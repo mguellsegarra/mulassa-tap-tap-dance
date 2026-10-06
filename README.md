@@ -7,7 +7,7 @@
   </picture>
 </a>
 
-**Un joc de ritme per al navegador sobre el Ball de la Mulassa de Valls.**
+**Un joc de ritme sobre el Ball de la Mulassa de Valls, per jugar al navegador.**
 
 [![Desplegament](https://github.com/mguellsegarra/mulassa-tap-tap-dance/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/mguellsegarra/mulassa-tap-tap-dance/actions/workflows/deploy-pages.yml)
 [![Llicència: MIT](https://img.shields.io/badge/codi-MIT-a3182f)](LICENSE)
@@ -38,7 +38,7 @@ npm install
 npm run dev
 ```
 
-Obre `http://localhost:5178/?mute`. El paràmetre `?mute` treu el so, que és pràctic mentre treballes. Altres paràmetres útils:
+Obre `http://localhost:5178/?mute`. El paràmetre `?mute` silencia el joc mentre treballes. Altres paràmetres útils:
 
 | Paràmetre | Què fa |
 |---|---|
@@ -46,7 +46,7 @@ Obre `http://localhost:5178/?mute`. El paràmetre `?mute` treu el so, que és pr
 | `?from=40` | Comença la cançó al segon 40. |
 | `?view=side` | Càmera fixa (`side`, `front`, `back`, `top`) i sense HUD. |
 | `?cam` | Editor de càmera per sobre del joc. |
-| `?perf` | Mostra fps i temps de render a la consola i a la pantalla. |
+| `?perf` | Mostra els FPS i els temps de render a la consola i a la pantalla. |
 
 Per comprovar que no has trencat res:
 
@@ -54,9 +54,9 @@ Per comprovar que no has trencat res:
 npm run check
 ```
 
-Tots els tests corren amb Node, sense navegador.
+Tots els tests s'executen amb Node, sense navegador.
 
-Sense configurar res, el joc funciona complet en local. El rànquing, la bústia de comentaris i els informes d'errors només s'activen si omples les variables de `.env.example` en un `.env.local`.
+Pots jugar en local sense configurar cap servei. Per activar el rànquing, la bústia de comentaris i els informes d'errors, copia les variables de `.env.example` a `.env.local` i omple les que necessitis.
 
 ## Com està fet
 
@@ -67,7 +67,7 @@ Hi ha dues capes de dibuix, una sobre l'altra:
 - Un `<canvas>` WebGL amb la plaça, la Mulassa, la gent i la banda, tot fet de blocs (vòxels).
 - Un `<canvas>` 2D al damunt amb el HUD: la pista de notes, la puntuació, les bombolles de la gent i la pantalla de resultats.
 
-Els menús i les finestres (configuració, rànquing, compartir) són HTML normal a `index.html`.
+Els menús i les finestres de configuració, rànquing i opcions per compartir són HTML a `index.html`.
 
 ### Els mòduls
 
@@ -75,7 +75,7 @@ Els menús i les finestres (configuració, rànquing, compartir) són HTML norma
 
 ```mermaid
 flowchart LR
-    main["main.js<br/>arrenca i fa girar el bucle"]
+    main["main.js<br/>arrenca i executa el bucle"]
     core["core/<br/>rellotge, temps, paràmetres d'URL"]
     scene["scene/<br/>món 3D: plaça, Mulassa, gent, càmeres"]
     hud["hud/<br/>canvas 2D: pista, puntuació, resultats"]
@@ -122,7 +122,7 @@ Els detalls musicals (arranjament, regles de cada tipus de nota) són a [music/R
 
 Tot això és opcional.
 
-- **[Supabase](https://supabase.com)** guarda el rànquing. Els jugadors són anònims i només poden escriure els seus resultats a través de funcions SQL (`supabase/migrations/`). Els tests ho proven amb [PGlite](https://pglite.dev), un Postgres que corre dins de Node.
+- **[Supabase](https://supabase.com)** guarda el rànquing. Els jugadors són anònims i només poden escriure els seus resultats a través de funcions SQL (`supabase/migrations/`). Els tests ho proven amb [PGlite](https://pglite.dev), un Postgres que s'executa dins de Node.
 - **Un [Worker de Cloudflare](https://workers.cloudflare.com)** (`workers/feedback/`) rep els missatges de la bústia i me'ls envia per correu sense guardar-los.
 - **[Cloudflare Turnstile](https://www.cloudflare.com/products/turnstile/)** evita que els bots omplin el rànquing o la bústia.
 - **[Sentry](https://sentry.io)** recull errors del joc, si hi ha un DSN configurat.
@@ -143,7 +143,7 @@ Les notes llargues (**MANTÉN**) no existeixen a Taiko. Les he afegit perquè la
 
 ## Contribueix
 
-Les issues i els pull requests són benvinguts. Abans d'obrir un PR, passa `npm run check`. El fitxer [AGENTS.md](AGENTS.md) té les convencions del codi en detall. El vaig escriure per a agents d'IA, però també serveix per a persones.
+Pots obrir una issue per avisar d'un problema o proposar un canvi, o enviar un pull request. Abans d'obrir un PR, executa `npm run check`. Les convencions del codi són a [AGENTS.md](AGENTS.md).
 
 ### Afegeix la teva figura
 
@@ -162,7 +162,7 @@ v.box(0, 0.5, 0, 1.1, 1.2, 3.3, '#a3182f');
 body.add(v.mesh());
 ```
 
-`box()` rep l'alçada de la base, no del centre, perquè així és més fàcil pensar en blocs apilats. L'eix z positiu és el davant de la figura.
+`box()` rep la posició vertical de la base, no la del centre, perquè així és més fàcil pensar en blocs apilats. L'eix z positiu és el davant de la figura.
 
 La funció ha de retornar un objecte amb les peces que el joc fa moure. Aquestes són les de la Mulassa:
 
@@ -190,7 +190,7 @@ La melodia va en un fitxer com `music/score.json`. Cada compàs és una llista d
 [1, "C5:1.5 D5:0.5 Eb5:1 F5:1"]
 ```
 
-La coreografia es descriu en temps musicals, com a `src/game/dance.js`: `YAW` diu cap on mira la figura a cada temps i `STYLE` com es mou (quant s'inclina, si salta, si avança). Mira vídeos del ball real i apunta a quin moment de la música fa cada gir.
+La coreografia es descriu en temps musicals, com a `src/game/dance.js`: `YAW` diu cap on mira la figura a cada temps i `STYLE` com es mou (quant s'inclina, si salta, si avança). Mira vídeos del ball real i anota en quin moment de la música fa cada gir.
 
 Abans d'afegir una melodia, comprova que es pot fer servir. Moltes músiques de bestiari tenen autor i drets.
 
@@ -209,7 +209,7 @@ Abans d'afegir una melodia, comprova que es pot fer servir. Moltes músiques de 
 - **Tipografies**: [Baloo 2](https://github.com/EkType/Baloo2) i [Jersey 10](https://github.com/scfried/soft-type-jersey), totes dues amb llicència OFL.
 - **3D**: [three.js](https://threejs.org).
 
-## ☕ Buy Me a Coffee
+## Convida'm a un cafè
 
 Si el joc t'ha fet somriure, **[convida'm a un cafè](https://buymeacoffee.com/mguellsegarra)!**
 

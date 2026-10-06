@@ -1,0 +1,45 @@
+name: Desplegament
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      # Public client configuration (Settings → Variables → Actions); same names as .env.local.
+      VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
+      VITE_LEADERBOARD_PUBLISHING_ENABLED: ${{ vars.VITE_LEADERBOARD_PUBLISHING_ENABLED }}
+      VITE_LEADERBOARD_CAPTCHA_REQUIRED: ${{ vars.VITE_LEADERBOARD_CAPTCHA_REQUIRED }}
+      VITE_TURNSTILE_SITE_KEY: ${{ vars.VITE_TURNSTILE_SITE_KEY }}
+      VITE_SENTRY_DSN: ${{ vars.VITE_SENTRY_DSN }}
+      VITE_FEEDBACK_URL: ${{ vars.VITE_FEEDBACK_URL }}
+      VITE_FEEDBACK_ENABLED: ${{ vars.VITE_FEEDBACK_ENABLED }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # the version's PATCH is the commit count (vite.config.js)
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - run: npm ci
+      # checks + vite build + the Pages allowlist artifact in dist/
+      - run: npm run build:pages
+      - name: Deploy dist/
+        run: npx --yes wrangler@4.142.0 pages deploy dist --project-name mulassa-tap-tap-dance --branch main --commit-dirty=true
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          WRANGLER_SEND_METRICS: 'false'

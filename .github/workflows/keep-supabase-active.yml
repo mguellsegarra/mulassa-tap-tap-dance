@@ -1,0 +1,39 @@
+name: Keep Supabase active
+
+on:
+  schedule:
+    - cron: '23 6 * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: supabase-availability
+  cancel-in-progress: false
+
+jobs:
+  check-leaderboards:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      # Public client configuration; no administrator key is needed.
+      SUPABASE_URL: https://oajlkitufibpfvhgtqwr.supabase.co
+      SUPABASE_PUBLISHABLE_KEY: sb_publishable_-pjXCr0l3GleGgniSUMEkw_K5dtYM1S
+    steps:
+      - name: Query the public leaderboard
+        shell: bash
+        run: |
+          set -euo pipefail
+          response=$(mktemp)
+          trap 'rm -f "$response"' EXIT
+          # the joint board (get_leaderboard_all, 202609280005): one row is enough to keep the project awake
+          curl --silent --show-error --fail \
+            --connect-timeout 10 --max-time 30 \
+            --retry 2 --retry-delay 5 --retry-max-time 100 \
+            -X POST "$SUPABASE_URL/rest/v1/rpc/get_leaderboard_all" \
+            -H "apikey: $SUPABASE_PUBLISHABLE_KEY" \
+            -H 'Content-Type: application/json' \
+            --data '{"p_version":"mulassa-v1","p_period":"all","p_offset":0,"p_limit":1}' \
+            --output "$response"
+          python3 -c 'import json,sys; data=json.load(open(sys.argv[1])); assert isinstance(data,list), "Expected a leaderboard array"' "$response"
+          echo "Leaderboard available."

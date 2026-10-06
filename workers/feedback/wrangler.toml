@@ -1,0 +1,43 @@
+# «Bústia de la plaça» (src/services/feedback.js → VITE_FEEDBACK_URL): Turnstile, then one plain-text e-mail to Marc through
+# Email Routing's send_email binding (free; only to verified destination addresses). Nothing is stored.
+# Deploy: cd workers/feedback && CLOUDFLARE_ACCOUNT_ID=<compte> npx wrangler deploy
+# Secrets (once each; wrangler prompts for the value):
+#   CLOUDFLARE_ACCOUNT_ID=<compte> npx wrangler secret put TURNSTILE_SECRET_KEY
+#   CLOUDFLARE_ACCOUNT_ID=<compte> npx wrangler secret put FEEDBACK_TO   (the verified destination address)
+name = "mulassa-feedback"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+workers_dev = true
+
+[vars]
+ALLOWED_ORIGINS = "https://mulassa-tap-tap-dance.pages.dev,https://mulassa.cat,https://www.mulassa.cat,http://localhost:5178,http://192.168.1.100:5178,http://192.168.1.108:5178,http://10.13.0.4:5178"
+# the sender: an address on mulassa.cat, the zone with Email Routing
+FEEDBACK_FROM = "holi@mulassa.cat"
+# about this many e-mails a day in total (counted in DAILY; KV has no atomic increment, so concurrent requests from
+# several locations can overshoot by a few: keep the real budget above this); then 429 until midnight UTC
+DAILY_MAX = "150"
+
+# no destination_address: it may send to any verified Email Routing destination of the account; FEEDBACK_TO picks it
+[[send_email]]
+name = "MAIL"
+
+# Abuse caps (free on every plan; counters per Cloudflare location, approximate by design). Period: 10 or 60 s only.
+# PER_IP: 3 messages a minute per CF-Connecting-IP. ALL: 10 a minute in total, so a burst can't outrun the daily count.
+[[ratelimits]]
+name = "PER_IP"
+namespace_id = "1001"
+  [ratelimits.simple]
+  limit = 3
+  period = 60
+
+[[ratelimits]]
+name = "ALL"
+namespace_id = "1002"
+  [ratelimits.simple]
+  limit = 10
+  period = 60
+
+# the daily e-mail count (one key per UTC day, expires after two days); <= DAILY_MAX writes a day, inside KV's free 1000
+[[kv_namespaces]]
+binding = "DAILY"
+id = "0e06fa6535f54ab981047d3750d17c09"

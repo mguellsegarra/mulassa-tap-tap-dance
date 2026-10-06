@@ -1,0 +1,22 @@
+{
+  "name": "Mulassa Tap Tap Dance",
+  "short_name": "Mulassa",
+  "start_url": "/",
+  "display": "fullscreen",
+  "orientation": "any",
+  "background_color": "#2a1a10",
+  "theme_color": "#2a1a10",
+  "icons": [
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

@@ -1,0 +1,111 @@
+// The results screen.
+import { drawStars } from './stars.js';
+import { qualityText } from '../game/progress.js';
+import { SITE_LABEL } from '../services/share.js';
+import { sheets } from '../ui/sheets.js';
+import { G, clock } from '../game/state.js';
+import { H, W, HH, SAFE, K } from './canvas.js';
+import { panel, text, textWidth } from './primitives.js';
+import { C } from './sprites.js';
+import { elastic } from './praise.js';
+import { sparkle, tipChip } from './title.js';
+import { COARSE } from '../core/env.js';
+
+// Results, three blocks with room between them, centred as a group inside the safe area: the card (title,
+// rank + stats, quality, record badge), the tip under it (its own pill, labelled CONSELL) and a real
+// "TOCA PER TORNAR" button at the bottom.
+// css px kept free under the card for the DOM results row (index.html #results-actions: 48 px buttons, 12 px apart,
+// 10 px off the bottom, 8 px clear above); narrow screens put «Publica el resultat» on a row of its own, when it can show
+const NARROW = matchMedia('(max-width: 639px)');
+const ROW_GAP = 20, BELOW_EXTRA = 8, resultsRow = document.getElementById('results-actions');
+const NARROW_ROW = matchMedia('(max-width: 419px)'); // index.html: «Torna-ho a provar» takes a row of its own
+let rowSeen = 0; // the row's real height once laid out (a wrap the estimate below missed must never sit on the tip)
+try { new ResizeObserver(() => { rowSeen = resultsRow.offsetHeight; }).observe(resultsRow); } catch { /* old browser / tests: the estimate alone */ }
+const resultsReserve = () => { // the row's own height, css px: rows of 48, 12 apart. Publish and (a collapse's) retry each wrap onto their own row on a phone
+  const rows = 1 + (sheets.board.publishable && NARROW.matches ? 1 : 0) + (G.reason === 'collapse' && NARROW_ROW.matches ? 1 : 0);
+  return Math.max(rows * 48 + (rows - 1) * 12, rowSeen);
+};
+// The row sits right under the card (ROW_GAP css px), TOCA PER TORNAR and the tip under it: drawResults() places it by
+// writing its `top` (only when it changes: no layout reads per frame)
+let resultsTop = '';
+function placeResultsRow(yCss) {
+  const v = `${Math.round(yCss)}px`;
+  if (v !== resultsTop) { resultsTop = v; resultsRow.style.top = v; resultsRow.style.bottom = 'auto'; }
+}
+export function drawResults() {
+  H.fillStyle = 'rgba(42,26,16,0.4)'; H.fillRect(0, 0, W, HH);
+  const lost = G.reason === 'collapse'; // a collapse is a defeat: no stars, no quality % (they would read as a pass)
+  const row = 17, STAR_H = lost ? 0 : 76, rec = lost ? 0 : G.newRecord ? 34 : G.previous ? 22 : 8, chl = G.challenge ? 20 : 0, url = 14; // chl: a friend's challenge; url: the address
+  const pw = Math.min(340, W - 20), ph = (lost ? 154 : 184) + STAR_H + rec + chl + url, x0 = W / 2 - pw / 2;
+  // top to bottom: the card, the DOM row (index.html #results-actions, never scaled), the tip, TOCA PER TORNAR
+  const top = (SAFE.t + 8) / K, bottom = HH - (SAFE.b + 10) / K, rowH = resultsReserve() / K, rowGap = ROW_GAP / K, extra = BELOW_EXTRA / K;
+  const tipH = 26, btnH = 30, room = bottom - top - ph - tipH - btnH - 14 - rowGap - rowH - extra; // 14: the CONSELL label
+  const gap = Math.max(8, Math.min(26, room / 3)); // generous on tall phones, tight on an SE or landscape
+  const canvasH = ph + extra + gap + 14 + tipH + gap * 1.4 + btnH; // everything drawn here (the row's slot apart)
+  const fit = Math.min(1, (bottom - top - rowGap - rowH) / canvasH); // too short for it all (landscape phones): the canvas parts scale down
+  const y0 = Math.max(top, top + (bottom - top - canvasH * fit - rowGap - rowH) * 0.45);
+  const rowTop = y0 + ph * fit + rowGap, rowBottom = rowTop + rowH;
+  placeResultsRow(rowTop * K);
+  H.save(); // the card scales about its own top
+  if (fit < 1) { H.translate(W / 2, y0); H.scale(fit, fit); H.translate(-W / 2, -y0); }
+  panel(x0, y0, pw, ph);
+  const [title, sub, col] = {
+    clear: ['BALL COMPLET!', 'La plaça celebra el teu ball!', C.gold],
+    fail: ['TORNEM-HI!', 'Practica el ritme i recupera la plaça', C.blue],
+    collapse: ['LA MULASSA S’HA DESMUNTAT!', 'Els portadors demanen un cafè', C.red],
+  }[G.reason];
+  text(title, W / 2, y0 + 17, Math.min(16, (pw - 20) / 16), col);
+  text(sub, W / 2, y0 + 34, Math.min(9, (pw - 20) / textWidth(sub, 1)), C.cream);
+  const rule = y => { H.fillStyle = 'rgba(245,197,24,0.35)'; H.fillRect(x0 + 12, y, pw - 24, 1); };
+  rule(y0 + 46);
+  // the stars are the hero: centred under the title, then the stats in full-width rows (like a mobile game's win card)
+  if (!lost) { drawStars(H, G.stars, W / 2, y0 + 46 + STAR_H / 2, 84, clock - G.resT); /* the earned ones drop in one by one */ rule(y0 + 46 + STAR_H); }
+  const by = y0 + 54 + STAR_H, bh = row * 5, sx = x0 + 26, ex = x0 + pw - 26;
+  [['GUAPA!', G.counts.perfect, C.gold], ['BÉ', G.counts.good, C.cream], ['XURRO', G.counts.miss, C.blue], ['RATXA', G.maxCombo, C.pink], ['PUNTS', G.score, C.cream]]
+    .forEach(([s, v, c], i) => {
+      const y = by + row * (i + 0.5);
+      if (i) { H.fillStyle = 'rgba(255,243,214,0.08)'; H.fillRect(sx, y - row / 2, ex - sx, 1); }
+      text(s, sx, y, 9, c, 'left');
+      text(String(v), ex, y, 9, C.cream, 'right');
+    });
+  rule(by + bh + 8);
+  // quality: the headline number of the card
+  const qy = by + bh + 30, q = qualityText(G.counts), lw = textWidth('ENCERTS', 9), vw = textWidth(q, 18), qx = W / 2 - (lw + 8 + vw) / 2;
+  if (!lost) { text('ENCERTS', qx, qy + 1, 9, C.cream, 'left'); text(q, qx + lw + 8, qy, 18, C.gold, 'left'); }
+  if (G.newRecord) { // a gold ribbon of its own that pops in after the medallion
+    const s = 'NOU RÈCORD PERSONAL!', size = Math.min(9.5, (pw - 70) / 12), pop = elastic(Math.min(1, Math.max(0, clock - G.resT - 0.4) * 2.5));
+    const bw = (textWidth(s, size) + 34) * pop, ry = qy + 26;
+    if (pop > 0.05) {
+      H.beginPath(); H.roundRect(W / 2 - bw / 2, ry - 10, bw, 20, 10); H.fillStyle = C.gold; H.fill();
+      H.strokeStyle = C.dark; H.lineWidth = 1.5; H.stroke();
+      H.save(); H.beginPath(); H.roundRect(W / 2 - bw / 2, ry - 10, bw, 20, 10); H.clip(); // a shine sweeps across
+      const sh = W / 2 - bw / 2 + ((clock * 70) % (bw + 60)) - 30;
+      H.fillStyle = 'rgba(255,255,255,0.35)'; H.beginPath(); H.moveTo(sh, ry - 10); H.lineTo(sh + 12, ry - 10); H.lineTo(sh + 2, ry + 10); H.lineTo(sh - 10, ry + 10); H.fill();
+      H.restore();
+      if (pop > 0.9) { text(s, W / 2, ry, size, C.dark, 'center', C.gold); /* dark on gold: no dark outline, it blotted the letters */ sparkle(W / 2 - bw / 2 + 10, ry, 4 + Math.sin(clock * 6), C.dark); sparkle(W / 2 + bw / 2 - 10, ry, 4 + Math.sin(clock * 6 + 2), C.dark); }
+    }
+  } else if (G.previous && !lost) text(`MILLOR: ${Math.round(G.previous.quality)}%`, W / 2, qy + 22, 9, '#e8d8b8');
+  if (G.challenge) text(G.challenge.line, W / 2, y0 + ph - url - chl + 8, G.challenge.beaten ? 11 : 9.5, G.challenge.beaten ? C.gold : '#5fd4c8'); // a friend's ?repte (same level)
+  text(SITE_LABEL, W / 2, y0 + ph - 9, 7, '#e8d8b8'); // small, inside the card: a screenshot still says where to play
+  // the tip, outside the card
+  const e = G.errors, others = e.silent + e.early + e.late + e.move;
+  const hint = G.reason === 'collapse' ? 'S’ha esgotat l’ànim de la plaça: cada encert el torna a omplir' : e.both > others ? (COARSE.matches ? 'GUAPA: toca els dos botons alhora' : 'GUAPA: prem ← i → alhora') : e.hold > others ? 'MANTÉN: no deixis anar fins al final' : G.errors.silent > G.errors.early + G.errors.late + G.errors.move ? 'Marca les notes quan arriben a l’anella' : G.errors.move > G.errors.early + G.errors.late ? 'Segueix la fletxa: esquerra o dreta' : G.errors.early > G.errors.late ? 'T’avances una mica massa: espera el pols' : G.errors.late ? 'Arribes tard: anticipa el pols' : 'Ball complet sense errors!';
+  H.restore(); H.save(); // the tip and the button: under the row, scaled about the row's bottom
+  if (fit < 1) { H.translate(W / 2, rowBottom); H.scale(fit, fit); H.translate(-W / 2, -rowBottom); }
+  const win = G.reason !== 'collapse' && !others && !e.both && !e.hold, ty = rowBottom + extra + gap;
+  text(win ? 'ENHORABONA' : 'CONSELL', W / 2, ty + 5, 7.5, win ? C.gold : '#5fd4c8');
+  tipChip(hint, W / 2, ty + 14 + tipH / 2, pw - 8, win, tipH);
+  // continue: a real button, fading in after a second
+  const since = clock - G.resT;
+  if (since > 1) {
+    const b = Math.sin(clock * 3), s = COARSE.matches ? 'TOCA PER TORNAR' : 'ESPAI PER TORNAR';
+    const bw = textWidth(s, 10.5) + 40, cy = ty + 14 + tipH + gap * 1.4 + btnH / 2;
+    H.globalAlpha = Math.min(1, (since - 1) * 4);
+    H.beginPath(); H.roundRect(W / 2 - bw / 2, cy - btnH / 2, bw, btnH, btnH / 2);
+    H.fillStyle = 'rgba(42,26,16,0.92)'; H.fill();
+    H.strokeStyle = C.gold; H.lineWidth = 2 + 0.6 * (b + 1); H.stroke();
+    text(s, W / 2, cy + 1, 10.5, C.gold);
+    H.globalAlpha = 1;
+  }
+  H.restore();
+}

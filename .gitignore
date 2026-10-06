@@ -1,0 +1,53 @@
+# Dependencies and Vite build output
+node_modules
+dist/
+.vite/
+
+# Local deployment artifacts and browser evidence
+output/
+
+# Temporary music analysis and rendered source pages
+/tmp/
+
+# Local environment variables
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Logs
+*.log
+npm-debug.log*
+
+# Python cache (tools/)
+__pycache__/
+*.py[cod]
+.venv/
+
+# macOS and local editor settings
+.DS_Store
+._*
+.idea/
+.vscode/
+.claude/settings.local.json
+.claude/worktrees/
+
+# Private deployment identity and local launch snapshots
+.cloudflare.local.json
+.claude/launch.local.json
+
+# Self-signed certificate for DEV_HTTPS (vite.config.js)
+.cert/
+
+# Wrangler local state (workers/feedback)
+.wrangler/
+
+# BSD sed -i -E backups
+*-E
+
+# Supabase CLI cache
+supabase/.temp/
+
+# Generator output kept out of the repo (tools/build_taiko.py)
+public/music/*.wav
+public/music/*.mid

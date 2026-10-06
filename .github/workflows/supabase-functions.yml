@@ -1,0 +1,29 @@
+name: Supabase functions
+
+on:
+  push:
+    branches: [master]
+    paths: ['supabase/functions/**', 'supabase/config.toml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: supabase-functions
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      # Needs Edge Functions read-write; the database migrations job does not use it.
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      # --use-api bundles on Supabase's side: no Docker on the runner. verify_jwt comes from supabase/config.toml.
+      - run: supabase functions deploy delete-player --project-ref oajlkitufibpfvhgtqwr --use-api

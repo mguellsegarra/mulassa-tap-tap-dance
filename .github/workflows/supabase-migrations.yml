@@ -1,0 +1,50 @@
+name: Supabase migrations
+
+on:
+  push:
+    branches: [master]
+    paths: ['supabase/migrations/**']
+  workflow_dispatch:
+    inputs:
+      baseline:
+        description: 'One-off: mark every local migration as already applied (no SQL runs). Only if the remote schema already has them all.'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: supabase-migrations
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      # Session pooler (IPv4; the direct host is IPv6-only). Region: Central EU (Frankfurt).
+      POOLER_HOST: aws-0-eu-central-1.pooler.supabase.com
+      PROJECT_REF: oajlkitufibpfvhgtqwr
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      # No `supabase link` and no access token: the CLI only needs the database URL.
+      - name: Build database URL
+        run: |
+          pw=$(python3 -c 'import os,urllib.parse; print(urllib.parse.quote(os.environ["SUPABASE_DB_PASSWORD"], safe=""))')
+          echo "::add-mask::$pw"
+          echo "DB_URL=postgresql://postgres.${PROJECT_REF}:${pw}@${POOLER_HOST}:5432/postgres" >> "$GITHUB_ENV"
+      - name: Baseline history (manual, once)
+        if: inputs.baseline
+        run: |
+          versions=$(ls supabase/migrations/*.sql | sed 's|.*/||; s|_.*||')
+          supabase migration repair --status applied $versions --db-url "$DB_URL"
+      - name: Show history
+        run: supabase migration list --db-url "$DB_URL"
+      - name: Apply pending migrations
+        if: '!inputs.baseline'
+        run: supabase db push --db-url "$DB_URL"

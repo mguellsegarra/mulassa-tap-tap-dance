@@ -1,0 +1,2178 @@
+import assert from 'node:assert/strict';
+import { readPage } from './page.mjs';
+import { loadMainSource } from './load-main.mjs';
+import { PROFILES, initialQuality, renderDpr, frameMonitor, hudScale, framePacer, profileAt, hudBudget, startLevel, MINIMAL, smoothClock, isSoftwareRenderer, probeRenderer } from '../src/platform/render-quality.js';
+import { buildPerson } from '../src/scene/models.js';
+import { eventAge } from '../src/game/progress.js';
+assert.equal(initialQuality({ mobile: true, cores: 8, memory: 8 }), 1);
+assert.equal(initialQuality({ mobile: true, cores: 4 }), 1); // iOS under-reports cores: phones start antialiased
+assert.equal(initialQuality({ cores: 16, memory: 16 }), 2);
+assert.equal(initialQuality({ saveData: true }), 0);
+for (const profile of PROFILES) {
+  const dpr = renderDpr(profile, 3840, 2160, 3);
+  assert(dpr <= profile.dpr);
+  assert(3840 * 2160 * dpr ** 2 <= profile.pixels + 0.001);
+}
+let reductions = 0;
+const sample = frameMonitor(() => reductions++);
+for (let i = 0; i < 600; i++) sample(16.67);
+assert.equal(reductions, 0, 'smooth rendering keeps quality');
+sample(5000);
+assert.equal(reductions, 0, 'background gap cannot lower quality');
+for (let i = 0; i < 150; i++) sample(33.33);
+assert.equal(reductions, 1, 'sustained slow frames lower quality');
+for (let i = 0; i < 120; i++) sample(33.33);
+assert.equal(reductions, 1, 'cooldown avoids consecutive quality switches');
+{ // a steady ~53 fps (one missed vsync in six) is a judder on the lane: quality steps down; an occasional miss does not
+  const run = every => { let n = 0; const m = frameMonitor(() => n++); for (let i = 0; i < 1500; i++) m(i % every ? 16.67 : 33.3); return n; };
+  assert(run(6) > 0, '~1 in 6 frames missed: steps down');
+  assert.equal(run(20), 0, '~1 in 20 missed: keeps quality');
+}
+let promptReductions = 0;
+const promptSample = frameMonitor(() => promptReductions++);
+for (let i = 0; i < 15; i++) promptSample(400);
+assert.equal(promptReductions, 1, 'very slow rendering must react within six seconds');
+// HUD backing store: an iPad Pro (1366×1024 css, DPR 2) stays within its pixel budget; phones keep full resolution
+// the minimal tier (-1): only reached by stepping down; below 1x 3D, one crowd row; remembered per device
+assert.equal(profileAt(-1), MINIMAL); assert.equal(profileAt(0), PROFILES[0]); assert.equal(profileAt(2), PROFILES[2]);
+assert(renderDpr(MINIMAL, 393, 852, 3) < 1.05 && renderDpr(MINIMAL, 1280, 800, 2) < 0.7, 'minimal draws the 3D below 1x');
+assert(MINIMAL.rows === 1 && MINIMAL.backdrop < PROFILES[0].backdrop && MINIMAL.confetti < PROFILES[0].confetti);
+// A full plaça, cheaply: the instanced figures (façades: backdrop; beyond the ring: mid), the static
+// balcony people and the ring that answers hits (near) grow with the tier; low-end phones pay the least.
+{
+  const tiers = [MINIMAL, ...PROFILES];
+  for (const k of ['backdrop', 'mid', 'balconies', 'near']) for (let i = 1; i < tiers.length; i++)
+    assert(tiers[i][k] >= tiers[i - 1][k], `${k}: ${tiers[i].name} (${tiers[i][k]}) at least ${tiers[i - 1].name}'s (${tiers[i - 1][k]})`);
+  assert(MINIMAL.mid > 0 && PROFILES[1].mid >= 120 && PROFILES[1].backdrop > 220, 'every tier fills the plaça; medium clearly more than before');
+  assert(MINIMAL.near >= 8 && PROFILES[2].near <= 30, 'the reacting ring stays a first ring (10-30 people)');
+}
+assert(hudBudget(-1, true) < hudBudget(1, true) && hudBudget(0, false) === hudBudget(-1, false), 'a smaller HUD budget at low/minimal');
+assert.deepEqual(startLevel(1, null), { level: 1, retry: false }, 'no memory: the hardware guess');
+assert.equal(startLevel(1, { level: -1, at: Date.now(), visits: 1 }).level, -1, 'starts where it settled');
+assert.equal(startLevel(1, { level: -1, at: Date.now(), visits: 4 }).level, 0, 'every 5th visit tries one step up');
+assert.equal(startLevel(1, { level: -1, at: Date.now() - 8 * 864e5, visits: 1 }).level, 0, 'a week on it tries again');
+assert.equal(startLevel(1, { level: 2, at: 0 }).level, 1, 'never above the hardware guess');
+{ // software WebGL (no GPU): real-world renderer/vendor strings, and the failIfMajorPerformanceCaveat signal
+  const soft = [
+    ['ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)', 'Google Inc. (Google)'], // Chrome --disable-gpu / blocklisted
+    ['ANGLE (Google, SwiftShader Device (Subzero), SwiftShader driver)', 'Google Inc.'],
+    ['Google SwiftShader', 'Google Inc.'], // older Chrome
+    ['llvmpipe (LLVM 15.0.7, 256 bits)', 'Mesa'], // Linux Mesa (Firefox and Chrome's native GL)
+    ['ANGLE (Mesa, llvmpipe (LLVM 17.0.6, 256 bits), OpenGL 4.5)', 'Google Inc. (Mesa)'],
+    ['Mesa OffScreen / softpipe', 'VMware, Inc.'], ['Software Rasterizer', 'Mesa Project'],
+    ['ANGLE (Microsoft, Microsoft Basic Render Driver Direct3D11 vs_5_0 ps_5_0, D3D11)', 'Google Inc. (Microsoft)'], // Windows, no driver
+    ['Microsoft Basic Render Driver', 'Microsoft'], ['GDI Generic', 'Microsoft Corporation'], ['Apple Software Renderer', 'Apple Inc.'],
+  ];
+  const hard = [
+    ['ANGLE (Apple, ANGLE Metal Renderer: Apple M2, Unspecified Version)', 'Google Inc. (Apple)'],
+    ['ANGLE (NVIDIA, NVIDIA GeForce RTX 3060 (0x00002504) Direct3D11 vs_5_0 ps_5_0, D3D11)', 'Google Inc. (NVIDIA)'],
+    ['ANGLE (Intel, Intel(R) UHD Graphics 620 Direct3D11 vs_5_0 ps_5_0), or similar', 'Mozilla'], // Firefox, sanitised
+    ['Mozilla', 'Mozilla'], ['WebKit WebGL', 'WebKit'], ['', ''], // resistFingerprinting / masked / unknown: no guess
+    ['Apple GPU', 'Apple Inc.'], ['Adreno (TM) 740', 'Qualcomm'], ['Mali-G78', 'ARM'], ['Mesa Intel(R) Xe Graphics (TGL GT2)', 'Intel'],
+  ];
+  for (const [renderer, vendor] of soft) assert(isSoftwareRenderer({ renderer, vendor }), `software: ${renderer}`);
+  for (const [renderer, vendor] of hard) assert(!isSoftwareRenderer({ renderer, vendor }), `a GPU: ${renderer || '(none)'}`);
+  assert(isSoftwareRenderer({ renderer: 'Mozilla', caveat: true }), 'a refused caveat context is software whatever the string says');
+  assert(!isSoftwareRenderer() && !isSoftwareRenderer({ renderer: null, vendor: undefined }), 'no information: not software');
+  const saved = { level: 2, at: Date.now(), visits: 3 }, sw = isSoftwareRenderer({ renderer: soft[0][0] });
+  const start = startLevel(2, saved, Date.now(), sw);
+  assert(start.level === -1 && !start.retry && profileAt(start.level) === MINIMAL, 'software WebGL starts at minimal');
+  assert.equal(hudBudget(start.level, false), Math.min(hudBudget(-1, false), hudBudget(0, false), hudBudget(2, false)), 'with the lowest HUD budget');
+  assert.deepEqual(saved, { level: 2, at: saved.at, visits: 3 }, 'the saved level is not touched');
+  assert.deepEqual(startLevel(2, saved, Date.now(), isSoftwareRenderer({ renderer: hard[0][0] })), startLevel(2, saved), 'a GPU: unchanged');
+  // the probe: one cheap context, released; a second (plain) one only when the caveat context is refused
+  const fake = ({ caveatOk = true, plainOk = true, renderer = 'WebKit WebGL', unmasked = 'ANGLE (Apple, ANGLE Metal Renderer: Apple M2)' } = {}) => {
+    const log = { made: 0, lost: 0, ext: [] };
+    const gl = { RENDERER: 1, VENDOR: 2, getParameter: k => ({ 1: renderer, 2: 'WebKit', 3: unmasked, 4: 'Google Inc.' })[k],
+      getExtension: n => { log.ext.push(n); return n === 'WEBGL_debug_renderer_info' ? { UNMASKED_RENDERER_WEBGL: 3, UNMASKED_VENDOR_WEBGL: 4 } : { loseContext: () => log.lost++ }; } };
+    const make = () => ({ getContext: (type, a) => (log.made++, type === 'webgl2' && (a.failIfMajorPerformanceCaveat ? caveatOk : plainOk) ? gl : null) });
+    return { log, make };
+  };
+  let f = fake();
+  assert.deepEqual(probeRenderer(f.make), { renderer: 'ANGLE (Apple, ANGLE Metal Renderer: Apple M2)', vendor: 'Google Inc.', caveat: false });
+  assert(f.log.made === 1 && f.log.lost === 1, 'a GPU: one probe context, lost at once');
+  f = fake({ caveatOk: false, unmasked: soft[0][0] });
+  const p = probeRenderer(f.make);
+  assert(p.caveat && isSoftwareRenderer(p) && f.log.made === 2 && f.log.lost === 1, 'SwiftShader: the caveat context is refused, the plain one read and lost');
+  f = fake({ renderer: 'ANGLE (Intel, Intel(R) HD Graphics 400 Direct3D11 vs_5_0 ps_5_0), or similar' });
+  assert(probeRenderer(f.make).renderer.startsWith('ANGLE (Intel') && !f.log.ext.includes('WEBGL_debug_renderer_info'), 'Firefox: RENDERER as is (no deprecated extension)');
+  f = fake({ caveatOk: false, plainOk: false });
+  assert.deepEqual(probeRenderer(f.make), { renderer: '', vendor: '', caveat: false }, 'no WebGL 2 at all is not "software"');
+  assert.deepEqual(probeRenderer(() => { throw new Error('no canvas'); }), { renderer: '', vendor: '', caveat: false }, 'a failing probe never throws');
+}
+{ // far too slow frames drop two steps at once, merely slow ones one
+  const got = []; const m = frameMonitor(s => got.push(s));
+  for (let t = 0; t < 2000; t += 16) m(16); // warm-up
+  for (let t = 0; t < 4200; t += 60) m(60); // every frame slow
+  for (let t = 0; t < 2100; t += 16) m(16);
+  for (let t = 0; t < 4200; t += 16) m(t % 32 ? 16 : 40); // ~50% slow
+  assert.deepEqual(got, [2, 1]);
+}
+{ // hitches: a burst of spikes during play steps down once; one-offs, spread-out ones and menus never do
+  const run = (spikeAt, play = true, ms = 16.67, total = 20000) => {
+    const got = [], m = frameMonitor(s => got.push(s)), hits = new Set(spikeAt);
+    for (let t = 0, i = 0; t < total; i++) { const d = hits.has(i) ? 80 : ms; m(d, play); t += d; }
+    return got;
+  };
+  const f = s => Math.round(s * 60); // frame index at s seconds
+  assert.deepEqual(run([2.5, 2.9, 3.3, 3.8, 4.4].map(f)), [1], 'five spikes within 3 s in play: one step');
+  assert.deepEqual(run([2.5, 2.9, 3.3, 3.8, 4.4].map(f), false), [], 'spikes on a menu or the pause sheet: none');
+  assert.deepEqual(run([3, 4.2, 5.4, 6.6, 7.8, 9, 10.2].map(f)), [], 'a spike now and then (a first use, a GC): none');
+  assert.deepEqual(run([3, 3.1, 9, 9.1, 15, 15.1].map(f)), [], 'isolated double hitches: none');
+  const stall = frameMonitor(() => assert.fail('a hidden tab or a stall is no hitch')); // gaps over 1 s reset the count
+  for (let t = 0; t < 2100; t += 16) stall(16);
+  for (let i = 0; i < 4; i++) { stall(80); stall(16); }
+  stall(5000);
+  for (let i = 0; i < 4; i++) { stall(80); stall(16); }
+  for (let t = 0; t < 5000; t += 16) stall(16);
+}
+assert(1366 * 1024 * hudScale(1366, 1024, 2, 2_500_000) ** 2 <= 2_500_001, 'tablet HUD within budget');
+assert(hudScale(1366, 1024, 2, 2_500_000) > 1.3, 'tablet HUD still sharper than 1x');
+assert.equal(hudScale(393, 852, 3, 2_500_000), 2, 'phones: full HUD resolution (capped at 2)');
+assert.equal(hudScale(3840, 2160, 1, 2_500_000), 1, 'never below 1x');
+// Frame pacing, with synthetic rAF timing: callbacks land on the display's vsyncs; a drawn frame that costs `cost(t)`
+// ms makes the next callback wait for the first vsync after it (a missed refresh), a skipped one costs nothing.
+const simulate = (hz, ms, cost = () => 4, p = framePacer(), hold = () => false) => {
+  const iv = 1000 / hz, drawn = [], flips = [];
+  let half = p.half;
+  for (let t = 0; t < ms;) {
+    const draw = p(t, hold(t));
+    if (p.half !== half) { half = p.half; flips.push([t, half]); }
+    if (draw) drawn.push(t);
+    t += draw ? Math.max(1, Math.ceil(cost(t) / iv - 1e-6)) * iv : iv;
+  }
+  const gaps = drawn.slice(1).map((t, i) => t - drawn[i]);
+  return { p, drawn, flips, gaps };
+};
+const at60 = simulate(60, 2000), at90 = simulate(90, 2000);
+assert(at60.drawn.length >= 119 && at60.flips.length === 0 && Math.round(at60.p.fps) === 60, '60 Hz: every frame');
+assert(at90.drawn.length >= 179 && at90.flips.length === 0 && Math.round(at90.p.fps) === 90, '90 Hz: every frame (halving it would judder at 45)');
+const fast120 = simulate(120, 20000);
+assert(fast120.flips.length === 0 && fast120.drawn.length >= 2399 && Math.round(fast120.p.fps) === 120, '120 Hz, a device that keeps up: the full 120 fps');
+let seed = 1; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647; // repeatable "random" misses
+const misses = share => () => (rnd() < share ? 12 : 4);
+const busy = simulate(120, 20000, misses(0.05));
+assert.equal(busy.flips.length, 0, '120 Hz: a few missed refreshes (well under 15%) keep the full rate');
+const slow = simulate(120, 240000, misses(0.5)); // half its frames miss 8.3 ms
+assert(slow.flips[0][1] === true && slow.flips[0][0] < 4000, '120 Hz, over 15% missed: half rate within a 2 s window (after warm-up)');
+const halfGaps = slow.gaps.filter((g, i) => slow.drawn[i] > slow.flips[0][0] + 100 && slow.drawn[i + 1] < slow.flips[1][0] && g < 20);
+assert(halfGaps.length > 200 && halfGaps.every(g => Math.abs(g - 1000 / 60) < 0.01), 'half rate: an even 60 fps (every other refresh)');
+for (const [t] of slow.flips) assert(slow.flips.filter(([u]) => u >= t && u < t + 60000).length <= 3, 'at most 3 switches in any minute (no flip-flop)');
+const ups = slow.flips.filter(([, h]) => !h).map(([t]) => t), downs = slow.flips.filter(([, h]) => h).map(([t]) => t);
+assert(ups.length >= 2 && ups.every(t => t - Math.max(...downs.filter(d => d < t)) >= 5000), 'it retries 120 only after 5+ s of good frames at 60');
+assert(slow.drawn.length / 240 < 66, 'a device that cannot hold 120 spends its time at an even 60');
+const steady = simulate(120, 10000, () => 12); // every frame misses: rAF itself falls to 60
+assert(steady.flips.length === 0 && steady.gaps.slice(5).every(g => Math.abs(g - 1000 / 60) < 0.01), 'rAF falling to 60 is an even 60 too, no switching');
+const recovers = simulate(120, 30000, t => (t < 8000 ? (rnd() < 0.5 ? 12 : 4) : 4)); // e.g. the quality monitor stepped down
+assert(recovers.flips.length === 2 && recovers.flips[1][1] === false && recovers.flips[1][0] - recovers.flips[0][0] >= 5000 && !recovers.p.half,
+  'a device that catches up goes back to 120 after 5 s and stays');
+// A song holds the rate: a device that can't keep 120 mid-song drops to an even 60 once and stays there until the
+// song is over (a retry is a 2 s burst of missed refreshes, and each switch changes the notes' step: the lane «broke»).
+{
+  const song = t => t >= 10000 && t < 110000, twenty = () => (rnd() < 0.2 ? 12 : 4); // 20% of its 120 Hz frames miss
+  const held = simulate(120, 130000, twenty, framePacer(), song), free = simulate(120, 130000, twenty);
+  const inSong = r => r.flips.filter(([t]) => song(t));
+  assert(inSong(held).length <= 1 && inSong(held).every(([, h]) => h), 'mid-song: at most one switch, and only down to 60');
+  assert(inSong(free).some(([, h]) => !h), '(without the hold it retries 120 mid-song)');
+  const after = held.flips.filter(([t]) => t >= 110000);
+  assert(held.p.half || after.some(([, h]) => !h), 'after the song it may try 120 again');
+  const breaks = r => r.gaps.filter((g, i) => i && song(r.drawn[i]) && Math.abs(g - r.gaps[i - 1]) > 1).length;
+  assert(breaks(held) * 2 < breaks(free), `mid-song cadence breaks: held ${breaks(held)} vs free ${breaks(free)}`);
+}
+const stall = framePacer(); for (let t = 0; t < 3000; t += 1000 / 120) stall(t);
+for (let t = 8000; t < 12000; t += 1000 / 120) stall(t); // a hidden tab / 5 s stall in between
+assert(!stall.half && Math.round(stall.hz) === 120, 'a long gap is neither a slow frame nor the display rate');
+// iOS Low Power Mode caps rAF at 30 Hz
+const lpm = simulate(30, 10000);
+assert(lpm.p.lowPower && Math.round(lpm.p.fps) === 30 && lpm.flips.length === 0 && lpm.drawn.length >= 299, '30 Hz: Low Power Mode, every frame, flagged for the FPS hint');
+let paceDowns = 0; // the frame monitor sees the paced frames: no false downgrade on a ProMotion screen, full or half rate
+const paceMon = frameMonitor(() => paceDowns++);
+[slow, fast120, steady].forEach(r => r.gaps.forEach(g => paceMon(g)));
+assert.equal(paceDowns, 0, 'paced 120 Hz frames keep quality');
+let realDowns = 0;
+const realMon = frameMonitor(() => realDowns++);
+simulate(120, 12000, () => 30).gaps.forEach(g => realMon(g));
+assert(realDowns > 0, 'too slow even at half rate: quality steps down');
+// Compare the forward faces of the actual merged skin and hair boxes.
+for (const seated of [false, true]) {
+  const person = buildPerson({ seated });
+  const positions = person.body.geometry.attributes.position;
+  const top = seated ? 0.62 : 1.38;
+  const fronts = [];
+  for (let i = 0; i < positions.count; i++) {
+    if (positions.getY(i) > top + 0.25 && positions.getZ(i) > 0.14) fronts.push(positions.getZ(i));
+  }
+  assert(fronts.some(z => Math.abs(z - 0.15) < 1e-6), 'hair front is recessed');
+  assert(fronts.some(z => Math.abs(z - 0.16) < 1e-6), 'skin front remains intact');
+  person.g.traverse(o => o.geometry?.dispose());
+}
+console.log('render quality, adaptation and forehead geometry ok');
+
+// The skinned crowd (one draw call) draws exactly what the per-part meshes drew: same vertices, same colours,
+// wherever the walk cycle, lean and arm poses put them, and nothing at all for a hidden (zero-scaled) person.
+{
+  const T = await import('three'), { skinCrowd } = await import('../src/scene/models.js');
+  const opts = [{}, { kid: true }, { hat: '#333333' }, { seated: true }];
+  const make = () => opts.map(o => { const p = buildPerson(o); if (o.kid) p.g.scale.setScalar(0.72); return p; });
+  const pose = (people, s) => people.forEach((p, i) => {
+    p.g.position.set(i * 1.3 - 2, 0.05 * s, s - i); p.g.rotation.set(0, s + i, 0, 'YXZ');
+    p.torso.rotation.x = 0.2 * s; p.legs.forEach((l, j) => (l.rotation.x = (j ? -0.4 : 0.4) * s));
+    p.arms.forEach((a, j) => { a.rotation.x = -2.8 + s; a.rotation.z = (j ? -0.3 : 0.3) * s; });
+    p.g.updateMatrixWorld(true);
+  });
+  const ref = make(), people = make(), v = new T.Vector3();
+  const expected = (hidden = -1) => ref.flatMap((p, pi) => [p.torso, ...p.legs, ...p.arms].flatMap(b => b.children.filter(o => o.isMesh).flatMap(m => {
+    const pos = m.geometry.attributes.position, out = [];
+    for (let i = 0; i < pos.count; i++) out.push(pi === hidden ? p.g.position.clone() : v.fromBufferAttribute(pos, i).applyMatrix4(m.matrixWorld).clone());
+    return out;
+  })));
+  const colours = people.flatMap(p => [p.torso, ...p.legs, ...p.arms].flatMap(b => b.children.filter(o => o.isMesh).flatMap(m => [...m.geometry.attributes.color.array])));
+  const mesh = skinCrowd(people);
+  assert.equal(people.flatMap(p => [p.torso, ...p.legs, ...p.arms]).filter(b => b.children.some(o => o.isMesh)).length, 0, 'the part meshes are gone: one mesh draws them');
+  assert.deepEqual([...mesh.geometry.attributes.color.array].map(c => +c.toFixed(5)), colours.map(c => +c.toFixed(5)), 'same vertex colours, jitter and all');
+  for (const [s, hidden] of [[0, -1], [0.7, -1], [-1.1, 2]]) {
+    pose(ref, s); pose(people, s);
+    if (hidden >= 0) { people[hidden].g.scale.setScalar(0); people[hidden].g.updateMatrixWorld(true); }
+    mesh.skeleton.update();
+    const want = expected(hidden);
+    assert.equal(mesh.geometry.attributes.position.count, want.length);
+    const worst = want.reduce((m, w, i) => Math.max(m, mesh.getVertexPosition(i, v).distanceTo(w)), 0);
+    assert(worst < 1e-5, `pose ${s}: every skinned vertex where its part mesh put it (off by ${worst})`);
+    if (hidden >= 0) people[hidden].g.scale.setScalar(people[hidden].scale);
+  }
+  assert.deepEqual(people.map(p => p.scale), [1, 0.72, 1, 1], 'each person remembers the size to show again at');
+}
+console.log('skinned crowd matches the per-part meshes ok');
+// Musicians: every instrument is baked into the body and arm parts (no loose meshes), sticks and cymbals ride the arm
+// that swings them, and the bombo's mallet rests on the drum's right head.
+{
+  const T = await import('three'), { buildMusician, BAND } = await import('../src/scene/models.js'), box = new T.Box3();
+  for (const [kind] of BAND) {
+    const p = buildMusician(kind);
+    p.g.updateMatrixWorld(true);
+    assert(p.g.children.every(o => !o.isMesh) && [p.torso, ...p.legs, ...p.arms].every(b => b.children.filter(o => o.isMesh).every(m => !m.geometry.attributes.position.array.some(Number.isNaN))), `${kind}: parts only, no NaN`);
+    if (kind === 'bombo') {
+      box.setFromObject(p.arms[1].children.at(-1), true);
+      assert(box.max.x > -0.16 && box.max.x < -0.14 && box.min.y < 1.02 && box.max.y > 1.02, `the mallet rests on the head (${box.min.toArray().map(v => v.toFixed(2))} ${box.max.toArray().map(v => v.toFixed(2))})`);
+    }
+  }
+}
+console.log('band musicians ok');
+
+// The backdrop stands beyond the camera's square and short of the façades; balcony people stay on their balconies.
+{
+  const { buildPlaza, buildPerson: person } = await import('../src/scene/models.js');
+  const T = await import('three');
+  const plaza = buildPlaza({ backdrop: 360, balconies: 24 });
+  const { mesh, n } = plaza.backdrop, m = new T.Matrix4(), v = new T.Vector3();
+  assert(n >= 300, `a dense backdrop (${n})`);
+  for (let i = 0; i < n; i++) {
+    mesh.getMatrixAt(i, m); v.setFromMatrixPosition(m);
+    const out = Math.max(Math.abs(v.x), Math.abs(v.z));
+    assert(out > plaza.inner - 1.5 + 0.1 && out < plaza.inner + 0.5, `backdrop figure ${i} in its band (${out.toFixed(2)})`);
+  }
+  assert.equal(mesh.geometry.attributes.position.count, 56, 'backdrop figure: 56 vertices (48 + two eyes, front faces only)');
+  // the mid band: the same figures on an arc beyond the moving ring, clear of the band's sector
+  const { buildBackdrop } = await import('../src/scene/models.js');
+  const ring = { r0: 10.7, r1: 12.6, far: -0.52, half: 1.45, avoid: [[5.3, 0.47, 11.3]] };
+  const mid = buildBackdrop(200, plaza.inner, plaza.props, { ring, share: plaza.backdrop }), at = [];
+  assert(mid.n >= 150, `a dense mid band (${mid.n})`);
+  assert(mid.mesh.material === mesh.material && mid.mesh.geometry.index === mesh.geometry.index && mid.mesh.geometry.attributes.position === mesh.geometry.attributes.position,
+    'the mid band shares the backdrop’s material (no new shader program) and its figure');
+  for (let i = 0; i < mid.n; i++) {
+    mid.mesh.getMatrixAt(i, m); v.setFromMatrixPosition(m);
+    const r = Math.hypot(v.x, v.z), a = Math.atan2(v.z, v.x), off = Math.abs(Math.atan2(Math.sin(a - ring.far), Math.cos(a - ring.far)));
+    const band = Math.abs(Math.atan2(Math.sin(a - 5.3), Math.cos(a - 5.3))) < 0.47;
+    assert(r >= (band ? 11.3 : ring.r0) - 1e-6 && r <= ring.r1 + 1e-6 && off <= ring.half + 1e-6, `mid figure ${i} in its arc (r ${r.toFixed(2)}, ${off.toFixed(2)} rad off)`);
+    for (const [x, z] of at) assert(Math.hypot(x - v.x, z - v.z) >= 0.44, `mid figures ${i} stand apart`);
+    at.push([v.x, v.z]);
+  }
+  assert.equal(plaza.balcony.length, 0, 'medium: balcony people are static, merged into the buildings');
+  assert.equal(buildPlaza().backdrop, null, 'no backdrop unless asked');
+  const kid = person({ rider: true, fan: '#b3122a' }), plain = person();
+  const verts = p => { let n = 0; p.g.traverse(o => { if (o.isMesh) n += o.geometry.attributes.position.count; }); return n; };
+  assert(verts(kid) > verts(plain) + 200, 'rider and ventall add their boxes');
+}
+console.log('backdrop, balconies and crowd variety ok');
+
+// Z-fighting: in every voxel model (people with each extra, each musician, the mulassa, the façade flags) no two boxes put faces looking
+// the same way within 4 mm of each other where both can show (the overlap's middle not buried in a third box) in two
+// different colours: the depth test can't pick one and they strobe as the model moves (hair on the heads, a hat's
+// crown, a trumpet's bell did). Jittered boxes count as different colours.
+{
+  const T = await import('three'), { buildMusician, buildMulassa, buildFlag, BAND } = await import('../src/scene/models.js');
+  const V = () => new T.Vector3();
+  function zFights(root) {
+    root.updateMatrixWorld(true);
+    const inv = root.matrixWorld.clone().invert(), quads = [], boxes = [];
+    let mi = 0;
+    root.traverse(o => {
+      if (!o.isMesh) return;
+      const g = o.geometry.clone().applyMatrix4(new T.Matrix4().multiplyMatrices(inv, o.matrixWorld)), P = g.attributes.position, C = g.attributes.color;
+      for (let q = 0; q < P.count / 4; q++) {
+        const v = [0, 1, 2, 3].map(k => V().fromBufferAttribute(P, q * 4 + k)), n = V().subVectors(v[1], v[0]).cross(V().subVectors(v[2], v[0])).normalize();
+        quads.push({ box: `${mi}:${Math.floor(q / 6)}`, v, n, d: n.dot(v[0]), c: [C.getX(q * 4), C.getY(q * 4), C.getZ(q * 4)] });
+      }
+      mi++;
+    });
+    const byBox = Object.groupBy(quads, q => q.box);
+    for (const [k, fs] of Object.entries(byBox)) { // axis-aligned boxes: what can bury a face
+      if (fs.every(f => Math.max(...f.n.toArray().map(Math.abs)) > 0.999)) boxes.push({ k, b: new T.Box3().setFromPoints(fs.flatMap(f => f.v)) });
+    }
+    const out = [];
+    for (let i = 0; i < quads.length; i++) for (let j = i + 1; j < quads.length; j++) {
+      const a = quads[i], b = quads[j];
+      if (a.box === b.box || a.n.dot(b.n) < 0.999 || Math.abs(a.d - b.d) >= 0.004 || a.c.every((c, k) => c === b.c[k])) continue;
+      const u = V().subVectors(a.v[1], a.v[0]).normalize(), w = V().crossVectors(a.n, u); // a's own edges
+      const span = (f, e) => [Math.min(...f.v.map(p => p.dot(e))), Math.max(...f.v.map(p => p.dot(e)))];
+      const [au, bu, aw, bw] = [span(a, u), span(b, u), span(a, w), span(b, w)];
+      const lu = Math.max(au[0], bu[0]), hu = Math.min(au[1], bu[1]), lw = Math.max(aw[0], bw[0]), hw = Math.min(aw[1], bw[1]);
+      if (hu - lu < 1e-4 || hw - lw < 1e-4) continue;
+      const mid = V().addScaledVector(u, (lu + hu) / 2).addScaledVector(w, (lw + hw) / 2).addScaledVector(a.n, (a.d + b.d) / 2);
+      if (boxes.some(({ k, b: B }) => k !== a.box && k !== b.box && B.clone().expandByScalar(-1e-4).containsPoint(mid))) continue;
+      out.push(`${a.box}/${b.box} at ${mid.toArray().map(x => x.toFixed(3))}`);
+    }
+    return out;
+  }
+  const models = [
+    ...[{}, { kid: true }, { hat: '#b3122a' }, { rider: true, hat: '#26262e' }, { fan: '#f5c518' }, { faixa: '#d62828' }, { seated: true }]
+      .map(o => [`person ${JSON.stringify(o)}`, buildPerson(o).g]),
+    ...[...new Set(BAND.map(([kind]) => kind))].map(k => [`musician ${k}`, buildMusician(k).g]),
+    ['mulassa', buildMulassa().root],
+    // the façade flags (one plate per layer): estelada blava, estelada vermella, bandera de Valls; balcony and eaves sizes
+    ...[1, 2, 3].flatMap(k => [false, true].map(big => [`flag ${k}${big ? ' (eaves)' : ''}`, buildFlag(k, big)])),
+  ];
+  for (const [name, root] of models) assert.deepEqual(zFights(root), [], `${name}: no coplanar faces in two colours`);
+}
+console.log('voxel models free of z-fighting ok');
+
+// Execute the actual scene/simulation with Three.js geometry and a CPU renderer stub.
+// This checks integration without requiring a GPU or adding production-only test hooks.
+const { readFileSync } = await import('node:fs');
+const vm = await import('node:vm');
+const THREE = await import('three');
+const models = await import('../src/scene/models.js');
+const chart = await import('../src/game/chart.js');
+const mainSource = loadMainSource();
+const progress = await import('../src/game/progress.js');
+const stars = await import('../src/hud/stars.js');
+const practice = await import('../src/game/practice.js');
+const energy = await import('../src/game/energy.js');
+const bubblesLogic = await import('../src/game/bubble-rules.js');
+const framing = await import('../src/scene/framing.js');
+const dance = await import('../src/game/dance.js');
+const titleLayoutLogic = await import('../src/hud/title-layout.js');
+const orbitLogic = await import('../src/scene/orbit.js');
+const leaderboardResult = await import('../src/services/leaderboard-result.js');
+const shareLogic = await import('../src/services/share.js');
+const { setupShare } = await import('../src/ui/share-ui.js');
+const { setupLoader } = await import('../src/ui/loader.js');
+const { errors } = await import('../src/services/errors.js'); // the real one: off here (no window, no DSN)
+const loaderTimers = []; // #loader's delays, run by hand: flushLoader()
+const flushLoader = () => { while (loaderTimers.length) loaderTimers.shift()(); };
+const nodes = new Map();
+const keyHandlers = [];
+const windowHandlers = {};
+const drawnText = [];
+const hudWork = { ops: 0, clears: 0 }; // every read of a canvas method or property («mode foto» draws nothing)
+const drawing = new Proxy({}, { get: (_, key) => (hudWork.ops++, key === 'clearRect' && hudWork.clears++, key === 'fillText') ? value => drawnText.push(value)
+  : key === 'measureText' ? s => ({ width: String(s).length * 6 }) : key === 'createLinearGradient' ? () => ({ addColorStop() {} }) : () => {}, set: () => true });
+const document = {
+  hidden: false,
+  focused: true,
+  hasFocus() { return this.focused; },
+  listeners: {},
+  addEventListener(type, handler) { this.listeners[type] = handler; },
+  body: { appendChild() {}, classList: { contains: () => false, toggle() {} } },
+  createElement: () => ({ style: {}, setAttribute() {}, appendChild() {} }),
+  getElementById(id) {
+    if (!nodes.has(id)) nodes.set(id, {
+      style: {}, dataset: {}, options: [{}, {}], listeners: {}, open: false,
+      addEventListener(type, handler) { this.listeners[type] = handler; },
+      showModal() { this.open = true; }, close() { this.open = false; },
+      focus() {}, blur() {}, setAttribute() {}, classList: { toggle() {}, add() {}, remove() {} }, contains: () => false,
+      getContext: () => drawing,
+    });
+    return nodes.get(id);
+  },
+  querySelectorAll: () => [],
+};
+class Renderer {
+  constructor() { this.shadowMap = {}; }
+  setPixelRatio() {}
+  setSize() {}
+  render() {}
+}
+const context = vm.createContext({
+  ...leaderboardResult,
+  ...await import('../src/dev/final-test.js'), ALIAS_KEY: 'leaderboard-alias', DECLINES_KEY: 'publish-declines', // ?final: off here (no hostname)
+  errors,
+  THREE: { ...THREE, WebGLRenderer: Renderer }, ...await import('../src/scene/crowd-fx.js'), ...models, ...chart, ...progress, ...stars,
+  PROFILES, initialQuality, renderDpr, frameMonitor, hudScale, framePacer, smoothClock, profileAt, hudBudget, startLevel, isSoftwareRenderer, probeRenderer, Chip: class { constructor(song, opts) { context.chipOpts = opts; } setMenuMusic(on) { (context.menuMusicCalls ||= []).push(on); } }, ...practice, ...energy, ...bubblesLogic, ...framing, ...dance, ...titleLayoutLogic, ...orbitLogic, setupSync: hooks => { context.syncHooks = hooks; return context.syncSheet = { open: false, show() { this.open = true; } }; },
+  setupBoard: opts => (context.boardSheet = { opts, open: false, configured: true, shown: [], opened: [], results(show) { this.shown.push(show); }, publishable: false,
+    openBoard(back) { this.open = true; this.opened.push(back); this.back = back; }, verifyStarts: 0, verifyStart() { this.verifyStarts++; },
+    settingsRefreshed: 0, refreshSettings() { this.settingsRefreshed++; }, openPublish(o) { this.publishOpened = o; } }), // src/ui/board-ui.js has its own DOM tests (tests/board-ui.mjs)
+  song: JSON.parse(readFileSync(new URL('../src/song.json', import.meta.url))),
+  ...shareLogic, // the real Comparteix sheet on the mocked DOM (no canvas here: the image fails quietly)
+  setupLoader: doc => setupLoader(doc, { timers: { setTimeout: f => loaderTimers.push(f), clearTimeout() {} } }),
+  sheetFades() {}, // src/ui/sheet-fade.js: scroll fades of the sheets, pure DOM
+  setupNudge: opts => (context.nudgeMock = { opts, armed: 0, arm() { this.armed++; }, done() { this.ended = true; }, hide() {} }), // its rules: tests/feedback-ui.mjs
+  setupProfile: () => ({ isOpen: false, open() {}, refresh() {} }), // src/ui/profile-ui.js
+  setupFeedback: opts => (context.feedbackSheet = { opts, open: false, configured: true, shown: 0, show(back) { this.open = true; this.shown++; this.back = back; } }), // src/ui/feedback-ui.js: tests/feedback-ui.mjs
+  setupShare: opts => (context.shareSheet = setupShare({ ...opts, doc: document, nav: {}, fonts: null, url: { createObjectURL: () => 'blob:card', revokeObjectURL() {} } })),
+  document, navigator: { hardwareConcurrency: 8, deviceMemory: 8 },
+  location: { search: '' }, localStorage: { getItem() {}, setItem() {} },
+  matchMedia: () => ({ matches: false }), addEventListener(type, handler) {
+    (windowHandlers[type] ||= []).push(handler);
+    if (type === 'keydown') keyHandlers.push(handler);
+  },
+  innerWidth: 1280, innerHeight: 720, devicePixelRatio: 1,
+  URLSearchParams, performance: { now: () => 0 }, requestAnimationFrame() {}, window: {}, setTimeout() {}, clearTimeout() {},
+});
+// The vm context has its own Math; models.js's rnd()/pick() (buildPerson, placeHome...) are this realm's, so the
+// tests below seed BOTH (they stay seeded from here on): `seedR = n` inside the context and hostSeed(n) here (else crowd variety is unseeded).
+const hostSeed = n => { let s = n; Math.random = () => (s = (s * 16807) % 2147483647) / 2147483647; };
+hostSeed(5); vm.runInContext('var seedR = 5, seeded = () => (seedR = (seedR * 16807) % 2147483647) / 2147483647, mathRandom = Math.random; Math.random = seeded;', context);
+vm.runInContext(mainSource, context);
+// The camera-fit silhouettes are test-only (the game no longer computes them): they fold her, so the last call restores the standing pose.
+vm.runInContext(`// Fit each part separately: a single tall box wastes the empty space above her back. The margins are the dance's reach
+// (dance.js): the front thrown up by a jump (the rear stays down: 0.4 m per m towards the front) and the swing of a lean.
+function silhouettePoints(collapse = 0) { // prepared once; the head folds beyond the standing footprint
+  mula.neck.rotation.x = 0.15 + collapse * 1.2; mula.head.rotation.x = 0.2;
+  mula.jaw.rotation.x = collapse * 0.6 + 0.12;
+  for (const ear of mula.ears) ear.rotation.x = -0.25 + collapse * 0.9;
+  mula.body.rotation.z = collapse * 0.25; mula.root.position.y = -collapse * 0.42;
+  mula.root.updateMatrixWorld(true);
+  const points = [], p = new THREE.Vector3();
+  mula.root.traverse(m => {
+    if (!m.isMesh) return;
+    m.geometry.computeBoundingBox(); const b = m.geometry.boundingBox;
+    for (let i = 0; i < 8; i++) {
+      p.set(i & 1 ? b.max.x : b.min.x, i & 2 ? b.max.y : b.min.y, i & 4 ? b.max.z : b.min.z).applyMatrix4(m.matrixWorld);
+      const rise = 0.45 + Math.max(0, 0.4 * (p.z + 1.6)), swing = Math.max(0, 0.47 * (p.y - 0.9));
+      points.push(p.x, p.y + rise, p.z, p.x - swing, p.y, p.z, p.x + swing, p.y, p.z, p.x, Math.max(-0.05, p.y - 0.5), p.z); // (never below the floor: it hides that)
+    }
+  });
+  return new Float32Array(points);
+}
+const COLLAPSE_POINTS = new Float32Array([...silhouettePoints(0.5), ...silhouettePoints(0.8), ...silhouettePoints(1)]);
+const MULA_POINTS = silhouettePoints();
+`, context);
+const run = source => vm.runInContext(source, context);
+run('qualityLevel = 0; applyRenderQuality();');
+assert(run('crowd.some(p => !p.g.visible)'), 'downgrade hides some spectators');
+assert(run('crowd.every(p => p.g.scale.x === (p.g.visible ? p.scale : 0))'), 'hidden spectators shrink to nothing in the skinned crowd mesh');
+assert(run('[...crowd, ...plaza.band, ...plaza.balcony].every(p => { let n = 0; p.g.traverse(o => { if (o.isMesh) n++; }); return n === 0; }) && crowdMesh.isSkinnedMesh && crowdMesh.skeleton.bones.length === [...crowd, ...plaza.band, ...plaza.balcony].reduce((n, p) => n + 1 + p.legs.length + p.arms.length, 0)'),
+  'the whole crowd, the band (instruments and all) and balcony people are one skinned mesh, its bones their own pivots');
+assert(run('(() => { let plain = 0, shared = 0; scene.traverse(o => { if (o.isMesh && !o.isSkinnedMesh && !o.isInstancedMesh) { plain++; if (o.material === crowdMesh.material) shared++; } }); return plain > 0 && shared === 0; })()'),
+  'the skinned crowd has a material of its own (shared with plain meshes, three.js would switch programs twice a frame)');
+assert(run('plaza.balcony.length > 20 && plaza.balcony.length <= PROFILES[2].balconies && plaza.balcony.every((p, i) => p.g.scale.x === (i < PROFILES[0].balconies ? 1 : 0))'), 'fewer balcony people at low');
+assert(run('plaza.backdrop.mesh.count === PROFILES[0].backdrop && plaza.backdrop.n === PROFILES[2].backdrop'), 'the backdrop thins out at low');
+assert(run('midCrowd.mesh.count === PROFILES[0].mid && midCrowd.n >= PROFILES[1].mid'), 'the mid band thins out at low');
+run('qualityLevel = 2; applyRenderQuality();');
+assert(run('crowd.every(p => p.g.visible && p.g.scale.x === p.scale && p.scale === (p.kid ? 0.72 : 1)) && crowdMesh.castShadow'), 'upgraded again: everyone back at full size (kids smaller), casting shadows');
+assert(run('plaza.balcony.every(p => p.g.scale.x === 1) && plaza.backdrop.mesh.count === PROFILES[2].backdrop'), 'balconies and the full backdrop come back');
+// The mid band stands on the far side from the play camera, nowhere near its line to her (she stays within 1 m of the
+// middle; the camera 8–22 m back, kept in the square).
+assert(run(`(() => { const m = new THREE.Matrix4(), v = new THREE.Vector3(), bad = [];
+  for (let i = 0; i < midCrowd.mesh.count; i++) {
+    midCrowd.mesh.getMatrixAt(i, m); v.setFromMatrixPosition(m);
+    for (let x = -1; x <= 1; x++) for (let z = -1; z <= 1; z++) for (const d of [8, 15, 22]) {
+      const c = insidePlaza(new THREE.Vector3(x + d * CAM_DIR[0], 1 + d * CAM_DIR[1], z + d * CAM_DIR[2]), x, 1, z);
+      const vx = x - c.x, vz = z - c.z, k = Math.max(0, Math.min(1, ((v.x - c.x) * vx + (v.z - c.z) * vz) / (vx * vx + vz * vz)));
+      if (Math.hypot(v.x - c.x - vx * k, v.z - c.z - vz * k) < 4) bad.push([v.x, v.z, d]);
+    }
+  }
+  return bad.length === 0 || JSON.stringify(bad.slice(0, 3)); })()`) === true, 'the mid band is never between the play camera and her');
+// The band: as many as the quality allows (a full line-up at every size), at the ring's edge across the plaça from the
+// play camera, facing the middle, never between the camera and her, with room in the ring; it plays on the song's beat.
+for (const q of [0, 1, 2]) {
+  run(`qualityLevel = ${q}; applyRenderQuality();`);
+  const b = JSON.parse(run(`JSON.stringify(plaza.band.filter(p => p.g.scale.x > 0).map(p => ({ kind: p.kind, x: p.g.position.x, z: p.g.position.z, yaw: p.g.rotation.y })))`));
+  assert.equal(b.length, run(`PROFILES[${q}].band`), `quality ${q}: ${b.length} musicians`);
+  assert(['clarinet', 'trumpet', 'trombone', 'tuba', 'bombo'].every(k => b.some(m => m.kind === k)), `quality ${q}: woodwind, brass and a bombo`);
+  assert(run(`plaza.band.slice(PROFILES[${q}].band).every(p => p.g.scale.x === 0)`), `quality ${q}: the rest hidden`);
+  for (const m of b) {
+    const r = Math.hypot(m.x, m.z);
+    assert(r > 9.5 && r < 11, `quality ${q}: ${m.kind} at the ring's edge (${r.toFixed(2)})`);
+    assert(Math.abs(Math.sin(m.yaw) * m.x + Math.cos(m.yaw) * m.z + r) < 1e-6, `quality ${q}: ${m.kind} faces the middle`);
+    for (let n = 0; n < 2; n++) for (let o = 0; o < 2; o++) for (const d of [8, 15, 22]) { // her within 1 m of the middle
+      const hx = n * 2 - 1, hz = o * 2 - 1, c = JSON.parse(run(`JSON.stringify(insidePlaza(new THREE.Vector3(${hx} + ${d} * CAM_DIR[0], 1 + ${d} * CAM_DIR[1], ${hz} + ${d} * CAM_DIR[2]), ${hx}, 1, ${hz}))`));
+      const vx = hx - c.x, vz = hz - c.z, k = Math.max(0, Math.min(1, ((m.x - c.x) * vx + (m.z - c.z) * vz) / (vx * vx + vz * vz)));
+      assert(Math.hypot(m.x - c.x - vx * k, m.z - c.z - vz * k) > 3, `quality ${q}: ${m.kind} is nowhere near the play camera's line to her`);
+    }
+    assert(run(`crowd.every(p => Math.hypot(p.pos.x - ${m.x}, p.pos.y - ${m.z}) > 1)`), `quality ${q}: the ring leaves the band room`);
+  }
+}
+{
+  const pose = (beat, live = 1) => JSON.parse(run(`poseBand(plaza.band, ${beat}, ${live}); JSON.stringify(Object.fromEntries(['bombo', 'caixa', 'plats', 'clarinet'].map(k => { const p = plaza.band.find(q => q.kind === k); return [k, { rest: p.rest, arms: p.arms.map(a => [a.rotation.x, a.rotation.z]), nod: p.torso.rotation.x }]; })))`));
+  const at = (m, i) => Math.abs(m.arms[i][0] - m.rest[i * 2]) + Math.abs(m.arms[i][1] - m.rest[i * 2 + 1]);
+  for (const k of [4, 5, 37]) { // on the beat: mallet and right stick on the drums, winds nod; between: sticks up
+    const on = pose(k), half = pose(k + 0.5), up = pose(k + 0.7);
+    assert(at(on.bombo, 1) < 1e-9 && at(on.caixa, 1) < 1e-9 && at(half.caixa, 0) < 1e-9, `beat ${k}: bombo and caixa strike on the beat, the left stick between`);
+    assert(at(up.bombo, 1) > 0.5 && at(half.caixa, 1) > 0.3, `beat ${k}: the mallet and stick are up between the hits`);
+    assert(on.clarinet.nod > 0.04 && Math.abs(half.clarinet.nod) < 1e-9, `beat ${k}: the winds nod on the beat`);
+    assert((k % 2 === 0) === (at(on.plats, 0) < 1e-9 && at(on.plats, 1) < 1e-9), `beat ${k}: the plats crash every other beat`);
+  }
+  const still = pose(4.6, 0);
+  assert(['bombo', 'caixa', 'plats', 'clarinet'].every(k => at(still[k], 0) + at(still[k], 1) < 1e-9 && still[k].nod === 0), 'before the first note the band holds still');
+  run('animCrowd(0.016, 8, 0, 1)');
+  assert(run('plaza.band.find(p => p.kind === "bombo").arms[1].rotation.z === plaza.band.find(p => p.kind === "bombo").rest[3]'), 'the crowd update plays the band on the beat');
+}
+run('G.finale = true; for (let i = 0; i < 60; i++) animCrowd(0.05, i / 10, 0); G.finale = false;');
+assert(run('plaza.backdrop.u.uWave.value > 0.9 && crowd.some(p => p.arms[0].rotation.x < -2.5)'), 'the finale sends a wave round the ring, backdrop included');
+run('qualityLevel = 0; applyRenderQuality();');
+assert(run('!crowdMesh.castShadow && !crowdMesh.receiveShadow'), 'no spectator shadows below high');
+// Force candidate selection toward a hidden spectator if one is offered.
+context.pick = candidates => candidates.find(p => p?.g && !p.g.visible) ?? candidates[0];
+run(`animCrowd(0, 0, 0); scene.updateMatrixWorld(true);
+  chip = { sfx() {}, t0: 0, now: () => clock }; camera.position.set(2, 12, 24); camera.lookAt(0, 6, 0); camera.updateMatrixWorld(true);
+  Object.assign(G, { state: 'play', diff: 1, go: 0, energy: 1, streak: 0, combo: 5 }); M.missT = -9; clock = 10;
+  rests = restTimeline([{ t: 0 }, { t: 200 }]);
+  bubble('VISCA!', null);`);
+assert(run(`bubbles.length === 1 && bubbles.every(b => {
+  const anchor = b.pos();
+  return crowd.some(p => p.g.visible && p.g.position.x === anchor.x && p.g.position.z === anchor.z);
+})`), 'rest bubbles stay anchored to visible spectators after downgrade');
+const inView = `bubbles.every(b => { const v = bubbleView(); return !b.shown || (b.box.x0 >= v.l - 0.01 && b.box.x1 <= v.r + 0.01 && b.box.y0 >= v.t - 0.01 && b.box.y1 <= v.b + 0.01); })`;
+run(`var chat = diff => { bubbles.length = 0; lastBubble = -9; nextChatter = 0; G.diff = diff; var seen = new Set(), most = 0;
+    rests = restTimeline([{ t: clock - 1 }, { t: clock + 200 }]);
+    for (let f = 0; f < 600; f++) { clock += 1 / 30; drawBubbles(); bubbles.forEach(b => seen.add(b)); most = Math.max(most, bubbles.length); if (!(${inView})) return 'out'; }
+    return { lines: [...seen].map(b => b.txt), most }; };
+  Object.assign(G, { streak: 0, combo: 5, energy: 1 }); M.missT = -9;
+  var hard = chat(2), normal = chat(1), easy = chat(0);
+  G.streak = 2; var struggling = chat(2); G.streak = 0; G.combo = 1; var stillShaken = chat(2); G.combo = 4; var recovered = chat(2);
+  G.practice = {}; var practising = chat(2); G.practice = null;`);
+for (const diff of ['hard', 'normal', 'easy']) {
+  assert(run(`${diff} !== 'out' && ${diff}.lines.length >= 2 && ${diff}.lines.length <= 3 && ${diff}.most === 1`), `${diff}: one bubble at a time, at least eight seconds apart`);
+  assert(run(`${diff}.lines.every(w => CHATTER.includes(w))`), 'chatter belongs to musical rests');
+}
+assert.deepEqual([run('struggling.lines.length'), run('stillShaken.lines.length'), run('practising.lines.length')], [0, 0, 0], 'hushed while struggling and practising');
+assert(run('recovered.lines.length') > 0, 'back once the player recovers');
+run(`clock = 10; var bubbleSongTime = 10; chip.now = () => bubbleSongTime; rests = restTimeline([{ t: 0 }, { t: 20 }]); bubbles.length = 0; lastBubble = -9; nextChatter = 100;
+  bubble('VISCA!', null); var restDuration = bubbles[0].dur;
+  clock += 0.1; bubbleSongTime = 19.81; drawBubbles(); var clearBeforeNote = bubbles.length;
+  bubbleSongTime = 20; lastBubble = -9; var duringNote = bubble('VISCA!', null);
+  G.counts = { perfect: 0, good: 0, miss: 0 }; G.errors = { early: 0, late: 0, move: 0, silent: 0, both: 0, hold: 0 }; G.score = 0; G.maxCombo = 0;
+  G.combo = 9; G.praise = null; judge({ phrase: 0 }, 'perfect'); var comboHeadline = G.praise;
+  judge({ phrase: 0 }, 'miss'); var firstMissSpeech = bubbles.length;
+  judge({ phrase: 0 }, 'miss'); judge({ phrase: 0 }, 'miss'); var missHeadline = G.praise;
+  G.energy = 0.4; G.energyWarn = [true, true]; cheer({}, 'miss'); var warningPulse = G.energyWarnT;
+  G.energy = 1; M.missT = -9;`);
+assert.equal(run('restDuration'), 2, 'optional bubbles always last two seconds');
+assert.equal(run('clearBeforeNote'), 0, 'clear speech before the next playable event');
+assert.equal(run('duringNote'), false, 'no speech at a note');
+assert.equal(run('firstMissSpeech'), 0, 'misses do not add speech');
+assert(run('comboHeadline === null && missHeadline === null'), 'combo and miss streaks do not add headlines');
+assert(run('warningPulse === clock && bubbles.length === 0'), 'energy warnings pulse the meter without speech');
+// a phone: the bubble never crosses the notch, the edges, the lane band or the pad
+run(`innerWidth = 375; innerHeight = 667; resize(); rests = restTimeline([{ t: clock - 1 }, { t: clock + 100 }]); G.go = 0; chip = { t0: 0, now: () => clock, sfx() {} }; shaken = false; bubbles.length = 0; lastBubble = -9; G.diff = 2; G.streak = 0; G.combo = 5; G.energy = 1;
+  for (const p of activeCrowd) { const b = { txt: 'UN CALÇOT, SISPLAU!', pos: at(p.g, 2.3), t0: clock, dur: 9, col: C.dark, size: 9, w: textWidth('UN CALÇOT, SISPLAU!', 9) + 10, box: {}, shown: false }; bubbles.push(b); }
+  drawBubbles(); var phoneOk = ${inView}, phoneShown = bubbles.filter(b => b.shown).length; bubbles.length = 0;
+  innerWidth = 1280; innerHeight = 720; resize();`);
+assert(run('phoneOk && phoneShown > 0'), 'on a phone every drawn bubble is whole inside the free area');
+console.log('crowd bubble tuning and placement ok');
+run('firework(0, 10, 0); animFireworks(0.1);');
+assert(run('fireworks.visible && fireworks.count > 0'), 'fireworks appear when triggered');
+assert(run('fireworks.count === sparks.filter(s => s.life > 0).length'), 'only live sparks are drawn');
+run('animFireworks(2);');
+assert(run('!fireworks.visible && fireworks.count === 0'), 'expired fireworks stop drawing');
+run('burst(0, 0); animConfetti(0.01);');
+assert(run('confetti.visible && !confettiSettled'), 'burst wakes confetti');
+run('for (let i = 0; i < 200; i++) animConfetti(0.05);');
+assert(run('confettiSettled'), 'grounded confetti stop updating');
+run('burst(0, 0); animConfetti(0.01);');
+assert(run('confetti.visible && !confettiSettled'), 'another burst wakes settled confetti');
+// A second burst mid-fall never lifts a piece that is still in the air, and a piece on the floor shrinks away
+// (it never vanishes in a single frame): the floor doesn't pop empty.
+run('for (let i = 0; i < 200; i++) animConfetti(0.05); burst(0, 0); for (let i = 0; i < 6; i++) animConfetti(0.05); globalThis.yBefore = conf.map(c => c.p.y);');
+run('burst(3, 3); animConfetti(0.001);');
+assert(run('conf.every((c, i) => yBefore[i] > 0.03 ? Math.abs(c.p.y - yBefore[i]) < 1 : true)'), 'a burst leaves the confetti still in the air alone');
+run('for (let i = 0; i < 200; i++) animConfetti(0.05); burst(0, 0); for (let i = 0; i < 100; i++) animConfetti(0.05);');
+assert(run('conf.some(c => c.p.y === 0.02 && c.lay > 0)'), 'confetti rests on the floor for a while');
+const scales = JSON.parse(run(`(() => { const out = []; for (let i = 0; i < 90; i++) { animConfetti(0.05); const m = new THREE.Matrix4(); confetti.getMatrixAt(0, m); out.push(new THREE.Vector3().setFromMatrixPosition(m).y > -1 ? new THREE.Vector3().setFromMatrixScale(m).x : null); } return JSON.stringify(out); })()`)).filter(v => v !== null); // (parked out of sight: not drawn)
+assert(scales.every((v, i) => i === 0 || Math.abs(v - scales[i - 1]) < 0.35), 'a piece shrinks away over a second, never in one frame');
+console.log('scene downgrade and particle lifecycle ok');
+
+// Two neighbours on opposite sides of a grid boundary must still repel each other.
+run(`const neighbours = activeCrowd.slice(0, 2);
+  function resetNeighbours() {
+    neighbours.forEach((p, i) => {
+      p.pos.set(0.99 + i * 0.02, 8); p.vel.set(0, 0); p.comfort = 1; p.nerve = 1;
+    });
+  }
+  resetNeighbours();
+  activeCrowd = [neighbours[0]]; animCrowd(0.05, 0, 0, 0); // live 0: before the first note, nobody slowed down yet
+  const isolatedVelocity = neighbours[0].vel.x;
+  resetNeighbours();
+  activeCrowd = neighbours; animCrowd(0.05, 0, 0, 0);`);
+assert(run('neighbours[0].vel.x < isolatedVelocity - 1'), 'collision finds neighbours across cell boundaries');
+run('neighbours.forEach(p => { p.comfort = RING.clear; }); activeCrowd = crowd.filter(p => p.g.visible);'); // (as they were: nobody that bold)
+console.log('crowd neighbour separation ok');
+
+// Nobody walks into anybody: the busiest stretch of the song (her livelier turns, 60–85 s) and the title's demo walk,
+// at high quality (the full crowd), seeded. Footprints are the shirt's rectangle (0.46 x 0.28, a kid 0.72 of it,
+// a rider's kid reaching 0.38 m back) on each person's rendered position and heading, the band's included.
+{
+  const q0 = run('qualityLevel');
+  hostSeed(7); run(`seedR = 7; var crowdNow = 60;
+    chip = { resume() {}, t0: 0, ctx: { currentTime: 0, suspend() {} }, resume() {}, stop() {}, menu() {}, sfx() {}, noiseHit() {}, blip() {}, wake() {},
+      now: () => crowdNow, start: () => Promise.resolve(false) };
+    qualityLevel = 2; applyRenderQuality(); offsetMs = 0; startGame(1); G.state = 'play'; G.guapo = 80;
+    var footprintLog = { overlaps: [], minD: 9, frames: 0, midD: 9 };
+    var midSpots = Array.from({ length: midCrowd.mesh.count }, (_, i) => { const m = new THREE.Matrix4(); midCrowd.mesh.getMatrixAt(i, m); return [m.elements[12], m.elements[14]]; });
+    function footprints() {
+      for (const p of activeCrowd) for (const [x, z] of midSpots) footprintLog.midD = Math.min(footprintLog.midD, Math.hypot(p.g.position.x - x, p.g.position.z - z));
+      const all = activeCrowd.concat(plaza.band.filter(p => p.g.scale.x)).map(p => {
+        const k = p.g.scale.x, th = p.g.rotation.y, back = (p.rider ? 0.38 : 0.14) * k, front = 0.14 * k;
+        return { p, x: p.g.position.x + Math.sin(th) * (front - back) / 2, z: p.g.position.z + Math.cos(th) * (front - back) / 2,
+          u: [Math.cos(th), -Math.sin(th)], v: [Math.sin(th), Math.cos(th)], hw: 0.23 * k, hd: (front + back) / 2 };
+      });
+      const reach = (a, [ax, az]) => a.hw * Math.abs(a.u[0] * ax + a.u[1] * az) + a.hd * Math.abs(a.v[0] * ax + a.v[1] * az);
+      footprintLog.frames++;
+      for (let i = 0; i < all.length; i++) for (let j = i + 1; j < all.length; j++) {
+        const a = all[i], b = all[j];
+        if (a.p.kind && b.p.kind) continue; // musicians stand still
+        const dx = b.x - a.x, dz = b.z - a.z;
+        footprintLog.minD = Math.min(footprintLog.minD, Math.hypot(a.p.g.position.x - b.p.g.position.x, a.p.g.position.z - b.p.g.position.z));
+        if ([a.u, a.v, b.u, b.v].every(ax => Math.abs(dx * ax[0] + dz * ax[1]) < reach(a, ax) + reach(b, ax)) && footprintLog.overlaps.length < 5)
+          footprintLog.overlaps.push([G.state, songTime().toFixed(2), a.p.kind || (a.p.kid ? 'kid' : 'adult'), b.p.kind || (b.p.kid ? 'kid' : 'adult')].join(' '));
+      }
+    }
+    function crowdStep(dt) {
+      crowdNow += dt; clock += dt;
+      const t = songTime(), beat = beatAt(t);
+      if (G.state === 'play') { autoplay(t); advance(t); G.sec = sectionAt(song, t); G.finale = t >= FINALE_T; }
+      animMula(dt, beat, 1);
+      if (G.state === 'play') framePlayCamera(dt, M.pos.x, M.pos.y);
+      animCrowd(dt, beat, t, 1);
+    }
+    for (let k = 0; songTime() < 85; k++) { crowdStep(1 / 30); if (k % 2) footprints(); }
+    toTitle();
+    for (let k = 0; k < 240; k++) { crowdStep(1 / 30); if (k % 2) footprints(); }
+`);
+  const log = JSON.parse(run('JSON.stringify(footprintLog)'));
+  assert(log.frames > 450, 'the whole stretch was sampled');
+  assert.deepEqual(log.overlaps, [], 'no two footprints ever overlap (spectators, kids, riders, the band)');
+  assert(log.minD > 0.5, `people keep their distance (closest centres ${log.minD.toFixed(2)} m)`);
+  assert(log.midD > 0.6, `nobody walks into the mid band's (instanced, unmoving) figures (closest ${log.midD.toFixed(2)} m)`);
+  run(`qualityLevel = ${q0}; applyRenderQuality(); crowd.forEach(p => placeHome(p));`);
+}
+console.log('crowd footprints never overlap ok');
+
+// During the song the plaça stands still and only answers the player's hits, gently (GROOVE): no pose or position
+// ever jumps in one frame, however fast the hits come; with no hits, near-still; the finale is still a festa, and its
+// arrival eases in. Section B (it used to clap and hop on every beat), 60 fps, the full crowd, seeded.
+// Only the first ring (NEAR: the few nearest her that the camera sees, PROFILES near) answers more: a bigger bob and
+// nod, arms coming up, more on a GUAPA and on a streak, and a light bounce on the beat while the streak holds; eased,
+// with its own per-frame limits. Everyone else keeps the calm limits.
+{
+  const q0 = run('qualityLevel');
+  hostSeed(11);
+  const r = JSON.parse(run(`(() => {
+    seedR = 11;
+    qualityLevel = 2; applyRenderQuality(); crowdNow = 75; startGame(1); G.state = 'play'; G.guapo = 90;
+    mood.kick = mood.gr1 = mood.gr2 = mood.gr3 = mood.gr4 = 0; G.combo = 0;
+    const who = () => activeCrowd.filter(p => p.g.scale.x);
+    const pose = p => [p.g.position.x, p.g.position.y, p.g.position.z, p.torso.rotation.x, p.torso.rotation.z, ...p.arms.flatMap(a => [a.rotation.x, a.rotation.z])];
+    let prev = null;
+    const step = (dt, out) => {
+      crowdNow += dt; clock += dt;
+      const t = songTime(), beat = beatAt(t);
+      G.sec = sectionAt(song, t); G.finale = t >= FINALE_T;
+      animMula(dt, beat, 1); framePlayCamera(dt, M.pos.x, M.pos.y); animCrowd(dt, beat, t, 1);
+      const ppl = who(), now = ppl.map(pose);
+      if (prev && out) now.forEach((q, i) => {
+        const o = prev[i], w = ppl[i].way > 0.001 || ppl[i].away || ppl[i].spd > 0.05 || ppl[i].vel.lengthSq() > 4e-4 ? out.way : ppl[i].nearK > 0.02 ? out.ring : out; // the first ring (even fading in or out) has its own limits; walking (making way, settling after it: the next test): their own bucket
+        w.pos = Math.max(w.pos, Math.hypot(q[0] - o[0], q[2] - o[2])); w.y = Math.max(w.y, Math.abs(q[1] - o[1]));
+        for (let k = 3; k < q.length; k++) w.rot = Math.max(w.rot, Math.abs(q[k] - o[k]));
+        w.top = Math.max(w.top, q[1]); if (!ppl[i].fan) w.arm = Math.min(w.arm, q[5]); // arm 0 (ventalls: by the face)
+      });
+      if (out) { out.ringN = Math.max(out.ringN, ppl.filter(p => p.near).length); out.shove = Math.max(out.shove || 0, mood.shoveK); }
+      prev = now;
+    };
+    const win = () => ({ pos: 0, y: 0, rot: 0, top: 0, arm: 0, ringN: 0, ring: { pos: 0, y: 0, rot: 0, top: 0, arm: 0 }, way: { pos: 0, y: 0, rot: 0, top: 0, arm: 0 } });
+    for (let f = 0; f < 240; f++) step(1 / 60); // the first note is long gone: they settle where startGame put them
+    const quiet = win(); for (let f = 0; f < 180; f++) step(1 / 60, quiet);
+    const burst = win();
+    for (let f = 0, k = 0; f < 240; f++) {
+      if (f % 9 === 0) { k++; judge({ phrase: 0, input: k % 5 ? (k % 2 ? 'L' : 'R') : 'B', big: !(k % 5) }, k % 4 ? 'perfect' : 'good'); }
+      if (f === 200) judge({ phrase: 0, input: 'L' }, 'miss');
+      step(1 / 60, burst);
+    }
+    G.combo = 0; for (let f = 0; f < 120; f++) step(1 / 60); // settle again
+    G.combo = 24; const groove = win(); for (let f = 0; f < 240; f++) step(1 / 60, groove); // a streak, no hit: the ring bounces on the beat
+    const streak = win(); // a long streak and GUAPAs: the ring's liveliest
+    for (let f = 0, k = 0; f < 240; f++) { if (f % 9 === 0) { k++; G.combo = 40; judge({ phrase: 0, input: k % 3 ? 'L' : 'B', big: !(k % 3) }, 'perfect'); } step(1 / 60, streak); }
+    crowdNow = 60; prev = null; G.combo = 0; for (let f = 0; f < 240; f++) step(1 / 60); // section B: the plaça loosens up
+    const party = win(); for (let f = 0; f < 240; f++) step(1 / 60, party);
+    crowdNow = FINALE_T - 1; prev = null; step(1 / 60);
+    const fin = win(); for (let f = 0; f < 240; f++) step(1 / 60, fin);
+    return JSON.stringify({ quiet, burst, groove, streak, party, fin, calm: mood.calmK, fest: mood.festK });
+  })()`));
+  const { quiet, burst, groove, streak, party, fin } = r, mm = v => `${(v * 1000).toFixed(1)} mm`;
+  assert(quiet.pos < 2e-3 && quiet.y < 1e-3 && quiet.top < 5e-3 && quiet.rot < 8e-3,
+    `no hits: the plaça stands near-still (per frame ${mm(quiet.pos)} across, ${mm(quiet.y)} up, ${quiet.rot.toFixed(4)} rad; highest ${mm(quiet.top)})`);
+  assert(burst.pos < 9e-3 && burst.y < 0.022 && burst.rot < 0.09, // (the ripple: a hit is seen hopping round the ring, still eased)
+    `a burst of hits (GUAPA and a miss among them) never jolts anyone: per frame ${mm(burst.pos)} across, ${mm(burst.y)} up, ${burst.rot.toFixed(3)} rad`);
+  assert(party.y > quiet.y * 3 && party.y < fin.y, `section B: the plaça hops on the beat (${mm(party.y)} up a frame), less than the finale's ${mm(fin.y)}`);
+  assert((quiet.shove || 0) === 0 && burst.shove > 0.5 && burst.shove <= 1, `a GUAPA shoves the ring (up to ${(burst.shove || 0).toFixed(2)}), silence does not`);
+  assert(burst.top > 0.03 && burst.top < 0.11 && burst.arm > -1.3, `hits answer with a visible bob (up to ${mm(burst.top)}), arms down (${burst.arm.toFixed(2)} rad)`);
+  assert(quiet.ring.top < 5e-3 && quiet.ring.rot < 6e-3, `no hits, no streak: the first ring is as still as everyone (${mm(quiet.ring.top)})`);
+  for (const [name, w] of [['a streak', groove], ['a streak of GUAPAs', streak]]) {
+    assert(w.pos < 9e-3 && w.y < 0.022 && w.top < 0.13 && w.arm > -1.3 && w.rot < 0.09, `${name}: the rest of the plaça stays calm (per frame ${mm(w.pos)} across, ${mm(w.y)} up, ${w.rot.toFixed(3)} rad; up to ${mm(w.top)}, arms ${w.arm.toFixed(2)})`);
+    assert(w.ringN >= 10 && w.ringN <= PROFILES[2].near, `${name}: a first ring of ${w.ringN} reacts`);
+    assert(w.ring.pos < 9e-3 && w.ring.y < 0.03 && w.ring.rot < 0.12,
+      `${name}: the first ring moves smoothly: per frame ${mm(w.ring.pos)} across, ${mm(w.ring.y)} up, ${w.ring.rot.toFixed(3)} rad`);
+  }
+  assert(groove.ring.top > 0.02, `a streak: the first ring bounces on the beat (up to ${mm(groove.ring.top)})`);
+  assert(streak.ring.top > 0.06 && streak.ring.top < 0.25 && streak.ring.arm < -0.4 && streak.ring.arm > -2.1,
+    `hits on a streak: the first ring answers noticeably (bob up to ${mm(streak.ring.top)}, arms up to ${streak.ring.arm.toFixed(2)} rad)`);
+  assert(streak.ring.top > burst.ring.top && burst.ring.top > burst.top, 'the ring answers more than the plaça, and more on a streak');
+  assert(r.fest > 0.9 && r.calm < 0.05 && Math.max(fin.top, fin.ring.top, fin.way.top) > 0.25 && Math.min(fin.arm, fin.ring.arm, fin.way.arm) < -2.5, `the finale is still a festa: hops up to ${Math.max(fin.top, fin.ring.top, fin.way.top).toFixed(2)} m, arms up`);
+  for (const [name, w] of [['no hits', quiet], ['hits', burst], ['a streak', groove], ['a streak of GUAPAs', streak]])
+    // (0.16: an arm slews at most 0.1 rad a frame, plus the stride's counter-swing; a GUAPA's shove makes more people make way.
+    // The worst frame moves 0.13-0.155 with the seeded crowd, e.g. after the escut's boxes changed: a snap is far above, see the festa below)
+    assert(w.way.pos < 0.024 && w.way.rot < 0.16, `${name}: whoever walks (making way, settling) walks smoothly (${mm(w.way.pos)}, ${w.way.rot.toFixed(3)} rad per frame)`);
+  const finRot = Math.max(fin.rot, fin.ring.rot, fin.way.rot), finY = Math.max(fin.y, fin.ring.y, fin.way.y);
+  assert(finRot < 0.25 && finY < 0.1, `the festa eases in, no snap (per frame ${finRot.toFixed(3)} rad, ${mm(finY)} up)`);
+  console.log('the crowd stays calm during the song and answers hits gently ok');
+  run(`qualityLevel = ${q0}; applyRenderQuality(); crowd.forEach(p => placeHome(p)); G.finale = false; mood.kick = mood.gr1 = mood.gr2 = mood.gr3 = mood.gr4 = 0; G.combo = 0;`);
+}
+
+// The plaça fills with how well it goes: with few hits right, some of the back rows aren't there (scale 0, eased);
+// with many they all are; the front row and the menus always are.
+{
+  const q0 = run('qualityLevel');
+  const r = JSON.parse(run(`(() => {
+    qualityLevel = 2; applyRenderQuality(); crowd.forEach(p => placeHome(p)); crowdNow = 0; startGame(1); G.state = 'play';
+    const run = (guapo, frames) => { G.counts = { perfect: guapo, good: 0, miss: 100 - guapo }; G.guapo = guapo;
+      for (let f = 0; f < frames; f++) { crowdNow += 1 / 60; clock += 1 / 60; const t = songTime(), b = beatAt(t); G.sec = sectionAt(song, t); animMula(1 / 60, b, 1); framePlayCamera(1 / 60, M.pos.x, M.pos.y); animCrowd(1 / 60, b, t, 1); } };
+    const gone = () => activeCrowd.filter(p => !p.g.scale.x), front = () => activeCrowd.filter(p => p.row === 0 && !p.g.scale.x).length;
+    run(100, 60); const full = gone().length;
+    run(50, 60 * 12); const poor = gone().length, poorFront = front();
+    run(100, 60 * 12); const back = gone().length;
+    G.state = 'results'; run(50, 60 * 12); const menu = gone().length; G.state = 'play';
+    return JSON.stringify({ full, poor, poorFront, back, menu, total: activeCrowd.length });
+  })()`));
+  assert(r.full === 0 && r.back === 0, 'with a good run everyone is there');
+  assert(r.poor >= r.total * 0.1 && r.poor <= r.total * 0.5, `a poor run empties part of the back rows (${r.poor} of ${r.total})`);
+  assert(r.poorFront === 0, 'the front row is always there');
+  assert(r.menu === 0, 'the results screen has the whole plaça');
+  console.log('the plaça fills with how well it goes ok');
+  run(`qualityLevel = ${q0}; applyRenderQuality(); crowd.forEach(p => placeHome(p)); mood.presK = 1;`);
+}
+
+// Making way (RING): a clear ring of open floor round her all song; when her body or swinging rear comes at someone
+// they step back, eased and capped (no jolts), hands up, then walk slowly back to their spot once she has gone.
+// Her turns (90–108 s: the half turns and the livelier ones before the finale), 60 fps, the full crowd, seeded.
+{
+  const q0 = run('qualityLevel');
+  hostSeed(23);
+  const r = JSON.parse(run(`(() => {
+    seedR = 23;
+    qualityLevel = 2; applyRenderQuality(); crowdNow = 86; startGame(1); G.state = 'play'; G.guapo = 90; G.combo = 0;
+    const ppl = [...activeCrowd], prev = new Map(), out = { minClear: 99, step: 0, dv: 0, rot: 0, made: new Set(), back: 0, frames: 0, calmStep: 0 };
+    const clearOf = p => { const dx = p.pos.x - M.pos.x, dz = p.pos.y - M.pos.y, c = Math.cos(M.yaw), s = Math.sin(M.yaw);
+      return Math.hypot(Math.max(0, Math.abs(dx * c - dz * s) - 0.75), Math.max(0, Math.abs(dx * s + dz * c) - 2.3)); };
+    for (let f = 0; crowdNow < 108; f++) {
+      const dt = 1 / 60; crowdNow += dt; clock += dt;
+      const t = songTime(), beat = beatAt(t);
+      G.sec = sectionAt(song, t); G.finale = t >= FINALE_T;
+      animMula(dt, beat, 1); framePlayCamera(dt, M.pos.x, M.pos.y); animCrowd(dt, beat, t, 1);
+      if (t < 90) continue;
+      out.frames++;
+      for (const p of ppl) {
+        out.minClear = Math.min(out.minClear, clearOf(p));
+        const o = prev.get(p), q = [p.g.position.x, p.g.position.z, o ? p.g.position.x - o[0] : NaN, o ? p.g.position.z - o[1] : NaN, p.torso.rotation.x, ...p.arms.map(a => a.rotation.x)];
+        prev.set(p, q);
+        if (p.way > 0.5) out.made.add(p);
+        if (!o) continue;
+        const step = Math.hypot(q[0] - o[0], q[1] - o[1]);
+        if (p.way > 0.001 || p.away) {
+          out.step = Math.max(out.step, step); if (o[2] === o[2]) out.dv = Math.max(out.dv, Math.hypot(q[2] - o[2], q[3] - o[3])); // (NaN: no step before)
+          for (let k = 4; k < q.length; k++) out.rot = Math.max(out.rot, Math.abs(q[k] - o[k]));
+        } else out.calmStep = Math.max(out.calmStep, step);
+      }
+    }
+    for (let f = 0; f < 600; f++) { const dt = 1 / 60; clock += dt; animCrowd(dt, 0, 0, 1); } // she stands still (no song time): they come back
+    const free = [...out.made].filter(p => clearOf({ pos: p.spot }) > p.comfort + RING.back + 0.2); // their spot is clear of her again
+    out.back = free.filter(p => p.pos.distanceTo(p.spot) < 0.35).length;
+    out.away = free.filter(p => p.away).length; out.free = free.length;
+    out.made = out.made.size;
+    return JSON.stringify(out);
+  })()`));
+  assert(r.frames > 1000, 'the whole stretch was sampled');
+  assert(r.minClear > 1.2, `open floor round her all along (closest ${r.minClear.toFixed(2)} m from her body)`);
+  assert(r.made >= 3, `people make way as she turns (${r.made})`);
+  assert(r.step < 0.024 && r.dv < 0.008 && r.rot < 0.15, // (dv: the step's change from one frame to the next)
+    `making way is smooth: per frame ${(r.step * 1000).toFixed(1)} mm, its change ${(r.dv * 1000).toFixed(2)} mm, ${r.rot.toFixed(3)} rad`);
+  assert(r.calmStep < 0.024, `everyone else at most jostled aside (the no-overlap limit), never faster than making way (${(r.calmStep * 1000).toFixed(1)} mm)`);
+  assert(r.free >= 1 && r.back >= r.free / 2 && r.away <= r.free / 4, `once she has gone they walk back to their spots (${r.back} of ${r.free} free to, ${r.away} still away)`);
+  console.log('the crowd makes way for her, smoothly, and comes back ok');
+  run(`qualityLevel = ${q0}; applyRenderQuality(); crowd.forEach(p => placeHome(p)); G.finale = false; G.combo = 0;`);
+}
+
+// Leaving a paused game must resume the menu and allow the next game to run.
+run(`let resumes = 0;
+  chip = { stop() {}, menu() {}, resume() { resumes++; }, ctx: {} };
+  G.state = 'play'; G.paused = true;
+  toTitle();`);
+assert.equal(run('G.paused'), false, 'menu clears pause after Escape');
+assert.equal(run('resumes'), 1, 'menu resumes suspended audio');
+
+// Loading a recording may finish after the player has already left the game.
+run(`let resolveStart, countIns = 0;
+  chip = { resume() {}, stop() {}, menu() {}, sfx() {},
+    start() { return new Promise(resolve => { resolveStart = resolve; }); },
+    countIn() { countIns++; }, ctx: { resume() {} } };
+  startGame(0); toTitle(); resolveStart(false);`);
+await Promise.resolve();
+assert.equal(run('countIns'), 0, 'cancelled starts cannot schedule a count-in');
+console.log('menu pause and cancelled start contracts ok');
+
+// Loading (src/ui/loader.js): the page cover lifts once the first frame is drawn; a game whose song is still
+// downloading/decoding shows «Preparant la música…» (only after the delay), gone when the count-in can start.
+{
+  const card = nodes.get('loader'), line = nodes.get('loader-text');
+  run('loader.ready()'); flushLoader();
+  assert.equal(card.hidden, true, 'the cover goes after the first frame');
+  run(`var resolveSong; chip = { resume() {}, stop() {}, menu() {}, sfx() {}, countIn() {}, ctx: { resume() {} },
+    start() { return new Promise(resolve => { resolveSong = resolve; }); } };
+    startGame(1);`);
+  assert.equal(card.hidden, true, 'no spinner before the delay: short waits never flash one');
+  flushLoader();
+  assert(card.hidden === false && line.textContent === 'Preparant la música…', 'a slow song load says so');
+  run('resolveSong(true)'); await Promise.resolve(); flushLoader();
+  assert.equal(card.hidden, true, 'the card goes when the song starts');
+  run('chip.buf = {}; startGame(1)'); flushLoader();
+  assert.equal(card.hidden, true, 'a decoded song starts with no card');
+  run('delete chip.buf; startGame(1); toTitle();'); flushLoader();
+  assert.equal(card.hidden, true, 'leaving for the title drops the card');
+  // The first drawn frame lifts the cover on every input path (touch too), once; waits on the splash's tap don't matter.
+  run(`var readies = 0; { const r = loader.ready; loader.ready = () => { readies++; r(); }; }
+    drawn = false; coverUp = true; fontsIn = false; coverAt = null; COARSE.matches = true; G.state = 'splash'; chip = null; warmStart(); frame(5000);`);
+  await Promise.resolve(); await Promise.resolve(); // it waits for the web fonts (resolved at once here)
+  // and for the queued words (the count-in's big outlined ones, the title's): painted under the cover, one a frame,
+  // not on the splash where the first tap lands
+  const queued = run('warmups.length');
+  assert(queued >= 8, `the splash queues the title's words and the count-in's (${queued})`);
+  run(`Object.defineProperty(loader, 'covering', { get: () => coverUp, configurable: true })`); // (this harness lifted its cover long ago)
+  run('frame(5020)');
+  assert.equal(run('readies'), 0, 'the cover stays while words are still queued');
+  assert.equal(run('warmups.length'), queued - 1, 'under the cover: one a frame, not one per 0.25 s');
+  for (let f = 2; run('readies') === 0 && f < 60; f++) run(`frame(${5000 + f * 20})`);
+  assert.equal(run('readies'), 1, 'touch: then the cover lifts, once');
+  assert.equal(run('warmups.length'), 0, 'every queued word painted before it did');
+  run(`warmStart(); warmups.push(...Array(200).fill(() => {})); coverUp = true; coverAt = null;`); // a device too slow to finish them
+  for (let f = 0; run('coverUp') && f < 100; f++) run(`frame(${8000 + f * 40})`);
+  assert(!run('coverUp') && run('warmups.length') > 0, 'the cover never waits more than COVER_WARM for them');
+  run(`warmups.length = 0; COARSE.matches = false; Object.defineProperty(loader, 'covering', { get: () => false, configurable: true });`);
+}
+console.log('loading indicator contracts ok');
+
+const rejectedLoads = [];
+const onUnhandled = error => rejectedLoads.push(error);
+process.on('unhandledRejection', onUnhandled);
+run(`chip = { resume() {}, stop() {}, menu() {}, sfx() {}, ctx: { resume() {} },
+  start() { return Promise.reject(new Error('recording unavailable')); } };
+  startGame(0);`);
+await new Promise(resolve => setImmediate(resolve));
+process.removeListener('unhandledRejection', onUnhandled);
+assert.equal(run('G.state'), 'title', 'failed recording returns to the menu');
+assert(run('Boolean(G.audioError)'), 'failed recording explains how to retry');
+assert.equal(rejectedLoads.length, 0, 'failed loading is handled');
+console.log('audio error recovery contract ok');
+
+run(`chip = { resume() {}, wake() {}, ctx: { suspend() {}, resume() {} }, stop() {}, menu() {} };
+  G.state = 'play'; G.paused = false; G.collapseT = 0;`);
+for (const handler of keyHandlers) handler({ code: 'Escape', target: { tagName: 'BODY' }, preventDefault() {} });
+assert.equal(run('G.state'), 'play', 'Escape keeps the game');
+assert.equal(run('G.paused'), true, 'Escape pauses the game');
+assert(nodes.get('pause-menu').open, 'pause opens a modal menu');
+run('requestPauseAction("exit");');
+assert.equal(run('G.state'), 'play', 'menu requires confirmation');
+assert.equal(run('G.paused'), true);
+nodes.get('pause-menu').listeners.cancel({ preventDefault() {} });
+assert.equal(run('G.pendingAction'), null, 'Escape dismisses confirmation first');
+assert.equal(run('G.paused'), true, 'dismissing confirmation retains pause');
+run('requestPauseAction("exit");');
+nodes.get('confirm-action').listeners.click();
+assert.equal(run('G.state'), 'title', 'confirmed menu exits');
+assert.equal(nodes.get('pause-menu').open, false);
+run(`chip = { resume() {}, ctx: { suspend() {}, resume() {} }, stop() {}, menu() {}, sfx() {},
+  start() { return Promise.resolve(false); } };
+  startGame(0); togglePause(); requestPauseAction('restart');`);
+const chartBeforeRestart = run('G.chart');
+assert.equal(run('G.chart'), chartBeforeRestart, 'restart waits for confirmation');
+nodes.get('cancel-action').listeners.click();
+assert.equal(run('G.chart'), chartBeforeRestart, 'cancel preserves the game');
+run('requestPauseAction("restart");');
+nodes.get('confirm-action').listeners.click();
+assert.notEqual(run('G.chart'), chartBeforeRestart, 'confirmed restart creates a new game');
+assert.equal(run('G.paused'), false);
+console.log('Escape, pause menu and confirmation contracts ok');
+
+run(`let suspends = 0, wakes = 0;
+  chip = { resume() {}, wake() { wakes++; }, t0: 0, now: () => 5, start() { return Promise.resolve(true); }, countIn() {}, ctx: { suspend() { suspends++; }, resume() {} } };
+  G.state = 'play'; G.paused = false; G.collapseT = 0;`);
+document.hidden = true;
+document.listeners.visibilitychange?.();
+assert.equal(run('G.paused'), true, 'hiding the tab pauses gameplay');
+assert(run('suspends > 0'), 'background audio is suspended');
+document.listeners.visibilitychange();
+assert.equal(run('G.paused'), true, 'repeated background events retain pause');
+document.hidden = false;
+document.listeners.visibilitychange();
+assert.equal(run('G.paused'), true, 'returning to the tab requires explicit resume');
+assert.equal(run('wakes'), 0, 'returning does not restart paused audio');
+run('togglePause();');
+assert.notEqual(run('G.resuming'), null, 'explicit resume starts a 3, 2, 1');
+assert.equal(run('G.paused'), true, 'the run stays frozen during the count-in');
+run('G.resuming = null; G.paused = false;'); // the count-in ends (frame() does this once the song clock reaches the pause point)
+document.focused = false;
+windowHandlers.blur.forEach(handler => handler());
+assert.equal(run('G.paused'), true, 'an unfocused visible window also pauses');
+run('togglePause();');
+assert.equal(run('G.paused'), true, 'inactive windows cannot resume');
+run("G.state = 'title'; G.paused = false; suspends = 0;");
+windowHandlers.blur.forEach(handler => handler());
+assert.equal(run('suspends'), 1, 'menu audio is suspended without focus');
+document.focused = true;
+windowHandlers.focus.forEach(handler => handler());
+assert.equal(run('wakes'), 1, 'menu audio wakes when focus returns');
+run("G.state = 'play'; G.paused = false; G.collapseT = 1;");
+windowHandlers.pagehide.forEach(handler => handler());
+assert.equal(run('G.paused'), true, 'page exit also pauses the collapse animation');
+windowHandlers.pageshow.forEach(handler => handler());
+assert.equal(run('G.paused'), true, 'restoring a page retains the paused game');
+console.log('background audio and gameplay pause contracts ok');
+
+run(`G.reason = 'fail'; G.stars = 0; G.resT = clock;
+  G.errors = { early: 0, late: 0, move: 5, silent: 0 };
+  drawResults();`);
+assert(drawnText.includes('Segueix la fletxa: esquerra o dreta'), 'movement advice explains the available controls');
+console.log('results advice matches two-sided control ok');
+
+// GLOBUS: every tap in its window counts (never a wrong move); pops repeat every `need` taps; judged once at the end.
+run(`let songNow = 0, bonks = 0;
+  chip = { resume() {}, t0: 0, ctx: { currentTime: 0, suspend() {}, resume() {} }, stop() {}, menu() {}, blip() {}, noiseHit() {},
+    sfx(k) { if (k === 'bonk') bonks++; }, now: () => songNow, start: () => Promise.resolve(false) };
+  startGame(1); G.state = 'play'; offsetMs = 0;
+  var [b1, b2] = G.balloons; G.next = G.chart.indexOf(b1);
+  songNow = b1.t + 0.1; for (let i = 0; i < b1.need; i++) press(i % 2 ? 'R' : 'P');
+  var afterPop = G.score; press('L'); var oneTap = G.score - afterPop;
+  for (let i = 1; i < b1.need + 1; i++) press(i % 2 ? 'R' : 'L');`);
+assert.equal(run('oneTap'), 50, 'taps after the first pop still score');
+assert.equal(run('b1.hit'), null, 'a balloon is judged only when its window ends');
+assert.equal(run('b1.count'), run('b1.need * 2 + 1'), 'counting goes on after a pop');
+assert.equal(run('G.pop.word'), 'PAM! x2!', 'the second pop is announced');
+assert.equal(run('bonks'), 0, 'balloon taps are never wrong moves');
+run(`var perfects = G.counts.perfect; endBalloon(b1); var judged = G.counts.perfect - perfects;
+  G.next = G.chart.indexOf(b2); songNow = b2.t + 0.1;
+  for (let i = 0; i < Math.ceil(b2.need / 2); i++) press('L');
+  songNow = b2.end - 0.05; press('R'); endBalloon(b2);`);
+assert.equal(run('b1.hit'), 'perfect', 'a popped balloon is perfect');
+assert.equal(run("judged"), 1, 'a balloon is judged once, however many pops');
+assert.equal(run('b2.count'), run('Math.ceil(b2.need / 2)'), 'taps after the hand-off go to the next note');
+assert.equal(run('b2.hit'), 'good', 'a half-inflated balloon is good');
+assert.equal(run('G.praise'), null, 'balloon completion does not add a headline during the song');
+console.log('balloon contracts ok');
+
+// GUAPA: from NORMAL, both buttons within 80 ms = hit x2 (judged on the first press); one button alone is an
+// ERROR once the window closes (never a bonk); the partner press never eats the next note. FÀCIL takes either.
+run(`startGame(2); G.state = 'play'; offsetMs = 0; bonks = 0; var misses = 0;
+  const sfx0 = chip.sfx; chip.sfx = k => { if (k === 'miss') misses++; sfx0(k); }; chip.wake = () => {};
+  var bigs = G.chart.filter(n => n.big), gi = G.chart.findIndex(n => n.big && G.chart[G.chart.indexOf(n) + 1].t - n.t < 0.5); // a note right after the GUAPA
+  var g1 = G.chart[gi], after = G.chart[gi + 1];
+  G.next = gi; songNow = g1.t + 0.06; var s0 = G.score; press('L'); var pending = g1.hit;
+  songNow += 0.05; press('R'); var pair = G.score - s0, pairRing = G.ring;
+  var g2 = bigs.find(n => n.t > g1.t + 1 && n.t < song.end - 1); G.next = G.chart.indexOf(g2);
+  songNow = g2.t; s0 = G.score; press('R'); var lonePending = g2.hit;
+  songNow += 0.09; settleBig(songNow); var lone = G.score - s0;`);
+assert.equal(run('pending'), null, 'one button on a GUAPA waits for the other');
+assert.equal(run('g1.hit'), 'good', 'a GUAPA is judged on the first press');
+assert.equal(run('pair'), run('g1.pts * 2'), 'both buttons together score double');
+assert(run('g1.gran && pairRing.kind === "gran" && pairRing.word === "GUAPA!"'), 'the pair lights the GUAPA! effect');
+assert.equal(run('after.hit'), null, 'the partner press does not eat the next note');
+assert.equal(run('lonePending'), null);
+assert(run('g2.hit === "miss" && g2.detail === "ELS DOS ALHORA!" && !g2.gran'), 'NORMAL+: one button alone is an error');
+assert.equal(run('lone'), 0, 'one button alone scores nothing');
+assert(run('misses > 0 && bonks === 0'), 'the lone press plays the miss sound, never the bonk');
+run(`var g3 = bigs.find(n => n.t > g2.t + 1 && n.t < song.end - 1); G.next = G.chart.indexOf(g3);
+  songNow = g3.t; s0 = G.score; press('P'); var space = G.score - s0;`);
+assert(run('g3.hit === "perfect" && g3.gran && space === g3.pts * 2'), 'Space is both buttons');
+run(`startGame(0); G.state = 'play'; offsetMs = 0;
+  var e1 = G.chart.find(n => n.big), e1n = G.chart[G.chart.indexOf(e1) + 1]; G.next = G.chart.indexOf(e1); songNow = e1.t;
+  s0 = G.score; press('L'); songNow += 0.12; press('R'); var easyPts = G.score - s0;
+  var e2 = G.chart.find(n => n.big && n.t > e1.t + 1 && n.t < song.end - 1); G.next = G.chart.indexOf(e2); songNow = e2.t;
+  press('R'); songNow += 0.2; settleBig(songNow);`);
+assert(run('e1.hit === "perfect" && e1.gran && easyPts === e1.pts * 2'), 'FÀCIL: both buttons too, with a wider window (0.12 s apart still pairs)');
+assert(run('e2.hit === "miss" && e2.detail === "ELS DOS ALHORA!"'), 'FÀCIL: one button alone is an error as well');
+assert.equal(run('e1n.hit'), null, 'FÀCIL: the partner press is swallowed too');
+assert.equal(run('G.chart.some(n => n.end && !n.balloon)'), false, 'FÀCIL plays holds as taps');
+console.log('GUAPA contracts ok');
+
+// Headline slot: one word at a time; a higher (or equal) priority replaces, a lower one is dropped, not queued.
+run(`G.praise = null; clock = 100;
+  headline('FINAL ESBOJARRAT!', 'rainbow', 4, 2.2); var praiseTaken = headline('QUIN ESTIL!', 0, 2), pamTaken = headline('PAM!', 3, 3, 0.9);
+  var duringFinale = G.praise.word;
+  clock += 2.3; var afterFinale = headline('QUIN ESTIL!', 0, 2); var venenuTaken = headline('VENENU!', 'bad', 1);
+  var patapam = headline('PATAPAM!', 'bonk', 2, 1);`);
+assert(run('!praiseTaken && !pamTaken && duringFinale === "FINAL ESBOJARRAT!"'), 'the finale intro outranks everything while it shows');
+assert(run('afterFinale && !venenuTaken && patapam && G.praise.word === "PATAPAM!"'), 'expired words free the slot; lower ranks are dropped; equal ranks replace');
+// A wrong move still stumbles and scores an error, without an extra headline.
+run(`startGame(1); G.state = 'play'; offsetMs = 0; bonks = 0; G.praise = null; clock += 5;
+  var wrong = G.chart.find(n => !n.big && !n.balloon && !n.end && n.input === 'L'); G.next = G.chart.indexOf(wrong);
+  songNow = wrong.t; var pitchV = S.pitch.v; press('R');`);
+assert(run('bonks === 1 && wrong.hit === "miss" && wrong.detail === "MOVIMENT"'), 'a wrong move is a bonk and an error');
+assert(run('G.praise === null && M.missT === clock && S.pitch.v > pitchV'), 'a wrong move trips the mulassa up without a headline');
+assert.equal(run('typeof guia'), 'undefined', 'there is no guide beside the mulassa');
+console.log('headline slot and wrong-move contracts ok');
+
+// Every HUD screen draws without throwing (an exception mid-frame would leave the canvas transformed/clipped):
+// each headline tier, a wrong move, the finale, a globus, a hold, the collapse and every results card.
+run(`var hudT = G.chart[G.next].t;
+  for (const [w, tier] of [['A', 0], ['B', 1], ['C', 2], ['D', 3], ['VENENU!', 'bad'], ['PATAPAM!', 'bonk'], ['EEEEEEH!!', 'rainbow']]) { G.praise = null; headline(w, tier, 2); drawHud(hudT); }
+  G.finale = true; G.finaleT = clock; headline('FINAL ESBOJARRAT!', 'rainbow', 4, 2.2); drawHud(hudT);
+  bubbles.length = 0; drawHud(hudT);
+  var hb2 = G.chart.find(n => n.end && !n.balloon); G.hold = { n: hb2, got: hb2.t, pts: 0, auto: true }; G.holdDone = { t0: clock, dir: 'L' }; drawHud(hb2.t + 0.2); G.hold = null;
+  var bb = G.balloons[0]; bb.count = 3; G.pop = { t0: clock, word: 'PAM!' }; G.pumpT = clock; drawHud(bb.t + 0.2);
+  G.collapseT = clock; drawHud(hudT); G.collapseT = 0; G.finale = false;
+  G.errors = { early: 1, late: 2, move: 3, silent: 0, both: 0, hold: 0 }; G.resT = clock - 2;
+  for (const [reason, rec, prev] of [['clear', true, null], ['fail', false, { quality: 80 }], ['collapse', false, null]]) {
+    G.state = 'results'; G.reason = reason; G.stars = 2; G.newRecord = rec; G.previous = prev; drawHud(0);
+  }
+  for (const st of ['splash', 'title']) { G.state = st; drawHud(0); }`);
+console.log('HUD screens draw without exceptions ok');
+
+// MANTÉN: head judged like a tap; hold the key to the end (last 0.12 s free) for a PERFECTE tail, half for BÉ,
+// less is an ERROR; the tail trickles points while held. Head miss loses the whole hold.
+const key = (type, code) => windowHandlers[type].forEach(h => h({ code, target: { tagName: 'BODY' }, preventDefault() {} }));
+context.key = key;
+run(`startGame(1); G.state = 'play'; offsetMs = 0;
+  var holds = G.chart.filter(n => n.end && !n.balloon), [h1, h2, h3, h4] = holds;
+  function playHold(h, releaseAt, code = h.input === 'L' ? 'KeyD' : 'KeyK') {
+    G.next = G.chart.indexOf(h); songNow = h.t; const c0 = { ...G.counts }, s0 = G.score;
+    key('keydown', code);
+    const holding = G.hold?.n === h;
+    for (let x = h.t; x < releaseAt; x += 0.05) { songNow = x; settleHold(x); }
+    songNow = releaseAt; key('keyup', code); settleHold(releaseAt);
+    return { holding, tail: h.tail, judged: Object.values(G.counts).reduce((a, b) => a + b) - Object.values(c0).reduce((a, b) => a + b), pts: G.score - s0 };
+  }
+  var full = playHold(h1, h1.end - 0.05), part = playHold(h2, h2.t + (h2.end - h2.t) * 0.6), early = playHold(h3, h3.t + 0.1);`);
+assert(run('full.holding && full.tail === "perfect" && full.judged === 2'), 'a hold is head + tail; letting go in the last 0.12 s is full');
+assert(run('full.pts > 2 * (300 + 2)'), 'holding trickles points on top of the two judgements');
+assert.equal(run('part.tail'), 'good', 'half a hold is BÉ');
+assert(run('early.tail === "miss" && G.judge.detail === "HAS DEIXAT ANAR"'), 'letting go early is an error');
+run(`G.next = G.chart.indexOf(h4); var c0 = G.counts.miss; advance(h4.t + WIN.miss + 0.01);`);
+assert(run('h4.tail === "miss" && G.counts.miss - c0 === 2 && !G.hold'), 'a missed head loses the whole hold');
+run(`startGame(1); G.state = 'play'; offsetMs = 0; var hb = G.chart.find(n => n.end && !n.balloon);
+  G.next = G.chart.indexOf(hb); songNow = hb.t; key('keydown', hb.input === 'L' ? 'ArrowLeft' : 'ArrowRight');
+  songNow = hb.t + 0.2; settleHold(songNow);`);
+windowHandlers.blur.forEach(h => h());
+assert(run('hb.tail === "miss" && !G.hold'), 'losing the window focus lets go');
+console.log('hold contracts ok');
+
+// autoplay: both buttons on every GUAPA and every hold kept down to the end
+for (const diff of [0, 1, 2]) {
+  run(`startGame(${diff}); G.state = 'play'; offsetMs = 0;
+    for (let x = G.chart[0].t - 0.5; x < song.end + 0.5; x += 1 / 30) { songNow = x; autoplay(x); advance(x); }`);
+  assert.equal(run('G.counts.miss'), 0, `autoplay ${diff}: no errors`);
+  assert(run('G.chart.filter(n => n.big).every(n => n.hit === "perfect" && n.gran)'), `autoplay ${diff}: both buttons on every GUAPA`);
+  assert(run('G.chart.filter(n => n.end && !n.balloon).every(n => n.tail === "perfect")'), `autoplay ${diff}: every hold kept to the end`);
+  assert.equal(run('G.counts.perfect + G.counts.good'), run('G.chart.length + G.chart.filter(n => n.end && !n.balloon).length'), 'a hold counts head + tail');
+}
+console.log('autoplay GUAPA and hold contracts ok');
+
+// Practice (first game): the real lane, judge and FX on five small charts over a click track. Picking a
+// difficulty the first time runs it; autoplay passes every step first try; then that difficulty starts.
+// Skipping every input still gets through (three tries per step), back to the title. Nothing is recorded.
+run(`var stored = {}; localStorage.getItem = k => stored[k] ?? null; localStorage.setItem = (k, v) => { stored[k] = String(v); };
+  var minEnergy = 1, clicks = 0, started = null, maxTries = 0, seen = new Set(), ticks = [], hits = [], noteTimes = [];
+  var menuOn = true; chip = { resume() {}, t0: null, ctx: { currentTime: 50, suspend() {}, resume() {} }, stop() { this.t0 = null; }, menu(on) { menuOn = on; }, sfx() {}, noiseHit() {},
+    blip(w, f) { clicks++; if (f === 1320) ticks.push(w - this.t0); }, timbal(w) { clicks++; hits.push(w - this.t0); }, startClock(d, from) { this.t0 = this.ctx.currentTime + d - from; },
+    now() { return this.ctx.currentTime - this.t0; }, start() { started = G.diff; return Promise.resolve(false); } };
+  function practise(auto, seconds) {
+    for (let i = 0; i < seconds * 60 && G.practice; i++) {
+      chip.ctx.currentTime += 1 / 60; clock += 1 / 60;
+      const x = songTime();
+      if (auto) autoplay(x);
+      advance(x);
+      if (!G.practice) break;
+      G.chart.forEach(n => noteTimes.includes(n.t) || noteTimes.push(n.t));
+      minEnergy = Math.min(minEnergy, G.energy);
+      seen.add(G.practice.step); maxTries = Math.max(maxTries, G.practice.tries);
+      practiceTick(x);
+      if (i % 20 === 0 && G.state === 'play') drawHud(x);
+    }
+  }
+  offsetMs = 0; G.state = 'title'; choose(2);
+  var firstTime = G.state === 'play' && G.practice?.then === 2, practiceWin = WIN;
+  practise(true, 60);`);
+assert(run('firstTime'), 'the first game starts with the practice');
+assert.equal(run('practiceWin'), progress.WINDOWS[0], 'practice timing is forgiving');
+assert(run('[0, 1, 2, 3, 4].every(k => seen.has(k)) && maxTries === 0 && started === 2 && G.practice === null'), 'autoplay passes all five steps, then the chosen difficulty starts');
+assert(run('clicks > 40'), 'a click track plays under the practice');
+assert(run('noteTimes.length >= 14 && noteTimes.every(t => hits.some(h => Math.abs(h - t) < 1e-3))'), 'a taiko hit on the audio clock exactly on every practice note (< 1 ms)');
+assert(run('[...ticks, ...hits].every(x => song.beats.some(b => Math.abs(b - x) < 1e-3))'), 'every click sits on the song beat grid the notes use');
+assert(run('!menuOn'), 'the menu ambient is off during the practice');
+assert.equal(run('stored.tutorial'), 'done');
+assert(run("!Object.keys(stored).some(k => k.startsWith('record'))"), 'practice records nothing');
+run(`started = null; G.state = 'title'; choose(1);`);
+assert(run('started === 1 && !G.practice'), 'afterwards a difficulty starts the song straight away');
+run(`seen.clear(); startPractice(null); practise(false, 150);`);
+assert(run("[0, 1, 2, 3, 4].every(k => seen.has(k)) && G.state === 'title' && !G.practice"), 'nobody gets stuck: three tries per step, then from the Com es juga sheet back to the title');
+assert(run('minEnergy === 1 && !G.collapseT'), 'the practice never drains the ànim, however many notes go by');
+run(`startPractice(null); G.praise = null; for (const n of G.chart.slice(0, 3)) judge(n, "miss");`);
+assert(run("!G.praise || !/VENENU/.test(G.praise.word)"), 'no shaming VENENU! while learning');
+run('startPractice(1);');
+nodes.get('skip').listeners.click();
+assert(run('started === 1 && !G.practice'), 'SALTA skips straight to the song');
+// Stepping is bounds-safe: steps skipped as fast as possible (every frame, in debug), bumped far past the last one,
+// NaN, a pause and a restart mid-way: never a throw, and past the end it wraps up once (A BALLAR!) and leaves.
+run(`var fanfares = 0; chip.sfx = k => { if (k === 'fanfare3') fanfares++; };
+  started = null; startPractice(1);
+  for (let i = 0; i < 12 && G.practice; i++) { G.practice.step++; G.practice.wait = clock; practise(false, 1 / 60); }`);
+assert(run('fanfares === 1 && (G.practice === null || G.practice.doneT != null)'), 'skipping every step rapidly: one A BALLAR!');
+run('practise(false, 3);');
+assert(run('started === 1 && !G.practice && fanfares === 1'), 'then the song starts, once');
+for (const bump of ['STEPS.length', 'STEPS.length + 7', 'NaN', '-3']) {
+  run(`started = null; fanfares = 0; startPractice(2); practise(false, 0.5); G.practice.step = ${bump}; drawHud(songTime()); practiceStep(8); practise(false, 4);`);
+  assert(run('started === 2 && !G.practice && fanfares === 1'), `step = ${bump}: ends cleanly into the song`);
+}
+run(`started = null; startPractice(null); practise(false, 0.5); G.practice.step = STEPS.length; practiceTick(songTime());`);
+nodes.get('skip').listeners.click(); run('endPractice(); practiceTick(songTime());');
+assert(run("started === null && G.state === 'title' && !G.practice"), 'SALTA during A BALLAR!, then a late tick and a second end: harmless');
+run(`started = null; startPractice(1); practise(false, 0.5); G.practice.step = 99; pauseGame(); drawHud(songTime());`);
+assert(run('G.paused && G.practice && G.practice.step === 99'), 'paused past the end: the HUD still draws');
+run(`G.pendingAction = 'restart';`); nodes.get('confirm-action').listeners.click();
+assert(run('!G.paused && G.practice && G.practice.step === 0 && G.practice.then === 1 && G.chart.length'), 'restart from the pause: the practice from step 0');
+run('practise(true, 60);');
+assert(run('started === 1 && !G.practice'), 'and it plays through to the song');
+console.log('practice contracts ok');
+
+// ⚙ Configuració on the title: shows the current offset; the sync comes back to it when closed; the practice
+// starts from it; title keys don't start a game behind it.
+run(`G.state = 'title'; G.practice = null; offsetMs = 40; chip.wake = () => {};`);
+nodes.get('settings').listeners.click();
+const settingsSheet = nodes.get('settings-menu');
+assert(settingsSheet.open, 'the gear opens Configuració');
+assert.equal(nodes.get('settings-offset').textContent, 'Ara: +40 ms', 'it shows the current sync offset');
+keyHandlers.forEach(h => h({ code: 'Space', target: { tagName: 'BODY' }, preventDefault() {} }));
+assert.equal(run('G.state'), 'title', 'Space does not start a game behind the sheet');
+document.listeners.click({ target: { closest: sel => (sel === '[data-privacy-open]' ? {} : null) } });
+assert(nodes.get('privacy-menu').open && settingsSheet.open, 'Privadesa opens over Configuració, which stays behind it');
+keyHandlers.forEach(h => h({ code: 'Enter', target: { tagName: 'DIALOG' }, preventDefault() {} }));
+assert.equal(run('G.state'), 'title', 'keys on Privadesa do not start a game');
+nodes.get('privacy-menu').close();
+nodes.get('settings-sync').listeners.click();
+assert(!settingsSheet.open && context.syncSheet.open, 'Ajusta la sincronia opens the sync sheet');
+context.syncSheet.open = false; run('offsetMs = -20;'); context.syncHooks.onClose();
+assert(settingsSheet.open, 'closing the sync sheet returns to Configuració');
+assert.equal(nodes.get('settings-offset').textContent, 'Ara: −20 ms', 'with the new offset');
+nodes.get('settings-practice').listeners.click();
+assert(!settingsSheet.open && run("G.state === 'play' && G.practice && G.practice.then == null"), 'Fes la pràctica starts the practice, back to the title afterwards');
+run('endPractice();');
+assert.equal(run('G.state'), 'title');
+context.syncHooks.onClose();
+assert(!settingsSheet.open, 'the sync sheet opened from elsewhere does not reopen Configuració');
+// menu placement: Configuració has both; Com es juga only the practice; the pause menu only the sync (mid-song)
+const html = readPage();
+const sheet = id => html.slice(html.indexOf(`<dialog id="${id}"`), html.indexOf('</dialog>', html.indexOf(`<dialog id="${id}"`)));
+assert(/Ajusta la sincronia/.test(sheet('settings-menu')) && /Fes la pràctica/.test(sheet('settings-menu')), 'Configuració: sync + practice');
+assert(/Fes la pràctica/.test(sheet('howto-menu')) && !/sincronia/.test(sheet('howto-menu')), 'Com es juga: only the practice');
+assert(/Ajusta la sincronia/.test(sheet('pause-menu')) && !/pràctica/.test(sheet('pause-menu')), 'pause: only the sync');
+run(`G.state = 'title'; G.practice = null;`);
+nodes.get('howto-practice').listeners.click();
+assert(run("G.state === 'play' && G.practice"), 'Com es juga → Fes la pràctica starts the practice');
+run('endPractice();');
+console.log('settings sheet contracts ok');
+
+// Classificacions: Configuració → the sheet (closing it goes back); an open board sheet swallows the title and results
+// keys (typing an alias never plays or leaves); its results row appears with TOCA PER TORNAR and the card makes room.
+const boardSheet = context.boardSheet;
+run(`G.state = 'title'; G.sel = 2;`);
+nodes.get('settings').listeners.click();
+nodes.get('settings-board').listeners.click();
+assert(!settingsSheet.open && boardSheet.open && boardSheet.opened.length === 1, 'Configuració → Classificacions (one board for every level)');
+boardSheet.open = false; boardSheet.back();
+assert(settingsSheet.open, 'closing Classificacions returns to Configuració');
+settingsSheet.close();
+// the title's podium (#leaders): only on the title, straight to Classificacions; closing blurs it, no Configuració
+run('updateControls();');
+assert.equal(nodes.get('leaders').hidden, false, 'the podium shows on the title');
+nodes.get('leaders').listeners.click();
+assert(boardSheet.open && boardSheet.opened.length === 2 && !settingsSheet.open, 'the podium opens Classificacions');
+let podiumBlurred = false;
+document.activeElement = { blur() { podiumBlurred = true; } };
+boardSheet.open = false; boardSheet.back();
+assert(podiumBlurred && !settingsSheet.open, 'closing it blurs the podium (Space picks a level again) and opens nothing else');
+delete document.activeElement;
+run(`G.state = 'results'; updateControls();`);
+assert.equal(nodes.get('leaders').hidden, true, 'no podium outside the title');
+boardSheet.opened.length = 0; nodes.get('leaders').listeners.click();
+assert.equal(boardSheet.opened.length, 0, 'a stale podium click off the title opens nothing');
+// the menu music's speaker (#music): title only; a click switches the loop, remembers it and says what the next click does
+{
+  const stored = [], btn = nodes.get('music');
+  context.localStorage.setItem = (k, v) => stored.push([k, v]);
+  run(`G.state = 'title'; updateControls();`);
+  assert.equal(btn.hidden, false, 'the speaker shows on the title');
+  assert.equal(btn.dataset.state, 'on');
+  btn.listeners.click();
+  assert.equal(btn.dataset.state, 'off'); assert.equal(btn.title, 'Activa la música del menú');
+  assert.deepEqual(stored.at(-1), ['menu-music', 'off'], 'remembered on this device');
+  assert(run('menuMusic === false'));
+  if (run('engine != null')) assert.deepEqual(context.menuMusicCalls.at(-1), false, 'the engine fades the loop out');
+  btn.listeners.click();
+  assert.equal(btn.dataset.state, 'on'); assert.deepEqual(stored.at(-1), ['menu-music', 'on']);
+  context.localStorage.setItem = () => {};
+  run(`G.state = 'results'; updateControls();`);
+  assert.equal(btn.hidden, true, 'title only');
+}
+// «Bústia de la plaça» (#feedback): title only, never over another sheet; while it is up, typing never plays
+{
+  const fb = context.feedbackSheet;
+  run(`G.state = 'title'; updateControls();`);
+  assert.equal(nodes.get('feedback').hidden, false, 'the speech bubble shows on the title');
+  assert.equal(fb.opts.captcha, boardSheet.captcha, 'one Turnstile: board-ui.js\'s');
+  nodes.get('feedback').listeners.click();
+  assert.equal(fb.shown, 1);
+  for (const code of ['Space', 'Enter', 'ArrowRight', 'KeyD']) keyHandlers.forEach(h => h({ code, target: { tagName: 'TEXTAREA' }, preventDefault() { throw new Error('typing a space must stay a space'); } }));
+  assert(run("G.state === 'title' && G.sel === 2"), 'title keys do nothing behind «Bústia de la plaça»');
+  fb.open = false;
+  boardSheet.open = true; nodes.get('feedback').listeners.click(); boardSheet.open = false;
+  assert.equal(fb.shown, 1, 'not over another sheet');
+  run(`G.state = 'results'; updateControls();`);
+  assert.equal(nodes.get('feedback').hidden, true, 'title only');
+  const nm = context.nudgeMock, before = nm.armed;
+  run('toTitle();'); assert.equal(nm.armed, before + 1, 'back from a run: the nudge may show');
+  run('toTitle();'); assert.equal(nm.armed, before + 1, 'title to title (the first tap) is not a run');
+  fb.opts.onOpen(); assert(nm.ended, 'opening the sheet ends the nudge for good');
+}
+run(`G.state = 'title'; updateControls();`);
+boardSheet.open = true;
+for (const code of ['Space', 'Enter', 'ArrowRight', 'KeyD', 'BracketLeft']) keyHandlers.forEach(h => h({ code, target: { tagName: 'DIALOG' }, preventDefault() {} }));
+assert(run("G.state === 'title' && G.sel === 2 && offsetMs === -20"), 'title keys do nothing behind Classificacions');
+run(`G.state = 'results'; G.resT = clock - 5;`);
+keyHandlers.forEach(h => h({ code: 'Space', target: { tagName: 'DIALOG' }, preventDefault() {} }));
+assert.equal(run('G.state'), 'results', 'Space on the publish sheet does not leave the results');
+boardSheet.open = false;
+boardSheet.shown.length = 0;
+run('G.resT = clock - 0.5; updateControls(); G.resT = clock - 1.5; updateControls(); G.state = "title"; updateControls();');
+assert.deepEqual(boardSheet.shown, [false, true, false], 'the results row waits for TOCA PER TORNAR and goes with the results');
+drawnText.length = 0;
+run(`G.state = 'results'; G.reason = 'clear'; G.resT = clock - 2; G.counts = { perfect: 100, good: 0, miss: 0 }; drawHud(0); G.state = 'title';`);
+assert(drawnText.includes('ESPAI PER TORNAR'), 'the results still offer to go back');
+// the publish prompt opens by itself only over a bare, visible, upright results screen (board-ui.js asks canPrompt)
+run(`G.state = 'results';`);
+assert(boardSheet.opts.canPrompt(), 'results, nothing else up: the prompt may open');
+boardSheet.open = true; assert(!boardSheet.opts.canPrompt(), 'not over another sheet'); boardSheet.open = false;
+nodes.get('share-menu').open = true; assert(!boardSheet.opts.canPrompt(), 'not over Comparteix'); nodes.get('share-menu').open = false;
+document.hidden = true; assert(!boardSheet.opts.canPrompt(), 'not on a hidden page'); document.hidden = false;
+run(`G.state = 'title';`);
+assert(!boardSheet.opts.canPrompt(), 'only on the results');
+// Turnstile (src/services/captcha.js via board-ui.js): never started ahead (only Publica / Bústia ask for a token); its tick box never mid-song
+boardSheet.verifyStarts = 0;
+run(`var savedChip = chip, savedState = G.state; drawn = false; G.state = 'splash'; frame(clock * 1000 + 16); frame(clock * 1000 + 32); G.state = 'title'; frame(clock * 1000 + 48);`);
+run(`chip = { resume() {}, stop() {}, menu() {}, sfx() {}, ctx: { resume() {} } }; G.state = 'title'; toTitle();`);
+run(`G.state = 'play'; G.counts = { perfect: 10, good: 0, miss: 0 }; finish('end');`);
+assert.equal(run('G.state'), 'results');
+run(`G.state = 'play'; toTitle();`);
+assert.equal(boardSheet.verifyStarts, 0, 'a finished or left run asks Cloudflare nothing');
+run('chip = savedChip; G.state = savedState;');
+run(`G.state = 'play';`); assert(!boardSheet.opts.canVerify(), 'no tick box during a song or the practice');
+run(`G.state = 'results';`); assert(boardSheet.opts.canVerify(), 'on the results it may show');
+run(`G.state = 'title';`); assert(boardSheet.opts.canVerify(), 'on the title too');
+// after a publication Comparteix comes next (board-ui.js afterPublish → share-ui.js openAfterPublish)
+assert.equal(typeof boardSheet.opts.afterPublish, 'function', 'publishing hands over to Comparteix');
+// ⚙ Configuració: its «Sobrenom» row is refreshed on every opening
+const refreshed = boardSheet.settingsRefreshed;
+nodes.get('settings').listeners.click();
+assert.equal(boardSheet.settingsRefreshed, refreshed + 1, 'opening Configuració refreshes the nickname row');
+settingsSheet.close();
+console.log('classificacions integration contracts ok');
+
+// Comparteix: the results row shows (even offline) with TOCA PER TORNAR; the nudge only for something to show off;
+// the sheet opens from its button, swallows the game keys while open and closes; the card makes room for the row.
+{
+  const row = nodes.get('results-actions'), menu = nodes.get('share-menu');
+  run(`G.state = 'results'; G.resT = clock - 0.5; G.reason = 'clear'; G.stars = 3; G.newRecord = true; G.challenge = null;
+    G.shareRun = { pct: 96, diff: 2, reason: 'clear', stars: 3, newRecord: true, maxCombo: 80, t: G.resT, practice: false }; updateControls();`);
+  assert(row.hidden !== false, 'no row during the first second (TOCA PER TORNAR waits too)');
+  run('G.resT = clock - 2; G.shareRun.t = G.resT; updateControls();');
+  assert(row.hidden === false && nodes.get('results-share-tag').hidden === false, 'the row with Comparteix, and «Presumeix-ne!» for a record / S');
+  nodes.get('results-share').listeners.click();
+  assert(menu.open && context.shareSheet.open && nodes.get('results-share-tag').hidden, 'Comparteix opens the sheet; the nudge has done its job');
+  for (const code of ['Space', 'Enter', 'ArrowLeft', 'BracketRight']) keyHandlers.forEach(h => h({ code, target: { tagName: 'DIALOG' }, preventDefault() {} }));
+  assert(run("G.state === 'results' && offsetMs === -20"), 'game keys do nothing behind Comparteix');
+  nodes.get('share-close').listeners.click();
+  assert(!menu.open, 'Tanca closes it');
+  // after a publication (board-ui.js afterPublish) Comparteix opens by itself for that run: «Publicat!», then the place
+  boardSheet.opts.afterPublish({ place: Promise.resolve('Ets el número 7 · top 40%!') });
+  assert(menu.open && nodes.get('share-note').hidden === false && nodes.get('share-note').textContent === 'Publicat! Ja surts a la classificació.', 'published: Comparteix opens by itself');
+  await Promise.resolve(); await Promise.resolve();
+  assert.equal(nodes.get('share-note').textContent, 'Ets el número 7 · top 40%!', '…its header then says where they stand');
+  nodes.get('share-close').listeners.click(); menu.listeners.close(); // (the mock's close() fires no event)
+  assert(!menu.open && nodes.get('share-note').hidden, 'Tanca closes it as usual; the line goes with it');
+  context.shareSheet.openAfterPublish({});
+  assert(menu.open && nodes.get('share-note').textContent === 'Publicat! Ja surts a la classificació.', 'without a place: just «Publicat!»');
+  nodes.get('share-close').listeners.click();
+  keyHandlers.forEach(h => h({ code: 'Space', target: { tagName: 'BODY' }, preventDefault() {} }));
+  assert.equal(run('G.state'), 'title', 'closed: Space leaves the results again');
+  run('updateControls();');
+  assert(row.hidden === true, 'the row goes with the results');
+  run(`G.state = 'results'; G.resT = clock - 2; G.stars = 1; G.newRecord = false;
+    G.shareRun = { pct: 55, diff: 1, reason: 'fail', stars: 1, newRecord: false, maxCombo: 9, t: G.resT, practice: false }; updateControls();`);
+  assert(row.hidden === false && nodes.get('results-share-tag').hidden === true, 'no nudge for an ordinary run');
+  drawnText.length = 0;
+  run(`G.challenge = challengeResult({ pct: 50, diff: 1 }, G.shareRun); G.counts = { perfect: 40, good: 20, miss: 30 }; drawHud(0);`);
+  assert(drawnText.includes('REPTE SUPERAT!') && drawnText.includes(shareLogic.SITE_LABEL), 'the card says the challenge is beaten and where to play');
+  drawnText.length = 0;
+  run(`G.challenge = challengeResult({ pct: 58, diff: 1 }, G.shareRun); drawHud(0);`);
+  assert(drawnText.includes('Gairebé! et falten 4 punts'), 'or how close it was');
+  assert.equal(run('resultsReserve()'), 48, 'one row of buttons: 48 px');
+  // the row sits right under the card (drawResults writes its top), not pinned to the bottom edge
+  const rowTop = parseFloat(row.style.top);
+  assert(row.style.bottom === 'auto' && rowTop > 0 && rowTop + 48 < run('HH * K') - 60, `the row under the card, with the tip and the return button below it (top ${rowTop})`);
+  // a collapse: nothing to share; «Torna-ho a provar» (the same level) and Classificacions stay
+  run(`G.reason = 'collapse'; G.stars = 0; G.diff = 2; G.resT = clock - 2;
+    G.shareRun = { pct: 20, diff: 2, reason: 'collapse', stars: 0, newRecord: false, maxCombo: 3, t: G.resT, practice: false }; updateControls();`);
+  assert(row.hidden === false && nodes.get('results-share').hidden === true && nodes.get('results-retry').hidden === false, 'collapse: no Comparteix, Torna-ho a provar instead');
+  context.shareSheet.openAfterPublish({});
+  assert(!menu.open, 'collapse: the share sheet never opens');
+  nodes.get('results-retry').listeners.click();
+  assert(run("G.state === 'play' && G.diff === 2 && !G.practice"), 'Torna-ho a provar: the same level again');
+  run(`G.state = 'results'; G.reason = 'clear'; G.resT = clock - 2;
+    G.shareRun = { pct: 90, diff: 2, reason: 'clear', stars: 3, newRecord: false, maxCombo: 50, t: G.resT, practice: false }; updateControls();`);
+  assert(nodes.get('results-share').hidden === false && nodes.get('results-retry').hidden === true, 'a finished dance: Comparteix again, no retry');
+  run(`G.challenge = null; G.state = 'title'; updateControls();`);
+}
+console.log('comparteix integration contracts ok');
+
+// The share photo (renderHero): at every quality tier it renders at the card's size, with her standing in view and the
+// crowd around her, never a silent null (a ReferenceError inside it once gave every card an empty sky and ground).
+{
+  const { PHOTO } = await import('../src/hud/share-card.js');
+  const made = document.createElement;
+  document.createElement = tag => tag === 'canvas' ? { getContext: () => ({ putImageData() {} }) } : made(tag);
+  context.ImageData = class { constructor(d, w, h) { Object.assign(this, { d, w, h }); } };
+  run(`var heroShots = [], heroFlat = 0; Object.assign(renderer, { extensions: { has: () => true }, target: null,
+    getRenderTarget() { return this.target; }, setRenderTarget(t) { this.target = t; },
+    readRenderTargetPixels(t, x, y, w, h, px) { for (let i = 0; i < px.length; i++) px[i] = heroFlat ? 90 : (i * 37) & 255; heroFlat && heroFlat--; },
+    render(sc, cam) {
+      if (cam !== heroCam) return;
+      sc.updateMatrixWorld(true); cam.updateMatrixWorld(); cam.updateProjectionMatrix();
+      const frustum = new THREE.Frustum().setFromProjectionMatrix(new THREE.Matrix4().multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse));
+      let shown = true; for (let o = mula.root; o; o = o.parent) shown &&= o.visible;
+      const box = new THREE.Box3().setFromObject(mula.root), size = box.getSize(new THREE.Vector3());
+      const a = box.min.clone().project(cam), b = box.max.clone().project(cam), c = box.getCenter(new THREE.Vector3()).project(cam);
+      const people = crowd.filter(p => p.g.scale.x > 0 && frustum.containsPoint(p.g.getWorldPosition(new THREE.Vector3()))).length;
+      heroShots.push({ w: this.target?.width, h: this.target?.height, shown, legs: mula.legs.every(l => l.visible), tall: size.y,
+        inView: frustum.containsPoint(box.getCenter(new THREE.Vector3())) && Math.abs(c.x) < 0.6 && Math.abs(c.y) < 0.6,
+        height: Math.abs(a.y - b.y) / 2, people });
+    } });`);
+  for (const level of [-1, 0, 1, 2]) for (const format of ['story', 'square', 'og']) {
+    const [w, h] = PHOTO[format];
+    run(`qualityLevel = ${level}; applyRenderQuality(); G.state = 'results'; G.reason = 'clear'; heroShots.length = 0;`);
+    const before = run('mula.root.position.toArray().join() + mula.root.quaternion.toArray().join()');
+    const img = run(`renderHero(${w}, ${h})`), [s] = run('heroShots');
+    const at = `${format} at ${profileAt(level).name}`;
+    assert(img && img.width === w && img.height === h, `${at}: a photo comes back at the card's size`);
+    assert(s && s.w === w && s.h === h && w * h >= 400 * 300, `${at}: drawn into a ${w}×${h} target (got ${s?.w}×${s?.h})`);
+    assert(s.shown && s.legs && s.tall > 1.5, `${at}: the mulassa is visible, standing, full size`);
+    assert(s.inView && s.height > 0.3, `${at}: she is in the middle of the photo and big (${s.height.toFixed(2)} of its height)`);
+    assert(s.people >= 4, `${at}: the crowd stands around her (${s.people} in view)`);
+    assert.equal(run('mula.root.position.toArray().join() + mula.root.quaternion.toArray().join()'), before, `${at}: her pose is put back`);
+  }
+  run('heroFlat = 1; heroShots.length = 0;'); // the float target drew nothing: the same photo again in 8 bits
+  assert(run('renderHero(960, 620)') && run('heroShots.length') === 2, 'a flat float render is retried in 8 bits');
+  const warn = console.warn; console.warn = () => {};
+  run('heroFlat = 2;');
+  assert.equal(run('renderHero(960, 620)'), null, 'nothing drawn at all: no photo (the card draws its stand-in)');
+  console.warn = warn;
+  document.createElement = made; delete context.ImageData;
+  run('qualityLevel = 2; applyRenderQuality(); G.state = "title";');
+}
+console.log('share photo renders her with the crowd at every quality ok');
+
+// L'ÀNIM DE LA PLAÇA: standing idle drains it note by note until the mulassa falls apart, on every difficulty;
+// the count-in and the intro before the first note never drain; each warning threshold pulses once on the way down.
+for (const diff of [0, 1, 2]) {
+  run(`songNow = 0; chip = { resume() {}, t0: 0, ctx: { currentTime: 0, suspend() {}, resume() {} }, stop() {}, menu() {}, sfx() {}, noiseHit() {}, blip() {},
+      now: () => songNow, start: () => Promise.resolve(false) };
+    offsetMs = 0; startGame(${diff}); bubbles.length = 0; var diedAt = null, introE = 1;
+    for (songNow = -LEAD; songNow < G.chart[0].t; songNow += 1 / 30) { advance(songNow); introE = Math.min(introE, G.energy); }
+    var warningTimes = [], lastWarning = G.energyWarnT;
+    for (; songNow < 60 && !G.collapseT; songNow += 1 / 30) { clock += 1 / 30; advance(songNow); if (G.energyWarnT !== lastWarning) { warningTimes.push(G.energyWarnT); lastWarning = G.energyWarnT; } }
+    diedAt = G.collapseT ? songNow - G.chart[0].t : null;
+    var lastWord = bubbles.map(b => b.txt).join();`);
+  assert.equal(run('introE'), 1, 'no drain during the count-in and the intro');
+  const died = run('diedAt'), misses = run('G.counts.miss');
+  assert(died != null && run('G.energy === 0'), `idle on ${diff}: the mulassa collapses`);
+  assert.equal(misses, [13, 10, 8][diff], `idle on ${diff}: misses from full to empty`);
+  if (diff === 0) assert(died + run('LEAD + G.chart[0].t') < 30, `idle on FÀCIL loses within ~30 s (${died.toFixed(1)} s after the first note)`);
+  assert.equal(run('warningTimes.length'), 2, 'each threshold pulses once');
+  assert.equal(run('lastWord'), '', 'collapse clears every bubble for its fixed caption');
+}
+run(`startGame(2); var hitN = G.chart.find(n => !n.big && !n.balloon && !n.end); G.energy = 0.5; judge(hitN, 'perfect'); var afterHit = G.energy;
+  var bigN = G.chart.find(n => n.big); G.energy = 0.5; judge(bigN, 'perfect'); var afterBig = G.energy, bigFlash = G.energyT === clock;`);
+assert(run('afterHit > 0.5 && afterBig > afterHit && bigFlash'), 'hits refill the ànim, a GUAPA more (with a flash)');
+drawnText.length = 0;
+run(`G.state = 'results'; G.reason = 'collapse'; G.errors = { early: 0, late: 0, move: 0, silent: 9, both: 0, hold: 0 }; drawHud(0);`);
+assert(drawnText.some(s => /esgotat l’ànim/.test(s)), 'a collapse explains the ànim in the tip');
+console.log('ànim (energy) contracts ok');
+// ENCERTS before any note is judged: no pill in the top bar (never "0%"), an em dash on the results card.
+drawnText.length = 0;
+run(`startGame(1); G.state = 'play'; drawTop();`);
+assert(!drawnText.includes('ENCERTS') && !drawnText.includes('—') && !drawnText.includes('0%'), 'the ENCERTS pill stays hidden until the first judged note');
+drawnText.length = 0;
+run(`judge(G.chart.find(n => !n.big && !n.balloon && !n.end), 'perfect'); drawTop();`);
+assert(drawnText.includes('ENCERTS') && drawnText.some(s => /^\d+%$/.test(s)), 'the ENCERTS pill appears with the first judged note');
+run(`judge(G.chart.find(n => !n.big && !n.balloon && !n.end), 'perfect'); G.shown = G.guapo;`);
+drawnText.length = 0;
+run('drawTop();');
+assert(drawnText.includes('100%') && !drawnText.includes('—'), 'the first judged note shows its real value');
+drawnText.length = 0;
+run(`G.counts = { perfect: 0, good: 0, miss: 0 }; G.state = 'results'; G.reason = 'fail'; G.resT = clock - 2; drawHud(0);`);
+assert(drawnText.includes('—') && !drawnText.includes('0%'), 'results with nothing judged show —');
+console.log('quality placeholder contracts ok');
+// Song progress (drawTop): 0 through the count-in up to the first note, 1 from the last note on.
+// Its ring is a halo round #pause (drawProgressRing): inside the screen and the safe area, clear of the panel, the lane (and its
+// ring), the judge words and the x2 tag; the finale's x2 tag sits on the panel's top edge, inside the safe area, clear of the ÀNIM bar,
+// ENCERTS, the mulassa, #pause and the bar. Phones, an iPad on its side, desktop.
+assert.equal(run('[songProgress(PROG_T0 - LEAD), songProgress(PROG_T0), songProgress((PROG_T0 + PROG_T1) / 2), songProgress(PROG_T1), songProgress(PROG_T1 + 9)].join()'), '0,0,0.5,1,1', 'progress: 0 at the start, 1 at the end, clamped');
+assert.equal(run('PROG_T0'), run('song.notes[0][0]'), 'from the first note');
+const inter = (a, c) => a.x < c.x + c.w && c.x < a.x + a.w && a.y < c.y + c.h && c.y < a.y + a.h;
+for (const [w, h, touch, notch] of [[375, 667, true, 20], [393, 852, true, 59], [1180, 820, true, 24], [1280, 800, false, 0]]) for (const diff of [0, 1, 2]) {
+  context.innerWidth = w; context.innerHeight = h;
+  const r = run(`COARSE.matches = ${touch}; resize(); SAFE.t = ${notch}; startGame(${diff}); G.state = 'play';
+    var T = topLayout(), L = lane(), b = T.bar, g = T.tag, ps = PAUSE_PX() / K, pb = pauseBox(), pr = pb.r + RING_GAP + RING_W / 2 + 0.5, ringR = (RING_R + 2.25) * L.s;
+    ({ prog: { x: pb.cx - pr, y: pb.cy - pr, w: 2 * pr, h: 2 * pr }, // the ring's outer edge
+      panel: { x: T.x - 0.75, y: T.y - 0.75, w: T.w + 1.5, h: T.h + 1.5 }, // with its stroke
+      pause: { x: W - (10 + SAFE.r) / K - ps, y: ((K < 2 ? 13 : 18) + SAFE.t) / K, w: ps, h: ps }, notch: { x: 0, y: 0, w: W, h: SAFE.t / K },
+      screen: { W, HH }, lane: { x: 0, y: L.top, w: W, h: L.bottom - L.top }, ring: { x: L.hx - ringR, y: L.cy - ringR, w: 2 * ringR, h: 2 * ringR },
+      judge: { x: 0, y: L.bottom, w: W, h: 30 * L.sb },
+      tag: { x: g.x - 0.75, y: g.y - 0.75, w: g.w + 1.5, h: g.h + 1.5 },
+      bar: { x: b.x - 1.5, y: b.y - 2, w: b.w + 3, h: b.h + 4 }, // its low-energy rim and the danger tick
+      encerts: { x: T.enc.x, y: T.enc.y, w: T.enc.w, h: T.enc.h }, mug: { x: T.x + T.pad - 1, y: T.cy - MULE_H / 2 - 3, w: MULE_W + 2, h: MULE_H + 6 },
+      gap: L.top - (T.y + T.h + 0.75) })`);
+  const name = `${w}x${h} diff ${diff}`;
+  assert(r.prog.x >= 0 && r.prog.x + r.prog.w <= r.screen.W && r.prog.y >= r.notch.h, `${name}: the ring on screen, inside the safe area ${JSON.stringify(r.prog)}`);
+  assert(r.gap >= 10, `${name}: the lane keeps its room under the panel (${r.gap})`);
+  assert(!inter(r.encerts, r.lane) && !inter(r.encerts, r.pause) && r.encerts.x >= 0 && r.encerts.x + r.encerts.w <= r.screen.W, `${name}: the ENCERTS pill clear of the lane and #pause, on screen`);
+  for (const o of ['panel', 'notch', 'lane', 'ring', 'judge', 'tag']) assert(!inter(r.prog, r[o]), `${name}: progress ring clear of the ${o} ${JSON.stringify([r.prog, r[o]])}`);
+  assert(r.tag.y >= r.notch.h, `${name}: the x2 tag inside the safe area`);
+  for (const o of ['bar', 'encerts', 'mug', 'pause']) assert(!inter(r.tag, r[o]), `${name}: the x2 tag clear of the ${o} ${JSON.stringify([r.tag, r[o]])}`);
+}
+context.innerWidth = 1280; context.innerHeight = 720; run('COARSE.matches = false; SAFE.t = 0; resize();');
+console.log('song progress contracts ok');
+
+// Lane: on every screen and difficulty the closest two notes of the chart keep a clear gap (NOTE_GAP diameters)
+// and a note stays visible for at least MIN_LOOK s; the band grows on big screens; the camera stays in the plaça.
+for (const [w, h] of [[393, 852], [375, 667], [852, 393], [1280, 720], [2000, 1060]]) {
+  context.innerWidth = w; context.innerHeight = h; run('resize()');
+  for (const diff of [0, 1, 2]) {
+    const L = run(`startGame(${diff}); G.state = 'play'; var L = lane(); ({ ...L, gap: minGap(G.chart), W, R: NOTE_R, NG: NOTE_GAP, ML: MIN_LOOK })`);
+    const px = L.speed * L.s, clear = px * L.gap - 2 * L.R * L.s;
+    assert(clear >= L.NG * 2 * L.R * L.s - 1e-6, `${w}x${h} diff ${diff}: closest notes keep a clear gap (${clear.toFixed(1)})`);
+    assert((L.W - L.hx) / px >= L.ML - 1e-6, `${w}x${h} diff ${diff}: look-ahead ${((L.W - L.hx) / px).toFixed(2)} s`);
+    assert(L.bottom - L.top >= 40, `${w}x${h}: the band never shrinks`);
+  }
+}
+assert(run('var big = lane(); big.sb') >= 1.6, 'big desktops get the tablet band (K grows with the screen, so the HUD keeps its proportions)');
+assert(run('var c = insidePlaza(new THREE.Vector3(3, 10, 30), 0, 1, 12); Math.abs(c.z) <= plaza.inner - 1.5 + 1e-9 && c.y > 10'), 'the camera stays inside the plaça, higher instead');
+// Trees and lamps stand out of the play camera's path: wherever she dances (during play her centre stays within
+// 0.35 m of the middle; checked to 1 m) and however far the camera sits (big tablets pull back to about 22 m), none
+// is on the sight line or by the lens (so none has to pop away).
+assert(run(`var hit = []; for (let x = -1; x <= 1; x += 0.25) for (let z = -1; z <= 1; z += 0.25) for (let d = 8; d <= 22; d++) {
+    const c = insidePlaza(new THREE.Vector3(x + d * CAM_DIR[0], 1 + d * CAM_DIR[1], z + d * CAM_DIR[2]), x, 1, z);
+    for (const p of plaza.props) if (blocks(p, [c.x, c.y, c.z], [x, 1, z])) hit.push([x, z, d, p.x, p.z]); }
+  hit.length === 0 || JSON.stringify(hit.slice(0, 3))`) === true, 'no prop between the play camera and the mulassa');
+context.innerWidth = 1280; context.innerHeight = 720; run('resize()');
+// The streak (RATXA badge, drawStreak): never inside the ring any more. From 10 in a row, «RATXA» on its plate (no COMBO); tiers climb gold -> orange -> hot pink -> 100+; a miss lets it fade, a new run clears it.
+const streakDraw = (combo, dt = 0) => { drawnText.length = 0; run(`G.combo = ${combo}; clock += ${dt}; drawStreak(G.chart[0].t);`); return drawnText.slice(); };
+run(`startGame(1); G.state = 'play'; G.practice = null; stk.n = 0; stk.lostT = -9; M.missT = -9;`);
+assert.deepEqual(streakDraw(9), [], 'no streak under 10');
+assert.deepEqual(streakDraw(12), ['RATXA', '1', '2'], 'from 10: the badge (one glyph per digit)');
+assert.deepEqual(streakDraw(12), ['RATXA', '1', '2'], 'RATXA, never COMBO');
+drawnText.length = 0; run('G.combo = 40; drawRing(0, lane().hx, lane().cy); drawRingTop(0, lane().hx, lane().cy, false);');
+assert(!drawnText.some(s => /\d/.test(s)), 'no number inside the ring');
+run('G.combo = 12; M.missT = clock;');
+assert.deepEqual(streakDraw(0), ['RATXA', '1', '2'], 'a miss: the last streak lingers, fading');
+assert.deepEqual(streakDraw(0, 0.7), [], '... and is gone');
+run('stk.n = 30; M.missT = -9;');
+assert.deepEqual(streakDraw(0), [], 'a new run clears it without the fade');
+assert.deepEqual([10, 24, 25, 49, 50, 99, 100, 250].map(n => run(`streakCol(${n})`)),
+  ['#f5c518', '#f5c518', '#ff9f1c', '#ff9f1c', '#ff5ea8', '#ff5ea8', '#ffffff', '#ffffff'], 'colour tiers');
+assert.deepEqual([...Array(301).keys()].filter(n => run(`streakMilestone(${n})`)), [10, 25, 50, 75, 100, 150, 200, 250, 300], 'milestones');
+run(`stk.n = 9; G.combo = 9; clock += 1; drawStreak(0); G.combo = 10; drawStreak(0);`);
+assert(run('stk.mt === clock && stk.t === clock'), 'reaching 10 is a milestone pop');
+// Every digit and tier label is painted ahead (warmups), at most six small sprites a spare frame.
+assert(run('streakWarmups().length === 2 * STREAK.tiers.length'), 'streak warmups: two per tier');
+// Placement: behind the ring on the band (the ring in the middle) or above-left of it (portrait phones), at its biggest
+// pop and while it sinks: inside the safe screen, clear of the ring at its biggest, the notes' path (a missed GUAPA
+// scrolls on to hx - 20), the judge word under the lane, the top panel, the progress ring and #pause; inside the band
+// or wholly above it, never across its edges.
+{
+  const hit = (a, c) => a.x < c.x + c.w && c.x < a.x + a.w && a.y < c.y + c.h && c.y < a.y + a.h;
+  for (const [w, h, touch, notch, lane] of [[360, 760, true, 0, false], [375, 667, true, 20, false], [393, 852, true, 59, false], [393, 852, true, 0, false],
+    [1180, 820, true, 24, true], [1280, 800, false, 0, true], [852, 393, true, 0, true]]) for (const diff of [0, 1, 2]) {
+    context.innerWidth = w; context.innerHeight = h;
+    const r = run(`COARSE.matches = ${touch}; resize(); SAFE.t = ${notch}; startGame(${diff}); G.state = 'play'; G.practice = null;
+      var B = streakBox(), L = lane(), T = topLayout(), ps = PAUSE_PX() / K, pb = pauseBox(), pr = pb.r + RING_GAP + RING_W / 2;
+      var drop = { x: B.cx - B.w * 0.45, y: B.cy - B.h * 0.45, w: B.w * 0.9, h: B.h * 0.9 + STREAK.drop };
+      ({ lane: B.lane, box: { x: B.cx - B.w * B.M / 2, y: Math.min(B.cy - B.h * B.M / 2, drop.y), w: B.w * B.M, h: Math.max(B.cy + B.h * B.M / 2, drop.y + drop.h) - Math.min(B.cy - B.h * B.M / 2, drop.y) },
+        M: B.M, W, HH, top: SAFE.t / K, hx: L.hx, cy: L.cy, R: (RING_R + 12.5) * L.s + 1.25, L: { top: L.top, bottom: L.bottom },
+        notes: { x: L.hx - 47 * L.s, y: L.cy - 27 * L.s, w: W, h: 54 * L.s }, judge: { x: 0, y: L.bottom, w: W, h: 30 * L.sb },
+        panel: { x: T.x - 0.75, y: T.y - 0.75, w: T.w + 1.5, h: T.h + 1.5 }, prog: { x: pb.cx - pr - 1, y: pb.cy - pr - 1, w: 2 * pr + 2, h: 2 * pr + 2 },
+        pause: { x: W - (10 + SAFE.r) / K - ps, y: ((K < 2 ? 13 : 18) + SAFE.t) / K, w: ps, h: ps } })`);
+    const name = `${w}x${h}${notch ? ' notch' : ''} diff ${diff}`, b = r.box;
+    assert.equal(r.lane, lane, `${name}: ${lane ? 'behind the ring' : 'on the top row, left of the panel'}`);
+    assert(r.M >= 1.08, `${name}: room to pop (${r.M.toFixed(2)})`);
+    assert(b.x >= 0 && b.x + b.w <= r.W && b.y >= r.top && b.y + b.h <= r.HH, `${name}: on screen, under the notch ${JSON.stringify(b)}`);
+    const nx = Math.max(b.x, Math.min(r.hx, b.x + b.w)), ny = Math.max(b.y, Math.min(r.cy, b.y + b.h));
+    assert(Math.hypot(nx - r.hx, ny - r.cy) > r.R, `${name}: clear of the ring ${JSON.stringify([b, r.hx, r.cy, r.R])}`);
+    assert(b.y >= r.L.top + 1 && b.y + b.h <= r.L.bottom - 1 || b.y + b.h <= r.L.top - 1, `${name}: inside the band or above it, never on its edges`);
+    for (const o of ['notes', 'judge', 'panel', 'prog', 'pause']) assert(!hit(b, r[o]), `${name}: clear of the ${o} ${JSON.stringify([b, r[o]])}`);
+  }
+  context.innerWidth = 1280; context.innerHeight = 720; run('COARSE.matches = false; SAFE.t = 0; resize();');
+}
+drawnText.length = 0;
+run(`G.state = 'results'; G.reason = 'clear'; G.resT = clock - 2; drawHud(0);`);
+assert(drawnText.includes('RATXA') && drawnText.includes('ENCERTS'), 'results: RATXA and ENCERTS');
+console.log('lane size, streak badge and camera contracts ok');
+
+// A GLOBUS hanging under the ring never covers the headline: the word steps beside it or under it, on any screen.
+for (const [w, h] of [[393, 852], [375, 667], [852, 393], [1280, 800], [1920, 1080]]) {
+  context.innerWidth = w; context.innerHeight = h; run('resize()');
+  for (const word of ['PAM!', 'PAM! x2!', 'FINAL ESBOJARRAT!']) {
+    const r = run(`startGame(1); G.state = 'play'; var p = { word: ${JSON.stringify(word)}, dx: 0, dy: 0 }; dodgeBalloon(p, 3);
+      var L = lane(), hs = HEADLINE_SIZE() * (1 + 3 * 0.08) * 1.15; var hw = (H.measureText(p.word).width + hs * 0.6) / 2;
+      var x = L.hx + p.dx, y = PRAISE_Y() + p.dy;
+      ({ w: W, l: x - hw, r: x + hw, t: y - hs * 0.6, bx0: L.hx - 31 * L.s, bx1: L.hx + 31 * L.s, by1: L.bottom + BALLOON_DROP * L.s, lab: L.bottom + 31 * L.s })`);
+    const apart = r.r <= r.bx0 || r.l >= r.bx1 || r.t >= r.by1;
+    assert(r.t >= r.by1 || r.t >= r.lab, `${w}x${h} ${word}: beside the balloon, under its labels`);
+    assert(apart, `${w}x${h} ${word}: the headline clears the balloon ${JSON.stringify(r)}`);
+  }
+}
+context.innerWidth = 1280; context.innerHeight = 720; run('resize()');
+// Celebrations (the chant, the practice's combo praise and A BALLAR!) are big; on portrait phones (and tablets) they sit
+// exactly in the middle of the free space between the lane and the pad, clear of a GLOBUS, the practice instruction
+// and the pad. Landscape phones and desktops keep them under the lane. The practice's other
+// words stay compact in the judge slot under the ring, and the per-note judge shows beside a big word.
+for (const [w, h, touch, centred] of [[393, 852, true, true], [375, 667, true, true], [360, 760, true, true], [852, 393, true, false], [1280, 800, false, false]]) {
+  context.innerWidth = w; context.innerHeight = h;
+  nodes.get('pad').getBoundingClientRect = () => ({ top: touch ? h - (h < 400 ? 66 : 130) : h });
+  run(`COARSE.matches = ${touch}; SAFE.t = SAFE.b = 0; resize(); padTop = null; startGame(1); G.state = 'play';`);
+  drawnText.length = 0;
+  const r = run(`(() => {
+    G.practice = { step: 0, clickK: 0 }; G.praise = null; G.balloons = [];
+    G.counts = { perfect: 0, good: 0, miss: 0 }; G.combo = 9; judge({ phrase: 0 }, 'perfect'); var combo = G.praise;
+    G.praise = null; headline('MOLT BÉ!', 1, 3, 1.2); var small = G.praise;
+    G.praise = null; headline('A BALLAR!', 'rainbow', 4, 2, 0.5, true); var L = lane();
+    var S = HEADLINE_SIZE(true) * (1 + 3 * 0.08) * 1.15, y = PRAISE_Y(true), mid = (L.bottom + praiseFloor()) / 2;
+    G.judge = { kind: 'perfect', word: 'PERFECTE', t: clock }; drawJudge();
+    var p = { word: 'A BALLAR!', big: true }; G.balloons = [{ t: -1e9, end: 1e9, balloon: true, need: 6, count: 0 }]; dodgeBalloon(p, 3);
+    return ({ combo: !!combo?.big, small: small?.big, big: G.praise.big, centred: PRAISE_CENTRED(true), y, top: y - S * 0.6, bottom: y + S * 0.6,
+      mid, balloon: L.bottom + BALLOON_DROP * L.s, instr: PRACTICE_Y() - 11, pad: playBottom(), compactY: PRAISE_Y(false),
+      slot: L.bottom + 16 * bandScale(), under: L.bottom + 44 * bandScale() + HEADLINE_SIZE(true) * 0.6, moved: !!(p.dx || p.dy) });
+  })()`);
+  assert(r.combo && r.small === false && r.big, `${w}x${h}: combo praise and A BALLAR! are big, MOLT BÉ! compact ${JSON.stringify(r)}`);
+  assert.equal(r.compactY, r.slot, `${w}x${h}: compact practice words stay in the judge slot`);
+  assert(drawnText.includes('PERFECTE'), `${w}x${h}: a big word does not hide the per-note judge`);
+  assert.equal(r.centred, centred, `${w}x${h}: centred only on portrait screens and tablets`);
+  if (centred) {
+    assert(Math.abs(r.y - r.mid) < 0.5 && r.top > r.balloon && r.bottom < r.instr && r.bottom < r.pad, `${w}x${h}: in the middle, clear of the GLOBUS, instruction and pad ${JSON.stringify(r)}`);
+    assert(!r.moved, `${w}x${h}: a centred word never needs to dodge the balloon`);
+  } else assert.equal(r.y, r.under, `${w}x${h}: landscape keeps the word under the lane`);
+}
+context.innerWidth = 1280; context.innerHeight = 720; run('G.practice = null; G.balloons = []; G.judge = null; G.praise = null; COARSE.matches = false; SAFE.t = SAFE.b = 0; resize();');
+// A tap that waited behind a long frame is judged at its event time (performance.now() is 1000 for this block)
+assert.equal(eventAge(960, 1000), 0.04, 'event age backdates the press');
+assert.equal(eventAge(700, 1000), 0.3, 'a 300 ms stall (low-end phone) is not capped');
+assert.equal(eventAge(100, 1000), 0.5, 'event age is capped at half a second');
+assert.equal(eventAge(1.7e12, 1000), 0, 'an epoch timestamp (other clock, future) is ignored');
+assert.equal(eventAge(0, 1000), 0, 'a zero timestamp is ignored');
+assert.equal(eventAge(-5, 1000), 0, 'a negative timestamp is ignored');
+assert.equal(eventAge(undefined, 1000), 0, 'no event: no lag');
+run('performance.now = () => 1000');
+assert.equal(run('eventAt({ timeStamp: 960 })'), 960, 'press() reads the song clock at the event time');
+assert.equal(run('eventAt({ timeStamp: 100 })'), 500, '... at most half a second back');
+assert.equal(run('eventAt(undefined)'), 1000, 'no event: now');
+assert.equal(run('eventAt({ timeStamp: 1.7e12 })'), 1000, 'a foreign-clock stamp: now');
+run(`Object.assign(G, { state: 'play', paused: false, collapseT: 0, practice: null, diff: 1, next: 0, streak: 0, combo: 0, energy: 1,
+  counts: { perfect: 0, good: 0, miss: 0 }, errors: { early: 0, late: 0, move: 0, silent: 0, both: 0, hold: 0 }, score: 0, maxCombo: 0 });
+  G.balloons = []; bigPending = null; G.hold = null; chip = { sfx() {}, t0: 0, now: at => 5 + ((at ?? performance.now()) - 1000) / 1000 };
+  var lagNote = { t: songTime() - 0.06, dir: 'L', input: 'L', phrase: 0, hit: null }; G.chart = [lagNote]; WIN = WINDOWS[1];
+  press('L', { timeStamp: 940 });`);
+assert.equal(run('lagNote.hit'), 'perfect', 'the press lands on the note it was aimed at, despite a 60 ms handler delay');
+run(`var stallNote = { t: songTime() - 0.3, dir: 'R', input: 'R', phrase: 0, hit: null }; G.chart = [stallNote]; G.next = 0;
+  press('R', { timeStamp: 700 });`);
+assert.equal(run('stallNote.hit'), 'perfect', 'a 300 ms main-thread stall still judges the tap on time');
+run('performance.now = () => 0');
+console.log('input event-time judging ok');
+
+// Compact feedback retains useful instruction without repeating routine error explanations.
+run(`chip = { resume() {}, t0: 0, ctx: { currentTime: 0, suspend() {}, resume() {} }, stop() {}, menu() {}, sfx() {}, noiseHit() {}, blip() {}, now: () => songNow, start: () => Promise.resolve(false) };
+  startGame(1); offsetMs = 0; G.state = 'play'; clock += 1; songNow = G.chart[0].t;
+  G.balloons = []; G.next = 0; G.hold = null; bigPending = null;`);
+for (const kind of ['perfect', 'good', 'miss']) {
+  run(`G.energy = 1; judge({ phrase: 0, detail: 'SENSE TOC' }, '${kind}');`);
+  assert.equal(run('G.judge.word'), { perfect: 'PERFECTE', good: 'BÉ', miss: 'ERROR' }[kind]);
+  drawnText.length = 0; run('drawJudge()');
+  assert(!drawnText.includes('SENSE TOC'), 'routine details stay in results');
+}
+for (const detail of ['ELS DOS ALHORA!', 'HAS DEIXAT ANAR']) {
+  drawnText.length = 0;
+  run(`G.judge.detail = ${JSON.stringify(detail)}; drawJudge();`);
+  assert(drawnText.includes(detail), 'actionable instruction remains');
+}
+drawnText.length = 0;
+run(`G.practice = { step: 0 }; G.judge.detail = 'AVIAT'; drawJudge(); G.practice = null;`);
+assert(drawnText.includes('AVIAT'), 'practice retains detailed feedback');
+drawnText.length = 0;
+run(`G.go = G.chart[0].t; drawBanner(G.go);`);
+assert(!drawnText.includes('BALLA!'), 'the first playable note is not covered by the start word');
+
+// A special does not open a new headline slot during the song.
+run(`G.praise = null; var compactBalloon = { t: songNow - 1, end: songNow + 2, balloon: true, need: 2, count: 0, phrase: 0 }; pump(compactBalloon); pump(compactBalloon);`);
+assert.equal(run('G.praise'), null, 'pops retain their particles and score without a headline');
+run('endBalloon(compactBalloon);');
+assert.equal(run('G.praise'), null, 'no end-of-balloon tally headline');
+
+// The camera and bubble exclusion use a stable stage, independent of feedback or active balloons.
+for (const [w, h, padPixels, touch] of [[375, 667, 508, true], [393, 852, 693, true], [667, 375, 375, false], [1280, 800, 800, false], [1366, 1024, 871, true]]) {
+  context.innerWidth = w; context.innerHeight = h;
+  nodes.get('pad').getBoundingClientRect = () => ({ top: padPixels });
+  run(`COARSE.matches = ${touch};`);
+  run(`resize(); startGame(1); G.practice = null; G.collapseT = 0; G.state = 'play';
+    SAFE.t = COARSE.matches ? 44 : 0; SAFE.b = COARSE.matches ? 34 : 0;
+    var stableStage = JSON.stringify(playStage()); G.judge = { kind: 'miss', detail: 'ELS DOS ALHORA!', t: clock };
+    G.praise = { word: 'IGNORED', tier: 0 }; G.hold = { n: G.chart[0] };`);
+  assert.equal(run('JSON.stringify(playStage())'), run('stableStage'), 'temporary feedback cannot change framing');
+  assert(run('bubbleView().t >= playStage().top + 2 && bubbleView().b <= playStage().bottom - 2'), 'speech respects the same stage');
+  run(`G.hold = null; G.praise = null; G.balloons = [];
+    var projected = []; var vertex = new THREE.Vector3();
+    for (const collapsed of [false, true]) for (let yaw = 0; yaw < Math.PI * 2; yaw += Math.PI / 4) {
+      G.collapseT = collapsed ? clock : 0; var fitPoints = collapsed ? COLLAPSE_POINTS : MULA_POINTS;
+      M.yaw = yaw; var shift = framePlayCamera(1, 0, 0, true);
+      camera.setViewOffset(W * K, HH * K, 0, -shift, W * K, HH * K); camera.updateMatrixWorld(true);
+      var sy = Math.sin(yaw), cy = Math.cos(yaw), area = playStage();
+      var minY = Infinity, maxY = -Infinity, minX = Infinity, maxX = -Infinity;
+      for (let i = 0; i < fitPoints.length; i += 3) {
+        vertex.set(fitPoints[i] * cy + fitPoints[i + 2] * sy, fitPoints[i + 1], -fitPoints[i] * sy + fitPoints[i + 2] * cy).project(camera);
+        var xx = (vertex.x + 1) * W / 2, yy = (1 - vertex.y) * HH / 2;
+        minY = Math.min(minY, yy); maxY = Math.max(maxY, yy); minX = Math.min(minX, xx); maxX = Math.max(maxX, xx);
+      }
+      projected.push({ minY, maxY, minX, maxX, top: area.top, bottom: area.bottom, width: W });
+    }`);
+  for (const p of run('projected')) {
+    // The play camera frames a fixed slice of the world (CAMV), not her whole envelope: in her wildest turn/jump she may pass
+    // over the lane or the pad (and a desktop shows her feet at the very bottom on purpose), but never off a side (the wildest jump apex may just touch the top of the window).
+    assert(p.minY >= -26 && p.minX >= 2 && p.maxX <= p.width - 2,
+      `${w}x${h}: the turn/jump envelope stays on the screen ${JSON.stringify(p)}`);
+  }
+}
+// Practice must leave a usable stage, not fit a tiny silhouette from above the roofs.
+for (const [w, h, touch] of [[375, 667, true], [393, 852, true], [667, 375, false], [1280, 720, false], [1366, 1024, true]]) {
+  context.innerWidth = w; context.innerHeight = h;
+  nodes.get('pad').getBoundingClientRect = () => ({ top: touch ? h - (h < 400 ? 66 : 130) : h });
+  run(`COARSE.matches = ${touch}; SAFE.t = SAFE.b = 0; resize(); startGame(1); G.practice = { step: 0, clickK: 0 };`);
+  const area = run('JSON.stringify(playStage())');
+  for (let step = 0; step < 5; step++) for (const yaw of [0, 1.3, 2.6, 3.9, 5.2]) {
+    run(`G.practice.step = ${step}; practiceStep(4); M.yaw = ${yaw}; framePlayCamera(1, 0, 0, true);`);
+    assert.equal(run('JSON.stringify(playStage())'), area, 'practice steps and special notes keep the same camera stage');
+    assert(run('playStage().bottom - playStage().top > HH * 0.2'), `${w}x${h}: practice retains room for the Mulassa`);
+    assert(run('(cameraTarget.y - 1.4) / Math.hypot(cameraTarget.x, cameraTarget.z) < 2.15'), `${w}x${h}: practice does not escape above the plaza ${run("JSON.stringify({pos:cameraTarget.toArray(),stage:playStage(),HH})")}`);
+    assert(run('PRACTICE_Y() - 11 >= playStage().bottom && PRACTICE_Y() + 11 < playBottom()'), 'instructions clear the stage and pad');
+  }
+}
+context.innerWidth = 1280; context.innerHeight = 720; run('G.practice = null; COARSE.matches = false; SAFE.t = SAFE.b = 0; resize();');
+
+// Collapse is a presentation of its own: no gameplay HUD, delayed caption and restored controls on restart.
+run(`startGame(1); G.state = 'play'; clock = 500; G.judge = { kind: 'miss', word: 'ERROR', t: clock };
+  G.praise = { word: 'OLD', tier: 0, t0: clock }; collapse(); drawHud(songTime()); updateControls();`);
+assert(run('G.judge === null && G.praise === null && bubbles.length === 0'), 'collapse clears competing feedback');
+assert.equal(nodes.get('pause').hidden, true, 'collapse hides pause');
+drawnText.length = 0; run('drawHud(songTime());');
+assert.deepEqual(drawnText, [], 'collapse initially leaves the animation alone');
+drawnText.length = 0; run('clock += 0.7; drawHud(songTime());');
+assert.deepEqual(drawnText, ['LA MULASSA', 'S’HA DESMUNTAT!'], 'only the delayed caption remains (two big lines)');
+run(`var collapseStage = JSON.stringify(playStage()); startGame(1); updateControls();`);
+assert.equal(nodes.get('pause').hidden, false, 'a new run restores pause');
+assert(run('G.collapseT === 0 && G.energyWarnT === -9 && rests.cursor === 0 && JSON.stringify(playStage()) !== collapseStage'), 'restart restores stage and rest/warning state');
+run('toTitle(); updateControls();');
+assert.equal(nodes.get('pause').hidden, true, 'the title does not retain pause');
+console.log('compact feedback, stable stage and collapse presentation ok');
+
+// Exercise the real frame transitions: the finale has no banner, the cheer waits for chart resolution,
+// and collapse still reaches results after its existing delay.
+run(`startGame(1); songNow = song.finale + 0.1; clock = 800;
+  G.counts = { perfect: 100, good: 0, miss: 0 }; G.guapo = G.shown = 100;
+  for (const n of G.chart) if (n.t < songNow) { n.hit = 'perfect'; if (n.end && !n.balloon) n.tail = 'perfect'; }
+  G.next = G.chart.findIndex(n => !n.hit); G.praise = null; frame(1000);`);
+assert(run('G.finale && G.praise === null'), 'the actual finale transition preserves effects without a banner');
+run(`songNow = song.end; for (const n of G.chart) n.hit = n.hit || 'perfect'; G.next = G.chart.length; // no misses: no collapse
+  G.hold = { n: G.chart.at(-1), got: songNow, pts: 0 }; bigPending = { n: G.chart.at(-1), t: songNow, done: true };
+  frame(1017);`);
+assert.equal(run('G.eeeh'), false, 'post-song celebration waits for pending interactions');
+run(`G.hold = null; bigPending = null; for (const n of G.chart) n.hit = 'perfect'; G.next = G.chart.length; songNow = song.end + 0.1; frame(1034);`);
+assert(run('G.eeeh'), 'the post-song celebration remains (the GUAPA, GUAPA... I GUAPA! chant is timed)');
+run(`collapse(); clock = G.collapseT + 3.51; frame(1051);`);
+assert(run('G.state === "results" && G.reason === "collapse"'), 'collapse retains its 3.5-second results transition');
+// A fatal missed hold judges both ends but cannot repopulate terminal presentation.
+run(`startGame(1); G.energy = 0.01; var fatalHold = G.chart.find(n => n.end && !n.balloon); judge(fatalHold, 'miss');`);
+assert(run('G.collapseT && G.counts.miss === 2 && G.judge === null && G.ring === null'), 'tail judgement after a fatal head miss stays visually quiet');
+console.log('finale and collapse frame transitions ok');
+
+// The finale's festa is for everyone; only the double points (and their «x2 PUNTS» tag) need >= 70%.
+for (const [perfect, miss, doubled] of [[50, 50, false], [100, 0, true]]) {
+  run(`startGame(1); songNow = song.finale + 0.1; clock = 900;
+    G.counts = { perfect: ${perfect}, good: 0, miss: ${miss} }; G.guapo = G.shown = quality(G.counts);
+    for (const n of G.chart) if (n.t < songNow) { n.hit = 'perfect'; if (n.end && !n.balloon) n.tail = 'perfect'; }
+    G.next = G.chart.findIndex(n => !n.hit); frame(1100); var finN = G.chart.find(n => !n.hit && !n.big && !n.balloon && !n.end);
+    G.combo = 0; judge(finN, 'perfect');`);
+  const q = run('G.guapo');
+  assert(run('G.finale && (animFinaleLights(1.1), hemi.intensity !== 1.6)'), `the finale lights up at ${q.toFixed(0)}%`);
+  assert(run('G.finale && sparks.some(s => s.life > 0)'), `the finale's fireworks fly at ${q.toFixed(0)}%`);
+  assert.equal(run('G.doublePoints'), doubled, `double points ${doubled ? 'on' : 'off'} at ${q.toFixed(0)}%`);
+  assert.equal(run('finN.pts'), doubled ? 604 : 302, `a perfect is worth ${doubled ? 'x2' : 'x1'} at ${q.toFixed(0)}%`);
+  run(`for (const n of G.chart) n.hit = n.hit || 'perfect'; G.next = G.chart.length; G.hold = null; bigPending = null; songNow = song.end + 0.1; frame(1117);`);
+  assert(run('G.eeeh'), `the post-song chant and volley play at ${q.toFixed(0)}%`);
+}
+console.log('finale festa for everyone, x2 from 70% ok');
+
+// Dance integration (dance.js + accents): the song's choreography owns the heading, hits only accent it and settle
+// back, taps never pile up, holds release smoothly, misses recover, the practice stays front on and a collapse
+// freezes the song pose. No score, judgement or energy rule depends on any of it.
+run(`chip = { resume() {}, t0: 0, ctx: { currentTime: 0, suspend() {}, resume() {} }, stop() {}, menu() {}, blip() {}, noiseHit() {},
+    sfx() {}, now: () => songNow, start: () => Promise.resolve(false), startClock() {}, tick() {}, countIn() {} };
+  var dp = newPose(), frames = (n, dt = 1 / 60) => { for (let i = 0; i < n; i++) { clock += dt; animMula(dt, beatAt(songNow)); } };
+  function danceAt(diff, x) { startGame(diff); songNow = x; M.missT = -9; frames(90); return { yaw: M.yaw, roll: mula.body.rotation.z, pitch: mula.body.rotation.x, y: mula.root.position.y, x: M.pos.x, z: M.pos.y }; }
+  var sameEasy = danceAt(0, BEATS[200] + 0.1), sameHard = danceAt(2, BEATS[200] + 0.1);`);
+assert.deepEqual(run('sameEasy'), run('sameHard'), 'the same dance at the same musical moment on every difficulty');
+run(`startGame(1); songNow = BEATS[100]; M.missT = -9; frames(60); dancePose(dp, beatAt(songNow));`);
+assert(run('Math.abs(M.yaw - FRONT - dp.yaw) < 1e-9 && Math.abs(M.yaw - FRONT - Math.PI) < 0.35'), 'untouched, she follows the song: rear to the plaça in A bars 9-16');
+run(`var y0 = M.yaw, r0 = mula.body.rotation.z; act('L'); frames(8); var leaned = mula.body.rotation.z - r0, turned = Math.abs(M.yaw - y0); frames(120);`);
+assert(run('Math.abs(leaned) > 0.03 && turned < 0.05'), 'a GUA hit leans her without turning her away');
+assert(run('Math.abs(M.yaw - FRONT - dp.yaw) < 1e-3 && Math.abs(S.roll.x) < 1e-3 && M.air === 0'), 'the accent settles back onto the dance');
+run(`songNow = BEATS[20]; frames(60); var rFront = mula.body.rotation.z; act('L'); frames(8); var guaFront = mula.body.rotation.z - rFront;
+  frames(120); songNow = BEATS[100]; frames(60); var rRear = mula.body.rotation.z; act('L'); frames(8); var guaRear = mula.body.rotation.z - rRear; frames(120);`);
+assert(run('guaFront > 0.03 && guaRear < -0.03'), 'GUA leans to the screen’s left whichever way she faces (her own roll flips)');
+run(`var worst = 0, bl = G.balloons[0]; songNow = bl.t + 0.1; G.next = G.chart.indexOf(bl);
+  for (let i = 0; i < 400; i++) { press(i % 2 ? 'L' : 'R'); frames(1, 1 / 120); dancePose(dp, beatAt(songNow));
+    worst = Math.max(worst, Math.abs(M.yaw - FRONT - dp.yaw) / CAP.yaw, Math.abs(S.roll.x) / CAP.roll, Math.abs(S.pitch.x) / CAP.pitch, M.air / CAP.air); }`);
+assert(run('bl.count === 400 && worst <= 1 + 1e-9'), 'mashing a GLOBUS (and its pops) stays within the accent caps');
+run(`frames(180);`);
+assert(run('M.air === 0 && Math.abs(S.roll.x) < 1e-3 && Math.abs(M.yaw - FRONT - dp.yaw) < 1e-3'), 'and settles once the mashing stops');
+run(`startGame(1); var hn = G.chart.find(n => n.end && !n.balloon); songNow = hn.t; frames(30);
+  G.hold = { n: hn, got: hn.t, pts: 0, auto: true }; frames(60); var holdNeck = S.neck.x, holdRoll = S.roll.x;
+  G.hold = null; frames(4); var justLet = S.neck.x; frames(120);`);
+assert(run('holdNeck < -0.1 && Math.abs(holdRoll) > 0.02'), 'a held MANTÉN sustains a restrained gesture');
+assert(run('justLet < -0.05 && Math.abs(S.neck.x) < 1e-3'), 'and releases it smoothly, not in one frame');
+run(`startGame(1); songNow = BEATS[40]; frames(30); var gn = G.chart.find(n => n.big); gn.pts = 0; guapaHit(gn); frames(6); var gAir = M.air, gPitch = S.pitch.x; frames(120);`);
+assert(run('gAir > 0.03 && gAir <= CAP.air && gPitch < 0'), 'a GUAPA lifts her whole front, within the cap');
+run(`stumble('L'); frames(4); var stumbled = S.pitch.x; frames(150); dancePose(dp, beatAt(songNow));`);
+assert(run('stumbled > 0.1 && Math.abs(S.pitch.x) < 1e-3 && Math.abs(M.yaw - FRONT - dp.yaw) < 1e-3'), 'a stumble dips her, then she recovers the song pose');
+run(`var missNote = G.chart.find(n => !n.big && !n.balloon && !n.end && n.t > songNow + 1); G.next = G.chart.indexOf(missNote);
+  songNow = missNote.t - WIN.good - 0.02; G.score = 0; var r0m = S.roll.v, s0 = G.score; press(missNote.input);`);
+run(`startGame(1); songNow = song.finale + 1; G.finale = true; M.air = 0; M.airV = 0; var hopped = false;
+  for (let i = 0; i < 240; i++) { frames(1); hopped ||= M.air > 0; } dancePose(dp, beatAt(songNow));`);
+assert(run('!hopped && Math.abs(M.yaw - FRONT - dp.yaw) < 1e-3'), 'the finale follows the choreography: no random hops or free spinning');
+run(`startGame(1); songNow = BEATS[100] + 0.2; frames(30); var beforePause = M.yaw; G.paused = true; frames(30, 0); var paused = M.yaw; G.paused = false;
+  startGame(1); songNow = BEATS[100] + 0.2; frames(30); var restarted = M.yaw;`);
+assert(run('beforePause === paused && Math.abs(restarted - beforePause) < 1e-9'), 'pause freezes the pose; a restart lands on the same one');
+run(`startPractice(null); songNow = BEATS[100]; frames(60); var practiceYaw = M.yaw; toTitle();`);
+assert(run('Math.abs(practiceYaw - FRONT) < 0.35'), 'the practice keeps her front on, not in the song’s turns');
+run(`startGame(1); songNow = BEATS[76]; frames(10); collapse(); var fell = M.danceBeat; songNow = BEATS[90]; frames(60);`);
+assert(run('M.danceBeat === fell && Math.abs(mula.root.position.y + 0.42) < 1e-6'), 'a collapse freezes the dance where she fell and sinks her');
+run(`finish('collapse'); var leaving = M.yaw; frames(2);`);
+assert(run('Math.abs(M.yaw - leaving) < 0.01 && !M.dancing'), 'results take over the heading without a jump');
+run('toTitle();');
+// A collapse, then back to the menu: she stands up again, exactly as on a fresh title (it looked «moixa»: sunk, neck and
+// head on the floor, legs hidden, the crowd sad, until the next game). Same spot, heading and clock for both.
+run(`var titlePose = () => { const b = mula.body, n = mula.neck, r = v => +v.toFixed(4); return JSON.stringify({ root: mula.root.position.toArray().map(r),
+    body: [b.rotation.x, b.rotation.z, b.scale.y].map(r), neck: [n.rotation.x, n.rotation.y].map(r), head: r(mula.head.rotation.x), jaw: r(mula.jaw.rotation.x),
+    ears: mula.ears.map(e => r(e.rotation.x)), legs: mula.legs.map(l => [l.visible, r(l.position.y)]), tail: [mula.tail.rotation.x, mula.tail.rotation.z].map(v => +v.toFixed(2)),
+    collapseT: G.collapseT, sad: Boolean(clock - M.missT < 1 || G.collapseT), air: M.air, state: G.state }); };
+  var titleAt = () => { Object.assign(M, { yaw: 0, dancing: false }); Object.assign(S.yaw, { x: 0, v: 0, t: 0 }); M.pivot.set(0, PIVOT); clock = 5000;
+    for (let i = 0; i < 120; i++) { clock += 1 / 60; animMula(1 / 60, clock / BEAT); } return titlePose(); };
+  startGame(1); songNow = BEATS[40]; frames(30); toTitle(); var fresh = titleAt();
+  startGame(1); songNow = BEATS[76]; frames(10); stumble('L'); collapse(); frames(60); finish('collapse'); frames(120); var fallen = JSON.parse(titlePose());
+  toTitle(); var stood = titleAt();`);
+assert(run('fallen.root[1] < -0.4 && fallen.legs.every(([v]) => !v) && fallen.sad'), 'the results after a collapse still show her fallen');
+assert.equal(run('stood'), run('fresh'), 'collapse → menu: her pose and state equal a fresh title');
+run(`startGame(1); songNow = BEATS[76]; frames(10); collapse(); frames(30); finish('collapse'); frames(30); startGame(1); frames(1);`);
+assert(run('G.collapseT === 0 && mula.legs.every(l => l.visible) && mula.root.position.y > -0.1'), 'and a new run (Torna-ho a provar) starts her upright');
+run('toTitle();');
+console.log('dance integration contracts ok');
+
+// Play camera (framePlayCamera): low and steady. Through the song's half turn and the finale's quick turns it keeps a
+// cinematic angle, hardly changes distance, never jerks, keeps her whole silhouette in the stage every frame, and
+// takes the same path at 30 and 60 fps. Taps never move it; entering play glides on from the title camera.
+for (const [w, h, padPixels, touch] of [[393, 852, 695, true], [375, 667, 537, true], [1280, 800, 800, false], [1366, 1024, 871, true], [667, 375, 375, false]]) {
+  context.innerWidth = w; context.innerHeight = h;
+  nodes.get('pad').getBoundingClientRect = () => ({ top: padPixels });
+  run(`COARSE.matches = ${touch}; SAFE.t = SAFE.b = 0; resize(); padTop = null;`);
+  const sim = fps => JSON.parse(run(`(() => {
+    toTitle(); G.state = 'title'; clock = 2000; camera.position.set(8, 6, 9); camera.lookAt(0, 1.2, 0); camFocus.set(0, 1.2, 0); CAMS.live = false;
+    startGame(1); G.state = 'play'; M.missT = -9; trauma = 0;
+    const dt = 1 / ${fps}, out = { maxAcc: 0, maxLookAcc: 0, el: [90, 0], dist: [1e9, 0], outside: -1e9, firstStep: 0, end: null }, v = new THREE.Vector3(), look = new THREE.Vector3();
+    let p1 = null, p2 = null, l1 = null, l2 = null, first = true;
+    for (const [a, b] of [[BEATS[64], BEATS[90]], [BEATS[288], BEATS[304]]]) for (songNow = a - 7; songNow < b; songNow += dt) { // (after a seek: 7 s to settle: the springs are slow, on purpose)
+      clock += dt; animMula(dt, beatAt(songNow)); const shift = framePlayCamera(dt, M.pos.x, M.pos.y); camShift = shift;
+      camera.setViewOffset(W * K, HH * K, 0, -shift, W * K, HH * K); camera.updateMatrixWorld(true);
+      camera.getWorldDirection(look);
+      const p = camera.position.clone(), d = Math.hypot(p.x - camFocus.x, p.y - 1.4, p.z - camFocus.z);
+      if (first) { out.firstStep = p.distanceTo(new THREE.Vector3(8, 6, 9)); first = false; }
+      if (songNow >= a) { // after the glide in from the title / the seek
+        out.el[0] = Math.min(out.el[0], Math.asin((p.y - 1.4) / d) * 180 / Math.PI); out.el[1] = Math.max(out.el[1], Math.asin((p.y - 1.4) / d) * 180 / Math.PI);
+        out.dist[0] = Math.min(out.dist[0], d); out.dist[1] = Math.max(out.dist[1], d);
+        if (p2) out.maxAcc = Math.max(out.maxAcc, p.clone().sub(p1.clone().multiplyScalar(2)).add(p2).length() / dt / dt);
+        if (l2) out.maxLookAcc = Math.max(out.maxLookAcc, look.clone().sub(l1.clone().multiplyScalar(2)).add(l2).length() / dt / dt);
+        const area = playStage(), sy = Math.sin(M.yaw), cy = Math.cos(M.yaw);
+        // her real box this frame (jumps, leans, buzz and all): the fit's margins must hold it
+        mula.root.updateMatrixWorld(true); const bx = new THREE.Box3().setFromObject(mula.root), pts = [];
+        for (let k = 0; k < 8; k++) pts.push(v.clone().set(k & 1 ? bx.max.x : bx.min.x, k & 2 ? bx.max.y : bx.min.y, k & 4 ? bx.max.z : bx.min.z));
+        for (let k = 0; k < MULA_POINTS.length + 24; k += 3) {
+          if (k < MULA_POINTS.length) v.set(MULA_POINTS[k] * cy + MULA_POINTS[k + 2] * sy + M.pos.x, MULA_POINTS[k + 1], -MULA_POINTS[k] * sy + MULA_POINTS[k + 2] * cy + M.pos.y);
+          else v.copy(pts[(k - MULA_POINTS.length) / 3]);
+          v.project(camera);
+          const yy = (1 - v.y) * HH / 2, xx = (v.x + 1) * W / 2;
+          // Known: 1366x1024 (tablet), beat ~298, the head clears the top by up to ~26.7 units in the wildest jump (found when this check was repaired, 2026-09-30); 27.5 holds that, sides stay strict.
+          const o = Math.max(-yy - 27.5, -xx + 2, xx - W + 2); // (never off a side; the head may just touch the top in a wild jump)
+          if (o > out.outside) { out.outside = o; out.worst = [area.top - yy, yy - area.bottom, -xx, xx - W, beatAt(songNow), M.yaw - FRONT, mula.root.position.y]; } // (the fit keeps 8 units clear; the lift and accents may use some)
+        }
+      }
+      p2 = p1; p1 = p; l2 = l1; l1 = look.clone();
+    }
+    out.end = camera.position.toArray();
+    return JSON.stringify(out); })()`));
+  const a = sim(60), b = sim(30);
+  const tag = `${w}x${h} ${JSON.stringify(a)}`;
+  assert(a.el[0] > 20 && a.el[1] < 34, `${tag}: a low view over the crowd (about 26 deg, swaying a few degrees, never a helicopter)`);
+  assert(a.dist[1] / a.dist[0] < 1.2, `${tag}: turning only eases the distance (her apparent size)`);
+  assert(a.maxAcc < 4 && a.maxLookAcc < 1.5, `${tag}: no jerks`);
+  assert(a.outside <= 0, `${tag}: her silhouette stays on the screen on every frame (no side, and the head only touches the top in a wild jump)`);
+  assert(a.firstStep < 0.2, `${tag}: play starts by gliding on from the title camera`);
+  assert(Math.hypot(...a.end.map((x, i) => x - b.end[i])) < 0.05, `${tag}: the same path at 30 fps (${b.end})`);
+}
+run(`var drift0 = { ...DRIFT }; DRIFT.az = DRIFT.el = DRIFT.dist = DRIFT.follow = 0; // (the slow sway aside: checked below)
+  for (let i = 0; i < 1500; i++) { clock += 1 / 60; animMula(1 / 60, beatAt(songNow)); framePlayCamera(1 / 60, M.pos.x, M.pos.y); }
+  var camBefore = camera.position.clone(); for (let i = 0; i < 20; i++) { act(i % 2 ? 'L' : 'B'); clock += 1 / 60; animMula(1 / 60, beatAt(songNow)); framePlayCamera(1 / 60, M.pos.x, M.pos.y); }`);
+assert(run('camera.position.distanceTo(camBefore) < 0.05'), 'taps and accents do not move the camera');
+run('Object.assign(DRIFT, drift0)');
+// The breath: left alone for 8 s the play camera drifts a little round her (the plaça glides behind her, she stays
+// framed: checked every frame above), slowly; reduced motion keeps it still.
+for (const calm of [false, true]) {
+  const moved = run(`CALM.matches = ${calm}; for (let i = 0; i < 600; i++) { clock += 1 / 60; framePlayCamera(1 / 60, M.pos.x, M.pos.y); }
+    (() => { const p0 = camera.position.clone(); let most = 0; for (let i = 0; i < 480; i++) { clock += 1 / 60; framePlayCamera(1 / 60, M.pos.x, M.pos.y); most = Math.max(most, camera.position.distanceTo(p0)); } return most; })()`);
+  if (calm) assert(moved < 0.02, `reduced motion: no breath (${moved.toFixed(3)} m)`);
+  else assert(moved > 0.1 && moved < 3, `the camera sways, gently (${moved.toFixed(2)} m over 8 s)`);
+}
+run('CALM.matches = false');
+context.innerWidth = 1280; context.innerHeight = 720; run('COARSE.matches = false; resize(); toTitle();');
+console.log('play camera smoothness ok');
+
+// 120 fps must look like 60, only smoother: particles move by real time, not per frame (framePacer runs 120 Hz screens
+// at their full rate when they keep up).
+run(`var fwGap = (() => {
+  sparks.forEach(s => { s.life = 0; }); firework(0, 10, 0, 700); // only this burst
+  const s0 = sparks.map(s => [s.p.clone(), s.v.clone(), s.life]);
+  const sim = n => { sparks.forEach((s, i) => { s.p.copy(s0[i][0]); s.v.copy(s0[i][1]); s.life = s0[i][2]; }); for (let k = 0; k < n; k++) animFireworks(0.8 / n); return sparks.map(s => s.p.clone()); };
+  const a = sim(48), b = sim(96);
+  return s0.reduce((m, s, i) => s[2] > 0.85 ? Math.max(m, a[i].distanceTo(b[i])) : m, 0);
+})()`);
+assert(run('fwGap') < 0.05, `fireworks fly the same at 60 and 120 fps (${run('fwGap').toFixed(3)} m apart)`);
+// «Mostra els FPS»: off by default; the ⚙ switch shows it and remembers it; just the number, ~4 updates a second,
+// on the title and in play only; a ~30 Hz display (iOS Low Power Mode) gets a short hint.
+{
+  const saved = {};
+  context.localStorage = { getItem: k => saved[k] ?? null, setItem: (k, v) => { saved[k] = String(v); } };
+  const fps = nodes.get('fps'), sw = nodes.get('settings-fps');
+  run(`G.state = 'title'; fpsTick(0);`);
+  assert(fps.hidden && !sw.checked, 'FPS readout off by default');
+  sw.checked = true; sw.listeners.change();
+  assert.equal(saved.fps, 'on', 'the switch is remembered');
+  run('for (let i = 0; i <= 45; i++) fpsTick(1000 + i * 1000 / 60);');
+  assert(!fps.hidden && fps.textContent === '60 FPS' && fps.dataset.l === 'ok', `a plain number (${fps.textContent})`);
+  run('for (let i = 46; i <= 60; i++) fpsTick(1000 + i * 1000 / 60);'); // an 8th of a second more: not redrawn yet
+  run(`pace.lowPower = true; pace.fps = 30; for (let i = 1; i <= 30; i++) fpsTick(2000 + i * 1000 / 30);`);
+  assert.equal(fps.textContent, '30 FPS\nmode d’estalvi?', 'Low Power Mode hint at ~30 Hz');
+  run(`pace.lowPower = false; pace.fps = 120; for (let i = 1; i <= 60; i++) fpsTick(3000 + i * 1000 / 60);`);
+  assert(fps.textContent === '60 FPS' && fps.dataset.l === 'low', '60 of a 120 target reads red');
+  run(`G.state = 'results'; fpsTick(5000);`);
+  assert(fps.hidden, 'hidden on the results screen (its buttons own the bottom)');
+  sw.checked = false; sw.listeners.change(); run(`G.state = 'title'; pace.fps = 60; fpsTick(6000);`);
+  assert(fps.hidden && saved.fps === 'off', 'switched off: gone and remembered');
+}
+console.log('frame-rate independence and FPS readout ok');
+
+// Title camera steering (src/scene/orbit.js): a drag on empty canvas turns the view and never picks a difficulty; a press
+// on a canvas button still picks it; nothing steers outside the title or with a sheet up.
+{
+  const hud = nodes.get('hud'), k = run('K'), up = id => (windowHandlers.pointerup || []).forEach(h => h({ pointerId: id }));
+  const ev = (id, x, y, more = {}) => ({ pointerId: id, clientX: x * k, clientY: y * k, pointerType: 'touch', button: 0, preventDefault() {}, ...more });
+  run(`var picked = [], realChoose = choose; choose = i => picked.push(i); G.state = 'title'; orbitCancel(orbit);
+    buttons = [{ x: 100, y: 200, w: 60, h: 30, i: 1 }];`);
+  const yaw0 = run('orbit.yaw');
+  hud.listeners.pointerdown(ev(1, 20, 60));
+  for (let x = 20; x <= 140; x += 10) hud.listeners.pointermove(ev(1, x, 60 + x)); // across the button, too
+  up(1);
+  assert(run('picked.length === 0 && orbit.ptrs.size === 0'), 'a drag never picks a difficulty, even ending on a button');
+  assert(run(`orbit.yaw`) !== yaw0, 'the drag turned the view');
+  hud.listeners.pointerdown(ev(2, 120, 210)); up(2);
+  assert(run('picked.join() === "1" && orbit.ptrs.size === 0'), 'a press on a canvas button still picks it');
+  run('picked.length = 0; settingsMenu.open = true;');
+  hud.listeners.pointerdown(ev(3, 20, 60));
+  assert(run('orbit.ptrs.size === 0'), 'no steering with a sheet up');
+  const zoom = run('orbit.zoomTo');
+  hud.listeners.wheel(ev(0, 0, 0, { deltaY: 100, deltaMode: 0, ctrlKey: false }));
+  assert.equal(run('orbit.zoomTo'), zoom, 'no wheel zoom with a sheet up');
+  run('settingsMenu.open = false;');
+  let prevented = false;
+  hud.listeners.wheel(ev(0, 0, 0, { deltaY: 100, deltaMode: 0, ctrlKey: true, preventDefault() { prevented = true; } }));
+  assert(prevented && run('orbit.zoomTo') > zoom, 'the wheel / trackpad pinch backs off, never zooming the page');
+  for (const state of ['play', 'results', 'splash']) {
+    run(`G.state = '${state}'; G.resT = clock; G.paused = false;`);
+    const z = run('orbit.zoomTo');
+    if (state !== 'splash') hud.listeners.pointerdown(ev(4, 20, 60));
+    hud.listeners.pointermove(ev(4, 90, 90));
+    hud.listeners.wheel(ev(0, 0, 0, { deltaY: 100, deltaMode: 0, ctrlKey: false }));
+    assert(run('orbit.ptrs.size === 0') && run('orbit.zoomTo') === z, `${state}: no steering`);
+    up(4);
+  }
+  run(`choose = realChoose; G.state = 'title'; buttons = [];`);
+}
+console.log('title camera steering ok');
+
+// «Mode foto» (#viewmode, title only): every control, tip and the HUD go (inert, the body class fades them), the camera
+// still steers, a tap or a key picks nothing, no sheet opens; Escape, H or the same button bring it all back.
+{
+  const btn = nodes.get('viewmode'), hud = nodes.get('hud'), k = run('K'), cls = new Set(), attrs = {}, idle = new Set();
+  const bodyCl = document.body.classList;
+  document.body.classList = { contains: c => cls.has(c), toggle: (c, on) => { if (on) cls.add(c); else cls.delete(c); } };
+  btn.setAttribute = (a, v) => { attrs[a] = v; };
+  btn.classList = { add: c => idle.add(c), remove: c => idle.delete(c), toggle() {} };
+  let focused = null; btn.focus = () => { focused = btn; };
+  const HIDES = ['leaders', 'settings', 'feedback', 'music', 'howto', 'ios-hint', 'fps', 'feedback-nudge'];
+  const keyDown = code => keyHandlers.forEach(h => h({ code, target: { tagName: 'BODY' }, preventDefault() {} }));
+  const up = id => (windowHandlers.pointerup || []).forEach(h => h({ pointerId: id }));
+  const ev = (id, x, y) => ({ pointerId: id, clientX: x * k, clientY: y * k, pointerType: 'touch', button: 0, preventDefault() {} });
+  let t = 20000; const frames = n => { for (let i = 0; i < n; i++) run(`frame(${t += 1000 / 60})`); };
+  run(`var picked = [], realChoose = choose; choose = i => picked.push(i); G.state = 'title'; G.sel = 0; orbitCancel(orbit); updateControls(); if (chip && !chip.wake) chip.wake = () => {};`);
+  assert.equal(btn.hidden, false, 'the eye is on the title');
+  frames(3);
+  assert(hudWork.ops > 0, 'the title draws its HUD');
+  btn.listeners.click();
+  assert(run('viewMode') && cls.has('view-mode') && attrs['aria-pressed'] === 'true' && focused === btn, 'pressed: the UI fades out, the focus on the button');
+  assert(HIDES.every(id => nodes.get(id).inert === true), 'every hidden control is inert: never focused or clicked');
+  frames(20); // past the fade
+  const w0 = { ...hudWork };
+  frames(30);
+  assert(hudWork.ops === w0.ops && hudWork.clears === w0.clears, `faded out: the HUD is left blank, not redrawn (${hudWork.ops - w0.ops} canvas calls)`);
+  run(`buttons = [{ x: 100, y: 200, w: 60, h: 30, i: 1 }];`); // the choice's spot (unseen now)
+  hud.listeners.pointerdown(ev(7, 120, 210));
+  assert(run('picked.length === 0 && orbit.ptrs.size === 1'), 'a tap on the plaça (even on the choice\'s spot) steers, never picks a difficulty');
+  up(7);
+  for (const code of ['Space', 'Enter', 'ArrowRight', 'KeyK', 'BracketLeft']) keyDown(code);
+  assert(run('picked.length === 0 && G.sel === 0 && G.state === "title"'), 'no key picks or starts anything');
+  keyDown('Escape');
+  assert(!run('viewMode') && !cls.has('view-mode') && attrs['aria-pressed'] === 'false' && HIDES.every(id => nodes.get(id).inert === false), 'Escape brings the UI back');
+  frames(1);
+  assert(hudWork.ops > w0.ops, 'and the HUD draws again');
+  keyDown('KeyH');
+  assert(run('viewMode'), 'H hides the UI');
+  keyDown('KeyH');
+  assert(!run('viewMode'), 'H again shows it');
+  btn.listeners.click(); btn.listeners.click();
+  assert(!run('viewMode') && !cls.has('view-mode'), 'so does the button');
+  run('settingsMenu.open = true;'); keyDown('KeyH'); btn.listeners.click();
+  assert(!run('viewMode'), 'never under a sheet'); run('settingsMenu.open = false;');
+  btn.listeners.click(); run(`G.state = 'play'; G.paused = false; updateControls();`);
+  assert(!run('viewMode') && !cls.has('view-mode') && btn.hidden, 'title only: a game brings the UI back and has no eye');
+  keyDown('KeyH'); btn.listeners.click();
+  assert(!run('viewMode'), 'no «mode foto» during a game');
+  run(`G.state = 'results'; G.resT = clock; updateControls();`);
+  assert(btn.hidden, 'nor on the results');
+  run(`choose = realChoose; G.state = 'title'; buttons = []; orbitCancel(orbit); updateControls();`);
+  document.body.classList = bodyCl;
+}
+console.log('view mode ok');
+
+// Canvas roundRect polyfill (src/platform/polyfills.js, Safari 15 / Chrome < 99): number or 1–4 radii, radii that don't fit shrink.
+{
+  const { roundRect } = await import('../src/platform/polyfills.js');
+  const path = () => { const ops = []; return { ops, moveTo: (...a) => ops.push(['M', ...a]), arcTo: (...a) => ops.push(['A', ...a]), closePath: () => ops.push(['Z']) }; };
+  const radii = r => { const p = path(); roundRect.call(p, 0, 0, 100, 40, r); return p.ops.filter(o => o[0] === 'A').map(o => +o[5].toFixed(3)); };
+  assert.deepEqual(radii(8), [8, 8, 8, 8], 'one number: every corner (tr, br, bl, tl)');
+  assert.deepEqual(radii([8]), [8, 8, 8, 8], 'an array of one');
+  assert.deepEqual(radii([0, 6, 6, 0]), [6, 6, 0, 0], 'four radii in CSS order tl, tr, br, bl');
+  assert.deepEqual(radii([2, 5]), [5, 2, 5, 2], 'two radii: tl/br and tr/bl');
+  assert.deepEqual(radii(40), [20, 20, 20, 20], 'a pill: radii larger than half the height shrink to fit');
+  assert.deepEqual(radii(), [0, 0, 0, 0], 'no radius: square corners');
+  const p = path(); roundRect.call(p, 10, 20, 30, 40, 5);
+  assert.deepEqual(p.ops[0], ['M', 15, 20], 'starts after the top-left corner');
+  assert.deepEqual(p.ops.at(-1), ['M', 10, 20], 'a new subpath at (x, y) afterwards, like the native one');
+  console.log('canvas roundRect polyfill ok');
+}
+
+{ // the drawn song clock: the audio clock only moves in whole render buffers (256 samples at 48 kHz = 5.33 ms, 1024 on
+  // some phones); the frames must still advance evenly, stay with the audio and never run backwards
+  const run = (hz, block, frames = 1200, rate = 1, jitter = 0) => {
+    const view = smoothClock(), q = block / 48000, steps = [], drift = [];
+    let prev = null, audioReal = 10, now = 0, last = 0;
+    for (let i = 0; i < frames; i++) {
+      const dt = 1 / hz + (jitter ? (i % 7 - 3) * jitter : 0);
+      now += dt; audioReal += dt * rate;
+      const audio = Math.floor(audioReal / q) * q; // what ctx.currentTime reads: the last rendered buffer
+      const v = view(audio, now - last); last = now;
+      if (prev != null) steps.push({ step: v - prev, dt });
+      drift.push(v - audio);
+      prev = v;
+    }
+    return { steps: steps.slice(120), drift: drift.slice(120), all: steps };
+  };
+  for (const [hz, block] of [[60, 256], [120, 256], [60, 1024], [144, 128], [90, 441]]) {
+    const { steps, drift, all } = run(hz, block);
+    assert(all.every(s => s.step >= 0), `${hz} Hz/${block}: monotonic`);
+    const worst = Math.max(...steps.map(s => Math.abs(s.step - s.dt)));
+    assert(worst < 0.001, `${hz} Hz/${block}: every frame advances by its real time (±1 ms), got ±${(worst * 1000).toFixed(2)} ms`);
+    const raw = 1 / hz % (block / 48000);
+    if (raw > 1e-4) assert(worst < raw / 3, `${hz} Hz/${block}: much smoother than the raw buffer steps`);
+    assert(Math.max(...drift.map(Math.abs)) <= block / 48000 + 0.002, `${hz} Hz/${block}: within about a buffer of the audio clock`);
+  }
+  // uneven frame times (a busy phone) and an audio clock 0.2% off the frame clock: still bounded, still monotonic
+  { const { drift, all } = run(60, 1024, 3000, 1.002, 0.002);
+    assert(all.every(s => s.step >= 0), 'jittery frames: monotonic');
+    assert(Math.max(...drift.map(Math.abs)) < 0.03, 'a drifting audio clock is followed (bounded)'); }
+  // a jump (new song, seek, restart) is taken at once; dt = 0 (paused) holds it; a long stall re-syncs
+  const view = smoothClock();
+  view(5, 0.016); for (let i = 0; i < 30; i++) view(5 + i * 0.016, 0.016);
+  assert.equal(view(40, 0.016), 40, 'a seek snaps');
+  assert.equal(view(-3, 0.016), -3, 'a restart (backwards) snaps');
+  const held = view(-2.99, 0.016);
+  assert.equal(view(-2.99, 0), held, 'paused: holds');
+  assert.equal(view(-2.99, 0), held, 'paused: still holds');
+  assert.equal(view(7, 1), 7, 'after a stall (hidden tab) it takes the audio clock');
+  // it never runs more than 30 ms ahead of an audio clock that stops (the song ended, the context suspended)
+  let v = 0; for (let i = 0; i < 60; i++) v = view(7.05, 0.016);
+  assert(v <= 7.05 + 0.03 + 1e-9, 'never far ahead of a stopped audio clock');
+  // main.js draws the lane through it on top of the de-stepped audio clock (already smooth): identical while the audio
+  // runs evenly, but a jump of the audio device itself (+4.3 ms measured on a Mac; ~27 ms in a rare glitch) is eased
+  // in instead of popping every note (at 889 px/s, 4.3 ms = 3.8 px in one frame)
+  for (const jump of [0.0043, 0.0267]) {
+    const ease = smoothClock(); let a = 20, prevV = ease(a, 0), worst = 0, same = 0;
+    for (let i = 1; i < 120; i++) {
+      a += 1 / 60 + (i === 60 ? jump : 0);
+      const v2 = ease(a, 1 / 60);
+      if (i < 60) same = Math.max(same, Math.abs(v2 - a));
+      worst = Math.max(worst, Math.abs(v2 - prevV - 1 / 60)); prevV = v2;
+    }
+    assert(same < 1e-9, 'an even audio clock is drawn as is');
+    assert(worst < jump / 8, `a ${jump * 1000} ms jump of the audio device: at most ${(worst * 1000).toFixed(2)} ms extra in one frame`);
+    assert(Math.abs(prevV - a) < jump / 4, 'and it is caught up within a second');
+  }
+
+  // The de-stepped song clock (audio.js audioClock) that draws, judges and calibrates: ctx.currentTime moves per
+  // rendered buffer (each callback up to 0.5 ms late), rAF callbacks land ±1 ms off the refresh and read the clock up
+  // to 2 ms into the frame; the audio clock may run ±50 ppm off the system's. `A` is the true audio time.
+  const { audioClock, Chip } = await import('../src/platform/audio.js');
+  let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const P0 = 5000; // performance.now() at t = 0
+  const fakeCtx = (block, rate = 1) => {
+    const q = block / 48000, late = k => (k * 7919 % 101) / 101 * 0.0005;
+    return { t: 0, A: 3.2, state: 'running', stall: false, outputLatency: 0.012,
+      go(dt) { this.t += dt; if (this.state === 'running' && !this.stall) this.A += dt * rate; },
+      get currentTime() { const k = Math.floor(this.A / q + 1e-9); return (this.A - k * q < late(k) ? k - 1 : k) * q; } };
+  };
+  const clockFor = ctx => audioClock(ctx, { perf: () => P0 + ctx.t * 1000 });
+  const frames = (ctx, clock, hz, secs, each) => { // rAF frames: the estimate at the frame's time vs the true audio time
+    const t0 = ctx.t, out = [];
+    for (let i = 1; i <= secs * hz; i++) {
+      const at = t0 + i / hz + (rnd() - 0.5) * 0.002;
+      each?.(ctx.t - t0);
+      ctx.go(at - ctx.t); const truth = ctx.A;
+      ctx.go(rnd() * 0.002);
+      out.push({ t: at - t0, est: clock.at(P0 + at * 1000), truth, raw: ctx.currentTime });
+    }
+    return out;
+  };
+  const worst = (fs, from = 1) => Math.max(...fs.filter(f => f.t > from).map(f => Math.abs(f.est - f.truth)));
+  const monotonic = fs => fs.every((f, i) => !i || f.est > fs[i - 1].est);
+  for (const block of [256, 1024, 2048]) for (const hz of [60, 144]) for (const rate of [1, 1.00005, 0.99995]) {
+    const ctx = fakeCtx(block, rate), fs = frames(ctx, clockFor(ctx), hz, 12), name = `${block} samples, ${hz} Hz, ×${rate}`;
+    assert(worst(fs) < 0.001, `${name}: within 1 ms of the true audio time, got ${(worst(fs) * 1000).toFixed(2)} ms`);
+    assert(monotonic(fs), `${name}: monotonic`);
+    const raw = Math.max(...fs.map(f => f.truth - f.raw));
+    assert(raw > block / 48000 * 0.8, `${name}: the raw clock really was stepped (${(raw * 1000).toFixed(1)} ms behind)`);
+  }
+  { // a new run (Chip.start: song start, seek, restart) snaps at once and settles within a second
+    const ctx = fakeCtx(1024), chip = Object.assign(Object.create(Chip.prototype), { ctx, t0: 0 });
+    chip._clock = clockFor(ctx);
+    frames(ctx, chip.clock, 60, 3);
+    chip.t0 = ctx.currentTime + 3 - 40; chip.clock.run(); // `from` 40 s, 3 s of count-in
+    const first = chip.now(P0 + ctx.t * 1000);
+    assert(Math.abs(first - (40 - 3 - 0.012)) < 1e-9, 'a seek snaps: the song position at once');
+    const fs = frames(ctx, chip.clock, 60, 3);
+    assert(worst(fs) < 0.001 && monotonic(fs), 'and settles within a second, monotonic');
+  }
+  { // pause: the context is suspended (its clock stops, performance.now doesn't); resuming takes the device 30 ms
+    const ctx = fakeCtx(2048), clock = clockFor(ctx);
+    frames(ctx, clock, 60, 2);
+    ctx.state = 'suspended';
+    const paused = frames(ctx, clock, 60, 3);
+    assert(paused.every(f => f.est === paused[0].est && f.est === ctx.currentTime), 'suspended: the held audio clock, not running on');
+    ctx.state = 'running'; ctx.stall = true;
+    const waking = frames(ctx, clock, 60, 0.03);
+    assert(waking.every(f => f.est === paused[0].est), 'resumed, the device not yet started: still held');
+    ctx.stall = false;
+    const fs = frames(ctx, clock, 60, 3);
+    assert(fs.every(f => f.est - f.truth < 0.001), 'never ahead of the resumed audio clock (re-anchored)');
+    assert(worst(fs) < 0.001 && monotonic(fs), 'resumed: within 1 ms after a second, monotonic');
+  }
+  { // audio stalls while running (an underrun): a long one re-anchors; a short one sinks back within a few seconds
+    for (const [ms, settle] of [[200, 1], [20, 4]]) {
+      const ctx = fakeCtx(1024), clock = clockFor(ctx);
+      frames(ctx, clock, 60, 3);
+      ctx.stall = true; const during = frames(ctx, clock, 60, ms / 1000); ctx.stall = false;
+      const fs = frames(ctx, clock, 60, 6);
+      assert(Math.max(...during.concat(fs).map(f => f.est - f.truth)) < 0.052, `${ms} ms stall: never far ahead`);
+      assert(worst(fs, settle) < 0.001, `${ms} ms stall: back within 1 ms after ${settle} s`);
+      if (ms < 50) assert(monotonic(during.concat(fs)), `${ms} ms stall: still monotonic`);
+    }
+  }
+  { // the output latency is latched per run: the median of its first 0.5 s
+    const ctx = fakeCtx(256), clock = clockFor(ctx), wobble = [0.02, 0.031, 0.019, 0.022, 0.05, 0.021];
+    let i = 0;
+    frames(ctx, clock, 60, 0.5, () => { ctx.outputLatency = wobble[i++ % wobble.length]; clock.latency(); });
+    const latched = clock.latency();
+    assert(latched >= 0.02 && latched <= 0.022, `the median, not a spike (${latched})`);
+    ctx.outputLatency = 0.2; frames(ctx, clock, 60, 1, () => clock.latency());
+    assert.equal(clock.latency(), latched, 'then fixed for the run');
+    clock.run(); frames(ctx, clock, 60, 0.6, () => clock.latency());
+    assert.equal(clock.latency(), 0.2, 'a new run latches again');
+  }
+  { // a tap at a known event time, with the audio clock in 1024-sample steps, is judged within 1 ms of the truth
+    const main = source => vm.runInContext(source, context); // (`run` is the smooth clock's helper here)
+    const ctx = fakeCtx(1024), chip = Object.assign(Object.create(Chip.prototype), { ctx, t0: 1, sfx() {} });
+    chip._clock = clockFor(ctx);
+    context.fakePerf = () => P0 + ctx.t * 1000;
+    context.testChip = chip;
+    main('performance.now = () => fakePerf(); chip = testChip; offsetMs = 0;');
+    frames(ctx, chip.clock, 60, 2);
+    const at = P0 + ctx.t * 1000 - 8, truth = ctx.A - 0.008 - chip.t0 - 0.012; // the event happened 8 ms ago
+    assert(Math.abs(main(`songTime(eventAt({ timeStamp: ${at} }))`) - truth) < 0.001, 'the tap reads the song clock at its timeStamp, within 1 ms');
+    main(`Object.assign(G, { state: 'play', paused: false, collapseT: 0, practice: null, diff: 2, next: 0, streak: 0, combo: 0, energy: 1,
+      counts: { perfect: 0, good: 0, miss: 0 }, errors: { early: 0, late: 0, move: 0, silent: 0, both: 0, hold: 0 }, score: 0, maxCombo: 0 });
+      G.balloons = []; bigPending = null; G.hold = null; WIN = WINDOWS[2];
+      var edgeIn = { t: ${truth - 0.034}, input: 'L', phrase: 0, hit: null }, edgeOut = { t: ${truth - 0.036}, input: 'R', phrase: 0, hit: null };
+      G.chart = [edgeIn]; press('L', { timeStamp: ${at} }); G.chart = [edgeOut]; G.next = 0; press('R', { timeStamp: ${at} });`);
+    assert.equal(main('edgeIn.hit'), 'perfect', 'DIFÍCIL: 34 ms late is PERFECTE');
+    assert.equal(main('edgeOut.hit'), 'good', 'DIFÍCIL: 36 ms late is BÉ');
+    main('performance.now = () => 0');
+  }
+  console.log('smooth song clock ok');
+}

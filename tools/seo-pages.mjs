@@ -68,7 +68,8 @@ const toHtml = (p, canonical, alternate) => `<!doctype html>
   ...(p.videos && { video: p.videos.map(([src, poster, t]) => ({ '@type': 'VideoObject', name: t, description: 'Vídeo promocional de Mulassa Tap Tap Dance.', thumbnailUrl: `${SITE}${poster}`, contentUrl: `${SITE}${src}`, uploadDate: '2026-10-01', duration: 'PT34S', inLanguage: 'ca' })) }),
 })}</script>
 <style>
-  body { margin: 0; background: #2a1a10 ${PATTERN}; color: #fff3d6; font: 400 18px/1.6 'Baloo 2', system-ui, sans-serif; }
+  body { margin: 0; background: #2a1a10; color: #fff3d6; font: 400 18px/1.6 'Baloo 2', system-ui, sans-serif; }
+  body::before { content: ''; position: fixed; inset: 0; z-index: -1; background: ${PATTERN}; } /* still pattern, the page scrolls over it (iOS ignores background-attachment: fixed) */
   @font-face { font-family: 'Baloo 2'; font-weight: 400 800; font-display: swap; src: url(/fonts/baloo-2-latin.woff2) format('woff2'); }
   main { max-width: 42rem; margin: 0 auto; padding: 32px 20px 64px; }
   h1 { font-size: 2rem; line-height: 1.15; color: #f5c518; font-weight: 800; } h2 { margin: 0 0 .4em; color: #f5c518; font-weight: 800; }

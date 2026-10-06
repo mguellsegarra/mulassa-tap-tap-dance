@@ -209,6 +209,10 @@ Abans d'afegir una melodia, comprova que es pot fer servir. Moltes músiques de 
 - **Tipografies**: [Baloo 2](https://github.com/EkType/Baloo2) i [Jersey 10](https://github.com/scfried/soft-type-jersey), totes dues amb llicència OFL.
 - **3D**: [three.js](https://threejs.org).
 
+## ☕ Buy Me a Coffee
+
+Si el joc t'ha fet somriure, **[convida'm a un cafè](https://buymeacoffee.com/mguellsegarra)!**
+
 ## Llicència
 
 © 2026 Marc Güell Segarra · [ondori.dev](https://ondori.dev)

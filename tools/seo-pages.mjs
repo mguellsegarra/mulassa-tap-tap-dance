@@ -29,16 +29,17 @@ export const PAGES = {
       ['Què és', ['Un joc de ritme. Les notes avancen pel carril i les has de tocar a temps amb dos botons: GUA (taronja, esquerra) i PA (turquesa, dreta). Mentre toques, una Mulassa en 3D balla enmig d’una plaça plena de gent. Es juga des del navegador, sense instal·lar res ni registrar-se.']],
       ['La Mulassa de Valls i la Fira de Santa Úrsula', ['La Mulassa és una de les peces del bestiari festiu de Valls (Alt Camp). Surt al seguici de les festes, com la Fira de Santa Úrsula, i la fa ballar la Unió Anelles de la Flama. Aprofito la Fira de Santa Úrsula de Valls per llançar el joc, com a homenatge a la festa i a la Mulassa. El ball intenta reproduir el ball real, amb algunes petites exageracions per fer-lo més esbojarrat. És una adaptació meva a partir de vídeos públics, no la coreografia oficial.', 'La música és un arranjament nou, de festa major, que només aprofita la melodia del Ball de la Mulassa, composta per Francesc Bofarull i Figuerola.']],
       ['Com es juga', ['**GUA** i **PA**: toca el botó esquerre o el dret quan la nota arribi al cercle (al teclat, ← i → o D i K).', '**GUAPA!** Els dos botons alhora. Doble punt; un de sol és error.', '**MANTÉN**: manté premut fins al final de la nota llarga (normal i difícil).', '**GLOBUS**: als redobles, pica tantes vegades com puguis fins que peti.', '**ÀNIM**: cada error desanima la plaça; si es buida, la Mulassa cau.', '**FINAL ESBOJARRAT**: l’última frase de la cançó. Els punts valen el doble si portes almenys un 70 % d’encerts.', 'El primer ball és una pràctica guiada. Després tries entre fàcil, normal i difícil, i pots publicar el resultat a les classificacions amb un sobrenom o compartir-ne la targeta.']],
-      ['Autoria i crèdits', ['Idea, disseny i desenvolupament: Marc Güell Segarra · [ondori.dev](https://ondori.dev).', 'Gràcies a la [Unió Anelles de la Flama](https://uaf.cat) per deixar-me fer aquest joc de la Mulassa.', 'Melodia: Francesc Bofarull i Figuerola. L’arranjament i els sons els genera el codi del joc.', 'Tipografies Baloo 2 i Jersey 10, amb llicència SIL Open Font License.', 'Fet amb carinyo {cor} i molta IA a Valls {campanar}']],
+      ['Autoria i crèdits', ['Idea, disseny i desenvolupament: Marc Güell Segarra · [ondori.dev](https://ondori.dev).', 'Amb la col·laboració de la [Unió Anelles de la Flama](https://uaf.cat), que m’ha deixat fer aquest joc de la Mulassa. {uaf}', 'Melodia: Francesc Bofarull i Figuerola. L’arranjament i els sons els genera el codi del joc.', 'Tipografies Baloo 2 i Jersey 10, amb llicència SIL Open Font License.', 'Fet amb carinyo {cor} i molta IA a Valls {campanar}']],
       ['Codi obert i col·laboració', ['El [codi és obert a GitHub](https://github.com/mguellsegarra/mulassa-tap-tap-dance) i tothom qui vulgui hi pot col·laborar: afegir-hi les seves mulasses i el seu bestiari, amb els seus balls i la seva música.', 'Si t’ha fet somriure, pots [convidar-me a un cafè](https://buymeacoffee.com/mguellsegarra).', 'El joc no fa servir galetes de seguiment. Pots consultar les dades que es tracten i els teus drets a «Privadesa», dins de Configuració. Per a imatges o qualsevol dubte: [holi@mulassa.cat](mailto:holi@mulassa.cat).']],
     ],
   },
 };
 
-const toMd = p => `# ${p.title}\n\n${p.lead}\n\n${(p.captures ?? []).map(([src, alt]) => `![${alt}](${SITE}${src})`).join('\n\n')}${p.captures ? '\n\n' : ''}${p.sections.map(([h, ps]) => `## ${h}\n\n${ps.join('\n\n').replace('{cor}', '♥').replace(' {campanar}', '')}`).join('\n\n')}${p.videos ? `\n\n## Vídeos\n\n${p.videos.map(([src,, t,,, size]) => `- [${t}, descarrega (MP4, ${size})](${SITE}${src})`).join('\n')}` : ''}\n`;
+const toMd = p => `# ${p.title}\n\n${p.lead}\n\n${(p.captures ?? []).map(([src, alt]) => `![${alt}](${SITE}${src})`).join('\n\n')}${p.captures ? '\n\n' : ''}${p.sections.map(([h, ps]) => `## ${h}\n\n${ps.join('\n\n').replace('{cor}', '♥').replace(' {campanar}', '').replace(' {uaf}', '')}`).join('\n\n')}${p.videos ? `\n\n## Vídeos\n\n${p.videos.map(([src,, t,,, size]) => `- [${t}, descarrega (MP4, ${size})](${SITE}${src})`).join('\n')}` : ''}\n`;
 
 const HEART = '<svg class="heart" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.2 3.6 13A5.2 5.2 0 0 1 12 6.6a5.2 5.2 0 0 1 8.4 6.4z"/></svg>';
-const inline = s => html(s).replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>').replace('{cor}', HEART).replace('{campanar}', '<img class="campanar" src="/campanar-valls.svg" alt="" width="29" height="65">');
+const inline = s => html(s).replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>').replace('{cor}', HEART).replace('{campanar}', '<img class="campanar" src="/campanar-valls.svg" alt="" width="29" height="65">')
+  .replace(' {uaf}', '<a class="uaf" href="https://uaf.cat"><img src="/uaf-logo.jpg" alt="Unió Anelles de la Flama, Valls" width="640" height="327" loading="lazy"></a>');
 const toHtml = (p, canonical, alternate) => `<!doctype html>
 <html lang="ca">
 <head>
@@ -83,7 +84,8 @@ const toHtml = (p, canonical, alternate) => `<!doctype html>
   .shots { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding-bottom: 20px; } figure { margin: 0; } img { width: 100%; height: auto; display: block; border-radius: 12px; border: 2px solid #f5c518; box-sizing: border-box; } figcaption { font-size: 14px; line-height: 1.4; margin-top: 6px; opacity: .85; }
   @media (max-width: 560px) { .shots { grid-template-columns: 1fr; max-width: 280px; } }
   .heart { width: .9em; height: .9em; vertical-align: -.1em; fill: #c0283c; } img.campanar { display: inline; width: auto; height: .95em; border: 0; border-radius: 0; margin-left: .08em; }
-  footer { margin-top: 3em; padding-top: 1em; border-top: 1px solid #f5c51855; font-size: 15px; }
+  .uaf { display: block; width: min(100%, 320px); margin: 12px auto 0; } .uaf img { border: 0; } /* the entitat's logo as sent: on its own white, never recoloured */
+  footer { margin-top: 3em; padding-top: 1em; border-top: 1px solid #f5c51855; font-size: 15px; text-align: center; }
 </style>
 </head>
 <body>

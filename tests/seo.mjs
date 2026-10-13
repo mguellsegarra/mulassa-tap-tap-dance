@@ -19,7 +19,7 @@ try {
   const ld = JSON.parse(page.match(/<script type="application\/ld\+json">([^<]*)<\/script>/)[1]);
   assert.equal(ld['@type'], 'AboutPage');
   assert.equal(ld.video.length, 2);
-  assert(!/\{cor\}|\{campanar\}/.test(page + md), 'every placeholder is rendered');
+  assert(!/\{cor\}|\{campanar\}|\{uaf\}/.test(page + md), 'every placeholder is rendered');
   assert(/Marc Güell Segarra/.test(page + md) && !/Marc Güell(?! Segarra)/.test(page + md), 'always both surnames');
   for (const file of ['index.md', 'projecte/index.md']) await access(join(dist, file));
   // everything the page points at is a file we ship (public/ or generated)

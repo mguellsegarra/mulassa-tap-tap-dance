@@ -62,6 +62,8 @@
    scrolling) and scrolls its .sheet-body instead; no per-sheet rules, no «Tanca» button */
 .sheet[open]:has(> .sheet-x) { display: flex; flex-direction: column; overflow: visible; }
 .sheet > .sheet-body { min-height: 0; overflow: auto; scrollbar-width: none; } .sheet > .sheet-body::-webkit-scrollbar { display: none; }
+.sheet-bar { position: absolute; right: 6px; width: 4px; border-radius: 2px; background: #f5c51829; pointer-events: none; } /* src/ui/sheet-fade.js: the body's drawn scrollbar */
+.sheet-bar i { display: block; border-radius: 2px; background: #f5c518d9; }
 .sheet-x::after { content: ""; position: absolute; inset: -6px; } /* touch slop: a ~52 px target for the 40 px circle */
 .sheet-x svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; }
 .sheet-x:focus-visible { outline: 3px solid var(--button-text); outline-offset: 2px; }

@@ -39,8 +39,9 @@ __pycache__/
 # Self-signed certificate for DEV_HTTPS (vite.config.js)
 .cert/
 
-# Wrangler local state (workers/feedback)
+# Wrangler local state and dev-only vars (workers/feedback)
 .wrangler/
+.dev.vars
 
 # BSD sed -i -E backups
 *-E

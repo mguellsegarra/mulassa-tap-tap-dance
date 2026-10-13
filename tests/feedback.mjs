@@ -21,7 +21,8 @@ assert.match(toml, /^\[\[send_email\]\]\nname = "MAIL"\n/m, 'the send_email bind
 assert.match(toml, /^FEEDBACK_FROM = "holi@mulassa\.cat"$/m);
 assert.doesNotMatch(toml, /^(destination_address|FEEDBACK_TO|TURNSTILE_SECRET_KEY) *=/m, 'the recipient and the Turnstile key are secrets, not in the repo');
 const tomlOrigins = /^ALLOWED_ORIGINS = "(.*)"$/m.exec(toml)[1].split(',');
-for (const o of ['https://mulassa-tap-tap-dance.pages.dev', 'https://mulassa.cat', 'https://www.mulassa.cat', 'http://localhost:5178']) assert(tomlOrigins.includes(o), `origin ${o}`);
+for (const o of ['https://mulassa-tap-tap-dance.pages.dev', 'https://mulassa.cat', 'https://www.mulassa.cat']) assert(tomlOrigins.includes(o), `origin ${o}`);
+assert(tomlOrigins.every(o => o.startsWith('https://')), 'production origins only: local/LAN ones go in .dev.vars, never in the repo');
 // the abuse caps: two rate-limit bindings (limit per 60 s) and the KV day counter
 const rl = name => new RegExp(`^\\[\\[ratelimits\\]\\]\\nname = "${name}"\\nnamespace_id = "\\d+"\\n +\\[ratelimits\\.simple\\]\\n +limit = (\\d+)\\n +period = 60$`, 'm').exec(toml)?.[1];
 assert.equal(rl('PER_IP'), '3', 'PER_IP: 3 a minute'); assert.equal(rl('ALL'), '10', 'ALL: 10 a minute');

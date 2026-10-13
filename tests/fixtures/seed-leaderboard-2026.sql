@@ -11,7 +11,7 @@
 --
 -- Values come from a simulation of the real scoring (src/main.js judge/pump/settleHold, finale x2 at >=70%) on the
 -- real charts: judgments 150/181/318 (FÀCIL/NORMAL/DIFÍCIL); a flawless run with fast balloon tapping scores about
--- 96-104k / 113-119k / 178-197k. Seeds are deliberately modest (about 30-68%, no finale bonus) so real players climb past them easily. Times are relative to now()
+-- 96-104k / 113-119k / 178-197k. The samples are modest (about 30-68%, no finale bonus): real players pass them quickly. Times are relative to now()
 -- (the last ~6.5 days). Every alias passes checkAlias (src/alias-rules.js) and the proposed server rules;
 -- tests/alias-rules.mjs runs this file and the cleanup on PGlite.
 begin;

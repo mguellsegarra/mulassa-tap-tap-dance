@@ -1,14 +1,13 @@
 -- Seed phase-out (2026-09-28). The 2026 seed players (tests/fixtures/seed-leaderboard-2026.sql, ids
--- 5eed2026-0000-4000-8000-...) filled the empty boards; now every REAL player with a result on a level hides ONE seed
+-- 5eed2026-0000-4000-8000-...) are sample results so the boards don't start empty; every real player with a result on a level hides ONE seed
 -- result on that same level, until that level has no seeds left.
 --   * leaderboard_private.profiles.is_seed: the explicit marker (default false = a real player). Backfilled here for
---     the existing seed ids; the seed file sets it too. Nothing public shows it: seeds look exactly like players.
+--     the existing seed ids; the seed file sets it too.
 --   * leaderboard_private.visible_entries(p_version): the entries of a version minus, on each level, the k LOWEST seed
 --     results, where k = the number of real players with a result on that level. "Lowest" is the exact reverse of the
---     board order (score, then quality, then the later / higher id first). Why the lowest first: the top of the board
---     stays a challenge (the best seeds are the ones worth beating), the tail fills with real people, and the rows that
---     go are the ones nobody looks at (the modest bottom of the board), so the phase-out is invisible; the board's size
---     stays about the same while seeds remain, so it never looks empty nor suddenly inflated.
+--     board order (score, then quality, then the later / higher id first). Lowest first: real players take over
+--     the bottom of the board, the best samples stay as a target to beat, and the board keeps about the same size while
+--     samples remain.
 --   * get_leaderboard_all: same signature, grants, security definer and search_path as 202609280005; it ranks only
 --     visible_entries, so position, total (the "#N de M - top X%" and "Ets el numero N - top X%" lines), the caller's
 --     +-5 neighbours and every page come from the same set. submit_result returns no rank, so it is unchanged.

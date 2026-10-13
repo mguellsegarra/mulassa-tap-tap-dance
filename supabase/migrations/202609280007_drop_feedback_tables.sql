@@ -1,4 +1,4 @@
--- The feedback box sends every message straight to Marc's e-mail (send-feedback, Gmail) and stores nothing
+-- The feedback box sends every message straight to Marc's e-mail (send-feedback) and stores nothing
 -- (Marc, 2026-09-28): drop what 202609280006 created. ASCII only (SQL Editor).
 begin;
 -- the optional nightly purge (pg_cron) would fail every night once purge_feedback() is gone

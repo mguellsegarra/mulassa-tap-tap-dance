@@ -132,9 +132,9 @@ for (const [term, mode, reason, severe] of ALIAS_TERMS) {
   assert(['sub', 'word'].includes(mode) && ['blocked', 'reserved'].includes(reason) && typeof severe === 'boolean');
   assert(severe ? mode === 'sub' && reason === 'blocked' && /^[a-z0-9]+$/.test(term) : /^[a-z]+$/.test(term), term);
 }
-// the 17 seed players (tests/fixtures/seed-leaderboard-2026.sql, live in production) keep their nicknames
+// the 16 seed players (tests/fixtures/seed-leaderboard-2026.sql, live in production) keep their nicknames
 const SEED_ALIASES = ['laiaxx', 'paquet07', 'MartaaVLS', 'jordi2003', 'claraaa', 'emiliu', 'POL2011', 'mireia-vls', 'arnau99',
-  'marcgs', 'OriolCastells', 'bertitaa', 'medinet', 'dolors66', 'ainaa04', 'nuriaPB', 'xavi43800'];
+  'OriolCastells', 'bertitaa', 'medinet', 'dolors66', 'ainaa04', 'nuriaPB', 'xavi43800'];
 for (const a of SEED_ALIASES) assert.equal(checkAlias(a).alias, a, `seed alias ${a} passes checkAlias`);
 
 const SEED_AUTH = `create role anon; create role authenticated; create role service_role; create schema auth;
@@ -157,7 +157,7 @@ try {
     if (got.ok) assert.deepEqual(await server(got.alias), { ok: true, alias: got.alias }, `live server takes ${got.alias}`);
   }
 
-  // --- the seed, on the live schema: 10/10/4 believable rows per level, all removable (raw rows: from 0014 the board
+  // --- the seed, on the live schema: 10/9/3 believable rows per level, all removable (raw rows: from 0014 the board
   // hides one seed per real player per level, never deletes them; tests/seed-phaseout.mjs)
   await db.query("insert into auth.users(id, is_anonymous) values ('0f0f0f0f-0000-4000-8000-000000000001', true)"); // a real player
   await db.query(`insert into leaderboard_private.profiles(user_id, alias) values ('0f0f0f0f-0000-4000-8000-000000000001', 'Real')`);
@@ -169,7 +169,7 @@ try {
     const rows = (await db.query(`select p.alias, 20::numeric * e.quality_units / v.judgments as quality from leaderboard_private.entries e
       join leaderboard_private.profiles p using (user_id) join leaderboard_private.versions v using (version, difficulty)
       where e.version = 'mulassa-v1' and e.difficulty = $1`, [d])).rows; // each level's rows (the per-level board is gone)
-    assert.equal(rows.length, [11, 10, 4][d]);
+    assert.equal(rows.length, [11, 9, 3][d]);
     assert(rows.every(r => Number(r.quality) < 100));
     for (const r of rows) if (r.alias !== 'Real') assert.equal(checkAlias(r.alias).alias, r.alias, `seed alias ${r.alias} passes checkAlias`);
     const raw = (await db.query(`select perfect, good, miss, max_combo, achieved_at from leaderboard_private.entries
@@ -177,7 +177,7 @@ try {
     assert(raw.every(r => r.perfect + r.good + r.miss === judgments[d] && r.max_combo <= r.perfect + r.good && r.achieved_at < new Date()));
   }
   const aliases = (await db.query("select alias from leaderboard_private.profiles where user_id::text like '5eed2026-%'")).rows.map(r => r.alias);
-  assert(aliases.includes('marcgs') && aliases.includes('MartaaVLS') && aliases.length === 17);
+  assert(!aliases.includes('marcgs') && aliases.includes('MartaaVLS') && aliases.length === 16);
   await assert.rejects(db.exec(sql('tests/fixtures/seed-leaderboard-2026.sql')), /seed already present/);
   await db.exec('rollback');
   await db.exec(sql('tests/fixtures/seed-leaderboard-2026-cleanup.sql'));

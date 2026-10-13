@@ -30,21 +30,21 @@ try {
     join leaderboard_private.profiles p using (user_id)`)).rows;
 
   // before 0014 nothing is hidden and there is no flag
-  assert.equal((await board()).length, 17);
+  assert.equal((await board()).length, 16);
   await db.exec(sql('supabase/migrations/202609280014_seed_phaseout.sql'));
   await db.exec(sql('supabase/migrations/202609280014_seed_phaseout.sql')); // idempotent
   const flagged = (await db.query(`select count(*) filter (where is_seed)::int s, count(*) filter (where not is_seed)::int r,
     count(*) filter (where is_seed <> (user_id::text like '5eed2026-%'))::int wrong from leaderboard_private.profiles`)).rows[0];
-  assert.deepEqual(flagged, { s: 17, r: 0, wrong: 0 }, 'the backfill marks exactly the 17 seed players');
+  assert.deepEqual(flagged, { s: 16, r: 0, wrong: 0 }, 'the backfill marks exactly the 16 seed players');
   const fn = (await db.query(`select p.prosecdef, p.proconfig, has_function_privilege('anon', p.oid, 'execute') anon
     from pg_proc p where p.proname = 'get_leaderboard_all'`)).rows;
   assert.equal(fn.length, 1, 'one get_leaderboard_all');
   assert(fn[0].prosecdef && fn[0].anon && String(fn[0].proconfig).includes('search_path='), 'security definer, anon grant, empty search_path');
   assert.equal((await db.query(`select has_function_privilege('anon', 'leaderboard_private.visible_entries(text)', 'execute') a`)).rows[0].a, false);
 
-  // 0 real players: every seed shows (24 results, 17 players)
-  assert.equal((await visible()).length, 24);
-  assert.deepEqual((await board()).map(r => r.total), Array(17).fill(17));
+  // 0 real players: every seed shows (22 results, 16 players)
+  assert.equal((await visible()).length, 22);
+  assert.deepEqual((await board()).map(r => r.total), Array(16).fill(16));
 
   // the reference rule, from the raw rows: per level, hide the k lowest seeds (reverse board order)
   const raw = async () => (await db.query(`select e.id, e.user_id, p.alias, p.is_seed, e.difficulty d, e.score, e.quality_units q,
@@ -102,31 +102,31 @@ try {
     .map(r => r.score).sort((a, b) => a - b);
 
   const low = await real(0, 1000); // below every seed: still shown, and it hides the lowest FÀCIL seed (bertitaa 10530)
-  assert.deepEqual(await levelCounts(), [10, 10, 4], '1 real on FÀCIL: 10 - 1 seeds + the real one; other levels unaffected');
+  assert.deepEqual(await levelCounts(), [10, 9, 3], '1 real on FÀCIL: 10 - 1 seeds + the real one; other levels unaffected');
   assert.deepEqual(await seedsLeft(0), [10768, 11010, 13152, 15216, 16752, 17680, 18596, 21162, 21542], 'the lowest seed goes first');
   assert(!(await board()).some(r => r.alias === 'bertitaa'), 'bertitaa (FACIL only) is off the board');
-  assert.equal((await db.query("select count(*)::int n from leaderboard_private.entries where user_id::text like '5eed2026-%'")).rows[0].n, 24, 'hidden, never deleted');
+  assert.equal((await db.query("select count(*)::int n from leaderboard_private.entries where user_id::text like '5eed2026-%'")).rows[0].n, 22, 'hidden, never deleted');
   await consistent('1 real, below every seed', low);
 
   const top = await real(0, 90000); // a strong one: still the lowest seed goes, the top stays
   assert.deepEqual(await seedsLeft(0), [11010, 13152, 15216, 16752, 17680, 18596, 21162, 21542]);
   await consistent('2 real on FACIL', top);
 
-  // NORMAL through submit_result: marcgs's NORMAL is not its lowest level, it keeps showing its DIFICIL
+  // NORMAL through submit_result: arnau99's NORMAL is its best result, it keeps showing it
   const pub = '0f0f0f0f-0000-4000-8000-0000000000aa';
   await db.query('insert into auth.users(id, is_anonymous) values ($1, true)', [pub]);
   await as(pub);
   await db.query("select * from public.submit_result('mulassa-v1', 1, 100, 40, $1, 16000, 20, 'Publicat')", [J[1] - 140]);
-  assert.deepEqual(await levelCounts(), [10, 10, 4]);
-  assert.deepEqual(await seedsLeft(1), [17030, 17096, 17162, 17296, 17364, 17836, 18450, 19592, 22530], 'xavi43800 NORMAL 16964 hidden');
+  assert.deepEqual(await levelCounts(), [10, 9, 3]);
+  assert.deepEqual(await seedsLeft(1), [17030, 17096, 17162, 17296, 17364, 17836, 18450, 22530], 'xavi43800 NORMAL 16964 hidden');
   assert((await board()).some(r => r.alias === 'xavi43800' && r.d === 0 && r.score === 11010), 'xavi43800 still shows its FACIL result');
   await consistent('real on NORMAL via submit_result', pub);
 
-  // more real players than seeds on DIFICIL: all 4 go, never "negative"; the other levels keep theirs
+  // more real players than seeds on DIFICIL: all 3 go, never "negative"; the other levels keep theirs
   for (let i = 0; i < 6; i++) await real(2, 20000 + i * 1000);
   assert.deepEqual(await seedsLeft(2), [], 'no DIFICIL seeds left');
-  assert.deepEqual(await levelCounts(), [10, 10, 6], '6 real on DIFICIL, 0 seeds');
-  assert((await board()).some(r => r.alias === 'marcgs' && r.d === 1), 'marcgs still shows its NORMAL');
+  assert.deepEqual(await levelCounts(), [10, 9, 6], '6 real on DIFICIL, 0 seeds');
+  assert((await board()).some(r => r.alias === 'arnau99' && r.d === 1), 'arnau99 still shows its NORMAL');
   await consistent('DIFICIL full of real players', low);
 
   // a player with two levels counts on both
@@ -134,7 +134,7 @@ try {
   await db.query(`insert into leaderboard_private.entries(user_id, version, difficulty, perfect, good, miss, score, max_combo)
     values ($1, 'mulassa-v1', 0, 60, 20, $2, 12000, 10)`, [both, J[0] - 80]);
   assert.deepEqual(await seedsLeft(0), [13152, 15216, 16752, 17680, 18596, 21162, 21542]);
-  assert.deepEqual(await seedsLeft(1), [17096, 17162, 17296, 17364, 17836, 18450, 19592, 22530]);
+  assert.deepEqual(await seedsLeft(1), [17096, 17162, 17296, 17364, 17836, 18450, 22530]);
   await consistent('a player on two levels', both);
 
   // a real player leaving brings a seed back (computed, not destructive)
@@ -148,7 +148,7 @@ try {
   await db.exec(sql('tests/fixtures/seed-leaderboard-2026-cleanup.sql'));
   assert.equal((await db.query('select count(*)::int n from leaderboard_private.profiles where is_seed')).rows[0].n, 0);
   await db.exec(sql('tests/fixtures/seed-leaderboard-2026.sql'));
-  assert.equal((await db.query('select count(*)::int n from leaderboard_private.profiles where is_seed')).rows[0].n, 17, 'a re-run seed is flagged');
+  assert.equal((await db.query('select count(*)::int n from leaderboard_private.profiles where is_seed')).rows[0].n, 16, 'a re-run seed is flagged');
   await consistent('re-seeded', low);
   console.log('seed phase-out: flag, one seed per real player per level (lowest first), ranks/totals/pages consistent ok');
 } catch (error) { console.error(error); process.exitCode = 1; }

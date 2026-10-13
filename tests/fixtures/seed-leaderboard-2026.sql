@@ -1,10 +1,10 @@
--- Seed: 24 sample results (10/10/4 per level) for the empty public boards, 2026-09-28. Also a test fixture.
+-- Seed: 22 sample results (10/9/3 per level) for the empty public boards, 2026-09-28 (seed player 01, marcgs, removed from it and from production 2026-10-13). Also a test fixture.
 -- Run by the Supabase backend owner in the Supabase SQL editor (role postgres). It writes auth.users and the
 -- private tables directly because the public RPCs only ever write the caller's own anonymous account (auth.uid(),
 -- Turnstile, 10 s throttle): there is no client path for seeding, and none should be added.
 -- Works on the live schema (migrations 202609270001-2) with or without migration 202609280009 (alias hardening).
 --
--- Marker: profiles.is_seed = true (set below once migration 202609280014 exists), plus 17 players with fixed ids 5eed2026-0000-4000-8000-0000000000NN AND
+-- Marker: profiles.is_seed = true (set below once migration 202609280014 exists), plus 16 players with fixed ids 5eed2026-0000-4000-8000-0000000000NN AND
 -- auth.users.raw_app_meta_data->>'mulassa_seed' = '2026' (app metadata is admin-only, never shown). Remove them all
 -- with seed-leaderboard-2026-cleanup.sql; deleting the auth user cascades to profiles and entries.
 -- The seeded accounts are anonymous, so the 12-month retention job would also expire them eventually.
@@ -33,7 +33,6 @@ select '00000000-0000-0000-0000-000000000000', v.id::uuid, 'authenticated', 'aut
   now() - v.created_ago, now() - v.active_ago, now() - v.created_ago,
   '{"provider": "anonymous", "providers": ["anonymous"], "mulassa_seed": "2026"}'::jsonb, '{}'::jsonb, '', '', '', ''
 from (values
-  ('5eed2026-0000-4000-8000-000000000001', interval '6459 minutes', interval '3499 minutes'),
   ('5eed2026-0000-4000-8000-000000000002', interval '9267 minutes', interval '5181 minutes'),
   ('5eed2026-0000-4000-8000-000000000003', interval '8423 minutes', interval '5324 minutes'),
   ('5eed2026-0000-4000-8000-000000000004', interval '9341 minutes', interval '7617 minutes'),
@@ -55,7 +54,6 @@ from (values
 insert into leaderboard_private.profiles (user_id, alias, created_at, last_active_at, last_write_at)
 select u.id, v.alias, u.created_at, u.updated_at, u.updated_at
 from (values
-  ('5eed2026-0000-4000-8000-000000000001', 'marcgs'),
   ('5eed2026-0000-4000-8000-000000000002', 'MartaaVLS'),
   ('5eed2026-0000-4000-8000-000000000003', 'jordi2003'),
   ('5eed2026-0000-4000-8000-000000000004', 'laiaxx'),
@@ -91,8 +89,6 @@ end $$;
 insert into leaderboard_private.entries (user_id, version, difficulty, perfect, good, miss, score, max_combo, achieved_at)
 select v.id::uuid, 'mulassa-v1', v.difficulty, v.perfect, v.good, v.miss, v.score, v.max_combo, now() - v.ago
 from (values
-  ('5eed2026-0000-4000-8000-000000000001', 1,  78,  40,  63,  19592,  17, interval '5565 minutes'), -- NORMAL 60.8%
-  ('5eed2026-0000-4000-8000-000000000001', 2, 112, 108,  98,  28026,  12, interval '3499 minutes'), -- DIFÍCIL 62.4%
   ('5eed2026-0000-4000-8000-000000000002', 0,  67,  42,  41,  21162,  42, interval '6719 minutes'), -- FÀCIL 67.1%
   ('5eed2026-0000-4000-8000-000000000002', 1,  62,  56,  63,  18450,   9, interval '5181 minutes'), -- NORMAL 59.0%
   ('5eed2026-0000-4000-8000-000000000003', 1,  42,  76,  63,  17096,   8, interval '5324 minutes'), -- NORMAL 56.8%
@@ -128,8 +124,8 @@ begin
     raise exception 'seed row outside the game rules';
   end if;
   if (select array_agg(n order by difficulty) from (select difficulty, count(*) n from leaderboard_private.entries
-      where user_id::text like '5eed2026-%' group by difficulty) s) <> array[10, 10, 4]::bigint[] then
-    raise exception 'expected 10/10/4 seeded results per level';
+      where user_id::text like '5eed2026-%' group by difficulty) s) <> array[10, 9, 3]::bigint[] then
+    raise exception 'expected 10/9/3 seeded results per level';
   end if;
 end $$;
 

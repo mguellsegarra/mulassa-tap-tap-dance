@@ -203,8 +203,12 @@ Abans d'afegir una melodia, comprova que es pot fer servir. Moltes músiques de 
 
 ## Crèdits
 
+Amb la col·laboració de la [Unió Anelles de la Flama (UAF) de Valls](https://uaf.cat), que m'ha deixat fer aquest joc de la Mulassa.
+
+<p align="center"><a href="https://uaf.cat"><img src="public/uaf-logo.jpg" alt="Unió Anelles de la Flama, Valls" width="320"></a></p>
+
 - **Música**: el Ball de la Mulassa és de Francesc Bofarull i Figuerola (1987). La melodia de `music/score.json` es va transcriure a partir de la [reducció per a banda publicada per l'ESMUC](https://www.esmuc.cat/wp-content/uploads/2026/04/AB-Analisi-Partitura-ARRE-2025JU-Partitura_compressed.pdf).
-- **La Mulassa**: peça del bestiari de Valls i de la [Unió Anelles de la Flama (UAF) de Valls](https://uaf.cat).
+- **La Mulassa**: peça del bestiari de Valls, de la Unió Anelles de la Flama.
 - **Mecànica**: inspirada en Taiko no Tatsujin, de Bandai Namco.
 - **Tipografies**: [Baloo 2](https://github.com/EkType/Baloo2) i [Jersey 10](https://github.com/scfried/soft-type-jersey), totes dues amb llicència OFL.
 - **3D**: [three.js](https://threejs.org).

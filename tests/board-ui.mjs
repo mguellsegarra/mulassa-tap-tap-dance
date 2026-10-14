@@ -189,6 +189,14 @@ const BOARD = page(0, 60, 22);
   const known = make({ alias: 'Gegant300' }); known.board.openBoard();
   assert(!known.$('board-views').hidden && known.$('board-view-me').getAttribute('aria-pressed') === 'true', 'published here: the switch and On sóc from the first frame');
 }
+// a remembered alias whose row is gone (nothing to publish): the answer settles on Tots, no switch, not an «On sóc» empty note
+{
+  const { board, $, T, rows } = make({ alias: 'Gegant300' });
+  board.openBoard();
+  T.alls[0].resolve(page(0, 30)); await tick();
+  assert.equal($('board-view-top').getAttribute('aria-pressed'), 'true', 'no own row: Tots');
+  assert($('board-views').hidden && rows().length === 30, 'no switch, the list');
+}
 // --- published here before: On sóc first, profile buttons from the first frame; «top 1%» at least
 {
   const { board, $, T, rows } = make({ session: true, alias: 'Gegant300' });

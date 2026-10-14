@@ -232,6 +232,7 @@ export function setupBoard({ focusIn, store = defaultStore, service = leaderboar
     if (req !== listReq || !boardMenu.open) return;
     const b = { byPos: new Map(), loaded: 0, total: 0, done: false };
     absorb(b, rows, 0);
+    if (view === 'me' && !canPublishNow() && ![...b.byPos.values()].some(r => r.is_self)) { view = 'all'; viewSeg.hidden = true; } // a remembered alias with no row and nothing to publish: On sóc would only say so; the list instead
     shownBoard = b; render();
   }
   // the next page: from the scroll (the list's end in view) or «Carrega’n més»; one at a time, dropped if stale

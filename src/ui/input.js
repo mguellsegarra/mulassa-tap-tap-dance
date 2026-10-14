@@ -45,16 +45,17 @@ addEventListener('keydown', e => {
     if (e.code === 'KeyP') togglePause();
   } else if (G.state === 'results' && clock - G.resT > 1 && (e.code === 'Space' || e.code === 'Enter')) toTitle();
 });
-padButtons.forEach(b => b.addEventListener('pointerdown', e => {
+function padDown(b, e) {
   e.preventDefault();
   if (G.state !== 'play') return;
   down.ptr.set(e.pointerId, b.dataset.d); // held for MANTÉN notes
   const before = G.judge, praised = G.praise, ring = G.ring;
   press(b.dataset.d, e);
-  const judged = G.judge !== before ? G.judge.kind : null, gran = G.ring !== ring && G.ring?.kind === 'gran';
-  haptic(gran || G.praise !== praised && G.praise.pri !== 1 && G.praise.tier !== 'bonk' ? 'big' : judged === 'miss' ? 'miss' : judged ? 'hit' : 'tap');
+  const judged = G.judge !== before ? G.judge?.kind ?? 'miss' : null, gran = G.ring !== ring && G.ring?.kind === 'gran'; // a fatal miss collapses the mulassa: judge/praise/ring are then null
+  haptic(gran || G.praise && G.praise !== praised && G.praise.pri !== 1 && G.praise.tier !== 'bonk' ? 'big' : judged === 'miss' ? 'miss' : judged ? 'hit' : 'tap');
   padFeedback(b, e); // after the game press: the look never delays the input
-}));
+}
+padButtons.forEach(b => b.addEventListener('pointerdown', e => padDown(b, e)));
 // letting go: keys, pad fingers, or the window losing focus (which also pauses)
 const letGo = e => { if (G.state === 'play' && !G.paused) settleHold(songTime(eventAt(e))); }; // let go when it happened, like press()
 addEventListener('keyup', e => { if (down.keys.delete(e.code)) letGo(e); });

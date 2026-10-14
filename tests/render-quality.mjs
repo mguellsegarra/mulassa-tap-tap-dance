@@ -565,6 +565,14 @@ assert.equal(run('duringNote'), false, 'no speech at a note');
 assert.equal(run('firstMissSpeech'), 0, 'misses do not add speech');
 assert(run('comboHeadline === null && missHeadline === null'), 'combo and miss streaks do not add headlines');
 assert(run('warningPulse === clock && bubbles.length === 0'), 'energy warnings pulse the meter without speech');
+// a pad tap that collapses the mulassa clears judge/praise/ring mid-press: the handler must not read them (Sentry: null.kind)
+run(`var realPress = press, realHaptic = haptic, realFeedback = padFeedback, padCalls = [];
+  haptic = k => padCalls.push(k); padFeedback = () => {};
+  press = () => { G.judge = G.praise = G.ring = null; };
+  G.state = 'play'; G.judge = { kind: 'perfect' }; G.praise = { pri: 2, tier: 1 }; G.ring = { kind: 'gran' };
+  padDown({ dataset: { d: 'L' } }, { pointerId: 9, preventDefault() {} });
+  press = realPress; haptic = realHaptic; padFeedback = realFeedback; down.ptr.clear(); G.praise = null; G.ring = null; G.judge = null;`);
+assert.equal(run('padCalls.join()'), 'miss', 'a collapsing tap does not crash the pad handler and still buzzes as a miss');
 // a phone: the bubble never crosses the notch, the edges, the lane band or the pad
 run(`innerWidth = 375; innerHeight = 667; resize(); rests = restTimeline([{ t: clock - 1 }, { t: clock + 100 }]); G.go = 0; chip = { t0: 0, now: () => clock, sfx() {} }; shaken = false; bubbles.length = 0; lastBubble = -9; G.diff = 2; G.streak = 0; G.combo = 5; G.energy = 1;
   for (const p of activeCrowd) { const b = { txt: 'UN CALÇOT, SISPLAU!', pos: at(p.g, 2.3), t0: clock, dur: 9, col: C.dark, size: 9, w: textWidth('UN CALÇOT, SISPLAU!', 9) + 10, box: {}, shown: false }; bubbles.push(b); }

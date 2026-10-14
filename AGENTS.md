@@ -179,7 +179,7 @@ by everyone below it as `sheets.board`… (`ui/sheets.js`), so no import cycle i
 - Publish prompt («Publica el teu resultat!», `#publish-menu`, board-ui.js): opens by itself once per eligible run; texts centred. On that
   auto opening only, «Ara no» (a decline, ×`MAX_DECLINES` stops it) and quiet «No m’ho tornis a recordar» (`OPTOUT_KEY`, permanent) both
   open Comparteix next. ⚙ Configuració «Proposta de publicar» (`#settings-prompt-row`) shows only while `promptsOn()` is false, with an «Activa» button that clears both.
-- Two-way views (Story · Quadrat, Tots · On soc — the latter only once the player has published): a segmented group (`.share-seg` / `.board-seg`, same rules) of
+- Two-way views (Story · Quadrat, Tots · On soc — both tabs for anyone with a nickname, never hidden after open, so nothing shifts; it opens on On soc only while the last answer gave that nickname a row (`ROW_KEY`), else on Tots): a segmented group (`.share-seg` / `.board-seg`, same rules) of
   `.btn.btn-secondary` with `aria-pressed`; a secondary choice under it stays quieter (`.board-period` pills).
 - Cloudflare Turnstile (`src/services/captcha.js`): one silent check for every player after their first run (its results, or the title
   after leaving it; skipped under webdriver): never at startup, its iframe shares the main thread on iPhone Safari;

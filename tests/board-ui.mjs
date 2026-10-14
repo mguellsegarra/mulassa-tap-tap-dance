@@ -41,7 +41,7 @@ const deferred = () => { let resolve, reject; const p = new Promise((a, b) => { 
 const RUN = Object.freeze({ version: 'mulassa-v1', difficulty: 1, counts: Object.freeze({ perfect: 150, good: 20, miss: 11 }), score: 43210, maxCombo: 60 });
 
 function make({ configured = true, publishingEnabled = true, captchaRequired = true, siteKey = 'site', session = false, persistent = true, email = 'contacte@example.test',
-  alias = null, declined = 0, afterPublish = null, onRecover = null, automated = false, ua = '', standalone = false, touch = 0 } = {}) {
+  alias = null, row = false, declined = 0, afterPublish = null, onRecover = null, automated = false, ua = '', standalone = false, touch = 0 } = {}) {
   doc = { activeElement: null, els: new Map(), getElementById(id) { return this.els.get(id); }, createElement: tag => new El(tag) };
   for (const id of ids) doc.els.set(id, new El('x', id));
   doc.els.set('privacy-contact', Object.assign(new El('p', 'privacy-contact'), { hidden: true, dataset: { email } }));
@@ -65,6 +65,7 @@ function make({ configured = true, publishingEnabled = true, captchaRequired = t
   const captcha = async () => { calls.captcha++; if (T.captchaFails) throw new Error('offline'); return turnstile; };
   const mem = new Map([['record-v2-duet-1', '{"quality":90}']]);
   if (alias) mem.set(ALIAS_KEY, alias);
+  if (row) mem.set('leaderboard-row', row === true ? alias : row); // the last answer gave this player a row
   if (declined) mem.set(DECLINES_KEY, String(declined));
   const env = { canPrompt: true, online: true, t: 0 }; // the prompt's world: main.js's screen check, navigator.onLine, the clock
   const store = { get: k => mem.get(k) ?? null, set: (k, v) => mem.set(k, String(v)), remove: k => mem.delete(k) };
@@ -186,20 +187,43 @@ const BOARD = page(0, 60, 22);
   assert($('board-views').hidden && rows().length === 30, 'the list alone');
   board.openBoard(); T.alls[1].resolve(BOARD); await tick();
   assert(!$('board-views').hidden, 'an own row (published on this profile): the switch shows');
-  const known = make({ alias: 'Gegant300' }); known.board.openBoard();
+  const known = make({ alias: 'Gegant300', row: true }); known.board.openBoard();
   assert(!known.$('board-views').hidden && known.$('board-view-me').getAttribute('aria-pressed') === 'true', 'published here: the switch and On sóc from the first frame');
 }
-// a remembered alias whose row is gone (nothing to publish): the answer settles on Tots, no switch, not an «On sóc» empty note
+// a remembered alias with no row (never published, or removed) and nothing to publish: Tots from the first frame, the switch
+// there from the start and still there after the answer (nothing shifts); the next open knows the answer
 {
-  const { board, $, T, rows } = make({ alias: 'Gegant300' });
+  const { board, $, T, rows, mem } = make({ alias: 'Gegant300' });
+  board.openBoard();
+  assert(!$('board-views').hidden && $('board-view-top').getAttribute('aria-pressed') === 'true', 'no row: the switch, Tots active from the first frame');
+  T.alls[0].resolve(page(0, 30)); await tick();
+  assert(!$('board-views').hidden && $('board-view-top').getAttribute('aria-pressed') === 'true' && rows().length === 30, 'the answer changes nothing: switch kept, Tots');
+  assert(!mem.has('leaderboard-row'), 'no row remembered');
+  board.openBoard(); T.alls[1].resolve(BOARD); await tick();
+  assert(mem.has('leaderboard-row'), 'an own row in the answer is remembered');
+}
+// the flag belongs to its alias: a new profile (other alias, no score) opens on Tots from the first frame
+{
+  const { board, $ } = make({ alias: 'Nou123', row: 'Gegant300' });
+  board.openBoard();
+  assert($('board-view-top').getAttribute('aria-pressed') === 'true' && !$('board-views').hidden, 'another alias’s row: Tots, switch there');
+}
+// an error answer leaves the flag alone
+{
+  const { board, T, mem } = make({ alias: 'Gegant300', row: true });
+  board.openBoard(); T.alls[0].reject(new Error('offline')); await tick();
+  assert.equal(mem.get('leaderboard-row'), 'Gegant300', 'offline: the flag is kept');
+}
+// a stale guess (row remembered, the answer has none, nothing to publish): lands on Tots, the switch stays
+{
+  const { board, $, T, rows } = make({ alias: 'Gegant300', row: true });
   board.openBoard();
   T.alls[0].resolve(page(0, 30)); await tick();
-  assert.equal($('board-view-top').getAttribute('aria-pressed'), 'true', 'no own row: Tots');
-  assert($('board-views').hidden && rows().length === 30, 'no switch, the list');
+  assert(!$('board-views').hidden && $('board-view-top').getAttribute('aria-pressed') === 'true' && rows().length === 30, 'stale row flag: Tots, switch kept');
 }
 // --- published here before: On sóc first, profile buttons from the first frame; «top 1%» at least
 {
-  const { board, $, T, rows } = make({ session: true, alias: 'Gegant300' });
+  const { board, $, T, rows } = make({ session: true, alias: 'Gegant300', row: true });
   board.openBoard();
   assert.equal($('board-view-me').getAttribute('aria-pressed'), 'true', 'published here: On sóc first');
   T.alls[0].resolve([{ position: 1, alias: 'Gegant300', difficulty: 2, quality: 99, score: 150000, is_self: true, total: 2140 },

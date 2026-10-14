@@ -15,6 +15,7 @@ import { calcotSpinner } from './loader.js';
 import { setupVerify, turnstileMessage, TURNSTILE_SRC } from '../services/captcha.js';
 
 export const ALIAS_KEY = 'leaderboard-alias';
+export const ROW_KEY = 'leaderboard-row'; // the alias the last answer (or a publication) gave a row to: only for that alias does the sheet open on On sóc
 // «Ara no» to the prompt that opens by itself after a run, in a row: at MAX_DECLINES it stops opening by itself (the
 // results row's «Publica el resultat» stays); any publication starts the count again. Only this number is kept.
 export const DECLINES_KEY = 'publish-declines', MAX_DECLINES = 3;
@@ -121,8 +122,9 @@ export function setupBoard({ focusIn, store = defaultStore, service = leaderboar
   // --- Classificació: one all-time board for every level, ranked by score, in pages of 50 (leaderboard.js). Two views of
   // it: «Tots» (every rank in order, the next page as the list's end comes into view, or «Carrega’n més»; at most
   // BOARD_CAP rows here) and «On sóc» (the player's row with 5 above and 5 below, from the first page). The switch between
-  // them only exists for someone who has published (remembered alias, or an own row in the answer): never published = the
-  // list alone. A late answer (or one for a closed / reopened sheet) is dropped. The sheet keeps one height throughout
+  // them exists for anyone with a nickname (remembered alias, or an own row in the answer): the list alone before that; it opens
+  // on On sóc only while the last answer gave that nickname a row, else on Tots.
+  // A late answer (or one for a closed / reopened sheet) is dropped. The sheet keeps one height throughout
   // (index.html: a fixed box holds list, loading, empty, error; the list scrolls inside it).
   const viewBtns = { all: $('board-view-top'), me: $('board-view-me') };
   const more = $('board-more'), moreStatus = $('board-more-status'), moreBtn = $('board-more-btn');
@@ -232,7 +234,9 @@ export function setupBoard({ focusIn, store = defaultStore, service = leaderboar
     if (req !== listReq || !boardMenu.open) return;
     const b = { byPos: new Map(), loaded: 0, total: 0, done: false };
     absorb(b, rows, 0);
-    if (view === 'me' && !canPublishNow() && ![...b.byPos.values()].some(r => r.is_self)) { view = 'all'; viewSeg.hidden = true; } // a remembered alias with no row and nothing to publish: On sóc would only say so; the list instead
+    const hasRow = [...b.byPos.values()].some(r => r.is_self);
+    if (hasRow) store.set(ROW_KEY, store.get(ALIAS_KEY) ?? ''); else store.remove(ROW_KEY);
+    if (view === 'me' && !hasRow && !canPublishNow()) view = 'all'; // a stale guess: the switch stays, the list shows
     shownBoard = b; render();
   }
   // the next page: from the scroll (the list's end in view) or «Carrega’n més»; one at a time, dropped if stale
@@ -261,14 +265,14 @@ export function setupBoard({ focusIn, store = defaultStore, service = leaderboar
   observe(more, table.parentElement, () => loadMore());
   for (const [k, b] of Object.entries(viewBtns)) b.addEventListener('click', () => { if (view !== k) { view = k; render(); } }); // same pages
   $('board-publish').addEventListener('click', () => { openPublish(); boardMenu.close(); }); // the board doesn't go back behind it
-  // published here before (the remembered alias): the switch, «On sóc» first from the first frame
-  // (the answer corrects it quietly); never published: the list alone, no switch
+  // published here before (the remembered alias): the switch, «On sóc» first from the first frame when the last answer gave
+  // a row, else «Tots» (the answer corrects it quietly); never published: the list alone, no switch
   function openBoard(onBack = null) {
     if (!service.configured) return;
     back = onBack;
     const known = Boolean(store.get(ALIAS_KEY));
     viewSeg.hidden = !known;
-    view = known ? 'me' : 'all';
+    view = known && (store.get(ROW_KEY) === store.get(ALIAS_KEY) || canPublishNow()) ? 'me' : 'all'; // no row (never published, or removed): Tots from the first frame, the switch in place so nothing shifts
     if (!boardMenu.open) boardMenu.showModal();
     focusIn(boardMenu, 'board-close');
     loadList();
@@ -450,7 +454,7 @@ export function setupBoard({ focusIn, store = defaultStore, service = leaderboar
     swap('wait', 'Publicant…'); publishMenu.focus();
     try {
       const out = await service.publish(run, alias, { captchaToken });
-      store.set(ALIAS_KEY, alias);
+      store.set(ALIAS_KEY, alias); store.set(ROW_KEY, alias);
       published = run; // the results button goes even if the sheet was closed meanwhile
       store.remove(DECLINES_KEY); // they publish: the prompt may open by itself again
       if (!store.get(PERSIST_KEY)) { store.set(PERSIST_KEY, '1'); try { Promise.resolve(persist()).catch(() => {}); } catch { /* no Storage API */ } }

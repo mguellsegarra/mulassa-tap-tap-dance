@@ -4,7 +4,7 @@ import { setupSync } from './sync-sheet.js';
 import { store } from '../platform/storage.js';
 import { APP_BUILD } from '../core/version.js';
 import { memoryKeys, mockLeaderboard, markTestMode } from '../dev/final-test.js';
-import { ALIAS_KEY, DECLINES_KEY, OPTOUT_KEY, setupBoard } from './board-ui.js';
+import { ALIAS_KEY, ROW_KEY, DECLINES_KEY, OPTOUT_KEY, setupBoard } from './board-ui.js';
 import { makeDanceChart } from '../game/chart.js';
 import song from '../song.json';
 import { setupShare } from './share-ui.js';
@@ -86,7 +86,7 @@ document.getElementById('settings-sync').addEventListener('click', () => { setti
 document.getElementById('settings-practice').addEventListener('click', () => { settingsMenu.close(); startPractice(null); });
 // Classificacions (optional, online): from Configuració on the title (closing it goes back there) or the results screen.
 // After an eligible run its publish sheet opens by itself, only over a bare, visible, upright results screen.
-const finalStore = FINAL && memoryKeys(store, [ALIAS_KEY, DECLINES_KEY, OPTOUT_KEY]); // ?final: nickname and «Ara no» forgotten on reload
+const finalStore = FINAL && memoryKeys(store, [ALIAS_KEY, ROW_KEY, DECLINES_KEY, OPTOUT_KEY]); // ?final: nickname and «Ara no» forgotten on reload
 const board = setupBoard({ focusIn,
   canPrompt: () => G.state === 'results' && !sheetUp() && !document.hidden && !document.body.classList.contains('wrong-orient'),
   canVerify: () => G.state !== 'play' && !document.hidden, // Turnstile's tick box (src/services/captcha.js) never interrupts a song

@@ -2,7 +2,7 @@
 import { initialQuality, probeRenderer, isSoftwareRenderer, startLevel, profileAt } from '../platform/render-quality.js';
 import { store } from '../platform/storage.js';
 import * as THREE from 'three';
-import { errors } from '../services/errors.js';
+import { errors, errorName } from '../services/errors.js';
 import { buildPlaza, buildMulassa } from './models.js';
 import { COARSE } from '../core/env.js';
 
@@ -28,14 +28,14 @@ export const renderer = (() => { // no WebGL 2 (disabled, blocklisted GPU, very 
     window.__mulassaBooted = 'no-webgl'; // index.html's boot watchdog: this card, not its generic one
     if (window.__mulassaFail) window.__mulassaFail('Ups! No es pot mostrar el joc', msg); // no retry: it wouldn't help
     else { const t = document.getElementById('loader-text'); if (t) t.textContent = msg; }
-    errors.report('webgl-unavailable', { webgl2: String(typeof WebGL2RenderingContext !== 'undefined') });
+    errors.report('webgl-unavailable', { phase: 'renderer-create', webgl2: String(typeof WebGL2RenderingContext !== 'undefined'), name: errorName(err), probe: GPU.probe });
     errors.start();
     err.mulassaReported = true; // already reported as the webgl-unavailable warning: errors.js drops the uncaught copy
     throw err; // nothing below can run without a renderer
   }
 })();
 glc.addEventListener('webglcontextlost', () => errors.report('webgl-context-lost')); // three.js handles the restore itself
-glc.addEventListener('webglcontextrestored', () => errors.report('webgl-context-restored'));
+glc.addEventListener('webglcontextrestored', () => errors.breadcrumb('webgl-context-restored')); // it fired; nothing says the scene is whole again
 renderer.shadowMap.enabled = renderProfile.shadow > 0;
 renderer.shadowMap.type = THREE.PCFShadowMap;
 export const scene = new THREE.Scene();

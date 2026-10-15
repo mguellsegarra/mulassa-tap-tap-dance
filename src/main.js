@@ -17,6 +17,7 @@ import { Q, COARSE, pageActive, beatAt, BEAT, offsetMs, playFrom, FINALE_T, AUTO
 import { pace, RAWCLOCK, viewClock } from './core/timing.js';
 import { qualityLevel, saveQuality, renderProfile, softwareGl, GPU, renderer, camera, CAM_AZ, FRONT, plaza, cameraTarget, camFocus, camFocusTarget, camShift, camXYZ, focusXYZ, scene, setQualityLevel, setCamShift } from './scene/stage.js';
 import { G, chip, clock, songTime, drawT, bigPending, audioEngine, setClock, setDrawT } from './game/state.js';
+import { audioFailureTags } from './platform/audio.js';
 import { TAU } from './core/anim.js';
 import { spawnConfetti, burst, animConfetti, setConfettiSettled } from './scene/confetti.js';
 import { applyRenderQuality, activeCrowd } from './scene/quality.js';
@@ -252,7 +253,7 @@ requestAnimationFrame(() => setTimeout(() => { // one paint first: that line sho
 // The audio engine, suspended (the splash's tap resumes it): the song, the menu loop and the applause are made behind
 // the page cover. Made at the first frame they finished on the splash on a slow first load, right under the tap.
 function startAudio() {
-  try { audioEngine().ready?.then(() => loadMark('song decoded'), e => errors.report('audio-load-failed', { name: e?.name || 'Error' })); } catch { /* no Web Audio: made at the tap */ }
+  try { audioEngine().ready?.then(() => loadMark('song decoded'), e => errors.report('audio-load-failed', audioFailureTags(e))); } catch { /* no Web Audio: made at the tap */ }
 }
 // Every program up front, for the screen and (hero) for the share photo's render target: that renders with linear
 // output, i.e. other programs, which cost ~0.45 s on the first Comparteix (desktop at 4x CPU; more on a phone). Run again

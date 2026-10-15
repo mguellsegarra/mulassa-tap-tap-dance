@@ -12,6 +12,7 @@ import { challengeResult } from '../services/share.js';
 import { fabricateRun } from '../dev/final-test.js';
 import { sheets } from '../ui/sheets.js';
 import { chip, audioEngine, G, clock, CHALLENGE, setChip, setBigPending } from './state.js';
+import { audioFailureTags } from '../platform/audio.js';
 import { goFullscreen } from '../ui/fullscreen.js';
 import { closePauseMenu } from '../ui/pause.js';
 import { pageActive, playFrom, LEAD, BEATS, BEAT, CLICKS, AUTOPLAY, FROM, beatAt, Q, STARS, FINAL, FINALE_T, setWIN } from '../core/env.js';
@@ -71,7 +72,7 @@ export function startGame(diff) {
     if (CLICKS) chart.forEach(n => chip.tick(n.t));
   }).catch(e => {
     waited();
-    errors.report('audio-start-failed', { name: e?.name || 'Error' });
+    errors.report('audio-start-failed', audioFailureTags(e));
     if (G.state !== 'play' || G.chart !== chart) return;
     toTitle();
     G.audioError = 'No s’ha pogut carregar la música. Torna a provar-ho.';

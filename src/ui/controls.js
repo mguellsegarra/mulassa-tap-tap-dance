@@ -1,7 +1,7 @@
 // Which DOM controls show in each state, and the photo (view) mode.
 import { sheets } from './sheets.js';
 import { howtoMenu, settingsMenu, privacyMenu, pauseMenu, hide, howtoEl, settingsEl, leadersEl, feedbackEl, musicEl, iosHint, hintOff, pauseEl, skipEl, retryEl } from './handles.js';
-import { G, engine, clock, CHALLENGE } from '../game/state.js';
+import { G, clock, CHALLENGE } from '../game/state.js';
 import { keyboardNav } from './focus.js';
 
 export const sheetUp = () => howtoMenu.open || settingsMenu.open || sheets.sync.open || sheets.board.open || privacyMenu.open || sheets.share.open || pauseMenu.open || sheets.feedback.open || sheets.profile?.isOpen;
@@ -46,7 +46,7 @@ export function updateControls() {
   hide(settingsEl, G.state !== 'title');
   hide(leadersEl, G.state !== 'title' || !sheets.board.configured);
   hide(feedbackEl, G.state !== 'title' || !sheets.feedback.configured);
-  hide(musicEl, G.state !== 'title' || Boolean(engine?.noAmbient)); // a lean connection has no menu loop to silence
+  hide(musicEl, G.state !== 'title');
   hide(iosHint, hintOff || G.state !== 'title' || howtoMenu.open || settingsMenu.open || sheets.sync.open);
   hide(pauseEl, G.state !== 'play' || G.paused || Boolean(G.collapseT));
   hide(skipEl, G.state !== 'play' || !G.practice || G.paused);

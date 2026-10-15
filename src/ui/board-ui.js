@@ -421,7 +421,7 @@ export function setupBoard({ focusIn, store = defaultStore, service = leaderboar
     clearTimeout(shareTimer); shareTimer = null;
     const place = placeP;
     const go = () => { fade?.cancel(); publishMenu.close(); afterPublish?.({ place }); };
-    const fade = !reduced() && publishMenu.animate?.([{ opacity: 1 }, { opacity: 0 }], { duration: 160, easing: 'ease-in', fill: 'forwards' });
+    const fade = reduced() ? null : publishMenu.animate?.([{ opacity: 1 }, { opacity: 0 }], { duration: 160, easing: 'ease-in', fill: 'forwards' });
     if (fade) fade.finished.then(go, go); else go();
   }
   async function send() {

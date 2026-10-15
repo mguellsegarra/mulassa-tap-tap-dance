@@ -1,6 +1,6 @@
 // Crash reports (src/services/errors.js): when they may be sent, what gets scrubbed, and the early buffer before the SDK loads.
 import assert from 'node:assert/strict';
-import { errorsMode, scrubUrl, scrubText, scrubEvent, scrubBreadcrumb, sentryOptions, createErrors, errors } from '../src/services/errors.js';
+import { errorsMode, scrubUrl, scrubText, scrubEvent, scrubBreadcrumb, sentryOptions, createErrors, errors, errorName } from '../src/services/errors.js';
 
 const DSN = 'https://public@o1.ingest.de.sentry.io/1';
 const prod = { dsn: DSN, hostname: 'mulassa-tap-tap-dance.pages.dev', search: '' };
@@ -59,13 +59,14 @@ function fakeWindow() {
   const win = fakeWindow();
   let loads = 0;
   const off = createErrors({ mode: null, win, load: () => { loads++; } });
-  off.start(); off.report('x'); off.capture(new Error('y'));
+  off.start(); off.report('x'); off.breadcrumb('z'); off.capture(new Error('y'));
   assert.equal(loads, 0, 'off: never loads the SDK');
   assert.equal(Object.keys(win.h).length + win.timers.length, 0, 'off: no listeners, no timers');
 }
 {
   const win = fakeWindow(), sent = [];
-  const S = { captureException: (e, h) => sent.push(['exception', e, h]), captureMessage: (m, h) => sent.push(['message', m, h]) };
+  const S = { captureException: (e, h) => sent.push(['exception', e, h]), captureMessage: (m, h) => sent.push(['message', m, h]),
+    addBreadcrumb: b => sent.push(['crumb', b.message, b]) };
   let loads = 0, ready;
   const api = createErrors({ mode: 'production', win, idle: f => f(), load: () => { loads++; return new Promise(r => { ready = () => r(S); }); } });
   const early = new Error('early');
@@ -76,17 +77,50 @@ function fakeWindow() {
   win.fire('pointerdown', { pointerType: 'touch' });
   api.context(() => ({ state: 'title' }));
   api.report('webgl-context-lost');
+  const actualNow = Date.now;
+  try { Date.now = () => 123456000; api.breadcrumb('webgl-context-restored', { n: 1 }); }
+  finally { Date.now = actualNow; }
+  api.capture(new Error('mid'));
   assert.equal(sent.length, 0, 'nothing is sent before the SDK loads');
   api.start(); api.start(); await new Promise(r => setTimeout(r));
   assert.equal(loads, 1, 'loaded once');
   ready(); await new Promise(r => setTimeout(r));
-  assert.deepEqual(sent.map(s => s[1]), [early, 'rejected', 'webgl-context-lost'], 'buffered errors and reports forwarded, in order');
+  assert.equal(sent.length, 5);
+  assert.deepEqual(sent.map(s => s[1]).map(v => v?.message ?? v), ['early', 'rejected', 'webgl-context-lost', 'webgl-context-restored', 'mid'], 'early errors, reports and breadcrumbs forwarded in the order they happened');
+  assert.equal(sent[3][2].timestamp, 123456, 'the breadcrumb keeps the occurrence time through delayed SDK loading');
+  assert.equal(sent[3][2].data.n, 1);
   assert.equal(sent[0][2].mechanism.handled, false);
   assert.equal(sent[2][2].level, 'warning');
+  assert.deepEqual(sent[2][2].fingerprint, ['mulassa', 'webgl-context-lost'], 'a manual report groups by its kind');
+  assert.equal(sent[0][2].fingerprint, undefined, 'exceptions keep the SDK grouping');
   assert.deepEqual(api.tags(), { state: 'title', pointer: 'touch' });
   win.fire('error', { error: new Error('late') });
-  assert.equal(sent.length, 3, 'forwarded once: the SDK handles later errors itself');
+  assert.equal(sent.length, 5, 'forwarded once: the SDK handles later errors itself');
   api.capture(new Error('now'));
-  assert.equal(sent.length, 4, 'after loading, captures go straight through');
+  assert.equal(sent.length, 6, 'after loading, captures go straight through');
 }
+{
+  const win = fakeWindow(), sent = [];
+  const S = { captureException() {}, captureMessage: m => sent.push(m), addBreadcrumb: b => sent.push('b:' + b.message) };
+  let ready;
+  const api = createErrors({ mode: 'production', win, idle: f => f(), load: () => new Promise(r => { ready = () => r(S); }) });
+  for (let i = 0; i < 40; i++) api.breadcrumb('c' + i);
+  for (let i = 0; i < 12; i++) api.report('r' + i);
+  api.start(); await new Promise(r => setTimeout(r)); ready(); await new Promise(r => setTimeout(r));
+  assert.equal(sent.filter(m => !m.startsWith('b:')).length, 10, 'warnings keep their own capacity');
+  assert.equal(sent.filter(m => m.startsWith('b:')).length, 20, 'breadcrumbs are capped');
+}
+{
+  const sent = [];
+  const S = { captureException: (e, h) => sent.push(h), captureMessage: (m, h) => sent.push(h), addBreadcrumb() {} };
+  const api = createErrors({ mode: 'production', win: fakeWindow(), idle: f => f(), load: async () => S });
+  api.start(); await new Promise(r => setTimeout(r));
+  api.report('webgl-context-lost', { n: 1 });
+  api.report('webgl-context-lost', { n: 2, extra: 'x' });
+  api.report('audio-load-failed');
+  api.capture(new Error('boom'), { n: 3 });
+  assert.deepEqual(sent.map(h => h.fingerprint), [['mulassa', 'webgl-context-lost'], ['mulassa', 'webgl-context-lost'], ['mulassa', 'audio-load-failed'], undefined],
+    'kinds get separate fingerprints, tags never change them, exceptions are left to the SDK');
+}
+assert.deepEqual(['TypeError', 'ReferenceError', 'SyntaxError', 'Whatever', undefined].map(n => errorName({ name: n })), ['TypeError', 'ReferenceError', 'SyntaxError', 'Other', 'Other'], 'standard diagnostic names stay recognizable while arbitrary names are rejected');
 console.log('crash reports: gating, scrubbing, early buffer ok');

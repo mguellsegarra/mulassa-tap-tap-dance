@@ -89,16 +89,16 @@ assert.equal(startLevel(1, { level: 2, at: 0 }).level, 1, 'never above the hardw
     return { log, make };
   };
   let f = fake();
-  assert.deepEqual(probeRenderer(f.make), { renderer: 'ANGLE (Apple, ANGLE Metal Renderer: Apple M2)', vendor: 'Google Inc.', caveat: false });
+  assert.deepEqual(probeRenderer(f.make), { renderer: 'ANGLE (Apple, ANGLE Metal Renderer: Apple M2)', vendor: 'Google Inc.', caveat: false, probe: 'ok' });
   assert(f.log.made === 1 && f.log.lost === 1, 'a GPU: one probe context, lost at once');
   f = fake({ caveatOk: false, unmasked: soft[0][0] });
   const p = probeRenderer(f.make);
-  assert(p.caveat && isSoftwareRenderer(p) && f.log.made === 2 && f.log.lost === 1, 'SwiftShader: the caveat context is refused, the plain one read and lost');
+  assert(p.caveat && p.probe === 'caveat' && isSoftwareRenderer(p) && f.log.made === 2 && f.log.lost === 1, 'SwiftShader: the caveat context is refused, the plain one read and lost');
   f = fake({ renderer: 'ANGLE (Intel, Intel(R) HD Graphics 400 Direct3D11 vs_5_0 ps_5_0), or similar' });
   assert(probeRenderer(f.make).renderer.startsWith('ANGLE (Intel') && !f.log.ext.includes('WEBGL_debug_renderer_info'), 'Firefox: RENDERER as is (no deprecated extension)');
   f = fake({ caveatOk: false, plainOk: false });
-  assert.deepEqual(probeRenderer(f.make), { renderer: '', vendor: '', caveat: false }, 'no WebGL 2 at all is not "software"');
-  assert.deepEqual(probeRenderer(() => { throw new Error('no canvas'); }), { renderer: '', vendor: '', caveat: false }, 'a failing probe never throws');
+  assert.deepEqual(probeRenderer(f.make), { renderer: '', vendor: '', caveat: false, probe: 'none' }, 'no WebGL 2 at all is not "software"');
+  assert.deepEqual(probeRenderer(() => { throw new Error('no canvas'); }), { renderer: '', vendor: '', caveat: false, probe: 'none' }, 'a failing probe never throws');
 }
 { // far too slow frames drop two steps at once, merely slow ones one
   const got = []; const m = frameMonitor(s => got.push(s));
@@ -367,7 +367,7 @@ const leaderboardResult = await import('../src/services/leaderboard-result.js');
 const shareLogic = await import('../src/services/share.js');
 const { setupShare } = await import('../src/ui/share-ui.js');
 const { setupLoader } = await import('../src/ui/loader.js');
-const { errors } = await import('../src/services/errors.js'); // the real one: off here (no window, no DSN)
+const { errors, errorName } = await import('../src/services/errors.js'); // the real one: off here (no window, no DSN)
 const loaderTimers = []; // #loader's delays, run by hand: flushLoader()
 const flushLoader = () => { while (loaderTimers.length) loaderTimers.shift()(); };
 const nodes = new Map();
@@ -398,7 +398,8 @@ const document = {
   querySelectorAll: () => [],
 };
 class Renderer {
-  constructor() { this.shadowMap = {}; }
+  constructor() { this.shadowMap = {}; this.lost = false; }
+  getContext() { return { isContextLost: () => this.lost }; }
   setPixelRatio() {}
   setSize() {}
   render() {}
@@ -406,7 +407,7 @@ class Renderer {
 const context = vm.createContext({
   ...leaderboardResult,
   ...await import('../src/dev/final-test.js'), ALIAS_KEY: 'leaderboard-alias', DECLINES_KEY: 'publish-declines', // ?final: off here (no hostname)
-  errors,
+  errors, errorName, audioFailureTags: (await import('../src/platform/audio.js')).audioFailureTags,
   THREE: { ...THREE, WebGLRenderer: Renderer }, ...await import('../src/scene/crowd-fx.js'), ...models, ...chart, ...progress, ...stars,
   PROFILES, initialQuality, renderDpr, frameMonitor, hudScale, framePacer, smoothClock, profileAt, hudBudget, startLevel, isSoftwareRenderer, probeRenderer, Chip: class { constructor(song, opts) { context.chipOpts = opts; } setMenuMusic(on) { (context.menuMusicCalls ||= []).push(on); } }, ...practice, ...energy, ...bubblesLogic, ...framing, ...dance, ...titleLayoutLogic, ...orbitLogic, setupSync: hooks => { context.syncHooks = hooks; return context.syncSheet = { open: false, show() { this.open = true; } }; },
   setupBoard: opts => (context.boardSheet = { opts, open: false, configured: true, shown: [], opened: [], results(show) { this.shown.push(show); }, publishable: false,
@@ -1228,6 +1229,10 @@ assert.equal(boardSheet.opened.length, 0, 'a stale podium click off the title op
   run(`G.state = 'title'; updateControls();`);
   assert.equal(btn.hidden, false, 'the speaker shows on the title');
   assert.equal(btn.dataset.state, 'on');
+  context.navigator.connection = { effectiveType: '3g', saveData: true };
+  run(`updateControls();`);
+  assert.equal(btn.hidden, false, 'a slow or Save-Data connection keeps the speaker on the title');
+  delete context.navigator.connection;
   btn.listeners.click();
   assert.equal(btn.dataset.state, 'off'); assert.equal(btn.title, 'Activa la música del menú');
   assert.deepEqual(stored.at(-1), ['menu-music', 'off'], 'remembered on this device');
@@ -1397,9 +1402,47 @@ console.log('comparteix integration contracts ok');
   run('heroFlat = 1; heroShots.length = 0;'); // the float target drew nothing: the same photo again in 8 bits
   assert(run('renderHero(960, 620)') && run('heroShots.length') === 2, 'a flat float render is retried in 8 bits');
   const warn = console.warn; console.warn = () => {};
-  run('heroFlat = 2;');
-  assert.equal(run('renderHero(960, 620)'), null, 'nothing drawn at all: no photo (the card draws its stand-in)');
-  console.warn = warn;
+  const seen = { reports: [], crumbs: [] };
+  const originalReport = errors.report, originalBreadcrumb = errors.breadcrumb;
+  try {
+    errors.report = (k, d) => seen.reports.push([k, d]); errors.breadcrumb = (k, d) => seen.crumbs.push([k, d]);
+    const pose = () => run('mula.root.position.toArray().join() + mula.root.quaternion.toArray().join() + plaza.props.map(p => p.mesh.visible)');
+    const before = pose();
+    run('heroFlat = 2;');
+    assert.equal(run('renderHero(960, 620)'), null, 'nothing drawn at all: no photo (the card draws its stand-in)');
+    assert.deepEqual(JSON.parse(JSON.stringify(seen.reports)), [['share-hero-failed', { phase: 'flat', target: 'byte', name: 'Error' }]], 'a genuine flat render stays a warning, bounded tags');
+    assert.equal(seen.crumbs.length, 0);
+    seen.reports.length = 0;
+    run(`var readOld = renderer.readRenderTargetPixels; renderer.readRenderTargetPixels = () => { throw Object.assign(new Error('secret detail'), { name: 'WeirdError' }); };`);
+    assert.equal(run('renderHero(960, 620)'), null);
+    assert.deepEqual(JSON.parse(JSON.stringify(seen.reports)), [['share-hero-failed', { phase: 'read', target: 'float', name: 'Other' }]], 'read failure: phase, target, allowlisted name only');
+    assert.equal(pose(), before, 'pose and props restored after a failure');
+    seen.reports.length = 0;
+    run(`var rtOld = renderer.setRenderTarget; renderer.setRenderTarget = () => { throw new Error('cleanup'); };
+      var disposed = 0, disposeOld = THREE.WebGLRenderTarget.prototype.dispose; THREE.WebGLRenderTarget.prototype.dispose = function () { disposed++; return disposeOld.call(this); };`);
+    assert.equal(run('renderHero(960, 620)'), null, 'setRenderTarget throws inside the capture: still null');
+    assert.equal(run('disposed'), 2, 'both temporary targets are disposed although setRenderTarget threw');
+    run('THREE.WebGLRenderTarget.prototype.dispose = disposeOld;');
+    assert.equal(pose(), before, 'pose and props restored although the GPU cleanup threw');
+    assert(seen.reports.some(r => r[1].phase === 'cleanup'), 'cleanup failure is reported');
+    run('renderer.setRenderTarget = rtOld; renderer.readRenderTargetPixels = readOld;'); seen.reports.length = 0;
+    run('renderer.lost = true; heroShots.length = 0; var heroDrawn = 0; var renderOld = renderer.render; renderer.render = () => heroDrawn++;');
+    assert.equal(run('renderHero(960, 620)'), null);
+    assert(run('heroDrawn') === 0 && !seen.reports.length, 'lost before: no render, no warning');
+    assert.deepEqual(JSON.parse(JSON.stringify(seen.crumbs)), [['share-hero-context-lost', { phase: 'context', target: 'none' }]]);
+    seen.crumbs.length = 0;
+    run('renderer.lost = false; renderer.render = renderOld; heroFlat = 2; var readFlat = renderer.readRenderTargetPixels; renderer.readRenderTargetPixels = function (...a) { this.lost = true; return readFlat.apply(this, a); };');
+    assert.equal(run('renderHero(960, 620)'), null);
+    assert(!seen.reports.length && seen.crumbs.length === 1 && seen.crumbs[0][1].phase === 'flat', 'lost during the render: breadcrumb, no warning');
+    assert.equal(pose(), before, 'pose restored after a mid-capture loss');
+    run('renderer.readRenderTargetPixels = readFlat; renderer.lost = false; heroFlat = 0;');
+    seen.crumbs.length = 0;
+    assert(run('renderHero(960, 620)'), 'healthy again after a loss: a photo');
+    assert(!seen.reports.length && !seen.crumbs.length, 'a healthy capture reports nothing');
+  } finally {
+    errors.report = originalReport; errors.breadcrumb = originalBreadcrumb;
+    console.warn = warn;
+  }
   document.createElement = made; delete context.ImageData;
   run('qualityLevel = 2; applyRenderQuality(); G.state = "title";');
 }

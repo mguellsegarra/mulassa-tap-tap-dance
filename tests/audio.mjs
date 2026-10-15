@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
-import { Chip, leanNetwork, applause } from '../src/platform/audio.js';
+import { Chip, applause, audioFailureTags } from '../src/platform/audio.js';
 
 let resolveReady;
 let starts = 0;
@@ -76,12 +76,7 @@ try {
 }
 console.log('audio wake respects page activity');
 
-// Slow networks: the song downloads first, the menu loop only after it (and never on Save-Data / 2G / 3G).
-assert.equal(leanNetwork(undefined), false, 'no Network Information API: a normal connection');
-assert.equal(leanNetwork({ effectiveType: '4g' }), false);
-assert.equal(leanNetwork({ effectiveType: '3g' }), true);
-assert.equal(leanNetwork({ effectiveType: 'slow-2g' }), true);
-assert.equal(leanNetwork({ effectiveType: '4g', saveData: true }), true);
+// Download order: both start at once, on any connection; only the speaker's own setting silences the menu loop.
 {
   const previousFetch = globalThis.fetch;
   try {
@@ -98,13 +93,13 @@ assert.equal(leanNetwork({ effectiveType: '4g', saveData: true }), true);
       c.urls = { audio: 'song', ambient: 'menu' };
       c.unlock = () => {};
       c.ctx = { currentTime: 0, decodeAudioData: async () => ({ duration: 30 }),
-        createBufferSource: () => ({ connect: t => t, start() { menuStarts.push(c); } }),
+        createBufferSource: () => ({ connect: t => t, start() { menuStarts.push(c); }, stop() {} }),
         createGain: () => ({ connect: t => t, disconnect() {}, gain: { setValueAtTime() {}, linearRampToValueAtTime() {}, setTargetAtTime() {} } }) };
       c.out = {};
       return c;
     };
     const normal = make();
-    normal.preload(false);
+    normal.preload();
     normal.menu(true); // the title opens while the song still downloads: a normal connection fetches both at once
     await normal.ambient;
     await new Promise(r => setTimeout(r, 5));
@@ -113,27 +108,31 @@ assert.equal(leanNetwork({ effectiveType: '4g', saveData: true }), true);
     finishSong();
     await normal.ready;
     log.length = 0;
-    const lean = make();
-    lean.preload(true);
+    // a slow / Save-Data connection changes nothing: the loop is requested and started like on any other
+    const navDesc = Object.getOwnPropertyDescriptor(globalThis, 'navigator');
+    Object.defineProperty(globalThis, 'navigator', { configurable: true, value: { connection: { effectiveType: '3g', saveData: true } } });
+    const slow = make();
+    slow.preload();
     finishSong();
-    await lean.ready;
-    lean.menu(true);
+    await slow.ready;
+    slow.menu(true);
     await new Promise(r => setTimeout(r, 5));
-    assert.deepEqual(log, ['song'], 'a lean connection never downloads the menu loop');
-    assert.equal(menuStarts.length, 1, 'and the title just stays quiet');
-    lean.menu(false);
+    assert.deepEqual(log, ['song', 'menu'], 'a 3G / Save-Data connection still downloads the menu loop');
+    assert.deepEqual(menuStarts, [normal, slow], 'and starts it');
+    slow.menu(false);
+    if (navDesc) Object.defineProperty(globalThis, 'navigator', navDesc); else delete globalThis.navigator;
     // the title's speaker button off (main.js, localStorage 'menu-music'): never fetched, never started; back on = a quick
     // fade in right there; off again = a quick fade out, the menu itself still on
-    log.length = 0;
+    log.length = 0; menuStarts.length = 0;
     const quiet = make();
     quiet.menuMusic = false;
-    quiet.preload(false);
+    quiet.preload();
     finishSong();
     await quiet.ready;
     quiet.menu(true);
     await new Promise(r => setTimeout(r, 5));
     assert.deepEqual(log, ['song'], 'menu music off: the loop is never downloaded');
-    assert.equal(menuStarts.length, 1, 'nor started');
+    assert.equal(menuStarts.length, 0, 'nor started');
     const ramps = [];
     quiet.ctx.createGain = () => ({ connect: t => t, disconnect() {}, gain: { setValueAtTime() {}, linearRampToValueAtTime: (v, t) => ramps.push(t), setTargetAtTime(v) { ramps.push(`to ${v}`); } } });
     quiet.ctx.createBufferSource = () => ({ connect: t => t, start() { menuStarts.push(quiet); }, stop() { ramps.push('stop'); } });
@@ -156,11 +155,24 @@ assert.equal(leanNetwork({ effectiveType: '4g', saveData: true }), true);
     assert.equal(murmur.at(-1), 0.035, 'a game: the murmur is back');
     quiet.menu(true); quiet.setMenuMusic(true);
     assert.equal(murmur.at(-1), 0.035, 'speaker on: the murmur too');
+    const pending = make();
+    let finishMenu;
+    pending.ambient = new Promise(resolve => { finishMenu = resolve; });
+    pending.menu(true);
+    pending.setMenuMusic(false);
+    finishMenu({ duration: 30 });
+    await pending.ambient;
+    assert.equal(menuStarts.filter(c => c === pending).length, 0, 'muted while loading: the downloaded loop never starts');
+    assert(!pending.menuSrc, 'muted while loading: no active menu source');
+    pending.setMenuMusic(true);
+    await pending.ambient;
+    assert.equal(menuStarts.filter(c => c === pending).length, 1, 're-enabling after the download starts the loop once');
+    pending.menu(false);
   } finally {
     globalThis.fetch = previousFetch;
   }
 }
-console.log('audio download order on slow networks ok');
+console.log('audio download order ok');
 
 // A real entrance plays once; the steady groove repeats without slowing the title's beat.
 {
@@ -282,4 +294,52 @@ console.log('leaving a run silences everything it queued ok');
   const seen = []; process.on('unhandledRejection', e => seen.push(e));
   c.resume(); await new Promise(r => setTimeout(r, 10));
   assert.equal(seen.length, 0, 'resume() rejection is swallowed');
+}
+
+{
+  const saved = globalThis.fetch;
+  const dom = name => Object.assign(new Error('secret message https://x.test/a.mp3'), { name });
+  const ok = (extra = {}) => ({ ok: true, status: 200, arrayBuffer: async () => new ArrayBuffer(4), ...extra });
+  const tags = async (fetchImpl, decode = async () => ({ duration: 1 })) => {
+    globalThis.fetch = fetchImpl;
+    const c = Object.create(Chip.prototype);
+    c.ctx = { decodeAudioData: decode };
+    c.urls = { audio: 'song' };
+    c.ready = c.loadRecording();
+    const e = await c.ready.then(() => null, e => e);
+    assert(e, 'it failed');
+    assert.equal(c.ready, null, 'a failed preload allows another request');
+    assert.equal(e.cause, undefined, 'no cause chain');
+    assert(!/secret|x\.test/.test(e.message), 'no browser text');
+    return audioFailureTags(e);
+  };
+  try {
+    assert.deepEqual(await tags(async () => { throw dom('TypeError'); }), { name: 'TypeError', phase: 'fetch' });
+    assert.deepEqual(await tags(() => { throw dom('NetworkError'); }), { name: 'NetworkError', phase: 'fetch' }, 'a synchronous throw too');
+    assert.deepEqual(await tags(async () => ({ ok: false, status: 503 })), { name: 'Error', phase: 'http', status: 503 });
+    assert.deepEqual(await tags(async () => ok({ arrayBuffer: async () => { throw dom('AbortError'); } })), { name: 'AbortError', phase: 'read' });
+    const stream = { read: async () => { throw dom('NetworkError'); } };
+    assert.deepEqual(await tags(async () => ok({ headers: { get: () => '10' }, body: { getReader: () => stream } })), { name: 'NetworkError', phase: 'read' }, 'a body stream that breaks');
+    assert.deepEqual(await tags(async () => ok(), () => { throw dom('EncodingError'); }), { name: 'EncodingError', phase: 'decode' }, 'decode throws synchronously');
+    assert.deepEqual(await tags(async () => ok(), async () => { throw dom('EncodingError'); }), { name: 'EncodingError', phase: 'decode' });
+    const forged = Object.assign(new Error('x'), { phase: 'https://x.test', status: 'abc', name: 'secret@mail' });
+    assert.deepEqual(audioFailureTags(forged), { name: 'Other', phase: 'unknown' });
+    assert.deepEqual(audioFailureTags({ phase: 'decode', status: 503, errName: 'EncodingError', name: 'EncodingError' }), { name: 'EncodingError', phase: 'unknown' }, 'not ours: unknown');
+    assert.deepEqual(audioFailureTags(null), { name: 'Other', phase: 'unknown' });
+    const real = await tags(async () => ({ ok: false, status: 503 }));
+    assert.equal(real.status, 503);
+    let n = 0;
+    globalThis.fetch = async () => (++n === 1 ? { ok: false, status: 500 } : ok());
+    const c = Object.create(Chip.prototype);
+    c.ctx = { decodeAudioData: async () => ({ duration: 2 }), currentTime: 0, createBufferSource: () => ({ connect: t => t, start() {}, stop() {} }), createGain: () => ({ connect: t => t, gain: { setValueAtTime() {}, linearRampToValueAtTime() {} } }) };
+    c.unlock = () => {};
+    Object.defineProperty(c, 'clock', { value: { run() {} } });
+    c.ready = c.loadRecording();
+    await assert.rejects(c.ready);
+    assert.equal(await c.start(), true, 'start retries after a failure');
+    assert.equal(n, 2);
+  } finally {
+    globalThis.fetch = saved;
+  }
+  console.log('audio failure phases and privacy ok');
 }

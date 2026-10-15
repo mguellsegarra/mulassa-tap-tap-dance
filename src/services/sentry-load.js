@@ -1,7 +1,7 @@
 // The lazily loaded half of src/services/errors.js: only these SDK parts reach the bundle (a namespace import would pull in
 // replay, feedback and tracing too). Errors only: no session pings, console hooks or rAF/addEventListener wrapping.
 import { init, eventFiltersIntegration, functionToStringIntegration, breadcrumbsIntegration, globalHandlersIntegration,
-  linkedErrorsIntegration, dedupeIntegration, httpContextIntegration, captureException, captureMessage } from '@sentry/browser';
+  linkedErrorsIntegration, dedupeIntegration, httpContextIntegration, captureException, captureMessage, addBreadcrumb } from '@sentry/browser';
 
 export function start(options) {
   init({
@@ -13,5 +13,5 @@ export function start(options) {
       globalHandlersIntegration(), linkedErrorsIntegration(), dedupeIntegration(), httpContextIntegration(),
     ],
   });
-  return { captureException, captureMessage };
+  return { captureException, captureMessage, addBreadcrumb };
 }

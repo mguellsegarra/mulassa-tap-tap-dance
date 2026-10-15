@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import { newPose, dancePose, END_BEAT } from '../game/dance.js';
 import { blocks } from './framing.js';
-import { errors } from '../services/errors.js';
+import { errors, errorName } from '../services/errors.js';
 import { plaza, mula, renderer, FRONT, CAM_AZ, scene } from './stage.js';
 import { M } from './mula-motion.js';
 import { insidePlaza } from './cameras.js';
@@ -29,10 +29,17 @@ function flatImage(px) { // one colour everywhere (sampled): nothing was drawn
   for (let i = 4 * 97; i < px.length; i += 4 * 97) if (Math.abs(px[i] - px[0]) + Math.abs(px[i + 1] - px[1]) + Math.abs(px[i + 2] - px[2]) > 6) return false;
   return true;
 }
+const gpuLost = () => { try { return renderer.getContext().isContextLost() === true; } catch { return false; } };
+function heroIssue(phase, target, e) {
+  if (gpuLost()) return errors.breadcrumb('share-hero-context-lost', { phase, target });
+  console.warn('[share] hero render failed', e);
+  errors.report('share-hero-failed', { phase, target, name: errorName(e) });
+}
 export function renderHero(w, h) {
+  if (gpuLost()) { errors.breadcrumb('share-hero-context-lost', { phase: 'context', target: 'none' }); return null; }
   const saved = [], props = plaza.props.map(p => p.mesh.visible);
   mula.root.traverse(o => saved.push([o, o.position.clone(), o.quaternion.clone(), o.scale.clone(), o.visible]));
-  let rt = null, out = null, prevTarget = null;
+  let rt = null, out = null, prevTarget = null, phase = 'setup', target = 'none';
   try {
     prevTarget = renderer.getRenderTarget();
     { // standing tall on the last hit: front up, head high, a three-quarter view (a collapse is never shared)
@@ -62,30 +69,35 @@ export function renderHero(w, h) {
     heroQuadMake();
     const px = new Uint8Array(w * h * 4);
     for (;;) {
+      phase = 'render'; target = float ? 'float' : 'byte';
       rt = new THREE.WebGLRenderTarget(w, h, { type: float ? THREE.HalfFloatType : THREE.UnsignedByteType, samples: 4 });
       renderer.setRenderTarget(rt);
       renderer.render(scene, heroCam);
       heroQuad.material.uniforms.src.value = rt.texture;
       renderer.setRenderTarget(out);
       renderer.render(heroQuad.scene, heroQuad.cam);
+      phase = 'read';
       renderer.readRenderTargetPixels(out, 0, 0, w, h, px);
       if (!float || !flatImage(px)) break;
       float = false; rt.dispose(); // the GPU drew nothing into the float target: the same photo in 8 bits
     }
+    phase = 'flat';
     if (flatImage(px)) throw new Error('hero render came back flat');
+    phase = 'canvas';
     const c = document.createElement('canvas');
     c.width = w; c.height = h;
     c.getContext('2d').putImageData(new ImageData(new Uint8ClampedArray(px.buffer), w, h), 0, 0);
     return c;
-  } catch (e) { // share-card.js draws a plain sky and plaça without it: never quietly (that hid a ReferenceError once)
-    console.warn('[share] hero render failed', e);
-    errors.report('share-hero-failed', { name: e?.name || 'Error' });
+  } catch (e) { // share-card.js draws a plain sky and plaça without it; heroIssue reports it (a lost context only leaves a breadcrumb)
+    heroIssue(phase, target, e);
     return null;
   } finally {
-    heroQuad && (heroQuad.material.uniforms.src.value = null);
-    renderer.setRenderTarget?.(prevTarget);
-    rt?.dispose(); out?.dispose();
     for (const [o, p, q, sc, v] of saved) { o.position.copy(p); o.quaternion.copy(q); o.scale.copy(sc); o.visible = v; }
     plaza.props.forEach((p, i) => (p.mesh.visible = props[i]));
+    try {
+      heroQuad && (heroQuad.material.uniforms.src.value = null);
+      rt?.dispose(); out?.dispose(); // restore may throw: release the temporary targets first
+      renderer.setRenderTarget(prevTarget);
+    } catch (e) { heroIssue('cleanup', target, e); }
   }
 }

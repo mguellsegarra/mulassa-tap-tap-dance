@@ -39,12 +39,13 @@ export const isSoftwareRenderer = ({ renderer = '', vendor = '', caveat = false 
 // no depth/stencil/MSAA, released at once (WEBGL_lose_context). Only a refused caveat context costs a second one.
 // Chrome/Safari report "WebKit WebGL" as RENDERER: only then the debug extension (Firefox warns it is deprecated).
 export function probeRenderer(makeCanvas = () => document.createElement('canvas')) {
-  const out = { renderer: '', vendor: '', caveat: false };
+  const out = { renderer: '', vendor: '', caveat: false, probe: 'none' };
   const open = caveat => { try { return makeCanvas().getContext('webgl2', { failIfMajorPerformanceCaveat: caveat, antialias: false,
     depth: false, stencil: false, powerPreference: 'high-performance' }) || null; } catch { return null; } };
   let gl = open(true);
   if (!gl) { gl = open(false); out.caveat = !!gl; } // WebGL 2 works, only not without a major performance caveat
   if (!gl) return out; // no WebGL 2 at all: main.js's renderer says so
+  out.probe = out.caveat ? 'caveat' : 'ok';
   try {
     const plain = String(gl.getParameter(gl.RENDERER) ?? ''), x = /^webkit/i.test(plain) ? gl.getExtension('WEBGL_debug_renderer_info') : null;
     out.renderer = String((x ? gl.getParameter(x.UNMASKED_RENDERER_WEBGL) : plain) ?? '');

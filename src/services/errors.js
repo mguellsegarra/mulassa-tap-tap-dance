@@ -8,7 +8,10 @@ export const DEV_HOST = /^(localhost|127(\.\d+){3}|\[::1\]|0\.0\.0\.0|.+\.(local
 const DEBUG_PARAMS = ['autoplay', 'from', 'view']; // self-playing or debug-camera runs are not players
 const PROD_HOST = 'mulassa-tap-tap-dance.pages.dev';
 const MAX_EVENTS = 10; // per page: a bug in the frame loop must not send one report per frame
-const BUFFER = 10;
+const BUFFER = { exception: 10, report: 10, breadcrumb: 20 };
+const KNOWN_ERROR_NAMES = new Set(['Error', 'TypeError', 'RangeError', 'ReferenceError', 'SyntaxError', 'SecurityError', 'InvalidStateError', 'NotSupportedError', 'AbortError',
+  'NetworkError', 'EncodingError', 'OperationError', 'UnknownError', 'NotAllowedError', 'DataCloneError']);
+export const errorName = e => (KNOWN_ERROR_NAMES.has(e?.name) ? e.name : 'Other');
 
 // 'production' | 'preview' | 'development', or null when nothing may be sent.
 export function errorsMode({ dsn, hostname = '', search = '', webdriver = false }) {
@@ -70,21 +73,23 @@ export function sentryOptions({ dsn, environment, release, tags = () => ({}) }) 
 
 // win: the window (null = off); load(): resolves to the Sentry module, already initialised.
 export function createErrors({ mode, win, load, idle }) {
-  const off = { on: false, context() {}, report() {}, capture() {}, start() {} };
+  const off = { on: false, context() {}, report() {}, breadcrumb() {}, capture() {}, start() {} };
   if (!mode || !win) return off;
   let sentry = null, loading = false, getTags = () => ({});
-  const queue = [], buffered = [];
+  const pending = [];
   let pointer = '';
+  const hold = (kind, send) => pending.filter(p => p.kind === kind).length < BUFFER[kind] && pending.push({ kind, send });
   const early = e => {
-    if (buffered.length >= BUFFER || (e.error ?? e.reason)?.mulassaReported) return; // shown to the player and reported already
-    if (e.type === 'unhandledrejection') buffered.push({ error: e.reason, type: 'onunhandledrejection' });
-    else if (e.error || (e.message && e.message !== 'Script error.')) buffered.push({ error: e.error ?? e.message, type: 'onerror' });
+    if ((e.error ?? e.reason)?.mulassaReported) return; // shown to the player and reported already
+    const mechanism = type => ({ mechanism: { type, handled: false } });
+    if (e.type === 'unhandledrejection') hold('exception', S => S.captureException(e.reason, mechanism('onunhandledrejection')));
+    else if (e.error || (e.message && e.message !== 'Script error.')) hold('exception', S => S.captureException(e.error ?? e.message, mechanism('onerror')));
   };
   const onPointer = e => { pointer = e.pointerType || pointer; };
   win.addEventListener('error', early);
   win.addEventListener('unhandledrejection', early);
   win.addEventListener('pointerdown', onPointer, { capture: true, passive: true });
-  const run = f => (sentry ? f(sentry) : queue.length < BUFFER && queue.push(f));
+  const run = (f, kind = 'report') => (sentry ? f(sentry) : hold(kind, f));
   const api = {
     on: true, mode,
     tags() {
@@ -95,9 +100,13 @@ export function createErrors({ mode, win, load, idle }) {
     context(fn) { getTags = fn; },
     // known failures shown to the player (not crashes): one warning each, no personal data, `data` = small tags
     report(kind, data = {}) {
-      run(S => S.captureMessage(kind, { level: 'warning', tags: { issue: kind, ...data } }));
+      run(S => S.captureMessage(kind, { level: 'warning', fingerprint: ['mulassa', kind], tags: { issue: kind, ...data } }));
     },
-    capture(error, data = {}) { run(S => S.captureException(error, { tags: data })); },
+    breadcrumb(kind, data = {}) {
+      const timestamp = Date.now() / 1000;
+      run(S => S.addBreadcrumb({ category: 'game', message: kind, level: 'info', data, timestamp }), 'breadcrumb');
+    },
+    capture(error, data = {}) { run(S => S.captureException(error, { tags: data }), 'exception'); },
     start() {
       if (loading) return;
       loading = true;
@@ -106,13 +115,12 @@ export function createErrors({ mode, win, load, idle }) {
           win.removeEventListener('error', early); // the SDK's own global handlers take over from here
           win.removeEventListener('unhandledrejection', early);
           sentry = S;
-          for (const b of buffered.splice(0)) S.captureException(b.error, { mechanism: { type: b.type, handled: false } });
-          for (const f of queue.splice(0)) f(S);
+          for (const p of pending.splice(0)) p.send(S);
         }).catch(() => { // blocked or offline: stop listening, keep nothing
           win.removeEventListener('error', early);
           win.removeEventListener('unhandledrejection', early);
           win.removeEventListener('pointerdown', onPointer, { capture: true });
-          buffered.length = queue.length = 0;
+          pending.length = 0;
         });
       });
     },

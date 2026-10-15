@@ -350,6 +350,33 @@ const BOARD = page(0, 60, 22);
   assert(!now.$('publish-menu').open && now.shares.length === 1, 'D’acord does it at once, once');
   await new Promise(r => setTimeout(r, 5)); assert.equal(now.shares.length, 1);
 }
+{
+  const run = async (reduce, manual) => {
+    globalThis.matchMedia = () => ({ matches: reduce });
+    try {
+      const s = make({ session: true, alias: 'Drac101', afterPublish: () => {} });
+      const fades = [];
+      s.$('publish-menu').animate = (frames) => { const d = deferred(); const f = { frames, cancels: 0, finished: d.p, end: d, cancel() { this.cancels++; } }; fades.push(f); return f; };
+      s.setRun(RUN); s.board.openPublish(); await tick(); await tick();
+      submit(s.$); s.T.publishes[0].resolve({ improved: true }); await tick();
+      if (manual) submit(s.$);
+      else await new Promise(r => setTimeout(r, 5));
+      return { s, fades };
+    } finally { delete globalThis.matchMedia; }
+  };
+  for (const manual of [true, false]) {
+    const { s, fades } = await run(true, manual);
+    assert(!s.$('publish-menu').open && s.shares.length === 1 && !fades.length, `reduced motion (${manual ? 'D’acord' : 'automatic'}): no fade, Comparteix once`);
+    await new Promise(r => setTimeout(r, 5)); assert.equal(s.shares.length, 1);
+    const n = await run(false, manual);
+    assert(n.s.$('publish-menu').open && !n.s.shares.length && n.fades.length === 1 && n.fades[0].frames[1].opacity === 0, 'normal motion: the sheet fades first');
+    n.fades[0].end.resolve(); await tick();
+    assert(!n.s.$('publish-menu').open && n.s.shares.length === 1 && n.fades[0].cancels === 1, 'the fade ends: its hold is cancelled, Comparteix once');
+    const r = await run(false, manual);
+    r.fades[0].end.reject(new Error('cancelled')); await tick();
+    assert(!r.s.$('publish-menu').open && r.s.shares.length === 1, 'an interrupted fade still hands off');
+  }
+}
 // --- Turnstile runs only when a token is needed (Publica for a new profile), never ahead; never a Supabase session before it
 {
   const s = make(); await tick();
@@ -409,6 +436,32 @@ const BOARD = page(0, 60, 22);
   assert.match(f.$('publish-status').textContent, /No s’ha pogut carregar la verificació.*codi load/);
   f.T.captchaFails = false; submit(f.$); await tick(); await tick();
   assert(f.calls.captcha === 2 && f.widgets.length === 1 && f.calls.publish.length === 0, 'Torna-ho a provar reloads the check');
+}
+{
+  const { board, $, calls, T, setRun } = make({ session: true, alias: 'Drac101' });
+  setRun(RUN); board.results(true); board.openPublish(); await tick(); await tick();
+  submit($);
+  T.publishes[0].reject(Object.assign(new Error('No s’ha pogut connectar. Torna-ho a provar.'), { code: 'unavailable', detail: 'rpc:Error:0' }));
+  await tick(); await tick();
+  assert.equal(calls.publish.length, 1, 'a lost response never triggers an automatic publish retry');
+  assert.equal($('publish-send').textContent, 'Torna-ho a provar');
+  assert(!$('publish-send').disabled, 'the player can retry after a transport failure');
+  board.results(true);
+  assert(!$('results-publish').hidden, 'the pending result survives the failed request');
+  submit($);
+  T.publishes[1].reject(Object.assign(new Error('Espera uns segons i torna-ho a provar.'), { code: 'rate_limit' }));
+  await tick();
+  assert(!$('publish-send').disabled, 'a rate limit after a lost response also permits a later retry');
+  submit($);
+  assert.equal(calls.publish.length, 3);
+  for (const call of calls.publish) {
+    assert.strictEqual(call.result, RUN, 'manual retries send the same pending result');
+    assert.equal(call.alias, 'Drac101');
+  }
+  T.publishes[2].resolve({ improved: false, quality: 90, score: RUN.score }); await tick();
+  assert.match($('publish-status').textContent, /Es manté el teu millor resultat/);
+  board.results(true);
+  assert($('results-publish').hidden, 'a confirmed non-improving retry completes publication');
 }
 // --- a nickname someone else has (server: leaderboard_alias_taken): under the field, marked, focused
 {

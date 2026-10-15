@@ -1,5 +1,6 @@
 // Plays the Taiko arrangement (public/music/mulassa-taiko.mp3, tools/build_taiko.py) with a
 // sample-accurate clock, its ambient loop on the menu, crowd ambience and chiptune sfx on top.
+import { errorName } from '../services/errors.js';
 const hz = m => 440 * 2 ** ((m - 69) / 12);
 // What the browser says it takes a sample to reach the speakers. Chip.now() and the sync calibration's
 // Clicker.heard() both subtract it, so the calibrated offset only holds the delay nobody reports.
@@ -54,8 +55,19 @@ export function audioClock(ctx, { drift = 0.0002, jump = 0.05, window = 2000, sl
     },
   };
 }
-// Save-Data, or a connection the browser rates 2G/3G (Network Information API; Chrome/Android only): skip the menu loop.
-export const leanNetwork = (c = globalThis.navigator?.connection) => !!c && (!!c.saveData || /^(slow-2g|2g|3g)$/.test(c.effectiveType || ''));
+const PHASES = ['fetch', 'http', 'read', 'decode'];
+class AudioFailure extends Error {
+  constructor(phase, e, status) {
+    super(`Recording unavailable: ${status ?? phase}`);
+    this.phase = phase; this.status = status; this.errName = errorName(e);
+  }
+}
+export function audioFailureTags(e) {
+  if (!(e instanceof AudioFailure)) return { name: errorName(e), phase: 'unknown' };
+  const tags = { name: errorName({ name: e.errName }), phase: PHASES.includes(e.phase) ? e.phase : 'unknown' };
+  if (Number.isInteger(e.status) && e.status >= 100 && e.status <= 599) tags.status = e.status;
+  return tags;
+}
 const muted = () => { try { return new URLSearchParams(location.search).has('mute'); } catch { return false; } };
 
 export class Chip {
@@ -79,18 +91,15 @@ export class Chip {
     for (let i = 0; i < md.length; i++) { b = (b + 0.02 * (Math.random() * 2 - 1)) / 1.02; md[i] = b * 3.5; }
     this.applause = applause(ctx); // built a few people at a time when the page is idle (see applause())
     this.menuMusic = menuMusic; // the title's speaker button (main.js): off = the menu loop is neither fetched nor played
-    this.preload(leanNetwork());
+    this.preload();
   }
 
   // Download and decode right away, even before the tap (main.js creates the engine after the first frame): a
-  // suspended context decodes fine, only playing needs the gesture. The song first (a game can't start without it),
-  // then the menu loop, so the two never share the line; on Save-Data or a 2G/3G connection no menu loop at all.
-  preload(lean) {
+  // suspended context decodes fine, only playing needs the gesture. The song and the menu loop (632 KB) start together,
+  // so the loop is ready by the first tap instead of waiting for the whole song (2.5 MB).
+  preload() {
     this.ready = this.loadRecording();
-    this.noAmbient = lean;
-    if (lean || this.menuMusic === false) return; // switched off: menu() fetches it if it is switched back on
-    // a normal connection: both at once, so the menu loop (632 KB) is ready by the first tap instead of waiting for
-    // the whole song (2.5 MB); only lean connections queue it behind the song (they skip it: see above)
+    if (this.menuMusic === false) return; // switched off: menu() fetches it if it is switched back on
     const amb = this.ambient = this.loadAmbient();
     amb.catch(() => { if (this.ambient === amb) this.ambient = null; }); // menu() retries
   }
@@ -100,12 +109,14 @@ export class Chip {
   }
 
   loadRecording() {
-    const got = fetch(this.urls?.audio ?? 'music/mulassa-taiko.mp3').then(response => {
-      if (!response.ok) throw new Error(`Recording unavailable: ${response.status}`);
+    let phase = 'fetch', status;
+    const got = new Promise(resolve => resolve(fetch(this.urls?.audio ?? 'music/mulassa-taiko.mp3'))).then(response => {
+      if (!response.ok) { phase = 'http'; status = response.status; throw new Error(); }
+      phase = 'read';
       return readAll(response, k => { this.loaded = k; });
     });
-    this.fetched = got.then(() => {}, () => {}); // downloaded (or failed): the line is free for the menu loop
-    const ready = got.then(data => this.ctx.decodeAudioData(data)).then(buffer => (this.buf = buffer));
+    const ready = got.then(data => { phase = 'decode'; return this.ctx.decodeAudioData(data); }).then(buffer => (this.buf = buffer))
+      .catch(e => { throw new AudioFailure(phase, e, status); });
     ready.catch(() => { if (this.ready === ready) this.ready = null; });
     return ready;
   }
@@ -229,7 +240,7 @@ export class Chip {
     this.endRun(); // back on the menu: whatever the run still had queued on the audio clock never sounds
     const token = (this.menuToken = {});
     this.murmurLevel();
-    if (this.noAmbient || this.menuMusic === false) return; // a slow or Save-Data connection, or switched off: the plaça's murmur alone
+    if (this.menuMusic === false) return; // switched off: the plaça's murmur alone
     this.ambient ||= this.loadAmbient();
     // the tap's resume() takes a moment before the hardware really plays: starting the loop while the context is still
     // suspended ate its first beats (it began "cut"). Wait for `running`, then start a hair ahead of the clock.
@@ -239,7 +250,7 @@ export class Chip {
     });
     this.ambient.then(async buf => {
       if (running) await running;
-      if (this.menuToken !== token || this.menuSrc) return; // menu left (or reopened) while loading
+      if (this.menuToken !== token || this.menuSrc || this.menuMusic === false) return; // menu left, reopened or muted while loading
       const src = ctx.createBufferSource(), g = ctx.createGain();
       src.buffer = buf; src.loop = true;
       src.loopStart = this.urls?.ambientLoop?.start ?? 0;

@@ -65,12 +65,13 @@ export function renderHero(w, h) {
     // multisampled half floats need EXT_color_buffer_float (half_float alone may leave the target incomplete: a flat
     // image, retried in 8 bits below)
     let float = renderer.extensions.has('EXT_color_buffer_float');
-    out = new THREE.WebGLRenderTarget(w, h);
+    out = new THREE.WebGLRenderTarget(w, h, { depthBuffer: false }); // the quad pass never tests depth
     heroQuadMake();
     const px = new Uint8Array(w * h * 4);
     for (;;) {
       phase = 'render'; target = float ? 'float' : 'byte';
-      rt = new THREE.WebGLRenderTarget(w, h, { type: float ? THREE.HalfFloatType : THREE.UnsignedByteType, samples: 4 });
+      rt = new THREE.WebGLRenderTarget(w, h, { type: float ? THREE.HalfFloatType : THREE.UnsignedByteType, samples: 4,
+        resolveDepthBuffer: false }); // nothing samples the scene's depth: skip its resolve blit
       renderer.setRenderTarget(rt);
       renderer.render(scene, heroCam);
       heroQuad.material.uniforms.src.value = rt.texture;

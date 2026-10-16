@@ -34,8 +34,9 @@ export const renderer = (() => { // no WebGL 2 (disabled, blocklisted GPU, very 
     throw err; // nothing below can run without a renderer
   }
 })();
-glc.addEventListener('webglcontextlost', () => errors.report('webgl-context-lost')); // three.js handles the restore itself
-glc.addEventListener('webglcontextrestored', () => errors.breadcrumb('webgl-context-restored')); // it fired; nothing says the scene is whole again
+let restorePending = false; // a restore fired and no screen render has been submitted since
+glc.addEventListener('webglcontextlost', () => { restorePending = false; errors.report('webgl-context-lost'); }); // three.js handles the restore itself
+glc.addEventListener('webglcontextrestored', () => { restorePending = true; errors.breadcrumb('webgl-context-restored'); }); // it fired; nothing says the scene is whole again
 renderer.shadowMap.enabled = renderProfile.shadow > 0;
 renderer.shadowMap.type = THREE.PCFShadowMap;
 export const scene = new THREE.Scene();
@@ -76,3 +77,13 @@ export const CAM_DIR = [Math.cos(CAM_EL) * Math.sin(CAM_AZ), Math.sin(CAM_EL), M
 export const FRONT = CAM_AZ + 0.35; // her dance's front: 20 deg off the play camera, so every pose reads three-quarter (her side, the blanket, the head)
 export let camShift = 0; // lens shift of the play camera, css px (see frame())
 export const setCamShift = v => (camShift = v);
+
+// The frame's screen render. After a restore, the first one that submitted draw calls to a live context leaves a breadcrumb
+// (draws were submitted: not proof of visible pixels). Reads renderer.info fresh: three replaces it on restore.
+export function renderScreen() {
+  renderer.render(scene, camera);
+  if (restorePending && renderer.getRenderTarget() === null && !renderer.getContext().isContextLost() && renderer.info.render.calls > 0) {
+    restorePending = false;
+    errors.breadcrumb('webgl-screen-submitted-after-restore');
+  }
+}

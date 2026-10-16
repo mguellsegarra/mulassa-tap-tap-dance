@@ -1448,6 +1448,59 @@ console.log('comparteix integration contracts ok');
 }
 console.log('share photo renders her with the crowd at every quality ok');
 
+// Capture targets: no depth on the encoding target, no depth resolve on the scene target, same samples/types/sizes as before.
+{
+  const made = document.createElement;
+  document.createElement = tag => tag === 'canvas' ? { getContext: () => ({ putImageData() {} }) } : made(tag);
+  context.ImageData = class { constructor(d, w, h) { Object.assign(this, { d, w, h }); } };
+  run(`var tOpts = [], tOld = THREE.WebGLRenderTarget; heroFlat = 0; renderer.extensions = { has: () => true };
+    THREE.WebGLRenderTarget = class extends tOld { constructor(w, h, o) { super(w, h, o); tOpts.push(this); } };`);
+  const opts = () => JSON.parse(run(`JSON.stringify(tOpts.map(t => [t.width, t.height, t.depthBuffer, t.resolveDepthBuffer, t.samples, t.texture.type]))`));
+  assert(run('renderHero(960, 620)'));
+  const half = 1016; // THREE.HalfFloatType
+  assert.deepEqual(opts(), [[960, 620, false, true, 0, 1009], [960, 620, true, false, 4, half]], 'out: no depth; scene: depth kept, no resolve, 4 samples, half float');
+  run('tOpts.length = 0; renderer.extensions = { has: () => false };');
+  assert(run('renderHero(960, 620)'));
+  assert.deepEqual(opts(), [[960, 620, false, true, 0, 1009], [960, 620, true, false, 4, 1009]], 'no float extension: straight to bytes, one attempt');
+  run('tOpts.length = 0; renderer.extensions = { has: () => true }; heroFlat = 1;');
+  assert(run('renderHero(960, 620)'));
+  assert.deepEqual(opts().map(o => [o[2], o[3], o[4], o[5]]), [[false, true, 0, 1009], [true, false, 4, half], [true, false, 4, 1009]], 'flat float: one byte retry, same options');
+  run('THREE.WebGLRenderTarget = tOld;');
+  document.createElement = made; delete context.ImageData;
+}
+console.log('share capture targets ok');
+
+// The first screen render after a restore: renderScreen() leaves one breadcrumb once draw calls reached a live context.
+{
+  const crumbs = [], ob = errors.breadcrumb, or = errors.report;
+  errors.breadcrumb = k => crumbs.push(k); errors.report = () => {};
+  const gl = nodes.get('gl').listeners, N = 'webgl-screen-submitted-after-restore';
+  run(`var scCalls = 3, scThrow = false, scOld = renderer.render, scInfoOld = renderer.info;
+    renderer.info = { render: { calls: 0 } }; renderer.target = null; renderer.lost = false;
+    renderer.render = function () { if (scThrow) throw new Error('boom'); this.info.render.calls = scCalls; };`);
+  const frame = () => run('renderScreen()');
+  const names = () => crumbs.filter(k => k === N).length;
+  try {
+    frame(); frame(); assert.equal(names(), 0, 'idle (no restore): no breadcrumb');
+    gl.webglcontextlost(); gl.webglcontextrestored(); crumbs.length = 0;
+    run('scCalls = 0;'); frame(); assert.equal(names(), 0, 'zero draw calls: still pending');
+    run('scCalls = 3; renderer.target = {};'); frame(); assert.equal(names(), 0, 'a non-null target is not the screen');
+    run('renderer.target = null; renderer.lost = true;'); frame(); assert.equal(names(), 0, 'context lost: still pending');
+    run('renderer.lost = false; scThrow = true;');
+    assert.throws(() => frame(), /boom/, 'a render error propagates'); assert.equal(names(), 0, 'and keeps it pending');
+    run('scThrow = false;'); frame(); frame(); frame();
+    assert.equal(names(), 1, 'valid frames: exactly one breadcrumb');
+    gl.webglcontextlost(); frame(); assert.equal(names(), 1, 'a loss clears a pending restore');
+    gl.webglcontextrestored(); frame(); frame(); assert.equal(names(), 2, 'the next restore re-arms it once');
+    gl.webglcontextrestored(); gl.webglcontextlost(); frame(); assert.equal(names(), 2, 'loss after restore, before a frame: nothing pending');
+  } finally {
+    run('renderer.render = scOld; renderer.info = scInfoOld; renderer.lost = false;');
+    errors.breadcrumb = ob; errors.report = or;
+  }
+}
+console.log('screen render after a restore ok');
+
+
 // L'ÀNIM DE LA PLAÇA: standing idle drains it note by note until the mulassa falls apart, on every difficulty;
 // the count-in and the intro before the first note never drain; each warning threshold pulses once on the way down.
 for (const diff of [0, 1, 2]) {

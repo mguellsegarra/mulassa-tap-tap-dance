@@ -15,7 +15,7 @@ import { rnd } from './scene/models.js';
 import { setupCamEdit } from './dev/cam-edit.js';
 import { Q, COARSE, pageActive, beatAt, BEAT, offsetMs, playFrom, FINALE_T, AUTOPLAY, CALM, FINAL, STARS } from './core/env.js';
 import { pace, RAWCLOCK, viewClock } from './core/timing.js';
-import { qualityLevel, saveQuality, renderProfile, softwareGl, GPU, renderer, camera, CAM_AZ, FRONT, plaza, cameraTarget, camFocus, camFocusTarget, camShift, camXYZ, focusXYZ, scene, setQualityLevel, setCamShift } from './scene/stage.js';
+import { qualityLevel, saveQuality, renderProfile, softwareGl, GPU, renderer, camera, CAM_AZ, FRONT, plaza, cameraTarget, camFocus, camFocusTarget, camShift, camXYZ, focusXYZ, scene, setQualityLevel, setCamShift, renderScreen } from './scene/stage.js';
 import { G, chip, clock, songTime, drawT, bigPending, audioEngine, setClock, setDrawT } from './game/state.js';
 import { audioFailureTags } from './platform/audio.js';
 import { TAU } from './core/anim.js';
@@ -202,7 +202,7 @@ function frame(now) {
     camera.position.x += Math.sin(clock * 47) * 0.25 * k; camera.position.y += Math.sin(clock * 61) * 0.2 * k;
   }
   const p0 = PERF && performance.now();
-  if (PERF?.mode !== 'no3d') renderer.render(scene, camera);
+  if (PERF?.mode !== 'no3d') renderScreen();
   if (PERF?.mode === 'sync') renderer.getContext().readPixels(0, 0, 1, 1, 6408, 5121, PERF.px ??= new Uint8Array(4)); // RGBA, UNSIGNED_BYTE
   const p1 = PERF && performance.now();
   if (PERF) { const ri = renderer.info.render; PERF.calls = ri.calls; PERF.tris = ri.triangles; } // the plaza pass only: the balloon overlay's render() resets renderer.info

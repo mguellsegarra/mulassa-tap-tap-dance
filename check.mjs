@@ -1,8 +1,10 @@
 import assert from 'node:assert';
 import { readFileSync } from 'node:fs';
-import { makeDanceChart, DIFFS, sectionAt, BALLOONS } from './src/game/chart.js';
+import { makeDanceChart, DIFFS, sectionAt } from './src/game/chart.js';
 
-const song = JSON.parse(readFileSync(new URL('./src/song.json', import.meta.url)));
+const song = JSON.parse(readFileSync(new URL('./src/song.json', import.meta.url))), BALLOONS = song.balloonBeats;
+const arrangement = JSON.parse(readFileSync(new URL('./music/taiko-arrangement.json', import.meta.url)));
+assert.deepEqual(BALLOONS, arrangement.drum_rolls, 'a GLOBUS on every drumroll of the arrangement, and nowhere else');
 const spb = 60 / song.bpm, onGrid = t => { const x = (t - song.beats[0]) / spb * 2; return Math.abs(x - Math.round(x)) < 2e-3; }; // every tap on an eighth of the grid
 const balloonsBy = [];
 const counts = DIFFS.map((d, i) => {
@@ -44,7 +46,7 @@ const tune = song.notes.filter(([, , , big]) => big).map(([t]) => t);
 assert(song.notes.every(n => n.length === 5 && 'don ka'.split(' ').includes(n[1]) && (n[3] === 0 || n[3] === 1) && (n[4] === 0 || n[4] > n[0])), 'notes are [t, don|ka, level, big, holdEnd]');
 assert(song.notes.every(n => !(n[3] && n[4])), 'a note is a GUAPA or a hold, not both');
 assert(counts.every(c => c.filter(n => n.big).length === tune.length), 'big notes on every difficulty');
-assert(tune.slice(0, -1).every(t => t < song.beats[308]), 'big notes are tune taps (the last one is the final hit)');
+assert(tune.slice(0, -1).every(t => t < song.beats[BALLOONS.at(-1)[0]]), 'big notes are tune taps (the last one is the final hit)');
 for (let i = 1; i < 3; i++) {
   assert(counts[i].length > counts[i - 1].length, 'difficulty must add notes');
   const times = new Set(counts[i].map(n => n.t));

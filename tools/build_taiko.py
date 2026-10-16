@@ -52,17 +52,16 @@ def lay(bar, t, scale, override=None):
     return t
 
 
+# The short cut of the song: the whole intro, A A B, then straight from bar 31 into bar 49 (both on G7, so bar 49
+# still leads into C as it did after B'), C C and the coda. Bars 32-48 (the break, A' and B') are not played.
 t = lay(0, 12, 2)                                   # pickup in the 4th intro measure
 for b in range(1, 16): t = lay(b, t, 2)
 t = lay(16, t, 1, 'C5:4 R:3 E5:0.5 E5:0.5')         # A bar whose pickup is already at B speed
-for b in range(17, 33): t = lay(b, t, 1)
-t = lay(33, t, 2)                                   # pickup back to A (a one-measure break)
-for b in range(34, 41): t = lay(b, t, 2)
-t = lay(41, t, 1, 'C5:4 R:3 E5:0.5 E5:0.5')
-for b in range(42, 74): t = lay(b, t, 1)
-assert t == 308, t
+for b in range(17, 32): t = lay(b, t, 1)
+for b in range(49, 74): t = lay(b, t, 1)
+assert t == 224, t
 melody[-1][1] = 6                                   # final C6 rings into the drum roll
-END = 312                                           # last hit
+END = 228                                           # last hit
 
 # ------------------------------------------------------------------ harmony
 # A is C minor, but coloured like a festa-major pasdoble: the relative major (Eb), its V (Bb),
@@ -85,30 +84,29 @@ chords = [(0, 4, 'Cm'), (4, 8, 'Ab'), (8, 12, 'Bb'), (12, 16, 'G')]   # intro: i
 bars = sorted(bar_start)
 for i, b in enumerate(bars):
     if b in (0,): continue
-    s, e = bar_start[b], bar_start[bars[i + 1]] if i + 1 < len(bars) else 308
+    s, e = bar_start[b], bar_start[bars[i + 1]] if i + 1 < len(bars) else 224
     c = bar_chord[b]
     if isinstance(c, list):                          # equal slices of the bar
         q = (e - s) / len(c)
         chords += [(s + i * q, s + (i + 1) * q, x) for i, x in enumerate(c)]
     else:
         chords.append((s, e, c))
-chords.append((308, END + 4, 'C'))
+chords.append((224, END + 4, 'C'))
 chord_at = lambda beat: next(c for s, e, c in reversed(chords) if s <= beat + 1e-6)
 
 # ------------------------------------------------------------------ section plan (one style per measure)
 # A1: backbeat + oom-pah bass. A2: four-on-the-floor, syncopated bass, bells on the tune.
-# X: the last coda phrase (beats 292-308, the game's FINAL ESBOJARRAT) doubles the subdivision so the
+# X: the last coda phrase (beats 208-224, the game's FINAL ESBOJARRAT) doubles the subdivision so the
 # constant tempo feels like it accelerates: 16th hats and shaker, taiko don-ka in 16ths, claps on
 # every beat, a snare build and a riser over the last two measures into the closing roll.
-plan = ['intro0', 'intro1', 'intro2', 'pickup'] + ['A1'] * 16 + ['A2'] * 16 + ['B'] * 8 + ['break'] \
-       + ['A1'] * 8 + ['A2'] * 8 + ['B'] * 4 + ['C'] * 8 + ['X'] * 4 + ['roll']
+plan = ['intro0', 'intro1', 'intro2', 'pickup'] + ['A1'] * 16 + ['A2'] * 16 + ['B'] * 8 + ['C'] * 8 + ['X'] * 4 + ['roll']
 assert len(plan) * 4 == END, len(plan) * 4
-FILLS = {43, 52, 64, 68, 72}                         # half-measure fill into a new phrase
-BALLOON = {35, 60}                                   # beats 140-143 / 240-243: drum roll, then the E5 E5 pickup
+FILLS = {43, 47, 51}                                 # half-measure fill into a new phrase
+BALLOON = {35}                                       # beats 140-143: drum roll, then the E5 E5 pickup
 start_of = lambda m: next(k for k in range(m, -1, -1) if k == 0 or plan[k - 1] != plan[m])
 MINI = {m for m, st in enumerate(plan) if m not in FILLS | BALLOON and (
     st in ('B', 'C') and (m - start_of(m)) % 2 == 1 or st == 'A2' and (m - start_of(m)) % 4 == 3)}
-CRASH = [16, 48, 80, 112, 144, 160, 180, 212, 228, 244, 252, 260, 276, 292, 300, 312]
+CRASH = [16, 48, 80, 112, 144, 160, 176, 192, 208, 216, 228]
 HEY = []                                        # crowd shouts removed (user: synthetic 'hey!' sounded off)
 
 P = {  # 16 steps per measure: x = full hit, o = soft
@@ -207,13 +205,13 @@ for m, style in enumerate(plan):
             tones = CH[chord_at(b)]
             k = [0, 1, 2, 3, 2, 1][(m * 16 + i) % 6]
             arp.append((b, 72 + (tones[k % len(tones)] + 12 * (k // len(tones))) % 24))
-hits['crash'] = [(b, 1.0 if b in (144, 244, 260, 292, 312) else 0.7) for b in CRASH] + [(292.02, 0.8)]   # doubled crash into the finale
+hits['crash'] = [(b, 1.0 if b in (144, 176, 208, 228) else 0.7) for b in CRASH] + [(208.02, 0.8)]   # doubled crash into the finale
 hits['hey'] = [(b, 1.0 if b == END else 0.6) for b in HEY]
 # One don/ka rule for the whole tune, shared by the audible taiko (in A) and the game chart.
 # Structural positions alternate like a taiko pattern: the tune's bar downbeats and half-bars are
 # DON, the beats between are KA; the in-between notes follow the melody: up = KA (rim), down = DON.
-A_RANGES = [(16, 144), (180, 244)]
-in_a = lambda s: any(a <= s < b for a, b in A_RANGES) or 12 <= s < 16 or 176 <= s < 180
+A_RANGES = [(16, 144)]
+in_a = lambda s: any(a <= s < b for a, b in A_RANGES) or 12 <= s < 16
 
 
 def tap_of(s, m, prev):
@@ -228,23 +226,23 @@ def tap_of(s, m, prev):
     if s % 4 == 0: return ('don', 0)
     if s % 2 == 0: return ('ka', 0)
     if s % 1 == 0: return (contour, 1 if s % 4 == 1 else 2)
-    return (contour, 2 if s % 2 == 1.5 or 292 <= s < 306 else 3)
+    return (contour, 2 if s % 2 == 1.5 or 208 <= s < 222 else 3)
 
 
 tune_taps, prev = [], None
 for s, d, m in melody:
-    if s < 306: tune_taps.append((s, *tap_of(s, m, prev)))
+    if s < 222: tune_taps.append((s, *tap_of(s, m, prev)))
     prev = m
 # accents: every other crash moves to the tune's next KA (2 beats later), so big GUA and big PA alternate
 ka0 = {t for t, k, lv in tune_taps if k == 'ka' and lv == 0}
-BIG, want_pa = {306}, False
+BIG, want_pa = {222}, False
 for c in CRASH:
-    if c in (300, END): continue
+    if c in (216, END): continue
     pa = want_pa and c + 2 in ka0
     BIG.add(c + 2 if pa else c)
     want_pa = not want_pa if pa or not want_pa else True   # a crash with no KA after it passes the turn on
 # holds are the long tune notes (3+ beats) that aren't accents; every other one is a PA, and the taiko plays it so
-HOLD_KA = set(sorted(s for s, d, _ in melody if d >= 3 and s < 306 and s not in BIG)[1::2])
+HOLD_KA = set(sorted(s for s, d, _ in melody if d >= 3 and s < 222 and s not in BIG)[1::2])
 for s, k, _ in tune_taps:     # taiko doubles the tune in A (PA holds sound as KA)
     k = 'ka' if s in HOLD_KA else k
     m = int(s // 4)
@@ -327,7 +325,6 @@ def voicing(name, low=55):
 
 
 for s, e, c in chords:
-    if 176 <= s < 180: continue                      # break: tune and claps alone
     dur = (e - s) * SPB
     for m in voicing(c, 58):
         for det, pan in ((-9, -0.8), (9, 0.8), (0, 0)):
@@ -473,7 +470,7 @@ vel = lambda v: max(1, min(127, int(127 * v)))
 track('Lead', 0, 80, [(s, d, m, 100) for s, d, m in melody])
 track('Chords', 1, 89, [(s, e - s, m, 60) for s, e, c in chords for m in voicing(c, 58)])
 track('Brass', 4, 61, [(s, 0.25, m, 90) for s, c in stabs for m in voicing(c, 57)])
-track('Glockenspiel', 5, 9, [(s, 0.5, m + 12, 70) for s, d, m in melody if plan[min(int(s // 4), 77)] in ('A2', 'B', 'C', 'X', 'roll')])
+track('Glockenspiel', 5, 9, [(s, 0.5, m + 12, 70) for s, d, m in melody if plan[min(int(s // 4), len(plan) - 1)] in ('A2', 'B', 'C', 'X', 'roll')])
 track('Bass', 2, 38, [(s, d, m, 100) for s, d, m in bass])
 track('Taiko', 3, 116, [(s, 0.25, 48 if k == 'don' else 60, vel(v)) for k in ('don', 'ka') for s, v in hits[k]])
 GM = dict(kick=36, snare=38, clap=39, hat=42, ohat=46, crash=49, tamb=54, cowbell=56, shaker=70)
@@ -483,7 +480,7 @@ mid.save('public/music/mulassa-taiko.mid')
 json.dump({
     'bpm': BPM, 'offset': LEAD_IN, 'beats_per_bar': 4, 'end_beat': END,
     'sections': [[m * 4, s] for m, s in enumerate(plan) if m == 0 or plan[m - 1] != s],
-    'drum_rolls': [[m * 4, m * 4 + 3] for m in sorted(BALLOON)] + [[308, END]],
+    'drum_rolls': [[m * 4, m * 4 + 3] for m in sorted(BALLOON)] + [[224, END]],
     'melody': [[round(s, 3), round(d, 3), m] for s, d, m in melody],
     'don': sorted(round(s, 3) for s, _ in hits['don']), 'ka': sorted(round(s, 3) for s, _ in hits['ka']),
 }, open('music/taiko-arrangement.json', 'w'), separators=(',', ':'))
@@ -505,25 +502,25 @@ assert not clash, clash
 # level = easiest difficulty that gets the note: 0 FÀCIL, 1 NORMAL, 2 DIFÍCIL.
 # big = GUAPA (GUA + PA: both buttons at once; FÀCIL: either), on the musical accents: the tune note under
 # every crash (phrase starts and landings), the last C and the final hit. The kind still drives the audible
-# taiko; in the game a GUAPA is half orange, half turquoise. 300 is left out so the finale's accents stay 292, 306 and 312.
-last_c = (306, *tap_of(306, melody[-1][2], melody[-2][2]))
+# taiko; in the game a GUAPA is half orange, half turquoise. 216 is left out so the finale's accents stay 208, 222 and 228.
+last_c = (222, *tap_of(222, melody[-1][2], melody[-2][2]))
 taps = [(s, k, lv, int(s in BIG)) for s, k, lv in tune_taps + [last_c]] \
-       + [(308 + i / 2, 'don', 1 if i % 2 == 0 else 2, 0) for i in range(8)] + [(END, 'don', 0, 1)]
+       + [(224 + i / 2, 'don', 1 if i % 2 == 0 else 2, 0) for i in range(8)] + [(END, 'don', 0, 1)]
 taps.sort()
 assert all(b[0] - a[0] >= 0.5 for a, b in zip(taps, taps[1:]) if a[0] >= 12), 'overlapping taps'
 onsets = {s for s, _, _ in melody}
-assert taps[0][0] == 12 and all(s in onsets for s, _, _, _ in taps if s < 308), 'taps must be melody notes'
+assert taps[0][0] == 12 and all(s in onsets for s, _, _, _ in taps if s < 224), 'taps must be melody notes'
 bigs = [(s, k, lv) for s, k, lv, bg in taps if bg]
 assert {s for s, _, _ in bigs} == BIG | {END} and all(lv == 0 for _, _, lv in bigs), bigs    # on every difficulty
-assert not [s for s, _, _ in bigs if any(a <= s < b for a, b in ((140, 143), (240, 243), (308, 312)))], 'big note in a balloon'
+assert not [s for s, _, _ in bigs if any(a <= s < b for a, b in ((140, 143), (224, 228)))], 'big note in a balloon'
 assert 10 <= len(bigs) <= 16 and bigs[-1] == (END, 'don', 0), bigs
 # holds (NORMAL and DIFÍCIL; FÀCIL plays them as taps): the tune's long notes (3+ beats) that aren't GUAPA
 # accents. The tail follows the sung note and ends at least a beat before the next tap or balloon.
-BALLOON_B = [(140, 143), (240, 243), (308, 312)]
+BALLOON_B = [(140, 143), (224, 228)]
 dur_of = {s: d for s, d, _ in melody}
 HOLD = {}
 for i, (s, k, lv, bg) in enumerate(taps):
-    if bg or dur_of.get(s, 0) < 3 or s >= 306: continue
+    if bg or dur_of.get(s, 0) < 3 or s >= 222: continue
     nxt = min([taps[i + 1][0]] + [a for a, _ in BALLOON_B if a > s])
     HOLD[s] = min(s + dur_of[s], nxt - 1)
 # every other hold is a PA (HOLD_KA, defined with the accents so the audible taiko matches)
@@ -544,13 +541,14 @@ busy = [(s - 0.75, s + 0.75) for s, *_ in taps] + [(s, he + 1) for s, _, _, _, h
 extra = [(b, 'ka', 2, 0, 0) for b in BACKBEAT if not any(lo < b < hi for lo, hi in busy)]
 assert 20 <= len(extra) <= 80, len(extra)
 taps = sorted(taps + extra)
-sect = [(0, 'A'), (144, 'B'), (176, 'A'), (244, 'B')]
+sect = [(0, 'A'), (144, 'B')]
 json.dump({
     'bpm': BPM, 'duration': round(N / SR, 3), 'end': round(sec(END), 3), 'tail': round(sec(END) + 2.5, 3),
-    'finale': round(sec(292), 4),               # FINAL ESBOJARRAT: the last coda phrase (bar 66) to the last hit
+    'finale': round(sec(208), 4),               # FINAL ESBOJARRAT: the last coda phrase (bar 66) to the last hit
     'sections': [[round(sec(b), 3), k] for b, k in sect],
     'beats': [round(sec(b), 4) for b in range(END + 1)],
     'notes': [[round(sec(s), 4), k, lv, bg, round(sec(he), 4) if he else 0] for s, k, lv, bg, he in taps],
+    'balloonBeats': [list(w) for w in BALLOON_B],   # the GLOBUS windows [start, end) in beats (src/game/chart.js)
 }, open('src/song.json', 'w'), separators=(',', ':'))
 
 # ------------------------------------------------------------------ menu ambience: an entrance, then a 16-measure loop
@@ -562,124 +560,127 @@ json.dump({
 AMB, INTRO_BEATS = 64, 16
 LOOP = int(AMB * SPB * SR)
 INTRO = int(INTRO_BEATS * SPB * SR)
-amb = {k: np.zeros((LOOP + 5 * SR, 2)) for k in ('pad', 'bass', 'chords', 'melody', 'drums')}
-ab = lambda b: b * SPB
-call = 'R:0.5 C4:0.5 E4:1 G4:1 E4:1'            # B's C/E/G colours, one gentle arch
-answer = 'E4:0.5 D4:0.5 C4:2 R:1'
-amb_bars = [
-    ('C', call), ('C', answer),
-    ('F', 'R:0.5 C4:0.5 F4:1 F4:1 C4:1'), ('F', 'C4:1 A3:2 R:1'),
-    ('G', 'R:0.5 B3:0.5 D4:1 G4:1 D4:1'), ('G', 'D4:1 B3:2 R:1'),
-    ('C', call), ('C', answer),
-] * 2
-amb_mel, amb_ch = [], []
-for i, (c, line) in enumerate(amb_bars):
-    ns, end = notes_of(17, i * 4, 1, line)
-    assert end == (i + 1) * 4, (i, end)
-    amb_mel.extend(ns)
-    if amb_ch and amb_ch[-1][2] == c:             # one held harmony, not a new pad attack every bar
-        amb_ch[-1] = (amb_ch[-1][0], end, c)
-    else:
-        amb_ch.append((i * 4, end, c))
-assert len(amb_bars) * 4 == AMB
-# Close inner voices soften each change. The loop itself stays on C.
-amb_voices = {'C': (55, 60, 64), 'F': (57, 60, 65), 'G': (55, 59, 62)}
-for a, b in zip(amb_ch, amb_ch[1:] + amb_ch[:1]):
-    assert max(abs(x - y) for x, y in zip(amb_voices[a[2]], amb_voices[b[2]])) <= 3, 'jumpy inner voice'
-
-
-def nylon(f, dur, pos=0.18, bright=1.0):
-    """Thumbed nylon: rounded attack, tuned harmonics, dark body and no sharp pick transient."""
-    t = np.arange(int(dur * SR)) / SR
-    out = sum(n ** -1.9 * abs(np.sin(np.pi * n * pos)) * np.exp(-t * (2.0 + 1.2 * bright * (n - 1) ** 1.25))
-              * np.sin(2 * np.pi * f * n * t) for n in range(1, 10) if f * n < 3500)
-    return out * np.minimum(1, t / 0.012) * np.clip((dur - t) / 0.1, 0, 1)
-
-
-amb_chord = lambda beat: next(c for s, e, c in reversed(amb_ch) if s <= beat + 1e-6)
-assert all(m % 12 in CH[amb_chord(s)] for s, d, m in amb_mel if s % 1 == 0), 'unresolved strong-beat note'
-assert max(m for _, _, m in amb_mel) - min(m for _, _, m in amb_mel) <= 10, 'keep the tune in one singing register'
-assert all(e - s >= 8 for s, e, _ in amb_ch), 'let the harmony settle for two measures'
-assert [(s, d, m) for s, d, m in amb_mel if s < 32] == [(s - 32, d, m) for s, d, m in amb_mel if s >= 32], 'repeat the tune before developing it'
-for end in range(8, AMB + 1, 8):
-    phrase = [(s, d, m) for s, d, m in amb_mel if end - 8 <= s < end]
-    s, d, m = phrase[-1]
-    assert m % 12 in CH[amb_chord(s)] and d >= 2 and s + d <= end - 1, 'hold the arrival, then take a breath'
-for voice in range(3):                          # common tones hold through the chord change
-    held = []
-    for s, e, c in amb_ch:
-        m = amb_voices[c][voice]
-        if held and held[-1][2] == m:
-            held[-1] = (held[-1][0], e, m)
+# The menu loop doesn't depend on the song's form: AMBIENT=1 renders and encodes it again, otherwise its MP3 (and hash) stays.
+AMBIENT = bool(os.environ.get('AMBIENT'))
+if AMBIENT:
+    amb = {k: np.zeros((LOOP + 5 * SR, 2)) for k in ('pad', 'bass', 'chords', 'melody', 'drums')}
+    ab = lambda b: b * SPB
+    call = 'R:0.5 C4:0.5 E4:1 G4:1 E4:1'            # B's C/E/G colours, one gentle arch
+    answer = 'E4:0.5 D4:0.5 C4:2 R:1'
+    amb_bars = [
+        ('C', call), ('C', answer),
+        ('F', 'R:0.5 C4:0.5 F4:1 F4:1 C4:1'), ('F', 'C4:1 A3:2 R:1'),
+        ('G', 'R:0.5 B3:0.5 D4:1 G4:1 D4:1'), ('G', 'D4:1 B3:2 R:1'),
+        ('C', call), ('C', answer),
+    ] * 2
+    amb_mel, amb_ch = [], []
+    for i, (c, line) in enumerate(amb_bars):
+        ns, end = notes_of(17, i * 4, 1, line)
+        assert end == (i + 1) * 4, (i, end)
+        amb_mel.extend(ns)
+        if amb_ch and amb_ch[-1][2] == c:             # one held harmony, not a new pad attack every bar
+            amb_ch[-1] = (amb_ch[-1][0], end, c)
         else:
-            held.append((s, e, m))
-    for s, e, m in held:
-        dur = (e - s) * SPB + 0.06               # a short release, never the old chord over the next whole beat
-        for det, pan in ((-6, -0.9), (6, 0.9)):
-            w, t_ = additive(hz(m), dur, 2.2, 0.5, det)
-            put(amb['pad'], ab(s), w * adsr(t_, dur, 0.22, 0.12) * 0.01, pan)
-# Fixed touch patterns: the drummer anchors the beat; bass and hands settle just behind.
-# These tiny offsets never accumulate or change the tempo, including across the loop.
-touch = (0.96, 1.0, 1.02, 0.94, 0.98, 1.03, 1.0, 0.92)
-for b in range(0, AMB, 2):                     # bass + drum on 1/3, strummed chords answer on 2/4
-    c = amb_chord(b); root = CH[c][0]
-    root += 36 if root < 8 else 24
-    fifth = root + 7 if root + 7 <= 48 else root - 5
-    m = fifth if b % 4 else root
-    gain = touch[b // 4 % 8]
-    w, t_ = additive(hz(m), 0.42, 1.8, 3.0)
-    put(amb['bass'], ab(b) + 0.004, (0.6 * w + 0.6 * np.sin(2 * np.pi * hz(m) * t_)) * adsr(t_, 0.42, 0.014, 0.08, 0.6, 0.1) * 0.11 * gain)
-    for i, m in enumerate(amb_voices[amb_chord(b + 1)]):
-        w = nylon(hz(m), 0.38, 0.3, 2.0)
-        put(amb['chords'], ab(b + 1) + 0.009 + (0.012 if b % 4 else 0.016) * i, w * 0.065 * gain,
-            (-0.35, 0.05, 0.35)[i % 3])
-for s, d, m in amb_mel:
-    dur = min(d * SPB, 1.4)
-    ending = int(s // 4) % 2 == 1
-    gain = touch[int(s // 4) % 8] * (0.82 if ending else 1.0)
-    lag = 0.014 if ending else 0.006             # lean into the arch, relax into its answer
-    put(amb['melody'], ab(s) + lag, nylon(hz(m), dur, 0.24, 1.5) * 0.052 * gain, -0.15)
-for mm in range(AMB // 4):
-    b0 = mm * 4
-    gain = touch[mm % 8]
-    for b, v in ((0, 0.42), (2, 0.34)):
-        put(amb['drums'], ab(b0 + b), lp(perc('don', v * gain), 0.7) * 0.4, -0.1)
-    for b in (1, 3):
-        put(amb['drums'], ab(b0 + b) + (0.012 if b == 1 else 0.009), lp(perc('clap', (0.21 if b == 1 else 0.19) * gain), 0.45), -0.15)
-    for i in range(8):
-        v = (0.18, 0.3, 0.16, 0.27, 0.2, 0.31, 0.15, 0.25)[i]
-        put(amb['drums'], ab(b0 + i / 2) + (0.006 if i % 2 else 0), lp(perc('shaker', v * gain), 0.45), 0.35)
-    if mm % 8 == 7:                             # just a soft hand-drum reply after the tune has landed
-        for b, v in ((3, 0.1), (3.5, 0.13)):
-            put(amb['drums'], ab(b0 + b) + 0.008, lp(perc('ka', v), 0.55), 0.25)
-entrance, steady = np.zeros((INTRO, 2)), np.zeros((LOOP, 2))
-# The tails wrap inside the steady section only. Its last measures flow into its first;
-# once every layer has entered, the entrance uses that same continuous join.
-entry = dict(drums=(0, 8), pad=(2, 10), bass=(4, 12), chords=(6, 14))
-for k, dry_amb in amb.items():
-    wet = np.stack([fftconvolve(dry_amb[:, c], ir[:, c])[:len(dry_amb)] for c in range(2)], 1)
-    rendered = dry_amb + wet * (0.5 if k in ('pad', 'melody', 'chords') else 0.15)
-    rendered[:len(rendered) - LOOP] += rendered[LOOP:]
-    steady += rendered[:LOOP]
-    if k in entry:
-        start, end = entry[k]
-        fade = np.clip((np.arange(INTRO) / SR / SPB - start) / (end - start), 0, 1)
-        fade = fade * fade * (3 - 2 * fade)
-        entrance += rendered[LOOP - INTRO:LOOP] * fade[:, None]
-level = 0.075 / np.sqrt((steady ** 2).mean())     # leave the menu comfortably behind the game
-loop = np.concatenate([entrance, steady, steady[:SR]]) * level
-loop = np.tanh(loop * 1.3) / 1.3
-assert np.abs(loop).max() < 0.7, np.abs(loop).max()
-intro_rms = np.sqrt((loop[:SR] ** 2).mean())
-steady_rms = np.sqrt((loop[INTRO:INTRO + LOOP] ** 2).mean())
-assert intro_rms < steady_rms * 0.12, 'the first second must ease in, even outside the game'
-assert np.max(np.abs(loop[INTRO - 1] - loop[INTRO])) < 0.015, 'entrance seam'
-assert np.max(np.abs(loop[INTRO + LOOP - 1] - loop[INTRO])) < 0.015, 'loop seam'
-os.makedirs('tmp/audio', exist_ok=True)
-sf.write('tmp/audio/mulassa-ambient.wav', loop.astype(np.float32), SR, subtype='PCM_16')
-for src, dst, br in (('public/music/mulassa-taiko.wav', 'public/music/mulassa-taiko.mp3', '160k'),
-                     ('tmp/audio/mulassa-ambient.wav', 'public/music/mulassa-taiko-ambient.mp3', '192k')):
-    subprocess.run(['ffmpeg', '-hide_banner', '-loglevel', 'error', '-y', '-i', src, '-c:a', 'libmp3lame', '-b:a', br, dst], check=True)
+            amb_ch.append((i * 4, end, c))
+    assert len(amb_bars) * 4 == AMB
+    # Close inner voices soften each change. The loop itself stays on C.
+    amb_voices = {'C': (55, 60, 64), 'F': (57, 60, 65), 'G': (55, 59, 62)}
+    for a, b in zip(amb_ch, amb_ch[1:] + amb_ch[:1]):
+        assert max(abs(x - y) for x, y in zip(amb_voices[a[2]], amb_voices[b[2]])) <= 3, 'jumpy inner voice'
+
+
+    def nylon(f, dur, pos=0.18, bright=1.0):
+        """Thumbed nylon: rounded attack, tuned harmonics, dark body and no sharp pick transient."""
+        t = np.arange(int(dur * SR)) / SR
+        out = sum(n ** -1.9 * abs(np.sin(np.pi * n * pos)) * np.exp(-t * (2.0 + 1.2 * bright * (n - 1) ** 1.25))
+                  * np.sin(2 * np.pi * f * n * t) for n in range(1, 10) if f * n < 3500)
+        return out * np.minimum(1, t / 0.012) * np.clip((dur - t) / 0.1, 0, 1)
+
+
+    amb_chord = lambda beat: next(c for s, e, c in reversed(amb_ch) if s <= beat + 1e-6)
+    assert all(m % 12 in CH[amb_chord(s)] for s, d, m in amb_mel if s % 1 == 0), 'unresolved strong-beat note'
+    assert max(m for _, _, m in amb_mel) - min(m for _, _, m in amb_mel) <= 10, 'keep the tune in one singing register'
+    assert all(e - s >= 8 for s, e, _ in amb_ch), 'let the harmony settle for two measures'
+    assert [(s, d, m) for s, d, m in amb_mel if s < 32] == [(s - 32, d, m) for s, d, m in amb_mel if s >= 32], 'repeat the tune before developing it'
+    for end in range(8, AMB + 1, 8):
+        phrase = [(s, d, m) for s, d, m in amb_mel if end - 8 <= s < end]
+        s, d, m = phrase[-1]
+        assert m % 12 in CH[amb_chord(s)] and d >= 2 and s + d <= end - 1, 'hold the arrival, then take a breath'
+    for voice in range(3):                          # common tones hold through the chord change
+        held = []
+        for s, e, c in amb_ch:
+            m = amb_voices[c][voice]
+            if held and held[-1][2] == m:
+                held[-1] = (held[-1][0], e, m)
+            else:
+                held.append((s, e, m))
+        for s, e, m in held:
+            dur = (e - s) * SPB + 0.06               # a short release, never the old chord over the next whole beat
+            for det, pan in ((-6, -0.9), (6, 0.9)):
+                w, t_ = additive(hz(m), dur, 2.2, 0.5, det)
+                put(amb['pad'], ab(s), w * adsr(t_, dur, 0.22, 0.12) * 0.01, pan)
+    # Fixed touch patterns: the drummer anchors the beat; bass and hands settle just behind.
+    # These tiny offsets never accumulate or change the tempo, including across the loop.
+    touch = (0.96, 1.0, 1.02, 0.94, 0.98, 1.03, 1.0, 0.92)
+    for b in range(0, AMB, 2):                     # bass + drum on 1/3, strummed chords answer on 2/4
+        c = amb_chord(b); root = CH[c][0]
+        root += 36 if root < 8 else 24
+        fifth = root + 7 if root + 7 <= 48 else root - 5
+        m = fifth if b % 4 else root
+        gain = touch[b // 4 % 8]
+        w, t_ = additive(hz(m), 0.42, 1.8, 3.0)
+        put(amb['bass'], ab(b) + 0.004, (0.6 * w + 0.6 * np.sin(2 * np.pi * hz(m) * t_)) * adsr(t_, 0.42, 0.014, 0.08, 0.6, 0.1) * 0.11 * gain)
+        for i, m in enumerate(amb_voices[amb_chord(b + 1)]):
+            w = nylon(hz(m), 0.38, 0.3, 2.0)
+            put(amb['chords'], ab(b + 1) + 0.009 + (0.012 if b % 4 else 0.016) * i, w * 0.065 * gain,
+                (-0.35, 0.05, 0.35)[i % 3])
+    for s, d, m in amb_mel:
+        dur = min(d * SPB, 1.4)
+        ending = int(s // 4) % 2 == 1
+        gain = touch[int(s // 4) % 8] * (0.82 if ending else 1.0)
+        lag = 0.014 if ending else 0.006             # lean into the arch, relax into its answer
+        put(amb['melody'], ab(s) + lag, nylon(hz(m), dur, 0.24, 1.5) * 0.052 * gain, -0.15)
+    for mm in range(AMB // 4):
+        b0 = mm * 4
+        gain = touch[mm % 8]
+        for b, v in ((0, 0.42), (2, 0.34)):
+            put(amb['drums'], ab(b0 + b), lp(perc('don', v * gain), 0.7) * 0.4, -0.1)
+        for b in (1, 3):
+            put(amb['drums'], ab(b0 + b) + (0.012 if b == 1 else 0.009), lp(perc('clap', (0.21 if b == 1 else 0.19) * gain), 0.45), -0.15)
+        for i in range(8):
+            v = (0.18, 0.3, 0.16, 0.27, 0.2, 0.31, 0.15, 0.25)[i]
+            put(amb['drums'], ab(b0 + i / 2) + (0.006 if i % 2 else 0), lp(perc('shaker', v * gain), 0.45), 0.35)
+        if mm % 8 == 7:                             # just a soft hand-drum reply after the tune has landed
+            for b, v in ((3, 0.1), (3.5, 0.13)):
+                put(amb['drums'], ab(b0 + b) + 0.008, lp(perc('ka', v), 0.55), 0.25)
+    entrance, steady = np.zeros((INTRO, 2)), np.zeros((LOOP, 2))
+    # The tails wrap inside the steady section only. Its last measures flow into its first;
+    # once every layer has entered, the entrance uses that same continuous join.
+    entry = dict(drums=(0, 8), pad=(2, 10), bass=(4, 12), chords=(6, 14))
+    for k, dry_amb in amb.items():
+        wet = np.stack([fftconvolve(dry_amb[:, c], ir[:, c])[:len(dry_amb)] for c in range(2)], 1)
+        rendered = dry_amb + wet * (0.5 if k in ('pad', 'melody', 'chords') else 0.15)
+        rendered[:len(rendered) - LOOP] += rendered[LOOP:]
+        steady += rendered[:LOOP]
+        if k in entry:
+            start, end = entry[k]
+            fade = np.clip((np.arange(INTRO) / SR / SPB - start) / (end - start), 0, 1)
+            fade = fade * fade * (3 - 2 * fade)
+            entrance += rendered[LOOP - INTRO:LOOP] * fade[:, None]
+    level = 0.075 / np.sqrt((steady ** 2).mean())     # leave the menu comfortably behind the game
+    loop = np.concatenate([entrance, steady, steady[:SR]]) * level
+    loop = np.tanh(loop * 1.3) / 1.3
+    assert np.abs(loop).max() < 0.7, np.abs(loop).max()
+    intro_rms = np.sqrt((loop[:SR] ** 2).mean())
+    steady_rms = np.sqrt((loop[INTRO:INTRO + LOOP] ** 2).mean())
+    assert intro_rms < steady_rms * 0.12, 'the first second must ease in, even outside the game'
+    assert np.max(np.abs(loop[INTRO - 1] - loop[INTRO])) < 0.015, 'entrance seam'
+    assert np.max(np.abs(loop[INTRO + LOOP - 1] - loop[INTRO])) < 0.015, 'loop seam'
+    os.makedirs('tmp/audio', exist_ok=True)
+    sf.write('tmp/audio/mulassa-ambient.wav', loop.astype(np.float32), SR, subtype='PCM_16')
+subprocess.run(['ffmpeg', '-hide_banner', '-loglevel', 'error', '-y', '-i', 'public/music/mulassa-taiko.wav', '-c:a', 'libmp3lame', '-b:a', '160k', 'public/music/mulassa-taiko.mp3'], check=True)
+if AMBIENT:
+    subprocess.run(['ffmpeg', '-hide_banner', '-loglevel', 'error', '-y', '-i', 'tmp/audio/mulassa-ambient.wav', '-c:a', 'libmp3lame', '-b:a', '192k', 'public/music/mulassa-taiko-ambient.mp3'], check=True)
 for d in range(3):  # every difficulty must mix both sides
     ks = [k for _, k, lv, _, _ in taps if lv <= d]
     assert min(ks.count('don'), ks.count('ka')) > 0.3 * len(ks), (d, ks.count('don'), ks.count('ka'))

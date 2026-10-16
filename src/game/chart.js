@@ -12,11 +12,10 @@ export const DIFFS = [{ name: 'FÀCIL', sub: 'Només les notes principals' }, { 
 export const sectionAt = (song, t) => (song.sections.filter(([s]) => s <= t).pop() ?? song.sections[0])[1]; // before the first section: the first one
 
 const INPUT = { don: 'L', ka: 'R' };
-export const BALLOONS = [[140, 143], [240, 243], [308, 312]]; // beat windows [start, end)
 const PUMPS = [1.7, 2.7, 4]; // taps per beat needed to pop, per difficulty
 
 export function makeDanceChart(song, diff) {
-  const spb = 60 / song.bpm, b0 = song.beats[0], B = song.beats;
+  const spb = 60 / song.bpm, b0 = song.beats[0], B = song.beats, BALLOONS = song.balloonBeats; // beat windows [start, end), from the generator
   const inBalloon = t => BALLOONS.some(([a, b]) => t > B[a] - 1e-3 && t < B[b] - 1e-3);
   const notes = song.notes.filter(([t, , level]) => level <= diff && !inBalloon(t)).map(([t, kind, , big, holdEnd]) => {
     const phrase = Math.floor(Math.floor((t - b0) / spb + 0.01) / 8), input = INPUT[kind];

@@ -1,6 +1,7 @@
 // The results screen.
 import { drawStars } from './stars.js';
 import { qualityText } from '../game/progress.js';
+import { comparableScore } from '../game/score-scale.js';
 import { SITE_LABEL } from '../services/share.js';
 import { sheets } from '../ui/sheets.js';
 import { G, clock } from '../game/state.js';
@@ -61,7 +62,7 @@ export function drawResults() {
   // the stars are the hero: centred under the title, then the stats in full-width rows (like a mobile game's win card)
   if (!lost) { drawStars(H, G.stars, W / 2, y0 + 46 + STAR_H / 2, 84, clock - G.resT); /* the earned ones drop in one by one */ rule(y0 + 46 + STAR_H); }
   const by = y0 + 54 + STAR_H, bh = row * 5, sx = x0 + 26, ex = x0 + pw - 26;
-  [['GUAPA!', G.counts.perfect, C.gold], ['BÉ', G.counts.good, C.cream], ['XURRO', G.counts.miss, C.blue], ['RATXA', G.maxCombo, C.pink], ['PUNTS', G.score, C.cream]]
+  [['GUAPA!', G.counts.perfect, C.gold], ['BÉ', G.counts.good, C.cream], ['XURRO', G.counts.miss, C.blue], ['RATXA', G.maxCombo, C.pink], ['PUNTS', comparableScore(G.score, G.diff), C.cream]]
     .forEach(([s, v, c], i) => {
       const y = by + row * (i + 0.5);
       if (i) { H.fillStyle = 'rgba(255,243,214,0.08)'; H.fillRect(sx, y - row / 2, ex - sx, 1); }

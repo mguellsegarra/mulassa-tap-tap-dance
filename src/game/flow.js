@@ -1,6 +1,8 @@
 // Game flow: back to the title, start a run, the practice, finish and the final.
 import { clearLeaderboardResult, captureLeaderboardResult } from '../services/leaderboard-result.js';
 import { makeDanceChart } from './chart.js';
+import { comparableScore } from './score-scale.js';
+import { bestRecord, recordFamilyKey, saveRecord } from './records.js';
 import song from '../song.json';
 import { store } from '../platform/storage.js';
 import { errors } from '../services/errors.js';
@@ -59,8 +61,8 @@ export function startGame(diff) {
   G.sel = diff;
   beginRun(diff, makeDanceChart(song, diff).filter(n => n.t >= playFrom));
   warmStart(); // already painted on the title unless the screen changed since (sprites are per size)
-  G.recordKey = `record-v2-duet-${diff}`;
-  try { G.previous = JSON.parse(store.get(G.recordKey)) || null; } catch { G.previous = null; }
+  G.recordKey = recordFamilyKey(diff);
+  G.previous = bestRecord(store, diff);
   const chart = G.chart;
   const wait = songWait = chip.buf ? null : loader.wait(musicLine());
   const waited = () => { loader.done(wait); if (songWait === wait) songWait = null; };
@@ -199,8 +201,9 @@ export function finish(reason) {
   const value = quality(G.counts);
   G.stars = starsFor(value);
   G.reason = reason === 'collapse' ? 'collapse' : value >= 70 ? 'clear' : 'fail';
-  G.newRecord = !AUTOPLAY && !FROM && STARS < 0 && reason !== 'collapse' && (!G.previous || value > G.previous.quality || (value === G.previous.quality && G.score > G.previous.score));
-  if (G.newRecord && !FINAL) store.set(G.recordKey, JSON.stringify({ quality: value, score: G.score, combo: G.maxCombo }));
+  const recordScore = comparableScore(G.score, G.diff);
+  G.newRecord = !AUTOPLAY && !FROM && STARS < 0 && reason !== 'collapse' && (!G.previous || value > G.previous.quality || (value === G.previous.quality && recordScore > G.previous.score));
+  if (G.newRecord && !FINAL) saveRecord(store, G.diff, value, G.score, G.maxCombo);
   G.state = 'results';
   G.resT = clock;
   const run = { pct: Math.round(value), diff: G.diff, reason: G.reason, stars: G.stars, newRecord: G.newRecord, maxCombo: G.maxCombo, t: G.resT, practice: false };
@@ -218,8 +221,8 @@ export function startFinal() {
   beginRun(diff, makeDanceChart(song, diff));
   const run = fabricateRun(G.chart, FINAL, FINALE_T);
   Object.assign(G, { counts: run.counts, errors: run.errors, score: run.score, combo: run.combo, maxCombo: run.maxCombo, energy: run.energy,
-    shownE: run.energy, guapo: quality(run.counts), next: G.chart.length, recordKey: `record-v2-duet-${diff}` });
-  G.previous = outcome === 'record' ? null : { quality: Math.min(100, quality(run.counts) + 3), score: run.score + 1000, combo: run.maxCombo };
+    shownE: run.energy, guapo: quality(run.counts), next: G.chart.length, recordKey: recordFamilyKey(diff) });
+  G.previous = outcome === 'record' ? null : { quality: Math.min(100, quality(run.counts) + 3), score: comparableScore(run.score, diff) + 1000, combo: run.maxCombo };
   if (run.collapsed) G.collapseT = clock;
   finish(run.collapsed ? 'collapse' : 'end');
 }

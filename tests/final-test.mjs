@@ -7,8 +7,10 @@ import { ENERGY } from '../src/game/energy.js';
 import { quality } from '../src/game/progress.js';
 import { finalMode, fabricateRun, judgments, walk, mockLeaderboard, memoryKeys } from '../src/dev/final-test.js';
 
+import { comparableScore } from '../src/game/score-scale.js';
 const song = JSON.parse(readFileSync(new URL('../src/song.json', import.meta.url)));
 const charts = [0, 1, 2].map(d => makeDanceChart(song, d));
+
 
 // inert on production, on LAN / localhost only
 for (const h of ['mulassa.cat', 'www.mulassa.cat', 'mulassa-tap-tap-dance.pages.dev', 'abc123.mulassa-tap-tap-dance.pages.dev', '8.8.8.8', '172.32.0.1', ''])
@@ -72,6 +74,17 @@ const after = await svc.listAll(), me = after.find(r => r.is_self);
 assert(me && me.alias === 'ProvaMulassa' && me.total === 63 && Math.round(me.quality) === 95);
 assert.equal(after.filter(r => r.position === me.position).length, 1);
 assert.equal((await svc.publish({ ...run, score: run.score - 1 }, 'ProvaMulassa')).improved, false);
+assert.equal(me.score, comparableScore(run.score, run.difficulty), 'mock board converts raw points exactly once');
+{ // A newly accepted version result need not replace the user's stronger historical board row.
+  const mixed = mockLeaderboard({ charts, finaleT: song.finale, delay: 0 });
+  await mixed.publish({ version: 'mulassa-v1', difficulty: 0, counts: { perfect: 150, good: 0, miss: 0 }, score: 60000, maxCombo: 150 }, 'Versions');
+  const accepted = await mixed.publish({ version: run.version, difficulty: 0, counts: { perfect: 108, good: 0, miss: 0 }, score: 10000, maxCombo: 108 }, 'Versions');
+  assert(accepted.improved);
+  assert.equal(accepted.score, comparableScore(10000, 0));
+  const visible = (await mixed.listAll()).filter(row => row.is_self);
+  assert.equal(visible.length, 1);
+  assert.equal(visible[0].score, 60000, 'mock preserves the best historical board result');
+}
 assert.deepEqual(await svc.deleteProfile(), { deleted: true });
 assert.equal((await svc.identity()).hasSession, false);
 { // ?taken: the first nickname tried is somebody else's, another goes through

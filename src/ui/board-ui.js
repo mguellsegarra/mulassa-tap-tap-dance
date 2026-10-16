@@ -467,7 +467,7 @@ export function setupBoard({ focusIn, store = defaultStore, service = leaderboar
       if (req !== publishReq) return;
       setPublishStatus(out?.improved === false
         ? `Es manté el teu millor resultat en aquest nivell: ${Math.round(Number(out.quality))}% · ${num(out.score)} punts.`
-        : 'Ja surts a la classificació.', true);
+        : 'Resultat publicat. La classificació mostra el teu millor resultat.', true);
       // Comparteix is «D'acord»; only with `shareDelay` does it also come by itself
       if (afterPublish && shareDelay != null) shareTimer = setTimeout(() => { if (req === publishReq && publishMenu.open && done) toShare(); }, shareDelay);
       done = true;

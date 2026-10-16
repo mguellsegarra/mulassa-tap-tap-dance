@@ -248,11 +248,14 @@ function steer(p, dt, beat, live) {
     p.vel.lerp(tmp, fleeing ? ringE : Math.min(1, dt * 8)); p.rest = false;
     if (fleeing) { const v = p.vel.length(); if (v > RING.flee) p.vel.multiplyScalar(RING.flee / v); }
   }
+  const r0 = p.pos.length();
   p.pos.addScaledVector(p.vel, dt);
   const r = p.pos.length();
   if (r > MID.edge) { // the edge of the plaça; on the far side the mid band's front (its figures never step aside)
     const lim = midCrowd?.mesh.count && p.pos.x * MID.fx + p.pos.y * MID.fz > r * MID.cos ? MID.edge : 13;
-    if (r > lim) p.pos.multiplyScalar(lim / r);
+    // a stop, never a pull: whoever walks round into the mid band's arc from beyond its edge stays as far out as they
+    // were (the soft wall above walks them in) instead of being snapped in
+    if (r > lim) p.pos.multiplyScalar(Math.max(lim, Math.min(r, r0)) / r);
   }
   recell(p);
 }
@@ -336,13 +339,18 @@ function pose(p, dt, beat, live) {
   p.ax += Math.max(-armMax, Math.min(armMax, (tx - p.ax) * armEase));
   p.az += Math.max(-armMax, Math.min(armMax, (tz - p.az) * armEase));
   const a0 = p.arms[0], a1 = p.arms[1]; // counter-swing: each arm goes with the opposite leg
-  a0.rotation.x = p.ax - sw * armK; a0.rotation.z = p.az;
-  a1.rotation.x = p.ax + sw * armK; a1.rotation.z = -p.az;
+  let x0 = p.ax - sw * armK, z0 = p.az;
   if (p.fan) { // fanning themselves: the ventall arm up by the face, flicking (slow and small while the song plays)
     const f = p.fanK = (p.fanK ?? 1) + ((1 - w) * (1 - festK) * (1 - up) - (p.fanK ?? 1)) * fanE; // eased: a first step never flicks it down
-    a0.rotation.x += (-1.9 - a0.rotation.x) * f;
-    a0.rotation.z += (Math.sin(clock * 13 + p.ph) * 0.2 * (1 - moodK) + Math.sin(clock * 3.5 + p.ph) * 0.06 * moodK) * f;
+    x0 += (-1.9 - x0) * f;
+    z0 += (Math.sin(clock * 13 + p.ph) * 0.2 * (1 - moodK) + Math.sin(clock * 3.5 + p.ph) * 0.06 * moodK) * f;
   }
+  // the arm as drawn, swing and ventall included, keeps the 6 rad/s too (raised while a slowing stride swings it the same way)
+  const x1 = p.ax + sw * armK;
+  p.r0 = p.r0 === undefined ? x0 : p.r0 + Math.max(-armMax, Math.min(armMax, x0 - p.r0));
+  p.r1 = p.r1 === undefined ? x1 : p.r1 + Math.max(-armMax, Math.min(armMax, x1 - p.r1));
+  a0.rotation.x = p.r0; a0.rotation.z = z0;
+  a1.rotation.x = p.r1; a1.rotation.z = -p.az;
 }
 
 // Step 4: everyone who isn't in the ring: the band, the balconies and the backdrop's shader.

@@ -1,3 +1,5 @@
+import { v1Song } from './v1-song.mjs';
+import { referenceScore } from '../tools/reference-score.mjs';
 import assert from 'node:assert/strict';
 import { readPage } from './page.mjs';
 import { loadMainSource } from './load-main.mjs';
@@ -536,7 +538,7 @@ assert(run(`bubbles.length === 1 && bubbles.every(b => {
   return crowd.some(p => p.g.visible && p.g.position.x === anchor.x && p.g.position.z === anchor.z);
 })`), 'rest bubbles stay anchored to visible spectators after downgrade');
 const inView = `bubbles.every(b => { const v = bubbleView(); return !b.shown || (b.box.x0 >= v.l - 0.01 && b.box.x1 <= v.r + 0.01 && b.box.y0 >= v.t - 0.01 && b.box.y1 <= v.b + 0.01); })`;
-run(`var chat = diff => { bubbles.length = 0; lastBubble = -9; nextChatter = 0; G.diff = diff; var seen = new Set(), most = 0;
+run(`var chat = diff => { clock = 10; bubbles.length = 0; lastBubble = -9; nextChatter = 0; G.diff = diff; var seen = new Set(), most = 0; // each 20 s chat inside the song, however long it is
     rests = restTimeline([{ t: clock - 1 }, { t: clock + 200 }]);
     for (let f = 0; f < 600; f++) { clock += 1 / 30; drawBubbles(); bubbles.forEach(b => seen.add(b)); most = Math.max(most, bubbles.length); if (!(${inView})) return 'out'; }
     return { lines: [...seen].map(b => b.txt), most }; };
@@ -619,7 +621,7 @@ assert(run('neighbours[0].vel.x < isolatedVelocity - 1'), 'collision finds neigh
 run('neighbours.forEach(p => { p.comfort = RING.clear; }); activeCrowd = crowd.filter(p => p.g.visible);'); // (as they were: nobody that bold)
 console.log('crowd neighbour separation ok');
 
-// Nobody walks into anybody: the busiest stretch of the song (her livelier turns, 60–85 s) and the title's demo walk,
+// Nobody walks into anybody: the busiest stretch of the song (B, the half turn into C, C's turns and the finale, 60–85 s) and the title's demo walk,
 // at high quality (the full crowd), seeded. Footprints are the shirt's rectangle (0.46 x 0.28, a kid 0.72 of it,
 // a rider's kid reaching 0.38 m back) on each person's rendered position and heading, the band's included.
 {
@@ -680,7 +682,7 @@ console.log('crowd footprints never overlap ok');
   hostSeed(11);
   const r = JSON.parse(run(`(() => {
     seedR = 11;
-    qualityLevel = 2; applyRenderQuality(); crowdNow = 75; startGame(1); G.state = 'play'; G.guapo = 90;
+    qualityLevel = 2; applyRenderQuality(); crowdNow = 33; startGame(1); G.state = 'play'; G.guapo = 90; // A, her rear to the plaça (A2, beats 84-137)
     mood.kick = mood.gr1 = mood.gr2 = mood.gr3 = mood.gr4 = 0; G.combo = 0;
     const who = () => activeCrowd.filter(p => p.g.scale.x);
     const pose = p => [p.g.position.x, p.g.position.y, p.g.position.z, p.torso.rotation.x, p.torso.rotation.z, ...p.arms.flatMap(a => [a.rotation.x, a.rotation.z])];
@@ -774,29 +776,30 @@ console.log('crowd footprints never overlap ok');
 
 // Making way (RING): a clear ring of open floor round her all song; when her body or swinging rear comes at someone
 // they step back, eased and capped (no jolts), hands up, then walk slowly back to their spot once she has gone.
-// Her turns (90–108 s: the half turns and the livelier ones before the finale), 60 fps, the full crowd, seeded.
+// Her turns (61–79 s: the half turn into C and the livelier ones before the finale), 60 fps, the full crowd, seeded.
 {
   const q0 = run('qualityLevel');
   hostSeed(23);
   const r = JSON.parse(run(`(() => {
     seedR = 23;
-    qualityLevel = 2; applyRenderQuality(); crowdNow = 86; startGame(1); G.state = 'play'; G.guapo = 90; G.combo = 0;
-    const ppl = [...activeCrowd], prev = new Map(), out = { minClear: 99, step: 0, dv: 0, rot: 0, made: new Set(), back: 0, frames: 0, calmStep: 0 };
+    qualityLevel = 2; applyRenderQuality(); crowdNow = 57; startGame(1); G.state = 'play'; G.guapo = 90; G.combo = 0;
+    const ppl = [...activeCrowd], prev = new Map(), out = { minClear: 99, step: 0, dv: 0, rot: 0, made: new Set(), back: 0, frames: 0, calmStep: 0, armRate: 0 };
     const clearOf = p => { const dx = p.pos.x - M.pos.x, dz = p.pos.y - M.pos.y, c = Math.cos(M.yaw), s = Math.sin(M.yaw);
       return Math.hypot(Math.max(0, Math.abs(dx * c - dz * s) - 0.75), Math.max(0, Math.abs(dx * s + dz * c) - 2.3)); };
-    for (let f = 0; crowdNow < 108; f++) {
+    for (let f = 0; crowdNow < 79; f++) {
       const dt = 1 / 60; crowdNow += dt; clock += dt;
       const t = songTime(), beat = beatAt(t);
       G.sec = sectionAt(song, t); G.finale = t >= FINALE_T;
       animMula(dt, beat, 1); framePlayCamera(dt, M.pos.x, M.pos.y); animCrowd(dt, beat, t, 1);
-      if (t < 90) continue;
+      if (t < 61) continue;
       out.frames++;
       for (const p of ppl) {
         out.minClear = Math.min(out.minClear, clearOf(p));
-        const o = prev.get(p), q = [p.g.position.x, p.g.position.z, o ? p.g.position.x - o[0] : NaN, o ? p.g.position.z - o[1] : NaN, p.torso.rotation.x, ...p.arms.map(a => a.rotation.x)];
+        const o = prev.get(p), q = [p.g.position.x, p.g.position.z, o ? p.g.position.x - o[0] : NaN, o ? p.g.position.z - o[1] : NaN, p.torso.rotation.x, ...p.arms.flatMap(a => [a.rotation.x, a.rotation.z])];
         prev.set(p, q);
         if (p.way > 0.5) out.made.add(p);
         if (!o) continue;
+        for (let k = 5; k < q.length; k++) out.armRate = Math.max(out.armRate, Math.abs(q[k] - o[k]) / dt);
         const step = Math.hypot(q[0] - o[0], q[1] - o[1]);
         if (p.way > 0.001 || p.away) {
           out.step = Math.max(out.step, step); if (o[2] === o[2]) out.dv = Math.max(out.dv, Math.hypot(q[2] - o[2], q[3] - o[3])); // (NaN: no step before)
@@ -818,7 +821,8 @@ console.log('crowd footprints never overlap ok');
     `making way is smooth: per frame ${(r.step * 1000).toFixed(1)} mm, its change ${(r.dv * 1000).toFixed(2)} mm, ${r.rot.toFixed(3)} rad`);
   assert(r.calmStep < 0.024, `everyone else at most jostled aside (the no-overlap limit), never faster than making way (${(r.calmStep * 1000).toFixed(1)} mm)`);
   assert(r.free >= 1 && r.back >= r.free / 2 && r.away <= r.free / 4, `once she has gone they walk back to their spots (${r.back} of ${r.free} free to, ${r.away} still away)`);
-  console.log('the crowd makes way for her, smoothly, and comes back ok');
+  assert(r.armRate <= 6 + 1e-9, `drawn arms keep the 6 rad/s limit (${r.armRate})`);
+  console.log('the crowd makes way for her, smoothly, and comes back ok', { step: r.step, delta: r.dv, rotation: r.rot, armRate: r.armRate });
   run(`qualityLevel = ${q0}; applyRenderQuality(); crowd.forEach(p => placeHome(p)); G.finale = false; G.combo = 0;`);
 }
 
@@ -1086,11 +1090,24 @@ console.log('hold contracts ok');
 // autoplay: both buttons on every GUAPA and every hold kept down to the end
 for (const diff of [0, 1, 2]) {
   run(`startGame(${diff}); G.state = 'play'; offsetMs = 0;
-    for (let x = G.chart[0].t - 0.5; x < song.end + 0.5; x += 1 / 30) { songNow = x; autoplay(x); advance(x); }`);
+    for (let x = G.chart[0].t - 0.5; x < song.end + 0.5; x += 1 / 30) { songNow = x; G.doublePoints = x >= FINALE_T && G.guapo >= 70; autoplay(x); advance(x); }`);
+  // Each full hold may retain <1 uncredited fractional point after the final floor.
+  const shortLoss = referenceScore(context.song, diff) - run('G.score');
+  assert(shortLoss >= 0 && shortLoss <= run('G.chart.filter(n => n.end && !n.balloon).length'), `active reference vs real scoring ${diff}: ${shortLoss} points of hold rounding`);
   assert.equal(run('G.counts.miss'), 0, `autoplay ${diff}: no errors`);
   assert(run('G.chart.filter(n => n.big).every(n => n.hit === "perfect" && n.gran)'), `autoplay ${diff}: both buttons on every GUAPA`);
   assert(run('G.chart.filter(n => n.end && !n.balloon).every(n => n.tail === "perfect")'), `autoplay ${diff}: every hold kept to the end`);
   assert.equal(run('G.counts.perfect + G.counts.good'), run('G.chart.length + G.chart.filter(n => n.end && !n.balloon).length'), 'a hold counts head + tail');
+}
+// The old reference also runs through the actual judge/pump/hold code, preserving the old chart's finale.
+for (const diff of [0, 1, 2]) {
+  run(`beginRun(${diff}, makeDanceChart(${JSON.stringify(v1Song)}, ${diff})); G.state = 'play'; offsetMs = 0;
+    for (let x = G.chart[0].t - 0.5; x < ${v1Song.end} + 0.5; x += 1 / 30) {
+      songNow = x; G.doublePoints = x >= ${v1Song.finale} && G.guapo >= 70; autoplay(x); advance(x);
+    }`);
+  assert.equal(run('G.counts.miss'), 0);
+  const oldLoss = referenceScore(v1Song, diff) - run('G.score');
+  assert(oldLoss >= 0 && oldLoss <= run('G.chart.filter(n => n.end && !n.balloon).length'), `legacy reference vs real scoring ${diff}: ${oldLoss} points of hold rounding`);
 }
 console.log('autoplay GUAPA and hold contracts ok');
 
@@ -1546,7 +1563,8 @@ console.log('quality placeholder contracts ok');
 // Its ring is a halo round #pause (drawProgressRing): inside the screen and the safe area, clear of the panel, the lane (and its
 // ring), the judge words and the x2 tag; the finale's x2 tag sits on the panel's top edge, inside the safe area, clear of the ÀNIM bar,
 // ENCERTS, the mulassa, #pause and the bar. Phones, an iPad on its side, desktop.
-assert.equal(run('[songProgress(PROG_T0 - LEAD), songProgress(PROG_T0), songProgress((PROG_T0 + PROG_T1) / 2), songProgress(PROG_T1), songProgress(PROG_T1 + 9)].join()'), '0,0,0.5,1,1', 'progress: 0 at the start, 1 at the end, clamped');
+const progressSamples = JSON.parse(run('JSON.stringify([songProgress(PROG_T0 - LEAD), songProgress(PROG_T0), songProgress((PROG_T0 + PROG_T1) / 2), songProgress(PROG_T1), songProgress(PROG_T1 + 9)])'));
+assert(progressSamples.every((v, i) => Math.abs(v - [0, 0, 0.5, 1, 1][i]) < 1e-12), 'progress: 0 at the start, 1 at the end, clamped');
 assert.equal(run('PROG_T0'), run('song.notes[0][0]'), 'from the first note');
 const inter = (a, c) => a.x < c.x + c.w && c.x < a.x + a.w && a.y < c.y + c.h && c.y < a.y + a.h;
 for (const [w, h, touch, notch] of [[375, 667, true, 20], [393, 852, true, 59], [1180, 820, true, 24], [1280, 800, false, 0]]) for (const diff of [0, 1, 2]) {
@@ -1925,7 +1943,7 @@ for (const [w, h, padPixels, touch] of [[393, 852, 695, true], [375, 667, 537, t
     startGame(1); G.state = 'play'; M.missT = -9; trauma = 0;
     const dt = 1 / ${fps}, out = { maxAcc: 0, maxLookAcc: 0, el: [90, 0], dist: [1e9, 0], outside: -1e9, firstStep: 0, end: null }, v = new THREE.Vector3(), look = new THREE.Vector3();
     let p1 = null, p2 = null, l1 = null, l2 = null, first = true;
-    for (const [a, b] of [[BEATS[64], BEATS[90]], [BEATS[288], BEATS[304]]]) for (songNow = a - 7; songNow < b; songNow += dt) { // (after a seek: 7 s to settle: the springs are slow, on purpose)
+    for (const [a, b] of [[BEATS[64], BEATS[90]], [BEATS[204], BEATS[220]]]) for (songNow = a - 7; songNow < b; songNow += dt) { // (after a seek: 7 s to settle: the springs are slow, on purpose)
       clock += dt; animMula(dt, beatAt(songNow)); const shift = framePlayCamera(dt, M.pos.x, M.pos.y); camShift = shift;
       camera.setViewOffset(W * K, HH * K, 0, -shift, W * K, HH * K); camera.updateMatrixWorld(true);
       camera.getWorldDirection(look);

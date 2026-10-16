@@ -9,6 +9,8 @@ import { DEV_HOST } from '../services/errors.js';
 import { quality } from '../game/progress.js';
 import { drain, ENERGY } from '../game/energy.js';
 import { createLeaderboardService } from '../services/leaderboard.js';
+import { comparableScore } from '../game/score-scale.js';
+import { VERSION_RULES } from '../services/leaderboard-rules.js';
 
 const OUTCOMES = ['record', 'clear', 'collapse'];
 export function finalMode({ hostname = '', search = '' } = {}) {
@@ -100,16 +102,21 @@ export function mockRows(charts, finaleT) {
   const rand = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
   return Array.from({ length: 62 }, (_, i) => {
     const diff = i % 3, pct = 55 + Math.floor(rand() * 46), run = fabricateRun(charts[diff], { pct, diff, outcome: 'clear' }, finaleT);
-    return { alias: `${NAMES[Math.floor(rand() * NAMES.length)]}${100 + Math.floor(rand() * 900)}`, difficulty: diff, quality: quality(run.counts), score: run.score };
+    return { alias: `${NAMES[Math.floor(rand() * NAMES.length)]}${100 + Math.floor(rand() * 900)}`, difficulty: diff, quality: quality(run.counts), score: comparableScore(run.score, diff) };
   });
 }
 function mockClient({ rows, taken = false, delay = 500 }) {
   let session = null, self = null;
+  const entries = new Map();
   const refused = new Set(); // with ?taken: the first nickname tried, and it stays taken
   const wait = () => new Promise(r => setTimeout(r, delay * (0.6 + 0.8 * Math.random())));
   const board = () => {
-    const all = [...rows, ...(self ? [self] : [])].sort((a, b) => b.score - a.score || b.quality - a.quality);
-    return all.map((r, i) => ({ ...r, position: i + 1, total: all.length, is_self: r === self }));
+    const tie = r => r.quality * VERSION_RULES['mulassa-v1'].judgments[r.difficulty];
+    const order = (a, b) => b.score - a.score || tie(b) - tie(a);
+    const best = [...entries.values()].sort(order)[0];
+    const mine = best && self ? { ...best, alias: self.alias } : null;
+    const all = [...rows, ...(mine ? [mine] : [])].sort(order);
+    return all.map((r, i) => ({ ...r, position: i + 1, total: all.length, is_self: r === mine }));
   };
   const isTaken = alias => {
     const k = alias.toLowerCase();
@@ -125,7 +132,7 @@ function mockClient({ rows, taken = false, delay = 500 }) {
       async signInAnonymously() { await wait(); session = { user: { id: 'prova' } }; return { data: { session }, error: null }; },
       async signOut() { session = null; return { error: null }; },
     },
-    functions: { async invoke() { await wait(); self = null; return { data: { deleted: true }, error: null }; } },
+    functions: { async invoke() { await wait(); self = null; entries.clear(); return { data: { deleted: true }, error: null }; } },
     async rpc(name, a) {
       await wait();
       if (name === 'get_leaderboard_all') {
@@ -136,10 +143,13 @@ function mockClient({ rows, taken = false, delay = 500 }) {
       if (!session) return no('leaderboard_auth', 401);
       if (name === 'submit_result') {
         if (self?.alias !== a.p_alias && isTaken(a.p_alias)) return no('leaderboard_alias_taken', 409);
-        const q = quality({ perfect: a.p_perfect, good: a.p_good, miss: a.p_miss }), improved = !self || a.p_score > self.score;
-        if (improved) self = { alias: a.p_alias, difficulty: a.p_difficulty, quality: q, score: a.p_score };
-        else self.alias = a.p_alias;
-        return ok([{ improved, quality: self.quality, score: self.score }]);
+        const q = quality({ perfect: a.p_perfect, good: a.p_good, miss: a.p_miss });
+        const points = comparableScore(a.p_score, a.p_difficulty, a.p_version), key = `${a.p_version}:${a.p_difficulty}`;
+        const previous = entries.get(key), improved = !previous || q > previous.quality || (q === previous.quality && a.p_score > previous.rawScore);
+        self = { alias: a.p_alias };
+        if (improved) entries.set(key, { difficulty: a.p_difficulty, quality: q, score: points, rawScore: a.p_score, max_combo: a.p_max_combo });
+        const saved = entries.get(key);
+        return ok([{ improved, quality: saved.quality, score: saved.score }]);
       }
       if (name === 'update_alias') {
         if (!self) return no('leaderboard_auth', 401);

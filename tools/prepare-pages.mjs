@@ -39,6 +39,7 @@ export async function preparePages(directory, song) {
     const allowed = required.includes(name)
       || /^assets\/[\w-]+\.(js|css)$/.test(name)
       || /^fonts\/[\w-]+\.(woff2?|txt)$/.test(name)
+      || name === 'music/aliga/balladeta-aliga.mp3' // isolated Àliga 1991 preview
       || /^(captures\/[\w-]+\.jpg|videos\/[\w-]+\.(mp4|jpg))$/.test(name) // /projecte/'s screenshots
       || name === 'campanar-valls.svg' // Configuració «Sobre el joc»
       || name === 'uaf-logo.jpg' // /projecte/'s credits: the Unió Anelles de la Flama logo

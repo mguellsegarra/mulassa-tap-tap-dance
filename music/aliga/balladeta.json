@@ -1,0 +1,2054 @@
+{
+  "title": "Balladeta de l'Àliga de Valls",
+  "version": 1,
+  "status": "Transcripció visual editable. Recreació de plaça provisional, pendent de validació auditiva i de la coda.",
+  "source": "https://usuaris.tinet.cat/rclibru/sonsimusiques/balladetadelaligadisc2a.jpg",
+  "meter": [
+    2,
+    4
+  ],
+  "printed_bpm": 92,
+  "duration_unit": "quarter",
+  "bar_numbering": "Identificadors editorials de fragments escrits; 0 i 3 anacrusis, 2 final incomplet; no són compassos desplegats.",
+  "bars": [
+    {
+      "id": 0,
+      "section": "Introducció",
+      "key": "C major",
+      "notes": [
+        {
+          "pitch": "D6",
+          "duration": 0.25
+        },
+        {
+          "pitch": "C6",
+          "duration": 0.25
+        }
+      ],
+      "status": "lectura visual provisional amb dubtes documentats; no validat auditivament",
+      "ties": [],
+      "evidence": "Lectura visual de pentagrama ampliat, 16-10-2026",
+      "source_system": 1
+    },
+    {
+      "id": 1,
+      "section": "Introducció",
+      "key": "C major",
+      "notes": [
+        {
+          "pitch": "B5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "C6",
+          "duration": 0.25
+        },
+        {
+          "pitch": "B5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "A5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "G5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "F5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "E5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "D5",
+          "duration": 0.25
+        }
+      ],
+      "status": "lectura visual provisional amb dubtes documentats; no validat auditivament",
+      "ties": [],
+      "evidence": "Lectura visual de pentagrama ampliat, 16-10-2026",
+      "source_system": 1
+    },
+    {
+      "id": 2,
+      "section": "Introducció",
+      "key": "C major",
+      "notes": [
+        {
+          "pitch": "C5",
+          "duration": 1.5
+        }
+      ],
+      "status": "llegible visualment; interpretació enregistrada no validada nota per nota",
+      "ties": [],
+      "evidence": "Lectura visual de pentagrama ampliat, 16-10-2026",
+      "source_system": 1
+    },
+    {
+      "id": 3,
+      "section": "A",
+      "key": "C major",
+      "notes": [
+        {
+          "pitch": "C5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "D5",
+          "duration": 0.25
+        }
+      ],
+      "status": "llegible visualment; interpretació enregistrada no validada nota per nota",
+      "ties": [],
+      "evidence": "Lectura visual de pentagrama ampliat, 16-10-2026",
+      "source_system": 1
+    },
+    {
+      "id": 4,
+      "section": "A",
+      "key": "C major",
+      "notes": [
+        {
+          "pitch": "E5",
+          "duration": 0.5
+        },
+        {
+          "pitch": "C5",
+          "duration": 0.5
+        },
+        {
+          "pitch": "E5",
+          "duration": 0.5
+        },
+        {
+          "pitch": "E5",
+          "duration": 0.5
+        }
+      ],
+      "status": "lectura visual provisional amb dubtes documentats; no validat auditivament",
+      "ties": [],
+      "evidence": "Lectura visual de pentagrama ampliat, 16-10-2026",
+      "source_system": 1
+    },
+    {
+      "id": 5,
+      "section": "A",
+      "key": "C major",
+      "notes": [
+        {
+          "pitch": "G5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "F5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "E5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "F5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "D5",
+          "duration": 0.5
+        },
+        {
+          "pitch": "B4",
+          "duration": 0.25
+        },
+        {
+          "pitch": "C5",
+          "duration": 0.25
+        }
+      ],
+      "status": "llegible visualment; interpretació enregistrada no validada nota per nota",
+      "ties": [],
+      "evidence": "Lectura visual de pentagrama ampliat, 16-10-2026",
+      "source_system": 2
+    },
+    {
+      "id": 6,
+      "section": "A",
+      "key": "C major",
+      "notes": [
+        {
+          "pitch": "D5",
+          "duration": 0.5
+        },
+        {
+          "pitch": "B4",
+          "duration": 0.25
+        },
+        {
+          "pitch": "C5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "D5",
+          "duration": 0.5
+        },
+        {
+          "pitch": "D5",
+          "duration": 0.5
+        }
+      ],
+      "status": "llegible visualment; interpretació enregistrada no validada nota per nota",
+      "ties": [],
+      "evidence": "Lectura visual de pentagrama ampliat, 16-10-2026",
+      "source_system": 2
+    },
+    {
+      "id": 7,
+      "section": "A",
+      "key": "C major",
+      "notes": [
+        {
+          "pitch": "F5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "E5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "D5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "E5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "C5",
+          "duration": 0.5
+        },
+        {
+          "pitch": "C5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "D5",
+          "duration": 0.25
+        }
+      ],
+      "status": "llegible visualment; interpretació enregistrada no validada nota per nota",
+      "ties": [],
+      "evidence": "Lectura visual de pentagrama ampliat, 16-10-2026",
+      "source_system": 2
+    },
+    {
+      "id": 8,
+      "section": "A",
+      "key": "C major",
+      "notes": [
+        {
+          "pitch": "E5",
+          "duration": 0.5
+        },
+        {
+          "pitch": "C5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "D5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "E5",
+          "duration": 0.5
+        },
+        {
+          "pitch": "E5",
+          "duration": 0.5
+        }
+      ],
+      "status": "llegible visualment; interpretació enregistrada no validada nota per nota",
+      "ties": [],
+      "evidence": "Lectura visual de pentagrama ampliat, 16-10-2026",
+      "source_system": 2
+    },
+    {
+      "id": 9,
+      "section": "A",
+      "key": "C major",
+      "notes": [
+        {
+          "pitch": "G5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "F5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "E5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "F5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "D5",
+          "duration": 0.5
+        },
+        {
+          "pitch": "G5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "A5",
+          "duration": 0.25
+        }
+      ],
+      "status": "lectura visual provisional amb dubtes documentats; no validat auditivament",
+      "ties": [],
+      "evidence": "Lectura visual de pentagrama ampliat, 16-10-2026",
+      "source_system": 3
+    },
+    {
+      "id": 10,
+      "section": "A",
+      "key": "C major",
+      "notes": [
+        {
+          "pitch": "B5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "C6",
+          "duration": 0.25
+        },
+        {
+          "pitch": "B5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "A5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "G5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "F5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "E5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "D5",
+          "duration": 0.25
+        }
+      ],
+      "status": "lectura visual provisional amb dubtes documentats; no validat auditivament",
+      "ties": [],
+      "evidence": "Lectura visual de pentagrama ampliat, 16-10-2026",
+      "source_system": 3
+    },
+    {
+      "id": 11,
+      "section": "A",
+      "key": "C major",
+      "notes": [
+        {
+          "pitch": "C5",
+          "duration": 1.5
+        },
+        {
+          "pitch": "C5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "D5",
+          "duration": 0.25
+        }
+      ],
+      "status": "llegible visualment; interpretació enregistrada no validada nota per nota",
+      "ties": [],
+      "evidence": "Lectura visual de pentagrama ampliat, 16-10-2026",
+      "source_system": 3
+    },
+    {
+      "id": 12,
+      "section": "A",
+      "key": "C major",
+      "notes": [
+        {
+          "pitch": "C5",
+          "duration": 1.5
+        },
+        {
+          "pitch": "E4",
+          "duration": 0.25
+        },
+        {
+          "pitch": "F4",
+          "duration": 0.25
+        }
+      ],
+      "status": "llegible visualment; interpretació enregistrada no validada nota per nota",
+      "ties": [],
+      "evidence": "Lectura visual de pentagrama ampliat, 16-10-2026",
+      "source_system": 3
+    },
+    {
+      "id": 13,
+      "section": "B",
+      "key": "C major",
+      "notes": [
+        {
+          "pitch": "G4",
+          "duration": 0.25
+        },
+        {
+          "pitch": "F4",
+          "duration": 0.25
+        },
+        {
+          "pitch": "E4",
+          "duration": 0.25
+        },
+        {
+          "pitch": "F4",
+          "duration": 0.25
+        },
+        {
+          "pitch": "G4",
+          "duration": 0.25
+        },
+        {
+          "pitch": "A4",
+          "duration": 0.25
+        },
+        {
+          "pitch": "B4",
+          "duration": 0.25
+        },
+        {
+          "pitch": "C5",
+          "duration": 0.25
+        }
+      ],
+      "status": "llegible visualment; interpretació enregistrada no validada nota per nota",
+      "ties": [],
+      "evidence": "Lectura visual de pentagrama ampliat, 16-10-2026",
+      "source_system": 4
+    },
+    {
+      "id": 14,
+      "section": "B",
+      "key": "C major",
+      "notes": [
+        {
+          "pitch": "A4",
+          "duration": 0.5
+        },
+        {
+          "pitch": "A4",
+          "duration": 0.5
+        },
+        {
+          "pitch": "A4",
+          "duration": 0.5
+        },
+        {
+          "pitch": "D4",
+          "duration": 0.25
+        },
+        {
+          "pitch": "E4",
+          "duration": 0.25
+        }
+      ],
+      "status": "llegible visualment; interpretació enregistrada no validada nota per nota",
+      "ties": [],
+      "evidence": "Lectura visual de pentagrama ampliat, 16-10-2026",
+      "source_system": 4
+    },
+    {
+      "id": 15,
+      "section": "B",
+      "key": "C major",
+      "notes": [
+        {
+          "pitch": "F4",
+          "duration": 0.25
+        },
+        {
+          "pitch": "E4",
+          "duration": 0.25
+        },
+        {
+          "pitch": "D4",
+          "duration": 0.25
+        },
+        {
+          "pitch": "E4",
+          "duration": 0.25
+        },
+        {
+          "pitch": "F4",
+          "duration": 0.25
+        },
+        {
+          "pitch": "G4",
+          "duration": 0.25
+        },
+        {
+          "pitch": "A4",
+          "duration": 0.25
+        },
+        {
+          "pitch": "B4",
+          "duration": 0.25
+        }
+      ],
+      "status": "llegible visualment; interpretació enregistrada no validada nota per nota",
+      "ties": [],
+      "evidence": "Lectura visual de pentagrama ampliat, 16-10-2026",
+      "source_system": 4
+    },
+    {
+      "id": 16,
+      "section": "B",
+      "key": "C major",
+      "notes": [
+        {
+          "pitch": "G4",
+          "duration": 0.5
+        },
+        {
+          "pitch": "G4",
+          "duration": 0.5
+        },
+        {
+          "pitch": "G4",
+          "duration": 0.5
+        },
+        {
+          "pitch": "E4",
+          "duration": 0.25
+        },
+        {
+          "pitch": "F4",
+          "duration": 0.25
+        }
+      ],
+      "status": "llegible visualment; interpretació enregistrada no validada nota per nota",
+      "ties": [],
+      "evidence": "Lectura visual de pentagrama ampliat, 16-10-2026",
+      "source_system": 5
+    },
+    {
+      "id": 17,
+      "section": "B",
+      "key": "C major",
+      "notes": [
+        {
+          "pitch": "G4",
+          "duration": 0.25
+        },
+        {
+          "pitch": "F4",
+          "duration": 0.25
+        },
+        {
+          "pitch": "E4",
+          "duration": 0.25
+        },
+        {
+          "pitch": "F4",
+          "duration": 0.25
+        },
+        {
+          "pitch": "G4",
+          "duration": 0.25
+        },
+        {
+          "pitch": "A4",
+          "duration": 0.25
+        },
+        {
+          "pitch": "B4",
+          "duration": 0.25
+        },
+        {
+          "pitch": "C5",
+          "duration": 0.25
+        }
+      ],
+      "status": "llegible visualment; interpretació enregistrada no validada nota per nota",
+      "ties": [],
+      "evidence": "Lectura visual de pentagrama ampliat, 16-10-2026",
+      "source_system": 5
+    },
+    {
+      "id": 18,
+      "section": "B",
+      "key": "C major",
+      "notes": [
+        {
+          "pitch": "A4",
+          "duration": 0.5
+        },
+        {
+          "pitch": "A4",
+          "duration": 0.5
+        },
+        {
+          "pitch": "A4",
+          "duration": 0.5
+        },
+        {
+          "pitch": "D5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "C5",
+          "duration": 0.25
+        }
+      ],
+      "status": "llegible visualment; interpretació enregistrada no validada nota per nota",
+      "ties": [],
+      "evidence": "Lectura visual de pentagrama ampliat, 16-10-2026",
+      "source_system": 5
+    },
+    {
+      "id": 19,
+      "section": "B",
+      "key": "C major",
+      "notes": [
+        {
+          "pitch": "B4",
+          "duration": 0.25
+        },
+        {
+          "pitch": "C5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "B4",
+          "duration": 0.25
+        },
+        {
+          "pitch": "A4",
+          "duration": 0.25
+        },
+        {
+          "pitch": "G4",
+          "duration": 0.25
+        },
+        {
+          "pitch": "F4",
+          "duration": 0.25
+        },
+        {
+          "pitch": "E4",
+          "duration": 0.25
+        },
+        {
+          "pitch": "D4",
+          "duration": 0.25
+        }
+      ],
+      "status": "llegible visualment; interpretació enregistrada no validada nota per nota",
+      "ties": [],
+      "evidence": "Lectura visual de pentagrama ampliat, 16-10-2026",
+      "source_system": 5
+    },
+    {
+      "id": 20,
+      "section": "B",
+      "key": "C major",
+      "notes": [
+        {
+          "pitch": "C4",
+          "duration": 1.5
+        },
+        {
+          "pitch": "E4",
+          "duration": 0.25
+        },
+        {
+          "pitch": "F4",
+          "duration": 0.25
+        }
+      ],
+      "status": "lectura visual provisional amb dubtes documentats; no validat auditivament",
+      "ties": [],
+      "evidence": "Lectura visual de pentagrama ampliat, 16-10-2026",
+      "source_system": 6
+    },
+    {
+      "id": 21,
+      "section": "B",
+      "key": "C major",
+      "notes": [
+        {
+          "pitch": "C4",
+          "duration": 1.5
+        },
+        {
+          "pitch": "C5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "D5",
+          "duration": 0.25
+        }
+      ],
+      "status": "lectura visual provisional amb dubtes documentats; no validat auditivament",
+      "ties": [],
+      "evidence": "Lectura visual de pentagrama ampliat, 16-10-2026",
+      "source_system": 6
+    },
+    {
+      "id": 22,
+      "section": "A variant",
+      "key": "C major",
+      "notes": [
+        {
+          "pitch": "C5",
+          "duration": 0.5
+        },
+        {
+          "pitch": "C5",
+          "duration": 0.5
+        },
+        {
+          "pitch": "E5",
+          "duration": 0.5
+        },
+        {
+          "pitch": "E5",
+          "duration": 0.5
+        }
+      ],
+      "status": "lectura visual provisional amb dubtes documentats; no validat auditivament",
+      "ties": [],
+      "evidence": "Lectura visual de pentagrama ampliat, 16-10-2026",
+      "source_system": 6
+    },
+    {
+      "id": 23,
+      "section": "A variant",
+      "key": "C major",
+      "notes": [
+        {
+          "pitch": "G5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "F5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "E5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "F5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "D5",
+          "duration": 0.5
+        },
+        {
+          "pitch": "D5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "E5",
+          "duration": 0.25
+        }
+      ],
+      "status": "llegible visualment; interpretació enregistrada no validada nota per nota",
+      "ties": [],
+      "evidence": "Lectura visual de pentagrama ampliat, 16-10-2026",
+      "source_system": 6
+    },
+    {
+      "id": 24,
+      "section": "A variant",
+      "key": "C major",
+      "notes": [
+        {
+          "pitch": "F5",
+          "duration": 0.5
+        },
+        {
+          "pitch": "D5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "E5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "F5",
+          "duration": 0.5
+        },
+        {
+          "pitch": "F5",
+          "duration": 0.5
+        }
+      ],
+      "status": "llegible visualment; interpretació enregistrada no validada nota per nota",
+      "ties": [],
+      "evidence": "Lectura visual de pentagrama ampliat, 16-10-2026",
+      "source_system": 6
+    },
+    {
+      "id": 25,
+      "section": "A variant",
+      "key": "C major",
+      "notes": [
+        {
+          "pitch": "G5",
+          "duration": 0.5
+        },
+        {
+          "pitch": "F5",
+          "duration": 0.5
+        },
+        {
+          "pitch": "E5",
+          "duration": 0.5
+        },
+        {
+          "pitch": "C5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "D5",
+          "duration": 0.25
+        }
+      ],
+      "status": "llegible visualment; interpretació enregistrada no validada nota per nota",
+      "ties": [],
+      "evidence": "Lectura visual de pentagrama ampliat, 16-10-2026",
+      "source_system": 7
+    },
+    {
+      "id": 26,
+      "section": "A variant",
+      "key": "C major",
+      "notes": [
+        {
+          "pitch": "E5",
+          "duration": 0.5
+        },
+        {
+          "pitch": "C5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "D5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "E5",
+          "duration": 0.5
+        },
+        {
+          "pitch": "E5",
+          "duration": 0.5
+        }
+      ],
+      "status": "llegible visualment; interpretació enregistrada no validada nota per nota",
+      "ties": [],
+      "evidence": "Lectura visual de pentagrama ampliat, 16-10-2026",
+      "source_system": 7
+    },
+    {
+      "id": 27,
+      "section": "A variant",
+      "key": "C major",
+      "notes": [
+        {
+          "pitch": "G5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "F5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "E5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "F5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "D5",
+          "duration": 0.5
+        },
+        {
+          "pitch": "G5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "A5",
+          "duration": 0.25
+        }
+      ],
+      "status": "lectura visual provisional amb dubtes documentats; no validat auditivament",
+      "ties": [],
+      "evidence": "Lectura visual de pentagrama ampliat, 16-10-2026",
+      "source_system": 7
+    },
+    {
+      "id": 28,
+      "section": "A variant",
+      "key": "C major",
+      "notes": [
+        {
+          "pitch": "B5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "C6",
+          "duration": 0.25
+        },
+        {
+          "pitch": "B5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "A5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "G5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "F5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "E5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "D5",
+          "duration": 0.25
+        }
+      ],
+      "status": "lectura visual provisional amb dubtes documentats; no validat auditivament",
+      "ties": [],
+      "evidence": "Lectura visual de pentagrama ampliat, 16-10-2026",
+      "source_system": 7
+    },
+    {
+      "id": 29,
+      "section": "A variant",
+      "key": "C major",
+      "notes": [
+        {
+          "pitch": "C5",
+          "duration": 1.5
+        },
+        {
+          "pitch": "C5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "D5",
+          "duration": 0.25
+        }
+      ],
+      "status": "llegible visualment; interpretació enregistrada no validada nota per nota",
+      "ties": [],
+      "evidence": "Lectura visual de pentagrama ampliat, 16-10-2026",
+      "source_system": 7
+    },
+    {
+      "id": 30,
+      "section": "A variant",
+      "key": "C major",
+      "notes": [
+        {
+          "pitch": "C5",
+          "duration": 1.5
+        },
+        {
+          "pitch": "E4",
+          "duration": 0.25
+        },
+        {
+          "pitch": "F4",
+          "duration": 0.25
+        }
+      ],
+      "status": "lectura visual provisional amb dubtes documentats; no validat auditivament",
+      "ties": [],
+      "evidence": "Lectura visual de pentagrama ampliat, 16-10-2026",
+      "source_system": 8
+    },
+    {
+      "id": 31,
+      "section": "Enllaç",
+      "key": "C major",
+      "notes": [
+        {
+          "pitch": "C4",
+          "duration": 1.5
+        },
+        {
+          "pitch": "F4",
+          "duration": 0.25
+        },
+        {
+          "pitch": "G4",
+          "duration": 0.25
+        }
+      ],
+      "status": "lectura visual provisional amb dubtes documentats; no validat auditivament",
+      "ties": [],
+      "evidence": "Lectura visual de pentagrama ampliat, 16-10-2026",
+      "source_system": 8
+    },
+    {
+      "id": 32,
+      "section": "C en fa",
+      "key": "F major",
+      "notes": [
+        {
+          "pitch": "F4",
+          "duration": 0.5
+        },
+        {
+          "pitch": "F4",
+          "duration": 0.5
+        },
+        {
+          "pitch": "A4",
+          "duration": 0.5
+        },
+        {
+          "pitch": "A4",
+          "duration": 0.5
+        }
+      ],
+      "status": "llegible visualment; interpretació enregistrada no validada nota per nota",
+      "ties": [],
+      "evidence": "Lectura visual de pentagrama ampliat, 16-10-2026",
+      "source_system": 8
+    },
+    {
+      "id": 33,
+      "section": "C en fa",
+      "key": "F major",
+      "notes": [
+        {
+          "pitch": "C5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "Bb4",
+          "duration": 0.25
+        },
+        {
+          "pitch": "A4",
+          "duration": 0.25
+        },
+        {
+          "pitch": "Bb4",
+          "duration": 0.25
+        },
+        {
+          "pitch": "G4",
+          "duration": 0.5
+        },
+        {
+          "pitch": "R",
+          "duration": 0.5
+        }
+      ],
+      "status": "lectura visual provisional amb dubtes documentats; no validat auditivament",
+      "ties": [],
+      "alternative_notes": [
+        {
+          "pitch": "C5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "Bb4",
+          "duration": 0.25
+        },
+        {
+          "pitch": "A4",
+          "duration": 0.25
+        },
+        {
+          "pitch": "Bb4",
+          "duration": 0.25
+        },
+        {
+          "pitch": "G4",
+          "duration": 0.5
+        },
+        {
+          "pitch": "C5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "D5",
+          "duration": 0.25
+        }
+      ],
+      "evidence": "Lectura visual de pentagrama ampliat, 16-10-2026",
+      "source_system": 9,
+      "cue_notes": [
+        {
+          "offset": 1.5,
+          "pitch": "C5",
+          "duration": 0.25
+        },
+        {
+          "offset": 1.75,
+          "pitch": "D5",
+          "duration": 0.25
+        }
+      ]
+    },
+    {
+      "id": 34,
+      "section": "C en fa",
+      "key": "F major",
+      "notes": [
+        {
+          "pitch": "R",
+          "duration": 0.5
+        },
+        {
+          "pitch": "E4",
+          "duration": 0.5
+        },
+        {
+          "pitch": "D4",
+          "duration": 0.5
+        },
+        {
+          "pitch": "C4",
+          "duration": 0.5
+        }
+      ],
+      "status": "lectura visual provisional amb dubtes documentats; no validat auditivament",
+      "ties": [],
+      "alternative_notes": [
+        {
+          "pitch": "E5",
+          "duration": 0.5
+        },
+        {
+          "pitch": "E5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "F5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "G5",
+          "duration": 0.5
+        },
+        {
+          "pitch": "A5",
+          "duration": 0.5
+        }
+      ],
+      "evidence": "Lectura visual de pentagrama ampliat, 16-10-2026",
+      "source_system": 9,
+      "cue_notes": [
+        {
+          "offset": 0,
+          "pitch": "E5",
+          "duration": 0.5
+        },
+        {
+          "offset": 0.5,
+          "pitch": "E5",
+          "duration": 0.25
+        },
+        {
+          "offset": 0.75,
+          "pitch": "F5",
+          "duration": 0.25
+        },
+        {
+          "offset": 1,
+          "pitch": "G5",
+          "duration": 0.5
+        },
+        {
+          "offset": 1.5,
+          "pitch": "A5",
+          "duration": 0.5
+        }
+      ]
+    },
+    {
+      "id": 35,
+      "section": "C en fa",
+      "key": "F major",
+      "notes": [
+        {
+          "pitch": "Bb4",
+          "duration": 0.25
+        },
+        {
+          "pitch": "A4",
+          "duration": 0.25
+        },
+        {
+          "pitch": "G4",
+          "duration": 0.25
+        },
+        {
+          "pitch": "A4",
+          "duration": 0.25
+        },
+        {
+          "pitch": "F4",
+          "duration": 0.5
+        },
+        {
+          "pitch": "F4",
+          "duration": 0.25
+        },
+        {
+          "pitch": "G4",
+          "duration": 0.25
+        }
+      ],
+      "status": "lectura visual provisional amb dubtes documentats; no validat auditivament",
+      "ties": [],
+      "evidence": "Lectura visual de pentagrama ampliat, 16-10-2026",
+      "source_system": 9,
+      "cue_notes": [
+        {
+          "offset": 0,
+          "pitch": "Bb5",
+          "duration": 0.5
+        }
+      ]
+    },
+    {
+      "id": 36,
+      "section": "C en fa",
+      "key": "F major",
+      "notes": [
+        {
+          "pitch": "A4",
+          "duration": 0.5
+        },
+        {
+          "pitch": "C5",
+          "duration": 0.25,
+          "additional_pitches": [
+            "A4"
+          ]
+        },
+        {
+          "pitch": "Bb4",
+          "duration": 0.25,
+          "additional_pitches": [
+            "G4"
+          ]
+        },
+        {
+          "pitch": "A4",
+          "duration": 0.5
+        },
+        {
+          "pitch": "A4",
+          "duration": 0.5
+        }
+      ],
+      "status": "lectura visual provisional amb dubtes documentats; no validat auditivament",
+      "ties": [],
+      "evidence": "Lectura visual de pentagrama ampliat, 16-10-2026",
+      "source_system": 9
+    },
+    {
+      "id": 37,
+      "section": "C en fa",
+      "key": "F major",
+      "notes": [
+        {
+          "pitch": "C5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "Bb4",
+          "duration": 0.25
+        },
+        {
+          "pitch": "A4",
+          "duration": 0.25
+        },
+        {
+          "pitch": "Bb4",
+          "duration": 0.25
+        },
+        {
+          "pitch": "G4",
+          "duration": 0.5
+        },
+        {
+          "pitch": "G5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "F5",
+          "duration": 0.25
+        }
+      ],
+      "status": "llegible visualment; interpretació enregistrada no validada nota per nota",
+      "ties": [],
+      "evidence": "Lectura visual de pentagrama ampliat, 16-10-2026",
+      "source_system": 10
+    },
+    {
+      "id": 38,
+      "section": "C en fa",
+      "key": "F major",
+      "notes": [
+        {
+          "pitch": "E5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "F5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "E5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "D5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "C5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "D5",
+          "duration": 0.25,
+          "additional_pitches": [
+            "Bb4"
+          ]
+        },
+        {
+          "pitch": "C5",
+          "duration": 0.25,
+          "additional_pitches": [
+            "A4"
+          ]
+        },
+        {
+          "pitch": "Bb4",
+          "duration": 0.25,
+          "additional_pitches": [
+            "G4"
+          ]
+        }
+      ],
+      "status": "lectura visual provisional amb dubtes documentats; no validat auditivament",
+      "ties": [],
+      "evidence": "Lectura visual de pentagrama ampliat, 16-10-2026",
+      "source_system": 10,
+      "ornaments": [
+        {
+          "before_note": 0,
+          "pitch": "F5",
+          "type": "grace",
+          "duration": 0
+        }
+      ]
+    },
+    {
+      "id": 39,
+      "section": "C en fa",
+      "key": "F major",
+      "notes": [
+        {
+          "pitch": "A4",
+          "duration": 1.5,
+          "additional_pitches": [
+            "F4"
+          ]
+        },
+        {
+          "pitch": "F4",
+          "duration": 0.25
+        },
+        {
+          "pitch": "G4",
+          "duration": 0.25
+        }
+      ],
+      "status": "lectura visual provisional amb dubtes documentats; no validat auditivament",
+      "ties": [],
+      "evidence": "Lectura visual de pentagrama ampliat, 16-10-2026",
+      "source_system": 10
+    },
+    {
+      "id": 40,
+      "section": "Coda",
+      "key": "F major",
+      "notes": [
+        {
+          "pitch": "A4",
+          "duration": 0.5,
+          "additional_pitches": [
+            "F4"
+          ]
+        },
+        {
+          "pitch": "C5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "C5",
+          "duration": 0.25
+        },
+        {
+          "pitch": "C5",
+          "duration": 0.5
+        },
+        {
+          "pitch": "C5",
+          "duration": 0.5
+        }
+      ],
+      "status": "lectura visual provisional amb dubtes documentats; no validat auditivament",
+      "ties": [],
+      "evidence": "Lectura visual de pentagrama ampliat, 16-10-2026",
+      "source_system": 11
+    },
+    {
+      "id": 41,
+      "section": "Coda",
+      "key": "F major",
+      "notes": [
+        {
+          "pitch": "R",
+          "duration": 0.5
+        },
+        {
+          "pitch": "C5",
+          "duration": 0.5
+        },
+        {
+          "pitch": "F5",
+          "duration": 0.5
+        },
+        {
+          "pitch": "C5",
+          "duration": 0.5
+        }
+      ],
+      "status": "lectura visual provisional amb dubtes documentats; no validat auditivament",
+      "ties": [],
+      "evidence": "Lectura visual de pentagrama ampliat, 16-10-2026",
+      "source_system": 11
+    },
+    {
+      "id": 42,
+      "section": "Coda",
+      "key": "F major",
+      "notes": [
+        {
+          "pitch": "F4",
+          "duration": 0.5
+        }
+      ],
+      "status": "lectura visual provisional amb dubtes documentats; no validat auditivament",
+      "ties": [],
+      "evidence": "Lectura visual de pentagrama ampliat, 16-10-2026",
+      "source_system": 11
+    }
+  ],
+  "routing": {
+    "intro": [
+      0,
+      1,
+      2
+    ],
+    "A": [
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      12
+    ],
+    "B": [
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      21
+    ],
+    "A_variant": [
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      30
+    ],
+    "dal_segno": [
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      31
+    ],
+    "C": [
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39
+    ],
+    "coda": [
+      40,
+      41,
+      42
+    ]
+  },
+  "routing_note": "Al segno de B fins al signe de coda sobre la segona casella; salt a l'ull 1, segueix ull 2. 'Repeteix 3 vegades accel. i CODA' pendent de comptar a les gravacions.",
+  "uncertainties": [
+    {
+      "bars": [
+        0,
+        1,
+        9,
+        10,
+        27,
+        28
+      ],
+      "issue": "Octaves del registre agut llegibles al paper; els doblatges reals no s'han separat de la mescla.",
+      "alternatives": [
+        "octava escrita",
+        "doblatge una o dues octaves més baix"
+      ],
+      "resolution": "Pendent de separació instrumental o escolta. La font conserva les octaves escrites."
+    },
+    {
+      "bars": [
+        4,
+        22
+      ],
+      "issue": "L'inici de les dues versions d'A difereix. A comença E5 C5 E5 E5; A variant comença C5 C5 E5 E5.",
+      "alternatives": [
+        "A, fragments 4-12",
+        "A variant, fragments 22-30"
+      ],
+      "resolution": "La plaça concorda més amb A en les comparacions numèriques; no es dóna per validada cada nota de cada repetició."
+    },
+    {
+      "bars": [
+        20,
+        21,
+        30,
+        31
+      ],
+      "issue": "La segona casella de B conté C4 amb punt abans del salt. La durada es completa amb l'anacrusi que segueix.",
+      "alternatives": [
+        "seguir a C5 D5 per tornar a A",
+        "saltar a F4 G4 per anar a la secció en fa"
+      ],
+      "resolution": "Encaminament imprès conservat en routing. El retorn de plaça segueix A."
+    },
+    {
+      "bars": [
+        33,
+        34,
+        35
+      ],
+      "issue": "Notes petites simultànies a la veu de notes grosses. La jerarquia instrumental no està identificada.",
+      "alternatives": [
+        "veu grossa amb silencis a 33 i 34",
+        "veu petita ascendent C5 D5 E5 E5 F5 G5 A5 Bb5"
+      ],
+      "resolution": "Conservo notes grosses a notes i petites a cue_notes. Cap silenci afegit per petards. La secció en fa no s'usa a la mescla de plaça."
+    },
+    {
+      "bars": [
+        36,
+        38,
+        39,
+        40
+      ],
+      "issue": "Dobles notes. Una melodia sola no pot reproduir les dues veus simultànies.",
+      "alternatives": [
+        "nota superior",
+        "nota inferior"
+      ],
+      "resolution": "La versió monofònica tria la superior i conserva les altres a additional_pitches; és una reducció explícita."
+    },
+    {
+      "bars": [
+        38
+      ],
+      "issue": "Petita nota F5 abans del primer E5.",
+      "alternatives": [
+        "acciaccatura F5",
+        "E5 directe"
+      ],
+      "resolution": "Conservada com a ornament escrit; MIDI de referència sense ornamentació, no altera la durada del compàs."
+    },
+    {
+      "bars": [
+        39,
+        40,
+        41,
+        42
+      ],
+      "issue": "'Repeteix 3 vegades' pot comptar tres repeticions després de l'exposició o tres passades en total. La coda de plaça no està resolta nota per nota.",
+      "alternatives": [
+        "C quatre passades al desplegat del llibret",
+        "C tres passades",
+        "plaça AABB tres voltes i tancament en do"
+      ],
+      "resolution": "La forma de plaça AABB × 3 està sostinguda per les coincidències entre 2017 i 2023. La coda de la recreació és la del paper transposada de fa a do, adaptació pendent de validar."
+    }
+  ],
+  "notation": {
+    "ties": "No es veuen lligadures de prolongació. La corba petita de 38 correspon a una nota ornamental; no s'ha tractat com a lligadura.",
+    "endings": {
+      "11": "A, primera",
+      "12": "A, segona",
+      "20": "B, primera",
+      "21": "B, segona",
+      "29": "A variant, primera",
+      "30": "A variant, segona"
+    },
+    "segno_at": 13,
+    "to_coda_at": 21,
+    "jump_target": 31,
+    "key_change_at": 32,
+    "repeat_at": 39,
+    "breath_in": 41
+  },
+  "performance": {
+    "name": "Plaça 2023, reconstrucció provisional",
+    "reference": "https://www.youtube.com/watch?v=l85rZ9lxCzM",
+    "cross_reference": "https://www.youtube.com/watch?v=GqCckCqqAbE",
+    "form": "Introducció + (A A B B) × 3 + coda adaptada en do",
+    "key": "C major",
+    "intro_source_bars": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "intro_bpm": 76,
+    "segments": [
+      {
+        "name": "A1.1",
+        "source_bars": [
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11
+        ],
+        "bpm": 76.677316,
+        "reference_start": 2.92,
+        "reference_end": 15.44,
+        "confidence": "mitjana",
+        "tempo_status": "mitjana de frase per coincidència melòdica; no pulsacions individuals observades"
+      },
+      {
+        "name": "A1.2",
+        "source_bars": [
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          12
+        ],
+        "bpm": 75.709779,
+        "reference_start": 15.44,
+        "reference_end": 28.12,
+        "confidence": "mitjana",
+        "tempo_status": "mitjana de frase per coincidència melòdica; no pulsacions individuals observades"
+      },
+      {
+        "name": "B1.1",
+        "source_bars": [
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20
+        ],
+        "bpm": 76.677316,
+        "reference_start": 28.12,
+        "reference_end": 40.64,
+        "confidence": "mitjana",
+        "tempo_status": "mitjana de frase per coincidència melòdica; no pulsacions individuals observades"
+      },
+      {
+        "name": "B1.2",
+        "source_bars": [
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          21
+        ],
+        "bpm": 75.23511,
+        "reference_start": 40.64,
+        "reference_end": 53.4,
+        "confidence": "mitjana",
+        "tempo_status": "mitjana de frase per coincidència melòdica; no pulsacions individuals observades"
+      },
+      {
+        "name": "A2.1",
+        "source_bars": [
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11
+        ],
+        "bpm": 75.23511,
+        "reference_start": 53.4,
+        "reference_end": 66.16,
+        "confidence": "mitjana",
+        "tempo_status": "mitjana de frase per coincidència melòdica; no pulsacions individuals observades"
+      },
+      {
+        "name": "A2.2",
+        "source_bars": [
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          12
+        ],
+        "bpm": 74.534161,
+        "reference_start": 66.16,
+        "reference_end": 79.04,
+        "confidence": "mitjana",
+        "tempo_status": "mitjana de frase per coincidència melòdica; no pulsacions individuals observades"
+      },
+      {
+        "name": "B2.1",
+        "source_bars": [
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20
+        ],
+        "bpm": 75.0,
+        "reference_start": 79.04,
+        "reference_end": 91.84,
+        "confidence": "mitjana",
+        "tempo_status": "mitjana de frase per coincidència melòdica; no pulsacions individuals observades"
+      },
+      {
+        "name": "B2.2",
+        "source_bars": [
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          21
+        ],
+        "bpm": 75.23511,
+        "reference_start": 91.84,
+        "reference_end": 104.6,
+        "confidence": "mitjana",
+        "tempo_status": "mitjana de frase per coincidència melòdica; no pulsacions individuals observades"
+      },
+      {
+        "name": "A3.1",
+        "source_bars": [
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11
+        ],
+        "bpm": 88.560886,
+        "reference_start": 104.6,
+        "reference_end": 115.44,
+        "confidence": "baixa a mitjana",
+        "tempo_status": "mitjana de frase per coincidència melòdica; no pulsacions individuals observades"
+      },
+      {
+        "name": "A3.2",
+        "source_bars": [
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          12
+        ],
+        "bpm": 93.75,
+        "reference_start": 115.44,
+        "reference_end": 125.68,
+        "confidence": "baixa a mitjana",
+        "tempo_status": "mitjana de frase per coincidència melòdica; no pulsacions individuals observades"
+      },
+      {
+        "name": "B3.1",
+        "source_bars": [
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20
+        ],
+        "bpm": 105.726872,
+        "reference_start": 125.68,
+        "reference_end": 134.76,
+        "confidence": "baixa a mitjana",
+        "tempo_status": "mitjana de frase per coincidència melòdica; no pulsacions individuals observades"
+      },
+      {
+        "name": "B3.2",
+        "source_bars": [
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          21
+        ],
+        "bpm": 109.839817,
+        "reference_start": 134.76,
+        "reference_end": 143.5,
+        "confidence": "baixa",
+        "tempo_status": "Inici per coincidència melòdica; final 143.50 s provisional. Tempo estimat dependent d'aquest límit, no mesura confirmada."
+      }
+    ],
+    "coda_source_bars": [
+      40,
+      41,
+      42
+    ],
+    "coda_transpose": 7,
+    "coda_bpm": 110,
+    "coda_status": "Adaptació explícita del tancament imprès en fa, transposat a do. Límit 143.5 s i notes de la coda pendents de confirmar a l'àudio de plaça.",
+    "tempo_interpolation": "Tempo constant dins de cada frase de vuit compassos. Aproximació de la variació real, no mapa de pulsacions exactes.",
+    "pickup_note": "La introducció sencera del paper s'inclou. El vídeo de 2023 ja té so al començament i pot estar retallat.",
+    "listen_validated": false
+  },
+  "reference_performance": {
+    "name": "Desplegat del llibret, hipòtesi quatre passades de C",
+    "source_bars": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      30,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42
+    ],
+    "bpm": 92,
+    "status": "Forma llegida, no ajustada al tempo de Tinet; tres versus quatre passades de C pendent."
+  }
+}

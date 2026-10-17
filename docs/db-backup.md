@@ -1,6 +1,6 @@
 # Database backup and restore
 
-Status: **GitHub backups disabled; manual production backup and local restore tested.** On 2026-10-17,
+Status (2026-10-17): **Manual GitHub backup and local production restore tested; daily automation pending.** On 2026-10-17,
 the coordinator exported the four production schemas, encrypted the archive and verified its private R2
 readback. A downloaded archive was authenticated by age and restored into an isolated PostgreSQL 17
 container with no network or published ports and tmpfs storage. All 33 table-data entries restored and
@@ -10,7 +10,8 @@ a rolled-back synthetic player flow. The container, plaintext and downloaded cip
 An earlier synthetic rehearsal also restored selected Auth and application data into a fresh managed
 Supabase project and checked password login, anonymous sign-in, ranking, publication and deletion.
 The production rehearsal validates local database restoration, not managed Supabase Auth or email recovery.
-GitHub-hosted execution, email delivery and browser gameplay remain unverified by these rehearsals.
+A subsequent manual GitHub Actions run completed with `BACKUP_OK` and zero artifacts. Daily scheduling,
+Sentry notification delivery and production Auth/email recovery remain unverified.
 Private manifests and reports stay outside this public repository; no production object names or data belong here.
 
 The pieces:
@@ -18,7 +19,8 @@ The pieces:
 - `tools/db_backup.py`: the coordinator (`preflight [--staged]`, `run`, and guarded `preflight-production [--staged]`, `run-production`). It runs `pg_dump | age`, uploads the
   ciphertext in one PUT, reads it back and compares SHA-256 and size. Plain Python, no framework.
 - `tools/db-backup-requirements.txt`: hash-locked `boto3` (CI only; imported lazily, the tests do not need it).
-- `.github/workflows/db-backup.yml`: manual `workflow_dispatch` only, gated by the repository variable `BACKUP_ENABLED`.
+- `.github/workflows/db-backup.yml`: manual dispatch plus a daily UTC trigger; all runs require repository
+  variable `BACKUP_ENABLED=true`, and scheduled runs additionally require `BACKUP_SCHEDULE_ENABLED=true`.
 - `tests/db_backup_test.py` (run by `npm run check` through `tests/db-backup.mjs`).
 
 ## What a run does
@@ -47,7 +49,8 @@ Failure codes: `CONFIG <SETTING>`, `TOOLS`, `DUMP`, `ENCRYPT`, `TIMEOUT`, `TOO_L
 
 ### Settings
 
-Non-secret (production environment variables, except the repository-level enable gate): `BACKUP_ENABLED`, `BACKUP_PG_HOST`, `BACKUP_PG_PORT`,
+Non-secret (production environment variables, except the repository-level enable gates): `BACKUP_ENABLED`,
+`BACKUP_SCHEDULE_ENABLED` (workflow only; unset or false skips scheduled exports), `BACKUP_PG_HOST`, `BACKUP_PG_PORT`,
 `BACKUP_PG_DATABASE`, `BACKUP_PG_USER`, `BACKUP_PG_MAJOR`, `BACKUP_PG_CA_PEM` (workflow only: the public CA
 certificate PEM, written to a file), `BACKUP_AGE_RECIPIENTS` (one to three comma-separated `age1...` public keys),
 `BACKUP_S3_ENDPOINT` (`https://host[:port]`, nothing else), `BACKUP_S3_BUCKET`, `BACKUP_S3_REGION` (default
@@ -161,7 +164,7 @@ in chat. A preparation approval does not authorize exports or scheduled runs.
    - That the role can dump all four schemas, and that `--strict-names` finds them.
    - That the session pooler is reachable from the runner and its certificate passes `verify-full` with the chosen CA.
    - That the runner can build `age@v1.3.2` and install the locked Python dependencies. The age build and
-     encryption roundtrip passed locally with Go 1.27.1; installation on a GitHub runner has not been exercised.
+     encryption roundtrip passed locally with Go 1.27.1; installation must also be verified on a GitHub runner before enabling automation.
    - That the pg_dump output is complete: the coordinator trusts both exit codes and does not inspect the archive.
      The restore rehearsal below, with a table-of-contents check, is the proof.
 7. Do the restore rehearsal (below) once, on a real downloaded backup, and write down the date.
@@ -173,17 +176,55 @@ in chat. A preparation approval does not authorize exports or scheduled runs.
    during manual preparation. GitHub may delay or drop scheduled jobs, and disables schedules in public
    repositories after 60 days without repository activity.
 
-   The job gate already allows `schedule` next to `workflow_dispatch`. After the approvals and checks above,
-   add this trigger under `on:` (03:17 UTC daily):
+   The workflow already declares `17 3 * * *` (03:17 UTC daily, 04:17 winter / 05:17 summer in
+   Europe/Madrid). It does not export automatically until the **repository** variable
+   `BACKUP_SCHEDULE_ENABLED=true` is explicitly approved and set. Missing or false keeps scheduled jobs
+   skipped, even with `BACKUP_ENABLED=true`. Manual dispatch remains available independently.
+   `BACKUP_ENABLED=false` stops both manual and scheduled exports. These switches control jobs, not
+   GitHub's scheduling of the workflow itself.
 
-   ```yaml
-     schedule:
-       - cron: '17 3 * * *'
-   ```
+   Complete the monitoring setup below and the environment access change first. Activate the schedule
+   switch last, then verify the first scheduled run and its Sentry check-in. Disable the switch if that
+   verification fails. Changing the schedule requires updating the monitor's UTC schedule as well.
 
-   and update `tests/db_backup_test.py::test_trigger_is_manual_dispatch_only`, which fails until you do. Scheduled runs
-   always use the default branch, which the gate also requires. Configure Sentry for the same cadence with a
-   sufficient grace period and verify that a deliberately missed synthetic check-in reaches the chosen recipient.
+### Daily monitoring setup and verification
+
+Prepare this through the Sentry dashboard; do not put ingest URLs, tokens, notification addresses or
+production values in this public repository. Stop if the account requires a paid plan or an additional
+paid monitor. Inspect existing monitors before creating anything.
+
+- Project: the existing game project. Suggested monitor slug: `mulassa-db-backup`.
+- Schedule: crontab `17 3 * * *`, timezone `Etc/UTC`.
+- Check-in margin: 120 minutes, to tolerate GitHub queue delays and dependency installation.
+- Max runtime: 60 minutes (the entire Actions job times out after 45 minutes).
+- Failure issue threshold: 1; recovery threshold: 1.
+- Alert routing: explicitly select Marc's existing verified destination. Cover monitor failures, timeouts
+  and missed check-ins, including a recurrence after recovery. The general high-priority issue alert is
+  not proof that this monitor will notify the intended recipient.
+
+The coordinator sends only statuses and a random check-in ID. Dependency installation or configuration
+failures before its first check-in are detected by the missed-check-in alert. An unreachable Sentry
+endpoint after a verified backup produces `BACKUP_OK_MONITOR_FAIL` and fails the Actions job.
+
+Before unattended activation:
+
+1. Configure and test the monitor within the free quota, with explicit approval for external changes
+   and synthetic notifications. Use synthetic check-ins only, never database exports for alert tests.
+2. Prove delivery of an `error` notification, recover with an `ok` check-in, then prove a **missed**
+   check-in notification using a temporarily short schedule. Record receipt and recurrence handling.
+   Restore the daily UTC schedule and margins afterwards. Do not post the ingest URL in the report.
+3. Marc privately adds the ingest URL as environment secret `BACKUP_SENTRY_CHECKIN_URL`. Separately
+   approve setting environment variable `BACKUP_SENTRY_ENABLED=true` and a manual Actions backup.
+   Verify both `BACKUP_OK` and the matching healthy check-in in the dashboard.
+4. Separately approve removing only required reviewers from `db-backup-production`; preserve the
+   restriction to `master`, secrets and variables, branch protections and disabled administrator bypass.
+   This allows unattended access to production credentials by merged workflow code. A PR rule with zero
+   required reviews/checks does not provide independent review; record that accepted limitation.
+5. Separately approve repository variable `BACKUP_SCHEDULE_ENABLED=true`. Verify the first daily run,
+   its successful encrypted readback and its healthy Sentry check-in before calling automation validated.
+
+A dashboard preparation prompt is in
+[db-backup-monitor-setup.md](db-backup-monitor-setup.md). Its preparation does not authorize running it.
 
 ## Restore runbook (manual, isolated, never automatic)
 

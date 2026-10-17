@@ -583,17 +583,17 @@ class WorkflowTests(unittest.TestCase):
     def setUpClass(cls):
         cls.text = (REPO / ".github" / "workflows" / "db-backup.yml").read_text()
 
-    def test_trigger_is_manual_dispatch_only(self):
+    def test_triggers_are_manual_and_daily_with_separate_activation(self):
         on = re.search(r"^on:\n((?:  .*\n)+)", self.text, re.M).group(1)
-        self.assertEqual(on.strip(), "workflow_dispatch:")
+        trigger = "\n".join(line.split("#", 1)[0].rstrip() for line in on.strip().splitlines())
+        self.assertEqual(trigger, "workflow_dispatch:\n  schedule:\n    - cron: '17 3 * * *'")
         for bad in ("pull_request", "push:", "workflow_run", "inputs:", "repository_dispatch"):
             self.assertNotIn(bad, self.text)
-        self.assertNotIn("schedule:", self.text)  # the gate allows the event; the trigger is added at activation
 
     def test_gate_and_environment(self):
         job_if = re.search(r"^    if: (.*)$", self.text, re.M).group(1)
         for part in ("vars.BACKUP_ENABLED == 'true'",
-                     "(github.event_name == 'workflow_dispatch' || github.event_name == 'schedule')",
+                     "(github.event_name == 'workflow_dispatch' || (github.event_name == 'schedule' && vars.BACKUP_SCHEDULE_ENABLED == 'true'))",
                      "github.ref == format('refs/heads/{0}', github.event.repository.default_branch)",
                      "github.event.repository.fork == false"):
             self.assertIn(part, job_if)

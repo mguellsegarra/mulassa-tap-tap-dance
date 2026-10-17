@@ -52,3 +52,9 @@ supabase/.temp/
 # Generator output kept out of the repo (tools/build_taiko.py)
 public/music/*.wav
 public/music/*.mid
+
+# Database backups: ciphertext or plaintext dumps never belong in the repo (tools/db_backup.py)
+*.age
+*.dump
+*.pgdump
+db-backup-*/

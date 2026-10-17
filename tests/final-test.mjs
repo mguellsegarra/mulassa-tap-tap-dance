@@ -16,6 +16,8 @@ for (const h of ['mulassa.cat', 'www.mulassa.cat', 'mulassa-tap-tap-dance.pages.
 for (const h of ['localhost', '127.0.0.1', '192.168.1.100', '10.0.0.7', '172.20.1.2', 'mac.local', 'mulassa.test'])
   assert.deepEqual(finalMode({ hostname: h, search: '?final&mute' }), { pct: 95, diff: 0, outcome: 'record', taken: false }, h);
 assert.equal(finalMode({ hostname: 'localhost', search: '?mute' }), null, 'only when asked');
+assert.equal(finalMode({ hostname: 'localhost', search: '?final&board=me' }).board, 'me');
+assert.equal(finalMode({ hostname: 'mulassa.cat', search: '?final&board=me' }), null);
 assert.deepEqual(finalMode({ hostname: 'localhost', search: '?final=62-2-clear&taken' }), { pct: 62, diff: 2, outcome: 'clear', taken: true });
 assert.deepEqual(finalMode({ hostname: 'localhost', search: '?final=30-1-collapse&repte=95-2' }), { pct: 30, diff: 1, outcome: 'collapse', taken: false });
 assert.deepEqual(finalMode({ hostname: 'localhost', search: '?final=x-9-nope' }), { pct: 95, diff: 0, outcome: 'record', taken: false });
@@ -56,6 +58,11 @@ assert.equal(fabricateRun(charts[2], { pct: 100, diff: 2 }, song.finale).maxComb
 
 // the mock: the real service's rules and messages, no network at all
 globalThis.fetch = () => { throw new Error('the mock must never fetch'); };
+const boardPreview = mockLeaderboard({ charts, finaleT: song.finale, board: 'me', delay: 0 });
+const previewSelf = (await boardPreview.listAll()).find(r => r.is_self);
+assert.equal(previewSelf.alias, 'ProvaRetall');
+assert.equal(previewSelf.position, 48);
+assert.equal(previewSelf.total, 119);
 const svc = mockLeaderboard({ charts, finaleT: song.finale, delay: 0 });
 assert(svc.configured && svc.publishingEnabled && !svc.captchaRequired);
 const run = snap(fabricateRun(charts[0], { pct: 95, diff: 0 }, song.finale), 0);

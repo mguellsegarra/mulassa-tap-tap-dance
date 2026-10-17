@@ -209,8 +209,8 @@ export function setupBoard({ focusIn, store = defaultStore, service = leaderboar
     if (!box) return;
     box.scrollTop = 0;
     if (view !== 'me' || !me?.offsetHeight) return;
-    const head = table.tHead?.offsetHeight ?? 0, foot = $('board-summary').offsetHeight || 0;
-    const want = me.offsetTop - head - (box.clientHeight - head - foot - me.offsetHeight) / 2;
+    const head = table.tHead?.offsetHeight ?? 0;
+    const want = me.offsetTop - head - (box.clientHeight - head - me.offsetHeight) / 2;
     const first = [...tbody.children].reverse().find(tr => tr.offsetTop - head <= want) ?? tbody.children[0];
     box.scrollTop = first.offsetTop - head;
   }

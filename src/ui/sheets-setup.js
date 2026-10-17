@@ -87,12 +87,13 @@ document.getElementById('settings-practice').addEventListener('click', () => { s
 // Classificacions (optional, online): from Configuració on the title (closing it goes back there) or the results screen.
 // After an eligible run its publish sheet opens by itself, only over a bare, visible, upright results screen.
 const finalStore = FINAL && memoryKeys(store, [ALIAS_KEY, ROW_KEY, DECLINES_KEY, OPTOUT_KEY]); // ?final: nickname and «Ara no» forgotten on reload
+if (FINAL?.board === 'me') { finalStore.set(ALIAS_KEY, 'ProvaRetall'); finalStore.set(ROW_KEY, 'ProvaRetall'); }
 const board = setupBoard({ focusIn,
   canPrompt: () => G.state === 'results' && !sheetUp() && !document.hidden && !document.body.classList.contains('wrong-orient'),
   canVerify: () => G.state !== 'play' && !document.hidden, // Turnstile's tick box (src/services/captcha.js) never interrupts a song
   afterPublish: o => share.openAfterPublish(o), // published: Comparteix next, for that run
   ...(!FINAL && { onRecover: () => profile.open('recover', () => board.openPublish()) }), // «Ja tens un perfil?» on the publish sheet: recover, then publish
-  ...(FINAL && { service: mockLeaderboard({ charts: [0, 1, 2].map(d => makeDanceChart(song, d)), finaleT: FINALE_T, taken: FINAL.taken }), store: finalStore }) });
+  ...(FINAL && { service: mockLeaderboard({ charts: [0, 1, 2].map(d => makeDanceChart(song, d)), finaleT: FINALE_T, taken: FINAL.taken, board: FINAL.board }), store: finalStore }) });
 sheets.board = board;
 // Comparteix (results only): the image and the challenge link, made on this device; closing gives the focus back to
 // the button only for keyboard players (Space would otherwise press it again instead of leaving the results)

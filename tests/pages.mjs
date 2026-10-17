@@ -19,6 +19,15 @@ async function fixture(name) {
   return folder;
 }
 try {
+  // A client requiring a new schema must never reach Pages before its migration succeeds.
+  const deployWorkflow = await readFile(new URL('../.github/workflows/deploy-pages.yml', import.meta.url), 'utf8');
+  const migrationWorkflow = await readFile(new URL('../.github/workflows/supabase-migrations.yml', import.meta.url), 'utf8');
+  assert.match(deployWorkflow, /  migrate:\n    uses: \.\/\.github\/workflows\/supabase-migrations\.yml/);
+  assert.match(deployWorkflow, /  deploy:\n    needs: migrate\n/);
+  assert(!/if:.*(?:always\(|failure\(|cancelled\()/.test(deployWorkflow), 'deployment cannot bypass a failed migration');
+  assert.match(migrationWorkflow, /  workflow_call:\n    secrets:\n      SUPABASE_DB_PASSWORD:\n        required: true/);
+  assert(!/  push:/.test(migrationWorkflow), 'one migration run per deployment, rather than a parallel push trigger');
+  assert.match(migrationWorkflow, /supabase db push --db-url/);
   const valid = await fixture('valid');
   const result = await preparePages(valid, song);
   assert(result.includes('404.html'), 'ship the root 404 to disable the SPA fallback');

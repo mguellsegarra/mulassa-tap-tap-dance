@@ -1,9 +1,10 @@
 name: Supabase migrations
 
 on:
-  push:
-    branches: [master]
-    paths: ['supabase/migrations/**']
+  workflow_call:
+    secrets:
+      SUPABASE_DB_PASSWORD:
+        required: true
   workflow_dispatch:
     inputs:
       baseline:

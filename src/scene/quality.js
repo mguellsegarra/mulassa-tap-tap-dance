@@ -2,7 +2,7 @@
 import { profileAt } from '../platform/render-quality.js';
 import { placeBand, buildBackdrop } from './models.js';
 import * as THREE from 'three';
-import { renderProfile, qualityLevel, renderer, sun, plaza, glc, qualityStart, saveQuality, CAM_DIR, setRenderProfile } from './stage.js';
+import { renderProfile, qualityLevel, renderer, sun, plaza, glc, CAM_DIR, setRenderProfile } from './stage.js';
 import { crowd, crowdMesh, BAND_AZ, RAD, BAND_ARC } from './crowd-build.js';
 
 export let midCrowd = null; // the mid band (built once the play camera's direction exists, below CAM_DIR)
@@ -32,8 +32,6 @@ export function applyRenderQuality() {
   glc.dataset.quality = renderProfile.name;
 }
 applyRenderQuality();
-// a retry one step up that holds for a minute becomes the device's level
-if (qualityStart.retry) setTimeout(() => { if (qualityLevel === qualityStart.level) saveQuality(); }, 60000);
 // The mid band: the backdrop's instanced figures (no bones, no CPU a frame, its material: no new shader program, one
 // more draw call) filling the open ground beyond the moving ring on the far side, what every play
 // shot looks across. r0..r1: beyond the ring (the moving crowd stops at `edge` there, animCrowd) and short of the

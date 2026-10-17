@@ -3,7 +3,8 @@
 // (errors.js DEV_HOST: localhost, LAN IPs, *.local/.test): on mulassa.cat or pages.dev `finalMode()` is null and nothing
 // here runs. `?final=<pct>-<level>-<outcome>` (default 95-0-record; outcome record | clear | collapse), `&taken` makes the
 // first nickname tried «ja és d’algú». The run is made up but consistent: judgments walked over the real chart with the
-// game's scoring and ànim rules. The leaderboard is an in-memory mock behind the real service (same validation and
+// game's scoring. `?final&board=me` opens On soc directly with a fictitious #48 of 119, for responsive scroll checks.
+// The run follows the ànim rules. The leaderboard is an in-memory mock behind the real service (same validation and
 // messages): no network, no Turnstile, nothing kept after a reload. Sharing stays real (it is all on the device).
 import { DEV_HOST } from '../services/errors.js';
 import { quality } from '../game/progress.js';
@@ -19,7 +20,7 @@ export function finalMode({ hostname = '', search = '' } = {}) {
   const [p, d, o] = (q.get('final') || '').split('-');
   const pct = /^\d{1,3}$/.test(p ?? '') ? Math.min(100, +p) : 95;
   const diff = /^[0-2]$/.test(d ?? '') ? +d : 0;
-  return { pct, diff, outcome: OUTCOMES.includes(o) ? o : 'record', taken: q.has('taken') };
+  return { pct, diff, outcome: OUTCOMES.includes(o) ? o : 'record', taken: q.has('taken'), ...(q.get('board') === 'me' && { board: 'me' }) };
 }
 
 // Every judgment of a chart in song order: notes, hold tails (at their end), balloons (judged at their end).
@@ -105,9 +106,10 @@ export function mockRows(charts, finaleT) {
     return { alias: `${NAMES[Math.floor(rand() * NAMES.length)]}${100 + Math.floor(rand() * 900)}`, difficulty: diff, quality: quality(run.counts), score: comparableScore(run.score, diff) };
   });
 }
-function mockClient({ rows, taken = false, delay = 500 }) {
-  let session = null, self = null;
+function mockClient({ rows, taken = false, delay = 500, initialSelf = null }) {
+  let session = initialSelf ? { user: { id: 'prova' } } : null, self = initialSelf;
   const entries = new Map();
+  if (initialSelf) entries.set(`mulassa-v1:${initialSelf.difficulty}`, { ...initialSelf, rawScore: initialSelf.score });
   const refused = new Set(); // with ?taken: the first nickname tried, and it stays taken
   const wait = () => new Promise(r => setTimeout(r, delay * (0.6 + 0.8 * Math.random())));
   const board = () => {
@@ -161,8 +163,12 @@ function mockClient({ rows, taken = false, delay = 500 }) {
     },
   };
 }
-export function mockLeaderboard({ charts, finaleT, taken = false, delay = 500 }) {
-  const c = mockClient({ rows: mockRows(charts, finaleT), taken, delay });
+export function mockLeaderboard({ charts, finaleT, taken = false, delay = 500, board = null }) {
+  const rows = board === 'me' ? Array.from({ length: 119 }, (_, i) => ({
+    alias: i === 47 ? 'ProvaRetall' : `Prova${i + 1}`, difficulty: i % 3, quality: 88, score: 69286 + (47 - i) * 600,
+  })) : mockRows(charts, finaleT);
+  const initialSelf = board === 'me' ? rows.splice(47, 1)[0] : null;
+  const c = mockClient({ rows, taken, delay, initialSelf });
   return createLeaderboardService({ configured: true, publishingEnabled: true, captchaRequired: false, getClient: async () => c });
 }
 // the nickname and the «Ara no» count live in memory here: every load is a first-time player, and a few «Ara no» while

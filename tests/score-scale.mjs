@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { comparableScore, CURRENT_SCORE_VERSION, FULL_SCORE_ANCHORS, SHORT_SCORE_ANCHORS } from '../src/game/score-scale.js';
 import { bestRecord, recordFamilyKey, saveRecord } from '../src/game/records.js';
+import { quality } from '../src/game/progress.js';
 
 const data = new Map(), storage = { get: key => data.get(key) ?? null, set: (key, value) => data.set(key, value) };
 const legacy = 'record-v2-duet-1', key = recordFamilyKey(1);
@@ -21,6 +22,17 @@ assert.equal(bestRecord(storage, 1).score, 80000, 'incoherent converted records 
 data.set(legacy, '{');
 assert.equal(bestRecord(storage, 1), null, 'malformed records do not block a run');
 assert.equal(bestRecord({ get() { throw Error('blocked storage'); } }, 0), null);
+// Equal rational qualities from different chart sizes may differ in the last floating-point digit.
+const oldQuality = quality({ perfect: 265, good: 53, miss: 0 });
+const shortQuality = quality({ perfect: 200, good: 40, miss: 0 });
+data.clear();
+data.set('record-v2-duet-2', JSON.stringify({ quality: oldQuality, score: 182972, combo: 318 }));
+saveRecord(storage, 2, shortQuality, 139572, 240);
+assert.equal(bestRecord(storage, 2).score, 182972, 'equal-quality family records prefer the higher comparable score');
+saveRecord(storage, 2, shortQuality, 139672, 240);
+assert.equal(bestRecord(storage, 2).sourceVersion, CURRENT_SCORE_VERSION, 'higher comparable points break an equal-quality tie');
+saveRecord(storage, 2, shortQuality + 0.001, 1, 1);
+assert.equal(bestRecord(storage, 2).quality, shortQuality + 0.001, 'a real quality improvement still wins');
 for (let difficulty = 0; difficulty < 3; difficulty++) {
   assert.equal(comparableScore(SHORT_SCORE_ANCHORS[difficulty], difficulty), FULL_SCORE_ANCHORS[difficulty]);
   assert.equal(comparableScore(0, difficulty), 0);

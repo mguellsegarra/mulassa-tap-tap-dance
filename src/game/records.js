@@ -2,6 +2,12 @@ import { comparableScore, CURRENT_SCORE_VERSION, LEGACY_SCORE_VERSION } from './
 
 export const recordFamilyKey = difficulty => `record-family-mulassa-${difficulty}`;
 const recordScale = 'mulassa-family-v1';
+export function beatsRecord(quality, score, previous) {
+  if (!previous) return true;
+  // Different chart denominators can put equal rational percentages a few ulps apart.
+  const delta = quality - previous.quality;
+  return Math.abs(delta) < 1e-9 ? score > previous.score : delta > 0;
+}
 function readRecord(store, key, difficulty, legacy = false) {
   try {
     const value = JSON.parse(store.get(key));
@@ -19,7 +25,7 @@ export function bestRecord(store, difficulty) {
   const current = readRecord(store, recordFamilyKey(difficulty), difficulty);
   if (!old) return current;
   if (!current) return old;
-  return current.quality > old.quality || (current.quality === old.quality && current.score > old.score) ? current : old;
+  return beatsRecord(current.quality, current.score, old) ? current : old;
 }
 export function saveRecord(store, difficulty, quality, rawScore, combo) {
   store.set(recordFamilyKey(difficulty), JSON.stringify({ quality, rawScore, score: comparableScore(rawScore, difficulty),

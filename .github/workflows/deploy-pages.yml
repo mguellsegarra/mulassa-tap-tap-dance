@@ -13,7 +13,12 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  migrate:
+    uses: ./.github/workflows/supabase-migrations.yml
+    secrets:
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
   deploy:
+    needs: migrate
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:

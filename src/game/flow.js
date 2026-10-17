@@ -2,7 +2,7 @@
 import { clearLeaderboardResult, captureLeaderboardResult } from '../services/leaderboard-result.js';
 import { makeDanceChart } from './chart.js';
 import { comparableScore } from './score-scale.js';
-import { bestRecord, recordFamilyKey, saveRecord } from './records.js';
+import { bestRecord, beatsRecord, recordFamilyKey, saveRecord } from './records.js';
 import song from '../song.json';
 import { store } from '../platform/storage.js';
 import { errors } from '../services/errors.js';
@@ -202,7 +202,7 @@ export function finish(reason) {
   G.stars = starsFor(value);
   G.reason = reason === 'collapse' ? 'collapse' : value >= 70 ? 'clear' : 'fail';
   const recordScore = comparableScore(G.score, G.diff);
-  G.newRecord = !AUTOPLAY && !FROM && STARS < 0 && reason !== 'collapse' && (!G.previous || value > G.previous.quality || (value === G.previous.quality && recordScore > G.previous.score));
+  G.newRecord = !AUTOPLAY && !FROM && STARS < 0 && reason !== 'collapse' && beatsRecord(value, recordScore, G.previous);
   if (G.newRecord && !FINAL) saveRecord(store, G.diff, value, G.score, G.maxCombo);
   G.state = 'results';
   G.resT = clock;

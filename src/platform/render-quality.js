@@ -16,17 +16,6 @@ export const MINIMAL = { name: 'minimal', dpr: 1, pixels: 350_000, shadow: 0, ro
 export const profileAt = level => (level < 0 ? MINIMAL : PROFILES[Math.min(level, PROFILES.length - 1)]);
 // The HUD canvas budget follows the quality: at low/minimal the fill rate is the problem, so text is a little softer.
 export const hudBudget = (level, touch) => (level <= 0 ? 900_000 : touch ? 2_500_000 : 4_200_000);
-// A device remembers the level it settled on (saved = { level, at, visits } from localStorage): the next visit starts
-// there, so a weak GPU never begins at a level it can't hold (nor with MSAA, fixed at context creation). Now and then
-// (every 5th visit, or a week on) it tries one step up again, never above the hardware guess.
-// Software WebGL (`software`, isSoftwareRenderer): minimal from the first frame, this session only; the saved level is
-// left alone (main.js saves nothing then), so a fixed driver or re-enabled acceleration picks up where it was.
-export function startLevel(guess, saved, now = Date.now(), software = false) {
-  if (software) return { level: -1, retry: false, software: true };
-  if (!saved || !Number.isFinite(saved.level) || saved.level >= guess) return { level: guess, retry: false };
-  const visits = (saved.visits || 0) + 1, retry = visits % 5 === 0 || now - (saved.at || 0) > 7 * 864e5;
-  return { level: retry ? Math.min(guess, saved.level + 1) : saved.level, retry, visits };
-}
 // Software WebGL: no GPU (Chrome's SwiftShader on a blocklisted GPU or with acceleration off, Mesa's llvmpipe/softpipe,
 // Windows' Basic Render Driver, "GDI Generic", Apple's software renderer). Two signals, either is enough: the renderer
 // string (unmasked where the browser allows; Firefox may sanitise it, resistFingerprinting says just "Mozilla": no

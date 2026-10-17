@@ -22,7 +22,7 @@ export async function preparePages(directory, song) {
     }
   }
   await walk(root);
-  const audio = [song.audio, song.ambient].map(url => {
+  const audio = [song.audio, song.ambient, ...(song.legacyAudio === undefined ? [] : [song.legacyAudio])].map(url => {
     if (typeof url !== 'string' || !/^music\/[\w-]+\.mp3\?v=[a-f0-9]+$/.test(url)) {
       throw new Error('Expected local content-versioned MP3 URL');
     }

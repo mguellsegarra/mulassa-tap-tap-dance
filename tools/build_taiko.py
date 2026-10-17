@@ -4,7 +4,7 @@ Only input: music/score.json (the melody). Everything else is written here.
 A (4/4, slow tune): each quarter of the score = 2 beats, but the band drives at full tempo
 (backbeat + oom-pah bass, then four-on-the-floor), with bright major colours around C minor.
 B/C (2/4, fast tune): each quarter = 1 beat; offbeat brass, octave bass, bells, fills and "hey!".
-Outputs public/music/mulassa-taiko.{wav,mp3,mid}, the menu loop mulassa-taiko-ambient.mp3,
+Outputs public/music/mulassa-taiko.{wav,mid}, mulassa-taiko-short.mp3, the menu loop mulassa-taiko-ambient.mp3,
 music/taiko-arrangement.json and the game chart src/song.json.
 """
 import json
@@ -678,7 +678,7 @@ if AMBIENT:
     assert np.max(np.abs(loop[INTRO + LOOP - 1] - loop[INTRO])) < 0.015, 'loop seam'
     os.makedirs('tmp/audio', exist_ok=True)
     sf.write('tmp/audio/mulassa-ambient.wav', loop.astype(np.float32), SR, subtype='PCM_16')
-subprocess.run(['ffmpeg', '-hide_banner', '-loglevel', 'error', '-y', '-i', 'public/music/mulassa-taiko.wav', '-c:a', 'libmp3lame', '-b:a', '160k', 'public/music/mulassa-taiko.mp3'], check=True)
+subprocess.run(['ffmpeg', '-hide_banner', '-loglevel', 'error', '-y', '-i', 'public/music/mulassa-taiko.wav', '-c:a', 'libmp3lame', '-b:a', '160k', 'public/music/mulassa-taiko-short.mp3'], check=True)
 if AMBIENT:
     subprocess.run(['ffmpeg', '-hide_banner', '-loglevel', 'error', '-y', '-i', 'tmp/audio/mulassa-ambient.wav', '-c:a', 'libmp3lame', '-b:a', '192k', 'public/music/mulassa-taiko-ambient.mp3'], check=True)
 for d in range(3):  # every difficulty must mix both sides
@@ -688,7 +688,9 @@ for d in range(3):  # every difficulty must mix both sides
 import hashlib
 ver = lambda f: hashlib.sha1(open(f, 'rb').read()).hexdigest()[:10]
 song_json = json.load(open('src/song.json'))
-song_json['audio'] = f"music/mulassa-taiko.mp3?v={ver('public/music/mulassa-taiko.mp3')}"
+song_json['audio'] = f"music/mulassa-taiko-short.mp3?v={ver('public/music/mulassa-taiko-short.mp3')}"
+# Old open tabs can retry their download after deployment. Keep their original recording and URL intact.
+song_json['legacyAudio'] = f"music/mulassa-taiko.mp3?v={ver('public/music/mulassa-taiko.mp3')}"
 song_json['ambient'] = f"music/mulassa-taiko-ambient.mp3?v={ver('public/music/mulassa-taiko-ambient.mp3')}"
 song_json['ambientLoop'] = dict(start=INTRO / SR, end=(INTRO + LOOP) / SR, beats=AMB)
 json.dump(song_json, open('src/song.json', 'w'), separators=(',', ':'))

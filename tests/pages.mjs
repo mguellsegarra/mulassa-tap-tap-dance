@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
+import { v1Song } from './v1-song.mjs';
 import { readPage } from './page.mjs';
 import { mkdtemp, mkdir, writeFile, access, rm, symlink, open, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -107,6 +109,20 @@ try {
   assert.equal(rules['/*']['x-content-type-options'], 'nosniff');
   assert.equal(rules['/*']['strict-transport-security'], 'max-age=31536000', 'HSTS for a year, never includeSubDomains');
   const real = JSON.parse(await readFile(new URL('../src/song.json', import.meta.url), 'utf8'));
+  // An old tab may retry its audio download after the new deployment, without its old cached response.
+  assert.notEqual(real.audio.split('?')[0], v1Song.audio.split('?')[0], 'short audio must not replace the original chart\'s URL');
+  assert.equal(real.legacyAudio, v1Song.audio, 'keep the exact URL requested by an old client');
+  for (const url of [real.audio, real.legacyAudio]) {
+    const [path, version] = url.split('?v=');
+    const bytes = await readFile(new URL(`../public/${path}`, import.meta.url));
+    assert.equal(createHash('sha1').update(bytes).digest('hex').slice(0, 10), version, `correct recording for ${url}`);
+  }
+  const compatible = await fixture('legacy-audio');
+  await writeFile(join(compatible, 'music/legacy.mp3'), 'legacy recording');
+  const withLegacy = { ...song, legacyAudio: 'music/legacy.mp3?v=123abc' };
+  assert((await preparePages(compatible, withLegacy)).includes('music/legacy.mp3'), 'deploy the audio needed by old clients');
+  await rm(join(compatible, 'music/legacy.mp3'));
+  await assert.rejects(preparePages(compatible, withLegacy), /Missing deployment file: music\/legacy\.mp3/);
   for (const url of [real.audio, real.ambient]) assert.match(url, /^music\/[\w-]+\.mp3\?v=[a-f0-9]+$/, 'immutable music needs a versioned URL');
   console.log('Pages cache headers ok');
 

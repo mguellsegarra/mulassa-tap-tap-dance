@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readPage } from './page.mjs';
 import { loadMainSource } from './load-main.mjs';
-import { PROFILES, initialQuality, renderDpr, frameMonitor, hudScale, framePacer, profileAt, hudBudget, startLevel, MINIMAL, smoothClock, isSoftwareRenderer, probeRenderer } from '../src/platform/render-quality.js';
+import { PROFILES, initialQuality, renderDpr, frameMonitor, hudScale, framePacer, profileAt, hudBudget, MINIMAL, smoothClock, isSoftwareRenderer, probeRenderer } from '../src/platform/render-quality.js';
 import { buildPerson } from '../src/scene/models.js';
 import { eventAge } from '../src/game/progress.js';
 assert.equal(initialQuality({ mobile: true, cores: 8, memory: 8 }), 1);
@@ -33,7 +33,7 @@ const promptSample = frameMonitor(() => promptReductions++);
 for (let i = 0; i < 15; i++) promptSample(400);
 assert.equal(promptReductions, 1, 'very slow rendering must react within six seconds');
 // HUD backing store: an iPad Pro (1366×1024 css, DPR 2) stays within its pixel budget; phones keep full resolution
-// the minimal tier (-1): only reached by stepping down; below 1x 3D, one crowd row; remembered per device
+// the minimal tier (-1): only reached by stepping down; below 1x 3D, one crowd row; this session only
 assert.equal(profileAt(-1), MINIMAL); assert.equal(profileAt(0), PROFILES[0]); assert.equal(profileAt(2), PROFILES[2]);
 assert(renderDpr(MINIMAL, 393, 852, 3) < 1.05 && renderDpr(MINIMAL, 1280, 800, 2) < 0.7, 'minimal draws the 3D below 1x');
 assert(MINIMAL.rows === 1 && MINIMAL.backdrop < PROFILES[0].backdrop && MINIMAL.confetti < PROFILES[0].confetti);
@@ -47,11 +47,6 @@ assert(MINIMAL.rows === 1 && MINIMAL.backdrop < PROFILES[0].backdrop && MINIMAL.
   assert(MINIMAL.near >= 8 && PROFILES[2].near <= 30, 'the reacting ring stays a first ring (10-30 people)');
 }
 assert(hudBudget(-1, true) < hudBudget(1, true) && hudBudget(0, false) === hudBudget(-1, false), 'a smaller HUD budget at low/minimal');
-assert.deepEqual(startLevel(1, null), { level: 1, retry: false }, 'no memory: the hardware guess');
-assert.equal(startLevel(1, { level: -1, at: Date.now(), visits: 1 }).level, -1, 'starts where it settled');
-assert.equal(startLevel(1, { level: -1, at: Date.now(), visits: 4 }).level, 0, 'every 5th visit tries one step up');
-assert.equal(startLevel(1, { level: -1, at: Date.now() - 8 * 864e5, visits: 1 }).level, 0, 'a week on it tries again');
-assert.equal(startLevel(1, { level: 2, at: 0 }).level, 1, 'never above the hardware guess');
 { // software WebGL (no GPU): real-world renderer/vendor strings, and the failIfMajorPerformanceCaveat signal
   const soft = [
     ['ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)', 'Google Inc. (Google)'], // Chrome --disable-gpu / blocklisted
@@ -74,12 +69,8 @@ assert.equal(startLevel(1, { level: 2, at: 0 }).level, 1, 'never above the hardw
   for (const [renderer, vendor] of hard) assert(!isSoftwareRenderer({ renderer, vendor }), `a GPU: ${renderer || '(none)'}`);
   assert(isSoftwareRenderer({ renderer: 'Mozilla', caveat: true }), 'a refused caveat context is software whatever the string says');
   assert(!isSoftwareRenderer() && !isSoftwareRenderer({ renderer: null, vendor: undefined }), 'no information: not software');
-  const saved = { level: 2, at: Date.now(), visits: 3 }, sw = isSoftwareRenderer({ renderer: soft[0][0] });
-  const start = startLevel(2, saved, Date.now(), sw);
-  assert(start.level === -1 && !start.retry && profileAt(start.level) === MINIMAL, 'software WebGL starts at minimal');
-  assert.equal(hudBudget(start.level, false), Math.min(hudBudget(-1, false), hudBudget(0, false), hudBudget(2, false)), 'with the lowest HUD budget');
-  assert.deepEqual(saved, { level: 2, at: saved.at, visits: 3 }, 'the saved level is not touched');
-  assert.deepEqual(startLevel(2, saved, Date.now(), isSoftwareRenderer({ renderer: hard[0][0] })), startLevel(2, saved), 'a GPU: unchanged');
+  assert.equal(profileAt(-1), MINIMAL, 'software WebGL boots at minimal (tests/quality-boot.mjs)');
+  assert.equal(hudBudget(-1, false), Math.min(hudBudget(-1, false), hudBudget(0, false), hudBudget(2, false)), 'with the lowest HUD budget');
   // the probe: one cheap context, released; a second (plain) one only when the caveat context is refused
   const fake = ({ caveatOk = true, plainOk = true, renderer = 'WebKit WebGL', unmasked = 'ANGLE (Apple, ANGLE Metal Renderer: Apple M2)' } = {}) => {
     const log = { made: 0, lost: 0, ext: [] };
@@ -409,7 +400,7 @@ const context = vm.createContext({
   ...await import('../src/dev/final-test.js'), ALIAS_KEY: 'leaderboard-alias', DECLINES_KEY: 'publish-declines', // ?final: off here (no hostname)
   errors, errorName, audioFailureTags: (await import('../src/platform/audio.js')).audioFailureTags,
   THREE: { ...THREE, WebGLRenderer: Renderer }, ...await import('../src/scene/crowd-fx.js'), ...models, ...chart, ...progress, ...stars,
-  PROFILES, initialQuality, renderDpr, frameMonitor, hudScale, framePacer, smoothClock, profileAt, hudBudget, startLevel, isSoftwareRenderer, probeRenderer, Chip: class { constructor(song, opts) { context.chipOpts = opts; } setMenuMusic(on) { (context.menuMusicCalls ||= []).push(on); } }, ...practice, ...energy, ...bubblesLogic, ...framing, ...dance, ...titleLayoutLogic, ...orbitLogic, setupSync: hooks => { context.syncHooks = hooks; return context.syncSheet = { open: false, show() { this.open = true; } }; },
+  PROFILES, initialQuality, renderDpr, frameMonitor, hudScale, framePacer, smoothClock, profileAt, hudBudget, isSoftwareRenderer, probeRenderer, Chip: class { constructor(song, opts) { context.chipOpts = opts; } setMenuMusic(on) { (context.menuMusicCalls ||= []).push(on); } }, ...practice, ...energy, ...bubblesLogic, ...framing, ...dance, ...titleLayoutLogic, ...orbitLogic, setupSync: hooks => { context.syncHooks = hooks; return context.syncSheet = { open: false, show() { this.open = true; } }; },
   setupBoard: opts => (context.boardSheet = { opts, open: false, configured: true, shown: [], opened: [], results(show) { this.shown.push(show); }, publishable: false,
     openBoard(back) { this.open = true; this.opened.push(back); this.back = back; }, verifyStarts: 0, verifyStart() { this.verifyStarts++; },
     settingsRefreshed: 0, refreshSettings() { this.settingsRefreshed++; }, openPublish(o) { this.publishOpened = o; } }), // src/ui/board-ui.js has its own DOM tests (tests/board-ui.mjs)
@@ -2279,4 +2270,34 @@ console.log('view mode ok');
     main('performance.now = () => 0');
   }
   console.log('smooth song clock ok');
+}
+
+// The real downgrade callback still updates the scene and resolution, but cannot poison the next page load.
+{
+  const saved = { 'render-quality': '{"level":-1}', 'leaderboard-alias': 'kept', 'menu-music': '1' };
+  const writes = [];
+  context.localStorage = { getItem: k => saved[k] ?? null, setItem: (k, v) => writes.push([k, v]), removeItem: k => writes.push([k]) };
+  run(`G.state = 'title'; G.paused = false; chip = null;
+    qualityLevel = 1; applyRenderQuality(); devicePixelRatio = 3;
+    var qualityCompiles = 0, qualityDpr = 0;
+    renderer.compileAsync = () => { qualityCompiles++; return Promise.resolve(); };
+    renderer.setPixelRatio = dpr => { qualityDpr = dpr; };
+    for (let i = 0; i < 400; i++) monitorFrames(1000 / 30, false);`);
+  assert.equal(run('qualityLevel'), -1, 'slow frames reach the minimal floor');
+  assert.equal(run('renderProfile.name'), 'minimal', 'the scene profile follows the downgrade');
+  assert.equal(run('qualityDpr'), run('renderDpr(renderProfile, sizedW, sizedH, devicePixelRatio)'), 'resize applies the lower DPR');
+  assert(run('qualityCompiles > 0'), 'the downgraded scene is precompiled');
+  assert.deepEqual(writes, [], 'adaptive drops do not write or clear stored preferences');
+  const rendererBefore = run('renderer');
+  document.hidden = true;
+  document.listeners.visibilitychange?.();
+  document.hidden = false;
+  document.listeners.visibilitychange?.();
+  for (const h of windowHandlers.pageshow || []) h({ persisted: true });
+  assert.equal(run('qualityLevel'), -1, 'visibility and BFCache resume retain the session level');
+  assert.equal(run('renderer'), rendererBefore, 'resume does not recreate the WebGL context');
+  context.localStorage = new Proxy({}, { get() { throw new Error('storage blocked'); } });
+  run('qualityLevel = 1; for (let i = 0; i < 400; i++) monitorFrames(1000 / 30, false);');
+  assert.equal(run('qualityLevel'), -1, 'adaptation also works with blocked storage');
+  console.log('session-only quality recovery ok');
 }

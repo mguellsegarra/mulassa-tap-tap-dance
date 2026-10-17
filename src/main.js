@@ -15,7 +15,7 @@ import { rnd } from './scene/models.js';
 import { setupCamEdit } from './dev/cam-edit.js';
 import { Q, COARSE, pageActive, beatAt, BEAT, offsetMs, playFrom, FINALE_T, AUTOPLAY, CALM, FINAL, STARS } from './core/env.js';
 import { pace, RAWCLOCK, viewClock } from './core/timing.js';
-import { qualityLevel, saveQuality, renderProfile, softwareGl, GPU, renderer, camera, CAM_AZ, FRONT, plaza, cameraTarget, camFocus, camFocusTarget, camShift, camXYZ, focusXYZ, scene, setQualityLevel, setCamShift, renderScreen } from './scene/stage.js';
+import { qualityLevel, renderProfile, softwareGl, GPU, renderer, camera, CAM_AZ, FRONT, plaza, cameraTarget, camFocus, camFocusTarget, camShift, camXYZ, focusXYZ, scene, setQualityLevel, setCamShift, renderScreen } from './scene/stage.js';
 import { G, chip, clock, songTime, drawT, bigPending, audioEngine, setClock, setDrawT } from './game/state.js';
 import { audioFailureTags } from './platform/audio.js';
 import { TAU } from './core/anim.js';
@@ -57,7 +57,7 @@ import './ui/input.js';
 import './ui/sheets-setup.js';
 
 const monitorFrames = frameMonitor((steps = 1) => { // steps: 2 when frames are far too slow
-  if (qualityLevel > -1) { setQualityLevel(Math.max(-1, qualityLevel - steps)); applyRenderQuality(); resize(); saveQuality(); precompile(); } // now, not at the first GLOBUS pop or firework
+  if (qualityLevel > -1) { setQualityLevel(Math.max(-1, qualityLevel - steps)); applyRenderQuality(); resize(); precompile(); } // now, not at the first GLOBUS pop or firework
 });
 let glName; // crash reports' context, read only when one is sent
 errors.context(() => ({ state: G.state, diff: G.diff, practice: !!G.practice, paused: G.paused, quality: renderProfile.name, softwareGl,

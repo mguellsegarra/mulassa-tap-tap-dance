@@ -1,24 +1,18 @@
 // The 3D world: the renderer (with the no-WebGL card), scene, lights, the plaza, the mulassa, and the play camera's fixed direction.
-import { initialQuality, probeRenderer, isSoftwareRenderer, startLevel, profileAt } from '../platform/render-quality.js';
-import { store } from '../platform/storage.js';
+import { initialQuality, probeRenderer, isSoftwareRenderer, profileAt } from '../platform/render-quality.js';
 import * as THREE from 'three';
 import { errors, errorName } from '../services/errors.js';
 import { buildPlaza, buildMulassa } from './models.js';
 import { COARSE } from '../core/env.js';
 
 // ------------------------------------------------------------------ 3D
-// the level this device settled on last time (render-quality.js startLevel), or the hardware guess; -1 = minimal
-const QUALITY_KEY = 'render-quality', qualityGuess = initialQuality({ mobile: COARSE.matches, cores: navigator.hardwareConcurrency,
+// every page load starts from the hardware guess (adaptive drops last for the session only); -1 = minimal
+const qualityGuess = initialQuality({ mobile: COARSE.matches, cores: navigator.hardwareConcurrency,
   memory: navigator.deviceMemory, saveData: navigator.connection?.saveData });
-let savedQuality = null;
-try { savedQuality = JSON.parse(store.get(QUALITY_KEY)); } catch { /* none */ }
-// software WebGL (no GPU): minimal from the start, this session only; the saved level stays for when the GPU is back
+// software WebGL (no GPU): minimal from the start
 export const GPU = probeRenderer(), softwareGl = isSoftwareRenderer(GPU);
-export const qualityStart = startLevel(qualityGuess, savedQuality, Date.now(), softwareGl);
-export let qualityLevel = qualityStart.level;
+export let qualityLevel = softwareGl ? -1 : qualityGuess;
 export const setQualityLevel = v => (qualityLevel = v);
-export const saveQuality = () => { if (!softwareGl) store.set(QUALITY_KEY, JSON.stringify({ level: qualityLevel, at: Date.now(), visits: qualityStart.visits || 0 })); };
-if (savedQuality && qualityStart.level < qualityGuess) saveQuality(); // counts the visit (and dates a retry)
 export let renderProfile = profileAt(qualityLevel);
 export const setRenderProfile = v => (renderProfile = v);
 export const glc = document.getElementById('gl');

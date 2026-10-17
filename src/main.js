@@ -49,6 +49,7 @@ import { pauseGame } from './ui/pause.js';
 import './ui/fullscreen.js';
 import { updateControls, viewMode, viewT, hudBlank, setHudBlank } from './ui/controls.js';
 import { fpsTick } from './dev/fps.js';
+import { aligaTick, aligaFrameCamera } from './dev/aliga-preview.js';
 import { debugAction } from './dev/debug.js';
 import { drawHud } from './hud/draw.js';
 import './ui/pause-actions.js';
@@ -134,8 +135,11 @@ function frame(now) {
     if (G.lastBeat % 2 === 0 && !Q.has('still')) act('LDRU'[(G.lastBeat / 2) % 4]);
   }
   animMula(dt, beat, live);
+  aligaTick(clock); // ?aliga only
   const c0 = PERF && performance.now();
-  animCrowd(dt, beat, vt, live);
+  // The Àliga rehearsal keeps spectators at their initial places, clear of the performance ring.
+  // Their normal steering follows the hidden Mulassa and would otherwise walk through the aligons.
+  if (!Q.has('aliga') || !drawn) animCrowd(Q.has('aliga') ? 0 : dt, beat, vt, live);
   if (PERF) PERF.crowd += performance.now() - c0; // ?perf: the crowd's own share of the js
   animConfetti(dt);
   animFireworks(dt);
@@ -193,6 +197,7 @@ function frame(now) {
   setCamShift(G.state === 'play' && !VIEW ? shift : camShift + (shift - camShift) * Math.min(1, dt * 3)); // play: already smoothed
   if (Math.abs(camShift) > 0.5) camera.setViewOffset(W * K, HH * K, 0, -camShift, W * K, HH * K);
   else if (camera.view?.enabled) camera.clearViewOffset();
+  aligaFrameCamera(camera); // ?aliga: include all three aligons, including on portrait screens
   camXYZ[0] = camera.position.x; camXYZ[1] = camera.position.y; camXYZ[2] = camera.position.z;
   focusXYZ[0] = mx; focusXYZ[1] = G.state === 'play' ? 1.4 : 1; focusXYZ[2] = mz;
   for (const p of plaza.props) p.mesh.visible = !blocks(p, camXYZ, focusXYZ); // a tree or lamp in the way: gone
@@ -214,7 +219,7 @@ function frame(now) {
   setBalloonView(null);
   if (!hudOff || !hudBlank) H.clearRect(0, 0, W, HH);
   setHudBlank(hudOff);
-  if (!hudOff && !Q.has('view') && PERF?.mode !== 'nohud') try { drawHud(vt); } catch (err) { // a drawing bug must never leave the HUD clipped or transformed: log it, reset the canvas state
+  if (!hudOff && !Q.has('view') && !Q.has('aliga') && PERF?.mode !== 'nohud') try { drawHud(vt); } catch (err) { // a drawing bug must never leave the HUD clipped or transformed: log it, reset the canvas state
     if (err.message !== hudError) { hudError = err.message; console.error(err); errors.capture(err, { where: 'hud' }); }
     resize();
   }

@@ -4,6 +4,31 @@ import { mkdtemp, mkdir, writeFile, access, rm, symlink, open, readFile } from '
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { preparePages } from '../tools/prepare-pages.mjs';
+import { pagesDeployNeeded } from '../tools/pages-deploy-needed.mjs';
+
+const pkg = { version: '1.1.0', scripts: { build: 'vite build', check: 'node check.mjs' }, dependencies: { three: '1' } };
+const backupOnly = { ...pkg, scripts: { ...pkg.scripts, check: 'node check.mjs && node tests/db-backup.mjs' } };
+const backupFiles = ['.github/workflows/db-backup.yml', '.github/workflows/deploy-pages.yml', '.gitignore',
+  'README.md', 'package.json', 'docs/db-backup.md', 'tests/db-backup.mjs', 'tests/db_backup_test.py',
+  'tools/db_backup.py', 'tools/db-backup-requirements.txt', 'tools/pages-deploy-needed.mjs'];
+assert.equal(pagesDeployNeeded(backupFiles, { beforePackage: pkg, afterPackage: backupOnly }), false);
+assert.equal(pagesDeployNeeded(['.github/workflows/deploy-pages.yml']), false);
+assert.equal(pagesDeployNeeded(['tests/pages.mjs', 'docs/example.md']), false);
+for (const path of ['src/main.js', 'public/_headers', 'index.html', 'package-lock.json', '.node-version',
+  'vite.config.js', 'tools/seo-pages.mjs', 'tools/prepare-pages.mjs', 'new-build-input.js']) {
+  assert.equal(pagesDeployNeeded([...backupFiles, path], { beforePackage: pkg, afterPackage: backupOnly }), true, path);
+}
+for (const afterPackage of [{ ...pkg, version: '1.2.0' }, { ...pkg, dependencies: { three: '2' } },
+  { ...pkg, scripts: { ...pkg.scripts, build: 'vite build --mode new' } }]) {
+  assert.equal(pagesDeployNeeded(['package.json'], { beforePackage: pkg, afterPackage }), true);
+}
+assert.equal(pagesDeployNeeded(['package.json']), true, 'unknown package content fails toward deploying');
+assert.equal(pagesDeployNeeded([], { manual: true }), true, 'manual dispatch always deploys');
+assert.equal(pagesDeployNeeded([], { unknownBase: true }), true, 'unknown base cannot hide a game update');
+const deployWorkflow = await readFile(new URL('../.github/workflows/deploy-pages.yml', import.meta.url), 'utf8');
+assert.match(deployWorkflow, /needs: changes\n    if: needs\.changes\.outputs\.deploy == 'true'/);
+assert.match(deployWorkflow, /DEPLOY_BASE_SHA: \$\{\{ github\.event\.before \}\}/);
+console.log('Pages deployment change detection ok');
 
 const song = { audio: 'music/main.mp3?v=abc123', ambient: 'music/menu.mp3?v=def456' };
 const files = ['index.html', '404.html', '_headers', 'favicon.ico', 'favicon-32.png', 'apple-touch-icon.png',

@@ -277,8 +277,8 @@ kbd { display: inline-block; min-width: 14px; padding: 0 4px; border: 1px solid 
 #board-menu h2 { margin: 0 0 16px; font-size: 28px; }
 #board-menu .board-seg { width: 100%; margin: 0 0 16px; }
 #board-menu .board-seg .btn { min-height: 34px; }
-/* «#347 de 2.140 · top 17%»: part of the list (a line pinned to the bottom of its box), On sóc only */
-.board-summary { position: sticky; z-index: 1; bottom: 0; margin: 0; padding: 6px 0; border-top: 1px solid #f5c51866; background: #2a1a10; text-align: center; font-size: 15px; line-height: 1.35; color: #f5c518; }
+/* «#347 de 2.140 · top 17%»: outside the scroll area so rows cannot bleed below it, On sóc only */
+.board-summary { flex: none; margin: 0; padding: 6px 0; border-top: 1px solid #f5c51866; background: #2a1a10; text-align: center; font-size: 15px; line-height: 1.35; color: #f5c518; }
 .board-summary:empty { display: none; }
 /* the list's end: a spinner row while the next page loads, «Carrega’n més» (the fallback of the scroll) */
 .board-more { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 0 12px; }
@@ -298,9 +298,9 @@ kbd { display: inline-block; min-width: 14px; padding: 0 4px; border: 1px solid 
 /* loading: the dancing calçot over its line (board-ui.js keeps it ≥ 1.2 s), then the list fades in */
 #board-status .calcot-spin { display: block; width: 72px; height: 72px; margin: 0 auto 10px; }
 #board-status:has(.calcot-spin) { animation: board-in .25s ease-out both; }
-#board-table:not([hidden]) tbody, .board-summary { animation: board-in .35s ease-out both; }
+#board-table:not([hidden]) tbody { animation: board-in .35s ease-out both; }
 @keyframes board-in { from { opacity: 0; transform: translateY(6px); } }
-@media (prefers-reduced-motion: reduce) { #board-table tbody, .board-summary, #board-status { animation: none; } }
+@media (prefers-reduced-motion: reduce) { #board-table tbody, #board-status { animation: none; } }
 #board-table, .board-head { width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 15px; line-height: 1.25; font-variant-numeric: tabular-nums; }
 :is(#board-table, .board-head) .c-pos { width: 2.6em; } :is(#board-table, .board-head) .c-pct { width: 3.6em; } :is(#board-table, .board-head) .c-pts { width: 5em; }
 #board-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); } /* for screen readers; .board-head shows them */

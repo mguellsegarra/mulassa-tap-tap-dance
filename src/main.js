@@ -55,6 +55,7 @@ import './ui/pause-actions.js';
 import './ui/backdrop.js';
 import './ui/input.js';
 import './ui/sheets-setup.js';
+import { sheets } from './ui/sheets.js';
 
 const monitorFrames = frameMonitor((steps = 1) => { // steps: 2 when frames are far too slow
   if (qualityLevel > -1) { setQualityLevel(Math.max(-1, qualityLevel - steps)); applyRenderQuality(); resize(); saveQuality(); precompile(); } // now, not at the first GLOBUS pop or firework
@@ -228,7 +229,8 @@ function frame(now) {
     fontsReady.then(() => { fontsIn = true; });
     loadMark('first frame');
     errors.start(); // crash reports: the SDK loads when the browser is idle (nothing at all without a DSN)
-    if (FINAL) startFinal();
+    if (FINAL?.board === 'me') sheets.board.openBoard();
+    else if (FINAL) startFinal();
   }
   // The page cover lifts once the web fonts are in and the queued words are painted (warmups: a big outlined count-in
   // word is ~20 ms on a desktop, several times that on a phone), at most COVER_WARM ms after the fonts: on a slow first

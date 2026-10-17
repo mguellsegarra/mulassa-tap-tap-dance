@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="ca">
+  <meta charset="utf-8" /><meta
+    name="viewport"
+    content="width=device-width,initial-scale=1"
+  /><title>Els primers posts · Mulassa</title
+  ><link rel="stylesheet" href="../shared/fonts.css" /><style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      background: #17120e;
+      color: #fff3d6;
+      font: 16px system-ui;
+      margin: 0;
+      padding: 24px;
+    }
+    main {
+      max-width: 1250px;
+      margin: auto;
+    }
+    h1 {
+      font-size: 26px;
+    }
+    nav {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 22px 0;
+    }
+    button,
+    a.button {
+      font: inherit;
+      border: 1px solid #f5c518;
+      border-radius: 24px;
+      padding: 12px 18px;
+      color: inherit;
+      background: transparent;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    button[aria-pressed="true"],
+    #download {
+      background: #f5c518;
+      color: #2a1a10;
+    }
+    .editor {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 290px;
+      gap: 28px;
+    }
+    canvas {
+      width: 100%;
+      height: auto;
+      align-self: start;
+      border-radius: 16px;
+    }
+    [hidden] {
+      display: none !important;
+    }
+    label {
+      display: block;
+      margin: 18px 0;
+    }
+    input {
+      display: block;
+      width: 100%;
+      margin-top: 6px;
+      padding: 10px;
+      background: #36251b;
+      color: #fff3d6;
+      border: 1px solid #826743;
+      font: inherit;
+      border-radius: 6px;
+    }
+    p {
+      color: #c6b59e;
+      line-height: 1.5;
+    }
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-top: 36px;
+    }
+    .gallery img {
+      width: 100%;
+      border-radius: 9px;
+    }
+    .gallery a {
+      color: #fff3d6;
+      text-decoration: none;
+    }
+    small {
+      font-size: 13px;
+    }
+    @media (max-width: 700px) {
+      .editor {
+        grid-template-columns: 1fr;
+      }
+      .gallery {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      body {
+        padding: 12px;
+      }
+    }
+  </style>
+  <header style="padding: 12px 28px">
+    <a style="color: #f5c518" href="../index.html">← Eines d’Instagram</a>
+  </header>
+  <main>
+    <h1>Els quatre primers posts</h1>
+    <nav></nav>
+    <div class="editor">
+      <canvas aria-label="Post vertical 3:4"></canvas>
+      <aside>
+        <label>Titular<input id="title" maxlength="45" /></label
+        ><label>Segona línia<input id="sub" maxlength="45" /></label
+        ><label>Peu<input id="foot" maxlength="65" /></label>
+        <fieldset id="camera-controls">
+          <legend>Càmera de la Mulassa</legend>
+          <label
+            >Gir <output id="value-angle">-59</output
+            ><input
+              type="range"
+              id="camera-angle"
+              min="-180"
+              max="180"
+              value="-59"
+              step="1" /></label
+          ><label
+            >Alçada de la càmera <output id="value-elevation">12</output
+            ><input
+              type="range"
+              id="camera-elevation"
+              min="-5"
+              max="45"
+              value="12"
+              step="1" /></label
+          ><label
+            >Mida <output id="value-size">820</output
+            ><input
+              type="range"
+              id="camera-size"
+              min="400"
+              max="1600"
+              value="820"
+              step="1" /></label
+          ><label
+            >Posició horitzontal <output id="value-x">540</output
+            ><input
+              type="range"
+              id="camera-x"
+              min="200"
+              max="880"
+              value="540"
+              step="1" /></label
+          ><label
+            >Posició vertical <output id="value-y">685</output
+            ><input
+              type="range"
+              id="camera-y"
+              min="400"
+              max="1500"
+              value="685"
+              step="1" /></label
+          ><button id="camera-reset" type="button">Restableix la càmera</button>
+          <p>
+            <small
+              >Els ajustos es desen en aquest navegador. Comprova els peus i les
+              orelles abans de desar el PNG.</small
+            >
+          </p>
+        </fieldset>
+        <button id="download">Desa PNG · 1080 × 1440</button>
+        <p>La quarta peça conserva l'editor de personatges.</p>
+        <a class="button" href="../personatges/index.html"
+          >04 · Edita la Mulassa</a
+        >
+        <p>
+          <small
+            >Les notes del post 03 són una composició explicativa. No mostren
+            puntuacions ni jugadors inventats.</small
+          >
+        </p>
+      </aside>
+    </div>
+    <div class="gallery" aria-label="Previsualitzacions dels posts"></div>
+  </main>
+  <script type="module" src="./posts.js"></script>
+</html>

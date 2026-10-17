@@ -10,6 +10,7 @@ permissions:
 
 concurrency:
   group: deploy-pages
+  queue: max # keep a pending release when a later push only changes documentation
   cancel-in-progress: false
 
 jobs:

@@ -28,6 +28,9 @@ assert.equal(pagesDeployNeeded(['package.json']), true, 'unknown package content
 assert.equal(pagesDeployNeeded([], { manual: true }), true, 'manual dispatch always deploys');
 assert.equal(pagesDeployNeeded([], { unknownBase: true }), true, 'unknown base cannot hide a game update');
 const deployWorkflow = await readFile(new URL('../.github/workflows/deploy-pages.yml', import.meta.url), 'utf8');
+const deploymentQueue = deployWorkflow.match(/^concurrency:\n((?: {2}.+\n)+)/m)?.[1] ?? '';
+assert.match(deploymentQueue, /^  queue: max(?:\s+#.*)?$/m, 'a later docs-only push must not cancel a pending migration/deployment');
+assert.match(deploymentQueue, /^  cancel-in-progress: false$/m, 'finish the running deployment before starting another');
 assert.match(deployWorkflow, /needs: changes\n    if: needs\.changes\.outputs\.deploy == 'true'/);
 assert.match(deployWorkflow, /DEPLOY_BASE_SHA: \$\{\{ github\.event\.before \}\}/);
 console.log('Pages deployment change detection ok');

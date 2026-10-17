@@ -104,6 +104,17 @@ function page(offset, total, selfAt = 0) {
   return [...ranks].sort((a, b) => a - b).map(p => player(p, total, selfAt));
 }
 const BOARD = page(0, 60, 22);
+// A repeated short result can be weaker than the retained full-song record on the combined board.
+{
+  const { board, $, T, setRun } = make({ session: true, alias: 'Versions', captchaRequired: false });
+  setRun({ version: 'mulassa-v2-short', difficulty: 0, counts: { perfect: 108, good: 0, miss: 0 }, score: 69350, maxCombo: 108 });
+  board.results(true); board.openPublish(); await tick(); await tick();
+  submit($);
+  T.publishes[0].resolve({ improved: false, quality: 100, score: 96572 }); await tick();
+  T.alls.at(-1).resolve([{ position: 1, alias: 'Versions', difficulty: 0, quality: 100, score: 100072, is_self: true, total: 1 }]); await tick();
+  assert.equal($('publish-status').textContent, 'Resultat publicat. La classificació mostra el teu millor resultat.', 'publication must not claim the version-specific score is the combined record');
+  assert($('publish-status').classList.contains('ok'), 'a non-improving cross-version retry remains a successful publication');
+}
 {
   const { board, $, calls, T, rows, focused, io } = make();
   assert.equal(calls.all + calls.identity + calls.captcha, 0, 'no network or CAPTCHA on page load');
@@ -316,7 +327,7 @@ const BOARD = page(0, 60, 22);
   assert.equal(calls.publish.at(-1).opts.captchaToken, 'tok-3');
   T.session = true;
   T.publishes[1].resolve({ improved: false, quality: 95.4, score: 50000 }); await tick();
-  assert.match($('publish-status').textContent, /^Es manté el teu millor resultat en aquest nivell: 95% · /, 'a non-improvement is a success');
+  assert.equal($('publish-status').textContent, 'Resultat publicat. La classificació mostra el teu millor resultat.', 'a non-improvement is a success');
   assert($('publish-status').classList.contains('ok') && $('publish-alias').readOnly);
   assert.equal($('publish-title').textContent, 'Publicat!');
   assert.equal(mem.get(ALIAS_KEY), 'Ànecd’Òdena', 'the alias is remembered');
@@ -459,7 +470,7 @@ const BOARD = page(0, 60, 22);
     assert.equal(call.alias, 'Drac101');
   }
   T.publishes[2].resolve({ improved: false, quality: 90, score: RUN.score }); await tick();
-  assert.match($('publish-status').textContent, /Es manté el teu millor resultat/);
+  assert.equal($('publish-status').textContent, 'Resultat publicat. La classificació mostra el teu millor resultat.');
   board.results(true);
   assert($('results-publish').hidden, 'a confirmed non-improving retry completes publication');
 }

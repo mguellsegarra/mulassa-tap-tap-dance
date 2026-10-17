@@ -453,7 +453,7 @@ export function setupBoard({ focusIn, store = defaultStore, service = leaderboar
     const t0 = Date.now();
     swap('wait', 'Publicant…'); publishMenu.focus();
     try {
-      const out = await service.publish(run, alias, { captchaToken });
+      await service.publish(run, alias, { captchaToken });
       store.set(ALIAS_KEY, alias); store.set(ROW_KEY, alias);
       published = run; // the results button goes even if the sheet was closed meanwhile
       store.remove(DECLINES_KEY); // they publish: the prompt may open by itself again
@@ -465,9 +465,7 @@ export function setupBoard({ focusIn, store = defaultStore, service = leaderboar
       // the calçot for a beat (never a flash), and until the place is known: «Publicat!» and both lines come together
       if (settle) await Promise.race([Promise.all([placeP, sleep(settle - (Date.now() - t0))]), sleep(2500)]);
       if (req !== publishReq) return;
-      setPublishStatus(out?.improved === false
-        ? `Es manté el teu millor resultat en aquest nivell: ${Math.round(Number(out.quality))}% · ${num(out.score)} punts.`
-        : 'Ja surts a la classificació.', true);
+      setPublishStatus('Resultat publicat. La classificació mostra el teu millor resultat.', true);
       // Comparteix is «D'acord»; only with `shareDelay` does it also come by itself
       if (afterPublish && shareDelay != null) shareTimer = setTimeout(() => { if (req === publishReq && publishMenu.open && done) toShare(); }, shareDelay);
       done = true;

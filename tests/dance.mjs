@@ -16,14 +16,14 @@ song.beats.forEach((t, i) => assert(Math.abs(t - (arr.offset + i * spb)) < 2e-3,
 const beatOf = t => (t - song.beats[0]) / spb;
 const near = (a, b, e = 1e-3) => Math.abs(a - b) < e;
 for (const [t, k] of song.sections) assert(ARRANGEMENT.some(([b]) => near(beatOf(t), b)) || near(beatOf(t), 0), `song section ${k} at a cue`);
-assert(near(beatOf(song.finale), 292) && near(beatOf(song.end), END_BEAT), 'finale and final hit on their cues');
+assert(near(beatOf(song.finale), 208) && near(beatOf(song.end), END_BEAT), 'finale and final hit on their cues');
 assert(Math.abs(DANCE_SIZE.h - 4.03) < 0.05 && Math.abs(DANCE_SIZE.l - 4.22) < 0.05, 'amplitudes scale with the model size');
 
 // Continuity, finite values and the guide's artistic ranges, over the whole song and beyond.
 const DEG = Math.PI / 180, p = newPose(), q = newPose(), step = 0.01;
 const channels = ['yaw', 'roll', 'pitch', 'lift', 'x', 'z', 'drive'];
 dancePose(q, -20);
-for (let b = -20 + step; b < 330; b += step) {
+for (let b = -20 + step; b < 248; b += step) {
   dancePose(p, b);
   for (const c of channels) assert(Number.isFinite(p[c]), `${c} finite at ${b}`);
   assert(Math.abs(p.yaw - q.yaw) < 0.03, `heading continuous at ${b.toFixed(2)}`);
@@ -37,27 +37,26 @@ for (let b = -20 + step; b < 330; b += step) {
   Object.assign(q, p);
 }
 
-// The observed order: front, rear, front, rear (B, A'), front, turns, front at the end. Yaw is unwrapped (turns keep
+// The observed order: front, rear, front, rear (B), front, turns, front at the end. Yaw is unwrapped (turns keep
 // going the same way) and never runs backwards between the keys.
 const facing = b => { dancePose(p, b); const a = ((p.yaw % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI); return Math.min(a, 2 * Math.PI - a); };
 const front = b => facing(b) < 0.35, rear = b => facing(b) > Math.PI - 0.35;
 for (let b = 12; b < 70; b += 0.5) assert(front(b), `A bars 1-8: front / three-quarter (${b})`);
 for (let b = 82; b < 134; b += 0.5) assert(rear(b), `A bars 9-16: rear (${b})`);
 assert(front(144), 'front again as B starts');
-for (let b = 152; b < 172; b += 0.5) assert(rear(b), `B: towards the rear (${b})`);
-for (let b = 176; b < 234; b += 0.5) assert(rear(b), `pickup and A': rear, no reset of the heading (${b})`);
-for (const b of [244, 260, 292, 308, 312, 320]) assert(front(b), `front at the ${b} cue`);
+for (let b = 152; b < 168; b += 0.5) assert(rear(b), `B: towards the rear (${b})`);
+for (const b of [176, 208, 224, 228, 236]) assert(front(b), `front at the ${b} cue`);
 dancePose(p, 400); const end = p.yaw;
-assert(near(end, 14 * Math.PI) && end > 4 * Math.PI, 'unwrapped: seven whole turns by the end, not wrapped back');
-for (let b = 0, top = 0; b < 330; b += 0.25) { dancePose(p, b); assert(p.yaw > top - 0.65, `no unwinding beyond a glance at ${b}`); top = Math.max(top, p.yaw); }
-for (let b = 318; b < 340; b += 0.1) { // settled: facing the plaça, only a breath of sway left
+assert(near(end, 12 * Math.PI) && end > 4 * Math.PI, 'unwrapped: six whole turns by the end, not wrapped back');
+for (let b = 0, top = 0; b < 248; b += 0.25) { dancePose(p, b); assert(p.yaw > top - 0.65, `no unwinding beyond a glance at ${b}`); top = Math.max(top, p.yaw); }
+for (let b = 234; b < 256; b += 0.1) { // settled: facing the plaça, only a breath of sway left
   dancePose(p, b);
-  assert(near(p.yaw, 14 * Math.PI) && Math.abs(p.roll) <= 1.01 * DEG && p.lift <= 0.004 * DANCE_SIZE.h + 1e-9 && Math.abs(p.shake) < 1e-9 && p.drive <= 0.3 + 1e-9, `settled at ${b}`);
+  assert(near(p.yaw, 12 * Math.PI) && Math.abs(p.roll) <= 1.01 * DEG && p.lift <= 0.004 * DANCE_SIZE.h + 1e-9 && Math.abs(p.shake) < 1e-9 && p.drive <= 0.3 + 1e-9, `settled at ${b}`);
 }
 
 // Direct evaluation: seek, rewind or the same beat again give exactly the same pose (no hidden state).
 const at = b => ({ ...dancePose(newPose(), b) });
-const out = newPose(), seq = [200.25, 12, 299.9, 200.25, -3, 299.9];
+const out = newPose(), seq = [200.25, 12, 215.9, 200.25, -3, 215.9];
 const first = seq.map(b => ({ ...dancePose(out, b) }));
 seq.forEach((b, i) => assert.deepEqual(first[i], at(b), `same pose at ${b} whatever came before`));
 assert.equal(dancePose(out, 10), out, 'fills the pose it is given');

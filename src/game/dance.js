@@ -11,9 +11,10 @@
 
 // The arrangement's sections from the pickup on (music/taiko-arrangement.json). tests/dance.mjs fails if a
 // regenerated arrangement moves them, so the cues below can't silently drift off the music.
-export const ARRANGEMENT = [[12, 'pickup'], [16, 'A1'], [80, 'A2'], [144, 'B'], [176, 'break'], [180, 'A1'], [212, 'A2'],
-  [244, 'B'], [260, 'C'], [292, 'X'], [308, 'roll']];
-export const END_BEAT = 312; // the final hit
+// The short cut: the song as it was up to bar 31 (beat 174), then bar 49 on (C, X, the roll) 84 beats earlier; the
+// break, A' and B' are not played, so neither is their choreography.
+export const ARRANGEMENT = [[12, 'pickup'], [16, 'A1'], [80, 'A2'], [144, 'B'], [176, 'C'], [208, 'X'], [224, 'roll']];
+export const END_BEAT = 228; // the final hit
 
 const PI = Math.PI;
 // Heading keys [beat, yaw]: 0 = front to the plaça (the play camera), PI = rear. Unwrapped: turns keep going the same
@@ -22,12 +23,10 @@ const YAW = [
   [0, 0], [72, 0], //        pickup, A bars 1-8: front
   [80, 1], [136, 1], //      half turn to show the rear at the end of the half; A bars 9-16: rear
   [144, 2], [150, 3], //     back to the front before B; B: a broader turn towards the rear...
-  [174, 3], [236, 3], //     ...held through the pickup (bar 33) and A': rear
-  [244, 4], [252, 5], //     A' ends front; B': a lively whole turn
-  [260, 6], [272, 8], //     C: one turn, a breath in front,
-  [276, 8], [288, 10], //    another one, a little quicker,
-  [292, 10], [300, 12], //   the last phrase (the finale): two quick turns
-  [308, 14], //              front for the roll and the final hit
+  [168, 3], [176, 4], //     ...held, then the same way round to the front as bar 49 leads into C
+  [188, 6], [192, 6], //     C: one turn, a breath in front,
+  [204, 8], [208, 8], //     another one, a little quicker,
+  [216, 10], [224, 12], //   the last phrase (the finale): two quick turns, front for the roll and the final hit
 ].map(([b, k]) => [b, k * PI]);
 // Style keys, linear in between: [beat, roll deg, pitch sway deg, pitch bias deg (- = front up), hop deg (how far the
 // front carriers throw the front up on each jump), local travel (fraction of her length), three-quarter glance (rad),
@@ -44,18 +43,16 @@ const STYLE = [
   [140, 16, 4, -6, 10, 0.05, 0.1, 0.85, 0.8], //   back to the front with the front lifted
   [146, 26, 7, 0, 15, 0.08, 0.1, 1, 1.3], //     B: broad lean, real jumps
   [172, 26, 7, 0, 15, 0.08, 0.1, 1, 1.3],
-  [182, 22, 5, 0, 11, 0.07, 0.1, 0.8, 0.9], //   A': clear alternating lateral lean, rear to the plaça
-  [236, 22, 5, 0, 11, 0.07, 0.1, 0.8, 0.9],
-  [244, 27, 6, -2, 14, 0.08, 0, 1, 1.4], //      B': pitching
-  [260, 27, 6, 0, 15, 0.08, 0, 1, 1.5], //       C: successive turns
-  [292, 28, 7, 0, 16, 0.08, 0, 1, 1.7], //       the last phrase, strongest
-  [306, 28, 7, 0, 16, 0.08, 0, 1, 1.7],
-  [312, 3, 1, -3, 0, 0.02, 0, 0.4, 0.5], //      the final hit: front up, a clear ending pose
-  [318, 1, 0.5, 0, 0, 0.01, 0, 0.3, 0], //       settled
+  [176, 27, 6, 0, 15, 0.08, 0, 1, 1.5], //       C: successive turns
+  [208, 28, 7, 0, 16, 0.08, 0, 1, 1.7], //       the last phrase, strongest
+  [222, 28, 7, 0, 16, 0.08, 0, 1, 1.7],
+  [228, 3, 1, -3, 0, 0.02, 0, 0.4, 0.5], //      the final hit: front up, a clear ending pose
+  [234, 1, 0.5, 0, 0, 0.01, 0, 0.3, 0], //       settled
 ];
 // Sway period in beats, per stretch: one side per score quarter-pair in A (a quarter = 2 game beats), one side per
-// 2/4 bar in B/C. Every change sits on a sway extreme (zero velocity), so the switch is smooth.
-const PERIOD = [[0, 8], [144, 4], [176, 8], [244, 4], [308, 8]]; // (the first one also runs back before beat 0)
+// 2/4 bar in B/C. Every change sits on a sway extreme (zero velocity), so the switch is smooth. One slow lean over the
+// fill into C (172-176) puts C, the finale and the ending on the side they leaned to before the cut.
+const PERIOD = [[0, 8], [144, 4], [172, 8], [176, 4], [224, 8]]; // (the first one also runs back before beat 0)
 const PHASE0 = PERIOD.map(() => 0); // sway phase at each stretch's start (prepared once)
 for (let i = 1; i < PERIOD.length; i++) PHASE0[i] = PHASE0[i - 1] + (PERIOD[i][0] - PERIOD[i - 1][0]) / PERIOD[i - 1][1] * 2 * PI;
 export const DANCE_SIZE = { h: 4.03, l: 4.22 }; // her height and length (models.js buildMulassa), metres

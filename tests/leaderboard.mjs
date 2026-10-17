@@ -1,25 +1,35 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { makeDanceChart } from '../src/game/chart.js';
-import { LEADERBOARD_VERSION, EXPECTED_JUDGMENTS, normalizeAlias, snapshotResult, validResult } from '../src/services/leaderboard-rules.js';
+import { LEADERBOARD_VERSION, EXPECTED_JUDGMENTS, VERSION_RULES, normalizeAlias, snapshotResult, validResult } from '../src/services/leaderboard-rules.js';
 import { createLeaderboardService } from '../src/services/leaderboard.js';
 import { captureLeaderboardResult, clearLeaderboardResult, getLeaderboardResult, subscribeLeaderboardResult, markLeaderboardDebugUse } from '../src/services/leaderboard-result.js';
+import { v1Song } from './v1-song.mjs';
 const song = JSON.parse(readFileSync(new URL('../src/song.json', import.meta.url)));
-for (let d = 0; d < 3; d++) assert.equal(makeDanceChart(song, d).reduce((sum,n) => sum + 1 + (n.end && !n.balloon ? 1 : 0),0), EXPECTED_JUDGMENTS[d], 'chart changes require a new leaderboard version');
+const judgedIn = chart => chart.reduce((sum,n) => sum + 1 + (n.end && !n.balloon ? 1 : 0),0);
+for (let d = 0; d < 3; d++) assert.equal(judgedIn(makeDanceChart(v1Song, d)), VERSION_RULES['mulassa-v1'].judgments[d], 'chart changes require a new leaderboard version');
+// the local trial's short chart is not mulassa-v1: not one of its runs, however good, makes a result to publish
+for (let d = 0; d < 3; d++) {
+  const n = judgedIn(makeDanceChart(song, d));
+  assert.equal(n, EXPECTED_JUDGMENTS[d], 'the short chart has its own contract');
+  const result = snapshotResult({ diff: d, counts: { perfect: n, good: 0, miss: 0 }, score: 1000, maxCombo: n }, { reason: 'end', query: new URLSearchParams() });
+  assert.equal(result.version, LEADERBOARD_VERSION);
+  assert(!validResult({ ...result, version: 'mulassa-v1' }), 'short counts cannot be relabelled as v1');
+}
 assert.equal(normalizeAlias('  A\u0300necd’Òdena '), 'Ànecd’Òdena'); assert.equal(normalizeAlias('Ànec d’Òdena'), null, 'no spaces');
 for (const a of ['x','<script>','a@example.com','🎮🎮','a'.repeat(21)]) assert.equal(normalizeAlias(a), null);
-const game = { diff:0, counts:{ perfect:120,good:20,miss:10 },score:54321,maxCombo:50 };
+const game = { diff:0, counts:{ perfect:70,good:20,miss:18 },score:54321,maxCombo:50 };
 const clean = snapshotResult(game,{reason:'end',query:new URLSearchParams()});
 assert(clean && Object.isFrozen(clean) && Object.isFrozen(clean.counts));
-game.counts.perfect = 1; assert.equal(clean.counts.perfect,120); game.counts.perfect = 120;
+game.counts.perfect = 1; assert.equal(clean.counts.perfect,70); game.counts.perfect = 70;
 for (const q of ['autoplay','from=0','from=50','view=front','perf']) assert.equal(snapshotResult(game,{reason:'end',query:new URLSearchParams(q)}),null);
 assert(snapshotResult(game,{reason:'end',query:new URLSearchParams('mute&offset=60')}));
 assert.equal(snapshotResult(game,{reason:'collapse',query:new URLSearchParams()}),null);
 assert.equal(snapshotResult({...game,practice:{}},{reason:'end',query:new URLSearchParams()}),null);
 assert.equal(snapshotResult(game,{reason:'end',query:new URLSearchParams(),debugUsed:true}),null);
-assert(validResult({...clean,counts:{perfect:60,good:60,miss:30}}),'under 70% finished runs may publish');
-assert(!validResult({...clean,maxCombo:141}));
-assert(!validResult({...clean,counts:{perfect:120,good:20,miss:9}}));
+assert(validResult({...clean,counts:{perfect:20,good:50,miss:38}}),'under 70% finished runs may publish');
+assert(!validResult({...clean,maxCombo:91}));
+assert(!validResult({...clean,counts:{perfect:70,good:20,miss:17}}));
 assert(!validResult({...clean,score:NaN}));
 let observed;
 const off = subscribeLeaderboardResult(r => { observed=r; });

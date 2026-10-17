@@ -6,11 +6,14 @@ import assert from 'node:assert/strict';
 import { loadMainSource } from './load-main.mjs';
 import { readFileSync } from 'node:fs';
 import { makeDanceChart } from '../src/game/chart.js';
-import { MAX_SCORES, EXPECTED_JUDGMENTS, validResult, LEADERBOARD_VERSION } from '../src/services/leaderboard-rules.js';
+import { MAX_SCORES, EXPECTED_JUDGMENTS, validResult, LEADERBOARD_VERSION, VERSION_RULES } from '../src/services/leaderboard-rules.js';
 import { fabricateRun, judgments, walk, mockRows } from '../src/dev/final-test.js';
 import { ceilings, perfectMax, ceilingOf, loadSong, SCORING, TAP_RATE, MARGIN } from '../tools/score-ceiling.mjs';
+import { v1Song } from './v1-song.mjs';
 
 const song = loadSong();
+import { comparableScore, FULL_SCORE_ANCHORS, SHORT_SCORE_ANCHORS } from '../src/game/score-scale.js';
+import { referenceScore } from '../tools/reference-score.mjs';
 const charts = [0, 1, 2].map(d => makeDanceChart(song, d));
 const want = ceilings(song);
 
@@ -19,7 +22,7 @@ assert.deepEqual([...MAX_SCORES], want, `MAX_SCORES must be the generated ceilin
 const sql = readFileSync(new URL('../supabase/migrations/202609280015_score_ceiling.sql', import.meta.url), 'utf8');
 const values = sql.match(/from \(values ([^)]*\)(?:, \([^)]*\))*)\) as c\(difficulty, max_score\)/)?.[1];
 assert(values, 'the migration sets versions.max_score from a values list');
-assert.deepEqual([...values.matchAll(/\((\d), (\d+)\)/g)].map(m => [+m[1], +m[2]]), want.map((c, d) => [d, c]), 'the migration carries the same ceilings');
+assert.deepEqual([...values.matchAll(/\((\d), (\d+)\)/g)].map(m => [+m[1], +m[2]]), ceilings(v1Song).map((c, d) => [d, c]), 'the migration carries the same ceilings');
 assert(/if p_score > v_max then[\s\S]*?'leaderboard_score_ceiling'/.test(sql), 'submit_result refuses a score over the ceiling with its own code');
 assert(/^[\x00-\x7f]*$/.test(sql), 'ASCII only (SQL Editor)');
 
@@ -41,8 +44,18 @@ for (const d of [0, 1, 2]) {
   const counts = { perfect: EXPECTED_JUDGMENTS[d], good: 0, miss: 0 }, res = s => ({ version: LEADERBOARD_VERSION, difficulty: d, counts, score: s, maxCombo: 10 });
   assert(validResult(res(MAX_SCORES[d])) && !validResult(res(MAX_SCORES[d] + 1)), `level ${d}: the client stops at the ceiling`);
 }
-assert(mockRows(charts, song.finale).every(r => r.score <= MAX_SCORES[r.difficulty]), '?final mock board under the ceilings');
+assert(mockRows(charts, song.finale).every(r => r.score <= comparableScore(MAX_SCORES[r.difficulty], r.difficulty)), '?final mock board under the ceilings');
 assert(MAX_SCORES[0] < MAX_SCORES[1] && MAX_SCORES[1] < MAX_SCORES[2], 'harder levels, higher ceilings');
+// Preserve the original published contract independently of the active short chart.
+assert.deepEqual(VERSION_RULES['mulassa-v1'].ceilings, ceilings(v1Song));
+assert.deepEqual(VERSION_RULES['mulassa-v1'].judgments, [0, 1, 2].map(d => perfectMax(v1Song, d).judgments));
+for (const d of [0, 1, 2]) {
+  assert.equal(referenceScore(v1Song, d), FULL_SCORE_ANCHORS[d]);
+  assert.equal(referenceScore(song, d), SHORT_SCORE_ANCHORS[d]);
+  assert.equal(comparableScore(SHORT_SCORE_ANCHORS[d], d), FULL_SCORE_ANCHORS[d], 'equal reference performances earn equal displayed points');
+  assert.equal(comparableScore(54321, d, 'mulassa-v1'), 54321, 'existing published points stay identical');
+  assert(!validResult({ version: 'mulassa-v1', difficulty: d, counts: { perfect: EXPECTED_JUDGMENTS[d], good: 0, miss: 0 }, score: 1000, maxCombo: 1 }));
+}
 
 // the scoring the model assumes is still the game's (src/main.js judge / pump / settleHold / guapaHit, the x2 finale)
 const main = loadMainSource();

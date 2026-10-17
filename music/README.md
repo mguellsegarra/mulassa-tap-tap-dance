@@ -7,9 +7,23 @@ https://www.esmuc.cat/wp-content/uploads/2026/04/AB-Analisi-Partitura-ARRE-2025J
 
 És l'única entrada de `tools/build_taiko.py`, que genera tota la música, el mapa de notes del joc (`src/song.json`) i `taiko-arrangement.json`. Les versions anteriors (gralla chiptune, C64, arcade, banda de vent...) i les seves eines es poden recuperar de l'historial de git.
 
+## Versió curta
+
+La versió curta conserva tota la introducció original i elimina només el tram [174,258) de la versió completa. Manté 152 BPM: últim cop al temps 228 (90,1 s), amb 93,6 s incloent la cua. S'ometen el final original de B, el pont i la represa A′ B′; es conserva el compàs 49 d'entrada a C. No s'ha audicionat aquesta prova.
+
+La versió curta publica com a `mulassa-v2-short`, amb els recomptes i límits propis; `mulassa-v1` continua activa per als clients anteriors. La migració `202610160001_short_song_rankings.sql` conserva tots els registres originals i uneix les dues versions a la mateixa classificació. En fusionar a `master`, el workflow de desplegament aplica primer les migracions pendents i només publica el client si acaben correctament. Aprovar la PR no executa aquests passos: cal fusionar-la. El workflow de migracions també es pot executar manualment; l'opció `baseline` només marca l'historial i no aplica SQL.
+
+Els punts es guarden i es validen sense transformar. La classificació i els resultats els mostren a l'escala original: una partida de referència amb tots els encerts perfectes, mantinguts complets i globus a 12 tocs/s equival a la mateixa partida de referència llarga, per nivell. Les referències són `[96572,113940,196572]` i `[69350,83540,149972]` (`tools/reference-score.mjs`). La proporció no reprodueix els errors o combos de les frases eliminades: és una calibració comuna, no una equivalència exacta per a qualsevol manera de jugar. Els límits de seguretat continuen calculant-se separadament amb `tools/score-ceiling.mjs`.
+
+La qualitat i la ratxa conserven els valors reals de cada partida. Els desempats mantenen l'escala de judicis original de cada nivell. Un jugador amb les dues versions ocupa una sola posició i substitueix una sola mostra per nivell. Els rècords locals nous es desen en una clau de família; els antics es tornen a llegir a cada partida i no se sobreescriuen. Les proves conserven una còpia íntegra del mapa original de `96312f5` a `tests/fixtures/`.
+
+El generador no regenera l'ambient del menú per defecte; `AMBIENT=1` ho activa explícitament.
+
+La gravació curta es publica com a `mulassa-taiko-short.mp3`. Es conserva la gravació llarga original a `mulassa-taiko.mp3`, amb el seu hash, perquè una pestanya antiga pugui repetir una descàrrega fallida després del desplegament. El generador només escriu l'MP3 curt; `legacyAudio` fa que el paquet de Pages també exigeixi i inclogui l'original.
+
 ## Arranjament Taiko
 
-`mulassa-taiko.mp3`, `.wav` i `.mid`, a 152 BPM fixos. És un arranjament nou, en to de festa major, que només aprofita la melodia de `score.json`. A la part A cada negra de la partitura ocupa dos temps, però la banda toca a tempo sencer: primer caixa al segon i quart temps i baix de pasdoble (fonamental i quinta), després bombo a negres, baix sincopat i glockenspiel doblant la melodia. Els acords de do menor s'il·luminen amb mi bemoll, si bemoll i la bemoll majors. B i la coda fan servir un temps per negra, amb metalls suaus a contratemps, baix a octaves, campanes, i petits redobles cada quatre compassos de la melodia. Abans de cada B (temps 140–143 i 240–243) i al final (308–312) hi ha redoblaments en crescendo. L'última frase de la coda (temps 292–308) dobla la subdivisió i és el clímax: és el FINAL ESBOJARRAT del joc. Sense gralla ni sons de pols: tots els timbres són additius i suaus.
+`mulassa-taiko-short.mp3`, `mulassa-taiko.wav` i `mulassa-taiko.mid`, a 152 BPM fixos. És un arranjament nou, en to de festa major, que només aprofita la melodia de `score.json`. A la part A cada negra de la partitura ocupa dos temps, però la banda toca a tempo sencer: primer caixa al segon i quart temps i baix de pasdoble (fonamental i quinta), després bombo a negres, baix sincopat i glockenspiel doblant la melodia. Els acords de do menor s'il·luminen amb mi bemoll, si bemoll i la bemoll majors. B i la coda fan servir un temps per negra, amb metalls suaus a contratemps, baix a octaves, campanes, i petits redobles cada quatre compassos de la melodia. Abans de B (temps 140–143) i al final (224–228) hi ha redoblaments en crescendo. L'última frase de la coda (temps 208–224) dobla la subdivisió i és el clímax: és el FINAL ESBOJARRAT del joc. Sense gralla ni sons de pols: tots els timbres són additius i suaus.
 
 `mulassa-taiko-ambient.mp3` és l'ambient del menú: percussió de festa major amb taiko arrodonit, picaments de mans, shaker suau, baix i guitarra de niló. Comença amb quatre compassos d'entrada gradual (uns 6,3 s): primer percussió, després harmonia, baix i acords. La guitarra insinua els colors do/mi/sol de B amb un petit arc melòdic i una resposta descendent, en registre mitjà, amb atac tou i sense salts d'octava. Sense campanes ni cascavells.
 
@@ -24,10 +38,10 @@ El mateix generador escriu `src/song.json` (`[temps, don|ka, nivell, gran, final
 ### Regles del joc
 
 - **GUA** (taronja, esquerra; `don`): primer temps i meitat del compàs de la melodia. **PA** (turquesa, dreta; `ka`): temps del mig. Les notes intermèdies segueixen la melodia: si puja, PA; si baixa, GUA.
-- **GUAPA!** (meitat taronja, meitat turquesa): 16 accents per cançó (plats, inicis de frase, últim do i cop final). A tots els nivells cal prémer els dos botons alhora (80 ms; a FÀCIL, 150 ms), i puntua el doble. Amb un sol botó és error («ELS DOS ALHORA!»).
-- **MANTÉN** (NORMAL i DIFÍCIL): les 7 notes llargues de la part A (3 temps o més), alternant GUA i PA. Es jutgen dues vegades: l'inici, com un toc, i la cua, segons quanta estona s'ha mantingut premut.
-- **GLOBUS**: redobles als temps 140–143, 240–243 i 308–312. Compten tots els tocs de qualsevol costat; esclata cada cert nombre de tocs (5/8/12 segons la dificultat, més al final) i en surt un altre. Compta fins a 60 ms abans del final.
-- **FINAL ESBOJARRAT**: l'última frase de la coda (compàs 66, temps 292) fins a l'últim cop, amb punts dobles.
+- **GUAPA!** (meitat taronja, meitat turquesa): 11 accents per cançó (plats, inicis de frase, últim do i cop final). A tots els nivells cal prémer els dos botons alhora (80 ms; a FÀCIL, 150 ms), i puntua el doble. Amb un sol botó és error («ELS DOS ALHORA!»).
+- **MANTÉN** (NORMAL i DIFÍCIL): les 5 notes llargues de la part A (3 temps o més), alternant GUA i PA. Es jutgen dues vegades: l'inici, com un toc, i la cua, segons quanta estona s'ha mantingut premut.
+- **GLOBUS**: redobles als temps 140–143 i 224–228. Compten tots els tocs de qualsevol costat; esclata cada cert nombre de tocs (5/8/12 segons la dificultat, més al final) i en surt un altre. Compta fins a 60 ms abans del final.
+- **FINAL ESBOJARRAT**: l'última frase de la coda (compàs 66 de la partitura, temps 208) fins a l'últim cop, amb punts dobles.
 - **Nivells** (notes cada 7 s, inici → final): FÀCIL 6–7 constant; NORMAL 8 → 12; DIFÍCIL 13–15 → 20–25, i totes les corxeres només al frenesí (~30). `nivell` 3 = nota de la melodia que no surt a cap nivell.
 
 ```sh

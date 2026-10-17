@@ -58,3 +58,7 @@ public/music/*.mid
 *.dump
 *.pgdump
 db-backup-*/
+
+# Local Instagram editor builds and exports
+dist-instagram/
+tools/instagram/exports/

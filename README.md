@@ -30,6 +30,8 @@ Es juga a **[mulassa.cat](https://mulassa.cat)**, des del navegador del mòbil o
 
 Necessites Node 22 (`.node-version`).
 
+Per executar els tests de backups també cal Python 3.11 o posterior.
+
 ```bash
 npm install
 ```

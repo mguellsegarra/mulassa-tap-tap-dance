@@ -41,12 +41,17 @@ const deferred = () => { let resolve, reject; const p = new Promise((a, b) => { 
 const RUN = Object.freeze({ version: 'mulassa-v1', difficulty: 1, counts: Object.freeze({ perfect: 150, good: 20, miss: 11 }), score: 43210, maxCombo: 60 });
 
 function make({ configured = true, publishingEnabled = true, captchaRequired = true, siteKey = 'site', session = false, persistent = true, email = 'contacte@example.test',
-  alias = null, row = false, declined = 0, afterPublish = null, onRecover = null, automated = false, ua = '', standalone = false, touch = 0 } = {}) {
+  detachedPrivacy = false, alias = null, row = false, declined = 0, afterPublish = null, onRecover = null, automated = false, ua = '', standalone = false, touch = 0 } = {}) {
   doc = { activeElement: null, els: new Map(), getElementById(id) { return this.els.get(id); }, createElement: tag => new El(tag) };
   for (const id of ids) doc.els.set(id, new El('x', id));
   doc.els.set('privacy-contact', Object.assign(new El('p', 'privacy-contact'), { hidden: true, dataset: { email } }));
   doc.els.set('privacy-contact-link', new El('a', 'privacy-contact-link'));
   const $ = id => doc.els.get(id);
+  if (detachedPrivacy) {
+    doc.getElementById = id => id === 'privacy-contact' || id === 'privacy-contact-link' ? null : $(id);
+    $('privacy-contact').querySelector = () => $('privacy-contact-link');
+    doc.els.set('privacy-content', { content: { querySelector: () => $('privacy-contact') } });
+  }
   $('board-table').hidden = true; $('results-actions').hidden = true;
   const calls = { all: 0, pages: [], identity: 0, publish: [], alias: [], del: 0, captcha: 0, render: [], reset: 0, remove: 0, persist: 0 };
   const T = { session, persistent, alls: [], publishes: [], }; // queued deferreds the test resolves
@@ -81,6 +86,16 @@ function make({ configured = true, publishingEnabled = true, captchaRequired = t
   return { board, $, calls, T, widgets, mem, focused, env, shares, reports, io, setRun: r => listener(r), rows: () => $('board-rows').children.map(tr => tr.children.map(td => td.textContent)) };
 }
 const submit = $ => $('publish-form').fire('submit');
+
+// The privacy contact is detached at startup, but publishing still requires it.
+{
+  const ready = make({ detachedPrivacy: true }); ready.setRun(RUN); ready.board.results(true);
+  assert(ready.board.publishable && !ready.$('results-publish').hidden, 'a contact inside the template permits publishing');
+  assert.equal(ready.$('privacy-contact-link').href, 'mailto:contacte@example.test');
+  assert(!ready.$('privacy-contact').hidden, 'contact is ready before the privacy sheet opens');
+  const absent = make({ detachedPrivacy: true, email: ' ' }); absent.setRun(RUN); absent.board.results(true);
+  assert(!absent.board.publishable && absent.$('results-publish').hidden, 'an empty detached contact still blocks publishing');
+}
 
 // --- suggestions and the alias rule
 for (let i = 0; i < 50; i++) { const s = suggestAlias(); assert(normalizeAlias(s) && checkAlias(s).alias === s, 'every suggested alias is valid'); }

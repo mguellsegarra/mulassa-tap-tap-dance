@@ -190,7 +190,8 @@
 <!-- Privadesa: any button with data-privacy-open opens it (stacked over the sheet that asked). One <section> per service. -->
 <dialog id="privacy-menu" class="sheet" tabindex="-1" aria-labelledby="privacy-title">
   <button id="privacy-ok" type="button" class="sheet-x" aria-label="Tanca"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
-  <div class="sheet-body fade">
+  <div class="sheet-body fade"></div>
+  <template id="privacy-content">
   <h2 id="privacy-title">Privadesa</h2>
   <p class="privacy-lead">Què passa amb les dades quan jugues.</p>
   <section data-privacy="cloudflare" aria-labelledby="privacy-cf">
@@ -235,7 +236,7 @@
   <!-- For the whole sheet (every section). THE one place for the contact e-mail: the data-email attribute below;
        src/ui/board-ui.js writes the mailto link from it. Empty: the contact stays hidden and publishing/renaming are blocked. -->
   <p class="privacy-owner">Responsable: <b>Marc Güell Segarra</b>, de <b>Mulassa Tap Tap Dance</b> (projecte de codi obert sense ànim de lucre, Valls). Base jurídica: el teu consentiment quan publiques un resultat, enllaces un correu al perfil o escrius a la bústia, i l’interès legítim de servir el joc i protegir-lo dels robots.<span id="privacy-contact" data-email="holi@mulassa.cat" hidden> Per a dubtes o per exercir els teus drets (accedir a les teves dades, corregir-les, esborrar-les, limitar-ne el tractament, portar-les o oposar-t’hi): <a id="privacy-contact-link"></a>.</span> Si creus que no les hem tractat bé, pots reclamar a l’<a href="https://www.aepd.es" target="_blank" rel="noopener">Agència Espanyola de Protecció de Dades</a>.</p>
-  </div>
+  </template>
 </dialog>
 <!-- Classificacions (optional, online): the lists and publishing the run. Driven by src/ui/board-ui.js (the profile itself: src/ui/profile-ui.js) -->
 <div id="results-actions" hidden>

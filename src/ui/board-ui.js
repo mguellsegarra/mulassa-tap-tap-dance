@@ -108,9 +108,11 @@ export function setupBoard({ focusIn, store = defaultStore, service = leaderboar
   if (!service.configured) { $('settings-board').hidden = true; if ($('settings-prompt-row')) $('settings-prompt-row').hidden = true; } // offline game: no online entry points
   // Writes need the build flag AND a privacy contact: index.html #privacy-contact data-email is the one place for it.
   // Empty (or missing): the line stays hidden and nobody can publish; reading still works.
-  const contact = $('privacy-contact'), email = contact?.dataset.email?.trim() || '';
+  const privacyRoot = $('privacy-content')?.content;
+  const contact = privacyRoot?.querySelector('#privacy-contact') || $('privacy-contact');
+  const email = contact?.dataset.email?.trim() || '';
   if (email) {
-    const a = $('privacy-contact-link');
+    const a = contact.querySelector?.('#privacy-contact-link') || $('privacy-contact-link');
     a.href = `mailto:${email}`; a.textContent = email;
     contact.hidden = false;
   }

@@ -3,7 +3,7 @@ import { appendFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
 
-const metadataFile = path => /^(\.github\/|docs\/|tests\/)/.test(path)
+const metadataFile = path => /^(\.github\/|docs\/|tests\/|workers\/backup-scheduler\/)/.test(path)
   || ['README.md', 'AGENTS.md', '.gitignore', 'tools/db_backup.py',
     'tools/db-backup-requirements.txt', 'tools/pages-deploy-needed.mjs'].includes(path);
 

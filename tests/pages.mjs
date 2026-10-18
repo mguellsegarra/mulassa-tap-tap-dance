@@ -15,6 +15,10 @@ const backupFiles = ['.github/workflows/db-backup.yml', '.github/workflows/deplo
   'tools/db_backup.py', 'tools/db-backup-requirements.txt', 'tools/pages-deploy-needed.mjs'];
 assert.equal(pagesDeployNeeded(backupFiles, { beforePackage: pkg, afterPackage: backupOnly }), false);
 assert.equal(pagesDeployNeeded(['.github/workflows/deploy-pages.yml']), false);
+assert.equal(pagesDeployNeeded(['workers/backup-scheduler/src/index.js',
+  'workers/backup-scheduler/wrangler.toml', 'tests/backup-scheduler.mjs'],
+  { beforePackage: pkg, afterPackage: backupOnly }), false);
+assert.equal(pagesDeployNeeded(['workers/feedback/src/index.js']), true);
 assert.equal(pagesDeployNeeded(['tests/pages.mjs', 'docs/example.md']), false);
 for (const path of ['src/main.js', 'public/_headers', 'index.html', 'package-lock.json', '.node-version',
   'vite.config.js', 'tools/seo-pages.mjs', 'tools/prepare-pages.mjs', 'new-build-input.js']) {

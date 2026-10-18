@@ -337,7 +337,7 @@ function pose(p, dt, beat, live) {
   const hop = (Math.max(0, Math.sin(beat * Math.PI + p.ph)) * F.beatHop + up * 0.25) * p.stand + (gv * GROOVE.bob + ringUp + rip * RIP.bob) * k;
   // drawn a hair behind the simulation (a 40 ms ease): the no-overlap limit's small corrections in a packed crowd never pop
   if (p.gx === undefined) { p.gx = p.pos.x; p.gz = p.pos.y; } else { // (and never faster than 1.6 m/s: a shove is caught up with, not jumped)
-    let ex = (p.pos.x - p.gx) * showE, ez = (p.pos.y - p.gz) * showE; const e = Math.hypot(ex, ez), lim = 1.6 * dt;
+    let ex = (p.pos.x - p.gx) * showE, ez = (p.pos.y - p.gz) * showE; const e = Math.hypot(ex, ez), lim = (PHOTO.on ? 3.4 : 1.6) * dt;
     if (e > lim) { ex *= lim / e; ez *= lim / e; }
     p.gx += ex; p.gz += ez;
   }

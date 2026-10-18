@@ -42,12 +42,17 @@ export function dracEndTraca(n) {
 }
 // once a frame, after animCrowd. t: the song time drawn
 export function dracFrame(dt, t) { // (the red smoke of the last pass rises round IN.x/z, her spot)
+  if (!drac?.root.visible) {
+    SHOWCASE.crema = false;
+    chip?.clearMenuSfx?.('flama');
+    dracFx.clear(); tracaFor = null;
+    if (hazed) { scene.fog.color.copy(FOG.sky); scene.background.copy(FOG.sky); scene.fog.near = FOG.near; scene.fog.far = FOG.far; hazed = false; }
+    return;
+  }
   const on = isDracOn();
-  const poof = PAIR.poof; // the splash's Drac leaves in a smoke bomb (its puffs count as live only once drawn: update this frame)
-  if (poof) { PAIR.poof = false; dracFx.bomb(PAIR.x, PAIR.z); chip?.sfx('perfect'); } // with the practice's GUA / PA tick
   const show = PAIR.k > 0 || (on && (G.state === 'select' || G.state === 'title')); // its menu showcase (drac-demo.js): a CREMA now and then
   if (SHOWCASE.crema) { SHOWCASE.crema = false; if (show) { dracFx.crema(); chip?.sfx('flama'); } }
-  if (!on && !show && !poof && !hazed && dracFx.idle) return; // the Mulassa alone: nothing to do
+  if (!on && !show && !hazed && dracFx.idle) return; // the Mulassa alone: nothing to do
   const play = on && G.state === 'play' && !G.collapseT;
   IN.on = (play && !G.practice) || show; IN.fire = on || show ? drac?.fire ?? null : null;
   IN.streak = play && !G.practice && streakFire(G.combo, beatAt(t));

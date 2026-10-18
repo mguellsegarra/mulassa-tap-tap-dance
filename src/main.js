@@ -16,7 +16,7 @@ import { setupCamEdit } from './dev/cam-edit.js';
 import { Q, COARSE, pageActive, beatAt, BEAT, offsetMs, playFrom, FINALE_T, AUTOPLAY, CALM, FINAL, STARS } from './core/env.js';
 import { pace, RAWCLOCK, viewClock } from './core/timing.js';
 import { initDrac, mula, drac, qualityLevel, renderProfile, softwareGl, GPU, renderer, camera, CAM_AZ, FRONT, plaza, cameraTarget, camFocus, camFocusTarget, camShift, camXYZ, focusXYZ, scene, setQualityLevel, setCamShift, renderScreen } from './scene/stage.js';
-import { G, chip, clock, songTime, drawT, bigPending, audioEngine, setClock, setDrawT } from './game/state.js';
+import { afterActive, G, chip, clock, songTime, drawT, bigPending, audioEngine, setClock, setDrawT } from './game/state.js';
 import { audioFailureTags } from './platform/audio.js';
 import { TAU } from './core/anim.js';
 import { spawnConfetti, burst, animConfetti, setConfettiSettled } from './scene/confetti.js';
@@ -59,7 +59,6 @@ import './ui/backdrop.js';
 import './ui/input.js';
 import './ui/sheets-setup.js';
 import { framePhotoCamera, releasePhotoCamera } from './scene/photo-camera.js';
-import { updatePhotoMarker } from './scene/photo-marker.js';
 
 initDrac(); // both rigs exist before shader warmup and the first frame
 
@@ -73,6 +72,9 @@ errors.context(() => ({ state: G.state, diff: G.diff, practice: !!G.practice, pa
 
 // ------------------------------------------------------------------ loop
 let last = performance.now();
+const resetFrameTime = () => { last = null; };
+for (const event of ['blur', 'focus', 'pagehide', 'pageshow']) addEventListener(event, resetFrameTime);
+document.addEventListener('visibilitychange', resetFrameTime);
 
 let audioStallT = null;
 // ?cam: the camera editor over the game (src/dev/cam-edit.js): choose a view by eye, copy its numbers, the per-device camera is fitted from them
@@ -81,7 +83,8 @@ const CAMED = Q.has('cam') ? setupCamEdit({ hud, camera, active: () => G.state =
 function frame(now) {
   requestAnimationFrame(frame);
   if (innerWidth !== sizedW || devicePixelRatio !== sizedDpr || Math.abs(HH * K - appHeight()) > 1) resize();
-  if (document.hidden) { last = now; return; }
+  if (!pageActive()) { last = null; return; }
+  if (last === null) last = now; // no elapsed background time enters the demo or effect emitters
   // iOS can leave the audio context stopped after an app switch (resume() only works inside a tap): the song clock would stand still
   // with no menu up. Stalled for a second mid-run: pause, so the Reprèn tap is the gesture that restarts it.
   if (G.state === 'play' && !G.paused && chip?.t0 != null && chip.ctx.state !== 'running' && pageActive()) { audioStallT ??= now; if (now - audioStallT > 1000) { audioStallT = null; pauseGame(); } } else audioStallT = null;
@@ -121,10 +124,10 @@ function frame(now) {
     }
     if (t >= song.end && G.next >= G.chart.length && !G.hold && !bigPending && !G.eeeh && !G.collapseT) { // the "eeeeh!": grand finale volley, for everyone
       G.eeeh = true;
-      for (let i = 0; i < 6; i++) setTimeout(() => firework(rnd(-10, 10), rnd(10, 15), rnd(-10, 3), 90), i * 180);
+      for (let i = 0; i < 6; i++) afterActive(i * 180, () => { if (G.state === 'play') firework(rnd(-10, 10), rnd(10, 15), rnd(-10, 3), 90); });
       burst(M.pos.x, M.pos.y);
       // the crowd's chant, in its own rhythm: "guapa, guapa... i guapa!"
-      figTheme.chant.forEach(([w, at]) => setTimeout(() => { if (G.state === 'play') headline(w, 'rainbow', 4, at > 1 ? 1.6 : 0.8, 0.5); }, at * 1000));
+      figTheme.chant.forEach(([w, at]) => afterActive(at * 1000, () => { if (G.state === 'play') headline(w, 'rainbow', 4, at > 1 ? 1.6 : 0.8, 0.5); }));
       setTrauma(1);
     }
     if (judgedCount(G.counts) > 1) G.shown += (G.guapo - G.shown) * Math.min(1, dt * 4); // the meter eases, it never jumps
@@ -142,7 +145,7 @@ function frame(now) {
   }
   if (PHOTO.on && !steers()) setView(false);
   animMula(dt, beat, live);
-  if (!PHOTO.on && G.state === 'select' && sheets.select?.figure?.status === 'aviat') { mula.root.visible = false; drac.root.visible = false; }
+  if (G.state === 'select' && (sheets.select?.pending ?? sheets.select?.figure?.status === 'aviat')) { mula.root.visible = false; drac.root.visible = false; }
   const c0 = PERF && performance.now();
   animCrowd(dt, beat, vt, live);
   if (PERF) PERF.crowd += performance.now() - c0; // ?perf: the crowd's own share of the js
@@ -153,7 +156,7 @@ function frame(now) {
 
   // camera: during play the mulassa sits near the lane, in the free stage above the pad or
   // the bottom edge, with the crowd around her. A lens shift (view offset) puts her there without tilting the view.
-  const pk = PHOTO.on ? (PHOTO.pair && PHOTO.id === 'drac-valls' ? 1 : 0) : G.state === 'splash' ? 0.5 * PAIR.k : G.state === 'select' ? 0.5 * PAIR.k ** 3 : 0; // the splash frames her and the Drac together, and keeps it in shot while it fades in its smoke; then titleC's spring eases onto her
+  const pk = PHOTO.on ? (PHOTO.pair && PHOTO.id === 'drac-valls' ? 1 : 0) : G.state === 'splash' ? 0.5 * PAIR.k : 0; // the splash frames both figures; the selector follows its selected figure
   const mx = G.state === 'play' ? M.pos.x : (M.pivot.x * 0.5 + M.pos.x * 0.5) * (1 - pk) + PAIR.x * pk, mz = G.state === 'play' ? M.pos.y : (M.pivot.y * 0.5 + M.pos.y * 0.5) * (1 - pk) + PAIR.z * pk, far = camera.aspect < 1 ? 1.4 : 1; // play follows the body; the menu follows her pivot
   const VIEW = { side: [9, 2.2, 0], front: [0, 2.5, 8], back: [-3, 3, -8], top: [4, 9, 6] }[Q.get('view')];
   if (!PHOTO.on) releasePhotoCamera();
@@ -204,7 +207,7 @@ function frame(now) {
     CAMS.live = false;
     if (camera.fov !== baseFov()) { camera.fov = baseFov(); camera.updateProjectionMatrix(); }
   }
-  setCamShift(G.state === 'play' && !VIEW ? shift : camShift + (shift - camShift) * Math.min(1, dt * 3)); // play: already smoothed
+  setCamShift(PHOTO.on || G.state === 'play' && !VIEW ? shift : camShift + (shift - camShift) * Math.min(1, dt * 3)); // play: already smoothed
   if (Math.abs(camShift) > 0.5) camera.setViewOffset(W * K, HH * K, 0, -camShift, W * K, HH * K);
   else if (camera.view?.enabled) camera.clearViewOffset();
   camXYZ[0] = camera.position.x; camXYZ[1] = camera.position.y; camXYZ[2] = camera.position.z;
@@ -216,7 +219,6 @@ function frame(now) {
     camera.position.x += Math.sin(clock * 47) * 0.25 * k; camera.position.y += Math.sin(clock * 61) * 0.2 * k;
   }
   const p0 = PERF && performance.now();
-  updatePhotoMarker();
   if (PERF?.mode !== 'no3d') renderScreen();
   if (PERF?.mode === 'sync') renderer.getContext().readPixels(0, 0, 1, 1, 6408, 5121, PERF.px ??= new Uint8Array(4)); // RGBA, UNSIGNED_BYTE
   const p1 = PERF && performance.now();

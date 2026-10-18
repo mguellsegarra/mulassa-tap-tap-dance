@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { FIGURES, TOWNS, MULASSA, DRAC, MULE_ART, DRAC_ART, portraitArt, portraitPalette, playable, townOf, rememberedLevel, rememberLevel, recordKey, aviatText } from '../src/game/figures.js';
+import { FIGURES, TOWNS, MULASSA, DRAC, MULE_ART, DRAC_ART, portraitArt, portraitPalette, playable, townOf, rememberedLevel, rememberLevel, recordKey, aviatText, INVITE, INVITE_TOWN, INVITE_DRAFT } from '../src/game/figures.js';
 import { FIGURE_PORTRAITS } from '../src/game/figure-portraits.js';
 import { setupSelect, peekGap } from '../src/ui/select-ui.js';
 import { escutSvg } from '../src/ui/escuts.js';
@@ -12,7 +12,22 @@ for (const id of ['valls', 'tarragona', 'reus', 'solsona', 'vilanova']) assert(T
 assert.deepEqual(FIGURES.filter(playable).map(f => f.id), [MULASSA.id, DRAC.id]);
 assert(FIGURES.slice(0, FIGURES.filter(playable).length).every(playable), 'available figures come first');
 assert(FIGURES.every(f => townOf(f) && ['playable', 'aviat'].includes(f.status)));
-assert.deepEqual(FIGURES.filter(f => f.town === 'valls').map(f => f.id).sort(), ['mulassa-valls', 'drac-valls', 'aliga-valls', 'bou-tradicional-valls', 'os-trabucaires-valls', 'nans-valls', 'gegants-ciutat-valls', 'cavallets-valls', 'diables-valls', 'gegant-calcot-valls', 'campanar-valls'].sort(), 'only the requested principal Valls figures remain');
+assert.deepEqual(FIGURES.filter(f => f.town === 'valls').map(f => f.id).sort(), ['mulassa-valls', 'drac-valls', 'aliga-valls', 'bou-tradicional-valls', 'os-trabucaires-valls', 'nans-valls', 'gegants-ciutat-valls', 'cavallets-valls', 'gegant-calcot-valls', 'campanar-valls', 'basilisc-valls'].sort(), 'only the requested principal Valls figures remain');
+const sourceCatalog = JSON.parse(readFileSync(new URL('../src/game/figure-catalog.json', import.meta.url), 'utf8'));
+assert.deepEqual(sourceCatalog.figures.filter(f => f.selectorVisible === false).map(f => f.id), ['diables-valls']);
+assert(sourceCatalog.figures.find(f => f.id === 'diables-valls').sources.length && FIGURE_PORTRAITS['diables-valls'], 'hidden Diables retain sources and portrait');
+assert.equal(FIGURES.find(f => f.id === 'os-trabucaires-valls').fullName, 'Ós de Valls', 'the figure is distinct from its accompanying Trabucaires');
+for (const id of ['aliga-valls', 'nans-valls', 'gegants-ciutat-valls']) {
+  const f = FIGURES.find(f => f.id === id);
+  assert.equal(f.owner, 'Ajuntament de Valls');
+  assert.equal(f.manager, 'Unió Anelles de la Flama');
+  assert.equal(f.entity, 'Ajuntament + UAF');
+  assert.equal(f.entityName, 'Ajuntament + UAF', 'compact joint attribution in the card and information panel');
+}
+const basilisc = FIGURES.find(f => f.id === 'basilisc-valls');
+assert.equal(basilisc.entity, 'La Pessigolla');
+assert.equal(basilisc.status, 'aviat', 'Basilisc joins the catalog without becoming playable');
+assert.equal(basilisc.manager, 'Agrupació Cultural La Pessigolla');
 assert.equal(TOWNS.find(t => t.id === 'vilanova').name, 'Vilanova i la Geltrú');
 for (const f of FIGURES) {
   assert(f.name && f.entity && f.sources?.length, `${f.id}: named and attributed catalog entry`);
@@ -23,6 +38,7 @@ for (const f of FIGURES) {
   assert(art.every(row => row.length === art[0].length), `${f.id}: uniform rows`);
   for (const cell of art.join('')) assert(cell === '.' || palette[cell], `${f.id}: unknown palette cell ${cell}`);
 }
+assert(portraitArt(INVITE).join('').split('').every(c => c === '.' || portraitPalette(INVITE)[c]), 'the invitation has its own portrait');
 assert.equal(portraitArt(MULASSA), MULE_ART, 'original Mulassa portrait is retained');
 assert.equal(portraitArt(DRAC), DRAC_ART, 'original Drac portrait is retained');
 assert(FIGURES.every(f => /^#[0-9a-f]{6}$/i.test(townOf(f).color)));
@@ -64,6 +80,7 @@ class Node {
   querySelector(sel) { return sel.startsWith('.sel-banner') ? { offsetLeft: 100 } : null; }
   setAttribute(k, v) { this.attrs[k] = v; }
   toggleAttribute(k, v) { this.attrs[k] = v; }
+  removeAttribute(k) { delete this.attrs[k]; }
   hasAttribute(k) { return Boolean(this.attrs[k]); }
   getClientRects() { return this.hidden ? [] : [{}]; }
   addEventListener(k, f) { (this.listeners[k] ||= []).push(f); }
@@ -158,9 +175,10 @@ assert.equal(sounds.length, soundBefore + 2, 'unavailable scroll actions make no
 
 const live = FIGURES.filter(f => playable(f)), soon = FIGURES.filter(f => !playable(f));
 const more = cards.find(c => c.dataset.more), later = cards.filter(c => c.cls.includes('later'));
+assert(!cards.some(c => c.dataset.id === 'diables-valls'), 'Diables have no card for clicks, keyboard navigation or town selection');
 assert.deepEqual(cards.slice(0, live.length).map(c => c.dataset.id), live.map(f => f.id), 'the playable figures come first');
 assert.equal(cards[live.length], more, 'then the fold');
-assert.deepEqual(later.map(c => c.dataset.id), soon.map(f => f.id), 'then everything still to come');
+assert.deepEqual(later.map(c => c.dataset.id), [...soon, INVITE].map(f => f.id), 'then everything still to come, and the invitation last');
 assert(/aria-label="Pròximament"><span class="sel-more-flag" aria-hidden="true"><svg[^]*?<\/svg><span class="sel-fan"><svg class="escut"/.test($('select-strip').innerHTML), 'the fold is named Pròximament and shows the coming towns\' arms, no count');
 assert.equal($('select-strip').banners.filter(b => b.dataset.town === 'valls').length, 1, 'Valls goes on past the fold with no second banner');
 const banners = $('select-strip').banners;
@@ -229,6 +247,12 @@ const foldSounds = sounds.length;
 key('ArrowRight');
 assert.equal(sounds.length, foldSounds + 1, 'focusing the fold plays one sound without changing figure');
 assert(doc.activeElement === more && api.figure === DRAC && !api.unfolded, 'arrows reach the fold without unfolding it or changing the figure');
+// the cursor on the fold shows the fold's own card: what is coming, no difficulty, the dock where it was
+assert(!$('select-pending').hidden && $('select-info').hidden && $('select-pending').attrs['data-fold'], 'the fold has its own card');
+assert.equal($('aviat-title').textContent, 'Aviat a la plaça');
+assert.match($('aviat-entity').innerHTML, new RegExp(`${soon.length} figures · ${new Set(soon.map(f => f.town)).size} poblacions`));
+assert.equal(($('aviat-icon').innerHTML.match(/class="sel-peek"/g) || []).length, 3, 'three coming figures peek out');
+assert($('select-next').disabled && $('select').attrs['data-fold'], 'its action hides; the dock drops over its row (select.css)');
 key('ArrowRight'); assert.equal(doc.activeElement, more, 'folded, it is the end of the strip');
 assert.equal(sounds.length, foldSounds + 1, 'no sound when the fold focus cannot move farther');
 key('Enter'); assert(api.unfolded && later.every(c => !c.hidden) && more.attrs['aria-expanded'] === 'true', 'Enter unfolds it in place');
@@ -258,18 +282,37 @@ key('ArrowRight'); assert.equal(api.figure, soon[0], 'the arrows go on into it')
 assert(!$('select-pending').hidden && $('select-info').hidden, 'a pending figure shows its own panel');
 assert.equal($('aviat-title').textContent, soon[0].fullName || soon[0].name); assert.match($('aviat-icon').innerHTML, /<svg|<img/);
 assert.equal(($('aviat-text').innerHTML.match(/<p>/g) || []).length, 1); assert.match($('aviat-text').innerHTML, /Encara no s’hi pot jugar/);
-assert($('select-next').disabled && !$('select-next').hidden, 'no difficulty for it, and nothing shifts');
+assert($('select-next').disabled && !$('select-next').hidden, 'no difficulty for it: its action hides');
+assert($('select').attrs['data-pending'], 'the dock drops over the action\'s empty row');
+assert.equal($('select-name').textContent, DRAC.fullName || DRAC.name, 'the playable panel fades out as it was');
 assert.equal(selected.at(-1), DRAC.id, 'nor does it change the song or the model');
 click($('select-next')); key('Enter'); assert($('select-act').hidden, 'it cannot be played');
 click($('aviat-write')); assert.deepEqual(drafts, [`Sobre ${townOf(soon[0]).name}: `]);
 click($('select-strip'), more); assert(!api.unfolded && later.every(c => c.hidden), 'the banner folds it back');
-assert.equal(api.figure, DRAC, 'and goes back to the last playable figure'); assert($('select-pending').hidden);
+assert.equal(api.figure, DRAC, 'a hidden figure falls back to Drac');
+assert($('select-pending').hidden && !$('select').attrs['data-fold'], 'closing never replaces the outgoing figure with the teaser');
+click($('select-strip'), cards[1]); assert($('select-pending').hidden && !$('select-info').hidden && !$('select-next').disabled, 'leaving the fold brings the figure back');
 const tarragona = pills.find(p => p.dataset.town === 'tarragona');
 click($('select-towns'), soonPill); assert(api.unfolded && !tarragona.hidden, 'the pill unfolds too');
 click($('select-towns'), soonPill); assert(!api.unfolded && tarragona.hidden, 'and folds');
 click($('select-towns'), soonPill); click($('select-towns'), tarragona);
 assert.equal(api.figure, soon.find(f => f.town === 'tarragona'), 'a town pill goes to its first figure');
 assert.equal(tarragona.attrs['aria-pressed'], 'true');
+{ // the last pill and card invite a colla to propose its figure: the pending panel with its own copy and draft, never playable
+  const invite = pills.at(-1);
+  assert.equal(invite.dataset.town, INVITE_TOWN.id); assert.equal(cards.at(-1).dataset.id, INVITE.id, 'the invitation closes the strip');
+  assert(!TOWNS.some(t => t.id === INVITE_TOWN.id) && !FIGURES.includes(INVITE), 'no real town, no catalog figure');
+  assert.equal(banners.at(-1).dataset.town, INVITE_TOWN.id, 'under its own estendard');
+  const notified = selected.length;
+  click($('select-towns'), invite);
+  assert.equal(api.figure, INVITE); assert.equal(invite.attrs['aria-pressed'], 'true');
+  assert(!$('select-pending').hidden && $('select-info').hidden && $('select-next').disabled, 'the pending panel: no difficulty, no records');
+  assert.equal($('aviat-title').textContent, 'La teva colla'); assert.match($('aviat-text').innerHTML, /el teu poble surti al joc/);
+  assert.equal(selected.length, notified, 'the stage keeps the last playable figure');
+  click($('select-next')); assert($('select-act').hidden, 'it cannot be played');
+  click($('aviat-write')); assert.equal(drafts.at(-1), INVITE_DRAFT, 'the Bústia opens with a proposal draft');
+  click($('select-towns'), tarragona);
+}
 assert.match($('select-strip').innerHTML, /<img src="\/figures\/selector-fixture\.webp" alt="" width="96" height="96" loading="lazy"/);
 assert.match($('select-strip').innerHTML, /Figura de prova amb nom llarg<\/span><small>Entitat de prova amb nom llarg/);
 busy = true; click($('select-strip'), more); assert(api.unfolded, 'not over a sheet'); busy = false;
@@ -330,6 +373,18 @@ assert(!/showModal|aviat\.close|aviat-menu|aviat-close/.test(ui));
   for (const t of TOWNS.filter(t => t.id !== 'solsona')) assert.match(css, new RegExp(`\\.sel-banner\\[data-town="${t.id}"\\]`), `${t.name}: a colla's cloth`);
 }
 assert.match(readFileSync(new URL('../src/styles/select.css', import.meta.url), 'utf8'), /@media \(pointer: coarse\) \{[^}]*\}\s*\.sel-carousel \.sel-arrow \{ display: none; \}/, 'touch screens swipe the strip: no arrows');
+{ // a pending figure takes the action's row back: the dock drops, its card follows on the same clock, no layout animated
+  const css = readFileSync(new URL('../src/styles/select.css', import.meta.url), 'utf8');
+  assert.match(css, /#select:is\(\[data-pending\], \[data-fold\]\) \{ --drop: var\(--drop-h\); \}/, 'a pending figure or the fold\'s card');
+  assert.match(css, /--drop-h: calc\(var\(--action-h\) \+ var\(--ga\)\)/, 'by exactly the action and its gap');
+  assert.match(css, /\.sel-bottom \{[^}]*transform: translateY\(var\(--drop\)\); transition: transform \.32s/);
+  assert.match(css, /\.sel-pending \{ --sink: calc\(var\(--drop\) \/ 2\); transform: translateY\(var\(--sink\)\); transition: [^}]*transform \.32s[^}]*max-height \.32s/);
+  assert.match(css, /\.sel-pending \{[^}]*max-height: calc\(100% - var\(--pending-top, 144px\) - var\(--pending-bottom, 254px\) \+ var\(--drop\)\)/);
+  assert.match(css, /@media \(prefers-reduced-motion: reduce\) \{ #select :is\(\.sel-pending, \.sel-info\) \{ transition: none; \} \}/);
+  assert.match(css, /#select\[data-fold\] \.sel-card\.sel-more:not\(:focus-visible\)::before \{ border: 3px solid #fff3d6; \}/, 'the fold\'s card shows: the fold wears the cream ring');
+  assert.match(css, /#select\[data-fold\] \.sel-card\[aria-selected="true"\] \{ transform: none;/, 'and the figure underneath lets it go');
+  assert.match(ui, /dockTop = \(dock\.offsetTop/, 'measure() reads the dock\'s layout box, never its moving rect');
+}
 console.log('catalog selection, the PRÒXIMAMENT fold, pending panel, town pills, town arms, touch strip without arrows, feedback focus and per-figure records ok');
 
 
@@ -343,7 +398,7 @@ console.log('catalog selection, the PRÒXIMAMENT fold, pending panel, town pills
   assert.equal(peekGap([60, 60], 400, 7), 7);
 }
 
-{ // A pending selection and its action change only when the coordinated fold ends.
+{ // Selection commits before the first exit frame; hiding the catalog only finishes the visual transition.
   for (const n of nodes.values()) n.listeners = {};
   for (const k of Object.keys(handlers)) delete handlers[k];
   doc.activeElement = null;
@@ -356,8 +411,11 @@ console.log('catalog selection, the PRÒXIMAMENT fold, pending panel, town pills
     const animation = { keyframes, options, cancelled: false, cancel() { this.cancelled = true; } };
     this.animation = animation; return animation;
   };
-  const tick = ms => { now += ms; const jobs = [...frames.values()]; frames.clear(); jobs.forEach(f => f(now)); };
-  const animated = setupSelect({ doc, win, store, reduced: () => false, onPlay() {} });
+  const tick = ms => { now += ms; for (const [id, f] of [...frames]) if (frames.delete(id)) f(now); }; // honour cancellation by an earlier callback in this frame
+  let reducedMotion = false;
+  const notifications = [], foldSfx = [];
+  const animated = setupSelect({ doc, win, store, reduced: () => reducedMotion, keyboard: () => true,
+    onPlay() {}, onSelect: f => notifications.push(f.id), sfx: k => foldSfx.push(k) });
   animated.visible(true);
   const row = $('select-strip'), toggle = row.children.find(c => c.dataset.more);
   const dragon = row.children.find(c => c.dataset.id === DRAC.id);
@@ -365,18 +423,55 @@ console.log('catalog selection, the PRÒXIMAMENT fold, pending panel, town pills
   click(row, dragon); click(row, toggle); click(row, eagle);
   for (let i = 0; i < 120; i++) tick(1000 / 60);
   click(row, toggle);
-  assert.equal(animated.figure.id, 'aliga-valls');
-  assert($('select-next').disabled, 'difficulty does not appear before the pending figure fades');
+  assert.equal(animated.figure, DRAC);
+  assert.equal($('aviat-title').textContent, 'Àliga de la Ciutat de Valls', 'the outgoing panel retains its content');
+  assert($('select-pending').hidden && !$('select').hasAttribute('data-fold'), 'the pending panel fades without an intermediate teaser');
   tick(120);
-  assert.equal(animated.figure.id, 'aliga-valls', 'selection stays stable through the exit');
+  assert.equal(animated.figure, DRAC, 'selection stays stable through the exit');
   assert(!eagle.hidden && eagle.inert, 'fading figures retain layout but cannot be selected');
   assert.deepEqual(eagle.animation.keyframes.opacity, [1, 0]);
   tick(120);
-  assert(eagle.hidden && animated.figure === DRAC, 'hide and restore selection happen together');
-  assert(!$('select-next').disabled && !$('select').hasAttribute('data-folding'));
+  assert(eagle.hidden && animated.figure === DRAC, 'completion only removes the faded catalog');
+  assert(!$('select-next').disabled && !$('select').hasAttribute('data-folding') && !$('select').hasAttribute('data-fold'), 'the cursor comes back with the figure: its action, the dock up');
+  click(row, toggle); click(row, dragon); click(row, toggle); tick(300);
+  assert(!$('select-next').disabled && !$('select').hasAttribute('data-fold'), 'folding with a playable figure selected brings its action back');
+  click(row, dragon);
   click(row, toggle); click(row, eagle); tick(300);
   click(row, toggle); tick(80); click(row, toggle); tick(500);
-  assert(!eagle.hidden && !eagle.inert && animated.figure.id === 'aliga-valls', 'reopening keeps the pending selection and cancels the old exit');
+  assert(!eagle.hidden && !eagle.inert && animated.figure === DRAC, 'reopening keeps the committed selection and cancels the old exit');
   assert(!$('select-pending').inert && !$('select').hasAttribute('data-folding'));
+  for (const reduced of [false, true]) {
+    reducedMotion = reduced;
+    for (const id of [MULASSA.id, DRAC.id, 'aliga-valls', INVITE.id]) {
+      if (!animated.unfolded) click(row, toggle);
+      click(row, row.children.find(c => c.dataset.id === MULASSA.id));
+      const source = row.children.find(c => c.dataset.id === id);
+      click(row, source); source.focus();
+      tick(500);
+      const title = $('aviat-title').textContent, before = notifications.length, soundCount = foldSfx.length;
+      const expected = id === MULASSA.id ? MULASSA : DRAC;
+      click(row, toggle);
+      assert.equal(animated.figure, expected, `${id}: selection commits synchronously (reduced=${reduced})`);
+      assert(!$('select').hasAttribute('data-fold'), 'no teaser, including keyboard mode');
+      assert.equal($('aviat-title').textContent, title, 'outgoing content is not rewritten');
+      assert.deepEqual(foldSfx.slice(soundCount), ['menu'], 'one ordinary menu sound, no Drac effect');
+      assert.equal(notifications.length - before, playable(FIGURES.find(f => f.id === id) ?? INVITE) ? 0 : 1, 'host notified only for a changed figure');
+      if (!playable(FIGURES.find(f => f.id === id) ?? INVITE)) assert.equal(doc.activeElement, toggle, 'focus returns from the disappearing card');
+      tick(300);
+      assert.equal(animated.figure, expected, 'completion does not change selection');
+      assert(!row.children.some(c => c.inert && !c.hidden), 'no lingering invisible interactive cards');
+    }
+  }
+  reducedMotion = false;
+  click(row, toggle);
+  click(row, row.children.find(c => c.dataset.id === INVITE.id));
+  const townRow = $('select-towns');
+  townRow.scrollWidth = 2000; townRow.scrollLeft = 1400;
+  click(row, toggle);
+  tick(120);
+  assert(townRow.scrollLeft > 0 && townRow.scrollLeft < 1400, 'distant pills return while the catalog fades');
+  tick(120);
+  assert.equal(townRow.scrollLeft, 0, 'pills arrive before removing their overflow can clamp the scroll');
+  assert.equal(animated.figure, DRAC);
 }
-console.log('pending fold: delayed action, shared exit, focus-safe hiding and reopening ok');
+console.log('pending fold: immediate selection, preserved outgoing content, shared exit and reopening ok');

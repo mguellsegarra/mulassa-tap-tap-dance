@@ -5,7 +5,7 @@ import { CALM } from '../core/env.js';
 import * as THREE from 'three';
 import { poseMulaBody } from './mula-pose-rig.js';
 import { newPose, practicePose, dancePose } from '../game/dance.js';
-import { CAM_AZ, FRONT, mula, drac, dracMat } from './stage.js';
+import { CAM_AZ, FRONT, mula, drac } from './stage.js';
 import { selectedFigure } from '../game/figure-song.js';
 import { newDracPose, dracPose, dracPractice } from '../game/dance-drac.js';
 import { poseDrac } from './drac-motion.js';
@@ -229,18 +229,15 @@ function holdGesture() {
 }
 
 // The splash: the Drac wanders and dances beside her (drac-demo.js), round a spot across the shot from the camera; each
-// slows down short of the other, and a last push keeps her head, centre and rear (it swings round on her turns) out of its footprint. Leaving the splash it
-// goes up in a smoke bomb (drac-show.js reads poof), fading out inside the cloud (the selector shows one figure).
-export const PAIR = { k: 0, poof: false, x: Math.cos(CAM_AZ) * 2.6 - Math.sin(CAM_AZ) * 2.2, z: -Math.sin(CAM_AZ) * 2.6 - Math.cos(CAM_AZ) * 2.2, clear: 2.5, avoid: 4.2 };
+// slows down short of the other, and a last push keeps her head, centre and rear out of its footprint.
+// The selector shows only its selected figure, from the first frame.
+export const PAIR = { k: 0, x: Math.cos(CAM_AZ) * 2.6 - Math.sin(CAM_AZ) * 2.2, z: -Math.sin(CAM_AZ) * 2.6 - Math.cos(CAM_AZ) * 2.2, clear: 2.5, avoid: 4.2 };
 PAIR.w = newWalker(PAIR.x, PAIR.z, FRONT, 1.3);
 PAIR.hx = -Math.cos(CAM_AZ) * 1.6; PAIR.hz = Math.sin(CAM_AZ) * 1.6; // her own wandering middle: to the shot's left
 const SOLO = newWalker(); // the Drac picked on the selector
 let soloOn = false;
-let dracShadows = true;
-function dracShadow(on) { if (on !== dracShadows) { dracShadows = on; drac.root.traverse(o => { if (o.isMesh && o.material === dracMat) o.castShadow = on; }); } }
-function placeLife(x, z, yaw, opacity = 1) { // the rig's parent: where it walks and which way it faces (0, 0, 0 in the song)
+function placeLife(x, z, yaw) { // the rig's parent: where it walks and which way it faces (0, 0, 0 in the song)
   const life = drac.root.parent;
-  dracMat.opacity = opacity;
   life.position.set(x, 0, z); life.rotation.set(0, yaw, 0); // quaternion restores may leave x/z rotated
   life.scale.setScalar(DRAC_SCALE);
 }
@@ -253,18 +250,13 @@ function keepClear() {
   M.pos.set(M.pivot.x - sx * PIVOT, M.pivot.y - cz * PIVOT);
 }
 function animPair(dt, beat) {
-  if (PAIR.k === 1 && G.state !== 'splash') PAIR.poof = true;
-  // its fade, as the cloud thickens: at most a 30th of a second a frame, so the long frame that opens the selector
-  // (old phones) never swallows it, and the shadow goes while the smoke hides the floor under it
-  PAIR.k = G.state === 'splash' ? 1 : G.state === 'play' ? 0 : Math.max(0, PAIR.k - Math.min(dt, 1 / 30) / 0.55);
+  PAIR.k = G.state === 'splash' ? 1 : 0;
   drac.root.visible = PAIR.k > 0;
-  dracShadow(PAIR.k === 0 || PAIR.k > 0.5); // (back on once it is gone: the Drac picked later casts its own)
   if (!PAIR.k) return;
   const w = PAIR.w;
   if (PHOTO.on && PHOTO.pair && (PHOTO.id === 'drac-valls' || PHOTO.yielding)) manualDracStep(w, DRAC_POSE, dt, beat, PHOTO.drac, DRAC_SCALE, CALM.matches);
-  else if (G.state === 'splash') { if (w.manual > 0) resumeWalker(w, beat); demoStep(w, DRAC_POSE, dt, beat, M.pos, DRAC_SCALE); PAIR.x = w.x; PAIR.z = w.z; } // (frozen in its cloud)
-  if (PAIR.k < 1) DRAC_POSE.fire *= PAIR.k ** 3; // (its flames are opaque: they shrink away first)
-  placeLife(w.x, w.z, w.face, smooth(PAIR.k));
+  else { if (w.manual > 0) resumeWalker(w, beat); demoStep(w, DRAC_POSE, dt, beat, M.pos, DRAC_SCALE); PAIR.x = w.x; PAIR.z = w.z; }
+  placeLife(w.x, w.z, w.face);
   poseDrac(drac, DRAC_POSE, 0, w.feetAt);
 }
 

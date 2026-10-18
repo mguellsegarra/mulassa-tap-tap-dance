@@ -26,7 +26,9 @@ export function togglePause() {
 }
 function syncPageActivity() {
   if (!pageActive()) {
+    G.activityEpoch++;
     pauseGame();
+    chip?.clearMenuSfx?.();
     chip?.ctx.suspend();
   } else if (!G.paused || G.resuming != null) {
     chip?.wake();
@@ -36,6 +38,8 @@ document.addEventListener('visibilitychange', syncPageActivity);
 addEventListener('blur', syncPageActivity);
 addEventListener('focus', syncPageActivity);
 addEventListener('pagehide', () => {
+  G.activityEpoch++;
+  chip?.clearMenuSfx?.();
   pauseGame();
   chip?.ctx.suspend();
 });

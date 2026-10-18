@@ -1,30 +1,46 @@
 import assert from 'node:assert/strict';
-import {readFileSync} from 'node:fs';
+import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
-const el={style:{},dataset:{},setAttribute(){},hidden:false}, sw={addEventListener(){}};
-const c=vm.createContext({document:{getElementById:id=>id==='fps'?el:sw},store:{get:()=> 'on'},hide:(e,h)=>e.hidden=h,sheets:{select:{band:{top:120,bottom:451},fpsFooter:[]}},G:{state:'select'},pace:{fps:60},COARSE:{matches:false},K:1,W:375,HH:667,SAFE:{t:0,r:0,b:0,l:0},playBottom:()=>600,addEventListener(){}});
-vm.runInContext(readFileSync('src/dev/fps.js','utf8').replace(/^import .*;$/gm,'').replace('export function','function'),c);
-let now=1000;const tick=()=>{vm.runInContext(`fpsTick(${now});fpsTick(${now+300})`,c);now+=600;return {left:parseFloat(el.style.left),bottom:parseFloat(el.style.bottom)}};
-const rect=(left,top,width,height)=>({left,top,right:left+width,bottom:top+height,width,height});
-const set=(w,h,rects)=>{c.W=w;c.HH=h;c.sheets.select.fpsFooter=rects;};
-set(375,667,[rect(53,10,268,44),rect(0,70,375,44),rect(14,135,347,301),rect(0,457,375,144)]);
-assert.deepEqual(tick(),{left:8,bottom:8},'pending SE: hidden CTA leaves footer free');
-set(320,568,[rect(26,10,268,44),rect(0,70,320,44),rect(14,126,292,256),rect(0,394,320,108)]);
-assert.deepEqual(tick(),{left:8,bottom:8},'small pending: clear of card and carousel');
-vm.runInContext('FPS.height=18;FPS.width=53',c);
-set(667,375,[rect(12,12,200,44),rect(611,12,44,44),rect(12,66,267,295),rect(287,72,380,44),rect(287,143,380,170)]);
-assert.deepEqual(tick(),{left:549,bottom:8},'landscape pending: clear of the left card');
-set(375,667,[rect(53,10,268,44),rect(0,70,375,44),rect(14,134,347,180),rect(0,457,375,144),rect(12,607,351,48)]);
-const live=tick();assert(live.bottom>=216 && live.bottom<=297,'playable: free space above dock');
-vm.runInContext('FPS.width=53;FPS.height=18',c);assert.deepEqual(tick(),live,'digits and hint changes retain slot');
-set(500,800,[rect(160,10,300,44),rect(0,80,500,44)]);
-assert.deepEqual(tick(),{left:8,bottom:742},'use upper left only with enough real space');
-set(1280,800,[rect(0,84,1280,44),rect(400,140,480,356),rect(0,506,1280,200)]);
-assert.deepEqual(tick(),{left:8,bottom:8},'desktop retains original corner');
-c.G.state='play';assert.deepEqual(tick(),{left:8,bottom:8},'game restores left edge');
-c.G.state='select';c.SAFE={t:20,l:47,r:47,b:21};
-set(667,375,[]);assert.deepEqual(tick(),{left:55,bottom:29},'safe-area insets stay clear');
-c.G.state='play';c.COARSE.matches=true;c.SAFE={t:0,l:0,r:0,b:0};c.HH=800;
-assert.deepEqual(tick(),{left:8,bottom:206},'touch game clears the cached pad top');
-c.G.practice={};assert.deepEqual(tick(),{left:8,bottom:232},'practice also clears its instruction');
-console.log('FPS obstacle regression cases passed');
+
+const badge = { style: {}, dataset: {}, setAttribute() {} };
+const toggle = { addEventListener(_, fn) { this.change = fn; } };
+let rail = false, measures = 0;
+const context = vm.createContext({
+  document: {
+    getElementById: id => id === 'fps' ? badge : toggle,
+    body: { classList: { toggle: (_, on) => { rail = on; } } },
+  },
+  store: { get: () => 'on', set() {} }, hide: (el, hidden) => { el.hidden = hidden; },
+  sheets: { select: { measure() { measures++; }, fpsFooter: [] } },
+  G: { state: 'select' }, pace: { fps: 60 }, COARSE: { matches: false },
+  K: 1, HH: 667, SAFE: { t: 0, r: 0, b: 0, l: 0 }, playBottom: () => 600, addEventListener() {},
+});
+vm.runInContext(readFileSync(new URL('../src/dev/fps.js', import.meta.url), 'utf8')
+  .replace(/^import .*;$/gm, '').replace('export function', 'function'), context);
+let now = 1000;
+function tick() {
+  vm.runInContext(`fpsTick(${now});fpsTick(${now + 300})`, context);
+  now += 600;
+  return { top: badge.style.top, bottom: badge.style.bottom };
+}
+assert(rail, 'remembered FPS reserve their rail before the selector opens');
+assert.deepEqual(tick(), { top: '8px', bottom: 'auto' });
+// A hidden action returning, a new footer location and rotation must never move the readout into the action row.
+for (const height of [568, 667, 852, 375, 1024, 800]) {
+  context.HH = height;
+  context.sheets.select.fpsFooter = [{ left: 0, right: 375, top: height - 80, bottom: height }];
+  assert.deepEqual(tick(), { top: '8px', bottom: 'auto' }, `fixed selector rail at height ${height}`);
+}
+context.pace.lowPower = true;
+tick();
+assert(!badge.textContent.includes('\n'), 'selector hint never expands the reserved rail');
+context.SAFE.t = 47;
+assert.equal(tick().top, '55px', 'rail respects the notch');
+toggle.checked = false; toggle.change(); tick();
+assert(!rail && badge.hidden && measures === 1, 'switch off releases the rail and remeasures the selector');
+toggle.checked = true; toggle.change();
+context.G.state = 'play'; context.COARSE.matches = true; context.HH = 800;
+assert.deepEqual(tick(), { top: 'auto', bottom: '206px' }, 'game restores the pad-relative position');
+context.G.practice = {};
+assert.equal(tick().bottom, '232px', 'practice also clears its instruction');
+console.log('FPS fixed rail, footer independence, switch, safe areas and game position ok');

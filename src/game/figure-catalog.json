@@ -91,8 +91,8 @@
       "name": "Àliga",
       "fullName": "Àliga de la Ciutat de Valls",
       "town": "valls",
-      "entity": "UAF",
-      "entityName": "Unió Anelles de la Flama",
+      "entity": "Ajuntament + UAF",
+      "entityName": "Ajuntament + UAF",
       "music": "tradicional",
       "sources": [
         "https://uaf.cat/seguici-ceremonial/aliga-de-la-ciutat/"
@@ -101,7 +101,10 @@
         "Aligons",
         "Àliga de la Ciutat petita"
       ],
-      "modelYear": 1991
+      "modelYear": 1991,
+      "owner": "Ajuntament de Valls",
+      "manager": "Unió Anelles de la Flama",
+      "attributionNote": "La UAF gestiona la peça municipal i aporta els aligons. La fitxa documenta la nissaga Tondo com a balladors històrics, sense identificar el ballador actual."
     },
     {
       "id": "bou-tradicional-valls",
@@ -113,12 +116,13 @@
       "music": "Francesc Bofarull i Figuerola",
       "sources": [
         "https://uaf.cat/seguici-ceremonial/bou-tradicional/"
-      ]
+      ],
+      "attributionNote": "Bou Tradicional recuperat per la UAF el 2012; no identifica altres bous de Valls."
     },
     {
       "id": "os-trabucaires-valls",
-      "name": "Ós i Trabucaires",
-      "fullName": "Ós i Trabucaires de Valls",
+      "name": "Ós",
+      "fullName": "Ós de Valls",
       "town": "valls",
       "entity": "UAF",
       "entityName": "Unió Anelles de la Flama",
@@ -128,15 +132,16 @@
       ],
       "includes": [
         "Ós petit"
-      ]
+      ],
+      "attributionNote": "Els Trabucaires acompanyen l’Ós; són un grup diferenciat de la figura. Es conserva l’identificador històric os-trabucaires-valls."
     },
     {
       "id": "nans-valls",
       "name": "Nans",
       "fullName": "Nans de la Ciutat de Valls",
       "town": "valls",
-      "entity": "UAF",
-      "entityName": "Unió Anelles de la Flama",
+      "entity": "Ajuntament + UAF",
+      "entityName": "Ajuntament + UAF",
       "music": "Francesc Sans",
       "sources": [
         "https://uaf.cat/seguici-ceremonial/nans-de-la-ciutat/"
@@ -152,15 +157,17 @@
         "Català",
         "Noia Maca",
         "Arlequí"
-      ]
+      ],
+      "owner": "Ajuntament de Valls",
+      "manager": "Unió Anelles de la Flama"
     },
     {
       "id": "gegants-ciutat-valls",
       "name": "Gegants i Gegantons",
       "fullName": "Gegants i Gegantons de la Ciutat de Valls",
       "town": "valls",
-      "entity": "UAF",
-      "entityName": "Unió Anelles de la Flama",
+      "entity": "Ajuntament + UAF",
+      "entityName": "Ajuntament + UAF",
       "music": "tradicional",
       "sources": [
         "https://uaf.cat/seguici-ceremonial/gegants-de-la-ciutat/"
@@ -170,7 +177,9 @@
         "Geganta",
         "Lladrefaves",
         "Gegantona"
-      ]
+      ],
+      "owner": "Ajuntament de Valls",
+      "manager": "Unió Anelles de la Flama"
     },
     {
       "id": "cavallets-valls",
@@ -201,19 +210,21 @@
         "Diablessa",
         "Abanderat",
         "Sant Miquel"
-      ]
+      ],
+      "selectorVisible": false
     },
     {
       "id": "gegant-calcot-valls",
       "name": "Gegant del Calçot",
-      "fullName": "Gegant del Calçot",
+      "fullName": "Gegant del Calçot de Valls",
       "town": "valls",
       "entity": "UAF",
       "entityName": "Unió Anelles de la Flama",
       "music": "Roser Olivé",
       "sources": [
         "https://uaf.cat/elements-festius-de-nova-tradicio/gegant-del-calcot/"
-      ]
+      ],
+      "attributionNote": "Figura presentada per la UAF com a mascota de la Gran Festa de la Calçotada; no confondre amb els gegants de la Colla Gegantera El Calçot."
     },
     {
       "id": "campanar-valls",
@@ -225,6 +236,22 @@
       "sources": [
         "https://www.valls.cat/images/aa2026noticies/260604PROGRAMA_santjoan_web.pdf",
         "https://costadaurada.info/file/9322/download?token=Ru315H-c"
+      ],
+      "attributionNote": "El programa municipal de Sant Joan 2026, pàgina 12, l’atribueix a la UAF. No hi especifica separadament la titularitat ni la colla portadora."
+    },
+    {
+      "id": "basilisc-valls",
+      "name": "Basilisc",
+      "fullName": "Basilisc de Valls",
+      "town": "valls",
+      "entity": "La Pessigolla",
+      "entityName": "Agrupació Cultural La Pessigolla",
+      "manager": "Agrupació Cultural La Pessigolla",
+      "music": "Roger Borràs",
+      "sources": [
+        "https://www.bestiari.cat/figura/basilisc-de-valls/",
+        "https://lapessigolla.cat/fem-poble/efemerides-especials/10-anys/",
+        "https://www.visitavalls.cat/ca/descobreix-valls/seguici-popular/"
       ]
     },
     {

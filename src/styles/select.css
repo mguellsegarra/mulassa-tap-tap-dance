@@ -1,5 +1,5 @@
 /* The town row and bottom dock reserve their space; information scrolls within the free stage. */
-#select { --dock-h: 240px; --action-h: 52px; --card-label-h: 68px; --info-top: 142px; --u: 1px; position: fixed; z-index: 3; inset: 0; pointer-events: none; color: #fff3d6; font: 700 16px/1.25 'Baloo 2', system-ui, sans-serif; }
+#select { --dock-h: 264px; --action-h: 52px; --card-label-h: 92px; --info-top: 142px; --u: 1px; position: fixed; z-index: 3; inset: 0; pointer-events: none; color: #fff3d6; font: 700 16px/1.25 'Baloo 2', system-ui, sans-serif; }
 #select[hidden], #select [hidden] { display: none; }
 #select > * { pointer-events: auto; }
 #select::before, #select::after { content: ''; position: absolute; inset-inline: 0; pointer-events: none; }
@@ -30,6 +30,7 @@
 .sel-pill .escut { flex: none; width: 22px; height: 22px; margin: 0; /* not the .btn icon slot's offset: the arms sit with their name */ filter: drop-shadow(0 0 1px #fff3d699); }
 #select .sel-pill[aria-pressed="true"] .escut { filter: none; }
 .sel-pill i { width: 12px; height: 12px; border-radius: 50%; background: var(--c); box-shadow: 0 0 0 1.5px #fff3d6aa; }
+#select .sel-pill[data-town="el-teu-poble"][aria-pressed] i { border-radius: 0; background: linear-gradient(currentColor 0 0) center / 100% 3px no-repeat, linear-gradient(currentColor 0 0) center / 3px 100% no-repeat; box-shadow: none; } /* a plus in the text colour: add your town */
 #select .sel-pill:active { transform: scale(.96); } /* the row clips its overflow: the usual 1 px drop cut its bottom edge */
 #select .sel-pill[aria-pressed="true"] { background: #fff3d6; color: #2a1a10; border-color: #fff3d6; } /* cream = selected; gold fill is only the primary action */
 #select .sel-pill[aria-pressed="true"] i { box-shadow: 0 0 0 1.5px #2a1a1080; }
@@ -75,32 +76,45 @@
 #select-howto[hidden] { display: none; }
 #select-error { margin: 0; padding: 4px 8px; border-left: 3px solid #ff8a7a; background: #1b110be6; font-size: 14px; }
 
-/* Both steps occupy this same dock, so selecting an unavailable figure never moves the cards. */
-.sel-bottom { --ga: 8px; --bl: max(16px, env(safe-area-inset-left)); --br: max(16px, env(safe-area-inset-right)); position: absolute; z-index: 1; bottom: env(safe-area-inset-bottom); left: 50%; translate: -50% 0; width: 100%; height: var(--dock-h); box-sizing: border-box; display: grid; grid-template-rows: minmax(0, 1fr) var(--action-h); gap: var(--ga); padding: 8px var(--br) calc(var(--ga) + 6px) var(--bl); }
+/* Both steps occupy this same dock. A pending figure has no action: the dock drops by the action's row (--drop) and
+   its card takes the room; a transform, so nothing re-lays out while it eases (measure() reads the layout box). */
+#select { --ga: 8px; --drop-h: calc(var(--action-h) + var(--ga)); --drop: 0px; --sel-ease: cubic-bezier(.35, 0, .15, 1); }
+#select:is([data-pending], [data-fold]) { --drop: var(--drop-h); } /* the fold's own card has no action either */
+/* The action fades with the drop; it comes back once the dock is on its way up. */
+#select #select-next { transition: transform .12s, filter .12s, box-shadow .12s, opacity .3s var(--sel-ease) .1s, translate .3s var(--sel-ease) .1s, visibility 0s; } /* + .btn-primary's */
+:is(#select #select-next:disabled, #select[data-folding] #select-next) { opacity: 0; pointer-events: none; translate: 0 8px; transition: opacity .2s var(--sel-ease), translate .2s var(--sel-ease), visibility 0s .2s; } /* hidden, or a fold under way: it fades out and back, never pops; translate is free (the breathing uses scale/rotate) */
+.sel-bottom { --bl: max(16px, env(safe-area-inset-left)); --br: max(16px, env(safe-area-inset-right)); position: absolute; z-index: 1; bottom: env(safe-area-inset-bottom); left: 50%; translate: -50% 0; transform: translateY(var(--drop)); transition: transform .32s var(--sel-ease); width: 100%; height: var(--dock-h); box-sizing: border-box; display: grid; grid-template-rows: minmax(0, 1fr) var(--action-h); gap: var(--ga); padding: 8px var(--br) calc(var(--ga) + 6px) var(--bl); }
 /* --ga + the strip's 6 px foot = the air over the action = the air under it */
 .sel-carousel { --edge-w: 88px; grid-row: 1; grid-column: 1; position: relative; isolation: isolate; display: grid; grid-template-columns: minmax(0, 1fr); align-items: stretch; min-height: 0; margin-inline: calc(-1 * var(--bl)) calc(-1 * var(--br)); }
 /* The arrows float over the strip; only an available arrow adds its edge shade. */
-.sel-carousel::before, .sel-carousel::after { content: ''; position: absolute; z-index: 1; top: 10px; bottom: 6px; width: var(--edge-w); pointer-events: none; opacity: 0; background: linear-gradient(to right, #140c07eb, #140c0780 50%, #140c0700); }
+.sel-carousel::before, .sel-carousel::after { content: ''; position: absolute; z-index: 1; top: 10px; bottom: 6px; width: var(--edge-w); pointer-events: none; opacity: 0; transition: opacity .18s ease; background: linear-gradient(to right, #140c07eb, #140c0780 50%, #140c0700); }
 .sel-carousel::before { left: 0; }
 .sel-carousel::after { right: 0; rotate: 180deg; }
 .sel-carousel:not([data-fits]):has(> #select-prev:not(:disabled))::before, .sel-carousel:not([data-fits]):has(> #select-forward:not(:disabled))::after { opacity: 1; }
 .sel-carousel .sel-arrow { position: absolute; z-index: 2; top: calc(50% + 2px); translate: 0 -50%; width: 44px; min-width: 44px; height: 44px; min-height: 44px; padding: 0; display: grid; place-items: center; border-radius: 50%; }
 #select-prev { left: calc((var(--edge-w) - 44px) / 2); }
 #select-forward { right: calc((var(--edge-w) - 44px) / 2); }
+/* Availability changes immediately through disabled; only the paint fades, with no layout or timer work. */
+#select .sel-arrow { opacity: 1; transition: opacity .18s ease, visibility 0s; }
+#select .sel-arrow:disabled, #select .sel-carousel[data-fits] .sel-arrow { opacity: 0; visibility: hidden; pointer-events: none; transition-delay: 0s, .18s; }
+@media (prefers-reduced-motion: reduce) {
+  #select .sel-arrow, #select .sel-arrow:disabled, #select .sel-carousel[data-fits] .sel-arrow,
+  .sel-carousel::before, .sel-carousel::after { transition: none; }
+}
 .sel-carousel .sel-arrow svg { position: static; width: 22px; height: 22px; margin: 0; transform: none; }
 @media (pointer: coarse) { .sel-carousel { margin-inline: calc(-1 * var(--bl)) calc(-1 * var(--br)); } .sel-carousel .sel-arrow { display: none; } .sel-carousel::before, .sel-carousel::after { display: none; } .sel-carousel .sel-strip { padding-inline: max(var(--bl), var(--strip-inset, 0px)) max(var(--br), var(--strip-inset, 0px)); scroll-padding-inline: var(--bl) var(--br); } } /* touch: the strip is swiped edge to edge (a cut card says there are more), arrows only for mouse */
 #select button:disabled { visibility: hidden; pointer-events: none; }
 .sel-strip { position: relative; display: flex; align-items: stretch; justify-content: flex-start; gap: 8px; min-height: 0; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; touch-action: pan-x; padding: 10px max(6px, var(--strip-inset, 0px)) 6px; margin-inline: 0; box-sizing: border-box; overflow-anchor: none; }
 /* A dark card on the panel's surface: the town tints the portrait and draws a thin line under it, so a row of
    one town reads as a group without a wall of saturated blocks; the name stays cream and centred. */
-.sel-card { position: relative; flex: 0 0 128px; width: 128px; display: grid; grid-template-columns: minmax(0, 1fr); justify-content: stretch; grid-template-rows: minmax(0, 1fr) var(--card-label-h); align-items: stretch; justify-items: stretch; gap: 0; min-height: 0; padding: 0; border: 0; border-radius: var(--sel-r); background: #20150e; box-shadow: 0 6px 16px #0006; text-align: center; transition: transform .15s; }
+.sel-card { position: relative; flex: 0 0 152px; width: 152px; display: grid; grid-template-columns: minmax(0, 1fr); justify-content: stretch; grid-template-rows: minmax(0, 1fr) var(--card-label-h); align-items: stretch; justify-items: stretch; gap: 0; min-height: 0; padding: 0; border: 0; border-radius: var(--sel-r); background: #20150e; box-shadow: 0 6px 16px #0006; text-align: center; transition: transform .15s; }
 .sel-card::after { content: ''; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1px #fff3d624; pointer-events: none; }
 .sel-card .por { position: relative; box-sizing: border-box; width: 100%; height: 100%; min-height: 0; display: grid; place-items: center; overflow: hidden; border-bottom: 3px solid var(--c); border-radius: var(--sel-r) var(--sel-r) 0 0; background: radial-gradient(circle at 50% 42%, color-mix(in srgb, var(--c) 52%, #3b2a1e), color-mix(in srgb, var(--c) 14%, #20150e) 78%); }
 .sel-card .por svg, .sel-card .por img { width: 78%; height: 78%; min-height: 0; object-fit: contain; stroke: none; image-rendering: pixelated; }
-/* name and entity as one block, centred in the label whether the name takes one line or two */
+/* Full names wrap in a shared caption height; the extra dock space preserves the portraits and aligned cards. */
 .sel-card .nb { box-sizing: border-box; width: 100%; height: 100%; min-height: 0; display: flex; flex-direction: column; justify-content: center; align-items: stretch; gap: 3px; padding: 6px 8px; overflow: hidden; color: #fff3d6; }
-.sel-card-name { flex: none; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; font-size: 15px; line-height: 19px; overflow-wrap: normal; }
-.sel-card .nb small { flex: none; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; font-weight: 600; line-height: 1.15; color: var(--sel-muted); }
+.sel-card-name { flex: none; display: block; white-space: normal; font-size: 15px; line-height: 19px; overflow-wrap: anywhere; }
+.sel-card .nb small { flex: none; display: block; white-space: normal; overflow-wrap: anywhere; font-size: 12px; font-weight: 600; line-height: 1.15; color: var(--sel-muted); }
 /* Selected: lifted, with a cream ring over the whole card (drawn above the portrait). */
 .sel-card[aria-selected="true"] { transform: translateY(-4px); box-shadow: 0 10px 22px #000a; }
 .sel-card[aria-selected="true"]::after { box-shadow: inset 0 0 0 3px #fff3d6; }
@@ -110,8 +124,8 @@
    it rises 8 px into the strip's top padding, above the cards (the fold too) */
 .sel-banner { position: relative; flex: 0 0 34px; margin-top: -8px; background: linear-gradient(var(--cloth, var(--c)), var(--cloth, var(--c))) 2px 4px / calc(100% - 4px) calc(100% - 15px) no-repeat; }
 /* the cloth is the shirt of the town's best-known colla castellera */
-/* Valls carries both colles, cut in bend like a coat of arms: the Vella's pink (their site's #ffb4aa), the Joves' red */
-.sel-banner[data-town="valls"] { background: linear-gradient(150deg, #ffb4aa 49.6%, #c8202f 50.4%) 2px 4px / calc(100% - 4px) calc(100% - 15px) no-repeat; }
+/* Valls: thin white vertical edges around a red centre covering two thirds of the cloth. */
+.sel-banner[data-town="valls"] { background: linear-gradient(90deg, #fff 0 calc(100% / 6), #c8202f 0 calc(500% / 6), #fff 0) 2px 4px / calc(100% - 4px) calc(100% - 15px) no-repeat; }
 .sel-banner[data-town="tarragona"] { --cloth: #7d5aa8; } /* Colla Jove: lila */
 .sel-banner[data-town="reus"] { --cloth: #8f6340; } /* Xiquets de Reus: marró avellana */
 .sel-banner[data-town="vilanova"] { --cloth: #d9a521; } /* Bordegassos: groc terrós */
@@ -119,6 +133,7 @@
 .sel-banner[data-town="berga"] { --cloth: #1f3f7a; } /* Castellers de Berga: blau fosc */
 .sel-banner[data-town="olot"] { --cloth: #7d1f2e; } /* Xerrics d'Olot: granat */
 .sel-banner[data-town="vilafranca"] { --cloth: #00b09a; } /* Castellers de Vilafranca: verd (their site's #00b09a) */
+.sel-banner[data-town="el-teu-poble"] { background: repeating-linear-gradient(90deg, #fcdd09 0 calc(100% / 9), #da121a 0 calc(200% / 9)) 2px 4px / calc(100% - 4px) calc(100% - 15px) no-repeat; } /* the invitation: no town's colours, the senyera hung vertically (nine bars, four red) */
 .sel-banner::before { content: ''; position: absolute; z-index: 2; top: 1px; left: -5px; right: -5px; height: 6px; border-radius: 3px; background: linear-gradient(#ffe68a, #f5c518 45%, #a87a08); box-shadow: 0 2px 3px #0007; }
 .sel-banner::after { content: ''; position: absolute; left: 2px; right: 2px; bottom: 1px; height: 11px; background: linear-gradient(#f5c518 0 2px, #0000 2px), repeating-linear-gradient(90deg, #e0b012 0 2px, #0000 2px 3.4px); -webkit-mask: linear-gradient(#000 60%, #0008); mask: linear-gradient(#000 60%, #0008); }
 .sel-banner span { position: absolute; z-index: 1; top: calc(50% - 3.5px); left: 50%; translate: -50% -50%; rotate: -90deg; text-box: trim-both cap alphabetic; text-align: center; font: 800 16px/1 'Baloo 2', system-ui, sans-serif; color: #fff; letter-spacing: .05em; text-shadow: 0 0 1px #1a0f08, 1.2px 0 0 #1a0f08, -1.2px 0 0 #1a0f08, 0 1.2px 0 #1a0f08, 0 -1.2px 0 #1a0f08, .9px .9px 0 #1a0f08, -.9px -.9px 0 #1a0f08, .9px -.9px 0 #1a0f08, -.9px .9px 0 #1a0f08, 0 0 4px #1a0f0899; } /* white with a dark rim: reads the same on every cloth; turned a quarter, read upwards, the box trimmed to the caps so they sit on the cloth's middle (Baloo's caps sit off-centre in a full line box) */
@@ -147,25 +162,25 @@ body.view-mode #select { opacity: 0; visibility: hidden; pointer-events: none; }
 #select { transition: opacity .2s; }
 
 @media (max-width: 899px) and (min-height: 501px) {
-  #select { --dock-h: 228px; --card-label-h: 68px; }
+  #select { --dock-h: 252px; --card-label-h: 92px; }
   #select::before { --shade: linear-gradient(#140c07f0, #140c07b8 26%, #140c0700 44%); } /* the column spans the width: shade from the top */
   .sel-info { width: min(460px, calc(100% - 24px)); }
   .sel-name { font-size: 26px; }
-  .sel-card { flex-basis: 118px; }
+  .sel-card { flex-basis: 144px; }
   .sel-card .nb { padding: 8px 9px; }
   .sel-card-name { font-size: 15px; line-height: 19px; }
 }
 
 @media (max-width: 519px) and (min-height: 501px) {
   /* one 14 px step between the groups: corner icons (bottom 54) → pills → the name (the info's 2 px padding included) */
-  #select { --info-top: 130px; --dock-h: 216px; --action-h: 48px; }
+  #select { --info-top: 130px; --dock-h: 240px; --action-h: 48px; --ga: 6px; }
   .sel-towns { top: calc(70px + env(safe-area-inset-top)); --edge-l: max(12px, env(safe-area-inset-left)); --edge-r: max(12px, env(safe-area-inset-right)); }
   .sel-info { left: calc(max(12px, env(safe-area-inset-left)) - 4px); width: calc(100% - 16px); }
-  .sel-bottom { --ga: 6px; --bl: 12px; --br: 12px; padding: 6px 12px calc(var(--ga) + 6px); }
+  .sel-bottom { --bl: 12px; --br: 12px; padding: 6px 12px calc(var(--ga) + 6px); }
   .sel-panel { gap: 10px; }
   .sel-song { padding-top: 10px; }
   .sel-song svg { width: 30px; height: 30px; padding: 7px; }
-  .sel-card { flex-basis: 112px; }
+  .sel-card { flex-basis: 144px; }
   .sel-card-name { font-size: 14px; line-height: 18px; }
   .sel-card .nb small { font-size: 11px; }
   .sel-footer .btn, #select-next { flex: 1; min-width: 0; font-size: 18px; } /* full width, under the thumb */
@@ -173,7 +188,7 @@ body.view-mode #select { opacity: 0; visibility: hidden; pointer-events: none; }
 }
 @media (max-height: 500px) {
   /* one 16 px step between the groups (icons → pills → name: the ? disc clears the pills), 10 inside the identity */
-  #select { --info-top: 130px; --dock-h: 238px; --action-h: 44px; --card-label-h: 68px; }
+  #select { --info-top: 130px; --dock-h: 262px; --action-h: 44px; --card-label-h: 92px; --ga: 6px; }
   .sel-towns { top: calc(72px + env(safe-area-inset-top)); }
   .sel-info { left: 12px; width: 40%; max-height: calc(100% - 128px); gap: 6px; }
   .sel-panel { gap: 10px; }
@@ -182,8 +197,8 @@ body.view-mode #select { opacity: 0; visibility: hidden; pointer-events: none; }
   .sel-song svg { width: 28px; height: 28px; padding: 6px; }
   .sel-tiles { padding-top: 10px; }
   .sel-tiles { font-size: 15px; line-height: 22px; }
-    .sel-bottom { --bl: 12px; --br: max(12px, env(safe-area-inset-right)); left: auto; right: 0; translate: none; width: 57%; --ga: 6px; padding: 6px var(--br) calc(var(--ga) + 6px) 12px; }
-  .sel-card { flex-basis: 112px; }
+    .sel-bottom { --bl: 12px; --br: max(12px, env(safe-area-inset-right)); left: auto; right: 0; translate: none; width: 57%; padding: 6px var(--br) calc(var(--ga) + 6px) 12px; }
+  .sel-card { flex-basis: 144px; }
   .sel-card-name { font-size: 14px; line-height: 18px; }
   .sel-footer .btn { width: auto; min-width: 0; flex: 1; padding-inline: 20px; font-size: 17px; }
   .sel-footer #select-figures-back { font-size: 12px; }
@@ -205,7 +220,7 @@ body.view-mode #select { opacity: 0; visibility: hidden; pointer-events: none; }
 @media (hover: hover) { #select .btn-primary:hover { transform: translateY(-1px); filter: brightness(1.06); box-shadow: 0 6px 18px #0008; } }
 #select .btn-primary:active { transform: translateY(1px) scale(.98); filter: brightness(.94); box-shadow: 0 2px 8px #0006; }
 @media (prefers-reduced-motion: reduce) {
-  #select, .sel-card, #select .btn-primary { transition: none; }
+  #select, .sel-card, #select .btn-primary, #select .sel-bottom, #select #select-next, #select #select-next:disabled, #select[data-folding] #select-next { transition: none; }
   #select .btn-primary { animation: none; scale: none; rotate: none; }
   #select .btn-primary::after { display: none; animation: none; }
   #select .btn-primary:is(:hover, :active) { transform: none; }
@@ -221,8 +236,7 @@ body.view-mode #select { opacity: 0; visibility: hidden; pointer-events: none; }
 
 /* Desktop and landscape tablets: room to breathe between the cards and a bigger main action. */
 @media (min-width: 900px) and (min-height: 600px) {
-  #select { --dock-h: 300px; --action-h: 58px; --card-label-h: 76px; }
-  .sel-bottom { --ga: 12px; }
+  #select { --dock-h: 324px; --action-h: 58px; --card-label-h: 100px; --ga: 12px; }
   #select-next { flex-basis: 400px; font-size: 22px; }
   /* a wide, open column a little in from the edge; the type grows with the screen */
   .sel-info { top: calc(var(--info-top) + 16px + env(safe-area-inset-top)); left: calc(max(40px, env(safe-area-inset-left)) - 4px); width: min(640px, 40%); }
@@ -236,7 +250,7 @@ body.view-mode #select { opacity: 0; visibility: hidden; pointer-events: none; }
   .sel-song svg { width: 44px; height: 44px; padding: 11px; }
   .sel-song-credit { font-size: 15px; }
   .sel-tiles { font-size: 20px; line-height: 28px; }
-      .sel-card { flex-basis: 152px; }
+      .sel-card { flex-basis: 176px; }
   .sel-card-name { font-size: 17px; line-height: 21px; }
   .sel-card .nb small { font-size: 13px; }
   .sel-banner { flex-basis: 38px; }
@@ -244,7 +258,7 @@ body.view-mode #select { opacity: 0; visibility: hidden; pointer-events: none; }
 }
 /* Larger glass: the owner-approved bigger cards (~40% over the phones). */
 @media (min-width: 1100px) and (min-height: 900px) {
-  #select { --dock-h: 372px; --card-label-h: 84px; }
+  #select { --dock-h: 396px; --card-label-h: 108px; }
   .sel-song { font-size: 24px; padding-top: 20px; }
   .sel-tiles { padding-top: 20px; }
   .sel-panel { gap: 20px; }
@@ -256,7 +270,7 @@ body.view-mode #select { opacity: 0; visibility: hidden; pointer-events: none; }
 }
 /* Safari's toolbars can leave a short portrait viewport on a small phone. */
 @media (max-width: 519px) and (min-height: 501px) and (max-height: 600px) {
-  #select { --dock-h: 180px; --card-label-h: 62px; }
+  #select { --dock-h: 204px; --card-label-h: 86px; }
   .sel-info { gap: 6px; }
   .sel-panel { gap: 6px; }
   .sel-name { font-size: 24px; }
@@ -286,7 +300,6 @@ body.view-mode #select { opacity: 0; visibility: hidden; pointer-events: none; }
 .sel-fan .escut { width: 20px; height: 20px; margin: 0 0 0 -6px; filter: grayscale(.55) brightness(.8) drop-shadow(0 0 1px #2a1a10); }
 .sel-fan .escut:first-child { margin-left: 0; }
 .sel-info::-webkit-scrollbar { display: none; }
-.sel-carousel[data-fits] .sel-arrow { visibility: hidden; } /* nothing to scroll to */
 /* the fold: the «Pròximament» pill above stood upright in a 44 px button (--more-w wide, the overhang eats into the gaps):
    the same dashed outline, the coming towns' arms stacked under the chevron */
 #select { --more-w: 34px; }
@@ -307,9 +320,20 @@ body.view-mode #select { opacity: 0; visibility: hidden; pointer-events: none; }
 #select .sel-card.sel-more:focus-visible::before { border: var(--focus); }
 body:has(:focus-visible) #select .sel-card[aria-selected="true"]:not(:focus-visible)::after { box-shadow: inset 0 0 0 2px #fff3d640; } /* Keep selection quieter while the keyboard cursor is on another control. */
 @media (hover: hover) { #select .sel-card.sel-more:hover:not(:focus-visible)::before { border-style: solid; border-color: #f5c518aa; } }
+/* While its own card shows, the fold is what is selected: the cream ring moves to it; the figure stays chosen underneath. */
+#select[data-fold] .sel-card.sel-more:not(:focus-visible)::before { border: 3px solid #fff3d6; }
+#select[data-fold] .sel-card[aria-selected="true"] { transform: none; box-shadow: 0 6px 16px #0006; }
+body #select[data-fold] .sel-card[aria-selected="true"]:not(.sel-more)::after { box-shadow: inset 0 0 0 1px #fff3d624; }
 #select .sel-soon[aria-expanded="true"] .sel-fan { display: none; }
 /* Pending figures share the measured free band. Only the portrait gives up height on short screens. */
-.sel-pending { position: absolute; z-index: 1; top: calc((100% + var(--pending-top, 144px) - var(--pending-bottom, 254px)) / 2); max-height: calc(100% - var(--pending-top, 144px) - var(--pending-bottom, 254px)); left: 50%; translate: -50% -50%; width: min(480px, calc(100% - 28px)); box-sizing: border-box; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px 20px; border: 1px solid var(--sel-line); border-radius: var(--sel-r); text-align: center; background: #1a110bf5; box-shadow: 0 8px 24px #0005; font-size: 16px; font-weight: 500; line-height: 1.3; }
+/* It and the playable info cross-fade. The card's band ends above the strip: it rides half the dock's drop (--sink, its
+   band's centre) and grows by the rest, on the dock's clock, so its edges keep their distance from the strip. */
+#select .sel-info { transition: opacity .26s var(--sel-ease) .06s, display .32s allow-discrete; }
+#select .sel-pending { --sink: calc(var(--drop) / 2); transform: translateY(var(--sink)); transition: opacity .26s var(--sel-ease) .06s, transform .32s var(--sel-ease), max-height .32s var(--sel-ease), display .32s allow-discrete; }
+#select :is(.sel-pending, .sel-info)[hidden] { opacity: 0; pointer-events: none; transition-duration: .14s, .32s, .32s, .32s; transition-delay: 0s; }
+@starting-style { #select[data-shown] :is(.sel-pending, .sel-info) { opacity: 0; } #select[data-shown] .sel-pending { transform: none; } }
+@media (prefers-reduced-motion: reduce) { #select :is(.sel-pending, .sel-info) { transition: none; } }
+.sel-pending { position: absolute; z-index: 1; top: calc((100% + var(--pending-top, 144px) - var(--pending-bottom, 254px)) / 2); max-height: calc(100% - var(--pending-top, 144px) - var(--pending-bottom, 254px) + var(--drop)); left: 50%; translate: -50% -50%; width: min(480px, calc(100% - 28px)); box-sizing: border-box; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px 20px; border: 1px solid var(--sel-line); border-radius: var(--sel-r); text-align: center; background: #1a110bf5; box-shadow: 0 8px 24px #0005; font-size: 16px; font-weight: 500; line-height: 1.3; }
 .sel-pending > * { flex-shrink: 0; }
 .sel-pending h2 { margin: 0; font: 800 26px/1.1 'Baloo 2', system-ui, sans-serif; text-wrap: balance; }
 .sel-pending .sel-pending-icon { flex: 0 1 96px; min-height: 44px; width: 96px; display: grid; place-items: center; }
@@ -324,15 +348,37 @@ body:has(:focus-visible) #select .sel-card[aria-selected="true"]:not(:focus-visi
 .sel-pending-links .btn { display: flex; justify-content: center; align-items: center; gap: 6px; }
 .sel-pending-links .btn > svg { flex: none; width: 18px; height: 18px; margin: 0; }
 .sel-pending-links .btn > span { min-width: 0; overflow-wrap: anywhere; }
+/* The fold's own card (data-fold): three coming figures fanned like the strip's cards, every coming town's arms, one
+   rhythm between the rows (a pending figure's height kept, its content centred) and a button that fits its words. */
+.sel-pending[data-fold] { justify-content: center; gap: 14px; }
+.sel-pending[data-fold] .sel-pending-icon { container-type: size; display: flex; justify-content: center; align-items: center; width: min(180px, 100%); } /* the minis size off the slot's height, which shrinks on short screens */
+.sel-peek { position: relative; box-sizing: border-box; flex: none; width: min(82cqh, 80px); height: min(82cqh, 80px); display: grid; place-items: center; border-radius: 12px; border-bottom: 3px solid var(--c); box-shadow: 0 4px 10px #0008, inset 0 0 0 1px #fff3d624; background: radial-gradient(circle at 50% 42%, color-mix(in srgb, var(--c) 52%, #3b2a1e), color-mix(in srgb, var(--c) 14%, #20150e) 78%); }
+.sel-peek + .sel-peek { margin-left: -14%; }
+.sel-peek:nth-child(1) { rotate: -8deg; translate: 0 4%; }
+.sel-peek:nth-child(2) { z-index: 1; }
+.sel-peek:nth-child(3) { rotate: 8deg; translate: 0 4%; }
+.sel-pending-icon .sel-peek :is(svg, img) { width: 76%; height: 76%; }
+.sel-pending-icon .sel-peek .escut { position: absolute; width: 30%; height: 30%; right: -6%; top: -6%; }
+.sel-pending[data-fold] .sel-entity .sel-fan .escut { width: 16px; height: 16px; margin-left: -5px; filter: drop-shadow(0 0 1px #2a1a10); }
+.sel-pending[data-fold] .sel-entity .sel-fan .escut:first-child { margin-left: 0; }
+.sel-pending[data-fold] .sel-entity span:last-child { font-variant-numeric: tabular-nums; }
+.sel-pending[data-fold] .sel-pending-copy { max-width: 34ch; }
+.sel-pending[data-fold] > .btn-primary { width: auto; min-width: 200px; margin-top: 4px; padding-inline: 32px; }
 @media (max-width: 519px), (max-height: 500px) {
   .sel-pending { padding: 10px 12px; gap: 5px; font-size: 15px; }
   .sel-pending h2 { font-size: 22px; }
   .sel-pending .sel-pending-icon { flex-basis: 72px; width: 72px; }
+  .sel-pending[data-fold] { gap: 10px; }
+  .sel-pending[data-fold] .sel-pending-icon { width: min(140px, 100%); }
 }
 @media (max-height: 500px) {
-  #select[data-pending] .sel-towns { left: 43%; width: 57%; }
+  #select:is([data-pending], [data-fold]) .sel-towns { left: 43%; width: 57%; }
+  #select .sel-pending { --sink: 0px; } /* beside the dock, not above it */
+  #select .sel-pending[hidden] { transition: none; } /* the pills take its row back at once: it leaves with them */
   .sel-pending { left: max(12px, env(safe-area-inset-left)); translate: 0 -50%; width: calc(43% - max(12px, env(safe-area-inset-left)) - 8px); top: calc((100% + 60px + env(safe-area-inset-top) - 8px - env(safe-area-inset-bottom)) / 2); max-height: calc(100% - 68px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); gap: 3px; padding: 6px 10px; line-height: 1.25; }
   .sel-pending h2 { font-size: 20px; }
+  .sel-pending[data-fold] { gap: 6px; }
+  .sel-pending[data-fold] > .btn-primary { margin-top: 0; }
 }
 
 /* Portrait phones: the identity, the song on a plate sized to itself, and a fixed row of record chips under it (bare text
@@ -376,4 +422,12 @@ body:has(:focus-visible) #select .sel-card[aria-selected="true"]:not(:focus-visi
 .sel-card.later { content-visibility: auto; contain-intrinsic-size: auto 128px auto 200px; } /* the off-screen pending cards skip their layout and paint: unfolding 30-odd cards cost ~150 ms on an iPhone */
 
 /* The playable action returns with the completed fold, never ahead of its selected figure. */
-#select[data-folding] #select-next { visibility: hidden; pointer-events: none; }
+
+/* FPS own a rail, independent of the selected figure, fold, difficulty and footer actions. */
+body.fps-on:has(#select:not([hidden])) { --fps-rail: 24px; }
+body.fps-on:has(#select:not([hidden])) :is(#leaders, #viewmode, #feedback, #music, #settings) { translate: 0 var(--fps-rail); }
+body.fps-on #select:not([data-header-inline]) > :is(.sel-towns, .sel-info) { translate: 0 var(--fps-rail); }
+body.fps-on #select .sel-info { max-height: calc(100% - var(--info-top) - var(--dock-h) - 6px - env(safe-area-inset-top) - env(safe-area-inset-bottom) - var(--fps-rail)); }
+@media (max-height: 500px) {
+  body.fps-on #select .sel-pending { top: calc((100% + 60px + env(safe-area-inset-top) + var(--fps-rail) - 8px - env(safe-area-inset-bottom)) / 2); max-height: calc(100% - 68px - env(safe-area-inset-top) - env(safe-area-inset-bottom) - var(--fps-rail)); }
+}

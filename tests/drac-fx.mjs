@@ -52,17 +52,6 @@ function make(smoke = 128, embers = 256, wheels = 0) {
   const e0 = make(0, 0); e0.fx.crema(); e0.run(0.3); assert.equal(e0.fx.objects.sparks, null, 'no pool: no spark mesh');
 }
 
-// the splash's smoke bomb: a pale cloud round the given spot, up its height, silent (drac-show.js plays its tick), cleared in under 2.5 s
-{
-  const m = make(); m.s.on = false; m.s.fire = null;
-  m.fx.bomb(3, -2); m.run(0.3);
-  const p = m.fx.state().puffs;
-  assert(p.length >= 14 && p.every(([x, , z]) => Math.hypot(x - 3, z + 2) < 2.5) && Math.max(...p.map(q => q[1])) > 2, `bomb: ${p.length} puffs round its spot`);
-  assert.deepEqual(m.sounds, []);
-  m.run(2.3); assert(m.fx.idle, 'the cloud clears');
-  const z = make(0); z.fx.bomb(0, 0); z.run(0.3); assert.equal(z.fx.state().smoke, 0, 'minimal: no smoke');
-}
-
 // CREMA: the flames rise fast, peak well over their dance size, gone by ~1.1 s; smoke from the five tips
 {
   const m = make();
@@ -242,3 +231,23 @@ function make(smoke = 128, embers = 256, wheels = 0) {
   const nf = make(0, 0, 512); nf.s.fire = null; nf.fx.wheels(3); nf.run(0.5); assert.equal(nf.fx.state().wheelSparks, 0, 'no fire points (the Mulassa): nothing');
 }
 console.log('drac fx ok');
+
+// Pending selections discard every pool and emission debt, then a visible Drac can start fresh.
+{
+  const { fx, s, run, step, sounds } = make(160, 256, 400);
+  step(1 / 60); fx.crema(); fx.wheels(2); fx.begin(); fx.pump(1, 2);
+  s.flare = s.streak = true; run(0.2);
+  assert(!fx.idle && fx.state().embers > 0);
+  fx.clear();
+  assert(fx.idle);
+  for (const obj of Object.values(fx.objects).flat()) if (obj) assert.equal(obj.visible, false);
+  assert.equal(fx.state().puffs.length, 0);
+  assert.equal(fx.state().sparks.length + fx.state().wsparks.length, 0);
+  s.on = s.flare = s.streak = false; s.fire = null;
+  const n = sounds.length; run(10);
+  assert(fx.idle && sounds.length === n, 'no delayed particles or sounds after clearing');
+  const fresh = make(); fresh.step(1 / 60); fresh.fx.clear(); fresh.step(1 / 60);
+  fresh.fx.crema(); fresh.fx.begin(); fresh.fx.pump(1, 2); fresh.run(0.1);
+  assert(fresh.fx.state().embers > 0 && fresh.fx.objects.petards.count === 5);
+  assert(fresh.sounds.some(([k]) => k === 'crack'), 'legitimate traca still works after clear');
+}

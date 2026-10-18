@@ -3,7 +3,7 @@ import { quality, eventAge } from './progress.js';
 import { pick } from '../scene/models.js';
 import { CELEBRATE } from './bubble-rules.js';
 import { drain, warnings } from './energy.js';
-import { G, clock, chip, bigPending, JUDGE_WORDS, isDown, down, songTime, balloonAt, HANDOFF, setBigPending } from './state.js';
+import { G, clock, chip, afterActive, bigPending, JUDGE_WORDS, isDown, down, songTime, balloonAt, HANDOFF, setBigPending } from './state.js';
 import { bubbles, talkState, bubble } from '../hud/bubbles.js';
 import { updateControls } from '../ui/controls.js';
 import { ringFx, ringSparks } from '../hud/lane.js';
@@ -23,7 +23,7 @@ export function collapse() {
   chip.stop();
   chip.sfx('crash');
   const fell = G.collapseT;
-  setTimeout(() => { if (G.collapseT === fell) chip.sfx('laugh'); }, 700); // not once the run was left (toTitle, a new run)
+  afterActive(700, () => { if (G.collapseT === fell) chip.sfx('laugh'); }); // not once the run was left (toTitle, a new run)
   bubbles.length = 0;
   G.judge = null; G.praise = null; G.ring = null;
   G.hold = null; setBigPending(null);

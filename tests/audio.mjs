@@ -229,6 +229,28 @@ console.log('menu entrance, loop points, version and tempo ok');
     c.plays = (s, t) => s.at != null && (s.end ?? Infinity) > Math.max(s.at, t) && c.audible(s);
     return c;
   };
+  // Menu demo effects are immediate events, never a queue waiting for focus / audio unlock.
+  const menu = graph();
+  menu.ctx.state = 'suspended';
+  for (let i = 0; i < 20; i++) menu.sfx('flama');
+  assert.equal(menu.ctx.sources.length, 0, 'suspended demo cannot accumulate flame sources');
+  menu.ctx.state = 'running'; menu.sfx('flama');
+  const flame = menu.ctx.sources.at(-1);
+  assert(menu.plays(flame, menu.ctx.currentTime), 'a live flame still schedules its original sound');
+  menu.sfx('menu'); const click = menu.ctx.sources.at(-1);
+  menu.clearMenuSfx('flama');
+  assert(!menu.plays(flame, menu.ctx.currentTime), 'hiding the Drac cancels its already scheduled flame');
+  assert(menu.plays(click, menu.ctx.currentTime), 'hiding the Drac preserves the selector click');
+  menu.clearMenuSfx();
+  assert(!menu.plays(click, menu.ctx.currentTime), 'background cancels transient menu voices');
+  const doc = globalThis.document;
+  try {
+    globalThis.document = { hidden: false, hasFocus: () => false };
+    const n = menu.ctx.sources.length; menu.sfx('flama');
+    assert.equal(menu.ctx.sources.length, n, 'blur before suspend resolves cannot schedule a flame');
+    document.hidden = true; document.hasFocus = () => true; menu.sfx('flama');
+    assert.equal(menu.ctx.sources.length, n, 'hidden events cannot schedule a flame');
+  } finally { if (doc === undefined) delete globalThis.document; else globalThis.document = doc; }
   const c = graph(), ctx = c.ctx;
   c.menu(false); // beginRun (main.js): a run's bus
   assert.equal(await c.start(3, 0, 100), true);

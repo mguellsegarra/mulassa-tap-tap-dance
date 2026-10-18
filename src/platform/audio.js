@@ -316,10 +316,19 @@ export class Chip {
     bus.gain.setTargetAtTime(0, t, 0.01); // the ones sounding now fade instead of clicking...
     setTimeout(() => bus.disconnect(), 100); // ...and the bus is gone, whatever the audio clock does next
   }
-  voice(n) { // a source this run started: endRun() stops it
-    if (!this.bus) return n;
-    (this.voices ??= new Set()).add(n);
-    n.onended = () => this.voices?.delete(n);
+  clearMenuSfx(kind) { // transient effects must not survive a suspended menu clock
+    if (!this.menuVoices) return;
+    for (const n of this.menuVoices) if (!kind || n.effectKind === kind) {
+      try { n.stop(); } catch { /* already ended */ }
+      this.menuVoices.delete(n);
+    }
+  }
+  voice(n) { // songs and the ambient loop never pass through here
+    if (!this.bus && !(this instanceof Chip)) return n; // Clicker owns its separate context
+    const voices = this.bus ? (this.voices ??= new Set()) : (this.menuVoices ??= new Set());
+    n.effectKind = this.effectKind;
+    voices.add(n);
+    n.onended = () => voices.delete(n);
     return n;
   }
 
@@ -378,7 +387,10 @@ export class Chip {
   }
 
   sfx(kind, i = 0) { // i: the Drac's petard index (its crack's pitch)
+    if (this.ctx.state && this.ctx.state !== 'running') return; // an immediate effect cannot be queued for a future wake
+    if (typeof document !== 'undefined' && (document.hidden || !document.hasFocus())) return;
     const t = this.ctx.currentTime;
+    this.effectKind = kind;
     switch (kind) {
       case 'crack': { // a petard of the Drac's traca: a short bright bang and a click; at most 3 in any 80 ms (a fast mash)
         const at = this.crackAt ??= new Float64Array(3).fill(-9), k = ((this.crackN ?? 0) + 1) % 3; // k: the oldest of the last 3

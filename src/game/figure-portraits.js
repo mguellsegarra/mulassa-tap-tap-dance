@@ -1,5 +1,45 @@
 // Catalog cells use the original Mulassa/Drac grid style. The SVG renderer adds the dark rim.
 export const FIGURE_PORTRAITS = {
+  // «La teva colla» (the invitation, not a real figure): a crowned gegant holding a gold-and-red estendard.
+  'la-teva-colla': {
+    art: [
+      't......t..........',
+      'tttttttt..y.y.y...',
+      '.yryryrn..yyyyy...',
+      '.yryryrn.hsssssh..',
+      '.yryryrn.hsksksh..',
+      '.yryryrn.hsssssh..',
+      '.yryryrn..hsrsh...',
+      '.t.t.t.n.wwwwwww..',
+      '.......sggggwgggs.',
+      '.......nggggwgggg.',
+      '.......nyyyyyyyyy.',
+      '.......n.gggwggg..',
+      '.......nggggwgggg.',
+      '.......nwgwgwgwgw.',
+    ],
+    palette: { t: '#f5c518', y: '#dfb13d', r: '#c8202f', n: '#6b4630', h: '#5b4033', s: '#e0a868', k: '#2b2622', w: '#fff3d6', g: '#3f7f8c' },
+  },
+  // Valls Basilisc: red rooster comb, gold neck, turquoise scales and raised bat wings.
+  'basilisc-valls': {
+    art: [
+      '.......r.r.r......',
+      '.......rrrrr......',
+      '......ggkggbb.....',
+      '......gggggbb.....',
+      '..w....rgggr...w..',
+      '..ww....ggg...ww..',
+      '..wtw..gsgsg.wtw..',
+      '..wttw.gsgsgwttw..',
+      '...wttttttttttw...',
+      '....ttstktkstt....',
+      '...ggttststttgg...',
+      '...gggttttttggg...',
+      '.......d..d.......',
+      '......bb..bb......',
+    ],
+    palette: { r: '#a52636', g: '#b8884c', k: '#29262b', b: '#e0bd7c', w: '#b7c9cc', t: '#378b98', s: '#96c8ce', d: '#444048' },
+  },
   // The silver 1991 eagle in profile: gold crown, small hooked beak, raised fan wing, grey feather flecks.
   'aliga-valls': {
     art: [

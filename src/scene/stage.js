@@ -53,8 +53,7 @@ scene.add(plaza.group);
 export const mula = buildMulassa();
 scene.add(mula.root);
 export let drac = null;
-// The Drac's own copy of the voxel material, transparent from the start (compiled with the rest, never switched mid-game):
-// the splash's Drac fades out in its smoke bomb while the plaça's MAT stays opaque. At opacity 1 it draws the same.
+// Keep the Drac's material separate for share captures; its body stays opaque.
 // Copied from its own meshes in initDrac (no voxel.js import here: the tests' one-script bundle keeps its module order).
 export let dracMat = null;
 // Build after the existing plaza/crowd setup so its material jitter does not change their random layout.
@@ -64,7 +63,7 @@ export function initDrac() {
   drac.feet = newDracFeet();
   drac.root.traverse(o => { // the voxel parts (vertex colours); the flames keep their own opaque materials
     if (!o.material?.isMeshLambertMaterial || !o.material.vertexColors) return;
-    dracMat ??= Object.assign(o.material.clone(), { transparent: true });
+    dracMat ??= o.material.clone();
     o.material = dracMat;
   });
   drac.root.visible = false;

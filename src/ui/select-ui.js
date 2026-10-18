@@ -2,7 +2,7 @@
 // one fold (the coming towns' arms) and one «Pròximament» pill; either unfolds it in place (its cards, its towns' pills),
 // the fold and an «Amaga» pill fold it back. A pending figure shows its own panel instead of the records.
 // Arrows rove cards; Enter confirms a figure. On the next step arrows choose difficulty; Escape returns.
-import { FIGURES, TOWNS, MULASSA, portraitArt, portraitPalette, townOf, playable, rememberedLevel, rememberLevel, readFigureRecord, aviatText, aviatDraft } from '../game/figures.js';
+import { FIGURES, TOWNS, MULASSA, DRAC, portraitArt, portraitPalette, townOf, playable, rememberedLevel, rememberLevel, readFigureRecord, aviatText, aviatDraft, INVITE, INVITE_TOWN, inviteText, INVITE_DRAFT } from '../game/figures.js';
 import { DIFFS } from '../game/chart.js';
 import { num } from './sheet-kit.js';
 import { escutSvg } from './escuts.js';
@@ -33,13 +33,15 @@ function stripHtml(figures, later = false, last = null) { // later: what the fol
     last = t;
     const name = f.name || 'Aviat', entity = f.entity || t.name;
     const ok = playable(f);
-    html += `<button type="button" class="btn btn-secondary sel-card${ok ? '' : ' aviat'}${later ? ' later' : ''}" role="option" data-id="${escapeHtml(f.id)}" tabindex="-1" aria-selected="false" aria-label="${escapeHtml(`${name}, ${entity}, ${t.name}${ok ? '' : ', pròximament'}`)}" style="--c:${t.color}"><span class="por">${portraitHtml(f)}</span><span class="nb"><span class="sel-card-name">${escapeHtml(name)}</span><small>${escapeHtml(entity)}</small></span></button>`;
+    html += `<button type="button" class="btn btn-secondary sel-card${ok ? '' : ' aviat'}${later ? ' later' : ''}" role="option" data-id="${escapeHtml(f.id)}" tabindex="-1" aria-selected="false" aria-label="${escapeHtml(f.invite ? `${name}: ${entity.toLowerCase()} per al joc` : `${name}, ${entity}, ${t.name}${ok ? '' : ', pròximament'}`)}" style="--c:${t.color}"><span class="por">${portraitHtml(f)}</span><span class="nb"><span class="sel-card-name">${escapeHtml(name)}</span><small>${escapeHtml(entity)}</small></span></button>`;
   }
   return html;
 }
 // the fold between the playable figures and the rest: the «Pròximament» pill stood upright (the coming towns' arms), › folded, ‹ unfolded
 const moreHtml = towns => `<button type="button" class="btn btn-secondary sel-card sel-more" data-more="1" role="option" tabindex="-1" aria-selected="false" aria-expanded="false" aria-label="Pròximament"><span class="sel-more-flag" aria-hidden="true"><svg viewBox="0 0 24 24"><path class="open" d="m9 5 7 7-7 7"/><path class="close" d="m15 5-7 7 7 7"/></svg><span class="sel-fan">${towns.slice(0, 5).map(t => escutSvg(t.id)).join('')}</span></span></button>`; // the first five arms: what fits
 // the pills' last one: the arms of the towns with nothing to play yet, fanned out; unfolded, «Amaga»
+// The fold's own card while the cursor is on it: three coming figures (one per town), every coming town's arms and the count
+const peekHtml = figures => figures.map(f => `<span class="sel-peek" style="--c:${townOf(f).color}">${portraitHtml(f)}${escutSvg(f.town)}</span>`).join('');
 const soonPillHtml = towns => `<button type="button" class="btn btn-secondary sel-pill sel-soon" data-soon="1" tabindex="0" aria-expanded="false"><span class="sel-fan" aria-hidden="true">${towns.map(t => escutSvg(t.id)).join('')}</span><span class="sel-soon-text">Pròximament</span></button>`;
 
 // keyboard(): true while the player uses keys (focus rings, focus follows); busy(): a sheet is up; reduced(): reduced motion
@@ -64,12 +66,13 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
   const DEMO = demo && Boolean((import.meta.env ?? {}).DEV); // ?demo: made-up facts on show only, never stored or sent; gone from production builds
   const $ = id => doc.getElementById(id);
   const root = $('select'), towns = $('select-towns'), strip = $('select-strip'), levels = $('select-level'), pending = $('select-pending');
+  const links = pending.querySelector?.('.sel-pending-links');
   const live = FIGURES.filter(playable), soon = FIGURES.filter(f => !playable(f));
-  const liveTowns = TOWNS.filter(t => live.some(f => f.town === t.id)), restTowns = TOWNS.filter(t => !liveTowns.includes(t) && soon.some(f => f.town === t.id));
+  const liveTowns = TOWNS.filter(t => live.some(f => f.town === t.id)), restTowns = [...TOWNS.filter(t => !liveTowns.includes(t) && soon.some(f => f.town === t.id)), INVITE_TOWN]; // the invitation folds with what is to come, last
   // the toggle sits right after the live towns, like the strip's fold: it stays under the finger and the rest opens after it
   towns.setAttribute('role', 'group'); // Native Tab order, with optional arrow shortcuts between visible buttons.
   towns.innerHTML = liveTowns.map(pillHtml).join('') + (restTowns.length ? soonPillHtml(restTowns) : '') + restTowns.map(pillHtml).join('');
-  strip.innerHTML = stripHtml(live) + (soon.length ? moreHtml(restTowns) + stripHtml(soon, true, townOf(live.at(-1))) : '');
+  strip.innerHTML = stripHtml(live) + (soon.length ? moreHtml(restTowns) + stripHtml([...soon, INVITE], true, townOf(live.at(-1))) : '');
   levels.innerHTML = DIFFS.map((d, i) => `<button type="button" class="btn btn-secondary" data-level="${i}" aria-pressed="false">${d.name}</button>`).join('');
   // Keep device guidance in the information flow, clear of the dock and its actions.
   const hint = $('ios-hint');
@@ -77,13 +80,16 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
   const bar = [...towns.querySelectorAll('.sel-pill')], pills = bar.filter(p => p.dataset.town), cards = [...strip.querySelectorAll('.sel-card')];
   const fold = cards.find(c => c.dataset.more), soonPill = bar.find(p => p.dataset.soon), later = [...strip.querySelectorAll('.later')];
   const restPills = pills.filter(p => restTowns.some(t => t.id === p.dataset.town));
-  const foldLabel = `${soon.length} figures més, pròximament, de ${new Set(soon.map(f => f.town)).size} pobles`;
-  let figure = live[0], lastLive = figure, open = true; // catalog selection is independent of the host's last playable figure
-  let opening = false, shown = false, level = 1, town = null, cur = 0, req = 0, step = 'figures';
+  const foldLabel = `${soon.length} figures més, pròximament, de ${new Set(soon.map(f => f.town)).size} poblacions`;
+  const soonTowns = TOWNS.filter(t => soon.some(f => f.town === t.id));
+  const peekFigures = soonTowns.slice(0, 3).map(t => soon.find(f => f.town === t.id));
+  let figure = live[0], open = true; // catalog selection is independent of the host's last playable figure
+  let opening = false, shown = false, teasing = false, level = 1, town = null, cur = 0, req = 0, step = 'figures';
   const smooth = () => (reduced() ? 'auto' : 'smooth');
-  const api = { band: null, fpsFooter: [], onSelect, get figure() { return figure; }, get unfolded() { return open; }, visible };
+  const api = { band: null, fpsFooter: [], measure: () => { if (shown) measure(); }, onSelect, get figure() { return figure; }, get pending() { return teasing || !playable(figure); }, get unfolded() { return open; }, visible };
 
   const scrolling = stripScroll(strip, win, reduced);
+  const townScrolling = stripScroll(towns, win, reduced);
   let stripLimit = 0;
   function updateArrows() {
     $('select-prev').disabled = strip.scrollLeft <= 1;
@@ -91,29 +97,56 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
   }
   const centre = (row, el, behavior = smooth()) => {
     const left = el.offsetLeft - (row.clientWidth - el.offsetWidth) / 2;
-    if (row === strip) scrolling.to(left, behavior !== 'smooth', closing ? finishFold : null); else row.scrollTo({ left, behavior });
+    if (row === strip) scrolling.to(left, behavior !== 'smooth', closing ? finishFold : null);
+    else { townScrolling.stop(); row.scrollTo({ left, behavior }); }
     if (row === strip) updateArrows();
   };
 
+  function pendingFill(f) {
+    $('aviat-title').textContent = f.fullName || f.name;
+    $('aviat-entity').innerHTML = entityHtml(f);
+    $('aviat-icon').innerHTML = portraitHtml(f);
+    $('aviat-text').innerHTML = (f.invite ? inviteText() : aviatText()).split('\n\n').map(p => `<p>${escapeHtml(p)}</p>`).join('');
+  }
+  function teaserFill() {
+    // The card keeps a pending figure's height (measured on the first one): no jump between it and the fold.
+    pending.toggleAttribute('data-fold', false); pending.style.minHeight = '';
+    if (links) links.hidden = false;
+    pendingFill(soon[0]);
+    const h = pending.offsetHeight;
+    pending.toggleAttribute('data-fold', true);
+    if (links) links.hidden = true;
+    $('aviat-title').textContent = 'Aviat a la plaça';
+    $('aviat-icon').innerHTML = peekHtml(peekFigures);
+    $('aviat-entity').innerHTML = `<span class="sel-fan" aria-hidden="true">${soonTowns.map(t => escutSvg(t.id)).join('')}</span><span>${soon.length} figures · ${soonTowns.length} poblacions</span>`;
+    $('aviat-text').innerHTML = '<p>Encara no s’hi pot jugar. Si en saps coses, dona un cop de mà.</p>';
+    if (h) pending.style.minHeight = `${h}px`;
+  }
+  function panel() { // the centre shows what the cursor is on: the selected figure, or the fold's own card
+    const ok = playable(figure);
+    teasing = Boolean(fold) && cards[cur] === fold;
+    root.toggleAttribute('data-pending', !ok);
+    root.toggleAttribute('data-fold', teasing);
+    pending.hidden = ok && !teasing;
+    $('select-info').hidden = !ok || teasing;
+    $('select-next').disabled = !ok || teasing; // hidden; [data-pending] / [data-fold] drop the dock over its row (select.css)
+    if (teasing) teaserFill();
+    else if (!ok) { pending.toggleAttribute('data-fold', false); pending.style.minHeight = ''; if (links) links.hidden = false; pendingFill(figure); }
+  }
   function info() {
     const t = townOf(figure), ok = playable(figure);
-    root.toggleAttribute('data-pending', !ok);
-    pending.hidden = ok;
-    $('select-info').hidden = !ok;
-    $('aviat-title').textContent = figure.fullName || figure.name;
-    $('aviat-entity').innerHTML = entityHtml(figure);
-    $('aviat-icon').innerHTML = ok ? '' : portraitHtml(figure);
-    $('aviat-text').innerHTML = ok ? '' : aviatText().split('\n\n').map(p => `<p>${escapeHtml(p)}</p>`).join('');
-    $('select-entity').innerHTML = entityHtml(figure);
-    for (const id of ['select-song', 'select-howto']) $(id).hidden = !ok;
-    $('select-next').disabled = !ok; // invisible, its row kept: nothing shifts
+    // Only the panel coming in is rewritten: the other one fades out as it was (select.css).
+    panel();
+    if (ok) {
+      $('select-entity').innerHTML = entityHtml(figure);
+      $('select-name').textContent = figure.fullName || figure.name || 'Aviat';
+      $('select-info').style.setProperty('--strip', t.color);
+      $('select-song-name').textContent = figure.song || '';
+      $('select-song-credit').textContent = [figure.composer, figure.year].filter(Boolean).join(' · ');
+    }
     setStep('figures');
-    $('select-name').textContent = figure.fullName || figure.name || 'Aviat';
-    $('select-info').style.setProperty('--strip', t.color);
-    $('select-song-name').textContent = figure.song || '';
-    $('select-song-credit').textContent = [figure.composer, figure.year].filter(Boolean).join(' · ');
     for (const c of cards) c.setAttribute('aria-selected', String(c.dataset.id === figure.id));
-    records(); updateStanding();
+    if (ok) { records(); updateStanding(); }
   }
   function setStep(next) {
     step = next === 'level' && playable(figure) ? 'level' : 'figures';
@@ -129,7 +162,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     if (shown && !opening) measure();
   }
   function nextStep() {
-    if (!shown || !playable(figure) || busy()) return;
+    if (!shown || !playable(figure) || teasing || busy()) return;
     sfx('menu'); setStep('level');
     if (keyboard()) levels.children[level].focus({ preventScroll: true });
   }
@@ -198,11 +231,28 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
   }
   function finishFold() {
     if (open) return;
+    townScrolling.to(townScrolling.target, true);
+    const header = headerPositions();
     closing = false; root.toggleAttribute('data-folding', false);
     arrivals.get(pending)?.cancel(); pending.inert = false;
     revealItems(false);
-    if (!playable(figure)) pick(cards.find(c => figureOf(c) === lastLive), 'filter');
-    if (shown) measure();
+    if (shown) { measure(); moveHeader(header); }
+  }
+  // The collapsed towns can fit beside the corner buttons. Preserve their painted position across
+  // that one layout change, then move on the compositor; the first pill also accounts for centring.
+  function headerPositions() {
+    return [towns, $('select-info')].map(el => ({ el, rect: (el === towns ? pills[0] : el).getBoundingClientRect() }));
+  }
+  function moveHeader(before) {
+    const zoom = parseFloat(win.getComputedStyle?.(root).zoom) || 1;
+    for (const { el, rect } of before) {
+      arrivals.get(el)?.cancel();
+      const after = (el === towns ? pills[0] : el).getBoundingClientRect();
+      const x = (rect.left - after.left) / zoom, y = (rect.top - after.top) / zoom;
+      if (!reduced() && el.animate && (Math.abs(x) > 1 || Math.abs(y) > 1)) {
+        arrivals.set(el, el.animate({ transform: [`translate(${x}px, ${y}px)`, 'translate(0, 0)'] }, { duration: FOLD_MS, easing: 'ease-in-out' }));
+      }
+    }
   }
   function foldedMax() {
     const padding = parseFloat(win.getComputedStyle?.(strip).paddingRight) || 0;
@@ -212,6 +262,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
   function unfold(on, how) { // shows or hides what is still to come: its cards and banners, its towns' pills
     if (on === open || !fold) return;
     open = on;
+    townScrolling.stop();
     const items = [...later, ...restPills];
     const restoreFocus = !on && items.includes(doc.activeElement);
     restPills.forEach(p => { p.tabIndex = on ? 0 : -1; });
@@ -224,24 +275,34 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     sfx('menu');
     label();
     if (on) {
+      const header = headerPositions();
       closing = false; root.toggleAttribute('data-folding', false);
       arrivals.get(pending)?.cancel(); pending.inert = false;
       revealItems(true);
       roveCard(cur);
-      if (shown) measure();
+      if (shown) { measure(); moveHeader(header); }
       // Keep the existing cards in place; reveal just enough of the first new card to invite navigation.
       const first = cards.find(c => later.includes(c));
       const right = first ? first.offsetLeft + first.offsetWidth - strip.clientWidth + 12 : scrolling.target;
       scrolling.to(how === 'tap' ? Math.max(scrolling.target, right) : scrolling.target);
     } else {
+      // Commit the selection before the exit starts. Keep the outgoing panel's text for its CSS fade;
+      // the disclosure's keyboard focus is independent of the selected card and never needs a teaser here.
+      const target = cards.find(c => figureOf(c) === (playable(figure) ? figure : DRAC));
+      pick(target, 'fold');
+      press(figure.town);
       closing = true;
       root.toggleAttribute('data-folding', true);
-      const exiting = [...items, ...(!playable(figure) ? [pending] : [])];
+      const exiting = items;
       for (const el of exiting) el.inert = true;
-      roveCard(cur);
       if (shown) measure();
       if (restoreFocus) (how === 'pill' ? soonPill : fold)?.focus({ preventScroll: true });
       const destination = Math.min(scrolling.target, foldedMax());
+      // Both rows arrive before the outgoing items lose their layout boxes. Native smooth scrolling
+      // takes longer on a distant town and would otherwise be clamped abruptly when those pills hide.
+      towns.scrollTo({ left: towns.scrollLeft, behavior: 'instant' });
+      const pill = pills.find(p => p.dataset.town === figure.town);
+      const townDestination = Math.max(0, Math.min(pill.offsetLeft - (towns.clientWidth - pill.offsetWidth) / 2, rowEdge(towns) - towns.clientWidth));
       // Start both clocks after layout; a slow first paint must not delay the fade.
       const fadeStart = win.performance?.now();
       for (const el of exiting) {
@@ -252,6 +313,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
           arrivals.set(el, exit);
         }
       }
+      townScrolling.to(townDestination, false, null, FOLD_MS);
       scrolling.to(destination, false, finishFold, FOLD_MS);
     }
   }
@@ -266,6 +328,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
   function roveCard(i) { // the strip's one tab stop
     cur = i;
     cards.forEach((c, k) => { c.tabIndex = k === i ? 0 : -1; });
+    if (teasing !== (Boolean(fold) && cards[i] === fold)) { panel(); if (shown && !opening) measure(); }
   }
   // ↑↓ jump between the screen's rows like a game menu: the corner buttons, pills, info tiles, «Aviat», figures or levels,
   // footer buttons; ←→ walk the corner row (left to right as drawn).
@@ -297,22 +360,23 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     focusMove(target, figure === previousFigure);
     centre(strip, target);
   }
-  const figureOf = card => FIGURES.find(f => f.id === card.dataset.id);
+  const figureOf = card => card.dataset.id === INVITE.id ? INVITE : FIGURES.find(f => f.id === card.dataset.id);
   const play = () => {
     if (!shown || step !== 'level' || !playable(figure) || busy()) return;
     rememberLevel(store, figure.id, level); sfx('menu'); onPlay(level, figure);
   };
   function pick(card, how) {
     if (!card || card.hidden || card.inert) return;
+    if (card.dataset.more && open && (how === 'tap' || how === 'enter') && shown && !busy()) { unfold(false, 'tap'); return; }
     if (closing && !card.dataset.more) { scrolling.stop(); finishFold(); }
     roveCard(cards.indexOf(card));
     if (card.dataset.more) { if ((how === 'tap' || how === 'enter') && shown && !busy()) unfold(!open, 'tap'); return; } // arrows only reach it
     const next = figureOf(card);
     if (next !== figure) {
-      if (how !== 'filter') sfx('menu');
+      if (how !== 'filter' && how !== 'fold') sfx('menu');
       figure = next; info(); setLevel(rememberedLevel(store, figure.id), 'open');
-      mark(figure.town, how === 'arrow' ? 'instant' : smooth());
-      if (playable(figure)) { lastLive = figure; api.onSelect(figure); } // pending figures never replace the song/model state
+      if (how !== 'fold') mark(figure.town, how === 'arrow' ? 'instant' : smooth());
+      if (playable(figure)) api.onSelect(figure); // pending figures never replace the song/model state
       measure();
     }
     if (how === 'enter') nextStep();
@@ -349,7 +413,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
   $('select-figures-back').addEventListener('click', () => { setStep('figures'); api.refocus(); });
   $('select-play').addEventListener('click', play);
   $('select-howto').addEventListener('click', () => { if (playable(figure)) onHowto(); });
-  $('aviat-write').addEventListener('click', () => { if (!playable(figure)) onWrite(aviatDraft(townOf(figure).name)); });
+  $('aviat-write').addEventListener('click', () => { if (teasing) onWrite(''); else if (!playable(figure)) onWrite(figure.invite ? INVITE_DRAFT : aviatDraft(townOf(figure).name)); });
 
   win.addEventListener('keydown', e => {
     if (!shown || busy() || e.altKey || e.ctrlKey || e.metaKey) return;
@@ -422,9 +486,11 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
       root.style.setProperty('--town-top', px(right[0].top + (right[0].height - r(towns).height) / 2));
       root.style.setProperty('--info-top', px(Math.max(...left.map(b => b.bottom), ...right.map(b => b.bottom)) + 16));
     } else root.style.removeProperty?.('--info-top');
-    api.band = { top: side ? r(towns).bottom : r($('select-info')).bottom, bottom: r($('select-bottom')).top };
-    root.style.setProperty('--pending-top', px(r(towns).bottom + 12)); // a pending figure's card sits between the pills and the strip
-    root.style.setProperty('--pending-bottom', px(Math.max(0, win.innerHeight - (win.innerHeight <= 500 ? win.innerHeight : r(strip).top)) + 12));
+    // The dock's layout box, not its rect: a pending figure drops it by a transform that may still be under way.
+    const dock = $('select-bottom'), dockTop = (dock.offsetTop ?? r(dock).top / z) * z;
+    api.band = { top: side ? r(towns).bottom : r($('select-info')).bottom, bottom: dockTop };
+    root.style.setProperty('--pending-top', px(r(towns).bottom + 12)); // a pending figure's card sits between the pills and the strip (CSS adds the drop)
+    root.style.setProperty('--pending-bottom', px(Math.max(0, win.innerHeight - (win.innerHeight <= 500 ? win.innerHeight : dockTop + r(strip).top - r(dock).top)) + 12));
     peek();
     // The live group keeps its centred origin when the catalog opens. Only scrollLeft moves the cards.
     const base = [...strip.children].filter(el => !later.includes(el));
@@ -437,14 +503,10 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     stripLimit = Math.max(0, Math.min(rowEdge(strip), strip.scrollWidth) - strip.clientWidth);
     $('select-carousel').toggleAttribute('data-fits', stripLimit <= 1);
     updateArrows();
-    // Measure the whole carousel, not its moving cards. Invisible pending actions are not obstacles.
-    // Cache after the pending panel's bounds have been applied; FPS never reads layout in the frame loop.
-    api.fpsFooter = [...left, ...right, ...['select-towns', 'select-info', 'select-pending', 'select-carousel',
-      'select-level', 'select-figures-back', 'select-next', 'select-play'].map($)
-      .filter(el => el && !el.hidden && !el.disabled && win.getComputedStyle?.(el).visibility !== 'hidden').map(r)]
-      .filter(b => b.width > 0 && b.height > 0);
+    // Cached action bounds for diagnostic overlays; no frame-loop layout reads.
+    api.fpsFooter = ['select-figures-back', 'select-next', 'select-play'].map($).filter(el => !el.hidden).map(r);
   }
-  win.addEventListener('resize', () => { if (shown) { scrolling.stop(); if (closing) finishFold(); measure(); } });
+  win.addEventListener('resize', () => { if (shown) { scrolling.stop(); if (closing) finishFold(); if (teasing) teaserFill(); measure(); } });
   if (win.ResizeObserver) new win.ResizeObserver(() => { if (shown) measure(); }).observe($('select-info'));
   doc.fonts?.ready.then(() => { if (shown) measure(); });
   function visible(on) {
@@ -452,7 +514,9 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     if (error && error.textContent !== message) { error.textContent = message; error.hidden = !message; if (shown) measure(); }
     if (on === shown) return;
     shown = on; root.hidden = !on;
-    if (!on) { scrolling.stop(); if (closing) finishFold(); if (root.contains(doc.activeElement)) doc.activeElement.blur(); return; }
+    root.removeAttribute('data-shown'); // the panels' entrance fade (select.css) is for swaps, not for opening
+    if (on) win.requestAnimationFrame?.(() => win.requestAnimationFrame(() => root.toggleAttribute('data-shown', shown))); // after its first paint
+    if (!on) { scrolling.stop(); if (closing) finishFold(); townScrolling.stop(); if (root.contains(doc.activeElement)) doc.activeElement.blur(); return; }
     // Every write first, then one read of the layout, then the scrolls: each read after a write recomputed the whole
     // selector's styles, and this runs in the frame that shows it (the splash's ENTRA: ~0.3 s on a slow phone).
     opening = true; info(); opening = false;

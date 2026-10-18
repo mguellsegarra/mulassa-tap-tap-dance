@@ -5,13 +5,20 @@ import { camera, camFocus } from './stage.js';
 import { activeCrowd } from './quality.js';
 import { photoClearance, photoPairClearance } from './photo-collision.js';
 import { photoExtras, updatePhotoExtras, photoFixedClearance, photoEscape } from './photo-obstacles.js';
+const photoNearby = [];
+function cachePhotoList(list) {
+  const b=photoBody(),q=PHOTO.id==='drac-valls'?PHOTO.mula:PHOTO.drac;
+  for(const p of list) {
+    if(Math.abs(p.pos.x-b.x)<5&&Math.abs(p.pos.y-b.z)<5 || Math.abs(p.gx-b.x)<5&&Math.abs(p.gz-b.z)<5 || PHOTO.pair&&(Math.abs(p.pos.x-q.x)<5&&Math.abs(p.pos.y-q.z)<5 || Math.abs(p.gx-q.x)<5&&Math.abs(p.gz-q.z)<5))photoNearby.push(p);
+  }
+}
+function cachePhotoObstacles() { photoNearby.length=0;cachePhotoList(activeCrowd);cachePhotoList(photoExtras); }
 function photoSafe(x, z, yaw, dragon = PHOTO.id === 'drac-valls') {
   let clear = photoFixedClearance(x, z, yaw, dragon);
-  for (const p of activeCrowd) {
+  for (const p of photoNearby) {
     clear = Math.min(clear, photoClearance(x, z, yaw, p.pos.x, p.pos.y, p.rad, dragon));
     if (Number.isFinite(p.gx)) clear = Math.min(clear, photoClearance(x, z, yaw, p.gx, p.gz, p.rad, dragon));
   }
-  for (const p of photoExtras) clear = Math.min(clear, photoClearance(x, z, yaw, p.pos.x, p.pos.y, p.rad, dragon));
   if (PHOTO.pair) {
     const other = dragon ? PHOTO.mula : PHOTO.drac;
     clear = Math.min(clear, photoPairClearance(x, z, yaw, other, dragon));
@@ -30,8 +37,9 @@ export function tickPhoto(dt, m, pair, pivot) {
     else { PHOTO.drac.x = pair.x; PHOTO.drac.z = pair.z; PHOTO.drac.yaw = pair.w.face; }
   }
   updatePhotoExtras(dt);
+  cachePhotoObstacles();
   if (PHOTO.pair) { yieldPhotoCompanion(dt); if (PHOTO.yielding) { pair.x=PHOTO.drac.x; pair.z=PHOTO.drac.z; } }
-  movePhoto(dt, photoSafe, Math.atan2(camera.position.x - camFocus.x, camera.position.z - camFocus.z) - Math.PI);
+  movePhoto(dt, photoSafe, (PHOTO.cameraYaw ?? Math.atan2(camera.position.x - camFocus.x, camera.position.z - camFocus.z)) - Math.PI);
   if (PHOTO.pair && PHOTO.id === 'drac-valls') { pair.x = PHOTO.drac.x; pair.z = PHOTO.drac.z; pair.k = 1; if (!PHOTO.yielding) return; }
   const p = PHOTO.pair ? PHOTO.mula : photoBody(), oldYaw = m.yaw;
   m.pos.set(p.x, p.z); m.yaw = p.yaw; m.yawVel = dt ? Math.atan2(Math.sin(p.yaw - oldYaw), Math.cos(p.yaw - oldYaw)) / dt : 0;

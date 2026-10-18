@@ -38,8 +38,7 @@ function dfxGlowTexture(pow, hard = 1) { // a white disc, alpha falling off (no 
 // SMOKE: kinds of puff [life s, start size m, end size m, alpha, rise m/s, r, g, b]
 const PUFF = { crema: [1.9, 0.6, 2.4, 0.65, 1.1, 0.2, 0.19, 0.19], breath: [1.2, 0.3, 1, 0.5, 0.8, 0.26, 0.25, 0.25],
   flare: [7, 1.2, 7, 0.34, -0.22, 0.9, 0.2, 0.28], // (the last pass's: a thin red haze, heavy, sinking over the crowd as it spreads and lingers)
-  tro: [2, 0.7, 2.8, 0.8, 0.7, 0.24, 0.22, 0.21], petard: [1.2, 0.3, 1.2, 0.7, 0.6, 0.33, 0.31, 0.3],
-  bomb: [1.2, 1.1, 2.6, 0.92, 0.45, 0.88, 0.86, 0.82] }; // (the splash's exit: a thick pale cloud that hides it whole, gone before the selector settles: it lingered over her)
+  tro: [2, 0.7, 2.8, 0.8, 0.7, 0.24, 0.22, 0.21], petard: [1.2, 0.3, 1.2, 0.7, 0.6, 0.33, 0.31, 0.3] };
 const DRAG = 2.5; // how fast a puff's own push dies (1/s)
 // SPARKS (guspires): colour from hot to cool over their life [r, g, b, r, g, b]: fire, (unused: the old bengales'), powder
 const PAL = [[1, 0.88, 0.35, 1, 0.28, 0.02], [1, 0.7, 0.7, 0.95, 0.06, 0.14], [1, 0.9, 0.3, 1, 0.45, 0.02], [1, 0.78, 0.2, 0.9, 0.1, 0]]; // ..., wheel (gold, through orange, to red)
@@ -167,11 +166,6 @@ export function createDracFx(scene, opts = {}) {
     if (big) sparks(P, DIR.set(D.x, D.y + 0.2, D.z), count(14), 5, 0.6, 0, 0.09);
     puff(big ? PUFF.tro : PUFF.petard, P.x, P.y, P.z, D.x * 1.2, D.y * 1.2 + 0.5, D.z * 1.2);
     if (big) puff(PUFF.tro, P.x, P.y + 0.3, P.z, D.x * 0.5, 1.2, D.z * 0.5);
-  }
-  // a smoke bomb at its feet (x, z: world metres): a ring of thick puffs up its height, pushed out a little
-  function bomb(x, z) {
-    const n = Math.min(cap, 18); // (few, big: old phones pay for every overlapping puff)
-    for (let i = 0; i < n; i++) { const a = i * 2.4, r = 0.4 + (i % 3) * 0.4, c = Math.sin(a), d = Math.cos(a); puff(PUFF.bomb, x + c * r, 0.3 + (i % 4) * 0.7, z + d * r, c * 0.6, 0.4, d * 0.6); }
   }
   // Every tap fires one petard. Reaching the target earns a TRO when the drumroll ends.
   function pump(count, need) {
@@ -352,12 +346,25 @@ export function createDracFx(scene, opts = {}) {
     sparkMesh.count = n; sparkMesh.visible = n > 0;
     if (n) { sparkMesh.instanceMatrix.needsUpdate = true; sparkMesh.instanceColor.needsUpdate = true; sparkA.needsUpdate = true; }
   }
+  function clear() { // a hidden figure owns no lingering particles or emission debt
+    end(); F.cremaAge = 99;
+    F.streak = F.flare = F.level = F.emitBurst = F.emitBreath = F.emitSprinkle = hazeOwed = sprinkle = 0;
+    WH.until = F.t; WH.on = false; WH.n = 0; wEmit.fill(0);
+    for (const p of puffs) p.live = false;
+    EAGE.fill(99); fAge.fill(99); kick.fill(0);
+    liveN = liveE = liveW = 0;
+    if (smoke) { smoke.visible = false; smoke.count = 0; }
+    if (sparkMesh) { sparkMesh.visible = false; sparkMesh.count = 0; }
+    for (const f of flash) f.visible = false;
+    if (nodes) for (const f of nodes) { f.visible = false; f.scale.setScalar(0); }
+    nodes = null;
+  }
   function warm(renderer) { renderer.initTexture?.(glow); renderer.initTexture?.(dot); } // the programs compile with the scene (every object here is in it from the start)
   const state = () => ({ t: F.t, level: F.level, streak: F.streak, flare: F.flare, fired: T.fired, last: T.last, next: T.next, smoke: liveN, embers: liveE, wheelSparks: liveW, wheels: WH.on ? WH.n : 0, traca: T.on,
     pet: [...pet], flashes: flash.map(f => f.visible), puffs: puffs.filter(p => p.live).map(p => [p.x, p.y, p.z, p.age]),
     sparks: [...EAGE].map((a, i) => [EX[i], EY[i], EZ[i], a]).filter((p, i) => i < E && EAGE[i] < ELIFE[i]),
     wsparks: [...EAGE].map((a, i) => [EX[i], EY[i], EZ[i], a]).filter((p, i) => i >= E && EAGE[i] < ELIFE[i]) }); // tests only
-  return { crema, pump, finish, bomb, begin, end, wheels, update, warm, state, get tracaOn() { return T.on; },
+  return { crema, pump, finish, begin, end, wheels, update, warm, clear, state, get tracaOn() { return T.on; },
     get flare() { return F.flare; }, // the last pass's red mist, 0..1 (drac-show.js thickens the plaça's fog with it)
     clearHaze() { F.flare = hazeOwed = 0; for (const p of puffs) if (p.k === PUFF.flare) p.live = false; }, // back on a menu: gone at once
     get idle() { return !liveN && !liveE && !liveW && F.t >= WH.until && !F.flare && !F.streak && !petards.visible && F.cremaAge > DRAC_FX.crema && fAge.every((a, i) => a >= fLife[i]); },

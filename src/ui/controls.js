@@ -1,6 +1,5 @@
 // Which DOM controls show in each state, and the photo (view) mode.
-import { selectedFigure } from '../game/figure-song.js';
-import { setPhotoControl } from '../game/photo-control.js';
+import { showAvatars } from './photo-avatars.js';
 import { sheets } from './sheets.js';
 import { howtoMenu, settingsMenu, privacyMenu, pauseMenu, hide, howtoEl, settingsEl, leadersEl, feedbackEl, musicEl, iosHint, hintOff, pauseEl, skipEl, retryEl } from './handles.js';
 import { G, clock, CHALLENGE } from '../game/state.js';
@@ -38,7 +37,7 @@ export let viewMode = false, viewT = 0, viewBack = null, viewIdle = 0, hudBlank 
 export const setHudBlank = v => (hudBlank = v);
 export function setView(on) {
   if (on === viewMode || on && (!menuState() || sheetUp())) return;
-  viewMode = on; setPhotoControl(on, selectedFigure.id, G.state === 'splash'); viewT = performance.now();
+  viewMode = on; showAvatars(on); viewT = performance.now();
   document.body.classList.toggle('view-mode', on);
   for (const el of VIEW_HIDES) el.inert = on;
   viewBtn.setAttribute('aria-pressed', String(on)); // (one name, «Amaga els botons», pressed or not; the tooltip says what a press does)

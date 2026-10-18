@@ -377,7 +377,7 @@ const document = {
   focused: true,
   hasFocus() { return this.focused; },
   listeners: {},
-  addEventListener(type, handler) { this.listeners[type] = handler; },
+  addEventListener(type, handler) { const previous = this.listeners[type]; this.listeners[type] = previous ? (...args) => { previous(...args); handler(...args); } : handler; },
   body: { appendChild() {}, classList: { contains: () => false, toggle() {} }, style: { setProperty() {}, removeProperty() {} } },
   createElement: () => ({ style: {}, setAttribute() {}, appendChild() {} }),
   getElementById(id) {
@@ -1437,8 +1437,8 @@ console.log('comparteix integration contracts ok');
     assert(s.people >= (format === 'og' ? 4 : 3), `${at}: the crowd stands around her (${s.people} in view)`);
     assert.equal(run('mula.root.position.toArray().join() + mula.root.quaternion.toArray().join()'), before, `${at}: her pose is put back`);
   }
-  // A capture immediately after switching figures must not inherit the splash's
-  // faded material or wandering parent. Every state change is restored afterward.
+  // A capture immediately after switching figures must not inherit a hidden
+  // material or wandering parent. Every state change is restored afterward.
   run(`var oldHeroRender = renderer.render, dracHeroSeen = false;
     drac.root.parent.position.set(12, 0, -12); drac.root.parent.rotation.y = 1.7;
     dracMat.opacity = 0; drac.root.visible = false; confetti.visible = true; fireworks.visible = true;
@@ -1451,7 +1451,7 @@ console.log('comparteix integration contracts ok');
   const dracBefore = run('photoState()');
   assert(run("renderHero(1104, 988, 'drac-valls')") && run('dracHeroSeen'), 'Drac capture sets a visible pose and excludes effects');
   assert.equal(run('photoState()'), dracBefore, 'capture restores parent transform, opacity, figure and effects');
-  run('renderer.render = oldHeroRender;');
+  run('renderer.render = oldHeroRender; dracMat.opacity = 1;');
   run('heroFlat = 1; heroShots.length = 0;'); // the float target drew nothing: the same photo again in 8 bits
   assert(run('renderHero(960, 620)') && run('heroShots.length') === 2, 'a flat float render is retried in 8 bits');
   const warn = console.warn; console.warn = () => {};
@@ -1966,15 +1966,15 @@ run(`startGame(1); songNow = BEATS[76]; frames(10); collapse(); frames(30); fini
 assert(run('G.collapseT === 0 && mula.legs.every(l => l.visible) && mula.root.position.y > -0.1'), 'and a new run (Torna-ho a provar) starts her upright');
 run('toTitle();');
 // The splash: the Drac dances beside her and her demo walk never runs into it (head, centre and rear stay clear);
-// after the tap it goes up in a smoke bomb and the selector shows her alone.
+// after the tap the selector shows her alone, from the first frame.
 run(`G.state = 'splash'; M.pivot.set(0, PIVOT); var pairMin = 9, pairStray = 0, pairCremas = 0, pairFrom = [PAIR.x, PAIR.z], pairWalk = 0;
   for (let i = 0; i < 60 * 120; i++) { clock += 1 / 60; animMula(1 / 60, clock / BEAT);
     if (SHOWCASE.crema) { pairCremas++; SHOWCASE.crema = false; }
     pairStray = Math.max(pairStray, Math.hypot(PAIR.x - PAIR.w.hx, PAIR.z - PAIR.w.hz)); pairWalk = Math.max(pairWalk, Math.hypot(PAIR.x - pairFrom[0], PAIR.z - pairFrom[1]));
     for (const back of [0, PIVOT, 2 * PIVOT]) pairMin = Math.min(pairMin, Math.hypot(M.pivot.x - Math.sin(M.yaw) * back - PAIR.x, M.pivot.y - Math.cos(M.yaw) * back - PAIR.z)); }
-  var pairShown = drac.root.visible && mula.root.visible && dracMat.opacity === 1; G.state = 'select'; var pairFade = [];
-  for (let i = 0; i < 60; i++) { clock += 1 / 60; animMula(1 / 60, clock / BEAT); if (i % 12 === 5) pairFade.push(drac.root.visible ? dracMat.opacity : 0); }`);
-assert(run('pairFade.every((a, i) => i === 0 || a <= pairFade[i - 1]) && pairFade[0] < 1 && pairFade[0] > 0.5 && pairFade.at(-1) === 0'), `the splash Drac fades out in its smoke (${run('pairFade.map(a => a.toFixed(2)).join(" ")')})`);
+  var pairShown = drac.root.visible && mula.root.visible && dracMat.opacity === 1; G.state = 'select';
+  animMula(1 / 60, clock / BEAT);`);
+assert(run('!drac.root.visible && mula.root.visible && PAIR.k === 0 && dracMat.opacity === 1'), 'first selector frame: Mulassa alone, no fade');
 assert(run('pairWalk > 1 && pairStray < 2.5 && pairCremas >= 4'), `splash: the Drac wanders round its spot (${run('pairWalk.toFixed(1)')} m, never over ${run('pairStray.toFixed(1)')} m away) and burns now and then (${run('pairCremas')} CREMES)`);
 // its shoes stay planted on the floor while it walks and turns (they skated along with it): a planted shoe moves
 // under 1 cm in the world from one frame to the next, and they do step (each one lifts, the walk carries it on)
@@ -1984,12 +1984,15 @@ run(`var shoeSlip = 0, shoeLifted = 0, shoeDown = [false, false], shoeAt = [null
       if (down && shoeDown[k]) shoeSlip = Math.max(shoeSlip, Math.hypot(q.x - shoeAt[k].x, q.z - shoeAt[k].z)); if (!down) shoeLifted++;
       shoeDown[k] = down; shoeAt[k] = q; });
     shoeWalked = Math.max(shoeWalked, Math.hypot(PAIR.x - shoeFrom[0], PAIR.z - shoeFrom[1])); }
-  G.state = 'select'; for (let i = 0; i < 60; i++) { clock += 1 / 60; animMula(1 / 60, clock / BEAT); }`); // (gone in its smoke again, as the checks below expect)
+  G.state = 'select'; for (let i = 0; i < 60; i++) { clock += 1 / 60; animMula(1 / 60, clock / BEAT); }`);
 assert(run('shoeSlip < 0.01 && shoeLifted > 0 && shoeWalked > 0.5'), `the splash Drac's planted shoes hold the floor (shoeSlip ${run('(shoeSlip * 1000).toFixed(1)')} mm a frame, shoeWalked ${run('shoeWalked.toFixed(1)')} m)`);
 assert(run('pairShown && pairMin > PAIR.clear - 0.05'), `splash: both figures shown, the Mulassa clear of the Drac (closest ${run('pairMin.toFixed(2)')} m)`);
-assert(run('!drac.root.visible && PAIR.k === 0 && PAIR.poof'), 'after the splash the Drac is gone, in a smoke bomb');
-run('var smokeMax = renderProfile.smoke; renderProfile.smoke = 96; dracFrame(1 / 60, 0); dracFrame(1 / 60, 0); var bombed = dracFx.state().smoke; renderProfile.smoke = smokeMax;');
-assert(run('!PAIR.poof && bombed > 0'), `the smoke bomb went off once and is drawn (${run('bombed')} puffs)`);
+assert(run('!drac.root.visible && PAIR.k === 0'), 'after the splash the Drac stays hidden');
+run('var smokeMax = renderProfile.smoke; renderProfile.smoke = 96; dracFrame(1 / 60, 0); dracFrame(1 / 60, 0); var exitSmoke = dracFx.state().smoke; renderProfile.smoke = smokeMax;');
+assert.equal(run('exitSmoke'), 0, 'entering the selector emits no exit smoke');
+run('setFigureSong(DRAC); animMula(1 / 60, clock / BEAT);');
+assert(run('drac.root.visible && !mula.root.visible && dracMat.opacity === 1'), 'Drac can still be selected at full opacity');
+run('setFigureSong(MULASSA); animMula(1 / 60, clock / BEAT);');
 console.log('dance integration contracts ok');
 
 // Play camera (framePlayCamera): low and steady. Through the song's half turn and the finale's quick turns it keeps a
@@ -2096,17 +2099,10 @@ assert(run('fwGap') < 0.05, `fireworks fly the same at 60 and 120 fps (${run('fw
   assert(fps.textContent === '60 FPS' && fps.dataset.l === 'low', '60 of a 120 target reads red');
   run(`G.state = 'select'; pace.fps = 60; for (let i = 1; i <= 60; i++) fpsTick(4000 + i * 1000 / 60);`);
   assert(!fps.hidden && fps.textContent === '60 FPS', 'remembered FPS remain visible on the character selector');
-  assert.equal(fps.style.bottom, `${Math.round(8 + run('SAFE.b'))}px`, 'selector FPS stay at the bottom-left, independent of the dock');
-  run(`var fpsPreviousMenu = { band: sheets.select.band, footer: sheets.select.fpsFooter };
-    sheets.select.band = { top: 120, bottom: HH * K - 216 };
-    sheets.select.fpsFooter = [{ left: 12, right: 190, top: HH * K - 60, bottom: HH * K - 12, width: 178 }]; fpsTick(5300);`);
-  assert.equal(fps.style.bottom, '222px', 'a mobile footer moves FPS above the selector dock, clear of its cards and levels');
-  run(`sheets.select.fpsFooter = [{ left: 400, right: 800, top: HH * K - 60, bottom: HH * K - 12, width: 400 }]; fpsTick(5600);`);
-  assert.equal(fps.style.bottom, `${Math.round(8 + run('SAFE.b'))}px`, 'a centred desktop footer leaves FPS in the original corner');
-  run(`sheets.select.band = fpsPreviousMenu.band; sheets.select.fpsFooter = fpsPreviousMenu.footer;
-    var fpsPreviousHH = HH; HH = 393 / K; fpsTick(5900);`);
-  assert.equal(fps.style.bottom, `${Math.round(8 + run('SAFE.b'))}px`, 'landscape FPS stay below the selector information');
-  run(`HH = fpsPreviousHH; G.state = 'play'; fpsTick(6200);`);
+  assert.equal(fps.style.top, `${8 + run('SAFE.t')}px`, 'selector FPS own a fixed top rail');
+  assert.equal(fps.style.bottom, 'auto', 'selector FPS never anchor to the changing action row');
+  run(`G.state = 'play'; fpsTick(6200);`);
+  assert.equal(fps.style.top, 'auto', 'playing restores the original pad-relative placement');
   assert(!fps.hidden, 'FPS remain visible during a run');
   run(`G.state = 'results'; fpsTick(6500);`);
   assert(fps.hidden, 'hidden on the results screen (its buttons own the bottom)');
@@ -2454,7 +2450,7 @@ console.log('view mode ok');
   assert.deepEqual(run('JSON.stringify([DIRC.L, DIRC.R, DIRLT.L, DIRDK.R, themed("GUAPA!")])'), JSON.stringify(['#ffc21f', '#b0188c', '#ffe38a', '#66084f', 'CREMA!']));
   // Wheels celebrate only the 50/100 combo milestones, for 1.2 s; other confetti requests stay silent.
   // Earlier clock tests rewind rAF time. Bring particle time forward before these isolated effect checks.
-  run("G.state = 'play'; G.practice = null; G.collapseT = 0; dracFrame(Math.max(0, 1 - dracFx.state().t), 0); for (let i = 0; i < 400; i++) { animConfetti(0.05); dracFrame(0.05, 0); } var confBefore = conf.map(c => c.p.y).join();");
+  run("G.state = 'play'; G.practice = null; G.collapseT = 0; animMula(0, 0, 1); dracFrame(Math.max(0, 1 - dracFx.state().t), 0); for (let i = 0; i < 400; i++) { animConfetti(0.05); dracFrame(0.05, 0); } var confBefore = conf.map(c => c.p.y).join();");
   for (const combo of [25, 50, 75, 100, 150]) {
     run(`G.combo = ${combo}; burst(0, 0, 'combo'); dracFrame(1 / 60, 0);`);
     assert.equal(run('dracFx.state().wheels > 0'), combo === 50 || combo === 100, `wheels at combo ${combo}`);
@@ -2574,14 +2570,11 @@ console.log('view mode ok');
   assert(run('Math.hypot(PAIR.x-idleD.x,PAIR.z-idleD.z)>.01'), 'uncontrolled Drac keeps walking');
   run(`photoKey({code:'Tab',preventDefault(){}},true); animMula(1/60,clock/BEAT);
     idleM=M.pos.clone(); idleD={x:PAIR.x,z:PAIR.z};
-    for(let i=0;i<180;i++){clock+=1/60;animMula(1/60,clock/BEAT);}
-    updatePhotoMarker();`);
+    for(let i=0;i<180;i++){clock+=1/60;animMula(1/60,clock/BEAT);}`);
   assert(run('Math.hypot(PAIR.x-idleD.x,PAIR.z-idleD.z)<1e-6'), 'controlled Drac stays put without keys');
   assert(run('M.pos.distanceTo(idleM)>.01'), 'Mulassa resumes her walk after Tab');
-  assert(run('photoMarker.visible && photoMarker.position.y===0.045'), 'selected figure has a ground ring');
-  run('setView(false); animMula(1/60,clock/BEAT); updatePhotoMarker();');
-  assert(run('!photoMarker.visible'), 'marker leaves with manual controls');
-  console.log('manual ownership, autonomous companion and ground ring ok');
+  run('setView(false); animMula(1/60,clock/BEAT);');
+  console.log('manual ownership and autonomous companion ok');
 }
 
 {
@@ -2627,4 +2620,62 @@ console.log('view mode ok');
   assert(run('travelClear>-.08'), `passage keeps visible collision clearance: ${run('travelClear')}`);
   run('setView(false);animMula(1/60,clock/BEAT);');
   console.log('dense crowd passage and yielding floor spectators ok');
+}
+
+// Manual camera: one centre, independent of the selector dock, throughout locomotion and at the plaza edge.
+{
+  run(`G.state='select';setView(true);animMula(1/60,0);camera.setViewOffset(1280,800,0,160,1280,800);
+    for(let i=0;i<180;i++)framePhotoCamera(1/60);
+    var cameraError=0,cameraStep=0,photoCameraPrevious=camera.position.clone();
+    for(let i=0;i<180;i++){
+      PHOTO.mula.x+=.02;PHOTO.mula.z+=.01;framePhotoCamera(1/60);camera.updateMatrixWorld(true);
+      var projectedPhoto=new THREE.Vector3(PHOTO.mula.x,PHOTO_CAM.aimY[PHOTO.id],PHOTO.mula.z).project(camera);
+      cameraError=Math.max(cameraError,Math.hypot(projectedPhoto.x,projectedPhoto.y));
+      cameraStep=Math.max(cameraStep,camera.position.distanceTo(photoCameraPrevious));photoCameraPrevious.copy(camera.position);
+    }`);
+  assert(run('cameraError<.002 && cameraStep<.05 && !camera.view.enabled'), `centred camera while walking: ${run('JSON.stringify([cameraError,cameraStep])')}`);
+  run(`PHOTO.mula.x=plaza.inner-2;PHOTO.mula.z=0;PHOTO.cameraYaw=Math.PI/2;PHOTO.zoom=20;
+    for(let i=0;i<180;i++)framePhotoCamera(1/60);camera.updateMatrixWorld(true);
+    var edgeProjection=new THREE.Vector3(PHOTO.mula.x,PHOTO_CAM.aimY[PHOTO.id],0).project(camera);`);
+  assert(run('camera.position.x<=plaza.inner-.54 && Math.hypot(edgeProjection.x,edgeProjection.y)<.002'), 'wall compresses camera boom without moving the centre');
+  run(`setView(false);releasePhotoCamera();PHOTO.mula.x=0;PHOTO.mula.z=0;camera.position.set(0,14,6);camFocus.set(0,1.2,0);
+    var wowStart=camera.position.clone();setView(true);framePhotoCamera(1/60);
+    var wowStep=camera.position.distanceTo(wowStart);for(let i=0;i<180;i++)framePhotoCamera(1/60);camera.updateMatrixWorld(true);
+    var wowPitch=Math.asin((camera.position.y-camFocus.y)/camera.position.distanceTo(camFocus)),wowBody=new THREE.Vector3(0,1.4,0).project(camera).y;`);
+  assert(run('wowStep<.5 && Math.abs(wowPitch-PHOTO_CAM.pitch)<.01 && Math.abs(camera.position.distanceTo(camFocus)-PHOTO_CAM.zoom)<.05 && wowBody<-.1'), `WoW framing eases in, body below the centre: ${run('JSON.stringify([wowStep,wowPitch,wowBody])')}`);
+  run(`setView(false);releasePhotoCamera();`);
+  assert(run('Number.isFinite(orbit.yaw) && !photoRig.on'), 'exit hands a valid camera back to the menu');
+  console.log('manual camera stays centred in motion, ignores menu offset and compresses at walls');
+}
+
+// Visible-but-blurred menus used to advance the demo against a suspended audio clock.
+{
+  run("G.state = 'select'; G.paused = false; G.resuming = null; setView(false); setFigureSong(DRAC); chip = { sfx() {}, ctx: { state: 'suspended' } }; last = 1000;");
+  const before = run('clock');
+  document.focused = false;
+  run('frame(2000); frame(122000);');
+  assert.equal(run('clock'), before, 'short and long unfocused frames cannot advance the demo');
+  document.focused = true;
+  run('frame(122016);');
+  assert.equal(run('clock'), before, 'the returning frame consumes no background delta');
+  run('frame(122032);');
+  assert(run('clock > ' + before), 'the next active frame advances normally');
+  run("sheets.select.pending = true; SHOWCASE.crema = true; frame(122048);");
+  assert(run('!mula.root.visible && !drac.root.visible && dracFx.idle && !SHOWCASE.crema'), 'pending hides both models and clears a queued showcase and all effects');
+  run('sheets.select.pending = false; frame(122064);');
+  assert(run('drac.root.visible'), 'returning to a playable Drac restores the model');
+  console.log('background demo time and pending effect lifecycle ok');
+}
+
+{
+  const savedTimer = context.setTimeout, timers = [];
+  context.setTimeout = fn => timers.push(fn);
+  run('G.paused = false; var delayedEffects = 0; afterActive(700, () => delayedEffects++);');
+  document.focused = false; windowHandlers.blur.forEach(fn => fn());
+  document.focused = true; windowHandlers.focus.forEach(fn => fn());
+  timers.splice(0).forEach(fn => fn());
+  assert.equal(run('delayedEffects'), 0, 'an overdue callback cannot fire after returning to foreground');
+  run('afterActive(700, () => delayedEffects++);'); timers.splice(0).forEach(fn => fn());
+  assert.equal(run('delayedEffects'), 1, 'uninterrupted delayed effects still fire');
+  context.setTimeout = savedTimer;
 }

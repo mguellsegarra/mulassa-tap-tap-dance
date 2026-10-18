@@ -4,7 +4,7 @@ import { store } from '../platform/storage.js';
 import { Chip } from '../platform/audio.js';
 import { song, menuSong, selectedFigure, setFigureSong } from './figure-song.js';
 import { clearLeaderboardResult } from '../services/leaderboard-result.js';
-import { Q, offsetMs, playFrom, LEAD, WIN } from '../core/env.js';
+import { Q, offsetMs, playFrom, LEAD, WIN, pageActive } from '../core/env.js';
 
 // ------------------------------------------------------------------ game
 // G is the one shared record. Most fields appear on first write, so this is the map of who owns what:
@@ -18,7 +18,12 @@ import { Q, offsetMs, playFrom, LEAD, WIN } from '../core/env.js';
 //     energyWarnT, doubleT, finaleT, chantT, offsetT, uiT, clapBeat, finBeat, lastBeat
 //   the app (which screen, what is open)
 //     state ('splash' | 'title' | 'select' | 'play' | 'results'), sel (the level picked on «QUI BALLA?»), paused, pendingAction, audioError
-export const G = { chart: [], balloons: [], state: 'splash', figureId: selectedFigure.id, figureVersion: selectedFigure.version, sel: 0, diff: 0, paused: false, guapo: 20, shown: 20, combo: 0, chantT: -99, collapseT: 0, sec: 'A', energy: 1, shownE: 1, energyWarn: [true, true], energyT: -9 };
+export const G = { activityEpoch: 0, chart: [], balloons: [], state: 'splash', figureId: selectedFigure.id, figureVersion: selectedFigure.version, sel: 0, diff: 0, paused: false, guapo: 20, shown: 20, combo: 0, chantT: -99, collapseT: 0, sec: 'A', energy: 1, shownE: 1, energyWarn: [true, true], energyT: -9 };
+// Deferred one-shot effects expire when the page loses activity, even if its timer fires after returning.
+export function afterActive(delay, effect) {
+  const epoch = G.activityEpoch;
+  setTimeout(() => { if (epoch === G.activityEpoch && !G.paused && pageActive()) effect(); }, delay);
+}
 // A friend's challenge (?repte=94-2, share.js): its level comes preselected on «QUI BALLA?» and the title shows it; the address bar
 // drops it (a reload doesn't bring it back). Only a % and a level: it never changes what the leaderboard accepts.
 export const CHALLENGE = parseChallenge(Q);

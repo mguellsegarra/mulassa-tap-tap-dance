@@ -1,5 +1,6 @@
 // Keyboard and pointer input for the game and for the title camera.
 import { PHOTO, photoKey, clearPhotoKeys, photoLook, photoZoom } from '../game/photo-control.js';
+import { syncAvatars, stopControl } from './photo-avatars.js';
 import { store } from '../platform/storage.js';
 import { orbitMove, turnFor, orbitDown, orbitUp, orbitZoom, wheelFactor } from '../scene/orbit.js';
 import { sheets } from './sheets.js';
@@ -16,14 +17,14 @@ import { orbit, pnow } from '../scene/cameras.js';
 
 for (const ev of ['touchend', 'click', 'keydown']) addEventListener(ev, () => { if (!G.paused && pageActive()) chip?.wake(); }, { passive: true });
 addEventListener('keydown', e => {
-  if (photoKey(e, viewMode && menuState() && !sheetUp())) return;
+  if (photoKey(e, viewMode && menuState() && !sheetUp())) { syncAvatars(); return; } // (Tab may have switched figures)
   if (e.repeat || sheets.sync.open || privacyMenu.open || sheets.board.open || sheets.share.open || sheets.feedback.open) return; // «Bústia de la plaça» is typed into; the sync sheet takes its own keys; Privadesa is read, not played; Classificacions types an alias; Comparteix has its own buttons
   if (G.state === 'play' && e.code === 'Escape') {
     if (!pauseMenu.open) { e.preventDefault(); togglePause(); }
     return;
   }
   if (!['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target?.tagName) && !e.target?.isContentEditable && menuState() && !sheetUp() && !e.ctrlKey && !e.metaKey && !e.altKey && (e.code === 'KeyH' || viewMode && e.code === 'Escape')) { // «mode foto» (H is no game key)
-    e.preventDefault(); setView(!viewMode); return;
+    e.preventDefault(); if (e.code !== 'Escape' || !stopControl()) setView(!viewMode); return; // Escape steps back: driving → looking → buttons
   }
   if (viewMode || G.state === 'select') return; // the selector owns its keys; photo walking has already handled its keys
   if (['INPUT', 'SELECT', 'BUTTON'].includes(e.target.tagName)) return;
@@ -74,7 +75,9 @@ hud.addEventListener('pointermove', e => {
     const p = orbit.ptrs.get(e.pointerId);
     if (p) photoLook(e.clientX - p.x, e.clientY - p.y, false);
   }
-  worldMove(e); orbitMove(orbit, e.pointerId, e.clientX, e.clientY, pnow()); }); // dragging the view
+  const oldZoom=orbit.x[1];
+  worldMove(e); orbitMove(orbit, e.pointerId, e.clientX, e.clientY, pnow());
+  if(PHOTO.on && orbit.pinch && oldZoom>0)photoZoom(orbit.x[1]/oldZoom); }); // dragging the view
 hud.addEventListener('pointerdown', e => {
   if (PHOTO.on && e.pointerType === 'mouse' && (e.button === 0 || e.button === 2)) {
     e.preventDefault(); PHOTO.mouse = e.buttons & 3;
@@ -94,6 +97,7 @@ hud.addEventListener('pointerdown', e => {
     }
   } else if (G.state === 'results' && clock - G.resT > 1) toTitle();
 });
+hud.addEventListener('lostpointercapture', () => { PHOTO.mouse=0; });
 hud.addEventListener('contextmenu', e => { if (PHOTO.on) e.preventDefault(); });
 for (const ev of ['pointerup', 'pointercancel']) addEventListener(ev, e => { if (e.pointerType === 'mouse') PHOTO.mouse &= ev === 'pointercancel' ? 0 : e.buttons & 3; });
 for (const ev of ['pointerup', 'pointercancel']) addEventListener(ev, e => { orbitUp(orbit, e.pointerId, pnow()); });

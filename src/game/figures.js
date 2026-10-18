@@ -8,12 +8,16 @@ const playableSongs = {
   'mulassa-valls': { song: 'Ball de la Mulassa', composer: 'Francesc Bofarull i Figuerola', year: 1987, version: CURRENT_SCORE_VERSION },
   'drac-valls': { song: 'Ball del Drac', composer: 'Francesc Bofarull i Figuerola', year: 1985, version: 'drac-v1' },
 };
-export const FIGURES = figureCatalog.figures.map(f => ({
+// Hidden entries keep their catalog data and portraits but cannot enter selector navigation.
+export const FIGURES = figureCatalog.figures.filter(f => f.selectorVisible !== false).map(f => ({
   ...f, status: playableSongs[f.id] ? 'playable' : 'aviat', ...playableSongs[f.id],
 })).sort((a, b) => Number(b.status === 'playable') - Number(a.status === 'playable'));
 export const MULASSA = FIGURES.find(f => f.id === 'mulassa-valls');
 export const DRAC = FIGURES.find(f => f.id === 'drac-valls');
-export const townOf = f => TOWNS.find(t => t.id === f.town);
+// The strip's last card invites a colla to propose its figure: no real town, no song, outside FIGURES (records, board).
+export const INVITE_TOWN = { id: 'el-teu-poble', name: 'El teu poble', color: '#c8202f' };
+export const INVITE = { id: 'la-teva-colla', name: 'La teva colla', fullName: 'La teva colla', town: INVITE_TOWN.id, entity: 'Proposa-la', status: 'aviat', invite: true };
+export const townOf = f => f.town === INVITE_TOWN.id ? INVITE_TOWN : TOWNS.find(t => t.id === f.town);
 export const playable = f => f.status === 'playable';
 
 // The mulassa as 12 × 10 pixel art, side-on, facing right: ears, head, long neck, the red caparison with gold dots and
@@ -46,6 +50,8 @@ export function saveFigureRecord(store, figure, level, quality, rawScore, combo)
 
 export const aviatText = () => `Encara no s’hi pot jugar. Tens fotos, vídeos, partitures o coneixes el ball? Dona un cop de mà.`;
 export const aviatDraft = town => `Sobre ${town}: `; // the Bústia's first words, from an «Aviat» card
+export const inviteText = () => `Tens una colla gegantera o de bestiari? Vols que el teu poble surti al joc? Explica’ns quina figura és i d’on és.`;
+export const INVITE_DRAFT = 'Proposo una figura. Poble i colla: ';
 
 // Two green necks, red jaws and gold wing membranes, in the same portrait box as the Mulassa.
 export const DRAC_ART = ['..gg...gg...', '.ggrr.ggrr..', '..gg...gg...', '..gg...gg...', 'w.ggggggg.w.', '.wggogoggw..', '..ggggggg...', '..ggggggg...', '...d..d.....', '..dd..dd....'];

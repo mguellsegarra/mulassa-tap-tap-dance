@@ -86,3 +86,33 @@ setPhotoControl(true,'mulassa-valls',false);Object.assign(photoBody(),{x:0,z:0,y
 movePhoto(1/60,(x,z,yaw)=>yaw>.4&&yaw<.6?-1:1);
 assert(photoBody().yaw<=.4,'turning tests the swept angles rather than only the end pose');setPhotoControl(false);
 console.log('rotational collision sweep ok');
+
+for(const fps of [30,60,120]) {
+  setPhotoControl(true,'mulassa-valls',false);Object.assign(photoBody(),{x:0,z:0,yaw:0});press('KeyW');
+  for(let i=0;i<fps/2;i++)movePhoto(1/fps,()=>99);
+  assert(photoBody().vz>2.47,'quick progressive start');
+  PHOTO.keys.delete('KeyW');press('KeyS');
+  for(let i=0;i<fps/10;i++)movePhoto(1/fps,()=>99);
+  assert(photoBody().vz<0,'reversal brakes before accelerating backwards');
+}
+setPhotoControl(false);
+console.log('responsive acceleration and reversal at 30/60/120 FPS ok');
+
+for (const fps of [30,60,120]) {
+  setPhotoControl(true,'mulassa-valls',false);
+  Object.assign(photoBody(),{x:0,z:0,yaw:0});
+  PHOTO.mouse=1; photoLook(150,0,false);
+  movePhoto(1/fps,()=>99);
+  assert.equal(photoBody().yaw,0,'left orbit at rest preserves heading');
+  press('KeyW');
+  for(let i=0;i<fps;i++)movePhoto(1/fps,()=>99);
+  assert(Math.abs(photoBody().yaw+.45)<.001,'W plus left drag aligns smoothly at every frame rate');
+  assert(photoBody().x<-.5 && photoBody().z>1,'walking follows the new heading');
+  PHOTO.keys.delete('KeyW');const heading=photoBody().yaw;
+  photoLook(100,0,false);movePhoto(1/fps,()=>99);
+  assert.equal(photoBody().yaw,heading,'releasing W restores free orbit');
+  press('KeyW');clearPhotoKeys();movePhoto(1/fps,()=>99);
+  assert.equal(photoBody().yaw,heading,'blur cancels left-drag steering');
+}
+setPhotoControl(false);
+console.log('left drag steers while advancing and freely orbits at rest ok');

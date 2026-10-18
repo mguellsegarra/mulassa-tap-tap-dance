@@ -12,13 +12,15 @@ for (const id of ['valls', 'tarragona', 'reus', 'solsona', 'vilanova']) assert(T
 assert.deepEqual(FIGURES.filter(playable).map(f => f.id), [MULASSA.id, DRAC.id]);
 assert(FIGURES.slice(0, FIGURES.filter(playable).length).every(playable), 'available figures come first');
 assert(FIGURES.every(f => townOf(f) && ['playable', 'aviat'].includes(f.status)));
-assert.deepEqual(FIGURES.filter(f => f.town === 'valls').map(f => f.id).sort(), ['mulassa-valls', 'drac-valls', 'aliga-valls', 'bou-tradicional-valls', 'os-trabucaires-valls', 'nans-valls', 'gegants-ciutat-valls', 'cavallets-valls', 'gegant-calcot-valls', 'campanar-valls', 'basilisc-valls'].sort(), 'only the requested principal Valls figures remain');
+assert.deepEqual(FIGURES.filter(f => f.town === 'valls').map(f => f.id).sort(), ['mulassa-valls', 'drac-valls', 'aliga-valls', 'bou-tradicional-valls', 'os-trabucaires-valls', 'gegants-ciutat-valls', 'cavallets-valls', 'gegant-calcot-valls', 'campanar-valls', 'basilisc-valls'].sort(), 'only the requested principal Valls figures remain');
 const sourceCatalog = JSON.parse(readFileSync(new URL('../src/game/figure-catalog.json', import.meta.url), 'utf8'));
-assert.deepEqual(sourceCatalog.figures.filter(f => f.selectorVisible === false).map(f => f.id), ['diables-valls']);
-assert(sourceCatalog.figures.find(f => f.id === 'diables-valls').sources.length && FIGURE_PORTRAITS['diables-valls'], 'hidden Diables retain sources and portrait');
+assert.deepEqual(sourceCatalog.figures.filter(f => f.selectorVisible === false).map(f => f.id), ['nans-valls', 'diables-valls']);
+for (const id of ['nans-valls', 'diables-valls']) {
+  assert(sourceCatalog.figures.find(f => f.id === id).sources.length && FIGURE_PORTRAITS[id], `${id}: hidden figure retains sources and portrait`);
+}
 assert.equal(FIGURES.find(f => f.id === 'os-trabucaires-valls').fullName, 'Ós de Valls', 'the figure is distinct from its accompanying Trabucaires');
 for (const id of ['aliga-valls', 'nans-valls', 'gegants-ciutat-valls']) {
-  const f = FIGURES.find(f => f.id === id);
+  const f = sourceCatalog.figures.find(f => f.id === id);
   assert.equal(f.owner, 'Ajuntament de Valls');
   assert.equal(f.manager, 'Unió Anelles de la Flama');
   assert.equal(f.entity, 'Ajuntament + UAF');
@@ -26,6 +28,7 @@ for (const id of ['aliga-valls', 'nans-valls', 'gegants-ciutat-valls']) {
 }
 const basilisc = FIGURES.find(f => f.id === 'basilisc-valls');
 assert.equal(basilisc.entity, 'La Pessigolla');
+assert.equal(FIGURES[FIGURES.findIndex(f => f.id === 'cavallets-valls') + 1], basilisc, 'Basilisc immediately follows Cavallets');
 assert.equal(basilisc.status, 'aviat', 'Basilisc joins the catalog without becoming playable');
 assert.equal(basilisc.manager, 'Agrupació Cultural La Pessigolla');
 assert.equal(TOWNS.find(t => t.id === 'vilanova').name, 'Vilanova i la Geltrú');
@@ -57,7 +60,7 @@ rememberLevel(store, MULASSA.id, 2); assert.equal(rememberedLevel(store, MULASSA
 assert.equal(rememberedLevel(store, 'another'), 1, 'memory belongs to the figure');
 for (const value of ['-1', '3', 'NaN', '1.5', '']) { memory.set('level-mulassa-valls', value); assert.equal(rememberedLevel(store, MULASSA.id), 1); }
 assert.equal(recordKey(MULASSA, 2), 'record-family-mulassa-2', 'short records have a separate namespace');
-assert.equal(FIGURES.find(f => f.id === 'nans-valls').music, 'Francesc Sans', 'pending Valls figures credit their own music');
+assert.equal(sourceCatalog.figures.find(f => f.id === 'nans-valls').music, 'Francesc Sans', 'pending Valls figures credit their own music');
 assert.equal(aviatText('Reus').split('\n\n').length, 1, 'pending invitation stays compact');
 
 // A named asset-backed fixture exercises future catalog entries without prescribing the research roster.
@@ -173,9 +176,18 @@ assert.equal(sounds.length, soundBefore + 2, 'unavailable scroll actions make no
   assert($('select-prev').disabled && $('select-forward').disabled, 'growing the viewport removes unavailable arrows');
 }
 
+const cardMarkup = id => $('select-strip').innerHTML.match(new RegExp(`<button[^>]*data-id="${id}"[^]*?</button>`))[0];
+assert.match(cardMarkup('mulassa-valls'), /aria-label="Mulassa, Unió Anelles de la Flama, Valls/);
+assert.match(cardMarkup('aliga-valls'), /aria-label="Àliga, Ajuntament de Valls \+ Unió Anelles de la Flama, Valls/);
+for (const [id, count] of [['mulassa-valls', 1], ['aliga-valls', 2]]) {
+  const icons = cardMarkup(id).match(/<small class="sel-entity-icons" aria-hidden="true">([^]*?)<\/small>/)[1];
+  assert.match(icons, /UAF<\/span>/);
+  if (count === 2) assert.match(icons, /Ajuntament<\/span>/);
+  assert.equal((icons.match(/<svg/g) || []).length, count, `${id}: entity icons accompany the card caption`);
+}
 const live = FIGURES.filter(f => playable(f)), soon = FIGURES.filter(f => !playable(f));
 const more = cards.find(c => c.dataset.more), later = cards.filter(c => c.cls.includes('later'));
-assert(!cards.some(c => c.dataset.id === 'diables-valls'), 'Diables have no card for clicks, keyboard navigation or town selection');
+assert(!cards.some(c => ['diables-valls', 'nans-valls'].includes(c.dataset.id)), 'Diables and Nans have no card for clicks, keyboard navigation or town selection');
 assert.deepEqual(cards.slice(0, live.length).map(c => c.dataset.id), live.map(f => f.id), 'the playable figures come first');
 assert.equal(cards[live.length], more, 'then the fold');
 assert.deepEqual(later.map(c => c.dataset.id), [...soon, INVITE].map(f => f.id), 'then everything still to come, and the invitation last');

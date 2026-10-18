@@ -91,7 +91,7 @@ export class Chip {
     let b = 0;
     for (let i = 0; i < md.length; i++) { b = (b + 0.02 * (Math.random() * 2 - 1)) / 1.02; md[i] = b * 3.5; }
     this.applause = applause(ctx); // built a few people at a time when the page is idle (see applause())
-    this.menuMusic = menuMusic; // the title's speaker button (main.js): off = the menu loop is neither fetched nor played
+    this.menuMusic = menuMusic; // the title's speaker button (main.js): off = all menu sounds are silent; the loop is neither fetched nor played
     this.preload();
   }
 
@@ -251,7 +251,7 @@ export class Chip {
     this.endRun(); // back on the menu: whatever the run still had queued on the audio clock never sounds
     const token = (this.menuToken = {});
     this.murmurLevel();
-    if (this.menuMusic === false) return; // switched off: the plaça's murmur alone
+    if (this.menuMusic === false) { this.clearMenuSfx(); return; } // remembered menu silence, including leftover effects
     const ambient = this.ambient ||= this.loadAmbient();
     // the tap's resume() takes a moment before the hardware really plays: starting the loop while the context is still
     // suspended ate its first beats (it began "cut"). Wait for `running`, then start a hair ahead of the clock.
@@ -289,12 +289,12 @@ export class Chip {
     src.stop(t + 0.3);
     this.menuSrc = null;
   }
-  // the speaker button: the menu loop and, while on the menu, the murmur (never the song or the sfx); fades at once
+  // Menu sound preference: loop, murmur and UI/demo effects. A run keeps its own sound.
   setMenuMusic(on) {
     this.menuMusic = on;
     this.murmurLevel();
     if (!this.menuToken) return; // not on the menu: the next menu(true) follows the setting
-    if (on) this.menu(true, 0.2); else this.menuFade();
+    if (on) this.menu(true, 0.2); else { this.clearMenuSfx(); this.menuFade(); }
   }
 
   // ---------------------------------------------------------------- a run's sounds
@@ -387,6 +387,7 @@ export class Chip {
   }
 
   sfx(kind, i = 0) { // i: the Drac's petard index (its crack's pitch)
+    if (this.menuToken && this.menuMusic === false) return; // discard muted menu events; never replay on enable / play
     if (this.ctx.state && this.ctx.state !== 'running') return; // an immediate effect cannot be queued for a future wake
     if (typeof document !== 'undefined' && (document.hidden || !document.hasFocus())) return;
     const t = this.ctx.currentTime;

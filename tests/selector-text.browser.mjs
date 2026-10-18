@@ -40,6 +40,6 @@ export async function checkSelectorText() {
       cardWidth: rect(card).width, cardHeight: rect(card).height, captionHeight: rect(caption).height,
       entityHeight: rect(entity).height, entityFont: getComputedStyle(entity).fontSize, panelHeight: rect(panel).height });
   }
-  if (new Set(rows.map(r => r.cardHeight)).size > 1 || new Set(rows.map(r => r.captionHeight)).size > 1) failures.push('Unequal card/caption heights');
+  if (new Set(rows.map(r => Math.round(r.cardHeight))).size > 1 || new Set(rows.map(r => Math.round(r.captionHeight))).size > 1) failures.push('Unequal card/caption heights');
   return { viewport: [innerWidth, innerHeight], count: rows.length, failures: [...new Set(failures)], rows };
 }

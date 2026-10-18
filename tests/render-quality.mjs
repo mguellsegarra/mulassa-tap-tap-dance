@@ -379,13 +379,13 @@ const document = {
   listeners: {},
   addEventListener(type, handler) { const previous = this.listeners[type]; this.listeners[type] = previous ? (...args) => { previous(...args); handler(...args); } : handler; },
   body: { appendChild() {}, classList: { contains: () => false, toggle() {} }, style: { setProperty() {}, removeProperty() {} } },
-  createElement: () => ({ style: {}, setAttribute() {}, appendChild() {} }),
+  createElement: () => ({ style: {}, setAttribute() {}, appendChild() {}, querySelectorAll: () => [], querySelector: () => ({}) }),
   getElementById(id) {
     if (!nodes.has(id)) nodes.set(id, {
       style: {}, dataset: {}, options: [{}, {}], listeners: {}, open: false,
       addEventListener(type, handler) { this.listeners[type] = handler; },
       showModal() { this.open = true; }, close() { this.open = false; },
-      focus() {}, blur() {}, setAttribute() {}, classList: { toggle() {}, add() {}, remove() {} }, contains: () => false,
+      focus() {}, blur() {}, setAttribute() {}, classList: { toggle() {}, add() {}, remove() {} }, contains: () => false, after() {},
       getContext: () => drawing,
     });
     return nodes.get(id);
@@ -418,6 +418,7 @@ const context = vm.createContext({
   errors, errorName, audioFailureTags: (await import('../src/platform/audio.js')).audioFailureTags,
   THREE: { ...THREE, WebGLRenderer: Renderer }, ...await import('../src/scene/crowd-fx.js'), ...models, ...chart, ...progress, ...stars,
   PROFILES, initialQuality, renderDpr, frameMonitor, hudScale, framePacer, smoothClock, profileAt, hudBudget, isSoftwareRenderer, probeRenderer, Chip: class { constructor(song, opts) { context.chipOpts = opts; } setMenuMusic(on) { (context.menuMusicCalls ||= []).push(on); } }, ...practice, ...energy, ...bubblesLogic, ...framing, ...dance, ...titleLayoutLogic, ...orbitLogic, setupSync: hooks => { context.syncHooks = hooks; return context.syncSheet = { open: false, show() { this.open = true; } }; },
+  pixelSvg: () => '<svg></svg>', // src/ui/select-ui.js (provided)
   setupSelect: opts => (context.selectScreen = { opts, sheetOpen: false, visible(on) { this.shown = on; }, refocus() {} }),
   setupBoard: opts => (context.boardSheet = { opts, open: false, configured: true, shown: [], opened: [], results(show) { this.shown.push(show); }, publishable: false,
     openBoard(back) { this.open = true; this.opened.push(back); this.back = back; }, verifyStarts: 0, verifyStart() { this.verifyStarts++; },
@@ -1266,7 +1267,7 @@ assert.equal(boardSheet.opened.length, 0, 'a stale podium click off the title op
   assert.equal(btn.hidden, false, 'a slow or Save-Data connection keeps the speaker on the title');
   delete context.navigator.connection;
   btn.listeners.click();
-  assert.equal(btn.dataset.state, 'off'); assert.equal(btn.title, 'Activa la música del menú');
+  assert.equal(btn.dataset.state, 'off'); assert.equal(btn.title, 'Activa el so del menú');
   assert.deepEqual(stored.at(-1), ['menu-music', 'off'], 'remembered on this device');
   assert(run('menuMusic === false'));
   if (run('engine != null')) assert.deepEqual(context.menuMusicCalls.at(-1), false, 'the engine fades the loop out');
@@ -2498,7 +2499,7 @@ console.log('view mode ok');
     for (const h of keyHandlers) h({ code, target: { tagName: 'BODY' }, preventDefault() { prevented = true; }, ...more });
     return prevented;
   };
-  run(`if (chip) chip.wake = () => {}; setFigureSong(MULASSA); G.state = 'splash'; animMula(1/60, 0); M.pos.set(-3,0); M.pivot.set(-3, PIVOT); PAIR.w.x=3; PAIR.w.z=0; PAIR.x=3; PAIR.z=0; camera.position.set(0,6,10); camFocus.set(0,0,0); var photoCrowd=activeCrowd; activeCrowd=[]; setView(true); animMula(1/60, 0);
+  run(`if (chip) chip.wake = () => {}; setFigureSong(MULASSA); G.state = 'splash'; animMula(1/60, 0); M.pos.set(-3,0); M.pivot.set(-3, PIVOT); PAIR.w.x=3; PAIR.w.z=0; PAIR.x=3; PAIR.z=0; camera.position.set(0,6,10); camFocus.set(0,0,0); var photoCrowd=activeCrowd; activeCrowd=[]; setView(true); takeFigure(selectedFigure.id); animMula(1/60, 0);
     var photoSong = song, photoDiff = G.diff, photoStart = M.pos.clone();`);
   assert(run('PHOTO.on && PHOTO.pair && mula.root.visible && drac.root.visible'));
   photoKeyDown('KeyW');
@@ -2516,17 +2517,51 @@ console.log('view mode ok');
   photoKeyDown('Escape'); run('animMula(1/60, clock/BEAT);');
   assert(run('!PHOTO.on && !PHOTO.ready && song === photoSong && G.diff === photoDiff'));
   assert(!photoKeyDown('Tab'), 'normal Tab untouched');
-  run(`G.state='select'; setView(true); animMula(1/60, clock/BEAT);`);
+  run(`G.state='select'; setView(true); takeFigure(selectedFigure.id); animMula(1/60, clock/BEAT);`);
   photoKeyDown('Tab'); run('animMula(1/60, clock/BEAT);');
   assert(run("drac.root.visible && !mula.root.visible && selectedFigure.id === 'mulassa-valls'"), 'selector shows temporary Drac without changing selected figure');
   photoKeyDown('KeyA', { target: { tagName: 'TEXTAREA' } });
   assert(run('PHOTO.keys.size === 0'), 'text fields never steer');
   photoKeyDown('Escape'); run('animMula(1/60, clock/BEAT);');
   assert(run('mula.root.visible && !drac.root.visible && song === photoSong && G.diff === photoDiff'), 'exit restores original selector figure and song');
-  run(`setView(true); animMula(1/60, clock/BEAT); G.state='play'; updateControls(); animMula(1/60, clock/BEAT);`);
+  run(`setView(true); takeFigure(selectedFigure.id); animMula(1/60, clock/BEAT); G.state='play'; updateControls(); animMula(1/60, clock/BEAT);`);
   assert(run('!PHOTO.on && PHOTO.keys.size === 0'), 'game transition clears manual mode');
   run("G.state='select'; setView(false);");
   console.log('photo walking splash/selector, visible switching, blur and play isolation ok');
+}
+
+// Photo mode opens on plain viewing; the desktop bar's frames hand a figure to WASD; touch screens only look.
+{
+  const keyDown = (code, more = {}) => {
+    let prevented = false;
+    for (const h of keyHandlers) h({ code, target: { tagName: 'BODY' }, preventDefault() { prevented = true; }, ...more });
+    return prevented;
+  };
+  run(`G.state = 'select'; setFigureSong(MULASSA); setView(false); setView(true); animMula(1/60, clock/BEAT);`);
+  assert(run('viewMode && !PHOTO.on && !avatarsEl.hidden'), 'photo mode starts in free view with the bar shown');
+  assert(!keyDown('KeyW') && !keyDown('Tab'), 'free view leaves W and Tab alone');
+  assert(run('PHOTO.keys.size === 0'));
+  run("takeFigure('drac-valls');");
+  assert(run("PHOTO.on && PHOTO.id === 'drac-valls' && !PHOTO.pair"), 'a frame takes that figure');
+  assert(keyDown('Tab') && run("PHOTO.id === 'mulassa-valls'"), 'Tab switches only while driving');
+  run("takeFigure('mulassa-valls');");
+  assert(run('!PHOTO.on && viewMode'), 'clicking the active frame goes back to viewing');
+  run("takeFigure('mulassa-valls'); takeFigure('');");
+  assert(run('!PHOTO.on && viewMode'), 'Vista lliure goes back to viewing');
+  run("takeFigure('mulassa-valls');"); keyDown('KeyW');
+  keyDown('Escape');
+  assert(run('!PHOTO.on && viewMode && PHOTO.keys.size === 0'), 'Escape first drops control (keys cleared)');
+  keyDown('Escape');
+  assert(run('!viewMode && avatarsEl.hidden'), 'the next Escape brings the buttons back');
+  run("setView(true); takeFigure('mulassa-valls');"); keyDown('KeyH');
+  assert(run('!viewMode && !PHOTO.on'), 'H leaves photo mode and control at once');
+  run("COARSE.matches = true; setView(true); takeFigure('mulassa-valls');");
+  assert(run('viewMode && avatarsEl.hidden && !PHOTO.on'), 'touch: no bar, no driving');
+  assert(!keyDown('KeyW') && run('PHOTO.keys.size === 0'), 'touch: keys never steer');
+  run("setView(false); COARSE.matches = false; G.state = 'play';");
+  assert(!keyDown('Tab') && !keyDown('KeyA'), 'during a song WASD/Tab are not photo keys');
+  run("G.state = 'select';");
+  console.log('photo free view by default, desktop frames, Escape steps back, touch only looks ok');
 }
 
 // A nearby spectator makes way through the regular RING steering; the walker never tunnels through them.
@@ -2535,7 +2570,7 @@ console.log('view mode ok');
     S.yaw.x=S.yaw.t=Math.PI; S.yaw.v=0; camera.position.set(0,6,10); camFocus.set(0,0,0);
     var savedPhotoCrowd=activeCrowd, photoPerson=activeCrowd[0]; activeCrowd=[photoPerson];
     photoPerson.pos.set(0,-4.3); photoPerson.gx=0; photoPerson.gz=-4.3; photoPerson.vel.set(0,0);
-    setView(true); animMula(1/60,0); PHOTO.keys.add('KeyW');
+    setView(true); takeFigure(selectedFigure.id); animMula(1/60,0); PHOTO.keys.add('KeyW');
     var manualMin=99, manualStep=0, personStart=photoPerson.pos.clone();
     for(let i=0;i<360;i++){
       var px=M.pos.x,pz=M.pos.y; clock+=1/60; animMula(1/60,clock/BEAT); animCrowd(1/60,clock/BEAT,0,1);
@@ -2563,7 +2598,7 @@ console.log('view mode ok');
 
 // Only the currently driven figure leaves the autonomous menu walk.
 {
-  run(`G.state='splash'; setFigureSong(MULASSA); animMula(1/60,0); setView(true); animMula(1/60,0);
+  run(`G.state='splash'; setFigureSong(MULASSA); animMula(1/60,0); setView(true); takeFigure(selectedFigure.id); animMula(1/60,0);
     clearPhotoKeys(); var idleM=M.pos.clone(), idleD={x:PAIR.x,z:PAIR.z};
     for(let i=0;i<180;i++){clock+=1/60;animMula(1/60,clock/BEAT);}`);
   assert(run('M.pos.distanceTo(idleM)<1e-6'), 'controlled Mulassa stays put without keys');
@@ -2578,7 +2613,7 @@ console.log('view mode ok');
 }
 
 {
-  run(`G.state='select'; setFigureSong(MULASSA); M.air=0; M.airV=0; setView(true); animMula(1/60,clock/BEAT);
+  run(`G.state='select'; setFigureSong(MULASSA); M.air=0; M.airV=0; setView(true); takeFigure(selectedFigure.id); animMula(1/60,clock/BEAT);
     photoKey({code:'Space',preventDefault(){}},true); var photoJump=0;
     for(let i=0;i<90;i++){clock+=1/60;animMula(1/60,clock/BEAT);photoJump=Math.max(photoJump,M.air);}`);
   assert(run('photoJump>.5 && M.air===0'), 'Space jumps and lands without accumulating lift');
@@ -2594,7 +2629,7 @@ console.log('view mode ok');
   run(`G.state='splash'; setFigureSong(MULASSA); animMula(1/60,0);
     M.pos.set(-4,0);M.pivot.set(-4+PIVOT,0);M.yaw=Math.PI/2;S.yaw.x=S.yaw.t=M.yaw;S.yaw.v=0;
     PAIR.x=PAIR.w.x=3;PAIR.z=PAIR.w.z=0;PAIR.w.face=0;
-    var passageCrowd=activeCrowd;activeCrowd=[];setView(true);animMula(1/60,0);PHOTO.keys.add('KeyW');
+    var passageCrowd=activeCrowd;activeCrowd=[];setView(true); takeFigure(selectedFigure.id);animMula(1/60,0);PHOTO.keys.add('KeyW');
     var passageStart=PAIR.x,passageGap=99,passageStep=0;
     for(let i=0;i<300;i++){var lastX=PAIR.x,lastZ=PAIR.z;clock+=1/60;animMula(1/60,clock/BEAT);
       passageGap=Math.min(passageGap,photoPairClearance(M.pos.x,M.pos.y,M.yaw,{x:PAIR.x,z:PAIR.z,yaw:PAIR.w.face},false));
@@ -2610,7 +2645,7 @@ console.log('view mode ok');
 
 {
   run(`G.state='select';setFigureSong(MULASSA);M.pos.set(0,0);M.yaw=Math.atan2(MID.fx,MID.fz);M.pivot.set(Math.sin(M.yaw)*PIVOT,Math.cos(M.yaw)*PIVOT);S.yaw.x=S.yaw.t=M.yaw;S.yaw.v=0;
-    setView(true);animMula(1/60,clock/BEAT);PHOTO.keys.add('KeyW');var extrasMoved=0,extraMaxStep=0,travelClear=99;
+    setView(true); takeFigure(selectedFigure.id);animMula(1/60,clock/BEAT);PHOTO.keys.add('KeyW');var extrasMoved=0,extraMaxStep=0,travelClear=99;
     for(let i=0;i<480;i++){clock+=1/60;animMula(1/60,clock/BEAT);animCrowd(1/60,clock/BEAT,0,1);
       travelClear=Math.min(travelClear,photoSafe(M.pos.x,M.pos.y,M.yaw));
       for(const p of photoExtras)extrasMoved=Math.max(extrasMoved,Math.hypot(p.pos.x-p.homeX,p.pos.y-p.homeZ));}
@@ -2624,7 +2659,7 @@ console.log('view mode ok');
 
 // Manual camera: one centre, independent of the selector dock, throughout locomotion and at the plaza edge.
 {
-  run(`G.state='select';setView(true);animMula(1/60,0);camera.setViewOffset(1280,800,0,160,1280,800);
+  run(`G.state='select';setView(true); takeFigure(selectedFigure.id);animMula(1/60,0);camera.setViewOffset(1280,800,0,160,1280,800);
     for(let i=0;i<180;i++)framePhotoCamera(1/60);
     var cameraError=0,cameraStep=0,photoCameraPrevious=camera.position.clone();
     for(let i=0;i<180;i++){
@@ -2639,7 +2674,7 @@ console.log('view mode ok');
     var edgeProjection=new THREE.Vector3(PHOTO.mula.x,PHOTO_CAM.aimY[PHOTO.id],0).project(camera);`);
   assert(run('camera.position.x<=plaza.inner-.54 && Math.hypot(edgeProjection.x,edgeProjection.y)<.002'), 'wall compresses camera boom without moving the centre');
   run(`setView(false);releasePhotoCamera();PHOTO.mula.x=0;PHOTO.mula.z=0;camera.position.set(0,14,6);camFocus.set(0,1.2,0);
-    var wowStart=camera.position.clone();setView(true);framePhotoCamera(1/60);
+    var wowStart=camera.position.clone();setView(true); takeFigure(selectedFigure.id);framePhotoCamera(1/60);
     var wowStep=camera.position.distanceTo(wowStart);for(let i=0;i<180;i++)framePhotoCamera(1/60);camera.updateMatrixWorld(true);
     var wowPitch=Math.asin((camera.position.y-camFocus.y)/camera.position.distanceTo(camFocus)),wowBody=new THREE.Vector3(0,1.4,0).project(camera).y;`);
   assert(run('wowStep<.5 && Math.abs(wowPitch-PHOTO_CAM.pitch)<.01 && Math.abs(camera.position.distanceTo(camFocus)-PHOTO_CAM.zoom)<.05 && wowBody<-.1'), `WoW framing eases in, body below the centre: ${run('JSON.stringify([wowStep,wowPitch,wowBody])')}`);
@@ -2650,7 +2685,7 @@ console.log('view mode ok');
 
 // Visible-but-blurred menus used to advance the demo against a suspended audio clock.
 {
-  run("G.state = 'select'; G.paused = false; G.resuming = null; setView(false); setFigureSong(DRAC); chip = { sfx() {}, ctx: { state: 'suspended' } }; last = 1000;");
+  run("G.state = 'select'; G.paused = false; G.resuming = null; setView(false); setFigureSong(DRAC); chip = { sfx() {}, wake() {}, ctx: { state: 'suspended', suspend() {} } }; last = 1000;");
   const before = run('clock');
   document.focused = false;
   run('frame(2000); frame(122000);');

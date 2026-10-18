@@ -32,7 +32,8 @@ const state = { state: 'splash', paused: false }, ctx = { document: doc, perform
   padButtons: [$('pad-left'), $('pad-right')], hud: $('hud'), orbit: { ptrs: new Map(), x: [0.4,11] }, pnow: () => time, W: 375, K: 1,
   orbitMove() {}, orbitZoom() {}, turnFor: () => 1, orbitDown(o, id) { o.ptrs.set(id, true); }, orbitUp(o, id) { o.ptrs.delete(id); },
   chip: null, down: { keys: new Set(), ptr: new Map() }, KEYS: {}, pageActive: () => true, releaseAll() {}, buttonAt: () => { throw new Error('selector world must never hit a title button'); },
-  store: { set() {} }, unlock() { state.state = 'select'; }, toTitle() { state.state = 'select'; } };
+  store: { set() {} }, unlock() { state.state = 'select'; }, toTitle() { state.state = 'select'; },
+  showAvatars: () => run('setPhotoControl(false)'), syncAvatars() {}, stopControl: () => run('PHOTO.on ? (setPhotoControl(false), true) : false') }; // src/ui/photo-avatars.js (its DOM: tests/render-quality.mjs)
 let time = 1000;
 const photoSource = readFileSync(new URL('../src/game/photo-control.js', import.meta.url), 'utf8').replace(/^export /gm, '');
 const code = photoSource + '\n' + ['controls', 'input'].map(name => readFileSync(new URL(`../src/ui/${name}.js`, import.meta.url), 'utf8').replace(/^import .*;\n/gm, '').replace(/^export /gm, '')).join('\n');

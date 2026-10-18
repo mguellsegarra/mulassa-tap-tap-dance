@@ -33,39 +33,28 @@
 :is(#hud, #leaders, #settings, #feedback, #music, #howto, #ios-hint, #fps, #feedback-nudge) { transition: opacity .2s; }
 body.view-mode :is(#hud, #leaders, #settings, #feedback, #music, #howto, #ios-hint, #fps, #feedback-nudge) { opacity: 0; }
 body.view-mode :is(#leaders, #settings, #feedback, #music, #howto, #ios-hint, #fps, #feedback-nudge) { visibility: hidden; pointer-events: none; transition: opacity .2s, visibility 0s .2s; } /* (main.js also makes them inert) */
-/* Photo mode, desktop: the two figures' frames (src/ui/photo-avatars.js). Buttons: dark fill, gold edge; the one being
-   driven is the selected look (cream ring, cream plate, dark text). They fade with the eye after a few idle seconds. */
-#photo-figs { position: fixed; z-index: 5; display: flex; gap: 10px; transition: opacity .25s; }
+/* Photo mode, desktop: a companion bar, bottom centre (src/ui/photo-avatars.js): «Vista lliure» and the two figures'
+   frames, the keys over them for a moment. Buttons: dark fill, gold edge; the active one is an elite frame (below).
+   They fade with the eye after a few idle seconds. */
+#photo-figs { position: fixed; z-index: 5; bottom: calc(20px + env(safe-area-inset-bottom)); left: 50%; translate: -50% 0; display: flex; gap: 14px; transition: opacity .25s; }
 #photo-figs[hidden] { display: none; }
 body:has(#viewmode.idle) #photo-figs:not(:hover, :focus-within) { opacity: .25; transition-duration: 1s; }
-#photo-figs .pf { position: relative; display: flex; align-items: center; gap: 0; min-height: 44px; padding: 0; border: 0; background: none; color: #fff3d6; font: 700 16px/1.1 'Baloo 2', system-ui, sans-serif; cursor: pointer; text-align: left; }
-#photo-figs .pf-por { flex: none; display: grid; place-items: center; box-sizing: border-box; border: 2px solid #f5c518; border-radius: 50%; background: radial-gradient(circle at 50% 42%, color-mix(in srgb, var(--c) 52%, #3b2a1e), color-mix(in srgb, var(--c) 14%, #20150e) 78%); overflow: hidden; } /* the selector card's backdrop */
+#photo-figs .pf { position: relative; display: flex; align-items: center; min-height: 44px; padding: 0; border: 0; background: none; color: #fff3d6; font: 700 16px/1.1 'Baloo 2', system-ui, sans-serif; cursor: pointer; text-align: left; }
+#photo-figs .pf-por { z-index: 1; flex: none; display: grid; place-items: center; box-sizing: border-box; width: 56px; height: 56px; border: 2px solid #f5c518; border-radius: 50%; background: radial-gradient(circle at 50% 42%, color-mix(in srgb, var(--c) 52%, #3b2a1e), color-mix(in srgb, var(--c) 14%, #20150e) 78%); overflow: hidden; } /* the selector card's backdrop */
 #photo-figs .pf-por svg { width: 74%; height: 74%; stroke: none; } /* (not the line icons' stroke) */
-#photo-figs .pf-nb { display: flex; flex-direction: column; justify-content: center; box-sizing: border-box; border: 2px solid #f5c518; background: #140c07e6; }
-#photo-figs .pf-nb small { color: #e8d8b8; font-size: 12px; font-weight: 600; }
-#photo-figs .pf[aria-pressed="true"] .pf-por { border-color: #fff3d6; box-shadow: 0 0 0 3px #fff3d6; }
-#photo-figs .pf[aria-pressed="true"] .pf-nb { border-color: #fff3d6; background: #fff3d6; color: #2a1a10; }
-#photo-figs .pf[aria-pressed="true"] .pf-nb small { color: #5b4033; }
+#photo-figs .pf-free { --c: #6b4630; }
+#photo-figs .pf-free .pf-por svg { width: 55%; height: 55%; stroke: currentColor; }
+#photo-figs .pf-nb { display: flex; flex-direction: column; justify-content: center; box-sizing: border-box; width: 150px; height: 42px; margin-left: -28px; padding: 0 10px 0 38px; /* starts under the portrait's centre: its square end never shows */ border: 2px solid #f5c518; border-radius: 0 10px 10px 0; background: #140c07e6; }
+/* The active frame is an elite frame, like WoW's: a gold plate with dark text and a thicker ring. */
+#photo-figs .pf-por, #photo-figs .pf-nb { transition: box-shadow .2s, background .2s; }
+#photo-figs .pf[aria-pressed="true"] .pf-por { border: 4px solid #f5c518; box-shadow: 0 0 0 2px #7a5a10; }
+#photo-figs .pf[aria-pressed="true"] .pf-nb { border-color: #ffe27a; background: linear-gradient(#f5c518, #b8860b); color: #2a1a10; }
+@media (prefers-reduced-motion: reduce) { #photo-figs .pf-por, #photo-figs .pf-nb { transition: none; } }
 @media (hover: hover) { #photo-figs .pf[aria-pressed="false"]:hover .pf-por { box-shadow: 0 0 0 2px #f5c51880; } }
 #photo-figs .pf:focus-visible { outline: none; }
 #photo-figs .pf:focus-visible .pf-por { outline: 3px solid #fff3d6; outline-offset: 3px; }
-#photo-figs .pf-tip { margin: 0; padding: 6px 10px; border-left: 3px solid #f5c518; border-radius: 4px; background: #2a1a10e0; color: #fff3d6; font: 700 13px/1.25 'Baloo 2', system-ui, sans-serif; white-space: nowrap; } /* a tip: flat, coloured strip */
-/* A: party frames under the eye, top left: round portrait over the end of a name plate */
-#photo-figs[data-variant="a"] { top: calc(88px + env(safe-area-inset-top)); left: calc(16px + env(safe-area-inset-left)); flex-direction: column; align-items: flex-start; }
-#photo-figs[data-variant="a"] .pf-por { z-index: 1; width: 64px; height: 64px; }
-#photo-figs[data-variant="a"] .pf-nb { width: 150px; height: 46px; margin-left: -18px; padding: 0 12px 0 26px; border-radius: 0 10px 10px 0; }
-/* B: compact round portraits down the left edge, the name on a small tag under each */
-#photo-figs[data-variant="b"] { top: 50%; left: calc(16px + env(safe-area-inset-left)); translate: 0 -50%; flex-direction: column; align-items: flex-start; gap: 14px; }
-#photo-figs[data-variant="b"] .pf { flex-direction: column; width: 76px; }
-#photo-figs[data-variant="b"] .pf-por { width: 60px; height: 60px; }
-#photo-figs[data-variant="b"] .pf-nb { margin-top: -8px; padding: 0 8px; border-width: 1.5px; border-radius: 999px; align-items: center; font-size: 14px; }
-#photo-figs[data-variant="b"] .pf-nb small { display: none; }
-#photo-figs[data-variant="b"] .pf-tip { position: absolute; left: calc(100% + 10px); top: 50%; translate: 0 -50%; white-space: normal; width: 11em; }
-/* C: a companion bar, bottom centre: two frames side by side, the keys over them */
-#photo-figs[data-variant="c"] { bottom: calc(20px + env(safe-area-inset-bottom)); left: 50%; translate: -50% 0; gap: 14px; }
-#photo-figs[data-variant="c"] .pf-tip { position: absolute; bottom: calc(100% + 10px); left: 50%; translate: -50% 0; }
-#photo-figs[data-variant="c"] .pf-por { z-index: 1; width: 56px; height: 56px; }
-#photo-figs[data-variant="c"] .pf-nb { width: 130px; height: 42px; margin-left: -16px; padding: 0 10px 0 24px; border-radius: 0 10px 10px 0; }
+#photo-figs .pf-tip { position: absolute; bottom: calc(100% + 10px); left: 50%; translate: -50% 0; margin: 0; padding: 6px 10px; border-left: 3px solid #f5c518; border-radius: 4px; background: #2a1a10e0; color: #fff3d6; font: 700 13px/1.25 'Baloo 2', system-ui, sans-serif; white-space: nowrap; } /* a tip: flat, coloured strip */
+@media (max-width: 599px) { #photo-figs .pf-nb { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); } } /* a narrow window: portraits only (the names stay for screen readers) */
 @media (prefers-reduced-motion: reduce) { #photo-figs { transition: none; } }
 @media (prefers-reduced-motion: reduce) { #viewmode, :is(#hud,#leaders, #settings, #feedback, #music, #howto, #ios-hint, #fps, #feedback-nudge), body.view-mode :is(#leaders, #settings, #feedback, #music, #howto, #ios-hint, #fps, #feedback-nudge) { transition: none; } }
 /* the nudge after a game (src/ui/feedback-ui.js setupNudge): a speech bubble beside the bubble button (or under it), its

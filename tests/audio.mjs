@@ -251,6 +251,26 @@ console.log('menu entrance, loop points, version and tempo ok');
     document.hidden = true; document.hasFocus = () => true; menu.sfx('flama');
     assert.equal(menu.ctx.sources.length, n, 'hidden events cannot schedule a flame');
   } finally { if (doc === undefined) delete globalThis.document; else globalThis.document = doc; }
+  const menuSound = graph();
+  menuSound.menuMusic = true; menuSound.menuToken = {};
+  menuSound.sfx('flama'); const oldFlame = menuSound.ctx.sources.at(-1);
+  menuSound.setMenuMusic(false);
+  assert(!menuSound.plays(oldFlame, menuSound.ctx.currentTime), 'silencing the menu stops a flame already sounding');
+  const quietSources = menuSound.ctx.sources.length;
+  for (const kind of ['menu', 'flama', 'perfect', 'crack']) menuSound.sfx(kind);
+  assert.equal(menuSound.ctx.sources.length, quietSources, 'muted menu buttons and demo effects schedule nothing');
+  menuSound.menu(false); // A BALLAR: same saved preference, full game sound
+  menuSound.sfx('start'); menuSound.sfx('flama');
+  assert(menuSound.ctx.sources.length > quietSources && menuSound.menuMusic === false, 'game effects return without changing the saved menu preference');
+  menuSound.menu(true);
+  const returnedSources = menuSound.ctx.sources.length;
+  menuSound.sfx('menu'); menuSound.sfx('flama');
+  assert.equal(menuSound.ctx.sources.length, returnedSources, 'returning to the menu restores silence');
+  menuSound.ambient = Promise.resolve({ duration: 30 });
+  menuSound.setMenuMusic(true); await menuSound.ambient;
+  const enabledSources = menuSound.ctx.sources.length;
+  menuSound.sfx('menu');
+  assert(menuSound.ctx.sources.length > enabledSources, 'enabling menu sound restores fresh button effects');
   const c = graph(), ctx = c.ctx;
   c.menu(false); // beginRun (main.js): a run's bus
   assert.equal(await c.start(3, 0, 100), true);

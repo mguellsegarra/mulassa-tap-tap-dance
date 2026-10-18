@@ -155,10 +155,10 @@ function placeNudge() {
   const button = dom(feedbackEl);
   return button && nudgePlace({ button, avoid, W: W * K, H: HH * K, safe: SAFE, corner: CORNER.matches });
 }
-// the title's speaker (#music): only the menu loop (never the song, the sfx or the plaça's murmur), a quick fade either way
+// The speaker controls every menu sound; the saved preference never silences a run.
 const musicBtn = document.getElementById('music');
 function showMusic() {
-  const label = menuMusic ? 'Silencia la música del menú' : 'Activa la música del menú';
+  const label = menuMusic ? 'Silencia el so del menú' : 'Activa el so del menú';
   musicBtn.dataset.state = menuMusic ? 'on' : 'off';
   musicBtn.setAttribute('aria-label', label); musicBtn.title = label;
 }

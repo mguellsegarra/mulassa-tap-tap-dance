@@ -159,7 +159,8 @@
         "Arlequí"
       ],
       "owner": "Ajuntament de Valls",
-      "manager": "Unió Anelles de la Flama"
+      "manager": "Unió Anelles de la Flama",
+      "selectorVisible": false
     },
     {
       "id": "gegants-ciutat-valls",
@@ -191,6 +192,21 @@
       "music": "Francesc Bofarull i Figuerola",
       "sources": [
         "https://uaf.cat/seguici-ceremonial/ball-de-cavallets/"
+      ]
+    },
+    {
+      "id": "basilisc-valls",
+      "name": "Basilisc",
+      "fullName": "Basilisc de Valls",
+      "town": "valls",
+      "entity": "La Pessigolla",
+      "entityName": "Agrupació Cultural La Pessigolla",
+      "manager": "Agrupació Cultural La Pessigolla",
+      "music": "Roger Borràs",
+      "sources": [
+        "https://www.bestiari.cat/figura/basilisc-de-valls/",
+        "https://lapessigolla.cat/fem-poble/efemerides-especials/10-anys/",
+        "https://www.visitavalls.cat/ca/descobreix-valls/seguici-popular/"
       ]
     },
     {
@@ -238,21 +254,6 @@
         "https://costadaurada.info/file/9322/download?token=Ru315H-c"
       ],
       "attributionNote": "El programa municipal de Sant Joan 2026, pàgina 12, l’atribueix a la UAF. No hi especifica separadament la titularitat ni la colla portadora."
-    },
-    {
-      "id": "basilisc-valls",
-      "name": "Basilisc",
-      "fullName": "Basilisc de Valls",
-      "town": "valls",
-      "entity": "La Pessigolla",
-      "entityName": "Agrupació Cultural La Pessigolla",
-      "manager": "Agrupació Cultural La Pessigolla",
-      "music": "Roger Borràs",
-      "sources": [
-        "https://www.bestiari.cat/figura/basilisc-de-valls/",
-        "https://lapessigolla.cat/fem-poble/efemerides-especials/10-anys/",
-        "https://www.visitavalls.cat/ca/descobreix-valls/seguici-popular/"
-      ]
     },
     {
       "id": "aliga-tarragona",

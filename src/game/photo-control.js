@@ -2,18 +2,18 @@
 export const PHOTO = { on: false, ready: false, id: 'mulassa-valls', keys: new Set(), pair: false, turn: 0, pitch: 0.34, action: false, mouse: 0, cameraYaw: null, zoom:11,
   mula: { x: 0, z: 0, yaw: 0, vx: 0, vz: 0, fire: 0 }, drac: { x: 0, z: 0, yaw: 0, vx: 0, vz: 0, fire: 0 } };
 // Third person like WoW: aim just over her head from behind and a little above, so she sits low and the plaça shows ahead.
-export const PHOTO_CAM = { pitch:0.35, zoom:10, minZoom:6, maxZoom:20, minPitch:0.08, maxPitch:1.0, aimY:{ 'mulassa-valls':3.3, 'drac-valls':3.2 } };
+export const PHOTO_CAM = { follow:0.8, pitch:0.35, zoom:10, minZoom:6, maxZoom:20, minPitch:0.08, maxPitch:1.0, aimY:{ 'mulassa-valls':3.3, 'drac-valls':3.2 } };
 export const photoBody = () => PHOTO.id === 'drac-valls' ? PHOTO.drac : PHOTO.mula;
 export function clearPhotoKeys() {
   PHOTO.keys.clear(); PHOTO.turn = 0; PHOTO.action = false; PHOTO.mouse = 0; PHOTO.intentX = PHOTO.intentZ = 0;
   for (const p of [PHOTO.mula, PHOTO.drac]) { p.vx = p.vz = 0; p.fire = 0; }
 }
 export function setPhotoControl(on, id, pair) {
-  const prev = PHOTO.on && on && photoBody(); // switching figures while driving: keep the view
+  const prev = PHOTO.on && on && id && id !== PHOTO.id && photoBody(); // switching figures while driving: keep the view
   PHOTO.on = on; if (on && !prev) PHOTO.cameraYaw = null;
   if (on && id) {
     PHOTO.id = id; PHOTO.pair = pair;
-    if (prev && !pair && prev !== photoBody()) Object.assign(photoBody(), { x: prev.x, z: prev.z, yaw: prev.yaw }); // one figure on show: the other takes its spot, as Tab does
+    if (prev && !pair) Object.assign(photoBody(), { x: prev.x, z: prev.z, yaw: prev.yaw }); // one figure on show: the other takes its spot, as Tab does
   }
   clearPhotoKeys();
 }
@@ -56,6 +56,11 @@ export function movePhoto(dt, safe, sideYaw = photoBody().yaw) {
     p.yaw=nextYaw;left-=step;
   }
   PHOTO.turn = 0;
+  // Like WoW: walking forward with no mouse look swings the camera round behind her, slowly (A/D strafes stay readable).
+  if (forward > 0 && !PHOTO.mouse && PHOTO.cameraYaw !== null) {
+    const behind = Math.atan2(Math.sin(p.yaw + Math.PI - PHOTO.cameraYaw), Math.cos(p.yaw + Math.PI - PHOTO.cameraYaw));
+    PHOTO.cameraYaw += behind * (1 - Math.exp(-Math.min(dt, 0.05) / PHOTO_CAM.follow));
+  }
   // The model faces +Z. Its right hand is -X when seen from behind.
   const tx = (-Math.cos(sideYaw) * side + Math.sin(p.yaw) * forward);
   const tz = (Math.sin(sideYaw) * side + Math.cos(p.yaw) * forward);

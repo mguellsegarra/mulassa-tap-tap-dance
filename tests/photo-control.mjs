@@ -116,3 +116,22 @@ for (const fps of [30,60,120]) {
 }
 setPhotoControl(false);
 console.log('left drag steers while advancing and freely orbits at rest ok');
+
+// Like WoW: walking forward swings the camera round behind her; mouse look keeps it where the player put it.
+{
+  setPhotoControl(true,'mulassa-valls',false); Object.assign(photoBody(),{x:0,z:0,yaw:0});
+  PHOTO.cameraYaw = Math.PI + 1; press('KeyW');
+  for (let i = 0; i < 60; i++) movePhoto(1/60, () => 99);
+  const off = Math.abs(Math.atan2(Math.sin(PHOTO.cameraYaw - Math.PI - photoBody().yaw), Math.cos(PHOTO.cameraYaw - Math.PI - photoBody().yaw)));
+  assert(off < 0.5 && off > 0.05, `W eases the camera behind her, gently: ${off}`);
+  PHOTO.mouse = 1; const held = PHOTO.cameraYaw; movePhoto(1/60, () => 99);
+  assert.equal(PHOTO.cameraYaw, held, 'left-drag look is never overridden');
+  clearPhotoKeys(); PHOTO.cameraYaw = Math.PI + 1; movePhoto(1/60, () => 99);
+  assert.equal(PHOTO.cameraYaw, Math.PI + 1, 'standing still never moves the camera');
+  // switching figures from a frame keeps the spot and the view; re-taking the same one starts fresh
+  Object.assign(photoBody(),{x:2,z:-1,yaw:0.5}); setPhotoControl(true,'drac-valls',false);
+  assert(PHOTO.drac.x === 2 && PHOTO.drac.z === -1 && PHOTO.drac.yaw === 0.5 && PHOTO.cameraYaw === Math.PI + 1);
+  setPhotoControl(true,'drac-valls',false); assert.equal(PHOTO.cameraYaw, null);
+  setPhotoControl(false);
+}
+console.log('camera follows forward walking, figure switch keeps the spot ok');

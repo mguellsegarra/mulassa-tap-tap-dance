@@ -115,6 +115,15 @@
 .sel-card .nb { box-sizing: border-box; width: 100%; height: 100%; min-height: 0; display: flex; flex-direction: column; justify-content: center; align-items: stretch; gap: 3px; padding: 6px 8px; overflow: hidden; color: #fff3d6; }
 .sel-card-name { flex: none; display: block; white-space: normal; font-size: 15px; line-height: 19px; overflow-wrap: anywhere; }
 .sel-card .nb small { flex: none; display: block; white-space: normal; overflow-wrap: anywhere; font-size: 12px; font-weight: 600; line-height: 1.15; color: var(--sel-muted); }
+.sel-card .nb .sel-entity-icons { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 2px 4px; min-height: 16px; }
+.sel-entity-icons > span { display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; }
+.sel-entity-icons svg { flex: none; width: 9px; height: 14px; fill: #e73449; stroke: none; }
+.sel-entity-icons svg.escut { width: 14px; height: 14px; }
+/* La Pessigolla's isotip keeps its own colours and shape; on the dark card its black jester needs the light ground the
+   entity's own favicon gives it, the cream pill (pending panel) already is one */
+#select :is(.sel-entity, .sel-entity-icons) svg.pessigolla { width: auto; height: 20px; aspect-ratio: 845 / 628; fill: initial; }
+#select :is(.sel-entity-icons, .sel-identity) svg.pessigolla { box-sizing: border-box; padding: 2px 3px; border-radius: 4px; background: #fff3d6; }
+#select .sel-entity-icons svg.pessigolla { aspect-ratio: auto; width: 28px; }
 /* Selected: lifted, with a cream ring over the whole card (drawn above the portrait). */
 .sel-card[aria-selected="true"] { transform: translateY(-4px); box-shadow: 0 10px 22px #000a; }
 .sel-card[aria-selected="true"]::after { box-shadow: inset 0 0 0 3px #fff3d6; }

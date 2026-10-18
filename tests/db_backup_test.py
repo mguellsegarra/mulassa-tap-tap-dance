@@ -431,6 +431,17 @@ class BackupTests(Base):
                         os.kill(pid, 0)
                 self.assertNoLeftovers()
 
+    def test_refused_group_kill_still_kills_children(self):
+        # macOS answers EPERM to killpg once the group's leader (pg_dump) is reaped and age still runs
+        self.modes(pg="ok", age="hang")
+        s3 = FakeS3()
+        with mock.patch.object(db, "TIMEOUT_S", 1), mock.patch.object(db.os, "killpg", side_effect=PermissionError):
+            code, out = self.run_main(["run"], client=lambda cfg: s3)
+        self.assertEqual((code, out.strip()), (1, "BACKUP_FAIL TIMEOUT"))
+        with self.assertRaises(ProcessLookupError):
+            os.kill(int((self.bin / "age_pid").read_text()), 0)
+        self.assertNoLeftovers()
+
     def test_sigterm_cleans_up(self):
         self.modes(age="hang")
         script = f"import sys; sys.path.insert(0, {str(REPO / 'tools')!r}); import db_backup as d; sys.exit(d.main(['run']))"

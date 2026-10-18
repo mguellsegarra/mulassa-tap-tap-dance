@@ -1,5 +1,5 @@
 // The crowd's behaviour: making way for her, its mood, reactions to hits and to the finale, neighbour separation.
-import { PHOTO } from '../game/photo-control.js';
+import { PHOTO, PHOTO_SPIN } from '../game/photo-control.js';
 import { photoClearance } from './photo-collision.js';
 import { photoExtras, updatePhotoExtras, photoEscape } from './photo-obstacles.js';
 import { pushPulse, rippleLive, RIPPLE, ripple } from './crowd-fx.js';
@@ -200,7 +200,7 @@ function steer(p, dt, beat, live) {
     photoFear = away.fear;
     clear = Math.min(clear, want - photoFear);
   }
-  const fleeing = clear < want, fleeSpeed = PHOTO.on ? 3.4 : RING.flee;
+  const fleeing = clear < want, fleeSpeed = PHOTO.on ? Math.max(3.4, PHOTO.speed * 1.3) : RING.flee; // photo: they outrun her gallop
   if (fleeing) { // make way: step back from the nearest danger (the rear if it's swinging, else the body), capped
     const rx = p.pos.x - F.rearX, rz = p.pos.y - F.rearZ, rd = Math.hypot(rx, rz) || 1;
     if (PHOTO.on && photoFear > 0) { /* the anticipated corridor already set away */ }
@@ -263,6 +263,7 @@ function steer(p, dt, beat, live) {
     p.vel.lerp(tmp, fleeing ? ringE : Math.min(1, dt * 8)); p.rest = false;
     if (fleeing) { const v = p.vel.length(); if (v > fleeSpeed) p.vel.multiplyScalar(fleeSpeed / v); }
   }
+  if (PHOTO.on) culadaKnock(p, dt, dx, dz); else if (p.downT > 0) p.vel.set(0, 0); // (photo mode left mid-fall: they still get up first)
   const r0 = p.pos.length(), oldX=p.pos.x, oldZ=p.pos.y;
   p.pos.addScaledVector(p.vel, dt);
   if (PHOTO.on) {
@@ -279,6 +280,23 @@ function steer(p, dt, beat, live) {
     if (r > lim) p.pos.multiplyScalar(Math.max(lim, Math.min(r, r0)) / r);
   }
   recell(p);
+}
+
+// The Mulassa's culada (E in photo mode): whoever her swinging rear reaches is flung out and round with it, arms up,
+// sliding to a stop and falling flat for a moment (PHOTO_SPIN); never in the game. It overrides their own steering until they are up.
+let culadaEh = -9;
+function culadaKnock(p, dt, dx, dz) {
+  const d = Math.hypot(dx, dz) || 1;
+  if (PHOTO.culada && (p.knockT ?? 0) <= 0 && d < PHOTO_SPIN.reach + p.rad) {
+    const k = PHOTO_SPIN.kick * (0.8 + 0.4 * ((p.ph * 5.3) % 1)) * (1 - 0.5 * d / PHOTO_SPIN.reach), // weaker further out
+      turn = PHOTO.culada * 0.7; // out, and round the way she turns
+    p.kx = (dx + dz * turn) / d * k; p.kz = (dz - dx * turn) / d * k; p.knockT = PHOTO_SPIN.slide * 3; p.downT = CALM.matches ? 0 : PHOTO_SPIN.down;
+    if (clock - culadaEh > 0.6) { culadaEh = clock; chip?.sfx('eh'); } // the plaça's «eeh!», once a culada
+  }
+  if ((p.knockT ?? 0) <= 0) { if (p.downT > 0) { p.vel.set(0, 0); p.rest = false; } return; } // flat on the floor: nobody walks
+  const slow = Math.exp(-dt / PHOTO_SPIN.slide);
+  p.kx *= slow; p.kz *= slow; p.knockT -= dt;
+  p.vel.set(p.kx, p.kz); p.way = 1; p.rest = false; p.away = false;
 }
 
 // Step 3: how one person looks. Walk cycle driven by the distance actually covered (feet plant instead of skating), then
@@ -337,12 +355,16 @@ function pose(p, dt, beat, live) {
   const hop = (Math.max(0, Math.sin(beat * Math.PI + p.ph)) * F.beatHop + up * 0.25) * p.stand + (gv * GROOVE.bob + ringUp + rip * RIP.bob) * k;
   // drawn a hair behind the simulation (a 40 ms ease): the no-overlap limit's small corrections in a packed crowd never pop
   if (p.gx === undefined) { p.gx = p.pos.x; p.gz = p.pos.y; } else { // (and never faster than 1.6 m/s: a shove is caught up with, not jumped)
-    let ex = (p.pos.x - p.gx) * showE, ez = (p.pos.y - p.gz) * showE; const e = Math.hypot(ex, ez), lim = (PHOTO.on ? 3.4 : 1.6) * dt;
+    let ex = (p.pos.x - p.gx) * showE, ez = (p.pos.y - p.gz) * showE; const e = Math.hypot(ex, ez), lim = (PHOTO.on ? Math.max(3.4, PHOTO.speed * 1.3, p.knockT > 0 ? PHOTO_SPIN.kick * 1.3 : 0) : 1.6) * dt;
     if (e > lim) { ex *= lim / e; ez *= lim / e; }
     p.gx += ex; p.gz += ez;
   }
-  p.g.position.set(p.gx, bob + hop, p.gz);
-  p.g.rotation.set(0, p.yaw, 0);
+  // the culada's fall (photo mode): flat on their back at once, up again more slowly
+  if (p.downT > 0) p.downT -= dt; // (counted here: it runs every frame, photo mode or not)
+  const down = (p.downT ?? 0) > 0.6 ? 1 : 0;
+  if (down || p.fall) { p.fall = (p.fall ?? 0) + (down - (p.fall ?? 0)) * easeIn(dt, down ? 0.12 : 0.35); if (p.fall < 0.01) p.fall = 0; }
+  p.g.position.set(p.gx, bob + hop + 0.15 * (p.fall || 0), p.gz);
+  p.g.rotation.set(-1.45 * (p.fall || 0), p.yaw, 0);
   const lean = 0.12 * (1 - live) + w * dir * (0.05 + 0.22 * run) - 0.14 * p.way; // craning before the start; leaning into the stride; back from her
   p.lean += (lean - p.lean) * Math.min(1, dt * 8);
   p.torso.rotation.x = p.lean + gv * GROOVE.nod + ringNod + rip * RIP.nod + calmK * Math.sin(clock * 1.7 + p.ph) * GROOVE.breath; // nod; breathing

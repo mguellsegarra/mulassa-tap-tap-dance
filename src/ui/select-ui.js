@@ -2,10 +2,10 @@
 // one fold (the coming towns' arms) and one «Pròximament» pill; either unfolds it in place (its cards, its towns' pills),
 // the fold and an «Amaga» pill fold it back. A pending figure shows its own panel instead of the records.
 // Arrows rove cards; Enter confirms a figure. On the next step arrows choose difficulty; Escape returns.
-import { FIGURES, TOWNS, MULASSA, DRAC, portraitArt, portraitPalette, townOf, playable, rememberedLevel, rememberLevel, readFigureRecord, aviatText, aviatDraft, INVITE, INVITE_TOWN, inviteText, INVITE_DRAFT } from '../game/figures.js';
+import { FIGURES, TOWNS, MULASSA, portraitArt, portraitPalette, portraitStand, townOf, playable, rememberedLevel, rememberLevel, readFigureRecord, aviatText, aviatDraft, INVITE, INVITE_TOWN, inviteText, INVITE_DRAFT } from '../game/figures.js';
 import { DIFFS } from '../game/chart.js';
 import { num } from './sheet-kit.js';
-import { escutSvg } from './escuts.js';
+import { escutSvg, escutField } from './escuts.js';
 import { PESSIGOLLA_MARK } from './pessigolla-logo.js';
 import { stripScroll } from './strip-scroll.js';
 
@@ -18,7 +18,7 @@ export function pixelSvg(art, palette, rim) {
   for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (on(x, y)) out.push(`<rect x="${x + 1}" y="${y + 1}" width="1.02" height="1.02" fill="${palette[art[y][x]]}"/>`);
   return `<svg viewBox="0 0 ${w + 2} ${h + 2}" shape-rendering="crispEdges" aria-hidden="true">${out.join('')}</svg>`;
 }
-const pillHtml = t => `<button type="button" class="btn btn-secondary sel-pill" data-town="${t.id}" tabindex="0" aria-pressed="false" style="--c:${t.color}">${escutSvg(t.id) || '<i aria-hidden="true"></i>'}${t.name}</button>`;
+const pillHtml = t => `<button type="button" class="btn btn-secondary sel-pill" data-town="${t.id}" tabindex="0" aria-pressed="false"${t.color ? ` style="--c:${t.color}"` : ''}>${escutSvg(t.id) || '<i aria-hidden="true"></i>'}${t.name}</button>`;
 const DEMO_BEST = [8120, 12340, null]; // ?demo: made-up best scores per level
 const TROPHY = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h10V9a5 5 0 0 1-10 0zM7 5.5H3.5V7A3.5 3.5 0 0 0 7 10.5M17 5.5h3.5V7a3.5 3.5 0 0 1-3.5 3.5M12 14v3.5M8 20.5h8M9.5 17.5h5"/></svg>';
 const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -26,7 +26,9 @@ const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&':
 const UAF_FLAME = `<svg viewBox="0 0 525 829" aria-hidden="true"><path transform="matrix(.1 0 0 -.1 0 829)" d="M1988 8232 c-19 -11 -28 -25 -28 -42 0 -115 -67 -432 -133 -625 -134 -399 -258 -618 -849 -1497 -464 -693 -665 -1089 -806 -1593 -139 -492 -170 -1065 -86 -1565 72 -427 274 -961 493 -1297 l60 -93 68 26 c113 42 257 105 270 117 10 10 2 30 -37 94 -240 398 -413 874 -481 1323 -53 343 -23 835 72 1215 129 511 317 871 875 1676 468 675 698 1121 824 1597 6 23 16 42 22 42 27 0 481 -356 713 -560 1248 -1092 1846 -2225 1846 -3500 0 -1498 -849 -2605 -2488 -3245 -68 -26 -123 -53 -123 -60 0 -21 237 -128 409 -184 l63 -21 97 41 c1183 504 1994 1352 2295 2400 239 834 182 1773 -159 2634 -428 1081 -1374 2138 -2713 3033 -163 110 -163 110 -204 84z M2553 5408 c-506 -474 -762 -905 -864 -1458 -30 -159 -37 -514 -14 -685 43 -323 177 -683 335 -898 l50 -67 43 26 c99 62 247 201 247 232 0 5 -23 47 -50 93 -248 417 -313 948 -175 1429 75 260 208 495 415 729 39 45 77 81 84 81 28 0 230 -252 317 -397 266 -439 328 -1017 164 -1508 -231 -689 -899 -1268 -2012 -1745 -95 -40 -173 -75 -173 -78 0 -11 147 -166 210 -222 l69 -62 128 57 c1268 566 1990 1248 2197 2073 88 352 85 775 -9 1136 -77 296 -233 596 -455 876 -98 124 -410 440 -434 440 -10 0 -42 -24 -73 -52z"/></svg>`;
 const entityLabel = f => f.owner && f.manager ? `${f.owner} + ${f.manager}` : f.entityName || f.entity || townOf(f).name;
 const ENTITY_MARK = { UAF: UAF_FLAME, 'La Pessigolla': PESSIGOLLA_MARK };
-const entityHtml = f => ENTITY_MARK[f.entity] ? `${ENTITY_MARK[f.entity]}<span>${escapeHtml(entityLabel(f))}</span>` : escapeHtml(entityLabel(f));
+const entityPart = (mark, name) => `<span class="sel-entity-part">${mark}<span>${escapeHtml(name)}</span></span>`;
+const entityHtml = f => f.entity === 'Ajuntament + UAF' ? `${entityPart(escutSvg(f.town), f.owner)} <span>+</span> ${entityPart(UAF_FLAME, f.manager)}`
+  : ENTITY_MARK[f.entity] ? `${ENTITY_MARK[f.entity]}<span>${escapeHtml(entityLabel(f))}</span>` : escapeHtml(entityLabel(f));
 const cardEntityHtml = f => f.entity === 'UAF' || f.entity === 'Ajuntament + UAF'
   ? `<small class="sel-entity-icons" aria-hidden="true">${f.entity === 'Ajuntament + UAF' ? `<span>${escutSvg('valls')}Ajuntament</span><span>+</span>` : ''}<span>${UAF_FLAME}UAF</span></small>`
   : f.entity === 'La Pessigolla' ? `<small class="sel-entity-icons" aria-hidden="true"><span>${PESSIGOLLA_MARK}La Pessigolla</span></small>`
@@ -36,11 +38,11 @@ function stripHtml(figures, later = false, last = null) { // later: what the fol
   let html = '';
   for (const f of figures) {
     const t = townOf(f);
-    if (t !== last) html += `<span class="sel-banner${later ? ' later' : ''}" data-town="${t.id}"${(t.short ?? t.name).length > 9 ? ' data-long' : ''} style="--c:${t.color}" aria-hidden="true"><span>${(t.short ?? t.name).toUpperCase()}</span></span>`;
+    if (t !== last) html += `<span class="sel-banner${later ? ' later' : ''}" data-town="${t.id}" data-field="${escutField(t.id)}"${(t.short ?? t.name).length > 9 ? ' data-long' : ''} aria-hidden="true"><span>${(t.short ?? t.name).toUpperCase()}</span></span>`;
     last = t;
     const name = f.name || 'Aviat', entity = f.entity || t.name;
-    const ok = playable(f);
-    html += `<button type="button" class="btn btn-secondary sel-card${ok ? '' : ' aviat'}${later ? ' later' : ''}" role="option" data-id="${escapeHtml(f.id)}" tabindex="-1" aria-selected="false" aria-label="${escapeHtml(f.invite ? `${name}: ${entity.toLowerCase()} per al joc` : `${name}, ${entityLabel(f)}, ${t.name}${ok ? '' : ', pròximament'}`)}" style="--c:${t.color}"><span class="por">${portraitHtml(f)}</span><span class="nb"><span class="sel-card-name">${escapeHtml(name)}</span>${cardEntityHtml(f)}</span></button>`;
+    const ok = playable(f), art = f.thumbnail ? null : portraitArt(f); // the portrait's grid with its rim: whole-pixel sizing (select.css)
+    html += `<button type="button" class="btn btn-secondary sel-card${ok ? '' : ' aviat'}${later ? ' later' : ''}" role="option" data-id="${escapeHtml(f.id)}" data-field="${escutField(t.id)}" tabindex="-1" aria-selected="false" aria-label="${escapeHtml(f.invite ? `${name}: ${entity.toLowerCase()} per al joc` : `${name}, ${entityLabel(f)}, ${t.name}${ok ? '' : ', pròximament'}`)}"${art ? ` style="--gw:${art[0].length + 2};--gh:${art.length + 2};--s:${portraitStand(f)}"` : ''}><span class="por">${portraitHtml(f)}</span><span class="nb"><span class="sel-card-name">${escapeHtml(name)}</span>${cardEntityHtml(f)}</span></button>`;
   }
   return html;
 }
@@ -48,7 +50,7 @@ function stripHtml(figures, later = false, last = null) { // later: what the fol
 const moreHtml = towns => `<button type="button" class="btn btn-secondary sel-card sel-more" data-more="1" role="option" tabindex="-1" aria-selected="false" aria-expanded="false" aria-label="Pròximament"><span class="sel-more-flag" aria-hidden="true"><svg viewBox="0 0 24 24"><path class="open" d="m9 5 7 7-7 7"/><path class="close" d="m15 5-7 7 7 7"/></svg><span class="sel-fan">${towns.slice(0, 5).map(t => escutSvg(t.id)).join('')}</span></span></button>`; // the first five arms: what fits
 // the pills' last one: the arms of the towns with nothing to play yet, fanned out; unfolded, «Amaga»
 // The fold's own card while the cursor is on it: three coming figures (one per town), every coming town's arms and the count
-const peekHtml = figures => figures.map(f => `<span class="sel-peek" style="--c:${townOf(f).color}">${portraitHtml(f)}${escutSvg(f.town)}</span>`).join('');
+const peekHtml = figures => figures.map(f => `<span class="sel-peek" data-field="${escutField(f.town)}">${portraitHtml(f)}${escutSvg(f.town)}</span>`).join('');
 const soonPillHtml = towns => `<button type="button" class="btn btn-secondary sel-pill sel-soon" data-soon="1" tabindex="0" aria-expanded="false"><span class="sel-fan" aria-hidden="true">${towns.map(t => escutSvg(t.id)).join('')}</span><span class="sel-soon-text">Pròximament</span></button>`;
 
 // keyboard(): true while the player uses keys (focus rings, focus follows); busy(): a sheet is up; reduced(): reduced motion
@@ -73,7 +75,6 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
   const DEMO = demo && Boolean((import.meta.env ?? {}).DEV); // ?demo: made-up facts on show only, never stored or sent; gone from production builds
   const $ = id => doc.getElementById(id);
   const root = $('select'), towns = $('select-towns'), strip = $('select-strip'), levels = $('select-level'), pending = $('select-pending');
-  const links = pending.querySelector?.('.sel-pending-links');
   const live = FIGURES.filter(playable), soon = FIGURES.filter(f => !playable(f));
   const liveTowns = TOWNS.filter(t => live.some(f => f.town === t.id)), restTowns = [...TOWNS.filter(t => !liveTowns.includes(t) && soon.some(f => f.town === t.id)), INVITE_TOWN]; // the invitation folds with what is to come, last
   // the toggle sits right after the live towns, like the strip's fold: it stays under the finger and the rest opens after it
@@ -90,7 +91,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
   const foldLabel = `${soon.length} figures més, pròximament, de ${new Set(soon.map(f => f.town)).size} poblacions`;
   const soonTowns = TOWNS.filter(t => soon.some(f => f.town === t.id));
   const peekFigures = soonTowns.slice(0, 3).map(t => soon.find(f => f.town === t.id));
-  let figure = live[0], open = true; // catalog selection is independent of the host's last playable figure
+  let figure = live[0], lastPlayable = figure, open = true; // catalog selection is independent of the host's last playable figure
   let opening = false, shown = false, teasing = false, level = 1, town = null, cur = 0, req = 0, step = 'figures';
   const smooth = () => (reduced() ? 'auto' : 'smooth');
   const api = { band: null, fpsFooter: [], measure: () => { if (shown) measure(); }, onSelect, get figure() { return figure; }, get pending() { return teasing || !playable(figure); }, get unfolded() { return open; }, visible };
@@ -98,64 +99,78 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
   const scrolling = stripScroll(strip, win, reduced);
   const townScrolling = stripScroll(towns, win, reduced);
   let stripLimit = 0;
-  function updateArrows() {
-    $('select-prev').disabled = strip.scrollLeft <= 1;
-    $('select-forward').disabled = strip.scrollLeft >= stripLimit - 1;
+  function updateArrows() { // the selection's neighbours, not the scroll position: the centring padding is never «more»
+    const available = visibleCards(), i = available.indexOf(cards[cur]), fits = $('select-carousel').hasAttribute('data-fits');
+    $('select-prev').disabled = fits || i <= 0;
+    $('select-forward').disabled = fits || i < 0 || i >= available.length - 1;
   }
-  const centre = (row, el, behavior = smooth()) => {
+  const centre = (row, el, behavior = smooth()) => { // both rows share one bounded motion (native smooth scrolling grows with the distance)
     const left = el.offsetLeft - (row.clientWidth - el.offsetWidth) / 2;
     if (row === strip) scrolling.to(left, behavior !== 'smooth', closing ? finishFold : null);
-    else { townScrolling.stop(); row.scrollTo({ left, behavior }); }
-    if (row === strip) updateArrows();
+    else townScrolling.to(left, behavior !== 'smooth');
   };
 
   function pendingFill(f) {
     $('aviat-title').textContent = f.fullName || f.name;
+    $('aviat-entity').hidden = false;
     $('aviat-entity').innerHTML = entityHtml(f);
     $('aviat-icon').innerHTML = portraitHtml(f);
     $('aviat-text').innerHTML = (f.invite ? inviteText() : aviatText()).split('\n\n').map(p => `<p>${escapeHtml(p)}</p>`).join('');
   }
   function teaserFill() {
     // The card keeps a pending figure's height (measured on the first one): no jump between it and the fold.
-    pending.toggleAttribute('data-fold', false); pending.style.minHeight = '';
-    if (links) links.hidden = false;
+    pending.toggleAttribute('data-fold', false); pending.style.setProperty('--keep-h', '');
     pendingFill(soon[0]);
+    pending.style.maxHeight = 'none'; // measured unbounded: its max-height may still be easing in (CSS caps --keep-h to the room)
     const h = pending.offsetHeight;
-    pending.toggleAttribute('data-fold', true);
-    if (links) links.hidden = true;
+    pending.style.maxHeight = '';
+    pending.toggleAttribute('data-fold', true); // same GitHub/mail row as a pending figure: the fan yields the room (select.css)
     $('aviat-title').textContent = 'Aviat a la plaça';
     $('aviat-icon').innerHTML = peekHtml(peekFigures);
-    $('aviat-entity').innerHTML = `<span class="sel-fan" aria-hidden="true">${soonTowns.map(t => escutSvg(t.id)).join('')}</span><span>${soon.length} figures · ${soonTowns.length} poblacions</span>`;
-    $('aviat-text').innerHTML = '<p>Encara no s’hi pot jugar. Si en saps coses, dona un cop de mà.</p>';
-    if (h) pending.style.minHeight = `${h}px`;
+    $('aviat-entity').hidden = true;
+    $('aviat-entity').innerHTML = '';
+    $('aviat-text').innerHTML = '<p>Volem que surtin a la plaça. Tens fotos, vídeos, partitures o coneixes el ball? Ajuda’ns!</p>';
+    if (h) pending.style.setProperty('--keep-h', `${h}px`); // CSS caps it to the room left (select.css)
   }
+  // Leaving, the card keeps the box it had: the dock rising and the room it frees would otherwise resize and move it
+  // mid-fade (a jump and a repaint as it went). Its next showing lets go first.
+  const FROZEN = ['top', 'maxHeight', 'minHeight', 'height', 'transform'];
+  function freeze() {
+    const cs = win.getComputedStyle?.(pending);
+    if (!cs) return;
+    // getComputedStyle is live: capture every value before any write can change the layout.
+    const values = FROZEN.map(k => k === 'minHeight' ? cs.height : cs[k]);
+    FROZEN.forEach((k, i) => { pending.style[k] = values[i]; });
+    pending.toggleAttribute('data-leaving', true);
+  }
+  function thaw() { for (const k of FROZEN) pending.style[k] = ''; pending.toggleAttribute('data-leaving', false); }
   function panel() { // the centre shows what the cursor is on: the selected figure, or the fold's own card
-    const ok = playable(figure);
+    const ok = playable(figure), leave = ok && !(Boolean(fold) && cards[cur] === fold);
+    if (leave && !pending.hidden) freeze(); else if (!leave) thaw(); // read before the attributes below move the dock
     teasing = Boolean(fold) && cards[cur] === fold;
     root.toggleAttribute('data-pending', !ok);
     root.toggleAttribute('data-fold', teasing);
-    pending.hidden = ok && !teasing;
+    pending.hidden = leave;
     $('select-info').hidden = !ok || teasing;
     $('select-next').disabled = !ok || teasing; // hidden; [data-pending] / [data-fold] drop the dock over its row (select.css)
     if (teasing) teaserFill();
-    else if (!ok) { pending.toggleAttribute('data-fold', false); pending.style.minHeight = ''; if (links) links.hidden = false; pendingFill(figure); }
+    else if (!ok) { pending.toggleAttribute('data-fold', false); pending.style.setProperty('--keep-h', ''); pendingFill(figure); }
   }
   function info() {
-    const t = townOf(figure), ok = playable(figure);
+    const ok = playable(figure);
     // Only the panel coming in is rewritten: the other one fades out as it was (select.css).
     panel();
     if (ok) {
       $('select-entity').innerHTML = entityHtml(figure);
       $('select-name').textContent = figure.fullName || figure.name || 'Aviat';
-      $('select-info').style.setProperty('--strip', t.color);
       $('select-song-name').textContent = figure.song || '';
       $('select-song-credit').textContent = [figure.composer, figure.year].filter(Boolean).join(' · ');
     }
     setStep('figures');
-    for (const c of cards) c.setAttribute('aria-selected', String(c.dataset.id === figure.id));
     if (ok) { records(); updateStanding(); }
   }
   function setStep(next) {
+    const back = step === 'level';
     step = next === 'level' && playable(figure) ? 'level' : 'figures';
     const choosing = step === 'level';
     root.setAttribute('data-step', step);
@@ -166,7 +181,8 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     $('select-next').hidden = choosing;
     $('select-play').hidden = !choosing;
     $('select-figures-back').hidden = !choosing;
-    if (shown && !opening) measure();
+    if (choosing) scrolling.stop(); // a hidden strip cannot finish a motion
+    if (shown && !opening) { measure(); if (back && !choosing) centre(strip, cards[cur], 'instant'); }
   }
   function nextStep() {
     if (!shown || !playable(figure) || teasing || busy()) return;
@@ -295,7 +311,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     } else {
       // Commit the selection before the exit starts. Keep the outgoing panel's text for its CSS fade;
       // the disclosure's keyboard focus is independent of the selected card and never needs a teaser here.
-      const target = cards.find(c => figureOf(c) === (playable(figure) ? figure : DRAC));
+      const target = cards.find(c => figureOf(c) === (playable(figure) ? figure : lastPlayable));
       pick(target, 'fold');
       press(figure.town);
       closing = true;
@@ -305,9 +321,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
       if (shown) measure();
       if (restoreFocus) (how === 'pill' ? soonPill : fold)?.focus({ preventScroll: true });
       const destination = Math.min(scrolling.target, foldedMax());
-      // Both rows arrive before the outgoing items lose their layout boxes. Native smooth scrolling
-      // takes longer on a distant town and would otherwise be clamped abruptly when those pills hide.
-      towns.scrollTo({ left: towns.scrollLeft, behavior: 'instant' });
+      // Both rows arrive before the outgoing items lose their layout boxes (or a far pill would be clamped abruptly).
       const pill = pills.find(p => p.dataset.town === figure.town);
       const townDestination = Math.max(0, Math.min(pill.offsetLeft - (towns.clientWidth - pill.offsetWidth) / 2, rowEdge(towns) - towns.clientWidth));
       // Start both clocks after layout; a slow first paint must not delay the fade.
@@ -332,9 +346,10 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     pick(first, 'filter'); // the pill's tap already made the sound
     centre(strip, first, smooth());
   }
-  function roveCard(i) { // the strip's one tab stop
+  function roveCard(i) { // the strip's one tab stop and its one selection (the fold included)
     cur = i;
-    cards.forEach((c, k) => { c.tabIndex = k === i ? 0 : -1; });
+    cards.forEach((c, k) => { c.tabIndex = k === i ? 0 : -1; c.setAttribute('aria-selected', String(k === i)); });
+    updateArrows();
     if (teasing !== (Boolean(fold) && cards[i] === fold)) { panel(); if (shown && !opening) measure(); }
   }
   // ↑↓ jump between the screen's rows like a game menu: the corner buttons, pills, info tiles, «Aviat», figures or levels,
@@ -383,7 +398,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
       if (how !== 'filter' && how !== 'fold') sfx('menu');
       figure = next; info(); setLevel(rememberedLevel(store, figure.id), 'open');
       if (how !== 'fold') mark(figure.town, how === 'arrow' ? 'instant' : smooth());
-      if (playable(figure)) api.onSelect(figure); // pending figures never replace the song/model state
+      if (playable(figure)) { lastPlayable = figure; api.onSelect(figure); } // pending figures never replace the song/model state
       measure();
     }
     if (how === 'enter') nextStep();
@@ -395,19 +410,17 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
   function scrollBy(distance) {
     if (closing) return; // the short fold owns its destination until its exit has finished
     scrolling.to(Math.max(0, Math.min(stripLimit, scrolling.target + distance)), false, closing ? finishFold : null);
-    updateArrows();
   }
-  function moveStrip(delta) {
+  function moveStrip(delta) { // ‹ › are the arrow keys for the mouse: they select, the wheel only browses
     if (!shown || step !== 'figures' || busy() || $(delta < 0 ? 'select-prev' : 'select-forward').disabled) return;
-    sfx('menu');
-    scrollBy(Math.max(120, strip.clientWidth * 0.65) * delta);
+    const available = visibleCards(), target = available[available.indexOf(cards[cur]) + delta], previous = figure;
+    pick(target, 'arrow');
+    if (figure === previous) sfx('menu'); // the fold changes no figure, so pick made no sound
+    centre(strip, target);
   }
   $('select-rank-tile').addEventListener('click', () => { if (!busy()) onBoard(); });
-  $('select-prev').setAttribute('aria-label', 'Desplaça les figures cap a l’esquerra');
-  $('select-forward').setAttribute('aria-label', 'Desplaça les figures cap a la dreta');
   $('select-prev').addEventListener('click', () => moveStrip(-1));
   $('select-forward').addEventListener('click', () => moveStrip(1));
-  strip.addEventListener('scroll', updateArrows, { passive: true });
   strip.addEventListener('wheel', e => {
     if (e.ctrlKey || strip.scrollWidth <= strip.clientWidth) return;
     e.preventDefault();
@@ -416,6 +429,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     scrollBy(distance);
   }, { passive: false });
   strip.addEventListener('pointerdown', () => { if (!closing) scrolling.stop(); });
+  for (const type of ['pointerdown', 'wheel']) towns.addEventListener(type, () => { if (!closing) townScrolling.stop(); }, { passive: true }); // a hand on the pills wins
   $('select-next').addEventListener('click', nextStep);
   $('select-figures-back').addEventListener('click', () => { setStep('figures'); api.refocus(); });
   $('select-play').addEventListener('click', play);
@@ -495,9 +509,9 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     } else root.style.removeProperty?.('--info-top');
     // The dock's layout box, not its rect: a pending figure drops it by a transform that may still be under way.
     const dock = $('select-bottom'), dockTop = (dock.offsetTop ?? r(dock).top / z) * z;
-    api.band = { top: side ? r(towns).bottom : r($('select-info')).bottom, bottom: dockTop };
-    root.style.setProperty('--pending-top', px(r(towns).bottom + 12)); // a pending figure's card sits between the pills and the strip (CSS adds the drop)
-    root.style.setProperty('--pending-bottom', px(Math.max(0, win.innerHeight - (win.innerHeight <= 500 ? win.innerHeight : dockTop + r(strip).top - r(dock).top)) + 12));
+    // The pills' layout box, not their rect: unfolding slides them to their new row by a transform that may still be under way.
+    const townsBottom = ((towns.offsetTop ?? r(towns).top / z) + (towns.offsetHeight ?? r(towns).height / z)) * z;
+    root.style.setProperty('--pending-top', px(townsBottom + 12)); // a pending figure's card sits between the pills and the strip (CSS adds the drop)
     peek();
     // The live group keeps its centred origin when the catalog opens. Only scrollLeft moves the cards.
     const base = [...strip.children].filter(el => !later.includes(el));
@@ -510,10 +524,14 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     stripLimit = Math.max(0, Math.min(rowEdge(strip), strip.scrollWidth) - strip.clientWidth);
     $('select-carousel').toggleAttribute('data-fits', stripLimit <= 1);
     updateArrows();
+    // The arrow group stands above the strip while it overflows (none on touch): her band and a pending card keep clear of it.
+    const nav = stripLimit > 1 ? ($('select-nav').offsetHeight || 0) * z : 0;
+    api.band = { top: side ? townsBottom : r($('select-info')).bottom, bottom: dockTop - nav };
+    root.style.setProperty('--pending-bottom', px(Math.max(0, win.innerHeight - (win.innerHeight <= 500 ? win.innerHeight : dockTop + r(strip).top - r(dock).top)) + 12 + nav));
     // Cached action bounds for diagnostic overlays; no frame-loop layout reads.
     api.fpsFooter = ['select-figures-back', 'select-next', 'select-play'].map($).filter(el => !el.hidden).map(r);
   }
-  win.addEventListener('resize', () => { if (shown) { scrolling.stop(); if (closing) finishFold(); if (teasing) teaserFill(); measure(); } });
+  win.addEventListener('resize', () => { if (shown) { scrolling.stop(); if (closing) finishFold(); if (teasing) teaserFill(); measure(); if (step === 'figures') centre(strip, cards[cur], 'instant'); } });
   if (win.ResizeObserver) new win.ResizeObserver(() => { if (shown) measure(); }).observe($('select-info'));
   doc.fonts?.ready.then(() => { if (shown) measure(); });
   function visible(on) {

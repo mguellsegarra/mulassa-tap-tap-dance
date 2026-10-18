@@ -17,7 +17,7 @@ export function photoFixedClearance(x, z, yaw, dragon) {
 // Step sideways out of the intended corridor, including when the mover has braked for a person.
 export function photoEscape(x, z, out) {
   const p = photoBody(), vx = PHOTO.intentX || 0, vz = PHOTO.intentZ || 0, speed = Math.hypot(vx,vz);
-  const dx = x-p.x, dz = z-p.z, along = speed ? Math.max(0,Math.min(3, (dx*vx+dz*vz)/speed)) : 0;
+  const dx = x-p.x, dz = z-p.z, along = speed ? Math.max(0,Math.min(Math.max(3, speed*0.5), (dx*vx+dz*vz)/speed)) : 0; // half a second ahead at a gallop
   let ax=dx-(speed ? vx/speed*along : 0), az=dz-(speed ? vz/speed*along : 0), d=Math.hypot(ax,az);
   const clear = Math.min(photoClearance(p.x,p.z,p.yaw,x,z,0,PHOTO.id==='drac-valls'),
     photoClearance(p.x+(speed?vx/speed*along:0),p.z+(speed?vz/speed*along:0),p.yaw,x,z,0,PHOTO.id==='drac-valls'));
@@ -63,7 +63,7 @@ export function updatePhotoExtras(dt) {
     let tx=0,tz=0;
     if(PHOTO.on) {
       photoEscape(p.pos.x,p.pos.y,photoAway);
-      const speed=Math.min(3.4,photoAway.fear*2.5);
+      const run=Math.max(1,PHOTO.speed/3.4), speed=Math.min(3.4*run,photoAway.fear*2.5*run); // faster as she gallops
       tx=photoAway.x*speed;tz=photoAway.y*speed;
     } else {
       const dx=p.homeX-p.pos.x,dz=p.homeZ-p.pos.y,d=Math.hypot(dx,dz);

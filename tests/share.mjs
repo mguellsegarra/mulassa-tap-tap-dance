@@ -122,8 +122,8 @@ assert(/id="results-share" type="button" class="btn btn-secondary"[^>]*><svg/.te
 assert(share.indexOf('id="share-preview"') < share.indexOf('id="share-image"'), 'the card preview is the hero, before the actions');
 assert.equal((share.match(/btn-primary/g) || []).length, 1, 'one primary action');
 assert(/<button id="share-image"[^>]*class="btn btn-primary"[^>]*>(<svg[^>]*>.*?<\/svg>){2}<span id="share-image-label">/.test(share), 'primary: share / save icons first, then its label');
-assert(/class="share-seg" role="group"/.test(share) && /id="share-format-story"[^>]*aria-pressed="true">Story</.test(share) && /id="share-format-feed"[^>]*>Instagram 4:5</.test(share), 'Story / Instagram 4:5: a segmented toggle');
-assert(!/Història|història/.test(share), '«Story», never «Història»');
+assert(/class="share-seg" role="group"/.test(share) && /id="share-format-story"[^>]*aria-pressed="true">Història \(9:16\)</.test(share) && /id="share-format-feed"[^>]*>Publicació \(4:5\)</.test(share), 'Història (9:16) / Publicació (4:5): a segmented toggle');
+assert(!/>Story<|Instagram 4:5/.test(share), 'Catalan format names with the ratio (Marc, 2026-10-18), no «Story» / «Instagram 4:5»');
 assert(/<p id="share-note" class="share-note" role="status" hidden>/.test(share) && share.indexOf('id="share-note"') > share.indexOf('id="share-title"'), 'after publishing: the place line under the title');
 assert(/<div class="share-foot"><button id="share-privacy"/.test(share), 'Privadesa alone at the foot (Tanca is the X, top right)');
 assert(/<label id="share-nick-row" class="switch-row[^"]*" for="share-nick" hidden>.*<input id="share-nick" type="checkbox" role="switch" checked>/.test(share), 'the nickname: a .switch-row, hidden until there is an alias, on by default');
@@ -138,7 +138,7 @@ assert(/<button id="share-more" type="button" class="btn btn-link btn-compact" d
   'Més…: a neutral share icon (a link icon when it copies), the same quiet link');
 assert(!/btn-secondary|btn-primary/.test(linkArea), 'the link area has no outlined or filled buttons: clearly lesser than the primary');
 assert(/\.share-links-label \{[^}]*color: #e8d8b8a6; font-size: 14px/.test(html), 'the label is small and muted');
-assert.equal((share.match(/<(?:button|a) /g) || []).length, 8, 'Story · Quadrat · Comparteix · WhatsApp · X · Més… · Privadesa · the X: nothing more');
+assert.equal((share.match(/<(?:button|a) /g) || []).length, 8, 'Història · Publicació · Comparteix · WhatsApp · X · Més… · Privadesa · the X: nothing more');
 assert(/<button id="share-close" type="button" class="sheet-x" aria-label="Tanca"><svg/.test(share), 'Tanca: the round X, top right');
 assert(!/<button(?![^>]*class="(?:btn|sheet-x))/.test(share) && !/<a (?![^>]*class="btn)/.test(share), 'every control is a .btn');
 assert(/\.btn-compact \{[^}]*min-width: 44px; min-height: 44px/.test(html) && /\.share-seg \{/.test(html), 'the compact link is part of the .btn component, a 44 px target; the toggle has its style');

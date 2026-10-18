@@ -266,7 +266,19 @@ console.log('band musicians ok');
     const out = Math.max(Math.abs(v.x), Math.abs(v.z));
     assert(out > plaza.inner - 1.5 + 0.1 && out < plaza.inner + 0.5, `backdrop figure ${i} in its band (${out.toFixed(2)})`);
   }
-  assert.equal(mesh.geometry.attributes.position.count, 56, 'backdrop figure: 56 vertices (48 + two eyes, front faces only)');
+  assert.equal(mesh.geometry.attributes.position.count, 68, 'backdrop figure: 68 vertices (60 + two eyes; backs included, photo mode walks round them)');
+  // Photo mode sees these people from every side. Raycast with the real one-sided material so a missing or
+  // inward-facing wall fails, even if the total vertex count still happens to match.
+  const figure = new T.Mesh(mesh.geometry, mesh.material), ray = new T.Raycaster();
+  for (const [y, part] of [[0.4, 0], [1.1, 1], [1.5, 2]]) {
+    for (const [x, z] of [[0, -1], [0, 1], [-1, 0], [1, 0]]) {
+      ray.set(new T.Vector3(x, y, z), new T.Vector3(-x, 0, -z));
+      const hit = ray.intersectObject(figure, false)[0];
+      assert(hit && hit.distance < 1, `backdrop is solid at height ${y}, seen from ${x},${z}`);
+      assert.equal(mesh.geometry.attributes.aPart.getX(hit.face.a), part === 2 && z === -1 ? 3 : part,
+        'back of the head is hair; face and sides keep skin, torso keeps shirt, legs keep trousers');
+    }
+  }
   // the mid band: the same figures on an arc beyond the moving ring, clear of the band's sector
   const { buildBackdrop } = await import('../src/scene/models.js');
   const ring = { r0: 10.7, r1: 12.6, far: -0.52, half: 1.45, avoid: [[5.3, 0.47, 11.3]] };
@@ -1094,6 +1106,16 @@ run(`startGame(1); G.state = 'play'; offsetMs = 0; var hb = G.chart.find(n => n.
   songNow = hb.t + 0.2; settleHold(songNow);`);
 windowHandlers.blur.forEach(h => h());
 assert(run('hb.tail === "miss" && !G.hold'), 'losing the window focus lets go');
+{ // a pad that has the keyboard focus (Tab) must not swallow the game keys; other buttons still keep theirs
+  const padBtn = { tagName: 'BUTTON', closest: s => (s === '#pad' ? {} : null) }, other = { tagName: 'BUTTON', closest: () => null };
+  run(`startGame(1); G.state = 'play'; offsetMs = 0; var tn = G.chart.find(n => !n.end && !n.balloon && !n.pair); G.next = G.chart.indexOf(tn); songNow = tn.t; var j0 = Object.values(G.counts).reduce((a, b) => a + b);`);
+  const code = run('tn.input') === 'L' ? 'KeyD' : 'KeyK';
+  windowHandlers.keydown.forEach(h => h({ code, target: other, preventDefault() {} }));
+  assert.equal(run('Object.values(G.counts).reduce((a, b) => a + b) - j0'), 0, 'a focused ordinary button keeps its keys');
+  windowHandlers.keydown.forEach(h => h({ code, target: padBtn, preventDefault() {} }));
+  assert.equal(run('Object.values(G.counts).reduce((a, b) => a + b) - j0'), 1, 'a focused pad still plays the note');
+  key('keyup', code);
+}
 console.log('hold contracts ok');
 
 // autoplay: both buttons on every GUAPA and every hold kept down to the end
@@ -1964,7 +1986,7 @@ run(`var titlePose = () => { const b = mula.body, n = mula.neck, r = v => +v.toF
 assert(run('fallen.root[1] < -0.4 && fallen.legs.every(([v]) => !v) && fallen.sad'), 'the results after a collapse still show her fallen');
 assert.equal(run('stood'), run('fresh'), 'collapse → menu: her pose and state equal a fresh title');
 run(`startGame(1); songNow = BEATS[76]; frames(10); collapse(); frames(30); finish('collapse'); frames(30); startGame(1); frames(1);`);
-assert(run('G.collapseT === 0 && mula.legs.every(l => l.visible) && mula.root.position.y > -0.1'), 'and a new run (Torna-ho a provar) starts her upright');
+assert(run('G.collapseT === 0 && mula.legs.every(l => l.visible) && mula.root.position.y > -0.1'), `and a new run (Torna-ho a provar) starts her upright ${run('JSON.stringify([G.collapseT, mula.legs.map(l=>l.visible).join(), mula.root.position.y])')}`);
 run('toTitle();');
 // The splash: the Drac dances beside her and her demo walk never runs into it (head, centre and rear stay clear);
 // after the tap the selector shows her alone, from the first frame.
@@ -2578,12 +2600,84 @@ console.log('view mode ok');
       manualMin=Math.min(manualMin,photoClearance(M.pos.x,M.pos.y,M.yaw,photoPerson.gx,photoPerson.gz,photoPerson.rad));
     }`);
   assert(run('photoPerson.pos.distanceTo(personStart)>1'), 'spectator steps away from the moving figure');
-  assert(run('manualStep<=2.6/60+1e-6'), 'manual motion never jumps through the audience');
+  assert(run('manualStep<=PHOTO_RUN.run/60+1e-6'), 'manual motion never jumps through the audience');
   assert(run('manualMin >= -0.03'), `no overlap with the visible spectator: ${run('manualMin')}`);
   assert(run('photoFixedClearance(M.pos.x,M.pos.y,M.yaw,false)>=-1e-6'), 'figure stays inside the real plaza and clear of props');
   assert(run('M.pos.length()>MID.edge-2.65'), 'open floor beyond the old artificial circle is reachable');
   run('setView(false); animMula(1/60,clock/BEAT); activeCrowd=savedPhotoCrowd;');
   console.log('photo walking reuses crowd making-way without overlaps or jumps');
+}
+
+// R in photo mode: the Mulassa's culada flings the people round her out (fast, then they slide to a stop); the Drac's E sparks.
+{
+  run(`G.state='select'; setFigureSong(MULASSA); M.pos.set(0,0); M.yaw=0; M.pivot.set(0,PIVOT); S.yaw.x=S.yaw.t=0; S.yaw.v=0;
+    camera.position.set(0,6,10); camFocus.set(0,0,0); setView(false);
+    var savedCuladaCrowd=activeCrowd, hit=activeCrowd[0], far=activeCrowd[1]; activeCrowd=[hit,far];
+    hit.pos.set(1.6,-1.2); hit.gx=1.6; hit.gz=-1.2; hit.vel.set(0,0); hit.knockT=0; far.pos.set(0,9); far.gx=0; far.gz=9; far.vel.set(0,0); far.knockT=0;
+    setView(true); takeFigure('mulassa-valls'); animMula(1/60,clock/BEAT);
+    var hitStart=hit.pos.clone(), farStart=far.pos.clone(), hitTop=0;
+    photoKey({code:'KeyR',preventDefault(){}},true);
+    for(let i=0;i<90;i++){clock+=1/60;animMula(1/60,clock/BEAT);animCrowd(1/60,clock/BEAT,0,1);hitTop=Math.max(hitTop,hit.vel.length());}`);
+  assert(run('hit.pos.distanceTo(hitStart)>1.5 && hitTop>4'), `the culada flings the near one out: ${run('hit.pos.distanceTo(hitStart)')} m, ${run('hitTop')} m/s`);
+  assert(run('far.pos.distanceTo(farStart)<0.5'), 'people out of her reach are untouched');
+  assert(run('hit.fall > 0.9 && !far.fall && Math.abs(hit.g.rotation.x) > 1.3'), 'the one she hit lies flat on the floor (photo mode only)');
+  run(`for(let i=0;i<220;i++){clock+=1/60;animMula(1/60,clock/BEAT);animCrowd(1/60,clock/BEAT,0,1);}`);
+  assert(run('!hit.fall && hit.g.rotation.x === 0 && !(hit.downT > 0)'), 'and gets back up');
+  assert(run('Math.abs(Math.abs(Math.atan2(Math.sin(M.yaw),Math.cos(M.yaw)))-Math.PI)<0.05'), 'she ends half round');
+  assert(run('hit.knockT<=0 && hit.vel.length()<3.5'), `the flung one slides to a stop, back to their own pace (at most the 3.4 m/s flee): ${run('[hit.knockT, hit.vel.length(), hit.pos.x, hit.pos.y].map(v=>v.toFixed(2))')}`);
+  run(`activeCrowd=savedCuladaCrowd; setView(false); animMula(1/60,clock/BEAT);
+    setFigureSong(MULASSA); G.state='select'; setView(true); takeFigure('drac-valls'); animMula(1/60,clock/BEAT);
+    photoKey({code:'KeyE',preventDefault(){}},true);
+    for(let i=0;i<30;i++){clock+=1/60;animMula(1/60,clock/BEAT);dracFrame(1/60,0);}`);
+  assert(run('drac.root.visible && !PHOTO.sparks && !dracFx.idle'), 'Drac E sets its sparks going');
+  run("setView(false); animMula(1/60,clock/BEAT); dracFrame(1/60,0);");
+  console.log('photo culada flings the crowd; Drac E sparks ok');
+}
+
+// A running jump follows its flight arc: no music bounce or walking feet after the takeoff blend.
+{
+  for (const fps of [30, 60, 120]) {
+    run(`G.state='select'; setFigureSong(MULASSA); setView(false); setView(true); takeFigure('mulassa-valls');
+      animMula(1/60,0,1); clearPhotoKeys();
+      var jumpCrowd=activeCrowd; activeCrowd=[];
+      M.air=0; M.airV=0; M.missT=-9; G.collapseT=0;
+      for(const s of Object.values(S)){s.x=s.v=s.t=0;}
+      Object.assign(PHOTO.mula,{x:0,z:0,yaw:0,vx:0,vz:9,sprint:1});
+      PHOTO.cameraYaw=Math.PI; PHOTO.keys.add('KeyW');
+      for(let i=0;i<12;i++){clock+=1/${fps};animMula(1/${fps},clock/BEAT,1);}
+      PHOTO.action=true;
+      var airBounce=0, airStep=0, airSamples=0;
+      for(let i=0;i<${fps}*0.6;i++){
+        clock+=1/${fps};animMula(1/${fps},clock/BEAT,1);
+        if(i/${fps}>0.2 && M.air>0.1){
+          airSamples++;
+          airBounce=Math.max(airBounce,Math.abs(mula.root.position.y-M.air));
+          airStep=Math.max(airStep,...mula.legs.map(l=>Math.abs(l.position.y)));
+        }
+      }
+      activeCrowd=jumpCrowd; clearPhotoKeys(); setView(false);`);
+    assert(run('airSamples > 4'), `sample the flight at ${fps} fps`);
+    assert(run('airBounce < 0.02 && airStep < 0.02'),
+      `no gait superimposed on the jump at ${fps} fps: ${run('JSON.stringify({airBounce,airStep})')}`);
+  }
+}
+
+// Q held: the Mulassa rears up on her rear legs; E held: she kicks her rear up on her front legs. The Drac's Q is a roar.
+{
+  const legY = (front) => run(`mula.legs.filter((l,i)=>(i<4)===${front}).reduce((m,l)=>Math.max(m,Math.abs(mula.root.position.y+l.position.y)),0)`);
+  run(`G.state='select'; setFigureSong(MULASSA); M.air=0; M.airV=0; setView(false); setView(true); takeFigure('mulassa-valls'); clearPhotoKeys(); PHOTO.keys.add('KeyQ');
+    for(let i=0;i<60;i++){clock+=1/60;animMula(1/60,clock/BEAT,1);}`);
+  assert(run('mula.body.rotation.x < -0.35'), 'Q: her front up');
+  assert(legY(false) < 0.12 && run('mula.legs.slice(0,4).every(l=>mula.root.position.y+l.position.y>0.3)'), `on her rear legs, the front ones off the floor (rear ${legY(false).toFixed(2)})`);
+  run(`PHOTO.keys.delete('KeyQ'); PHOTO.keys.add('KeyE'); for(let i=0;i<60;i++){clock+=1/60;animMula(1/60,clock/BEAT,1);}`);
+  assert(run('mula.body.rotation.x > 0.3 && mula.legs.slice(4).every(l=>mula.root.position.y+l.position.y>0.3)'), 'E: her rear up, its legs off the floor');
+  assert(legY(true) < 0.12, `on her front legs (${legY(true).toFixed(2)})`);
+  run(`clearPhotoKeys(); for(let i=0;i<90;i++){clock+=1/60;animMula(1/60,clock/BEAT,1);}`);
+  assert(run('Math.abs(mula.body.rotation.x) < 0.05'), 'let go: back on all fours');
+  run(`takeFigure('drac-valls'); PHOTO.keys.add('KeyQ'); for(let i=0;i<60;i++){clock+=1/60;animMula(1/60,clock/BEAT,1);}`);
+  assert(run('DRAC_POSE.rear > 0.8 && DRAC_POSE.jaw > 0.8'), 'Drac Q: heads up, jaws open');
+  run(`clearPhotoKeys(); setView(false); animMula(1/60,clock/BEAT,1);`);
+  console.log('photo Q rears up, E kicks, Drac Q roars ok');
 }
 
 {
@@ -2617,12 +2711,14 @@ console.log('view mode ok');
     photoKey({code:'Space',preventDefault(){}},true); var photoJump=0;
     for(let i=0;i<90;i++){clock+=1/60;animMula(1/60,clock/BEAT);photoJump=Math.max(photoJump,M.air);}`);
   assert(run('photoJump>.5 && M.air===0'), 'Space jumps and lands without accumulating lift');
-  run(`photoKey({code:'Tab',preventDefault(){}},true); photoKey({code:'Space',preventDefault(){}},true);
-    for(let i=0;i<45;i++){clock+=1/60;animMula(1/60,clock/BEAT);}`);
-  assert(run('DRAC_POSE.fire>2'), 'Space gives the controlled Drac a large flame');
-  run(`for(let i=0;i<180;i++){clock+=1/60;animMula(1/60,clock/BEAT);} setView(false); animMula(1/60,clock/BEAT);`);
-  assert(run('PHOTO.drac.fire===0'), 'the flame pulse expires and is cleared on exit');
-  console.log('photo Space jump, landing and bounded dragon flame ok');
+  run(`photoKey({code:'Tab',preventDefault(){}},true); setTrauma(0); var dracUp=0, dracShake=0, booms=0, dracFire=0; chip={sfx(k){if(k==='gran')booms++;}};
+    photoKey({code:'Space',preventDefault(){}},true);
+    for(let i=0;i<90;i++){clock+=1/60;animMula(1/60,clock/BEAT);dracUp=Math.max(dracUp,drac.root.parent.position.y);dracShake=Math.max(dracShake,trauma);dracFire=Math.max(dracFire,DRAC_POSE.fire);}`);
+  assert(run('dracUp>.5 && drac.root.parent.position.y===0 && M.air===0'), 'Space jumps the whole Drac (not her) and lands it');
+  assert(run('dracShake>.8 && booms===1'), 'its landing booms once and shakes the plaça');
+  assert(run('dracFire>2 && PHOTO.drac.fire===0'), 'it breathes fire as it takes off, and the flame dies away');
+  run(`setView(false); animMula(1/60,clock/BEAT); chip=null; setTrauma(0);`);
+  console.log('photo Space jumps for both figures; the Drac lands with a boom ok');
 }
 
 {

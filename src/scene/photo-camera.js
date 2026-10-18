@@ -39,7 +39,7 @@ export function framePhotoCamera(dt) {
   const pitch=Math.max(PHOTO_CAM.minPitch,Math.min(1.2,PHOTO.pitch+photoRig.dp));
   const cp=Math.cos(pitch),dx=Math.sin(PHOTO.cameraYaw)*cp,dy=Math.sin(pitch),dz=Math.cos(PHOTO.cameraYaw)*cp;
   const room=photoCameraRoom(camFocus.x,camFocus.y,camFocus.z,dx,dy,dz,Math.max(1,PHOTO.zoom+photoRig.dzoom));
-  photoRig.distance+=(room-photoRig.distance)*(1-Math.exp(-dt/0.12));
+  photoRig.distance+=(room-photoRig.distance)*(1-Math.exp(-dt/(room>photoRig.distance?0.4:0.12))); // in at once (the min below), back out slowly
   const distance=Math.min(room,photoRig.distance); // compress against an obstacle; restore zoom smoothly when it clears
   camera.position.set(camFocus.x+dx*distance,camFocus.y+dy*distance,camFocus.z+dz*distance);
   camera.lookAt(camFocus);

@@ -228,6 +228,10 @@ def _kill(procs) -> None:
             os.killpg(procs[0].pid, signal.SIGKILL)
         except ProcessLookupError:
             pass
+        except PermissionError:  # macOS refuses a group whose leader is already reaped: kill each one still running
+            for p in procs:
+                if p.poll() is None:
+                    p.kill()
     for p in procs:
         p.wait()
 

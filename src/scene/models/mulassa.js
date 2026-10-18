@@ -33,7 +33,9 @@ export function buildMulassa() {
   }
   // green blanket with gold frame
   const bz = -0.15, bl = 1.35;
-  v.box(0, y0 + 1.35, bz, 1.0, 0.05, bl, C.green, 0);
+  // top laps 1.5 cm into the side panels (x 0.545..0.585, top 1.38): no red seam at the corners. 5 mm short of their
+  // ends and of the gold end bars (x from 0.565) so no face is shared with them (z-fighting)
+  v.box(0, y0 + 1.35, bz, 1.12, 0.05, bl - 0.01, C.green, 0);
   for (const s of [1, -1]) {
     v.box(s * 0.565, y0 + 0.5, bz, 0.04, 0.88, bl, C.green, 0);
     v.box(s * 0.58, y0 + 0.48, bz, 0.03, 0.06, bl + 0.04, C.gold, 0);

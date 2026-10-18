@@ -80,7 +80,8 @@ export function manualDracStep(w, out, dt, beat, body, scale, reduced) {
   const k = 1 - Math.exp(-dt / 0.22), moving = Math.min(1, Math.hypot(body.vx, body.vz));
   for (const key in out) {
     if (key === 'beat' || key === 'practice') continue;
-    const target = key === 'drive' ? (reduced ? 0 : moving * 0.35) : key === 'fire' && body.fire > 0 ? (reduced ? 0.9 : 3) : 0;
+    const target = key === 'drive' ? (reduced ? 0 : moving * 0.35) : key === 'fire' && body.fire > 0 ? (reduced ? 0.9 : 3)
+      : body.roar && (key === 'rear' || key === 'jaw' || key === 'flap') ? (reduced ? 0.4 : 1) : 0; // photo Q: a roar
     out[key] += (target - out[key]) * k;
   }
   out.yaw = 0; out.practice = true; out.beat = beat;

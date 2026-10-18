@@ -48,7 +48,7 @@ export function saveFigureRecord(store, figure, level, quality, rawScore, combo)
   else store.set(recordKey(figure, level), JSON.stringify({ quality, score: rawScore, combo }));
 }
 
-export const aviatText = () => `Encara no s’hi pot jugar. Tens fotos, vídeos, partitures o coneixes el ball? Dona un cop de mà.`;
+export const aviatText = () => `Volem que surti a la plaça. Tens fotos, vídeos, partitures o coneixes el ball? Ajuda’ns!`;
 export const aviatDraft = town => `Sobre ${town}: `; // the Bústia's first words, from an «Aviat» card
 export const inviteText = () => `Tens una colla gegantera o de bestiari? Vols que el teu poble surti al joc? Explica’ns quina figura és i d’on és.`;
 export const INVITE_DRAFT = 'Proposo una figura. Poble i colla: ';
@@ -59,3 +59,14 @@ export const DRAC_PALETTE = { g: '#4a8a4c', r: '#c42a2a', w: '#dfc07a', o: '#e0b
 export const portraitArt = figure => figure.id === DRAC.id ? DRAC_ART : figure.id === MULASSA.id ? MULE_ART : FIGURE_PORTRAITS[figure.id]?.art ?? AVIAT_ART;
 const UNKNOWN_PALETTE = { x: '#120b07' };
 export const portraitPalette = figure => figure.id === DRAC.id ? DRAC_PALETTE : figure.id === MULASSA.id ? MULE_PALETTE : FIGURE_PORTRAITS[figure.id]?.palette ?? UNKNOWN_PALETTE;
+
+// How tall each figure stands beside the others (the gegants = 1), so the selector shows them at roughly their real
+// relative size whatever zoom their pixel art was drawn at. Set by eye with ?sizes (src/dev/sizes-edit.js), not measured.
+export const STAND = {
+  'mulassa-valls': 0.8, 'drac-valls': 0.7, 'aliga-valls': 0.8, 'bou-tradicional-valls': 0.65, 'os-trabucaires-valls': 0.65, 'nans-valls': 0.55,
+  'gegants-ciutat-valls': 1, 'cavallets-valls': 0.55, 'basilisc-valls': 0.65, 'diables-valls': 0.8, 'gegant-calcot-valls': 1, 'campanar-valls': 1,
+  'aliga-tarragona': 0.8, 'cucafera-tarragona': 0.65, 'gegants-mulassa-reus': 1, 'gegants-solsona': 1, 'drac-solsona': 0.8, 'bou-solsona': 0.65,
+  'mulassa-solsona': 0.8, 'aliga-solsona': 0.8, 'gegants-bojos-solsona': 1, 'draca-solsona': 0.8, 'mulasses-vilanova': 0.8, 'aliga-barcelona': 0.8,
+  'guites-berga': 1, 'gegants-olot': 1, 'drac-vilafranca': 0.8, 'la-teva-colla': 1,
+};
+export const portraitStand = figure => STAND[figure.id] ?? 0.8;

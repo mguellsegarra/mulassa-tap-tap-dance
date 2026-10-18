@@ -3,58 +3,49 @@
     {
       "id": "valls",
       "name": "Valls",
-      "comarca": "Alt Camp",
-      "color": "#c0283c"
+      "comarca": "Alt Camp"
     },
     {
       "id": "tarragona",
       "name": "Tarragona",
-      "comarca": "Tarragonès",
-      "color": "#c0283c"
+      "comarca": "Tarragonès"
     },
     {
       "id": "reus",
       "name": "Reus",
-      "comarca": "Baix Camp",
-      "color": "#c0283c"
+      "comarca": "Baix Camp"
     },
     {
       "id": "solsona",
       "name": "Solsona",
-      "comarca": "Solsonès",
-      "color": "#c0283c"
+      "comarca": "Solsonès"
     },
     {
       "id": "vilanova",
       "name": "Vilanova i la Geltrú",
       "short": "Vilanova",
-      "comarca": "Garraf",
-      "color": "#2f6fc4"
+      "comarca": "Garraf"
     },
     {
       "id": "barcelona",
       "name": "Barcelona",
-      "comarca": "Barcelonès",
-      "color": "#c0283c"
+      "comarca": "Barcelonès"
     },
     {
       "id": "berga",
       "name": "Berga",
-      "comarca": "Berguedà",
-      "color": "#2f6fc4"
+      "comarca": "Berguedà"
     },
     {
       "id": "olot",
       "name": "Olot",
-      "comarca": "Garrotxa",
-      "color": "#2f6fc4"
+      "comarca": "Garrotxa"
     },
     {
       "id": "vilafranca",
       "name": "Vilafranca del Penedès",
       "short": "Vilafranca",
-      "comarca": "Alt Penedès",
-      "color": "#2f6fc4"
+      "comarca": "Alt Penedès"
     }
   ],
   "figures": [

@@ -2,13 +2,14 @@
 // (menu orbit, figures on their own) until a figure is clicked: then WASD drives it. «Vista lliure», a click on the
 // active figure or Escape go back to just looking. Touch screens (COARSE) never get the bar: there photo mode only looks.
 import { PHOTO, setPhotoControl } from '../game/photo-control.js';
-import { MULASSA, DRAC, portraitArt, portraitPalette, townOf } from '../game/figures.js';
+import { MULASSA, DRAC, portraitArt, portraitPalette } from '../game/figures.js';
+import { escutField } from './escuts.js';
 import { pixelSvg } from './select-ui.js';
 import { sheets } from './sheets.js';
 import { COARSE } from '../core/env.js';
 import { G } from '../game/state.js';
 
-const PF_FIGS = [[MULASSA, 'salta'], [DRAC, 'flamarada']];
+const PF_FIGS = [[MULASSA, 'salta', 'Q s’alça · E guitza · R culada'], [DRAC, 'salta', 'Q rugeix · E guspires · R gira']];
 const PF_TIP_MS = 4000; // the keys show for a moment each time a figure is taken
 const PF_ORBIT_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M4.5 9.5A8 8 0 0 1 18 6.3M19.5 14.5A8 8 0 0 1 6 17.7M18 2.5v4h-4M6 21.5v-4h4"/></svg>';
 export const avatarsEl = document.createElement('div');
@@ -17,7 +18,7 @@ avatarsEl.hidden = true;
 avatarsEl.setAttribute('role', 'group');
 avatarsEl.setAttribute('aria-label', 'Mou una figura');
 avatarsEl.innerHTML = '<button type="button" class="pf pf-free" data-id="" aria-pressed="true" title="Vista lliure (Esc)"><span class="pf-por">' + PF_ORBIT_SVG + '</span><span class="pf-nb"><span class="pf-name">Vista lliure</span></span></button>'
-  + PF_FIGS.map(([f]) => `<button type="button" class="pf" data-id="${f.id}" aria-pressed="false" style="--c:${townOf(f).color}"><span class="pf-por">${pixelSvg(portraitArt(f), portraitPalette(f), '#2a1a10')}</span><span class="pf-nb"><span class="pf-name">${f.name}</span></span></button>`).join('')
+  + PF_FIGS.map(([f]) => `<button type="button" class="pf" data-id="${f.id}" aria-pressed="false" data-field="${escutField(f.town)}"><span class="pf-por">${pixelSvg(portraitArt(f), portraitPalette(f), '#2a1a10')}</span><span class="pf-nb"><span class="pf-name">${f.name}</span></span></button>`).join('')
   + '<p class="pf-tip" hidden></p>';
 document.getElementById('viewmode').after(avatarsEl);
 const pfButtons = [...avatarsEl.querySelectorAll('.pf')], pfTip = avatarsEl.querySelector('.pf-tip');
@@ -36,7 +37,7 @@ export function syncAvatars() {
     pfTipFor = active; clearTimeout(pfTipT);
     const fig = PF_FIGS.find(([f]) => f.id === active);
     pfTip.hidden = !fig;
-    if (fig) { pfTip.textContent = `WASD camina · Espai ${fig[1]} · Tab canvia · Esc torna a mirar`; pfTipT = setTimeout(() => { pfTip.hidden = true; }, PF_TIP_MS); }
+    if (fig) { pfTip.textContent = `WASD camina · Espai ${fig[1]} · ${fig[2]} · Tab canvia · Esc torna a mirar`; pfTipT = setTimeout(() => { pfTip.hidden = true; }, PF_TIP_MS); }
   }
 }
 // Called when photo mode opens or closes: control always starts off, in plain viewing.

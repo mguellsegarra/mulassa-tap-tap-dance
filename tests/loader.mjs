@@ -1,10 +1,10 @@
 import vm from 'node:vm';
 import { readPage } from './page.mjs';
-// The calçot loader (src/ui/loader.js + index.html #loader): paints before any JS, leaves after the first frame,
+// The Mulassa loader (src/ui/loader.js + index.html #loader): paints before any JS, leaves after the first frame,
 // only shows later waits past the delay, updates its status line, and respects prefers-reduced-motion.
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { CALCOT_SVG, calcotSpinner, setupLoader, LOADING_JOKES } from '../src/ui/loader.js';
+import { MULASSA_SVG, MULASSA_MINI_SVG, mulaSpinner, setupLoader, LOADING_JOKES } from '../src/ui/loader.js';
 import { applause } from '../src/platform/audio.js';
 
 const html = readPage();
@@ -12,39 +12,25 @@ const body = html.slice(html.indexOf('<body'));
 assert(body.indexOf('id="loader"') < body.indexOf('<script'), 'the loader is plain HTML, painted before the bundle loads');
 assert(/<div id="loader" class="page" role="status" aria-live="polite">/.test(html), 'a live status region, the page cover to start');
 assert(/<body aria-busy="true">/.test(html), 'the page says it is busy until the first frame');
-assert(html.includes(CALCOT_SVG), 'index.html carries the same calçot as src/ui/loader.js');
+assert(html.includes(MULASSA_SVG), 'index.html carries the same Mulassa as src/ui/loader.js');
 assert(html.includes('Avisant a la brigada…'), 'Catalan status on the first paint');
 const css = html.slice(html.indexOf('#loader {'), html.indexOf('</style>', html.indexOf('#loader {')));
-assert(/@keyframes calcot-spin \{[^}]*transform: translateY\([^)]*\) rotate\(/.test(css), 'the dance is a transform (compositor only)');
-assert(/@media \(prefers-reduced-motion: reduce\) \{ \.calcot-spin \{ animation: calcot-pulse/.test(css), 'reduced motion: a gentle pulse, no spin');
+assert(/@media \(prefers-reduced-motion: reduce\)\{\.mula-load \*\{animation:none!important\}\}/.test(css), 'reduced motion: all character parts rest');
 assert(/#loader \{[^}]*pointer-events: none/.test(css), 'the loader never takes a tap');
-assert(/#loader\.page \.loader-box \{[^}]*animation-delay: 0s/.test(css), 'the page calçot shows at once (it stays at least minShow)');
-{ // minShow: a race — the cover lifts only when BOTH the first frame is ready and minShow has passed
-  let t = 0; const q = [];
-  const fake = { setTimeout: (f, ms) => { q.push({ f, at: t + (ms || 0) }); return q.length; }, clearTimeout() {} };
-  const el = { hidden: false, classList: { c: new Set(['page']), toggle(k, on) { on ? this.c.add(k) : this.c.delete(k); }, contains(k) { return this.c.has(k); } }, setAttribute() {} };
-  const d = { getElementById: id => (id === 'loader' ? el : null), body: { removeAttribute() {} } };
-  const L = setupLoader(d, { minShow: 4000, giveUp: 12000, timers: fake, now: () => t });
-  assert(L.covering, 'covering from the start (main.js paints its queued words one a frame under it)');
-  t = 900; L.ready();
-  assert(!el.classList.contains('out') && L.covering, 'loaded early: the calçot keeps dancing until 4 s');
-  t = 4000; q.filter(x => x.at <= t).forEach(x => x.f());
-  assert(el.classList.contains('out') && !L.covering, 'at 4 s the cover lifts');
-}
-{ // the last funny line gets its full turn: ready mid-line waits for the line to end, and no new line starts meanwhile
+assert(/#loader\.page \.loader-box \{[^}]*animation-delay: 0s/.test(css), 'the page Mulassa shows at once');
+{ // Readiness never waits for a joke or dance cycle to finish.
   let t = 0; const q = [];
   const fake = { setTimeout: (f, ms) => { q.push({ f, at: t + (ms || 0) }); return q.length; }, clearTimeout() {} };
   const run = until => { for (let x; (x = q.filter(y => y.at <= until).sort((a, b) => a.at - b.at)[0]);) { q.splice(q.indexOf(x), 1); t = x.at; x.f(); } t = until; };
   const el = { hidden: false, classList: { c: new Set(['page']), toggle(k, on) { on ? this.c.add(k) : this.c.delete(k); }, contains(k) { return this.c.has(k); } }, setAttribute() {} };
   const label = { textContent: LOADING_JOKES[0] };
   const d = { getElementById: id => ({ loader: el, 'loader-text': label })[id], body: { removeAttribute() {} } };
-  const L = setupLoader(d, { minShow: 1000, giveUp: 12000, timers: fake, now: () => t, storage: null });
+  const L = setupLoader(d, { giveUp: 12000, timers: fake, storage: null });
   L.jokes(LOADING_JOKES, 1600);
   run(2000); const line = label.textContent; // a new line came at 1.6 s
   L.ready();
-  assert(!el.classList.contains('out'), 'loaded mid-line: the cover waits');
-  run(3100); assert(!el.classList.contains('out') && label.textContent === line, 'the line stays, nothing new starts');
-  run(3200); assert(el.classList.contains('out') && label.textContent === line, 'at the end of its 1.6 s the cover lifts on that same line');
+  assert(el.classList.contains('out') && !L.covering, 'loaded mid-line: release immediately');
+  run(4000); assert(el.hidden && label.textContent === line, 'pending joke ticks never change a released cover');
 }
 
 // A tiny DOM: #loader + #loader-text, and timers run by hand.
@@ -99,9 +85,11 @@ function dom() {
 }
 {
   const made = [];
-  const doc = { createElement: tag => { const e = { tag }; made.push(e); return e; } };
-  const s = calcotSpinner(doc);
-  assert(s.tag === 'span' && s.className === 'calcot-spin' && s.innerHTML === CALCOT_SVG, 'calcotSpinner(): the shared spinner for any sheet');
+  const doc = { createElement: tag => { const e = { tag, setAttribute(k, v) { this[k] = v; } }; made.push(e); return e; } };
+  const s = mulaSpinner(doc), mini = mulaSpinner(doc, { mini: true });
+  assert(s.tag === 'span' && s.className === 'mula-spinner' && s.innerHTML === MULASSA_SVG, 'larger sheet waits use the full figure');
+  assert.equal(mini.innerHTML, MULASSA_MINI_SVG, 'small status lines use the head');
+  assert.equal(mini['aria-hidden'], 'true', 'the adjacent status text describes the decorative animation');
 }
 { // the applause is built in idle slices (it was the freeze after the tap); finish() completes it on demand
   const slices = [];
@@ -151,20 +139,18 @@ function dom() {
 console.log('loader contracts ok');
 
 // index.html's boot watchdog: only a fatal start (the entry module failing to load or throwing, or no first frame
-// after 60 s of VISIBLE time, 25 s once the module ran) turns the cover into the sad calçot with a retry.
+// after 60 s of VISIBLE time, 25 s once the module ran) turns the cover into the sad Mulassa with a retry.
 {
   const vm = await import('node:vm');
   const src = /<script id="boot-watchdog">([\s\S]*?)<\/script>/.exec(html)?.[1];
   assert(src, 'the boot watchdog is an inline classic script');
   assert(html.indexOf('id="boot-watchdog"') > html.indexOf('<div id="loader"'), 'it runs after the loader is in the page');
-  const sad = /var SAD = '(<svg[^']*<\/svg>)'/.exec(src)?.[1];
-  assert(sad && sad.length <= 2048, 'the sad calçot is a small inline SVG');
-  assert(!/class="d"|ring|animation/.test(sad), 'no drops ring, nothing spins');
   const boot = () => {
     const timers = [], docHandlers = {}, loader = { hidden: true, className: 'out', attrs: {}, innerHTML: '', setAttribute(k, v) { this.attrs[k] = v; },
       parts: {}, querySelector(sel) { return (this.parts[sel] ||= { textContent: '', onclick: null }); } };
     const env = { reloads: 0, window: {}, timers, loader, docHandlers,
       document: { hidden: false, body: { removeAttribute() {} }, getElementById: id => (id === 'loader' ? loader : null),
+        querySelector: sel => sel === '#loader .mula-load' ? { outerHTML: MULASSA_SVG } : null,
         addEventListener: (type, f) => { docHandlers[type] = f; } },
       setTimeout: f => timers.push(f), location: { reload() { env.reloads++; } } };
     env.window = env; // window.__mulassa* live on the global, as in a browser
@@ -186,6 +172,7 @@ console.log('loader contracts ok');
   assert(!b.shown(), 'a hidden tab (no frames) is not a failure');
   b.document.hidden = false; for (let i = 0; i < 60; i++) b.second();
   assert(b.shown(), 'a minute of visible time without the game is');
+  assert(b.loader.innerHTML.includes(MULASSA_SVG.replace('class="mula-load"', 'class="mula-load sad"')), 'the pre-bundle error reuses the full artwork in its sad pose');
   assert.equal(b.loader.parts.h1.textContent, 'Ups! No s’ha pogut carregar');
   assert.equal(b.loader.parts.p.textContent, 'Refresca la pàgina per tornar-ho a provar.');
   assert(b.loader.innerHTML.includes('class="btn btn-primary">Torna-ho a provar</button>'), 'the retry is the normal primary button');

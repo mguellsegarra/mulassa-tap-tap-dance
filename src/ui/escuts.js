@@ -58,3 +58,7 @@ export function escutSvg(townId, cls = 'escut') {
     + `<g clip-path="url(#${id})" stroke="none">${arms.art}</g><path d="${shape}" fill="none" stroke="${ESC_T.sable}" stroke-width="1.1" stroke-linejoin="round"/></svg>`;
 }
 export const ESCUT_TOWNS = Object.keys(ESC_ARMS);
+// Each arms' first field (the chief or first quarter of the blazons above): the town's tint on its selector cards and
+// its banner's cloth. Heraldic tinctures, not official town colours; '' = no arms (the invitation).
+const ESC_FIELD = { valls: 'gules', tarragona: 'or', reus: 'argent', solsona: 'gules', vilanova: 'atzur', barcelona: 'argent', berga: 'or', olot: 'or', vilafranca: 'atzur' };
+export const escutField = townId => ESC_FIELD[townId] ?? '';

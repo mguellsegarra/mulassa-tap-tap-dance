@@ -9,6 +9,7 @@ import { selectedFigure, song, songTimeAtBeat, beatAt } from '../game/figure-son
 import { DRAC } from '../game/figures.js';
 import { M, PAIR } from './mula-motion.js';
 import { SHOWCASE } from './drac-demo.js';
+import { PHOTO } from '../game/photo-control.js';
 import { setConfettiDivert } from './confetti.js';
 
 export const dracFx = createDracFx(scene, { smoke: renderProfile.smoke ?? 0, embers: renderProfile.embers ?? 0, wheels: renderProfile.wheels ?? 0, sound: (kind, i) => chip?.sfx(kind, i) });
@@ -19,10 +20,10 @@ setConfettiDivert((sec, reason) => {
   if (reason === 'combo' && !G.practice && (G.combo === 50 || G.combo === 100)) dracFx.wheels(1.2);
   return true;
 });
-let flareSong = null, flareT = Infinity, tracaFor = null, hazed = false;
+let flareSong = null, flareT = Infinity, tracaFor = null, hazed = false, sparkT = 0;
 // The last pass's red mist: the plaça's own fog (stage.js) closes in and turns red with the crescendo, the sky with it (a
 // dense mist costs nothing more to draw: old phones). Only while the dance is on; a menu clears it at once.
-const FOG = { sky: new THREE.Color('#8fd3ff'), red: new THREE.Color('#e0707c'), near: 40, far: 90 };
+const FOG = { sky: new THREE.Color('#8fd3ff'), red: new THREE.Color('#c50912'), near: 40, far: 90 };
 
 export function dracCrema() { // a GUAPA (and the final hit): the CREMA
   if (!isDracOn() || G.practice) return;
@@ -50,8 +51,15 @@ export function dracFrame(dt, t) { // (the red smoke of the last pass rises roun
     return;
   }
   const on = isDracOn();
-  const show = PAIR.k > 0 || (on && (G.state === 'select' || G.state === 'title')); // its menu showcase (drac-demo.js): a CREMA now and then
+  const photoDrac = PHOTO.on && PHOTO.id === 'drac-valls'; // driven in photo mode
+  const show = PAIR.k > 0 || photoDrac || (on && (G.state === 'select' || G.state === 'title')); // its menu showcase (drac-demo.js): a CREMA now and then
   if (SHOWCASE.crema) { SHOWCASE.crema = false; if (show) { dracFx.crema(); chip?.sfx('flama'); } }
+  if (photoDrac) { // E: a CREMA's sparks at once; held, the rodes de foc spin and another burst every 0.4 s
+    const held = PHOTO.keys.has('KeyE');
+    if (PHOTO.sparks) { PHOTO.sparks = false; sparkT = 0; dracFx.crema(); chip?.sfx('flama'); }
+    else if (held && (sparkT += dt) >= 0.4) { sparkT = 0; dracFx.crema(); }
+    if (held) dracFx.wheels(0.3);
+  }
   if (!on && !show && !hazed && dracFx.idle) return; // the Mulassa alone: nothing to do
   const play = on && G.state === 'play' && !G.collapseT;
   IN.on = (play && !G.practice) || show; IN.fire = on || show ? drac?.fire ?? null : null;
@@ -68,7 +76,7 @@ export function dracFrame(dt, t) { // (the red smoke of the last pass rises roun
   if (k || hazed) {
     hazed = k > 0;
     const e = k * k * (3 - 2 * k);
-    scene.fog.color.copy(FOG.sky).lerp(FOG.red, e * 0.8); scene.background.copy(scene.fog.color);
+    scene.fog.color.copy(FOG.sky).lerp(FOG.red, e * 0.96); scene.background.copy(scene.fog.color);
     scene.fog.near = FOG.near - 36 * e; scene.fog.far = FOG.far - 62 * e; // at full: thick from 4 m, solid past 28
   }
 }

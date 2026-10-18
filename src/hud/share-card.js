@@ -157,7 +157,7 @@ export function drawCard(c, format, d, hero) {
   cardTicket(c, d, L, theme); cardFooter(c, L.footY, L.story, theme.ink);
   c.restore(); return c.canvas;
 }
-export const cardAlt = (format, d) => `Imatge per compartir (${format === 'story' ? 'Story' : 'Instagram 4:5'}): ${d.figureId === 'drac-valls' ? 'el Drac de Valls' : 'la Mulassa de Valls'}, ${d.score ?? '—'} punts, ${d.pct}% d’encerts a ${d.diffName}, ratxa màxima ${d.maxCombo}.`;
+export const cardAlt = (format, d) => `Imatge per compartir (${format === 'story' ? 'Història (9:16)' : 'Publicació (4:5)'}): ${d.figureId === 'drac-valls' ? 'el Drac de Valls' : 'la Mulassa de Valls'}, ${d.score ?? '—'} punts, ${d.pct}% d’encerts a ${d.diffName}, ratxa màxima ${d.maxCombo}.`;
 export function toJpeg(canvas, quality = 0.9, figureId = 'mulassa-valls') {
   const name = figureId === 'drac-valls' ? 'drac-de-valls.jpg' : CARD_FILE;
   return new Promise((resolve, reject) => canvas.toBlob(b => b ? resolve(new File([b], name, { type: 'image/jpeg' })) : reject(new Error('card')), 'image/jpeg', quality));

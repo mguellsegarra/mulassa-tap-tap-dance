@@ -37,7 +37,7 @@ function dfxGlowTexture(pow, hard = 1) { // a white disc, alpha falling off (no 
 }
 // SMOKE: kinds of puff [life s, start size m, end size m, alpha, rise m/s, r, g, b]
 const PUFF = { crema: [1.9, 0.6, 2.4, 0.65, 1.1, 0.2, 0.19, 0.19], breath: [1.2, 0.3, 1, 0.5, 0.8, 0.26, 0.25, 0.25],
-  flare: [7, 1.2, 7, 0.34, -0.22, 0.9, 0.2, 0.28], // (the last pass's: a thin red haze, heavy, sinking over the crowd as it spreads and lingers)
+  flare: [7, 1.2, 7, 0.72, -0.22, 0.85, 0.001, 0.003], // saturated pigment in linear RGB; soft alpha edges still reveal the crowd as it spreads and fades
   tro: [2, 0.7, 2.8, 0.8, 0.7, 0.24, 0.22, 0.21], petard: [1.2, 0.3, 1.2, 0.7, 0.6, 0.33, 0.31, 0.3] };
 const DRAG = 2.5; // how fast a puff's own push dies (1/s)
 // SPARKS (guspires): colour from hot to cool over their life [r, g, b, r, g, b]: fire, (unused: the old bengales'), powder

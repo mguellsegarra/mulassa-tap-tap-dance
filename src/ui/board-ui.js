@@ -3,7 +3,7 @@
 // e-mail, recover, sign out, delete) is src/ui/profile-ui.js. Turnstile (src/services/captcha.js) checks every player once, silently, after their
 // first run; Supabase is touched only when one of these sheets asks for it, never in the game loop, and the anonymous profile
 // is made only on publishing. After an eligible run the publish sheet opens by itself (a prompt: nothing is sent until
-// Publica is pressed; «Ara no» ×3 stops it); a publication shows a calçot, then «Publicat!» + the place with an «D'acord» that opens Comparteix (afterPublish).
+// Publica is pressed; «Ara no» ×3 stops it); a publication shows a Mulassa, then «Publicat!» + the place with an «D'acord» that opens Comparteix (afterPublish).
 import { leaderboard, turnstileSiteKey, subscribeLeaderboardResult, PAGE } from '../services/leaderboard.js';
 import { checkAlias } from '../services/alias-rules.js';
 import { DIFFS } from '../game/chart.js';
@@ -11,7 +11,7 @@ import { quality, starsFor } from '../game/progress.js';
 import { errors } from '../services/errors.js';
 import { store as defaultStore } from '../platform/storage.js';
 import { byId, num, statusLine, setButton, whenSeen, onScreen } from './sheet-kit.js';
-import { calcotSpinner } from './loader.js';
+import { mulaSpinner } from './loader.js';
 import { setupVerify, turnstileMessage, TURNSTILE_SRC } from '../services/captcha.js';
 import { KEEP_NOTICE, NOTICE_FIRST, untilText, keptUntil, checkBadge, deviceRisk, DEVICE_NOTES, browserEnv } from './profile-notes.js';
 
@@ -60,7 +60,7 @@ export function setupBoard({ focusIn, store = defaultStore, service = leaderboar
   // for a new profile, a Bústia message), never ahead: a check after every first run showed the box to people who never publish
   canVerify = () => true, verifyOpts = {}, // seen / visible: the 7-day notice read on screen (sheet-kit.js), watched (→ a cancel) / at a press
   // after a publication: Comparteix, for that run (main.js → share-ui.js), from the success sheet's «D'acord»; `shareDelay` (ms, null = never)
-  // would also open it by itself. `settle`: the calçot shows at least this long (and waits for the place line) before «Publicat!»
+  // would also open it by itself. `settle`: the Mulassa shows at least this long (and waits for the place line) before «Publicat!»
   afterPublish = null, shareDelay = null, settle = 1100,
   // the browser the profile lives in (deviceRisk) and the one-off storage.persist() request
   env = browserEnv, persist = askPersist,
@@ -157,7 +157,7 @@ export function setupBoard({ focusIn, store = defaultStore, service = leaderboar
     const capped = !b.done && b.loaded >= BOARD_CAP;
     moreStatus.textContent = moreBusy ? 'Carregant-ne més…' : moreFailed ? 'No s’han pogut carregar més.'
       : capped ? `Mostrant els ${num(BOARD_CAP)} primers` : ''; // the end of the list needs no line
-    if (moreBusy) moreStatus.prepend(calcotSpinner(doc));
+    if (moreBusy) moreStatus.prepend(mulaSpinner(doc, { mini: true }));
     moreBtn.hidden = moreBusy || b.done || capped;
   }
   function render() {
@@ -194,13 +194,13 @@ export function setupBoard({ focusIn, store = defaultStore, service = leaderboar
     const first = [...tbody.children].reverse().find(tr => tr.offsetTop - head <= want) ?? tbody.children[0];
     box.scrollTop = first.offsetTop - head;
   }
-  // The dancing calçot shows while it loads, at least `minLoad` ms when the sheet opens so it never just flashes; then
+  // The dancing Mulassa shows while it loads, at least `minLoad` ms when the sheet opens so it never just flashes; then
   // the list fades in (index.html).
   async function loadList({ min = minLoad } = {}) {
     const req = ++listReq;
     shownBoard = null; moreBusy = false; moreFailed = false; render();
     setBoardStatus('Carregant la classificació…');
-    $('board-status').prepend(calcotSpinner(doc));
+    $('board-status').prepend(mulaSpinner(doc));
     const shown = min > 0 ? new Promise(r => setTimeout(r, min)) : null;
     let rows;
     try { rows = await fetchBoard(); } catch (e) {
@@ -409,8 +409,8 @@ export function setupBoard({ focusIn, store = defaultStore, service = leaderboar
   const reduced = () => globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   const sleep = ms => new Promise(r => setTimeout(r, Math.max(0, ms)));
   const form = $('publish-form');
-  $('publish-wait')?.append(calcotSpinner(doc));
-  // the sheet's view (swap): null (the form) | 'wait' (the calçot) | 'done' (Publicat! + place + D'acord). The frame eases to the
+  $('publish-wait')?.append(mulaSpinner(doc));
+  // the sheet's view (swap): null (the form) | 'wait' (the Mulassa) | 'done' (Publicat! + place + D'acord). The frame eases to the
   // new height and the new content fades in (index.html), so the sheet never jumps between them
   function swap(v, title) {
     const h0 = publishMenu.offsetHeight;
@@ -469,7 +469,7 @@ export function setupBoard({ focusIn, store = defaultStore, service = leaderboar
       needsCaptcha = false; // the profile exists now
       auto = false;
       placeP = showPlace(req);
-      // the calçot for a beat (never a flash), and until the place is known: «Publicat!» and both lines come together
+      // the Mulassa for a beat (never a flash), and until the place is known: «Publicat!» and both lines come together
       if (settle) await Promise.race([Promise.all([placeP, sleep(settle - (Date.now() - t0))]), sleep(2500)]);
       if (req !== publishReq) return;
       setPublishStatus('Resultat publicat. La classificació mostra el teu millor resultat.', true);

@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { FIGURES, TOWNS, MULASSA, DRAC, MULE_ART, DRAC_ART, portraitArt, portraitPalette, playable, townOf, rememberedLevel, rememberLevel, recordKey, aviatText, INVITE, INVITE_TOWN, INVITE_DRAFT } from '../src/game/figures.js';
+import { FIGURES, TOWNS, MULASSA, DRAC, MULE_ART, DRAC_ART, portraitArt, portraitPalette, portraitStand, STAND, playable, townOf, rememberedLevel, rememberLevel, recordKey, aviatText, INVITE, INVITE_TOWN, INVITE_DRAFT } from '../src/game/figures.js';
 import { FIGURE_PORTRAITS } from '../src/game/figure-portraits.js';
 import { setupSelect, peekGap } from '../src/ui/select-ui.js';
-import { escutSvg } from '../src/ui/escuts.js';
+import { escutSvg, escutField } from '../src/ui/escuts.js';
+import { clampStand } from '../src/dev/sizes-edit.js';
 import './strip-scroll.mjs';
 assert.equal(new Set(FIGURES.map(f => f.id)).size, FIGURES.length);
 assert.equal(new Set(TOWNS.map(t => t.id)).size, TOWNS.length);
@@ -44,16 +45,7 @@ for (const f of FIGURES) {
 assert(portraitArt(INVITE).join('').split('').every(c => c === '.' || portraitPalette(INVITE)[c]), 'the invitation has its own portrait');
 assert.equal(portraitArt(MULASSA), MULE_ART, 'original Mulassa portrait is retained');
 assert.equal(portraitArt(DRAC), DRAC_ART, 'original Drac portrait is retained');
-assert(FIGURES.every(f => /^#[0-9a-f]{6}$/i.test(townOf(f).color)));
-const hue = hex => {
-  const [r, g, b] = hex.match(/\w\w/g).map(n => parseInt(n, 16) / 255), max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min;
-  return ((max === r ? (g - b) / d : max === g ? (b - r) / d + 2 : (r - g) / d + 4) * 60 + 360) % 360;
-};
-const gap = (a, b) => Math.min(Math.abs(a - b), 360 - Math.abs(a - b));
-for (const t of TOWNS) {
-  for (const input of ['#ff7a1a', '#14b8a6']) assert(gap(hue(t.color), hue(input)) > 30, `${t.name}: distinct from input colours`);
-
-}
+assert(TOWNS.every(t => !('color' in t)), 'a town\'s colour is its arms\' tincture (escutField), never a bare catalogue value');
 const memory = new Map(), store = { get: k => memory.get(k) ?? null, set: (k, v) => memory.set(k, v) };
 assert.equal(rememberedLevel(store, MULASSA.id), 1);
 rememberLevel(store, MULASSA.id, 2); assert.equal(rememberedLevel(store, MULASSA.id), 2);
@@ -97,7 +89,7 @@ class Node {
   scrollTo({ left, behavior }) { this.scrollLeft = left; this.behavior = behavior; }
   getBoundingClientRect() { return { top: 100, right: 200, bottom: 300 }; }
 }
-for (const id of ['leaders', 'viewmode', 'feedback', 'music', 'settings', 'select-carousel', 'select-prev', 'select-forward', 'select', 'select-towns', 'select-strip', 'select-level', 'select-song', 'select-entity', 'select-act', 'select-name', 'select-song-name', 'select-song-credit', 'select-play', 'select-next', 'select-figures-back', 'select-board', 'select-howto', 'aviat-write', 'aviat-text', 'select-info', 'select-bottom', 'select-pos', 'select-tiles', 'select-rank-tile', 'select-pending', 'aviat-entity', 'aviat-icon', 'aviat-title']) nodes.set(id, new Node(id));
+for (const id of ['leaders', 'viewmode', 'feedback', 'music', 'settings', 'select-carousel', 'select-prev', 'select-forward', 'select-nav', 'select', 'select-towns', 'select-strip', 'select-level', 'select-song', 'select-entity', 'select-act', 'select-name', 'select-song-name', 'select-song-credit', 'select-play', 'select-next', 'select-figures-back', 'select-board', 'select-howto', 'aviat-write', 'aviat-text', 'select-info', 'select-bottom', 'select-pos', 'select-tiles', 'select-rank-tile', 'select-pending', 'aviat-entity', 'aviat-icon', 'aviat-title']) nodes.set(id, new Node(id));
 const $ = id => nodes.get(id), win = { innerWidth: 393, innerHeight: 852, addEventListener(k, f) { (handlers[k] ||= []).push(f); } };
 let boards = 0, sounds = [], played = [], how = 0, drafts = [], busy = false, selected = [];
 const api = setupSelect({ doc, win, store, keyboard: () => true, reduced: () => true, busy: () => busy,
@@ -154,26 +146,35 @@ key('ArrowLeft'); assert.equal(api.figure, MULASSA);
 assert.equal(sounds.length, soundBefore + 2);
 click($('select-prev')); click($('select-forward'));
 assert.equal(sounds.length, soundBefore + 2, 'unavailable scroll actions make no sound');
-{
-  const strip = $('select-strip'), resize = () => handlers.resize.forEach(f => f());
+{ // ‹ › select like ← → (the fold too); the wheel only browses; availability follows the selection, never the scroll position
+  const strip = $('select-strip'), resize = () => handlers.resize.forEach(f => f()), more = cards.find(c => c.dataset.more);
   strip.clientWidth = 100; resize();
-  assert($('select-prev').disabled && !$('select-forward').disabled, 'overflow only to the right at the start');
+  assert($('select-prev').disabled && !$('select-forward').disabled, 'the first figure has nothing before it');
+  const sound = sounds.length;
   click($('select-forward'));
-  assert.equal(strip.scrollLeft, 120, 'mouse arrow scrolls the strip');
-  assert.equal(api.figure, MULASSA, 'scrolling does not change selection');
-  assert(!$('select-prev').disabled && !$('select-forward').disabled);
+  assert(api.figure === DRAC && cards[1].attrs['aria-selected'] === 'true', 'the mouse arrow selects the next figure');
+  assert.equal(strip.scrollLeft, 87, 'and centres it');
+  assert.equal(sounds.length, sound + 1, 'with one menu sound');
+  assert(!$('select-prev').disabled, 'Drac always has Mulassa before it, whatever the scroll');
+  busy = true; click($('select-prev')); assert.equal(api.figure, DRAC, 'sheets guard the arrows'); busy = false;
   click($('select-forward'));
-  assert.equal(strip.scrollLeft, 174, 'repeated clicks stop at the available content boundary');
-  assert($('select-forward').disabled && !$('select-prev').disabled);
-  busy = true; click($('select-prev')); assert.equal(strip.scrollLeft, 174, 'sheets guard scrolling'); busy = false;
-  click($('select-prev')); assert.equal(strip.scrollLeft, 54, 'left works even with the first figure selected');
-  strip.scrollLeft = 0; strip.fire('scroll');
-  assert($('select-prev').disabled, 'native scrolling also refreshes arrow availability');
+  assert(more.attrs['aria-selected'] === 'true' && cards[1].attrs['aria-selected'] === 'false', 'the fold is the one selection, no figure marked underneath');
+  assert(api.figure === DRAC && !api.unfolded && !$('select-pending').hidden && $('aviat-title').textContent === 'Aviat a la plaça', 'it shows its own card without unfolding');
+  assert.equal(sounds.length, sound + 2, 'reaching the fold sounds too');
+  assert($('select-forward').disabled, 'folded, the fold is the last stop');
+  click($('select-prev')); assert(api.figure === DRAC && cards[1].attrs['aria-selected'] === 'true' && more.attrs['aria-selected'] === 'false');
+  click($('select-prev')); assert(api.figure === MULASSA && $('select-prev').disabled);
   let prevented = false;
   strip.fire('wheel', { deltaY: 100, deltaX: 0, deltaMode: 0, preventDefault() { prevented = true; } });
-  assert(prevented && strip.scrollLeft === 100, 'mouse wheel scrolls the horizontal strip');
+  assert(prevented && strip.scrollLeft === 100 && api.figure === MULASSA, 'the wheel browses without selecting');
+  assert($('select-prev').disabled, 'scrolling never enables the arrow before the first figure');
+  click($('select-forward')); assert.equal(api.figure, DRAC, 'the next arrow goes on from the selection, not from what the wheel shows');
+  strip.scrollLeft = 900; click($('select-next')); click($('select-figures-back'));
+  assert.equal(strip.scrollLeft, 87, 'back from difficulty, the selected figure is centred again');
+  strip.scrollLeft = 900; resize(); assert.equal(strip.scrollLeft, 87, 'and after a resize');
+  click($('select-prev'));
   strip.clientWidth = 393; strip.scrollLeft = 0; resize();
-  assert($('select-prev').disabled && $('select-forward').disabled, 'growing the viewport removes unavailable arrows');
+  assert($('select-prev').disabled && $('select-forward').disabled, 'fitting cards have no arrows');
 }
 
 const cardMarkup = id => $('select-strip').innerHTML.match(new RegExp(`<button[^>]*data-id="${id}"[^]*?</button>`))[0];
@@ -262,9 +263,10 @@ assert(doc.activeElement === more && api.figure === DRAC && !api.unfolded, 'arro
 // the cursor on the fold shows the fold's own card: what is coming, no difficulty, the dock where it was
 assert(!$('select-pending').hidden && $('select-info').hidden && $('select-pending').attrs['data-fold'], 'the fold has its own card');
 assert.equal($('aviat-title').textContent, 'Aviat a la plaça');
-assert.match($('aviat-entity').innerHTML, new RegExp(`${soon.length} figures · ${new Set(soon.map(f => f.town)).size} poblacions`));
+assert($('aviat-entity').hidden, 'the teaser has no count pill');
+assert.equal($('aviat-entity').innerHTML, '');
 assert.equal(($('aviat-icon').innerHTML.match(/class="sel-peek"/g) || []).length, 3, 'three coming figures peek out');
-assert($('select-next').disabled && $('select').attrs['data-fold'], 'its action hides; the dock drops over its row (select.css)');
+assert($('select-next').disabled && $('select').attrs['data-fold'], 'its action hides; desktop reserves its row and touch reclaims it (select.css)');
 key('ArrowRight'); assert.equal(doc.activeElement, more, 'folded, it is the end of the strip');
 assert.equal(sounds.length, foldSounds + 1, 'no sound when the fold focus cannot move farther');
 key('Enter'); assert(api.unfolded && later.every(c => !c.hidden) && more.attrs['aria-expanded'] === 'true', 'Enter unfolds it in place');
@@ -293,9 +295,11 @@ key('ArrowRight'); assert.equal(api.figure, soon[0], 'the arrows go on into it')
 }
 assert(!$('select-pending').hidden && $('select-info').hidden, 'a pending figure shows its own panel');
 assert.equal($('aviat-title').textContent, soon[0].fullName || soon[0].name); assert.match($('aviat-icon').innerHTML, /<svg|<img/);
-assert.equal(($('aviat-text').innerHTML.match(/<p>/g) || []).length, 1); assert.match($('aviat-text').innerHTML, /Encara no s’hi pot jugar/);
+assert.equal(soon[0].entity, 'Ajuntament + UAF'); assert.match($('aviat-entity').innerHTML, /class="escut".*Ajuntament de Valls.*viewBox="0 0 525 829".*Unió Anelles de la Flama/, 'a shared figure shows both marks, as its card does');
+assert(!$('aviat-entity').hidden, 'a pending figure restores its entity after the teaser');
+assert.equal(($('aviat-text').innerHTML.match(/<p>/g) || []).length, 1); assert.match($('aviat-text').innerHTML, /Volem que surti a la plaça/);
 assert($('select-next').disabled && !$('select-next').hidden, 'no difficulty for it: its action hides');
-assert($('select').attrs['data-pending'], 'the dock drops over the action\'s empty row');
+assert($('select').attrs['data-pending'], 'pending selection hides the action');
 assert.equal($('select-name').textContent, DRAC.fullName || DRAC.name, 'the playable panel fades out as it was');
 assert.equal(selected.at(-1), DRAC.id, 'nor does it change the song or the model');
 click($('select-next')); key('Enter'); assert($('select-act').hidden, 'it cannot be played');
@@ -380,21 +384,44 @@ assert(!/showModal|aviat\.close|aviat-menu|aviat-close/.test(ui));
   assert.equal(new Set(ids).size, ids.length);
   assert.equal(escutSvg('nowhere'), '');
   assert.match(ui, /escutSvg\(t\.id\) \|\|/); assert.match(ui, /aria-hidden="true"><span>\$\{\(t\.short/, 'banners carry the name only');
-  // the banner's cloth is the shirt of the town's colla castellera; Solsona has none active and keeps its own colour
+  // a town's cards and banner take the first field of its arms, never a bare catalogue colour
   const css = readFileSync(new URL('../src/styles/select.css', import.meta.url), 'utf8');
-  for (const t of TOWNS.filter(t => t.id !== 'solsona')) assert.match(css, new RegExp(`\\.sel-banner\\[data-town="${t.id}"\\]`), `${t.name}: a colla's cloth`);
+  for (const t of TOWNS) {
+    const field = escutField(t.id);
+    assert(['gules', 'atzur', 'or', 'argent'].includes(field), `${t.name}: a tincture for its cards and banner`);
+    assert.match(css, new RegExp(`\\.sel-banner\\[data-field="${field}"\\] \\{ --cloth: #`), `${t.name}: banner ${field}`);
+    assert.match(css, new RegExp(`:is\\(\\.sel-card, \\.sel-peek, #photo-figs \\.pf\\)\\[data-field="${field}"\\] \\{ --t: #`), `${t.name}: card, peek and avatar ${field}`);
+  }
+  assert.equal(escutField(INVITE_TOWN.id), '', 'the invitation has no arms: the neutral tint');
+  assert.match(ui, /data-field="\$\{escutField\(t\.id\)\}"[^`]*sel-card|sel-card[^`]*data-field="\$\{escutField\(t\.id\)\}"/, 'cards carry their tincture');
+  // one surface, no divider; each portrait in whole pixels at its real relative size, never more than its box holds
+  assert(!/\.sel-card \.por \{[^}]*border-bottom/.test(css), 'no line between portrait and caption');
+  assert.match(css, /--ref: round\(down, min\(100cqh \/ 16, 100cqw \/ 20\), 1px\)/, 'one reference cell: the biggest grid');
+  assert.match(css, /round\(nearest, var\(--s, 1\) \* 16 \* var\(--ref\) \/ var\(--gh\), 1px\), round\(down, 100cqh \/ var\(--gh\), 1px\), round\(down, 100cqw \/ var\(--gw\), 1px\)/, 'whole-pixel cell at the figure\'s share, clamped to fit');
+  assert(Math.max(...FIGURES.map(f => portraitArt(f)[0].length)) + 2 === 20 && Math.max(...FIGURES.map(f => portraitArt(f).length)) + 2 === 16, 'the reference divisors match the biggest portrait');
+  assert.match(css, /width: calc\(var\(--gw\) \* var\(--cell\)\); height: calc\(var\(--gh\) \* var\(--cell\)\)/);
+  assert.match(ui, /--gw:\$\{art\[0\]\.length \+ 2\};--gh:\$\{art\.length \+ 2\};--s:\$\{portraitStand\(f\)\}/, 'the svg grid, rim included, and its stand');
+  for (const f of [...FIGURES, INVITE]) assert(STAND[f.id] > 0 && STAND[f.id] <= 1.2 && portraitStand(f) === STAND[f.id], `${f.id}: its own stand beside the gegants (?sizes output pastes over STAND)`);
+  assert.deepEqual([clampStand(0), clampStand(0.734), clampStand(9)], [0.2, 0.73, 1.2], '?sizes keeps two decimals within its range');
+  assert(portraitStand(FIGURES.find(f => f.id === 'gegants-ciutat-valls')) > portraitStand(MULASSA) && portraitStand(MULASSA) > portraitStand(FIGURES.find(f => f.id === 'cavallets-valls')), 'gegants > mulassa > cavallets');
+  assert.match(css, /\.sel-card\.aviat::after \{ box-shadow: none; border: 1\.5px dashed/, 'pending: a dashed edge, not only a tone');
+  assert(!/\.sel-card\[aria-selected="true"\] \{[^}]*transform/.test(css), 'the selected card is not lifted: every foot on one floor line');
+  assert.match(css, /\.sel-card \.por \{[^}]*place-items: end center;[^}]*linear-gradient\(#f5e3b800, #f5e3b814 45%, #f5e3b82b\) 0 100% \/ 100% 30% no-repeat/, 'portraits stand on one flat street');
 }
 assert.match(readFileSync(new URL('../src/styles/select.css', import.meta.url), 'utf8'), /@media \(pointer: coarse\) \{[^}]*\}\s*\.sel-carousel \.sel-arrow \{ display: none; \}/, 'touch screens swipe the strip: no arrows');
-{ // a pending figure takes the action's row back: the dock drops, its card follows on the same clock, no layout animated
+{ // Touch reclaims the action row; desktop keeps navigation fixed (verified in the browser).
   const css = readFileSync(new URL('../src/styles/select.css', import.meta.url), 'utf8');
   assert.match(css, /#select:is\(\[data-pending\], \[data-fold\]\) \{ --drop: var\(--drop-h\); \}/, 'a pending figure or the fold\'s card');
+  assert.match(css, /\.sel-pending\[data-fold\] \{[^}]*height: min\(var\(--keep-h\), var\(--pending-max\)\)/, 'the fold\'s card, links row included, is never taller than a pending figure\'s');
   assert.match(css, /--drop-h: calc\(var\(--action-h\) \+ var\(--ga\)\)/, 'by exactly the action and its gap');
   assert.match(css, /\.sel-bottom \{[^}]*transform: translateY\(var\(--drop\)\); transition: transform \.32s/);
   assert.match(css, /\.sel-pending \{ --sink: calc\(var\(--drop\) \/ 2\); transform: translateY\(var\(--sink\)\); transition: [^}]*transform \.32s[^}]*max-height \.32s/);
-  assert.match(css, /\.sel-pending \{[^}]*max-height: calc\(100% - var\(--pending-top, 144px\) - var\(--pending-bottom, 254px\) \+ var\(--drop\)\)/);
+  assert.match(css, /\.sel-pending \{[^}]*--pending-max: calc\(100% - var\(--pending-top, 144px\) - var\(--pending-bottom, 254px\) \+ var\(--drop\)\); max-height: var\(--pending-max\)/);
+  assert.match(css, /\.sel-pending \{ min-height: min\(var\(--keep-h, 0px\), var\(--pending-max\)\); overflow-y: auto;/, 'the fold card\'s kept height never outgrows the room between the pills and the strip');
+  assert(!/pending\.style\.minHeight/.test(ui), 'no fixed min-height that would beat max-height');
   assert.match(css, /@media \(prefers-reduced-motion: reduce\) \{ #select :is\(\.sel-pending, \.sel-info\) \{ transition: none; \} \}/);
-  assert.match(css, /#select\[data-fold\] \.sel-card\.sel-more:not\(:focus-visible\)::before \{ border: 3px solid #fff3d6; \}/, 'the fold\'s card shows: the fold wears the cream ring');
-  assert.match(css, /#select\[data-fold\] \.sel-card\[aria-selected="true"\] \{ transform: none;/, 'and the figure underneath lets it go');
+  assert.match(css, /#select \.sel-card\.sel-more\[aria-selected="true"\]:not\(:focus-visible\)::before \{ border: 3px solid #fff3d6; \}/, 'selected, the fold wears the cream ring');
+  assert(!/\[data-fold\] \.sel-card\[aria-selected/.test(css), 'no figure stays selected underneath the fold');
   assert.match(ui, /dockTop = \(dock\.offsetTop/, 'measure() reads the dock\'s layout box, never its moving rect');
 }
 console.log('catalog selection, the PRÒXIMAMENT fold, pending panel, town pills, town arms, touch strip without arrows, feedback focus and per-figure records ok');
@@ -461,7 +488,7 @@ console.log('catalog selection, the PRÒXIMAMENT fold, pending panel, town pills
       click(row, source); source.focus();
       tick(500);
       const title = $('aviat-title').textContent, before = notifications.length, soundCount = foldSfx.length;
-      const expected = id === MULASSA.id ? MULASSA : DRAC;
+      const expected = id === DRAC.id ? DRAC : MULASSA; // folding from a pending card returns to the last playable one (Mulassa, just clicked)
       click(row, toggle);
       assert.equal(animated.figure, expected, `${id}: selection commits synchronously (reduced=${reduced})`);
       assert(!$('select').hasAttribute('data-fold'), 'no teaser, including keyboard mode');
@@ -484,6 +511,17 @@ console.log('catalog selection, the PRÒXIMAMENT fold, pending panel, town pills
   assert(townRow.scrollLeft > 0 && townRow.scrollLeft < 1400, 'distant pills return while the catalog fades');
   tick(120);
   assert.equal(townRow.scrollLeft, 0, 'pills arrive before removing their overflow can clamp the scroll');
-  assert.equal(animated.figure, DRAC);
+  assert.equal(animated.figure, MULASSA, 'the last playable figure, never a fixed one');
+  { // a far jump (a distant town) arrives within the capped time, and a hitch (the unfold's layout) never teleports it
+    row.scrollWidth = 9000; row.scrollLeft = 0; tick(500);
+    const pill = townRow.children.find(p => p.dataset.soon); click(townRow, pill);
+    const far = townRow.children.find(p => p.dataset.town === 'tarragona'); click(townRow, far);
+    const card = row.children.find(c => c.dataset.id === animated.figure.id), target = card.offsetLeft - (row.clientWidth - card.offsetWidth) / 2;
+    assert(target > row.clientWidth, 'the town is more than a screen away');
+    tick(300); assert(row.scrollLeft > 0 && row.scrollLeft < target * 0.25, 'a stalled first frame still moves, never teleports');
+    for (let i = 0; i < 27; i++) tick(1000 / 60);
+    assert.equal(row.scrollLeft, target, 'and is there within the 450 ms cap (plus the stalled frame)');
+    row.scrollWidth = 700;
+  }
 }
 console.log('pending fold: immediate selection, preserved outgoing content, shared exit and reopening ok');

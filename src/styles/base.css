@@ -1,5 +1,5 @@
 /* The page: layout, the HUD chrome, the touch pad and the sheets (settings, pause, sync, classificacions...). */
-:root { --sat: env(safe-area-inset-top, 0px); --sar: env(safe-area-inset-right, 0px); --sal: env(safe-area-inset-left, 0px); --sab: env(safe-area-inset-bottom, 0px); --button-radius: 12px; --button-border: #f5c518; --button-bg: #2a1a10e8; --button-text: #fff3d6; --focus: 3px solid var(--button-text); --focus-off: 3px; } /* ONE keyboard cursor everywhere: --focus, never stacked on a selection ring */
+:root { --sat: env(safe-area-inset-top, 0px); --sar: env(safe-area-inset-right, 0px); --sal: env(safe-area-inset-left, 0px); --sab: env(safe-area-inset-bottom, 0px); --button-radius: 12px; --button-border: #f5c518; --button-gold-bg: linear-gradient(180deg, #ffe066 0%, #f5c518 55%, #dfad13 100%); --button-bg: #2a1a10e8; --button-text: #fff3d6; --focus: 3px solid var(--button-text); --focus-off: 3px; } /* ONE keyboard cursor everywhere: --focus, never stacked on a selection ring */
 :root { color-scheme: light only; } /* never let iOS/Android dark mode restyle our colours */
 button { -webkit-appearance: none; appearance: none; display: inline-flex; align-items: center; justify-content: center; gap: 12px; min-height: 44px; border: 2px solid var(--button-border); border-radius: var(--button-radius); background: var(--button-bg); color: var(--button-text); font: 800 18px 'Baloo 2', system-ui, sans-serif; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 @media (hover: hover) { button:hover { filter: brightness(1.15); } } /* touch screens keep :hover after a tap: it stuck lit */
@@ -11,7 +11,7 @@ button:focus-visible, a:focus-visible { outline: var(--focus); outline-offset: v
 .btn { position: relative; box-sizing: border-box; display: block; width: 100%; min-height: 48px; padding: 8px 20px; border: 2px solid var(--button-border); border-radius: var(--button-radius); background: var(--button-bg); color: var(--button-text); font: 800 18px/1.2 'Baloo 2', system-ui, sans-serif; text-align: center; text-wrap: balance; }
 .btn > svg { display: inline-block; flex: none; width: 22px; height: 22px; margin: -3px 10px 0 0; vertical-align: middle; }
 .btn .sub { display: block; margin-top: 2px; font-size: 14px; font-weight: 700; color: #e8d8b8; }
-.btn-primary { background: var(--button-border); color: #2a1a10; }
+.btn-primary { background: var(--button-gold-bg); color: #2a1a10; }
 .btn-primary .sub { color: #2a1a10b3; }
 .btn-secondary { background: var(--button-bg); border-color: var(--button-border); color: var(--button-text); } /* = the plain .btn, spelled out: gold edge, never filled */
 .btn-link { display: inline-block; width: auto; min-height: 40px; padding: 4px 12px; border-color: transparent; background: none; color: #e8d8b8; font-size: 16px; text-decoration: underline; text-decoration-color: #e8d8b866; text-underline-offset: 3px; }
@@ -26,8 +26,14 @@ p .btn-link::after { display: none; } /* a link inside a sentence: its slop woul
 .btn-compact > svg.line { fill: none; stroke: currentColor; stroke-width: 2.2; } /* our own line icons (share, link) */
 .sheet-actions { display: grid; gap: 12px; margin-top: 14px; } /* a sheet's stack of .btn */
 
-html, body { margin: 0; height: 100%; height: var(--app-h, 100%); overflow: hidden; overscroll-behavior: none; background: #2a1a10; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+:root { --page-edge: #140c07; } /* Match theme-color and the manifest; Safari also samples the document background. */
+html, body { margin: 0; height: 100%; height: var(--app-h, 100%); overflow: hidden; overscroll-behavior: none; background: var(--page-edge); touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
 body { position: fixed; top: 0; left: 0; width: 100%; } /* Safari (iPad, after the share sheet) could still scroll the page under its bars: nothing to scroll now (see settle() in main.js) */
+/* Only the safe areas and 8 px at each edge meet the browser colour. Keep the scene and selector's own shading intact.
+   Above the loading/orientation covers too; no hit targets or layout changes. The bottom follows the same app gap as the pad. */
+body::before, body::after { content: ''; position: fixed; z-index: 60; left: 0; right: 0; pointer-events: none; }
+body::before { top: 0; height: calc(env(safe-area-inset-top, 0px) + 8px); background: linear-gradient(to bottom, var(--page-edge) calc(env(safe-area-inset-top, 0px) + 1px), #140c0700); }
+body::after { bottom: var(--app-gap, 0px); height: calc(env(safe-area-inset-bottom, 0px) + 8px); background: linear-gradient(to top, var(--page-edge) calc(env(safe-area-inset-bottom, 0px) + 1px), #140c0700); }
 canvas { position: fixed; left: 0; top: 0; width: 100%; height: 100vh; height: 100dvh; height: var(--app-h, 100dvh); } /* --app-h: the real screen height, set by resize() (iOS home-screen app fix); dvh follows Safari's toolbars */
 #hud { touch-action: none; overscroll-behavior: none; } /* the title's drag / pinch steer the camera (src/scene/orbit.js): never a page pan or zoom */
 /* Touch pad: two halves edge to edge, GUA | PA, reading "GUAPA" together. Insets go inside the padding. */
@@ -71,7 +77,7 @@ canvas { position: fixed; left: 0; top: 0; width: 100%; height: 100vh; height: 1
 @media (pointer: coarse) and (orientation: landscape) and (max-height: 519px) { #pad button { height: calc(108px + env(safe-area-inset-bottom)); font-size: 30px; } } /* landscape phones: keep room for the lane and the mulassa */
 [hidden] { display: none !important; }
 /* wrong orientation (phones: portrait only; tablets: landscape only): a cover over everything, the song pauses */
-#rotate { display: none; position: fixed; inset: 0; z-index: 50; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 24px; background: #2a1a10; color: #fff3d6; font: 800 22px/1.3 'Baloo 2', system-ui, sans-serif; text-align: center; }
+#rotate { display: none; position: fixed; inset: 0; z-index: 50; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 24px; background: var(--page-edge); color: #fff3d6; font: 800 22px/1.3 'Baloo 2', system-ui, sans-serif; text-align: center; }
 #rotate svg { width: 64px; height: 64px; fill: none; stroke: #f5c518; stroke-width: 1.6; stroke-linecap: round; animation: rotate-hint 1.6s ease-in-out infinite; }
 body.wrong-orient #rotate { display: flex; }
 body.wrong-orient dialog[open], body.wrong-orient dialog::backdrop { display: none; } /* a modal sheet (the pause) lives in the top layer, over the cover: back when upright */
@@ -258,7 +264,7 @@ kbd { display: inline-block; min-width: 14px; padding: 0 4px; border: 1px solid 
    cream text and a clear gold border; each with its icon in the same slot (padding reserves it on both sides) */
 #results-actions .btn { flex: 1 1 0; max-width: 220px; min-width: 0; min-height: 48px; padding: 6px 16px; font-size: 16px; opacity: 1; box-shadow: 0 4px 14px #000b; }
 #results-actions .btn-secondary { border-color: #f5c518; background: #2a1a10; color: #fff3d6; }
-#results-actions .btn-primary { border-color: #f5c518; background: #f5c518; color: #2a1a10; }
+#results-actions .btn-primary { border-color: #f5c518; background: var(--button-gold-bg); color: #2a1a10; }
 #results-actions .btn > svg { width: 20px; height: 20px; margin-right: 8px; }
 /* narrow: «Publica» is exactly as wide as the pair under it (2 × 220 + the gap), never the whole screen */
 @media (max-width: 639px) { #results-actions { width: min(452px, calc(100vw - 24px - var(--sal) - var(--sar))); } #results-actions > #results-publish { flex-basis: 100%; max-width: none; } }
@@ -282,7 +288,7 @@ kbd { display: inline-block; min-width: 14px; padding: 0 4px; border: 1px solid 
    Without the switch its space goes to the list box (the dialog's height never changes) */
 #board-menu h2 { margin: 0 0 16px; font-size: 28px; }
 #board-menu .board-seg { width: 100%; margin: 0 0 16px; }
-#board-menu .board-seg .btn { min-height: 34px; }
+#board-menu .board-seg .btn { min-height: 44px; } /* a 44 px target like every other control */
 /* «#347 de 2.140 · top 17%»: outside the scroll area so rows cannot bleed below it, On sóc only */
 .board-summary { flex: none; margin: 0; padding: 6px 0; border-top: 1px solid #f5c51866; background: #2a1a10; text-align: center; font-size: 15px; line-height: 1.35; color: #f5c518; }
 .board-summary:empty { display: none; }
@@ -290,8 +296,8 @@ kbd { display: inline-block; min-width: 14px; padding: 0 4px; border: 1px solid 
 .board-more { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 0 12px; }
 .board-more-status { display: flex; align-items: center; gap: 8px; margin: 0; color: #e8d8b899; font-size: 14px; }
 .board-more-status:empty { display: none; }
-.board-more-status .calcot-spin { width: 24px; height: 24px; }
-.board-more .btn { width: auto; min-height: 40px; padding: 0 18px; border-width: 1.5px; font-size: 15px; }
+.board-more-status .mula-spinner { width: 24px; height: 24px; }
+.board-more .btn { width: auto; min-height: 44px; padding: 0 18px; border-width: 1.5px; font-size: 15px; }
 /* the list box: the column headings sit above the scrolling part (so its scrollbar starts under them, not beside them);
    both reserve the same scrollbar gutter, so the columns line up */
 .board-box { position: relative; flex: 1 1 auto; min-height: 96px; display: flex; flex-direction: column; }
@@ -301,9 +307,9 @@ kbd { display: inline-block; min-width: 14px; padding: 0 4px; border: 1px solid 
 .board-state { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 0 12px; }
 .board-state .btn { width: auto; min-width: 220px; }
 #board-menu:has(#board-table:not([hidden])) .board-state { display: none; }
-/* loading: the dancing calçot over its line (board-ui.js keeps it ≥ 1.2 s), then the list fades in */
-#board-status .calcot-spin { display: block; width: 72px; height: 72px; margin: 0 auto 10px; }
-#board-status:has(.calcot-spin) { animation: board-in .25s ease-out both; }
+/* loading: the dancing Mulassa over its line (board-ui.js keeps it ≥ 1.2 s), then the list fades in */
+#board-status .mula-spinner { display: block; width: 72px; height: 72px; margin: 0 auto 10px; }
+#board-status:has(.mula-spinner) { animation: board-in .25s ease-out both; }
 #board-table:not([hidden]) tbody { animation: board-in .35s ease-out both; }
 @keyframes board-in { from { opacity: 0; transform: translateY(6px); } }
 @media (prefers-reduced-motion: reduce) { #board-table tbody, #board-status { animation: none; } }
@@ -382,7 +388,7 @@ kbd { display: inline-block; min-width: 14px; padding: 0 4px; border: 1px solid 
 /* a calm result card, one rhythm (8 px steps): title → what happened (quiet) → where they stand (the green highlight) → D'acord */
 #publish-form[data-view] .publish-end { margin-top: 0; }
 #publish-form[data-view] h2 { margin-bottom: 12px; }
-#publish-wait .calcot-spin { display: block; width: 88px; height: 88px; margin: 4px auto 8px; }
+#publish-wait .mula-spinner { display: block; width: 88px; height: 88px; margin: 4px auto 8px; }
 #publish-form[data-view="done"] #publish-status { margin: 0 0 20px; font-size: 16px; line-height: 1.35; color: #e8d8b8; }
 #publish-form[data-view="done"] #publish-status:has(+ .publish-place:not([hidden])) { margin-bottom: 6px; }
 #publish-form[data-view="done"] .publish-place { margin: 0 0 24px; font-size: 26px; line-height: 1.2; }
@@ -450,7 +456,7 @@ kbd { display: inline-block; min-width: 14px; padding: 0 4px; border: 1px solid 
   .settings-about .about-uaf { margin-top: 2px; line-height: 1.3; } .settings-about .about-version { margin-top: 2px; }
   .about-links a { min-height: 40px; }
 }
-.setting-row .btn { flex: none; width: auto; min-height: 36px; padding: 0 14px; border-width: 1.5px; font-size: 15px; }
+.setting-row .btn { flex: none; width: auto; min-height: 44px; padding: 0 14px; border-width: 1.5px; font-size: 15px; }
 .setting-row .sub { overflow-wrap: anywhere; color: #f5c518; }
 @media (max-width: 400px) { #publish-menu { padding-inline: 16px; } #publish-menu h2 { font-size: 27px; } .publish-hint { font-size: 13px; } } /* the hint and «Publica el teu resultat!» stay one line (the title never shrinks to «Publicat!» with a jump) */
 #privacy-menu .privacy-owner { margin: 12px 0 0; text-align: center; }

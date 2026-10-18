@@ -9,14 +9,14 @@ import { KEEP_NOTICE, VERIFIED, EXPIRED_TEXT, RESERVED_TEXT, untilText } from '.
 class El {
   constructor(id) { Object.assign(this, { id, hidden: false, disabled: false, value: '', readOnly: false, dataset: {}, on: {}, open: false, text: '', attrs: {} }); }
   get textContent() { return this.text; } set textContent(v) { this.text = String(v); this.first = null; this.kids = []; }
-  get classList() { return { toggle: () => {} }; }
+  get classList() { const c = (this.cls ||= new Set()); return { toggle: (k, on = !c.has(k)) => { if (on) c.add(k); else c.delete(k); }, replace: (a, b) => { if (c.delete(a)) c.add(b); }, contains: k => c.has(k) }; }
   append(...c) { (this.kids ||= []).push(...c); }
   setAttribute(k, v) { this.attrs[k] = v; } addEventListener(t, f) { (this.on[t] ||= []).push(f); }
   fire(t, ev = {}) { const e = { preventDefault() { this.prevented = true; }, ...ev }; for (const f of this.on[t] || []) f(e); return e; }
   click() { return this.fire('click'); } focus() {} prepend(c) { this.first = c; }
   showModal() { this.open = true; } close() { if (!this.open) return; this.open = false; this.fire('close'); }
 }
-const ids = ['profile-menu', 'profile-form', 'profile-email', 'profile-code', 'profile-status', 'profile-send', 'profile-cancel', 'profile-lead', 'profile-title',
+const ids = ['profile-menu', 'profile-form', 'profile-email', 'profile-code', 'profile-status', 'profile-send', 'profile-cancel', 'profile-keep', 'profile-lead', 'profile-title',
   'profile-alias', 'profile-alias-field', 'profile-mail-field', 'profile-code-field', 'profile-note', 'settings-profile-row', 'settings-profile-name', 'settings-profile-sub', 'settings-profile-main', 'settings-profile-alt'];
 const tick = () => new Promise(r => setTimeout(r, 0));
 
@@ -117,7 +117,8 @@ const enter = ($, id, v) => { $(id).value = v; $(id).fire('input'); };
 }
 { // delete: confirmed, once; a failure is reported and can be retried
   const s = make({ alias: 'takeshi', session: true }); await s.profile.refresh();
-  s.profile.open('delete'); assert(s.$('profile-title').textContent === 'Esborrar el perfil?' && s.$('profile-send').textContent === 'Sí, esborra-ho tot' && s.focused.at(-1) === 'profile-cancel', 'starts on the safe button');
+  s.profile.open('delete'); assert(s.$('profile-title').textContent === 'Esborrar el perfil?' && s.$('profile-send').textContent === 'Sí, esborra-ho tot' && s.focused.at(-1) === 'profile-keep', 'starts on the safe button');
+  assert(!s.$('profile-keep').hidden && s.$('profile-send').classList.contains('btn-secondary') && !s.$('profile-send').classList.contains('btn-primary'), 'as in the pause: «Cancel·la» is the primary, the irreversible one outlined');
   assert(s.$('profile-mail-field').hidden && s.$('profile-code-field').hidden && s.$('profile-note').hidden);
   s.T.fail = Object.assign(new Error('No s’ha pogut connectar.'), { code: 'unavailable', detail: 'js:Error' });
   s.$('profile-form').fire('submit'); await tick(); await tick();
@@ -126,8 +127,11 @@ const enter = ($, id, v) => { $(id).value = v; $(id).fire('input'); };
   s.T.fail = null; s.T.session = false; s.$('profile-form').fire('submit'); s.$('profile-form').fire('submit'); await tick(); await tick();
   assert.equal(s.calls.filter(c => c[0] === 'delete').length, 2, 'the retry deleted once (a double press is one request)');
   assert(!s.mem.has('alias')); assert(/Perfil esborrat/.test(s.$('profile-status').textContent));
+  assert(s.$('profile-keep').hidden && s.$('profile-send').classList.contains('btn-primary'), 'done: only «Tanca», primary again');
   s.$('profile-menu').close();
   const c = make({ alias: 'takeshi', session: true }); c.profile.open('delete'); c.$('profile-cancel').click(); assert(!c.$('profile-menu').open && c.calls.length === 0, 'the X deletes nothing');
+  c.profile.open('delete'); c.$('profile-keep').click(); assert(!c.$('profile-menu').open && c.calls.length === 0, '«Cancel·la» deletes nothing');
+  c.profile.open('create'); assert(c.$('profile-keep').hidden && c.$('profile-send').classList.contains('btn-primary'), 'other steps keep their one gold button');
 }
 { // sign out (with an e-mail on the profile)
   const s = make({ alias: 'takeshi', session: true, email: 'jugador@example.com' }); await s.profile.refresh();

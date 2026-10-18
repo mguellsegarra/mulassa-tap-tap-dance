@@ -27,7 +27,7 @@ addEventListener('keydown', e => {
     e.preventDefault(); if (e.code !== 'Escape' || !stopControl()) setView(!viewMode); return; // Escape steps back: driving → looking → buttons
   }
   if (viewMode || G.state === 'select') return; // the selector owns its keys; photo walking has already handled its keys
-  if (['INPUT', 'SELECT', 'BUTTON'].includes(e.target.tagName)) return;
+  if (['INPUT', 'SELECT', 'BUTTON'].includes(e.target.tagName) && !e.target.closest?.('#pad')) return; // a pad with keyboard focus still plays
   const dir = KEYS[e.code];
   if (dir || e.code === 'Space') down.keys.add(e.code); // held for MANTÉN notes
   if (dir || e.code === 'Space') e.preventDefault();
@@ -68,20 +68,19 @@ addEventListener('focusin', e => { if (e.target?.isContentEditable || ['INPUT', 
 hud.addEventListener('pointermove', e => {
   if (PHOTO.on && e.pointerType === 'mouse' && PHOTO.mouse) {
     PHOTO.mouse = e.buttons & 3;
-    if (PHOTO.mouse) photoLook(e.movementX || 0, e.movementY || 0, !!(PHOTO.mouse & 2));
+    if (PHOTO.mouse) photoLook(e.movementX || 0, e.movementY || 0);
     return;
   }
   if (PHOTO.on && e.pointerType !== 'mouse' && orbit.ptrs.size === 1) {
     const p = orbit.ptrs.get(e.pointerId);
-    if (p) photoLook(e.clientX - p.x, e.clientY - p.y, false);
+    if (p) photoLook(e.clientX - p.x, e.clientY - p.y);
   }
   const oldZoom=orbit.x[1];
   worldMove(e); orbitMove(orbit, e.pointerId, e.clientX, e.clientY, pnow());
   if(PHOTO.on && orbit.pinch && oldZoom>0)photoZoom(orbit.x[1]/oldZoom); }); // dragging the view
 hud.addEventListener('pointerdown', e => {
   if (PHOTO.on && e.pointerType === 'mouse' && (e.button === 0 || e.button === 2)) {
-    e.preventDefault(); PHOTO.mouse = e.buttons & 3;
-    if (PHOTO.mouse & 2) photoLook(0, 0, true);
+    e.preventDefault(); PHOTO.mouse = e.buttons & 3; // (holding the right button turns her after the view: movePhoto)
     try { hud.setPointerCapture?.(e.pointerId); } catch { /* pointer already released */ }
     return;
   }

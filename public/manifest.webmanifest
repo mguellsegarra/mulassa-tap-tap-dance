@@ -4,8 +4,8 @@
   "start_url": "/",
   "display": "fullscreen",
   "orientation": "any",
-  "background_color": "#2a1a10",
-  "theme_color": "#2a1a10",
+  "background_color": "#140c07",
+  "theme_color": "#140c07",
   "icons": [
     {
       "src": "/apple-touch-icon.png",

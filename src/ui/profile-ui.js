@@ -33,7 +33,7 @@ export function setupProfile({ focusIn, captcha, store, aliasKey, deviceNote = (
   seen = whenSeen, now = () => Date.now() }) {
   const $ = byId(doc);
   const menu = $('profile-menu'), form = $('profile-form'), mailIn = $('profile-email'), aliasIn = $('profile-alias'), codeIn = $('profile-code');
-  const status = $('profile-status'), sendBtn = $('profile-send'), cancelBtn = $('profile-cancel'), lead = $('profile-lead');
+  const status = $('profile-status'), sendBtn = $('profile-send'), cancelBtn = $('profile-cancel'), keepBtn = $('profile-keep'), lead = $('profile-lead');
   const row = $('settings-profile-row'), nameEl = $('settings-profile-name'), sub = $('settings-profile-sub');
   const mainBtn = $('settings-profile-main'), altBtn = $('settings-profile-alt');
   const online = Boolean(service.configured), canLink = online && service.publishingEnabled; // deleting stays possible with publishing off
@@ -50,6 +50,7 @@ export function setupProfile({ focusIn, captcha, store, aliasKey, deviceNote = (
     step = s;
     $('profile-alias-field').hidden = s !== 'alias'; $('profile-mail-field').hidden = s !== 'mail'; $('profile-code-field').hidden = s !== 'code';
     $('profile-note').hidden = s !== 'mail' && s !== 'code';
+    keepBtn.hidden = s !== 'confirm'; sendBtn.classList.toggle('btn-primary', s !== 'confirm'); sendBtn.classList.toggle('btn-secondary', s === 'confirm'); // delete / sign out: «Cancel·la» leads
     setSend(label());
   };
   const idle = () => { busy = false; mailIn.readOnly = codeIn.readOnly = aliasIn.readOnly = false; setSend(label()); };
@@ -160,14 +161,15 @@ export function setupProfile({ focusIn, captcha, store, aliasKey, deviceNote = (
       show('confirm');
     }
     menu.showModal();
-    focusIn(menu, step === 'alias' ? 'profile-alias' : step === 'mail' ? 'profile-email' : 'profile-cancel'); // a confirmation starts on the safe button
+    focusIn(menu, step === 'alias' ? 'profile-alias' : step === 'mail' ? 'profile-email' : 'profile-keep'); // a confirmation starts on the safe button
   }
 
   mailIn.addEventListener('input', () => { const c = cleanEmail(mailIn.value); if (c !== mailIn.value) mailIn.value = c; });
   codeIn.addEventListener('input', () => { codeIn.value = codeIn.value.replace(/\D/g, '').slice(0, 6); });
   form.addEventListener('submit', e => { e.preventDefault(); send(); });
   function finish(text) { // the result for a beat, then back
-    step = 'done'; busy = false; cancelBtn.hidden = true;
+    step = 'done'; busy = false; cancelBtn.hidden = keepBtn.hidden = true;
+    sendBtn.classList.replace('btn-secondary', 'btn-primary');
     $('profile-alias-field').hidden = $('profile-mail-field').hidden = $('profile-code-field').hidden = $('profile-note').hidden = true;
     lead.textContent = ''; setSend('Tanca'); setStatus(text, true);
     closeTimer = setTimeout(() => { if (menu.open) menu.close(); }, 2000);
@@ -236,6 +238,7 @@ export function setupProfile({ focusIn, captcha, store, aliasKey, deviceNote = (
     }
   }
   cancelBtn.addEventListener('click', () => { if (!busy) menu.close(); });
+  keepBtn.addEventListener('click', () => { if (!busy) menu.close(); });
   menu.addEventListener('cancel', e => { if (busy) e.preventDefault(); });
   menu.addEventListener('close', () => {
     req++; busy = false; clearTimeout(closeTimer); captcha?.cancel(); cancelBtn.hidden = false;

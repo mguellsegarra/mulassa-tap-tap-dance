@@ -36,13 +36,13 @@
 #share-preview.ready { opacity: 1; }
 @media (prefers-reduced-motion: reduce) { .share-frame::before { animation: none; } #share-preview, .share-frame::before { transition: none; } }
 .board-seg, .share-seg { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; width: min(100%, 260px); margin: 0 auto; padding: 3px; box-sizing: border-box; border: 1.5px solid #e8d8b880; border-radius: var(--button-radius); background: #140c07; }
-.board-seg .btn, .share-seg .btn { min-height: 38px; padding: 2px 8px; border: 0; border-radius: 9px; background: none; color: #e8d8b8; font-size: 16px; }
+.board-seg .btn, .share-seg .btn { min-height: 44px; padding: 2px 8px; border: 0; border-radius: 9px; background: none; color: #e8d8b8; font-size: 16px; }
 .board-seg .btn[aria-pressed="true"], .share-seg .btn[aria-pressed="true"] { background: #fff3d6; color: #2a1a10; } /* cream = what is selected; gold fill stays the one primary */
 .share-seg { width: 100%; margin-top: calc(var(--share-gap) - 8px); } /* as wide as the switch and the button: the edges line up */
 .share-switch { min-height: 40px; padding: 4px 8px 4px 14px; font-size: 16px; color: #e8d8b8; }
 #share-image { min-height: 52px; margin-top: calc(var(--share-gap) - 4px); font-size: 19px; }
 /* both states spelled out: iOS Safari's own :disabled look (faded) must never linger on the ready button */
-#share-image:enabled { opacity: 1; background: #f5c518; border-color: #f5c518; color: #2a1a10; -webkit-text-fill-color: #2a1a10; }
+#share-image:enabled { opacity: 1; background: var(--button-gold-bg); border-color: #f5c518; color: #2a1a10; -webkit-text-fill-color: #2a1a10; }
 #share-image:disabled { opacity: 1; background: #f5c51833; border-color: #f5c51866; color: #e8d8b8; -webkit-text-fill-color: #e8d8b8; cursor: progress; filter: none; transform: none; } /* «Preparant la imatge…» */
 #share-image[data-mode="share"] .ico-save, #share-image:not([data-mode="share"]) .ico-share { display: none; }
 #share-menu #share-status { margin: 0; }

@@ -1,5 +1,5 @@
 // The mulassa's motion: damped-spring accents on top of the base choreography (dance.js), heading, stumbles and holds.
-import { PHOTO, photoBody, setPhotoControl } from '../game/photo-control.js';
+import { PHOTO, PHOTO_RUN, photoBody, setPhotoControl } from '../game/photo-control.js';
 import { tickPhoto, endPhoto } from './photo-motion.js';
 import { CALM } from '../core/env.js';
 import * as THREE from 'three';
@@ -11,7 +11,7 @@ import { newDracPose, dracPose, dracPractice } from '../game/dance-drac.js';
 import { poseDrac } from './drac-motion.js';
 import { DRAC_SCALE } from './models/drac.js';
 import { newWalker, resetWalker, demoStep, turn, manualDracStep, resumeWalker } from './drac-demo.js';
-import { G, clock, isDown } from '../game/state.js';
+import { G, clock, isDown, chip } from '../game/state.js';
 import { smooth, pulse, easeIn, hold } from '../core/anim.js';
 
 export const PIVOT = 1.3; // metres from the body centre to the front pivot
@@ -28,7 +28,9 @@ function stepSprings(dt) {
   }
 }
 export const M = { pivot: new THREE.Vector2(0, PIVOT), pos: new THREE.Vector2(0, 0), yaw: 0, yawVel: 0, missT: -9, biteT: -9, peekT: -9, air: 0, airV: 0, dancing: false, danceBeat: 0, vigor: 1 };
-let photoGait = 1, photoLastId = null;
+let photoGait = 1, photoLastId = null, photoStride = 0, photoGround = 1, photoRear = 0, photoKick = 0;
+// Q held: she rears up like a horse (front up, on her rear legs); E held: a kick (rear up, on her front legs). rad.
+export const PHOTO_REAR = { front: 0.5, rear: 0.45, legZ: 1.05, ease: 0.15 };
 let animatedFigureId = selectedFigure.id;
 const DRAC_POSE = newDracPose();
 const POSE = newPose(); // the base choreography's pose this frame (dance.js), reused
@@ -106,7 +108,7 @@ export function animMula(dt, beat, live = 1) {
     tickPhoto(dt, M, PAIR, PIVOT);
     manualMula ||= PHOTO.pair && PHOTO.yielding && PHOTO.id === 'drac-valls';
     if (manualMula) { S.yaw.x = S.yaw.t = M.yaw; S.yaw.v = 0; }
-    if (manualMula && PHOTO.action) {
+    if (manualMula && PHOTO.action && PHOTO.id === 'mulassa-valls') { // (a yielding Mulassa never takes the Drac's jump)
       if (M.air === 0) M.airV = CALM.matches ? 1.4 : 4.8;
       PHOTO.action = false;
     }
@@ -182,26 +184,37 @@ export function animMula(dt, beat, live = 1) {
   if (dancing && M.air > CAP.air) { M.air = CAP.air; M.airV = Math.min(0, M.airV); }
   if (M.air === 0 && M.airV < -2) { S.squash.v -= 4; trauma = Math.min(1, trauma + 0.35); S.pitch.v += 1; }
   if (M.air === 0) M.airV = 0;
+  if (manualMula && PHOTO.id === 'mulassa-valls') PHOTO.air = M.air > 0; // airborne: she keeps her momentum (movePhoto)
   // groove on every beat of the music, even without pressing anything; in play the base pose owns the body's sway,
   // lift and pitch (a miss weakens it for a moment), the groove only the head, ears and legs
   const photoGaitTarget = manualMula ? (CALM.matches ? 0 : Math.min(1, Math.hypot(PHOTO.mula.vx, PHOTO.mula.vz))) : 1;
-  photoGait += (photoGaitTarget - photoGait) * (1 - Math.exp(-dt / 0.18));
-  if (!dancing) live *= photoGait;
+  if (dt > 0) photoGait += (photoGaitTarget - photoGait) * (1 - Math.exp(-dt / 0.18));
+  // driven at speed she gallops: legs on her own stride (not the beat), a hop and a rocking-horse pitch, flapping ears
+  if (dt > 0) photoGround += ((M.air > 0 ? 0 : 1) - photoGround) * (1 - Math.exp(-dt / 0.06)); // in the air the gallop stops (its hops on the flight were a judder)
+  if (!dancing) live *= photoGait * (manualMula ? photoGround : 1); // fade the music groove and stepping out too
+  const photoRun = manualMula && !CALM.matches ? Math.min(1, Math.hypot(PHOTO.mula.vx, PHOTO.mula.vz) / PHOTO_RUN.run) * photoGround : 0;
+  if (!manualMula || M.air === 0) photoStride = (photoStride + dt * 2 * Math.PI * (1.4 + photoRun * 3.2)) % (2 * Math.PI);
+  const gallop = Math.sin(photoStride), hop = Math.abs(gallop) * 0.32 * photoRun;
+  const driving = manualMula && PHOTO.id === 'mulassa-valls', reduce = CALM.matches ? 0.4 : 1, poseE = dt > 0 ? 1 - Math.exp(-dt / PHOTO_REAR.ease) : 0; // (a NaN dt would stick for good)
+  photoRear += ((driving && PHOTO.keys.has('KeyQ') ? reduce : 0) - photoRear) * poseE;
+  photoKick += ((driving && PHOTO.keys.has('KeyE') ? reduce : 0) - photoKick) * poseE;
+  const rearPitch = -PHOTO_REAR.front * photoRear + PHOTO_REAR.rear * photoKick; // + = rear up (the model faces +z)
+  const rearLift = PHOTO_REAR.legZ * Math.abs(Math.sin(rearPitch)); // pivot on the legs that stay down
   const bp = beat * Math.PI, amp = (dancing ? POSE.drive : playful ? 1 : 0.6) * live, base = dancing ? (1 - col) * (1 - 0.5 * miss) : 0;
   const bounce = dancing ? POSE.lift * base : Math.abs(Math.sin(bp)) * 0.1 * amp;
   const sway = dancing ? POSE.roll * base : Math.sin(bp) * 0.07 * amp;
   const buzz = dancing ? POSE.shake * base : 0; // the landing of each jump shakes the whole figure
-  poseMulaBody(mula, M.pos.x, col ? -0.42 * col : bounce + M.air, M.pos.y, M.yaw,
+  poseMulaBody(mula, M.pos.x, col ? -0.42 * col : bounce + M.air + hop + rearLift, M.pos.y, M.yaw,
     col * 0.25 + S.roll.x + sway + buzz + Math.sin(clock * 35) * 0.06 * miss,
-    S.pitch.x + (dancing ? POSE.pitch * base + buzz * 0.6 : Math.sin(bp * 2) * 0.02 * amp));
+    S.pitch.x + rearPitch + gallop * 0.08 * photoRun + (dancing ? POSE.pitch * base + buzz * 0.6 : Math.sin(bp * 2) * 0.02 * amp));
   if (dancing) trauma = Math.max(trauma, Math.min(0.5, Math.abs(buzz) * 14));
   const sq = 1 + S.squash.x * 0.08 + breath * 0.012 - 0.03 * miss;
   mula.body.scale.set(1 / Math.sqrt(sq), sq, 1 / Math.sqrt(sq));
-  mula.neck.rotation.x = 0.15 + breath * 0.03 + col * 1.2 + S.neck.x + Math.sin(bp * 2) * 0.08 * amp;
+  mula.neck.rotation.x = 0.15 - 0.35 * photoRear + 0.2 * photoKick + breath * 0.03 + col * 1.2 + S.neck.x + Math.sin(bp * 2) * 0.08 * amp;
   mula.neck.rotation.y = Math.sin(clock * 28) * 0.3 * miss + S.neckYaw.x + Math.sin(bp) * 0.12 * amp;
   mula.head.rotation.x = 0.2 + S.neck.x * 0.4 + Math.sin(bp * 2 + 1) * 0.08 * amp;
   mula.jaw.rotation.x = 0.55 * pulse(M.biteT, 0.3) + col * 0.6 + Math.max(0, Math.sin(bp * 2)) * 0.12 * amp;
-  mula.ears.forEach((ear, i) => (ear.rotation.x = -0.25 + Math.sin(bp * 2 + i) * 0.2 * live + (miss + col) * 0.9 - S.neck.v * 0.03));
+  mula.ears.forEach((ear, i) => (ear.rotation.x = -0.25 + Math.sin(bp * 2 + i) * 0.2 * live + (miss + col) * 0.9 - S.neck.v * 0.03 + Math.abs(Math.sin(photoStride + i)) * 0.7 * photoRun));
   // the tail trails its targets like hair (no frame-to-frame snaps); positive x swings it out behind, never into the body
   const ease = 1 - Math.exp(-dt * 7), tail = mula.tail.rotation, clampT = (v, m) => Math.max(-m, Math.min(m, v));
   tail.z += (clampT(S.tail.x * 0.25 + Math.sin(clock * 7) * 0.15 - M.yawVel * 0.25, 1.2) - tail.z) * ease;
@@ -215,8 +228,10 @@ export function animMula(dt, beat, live = 1) {
     l.visible = col < 0.5;
     const ph = (i % 2) * Math.PI + ((i >> 2) & 1) * Math.PI / 2;
     const rear = i >= 4, extra = rear ? Math.min(0.15, Math.abs(M.yawVel) * 0.06) : 0; // the rear legs run round the compass
-    l.position.y = Math.max(0, Math.sin(bp * (stepping ? 2 : 1) + ph)) * ((stepping ? 0.16 : 0.06) + extra) * live;
+    l.position.y = manualMula ? Math.max(0, Math.sin(photoStride + ph)) * (0.16 + 0.26 * photoRun) * live
+      : Math.max(0, Math.sin(bp * (stepping ? 2 : 1) + ph)) * ((stepping ? 0.16 : 0.06) + extra) * live;
     if (dancing) l.position.y += Math.max(0, bounce + M.air - l.position.z * Math.sin(mula.body.rotation.x)) - bounce - M.air; // the rear legs stay planted, the front ones follow the raised front
+    if (rearLift) l.position.y += Math.max(0, rearLift - l.position.z * Math.sin(rearPitch)) - rearLift; // Q/E: the end that stays down keeps its feet on the ground
   });
 }
 // MANTÉN held right: a restrained sustained gesture (a lean to the note's side, head up) that the springs release
@@ -236,9 +251,9 @@ PAIR.w = newWalker(PAIR.x, PAIR.z, FRONT, 1.3);
 PAIR.hx = -Math.cos(CAM_AZ) * 1.6; PAIR.hz = Math.sin(CAM_AZ) * 1.6; // her own wandering middle: to the shot's left
 const SOLO = newWalker(); // the Drac picked on the selector
 let soloOn = false;
-function placeLife(x, z, yaw) { // the rig's parent: where it walks and which way it faces (0, 0, 0 in the song)
+function placeLife(x, z, yaw, y = 0) { // the rig's parent: where it walks and which way it faces (0, 0, 0 in the song)
   const life = drac.root.parent;
-  life.position.set(x, 0, z); life.rotation.set(0, yaw, 0); // quaternion restores may leave x/z rotated
+  life.position.set(x, y, z); life.rotation.set(0, yaw, 0); // quaternion restores may leave x/z rotated
   life.scale.setScalar(DRAC_SCALE);
 }
 function keepClear() {
@@ -249,23 +264,37 @@ function keepClear() {
   }
   M.pos.set(M.pivot.x - sx * PIVOT, M.pivot.y - cz * PIVOT);
 }
+// Space while driving the Drac: the whole rig (shoes too) jumps like her, breathing fire, and the plaça booms and shakes as it lands.
+const DRAC_JUMP = { air: 0, v: 0 };
+function dracJump(dt) {
+  if (PHOTO.action) { if (DRAC_JUMP.air === 0) { DRAC_JUMP.v = CALM.matches ? 1.4 : 4.8; PHOTO.drac.fire = 1.4; } PHOTO.action = false; } // a flamarada as it takes off
+  DRAC_JUMP.v -= 14 * dt; DRAC_JUMP.air = Math.max(0, DRAC_JUMP.air + DRAC_JUMP.v * dt); PHOTO.air = DRAC_JUMP.air > 0;
+  if (DRAC_JUMP.air === 0) {
+    if (DRAC_JUMP.v < -2) { chip?.sfx('gran'); if (!CALM.matches) trauma = Math.min(1, trauma + 0.9); } // a big taiko DON
+    DRAC_JUMP.v = 0;
+  }
+  return DRAC_JUMP.air;
+}
 function animPair(dt, beat) {
   PAIR.k = G.state === 'splash' ? 1 : 0;
   drac.root.visible = PAIR.k > 0;
   if (!PAIR.k) return;
   const w = PAIR.w;
-  if (PHOTO.on && PHOTO.pair && (PHOTO.id === 'drac-valls' || PHOTO.yielding)) manualDracStep(w, DRAC_POSE, dt, beat, PHOTO.drac, DRAC_SCALE, CALM.matches);
+  PHOTO.drac.roar = PHOTO.on && PHOTO.id === 'drac-valls' && PHOTO.keys.has('KeyQ'); // Q: heads up, jaws open, wings out
+  const manual = PHOTO.on && PHOTO.pair && (PHOTO.id === 'drac-valls' || PHOTO.yielding);
+  if (manual) manualDracStep(w, DRAC_POSE, dt, beat, PHOTO.drac, DRAC_SCALE, CALM.matches);
   else { if (w.manual > 0) resumeWalker(w, beat); demoStep(w, DRAC_POSE, dt, beat, M.pos, DRAC_SCALE); PAIR.x = w.x; PAIR.z = w.z; }
-  placeLife(w.x, w.z, w.face);
+  placeLife(w.x, w.z, w.face, PHOTO.on && PHOTO.id === 'drac-valls' ? dracJump(dt) : (DRAC_JUMP.air = 0));
   poseDrac(drac, DRAC_POSE, 0, w.feetAt);
 }
 
 function animPlayableDrac(dt, beat, live) {
   if (G.state === 'select' || G.state === 'title') { // picked on the selector: it wanders and shows off, from where it stands
     if (!soloOn) { resetWalker(SOLO, M.pos.x, M.pos.y, M.yaw); SOLO.hx = SOLO.hz = 0; soloOn = true; }
+    PHOTO.drac.roar = PHOTO.on && PHOTO.id === 'drac-valls' && PHOTO.keys.has('KeyQ');
     if (PHOTO.on) manualDracStep(SOLO, DRAC_POSE, dt, beat, PHOTO.drac, DRAC_SCALE, CALM.matches);
     else demoStep(SOLO, DRAC_POSE, dt, beat, null, DRAC_SCALE);
-    placeLife(SOLO.x, SOLO.z, SOLO.face);
+    placeLife(SOLO.x, SOLO.z, SOLO.face, PHOTO.on && PHOTO.id === 'drac-valls' ? dracJump(dt) : (DRAC_JUMP.air = 0));
     poseDrac(drac, DRAC_POSE, 0, SOLO.feetAt);
     const prev = M.yaw;
     M.yaw = SOLO.face; M.yawVel = dt > 0 ? turn(M.yaw, prev) / dt : 0;

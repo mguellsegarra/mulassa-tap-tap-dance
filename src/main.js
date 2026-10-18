@@ -13,6 +13,7 @@ import { blocks, smoothDamp } from './scene/framing.js';
 import { ORBIT, orbitCancel, orbitStep, roomAlong } from './scene/orbit.js';
 import { rnd } from './scene/models.js';
 import { setupCamEdit } from './dev/cam-edit.js';
+import { setupSizesEdit } from './dev/sizes-edit.js';
 import { Q, COARSE, pageActive, beatAt, BEAT, offsetMs, playFrom, FINALE_T, AUTOPLAY, CALM, FINAL, STARS } from './core/env.js';
 import { pace, RAWCLOCK, viewClock } from './core/timing.js';
 import { initDrac, mula, drac, qualityLevel, renderProfile, softwareGl, GPU, renderer, camera, CAM_AZ, FRONT, plaza, cameraTarget, camFocus, camFocusTarget, camShift, camXYZ, focusXYZ, scene, setQualityLevel, setCamShift, renderScreen } from './scene/stage.js';
@@ -80,6 +81,7 @@ let audioStallT = null;
 // ?cam: the camera editor over the game (src/dev/cam-edit.js): choose a view by eye, copy its numbers, the per-device camera is fitted from them
 const CAMED = Q.has('cam') ? setupCamEdit({ hud, camera, active: () => G.state === 'play' && !G.paused, info: () => ({
   cw: innerWidth, ch: HH * K, dpr: devicePixelRatio, K, practice: !!G.practice, touch: COARSE.matches, laneBottom: lane().bottom * K, padTop: playBottom() * K }) }) : null;
+if (Q.has('sizes')) setupSizesEdit(); // ?sizes: each selector figure's height beside the gegants, set by eye (src/dev/sizes-edit.js)
 function frame(now) {
   requestAnimationFrame(frame);
   if (innerWidth !== sizedW || devicePixelRatio !== sizedDpr || Math.abs(HH * K - appHeight()) > 1) resize();

@@ -153,6 +153,7 @@ by everyone below it as `sheets.board`… (`ui/sheets.js`), so no import cycle i
 - All copy in Catalan, no English ("Practice", "OK", "Settings"…). Watch false friends and apostrophes (’).
 - Tap verbs: «Toca» for the touch screen, «Prem» for keys, «Pica» only for GLOBUS mashing; split by device (`.touch`/`.keys`,
   `COARSE`) or use a neutral verb («Marca»). Links in running text (mailtos): cream `#fff3d6`, underlined (never GUA orange).
+- Desktop selector navigation uses one 120×44 px brown capsule with a gold outline and cream arrows, centred above the strip, without a counter. It stays hidden until the opening layout has been measured. Its halves stay in place at the ends. With a fine pointer, the cards and navigation keep a fixed height across playable and pending selections, reserving the primary action row; touch keeps swipe navigation and its existing dock movement.
 - **Colour roles** (one job each): solid gold `#f5c518` = the one primary action of a view; gold outline = every other button,
   round icon buttons and the sheets' frame; solid cream `#fff3d6` with dark text = what is selected (town pills, level and
   view segments; a cream ring on the selected card), unselected choices get a neutral `#e8d8b880` edge; gold as text only for
@@ -187,12 +188,13 @@ by everyone below it as `sheets.board`… (`ui/sheets.js`), so no import cycle i
   at the bottom. Nothing overlaps the lane or the HUD.
 - Respect safe areas (notch, home indicator: `env(safe-area-inset-*)`, `SAFE`), iOS standalone full height (`--app-h`).
 - No emoji-dependent icons: draw them (SVG / canvas). `color-scheme: light only`.
-- **Loading = the spinning calçot** (`src/ui/loader.js`, CSS next to `#loader` in index.html). `#loader.page` is plain
+- **Loading = the animated Mulassa (running portadors, scrolling ground)** (`src/ui/loader.js`, CSS next to `#loader` in index.html). `#loader.page` is plain
   HTML/CSS that paints before the bundle ("Avisant a la brigada…"), lifted by the first drawn frame (`loader.ready()`,
   with a 12 s safety timeout); later waits use `loader.wait(text)` → `loader.done(handle)`: a flat card (gold strip),
   shown only past 300 ms, `role="status"`, `pointer-events: none`. For a sheet's own "Carregant…" line use
-  `calcotSpinner()` (a `<span class="calcot-spin">`, 1em, spins itself; reduced motion = a pulse). The calçot SVG
-  lives twice, identical (`CALCOT_SVG` and index.html; tests/loader.mjs checks): swap both together. Copy is short
+  `mulaSpinner()` (a `<span class="mula-spinner">`, 1em); pass `{ mini: true }` as its second argument for the head at small sizes. Reduced motion holds the rest pose. The full SVG
+  lives twice, identical (`MULASSA_SVG` and index.html; tests/loader.mjs checks): swap both together. The error card reuses it in a static sad pose.
+  Never delay readiness for the animation or loading jokes. Copy is short
   Catalan with "…". Audio (suspended context) downloads/decodes while the shaders compile, before the first frame, never on the tap;
   the cover lifts only once the queued `warmups` are painted (one a frame under it, at most `COVER_WARM` 1.5 s more).
 - Character selection: splash unlock and `toTitle()` enter `G.state = 'select'` directly, over the same plaça and menu loop. Town pills never filter: one scrolls the strip to centre its town's first figure and selects it (no Tots pill); the active pill is always the selected figure's town (it doesn't follow the strip's scroll). Pending real figures retain their name/entity and show inline information in the measured central band, without a dialog. Only Mulassa and Drac can play; pending selection hides difficulty, play, records and instructions. Figure selection and difficulty are two steps in the same fixed-height dock: "TRIA DIFICULTAT" opens the level choices and "A BALLAR!"; "Canvia de figura" or Escape returns to the cards. Pending figures cannot enter the difficulty step and show no continue button. The action row sits above the card strip, right-aligned on desktop; all cards use identical grid columns, joined image/text panels and a fixed caption height. The host hides both stage models while selection is pending, retaining the last playable song/model state. The info block carries town/comarca, name, song, record/rank/leader tiles and "Com es juga" underneath. The bottom strip has town banners, figure cards, remembered per-figure difficulty and "A BALLAR!". First runs enter practice through `choose`; `__dbg.choose` keeps direct entry. The inline pending card opens the existing feedback flow with `aviatDraft(town)` or offers mail. Arrows rove visible cards; there is no back-to-title loop. `setupSelect` exposes `figure`, calls `onSelect(figure)` only for playable figures when opened or changed, and `onPlay(level, figure)`; sheets-setup wires the callback to `setSelectedFigure` and passes figure plus level on play. Flow reads the active song adapter, stores records per figure and stamps run/share identity. Leaderboard remains Mulassa-only; Drac hides the public rank/leader tiles.
@@ -209,7 +211,7 @@ by everyone below it as `sheets.board`… (`ui/sheets.js`), so no import cycle i
 - Publish prompt («Publica el teu resultat!», `#publish-menu`, board-ui.js): opens by itself once per eligible run; texts centred. On that
   auto opening only, «Ara no» (a decline, ×`MAX_DECLINES` stops it) and quiet «No m’ho tornis a recordar» (`OPTOUT_KEY`, permanent) both
   open Comparteix next. ⚙ Configuració «Proposta de publicar» (`#settings-prompt-row`) shows only while `promptsOn()` is false, with an «Activa» button that clears both.
-- Two-way views (Story · Quadrat, Tots · On soc — both tabs for anyone with a nickname, never hidden after open, so nothing shifts; it opens on On soc only while the last answer gave that nickname a row (`ROW_KEY`), else on Tots): a segmented group (`.share-seg` / `.board-seg`, same rules) of
+- Two-way views (Història (9:16) · Publicació (4:5), Tots · On soc — both tabs for anyone with a nickname, never hidden after open, so nothing shifts; it opens on On soc only while the last answer gave that nickname a row (`ROW_KEY`), else on Tots): a segmented group (`.share-seg` / `.board-seg`, same rules) of
   `.btn.btn-secondary` with `aria-pressed`; the pressed one is cream.
 - Cloudflare Turnstile (`src/services/captcha.js`): one silent check for every player after their first run (its results, or the title
   after leaving it; skipped under webdriver): never at startup, its iframe shares the main thread on iPhone Safari;
@@ -257,7 +259,7 @@ by everyone below it as `sheets.board`… (`ui/sheets.js`), so no import cycle i
   with reduced motion. CPU: distance/side are cached in `pickNear`; `PROFILES[].ripple` = rows that take part (high all,
   medium row 0 + first ring, low first ring only, minimal none). Costs ~1% of `animCrowd`.
 - **Shove, growth**: a GUAPA makes the front row and first ring want 0.9 m more room for 0.5 s (`SHOVE`, the
-  making-way below does the rest). Nobody is ever knocked over (rejected: people falling to the floor). After 8 judged notes about 40% of the back rows (`PRES`, `p.thr`) are only there while
+  making-way below does the rest). Nobody is ever knocked over in the game (rejected: people falling to the floor); only photo mode's culada (R) knocks the near ones flat for a moment (Marc, 2026-10-18). After 8 judged notes about 40% of the back rows (`PRES`, `p.thr`) are only there while
   ENCERTS is above their threshold (scale 0, eased; never front row, menus, practice, finale).
 - **Making way** (`RING`): the front row stands at `RING.front` (5.4 m) and everyone keeps `RING.clear` (3.8 m, + row,
   jitter) from her body box / swept rear, so her turning ends reach them and they step back (eased, ≤ `RING.flee`

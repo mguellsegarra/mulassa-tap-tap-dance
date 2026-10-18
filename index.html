@@ -9,7 +9,7 @@
 <link rel="alternate" type="text/markdown" href="/index.md">
 <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebSite","@id":"https://mulassa.cat/#site","name":"Mulassa Tap Tap Dance","url":"https://mulassa.cat/","inLanguage":"ca","publisher":{"@id":"https://mulassa.cat/#autor"}},{"@type":"Person","@id":"https://mulassa.cat/#autor","name":"Marc Güell Segarra","url":"https://ondori.dev","sameAs":["https://ondori.dev","https://github.com/mguellsegarra","https://github.com/mguellsegarra/mulassa-tap-tap-dance"],"contactPoint":{"@type":"ContactPoint","contactType":"general","email":"holi@mulassa.cat"}},{"@type":"VideoGame","name":"Mulassa Tap Tap Dance","url":"https://mulassa.cat/","description":"Joc de ritme en català: balla la Mulassa de Valls al ritme tocant GUA i PA.","inLanguage":"ca","genre":"Joc de ritme","applicationCategory":"GameApplication","operatingSystem":"Qualsevol navegador","isAccessibleForFree":true,"image":"https://mulassa.cat/og.jpg","author":{"@id":"https://mulassa.cat/#autor"},"isPartOf":{"@id":"https://mulassa.cat/#site"}}]}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<meta name="theme-color" content="#2a1a10">
+<meta name="theme-color" content="#140c07">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -53,33 +53,58 @@
 <link rel="stylesheet" href="/src/styles/base.css">
 <link rel="stylesheet" href="/src/styles/share.css">
 <style>
-  /* #loader (src/ui/loader.js): a spinning calçot. .page = the first paint's cover, before any JS: it fades out once the
-     first frame is drawn, and its calçot only fades in after 300 ms (a quick load shows no spinner). Without .page
-     it's a flat card over the game (a status, not a button: gold strip, no outline). Never takes a tap. */
+  /* #loader paints the Mulassa before the bundle loads. The initial cover leaves as soon as the game is ready;
+     later waits use a small flat card and only show after 300 ms. Artwork and animation stay inline. */
   #loader { position: fixed; z-index: 40; inset: 0; display: flex; align-items: center; justify-content: center; box-sizing: border-box; padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); pointer-events: none; color: #fff3d6; font: 800 18px/1.2 'Baloo 2', system-ui, sans-serif; transition: opacity .25s ease-out; }
-  #loader.page { background: #2a1a10; animation: loader-give-up .3s 30s forwards; } /* no JS at all: never a cover for good */
+  #loader.page { background: var(--page-edge, #140c07); animation: loader-give-up .3s 30s forwards; } /* no JS at all: never a cover for good */
   #loader.out { opacity: 0; }
   .loader-box { font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: 12px; padding: 10px 18px 10px 14px; border-left: 3px solid #f5c518; border-radius: 4px; background: #2a1a10e8; animation: loader-in .15s ease-out both; }
-  #loader.page .loader-box { flex-direction: column; gap: 14px; box-sizing: border-box; max-width: min(360px, 100vw - 32px); padding: 24px; border: 0; border-radius: 20px; background: #0000008c; -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px); font-size: 20px; animation-duration: .3s; animation-delay: 0s; } /* a card over the drifting pattern */ /* the page calçot shows at once: it always stays ≥ 4 s */
-  .calcot-spin { display: inline-block; flex: none; width: 1em; height: 1em; animation: none ease-in-out infinite; transform-origin: 50% 92%; will-change: transform; } /* dances on its feet: sway + hop */
-  .calcot-spin img, .calcot-spin svg { display: block; width: 100%; height: 100%; overflow: visible; }
-  .calcot-ring{width:100%;height:100%;display:block;overflow:visible}
-  .calcot-ring .d{fill:#e8552a;stroke:#2a1a10;stroke-width:1.4;stroke-linejoin:round}
-  .calcot-ring .ring{transform-box:view-box;transform-origin:50% 50%;animation:romesco-ring 1.2s linear infinite}
-  .calcot-ring .c{transform-box:view-box;transform-origin:50% 50%;animation:calcot-bob 1.2s ease-in-out infinite}
-  @keyframes romesco-ring{to{transform:rotate(360deg)}}
-  @keyframes calcot-bob{50%{transform:translateY(-2px)}}
-  @media (prefers-reduced-motion:reduce){.calcot-ring .ring,.calcot-ring .c{animation:none}}
-  .loader-box .calcot-spin { width: 56px; height: 56px; }
-  #loader.page .calcot-spin { width: 150px; height: 150px; }
-  #loader.page #loader-text { height: 2.6em; width: min(300px, 100vw - 80px); text-align: center; display: flex; align-items: center; justify-content: center; } /* always 2 lines tall (a joke that wraps, or the font swap, never moves the calçot); a one-line joke sits in the middle of that space */
-  /* a festive little dance instead of a flat card flipping: sway side to side, hop on the beat with squash & stretch */
-  @keyframes calcot-spin { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-3%) rotate(0deg); } } /* the sprite twirls itself: just a soft bob */
-  @keyframes calcot-pulse { 50% { transform: scale(.88); opacity: .6; } }
+  #loader.page .loader-box { flex-direction: column; gap: 14px; box-sizing: border-box; max-width: min(360px, 100vw - 32px); padding: 24px; border: 0; border-radius: 20px; background: #0000008c; -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px); font-size: 20px; animation-duration: .3s; animation-delay: 0s; } /* a card over the drifting pattern */ /* the character paints immediately */
+  .mula-spinner { display: inline-block; flex: none; width: 1em; height: 1em; }
+  .mula-load{display:block;width:100%;height:100%;overflow:visible}.mula-load *{transform-box:view-box}
+  /* One stride is .48 s: opposing legs, bent knees, heels up; the ground travels left under the planted feet. */
+  .mula-load .ml-leg{transform-origin:0 0;animation:ml-stride .48s linear infinite;animation-delay:var(--step,0s)}
+  .mula-load .ml-shin{transform-origin:0 0;animation:ml-knee .48s linear infinite;animation-delay:var(--step,0s)}
+  .ml-bob{transform-origin:100px 118px;animation:ml-bob .24s ease-in-out infinite}
+  .ml-tail{transform-origin:42px 74px;animation:ml-tail .48s ease-in-out infinite}
+  .ml-neck{transform-origin:148px 72px;animation:ml-neck .48s ease-in-out infinite}
+  .ml-nod{transform-origin:148px 72px;animation:ml-nod .24s ease-in-out infinite;animation-delay:-.06s}
+  .ml-jaw{transform-origin:159px 38px;animation:ml-jaw .48s ease-in-out infinite}
+  .ml-ear{transform-origin:151px 18px;animation:ml-ear .48s ease-in-out infinite;animation-delay:-.08s}.ml-ear.ml-e2{transform-origin:158px 18px;animation-delay:-.16s}
+  .ml-clac{opacity:0;animation:ml-clac 1.92s linear infinite}
+  .mula-load .ml-ground{overflow:hidden}
+  .ml-road{animation:ml-road .32s linear infinite}
+  .ml-dust{opacity:0;transform-origin:0 0;animation:ml-dust .48s linear infinite}
+  .ml-sweat{opacity:0;animation:ml-sweat .96s ease-out infinite}
+  .mula-load.mini .ml-neck{animation-duration:.96s}
+  .mula-load.mini .ml-nod{animation:none}
+  .mula-load.mini .ml-sweat{display:none}
+  @keyframes ml-stride{0%,100%{transform:translateY(1px) rotate(-30deg)}12%{transform:translateY(-2px) rotate(-4deg)}25%{transform:translateY(-1px) rotate(25deg)}45%{transform:rotate(50deg)}60%{transform:translateY(-2px) rotate(10deg)}78%{transform:translateY(-3px) rotate(-45deg)}90%{transform:rotate(-48deg)}}
+  @keyframes ml-knee{0%,100%{transform:rotate(35deg)}12%{transform:rotate(23deg)}25%{transform:rotate(10deg)}45%{transform:rotate(85deg)}60%{transform:rotate(110deg)}78%{transform:rotate(95deg)}90%{transform:rotate(50deg)}}
+  @keyframes ml-bob{0%,100%{transform:translateY(1px) rotate(6deg)}25%{transform:translateY(-3px) rotate(8deg)}50%{transform:translateY(-6px) rotate(7deg)}75%{transform:translateY(-2px) rotate(5deg)}}
+  @keyframes ml-tail{0%,100%{transform:rotate(66deg)}45%{transform:rotate(87deg)}75%{transform:rotate(58deg)}}
+  @keyframes ml-neck{0%,100%{transform:rotate(6deg)}45%{transform:rotate(13deg)}75%{transform:rotate(3deg)}}
+  @keyframes ml-nod{0%,100%{transform:none}50%{transform:rotate(-4deg)}}
+  @keyframes ml-jaw{0%,100%{transform:rotate(6deg)}35%{transform:rotate(19deg)}65%{transform:rotate(3deg)}}
+  @keyframes ml-ear{0%,100%{transform:rotate(-32deg)}40%{transform:rotate(-54deg)}75%{transform:rotate(-22deg)}}
+  @keyframes ml-clac{0%,86%,100%{opacity:0}90%{opacity:.75}95%{opacity:0}}
+  @keyframes ml-road{to{transform:translateX(-64px)}}
+  @keyframes ml-dust{0%{opacity:0;transform:translate(3px,0) scale(.22,.35)}16%{opacity:.5;transform:translate(-2px,-1px) scale(.55,.7)}45%{opacity:.4;transform:translate(-12px,-4px) scale(.9,1)}75%{opacity:.15;transform:translate(-23px,-7px) scale(1.16,1.08)}100%{opacity:0;transform:translate(-32px,-9px) scale(1.3,1.12)}}
+  @keyframes ml-sweat{0%,45%,100%{opacity:0;transform:none}55%{opacity:.85;transform:none}90%{opacity:0;transform:translate(-10px,6px)}}
+  .mula-load .ml-sad{display:none}
+  .mula-load.sad,.mula-load.sad *{animation:none!important}
+  .mula-load.sad .ml-sad{display:inline}
+  .mula-load.sad .ml-neck{transform:rotate(12deg)}
+  .mula-load.sad .ml-ear{transform:rotate(-30deg)}
+  .mula-load.sad .ml-e2{transform:rotate(25deg)}
+  @media (prefers-reduced-motion: reduce){.mula-load *{animation:none!important}}
+  .loader-box .mula-spinner { width: 70px; height: 56px; }
+  #loader.page .mula-spinner { width: 180px; height: 138px; }
+  #loader.page #loader-text { height: 2.6em; width: min(300px, 100vw - 80px); text-align: center; display: flex; align-items: center; justify-content: center; } /* always 2 lines tall (a joke that wraps, or the font swap, never moves the Mulassa); a one-line joke sits in the middle of that space */
   @keyframes loader-in { from { opacity: 0; } }
   @keyframes loader-give-up { to { opacity: 0; visibility: hidden; } }
   /* .fail: the game couldn't start (the boot watchdog below, or main.js without WebGL). The same cover, now still: a sad
-     calçot (no drops, no spin), a short title, one line of why, the retry; 24 / 8 / 24 px, a 320 px column */
+     Mulassa (head and ears lowered), a short title, one line of why, the retry; 24 / 8 / 24 px, a 320 px column */
   #loader.fail { animation: none; pointer-events: auto; }
   .boot-fail, .cover-card { box-sizing: border-box; display: flex; flex-direction: column; align-items: center; width: min(360px, 100vw - 32px); padding: 28px 24px; border-radius: 20px; background: #0000008c; -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px); text-align: center; } /* cards over the pattern */
   .cover-card { gap: 18px; }
@@ -87,6 +112,12 @@
   .boot-fail h1 { margin: 0 0 8px; font: 800 26px/1.15 'Baloo 2', system-ui, sans-serif; color: #fff3d6; text-wrap: balance; }
   .boot-fail p { margin: 0; font: 600 16px/1.35 'Baloo 2', system-ui, sans-serif; color: #e8d8b8; text-wrap: pretty; }
   .boot-fail .btn { width: auto; min-width: 220px; margin-top: 24px; }
+  @media (max-height: 450px) {
+    .boot-fail { padding: 16px 24px; }
+    .boot-fail svg { width: 100px; height: 70px; margin-bottom: 12px; }
+    .boot-fail h1 { font-size: 22px; }
+    .boot-fail .btn { margin-top: 16px; }
+  }
   /* Full-screen covers (the page loader, its failure card, «gira el mòbil»): a subtle tiled pattern (a mulassa, a calçot,
      sparkles, a shade lighter than the brown) drifting ↘ one 180 px tile per 9 s, seamless: the layer is a tile larger
      up and left. Compositor only (transform); still with reduced motion; behind the content (z-index -1 inside the
@@ -95,14 +126,13 @@
   #loader.page::before, #rotate::before { content: ''; position: absolute; z-index: -1; inset: -180px 0 0 -180px; pointer-events: none; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' fill='%233a261b' stroke='%233a261b'%3E%3Cpath transform='translate(50 54) rotate(-14) scale(1.5) translate(-41 -39)' stroke='none' d='M18 42h34l2 14H16zM20 36h30v8H20zM21 56h4v5h-4zM43 56h4v5h-4zM47 40l6-15h5l-5 15zM54 22h12v7H54zM55 23l-1-6 3 5zM59 22l1-6 2 6z'/%3E%3Cpath transform='translate(140 118) rotate(16) scale(1.5) translate(-134 -109)' stroke-width='.8' d='M131 102h6v24q0 3-3 3t-3-3zM132 103l-5-17 7 16zM134 102v-18l2 18zM136 103l5-16-3 17zM132 130l-1 4M134 130v4M136 130l1 4'/%3E%3Cpath transform='translate(134 34) rotate(14) scale(1.5)' stroke='none' d='M0-8l2 6 6 2-6 2-2 6-2-6-6-2 6-2z'/%3E%3Cpath transform='translate(40 146) rotate(-20) scale(1.2)' stroke='none' d='M0-8l2 6 6 2-6 2-2 6-2-6-6-2 6-2z'/%3E%3C/svg%3E") 0 0 / 180px 180px; animation: boot-tiles 9s linear infinite; will-change: transform; }
   @keyframes boot-tiles { to { transform: translate3d(180px, 180px, 0); } }
   @media (prefers-reduced-motion: reduce) { #loader.page::before, #rotate::before { animation: none; } }
-  @media (prefers-reduced-motion: reduce) { .calcot-spin { animation: calcot-pulse 1.6s ease-in-out infinite; } }
 </style>
 <link rel="stylesheet" href="/src/styles/feedback.css">
 <link rel="stylesheet" href="/src/styles/select.css">
 </head>
 <body aria-busy="true">
 <div class="sr-only"><h1>Mulassa Tap Tap Dance</h1><p>Joc de ritme gratuït en català: balla la Mulassa de Valls tocant GUA i PA al compàs de la música. Projecte de codi obert, sense ànim de lucre, per difondre el bestiari de la cultura popular catalana. <a href="/projecte/" tabindex="-1">Sobre el projecte</a>. Idea i desenvolupament: Marc Güell Segarra, <a tabindex="-1" href="https://ondori.dev">ondori.dev</a>. <a tabindex="-1" href="/projecte/#autoria-i-credits">Crèdits</a>. Contacte: <a tabindex="-1" href="mailto:holi@mulassa.cat">holi@mulassa.cat</a>.</p></div>
-<div id="loader" class="page" role="status" aria-live="polite"><div class="loader-box"><span class="calcot-spin"><svg class="calcot-ring" viewBox="0 0 100 100" aria-hidden="true"><g class="ring"><path class="d" style="opacity:0.22" transform="translate(50.00 7.00) rotate(90)" d="M0-6.4C-2.8-3-4.4-.6-4.4 1.5a4.4 4.4 0 0 0 8.8 0C4.4-.6 2.8-3 0-6.4z"/><path class="d" style="opacity:0.33" transform="translate(80.41 19.59) rotate(135)" d="M0-6.4C-2.8-3-4.4-.6-4.4 1.5a4.4 4.4 0 0 0 8.8 0C4.4-.6 2.8-3 0-6.4z"/><path class="d" style="opacity:0.44" transform="translate(93.00 50.00) rotate(180)" d="M0-6.4C-2.8-3-4.4-.6-4.4 1.5a4.4 4.4 0 0 0 8.8 0C4.4-.6 2.8-3 0-6.4z"/><path class="d" style="opacity:0.55" transform="translate(80.41 80.41) rotate(225)" d="M0-6.4C-2.8-3-4.4-.6-4.4 1.5a4.4 4.4 0 0 0 8.8 0C4.4-.6 2.8-3 0-6.4z"/><path class="d" style="opacity:0.67" transform="translate(50.00 93.00) rotate(270)" d="M0-6.4C-2.8-3-4.4-.6-4.4 1.5a4.4 4.4 0 0 0 8.8 0C4.4-.6 2.8-3 0-6.4z"/><path class="d" style="opacity:0.78" transform="translate(19.59 80.41) rotate(315)" d="M0-6.4C-2.8-3-4.4-.6-4.4 1.5a4.4 4.4 0 0 0 8.8 0C4.4-.6 2.8-3 0-6.4z"/><path class="d" style="opacity:0.89" transform="translate(7.00 50.00) rotate(360)" d="M0-6.4C-2.8-3-4.4-.6-4.4 1.5a4.4 4.4 0 0 0 8.8 0C4.4-.6 2.8-3 0-6.4z"/><path class="d" style="opacity:1.00" transform="translate(19.59 19.59) rotate(405)" d="M0-6.4C-2.8-3-4.4-.6-4.4 1.5a4.4 4.4 0 0 0 8.8 0C4.4-.6 2.8-3 0-6.4z"/></g><g class="c"><g transform="translate(50 50) scale(1.08) translate(-50 -45.80)"> <g fill="#5fb84a" stroke="#2a1a10" stroke-width="1.6" stroke-linejoin="round"> <path d="M46.2 41C43 34 40 27 38.6 19.6c-.2-1.2 1.1-1.8 1.9-.9 3.6 4.8 6.6 11 8.6 20.3z"/> <path d="M53.8 41c3.2-7 6.2-14 7.6-21.4.2-1.2-1.1-1.8-1.9-.9-3.6 4.8-6.6 11-8.6 20.3z"/> <path d="M47.6 40.5C47 31 47.6 22 49.2 13.6c.2-1.1 1.4-1.1 1.6 0 1.6 8.4 2.2 17.4 1.6 26.9z" fill="#79cc5c"/> </g> <path d="M45 44q0-6 5-6t5 6v25q0 5-5 5t-5-5z" fill="#fff3d6"/> <path d="M45 44q0-6 5-6t5 6v4h-10z" fill="#b9e08a"/> <path d="M45 66.5h10v2.5q0 5-5 5t-5-5z" fill="#6b4330"/> <path d="M47.4 66.8l1.4 2.2M52.6 66.6l-1.2 2.4" stroke="#8a5a3c" stroke-width="1.1" stroke-linecap="round"/> <path d="M45 44q0-6 5-6t5 6v25q0 5-5 5t-5-5z" fill="none" stroke="#2a1a10" stroke-width="1.6"/> <path d="M48.6 74.6l-.9 3.2M50 75l0 3.4M51.4 74.6l.9 3.2" stroke="#b08a60" stroke-width="1.1" stroke-linecap="round"/> <circle cx="48.2" cy="53" r="1.1" fill="#2a1a10"/><circle cx="51.8" cy="53" r="1.1" fill="#2a1a10"/> <path d="M48.4 56.1q1.6 1.3 3.2 0" fill="none" stroke="#2a1a10" stroke-width="1.1" stroke-linecap="round"/> </g></g></svg></span><span id="loader-text">Avisant a la brigada…</span></div></div>
+<div id="loader" class="page" role="status" aria-live="polite"><div class="loader-box"><span class="mula-spinner"><svg class="mula-load" viewBox="0 0 220 168" aria-hidden="true"><svg class="ml-ground" x="8" y="144" width="202" height="18" viewBox="0 0 202 18"><path d="M0 4H202" fill="none" stroke="#866846" stroke-width="1.2" opacity=".6"/><g class="ml-road" fill="none" stroke="#a78355" stroke-width="1.2" stroke-linecap="round" opacity=".45"><path d="M0 10H270" stroke-dasharray="18 12 4 12 6 12"/><path d="M30 4l3-3h4l3 3m54 0l3-3h4l3 3m54 0l3-3h4l3 3m54 0l3-3h4l3 3"/></g></svg><g transform="translate(43 145)"><g class="ml-dust" style="animation-delay:0s"><path d="M-3 0c-5 0-8-3-7-6 1-3 4-4 6-3 0-6 7-7 9-3 5-2 9 1 8 5 3 0 4 3 2 5C10 1 3 1-3 0z" fill="#9b7951"/><path d="M-7-6q2-5 6-2m3-5q4-2 6 2" fill="none" stroke="#c6a16b" stroke-width="1.2" stroke-linecap="round" opacity=".5"/><path d="M-13-2l-2-1m-1-5-1-1" fill="none" stroke="#a78355" stroke-width="1.6" stroke-linecap="round"/></g></g><g transform="translate(43 145)"><g class="ml-dust" style="animation-delay:-0.24s"><path d="M-3 0c-5 0-8-3-7-6 1-3 4-4 6-3 0-6 7-7 9-3 5-2 9 1 8 5 3 0 4 3 2 5C10 1 3 1-3 0z" fill="#9b7951"/><path d="M-7-6q2-5 6-2m3-5q4-2 6 2" fill="none" stroke="#c6a16b" stroke-width="1.2" stroke-linecap="round" opacity=".5"/><path d="M-13-2l-2-1m-1-5-1-1" fill="none" stroke="#a78355" stroke-width="1.6" stroke-linecap="round"/></g></g><ellipse cx="100" cy="147" rx="72" ry="4.5" fill="#000" opacity=".35"/><g transform="translate(60 113)" style="--step:0s"><g class="ml-leg"><rect x="-3.5" y="0" width="7" height="18" rx="3" fill="#36303a"/><g transform="translate(0 16)"><g class="ml-shin"><rect x="-3.5" y="-2" width="7" height="17" rx="2" fill="#36303a"/><rect x="-3.5" y="10" width="7" height="4" fill="#aaa18d"/><path d="M-4 13h7l6 2q2 1 1 4H-4z" fill="#241b1c"/><path d="M-4 18h14" stroke="#aaa18d" stroke-width="1.5" stroke-linecap="round"/></g></g></g></g><g transform="translate(70 113)" style="--step:-0.24s"><g class="ml-leg"><rect x="-3.5" y="0" width="7" height="18" rx="3" fill="#36303a"/><g transform="translate(0 16)"><g class="ml-shin"><rect x="-3.5" y="-2" width="7" height="17" rx="2" fill="#36303a"/><rect x="-3.5" y="10" width="7" height="4" fill="#aaa18d"/><path d="M-4 13h7l6 2q2 1 1 4H-4z" fill="#241b1c"/><path d="M-4 18h14" stroke="#aaa18d" stroke-width="1.5" stroke-linecap="round"/></g></g></g></g><g transform="translate(136 113)" style="--step:-0.04s"><g class="ml-leg"><rect x="-3.5" y="0" width="7" height="18" rx="3" fill="#36303a"/><g transform="translate(0 16)"><g class="ml-shin"><rect x="-3.5" y="-2" width="7" height="17" rx="2" fill="#36303a"/><rect x="-3.5" y="10" width="7" height="4" fill="#aaa18d"/><path d="M-4 13h7l6 2q2 1 1 4H-4z" fill="#241b1c"/><path d="M-4 18h14" stroke="#aaa18d" stroke-width="1.5" stroke-linecap="round"/></g></g></g></g><g transform="translate(146 113)" style="--step:-0.28s"><g class="ml-leg"><rect x="-3.5" y="0" width="7" height="18" rx="3" fill="#36303a"/><g transform="translate(0 16)"><g class="ml-shin"><rect x="-3.5" y="-2" width="7" height="17" rx="2" fill="#36303a"/><rect x="-3.5" y="10" width="7" height="4" fill="#aaa18d"/><path d="M-4 13h7l6 2q2 1 1 4H-4z" fill="#241b1c"/><path d="M-4 18h14" stroke="#aaa18d" stroke-width="1.5" stroke-linecap="round"/></g></g></g></g><g transform="translate(53 113)" style="--step:-0.02s"><g class="ml-leg"><rect x="-3.5" y="0" width="7" height="18" rx="3" fill="#51454e"/><g transform="translate(0 16)"><g class="ml-shin"><rect x="-3.5" y="-2" width="7" height="17" rx="2" fill="#51454e"/><rect x="-3.5" y="10" width="7" height="4" fill="#f4efe4"/><path d="M-4 13h7l6 2q2 1 1 4H-4z" fill="#241b1c"/><path d="M-4 18h14" stroke="#f4efe4" stroke-width="1.5" stroke-linecap="round"/></g></g></g></g><g transform="translate(65 113)" style="--step:-0.26s"><g class="ml-leg"><rect x="-3.5" y="0" width="7" height="18" rx="3" fill="#51454e"/><g transform="translate(0 16)"><g class="ml-shin"><rect x="-3.5" y="-2" width="7" height="17" rx="2" fill="#51454e"/><rect x="-3.5" y="10" width="7" height="4" fill="#f4efe4"/><path d="M-4 13h7l6 2q2 1 1 4H-4z" fill="#241b1c"/><path d="M-4 18h14" stroke="#f4efe4" stroke-width="1.5" stroke-linecap="round"/></g></g></g></g><g transform="translate(128 113)" style="--step:-0.06s"><g class="ml-leg"><rect x="-3.5" y="0" width="7" height="18" rx="3" fill="#51454e"/><g transform="translate(0 16)"><g class="ml-shin"><rect x="-3.5" y="-2" width="7" height="17" rx="2" fill="#51454e"/><rect x="-3.5" y="10" width="7" height="4" fill="#f4efe4"/><path d="M-4 13h7l6 2q2 1 1 4H-4z" fill="#241b1c"/><path d="M-4 18h14" stroke="#f4efe4" stroke-width="1.5" stroke-linecap="round"/></g></g></g></g><g transform="translate(140 113)" style="--step:-0.3s"><g class="ml-leg"><rect x="-3.5" y="0" width="7" height="18" rx="3" fill="#51454e"/><g transform="translate(0 16)"><g class="ml-shin"><rect x="-3.5" y="-2" width="7" height="17" rx="2" fill="#51454e"/><rect x="-3.5" y="10" width="7" height="4" fill="#f4efe4"/><path d="M-4 13h7l6 2q2 1 1 4H-4z" fill="#241b1c"/><path d="M-4 18h14" stroke="#f4efe4" stroke-width="1.5" stroke-linecap="round"/></g></g></g></g><g class="ml-bob"><g class="ml-tail"><path d="M41 74q-9 12-7 36l7 1q-1-20 6-34z" fill="#4e2e1a"/><path d="M33 86h10M33 99h10" stroke="#f4efe4" stroke-width="3"/><path d="M33 92.5h10" stroke="#ffb3c7" stroke-width="3"/></g><g class="ml-neck"><g class="ml-nod"><path d="M139 74 150 33q3-8 12-6l3 3-7 44z" fill="#7a4a2b"/><path d="M145 68 152 34" stroke="#4e2e1a" stroke-width="4" stroke-linecap="round"/><g class="ml-head"><g class="ml-sweat" fill="#fff3d6"><path d="M133 28q-7-3-7 1t7-1z"/><path d="M132 19q-5-5-7-2t7 2z"/></g><g class="ml-ear ml-e2"><path d="M156 18q-1-12 5-17 3 6 0 17z" fill="#4e2e1a"/></g><path d="M159 38 187 42.5 160 43.5z" fill="#5a1010"/><g class="ml-jaw"><path d="M158 37.5 186 42q2 5-3 6.5l-24-4z" fill="#7a4a2b"/><path d="M178 42.5l8 1.2q1 3.6-3 4.6l-5-.8z" fill="#5d3a24"/><path d="M178.5 42.6l7 1" stroke="#f4efe4" stroke-width="1.4"/></g><circle cx="158" cy="26" r="11" fill="#7a4a2b"/><path d="M152 19 183 28q7 2 6.5 9l-1 4-31-4z" fill="#7a4a2b"/><path d="M178 29.5q10 2 10.5 7.5l-1 4-9.5-1.5z" fill="#5d3a24"/><path d="M178 40.4l9 1.4" stroke="#f4efe4" stroke-width="1.4"/><circle cx="185" cy="33" r="1.3" fill="#2a1a10"/><circle cx="160" cy="24.5" r="4.2" fill="#f4efe4"/><circle cx="162" cy="25" r="2.2" fill="#2a1a10"/><g class="ml-sad"><path d="M156.3 25a3.7 3.7 0 0 1 7.4 0z" fill="#7a4a2b"/><path d="M156 23.6l7.5-1.4" stroke="#2a1a10" stroke-width="1.1" stroke-linecap="round"/><path d="M160.5 30.5q-2.2 3.2 0 4.6 2.2-1.4 0-4.6z" fill="#8bc9f4"/></g><path d="M152 18.5l12-3M156 21l2.5 16M169 30l1.5 10" stroke="#a3182f" stroke-width="2.8" stroke-linecap="round"/><circle cx="154" cy="13" r="4.2" fill="#a3182f"/><circle cx="154" cy="8.3" r="2.1" fill="#d9a521"/><g class="ml-ear"><path d="M149 18q-8-10-5-17 6 3 9 15z" fill="#7a4a2b"/><path d="M148.5 14q-4-6-3-10 3 2 4.5 8z" fill="#b07a5a"/></g><g class="ml-clac" stroke="#f5c518" stroke-width="2" stroke-linecap="round"><path d="M192 38l5-3M193 45h6M191 51l4 3"/></g></g></g></g><rect x="40" y="66" width="118" height="52" rx="7" fill="#a3182f"/><path d="M40 103h118v8q0 7-7 7H47q-7 0-7-7z" fill="#7c1024"/><path d="M46 68.5h106" stroke="#c43752" stroke-width="2" stroke-linecap="round"/><path d="M137 64h25v10q0 3-3 3h-19q-3 0-3-3z" fill="#a3182f"/><rect x="136" y="61" width="27" height="4" rx="1.5" fill="#d9a521"/><path d="M155 72q-10 26-24 2" fill="none" stroke="#d9a521" stroke-width="2.4" stroke-dasharray=".1 3.6" stroke-linecap="round"/><rect x="76" y="61" width="52" height="45" rx="3" fill="#1f5c33" stroke="#d9a521" stroke-width="2.5"/><path d="M83 97h38" stroke="#d9a521" stroke-width="1.5"/><path d="M96 70.5h16v3H96zM96 70.5v-3h3v3M102.5 70.5v-3h3v3M109 70.5v-3h3v3" fill="#d9a521" stroke="#d9a521" stroke-width=".6"/><path d="M104 75 113 83 104 91 95 83z" fill="#a3182f" stroke="#2a1a10" stroke-width=".8"/><path d="M97.3 81h13.4l2.2 2-2.2 2H97.3l-2.2-2z" fill="#f4efe4"/><rect x="38" y="116" width="122" height="5" rx="2" fill="#d9a521"/><path d="M41 123.5h117" stroke="#d9a521" stroke-width="5" stroke-dasharray="2 2.4"/></g></svg></span><span id="loader-text">Avisant a la brigada…</span></div></div>
 <script id="loader-first-joke">/* The first loading line, picked before the first paint: one not seen yet on this device (the same memory and list as src/ui/loader.js jokes(); tests/loader.mjs keeps the two lists identical), so no visit always opens the same way. */
 (function () { var L = ["Avisant a la brigada…", "Esperant que obri el Maitanca…", "Trucant a la grua…", "Validant el tiquet de la zona blava…", "Encenent el foc amb redoltes…", "Remenant la salsa de calçots…", "Pentinant la Mulassa…", "Pujant al campanar a mirar la plaça…", "Esquivant les caques de gos…", "Planxant les estelades…", "Posant una espelmeta a la Mare de Déu de la Candela…", "Posant-li les arracades a l’Alcaldessa…", "Apartant les paneroles…"], k = 'loader-jokes-seen', s = [], t = document.getElementById('loader-text');
   try { s = JSON.parse(localStorage.getItem(k) || '[]').filter(function (l) { return L.indexOf(l) >= 0; }); } catch (e) { /* private mode */ }
@@ -116,10 +146,11 @@
 /* Boot watchdog (classic script, before the bundle). main.js sets __mulassaBooted = 'module' when it has run to the end
    and true on its first frame. Fatal only: the entry module failing to load (its 'error') or throwing while it runs (its
    'load' without the flag), or no first frame after 60 s of visible time (25 s once the module has run: a hidden tab has
-   no frames and doesn't count). Then the cover turns into a sad calçot with a retry; main.js reuses it (no WebGL). */
+   no frames and doesn't count). Then the cover turns into a sad Mulassa with a retry; main.js reuses it (no WebGL). */
 (function () {
   var shown = false, entry = /\/(src\/main|assets\/index-[\w-]+)\.js(\?|$)/;
-  var SAD = '<svg viewBox="12 11 76 76" aria-hidden="true"><g transform="translate(50 50) scale(1.2) translate(-50 -52) rotate(-7 50 76)"><g fill="#5fb84a" stroke="#2a1a10" stroke-width="1.6" stroke-linejoin="round"><path d="M46.6 41C44 33 40.5 27.5 36.5 28c-3.8.5-4.8 5.6-4 11.4 1.4-3.6 3-6.2 5.4-6.2 3 0 5.6 3.8 7.4 8.8z"/><path d="M53.4 41c2.6-6.4 6-10 9.6-9.4 3.6.6 4.6 6 3.6 11.4-1.2-3.4-2.8-5.6-5-5.4-2.6.2-4.8 2.4-6.4 4.8z"/><path d="M48.4 40.5C47.6 32 48.6 24 52 21.6c3.2-2.2 6.8.4 7.2 5.8-1.8-2.2-3.8-2.8-5.4-1.6-1.8 1.4-2.2 7-2.2 14.7z" fill="#79cc5c"/></g><path d="M45 44q0-6 5-6t5 6v25q0 5-5 5t-5-5z" fill="#fff3d6"/><path d="M45 44q0-6 5-6t5 6v4h-10z" fill="#b9e08a"/><path d="M45 66.5h10v2.5q0 5-5 5t-5-5z" fill="#6b4330"/><path d="M47.4 66.8l1.4 2.2M52.6 66.6l-1.2 2.4" stroke="#8a5a3c" stroke-width="1.1" stroke-linecap="round"/><path d="M45 44q0-6 5-6t5 6v25q0 5-5 5t-5-5z" fill="none" stroke="#2a1a10" stroke-width="1.6"/><path d="M48.6 74.6l-.9 3.2M50 75v3.4M51.4 74.6l.9 3.2" stroke="#b08a60" stroke-width="1.1" stroke-linecap="round"/><path d="M46.9 51.1l2.1-1M53.1 51.1l-2.1-1M48.5 57.4q1.5-1.4 3 0" fill="none" stroke="#2a1a10" stroke-width="1" stroke-linecap="round"/><circle cx="48.2" cy="53.2" r="1.1" fill="#2a1a10"/><circle cx="51.8" cy="53.2" r="1.1" fill="#2a1a10"/><path d="M52.9 54.9q-1.3 2.1 0 2.5 1.3-.4 0-2.5z" fill="#8bc9f4"/></g></svg>'; // a wilted calçot: the loader's, drooping leaves, sad brows, a tear
+  var art = document.querySelector('#loader .mula-load');
+  var SAD = art ? art.outerHTML.replace('class="mula-load"', 'class="mula-load sad"') : ''; // reuse the first-paint artwork, before the bundle
   window.__mulassaFail = function (title, text, retry) {
     var el = document.getElementById('loader');
     if (shown || !el) return;
@@ -164,7 +195,7 @@
   <form id="settings-form" method="dialog" class="sheet-actions">
     <button id="settings-sync" type="button" class="btn btn-secondary"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 21h8l-3-17h-2zM12 14l6-7"/></svg>Ajusta la sincronia<span class="sub" id="settings-offset">Ara: 0 ms</span></button>
     <button id="settings-practice" type="button" class="btn btn-secondary"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 10 7-10 7Z"/></svg>Fes la pràctica<span class="sub">Els passos bàsics, sense puntuar</span></button>
-    <button id="settings-board" type="button" class="btn btn-secondary" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0zM7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3"/></svg>Classificacions<span class="sub">Els millors de tots els nivells</span></button>
+    <button id="settings-board" type="button" class="btn btn-secondary" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 20h20M3.5 20v-7H9v7M9 20V5h6v15M15 20v-5h5.5v5M11 9.2l1.4-1.1V14"/></svg>Classificacions<span class="sub">Els millors de tots els nivells</span></button>
     <!-- «Perfil» (src/ui/profile-ui.js): the nickname, what state the guest profile is in (its deadline while the e-mail is unconfirmed), and only the buttons that fit: create / recover / confirm an e-mail / sign out / delete / forget the name -->
     <div id="settings-profile-row" class="switch-row setting-row profile-block" hidden>
       <span>Perfil<span class="profile-name" id="settings-profile-name"></span><span class="sub setting-note" id="settings-profile-sub"></span></span>
@@ -256,8 +287,8 @@
       <h2 id="share-title">Comparteix el teu ball</h2>
       <p id="share-note" class="share-note" role="status" hidden></p><!-- after publishing: where they stand -->
       <div class="share-seg" role="group" aria-label="Format de la imatge">
-        <button id="share-format-story" type="button" class="btn btn-secondary" aria-pressed="true">Story</button>
-        <button id="share-format-feed" type="button" class="btn btn-secondary" aria-pressed="false">Instagram 4:5</button>
+        <button id="share-format-story" type="button" class="btn btn-secondary" aria-pressed="true">Història (9:16)</button>
+        <button id="share-format-feed" type="button" class="btn btn-secondary" aria-pressed="false">Publicació (4:5)</button>
       </div>
       <label id="share-nick-row" class="switch-row share-switch" for="share-nick" hidden><span>Afegeix el meu sobrenom</span><input id="share-nick" type="checkbox" role="switch" checked></label>
       <button id="share-image" type="button" class="btn btn-primary" disabled><svg class="ico-share" viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg><svg class="ico-save" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M4 17v3h16v-3"/></svg><span id="share-image-label">Preparant la imatge…</span></button>
@@ -300,7 +331,7 @@
       <div class="board-state">
         <p id="board-status" class="board-status" role="status" aria-live="polite"></p>
         <button id="board-retry" type="button" class="btn btn-secondary" hidden>Torna-ho a provar</button>
-        <button id="board-publish" type="button" class="btn btn-primary" aria-haspopup="dialog" hidden>Publica el teu resultat</button>
+        <button id="board-publish" type="button" class="btn btn-primary" aria-haspopup="dialog" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M4 15v5h16v-5"/></svg>Publica el teu resultat</button>
       </div>
     </div>
     <p id="board-summary" class="board-summary"></p>
@@ -314,7 +345,7 @@
   <button id="publish-cancel" type="button" class="sheet-x" aria-label="Ara no, tanca"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button><!-- «Ara no»: closes, and counts as a decline on the prompt that opened by itself (board-ui.js) -->
   <form id="publish-form" class="sheet-body" novalidate>
     <h2 id="publish-title">Publica el teu resultat!</h2>
-    <div id="publish-wait" class="publish-wait" aria-hidden="true"></div><!-- the calçot while publishing (board-ui.js swap()) -->
+    <div id="publish-wait" class="publish-wait" aria-hidden="true"></div><!-- the Mulassa while publishing (board-ui.js swap()) -->
     <p id="publish-summary" class="publish-run"></p>
     <!-- one column, left-aligned to the field: the nickname (or the remembered one), its hint / error, the consent note -->
     <div class="publish-body">
@@ -369,6 +400,7 @@
     </div>
     <p id="profile-status" class="board-status" role="status" aria-live="polite"></p>
     <div class="sheet-actions">
+      <button id="profile-keep" type="button" class="btn btn-primary" hidden>Cancel·la</button><!-- delete / sign out: the safe choice is the primary, as in the pause -->
       <button id="profile-send" type="submit" class="btn btn-primary">Envia el codi</button>
     </div>
   </form>
@@ -444,14 +476,15 @@
     <button id="aviat-write" type="button" class="btn btn-primary" aria-haspopup="dialog">Escriu a la bústia</button>
     <div class="sel-pending-links">
       <a id="aviat-code" class="btn btn-link btn-compact sel-code-link" href="https://github.com/mguellsegarra/mulassa-tap-tap-dance" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" stroke="none" d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 0-.8.4-1.3.7-1.6-2.7-.3-5.5-1.3-5.5-6 0-1.2.5-2.3 1.3-3.1-.2-.4-.6-1.6 0-3.2 0 0 1-.3 3.4 1.2a11.5 11.5 0 0 1 6 0c2.3-1.5 3.3-1.2 3.3-1.2.6 1.6.2 2.8.1 3.2.8.8 1.3 1.9 1.3 3.1 0 4.6-2.8 5.6-5.5 5.9.5.4.9 1.1.9 2.2v3.3c0 .3.1.7.8.6A12 12 0 0 0 12 .3"/></svg><span>Col·labora a GitHub</span></a>
-      <a class="btn btn-link btn-compact sel-mail" href="mailto:holi@mulassa.cat"><svg class="line" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linejoin="round" d="M3.5 6h17v12h-17zM3.5 6.5l8.5 7 8.5-7"/></svg><span>holi@mulassa.cat</span></a>
+      <a class="btn btn-link btn-compact sel-mail" href="mailto:holi@mulassa.cat"><svg class="line" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linejoin="round" d="M3.5 6h17v12h-17zM3.5 6.5l8.5 7 8.5-7"/></svg><span>holi@<wbr>mulassa.cat</span></a>
     </div>
   </section>
   <div id="select-bottom" class="sel-bottom">
     <div id="select-carousel" class="sel-carousel">
-      <button id="select-prev" type="button" class="btn btn-secondary sel-arrow" tabindex="-1" aria-label="Personatge anterior" aria-controls="select-strip"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg></button>
+      <button id="select-prev" type="button" class="btn btn-secondary sel-arrow" tabindex="-1" aria-label="Personatge anterior" aria-controls="select-strip"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5Q12 8.8 8 12Q12 15.2 15 19"/></svg></button>
       <div id="select-strip" class="sel-strip" role="listbox" aria-label="Figures" aria-orientation="horizontal"></div>
-      <button id="select-forward" type="button" class="btn btn-secondary sel-arrow" tabindex="-1" aria-label="Personatge següent" aria-controls="select-strip"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></button>
+      <button id="select-forward" type="button" class="btn btn-secondary sel-arrow" tabindex="-1" aria-label="Personatge següent" aria-controls="select-strip"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5Q12 8.8 16 12Q12 15.2 9 19"/></svg></button>
+      <span id="select-nav" class="sel-nav" aria-hidden="true"></span>
     </div>
     <div id="select-act" class="sel-act" hidden>
       <h2>Tria la dificultat</h2>
@@ -459,12 +492,12 @@
     </div>
     <div class="sel-footer">
       <button id="select-figures-back" type="button" class="btn btn-secondary" hidden>Canvia de figura</button>
-      <button id="select-next" type="button" class="btn btn-primary"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 5.5 11 12l-6.5 6.5M12.5 5.5 19 12l-6.5 6.5" fill="none" stroke="currentColor" stroke-width="3.25" stroke-linecap="round" stroke-linejoin="round"/></svg><span>TRIA LA DIFICULTAT</span></button>
+      <button id="select-next" type="button" class="btn btn-primary"><span>Tria la dificultat</span></button>
       <button id="select-play" type="button" class="btn btn-primary" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13L18.5 12z" fill="currentColor" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/></svg><span>A BALLAR!</span></button>
     </div>
   </div>
 </section>
-<button id="howto" class="howto-pill" hidden aria-haspopup="dialog"><span class="q" aria-hidden="true">?</span>COM ES JUGA?</button>
+<button id="howto" class="howto-pill" hidden aria-haspopup="dialog"><span class="q" aria-hidden="true">?</span>Com es juga?</button>
 <dialog id="howto-menu" class="sheet" tabindex="-1" aria-labelledby="howto-title">
   <button id="howto-ok" type="button" class="sheet-x" aria-label="Tanca"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
   <div class="sheet-body fade">

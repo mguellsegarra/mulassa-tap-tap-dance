@@ -91,7 +91,7 @@ const game = { diff: 2, counts, score: 1000, maxCombo: 10, practice: null };
 assert(snapshotResult(game, { reason: 'end', query: new URLSearchParams('repte=94-2') }), 'still eligible with ?repte');
 assert(snapshotResult(game, { reason: 'end', query: new URLSearchParams('mute&repte=junk') }), 'junk repte: eligible too');
 
-// --- the title's challenge chip: inside the budget, never over the logo, the heading or the buttons
+// --- the title's challenge chip: inside the budget, never over the logo or the JUGA button
 for (const [cw, ch, K] of [[375, 667, 1.5], [393, 852, 1.5], [320, 480, 1.5], [852, 393, 1.5], [667, 375, 1.5], [1280, 800, 2], [1920, 1080, 2]]) {
   const corner = ch <= 500;
   const L = titleLayout({ W: cw / K, HH: ch / K, K, safe: { t: 0, r: 0, b: 0, l: 0 }, keys: true, note: '', logoRatio: 4.85, subW: 104, nameW: 42,
@@ -99,7 +99,6 @@ for (const [cw, ch, K] of [[375, 667, 1.5], [393, 852, 1.5], [320, 480, 1.5], [8
   const chip = { top: L.chipY - CHIP / 2, bottom: L.chipY + CHIP / 2 };
   assert(L.fits, `${cw}x${ch}: fits with the chip`);
   assert(chip.top >= L.logo.y + L.logo.h - 0.5, `${cw}x${ch}: chip under the logo`);
-  assert(chip.bottom <= L.headingY - 8 + 0.5, `${cw}x${ch}: chip over the heading`);
   assert(L.buttons.every(b => b.y >= chip.bottom), `${cw}x${ch}: chip over the buttons`);
   assert.equal(titleLayout({ W: cw / K, HH: ch / K, K, safe: { t: 0, r: 0, b: 0, l: 0 }, keys: true, note: '', logoRatio: 4.85, subW: 104, nameW: 42,
     pill: { w: 170, h: 44 }, hint: null, corner, obstacles: [] }).chipY, null, 'no challenge: no chip');
@@ -123,7 +122,7 @@ assert(/id="results-share" type="button" class="btn btn-secondary"[^>]*><svg/.te
 assert(share.indexOf('id="share-preview"') < share.indexOf('id="share-image"'), 'the card preview is the hero, before the actions');
 assert.equal((share.match(/btn-primary/g) || []).length, 1, 'one primary action');
 assert(/<button id="share-image"[^>]*class="btn btn-primary"[^>]*>(<svg[^>]*>.*?<\/svg>){2}<span id="share-image-label">/.test(share), 'primary: share / save icons first, then its label');
-assert(/class="share-seg" role="group"/.test(share) && /id="share-format-story"[^>]*aria-pressed="true">Story</.test(share) && /id="share-format-square"[^>]*>Quadrat</.test(share), 'Story / Quadrat: a segmented toggle');
+assert(/class="share-seg" role="group"/.test(share) && /id="share-format-story"[^>]*aria-pressed="true">Story</.test(share) && /id="share-format-feed"[^>]*>Instagram 4:5</.test(share), 'Story / Instagram 4:5: a segmented toggle');
 assert(!/Història|història/.test(share), '«Story», never «Història»');
 assert(/<p id="share-note" class="share-note" role="status" hidden>/.test(share) && share.indexOf('id="share-note"') > share.indexOf('id="share-title"'), 'after publishing: the place line under the title');
 assert(/<div class="share-foot"><button id="share-privacy"/.test(share), 'Privadesa alone at the foot (Tanca is the X, top right)');
@@ -140,7 +139,7 @@ assert(/<button id="share-more" type="button" class="btn btn-link btn-compact" d
 assert(!/btn-secondary|btn-primary/.test(linkArea), 'the link area has no outlined or filled buttons: clearly lesser than the primary');
 assert(/\.share-links-label \{[^}]*color: #e8d8b8a6; font-size: 14px/.test(html), 'the label is small and muted');
 assert.equal((share.match(/<(?:button|a) /g) || []).length, 8, 'Story · Quadrat · Comparteix · WhatsApp · X · Més… · Privadesa · the X: nothing more');
-assert(/<button id="share-close" type="button" class="sheet-x" aria-label="Tanca"><svg/.test(share), 'Tanca: a white X on black, top right');
+assert(/<button id="share-close" type="button" class="sheet-x" aria-label="Tanca"><svg/.test(share), 'Tanca: the round X, top right');
 assert(!/<button(?![^>]*class="(?:btn|sheet-x))/.test(share) && !/<a (?![^>]*class="btn)/.test(share), 'every control is a .btn');
 assert(/\.btn-compact \{[^}]*min-width: 44px; min-height: 44px/.test(html) && /\.share-seg \{/.test(html), 'the compact link is part of the .btn component, a 44 px target; the toggle has its style');
 // the apps' own marks, filled (Simple Icons), not stroke look-alikes
@@ -306,7 +305,7 @@ console.log('share: challenge link, captions, fallbacks, eligibility, privacy an
     gate = null; slow.shift()(); await new Promise(r => setTimeout(r, 0)); await new Promise(r => setTimeout(r, 0));
     assert.equal(look(), ready);
     slow = gate = [];
-    doc.getElementById('share-format-square').listeners.click();
+    doc.getElementById('share-format-feed').listeners.click();
     assert.equal(look(), 'Preparant la imatge…|true|share', 'a format whose photo is still to render says so (keeping its icon)');
     for (let i = 0; i < 20 && !slow.length; i++) await new Promise(r => setTimeout(r, 0));
     gate = null; slow.shift()(); await new Promise(r => setTimeout(r, 0)); await new Promise(r => setTimeout(r, 0));
@@ -315,4 +314,64 @@ console.log('share: challenge link, captions, fallbacks, eligibility, privacy an
     doc.getElementById('share-close').listeners.click();
     console.log('share sheet: a steady primary while the card is redrawn ok');
   }
+  // Late photo/rank answers from the previous figure must not replace a new run.
+  {
+    nodes.clear(); shared.length = 0;
+    const photos = [], ranks = [];
+    let alias = 'PublicAlias';
+    const ui = setupShare({ focusIn() {}, doc, nav: phone,
+      store: { get: key => key === 'share-format' ? 'square' : alias, set() {} }, fonts: null,
+      url: { createObjectURL: () => 'blob:card', revokeObjectURL() {} }, settle: async () => {},
+      hero: (w, h, figureId) => new Promise(resolve => photos.push({ figureId, resolve, w, h })),
+      standing: () => new Promise(resolve => ranks.push(resolve)) });
+    ui.results(true, run({ figureId: 'mulassa-valls', score: 15000, t: 9 }), null);
+    doc.getElementById('results-share').listeners.click();
+    await new Promise(r => setTimeout(r, 0));
+    assert.equal(doc.getElementById('share-menu').dataset.format, 'feed', 'legacy saved square migrates to 4:5');
+    assert.equal(photos.length, 1); assert.equal(ranks.length, 1);
+    ui.results(true, run({ figureId: 'drac-valls', score: 12000, t: 9 }), null);
+    doc.getElementById('results-share').listeners.click();
+    await new Promise(r => setTimeout(r, 0));
+    assert.equal(photos.length, 2); assert.equal(ranks.length, 1, 'Drac never requests the Mulassa board');
+    ranks[0]({ pos: 2, total: 99 }); photos[0].resolve({ width: 1104, height: 988 });
+    await new Promise(r => setTimeout(r, 0));
+    assert(doc.getElementById('share-image').disabled, 'old photo cannot finish the current card');
+    photos[1].resolve({ width: 1104, height: 988 }); await wait();
+    doc.getElementById('share-image').listeners.click(); await new Promise(r => setTimeout(r, 0));
+    assert.equal(shared.at(-1).files[0].name, 'drac-de-valls.jpg');
+    assert.deepEqual(Object.keys(shared.at(-1)), ['files']);
+    assert.equal(photos.length, 2, 'stale rank does not start a new capture');
+    assert(doc.getElementById('share-preview').alt.includes('Drac'));
+  }
 }
+
+// Poster geometry: 4:5 replaces the saved square option. Optional rows determine
+// the group's bounds; the shorter Drac ticket receives the same clear space.
+{
+  const { cardLayout, cardRank, drawCard, loadCardFonts, toJpeg } = await import('../src/hud/share-card.js');
+  for (const figureId of ['mulassa-valls', 'drac-valls']) for (const alias of ['', 'UnAliasMoltLlarg']) for (const rank of [null, { pos: 12, total: 86 }]) {
+    const d = { figureId, alias, rank, score: 12345, diff: 2, diffName: 'DIFÍCIL', pct: 92, maxCombo: 100 };
+    const L = cardLayout('feed', d);
+    assert.deepEqual([L.w, L.h], [1080, 1350]);
+    assert(Math.abs((L.discY - L.titleBottom) - (L.footY - L.ticketY - L.ticketH - 12)) < .001, 'equal clear space around combined photo/ticket');
+    assert(L.discY > L.titleBottom && L.disc === 540, 'centering preserves the figure size');
+    assert.equal(Boolean(L.rank), figureId === 'mulassa-valls' && Boolean(rank));
+    const story = cardLayout('story', d);
+    assert.equal(story.footY, 1652); assert.equal(story.discY, 470);
+    assert(story.ticketY + story.ticketH + 12 < story.footY, 'story content clears its anchored footer');
+    const text = [], c = new Proxy({ canvas: {} }, { get: (t, k) => k in t ? t[k] : k === 'measureText' ? s => ({ width: String(s).length * 20 }) : k === 'fillText' ? s => text.push(String(s)) : k.startsWith('create') ? () => ({ addColorStop() {} }) : () => {}, set: (t, k, v) => (t[k] = v, true) });
+    drawCard(c, 'feed', d, null);
+    assert(text.includes('12.345') && text.includes('92%') && text.includes('100'), 'actual points, accuracy and streak');
+    assert(text.includes(figureId === 'drac-valls' ? 'DRAC' : 'MULASSA'));
+    assert(text.includes('mulassa_cat') && !text.includes('@mulassa_cat'));
+    assert.equal(text.some(s => s.includes('#12')), figureId === 'mulassa-valls' && Boolean(rank));
+  }
+  for (const rank of [{ pos: 0, total: 20 }, { pos: 21, total: 20 }, { pos: '2', total: 20 }, { pos: 1, total: NaN }]) assert.equal(cardRank({ rank }), null);
+  const fonts = [];
+  await loadCardFonts({ load: async (...args) => fonts.push(args), ready: Promise.resolve() });
+  assert(fonts.every(([font]) => font.includes('Baloo 2')) && fonts.length === 2, 'only the local Baloo weights');
+  await assert.rejects(loadCardFonts({ load: async () => { throw Error('font unavailable'); } }), 'never silently export a fallback font');
+  const file = await toJpeg({ toBlob: cb => cb(new Blob(['x'])) }, .9, 'drac-valls');
+  assert.equal(file.name, 'drac-de-valls.jpg');
+}
+console.log('share poster: format, figure identity, scores, rank validation, optional-row centering and fonts ok');

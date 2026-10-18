@@ -64,6 +64,16 @@ try {
   assert(result.includes('music/main.mp3'));
   assert(!result.includes('music/mulassa-taiko.wav'));
   await assert.rejects(access(join(valid, 'music/mulassa-taiko.wav')));
+  const multi = await fixture('multi');
+  const dracSong = { audio: 'music/drac-taiko.mp3?v=abc123', ambient: 'music/drac-taiko-ambient.mp3?v=def456' };
+  for (const name of ['music/drac-taiko.mp3', 'music/drac-taiko-ambient.mp3', 'music/drac-taiko.mid']) await writeFile(join(multi, name), name);
+  const multiResult = await preparePages(multi, [song, dracSong]);
+  assert(multiResult.includes('music/drac-taiko.mp3'));
+  assert(multiResult.includes('music/drac-taiko-ambient.mp3'));
+  assert(!multiResult.includes('music/drac-taiko.mid'));
+  await assert.rejects(access(join(multi, 'music/drac-taiko.mid')));
+  const missingDrac = await fixture('missing-drac');
+  await assert.rejects(preparePages(missingDrac, [song, dracSong]), /Missing deployment file: music\/drac-taiko/);
   for (const unexpected of ['_worker.js', '.env', 'functions/api.js', 'music/private.wav']) {
     const folder = await fixture(unexpected.replaceAll('/', '-'));
     await mkdir(join(folder, unexpected, '..'), { recursive: true });

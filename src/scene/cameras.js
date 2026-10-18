@@ -3,6 +3,7 @@ import { createOrbit } from './orbit.js';
 import { smoothDamp } from './framing.js';
 import { plaza, camFocus, FRONT, camShift, camera, CAM_AZ, CAM_EL, cameraTarget } from './stage.js';
 import { playStage } from '../hud/layout.js';
+import { figureScale } from '../game/figure-song.js';
 import { M } from './mula-motion.js';
 import { CALM } from '../core/env.js';
 import { clock, G } from '../game/state.js';
@@ -38,7 +39,7 @@ const CAMV = { fov: 54, h: 8.25, w: 8.4, stage: 0.42 };
 export const DRIFT = { az: 0.2, el: 0.05, dist: 0.03, follow: 0.26, oblique: 0.4, tAz: 29, tAz2: 17, tEl: 21, tD: 13 }; // rad / rad / share / rad, seconds: slow, unrelated periods (never a rhythm you can spot)
 const CAM_T = { focus: 0.5, dist: 1.8, follow: 2.8, shift: 0.5, pos: 1.5 }; // seconds to (about) catch up. Constant (a spring whose stiffness changes while it is still far from its target whiplashes); the swoop in from the title camera is just this slow
 export function framePlayCamera(dt, mx, mz, snap = false) { // snap: jump straight to the settled framing (tests)
-  const area = playStage(), focusY = 1.4, s = CAMS;
+  const area = playStage(), focusY = 1.4 * figureScale(), s = CAMS;
   if (!s.live || snap) { // carry on from wherever the camera is (the title's orbit), at rest
     s.v.fill(0);
     s.x[0] = snap ? mx : camFocus.x; s.x[1] = snap ? mz : camFocus.z; s.x[3] = Math.sin(M.yaw - FRONT); s.x[8] = Math.cos(M.yaw - FRONT) ** 2; s.x[4] = camShift;
@@ -55,7 +56,7 @@ export function framePlayCamera(dt, mx, mz, snap = false) { // snap: jump straig
   const az = CAM_AZ + br * DRIFT.az * (0.65 * Math.sin(T / DRIFT.tAz) + 0.35 * Math.sin(T / DRIFT.tAz2 + 1.3))
     + DRIFT.follow * follow - DRIFT.oblique * obl;
   const el = CAM_EL + br * DRIFT.el * (0.7 * Math.sin(T / DRIFT.tEl + 0.7) + 0.3 * Math.sin(T / 9));
-  const dT = Math.max(CAMV.h, CAMV.w / camera.aspect) / (2 * tan) * (1 + br * DRIFT.dist * Math.sin(T / DRIFT.tD)) * (G.collapseT ? 1.2 : 1) * (HH < 300 ? 1.2 : 1); // (lying down she is wider; a short window has little stage above her: a little more room)
+  const dT = Math.max(CAMV.h, CAMV.w / camera.aspect) * figureScale() / (2 * tan) * (1 + br * DRIFT.dist * Math.sin(T / DRIFT.tD)) * (G.collapseT ? 1.2 : 1) * (HH < 300 ? 1.2 : 1); // (lying down she is wider; a short window has little stage above her: a little more room)
   if (snap) { s.x[0] = mx; s.x[1] = mz; s.x[2] = dT; }
   const fx = smoothDamp(s, 0, mx, CAM_T.focus, t), fz = smoothDamp(s, 1, mz, CAM_T.focus, t), d = smoothDamp(s, 2, dT, CAM_T.dist, t);
   const ce = Math.cos(el);

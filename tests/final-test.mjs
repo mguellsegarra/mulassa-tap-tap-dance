@@ -5,12 +5,18 @@ import { makeDanceChart } from '../src/game/chart.js';
 import { EXPECTED_JUDGMENTS, snapshotResult, validResult } from '../src/services/leaderboard-rules.js';
 import { ENERGY } from '../src/game/energy.js';
 import { quality } from '../src/game/progress.js';
-import { finalMode, fabricateRun, judgments, walk, mockLeaderboard, memoryKeys } from '../src/dev/final-test.js';
+import { leaderboardPreviewMode, finalMode, fabricateRun, judgments, walk, mockLeaderboard, memoryKeys, REVIEWS, OTHER_MAIL, MOCK_CODE } from '../src/dev/final-test.js';
 
 import { comparableScore } from '../src/game/score-scale.js';
 const song = JSON.parse(readFileSync(new URL('../src/song.json', import.meta.url)));
 const charts = [0, 1, 2].map(d => makeDanceChart(song, d));
 
+// Local previews use synthetic ranking rows when the real service is absent, without entering results.
+assert(leaderboardPreviewMode({ hostname: 'localhost', configured: false }));
+assert(leaderboardPreviewMode({ hostname: '192.168.1.195', search: '?mock' }));
+assert(!leaderboardPreviewMode({ hostname: 'localhost', configured: true }));
+for (const hostname of ['mulassa.cat', 'abc.pages.dev', '8.8.8.8'])
+  assert(!leaderboardPreviewMode({ hostname, search: '?mock', configured: false }), 'production never substitutes fake standings');
 
 // inert on production, on LAN / localhost only
 for (const h of ['mulassa.cat', 'www.mulassa.cat', 'mulassa-tap-tap-dance.pages.dev', 'abc123.mulassa-tap-tap-dance.pages.dev', '8.8.8.8', '172.32.0.1', ''])
@@ -75,7 +81,8 @@ assert.deepEqual(await svc.identity(), { hasSession: false, persistent: true, em
 await assert.rejects(svc.publish(run, first[3].alias.toUpperCase()), { code: 'taken', message: 'Aquest sobrenom ja és d’algú. Prova’n un altre.' });
 await assert.rejects(svc.publish(run, 'x'), { code: 'invalid' });
 await assert.rejects(svc.publish({ ...run, counts: { ...run.counts, miss: run.counts.miss + 1 } }, 'ProvaMulassa'), { code: 'invalid' });
-assert.equal((await svc.publish(run, 'ProvaMulassa')).improved, true);
+await assert.rejects(svc.publish(run, 'ProvaMulassa'), { code: 'notice' }, 'a first publication needs the 7-day notice shown');
+assert.equal((await svc.publish(run, 'ProvaMulassa', { notice: true })).improved, true);
 assert.equal((await svc.identity()).hasSession, true);
 const after = await svc.listAll(), me = after.find(r => r.is_self);
 assert(me && me.alias === 'ProvaMulassa' && me.total === 63 && Math.round(me.quality) === 95);
@@ -84,7 +91,7 @@ assert.equal((await svc.publish({ ...run, score: run.score - 1 }, 'ProvaMulassa'
 assert.equal(me.score, comparableScore(run.score, run.difficulty), 'mock board converts raw points exactly once');
 { // A newly accepted version result need not replace the user's stronger historical board row.
   const mixed = mockLeaderboard({ charts, finaleT: song.finale, delay: 0 });
-  await mixed.publish({ version: 'mulassa-v1', difficulty: 0, counts: { perfect: 150, good: 0, miss: 0 }, score: 60000, maxCombo: 150 }, 'Versions');
+  await mixed.publish({ version: 'mulassa-v1', difficulty: 0, counts: { perfect: 150, good: 0, miss: 0 }, score: 60000, maxCombo: 150 }, 'Versions', { notice: true });
   const accepted = await mixed.publish({ version: run.version, difficulty: 0, counts: { perfect: 108, good: 0, miss: 0 }, score: 10000, maxCombo: 108 }, 'Versions');
   assert(accepted.improved);
   assert.equal(accepted.score, comparableScore(10000, 0));
@@ -98,7 +105,41 @@ assert.equal((await svc.identity()).hasSession, false);
   const t = mockLeaderboard({ charts, finaleT: song.finale, taken: true, delay: 0 });
   await assert.rejects(t.publish(run, 'TimbalerNou'), { code: 'taken' });
   await assert.rejects(t.publish(run, 'timbalernou'), { code: 'taken' });
-  assert.equal((await t.publish(run, 'TimbalerAltre')).improved, true);
+  assert.equal((await t.publish(run, 'TimbalerAltre', { notice: true })).improved, true);
+}
+{ // &review: dev hosts only; each state picks the mock account it starts from
+  assert.deepEqual(finalMode({ hostname: 'localhost', search: '?final&review=profile-legacy' }), { pct: 95, diff: 0, outcome: 'record', taken: false, review: 'profile-legacy', account: 'legacy' });
+  assert.equal(finalMode({ hostname: 'localhost', search: '?final&review' }).review, '', 'the list of states');
+  assert.equal(finalMode({ hostname: 'localhost', search: '?final&review=nope' }).review, '');
+  assert.equal(finalMode({ hostname: 'localhost', search: '?final&review=recover' }).taken, true);
+  assert.equal(finalMode({ hostname: 'localhost', search: '?final&review=board&account=expired' }).account, 'expired');
+  assert.equal(finalMode({ hostname: 'mulassa.cat', search: '?final&review=published' }), null);
+  assert(Object.values(REVIEWS).every(r => ['new', 'reserved', 'pending', 'legacy', 'verified'].includes(r.account) || r.account === 'expired'));
+}
+{ // the mock accounts behave as 202610180001 does: deadline once, notice once, a pending address counts for nothing
+  let t = Date.parse('2026-10-18T10:00:00Z'); const now = () => t, WEEK = 7 * 864e5;
+  const fresh = mockLeaderboard({ charts, finaleT: song.finale, delay: 0, now });
+  const res = await fresh.publish(run, 'ProvaNova', { notice: true });
+  assert(res.started && Date.parse(res.expires_at) === t + WEEK);
+  t += 60e3; assert.equal((await fresh.publish({ ...run, score: run.score + 1 }, 'ProvaNova')).started, false, 'later publications keep it');
+  let p = await fresh.profile(); assert(p.verified === false && p.expiresAt === t - 60e3 + WEEK && !p.noticeNeeded);
+  assert.deepEqual(await fresh.sendCode('jo@exemple.cat'), { type: 'email_change' });
+  await assert.rejects(fresh.verifyCode('jo@exemple.cat', '000000', 'email_change'), { code: 'code' });
+  assert.equal((await fresh.profile()).verified, false, 'sent, not confirmed: no check');
+  assert.equal((await fresh.identity()).email, '', 'nor an address on the profile');
+  await fresh.verifyCode('jo@exemple.cat', MOCK_CODE, 'email_change');
+  p = await fresh.profile(); assert(p.verified && p.expiresAt === null);
+  assert.equal((await fresh.listAll()).find(r => r.is_self).verified, true);
+  const old = mockLeaderboard({ charts, finaleT: song.finale, delay: 0, now, account: 'legacy' });
+  assert.equal((await old.profile()).noticeNeeded, true);
+  const until = await old.ackNotice(); t += 5000;
+  assert(until === t - 5000 + WEEK && (await old.ackNotice()) === until, 'the notice starts 7 days once');
+  const gone = mockLeaderboard({ charts, finaleT: song.finale, delay: 0, now, account: 'expired' });
+  assert.equal((await gone.profile()).expired, true); assert(!(await gone.listAll()).some(r => r.is_self), 'hidden once expired');
+  const sw = mockLeaderboard({ charts, finaleT: song.finale, delay: 0, now, account: 'pending' });
+  assert.deepEqual(await sw.sendCode(OTHER_MAIL), { type: 'email' }, 'an address with a profile: switch, not merge');
+  await sw.verifyCode(OTHER_MAIL, MOCK_CODE, 'email'); assert.equal(await sw.myAlias(), 'Castellera777');
+  await assert.rejects(mockLeaderboard({ charts, finaleT: song.finale, delay: 0 }).sendCode('ningu@exemple.cat'), { code: 'noprofile' }, 'recovery needs a confirmed address');
 }
 { // the nickname and «Ara no» count in memory; everything else goes to the device's store
   const base = new Map(), s = memoryKeys({ get: k => base.get(k) ?? null, set: (k, v) => base.set(k, v) }, ['leaderboard-alias']);

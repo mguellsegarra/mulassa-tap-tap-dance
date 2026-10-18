@@ -1,5 +1,6 @@
 // The HUD palette, fonts and the text sprite cache (each string is painted once and blitted after).
 import { H } from './canvas.js';
+import { onTheme } from '../game/figure-theme.js';
 
 // Readable rounded bold font for everything (Taiko style); the pixel font only for the logo and big numbers
 export const FONT = "'Baloo 2', system-ui, sans-serif", PIXEL = "'Jersey 10', monospace";
@@ -10,6 +11,8 @@ export const C = {
 };
 export const DIRC = { L: C.gua, D: '#3aa35a', U: '#e8b423', R: C.pa, B: C.gold }; // B: GUAPA, both
 export const DIRLT = { L: C.guaLt, R: C.paLt, B: '#fff27a' }, DIRDK = { L: C.guaDk, R: C.paDk, B: '#b38a00' }; // highlight / shade of each note colour
+// The note colours follow the figure (in place: everyone holds these objects); text sprites are keyed by their colour
+onTheme(t => { Object.assign(C, t.colors); DIRC.L = C.gua; DIRC.R = C.pa; DIRLT.L = C.guaLt; DIRLT.R = C.paLt; DIRDK.L = C.guaDk; DIRDK.R = C.paDk; });
 // Sprites: outlined text is by far the HUD's biggest cost (every stroked glyph is a path, and pulsing sizes miss the
 // glyph cache), and shadowBlur glows are a Gaussian blur per draw. So each string + style + size is painted once
 // into a small canvas and blitted from then on (LRU, capped by pixels). No offscreen canvas (tests): drawn directly.

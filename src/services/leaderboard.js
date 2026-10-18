@@ -25,7 +25,9 @@ const messages = {
   spaces: ALIAS_MESSAGES.spaces,
   email: 'Revisa l’adreça de correu.',
   code: 'El codi no és correcte o ha caducat. Demana’n un de nou.',
-  noprofile: 'No hi ha cap perfil amb aquest correu.',
+  noprofile: 'No hi ha cap perfil amb aquest correu confirmat.',
+  // 202610180001: the first publication of an unconfirmed profile needs the 7-day notice shown (board-ui.js shows it again)
+  notice: 'Abans de publicar, llegeix l’avís sobre els 7 dies i torna a prémer Publica.',
 };
 const fail = (code, detail) => new LeaderboardError(code, messages[code], detail);
 export const PAGE = 50; // rows per page of the joint board (the server's cap too)
@@ -53,6 +55,7 @@ function translated(error) {
   if (text.includes('leaderboard_alias_taken') || code === '23505') return f('taken'); // one player per nickname
   if (text.includes('leaderboard_rate_limit') || error?.status === 429 || /^over_.*rate_limit$/.test(code)) return f('rate_limit');
   if (text.includes('leaderboard_score_ceiling')) return f('ceiling');
+  if (text.includes('leaderboard_notice_required')) return f('notice');
   if (text.includes('leaderboard_invalid_alias_spaces')) return f('spaces'); // 0012: an older client sent spaces
   if (text.includes('leaderboard_invalid_alias')) return f('blocked'); // _blocked, or its shape: pick another
   if (text.includes('leaderboard_invalid')) return f('invalid');
@@ -94,6 +97,14 @@ export function createLeaderboardService({ configured, publishingEnabled, captch
     if (error) { if (error.status === undefined) try { error.status = status; } catch { /* frozen: no status */ } throw error; }
     return data;
   }
+  // a write refused as no player: the account is gone (its 7 days ran out and the purge took it, 202610180001) while its
+  // token still reads valid for up to an hour. This browser leaves it, so the next try signs in to a new profile.
+  async function player(c, name, args) {
+    try { return await rpc(c, name, args); } catch (error) {
+      if (String(error?.message ?? '').includes('leaderboard_auth')) try { await c.auth.signOut({ scope: 'local' }); } catch { /* the retry reports it */ }
+      throw error;
+    }
+  }
   return Object.freeze({
     configured, publishingEnabled, captchaRequired,
     // One all-time board for every level, by score, each player's best, in pages: ranks offset+1 .. offset+limit (at most
@@ -110,17 +121,20 @@ export function createLeaderboardService({ configured, publishingEnabled, captch
       try {
         const c = await client(), { data, error } = await c.auth.getSession();
         if (error) throw error;
-        return { hasSession: !!data.session, persistent: c.mulassaPersistentStorage !== false, email: data.session?.user?.email || '' };
+        // the address only once Supabase Auth confirmed it (a pending change is not the profile's)
+        const user = data.session?.user;
+        return { hasSession: !!data.session, persistent: c.mulassaPersistentStorage !== false, email: (user?.email_confirmed_at && user.email) || '' };
       } catch (error) { throw translated(error); }
     },
-    async publish(result, alias, { captchaToken } = {}) {
+    // notice: the publish sheet showed the 7-day notice (only then may the server start a new profile's deadline)
+    async publish(result, alias, { captchaToken, notice = false } = {}) {
       const normalized = normalizeAlias(alias);
       if (!normalized || !validResult(result)) throw fail('invalid');
       return write(async c => {
         await session(c, captchaToken);
-        const data = await rpc(c, 'submit_result', { p_version: result.version, p_difficulty: result.difficulty,
+        const data = await player(c, 'submit_result', { p_version: result.version, p_difficulty: result.difficulty,
           p_perfect: result.counts.perfect, p_good: result.counts.good, p_miss: result.counts.miss,
-          p_score: result.score, p_max_combo: result.maxCombo, p_alias: normalized });
+          p_score: result.score, p_max_combo: result.maxCombo, p_alias: normalized, p_notice: notice === true });
         return data[0];
       });
     },
@@ -129,11 +143,28 @@ export function createLeaderboardService({ configured, publishingEnabled, captch
     async createProfile(alias, { captchaToken } = {}) {
       const normalized = normalizeAlias(alias);
       if (!normalized) throw fail('invalid');
-      return write(async c => { await session(c, captchaToken); return rpc(c, 'update_alias', { p_alias: normalized }); });
+      return write(async c => { await session(c, captchaToken); return player(c, 'update_alias', { p_alias: normalized }); });
     },
     // The signed-in profile's own nickname, or null (my_alias, 202609300002): on the board or not.
     async myAlias() {
       try { return (await rpc(await client(), 'my_alias')) || null; } catch (error) { throw translated(error); }
+    },
+    // The signed-in profile as the server sees it (my_profile, 202610180001), or null (no session or no profile row).
+    // verified: an address Supabase Auth confirmed (a pending one never counts); expiresAt: ms, null = no deadline.
+    async profile() {
+      try {
+        const c = await client(), { data, error } = await c.auth.getSession();
+        if (error) throw error;
+        if (!data.session) return null;
+        const p = (await rpc(c, 'my_profile'))?.[0];
+        return p ? { alias: p.alias, verified: p.verified === true, expiresAt: p.expires_at ? Date.parse(p.expires_at) : null,
+          published: p.published === true, noticeNeeded: p.notice_needed === true, expired: p.expired === true } : null;
+      } catch (error) { throw translated(error); }
+    },
+    // The 7-day notice is on screen for a profile that already had results: the server starts its deadline once (a retry
+    // returns the same one). Returns the deadline (ms) or null.
+    async ackNotice() {
+      try { const t = await rpc(await client(), 'ack_expiry_notice'); return t ? Date.parse(t) : null; } catch (error) { throw translated(error); }
     },
     // Profile recovery, no password: an e-mail address on the guest profile, then a 6-digit code sent to it. sendCode()
     // attaches the address to this browser's profile (or, if that address already owns one, signs in to it instead) and

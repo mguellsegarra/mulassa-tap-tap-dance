@@ -1,5 +1,5 @@
 // The top band: the song progress ring, ENCERTS and the ànim (energy) meter.
-import song from '../song.json';
+import { song } from '../game/figure-song.js';
 import { judgedCount } from '../game/progress.js';
 import { K, PXU, H, SAFE, W } from './canvas.js';
 import { glowPath, textWidth, text } from './primitives.js';
@@ -8,6 +8,8 @@ import { HUD_H, ENC_H, HUD_CY, ENC_GAP } from './layout.js';
 import { songTime, G, clock } from '../game/state.js';
 import { elastic } from './praise.js';
 import { CALM } from '../core/env.js';
+import { portraitArt, portraitPalette } from '../game/figures.js';
+import { selectedFigure } from '../game/figure-song.js';
 
 // Top bar: ONE compact row centred at the top, like FNF / osu! / Guitar Hero: L'ÀNIM DE LA PLAÇA is the one bar
 // (the mulassa as its portrait, then the bar: empty, she falls apart) and ENCERTS (the quality: the hit rate) is just a
@@ -24,22 +26,19 @@ function hudBox(x, y, w, h, glow = 0) {
 }
 // Song progress: from the first note to the last (song.end, the final hit: the tail after it is the celebration, not the dance)
 // on the audio clock (songTime), so the count-in reads 0 and a pause holds it. Shown as a ring round #pause (drawProgressRing).
-const PROG_T0 = song.notes[0][0], PROG_T1 = song.end, RING_GAP = 1.5, RING_W = 2; // the ring: RING_GAP off the button's edge
-const songProgress = t => Math.min(1, Math.max(0, (t - PROG_T0) / (PROG_T1 - PROG_T0)));
-// The mulassa as 12 × 10 pixel art, side-on, facing the way the song goes (right): ears, head, long neck, the red
-// caparison with gold dots and fringe, the portadors' legs. Painted once per HUD scale into a sprite, dark-outlined.
-const MULE_ART = ['........e.e.', '........hhh.', '........hhhh', '.......hh...', '.rrrrrrh....', 'rrgrrgrr....', 'rrrrrrrr....', 'gggggggg....', '.d....d.....', '.dd...dd....'];
-const MULE_COL = { e: '#e0a868', h: '#b87a44', r: C.red, g: C.gold, d: C.dark }; // light browns: the head must read against the dark outline
+const RING_GAP = 1.5, RING_W = 2; // the ring: RING_GAP off the button's edge
+const songProgress = t => Math.min(1, Math.max(0, (t - song.notes[0][0]) / (song.end - song.notes[0][0])));
+// The mulassa's pixel art (src/game/figures.js), facing the way the song goes. Painted once per HUD scale into a sprite, dark-outlined.
 const MULE_S = 17 / 10.8, MULE_W = 12.8 * MULE_S, MULE_H = 10.8 * MULE_S; // 17 units tall with its outline
 function paintMule(c) { // in a MULE_W × MULE_H box, feet at the bottom
   c.scale(MULE_S, MULE_S); c.translate(0.4, 0.4);
   c.fillStyle = C.dark;
-  MULE_ART.forEach((row, y) => [...row].forEach((k, x) => k !== '.' && c.fillRect(x - 0.4, y - 0.4, 1.8, 1.8))); // outline
-  MULE_ART.forEach((row, y) => [...row].forEach((k, x) => { if (k !== '.') { c.fillStyle = MULE_COL[k]; c.fillRect(x, y, 1, 1); } }));
+  portraitArt(selectedFigure).forEach((row, y) => [...row].forEach((k, x) => k !== '.' && c.fillRect(x - 0.4, y - 0.4, 1.8, 1.8))); // outline
+  portraitArt(selectedFigure).forEach((row, y) => [...row].forEach((k, x) => { if (k !== '.') { c.fillStyle = portraitPalette(selectedFigure)[k]; c.fillRect(x, y, 1, 1); } }));
 }
 function muleGlyph(x, bottom) { // x: centre; blitted from a sprite (painted once per HUD scale), drawn directly without one (tests)
   const k = devScale(), y = bottom - MULE_H, x0 = x - MULE_W / 2;
-  const sp = k ? sprite(`mule|${k}`, k, () => ({ w: MULE_W, h: MULE_H }), c => paintMule(c)) : null;
+  const sp = k ? sprite(`figure|${selectedFigure.id}|${k}`, k, () => ({ w: MULE_W, h: MULE_H }), c => paintMule(c)) : null;
   if (sp) { H.drawImage(sp.c, x0, y, sp.w, sp.h); return; }
   H.save(); H.translate(x0, y); paintMule(H); H.restore();
 }

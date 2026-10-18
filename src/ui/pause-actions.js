@@ -1,7 +1,7 @@
 // Pause toggling, page visibility, and the restart and exit actions.
-import song from '../song.json';
+import { song, countInAt, countInDuration } from '../game/figure-song.js';
 import { G, songTime, chip } from '../game/state.js';
-import { pageActive, BEATS, playFrom, BEAT } from '../core/env.js';
+import { pageActive, BEATS, playFrom } from '../core/env.js';
 import { pauseGame, closePauseMenu } from './pause.js';
 import { pauseMenu } from './handles.js';
 import { focusIn } from './focus.js';
@@ -19,9 +19,9 @@ export function togglePause() {
     chip.resume();
     if (tp < (G.practice ? BEATS[0] : BEATS.find(b => b >= playFrom) ?? playFrom)) return; // still in the start's own count-in: it carries on
     G.paused = true; G.resuming = tp;
-    const chart = G.chart, at = [3, 2, 1].map(k => tp - k * BEAT);
-    if (G.practice) { chip.startClock(3 * BEAT, tp); chip.countIn(at); return; }
-    chip.start(3 * BEAT, tp, song.tail).then(ok => { if (ok && G.chart === chart) chip.countIn(at); });
+    const chart = G.chart, at = countInAt(tp), lead = countInDuration(tp);
+    if (G.practice) { chip.startClock(lead, tp); chip.countIn(at); return; }
+    chip.start(lead, tp, song.tail).then(ok => { if (ok && G.chart === chart) chip.countIn(at); });
   }
 }
 function syncPageActivity() {

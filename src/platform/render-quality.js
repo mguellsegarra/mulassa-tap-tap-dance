@@ -5,14 +5,16 @@
 // frame) filling the ground beyond the moving ring, on the far side the play camera looks across
 // (main.js midCrowd). near: how many of the skinned ring (the nearest her that the camera sees) answer hits more (NEAR).
 // ripple: rows (from the front) that also see each hit travel round the ring (crowd-fx.js); the first ring always does; -1 = nobody.
+// smoke: the Drac's smoke puffs (drac-fx.js pool; 0 = none); embers: its small sparks (guspires) off the fire points;
+// wheels: the sparks of its rodes de foc (its confetti: a wheel on each of its 5 fire points; minimal: the 2 mouths).
 export const PROFILES = [
-  { name: 'low', dpr: 1, pixels: 850_000, shadow: 0, rows: 2, stride: 2, confetti: 80, fireworks: 180, backdrop: 160, mid: 130, balconies: 16, near: 12, ripple: 0, band: 6 },
-  { name: 'medium', dpr: 1.5, pixels: 1_600_000, shadow: 1024, rows: 3, stride: 2, confetti: 150, fireworks: 350, backdrop: 280, mid: 240, balconies: 36, near: 18, ripple: 1, band: 8 },
-  { name: 'high', dpr: 2, pixels: 3_000_000, shadow: 2048, rows: 3, stride: 1, confetti: 260, fireworks: 700, backdrop: 380, mid: 340, balconies: 40, near: 26, ripple: 9, band: 10 },
+  { name: 'low', dpr: 1, pixels: 850_000, shadow: 0, rows: 2, stride: 2, confetti: 80, fireworks: 180, backdrop: 160, mid: 130, balconies: 16, near: 12, ripple: 0, band: 6, smoke: 48, embers: 64, wheels: 160 },
+  { name: 'medium', dpr: 1.5, pixels: 1_600_000, shadow: 1024, rows: 3, stride: 2, confetti: 150, fireworks: 350, backdrop: 280, mid: 240, balconies: 36, near: 18, ripple: 1, band: 8, smoke: 96, embers: 128, wheels: 320 },
+  { name: 'high', dpr: 2, pixels: 3_000_000, shadow: 2048, rows: 3, stride: 1, confetti: 260, fireworks: 700, backdrop: 380, mid: 340, balconies: 40, near: 26, ripple: 9, band: 10, smoke: 160, embers: 256, wheels: 400 },
 ];
 // Level -1: for GPUs that can't keep up even at 'low' (the frame monitor steps down to it) and software WebGL (below):
 // the 3D below 1× (~350k px), one crowd row, a thin backdrop. PROFILES[0..2] keep their indices.
-export const MINIMAL = { name: 'minimal', dpr: 1, pixels: 350_000, shadow: 0, rows: 1, stride: 2, confetti: 40, fireworks: 90, backdrop: 60, mid: 40, balconies: 0, near: 10, ripple: -1, band: 6 };
+export const MINIMAL = { name: 'minimal', dpr: 1, pixels: 350_000, shadow: 0, rows: 1, stride: 2, confetti: 40, fireworks: 90, backdrop: 60, mid: 40, balconies: 0, near: 10, ripple: -1, band: 6, smoke: 0, embers: 24, wheels: 64 };
 export const profileAt = level => (level < 0 ? MINIMAL : PROFILES[Math.min(level, PROFILES.length - 1)]);
 // The HUD canvas budget follows the quality: at low/minimal the fill rate is the problem, so text is a little softer.
 export const hudBudget = (level, touch) => (level <= 0 ? 900_000 : touch ? 2_500_000 : 4_200_000);

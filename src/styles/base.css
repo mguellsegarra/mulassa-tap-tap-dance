@@ -1,10 +1,10 @@
 /* The page: layout, the HUD chrome, the touch pad and the sheets (settings, pause, sync, classificacions...). */
-:root { --sat: env(safe-area-inset-top, 0px); --sar: env(safe-area-inset-right, 0px); --sal: env(safe-area-inset-left, 0px); --sab: env(safe-area-inset-bottom, 0px); --button-radius: 12px; --button-border: #f5c518; --button-bg: #2a1a10e8; --button-text: #fff3d6; }
+:root { --sat: env(safe-area-inset-top, 0px); --sar: env(safe-area-inset-right, 0px); --sal: env(safe-area-inset-left, 0px); --sab: env(safe-area-inset-bottom, 0px); --button-radius: 12px; --button-border: #f5c518; --button-bg: #2a1a10e8; --button-text: #fff3d6; --focus: 3px solid var(--button-text); --focus-off: 3px; } /* ONE keyboard cursor everywhere: --focus, never stacked on a selection ring */
 :root { color-scheme: light only; } /* never let iOS/Android dark mode restyle our colours */
 button { -webkit-appearance: none; appearance: none; display: inline-flex; align-items: center; justify-content: center; gap: 12px; min-height: 44px; border: 2px solid var(--button-border); border-radius: var(--button-radius); background: var(--button-bg); color: var(--button-text); font: 800 18px 'Baloo 2', system-ui, sans-serif; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-button:hover { filter: brightness(1.15); }
+@media (hover: hover) { button:hover { filter: brightness(1.15); } } /* touch screens keep :hover after a tap: it stuck lit */
 button:active { transform: translateY(1px); }
-button:focus-visible { outline: 3px solid var(--button-text); outline-offset: 4px; }
+button:focus-visible, a:focus-visible { outline: var(--focus); outline-offset: var(--focus-off); }
 /* .btn: THE button of every sheet. An optional icon sits right before the label and the two are centred together
    (icon + label read as one; no gap that changes with the label's length); an optional .sub line below.
    .btn-primary = filled gold (one per sheet), .btn-secondary = outlined, .btn-link = plain text (minor actions). */
@@ -13,8 +13,11 @@ button:focus-visible { outline: 3px solid var(--button-text); outline-offset: 4p
 .btn .sub { display: block; margin-top: 2px; font-size: 14px; font-weight: 700; color: #e8d8b8; }
 .btn-primary { background: var(--button-border); color: #2a1a10; }
 .btn-primary .sub { color: #2a1a10b3; }
+.btn-secondary { background: var(--button-bg); border-color: var(--button-border); color: var(--button-text); } /* = the plain .btn, spelled out: gold edge, never filled */
 .btn-link { display: inline-block; width: auto; min-height: 40px; padding: 4px 12px; border-color: transparent; background: none; color: #e8d8b8; font-size: 16px; text-decoration: underline; text-decoration-color: #e8d8b866; text-underline-offset: 3px; }
 .btn-link:active { transform: none; }
+.btn-link::after { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 100%; min-height: 44px; translate: 0 -50%; } /* touch slop: a 44 px target whatever the text's height */
+p .btn-link::after { display: none; } /* a link inside a sentence: its slop would cover the lines around it (WCAG 2.5.8 exempts inline targets) */
 .btn-small { min-height: 32px; padding: 0 4px; font-size: 14px; }
 /* .btn-compact (with .btn-link): a quiet icon + label text link, clearly lesser than the sheet's buttons, e.g. the
    share sheet's WhatsApp · X · Més…; small to the eye, still a 44 px target (padding); never a sheet's main action */
@@ -34,15 +37,15 @@ canvas { position: fixed; left: 0; top: 0; width: 100%; height: 100vh; height: 1
 /* The buttons are the same round notes as the lane: a white disc with a dark rim and the note's colour inside. The whole half
    stays the hit zone (transparent); only the disc is drawn. */
 #pad button { background: none; justify-content: center; }
-#pad .gua { padding-left: env(safe-area-inset-left); --c: #ff7a1a; --lt: #ffb56b; --dk: #b34d00; }
-#pad .pa { padding-right: env(safe-area-inset-right); --c: #14b8a6; --lt: #5eead4; --dk: #0b7f72; }
+#pad .gua { padding-left: env(safe-area-inset-left); --c: var(--gua, #ff7a1a); --lt: var(--gua-lt, #ffb56b); --dk: var(--gua-dk, #b34d00); }
+#pad .pa { padding-right: env(safe-area-inset-right); --c: var(--pa, #14b8a6); --lt: var(--pa-lt, #5eead4); --dk: var(--pa-dk, #0b7f72); }
 /* A press scales the disc and lights it (compositor work only); the GUAPA glow is a ring on ::after. */
 #pad button::before { display: none; }
 #pad button::after { content: ""; position: absolute; z-index: 0; top: -50px; bottom: calc(-32px + env(safe-area-inset-bottom)); left: 50%; aspect-ratio: 1; translate: -50% 0; opacity: 0; transition: opacity .3s ease-out; pointer-events: none; background: radial-gradient(circle closest-side, #f5c518 60%, #f5c518 68%, #f5c518aa 76%, #f5c51844 88%, #f5c51800 100%); } /* GUAPA glow: a round gradient that fades to nothing inside its box, so no square edge (a blurred box-shadow got cropped) */
 #pad .lbl { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; box-sizing: border-box; height: calc(100% - 10px); aspect-ratio: 1; max-width: calc(100% - 14px); border: 6px solid #fff; border-radius: 50%; background: radial-gradient(circle at 50% 30%, var(--lt), var(--c) 62%); box-shadow: 0 0 0 5px #2a1a10, 0 6px 0 5px #0006, inset 0 -8px 0 var(--dk); pointer-events: none; transition: transform .38s cubic-bezier(.3, 1.8, .5, 1), box-shadow .3s ease-out; will-change: transform; } /* release: springs back past 1 and settles */
 /* The outline is painted once: a stroked copy of the word under it (::before), not 16 text-shadows (iOS Safari
    ignores paint-order on HTML text). The word's own shadow drops under it; over the outline it's the same colour. */
-#pad .word { text-shadow: 0 2px 8px #0000002e; } /* plain white, just a soft shadow for contrast */
+#pad .word { text-shadow: 0 2px 8px #0000002e; } .fig-drac #pad .word { text-shadow: 0 1px 0 var(--dk), 0 2px 6px #0006; } /* white on the light yellow needs a darker edge */ /* plain white, just a soft shadow for contrast */
 #pad .arr { font-size: 18px; line-height: 1; color: #fff; text-shadow: 0 1px 4px #0000002e; margin-bottom: 2px; }
 #pad button:hover { filter: none; }
 #pad button:active { transform: none; }
@@ -83,10 +86,11 @@ button svg { width: 22px; height: 22px; flex: none; fill: none; stroke: currentC
 #pause-menu h2 { font-size: 32px; }
 #pause-menu p { margin: 0 0 20px; text-align: center; font-size: 16px; }
 #pause-menu .sheet-actions { margin-top: 0; }
-/* Title: one small "how to play" pill under the difficulty buttons; the key lives in a sheet it opens.
+/* Title: one small "how to play" pill under JUGA; the key lives in a sheet it opens.
    main.js (titleLayoutNow, src/hud/title-layout.js) sets its top inline from the canvas layout, and the iPhone hint's;
    the bottom values here are only the first frame's fallback. Corner mode (max-height: 500px) stays CSS-placed. */
-#howto { position: fixed; z-index: 3; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom)); transform: translateX(-50%); min-height: 44px; padding: 6px 18px 6px 8px; gap: 8px; border-width: 1.5px; border-radius: 999px; font-size: 15px; letter-spacing: .03em; }
+#howto { position: fixed; z-index: 3; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom)); transform: translateX(-50%); }
+.howto-pill { min-height: 44px; padding: 6px 18px 6px 8px; gap: 8px; border-width: 1.5px; border-radius: 999px; font-size: 15px; letter-spacing: .03em; } /* the title's #howto and «QUI BALLA?»'s #select-howto */
 #howto:active { transform: translate(-50%, 1px); }
 /* iPhone Safari only: how to get the fullscreen home-screen app. Sits just above the "how to play" pill. */
 #ios-hint { position: fixed; z-index: 3; left: 50%; bottom: calc(16px + 44px + 10px + env(safe-area-inset-bottom)); transform: translateX(-50%); box-sizing: border-box; width: max-content; max-width: calc(100vw - 32px); display: flex; align-items: center; gap: 8px; padding: 6px 4px 6px 12px; border-left: 3px solid #f5c518; border-radius: 4px; background: #2a1a10e0; /* a tip, not a button: flat, a coloured strip, no outline */ color: #fff3d6; font: 700 13px/1.25 'Baloo 2', system-ui, sans-serif; }
@@ -94,19 +98,19 @@ button svg { width: 22px; height: 22px; flex: none; fill: none; stroke: currentC
 #ios-hint b { color: #f5c518; font-weight: 800; }
 #ios-hint span { flex: 1; text-align: center; text-wrap: balance; } /* centred between the share icon and the close button */
 #ios-hint button { flex: none; min-height: 32px; width: 32px; padding: 0; border: 0; background: none; font-size: 20px; line-height: 1; color: #e8d8b8; }
-#howto .q { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--button-border); color: #2a1a10; font-size: 17px; line-height: 1; }
+.howto-pill .q { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--button-border); color: #2a1a10; font-size: 17px; line-height: 1; }
 @media (min-width: 520px) and (min-height: 520px) { /* the canvas HUD draws at 2x here (1.5x on phones): scale the pill to match its buttons */
   #howto { min-height: 56px; bottom: calc(20px + env(safe-area-inset-bottom)); padding: 8px 24px 8px 10px; gap: 10px; border-width: 2px; font-size: 20px; }
   #howto .q { width: 36px; height: 36px; font-size: 22px; }
 }
 /* Title: a round gear top-right opens "Configuració" (sync + practice). Landscape phones: top-left, the Com es juga pill has the top-right corner. */
-#settings { position: fixed; z-index: 3; top: calc(10px + env(safe-area-inset-top)); right: calc(10px + env(safe-area-inset-right)); width: 44px; height: 44px; min-height: 0; padding: 0; border-width: 1.5px; border-radius: 50%; }
+#settings { position: fixed; z-index: 3; top: calc(10px + env(safe-area-inset-top)); right: calc(10px + env(safe-area-inset-right)); width: 44px; height: 44px; min-height: 0; padding: 0; border-width: 2px; border-radius: 50%; }
 #settings svg { width: 24px; height: 24px; }
 @media (min-width: 520px) and (min-height: 520px) { #settings { top: calc(16px + env(safe-area-inset-top)); right: calc(16px + env(safe-area-inset-right)); width: 56px; height: 56px; border-width: 2px; } #settings svg { width: 30px; height: 30px; } }
 @media (max-height: 500px) { #settings { right: auto; left: calc(12px + env(safe-area-inset-left)); top: calc(12px + env(safe-area-inset-top)); } }
 /* Title: a round podium opens Classificacions. Portrait: top-left, the ⚙'s mirror. Landscape phones: right after the ⚙.
    Both are title-layout obstacles (titleLayoutNow() measures them), so the logo keeps clear of them. */
-#leaders { position: fixed; z-index: 3; top: calc(10px + env(safe-area-inset-top)); left: calc(10px + env(safe-area-inset-left)); width: 44px; height: 44px; min-height: 0; padding: 0; border-width: 1.5px; border-radius: 50%; }
+#leaders { position: fixed; z-index: 3; top: calc(10px + env(safe-area-inset-top)); left: calc(10px + env(safe-area-inset-left)); width: 44px; height: 44px; min-height: 0; padding: 0; border-width: 2px; border-radius: 50%; }
 #leaders svg { width: 24px; height: 24px; }
 @media (min-width: 520px) and (min-height: 520px) { #leaders { top: calc(16px + env(safe-area-inset-top)); left: calc(16px + env(safe-area-inset-left)); width: 56px; height: 56px; border-width: 2px; } #leaders svg { width: 30px; height: 30px; } }
 @media (max-height: 500px) { #leaders { left: calc(12px + 44px + 10px + env(safe-area-inset-left)); top: calc(12px + env(safe-area-inset-top)); } }
@@ -120,11 +124,12 @@ button svg { width: 22px; height: 22px; flex: none; fill: none; stroke: currentC
 .switch-row input::before { content: ""; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%; background: #e8d8b8; transition: transform .15s; }
 .switch-row input:checked { background: var(--button-border); }
 .switch-row input:checked::before { transform: translateX(20px); background: #2a1a10; }
-.switch-row input:focus-visible { outline: 3px solid var(--button-text); outline-offset: 3px; }
+.switch-row input:focus-visible { outline: var(--focus); outline-offset: var(--focus-off); }
 @media (prefers-reduced-motion: reduce) { .switch-row input, .switch-row input::before { transition: none; } }
 /* «Mostra els FPS»: a discreet readout, bottom-left, a flat label with a coloured strip (green / amber / red against
    the target rate). main.js fpsTick() sets its bottom: above the pad (and the practice instruction) in play. */
-#fps { position: fixed; z-index: 3; left: calc(8px + var(--sal)); bottom: calc(8px + var(--sab)); padding: 1px 7px 1px 6px; border-left: 3px solid #7ee081; border-radius: 3px; background: #2a1a1099; color: #fff3d6d9; font: 700 12px/16px 'Baloo 2', system-ui, sans-serif; font-variant-numeric: tabular-nums; white-space: pre-line; pointer-events: none; }
+#fps { position: fixed; inset: auto; margin: 0; width: max-content; overflow: visible; border: 0; z-index: 3; left: calc(8px + var(--sal)); bottom: calc(8px + var(--sab)); padding: 1px 7px 1px 6px; border-left: 3px solid #7ee081; border-radius: 3px; background: #2a1a1099; color: #fff3d6d9; font: 700 12px/16px 'Baloo 2', system-ui, sans-serif; font-variant-numeric: tabular-nums; white-space: pre-line; pointer-events: none; }
+#fps::backdrop { background: transparent; pointer-events: none; }
 #fps[data-l="mid"] { border-left-color: #f5a623; } #fps[data-l="low"] { border-left-color: #ff6b5b; }
 /* phones: «mode d’estalvi?» wraps under «30 FPS» (mode / d’estalvi?) so the box stays left of «Com es juga?» (it ran
    4 px into it on an iPhone SE, 12 on a 360 px Android); «120 FPS» still fits on one line */
@@ -152,14 +157,15 @@ button svg { width: 22px; height: 22px; flex: none; fill: none; stroke: currentC
 #controls-legend { margin: 12px 0 0; padding: 0; list-style: none; display: grid; gap: 6px; font: 700 14px/1.2 'Baloo 2', system-ui, sans-serif; }
 #controls-legend li { display: grid; grid-template-columns: 76px 1fr; align-items: center; gap: 12px; padding: 8px 10px; border-radius: 12px; background: #fff3d60a; }
 #controls-legend li > :first-child { justify-self: center; }
+#controls-legend li.only-drac, .fig-drac #controls-legend li.only-mula { display: none; } .fig-drac #controls-legend li.only-drac { display: grid; } /* one figure's rows (ui/figure-theme-dom.js sets .fig-drac) */
 #controls-legend b { display: block; color: #f5c518; font-size: 16px; letter-spacing: .03em; }
 @media (max-height: 700px) { #howto-menu { padding: 14px 16px 14px; } #howto-menu h2 { font-size: 26px; } #controls-legend { margin-top: 8px; gap: 4px; } #controls-legend li { padding: 4px 8px; } } /* short phones (360×640): the whole list and «Entesos!» fit without scrolling */
 #controls-legend small { display: block; font-size: 14px; color: #e8d8b8; }
 .note { flex: none; box-sizing: border-box; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 2px #2a1a10; color: #fff; font-size: 13px; }
-.note.gua { background: #ff7a1a; text-shadow: 0 0 2px #b34d00, 0 0 1px #b34d00; } .note.pa { background: #14b8a6; text-shadow: 0 0 2px #0a6e63, 0 0 1px #0a6e63; } /* GUA orange, PA turquoise; dark outline keeps the white arrow readable */
-.note.guapa { display: grid; place-items: center; width: 44px; height: 44px; border: 3px solid #f5c518; background: linear-gradient(90deg, #ff7a1a 50%, #14b8a6 50%); box-shadow: 0 0 0 3px #2a1a10, 0 0 10px 2px #f5c51899; font-size: 9px; line-height: 1; letter-spacing: 0; text-shadow: 0 0 2px #2a1a10, 0 0 2px #2a1a10; } /* GUAPA: 1.4x, gold rim, half GUA orange / half PA turquoise */
+.note.gua { background: var(--gua, #ff7a1a); text-shadow: 0 0 2px var(--gua-dk, #b34d00), 0 0 1px var(--gua-dk, #b34d00); } .note.pa { background: var(--pa, #14b8a6); text-shadow: 0 0 2px var(--pa-dk, #0a6e63), 0 0 1px var(--pa-dk, #0a6e63); } /* GUA orange, PA turquoise; dark outline keeps the white arrow readable */
+.note.guapa { display: grid; place-items: center; width: 44px; height: 44px; border: 3px solid #f5c518; background: linear-gradient(90deg, var(--gua, #ff7a1a) 50%, var(--pa, #14b8a6) 50%); box-shadow: 0 0 0 3px #2a1a10, 0 0 10px 2px #f5c51899; font-size: 9px; line-height: 1; letter-spacing: 0; text-shadow: 0 0 2px #2a1a10, 0 0 2px #2a1a10; } /* GUAPA: 1.4x, gold rim, half GUA orange / half PA turquoise */
 .legend-icon { flex: none; overflow: visible; } /* drawn like the lane: MANTÉN head + tail + cap, GLOBUS balloon */
-.legend-icon.hold { filter: drop-shadow(0 0 3px #ff7a1a99); }
+.legend-icon.hold { filter: drop-shadow(0 0 3px color-mix(in srgb, var(--gua, #ff7a1a) 60%, transparent)); }
 kbd { display: inline-block; min-width: 14px; padding: 0 4px; border: 1px solid #fff3d660; border-radius: 4px; background: #fff3d60c; font: 800 12px/16px 'Baloo 2', system-ui, sans-serif; text-align: center; }
 .pad-key { display: inline-block; padding: 0 5px; border-radius: 4px; color: #fff; font-size: 10px; line-height: 16px; vertical-align: 1px; }
 .keys, .touch { white-space: nowrap; }
@@ -206,7 +212,7 @@ kbd { display: inline-block; min-width: 14px; padding: 0 4px; border: 1px solid 
 #sync-menu #sync-live { min-height: 1.3em; margin-bottom: 12px; font-size: 20px; color: #fff3d6; }
 #sync-pad { display: flex; margin: 0 0 6px; border: 2px solid #f5c518; border-radius: 14px; overflow: hidden; }
 #sync-pad span { flex: 1; display: grid; place-items: center; min-height: 64px; color: #fff; font-size: 24px; letter-spacing: .04em; text-shadow: -2px 0 #2a1a10, 2px 0 #2a1a10, 0 -2px #2a1a10, 0 2px #2a1a10; }
-#sync-pad .gua { background: #ff7a1a; border-right: 2px solid #2a1a10; } #sync-pad .pa { background: #14b8a6; }
+#sync-pad .gua { background: var(--gua, #ff7a1a); border-right: 2px solid #2a1a10; } #sync-pad .pa { background: var(--pa, #14b8a6); }
 #sync-menu .sync-kicker { margin: 4px 0 0; font-size: 13px; letter-spacing: .12em; }
 #sync-measured { display: block; margin: 0 0 6px; font: 800 58px/1.05 'Baloo 2', system-ui, sans-serif; color: #f5c518; }
 #sync-menu #sync-verdict { margin-bottom: 16px; font-size: 16px; color: #fff3d6; }
@@ -327,6 +333,16 @@ kbd { display: inline-block; min-width: 14px; padding: 0 4px; border: 1px solid 
 #board-table tr.me td { background: #f5c51824; color: #f5c518; }
 #board-table tr.me td:first-child { box-shadow: inset 3px 0 #f5c518; } /* the player's own row: a gold strip */
 .me-tag { flex: none; display: inline-block; padding: 0 5px; border-radius: 4px; background: #f5c518; color: #2a1a10; font-size: 11px; line-height: 16px; letter-spacing: .06em; }
+/* «Correu confirmat» (src/ui/profile-notes.js checkBadge): a blue check after the nickname, meaning only that; a tap or the
+   keyboard shows the words in a flat tip under it */
+.verified-check { position: relative; flex: none; display: inline-grid; place-items: center; width: 16px; height: 16px; min-height: 0; margin: 0; padding: 0; border: 0; border-radius: 50%; background: none; cursor: help; -webkit-tap-highlight-color: transparent; }
+.verified-check svg { width: 100%; height: 100%; fill: #3b9cff; stroke: #fff; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.verified-check svg circle { stroke: none; }
+.verified-check::before { content: ""; position: absolute; inset: -14px; } /* touch slop: a 44 px target */
+.verified-check::after { content: attr(data-tip); position: absolute; z-index: 3; left: 50%; top: calc(100% + 6px); translate: -50% 0; padding: 4px 8px 4px 7px; border-left: 3px solid #3b9cff; border-radius: 4px; background: #2a1a10; color: #fff3d6; font: 700 12px/1.3 system-ui, sans-serif; letter-spacing: 0; white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity .15s; }
+.verified-check.tip::after, .verified-check:focus-visible::after { opacity: 1; }
+.profile-name .verified-check { width: 20px; height: 20px; margin-left: 6px; vertical-align: -2px; }
+@media (prefers-reduced-motion: reduce) { .verified-check::after { transition: none; } }
 .board-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 0 16px; }
 .board-text { margin: 0 0 10px; text-align: center; font-size: 16px; line-height: 1.35; color: #e8d8b8; text-wrap: pretty; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
@@ -370,6 +386,15 @@ kbd { display: inline-block; min-width: 14px; padding: 0 4px; border: 1px solid 
 #publish-form[data-view="done"] #publish-status { margin: 0 0 20px; font-size: 16px; line-height: 1.35; color: #e8d8b8; }
 #publish-form[data-view="done"] #publish-status:has(+ .publish-place:not([hidden])) { margin-bottom: 6px; }
 #publish-form[data-view="done"] .publish-place { margin: 0 0 24px; font-size: 26px; line-height: 1.2; }
+/* under the first «Publicat!» of a profile with a deadline: when it goes, and a quiet way to keep it (board-ui.js) */
+/* no box: the deadline in the error red, then «Confirma el correu» takes the primary and «D'acord» steps down to secondary */
+.publish-offer { margin: -12px 0 10px; text-align: center; }
+.publish-warning { margin: 0 0 18px; color: #ff8a7a; font-size: 15px; line-height: 1.35; text-wrap: balance; }
+.publish-warning-when { display: block; font-size: 16px; }
+.publish-warning-when svg { width: 20px; height: 20px; margin: -3px 6px 0 0; vertical-align: middle; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.publish-offer > .btn > svg { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.publish-offer:not([hidden]) + .sheet-actions > #publish-send { background: var(--button-bg); color: var(--button-text); }
+#publish-form[data-view="done"] .publish-offer { animation: board-in .3s ease-out both; }
 @media (min-height: 501px) { #publish-menu:has(#publish-form[data-view]) { padding: 24px 24px 24px; } } /* even air all round (not the compact landscape sheet) */
 #publish-menu .sheet-actions { margin-top: 0; gap: 8px; }
 #publish-menu:has(#publish-form[data-view="wait"]) #publish-cancel { display: none; }
@@ -406,7 +431,7 @@ kbd { display: inline-block; min-width: 14px; padding: 0 4px; border: 1px solid 
 .profile-name { display: block; margin-top: 2px; font-size: 24px; line-height: 1.1; font-weight: 800; color: #f5c518; overflow-wrap: anywhere; } .profile-name:empty { display: none; }
 .profile-block .sub.setting-note { margin-top: 4px; color: #e8d8b8b3; }
 .profile-block .profile-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; }
-.profile-block .profile-actions .btn { width: 100%; min-height: 40px; padding: 0 10px; }
+.profile-block .profile-actions .btn { width: 100%; min-height: 44px; padding: 0 10px; }
 .profile-block .profile-actions .btn[hidden] { display: none; }
 /* waiting for the identity: the room is kept and shows as a quiet skeleton (the name is already known), so it reads as loading, not dead */
 .profile-block[data-pending] .btn { color: transparent; border-color: transparent; background: #fff3d614; pointer-events: none; animation: profile-pulse 1.2s ease-in-out infinite; }
@@ -431,9 +456,8 @@ kbd { display: inline-block; min-width: 14px; padding: 0 4px; border: 1px solid 
 #privacy-menu .privacy-owner { margin: 12px 0 0; text-align: center; }
 /* links in running text (the mailtos): GUA orange, 6.4:1 on the sheet and 5.6:1 on a section's tint, underlined, the same once
    visited, a keyboard ring; gold stays for the .btn-link buttons and the Configuració icon links */
-#privacy-menu p a, #privacy-menu p a:visited, .feedback-small a, .feedback-small a:visited { color: #ff7a1a; text-decoration: underline; text-decoration-thickness: 1.5px; text-underline-offset: 3px; overflow-wrap: anywhere; border-radius: 3px; }
+#privacy-menu p a, #privacy-menu p a:visited, .feedback-small a, .feedback-small a:visited { color: #fff3d6; text-decoration: underline; text-decoration-thickness: 1.5px; text-underline-offset: 3px; overflow-wrap: anywhere; border-radius: 3px; }
 #privacy-menu p a:hover, .feedback-small a:hover { color: #ff9a4a; }
-#privacy-menu p a:focus-visible, .feedback-small a:focus-visible, .about-links a:focus-visible, .about-uaf a:focus-visible { outline: 3px solid var(--button-text); outline-offset: 2px; }
 .about-links a:visited { color: #f5c518; }
 @media (max-height: 500px) { /* landscape phones: the list gets the height, the settings row spans */
   #settings-menu .sheet-actions > :is(#settings-board, #settings-profile-row) { grid-column: 1 / -1; } /* the wide rows span; the switch rows share a row */

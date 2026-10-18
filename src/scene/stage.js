@@ -3,6 +3,8 @@ import { initialQuality, probeRenderer, isSoftwareRenderer, profileAt } from '..
 import * as THREE from 'three';
 import { errors, errorName } from '../services/errors.js';
 import { buildPlaza, buildMulassa } from './models.js';
+import { newDracFeet } from '../game/drac-feet.js';
+import { buildDrac, DRAC_SCALE } from './models/drac.js';
 import { COARSE } from '../core/env.js';
 
 // ------------------------------------------------------------------ 3D
@@ -50,6 +52,27 @@ export const plaza = buildPlaza({ backdrop: renderProfile.backdrop, balconies: r
 scene.add(plaza.group);
 export const mula = buildMulassa();
 scene.add(mula.root);
+export let drac = null;
+// The Drac's own copy of the voxel material, transparent from the start (compiled with the rest, never switched mid-game):
+// the splash's Drac fades out in its smoke bomb while the plaça's MAT stays opaque. At opacity 1 it draws the same.
+// Copied from its own meshes in initDrac (no voxel.js import here: the tests' one-script bundle keeps its module order).
+export let dracMat = null;
+// Build after the existing plaza/crowd setup so its material jitter does not change their random layout.
+export function initDrac() {
+  if (drac) return;
+  drac = buildDrac();
+  drac.feet = newDracFeet();
+  drac.root.traverse(o => { // the voxel parts (vertex colours); the flames keep their own opaque materials
+    if (!o.material?.isMeshLambertMaterial || !o.material.vertexColors) return;
+    dracMat ??= Object.assign(o.material.clone(), { transparent: true });
+    o.material = dracMat;
+  });
+  drac.root.visible = false;
+  const life = new THREE.Group(); // the rig dances in model units; this shows it life-size
+  life.scale.setScalar(DRAC_SCALE);
+  life.add(drac.root);
+  scene.add(life);
+}
 // Her standing pose at load (what the camera-fit silhouettes used to leave behind): animMula overwrites it every frame.
 mula.neck.rotation.x = 0.15;
 mula.head.rotation.x = 0.2;

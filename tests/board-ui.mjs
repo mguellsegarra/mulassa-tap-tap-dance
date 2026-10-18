@@ -8,6 +8,7 @@ import { readFileSync } from 'node:fs';
 import { setupBoard, suggestAlias, ALIAS_KEY, DECLINES_KEY, OPTOUT_KEY, MAX_DECLINES, deviceRisk, DEVICE_NOTES, PERSIST_KEY } from '../src/ui/board-ui.js';
 import { normalizeAlias } from '../src/services/leaderboard-rules.js';
 import { checkAlias, ALIAS_MESSAGES } from '../src/services/alias-rules.js';
+import { KEEP_NOTICE, untilText, keptUntil, VERIFIED } from '../src/ui/profile-notes.js';
 
 class El {
   constructor(tag, id = '') { Object.assign(this, { tag, id, children: [], hidden: false, disabled: false, value: '', readOnly: false, dataset: {}, attrs: {}, on: {}, open: false, own: '', className: '' }); }
@@ -34,26 +35,36 @@ const ids = ['board-menu', 'publish-menu', 'board-rows', 'board-table', 'board-s
   'publish-form', 'publish-title', 'publish-summary', 'publish-about', 'publish-temp', 'publish-alias', 'publish-status', 'publish-send',
   'publish-cancel', 'publish-never', 'settings-prompt-row', 'settings-prompt', 'publish-place', 'publish-as', 'publish-as-name', 'publish-field', 'publish-rule', 'publish-error', 'publish-board',
   'results-actions', 'results-publish', 'results-board', 'settings-board', 'publish-device', 'publish-recover',
-  'board-views', 'board-view-top', 'board-view-me', 'board-more', 'board-more-status', 'board-more-btn', 'board-summary', 'board-publish', 'captcha-menu', 'captcha-box'];
+  'board-views', 'board-view-top', 'board-view-me', 'board-more', 'board-more-status', 'board-more-btn', 'board-summary', 'board-publish', 'captcha-menu', 'captcha-box',
+  'publish-keep', 'publish-offer', 'publish-offer-text', 'publish-confirm'];
 let doc;
 const tick = () => new Promise(r => setTimeout(r, 0));
 const deferred = () => { let resolve, reject; const p = new Promise((a, b) => { resolve = a; reject = b; }); return { p, resolve, reject }; };
 const RUN = Object.freeze({ version: 'mulassa-v1', difficulty: 1, counts: Object.freeze({ perfect: 150, good: 20, miss: 11 }), score: 43210, maxCombo: 60 });
 
 function make({ configured = true, publishingEnabled = true, captchaRequired = true, siteKey = 'site', session = false, persistent = true, email = 'contacte@example.test',
-  alias = null, row = false, declined = 0, afterPublish = null, onRecover = null, automated = false, ua = '', standalone = false, touch = 0 } = {}) {
+  detachedPrivacy = false, alias = null, row = false, declined = 0, afterPublish = null, onRecover = null, automated = false, ua = '', standalone = false, touch = 0,
+  prof, onConfirm = null, mail = '' } = {}) { // prof: what service.profile() answers (undefined: a service without it)
   doc = { activeElement: null, els: new Map(), getElementById(id) { return this.els.get(id); }, createElement: tag => new El(tag) };
   for (const id of ids) doc.els.set(id, new El('x', id));
   doc.els.set('privacy-contact', Object.assign(new El('p', 'privacy-contact'), { hidden: true, dataset: { email } }));
   doc.els.set('privacy-contact-link', new El('a', 'privacy-contact-link'));
   const $ = id => doc.els.get(id);
+  if (detachedPrivacy) {
+    doc.getElementById = id => id === 'privacy-contact' || id === 'privacy-contact-link' ? null : $(id);
+    $('privacy-contact').querySelector = () => $('privacy-contact-link');
+    doc.els.set('privacy-content', { content: { querySelector: () => $('privacy-contact') } });
+  }
   $('board-table').hidden = true; $('results-actions').hidden = true;
-  const calls = { all: 0, pages: [], identity: 0, publish: [], alias: [], del: 0, captcha: 0, render: [], reset: 0, remove: 0, persist: 0 };
-  const T = { session, persistent, alls: [], publishes: [], }; // queued deferreds the test resolves
+  const calls = { all: 0, pages: [], identity: 0, publish: [], alias: [], del: 0, captcha: 0, render: [], reset: 0, remove: 0, persist: 0, profile: 0, ack: 0, signout: 0 };
+  const T = { session, persistent, alls: [], publishes: [], prof, paints: [], acks: [], unwatched: 0, visible: true }; // queued deferreds (and paint callbacks) the test runs
   const service = {
     configured, publishingEnabled, captchaRequired,
     listAll(o = {}) { calls.all++; calls.pages.push(o.offset ?? 0); const x = deferred(); T.alls.push(x); return x.p; },
-    async identity() { calls.identity++; return { hasSession: T.session, persistent: T.persistent }; },
+    async identity() { calls.identity++; return { hasSession: T.session, persistent: T.persistent, ...(mail && { email: mail }) }; },
+    ...(prof !== undefined && { async profile() { calls.profile++; return T.prof; } }),
+    ackNotice() { calls.ack++; const x = deferred(); T.acks.push(x); return x.p; },
+    async signOut() { calls.signout++; T.session = false; return { signedOut: true }; },
     publish(result, alias, opts) { calls.publish.push({ result, alias, opts }); const x = deferred(); T.publishes.push(x); return x.p; },
   };
   const widgets = [];
@@ -77,10 +88,40 @@ function make({ configured = true, publishingEnabled = true, captchaRequired = t
     canPrompt: () => env.canPrompt, online: () => env.online, promptDelay: 0, now: () => env.t, minLoad: 0,
     verifyOpts: { report: (k, t) => reports.push([k, t]), log: { warn() {} }, schedule() {} },
     afterPublish: afterPublish && (o => { shares.push(o); afterPublish(o); }), shareDelay: 0, settle: 0, observe: (el, root, fn) => { io.el = el; io.fire = fn; },
-    onRecover, env: () => ({ ua, standalone, touch }), persist: async () => { calls.persist++; return true; } });
+    onRecover, env: () => ({ ua, standalone, touch }), persist: async () => { calls.persist++; return true; },
+    onConfirm, seen: (el, cb) => { assert.equal(el, $('publish-keep'), 'the notice itself is watched'); T.paints.push(cb); return () => { T.unwatched++; }; },
+    visible: el => { assert.equal(el, $('publish-keep')); return T.visible; } });
   return { board, $, calls, T, widgets, mem, focused, env, shares, reports, io, setRun: r => listener(r), rows: () => $('board-rows').children.map(tr => tr.children.map(td => td.textContent)) };
 }
 const submit = $ => $('publish-form').fire('submit');
+
+// Each visit reads the current identity; earlier requests never populate a shared rank cache.
+{
+  const { board, calls, T } = make();
+  const profileA = board.standing();
+  const signedOut = board.standing();
+  T.alls[1].resolve([{ position: 1, alias: '<Leader>' }]);
+  assert.deepEqual(await signedOut, { pos: null, total: null });
+  T.alls[0].resolve([{ position: 1, alias: '<Leader>', total: 135 }, { position: 22, is_self: true, total: 135 }]);
+  assert.deepEqual(await profileA, { pos: 22, total: 135 });
+  const recovered = board.standing();
+  assert.equal(calls.all, 3, 'recovery/deletion/sign-out cannot reuse a previous identity response');
+  T.alls[2].resolve([{ position: 1, alias: '<Leader>' }, { position: 7, is_self: true }]);
+  assert.deepEqual(await recovered, { pos: 7, total: null });
+  const failed = board.standing(); T.alls[3].reject(new Error('offline'));
+  assert.equal(await failed, null);
+  const retry = board.standing(); T.alls[4].resolve([]);
+  assert.deepEqual(await retry, { pos: null, total: null });
+}
+// The privacy contact is detached at startup, but publishing still requires it.
+{
+  const ready = make({ detachedPrivacy: true }); ready.setRun(RUN); ready.board.results(true);
+  assert(ready.board.publishable && !ready.$('results-publish').hidden, 'a contact inside the template permits publishing');
+  assert.equal(ready.$('privacy-contact-link').href, 'mailto:contacte@example.test');
+  assert(!ready.$('privacy-contact').hidden, 'contact is ready before the privacy sheet opens');
+  const absent = make({ detachedPrivacy: true, email: ' ' }); absent.setRun(RUN); absent.board.results(true);
+  assert(!absent.board.publishable && absent.$('results-publish').hidden, 'an empty detached contact still blocks publishing');
+}
 
 // --- suggestions and the alias rule
 for (let i = 0; i < 50; i++) { const s = suggestAlias(); assert(normalizeAlias(s) && checkAlias(s).alias === s, 'every suggested alias is valid'); }
@@ -653,13 +694,15 @@ const BOARD = page(0, 60, 22);
   let recovers = 0;
   const y = make({ session: true, alias: 'Drac101', onRecover: () => recovers++ }); y.setRun(RUN); y.board.openPublish(); await tick(); await tick();
   assert(y.$('publish-recover').hidden, 'a profile here: nothing to recover');
-  const n = make({ onRecover: () => recovers++ }); n.setRun(RUN); n.board.openPublish({ auto: true }); await tick(); await tick();
+  const n = make({ onRecover: () => recovers++ }); n.setRun(RUN); n.board.openPublish({ auto: true });
+  assert(!n.$('publish-recover').hidden, 'recovery is present on the first paint, before identity resolves: no late row insertion');
+  await tick(); await tick();
   assert(!n.$('publish-recover').hidden, 'no profile here: the link shows');
   n.$('publish-recover').click();
   assert.equal(recovers, 1); assert(!n.$('publish-menu').open, 'the publish sheet gives way');
   assert.equal(n.mem.get(DECLINES_KEY) ?? null, null, 'leaving for the profile sheet is not a decline');
   const off = make({}); off.setRun(RUN); off.board.openPublish(); await tick(); await tick();
-  assert(off.$('publish-recover').hidden, 'no handler (?final mock): no link');
+  assert(off.$('publish-recover').hidden, 'no handler: no link');
 }
 // --- closing the board goes back to where it was opened from
 {
@@ -729,7 +772,146 @@ const BOARD = page(0, 60, 22);
   n.setRun(RUN); n.board.openPublish(); await tick(); await tick();
   n.$('publish-alias').value = 'Drac101'; submit(n.$); await tick();
   n.T.publishes[0].reject(Object.assign(new Error('Aquest sobrenom ja és d’algú. Prova’n un altre.'), { code: 'taken' })); await tick();
-  assert.equal(n.$('publish-error').textContent, 'Aquest sobrenom ja està agafat. Si és teu, recupera el perfil.');
+  assert.equal(n.$('publish-error').textContent, 'Aquest sobrenom ja és d’algú. Si és teu i hi vas confirmar el correu, recupera el perfil.', 'recovery needs a confirmed address: said so');
+}
+// --- temporary profiles (202610180001): the 7-day notice on the sheet goes with the press; a running deadline is shown
+// instead; the first «Publicat!» of a deadline offers «Confirma el correu» once (never by itself, never again); an old
+// profile's notice is acknowledged only once it is painted; a confirmed address: no notice, no offer, a check on the board
+const iso = ms => new Date(ms).toISOString(), UNTIL = Date.parse('2026-10-25T16:42:00Z');
+const find = (el, test) => (test(el) ? el : el.children.map(c => find(c, test)).find(Boolean) ?? null);
+{ // a new player: the notice from the first frame, sent with the publication, then the offer under the first Publicat!
+  const confirms = [];
+  const n = make({ captchaRequired: false, afterPublish: () => {}, onConfirm: o => confirms.push(o) });
+  n.setRun(RUN); n.board.openPublish();
+  assert.equal(n.$('publish-keep').textContent, KEEP_NOTICE, 'the notice before anything is known');
+  assert(n.$('publish-offer').hidden, 'no offer before publishing');
+  await tick(); await tick();
+  n.$('publish-alias').value = 'Drac101'; submit(n.$); await tick();
+  assert.equal(n.calls.publish[0].opts.notice, true, 'the server learns the notice was on screen');
+  n.T.session = true;
+  n.T.publishes[0].resolve({ improved: true, quality: 90, score: 1, expires_at: iso(UNTIL), started: true }); await tick();
+  assert.equal(n.$('publish-form').dataset.view, 'done');
+  assert(!n.$('publish-offer').hidden && n.$('publish-offer-text').textContent === keptUntil(UNTIL), 'the first Publicat!: when it goes');
+  assert.equal(n.$('publish-send').textContent, 'D’acord', 'D’acord stays the one primary: the offer is optional');
+  assert(n.$('publish-menu').open && !confirms.length && !n.shares.length, 'nothing opens by itself');
+  n.$('publish-confirm').click();
+  assert(!n.$('publish-menu').open && confirms.length === 1 && !n.shares.length, '«Confirma el correu»: the profile sheet next, Comparteix after it (onConfirm)');
+  assert('place' in confirms[0], 'the place goes along for Comparteix');
+  n.$('publish-confirm').click(); assert.equal(confirms.length, 1, 'once');
+  // the next publication (same profile, its deadline running): it does not start or offer anything again
+  n.setRun({ ...RUN }); n.board.openPublish(); await tick(); await tick();
+  assert(n.$('publish-offer').hidden, 'a new opening starts without the offer');
+  submit(n.$); await tick();
+  n.T.publishes[1].resolve({ improved: false, quality: 90, score: 1, expires_at: iso(UNTIL), started: false }); await tick();
+  assert(n.$('publish-form').dataset.view === 'done' && n.$('publish-offer').hidden, 'no repeated reminder');
+  // without an onConfirm (no profile sheet to go to): no offer, even on a first publication
+  const q = make({ captchaRequired: false, afterPublish: () => {} });
+  q.setRun(RUN); q.board.openPublish(); await tick(); await tick();
+  q.$('publish-alias').value = 'Drac101'; submit(q.$); await tick();
+  q.T.publishes[0].resolve({ improved: true, expires_at: iso(UNTIL), started: true }); await tick();
+  assert(q.$('publish-offer').hidden);
+  // an older server (no deadline in its answer): no offer
+  const o = make({ captchaRequired: false, afterPublish: () => {}, onConfirm: () => {} });
+  o.setRun(RUN); o.board.openPublish(); await tick(); await tick();
+  o.$('publish-alias').value = 'Drac101'; submit(o.$); await tick();
+  o.T.publishes[0].resolve({ improved: true }); await tick();
+  assert(o.$('publish-offer').hidden);
+}
+{ // a deadline already running: the date instead of the general notice, still sent as shown
+  const d = make({ session: true, alias: 'Drac101', prof: { alias: 'Drac101', verified: false, expiresAt: UNTIL, noticeNeeded: false } });
+  d.setRun(RUN); d.board.openPublish(); await tick(); await tick();
+  assert.equal(d.calls.profile, 1);
+  assert.equal(d.$('publish-keep').textContent, untilText(UNTIL));
+  submit(d.$); await tick(); assert.equal(d.calls.publish[0].opts.notice, true);
+}
+{ // a confirmed address: no notice, the server is not told one was shown, no offer; if it asks for it, the notice appears
+  const v = make({ session: true, alias: 'Drac101', mail: 'jo@example.test', afterPublish: () => {}, onConfirm: () => {}, prof: { alias: 'Drac101', verified: true, expiresAt: null, noticeNeeded: false } });
+  v.setRun(RUN); v.board.openPublish(); await tick(); await tick();
+  assert.equal(v.$('publish-keep').textContent, 'Amb el correu confirmat, el perfil es conserva fins que l’esborris.');
+  submit(v.$); await tick();
+  assert.equal(v.calls.publish[0].opts.notice, false, 'nothing shown: nothing claimed');
+  v.T.publishes[0].reject(Object.assign(new Error('Abans de publicar, llegeix l’avís sobre els 7 dies i torna a prémer Publica.'), { code: 'notice' })); await tick();
+  assert.equal(v.$('publish-keep').textContent, KEEP_NOTICE, 'the server wanted the notice: it is on the sheet now');
+  assert.match(v.$('publish-status').textContent, /llegeix l’avís/);
+  submit(v.$); await tick();
+  assert.equal(v.calls.publish[1].opts.notice, true, 'the next press sends it');
+  v.T.publishes[1].resolve({ improved: true, expires_at: null, started: false }); await tick();
+  assert(v.$('publish-offer').hidden, 'confirmed: no offer');
+}
+{ // an old profile with results and no deadline: acknowledged only once the sheet is painted, then offered once
+  const legacyProf = { alias: 'Drac101', verified: false, expiresAt: null, noticeNeeded: true };
+  const l = make({ session: true, alias: 'Drac101', afterPublish: () => {}, onConfirm: () => {}, prof: legacyProf });
+  l.setRun(RUN); l.board.openPublish(); await tick(); await tick();
+  assert.equal(l.$('publish-keep').textContent, KEEP_NOTICE);
+  assert(l.calls.ack === 0 && l.T.paints.length === 1, 'nothing acknowledged before it is on screen');
+  l.T.paints.shift()(); assert.equal(l.calls.ack, 1, 'painted: the server starts its 7 days');
+  l.T.acks[0].resolve(iso(UNTIL)); await tick();
+  submit(l.$); await tick();
+  l.T.publishes[0].resolve({ improved: false, expires_at: iso(UNTIL), started: false }); await tick();
+  assert(!l.$('publish-offer').hidden && l.$('publish-offer-text').textContent === keptUntil(UNTIL), 'the Publicat! the notice was shown for offers it');
+  // closed before it was painted: nothing acknowledged
+  const c = make({ session: true, alias: 'Drac101', prof: { ...legacyProf } });
+  c.setRun(RUN); c.board.openPublish(); await tick(); await tick();
+  c.$('publish-menu').close(); assert.equal(c.T.unwatched, 1, 'closed: no longer watched');
+  c.T.paints.shift()();
+  assert.equal(c.calls.ack, 0, 'a sheet no longer open acknowledges nothing');
+  // the press says the notice was read only while it is on screen: scrolled away, it comes into view, nothing is sent
+  const off = make({ captchaRequired: false, afterPublish: () => {} });
+  let scrolled = 0; off.$('publish-keep').scrollIntoView = () => { scrolled++; };
+  off.setRun(RUN); off.board.openPublish(); await tick(); await tick();
+  off.$('publish-alias').value = 'Drac101'; off.T.visible = false; submit(off.$); await tick();
+  assert(off.calls.publish.length === 0 && scrolled === 1 && /llegeix l’avís/.test(off.$('publish-status').textContent), 'off screen: shown first, not sent');
+  off.T.visible = true; submit(off.$); await tick();
+  assert(off.calls.publish.length === 1 && off.calls.publish[0].opts.notice === true, 'on screen: the next press sends it');
+  // a confirmed profile has no notice to read: never held back
+  const conf = make({ session: true, alias: 'Drac101', mail: 'jo@example.test', prof: { alias: 'Drac101', verified: true, expiresAt: null, noticeNeeded: false } });
+  conf.setRun(RUN); conf.board.openPublish(); await tick(); await tick(); conf.T.visible = false; submit(conf.$); await tick();
+  assert.equal(conf.calls.publish.length, 1);
+  // an expired profile's sheet: the notice, not a date gone by
+  const gone = make({ session: true, alias: 'Drac101', prof: { alias: 'Drac101', verified: false, expiresAt: Date.parse('2026-10-01T10:00:00Z'), noticeNeeded: false, expired: true } });
+  gone.setRun(RUN); gone.board.openPublish(); await tick(); await tick();
+  assert.equal(gone.$('publish-keep').textContent, KEEP_NOTICE);
+  // the account behind the session was purged: the publication left it, the retry asks for a new profile's token
+  const purged = make({ session: true, alias: 'Drac101', afterPublish: () => {}, prof: { alias: 'Drac101', verified: false, expiresAt: UNTIL, noticeNeeded: false } });
+  purged.setRun(RUN); purged.board.openPublish(); await tick(); await tick();
+  submit(purged.$); await tick();
+  purged.T.session = false; purged.T.publishes[0].reject(Object.assign(new Error('La sessió ha caducat. Torna-ho a provar.'), { code: 'session' })); await tick(); await tick();
+  assert(!purged.$('publish-field').hidden && purged.$('publish-keep').textContent === KEEP_NOTICE, 'a new profile: the field and the notice');
+  submit(purged.$); await tick(); await tick();
+  assert.equal(purged.calls.captcha >= 1 || purged.calls.render.length >= 1, true, 'the retry gets a Turnstile token for the new profile');
+  // a failed acknowledgement: no offer (the server never started its 7 days here), publishing still works
+  const f = make({ session: true, alias: 'Drac101', afterPublish: () => {}, onConfirm: () => {}, prof: { ...legacyProf } });
+  f.setRun(RUN); f.board.openPublish(); await tick(); await tick();
+  f.T.paints.shift()(); f.T.acks[0].reject(new Error('offline')); await tick();
+  submit(f.$); await tick();
+  assert.equal(f.calls.publish[0].opts.notice, true, 'the notice was shown: the publication may start the 7 days');
+  f.T.publishes[0].resolve({ improved: true, expires_at: iso(UNTIL), started: true }); await tick();
+  assert(!f.$('publish-offer').hidden, 'started by this publication instead: offered');
+}
+{ // a remembered name whose profile row is gone (its deadline passed): this browser leaves the old session, picks a name again
+  const g = make({ session: true, alias: 'Drac101', prof: null });
+  g.setRun(RUN); g.board.openPublish(); await tick(); await tick(); await tick();
+  assert.equal(g.calls.signout, 1, 'the old session goes');
+  assert(!g.$('publish-field').hidden && g.$('publish-as').hidden, 'the field: the old name may be free or taken now');
+  assert.equal(g.$('publish-keep').textContent, KEEP_NOTICE);
+  // a confirmed account with no row, or a session never published from here: kept
+  const keepMail = make({ session: true, alias: 'Drac101', mail: 'jo@example.test', prof: null });
+  keepMail.setRun(RUN); keepMail.board.openPublish(); await tick(); await tick(); await tick();
+  const keepNew = make({ session: true, prof: null }); keepNew.setRun(RUN); keepNew.board.openPublish(); await tick(); await tick(); await tick();
+  assert(keepMail.calls.signout === 0 && keepNew.calls.signout === 0);
+}
+{ // the board: a check for a confirmed address only; a tap shows what it means, leaving it hides it
+  const b = make();
+  b.board.openBoard(); await tick();
+  b.T.alls[0].resolve([{ ...player(1, 2, 0), verified: true }, { ...player(2, 2, 0), verified: false }]); await tick(); await tick();
+  const [first, second] = b.$('board-rows').children;
+  const check = find(first, e => e.className?.includes?.('verified-check'));
+  assert(check && check.tag === 'button' && check.attrs['aria-label'] === VERIFIED && check.dataset.tip === VERIFIED, 'a button named «Correu confirmat»');
+  assert(!find(second, e => e.className?.includes?.('verified-check')), 'unconfirmed: no check');
+  assert.deepEqual(b.rows()[0], ['1', `${NAMES[0]}FÀCILratxa 1.199`, '99%', '123.356'], 'the check adds no text to the row');
+  check.click(); assert(check.classList.contains('tip'), 'a tap shows the words');
+  check.fire('blur'); assert(!check.classList.contains('tip'), 'and they go when it is left');
+  assert(!JSON.stringify(b.$('board-rows').children.map(tr => tr.textContent)).includes('@'), 'never an address');
 }
 // --- markup: every id the module needs exists, copy is Catalan, buttons are .btn, live regions, privacy section
 {
@@ -744,8 +926,9 @@ const BOARD = page(0, 60, 22);
   const sheet = id => html.slice(html.indexOf(`<dialog id="${id}"`), html.indexOf('</dialog>', html.indexOf(`<dialog id="${id}"`)));
   for (const id of ['board-menu', 'publish-menu']) {
     assert(!/<button(?![^>]*class="(btn|sheet-x))/.test(sheet(id)), `${id}: every button is a .btn (or the corner X)`);
-    // «Publica el teu resultat» only shows while Tanca is secondary (tested above)
-    assert.equal((sheet(id).replace(/id="board-publish"[^>]*/, '').match(/btn-primary/g) || []).length, id === 'publish-menu' ? 1 : 0, `${id}: one primary per view (the board has none but «Publica el teu resultat»)`);
+    // «Publica el teu resultat» only shows while Tanca is secondary (tested above); «Confirma el correu» only while
+    // its .publish-offer steps #publish-send down to secondary (base.css)
+    assert.equal((sheet(id).replace(/id="board-publish"[^>]*/, '').replace(/id="publish-confirm"[^>]*/, '').match(/btn-primary/g) || []).length, id === 'publish-menu' ? 1 : 0, `${id}: one primary per view (the board has none but «Publica el teu resultat»)`);
     assert(!/\b(OK|Cancel|Delete|Submit|Leaderboard|Settings)(?![·\w])/.test(sheet(id).replace(/<[^>]*>/g, ' ')), `${id}: no English copy`);
   }
   assert(/No cal que sigui el teu nom real · 3–16 caràcters/.test(sheet('publish-menu')), 'a real name is not required (one short line)');
@@ -768,5 +951,15 @@ const BOARD = page(0, 60, 22);
   assert.equal((html.match(/data-email="/g) || []).length, 1, 'one place for the contact e-mail');
   assert(/<span id="privacy-contact" data-email="holi@mulassa\.cat" hidden>/.test(owner), 'the contact Marc gave; shown by board-ui as a mailto link');
   assert(/autocomplete="off"/.test(sheet('publish-menu')) && /maxlength="24"/.test(sheet('publish-menu')));
+  // 202610180001: the first frame's notice is the module's text; the offer is the done view's primary (D'acord steps down); privacy says it
+  assert(sheet('publish-menu').includes(`<span id="publish-keep">${KEEP_NOTICE}</span>`), 'the notice in the markup is the one the module writes');
+  assert(/id="publish-offer" class="publish-offer" hidden>[\s\S]*id="publish-confirm" type="button" class="btn btn-primary"/.test(sheet('publish-menu')), 'the offer: hidden, the primary, after the place line');
+  assert(/Ho perdràs si no confirmes el correu\./.test(sheet('publish-menu')));
+  assert.equal(keptUntil(+new Date(2026, 9, 25, 12, 10)), 'El nom es guarda fins al 25 d’octubre.');
+  assert.equal(keptUntil(+new Date(2026, 10, 1)), 'El nom es guarda fins a l’1 de novembre.');
+  assert(/Tens un perfil amb el correu confirmat\? Recupera’l/.test(sheet('publish-menu')), 'recovery needs a confirmed address');
+  assert(/<b>7 dies<\/b> des de la primera publicació/.test(privacy) && /des que el joc te n’avisa/.test(privacy) && /sobrenom queda lliure/.test(privacy) && /rècords del dispositiu es mantenen/.test(privacy), 'Privadesa: the 7 days, the notice for older profiles, the freed name, local records');
+  assert(/marca de «Correu confirmat»/.test(privacy) && /no confirmat no compta/.test(privacy) && !/El perfil i els resultats es conserven fins que els esborres: ho/.test(privacy.replace('Amb el correu confirmat, el perfil i els resultats es conserven fins que els esborres', '')), 'Privadesa: the check, a pending address, and no longer «kept until you delete it» for everyone');
+  assert(!/torneig|tornejos/i.test(privacy), 'no tournament claims in the privacy text');
 }
 console.log('classificacions sheets ok');

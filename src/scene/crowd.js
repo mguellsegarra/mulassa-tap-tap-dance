@@ -1,14 +1,17 @@
 // The crowd's behaviour: making way for her, its mood, reactions to hits and to the finale, neighbour separation.
+import { PHOTO } from '../game/photo-control.js';
+import { photoClearance } from './photo-collision.js';
+import { photoExtras, updatePhotoExtras, photoEscape } from './photo-obstacles.js';
 import { pushPulse, rippleLive, RIPPLE, ripple } from './crowd-fx.js';
 import * as THREE from 'three';
 import { judgedCount } from '../game/progress.js';
-import song from '../song.json';
+import { song, figureScale } from '../game/figure-song.js';
 import { pick, poseBand } from './models.js';
 import { renderProfile, camera, plaza } from './stage.js';
 import { CALM } from '../core/env.js';
 import { clock, G, chip } from '../game/state.js';
 import { activeCrowd, bandSpots, midCrowd, MID } from './quality.js';
-import { M, PIVOT } from './mula-motion.js';
+import { M, PIVOT, PAIR } from './mula-motion.js';
 import { RING, REACH } from './crowd-build.js';
 import { easeIn, smooth01, TAU } from '../core/anim.js';
 import { bubble, at } from '../hud/bubbles.js';
@@ -124,7 +127,7 @@ const F = { calm: false, moodK: 0, eager: 0, ex: 0, beatHop: 0, nearFade: 0, way
 // still, answering hits only (the groove); the festa (the finale, the "eeeh!", a clear result) cheers; a collapse
 // saddens (a miss alone doesn't: at most the groove settles); section B / the menus clap. Also fills F.
 function updateMood(dt, t, live) {
-  const g = G.state === 'title' || G.state === 'splash' ? 70 : G.guapo;
+  const g = G.state === 'title' || G.state === 'splash' || G.state === 'select' ? 70 : G.guapo;
   mood.respect += (g - mood.respect) * Math.min(1, dt * 1.5);
   const calm = G.state === 'play' && !G.finale && !G.eeeh && !G.collapseT;
   const cheering = G.finale || (G.state === 'play' && G.eeeh && !G.collapseT) || (G.state === 'results' && G.reason === 'clear') || (G.state !== 'play' && clock - G.chantT < 2.5);
@@ -181,22 +184,34 @@ function steer(p, dt, beat, live) {
   // round the pivot; only near the ring (RING.reach): everyone further out is simply clear
   const dpx = p.pos.x - M.pivot.x, dpz = p.pos.y - M.pivot.y, dp = Math.hypot(dpx, dpz) || 1;
   let clear = 99;
-  if (dp < want + RING.reach + PIVOT + 2.4) {
+  if (dp < want + RING.reach + PIVOT + 2.4 * figureScale()) {
     local.set(dx * F.cy - dz * F.sy, dx * F.sy + dz * F.cy);
-    clear = Math.hypot(Math.max(0, Math.abs(local.x) - 0.75), Math.max(0, Math.abs(local.y) - 2.3));
-    if (F.sweep > 0.2) clear = Math.min(clear, dp - (PIVOT + 2.1) * F.sweep);
+    clear = Math.hypot(Math.max(0, Math.abs(local.x) - 0.75 * figureScale()), Math.max(0, Math.abs(local.y) - 2.3 * figureScale()));
+    if (F.sweep > 0.2) clear = Math.min(clear, dp - (PIVOT + 2.1) * figureScale() * F.sweep);
   }
+  if (PHOTO.on) clear = photoClearance(M.pos.x, M.pos.y, M.yaw, p.pos.x, p.pos.y, 0, !PHOTO.pair && PHOTO.id === 'drac-valls');
+  // the splash's Drac beside her (mula-motion.js PAIR): a round footprint, made way for like her
+  const qx = p.pos.x - PAIR.x, qz = p.pos.y - PAIR.z, qd = PAIR.k ? Math.hypot(qx, qz) || 1 : 99, pairClear = qd - 1.5;
+  if (pairClear < clear) clear = pairClear;
   tmp.set(0, 0);
-  const fleeing = clear < want;
+  let photoFear = 0;
+  if (PHOTO.on) {
+    photoEscape(p.pos.x, p.pos.y, away);
+    photoFear = away.fear;
+    clear = Math.min(clear, want - photoFear);
+  }
+  const fleeing = clear < want, fleeSpeed = PHOTO.on ? 3.4 : RING.flee;
   if (fleeing) { // make way: step back from the nearest danger (the rear if it's swinging, else the body), capped
     const rx = p.pos.x - F.rearX, rz = p.pos.y - F.rearZ, rd = Math.hypot(rx, rz) || 1;
-    if (F.sweep > 0.2 && rd < 3) away.set(rx / rd, rz / rd); else away.set(dpx / dp, dpz / dp);
-    tmp.copy(away).multiplyScalar(Math.min(RING.flee, (want - clear) * RING.gain * p.nerve));
+    if (PHOTO.on && photoFear > 0) { /* the anticipated corridor already set away */ }
+    else if (clear === pairClear) away.set(qx / qd, qz / qd);
+    else if (F.sweep > 0.2 && rd < 3) away.set(rx / rd, rz / rd); else away.set(dpx / dp, dpz / dp);
+    tmp.copy(away).multiplyScalar(Math.min(fleeSpeed, (want - clear) * RING.gain * p.nerve));
     p.away = G.state === 'play';
     if (G.state === 'play' && want - clear > 0.6 && clock - (G.uiT || -9) > 1.2 && Math.random() < dt * 3) { // one shout at a time (per second, not per frame: same at 60 and 120 fps)
       G.uiT = clock; bubble(pick(['UI!', 'COMPTE!', 'ALERTA!', 'AI!']), at(p.g, 2.3));
     }
-  } else if (G.state !== 'play' && clear > want + 0.4) { // creep in to watch (not while the song plays: they hold their spot)
+  } else if (!PHOTO.on && G.state !== 'play' && clear > want + 0.4) { // creep in to watch (not while the song plays: they hold their spot)
     tmp.set(-dx, -dz).normalize().multiplyScalar(Math.min(0.7, (clear - want) * 0.35) * live);
   } else if (p.away && clear > want + RING.back) { // she has gone: back to their spot, slowly
     const sx = p.spot.x - p.pos.x, sz = p.spot.y - p.pos.y, sd = Math.hypot(sx, sz);
@@ -204,7 +219,7 @@ function steer(p, dt, beat, live) {
   }
   if (p.away && p.vel.lengthSq() < 0.0025 && (p.stuck = (p.stuck || 0) + dt) > RING.patience) p.away = false; // their way back is blocked: stay here
   if (G.state !== 'play' || !p.away) { p.away = false; p.stuck = 0; }
-  if (midCrowd?.mesh.count && dp > MID.edge - 1.2) { // the mid band's front (its figures never step aside): a firm soft wall before the hard stop below
+  if (!PHOTO.on && midCrowd?.mesh.count && dp > MID.edge - 1.2) { // the mid band's front (its figures never step aside): a firm soft wall before the hard stop below
     const rr = p.pos.length(), over = rr - (MID.edge - 0.8);
     if (over > 0 && p.pos.x * MID.fx + p.pos.y * MID.fz > rr * MID.cos) { tmp.x -= (p.pos.x / rr) * over * 10; tmp.y -= (p.pos.y / rr) * over * 10; }
   }
@@ -246,12 +261,18 @@ function steer(p, dt, beat, live) {
     if (p.rest) p.vel.set(0, 0);
   } else { // the menus: brisker, but making way stays eased and capped too
     p.vel.lerp(tmp, fleeing ? ringE : Math.min(1, dt * 8)); p.rest = false;
-    if (fleeing) { const v = p.vel.length(); if (v > RING.flee) p.vel.multiplyScalar(RING.flee / v); }
+    if (fleeing) { const v = p.vel.length(); if (v > fleeSpeed) p.vel.multiplyScalar(fleeSpeed / v); }
   }
-  const r0 = p.pos.length();
+  const r0 = p.pos.length(), oldX=p.pos.x, oldZ=p.pos.y;
   p.pos.addScaledVector(p.vel, dt);
+  if (PHOTO.on) {
+    const limit=plaza.inner-p.rad-0.2;
+    if(Math.abs(p.pos.x)>limit && Math.abs(p.pos.x)>Math.abs(oldX)) {p.pos.x=oldX;p.vel.x=0;}
+    if(Math.abs(p.pos.y)>limit && Math.abs(p.pos.y)>Math.abs(oldZ)) {p.pos.y=oldZ;p.vel.y=0;}
+    for(const q of plaza.props) if(Math.hypot(p.pos.x-q.x,p.pos.y-q.z)<p.rad+q.r && Math.hypot(p.pos.x-q.x,p.pos.y-q.z)<Math.hypot(oldX-q.x,oldZ-q.z)) {p.pos.set(oldX,oldZ);p.vel.set(0,0);break;}
+  }
   const r = p.pos.length();
-  if (r > MID.edge) { // the edge of the plaça; on the far side the mid band's front (its figures never step aside)
+  if (!PHOTO.on && r > MID.edge) { // the edge of the plaça; on the far side the mid band's front (its figures never step aside)
     const lim = midCrowd?.mesh.count && p.pos.x * MID.fx + p.pos.y * MID.fz > r * MID.cos ? MID.edge : 13;
     // a stop, never a pull: whoever walks round into the mid band's arc from beyond its edge stays as far out as they
     // were (the soft wall above walks them in) instead of being snapped in
@@ -371,11 +392,13 @@ function poseScenery(beat, live) {
 }
 
 export function animCrowd(dt, beat, t, live = 1) {
+  if (!PHOTO.on) updatePhotoExtras(dt);
   dt = Math.max(0, dt); // (a clock stepped backwards must not blow up the exponential easing)
   for (const k of usedCells) crowdCells[k].length = 0; // only the cells used last frame, not all 1024
   usedCells.length = 0;
   for (const p of activeCrowd) { p.cell = crowdCell(p); cellPush(p.cell, p); }
   for (const b of bandSpots) cellPush(crowdCell(b), b); // the band: fixed, never in anyone's way
+  for (const p of photoExtras) if (!p.band) cellPush(crowdCell(p), p);
   updateMood(dt, t, live);
   for (const p of activeCrowd) steer(p, dt, beat, live);
   separate();

@@ -1,4 +1,5 @@
 // The lane: notes, holds, balloons, the hit ring and the streak badge.
+import { themed } from '../game/figure-theme.js';
 import { lane, LH } from './layout.js';
 import { W, H, PXU, SAFE, K } from './canvas.js';
 import { BEATS, beatAt, CALM } from '../core/env.js';
@@ -72,7 +73,7 @@ export function drawLane(t) {
     text(String(bl.count), hx, by, 28, C.cream, 'center', C.dark, false, (9 + r * 0.55 + pulse(G.pumpT, 0.12) * 3) / 28); // the total only ever goes up; grows from one sprite per number (r < 29)
     const pops = Math.floor(bl.count / bl.need);
     text(pops ? `x${pops}` : `${bl.need - bl.count}`, hx + 34, bottom + 12, 20, C.gold, 'left', C.dark, false, 0.8 * (1 + pulse(G.pumpT, 0.12) * 0.25));
-    text(pops ? 'GLOBUS' : 'PER PETAR', hx + 34, bottom + 26, 8, C.cream, 'left');
+    text(pops ? themed('GLOBUS') : 'PER PETAR', hx + 34, bottom + 26, 8, C.cream, 'left');
     const urge = (1 + 0.08 * Math.sin(clock * 12)) / 1.08, U = 9 * 1.08; // mirrors the counter on the other side of the balloon
     if (hx - 34 - W0 > textWidth('RÀPID!', 9) + 2) { text('PICA', hx - 34, bottom + 12, U, C.gold, 'right', C.dark, false, urge); text('RÀPID!', hx - 34, bottom + 25, U, C.gold, 'right', C.dark, false, urge); }
     else text('PICA RÀPID!', hx + 34, bottom + 40, U, C.gold, 'left', C.dark, false, urge); // no room left of the ring (phones): under the counter

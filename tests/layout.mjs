@@ -1,4 +1,4 @@
-// Title layout (src/hud/title-layout.js): at every screen size and input, the logo, the difficulty buttons, the key hint,
+// Title layout (src/hud/title-layout.js): at every screen size and input, the logo, the JUGA button, the key hint,
 // the DOM "Com es juga?" pill, the iPhone hint, the ⚙, the Classificacions podium, the «Bústia de la plaça» bubble and the menu music's speaker never overlap (each other included)
 // and stay inside the safe area. DOM geometry mirrors index.html (#settings / #leaders / #feedback / #music / #howto corners and sizes). Browser matrix: see AGENTS.md.
 import assert from 'node:assert/strict';
@@ -33,7 +33,7 @@ for (const [cw, ch] of SIZES) for (const keys of [true, false]) for (const hint 
   if (hint) dom.push(['ios hint', { x: cw / 2 - iosHint.w / 2, y: L.iosTopCss, w: iosHint.w, h: iosHint.h }]);
   // «mode foto» (#viewmode, 44 px): bottom-right, centred on the pill's height and under the ⚙; landscape phones: under the ⚙ (none where the row is too narrow)
   if (row || !corner) dom.push(['view mode', corner ? { x: safe.l + 12, y: safe.t + 12 + 44 + 10, w: 44, h: 44 } : { x: cw - safe.r - (big ? 22 : 10) - 44, y: ch - safe.b - (big ? 22 : 16) - 44, w: 44, h: 44 }]);
-  const canvas = [['logo', css(L.logo)], ['heading', { x: cw / 2 - 80, y: (L.headingY - 7) * K, w: 160, h: 14 * K }], ...L.buttons.map(b => ['button ' + b.i, css(b)])];
+  const canvas = [['logo', css(L.logo)], ...L.buttons.map(b => ['button ' + b.i, css(b)])];
   if (L.hintY != null) canvas.push(['key hint', { x: cw / 2 - 100 * K, y: (L.hintY - 7) * K, w: 200 * K, h: 14 * K }]);
   assert(L.fits, `${name}: fits`);
   assert(L.buttons.every(b => b.h * K >= 44), `${name}: 44 px touch targets`);
@@ -57,10 +57,10 @@ for (const [cw, ch] of SIZES) for (const keys of [true, false]) for (const hint 
   }
   cases++;
 }
-// wide or short screens put the three choices in a row; narrow phones stack them
+// Every viewport has one JUGA button; difficulty lives on the character selector.
 const at = (cw, ch, K) => titleLayout({ W: cw / K, HH: ch / K, K, safe: NONE, keys: true, note: '', logoRatio: 4.85, subW: 104, nameW: 42, pill: { w: 170, h: 44 }, hint: null, corner: ch <= 500, obstacles: [] });
-assert(!at(375, 667, 1.5).row && at(1280, 600, 2).row && at(667, 375, 1.5).row, 'row on wide/short screens, column on phones');
-assert(at(510, 600, 1.5).s < at(510, 852, 1.5).s, 'a shorter window shrinks the logo');
+for (const [w, h, k] of [[375, 667, 1.5], [1280, 600, 2], [667, 375, 1.5]]) assert.equal(at(w, h, k).buttons.length, 1);
+assert(at(510, 320, 1.5).s < at(510, 852, 1.5).s, 'a short window shrinks the logo once its free band is spent');
 assert(at(430, 932, 1.5).s * 1.5 >= 84, 'the biggest phones get a logo as wide as the screen allows');
 // the logo's motion: the glint crosses MULASSA once every GLINT.every s, after a pause; TAP, TAP, DANCE pop on three
 // beats out of four, one at a time, small, and settle before the next

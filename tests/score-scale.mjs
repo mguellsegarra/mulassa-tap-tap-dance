@@ -44,3 +44,5 @@ for (let difficulty = 0; difficulty < 3; difficulty++) {
   }
 }
 console.log('score scale and local record compatibility ok');
+
+assert.equal(comparableScore(12345, 1, 'drac-v1'), 12345, 'Drac scores stay on their own scale');

@@ -71,7 +71,8 @@ export function audioFailureTags(e) {
 const muted = () => { try { return new URLSearchParams(location.search).has('mute'); } catch { return false; } };
 
 export class Chip {
-  constructor(song = {}, { menuMusic = true } = {}) {
+  constructor(song = {}, { menuMusic = true, menuLoop = song } = {}) {
+    this.menuUrls = menuLoop; // the menu loop is one tune for every figure: a figure's song never swaps it
     this.urls = song; // song.audio / song.ambient carry a ?v= content hash, so a regenerated song is never served stale
     const ctx = this.ctx = new (window.AudioContext || window.webkitAudioContext)();
     this.out = ctx.createGain();
@@ -97,6 +98,14 @@ export class Chip {
   // Download and decode right away, even before the tap (main.js creates the engine after the first frame): a
   // suspended context decodes fine, only playing needs the gesture. The song and the menu loop (632 KB) start together,
   // so the loop is ready by the first tap instead of waiting for the whole song (2.5 MB).
+  // Keep the unlocked context and effects, invalidate every pending source from the old arrangement.
+  setSong(song) {
+    if (this.urls === song) return;
+    this.stop(); this.endRun(); // the menu loop keeps playing: it is the same for every figure
+    this.urls = song; this.buf = null; this.loaded = 0;
+    this.ready = this.loadRecording();
+  }
+
   preload() {
     this.ready = this.loadRecording();
     if (this.menuMusic === false) return; // switched off: menu() fetches it if it is switched back on
@@ -105,17 +114,18 @@ export class Chip {
   }
 
   loadAmbient() {
-    return fetch(this.urls?.ambient ?? 'music/mulassa-taiko-ambient.mp3').then(r => r.arrayBuffer()).then(a => this.ctx.decodeAudioData(a));
+    return fetch((this.menuUrls ?? this.urls)?.ambient ?? 'music/mulassa-taiko-ambient.mp3').then(r => r.arrayBuffer()).then(a => this.ctx.decodeAudioData(a));
   }
 
   loadRecording() {
+    const recording = this.recording = {};
     let phase = 'fetch', status;
     const got = new Promise(resolve => resolve(fetch(this.urls?.audio ?? 'music/mulassa-taiko.mp3'))).then(response => {
       if (!response.ok) { phase = 'http'; status = response.status; throw new Error(); }
       phase = 'read';
-      return readAll(response, k => { this.loaded = k; });
+      return readAll(response, k => { if (this.recording === recording) this.loaded = k; });
     });
-    const ready = got.then(data => { phase = 'decode'; return this.ctx.decodeAudioData(data); }).then(buffer => (this.buf = buffer))
+    const ready = got.then(data => { phase = 'decode'; return this.ctx.decodeAudioData(data); }).then(buffer => { if (this.recording === recording) this.buf = buffer; return buffer; })
       .catch(e => { throw new AudioFailure(phase, e, status); });
     ready.catch(() => { if (this.ready === ready) this.ready = null; });
     return ready;
@@ -156,6 +166,7 @@ export class Chip {
   // play the recording from `from` after `delay` seconds, fading out at `end`
   async start(delay = 3, from = 0, end = Infinity) {
     this.unlock();
+    this.menuToken = null; this.menuFade(); // cancel ambient playback and pending decodes before a run
     this.stop();
     const token = (this.token = {});
     await (this.ready ||= this.loadRecording());
@@ -241,27 +252,27 @@ export class Chip {
     const token = (this.menuToken = {});
     this.murmurLevel();
     if (this.menuMusic === false) return; // switched off: the plaça's murmur alone
-    this.ambient ||= this.loadAmbient();
+    const ambient = this.ambient ||= this.loadAmbient();
     // the tap's resume() takes a moment before the hardware really plays: starting the loop while the context is still
     // suspended ate its first beats (it began "cut"). Wait for `running`, then start a hair ahead of the clock.
     const running = ctx.state === 'running' || !ctx.addEventListener ? null : new Promise(done => {
       const f = () => { if (ctx.state === 'running') { ctx.removeEventListener('statechange', f); done(); } };
       ctx.addEventListener('statechange', f);
     });
-    this.ambient.then(async buf => {
+    ambient.then(async buf => {
       if (running) await running;
       if (this.menuToken !== token || this.menuSrc || this.menuMusic === false) return; // menu left, reopened or muted while loading
       const src = ctx.createBufferSource(), g = ctx.createGain();
       src.buffer = buf; src.loop = true;
-      src.loopStart = this.urls?.ambientLoop?.start ?? 0;
-      src.loopEnd = this.urls?.ambientLoop?.end ?? buf.duration - 1; // the file carries 1 s past the loop point
+      src.loopStart = (this.menuUrls ?? this.urls)?.ambientLoop?.start ?? 0;
+      src.loopEnd = (this.menuUrls ?? this.urls)?.ambientLoop?.end ?? buf.duration - 1; // the file carries 1 s past the loop point
       const at = ctx.currentTime + 0.12;
       g.gain.setValueAtTime(0, at);
       g.gain.linearRampToValueAtTime(0.9, at + fadeIn);
       src.connect(g).connect(this.out);
       src.start(at);
       this.menuSrc = { src, g, t0: at }; // t0: menuBeat()'s origin
-    }).catch(() => { this.ambient = null; });
+    }).catch(() => { if (this.ambient === ambient) this.ambient = null; });
   }
   // The entrance and loop share a tempo; their combined file length is not the loop's period.
   // (the title logo's TAP TAP DANCE taps along)
@@ -269,7 +280,7 @@ export class Chip {
     const m = this.menuSrc, len = m && m.src.loopEnd - (m.src.loopStart ?? 0);
     if (!len) return null;
     const t = this.clock.at() - m.t0 - this.clock.latency();
-    return t < 0 ? null : (t % len) / len * (this.urls?.ambientLoop?.beats ?? 64);
+    return t < 0 ? null : (t % len) / len * ((this.menuUrls ?? this.urls)?.ambientLoop?.beats ?? 64);
   }
   menuFade() { // short fade (~200 ms) so stopping the loop never clicks
     if (!this.menuSrc) return;
@@ -366,9 +377,28 @@ export class Chip {
     this.voice(s).start(t, 0.5 + Math.random() * 3.5); s.stop(t + 0.3);
   }
 
-  sfx(kind) {
+  sfx(kind, i = 0) { // i: the Drac's petard index (its crack's pitch)
     const t = this.ctx.currentTime;
     switch (kind) {
+      case 'crack': { // a petard of the Drac's traca: a short bright bang and a click; at most 3 in any 80 ms (a fast mash)
+        const at = this.crackAt ??= new Float64Array(3).fill(-9), k = ((this.crackN ?? 0) + 1) % 3; // k: the oldest of the last 3
+        if (t - at[k] < 0.08) break;
+        at[k] = t; this.crackN = k;
+        this.noiseHit(t, 0.04, 0.3, 'bandpass', 2400 + (i % 5) * 380, 1.3);
+        this.blip(t, 1900 + (i % 3) * 260, 700, 0.025, 0.05, 'triangle');
+        break;
+      }
+      case 'tro': // the TRO that ends the traca: a deep boom, then a crackle dying away
+        this.blip(t, 95, 30, 0.7, 0.5, 'sine');
+        this.noiseHit(t, 0.55, 0.45, 'lowpass', 320, 0.7);
+        this.noiseHit(t, 0.08, 0.3, 'bandpass', 1500, 0.8);
+        for (let k = 0; k < 6; k++) this.noiseHit(t + 0.14 + k * 0.07, 0.03, 0.13 - k * 0.018, 'bandpass', 3000 - k * 260, 2);
+        break;
+      case 'flama': { // the CREMA's whoosh, quiet under the GUAPA's DON
+        const f = this.noiseHit(t, 0.45, 0.07, 'bandpass', 450, 0.9);
+        f.frequency.exponentialRampToValueAtTime(1500, t + 0.35);
+        break;
+      }
       case 'perfect': this.blip(t, 1320, 1180, 0.05, 0.035, 'sine'); this.noiseHit(t, 0.02, 0.05, 'bandpass', 3200, 1.5); break; // a light wooden tick
       case 'good': this.blip(t, 990, 900, 0.04, 0.025, 'sine'); break;
       case 'gran': this.bigDon(t); break; // both buttons on a GUAPA: a big taiko DON

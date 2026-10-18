@@ -1,9 +1,10 @@
 // Game flow: back to the title, start a run, the practice, finish and the final.
 import { clearLeaderboardResult, captureLeaderboardResult } from '../services/leaderboard-result.js';
 import { makeDanceChart } from './chart.js';
+import { recordKey, readFigureRecord, saveFigureRecord } from './figures.js';
 import { comparableScore } from './score-scale.js';
-import { bestRecord, beatsRecord, recordFamilyKey, saveRecord } from './records.js';
-import song from '../song.json';
+import { beatsRecord } from './records.js';
+import { song, selectedFigure, countInAt } from './figure-song.js';
 import { store } from '../platform/storage.js';
 import { errors } from '../services/errors.js';
 import { WINDOWS, quality, starsFor } from './progress.js';
@@ -42,7 +43,7 @@ export function toTitle() {
   G.paused = false; G.resuming = null;
   G.practice = null;
   const fromGame = G.state === 'play' || G.state === 'results';
-  G.state = 'title';
+  G.state = 'select';
   chip.stop();
   chip.menu(true); // also silences whatever the run still had queued (the count-in) before the clock runs again
   if (pageActive()) chip.resume();
@@ -52,6 +53,8 @@ export function toTitle() {
   warmStart();
   if (fromGame && sheets.feedback.configured) sheets.nudge.arm(); // a run finished or left: the feedback bubble may say hello (src/ui/feedback-ui.js setupNudge)
 }
+// Legacy title callers still enter the main selector; leaving a run uses toTitle() for its cleanup.
+export function openSelect() { if (G.state === 'title') G.state = 'select'; }
 // A game picked before its song has arrived (a slow line) waits, frozen at the count-in, and says so (after 300 ms),
 // with the download's % while it lasts; frame() keeps the line current.
 export let songWait = null;
@@ -61,8 +64,8 @@ export function startGame(diff) {
   G.sel = diff;
   beginRun(diff, makeDanceChart(song, diff).filter(n => n.t >= playFrom));
   warmStart(); // already painted on the title unless the screen changed since (sprites are per size)
-  G.recordKey = recordFamilyKey(diff);
-  G.previous = bestRecord(store, diff);
+  G.recordKey = recordKey(selectedFigure, diff);
+  G.previous = readFigureRecord(store, selectedFigure, diff);
   const chart = G.chart;
   const wait = songWait = chip.buf ? null : loader.wait(musicLine());
   const waited = () => { loader.done(wait); if (songWait === wait) songWait = null; };
@@ -70,7 +73,7 @@ export function startGame(diff) {
     waited();
     if (!started) return;
     const b0 = BEATS.find(b => b >= playFrom) ?? playFrom;
-    chip.countIn([3, 2, 1].map(k => b0 - k * BEAT)); // 3, 2, 1 on the song's pulse; BALLA! lands on its first beat
+    chip.countIn(countInAt(b0)); // 3, 2, 1 on the song's pulse; BALLA! lands on its first beat
     if (CLICKS) chart.forEach(n => chip.tick(n.t));
   }).catch(e => {
     waited();
@@ -87,6 +90,7 @@ function beginRun(diff, chart) { // shared by the song and the practice: a clean
   loader.cancel(); songWait = null; // a restart drops the last run's wait (startGame makes its own)
   if (!chip) { setChip(audioEngine()); chip.unlock(); } // never start without an audio engine
   G.diff = diff;
+  G.figureId = selectedFigure.id; G.figureVersion = selectedFigure.version;
   chip.stop();
   chip.menu(false);
   chip.sfx('start');
@@ -117,10 +121,10 @@ function beginRun(diff, chart) { // shared by the song and the practice: a clean
 // beat grid, scheduled on the audio clock. Pass a step (or try it three times) to move on; nothing is recorded.
 const TUTORIAL = 'tutorial';
 const tutorialDone = () => AUTOPLAY || FROM || store.get(TUTORIAL) === 'done';
-export function choose(diff) { // a difficulty picked on the title: the very first time, the practice comes first
+export function choose(diff) { // a level picked on the selector (A BALLAR!): the very first time, the practice comes first
   if (tutorialDone()) startGame(diff); else startPractice(diff);
 }
-export function startPractice(then = null) { // then: the difficulty to start afterwards (null: back to the title)
+export function startPractice(then = null) { // then: the difficulty to start afterwards (null: back to the selector)
   G.sel = then ?? G.sel;
   beginRun(1, []); // NORMAL rules (GUAPA wants both buttons, holds) ...
   setWIN(WINDOWS[0]); // ... with FÀCIL's forgiving timing
@@ -201,12 +205,12 @@ export function finish(reason) {
   const value = quality(G.counts);
   G.stars = starsFor(value);
   G.reason = reason === 'collapse' ? 'collapse' : value >= 70 ? 'clear' : 'fail';
-  const recordScore = comparableScore(G.score, G.diff);
+  const recordScore = comparableScore(G.score, G.diff, G.figureVersion);
   G.newRecord = !AUTOPLAY && !FROM && STARS < 0 && reason !== 'collapse' && beatsRecord(value, recordScore, G.previous);
-  if (G.newRecord && !FINAL) saveRecord(store, G.diff, value, G.score, G.maxCombo);
+  if (G.newRecord && !FINAL) saveFigureRecord(store, selectedFigure, G.diff, value, G.score, G.maxCombo);
   G.state = 'results';
   G.resT = clock;
-  const run = { pct: Math.round(value), diff: G.diff, reason: G.reason, stars: G.stars, newRecord: G.newRecord, maxCombo: G.maxCombo, t: G.resT, practice: false };
+  const run = { figureId: selectedFigure.id, score: recordScore, pct: Math.round(value), diff: G.diff, reason: G.reason, stars: G.stars, newRecord: G.newRecord, maxCombo: G.maxCombo, t: G.resT, practice: false };
   G.challenge = challengeResult(CHALLENGE, run); // null unless it was the challenge's level
   G.shareRun = run; // what «Comparteix» shows (share-ui.js); the leaderboard's snapshot above is untouched
   if (G.reason === 'clear') { G.chantT = clock; burst(M.pos.x, M.pos.y); chip.sfx('ovation'); }
@@ -221,8 +225,8 @@ export function startFinal() {
   beginRun(diff, makeDanceChart(song, diff));
   const run = fabricateRun(G.chart, FINAL, FINALE_T);
   Object.assign(G, { counts: run.counts, errors: run.errors, score: run.score, combo: run.combo, maxCombo: run.maxCombo, energy: run.energy,
-    shownE: run.energy, guapo: quality(run.counts), next: G.chart.length, recordKey: recordFamilyKey(diff) });
-  G.previous = outcome === 'record' ? null : { quality: Math.min(100, quality(run.counts) + 3), score: comparableScore(run.score, diff) + 1000, combo: run.maxCombo };
+    shownE: run.energy, guapo: quality(run.counts), next: G.chart.length, recordKey: recordKey(selectedFigure, diff) });
+  G.previous = outcome === 'record' ? null : { quality: Math.min(100, quality(run.counts) + 3), score: comparableScore(run.score, diff, G.figureVersion) + 1000, combo: run.maxCombo };
   if (run.collapsed) G.collapseT = clock;
   finish(run.collapsed ? 'collapse' : 'end');
 }

@@ -6,14 +6,18 @@ import { clock } from '../game/state.js';
 import { smooth01 } from '../core/anim.js';
 
 const CONF = renderProfile.confetti;
-const confetti = new THREE.InstancedMesh(new THREE.BoxGeometry(0.14, 0.14, 0.04), new THREE.MeshLambertMaterial(), CONF);
+export const confetti = new THREE.InstancedMesh(new THREE.BoxGeometry(0.14, 0.14, 0.04), new THREE.MeshLambertMaterial(), CONF);
 const conf = Array.from({ length: CONF }, () => ({ p: new THREE.Vector3(0, -9, 0), v: new THREE.Vector3(), r: rnd(0, 6), lay: -1 })); // lay: s on the floor (-1: parked or in the air)
 ['#d62828', '#f5c518', '#2f62d6', '#3a9d4b', '#ffffff', '#ff8fb1'].forEach((c, k) => conf.forEach((_, i) => i % 6 === k && confetti.setColorAt(i, new THREE.Color(c))));
 confetti.frustumCulled = false;
 confetti.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
 scene.add(confetti);
 export const dummy = new THREE.Object3D();
-export function burst(x, z) {
+// The Drac throws no confetti: drac-show.js uses the reason to light rodes de foc only at selected combo milestones (true = taken)
+let confettiDivert = null;
+export const setConfettiDivert = f => (confettiDivert = f);
+export function burst(x, z, reason = 'burst') {
+  if (confettiDivert?.(4, reason)) return;
   confettiSettled = false;
   confSweep = -1;
   spawnConfetti(CONF, c => { c.p.set(x + rnd(-1, 1), rnd(4, 6), z + rnd(-1, 1)); c.v.set(rnd(-3, 3), rnd(0, 4), rnd(-3, 3)); });
@@ -21,6 +25,7 @@ export function burst(x, z) {
 // Pieces to throw: the parked ones first, then any lying on the floor; never one still in the air (it would jump back
 // up to the sky mid-fall), and the floor's pieces shrink away by themselves (animConfetti) so few are ever lifted off it.
 export function spawnConfetti(n, place) {
+  if (confettiDivert?.(1.5)) return; // the Drac also suppresses the finale's confetti puffs
   let left = Math.min(n, renderProfile.confetti);
   for (const parkedPass of [true, false]) for (let i = 0; i < renderProfile.confetti && left > 0; i++) {
     const c = conf[i];

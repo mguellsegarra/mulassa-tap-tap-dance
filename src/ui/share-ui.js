@@ -14,7 +14,7 @@ const FORMAT_KEY = 'share-format';
 // 0.2 s) first, so it never waits behind the publish sheet or freezes mid-way; the shimmer holds the card's place.
 const afterEntrance = () => new Promise(r => (globalThis.requestAnimationFrame ?? setTimeout)(() => setTimeout(r, 200)));
 
-export function setupShare({ focusIn, restore = () => {}, hero = () => null, sfx = () => {}, doc = document, nav = navigator,
+export function setupShare({ focusIn, restore = () => {}, hero = () => null, standing = async () => null, sfx = () => {}, doc = document, nav = navigator,
   store, fonts = doc.fonts, url = globalThis.URL, settle = afterEntrance,
   // a run worth showing off (and ≥ 2 stars: a weak one is never pushed) opens Comparteix by itself `autoDelay` ms after its results: `auto()` says nobody else will (the publish
   // prompt, when it opens, ends in Comparteix anyway), `ready()` that nothing is open over the screen by then
@@ -22,14 +22,14 @@ export function setupShare({ focusIn, restore = () => {}, hero = () => null, sfx
   const $ = byId(doc);
   const menu = $('share-menu'), row = $('results-actions'), btn = $('results-share'), tag = $('results-share-tag');
   const img = $('share-preview'), frame = $('share-frame'), status = $('share-status'), primary = $('share-image');
-  const note = $('share-note'), nick = $('share-nick'), nickRow = $('share-nick-row'), formats = { story: $('share-format-story'), square: $('share-format-square') };
-  let run = null, challenge = null, format = store.get(FORMAT_KEY) === 'square' ? 'square' : 'story';
+  const note = $('share-note'), nick = $('share-nick'), nickRow = $('share-nick-row'), formats = { story: $('share-format-story'), feed: $('share-format-feed') };
+  let rank = null, run = null, challenge = null, format = ['square', 'feed'].includes(store.get(FORMAT_KEY)) ? 'feed' : 'story';
   // file: the last card made; fresh: it matches what the sheet now shows (a redraw after the nickname / the format
   // makes it stale until the new one is ready); tapped: a tap on the primary waiting for that new card
   let file = null, fresh = false, tapped = false, previewUrl = '', heroes = {}, req = 0, shownKey = '';
   const data = () => {
     const alias = nick.checked && !nickRow.hidden ? store.get(ALIAS_KEY) : null;
-    return { stars: run.stars, pct: run.pct, maxCombo: run.maxCombo, diffName: DIFFS[run.diff].name, reason: run.reason,
+    return { figureId: run.figureId, score: run.score, diff: run.diff, rank, stars: run.stars, pct: run.pct, maxCombo: run.maxCombo, diffName: DIFFS[run.diff].name, reason: run.reason,
       newRecord: run.newRecord, beaten: Boolean(challengeResult(challenge, run)?.beaten), alias };
   };
   const say = (text, ok = false) => { status.textContent = text; status.classList.toggle('ok', ok); };
@@ -63,9 +63,13 @@ export function setupShare({ focusIn, restore = () => {}, hero = () => null, sfx
       await loadCardFonts(fonts);
       if (!heroes[f]) await settle();
       if (r !== req || !menu.open) return;
-      heroes[f] ??= hero(...PHOTO[f]); // rendered once per results screen and format (a render target, then read back)
+      if (!heroes[f]) {
+        const photo = await hero(...PHOTO[f], d.figureId);
+        if (r !== req || !menu.open) return;
+        heroes[f] = photo;
+      } // rendered once per results screen and format (a render target, then read back)
       const canvas = drawCard(doc.createElement('canvas').getContext('2d'), f, d, heroes[f]);
-      const out = await toJpeg(canvas, 0.9);
+      const out = await toJpeg(canvas, 0.9, d.figureId);
       if (r !== req || !menu.open) return;
       file = out; fresh = true;
       show(url.createObjectURL(out));
@@ -94,10 +98,15 @@ export function setupShare({ focusIn, restore = () => {}, hero = () => null, sfx
     tag.hidden = true; // the nudge has done its job
     say('');
     note.hidden = !published; note.textContent = published ? 'Publicat! Ja surts a la classificació.' : '';
-    const o = ++opens;
+    const o = ++opens, openedRun = run, aliasAtOpen = store.get(ALIAS_KEY);
+    rank = null;
+    if (run.figureId !== 'drac-valls' && aliasAtOpen) Promise.resolve().then(() => standing()).then(value => {
+      if (o !== opens || run !== openedRun || !menu.open || store.get(ALIAS_KEY) !== aliasAtOpen) return;
+      rank = value; prepare();
+    }, () => {});
     Promise.resolve(place).then(t => { if (t && menu.open && o === opens) note.textContent = t; }, () => {});
     nickRow.hidden = !store.get(ALIAS_KEY); // the switch only exists for a nickname already chosen (Classificacions)
-    const cap = shareText(run, challenge), link = challengeUrl(run.pct, run.diff), links = shareLinks(cap, link);
+    const cap = shareText(run, challenge), link = challengeUrl(run.pct, run.diff, undefined, run.figureId), links = shareLinks(cap, link);
     $('share-x').href = links.x; $('share-whatsapp').href = links.whatsapp;
     more.dataset.mode = linkMode(nav, { text: cap, url: link });
     $('share-more-label').textContent = more.dataset.mode === 'share' ? 'Altres' : 'Copia';
@@ -131,7 +140,7 @@ export function setupShare({ focusIn, restore = () => {}, hero = () => null, sfx
   // else a hidden field's copy (http, blocked permission), else the link shown in the status line to copy by hand
   const more = $('share-more');
   more.addEventListener('click', () => {
-    const text = shareText(run, challenge), link = challengeUrl(run.pct, run.diff);
+    const text = shareText(run, challenge), link = challengeUrl(run.pct, run.diff, undefined, run.figureId);
     if (more.dataset.mode === 'share') {
       let p;
       try { p = nav.share({ text, url: link }); } catch (e) { p = Promise.reject(e); }
@@ -159,10 +168,12 @@ export function setupShare({ focusIn, restore = () => {}, hero = () => null, sfx
     openAfterPublish: ({ place, published = true } = {}) => open({ published, place }),
     // every frame from updateControls(): only real changes touch the DOM. r: the run on the results screen (null: none)
     results(show, r, ch) {
-      const key = show && r ? `${r.diff}|${r.pct}|${r.reason}|${r.t}` : '';
+      const key = show && r ? `${r.figureId}|${r.score}|${r.maxCombo}|${r.diff}|${r.pct}|${r.reason}|${r.t}` : '';
       if (key === shownKey) return;
       if (!key && row.contains(doc.activeElement)) doc.activeElement.blur?.();
       if (key && key !== shownKey) { // a new results screen: its heroes, its nudge
+        req++; opens++; rank = null;
+        if (menu.open) menu.close();
         run = r; challenge = ch; heroes = {};
         if (previewUrl) url.revokeObjectURL(previewUrl); // another run: the shimmer again, never the last run's card
         file = null; fresh = false;

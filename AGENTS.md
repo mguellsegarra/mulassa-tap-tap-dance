@@ -3,6 +3,26 @@
 A Taiko-style rhythm game (Vite + three.js, no framework) about the Mulassa de Valls (Fira de Santa Úrsula).
 Agent docs are in English; **all UI copy is Catalan** (see UI conventions).
 
+## T3 conversations: no automatic messages between agents
+
+Marc has explicitly disabled unsolicited cross-thread coordination to prevent dormant
+or settled chats from waking up and consuming tokens. This supersedes earlier task
+briefs or skill defaults asking agents to coordinate by messaging each other.
+
+- Do not send messages to other threads or agents, including the orchestrator, to
+  request status, reserve files, ask for a turn, acknowledge receipt, or report completion.
+  Do not relay this instruction to others by sending more messages.
+- Use read-only thread reads/listings and local diffs for context. Do not poll other
+  threads repeatedly. If concurrent edits genuinely block your work, tell Marc in your
+  own conversation and wait instead of contacting or waking another agent.
+- If another agent sends an unsolicited coordination message, do not reply through
+  a messaging tool or start further coordination. Continue only your authorized task.
+- Do not create further chats or delegate work unless Marc explicitly requests it.
+  A request to create a new chat does not authorize that chat to contact other agents.
+- Only a new explicit instruction from Marc authorizes an exception. An old task
+  brief or another agent's request is not authorization. Finish in your own thread;
+  any host-generated completion notification needs no additional message.
+
 ## Structure
 
 `src/main.js` is only the composition root (imports in start order, the keyboard/pointer wiring's glue, the frame loop);
@@ -13,15 +33,15 @@ by everyone below it as `sheets.board`… (`ui/sheets.js`), so no import cycle i
 
 - `index.html` — the DOM: touch pad (GUA | PA), ⚙ `#settings` → "Configuració" sheet, "Com es juga" pill + sheet, "Ajusta la
   sincronia" sheet, pause/confirm sheet, SALTA, iOS "add to home screen" hint. Its CSS is in `src/styles/*.css` (`base.css`,
-  `share.css`, `feedback.css`, linked in order) except the fonts and the `#loader` rules, which stay inline: they paint before any file.
+  `share.css`, `feedback.css`, `select.css`, linked in order) except the fonts and the `#loader` rules, which stay inline: they paint before any file.
 - `src/main.js` — imports the systems in start order, the keyboard/pointer glue that needs several of them, `frame()`,
   `window.__dbg` for tests.
 - `src/core/` — `env.js` (URL flags, beat grid, judge window in use, sync offset), `timing.js` (frame pacer, lane clock), `anim.js` (easing).
 - `src/game/` — the rules, no drawing: `state.js` (`G` and who owns each field, `chip`, `clock`, the song clock, held keys),
-  `flow.js` (title → run → practice → finish → final), `judge.js` (hits, GUAPA pairs, holds, balloons, collapse, autoplay/advance),
+  `flow.js` (splash → select → run/practice → finish → final), `judge.js` (hits, GUAPA pairs, holds, balloons, collapse, autoplay/advance),
   and the pure logic: `chart.js` (`makeDanceChart`, `DIFFS`, `BALLOONS`), `progress.js` (quality %, stars, `WINDOWS`), `energy.js`
   ("l'ànim de la plaça"), `practice.js` (first-game `STEPS`), `calibration.js`, `dance.js` (the song's base choreography),
-  `bubble-rules.js` (when the crowd may talk).
+  `bubble-rules.js` (when the crowd may talk), `figure-catalog.json` (names, towns, entities and primary sources), `figures.js` (playable/Aviat registry, portraits, per-figure level memory and legacy record keys). Catalog thumbnails use native pixel cells and palettes in `figure-portraits.js`, rendered through the original `pixelSvg` component.
 - `src/scene/` — the 3D world: `stage.js` (renderer, scene, lights, plaza, mulassa, the play camera's direction), `quality.js`
   (a render-quality level applied), `crowd-build.js` (who stands where), `crowd.js` (`animCrowd` = `updateMood` →
   `steer` → `separate` → `pose` → `poseScenery`; the mood is the `mood` object), `mula-motion.js` (springs on top of the choreography),
@@ -32,7 +52,7 @@ by everyone below it as `sheets.board`… (`ui/sheets.js`), so no import cycle i
   `draw.js` (`drawHud`), plus `stars.js`, `title-layout.js`, `share-card.js`.
 - `src/ui/` — DOM: `handles.js`, `sheets-setup.js`, `input.js`, `controls.js`, `pause.js`, `pause-actions.js`, `pad.js`, `focus.js`,
   `backdrop.js`, `fullscreen.js`; the sheets `board-ui.js`, `profile-ui.js`, `share-ui.js`, `feedback-ui.js` (+ the nudge), `sync-sheet.js`,
-  `loader.js`; helpers `sheet-kit.js` (status line, busy button), `sheet-fade.js`.
+  `loader.js`, `select-ui.js` (main selector, town pills, records and inline pending information); helpers `sheet-kit.js` (status line, busy button), `sheet-fade.js`.
 - `src/services/` — talking to the outside: `leaderboard.js` (+ `leaderboard-rules.js`, `leaderboard-result.js`, `alias-rules.js`),
   `feedback.js` (client of the `workers/feedback` Cloudflare Worker, `VITE_FEEDBACK_URL`; the Worker checks Turnstile and e-mails each
   message to the `FEEDBACK_TO` secret, nothing stored, never put a personal address in the repo), `captcha.js` (Turnstile), `share.js`,
@@ -69,6 +89,7 @@ by everyone below it as `sheets.board`… (`ui/sheets.js`), so no import cycle i
 - URL params: `?mute` (silent), `?autoplay` (plays itself), `?from=N` (start at N s), `?view=side|front|back|top`
   (fixed camera, no HUD), `?still` (mulassa doesn't dance on the title), `?offset=ms` (sync offset).
 - `?cam` (with `?autoplay&from=N`, or a practice): the camera editor over the game (`src/dev/cam-edit.js`). Drag orbits, wheel/pinch = distance, shift- or right-drag (two fingers) = where she stands on the screen, shift+wheel or the buttons = fov; an overlay shows az/el/dist/fov/her screen y next to the automatic camera's, and «copia» copies one JSON line (viewport, K, stage, values, auto) to fit the per-device camera from. The auto camera keeps running underneath («auto» goes back to it).
+- Local previews without Supabase automatically use the existing in-memory leaderboard and show "MODE PROVA"; `?mock` explicitly selects it on dev hosts. Public hosts never use this fallback. It does not skip the splash or fabricate a completed run.
 - `?stars=0-3`: opens straight on the results card with a fake run of that many stars (never a record, never stored); the star animation replays on each load.
 - `?perf`: every 3 s logs `[perf]` averages (fps, the display rate `hz` and `half` (pacer ÷2), `late` frames (missed
   their turn: a visible lane hitch), rAF frame ms + worst, JS ms split into `3d` render and `hud` draw,
@@ -127,9 +148,17 @@ by everyone below it as `sheets.board`… (`ui/sheets.js`), so no import cycle i
 
 ## UI conventions
 
+- Hide disabled action buttons instead of showing a dimmed unavailable action. Preserve their layout space when removing it would shift nearby controls (for example, carousel arrows at either end).
+
 - All copy in Catalan, no English ("Practice", "OK", "Settings"…). Watch false friends and apostrophes (’).
 - Tap verbs: «Toca» for the touch screen, «Prem» for keys, «Pica» only for GLOBUS mashing; split by device (`.touch`/`.keys`,
-  `COARSE`) or use a neutral verb («Marca»). Links in running text (mailtos): GUA orange `#ff7a1a`, underlined; `.btn-link` stays gold.
+  `COARSE`) or use a neutral verb («Marca»). Links in running text (mailtos): cream `#fff3d6`, underlined (never GUA orange).
+- **Colour roles** (one job each): solid gold `#f5c518` = the one primary action of a view; gold outline = every other button,
+  round icon buttons and the sheets' frame; solid cream `#fff3d6` with dark text = what is selected (town pills, level and
+  view segments; a cream ring on the selected card), unselected choices get a neutral `#e8d8b880` edge; gold as text only for
+  brand and celebration (titles, GUAPA); GUA orange / PA turquoise only for the two drums and what literally means left/right;
+  errors `#ff8a7a`. Round icon buttons: 44 or 56 px, 2 px gold edge, dark fill, cream glyph (`.sheet-x` too); #pause stays
+  bigger on purpose (a game control). Every target is >= 44 px (`.btn-link` gets an invisible slop).
 - **Buttons: use the `.btn` component** (in `index.html`), never one-off button styles:
   `.btn` + `.btn-primary` (filled gold, one per sheet) / `.btn-secondary` (outlined) / `.btn-link` (plain underlined
   text, minor actions; `.btn-small` for tiny ones). Optional `<svg>` icon goes first: fixed 22 px slot on the left,
@@ -166,7 +195,8 @@ by everyone below it as `sheets.board`… (`ui/sheets.js`), so no import cycle i
   lives twice, identical (`CALCOT_SVG` and index.html; tests/loader.mjs checks): swap both together. Copy is short
   Catalan with "…". Audio (suspended context) downloads/decodes while the shaders compile, before the first frame, never on the tap;
   the cover lifts only once the queued `warmups` are painted (one a frame under it, at most `COVER_WARM` 1.5 s more).
-- Menu placement: ⚙ Configuració = sync + practice (+ Classificacions, the «Perfil» block — nickname, Enllaça un correu / Recupera / Tanca la sessió / Esborra el perfil, src/ui/profile-ui.js —, «Mostra els FPS»); Com es juga = practice; pause = sync (no practice).
+- Character selection: splash unlock and `toTitle()` enter `G.state = 'select'` directly, over the same plaça and menu loop. Town pills never filter: one scrolls the strip to centre its town's first figure and selects it (no Tots pill); the active pill is always the selected figure's town (it doesn't follow the strip's scroll). Pending real figures retain their name/entity and show inline information in the measured central band, without a dialog. Only Mulassa and Drac can play; pending selection hides difficulty, play, records and instructions. Figure selection and difficulty are two steps in the same fixed-height dock: "TRIA DIFICULTAT" opens the level choices and "A BALLAR!"; "Canvia de figura" or Escape returns to the cards. Pending figures cannot enter the difficulty step and show no continue button. The action row sits above the card strip, right-aligned on desktop; all cards use identical grid columns, joined image/text panels and a fixed caption height. The host hides both stage models while selection is pending, retaining the last playable song/model state. The info block carries town/comarca, name, song, record/rank/leader tiles and "Com es juga" underneath. The bottom strip has town banners, figure cards, remembered per-figure difficulty and "A BALLAR!". First runs enter practice through `choose`; `__dbg.choose` keeps direct entry. The inline pending card opens the existing feedback flow with `aviatDraft(town)` or offers mail. Arrows rove visible cards; there is no back-to-title loop. `setupSelect` exposes `figure`, calls `onSelect(figure)` only for playable figures when opened or changed, and `onPlay(level, figure)`; sheets-setup wires the callback to `setSelectedFigure` and passes figure plus level on play. Flow reads the active song adapter, stores records per figure and stamps run/share identity. Leaderboard remains Mulassa-only; Drac hides the public rank/leader tiles.
+- Menu placement: original DOM corner controls (ranking, feedback, music, settings) remain available on the selector, at their original 44/56 px sizes. Settings contains sync, practice, profile and privacy. "Com es juga" appears only under selector records. Town pills occupy a separate centered scrolling row below the corner controls on every viewport; chrome sits above selector gradients. Photo mode is available through the original eye, H/Escape or two still pointer taps on the exposed world (mouse and touch, no synthetic dblclick handler). It hides/inerts the selector without resetting figure, town or level. Offline feedback still opens its existing sheet. The legacy title remains dormant; pause retains sync.
 - Title logo (`logo()`, title-layout.js): portrait/desktop it starts 22 px under the corner icons' row (never under 12),
   as wide as the screen allows; short screens give up the mulassa's free band before the logo (it may cover her a
   little). Motion, all cached sprites and static with reduced motion: a glint sweeps MULASSA every 5 s (`glintAt`, a
@@ -180,7 +210,7 @@ by everyone below it as `sheets.board`… (`ui/sheets.js`), so no import cycle i
   auto opening only, «Ara no» (a decline, ×`MAX_DECLINES` stops it) and quiet «No m’ho tornis a recordar» (`OPTOUT_KEY`, permanent) both
   open Comparteix next. ⚙ Configuració «Proposta de publicar» (`#settings-prompt-row`) shows only while `promptsOn()` is false, with an «Activa» button that clears both.
 - Two-way views (Story · Quadrat, Tots · On soc — both tabs for anyone with a nickname, never hidden after open, so nothing shifts; it opens on On soc only while the last answer gave that nickname a row (`ROW_KEY`), else on Tots): a segmented group (`.share-seg` / `.board-seg`, same rules) of
-  `.btn.btn-secondary` with `aria-pressed`; a secondary choice under it stays quieter (`.board-period` pills).
+  `.btn.btn-secondary` with `aria-pressed`; the pressed one is cream.
 - Cloudflare Turnstile (`src/services/captcha.js`): one silent check for every player after their first run (its results, or the title
   after leaving it; skipped under webdriver): never at startup, its iframe shares the main thread on iPhone Safari;
   its tick box only in the centred, non-dismissable `#captcha-menu`, never mid-song; failures never block the game.

@@ -1,9 +1,17 @@
+import { selectedFigure } from '../game/figure-song.js';
+import { newDracPose, dracPose } from '../game/dance-drac.js';
+import { poseDrac } from './drac-motion.js';
+import { confetti } from './confetti.js';
+import { fireworks } from './fx.js';
+import { dracFx } from './drac-show.js';
+import dracShareSong from '../song-drac.json' with { type: 'json' };
+import { DRAC_SIZE, DRAC_SCALE } from './models/drac.js';
 // renderHero: the share photo, rendered off-screen from the live scene.
 import * as THREE from 'three';
 import { newPose, dancePose, END_BEAT } from '../game/dance.js';
 import { blocks } from './framing.js';
 import { errors, errorName } from '../services/errors.js';
-import { plaza, mula, renderer, FRONT, CAM_AZ, scene } from './stage.js';
+import { plaza, mula, drac, dracMat, renderer, FRONT, CAM_AZ, scene } from './stage.js';
 import { M } from './mula-motion.js';
 import { insidePlaza } from './cameras.js';
 
@@ -35,14 +43,32 @@ function heroIssue(phase, target, e) {
   console.warn('[share] hero render failed', e);
   errors.report('share-hero-failed', { phase, target, name: errorName(e) });
 }
-export function renderHero(w, h) {
+export function renderHero(w, h, figureId = selectedFigure.id) {
   if (gpuLost()) { errors.breadcrumb('share-hero-context-lost', { phase: 'context', target: 'none' }); return null; }
   const saved = [], props = plaza.props.map(p => p.mesh.visible);
-  mula.root.traverse(o => saved.push([o, o.position.clone(), o.quaternion.clone(), o.scale.clone(), o.visible]));
+  const isDrac = figureId === 'drac-valls', model = isDrac ? drac : mula;
+  const scale = isDrac ? DRAC_SIZE.h * DRAC_SCALE / 4.03 : 1;
+  const effects = [confetti, fireworks, ...Object.values(dracFx.objects).flat()].filter(Boolean);
+  const visibility = [...effects, mula.root, drac.root].map(o => [o, o.visible]);
+  model.root.traverse(o => saved.push([o, o.position.clone(), o.quaternion.clone(), o.scale.clone(), o.visible]));
+  const opacity = dracMat?.opacity;
+  if (isDrac) {
+    const life = drac.root.parent;
+    saved.push([life, life.position.clone(), life.quaternion.clone(), life.scale.clone(), life.visible]);
+  }
   let rt = null, out = null, prevTarget = null, phase = 'setup', target = 'none';
   try {
     prevTarget = renderer.getRenderTarget();
-    { // standing tall on the last hit: front up, head high, a three-quarter view (a collapse is never shared)
+    effects.forEach(o => { o.visible = false; });
+    mula.root.visible = !isDrac; drac.root.visible = isDrac;
+    if (isDrac) {
+      const life = drac.root.parent;
+      life.position.set(0, 0, 0); life.rotation.set(0, 0, 0); life.scale.setScalar(DRAC_SCALE); life.visible = true;
+      if (dracMat) dracMat.opacity = 1;
+      const pose = dracPose(newDracPose(), dracShareSong.beats.length - 1);
+      pose.x = M.pos.x / DRAC_SCALE; pose.z = M.pos.y / DRAC_SCALE; pose.fire = 0;
+      poseDrac(drac, pose, FRONT + 0.55);
+    } else { // standing tall on the last hit: front up, head high, a three-quarter view (a collapse is never shared)
       dancePose(heroPose, END_BEAT);
       mula.root.position.set(M.pos.x, heroPose.lift * 2, M.pos.y);
       mula.root.rotation.set(0, FRONT + 0.55, 0);
@@ -52,9 +78,9 @@ export function renderHero(w, h) {
       mula.ears.forEach(e => (e.rotation.x = -0.5));
       mula.legs.forEach((l, i) => { l.visible = true; l.position.y = i % 2 ? 0.12 : 0; });
     }
-    const fy = 1.8, need = 5.6, t = Math.tan(heroCam.fov * Math.PI / 360);
+    const fy = 1.8 * scale, need = 5.6 * scale, t = Math.tan(heroCam.fov * Math.PI / 360);
     heroCam.aspect = w / h;
-    const d = Math.max(need / 2 / t, 6 / 2 / t / heroCam.aspect), el = 12 * Math.PI / 180;
+    const d = Math.max(need / 2 / t, 6 * scale / 2 / t / heroCam.aspect), el = 12 * Math.PI / 180;
     heroCam.position.set(M.pos.x + Math.cos(el) * Math.sin(CAM_AZ) * d, fy + Math.sin(el) * d, M.pos.y + Math.cos(el) * Math.cos(CAM_AZ) * d);
     insidePlaza(heroCam.position, M.pos.x, fy, M.pos.y);
     heroCam.lookAt(M.pos.x, fy, M.pos.y);
@@ -94,6 +120,8 @@ export function renderHero(w, h) {
     return null;
   } finally {
     for (const [o, p, q, sc, v] of saved) { o.position.copy(p); o.quaternion.copy(q); o.scale.copy(sc); o.visible = v; }
+    if (dracMat) dracMat.opacity = opacity;
+    visibility.forEach(([o, visible]) => { o.visible = visible; });
     plaza.props.forEach((p, i) => (p.mesh.visible = props[i]));
     try {
       heroQuad && (heroQuad.material.uniforms.src.value = null);

@@ -4,7 +4,8 @@ import { C } from './sprites.js';
 import { H, W } from './canvas.js';
 import { lane, BANNER } from './layout.js';
 import { textWidth, text } from './primitives.js';
-import { BEAT, BEATS, playFrom } from '../core/env.js';
+import { BEATS, playFrom } from '../core/env.js';
+import { countInPhase } from '../game/figure-song.js';
 import { bigWord, elastic } from './praise.js';
 
 export function drawJudge() {
@@ -20,21 +21,21 @@ export function drawJudge() {
   H.globalAlpha = 1;
 }
 export function drawResume() { // 3, 2, 1 after a pause, on the same pulse as the start's count-in
-  const since = songTime() - (G.resuming - 3 * BEAT), i = Math.floor(since / BEAT);
+  const phase = countInPhase(songTime(), G.resuming), i = Math.floor(phase);
   if (i < 0 || i > 2) return;
   const big = BANNER.big(), y = lane().bottom + 10 + big * 0.55;
-  bigWord(String(3 - i), W / 2, y, big * elastic(Math.min(1, (since / BEAT - i) * 4)), BANNER.count, 0, W - 12, big);
+  bigWord(String(3 - i), W / 2, y, big * elastic(Math.min(1, (phase - i) * 4)), BANNER.count, 0, W - 12, big);
 }
 export function drawBanner(t) {
   if (G.collapseT) return;
   // count-in locked to the timbal: each number appears exactly on its hit, BALLA! on the song's first beat
   // in the band under the lane (the headline slot and a bit more), above the mulassa's body
-  const b0 = BEATS.find(b => b >= playFrom) ?? playFrom, since = t - (b0 - 3 * BEAT);
+  const b0 = BEATS.find(b => b >= playFrom) ?? playFrom, phase = countInPhase(t, b0);
   const big = BANNER.big(), y = lane().bottom + 10 + big * 0.55;
   if (t < b0) {
-    if (since < 0) text('PREPARATS…', W / 2, y, BANNER.ready(), C.cream);
+    if (phase < 0) text('PREPARATS…', W / 2, y, BANNER.ready(), C.cream);
     else {
-      const i = Math.floor(since / BEAT), frac = since / BEAT - i; // frac 0 = right on the hit
+      const i = Math.floor(phase), frac = phase - i; // frac 0 = right on the hit
       bigWord(String(3 - i), W / 2, y, big * elastic(Math.min(1, frac * 4)), BANNER.count, 0, W - 12, big);
     }
   }

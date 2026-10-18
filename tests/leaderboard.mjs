@@ -126,4 +126,16 @@ await assert.rejects(absent.listAll(),{code:'disabled'});
   const svc=createLeaderboardService({configured:true,publishingEnabled:false,captchaRequired:true,getClient:async()=>c7});
   assert.deepEqual(await svc.signOut(),{signedOut:true}); assert.deepEqual(out,{scope:'local'},'this browser only; also with publishing off');
 }
+// 202610180001: the account behind a still-valid token was purged (its 7 days ran out): the write is refused as no
+// player, and this browser leaves that session so the next try signs in to a new profile; other refusals keep it
+{ let session={access_token:'test-only'}, outs=0, refuse='leaderboard_auth_required';
+  const c8={auth:{getSession:async()=>({data:{session}}),signOut:async()=>{outs++;session=null;return {error:null};}},
+    rpc:async()=>({data:null,error:{message:refuse,code:'28000'},status:400})};
+  const svc=createLeaderboardService({configured:true,publishingEnabled:true,captchaRequired:false,getClient:async()=>c8});
+  const run={version:LEADERBOARD_VERSION,difficulty:0,counts:{perfect:EXPECTED_JUDGMENTS[0],good:0,miss:0},score:1000,maxCombo:EXPECTED_JUDGMENTS[0]};
+  await assert.rejects(svc.publish(run,'Novell'),{code:'session'}); assert(outs===1 && session===null,'purged: the session goes');
+  session={access_token:'test-only'}; await assert.rejects(svc.createProfile('Novell'),{code:'session'}); assert.equal(outs,2,'«Crea» too');
+  session={access_token:'test-only'}; refuse='leaderboard_rate_limit';
+  await assert.rejects(svc.publish(run,'Novell'),{code:'rate_limit'}); assert(outs===2 && session,'any other refusal keeps it');
+}
 console.log('leaderboard chart, result, privacy and client contracts ok');

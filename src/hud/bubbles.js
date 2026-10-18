@@ -1,7 +1,7 @@
 // Speech bubbles anchored to people in the plaza.
 import { restTimeline, rattled, updateRest, placeBubble, mayTalk, BUBBLE_SECONDS, CHATTER } from '../game/bubble-rules.js';
 import * as THREE from 'three';
-import song from '../song.json';
+import { song } from '../game/figure-song.js';
 import { pick } from '../scene/models.js';
 import { SAFE, K, W, HH, toScreen, H } from './canvas.js';
 import { G, songTime, balloonAt, bigPending, clock } from '../game/state.js';
@@ -10,6 +10,7 @@ import { M } from '../scene/mula-motion.js';
 import { textWidth, text } from './primitives.js';
 import { activeCrowd } from '../scene/quality.js';
 import { C } from './sprites.js';
+import { themed } from '../game/figure-theme.js';
 
 // Speech bubbles anchored to people in the world, only in rests and hushed while the player struggles. Each one sits whole inside the free area (safe area, under the HUD + lane +
 // judge/headline slots, over the pad) with its tail on the speaker; no room there: another spectator, or nothing.
@@ -65,7 +66,7 @@ export function bubble(txt, pos, col = C.dark, kind = 'crowd') {
 function talk() { // a little festa-major chatter, only when the chart leaves room
   if (G.state !== 'play' || clock < nextChatter) return;
   nextChatter = clock + 0.4 + Math.random() * 1.2;
-  bubble(pick(CHATTER), null, C.dark, 'chatter');
+  bubble(themed(pick(CHATTER)), null, C.dark, 'chatter');
 }
 export function drawBubbles() {
   const state = talkState();

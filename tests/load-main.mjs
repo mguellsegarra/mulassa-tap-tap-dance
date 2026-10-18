@@ -9,10 +9,10 @@ import { dirname, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../src');
-const PROVIDED = new Set(`song.json platform/polyfills.js platform/render-quality.js platform/audio.js services/errors.js
-  services/leaderboard-result.js services/share.js game/chart.js game/progress.js game/practice.js game/energy.js game/dance.js
-  game/bubble-rules.js hud/stars.js hud/title-layout.js scene/models.js scene/balloon3d.js scene/framing.js scene/orbit.js
-  scene/crowd-fx.js ui/board-ui.js ui/profile-ui.js ui/share-ui.js ui/feedback-ui.js ui/sync-sheet.js ui/loader.js ui/sheet-fade.js
+const PROVIDED = new Set(`song.json song-drac.json platform/polyfills.js platform/render-quality.js platform/audio.js services/errors.js
+  services/leaderboard-result.js services/leaderboard.js services/share.js game/chart.js game/progress.js game/practice.js game/energy.js game/dance.js
+  game/bubble-rules.js game/dance-drac.js game/drac-feet.js scene/drac-motion.js hud/stars.js hud/title-layout.js scene/models.js scene/models/drac.js scene/balloon3d.js scene/framing.js scene/orbit.js
+  scene/crowd-fx.js ui/select-ui.js ui/board-ui.js ui/profile-ui.js ui/share-ui.js ui/feedback-ui.js ui/sync-sheet.js ui/loader.js ui/sheet-fade.js
   dev/cam-edit.js dev/final-test.js`.split(/\s+/));
 const IMPORT = /^import .*;\n/gm, LOCAL = /^import (?:.* from )?'(\.[^']+)';/gm;
 
@@ -26,7 +26,7 @@ export function loadMainSource(entry = resolve(root, 'main.js')) {
       const dep = resolve(dirname(file), spec);
       if (!PROVIDED.has(relative(root, dep))) visit(dep);
     }
-    out.push(`//# sourceURL=${file}\n` + src.replace(IMPORT, '').replace(/^export (default )?/gm, ''));
+    out.push(`//# sourceURL=${file}\n` + src.replace(/^import (\w+) from '(\.[^']+\.json)'(?: with \{ type: 'json' \})?;$/gm, (_, name, spec) => name === 'song' ? '' : `const ${name} = ${readFileSync(resolve(dirname(file), spec), 'utf8')};`).replace(IMPORT, '').replace(/^export .* from '[^']+';\n/gm, '').replace(/^export (default )?/gm, ''));
   };
   visit(entry);
   return out.join('\n');

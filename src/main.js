@@ -1,21 +1,21 @@
 // Mulassa Tap Tap Dance: the composition root. Each system lives in its own module (core, scene, game, hud, ui, dev);
 // this file imports them in the order they must start, wires the input and the sheets' buttons together, and runs the frame loop.
 import './platform/polyfills.js';
+import { PHOTO } from './game/photo-control.js';
 import { errors } from './services/errors.js';
 import * as THREE from 'three';
-import song from './song.json';
+import { song, figureScale } from './game/figure-song.js';
 import { frameMonitor } from './platform/render-quality.js';
 import { sectionAt } from './game/chart.js';
 import { judgedCount } from './game/progress.js';
 import { markLeaderboardDebugUse } from './services/leaderboard-result.js';
 import { blocks, smoothDamp } from './scene/framing.js';
-import { CHIP } from './hud/title-layout.js';
 import { ORBIT, orbitCancel, orbitStep, roomAlong } from './scene/orbit.js';
 import { rnd } from './scene/models.js';
 import { setupCamEdit } from './dev/cam-edit.js';
 import { Q, COARSE, pageActive, beatAt, BEAT, offsetMs, playFrom, FINALE_T, AUTOPLAY, CALM, FINAL, STARS } from './core/env.js';
 import { pace, RAWCLOCK, viewClock } from './core/timing.js';
-import { qualityLevel, renderProfile, softwareGl, GPU, renderer, camera, CAM_AZ, FRONT, plaza, cameraTarget, camFocus, camFocusTarget, camShift, camXYZ, focusXYZ, scene, setQualityLevel, setCamShift, renderScreen } from './scene/stage.js';
+import { initDrac, mula, drac, qualityLevel, renderProfile, softwareGl, GPU, renderer, camera, CAM_AZ, FRONT, plaza, cameraTarget, camFocus, camFocusTarget, camShift, camXYZ, focusXYZ, scene, setQualityLevel, setCamShift, renderScreen } from './scene/stage.js';
 import { G, chip, clock, songTime, drawT, bigPending, audioEngine, setClock, setDrawT } from './game/state.js';
 import { audioFailureTags } from './platform/audio.js';
 import { TAU } from './core/anim.js';
@@ -23,14 +23,17 @@ import { spawnConfetti, burst, animConfetti, setConfettiSettled } from './scene/
 import { applyRenderQuality, activeCrowd } from './scene/quality.js';
 import { resize, hud, HH, K, sizedW, sizedDpr, appHeight, baseFov, W, H, SAFE } from './hud/canvas.js';
 import { loader } from './ui/handles.js';
+import { sheets } from './ui/sheets.js';
 import { titleL, fontsReady, warmups } from './hud/sprites.js';
+import { figTheme } from './game/figure-theme.js';
 import './hud/primitives.js';
 import { balloonView, balloonFx, setBalloonView } from './hud/balloon.js';
-import { M, trauma, act, animMula, setTrauma } from './scene/mula-motion.js';
+import { M, trauma, act, animMula, setTrauma, PAIR } from './scene/mula-motion.js';
 import { lane, playBottom, padEl } from './hud/layout.js';
 import { bubbles, bubble, at } from './hud/bubbles.js';
 import { animCrowd } from './scene/crowd.js';
 import { firework, animFireworks, animFinaleLights } from './scene/fx.js';
+import { dracFrame, dracWarm } from './scene/drac-show.js';
 import './hud/lane.js';
 import './hud/top.js';
 import { headline } from './hud/praise.js';
@@ -47,7 +50,7 @@ import './ui/pad.js';
 import './ui/focus.js';
 import { pauseGame } from './ui/pause.js';
 import './ui/fullscreen.js';
-import { updateControls, viewMode, viewT, hudBlank, setHudBlank } from './ui/controls.js';
+import { updateControls, viewMode, viewT, hudBlank, setHudBlank, menuState, steers, setView } from './ui/controls.js';
 import { fpsTick } from './dev/fps.js';
 import { debugAction } from './dev/debug.js';
 import { drawHud } from './hud/draw.js';
@@ -55,7 +58,10 @@ import './ui/pause-actions.js';
 import './ui/backdrop.js';
 import './ui/input.js';
 import './ui/sheets-setup.js';
-import { sheets } from './ui/sheets.js';
+import { framePhotoCamera, releasePhotoCamera } from './scene/photo-camera.js';
+import { updatePhotoMarker } from './scene/photo-marker.js';
+
+initDrac(); // both rigs exist before shader warmup and the first frame
 
 const monitorFrames = frameMonitor((steps = 1) => { // steps: 2 when frames are far too slow
   if (qualityLevel > -1) { setQualityLevel(Math.max(-1, qualityLevel - steps)); applyRenderQuality(); resize(); precompile(); } // now, not at the first GLOBUS pop or firework
@@ -118,7 +124,7 @@ function frame(now) {
       for (let i = 0; i < 6; i++) setTimeout(() => firework(rnd(-10, 10), rnd(10, 15), rnd(-10, 3), 90), i * 180);
       burst(M.pos.x, M.pos.y);
       // the crowd's chant, in its own rhythm: "guapa, guapa... i guapa!"
-      [['GUAPA,', 0], ['GUAPA…', 0.8], ['I GUAPA!', 1.8]].forEach(([w, at]) => setTimeout(() => { if (G.state === 'play') headline(w, 'rainbow', 4, at > 1 ? 1.6 : 0.8, 0.5); }, at * 1000));
+      figTheme.chant.forEach(([w, at]) => setTimeout(() => { if (G.state === 'play') headline(w, 'rainbow', 4, at > 1 ? 1.6 : 0.8, 0.5); }, at * 1000));
       setTrauma(1);
     }
     if (judgedCount(G.counts) > 1) G.shown += (G.guapo - G.shown) * Math.min(1, dt * 4); // the meter eases, it never jumps
@@ -130,30 +136,35 @@ function frame(now) {
       if (G.practice) practiceTick(t);
       else if (t > song.tail + 1) finish('end');
     } else if (clock - G.collapseT > 3.5) finish('collapse');
-  } else if (G.state === 'title' && Math.floor(beat) !== G.lastBeat) { // demo dance on the menu
+  } else if ((G.state === 'title' || G.state === 'select') && Math.floor(beat) !== G.lastBeat) { // demo dance on the menu
     G.lastBeat = Math.floor(beat);
-    if (G.lastBeat % 2 === 0 && !Q.has('still')) act('LDRU'[(G.lastBeat / 2) % 4]);
+    if (G.lastBeat % 2 === 0 && !Q.has('still') && !(PHOTO.on && PHOTO.id === 'mulassa-valls')) act('LDRU'[(G.lastBeat / 2) % 4]);
   }
+  if (PHOTO.on && !steers()) setView(false);
   animMula(dt, beat, live);
+  if (!PHOTO.on && G.state === 'select' && sheets.select?.figure?.status === 'aviat') { mula.root.visible = false; drac.root.visible = false; }
   const c0 = PERF && performance.now();
   animCrowd(dt, beat, vt, live);
   if (PERF) PERF.crowd += performance.now() - c0; // ?perf: the crowd's own share of the js
   animConfetti(dt);
   animFireworks(dt);
+  dracFrame(dt, vt); // the Drac's fire, red smoke and traca; nothing for the Mulassa
   animFinaleLights(beat);
 
   // camera: during play the mulassa sits near the lane, in the free stage above the pad or
   // the bottom edge, with the crowd around her. A lens shift (view offset) puts her there without tilting the view.
-  const mx = G.state === 'play' ? M.pos.x : M.pivot.x * 0.5 + M.pos.x * 0.5, mz = G.state === 'play' ? M.pos.y : M.pivot.y * 0.5 + M.pos.y * 0.5, far = camera.aspect < 1 ? 1.4 : 1; // play follows the body; the menu follows her pivot
+  const pk = PHOTO.on ? (PHOTO.pair && PHOTO.id === 'drac-valls' ? 1 : 0) : G.state === 'splash' ? 0.5 * PAIR.k : G.state === 'select' ? 0.5 * PAIR.k ** 3 : 0; // the splash frames her and the Drac together, and keeps it in shot while it fades in its smoke; then titleC's spring eases onto her
+  const mx = G.state === 'play' ? M.pos.x : (M.pivot.x * 0.5 + M.pos.x * 0.5) * (1 - pk) + PAIR.x * pk, mz = G.state === 'play' ? M.pos.y : (M.pivot.y * 0.5 + M.pos.y * 0.5) * (1 - pk) + PAIR.z * pk, far = camera.aspect < 1 ? 1.4 : 1; // play follows the body; the menu follows her pivot
   const VIEW = { side: [9, 2.2, 0], front: [0, 2.5, 8], back: [-3, 3, -8], top: [4, 9, 6] }[Q.get('view')];
+  if (!PHOTO.on) releasePhotoCamera();
   let shift = 0; // where her centre should sit, in css px below the middle of the screen
-  if (VIEW) {
+  if (PHOTO.on && !VIEW) { framePhotoCamera(dt); } else if (VIEW) {
     camera.position.set(mx + VIEW[0], VIEW[1], mz + VIEW[2]);
     camera.lookAt(mx, 1.4, mz);
-  } else if (G.state === 'title' || G.state === 'splash') {
+  } else if (G.state === 'title' || G.state === 'splash' || G.state === 'select') {
     // orbits her, not the middle: wandering about she'd otherwise pass right in front of the lens, huge. The player
     // may steer it (src/scene/orbit.js: its limits keep it inside the square and above the crowd); left alone it orbits.
-    const homeH = 4.2 * far, homeD = 11; // plaza level, in among the crowd (the old high wide shot showed mostly bare floor)
+    const homeH = 4.2 * far, homeD = 11; // one shot for every figure, so their sizes compare; plaza level, in among the crowd (the old high wide shot showed mostly bare floor)
     // her sway and steps never shake the shot: it drifts after her on a critically damped spring (like the play camera; a first-order
     // filter changes velocity the instant she does, which read as a jerk on every hop)
     if (!titleC.on) { titleS.x[0] = mx; titleS.x[1] = mz; titleS.v.fill(0); }
@@ -170,23 +181,25 @@ function frame(now) {
     camera.position.copy(insidePlaza(cameraTarget.set(cx + Math.sin(o.yaw) * hd, ORBIT.focusY + o.x[1] * Math.sin(o.x[0]), cz + Math.cos(o.yaw) * hd), cx, 1.2, cz));
     camera.lookAt(camFocus.lerp(camFocusTarget.set(cx, 1.2, cz), Math.min(1, dt * 2)));
     if (G.state === 'splash') { // her centre between the splash's logo and its prompt; the title's own shift below eases in from it on the tap
-      const mid = (HH * 0.2 + splashS() * 1.4 + HH * 0.82 - 14) / 2;
+      const mid = (HH * 0.2 + splashS() * 1.02 + HH * 0.82 - 14) / 2;
       shift = Math.max(-0.25 * HH * K, Math.min(0.25 * HH * K, (mid - HH / 2) * K));
     }
-    if (G.state === 'title' && titleL) { // (the cached layout: measuring here would touch the HUD canvas) a lens shift puts her in the free band between the logo and the choice (not behind either)
-      const L = titleL, mid = (L.logo.y + L.logo.h + L.headingY - (L.chipY != null ? CHIP + 6 : 0)) / 2;
+    if (G.state === 'title' && titleL) { // (the cached layout: measuring here would touch the HUD canvas) a lens shift puts her in the free band between the logo and the button (not behind either)
+      const L = titleL, mid = (L.logo.y + L.logo.h + L.choiceY) / 2;
       shift = Math.max(-0.25 * HH * L.K, Math.min(0.25 * HH * L.K, (mid - HH / 2) * L.K));
     }
+    const band = G.state === 'select' && sheets.select?.band; // «QUI BALLA?»: her centre in its free band (css px, measured when it opens or resizes)
+    if (band) shift = Math.max(-0.25 * HH * K, Math.min(0.25 * HH * K, (band.top + band.bottom) / 2 - HH * K / 2));
   } else if (G.state === 'play') {
     CAMED?.restoreFov();
     shift = framePlayCamera(dt, mx, mz);
     if (CAMED) shift = CAMED.apply(shift, mx, mz, now);
   } else {
-    camera.position.lerp(insidePlaza(cameraTarget.set(mx * 0.6 + 1.5, 9.5 * far, mz * 0.6 + 11 * far), mx * 0.8, 0.6, mz * 0.8 + 1.1), Math.min(1, dt * 2));
-    camera.lookAt(camFocus.lerp(camFocusTarget.set(mx * 0.8, 0.6, mz * 0.8 + 1.1), Math.min(1, dt * 2)));
+    camera.position.lerp(insidePlaza(cameraTarget.set(mx * 0.6 + 1.5, 9.5 * far * figureScale(), mz * 0.6 + 11 * far * figureScale()), mx * 0.8, 0.6, mz * 0.8 + 1.1), Math.min(1, dt * 2));
+    camera.lookAt(camFocus.lerp(camFocusTarget.set(mx * 0.8, 0.6 * figureScale(), mz * 0.8 + 1.1), Math.min(1, dt * 2)));
   }
   if (G.state !== 'play') CAMED?.idle();
-  if (G.state !== 'title' && orbit.ptrs.size) orbitCancel(orbit); // a game started mid-drag: let go
+  if (!menuState() && orbit.ptrs.size) orbitCancel(orbit); // a game started mid-drag: let go
   if ((G.state !== 'play' || VIEW) && CAMS.live) { // the next game's camera starts from wherever this one is
     CAMS.live = false;
     if (camera.fov !== baseFov()) { camera.fov = baseFov(); camera.updateProjectionMatrix(); }
@@ -203,6 +216,7 @@ function frame(now) {
     camera.position.x += Math.sin(clock * 47) * 0.25 * k; camera.position.y += Math.sin(clock * 61) * 0.2 * k;
   }
   const p0 = PERF && performance.now();
+  updatePhotoMarker();
   if (PERF?.mode !== 'no3d') renderScreen();
   if (PERF?.mode === 'sync') renderer.getContext().readPixels(0, 0, 1, 1, 6408, 5121, PERF.px ??= new Uint8Array(4)); // RGBA, UNSIGNED_BYTE
   const p1 = PERF && performance.now();
@@ -266,8 +280,9 @@ function precompile(hero = false) {
   const jobs = [], prev = renderer.getRenderTarget?.() ?? null;
   let rt = null;
   try {
-    jobs.push(renderer.compileAsync(scene, camera));
+    jobs.push(renderer.compileAsync(scene, camera)); // three.js traverses hidden meshes too, including the Drac and its flames
     if (balloonFx) jobs.push(balloonFx.warm(renderer));
+    dracWarm(renderer); // its glow texture (the Drac's meshes are in the scene, compiled above)
     if (hero) {
       renderer.setRenderTarget(rt = new THREE.WebGLRenderTarget(1, 1));
       jobs.push(renderer.compileAsync(scene, heroCam), renderer.compileAsync(heroQuadMake().scene, heroQuadMake().cam));

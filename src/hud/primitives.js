@@ -1,5 +1,6 @@
 // HUD drawing primitives: text, panels, glows, note discs, hold tails, arrows.
 import { C, devScale, qSize, PIXEL, FONT, sprite, DIRDK, DIRC, DIRLT } from './sprites.js';
+import { themed } from '../game/figure-theme.js';
 import { H, K } from './canvas.js';
 import { clock } from '../game/state.js';
 
@@ -89,7 +90,7 @@ export function noteDisc(dir, x, y, r, big = false) { // big = GUAPA: 1.4x, gold
     H.fillStyle = DIRC.L; H.beginPath(); H.arc(x, y, r - rim, Math.PI / 2, Math.PI * 1.5); H.fill();
     H.fillStyle = DIRC.R; H.beginPath(); H.arc(x, y, r - rim, -Math.PI / 2, Math.PI / 2); H.fill();
     H.fillStyle = 'rgba(255,255,255,0.28)'; H.beginPath(); H.ellipse(x, y - r * 0.5, r * 0.5, r * 0.2, 0, 0, 7); H.fill(); // shine across both halves
-    text('GUAPA', x, y + 0.4, 6.5, '#fff', 'center'); // +0.4: Baloo's caps sit a hair high
+    text(themed('GUAPA'), x, y + 0.4, 6.5, '#fff', 'center'); // +0.4: Baloo's caps sit a hair high
     return;
   }
   noteFace(dir, x, y, r - rim);

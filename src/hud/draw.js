@@ -6,6 +6,7 @@ import { W, H, HH } from './canvas.js';
 import { text, textWidth, panel } from './primitives.js';
 import { C, spriteBudget, SPRITES_NEW, warmups, warmT, setSpriteBudget, setWarmT } from './sprites.js';
 import { COARSE, offsetMs } from '../core/env.js';
+import { themed } from '../game/figure-theme.js';
 import { drawSplash, drawTitle } from './title.js';
 import { drawBubbles } from './bubbles.js';
 import { drawJudge, drawBanner, drawResume } from './banner.js';
@@ -26,19 +27,19 @@ function drawPractice() {
     H.strokeStyle = C.dark; H.lineWidth = 1; H.stroke();
   }
   if (P.doneT) return;
-  const s = COARSE.matches ? step.touch : step.keys, ww = textWidth(step.word, 10) + 8, room = W - 20 - ww - 24;
+  const s = themed(COARSE.matches ? step.touch : step.keys), ww = textWidth(themed(step.word), 10) + 8, room = W - 20 - ww - 24;
   const size = Math.min(10, 10 * room / textWidth(s, 10)), w = ww + textWidth(s, size) + 24, x = W / 2 - w / 2, cy = PRACTICE_Y();
   H.beginPath(); H.roundRect(x, cy - 11, w, 22, 3); // an instruction, not a button: flat, a gold strip, no outline
   H.fillStyle = 'rgba(42,26,16,0.9)'; H.fill(); H.fillStyle = C.gold; H.fillRect(x, cy - 11, 3, 22);
-  text(step.word, x + 12, cy, 10, { GUA: C.guaLt, PA: C.paLt }[step.word] ?? C.gold, 'left');
+  text(themed(step.word), x + 12, cy, 10, { GUA: C.guaLt, PA: C.paLt }[step.word] ?? C.gold, 'left');
   text(s, x + 12 + ww, cy, size, C.cream, 'left');
 }
 function drawCollapse() {
   if (clock - G.collapseT < 0.7 - 1e-9) return;
   // the moment itself: big, in the middle of the screen (two lines, so it stays big on a phone), with a short pop-in
   const size = Math.min(34, W / 11) * Math.min(1, 0.6 + 0.4 * Math.min(1, (clock - G.collapseT - 0.7) / 0.18)), y = HH * 0.42;
-  text('LA MULASSA', W / 2, y - size * 0.62, size, C.red, 'center', C.cream);
-  text('S’HA DESMUNTAT!', W / 2, y + size * 0.62, size, C.red, 'center', C.cream);
+  text(themed('LA MULASSA'), W / 2, y - size * 0.62, size, C.red, 'center', C.cream);
+  text(themed('S’HA DESMUNTAT!'), W / 2, y + size * 0.62, size, C.red, 'center', C.cream);
 }
 export function drawHud(t) {
   setSpriteBudget(SPRITES_NEW);

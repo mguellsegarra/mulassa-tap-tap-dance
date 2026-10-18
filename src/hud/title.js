@@ -1,6 +1,5 @@
-// The title screen: logo, splash, the difficulty buttons and their layout.
-import { DIFFS } from '../game/chart.js';
-import song from '../song.json';
+// The title screen: logo, splash, the JUGA button (it opens «QUI BALLA?», src/ui/select-ui.js) and their layout.
+import { song } from '../game/figure-song.js';
 import { glintAt, POP, popsAt, titleLayout, CHIP } from './title-layout.js';
 import { challengeTip } from '../services/share.js';
 import { COARSE, beatAt, CALM } from '../core/env.js';
@@ -13,18 +12,18 @@ import { iosHint, howtoEl, settingsEl, leadersEl, feedbackEl, musicEl } from '..
 // The title's words, at the title's sizes (its logo is not the splash's size): painted on the splash, so the tap's first
 // title frame only blits them (it painted ~10 new outlined sprites, along with the audio unlock and the DOM buttons).
 export function titleWarmups() {
-  const keys = !COARSE.matches;
-  return [() => logo(0, true, titleLayoutNow().s, true), () => logo(0, true, titleLayoutNow().s, true), () => text('TRIA LA DIFICULTAT', 0, 0, 11, C.cream),
-    ...DIFFS.map((d, i) => () => { text(d.name, 0, 0, 12, C.cream); text(d.sub, 0, 0, titleLayoutNow().subSize, keys && i === G.sel ? C.gold : '#e8d8b8'); })];
+  return [() => logo(0, titleLayoutNow().s, true), () => logo(0, titleLayoutNow().s, true),
+    () => { text(PLAY.name, 0, 0, 12, C.cream); text(PLAY.sub, 0, 0, titleLayoutNow().subSize, !COARSE.matches ? C.gold : '#e8d8b8'); }];
 }
+const PLAY = { name: 'JUGA', sub: 'Tria qui balla i el nivell' };
 // The logo: MULASSA on a blocky extrusion (one dark copy of its sprite, stacked), a glint of light across its letters
 // every few seconds, and TAP TAP DANCE tapping along to the menu loop, a word a beat (title-layout.js glintAt/popsAt).
 // Every piece is a cached sprite, blitted (the words at a pop's size, drawn smaller: they stay crisp); reduced motion:
 // all still. warm: paint every sprite (titleWarmups), the glint's too.
-const LOGO_EXT = '#5e1514', LOGO_DEPTH = [0.03, 0.06], MENU_BEAT = 60 / song.bpm; // the menu beat, when it's silent
+const LOGO_EXT = '#5e1514', LOGO_DEPTH = [0.03, 0.06];
 const pops = [0, 0, 0], tapAt = new Map(); // tapAt: s -> TAP, TAP, DANCE's centres from the middle (measured once a size)
 let mulaRatio = 5; // MULASSA's width / s (titleLayoutNow measures it)
-function logo(y, tagline = true, s = Math.min(W / 5, HH / 4.6, 130), warm = false) { // s: scales with the screen, capped so it never takes over (the title passes its budget's)
+function logo(y, s = splashS(), warm = false) { // the title passes its own layout budget
   const b = chip ? Math.abs(Math.sin(beatAt(Math.max(0, chip.now())) * Math.PI)) : 0, my = y - b * s * 0.06, calm = CALM.matches;
   for (const d of LOGO_DEPTH) text('MULASSA', W / 2, my + d * s, s, LOGO_EXT, 'center', LOGO_EXT, true);
   text('MULASSA', W / 2, my, s, C.red, 'center', C.cream, true);
@@ -38,10 +37,9 @@ function logo(y, tagline = true, s = Math.min(W / 5, HH / 4.6, 130), warm = fals
     if (tapAt.size > 7) tapAt.clear();
     tapAt.set(ts, at);
   }
-  popsAt(calm ? NaN : chip?.menuBeat?.() ?? clock / MENU_BEAT, pops);
+  popsAt(calm ? NaN : chip?.menuBeat?.() ?? clock * song.bpm / 60, pops);
   for (let i = 0; i < 3; i++) text(i < 2 ? 'TAP' : 'DANCE', W / 2 + at[i], y + s * 0.82 - pops[i] * POP.lift * ts, ts * big, C.gold, 'center', C.dark, false, (1 + pops[i]) / big);
-  if (tagline) text('Fira de Santa Úrsula · Valls', W / 2, y + s * 1.28, Math.max(10, s * 0.19), C.cream);
-  return y + s * (tagline ? 1.4 : 1.02); // bottom of the block
+  return y + s * 1.02; // bottom of the block
 }
 // The glint: a white copy of MULASSA's letters (one sprite; no outline) seen through a slanted band that crosses them
 // (p: 0..1), a soft wide band and a brighter core, fading in and out at the ends
@@ -56,17 +54,19 @@ function glint(x, y, s, p) {
     H.restore();
   }
 }
-export const splashS = () => Math.min(W / 5, HH / 4.6, 130); // the logo's size (logo()'s default), the camera below needs it too
+// Cap in CSS pixels too: the HUD scale grows on large displays, but the logo must leave the models visible.
+export const splashS = () => Math.min(W / 5, HH / 4.6, 130, 180 / K);
 export function drawSplash() {
   H.fillStyle = 'rgba(42,26,16,0.35)'; H.fillRect(0, 0, W, HH);
   logo(HH * 0.2);
-  // steady prompt on a pill, with a gentle breathing pulse: never blinks out, always readable
-  const b = Math.sin(clock * 3), s = COARSE.matches ? 'TOCA LA PANTALLA' : 'PREM QUALSEVOL TECLA', size = 12 * (1 + 0.03 * b);
-  const w = textWidth(s, 12) + 32, h = 28, y = HH * 0.82;
+  // Breathe as one button. Scale a single text sprite continuously, never its rounded font size.
+  const pulse = CALM.matches ? 0 : (1 - Math.cos(clock * Math.PI * 2 / 2.4)) / 2, grow = 1 + 0.05 * pulse, s = COARSE.matches ? 'TOCA AQUÍ PER ENTRAR' : 'CLICA AQUÍ PER ENTRAR'; // (any tap used to go in: say where)
+  const h = Math.max(32, 48 / K) * grow, w = Math.max(textWidth(s, 12) + 48, 120) * grow, y = HH * 0.82; // >= 44 css px
   H.beginPath(); H.roundRect(W / 2 - w / 2, y - h / 2, w, h, h / 2);
-  glowPath(C.gold, 5 + 3 * b);
+  glowPath(C.gold, 5 + 5 * pulse, 0.6 + 0.5 * pulse);
   H.fillStyle = 'rgba(42,26,16,0.8)'; H.fill(); H.strokeStyle = C.gold; H.lineWidth = 1.5; H.stroke();
-  text(s, W / 2, y, size, C.cream);
+  text(s, W / 2, y, 12 * 1.05, C.cream, 'center', C.dark, false, grow / 1.05);
+  setButtons([{ x: W / 2 - w / 2, y: y - h / 2, w, h }]);
 }
 // Title layout (src/hud/title-layout.js): one budget for the logo, the choice and the DOM pill (+ iPhone hint) under it,
 // recomputed only when the screen or what is shown changes (the DOM is measured then, never per frame). The pill and
@@ -86,7 +86,7 @@ export function titleLayoutNow() {
   mulaRatio = logoRatio;
   setTitleL(titleLayout({
     W, HH, K, safe: SAFE, keys, note: G.audioError, logoRatio,
-    subW: Math.max(...DIFFS.map(d => textWidth(d.sub, 7))), nameW: Math.max(...DIFFS.map(d => textWidth(d.name, 12))),
+    subW: textWidth(PLAY.sub, 7),
     pill: { h: pillH || (K === 2 ? 56 : 44) }, hint: hint ? { h: hintH || 48 } : null, corner,
     obstacles: [settingsEl, leadersEl, feedbackEl, musicEl, corner && howtoEl].map(el => el && rect(el)).filter(Boolean), chip: Boolean(CHALLENGE),
   }));
@@ -100,23 +100,18 @@ export function titleLayoutNow() {
 // band, only if it has room), once; dragging ends it early.
 export function drawTitle() {
   H.fillStyle = 'rgba(42,26,16,0.35)'; H.fillRect(0, 0, W, HH);
-  // logo on top, the mulassa dancing in the middle, the choice at the bottom above the "Com es juga?" pill
-  const L = titleLayoutNow(), keys = !COARSE.matches; // on touch nothing is preselected: just tap one
-  // «Fira de Santa Úrsula · Valls» under the logo only where it's roomy (desktop, tall screens): the mulassa's free
-  // band between the logo and the choice keeps at least a quarter of the height
-  const blockTop = (L.chipY ?? L.headingY) - 12, tagline = !L.squeezed && blockTop - (L.logo.y + L.logo.h + 0.4 * L.s) >= HH * 0.25;
-  logo(L.logoY, tagline, L.s);
-  text('TRIA LA DIFICULTAT', W / 2, L.headingY, 11, C.cream);
+  // logo on top, the mulassa dancing in the middle, JUGA at the bottom above the "Com es juga?" pill
+  const L = titleLayoutNow(), keys = !COARSE.matches; // keys: JUGA shows as the one in focus (Space / Enter press it)
+  logo(L.logoY, L.s);
   setButtons(L.buttons.map(b => {
-    const d = DIFFS[b.i], on = keys && b.i === G.sel;
-    drawButton(b.x, b.y, b.w, b.h, on);
-    text(d.name, b.x + b.w / 2, b.y + b.h * 0.38, 12, C.cream);
-    text(d.sub, b.x + b.w / 2, b.y + b.h * 0.74, L.subSize, on ? C.gold : '#e8d8b8');
+    drawButton(b.x, b.y, b.w, b.h, keys);
+    text(PLAY.name, b.x + b.w / 2, b.y + b.h * 0.38, 12, C.cream);
+    text(PLAY.sub, b.x + b.w / 2, b.y + b.h * 0.74, L.subSize, keys ? C.gold : '#e8d8b8');
     return b;
   }));
-  if (L.chipY != null) tipChip(challengeTip(CHALLENGE), W / 2, L.chipY, Math.min(W - 16, 330), false, CHIP); // a friend's ?repte, over the choice
+  if (L.chipY != null) tipChip(challengeTip(CHALLENGE), W / 2, L.chipY, Math.min(W - 16, 330), false, CHIP); // a friend's ?repte, over the button
   if (L.hintY == null) return; // no room for it (or touch)
-  const s = G.audioError || '← → per triar · ESPAI per començar', size = G.audioError ? 10 : 9;
+  const s = G.audioError || 'ESPAI per començar', size = G.audioError ? 10 : 9;
   text(s, W / 2, L.hintY, Math.min(size, size * (W - 16) / textWidth(s, size)), C.cream);
 }
 export function sparkle(x, y, r, col) { // four-point star

@@ -23,20 +23,21 @@
 #share-menu h2, .share-note { order: -1; margin: 0; }
 #share-menu h2 { font-size: 24px; }
 .share-note { text-align: center; font-size: 17px; line-height: 1.25; color: #7ee081; text-wrap: balance; } /* «Ets el número 7 · top 40%!» */
-.share-figure { display: flex; justify-content: center; align-items: center; box-sizing: border-box; width: 100%; height: var(--ph); margin-top: 4px; } /* a fixed box (the story's height): the square card is centred in it, so switching formats moves nothing */
+.share-figure { display: flex; justify-content: center; align-items: center; box-sizing: border-box; width: 100%; height: var(--ph); margin-top: 4px; } /* a fixed box (the story's height): the feed card is centred in it, so switching formats moves nothing */
 /* the frame keeps the card's box from the first frame (a shimmer until the image is ready): nothing moves when it
    lands. A new card fades in over the old one (the frame's background) */
-.share-frame { position: relative; overflow: hidden; box-sizing: border-box; height: var(--ph); max-width: 100%; aspect-ratio: 9 / 16; border: 2px solid #f5c51866; border-radius: 12px; background: #1c110a center / contain no-repeat; box-shadow: 0 8px 28px #0007; }
-#share-menu[data-format="square"] .share-frame { width: min(100%, var(--ph)); height: auto; aspect-ratio: 1; flex: none; }
+.share-frame { position: relative; overflow: hidden; box-sizing: border-box; height: var(--ph); max-width: 100%; aspect-ratio: 9 / 16; border-radius: 12px; background: #1c110a center / contain no-repeat; box-shadow: 0 8px 28px #0007; }
+.share-frame::after { content: ""; position: absolute; inset: 0; box-sizing: border-box; border: 2px solid #f5c51866; border-radius: inherit; pointer-events: none; } /* overlay: the border must not change the image's aspect ratio */
+#share-menu[data-format="feed"] .share-frame { width: min(100%, calc(var(--ph) * .8)); height: auto; aspect-ratio: 4 / 5; flex: none; }
 .share-frame::before { content: ""; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 35%, #f5c51817 50%, transparent 65%) 0 0 / 250% 100%; animation: share-shimmer 1.3s linear infinite; transition: opacity .2s; }
 .share-frame.has-img::before { opacity: 0; animation: none; }
 @keyframes share-shimmer { from { background-position: 100% 0; } to { background-position: -150% 0; } }
 #share-preview { position: relative; display: block; width: 100%; height: 100%; object-fit: contain; opacity: 0; transition: opacity .18s ease-out; }
 #share-preview.ready { opacity: 1; }
 @media (prefers-reduced-motion: reduce) { .share-frame::before { animation: none; } #share-preview, .share-frame::before { transition: none; } }
-.board-seg, .share-seg { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; width: min(100%, 260px); margin: 0 auto; padding: 3px; box-sizing: border-box; border: 1.5px solid #f5c51866; border-radius: var(--button-radius); background: #140c07; }
+.board-seg, .share-seg { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; width: min(100%, 260px); margin: 0 auto; padding: 3px; box-sizing: border-box; border: 1.5px solid #e8d8b880; border-radius: var(--button-radius); background: #140c07; }
 .board-seg .btn, .share-seg .btn { min-height: 38px; padding: 2px 8px; border: 0; border-radius: 9px; background: none; color: #e8d8b8; font-size: 16px; }
-.board-seg .btn[aria-pressed="true"], .share-seg .btn[aria-pressed="true"] { background: #f5c51826; color: #f5c518; box-shadow: inset 0 0 0 1.5px #f5c518; } /* the format shown: a toggle, not a second primary */
+.board-seg .btn[aria-pressed="true"], .share-seg .btn[aria-pressed="true"] { background: #fff3d6; color: #2a1a10; } /* cream = what is selected; gold fill stays the one primary */
 .share-seg { width: 100%; margin-top: calc(var(--share-gap) - 8px); } /* as wide as the switch and the button: the edges line up */
 .share-switch { min-height: 40px; padding: 4px 8px 4px 14px; font-size: 16px; color: #e8d8b8; }
 #share-image { min-height: 52px; margin-top: calc(var(--share-gap) - 4px); font-size: 19px; }
@@ -57,16 +58,16 @@
 #share-menu #share-status { line-height: 18px; font-size: 14px; }
 #share-menu #share-status { user-select: text; -webkit-user-select: text; } /* a blocked clipboard shows the link here to copy by hand */
 .share-direct .btn-compact { text-decoration-color: #e8d8b84d; }
-.sheet-x { position: absolute; top: -14px; right: -14px; z-index: 1; display: grid; place-items: center; width: 40px; height: 40px; padding: 0; border: 2px solid #f5c518; border-radius: 50%; background: #000; color: #fff; cursor: pointer; }
+.sheet-x { position: absolute; top: -14px; right: -14px; z-index: 1; display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 2px solid #f5c518; border-radius: 50%; background: #2a1a10; color: #fff3d6; cursor: pointer; } /* the round icon button, as the corner ones */
 /* shared X component: any .sheet whose first child is a .sheet-x sits it on the frame's corner (no clipping: the frame stops
    scrolling) and scrolls its .sheet-body instead; no per-sheet rules, no «Tanca» button */
 .sheet[open]:has(> .sheet-x) { display: flex; flex-direction: column; overflow: visible; }
 .sheet > .sheet-body { min-height: 0; overflow: auto; scrollbar-width: none; } .sheet > .sheet-body::-webkit-scrollbar { display: none; }
 .sheet-bar { position: absolute; right: 6px; width: 4px; border-radius: 2px; background: #f5c51829; pointer-events: none; } /* src/ui/sheet-fade.js: the body's drawn scrollbar */
 .sheet-bar i { display: block; border-radius: 2px; background: #f5c518d9; }
-.sheet-x::after { content: ""; position: absolute; inset: -6px; } /* touch slop: a ~52 px target for the 40 px circle */
+.sheet-x::after { content: ""; position: absolute; inset: -4px; } /* touch slop: a ~52 px target for the 44 px circle */
 .sheet-x svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; }
-.sheet-x:focus-visible { outline: 3px solid var(--button-text); outline-offset: 2px; }
+.sheet-x:focus-visible { outline-offset: 2px; }
 .share-foot { display: flex; justify-content: center; align-items: center; gap: 4px; margin-top: -2px; color: #e8d8b866; }
 .share-foot .btn-link { min-height: 40px; padding: 4px 10px; font-size: 15px; }
 @media (max-height: 740px) { #share-menu { --share-gap: 14px; } #share-menu h2 { font-size: 21px; } }
@@ -77,6 +78,5 @@
   .share-side { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
   .share-figure { margin: 0; width: var(--ph); max-width: 50vw; }
   #share-menu h2 { font-size: 22px; }
-  #share-menu[data-format="square"] .share-frame { width: 100%; max-width: none; }
   #share-image { min-height: 48px; }
 }

@@ -2,7 +2,8 @@
 import { parseChallenge, stripChallenge } from '../services/share.js';
 import { store } from '../platform/storage.js';
 import { Chip } from '../platform/audio.js';
-import song from '../song.json';
+import { song, menuSong, selectedFigure, setFigureSong } from './figure-song.js';
+import { clearLeaderboardResult } from '../services/leaderboard-result.js';
 import { Q, offsetMs, playFrom, LEAD, WIN } from '../core/env.js';
 
 // ------------------------------------------------------------------ game
@@ -16,9 +17,9 @@ import { Q, offsetMs, playFrom, LEAD, WIN } from '../core/env.js';
 //     shown, shownE (the smoothed guapo and energy), judge, praise, ring, pop, popT, pumpT, tapT, flash, holdDone, energyT,
 //     energyWarnT, doubleT, finaleT, chantT, offsetT, uiT, clapBeat, finBeat, lastBeat
 //   the app (which screen, what is open)
-//     state ('splash' | 'title' | 'play' | 'results'), sel (the highlighted level), paused, pendingAction, audioError
-export const G = { chart: [], balloons: [], state: 'splash', sel: 0, diff: 0, paused: false, guapo: 20, shown: 20, combo: 0, chantT: -99, collapseT: 0, sec: 'A', energy: 1, shownE: 1, energyWarn: [true, true], energyT: -9 };
-// A friend's challenge (?repte=94-2, share.js): its level comes preselected and the title shows it; the address bar
+//     state ('splash' | 'title' | 'select' | 'play' | 'results'), sel (the level picked on «QUI BALLA?»), paused, pendingAction, audioError
+export const G = { chart: [], balloons: [], state: 'splash', figureId: selectedFigure.id, figureVersion: selectedFigure.version, sel: 0, diff: 0, paused: false, guapo: 20, shown: 20, combo: 0, chantT: -99, collapseT: 0, sec: 'A', energy: 1, shownE: 1, energyWarn: [true, true], energyT: -9 };
+// A friend's challenge (?repte=94-2, share.js): its level comes preselected on «QUI BALLA?» and the title shows it; the address bar
 // drops it (a reload doesn't bring it back). Only a % and a level: it never changes what the leaderboard accepts.
 export const CHALLENGE = parseChallenge(Q);
 if (CHALLENGE) {
@@ -38,7 +39,7 @@ export let engine = null;
 // the title's speaker button: the menu loop on/off, remembered here ('menu-music': 'off'); off = never fetched nor started
 export let menuMusic = store.get('menu-music') !== 'off';
 export const setMenuMusic = v => (menuMusic = v);
-export const audioEngine = () => (engine ||= new Chip(song, { menuMusic }));
+export const audioEngine = () => (engine ||= new Chip(song, { menuMusic, menuLoop: menuSong }));
 // GLOBUS: every tap in its window (any side) scores and pumps it, the more the better: each `need` taps it pops
 // and a fresh one starts. It hands over to the next note HANDOFF early and is judged once, at the end.
 export const HANDOFF = 0.06; // the balloon counts until 60 ms before its end, then taps go to the next note
@@ -52,3 +53,16 @@ export const isDown = side => [...down.keys].some(c => c === 'Space' || KEYS[c] 
 export const KEYS = { ArrowLeft: 'L', ArrowRight: 'R', ArrowUp: 'U', ArrowDown: 'D', KeyD: 'L', KeyF: 'D', KeyJ: 'U', KeyK: 'R' };
 export let drawT = 0; // the song time the last frame was drawn at (tests)
 export const setDrawT = v => (drawT = v);
+
+// Selector callback. Switching during a run would mix charts and clocks, so only menu screens accept it.
+export function setSelectedFigure(value) {
+  if (G.state === 'play') return false;
+  const id = typeof value === 'string' ? value : value?.id;
+  if (id === selectedFigure.id) return true;
+  if (!setFigureSong(value)) return false;
+  engine?.setSong(song); // chip, when unlocked, already refers to this same engine
+  G.figureId = selectedFigure.id; G.figureVersion = selectedFigure.version;
+  G.challenge = null; G.shareRun = null;
+  clearLeaderboardResult();
+  return true;
+}

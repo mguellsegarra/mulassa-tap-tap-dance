@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="ca">
+<head>
+<meta charset="utf-8">
+<!-- Dev only (npm run dev → /editor.html?song=drac): the music form editor. Never a build input (vite build reads index.html). -->
+<meta name="robots" content="noindex">
+<title>Editor musical</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+<link rel="stylesheet" href="/src/dev/music-editor/editor.css">
+</head>
+<body>
+<header>
+  <h1>Editor musical</h1>
+  <label class="song">Cançó <select id="song" aria-label="Cançó"></select></label>
+  <span id="dirty" class="dirty" hidden title="Canvis sense desar">● sense desar</span>
+  <span class="grow"></span>
+  <button id="undo" class="tool" title="Desfés (⌘Z)" disabled>Desfés</button>
+  <button id="redo" class="tool" title="Refés (⇧⌘Z)" disabled>Refés</button>
+  <button id="save" class="tool primary" title="⌘S">Desa</button>
+  <button id="generate" class="tool" title="⌘↩">Genera</button>
+</header>
+<div id="conflict" class="conflict" hidden>
+  El fitxer ha canviat al disc des que l’has obert.
+  <button id="reload" class="tool">Recarrega (perds els canvis)</button>
+  <button id="force" class="tool danger">Desa igualment</button>
+</div>
+<main>
+  <section class="tracks">
+    <canvas id="orig" class="lane orig" aria-label="L’original"></canvas>
+    <canvas id="seq" class="lane seq" aria-label="La seqüència"></canvas>
+    <canvas id="tempo" class="lane tempo" aria-label="Tempo"></canvas>
+    <canvas id="events" class="lane events" aria-label="Esdeveniments"></canvas>
+    <div class="transport">
+      <button id="play" class="tool" title="Reprodueix / pausa (espai)">⏵</button>
+      <button id="stop" class="tool" title="Atura (Inici)">⏹</button>
+      <span class="listen">Escolta: <button id="track-seq" class="tool" aria-pressed="true" title="La seqüència (O canvia)">Seqüència</button><button id="track-orig" class="tool" aria-pressed="false" title="L’original sencer, amb la síntesi (O canvia)">Original</button></span>
+      <button id="loop" class="tool" aria-pressed="false" title="Repeteix l’element seleccionat (L)">Bucle</button>
+      <button id="source" class="tool" title="Síntesi o l’àudio generat (M)" disabled>so: síntesi</button>
+      <button id="fit" class="tool" title="Ajusta el zoom (+ / − i ⌘ + roda)">Ajusta</button>
+      <span id="readout" class="readout"></span>
+      <span id="status" class="status" role="status"></span>
+    </div>
+    <div class="below">
+      <canvas id="stage" class="stage" aria-label="Previsualització"></canvas>
+      <div class="output">
+        <ul id="errors" class="errors"></ul>
+        <pre id="log" class="log"></pre>
+      </div>
+    </div>
+  </section>
+  <aside id="panel">
+    <div id="unresolved"></div>
+    <div id="phrases"></div>
+    <div id="inspector"></div>
+    <details class="keys"><summary>Dreceres</summary>
+      <p><kbd>Espai</kbd> reprodueix · <kbd>Inici</kbd> atura · <kbd>L</kbd> bucle · <kbd>M</kbd> so · <kbd>N</kbd> nova frase ·
+      <kbd>Supr</kbd> treu · <kbd>⌘D</kbd> duplica · <kbd>⌥←</kbd> <kbd>⌥→</kbd> mou l’element · <kbd>⌘Z</kbd> / <kbd>⇧⌘Z</kbd> ·
+      <kbd>⌘S</kbd> desa · <kbd>⌘↩</kbd> genera · <kbd>Esc</kbd> desselecciona · roda = desplaça, <kbd>⌘</kbd>+roda = zoom.
+      Original: arrossega sobre els compassos per seleccionar-los; arrossega una frase a la seqüència. Doble clic al tempo o als
+      carrils GLOBUS / MANTÉN afegeix un punt o un esdeveniment.</p>
+    </details>
+  </aside>
+</main>
+<div id="ghost" class="ghost" hidden></div>
+<script type="module" src="/src/dev/music-editor/main.js"></script>
+</body>
+</html>

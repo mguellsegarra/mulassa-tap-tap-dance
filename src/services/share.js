@@ -8,6 +8,7 @@ export const SITE_LABEL = 'mulassa.cat'; // the line printed on the results card
 export const HASHTAGS = '#MulassaTapTap #Valls';
 export const CARD_FILE = 'mulassa-tap-tap-dance.jpg';
 
+export const challengeEligible = run => !run?.figureId || run.figureId === 'mulassa-valls';
 const diffName = d => DIFFS[d]?.name ?? DIFFS[0].name;
 
 // --- the challenge: «supera el 94% a DIFÍCIL»
@@ -15,7 +16,8 @@ export function encodeChallenge(pct, diff) {
   if (!Number.isFinite(pct) || !Number.isInteger(diff) || diff < 0 || diff > 2) return null;
   return `${Math.max(0, Math.min(100, Math.round(pct)))}-${diff}`;
 }
-export const challengeUrl = (pct, diff, base = SITE) => {
+export const challengeUrl = (pct, diff, base = SITE, figureId = 'mulassa-valls') => {
+  if (!challengeEligible({ figureId })) return base;
   const code = encodeChallenge(pct, diff);
   return code ? `${base}?repte=${code}` : base;
 };
@@ -34,7 +36,7 @@ export function stripChallenge(href) { // the address without ?repte (other para
 export const challengeTip = ch => `Repte d’un amic: supera el ${ch.pct}% a ${diffName(ch.diff)}`;
 // null when the run wasn't the challenge's level (or it was the practice)
 export function challengeResult(ch, run) {
-  if (!ch || !run || run.practice || run.diff !== ch.diff) return null;
+  if (!ch || !run || !challengeEligible(run) || run.practice || run.diff !== ch.diff) return null;
   const beaten = run.pct > ch.pct || (ch.pct === 100 && run.pct === 100);
   const missing = beaten ? 0 : ch.pct - run.pct + 1;
   return { beaten, missing, line: beaten ? 'REPTE SUPERAT!' : `${missing <= 10 ? 'Gairebé! ' : ''}et ${missing === 1 ? 'falta 1 punt' : `falten ${missing} punts`}` };
@@ -52,6 +54,7 @@ export function outcomeOf(run, challenge = null) {
 export const MULA = '🫏';
 export function shareText(run, challenge = null) { // the caption (the link goes apart: share()'s url, the intents' url=)
   const d = diffName(run.diff), p = `${run.pct}%`;
+  if (run.figureId === 'drac-valls') return `He fet ballar el Drac de Valls amb un ${p} d'encerts a ${d}. #Valls`;
   const line = {
     challenge: `${MULA}🏆 Repte superat! ${p} d’encerts a ${d} fent ballar la Mulassa de Valls 🎉`,
     record: `${MULA}🔥 Nou rècord personal: ${p} d’encerts a ${d} fent ballar la Mulassa de Valls! 🎉`,

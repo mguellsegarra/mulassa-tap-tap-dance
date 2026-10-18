@@ -2,7 +2,7 @@ import { readdir, readFile, rm, stat } from 'node:fs/promises';
 import { resolve, relative, sep } from 'node:path';
 import { pathToFileURL, fileURLToPath } from 'node:url';
 
-const OMIT = new Set(['music/mulassa-taiko.wav', 'music/mulassa-taiko.mid', '.DS_Store']);
+const OMIT = new Set(['music/mulassa-taiko.wav', 'music/mulassa-taiko.mid', 'music/drac-taiko.mid', '.DS_Store']);
 // A root 404 disables Pages' SPA fallback: unknown URLs must not serve the game with HTTP 200.
 const REQUIRED = ['index.html', '404.html', '_headers', 'favicon.ico', 'favicon-32.png',
   'apple-touch-icon.png', 'icon-512.png', 'manifest.webmanifest', 'og.jpg']; // og.jpg: index.html's og:image / twitter:image
@@ -22,7 +22,8 @@ export async function preparePages(directory, song) {
     }
   }
   await walk(root);
-  const audio = [song.audio, song.ambient, ...(song.legacyAudio === undefined ? [] : [song.legacyAudio])].map(url => {
+  const songs = Array.isArray(song) ? song : [song];
+  const audio = songs.flatMap(s => [s.audio, s.ambient, ...(s.legacyAudio === undefined ? [] : [s.legacyAudio])]).map(url => {
     if (typeof url !== 'string' || !/^music\/[\w-]+\.mp3\?v=[a-f0-9]+$/.test(url)) {
       throw new Error('Expected local content-versioned MP3 URL');
     }
@@ -54,7 +55,8 @@ export async function preparePages(directory, song) {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
-  const song = JSON.parse(await readFile(new URL('../src/song.json', import.meta.url), 'utf8'));
-  const files = await preparePages(fileURLToPath(new URL('../dist', import.meta.url)), song);
+  const songs = await Promise.all(['song.json', 'song-drac.json'].map(async name =>
+    JSON.parse(await readFile(new URL(`../src/${name}`, import.meta.url), 'utf8'))));
+  const files = await preparePages(fileURLToPath(new URL('../dist', import.meta.url)), songs);
   console.log(`Pages static artifact ready: ${files.length} files; no Functions or Workers.`);
 }

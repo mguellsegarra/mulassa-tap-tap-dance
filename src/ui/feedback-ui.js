@@ -38,14 +38,16 @@ export function setupFeedback({ focusIn, captcha, service = defaultService, doc 
     const h = text.scrollHeight, min = text.clientHeight;
     if (h > min) text.style.height = `${h + 4}px`; // + the borders
   }
-  function show(onBack = null) {
-    if (!configured || menu.open) return;
+  function show(onBack = null, draft = '') { // draft: the first words of an empty message («Sobre Reus: », from QUI BALLA?)
+    if (menu.open) return;
     back = onBack; clearTimeout(closeTimer);
     if (done) { text.value = ''; email.value = ''; } // sent: a fresh sheet; not sent: the draft is still there
+    if (draft && !text.value.trim()) text.value = draft;
     done = false; busy = false; req++;
     text.readOnly = email.readOnly = false;
     setInvalid(null); setSend('Envia');
     counter();
+    if (!configured) { sendBtn.disabled = true; setStatus('La bústia no està disponible. Pots escriure a holi@mulassa.cat.'); }
     menu.showModal();
     grow();
     onOpen(); // the nudge (setupNudge) goes, for good
@@ -68,7 +70,7 @@ export function setupFeedback({ focusIn, captcha, service = defaultService, doc 
   form.addEventListener('submit', e => { e.preventDefault(); send(); });
   async function send() {
     if (done) { menu.close(); return; }
-    if (busy) return; // a double tap sends once
+    if (busy || !configured) return; // a double tap sends once; no request without the service
     const ok = checkFeedback(text.value, email.value);
     if (!ok.ok) { setInvalid(ok.field, ok.message); fields[ok.field].focus(); return; }
     setInvalid(null);

@@ -8,6 +8,7 @@ import { G, clock } from '../game/state.js';
 import { H, W, HH, SAFE, K } from './canvas.js';
 import { panel, text, textWidth } from './primitives.js';
 import { C } from './sprites.js';
+import { themed } from '../game/figure-theme.js';
 import { elastic } from './praise.js';
 import { sparkle, tipChip } from './title.js';
 import { COARSE } from '../core/env.js';
@@ -53,7 +54,7 @@ export function drawResults() {
   const [title, sub, col] = {
     clear: ['BALL COMPLET!', 'La plaça celebra el teu ball!', C.gold],
     fail: ['TORNEM-HI!', 'Practica el ritme i recupera la plaça', C.blue],
-    collapse: ['LA MULASSA S’HA DESMUNTAT!', 'Els portadors demanen un cafè', C.red],
+    collapse: [themed('LA MULASSA S’HA DESMUNTAT!'), themed('Els portadors demanen un cafè'), C.red],
   }[G.reason];
   text(title, W / 2, y0 + 17, Math.min(16, (pw - 20) / 16), col);
   text(sub, W / 2, y0 + 34, Math.min(9, (pw - 20) / textWidth(sub, 1)), C.cream);
@@ -62,7 +63,7 @@ export function drawResults() {
   // the stars are the hero: centred under the title, then the stats in full-width rows (like a mobile game's win card)
   if (!lost) { drawStars(H, G.stars, W / 2, y0 + 46 + STAR_H / 2, 84, clock - G.resT); /* the earned ones drop in one by one */ rule(y0 + 46 + STAR_H); }
   const by = y0 + 54 + STAR_H, bh = row * 5, sx = x0 + 26, ex = x0 + pw - 26;
-  [['GUAPA!', G.counts.perfect, C.gold], ['BÉ', G.counts.good, C.cream], ['XURRO', G.counts.miss, C.blue], ['RATXA', G.maxCombo, C.pink], ['PUNTS', comparableScore(G.score, G.diff), C.cream]]
+  [[themed('GUAPA!'), G.counts.perfect, C.gold], ['BÉ', G.counts.good, C.cream], ['XURRO', G.counts.miss, C.blue], ['RATXA', G.maxCombo, C.pink], ['PUNTS', comparableScore(G.score, G.diff, G.figureVersion), C.cream]]
     .forEach(([s, v, c], i) => {
       const y = by + row * (i + 0.5);
       if (i) { H.fillStyle = 'rgba(255,243,214,0.08)'; H.fillRect(sx, y - row / 2, ex - sx, 1); }
@@ -90,7 +91,7 @@ export function drawResults() {
   text(SITE_LABEL, W / 2, y0 + ph - 9, 7, '#e8d8b8'); // small, inside the card: a screenshot still says where to play
   // the tip, outside the card
   const e = G.errors, others = e.silent + e.early + e.late + e.move;
-  const hint = G.reason === 'collapse' ? 'S’ha esgotat l’ànim de la plaça: cada encert el torna a omplir' : e.both > others ? (COARSE.matches ? 'GUAPA: toca els dos botons alhora' : 'GUAPA: prem ← i → alhora') : e.hold > others ? 'MANTÉN: no deixis anar fins al final' : G.errors.silent > G.errors.early + G.errors.late + G.errors.move ? 'Marca les notes quan arriben a l’anella' : G.errors.move > G.errors.early + G.errors.late ? 'Segueix la fletxa: esquerra o dreta' : G.errors.early > G.errors.late ? 'T’avances una mica massa: espera el pols' : G.errors.late ? 'Arribes tard: anticipa el pols' : 'Ball complet sense errors!';
+  const hint = G.reason === 'collapse' ? 'S’ha esgotat l’ànim de la plaça: cada encert el torna a omplir' : e.both > others ? themed(COARSE.matches ? 'GUAPA: toca els dos botons alhora' : 'GUAPA: prem ← i → alhora') : e.hold > others ? 'MANTÉN: no deixis anar fins al final' : G.errors.silent > G.errors.early + G.errors.late + G.errors.move ? 'Marca les notes quan arriben a l’anella' : G.errors.move > G.errors.early + G.errors.late ? 'Segueix la fletxa: esquerra o dreta' : G.errors.early > G.errors.late ? 'T’avances una mica massa: espera el pols' : G.errors.late ? 'Arribes tard: anticipa el pols' : 'Ball complet sense errors!';
   H.restore(); H.save(); // the tip and the button: under the row, scaled about the row's bottom
   if (fit < 1) { H.translate(W / 2, rowBottom); H.scale(fit, fit); H.translate(-W / 2, -rowBottom); }
   const win = G.reason !== 'collapse' && !others && !e.both && !e.hold, ty = rowBottom + extra + gap;

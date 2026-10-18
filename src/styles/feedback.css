@@ -1,7 +1,7 @@
 /* «Bústia de la plaça» (src/ui/feedback-ui.js) and the menu music's speaker (main.js): round buttons like the ⚙, title-layout
    obstacles like it (main.js titleLayoutNow, tests/layout.mjs). Portrait: [bubble][speaker][⚙] top-right; landscape
    phones: after the podium, [⚙][podium][speaker][bubble]. The bubble is outermost so its nudge has room beside it. */
-#feedback, #music { position: fixed; z-index: 3; top: calc(10px + env(safe-area-inset-top)); width: 44px; height: 44px; min-height: 0; padding: 0; border-width: 1.5px; border-radius: 50%; }
+#feedback, #music { position: fixed; z-index: 3; top: calc(10px + env(safe-area-inset-top)); width: 44px; height: 44px; min-height: 0; padding: 0; border-width: 2px; border-radius: 50%; }
 #feedback svg, #music svg { width: 24px; height: 24px; }
 #music { right: calc(10px + 44px + 10px + env(safe-area-inset-right)); }
 #feedback { right: calc(10px + 2 * (44px + 10px) + env(safe-area-inset-right)); }
@@ -21,7 +21,7 @@
    pill (the top row is full on a 360 px phone); landscape phones: under the ⚙ (the bottom holds the choice row there).
    Pressed, every control, tip and the HUD canvas fade out (the canvas keeps its drags: the camera still steers); only
    this button stays, dimmer, and nearly vanishes after a few idle seconds (main.js adds .idle; any touch/move/key wakes it). */
-#viewmode { position: fixed; z-index: 3; right: calc(10px + env(safe-area-inset-right)); bottom: calc(16px + env(safe-area-inset-bottom)); width: 44px; height: 44px; min-height: 0; padding: 0; border-width: 1.5px; border-radius: 50%; opacity: .7; transition: opacity .25s; }
+#viewmode { position: fixed; z-index: 3; right: calc(10px + env(safe-area-inset-right)); bottom: calc(16px + env(safe-area-inset-bottom)); width: 44px; height: 44px; min-height: 0; padding: 0; border-width: 2px; border-radius: 50%; opacity: .7; transition: opacity .25s; }
 #viewmode svg { width: 22px; height: 22px; }
 #viewmode:focus-visible { opacity: 1; }
 @media (hover: hover) { #viewmode:hover { opacity: 1; } }
@@ -30,7 +30,6 @@
 #viewmode[aria-pressed="false"] .off, #viewmode[aria-pressed="true"] .on { display: none; }
 @media (min-width: 520px) and (min-height: 520px) { #viewmode { right: calc(22px + env(safe-area-inset-right)); bottom: calc(22px + env(safe-area-inset-bottom)); } } /* centred on the pill and under the ⚙ */
 @media (max-height: 500px) { #viewmode { right: auto; bottom: auto; left: calc(12px + env(safe-area-inset-left)); top: calc(12px + 44px + 10px + env(safe-area-inset-top)); } }
-@media (max-height: 500px) and (max-width: 419px) { #viewmode { display: none; } } /* tiny short windows: the logo needs that corner */
 :is(#hud, #leaders, #settings, #feedback, #music, #howto, #ios-hint, #fps, #feedback-nudge) { transition: opacity .2s; }
 body.view-mode :is(#hud, #leaders, #settings, #feedback, #music, #howto, #ios-hint, #fps, #feedback-nudge) { opacity: 0; }
 body.view-mode :is(#leaders, #settings, #feedback, #music, #howto, #ios-hint, #fps, #feedback-nudge) { visibility: hidden; pointer-events: none; transition: opacity .2s, visibility 0s .2s; } /* (main.js also makes them inert) */
@@ -74,7 +73,7 @@ textarea.feedback-field { height: calc(4 * 1.35em + 20px); max-height: calc(8 * 
 #feedback-status { margin: 0 0 8px; }
 #feedback-status:not(.ok) { color: #ffb4a8; }
 #feedback-status.ok { display: flex; align-items: center; justify-content: center; font-size: 20px; }
-#feedback-status.ok::after { content: ""; flex: none; width: 20px; height: 20px; margin-left: 6px; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23ff7a1a' d='M12 21s-8-5.1-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.9-8 11-8 11z'/%3E%3C/svg%3E") center / contain no-repeat; } /* a drawn heart, no emoji */
+#feedback-status.ok::after { content: ""; flex: none; width: 20px; height: 20px; margin-left: 6px; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23f5c518' d='M12 21s-8-5.1-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.9-8 11-8 11z'/%3E%3C/svg%3E") center / contain no-repeat; } /* a drawn heart, no emoji */
 #feedback-menu .sheet-actions { margin-top: 0; gap: 4px; }
 @media (max-height: 700px) { /* 375 × 667: all of it without scrolling */
   .feedback-scroll { padding-top: 14px; }

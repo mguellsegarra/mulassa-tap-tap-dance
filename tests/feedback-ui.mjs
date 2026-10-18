@@ -88,6 +88,10 @@ assert.equal(menu.open, false, 'sent: the box closes');
 assert(el('feedback-thanks').open && focused === 'feedback-thanks-close', 'and «Rebut! Gràcies» opens');
 timers.at(-1)(); assert.equal(el('feedback-thanks').open, false, 'the thank-you closes by itself');
 fb.show(); assert.equal(text.value, ''); assert.equal(email.value, ''); assert(!text.readOnly && !el('feedback-cancel').disabled, 'the next one starts empty and open');
+menu.close(); fb.show(null, 'Sobre Tarragona: ');
+assert.equal(text.value, 'Sobre Tarragona: ', 'Aviat can seed an empty draft');
+text.value = 'Un esborrany meu'; menu.close(); fb.show(null, 'Sobre Reus: ');
+assert.equal(text.value, 'Un esborrany meu', 'a figure hint never overwrites an unsent message');
 { // while it sends: the calçot in the button, the form locked, no closing
   let release; service.send = () => new Promise(r => { release = r; });
   text.value = 'Un altre missatge'; email.value = 'jo@exemple.cat'; el('feedback-form').fire('submit'); await tick(); await tick();

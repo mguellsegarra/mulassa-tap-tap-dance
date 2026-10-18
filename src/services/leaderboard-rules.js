@@ -20,7 +20,7 @@ export function normalizeAlias(value) {
 }
 
 export function validResult(result) {
-  if (!result || !Object.hasOwn(VERSION_RULES, result.version) || !Number.isInteger(result.difficulty) || result.difficulty < 0 || result.difficulty > 2) return false;
+  if (!result || (result.figureId != null && result.figureId !== 'mulassa-valls') || !Object.hasOwn(VERSION_RULES, result.version) || !Number.isInteger(result.difficulty) || result.difficulty < 0 || result.difficulty > 2) return false;
   const contract = VERSION_RULES[result.version];
   const c = result.counts;
   return c && ['perfect', 'good', 'miss'].every(k => Number.isSafeInteger(c[k]) && c[k] >= 0)
@@ -30,6 +30,7 @@ export function validResult(result) {
 }
 
 export function snapshotResult(game, { reason, query, debugUsed = false }) {
+  if ((game.figureId != null && game.figureId !== 'mulassa-valls') || (game.figureVersion != null && game.figureVersion !== LEADERBOARD_VERSION)) return null;
   if (reason !== 'end' || game.practice || debugUsed || ['autoplay', 'from', 'view', 'perf'].some(k => query.has(k))) return null;
   const result = { version: LEADERBOARD_VERSION, difficulty: game.diff,
     counts: Object.freeze({ perfect: game.counts.perfect, good: game.counts.good, miss: game.counts.miss }),

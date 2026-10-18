@@ -1,11 +1,13 @@
 // The player's profile, in one place (⚙ Configuració «Perfil» block + #profile-menu, index.html). A guest profile lives in one
-// browser's storage; like any guest account it can be protected by linking an e-mail (a 6-digit code sent there brings it
-// back on any device: no password, no Google), left with «Tanca la sessió» once it has an e-mail, or deleted. The block
-// shows the nickname, the state, and only the buttons that fit it:
-//   none    no profile                  → Crea · Recupera
-//   stale   a name, but no profile here → Recupera · Oblida el nom (local only)
-//   guest   profile, no e-mail          → Enllaça un correu · Esborra el perfil
-//   linked  profile + e-mail            → Tanca la sessió · Esborra el perfil
+// browser's storage and, without a confirmed e-mail, keeps its nickname and results 7 days from its first publication
+// (src/ui/profile-notes.js, 202610180001). Confirming an e-mail (a 6-digit code sent there) removes the deadline, earns the
+// «Correu confirmat» check and brings the profile back on any device: no password, no Google. The block shows the
+// nickname, the state, and only the buttons that fit it:
+//   none     no profile                  → Crea · Recupera
+//   stale    a name, but no profile here → Recupera · Oblida el nom (local only)
+//   expired  its deadline passed         → Crea · Oblida el nom (this browser leaves the old session)
+//   guest    profile, not confirmed      → Confirma el correu · Esborra el perfil (the deadline, or the 7-day notice)
+//   linked   confirmed (server's answer) → Tanca la sessió · Esborra el perfil
 // The sheet's steps: alias (create), mail → code (link / recover), confirm (delete / sign out), done. «Crea» makes the
 // guest profile with just a nickname, before any result (service.createProfile). src/services/leaderboard.js does the
 // work (sendCode: an address that already owns a profile signs in to it instead); Turnstile is board-ui.js's (one widget).
@@ -14,7 +16,8 @@ import { cleanEmail } from '../services/feedback.js';
 import { checkAlias } from '../services/alias-rules.js';
 import { turnstileMessage } from '../services/captcha.js';
 import { errors } from '../services/errors.js';
-import { byId, statusLine, setButton } from './sheet-kit.js';
+import { byId, statusLine, setButton, whenSeen } from './sheet-kit.js';
+import { KEEP_NOTICE, VERIFIED, EXPIRED_TEXT, RESERVED_TEXT, untilText, checkBadge } from './profile-notes.js';
 
 const maskEmail = m => { const [u = '', d = ''] = m.split('@'); return `${u.slice(0, 1)}***@${d}`; };
 const CONFIRM = {
@@ -24,7 +27,10 @@ const CONFIRM = {
     lead: mail => `Aquest navegador oblidarà el perfil. El recuperaràs amb un codi enviat a ${mail}.` },
 };
 
-export function setupProfile({ focusIn, captcha, store, aliasKey, deviceNote = () => '', service = defaultService, doc = document, report = errors.report }) {
+// `seen(el, cb)`: cb once el has been read on screen (src/ui/sheet-kit.js; returns a cancel): the 7-day notice is
+// acknowledged only then; `now`: the clock
+export function setupProfile({ focusIn, captcha, store, aliasKey, deviceNote = () => '', service = defaultService, doc = document, report = errors.report,
+  seen = whenSeen, now = () => Date.now() }) {
   const $ = byId(doc);
   const menu = $('profile-menu'), form = $('profile-form'), mailIn = $('profile-email'), aliasIn = $('profile-alias'), codeIn = $('profile-code');
   const status = $('profile-status'), sendBtn = $('profile-send'), cancelBtn = $('profile-cancel'), lead = $('profile-lead');
@@ -33,6 +39,8 @@ export function setupProfile({ focusIn, captcha, store, aliasKey, deviceNote = (
   const online = Boolean(service.configured), canLink = online && service.publishingEnabled; // deleting stays possible with publishing off
   let step = 'mail', kind = '', type = '', mail = '', busy = false, req = 0, back = null, settingsReq = 0, closeTimer = null;
   let email = ''; // the address on the profile shown in the block (for «Tanca la sessió»)
+  let acking = false, unwatch = null; // the notice being watched (its cancel), and one acknowledgement on its way at a time
+  let badge = null; // the «Correu confirmat» check next to the name, made when first needed
 
   const setStatus = statusLine(status);
   const label = () => (step === 'alias' ? 'Crea el perfil' : step === 'mail' ? 'Envia el codi' : step === 'code' ? 'Comprova el codi' : step === 'confirm' ? CONFIRM[kind].yes : 'Tanca');
@@ -51,18 +59,54 @@ export function setupProfile({ focusIn, captcha, store, aliasKey, deviceNote = (
   // away the session needs a network round-trip to refresh, and the block must not sit blank until it comes back.
   const knownKey = `${aliasKey}:identity`;
   let known = null;
-  try { const k = JSON.parse(store.get(knownKey) || 'null'); if (k && typeof k.hasSession === 'boolean') known = { hasSession: k.hasSession, mailOn: String(k.mailOn || ''), persistent: k.persistent !== false }; } catch {}
-  function paint({ alias, hasSession, mailOn, persistent }) {
+  // prof: the server's view (service.profile()), null = unknown or no row; expired: this browser's profile ran out (kept
+  // until a new profile or «Oblida el nom»)
+  try {
+    const k = JSON.parse(store.get(knownKey) || 'null');
+    if (k && typeof k.hasSession === 'boolean') known = { hasSession: k.hasSession, mailOn: String(k.mailOn || ''), persistent: k.persistent !== false, prof: k.prof || null, expired: k.expired === true };
+  } catch {}
+  function paint({ alias, hasSession, mailOn, persistent, prof = null, expired = false }) {
     delete row.dataset.pending;
-    const state = hasSession ? (mailOn ? 'linked' : 'guest') : alias ? 'stale' : 'none';
+    // confirmed is the server's answer; without one (offline, an older server) a confirmed address on the session
+    const confirmed = prof ? prof.verified : Boolean(mailOn);
+    // a remembered deadline already past (the first frame, or offline): it ran out, whatever the next answer says
+    const past = !confirmed && prof?.expiresAt != null && prof.expiresAt <= now();
+    const state = (expired || past) && alias ? 'expired' : hasSession ? (confirmed ? 'linked' : 'guest') : alias ? 'stale' : 'none';
     email = mailOn;
     const set = (btn, act, text, on = true) => { btn.hidden = !on; btn.dataset.act = act; btn.textContent = text; };
     nameEl.textContent = alias;
+    if (state === 'linked') nameEl.append?.(badge ??= checkBadge(doc));
     if (state === 'none') { sub.textContent = 'Encara no en tens cap.'; set(mainBtn, 'create', 'Crea', canLink); set(altBtn, 'recover', 'Recupera', canLink); }
     else if (state === 'stale') { sub.textContent = 'Aquest navegador ja no té el perfil.'; set(mainBtn, 'recover', 'Recupera', canLink); set(altBtn, 'forget', 'Oblida el nom'); }
-    else if (state === 'guest') { sub.textContent = deviceNote(persistent) || 'Només viu en aquest navegador.'; set(mainBtn, 'link', 'Enllaça un correu', canLink); set(altBtn, 'delete', 'Esborra el perfil'); }
-    else { sub.textContent = `Protegit amb ${maskEmail(mailOn)}`; set(mainBtn, 'signout', 'Tanca la sessió'); set(altBtn, 'delete', 'Esborra el perfil'); }
+    else if (state === 'expired') { sub.textContent = EXPIRED_TEXT; set(mainBtn, 'create', 'Crea', canLink); set(altBtn, 'forget', 'Oblida el nom'); }
+    else if (state === 'guest') {
+      sub.textContent = prof?.expiresAt ? untilText(prof.expiresAt) : prof?.noticeNeeded ? KEEP_NOTICE : prof?.published === false ? RESERVED_TEXT : deviceNote(persistent) || 'Només viu en aquest navegador.';
+      set(mainBtn, 'link', 'Confirma el correu', canLink); set(altBtn, 'delete', 'Esborra el perfil');
+    } else { sub.textContent = mailOn ? `${VERIFIED}: ${maskEmail(mailOn)}` : VERIFIED; set(mainBtn, 'signout', 'Tanca la sessió'); set(altBtn, 'delete', 'Esborra el perfil'); }
     row.hidden = mainBtn.hidden && altBtn.hidden;
+    row.dataset.state = state;
+    if (state === 'guest' && prof?.noticeNeeded) acknowledge(alias); else stopWatch();
+  }
+  const stopWatch = () => { unwatch?.(); unwatch = null; };
+  row.closest?.('dialog')?.addEventListener('close', stopWatch); // Configuració closed: nothing more is read
+  // An old profile with results meets the 7-day notice here: once it has been read on screen (a second, scrolled into
+  // view, nothing over it), the server starts its 7 days (once; a failed call leaves the notice up and tries again on the
+  // next opening, never sooner than the notice is read again)
+  function acknowledge(alias) {
+    if (unwatch || acking) return;
+    unwatch = seen(sub, async () => {
+      unwatch = null;
+      if (row.dataset.state !== 'guest' || sub.textContent !== KEEP_NOTICE || store.get(aliasKey) !== alias) return; // repainted since
+      acking = true;
+      try {
+        const until = await service.ackNotice();
+        // the answer is this profile's only while the block still shows it (a recovery may have switched profiles meanwhile)
+        if (!until || !known?.prof?.noticeNeeded || store.get(aliasKey) !== alias) return;
+        known = { ...known, prof: { ...known.prof, expiresAt: until, noticeNeeded: false } };
+        store.set(knownKey, JSON.stringify(known));
+        if (row.dataset.state === 'guest') paint({ alias, ...known });
+      } catch { /* the notice stays; acknowledged on a later opening */ } finally { acking = false; }
+    });
   }
   async function refresh() {
     if (!online) { row.hidden = true; return; }
@@ -72,13 +116,28 @@ export function setupProfile({ focusIn, captcha, store, aliasKey, deviceNote = (
     if (known && alias) paint({ alias, ...known });
     else if (alias) { row.hidden = false; row.dataset.pending = '1'; nameEl.textContent = alias; sub.textContent = '\u00a0'; for (const b of [mainBtn, altBtn]) { b.hidden = false; b.textContent = '\u00a0'; } }
     else paint({ alias, hasSession: false, mailOn: '', persistent: true });
-    let id;
-    try { id = await service.identity(); } catch { if (r === settingsReq && row.dataset.pending) paint({ alias, hasSession: false, mailOn: '', persistent: true }); return; } // offline: what the memory says stands
-    known = { hasSession: id.hasSession, mailOn: id.email || '', persistent: id.persistent !== false };
+    let id, prof = null, gone = false;
+    try {
+      id = await service.identity();
+    } catch { if (r === settingsReq && row.dataset.pending) paint({ alias, hasSession: false, mailOn: '', persistent: true }); return; } // offline: what the memory says stands
+    // no answer from my_profile (offline, an older server): the last one stands
+    if (id.hasSession && service.profile) try { prof = await service.profile(); gone = prof === null; } catch { prof = known?.prof ?? null; }
+    if (r !== settingsReq) return;
+    // a deadline the server gave this name, now past (a confirmed profile has none)
+    const knownPast = Boolean(alias && !known?.prof?.verified && known?.prof?.expiresAt && known.prof.expiresAt <= now());
+    // ran out: the server says so, or the row is gone after that deadline
+    const ranOut = id.hasSession && alias && (prof?.expired || (!prof && knownPast));
+    // no session any more (the purge took the account with it): still «expired», not «stale», when it is known to have run out
+    const expired = ranOut || (!id.hasSession && (known?.expired === true || knownPast));
+    // either way, or the row of a remembered name without a confirmed address is gone (its account with it): the session
+    // left here is useless (as on the publish sheet), so this browser leaves it; the next profile starts from scratch
+    if (ranOut || (gone && alias && !id.email)) { try { await service.signOut(); } catch { /* the next publication starts over anyway */ } id = { ...id, hasSession: false }; prof = null; }
+    if (r !== settingsReq) return;
+    known = { hasSession: id.hasSession, mailOn: id.email || '', persistent: id.persistent !== false, prof, expired };
     store.set(knownKey, JSON.stringify(known));
-    if (r === settingsReq) paint({ alias, hasSession: id.hasSession, mailOn: id.email || '', persistent: id.persistent !== false });
+    paint({ alias, ...known });
   }
-  function forget() { store.remove(aliasKey); refresh(); }
+  function forget() { store.remove(aliasKey); if (known) store.set(knownKey, JSON.stringify(known = { ...known, expired: false })); refresh(); }
 
   // --- the sheet
   function open(what, onBack = null) {
@@ -92,9 +151,9 @@ export function setupProfile({ focusIn, captcha, store, aliasKey, deviceNote = (
       lead.textContent = 'Tria un sobrenom: és el nom que sortirà a la classificació. 3–16 caràcters, sense espais.';
       show('alias');
     } else if (what === 'link' || what === 'recover') {
-      $('profile-title').textContent = what === 'link' ? 'Enllaça un correu' : 'Recupera el perfil';
-      lead.textContent = what === 'link' ? 'Enllaça un correu per protegir el teu compte: si perds el perfil, el recuperaràs amb un codi. Sense contrasenya.'
-        : 'Escriu el correu del perfil i t’enviarem un codi per entrar-hi. Sense contrasenya.';
+      $('profile-title').textContent = what === 'link' ? 'Confirma el correu' : 'Recupera el perfil';
+      lead.textContent = what === 'link' ? 'Amb el correu confirmat, el teu nom i els resultats es conserven sense data de caducitat, i pots recuperar el perfil amb un codi en qualsevol dispositiu. Sense contrasenya. Si algun dia hi ha tornejos, també caldrà tenir-lo confirmat.'
+        : 'Escriu el correu que vas confirmar al perfil i t’enviarem un codi per entrar-hi. Sense contrasenya.';
       show('mail');
     } else {
       $('profile-title').textContent = CONFIRM[what].title; lead.textContent = CONFIRM[what].lead(email);
@@ -134,12 +193,16 @@ export function setupProfile({ focusIn, captcha, store, aliasKey, deviceNote = (
         const alias = await service.createProfile(aliasIn.value, { captchaToken });
         if (r !== req) return;
         store.set(aliasKey, alias);
+        if (known) store.set(knownKey, JSON.stringify(known = { ...known, expired: false })); // a new profile: the old one's notice goes
         finish('Perfil creat!');
       } else if (step === 'mail') {
         const out = await service.sendCode(mailIn.value, { captchaToken });
         if (r !== req) return;
         mail = mailIn.value; type = out.type;
-        lead.textContent = `T’hem enviat un codi de 6 xifres a ${mail}. Mira també la carpeta de correu brossa.`;
+        // the address already confirmed another profile: the code switches to that one, nothing is merged
+        const other = kind === 'link' && type === 'email', mine = store.get(aliasKey);
+        lead.textContent = other ? `Aquest correu ja és d’un altre perfil. Amb el codi que t’hem enviat a ${mail} entraràs en aquell perfil: ${mine || 'el d’aquest navegador'} i els seus resultats no s’hi afegeixen.`
+          : `T’hem enviat un codi de 6 xifres a ${mail}. Mira també la carpeta de correu brossa.`;
         codeIn.value = ''; show('code'); idle(); focusIn(menu, 'profile-code');
       } else if (step === 'code') {
         await service.verifyCode(mail, codeIn.value, type);
@@ -147,8 +210,15 @@ export function setupProfile({ focusIn, captcha, store, aliasKey, deviceNote = (
         if (type === 'email') { // signed in to an existing profile: bring its nickname back to this browser
           try { const alias = await service.myAlias(); if (alias) store.set(aliasKey, alias); } catch { /* asked again on the next publication */ }
           if (r !== req) return;
+          if (known) store.set(knownKey, JSON.stringify(known = { ...known, expired: false }));
+          finish(kind === 'link' ? 'Ara fas servir aquell perfil.' : 'Perfil recuperat!');
+          return;
         }
-        finish(type === 'email' ? 'Perfil recuperat!' : 'Compte protegit!');
+        // the server decides it is confirmed (a code for a pending change alone proves nothing to the board)
+        let ok = false;
+        try { ok = (await service.profile?.())?.verified === true; } catch { /* the block asks again */ }
+        if (r !== req) return;
+        finish(ok ? 'Correu confirmat!' : 'Codi comprovat.');
       } else { // confirm
         try { await (kind === 'delete' ? service.deleteProfile() : service.signOut()); } catch (e) {
           if (kind === 'delete') report('leaderboard-delete-failed', { code: e?.code || e?.name || 'Error', ...(e?.detail && { server: String(e.detail).slice(0, 64) }) });

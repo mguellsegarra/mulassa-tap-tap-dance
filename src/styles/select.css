@@ -92,15 +92,16 @@
 .sel-bottom { --bl: max(16px, env(safe-area-inset-left)); --br: max(16px, env(safe-area-inset-right)); position: absolute; z-index: 1; bottom: env(safe-area-inset-bottom); left: 50%; translate: -50% 0; transform: translateY(var(--drop)); transition: transform .32s var(--sel-ease); width: 100%; height: var(--dock-h); box-sizing: border-box; display: grid; grid-template-rows: minmax(0, 1fr) var(--action-h); gap: var(--ga); padding: 8px var(--br) calc(var(--ga) + 6px) var(--bl); }
 /* --ga + the strip's 6 px foot = the air over the action = the air under it */
 .sel-carousel { grid-row: 1; grid-column: 1; position: relative; isolation: isolate; display: grid; grid-template-columns: minmax(0, 1fr); align-items: stretch; min-height: 0; margin-inline: calc(-1 * var(--bl)) calc(-1 * var(--br)); }
-/* One minimal brown capsule above the strip; each half keeps its hit area when its arrow is hidden. */
+/* One minimal brown capsule above the strip; both arrows stay visible at the navigation boundaries. */
 .sel-carousel .sel-arrow { position: absolute; z-index: 2; bottom: calc(100% + 4px); width: 60px; min-width: 60px; height: 44px; min-height: 44px; padding: 0; display: grid; place-items: center; border: 0; background: transparent; color: var(--button-text); box-shadow: none; }
 #select-prev { left: calc(50% - 60px); border-radius: 999px 0 0 999px; }
 #select-forward { left: 50%; border-radius: 0 999px 999px 0; }
 .sel-nav { position: absolute; z-index: 1; bottom: calc(100% + 4px); left: 50%; translate: -50% 0; box-sizing: border-box; width: 120px; height: 44px; border: 2px solid var(--button-border); border-radius: 999px; background: var(--button-bg); box-shadow: 0 4px 12px #0006; pointer-events: none; }
 .sel-nav::after { content: ""; position: absolute; left: 50%; top: 10px; bottom: 10px; width: 1px; background: #f5c51860; }
-/* Keep the capsule still at either end; only the unavailable arrow fades. */
+/* Keep the capsule still at either end; the unavailable arrow stays visible but dimmed. */
 #select :is(.sel-arrow, .sel-nav) { opacity: 1; transition: opacity .26s var(--sel-ease), visibility 0s; }
-#select .sel-arrow:disabled, #select .sel-carousel[data-fits] :is(.sel-arrow, .sel-nav) { opacity: 0; visibility: hidden; pointer-events: none; transition-delay: 0s, .26s; }
+#select .sel-arrow:disabled { opacity: .35; visibility: visible; pointer-events: none; cursor: default; }
+#select .sel-carousel[data-fits] :is(.sel-arrow, .sel-nav) { opacity: 0; visibility: hidden; pointer-events: none; transition-delay: 0s, .26s; }
 @media (prefers-reduced-motion: reduce) {
   #select :is(.sel-arrow, .sel-nav), #select .sel-arrow:disabled, #select .sel-carousel[data-fits] :is(.sel-arrow, .sel-nav) { transition: none; }
 }
@@ -108,8 +109,12 @@
 #select:not([data-shown]) :is(.sel-arrow, .sel-nav) { opacity: 0; visibility: hidden; pointer-events: none; transition: none; }
 .sel-carousel .sel-arrow svg { position: static; width: 26px; height: 26px; margin: 0; transform: none; stroke-width: 2.8; stroke-linecap: round; stroke-linejoin: round; }
 @media (pointer: coarse) { .sel-carousel { margin-inline: calc(-1 * var(--bl)) calc(-1 * var(--br)); } .sel-carousel .sel-arrow { display: none; } .sel-carousel .sel-nav { display: none; } .sel-carousel .sel-strip { padding-inline: max(var(--bl), var(--strip-inset, 0px)) max(var(--br), var(--strip-inset, 0px)); scroll-padding-inline: var(--bl) var(--br); } } /* touch keeps the edge-to-edge swipe strip */
-@media (pointer: fine) and (max-height: 660px) { #select .sel-pending-links { display: none; } }
 #select button:disabled { visibility: hidden; pointer-events: none; }
+/* Desktop keeps the reserved action legible, without the playable button's invitation animation. */
+@media (pointer: fine) {
+  #select #select-next:disabled { visibility: visible; opacity: 1; translate: none; background: #2a1a10; border-color: #746957; color: #c7bca7; box-shadow: none; animation: none; scale: none; rotate: none; filter: none; cursor: default; }
+  #select #select-next:disabled::after { display: none; animation: none; }
+}
 .sel-strip { position: relative; display: flex; align-items: stretch; justify-content: flex-start; gap: 8px; min-height: 0; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; touch-action: pan-x; padding: 10px max(6px, var(--strip-inset, 0px)) 6px; margin-inline: 0; box-sizing: border-box; overflow-anchor: none; }
 /* One surface, no divider: the first field of the town's arms (escutField, data-field) tints its top and fades into the
    game's brown under the caption, so a town's row reads as a group. Or and argent are muted: never the gold action or the
@@ -368,15 +373,20 @@ body:has(:focus-visible) #select .sel-card[aria-selected="true"]:not(:focus-visi
 .sel-pending { position: absolute; z-index: 1; top: calc((100% + var(--pending-top, 144px) - var(--pending-bottom, 254px)) / 2); --pending-max: calc(100% - var(--pending-top, 144px) - var(--pending-bottom, 254px) + var(--drop)); max-height: var(--pending-max); left: 50%; translate: -50% -50%; width: min(480px, calc(100% - 28px)); box-sizing: border-box; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px 20px; border: 1px solid var(--sel-line); border-radius: var(--sel-r); text-align: center; background: #1a110bf5; box-shadow: 0 8px 24px #0005; font-size: 16px; font-weight: 500; line-height: 1.3; }
 .sel-pending > * { flex-shrink: 0; }
 .sel-pending { min-height: min(var(--keep-h, 0px), var(--pending-max)); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; } /* the fold's card keeps a pending card's height, never more than the room left; a very short window scrolls it instead of spilling onto the strip */
-.sel-pending h2 { margin: 0; font: 800 26px/1.1 'Baloo 2', system-ui, sans-serif; text-wrap: balance; }
+.sel-pending h2 { --title-size: 26px; --title-lines: 1; margin: 0; width: 100%; height: calc(var(--title-size) * 1.1 * var(--title-lines)); display: flex; align-items: center; justify-content: center; font: 800 var(--title-size)/1.1 'Baloo 2', system-ui, sans-serif; text-wrap: balance; }
+.sel-pending h2 > span { display: block; width: 100%; }
 .sel-pending .sel-pending-icon { flex: 0 1 96px; min-height: 0; width: 96px; display: grid; place-items: center; } /* On short screens the portrait yields to readable copy and full-size actions. */
 .sel-pending-icon :is(svg, img) { width: 100%; height: 100%; min-height: 0; image-rendering: pixelated; }
-.sel-pending .sel-entity { font-size: 12px; }
-.sel-pending .sel-entity svg { width: 12px; height: 19px; }
+/* One 16 px line plus padding, whether the entity has a flame, shield, logo or no mark. */
+.sel-pending .sel-entity { font-size: 12px; line-height: 16px; min-height: 24px; row-gap: 0; }
+#select .sel-pending .sel-entity svg { width: auto; height: 16px; }
+@media (max-height: 500px) and (max-width: 899px) { .sel-pending .sel-entity { min-height: 40px; } .sel-pending h2 { --title-lines: 2; } } /* the narrow side panel reserves two lines for longer entities */
 .sel-pending p { margin: 0; text-wrap: pretty; }
 .sel-pending:not([data-fold]) .sel-pending-copy { margin-block: 6px; }
 .sel-pending > .btn-primary { font-size: 16px; }
-.sel-pending-links { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); align-items: center; width: 100%; gap: 8px; }
+.sel-pending { --contact-pad: 16px; --contact-gap: 8px; }
+/* Centre the links in the whole band from the primary button to the inner border, including the card's bottom padding. */
+.sel-pending-links { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); align-items: center; width: 100%; gap: 8px; flex: 1 0 auto; min-height: calc(44px + var(--contact-gap) + var(--contact-pad)); margin-block: calc(-1 * var(--contact-gap)) calc(-1 * var(--contact-pad)); }
 .sel-pending-links .btn { width: 100%; min-height: 44px; padding: 4px 0; font-size: 14px; white-space: normal; }
 /* Centre each icon and label together, with a fixed gap rather than an empty slot. */
 .sel-pending-links .btn { display: flex; justify-content: center; align-items: center; gap: 6px; }
@@ -405,23 +415,36 @@ body:has(:focus-visible) #select .sel-card[aria-selected="true"]:not(:focus-visi
   .sel-pending-links .btn { font-size: 13px; }
   .sel-pending-links .btn > span { overflow-wrap: normal; white-space: nowrap; }
 }
-@media (max-width: 519px) and (max-height: 600px) { .sel-pending:not([data-fold]) .sel-pending-copy { margin-block: 0; } .sel-pending:not([data-fold]) h2 { font-size: 20px; } }
+@media (max-width: 519px) and (max-height: 600px) { .sel-pending:not([data-fold]) .sel-pending-copy { margin-block: 0; } .sel-pending:not([data-fold]) h2 { --title-size: 20px; } }
 /* The portrait yields first on short screens; squeezed below a readable size it goes rather than show a smudge. */
 .sel-pending:not([data-fold]) .sel-pending-icon { container-type: size; }
 @container (max-height: 31px) { .sel-pending-icon > :is(svg, img) { visibility: hidden; } }
 @media (max-width: 519px), (max-height: 500px), (min-width: 900px) and (max-height: 720px) { /* phones and short desktop windows */
-  .sel-pending { padding: 10px 12px; gap: 5px; font-size: 15px; }
-  .sel-pending h2 { font-size: 22px; }
+  .sel-pending { --contact-pad: 10px; --contact-gap: 5px; padding: 10px 12px; gap: 5px; font-size: 15px; }
+  .sel-pending h2 { --title-size: 22px; }
   .sel-pending .sel-pending-icon { flex-basis: 72px; width: 72px; }
   .sel-pending[data-fold] { gap: 5px; }
   .sel-pending[data-fold] .sel-pending-icon { width: min(140px, 100%); }
 }
 @media (max-height: 500px) {
+  .sel-pending { --contact-pad: 6px; --contact-gap: 3px; }
   #select:is([data-pending], [data-fold]) .sel-towns { left: 43%; width: 57%; }
   #select .sel-pending { --sink: 0px; } /* beside the dock, not above it */
   .sel-pending { left: max(12px, env(safe-area-inset-left)); translate: 0 -50%; width: calc(43% - max(12px, env(safe-area-inset-left)) - 8px); top: calc((100% + 60px + env(safe-area-inset-top) - 8px - env(safe-area-inset-bottom)) / 2); --pending-max: calc(100% - 68px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); max-height: var(--pending-max); gap: 3px; padding: 6px 10px; line-height: 1.25; }
-  .sel-pending h2 { font-size: 20px; }
+  .sel-pending h2 { --title-size: 20px; }
+  .sel-pending:not([data-fold]) .sel-pending-copy { margin-block: 0; }
   .sel-pending[data-fold] { gap: 3px; }
+}
+
+/* A fixed desktop dock leaves less room: release spacing before the contact row can overflow the card. */
+@media (pointer: fine) and (min-height: 501px) and (max-height: 780px) {
+  .sel-pending { --contact-pad: 12px; --contact-gap: 4px; padding-block: var(--contact-pad); gap: var(--contact-gap); }
+  .sel-pending[data-fold] { gap: var(--contact-gap); }
+  .sel-pending:not([data-fold]) .sel-pending-copy { margin-block: 0; }
+}
+@media (pointer: fine) and (min-height: 501px) and (max-height: 740px) {
+  .sel-pending { --contact-pad: 6px; --contact-gap: 2px; }
+  .sel-pending h2 { --title-size: 20px; }
 }
 
 /* The shortest landscape phones need a wider reading column; the strip still shows one whole card. */

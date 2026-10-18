@@ -1,6 +1,6 @@
 import vm from 'node:vm';
 import { readPage } from './page.mjs';
-// The Mulassa loader (src/ui/loader.js + index.html #loader): paints before any JS, leaves after the first frame,
+// The Mulassa loader (src/ui/loader.js + index.html #loader): paints before any JS, releases after readiness and three full phrases,
 // only shows later waits past the delay, updates its status line, and respects prefers-reduced-motion.
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -18,19 +18,54 @@ const css = html.slice(html.indexOf('#loader {'), html.indexOf('</style>', html.
 assert(/@media \(prefers-reduced-motion: reduce\)\{\.mula-load \*\{animation:none!important\}\}/.test(css), 'reduced motion: all character parts rest');
 assert(/#loader \{[^}]*pointer-events: none/.test(css), 'the loader never takes a tap');
 assert(/#loader\.page \.loader-box \{[^}]*animation-delay: 0s/.test(css), 'the page Mulassa shows at once');
-{ // Readiness never waits for a joke or dance cycle to finish.
-  let t = 0; const q = [];
-  const fake = { setTimeout: (f, ms) => { q.push({ f, at: t + (ms || 0) }); return q.length; }, clearTimeout() {} };
-  const run = until => { for (let x; (x = q.filter(y => y.at <= until).sort((a, b) => a.at - b.at)[0]);) { q.splice(q.indexOf(x), 1); t = x.at; x.f(); } t = until; };
-  const el = { hidden: false, classList: { c: new Set(['page']), toggle(k, on) { on ? this.c.add(k) : this.c.delete(k); }, contains(k) { return this.c.has(k); } }, setAttribute() {} };
-  const label = { textContent: LOADING_JOKES[0] };
-  const d = { getElementById: id => ({ loader: el, 'loader-text': label })[id], body: { removeAttribute() {} } };
-  const L = setupLoader(d, { giveUp: 12000, timers: fake, storage: null });
-  L.jokes(LOADING_JOKES, 1600);
-  run(2000); const line = label.textContent; // a new line came at 1.6 s
-  L.ready();
-  assert(el.classList.contains('out') && !L.covering, 'loaded mid-line: release immediately');
-  run(4000); assert(el.hidden && label.textContent === line, 'pending joke ticks never change a released cover');
+// Deterministic time protects the reading time, rather than only a minimum number of milliseconds since navigation.
+function timedLoader({ start = 0, ...options } = {}) {
+  let t = start, nextId = 0;
+  const queue = new Map(), d = dom();
+  const timers = { setTimeout(f, ms = 0) { const id = ++nextId; queue.set(id, { f, at: t + ms }); return id; }, clearTimeout(id) { queue.delete(id); } };
+  const run = until => {
+    for (;;) {
+      const due = [...queue].filter(([, x]) => x.at <= until).sort((a, b) => a[1].at - b[1].at)[0];
+      if (!due) break;
+      queue.delete(due[0]); t = due[1].at; due[1].f();
+    }
+    t = until;
+  };
+  const L = setupLoader(d.doc, { timers, storage: null, random: () => 0, ...options });
+  return { ...d, L, run };
+}
+for (const start of [0, 7000]) { // also after a slow module load: elapsed navigation time never skips the three lines
+  const d = timedLoader({ start });
+  d.L.jokes();
+  const first = d.label.textContent;
+  d.run(start + 500); d.L.ready(); d.L.ready();
+  d.run(start + 1599); assert.equal(d.label.textContent, first);
+  assert(d.L.covering, 'a fast load still leaves the first phrase readable');
+  d.run(start + 1600); const second = d.label.textContent;
+  d.run(start + 3200); const third = d.label.textContent;
+  assert.equal(new Set([first, second, third]).size, 3, 'three distinct phrases');
+  d.run(start + 4799); assert(d.L.covering && !d.classes.has('out'));
+  d.run(start + 4800); assert(!d.L.covering && d.classes.has('out'), 'fade only after all three full turns');
+  d.run(start + 5050); assert(d.el.hidden);
+  d.run(start + 20000); assert.equal(d.label.textContent, third, 'no fourth phrase flashes during or after the fade');
+}
+{
+  const d = timedLoader(); d.L.jokes();
+  d.run(5350); const fourth = d.label.textContent;
+  assert(d.L.covering, 'three phrases alone never release a game that is still loading');
+  d.L.ready();
+  d.run(6399); assert(d.L.covering && d.label.textContent === fourth, 'a slow load finishes the current phrase too');
+  d.run(6400); assert(!d.L.covering && d.label.textContent === fourth);
+}
+{
+  const d = timedLoader({ giveUp: 3500 }); d.L.jokes();
+  d.run(3500); assert(!d.L.covering, 'the safety timeout overrides the minimum reading time');
+  const last = d.label.textContent;
+  d.run(5000); assert(d.el.hidden && d.label.textContent === last, 'no joke timer survives the timeout');
+}
+{
+  const d = timedLoader(); d.L.jokes(); d.classes.add('fail');
+  d.run(20000); assert(!d.el.hidden && !d.classes.has('out'), 'a boot error stays visible past the loader timeout');
 }
 
 // A tiny DOM: #loader + #loader-text, and timers run by hand.

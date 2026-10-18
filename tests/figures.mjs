@@ -89,7 +89,7 @@ class Node {
   scrollTo({ left, behavior }) { this.scrollLeft = left; this.behavior = behavior; }
   getBoundingClientRect() { return { top: 100, right: 200, bottom: 300 }; }
 }
-for (const id of ['leaders', 'viewmode', 'feedback', 'music', 'settings', 'select-carousel', 'select-prev', 'select-forward', 'select-nav', 'select', 'select-towns', 'select-strip', 'select-level', 'select-song', 'select-entity', 'select-act', 'select-name', 'select-song-name', 'select-song-credit', 'select-play', 'select-next', 'select-figures-back', 'select-board', 'select-howto', 'aviat-write', 'aviat-text', 'select-info', 'select-bottom', 'select-pos', 'select-tiles', 'select-rank-tile', 'select-pending', 'aviat-entity', 'aviat-icon', 'aviat-title']) nodes.set(id, new Node(id));
+for (const id of ['leaders', 'viewmode', 'feedback', 'music', 'settings', 'select-carousel', 'select-prev', 'select-forward', 'select-nav', 'select', 'select-towns', 'select-strip', 'select-level', 'select-song', 'select-entity', 'select-act', 'select-name', 'select-song-name', 'select-song-credit', 'select-play', 'select-next', 'select-next-label', 'select-figures-back', 'select-board', 'select-howto', 'aviat-write', 'aviat-text', 'select-info', 'select-bottom', 'select-pos', 'select-tiles', 'select-rank-tile', 'select-pending', 'aviat-entity', 'aviat-icon', 'aviat-title']) nodes.set(id, new Node(id));
 const $ = id => nodes.get(id), win = { innerWidth: 393, innerHeight: 852, addEventListener(k, f) { (handlers[k] ||= []).push(f); } };
 let boards = 0, sounds = [], played = [], how = 0, drafts = [], busy = false, selected = [];
 const api = setupSelect({ doc, win, store, keyboard: () => true, reduced: () => true, busy: () => busy,
@@ -263,6 +263,7 @@ assert(doc.activeElement === more && api.figure === DRAC && !api.unfolded, 'arro
 // the cursor on the fold shows the fold's own card: what is coming, no difficulty, the dock where it was
 assert(!$('select-pending').hidden && $('select-info').hidden && $('select-pending').attrs['data-fold'], 'the fold has its own card');
 assert.equal($('aviat-title').textContent, 'Aviat a la plaça');
+assert.equal($('select-next-label').textContent, 'Pròximament?', 'the fold has the disabled pending label');
 assert($('aviat-entity').hidden, 'the teaser has no count pill');
 assert.equal($('aviat-entity').innerHTML, '');
 assert.equal(($('aviat-icon').innerHTML.match(/class="sel-peek"/g) || []).length, 3, 'three coming figures peek out');
@@ -298,7 +299,8 @@ assert.equal($('aviat-title').textContent, soon[0].fullName || soon[0].name); as
 assert.equal(soon[0].entity, 'Ajuntament + UAF'); assert.match($('aviat-entity').innerHTML, /class="escut".*Ajuntament de Valls.*viewBox="0 0 525 829".*Unió Anelles de la Flama/, 'a shared figure shows both marks, as its card does');
 assert(!$('aviat-entity').hidden, 'a pending figure restores its entity after the teaser');
 assert.equal(($('aviat-text').innerHTML.match(/<p>/g) || []).length, 1); assert.match($('aviat-text').innerHTML, /Volem que surti a la plaça/);
-assert($('select-next').disabled && !$('select-next').hidden, 'no difficulty for it: its action hides');
+assert($('select-next').disabled && !$('select-next').hidden, 'pending keeps a disabled action for the desktop placeholder');
+assert.equal($('select-next-label').textContent, 'Pròximament?');
 assert($('select').attrs['data-pending'], 'pending selection hides the action');
 assert.equal($('select-name').textContent, DRAC.fullName || DRAC.name, 'the playable panel fades out as it was');
 assert.equal(selected.at(-1), DRAC.id, 'nor does it change the song or the model');
@@ -306,6 +308,7 @@ click($('select-next')); key('Enter'); assert($('select-act').hidden, 'it cannot
 click($('aviat-write')); assert.deepEqual(drafts, [`Sobre ${townOf(soon[0]).name}: `]);
 click($('select-strip'), more); assert(!api.unfolded && later.every(c => c.hidden), 'the banner folds it back');
 assert.equal(api.figure, DRAC, 'a hidden figure falls back to Drac');
+assert.equal($('select-next-label').textContent, 'Tria la dificultat', 'returning to a playable figure restores its action label');
 assert($('select-pending').hidden && !$('select').attrs['data-fold'], 'closing never replaces the outgoing figure with the teaser');
 click($('select-strip'), cards[1]); assert($('select-pending').hidden && !$('select-info').hidden && !$('select-next').disabled, 'leaving the fold brings the figure back');
 const tarragona = pills.find(p => p.dataset.town === 'tarragona');

@@ -8,6 +8,7 @@ import { num } from './sheet-kit.js';
 import { escutSvg, escutField } from './escuts.js';
 import { PESSIGOLLA_MARK } from './pessigolla-logo.js';
 import { stripScroll } from './strip-scroll.js';
+import { fitPendingTitle } from './pending-title.js';
 
 // pixel art as an SVG: each cell a square, the cells round the shape a dark rim
 export function pixelSvg(art, palette, rim) {
@@ -152,7 +153,8 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     root.toggleAttribute('data-fold', teasing);
     pending.hidden = leave;
     $('select-info').hidden = !ok || teasing;
-    $('select-next').disabled = !ok || teasing; // hidden; [data-pending] / [data-fold] drop the dock over its row (select.css)
+    $('select-next').disabled = !ok || teasing; // desktop keeps a disabled placeholder; touch hides it
+    $('select-next-label').textContent = !ok || teasing ? 'Pròximament?' : 'Tria la dificultat';
     if (teasing) teaserFill();
     else if (!ok) { pending.toggleAttribute('data-fold', false); pending.style.setProperty('--keep-h', ''); pendingFill(figure); }
   }
@@ -528,11 +530,13 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     const nav = stripLimit > 1 ? ($('select-nav').offsetHeight || 0) * z : 0;
     api.band = { top: side ? townsBottom : r($('select-info')).bottom, bottom: dockTop - nav };
     root.style.setProperty('--pending-bottom', px(Math.max(0, win.innerHeight - (win.innerHeight <= 500 ? win.innerHeight : dockTop + r(strip).top - r(dock).top)) + 12 + nav));
+    if (!pending.hidden) fitPendingTitle($('aviat-title'), win);
     // Cached action bounds for diagnostic overlays; no frame-loop layout reads.
     api.fpsFooter = ['select-figures-back', 'select-next', 'select-play'].map($).filter(el => !el.hidden).map(r);
   }
   win.addEventListener('resize', () => { if (shown) { scrolling.stop(); if (closing) finishFold(); if (teasing) teaserFill(); measure(); if (step === 'figures') centre(strip, cards[cur], 'instant'); } });
   if (win.ResizeObserver) new win.ResizeObserver(() => { if (shown) measure(); }).observe($('select-info'));
+  if (win.ResizeObserver) new win.ResizeObserver(() => { if (shown && !pending.hidden) fitPendingTitle($('aviat-title'), win); }).observe($('aviat-icon'));
   doc.fonts?.ready.then(() => { if (shown) measure(); });
   function visible(on) {
     const error = $('select-error'), message = getError() ?? '';

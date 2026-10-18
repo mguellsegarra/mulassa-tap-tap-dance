@@ -8,7 +8,7 @@ import { SITE_LABEL, CARD_FILE } from '../services/share.js';
 const FORMATS = { story: { w: 1080, h: 1920 }, square: { w: 1080, h: 1080 }, og: { w: 1200, h: 630 } };
 export const PHOTO = { story: [960, 540], square: [992, 360], og: [1560, 630] }; // the hero render's size per format (css = image px)
 const BALOO = "'Baloo 2', system-ui, sans-serif", PIXEL = "'Jersey 10', monospace";
-const INK = { cream: '#fff3d6', gold: '#f5c518', red: '#c0283c', dark: '#2a1a10', soft: '#e8d8b8' };
+const INK = { cream: '#fff3d6', gold: '#f5c518', red: '#c0283c', dark: '#2a1a10', soft: '#e8d8b8', score: '#c9a7ff' }; // score = C.score (sprites.js): points only
 const HEAD = { clear: ['BALL COMPLET!', INK.gold], fail: ['TORNEM-HI!', '#6fa8ff'] }; // a collapse is never shared
 
 export async function loadCardFonts(fonts) { // before drawing: a card drawn with the fallback font is shared as is
@@ -174,14 +174,14 @@ function stack(top, bottom, min, items) {
   items.forEach(([h, draw, g], i) => { if (i) y += g ?? gap; draw(y); y += h; });
 }
 
-// d: { stars, pct, maxCombo, diffName, reason, newRecord, beaten, alias }
+// d: { stars, pct, score (comparable points), maxCombo, diffName, reason, newRecord, beaten, alias }
 export function drawCard(c, format, d, hero) {
   const { w, h } = FORMATS[format];
   c.canvas.width = w; c.canvas.height = h;
   c.save();
   frame(c, w, h);
   const [head, headCol] = HEAD[d.reason] ?? HEAD.clear;
-  const badge = d.newRecord ? 'NOU RÈCORD PERSONAL!' : d.beaten ? 'REPTE SUPERAT!' : null;
+  const badge = d.newRecord ? 'NOU RÈCORD DE PUNTS!' : d.beaten ? 'REPTE SUPERAT!' : null;
   const L = LAYOUT[format];
   if (L) { // story and square: one centre axis
     const cx = w / 2;
@@ -218,7 +218,7 @@ export function drawCard(c, format, d, hero) {
       const [r, label, pct, maxW] = L.score;
       items.push([2 * r, top => score(c, d, cx, top + r, r, label, fit(c, `${d.pct}%`, pct, maxW)), N.score]);
       const [cs, cg] = L.chips;
-      items.push([cs * 1.6, top => chips(c, [[d.diffName, INK.gold], [`RATXA ${d.maxCombo}`, '#ff8fb1']], cx, top + cs * 0.8, cs, cg), N.chips]);
+      items.push([cs * 1.6, top => chips(c, [[d.diffName, INK.gold], [`RATXA ${d.maxCombo}`, '#ff8fb1'], [`${d.score.toLocaleString('ca-ES')} PUNTS`, INK.score]], cx, top + cs * 0.8, cs, cg), N.chips]);
     }
     if (d.alias) { // the footer: nickname (its cap height) over the address, close together
       const a = ascent(c, 'H', L.alias, BALOO, 800);
@@ -247,7 +247,7 @@ export function drawCard(c, format, d, hero) {
   return c.canvas;
 }
 
-export const cardAlt = (format, d) => `Imatge per compartir (${format === 'story' ? 'story' : 'quadrada'}): la Mulassa de Valls, ${d.stars} ${d.stars === 1 ? 'estrella' : 'estrelles'}, ${d.pct}% d’encerts a ${d.diffName}, ratxa màxima ${d.maxCombo}${d.newRecord ? ', nou rècord personal' : ''}.`;
+export const cardAlt = (format, d) => `Imatge per compartir (${format === 'story' ? 'story' : 'quadrada'}): la Mulassa de Valls, ${d.stars} ${d.stars === 1 ? 'estrella' : 'estrelles'}, ${d.pct}% d’encerts a ${d.diffName}, ratxa màxima ${d.maxCombo}, ${d.score.toLocaleString('ca-ES')} punts${d.newRecord ? ' (nou rècord)' : ''}.`;
 
 export function toJpeg(canvas, quality = 0.9) { // -> File (the name the share sheet and the download use)
   return new Promise((resolve, reject) => canvas.toBlob(b => (b ? resolve(new File([b], CARD_FILE, { type: 'image/jpeg' })) : reject(new Error('card'))), 'image/jpeg', quality));

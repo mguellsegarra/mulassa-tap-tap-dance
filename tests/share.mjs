@@ -27,11 +27,11 @@ assert.equal(challengeTip({ pct: 94, diff: 2 }), 'Repte d’un amic: supera el 9
 assert(!/utm_|fbclid|ref=|id=/.test(challengeUrl(94, 2) + shareLinks('x', challengeUrl(94, 2)).x), 'no tracking parameters');
 
 // --- the result against the challenge: same level only; "supera" = more than the target (100 = 100 is enough)
-const run = (o = {}) => ({ pct: 90, diff: 2, reason: 'clear', stars: 3, newRecord: false, practice: false, ...o });
+const run = (o = {}) => ({ pct: 90, score: 182972, diff: 2, reason: 'clear', stars: 3, newRecord: false, practice: false, ...o });
 assert.deepEqual(challengeResult({ pct: 89, diff: 2 }, run()), { beaten: true, missing: 0, line: 'REPTE SUPERAT!' });
-assert.deepEqual(challengeResult({ pct: 90, diff: 2 }, run()), { beaten: false, missing: 1, line: 'Gairebé! et falta 1 punt' });
-assert.equal(challengeResult({ pct: 94, diff: 2 }, run()).line, 'Gairebé! et falten 5 punts');
-assert.equal(challengeResult({ pct: 99, diff: 2 }, run({ pct: 40 })).line, 'et falten 60 punts', 'far off: no "Gairebé"');
+assert.deepEqual(challengeResult({ pct: 90, diff: 2 }, run()), { beaten: false, missing: 1, line: 'Gairebé! Et falta un 1%' });
+assert.equal(challengeResult({ pct: 94, diff: 2 }, run()).line, 'Gairebé! Et falta un 5%');
+assert.equal(challengeResult({ pct: 99, diff: 2 }, run({ pct: 40 })).line, 'Et falta un 60%', 'far off: no "Gairebé"');
 assert(challengeResult({ pct: 100, diff: 0 }, run({ pct: 100, diff: 0 })).beaten, 'a perfect run beats a perfect challenge');
 assert.equal(challengeResult({ pct: 50, diff: 1 }, run()), null, 'another level: no verdict');
 assert.equal(challengeResult({ pct: 50, diff: 2 }, run({ practice: true })), null, 'never the practice');
@@ -48,7 +48,7 @@ for (const t of texts) {
   assert(t.endsWith(HASHTAGS) && HASHTAGS === '#MulassaTapTap #Valls', t);
   assert(/DIFÍCIL/.test(t) && /\d+%/.test(t) && !/https?:/.test(t) && !/'/.test(t), `level, %, no link, ’ only: ${t}`);
 }
-assert(/Repte superat/.test(texts[0]) && /rècord/.test(texts[1]));
+assert(/Repte superat/.test(texts[0]) && /rècord de punts: 182.972 a DIFÍCIL \(90% d’encerts\)/.test(texts[1]), texts[1]);
 // emojis: the donkey (🫏, the nearest to a mulassa) first, one festive emoji by outcome; X's count stays well under 280
 // (an emoji weighs 2, the link 23), and the intents carry them UTF-8 percent-encoded, back intact when decoded
 const xWeight = t => [...t].reduce((n, c) => n + (c.codePointAt(0) > 0x10ff ? 2 : 1), 0);

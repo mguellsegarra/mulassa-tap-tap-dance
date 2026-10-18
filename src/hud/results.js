@@ -62,19 +62,19 @@ export function drawResults() {
   // the stars are the hero: centred under the title, then the stats in full-width rows (like a mobile game's win card)
   if (!lost) { drawStars(H, G.stars, W / 2, y0 + 46 + STAR_H / 2, 84, clock - G.resT); /* the earned ones drop in one by one */ rule(y0 + 46 + STAR_H); }
   const by = y0 + 54 + STAR_H, bh = row * 5, sx = x0 + 26, ex = x0 + pw - 26;
-  [['GUAPA!', G.counts.perfect, C.gold], ['BÉ', G.counts.good, C.cream], ['XURRO', G.counts.miss, C.blue], ['RATXA', G.maxCombo, C.pink], ['PUNTS', comparableScore(G.score, G.diff), C.cream]]
-    .forEach(([s, v, c], i) => {
+  [['GUAPA!', G.counts.perfect, C.gold], ['BÉ', G.counts.good, C.cream], ['XURRO', G.counts.miss, C.blue], ['RATXA', G.maxCombo, C.pink], ['PUNTS', comparableScore(G.score, G.diff), C.score, C.score]]
+    .forEach(([s, v, c, vc = C.cream], i) => {
       const y = by + row * (i + 0.5);
       if (i) { H.fillStyle = 'rgba(255,243,214,0.08)'; H.fillRect(sx, y - row / 2, ex - sx, 1); }
       text(s, sx, y, 9, c, 'left');
-      text(String(v), ex, y, 9, C.cream, 'right');
+      text(v.toLocaleString('ca-ES'), ex, y, 9, vc, 'right'); // 182.972: thousands separated, as on the board
     });
   rule(by + bh + 8);
   // quality: the headline number of the card
   const qy = by + bh + 30, q = qualityText(G.counts), lw = textWidth('ENCERTS', 9), vw = textWidth(q, 18), qx = W / 2 - (lw + 8 + vw) / 2;
   if (!lost) { text('ENCERTS', qx, qy + 1, 9, C.cream, 'left'); text(q, qx + lw + 8, qy, 18, C.gold, 'left'); }
   if (G.newRecord) { // a gold ribbon of its own that pops in after the medallion
-    const s = 'NOU RÈCORD PERSONAL!', size = Math.min(9.5, (pw - 70) / 12), pop = elastic(Math.min(1, Math.max(0, clock - G.resT - 0.4) * 2.5));
+    const s = 'NOU RÈCORD DE PUNTS!', size = Math.min(9.5, (pw - 70) / 12), pop = elastic(Math.min(1, Math.max(0, clock - G.resT - 0.4) * 2.5));
     const bw = (textWidth(s, size) + 34) * pop, ry = qy + 26;
     if (pop > 0.05) {
       H.beginPath(); H.roundRect(W / 2 - bw / 2, ry - 10, bw, 20, 10); H.fillStyle = C.gold; H.fill();
@@ -85,7 +85,10 @@ export function drawResults() {
       H.restore();
       if (pop > 0.9) { text(s, W / 2, ry, size, C.dark, 'center', C.gold); /* dark on gold: no dark outline, it blotted the letters */ sparkle(W / 2 - bw / 2 + 10, ry, 4 + Math.sin(clock * 6), C.dark); sparkle(W / 2 + bw / 2 - 10, ry, 4 + Math.sin(clock * 6 + 2), C.dark); }
     }
-  } else if (G.previous && !lost) text(`MILLOR: ${Math.round(G.previous.quality)}%`, W / 2, qy + 22, 9, '#e8d8b8');
+  } else if (G.previous && !lost) { // the record to beat, laid out like ENCERTS: cream label, points in their own colour
+    const best = `${G.previous.score.toLocaleString('ca-ES')} PUNTS`, bl = textWidth('MILLOR', 9), bv = textWidth(best, 11), bx = W / 2 - (bl + 6 + bv) / 2;
+    text('MILLOR', bx, qy + 23, 9, C.cream, 'left'); text(best, bx + bl + 6, qy + 22, 11, C.score, 'left');
+  }
   if (G.challenge) text(G.challenge.line, W / 2, y0 + ph - url - chl + 8, G.challenge.beaten ? 11 : 9.5, G.challenge.beaten ? C.gold : '#5fd4c8'); // a friend's ?repte (same level)
   text(SITE_LABEL, W / 2, y0 + ph - 9, 7, '#e8d8b8'); // small, inside the card: a screenshot still says where to play
   // the tip, outside the card

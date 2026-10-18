@@ -107,6 +107,8 @@ by everyone below it as `sheets.board`… (`ui/sheets.js`), so no import cycle i
 - **FINAL ESBOJARRAT** starts at the last coda phrase (`song.finale`): the festa (fireworks, lights, chant) for everyone; double points and the «x2 PUNTS» tag only while ENCERTS ≥ 70% (`G.finale` / `G.doublePoints`).
 - Density targets (notes per 7 s): FÀCIL 6–7 flat; NORMAL 8 → 12; DIFÍCIL 13–15 → 20–25, ~30 only in the finale.
   Harder charts contain the easier ones (`check.mjs` enforces this and much more).
+- **Record** = most comparable points per level, device (`beatsRecord`, key `record-points-mulassa-*`, older keys only read) and
+  server (`submit_result`), as the board ranks; the % only breaks ties. Points: thousands dots, `C.score` lilac (points only). `?repte` stays on %.
 - **Ànim de la plaça** (energy/health): starts full, misses drain it, hits refill; empty = the mulassa collapses.
   Tuning lives in `src/game/energy.js` (misses from full to empty: FÀCIL 13, NORMAL 10, DIFÍCIL 8). The practice never drains.
 - In-game top HUD (`drawTop`): one row, the pixel mulassa (`mulaPortrait`: leans back and throbs below 35%, hops on a refill) + the ÀNIM bar (health) + the ENCERTS %

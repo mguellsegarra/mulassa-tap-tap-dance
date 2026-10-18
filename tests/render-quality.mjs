@@ -390,6 +390,18 @@ const document = {
   },
   querySelectorAll: () => [],
 };
+// Model node ownership so the real sheet handlers must move content both ways.
+const privacyTextStub = { textContent: 'Privacy content' };
+const privacyFragmentStub = { childNodes: [privacyTextStub], append(...children) {
+  this.childNodes.push(...children); privacyBodyStub.childNodes.length = 0;
+} };
+const privacyBodyStub = { childNodes: [], append(fragment) {
+  this.childNodes.push(...fragment.childNodes); fragment.childNodes.length = 0;
+}, scrollTop: 0 };
+const privacyMenuStub = document.getElementById('privacy-menu');
+privacyMenuStub.querySelector = () => privacyBodyStub;
+privacyMenuStub.close = function () { this.open = false; this.listeners.close(); };
+document.getElementById('privacy-content').content = privacyFragmentStub;
 class Renderer {
   constructor() { this.shadowMap = {}; this.lost = false; }
   getContext() { return { isContextLost: () => this.lost }; }
@@ -1181,8 +1193,15 @@ keyHandlers.forEach(h => h({ code: 'Space', target: { tagName: 'BODY' }, prevent
 assert.equal(run('G.state'), 'title', 'Space does not start a game behind the sheet');
 document.listeners.click({ target: { closest: sel => (sel === '[data-privacy-open]' ? {} : null) } });
 assert(nodes.get('privacy-menu').open && settingsSheet.open, 'Privadesa opens over Configuració, which stays behind it');
+assert.deepEqual(privacyBodyStub.childNodes, [privacyTextStub], 'privacy text is attached while open');
+assert.equal(privacyFragmentStub.childNodes.length, 0);
 keyHandlers.forEach(h => h({ code: 'Enter', target: { tagName: 'DIALOG' }, preventDefault() {} }));
 assert.equal(run('G.state'), 'title', 'keys on Privadesa do not start a game');
+nodes.get('privacy-menu').close();
+assert.equal(privacyBodyStub.childNodes.length, 0, 'closed privacy text is absent from the live DOM');
+assert.deepEqual(privacyFragmentStub.childNodes, [privacyTextStub]);
+run('openPrivacy(); openPrivacy();');
+assert.deepEqual(privacyBodyStub.childNodes, [privacyTextStub], 'reopening preserves the text without duplicates');
 nodes.get('privacy-menu').close();
 nodes.get('settings-sync').listeners.click();
 assert(!settingsSheet.open && context.syncSheet.open, 'Ajusta la sincronia opens the sync sheet');

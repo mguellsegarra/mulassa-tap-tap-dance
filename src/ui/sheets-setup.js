@@ -151,8 +151,15 @@ musicBtn.addEventListener('click', () => {
 document.getElementById('feedback').addEventListener('click', () => {
   if (G.state === 'title' && !sheetUp()) feedback.show(() => document.activeElement?.blur());
 });
+const privacyContent = document.getElementById('privacy-content');
+const privacyBody = privacyMenu.querySelector?.('.sheet-body');
+privacyMenu.addEventListener('close', () => {
+  // Reuse the same nodes, including the contact link initialized by setupBoard.
+  if (!privacyMenu.open && privacyBody) privacyContent.content.append(...privacyBody.childNodes);
+});
 function openPrivacy() {
   if (privacyMenu.open) return;
+  privacyBody.append(privacyContent.content);
   privacyMenu.showModal();
   const body = privacyMenu.querySelector?.('.sheet-body'); if (body) body.scrollTop = 0;
   focusIn(privacyMenu, 'privacy-ok');

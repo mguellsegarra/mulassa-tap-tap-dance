@@ -2,7 +2,7 @@
 import { clearLeaderboardResult, captureLeaderboardResult } from '../services/leaderboard-result.js';
 import { makeDanceChart } from './chart.js';
 import { comparableScore } from './score-scale.js';
-import { bestRecord, beatsRecord, recordFamilyKey, saveRecord } from './records.js';
+import { bestRecord, beatsRecord, recordPointsKey, saveRecord } from './records.js';
 import song from '../song.json';
 import { store } from '../platform/storage.js';
 import { errors } from '../services/errors.js';
@@ -61,7 +61,7 @@ export function startGame(diff) {
   G.sel = diff;
   beginRun(diff, makeDanceChart(song, diff).filter(n => n.t >= playFrom));
   warmStart(); // already painted on the title unless the screen changed since (sprites are per size)
-  G.recordKey = recordFamilyKey(diff);
+  G.recordKey = recordPointsKey(diff);
   G.previous = bestRecord(store, diff);
   const chart = G.chart;
   const wait = songWait = chip.buf ? null : loader.wait(musicLine());
@@ -206,7 +206,7 @@ export function finish(reason) {
   if (G.newRecord && !FINAL) saveRecord(store, G.diff, value, G.score, G.maxCombo);
   G.state = 'results';
   G.resT = clock;
-  const run = { pct: Math.round(value), diff: G.diff, reason: G.reason, stars: G.stars, newRecord: G.newRecord, maxCombo: G.maxCombo, t: G.resT, practice: false };
+  const run = { pct: Math.round(value), score: recordScore, diff: G.diff, reason: G.reason, stars: G.stars, newRecord: G.newRecord, maxCombo: G.maxCombo, t: G.resT, practice: false };
   G.challenge = challengeResult(CHALLENGE, run); // null unless it was the challenge's level
   G.shareRun = run; // what «Comparteix» shows (share-ui.js); the leaderboard's snapshot above is untouched
   if (G.reason === 'clear') { G.chantT = clock; burst(M.pos.x, M.pos.y); chip.sfx('ovation'); }
@@ -221,7 +221,7 @@ export function startFinal() {
   beginRun(diff, makeDanceChart(song, diff));
   const run = fabricateRun(G.chart, FINAL, FINALE_T);
   Object.assign(G, { counts: run.counts, errors: run.errors, score: run.score, combo: run.combo, maxCombo: run.maxCombo, energy: run.energy,
-    shownE: run.energy, guapo: quality(run.counts), next: G.chart.length, recordKey: recordFamilyKey(diff) });
+    shownE: run.energy, guapo: quality(run.counts), next: G.chart.length, recordKey: recordPointsKey(diff) });
   G.previous = outcome === 'record' ? null : { quality: Math.min(100, quality(run.counts) + 3), score: comparableScore(run.score, diff) + 1000, combo: run.maxCombo };
   if (run.collapsed) G.collapseT = clock;
   finish(run.collapsed ? 'collapse' : 'end');

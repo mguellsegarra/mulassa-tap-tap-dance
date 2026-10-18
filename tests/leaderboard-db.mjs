@@ -44,7 +44,7 @@ try {
   await assert.rejects(db.query('select leaderboard_private.require_player()'),/permission denied/, 'the helper is not for clients');
   await unlock();
   const first = (await db.exec('reset role; select achieved_at from leaderboard_private.entries; set role authenticated;'))[1].rows[0].achieved_at;
-  assert.equal((await submit(119,21,10,140999)).rows[0].improved,false, 'quality wins over points');
+  assert.equal((await submit(119,21,10,140999)).rows[0].improved,false, 'quality wins over points'); // the historic rule of these pinned migrations; 202610170001 keeps the most points (tests/record-by-score-db.mjs)
   await unlock();
   assert.equal((await submit()).rows[0].improved,false,'identical result is idempotent');
   const after = (await db.exec('reset role; select achieved_at from leaderboard_private.entries; set role authenticated;'))[1].rows[0].achieved_at;

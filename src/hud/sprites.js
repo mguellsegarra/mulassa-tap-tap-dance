@@ -5,6 +5,7 @@ import { H } from './canvas.js';
 export const FONT = "'Baloo 2', system-ui, sans-serif", PIXEL = "'Jersey 10', monospace";
 export const C = {
   cream: '#fff3d6', gold: '#f5c518', red: '#c0283c', dark: '#2a1a10', blue: '#6fa8ff', pink: '#ff8fb1', green: '#7ee081',
+  score: '#c9a7ff', // lilac, reserved for points (PUNTS, MILLOR, the share card)
   gua: '#ff7a1a', guaLt: '#ffb56b', guaDk: '#b34d00', // GUA (left, don): orange
   pa: '#14b8a6', paLt: '#6ee7d8', paDk: '#0a6e63', // PA (right, ka): turquoise
 };

@@ -1044,10 +1044,11 @@ run(`var hudT = G.chart[G.next].t;
   var bb = G.balloons[0]; bb.count = 3; G.pop = { t0: clock, word: 'PAM!' }; G.pumpT = clock; drawHud(bb.t + 0.2);
   G.collapseT = clock; drawHud(hudT); G.collapseT = 0; G.finale = false;
   G.errors = { early: 1, late: 2, move: 3, silent: 0, both: 0, hold: 0 }; G.resT = clock - 2;
-  for (const [reason, rec, prev] of [['clear', true, null], ['fail', false, { quality: 80 }], ['collapse', false, null]]) {
+  for (const [reason, rec, prev] of [['clear', true, null], ['fail', false, { quality: 80, score: 182972 }], ['collapse', false, null]]) {
     G.state = 'results'; G.reason = reason; G.stars = 2; G.newRecord = rec; G.previous = prev; drawHud(0);
   }
   for (const st of ['splash', 'title']) { G.state = st; drawHud(0); }`);
+assert(drawnText.includes('NOU RÈCORD DE PUNTS!') && drawnText.includes('MILLOR') && drawnText.includes('182.972 PUNTS'), 'the record is told in points, like the board');
 console.log('HUD screens draw without exceptions ok');
 
 // MANTÉN: head judged like a tap; hold the key to the end (last 0.12 s free) for a PERFECTE tail, half for BÉ,
@@ -1306,6 +1307,10 @@ run(`G.state = 'play'; G.diff = 2; G.counts = { perfect: 200, good: 40, miss: 0 
 assert.equal(run('G.newRecord'), false, 'equal cross-version quality with fewer points cannot announce a record');
 run(`G.state = 'play'; G.score = 139672; finish('end');`);
 assert.equal(run('G.newRecord'), true, 'equal cross-version quality with more points earns a record');
+run(`G.state = 'play'; G.counts = { perfect: 240, good: 0, miss: 0 }; G.score = 139572; finish('end');`);
+assert.equal(run('G.newRecord'), false, 'a higher % with fewer points is no record');
+run(`G.state = 'play'; G.counts = { perfect: 150, good: 50, miss: 40 }; G.score = 149972; finish('end');`);
+assert.equal(run('G.newRecord'), true, 'more points with a lower % is a record (as on the board)');
 run(`G.state = 'play'; toTitle();`);
 assert.equal(boardSheet.verifyStarts, 0, 'a finished or left run asks Cloudflare nothing');
 run('chip = savedChip; G.state = savedState;');
@@ -1326,7 +1331,7 @@ console.log('classificacions integration contracts ok');
 {
   const row = nodes.get('results-actions'), menu = nodes.get('share-menu');
   run(`G.state = 'results'; G.resT = clock - 0.5; G.reason = 'clear'; G.stars = 3; G.newRecord = true; G.challenge = null;
-    G.shareRun = { pct: 96, diff: 2, reason: 'clear', stars: 3, newRecord: true, maxCombo: 80, t: G.resT, practice: false }; updateControls();`);
+    G.shareRun = { pct: 96, score: 190000, diff: 2, reason: 'clear', stars: 3, newRecord: true, maxCombo: 80, t: G.resT, practice: false }; updateControls();`);
   assert(row.hidden !== false, 'no row during the first second (TOCA PER TORNAR waits too)');
   run('G.resT = clock - 2; G.shareRun.t = G.resT; updateControls();');
   assert(row.hidden === false && nodes.get('results-share-tag').hidden === false, 'the row with Comparteix, and «Presumeix-ne!» for a record / S');
@@ -1351,28 +1356,28 @@ console.log('classificacions integration contracts ok');
   run('updateControls();');
   assert(row.hidden === true, 'the row goes with the results');
   run(`G.state = 'results'; G.resT = clock - 2; G.stars = 1; G.newRecord = false;
-    G.shareRun = { pct: 55, diff: 1, reason: 'fail', stars: 1, newRecord: false, maxCombo: 9, t: G.resT, practice: false }; updateControls();`);
+    G.shareRun = { score: 100000, pct: 55, diff: 1, reason: 'fail', stars: 1, newRecord: false, maxCombo: 9, t: G.resT, practice: false }; updateControls();`);
   assert(row.hidden === false && nodes.get('results-share-tag').hidden === true, 'no nudge for an ordinary run');
   drawnText.length = 0;
   run(`G.challenge = challengeResult({ pct: 50, diff: 1 }, G.shareRun); G.counts = { perfect: 40, good: 20, miss: 30 }; drawHud(0);`);
   assert(drawnText.includes('REPTE SUPERAT!') && drawnText.includes(shareLogic.SITE_LABEL), 'the card says the challenge is beaten and where to play');
   drawnText.length = 0;
   run(`G.challenge = challengeResult({ pct: 58, diff: 1 }, G.shareRun); drawHud(0);`);
-  assert(drawnText.includes('Gairebé! et falten 4 punts'), 'or how close it was');
+  assert(drawnText.includes('Gairebé! Et falta un 4%'), 'or how close it was');
   assert.equal(run('resultsReserve()'), 48, 'one row of buttons: 48 px');
   // the row sits right under the card (drawResults writes its top), not pinned to the bottom edge
   const rowTop = parseFloat(row.style.top);
   assert(row.style.bottom === 'auto' && rowTop > 0 && rowTop + 48 < run('HH * K') - 60, `the row under the card, with the tip and the return button below it (top ${rowTop})`);
   // a collapse: nothing to share; «Torna-ho a provar» (the same level) and Classificacions stay
   run(`G.reason = 'collapse'; G.stars = 0; G.diff = 2; G.resT = clock - 2;
-    G.shareRun = { pct: 20, diff: 2, reason: 'collapse', stars: 0, newRecord: false, maxCombo: 3, t: G.resT, practice: false }; updateControls();`);
+    G.shareRun = { score: 100000, pct: 20, diff: 2, reason: 'collapse', stars: 0, newRecord: false, maxCombo: 3, t: G.resT, practice: false }; updateControls();`);
   assert(row.hidden === false && nodes.get('results-share').hidden === true && nodes.get('results-retry').hidden === false, 'collapse: no Comparteix, Torna-ho a provar instead');
   context.shareSheet.openAfterPublish({});
   assert(!menu.open, 'collapse: the share sheet never opens');
   nodes.get('results-retry').listeners.click();
   assert(run("G.state === 'play' && G.diff === 2 && !G.practice"), 'Torna-ho a provar: the same level again');
   run(`G.state = 'results'; G.reason = 'clear'; G.resT = clock - 2;
-    G.shareRun = { pct: 90, diff: 2, reason: 'clear', stars: 3, newRecord: false, maxCombo: 50, t: G.resT, practice: false }; updateControls();`);
+    G.shareRun = { score: 100000, pct: 90, diff: 2, reason: 'clear', stars: 3, newRecord: false, maxCombo: 50, t: G.resT, practice: false }; updateControls();`);
   assert(nodes.get('results-share').hidden === false && nodes.get('results-retry').hidden === true, 'a finished dance: Comparteix again, no retry');
   run(`G.challenge = null; G.state = 'title'; updateControls();`);
 }

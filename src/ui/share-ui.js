@@ -29,7 +29,7 @@ export function setupShare({ focusIn, restore = () => {}, hero = () => null, sfx
   let file = null, fresh = false, tapped = false, previewUrl = '', heroes = {}, req = 0, shownKey = '';
   const data = () => {
     const alias = nick.checked && !nickRow.hidden ? store.get(ALIAS_KEY) : null;
-    return { stars: run.stars, pct: run.pct, maxCombo: run.maxCombo, diffName: DIFFS[run.diff].name, reason: run.reason,
+    return { stars: run.stars, pct: run.pct, score: run.score, maxCombo: run.maxCombo, diffName: DIFFS[run.diff].name, reason: run.reason,
       newRecord: run.newRecord, beaten: Boolean(challengeResult(challenge, run)?.beaten), alias };
   };
   const say = (text, ok = false) => { status.textContent = text; status.classList.toggle('ok', ok); };

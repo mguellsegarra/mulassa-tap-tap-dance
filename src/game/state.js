@@ -12,7 +12,8 @@ import { Q, offsetMs, playFrom, LEAD, WIN, pageActive } from '../core/env.js';
 //     chart, balloons, next (the next unjudged note), diff, counts {perfect, good, miss}, errors, score, combo, maxCombo, streak
 //     (misses in a row), guapo (the ENCERTS %), energy (l'ànim), energyWarn, hold, activePhrase / phraseCounts, doublePoints,
 //     sec ('A' | 'B'), go (the first note's time), finale / eeeh / collapseT (the coda, its shout, the fall), previous / newRecord /
-//     recordKey / stars / reason / challenge / shareRun / resT (the result), practice, resuming
+//     recordKey / stars / reason / challenge / shareRun / resT (the result), practice, resuming, watch (the dance demo: the song
+//     plays itself, nothing is judged for the player, saved or shared)
 //   what the screens show (eased or stamped with `clock`, read by hud/* and the crowd; the rules never read them)
 //     shown, shownE (the smoothed guapo and energy), judge, praise, ring, pop, popT, pumpT, tapT, flash, holdDone, energyT,
 //     energyWarnT, doubleT, finaleT, chantT, offsetT, uiT, clapBeat, finBeat, lastBeat

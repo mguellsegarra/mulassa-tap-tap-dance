@@ -54,7 +54,7 @@ for (const [id, files] of Object.entries(BASE)) {
 assert.deepEqual(timelines.mulassa.holds.map(h => h.slice(0, 2)), [[32, 34], [64, 67], [96, 98], [128, 131], [136, 139]]);
 assert.deepEqual(timelines.drac.holds.map(h => h.slice(0, 2)), [[66, 69]]);
 assert.equal(timelines.mulassa.finale, 208);
-assert.equal(timelines.drac.finale, 231);
+assert.equal(timelines.drac.finale, 225); // the 8-beat closing roll under the held last note (docs/drac-music.md, round 2)
 // constant-exact is the generator's own grid, to the last bit
 assert.deepEqual(timelines.mulassa.beats, Array.from({ length: 229 }, (_, b) => 0.1 + b * (60 / 152)));
 // bars are whole beats however many 1/6 triplets they hold: nothing drifts off the grid
@@ -62,7 +62,7 @@ assert(timelines.drac.occurrences.every(o => Number.isInteger(o.start) && o.dur 
 
 // ------------------------------------------------------------------ the ending note rings; ties; scale and overrides
 assert.deepEqual(timelines.mulassa.melody.at(-1), [222, 6, 84]);
-assert.deepEqual(timelines.drac.melody.at(-1), [230, 7, 67]);
+assert.deepEqual(timelines.drac.melody.at(-1), [222, 13, 67]); // the last C held over the roll to the hit and past it
 assert.deepEqual(timelines.mulassa.occurrences.find(o => o.unfolded === 'u017').notes, [[136, 4, 72], [143, 0.5, 76], [143.5, 0.5, 76]], 'bar 16: override notes at scale 1');
 assert.equal(timelines.mulassa.occurrences.find(o => o.unfolded === 'u002').beatScale, 2);
 const bar21 = id => timelines.drac.occurrences.filter(o => o.bar === 21)[id];

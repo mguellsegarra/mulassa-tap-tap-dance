@@ -67,14 +67,15 @@ const SPIKE = { ms: 50, count: 5, within: 3000 };
 // iOS Low Power Mode (and thermal throttling) caps Safari's rAF at 30 Hz (WebKit AnimationFrameRate.cpp): every frame is
 // 33 ms, all of them read as slow and medium fell straight to minimal. CAP.run frames in a row at a steady ~33 ms suggest
 // a cap: until a faster frame, frames are judged against 30 Hz (twice the times above) and the run's frames
-// don't count as slow. A 60 Hz device too slow for 60 draws the same steady 33 ms: that alone steps down once (`probed`).
+// don't count as slow. Cadence alone cannot distinguish a power cap from a busy GPU; only missed refreshes
+// or repeated hitches justify removing detail, never an otherwise steady 30 Hz.
 const CAP = { lo: 29, hi: 38, run: 12 };
 export function frameMonitor(onSlow) {
-  let elapsed = 0, samples = 0, slow = 0, slow60 = 0, warmup = 2000, clock = 0, n = 0, spiky = false;
-  let run = 0, runSlow = 0, capped = false, probed = false; // runSlow: this window's slow frames of the current run
+  let elapsed = 0, samples = 0, slow = 0, warmup = 2000, clock = 0, n = 0, spiky = false;
+  let run = 0, runSlow = 0, capped = false; // runSlow: this window's slow frames of the current run
   const spikes = new Float64Array(SPIKE.count); // when the last few spikes happened (monitor time, ring buffer)
   return (ms, play = true) => {
-    if (ms <= 0 || ms > 1000) { elapsed = samples = slow = slow60 = n = run = runSlow = 0; spiky = capped = false; return; }
+    if (ms <= 0 || ms > 1000) { elapsed = samples = slow = n = run = runSlow = 0; spiky = capped = false; return; }
     clock += ms;
     const inCap = ms >= CAP.lo && ms <= CAP.hi, was = capped;
     run = inCap ? run + 1 : 0;
@@ -86,15 +87,13 @@ export function frameMonitor(onSlow) {
       if (n >= SPIKE.count && clock - spikes[n % SPIKE.count] <= SPIKE.within) spiky = true; // the oldest of the last few
     }
     elapsed += ms; samples++;
-    if (ms > 24) slow60++;
     if (ms > 24 * k) slow++;
     if (!inCap) runSlow = 0; else if (!capped) runSlow++;
     if (capped && !was) { slow -= runSlow; runSlow = 0; } // the run that showed the cap was its pace, not misses
     if (elapsed >= 4000) {
       const share = samples >= 8 ? slow / samples : 0;
       if (share > SLOW_SHARE || spiky) { onSlow(share > 0.8 ? 2 : 1); warmup = 2000; n = 0; } // way too slow: two steps
-      else if (capped && !probed && slow60 / samples > SLOW_SHARE) { probed = true; onSlow(1); warmup = 2000; n = 0; } // the cap, or too slow for 60
-      elapsed = samples = slow = slow60 = runSlow = 0; spiky = false;
+      elapsed = samples = slow = runSlow = 0; spiky = false;
     }
   };
 }

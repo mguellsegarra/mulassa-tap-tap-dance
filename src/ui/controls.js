@@ -13,7 +13,7 @@ let hudMouse = false;
 function updateHudCursor() {
   const active = hudMouse && !viewMode && !sheetUp();
   const clickable = active && ((G.state === 'splash' || G.state === 'title') && buttonAt(hudPointer)
-    || G.state === 'results' && clock - G.resT > 1);
+    || G.state === 'results' && !G.watch && clock - G.resT > 1);
   const cursor = clickable ? 'pointer' : '';
   if (hud.style.cursor !== cursor) hud.style.cursor = cursor;
 }
@@ -24,7 +24,7 @@ hud.addEventListener('pointermove', e => {
 });
 hud.addEventListener('pointerleave', () => { hudMouse = false; updateHudCursor(); });
 
-export const sheetUp = () => howtoMenu.open || settingsMenu.open || sheets.sync.open || sheets.board.open || privacyMenu.open || sheets.share.open || pauseMenu.open || sheets.feedback.open || sheets.profile?.isOpen || sheets.select?.sheetOpen;
+export const sheetUp = () => howtoMenu.open || settingsMenu.open || sheets.sync.open || sheets.board.open || privacyMenu.open || sheets.share.open || pauseMenu.open || sheets.feedback.open || sheets.profile?.isOpen || sheets.select?.sheetOpen || sheets.watch?.open;
 export const menuState = () => G.state === 'splash' || G.state === 'title' || G.state === 'select'; // the camera steers, photo mode works
 export const steers = () => menuState() && !sheetUp();
 // «Mode foto» (#viewmode, splash/title/selector): every control, tip and the HUD fade out (index.html body.view-mode) and the plaça
@@ -63,7 +63,8 @@ for (const ev of ['pointermove', 'pointerdown', 'keydown', 'wheel']) addEventLis
 viewBtn.addEventListener('click', () => setView(!viewMode));
 export function updateControls() {
   updateHudCursor();
-  sheets.select?.visible(G.state === 'select');
+  // Set the hint's final layout before the selector measures its information block.
+  hide(iosHint, hintOff || (G.state !== 'title' && G.state !== 'select') || howtoMenu.open || settingsMenu.open || sheets.sync.open);
   hide(howtoEl, true); // instructions live below the selector's record tiles
   hide(viewBtn, !menuState());
   if (viewMode && (!menuState() || sheetUp())) setView(false); // menu screens only, never under a sheet
@@ -72,10 +73,12 @@ export function updateControls() {
   document.getElementById('select').toggleAttribute?.('data-ranking', !leadersEl.hidden);
   hide(feedbackEl, (G.state !== 'title' && G.state !== 'select'));
   hide(musicEl, (G.state !== 'title' && G.state !== 'select'));
-  hide(iosHint, hintOff || (G.state !== 'title' && G.state !== 'select') || howtoMenu.open || settingsMenu.open || sheets.sync.open);
+  sheets.select?.visible(G.state === 'select'); // measure after the header controls have their final layout
   hide(pauseEl, G.state !== 'play' || G.paused || Boolean(G.collapseT));
   hide(skipEl, G.state !== 'play' || !G.practice || G.paused);
-  sheets.board.results(G.state === 'results' && clock - G.resT > 1); // with TOCA PER TORNAR: no stray tap from the last notes
-  sheets.share.results(G.state === 'results' && clock - G.resT > 1, G.shareRun, CHALLENGE); // the row itself (#results-actions)
-  hide(retryEl, !(G.state === 'results' && clock - G.resT > 1));
+  const result = G.state === 'results' && !G.watch && clock - G.resT > 1; // (the dance demo ends on its own sheet)
+  sheets.board.results(result); // with TOCA PER TORNAR: no stray tap from the last notes
+  sheets.share.results(result, G.shareRun, CHALLENGE); // the row itself (#results-actions)
+  hide(retryEl, !result);
+  sheets.watch?.frame();
 }

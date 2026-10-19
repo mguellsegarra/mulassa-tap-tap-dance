@@ -66,7 +66,7 @@ window.__mulassaBootPhase = 'init';
 initDrac(); // both rigs exist before shader warmup and the first frame
 
 const monitorFrames = frameMonitor((steps = 1) => { // steps: 2 when frames are far too slow
-  if (qualityLevel > -1) { setQualityLevel(Math.max(-1, qualityLevel - steps)); applyRenderQuality(); resize(); precompile(); } // now, not at the first GLOBUS pop or firework
+  if (qualityLevel > -1) { setQualityLevel(Math.max(-1, qualityLevel - steps)); applyRenderQuality({ transition: !loader.covering }); resize(); precompile(); } // now, not at the first GLOBUS pop or firework
 });
 let glName; // crash reports' context, read only when one is sent
 errors.context(() => ({ state: G.state, diff: G.diff, practice: !!G.practice, paused: G.paused, quality: renderProfile.name, softwareGl,
@@ -88,9 +88,10 @@ function frame(now) {
   if (window.__mulassaBootFailure) return; // an explicit retry owns recovery; no hidden game burning battery
   requestAnimationFrame(frame);
   if (innerWidth !== sizedW || devicePixelRatio !== sizedDpr || Math.abs(HH * K - appHeight()) > 1) resize();
-  // Safari can keep focus in its chrome while the page is visible. Finish startup under the cover;
-  // only an actual hidden page suspends it. Gameplay still rests whenever it loses focus.
-  if (document.hidden || (!coverUp && !pageActive())) { last = null; return; }
+  // Safari may leave hasFocus() false until a touch, even with the entrance fully visible.
+  // Its demo needs visibility, not keyboard focus; audio still waits for the entrance tap.
+  // Other screens retain their focus protection, and every hidden page rests.
+  if (document.hidden || (!coverUp && G.state !== 'splash' && !pageActive())) { last = null; return; }
   if (!drawn && renderer.getContext().isContextLost()) { last = null; return; } // a no-op render cannot certify readiness
   if (last === null) last = now; // no elapsed background time enters the demo or effect emitters
   // iOS can leave the audio context stopped after an app switch (resume() only works inside a tap): the song clock would stand still
@@ -141,7 +142,7 @@ function frame(now) {
     if (judgedCount(G.counts) > 1) G.shown += (G.guapo - G.shown) * Math.min(1, dt * 4); // the meter eases, it never jumps
     else G.shown = G.guapo; // ...except onto the first judged note: it starts from the real value, not 0
     G.shownE += (G.energy - G.shownE) * Math.min(1, dt * 8); // so does the ànim, a bit quicker
-    if (AUTOPLAY && !G.collapseT) autoplay(t);
+    if ((AUTOPLAY || G.watch) && !G.collapseT) autoplay(t);
     if (!G.collapseT) {
       advance(t);
       if (G.practice) practiceTick(t);
@@ -236,7 +237,7 @@ function frame(now) {
   if (PERF) { const ri = renderer.info.render; PERF.calls = ri.calls; PERF.tris = ri.triangles; } // the plaza pass only: the balloon overlay's render() resets renderer.info
 
   updateControls();
-  const padVis = G.state === 'play' && !G.paused && !G.collapseT ? 'visible' : 'hidden';
+  const padVis = G.state === 'play' && !G.paused && !G.collapseT && !G.watch ? 'visible' : 'hidden';
   if (padEl.style.visibility !== padVis) padEl.style.visibility = padVis;
   const hudOff = viewMode && now - viewT >= (CALM.matches ? 0 : 200); // «mode foto», faded out: cleared once, then no HUD work at all
   setBalloonView(null);

@@ -42,21 +42,35 @@ export function createCarriers(scene, motion) {
     const zz = yy * Math.sin(carrierBody.pitch) + z * Math.cos(carrierBody.pitch);
     out.set(carrierBody.x + xx * yawC + zz * yawS, carrierBody.lift + .9 + yy * Math.cos(carrierBody.pitch) - z * Math.sin(carrierBody.pitch), carrierBody.z - xx * yawS + zz * yawC);
   }
+  const before = {}, after = {};
   function pose(t, body) {
     for (let i = 0; i < 8; i++) motion.foot(t, i, feet[i]);
     const c = Math.cos(body.yaw), s = Math.sin(body.yaw);
     carrierBody = body; yawC = c; yawS = s;
+    // Keep a continuous crouch through a turn instead of standing up between each footfall.
+    motion.pose(Math.max(0, t - .08), before); motion.pose(t + .08, after);
+    const turn = Math.max(0, Math.min(1, (Math.abs(after.yaw - before.yaw) / .16 - .4) / .5));
+    const turnFlex = turn * turn * turn * (10 - 15 * turn + 6 * turn * turn);
     for (let pair = 0; pair < 4; pair++) {
-      const a = feet[pair * 2], b = feet[pair * 2 + 1];
       const x = pair % 2 ? -.21 : .21, z = pair < 2 ? 1.05 : -1.05;
-      shellPoint(x, .04, z, pelvis); shellPoint(x, .42, z, shoulder);
+      shellPoint(x, -.1, z, pelvis); shellPoint(x, .42, z, shoulder);
       const centerX = pelvis.x, centerZ = pelvis.z;
-      // The pelvis belongs to the carrier under the shell, not the midpoint of lagging shoes.
-      let hipY = Math.min(.94, pelvis.y);
+      // A normal forward stride does not require a squat. Widening the stance in a turn
+      // does: blend the pelvis/reach together while keeping both limb lengths fixed.
+      let spread = 0;
+      for (let side = 0; side < 2; side++) {
+        const f = feet[pair * 2 + side], dx = side ? -.085 : .085;
+        const ex = centerX + c * dx - f.x, ez = centerZ - s * dx - f.z;
+        spread = Math.max(spread, Math.abs(ex * c - ez * s), Math.max(0, Math.abs(ex * s + ez * c) - .2));
+      }
+      const u = Math.max(0, Math.min(1, (spread - .07) / .15));
+      const flex = Math.max(turnFlex, u * u * u * (10 - 15 * u + 6 * u * u));
+      const reach = .87 - .11 * flex;
+      let hipY = Math.min(.94 - .06 * flex, pelvis.y + .14 * (1 - flex));
       for (let side = 0; side < 2; side++) {
         const f = feet[pair * 2 + side], dx = side ? -.085 : .085;
         const horizontal = Math.hypot(centerX + c * dx - f.x, centerZ - s * dx - f.z);
-        hipY = Math.min(hipY, f.y + .075 + Math.sqrt(Math.max(0, .87 ** 2 - horizontal ** 2)));
+        hipY = Math.min(hipY, f.y + .075 + Math.sqrt(Math.max(0, reach ** 2 - horizontal ** 2)));
       }
       pelvis.y = hipY;
       bone(torsos[pair], pelvis, shoulder); torsos[pair].scale.y = pelvis.distanceTo(shoulder) / .5;
@@ -64,7 +78,10 @@ export function createCarriers(scene, motion) {
         const index = pair * 2 + side, f = feet[index], p = parts[index], dx = side ? -.085 : .085;
         hip.set(centerX + c * dx, hipY, centerZ - s * dx);
         ankle.set(f.x, f.y + .075, f.z);
-        bend.set(s, 0, c);
+        // A horizontal pole cannot flip through the hip–ankle axis as the shell tilts.
+        // Aim slightly inward beneath the cloth, with a persistent forward component.
+        const inward = x * .5 - ((f.x - body.x) * c - (f.z - body.z) * s);
+        bend.set(c * inward + s * .16, 0, -s * inward + c * .16);
         solveKnee(hip, ankle, bend, knee, work);
         bone(p.thigh, hip, knee); bone(p.shin, knee, ankle);
         p.knee.position.copy(knee); p.knee.rotation.y = body.yaw;

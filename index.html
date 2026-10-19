@@ -580,6 +580,8 @@
   </ul>
   <form method="dialog" class="sheet-actions">
     <button id="howto-practice" type="button" class="btn btn-secondary"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 10 7-10 7Z"/></svg>Fes la pràctica</button>
+    <!-- the selected figure's whole dance, played by itself, nothing scored (src/ui/watch-ui.js) -->
+    <button id="howto-watch" type="button" class="btn btn-secondary"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>Veure un ball de demostració</button>
   </form>
   </div>
 </dialog>
@@ -624,14 +626,26 @@
   </section>
   </div>
 </dialog>
+<!-- The dance demo: a label, not a button (flat, a gold strip), and its end sheet (src/ui/watch-ui.js) -->
+<p id="watch-tag" class="watch-tag" role="status" hidden><b>DEMOSTRACIÓ</b><span id="watch-song"></span></p>
+<dialog id="watch-menu" class="sheet" tabindex="-1" aria-labelledby="watch-title" aria-describedby="watch-text">
+  <button id="watch-close" type="button" class="sheet-x" aria-label="Tanca"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  <h2 id="watch-title">Ara et toca a tu!</h2>
+  <p id="watch-text"></p>
+  <div class="sheet-actions">
+    <button id="watch-play" type="button" class="btn btn-primary">Juga-hi</button>
+    <button id="watch-again" type="button" class="btn btn-secondary"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10a9 9 0 1 1 2 9M3 4v6h6"/></svg>Torna a mirar</button>
+    <button id="watch-figures" type="button" class="btn btn-link">Canvia de figura</button>
+  </div>
+</dialog>
 <button id="pause" hidden aria-label="Pausa" title="Pausa (Esc)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg></button>
 <dialog id="pause-menu" class="sheet" tabindex="-1" aria-labelledby="pause-title">
   <section id="pause-options">
     <h2 id="pause-title">Pausa</h2>
-    <p>Agafa aire. El ball t’espera.</p>
+    <p id="pause-text">Agafa aire. El ball t’espera.</p>
     <div class="sheet-actions">
       <button id="resume" class="btn btn-primary"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 10 7-10 7Z"/></svg>Continua</button>
-      <button id="restart" class="btn btn-secondary"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10a9 9 0 1 1 2 9M3 4v6h6"/></svg>Reinicia</button>
+      <button id="restart" class="btn btn-secondary"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10a9 9 0 1 1 2 9M3 4v6h6"/></svg><span id="restart-label">Reinicia</span></button>
       <button id="pause-sync" class="btn btn-secondary"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 21h8l-3-17h-2zM12 14l6-7"/></svg>Ajusta la sincronia</button>
       <button id="exit" class="btn btn-secondary"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4H4v16h6M14 8l4 4-4 4M8 12h12"/></svg>Torna al menú</button>
     </div>

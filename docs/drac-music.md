@@ -34,7 +34,8 @@ cases: it carries the tempo map and the melody. With `austera` no drum doubles t
 
 ## The form
 
-The score's own order, with the D.S. played through bar 51 and E's last phrase once more before the coda:
+The score's own order, with the D.S. played through bar 51, then the coda. Its last note is held past its written
+length, over the closing roll, until the dance settles:
 
 | Part | Bars | Beats | Label |
 | --- | --- | --- | --- |
@@ -44,12 +45,17 @@ The score's own order, with the D.S. played through bar 51 and E's last phrase o
 | B, C, D, E | 9-15, 16-23, 24-39, 40-51 | 42-128 | B, C, D, E |
 | D.S. | 6, 7, 9-15 | 128-146 | A3, B3 |
 | D.S. | 16-23, 24-39 | 146-194 | C3, D3 |
-| D.S. | 40-51, then 48-51 again | 194-226 | E3 (item `t09`: the repeat) |
-| Coda | 52-56 | 226-235 | coda, roll at 231, final hit 235 |
+| D.S. | 40-51 | 194-218 | E3 |
+| Coda | 52-56 | 218-233 | coda; the last C from 222, held 11 beats (written 5); roll 225-233, final hit 233 |
 
-235 beats from the start of the count-in to the final hit, 224 from the pickup. The last C rings 7 beats as before,
-the hold (bar 21, first C), both GLOBUS (124-128 and the closing roll 231-235), the finale rule (at the roll) and the
+233 beats from the start of the count-in to the final hit, 222 from the pickup. The last C is held 6 beats past its
+written 5 and rings 2 more past the hit (`noteDurations`: 13). The closing roll and its GLOBUS last 8 beats (were 4),
+the finale (FINAL ESBOJARRAT) starts with the roll. The hold (bar 21, first C), the mid-song GLOBUS (124-128) and the
 12-beat count-in are unchanged.
+
+Round 1 (2026-10-19 morning) played E's last phrase (48-51) twice before the coda (item `t09`) to fill 8 beats the
+tracked pulse counted in the recording. Marc knows the dance and said the original has no such repeat. It is gone; the
+recording's late seconds go to the held last note instead (below, point 5).
 
 ### Why this form
 
@@ -70,20 +76,29 @@ Evidence, all from `audio-analysis.wav` of the research dossier (scripts and dum
    was compared with the tracked beat count there. The trial form (D.S. through 51) agrees within 2.4 beats at all 12
    landmarks up to 98 s. The alternatives drift: D.S. only to bar 18 (the old game form) by up to 33 beats, D.S. from
    bar 1 by up to 13, an extra D3 phrase by up to 11.
-4. The late discrepancy. The pulse reaches about 236 beats at 104.8 s. The trial form's final hit (beat 227) would
-   fall near 101.2 s, while the dance spins until 104 s, settles at 104-104.8 s and the recording keeps its pitched
-   energy and onsets past 104.8 s. One more 4-bar phrase (8 beats) puts the final hit at 104.67 s, inside the settle.
-   The old "coda 2.5 s early" compared the trial's tempo with a DTW whose end was forced to 103 s; against the tracked
-   pulse the trial's coda (beat 218) comes 0.65 s early, and its form ends 8 beats short.
-5. Which phrase. A DTW on the late segment only (from E3's first bar at 87.96 s to an open end at 100-106.5 s):
-   trial 0.6248, the same with the final note held 8 beats longer 0.6251, plus 4 beats of coda 0.6193, any added
-   8-beat phrase 0.6125-0.6168 (E3 middle again 0.6125, E3 last again 0.6145, coda 52-53 twice more 0.6152). Control
-   phrases that make no musical sense score the same or better (a D phrase 0.5984, a C phrase 0.6070). So the analysis
-   supports 8 more beats of melody and cannot tell which 8. E's last phrase (48-51) once more is a musical choice: it
-   repeats a phrase whose joins already exist in the score (51 to 48 is 47 to 48; 51 to 52 is the coda's own entry).
+4. The late tempo is a real 150, not a subdivision (round 2, `r2/analysis/late2.py`). In 4 s windows from 88 to
+   98 s the onset autocorrelation of every band peaks at 150-152 BPM and at its half, 74-76 BPM (the bar), the low
+   40-250 Hz drum band included (75.4 at 0.24, 149.8 at 0.20 for 90-94 s). A true 125 BPM beat counted twice would
+   show 125 / 62.5 there; it does not. The chroma DTW of the score's own order from D3's last phrase (beat 186,
+   84.36 s) agrees: bars 42 to 51 take 7.20 s for 18 beats (150 BPM), the tracker 7.18 s.
+5. The dossier's late anchors (coda 99.50 s, roll 101.94 s) came from chroma binned at A440 with the recording 0.45
+   semitone sharp. To reach them E3 would have to run at about 125-135 BPM, against point 4. Rejected. With the pulse,
+   the score's order reaches the coda (beat 218) at 97.66 s and the last note (bar 54) at about 99.3 s. After about
+   98.5-99 s no band has a stable period (peaks of 0.07-0.15 wandering between 94 and 191 BPM), the chroma shows no
+   melody line, and the level stays at -24 to -26 dB until about 106.5 s (it drops at 107). The open-end DTW of the
+   score's order has two minima, the hit at 99.45 s (0.6032, the band still at 150) or at 104.5-105 s (0.6064-0.6075):
+   it cannot tell a held note from no music. So something with no pulse and no new melody fills about 99.3-104 s
+   while the dance spins six times and settles: read here as the last note held over a roll, a fermata. Round 1's
+   reading (8 more beats of melody: any 4-bar phrase scored 0.6125-0.6168, control phrases the same or better) gave no
+   evidence for a particular phrase either.
+6. The ending, three ways (dev mp3s, below): A, the last C held 6 more beats over an 8-beat roll with a rit. to 117,
+   hit at ref 104.236 s (in the game); B, no added beats, the whole gap taken by the tempo: 151.5 at the coda to 45
+   at the hit (smoothstep), hit at ref 104.17 s, the last beats about 1.3 s each; C, round 1's repeated phrase. B
+   slows the music to a crawl under the fastest spins of the dance; A keeps the measured 150 through every spin and
+   only broadens over the held note.
 
-Marc's ear must confirm the long D.S., and which four bars the xeremiers add before the coda. The analysis also
-leaves open a fermata or a longer roll in the coda.
+Marc's ear must confirm the long D.S. and the ending: the held last note over the roll, how long, and whether the
+band broadens into the hit.
 
 ## Tempo knots
 
@@ -101,15 +116,16 @@ fitted so the song's beats from bar 1 (beat 12) to beat 219 (98.5 s) land on the
 | 186 | `t05` (D3's last phrase) | 126.3 |
 | 194 | `t06` (E3) | 139.8 |
 | 202 | `t07` | 150.0 |
-| 218 | `t09` | 151.5 |
-| 226 | `s20` (coda) | 151.5 (authored) |
-| 230 | `s21` (long note) | 138.0 (authored, the trial's rit.) |
+| 218 | `s20` (coda) | 151.5 |
+| 222 | `s21` (the last C) | 150.0 (authored) |
+| 233 | `s21` + 11 (the final hit) | 117.0 (authored: the rit. under the held note) |
 
 The first two rows hold the count-in at bar 1's fitted tempo; the fit cannot see before the pickup. Range 117.0-151.5
 BPM. The largest step is 2.5 BPM a beat at the jump into the final spins (the tracker shows the band going from about
-128 to 140 between 85.8 and 86.7 s) and 5.0 in the coda's rit. Against the raw tracked beats the music is off by
-23 ms rms, 68 ms at worst (beat 157). Count-in plus pickup: the pickup note at 5.741 s (it was 5.338 s at 126 BPM).
-The final hit is at 110.318 s, the generated files last 113.818 s.
+128 to 140 between 85.8 and 86.7 s) and 4.5 in the rit. under the held note. Beats 0-218 are the round-1 fit,
+unchanged (removing the repeat left E3 on the same beats). Against the raw tracked beats the music is off by 23 ms rms,
+68 ms at worst (beat 157). Count-in plus pickup: the pickup note at 5.741 s (it was 5.338 s at 126 BPM). The final hit
+is at 109.889 s, the generated files last 113.389 s.
 
 Before this, the game used a hand curve (126, 148 from the D.S., 135 in the coda), and the trial a curve of 121-151
 read off coarse onset windows.
@@ -118,10 +134,11 @@ read off coarse onset windows.
 
 `reference` in the form: `end: 104.8` and one anchor per sequence item's start (the smoothed tracked pulse there),
 plus the video's first frame (beat 10.887, the count-in tempo before the pickup), the pickup (beat 11 at 0.058 s, the
-dossier's value), the final hit and the settle (beat 235.306 at 104.8 s). Items `t09`, `s20`, `s21`, the hit and the
-settle are past the measured pulse: they keep the music's own clock from `t08` (authored).
+dossier's value), the final hit and the settle (beat 234.1, `s21` + 12.1, at 104.8 s). `s20` (the coda) is the
+tracked beat 218 (97.663 s, the last measured anchor); `s21`, the hit and the settle are past the measured pulse:
+they keep the music's own clock from `s20` (authored).
 
-`src/song-drac.json` gets `ref: [[songSec, refSec], ...]` (34 anchors, rising in both, song seconds to 4 decimals) and
+`src/song-drac.json` gets `ref: [[songSec, refSec], ...]` (33 anchors, rising in both, song seconds to 4 decimals) and
 `refEnd: 104.8`. The compiler (`src/music-form/compile.js`) computes the same in `ref`, `refEnd` and `refAnchors`
 (`[[beat, refSec]]`); the generator asserts that its own clock gives the same song seconds.
 
@@ -156,11 +173,10 @@ anchor, so this is what it absorbs:
 | t06 (E3) | 93.633 | 87.975 | +0.015 |
 | t07 | 96.948 | 91.294 | +0.011 |
 | t08 | 100.142 | 94.490 | +0.009 |
-| t09 (repeat, authored) | 103.316 | 97.665 | +0.008 |
-| s20 (coda, authored) | 106.484 | 100.833 | +0.008 |
-| s21 (authored) | 108.144 | 102.493 | +0.008 |
-| final hit (authored) | 110.318 | 104.667 | +0.008 |
-| settle (authored) | 110.451 | 104.800 | +0.008 |
+| s20 (coda) | 103.316 | 97.663 | +0.010 |
+| s21 (the last C, authored) | 104.908 | 99.255 | +0.010 |
+| final hit (authored) | 109.889 | 104.236 | +0.010 |
+| settle (authored) | 110.453 | 104.800 | +0.010 |
 
 Every other item is within 0.037 s (`tests/drac-time.mjs` asserts < 0.1 s at all of them).
 
@@ -182,8 +198,8 @@ are expected:
 | quickening turns | 86.4 | 92.057 | 190.39 | -0.172 |
 | brake | 93.8 | 99.452 | 208.27 | -0.107 |
 | six turns CW | 94.8 | 100.452 | 210.78 | +0.088 |
-| settle | 104 | 109.651 | 233.47 | -0.203 |
-| end | 104.8 | 110.451 | 235.31 | -0.133 |
+| settle | 104 | 109.653 | 232.54 | +0.236 (the final hit, 233) |
+| end | 104.8 | 110.453 | 234.10 | -0.564 (the final hit, 233) |
 
 The audited foot placements (`VERIFIED` in `src/dev/drac-compare/phrases.js`): 32 of 40 arrival windows contain a beat
 of the song, none is more than 0.224 s from one. The first walk (0-16 s) steps once a beat, the strides at 29-32 s and
@@ -193,29 +209,67 @@ of the song, none is more than 0.224 s from one. The first walk (0-16 s) steps o
 ## Observed, measured, authored
 
 - Observed (the audit of the video): the dance's phrases and foot placements, in reference seconds.
-- Measured (audio analysis, no listening): the tuning, the pulse to 98.5 s, the phrase positions (chroma DTW), the
-  beat counts that chose the form, the tempo the knots are fitted to.
-- Inferred: the long D.S. (supported by both measures), that 8 beats are missing late (beat count).
-- Authored: which 8 beats (E's last phrase again), the coda's tempo (hold 151.5, rit. to 138), the map past 98.5 s,
-  the count-in tempo, the pickup's 0.058 s, the arrangements and their timbres.
+- Measured (audio analysis, no listening): the tuning, the pulse to 98.5 s (150 BPM late, the bar at 75), the phrase
+  positions (chroma DTW), the beat counts that chose the form, the tempo the knots are fitted to, that no band keeps
+  a pulse after about 99 s while the level holds until about 106.5 s.
+- Inferred: the long D.S. (supported by both measures), that the time between the last note's entry (about 99.3 s)
+  and the settle has no new melody.
+- Authored: the held last note (6 beats past its written 5) and its 8-beat roll, the rit. to 117, the map past
+  97.66 s, the count-in tempo, the pickup's 0.058 s, the arrangements and their timbres.
+- Marc (2026-10-19): no repeated phrase before the coda; more GUAPA on DIFÍCIL.
+
+## DIFÍCIL GUAPAs (round 2)
+
+Marc asked for more GUAPA (both buttons; the Drac's word is CREMA) on DIFÍCIL, where there already are some. The
+chart format has one GUAPA flag per note on every level that has the note, so a DIFÍCIL-only GUAPA has to be a
+DIFÍCIL-only (level 2) note. `tools/build_drac.py` (`HARD_BIG`): from the D.S. on, in every phrase item that opens on
+a GUAPA, the eighth falling from the phrase's highest note is a GUAPA too, when it is a level-2 eighth:
+
+| Beat | Item, label | Note (sounding) | Its peak |
+| --- | --- | --- | --- |
+| 131.5 | `s16`, A3 (bars 6-7) | A4, an eighth | B4 at 131 |
+| 149.5 | `s19`, C3 (bars 16-18) | B4 | D5 at 149 |
+| 199.5 | `t06`, E3 (bars 40-43) | B4 | D5 at 199 |
+| 219.5 | `s20`, coda (bars 52-53) | B4 | C5 at 219 |
+
+D3's first phrase (`t02`) opens on a GUAPA too, but the note after its peak is a NORMAL note: no DIFÍCIL-only
+eighth there. GUAPAs per level: before 13 / 13 / 13 (one of them on the removed repeat's first note), now
+12 / 12 / 16, inside the 10-16 a level that check.mjs and tests/drac.mjs ask for. Notes per level: 110 / 207 / 288 before,
+106 / 199 / 276 now (the repeat's 8 beats are gone). The audio does not change with them: no crash or taiko is added
+for a DIFÍCIL-only note. A GUAPA on a FÀCIL or NORMAL note but only on DIFÍCIL (on a downbeat, say) would need the
+chart format to carry the level from which a note is a GUAPA (`game/chart.js`, `makeDanceChart`).
+
+## Dev auditions (round 2)
+
+Outside the repo, in `~/.local/share/drac-integration-20261019/music/r2/` (festiva, 160 kbit/s; the analysis scripts
+and dumps in `analysis/`):
+
+- `A-integrated-held-final-note.mp3`: the game's, the same bytes as `public/music/drac-taiko.mp3`.
+- `B-tempo-only-ritardando.mp3`: no added beats, the coda slows from 151.5 to 45 (hit at ref 104.17 s).
+- `C-old-with-repeat.mp3`: round 1, E's last phrase twice (the same bytes as round 1's game file).
+
+## Marc's choice (round 2)
+
+Marc listened to A in the game and accepted it (2026-10-19): "la música de la versió A em va bé, és la bona". A is
+the game's song; B and C stay as dev auditions only.
 
 ## Open points for Marc's ear
 
-- The D.S. through bar 51, and the four bars before the coda: E's last phrase again, its middle phrase, the coda's
-  52-53 twice more, or a held note or roll.
-- The final bars: whether the band slows into the last note (authored rit.), and where the final hit falls in the
-  settle.
+- The D.S. through bar 51 (measured, never heard).
+- The ending: the last C held over the roll (about 5 s from its entry to the hit), the band broadening into the hit
+  (rit. 150 to 117), and where the hit falls in the settle (ref 104.24 s). Or B's slower coda, or a shorter hold.
 - The jump to the final spins: the fit ramps from 126 to 151 over E3's first bars (2.5 BPM a beat at most).
+- The four DIFÍCIL-only GUAPAs, on the falling eighth after each peak.
 - Festiva or austera, and whether either timbre is acceptable.
 
 ## Hashes (sha256, first 16)
 
-| File | Before | After |
-| --- | --- | --- |
-| `drac-taiko.mp3` | `12dc07e90d3b1160` | `9510cfd5b9c81946` (`?v=9ad84924bc`) |
-| `drac-taiko.mid` | `bb1626b4c33e0d4f` | `b21115ad14355d90` |
-| `drac-taiko-ambient.mp3` | `de9501e6384eb33e` | unchanged (`?v=2daa666987`) |
-| Mulassa (5 files) | | unchanged |
+| File | Before round 1 | Round 1 | Round 2 |
+| --- | --- | --- | --- |
+| `drac-taiko.mp3` | `12dc07e90d3b1160` | `9510cfd5b9c81946` | `df5ac41aa4b174ac` (`?v=4c459a108f`) |
+| `drac-taiko.mid` | `bb1626b4c33e0d4f` | `b21115ad14355d90` | `be31b7d6e460c0f4` |
+| `drac-taiko-ambient.mp3` | `de9501e6384eb33e` | unchanged | unchanged (`?v=2daa666987`) |
+| Mulassa (5 files) | | unchanged | unchanged |
 
 The menu ambience keeps its own 126 BPM (`AMB_BPM`), so it is byte-identical. The austera candidate
-`tmp/audio/drac-taiko-austera.mp3` is `5bcfac15c2e0fe7e`.
+`tmp/audio/drac-taiko-austera.mp3` is `3ab08ac92a2dfabf`.

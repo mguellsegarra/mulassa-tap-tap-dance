@@ -9,12 +9,23 @@ export async function checkPendingCards() {
   const rows = [], failures = [];
   for (const card of document.querySelectorAll('.sel-card.aviat[data-id]')) {
     card.click();
+    // The contact card uses the final dock position; compare painted bounds once its drop finishes.
+    await Promise.all($('#select-bottom').getAnimations().map(a => a.finished.catch(() => {})));
     const entry = { id: card.dataset.id, box: box(panel), button: box($('#aviat-write')), links: box($('.sel-pending-links')) };
     const first = rows[0] ?? entry;
     for (const key of ['box', 'button', 'links']) {
       if (entry[key].some((v, i) => Math.abs(v - first[key][i]) > 1)) failures.push(`${entry.id}: ${key} moved`);
     }
     if (panel.scrollHeight > panel.clientHeight + 1) failures.push(`${entry.id}: internal overflow`);
+    if (innerHeight > 500 && !$('#select').hasAttribute('data-header-inline')) {
+      const p = panel.getBoundingClientRect(), towns = $('.sel-towns').getBoundingClientRect();
+      const nav = $('#select-nav'), navBox = nav.getBoundingClientRect();
+      const cards = [...$('#select-strip').children].filter(el => !el.hidden && el.offsetHeight);
+      const bottom = navBox.height && getComputedStyle(nav).visibility !== 'hidden'
+        ? navBox.top : Math.min(...cards.map(el => el.getBoundingClientRect().top));
+      entry.bandMargins = [p.top - towns.bottom, bottom - p.bottom];
+      if (Math.abs(entry.bandMargins[0] - entry.bandMargins[1]) > 1) failures.push(`${entry.id}: not centred in available band`);
+    }
     const ink = el => {
       const range = document.createRange(); range.selectNodeContents(el);
       return [...range.getClientRects()].filter(r => r.width && r.height);

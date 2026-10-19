@@ -18,7 +18,7 @@ import { orbit, pnow } from '../scene/cameras.js';
 for (const ev of ['touchend', 'click', 'keydown']) addEventListener(ev, () => { if (!G.paused && pageActive()) chip?.wake(); }, { passive: true });
 addEventListener('keydown', e => {
   if (photoKey(e, viewMode && menuState() && !sheetUp())) { syncAvatars(); return; } // (Tab may have switched figures)
-  if (e.repeat || sheets.sync.open || privacyMenu.open || sheets.board.open || sheets.share.open || sheets.feedback.open) return; // «Bústia de la plaça» is typed into; the sync sheet takes its own keys; Privadesa is read, not played; Classificacions types an alias; Comparteix has its own buttons
+  if (e.repeat || sheets.sync.open || privacyMenu.open || sheets.board.open || sheets.share.open || sheets.feedback.open || sheets.watch?.open) return; // «Bústia de la plaça» is typed into; the sync sheet takes its own keys; Privadesa is read, not played; Classificacions types an alias; Comparteix has its own buttons
   if (G.state === 'play' && e.code === 'Escape') {
     if (!pauseMenu.open) { e.preventDefault(); togglePause(); }
     return;
@@ -42,7 +42,7 @@ addEventListener('keydown', e => {
     if (e.code === 'Space' || e.code === 'Enter') { chip.sfx('menu'); openSelect(); }
   } else if (G.state === 'play') {
     if (dir) press(dir, e);
-    if (e.code === 'Space') press('P', e);
+    if (e.code === 'Space') { if (G.watch) togglePause(); else press('P', e); } // the dance demo: Space pauses, as a video
     if (e.code === 'KeyP') togglePause();
   } else if (G.state === 'results' && clock - G.resT > 1 && (e.code === 'Space' || e.code === 'Enter')) toTitle();
 });

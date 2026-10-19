@@ -25,7 +25,7 @@ const drop = (f, ids) => {
   assert(!tl.arrangement.some(([, l]) => l === 'D3'));
   assert.equal(item(tl, 't06')[0][2], item(base, 't06')[0][2] - 32);
   assert.deepEqual(tl.tempo.beatUs.length, Math.floor(tl.end) + 8, 'the tempo map covers the shorter song');
-  assert.deepEqual(tl.tempo.knots.at(-1), [base.tempo.knots.at(-1)[0] - 32, 138], 'knots anchored to items move with them');
+  assert.deepEqual(tl.tempo.knots.at(-1), [base.tempo.knots.at(-1)[0] - 32, 117], 'knots anchored to items move with them');
   assert.deepEqual(tl.refAnchors.at(-1), [base.refAnchors.at(-1)[0] - 32, 104.8], 'reference anchors move with their items');
   // anchored to a removed item: an error, never moved
   const knots = edit(f => drop(f, D3));
@@ -56,9 +56,9 @@ const drop = (f, ids) => {
   const flat = edit(f => { f.tempo.knots = [{ at: { beat: 0 }, bpm: 120 }]; });
   assert(flat.tempo.beatUs.every(u => u === 500000));
   assert.equal(flat.beats[10], 0.1 + 5);
-  const slower = edit(f => { f.tempo.knots.at(-1).bpm = 120; });
+  const slower = edit(f => { f.tempo.knots.at(-1).bpm = 100; });
   const first = slower.tempo.beatUs.findIndex((u, k) => u !== base.tempo.beatUs[k]);
-  assert(first >= 226, `only the coda's rit. changes (first different beat ${first})`);
+  assert(first >= 222, `only the rit. under the held last note changes (first different beat ${first})`);
   assert(slower.ref.at(-1)[0] > base.ref.at(-1)[0] && slower.ref[20][0] === base.ref[20][0], 'the reference map follows the new clock');
   for (const tl of [base, slower, flat]) tl.beats.forEach((t, b) => b && assert(Math.abs(t - tl.beats[b - 1] - tl.tempo.beatUs[b - 1] / 1e6) < 1e-12, `beat ${b}`));
 }
@@ -75,7 +75,7 @@ const drop = (f, ids) => {
   const short = edit(f => { f.reference.end = 110; });
   assert.deepEqual(short.unresolved.map(u => u.path), ['reference.end']);
   const far = edit(f => { f.reference.anchors.at(-1).at = { beat: 400 }; });
-  assert.deepEqual(far.unresolved.map(u => u.path), ['reference.anchors[33].at', 'reference.end'], 'the last anchor dropped: nothing sits on end');
+  assert.deepEqual(far.unresolved.map(u => u.path), ['reference.anchors[32].at', 'reference.end'], 'the last anchor dropped: nothing sits on end');
   const none = edit(f => { delete f.reference; });
   assert.deepEqual([none.unresolved, none.ref, none.refEnd], [[], [], null], 'a form without a reference has no map');
 }

@@ -147,7 +147,15 @@ function make(smoke = 128, embers = 256, wheels = 0) {
   assert(st.embers > e0 && st.embers >= 0.8 * 256, `a big burst of sparks: the pool nearly full (${st.embers})`);
   assert.equal(m.sounds.at(-1)[0], 'tro');
   assert(m.fx.state().level > 1, 'and the flames roar');
-  m.fx.end(); m.step(1 / 60); assert(!m.fx.objects.petards.visible, 'unloaded after the window');
+  // after the window they shrink back into the mouths (Marc: popping out in one frame looked odd), gone in tracaOut s
+  const size = () => { const M4 = new THREE.Matrix4(), P = new THREE.Vector3(), Q = new THREE.Quaternion(), S = new THREE.Vector3(); m.fx.objects.petards.getMatrixAt(0, M4); M4.decompose(P, Q, S); return S.x; };
+  m.run(DRAC_FX.tracaBack + 0.05); // (the TRO fired all five: let them grow back first)
+  m.fx.end(); m.step(1 / 60); const s1 = size();
+  assert(m.fx.objects.petards.visible && s1 > 0.5, `still there just after the window, shrinking (${s1.toFixed(2)})`);
+  m.run(DRAC_FX.tracaOut / 2); assert(size() < s1 && size() > 0.001, 'smaller half way');
+  m.run(DRAC_FX.tracaOut / 2 + 0.05); assert(!m.fx.objects.petards.visible, 'unloaded after the window');
+  m.fx.begin(); m.step(1 / 60); assert(m.fx.objects.petards.visible && size() < 0.1, `a new traca grows them out of the mouths (${size().toFixed(3)})`);
+  m.fx.end(); m.run(1);
   m.fx.begin(); assert.equal(m.fx.finish(need - 1, need), false, 'too few taps: no TRO');
   assert.equal(m.fx.finish(need * 2, need), true, 'a second window can earn one TRO, even with multiple targets');
 }

@@ -136,6 +136,14 @@ const counts = DIFFS.map((d, i) => {
   return c.length;
 });
 assert(counts[0] < counts[1] && counts[1] < counts[2], `each level adds notes: ${counts}`);
+// DIFÍCIL doubles more (Marc, 2026-10-19): from the D.S. on, in the phrases that open on a GUAPA (A3, C3, E3, the coda),
+// the eighth falling from the phrase's peak is a GUAPA too. A DIFÍCIL-only note, so FÀCIL and NORMAL keep the shared ones.
+const bigBeats = i => makeDanceChart(song, i).filter(n => n.big).map(n => Math.round(beat(n.t) * 1000) / 1000);
+assert.deepEqual(bigBeats(1), bigBeats(0), 'NORMAL has FÀCIL\'s GUAPAs');
+const added = bigBeats(2).filter(b => !bigBeats(0).includes(b));
+assert.deepEqual(added, [131.5, 149.5, 199.5, 219.5], 'four DIFÍCIL-only GUAPAs');
+for (const b of added) assert(song.notes.some(([t, , lv, big]) => lv === 2 && big && Math.abs(beat(t) - b) < 1e-3)
+  && bigBeats(0).some(g => g < b && b - g < 8), `the GUAPA at ${b}: a DIFÍCIL note, in a phrase that opens on a GUAPA`);
 // At the top tempo (151.5), half a beat stays at least 30 / 151.5 seconds apart (the Mulassa's DIFÍCIL eighths at 152).
 assert(closest > 30 / Math.max(...KNOTS.map(([, t]) => t)) - 1e-3, `two notes ${closest.toFixed(3)} s apart`);
 

@@ -92,6 +92,14 @@ button svg { width: 22px; height: 22px; flex: none; fill: none; stroke: currentC
 #pause-menu h2 { font-size: 32px; }
 #pause-menu p { margin: 0 0 20px; text-align: center; font-size: 16px; }
 #pause-menu .sheet-actions { margin-top: 0; }
+/* The demo (Com es juga → «Veure un ball de demostració»): what is playing. A label (flat, a gold strip), top left, clear of #pause */
+.watch-tag { position: fixed; z-index: 3; top: calc(18px + env(safe-area-inset-top)); left: env(safe-area-inset-left); margin: 0; display: grid; padding: 6px 14px 7px 12px; border-left: 4px solid #f5c518; border-radius: 0 8px 8px 0; background: #2a1a10e0; color: #fff3d6; font: 600 13px/1.25 'Baloo 2', system-ui, sans-serif; pointer-events: none; }
+.watch-tag b { font-weight: 800; letter-spacing: .08em; }
+@media (min-width: 900px) and (min-height: 600px) { .watch-tag { padding: 8px 18px 9px 14px; font-size: 15px; } }
+#watch-menu { width: min(360px, calc(100vw - 48px)); padding: 24px; text-align: center; }
+#watch-menu h2 { margin-bottom: 6px; color: #f5c518; } /* a celebration: gold as text */
+#watch-menu p { margin: 0 0 18px; color: #e8d8b8; font-size: 16px; text-wrap: balance; }
+#watch-menu .sheet-actions { margin-top: 0; }
 /* Title: one small "how to play" pill under JUGA; the key lives in a sheet it opens.
    main.js (titleLayoutNow, src/hud/title-layout.js) sets its top inline from the canvas layout, and the iPhone hint's;
    the bottom values here are only the first frame's fallback. Corner mode (max-height: 500px) stays CSS-placed. */
@@ -160,6 +168,7 @@ button svg { width: 22px; height: 22px; flex: none; fill: none; stroke: currentC
 :is(.sheet, .sheet-body.fade, .feedback-scroll)::after { bottom: 0; margin-top: -30px; background: linear-gradient(#2a1a1000, #2a1a10 65%); }
 [data-more-up]::before, [data-more-down]::after { opacity: 1; }
 #howto-menu { width: min(400px, calc(100vw - 32px)); padding: 20px 20px 18px; }
+@media (max-width: 519px) and (max-height: 600px) { #howto-menu .sheet-actions { grid-template-columns: 1fr 1fr; gap: 8px; } #howto-menu .sheet-actions .btn { padding-inline: 8px; font-size: 15px; } #howto-menu .sheet-actions .btn > svg { display: none; } } /* small phones: the practice and the demo side by side, or the list would scroll */
 #controls-legend { margin: 12px 0 0; padding: 0; list-style: none; display: grid; gap: 6px; font: 700 14px/1.2 'Baloo 2', system-ui, sans-serif; }
 #controls-legend li { display: grid; grid-template-columns: 76px 1fr; align-items: center; gap: 12px; padding: 8px 10px; border-radius: 12px; background: #fff3d60a; }
 #controls-legend li > :first-child { justify-self: center; }
@@ -238,7 +247,7 @@ kbd { display: inline-block; min-width: 14px; padding: 0 4px; border: 1px solid 
   #sync-menu #sync-verdict { margin-bottom: 10px; }
   .btn { min-height: 44px; }
 }
-@media (max-height: 500px) { #howto { left: auto; right: calc(12px + env(safe-area-inset-right)); bottom: auto; top: calc(12px + env(safe-area-inset-top)); transform: none; } #howto:active { transform: translateY(1px); } #howto-menu { width: min(640px, calc(100vw - 32px)); padding: 14px 16px; } #howto-menu h2 { font-size: 24px; margin: 0; } #controls-legend { grid-template-columns: 1fr 1fr; margin-top: 8px; } #controls-legend li { padding: 5px 8px; } #howto-menu form { text-align: center; } #howto-menu .sheet-actions { grid-template-columns: repeat(2, minmax(0, 220px)); justify-content: center; margin-top: 10px; } } /* landscape phones: two columns so it fits without scrolling */
+@media (max-height: 500px) { #howto { left: auto; right: calc(12px + env(safe-area-inset-right)); bottom: auto; top: calc(12px + env(safe-area-inset-top)); transform: none; } #howto:active { transform: translateY(1px); } #howto-menu { width: min(640px, calc(100vw - 32px)); padding: 14px 16px; } #howto-menu h2 { font-size: 24px; margin: 0; } #controls-legend { grid-template-columns: 1fr 1fr; margin-top: 8px; } #controls-legend li { padding: 5px 8px; } #howto-menu form { text-align: center; } #howto-menu .sheet-actions { grid-template-columns: repeat(2, minmax(0, 270px)); justify-content: center; margin-top: 10px; } } /* landscape phones: two columns so it fits without scrolling */
 /* Privadesa: one sheet, one <section data-privacy="…"> per service (hosting/analytics, this device, rankings…) */
 .sheet-actions > .btn-link { justify-self: center; } /* a minor action under the stack, centred */
 #privacy-menu { width: min(440px, calc(100vw - 32px)); padding: 20px 20px 14px; }

@@ -14,6 +14,7 @@ export const DRAC_FX = {
   // and her (flareClear m either side); after the song it thins out over flareRamp s
   flareRamp: 10, flareRef: 93.8, flareNear: 1.5, flareFar: 10, flareClear: 2,
   tracaBefore: 0.6, tracaAfter: 0.8, tracaBack: 0.45, // petards on her fire points 0.6 s before its drumroll to 0.8 s after; a fired one is replaced in 0.45 s
+  tracaIn: 0.35, tracaOut: 0.3, // they grow out of the mouths and shrink back into them (s), never pop in or out
   // the rodes de foc (its confetti), one on each fire point: rad/s, arms, the tiny circle they turn on (m), spark speed m/s,
   // spark life s (+ up to wheelLife2 more), spark size m
   wheelSpin: 14, wheelArms: 2, wheelR: 0.06, wheelSpeed: 4.6, wheelLife: 0.45, wheelLife2: 0.35, wheelSize: 0.05, wheelTrail: 0.06, // (trail: s of flight a spark's streak shows)
@@ -156,12 +157,12 @@ export function createDracFx(scene, opts = {}) {
   petards.instanceMatrix.setUsage(THREE.DynamicDrawUsage); petards.frustumCulled = false; petards.visible = false;
   scene.add(petards);
   const pet = new Float32Array(PET).fill(1), kick = new Float32Array(PET); // each one's size (0 = just fired, growing back); its flame's kick (1 = just fired)
-  const T = { on: false, next: 0, fired: 0, last: -1, finished: false };
+  const T = { on: false, next: 0, fired: 0, last: -1, finished: false, show: 0 }; // show: the petards' grow in / out, 0..1
   const flash = Array.from({ length: FLASHES }, (_, i) => { const s = new THREE.Sprite(additive(i < PET ? '#ffd890' : '#fff4d0')); s.visible = false; scene.add(s); return s; });
   const fAge = new Float32Array(FLASHES).fill(99), fLife = new Float32Array(FLASHES).fill(0.15), fSize = new Float32Array(FLASHES).fill(1);
   function lightFlash(i, x, y, z, life, size) { flash[i].position.set(x, y, z); fAge[i] = 0; fLife[i] = life; fSize[i] = size; }
   function begin() { T.on = true; T.next = 0; T.finished = false; pet.fill(1); }
-  function end() { T.on = false; petards.visible = false; }
+  function end() { T.on = false; } // (they shrink back into the mouths: update)
   function fire(i, big) { // fire point i goes off: flash, sparks, a puff (the TRO: much more of each)
     nozzle(i); P.addScaledVector(D, 0.15);
     pet[i] = 0; kick[i] = 1; T.fired++; T.last = i;
@@ -279,12 +280,14 @@ export function createDracFx(scene, opts = {}) {
       }
     }
     // the traca's petards, riding on the fire points
-    petards.visible = T.on && !!nodes;
+    T.show = Math.max(0, Math.min(1, T.show + (T.on ? dt / DRAC_FX.tracaIn : -dt / DRAC_FX.tracaOut)));
+    petards.visible = T.show > 0 && !!nodes;
     if (petards.visible) {
+      const k = T.show * T.show * (3 - 2 * T.show); // eased: scaled about the nozzle, so it grows out of the mouth
       for (let i = 0; i < PET; i++) {
         pet[i] = Math.min(1, pet[i] + dt / DRAC_FX.tracaBack);
-        nozzle(i); P.addScaledVector(D, 0.24);
-        petards.setMatrixAt(i, MAT.compose(P, Q2, S.setScalar(Math.max(0.001, pet[i] * pet[i]))));
+        nozzle(i); P.addScaledVector(D, 0.24 * k);
+        petards.setMatrixAt(i, MAT.compose(P, Q2, S.setScalar(Math.max(0.001, k * pet[i] * pet[i]))));
       }
       petards.instanceMatrix.needsUpdate = true;
     }
@@ -355,7 +358,7 @@ export function createDracFx(scene, opts = {}) {
     if (n) { sparkMesh.instanceMatrix.needsUpdate = true; sparkMesh.instanceColor.needsUpdate = true; sparkA.needsUpdate = true; }
   }
   function clear() { // a hidden figure owns no lingering particles or emission debt
-    end(); F.cremaAge = 99;
+    end(); T.show = 0; petards.visible = false; F.cremaAge = 99;
     F.streak = F.flare = F.level = F.emitBurst = F.emitBreath = F.emitSprinkle = hazeOwed = sprinkle = 0;
     WH.until = F.t; WH.on = false; WH.n = 0; wEmit.fill(0);
     for (const p of puffs) p.live = false;

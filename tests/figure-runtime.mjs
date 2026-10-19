@@ -32,14 +32,14 @@ for (const target of [runtime.song.beats[0], runtime.song.beats[150], runtime.so
 }
 
 assert.notEqual(runtime.songTimeAtBeat(150) - runtime.songTimeAtBeat(149), runtime.songTimeAtBeat(12) - runtime.songTimeAtBeat(11));
-assert.deepEqual(runtime.song.balloons, [[124, 128], [231, 235]]); // the closing roll after the long D.S. (docs/drac-music.md)
+assert.deepEqual(runtime.song.balloons, [[124, 128], [225, 233]]); // the closing roll under the held last note (docs/drac-music.md)
 for (let diff = 0; diff < 3; diff++) {
   const chart = makeDanceChart(runtime.song, diff), balloons = chart.filter(n => n.balloon);
   assert.equal(balloons.length, 2);
   assert.equal(balloons[0].t, runtime.BEATS[124]);
   assert.equal(balloons[0].end, runtime.BEATS[128]);
-  assert.equal(balloons[1].t, runtime.BEATS[231]);
-  assert.equal(balloons[1].end, runtime.BEATS[235]);
+  assert.equal(balloons[1].t, runtime.BEATS[225]);
+  assert.equal(balloons[1].end, runtime.BEATS[233]);
   for (const n of chart) {
     assert(Number.isFinite(n.t) && Number.isFinite(n.phrase));
     if (n.end) assert(Number.isFinite(n.end) && n.end > n.t);

@@ -1,5 +1,5 @@
 /* The town row and bottom dock reserve their space; information scrolls within the free stage. */
-#select { --dock-h: 264px; --action-h: 52px; --card-label-h: 64px; --info-top: 142px; --u: 1px; position: fixed; z-index: 3; inset: 0; pointer-events: none; color: #fff3d6; font: 700 16px/1.25 'Baloo 2', system-ui, sans-serif; }
+#select { --dock-h: 264px; --action-h: 52px; --card-label-h: 64px; --info-top: 142px; --town-row-top: 84px; --u: 1px; position: fixed; z-index: 3; inset: 0; pointer-events: none; color: #fff3d6; font: 700 16px/1.25 'Baloo 2', system-ui, sans-serif; }
 #select[hidden], #select [hidden] { display: none; }
 #select > * { pointer-events: auto; }
 #select::before, #select::after { content: ''; position: absolute; inset-inline: 0; pointer-events: none; }
@@ -25,7 +25,7 @@
 
 
 /* A separate row until the complete town list fits between the corner controls with breathing room. */
-.sel-towns { --edge-l: max(16px, env(safe-area-inset-left)); --edge-r: max(16px, env(safe-area-inset-right)); position: absolute; z-index: 2; /* over the info's top padding, which reaches under the pills */ top: calc(84px + env(safe-area-inset-top)); inset-inline: 0; box-sizing: border-box; padding-inline: var(--edge-l) var(--edge-r); scroll-padding-inline: var(--edge-l) var(--edge-r); display: flex; justify-content: flex-start; /* under the corner icons, from the panel's edge */ align-items: center; gap: 7px; height: 44px; overflow-x: auto; scrollbar-width: none; touch-action: pan-x; }
+.sel-towns { --edge-l: max(16px, env(safe-area-inset-left)); --edge-r: max(16px, env(safe-area-inset-right)); position: absolute; z-index: 2; /* over the info's top padding, which reaches under the pills */ top: calc(var(--town-row-top) + env(safe-area-inset-top)); inset-inline: 0; box-sizing: border-box; padding-inline: var(--edge-l) var(--edge-r); scroll-padding-inline: var(--edge-l) var(--edge-r); display: flex; justify-content: flex-start; /* under the corner icons, from the panel's edge */ align-items: center; gap: 7px; height: 44px; overflow-x: auto; scrollbar-width: none; touch-action: pan-x; }
 .sel-towns::-webkit-scrollbar, .sel-strip::-webkit-scrollbar { display: none; }
 #select .sel-pill { min-width: 44px; flex: none; display: inline-flex; align-items: center; gap: 7px; width: auto; min-height: 44px; padding: 3px 13px; border: 1.5px solid #e8d8b880; border-radius: 999px; background: #140c07e6; color: #e8d8b8; font-size: 15px; touch-action: pan-x; }
 .sel-pill .escut { flex: none; width: 22px; height: 22px; margin: 0; /* not the .btn icon slot's offset: the arms sit with their name */ filter: drop-shadow(0 0 1px #fff3d699); }
@@ -42,6 +42,10 @@
 /* One radius scale: pills (tappable) 999 px · cards and panels 16 · information chips 8 (flat, no border: not buttons). */
 #select { --sel-r: 16px; --sel-chip-r: 8px; --sel-chip-bg: #1a110bd9; --sel-surface: #1a110beb; --sel-line: #fff3d61c; --sel-muted: #d2c0a0; }
 .sel-info { position: absolute; z-index: 1; top: calc(var(--info-top) + env(safe-area-inset-top)); left: calc(max(16px, env(safe-area-inset-left)) - 4px); /* its 4 px padding: the panel starts where the pills do */ width: min(400px, 36%); max-height: calc(100% - var(--info-top) - var(--dock-h) - 6px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); display: grid; gap: 10px; justify-items: start; overflow-y: auto; scrollbar-width: none; overscroll-behavior: contain; padding: 16px 4px 8px; margin-top: -14px; /* room inside the scroll box for the ?'s 44 px target over the name (top) and the position chip's (bottom); the margin keeps the name where it was */ box-sizing: border-box; }
+/* The transparent layout boxes leave exposed plaça to the HUD's orbit handlers.
+   Content still takes input (and can scroll the info), including every control. */
+#select > .sel-info { pointer-events: none; }
+.sel-info :is(.sel-name, .sel-entity, .sel-song, button, a, #ios-hint, #select-error) { pointer-events: auto; }
 .sel-panel { --sel-line: #fff3d630; /* hairlines on the shaded plaça, not a panel */ position: relative; box-sizing: border-box; width: 100%; display: grid; gap: 12px; }
 .sel-identity { display: grid; grid-template-columns: minmax(0, max-content) auto; justify-content: start; justify-items: start; gap: 10px 12px; min-width: 0; } /* the ? right after the name on every layout */
 .sel-identity .sel-entity { grid-column: 1 / -1; padding: 0; border-radius: 0; background: none; color: var(--sel-muted); font-size: 14px; font-weight: 600; text-shadow: 0 1px 3px #000c; } /* who carries her: a quiet line under the name, not a white pill competing with it */
@@ -50,6 +54,9 @@
 
 .sel-entity { display: inline-flex; align-items: center; gap: 7px; box-sizing: border-box; max-width: 100%; padding: 4px 10px; border-radius: 999px; background: #fff3d6; color: #2a1a10; font-size: 12px; font-weight: 700; line-height: 1.25; vertical-align: middle; }
 .sel-entity svg { flex: none; width: 14px; height: 22px; fill: #e73449; stroke: none; }
+/* Keep the original colours legible on the foil. The flame's path has a .1 transform. */
+.sel-pending .sel-entity svg:not(.escut):not(.pessigolla) path { stroke: #63202c; stroke-width: 160; paint-order: stroke fill; }
+.sel-pending .sel-entity svg.pessigolla path[fill] { stroke: #243044; stroke-width: 12; paint-order: stroke fill; }
 .sel-entity span { min-width: 0; }
 /* a shared figure names both entities, each with its mark (as on the cards): wraps between the parts, never inside one */
 .sel-entity:has(.sel-entity-part) { flex-wrap: wrap; justify-content: center; row-gap: 2px; }
@@ -169,10 +176,10 @@
 .sel-entity-icons > span { display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; }
 .sel-entity-icons svg { flex: none; width: 9px; height: 14px; fill: #e73449; stroke: none; }
 .sel-entity-icons svg.escut { width: 14px; height: 14px; }
-/* La Pessigolla's isotip keeps its shapes and red/blue; on the dark card, info line and pending pill its black jester would
-   vanish, so it takes the text's colour there */
+/* Keep the jester light on dark captions and the home attribution, dark on the pending foil. */
 #select :is(.sel-entity, .sel-entity-icons) svg.pessigolla { width: auto; height: 1em; aspect-ratio: 845 / 628; fill: initial; } /* Keep the mark centred with its label by the parent flex row. */
-#select :is(.sel-entity-icons, .sel-identity, .sel-pending) svg.pessigolla { --jester: currentColor; }
+#select :is(.sel-entity-icons, .sel-identity) svg.pessigolla { --jester: currentColor; }
+#select .sel-pending .sel-entity svg.pessigolla { --jester: #1b171c; }
 /* Selected: a cream ring over the whole card (drawn above the portrait) and a deeper shadow; never lifted, so every
    figure keeps the strip's one floor line. */
 .sel-card[aria-selected="true"] { box-shadow: 0 10px 22px #000a; }
@@ -215,7 +222,9 @@
 .sel-seg .sub svg { flex: none; width: 1em; height: 1em; margin: 0; stroke-width: 2.2; }
 
 body.view-mode #select { opacity: 0; visibility: hidden; pointer-events: none; }
-#select { transition: opacity .2s; }
+#select { transition: opacity .2s, visibility .2s, display .2s allow-discrete; }
+#select[hidden] { opacity: 0; }
+@starting-style { #select { opacity: 0; } }
 
 @media (max-width: 899px) and (min-height: 501px) {
   #select { --dock-h: 252px; --card-label-h: 64px; }
@@ -228,8 +237,8 @@ body.view-mode #select { opacity: 0; visibility: hidden; pointer-events: none; }
 
 @media (max-width: 519px) and (min-height: 501px) {
   /* one 14 px step between the groups: corner icons (bottom 54) → pills → the name (the info's 2 px padding included) */
-  #select { --info-top: 130px; --dock-h: 240px; --action-h: 48px; --ga: 6px; }
-  .sel-towns { top: calc(70px + env(safe-area-inset-top)); --edge-l: max(12px, env(safe-area-inset-left)); --edge-r: max(12px, env(safe-area-inset-right)); }
+  #select { --info-top: 130px; --town-row-top: 70px; --dock-h: 240px; --action-h: 48px; --ga: 6px; }
+  .sel-towns { --edge-l: max(12px, env(safe-area-inset-left)); --edge-r: max(12px, env(safe-area-inset-right)); }
   .sel-info { left: calc(max(12px, env(safe-area-inset-left)) - 4px); width: calc(100% - 16px); }
   .sel-bottom { --bl: 12px; --br: 12px; padding: 6px 12px calc(var(--ga) + 6px); }
   .sel-panel { gap: 10px; }
@@ -243,8 +252,7 @@ body.view-mode #select { opacity: 0; visibility: hidden; pointer-events: none; }
 }
 @media (max-height: 500px) {
   /* one 16 px step between the groups (icons → pills → name: the ? disc clears the pills), 10 inside the identity */
-  #select { --info-top: 130px; --dock-h: 262px; --action-h: 44px; --card-label-h: 64px; --ga: 6px; }
-  .sel-towns { top: calc(72px + env(safe-area-inset-top)); }
+  #select { --info-top: 130px; --town-row-top: 72px; --dock-h: 262px; --action-h: 44px; --card-label-h: 64px; --ga: 6px; }
   .sel-info { left: 12px; width: 40%; max-height: calc(100% - 128px); gap: 6px; }
   .sel-panel { gap: 10px; }
   .sel-name { font-size: 22px; }
@@ -383,13 +391,16 @@ body:has(:focus-visible) #select .sel-card[aria-selected="true"]:not(:focus-visi
 #select .sel-soon[aria-expanded="true"] .sel-fan { display: none; }
 /* All pending identities and the catalogue teaser occupy the same viewport-owned box.
    Only opacity changes on entry/exit; content never sizes or translates the box. */
-#select { --pending-top: calc(140px + env(safe-area-inset-top)); }
-#select .sel-info { transition: opacity .26s var(--sel-ease) .06s, display .32s allow-discrete; }
+#select { bottom: var(--app-gap, 0px); --pending-top: calc(var(--town-row-top) + 44px + 12px + env(safe-area-inset-top) + var(--fps-rail, 0px)); --pending-bottom: calc(var(--pending-rest-bottom, 254px) - var(--drop)); }
+#select .sel-info { transition: opacity .22s var(--sel-ease), display .22s allow-discrete; }
 #select .sel-pending { transform: none; transition: opacity .26s var(--sel-ease), display .32s allow-discrete; }
 #select :is(.sel-pending, .sel-info)[hidden] { opacity: 0; pointer-events: none; }
 #select .sel-pending[data-leaving][hidden] { transition-duration: .24s, .32s; }
-#select:has(.sel-pending[data-leaving][hidden]) .sel-info:not([hidden]) { transition-delay: .24s, 0s; }
-@starting-style { #select[data-shown] :is(.sel-pending, .sel-info) { opacity: 0; } }
+@starting-style {
+  #select .sel-info { opacity: 0; }
+  #select[data-shown] .sel-pending { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) { #select { transition: none; } }
 @media (prefers-reduced-motion: reduce) { #select :is(.sel-pending, .sel-info) { transition: none; } }
 .sel-pending { --contact-pad: 12px; --contact-gap: 10px; --pending-max: calc(100% - var(--pending-top) - var(--pending-bottom, 254px)); position: absolute; z-index: 1; top: calc((100% + var(--pending-top) - var(--pending-bottom, 254px)) / 2); left: 50%; translate: -50% -50%; width: min(480px, calc(100% - 28px)); height: min(360px, var(--pending-max)); box-sizing: border-box; display: grid; grid-template-rows: minmax(0, 1fr) 48px calc(44px + var(--contact-gap)); align-items: center; justify-items: center; gap: 0; padding: 3px 16px var(--contact-pad); border: 1px solid var(--sel-line); border-radius: var(--sel-r); text-align: center; background: #1a110bf5; box-shadow: 0 8px 24px #0005; font-size: 16px; font-weight: 500; line-height: 1.3; container-type: size; }
 .sel-pending-content { grid-row: 1; width: 100%; height: 100%; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: space-evenly; }
@@ -398,14 +409,10 @@ body:has(:focus-visible) #select .sel-card[aria-selected="true"]:not(:focus-visi
 .sel-pending h2 > span { display: block; width: 100%; }
 .sel-pending .sel-pending-icon { min-height: 0; width: min(180px, 100%); height: 48px; display: flex; justify-content: center; align-items: center; container-type: size; }
 .sel-pending-icon :is(svg, img) { width: 100%; height: 100%; min-height: 0; image-rendering: pixelated; }
-.sel-pending .sel-entity { max-width: 100%; box-sizing: border-box; font-size: 12px; line-height: 16px; min-height: 24px; row-gap: 0; background: #0b0704; color: #fff3d6; box-shadow: inset 0 0 0 1px #fff3d61f; }
+.sel-pending .sel-entity { max-width: 100%; box-sizing: border-box; font-size: 12px; line-height: 16px; min-height: 24px; row-gap: 0; background: linear-gradient(105deg, #ffb3c7, #ffe29a, #b8f0c8, #a8dcff, #d7b8ff, #ffb3c7) 0 0 / 300% 100%; color: #2a1a10; box-shadow: inset 0 0 0 1px #fff9, 0 0 4px #d7b8ff40; animation: sel-holo 6s linear infinite; }
 #select .sel-pending .sel-entity svg { width: auto; height: 16px; }
-/* The invitation's «Proposa-la» is the one chip that calls out: a holographic foil (pastel rainbow, a sheen sliding across
-   it); dark text keeps it readable on every hue. Reduced motion keeps the foil still. */
-.sel-pending .sel-entity[data-holo] { color: #2a1a10; background: linear-gradient(105deg, #ffb3c7, #ffe29a, #b8f0c8, #a8dcff, #d7b8ff, #ffb3c7) 0 0 / 300% 100%;
-  box-shadow: inset 0 0 0 1px #fff8, 0 0 12px #d7b8ff59; animation: sel-holo 6s linear infinite; }
 @keyframes sel-holo { to { background-position: 300% 0; } }
-@media (prefers-reduced-motion: reduce) { .sel-pending .sel-entity[data-holo] { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .sel-pending .sel-entity { animation: none; } }
 .sel-pending p { margin: 0; padding-block: 3px; text-wrap: balance; }
 .sel-pending .sel-pending-copy { display: contents; }
 .sel-pending-copy p + p { font-size: 14px; color: #e8d8b8; }
@@ -435,7 +442,6 @@ body:has(:focus-visible) #select .sel-card[aria-selected="true"]:not(:focus-visi
 @media (max-width: 519px) and (min-height: 780px) {
   .sel-pending { --contact-pad: 12px; --contact-gap: 10px; }
 }
-@media (max-width: 519px) { #select { --pending-top: calc(122px + env(safe-area-inset-top)); } }
 @media (max-height: 500px) {
   #select:is([data-pending], [data-fold]) .sel-towns { left: 43%; width: 57%; }
   .sel-pending { left: max(12px, env(safe-area-inset-left)); translate: 0 -50%; width: calc(43% - max(12px, env(safe-area-inset-left)) - 8px); top: calc((100% + 60px + env(safe-area-inset-top) - 8px - env(safe-area-inset-bottom)) / 2); height: calc(100% - 68px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); }
@@ -453,11 +459,6 @@ body:has(:focus-visible) #select .sel-card[aria-selected="true"]:not(:focus-visi
   .sel-pending :is(.sel-entity, .sel-pending-icon) { grid-row: 1; grid-column: 2; }
   .sel-pending-copy p { grid-column: 1 / -1; }
 
-}
-
-@media (max-width: 359px) and (max-height: 600px) {
-  /* Use the remaining header/arrow gutters: 4px above and 8px below, with full-width readable copy. */
-  .sel-pending { height: calc(min(360px, var(--pending-max)) + 8px); }
 }
 
 /* Narrow, short portrait windows: the full identity and 44 px contact targets take the room before optional art.

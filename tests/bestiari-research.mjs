@@ -69,6 +69,22 @@ for (const t of [17, 161, 33, 84]) motion.foot(t, 6);
 assert.deepEqual(motion.foot(144.84375, 6), footSeek, 'avoidance must not depend on playback history');
 const carrierScene = new THREE.Scene(), shell = buildMulassa(); carrierScene.add(shell.root);
 const carriers = createCarriers(carrierScene, motion);
+// Reported regressions: a permanent crouch, and knees flipping sides during a step.
+// Source stills show almost vertical shins at rest and at the raised rear around 110 s.
+const shinAxis = new THREE.Vector3();
+for (const t of [0, 1, 110, 166.2]) {
+  carriers.pose(t, motion.pose(t));
+  for (const p of (t === 110 ? carriers.parts.slice(4) : carriers.parts)) {
+    shinAxis.set(0, 1, 0).applyQuaternion(p.shin.quaternion);
+    assert(Math.abs(shinAxis.y) > Math.cos(20 * Math.PI / 180), `unnecessary resting crouch at ${t}`);
+  }
+}
+for (const t of [5.420833333333333, 73.35, 80.54166666666667]) {
+  carriers.pose(t - 1 / 480, motion.pose(t - 1 / 480));
+  const knees = carriers.parts.map(p => p.knee.position.clone());
+  carriers.pose(t + 1 / 480, motion.pose(t + 1 / 480));
+  for (let i = 0; i < 8; i++) assert(knees[i].distanceTo(carriers.parts[i].knee.position) < .05, `knee flips during a step at ${t}`);
+}
 const shellInverse = new THREE.Matrix4(), localVertex = new THREE.Vector3();
 const coveredParts = [...carriers.torsos, ...carriers.parts.flatMap(p => [p.thigh, p.shin, p.knee])];
 const up = new THREE.Vector3(0, LEG_LENGTH / 2, 0), end = new THREE.Vector3(), start = new THREE.Vector3();

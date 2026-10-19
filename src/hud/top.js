@@ -55,7 +55,7 @@ export function topLayout() { // drawTop()'s geometry, filled in place; tests ch
   return T;
 }
 const pauseBox = () => { const ps = PAUSE_PX() / K; return { cx: W - (10 + SAFE.r) / K - ps / 2, cy: ((K < 2 ? 13 : 18) + SAFE.t) / K + ps / 2, r: ps / 2 }; }; // #pause's circle (index.html)
-function drawProgressRing(t) { // a halo round #pause (the canvas sits under the button): a dark track and a gold arc
+export function drawProgressRing(t) { // a halo round #pause (the canvas sits under the button): a dark track and a gold arc
   const { cx, cy, r } = pauseBox(), R = r + RING_GAP, k = songProgress(t), a0 = -Math.PI / 2, at = f => a0 + f * 2 * Math.PI;
   H.lineWidth = RING_W; H.lineCap = 'butt';
   H.strokeStyle = 'rgba(42,26,16,0.86)'; H.beginPath(); H.arc(cx, cy, R, 0, 2 * Math.PI); H.stroke();

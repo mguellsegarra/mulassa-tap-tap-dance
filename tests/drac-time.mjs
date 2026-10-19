@@ -84,7 +84,7 @@ if (VERBOSE) {
   for (const [s, r, x] of drift) console.log(`${s.toFixed(3)} | ${r.toFixed(3)} | ${x >= 0 ? '+' : ''}${x.toFixed(3)}`);
   console.log('milestone ref s | song s | beat | refAt(nearest beat) - milestone');
   for (const m of [0.058, 16.7, 19.8, 28.8, 44.3, 59, 60, 63.4, 72.8, 86.4, 93.8, 94.8, 104, 104.8]) {
-    const b = d.beatAtRef(m), k = Math.round(b);
+    const b = d.beatAtRef(m), k = Math.min(Math.round(b), B.length - 1);
     console.log(`${m} | ${d.songAtRef(m).toFixed(3)} | ${b.toFixed(2)} | ${(d.refAt(B[k]) - m).toFixed(3)} (beat ${k})`);
   }
   for (const f of feet) console.log(`foot ${f.leg ?? '-'} ${f.lo}-${f.hi}: beat ${f.b.toFixed(2)}, nearest ${f.k} off ${f.off.toFixed(3)} s${f.inside ? '' : ' (outside)'}`);

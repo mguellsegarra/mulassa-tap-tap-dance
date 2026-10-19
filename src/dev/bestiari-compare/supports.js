@@ -60,8 +60,8 @@ export function planSupports(poseAt, end = 166.2) {
     } else {
       const u = (t - event.start) / (event.end - event.start);
       // Lift first, move above the standing shoes, then land. Both ends have zero velocity.
-      const travel = ease(Math.max(0, Math.min(1, (u - .2) / .6)));
-      const lift = ease(Math.min(1, u / .2, (1 - u) / .2));
+      const travel = ease(Math.max(0, Math.min(1, (u - .15) / .7)));
+      const lift = ease(Math.min(1, u / .15, (1 - u) / .15));
       out.x = event.from.x + (event.to.x - event.from.x) * travel;
       out.z = event.from.z + (event.to.z - event.from.z) * travel;
       out.yaw = event.from.yaw + (event.to.yaw - event.from.yaw) * travel;

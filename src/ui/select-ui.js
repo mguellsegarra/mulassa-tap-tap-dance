@@ -96,7 +96,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
   let figure = live[0], lastPlayable = figure, open = true; // catalog selection is independent of the host's last playable figure
   let opening = false, shown = false, teasing = false, level = 1, town = null, cur = 0, req = 0, step = 'figures';
   const smooth = () => (reduced() ? 'auto' : 'smooth');
-  const api = { band: null, fpsFooter: [], measure: () => { if (shown) measure(); }, onSelect, get figure() { return figure; }, get pending() { return teasing || !playable(figure); }, get unfolded() { return open; }, visible };
+  const api = { band: null, fpsFooter: [], measure: () => { if (shown) measure(); }, onSelect, get figure() { return figure; }, get pending() { return teasing || !playable(figure); }, get unfolded() { return open; }, visible, toLevels: () => nextStep() };
 
   const scrolling = stripScroll(strip, win, reduced);
   const townScrolling = stripScroll(towns, win, reduced);
@@ -114,7 +114,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
 
   function pendingFill(f) {
     $('aviat-title').textContent = f.fullName || f.name;
-    $('aviat-entity').hidden = false; $('aviat-entity').toggleAttribute('data-holo', !!f.invite); // the invitation's «Proposa-la»: a holographic chip
+    $('aviat-entity').hidden = false;
     $('aviat-entity').innerHTML = entityHtml(f);
     $('aviat-icon').innerHTML = ''; $('aviat-icon').hidden = true; // the strip below already shows its portrait
     $('aviat-text').innerHTML = (f.invite ? inviteText() : aviatText(f)).split('\n\n').map(p => `<p>${escapeHtml(p)}</p>`).join('');
@@ -146,7 +146,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     root.toggleAttribute('data-pending', !ok);
     root.toggleAttribute('data-fold', teasing);
     pending.hidden = leave;
-    $('select-info').hidden = !ok || teasing;
+    $('select-info').inert = $('select-info').hidden = !ok || teasing;
     $('select-next').disabled = !ok || teasing; // desktop keeps a disabled placeholder; touch hides it
     $('select-next-label').textContent = !ok || teasing ? 'Pròximament?' : 'Tria la dificultat';
     if (teasing) teaserFill();
@@ -556,20 +556,27 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     // The arrow group stands above the strip while it overflows (none on touch): her band and a pending card keep clear of it.
     const nav = stripLimit > 1 ? ($('select-nav').offsetHeight || 0) * z : 0;
     api.band = { top: side ? townsBottom : r($('select-info')).bottom, bottom: dockTop - nav };
-    root.style.setProperty('--pending-bottom', px(Math.max(0, win.innerHeight - (win.innerHeight <= 500 ? win.innerHeight : dockTop + r(strip).top - r(dock).top)) + 12 + (win.matchMedia?.('(pointer: fine)').matches ? 44 * z : 0)));
+    // Use the strip's final layout position, including its painted top gutter. CSS subtracts
+    // --drop so touch reserves the lowered dock without reading its animated transform.
+    const stripTop = dockTop + r(strip).top - r(dock).top;
+    const pendingEnd = nav ? dockTop + r($('select-nav')).top - r(dock).top : stripTop + Math.min(...base.map(el => el.offsetTop)) * z;
+    root.style.setProperty('--pending-rest-bottom', px(Math.max(0, r(root).height - pendingEnd) + 12 * z));
     if (!pending.hidden) { fitPendingTitle($('aviat-title'), win); fitPendingNote(pending); }
     // Cached action bounds for diagnostic overlays; no frame-loop layout reads.
     api.fpsFooter = ['select-figures-back', 'select-next', 'select-play'].map($).filter(el => !el.hidden).map(r);
   }
   win.addEventListener('resize', () => { if (shown) { scrolling.stop(); if (closing) finishFold(); for (const el of [towns, $('select-info')]) arrivals.get(el)?.cancel(); if (teasing) teaserFill(); measure(); if (step === 'figures') centre(strip, cards[cur], 'instant'); } });
-  if (win.ResizeObserver) new win.ResizeObserver(() => { if (shown) measure(); }).observe($('select-info'));
+  if (win.ResizeObserver) {
+    const observer = new win.ResizeObserver(() => { if (shown) measure(); });
+    observer.observe($('select-info')); observer.observe(root); // --app-h can settle after Safari's viewport event.
+  }
   doc.fonts?.ready.then(() => { if (shown) measure(); });
   function visible(on) {
     const error = $('select-error'), message = getError() ?? '';
     if (error && error.textContent !== message) { error.textContent = message; error.hidden = !message; if (shown) measure(); }
     if (on === shown) return;
-    shown = on; root.hidden = !on;
-    root.removeAttribute('data-shown'); // the panels' entrance fade (select.css) is for swaps, not for opening
+    shown = on; root.inert = root.hidden = !on;
+    root.removeAttribute('data-shown'); // navigation waits for the opening layout; panel fades also cover reopening
     if (on) win.requestAnimationFrame?.(() => win.requestAnimationFrame(() => root.toggleAttribute('data-shown', shown))); // after its first paint
     if (!on) { scrolling.stop(); if (closing) finishFold(); townScrolling.stop(); for (const el of [towns, $('select-info')]) arrivals.get(el)?.cancel(); if (root.contains(doc.activeElement)) doc.activeElement.blur(); return; }
     // Every write first, then one read of the layout, then the scrolls: each read after a write recomputed the whole

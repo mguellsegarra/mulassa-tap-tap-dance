@@ -23,9 +23,9 @@ for (let i = 0; i < 600; i++) sample(16.67);
 assert.equal(reductions, 0, 'smooth rendering keeps quality');
 sample(5000);
 assert.equal(reductions, 0, 'background gap cannot lower quality');
-for (let i = 0; i < 150; i++) sample(33.33);
+for (let i = 0; i < 65; i++) sample(66.67);
 assert.equal(reductions, 1, 'sustained slow frames lower quality');
-for (let i = 0; i < 120; i++) sample(33.33);
+for (let i = 0; i < 30; i++) sample(66.67);
 assert.equal(reductions, 1, 'cooldown avoids consecutive quality switches');
 { // a steady ~53 fps (one missed vsync in six) is a judder on the lane: quality steps down; an occasional miss does not
   const run = every => { let n = 0; const m = frameMonitor(() => n++); for (let i = 0; i < 1500; i++) m(i % every ? 16.67 : 33.3); return n; };
@@ -186,7 +186,7 @@ const paceMon = frameMonitor(() => paceDowns++);
 assert.equal(paceDowns, 0, 'paced 120 Hz frames keep quality');
 let realDowns = 0;
 const realMon = frameMonitor(() => realDowns++);
-simulate(120, 12000, () => 30).gaps.forEach(g => realMon(g));
+simulate(120, 12000, () => 55).gaps.forEach(g => realMon(g));
 assert(realDowns > 0, 'too slow even at half rate: quality steps down');
 // Compare the forward faces of the actual merged skin and hair boxes.
 for (const seated of [false, true]) {
@@ -428,7 +428,7 @@ const context = vm.createContext({
   ...await import('../src/game/dance-drac.js'), ...await import('../src/game/drac-feet.js'), ...await import('../src/scene/drac-motion.js'), ...await import('../src/scene/models/drac.js'),
   // the Drac's revised dance (pure modules, provided like the old one): only the names the inlined scene code uses
   poseAt: (await import('../src/game/drac-pose.js')).poseAt, REF_END: (await import('../src/game/drac-pose.js')).REF_END, feetAt: (await import('../src/game/drac-steps.js')).feetAt,
-  dracTime: (await import('../src/game/drac-time.js')).dracTime, ...await import('../src/game/drac-layout.js'), ...await import('../src/scene/drac-rig.js'), createColla: (await import('../src/scene/drac-colla.js')).createColla,
+  dracTime: (await import('../src/game/drac-time.js')).dracTime, ...await import('../src/game/drac-layout.js'), ...await import('../src/scene/drac-rig.js'), ...await import('../src/scene/drac-colla.js'),
   ...await import('../src/dev/final-test.js'), ALIAS_KEY: 'leaderboard-alias', DECLINES_KEY: 'publish-declines', // ?final: off here (no hostname)
   errors, errorName, audioFailureTags: (await import('../src/platform/audio.js')).audioFailureTags,
   THREE: { ...THREE, WebGLRenderer: Renderer }, ...await import('../src/scene/crowd-fx.js'), ...models, ...chart, ...progress, ...stars,
@@ -499,6 +499,55 @@ assert(run('midCrowd.mesh.count === PROFILES[0].mid && midCrowd.n >= PROFILES[1]
 run('qualityLevel = 2; applyRenderQuality();');
 assert(run('crowd.every(p => p.g.visible && p.g.scale.x === p.scale && p.scale === (p.kid ? 0.72 : 1)) && crowdMesh.castShadow'), 'upgraded again: everyone back at full size (kids smaller), casting shadows');
 assert(run('plaza.balcony.every(p => p.g.scale.x === 1) && plaza.backdrop.mesh.count === PROFILES[2].backdrop'), 'balconies and the full backdrop come back');
+// A runtime downgrade keeps its first exposed frame and retires every kind of spectator smoothly.
+run(`qualityLevel = 2; applyRenderQuality();
+  var retiring = crowd.find(p => p.row === 2), kept = crowd.find(p => p.row === 0 && p.slot % 2 === 0);
+  retiring.pres = 0.7; retiring.g.scale.setScalar(retiring.scale * retiring.pres);
+  var crowdBefore = retiring.g.scale.x, bandBefore = plaza.band.at(-1).g.scale.x,
+    backdropBefore = plaza.backdrop.mesh.count, midBefore = midCrowd.mesh.count;
+  qualityLevel = 0; applyRenderQuality({ transition: true });`);
+assert(run('retiring.g.visible && retiring.g.scale.x === crowdBefore && retiring.pres === 0.7'), 'a downgrade preserves the exposed pose and gameplay presence');
+assert(run('plaza.backdrop.mesh.count === backdropBefore && midCrowd.mesh.count === midBefore && plaza.band.at(-1).g.scale.x === bandBefore'), 'static spectators and musicians do not disappear on the profile switch');
+run('animateRenderQuality(0);');
+assert(run('retiring.g.scale.x === crowdBefore'), 'paused time cannot advance the quality transition');
+run('animateRenderQuality(0.4);');
+assert(run('Math.abs(retiring.g.scale.x - crowdBefore / 2) < 1e-6 && activeCrowd.includes(retiring) && kept.qualityScale === 1'), 'halfway: retiring spectators shrink smoothly, stay simulated, and retained people keep their size');
+assert(run('plaza.band.at(-1).g.scale.x > 0 && plaza.band.at(-1).g.scale.x < 1 && plaza.balcony.at(-1).g.scale.x > 0'), 'musicians and balconies also have intermediate sizes');
+assert(run(`(() => { const m = new THREE.Matrix4(); plaza.backdrop.mesh.getMatrixAt(PROFILES[0].backdrop, m); return m.elements[0] ** 2 + m.elements[2] ** 2 > 0; })()`), 'retiring instanced spectators still have geometry halfway through');
+run('animateRenderQuality(0.4);');
+assert(run('!retiring.g.visible && retiring.g.scale.x === 0 && !activeCrowd.includes(retiring) && retiring.pres === 0.7'), 'completed retirement releases simulation without changing gameplay presence');
+assert(run('plaza.backdrop.mesh.count === PROFILES[0].backdrop && midCrowd.mesh.count === Math.min(midCrowd.n, PROFILES[0].mid) && plaza.balcony.at(-1).g.scale.x === 0'), 'completed retirement restores the target drawing budgets');
+run(`qualityLevel = 2; applyRenderQuality({ transition: true }); animateRenderQuality(0.2);
+  var reversingScale = retiring.g.scale.x; qualityLevel = 0; applyRenderQuality({ transition: true });`);
+assert(run('retiring.g.scale.x === reversingScale'), 'a new profile continues from the currently visible size');
+run('animateRenderQuality(1);');
+for (const hz of [30, 60, 120]) {
+  run(`qualityLevel = 2; applyRenderQuality(); qualityLevel = 0; applyRenderQuality({ transition: true });
+    for (let i = 0; i < ${hz}; i++) animateRenderQuality(1 / ${hz});`);
+  assert(run('!qualityTransition && !retiring.g.visible'), `quality retirement finishes at ${hz} fps`);
+}
+run('var calmBeforeQuality = CALM.matches; CALM.matches = true; qualityLevel = 2; applyRenderQuality({ transition: true });');
+assert(run('!qualityTransition && retiring.g.scale.x === retiring.scale'), 'reduced motion installs the final profile without scaling animation');
+run('CALM.matches = calmBeforeQuality;');
+console.log('quality transitions: continuous presence, bounded retirement, reversal, reduced motion and 30/60/120 Hz ok');
+// Changing shadow support needs new material programs, and a visible downgrade fades before releasing its map.
+run(`qualityLevel = 1; applyRenderQuality();
+  var shadowFloor = plaza.group.children.find(o => o.isMesh && o.receiveShadow), shadowVersion = shadowFloor.material.version;
+  var shadowDisposals = 0, fadingShadowMap = { dispose() { shadowDisposals++; } }; sun.shadow.map = fadingShadowMap;
+  qualityLevel = 0; applyRenderQuality({ transition: true });`);
+assert(run('renderer.shadowMap.enabled && sun.shadow.map === fadingShadowMap && sun.shadow.intensity === 1'), 'a visible shadow downgrade preserves the first frame and its live map');
+run('animateRenderQuality(0.4);');
+assert(run('sun.shadow.intensity > 0 && sun.shadow.intensity < 1 && shadowDisposals === 0'), 'the shadow fades while its map remains available');
+run('animateRenderQuality(0.4);');
+assert(run('!renderer.shadowMap.enabled && sun.shadow.intensity === 0 && sun.shadow.map === null && shadowDisposals === 1'), 'only the completed fade turns shadows off and releases their GPU map');
+assert(run('shadowFloor.material.version > shadowVersion'), 'receiving materials invalidate their shadow program when support turns off');
+run(`shadowVersion = shadowFloor.material.version; qualityLevel = 1; applyRenderQuality({ transition: true });`);
+assert(run('renderer.shadowMap.enabled && sun.shadow.intensity === 0 && shadowFloor.material.version > shadowVersion'), 'returning shadows start at zero with the correct material programs');
+run('animateRenderQuality(0.3); var interruptedShadow = sun.shadow.intensity; qualityLevel = 0; applyRenderQuality({ transition: true });');
+assert(run('sun.shadow.intensity === interruptedShadow'), 'reversing a shadow fade preserves its current light level');
+run('animateRenderQuality(1); qualityLevel = 1; applyRenderQuality();');
+assert(run('renderer.shadowMap.enabled && sun.shadow.intensity === 1'), 'startup or an immediate profile restores full shadow intensity');
+console.log('quality shadows: continuous intensity, deferred disposal and material program invalidation ok');
 // The mid band stands on the far side from the play camera, nowhere near its line to her (she stays within 1 m of the
 // middle; the camera 8–22 m back, kept in the square).
 assert(run(`(() => { const m = new THREE.Matrix4(), v = new THREE.Vector3(), bad = [];
@@ -878,7 +927,22 @@ console.log('menu pause and cancelled start contracts ok');
   run('coverUp = false;');
   const before = run('clock');
   run('frame(4020)');
-  assert.equal(run('clock'), before, 'after startup, an unfocused page still rests');
+  assert(run('clock') > before, 'the visible entrance keeps animating after the cover lifts, even without keyboard focus');
+  assert.equal(run('chip'), null, 'animating the entrance never unlocks audio before its tap');
+  const entranceClock = run('clock');
+  document.hidden = true;
+  run('frame(12000)');
+  assert.equal(run('clock'), entranceClock, 'the hidden entrance still suspends its animation');
+  document.hidden = false;
+  run('frame(12020); frame(12040)');
+  assert(run('clock') > entranceClock && run('clock') - entranceClock < 0.05, 'returning visible resumes the entrance without a swipe or background catch-up');
+  for (const state of ['select', 'play']) {
+    run(`G.state = '${state}'; frame(12060);`);
+    const inactiveClock = run('clock');
+    run('frame(12080)');
+    assert.equal(run('clock'), inactiveClock, `${state} retains its existing focus protection`);
+  }
+  run("G.state = 'splash';");
   document.hasFocus = focus;
   run('coverUp = true;');
   run("drawn = false; renderer.lost = true; window.__mulassaBooted = 'module'; frame(4040);");
@@ -1237,6 +1301,46 @@ assert(run('!G.paused && G.practice && G.practice.step === 0 && G.practice.then 
 run('practise(true, 60);');
 assert(run('started === 1 && !G.practice'), 'and it plays through to the song');
 console.log('practice contracts ok');
+
+// The dance demo (ui/watch-ui.js, flow.js startWatch): the whole song plays itself on NORMAL, even before the
+// practice was ever done; GUA/PA do nothing, the ànim never drains, the player's tick is silent. Its end records,
+// snapshots, prompts and shares nothing, and its own sheet leads back to the selector.
+run(`var preWatch = { chip, stored }; stored = {}; songNow = 0; var watchSfx = [];
+  chip = { resume() {}, wake() {}, t0: null, ctx: { currentTime: 0, suspend() {}, resume() {} }, stop() {}, menu() {}, noiseHit() {}, blip() {}, countIn() {},
+    sfx(k) { watchSfx.push(k); }, start() { this.t0 = 0; return Promise.resolve(true); }, now: () => songNow };
+  offsetMs = 0; G.state = 'select'; G.paused = false;
+  var toLevels = 0; Object.assign(sheets.select, { figure: selectedFigure, pending: false, toLevels() { toLevels++; } }); // (the selector is stubbed here)`);
+nodes.get('howto-watch').listeners.click();
+assert(run("G.state === 'play' && G.watch && G.diff === 1 && !G.practice"), 'Com es juga starts the demo on NORMAL, never the practice');
+assert.equal(nodes.get('watch-song').textContent, run('selectedFigure.song'), 'the label names the dance');
+run(`var watchFirst = G.chart.find(n => !n.balloon && !n.big && !n.end); songNow = watchFirst.t; press('L', { timeStamp: 0 });`);
+assert(run('!watchFirst.hit'), 'GUA/PA judge nothing during the demo');
+run(`for (; songNow < song.tail + 0.5; songNow += 1 / 30) { clock += 1 / 30; autoplay(songNow); advance(songNow); }`);
+assert(run("G.chart.every(n => n.hit === 'perfect') && G.energy === 1"), 'it plays every note itself and never touches the ànim');
+assert(run("!watchSfx.includes('perfect') && watchSfx.includes('eh')"), 'no tick for a player who isn\'t tapping; the plaça still shouts on a GUAPA');
+run(`finish('end'); updateControls();`);
+assert(run("G.state === 'results' && G.watch && G.shareRun === null && getLeaderboardResult() === null"), 'its end is no result: nothing to publish or share');
+assert(run("!Object.keys(stored).some(k => k.startsWith('record') || k === 'tutorial')"), 'no record, and the practice is still to come');
+assert.equal(nodes.get('results-retry').hidden, true, 'no «Torna-ho a provar»');
+assert.equal(nodes.get('watch-menu').open, false, 'the plaça cheers a moment first');
+run('clock += 1.1; updateControls();');
+assert.equal(nodes.get('watch-menu').open, true, 'then «Ara et toca a tu!»');
+keyHandlers.forEach(h => h({ code: 'Space', target: { tagName: 'BUTTON' }, preventDefault() {} }));
+assert.equal(run('G.state'), 'results', 'Space acts on the sheet, not on the results behind it');
+nodes.get('watch-play').listeners.click();
+assert(run("G.state === 'select' && !G.watch && toLevels === 1 && sheets.select.shown") && !nodes.get('watch-menu').open, '«Juga-hi»: the selector, on its level step');
+nodes.get('howto-watch').listeners.click(); run('togglePause();');
+assert(run('G.paused && G.watch') && nodes.get('pause-sync').hidden, 'its pause has no sync');
+assert.equal(nodes.get('restart-label').textContent, 'Torna a començar');
+const demoChart = run('G.chart');
+nodes.get('restart').listeners.click();
+assert(run('!G.paused && G.watch') && run('G.chart') !== demoChart, 'restart needs no confirmation: nothing to lose');
+run('togglePause();'); nodes.get('exit').listeners.click();
+assert(run("G.state === 'select' && !G.watch && !G.paused"), 'neither does leaving');
+run('startGame(1); togglePause();');
+assert(!nodes.get('pause-sync').hidden && nodes.get('restart-label').textContent === 'Reinicia', 'a real game\'s pause is unchanged');
+run('toTitle(); chip = preWatch.chip; stored = preWatch.stored;');
+console.log('dance demo contracts ok');
 
 // ⚙ Configuració on the title: shows the current offset; the sync comes back to it when closed; the practice
 // starts from it; title keys don't start a game behind it.

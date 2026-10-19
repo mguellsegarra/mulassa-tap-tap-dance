@@ -73,8 +73,8 @@ export function createColla({ profile }) {
       for (let i = 0; i < crew.length; i++) poseHelper(crew[i], beat, energy);
       for (let i = 0; i < shown; i++) poseSeated(members[i], beat, energy, i % 3 === 2);
     },
-    setProfile(p) {
-      shown = Math.min(members.length, SEATED_COUNT[p.name] ?? 0);
+    setProfile(p, count = SEATED_COUNT[p.name] ?? 0) {
+      shown = Math.min(members.length, count);
       S.mesh.geometry.setDrawRange(0, shown ? S.ends[shown - 1] : 0);
       seated.visible = shown > 0;
       H.mesh.castShadow = S.mesh.castShadow = p.name === 'high'; // like the crowd

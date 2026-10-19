@@ -42,7 +42,8 @@ export function toTitle() {
   closePauseMenu();
   G.paused = false; G.resuming = null;
   G.practice = null;
-  const fromGame = G.state === 'play' || G.state === 'results';
+  const fromGame = !G.watch && (G.state === 'play' || G.state === 'results');
+  G.watch = false;
   G.state = 'select';
   chip.stop();
   chip.menu(true); // also silences whatever the run still had queued (the count-in) before the clock runs again
@@ -83,6 +84,18 @@ export function startGame(diff) {
     G.audioError = 'No s’ha pogut carregar la música. Torna a provar-ho.';
   });
 }
+// The demo (Com es juga → «Veure un ball de demostració»): the whole song on NORMAL, played by itself (main.js autoplay) on a clean screen.
+// It never reaches the results: finish() hands it to watched(), so no record, leaderboard snapshot, prompt or share.
+export function startWatch() {
+  startGame(1);
+  G.watch = true;
+}
+function watched() { // the plaça cheers the dance; ui/watch-ui.js then offers to play it
+  chip.stop();
+  Object.assign(G, { state: 'results', resT: clock, reason: 'clear', challenge: null, shareRun: null });
+  burst(M.pos.x, M.pos.y);
+  chip.sfx('ovation');
+}
 function beginRun(diff, chart) { // shared by the song and the practice: a clean plaça and score, `chart` on the lane
   clearLeaderboardResult();
   closePauseMenu();
@@ -105,7 +118,7 @@ function beginRun(diff, chart) { // shared by the song and the practice: a clean
   setBigPending(null);
   G.hold = null;
   releaseAll();
-  Object.assign(G, { praise: null, ring: null, finale: false, doublePoints: false, eeeh: false, state: 'play', next: 0, score: 0, combo: 0, maxCombo: 0, streak: 0, guapo: 0, shown: 0, phraseCounts: { perfect: 0, good: 0, miss: 0 }, activePhrase: null, judge: null, chantT: -99, collapseT: 0, sec: null, flash: -9, energy: 1, shownE: 1, energyWarn: [true, true], energyT: -9, energyWarnT: -9 });
+  Object.assign(G, { watch: false, praise: null, ring: null, finale: false, doublePoints: false, eeeh: false, state: 'play', next: 0, score: 0, combo: 0, maxCombo: 0, streak: 0, guapo: 0, shown: 0, phraseCounts: { perfect: 0, good: 0, miss: 0 }, activePhrase: null, judge: null, chantT: -99, collapseT: 0, sec: null, flash: -9, energy: 1, shownE: 1, energyWarn: [true, true], energyT: -9, energyWarnT: -9 });
   G.counts = { perfect: 0, good: 0, miss: 0 };
   G.errors = { early: 0, late: 0, move: 0, silent: 0, both: 0, hold: 0 };
   G.hold = null;
@@ -200,6 +213,7 @@ export function previewResults(stars) { // ?stars=0-3: a fake run (never a recor
   }), 1200);
 }
 export function finish(reason) {
+  if (G.watch) return watched();
   captureLeaderboardResult(G, reason, Q); // a frozen run for optional publication; no network during play
   chip.stop();
   const value = quality(G.counts);

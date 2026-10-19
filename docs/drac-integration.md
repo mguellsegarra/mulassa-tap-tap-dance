@@ -45,9 +45,10 @@ comparison). Not copied: the old lab (`drac-lab`), trial mp3s, SOURCE's unrelate
 
 ## Decisions taken here
 
-- Music: **Festiva** (Marc, 2026-10-19). Form: the long D.S. through bar 51 plus E's last phrase (bars 48-51) once more
-  before the coda, chosen from the recording's tracked pulse (it counts ~8 more beats than the trial form). Which 4 bars
-  repeat is an authored choice for Marc's ear. See `docs/drac-music.md`.
+- Music: **Festiva**, variant **A** (Marc listened and chose it, 2026-10-19). Form: the score's own order, the long D.S.
+  through bar 51, then the coda; no repeated phrase (round 1's repeat of bars 48-51 sounded wrong to Marc). The
+  recording's late seconds go to the last C held over an 8-beat closing roll, the final hit at reference 104.24 s;
+  the measured ~150 BPM is kept through the spins. DIFÍCIL has 4 more CREMA doubles (12/12/16). See `docs/drac-music.md`.
 - Helper radius 4.5 -> **5.1 m**: at 4.5 the close pass towards the camera (reference ~34 s) ran through S. With the
   posed rig (every mesh vertex, wings and tail) the closest is now S at 0.67 m (`tests/drac-dance.mjs`).
 - Dance frame heading `DRAC_YAW = danceYaw(CAM_AZ)`: the play camera looks in between two helpers. With the frame at the
@@ -93,7 +94,10 @@ comparison). Not copied: the old lab (`drac-lab`), trial mp3s, SOURCE's unrelate
   tier) instead of a heap by the band; the crowd's `RING.arena` 6.2 -> 7.2 m keeps them clear.
 - Red smoke more evident: denser fog (at full: the Drac ~29 %, the crowd ~46 %, the façades ~80 %), more opaque, redder
   puffs, their rate linear in the level (a square hid them until the very end). Checked with the real GPU (high quality).
-- Music: the repeated phrase before the coda and more DIFÍCIL CREMA doubles: see `docs/drac-music.md` (round 2).
+- Music: the repeated phrase removed (variant A, accepted by Marc after listening) and 4 more DIFÍCIL CREMA doubles:
+  see `docs/drac-music.md` (round 2).
+- Traca petards (they were already in the game): they now grow out of the mouths and shrink back into them (0.35 / 0.3 s)
+  instead of popping in and out in one frame.
 
 ## Independent review (GPT-6 Astra, read-only, 2026-10-19)
 
@@ -106,8 +110,8 @@ unreachable from the game, the old-dance sweep cut-off, the compiler change, the
 
 ## Not verified / approximate
 
-- Nobody has LISTENED to the music; form, tempo and map are analysis + authored choices. Open for Marc's ear: the long
-  D.S., the repeated 4 bars before the coda, the coda rit. to 138, the jump into 151 BPM, Festiva's timbre.
+- Marc listened to variant A in the game and accepted it (2026-10-19). Still analysis + authored: the tempo map's
+  knots, the held last note over the roll (no measurable pulse after ~99 s in the recording), the rit. to 117 into the hit.
 - No physical phone or tablet was tested (emulation only). Marc tests the LAN URL himself.
 - Distances, many angles and 140 of 188 foot placements are adaptations, not measurements; the overhead plan shows the
   model, not an independent measurement. The helpers' radius and the dance frame's heading are game choices.

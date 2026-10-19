@@ -83,7 +83,7 @@ function landed(n, kind) {
   M.biteT = clock;
   if ((n.big || n.input === 'B') && !CALM.matches) shoveRing();
   grooveHit((kind === 'perfect' ? GROOVE.hit : GROOVE.good) * (n.big || n.input === 'B' ? GROOVE.big : 1), n.input === 'L' ? 1 : n.input === 'R' ? -1 : 0);
-  chip.sfx(kind);
+  if (!G.watch) chip.sfx(kind); // the player's own tick: the dance demo has no player
   if (n.big || n.input === 'B') chip.sfx('eh'); // and the plaça yells «eeh!»
   if (PRAISE[G.combo]) { // big encouraging word, stronger the longer the combo
     const [word, tier] = PRAISE[G.combo];
@@ -96,7 +96,7 @@ function landed(n, kind) {
 // L'ÀNIM DE LA PLAÇA (energy.js): every judgement moves it; empty, the mulassa falls apart, on every difficulty.
 // The meter pulses as it sinks (once per dip). The practice never fails and autoplay never drains.
 function cheer(n, kind) {
-  if (G.practice || AUTOPLAY || G.collapseT) return;
+  if (G.practice || AUTOPLAY || G.watch || G.collapseT) return;
   const special = kind !== 'miss' && (n.big || (kind === 'perfect' && (n.balloon || n.tailOf))); // GUAPA pair, MANTINGUT, PAM!
   G.energy = drain(G.energy, G.diff, kind, special);
   if (special) G.energyT = clock; // the bar flashes
@@ -191,7 +191,7 @@ export function releaseAll() { down.keys.clear(); down.ptr.clear(); syncPad(); i
 // frame counts when it happened, not when its handler ran (eventAge, progress.js: capped at 0.5 s, foreign stamps = now).
 export const eventAt = e => { const now = performance.now(); return now - eventAge(e?.timeStamp, now) * 1000; };
 export function press(dir, e) {
-  if (G.state !== 'play' || G.collapseT || G.paused) return;
+  if (G.state !== 'play' || G.collapseT || G.paused || G.watch) return; // the dance demo plays itself
   const t = songTime(eventAt(e)), bl = balloonAt(t);
   G.tapT = clock;
   if (bl) { pump(bl); return; } // never a wrong move, never spills onto the next note

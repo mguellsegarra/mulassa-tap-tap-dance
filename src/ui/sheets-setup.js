@@ -18,7 +18,8 @@ import { pauseMenu, howtoMenu, settingsMenu, settingsEl, leadersEl, musicEl, how
 import { G, chip, menuMusic, engine, clock, setMenuMusic, setSelectedFigure, CHALLENGE } from '../game/state.js';
 import { showPauseOptions } from './pause.js';
 import { togglePause, requestPauseAction } from './pause-actions.js';
-import { startPractice, startGame, toTitle, endPractice, choose } from '../game/flow.js';
+import { startPractice, startGame, toTitle, endPractice, choose, startWatch } from '../game/flow.js';
+import { setupWatch } from './watch-ui.js';
 import { focusIn, keyboardNav } from './focus.js';
 import { offsetMs, FINAL, FINALE_T, setOffsetMs, CALM, DEMO } from '../core/env.js';
 import { sheetUp, viewMode, viewBtn } from './controls.js';
@@ -58,8 +59,10 @@ document.getElementById('confirm-action').addEventListener('click', () => {
 });
 document.getElementById('pause').addEventListener('click', togglePause);
 document.getElementById('howto').addEventListener('click', () => { if ((G.state === 'title' || G.state === 'select')) { howtoMenu.showModal(); focusIn(howtoMenu, 'howto-ok'); } });
-document.getElementById('restart').addEventListener('click', () => requestPauseAction('restart'));
-document.getElementById('exit').addEventListener('click', () => requestPauseAction('exit'));
+// The dance demo has nothing to lose: its restart and exit need no confirmation
+const pauseAction = a => { if (!G.watch) requestPauseAction(a); else if (a === 'restart') { chip.resume(); startWatch(); } else toTitle(); };
+document.getElementById('restart').addEventListener('click', () => pauseAction('restart'));
+document.getElementById('exit').addEventListener('click', () => pauseAction('exit'));
 // "Ajusta la sincronia": from ⚙ Configuració on the title, or from the pause menu mid-song
 const sync = setupSync({
   get: () => offsetMs,
@@ -141,6 +144,7 @@ const select = setupSelect({ store, keyboard: () => keyboardNav, busy: () => she
   onHowto: () => { howtoMenu.showModal(); focusIn(howtoMenu, 'howto-ok'); },
   onWrite: draft => feedback.show(() => select.refocus(), draft) });
 sheets.select = select;
+sheets.watch = setupWatch({ select, busy: () => sheetUp() || viewMode });
 howtoMenu.addEventListener('close', () => select.refocus());
 const nudge = setupNudge({ store, button: document.getElementById('feedback'), onTitle: () => G.state === 'title',
   free: () => !sheetUp() && !viewMode && !document.hidden && !document.body.classList.contains('wrong-orient'), place: placeNudge });

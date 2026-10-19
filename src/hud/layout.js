@@ -64,9 +64,9 @@ const praiseFloor = () => (G.practice && HH < W ? Math.min(playBottom(), PRACTIC
 export const PRACTICE_Y = () => playBottom() - 22; // instruction stays above the pad, away from the feedback slot
 const RESERVED_BOTTOM = () => lane().bottom + (G.practice ? 26 : 34) * bandScale();
 const stage = {}; // shared by camera framing and bubble exclusion; temporary text never changes it
-export function playStage() {
-  const top = G.collapseT ? SAFE.t / K + 8 : RESERVED_BOTTOM();
-  const bottom = G.collapseT ? HH - SAFE.b / K - 38 : playBottom() - (G.practice ? 36 : 0);
+export function playStage() { // the dance demo has no lane or pad: the whole screen under the pause button and its tag
+  const top = G.collapseT ? SAFE.t / K + 8 : G.watch ? (SAFE.t + 84) / K : RESERVED_BOTTOM();
+  const bottom = G.collapseT ? HH - SAFE.b / K - 38 : G.watch ? HH - (SAFE.b + 16) / K : playBottom() - (G.practice ? 36 : 0);
   return stageFrame(stage, top, bottom);
 }
 // The count-in's sizes and colours, shared with warmStart(): its words are painted ahead on the title and during

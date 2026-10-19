@@ -11,7 +11,7 @@ import { drawSplash, drawTitle } from './title.js';
 import { drawBubbles } from './bubbles.js';
 import { drawJudge, drawBanner, drawResume } from './banner.js';
 import { drawPraise } from './praise.js';
-import { drawTop } from './top.js';
+import { drawTop, drawProgressRing } from './top.js';
 import { drawLane } from './lane.js';
 import { drawResults } from './results.js';
 import { loader } from '../ui/handles.js';
@@ -48,11 +48,14 @@ export function drawHud(t) {
   if (G.state === 'play') {
     if (G.collapseT) { drawCollapse(); return; }
     drawBubbles();
-    drawJudge();
-    drawPraise();
-    if (G.practice) drawPractice(); else drawTop(t);
-    drawLane(t);
-    if (!G.practice) drawBanner(t);
+    if (!G.watch) drawJudge();
+    drawPraise(); // (the chant after the song: the plaça's, not a score)
+    if (G.watch) drawProgressRing(t); // the dance demo: no lane, score or count-in, only how far the song has gone
+    else {
+      if (G.practice) drawPractice(); else drawTop(t);
+      drawLane(t);
+      if (!G.practice) drawBanner(t);
+    }
     if (G.resuming != null) drawResume();
     if (!chip.running && !G.paused) { // audio blocked (iOS): the song clock can't move, so say how to fix it instead of hanging
       panel(W / 2 - 130, HH * 0.55, 260, 44);
@@ -60,7 +63,7 @@ export function drawHud(t) {
       text('per activar el so i començar', W / 2, HH * 0.55 + 32, 10, C.cream);
     }
   }
-  if (G.state === 'results') { drawBubbles(); drawResults(); }
+  if (G.state === 'results') { drawBubbles(); if (!G.watch) drawResults(); } // after the dance demo: its own end sheet (ui/watch-ui.js)
   if (clock - (G.offsetT ?? -9) < 1.5) {
     panel(W / 2 - 110, HH / 2 - 20, 220, 40);
     text(`Sincronia de l’àudio: ${offsetMs > 0 ? '+' : ''}${offsetMs} ms`, W / 2, HH / 2 - 5, 11, C.cream);

@@ -11,7 +11,7 @@ import { pick, poseBand } from './models.js';
 import { renderProfile, camera, plaza, colla } from './stage.js';
 import { CALM } from '../core/env.js';
 import { clock, G, chip, figureSfx } from '../game/state.js';
-import { activeCrowd, bandSpots, midCrowd, MID } from './quality.js';
+import { activeCrowd, bandSpots, midCrowd, MID, animateRenderQuality } from './quality.js';
 import { M, PIVOT, PAIR } from './mula-motion.js';
 import { COLLA_SPOTS } from './drac-dance.js';
 import { RING, REACH } from './crowd-build.js';
@@ -347,7 +347,7 @@ function pose(p, dt, beat, live) {
     const to = smooth01((presK - p.thr) / PRES.soft);
     if (to !== p.pres) {
       p.pres += (to - p.pres) * presE; if (Math.abs(to - p.pres) < 1e-3) p.pres = to;
-      p.g.scale.setScalar(p.pres < 0.01 ? (p.pres = 0) : p.scale * p.pres);
+      p.g.scale.setScalar(p.pres < 0.01 ? (p.pres = 0) : p.scale * p.pres * p.qualityScale);
     }
     if (!p.pres) return; // not there (scale 0: the skinned mesh skips them)
   }
@@ -433,4 +433,5 @@ export function animCrowd(dt, beat, t, live = 1) {
   separate();
   for (const p of activeCrowd) pose(p, dt, beat, live);
   poseScenery(beat, live);
+  animateRenderQuality(dt); // apply quality presence after the gameplay presence, without changing its state
 }

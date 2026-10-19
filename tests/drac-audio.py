@@ -86,7 +86,7 @@ def drop(f):
 
 tl, ev = events_of(drop)
 assert ev.END == ns.END - 24 and sum(st == 'D' for _, _, st in ev.layout) == 4
-assert abs(tl['refAnchors'][-1][0] - (ns.END + 0.306 - 24)) < 1e-9 and all(abs(ev.sec(b) - s) < 1e-9 for (b, _), (s, _) in zip(tl['refAnchors'], tl['ref']))
+assert abs(tl['refAnchors'][-1][0] - (ns.END + 1.1 - 24)) < 1e-9 and all(abs(ev.sec(b) - s) < 1e-9 for (b, _), (s, _) in zip(tl['refAnchors'], tl['ref']))
 assert len(ev.US) == ev.END + 8 and all(abs(ev.sec(b) - tl['beats'][b]) < 1e-12 for b in range(ev.END + 1)), 'one clock'
 assert all(abs(ev.sec(b + 1) - ev.sec(b) - ev.US[b] / 1e6) < 1e-12 for b in range(ev.END)), 'the MIDI tempo map is the audio clock'
 assert len(ev.HOLD) == 1 and all(any(x[0] == s and x[4] for x in ev.taps) for s in ev.HOLD)
@@ -98,7 +98,7 @@ assert len(first) == 4 and first == [(s - 8, e - 8, c) for s, e, c in ev.chords 
 
 # a tempo knot change changes only the beats after it, and the audio follows
 tl, ev = events_of(lambda f: f['tempo']['knots'][-1].update(bpm=120))
-assert ev.US[:226] == ns.US[:226] and ev.US[230:] != ns.US[230:], 'only the coda ritardando moves'
+assert ev.US[:222] == ns.US[:222] and ev.US[223:] != ns.US[223:], 'only the rit. under the held last note moves'
 
 # a hold has to start on a tap (a level-3 note is audio only): refused, not silently dropped
 try:

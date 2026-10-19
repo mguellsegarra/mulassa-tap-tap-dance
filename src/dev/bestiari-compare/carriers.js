@@ -40,7 +40,7 @@ export function createCarriers(scene, motion) {
       const centerX = (a.x + b.x) / 2, centerZ = (a.z + b.z) / 2;
       // Each pelvis follows its own two contacts; the shell does not stretch human legs.
       const span = Math.hypot(a.x - b.x, a.z - b.z);
-      const hipY = Math.min(.78 + Math.min(.06, body.lift * .15), Math.sqrt(Math.max(.36, .84 ** 2 - (span / 2) ** 2)));
+      const hipY = Math.min(.88 + Math.min(.02, body.lift * .05), Math.sqrt(Math.max(.36, .91 ** 2 - (span / 2) ** 2)));
       torsos[pair].position.set(centerX, hipY + .24, centerZ); torsos[pair].rotation.y = body.yaw;
       for (let side = 0; side < 2; side++) {
         const index = pair * 2 + side, f = feet[index], p = parts[index], dx = side ? -.085 : .085;

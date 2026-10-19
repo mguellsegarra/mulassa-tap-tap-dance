@@ -120,19 +120,12 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     $('aviat-text').innerHTML = (f.invite ? inviteText() : aviatText(f)).split('\n\n').map(p => `<p>${escapeHtml(p)}</p>`).join('');
   }
   function teaserFill() {
-    // The card keeps a pending figure's height (measured on the first one): no jump between it and the fold.
-    pending.toggleAttribute('data-fold', false); pending.style.setProperty('--keep-h', '');
-    pendingFill(soon[0]);
-    pending.style.maxHeight = 'none'; // measured unbounded: its max-height may still be easing in (CSS caps --keep-h to the room)
-    const h = pending.offsetHeight;
-    pending.style.maxHeight = '';
     pending.toggleAttribute('data-fold', true); // same GitHub/mail row as a pending figure: the fan yields the room (select.css)
     $('aviat-title').textContent = 'Aviat a la plaça';
     $('aviat-icon').innerHTML = peekHtml(peekFigures); $('aviat-icon').hidden = false;
     $('aviat-entity').hidden = true;
     $('aviat-entity').innerHTML = '';
     $('aviat-text').innerHTML = '<p>Volem que surtin a la plaça. Tens fotos, vídeos, partitures o coneixes el ball? Ajuda’ns!</p>';
-    if (h) pending.style.setProperty('--keep-h', `${h}px`); // CSS caps it to the room left (select.css)
   }
   // Leaving, the card keeps the box it had: the dock rising and the room it frees would otherwise resize and move it
   // mid-fade (a jump and a repaint as it went). Its next showing lets go first.
@@ -157,7 +150,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     $('select-next').disabled = !ok || teasing; // desktop keeps a disabled placeholder; touch hides it
     $('select-next-label').textContent = !ok || teasing ? 'Pròximament?' : 'Tria la dificultat';
     if (teasing) teaserFill();
-    else if (!ok) { pending.toggleAttribute('data-fold', false); pending.style.setProperty('--keep-h', ''); pendingFill(figure); }
+    else if (!ok) { pending.toggleAttribute('data-fold', false); pendingFill(figure); }
   }
   function info() {
     const ok = playable(figure);
@@ -547,7 +540,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     const dock = $('select-bottom'), dockTop = (dock.offsetTop ?? r(dock).top / z) * z;
     // The pills' layout box, not their rect: unfolding slides them to their new row by a transform that may still be under way.
     const townsBottom = ((towns.offsetTop ?? r(towns).top / z) + (towns.offsetHeight ?? r(towns).height / z)) * z;
-    root.style.setProperty('--pending-top', px(townsBottom + 12)); // a pending figure's card sits between the pills and the strip (CSS adds the drop)
+    // Reserve the expanded header row even while towns fit inline: folding must not move the contact card.
     peek();
     // The live group keeps its centred origin when the catalog opens. Only scrollLeft moves the cards.
     const base = [...strip.children].filter(el => !later.includes(el));
@@ -563,7 +556,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     // The arrow group stands above the strip while it overflows (none on touch): her band and a pending card keep clear of it.
     const nav = stripLimit > 1 ? ($('select-nav').offsetHeight || 0) * z : 0;
     api.band = { top: side ? townsBottom : r($('select-info')).bottom, bottom: dockTop - nav };
-    root.style.setProperty('--pending-bottom', px(Math.max(0, win.innerHeight - (win.innerHeight <= 500 ? win.innerHeight : dockTop + r(strip).top - r(dock).top)) + 12 + nav));
+    root.style.setProperty('--pending-bottom', px(Math.max(0, win.innerHeight - (win.innerHeight <= 500 ? win.innerHeight : dockTop + r(strip).top - r(dock).top)) + 12 + (win.matchMedia?.('(pointer: fine)').matches ? 44 * z : 0)));
     if (!pending.hidden) { fitPendingTitle($('aviat-title'), win); fitPendingNote(pending); }
     // Cached action bounds for diagnostic overlays; no frame-loop layout reads.
     api.fpsFooter = ['select-figures-back', 'select-next', 'select-play'].map($).filter(el => !el.hidden).map(r);

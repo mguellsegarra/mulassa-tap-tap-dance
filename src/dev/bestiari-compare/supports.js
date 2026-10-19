@@ -3,7 +3,7 @@ export const CARRIER_SCALE = { y: 2.95 / 4.03, z: 4.60 / 4.22 };
 export const SUPPORT_LAYOUT = [1.15, -1.15].flatMap(z => [0.28, -0.28].flatMap(x => [0.13, -0.13].map(dx => ({ x: x + dx, z }))));
 
 export function planSupports(poseAt, end = 166.2) {
-  const pose = {}, sample = {}, initial = [], events = SUPPORT_LAYOUT.map(() => []);
+  const pose = {}, sample = {}, ahead = {}, initial = [], events = SUPPORT_LAYOUT.map(() => []);
   function nominal(t, index, out) {
     poseAt(t, pose);
     const point = SUPPORT_LAYOUT[index], c = Math.cos(pose.yaw), s = Math.sin(pose.yaw);
@@ -28,17 +28,19 @@ export function planSupports(poseAt, end = 166.2) {
       if (chosen < 0) continue;
       const index = pair * 2 + chosen, from = { ...planted[chosen] };
       nominal(t + 0.1, index, sample);
-      const speed = Math.abs(sample.yaw - from.yaw);
-      const duration = Math.max(0.20, 0.32 - speed * 0.15);
+      nominal(t, index, ahead);
+      const speed = Math.abs(sample.yaw - ahead.yaw) / .1;
+      const travel = Math.hypot(sample.x - ahead.x, sample.z - ahead.z) / .1;
+      const duration = Math.max(.12, .32 / (1 + speed * .45 + travel * .3));
       const to = { ...nominal(t + duration, index, {}) };
       const other = planted[1 - chosen], gap = Math.hypot(to.x - other.x, to.z - other.z);
-      if (gap < 0.19) {
+      if (gap < 0.25) {
         const sign = chosen === 0 ? 1 : -1;
-        to.x = other.x + Math.cos(to.yaw) * 0.23 * sign;
-        to.z = other.z - Math.sin(to.yaw) * 0.23 * sign;
+        to.x = other.x + Math.cos(to.yaw) * 0.26 * sign;
+        to.z = other.z - Math.sin(to.yaw) * 0.26 * sign;
       }
       const length = Math.hypot(to.x - from.x, to.z - from.z);
-      events[index].push({ start: t, end: t + duration, from, to, height: Math.min(0.085, 0.035 + length * 0.1) });
+      events[index].push({ start: t, end: t + duration, from, to, support: { ...other }, height: Math.min(0.085, 0.035 + length * 0.1) });
       planted[chosen] = to; freeAt = t + duration + 0.025; next = 1 - chosen;
     }
   }
@@ -52,8 +54,13 @@ export function planSupports(poseAt, end = 166.2) {
       out.x = p.x; out.z = p.z; out.yaw = p.yaw; out.y = 0; out.contact = true;
     } else {
       const u = (t - event.start) / (event.end - event.start), k = u ** 3 * (10 - 15 * u + 6 * u * u);
-      out.x = event.from.x + (event.to.x - event.from.x) * k;
-      out.z = event.from.z + (event.to.z - event.from.z) * k;
+      // Arc around the planted shoe: a straight chord can cut through it in a pivot.
+      const sx = event.support.x, sz = event.support.z;
+      const a = Math.atan2(event.from.z - sz, event.from.x - sx), b = Math.atan2(event.to.z - sz, event.to.x - sx);
+      const angle = a + Math.atan2(Math.sin(b - a), Math.cos(b - a)) * k;
+      const r0 = Math.hypot(event.from.x - sx, event.from.z - sz), r1 = Math.hypot(event.to.x - sx, event.to.z - sz);
+      const radius = r0 + (r1 - r0) * k;
+      out.x = sx + Math.cos(angle) * radius; out.z = sz + Math.sin(angle) * radius;
       out.yaw = event.from.yaw + (event.to.yaw - event.from.yaw) * k;
       out.y = Math.sin(Math.PI * u) ** 2 * event.height; out.contact = u === 0;
     }

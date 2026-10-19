@@ -468,12 +468,13 @@ assert(!/showModal|aviat\.close|aviat-menu|aviat-close/.test(ui));
   }
   assert.equal(escutField(INVITE_TOWN.id), '', 'the invitation has no arms: the neutral tint');
   assert.match(ui, /data-field="\$\{escutField\(t\.id\)\}"[^`]*sel-card|sel-card[^`]*data-field="\$\{escutField\(t\.id\)\}"/, 'cards carry their tincture');
-  // one surface, no divider; each portrait in whole pixels at its real relative size, never more than its box holds
+  // one surface, no divider; each portrait (all vectors now) at its real relative size, never more than its box holds
   assert(!/\.sel-card \.por \{[^}]*border-bottom/.test(css), 'no line between portrait and caption');
-  assert.match(css, /--ref: round\(down, min\(100cqh \/ 16, 100cqw \/ 20\), 1px\)/, 'one reference cell: the biggest grid');
-  assert.match(css, /round\(nearest, var\(--s, 1\) \* 16 \* var\(--ref\) \/ var\(--gh\), 1px\), round\(down, 100cqh \/ var\(--gh\), 1px\), round\(down, 100cqw \/ var\(--gw\), 1px\)/, 'whole-pixel cell at the figure\'s share, clamped to fit');
-  assert(Math.max(...FIGURES.map(f => portraitArt(f)[0].length)) + 2 === 20 && Math.max(...FIGURES.map(f => portraitArt(f).length)) + 2 === 16, 'the reference divisors match the biggest portrait');
-  assert.match(css, /width: calc\(var\(--gw\) \* var\(--cell\)\); height: calc\(var\(--gh\) \* var\(--cell\)\)/);
+  assert.match(css, /--ref: min\(100cqh \/ 14, 100cqw \/ 18\)/, 'one reference cell: the biggest grid without its rim');
+  assert.match(css, /min\(var\(--s, 1\) \* 14 \* var\(--ref\) \/ \(var\(--gh\) - 2\), 100cqh \/ \(var\(--gh\) - 2\), 100cqw \/ \(var\(--gw\) - 2\)\)/, 'the cell at the figure\'s share, clamped to fit');
+  assert(Math.max(...FIGURES.map(f => portraitArt(f)[0].length)) === 18 && Math.max(...FIGURES.map(f => portraitArt(f).length)) === 14, 'the reference divisors match the biggest portrait');
+  assert.match(css, /width: calc\(var\(--gw\) \* var\(--cell\)\); height: calc\(var\(--gh\) \* var\(--cell\)\); margin: calc\(-1 \* var\(--cell\)\);/, 'the rim hangs outside the box: the drawing stands on the floor');
+  assert.match(css, /--mula-cell: max\(2px, min\(\.8 \* 14 \* min\(100cqh \/ 14, 100cqw \/ 18\) \/ 11\.02/, 'the Mulassa\'s body on the same reference, at her stand');
   assert.match(ui, /--gw:\$\{art\[0\]\.length \+ 2\};--gh:\$\{art\.length \+ 2\};--s:\$\{portraitStand\(f\)\}/, 'the svg grid, rim included, and its stand');
   for (const f of [...FIGURES, INVITE]) assert(STAND[f.id] > 0 && STAND[f.id] <= 1.2 && portraitStand(f) === STAND[f.id], `${f.id}: its own stand beside the gegants (?sizes output pastes over STAND)`);
   assert.deepEqual([clampStand(0), clampStand(0.734), clampStand(9)], [0.2, 0.73, 1.2], '?sizes keeps two decimals within its range');
@@ -486,12 +487,13 @@ assert.match(readFileSync(new URL('../src/styles/select.css', import.meta.url), 
 { // Touch reclaims the action row; desktop keeps navigation fixed (verified in the browser).
   const css = readFileSync(new URL('../src/styles/select.css', import.meta.url), 'utf8');
   assert.match(css, /#select:is\(\[data-pending\], \[data-fold\]\) \{ --drop: var\(--drop-h\); \}/, 'a pending figure or the fold\'s card');
-  assert.match(css, /\.sel-pending\[data-fold\] \{[^}]*height: min\(var\(--keep-h\), var\(--pending-max\)\)/, 'the fold\'s card, links row included, is never taller than a pending figure\'s');
+  assert(!/--keep-h/.test(css + ui), 'all pending identities share viewport sizing; no first-figure height snapshot');
   assert.match(css, /--drop-h: calc\(var\(--action-h\) \+ var\(--ga\)\)/, 'by exactly the action and its gap');
   assert.match(css, /\.sel-bottom \{[^}]*transform: translateY\(var\(--drop\)\); transition: transform \.32s/);
-  assert.match(css, /\.sel-pending \{ --sink: calc\(var\(--drop\) \/ 2\); transform: translateY\(var\(--sink\)\); transition: [^}]*transform \.32s[^}]*max-height \.32s/);
-  assert.match(css, /\.sel-pending \{[^}]*--pending-max: calc\(100% - var\(--pending-top, 144px\) - var\(--pending-bottom, 254px\) \+ var\(--drop\)\); max-height: var\(--pending-max\)/);
-  assert.match(css, /\.sel-pending \{ min-height: min\(var\(--keep-h, 0px\), var\(--pending-max\)\); overflow-y: auto;/, 'the fold card\'s kept height never outgrows the room between the pills and the strip');
+  assert.match(css, /height: min\(360px, var\(--pending-max\)\)/, 'the shared box fits the viewport band');
+  assert.match(css, /grid-template-rows: minmax\(52px, 1fr\) minmax\(48px, 1fr\) minmax\(0, 2fr\) 48px 44px/, 'identity, copy and accessible actions have stable shared rows');
+  assert(!/transition:[^;}]*(?:max-height|height) \./.test(css), 'no height animation conceals layout shifts');
+  assert(!/overflow-y: auto/.test(css.slice(css.indexOf('/* All pending identities'), css.indexOf('/* Narrow, short portrait windows:'))), 'the central card has no internal scroll');
   assert(!/pending\.style\.minHeight/.test(ui), 'no fixed min-height that would beat max-height');
   assert.match(css, /@media \(prefers-reduced-motion: reduce\) \{ #select :is\(\.sel-pending, \.sel-info\) \{ transition: none; \} \}/);
   assert.match(css, /#select \.sel-card\.sel-more\[aria-selected="true"\]:not\(:focus-visible\)::before \{ border: 3px solid #fff3d6; \}/, 'selected, the fold wears the cream ring');

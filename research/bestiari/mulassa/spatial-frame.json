@@ -6,18 +6,17 @@
   "compass": "not established for this performance; no invented N/W/S/E helper marks",
   "metricCalibration": "inferred from model dimensions; not surveyed",
   "camera": {
-    "position": [
-      0,
-      1.5,
-      10
-    ],
-    "target": [
-      0,
-      2.05,
-      0
-    ],
-    "fov": 32,
-    "pan": "follows 65% of inferred x travel, 60% of inferred z travel",
-    "status": "approximate comparison framing; model proportions differ; not camera tracking or geographic calibration"
+    "fov": 29,
+    "opening": "background affine tracking, approximate metric scale; independent of body x",
+    "secondSide": "same tracking plus -0.6m framing residual at 36-65s",
+    "later": "manual follow after 67s, no full-video camera calibration",
+    "status": "approximate lens and projection; not surveyed"
+  },
+  "previewModel": {
+    "heightScale": 0.7320099255583127,
+    "lengthScale": 1.0900473933649288,
+    "source": "https://uaf.cat/seguici-cerimonial/mulassa/",
+    "carriers": 4,
+    "note": "Preview only. No production mesh edit. Published overall dimensions constrain proportions, not every part."
   }
 }

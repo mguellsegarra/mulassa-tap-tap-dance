@@ -57,10 +57,14 @@ const carriers = createCarriers(new THREE.Scene(), motion);
 const up = new THREE.Vector3(0, LEG_LENGTH / 2, 0), end = new THREE.Vector3(), start = new THREE.Vector3();
 for (let frame = 0; frame <= 8310; frame++) {
   const t = frame / 50; carriers.pose(t, motion.pose(t));
+  for (let pair = 0; pair < 4; pair++) {
+    const a = motion.foot(t, pair * 2), b = motion.foot(t, pair * 2 + 1);
+    assert(Math.hypot(a.x - b.x, a.z - b.z) >= .25 - 1e-8, 'swing must not cross the planted foot');
+  }
   for (const p of carriers.parts) {
     end.copy(up).applyQuaternion(p.thigh.quaternion).add(p.thigh.position);
     start.copy(up).negate().applyQuaternion(p.shin.quaternion).add(p.shin.position);
-    assert(end.distanceTo(p.knee.position) < 1e-7 && start.distanceTo(p.knee.position) < 1e-7, 'fixed bones meet at knee');
+    assert(end.distanceTo(p.knee.position) < 1e-7 && start.distanceTo(p.knee.position) < 1e-7, `fixed bones meet at knee at ${t}: ${end.distanceTo(p.knee.position)}, ${start.distanceTo(p.knee.position)}`);
     end.copy(up).applyQuaternion(p.shin.quaternion).add(p.shin.position);
     start.copy(p.shoe.position); start.y += .0375;
     assert(end.distanceTo(start) < 1e-7, `ankle reachable at ${t}`);

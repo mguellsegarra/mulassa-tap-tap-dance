@@ -27,20 +27,24 @@ export function createStage(canvas, motion) {
   resize.observe(canvas);
   function render(t, pose, baseline) {
     // Opening camera stays independent of the reconstructed lateral motion.
-    const follow = Math.max(0, Math.min(1, (t - 31.7) / 4));
-    const cameraX = -.45 + pose.x * .65 * follow;
+    const follow = Math.max(0, Math.min(1, (t - 67) / 4));
+    const second = Math.max(0, Math.min(1, (t - 34) / 2, (67 - t) / 2));
+    const cameraX = -.95 + .5 * follow - .6 * second + pose.cameraX + pose.x * .65 * follow;
     camera.fov = baseline ? 32 : 29;
     camera.position.set(cameraX, 1.5, (baseline ? 10 : 8.2) + pose.z * .6 * follow);
-    camera.lookAt(cameraX, baseline ? 2.05 : 1.58, pose.z * .6 * follow);
+    camera.lookAt(cameraX, baseline ? 2.05 : 1.43 + .22 * follow + pose.cameraY, pose.z * .6 * follow);
     camera.updateProjectionMatrix();
     carriers.visible(!baseline);
     if (baseline) {
       rig.root.scale.set(1, 1, 1);
+      rig.body.children[0].scale.y = 1; rig.body.children[0].position.y = 0;
       for (const leg of rig.legs) leg.visible = true;
       poseMulassa(rig, baseline.pose, baseline.beat, -65 * Math.PI / 180);
       renderer.render(scene, camera); return;
     }
     rig.root.scale.set(1, CARRIER_SCALE.y, CARRIER_SCALE.z);
+    // Keep the cloth tall: a uniform height correction would flatten the skirt.
+    rig.body.children[0].scale.y = 1.35; rig.body.children[0].position.y = .20;
     rig.neck.rotation.set(0.15, 0, 0); rig.head.rotation.x = 0.2; rig.jaw.rotation.x = 0;
     rig.tail.rotation.set(0, 0, 0);
     for (const ear of rig.ears) ear.rotation.x = 0;

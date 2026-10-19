@@ -15,13 +15,7 @@ export function fitPendingTitle(title, win) {
   const shrink = () => { for (let size = largest; size >= 16; size -= .5) { text.style.fontSize = `${size}px`; if (fits()) return true; } return false; };
   // Still too long at 16 px for a one-line slot (a narrow phone): a second line, never over the entity.
   if (!shrink() && parseFloat(win.getComputedStyle(title).getPropertyValue('--title-lines')) === 1) { title.style.setProperty('--title-lines', '2'); shrink(); }
-  // A portrait too small to show keeps its slot. Centre the name in that unused
-  // space as well, without moving the entity or actions below it.
-  const portrait = title.nextElementSibling;
-  const hiddenArt = portrait?.firstElementChild && win.getComputedStyle(portrait.firstElementChild).visibility === 'hidden';
-  const gap = parseFloat(win.getComputedStyle(title.parentElement).rowGap) || 0;
-  const offset = hiddenArt ? (parseFloat(win.getComputedStyle(portrait).height) + gap) / 2 : 0;
-  text.style.translate = `0 ${offset}px`;
+
 }
 
 // A single figure's open-code note repeats the GitHub link under it: it shows only while the card has room for it

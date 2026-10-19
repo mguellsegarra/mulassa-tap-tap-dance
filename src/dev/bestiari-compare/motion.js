@@ -34,12 +34,22 @@ export function makeMotion(data) {
       out.roll += (cue.roll * rad - out.roll) * weight;
       out.pitch += (cue.pitch * rad - out.pitch) * weight;
     }
+    out.cameraX = 0; out.cameraY = 0;
     if (data.openingFit && t < 31.7) {
       const rows = data.openingFit.rows, u = Math.max(0, Math.min(1, (31.7 - t) / .7));
       const weight = u * u * (3 - 2 * u);
       out.x += (track(rows, t, 1) - out.x) * weight;
       out.yaw += (track(rows, t, 2) * rad - out.yaw) * weight;
       out.pitch += (track(rows, t, 3) * rad - out.pitch) * weight;
+      out.cameraX = track(rows, t, 4) * weight; out.cameraY = track(rows, t, 5) * weight;
+      out.roll *= 1 - weight * .9;
+    }
+    if (data.secondFit && t > 34 && t < 67) {
+      const rows = data.secondFit.rows;
+      const u = Math.max(0, Math.min(1, (t - 34) / 2, (67 - t) / 2)), weight = u * u * (3 - 2 * u);
+      out.x += (track(rows, t) - out.x) * weight;
+      out.pitch += (track(rows, t, 2) * rad - out.pitch) * weight;
+      out.cameraX = track(rows, t, 3) * weight; out.cameraY = track(rows, t, 4) * weight;
       out.roll *= 1 - weight * .9;
     }
     const settle = Math.max(0, Math.min(1, (165 - t) / 3));

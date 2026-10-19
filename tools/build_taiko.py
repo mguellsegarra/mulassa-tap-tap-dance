@@ -44,8 +44,6 @@ def build_layout(timeline):
     """Resolve ordered harmony spans and accompaniment cues without rendering audio."""
     if timeline.get('unresolved'):
         raise ValueError(f"Mulassa form has unresolved anchors: {timeline['unresolved']}")
-    if timeline['tempo']['clock'] != 'constant-exact':
-        raise ValueError('Mulassa rendering currently requires tempo.clock=constant-exact; variable tempo and its MIDI map are not supported yet')
     occurrences = timeline['occurrences']
     if not occurrences or not timeline['melody']:
         raise ValueError('Mulassa form needs at least one played melody phrase')
@@ -158,8 +156,19 @@ def main():
     timeline = load_timeline(os.environ.get('MUSIC_FORM'))
     layout = build_layout(timeline)
     BPM, SR, LEAD_IN = timeline['bpm'], 44100, timeline['beats'][0]
-    SPB = 60 / BPM
-    sec = lambda b: LEAD_IN + b * SPB
+    # One clock for audio, MIDI and chart: the compiler's whole microseconds a beat, linear inside a beat (as the
+    # game's beat grid). A constant form gives the same seconds as the old LEAD_IN + b * 60 / BPM, to the last bit.
+    US = timeline['tempo']['beatUs']
+    AT = [0.0]
+    for u in US: AT.append(AT[-1] + u / 1e6)
+    constant = timeline['tempo']['clock'] == 'constant-exact'
+
+    def sec(b):
+        if constant: return LEAD_IN + b * 60 / BPM
+        k = min(max(int(np.floor(b)), 0), len(US) - 1)
+        return LEAD_IN + AT[k] + (b - k) * US[k] / 1e6
+
+    span = lambda s, d: sec(s + d) - sec(s)
     hz = lambda m: 440 * 2 ** ((m - 69) / 12)
     PC = {'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11}
     melody, chords, plan = layout['melody'], layout['chords'], layout['plan']
@@ -168,6 +177,10 @@ def main():
     FILLS, BALLOON, MINI = layout['fills'], layout['balloon_measures'], layout['mini']
     CRASH = sorted(f['beat'] for f in layout['crashes'] if f.get('accent', True))
     HEY = []  # Synthetic crowd shouts are deliberately absent.
+    # More drive phrase by phrase, never a new instrument: the percussion leans in a little from B on (the mix is
+    # normalised on its loudest part, so the solemn A sits slightly further back), alongside the tempo's rise.
+    LIFT = {'B': 1.05, 'C': 1.1, 'X': 1.15, 'roll': 1.15}
+    DRIVE = lambda b: LIFT.get(plan[min(max(int(b // 4), 0), len(plan) - 1)], 1.0)
     A_RANGES = layout['a_ranges']
     BALLOON_B = layout['balloons']
     HOLD, HOLD_KIND = layout['holds'], layout['hold_kinds']
@@ -396,7 +409,7 @@ def main():
 
     # lead: warm additive tone (saw/square in between, highs roll off as it sustains), gentle vibrato
     for s, d, m in melody:
-        dur = d * SPB - 0.02
+        dur = span(s, d) - 0.02
         for det, pan, g in ((0, 0, 1.0), (7, -0.5, 0.3), (-7, 0.5, 0.3)):
             w, t = additive(hz(m), dur + 0.12, 1.35, 0.35, det, 0.004 if d >= 2 else 0.0)
             put(stem['lead'], sec(s), w * adsr(t, dur + 0.12, 0.01, 0.12, 0.8, 0.25) * g, pan)
@@ -410,7 +423,7 @@ def main():
 
 
     for s, e, c in chords:
-        dur = (e - s) * SPB
+        dur = span(s, e - s)
         for m in voicing(c, 58):
             for det, pan in ((-9, -0.8), (9, 0.8), (0, 0)):
                 w, t = additive(hz(m), dur + 0.4, 1.9, 0.8, det)
@@ -427,7 +440,7 @@ def main():
         put(stem['arp'], sec(s), w * np.exp(-t / 0.07) * 0.5, -0.6 if i % 2 else 0.6)
 
     for s, d, m in bass:
-        dur = d * SPB - 0.015
+        dur = span(s, d) - 0.015
         w, t = additive(hz(m), dur + 0.03, 1.6, 3.0)
         w = 0.8 * w + 0.6 * np.sin(2 * np.pi * hz(m) * t)
         put(stem['bass'], sec(s), w * adsr(t, dur + 0.03, 0.004, 0.03, 0.75, 0.12))
@@ -492,9 +505,9 @@ def main():
         return v * PERC[kind]
 
 
-    def swell(beats):
+    def swell(seconds):
         """rising noise wash under a roll, cut on the next downbeat."""
-        t = np.arange(int(beats * SPB * SR)) / SR
+        t = np.arange(int(seconds * SR)) / SR
         nz = np.resize(noise, len(t))
         x = nz - lp(nz, 0.45)
         return 0.3 * lp(x, 0.2) * (t / t[-1]) ** 2.5
@@ -505,7 +518,7 @@ def main():
     BUS = dict(don='taiko', ka='taiko', shaker='perc', tamb='perc', cowbell='perc', hey='perc')
     for kind, lst in hits.items():
         for s, v in lst:
-            x = swell(v) if kind == 'swell' else perc(kind, v)
+            x = swell(span(s, v)) if kind == 'swell' else perc(kind, v * DRIVE(s))
             put(stem[BUS.get(kind, 'drums')], sec(s), x, PAN.get(kind, 0))
 
     # sidechain: pad, stabs and bass breathe with the kick
@@ -536,12 +549,16 @@ def main():
     # ------------------------------------------------------------------ MIDI + game grid
     mid = mido.MidiFile(ticks_per_beat=480)
     TP = lambda b: int(round(b * 480))
+    conductor = mido.MidiTrack(); mid.tracks.append(conductor)   # MIDI time 0 = beat 0 = audio time LEAD_IN
+    conductor.append(mido.MetaMessage('track_name', name='Tempo'))
+    now = 0
+    for k, u in enumerate(US[:END + 8]):
+        if k == 0 or u != US[k - 1]: conductor.append(mido.MetaMessage('set_tempo', tempo=u, time=TP(k) - now)); now = TP(k)
 
 
     def track(name, ch, prog, notes):
         tr = mido.MidiTrack(); mid.tracks.append(tr)
         tr.append(mido.MetaMessage('track_name', name=name))
-        if name == 'Lead': tr.append(mido.MetaMessage('set_tempo', tempo=mido.bpm2tempo(BPM)))
         if prog is not None: tr.append(mido.Message('program_change', channel=ch, program=prog))
         ev = []
         for s, d, n, v in notes:
@@ -564,6 +581,7 @@ def main():
 
     json.dump({
         'bpm': BPM, 'offset': LEAD_IN, 'beats_per_bar': 4, 'end_beat': END,
+        'tempo_us': [[k, u] for k, u in enumerate(US) if k == 0 or u != US[k - 1]],   # whole µs a beat, where it changes
         'sections': [[m * 4, s] for m, s in enumerate(plan) if m == 0 or plan[m - 1] != s],
         'drum_rolls': [list(w) for w in BALLOON_B],
         'melody': [[round(s, 3), round(d, 3), m] for s, d, m in melody],
@@ -622,7 +640,11 @@ def main():
         'beats': [round(sec(b), 4) for b in range(END + 1)],
         'notes': [[round(sec(s), 4), k, lv, bg, round(sec(he), 4) if he else 0] for s, k, lv, bg, he in taps],
         'balloonBeats': [list(w) for w in BALLOON_B],   # the GLOBUS windows [start, end) in beats (src/game/chart.js)
+        'arrangement': timeline['arrangement'],
+        # the reference recording's clock (src/game/mula-time.js): the compiler's song seconds are this file's sec()
+        'ref': [[round(s, 4), r] for s, r in timeline['ref']], 'refEnd': timeline['refEnd'],
     }, open('src/song.json', 'w'), separators=(',', ':'))
+    assert all(abs(sec(b) - s) < 1e-9 for (b, _), (s, _) in zip(timeline['refAnchors'], timeline['ref'])), 'the reference map is on the audio clock'
 
     # ------------------------------------------------------------------ menu ambience: an entrance, then a 16-measure loop
     # The groove leads: rounded taiko, handclaps, shaker, bass and muted nylon afterbeats.

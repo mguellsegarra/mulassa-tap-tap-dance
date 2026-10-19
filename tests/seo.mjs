@@ -15,6 +15,7 @@ try {
   assert.match(page, /<link rel="canonical" href="https:\/\/mulassa\.cat\/projecte\/">/);
   assert.match(page, /rel="icon"[^>]*favicon-32\.png/, 'the page has the game\'s favicon');
   assert.match(page, /rel="alternate" type="text\/markdown" href="\/projecte\/index\.md"/);
+  assert.match(page, /og:image:width" content="1200"[\s\S]*og:image:height" content="630"[\s\S]*og:image:alt" content="La Mulassa i el Drac de Valls/); // same card as the home page
   assert.match(page, /mailto:holi@mulassa\.cat/, 'the contact address is a link');
   const ld = JSON.parse(page.match(/<script type="application\/ld\+json">([^<]*)<\/script>/)[1]);
   assert.equal(ld['@type'], 'AboutPage');

@@ -5,15 +5,15 @@ import { photoExtras, updatePhotoExtras, photoEscape } from './photo-obstacles.j
 import { pushPulse, rippleLive, RIPPLE, ripple } from './crowd-fx.js';
 import * as THREE from 'three';
 import { judgedCount } from '../game/progress.js';
-import { song, figureScale, selectedFigure } from '../game/figure-song.js';
-import { DRAC } from '../game/figures.js';
+import { song, figureScale } from '../game/figure-song.js';
 import { pick, poseBand } from './models.js';
-import { renderProfile, camera, plaza, colla } from './stage.js';
+import { renderProfile, camera, plaza, colla, mulaColla } from './stage.js';
 import { CALM } from '../core/env.js';
 import { clock, G, chip, figureSfx } from '../game/state.js';
 import { activeCrowd, bandSpots, midCrowd, MID, animateRenderQuality } from './quality.js';
 import { M, PIVOT, PAIR } from './mula-motion.js';
 import { COLLA_SPOTS } from './drac-dance.js';
+import { MULA_COLLA_SPOTS } from './mula-stage.js';
 import { RING, REACH } from './crowd-build.js';
 import { easeIn, smooth01, TAU } from '../core/anim.js';
 import { bubble, at } from '../hud/bubbles.js';
@@ -225,8 +225,9 @@ function steer(p, dt, beat, live) {
     const rr = p.pos.length(), over = rr - (MID.edge - 0.8);
     if (over > 0 && p.pos.x * MID.fx + p.pos.y * MID.fz > rr * MID.cos) { tmp.x -= (p.pos.x / rr) * over * 10; tmp.y -= (p.pos.y / rr) * over * 10; }
   }
-  if (!PHOTO.on && selectedFigure.id === DRAC.id) { // the Drac's dance ground and its helpers: a soft wall round the centre
-    const rr = p.pos.length() || 1, under = RING.arena - rr;
+  const arena = colla?.helpers.visible ? RING.arena : mulaColla?.helpers.visible ? RING.arenaMula : 0;
+  if (arena) { // the figure's dance ground and its colla (shown only with it, never in photo mode): a soft wall round the centre
+    const rr = p.pos.length() || 1, under = arena - rr;
     if (under > 0) { tmp.x += (p.pos.x / rr) * under * 10; tmp.y += (p.pos.y / rr) * under * 10; }
   }
   if (!p.away && (p.rest || G.state !== 'play')) p.spot.copy(p.pos); // where they stand (to come back to)
@@ -427,6 +428,7 @@ export function animCrowd(dt, beat, t, live = 1) {
   for (const p of activeCrowd) { p.cell = crowdCell(p); cellPush(p.cell, p); }
   for (const b of bandSpots) cellPush(crowdCell(b), b); // the band: fixed, never in anyone's way
   if (colla?.helpers.visible) for (const b of COLLA_SPOTS) cellPush(crowdCell(b), b); // the Drac's colla too
+  if (mulaColla?.helpers.visible) for (const b of MULA_COLLA_SPOTS) cellPush(crowdCell(b), b); // and the Mulassa's
   for (const p of photoExtras) if (!p.band) cellPush(crowdCell(p), p);
   updateMood(dt, t, live);
   for (const p of activeCrowd) steer(p, dt, beat, live);

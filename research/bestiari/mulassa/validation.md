@@ -127,3 +127,26 @@ Evidence: external `Mulassa/revisio-2026-10-19/full-motion-audit/`. `final-playb
 `final-phone.png`, `final-landscape.png` and `final-source/` identify the final version. Earlier experiments are
 retained separately and do not describe the shipped prototype. The source audio is still the recording; no new
 musical arrangement or listening sign-off is claimed.
+
+## Camera seam correction — 2026-10-19
+
+See `camera-seam-89s.md` for the reported 88.54 s capture, diagnosed discontinuity
+just after 89 s, complete camera-target fade at 121 s, and numeric/rendered evidence.
+
+- `node tests/bestiari-research.mjs`: passed. The new projected-camera regression
+  first failed on the preserved logic at 89 s, then passed with the fix, including
+  fit boundaries and 30/50/60/120 fps sampling around the reported transition.
+- `npm run build`: passed; existing large-chunk warning remains.
+- `npm run check`: initial run passed through crowd/input checks, then failed the
+  audio applause generation timing assertion at 116 ms. Re-ran the exact check
+  command sequence from `tests/audio.mjs` through the final backup-scheduler check:
+  all passed. Thus the suite completed across two runs, not one uninterrupted pass.
+  No audio code or thresholds were changed. Logs: `/tmp/mulassa-seam-check.log` and
+  `/tmp/mulassa-seam-check-remainder.log`.
+- Browser: muted side-by-side playback 86–95.8 s, additional playback 119–122 s,
+  confirmed adjacent 88.98/89/89.02 s via next-frame UI, desktop and 375 x 667 mobile.
+  No console errors/warnings after reload. Preview left paused at 86 s for review.
+- Production music hashes match the captured pre-edit baseline. No model geometry,
+  source choreography annotations or foot solver changes in this correction.
+- LAN URL returned HTTP 200. Existing Vite PID 26476 on port 5188 belongs to this
+  worktree and remains running. No new server, commit, push or deployment.

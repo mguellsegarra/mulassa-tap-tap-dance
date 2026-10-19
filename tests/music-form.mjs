@@ -55,8 +55,14 @@ assert.deepEqual(timelines.mulassa.holds.map(h => h.slice(0, 2)), [[32, 34], [64
 assert.deepEqual(timelines.drac.holds.map(h => h.slice(0, 2)), [[66, 69]]);
 assert.equal(timelines.mulassa.finale, 208);
 assert.equal(timelines.drac.finale, 225); // the 8-beat closing roll under the held last note (docs/drac-music.md, round 2)
-// constant-exact is the generator's own grid, to the last bit
-assert.deepEqual(timelines.mulassa.beats, Array.from({ length: 229 }, (_, b) => 0.1 + b * (60 / 152)));
+// the Mulassa rises phrase by phrase (A 154, A2 156, B 162, C 166, X 170) and broadens to 152 for the closing roll
+const mulassaBpm = b => Math.round(60e7 / timelines.mulassa.tempo.beatUs[b]) / 10;
+assert.deepEqual([0, 40, 100, 160, 190, 212, 226, 228].map(mulassaBpm), [154, 154, 156, 162, 166, 170, 152, 152]);
+{ // constant-exact stays the generator's own grid, to the last bit
+  const f = clone(forms.mulassa);
+  f.tempo = { clock: 'constant-exact', interpolation: 'smoothstep', leadIn: 0.1, knots: [{ at: { beat: 0 }, bpm: 152 }] };
+  assert.deepEqual(compileForm(f, scores.mulassa).beats, Array.from({ length: 229 }, (_, b) => 0.1 + b * (60 / 152)));
+}
 // bars are whole beats however many 1/6 triplets they hold: nothing drifts off the grid
 assert(timelines.drac.occurrences.every(o => Number.isInteger(o.start) && o.dur === (o.item === 'pickup' ? 1 : 2)), 'drac bars are whole beats');
 

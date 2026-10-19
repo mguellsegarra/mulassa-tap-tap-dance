@@ -64,10 +64,6 @@ export function poseDrac(d, p, front = 0, feetAt = dracFeet) {
     const ty = shoe.rotation.y * TWIST, ct = Math.cos(ty), st = Math.sin(ty);
     pants.rotation.set(Math.atan2(st * ux + ct * uz, uy), ty, -Math.asin(ct * ux - st * uz), 'YXZ'); // in the trouser's heading
   });
-  // fire: grows out of its nozzle and shrinks back into it (scaled about the nozzle, so it never floats free)
-  d.fire.forEach((f, i) => {
-    const k = Math.max(0, p.fire) * (0.85 + 0.15 * Math.sin(b * 16 + i * 2));
-    f.visible = k > 0;
-    f.scale.setScalar(k);
-  });
+  // fire: the dance's own jet level on each tube (drac-fx.js reads it; drac-fire.js draws the jets)
+  for (const f of d.fire) f.userData.level = Math.max(0, p.fire);
 }

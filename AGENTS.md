@@ -104,7 +104,7 @@ by everyone below it as `sheets.board`… (`ui/sheets.js`), so no import cycle i
   `draw.js` (`drawHud`), plus `stars.js`, `title-layout.js`, `share-card.js`.
 - `src/ui/` — DOM: `handles.js`, `sheets-setup.js`, `input.js`, `controls.js`, `pause.js`, `pause-actions.js`, `pad.js`, `focus.js`,
   `backdrop.js`, `fullscreen.js`; the sheets `board-ui.js`, `profile-ui.js`, `share-ui.js`, `feedback-ui.js` (+ the nudge), `sync-sheet.js`,
-  `loader.js`, `select-ui.js` (main selector, town pills, records and inline pending information); helpers `sheet-kit.js` (status line, busy button), `sheet-fade.js`.
+  `loader.js`, `select-ui.js` (main selector, town pills, records and inline pending information), `pending-gifts.js` (the fold card's four icons); helpers `sheet-kit.js` (status line, busy button), `sheet-fade.js`.
 - `src/services/` — talking to the outside: `leaderboard.js` (+ `leaderboard-rules.js`, `leaderboard-result.js`, `alias-rules.js`),
   `feedback.js` (client of the `workers/feedback` Cloudflare Worker, `VITE_FEEDBACK_URL`; the Worker checks Turnstile and e-mails each
   message to the `FEEDBACK_TO` secret, nothing stored, never put a personal address in the repo), `captcha.js` (Turnstile), `share.js`,
@@ -218,6 +218,7 @@ by everyone below it as `sheets.board`… (`ui/sheets.js`), so no import cycle i
   brand and celebration (titles, GUAPA); GUA orange / PA turquoise only for the two drums and what literally means left/right;
   errors `#ff8a7a`. Round icon buttons: 44 or 56 px, 2 px gold edge, dark fill, cream glyph (`.sheet-x` too); #pause stays
   bigger on purpose (a game control). Every target is >= 44 px (`.btn-link` gets an invisible slop).
+- The fold's «Aviat a la plaça» card shows four drawn things to send (Fotos, Vídeos, Partitures, El ball; `src/ui/pending-gifts.js`), each in its own pastel gradient: a deliberate exception to the colour roles, used nowhere else.
 - **Buttons: use the `.btn` component** (in `index.html`), never one-off button styles:
   `.btn` + `.btn-primary` (filled gold, one per sheet) / `.btn-secondary` (outlined) / `.btn-link` (plain underlined
   text, minor actions; `.btn-small` for tiny ones). Optional `<svg>` icon goes first: fixed 22 px slot on the left,

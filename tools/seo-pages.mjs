@@ -60,8 +60,13 @@ const toHtml = (p, canonical, alternate) => `<!doctype html>
 <meta property="og:description" content="${esc(p.lead)}">
 <meta property="og:url" content="${SITE}${canonical}">
 <meta property="og:image" content="${SITE}/og.jpg">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="La Mulassa i el Drac de Valls amb el logotip de Mulassa Tap Tap Dance.">
 <meta property="og:locale" content="ca_ES">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image:alt" content="La Mulassa i el Drac de Valls amb el logotip de Mulassa Tap Tap Dance.">
 <script type="application/ld+json">${JSON.stringify({
   '@context': 'https://schema.org', '@type': 'AboutPage', name: p.title, inLanguage: 'ca', url: `${SITE}${canonical}`,
   about: { '@type': 'VideoGame', name: 'Mulassa Tap Tap Dance', url: `${SITE}/`, inLanguage: 'ca', genre: 'Joc de ritme', applicationCategory: 'GameApplication', operatingSystem: 'Qualsevol navegador', isAccessibleForFree: true,

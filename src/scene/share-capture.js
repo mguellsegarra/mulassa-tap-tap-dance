@@ -13,7 +13,8 @@ import * as THREE from 'three';
 import { newPose, dancePose, END_BEAT } from '../game/dance.js';
 import { blocks } from './framing.js';
 import { errors, errorName } from '../services/errors.js';
-import { plaza, mula, drac, dracMat, renderer, FRONT, CAM_AZ, DRAC_YAW, scene } from './stage.js';
+import { plaza, mula, drac, dracMat, renderer, FRONT, CAM_AZ, DRAC_YAW, scene, mulaCarriers } from './stage.js';
+import { nominalFoot } from '../game/mula-supports.js';
 import { M } from './mula-motion.js';
 import { insidePlaza } from './cameras.js';
 
@@ -23,6 +24,7 @@ import { insidePlaza } from './cameras.js';
 // encodes sRGB into bytes, flipped so row 0 is the top. A finished dance strikes the final hit's pose (dance.js) for
 // the photo (a collapse is never shared). Every transform is put back before the next frame. Not per frame.
 const SHARE_POSE = newDracPose();
+const HERO_SHELL = {}, HERO_FEET = Array.from({ length: 8 }, () => ({}));
 export const heroCam = new THREE.PerspectiveCamera(24, 1, 0.5, 200), heroPose = newPose(), heroXYZ = [0, 0, 0], heroFocus = [0, 0, 0];
 let heroQuad = null;
 export function heroQuadMake() { // the sRGB encoding pass (built once; precompile() warms its program too)
@@ -78,7 +80,11 @@ export function renderHero(w, h, figureId = selectedFigure.id) {
       mula.body.scale.set(1, 1, 1);
       mula.neck.rotation.set(-0.05, 0.2, 0); mula.head.rotation.set(0.05, 0, 0); mula.jaw.rotation.set(0.35, 0, 0);
       mula.ears.forEach(e => (e.rotation.x = -0.5));
-      mula.legs.forEach((l, i) => { l.visible = true; l.position.y = i % 2 ? 0.12 : 0; });
+      // her carriers stand under her, one foot of each a little off the floor, mid-step
+      Object.assign(HERO_SHELL, { x: M.pos.x, z: M.pos.y, yaw: FRONT + 0.55, roll: 0.03, pitch: mula.body.rotation.x });
+      HERO_FEET.forEach((f, i) => { nominalFoot(HERO_SHELL, i, f); f.y = i % 2 ? 0.06 : 0; });
+      mulaCarriers.group.visible = true;
+      mulaCarriers.pose(mula, HERO_FEET);
     }
     const fy = 1.8 * scale, need = 5.6 * scale, t = Math.tan(heroCam.fov * Math.PI / 360);
     heroCam.aspect = w / h;

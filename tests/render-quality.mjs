@@ -714,6 +714,23 @@ assert(run(`(() => {
   animConfetti(1 / 30);
   return under.out >= 0 && beside.out < 0;
 })()`), 'confetti under her shrinks away, beside her it stays');
+// Overlapping papers on the floor never share a plane (same normal, same height): those z-fought, winking as the camera
+// drifted. A whole pool dropped onto one square metre, every close pair checked.
+const coplanar = run(`(() => {
+  for (let i = 0; i < 400; i++) animConfetti(0.05);
+  const n = new THREE.Vector3(), m = new THREE.Vector3(); let pairs = 0, same = 0;
+  spawnConfetti(renderProfile.confetti, c => c.p.set(M.pos.x + 6 + Math.random(), 0.5, M.pos.y + 6 + Math.random()));
+  for (let i = 0; i < 60; i++) animConfetti(1 / 30);
+  const lying = conf.filter(c => c.lay > SETTLE && c.out < 0);
+  for (let a = 0; a < lying.length; a++) for (let b = a + 1; b < lying.length; b++) {
+    const A = lying[a], B = lying[b];
+    if (Math.hypot(A.p.x - B.p.x, A.p.z - B.p.z) > 0.25) continue;
+    pairs++; n.set(0, 0, 1).applyQuaternion(A.qf); m.set(0, 0, 1).applyQuaternion(B.qf);
+    if (Math.abs(n.dot(m)) > 0.99999 && Math.abs(n.dot(m.subVectors(A.p, B.p))) < 0.0005) same++;
+  }
+  return JSON.stringify({ pairs, same });
+})()`);
+assert(JSON.parse(coplanar).pairs > 20 && JSON.parse(coplanar).same === 0, `no two overlapping confetti papers share a plane: ${coplanar}`);
 console.log('scene downgrade and particle lifecycle ok');
 
 // Two neighbours on opposite sides of a grid boundary must still repel each other.

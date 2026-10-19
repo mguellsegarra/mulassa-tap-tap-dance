@@ -146,10 +146,22 @@
     "labels": [[0, "intro0"], [4, "intro1"], [8, "intro2"]]
   },
   "tempo": {
-    "clock": "constant-exact",
+    "clock": "drac-midpoint-us",
     "interpolation": "smoothstep",
     "leadIn": 0.1,
-    "knots": [{ "at": { "beat": 0 }, "bpm": 152 }]
+    "knots": [
+      { "at": { "beat": 0 }, "bpm": 154 },
+      { "at": { "item": "s3", "edge": "start", "offset": -2 }, "bpm": 154 },
+      { "at": { "item": "s3", "edge": "start" }, "bpm": 156 },
+      { "at": { "item": "s5", "edge": "start", "offset": -1 }, "bpm": 156 },
+      { "at": { "item": "s5", "edge": "start", "offset": 2 }, "bpm": 162 },
+      { "at": { "item": "s10", "edge": "start", "offset": -2 }, "bpm": 162 },
+      { "at": { "item": "s10", "edge": "start" }, "bpm": 166 },
+      { "at": { "item": "s14", "edge": "start", "offset": -2 }, "bpm": 166 },
+      { "at": { "item": "s14", "edge": "start" }, "bpm": 170 },
+      { "at": { "item": "s15", "edge": "start", "offset": 4 }, "bpm": 170 },
+      { "at": { "item": "s15", "edge": "end" }, "bpm": 152 }
+    ]
   },
   "events": {
     "balloons": [
@@ -227,5 +239,18 @@
     "finale": { "item": "s14", "edge": "start" },
     "roll": { "item": "s15", "edge": "end" },
     "hit": { "item": "s15", "edge": "end", "offset": 4 }
+  },
+  "reference": {
+    "video": "Balladeta de la Mulassa, Santa Úrsula 2017 (El Camp Difusió), https://www.youtube.com/watch?v=D53pgXOeIL0",
+    "end": 166.2,
+    "anchors": [
+      { "at": { "beat": 12 }, "ref": 0 },
+      { "at": { "item": "s2", "edge": "start" }, "ref": 35.5 },
+      { "at": { "item": "s3", "edge": "start" }, "ref": 69.5 },
+      { "at": { "item": "s4", "edge": "start" }, "ref": 86 },
+      { "at": { "item": "s4", "edge": "start", "offset": 24 }, "ref": 110 },
+      { "at": { "item": "s15", "edge": "end" }, "ref": 161.3 },
+      { "at": { "item": "s15", "edge": "end", "offset": 10 }, "ref": 166.2 }
+    ]
   }
 }

@@ -27,21 +27,17 @@ export function setFigureSong(value) {
   FINALE_T = song.finale;
   return true;
 }
-export function beatAt(t) {
-  if (selectedFigure.id === MULASSA.id) { // preserve the legacy constant-tempo extrapolation
-    if (t <= BEATS[0]) return (t - BEATS[0]) / BEAT;
-    if (t >= BEATS.at(-1)) return BEATS.length - 1 + (t - BEATS.at(-1)) / BEAT;
-  }
-  return beatAtTime(BEATS, t);
-}
+// Both songs change tempo phrase by phrase: every reading goes through the local beat grid (beyond its ends, the first /
+// last beat's length carries on). BEAT is only the song's mean beat, never a clock.
+export const beatAt = t => beatAtTime(BEATS, t);
 export const songTimeAtBeat = beat => timeAtBeat(BEATS, beat);
-// Count-in follows the local beat intervals, including the Drac's acceleration and final ritardando.
-export const countInAt = t => [3, 2, 1].map(k => selectedFigure.id === MULASSA.id ? t - k * BEAT : songTimeAtBeat(beatAt(t) - k));
-export const countInDuration = t => selectedFigure.id === MULASSA.id ? 3 * BEAT : t - songTimeAtBeat(beatAt(t) - 3);
+// Count-in follows the local beat intervals, including the accelerations and final ritardandos.
+export const countInAt = t => [3, 2, 1].map(k => songTimeAtBeat(beatAt(t) - k));
+export const countInDuration = t => t - songTimeAtBeat(beatAt(t) - 3);
 
 // HUD countdown phase: integers 0/1/2 land on the very same clicks as countInAt().
 export function countInPhase(t, target) {
-  const phase = selectedFigure.id === MULASSA.id ? 3 + (t - target) / BEAT : 3 + beatAt(t) - beatAt(target);
+  const phase = 3 + beatAt(t) - beatAt(target);
   const whole = Math.round(phase) || 0;
   return Math.abs(phase - whole) < 1e-9 ? whole : phase;
 }

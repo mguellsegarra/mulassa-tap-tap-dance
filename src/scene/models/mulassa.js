@@ -1,4 +1,5 @@
-// The mulassa (the ballroom mule): body, blanket, head, ears and legs, each part a pivot the choreography drives.
+// The mulassa (the ballroom mule): body, blanket, head and ears, each part a pivot the choreography drives. Her four
+// carriers' shoes and trouser cuffs are scene/mula-carriers.js (they stand on the floor, not on the shell).
 import * as THREE from 'three';
 import { Vox } from './voxel.js';
 
@@ -125,14 +126,5 @@ export function buildMulassa() {
     return e;
   });
 
-  // eight legs of the four portadors, poking out under the cloth
-  const legs = [];
-  for (const z of [1.05, -1.05]) for (const x of [0.3, -0.3]) for (const dx of [0.08, -0.08]) {
-    const l = new THREE.Group();
-    l.position.set(x + dx, 0, z);
-    l.add(new Vox().box(0, 0, 0.03, 0.13, 0.08, 0.24, C.shoe, 0).box(0, 0.08, 0, 0.12, 0.45, 0.14, C.pants).mesh());
-    root.add(l);
-    legs.push(l);
-  }
-  return { root, body, neck, head, jaw, ears, legs, tail, peek };
+  return { root, body, neck, head, jaw, ears, tail, peek };
 }

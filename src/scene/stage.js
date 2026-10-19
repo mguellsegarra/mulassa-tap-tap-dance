@@ -5,8 +5,10 @@ import { errors, errorName } from '../services/errors.js';
 import { buildPlaza, buildMulassa } from './models.js';
 import { newDracFeet } from '../game/drac-feet.js';
 import { buildDrac, DRAC_SCALE } from './models/drac.js';
-import { createColla } from './drac-colla.js';
+import { createColla, createMulaColla } from './drac-colla.js';
 import { danceYaw } from '../game/drac-layout.js';
+import { mulaDanceYaw, mulaToWorld, MULA_CENTRE, MULA_COMPASS } from '../game/mula-layout.js';
+import { createCarriers } from './mula-carriers.js';
 import { COARSE } from '../core/env.js';
 
 // ------------------------------------------------------------------ 3D
@@ -55,8 +57,11 @@ export const plaza = buildPlaza({ backdrop: renderProfile.backdrop, balconies: r
 scene.add(plaza.group);
 export const mula = buildMulassa();
 scene.add(mula.root);
+export const mulaCarriers = createCarriers(); // her four carriers' shoes and trouser cuffs, under the cloth (mula-carriers.js)
+mula.root.add(mulaCarriers.group);
 export let drac = null;
 export let colla = null; // the Drac's colla: its four clapping helpers and a few members sitting round the plaça (drac-colla.js)
+export let mulaColla = null; // the Mulassa's: four attendants on her compass marks and a seated ring (drac-colla.js createMulaColla)
 // Keep the Drac's material separate for share captures; its body stays opaque.
 // Copied from its own meshes in initDrac (no voxel.js import here: the tests' one-script bundle keeps its module order).
 export let dracMat = null;
@@ -78,6 +83,12 @@ export function initDrac() {
   colla = createColla({ profile: renderProfile }); // hidden until the Drac is the figure; built now so the warmup compiles it
   colla.helpers.visible = colla.seated.visible = false;
   scene.add(colla.helpers, colla.seated);
+  // the Mulassa's seated ring, from its dance frame into the plaça (MULA_YAW below)
+  const seatAt = ([a, r]) => { const m = MULA_COMPASS[0], c = Math.cos(a), n = Math.sin(a), dx = m.x * c + m.z * n, dz = -m.x * n + m.z * c;
+    return mulaToWorld({}, MULA_CENTRE[0] + dx * r, MULA_CENTRE[1] + dz * r, MULA_YAW); };
+  mulaColla = createMulaColla(renderProfile, seatAt);
+  mulaColla.helpers.visible = mulaColla.seated.visible = false;
+  scene.add(mulaColla.helpers, mulaColla.seated);
 }
 // Her standing pose at load (what the camera-fit silhouettes used to leave behind): animMula overwrites it every frame.
 mula.neck.rotation.x = 0.15;
@@ -99,6 +110,7 @@ export const CAM_EL = 26 * Math.PI / 180, CAM_AZ = -81 * Math.PI / 180;
 export const CAM_DIR = [Math.cos(CAM_EL) * Math.sin(CAM_AZ), Math.sin(CAM_EL), Math.cos(CAM_EL) * Math.cos(CAM_AZ)]; // from her to the camera (unit)
 export const FRONT = CAM_AZ + 0.35; // her dance's front: 20 deg off the play camera, so every pose reads three-quarter (her side, the blanket, the head)
 export const DRAC_YAW = danceYaw(CAM_AZ); // the Drac's dance frame heading (game/drac-layout.js)
+export const MULA_YAW = mulaDanceYaw(CAM_AZ); // the Mulassa's (game/mula-layout.js): the camera looks in between W and S
 export let camShift = 0; // lens shift of the play camera, css px (see frame())
 export const setCamShift = v => (camShift = v);
 

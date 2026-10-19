@@ -24,8 +24,10 @@ export const RAD = { adult: 0.36, kid: 0.26, rider: 0.4, band: 0.55 }, REACH = 0
 export const RING = { front: 5.4, clear: 3.8, kid: -0.4, jitter: 0.6, row: 0.9, flee: 1.3, gain: 3, ease: 0.3, back: 0.5, home: 0.35, flinch: 0.9, reach: 2.5, bold: 0.85, patience: 3,
   // the Drac's dance travels round the plaça's centre with its four helpers 4.5 m out (game/drac-layout.js): while it is
   // the figure, nobody stands closer to the centre than `arena` m (a soft wall, like the mid band's front): beyond the
-  // colla members sitting round the helpers' ring (drac-colla.js SEATS, ~6 m)
-  arena: 7.2 };
+  // colla members sitting round the helpers' ring (drac-colla.js SEATS, ~6 m). The Mulassa's travels further (her
+  // whole song's footprint reaches 5.66 m from its centre, game/mula-layout.js): her seated ring sits at ~6.8 m, so
+  // her ground (`arenaMula`) is wider
+  arena: 7.2, arenaMula: 7.9 };
 export function placeHome(p) {
   const r = RING.front + p.row * 1.1 + rnd(-0.4, 0.4); // the front row near enough that her turns reach it (RING)
   p.pos.set(Math.cos(p.ang) * r, Math.sin(p.ang) * r);

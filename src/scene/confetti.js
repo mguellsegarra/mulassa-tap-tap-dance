@@ -25,6 +25,7 @@ const PARKED = new THREE.Matrix4().makeScale(0, 0, 0).setPosition(0, -9, 0);
 conf.forEach((_, i) => confetti.setMatrixAt(i, PARKED));
 confetti.count = 0; confetti.visible = false; // drawn up to the last piece in use only
 confetti.frustumCulled = false;
+confetti.receiveShadow = true; // in her shadow it darkens with the floor instead of glowing (no shadows: low/minimal draw none)
 confetti.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
 scene.add(confetti);
 export const dummy = new THREE.Object3D();
@@ -64,7 +65,7 @@ export function spawnConfetti(n, place, air = false) {
     c.spin = (c.flutter ? rnd(0.5, 2) : rnd(4, 9)) * (i & 1 ? 1 : -1) * (calm ? 0.3 : 1); c.tilt = rnd(0.5, 1.1) * (calm ? 0.4 : 1);
     c.amp = rnd(0.25, 0.6) * (calm ? 0.3 : 1); c.w = rnd(3, 6); c.ph = rnd(0, 6.3); c.dir = rnd(0, 6.3); c.k = rnd(2, 3);
     c.age = 0; c.lay = -1; c.out = -1; c.gust = false;
-    left--; cursor = (i + 1) % N;
+    left--; cursor = (i + 1) % N; confettiSettled = false;
   }
   const missing = left;
   if (air !== null) for (const onFloor of air ? [true, false] : [true]) for (let j = 0; j < N && left > 0; j++) {
@@ -80,8 +81,9 @@ export const setConfettiSettled = v => (confettiSettled = v);
 // blows it off to the side and shrinks it away, done well before BALLA! (reduced motion: it only shrinks away)
 const SWEEP = 0.9, CONF_LAY = 5, CONF_FADE = 1, SETTLE = 0.2, UNDER = 0.6; // s: the gust; a piece rests on the floor, then shrinks away; it lies flat; one under her goes
 const FALL = 5; // m/s², with each piece's drag k: it falls at FALL / k (1.7-2.5 m/s), paper, not a stone
-// Each piece lands a step above the one before (16 steps, 2.5 mm: far above the depth buffer's resolution at the camera's
-// distance): overlapping papers never share a plane (they used to z-fight, winking as the camera drifts), the last one on top.
+// Each piece lands a step above the one before (16 steps, 2.5 mm) and lies a few degrees off flat, like real paper: two
+// overlapping papers cross along a line instead of sharing a plane (they used to z-fight, winking as the camera drifts).
+// Its lower edge stays above the tiles (half its 0.2 m height x sin 3.4° < CONF_LAND).
 const CONF_LAND = 0.01, CONF_STEP = 0.0025, CONF_STEPS = 16;
 let confLanded = 0;
 export function sweepConfetti() {
@@ -126,7 +128,8 @@ export function animConfetti(dt) {
       if (c.p.y <= CONF_LAND) { // landed: it settles flat over SETTLE s (no snap), rests CONF_LAY s, then shrinks away
         c.p.y = CONF_LAND + (confLanded = (confLanded + 1) % CONF_STEPS) * CONF_STEP; c.v.set(0, 0, 0); c.lay = 0;
         const q = c.q0.copy(dummy.quaternion), up = q.y * q.z + q.w * q.x >= 0; // its face's normal points up (else down)
-        c.qf.setFromEuler(flat.set(up ? -Math.PI / 2 : Math.PI / 2, c.ang, 0)); // so it lies on the nearer face
+        const lean = (0.035 + 0.025 * Math.abs(Math.sin(c.ph))) * (c.dir > 3.15 ? 1 : -1);
+        c.qf.setFromEuler(flat.set((up ? -Math.PI / 2 : Math.PI / 2) + lean, c.ang, 0)); // so it lies on the nearer face
       }
     } else {
       if (c.lay <= SETTLE) c.lay += dt;

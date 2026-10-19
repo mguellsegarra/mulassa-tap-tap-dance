@@ -1,10 +1,9 @@
 // Applies a render-quality level to the scene (crowd rows, shadows, band, backdrop) and builds the mid crowd.
 import { CALM } from '../core/env.js';
-import { SEATED_COUNT } from './drac-colla.js';
 import { profileAt } from '../platform/render-quality.js';
 import { placeBand, buildBackdrop } from './models.js';
 import * as THREE from 'three';
-import { renderProfile, qualityLevel, renderer, sun, scene, plaza, glc, CAM_DIR, setRenderProfile, colla } from './stage.js';
+import { renderProfile, qualityLevel, renderer, sun, scene, plaza, glc, CAM_DIR, setRenderProfile, colla, mulaColla } from './stage.js';
 import { crowd, crowdMesh, BAND_AZ, RAD, BAND_ARC } from './crowd-build.js';
 
 export let midCrowd = null; // the mid band (built once the play camera's direction exists, below CAM_DIR)
@@ -87,7 +86,7 @@ export function animateRenderQuality(dt) {
   qualityShadowMap(renderProfile.shadow);
   if (plaza.backdrop) plaza.backdrop.mesh.count = Math.min(plaza.backdrop.n, renderProfile.backdrop);
   if (midCrowd) midCrowd.mesh.count = Math.min(midCrowd.n, renderProfile.mid);
-  colla?.setProfile(renderProfile);
+  colla?.setProfile(renderProfile); mulaColla?.setProfile(renderProfile);
   refreshQualityCrowd(); // no further per-frame transition work, or simulation of retired spectators
 }
 export function applyRenderQuality({ transition = false } = {}) {
@@ -109,10 +108,10 @@ export function applyRenderQuality({ transition = false } = {}) {
   plaza.band.forEach((p, i) => qualityScaleTo(bandScales[i], i < renderProfile.band ? 1 : 0, value => p.g.scale.setScalar(value)));
   qualityStaticCrowd(plaza.backdrop, renderProfile.backdrop);
   qualityStaticCrowd(midCrowd, renderProfile.mid);
-  if (colla) {
-    const target = SEATED_COUNT[renderProfile.name] ?? 0, previous = colla.count;
-    colla.setProfile(renderProfile, qualityTransition ? Math.max(previous, target) : target);
-    colla.members.forEach((p, i) => qualityScaleTo(i < previous ? p.g.scale.x : 0, i < target ? 1 : 0, value => p.g.scale.setScalar(value)));
+  for (const c of [colla, mulaColla]) if (c) { // both figures' seated members (one colla is out at a time)
+    const target = c.seatedCount[renderProfile.name] ?? 0, previous = c.count;
+    c.setProfile(renderProfile, qualityTransition ? Math.max(previous, target) : target);
+    c.members.forEach((p, i) => qualityScaleTo(i < previous ? p.g.scale.x : 0, i < target ? 1 : 0, value => p.g.scale.setScalar(value)));
   }
   refreshQualityCrowd();
   glc.dataset.quality = renderProfile.name;

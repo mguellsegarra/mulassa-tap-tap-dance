@@ -44,6 +44,9 @@ assert.deepEqual(base.crashes.map(c => c.beat), [16, 48, 80, 112, 144, 160, 176,
 {
   const f = structuredClone(form);
   [f.sequence[9], f.sequence[10]] = [f.sequence[10], f.sequence[9]];
+  // the dance's reference anchors no longer rise in this order: an error, never a silently moved anchor
+  assert.deepEqual(compileForm(f, score).unresolved.map(u => u.path), ['reference.anchors[7]']);
+  delete f.reference;
   const l = layout(f), bars = l.occurrence_chords.filter(o => o.start >= 176 && o.start < 192);
   assert.deepEqual(bars.map(o => o.bar), [54, 55, 56, 57, 50, 51, 52, 53]);
   for (const o of bars) {
@@ -73,12 +76,7 @@ assert.deepEqual(base.crashes.map(c => c.beat), [16, 48, 80, 112, 144, 160, 176,
   assert.deepEqual(l.a_ranges, [[20, 148]]);
 }
 {
-  const f = structuredClone(form);
-  f.tempo.clock = 'drac-midpoint-us';
-  f.tempo.knots.push({ at: { beat: 100 }, bpm: 170 });
-  const r = run(compile(f));
-  assert.notEqual(r.status, 0);
-  assert.match(r.stderr, /variable tempo and its MIDI map are not supported/);
+  assert.equal(compile(form).tempo.clock, 'drac-midpoint-us', 'the layout does not depend on the tempo map (the generator renders it)');
   const invalid = compile(form); invalid.unresolved.push({ path: 'ending', message: 'missing' });
   assert.match(run(invalid).stderr, /unresolved anchors/);
 }

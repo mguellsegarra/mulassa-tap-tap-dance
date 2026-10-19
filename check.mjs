@@ -1,11 +1,13 @@
 import assert from 'node:assert';
 import { readFileSync } from 'node:fs';
 import { makeDanceChart, DIFFS, sectionAt } from './src/game/chart.js';
+import { beatAtTime } from './src/core/beat-grid.js';
 
 const song = JSON.parse(readFileSync(new URL('./src/song.json', import.meta.url))), BALLOONS = song.balloonBeats;
 const arrangement = JSON.parse(readFileSync(new URL('./music/taiko-arrangement.json', import.meta.url)));
 assert.deepEqual(BALLOONS, arrangement.drum_rolls, 'a GLOBUS on every drumroll of the arrangement, and nowhere else');
-const spb = 60 / song.bpm, onGrid = t => { const x = (t - song.beats[0]) / spb * 2; return Math.abs(x - Math.round(x)) < 2e-3; }; // every tap on an eighth of the grid
+// the song's own beat grid (its tempo changes phrase by phrase): every tap on an eighth of it, spacing in its beats
+const beat = t => beatAtTime(song.beats, t), onGrid = t => { const x = beat(t) * 2; return Math.abs(x - Math.round(x)) < 2e-3; };
 const balloonsBy = [];
 const counts = DIFFS.map((d, i) => {
   const c = makeDanceChart(song, i);
@@ -13,17 +15,17 @@ const counts = DIFFS.map((d, i) => {
   c.forEach((n, j) => {
     assert(n.dir === undefined && (n.balloon ? n.input === 'P' : n.big ? n.input === 'B' : 'LR'.includes(n.input)), 'two-sided control only');
     assert(onGrid(n.t), `${d.name}: note at ${n.t}s is off the beat grid`);
-    if (j) assert(n.t - c[j - 1].t > spb * 0.45, `${d.name}: notes too close at ${n.t}`);
+    if (j) assert(beat(n.t) - beat(c[j - 1].t) > 0.45, `${d.name}: notes too close at ${n.t}`);
     if (n.end && !n.balloon) { // MANTÉN
       assert(i > 0 && !n.big && 'LR'.includes(n.input), `${d.name}: holds are plain GUA/PA notes from NORMAL up`);
-      assert(n.end - n.t >= spb * 2 - 1e-3 && onGrid(n.end), `${d.name}: a hold lasts 2+ beats, on the grid`);
-      assert(c[j + 1].t - n.end >= spb - 1e-3, `${d.name}: hold at ${n.t} must end a beat before the next note`);
+      assert(beat(n.end) - beat(n.t) >= 2 - 1e-3 && onGrid(n.end), `${d.name}: a hold lasts 2+ beats, on the grid`);
+      assert(beat(c[j + 1].t) - beat(n.end) >= 1 - 1e-3, `${d.name}: hold at ${n.t} must end a beat before the next note`);
     }
   });
   const balloons = c.filter(n => n.balloon), B = song.beats;
   assert.deepEqual(balloons.map(n => [n.t, n.end]), BALLOONS.map(([a, b]) => [B[a], B[b]]), `${d.name}: a balloon on every drumroll`);
   balloons.forEach((b, k) => {
-    assert(b.need >= 4 && b.need <= (b.end - b.t) / spb * 4.5, `${d.name}: balloon needs a fair number of taps`);
+    assert(b.need >= 4 && b.need <= (beat(b.end) - beat(b.t)) * 4.5, `${d.name}: balloon needs a fair number of taps`);
     assert(!c.some(n => !n.balloon && n.t > b.t - 1e-3 && n.t < b.end - 1e-3), `${d.name}: no notes inside a balloon`);
     if (i) assert(b.need > balloonsBy[i - 1][k].need, 'harder balloons need more taps');
   });

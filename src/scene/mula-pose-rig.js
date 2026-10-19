@@ -8,21 +8,16 @@ export function poseMulaBody(rig, x, y, z, yaw, roll, pitch) {
 
 // The preview's secondary motion is evaluated directly at the musical beat, so seeking never leaves stale limbs.
 // Reactive springs and the demo's following tail belong to animMula; the preview shows the unaccented choreography.
-export function poseMulassa(rig, pose, beat, front = 0) {
-  const yaw = front + pose.yaw, c = Math.cos(yaw), s = Math.sin(yaw), bp = beat * Math.PI, amp = pose.drive;
-  poseMulaBody(rig, pose.x * c + pose.z * s, pose.lift, -pose.x * s + pose.z * c, yaw, pose.roll + pose.shake, pose.pitch + pose.shake * 0.6);
+// pose: a game/mula-dance.js pose (roll, pitch, lift, headRoll, drive); x, z, yaw: where it stands and faces. The
+// carriers' shoes are posed separately (scene/mula-carriers.js), after this.
+export function poseMulassa(rig, pose, beat, x, z, yaw) {
+  const bp = beat * Math.PI, amp = pose.drive;
+  poseMulaBody(rig, x, pose.lift, z, yaw, pose.roll, pose.pitch);
   rig.body.scale.set(1, 1, 1);
   rig.neck.rotation.set(0.15 + Math.sin(bp * 2) * 0.08 * amp, Math.sin(bp) * 0.12 * amp, 0);
-  rig.head.rotation.x = 0.2 + Math.sin(bp * 2 + 1) * 0.08 * amp;
+  rig.head.rotation.set(0.2 + Math.sin(bp * 2 + 1) * 0.08 * amp, 0, pose.headRoll ?? 0);
   rig.jaw.rotation.x = Math.max(0, Math.sin(bp * 2)) * 0.12 * amp;
   for (let i = 0; i < rig.ears.length; i++) rig.ears[i].rotation.x = -0.25 + Math.sin(bp * 2 + i) * 0.2;
   rig.tail.rotation.set(0.12, 0, Math.sin(bp) * 0.15 * amp);
   rig.peek.scale.setScalar(0.001);
-  const stepping = amp > 0.8;
-  for (let i = 0; i < rig.legs.length; i++) {
-    const leg = rig.legs[i], ph = (i % 2) * Math.PI + ((i >> 2) & 1) * Math.PI / 2;
-    leg.visible = true;
-    leg.position.y = Math.max(0, Math.sin(bp * (stepping ? 2 : 1) + ph)) * (stepping ? 0.16 : 0.06);
-    leg.position.y += Math.max(0, pose.lift - leg.position.z * Math.sin(rig.body.rotation.x)) - pose.lift;
-  }
 }

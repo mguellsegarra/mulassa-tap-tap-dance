@@ -11,8 +11,8 @@ import { newDracPose } from '../game/dance-drac.js';
 import { poseAt } from '../game/drac-pose.js';
 import { feetAt } from '../game/drac-steps.js';
 import { dracTime } from '../game/drac-time.js';
-import { placeDance, danceToWorld, HELPERS } from '../game/drac-layout.js';
-import * as THREE from 'three';
+import { placeDance, danceToWorld } from '../game/drac-layout.js';
+import { tickColla } from './drac-colla.js';
 import { poseCarrier } from './drac-rig.js';
 import { DRAC_SCALE } from './models/drac.js';
 
@@ -44,28 +44,13 @@ export function danceDrac(beat, acc, pos) {
 
 // The colla, every frame: shown with the Drac (not in photo mode, where the driven beast would run the helpers over),
 // the helpers on the dance frame's spots, clapping on the music's beat while a run is on (calm on the menus).
-const COLLA_E = { k: 0 }; // the clap's energy, eased (a collapse or the end of a run lowers the arms, never at once)
 export const COLLA_SPOTS = []; // fixed obstacles for the crowd while the colla is out (crowd.js): helpers and the seated shown
-let spotsFor = -1;
-function collaSpots() {
-  if (spotsFor === colla.count) return;
-  spotsFor = colla.count; COLLA_SPOTS.length = 0;
-  for (const h of HELPERS) { const w = danceToWorld({}, h.x, h.z, DRAC_YAW); COLLA_SPOTS.push({ pos: new THREE.Vector2(w.x, w.z), rad: 0.45, fixed: true }); }
-  for (let i = 0; i < colla.count; i++) { // a seated member: hips on the seat, legs towards the centre
-    const p = colla.members[i].g.position, r = Math.hypot(p.x, p.z), k = (r - 0.35) / r;
-    COLLA_SPOTS.push({ pos: new THREE.Vector2(p.x * k, p.z * k), rad: 0.7, fixed: true });
-  }
-}
+// the run's state for tickColla, refreshed in place (no object a frame)
+export function collaRun(run) { run.play = G.state === 'play'; run.paused = !!G.paused; run.collapsed = !!G.collapseT; return run; }
+const DRAC_TICK = { obstacles: COLLA_SPOTS, toWorld: h => danceToWorld({}, h.x, h.z, DRAC_YAW), frozenBeat: 0, run: {}, labels: LETTERS };
 export function dracColla(on, beat, dt) {
   if (!colla) return;
-  const show = on && !PHOTO.on;
-  colla.helpers.visible = show; colla.seated.visible = show && colla.count > 0;
-  if (!show) return;
-  collaSpots();
   placeDance(colla.helpers, DRAC_YAW);
-  colla.setLabels(LETTERS);
-  // a pause (and its resume count-in) or a collapse freezes them with the Drac, on the beat it was frozen on
-  const frozen = G.state === 'play' && (G.paused || G.collapseT);
-  if (!(G.state === 'play' && G.paused)) COLLA_E.k += ((G.state === 'play' && !G.collapseT ? 1 : 0) - COLLA_E.k) * (1 - Math.exp(-Math.max(0, dt) / 0.35));
-  colla.update(frozen ? DANCE.beat : beat, COLLA_E.k);
+  DRAC_TICK.frozenBeat = DANCE.beat; collaRun(DRAC_TICK.run);
+  tickColla(colla, on && !PHOTO.on, beat, dt, DRAC_TICK);
 }

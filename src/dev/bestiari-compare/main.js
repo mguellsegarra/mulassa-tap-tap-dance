@@ -1,5 +1,5 @@
 import choreography from '../../../research/bestiari/mulassa/choreography.json';
-import reconstruction from '../../../research/bestiari/mulassa/reconstruction.json';
+import reconstruction from '../../game/mula-reconstruction.json';
 import { makeMotion } from './motion.js';
 import { makeDirections } from './directions.js';
 import { createStage } from './stage.js';

@@ -2,10 +2,10 @@
 // (1) no two boxes of one mesh share a coplanar, overlapping face pointing the same way (z-fighting = the parts that blink);
 // (2) every mesh is one piece: each box shares a face patch (or volume) with the rest, so no detail floats;
 // (3) every joint stays closed through the whole dance: the root face of each part (the end that goes into its parent)
-//     stays inside the parent's boxes at every beat, so no seam opens when the pivots turn; each flame's root sits in
-//     its nozzle, so a growing or shrinking flame never floats;
+//     stays inside the parent's boxes at every beat, so no seam opens when the pivots turn; each fire point's carretilla
+//     tube has its root in its nozzle, so it never floats;
 // (4) the rig's parts never sink into each other or the floor (sphere proxies);
-// (8) no flame, at full size whenever it burns, cuts into any part but its emitter’s metal rods and nozzle, and no box of a wing
+// (8) no carretilla tube cuts into any part but its emitter’s metal rods and nozzle, and no box of a wing
 //     cuts into a neck, head, jaw, the other wing, the tail or a leg (exact box-vs-box under the posed matrices);
 // (9) the carrier stands on rigid, flat shoes: every shoe box keeps its shape and its sole stays level, one shoe is always
 //     down, a step is a few cm and the foot under the lean lifts less (measured on the shoe boxes, whatever the rig).
@@ -101,7 +101,7 @@ drac.necks.forEach((n, i) => {
 drac.wings.forEach((w, i) => joint(`wing${i}`, w.root.children[0], i ? [0, 1] : SIDE, trunk));
 drac.tail.forEach((s, j) => joint(`tail${j}`, s.children[0], FRONT, j ? drac.tail[j - 1].children[0] : trunk));
 drac.legs.forEach(({ shoe, pants }, i) => { joint(`pants${i}`, pants.children[0], TOP, trunk); joint(`shoe${i}`, shoe.children[0], TOP, pants.children[0]); }); // the shoe's upper stays inside the cuff
-// a flame scales about its origin, so if the origin and the corners of its root box are inside the nozzle, every size is
+// a tube's root: if the fire node's origin and the corners of its root box are inside the nozzle, it is held there
 const flames = drac.fire.map((f, i) => {
   const emitter = f.parent.children.find(o => o.userData.boxes);
   const root = f.children.reduce((a, b) => (b.position.z - b.geometry.parameters.depth / 2 < a.position.z - a.geometry.parameters.depth / 2 ? b : a));
@@ -290,8 +290,8 @@ assert.equal(zfight.length, 0, 'coplanar overlapping faces (they blink):\n' + re
 assert.deepEqual(floating, [], 'boxes that float free of the rest of their part');
 assert.ok(joints.length === 2 * (drac.necks[0].segs.length + 2) + 2 + drac.tail.length + 4 && flames.length >= 3, 'every part has its joint');
 assert.deepEqual(report.open, {}, 'joints that open (m outside the parent, at that beat)');
-assert.deepEqual(report.flameChains, [], 'flames whose boxes come apart');
-assert.deepEqual(report.burns, {}, 'a flame or a wing cuts into another part (m deep along the best separating axis, at that beat)');
+assert.deepEqual(report.flameChains, [], 'fire tubes whose boxes come apart');
+assert.deepEqual(report.burns, {}, 'a fire tube or a wing cuts into another part (m deep along the best separating axis, at that beat)');
 assert.deepEqual(report.collisions, {}, 'parts sink into each other or the floor');
 assert.deepEqual(report.tailCuts, {}, 'tail segments whose bodies cut into each other (first beat)');
 assert.equal(shoeMeshes.length, 2, 'two shoes');

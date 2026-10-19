@@ -11,8 +11,9 @@ export const AUTOPLAY = Q.has('autoplay');
 export const STARS = Q.has('stars') ? Math.max(0, Math.min(3, +Q.get('stars') || 0)) : -1; // debug: open straight on a results card with this many stars
 export const FROM = +Q.get('from') || 0; // debug: start the song at this second
 export const CLICKS = Q.has('clicks'); // debug: tick on every note, to check sync by ear
-export const CAMDRAC = Q.get('camdrac'); // 'segueix': the play camera follows the Drac like the Mulassa (the calmer default: cameras.js DRAC_CAM)
-export const LETTERS = Q.has('lletres'); // debug: the Drac helpers' W / N / S / E letters over their heads
+export const CAMDRAC = Q.get('camdrac'); // 'segueix': the play camera follows the figure's heading, as it did before the travelling dances (the calmer default: cameras.js DRAC_CAM)
+export const LETTERS = Q.has('lletres'); // debug: the helpers' W / N / S / E letters over their heads (Drac and Mulassa)
+export const FESTA = Q.get('festiu') !== '0'; // ?festiu=0: the Mulassa's dance without its extra festive sway (A/B against the reference's own)
 export const DEMO = Q.has('demo'); // debug, dev builds only (select-ui.js): the selector shows a made-up record and position
 // ?final[=95-0-record] (dev hosts only, src/dev/final-test.js): straight to the results of a made-up run, a mock leaderboard
 export const FINAL = finalMode({ hostname: location.hostname, search: location.search });

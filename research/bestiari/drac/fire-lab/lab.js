@@ -41,15 +41,16 @@ scene.add(plaza.group);
 const drac = buildDrac(); drac.feet = newDracFeet();
 const life = new THREE.Group(); life.scale.setScalar(DRAC_SCALE); life.add(drac.root); scene.add(life);
 const CAM_EL = 26 * Math.PI / 180, CAM_AZ = -81 * Math.PI / 180, DRAC_YAW = danceYaw(CAM_AZ);
-const fx = Q.get('fx') === '0' ? createDracFx(scene, {}) : createDracFx(scene, { smoke: profile.smoke, embers: profile.embers, wheels: profile.wheels });
-const IN = { on: true, cam: camera, fire: drac.fire, streak: false, flare: false, max: profile.smoke, emax: profile.embers, wmax: profile.wheels, x: 0, z: 0 };
+// the game's own drac-fx (since 19/10/2026 it draws the carretilla jets and the flamarada itself: v=base is that fire)
+const fx = Q.get('fx') === '0' ? createDracFx(scene, {}) : createDracFx(scene, { smoke: profile.smoke, jets: profile.jets, wheels: profile.wheels, calm: { matches: CALM }, octaves: level > 0 ? 2 : 1 });
+const IN = { on: true, cam: camera, fire: drac.fire, streak: false, flare: false, max: profile.smoke, jmax: profile.jets, wmax: profile.wheels, viewH: 800, x: 0, z: 0 };
 
 // ---- the fire under test
 const SIZES = [0.55, 0.55, 0.45, 0.35, 0.35]; // fireNode sizes in drac.fire order: two mouths, the tail, two wing tips
 // v=M: the mock-up of the chosen direction (everyday spark jets + FLAMARADA, mock.js), with its own script; &mida= scales the flamarada
 const variant = VKEY === 'M' ? makeMock(scene, profile.name, CALM, { size: +Q.get('mida') || 1 }) : VARIANTS[VKEY] ? VARIANTS[VKEY].make(scene, profile.name, CALM) : null;
-if (variant) for (const f of drac.fire) for (const c of f.children) c.visible = false; // the boxes stay built (drac-fx reads them), unseen
-const fireObjects = variant ? variant.objects : drac.fire.flatMap(f => f.children);
+if (variant) for (const f of drac.fire) for (const c of f.children) c.visible = false; // a variant draws its own fire (the game's tubes hidden; drac-fx still reads them)
+const fireObjects = variant ? variant.objects : [fx.objects.jets, fx.objects.blast, fx.objects.flash].filter(Boolean);
 for (const o of fireObjects) o.layers.enable(7);
 const E = new Float32Array(40), P = new THREE.Vector3(), D = new THREE.Vector3();
 function readEmitters() {
@@ -140,12 +141,12 @@ function resize() {
   renderer.setPixelRatio(renderDpr(profile, w, h, devicePixelRatio)); renderer.setSize(w, h, false);
   glc.style.width = w + 'px'; glc.style.height = h + 'px';
   camera.aspect = w / h; camera.updateProjectionMatrix();
-  FIRE_VIEW.value = renderer.getContext().drawingBufferHeight;
+  FIRE_VIEW.value = IN.viewH = renderer.getContext().drawingBufferHeight;
 }
 addEventListener('resize', resize); resize();
 
 const label = document.getElementById('label');
-const NAME = (VKEY === 'M' ? 'Maqueta · guspires + flamarada' : VARIANTS[VKEY]?.name ?? 'Actual · caixes opaques') + ` · ${profile.name}${CALM ? ' · moviment reduït' : ''}`;
+const NAME = (VKEY === 'M' ? 'Maqueta · guspires + flamarada' : VARIANTS[VKEY]?.name ?? 'Joc · foc integrat (drac-fire.js)') + ` · ${profile.name}${CALM ? ' · moviment reduït' : ''}`;
 function paintLabel() { if (label) label.textContent = `${NAME} · ${(S.t % LOOP).toFixed(1)} s${variant?.phase ? ' · ' + variant.phase() : ''}`; }
 if (Q.get('label') === '0' && label) label.remove();
 

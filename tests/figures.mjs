@@ -467,14 +467,20 @@ assert(!/showModal|aviat\.close|aviat-menu|aviat-close/.test(ui));
   assert.equal(new Set(ids).size, ids.length);
   assert.equal(escutSvg('nowhere'), '');
   assert.match(ui, /escutSvg\(t\.id\) \|\|/); assert.match(ui, /aria-hidden="true"><span>\$\{\(t\.short/, 'banners carry the name only');
-  // a town's cards and banner take the first field of its arms, never a bare catalogue colour
+  // Card tints keep their heraldic fields; banner cloth keeps the independently agreed palette.
   const css = readFileSync(new URL('../src/styles/select.css', import.meta.url), 'utf8');
   for (const t of TOWNS) {
     const field = escutField(t.id);
     assert(['gules', 'atzur', 'or', 'argent'].includes(field), `${t.name}: a tincture for its cards and banner`);
-    assert.match(css, new RegExp(`\\.sel-banner\\[data-field="${field}"\\] \\{ --cloth: #`), `${t.name}: banner ${field}`);
     assert.match(css, new RegExp(`:is\\(\\.sel-card, #photo-figs \\.pf\\)\\[data-field="${field}"\\] \\{ --t: #`), `${t.name}: card and avatar ${field}`);
   }
+  const bannerCloth = { solsona: '#c0283c', tarragona: '#7d5aa8', reus: '#8f6340', vilanova: '#d9a521', barcelona: '#c8202f', berga: '#1f3f7a', olot: '#7d1f2e', vilafranca: '#00b09a' };
+  assert.deepEqual(Object.keys(bannerCloth).sort(), TOWNS.filter(t => t.id !== 'valls').map(t => t.id).sort(), 'every solid town banner has an agreed cloth');
+  for (const [town, colour] of Object.entries(bannerCloth)) {
+    assert(css.includes(`.sel-banner[data-town="${town}"] { --cloth: ${colour}; }`), `${town}: preserve the historical banner cloth ${colour}`);
+  }
+  assert(css.includes('.sel-banner[data-town="valls"] { background: linear-gradient(90deg, #c8202f 0 calc(100% / 3), #fff 0 calc(200% / 3), #c8202f 0)'), 'Valls: vertical red-white-red thirds, as requested');
+  assert.match(css, /\.sel-banner\[data-town="el-teu-poble"\] \{ background: repeating-linear-gradient\(90deg, #fcdd09 0 calc\(100% \/ 9\), #da121a 0 calc\(200% \/ 9\)\)/, 'the invitation keeps its nine-bar senyera');
   assert.equal(escutField(INVITE_TOWN.id), '', 'the invitation has no arms: the neutral tint');
   assert.match(ui, /data-field="\$\{escutField\(t\.id\)\}"[^`]*sel-card|sel-card[^`]*data-field="\$\{escutField\(t\.id\)\}"/, 'cards carry their tincture');
   // one surface, no divider; each portrait (all vectors now) at its real relative size, never more than its box holds

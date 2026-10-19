@@ -17,7 +17,7 @@ import { byteRange } from '../tools/bestiari/media-plugin.mjs';
 const root = fileURLToPath(new URL('../', import.meta.url));
 const json = p => JSON.parse(readFileSync(resolve(root, p), 'utf8'));
 const choreography = json('research/bestiari/mulassa/choreography.json');
-const data = json('research/bestiari/mulassa/reconstruction.json'), motion = makeMotion(data);
+const data = json('src/game/mula-reconstruction.json'), motion = makeMotion(data);
 // Evaluate the actual rendered camera and body, not just continuous root coordinates.
 const seamRig = buildMulassa(), seamCamera = new THREE.PerspectiveCamera(32, 16 / 9, .1, 60);
 const frameSeamCamera = createCameraFrame(seamCamera);

@@ -4,10 +4,10 @@
 // same on both faces), a curling tail, a carved brown chest plaque with a dark grille, red
 // spots in gold rings down the flanks, necks and tail, and a carrier whose cream camouflage trousers show underneath.
 // Every moving part is a pivot the choreography drives (drac-motion.js), built so it can turn without opening a seam:
-// a part's root end sits inside a knuckle (a stepped ball centred on its pivot) or deep in its parent, and the fire
-// grows out of a nozzle. tests/drac-parts.mjs checks that every part is one connected piece and stays attached.
+// a part's root end sits inside a knuckle (a stepped ball centred on its pivot) or deep in its parent, and each fire
+// point's carretilla tube sits in its nozzle. tests/drac-parts.mjs checks that every part is one connected piece and stays attached.
 import * as THREE from 'three';
-import { Vox } from './voxel.js';
+import { Vox, MAT } from './voxel.js';
 import { COLLA } from './colla.js';
 
 export const D = {
@@ -109,18 +109,18 @@ function head() {
   return { g, jaw, flame };
 }
 
-export const FLAME_MAT = new THREE.MeshBasicMaterial({ color: '#ff8a1f' }); // opaque: transparent flames re-sort every frame and pop
-const FLAME_CORE = new THREE.MeshBasicMaterial({ color: '#ffe680' });
-// A tongue of flame along +z from its nozzle: a hot yellow root inside the nozzle, then orange boxes that widen and taper.
-// Each box overlaps the next, and the root starts behind the origin, so a small flame shrinks back into the nozzle.
+// A fire point: a carretilla's kraft tube along +z out of its nozzle (the drac-fire.js jets and flamarada leave its mouth).
+// About 3 cm across and 20 cm long at the Drac's scale, like the real ones; narrower than the nozzle at its root, which
+// sits inside it, so it never floats. Vertex colours on the shared voxel material: stage.js gives it the Drac's own.
 function fireNode(size) {
-  const f = new THREE.Group();
-  [[0.16, 0.4, -0.08, FLAME_CORE], [0.55, 0.45, 0.2, FLAME_MAT], [0.38, 0.4, 0.55, FLAME_MAT], [0.2, 0.3, 0.85, FLAME_CORE]].forEach(([w, l, z, m]) => {
-    const b = new THREE.Mesh(new THREE.BoxGeometry(size * w, size * w, size * l), m);
-    b.position.z = size * (z + l / 2);
-    f.add(b);
-  });
-  f.visible = false;
+  const f = new THREE.Group(), w = 0.09, len = 0.9 * size, root = -0.03;
+  const g = new THREE.BoxGeometry(w, w, len), c = new THREE.Color('#c49a6c'), col = new Float32Array(g.attributes.position.count * 3);
+  for (let i = 0; i < col.length; i += 3) { col[i] = c.r; col[i + 1] = c.g; col[i + 2] = c.b; }
+  g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  const tube = new THREE.Mesh(g, MAT);
+  tube.position.z = root + len / 2;
+  f.add(tube);
+  f.userData.size = size; // the fire's nominal size (model units): drac-fire.js scales its jets with it
   return f;
 }
 

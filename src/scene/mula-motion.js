@@ -1,12 +1,15 @@
-// The mulassa's motion: damped-spring accents on top of the base choreography (dance.js), heading, stumbles and holds.
+// The mulassa's motion: damped-spring accents on top of the base choreography (game/mula-dance.js, placed by
+// mula-stage.js), heading, stumbles and holds; off the song, the demo walk and photo mode. Her carriers' shoes are
+// mula-stage.js's (the song's plan, or stepped live under wherever she goes).
 import { PHOTO, PHOTO_RUN, photoBody, setPhotoControl } from '../game/photo-control.js';
 import { tickPhoto, endPhoto } from './photo-motion.js';
 import { CALM } from '../core/env.js';
 import * as THREE from 'three';
 import { poseMulaBody } from './mula-pose-rig.js';
-import { newPose, practicePose, dancePose } from '../game/dance.js';
-import { CAM_AZ, FRONT, mula, drac } from './stage.js';
-import { selectedFigure } from '../game/figure-song.js';
+import { newMulaPose } from '../game/mula-dance.js';
+import { CAM_AZ, FRONT, mula, drac, mulaCarriers } from './stage.js';
+import { selectedFigure, songTimeAtBeat } from '../game/figure-song.js';
+import { danceMula, stepMulaFeet, resetMulaFeet, mulaCollaTick } from './mula-stage.js';
 import { newDracPose } from '../game/dance-drac.js';
 import { poseDrac } from './drac-motion.js';
 import { dressCarrier } from './drac-rig.js';
@@ -29,14 +32,14 @@ function stepSprings(dt) {
     sp.x += sp.v * dt;
   }
 }
-export const M = { pivot: new THREE.Vector2(0, PIVOT), pos: new THREE.Vector2(0, 0), yaw: 0, yawVel: 0, missT: -9, biteT: -9, peekT: -9, air: 0, airV: 0, dancing: false, danceBeat: 0, vigor: 1 };
+export const M = { pivot: new THREE.Vector2(0, PIVOT), pos: new THREE.Vector2(0, 0), yaw: 0, yawVel: 0, missT: -9, biteT: -9, peekT: -9, air: 0, airV: 0, dancing: false, danceBeat: 0, danceT: 0, vigor: 1 };
 let photoGait = 1, photoLastId = null, photoStride = 0, photoGround = 1, photoRear = 0, photoKick = 0;
 // Q held: she rears up like a horse (front up, on her rear legs); E held: a kick (rear up, on her front legs). rad.
 export const PHOTO_REAR = { front: 0.5, rear: 0.45, legZ: 1.05, ease: 0.15 };
 let animatedFigureId = selectedFigure.id;
 const DRAC_POSE = newDracPose(), DRAC_ACC = { roll: 0, pitch: 0, lift: 0, col: 0, vigor: 1 };
-const POSE = newPose(); // the base choreography's pose this frame (dance.js), reused
-const HOME = new THREE.Vector2(0, 0); // her centre's spot in the plaça during play; the choreography travels around it
+const POSE = newMulaPose(); // the base choreography's pose this frame (game/mula-dance.js, its dance frame), reused
+const SHELL = { x: 0, z: 0, yaw: 0, roll: 0, pitch: 0 }; // her body this frame, for the live steps (mula-stage.js)
 // Reactive limits on top of the base pose (rad, m): accents and stumbles never pile up, whatever the tapping rate.
 const CAP = { yaw: 0.35, roll: 0.3, pitch: 0.3, neck: 0.6, neckYaw: 0.6, air: 0.18 };
 function capSpring(sp, m) {
@@ -99,7 +102,7 @@ export function animMula(dt, beat, live = 1) {
   if (animatedFigureId !== selectedFigure.id) {
     animatedFigureId = selectedFigure.id;
     standUp(); M.dancing = false; M.yaw = FRONT; M.yawVel = 0;
-    M.pos.set(0, 0); M.pivot.set(0, PIVOT);
+    M.pos.set(0, 0); M.pivot.set(0, PIVOT); resetMulaFeet();
     Object.assign(S.yaw, { x: FRONT, v: 0, t: FRONT });
   }
   if (PHOTO.on && G.state !== 'splash' && G.state !== 'select' && G.state !== 'title') setPhotoControl(false);
@@ -129,6 +132,7 @@ export function animMula(dt, beat, live = 1) {
   const isDrac = (PHOTO.on && !PHOTO.pair ? PHOTO.id : selectedFigure.id) === 'drac-valls';
   mula.root.visible = !isDrac; drac.root.visible = isDrac;
   dracColla(isDrac, beat, dt);
+  mulaCollaTick(!isDrac && G.state !== 'splash', beat, dt, M.danceBeat); // (the splash has both figures: no colla)
   if (isDrac) { PAIR.k = 0; animPlayableDrac(dt, beat, live); return; }
   animPair(dt, beat);
   const breath = Math.sin(clock * 2.2) * (1 - live); // standing still, only breathing
@@ -141,14 +145,16 @@ export function animMula(dt, beat, live = 1) {
   M.dancing = dancing;
   const playful = G.state !== 'play' || G.sec === 'B';
   const miss = pulse(M.missT, 0.7);
-  if (dancing) { // the song's choreography (the practice's own front-on sway); a collapse freezes it where she fell
+  let danceYaw = 0;
+  if (dancing) { // the song's choreography (the practice holds its opening stance); a collapse freezes it where she fell
     if (!G.collapseT) M.danceBeat = beat;
-    (G.practice ? practicePose : dancePose)(POSE, M.danceBeat);
-    // Missing note after note calms her body (heading and turns stay): she eases down slowly, and springs back
-    // quickly on the first hit.
+    M.danceT = songTimeAtBeat(M.danceBeat);
+    danceYaw = danceMula(POSE, M.danceT, M.danceBeat, !!G.practice, M.pos);
+    // Missing note after note calms her body (her path, heading and turns stay: the shoes are planned on them): she
+    // eases down slowly, and springs back quickly on the first hit.
     const target = 1 - 0.92 * Math.min(1, G.streak / 2);
     M.vigor += (target - M.vigor) * easeIn(dt, target < M.vigor ? 0.8 : 0.25);
-    for (const k of ['roll', 'pitch', 'lift', 'x', 'z', 'shake', 'drive']) POSE[k] *= M.vigor;
+    for (const k of ['roll', 'pitch', 'lift', 'headRoll', 'drive']) POSE[k] *= M.vigor;
   } else if (!manualMula && !col && live) { // the demo walks: solemn = slowly round the plaça, playful = trotting about
     const fx = Math.sin(M.yaw), fz = Math.cos(M.yaw);
     const hx = PAIR.k ? PAIR.hx : 0, hz = PAIR.k ? PAIR.hz : 0; // the middle; on the splash, her half of the shot (the Drac has the other)
@@ -172,13 +178,10 @@ export function animMula(dt, beat, live = 1) {
   stepSprings(dt);
   if (dancing) for (const k in CAP) if (S[k]) capSpring(S[k], CAP[k]);
   const prevYaw = M.yaw;
-  M.yaw = dancing ? FRONT + POSE.yaw + S.yaw.x : S.yaw.x;
+  M.yaw = dancing ? danceYaw + S.yaw.x : S.yaw.x;
   M.yawVel = dt > 0 ? (M.yaw - prevYaw) / dt : 0;
-  if (dancing) { // she turns about her centre, which travels a little round its spot, in her own frame
-    const cy = Math.cos(FRONT + POSE.yaw), sy = Math.sin(FRONT + POSE.yaw);
-    M.pos.set(HOME.x + POSE.x * cy + POSE.z * sy, HOME.y - POSE.x * sy + POSE.z * cy);
-    M.pivot.copy(M.pos);
-  } else { // the demo's body centre hangs behind its front pivot: turning swings the rear round it
+  if (dancing) M.pivot.copy(M.pos); // she turns about her centre, which travels the reference's path (danceMula above)
+  else { // the demo's body centre hangs behind its front pivot: turning swings the rear round it
     M.pos.set(M.pivot.x - Math.sin(M.yaw) * PIVOT, M.pivot.y - Math.cos(M.yaw) * PIVOT);
     if (PAIR.k > 0 && !manualMula) keepClear();
   }
@@ -216,6 +219,7 @@ export function animMula(dt, beat, live = 1) {
   mula.neck.rotation.x = 0.15 - 0.35 * photoRear + 0.2 * photoKick + breath * 0.03 + col * 1.2 + S.neck.x + Math.sin(bp * 2) * 0.08 * amp;
   mula.neck.rotation.y = Math.sin(clock * 28) * 0.3 * miss + S.neckYaw.x + Math.sin(bp) * 0.12 * amp;
   mula.head.rotation.x = 0.2 + S.neck.x * 0.4 + Math.sin(bp * 2 + 1) * 0.08 * amp;
+  mula.head.rotation.z = dancing ? POSE.headRoll * base : 0; // the approved small head accent on the body's sway
   mula.jaw.rotation.x = 0.55 * pulse(M.biteT, 0.3) + col * 0.6 + Math.max(0, Math.sin(bp * 2)) * 0.12 * amp;
   mula.ears.forEach((ear, i) => (ear.rotation.x = -0.25 + Math.sin(bp * 2 + i) * 0.2 * live + (miss + col) * 0.9 - S.neck.v * 0.03 + Math.abs(Math.sin(photoStride + i)) * 0.7 * photoRun));
   // the tail trails its targets like hair (no frame-to-frame snaps); positive x swings it out behind, never into the body
@@ -226,16 +230,11 @@ export function animMula(dt, beat, live = 1) {
   // relax the springs back to rest (yaw keeps wherever she turned to)
   for (const k of ['roll', 'pitch', 'neck', 'neckYaw', 'squash', 'tail']) S[k].t = 0;
   holdGesture();
-  const stepping = playful || Math.abs(M.yawVel) > 0.5 || (dancing && POSE.drive > 0.8);
-  mula.legs.forEach((l, i) => {
-    l.visible = col < 0.5;
-    const ph = (i % 2) * Math.PI + ((i >> 2) & 1) * Math.PI / 2;
-    const rear = i >= 4, extra = rear ? Math.min(0.15, Math.abs(M.yawVel) * 0.06) : 0; // the rear legs run round the compass
-    l.position.y = manualMula ? Math.max(0, Math.sin(photoStride + ph)) * (0.16 + 0.26 * photoRun) * live
-      : Math.max(0, Math.sin(bp * (stepping ? 2 : 1) + ph)) * ((stepping ? 0.16 : 0.06) + extra) * live;
-    if (dancing) l.position.y += Math.max(0, bounce + M.air - l.position.z * Math.sin(mula.body.rotation.x)) - bounce - M.air; // the rear legs stay planted, the front ones follow the raised front
-    if (rearLift) l.position.y += Math.max(0, rearLift - l.position.z * Math.sin(rearPitch)) - rearLift; // Q/E: the end that stays down keeps its feet on the ground
-  });
+  // her carriers: the song's planned shoes while it plays (the hits' lift only stretches the cuffs), stepped live under
+  // her otherwise; off the song a jump or the gallop's hop takes the carriers up with her, Q / E keeps one end's shoes down
+  mulaCarriers.group.visible = col < 0.5;
+  SHELL.x = M.pos.x; SHELL.z = M.pos.y; SHELL.yaw = M.yaw; SHELL.roll = mula.body.rotation.z; SHELL.pitch = mula.body.rotation.x;
+  stepMulaFeet(dt, dancing && !G.practice ? M.danceT : null, SHELL, CALM.matches ? 0.4 : 1, dancing ? 0 : M.air + hop, rearLift, rearPitch);
 }
 // MANTÉN held right: a restrained sustained gesture (a lean to the note's side, head up) that the springs release
 // smoothly when the hold ends or is let go.

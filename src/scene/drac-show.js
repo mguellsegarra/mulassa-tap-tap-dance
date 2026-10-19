@@ -1,21 +1,22 @@
-// The Drac's fire and powder wired to the game (drac-fx.js does the work): judge.js calls dracCrema / dracPump, main.js
+// The Drac's fire and powder wired to the game (drac-fx.js / drac-fire.js do the work): judge.js calls dracCrema / dracPump, main.js
 // dracFrame (after the crowd is posed) and dracWarm. With the Mulassa every hook
 // is a no-op, so she looks and sounds exactly as before. Its confetti (confetti.js burst / spawnConfetti) are rodes de foc.
 import * as THREE from 'three';
 import { createDracFx, streakFire, flareLevel, tracaWindow, DRAC_FX } from './drac-fx.js';
 import { dracTime } from '../game/drac-time.js';
-import { scene, camera, drac, renderProfile } from './stage.js';
+import { scene, camera, drac, renderProfile, glc, qualityLevel } from './stage.js';
 import { G, figureSfx } from '../game/state.js';
-import { selectedFigure, song, beatAt } from '../game/figure-song.js';
+import { selectedFigure, song } from '../game/figure-song.js';
+import { CALM } from '../core/env.js';
 import { DRAC } from '../game/figures.js';
 import { M, PAIR } from './mula-motion.js';
 import { SHOWCASE } from './drac-demo.js';
 import { PHOTO } from '../game/photo-control.js';
 import { setConfettiDivert } from './confetti.js';
 
-export const dracFx = createDracFx(scene, { smoke: renderProfile.smoke ?? 0, embers: renderProfile.embers ?? 0, wheels: renderProfile.wheels ?? 0, sound: figureSfx });
+export const dracFx = createDracFx(scene, { smoke: renderProfile.smoke ?? 0, jets: renderProfile.jets ?? 0, wheels: renderProfile.wheels ?? 0, sound: figureSfx, calm: CALM, octaves: qualityLevel > 0 ? 2 : 1 });
 const isDracOn = () => selectedFigure.id === DRAC?.id;
-const IN = { on: false, cam: camera, fire: null, streak: false, flare: false, max: 0, emax: 0, wmax: 0, x: 0, z: 0 };
+const IN = { on: false, cam: camera, fire: null, streak: false, flare: false, max: 0, jmax: 0, wmax: 0, viewH: 800, x: 0, z: 0 };
 setConfettiDivert((sec, reason) => {
   if (!isDracOn()) return false;
   if (reason === 'combo' && !G.practice && (G.combo === 50 || G.combo === 100)) dracFx.wheels(1.2);
@@ -28,7 +29,7 @@ let flareSong = null, flareT = Infinity, tracaFor = null, hazed = false, sparkT 
 // at once and the crescendo is its density; the sky behind only half tints (a flat red sky read as odd).
 const FOG = { sky: new THREE.Color('#8fd3ff'), red: new THREE.Color('#b5473a'), sky_mix: 0.6, near: 40, far: 90 };
 
-export function dracCrema() { // a GUAPA (and the final hit): the CREMA
+export function dracCrema() { // a CREMA (the Drac's GUAPA) and the final hit: the flamarada
   if (!isDracOn() || G.practice) return;
   dracFx.crema();
   figureSfx('flama');
@@ -65,12 +66,12 @@ export function dracFrame(dt, t) { // (the red smoke of the last pass rises roun
   if (!on && !show && !hazed && dracFx.idle) return; // the Mulassa alone: nothing to do
   const play = on && G.state === 'play' && !G.collapseT;
   IN.on = (play && !G.practice) || show; IN.fire = on || show ? drac?.fire ?? null : null;
-  IN.streak = play && !G.practice && streakFire(G.combo, beatAt(t));
+  IN.streak = play && !G.practice && (streakFire(G.combo) || t >= song.finale); // the carretilles' jets: a long streak, the FINAL ESBOJARRAT
   if (song !== flareSong) { flareSong = song; flareT = dracTime.songAtRef(DRAC_FX.flareRef); }
   // From the brake before the six reversed spins it builds up to the final hit; results let it thin out, menus clear it.
   IN.flare = play && !G.practice ? flareLevel(t, flareT, song.end) : false;
   if (G.state === 'splash' || G.state === 'title' || G.state === 'select' || G.practice || !on) dracFx.clearHaze();
-  IN.max = renderProfile.smoke ?? 0; IN.emax = renderProfile.embers ?? 0; IN.wmax = renderProfile.wheels ?? 0; IN.x = M.pos.x; IN.z = M.pos.y; // a quality step down since the pools were made: fewer
+  IN.max = renderProfile.smoke ?? 0; IN.jmax = renderProfile.jets ?? 0; IN.wmax = renderProfile.wheels ?? 0; IN.viewH = glc.height; // (the canvas's pixel height: far sparks stay ~1.5 px wide) IN.x = M.pos.x; IN.z = M.pos.y; // a quality step down since the pools were made: fewer
   const bl = play ? tracaWindow(G.balloons, t) : null;
   if (bl !== tracaFor) { tracaFor = bl; if (bl) dracFx.begin(); else dracFx.end(); }
   dracFx.update(dt, IN);

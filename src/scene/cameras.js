@@ -3,8 +3,7 @@ import { createOrbit } from './orbit.js';
 import { smoothDamp } from './framing.js';
 import { plaza, camFocus, FRONT, camShift, camera, CAM_AZ, CAM_EL, cameraTarget } from './stage.js';
 import { playStage } from '../hud/layout.js';
-import { figureScale, selectedFigure } from '../game/figure-song.js';
-import { DRAC } from '../game/figures.js';
+import { figureScale } from '../game/figure-song.js';
 import { M } from './mula-motion.js';
 import { CALM, CAMDRAC } from '../core/env.js';
 import { clock, G } from '../game/state.js';
@@ -41,11 +40,13 @@ export const DRIFT = { az: 0.2, el: 0.05, dist: 0.03, follow: 0.26, oblique: 0.4
 // The Drac travels round the whole dance ground (up to 4 m from its centre) and spins a dozen times: followed like her, the
 // plaça slid and swung under the note lane. It follows `side` of its travel across the shot and `depth` of it towards /
 // away from the lens (from the dance's centre, the plaça's: depth unfollowed, or a slower focus spring, lifted it under
-// the lane on a desktop), a little further back so it stays whole on a phone, and never turns with its heading.
+// the lane on a desktop), a little further back so it stays whole on a phone, and never turns with its heading. The
+// Mulassa's reference-led dance travels and turns as much (game/mula-dance.js: up to ~5.7 m from its centre, about
+// four turns at the end), so she is followed the same way.
 const DRAC_CAM = { side: 0.5, depth: 0.9, dist: 1.12 };
 const CAM_T = { focus: 0.5, dist: 1.8, follow: 2.8, shift: 0.5, pos: 1.5 }; // seconds to (about) catch up. Constant (a spring whose stiffness changes while it is still far from its target whiplashes); the swoop in from the title camera is just this slow
 export function framePlayCamera(dt, mx, mz, snap = false) { // snap: jump straight to the settled framing (tests)
-  const area = playStage(), focusY = 1.4 * figureScale(), s = CAMS, calm = selectedFigure.id === DRAC.id && CAMDRAC !== 'segueix';
+  const area = playStage(), focusY = 1.4 * figureScale(), s = CAMS, calm = CAMDRAC !== 'segueix';
   if (calm) { // (the dance's centre is the plaça's: drac-layout.js placeDance)
     const ax = Math.sin(CAM_AZ), az = Math.cos(CAM_AZ), along = mx * ax + mz * az;
     mx = (mx - along * ax) * DRAC_CAM.side + along * ax * DRAC_CAM.depth; mz = (mz - along * az) * DRAC_CAM.side + along * az * DRAC_CAM.depth;

@@ -54,7 +54,10 @@ Songs: `mulassa` (score `music/score.json`, form `music/mulassa-form.json`) and 
     "finale": { "item": "z", "edge": "start" },     // FINAL ESBOJARRAT starts here
     "roll": { "beat": 191 },                         // the closing 'roll' label
     "hit": { "beat": 195 }                           // the final hit
-  }
+  },
+  // optional (the Drac): the recording a dance is authored from. Anchors rise in beats and seconds, the last sits on
+  // `end`; docs/drac-music.md. An anchor whose item is gone is an error like any other.
+  "reference": { "video": "…", "end": 104.8, "anchors": [{ "at": { "item": "s01", "edge": "start" }, "ref": 0.611 }] }
 }
 ```
 
@@ -79,6 +82,7 @@ offset in arranged beats). An anchor whose item / bar is gone is an ERROR in `un
   "tempo": { "clock": "drac-midpoint-us", "knots": [[0, 126]], "beatUs": [476190] }, // beatUs: integer µs per whole beat
   "beats": [0.1, 0.576190],          // song seconds of every whole beat 0..end+1 (preview + dance; Python may recompute, tests assert parity)
   "end": 195, "finale": 191, "balloons": [[191, 195]], "holds": [[50, 53, "don"]], "fills": [],
+  "ref": [[6.254, 0.611]], "refEnd": 104.8, "refAnchors": [[12, 0.611]], // [] / null without `reference`; ref in song s
   "unresolved": []                   // [{ path, message }]: the editor shows these; generators refuse to run on any
 }
 ```

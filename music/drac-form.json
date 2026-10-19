@@ -78,11 +78,44 @@
       { "id": "u069", "bar": 16, "section": "C" },
       { "id": "u070", "bar": 17, "section": "C" },
       { "id": "u071", "bar": 18, "section": "C" },
-      { "id": "u072", "bar": 52, "section": "coda" },
-      { "id": "u073", "bar": 53, "section": "coda" },
-      { "id": "u074", "bar": 54, "section": "coda" },
-      { "id": "u075", "bar": 55, "section": "coda" },
-      { "id": "u076", "bar": 56, "section": "coda" }
+      { "id": "u072", "bar": 19, "section": "C" },
+      { "id": "u073", "bar": 20, "section": "C" },
+      { "id": "u074", "bar": 21, "section": "C" },
+      { "id": "u075", "bar": 22, "section": "C" },
+      { "id": "u076", "bar": 23, "section": "C" },
+      { "id": "u077", "bar": 24, "section": "D" },
+      { "id": "u078", "bar": 25, "section": "D" },
+      { "id": "u079", "bar": 26, "section": "D" },
+      { "id": "u080", "bar": 27, "section": "D" },
+      { "id": "u081", "bar": 28, "section": "D" },
+      { "id": "u082", "bar": 29, "section": "D" },
+      { "id": "u083", "bar": 30, "section": "D" },
+      { "id": "u084", "bar": 31, "section": "D" },
+      { "id": "u085", "bar": 32, "section": "D" },
+      { "id": "u086", "bar": 33, "section": "D" },
+      { "id": "u087", "bar": 34, "section": "D" },
+      { "id": "u088", "bar": 35, "section": "D" },
+      { "id": "u089", "bar": 36, "section": "D" },
+      { "id": "u090", "bar": 37, "section": "D" },
+      { "id": "u091", "bar": 38, "section": "D" },
+      { "id": "u092", "bar": 39, "section": "D" },
+      { "id": "u093", "bar": 40, "section": "E" },
+      { "id": "u094", "bar": 41, "section": "E" },
+      { "id": "u095", "bar": 42, "section": "E" },
+      { "id": "u096", "bar": 43, "section": "E" },
+      { "id": "u097", "bar": 44, "section": "E" },
+      { "id": "u098", "bar": 45, "section": "E" },
+      { "id": "u099", "bar": 46, "section": "E" },
+      { "id": "u100", "bar": 47, "section": "E" },
+      { "id": "u101", "bar": 48, "section": "E" },
+      { "id": "u102", "bar": 49, "section": "E" },
+      { "id": "u103", "bar": 50, "section": "E" },
+      { "id": "u104", "bar": 51, "section": "E" },
+      { "id": "u105", "bar": 52, "section": "coda" },
+      { "id": "u106", "bar": 53, "section": "coda" },
+      { "id": "u107", "bar": 54, "section": "coda" },
+      { "id": "u108", "bar": 55, "section": "coda" },
+      { "id": "u109", "bar": 56, "section": "coda" }
     ],
     "ties": [[21, 22], [54, 55], [55, 56]]
   },
@@ -106,8 +139,20 @@
     { "id": "p-b3", "name": "B, D.S., primera frase", "bars": ["u062", "u063", "u064", "u065"] },
     { "id": "p-b4", "name": "B, D.S., segona frase", "bars": ["u066", "u067", "u068"] },
     { "id": "p-c-ds", "name": "C, D.S., fins al compàs 18", "bars": ["u069", "u070", "u071"] },
-    { "id": "p-coda1", "name": "Coda, compassos 52-53", "bars": ["u072", "u073"] },
-    { "id": "p-final", "name": "Coda, nota final (54-56)", "bars": ["u074", "u075", "u076"] }
+    {
+      "id": "p-c3-rest",
+      "name": "C, D.S., compassos 19-23 (hipòtesi: retorn sencer)",
+      "bars": ["u072", "u073", "u074", "u075", "u076"]
+    },
+    { "id": "p-d3-1", "name": "D, D.S., primera frase", "bars": ["u077", "u078", "u079", "u080"] },
+    { "id": "p-d3-2", "name": "D, D.S., segona frase", "bars": ["u081", "u082", "u083", "u084"] },
+    { "id": "p-d3-3", "name": "D, D.S., tercera frase", "bars": ["u085", "u086", "u087", "u088"] },
+    { "id": "p-d3-4", "name": "D, D.S., quarta frase", "bars": ["u089", "u090", "u091", "u092"] },
+    { "id": "p-e3-1", "name": "E, D.S., primera frase", "bars": ["u093", "u094", "u095", "u096"] },
+    { "id": "p-e3-2", "name": "E, D.S., segona frase", "bars": ["u097", "u098", "u099", "u100"] },
+    { "id": "p-e3-3", "name": "E, D.S., tercera frase", "bars": ["u101", "u102", "u103", "u104"] },
+    { "id": "p-coda1", "name": "Coda, compassos 52-53", "bars": ["u105", "u106"] },
+    { "id": "p-final", "name": "Coda, nota final (54-56)", "bars": ["u107", "u108", "u109"] }
   ],
   "sequence": [
     {
@@ -146,6 +191,22 @@
     { "id": "s18", "phrase": "p-b4", "label": "B3", "repeat": 1, "beatScale": 1, "bars": null, "barOverrides": {  } },
     { "id": "s19", "phrase": "p-c-ds", "label": "C3", "repeat": 1, "beatScale": 1, "bars": null, "barOverrides": {  } },
     {
+      "id": "t01",
+      "phrase": "p-c3-rest",
+      "label": "C3",
+      "repeat": 1,
+      "beatScale": 1,
+      "bars": null,
+      "barOverrides": {  }
+    },
+    { "id": "t02", "phrase": "p-d3-1", "label": "D3", "repeat": 1, "beatScale": 1, "bars": null, "barOverrides": {  } },
+    { "id": "t03", "phrase": "p-d3-2", "label": "D3", "repeat": 1, "beatScale": 1, "bars": null, "barOverrides": {  } },
+    { "id": "t04", "phrase": "p-d3-3", "label": "D3", "repeat": 1, "beatScale": 1, "bars": null, "barOverrides": {  } },
+    { "id": "t05", "phrase": "p-d3-4", "label": "D3", "repeat": 1, "beatScale": 1, "bars": null, "barOverrides": {  } },
+    { "id": "t06", "phrase": "p-e3-1", "label": "E3", "repeat": 1, "beatScale": 1, "bars": null, "barOverrides": {  } },
+    { "id": "t07", "phrase": "p-e3-2", "label": "E3", "repeat": 1, "beatScale": 1, "bars": null, "barOverrides": {  } },
+    { "id": "t08", "phrase": "p-e3-3", "label": "E3", "repeat": 1, "beatScale": 1, "bars": null, "barOverrides": {  } },
+    {
       "id": "s20",
       "phrase": "p-coda1",
       "label": "coda",
@@ -170,11 +231,19 @@
     "interpolation": "smoothstep",
     "leadIn": 0.1,
     "knots": [
-      { "at": { "beat": 0 }, "bpm": 126 },
-      { "at": { "item": "s16", "edge": "start" }, "bpm": 126 },
-      { "at": { "item": "s16", "edge": "start", "offset": 18 }, "bpm": 148 },
-      { "at": { "item": "s20", "edge": "start" }, "bpm": 148 },
-      { "at": { "item": "s21", "edge": "start" }, "bpm": 135 }
+      { "at": { "beat": 0 }, "bpm": 117 },
+      { "at": { "item": "s01", "edge": "start" }, "bpm": 117 },
+      { "at": { "item": "s05", "edge": "start" }, "bpm": 122.2 },
+      { "at": { "item": "s09", "edge": "start" }, "bpm": 123.5 },
+      { "at": { "item": "s13", "edge": "start" }, "bpm": 126.4 },
+      { "at": { "item": "s17", "edge": "start" }, "bpm": 128.2 },
+      { "at": { "item": "t02", "edge": "start" }, "bpm": 126.8 },
+      { "at": { "item": "t05", "edge": "start" }, "bpm": 126.3 },
+      { "at": { "item": "t06", "edge": "start" }, "bpm": 139.8 },
+      { "at": { "item": "t07", "edge": "start" }, "bpm": 150 },
+      { "at": { "item": "s20", "edge": "start" }, "bpm": 151.5 },
+      { "at": { "item": "s21", "edge": "start" }, "bpm": 150 },
+      { "at": { "item": "s21", "edge": "start", "offset": 11 }, "bpm": 117 }
     ]
   },
   "events": {
@@ -182,8 +251,8 @@
       { "id": "g0", "start": { "item": "s15", "edge": "end", "offset": -4 }, "end": { "item": "s15", "edge": "end" } },
       {
         "id": "g1",
-        "start": { "item": "s21", "edge": "start", "offset": 1 },
-        "end": { "item": "s21", "edge": "start", "offset": 5 }
+        "start": { "item": "s21", "edge": "start", "offset": 3 },
+        "end": { "item": "s21", "edge": "start", "offset": 11 }
       }
     ],
     "holds": [
@@ -195,11 +264,50 @@
       }
     ],
     "fills": [],
-    "noteDurations": [{ "at": { "item": "s21", "edge": "end", "note": -1 }, "beats": 7 }]
+    "noteDurations": [{ "at": { "item": "s21", "edge": "end", "note": -1 }, "beats": 13 }]
   },
   "ending": {
-    "finale": { "item": "s21", "edge": "start", "offset": 1 },
-    "roll": { "item": "s21", "edge": "start", "offset": 1 },
-    "hit": { "item": "s21", "edge": "start", "offset": 5 }
+    "finale": { "item": "s21", "edge": "start", "offset": 3 },
+    "roll": { "item": "s21", "edge": "start", "offset": 3 },
+    "hit": { "item": "s21", "edge": "start", "offset": 11 }
+  },
+  "reference": {
+    "video": "Ball del Drac de Valls, Sant Joan 2018 (El Camp Difusió), https://www.youtube.com/watch?v=pm-lEViiPK0",
+    "end": 104.8,
+    "anchors": [
+      { "at": { "beat": "10.887" }, "ref": 0 },
+      { "at": { "beat": 11 }, "ref": 0.058 },
+      { "at": { "item": "s01", "edge": "start" }, "ref": 0.611 },
+      { "at": { "item": "s02", "edge": "start" }, "ref": 4.685 },
+      { "at": { "item": "s03", "edge": "start" }, "ref": 8.725 },
+      { "at": { "item": "s04", "edge": "start" }, "ref": 12.694 },
+      { "at": { "item": "s05", "edge": "start" }, "ref": 15.642 },
+      { "at": { "item": "s06", "edge": "start" }, "ref": 19.594 },
+      { "at": { "item": "s07", "edge": "start" }, "ref": 22.515 },
+      { "at": { "item": "s08", "edge": "start" }, "ref": 26.391 },
+      { "at": { "item": "s09", "edge": "start" }, "ref": 30.308 },
+      { "at": { "item": "s10", "edge": "start" }, "ref": 34.202 },
+      { "at": { "item": "s11", "edge": "start" }, "ref": 38.041 },
+      { "at": { "item": "s12", "edge": "start" }, "ref": 41.869 },
+      { "at": { "item": "s13", "edge": "start" }, "ref": 45.663 },
+      { "at": { "item": "s14", "edge": "start" }, "ref": 49.463 },
+      { "at": { "item": "s15", "edge": "start" }, "ref": 53.243 },
+      { "at": { "item": "s16", "edge": "start" }, "ref": 56.991 },
+      { "at": { "item": "s17", "edge": "start" }, "ref": 58.875 },
+      { "at": { "item": "s18", "edge": "start" }, "ref": 62.648 },
+      { "at": { "item": "s19", "edge": "start" }, "ref": 65.437 },
+      { "at": { "item": "t01", "edge": "start" }, "ref": 68.223 },
+      { "at": { "item": "t02", "edge": "start" }, "ref": 73.004 },
+      { "at": { "item": "t03", "edge": "start" }, "ref": 76.794 },
+      { "at": { "item": "t04", "edge": "start" }, "ref": 80.552 },
+      { "at": { "item": "t05", "edge": "start" }, "ref": 84.365 },
+      { "at": { "item": "t06", "edge": "start" }, "ref": 87.975 },
+      { "at": { "item": "t07", "edge": "start" }, "ref": 91.294 },
+      { "at": { "item": "t08", "edge": "start" }, "ref": 94.49 },
+      { "at": { "item": "s20", "edge": "start" }, "ref": 97.663 },
+      { "at": { "item": "s21", "edge": "start" }, "ref": 99.255 },
+      { "at": { "item": "s21", "edge": "start", "offset": 11 }, "ref": 104.236 },
+      { "at": { "item": "s21", "edge": "start", "offset": "12.1" }, "ref": 104.8 }
+    ]
   }
 }

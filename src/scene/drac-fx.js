@@ -9,7 +9,10 @@ import * as THREE from 'three';
 export const DRAC_FX = {
   crema: 1.1, cremaIn: 0.06, cremaPeak: 4, cremaSmoke: 26, // the burst: rises in 60 ms, gone by 1.1 s; flames up to 4x their dance size; puffs a second per tip
   streakAt: 30, streakRamp: 0.3, streakFire: 1.1, // a short breath every four beats, eased in/out over 0.3 s
-  flareRamp: 10, flareNear: 3.5, flareFar: 9, flareArc: 1.9, // the red smoke builds up over 10 s, rising 3.5-9 m out from her, ±1.9 rad round the side the camera looks at
+  // the red smoke: from the brake before the six reversed spins (flareRef, reference seconds) it builds up to the final
+  // hit; it rises evenly all over the plaça (flareNear-flareFar m from its centre) except the corridor between the lens
+  // and her (flareClear m either side); after the song it thins out over flareRamp s
+  flareRamp: 10, flareRef: 93.8, flareNear: 1.5, flareFar: 10, flareClear: 2,
   tracaBefore: 0.6, tracaAfter: 0.8, tracaBack: 0.45, // petards on her fire points 0.6 s before its drumroll to 0.8 s after; a fired one is replaced in 0.45 s
   // the rodes de foc (its confetti), one on each fire point: rad/s, arms, the tiny circle they turn on (m), spark speed m/s,
   // spark life s (+ up to wheelLife2 more), spark size m
@@ -17,10 +20,11 @@ export const DRAC_FX = {
   full: 160, embersFull: 256, // the pools every emission rate is tuned for (a smaller pool emits less, so nothing is recycled while visible)
 };
 // The rules the game wires up (drac-show.js), here so tests can reach them: the streak fire, when the bengales are lit
-// (the last pass: the arrangement's 'A3' row, to the end), when the traca's petards ride on her (a little before and after
+// (from the brake before the reversed spins to the final hit, flareLevel), when the traca's petards ride on her (a little before and after
 // its window: they are loaded, then the TRO's smoke clears).
 export const streakFire = (combo, beat) => combo >= DRAC_FX.streakAt && beat >= 0 && beat % 4 < 0.5;
-export function flareStart(song, timeAtBeat) { const row = song.arrangement?.find(r => r[1] === 'A3'); return row ? timeAtBeat(row[0]) : Infinity; }
+// the red smoke's level at song time t, lit at t0 and full on the final hit t1: 0..1, eased in (smoothstep)
+export const flareLevel = (t, t0, t1) => { const k = Math.min(1, Math.max(0, (t - t0) / (t1 - t0))); return t < t0 ? 0 : k * k * (3 - 2 * k); };
 export function tracaWindow(balloons, t) {
   for (let i = 0; i < balloons.length; i++) { const n = balloons[i]; if (t >= n.t - DRAC_FX.tracaBefore && t < n.end + DRAC_FX.tracaAfter) return n; }
   return null;
@@ -37,7 +41,7 @@ function dfxGlowTexture(pow, hard = 1) { // a white disc, alpha falling off (no 
 }
 // SMOKE: kinds of puff [life s, start size m, end size m, alpha, rise m/s, r, g, b]
 const PUFF = { crema: [1.9, 0.6, 2.4, 0.65, 1.1, 0.2, 0.19, 0.19], breath: [1.2, 0.3, 1, 0.5, 0.8, 0.26, 0.25, 0.25],
-  flare: [7, 1.2, 7, 0.72, -0.22, 0.85, 0.001, 0.003], // saturated pigment in linear RGB; soft alpha edges still reveal the crowd as it spreads and fades
+  flare: [7, 1.2, 7, 0.7, -0.22, 0.6, 0.07, 0.05], // a bengala's smoke, a rosy red (linear RGB); soft alpha edges still reveal the crowd as it spreads and fades
   tro: [2, 0.7, 2.8, 0.8, 0.7, 0.24, 0.22, 0.21], petard: [1.2, 0.3, 1.2, 0.7, 0.6, 0.33, 0.31, 0.3] };
 const DRAG = 2.5; // how fast a puff's own push dies (1/s)
 // SPARKS (guspires): colour from hot to cool over their life [r, g, b, r, g, b]: fire, (unused: the old bengales'), powder
@@ -255,19 +259,23 @@ export function createDracFx(scene, opts = {}) {
         sparks(V, DIR.set(D.x, D.y + 0.5, D.z), 1, 3, 0.6, 0, 0.09, F.emitSprinkle / (30 * F.erate * F.streak));
       }
     } else F.emitSprinkle = 0;
-    // the last pass: red smoke rising from the floor all over the plaça, more and more (a crescendo over flareRamp s);
-    // it rises beyond her, round the side the camera looks at (not wasted behind the lens), on a breeze towards it
-    F.flare = ramp(F.flare, s.flare, DRAC_FX.flareRamp, dt);
+    // the last pass: red smoke rising from the floor all over the plaça, more and more. s.flare: a level 0..1 to follow
+    // (the song's own crescendo, flareLevel), or true / false: build up / thin out over flareRamp s
+    const want = s.flare === true ? 1 : +s.flare || 0;
+    F.flare = s.flare !== true && want >= F.flare ? want : Math.max(s.flare === true ? 0 : want, ramp(F.flare, s.flare === true, DRAC_FX.flareRamp, dt));
     F.flareRate = Math.min(28, cap * 0.7 / PUFF.flare[0]); // at full: 70% of the pool (the CREMA's recycle the oldest)
-    hazeOwed = F.flare ? hazeOwed + F.flareRate * F.flare * F.flare * dt : 0;
+    hazeOwed = F.flare ? hazeOwed + F.flareRate * F.flare * dt : 0; // linear in the level: a square hid it until the very end
     if (hazeOwed >= 1) {
-      if (s.cam) s.cam.getWorldDirection(D); else D.set(0, 0, -1);
-      const look = Math.atan2(D.x, D.z), x0 = s.x ?? 0, z0 = s.z ?? 0;
-      F.wx = -D.x * 0.25; F.wz = -D.z * 0.25;
+      const x0 = s.x ?? 0, z0 = s.z ?? 0, cx = s.cam ? s.cam.position.x - x0 : 0, cz = s.cam ? s.cam.position.z - z0 : 1, cd = Math.hypot(cx, cz) || 1;
+      F.wx = F.wz = 0; // no breeze: it hangs where it rose
       while (hazeOwed >= 1) {
         hazeOwed -= 1; hazeN++;
-        const a = look + (dfxHash(hazeN + 0.3) * 2 - 1) * DRAC_FX.flareArc, r = DRAC_FX.flareNear + (DRAC_FX.flareFar - DRAC_FX.flareNear) * dfxHash(hazeN + 0.7);
-        puff(PUFF.flare, x0 + Math.sin(a) * r, 0.4 + 1.6 * dfxHash(hazeN + 0.9), z0 + Math.cos(a) * r, 0, 0.3, 0);
+        // even over the plaça's area (r ~ sqrt), round its centre: never in the corridor from her to the lens
+        const a = dfxHash(hazeN + 0.3) * 2 * Math.PI, R0 = DRAC_FX.flareNear, R1 = DRAC_FX.flareFar;
+        const r = Math.sqrt(R0 * R0 + (R1 * R1 - R0 * R0) * dfxHash(hazeN + 0.7)), x = Math.sin(a) * r, z = Math.cos(a) * r;
+        const along = ((x - x0) * cx + (z - z0) * cz) / cd, side = Math.abs((x - x0) * cz - (z - z0) * cx) / cd;
+        if (along > -1 && along < cd && side < DRAC_FX.flareClear + 0.2 * Math.max(0, along)) continue;
+        puff(PUFF.flare, x, 0.4 + 1.6 * dfxHash(hazeN + 0.9), z, 0, 0.3, 0);
       }
     }
     // the traca's petards, riding on the fire points

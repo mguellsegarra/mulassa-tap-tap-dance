@@ -17,7 +17,7 @@ import { setupCamEdit } from './dev/cam-edit.js';
 import { setupSizesEdit } from './dev/sizes-edit.js';
 import { Q, COARSE, pageActive, beatAt, BEAT, offsetMs, playFrom, FINALE_T, AUTOPLAY, CALM, FINAL, STARS } from './core/env.js';
 import { pace, RAWCLOCK, viewClock } from './core/timing.js';
-import { initDrac, mula, drac, qualityLevel, renderProfile, softwareGl, GPU, renderer, camera, CAM_AZ, FRONT, plaza, cameraTarget, camFocus, camFocusTarget, camShift, camXYZ, focusXYZ, scene, setQualityLevel, setCamShift, renderScreen } from './scene/stage.js';
+import { initDrac, mula, drac, colla, qualityLevel, renderProfile, softwareGl, GPU, renderer, camera, CAM_AZ, FRONT, plaza, cameraTarget, camFocus, camFocusTarget, camShift, camXYZ, focusXYZ, scene, setQualityLevel, setCamShift, renderScreen } from './scene/stage.js';
 import { afterActive, G, chip, clock, songTime, drawT, bigPending, audioEngine, setClock, setDrawT } from './game/state.js';
 import { audioFailureTags } from './platform/audio.js';
 import { TAU } from './core/anim.js';
@@ -154,7 +154,7 @@ function frame(now) {
   if (PHOTO.on && !steers()) setView(false);
   animMula(dt, beat, live);
   // a pending selection hides both models, except in «mode foto»: the last playable one stands in (the selection is untouched)
-  if (G.state === 'select' && !viewMode && (sheets.select?.pending ?? sheets.select?.figure?.status === 'aviat')) { mula.root.visible = false; drac.root.visible = false; }
+  if (G.state === 'select' && !viewMode && (sheets.select?.pending ?? sheets.select?.figure?.status === 'aviat')) { mula.root.visible = false; drac.root.visible = false; colla.helpers.visible = colla.seated.visible = false; } // (the Drac's colla with it)
   const c0 = PERF && performance.now();
   animCrowd(dt, beat, vt, live);
   if (PERF) PERF.crowd += performance.now() - c0; // ?perf: the crowd's own share of the js

@@ -33,6 +33,11 @@ if (CHALLENGE) {
 }
 export let chip = null;
 export const setChip = v => (chip = v);
+// Scene effects belong to the run, even when the same animation is used by the selector / photo demo.
+// Never enqueue a demo sound for unlock or focus; menu controls and music use their own existing paths.
+export function figureSfx(kind, i = 0) {
+  if ((G.state === 'play' || G.state === 'results') && !G.paused && pageActive()) chip?.sfx(kind, i);
+}
 export let clock = 0;
 export const setClock = v => (clock = v);
 // at: a performance.now() time (a frame's, an input event's; default now): the de-stepped audio clock (audio.js audioClock)

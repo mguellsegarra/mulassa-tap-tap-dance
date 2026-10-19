@@ -3,9 +3,10 @@ import { createOrbit } from './orbit.js';
 import { smoothDamp } from './framing.js';
 import { plaza, camFocus, FRONT, camShift, camera, CAM_AZ, CAM_EL, cameraTarget } from './stage.js';
 import { playStage } from '../hud/layout.js';
-import { figureScale } from '../game/figure-song.js';
+import { figureScale, selectedFigure } from '../game/figure-song.js';
+import { DRAC } from '../game/figures.js';
 import { M } from './mula-motion.js';
-import { CALM } from '../core/env.js';
+import { CALM, CAMDRAC } from '../core/env.js';
 import { clock, G } from '../game/state.js';
 import { TAU } from '../core/anim.js';
 import { HH, K } from '../hud/canvas.js';
@@ -37,9 +38,18 @@ export function insidePlaza(p, tx, ty, tz) {
 export const CAMS = { x: new Float64Array(9), v: new Float64Array(9), live: false }; // focus x z, distance, heading follow, shift, position xyz, oblique
 const CAMV = { fov: 54, h: 8.25, w: 8.4, stage: 0.42 };
 export const DRIFT = { az: 0.2, el: 0.05, dist: 0.03, follow: 0.26, oblique: 0.4, tAz: 29, tAz2: 17, tEl: 21, tD: 13 }; // rad / rad / share / rad, seconds: slow, unrelated periods (never a rhythm you can spot)
+// The Drac travels round the whole dance ground (up to 4 m from its centre) and spins a dozen times: followed like her, the
+// plaça slid and swung under the note lane. It follows `side` of its travel across the shot and `depth` of it towards /
+// away from the lens (from the dance's centre, the plaça's: depth unfollowed, or a slower focus spring, lifted it under
+// the lane on a desktop), a little further back so it stays whole on a phone, and never turns with its heading.
+const DRAC_CAM = { side: 0.5, depth: 0.9, dist: 1.12 };
 const CAM_T = { focus: 0.5, dist: 1.8, follow: 2.8, shift: 0.5, pos: 1.5 }; // seconds to (about) catch up. Constant (a spring whose stiffness changes while it is still far from its target whiplashes); the swoop in from the title camera is just this slow
 export function framePlayCamera(dt, mx, mz, snap = false) { // snap: jump straight to the settled framing (tests)
-  const area = playStage(), focusY = 1.4 * figureScale(), s = CAMS;
+  const area = playStage(), focusY = 1.4 * figureScale(), s = CAMS, calm = selectedFigure.id === DRAC.id && CAMDRAC !== 'segueix';
+  if (calm) { // (the dance's centre is the plaça's: drac-layout.js placeDance)
+    const ax = Math.sin(CAM_AZ), az = Math.cos(CAM_AZ), along = mx * ax + mz * az;
+    mx = (mx - along * ax) * DRAC_CAM.side + along * ax * DRAC_CAM.depth; mz = (mz - along * az) * DRAC_CAM.side + along * az * DRAC_CAM.depth;
+  }
   if (!s.live || snap) { // carry on from wherever the camera is (the title's orbit), at rest
     s.v.fill(0);
     s.x[0] = snap ? mx : camFocus.x; s.x[1] = snap ? mz : camFocus.z; s.x[3] = Math.sin(M.yaw - FRONT); s.x[8] = Math.cos(M.yaw - FRONT) ** 2; s.x[4] = camShift;
@@ -48,15 +58,16 @@ export function framePlayCamera(dt, mx, mz, snap = false) { // snap: jump straig
     s.live = true;
   }
   const t = snap ? 0 : dt;
-  const follow = snap ? (s.x[3] = Math.sin(M.yaw - FRONT)) : smoothDamp(s, 3, Math.sin(M.yaw - FRONT), CAM_T.follow, t); // her heading, smoothly (a sine: no wrap-around step) and slowly: quick dance turns never pan the shot
-  const cr = Math.cos(M.yaw - FRONT) ** 2, obl = snap ? (s.x[8] = cr) : smoothDamp(s, 8, cr, CAM_T.follow, t); // front or rear: the camera slips round to a side so she never reads flat (0 at her sides)
+  const head = calm ? 0 : Math.sin(M.yaw - FRONT), flat = calm ? 0 : Math.cos(M.yaw - FRONT) ** 2;
+  const follow = snap ? (s.x[3] = head) : smoothDamp(s, 3, head, CAM_T.follow, t); // her heading, smoothly (a sine: no wrap-around step) and slowly: quick dance turns never pan the shot
+  const obl = snap ? (s.x[8] = flat) : smoothDamp(s, 8, flat, CAM_T.follow, t); // front or rear: the camera slips round to a side so she never reads flat (0 at her sides)
   if (camera.fov !== CAMV.fov) { camera.fov = CAMV.fov; camera.updateProjectionMatrix(); }
   const tan = Math.tan(camera.fov * Math.PI / 360);
   const br = CALM.matches ? 0 : 1, T = clock * TAU;
   const az = CAM_AZ + br * DRIFT.az * (0.65 * Math.sin(T / DRIFT.tAz) + 0.35 * Math.sin(T / DRIFT.tAz2 + 1.3))
     + DRIFT.follow * follow - DRIFT.oblique * obl;
   const el = CAM_EL + br * DRIFT.el * (0.7 * Math.sin(T / DRIFT.tEl + 0.7) + 0.3 * Math.sin(T / 9));
-  const dT = Math.max(CAMV.h, CAMV.w / camera.aspect) * figureScale() / (2 * tan) * (1 + br * DRIFT.dist * Math.sin(T / DRIFT.tD)) * (G.collapseT ? 1.2 : 1) * (HH < 300 ? 1.2 : 1); // (lying down she is wider; a short window has little stage above her: a little more room)
+  const dT = Math.max(CAMV.h, CAMV.w / camera.aspect) * figureScale() / (2 * tan) * (1 + br * DRIFT.dist * Math.sin(T / DRIFT.tD)) * (G.collapseT ? 1.2 : 1) * (HH < 300 ? 1.2 : 1) * (calm ? DRAC_CAM.dist : 1); // (lying down she is wider; a short window has little stage above her: a little more room)
   if (snap) { s.x[0] = mx; s.x[1] = mz; s.x[2] = dT; }
   const fx = smoothDamp(s, 0, mx, CAM_T.focus, t), fz = smoothDamp(s, 1, mz, CAM_T.focus, t), d = smoothDamp(s, 2, dT, CAM_T.dist, t);
   const ce = Math.cos(el);

@@ -2,7 +2,7 @@
 import { profileAt } from '../platform/render-quality.js';
 import { placeBand, buildBackdrop } from './models.js';
 import * as THREE from 'three';
-import { renderProfile, qualityLevel, renderer, sun, plaza, glc, CAM_DIR, setRenderProfile } from './stage.js';
+import { renderProfile, qualityLevel, renderer, sun, plaza, glc, CAM_DIR, setRenderProfile, colla } from './stage.js';
 import { crowd, crowdMesh, BAND_AZ, RAD, BAND_ARC } from './crowd-build.js';
 
 export let midCrowd = null; // the mid band (built once the play camera's direction exists, below CAM_DIR)
@@ -29,6 +29,7 @@ export function applyRenderQuality() {
   });
   if (plaza.backdrop) plaza.backdrop.mesh.count = Math.min(plaza.backdrop.n, renderProfile.backdrop);
   if (midCrowd) midCrowd.mesh.count = Math.min(midCrowd.n, renderProfile.mid);
+  colla?.setProfile(renderProfile); // fewer seated members on a lower tier
   glc.dataset.quality = renderProfile.name;
 }
 applyRenderQuality();

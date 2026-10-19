@@ -11,10 +11,11 @@ import { danceSections, danceCues, sameDanceForm, boundedDance } from './dance.j
 // PROVISIONAL TIMING: bound to this game's generated beat grid, never to the video's seconds.
 //
 // music/drac-arrangement.json `arrangement` rows; tests/drac.mjs fails if a regenerated arrangement moves them.
-// The song is the score's own order: A twice (1st / 2nd ending), B, C, the whole D, E, D.S. bars 6-18, coda.
+// The song is the score's own order: A twice (1st / 2nd ending), B, C, the whole D, E, the D.S. from bar 6 through bar 51,
+// coda, its last note held over the closing roll (docs/drac-music.md).
 export const ARRANGEMENT = [[11, 'pickup'], [12, 'A2'], [42, 'B'], [56, 'C'], [72, 'D'], [104, 'E'],
-  [128, 'A3'], [132, 'B3'], [146, 'C3'], [152, 'coda'], [157, 'roll']];
-export const END_BEAT = 161; // the final hit
+  [128, 'A3'], [132, 'B3'], [146, 'C3'], [162, 'D3'], [194, 'E3'], [218, 'coda'], [225, 'roll']];
+export const END_BEAT = 233; // the final hit
 export const DRAC_DANCE_SIZE = { h: 4.6, l: 4.2 };
 
 // Sway period in beats per stretch: the body leans to one side, holds, and goes over to the other, like the original
@@ -22,7 +23,7 @@ export const DRAC_DANCE_SIZE = { h: 4.6, l: 4.2 };
 // around it (a sudden rate step kept the phase but snapped the speed of every sine of it: travel, whip, reach).
 // The D.S. comes half an 8-beat sway early (bar 51 runs straight into bar 6): one faster sway over bar 51 gives the
 // half back, so the sway after it leans the way it was tuned to (a plain cut mirrored every later lean).
-const DRAC_LENGTHS = { intro: 11, pickup: 1, A1: 14, A2: 30, B: 14, C: 16, D: 32, E: 24, A3: 4, B3: 14, C3: 6, D3: 32, E3: 24, coda: 5, roll: 4 };
+const DRAC_LENGTHS = { intro: 11, pickup: 1, A1: 14, A2: 30, B: 14, C: 16, D: 32, E: 24, A3: 4, B3: 14, C3: 16, D3: 32, E3: 24, coda: 7, roll: 8 };
 // The D.S. half-sway is E + 20; it travels with its label. (D3 / E3: rows for edited forms that play a later D / E.)
 const DRAC_PERIOD_CUES = { intro: [[0, 8]], pickup: [[0, 8]], A1: [[0, 8]], A2: [[0, 8]], B: [[0, 8]], C: [[0, 8]], D: [[0, 4]], E: [[0, 8], [20, 4]], A3: [[0, 8]], B3: [[0, 8]], C3: [[0, 8]], D3: [[0, 4]], E3: [[0, 8]], coda: [[0, 8]], roll: [[0, 8]] };
 const PI = Math.PI, DEG = PI / 180, smooth = k => k * k * (3 - 2 * k), clamp01 = k => Math.min(1, Math.max(0, k));
@@ -48,7 +49,7 @@ const DRAC_YAW_CUES = {
   D3: [[8, 2], [16, 2], [24, 4], [32, 4]], E3: [[8, 0], [16, 2], [24, 2]], roll: [[4, 0]],
 };
 // The last rear belongs to coda, with its release extending three beats into the closing roll.
-const DRAC_REAR_CUES = { C: [[8, 16]], coda: [[4, 8]] }; // C3 stops at bar 18: no tied note to rear on
+const DRAC_REAR_CUES = { C: [[8, 16]], coda: [[4, 8]] }; // C3 has no rear (its rows predate the full D.S.)
 const DRAC_CROUCH_CUES = { roll: [[0, 4]] };
 export const newDracPose = () => ({ practice: false, beat: 0, yaw: 0, roll: 0, pitch: 0, lift: 0, crouch: 0, x: 0, z: 0, drive: 0, swing: 0, reach: 0, jaw: 0,
   flap: 0, whip: 0, shake: 0, fire: 0, rear: 0 });

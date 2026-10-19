@@ -5,6 +5,8 @@ import { errors, errorName } from '../services/errors.js';
 import { buildPlaza, buildMulassa } from './models.js';
 import { newDracFeet } from '../game/drac-feet.js';
 import { buildDrac, DRAC_SCALE } from './models/drac.js';
+import { createColla } from './drac-colla.js';
+import { danceYaw } from '../game/drac-layout.js';
 import { COARSE } from '../core/env.js';
 
 // ------------------------------------------------------------------ 3D
@@ -54,6 +56,7 @@ scene.add(plaza.group);
 export const mula = buildMulassa();
 scene.add(mula.root);
 export let drac = null;
+export let colla = null; // the Drac's colla: its four clapping helpers and a few members sitting round the plaça (drac-colla.js)
 // Keep the Drac's material separate for share captures; its body stays opaque.
 // Copied from its own meshes in initDrac (no voxel.js import here: the tests' one-script bundle keeps its module order).
 export let dracMat = null;
@@ -72,6 +75,9 @@ export function initDrac() {
   life.scale.setScalar(DRAC_SCALE);
   life.add(drac.root);
   scene.add(life);
+  colla = createColla({ profile: renderProfile }); // hidden until the Drac is the figure; built now so the warmup compiles it
+  colla.helpers.visible = colla.seated.visible = false;
+  scene.add(colla.helpers, colla.seated);
 }
 // Her standing pose at load (what the camera-fit silhouettes used to leave behind): animMula overwrites it every frame.
 mula.neck.rotation.x = 0.15;
@@ -92,6 +98,7 @@ export const camXYZ = [0, 0, 0], focusXYZ = [0, 0, 0]; // reused by the prop che
 export const CAM_EL = 26 * Math.PI / 180, CAM_AZ = -81 * Math.PI / 180;
 export const CAM_DIR = [Math.cos(CAM_EL) * Math.sin(CAM_AZ), Math.sin(CAM_EL), Math.cos(CAM_EL) * Math.cos(CAM_AZ)]; // from her to the camera (unit)
 export const FRONT = CAM_AZ + 0.35; // her dance's front: 20 deg off the play camera, so every pose reads three-quarter (her side, the blanket, the head)
+export const DRAC_YAW = danceYaw(CAM_AZ); // the Drac's dance frame heading (game/drac-layout.js)
 export let camShift = 0; // lens shift of the play camera, css px (see frame())
 export const setCamShift = v => (camShift = v);
 

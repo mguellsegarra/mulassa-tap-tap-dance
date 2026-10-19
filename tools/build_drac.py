@@ -4,14 +4,18 @@ Inputs: music/drac-score.json (the gralla 1 line) and music/drac-form.json (whic
 knots, balloons, holds, the ending). The form is compiled by the SAME browser-safe compiler the music editor uses
 (`node tools/compile-music-form.mjs drac`, src/music-form/CONTRACT.md) into a timeline of bars, melody, tempo and events;
 this file turns that timeline into sound and chart. `MUSIC_FORM=<path>` compiles another form file instead (experiments).
-2/4, 126 BPM at the start, one beat = one quarter; the tune is written in C and sounds in G major (gralla in sol), so
-everything here is placed in G major (the form's `source.transpose` below the written pitch).
+2/4, one beat = one quarter; the tune is written in C and sounds in G major (gralla in sol), so everything here is
+placed in G major (the form's `source.transpose` below the written pitch).
 Still hardcoded here (instruments, not decisions): the harmony table (V_BARS, by source bar), the drum/bass/stab patterns
 per label, the 6-bar count-in, which labels get the bell, the chart levels per beat position, and the menu ambience.
-Tempo: the form's knots (music/README.md: the late speed-up of E3, the coda's rit.), made into whole microseconds a beat by
-the compiler, so the MIDI tempo map and the audio agree exactly.
+Tempo: the form's knots, fitted to the reference recording's pulse (docs/drac-music.md: 117 BPM rising to 128, the
+late jump to 151 under the final spins, the rit. under the held last note), made into whole microseconds a beat by the compiler, so the
+MIDI tempo map and the audio agree exactly. The form's `reference` anchors become song-drac.json `ref` / `refEnd`: the
+map from song seconds to the recording's seconds the Drac's dance is authored in (game/drac-time.js).
+Two arrangements, one chosen by VARIANT: festiva (the party band below) and austera (one reed voice, timbal, bass drum).
 Outputs tmp/audio/drac-taiko.wav, public/music/drac-taiko.{mp3,mid}, drac-taiko-ambient.mp3,
-music/drac-arrangement.json and the game chart src/song-drac.json (same shape as src/song.json + `balloons`, `arrangement`).
+music/drac-arrangement.json and the game chart src/song-drac.json (same shape as src/song.json + `balloons`, `arrangement`,
+`ref`, `refEnd`); the other arrangement only as a dev candidate, tmp/audio/drac-taiko-<variant>.{wav,mp3} (gitignored).
 """
 import hashlib
 import json
@@ -29,6 +33,10 @@ from synth import SR, hz, lp, midi_of, put, additive, adsr, glock, note_gate, br
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_FORM = ROOT / 'music/drac-form.json'
 FORM = Path(os.environ.get('MUSIC_FORM') or DEFAULT_FORM)
+# Marc chose festiva (2026-10-19); austera stays renderable as a candidate (docs/drac-music.md).
+VARIANT = 'festiva'
+VARIANTS = ('festiva', 'austera')
+AMB_BPM = 126   # the menu ambience's own tempo (the song's first knot is the recording's 117 now; the loop stays as it was)
 
 
 # ------------------------------------------------------------------ the form -> a timeline (node, the one compiler)
@@ -170,6 +178,17 @@ def build_events(tl):
     # sides follow the melody: higher than the last tapped note -> ka (MA), lower -> don (CRE), same -> keep.
     # No level may play more than 4 on one side: the 5th flips (holds keep the form's side, the pickup's first stays).
     pitch = {s: m for s, _, m in melody}
+    # DIFÍCIL only (Marc, 2026-10-19: more GUAPA where there already are some): from the D.S. on, a phrase that opens on
+    # a GUAPA doubles the eighth falling from its peak too. A level-2 note, so the easier charts never see it.
+    length = {s: d for s, d, _ in melody}
+    DS = max(B(o['start']) for p, o in zip(body, body[1:]) if o['bar'] < p['bar'])
+    HARD_BIG = set()
+    for _, _, a, b in tl['itemSpans']:
+        own = [x for x in tune_taps if a <= x[0] < b and x[0] not in BIG]
+        if a < DS or a not in BIG or not own: continue
+        peak = max(own, key=lambda x: pitch[x[0]])
+        nxt = next((x for x in own if x[0] > peak[0]), None)
+        if nxt and nxt[2] == 2 and length[nxt[0]] >= 0.5: HARD_BIG.add(nxt[0])
     side, last_m, prev_s = {}, None, None
     for s, k, lv in tune_taps:
         side[s] = HOLD_KIND.get(s) or ('don' if last_m is None else
@@ -180,7 +199,7 @@ def build_events(tl):
         for _ in range(200):
             run, prev_k, flip = 0, None, None
             for s, k, lv in tune_taps:
-                if lv > lvl or s in BIG: continue
+                if lv > lvl or s in BIG or s in HARD_BIG: continue
                 run = run + 1 if side[s] == prev_k else 1
                 if run > 4 and not fixed(s): flip = s; break
                 prev_k = side[s]
@@ -189,7 +208,7 @@ def build_events(tl):
         else: raise AssertionError('side runs do not settle')
     taps = []
     for s, k, lv in tune_taps:
-        taps.append((s, side[s], lv, int(s in BIG), HOLD.get(s, 0)))
+        taps.append((s, side[s], lv, int(s in BIG or s in HARD_BIG), HOLD.get(s, 0)))
     taps.append((END, 'don', 0, 1, 0))
     taps = [x for x in taps if not (x[0] == END and any(y[0] == END for y in taps[:-1]))]
     taps.sort()
@@ -285,13 +304,117 @@ def render_stems(ev, N):
     return stem
 
 
+# ------------------------------------------------------------------ the room, the master and the two arrangements
+def reverb_ir():
+    it = np.arange(int(1.6 * SR)) / SR
+    ir = np.stack([lp(rng.standard_normal(len(it)), 0.6) * np.exp(-it / 0.35) for _ in range(2)], 1)
+    ir[: int(0.02 * SR)] = 0
+    ir /= np.abs(ir).sum(0) ** 0.5 * 12
+    return ir
+
+
+def master(dry, send, ir, N):
+    wet = np.stack([fftconvolve(send[:, c], ir[:, c])[:N] for c in range(2)], 1)
+    mix = dry + wet * 0.5
+    mix /= np.abs(mix).max() / 0.98
+    return np.tanh(mix * 1.6) / np.tanh(1.6) * 0.76
+
+
+PAN = {'kick': 0, 'snare': 0.05, 'clap': -0.1, 'hat': 0.35, 'ohat': 0.35, 'shaker': 0.55, 'tamb': -0.45, 'cowbell': -0.3,
+       'crash': -0.3, 'don': -0.15, 'ka': 0.3, 'tim': 0.1}
+BUS = dict(don='taiko', ka='taiko', shaker='perc', tamb='perc', cowbell='perc', tim='taiko')
+GAIN = dict(lead=0.36, pad=0.025, stab=0.11, arp=0.15, bell=0.09, bass=0.22, drums=0.45, perc=1.1, taiko=0.5)
+
+
+def festiva(ev, N, ir):
+    """The party band: lead, bell, pad, stabs, arpeggio, bass, drums, percussion and the taiko that doubles the chart."""
+    stem = render_stems(ev, N)
+    for kind, lst in ev.hits.items():
+        for s, v in lst:
+            x = swell(v, ev.span(s, v) / v) if kind == 'swell' else perc(kind, v)
+            put(stem[BUS.get(kind, 'drums')], ev.sec(s), x, PAN.get(kind, 0))
+    duck = np.ones(N)
+    for s, _ in ev.hits['kick']:
+        i = int(ev.sec(s) * SR); n = min(int(0.25 * SR), N - i)
+        duck[i:i + n] = np.minimum(duck[i:i + n], 1 - 0.35 * np.exp(-np.arange(n) / SR / 0.08))
+    for k in ('pad', 'stab', 'bass'): stem[k] *= duck[:, None]
+    dry = sum(stem[k] * g for k, g in GAIN.items())
+    send = stem['lead'] * 0.30 + stem['pad'] * 0.03 + stem['stab'] * 0.04 + stem['arp'] * 0.05 + stem['bell'] * 0.05 \
+           + stem['drums'] * 0.08 + stem['perc'] * 0.06
+    return master(dry, send, ir, N)
+
+
+# austera: the score's melody alone on one soft reed-like voice that stops at its written note-off, over a timbal and a
+# bass drum. No added harmony, no taiko (so no drum doubles the chart). Neither variant is the xeremiers' real sound.
+REL = 0.04   # s the reed sounds past its written note-off: a breath of legato, never an old pitch held over the next
+
+
+def reed(f, dur, vib):
+    """A soft double-reed colour: every harmonic, gently tilted and darkening, then a one-pole lowpass (no buzz)."""
+    w, t = additive(f, dur, 1.05, 0.6, 0.0, vib, 6000)
+    return lp(w, 0.35), t
+
+
+def render_austera_lead(ev, N):
+    out = np.zeros((N, 2))
+    for s, d, m in ev.melody:
+        dur = max(0.05, ev.span(s, d) - 0.012)
+        total = dur + REL
+        w, t = reed(hz(m), total, 0.003 if d >= 1 else 0.0)
+        put(out, ev.sec(s), w * adsr(t, total, 0.012, REL, 0.85, 0.3), 0.0)
+    return out
+
+
+# 8 sixteenth steps a 2/4 bar: x full, o soft. Calm phrases mark the beat, the walks and turns fill the off-beats.
+TIM = {'calm': 'x...o.o.', 'walk': 'x.o.x.o.', 'turns': 'x.oxx.o.'}
+BOMBO = {'calm': 'x.......', 'walk': 'x...x...', 'turns': 'x...x...'}
+AUSTERA = {'A2': 'calm', 'B': 'calm', 'C': 'calm', 'D': 'walk', 'E': 'calm', 'A3': 'calm', 'B3': 'calm', 'C3': 'calm',
+           'D3': 'walk', 'E3': 'turns', 'coda': 'walk'}
+COUNT_IN = ['x...x...', 'x...x...', 'x...x.o.', 'x...x.o.', 'x.o.x.o.', '..o.oxxx']   # the 12-beat intro, the last into the tune
+
+
+def austera_hits(ev):
+    hits = {'tim': [], 'don': []}
+
+    def pattern(b0, steps, kind, g):
+        for i, c in enumerate(steps):
+            b = b0 + i / 4
+            if c != '.' and b < ev.END: hits[kind].append((b, g * (1.0 if c == 'x' else 0.55)))
+
+    for i, steps in enumerate(COUNT_IN): pattern(2 * i, steps, 'tim', 0.45 + 0.06 * i)
+    for bar, s, style in ev.layout[1:]:                 # the pickup bar is the count-in's last
+        kind = AUSTERA[style]
+        pattern(s, TIM[kind], 'tim', 0.7)
+        pattern(s, BOMBO[kind], 'don', 0.45)
+    for a, b in ev.BALLOONS:                            # only the closing roll: the mid-song one is a game GLOBUS
+        if b != ev.END: continue
+        n = int((b - a) * 4)
+        for i in range(n): hits['tim'].append((a + i / 4, 0.35 + 0.55 * i / n))
+    hits['don'].append((ev.END, 1.0)); hits['tim'].append((ev.END, 1.0))
+    return hits
+
+
+def austera(ev, N, ir):
+    lead, drum = render_austera_lead(ev, N), np.zeros((N, 2))
+    for kind, lst in austera_hits(ev).items():
+        for s, v in lst: put(drum, ev.sec(s), perc(kind, v), 0.15 if kind == 'tim' else -0.1)
+    return master(lead * 0.5 + drum * 0.55, lead * 0.3 + drum * 0.08, ir, N)
+
+
+ARRANGEMENTS = {'festiva': festiva, 'austera': austera}
+
+
+def mp3(wav, out, rate):
+    subprocess.run(['ffmpeg', '-hide_banner', '-loglevel', 'error', '-y', '-i', wav, '-c:a', 'libmp3lame', '-b:a', rate, out], check=True)
+
+
 # ------------------------------------------------------------------ the song
 def main():
     form, tl = compile_timeline()
     ev = build_events(tl)
     melody, chords, stabs, bass, hits, taps, layout, BIG, HOLD, BALLOONS, ARR, US, sec, span, END, LEAD_IN, BPM = (
         getattr(ev, k) for k in ('melody chords stabs bass hits taps layout BIG HOLD BALLOONS ARR US sec span END LEAD_IN BPM').split())
-    SPB = 60 / BPM                                      # the base beat: the menu ambience, never the song's clock
+    SPB = 60 / AMB_BPM                                  # the base beat: the menu ambience, never the song's clock
     TR = form['source']['transpose']
     score = {}                                          # the menu ambience plays a few of the score's own bars
     for n, line in json.load(open('music/' + form['source']['score']))['bars']:
@@ -303,33 +426,13 @@ def main():
 
     N = int(max(sec(END) + 3.5, sec(END + 4) + 1.4) * SR)    # the pad rings to END + 4 (+0.4 s), then the reverb
     assert all(sec(s + d) + 0.12 < N / SR - 1 for s, d, _ in melody + bass) and max(sec(e) + 0.4 for _, e, _ in chords) < N / SR, 'no note cut off'
-    stem = render_stems(ev, N)
-    PAN = {'kick': 0, 'snare': 0.05, 'clap': -0.1, 'hat': 0.35, 'ohat': 0.35, 'shaker': 0.55, 'tamb': -0.45, 'cowbell': -0.3,
-           'crash': -0.3, 'don': -0.15, 'ka': 0.3, 'tim': 0.1}
-    BUS = dict(don='taiko', ka='taiko', shaker='perc', tamb='perc', cowbell='perc', tim='taiko')
-    for kind, lst in hits.items():
-        for s, v in lst:
-            x = swell(v, span(s, v) / v) if kind == 'swell' else perc(kind, v)
-            put(stem[BUS.get(kind, 'drums')], sec(s), x, PAN.get(kind, 0))
-    duck = np.ones(N)
-    for s, _ in hits['kick']:
-        i = int(sec(s) * SR); n = min(int(0.25 * SR), N - i)
-        duck[i:i + n] = np.minimum(duck[i:i + n], 1 - 0.35 * np.exp(-np.arange(n) / SR / 0.08))
-    for k in ('pad', 'stab', 'bass'): stem[k] *= duck[:, None]
-    GAIN = dict(lead=0.36, pad=0.025, stab=0.11, arp=0.15, bell=0.09, bass=0.22, drums=0.45, perc=1.1, taiko=0.5)
-    dry = sum(stem[k] * g for k, g in GAIN.items())
-    it = np.arange(int(1.6 * SR)) / SR
-    ir = np.stack([lp(rng.standard_normal(len(it)), 0.6) * np.exp(-it / 0.35) for _ in range(2)], 1)
-    ir[: int(0.02 * SR)] = 0
-    ir /= np.abs(ir).sum(0) ** 0.5 * 12
-    send = stem['lead'] * 0.30 + stem['pad'] * 0.03 + stem['stab'] * 0.04 + stem['arp'] * 0.05 + stem['bell'] * 0.05 \
-           + stem['drums'] * 0.08 + stem['perc'] * 0.06
-    wet = np.stack([fftconvolve(send[:, c], ir[:, c])[:N] for c in range(2)], 1)
-    mix = dry + wet * 0.5
-    mix /= np.abs(mix).max() / 0.98
-    mix = np.tanh(mix * 1.6) / np.tanh(1.6) * 0.76
+    assert VARIANT in VARIANTS, VARIANT
+    ir = reverb_ir()
     os.makedirs('tmp/audio', exist_ok=True)
-    sf.write('tmp/audio/drac-taiko.wav', mix.astype(np.float32), SR, subtype='PCM_16')
+    for v in (VARIANT,) + tuple(x for x in VARIANTS if x != VARIANT):   # the game's first, then the candidate
+        wav = 'tmp/audio/drac-taiko.wav' if v == VARIANT else f'tmp/audio/drac-taiko-{v}.wav'
+        sf.write(wav, ARRANGEMENTS[v](ev, N, ir).astype(np.float32), SR, subtype='PCM_16')
+        if v != VARIANT: mp3(wav, wav[:-4] + '.mp3', '160k')       # dev audition only: never into public/
 
 
     # ------------------------------------------------------------------ MIDI
@@ -375,9 +478,9 @@ def main():
     onsets = {round(s, 4) for s, _, _ in melody}
     assert all(round(s, 4) in onsets for s, *_ in taps if s < END), 'taps must be melody notes'
     bigs = [(s, k, lv) for s, k, lv, bg, _ in taps if bg]
-    assert {s for s, *_ in bigs} == BIG | {END} and all(lv == 0 for *_, lv in bigs), bigs
+    assert {s for s, *_ in bigs} == BIG | ev.HARD_BIG | {END} and all(lv == (2 if s in ev.HARD_BIG else 0) for s, _, lv in bigs), bigs
     assert not [s for s, *_ in bigs if any(a <= s < b for a, b in BALLOONS)], 'GUAPA inside a balloon'
-    assert 10 <= len(bigs) <= 16, len(bigs)
+    assert all(10 <= sum(lv <= d for *_, lv in bigs) <= 16 for d in range(3)), bigs
     for s, k, lv, bg, he in taps:
         if he: assert not bg and lv == 0 and he - s >= 2 and not any(s < b and he > a for a, b in BALLOONS), (s, he)
     for d in range(3):
@@ -391,6 +494,11 @@ def main():
             'beats': [round(sec(b), 4) for b in range(END + 1)],
             'balloons': BALLOONS, 'arrangement': ARR,
             'notes': [[round(sec(s), 4), k, lv, bg, round(sec(he), 4) if he else 0] for s, k, lv, bg, he in taps]}
+    # the recording's clock: the compiler's song seconds are this file's sec() (one clock), kept to the beats' precision
+    assert all(abs(sec(b) - s) < 1e-9 for (b, _), (s, _) in zip(tl['refAnchors'], tl['ref'])), 'the reference map is on the audio clock'
+    song['ref'] = [[round(s, 4), r] for s, r in tl['ref']]
+    song['refEnd'] = tl['refEnd']
+    assert all(b[0] > a[0] and b[1] > a[1] for a, b in zip(song['ref'], song['ref'][1:])), 'ref rises in both'
 
     # ------------------------------------------------------------------ menu ambience: an entrance, then a 32-beat loop
     AMB, INTRO_BEATS = 32, 8
@@ -445,15 +553,15 @@ def main():
     sf.write('tmp/audio/drac-ambient.wav', loop.astype(np.float32), SR, subtype='PCM_16')
     for src, dst, br in (('tmp/audio/drac-taiko.wav', 'public/music/drac-taiko.mp3', '160k'),
                          ('tmp/audio/drac-ambient.wav', 'public/music/drac-taiko-ambient.mp3', '192k')):
-        subprocess.run(['ffmpeg', '-hide_banner', '-loglevel', 'error', '-y', '-i', src, '-c:a', 'libmp3lame', '-b:a', br, dst], check=True)
+        mp3(src, dst, br)
     ver = lambda f: hashlib.sha1(open(f, 'rb').read()).hexdigest()[:10]
     song['audio'] = f"music/drac-taiko.mp3?v={ver('public/music/drac-taiko.mp3')}"
     song['ambient'] = f"music/drac-taiko-ambient.mp3?v={ver('public/music/drac-taiko-ambient.mp3')}"
     song['ambientLoop'] = dict(start=INTRO_N / SR, end=(INTRO_N + LOOP) / SR, beats=AMB)
     json.dump(song, open('src/song-drac.json', 'w'), separators=(',', ':'))
     per = [(sum(lv <= d and k == 'don' for _, k, lv, *_ in taps), sum(lv <= d and k == 'ka' for _, k, lv, *_ in taps)) for d in range(3)]
-    print('duration', round(N / SR, 1), 's  end beat', END, ' melody notes', len(melody), ' taps per level (don/ka)', per,
-          ' holds', sorted(HOLD.items()), ' big', sorted(BIG | {END}), ' balloons', BALLOONS)
+    print(VARIANT, 'duration', round(N / SR, 1), 's  end beat', END, ' melody notes', len(melody), ' taps per level (don/ka)', per,
+          ' holds', sorted(HOLD.items()), ' big', sorted(BIG | {END}), ' DIFÍCIL big', sorted(ev.HARD_BIG), ' balloons', BALLOONS)
 
 
 if __name__ == '__main__':

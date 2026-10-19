@@ -7,11 +7,13 @@ import { poseMulaBody } from './mula-pose-rig.js';
 import { newPose, practicePose, dancePose } from '../game/dance.js';
 import { CAM_AZ, FRONT, mula, drac } from './stage.js';
 import { selectedFigure } from '../game/figure-song.js';
-import { newDracPose, dracPose, dracPractice } from '../game/dance-drac.js';
+import { newDracPose } from '../game/dance-drac.js';
 import { poseDrac } from './drac-motion.js';
+import { dressCarrier } from './drac-rig.js';
+import { danceDrac, dracColla } from './drac-dance.js';
 import { DRAC_SCALE } from './models/drac.js';
 import { newWalker, resetWalker, demoStep, turn, manualDracStep, resumeWalker } from './drac-demo.js';
-import { G, clock, isDown, chip } from '../game/state.js';
+import { G, clock, isDown, figureSfx } from '../game/state.js';
 import { smooth, pulse, easeIn, hold } from '../core/anim.js';
 
 export const PIVOT = 1.3; // metres from the body centre to the front pivot
@@ -32,7 +34,7 @@ let photoGait = 1, photoLastId = null, photoStride = 0, photoGround = 1, photoRe
 // Q held: she rears up like a horse (front up, on her rear legs); E held: a kick (rear up, on her front legs). rad.
 export const PHOTO_REAR = { front: 0.5, rear: 0.45, legZ: 1.05, ease: 0.15 };
 let animatedFigureId = selectedFigure.id;
-const DRAC_POSE = newDracPose();
+const DRAC_POSE = newDracPose(), DRAC_ACC = { roll: 0, pitch: 0, lift: 0, col: 0, vigor: 1 };
 const POSE = newPose(); // the base choreography's pose this frame (dance.js), reused
 const HOME = new THREE.Vector2(0, 0); // her centre's spot in the plaça during play; the choreography travels around it
 // Reactive limits on top of the base pose (rad, m): accents and stumbles never pile up, whatever the tapping rate.
@@ -126,6 +128,7 @@ export function animMula(dt, beat, live = 1) {
   }
   const isDrac = (PHOTO.on && !PHOTO.pair ? PHOTO.id : selectedFigure.id) === 'drac-valls';
   mula.root.visible = !isDrac; drac.root.visible = isDrac;
+  dracColla(isDrac, beat, dt);
   if (isDrac) { PAIR.k = 0; animPlayableDrac(dt, beat, live); return; }
   animPair(dt, beat);
   const breath = Math.sin(clock * 2.2) * (1 - live); // standing still, only breathing
@@ -270,7 +273,7 @@ function dracJump(dt) {
   if (PHOTO.action) { if (DRAC_JUMP.air === 0) { DRAC_JUMP.v = CALM.matches ? 1.4 : 4.8; PHOTO.drac.fire = 1.4; } PHOTO.action = false; } // a flamarada as it takes off
   DRAC_JUMP.v -= 14 * dt; DRAC_JUMP.air = Math.max(0, DRAC_JUMP.air + DRAC_JUMP.v * dt); PHOTO.air = DRAC_JUMP.air > 0;
   if (DRAC_JUMP.air === 0) {
-    if (DRAC_JUMP.v < -2) { chip?.sfx('gran'); if (!CALM.matches) trauma = Math.min(1, trauma + 0.9); } // a big taiko DON
+    if (DRAC_JUMP.v < -2) { figureSfx('gran'); if (!CALM.matches) trauma = Math.min(1, trauma + 0.9); } // a big taiko DON
     DRAC_JUMP.v = 0;
   }
   return DRAC_JUMP.air;
@@ -285,7 +288,7 @@ function animPair(dt, beat) {
   if (manual) manualDracStep(w, DRAC_POSE, dt, beat, PHOTO.drac, DRAC_SCALE, CALM.matches);
   else { if (w.manual > 0) resumeWalker(w, beat); demoStep(w, DRAC_POSE, dt, beat, M.pos, DRAC_SCALE); PAIR.x = w.x; PAIR.z = w.z; }
   placeLife(w.x, w.z, w.face, PHOTO.on && PHOTO.id === 'drac-valls' ? dracJump(dt) : (DRAC_JUMP.air = 0));
-  poseDrac(drac, DRAC_POSE, 0, w.feetAt);
+  poseDrac(drac, DRAC_POSE, 0, w.feetAt); dressCarrier(drac);
 }
 
 function animPlayableDrac(dt, beat, live) {
@@ -295,17 +298,15 @@ function animPlayableDrac(dt, beat, live) {
     if (PHOTO.on) manualDracStep(SOLO, DRAC_POSE, dt, beat, PHOTO.drac, DRAC_SCALE, CALM.matches);
     else demoStep(SOLO, DRAC_POSE, dt, beat, null, DRAC_SCALE);
     placeLife(SOLO.x, SOLO.z, SOLO.face, PHOTO.on && PHOTO.id === 'drac-valls' ? dracJump(dt) : (DRAC_JUMP.air = 0));
-    poseDrac(drac, DRAC_POSE, 0, SOLO.feetAt);
+    poseDrac(drac, DRAC_POSE, 0, SOLO.feetAt); dressCarrier(drac);
     const prev = M.yaw;
     M.yaw = SOLO.face; M.yawVel = dt > 0 ? turn(M.yaw, prev) / dt : 0;
     M.pos.set(SOLO.x, SOLO.z); M.pivot.copy(M.pos); M.dancing = false;
     return;
   }
-  soloOn = false; placeLife(0, 0, 0);
+  soloOn = false;
   const dancing = G.state === 'play';
-  if (!G.collapseT && !(dancing && G.paused)) M.danceBeat = beat;
-  (dancing && !G.practice ? dracPose : dracPractice)(DRAC_POSE, M.danceBeat);
-  // Reuse the bounded tap/hold/stumble springs; shoes remain planted by the Drac's own feet solver.
+  // Reuse the bounded tap/hold/stumble springs; the dance itself is drac-dance.js's.
   for (const k in S) S[k].t = 0;
   holdGesture();
   stepSprings(Math.min(dt, 0.04));
@@ -313,18 +314,12 @@ function animPlayableDrac(dt, beat, live) {
   const col = G.collapseT ? smooth(Math.min(1, (clock - G.collapseT) / 0.6)) : 0;
   const target = dancing ? 1 - 0.92 * Math.min(1, (G.streak || 0) / 2) : live;
   M.vigor += (target - M.vigor) * easeIn(dt, 0.5);
-  DRAC_POSE.roll = DRAC_POSE.roll * M.vigor + S.roll.x + col * 0.6;
-  DRAC_POSE.pitch = DRAC_POSE.pitch * M.vigor + S.pitch.x + col * 0.5;
   M.airV -= 14 * dt; M.air = Math.min(CAP.air, Math.max(0, M.air + M.airV * dt));
   if (M.air === 0 || M.air === CAP.air) M.airV = 0;
-  DRAC_POSE.lift += M.air * (1 - col); // lift the body, while the Drac's shoe solver stays grounded
-  DRAC_POSE.drive *= M.vigor * (1 - col);
-  DRAC_POSE.crouch = Math.max(DRAC_POSE.crouch, col * 0.8);
-  DRAC_POSE.fire *= (1 - col) * live;
-  poseDrac(drac, DRAC_POSE, FRONT);
+  DRAC_ACC.roll = S.roll.x; DRAC_ACC.pitch = S.pitch.x; DRAC_ACC.lift = M.air; DRAC_ACC.col = col; DRAC_ACC.vigor = M.vigor; // (no literal: no garbage a frame)
   const prev = M.yaw;
-  M.yaw = FRONT + DRAC_POSE.yaw;
+  M.yaw = danceDrac(beat, DRAC_ACC, M.pos);
   M.yawVel = dt > 0 ? (M.yaw - prev) / dt : 0;
-  M.pos.set(DRAC_POSE.x * DRAC_SCALE, DRAC_POSE.z * DRAC_SCALE); M.pivot.copy(M.pos); // the world's metres
+  M.pivot.copy(M.pos);
   M.dancing = dancing;
 }

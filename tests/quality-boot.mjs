@@ -18,6 +18,7 @@ const boot = ({ saved = {}, software = false, nav = {}, blocked = false } = {}) 
   const context = vm.createContext({
     THREE: { ...THREE, WebGLRenderer: Renderer }, ...rq, ...finalTest, ...progress, song: { bpm: 120, beats: [], sections: [], notes: [] }, probeRenderer: () => ({ renderer: software ? 'llvmpipe' : 'Apple GPU', vendor: '', caveat: software, probe: 'test' }),
     errors: { report() {}, start() {}, breadcrumb() {} }, errorName: String, buildPlaza: stubModel, buildMulassa: stubModel,
+    danceYaw: az => az, createColla: () => ({}), // the Drac's dance frame and colla (provided modules; built by initDrac, not at boot)
     localStorage: blocked ? new Proxy({}, { get() { throw new Error('storage blocked'); } }) : { getItem: k => saved[k] ?? null, setItem: (k, v) => writes.push([k, v]), removeItem: k => writes.push([k]) },
     navigator: { hardwareConcurrency: 8, deviceMemory: 8, ...nav }, matchMedia: () => ({ matches: true }), window: {},
     document: { getElementById: () => ({ addEventListener() {}, dataset: {} }), hidden: false, hasFocus: () => true }, location: { search: '' },

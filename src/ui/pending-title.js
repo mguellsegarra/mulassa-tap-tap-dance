@@ -9,27 +9,30 @@ export function fitPendingTitle(title, win) {
     title.replaceChildren(text);
   }
   const largest = parseFloat(win.getComputedStyle(title).fontSize);
-  const fits = () => text.offsetHeight <= title.clientHeight + 1 && text.scrollWidth <= title.clientWidth + 1;
-  // Half-pixel steps keep a long title as large as its reserved one/two-line slot permits.
-  title.style.removeProperty('--title-lines');
-  const shrink = () => { for (let size = largest; size >= 16; size -= .5) { text.style.fontSize = `${size}px`; if (fits()) return true; } return false; };
-  // Still too long at 16 px for a one-line slot (a narrow phone): a second line, never over the entity.
-  if (!shrink() && parseFloat(win.getComputedStyle(title).getPropertyValue('--title-lines')) === 1) { title.style.setProperty('--title-lines', '2'); shrink(); }
+  const content = title.closest('.sel-pending-content');
+  // Read intrinsic rows, not the distributed gaps. The footer keeps its own fixed tracks.
+  const rows = () => [...content.querySelectorAll('h2, .sel-entity, .sel-pending-icon, p')]
+    .filter(el => !el.hidden && win.getComputedStyle(el).display !== 'none');
+  const fits = size => {
+    const visible = rows(), heights = visible.map(el => el.getBoundingClientRect().height);
+    const wide = win.getComputedStyle(content).display === 'grid';
+    const identity = wide ? Math.max(...heights.slice(0, 2)) : 0;
+    const used = wide ? identity + heights.slice(2).reduce((a, b) => a + b, 0) : heights.reduce((a, b) => a + b, 0);
+    return text.scrollWidth <= title.clientWidth + 1 && text.offsetHeight <= size * 1.1 * 2 + 1
+      && used <= content.clientHeight + 1;
+  };
+  for (let size = largest; size >= 16; size -= .5) {
+    text.style.fontSize = `${size}px`;
+    if (fits(size)) break;
+  }
 
 }
 
 // A single figure's open-code note repeats the GitHub link under it: it shows only while the card has room for it
-// (the spacers have already given theirs). Same moments as the title, plus the end of the card's max-height easing.
+// at selection, resize and font readiness, alongside the title.
 export function fitPendingNote(card) {
   const note = card?.querySelector('.sel-pending-copy p + p');
   if (!note) return;
   note.hidden = false;
   note.hidden = card.scrollHeight > card.clientHeight + 1;
-}
-
-// Refit on the card's own changes: its portrait slot's size (the title) and the end of its max-height easing (the
-// note: measured mid-ease, a resize would decide on a height the card is only passing through).
-export function watchPending(card, title, icon, win, live) {
-  if (win.ResizeObserver) new win.ResizeObserver(() => { if (live()) fitPendingTitle(title, win); }).observe(icon);
-  card.addEventListener?.('transitionend', e => { if (e.target === card && e.propertyName === 'max-height' && live()) fitPendingNote(card); });
 }

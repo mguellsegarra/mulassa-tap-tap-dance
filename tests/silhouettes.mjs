@@ -77,6 +77,10 @@ for (const [id, { vb: [vw, vh], d, parts = 1 }] of Object.entries(SILHOUETTE_DRA
   }
   assert.equal(pieces(grid, w), parts, `${id}: ${parts} whole figure(s), no shape left floating apart`);
 }
+for (const id of ['gegants-ciutat-valls', 'gegants-olot']) { // groups as wide as their card: ink centred (dx), so neither side meets the card's edge
+  const { vb: [vw], d, dx = 0 } = SILHOUETTE_DRAWINGS[id], xs = d.flatMap(s => polylines(s).flat().map(([x]) => x + dx));
+  assert(Math.abs(Math.min(...xs) + Math.max(...xs) - vw * 10) <= 2, `${id}: centred in its viewBox`);
+}
 { // the check itself: a deliberate one-unit gap is caught, an overlap is not
   const w = 40 / RES, grid = new Uint8Array(w * w); fill(grid, w, 'M2 2h10v10H2Z'); fill(grid, w, 'M13 2h10v10H13Z');
   assert.equal(pieces(grid, w), 2, 'a one-unit gap splits the figure');

@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 import { buildMulassa } from '../../scene/models/mulassa.js';
 import { createCarriers } from './carriers.js';
-import { CARRIER_SCALE } from './supports.js';
 import { poseMulassa } from '../../scene/mula-pose-rig.js';
 
 export function createStage(canvas, motion) {
@@ -19,6 +18,7 @@ export function createStage(canvas, motion) {
   rig.neck.rotation.x = 0.15; rig.head.rotation.x = 0.2;
   rig.peek.visible = false;
   const carriers = createCarriers(scene, motion);
+  const panel = new THREE.Vector3();
   const resize = new ResizeObserver(() => {
     const { width, height } = canvas.getBoundingClientRect();
     renderer.setSize(width, height, false); camera.aspect = width / height; camera.updateProjectionMatrix();
@@ -27,24 +27,19 @@ export function createStage(canvas, motion) {
   resize.observe(canvas);
   function render(t, pose, baseline) {
     // Opening camera stays independent of the reconstructed lateral motion.
-    const follow = Math.max(0, Math.min(1, (t - 67) / 4));
+    const follow = Math.max(0, Math.min(1, (t - 89) / 4)) * (1 - pose.referenceWeight);
     const second = Math.max(0, Math.min(1, (t - 34) / 2, (67 - t) / 2));
     const cameraX = -.95 + .5 * follow - .6 * second + pose.cameraX + pose.x * .65 * follow;
-    camera.fov = baseline ? 32 : 29;
-    camera.position.set(cameraX, 1.5, (baseline ? 10 : 8.2) + pose.z * .6 * follow);
-    camera.lookAt(cameraX, baseline ? 2.05 : 1.43 + .22 * follow + pose.cameraY, pose.z * .6 * follow);
+    camera.fov = 32;
+    camera.position.set(cameraX, 1.5, 10 + pose.z * .6 * follow);
+    camera.lookAt(cameraX, baseline ? 2.05 : 2.05 + .22 * follow + pose.cameraY, pose.z * .6 * follow);
     camera.updateProjectionMatrix();
     carriers.visible(!baseline);
     if (baseline) {
-      rig.root.scale.set(1, 1, 1);
-      rig.body.children[0].scale.y = 1; rig.body.children[0].position.y = 0;
       for (const leg of rig.legs) leg.visible = true;
       poseMulassa(rig, baseline.pose, baseline.beat, -65 * Math.PI / 180);
       renderer.render(scene, camera); return;
     }
-    rig.root.scale.set(1, CARRIER_SCALE.y, CARRIER_SCALE.z);
-    // Keep the cloth tall: a uniform height correction would flatten the skirt.
-    rig.body.children[0].scale.y = 1.35; rig.body.children[0].position.y = .20;
     rig.neck.rotation.set(0.15, 0, 0); rig.head.rotation.x = 0.2; rig.jaw.rotation.x = 0;
     rig.tail.rotation.set(0, 0, 0);
     for (const ear of rig.ears) ear.rotation.x = 0;
@@ -53,6 +48,18 @@ export function createStage(canvas, motion) {
     rig.body.rotation.set(pose.pitch, 0, pose.roll);
     rig.root.updateMatrixWorld(true);
     carriers.pose(t, pose);
+    if (pose.referenceWeight) {
+      // Match the observed cloth landmark without cancelling the floor trajectory.
+      panel.set(-.565 * Math.tanh(Math.sin(pose.yaw) * 5), .44, -.15);
+      rig.body.localToWorld(panel);
+      const depth = 10 - panel.z, height = 2 * depth * Math.tan(16 * Math.PI / 180);
+      const x = panel.x - (pose.referenceX - .5) * height * (16 / 9);
+      const targetAtPanel = panel.y + (pose.referenceY - .5) * height;
+      const targetY = 1.5 + (targetAtPanel - 1.5) * 10 / depth;
+      const w = pose.referenceWeight;
+      camera.position.x += (x - camera.position.x) * w;
+      camera.lookAt(camera.position.x, (2.05 + pose.cameraY) * (1 - w) + targetY * w, 0);
+    }
     renderer.render(scene, camera);
   }
   return { render, dispose() { resize.disconnect(); renderer.dispose(); } };

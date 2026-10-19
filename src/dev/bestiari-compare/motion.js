@@ -35,6 +35,7 @@ export function makeMotion(data) {
       out.pitch += (cue.pitch * rad - out.pitch) * weight;
     }
     out.cameraX = 0; out.cameraY = 0;
+    out.referenceX = 0; out.referenceY = 0; out.referenceWeight = 0;
     if (data.openingFit && t < 31.7) {
       const rows = data.openingFit.rows, u = Math.max(0, Math.min(1, (31.7 - t) / .7));
       const weight = u * u * (3 - 2 * u);
@@ -51,6 +52,22 @@ export function makeMotion(data) {
       out.pitch += (track(rows, t, 2) * rad - out.pitch) * weight;
       out.cameraX = track(rows, t, 3) * weight; out.cameraY = track(rows, t, 4) * weight;
       out.roll *= 1 - weight * .9;
+    }
+    if (data.approachCamera && t > 65 && t < 90) {
+      const u = Math.max(0, Math.min(1, t - 65, 90 - t)), w = u * u * (3 - 2 * u);
+      out.cameraX += (track(data.approachCamera.rows, t) - out.cameraX) * w;
+      out.cameraY += (track(data.approachCamera.rows, t, 2) - out.cameraY) * w;
+      out.referenceX = track(data.approachCamera.screenRows, t);
+      out.referenceY = track(data.approachCamera.screenRows, t, 2); out.referenceWeight = w;
+    }
+    if (data.lateFit && t > 89 && t < 121) {
+      const rows = data.lateFit.rows;
+      const u = Math.max(0, Math.min(1, t - 89, 121 - t)), w = u * u * (3 - 2 * u);
+      out.x += (track(rows, t) - out.x) * w;
+      out.pitch += (track(rows, t, 2) * rad - out.pitch) * w;
+      out.roll *= 1 - .9 * w;
+      out.referenceX = track(rows, t, 3); out.referenceY = track(rows, t, 4);
+      out.referenceWeight = w;
     }
     const settle = Math.max(0, Math.min(1, (165 - t) / 3));
     out.lift = Math.max(0, 1.25 * Math.sin(Math.abs(out.pitch)) - .06) + 0.025 * Math.abs(Math.sin(phase)) * settle;

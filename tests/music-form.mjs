@@ -33,6 +33,9 @@ for (const [id, files] of Object.entries(BASE)) {
   assert.equal(Number(tl.beats[tl.end].toFixed(3)), song.end, `${id}: end time (song.json keeps 3 decimals)`);
   const holds = song.notes.filter(n => n[4]).map(n => [n[0], n[4], n[1]]);
   assert.deepEqual(tl.holds.map(([a, b, k]) => [r4(tl.beats[a]), r4(tl.beats[b]), k]), holds, `${id}: holds`);
+  // the reference recording's clock (the Drac): the compiled anchors in song seconds, as the generator wrote them
+  assert.deepEqual(tl.ref.map(([s, r]) => [r4(s), r]), song.ref ?? [], `${id}: reference map`);
+  assert.equal(tl.refEnd, song.refEnd ?? null, `${id}: reference end`);
   if (arr.tempo_us) {
     const us = tl.tempo.beatUs;
     assert.deepEqual(us.map((u, k) => [k, u]).filter(([k, u]) => k === 0 || u !== us[k - 1]), arr.tempo_us, `${id}: tempo map in whole µs`);
@@ -51,7 +54,7 @@ for (const [id, files] of Object.entries(BASE)) {
 assert.deepEqual(timelines.mulassa.holds.map(h => h.slice(0, 2)), [[32, 34], [64, 67], [96, 98], [128, 131], [136, 139]]);
 assert.deepEqual(timelines.drac.holds.map(h => h.slice(0, 2)), [[66, 69]]);
 assert.equal(timelines.mulassa.finale, 208);
-assert.equal(timelines.drac.finale, 157);
+assert.equal(timelines.drac.finale, 231);
 // constant-exact is the generator's own grid, to the last bit
 assert.deepEqual(timelines.mulassa.beats, Array.from({ length: 229 }, (_, b) => 0.1 + b * (60 / 152)));
 // bars are whole beats however many 1/6 triplets they hold: nothing drifts off the grid
@@ -59,7 +62,7 @@ assert(timelines.drac.occurrences.every(o => Number.isInteger(o.start) && o.dur 
 
 // ------------------------------------------------------------------ the ending note rings; ties; scale and overrides
 assert.deepEqual(timelines.mulassa.melody.at(-1), [222, 6, 84]);
-assert.deepEqual(timelines.drac.melody.at(-1), [156, 7, 67]);
+assert.deepEqual(timelines.drac.melody.at(-1), [230, 7, 67]);
 assert.deepEqual(timelines.mulassa.occurrences.find(o => o.unfolded === 'u017').notes, [[136, 4, 72], [143, 0.5, 76], [143.5, 0.5, 76]], 'bar 16: override notes at scale 1');
 assert.equal(timelines.mulassa.occurrences.find(o => o.unfolded === 'u002').beatScale, 2);
 const bar21 = id => timelines.drac.occurrences.filter(o => o.bar === 21)[id];
@@ -177,10 +180,12 @@ for (const id of Object.keys(BASE)) {
   assert.equal(tl.bpm, form.tempo.knots[0].bpm);
   assert.equal(tl.beats.length, Math.floor(tl.end) + 1);
 }
-{ // drac: the score's own order (1a vegada 8, 2a vegada 9-15, D.S. from bar 6 to 18, then the coda 52-56)
+{ // drac: the score's own order (1a vegada 8, 2a vegada 9-15, D.S. from bar 6 through 51, then the coda 52-56; was: the
+  // D.S. to bar 18, before the reference recording's beat count, docs/drac-music.md)
   const bars = compileOriginal(forms.drac, scores.drac).occurrences.map(o => o.bar);
   assert.deepEqual(bars.slice(0, 17), [0, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 9]);
-  assert.deepEqual(bars.slice(-10), [14, 15, 16, 17, 18, 52, 53, 54, 55, 56]);
+  assert.deepEqual(bars.slice(-10), [47, 48, 49, 50, 51, 52, 53, 54, 55, 56]);
+  assert.deepEqual(compileOriginal(forms.drac, scores.drac).ref, [], 'the original has no reference map');
   assert.equal(compileOriginal(forms.drac, scores.drac).melody.some(n => n[1] === 3), true, 'ties apply in the original too');
   assert.equal(compileOriginal(forms.mulassa, scores.mulassa).occurrences.length, 74);
 }

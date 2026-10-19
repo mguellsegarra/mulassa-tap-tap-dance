@@ -21,7 +21,11 @@ export const RAD = { adult: 0.36, kid: 0.26, rider: 0.4, band: 0.55 }, REACH = 0
 // `patience` s, e.g. someone else filled it: they stay where they are). Only people
 // within `reach` m of that ring run the check. front: the front row's radius (rows 1.1 m apart behind it): her ends
 // (2.3 m from her centre) come within `clear` of it as she turns, her sides (0.75 m) never do. `bold`: the ring's share left late in the song (1 = never bolder).
-export const RING = { front: 5.4, clear: 3.8, kid: -0.4, jitter: 0.6, row: 0.9, flee: 1.3, gain: 3, ease: 0.3, back: 0.5, home: 0.35, flinch: 0.9, reach: 2.5, bold: 0.85, patience: 3 };
+export const RING = { front: 5.4, clear: 3.8, kid: -0.4, jitter: 0.6, row: 0.9, flee: 1.3, gain: 3, ease: 0.3, back: 0.5, home: 0.35, flinch: 0.9, reach: 2.5, bold: 0.85, patience: 3,
+  // the Drac's dance travels round the plaça's centre with its four helpers 4.5 m out (game/drac-layout.js): while it is
+  // the figure, nobody stands closer to the centre than `arena` m (a soft wall, like the mid band's front): beyond the
+  // colla members sitting round the helpers' ring (drac-colla.js SEATS, ~6 m)
+  arena: 7.2 };
 export function placeHome(p) {
   const r = RING.front + p.row * 1.1 + rnd(-0.4, 0.4); // the front row near enough that her turns reach it (RING)
   p.pos.set(Math.cos(p.ang) * r, Math.sin(p.ang) * r);

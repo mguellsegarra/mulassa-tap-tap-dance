@@ -6,6 +6,8 @@ import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { makeMotion } from '../src/dev/bestiari-compare/motion.js';
 import * as THREE from 'three';
+import { buildMulassa } from '../src/scene/models/mulassa.js';
+import { shoeSeparation, SHOE } from '../src/dev/bestiari-compare/support-clearance.js';
 import { createCarriers, LEG_LENGTH } from '../src/dev/bestiari-compare/carriers.js';
 import { byteRange } from '../tools/bestiari/media-plugin.mjs';
 
@@ -44,6 +46,11 @@ for (let frame = 0; frame <= 8310; frame++) {
 assert(motion.pose(14).x - motion.pose(24).x > .7, 'visible opening lateral return');
 assert(motion.pose(30).x - motion.pose(24).x > .25, 'return towards the initial area');
 assert(motion.pose(6).pitch > .025 && motion.pose(24).pitch < -.10, 'source hem changes tilt direction');
+assert(motion.pose(75).z - motion.pose(71).z > 2, 'rapid 71–75 s approach must travel towards the viewer');
+assert(motion.pose(71).x - motion.pose(75).x > 2.5, 'approach also travels left across the floor');
+assert(motion.pose(106).x - motion.pose(90).x > 1.5, 'late passage travels laterally instead of swaying in place');
+assert(motion.pose(110).pitch > .25, 'visible forward dip around 110 s');
+assert(motion.pose(127).pitch < -.3 && motion.pose(128).pitch > .3, 'front alternates up/down rather than lifting every time');
 for (const list of motion.events) {
   assert(list[0].start > 2, 'no arbitrary marching while the opening contacts are still');
   for (let k = 0; k < list.length - 1; k++) {
@@ -52,14 +59,37 @@ for (const list of motion.events) {
     const b = motion.foot(list[k].end, motion.events.indexOf(list));
     assert(a.contact && b.contact); assert.deepEqual(a, b, 'stance stays world fixed');
   }
+  for (const event of list) for (const t of [event.start, event.end]) {
+    const index = motion.events.indexOf(list), a = motion.foot(t - .00001, index), b = motion.foot(t + .00001, index);
+    assert(Math.hypot(a.x - b.x, a.y - b.y, a.z - b.z) < .001, `foot pops at contact at ${t}`);
+  }
 }
-const carriers = createCarriers(new THREE.Scene(), motion);
+const footSeek = motion.foot(144.84375, 6);
+for (const t of [17, 161, 33, 84]) motion.foot(t, 6);
+assert.deepEqual(motion.foot(144.84375, 6), footSeek, 'avoidance must not depend on playback history');
+const carrierScene = new THREE.Scene(), shell = buildMulassa(); carrierScene.add(shell.root);
+const carriers = createCarriers(carrierScene, motion);
+const shellInverse = new THREE.Matrix4(), localVertex = new THREE.Vector3();
+const coveredParts = [...carriers.torsos, ...carriers.parts.flatMap(p => [p.thigh, p.shin, p.knee])];
 const up = new THREE.Vector3(0, LEG_LENGTH / 2, 0), end = new THREE.Vector3(), start = new THREE.Vector3();
-for (let frame = 0; frame <= 8310; frame++) {
-  const t = frame / 50; carriers.pose(t, motion.pose(t));
-  for (let pair = 0; pair < 4; pair++) {
-    const a = motion.foot(t, pair * 2), b = motion.foot(t, pair * 2 + 1);
-    assert(Math.hypot(a.x - b.x, a.z - b.z) >= .25 - 1e-8, 'swing must not cross the planted foot');
+for (let frame = 0; frame <= 39888; frame++) {
+  const t = Math.min(166.2, (frame + .5) / 240), bodyPose = motion.pose(t); carriers.pose(t, bodyPose);
+  shell.root.position.set(bodyPose.x, bodyPose.lift, bodyPose.z); shell.root.rotation.y = bodyPose.yaw;
+  shell.body.rotation.set(bodyPose.pitch, 0, bodyPose.roll); carrierScene.updateMatrixWorld(true);
+  shellInverse.copy(shell.body.matrixWorld).invert();
+  // Actual rendered vertices against the original skirt's central solid box, not just joint centres.
+  for (const mesh of coveredParts) {
+    const positions = mesh.geometry.attributes.position;
+    for (let i = 0; i < positions.count; i++) {
+      localVertex.fromBufferAttribute(positions, i).applyMatrix4(mesh.matrixWorld).applyMatrix4(shellInverse);
+      if (localVertex.y > -.5 && localVertex.y < .75) {
+        assert(Math.abs(localVertex.x) < .56 && Math.abs(localVertex.z) < 1.66, `carrier protrudes above hem at ${t}`);
+      }
+    }
+  }
+  for (let i = 0; i < 8; i++) for (let j = i + 1; j < 8; j++) {
+    const a = motion.foot(t, i), b = motion.foot(t, j), gap = shoeSeparation(a, b, {}).gap;
+    assert(gap >= -1e-7 || Math.abs(a.y - b.y) >= SHOE.height - 1e-7, `shoes intersect at ${t}: ${i}/${j}`);
   }
   for (const p of carriers.parts) {
     end.copy(up).applyQuaternion(p.thigh.quaternion).add(p.thigh.position);

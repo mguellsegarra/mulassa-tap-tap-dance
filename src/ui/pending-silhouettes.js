@@ -48,7 +48,7 @@ export const SILHOUETTE_DRAWINGS = {
     'M176 90L186 86V96L178 100Z', 'M183 40h4V112h-4ZM180 104h10l-2 14h-6Z',
   ] },
   // Gegant and Geganta (crowns, robes widening to the ground), then the smaller Gegantona and Lladrefaves (tricorn, legs).
-  'gegants-ciutat-valls': { vb: [20, 16], parts: 2, d: [ // two pairs, each standing overlapped
+  'gegants-ciutat-valls': { vb: [20, 16], parts: 2, dx: 5, d: [ // two pairs, each standing overlapped; dx centres the ink (5.6–184 of 200: the left arm nearly touched a narrow card's edge)
     'M20 23L18 9L25 15L31 6L37 15L44 9L42 23Z', oval(31, 30, 9, 10), // Gegant
     'M14 50Q14 38 24 37H38Q48 38 48 50L50 70Q58 72 56 84Q52 88 50 84L54 148H8L12 84Q10 88 6 84Q4 72 12 70Z',
     'M64 25L62 11L69 17L75 8L81 17L88 11L86 25Z', oval(75, 32, 9, 10), // Geganta
@@ -71,17 +71,17 @@ export const SILHOUETTE_DRAWINGS = {
     'M128 60L148 62V71L130 72Z', 'M146 10h4V70h-4ZM140 64h16v5h-16Z', // arm, sword and guard
     carrierLeg(104, 130), carrierLeg(122, 130),
   ] },
-  // Front view: rooster comb, head and wattle, bat wings raised to both sides, scaly round body, two legs.
+  // From La Pessigolla's photo: tall and upright, big red comb, beak down, long neck, round scaly chest, both
+  // silver wings raised straight up beside the head, one carrier underneath.
   'basilisc-valls': { vb: [20, 16], d: [
-    'M84 30Q82 16 88 12Q94 10 96 18Q98 8 104 8Q110 10 108 18Q112 12 118 14Q122 18 116 30Z', // comb
-    oval(100, 38, 16, 13),
-    'M94 50Q100 60 106 50Z', // wattle
-    'M88 48Q82 64 82 92H118Q118 64 112 48Z', // neck, down into the body and the wing roots
-    // wings: from the shoulders up and out, scalloped trailing edge
-    'M86 80Q60 76 44 60Q34 50 24 44Q22 52 26 62Q20 64 22 72Q28 70 34 74Q30 82 34 88Q40 84 48 88Q52 92 56 96L86 96Z',
-    'M114 80Q140 76 156 60Q166 50 176 44Q178 52 174 62Q180 64 178 72Q172 70 166 74Q170 82 166 88Q160 84 152 88Q148 92 144 96L114 96Z',
-    'M40 104Q40 90 60 86H140Q160 90 160 104Q160 122 140 124H60Q40 122 40 104Z', // body
-    carrierLeg(88, 120), carrierLeg(112, 120, 1),
+    'M86 32Q82 14 92 10Q96 18 98 12Q102 4 108 8Q110 16 114 10Q122 14 116 32Z', // comb
+    oval(100, 40, 15, 13),
+    'M92 46L100 64L108 46Z', // beak
+    'M86 46Q80 70 82 92H118Q120 70 114 46Z', // neck
+    oval(100, 104, 30, 22), // chest
+    'M86 98Q66 82 60 58Q56 36 58 12Q64 24 68 36Q72 30 76 34Q74 48 80 56Q84 50 88 54Q86 70 94 86Z', // wings, raised
+    'M114 98Q134 82 140 58Q144 36 142 12Q136 24 132 36Q128 30 124 34Q126 48 120 56Q116 50 112 54Q114 70 106 86Z',
+    carrierLeg(92, 122), carrierLeg(108, 122, 1),
   ] },
   // The tall calçot: dark leaf fan over the head, long white stalk with the face, short sleeves, carrier's shoes.
   'gegant-calcot-valls': { vb: [12, 16], d: [
@@ -136,7 +136,7 @@ export const SILHOUETTE_DRAWINGS = {
   'boja-vilanova': { vb: [20, 16], d: [
     'M14 56Q14 46 24 46H138Q148 46 148 56V118Q148 126 140 126H22Q14 126 14 118Z',
     'M124 56Q124 30 134 16L144 12Q160 14 168 30Q176 40 172 48Q166 52 160 46L150 40Q146 50 148 62Z',
-    'M136 24L132 1L145 18Z', 'M150 20L157 1L163 20Z',
+    'M136 27L132 4L145 21Z', 'M150 23L157 4L163 23Z',
     carrierLeg(40, 122), carrierLeg(52, 122), carrierLeg(110, 122), carrierLeg(122, 122),
   ] },
   // Solsona's Corpus bull: long dark back, head turned to the viewer with its horns, skirt nearly to the ground.
@@ -147,14 +147,15 @@ export const SILHOUETTE_DRAWINGS = {
     'M130 36Q116 22 118 6Q124 6 126 14Q130 26 140 30Z', 'M162 32Q176 22 178 6Q184 8 182 16Q178 30 164 40Z', // horns
     carrierLeg(46, 134), carrierLeg(58, 134), carrierLeg(116, 134), carrierLeg(128, 134),
   ] },
-  // Solsona's Drac: S neck to the head at the right, raised bat wing, curled tail at the left, bearer in breeches.
+  // Solsona's Drac (Commons photo): upright green pear of a body, head on top looking right with open jaws, bat wings
+  // raised at its back, the tail curling round the base, the bearer's striped breeches and legs underneath.
   'drac-solsona': { vb: [20, 16], d: [
-    'M32 74Q34 62 46 62H140Q152 64 150 76L144 102Q140 110 130 110H54Q42 110 38 100Z', // body
-    'M126 72Q120 50 132 40Q140 34 140 22L152 24Q156 44 146 54Q140 60 144 72Z', // neck
-    'M134 22Q138 10 152 10Q166 10 176 18L190 26Q192 32 184 32L176 30Q180 36 172 38H148Q136 34 134 26Z', // head
-    'M46 76Q30 64 32 46Q34 30 22 26Q12 26 12 36Q14 42 20 40Q20 34 24 36Q26 44 24 56Q24 70 40 84Z', // tail
-    'M72 68Q62 44 50 14Q60 22 68 20Q72 30 82 24Q84 34 94 30Q98 40 108 38Q110 54 106 68Z', // bat wing
-    'M76 106H108L106 128H78Z', carrierLeg(84, 126), carrierLeg(100, 126),
+    'M66 130Q54 96 70 70Q84 50 106 52Q128 56 132 84Q136 110 124 130Z', // body
+    'M100 60Q98 34 114 26Q130 20 146 28L178 30Q183 37 175 40L146 44L172 56Q170 62 162 62L132 58Q124 64 114 68Z', // head, jaws wide open
+    'M117 31L106 12L125 27Z', 'M129 28L125 8L137 26Z', // horns
+    'M76 78Q56 62 44 38Q40 26 46 22Q50 34 58 40Q56 28 62 22Q66 36 72 42Q72 32 78 28Q82 48 92 62Z', // wings
+    'M72 114Q44 110 32 88Q26 72 34 64Q42 62 40 72Q42 88 68 96Z', // tail
+    'M80 126H114L112 136H82Z', carrierLeg(90, 134), carrierLeg(106, 134),
   ] },
   // Solsona's Carnaval Draca: round scaly body, S neck to the head at the right with its ear, raised tail, red skirt.
   'draca-solsona': { vb: [20, 16], d: [
@@ -186,17 +187,18 @@ export const SILHOUETTE_DRAWINGS = {
   'gegants-solsona': { vb: [20, 16], parts: 2, d: [
     'M14 12h5V94h-5Z', 'M40 36Q40 16 65 14Q90 16 90 36Z', 'M54 18Q58 4 70 4Q78 6 76 18Z', oval(65, 52, 22, 20),
     'M22 80Q22 68 34 68H96Q108 68 108 80L106 150H24Z', 'M30 88L16 84V94L28 98Z', // Vell, his hand on the staff
-    'M110 18h5V96h-5Z', 'M122 28L120 10L128 18L138 8L148 18L156 10L154 28Z', oval(146, 46, 22, 20),
+    'M110 18h5V96h-5Z', 'M130 28L128 10L136 18L146 8L156 18L164 10L162 28Z', oval(146, 46, 22, 20),
     'M122 74Q122 62 132 62H164Q176 62 176 74L184 150H116Z', 'M126 88L112 84V94L124 98Z', // Jove
   ] },
-  // Carnaval: the crowned, laughing Geganta Boja and the bald, white-bearded Gegant Boig.
+  // Carnaval: the Geganta Boja's low diadem and the bald Gegant Boig's small crown and rounded, beardless chin.
+  // From the named Taller Casserras reproductions; selector proposal accepted on 2026-10-19.
   'gegants-bojos-solsona': { vb: [20, 16], parts: 2, d: [
-    'M30 50L28 28L36 36L46 26L56 36L66 28L64 50Z', oval(55, 66, 26, 20), 'M20 94Q20 82 32 82H78Q90 82 90 94L92 150H14Z',
-    'M120 30L118 10L126 18L136 8L146 18L154 10L152 30Z', oval(137, 44, 23, 20), 'M117 50Q120 80 137 84Q154 80 157 50Z', // crown, bald head, beard
+    'M37 50L36 38L45 41L55 31L65 41L74 38L73 50Z', oval(55, 66, 26, 20), 'M20 94Q20 82 32 82H78Q90 82 90 94L92 150H14Z',
+    'M126 30L125 13Q131 9 137 12Q143 10 148 14L147 30Z', oval(137, 44, 23, 20), 'M117 50Q115 67 125 75Q139 84 151 72Q157 64 157 50Z', // crown, bald head, chin
     'M100 92Q100 76 114 76H162Q182 78 182 92L186 150H96Z',
   ] },
   // Olot: the crowned Geganta in her long dress and the Gegant with helmet, plume and raised mace.
-  'gegants-olot': { vb: [20, 16], parts: 2, d: [
+  'gegants-olot': { vb: [20, 16], parts: 2, dx: 4, d: [ // dx centres the ink (8–184 of 200)
     'M28 48L26 28L34 34L44 24L54 34L62 28L60 48Z', oval(45, 62, 24, 18), 'M18 86Q18 76 30 76H62Q74 76 74 86L82 150H8Z',
     'M106 42Q104 18 128 14Q152 18 152 42Z', 'M120 18Q124 6 132 6Q140 8 136 18Z', oval(128, 54, 22, 18),
     'M102 80Q102 68 112 68H148Q160 68 160 80L168 150H96Z',
@@ -213,6 +215,6 @@ export const SILHOUETTE_DRAWINGS = {
 const DRAWN_INK = '#120b07', DRAWN_HALO = '#f5e3b8';
 // One <path> per shape (overlaps never cancel into holes); the halo group, 2 screen px wide (1 px outside), sits under
 // the ink: the same line as the Bou's and the traced silhouettes'.
-const drawnSvg = ({ vb: [w, h], d }) => { const paths = d.map(x => `<path d="${x}"/>`).join('');
-  return `<svg viewBox="0 0 ${w} ${h}" aria-hidden="true"><g transform="scale(.1)"><g fill="${DRAWN_HALO}" stroke="${DRAWN_HALO}" opacity=".38" stroke-width="2" stroke-linejoin="round">${paths.replace(/<path/g, '<path vector-effect="non-scaling-stroke"')}</g><g fill="${DRAWN_INK}">${paths}</g></g></svg>`; };
+const drawnSvg = ({ vb: [w, h], d, dx = 0 }) => { const paths = d.map(x => `<path d="${x}"/>`).join('');
+  return `<svg viewBox="0 0 ${w} ${h}" aria-hidden="true"><g transform="scale(.1) translate(${dx} 0)"><g fill="${DRAWN_HALO}" stroke="${DRAWN_HALO}" opacity=".38" stroke-width="2" stroke-linejoin="round">${paths.replace(/<path/g, '<path vector-effect="non-scaling-stroke"')}</g><g fill="${DRAWN_INK}">${paths}</g></g></svg>`; };
 export const DRAWN_SILHOUETTES = Object.fromEntries(Object.entries(SILHOUETTE_DRAWINGS).map(([id, drawing]) => [id, drawnSvg(drawing)]));

@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import './pad-input.mjs';
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { Chip, applause, audioFailureTags } from '../src/platform/audio.js';
@@ -275,7 +276,8 @@ console.log('menu entrance, loop points, version and tempo ok');
   c.menu(false); // beginRun (main.js): a run's bus
   assert.equal(await c.start(3, 0, 100), true);
   c.countIn([-2.6, -1.8, -1]); // the 3, 2, 1 before the song, 0.4–2 s ahead on the audio clock (main.js: on its beats)
-  c.sfx('perfect'); c.sfx('miss'); c.sfx('ovation');
+  c.sfx('perfect'); c.sfx('miss'); c.sfx('ovation'); c.sfx('flama'); c.sfx('tro');
+  assert(ctx.sources.some(s => s.effectKind === 'flama') && ctx.sources.some(s => s.effectKind === 'tro' && s.at > ctx.currentTime), 'real figure sounds play on the run bus, including delayed TRO crackles');
   const run = ctx.sources.slice();
   assert(run.filter(s => s.at > ctx.currentTime).length >= 6, 'the count-in is queued ahead on the audio clock');
   ctx.currentTime += 0.4; // paused a moment into the count-in (the clock frozen there), then «Torna al menú»: toTitle

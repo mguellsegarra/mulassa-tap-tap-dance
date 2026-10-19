@@ -19,11 +19,13 @@ assert.equal(score.bars.length, 57, 'bars 0-56');
 assert.equal(new Map(score.bars).get(24), new Map(score.bars).get(32), 'the shortened D keeps the original entry figure');
 
 // -- Preserve the printed melody and its original ties, in the score's own order: A twice (1st ending bar 8, then
-// the 2nd), B, C, the whole D, E, then D.S. al segno (bar 6) through bar 18 and the coda.
+// the 2nd), B, C, the whole D, E, then D.S. al segno (bar 6) through bar 51 and the coda. Was: the D.S. stopped at bar 18
+// (the reference recording's beat count has the full return), then E's last phrase played twice, which the original
+// does not (Marc, 2026-10-19); the recording's late seconds go to the held last note instead (docs/drac-music.md).
 const PC = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
 const midi = n => 12 * (+n.at(-1) + 1) + PC[n[0]] + (n.includes('#') ? 1 : n.includes('b') ? -1 : 0) - 5;
 const bars = new Map(score.bars), TIED = { 22: 21, 55: 54, 56: 55 }, range = (a, b) => Array.from({ length: b - a + 1 }, (_, i) => a + i);
-const FORM = [0, ...range(1, 8), ...range(1, 7), ...range(9, 51), 6, 7, ...range(9, 18), ...range(52, 56)];
+const FORM = [0, ...range(1, 8), ...range(1, 7), ...range(9, 51), 6, 7, ...range(9, 51), ...range(52, 56)];
 const written = [];
 for (let i = 0, t = 11; i < FORM.length; i++) bars.get(FORM[i]).split(' ').forEach((tok, j) => {
   const [n, d] = tok.split(':');
@@ -31,12 +33,13 @@ for (let i = 0, t = 11; i < FORM.length; i++) bars.get(FORM[i]).split(' ').forEa
   else if (n !== 'R') written.push([t, frac(d), midi(n)]);
   t += frac(d);
 });
-written.at(-1)[1] = 7; // the game's adaptation: the last C rings on over the closing roll, past the final hit
+written.at(-1)[1] = 13; // the game's adaptation: the last C held 6 beats past its written 5 (a fermata over the closing
+// roll, to the dance's settle), ringing 2 past the final hit
 const r3 = x => Math.round(x * 1000) / 1000; // the arrangement's precision
 assert.deepEqual(arr.melody, written.map(([t, d, m]) => [r3(t), r3(d), m]), 'the melody is the score in its written order, rests and all');
 assert.deepEqual(arr.melody.filter(([t]) => t >= 127 && t <= 128), [[127, 0.5, 67], [127.5, 0.5, 71], [128, 1, 67]], 'bar 51 runs into bar 6');
-assert.deepEqual(song.balloons, [[124, 128], [END_BEAT - 4, END_BEAT]], 'two TRACA: the end of section E before the D.S., and the closing roll under the last note');
-assert.deepEqual(arr.arrangement.filter(([, st]) => st === 'roll'), [[END_BEAT - 4, 'roll']], 'only the closing roll crouches the dance');
+assert.deepEqual(song.balloons, [[124, 128], [END_BEAT - 8, END_BEAT]], 'two TRACA: the end of section E before the D.S., and the closing roll under the held last note');
+assert.deepEqual(arr.arrangement.filter(([, st]) => st === 'roll'), [[END_BEAT - 8, 'roll']], 'only the closing roll crouches the dance');
 
 // -- drift: a regenerated arrangement that moves a section must fail here
 assert.deepEqual(arr.arrangement.filter(([b]) => b >= 11), ARRANGEMENT, 'cues follow the arrangement');
@@ -56,18 +59,21 @@ for (const [b, t] of [[2.5, 1.525], [3.25, 1.85], [-1, 0], [-0.5, 0.25], [5, 3.2
 }
 for (let b = -2; b < 8; b += 0.137) assert(Math.abs(beatAtTime(FIX, timeAtBeat(FIX, b)) - b) < 1e-9, `round trip at ${b}`);
 
-// -- the tempo: 126 to the D.S., up to 148 over 18 beats, held for 6 beats, the coda's rit. to 135
-// (the arrangement's choice after the live recordings, not a measured curve). Each whole beat takes the smoothstep curve
-// at its middle, in whole microseconds (MIDI's unit)
-const KNOTS = [[0, 126], [128, 126], [146, 148], [152, 148], [156, 135]];
+// -- the tempo: fitted to the reference recording's pulse (docs/drac-music.md): 117 through the count-in and bar 1, a
+// slow rise to 128 by B3, back to 126 through D3, the jump to 151.5 over E3's first bars (the final spins), held into the
+// coda, then a rit. to 117 under the held last note (authored: the recording's pulse is lost there). Was the old hand
+// curve 126 -> 148 -> 135, then the coda's rit. to 138 after the repeated phrase.
+// Each whole beat takes the smoothstep curve at its middle, in whole microseconds (MIDI's unit)
+const KNOTS = [[0, 117], [12, 117], [42, 122.2], [72, 123.5], [104, 126.4], [132, 128.2], [162, 126.8], [186, 126.3], [194, 139.8],
+  [202, 150], [218, 151.5], [222, 150], [233, 117]];
 const bpmAt = b => { for (let i = 1; i < KNOTS.length; i++) { const [b0, t0] = KNOTS[i - 1], [b1, t1] = KNOTS[i];
   if (b < b1) { const k = Math.min(1, Math.max(0, (b - b0) / (b1 - b0))); return t0 + (t1 - t0) * k * k * (3 - 2 * k); } } return KNOTS.at(-1)[1]; };
 const US = Array.from({ length: END_BEAT + 8 }, (_, k) => Math.round(60e6 / bpmAt(k + 0.5)));
 assert.deepEqual(arr.tempo_us, US.map((u, k) => [k, u]).filter(([k, u]) => !k || u !== US[k - 1]), 'the tempo map');
-assert.deepEqual([US[68], US[127], US[146], US[151], US[156], US.at(-1)], [476190, 476190, 405405, 405405, 444444, 444444]);
+assert.deepEqual([US[5], US[41], US[132], US[194], US[218], US[222], US[225], US[232], US.at(-1)], [512821, 491016, 468023, 428833, 396208, 400530, 422228, 511953, 512821]);
 const SEC = [arr.offset]; US.forEach(u => SEC.push(SEC.at(-1) + u / 1e6));
 song.beats.forEach((t, i) => assert(Math.abs(t - SEC[i]) < 1e-4, `beat ${i} at ${SEC[i]} s (${t})`));
-assert(Math.abs(song.beats[128] - (0.1 + 128 * 0.47619)) < 1e-4 && Math.abs(song.beats[152] - song.beats[146] - 6 * 0.405405) < 1e-4, 'the plain stretches');
+assert(Math.abs(song.beats[12] - (0.1 + 12 * 0.512821)) < 1e-4, 'the plain count-in');
 // the MIDI: its tempo track gives every beat the same time, less the audio's lead-in
 {
   const m = readFileSync(new URL('../public/music/drac-taiko.mid', import.meta.url));
@@ -130,14 +136,14 @@ const counts = DIFFS.map((d, i) => {
   return c.length;
 });
 assert(counts[0] < counts[1] && counts[1] < counts[2], `each level adds notes: ${counts}`);
-// At the top tempo, half a beat stays at least 30 / 148 seconds apart.
-assert(closest > 30 / 148 - 1e-3, `two notes ${closest.toFixed(3)} s apart`);
+// At the top tempo (151.5), half a beat stays at least 30 / 151.5 seconds apart (the Mulassa's DIFÍCIL eighths at 152).
+assert(closest > 30 / Math.max(...KNOTS.map(([, t]) => t)) - 1e-3, `two notes ${closest.toFixed(3)} s apart`);
 
 // -- the dance: finite, continuous, bounded, deterministic
 const DEG = Math.PI / 180, p = newDracPose(), q = newDracPose(), step = 0.01;
 const ch = ['yaw', 'roll', 'pitch', 'lift', 'crouch', 'x', 'z', 'drive', 'swing', 'reach', 'jaw', 'flap', 'whip', 'shake', 'fire', 'rear'];
 dracPose(q, -20);
-for (let b = -20 + step; b < 240; b += step) {
+for (let b = -20 + step; b < END_BEAT + 6; b += step) {
   dracPose(p, b);
   for (const c of ch) assert(Number.isFinite(p[c]), `${c} finite at ${b}`);
   assert(Math.abs(p.yaw - q.yaw) < 0.04, `heading continuous at ${b.toFixed(2)}`);
@@ -153,11 +159,13 @@ for (let b = -20 + step; b < 240; b += step) {
 // the set pieces land where the tune does: rear on the long tied note (bar 21), crouch under the drum roll
 dracPose(p, 66); assert(p.rear > 0.95 && p.pitch < -25 * DEG, 'C rears to the long note');
 for (let b = 120; b < 136; b += 0.25) { dracPose(p, b); assert(p.crouch === 0, `no crouch while the tune runs into the D.S. (${b})`); }
-dracPose(p, 159); assert(p.crouch > 0.6 && p.fire > 0.3, 'the closing roll crouches and burns');
+// (DRAC_CROUCH_CUES: the first 4 beats of the roll; the closing roll is 8 beats since the held last note)
+dracPose(p, END_BEAT - 6); assert(p.crouch > 0.6 && p.fire > 0.3, 'the closing roll crouches and burns');
 dracPose(p, 300); assert(Math.abs(p.roll) < 1e-9 && p.jaw > 0.99 && p.fire === 0, 'still after the final hit: jaws open, no fire');
 dracPose(p, 12); const start = p.yaw;
-dracPose(p, 400); assert(Math.abs(p.yaw - 10 * Math.PI) < 1e-9 && start === 0, 'unwrapped: five whole turns by the end');
-for (let b = 0, top = 0; b < 240; b += 0.25) { dracPose(p, b); assert(p.yaw > top - 1e-9, `never unwinds at ${b}`); top = Math.max(top, p.yaw); }
+// eight whole turns by the end (was five: the full D.S. adds D3's two and E3's one)
+dracPose(p, 400); assert(Math.abs(p.yaw - 16 * Math.PI) < 1e-9 && start === 0, 'unwrapped: eight whole turns by the end');
+for (let b = 0, top = 0; b < END_BEAT + 6; b += 0.25) { dracPose(p, b); assert(p.yaw > top - 1e-9, `never unwinds at ${b}`); top = Math.max(top, p.yaw); }
 const at = b => ({ ...dracPose(newDracPose(), b) }), out = newDracPose();
 for (const b of [200.25, 12, 150.9, 200.25, -3, 150.9]) assert.deepEqual({ ...dracPose(out, b) }, at(b), `pure at ${b}`);
 dracPractice(p, 3); assert(p.yaw === 0 && p.fire === 0, 'the practice stays front on, without fire');

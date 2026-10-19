@@ -8,7 +8,7 @@ import { num } from './sheet-kit.js';
 import { escutSvg, escutField } from './escuts.js';
 import { PESSIGOLLA_MARK } from './pessigolla-logo.js';
 import { stripScroll } from './strip-scroll.js';
-import { fitPendingTitle, fitPendingNote, watchPending } from './pending-title.js';
+import { fitPendingTitle, fitPendingNote } from './pending-title.js';
 import { SELECTOR_PORTRAITS, pendingSilhouette } from './selector-portraits.js';
 
 // pixel art as an SVG: each cell a square, the cells round the shape a dark rim
@@ -114,7 +114,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
 
   function pendingFill(f) {
     $('aviat-title').textContent = f.fullName || f.name;
-    $('aviat-entity').hidden = false;
+    $('aviat-entity').hidden = false; $('aviat-entity').toggleAttribute('data-holo', !!f.invite); // the invitation's «Proposa-la»: a holographic chip
     $('aviat-entity').innerHTML = entityHtml(f);
     $('aviat-icon').innerHTML = ''; $('aviat-icon').hidden = true; // the strip below already shows its portrait
     $('aviat-text').innerHTML = (f.invite ? inviteText() : aviatText(f)).split('\n\n').map(p => `<p>${escapeHtml(p)}</p>`).join('');
@@ -563,7 +563,6 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
   }
   win.addEventListener('resize', () => { if (shown) { scrolling.stop(); if (closing) finishFold(); for (const el of [towns, $('select-info')]) arrivals.get(el)?.cancel(); if (teasing) teaserFill(); measure(); if (step === 'figures') centre(strip, cards[cur], 'instant'); } });
   if (win.ResizeObserver) new win.ResizeObserver(() => { if (shown) measure(); }).observe($('select-info'));
-  watchPending(pending, $('aviat-title'), $('aviat-icon'), win, () => shown && !pending.hidden);
   doc.fonts?.ready.then(() => { if (shown) measure(); });
   function visible(on) {
     const error = $('select-error'), message = getError() ?? '';

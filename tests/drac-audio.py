@@ -74,9 +74,19 @@ def events_of(edit):
     return tl, build_drac.build_events(tl)
 
 
-# a removed phrase (all of D) shortens the song; the tempo map and the audio clock still agree
-tl, ev = events_of(lambda f: f.update(sequence=[s for s in f['sequence'] if s['id'] not in ('s09', 's10', 's11', 's12')]))
-assert ev.END == ns.END - 32 and not any(st == 'D' for _, _, st in ev.layout)
+# a removed phrase (D's last three; its first carries a tempo knot) shortens the song; the tempo map and the audio clock
+# still agree. Every item has a reference anchor: the edit removes those too.
+GONE = ('s10', 's11', 's12')
+
+
+def drop(f):
+    f['sequence'] = [s for s in f['sequence'] if s['id'] not in GONE]
+    f['reference']['anchors'] = [a for a in f['reference']['anchors'] if a['at'].get('item') not in GONE]
+
+
+tl, ev = events_of(drop)
+assert ev.END == ns.END - 24 and sum(st == 'D' for _, _, st in ev.layout) == 4
+assert abs(tl['refAnchors'][-1][0] - (ns.END + 0.306 - 24)) < 1e-9 and all(abs(ev.sec(b) - s) < 1e-9 for (b, _), (s, _) in zip(tl['refAnchors'], tl['ref']))
 assert len(ev.US) == ev.END + 8 and all(abs(ev.sec(b) - tl['beats'][b]) < 1e-12 for b in range(ev.END + 1)), 'one clock'
 assert all(abs(ev.sec(b + 1) - ev.sec(b) - ev.US[b] / 1e6) < 1e-12 for b in range(ev.END)), 'the MIDI tempo map is the audio clock'
 assert len(ev.HOLD) == 1 and all(any(x[0] == s and x[4] for x in ev.taps) for s in ev.HOLD)
@@ -88,7 +98,7 @@ assert len(first) == 4 and first == [(s - 8, e - 8, c) for s, e, c in ev.chords 
 
 # a tempo knot change changes only the beats after it, and the audio follows
 tl, ev = events_of(lambda f: f['tempo']['knots'][-1].update(bpm=120))
-assert ev.US[:152] == ns.US[:152] and ev.US[156:] != ns.US[156:], 'only the coda ritardando moves'
+assert ev.US[:226] == ns.US[:226] and ev.US[230:] != ns.US[230:], 'only the coda ritardando moves'
 
 # a hold has to start on a tap (a level-3 note is audio only): refused, not silently dropped
 try:
@@ -98,4 +108,31 @@ except AssertionError:
 else:
     raise SystemExit('a hold on a note without a tap must fail')
 
-print('Drac audio: obsolete bell pitch is silent at note-off; attacks and sustained ending preserved')
+# the two arrangements (one switch, build_drac.VARIANT; docs/drac-music.md). Ported from the reference trial's checks.
+assert build_drac.VARIANT in build_drac.VARIANTS == ('festiva', 'austera') and set(build_drac.ARRANGEMENTS) == set(build_drac.VARIANTS)
+# austera: a timbal pattern for every label, nothing after the final hit, the final hit, no roll under the mid-song GLOBUS
+assert {st for _, _, st in ns.layout[1:]} <= set(build_drac.AUSTERA), 'a label without a timbal pattern'
+hits = build_drac.austera_hits(ns)
+assert all(s <= ns.END for s, _ in hits['tim'] + hits['don']), 'nothing after the final hit'
+assert any(abs(s - ns.END) < 1e-9 for s, _ in hits['don']), 'the final hit'
+mid = [a for a, b in ns.BALLOONS if b != ns.END][0]
+assert len([s for s, _ in hits['tim'] if mid <= s < mid + 4]) == 6, 'no roll in mid-song: two calm bars, three strokes each'
+
+
+# the reed stops at its written note-off plus a 40 ms breath: an F#-G step never rings together for longer.
+# Controlled mutation: the same probe sees a 0.25 s release.
+def overlap(release):
+    keep, build_drac.REL = build_drac.REL, release
+    try:
+        one = build_drac.render_austera_lead(SimpleNamespace(melody=[[0, 0.5, 66]], sec=lambda b: .25 * b, span=lambda s, d: .25 * d), SR)
+    finally:
+        build_drac.REL = keep
+    idx = np.nonzero(np.abs(one[round(0.125 * SR):, 0]) > 1e-6)[0]   # after the next note (G) starts
+    return (idx.max() + 1) / SR if idx.size else 0.0
+
+
+assert overlap(build_drac.REL) <= 0.03, overlap(build_drac.REL)
+assert overlap(0.25) > 0.2, 'the probe sees a long release'
+reed = build_drac.render_austera_lead(SimpleNamespace(melody=[[0, 0.5, 66]], sec=lambda b: .25 * b, span=lambda s, d: .25 * d), SR)
+assert np.sqrt(np.mean(reed[:round(0.1 * SR), 0] ** 2)) > 0.05 and np.isfinite(reed).all(), 'the reed sounds'
+print('Drac audio: obsolete bell pitch is silent at note-off; attacks and sustained ending preserved; austera reed and timbal ok')

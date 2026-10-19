@@ -32,14 +32,14 @@ for (const target of [runtime.song.beats[0], runtime.song.beats[150], runtime.so
 }
 
 assert.notEqual(runtime.songTimeAtBeat(150) - runtime.songTimeAtBeat(149), runtime.songTimeAtBeat(12) - runtime.songTimeAtBeat(11));
-assert.deepEqual(runtime.song.balloons, [[124, 128], [157, 161]]);
+assert.deepEqual(runtime.song.balloons, [[124, 128], [231, 235]]); // the closing roll after the long D.S. (docs/drac-music.md)
 for (let diff = 0; diff < 3; diff++) {
   const chart = makeDanceChart(runtime.song, diff), balloons = chart.filter(n => n.balloon);
   assert.equal(balloons.length, 2);
   assert.equal(balloons[0].t, runtime.BEATS[124]);
   assert.equal(balloons[0].end, runtime.BEATS[128]);
-  assert.equal(balloons[1].t, runtime.BEATS[157]);
-  assert.equal(balloons[1].end, runtime.BEATS[161]);
+  assert.equal(balloons[1].t, runtime.BEATS[231]);
+  assert.equal(balloons[1].end, runtime.BEATS[235]);
   for (const n of chart) {
     assert(Number.isFinite(n.t) && Number.isFinite(n.phrase));
     if (n.end) assert(Number.isFinite(n.end) && n.end > n.t);
@@ -113,3 +113,28 @@ saveFigureRecord(recordStore, DRAC, 1, 88, 12345, 30);
 assert.equal(readFigureRecord(recordStore, DRAC, 1).score, 12345, 'Drac retains raw score in its own namespace');
 assert.equal(readFigureRecord(recordStore, MULASSA, 1).quality, 95, 'switching figures cannot replace the Mulassa record');
 console.log('short Mulassa and Drac record isolation ok');
+
+// Scene sounds share the run's ownership, independently of which figure (or pending card) is selected.
+const figureRequests = [];
+context.pageActive = () => true;
+context.audioStub.sfx = (...args) => figureRequests.push(args);
+for (const state of ['splash', 'title', 'select']) {
+  vm.runInContext(`G.state = '${state}'; G.paused = false;`, context);
+  for (const id of [MULASSA.id, DRAC.id, 'aliga-valls']) {
+    vm.runInContext(`setSelectedFigure('${id}');`, context);
+    for (const kind of ['flama', 'crack', 'tro', 'gran', 'eh']) vm.runInContext(`figureSfx('${kind}', 3);`, context);
+  }
+}
+assert.equal(figureRequests.length, 0, 'no figure requests reach audio on any menu screen or pending selection');
+for (const state of ['play', 'results']) {
+  vm.runInContext(`G.state = '${state}';`, context);
+  for (const kind of ['flama', 'crack', 'tro', 'gran', 'eh']) vm.runInContext(`figureSfx('${kind}', 3);`, context);
+}
+assert.deepEqual(figureRequests, Array.from({length: 2}, () => ['flama', 'crack', 'tro', 'gran', 'eh'].map(k => [k, 3])).flat(), 'run and result effects retain their sound and petard index');
+vm.runInContext("G.state = 'play'; G.paused = true; figureSfx('flama'); G.paused = false;", context);
+context.pageActive = () => false;
+vm.runInContext("figureSfx('flama'); G.state = 'select';", context);
+context.pageActive = () => true;
+vm.runInContext("figureSfx('flama');", context);
+assert.equal(figureRequests.length, 10, 'paused, inactive and returning selector events are discarded');
+console.log('scene audio ownership: menu/pending discard, active run/results preserve, no wake replay ok');

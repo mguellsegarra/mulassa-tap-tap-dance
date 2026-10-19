@@ -163,6 +163,30 @@ function clockPart(c, form, endBeat, knots) {
   return { clock: t.clock, beatUs: [], beats: [] };
 }
 
+// The reference recording's clock (optional): anchors (any anchor -> a second of the source video), strictly rising in
+// both, the last on `end`. Song seconds follow the generator's sec(): leadIn + whole beats' µs + the fraction of the next.
+function referencePart(c, form, anchor, beatUs) {
+  const r = form.reference;
+  if (!r) return { ref: [], refEnd: null, refAnchors: [] };
+  const leadIn = form.tempo?.leadIn ?? 0, at = [0];
+  for (const u of beatUs) at.push(at[at.length - 1] + u / 1e6);
+  const anchors = [];
+  (r.anchors ?? []).forEach((a, i) => {
+    const t = anchor(a.at, `reference.anchors[${i}].at`);
+    if (!t) return;
+    const b = val(t), k = Math.floor(b);
+    if (!(Number.isFinite(a.ref) && a.ref >= 0)) return c.bad(`reference.anchors[${i}].ref`, 'ref must be a second >= 0');
+    if (k < 0 || k >= beatUs.length) return c.bad(`reference.anchors[${i}].at`, `beat ${b} is outside the tempo map`);
+    const prev = anchors[anchors.length - 1];
+    if (prev && !(b > prev[0] && a.ref > prev[2])) return c.bad(`reference.anchors[${i}]`, 'anchors must rise in beats and seconds');
+    anchors.push([b, leadIn + at[k] + (b - k) * beatUs[k] / 1e6, a.ref]);
+  });
+  if (!(r.end > 0)) c.bad('reference.end', 'end must be a positive second');
+  else if (anchors.length && anchors[anchors.length - 1][2] !== r.end) c.bad('reference.end', 'the last anchor must sit on end');
+  if (anchors.length < 2) c.bad('reference.anchors', 'at least two anchors');
+  return { ref: anchors.map(([, s, ref]) => [s, ref]), refEnd: r.end ?? null, refAnchors: anchors.map(([b, , ref]) => [b, ref]) };
+}
+
 function checkLabels(c, form, ...pairs) {
   const ok = new Set(form.labels ?? []);
   for (const [path, label] of pairs) if (!ok.has(label)) c.bad(path, `label ${label} is not in labels`);
@@ -263,6 +287,7 @@ export function compileForm(form, score) {
   checkLabels(c, form, ...introLabels.map(([, l], i) => [`intro.labels[${i}]`, l]), ...(pk ? [['intro.pickup.label', intro.pickup.label ?? 'pickup']] : []), ['ending.roll', 'roll']);
   const knots = (form.tempo?.knots ?? []).flatMap((k, i) => { const t = anchor(k.at, `tempo.knots[${i}].at`); return t ? [[val(t), k.bpm]] : []; });
   const clock = clockPart(c, form, hit ? val(hit) : null, knots);
+  const reference = referencePart(c, form, anchor, clock.beatUs);
 
   return {
     song: form.song, revision: formRevision(form), beatsPerBar: c.src.beatsPerBar, bpm: knots[0]?.[1] ?? null,
@@ -272,7 +297,7 @@ export function compileForm(form, score) {
     itemSpans: spans.map(s => [s.item, s.iteration, val(s.start), val(s.end)]),
     tempo: { clock: clock.clock, knots, beatUs: clock.beatUs }, beats: clock.beats,
     end: hit ? val(hit) : null, finale: finale ? val(finale) : null,
-    balloons, holds: holds.map(([s, t, kind]) => [s, t, kind]), fills, unresolved: c.unresolved,
+    balloons, holds: holds.map(([s, t, kind]) => [s, t, kind]), fills, ...reference, unresolved: c.unresolved,
   };
 }
 
@@ -291,6 +316,6 @@ export function compileOriginal(form, score) {
     melody: melody.map(m => [val(m.s), val(m.d), m.m]), melodyRef: melody.map(m => m.ref),
     arrangement: labelsOf([], occ, 0), itemSpans: [['original', 0, 0, endBeat]],
     tempo: { clock: clock.clock, knots, beatUs: clock.beatUs }, beats: clock.beats,
-    end: endBeat, finale: null, balloons: [], holds: [], fills: [], unresolved: c.unresolved,
+    end: endBeat, finale: null, balloons: [], holds: [], fills: [], ref: [], refEnd: null, refAnchors: [], unresolved: c.unresolved,
   };
 }

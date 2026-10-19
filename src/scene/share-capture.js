@@ -1,17 +1,19 @@
 import { selectedFigure } from '../game/figure-song.js';
-import { newDracPose, dracPose } from '../game/dance-drac.js';
-import { poseDrac } from './drac-motion.js';
+import { newDracPose } from '../game/dance-drac.js';
+import { poseAt, REF_END } from '../game/drac-pose.js';
+import { feetAt } from '../game/drac-steps.js';
+import { placeDance } from '../game/drac-layout.js';
+import { poseCarrier } from './drac-rig.js';
 import { confetti } from './confetti.js';
 import { fireworks } from './fx.js';
 import { dracFx } from './drac-show.js';
-import dracShareSong from '../song-drac.json' with { type: 'json' };
 import { DRAC_SIZE, DRAC_SCALE } from './models/drac.js';
 // renderHero: the share photo, rendered off-screen from the live scene.
 import * as THREE from 'three';
 import { newPose, dancePose, END_BEAT } from '../game/dance.js';
 import { blocks } from './framing.js';
 import { errors, errorName } from '../services/errors.js';
-import { plaza, mula, drac, dracMat, renderer, FRONT, CAM_AZ, scene } from './stage.js';
+import { plaza, mula, drac, dracMat, renderer, FRONT, CAM_AZ, DRAC_YAW, scene } from './stage.js';
 import { M } from './mula-motion.js';
 import { insidePlaza } from './cameras.js';
 
@@ -20,6 +22,7 @@ import { insidePlaza } from './cameras.js';
 // (no preserveDrawingBuffer). The scene renders linear into a float target (8-bit if the GPU can't); a quad then
 // encodes sRGB into bytes, flipped so row 0 is the top. A finished dance strikes the final hit's pose (dance.js) for
 // the photo (a collapse is never shared). Every transform is put back before the next frame. Not per frame.
+const SHARE_POSE = newDracPose();
 export const heroCam = new THREE.PerspectiveCamera(24, 1, 0.5, 200), heroPose = newPose(), heroXYZ = [0, 0, 0], heroFocus = [0, 0, 0];
 let heroQuad = null;
 export function heroQuadMake() { // the sRGB encoding pass (built once; precompile() warms its program too)
@@ -64,11 +67,9 @@ export function renderHero(w, h, figureId = selectedFigure.id) {
     mula.root.visible = !isDrac; drac.root.visible = isDrac;
     if (isDrac) {
       const life = drac.root.parent;
-      life.position.set(0, 0, 0); life.rotation.set(0, 0, 0); life.scale.setScalar(DRAC_SCALE); life.visible = true;
+      placeDance(life, DRAC_YAW).scale.setScalar(DRAC_SCALE); life.visible = true; // its dance frame, where it settled (M.pos)
       if (dracMat) dracMat.opacity = 1;
-      const pose = dracPose(newDracPose(), dracShareSong.beats.length - 1);
-      pose.x = M.pos.x / DRAC_SCALE; pose.z = M.pos.y / DRAC_SCALE; pose.fire = 0;
-      poseDrac(drac, pose, FRONT + 0.55);
+      poseCarrier(drac, poseAt(SHARE_POSE, REF_END, 0, 0), feetAt); // the final settle, feet on their last spots
     } else { // standing tall on the last hit: front up, head high, a three-quarter view (a collapse is never shared)
       dancePose(heroPose, END_BEAT);
       mula.root.position.set(M.pos.x, heroPose.lift * 2, M.pos.y);

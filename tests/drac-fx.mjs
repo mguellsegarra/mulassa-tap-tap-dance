@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { Session } from 'node:inspector/promises';
 import * as THREE from 'three';
-import { createDracFx, DRAC_FX, streakFire, flareStart, tracaWindow } from '../src/scene/drac-fx.js';
+import { createDracFx, DRAC_FX, streakFire, flareLevel, tracaWindow } from '../src/scene/drac-fx.js';
 import { PROFILES, MINIMAL } from '../src/platform/render-quality.js';
 import { buildDrac } from '../src/scene/models/drac.js';
 import { timeAtBeat } from '../src/core/beat-grid.js';
@@ -83,26 +83,27 @@ function make(smoke = 128, embers = 256, wheels = 0) {
   assert.equal(m.fx.state().embers, 0, 'a missed streak does not restart on the next downbeat');
 }
 
-// the last pass ('A3') to the end: red smoke rises all over the plaça (no bengala, nobody holds it), building up
-// (a crescendo), beyond her round the side the camera looks at, low over the crowd; it dies away after the song
+// the last pass: from the brake before the reversed spins (flareRef) red smoke builds up to the final hit, evenly over the
+// whole plaça (never in the corridor between the lens and her), low over the crowd; it dies away after the song
 {
-  const a3 = song.arrangement.find(r => r[1] === 'A3')[0], t3 = flareStart(song, b => timeAtBeat(song.beats, b));
-  assert(Math.abs(t3 - timeAtBeat(song.beats, a3)) < 1e-9 && t3 < song.end, `lit at beat ${a3} (${t3.toFixed(2)} s), before the end`);
-  assert.equal(flareStart({ arrangement: [[0, 'A']] }, b => b), Infinity, 'no last pass: no red smoke');
-  const m = make(96); m.s.flare = true; m.s.x = 0; m.s.z = 0;
-  m.run(3); const early = m.fx.state().smoke;
-  m.run(9); const full = m.fx.state().smoke;
-  assert(early < full / 3 && full > 30 && full <= 96, `a crescendo: ${early} puffs after 3 s, ${full} at full (pool 96)`);
+  assert.equal(flareLevel(9, 10, 20), 0, 'not lit before its start');
+  assert(flareLevel(12, 10, 20) < 0.15 && flareLevel(15, 10, 20) === 0.5 && flareLevel(20, 10, 20) === 1 && flareLevel(99, 10, 20) === 1, 'a crescendo up to the final hit');
+  const m = make(96); m.s.x = 0; m.s.z = 0;
+  m.s.flare = 0.3; m.run(8); const early = m.fx.state().smoke;
+  m.s.flare = 1; m.run(9); const full = m.fx.state().smoke;
+  assert(early < full / 2 && full > 30 && full <= 96, `it follows its level: ${early} puffs at 0.3, ${full} at full (pool 96)`);
   const M4 = new THREE.Matrix4(), P = new THREE.Vector3(), Q = new THREE.Quaternion(), S = new THREE.Vector3(), at = [];
-  for (let i = 0; i < m.fx.objects.smoke.count; i++) { m.fx.objects.smoke.getMatrixAt(i, M4); M4.decompose(P, Q, S); at.push([Math.hypot(P.x, P.z), Math.atan2(P.x, P.z), P.y, S.x]); }
-  assert(Math.min(...at.map(a => a[0])) > 2 && Math.max(...at.map(a => a[0])) > 7, 'all over the plaça round her, metres out');
-  const rel = at.map(a => Math.atan2(Math.sin(a[1] - Math.PI), Math.cos(a[1] - Math.PI))); // round from where the camera looks (its -z)
-  assert(Math.max(...rel) - Math.min(...rel) > 2.5 && rel.every(r => Math.abs(r) < DRAC_FX.flareArc + 0.6), 'spread wide across the view, beyond her (the puffs drift a little)');
+  for (let i = 0; i < m.fx.objects.smoke.count; i++) { m.fx.objects.smoke.getMatrixAt(i, M4); M4.decompose(P, Q, S); at.push([Math.hypot(P.x, P.z), Math.atan2(P.x, P.z), P.y, S.x, P.x, P.z]); }
+  assert(Math.max(...at.map(a => a[0])) > 7, 'all over the plaça, metres out');
+  const quads = [0, 1, 2, 3].map(q => at.filter(a => Math.floor(((a[1] + Math.PI) / (Math.PI / 2))) % 4 === q).length);
+  assert(quads.every(n => n >= full / 8), `even all round, not a wedge (${quads.join(' / ')} puffs a quarter)`);
+  // the camera (0, 4, 12) looks at her (0, 0): its corridor along +z stays clear (the puffs only sink and grow there)
+  assert(at.every(a => !(a[5] > 0.5 && a[5] < 11 && Math.abs(a[4]) < DRAC_FX.flareClear - 0.4)), 'nothing between the lens and her');
   assert(Math.max(...at.map(a => a[3])) > 4 && at.every(a => a[2] < 3.5), 'big puffs, low over the crowd');
   assert(!('flares' in m.fx.objects) && !m.fx.hold, 'no bengala left');
   assert(m.fx.flare > 0.9, 'its level, for the plaça fog');
   m.s.flare = false; m.fx.clearHaze(); m.step(1 / 60); assert(m.fx.state().smoke === 0 && m.fx.flare === 0, 'a menu clears it at once');
-  m.s.flare = true; m.run(12);
+  m.s.flare = 1; m.run(12);
   m.s.flare = false; m.run(18); assert(m.fx.state().smoke === 0 && !m.fx.state().flare, 'it thins out as it built up, gone a while after the song');
 }
 

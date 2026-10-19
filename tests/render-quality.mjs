@@ -426,6 +426,9 @@ class Renderer {
 const context = vm.createContext({
   ...leaderboardResult, leaderboard: { configured: true },
   ...await import('../src/game/dance-drac.js'), ...await import('../src/game/drac-feet.js'), ...await import('../src/scene/drac-motion.js'), ...await import('../src/scene/models/drac.js'),
+  // the Drac's revised dance (pure modules, provided like the old one): only the names the inlined scene code uses
+  poseAt: (await import('../src/game/drac-pose.js')).poseAt, REF_END: (await import('../src/game/drac-pose.js')).REF_END, feetAt: (await import('../src/game/drac-steps.js')).feetAt,
+  dracTime: (await import('../src/game/drac-time.js')).dracTime, ...await import('../src/game/drac-layout.js'), ...await import('../src/scene/drac-rig.js'), createColla: (await import('../src/scene/drac-colla.js')).createColla,
   ...await import('../src/dev/final-test.js'), ALIAS_KEY: 'leaderboard-alias', DECLINES_KEY: 'publish-declines', // ?final: off here (no hostname)
   errors, errorName, audioFailureTags: (await import('../src/platform/audio.js')).audioFailureTags,
   THREE: { ...THREE, WebGLRenderer: Renderer }, ...await import('../src/scene/crowd-fx.js'), ...models, ...chart, ...progress, ...stars,
@@ -1505,7 +1508,7 @@ console.log('comparteix integration contracts ok');
       drac.root.parent.scale.toArray(), dracMat.opacity, drac.root.visible, confetti.visible, fireworks.visible]);
     renderer.render = (sc, cam) => { if (cam === heroCam) {
       dracHeroSeen = drac.root.visible && !mula.root.visible && dracMat.opacity === 1
-        && drac.root.parent.position.length() === 0 && !confetti.visible && !fireworks.visible;
+        && drac.root.parent.position.distanceTo(placeDance(new THREE.Object3D(), DRAC_YAW).position) < 1e-9 && !confetti.visible && !fireworks.visible; // back in its dance frame (drac-layout.js), where it settled
     } };`);
   const dracBefore = run('photoState()');
   assert(run("renderHero(1104, 988, 'drac-valls')") && run('dracHeroSeen'), 'Drac capture sets a visible pose and excludes effects');
@@ -2519,12 +2522,20 @@ console.log('view mode ok');
   run('burst(0, 0); spawnConfetti(50, c => c.p.set(0, 5, 0)); animConfetti(0.01); dracFrame(1 / 60, 0);');
   assert(run('conf.map(c => c.p.y).join() === confBefore && dracFx.state().wheels === 0'), 'no confetti or continuous wheels from other effects');
   // picked on the selector it wanders and shows off from where it stood, burning now and then; a game puts it back on its spot
-  run(`G.state = 'select'; var soloFar = 0, soloCrema = false; for (let i = 0; i < 60 * 40; i++) { clock += 1 / 60; animMula(1 / 60, clock / BEAT);
+  run(`G.state = 'select'; var selectorSounds = []; chip = { sfx: k => selectorSounds.push(k) }; var soloFar = 0, soloCrema = false; for (let i = 0; i < 60 * 40; i++) { clock += 1 / 60; animMula(1 / 60, clock / BEAT);
     soloFar = Math.max(soloFar, M.pos.length()); if (SHOWCASE.crema) soloCrema = true; dracFrame(1 / 60, 0); }`);
   assert(run('drac.root.visible && soloFar > 1 && soloFar < 4 && soloCrema && Math.abs(drac.root.parent.position.x - M.pos.x) < 1e-9'), `the selector's Drac walks about (up to ${run('soloFar.toFixed(1)')} m) and burns`);
+  assert.equal(run('selectorSounds.length'), 0, 'selector demo keeps its flames visual without requesting figure SFX');
   run(`chip = { resume() {}, stop() {}, menu() {}, sfx() {}, t0: null, buf: {},
     start: () => Promise.resolve(false) }; startGame(1); frames(1);`);
-  assert(run('drac.root.parent.position.length() === 0 && drac.root.parent.rotation.y === 0'), 'in the game it dances on its own spot');
+  // in the game it dances in its dance frame (drac-layout.js placeDance): the helpers' centre on the plaça's, turned to DRAC_YAW
+  assert(run('drac.root.parent.position.distanceTo(placeDance(new THREE.Object3D(), DRAC_YAW).position) < 1e-9 && drac.root.parent.rotation.y === DRAC_YAW'), 'in the game it dances on its own spot');
+  // the colla claps with it, and freezes with it: a pause and its resume count-in keep the helpers' arms where they were
+  // (the count-in's beat runs on the restarted clock while the Drac waits on its frozen beat)
+  run(`var armPose = () => JSON.stringify(colla.crew.map(c => c.bones.map(b => b.rotation.toArray().slice(0, 3).map(v => +v.toFixed(6)))));
+    G.paused = false; G.collapseT = 0; for (let i = 0; i < 240; i++) animMula(1 / 60, 20.3, 1); /* its eased energy at full */ var armsAt = armPose(); G.paused = true; G.resuming = 1e9;
+    for (let i = 0; i < 30; i++) animMula(1 / 60, 20.3 + i * 0.1, 1); var armsPaused = armPose(); G.paused = false; G.resuming = null;`);
+  assert(run('colla.helpers.visible && armsPaused === armsAt'), 'the helpers freeze with the Drac through a pause and its resume count-in');
   // A real chart window closes through advance(), never from a target reached by pumping.
   run(`var tracaSounds = []; chip.sfx = k => tracaSounds.push(k); var originalTracas = G.balloons.slice();`);
   for (const ix of [0, 1]) {
@@ -2541,8 +2552,11 @@ console.log('view mode ok');
   run(`G.state = 'play'; G.practice = null; G.collapseT = 0; var fog0 = [scene.fog.near, scene.fog.far, scene.fog.color.getHexString()];
     for (let i = 0; i < 60 * 12; i++) dracFrame(1 / 60, 1e6); var fogIn = [scene.fog.near, scene.fog.far, scene.fog.color.r - scene.fog.color.b];
     G.state = 'select'; dracFrame(1 / 60, 0); var fogOut = [scene.fog.near, scene.fog.far, scene.fog.color.getHexString(), scene.background.getHexString(), dracFx.flare];`);
-  assert(run('fogIn[0] < 10 && fogIn[1] < 40 && fogIn[2] > 0.2'), `the dance's red mist closes in (${run('JSON.stringify(fogIn)')})`);
+  assert(run('fogIn[0] < 5 && fogIn[1] < 60 && fogIn[2] > 0.2'), `the dance's red mist closes in (${run('JSON.stringify(fogIn)')})`);
   assert(run('fogOut[0] === fog0[0] && fogOut[1] === fog0[1] && fogOut[2] === fog0[2] && fogOut[3] === fog0[2] && fogOut[4] === 0'), 'a menu clears it');
+  // a pending figure on the selector hides both beasts, and the Drac's colla with them
+  run(`G.state = 'select'; selectScreen.pending = true; frame(9e6); frame(9e6 + 17); var collaPending = colla.helpers.visible || colla.seated.visible; selectScreen.pending = false;`);
+  assert(run('collaPending === false'), 'a pending figure hides the Drac\'s colla too');
   run('setFigureSong(MULASSA)');
   run('for (let i = 0; i < 400; i++) dracFrame(1 / 60, 0); burst(0, 0); animConfetti(0.01);');
   assert(run('confetti.visible && conf.some(c => c.p.y > 1) && dracFx.state().wheels === 0'), 'the Mulassa keeps her confetti');
@@ -2623,7 +2637,7 @@ console.log('view mode ok');
   // A pending selection: the plaça is bare on the selector, but photo mode shows the last playable figure.
   let ft = 90000; const pendFrame = () => run(`frame(${ft += 1000 / 60})`);
   run(`var realSel = sheets.select, pendCrowd = activeCrowd; activeCrowd = []; sheets.select = { pending: true, figure: { id: 'aliga-valls', status: 'aviat' }, visible() {}, sheetOpen: false };
-    G.state = 'select'; setView(false); setFigureSong(MULASSA);`);
+    G.state = 'select'; setView(false); setFigureSong(MULASSA); var pendingSounds = [], pendingChip = chip; chip = { sfx: k => pendingSounds.push(k) };`);
   pendFrame();
   assert(run('!mula.root.visible && !drac.root.visible'), 'pending selector: no model');
   run('setView(true);'); pendFrame();
@@ -2636,6 +2650,8 @@ console.log('view mode ok');
   run('setFigureSong(DRAC); setView(true);'); pendFrame();
   assert(run('drac.root.visible && !mula.root.visible'), 'the last playable Drac stands in');
   run('setView(false); setFigureSong(MULASSA);'); pendFrame(); // (a frame closes the photo walk, as the game does)
+  assert.equal(run('pendingSounds.length'), 0, 'pending photo controls and figure switches never request SFX');
+  run('chip = pendingChip;');
   // A portrait phone: photo mode backs the camera off (same angle) so she fits across, and drops the selector band's shift.
   const sizeWas = [context.innerWidth, context.innerHeight]; context.innerWidth = 393; context.innerHeight = 852;
   run(`resize(); sheets.select.band = { top: 0, bottom: 200 }; setView(false);`); pendFrame();
@@ -2778,10 +2794,10 @@ console.log('view mode ok');
     photoKey({code:'Space',preventDefault(){}},true);
     for(let i=0;i<90;i++){clock+=1/60;animMula(1/60,clock/BEAT);dracUp=Math.max(dracUp,drac.root.parent.position.y);dracShake=Math.max(dracShake,trauma);dracFire=Math.max(dracFire,DRAC_POSE.fire);}`);
   assert(run('dracUp>.5 && drac.root.parent.position.y===0 && M.air===0'), 'Space jumps the whole Drac (not her) and lands it');
-  assert(run('dracShake>.8 && booms===1'), 'its landing booms once and shakes the plaça');
+  assert(run('dracShake>.8 && booms===0'), 'its selector landing stays silent and still shakes the plaça');
   assert(run('dracFire>2 && PHOTO.drac.fire===0'), 'it breathes fire as it takes off, and the flame dies away');
   run(`setView(false); animMula(1/60,clock/BEAT); chip=null; setTrauma(0);`);
-  console.log('photo Space jumps for both figures; the Drac lands with a boom ok');
+  console.log('photo Space jumps for both figures; silent Drac landing preserves the shake ok');
 }
 
 {
@@ -2844,7 +2860,7 @@ console.log('view mode ok');
 
 // Visible-but-blurred menus used to advance the demo against a suspended audio clock.
 {
-  run("G.state = 'select'; G.paused = false; G.resuming = null; setView(false); setFigureSong(DRAC); chip = { sfx() {}, wake() {}, ctx: { state: 'suspended', suspend() {} } }; last = 1000;");
+  run("G.state = 'select'; G.paused = false; G.resuming = null; setView(false); setFigureSong(DRAC); var returningSounds = []; chip = { sfx: k => returningSounds.push(k), wake() {}, ctx: { state: 'suspended', suspend() {} } }; last = 1000;");
   const before = run('clock');
   document.focused = false;
   run('frame(2000); frame(122000);');
@@ -2858,6 +2874,8 @@ console.log('view mode ok');
   assert(run('!mula.root.visible && !drac.root.visible && dracFx.idle && !SHOWCASE.crema'), 'pending hides both models and clears a queued showcase and all effects');
   run('sheets.select.pending = false; frame(122064);');
   assert(run('drac.root.visible'), 'returning to a playable Drac restores the model');
+  run('SHOWCASE.crema = true; dracFrame(1/60, 0);');
+  assert.equal(run('returningSounds.length'), 0, 'even a pending demo burst consumed after focus returns cannot request sound');
   console.log('background demo time and pending effect lifecycle ok');
 }
 

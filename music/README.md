@@ -47,3 +47,13 @@ El mateix generador escriu `src/song.json` (`[temps, don|ka, nivell, gran, final
 ```sh
 uv run --python 3.11 --with numpy --with scipy --with soundfile --with mido tools/build_taiko.py
 ```
+
+## Ball del Drac
+
+`drac-score.json` (veu de gralla 1, F. Bofarull, 1985) i `drac-form.json` alimenten `tools/build_drac.py`, que genera `public/music/drac-taiko.{mp3,mid}`, l'ambient del menú, `drac-arrangement.json` i `src/song-drac.json`. La forma i el tempo segueixen la gravació de Sant Joan 2018 de la qual surt el ball (pm-lEViiPK0): D.S. fins al compàs 51, l'última frase d'E un altre cop i la coda; de 117 BPM a 128, salt a 151,5 sota els girs finals i rit. a 138 a l'última nota. El bloc `reference` de la forma lliga els segons de la cançó amb els del vídeo (`ref`, `refEnd`, `src/game/drac-time.js`). Tot ve d'anàlisi de l'àudio, no s'ha escoltat: les proves, les xifres i el que falta confirmar d'oïda són a `docs/drac-music.md`.
+
+Hi ha dos arranjaments, festiu i auster, i els tria la constant `VARIANT` del generador. Encara no s'ha decidit quin; de moment és el festiu. L'altre només es genera a `tmp/audio/`.
+
+```sh
+uv run --python 3.11 --with numpy --with scipy --with soundfile --with mido python tools/build_drac.py
+```

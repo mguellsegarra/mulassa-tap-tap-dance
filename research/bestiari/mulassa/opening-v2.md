@@ -34,10 +34,11 @@ turns shorten swing duration. A swinging foot travels around the planted shoe in
 Each human has a pelvis, two fixed-length thigh/shin pairs and rigid shoes. The shell no longer stretches
 straight trouser meshes to reach the floor. Supports are precomputed so seeking stays deterministic.
 
-The preview uses overall proportion constraints from the [UAF figure page](https://uaf.cat/seguici-cerimonial/mulassa/):
-four carriers, length 4.60 m and height 2.95 m. The original voxel model differs; the preview adjusts overall
-height/length and restores skirt height after scaling. This does not constitute a complete model remodelling.
-No production model, choreography, score or audio file is changed.
+Marc rejected the preview's overall height/length and skirt scaling. Those adjustments have been removed:
+the original voxel shell, head, neck and skirt proportions are preserved. The camera distance/FOV/target height
+now accommodate the original model again, retaining the lateral tracking and follow logic. Articulated carrier
+legs, timing, root path, source-derived tilt cues and overhead view remain. No production model, choreography,
+score or audio file is changed.
 
 ## Limits
 

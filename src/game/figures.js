@@ -52,7 +52,7 @@ export function saveFigureRecord(store, figure, level, quality, rawScore, combo)
 export const plural = figure => / i /.test(figure.name) || /^\S{3,}s(?=\s|$)/.test(figure.fullName || figure.name);
 export const aviatText = figure => `Volem que ${plural(figure) ? 'surtin' : 'surti'} a la plaça. Tens fotos, vídeos, partitures o coneixes el ball? Dona’ns un cop de mà!\n\nEl joc és de codi obert: també pots ajudar a programar-lo a GitHub.`;
 export const aviatDraft = town => `Sobre ${town}: `; // the Bústia's first words, from an «Aviat» card
-export const inviteText = () => `Tens una colla gegantera o de bestiari? Vols que el teu poble surti al joc? Explica’ns quina figura és i d’on és.`;
+export const inviteText = () => `Tens una colla gegantera o de bestiari? Vols que el teu poble surti al joc? Explica’ns quina figura és i d’on és. Si en tens, envia’ns fotos, vídeos o la música del ball.\n\nEl joc és de codi obert: també pots ajudar a programar-lo a GitHub.`;
 export const INVITE_DRAFT = 'Proposo una figura. Poble i colla: ';
 
 // Two green necks, red jaws and gold wing membranes, in the same portrait box as the Mulassa.

@@ -1,0 +1,69 @@
+/* The Drac comparison (drac-compare.html, dev only): the game's colours, phone first. */
+:root { color-scheme: light only; --bg: #1b1d25; --panel: #262934; --cream: #fff3d6; --gold: #f5c518; --edge: #e8d8b880; --err: #ff8a7a; --overlay: 0.5; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--cream); font: 16px/1.45 system-ui, sans-serif; }
+header, main { max-width: 1600px; margin: 0 auto; padding: 0 14px; }
+h1 { margin: 16px 0 4px; font-size: 1.5rem; color: var(--gold); }
+h2 { margin: 16px 0 6px; font-size: 1rem; }
+p { margin: 0 0 8px; }
+.lead { opacity: 0.85; }
+.small { font-size: 0.85rem; opacity: 0.85; }
+.note { border-left: 4px solid var(--gold); padding: 6px 10px; background: #2c2f3a; }
+a { color: var(--cream); }
+.views { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.pane { margin: 0; min-width: 0; }
+.overhead-pane { grid-column: 1 / -1; }
+.overhead-pane .overhead-frame { aspect-ratio: 16 / 10; max-height: 300px; background: #f5efdf; }
+.overhead-pane figcaption { opacity: 1; }
+.overhead-pane p { margin: 5px 0 0; }
+.frame { position: relative; aspect-ratio: 16 / 9; background: #000; border-radius: 6px; overflow: hidden; }
+.frame video, .frame canvas { display: block; width: 100%; height: 100%; }
+figcaption { font-size: 0.85rem; opacity: 0.8; padding-top: 4px; }
+/* overlay: the model's canvas on top of the video, one frame */
+.views.overlay { grid-template-columns: 1fr; }
+.views.overlay .model-pane { display: none; }
+.views.overlay .frame canvas.on-video { position: absolute; inset: 0; opacity: var(--overlay); pointer-events: none; }
+.transport { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 12px 0; padding: 6px 0; position: sticky; top: 0; z-index: 5; background: var(--bg); }
+.seek { flex: 1 1 240px; display: flex; }
+.seek input { width: 100%; min-height: 44px; accent-color: var(--gold); }
+.readout { flex: 1 1 100%; font-variant-numeric: tabular-nums; font-size: 0.95rem; }
+button { min-height: 44px; min-width: 44px; padding: 8px 14px; border: 2px solid var(--gold); border-radius: 10px; background: var(--panel); color: var(--cream); font: inherit; cursor: pointer; }
+button.primary { background: var(--gold); color: #1b1d25; font-weight: 700; min-width: 140px; }
+button[hidden] { display: none; }
+button:focus { outline: none; }
+button:focus-visible, input:focus-visible, summary:focus-visible { outline: 3px solid var(--cream); outline-offset: 2px; }
+.controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
+fieldset { border: 0; margin: 0; padding: 0; }
+legend { font-size: 0.85rem; opacity: 0.8; padding: 0 0 4px; }
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.seg button { border-color: var(--edge); border-width: 1px; }
+.seg button[aria-pressed="true"] { background: var(--cream); color: #1b1d25; border-color: var(--cream); }
+.switch-row, .range-row { display: flex; align-items: center; gap: 8px; min-height: 44px; }
+.switch-row input { width: 22px; height: 22px; accent-color: var(--gold); }
+.range-row input { flex: 1; accent-color: var(--gold); }
+.camera { margin: 12px 0; background: var(--panel); border-radius: 8px; padding: 8px 12px; }
+.camera summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; }
+.tune { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin: 8px 0; }
+.tune label { display: flex; flex-direction: column; font-size: 0.85rem; }
+.tune input { min-height: 44px; padding: 4px 8px; border-radius: 8px; border: 1px solid var(--edge); background: var(--bg); color: var(--cream); font: inherit; }
+.mono { display: block; font: 0.8rem/1.4 ui-monospace, monospace; white-space: pre-wrap; word-break: break-all; opacity: 0.85; margin-top: 8px; }
+.phrase { border-left: 4px solid var(--gold); padding: 4px 10px; background: #2c2f3a; margin: 12px 0; }
+.phrase h2 { margin-top: 4px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips button { border-width: 1px; border-color: var(--edge); font-size: 0.85rem; padding: 6px 10px; text-align: left; max-width: 280px; }
+.chips button[aria-current="true"] { border-color: var(--gold); border-width: 2px; }
+.chips small { display: block; opacity: 0.75; font-size: 0.75rem; font-variant-numeric: tabular-nums; }
+.key { display: inline-block; width: 14px; height: 8px; border: 2px solid var(--c); margin: 0 4px 0 10px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+/* Keep video/model together on phones; all three views share a row when there is room. */
+@media (min-width: 1000px) {
+  .views:not(.overlay) { grid-template-columns: 1fr 1fr 0.85fr; }
+  .views .overhead-pane { grid-column: auto; }
+  .overhead-pane .overhead-frame { aspect-ratio: 1; max-height: none; }
+  .views.overlay { grid-template-columns: 1.5fr 1fr; }
+}
+@media (min-width: 600px) and (orientation: landscape) {
+  .views:not(.overlay) { grid-template-columns: 1fr 1fr 0.85fr; }
+  .views .overhead-pane { grid-column: auto; }
+  .views.overlay { grid-template-columns: 1.5fr 1fr; }
+}

@@ -114,6 +114,8 @@ by everyone below it as `sheets.board`… (`ui/sheets.js`), so no import cycle i
 - `src/dev/` — `cam-edit.js` (`?cam`), `perf.js` (`?perf`), `fps.js`, `debug.js`, `final-test.js` (`?final`).
 - `src/song.json` — **generated** (never hand-edit): bpm, beats, sections, finale, end, notes
   `[t, don|ka, level, big, holdEnd]`, hashed audio URLs.
+- `tools/build_drac.py` — the Drac's generator (form `music/drac-form.json`, Festiva arrangement, tempo map fitted to the
+  reference video, `song-drac.json` with its `ref` time map); `docs/drac-music.md`. Mulassa audio must stay bit-identical.
 - `tools/build_taiko.py` — the **single** generator of all music and the chart, from `music/score.json`
   (the melody). Writes `public/music/mulassa-taiko.{wav,mp3,mid}`, `mulassa-taiko-ambient.mp3`,
   `music/taiko-arrangement.json` and `src/song.json`. Musical/game rules: `music/README.md` (Catalan).
@@ -293,10 +295,28 @@ by everyone below it as `sheets.board`… (`ui/sheets.js`), so no import cycle i
   capped by `CAP`): GUA leans her to the screen's left, PA right, GUAPA/pop lifts her; holds sustain a lean; misses
   weaken, wrong moves stumble; nothing accumulates yaw. `tests/dance.mjs` fails if the arrangement's sections move.
   The title/results keep the free demo walk (front pivot). Never add random motion to the song choreography.
+- **Drac dance** (play, practice, results; `docs/drac-integration.md`): authored in REFERENCE seconds (the source video
+  pm-lEViiPK0, 0-104.8 s), never in beats: `game/drac-path.js` (root path, unwrapped yaw), `game/drac-steps.js` (the
+  audited foot plan: 188 placements, only 40 observed + 4 probable + 4 support, the rest adaptations), `game/drac-pose.js`
+  (`poseAt(out, refSec, musicBeat, gain)`: rigid shell + a comic knee dip / waddle on the SONG's beat), `scene/drac-rig.js`
+  (`poseCarrier`: rigid shell, pelvis off the shell, cloth trousers `scene/drac-legs.js`; call `dressCarrier` after any
+  other `poseDrac`), `scene/drac-dance.js` (the game's frame: mula-motion.js only dispatches to it). ONE time map,
+  `game/drac-time.js` (song seconds <-> reference seconds, from `song-drac.json` `ref`, written by `tools/build_drac.py`
+  from `music/drac-form.json`'s `reference` block): never connect a music beat to `pose.beat` (it carries reference
+  seconds to the feet). One dance frame, `placeDance(obj, FRONT)` (`game/drac-layout.js`): the Drac's parent, the helpers
+  and any debug layer; path in model units, helpers in metres, `DRAC_SCALE` once. The colla (`scene/drac-colla.js`,
+  `models/colla.js`): four helpers at 5.1 m in the colla's camouflage suit clapping on integer beats, a few members sitting
+  spread round their ring (~6 m, not the camera's gap; the crowd keeps beyond `RING.arena` 7.2 m), shown only with
+  the Drac and not in photo mode; `?lletres` shows the W/N/S/E debug letters. `game/dance-drac.js` (the old beat dance)
+  now only drives the selector / splash walker and the music editor's preview. `drac-compare.html?mute` (dev, never built)
+  draws the same modules against the video (served by the dev media alias `/drac-reference/`, research/bestiari/README.md;
+  never in `public/`). The frozen Codex prototype stays in `research/bestiari/drac/prototype/` for comparison only.
 - **Play camera** (`framePlayCamera`, v3): defined by what you SEE, not by fitting her turn/jump envelope. From `?cam` sessions on a desktop: fov 54, a slice of world 8.25 m tall at her (a narrow screen instead needs 8.4 m across: the greater distance wins), her focus point 42% of the way down the stage (lane → pad), ~81° round and 26° above (`CAM_AZ`/`CAM_EL`, `CAMV`). It never sits still: a slow sway (`DRIFT`, unrelated 13–29 s periods) and a very slow follow of her heading (a sine, so no wrap-around step; 2.8 s spring). Springs are constant and slow (position 1.5 s) on purpose: a spring whose stiffness changes while far from its target whiplashes. Tune with `?cam` (auto = this camera).
   `FRONT` = her dance's front, 20° off `CAM_AZ` so every pose reads three-quarter. The banda de música (models.js `BAND`, `placeBand`/`poseBand`,
   6/8/10 by quality) stands across the plaça from the camera (`BAND_AZ`), behind her, playing on the song's beat. `insidePlaza` remains the last resort.
   Shake during play is a small additive accent (GUAPA, finale), never fed back into the springs; misses/pops don't shake.
+  With the Drac (`DRAC_CAM`) it follows half its travel across the shot (90% in depth) and not its heading: its long
+  walks and twelve spins slid and swung the plaça under the note lane; `?camdrac=segueix` = the Mulassa's follow (A/B).
 - **HUD scale `K`** (css px per HUD unit, `uiScale` in main.js; also CSS `--ui` = K/2 for the tablet pad): phones 1.5; tablets in proportion to the screen (a 1024×768 iPad = 2, a 12.9" iPad Pro ≈ 2.7, cap 2.9: their css px follow the glass); desktops grow gently (2 up to 800 px of height, +1 per 600 px, cap 2.9: 2.5 was too small, unbounded proportion giant; a bigger monitor only shows more css px, the UI must not become giant).
 - **Crowd during the song** (`animCrowd`): still, near-invisible breathing; hits drive one eased envelope (`GROOVE`,
   `grooveHit`: a few cm bob, a few degrees nod/sway, attack ~0.1 s, release ~0.4 s; GUAPA/pop/good phrase a bit more,

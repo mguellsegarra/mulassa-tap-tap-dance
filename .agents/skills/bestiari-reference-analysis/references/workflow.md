@@ -42,3 +42,26 @@ rendered model from matching and independent angles. Test seek, playback, pause,
 portrait/landscape and desktop; a responsive viewport is not physical-device performance evidence.
 Keep the original symptom and unresolved discrepancies in validation.md. A skill is ready to reuse when another
 figure can follow it without copying the first figure's unsupported assumptions.
+
+### Lessons from the Mulassa opening revision
+
+Do not call a long phrase stationary after inspecting only its heading. Compare a stable body landmark against
+background landmarks, inspect visible foot crops, and separate camera pan/zoom from lateral travel. When a turn
+changes the visible side, a tracked cloth panel can switch: bridge that interval explicitly instead of treating
+the centroid jump as direct world displacement. Pixel tracking does not establish metric distances or hidden
+contacts. A plausible foot solver should preserve stance positions, fixed limb lengths and clearance around the
+planted shoe during turns; validate those separately from source-foot fidelity. Keep a reproducible failing
+baseline for the actual complaint (for example, an almost static opening).
+
+### Whole-performance and carrier regression checks
+
+Review the entire source duration with synchronized model playback. Retain actual capture times and label
+intermediate evidence. Revisit intervals changed after that pass; never present an earlier contact sheet as
+acceptance of later code. Inspect travel speed independently of a camera that follows the figure: a short floor
+path can be hidden by framing. Check repeated passages beyond the opening; a generic sway often misses signed
+front raises/dips later in the performance.
+
+For multi-carrier rigs, test all shoe pairs, not just each person's two feet. Inspect actual transformed leg and
+torso vertices against the unchanged shell. Sample between source frames as well as at frame times. Verify
+both sides of every lift-off and landing: collision avoidance that passes still-frame checks can introduce
+visible pops. Preserve fixed bones and planted contacts. Do not enlarge the costume to conceal a rig defect.

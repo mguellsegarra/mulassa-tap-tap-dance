@@ -142,8 +142,9 @@
     width: calc(var(--gw) * var(--cell)); height: calc(var(--gh) * var(--cell)); }
 }
 /* Static portraits share a 160x112 viewBox, 100-unit body height and sole baseline 104.
-   Keep the previous Mulassa footprint; UAF real heights set Drac/Mulassa = 1.90/2.95. */
-.sel-card .por svg:is(.sel-mulassa-illustration, .sel-drac-illustration) {
+   Keep the previous Mulassa footprint; UAF real heights set Drac/Mulassa = 1.90/2.95. The pending Bou's silhouette is
+   drawn on the Mulassa's skeleton at her scale (no published Bou height). */
+.sel-card .por svg:is(.sel-mulassa-illustration, .sel-drac-illustration, .sel-bou-silhouette) {
   --mula-cell: 5px; --portrait-scale: 1;
   --portrait-height: calc(11.02 * var(--mula-cell) * var(--portrait-scale));
   height: calc(var(--portrait-height) * 112 / 100); width: calc(var(--portrait-height) * 160 / 100);
@@ -152,7 +153,7 @@
 }
 .sel-card .por svg.sel-drac-illustration { --portrait-scale: calc(1.9 / 2.95); }
 @supports (width: round(down, 5.5px, 1px)) {
-  .sel-card .por svg:is(.sel-mulassa-illustration, .sel-drac-illustration) {
+  .sel-card .por svg:is(.sel-mulassa-illustration, .sel-drac-illustration, .sel-bou-silhouette) {
     --mula-cell: max(2px, min(round(nearest, .8 * 16 * round(down, min(100cqh / 16, 100cqw / 20), 1px) / 12, 1px), round(down, 100cqh / 12, 1px), round(down, 100cqw / 14, 1px)));
   }
 }
@@ -313,7 +314,7 @@ body.view-mode #select { opacity: 0; visibility: hidden; pointer-events: none; }
    The 160/100 frame ratio bounds the whole SVG; neither figure is stretched to fill its card. */
 @media (min-width: 900px) and (min-height: 661px) {
   .sel-card { flex-basis: 220px; }
-  .sel-card .por svg:is(.sel-mulassa-illustration, .sel-drac-illustration) {
+  .sel-card .por svg:is(.sel-mulassa-illustration, .sel-drac-illustration, .sel-bou-silhouette) {
     --portrait-height: calc(min(100cqh - 16px, 100cqw / 1.6) * var(--portrait-scale));
     margin-bottom: calc(8px - var(--portrait-height) * 8 / 100);
   }
@@ -362,20 +363,15 @@ body.view-mode #select { opacity: 0; visibility: hidden; pointer-events: none; }
 .sel-fan .escut { width: 20px; height: 20px; margin: 0 0 0 -6px; filter: grayscale(.55) brightness(.8) drop-shadow(0 0 1px #2a1a10); }
 .sel-fan .escut:first-child { margin-left: 0; }
 .sel-info::-webkit-scrollbar { display: none; }
-/* the fold: the «Pròximament» pill above stood upright in a 44 px button (--more-w wide, the overhang eats into the gaps):
-   the same dashed outline, the coming towns' arms stacked under the chevron */
+/* The full-height fold keeps its original outline and 44 px target width, with a centred chevron. */
 #select { --more-w: 34px; }
 .sel-card.sel-more { flex: 0 0 44px; width: 44px; margin: 0 calc((var(--more-w) - 44px) / 2); border-radius: 0; background: none; box-shadow: none; transform: none; }
 .sel-card.sel-more::before { content: ''; position: absolute; inset: 0 calc((44px - var(--more-w)) / 2); border: 1.5px dashed #f5c51877; border-radius: 999px; background: #140c07c0; }
 .sel-card.sel-more::after { display: none; }
-.sel-more-flag { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; overflow: hidden; }
+.sel-more-flag { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
 .sel-more-flag > svg { position: static; flex: none; width: 20px; height: 20px; margin: 0; fill: none; stroke: #f5c518; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; transform: none; }
 .sel-more[aria-expanded="false"] .close, .sel-more[aria-expanded="true"] .open { display: none; }
-.sel-more-flag .sel-fan { flex-direction: column; align-items: center; }
-.sel-more-flag .sel-fan .escut { width: 22px; height: 22px; margin: -6px 0 0; filter: drop-shadow(0 1px 1px #000a); }
-.sel-more-flag .sel-fan .escut:first-child { margin-top: 0; }
-@media (max-width: 519px), (max-height: 600px) { .sel-more-flag { gap: 6px; } .sel-more-flag > svg { width: 16px; height: 16px; } .sel-more-flag .sel-fan .escut { width: 20px; height: 20px; } }
-@media (min-width: 900px) and (min-height: 600px) { .sel-more-flag .sel-fan .escut { width: 28px; height: 28px; margin-top: -8px; } .sel-more-flag .sel-fan .escut:first-child { margin-top: 0; } }
+@media (max-width: 519px), (max-height: 600px) { .sel-more-flag > svg { width: 16px; height: 16px; } }
 #select .sel-card.sel-more:hover { transform: none; }
 /* the keyboard cursor on the fold draws its own pill, never a square box next to the chosen card's ring */
 #select .sel-card.sel-more:focus-visible { outline: none; }

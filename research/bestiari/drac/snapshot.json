@@ -1,0 +1,111 @@
+{
+  "created": "2026-10-19",
+  "sourceHead": "68f1433",
+  "state": "uncommitted working tree snapshot; not HEAD alone",
+  "files": [
+    {
+      "path": "src/dev/drac-compare/camera.js",
+      "sha256": "e85251565aa614b29a99d17c44fb9f8f992f3db1c74f90bba78ebc227b67f8d0"
+    },
+    {
+      "path": "src/dev/drac-compare/carrier-legs.js",
+      "sha256": "bd343a2d61c83282cb21aa4b0760045b60eb5b85fc26c7f841756380b64c2512"
+    },
+    {
+      "path": "src/dev/drac-compare/clock.js",
+      "sha256": "11a3d111ca09546331c00a13230e44ec8d700eb80efdac23fae2c810f07d41f2"
+    },
+    {
+      "path": "src/dev/drac-compare/compare.css",
+      "sha256": "c10ba19f9837cc688c4b1e0d9f52e71e7338c9066c4475c26556038581008746"
+    },
+    {
+      "path": "src/dev/drac-compare/helpers.js",
+      "sha256": "5fda7c8529f072e78e2230e0ad10c3220b02c235d3313306dc38973773eb7e5e"
+    },
+    {
+      "path": "src/dev/drac-compare/main.js",
+      "sha256": "5020d40f811e29601ac19bb476f220fe878580e29b4cded9d1b59b1209de6040"
+    },
+    {
+      "path": "src/dev/drac-compare/overhead.js",
+      "sha256": "ecb38447934a63e8f09246f8b7b1d837c34cd7c3b0e58db9552977b66e445ac6"
+    },
+    {
+      "path": "src/dev/drac-compare/path.js",
+      "sha256": "b75d9cf88239ba87230cb5567990ad59d0fb4555fad73b2e29e9ebf73b364232"
+    },
+    {
+      "path": "src/dev/drac-compare/phrases.js",
+      "sha256": "03fe493b9644b1b53f39f95081435f4b15ca8e27b83c231fe591146074b84b76"
+    },
+    {
+      "path": "src/dev/drac-compare/pose.js",
+      "sha256": "5b11f7715a314e66f95b98cb01e3476a40e5817cf5c6bda4088cb9999b572661"
+    },
+    {
+      "path": "src/dev/drac-compare/pulse.js",
+      "sha256": "a6fa68dcc15559fe2a3686135665dc18bc19dc80218a4129cc7c64ca26250e9c"
+    },
+    {
+      "path": "src/dev/drac-compare/rig.js",
+      "sha256": "fa9be9c45280addb88cbc3321e15a6384fafebfbf8a9be1f5cd8e100762712e2"
+    },
+    {
+      "path": "src/dev/drac-compare/stage.js",
+      "sha256": "77ffb341c683f6e04522e7f572ba2517f424722b1f1d54aaa145c238eabbe7e8"
+    },
+    {
+      "path": "src/dev/drac-compare/steps.js",
+      "sha256": "ac5ad6648d54cef44fd1dccaebc6900cca27d0dc30c2087833c53ab03a59c4b6"
+    },
+    {
+      "path": "src/dev/drac-lab/trial-rig.js",
+      "sha256": "89880d8829fb95467f7110892083fb32ba5cc268d1274a5ebe8bfe635303928f"
+    },
+    {
+      "path": "src/game/dance-drac.js",
+      "sha256": "5fe0273c163d463e68a4498e96466af9877fad867fd29cfffe67363664efb3f7"
+    },
+    {
+      "path": "src/game/dance.js",
+      "sha256": "a015310afa203f0f5b608c02cecffcfb6cc2afa3e2be4015f80433c8c807135b"
+    },
+    {
+      "path": "src/game/drac-feet.js",
+      "sha256": "db585719c832574a628349024de4e261c715fe56349b58334b0d512cdb5001b4"
+    },
+    {
+      "path": "src/scene/drac-motion.js",
+      "sha256": "fd30446014561a4fd9742471a8456e134d88c620a059f6f1337e5df578dbc65b"
+    },
+    {
+      "path": "src/scene/models/drac.js",
+      "sha256": "dda41ccf810edccaa195d3b7a8ecedc3d9d99820b955ecef96f6fbdc0e71da08"
+    },
+    {
+      "path": "src/scene/models/voxel.js",
+      "sha256": "ecc47187d713e1b984e9a86bbea317ea8f7c0ca9439b28730a484cf16492e55b"
+    },
+    {
+      "path": "tests/drac-cloth-probes.mjs",
+      "sha256": "5176ea373475e1d6a25c22bf99170e80cfa8ae6dd9711e48b9996956eefda7f3"
+    },
+    {
+      "path": "tests/drac-compare-base.json",
+      "sha256": "44a0e20dadc886b5842cbf72489a2198b1558cc020e7c57f8fc05fbbdfc22788"
+    },
+    {
+      "path": "tests/drac-compare-comic.mjs",
+      "sha256": "7f8a99d2cb5bbcc310661d54250a3213bf9d352d7ca957da2c3bb36fb0ac449d"
+    },
+    {
+      "path": "tests/drac-compare.mjs",
+      "sha256": "3e8e272965cbcf6d9475a3adca1d1956b425d2b5a24f7ad9b0aa4a1f4537582e"
+    },
+    {
+      "path": "tests/drac-natural-steps.mjs",
+      "sha256": "26c126c51bce406132f175df8f6b709a5ca476f812ad20817237a72d4f9f20cd"
+    }
+  ]
+}

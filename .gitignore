@@ -1,5 +1,6 @@
 # Dependencies and Vite build output
 node_modules
+.bestiari-media.json
 dist/
 .vite/
 

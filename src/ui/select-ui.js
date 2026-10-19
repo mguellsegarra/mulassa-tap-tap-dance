@@ -1,5 +1,5 @@
 // Main menu over the plaça: town pills, the playable figures, records, difficulty. What is still to come starts folded into
-// one fold (the coming towns' arms) and one «Pròximament» pill; either unfolds it in place (its cards, its towns' pills),
+// one chevron fold and one «Pròximament» pill; either unfolds it in place (its cards, its towns' pills),
 // the fold and an «Amaga» pill fold it back. A pending figure shows its own panel instead of the records.
 // Arrows rove cards; Enter confirms a figure. On the next step arrows choose difficulty; Escape returns.
 import { FIGURES, TOWNS, MULASSA, portraitArt, portraitPalette, portraitStand, townOf, playable, rememberedLevel, rememberLevel, readFigureRecord, aviatText, aviatDraft, INVITE, INVITE_TOWN, inviteText, INVITE_DRAFT } from '../game/figures.js';
@@ -9,7 +9,7 @@ import { escutSvg, escutField } from './escuts.js';
 import { PESSIGOLLA_MARK } from './pessigolla-logo.js';
 import { stripScroll } from './strip-scroll.js';
 import { fitPendingTitle, fitPendingNote, watchPending } from './pending-title.js';
-import { SELECTOR_PORTRAITS } from './selector-portraits.js';
+import { SELECTOR_PORTRAITS, pendingSilhouette } from './selector-portraits.js';
 
 // pixel art as an SVG: each cell a square, the cells round the shape a dark rim
 export function pixelSvg(art, palette, rim) {
@@ -44,12 +44,12 @@ function stripHtml(figures, later = false, last = null) { // later: what the fol
     last = t;
     const name = f.name || 'Aviat', entity = f.entity || t.name;
     const ok = playable(f), art = f.thumbnail ? null : portraitArt(f); // the portrait's grid with its rim: whole-pixel sizing (select.css)
-    html += `<button type="button" class="btn btn-secondary sel-card${ok ? '' : ' aviat'}${later ? ' later' : ''}" role="option" data-id="${escapeHtml(f.id)}" data-field="${escutField(t.id)}" tabindex="-1" aria-selected="false" aria-label="${escapeHtml(f.invite ? `${name}: ${entity.toLowerCase()} per al joc` : `${name}, ${entityLabel(f)}, ${t.name}${ok ? '' : ', pròximament'}`)}"${art ? ` style="--gw:${art[0].length + 2};--gh:${art.length + 2};--s:${portraitStand(f)}"` : ''}><span class="por">${SELECTOR_PORTRAITS[f.id] || portraitHtml(f)}</span><span class="nb"><span class="sel-card-name">${escapeHtml(name)}</span>${cardEntityHtml(f)}</span></button>`;
+    html += `<button type="button" class="btn btn-secondary sel-card${ok ? '' : ' aviat'}${later ? ' later' : ''}" role="option" data-id="${escapeHtml(f.id)}" data-field="${escutField(t.id)}" tabindex="-1" aria-selected="false" aria-label="${escapeHtml(f.invite ? `${name}: ${entity.toLowerCase()} per al joc` : `${name}, ${entityLabel(f)}, ${t.name}${ok ? '' : ', pròximament'}`)}"${art ? ` style="--gw:${art[0].length + 2};--gh:${art.length + 2};--s:${portraitStand(f)}"` : ''}><span class="por">${SELECTOR_PORTRAITS[f.id] || (ok || f.thumbnail ? portraitHtml(f) : pendingSilhouette(art))}</span><span class="nb"><span class="sel-card-name">${escapeHtml(name)}</span>${cardEntityHtml(f)}</span></button>`;
   }
   return html;
 }
-// the fold between the playable figures and the rest: the «Pròximament» pill stood upright (the coming towns' arms), › folded, ‹ unfolded
-const moreHtml = towns => `<button type="button" class="btn btn-secondary sel-card sel-more" data-more="1" role="option" tabindex="-1" aria-selected="false" aria-expanded="false" aria-label="Pròximament"><span class="sel-more-flag" aria-hidden="true"><svg viewBox="0 0 24 24"><path class="open" d="m9 5 7 7-7 7"/><path class="close" d="m15 5-7 7 7 7"/></svg><span class="sel-fan">${towns.slice(0, 5).map(t => escutSvg(t.id)).join('')}</span></span></button>`; // the first five arms: what fits
+// the fold between the playable figures and the rest: › folded, ‹ unfolded
+const moreHtml = () => `<button type="button" class="btn btn-secondary sel-card sel-more" data-more="1" role="option" tabindex="-1" aria-selected="false" aria-expanded="false" aria-label="Pròximament"><span class="sel-more-flag" aria-hidden="true"><svg viewBox="0 0 24 24"><path class="open" d="m9 5 7 7-7 7"/><path class="close" d="m15 5-7 7 7 7"/></svg></span></button>`;
 // the pills' last one: the arms of the towns with nothing to play yet, fanned out; unfolded, «Amaga»
 // The fold's own card while the cursor is on it: three coming figures (one per town), every coming town's arms and the count
 const peekHtml = figures => figures.map(f => `<span class="sel-peek" data-field="${escutField(f.town)}">${portraitHtml(f)}${escutSvg(f.town)}</span>`).join('');
@@ -82,7 +82,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
   // the toggle sits right after the live towns, like the strip's fold: it stays under the finger and the rest opens after it
   towns.setAttribute('role', 'group'); // Native Tab order, with optional arrow shortcuts between visible buttons.
   towns.innerHTML = liveTowns.map(pillHtml).join('') + (restTowns.length ? soonPillHtml(restTowns) : '') + restTowns.map(pillHtml).join('');
-  strip.innerHTML = stripHtml(live) + (soon.length ? moreHtml(restTowns) + stripHtml([...soon, INVITE], true, townOf(live.at(-1))) : '');
+  strip.innerHTML = stripHtml(live) + (soon.length ? moreHtml() + stripHtml([...soon, INVITE], true, townOf(live.at(-1))) : '');
   levels.innerHTML = DIFFS.map((d, i) => `<button type="button" class="btn btn-secondary" data-level="${i}" aria-pressed="false">${d.name}</button>`).join('');
   // Keep device guidance in the information flow, clear of the dock and its actions.
   const hint = $('ios-hint');

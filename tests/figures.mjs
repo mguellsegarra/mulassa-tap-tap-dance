@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { FIGURES, TOWNS, MULASSA, DRAC, MULE_ART, DRAC_ART, portraitArt, portraitPalette, portraitStand, STAND, playable, townOf, rememberedLevel, rememberLevel, recordKey, aviatText, INVITE, INVITE_TOWN, INVITE_DRAFT } from '../src/game/figures.js';
 import { FIGURE_PORTRAITS } from '../src/game/figure-portraits.js';
 import { setupSelect, peekGap, pixelSvg } from '../src/ui/select-ui.js';
+import { cellOutline } from '../src/ui/selector-portraits.js';
 import { escutSvg, escutField } from '../src/ui/escuts.js';
 import { clampStand } from '../src/dev/sizes-edit.js';
 import { fitPendingNote } from '../src/ui/pending-title.js';
@@ -198,6 +199,21 @@ assert.equal(sounds.length, soundBefore + 2, 'unavailable scroll actions make no
 const cardMarkup = id => $('select-strip').innerHTML.match(new RegExp(`<button[^>]*data-id="${id}"[^]*?</button>`))[0];
 assert.match(cardMarkup('mulassa-valls'), /aria-label="Mulassa, Unió Anelles de la Flama, Valls/);
 assert.match(cardMarkup('aliga-valls'), /aria-label="Àliga, Ajuntament de Valls \+ Unió Anelles de la Flama, Valls/);
+{ // pending cards wear a vector silhouette traced from their own grid; the Bou has its own, on the Mulassa's skeleton
+  const art = id => cardMarkup(id).match(/<span class="por">([^]*?)<\/span>/)[1];
+  for (const c of cards.filter(c => c.cls.includes('aviat') && c.dataset.id !== 'bou-tradicional-valls')) {
+    if (art(c.dataset.id).startsWith('<img')) { assert.equal(c.dataset.id, 'selector-fixture', 'only a figure with a photo keeps it'); continue; }
+    const grid = portraitArt({ id: c.dataset.id }), svg = art(c.dataset.id);
+    assert.match(svg, new RegExp(`^<svg viewBox="0 0 ${grid[0].length + 2} ${grid.length + 2}"`), `${c.dataset.id}: same box as its pixel portrait, so the same size`);
+    assert(/<path d="M[^"]+Z" fill="#120b07" stroke="#f5e3b8"/.test(svg) && !svg.includes('crispEdges'), `${c.dataset.id}: one ink path with a halo, no pixel cells`);
+  }
+  assert.match(art('bou-tradicional-valls'), /class="sel-bou-silhouette"/);
+  for (const id of ['mulassa-valls', 'drac-valls']) assert.doesNotMatch(art(id), /#120b07" stroke="#f5e3b8/, `${id} keeps its colour illustration`);
+  for (const [id, { art: grid }] of Object.entries(FIGURE_PORTRAITS)) { // the traced outline encloses exactly the drawn cells (shoelace area)
+    const area = cellOutline(grid).reduce((s, l) => s + l.reduce((a, p, i) => { const q = l[(i + 1) % l.length]; return a + p[0] * q[1] - q[0] * p[1]; }, 0) / 2, 0);
+    assert.equal(area, grid.join('').replace(/\./g, '').length, `${id}: the outline loses or adds no cell`);
+  }
+}
 for (const [id, count] of [['mulassa-valls', 1], ['aliga-valls', 2]]) {
   const icons = cardMarkup(id).match(/<small class="sel-entity-icons" aria-hidden="true">([^]*?)<\/small>/)[1];
   assert.match(icons, /UAF<\/span>/);
@@ -210,7 +226,10 @@ assert(!cards.some(c => ['diables-valls', 'nans-valls'].includes(c.dataset.id)),
 assert.deepEqual(cards.slice(0, live.length).map(c => c.dataset.id), live.map(f => f.id), 'the playable figures come first');
 assert.equal(cards[live.length], more, 'then the fold');
 assert.deepEqual(later.map(c => c.dataset.id), [...soon, INVITE].map(f => f.id), 'then everything still to come, and the invitation last');
-assert(/aria-label="Pròximament"><span class="sel-more-flag" aria-hidden="true"><svg[^]*?<\/svg><span class="sel-fan"><svg class="escut"/.test($('select-strip').innerHTML), 'the fold is named Pròximament and shows the coming towns\' arms, no count');
+const foldMarkup = $('select-strip').innerHTML.match(/<button[^>]*data-more="1"[^]*?<\/button>/)[0];
+assert.match(foldMarkup, /aria-label="Pròximament"/, 'the fold keeps its accessible name');
+assert.match(foldMarkup, /<path class="open"[^]*?<path class="close"/, 'the fold keeps both directional chevrons');
+assert(!/class="(?:escut|sel-fan)"/.test(foldMarkup), 'the strip fold has no decorative town arms');
 assert.equal($('select-strip').banners.filter(b => b.dataset.town === 'valls').length, 1, 'Valls goes on past the fold with no second banner');
 const banners = $('select-strip').banners;
 assert(later.every(c => c.hidden) && banners.filter(b => b.cls.includes('later')).every(b => b.hidden) && !banners[0].hidden, 'folded at first: only the playable figures and their banner');

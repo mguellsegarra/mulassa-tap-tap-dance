@@ -1446,8 +1446,18 @@ console.log('classificacions integration contracts ok');
   assert(run("G.state === 'play' && G.diff === 2 && !G.practice"), 'Torna-ho a provar: the same level again');
   run(`G.state = 'results'; G.reason = 'clear'; G.resT = clock - 2;
     G.shareRun = { pct: 90, diff: 2, reason: 'clear', stars: 3, newRecord: false, maxCombo: 50, t: G.resT, practice: false }; updateControls();`);
-  assert(nodes.get('results-share').hidden === false && nodes.get('results-retry').hidden === true, 'a finished dance: Comparteix again, no retry');
-  run(`G.challenge = null; G.state = 'title'; updateControls();`);
+  assert(nodes.get('results-share').hidden === false && nodes.get('results-retry').hidden === false, 'a finished dance offers both Comparteix and another run');
+  for (const figure of ['mulassa-valls', 'drac-valls']) for (const reason of ['clear', 'fail', 'collapse']) for (const diff of [0, 1, 2]) {
+    run(`G.state = 'results'; setSelectedFigure('${figure}'); G.reason = '${reason}'; G.diff = ${diff}; G.resT = clock - 0.5; updateControls();`);
+    assert(nodes.get('results-retry').hidden, 'the last notes cannot accidentally restart the run');
+    nodes.get('results-retry').listeners.click();
+    assert.equal(run('G.state'), 'results', 'retry ignores a click before results settle');
+    run('G.resT = clock - 2; updateControls();');
+    assert(!nodes.get('results-retry').hidden, `${figure}/${reason}/${diff}: retry is visible`);
+    nodes.get('results-retry').listeners.click();
+    assert(run(`G.state === 'play' && G.figureId === '${figure}' && G.diff === ${diff} && !G.practice && G.score === 0 && G.energy === 1`), `${figure}/${reason}/${diff}: restart the same figure and level with a fresh run`);
+  }
+  run(`G.challenge = null; G.state = 'title'; setSelectedFigure('mulassa-valls'); updateControls();`);
 }
 console.log('comparteix integration contracts ok');
 

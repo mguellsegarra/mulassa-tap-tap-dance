@@ -268,7 +268,7 @@ kbd { display: inline-block; min-width: 14px; padding: 0 4px; border: 1px solid 
 #results-actions .btn > svg { width: 20px; height: 20px; margin-right: 8px; }
 /* narrow: «Publica» is exactly as wide as the pair under it (2 × 220 + the gap), never the whole screen */
 @media (max-width: 639px) { #results-actions { width: min(452px, calc(100vw - 24px - var(--sal) - var(--sar))); } #results-actions > #results-publish { flex-basis: 100%; max-width: none; } }
-@media (max-width: 419px) { #results-actions > #results-retry { flex-basis: 100%; max-width: none; } } /* a collapse on a narrow phone: «Torna-ho a provar» on its own row, never broken at the hyphen */ /* a collapse's Torna-ho a provar stays in the one row */
+@media (max-width: 419px) { #results-actions > #results-retry { flex-basis: 100%; max-width: none; } } /* «Torna-ho a provar» on its own row, never broken at the hyphen */
 @media (max-width: 419px) { #results-actions .btn { padding-inline: 8px; } #results-actions .btn > svg { margin-right: 6px; } } /* phones: «Torna-ho a provar» and its icon on one line (it broke at the hyphen) */
 #board-menu, #publish-menu { max-height: calc(100dvh - 32px - var(--sat) - var(--sab)); }
 /* the board sheet has ONE height from its first frame (loading, list, empty, error, both views, both periods): the

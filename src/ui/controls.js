@@ -77,5 +77,5 @@ export function updateControls() {
   hide(skipEl, G.state !== 'play' || !G.practice || G.paused);
   sheets.board.results(G.state === 'results' && clock - G.resT > 1); // with TOCA PER TORNAR: no stray tap from the last notes
   sheets.share.results(G.state === 'results' && clock - G.resT > 1, G.shareRun, CHALLENGE); // the row itself (#results-actions)
-  hide(retryEl, !(G.state === 'results' && clock - G.resT > 1 && G.reason === 'collapse'));
+  hide(retryEl, !(G.state === 'results' && clock - G.resT > 1));
 }

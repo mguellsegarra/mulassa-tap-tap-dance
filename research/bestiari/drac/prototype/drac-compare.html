@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="ca">
+<head>
+<meta charset="utf-8">
+<!-- Dev only (npm run dev → /drac-compare.html?mute): the Drac model next to its source video. Never a build input (vite build reads index.html). -->
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Drac: vídeo i model</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+<link rel="stylesheet" href="./src/dev/drac-compare/compare.css">
+</head>
+<body>
+<header>
+  <h1>Drac: vídeo i model</h1>
+  <p class="lead">El Drac del joc ballant la seqüència auditada del vídeo, segon a segon (0–104,8 s). Prova local: res d'aquí arriba al joc.</p>
+</header>
+<main>
+  <section class="transport" aria-label="Reproducció">
+    <button id="play" class="primary" type="button">Reprodueix</button>
+    <button id="back" type="button" aria-label="Un fotograma enrere">−1 f</button>
+    <button id="fwd" type="button" aria-label="Un fotograma endavant">+1 f</button>
+    <label class="seek"><span class="sr">Posició</span><input id="seek" type="range" min="0" max="104.8" step="0.02" value="0"></label>
+    <output id="readout" class="readout" aria-live="off"></output>
+  </section>
+  <section id="views" class="views">
+    <figure class="pane">
+      <div class="frame"><video id="video" muted playsinline preload="auto" src="/drac-reference/pm-lEViiPK0.mp4"></video></div>
+      <figcaption>Vídeo de referència · Sant Joan 2018 · <a href="https://www.youtube.com/watch?v=pm-lEViiPK0" rel="noopener">El Camp Difusió</a></figcaption>
+      <p id="video-missing" class="note" hidden>Falta el vídeo. Copia'l a <code>public/drac-reference/pm-lEViiPK0.mp4</code> (no es versiona).</p>
+    </figure>
+    <figure class="pane model-pane">
+      <div class="frame"><canvas id="stage" aria-label="El Drac en 3D, al mateix instant que el vídeo"></canvas></div>
+      <figcaption id="stage-caption">Model</figcaption>
+    </figure>
+    <figure class="pane overhead-pane">
+      <div class="frame overhead-frame"><canvas id="overhead" role="img" aria-label="Vista des de dalt: posició i orientació del drac entre els quatre ajudants" aria-describedby="overhead-caption"></canvas></div>
+      <figcaption id="overhead-caption"><strong>Des de dalt · recorregut del model</strong><br>Verd: cap on mira. Blau: cap on avança. Groc: tram actual.</figcaption>
+      <p id="overhead-action" class="small"></p>
+      <p class="small">S segueix el primer avanç; W i E, els desplaçaments següents. La càmera té una marca pròpia. Posicions aproximades.</p>
+    </figure>
+  </section>
+
+
+
+  <section class="controls">
+    <fieldset>
+      <legend>Velocitat</legend>
+      <div class="seg" data-group="rate">
+        <button type="button" data-value="1">1×</button>
+        <button type="button" data-value="0.5">0,5×</button>
+        <button type="button" data-value="0.25">0,25×</button>
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>So i rang</legend>
+      <div class="seg">
+        <button id="sound" type="button" aria-pressed="false">So del vídeo</button>
+      </div>
+      <p id="sound-locked" class="small" hidden>Silenci fixat (?mute).</p>
+      <label class="switch-row"><input id="full" type="checkbox" role="switch"> Vídeo sencer (fins a 111,9 s)</label>
+    </fieldset>
+    <fieldset>
+      <legend>Vista del model</legend>
+      <div class="seg" data-group="view">
+        <button type="button" data-value="referencia">Referència</button>
+        <button type="button" data-value="fixa">Fixa ampla</button>
+        <button type="button" data-value="planta">Planta</button>
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>Expressivitat</legend>
+      <div class="seg" data-group="expr">
+        <button type="button" data-value="0">Base</button>
+        <button type="button" data-value="1">Amb més gràcia</button>
+      </div>
+      <label class="range-row">Intensitat <input id="expr" type="range" min="0" max="1" step="0.05" value="1"> <output id="expr-out" for="expr">100%</output></label>
+      <p class="small">Interpretació còmica (no surt al vídeo): flexió de genolls i balanceig al pols estimat de la música. La base és la coreografia del vídeo.</p>
+    </fieldset>
+    <fieldset>
+      <legend>Capes</legend>
+      <label class="switch-row"><input type="checkbox" role="switch" data-layer="grid" checked> Graella (0,5 m)</label>
+      <label class="switch-row"><input type="checkbox" role="switch" data-layer="axes" checked> Eixos</label>
+      <label class="switch-row"><input type="checkbox" role="switch" data-layer="prints"> Petjades de la frase</label>
+      <label class="switch-row"><input type="checkbox" role="switch" data-layer="path"> Recorregut</label>
+      <label class="switch-row"><input type="checkbox" role="switch" data-layer="helpers" checked> Ajudants (W · N · S · E)</label>
+      <p class="small">Marques provisionals dels ajudants que piquen de mans per orientar el portador: referències fixes al voltant de l'espai, no segueixen el drac. Es veuen totes a la vista Planta. Posicions aproximades, no mesurades al vídeo; W, N, S i E són esquemàtics.</p>
+      <label class="switch-row"><input id="overlay" type="checkbox" role="switch"> Superposa el model al vídeo</label>
+      <label class="range-row">Opacitat <input id="opacity" type="range" min="0.1" max="0.9" step="0.05" value="0.5"></label>
+    </fieldset>
+  </section>
+
+  <details class="camera">
+    <summary>Càmera de referència (aproximada)</summary>
+    <p class="small">Operador quiet en una estació fixa (ajust local del primer fotograma) que gira la càmera per claus: de 0 a 14 s, pel desplaçament del fons; després, fotogrames d'ancoratge. Separada del recorregut del model. No és un calibratge mètric.</p>
+    <div id="tune" class="tune"></div>
+    <div class="seg"><button id="tune-reset" type="button">Restableix</button></div>
+    <output id="tune-json" class="mono"></output>
+  </details>
+
+  <section class="phrase" aria-live="polite">
+    <h2 id="phrase-title">Frase</h2>
+    <p id="phrase-action"></p>
+    <p id="phrase-count" class="small"></p>
+    <p id="phrase-model" class="small"></p>
+  </section>
+  <section class="markers">
+    <h2>Les 33 frases auditades</h2>
+    <div id="phrases" class="chips"></div>
+    <p class="legend small"><span class="key" style="--c:#3ddc84"></span>observada <span class="key" style="--c:#f5c518"></span>probable <span class="key" style="--c:#4fc3f7"></span>acció de suport <span class="key" style="--c:#ff6ec7"></span>adaptació (no mesurada)</p>
+  </section>
+  <p class="note">Distàncies, punts del recorregut i angles intermedis: inferits, no calibrats amb el vídeo (la càmera fa panoràmiques i zoom). Les petjades sense recompte al vídeo són una adaptació i ho diuen. Quin peu és l'esquerre del portador (flors o cercles) no està verificat.</p>
+</main>
+<script type="module" src="./src/dev/drac-compare/main.js"></script>
+</body>
+</html>

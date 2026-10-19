@@ -23,8 +23,8 @@ const ROW_GAP = 20, BELOW_EXTRA = 8, resultsRow = document.getElementById('resul
 const NARROW_ROW = matchMedia('(max-width: 419px)'); // index.html: «Torna-ho a provar» takes a row of its own
 let rowSeen = 0; // the row's real height once laid out (a wrap the estimate below missed must never sit on the tip)
 try { new ResizeObserver(() => { rowSeen = resultsRow.offsetHeight; }).observe(resultsRow); } catch { /* old browser / tests: the estimate alone */ }
-const resultsReserve = () => { // the row's own height, css px: rows of 48, 12 apart. Publish and (a collapse's) retry each wrap onto their own row on a phone
-  const rows = 1 + (sheets.board.publishable && NARROW.matches ? 1 : 0) + (G.reason === 'collapse' && NARROW_ROW.matches ? 1 : 0);
+const resultsReserve = () => { // rows of 48, 12 apart. Publish and retry each wrap onto their own row on a narrow phone.
+  const rows = 1 + (sheets.board.publishable && NARROW.matches ? 1 : 0) + (NARROW_ROW.matches ? 1 : 0);
   return Math.max(rows * 48 + (rows - 1) * 12, rowSeen);
 };
 // The row sits right under the card (ROW_GAP css px), TOCA PER TORNAR and the tip under it: drawResults() places it by

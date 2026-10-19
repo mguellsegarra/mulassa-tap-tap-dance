@@ -191,5 +191,5 @@ document.getElementById('howto-practice').addEventListener('click', () => { howt
 document.getElementById('howto-ok').addEventListener('click', () => howtoMenu.close());
 document.getElementById('privacy-ok').addEventListener('click', () => privacyMenu.close());
 document.getElementById('skip').addEventListener('click', () => { if (G.practice && !G.paused) { chip.sfx('menu'); endPractice(); } });
-// a collapse: «Torna-ho a provar» in the results row starts the same level again (as the title would, in one tap)
-retryEl.addEventListener('click', () => { if (G.state === 'results' && G.reason === 'collapse' && clock - G.resT > 1) { const d = G.diff; toTitle(); startGame(d); } });
+// «Torna-ho a provar» starts the same figure and level again after any result.
+retryEl.addEventListener('click', () => { if (G.state === 'results' && clock - G.resT > 1) { const d = G.diff; toTitle(); startGame(d); } });

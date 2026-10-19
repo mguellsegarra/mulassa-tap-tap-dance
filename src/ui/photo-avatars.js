@@ -5,7 +5,6 @@ import { PHOTO, setPhotoControl } from '../game/photo-control.js';
 import { MULASSA, DRAC, portraitArt, portraitPalette } from '../game/figures.js';
 import { escutField } from './escuts.js';
 import { pixelSvg } from './select-ui.js';
-import { sheets } from './sheets.js';
 import { COARSE } from '../core/env.js';
 import { G } from '../game/state.js';
 
@@ -44,8 +43,8 @@ export function syncAvatars() {
 export function showAvatars(on) {
   pfShown = on;
   setPhotoControl(false);
-  // a pending figure on the selector hides both models: nothing to drive
-  avatarsEl.hidden = !on || COARSE.matches || G.state === 'select' && !!(sheets.select?.pending ?? sheets.select?.figure?.status === 'aviat');
+  // (a pending figure on the selector too: the last playable one stands in, main.js)
+  avatarsEl.hidden = !on || COARSE.matches;
   syncAvatars();
 }
 // Escape: drop control first; the next Escape leaves photo mode. true = handled.

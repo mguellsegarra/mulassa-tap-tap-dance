@@ -8,16 +8,17 @@ import { num } from './sheet-kit.js';
 import { escutSvg, escutField } from './escuts.js';
 import { PESSIGOLLA_MARK } from './pessigolla-logo.js';
 import { stripScroll } from './strip-scroll.js';
-import { fitPendingTitle } from './pending-title.js';
+import { fitPendingTitle, fitPendingNote, watchPending } from './pending-title.js';
+import { SELECTOR_PORTRAITS } from './selector-portraits.js';
 
 // pixel art as an SVG: each cell a square, the cells round the shape a dark rim
 export function pixelSvg(art, palette, rim) {
-  const h = art.length, w = art[0].length, on = (x, y) => (art[y]?.[x] ?? '.') !== '.', out = [];
-  for (let y = -1; y <= h; y++) for (let x = -1; x <= w; x++) {
-    if (!on(x, y) && (on(x - 1, y) || on(x + 1, y) || on(x, y - 1) || on(x, y + 1))) out.push(`<rect x="${x + 1}" y="${y + 1}" width="1.02" height="1.02" fill="${rim}"/>`);
-  }
-  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (on(x, y)) out.push(`<rect x="${x + 1}" y="${y + 1}" width="1.02" height="1.02" fill="${palette[art[y][x]]}"/>`);
-  return `<svg viewBox="0 0 ${w + 2} ${h + 2}" shape-rendering="crispEdges" aria-hidden="true">${out.join('')}</svg>`;
+  // One path per colour, not a rect per pixel: ~200 nodes a card made every selector restyle walk thousands of elements.
+  const h = art.length, w = art[0].length, on = (x, y) => (art[y]?.[x] ?? '.') !== '.', paths = new Map([[rim, '']]);
+  const cell = (fill, x, y) => paths.set(fill, (paths.get(fill) ?? '') + `M${x + 1} ${y + 1}h1.02v1.02h-1.02z`);
+  for (let y = -1; y <= h; y++) for (let x = -1; x <= w; x++) if (!on(x, y) && (on(x - 1, y) || on(x + 1, y) || on(x, y - 1) || on(x, y + 1))) cell(rim, x, y);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (on(x, y)) cell(palette[art[y][x]], x, y);
+  return `<svg viewBox="0 0 ${w + 2} ${h + 2}" shape-rendering="crispEdges" aria-hidden="true">${[...paths].filter(([, d]) => d).map(([fill, d]) => `<path fill="${fill}" d="${d}"/>`).join('')}</svg>`;
 }
 const pillHtml = t => `<button type="button" class="btn btn-secondary sel-pill" data-town="${t.id}" tabindex="0" aria-pressed="false"${t.color ? ` style="--c:${t.color}"` : ''}>${escutSvg(t.id) || '<i aria-hidden="true"></i>'}${t.name}</button>`;
 const DEMO_BEST = [8120, 12340, null]; // ?demo: made-up best scores per level
@@ -43,7 +44,7 @@ function stripHtml(figures, later = false, last = null) { // later: what the fol
     last = t;
     const name = f.name || 'Aviat', entity = f.entity || t.name;
     const ok = playable(f), art = f.thumbnail ? null : portraitArt(f); // the portrait's grid with its rim: whole-pixel sizing (select.css)
-    html += `<button type="button" class="btn btn-secondary sel-card${ok ? '' : ' aviat'}${later ? ' later' : ''}" role="option" data-id="${escapeHtml(f.id)}" data-field="${escutField(t.id)}" tabindex="-1" aria-selected="false" aria-label="${escapeHtml(f.invite ? `${name}: ${entity.toLowerCase()} per al joc` : `${name}, ${entityLabel(f)}, ${t.name}${ok ? '' : ', pròximament'}`)}"${art ? ` style="--gw:${art[0].length + 2};--gh:${art.length + 2};--s:${portraitStand(f)}"` : ''}><span class="por">${portraitHtml(f)}</span><span class="nb"><span class="sel-card-name">${escapeHtml(name)}</span>${cardEntityHtml(f)}</span></button>`;
+    html += `<button type="button" class="btn btn-secondary sel-card${ok ? '' : ' aviat'}${later ? ' later' : ''}" role="option" data-id="${escapeHtml(f.id)}" data-field="${escutField(t.id)}" tabindex="-1" aria-selected="false" aria-label="${escapeHtml(f.invite ? `${name}: ${entity.toLowerCase()} per al joc` : `${name}, ${entityLabel(f)}, ${t.name}${ok ? '' : ', pròximament'}`)}"${art ? ` style="--gw:${art[0].length + 2};--gh:${art.length + 2};--s:${portraitStand(f)}"` : ''}><span class="por">${SELECTOR_PORTRAITS[f.id] || portraitHtml(f)}</span><span class="nb"><span class="sel-card-name">${escapeHtml(name)}</span>${cardEntityHtml(f)}</span></button>`;
   }
   return html;
 }
@@ -115,8 +116,8 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     $('aviat-title').textContent = f.fullName || f.name;
     $('aviat-entity').hidden = false;
     $('aviat-entity').innerHTML = entityHtml(f);
-    $('aviat-icon').innerHTML = portraitHtml(f);
-    $('aviat-text').innerHTML = (f.invite ? inviteText() : aviatText()).split('\n\n').map(p => `<p>${escapeHtml(p)}</p>`).join('');
+    $('aviat-icon').innerHTML = ''; $('aviat-icon').hidden = true; // the strip below already shows its portrait
+    $('aviat-text').innerHTML = (f.invite ? inviteText() : aviatText(f)).split('\n\n').map(p => `<p>${escapeHtml(p)}</p>`).join('');
   }
   function teaserFill() {
     // The card keeps a pending figure's height (measured on the first one): no jump between it and the fold.
@@ -127,7 +128,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     pending.style.maxHeight = '';
     pending.toggleAttribute('data-fold', true); // same GitHub/mail row as a pending figure: the fan yields the room (select.css)
     $('aviat-title').textContent = 'Aviat a la plaça';
-    $('aviat-icon').innerHTML = peekHtml(peekFigures);
+    $('aviat-icon').innerHTML = peekHtml(peekFigures); $('aviat-icon').hidden = false;
     $('aviat-entity').hidden = true;
     $('aviat-entity').innerHTML = '';
     $('aviat-text').innerHTML = '<p>Volem que surtin a la plaça. Tens fotos, vídeos, partitures o coneixes el ball? Ajuda’ns!</p>';
@@ -246,8 +247,30 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     return pills.find(p => p.dataset.town === id);
   }
   const arrivals = new Map();
-  let closing = false;
+  let closing = false, townExit = null, settling = false; // settling: unfold() measures once after the steps it runs (each measure forces a layout)
   const FOLD_MS = 240;
+  function clearTownExit() {
+    if (!townExit) return;
+    townExit.animation?.cancel(); townExit.layer.remove(); townExit = null;
+  }
+  function exitTowns() {
+    // Keep only a painted copy of the outgoing pills. Their real layout can then reach its
+    // folded size now, so centring and the fade share one motion instead of two queued ones.
+    if (!win.matchMedia?.('(pointer: fine)').matches || reduced()) return false;
+    const rect = towns.getBoundingClientRect(), zoom = parseFloat(win.getComputedStyle(root).zoom) || 1;
+    const layer = towns.cloneNode(true), scroll = towns.scrollLeft;
+    layer.removeAttribute('id'); layer.removeAttribute('role'); layer.removeAttribute('aria-label');
+    layer.setAttribute('aria-hidden', 'true'); layer.inert = true;
+    Object.assign(layer.style, { left: `${rect.left / zoom}px`, top: `${rect.top / zoom}px`,
+      right: 'auto', width: `${rect.width / zoom}px`, height: `${rect.height / zoom}px`,
+      transform: 'none', translate: 'none', pointerEvents: 'none', zIndex: '1', justifyContent: win.getComputedStyle(towns).justifyContent,
+      paddingLeft: win.getComputedStyle(towns).paddingLeft, paddingRight: win.getComputedStyle(towns).paddingRight });
+    [...layer.children].forEach((el, i) => { if (!restPills.includes(bar[i])) el.style.visibility = 'hidden'; else el.style.opacity = win.getComputedStyle(bar[i]).opacity; });
+    root.append(layer); layer.scrollLeft = scroll;
+    townExit = { layer, animation: null };
+    restPills.forEach(p => { p.hidden = true; });
+    return true;
+  }
   function revealItems(on) {
     for (const el of [...later, ...restPills]) {
       arrivals.get(el)?.cancel(); el.hidden = !on; el.inert = !on;
@@ -257,25 +280,28 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
   function finishFold() {
     if (open) return;
     townScrolling.to(townScrolling.target, true);
-    const header = headerPositions();
+    const header = townExit ? null : headerPositions();
+    clearTownExit();
     closing = false; root.toggleAttribute('data-folding', false);
     arrivals.get(pending)?.cancel(); pending.inert = false;
     revealItems(false);
-    if (shown) { measure(); moveHeader(header); }
+    if (shown) { measure(); if (header) moveHeader(header); else if (reduced()) for (const el of [towns, $('select-info')]) arrivals.get(el)?.cancel(); }
   }
   // The collapsed towns can fit beside the corner buttons. Preserve their painted position across
   // that one layout change, then move on the compositor; the first pill also accounts for centring.
   function headerPositions() {
     return [towns, $('select-info')].map(el => ({ el, rect: (el === towns ? pills[0] : el).getBoundingClientRect() }));
   }
-  function moveHeader(before) {
+  function moveHeader(before, startTime) {
     const zoom = parseFloat(win.getComputedStyle?.(root).zoom) || 1;
     for (const { el, rect } of before) {
       arrivals.get(el)?.cancel();
       const after = (el === towns ? pills[0] : el).getBoundingClientRect();
       const x = (rect.left - after.left) / zoom, y = (rect.top - after.top) / zoom;
       if (!reduced() && el.animate && (Math.abs(x) > 1 || Math.abs(y) > 1)) {
-        arrivals.set(el, el.animate({ transform: [`translate(${x}px, ${y}px)`, 'translate(0, 0)'] }, { duration: FOLD_MS, easing: 'ease-in-out' }));
+        const motion = el.animate({ transform: [`translate(${x}px, ${y}px)`, 'translate(0, 0)'] }, { duration: FOLD_MS, easing: 'ease-in-out', fill: 'backwards' });
+        if (Number.isFinite(startTime)) motion.startTime = startTime;
+        arrivals.set(el, motion);
       }
     }
   }
@@ -298,9 +324,11 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     };
     if (how === 'open') { label(); for (const el of items) el.hidden = !on; return; }
     sfx('menu');
+    const foldingHeader = !on ? headerPositions() : null, movingTowns = !on && exitTowns();
     label();
     if (on) {
       const header = headerPositions();
+      clearTownExit();
       closing = false; root.toggleAttribute('data-folding', false);
       arrivals.get(pending)?.cancel(); pending.inert = false;
       revealItems(true);
@@ -314,12 +342,12 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
       // Commit the selection before the exit starts. Keep the outgoing panel's text for its CSS fade;
       // the disclosure's keyboard focus is independent of the selected card and never needs a teaser here.
       const target = cards.find(c => figureOf(c) === (playable(figure) ? figure : lastPlayable));
-      pick(target, 'fold');
+      settling = true; try { pick(target, 'fold'); } finally { settling = false; }
       press(figure.town);
       closing = true;
       root.toggleAttribute('data-folding', true);
-      const exiting = items;
-      for (const el of exiting) el.inert = true;
+      const exiting = movingTowns ? later : items;
+      for (const el of items) el.inert = true;
       if (shown) measure();
       if (restoreFocus) (how === 'pill' ? soonPill : fold)?.focus({ preventScroll: true });
       const destination = Math.min(scrolling.target, foldedMax());
@@ -328,6 +356,12 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
       const townDestination = Math.max(0, Math.min(pill.offsetLeft - (towns.clientWidth - pill.offsetWidth) / 2, rowEdge(towns) - towns.clientWidth));
       // Start both clocks after layout; a slow first paint must not delay the fade.
       const fadeStart = win.performance?.now();
+      if (movingTowns) {
+        townScrolling.to(0, true);
+        moveHeader(foldingHeader, fadeStart);
+        townExit.animation = townExit.layer.animate({ opacity: [1, 0] }, { duration: FOLD_MS, fill: 'forwards', easing: 'ease-in-out' });
+        townExit.animation.startTime = fadeStart;
+      }
       for (const el of exiting) {
         arrivals.get(el)?.cancel();
         if (!reduced() && el.animate) {
@@ -336,7 +370,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
           arrivals.set(el, exit);
         }
       }
-      townScrolling.to(townDestination, false, null, FOLD_MS);
+      if (!movingTowns) townScrolling.to(townDestination, false, null, FOLD_MS);
       scrolling.to(destination, false, finishFold, FOLD_MS);
     }
   }
@@ -352,7 +386,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     cur = i;
     cards.forEach((c, k) => { c.tabIndex = k === i ? 0 : -1; c.setAttribute('aria-selected', String(k === i)); });
     updateArrows();
-    if (teasing !== (Boolean(fold) && cards[i] === fold)) { panel(); if (shown && !opening) measure(); }
+    if (teasing !== (Boolean(fold) && cards[i] === fold)) { panel(); if (shown && !opening && !settling) measure(); }
   }
   // ↑↓ jump between the screen's rows like a game menu: the corner buttons, pills, info tiles, «Aviat», figures or levels,
   // footer buttons; ←→ walk the corner row (left to right as drawn).
@@ -393,15 +427,15 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     if (!card || card.hidden || card.inert) return;
     if (card.dataset.more && open && (how === 'tap' || how === 'enter') && shown && !busy()) { unfold(false, 'tap'); return; }
     if (closing && !card.dataset.more) { scrolling.stop(); finishFold(); }
-    roveCard(cards.indexOf(card));
-    if (card.dataset.more) { if ((how === 'tap' || how === 'enter') && shown && !busy()) unfold(!open, 'tap'); return; } // arrows only reach it
+    const unfolding = Boolean(card.dataset.more) && (how === 'tap' || how === 'enter') && shown && !busy(), was = settling; settling ||= unfolding; try { roveCard(cards.indexOf(card)); } finally { settling = was; }
+    if (card.dataset.more) { if (unfolding) unfold(!open, 'tap'); return; } // arrows only reach it
     const next = figureOf(card);
     if (next !== figure) {
       if (how !== 'filter' && how !== 'fold') sfx('menu');
       figure = next; info(); setLevel(rememberedLevel(store, figure.id), 'open');
       if (how !== 'fold') mark(figure.town, how === 'arrow' ? 'instant' : smooth());
       if (playable(figure)) { lastPlayable = figure; api.onSelect(figure); } // pending figures never replace the song/model state
-      measure();
+      if (!settling) measure();
     }
     if (how === 'enter') nextStep();
   }
@@ -452,8 +486,8 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     const inlineHeader = root.hasAttribute('data-header-inline');
     if (move && (corner.includes(a) || inlineHeader && inTowns)) {
       e.preventDefault();
-      // On wide screens the towns sit between the two corner groups: follow that visible order.
-      const header = (inlineHeader ? [...corner.slice(0, 2), ...bar, ...corner.slice(2)] : corner).filter(usable);
+      // On wide screens the towns sit between the logo and the corner buttons: follow that visible order.
+      const header = (inlineHeader ? [...bar, ...corner] : corner).filter(usable);
       const target = header[header.indexOf(a) + move];
       if (target) {
         focusMove(target);
@@ -498,16 +532,16 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
   function measure() { // her free band (css px): under the info block, or (info at the side) under the pills; above the strip
     const r = el => el.getBoundingClientRect(), side = win.innerWidth >= 900 || win.innerHeight <= 500;
     const z = parseFloat(win.getComputedStyle?.(root).zoom) || 1, px = v => `${v / z}px`; // big desktops zoom the layer: rects are screen px, its CSS isn't
-    const left = ['leaders', 'viewmode'].map($).filter(el => el && !el.hidden).map(r).filter(b => b.width > 0);
-    const right = ['feedback', 'music', 'settings'].map($).filter(el => el && !el.hidden).map(r).filter(b => b.width > 0);
+    // header: logo left, corner buttons right; the towns fit between (asymmetric gutter: a symmetric one dropped them on an iPad) or get their own row
+    const logo = [root.querySelector('.sel-logo')].filter(Boolean).map(r).filter(b => b.width > 0), right = corner.filter(el => !el.hidden).map(r).filter(b => b.width > 0);
     const needed = bar.reduce((width, pill) => width + r(pill).width, 0) + GAPS.get(towns) * z * (bar.length - 1);
-    const gutter = Math.max(0, ...left.map(b => b.right), ...right.map(b => win.innerWidth - b.left)) + 24;
-    const inline = Boolean(right.length && win.innerWidth - gutter * 2 >= needed);
+    const gutterL = Math.max(0, ...logo.map(b => b.right)) + 24, gutterR = Math.max(0, ...right.map(b => win.innerWidth - b.left)) + 24;
+    const inline = Boolean(right.length && win.innerWidth - gutterL - gutterR >= needed);
     root.toggleAttribute('data-header-inline', inline);
     if (inline) {
-      root.style.setProperty('--town-gutter', px(gutter));
+      root.style.setProperty('--town-gutter-l', px(gutterL)); root.style.setProperty('--town-gutter-r', px(gutterR));
       root.style.setProperty('--town-top', px(right[0].top + (right[0].height - r(towns).height) / 2));
-      root.style.setProperty('--info-top', px(Math.max(...left.map(b => b.bottom), ...right.map(b => b.bottom)) + 16));
+      root.style.setProperty('--info-top', px(Math.max(...logo.map(b => b.bottom), ...right.map(b => b.bottom)) + 16));
     } else root.style.removeProperty?.('--info-top');
     // The dock's layout box, not its rect: a pending figure drops it by a transform that may still be under way.
     const dock = $('select-bottom'), dockTop = (dock.offsetTop ?? r(dock).top / z) * z;
@@ -530,13 +564,13 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     const nav = stripLimit > 1 ? ($('select-nav').offsetHeight || 0) * z : 0;
     api.band = { top: side ? townsBottom : r($('select-info')).bottom, bottom: dockTop - nav };
     root.style.setProperty('--pending-bottom', px(Math.max(0, win.innerHeight - (win.innerHeight <= 500 ? win.innerHeight : dockTop + r(strip).top - r(dock).top)) + 12 + nav));
-    if (!pending.hidden) fitPendingTitle($('aviat-title'), win);
+    if (!pending.hidden) { fitPendingTitle($('aviat-title'), win); fitPendingNote(pending); }
     // Cached action bounds for diagnostic overlays; no frame-loop layout reads.
     api.fpsFooter = ['select-figures-back', 'select-next', 'select-play'].map($).filter(el => !el.hidden).map(r);
   }
-  win.addEventListener('resize', () => { if (shown) { scrolling.stop(); if (closing) finishFold(); if (teasing) teaserFill(); measure(); if (step === 'figures') centre(strip, cards[cur], 'instant'); } });
+  win.addEventListener('resize', () => { if (shown) { scrolling.stop(); if (closing) finishFold(); for (const el of [towns, $('select-info')]) arrivals.get(el)?.cancel(); if (teasing) teaserFill(); measure(); if (step === 'figures') centre(strip, cards[cur], 'instant'); } });
   if (win.ResizeObserver) new win.ResizeObserver(() => { if (shown) measure(); }).observe($('select-info'));
-  if (win.ResizeObserver) new win.ResizeObserver(() => { if (shown && !pending.hidden) fitPendingTitle($('aviat-title'), win); }).observe($('aviat-icon'));
+  watchPending(pending, $('aviat-title'), $('aviat-icon'), win, () => shown && !pending.hidden);
   doc.fonts?.ready.then(() => { if (shown) measure(); });
   function visible(on) {
     const error = $('select-error'), message = getError() ?? '';
@@ -545,7 +579,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     shown = on; root.hidden = !on;
     root.removeAttribute('data-shown'); // the panels' entrance fade (select.css) is for swaps, not for opening
     if (on) win.requestAnimationFrame?.(() => win.requestAnimationFrame(() => root.toggleAttribute('data-shown', shown))); // after its first paint
-    if (!on) { scrolling.stop(); if (closing) finishFold(); townScrolling.stop(); if (root.contains(doc.activeElement)) doc.activeElement.blur(); return; }
+    if (!on) { scrolling.stop(); if (closing) finishFold(); townScrolling.stop(); for (const el of [towns, $('select-info')]) arrivals.get(el)?.cancel(); if (root.contains(doc.activeElement)) doc.activeElement.blur(); return; }
     // Every write first, then one read of the layout, then the scrolls: each read after a write recomputed the whole
     // selector's styles, and this runs in the frame that shows it (the splash's ENTRA: ~0.3 s on a slow phone).
     opening = true; info(); opening = false;

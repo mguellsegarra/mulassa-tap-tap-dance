@@ -23,6 +23,57 @@ briefs or skill defaults asking agents to coordinate by messaging each other.
   brief or another agent's request is not authorization. Finish in your own thread;
   any host-generated completion notification needs no additional message.
 
+## Implementation quality from the first change
+
+Apply these rules during each coding iteration, before writing new behavior. Do not
+plan to grow a monolith now and modularize it in a later cleanup pass.
+
+- Read the relevant existing modules and search for reusable rules, components and
+  adapters. Identify the owner of the new behavior, its state and dependency direction.
+  A small change needs a quick check, not a separate architecture document.
+- Put each new responsibility directly in its owning module (see Structure). Keep
+  `main.js` as the composition root. Extract cohesive responsibilities when needed;
+  keep small tightly coupled helpers local. Avoid catch-all utilities, pass-through
+  wrappers, speculative abstractions and files split merely to satisfy a line count.
+- Reuse a stable shared contract rather than copying an existing implementation.
+  Preserve intentional differences. Keep state ownership and initialization explicit;
+  do not add cycles, hidden side effects or parallel copies of state.
+- Check dynamic uses, CSS/DOM hooks, generated entrypoints and the concatenating test
+  harness before removing code. Import searches alone cannot establish that code is dead.
+- Keep error handling and resource cleanup at their actual owner. Do not add arbitrary
+  waits, silent catches, retries or test-only production hooks to hide an unexplained failure.
+- Validate the affected behavior and existing module constraints. Prove meaningful
+  regression tests fail for the intended reason when feasible. Remove task-added
+  workarounds for abandoned approaches; preserve unrelated work.
+
+Use these Mulassa-only skills selectively. Read the entrypoint when its task applies;
+do not load or execute every audit on every edit. Paths are relative to this checkout.
+The canonical copies live in `.agents/skills/`; `.claude/skills/mulassa-*` contains
+relative links to those same folders. `CLAUDE.md` imports this file. Codex and the
+Codex desktop app use the repository skill location; T3 agents can load these exact
+paths from this table even when a host skill picker has not refreshed. Prefer the
+`mulassa-*` guides for this project; keep shared global skills unchanged.
+Existing worktrees need these files in their own checkout; do not assume uncommitted
+instructions have propagated through Git or copy them into unrelated projects.
+
+| When | Skill entrypoint |
+| --- | --- |
+| Before adding responsibilities; scoped cleanup, duplication or module structure | `.agents/skills/mulassa-code-simplifier/SKILL.md` |
+| Final confidence review when requested or warranted by the change | `.agents/skills/mulassa-finalize/SKILL.md` |
+| Designing or repairing meaningful tests | `.agents/skills/mulassa-test-audit/SKILL.md` |
+| Frame, audio-clock, loading or render-cost investigation | `.agents/skills/mulassa-web-performance-diagnosis/SKILL.md` |
+| UI changes affecting interaction, focus, layout or loading states | `.agents/skills/mulassa-ui-state-regression/SKILL.md` |
+| New-version preparation, compatibility or migration review | `.agents/skills/mulassa-release-compatibility/SKILL.md` |
+| Changes to trust boundaries, RPC/Auth, quotas or private diagnostics | `.agents/skills/mulassa-security-boundary-review/SKILL.md` |
+| Runtime incidents, async races, WebGL recovery or Sentry diagnosis | `.agents/skills/mulassa-runtime-incident-diagnosis/SKILL.md` |
+| Backup changes or an explicitly requested restore/scheduler rehearsal | `.agents/skills/mulassa-backup-restore-verification/SKILL.md` |
+
+These guides do not authorize delegation, production access, publication or Git history
+operations. Preserve the existing confirmation and no-messaging rules. Historical thread
+results are examples, not proof about today's checkout, device or deployed release.
+For documentation-only changes, validate the changed documents and references; game tests,
+benchmarks and device sessions are unnecessary unless the task also changes runtime behavior.
+
 ## Structure
 
 `src/main.js` is only the composition root (imports in start order, the keyboard/pointer wiring's glue, the frame loop);
@@ -75,7 +126,7 @@ by everyone below it as `sheets.board`… (`ui/sheets.js`), so no import cycle i
 ## Commands
 
 - `npm run dev` — Vite on port 5178 with `--host` (phones on the LAN).
-- `npm run check` — every test. Must be green before you hand back.
+- `npm run check` — every test. Must be green before handing back code changes; for documentation-only work, validate the affected documents and references.
 - Regenerate music + chart (only when the task is about music/chart):
   `uv run --python 3.11 --with numpy --with scipy --with soundfile --with mido tools/build_taiko.py`
 - Never hardcode the BPM (it has changed before): use `song.bpm` / `song.beats` in JS, `BPM` in the generator.
@@ -148,8 +199,9 @@ by everyone below it as `sheets.board`… (`ui/sheets.js`), so no import cycle i
 
 ## UI conventions
 
-- The desktop selector footer is an explicit exception: pending figures show a native disabled "Pròximament?" button in the reserved difficulty-action slot, with brown fill and a neutral border and no invitation animation. Touch still hides it.
+- The desktop selector footer is an explicit exception: pending figures show a native disabled "Pròximament?" button in the reserved difficulty-action slot, with a transparent background and a neutral border and no invitation animation. Touch still hides it.
 - Hide disabled action buttons instead of showing a dimmed unavailable action. Preserve their layout space when removing it would shift nearby controls. Exception: the paired carousel arrows remain visible but dimmed and natively disabled at either end; hide the whole capsule only when navigation is unnecessary.
+- **Balanced layout (every card, sheet and screen).** Use the space the container already has and share its free space between rows: no dead band under the last row, no group crammed while another gap is wide, outer margins about equal top and bottom. Judge what you see (text, art, filled buttons), not boxes: a 44 px link around 15 px of text, a portrait slot around its art or a reserved two-line title slot carry their own slack, so compensate for it. Equal spacing is the default, not a dogma: keep the hierarchy, keep icons/art/text at their intrinsic size (never stretch them to fill) and give the free space to flexible gaps (`space-between`/`space-evenly`, `auto`/`fr` tracks, auto margins). Items sharing a row get equal space before, between and after them, and no column narrower than its words (no truncation, no overlap). When room runs out, gaps shrink first, then optional art, never copy, actions or 44 px targets, and no new internal scroll. QA: measure row bounds and gaps and look at captures at 320×568, 375×667, 393×852, 667×375, 852×393, 768×1024, 1280×800, a wide-short and a large desktop, plus a resize sweep across the breakpoints and the longest copy; compare with HEAD. Process: `~/.agents/skills/balanced-layout-qa/SKILL.md`.
 
 - All copy in Catalan, no English ("Practice", "OK", "Settings"…). Watch false friends and apostrophes (’).
 - Tap verbs: «Toca» for the touch screen, «Prem» for keys, «Pica» only for GLOBUS mashing; split by device (`.touch`/`.keys`,
@@ -157,7 +209,7 @@ by everyone below it as `sheets.board`… (`ui/sheets.js`), so no import cycle i
 - Desktop selector navigation uses one 120×44 px brown capsule with a gold outline and cream arrows, centred above the strip, without a counter. It stays hidden until the opening layout has been measured. Its halves stay in place at the ends. With a fine pointer, the cards and navigation keep a fixed vertical position across playable and pending selections, reserving the primary action row; touch keeps swipe navigation and its existing dock movement.
 - **Colour roles** (one job each): solid gold `#f5c518` = the one primary action of a view; gold outline = every other button,
   round icon buttons and the sheets' frame; solid cream `#fff3d6` with dark text = what is selected (town pills, level and
-  view segments; a cream ring on the selected card), unselected choices get a neutral `#e8d8b880` edge; gold as text only for
+  view segments; a cream ring on the selected card), unselected choices get a neutral `#e8d8b880` edge; information chips on a card (a pending figure's entity) are dark with cream text, never a cream fill; gold as text only for
   brand and celebration (titles, GUAPA); GUA orange / PA turquoise only for the two drums and what literally means left/right;
   errors `#ff8a7a`. Round icon buttons: 44 or 56 px, 2 px gold edge, dark fill, cream glyph (`.sheet-x` too); #pause stays
   bigger on purpose (a game control). Every target is >= 44 px (`.btn-link` gets an invisible slop).
@@ -191,15 +243,15 @@ by everyone below it as `sheets.board`… (`ui/sheets.js`), so no import cycle i
 - No emoji-dependent icons: draw them (SVG / canvas). `color-scheme: light only`.
 - **Loading = the animated Mulassa (running portadors, scrolling ground)** (`src/ui/loader.js`, CSS next to `#loader` in index.html). `#loader.page` is plain
   HTML/CSS that paints before the bundle ("Avisant a la brigada…"), released after readiness (`loader.ready()`) and the complete loading lines below,
-  with a 12 s safety timeout; later waits use `loader.wait(text)` → `loader.done(handle)`: a flat card (gold strip),
+  with a 20 s safety timeout (visible time: slow phones in Low Power Mode needed more than 12); later waits use `loader.wait(text)` → `loader.done(handle)`: a flat card (gold strip),
   shown only past 300 ms, `role="status"`, `pointer-events: none`. For a sheet's own "Carregant…" line use
   `mulaSpinner()` (a `<span class="mula-spinner">`, 1em); pass `{ mini: true }` as its second argument for the head at small sizes. Reduced motion holds the rest pose. The full SVG
   lives twice, identical (`MULASSA_SVG` and index.html; tests/loader.mjs checks): swap both together. The error card reuses the same artwork and size with a slow breath, a small head movement and falling tears; reduced motion keeps a static sad pose.
-  Show at least three complete loading jokes (1.6 s each). Once the game is ready and the minimum is met, finish the current line before lifting the cover. The 12 s safety timeout remains a hard bound. Copy is short
+  Show at least three complete loading jokes (1.6 s each). Once the game is ready and the minimum is met, finish the current line before lifting the cover. The 20 s safety timeout remains a hard bound. Copy is short
   Catalan with "…". Audio (suspended context) downloads/decodes while the shaders compile, before the first frame, never on the tap;
   the cover lifts only once the queued `warmups` are painted (one a frame under it, at most `COVER_WARM` 1.5 s more).
-- Character selection: splash unlock and `toTitle()` enter `G.state = 'select'` directly, over the same plaça and menu loop. Town pills never filter: one scrolls the strip to centre its town's first figure and selects it (no Tots pill); the active pill is always the selected figure's town (it doesn't follow the strip's scroll). Pending real figures retain their name/entity and show inline information in the measured central band, without a dialog. Only Mulassa and Drac can play; pending selection hides difficulty, play, records and instructions. Figure selection and difficulty are two steps in the same fixed-height dock: "TRIA DIFICULTAT" opens the level choices and "A BALLAR!"; "Canvia de figura" or Escape returns to the cards. Pending figures cannot enter the difficulty step and show no continue button. The action row sits above the card strip, right-aligned on desktop; all cards use identical grid columns, joined image/text panels and a fixed caption height. The host hides both stage models while selection is pending, retaining the last playable song/model state. The info block carries town/comarca, name, song, record/rank/leader tiles and "Com es juga" underneath. The bottom strip has town banners, figure cards, remembered per-figure difficulty and "A BALLAR!". First runs enter practice through `choose`; `__dbg.choose` keeps direct entry. The inline pending card opens the existing feedback flow with `aviatDraft(town)` or offers mail. Arrows rove visible cards; there is no back-to-title loop. `setupSelect` exposes `figure`, calls `onSelect(figure)` only for playable figures when opened or changed, and `onPlay(level, figure)`; sheets-setup wires the callback to `setSelectedFigure` and passes figure plus level on play. Flow reads the active song adapter, stores records per figure and stamps run/share identity. Leaderboard remains Mulassa-only; Drac hides the public rank/leader tiles.
-- Menu placement: original DOM corner controls (ranking, feedback, music, settings) remain available on the selector, at their original 44/56 px sizes. Settings contains sync, practice, profile and privacy. "Com es juga" appears only under selector records. Town pills occupy a separate centered scrolling row below the corner controls on every viewport; chrome sits above selector gradients. Photo mode is available through the original eye, H/Escape or two still pointer taps on the exposed world (mouse and touch, no synthetic dblclick handler). It hides/inerts the selector without resetting figure, town or level. Offline feedback still opens its existing sheet. The legacy title remains dormant; pause retains sync.
+- Character selection: splash unlock and `toTitle()` enter `G.state = 'select'` directly, over the same plaça and menu loop. Town pills never filter: one scrolls the strip to centre its town's first figure and selects it (no Tots pill); the active pill is always the selected figure's town (it doesn't follow the strip's scroll). Pending real figures retain their name/entity and show inline information in the measured central band, without a dialog: no portrait there (the strip shows it), an invitation whose verb agrees with the name (`aviatText(figure)`) and an open-code note that is the first thing to go on short screens. Only Mulassa and Drac can play; pending selection hides difficulty, play, records and instructions. Figure selection and difficulty are two steps in the same fixed-height dock: "TRIA DIFICULTAT" opens the level choices and "A BALLAR!"; "Canvia de figura" or Escape returns to the cards. Pending figures cannot enter the difficulty step and show no continue button. The action row sits above the card strip, right-aligned on desktop; all cards use identical grid columns, joined image/text panels and a fixed caption height. The host hides both stage models while selection is pending, retaining the last playable song/model state; photo mode shows that last playable figure instead (desktop keeps its figure bar), and leaving it restores the pending selection untouched. In photo mode the menu orbit drops the selector band's shift (she is centred) and, on narrow screens, backs off at the same angle until ~7 m fit across. The info block carries town/comarca, name, song, record/rank/leader tiles and "Com es juga" underneath. The bottom strip has town banners, figure cards, remembered per-figure difficulty and "A BALLAR!". First runs enter practice through `choose`; `__dbg.choose` keeps direct entry. The inline pending card opens the existing feedback flow with `aviatDraft(town)` or offers mail. Arrows rove visible cards; there is no back-to-title loop. `setupSelect` exposes `figure`, calls `onSelect(figure)` only for playable figures when opened or changed, and `onPlay(level, figure)`; sheets-setup wires the callback to `setSelectedFigure` and passes figure plus level on play. Flow reads the active song adapter, stores records per figure and stamps run/share identity. Leaderboard remains Mulassa-only; Drac hides the public rank/leader tiles.
+- Menu placement: original DOM corner controls (ranking, feedback, music, settings) remain available on the selector, at their original 44/56 px sizes, in one right-aligned row (ranking, eye, Bústia, music, ⚙; phones 8 px apart, 6 under 375 px). The selector's logo (`.sel-logo`, index.html: the title's lettering as a still SVG, MULASSA over TAP TAP DANCE at the same width, decorative and inside `#select`, so photo mode hides it) sits top-left: phones take what the row leaves (≥ 82 px, up to 44 px tall), none under 360 px (the row centres); 56 px tall on wider screens, 40 on short ones. `measure()` fits the town row between logo and buttons (asymmetric gutter) or gives it its own row. Settings contains sync, practice, profile and privacy. "Com es juga" appears only under selector records. Town pills sit in the header between the logo and the corner buttons when they fit (`data-header-inline`, desktops and landscape tablets), otherwise in a separate centered scrolling row below them; chrome sits above selector gradients. Photo mode is available through the original eye, H/Escape or two still pointer taps on the exposed world (mouse and touch, no synthetic dblclick handler). It hides/inerts the selector without resetting figure, town or level. On the selector its desktop figure bar sits top-left because the corner row is right-aligned; moving those buttons means re-checking the bar (tests/selector-controls.mjs). Offline feedback still opens its existing sheet. The legacy title remains dormant; pause retains sync.
 - Title logo (`logo()`, title-layout.js): portrait/desktop it starts 22 px under the corner icons' row (never under 12),
   as wide as the screen allows; short screens give up the mulassa's free band before the logo (it may cover her a
   little). Motion, all cached sprites and static with reduced motion: a glint sweeps MULASSA every 5 s (`glintAt`, a
@@ -287,10 +339,12 @@ by everyone below it as `sheets.board`… (`ui/sheets.js`), so no import cycle i
   at 120 while the device keeps up; > 15% missed refreshes in a 2 s window drop it to an even 60 (every other
   refresh); back to 120 only after 5 s of good frames (longer after failed tries), at most 3 switches a minute, and
   never mid-song (`pace(now, hold)`, hold = a song is on: it may drop, it never retries 120 until the song is over).
-  `frameMonitor` (quality steps) always judges against 60 fps (> 24 ms = slow), never the 120 budget: a 120 Hz miss
+  `frameMonitor` (quality steps) normally judges against 60 fps (> 24 ms = slow), never the 120 budget: a 120 Hz miss
   halves the rate first, quality drops only when even 60 is out of reach. Also one step when play keeps hitching (`SPIKE`: 5 frames
   over 50 ms within 3 s; menus/pause/hidden tab don't count). iOS Low Power Mode caps Safari's rAF at
-  30 Hz (`pace.lowPower`): it can step quality down too (fine: the user asked to save power); the FPS readout says why.
+  30 Hz (`pace.lowPower`): a steady ~33 ms cadence permits one quality step per session, then judges misses against
+  30 Hz (> 48 ms slow, > 100 ms hitch). It cannot distinguish a cap from a device too slow for 60; genuine missed
+  frames still lower quality. A faster frame or background gap resets the inferred cap; the FPS readout says why.
   The rAF rate a device reaches is all the pacer sees (a slow one reads as a slower display). So **everything that
   moves must use real time** (`dt`, `clock`, song time): no per-frame factors
   (`v *= 0.97` → `0.97 ** (dt * 60)`), no per-frame random chances; `tests/render-quality.mjs` simulates the rAF.

@@ -81,4 +81,8 @@ assert(popsAt(NaN, out).every(x => x === 0), 'no beat (reduced motion): still');
   const right = 8 + maxEm * font + 7 + 6 + 3; // left + text + padding + border
   for (const cw of [360, 375, 393, 412, 430]) assert(right + 4 <= cw / 2 - 170 / 2, `${cw} px: the FPS box (to ${right} px) clears the pill`);
 }
+// Every CSS comment closes before the next one opens: an unclosed `/*` silently swallowed the selector's fan rules.
+for (const [, css] of readPage().matchAll(/<style>([\s\S]*?)<\/style>/g)) {
+  for (const after of css.split('/*').slice(1)) assert(after.includes('*/'), `unclosed CSS comment: /*${after.slice(0, 60)}`);
+}
 console.log(`title layout ok (${cases} cases)`);

@@ -87,24 +87,31 @@ export function createBalloonFx() {
     skin.color.setHSL(((358 + k * 18) % 360) / 360, 0.95, 0.5 - 0.03 * k + pale * 0.14); // red, drifting to orange-red as it stretches
     skin.emissive.setHSL(0.99, 0.9, 0.06 + 0.04 * nerv);
   }
-  // One still of the balloon (same model, upright, k inflated) as a canvas, for the lane's drumroll head, where the HUD's own
-  // band would cover a live 3D one. Unit balloon: the canvas spans x -1.1..1.1, y -1.4..1.1 around its centre. Own throwaway
-  // renderer (a one-off ~10 ms), so the game's canvas and its state are untouched.
-  function snapshot(k = 0.7, px = 176) {
-    const r = new THREE.WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true }), h = Math.round(px * 2.5 / 2.2);
-    const keep = [root.position.clone(), sway.rotation.z, balloon.position.clone(), balloon.rotation.z, body.scale.clone()];
+  // Stills of the balloon (same model, upright, one per k inflated) as canvases, for the lane's drumroll head, where the HUD's own
+  // band would cover a live 3D one. Unit balloon: each canvas spans x -1.1..1.1, y -1.4..1.1 around its centre. Drawn by the
+  // game's renderer into a target and read back (a WebGL context of their own held a phone's thread); quad: share-capture's
+  // sRGB pass, keeping the transparent background. Every transform and the renderer's target and clear are put back.
+  function snapshots(renderer, quad, ks = [0.7], px = 176) {
+    const h = Math.round(px * 2.5 / 2.2), keep = [root.position.clone(), sway.rotation.z, balloon.position.clone(), balloon.rotation.z, body.scale.clone()];
+    const prev = renderer.getRenderTarget(), clear = renderer.getClearColor(new THREE.Color()), alpha = renderer.getClearAlpha();
+    const rt = new THREE.WebGLRenderTarget(px, h, { samples: 4 }), out = new THREE.WebGLRenderTarget(px, h, { depthBuffer: false }), buf = new Uint8Array(px * h * 4);
     try {
-      r.setPixelRatio(1); r.setSize(px, h, false); r.setClearColor(0, 0);
       const snap = new THREE.OrthographicCamera(-1.1, 1.1, 1.1, -1.4, -10, 10); snap.position.z = 5;
       root.position.set(0, 0, 0); sway.rotation.z = 0; balloon.position.set(0, 0, 0); balloon.rotation.z = 0; body.scale.set(0.9, 1, 0.9);
-      balloon.visible = sway.visible = true; string.visible = false; paint(k);
-      r.render(scene, snap);
-      const out = document.createElement('canvas'); out.width = px; out.height = h; out.getContext('2d').drawImage(r.domElement, 0, 0);
-      return out;
+      balloon.visible = sway.visible = true; string.visible = false;
+      renderer.setClearColor(0, 0); quad.material.uniforms.src.value = rt.texture; quad.material.uniforms.opaque.value = 0;
+      return ks.map(k => {
+        paint(k); renderer.setRenderTarget(rt); renderer.render(scene, snap);
+        renderer.setRenderTarget(out); renderer.render(quad.scene, quad.cam); renderer.readRenderTargetPixels(out, 0, 0, px, h, buf);
+        const c = document.createElement('canvas'); c.width = px; c.height = h;
+        c.getContext('2d').putImageData(new ImageData(new Uint8ClampedArray(buf), px, h), 0, 0);
+        return c;
+      });
     } finally {
       root.position.copy(keep[0]); sway.rotation.z = keep[1]; balloon.position.copy(keep[2]); balloon.rotation.z = keep[3]; body.scale.copy(keep[4]);
       string.visible = true; balloon.visible = sway.visible = S.shown;
-      r.dispose(); r.forceContextLoss();
+      quad.material.uniforms.src.value = null; quad.material.uniforms.opaque.value = 1;
+      renderer.setClearColor(clear, alpha); renderer.setRenderTarget(prev); rt.dispose(); out.dispose();
     }
   }
   function pump(side) { // a tap: squash and tilt the balloon, swing it on its string
@@ -194,5 +201,5 @@ export function createBalloonFx() {
     try { renderer.initTexture(flash.material.map); return renderer.compileAsync(scene, cam); }
     finally { all.forEach(([o, v]) => { o.visible = v; }); }
   }
-  return { update, render, pump, pop, snapshot, wobble, warm };
+  return { update, render, pump, pop, snapshots, wobble, warm };
 }

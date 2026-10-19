@@ -112,7 +112,7 @@
 #select button:disabled { visibility: hidden; pointer-events: none; }
 /* Desktop keeps the reserved action legible, without the playable button's invitation animation. */
 @media (pointer: fine) {
-  #select #select-next:disabled { visibility: visible; opacity: 1; translate: none; background: #2a1a10; border-color: #746957; color: #c7bca7; box-shadow: none; animation: none; scale: none; rotate: none; filter: none; cursor: default; }
+  #select #select-next:disabled { visibility: visible; opacity: 1; translate: none; background: transparent; border-color: #746957; color: #c7bca7; box-shadow: none; animation: none; scale: none; rotate: none; filter: none; cursor: default; }
   #select #select-next:disabled::after { display: none; animation: none; }
 }
 .sel-strip { position: relative; display: flex; align-items: stretch; justify-content: flex-start; gap: 8px; min-height: 0; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; touch-action: pan-x; padding: 10px max(6px, var(--strip-inset, 0px)) 6px; margin-inline: 0; box-sizing: border-box; overflow-anchor: none; }
@@ -141,6 +141,21 @@
     --cell: max(2px, min(round(nearest, var(--s, 1) * 16 * var(--ref) / var(--gh), 1px), round(down, 100cqh / var(--gh), 1px), round(down, 100cqw / var(--gw), 1px)));
     width: calc(var(--gw) * var(--cell)); height: calc(var(--gh) * var(--cell)); }
 }
+/* Static portraits share a 160x112 viewBox, 100-unit body height and sole baseline 104.
+   Keep the previous Mulassa footprint; UAF real heights set Drac/Mulassa = 1.90/2.95. */
+.sel-card .por svg:is(.sel-mulassa-illustration, .sel-drac-illustration) {
+  --mula-cell: 5px; --portrait-scale: 1;
+  --portrait-height: calc(11.02 * var(--mula-cell) * var(--portrait-scale));
+  height: calc(var(--portrait-height) * 112 / 100); width: calc(var(--portrait-height) * 160 / 100);
+  margin-bottom: calc(.98 * var(--mula-cell) - var(--portrait-height) * 8 / 100);
+  image-rendering: auto;
+}
+.sel-card .por svg.sel-drac-illustration { --portrait-scale: calc(1.9 / 2.95); }
+@supports (width: round(down, 5.5px, 1px)) {
+  .sel-card .por svg:is(.sel-mulassa-illustration, .sel-drac-illustration) {
+    --mula-cell: max(2px, min(round(nearest, .8 * 16 * round(down, min(100cqh / 16, 100cqw / 20), 1px) / 12, 1px), round(down, 100cqh / 12, 1px), round(down, 100cqw / 14, 1px)));
+  }
+}
 /* Full names wrap in a shared caption height, just the room two lines of name and one of entity need. */
 .sel-card .nb { box-sizing: border-box; width: 100%; height: 100%; min-height: 0; display: flex; flex-direction: column; justify-content: center; align-items: stretch; gap: 1px; padding: 4px 6px 5px; overflow: hidden; color: #fff3d6; }
 .sel-card-name { flex: none; display: block; white-space: normal; font-size: 15px; line-height: 19px; overflow-wrap: anywhere; text-wrap: balance; }
@@ -149,10 +164,10 @@
 .sel-entity-icons > span { display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; }
 .sel-entity-icons svg { flex: none; width: 9px; height: 14px; fill: #e73449; stroke: none; }
 .sel-entity-icons svg.escut { width: 14px; height: 14px; }
-/* La Pessigolla's isotip keeps its shapes and red/blue; on the dark card and info line its black jester would vanish, so it
-   takes the text's colour there (the cream pill of the pending panel keeps it black) */
+/* La Pessigolla's isotip keeps its shapes and red/blue; on the dark card, info line and pending pill its black jester would
+   vanish, so it takes the text's colour there */
 #select :is(.sel-entity, .sel-entity-icons) svg.pessigolla { width: auto; height: 1em; aspect-ratio: 845 / 628; fill: initial; } /* Keep the mark centred with its label by the parent flex row. */
-#select :is(.sel-entity-icons, .sel-identity) svg.pessigolla { --jester: currentColor; }
+#select :is(.sel-entity-icons, .sel-identity, .sel-pending) svg.pessigolla { --jester: currentColor; }
 /* Selected: a cream ring over the whole card (drawn above the portrait) and a deeper shadow; never lifted, so every
    figure keeps the strip's one floor line. */
 .sel-card[aria-selected="true"] { box-shadow: 0 10px 22px #000a; }
@@ -292,14 +307,24 @@ body.view-mode #select { opacity: 0; visibility: hidden; pointer-events: none; }
   #select { --more-w: 38px; }
 }
 /* Short desktop windows: the dock gives the pending card its room back (a 324 px dock took over half of 600 px). */
-@media (min-width: 900px) and (min-height: 600px) and (max-height: 660px) { #select { --dock-h: 264px; --card-label-h: 88px; } }
-/* Larger glass: the owner-approved bigger cards (~40% over the phones). */
+@media (min-width: 900px) and (min-height: 600px) and (max-height: 660px) { #select { --dock-h: 224px; --action-h: 44px; --card-label-h: 68px; } }
+@media (min-width: 900px) and (min-height: 661px) and (max-height: 700px) { #select { --dock-h: 284px; --action-h: 44px; --card-label-h: 68px; } } /* a step between that and the full desktop dock: the card still fits, the art a size bigger */ /* the pending card needs ~190 px: the label's empty band and the action row give it (the art keeps its size; «Gegant del Campanar» still fits) */
+/* Desktop portraits use the available panel height, with one shared physical scale and floor.
+   The 160/100 frame ratio bounds the whole SVG; neither figure is stretched to fill its card. */
+@media (min-width: 900px) and (min-height: 661px) {
+  .sel-card { flex-basis: 220px; }
+  .sel-card .por svg:is(.sel-mulassa-illustration, .sel-drac-illustration) {
+    --portrait-height: calc(min(100cqh - 16px, 100cqw / 1.6) * var(--portrait-scale));
+    margin-bottom: calc(8px - var(--portrait-height) * 8 / 100);
+  }
+}
+/* Larger desktops keep nearly square cards rather than adding empty height above the artwork. */
 @media (min-width: 1100px) and (min-height: 900px) {
-  #select { --dock-h: 396px; --card-label-h: 78px; }
+  #select { --dock-h: 360px; --card-label-h: 78px; }
   .sel-song { font-size: 24px; padding-top: 20px; }
   .sel-tiles { padding-top: 20px; }
   .sel-panel { gap: 20px; }
-  .sel-card { flex-basis: 184px; }
+  .sel-card { flex-basis: 248px; }
   .sel-card-name { font-size: 19px; line-height: 23px; }
   .sel-card .nb small { font-size: 14px; }
   .sel-banner { flex-basis: 42px; }
@@ -328,7 +353,7 @@ body.view-mode #select { opacity: 0; visibility: hidden; pointer-events: none; }
 @media (max-width: 519px) { .sel-banner span { font-size: 15px; } .sel-banner[data-long] span { font-size: 12px; } } /* phones: shorter cards, a long name still fits */
 @media (min-width: 900px) and (min-height: 600px) { .sel-banner span { font-size: 18px; } .sel-banner[data-long] span { font-size: 16px; } }
 
-#select[data-header-inline] .sel-towns { top: var(--town-top); inset-inline: var(--town-gutter); padding-inline: 0; justify-content: safe center; } /* between the corner icons: a bounded row */
+#select[data-header-inline] .sel-towns { top: var(--town-top); inset-inline: var(--town-gutter-l) var(--town-gutter-r); padding-inline: 0; justify-content: safe center; } /* between the logo and the corner icons: a bounded row */
 
 /* What is still to come, folded: the pills' fan of arms and the strip's fold unfold it in place; the fold (and the pill's
    «Amaga») fold it back. */
@@ -370,24 +395,33 @@ body:has(:focus-visible) #select .sel-card[aria-selected="true"]:not(:focus-visi
 #select:has(.sel-pending[data-leaving][hidden]) .sel-info:not([hidden]) { transition-delay: .24s, 0s; } /* let the outgoing copy disappear before the playable identity enters */
 @starting-style { #select[data-shown] :is(.sel-pending, .sel-info) { opacity: 0; } #select[data-shown] .sel-pending { transform: none; } }
 @media (prefers-reduced-motion: reduce) { #select :is(.sel-pending, .sel-info) { transition: none; } }
-.sel-pending { position: absolute; z-index: 1; top: calc((100% + var(--pending-top, 144px) - var(--pending-bottom, 254px)) / 2); --pending-max: calc(100% - var(--pending-top, 144px) - var(--pending-bottom, 254px) + var(--drop)); max-height: var(--pending-max); left: 50%; translate: -50% -50%; width: min(480px, calc(100% - 28px)); box-sizing: border-box; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px 20px; border: 1px solid var(--sel-line); border-radius: var(--sel-r); text-align: center; background: #1a110bf5; box-shadow: 0 8px 24px #0005; font-size: 16px; font-weight: 500; line-height: 1.3; }
+.sel-pending { position: absolute; z-index: 1; top: calc((100% + var(--pending-top, 144px) - var(--pending-bottom, 254px)) / 2); --pending-max: calc(100% - var(--pending-top, 144px) - var(--pending-bottom, 254px) + var(--drop)); max-height: var(--pending-max); left: 50%; translate: -50% -50%; width: min(480px, calc(100% - 28px)); box-sizing: border-box; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 16px 20px; border: 1px solid var(--sel-line); border-radius: var(--sel-r); text-align: center; background: #1a110bf5; box-shadow: 0 8px 24px #0005; font-size: 16px; font-weight: 500; line-height: 1.3; }
 .sel-pending > * { flex-shrink: 0; }
 .sel-pending { min-height: min(var(--keep-h, 0px), var(--pending-max)); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; } /* the fold's card keeps a pending card's height, never more than the room left; a very short window scrolls it instead of spilling onto the strip */
 .sel-pending h2 { --title-size: 26px; --title-lines: 1; margin: 0; width: 100%; height: calc(var(--title-size) * 1.1 * var(--title-lines)); display: flex; align-items: center; justify-content: center; font: 800 var(--title-size)/1.1 'Baloo 2', system-ui, sans-serif; text-wrap: balance; }
 .sel-pending h2 > span { display: block; width: 100%; }
 .sel-pending .sel-pending-icon { flex: 0 1 96px; min-height: 0; width: 96px; display: grid; place-items: center; } /* On short screens the portrait yields to readable copy and full-size actions. */
 .sel-pending-icon :is(svg, img) { width: 100%; height: 100%; min-height: 0; image-rendering: pixelated; }
+.sel-pending .sel-pending-icon[hidden] { display: none; } /* a single figure's card: its portrait is in the strip below */
 /* One 16 px line plus padding, whether the entity has a flame, shield, logo or no mark. */
-.sel-pending .sel-entity { font-size: 12px; line-height: 16px; min-height: 24px; row-gap: 0; }
+.sel-pending .sel-entity { font-size: 12px; line-height: 16px; min-height: 24px; row-gap: 0; background: #0b0704; color: #fff3d6; box-shadow: inset 0 0 0 1px #fff3d61f; } /* a dark chip with cream text: cream fill means «selected» here */
 #select .sel-pending .sel-entity svg { width: auto; height: 16px; }
 @media (max-height: 500px) and (max-width: 899px) { .sel-pending .sel-entity { min-height: 40px; } .sel-pending h2 { --title-lines: 2; } } /* the narrow side panel reserves two lines for longer entities */
 .sel-pending p { margin: 0; text-wrap: pretty; }
-.sel-pending:not([data-fold]) .sel-pending-copy { margin-block: 6px; }
+.sel-pending:not([data-fold]) .sel-pending-copy { margin-block: 0; }
+/* A single figure (its portrait is in the strip): title + entity, the invitation, the actions, as three groups with the
+   same air between them. The air is two spacers that shrink before anything else when the room is short. */
+.sel-pending:not([data-fold]) :is(.sel-pending-copy, .sel-pending > .btn-primary, .sel-pending-links) { order: 1; }
+.sel-pending:not([data-fold]) :is(.sel-pending > .btn-primary, .sel-pending-links) { order: 2; }
+.sel-pending:not([data-fold])::before, .sel-pending:not([data-fold])::after { content: ''; order: 1; flex: 0 1 var(--group-air, 22px); min-height: 0; margin-block: calc(var(--contact-gap) / -2); } /* the margin cancels the row gap each spacer adds (--contact-gap = gap here): at zero they cost nothing */
+.sel-pending:not([data-fold]) .sel-pending-copy p { text-wrap: balance; } /* no lone «a GitHub.» line */
+.sel-pending:not([data-fold]) .sel-pending-copy p + p { margin-top: 6px; font-size: 14px; color: #e8d8b8; } /* the open-code note: secondary, one line on desktop */
+@media (max-width: 519px) and (max-height: 600px), (min-width: 900px) and (max-height: 720px) { .sel-pending > .btn-primary { min-height: 44px; padding-block: 4px; } } /* still a 44 px target, 6 px back for the copy */ /* it repeats the GitHub link below: on short screens it goes before anything scrolls */
 .sel-pending > .btn-primary { font-size: 16px; }
-.sel-pending { --contact-pad: 16px; --contact-gap: 8px; }
-/* Centre the links in the whole band from the primary button to the inner border, including the card's bottom padding. */
-.sel-pending-links { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); align-items: center; width: 100%; gap: 8px; flex: 1 0 auto; min-height: calc(44px + var(--contact-gap) + var(--contact-pad)); margin-block: calc(-1 * var(--contact-gap)) calc(-1 * var(--contact-pad)); }
-.sel-pending-links .btn { width: 100%; min-height: 44px; padding: 4px 0; font-size: 14px; white-space: normal; }
+.sel-pending { --contact-pad: 16px; --contact-gap: 6px; } /* = the base row gap (the teaser keeps its own 8) */
+/* One 44 px row whose target slack reaches into the gap above and the card's bottom padding (no band that grows). */
+.sel-pending-links { display: grid; grid-template-columns: repeat(2, auto); justify-content: space-evenly; align-items: center; width: 100%; box-sizing: border-box; padding-inline: 4px; flex: none; min-height: 44px; margin-block: calc(-1 * var(--contact-gap)) calc(-1 * var(--contact-pad)); }
+.sel-pending-links .btn { min-height: 44px; padding: 4px; font-size: 14px; white-space: normal; } /* 4 px each side and on the row: the same space before, between and after the two links */
 /* Centre each icon and label together, with a fixed gap rather than an empty slot. */
 .sel-pending-links .btn { display: flex; justify-content: center; align-items: center; gap: 6px; }
 .sel-pending-links .btn > svg { flex: none; width: 18px; height: 18px; margin: 0; }
@@ -395,8 +429,10 @@ body:has(:focus-visible) #select .sel-card[aria-selected="true"]:not(:focus-visi
 .sel-pending-links .sel-mail > span { overflow-wrap: normal; } /* the address breaks only after its @ (<wbr>), never mid-word */
 /* Keep a pending figure's height and share the free space equally between the teaser's five rows. */
 .sel-pending[data-fold] { justify-content: space-between; gap: 8px; height: min(var(--keep-h), var(--pending-max)); } /* on short screens the portrait shrinks before the copy or actions */
+.sel-pending[data-fold] { padding-top: max(var(--contact-pad), 14px); } /* as much air above the title as below the links' text (their 44 px target's slack) */
+.sel-pending[data-fold] h2 { --title-lines: 1; } /* «Aviat a la plaça» is one line: a figure's two-line slot left a hole above it on landscape phones */
 .sel-pending[data-fold] .sel-pending-icon { container-type: size; display: flex; justify-content: center; align-items: center; width: min(180px, 100%); } /* the minis size off the slot's height, which shrinks on short screens */
-.sel-peek { position: relative; box-sizing: border-box; flex: none; width: min(82cqh, 80px); height: min(82cqh, 80px); display: grid; place-items: center; --t: #8a6a4a; border-radius: 12px; box-shadow: 0 4px 10px #0008, inset 0 0 0 1px #fff3d624; background: linear-gradient(color-mix(in srgb, var(--t) 34%, #22160e), color-mix(in srgb, var(--t) 16%, #22160e) 60%, #1d130c); } /* a small card: the strip's own surface
+.sel-peek { position: relative; box-sizing: border-box; flex: none; width: min(82cqh, 80px); height: min(82cqh, 80px); display: grid; place-items: center; --t: #8a6a4a; border-radius: 12px; box-shadow: 0 4px 10px #0008, inset 0 0 0 1px #fff3d624; background: linear-gradient(color-mix(in srgb, var(--t) 34%, #22160e), color-mix(in srgb, var(--t) 16%, #22160e) 60%, #1d130c); } /* a small card: the strip's own surface */
 .sel-peek + .sel-peek { margin-left: -14%; }
 .sel-peek:nth-child(1) { rotate: -8deg; translate: 0 4%; }
 .sel-peek:nth-child(2) { z-index: 1; }
@@ -406,19 +442,20 @@ body:has(:focus-visible) #select .sel-card[aria-selected="true"]:not(:focus-visi
 .sel-pending[data-fold] .sel-entity .sel-fan .escut { width: 16px; height: 16px; margin-left: -5px; filter: drop-shadow(0 0 1px #2a1a10); }
 .sel-pending[data-fold] .sel-entity .sel-fan .escut:first-child { margin-left: 0; }
 .sel-pending[data-fold] .sel-entity span:last-child { font-variant-numeric: tabular-nums; }
-.sel-pending[data-fold] .sel-pending-copy { max-width: 40ch; }
+.sel-pending[data-fold] .sel-pending-copy { max-width: 40ch; margin-block: 6px; } /* its lines carry no slack, the fan and the links' targets do: this evens the gaps you see */
 .sel-pending[data-fold] > .btn-primary { width: auto; min-width: 200px; padding-inline: 32px; }
 /* Phones: the two links keep their words whole (the address broke as «holi@mulassa.ca / t»); a short phone's pending
    card drops the copy's extra margin so a two-line name and entity still fit without scrolling. */
 @media (max-width: 519px) {
-  .sel-pending-links { grid-template-columns: auto auto; justify-content: space-evenly; }
-  .sel-pending-links .btn { font-size: 13px; }
-  .sel-pending-links .btn > span { overflow-wrap: normal; white-space: nowrap; }
+  .sel-pending-links .btn { font-size: 13px; min-width: min-content; } /* a column never narrower than its words (the 44 px minimum let both shrink alike): «GitHub» ran under the mail icon at 320 px */
+  .sel-pending-links .btn > span { overflow-wrap: normal; white-space: nowrap; min-width: auto; }
 }
-@media (max-width: 519px) and (max-height: 600px) { .sel-pending:not([data-fold]) .sel-pending-copy { margin-block: 0; } .sel-pending:not([data-fold]) h2 { --title-size: 20px; } }
+@media (max-width: 519px) and (max-height: 600px) { .sel-pending:not([data-fold]) h2 { --title-size: 20px; } }
+@media (max-width: 519px) and (max-height: 700px), (min-width: 900px) and (max-height: 720px) { .sel-pending[data-fold] { padding-top: var(--contact-pad); } }
+@media (max-width: 519px) and (max-height: 600px), (min-width: 900px) and (max-height: 720px) { .sel-pending[data-fold] .sel-pending-copy { margin-block: 0; } } /* no room for the teaser's extra air: the gaps between its rows come first */
 /* The portrait yields first on short screens; squeezed below a readable size it goes rather than show a smudge. */
 .sel-pending:not([data-fold]) .sel-pending-icon { container-type: size; }
-@container (max-height: 31px) { .sel-pending-icon > :is(svg, img) { visibility: hidden; } }
+@container (max-height: 31px) { .sel-pending-icon > :is(svg, img, .sel-peek) { visibility: hidden; } } /* the fold's fan too: squeezed, it left a crumb under the title */
 @media (max-width: 519px), (max-height: 500px), (min-width: 900px) and (max-height: 720px) { /* phones and short desktop windows */
   .sel-pending { --contact-pad: 10px; --contact-gap: 5px; padding: 10px 12px; gap: 5px; font-size: 15px; }
   .sel-pending h2 { --title-size: 22px; }
@@ -432,19 +469,30 @@ body:has(:focus-visible) #select .sel-card[aria-selected="true"]:not(:focus-visi
   #select .sel-pending { --sink: 0px; } /* beside the dock, not above it */
   .sel-pending { left: max(12px, env(safe-area-inset-left)); translate: 0 -50%; width: calc(43% - max(12px, env(safe-area-inset-left)) - 8px); top: calc((100% + 60px + env(safe-area-inset-top) - 8px - env(safe-area-inset-bottom)) / 2); --pending-max: calc(100% - 68px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); max-height: var(--pending-max); gap: 3px; padding: 6px 10px; line-height: 1.25; }
   .sel-pending h2 { --title-size: 20px; }
-  .sel-pending:not([data-fold]) .sel-pending-copy { margin-block: 0; }
-  .sel-pending[data-fold] { gap: 3px; }
+  .sel-pending[data-fold] { gap: 3px; padding-top: 10px; } /* the side panel's links wrap to two lines: less slack under them to match */
 }
 
 /* A fixed desktop dock leaves less room: release spacing before the contact row can overflow the card. */
 @media (pointer: fine) and (min-height: 501px) and (max-height: 780px) {
   .sel-pending { --contact-pad: 12px; --contact-gap: 4px; padding-block: var(--contact-pad); gap: var(--contact-gap); }
   .sel-pending[data-fold] { gap: var(--contact-gap); }
-  .sel-pending:not([data-fold]) .sel-pending-copy { margin-block: 0; }
 }
 @media (pointer: fine) and (min-height: 501px) and (max-height: 740px) {
   .sel-pending { --contact-pad: 6px; --contact-gap: 2px; }
   .sel-pending h2 { --title-size: 20px; }
+}
+
+/* Narrow, short portrait windows: the full identity and 44 px contact targets take the room before optional art.
+   The wider reading column keeps long names on one line where possible; the compact dock stays fixed for every figure.
+   Its portrait slot is too short to read, so captions use the whole card rather than leaving an empty band. */
+@media (max-width: 519px) and (min-height: 501px) and (max-height: 700px) {
+  #select { --dock-h: clamp(160px, calc(100dvh - 408px), 240px); }
+  .sel-pending { width: calc(100% - 16px); padding-inline: 8px; }
+  .sel-card { container-type: size; }
+  @container (max-height: 100px) {
+    .sel-card .por { visibility: hidden; }
+    .sel-card .nb { grid-row: 1 / -1; }
+  }
 }
 
 /* The shortest landscape phones need a wider reading column; the strip still shows one whole card. */
@@ -476,20 +524,40 @@ body:has(:focus-visible) #select .sel-card[aria-selected="true"]:not(:focus-visi
    already as big as a laptop's or bigger: x1.45 made the selector giant on a 27" 5K. measure() divides by it. */
 @media (min-width: 2200px) and (min-height: 1200px) { #select { zoom: 1.1; } }
 
-/* Portrait phones, while the selector is up: the corner buttons gather in one centred row, looking first (Classificacions,
-   photo mode), then talking (Bústia, music), then ⚙. Only here: on the title they are the canvas layout's obstacles.
-   A hidden one (no board, no Bústia) closes its gap. */
+/* The selector's header: the title's lettering top-left (index.html .sel-logo, still and not a control), the five corner
+   buttons in one row on the right, looking first (Classificacions, photo mode), then talking (Bústia, music), then ⚙. Only
+   here: on the title they are the canvas layout's obstacles. A hidden one (no board, no Bústia) closes its gap; --cb-i
+   counts from the left, --cb-r from the right. Inside #select, so photo mode hides the logo with the rest. */
+body:has(#select:not([hidden])) { --cb-a: 0; --cb-b: 0; --cb-n: calc(5 - var(--cb-a) - var(--cb-b)); --cb-g: 12px; }
+body:has(#select:not([hidden])):has(#leaders[hidden]) { --cb-a: 1; }
+body:has(#select:not([hidden])):has(#feedback[hidden]) { --cb-b: 1; }
+body:has(#select:not([hidden])) #leaders { --cb-i: 0; }
+body:has(#select:not([hidden])) #viewmode { --cb-i: calc(1 - var(--cb-a)); }
+body:has(#select:not([hidden])) #feedback { --cb-i: calc(2 - var(--cb-a)); }
+body:has(#select:not([hidden])) #music { --cb-i: calc(3 - var(--cb-a) - var(--cb-b)); }
+body:has(#select:not([hidden])) #settings { --cb-i: calc(4 - var(--cb-a) - var(--cb-b)); }
+body:has(#select:not([hidden])) :is(#leaders, #viewmode, #feedback, #music, #settings) { --cb-r: calc(var(--cb-n) - 1 - var(--cb-i)); }
+#select > .sel-logo { position: absolute; z-index: 2; overflow: visible; /* the outline's edge */ left: max(16px, env(safe-area-inset-left)); top: calc(16px + env(safe-area-inset-top)); width: auto; height: 56px; pointer-events: none; }
+@media (min-width: 520px) and (min-height: 520px) { /* 56 px buttons */
+  body:has(#select:not([hidden])) :is(#leaders, #viewmode, #feedback, #music, #settings) { left: auto; right: calc(max(16px, env(safe-area-inset-right)) + var(--cb-r) * 68px); }
+}
+@media (min-width: 520px) and (max-height: 519px), (max-height: 500px) { /* 44 px buttons, short windows */
+  body:has(#select:not([hidden])) :is(#leaders, #viewmode, #feedback, #music, #settings) { left: auto; right: calc(max(12px, env(safe-area-inset-right)) + var(--cb-r) * 56px); }
+  #select > .sel-logo { left: max(12px, env(safe-area-inset-left)); top: calc(14px + env(safe-area-inset-top)); height: 40px; }
+}
+/* Portrait phones: 44 px buttons, 8 px apart (6 under 375 px) so the logo keeps >= 82 px (TAP's capitals >= 7 px) beside
+   them; it takes what the row leaves, up to the row's height. Under 360 px it cannot fit: no logo, the row centred. */
 @media (max-width: 519px) and (min-height: 501px) {
-  body:has(#select:not([hidden])) { --cb-a: 0; --cb-b: 0; --cb-n: calc(5 - var(--cb-a) - var(--cb-b)); }
-  body:has(#select:not([hidden])):has(#leaders[hidden]) { --cb-a: 1; }
-  body:has(#select:not([hidden])):has(#feedback[hidden]) { --cb-b: 1; }
-  body:has(#select:not([hidden])) :is(#leaders, #viewmode, #feedback, #music, #settings) { top: calc(10px + env(safe-area-inset-top)); right: auto; bottom: auto; width: 44px; height: 44px; left: calc(50% - (var(--cb-n) * 56px - 12px) / 2 + var(--cb-i) * 56px); }
-  body:has(#select:not([hidden])) #leaders { --cb-i: 0; }
-  body:has(#select:not([hidden])) #viewmode { --cb-i: calc(1 - var(--cb-a)); display: inline-flex; }
-  body:has(#select:not([hidden])) #feedback { --cb-i: calc(2 - var(--cb-a)); }
-  body:has(#select:not([hidden])) #music { --cb-i: calc(3 - var(--cb-a) - var(--cb-b)); }
-  body:has(#select:not([hidden])) #settings { --cb-i: calc(4 - var(--cb-a) - var(--cb-b)); }
+  body:has(#select:not([hidden])) { --cb-g: 8px; }
+  body:has(#select:not([hidden])) :is(#leaders, #viewmode, #feedback, #music, #settings) { top: calc(10px + env(safe-area-inset-top)); right: auto; bottom: auto; width: 44px; height: 44px; left: calc(100% - max(12px, env(safe-area-inset-right)) - (var(--cb-r) + 1) * 44px - var(--cb-r) * var(--cb-g)); }
+  body:has(#select:not([hidden])) #viewmode { display: inline-flex; }
   body:has(#select:not([hidden])) #viewmode svg { width: 24px; height: 24px; }
+  #select > .sel-logo { left: max(12px, env(safe-area-inset-left)); top: calc(10px + env(safe-area-inset-top)); height: 44px; width: calc(100% - max(12px, env(safe-area-inset-left)) - max(12px, env(safe-area-inset-right)) - 10px - var(--cb-n) * (44px + var(--cb-g)) + var(--cb-g)); }
+}
+@media (max-width: 374px) and (min-height: 501px) { body:has(#select:not([hidden])) { --cb-g: 6px; } }
+@media (max-width: 359px) and (min-height: 501px) {
+  #select > .sel-logo { display: none; }
+  body:has(#select:not([hidden])) :is(#leaders, #viewmode, #feedback, #music, #settings) { left: calc(50% - (var(--cb-n) * 56px - 12px) / 2 + var(--cb-i) * 56px); }
 }
 
 .sel-card.later { content-visibility: auto; contain-intrinsic-size: auto 128px auto 200px; } /* the off-screen pending cards skip their layout and paint: unfolding 30-odd cards cost ~150 ms on an iPhone */
@@ -498,7 +566,7 @@ body:has(:focus-visible) #select .sel-card[aria-selected="true"]:not(:focus-visi
 
 /* FPS own a rail, independent of the selected figure, fold, difficulty and footer actions. */
 body.fps-on:has(#select:not([hidden])) { --fps-rail: 24px; }
-body.fps-on:has(#select:not([hidden])) :is(#leaders, #viewmode, #feedback, #music, #settings) { translate: 0 var(--fps-rail); }
+body.fps-on:has(#select:not([hidden])) :is(#leaders, #viewmode, #feedback, #music, #settings), body.fps-on #select > .sel-logo { translate: 0 var(--fps-rail); }
 body.fps-on #select:not([data-header-inline]) > :is(.sel-towns, .sel-info) { translate: 0 var(--fps-rail); }
 body.fps-on #select .sel-info { max-height: calc(100% - var(--info-top) - var(--dock-h) - 6px - env(safe-area-inset-top) - env(safe-area-inset-bottom) - var(--fps-rail)); }
 @media (max-height: 500px) {

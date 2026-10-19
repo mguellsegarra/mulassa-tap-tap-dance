@@ -2,9 +2,10 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { FIGURES, TOWNS, MULASSA, DRAC, MULE_ART, DRAC_ART, portraitArt, portraitPalette, portraitStand, STAND, playable, townOf, rememberedLevel, rememberLevel, recordKey, aviatText, INVITE, INVITE_TOWN, INVITE_DRAFT } from '../src/game/figures.js';
 import { FIGURE_PORTRAITS } from '../src/game/figure-portraits.js';
-import { setupSelect, peekGap } from '../src/ui/select-ui.js';
+import { setupSelect, peekGap, pixelSvg } from '../src/ui/select-ui.js';
 import { escutSvg, escutField } from '../src/ui/escuts.js';
 import { clampStand } from '../src/dev/sizes-edit.js';
+import { fitPendingNote } from '../src/ui/pending-title.js';
 import './strip-scroll.mjs';
 assert.equal(new Set(FIGURES.map(f => f.id)).size, FIGURES.length);
 assert.equal(new Set(TOWNS.map(t => t.id)).size, TOWNS.length);
@@ -33,6 +34,12 @@ assert.equal(FIGURES[FIGURES.findIndex(f => f.id === 'cavallets-valls') + 1], ba
 assert.equal(basilisc.status, 'aviat', 'Basilisc joins the catalog without becoming playable');
 assert.equal(basilisc.manager, 'Agrupació Cultural La Pessigolla');
 assert.equal(TOWNS.find(t => t.id === 'vilanova').name, 'Vilanova i la Geltrú');
+const vilanovaFigures = FIGURES.filter(f => f.town === 'vilanova');
+assert.deepEqual(vilanovaFigures.map(f => f.id), ['boja-vilanova', 'drac-vilanova'], 'Vilanova replaces the grouped Mulasses with two distinct figures, Boja first');
+assert(vilanovaFigures.every(f => !playable(f) && f.visualSources.length), 'both are pending with direct visual references');
+assert(!sourceCatalog.figures.some(f => f.id === 'mulasses-vilanova'), 'the replaced group is absent');
+assert.notDeepEqual(portraitArt(vilanovaFigures[1]), DRAC_ART, 'Vilanova has its own one-headed dragon portrait');
+
 for (const f of FIGURES) {
   assert(f.name && f.entity && f.sources?.length, `${f.id}: named and attributed catalog entry`);
   assert(!f.thumbnail, `${f.id}: native pixel portrait`);
@@ -44,6 +51,12 @@ for (const f of FIGURES) {
 }
 assert(portraitArt(INVITE).join('').split('').every(c => c === '.' || portraitPalette(INVITE)[c]), 'the invitation has its own portrait');
 assert.equal(portraitArt(MULASSA), MULE_ART, 'original Mulassa portrait is retained');
+{ // a portrait is a few paths (one per colour), not a node per pixel: 27 cards of rects made every selector restyle slow
+  const svg = pixelSvg(MULE_ART, portraitPalette(MULASSA), '#2a1a10'), colours = new Set(MULE_ART.join('').replace(/\./g, '')).size;
+  assert(!svg.includes('<rect') && (svg.match(/<path/g) || []).length <= colours + 1, 'at most one path per colour plus the rim');
+  const lit = MULE_ART.join('').replace(/\./g, '').length;
+  assert.equal((svg.match(/h1\.02v1\.02h-1\.02z/g) || []).length > lit, true, 'every lit pixel and its rim are drawn');
+}
 assert.equal(portraitArt(DRAC), DRAC_ART, 'original Drac portrait is retained');
 assert(TOWNS.every(t => !('color' in t)), 'a town\'s colour is its arms\' tincture (escutField), never a bare catalogue value');
 const memory = new Map(), store = { get: k => memory.get(k) ?? null, set: (k, v) => memory.set(k, v) };
@@ -53,7 +66,12 @@ assert.equal(rememberedLevel(store, 'another'), 1, 'memory belongs to the figure
 for (const value of ['-1', '3', 'NaN', '1.5', '']) { memory.set('level-mulassa-valls', value); assert.equal(rememberedLevel(store, MULASSA.id), 1); }
 assert.equal(recordKey(MULASSA, 2), 'record-family-mulassa-2', 'short records have a separate namespace');
 assert.equal(sourceCatalog.figures.find(f => f.id === 'nans-valls').music, 'Francesc Sans', 'pending Valls figures credit their own music');
-assert.equal(aviatText('Reus').split('\n\n').length, 1, 'pending invitation stays compact');
+const pendingName = id => sourceCatalog.figures.find(f => f.id === id);
+for (const [id, verb] of [['gegants-ciutat-valls', 'surtin'], ['nans-valls', 'surtin'], ['mulassa-solsona', 'surtin'], ['aliga-solsona', 'surtin'], ['boja-vilanova', 'surti'], ['drac-vilanova', 'surti'], ['guites-berga', 'surtin'],
+  ['os-trabucaires-valls', 'surti'], ['diables-valls', 'surti'], ['cavallets-valls', 'surti'], ['gegant-calcot-valls', 'surti'], ['gegants-mulassa-reus', 'surtin'], ['gegants-bojos-solsona', 'surtin'], ['basilisc-valls', 'surti'], ['aliga-valls', 'surti'], ['cucafera-tarragona', 'surti']]) {
+  assert.match(aviatText(pendingName(id)), new RegExp(`^Volem que ${verb} a la plaça`), `${id}: the verb agrees with its name`);
+}
+assert.equal(aviatText(pendingName('aliga-valls')).split('\n\n').length, 2, 'pending cards: how to help, then the open code');
 
 // A named asset-backed fixture exercises future catalog entries without prescribing the research roster.
 const catalogFixture = { id: 'selector-fixture', town: 'vilanova', status: 'aviat', name: 'Figura de prova amb nom llarg', entity: 'Entitat de prova amb nom llarg', thumbnail: '/figures/selector-fixture.webp' };
@@ -223,18 +241,20 @@ click($('select-next')); soonPill.focus(); key('Escape');
 assert($('select-act').hidden, 'Escape still leaves difficulty when the town row is folded');
 // A desktop's inline header is one visible row, including its town controls.
 $('select').toggleAttribute('data-header-inline', true);
+// The logo holds the left end (not focusable); the towns come first, then the five corner buttons on the right.
 const headerSounds = sounds.length;
-$('viewmode').focus(); key('ArrowRight');
-assert.equal(doc.activeElement, pills[0], 'Right from the eye reaches Valls in the inline header');
-key('ArrowRight'); assert.equal(doc.activeElement, soonPill);
-key('ArrowRight'); assert.equal(doc.activeElement, $('feedback'), 'Right leaves the towns for the right corner controls');
-key('ArrowRight'); key('ArrowRight'); assert.equal(doc.activeElement, $('settings'), 'Settings is reachable without leaving the visible row');
-assert.equal(sounds.length, headerSounds + 5, 'each header focus move plays exactly one menu sound');
-key('ArrowRight'); assert.equal(sounds.length, headerSounds + 5, 'no sound at the header boundary');
-key('ArrowLeft'); key('ArrowLeft'); key('ArrowLeft'); assert.equal(doc.activeElement, soonPill, 'Left returns from the corner to the towns');
-key('ArrowLeft'); key('ArrowLeft'); assert.equal(doc.activeElement, $('viewmode'));
+pills[0].focus(); key('ArrowRight');
+assert.equal(doc.activeElement, soonPill);
+key('ArrowRight'); assert.equal(doc.activeElement, $('leaders'), 'Right leaves the towns for the corner buttons');
+key('ArrowRight'); assert.equal(doc.activeElement, $('viewmode'));
+key('ArrowRight'); key('ArrowRight'); key('ArrowRight'); assert.equal(doc.activeElement, $('settings'), 'Settings is reachable without leaving the visible row');
+assert.equal(sounds.length, headerSounds + 6, 'each header focus move plays exactly one menu sound');
+key('ArrowRight'); assert.equal(sounds.length, headerSounds + 6, 'no sound at the header boundary');
+key('ArrowLeft'); key('ArrowLeft'); key('ArrowLeft'); key('ArrowLeft'); key('ArrowLeft'); assert.equal(doc.activeElement, soonPill, 'Left returns from the corner to the towns');
+key('ArrowLeft'); assert.equal(doc.activeElement, pills[0]);
+key('ArrowLeft'); assert.equal(doc.activeElement, pills[0], 'Valls is the header\'s left end');
 $('select').toggleAttribute('data-header-inline', false);
-key('ArrowRight'); assert.equal(doc.activeElement, $('feedback'), 'on separate rows the corner controls stay together');
+$('viewmode').focus(); key('ArrowRight'); assert.equal(doc.activeElement, $('feedback'), 'on separate rows the corner controls stay together');
 soonPill.focus(); key('ArrowRight'); assert.equal(doc.activeElement, soonPill, 'folded towns stay out of the separate row');
 const rowSounds = sounds.length;
 pills[0].focus(); key('ArrowUp');
@@ -295,10 +315,10 @@ key('ArrowRight'); assert.equal(api.figure, soon[0], 'the arrows go on into it')
   key('ArrowLeft'); assert.equal(api.figure, soon[0], 'a fresh press still reverses immediately');
 }
 assert(!$('select-pending').hidden && $('select-info').hidden, 'a pending figure shows its own panel');
-assert.equal($('aviat-title').textContent, soon[0].fullName || soon[0].name); assert.match($('aviat-icon').innerHTML, /<svg|<img/);
+assert.equal($('aviat-title').textContent, soon[0].fullName || soon[0].name); assert($('aviat-icon').hidden && !$('aviat-icon').innerHTML, 'no portrait in the panel: the strip shows it');
 assert.equal(soon[0].entity, 'Ajuntament + UAF'); assert.match($('aviat-entity').innerHTML, /class="escut".*Ajuntament de Valls.*viewBox="0 0 525 829".*Unió Anelles de la Flama/, 'a shared figure shows both marks, as its card does');
 assert(!$('aviat-entity').hidden, 'a pending figure restores its entity after the teaser');
-assert.equal(($('aviat-text').innerHTML.match(/<p>/g) || []).length, 1); assert.match($('aviat-text').innerHTML, /Volem que surti a la plaça/);
+assert.equal(($('aviat-text').innerHTML.match(/<p>/g) || []).length, 2); assert.match($('aviat-text').innerHTML, /Volem que surti a la plaça/);
 assert($('select-next').disabled && !$('select-next').hidden, 'pending keeps a disabled action for the desktop placeholder');
 assert.equal($('select-next-label').textContent, 'Pròximament?');
 assert($('select').attrs['data-pending'], 'pending selection hides the action');
@@ -317,6 +337,28 @@ click($('select-towns'), soonPill); assert(!api.unfolded && tarragona.hidden, 'a
 click($('select-towns'), soonPill); click($('select-towns'), tarragona);
 assert.equal(api.figure, soon.find(f => f.town === 'tarragona'), 'a town pill goes to its first figure');
 assert.equal(tarragona.attrs['aria-pressed'], 'true');
+{ // One town, two pending identities: pill -> first card -> keyboard -> second card -> pointer -> first.
+  const vilanova = pills.find(p => p.dataset.town === 'vilanova');
+  const notified = selected.length, runs = played.length;
+  click($('select-towns'), vilanova);
+  assert.equal(api.figure.id, 'boja-vilanova');
+  cards.find(c => c.dataset.id === 'boja-vilanova').focus();
+  key('ArrowRight');
+  assert.equal(api.figure.id, 'drac-vilanova');
+  assert.equal($('aviat-title').textContent, 'Drac de Vilanova i la Geltrú');
+  assert.match($('aviat-entity').innerHTML, /Ajuntament de Vilanova i la Geltrú.*La Unió Vilanovina/);
+  assert.equal(vilanova.attrs['aria-pressed'], 'true');
+  key('Enter'); click($('select-next'));
+  assert($('select-act').hidden && $('select-info').hidden && !$('select-pending').hidden, 'no game, levels or records for Vilanova');
+  click($('aviat-write')); assert.equal(drafts.at(-1), 'Sobre Vilanova i la Geltrú: ', 'the collaboration draft keeps the shared town');
+  click($('select-strip'), cards.find(c => c.dataset.id === 'boja-vilanova'));
+  assert.equal(api.figure.id, 'boja-vilanova');
+  assert.equal($('aviat-title').textContent, 'Mulassa La Boja de Vilanova i la Geltrú');
+  assert.equal(selected.length, notified, 'neither pending identity changes the active song/model');
+  assert.equal(played.length, runs, 'no pending run can start');
+  click($('select-towns'), tarragona);
+}
+
 { // the last pill and card invite a colla to propose its figure: the pending panel with its own copy and draft, never playable
   const invite = pills.at(-1);
   assert.equal(invite.dataset.town, INVITE_TOWN.id); assert.equal(cards.at(-1).dataset.id, INVITE.id, 'the invitation closes the strip');
@@ -526,5 +568,52 @@ console.log('catalog selection, the PRÒXIMAMENT fold, pending panel, town pills
     assert.equal(row.scrollLeft, target, 'and is there within the 450 ms cap (plus the stalled frame)');
     row.scrollWidth = 700;
   }
+  { // Desktop folding starts the header's final journey with the exit, never in its completion callback.
+    const root = $('select'), first = townRow.children[0], rest = townRow.children.filter(p => p.dataset.town && p !== first);
+    const oldStyle = win.getComputedStyle, oldRect = first.getBoundingClientRect;
+    win.matchMedia = () => ({ matches: true });
+    win.getComputedStyle = () => ({ zoom: '1', gap: '7', paddingLeft: '16px', paddingRight: '16px', justifyContent: 'flex-start' });
+    first.getBoundingClientRect = () => ({ left: rest.every(p => p.hidden) ? 468 : 16 - townRow.scrollLeft, top: rest.every(p => p.hidden) ? 22 : 84 });
+    let layer;
+    townRow.cloneNode = () => {
+      layer = new Node(); layer.children = townRow.children.map(p => new Node('', p.cls, p.dataset));
+      layer.remove = () => { layer.removed = true; }; return layer;
+    };
+    root.append = child => { assert.equal(child, layer); };
+    const collapse = () => { click(row, toggle); return townRow.animation; };
+    tick(500); townRow.scrollLeft = 0;
+    const motion = collapse();
+    assert(rest.every(p => p.hidden), 'the final town layout is committed before the first exit frame');
+    assert.deepEqual(motion.keyframes.transform, ['translate(-452px, 62px)', 'translate(0, 0)']);
+    assert.equal(motion.startTime, eagle.animation.startTime, 'header movement and card fade share their start time');
+    assert.equal(motion.options.fill, 'backwards', 'keep the initial position while the document timeline catches up to the shared start');
+    assert(layer.inert && layer.attrs['aria-hidden'] === 'true', 'outgoing artwork cannot receive focus or be announced');
+    tick(240);
+    assert.equal(townRow.animation, motion, 'completion must not queue a second header movement');
+    assert(layer.removed, 'the exit artwork is removed on completion');
+    click(row, toggle); tick(500); townRow.scrollLeft = 1400;
+    const farMotion = collapse();
+    assert.equal(layer.scrollLeft, 1400, 'outgoing artwork preserves the scrolled viewport');
+    assert.equal(townRow.scrollLeft, 0, 'the live folded row has no leftover scroll');
+    assert.equal(farMotion.keyframes.transform[0], 'translate(-1852px, 62px)', 'the painted position includes the old scroll exactly once');
+    tick(80); const interrupted = layer; click(row, toggle);
+    assert(interrupted.removed && interrupted.animation.cancelled, 'reopening disposes of the interrupted exit');
+    tick(500); collapse();
+    for (const f of handlers.resize) f();
+    assert(layer.removed && townRow.animation.cancelled, 'resize settles the current layout without stale geometry');
+    click(row, toggle); tick(500); collapse(); animated.visible(false);
+    assert(layer.removed && townRow.animation.cancelled, 'leaving the selector clears the exit and movement');
+    win.getComputedStyle = oldStyle; delete win.matchMedia; first.getBoundingClientRect = oldRect;
+  }
 }
 console.log('pending fold: immediate selection, preserved outgoing content, shared exit and reopening ok');
+
+// The open-code note gives way only when the card would scroll, and comes back when there is room again.
+{
+  const note = { hidden: false }; let room = 100;
+  const card = { querySelector: () => note, get clientHeight() { return room; }, get scrollHeight() { return note.hidden ? 90 : 112; } };
+  fitPendingNote(card); assert(note.hidden, 'a card that would scroll drops the note');
+  room = 120; fitPendingNote(card); assert(!note.hidden, 'room again: the note is back');
+  fitPendingNote({ querySelector: () => null }); // a card without a note (the invitation): nothing to do
+  console.log('pending note: shown only when it fits ok');
+}

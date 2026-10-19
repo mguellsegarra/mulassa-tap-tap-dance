@@ -124,3 +124,18 @@ function fakeWindow() {
 }
 assert.deepEqual(['TypeError', 'ReferenceError', 'SyntaxError', 'Whatever', undefined].map(n => errorName({ name: n })), ['TypeError', 'ReferenceError', 'SyntaxError', 'Other', 'Other'], 'standard diagnostic names stay recognizable while arbitrary names are rejected');
 console.log('crash reports: gating, scrubbing, early buffer ok');
+
+// The pre-bundle watchdog forwards only finite category tags, once, including a failure before this module loaded.
+{
+  const { readFileSync } = await import('node:fs'), { runInNewContext } = await import('node:vm');
+  const source = readFileSync(new URL('../src/services/errors.js', import.meta.url), 'utf8');
+  const bridge = source.slice(source.indexOf('if (w) {\n  let bootReported'), source.indexOf("if (MODE === 'development'"));
+  for (const early of [false, true]) {
+    const sent = [], win = early ? { __mulassaBootFailure: { phase: 'shaders', reason: 'deadline' } } : {};
+    const api = { report: (kind, tags) => sent.push([kind, { ...tags }]), start() {} };
+    runInNewContext(bridge, { w: win, errors: api });
+    if (!early) { win.__mulassaBootFailure = { phase: 'private free text', reason: 'https://example.test/?token=private' }; win.__mulassaReportBoot(); }
+    win.__mulassaReportBoot();
+    assert.deepEqual(sent, [['boot-failed', early ? { phase: 'shaders', reason: 'deadline' } : { phase: 'unknown', reason: 'unknown' }]]);
+  }
+}

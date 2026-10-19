@@ -6,6 +6,7 @@ import { errors } from './services/errors.js';
 import * as THREE from 'three';
 import { song, figureScale } from './game/figure-song.js';
 import { frameMonitor } from './platform/render-quality.js';
+import { waitForWarmup, linkPrograms } from './platform/boot.js';
 import { sectionAt } from './game/chart.js';
 import { judgedCount } from './game/progress.js';
 import { markLeaderboardDebugUse } from './services/leaderboard-result.js';
@@ -61,6 +62,7 @@ import './ui/input.js';
 import './ui/sheets-setup.js';
 import { framePhotoCamera, releasePhotoCamera } from './scene/photo-camera.js';
 
+window.__mulassaBootPhase = 'init';
 initDrac(); // both rigs exist before shader warmup and the first frame
 
 const monitorFrames = frameMonitor((steps = 1) => { // steps: 2 when frames are far too slow
@@ -83,16 +85,20 @@ const CAMED = Q.has('cam') ? setupCamEdit({ hud, camera, active: () => G.state =
   cw: innerWidth, ch: HH * K, dpr: devicePixelRatio, K, practice: !!G.practice, touch: COARSE.matches, laneBottom: lane().bottom * K, padTop: playBottom() * K }) }) : null;
 if (Q.has('sizes')) setupSizesEdit(); // ?sizes: each selector figure's height beside the gegants, set by eye (src/dev/sizes-edit.js)
 function frame(now) {
+  if (window.__mulassaBootFailure) return; // an explicit retry owns recovery; no hidden game burning battery
   requestAnimationFrame(frame);
   if (innerWidth !== sizedW || devicePixelRatio !== sizedDpr || Math.abs(HH * K - appHeight()) > 1) resize();
-  if (!pageActive()) { last = null; return; }
+  // Safari can keep focus in its chrome while the page is visible. Finish startup under the cover;
+  // only an actual hidden page suspends it. Gameplay still rests whenever it loses focus.
+  if (document.hidden || (!coverUp && !pageActive())) { last = null; return; }
+  if (!drawn && renderer.getContext().isContextLost()) { last = null; return; } // a no-op render cannot certify readiness
   if (last === null) last = now; // no elapsed background time enters the demo or effect emitters
   // iOS can leave the audio context stopped after an app switch (resume() only works inside a tap): the song clock would stand still
   // with no menu up. Stalled for a second mid-run: pause, so the Reprèn tap is the gesture that restarts it.
   if (G.state === 'play' && !G.paused && chip?.t0 != null && chip.ctx.state !== 'running' && pageActive()) { audioStallT ??= now; if (now - audioStallT > 1000) { audioStallT = null; pauseGame(); } } else audioStallT = null;
   if (!pace(now, G.state === 'play')) return; // 120 Hz screens that can't keep up: every other refresh (framePacer); never back up to 120 mid-song
   const f0 = PERF && performance.now();
-  monitorFrames(now - last, G.state === 'play' && !G.paused); // against 60 fps, whatever the pacer aims for (a 120 Hz miss halves the rate first); hitches count only in play
+  monitorFrames(now - last, G.state === 'play' && !G.paused); // 60 fps budget, or 30 for a steady cap; hitches count only in play
   fpsTick(now);
   const frameS = (now - last) / 1000, dt = G.paused ? 0 : Math.min(0.05, frameS); // frameS: real seconds since the last drawn frame
   const heard = chip?.t0 != null ? chip.now(RAWCLOCK ? undefined : now) : -1; // the song at this frame's time (de-stepped: smooth notes)
@@ -147,7 +153,8 @@ function frame(now) {
   }
   if (PHOTO.on && !steers()) setView(false);
   animMula(dt, beat, live);
-  if (G.state === 'select' && (sheets.select?.pending ?? sheets.select?.figure?.status === 'aviat')) { mula.root.visible = false; drac.root.visible = false; }
+  // a pending selection hides both models, except in «mode foto»: the last playable one stands in (the selection is untouched)
+  if (G.state === 'select' && !viewMode && (sheets.select?.pending ?? sheets.select?.figure?.status === 'aviat')) { mula.root.visible = false; drac.root.visible = false; }
   const c0 = PERF && performance.now();
   animCrowd(dt, beat, vt, live);
   if (PERF) PERF.crowd += performance.now() - c0; // ?perf: the crowd's own share of the js
@@ -169,7 +176,9 @@ function frame(now) {
   } else if (G.state === 'title' || G.state === 'splash' || G.state === 'select') {
     // orbits her, not the middle: wandering about she'd otherwise pass right in front of the lens, huge. The player
     // may steer it (src/scene/orbit.js: its limits keep it inside the square and above the crowd); left alone it orbits.
-    const homeH = 4.2 * far, homeD = 11; // one shot for every figure, so their sizes compare; plaza level, in among the crowd (the old high wide shot showed mostly bare floor)
+    // «mode foto» on a narrow screen: back off (same angle) until ~7 m fit across, or her 4 m body barely fits
+    const fit = viewMode ? Math.max(1, 3.5 / (Math.tan(camera.fov * Math.PI / 360) * camera.aspect) / 11) : 1;
+    const homeH = ORBIT.focusY + (4.2 * far - ORBIT.focusY) * fit, homeD = 11 * fit; // one shot for every figure, so their sizes compare; plaza level, in among the crowd (the old high wide shot showed mostly bare floor)
     // her sway and steps never shake the shot: it drifts after her on a critically damped spring (like the play camera; a first-order
     // filter changes velocity the instant she does, which read as a jerk on every hop)
     if (!titleC.on) { titleS.x[0] = mx; titleS.x[1] = mz; titleS.v.fill(0); }
@@ -193,7 +202,7 @@ function frame(now) {
       const L = titleL, mid = (L.logo.y + L.logo.h + L.choiceY) / 2;
       shift = Math.max(-0.25 * HH * L.K, Math.min(0.25 * HH * L.K, (mid - HH / 2) * L.K));
     }
-    const band = G.state === 'select' && sheets.select?.band; // «QUI BALLA?»: her centre in its free band (css px, measured when it opens or resizes)
+    const band = G.state === 'select' && !viewMode && sheets.select?.band; // «QUI BALLA?»: her centre in its free band (css px, measured when it opens or resizes); «mode foto» hides the selector: centred
     if (band) shift = Math.max(-0.25 * HH * K, Math.min(0.25 * HH * K, (band.top + band.bottom) / 2 - HH * K / 2));
   } else if (G.state === 'play') {
     CAMED?.restoreFov();
@@ -243,6 +252,7 @@ function frame(now) {
   if (songWait) loader.status(musicLine());
   if (!drawn) { // the first frame is on screen: lift the page cover, then start on the audio (outside the first paint)
     drawn = true;
+    window.__mulassaBootPhase = 'ready';
     window.__mulassaBooted = true; // index.html's boot watchdog stands down
     fontsReady.then(() => { fontsIn = true; });
     loadMark('first frame');
@@ -267,8 +277,15 @@ function loadMark(stage) { if (PERF) console.log('[load]', stage, Math.round(per
 loadMark('module');
 loader.jokes(); // funny lines under the calçot until the plaça is ready
 requestAnimationFrame(() => setTimeout(() => { // one paint first: that line shows while a compile holds the thread
+  if (window.__mulassaBootFailure) return;
   startAudio(); // the song downloads and decodes (off the main thread) while the shaders compile, all under the cover
-  precompile(true).then(() => { loadMark('shaders'); requestAnimationFrame(frame); });
+  window.__mulassaBootPhase = 'shaders';
+  waitForWarmup(() => precompile(true).then(() => linkPrograms(renderer.info.programs))).then(result => {
+    if (window.__mulassaBootFailure) return;
+    window.__mulassaBootPhase = 'frame';
+    loadMark(result === 'ready' ? 'shaders' : 'shaders fallback');
+    requestAnimationFrame(frame);
+  });
 }));
 // The audio engine, suspended (the splash's tap resumes it): the song, the menu loop and the applause are made behind
 // the page cover. Made at the first frame they finished on the splash on a slow first load, right under the tap.

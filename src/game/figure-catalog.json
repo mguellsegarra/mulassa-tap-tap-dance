@@ -396,20 +396,49 @@
       ]
     },
     {
-      "id": "mulasses-vilanova",
-      "name": "Mulasses",
-      "fullName": "Mulasses de Vilanova i la Geltrú",
+      "id": "boja-vilanova",
+      "name": "La Boja",
+      "fullName": "Mulassa La Boja de Vilanova i la Geltrú",
       "town": "vilanova",
       "entity": "ABP Vilanova",
       "entityName": "Agrupació de Balls Populars de Vilanova i la Geltrú",
+      "manager": "Agrupació de Balls Populars de Vilanova i la Geltrú",
+      "description": "La mulassa grossa de Vilanova, recuperada el 1947. És una figura pròpia, diferent de la Presumida i la Cabreta.",
       "sources": [
-        "https://www.vilanova.cat/doc/doc_23908471_1.pdf",
+        "https://ballspopularsvilanova.cat/mulassa/",
+        "https://www.vilanova.cat/noticies/detall?id=99996656",
+        "https://www.bestiari.cat/2021/03/coneix-quatre-figures-de-bestiari-que-tenen-la-dona-com-a-referent/"
+      ],
+      "visualSources": [
+        "https://ballspopularsvilanova.cat/wp-content/uploads/2023/07/mulasses-de-vilanova.jpg",
+        "https://ballspopularsvilanova.cat/wp-content/uploads/2023/07/mulasses-de-vilanova-geltru.jpg"
+      ]
+    },
+    {
+      "id": "drac-vilanova",
+      "name": "Drac de Vilanova",
+      "fullName": "Drac de Vilanova i la Geltrú",
+      "town": "vilanova",
+      "entity": "La Unió Vilanovina",
+      "entityName": "La Unió Vilanovina",
+      "owner": "Ajuntament de Vilanova i la Geltrú",
+      "manager": "La Unió Vilanovina",
+      "description": "Figura de 1991 del Taller L'Estaquirot, inspirada en el disseny de 1948 d'E. C. Ricart. Un sol cap, coll llarg, ales i cua cargolada; quatre punts de foc a la boca.",
+      "dimensionsMeters": {
+        "length": 2,
+        "height": 1.9
+      },
+      "dimensionsSource": "https://dracvilanova.wordpress.com/2020/04/14/figura-actual/",
+      "sources": [
+        "https://www.bestiari.cat/figura/drac-de-vilanova-i-la-geltru/",
+        "https://dracvilanova.wordpress.com/72-2/",
+        "https://dracvilanova.wordpress.com/2020/04/14/figura-actual/",
         "https://www.vilanova.cat/doc/doc_29618862.pdf"
       ],
-      "includes": [
-        "Boja",
-        "Presumida",
-        "Cabreta"
+      "visualSources": [
+        "https://www.bestiari.cat/wp-content/uploads/2016/07/DracVilanova-1991-1.jpg",
+        "https://www.bestiari.cat/wp-content/uploads/2016/07/DracVilanova-1991-2.jpg",
+        "https://www.bestiari.cat/wp-content/uploads/2016/07/DracVilanova-1991-3.jpg"
       ]
     },
     {

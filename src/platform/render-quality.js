@@ -55,8 +55,8 @@ export function initialQuality({ mobile = false, cores, memory, saveData = false
 export function renderDpr(profile, width, height, dpr) {
   return Math.min(dpr || 1, profile.dpr, Math.sqrt(profile.pixels / Math.max(1, width * height)));
 }
-// Quality steps judge the drawn frames against 60 fps whatever the pacer aims for: a 120 Hz screen that misses its
-// 8.3 ms halves its rate first (framePacer), so quality only drops when even an even 60 is out of reach.
+// Quality steps normally judge the drawn frames against 60 fps: a 120 Hz screen that misses its 8.3 ms halves its
+// rate first (framePacer). A sustained 30 Hz cadence uses the capped budget below instead.
 // Spikes: a device that keeps hitching during play (SPIKE.count frames over SPIKE.ms within SPIKE.within ms) steps
 // down one level at the end of that window even when most frames are fine; a one-off hitch (a first use, a GC) never
 // does. `play` = false (menus, the pause sheet) counts no spikes; a gap over 1 s (hidden tab, a stall) resets it all.
@@ -64,23 +64,37 @@ export function renderDpr(profile, width, height, dpr) {
 // ~53 fps: a steady judder on the note lane although the fps counter never reads far under 60.
 const SLOW_SHARE = 0.12;
 const SPIKE = { ms: 50, count: 5, within: 3000 };
+// iOS Low Power Mode (and thermal throttling) caps Safari's rAF at 30 Hz (WebKit AnimationFrameRate.cpp): every frame is
+// 33 ms, all of them read as slow and medium fell straight to minimal. CAP.run frames in a row at a steady ~33 ms suggest
+// a cap: until a faster frame, frames are judged against 30 Hz (twice the times above) and the run's frames
+// don't count as slow. A 60 Hz device too slow for 60 draws the same steady 33 ms: that alone steps down once (`probed`).
+const CAP = { lo: 29, hi: 38, run: 12 };
 export function frameMonitor(onSlow) {
-  let elapsed = 0, samples = 0, slow = 0, warmup = 2000, clock = 0, n = 0, spiky = false;
+  let elapsed = 0, samples = 0, slow = 0, slow60 = 0, warmup = 2000, clock = 0, n = 0, spiky = false;
+  let run = 0, runSlow = 0, capped = false, probed = false; // runSlow: this window's slow frames of the current run
   const spikes = new Float64Array(SPIKE.count); // when the last few spikes happened (monitor time, ring buffer)
   return (ms, play = true) => {
-    if (ms <= 0 || ms > 1000) { elapsed = samples = slow = n = 0; spiky = false; return; }
+    if (ms <= 0 || ms > 1000) { elapsed = samples = slow = slow60 = n = run = runSlow = 0; spiky = capped = false; return; }
     clock += ms;
+    const inCap = ms >= CAP.lo && ms <= CAP.hi, was = capped;
+    run = inCap ? run + 1 : 0;
+    if (ms < 24) capped = false; else if (run >= CAP.run) capped = true;
     if (warmup > 0) { warmup = Math.max(0, warmup - ms); return; }
-    if (play && ms > SPIKE.ms) {
+    const k = capped ? 2 : 1;
+    if (play && ms > SPIKE.ms * k) {
       spikes[n++ % SPIKE.count] = clock;
       if (n >= SPIKE.count && clock - spikes[n % SPIKE.count] <= SPIKE.within) spiky = true; // the oldest of the last few
     }
     elapsed += ms; samples++;
-    if (ms > 24) slow++;
+    if (ms > 24) slow60++;
+    if (ms > 24 * k) slow++;
+    if (!inCap) runSlow = 0; else if (!capped) runSlow++;
+    if (capped && !was) { slow -= runSlow; runSlow = 0; } // the run that showed the cap was its pace, not misses
     if (elapsed >= 4000) {
       const share = samples >= 8 ? slow / samples : 0;
       if (share > SLOW_SHARE || spiky) { onSlow(share > 0.8 ? 2 : 1); warmup = 2000; n = 0; } // way too slow: two steps
-      elapsed = samples = slow = 0; spiky = false;
+      else if (capped && !probed && slow60 / samples > SLOW_SHARE) { probed = true; onSlow(1); warmup = 2000; n = 0; } // the cap, or too slow for 60
+      elapsed = samples = slow = slow60 = runSlow = 0; spiky = false;
     }
   };
 }

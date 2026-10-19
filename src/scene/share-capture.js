@@ -24,10 +24,11 @@ export const heroCam = new THREE.PerspectiveCamera(24, 1, 0.5, 200), heroPose = 
 let heroQuad = null;
 export function heroQuadMake() { // the sRGB encoding pass (built once; precompile() warms its program too)
   return heroQuad ??= (() => {
-    const material = new THREE.ShaderMaterial({ uniforms: { src: { value: null } }, depthTest: false, depthWrite: false,
+    // opaque 0 keeps the source's alpha (the GLOBUS stills, balloon3d.js); the photo is opaque
+    const material = new THREE.ShaderMaterial({ uniforms: { src: { value: null }, opaque: { value: 1 } }, depthTest: false, depthWrite: false,
       vertexShader: 'varying vec2 vUv; void main() { vUv = vec2(uv.x, 1.0 - uv.y); gl_Position = vec4(position.xy, 0.0, 1.0); }',
-      fragmentShader: 'uniform sampler2D src; varying vec2 vUv; void main() { vec3 c = clamp(texture2D(src, vUv).rgb, 0.0, 1.0);' +
-        ' gl_FragColor = vec4(mix(c * 12.92, 1.055 * pow(c, vec3(1.0 / 2.4)) - 0.055, step(0.0031308, c)), 1.0); }' });
+      fragmentShader: 'uniform sampler2D src; uniform float opaque; varying vec2 vUv; void main() { vec4 s = texture2D(src, vUv); vec3 c = clamp(s.rgb, 0.0, 1.0);' +
+        ' gl_FragColor = vec4(mix(c * 12.92, 1.055 * pow(c, vec3(1.0 / 2.4)) - 0.055, step(0.0031308, c)), max(s.a, opaque)); }' });
     const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material);
     quad.frustumCulled = false;
     return { scene: new THREE.Scene().add(quad), cam: new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1), material };

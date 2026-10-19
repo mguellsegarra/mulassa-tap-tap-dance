@@ -13,6 +13,17 @@ assert(!/id="select-(board|back)"/.test(html), 'there is one original podium and
 assert(!html.includes('id="aviat-menu"') && !html.includes('id="aviat-close"'), 'pending information is part of the selector, with no dialog');
 assert.match(html, /<section id="select-pending"/);
 assert.match(css, /body\.view-mode #select/);
+// The selector's logo: the title's lettering top-left, inside #select (photo mode hides it with the selector), never a control.
+const logoTag = html.match(/<svg class="sel-logo"[^>]*>/)?.[0] ?? '';
+assert(html.indexOf('class="sel-logo"') > html.indexOf('<section id="select"') && html.indexOf('class="sel-logo"') < html.indexOf('id="select-towns"'), 'the logo is the selector\'s first child');
+assert(/aria-hidden="true"/.test(logoTag) && /focusable="false"/.test(logoTag), 'the logo is decorative (the page H1 names the game)');
+assert.match(css, /#select > \.sel-logo \{[^}]*pointer-events: none/);
+// Portrait phones: five 44 px buttons right-aligned with --cb-g between them; the logo gets the rest (12 px edges, 10 px to
+// the row). >= 82 px keeps TAP TAP DANCE's capitals >= 7 px; under 360 px it cannot fit and is hidden.
+const gap = w => Number((w < 375 ? css.match(/max-width: 374px\) and \(min-height: 501px\) \{[^}]*--cb-g: (\d+)px/) : css.match(/max-width: 519px\) and \(min-height: 501px\) \{\s*body:has\(#select:not\(\[hidden\]\)\) \{ --cb-g: (\d+)px/))[1]);
+const logoW = w => w - 24 - 10 - 5 * (44 + gap(w)) + gap(w);
+for (const w of [360, 375, 393]) assert(logoW(w) >= 82, `logo ${logoW(w)} px at ${w}`);
+assert(logoW(359) < 82 && /max-width: 359px\) and \(min-height: 501px\) \{\s*#select > \.sel-logo \{ display: none/.test(css), 'no logo where it cannot fit');
 assert(!/#viewmode\s*\{[^}]*display:\s*none/.test(css + readFileSync(new URL('../src/styles/feedback.css', import.meta.url), 'utf8')), 'viewport rules never hide the photo-mode control');
 const nodes = new Map(), handlers = {}, classes = new Set();
 const doc = { addEventListener(k, f) { (handlers[k] ||= []).push(f); }, body: { classList: { toggle(c, on) { if (on) classes.add(c); else classes.delete(c); } } },
@@ -137,3 +148,25 @@ activeDialog = { querySelectorAll: () => [menuItems[1]] }; sounds.length = 0;
 dispatchKey('ArrowDown', 'ArrowDown', menuItems[1]);
 assert.deepEqual(sounds, [], 'unchanged focus does not emit a second selection sound');
 console.log('practice/game input routing: keyboard, mouse/touch pad and bubbling stay separate from menu sounds');
+
+// «Mode foto» on the selector: the figure bar (feedback.css #photo-figs) never covers the eye. The corner row is right-aligned
+// (select.css), so the bar takes the left; portrait phones put it under their row. Bar widths as Chromium lays them out:
+// 196 px portraits only (< 900 px), 598 px with names.
+{
+  const fb = readFileSync(new URL('../src/styles/feedback.css', import.meta.url), 'utf8');
+  const barLeft = Number(fb.match(/body:has\(#select:not\(\[hidden\]\)\) #photo-figs \{ left: max\((\d+)px/)?.[1]);
+  assert(barLeft, 'the bar is left-aligned on the selector');
+  const narrow = Number(fb.match(/max-width: (\d+)px\) \{ #photo-figs \.pf-nb \{ position: absolute/)?.[1]);
+  const phoneTop = Number(fb.match(/@media \(max-width: 519px\) \{ #photo-figs \{ top: calc\((\d+)px/)?.[1]);
+  const row = (re, what) => { const m = css.match(re); assert(m, what); return m.slice(1).map(Number); };
+  const [bigEdge, bigStep] = row(/min-width: 520px\) and \(min-height: 520px\) \{[^}]*right: calc\(max\((\d+)px[^)]*\)\) \+ var\(--cb-r\) \* (\d+)px\)/, 'big corner row');
+  const [shortEdge, shortStep] = row(/max-height: 519px\), \(max-height: 500px\) \{[^}]*right: calc\(max\((\d+)px[^)]*\)\) \+ var\(--cb-r\) \* (\d+)px\)/, 'short corner row');
+  const eyeR = 3; // five buttons, the eye second from the left (or first, without the podium): three to its right
+  for (const [w, h] of [[520, 800], [600, 800], [899, 700], [900, 700], [1024, 768], [1280, 800], [667, 375], [852, 393], [932, 430], [1180, 820]]) {
+    const short = h <= 519, size = short ? 44 : 56, eyeLeft = w - (short ? shortEdge + eyeR * shortStep : bigEdge + eyeR * bigStep) - size;
+    const barRight = barLeft + (w <= narrow ? 196 : 598);
+    assert(barRight + 8 <= eyeLeft, `${w}x${h}: the bar (to ${barRight}) clears the eye (from ${eyeLeft})`);
+  }
+  assert(phoneTop >= 10 + 44 + 8, 'portrait phones: the bar sits under the corner row');
+  console.log('photo bar clears the eye on the selector ok');
+}

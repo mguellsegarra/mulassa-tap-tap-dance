@@ -4,6 +4,9 @@ import { H, PXU } from './canvas.js';
 import { C } from './sprites.js';
 import { selectedFigure } from '../game/figure-song.js';
 import { clock } from '../game/state.js';
+import { loader } from '../ui/handles.js';
+import { renderer } from '../scene/stage.js';
+import { heroQuadMake } from '../scene/share-capture.js';
 
 const dracFig = () => selectedFigure.id === 'drac-valls';
 // The Drac's GLOBUS is a TRACA (its petards go off on the Drac's fire points, drac-fx.js): one fat petard where the balloon
@@ -68,7 +71,8 @@ export const setBalloonView = v => { // the Drac: no 3D balloon, the traca drawn
   return (balloonView = v);
 };
 let headArt = null; // the lane's drumroll head: stills of the same 3D balloon at three inflations (a live one would sit under the HUD band); vector until made
-setTimeout(() => { try { headArt = [0.05, 0.55, 1].map(k => balloonFx.snapshot(k)); } catch (err) { console.error(err); } }, 2500); // after the first frames: a one-off context
+// After the first frames and the page cover: drawing them holds the thread a moment, and froze the loader's Mulassa.
+setTimeout(function snap() { if (loader.covering) return setTimeout(snap, 500); try { headArt = balloonFx.snapshots(renderer, heroQuadMake(), [0.05, 0.55, 1]); } catch (err) { console.error(err); } }, 2500);
 // k 0..1 blends the tones; sq / rot are balloon3d's springs (squash, tilt) so it punches with every tap like the big one; the vector stays flat
 export function balloonHead(x, y, r, k = 0.5, sq = 0, rot = 0) {
   if (dracFig()) return tracaShape(x, y + r * 0.1, r * 0.95, k, null, rot);

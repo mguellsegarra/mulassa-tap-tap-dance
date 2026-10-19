@@ -8,6 +8,7 @@ import { buildDrac, DRAC_SCALE } from './models/drac.js';
 import { COARSE } from '../core/env.js';
 
 // ------------------------------------------------------------------ 3D
+window.__mulassaBootPhase = 'graphics';
 // every page load starts from the hardware guess (adaptive drops last for the session only); -1 = minimal
 const qualityGuess = initialQuality({ mobile: COARSE.matches, cores: navigator.hardwareConcurrency,
   memory: navigator.deviceMemory, saveData: navigator.connection?.saveData });

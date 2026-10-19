@@ -48,7 +48,9 @@ export function saveFigureRecord(store, figure, level, quality, rawScore, combo)
   else store.set(recordKey(figure, level), JSON.stringify({ quality, score: rawScore, combo }));
 }
 
-export const aviatText = () => `Volem que surti a la plaça. Tens fotos, vídeos, partitures o coneixes el ball? Ajuda’ns!`;
+// «Gegants i Gegantons», «Nans», «Mulassa i Antonio Ricu» are several; «Ós» and «Ball de Diables» (the title says so) are one.
+export const plural = figure => / i /.test(figure.name) || /^\S{3,}s(?=\s|$)/.test(figure.fullName || figure.name);
+export const aviatText = figure => `Volem que ${plural(figure) ? 'surtin' : 'surti'} a la plaça. Tens fotos, vídeos, partitures o coneixes el ball? Dona’ns un cop de mà!\n\nEl joc és de codi obert: també pots ajudar a programar-lo a GitHub.`;
 export const aviatDraft = town => `Sobre ${town}: `; // the Bústia's first words, from an «Aviat» card
 export const inviteText = () => `Tens una colla gegantera o de bestiari? Vols que el teu poble surti al joc? Explica’ns quina figura és i d’on és.`;
 export const INVITE_DRAFT = 'Proposo una figura. Poble i colla: ';
@@ -66,7 +68,7 @@ export const STAND = {
   'mulassa-valls': 0.8, 'drac-valls': 0.7, 'aliga-valls': 0.8, 'bou-tradicional-valls': 0.65, 'os-trabucaires-valls': 0.65, 'nans-valls': 0.55,
   'gegants-ciutat-valls': 1, 'cavallets-valls': 0.55, 'basilisc-valls': 0.65, 'diables-valls': 0.8, 'gegant-calcot-valls': 1, 'campanar-valls': 1,
   'aliga-tarragona': 0.8, 'cucafera-tarragona': 0.65, 'gegants-mulassa-reus': 1, 'gegants-solsona': 1, 'drac-solsona': 0.8, 'bou-solsona': 0.65,
-  'mulassa-solsona': 0.8, 'aliga-solsona': 0.8, 'gegants-bojos-solsona': 1, 'draca-solsona': 0.8, 'mulasses-vilanova': 0.8, 'aliga-barcelona': 0.8,
+  'mulassa-solsona': 0.8, 'aliga-solsona': 0.8, 'gegants-bojos-solsona': 1, 'draca-solsona': 0.8, 'boja-vilanova': 0.8, 'drac-vilanova': 0.8, 'aliga-barcelona': 0.8,
   'guites-berga': 1, 'gegants-olot': 1, 'drac-vilafranca': 0.8, 'la-teva-colla': 1,
 };
 export const portraitStand = figure => STAND[figure.id] ?? 0.8;

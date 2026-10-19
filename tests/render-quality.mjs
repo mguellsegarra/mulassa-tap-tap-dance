@@ -865,6 +865,32 @@ await Promise.resolve();
 assert.equal(run('countIns'), 0, 'cancelled starts cannot schedule a count-in');
 console.log('menu pause and cancelled start contracts ok');
 
+// A visible page may not own keyboard focus yet (Safari's address bar, another window).
+// Boot still paints; normal gameplay remains suspended without focus.
+{
+  const focus = document.hasFocus;
+  document.hasFocus = () => false;
+  run("drawn = false; last = null; G.state = 'splash'; chip = null; window.__mulassaBooted = 'module'; frame(4000);");
+  assert.equal(run('drawn'), true, 'visible startup paints even before the document gets focus');
+  run('coverUp = false;');
+  const before = run('clock');
+  run('frame(4020)');
+  assert.equal(run('clock'), before, 'after startup, an unfocused page still rests');
+  document.hasFocus = focus;
+  run('coverUp = true;');
+  run("drawn = false; renderer.lost = true; window.__mulassaBooted = 'module'; frame(4040);");
+  assert.equal(run('drawn'), false, 'a lost WebGL context cannot certify a first frame');
+  run('renderer.lost = false; frame(4060);');
+  assert.equal(run('drawn'), true, 'the first live frame after restoration completes startup');
+  const liveClock = run('clock');
+  run('renderer.lost = true; frame(4080);');
+  assert(run('clock') > liveClock, 'after startup, context loss must not freeze the HUD and game clock');
+  run('renderer.lost = false;');
+  run("window.__mulassaBootFailure = { reason: 'deadline' }; drawn = false; frame(4080);");
+  assert.equal(run('drawn'), false, 'a failed boot waits for retry instead of starting invisibly behind its error');
+  run('delete window.__mulassaBootFailure;');
+}
+
 // Loading (src/ui/loader.js): the page cover lifts once the first frame is drawn; a game whose song is still
 // downloading/decoding shows «Preparant la música…» (only after the delay), gone when the count-in can start.
 {
@@ -2447,7 +2473,7 @@ console.log('view mode ok');
     var qualityCompiles = 0, qualityDpr = 0;
     renderer.compileAsync = () => { qualityCompiles++; return Promise.resolve(); };
     renderer.setPixelRatio = dpr => { qualityDpr = dpr; };
-    for (let i = 0; i < 400; i++) monitorFrames(1000 / 30, false);`);
+    for (let i = 0; i < 400; i++) monitorFrames(1000 / 20, false);`);
   assert.equal(run('qualityLevel'), -1, 'slow frames reach the minimal floor');
   assert.equal(run('renderProfile.name'), 'minimal', 'the scene profile follows the downgrade');
   assert.equal(run('qualityDpr'), run('renderDpr(renderProfile, sizedW, sizedH, devicePixelRatio)'), 'resize applies the lower DPR');
@@ -2462,7 +2488,7 @@ console.log('view mode ok');
   assert.equal(run('qualityLevel'), -1, 'visibility and BFCache resume retain the session level');
   assert.equal(run('renderer'), rendererBefore, 'resume does not recreate the WebGL context');
   context.localStorage = new Proxy({}, { get() { throw new Error('storage blocked'); } });
-  run('qualityLevel = 1; for (let i = 0; i < 400; i++) monitorFrames(1000 / 30, false);');
+  run('qualityLevel = 1; for (let i = 0; i < 400; i++) monitorFrames(1000 / 20, false);');
   assert.equal(run('qualityLevel'), -1, 'adaptation also works with blocked storage');
   console.log('session-only quality recovery ok');
 }
@@ -2584,6 +2610,33 @@ console.log('view mode ok');
   assert(!keyDown('Tab') && !keyDown('KeyA'), 'during a song WASD/Tab are not photo keys');
   run("G.state = 'select';");
   console.log('photo free view by default, desktop frames, Escape steps back, touch only looks ok');
+  // A pending selection: the plaça is bare on the selector, but photo mode shows the last playable figure.
+  let ft = 90000; const pendFrame = () => run(`frame(${ft += 1000 / 60})`);
+  run(`var realSel = sheets.select, pendCrowd = activeCrowd; activeCrowd = []; sheets.select = { pending: true, figure: { id: 'aliga-valls', status: 'aviat' }, visible() {}, sheetOpen: false };
+    G.state = 'select'; setView(false); setFigureSong(MULASSA);`);
+  pendFrame();
+  assert(run('!mula.root.visible && !drac.root.visible'), 'pending selector: no model');
+  run('setView(true);'); pendFrame();
+  assert(run('mula.root.visible && !drac.root.visible && !avatarsEl.hidden'), 'pending photo mode: the Mulassa stands in, the bar shows');
+  run("takeFigure('drac-valls');"); pendFrame();
+  assert(run("drac.root.visible && !mula.root.visible && selectedFigure.id === 'mulassa-valls'"), 'driving the Drac never changes the selection');
+  run("PHOTO.sparks = true;"); pendFrame(); pendFrame();
+  run('setView(false);'); pendFrame();
+  assert(run("!mula.root.visible && !drac.root.visible && dracFx.idle && sheets.select.figure.id === 'aliga-valls' && selectedFigure.id === 'mulassa-valls'"), 'leaving: bare again, Drac fx cleared, pending selection kept');
+  run('setFigureSong(DRAC); setView(true);'); pendFrame();
+  assert(run('drac.root.visible && !mula.root.visible'), 'the last playable Drac stands in');
+  run('setView(false); setFigureSong(MULASSA);'); pendFrame(); // (a frame closes the photo walk, as the game does)
+  // A portrait phone: photo mode backs the camera off (same angle) so she fits across, and drops the selector band's shift.
+  const sizeWas = [context.innerWidth, context.innerHeight]; context.innerWidth = 393; context.innerHeight = 852;
+  run(`resize(); sheets.select.band = { top: 0, bottom: 200 }; setView(false);`); pendFrame();
+  const plainDist = run('orbitHome.dist'), plainPitch = run('orbitHome.pitch');
+  run('setView(true);'); pendFrame();
+  assert(run('orbitHome.dist') > plainDist * 1.3 && Math.abs(run('orbitHome.pitch') - plainPitch) < 1e-9, 'portrait photo mode: farther, same angle');
+  for (let i = 0; i < 120; i++) pendFrame();
+  assert(Math.abs(run('camShift')) < 1, 'portrait photo mode: centred, not in the hidden selector band');
+  [context.innerWidth, context.innerHeight] = sizeWas; run('setView(false); resize();'); pendFrame();
+  run('sheets.select = realSel; activeCrowd = pendCrowd;'); // (no crowd: the frames must not move the people later tests place)
+  console.log('pending selection: photo mode shows the last playable figure ok');
 }
 
 // A nearby spectator makes way through the regular RING steering; the walker never tunnels through them.

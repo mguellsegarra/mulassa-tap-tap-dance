@@ -17,6 +17,7 @@ assert(html.includes('Avisant a la brigada…'), 'Catalan status on the first pa
 const css = html.slice(html.indexOf('#loader {'), html.indexOf('</style>', html.indexOf('#loader {')));
 assert(/@media \(prefers-reduced-motion: reduce\)\{\.mula-load \*\{animation:none!important\}\}/.test(css), 'reduced motion: all character parts rest');
 assert(/#loader \{[^}]*pointer-events: none/.test(css), 'the loader never takes a tap');
+assert(/\.boot-fail > \.mula-load \{[^}]*width: 180px; height: 138px/.test(css) && !/\.boot-fail > svg/.test(css), 'the error card sizes the layered artwork (a div), never an svg');
 assert(/#loader\.page \.loader-box \{[^}]*animation-delay: 0s/.test(css), 'the page Mulassa shows at once');
 // Deterministic time protects the reading time, rather than only a minimum number of milliseconds since navigation.
 function timedLoader({ start = 0, ...options } = {}) {
@@ -65,7 +66,23 @@ for (const start of [0, 7000]) { // also after a slow module load: elapsed navig
 }
 {
   const d = timedLoader(); d.L.jokes(); d.classes.add('fail');
-  d.run(20000); assert(!d.el.hidden && !d.classes.has('out'), 'a boot error stays visible past the loader timeout');
+  d.run(28000); assert(!d.el.hidden && !d.classes.has('out'), 'a boot error stays visible past the loader timeout');
+}
+{
+  const d = timedLoader(); d.L.jokes();
+  d.doc.defaultView = { __mulassaCheckBoot() { d.classes.add('fail'); return false; } };
+  d.run(20000);
+  const last = d.label.textContent;
+  d.run(28000);
+  assert(!d.el.hidden && !d.classes.has('out'), 'no first frame: the deadline shows a retry, never an empty game');
+  assert.equal(d.label.textContent, last, 'the failed boot stops cycling loading phrases');
+  d.L.ready(); d.run(30000);
+  assert(!d.el.hidden, 'late readiness cannot dismiss the failure');
+}
+{
+  const d = timedLoader(); d.L.ready(); d.classes.add('fail');
+  d.run(250);
+  assert(!d.el.hidden, 'a fade queued before a boot failure cannot hide its retry');
 }
 
 // A tiny DOM: #loader + #loader-text, and timers run by hand.
@@ -174,23 +191,26 @@ function dom() {
 console.log('loader contracts ok');
 
 // index.html's boot watchdog: only a fatal start (the entry module failing to load or throwing, or no first frame
-// after 60 s of VISIBLE time, 25 s once the module ran) turns the cover into the sad Mulassa with a retry.
+// after 20 s of VISIBLE time) turns the cover into the sad Mulassa with a retry.
 {
   const vm = await import('node:vm');
   const src = /<script id="boot-watchdog">([\s\S]*?)<\/script>/.exec(html)?.[1];
   assert(src, 'the boot watchdog is an inline classic script');
   assert(html.indexOf('id="boot-watchdog"') > html.indexOf('<div id="loader"'), 'it runs after the loader is in the page');
   const boot = () => {
-    const timers = [], docHandlers = {}, loader = { hidden: true, className: 'out', attrs: {}, innerHTML: '', setAttribute(k, v) { this.attrs[k] = v; },
+    let now = 0;
+    const timers = [], docHandlers = {}, winHandlers = {}, loader = { hidden: true, className: 'out', attrs: {}, innerHTML: '', setAttribute(k, v) { this.attrs[k] = v; },
       parts: {}, querySelector(sel) { return (this.parts[sel] ||= { textContent: '', onclick: null }); } };
-    const env = { reloads: 0, window: {}, timers, loader, docHandlers,
+    const env = { reloads: 0, window: {}, timers, loader, docHandlers, winHandlers,
+      addEventListener: (type, f) => { winHandlers[type] = f; },
       document: { hidden: false, body: { removeAttribute() {} }, getElementById: id => (id === 'loader' ? loader : null),
         querySelector: sel => sel === '#loader .mula-load' ? { outerHTML: MULASSA_SVG } : null,
         addEventListener: (type, f) => { docHandlers[type] = f; } },
-      setTimeout: f => timers.push(f), location: { reload() { env.reloads++; } } };
+      Date: { now: () => now }, setTimeout: f => timers.push(f), location: { reload() { env.reloads++; } } };
     env.window = env; // window.__mulassa* live on the global, as in a browser
     vm.runInNewContext(src, env);
-    env.second = () => { const f = env.timers.shift(); f?.(); };
+    env.second = (ms = 1000) => { now += ms; const f = env.timers.shift(); f?.(); };
+    env.visibility = hidden => { env.document.hidden = hidden; docHandlers.visibilitychange(); };
     env.shown = () => loader.className === 'page fail';
     return env;
   };
@@ -199,26 +219,46 @@ console.log('loader contracts ok');
   b.docHandlers.load({ target: { tagName: 'SCRIPT', src: 'http://localhost:5178/@vite/client' } });
   b.docHandlers.load({ target: { tagName: 'IMG', src: 'x.png' } });
   b.__mulassaBooted = 'module'; b.docHandlers.load({ target: entry });
-  for (let i = 0; i < 24; i++) b.second();
+  for (let i = 0; i < 19; i++) b.second();
   b.__mulassaBooted = true; for (let i = 0; i < 100; i++) b.second();
   assert(!b.shown(), 'a normal load never shows it');
   b = boot();
-  b.document.hidden = true; for (let i = 0; i < 200; i++) b.second();
+  b.visibility(true); for (let i = 0; i < 200; i++) b.second();
   assert(!b.shown(), 'a hidden tab (no frames) is not a failure');
-  b.document.hidden = false; for (let i = 0; i < 60; i++) b.second();
-  assert(b.shown(), 'a minute of visible time without the game is');
+  b.visibility(false); for (let i = 0; i < 20; i++) b.second();
+  assert(b.shown(), 'twenty visible seconds without a bundle show a recoverable error');
   assert(b.loader.innerHTML.includes(MULASSA_SVG.replace('class="mula-load"', 'class="mula-load sad"')), 'the pre-bundle error reuses the full artwork in its sad pose');
   assert.equal(b.loader.parts.h1.textContent, 'Ups! No s’ha pogut carregar');
   assert.equal(b.loader.parts.p.textContent, 'Refresca la pàgina per tornar-ho a provar.');
   assert(b.loader.innerHTML.includes('class="btn btn-primary">Torna-ho a provar</button>'), 'the retry is the normal primary button');
   assert(!b.loader.hidden && b.loader.attrs['aria-busy'] === 'false');
   b.loader.parts.button.onclick(); assert.equal(b.reloads, 1, 'the retry reloads');
-  b = boot(); b.__mulassaBooted = 'module'; for (let i = 0; i < 25; i++) b.second();
-  assert(b.shown(), 'the module ran but no frame came in 25 visible seconds');
+  b = boot(); b.__mulassaBooted = 'module'; for (let i = 0; i < 20; i++) b.second();
+  assert(b.shown(), 'the module ran but no frame came in 20 visible seconds');
+  b = boot(); b.__mulassaBooted = 'module'; b.second(20000);
+  assert(b.shown(), 'a blocked main thread does not reset the deadline when timers can finally run');
+  assert.equal(b.__mulassaBootFailure.reason, 'deadline');
+  assert.equal(b.__mulassaBootFailure.phase, 'download');
+  b = boot(); b.visibility(true);
+  assert.equal(b.__mulassaCheckBoot(), false, 'the loader deadline does not release a hidden unpainted game');
+  assert(!b.shown(), 'background suspension is not a boot error');
+  b.visibility(false); b.__mulassaBooted = true;
+  assert.equal(b.__mulassaCheckBoot(), true, 'a painted game can release its cover');
+  b = boot(); b.second(5000); b.winHandlers.pagehide(); b.second(60000); b.winHandlers.pageshow();
+  b.second(14000);
+  assert(!b.shown(), 'page suspension without visibilitychange preserves the remaining visible-time budget');
+  b.second(); assert(b.shown(), 'resuming never resets the visible time already spent');
   b = boot(); b.docHandlers.load({ target: entry });
   assert(b.shown(), 'the entry module threw while it ran (loaded without the flag): shown at once');
+  assert.equal(b.__mulassaBootFailure.reason, 'module-init');
   b = boot(); b.docHandlers.error({ target: { tagName: 'SCRIPT', src: 'http://localhost:5178/src/main.js?t=1' } });
   assert(b.shown(), 'the entry module failed to load');
+  assert.equal(b.__mulassaBootFailure.reason, 'module-load');
+  b = boot(); let reports = 0;
+  b.__mulassaReportBoot = () => { reports++; };
+  b.__mulassaBootPhase = 'shaders'; b.second(20000); b.__mulassaFail('again', 'again', true);
+  assert.equal(b.__mulassaBootFailure.phase, 'shaders');
+  assert.equal(reports, 1, 'a startup error reports its category once, without raw error text');
   b = boot(); b.__mulassaBooted = 'no-webgl'; b.__mulassaFail('Ups! No es pot mostrar el joc', 'El teu navegador…');
   for (let i = 0; i < 100; i++) b.second();
   assert.equal(b.loader.parts.h1.textContent, 'Ups! No es pot mostrar el joc', 'main.js\'s own reason stays (no generic card over it)');

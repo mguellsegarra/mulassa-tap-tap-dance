@@ -216,12 +216,12 @@ function mockClient({ rows, taken = false, delay = 500, initialSelf = null, acco
           if (!a.p_notice) return no('leaderboard_notice_required');
           started = true;
         }
-        const q = quality({ perfect: a.p_perfect, good: a.p_good, miss: a.p_miss });
+        const q = quality({ perfect: a.p_perfect, good: a.p_good, miss: a.p_miss }), units = 5 * a.p_perfect + 4 * a.p_good;
         const points = comparableScore(a.p_score, a.p_difficulty, a.p_version), key = `${a.p_version}:${a.p_difficulty}`;
-        const previous = entries.get(key), improved = !previous || q > previous.quality || (q === previous.quality && a.p_score > previous.rawScore);
+        const previous = entries.get(key), improved = !previous || points > previous.score || (points === previous.score && units > previous.units); // as submit_result
         self = { verified: false, notice: false, ...self, alias: a.p_alias };
         if (started) self.expires = now() + 7 * DAY_MS;
-        if (improved) entries.set(key, { difficulty: a.p_difficulty, quality: q, score: points, rawScore: a.p_score, max_combo: a.p_max_combo });
+        if (improved) entries.set(key, { difficulty: a.p_difficulty, quality: q, units, score: points, rawScore: a.p_score, max_combo: a.p_max_combo });
         const saved = entries.get(key);
         return ok([{ improved, quality: saved.quality, score: saved.score, expires_at: self.verified ? null : iso(self.expires), started }]);
       }

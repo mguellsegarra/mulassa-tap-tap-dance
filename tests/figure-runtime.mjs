@@ -60,7 +60,7 @@ for (const key of ['audio', 'ambient']) {
   const bytes = readFileSync(new URL(`../public/${file}`, import.meta.url));
   assert.equal(createHash('sha1').update(bytes).digest('hex').slice(0, 10), hash, `${key}: generated URL matches copied audio`);
 }
-assert.equal(recordKey(MULASSA, 1), 'record-family-mulassa-1');
+assert.equal(recordKey(MULASSA, 1), 'record-points-mulassa-1');
 assert.notEqual(recordKey(DRAC, 1), recordKey(MULASSA, 1));
 const dracRun = { figureId: DRAC.id, pct: 100, diff: 1 };
 assert.equal(challengeEligible(dracRun), false);
@@ -112,6 +112,11 @@ assert.equal(JSON.parse(recordStore.get('record-v2-duet-1')).score, 50000, 'lega
 saveFigureRecord(recordStore, DRAC, 1, 88, 12345, 30);
 assert.equal(readFigureRecord(recordStore, DRAC, 1).score, 12345, 'Drac retains raw score in its own namespace');
 assert.equal(readFigureRecord(recordStore, MULASSA, 1).quality, 95, 'switching figures cannot replace the Mulassa record');
+// The figure adapter uses master points ordering, including records left by older tabs.
+recordStore.set('record-family-mulassa-1', JSON.stringify({ quality: 100, rawScore: 1, score: 1,
+  sourceVersion: 'mulassa-v2-short', scoreScale: 'mulassa-family-v1' }));
+assert.equal(readFigureRecord(recordStore, MULASSA, 1).score, Math.round(40000 * 113940 / 83540), 'an older tab cannot replace more points with a higher percentage');
+assert.equal(readFigureRecord(recordStore, DRAC, 1).score, 12345, 'Mulassa migration cannot change Drac records');
 console.log('short Mulassa and Drac record isolation ok');
 
 // Scene sounds share the run's ownership, independently of which figure (or pending card) is selected.

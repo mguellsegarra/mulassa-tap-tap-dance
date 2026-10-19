@@ -1,5 +1,6 @@
 import { leaderboard } from '../services/leaderboard.js';
 // Builds the sheets (settings, sync, board, share, profile, feedback, nudge, privacy), wires their buttons and registers them in `sheets`.
+import { showPhotoHelp } from './photo-avatars.js';
 import { setupSelect } from './select-ui.js';
 import { sheetFades } from './sheet-fade.js';
 import { setupSync } from './sync-sheet.js';
@@ -58,7 +59,7 @@ document.getElementById('confirm-action').addEventListener('click', () => {
   document.activeElement?.blur();
 });
 document.getElementById('pause').addEventListener('click', togglePause);
-document.getElementById('howto').addEventListener('click', () => { if ((G.state === 'title' || G.state === 'select')) { howtoMenu.showModal(); focusIn(howtoMenu, 'howto-ok'); } });
+document.getElementById('howto').addEventListener('click', () => { if (viewMode) { showPhotoHelp(); return; } if ((G.state === 'title' || G.state === 'select')) { howtoMenu.showModal(); focusIn(howtoMenu, 'howto-ok'); } });
 // The dance demo has nothing to lose: its restart and exit need no confirmation
 const pauseAction = a => { if (!G.watch) requestPauseAction(a); else if (a === 'restart') { chip.resume(); startWatch(); } else toTitle(); };
 document.getElementById('restart').addEventListener('click', () => pauseAction('restart'));

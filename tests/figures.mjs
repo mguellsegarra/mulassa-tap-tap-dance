@@ -66,7 +66,7 @@ assert.equal(rememberedLevel(store, MULASSA.id), 1);
 rememberLevel(store, MULASSA.id, 2); assert.equal(rememberedLevel(store, MULASSA.id), 2);
 assert.equal(rememberedLevel(store, 'another'), 1, 'memory belongs to the figure');
 for (const value of ['-1', '3', 'NaN', '1.5', '']) { memory.set('level-mulassa-valls', value); assert.equal(rememberedLevel(store, MULASSA.id), 1); }
-assert.equal(recordKey(MULASSA, 2), 'record-family-mulassa-2', 'short records have a separate namespace');
+assert.equal(recordKey(MULASSA, 2), 'record-points-mulassa-2', 'points-first Mulassa records have a separate namespace');
 assert.equal(sourceCatalog.figures.find(f => f.id === 'nans-valls').music, 'Francesc Sans', 'pending Valls figures credit their own music');
 const pendingName = id => sourceCatalog.figures.find(f => f.id === id);
 for (const [id, verb] of [['gegants-ciutat-valls', 'surtin'], ['nans-valls', 'surtin'], ['mulassa-solsona', 'surtin'], ['aliga-solsona', 'surtin'], ['boja-vilanova', 'surti'], ['drac-vilanova', 'surti'], ['guites-berga', 'surtin'],

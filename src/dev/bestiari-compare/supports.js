@@ -1,6 +1,6 @@
 import { shoeSeparation } from './support-clearance.js';
 // Four human carriers in two rows. The carried shell requires coordinated steps.
-export const SUPPORT_LAYOUT = [1.05, -1.05].flatMap(z => [.21, -.21].flatMap(x => [.13, -.13].map(dx => ({ x: x + dx, z }))));
+export const SUPPORT_LAYOUT = [1.05, -1.05].flatMap(z => [.2, -.2].flatMap(x => [.1, -.1].map(dx => ({ x: x + dx, z }))));
 const ease = u => u ** 3 * (10 - 15 * u + 6 * u * u);
 
 export function planSupports(poseAt, end = 166.2) {
@@ -22,33 +22,38 @@ export function planSupports(poseAt, end = 166.2) {
     let needed = false;
     for (let i = 0; i < 8; i++) {
       nominal(t, i, sample);
-      if (Math.hypot(sample.x - planted[i].x, sample.z - planted[i].z) > .115 || Math.abs(sample.yaw - planted[i].yaw) > .15) needed = true;
+      if (Math.hypot(sample.x - planted[i].x, sample.z - planted[i].z) > .075 || Math.abs(sample.yaw - planted[i].yaw) > .15) needed = true;
     }
     if (!needed) continue;
     poseAt(t, sample); poseAt(t + .1, ahead);
     const turnSpeed = Math.abs(ahead.yaw - sample.yaw) / .1, travelSpeed = Math.hypot(ahead.x - sample.x, ahead.z - sample.z) / .1;
-    const duration = Math.max(.12, .28 / (1 + turnSpeed * .4 + travelSpeed * .3));
-    for (let i = next; i < 8; i += 2) nominal(t + duration * 1.5, i, targets[i]);
-    // One common correction preserves the spacing between the four moving shoes.
-    let found = false, ox = 0, oz = 0;
-    for (let ring = 0; ring <= 40 && !found; ring++) {
-      for (let a = 0; a < (ring ? 32 : 1); a++) {
-        const dx = Math.cos(a * Math.PI / 16) * ring * .02, dz = Math.sin(a * Math.PI / 16) * ring * .02;
-        let clear = true;
-        for (let i = next; i < 8 && clear; i += 2) {
-          candidate.x = targets[i].x + dx; candidate.z = targets[i].z + dz; candidate.yaw = targets[i].yaw;
-          for (let j = 1 - next; j < 8 && clear; j += 2) if (shoeSeparation(candidate, planted[j], separation).gap < .014) clear = false;
-        }
-        if (clear) { found = true; ox = dx; oz = dz; break; }
-      }
-    }
-    if (!found) throw new Error(`No clear coordinated landing at ${t}`);
+    const duration = Math.max(.06, .24 / (1 + turnSpeed * 1.5 + travelSpeed * .65));
+    for (let i = next; i < 8; i += 2) nominal(t + duration, i, targets[i]);
+    // Each carrier places one foot beside their own stance foot. A shared offset
+    // pushed an entire row sideways when front/back carriers turned in opposite arcs.
     for (let i = next; i < 8; i += 2) {
-      const to = { x: targets[i].x + ox, z: targets[i].z + oz, yaw: targets[i].yaw };
+      let found = false;
+      const target = { ...targets[i] };
+      for (let ring = 0; ring <= 14 && !found; ring++) {
+        for (let a = 0; a < (ring ? 2 : 1); a++) {
+          const dx = 0, dz = (a ? -1 : 1) * ring * .02;
+          candidate.x = target.x + dx * Math.cos(target.yaw) + dz * Math.sin(target.yaw);
+          candidate.z = target.z - dx * Math.sin(target.yaw) + dz * Math.cos(target.yaw);
+          candidate.yaw = target.yaw;
+          let clear = true;
+          for (let j = 0; j < 8 && clear; j++) {
+            if (j === i || (j % 2 === next && j > i)) continue;
+            if (shoeSeparation(candidate, planted[j], separation).gap < .012) clear = false;
+          }
+          if (clear) { Object.assign(targets[i], candidate); found = true; break; }
+        }
+      }
+      if (!found) throw new Error(`No compact carrier landing at ${t}, foot ${i}`);
+      const to = { ...targets[i] };
       events[i].push({ start: t, end: t + duration, from: { ...planted[i] }, to });
       Object.assign(planted[i], to);
     }
-    freeAt = t + duration + .025; next = 1 - next;
+    freeAt = t + duration + .015; next = 1 - next;
   }
   function foot(t, index, out = {}) {
     const list = events[index]; let lo = 0, hi = list.length;

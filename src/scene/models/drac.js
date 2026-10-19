@@ -8,6 +8,7 @@
 // grows out of a nozzle. tests/drac-parts.mjs checks that every part is one connected piece and stays attached.
 import * as THREE from 'three';
 import { Vox } from './voxel.js';
+import { COLLA } from './colla.js';
 
 export const D = {
   green: '#2f6b3a', greenDark: '#1f4a2b', greenLight: '#4a8a4c', rib: '#26562f',
@@ -15,7 +16,7 @@ export const D = {
   red: '#c42a2a', redDark: '#6e1018', white: '#f4efe4', iris: '#2f62b8', irisCore: '#e8b52c', pupil: '#111111',
   spot: '#c62a22', spotRing: '#e0b03a',
   brown: '#8a5233', brownLight: '#b8743e', grille: '#2b2522', metal: '#3b3b40',
-  pants: '#d8c892', pantsPatch: '#5b8a3e', pantsEye: '#5d4f22', shoe: '#141414',
+  pants: COLLA.cream, pantsPatch: COLLA.blotch, pantsEye: COLLA.ring, shoe: '#141414', // the colla's own camouflage suit (models/colla.js)
 };
 export const DRAC_SIZE = { h: 6.0, l: 5.55 }; // model units, standing (heads up), snout to tail; tests/drac-parts.mjs measures it
 // The rig is built and danced in model units; the stage shows it at this uniform scale (feet stay planted, joints closed).

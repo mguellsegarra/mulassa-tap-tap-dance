@@ -1,6 +1,6 @@
 // Catalog metadata lives in JSON; only the two integrated songs are playable.
 import figureCatalog from './figure-catalog.json' with { type: 'json' };
-import { bestRecord, recordFamilyKey, saveRecord } from './records.js';
+import { bestRecord, recordPointsKey, saveRecord } from './records.js';
 import { CURRENT_SCORE_VERSION } from './score-scale.js';
 import { FIGURE_PORTRAITS } from './figure-portraits.js';
 export const TOWNS = figureCatalog.towns;
@@ -36,7 +36,7 @@ export function rememberedLevel(store, id) {
 }
 export const rememberLevel = (store, id, level) => store.set(levelKey(id), String(level));
 // A figure's record at a level on this device: the mulassa's keys predate the figures (record-v2-duet-<level>)
-export const recordKey = (figure, level) => figure.id === MULASSA.id ? recordFamilyKey(level) : `record-${figure.id}-${level}`;
+export const recordKey = (figure, level) => figure.id === MULASSA.id ? recordPointsKey(level) : `record-${figure.id}-${level}`;
 
 // Mulassa compares its legacy and shortened records; other figures keep their own raw score.
 export function readFigureRecord(store, figure, level) {

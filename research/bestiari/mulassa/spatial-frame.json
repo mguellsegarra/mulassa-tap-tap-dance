@@ -3,7 +3,18 @@
   "z": "towards reference camera at opening",
   "front": "+z for local model",
   "yaw": "unwrapped degrees; positive anticlockwise in the overhead view",
-  "compass": "not established for this performance; no invented N/W/S/E helper marks",
+  "compass": {
+    "kind": "approved rehearsal directions, not geographic north",
+    "W": "opening reconstructed heading (-64.319 degrees in camera frame)",
+    "orderPositiveYaw": [
+      "W",
+      "S",
+      "E",
+      "N"
+    ],
+    "origin": "opening reconstructed floor position",
+    "camera": "independent marker; never defines S"
+  },
   "metricCalibration": "inferred from model dimensions; not surveyed",
   "camera": {
     "fov": 32,
@@ -17,6 +28,6 @@
   "previewModel": {
     "proportions": "Original buildMulassa geometry and transforms preserved; no root or skirt scaling.",
     "carriers": 4,
-    "note": "Articulated carrier legs retained. Proportion adjustments reverted at Marc's request."
+    "note": "Original beast proportions preserved. Simplified visible trouser cuffs and rigid shoes for four carriers; hidden articulated anatomy omitted. Body roll emphasized by 15%, with a small head roll accent (12% of body roll), both artistic adaptation."
   }
 }

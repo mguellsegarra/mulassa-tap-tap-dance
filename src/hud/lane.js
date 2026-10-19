@@ -1,5 +1,5 @@
 // The lane: notes, holds, balloons, the hit ring and the streak badge.
-import { themed } from '../game/figure-theme.js';
+import { themed, figTheme } from '../game/figure-theme.js';
 import { lane, LH } from './layout.js';
 import { W, H, PXU, SAFE, K } from './canvas.js';
 import { BEATS, beatAt, CALM } from '../core/env.js';
@@ -61,19 +61,20 @@ export function drawLane(t) {
   }
   const bl = balloonShown(t);
   if (bl) { // the balloon hangs from the ring, under the lane, and inflates with every tap; the counter keeps going after each pop
-    const k = (bl.count % bl.need) / bl.need, r = 9 + 17 * k + pulse(G.pumpT, 0.15) * 3, by = bottom + 8 + r;
+    const k = (bl.count % bl.need) / bl.need, carretilles = figTheme.drac;
+    const r = carretilles ? 24 : 9 + 17 * k + pulse(G.pumpT, 0.15) * 3, by = carretilles ? bottom + 24 : bottom + 8 + r;
     const m = balloonFx && H.getTransform?.(); // the 3D balloon (balloon3d.js) is drawn under the HUD: say where it hangs, the counter below sits on top
     if (m) {
       const px = (x, y) => [(m.a * x + m.c * y + m.e) / PXU, (m.b * x + m.d * y + m.f) / PXU], [bx, byy] = px(hx, by), [ax, ay] = px(hx, cy + 17), sc = Math.hypot(m.a, m.b) / PXU;
       setBalloonView({ x: bx, y: byy, r: r * sc, k, ax, ay });
     } else {
-      H.strokeStyle = C.cream; H.lineWidth = 1; H.beginPath(); H.moveTo(hx, cy + 17); H.lineTo(hx, by - r); H.stroke();
+      if (!carretilles) { H.strokeStyle = C.cream; H.lineWidth = 1; H.beginPath(); H.moveTo(hx, cy + 17); H.lineTo(hx, by - r); H.stroke(); }
       balloonShape(hx, by, r, `hsl(${350 - k * 30},90%,${62 - k * 8}%)`);
     }
-    text(String(bl.count), hx, by, 28, C.cream, 'center', C.dark, false, (9 + r * 0.55 + pulse(G.pumpT, 0.12) * 3) / 28); // the total only ever goes up; grows from one sprite per number (r < 29)
+    text(String(bl.count), hx, carretilles ? bottom + 53 : by, 28, C.cream, 'center', C.dark, false, carretilles ? 0.65 : (9 + r * 0.55 + pulse(G.pumpT, 0.12) * 3) / 28); // the total only ever goes up; grows from one sprite per number (r < 29)
     const pops = Math.floor(bl.count / bl.need);
     text(pops ? `x${pops}` : `${bl.need - bl.count}`, hx + 34, bottom + 12, 20, C.gold, 'left', C.dark, false, 0.8 * (1 + pulse(G.pumpT, 0.12) * 0.25));
-    text(pops ? themed('GLOBUS') : 'PER PETAR', hx + 34, bottom + 26, 8, C.cream, 'left');
+    text(themed(pops ? 'GLOBUS' : 'PER PETAR'), hx + 34, bottom + 26, 8, C.cream, 'left');
     const urge = (1 + 0.08 * Math.sin(clock * 12)) / 1.08, U = 9 * 1.08; // mirrors the counter on the other side of the balloon
     if (hx - 34 - W0 > textWidth('RÀPID!', 9) + 2) { text('PICA', hx - 34, bottom + 12, U, C.gold, 'right', C.dark, false, urge); text('RÀPID!', hx - 34, bottom + 25, U, C.gold, 'right', C.dark, false, urge); }
     else text('PICA RÀPID!', hx + 34, bottom + 40, U, C.gold, 'left', C.dark, false, urge); // no room left of the ring (phones): under the counter

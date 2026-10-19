@@ -2,92 +2,48 @@ import * as THREE from 'three';
 import { SHOE } from './support-clearance.js';
 import { SUPPORT_LAYOUT } from './supports.js';
 
-export const LEG_LENGTH = 0.44;
-// Fixed-length thigh and shin. Flexion replaces the old telescoping trouser mesh.
-export function solveKnee(hip, ankle, forward, out, work) {
-  work.subVectors(ankle, hip);
-  const distance = work.length(); work.multiplyScalar(1 / Math.max(distance, 0.0001));
-  out.copy(forward).addScaledVector(work, -forward.dot(work)).normalize();
-  out.multiplyScalar(Math.sqrt(Math.max(0, LEG_LENGTH ** 2 - (distance / 2) ** 2)));
-  out.addScaledVector(work, distance / 2).add(hip);
-  return distance;
-}
-
+// A trouser cuff and a rigid shoe per foot. Hidden anatomy is deliberately omitted:
+// the cloth continues a little inside the unchanged costume, without exposed knee blocks.
 export function createCarriers(scene, motion) {
-  const cloth = new THREE.MeshLambertMaterial({ color: '#26262e' }), shoes = new THREE.MeshLambertMaterial({ color: '#171714' });
-  const legGeo = new THREE.BoxGeometry(0.115, LEG_LENGTH, 0.13), kneeGeo = new THREE.BoxGeometry(.12, .13, .14);
-  const shoeGeo = new THREE.BoxGeometry(SHOE.width, SHOE.height, SHOE.length), torsoGeo = new THREE.BoxGeometry(.32, .5, .23);
+  const cloth = new THREE.MeshLambertMaterial({ color: '#26262e' });
+  const leather = new THREE.MeshLambertMaterial({ color: '#171714' });
+  const cuffGeo = new THREE.BoxGeometry(.105, 1, .115);
+  const shoeGeo = new THREE.BoxGeometry(SHOE.width, SHOE.height, SHOE.length);
   const feet = SUPPORT_LAYOUT.map(() => ({}));
   const parts = SUPPORT_LAYOUT.map(() => {
-    const thigh = new THREE.Mesh(legGeo, cloth), shin = new THREE.Mesh(legGeo, cloth), knee = new THREE.Mesh(kneeGeo, cloth), shoe = new THREE.Mesh(shoeGeo, shoes);
-    scene.add(thigh, shin, knee, shoe); return { thigh, shin, knee, shoe };
+    const cuff = new THREE.Mesh(cuffGeo, cloth), shoe = new THREE.Mesh(shoeGeo, leather);
+    scene.add(cuff, shoe); return { cuff, shoe };
   });
-  const torsos = Array.from({ length: 4 }, () => { const mesh = new THREE.Mesh(torsoGeo, cloth); scene.add(mesh); return mesh; });
-  const hip = new THREE.Vector3(), ankle = new THREE.Vector3(), knee = new THREE.Vector3(), work = new THREE.Vector3();
-  const bend = new THREE.Vector3();
-  const shoulder = new THREE.Vector3(), pelvis = new THREE.Vector3();
-  const up = new THREE.Vector3(0, 1, 0), direction = new THREE.Vector3();
-  function bone(mesh, a, b) {
-    mesh.position.copy(a).add(b).multiplyScalar(.5); direction.subVectors(b, a).normalize();
-    mesh.quaternion.setFromUnitVectors(up, direction);
-  }
+  const root = new THREE.Object3D(), shell = new THREE.Object3D();
+  root.add(shell); shell.position.y = .9;
+  const inverse = new THREE.Matrix4(), ankle = new THREE.Vector3(), top = new THREE.Vector3();
+  const ray = new THREE.Ray(), up = new THREE.Vector3(0, 1, 0), direction = new THREE.Vector3();
   function visible(value) {
-    for (const p of parts) { p.thigh.visible = value; p.shin.visible = value; p.knee.visible = value; p.shoe.visible = value; }
-    for (const torso of torsos) torso.visible = value;
+    for (const p of parts) { p.cuff.visible = value; p.shoe.visible = value; }
   }
-  let carrierBody, yawC = 1, yawS = 0;
-  function shellPoint(x, y, z, out) {
-    const xx = x * Math.cos(carrierBody.roll) - y * Math.sin(carrierBody.roll);
-    const yy = x * Math.sin(carrierBody.roll) + y * Math.cos(carrierBody.roll);
-    const zz = yy * Math.sin(carrierBody.pitch) + z * Math.cos(carrierBody.pitch);
-    out.set(carrierBody.x + xx * yawC + zz * yawS, carrierBody.lift + .9 + yy * Math.cos(carrierBody.pitch) - z * Math.sin(carrierBody.pitch), carrierBody.z - xx * yawS + zz * yawC);
-  }
-  const before = {}, after = {};
   function pose(t, body) {
-    for (let i = 0; i < 8; i++) motion.foot(t, i, feet[i]);
-    const c = Math.cos(body.yaw), s = Math.sin(body.yaw);
-    carrierBody = body; yawC = c; yawS = s;
-    // Keep a continuous crouch through a turn instead of standing up between each footfall.
-    motion.pose(Math.max(0, t - .08), before); motion.pose(t + .08, after);
-    const turn = Math.max(0, Math.min(1, (Math.abs(after.yaw - before.yaw) / .16 - .4) / .5));
-    const turnFlex = turn * turn * turn * (10 - 15 * turn + 6 * turn * turn);
-    for (let pair = 0; pair < 4; pair++) {
-      const x = pair % 2 ? -.21 : .21, z = pair < 2 ? 1.05 : -1.05;
-      shellPoint(x, -.1, z, pelvis); shellPoint(x, .42, z, shoulder);
-      const centerX = pelvis.x, centerZ = pelvis.z;
-      // A normal forward stride does not require a squat. Widening the stance in a turn
-      // does: blend the pelvis/reach together while keeping both limb lengths fixed.
-      let spread = 0;
-      for (let side = 0; side < 2; side++) {
-        const f = feet[pair * 2 + side], dx = side ? -.085 : .085;
-        const ex = centerX + c * dx - f.x, ez = centerZ - s * dx - f.z;
-        spread = Math.max(spread, Math.abs(ex * c - ez * s), Math.max(0, Math.abs(ex * s + ez * c) - .2));
-      }
-      const u = Math.max(0, Math.min(1, (spread - .07) / .15));
-      const flex = Math.max(turnFlex, u * u * u * (10 - 15 * u + 6 * u * u));
-      const reach = .87 - .11 * flex;
-      let hipY = Math.min(.94 - .06 * flex, pelvis.y + .14 * (1 - flex));
-      for (let side = 0; side < 2; side++) {
-        const f = feet[pair * 2 + side], dx = side ? -.085 : .085;
-        const horizontal = Math.hypot(centerX + c * dx - f.x, centerZ - s * dx - f.z);
-        hipY = Math.min(hipY, f.y + .075 + Math.sqrt(Math.max(0, reach ** 2 - horizontal ** 2)));
-      }
-      pelvis.y = hipY;
-      bone(torsos[pair], pelvis, shoulder); torsos[pair].scale.y = pelvis.distanceTo(shoulder) / .5;
-      for (let side = 0; side < 2; side++) {
-        const index = pair * 2 + side, f = feet[index], p = parts[index], dx = side ? -.085 : .085;
-        hip.set(centerX + c * dx, hipY, centerZ - s * dx);
-        ankle.set(f.x, f.y + .075, f.z);
-        // A horizontal pole cannot flip through the hip–ankle axis as the shell tilts.
-        // Aim slightly inward beneath the cloth, with a persistent forward component.
-        const inward = x * .5 - ((f.x - body.x) * c - (f.z - body.z) * s);
-        bend.set(c * inward + s * .16, 0, -s * inward + c * .16);
-        solveKnee(hip, ankle, bend, knee, work);
-        bone(p.thigh, hip, knee); bone(p.shin, knee, ankle);
-        p.knee.position.copy(knee); p.knee.rotation.y = body.yaw;
-        p.shoe.position.set(f.x, f.y + .0375, f.z); p.shoe.rotation.y = f.yaw;
-      }
+    root.position.set(body.x, body.lift, body.z); root.rotation.y = body.yaw;
+    shell.rotation.set(body.pitch, 0, body.roll); root.updateMatrixWorld(true);
+    inverse.copy(shell.matrixWorld).invert();
+    for (let i = 0; i < 8; i++) {
+      const f = motion.foot(t, i, feet[i]), p = parts[i];
+      ankle.set(f.x, f.y + SHOE.height * .8, f.z);
+      ray.origin.copy(ankle); ray.direction.copy(up); ray.applyMatrix4(inverse);
+      // A lifted ankle may already be inside the cloth; keep a short overlap there.
+      const distance = Math.max(.08, -(ray.origin.y + .35) / ray.direction.y);
+      top.copy(ray.origin).addScaledVector(ray.direction, distance);
+      // Follow the hem vertically wherever possible. At the costume edge, tuck the
+      // top inside the cloth rather than exposing a separate thigh/hip or spreading knees.
+      top.x = THREE.MathUtils.clamp(top.x, -.44, .44);
+      top.z = THREE.MathUtils.clamp(top.z, -1.49, 1.49);
+      top.applyMatrix4(shell.matrixWorld);
+      p.cuff.position.copy(ankle).add(top).multiplyScalar(.5);
+      direction.subVectors(top, ankle);
+      p.cuff.scale.y = direction.length();
+      p.cuff.quaternion.setFromUnitVectors(up, direction.normalize());
+      p.shoe.position.set(f.x, f.y + SHOE.height / 2, f.z); p.shoe.rotation.set(0, f.yaw, 0);
     }
   }
-  return { pose, visible, parts, torsos };
+  function dispose() { cuffGeo.dispose(); shoeGeo.dispose(); cloth.dispose(); leather.dispose(); }
+  return { pose, visible, parts, dispose };
 }

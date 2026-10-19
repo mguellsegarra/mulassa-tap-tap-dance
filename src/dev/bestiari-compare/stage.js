@@ -1,9 +1,10 @@
 import * as THREE from 'three';
 import { buildMulassa } from '../../scene/models/mulassa.js';
 import { createCarriers } from './carriers.js';
+import { addDirectionMarkers } from './directions.js';
 import { poseMulassa } from '../../scene/mula-pose-rig.js';
 
-export function createStage(canvas, motion) {
+export function createStage(canvas, motion, directions) {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
   renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
   const scene = new THREE.Scene(); scene.background = new THREE.Color('#a7bdca');
@@ -18,6 +19,7 @@ export function createStage(canvas, motion) {
   rig.neck.rotation.x = 0.15; rig.head.rotation.x = 0.2;
   rig.peek.visible = false;
   const carriers = createCarriers(scene, motion);
+  const markers = addDirectionMarkers(THREE, scene, directions);
   const panel = new THREE.Vector3();
   const resize = new ResizeObserver(() => {
     const { width, height } = canvas.getBoundingClientRect();
@@ -37,10 +39,11 @@ export function createStage(canvas, motion) {
     carriers.visible(!baseline);
     if (baseline) {
       for (const leg of rig.legs) leg.visible = true;
+      rig.head.rotation.set(0, 0, 0);
       poseMulassa(rig, baseline.pose, baseline.beat, -65 * Math.PI / 180);
       renderer.render(scene, camera); return;
     }
-    rig.neck.rotation.set(0.15, 0, 0); rig.head.rotation.x = 0.2; rig.jaw.rotation.x = 0;
+    rig.neck.rotation.set(0.15, 0, 0); rig.head.rotation.set(0.2, 0, pose.headRoll); rig.jaw.rotation.x = 0;
     rig.tail.rotation.set(0, 0, 0);
     for (const ear of rig.ears) ear.rotation.x = 0;
     for (const leg of rig.legs) leg.visible = false;
@@ -62,5 +65,5 @@ export function createStage(canvas, motion) {
     }
     renderer.render(scene, camera);
   }
-  return { render, dispose() { resize.disconnect(); renderer.dispose(); } };
+  return { render, dispose() { resize.disconnect(); carriers.dispose(); markers.dispose(); renderer.dispose(); } };
 }

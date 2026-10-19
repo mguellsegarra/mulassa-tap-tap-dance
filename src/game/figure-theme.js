@@ -17,9 +17,9 @@ export function setFigureTheme(drac) {
   themeHooks.forEach(fn => fn(next));
 }
 // Every Mulassa word the Drac says differently; ELS DOS ALHORA! (an error key) stays for both.
-const THEME_SWAP = { GUAPA: 'CREMA', GLOBUS: 'TRACA', GUA: 'CRE', PA: 'MA', 'LA MULASSA': 'EL DRAC', 'la Mulassa cau!': 'el Drac s’apaga!', 'la Mulassa': 'el Drac', 'S’HA DESMUNTAT': 'S’HA APAGAT',
+const THEME_SWAP = { GUAPA: 'CREMA', GLOBUS: 'CARRETILLES', 'PER PETAR': 'PEL TRO FINAL', GUA: 'CRE', PA: 'MA', 'LA MULASSA': 'EL DRAC', 'la Mulassa cau!': 'el Drac s’apaga!', 'la Mulassa': 'el Drac', 'S’HA DESMUNTAT': 'S’HA APAGAT',
   'Els portadors demanen un cafè': 'Cal tornar a encendre la metxa', 'HA PETAT!': 'TRO!' };
-const THEME_RE = /\b(?:GUAPA|GLOBUS|GUA|PA)\b|LA MULASSA|la Mulassa cau!|la Mulassa|S’HA DESMUNTAT|Els portadors demanen un cafè|HA PETAT!/g;
+const THEME_RE = /\b(?:GUAPA|GLOBUS|GUA|PA)\b|PER PETAR|LA MULASSA|la Mulassa cau!|la Mulassa|S’HA DESMUNTAT|Els portadors demanen un cafè|HA PETAT!/g;
 export function themed(s) { // the text as the selected figure says it (cached: the HUD asks every frame)
   if (!figTheme.drac || !s) return s; // a drumroll's input has no word: undefined stays undefined
   let r = themeMemo.get(s);

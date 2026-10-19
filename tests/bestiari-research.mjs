@@ -8,7 +8,9 @@ import { makeMotion } from '../src/dev/bestiari-compare/motion.js';
 import * as THREE from 'three';
 import { buildMulassa } from '../src/scene/models/mulassa.js';
 import { shoeSeparation, SHOE } from '../src/dev/bestiari-compare/support-clearance.js';
-import { createCarriers, LEG_LENGTH } from '../src/dev/bestiari-compare/carriers.js';
+import { createCarriers } from '../src/dev/bestiari-compare/carriers.js';
+import { planSupports } from '../src/dev/bestiari-compare/supports.js';
+import { makeDirections } from '../src/dev/bestiari-compare/directions.js';
 import { byteRange } from '../tools/bestiari/media-plugin.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
@@ -51,8 +53,9 @@ assert(motion.pose(71).x - motion.pose(75).x > 2.5, 'approach also travels left 
 assert(motion.pose(106).x - motion.pose(90).x > 1.5, 'late passage travels laterally instead of swaying in place');
 assert(motion.pose(110).pitch > .25, 'visible forward dip around 110 s');
 assert(motion.pose(127).pitch < -.3 && motion.pose(128).pitch > .3, 'front alternates up/down rather than lifting every time');
+const still = planSupports((_t, out) => Object.assign(out, { x: 0, z: 0, yaw: 0, roll: 0, pitch: 0, lift: 0 }), 5);
+assert(still.events.every(list => list.length === 0), 'no arbitrary marching when the carried figure is still');
 for (const list of motion.events) {
-  assert(list[0].start > 2, 'no arbitrary marching while the opening contacts are still');
   for (let k = 0; k < list.length - 1; k++) {
     const t = (list[k].end + list[k + 1].start) / 2;
     const a = motion.foot(t, motion.events.indexOf(list));
@@ -69,25 +72,37 @@ for (const t of [17, 161, 33, 84]) motion.foot(t, 6);
 assert.deepEqual(motion.foot(144.84375, 6), footSeek, 'avoidance must not depend on playback history');
 const carrierScene = new THREE.Scene(), shell = buildMulassa(); carrierScene.add(shell.root);
 const carriers = createCarriers(carrierScene, motion);
-// Reported regressions: a permanent crouch, and knees flipping sides during a step.
-// Source stills show almost vertical shins at rest and at the raised rear around 110 s.
-const shinAxis = new THREE.Vector3();
+// The accepted visual abstraction has straight trouser cuffs, not exposed knee/hip chains.
+const cuffAxis = new THREE.Vector3();
 for (const t of [0, 1, 110, 166.2]) {
   carriers.pose(t, motion.pose(t));
-  for (const p of (t === 110 ? carriers.parts.slice(4) : carriers.parts)) {
-    shinAxis.set(0, 1, 0).applyQuaternion(p.shin.quaternion);
-    assert(Math.abs(shinAxis.y) > Math.cos(20 * Math.PI / 180), `unnecessary resting crouch at ${t}`);
+  for (const p of carriers.parts) {
+    cuffAxis.set(0, 1, 0).applyQuaternion(p.cuff.quaternion);
+    assert(cuffAxis.y > Math.cos(10 * Math.PI / 180), `unnecessary resting cuff lean at ${t}`);
   }
 }
-for (const t of [5.420833333333333, 73.35, 80.54166666666667]) {
-  carriers.pose(t - 1 / 480, motion.pose(t - 1 / 480));
-  const knees = carriers.parts.map(p => p.knee.position.clone());
-  carriers.pose(t + 1 / 480, motion.pose(t + 1 / 480));
-  for (let i = 0; i < 8; i++) assert(knees[i].distanceTo(carriers.parts[i].knee.position) < .05, `knee flips during a step at ${t}`);
+const directions = makeDirections(motion.pose(0));
+assert.equal(directions.heading(motion.pose(0).yaw), 'W');
+assert.equal(directions.heading(motion.pose(35.5).yaw), 'E');
+assert.equal(directions.heading(motion.pose(69.5).yaw), 'W');
+assert.equal(directions.heading(motion.pose(166.2).yaw), 'W');
+const origin = directions.origin;
+for (const marker of directions.markers) {
+  const east = directions.east(origin.x + marker.x, origin.z + marker.z);
+  const south = directions.south(origin.x + marker.x, origin.z + marker.z);
+  const expected = { W: [-1, 0], E: [1, 0], N: [0, -1], S: [0, 1] }[marker.name];
+  assert(Math.abs(east - expected[0]) < 1e-10 && Math.abs(south - expected[1]) < 1e-10, 'map and 3D share fixed directions');
+}
+assert(Math.abs(directions.east(-.95, 10)) > 3, 'the reference camera must not define S');
+assert(Math.abs(motion.pose(1).roll) > .04, 'opening side sway must reach the whole silhouette');
+assert(Math.abs(motion.pose(1).headRoll) > .004, 'small explicit expressive head accent');
+for (const t of [0, 165, 166.2]) assert(Math.abs(motion.pose(t).headRoll) < 1e-8, 'secondary motion settles');
+for (const list of motion.events) for (const event of list) {
+  assert(Math.hypot(event.to.x - event.from.x, event.to.z - event.from.z) < .85, 'avoid the former metre-long landing correction');
 }
 const shellInverse = new THREE.Matrix4(), localVertex = new THREE.Vector3();
-const coveredParts = [...carriers.torsos, ...carriers.parts.flatMap(p => [p.thigh, p.shin, p.knee])];
-const up = new THREE.Vector3(0, LEG_LENGTH / 2, 0), end = new THREE.Vector3(), start = new THREE.Vector3();
+const coveredParts = carriers.parts.map(p => p.cuff);
+const end = new THREE.Vector3(), start = new THREE.Vector3();
 for (let frame = 0; frame <= 39888; frame++) {
   const t = Math.min(166.2, (frame + .5) / 240), bodyPose = motion.pose(t); carriers.pose(t, bodyPose);
   shell.root.position.set(bodyPose.x, bodyPose.lift, bodyPose.z); shell.root.rotation.y = bodyPose.yaw;
@@ -108,13 +123,14 @@ for (let frame = 0; frame <= 39888; frame++) {
     assert(gap >= -1e-7 || Math.abs(a.y - b.y) >= SHOE.height - 1e-7, `shoes intersect at ${t}: ${i}/${j}`);
   }
   for (const p of carriers.parts) {
-    end.copy(up).applyQuaternion(p.thigh.quaternion).add(p.thigh.position);
-    start.copy(up).negate().applyQuaternion(p.shin.quaternion).add(p.shin.position);
-    assert(end.distanceTo(p.knee.position) < 1e-7 && start.distanceTo(p.knee.position) < 1e-7, `fixed bones meet at knee at ${t}: ${end.distanceTo(p.knee.position)}, ${start.distanceTo(p.knee.position)}`);
-    end.copy(up).applyQuaternion(p.shin.quaternion).add(p.shin.position);
-    start.copy(p.shoe.position); start.y += .0375;
-    assert(end.distanceTo(start) < 1e-7, `ankle reachable at ${t}`);
-    assert.equal(p.shoe.scale.y, 1); assert.equal(p.thigh.scale.y, 1); assert.equal(p.shin.scale.y, 1);
+    end.set(0, -.5, 0).applyMatrix4(p.cuff.matrixWorld);
+    start.copy(p.shoe.position); start.y += SHOE.height * .3;
+    assert(end.distanceTo(start) < 1e-7, `trouser cuff remains attached to shoe at ${t}`);
+    cuffAxis.set(0, 1, 0).applyQuaternion(p.cuff.quaternion);
+    assert(cuffAxis.y > Math.cos(35 * Math.PI / 180), `cuff sprawls outward at ${t}`);
+    assert.equal(p.cuff.scale.x, 1); assert.equal(p.cuff.scale.z, 1);
+    assert.equal(p.shoe.scale.x, 1); assert.equal(p.shoe.scale.y, 1); assert.equal(p.shoe.scale.z, 1);
+    assert(p.shoe.position.y >= SHOE.height / 2 - 1e-9, 'shoe sole stays above ground');
   }
 }
 assert.equal(motion.pose(166.2).lift, 0, 'settled at the end');

@@ -1,0 +1,16 @@
+name = "mulassa-backup-scheduler"
+main = "src/index.js"
+compatibility_date = "2026-10-18"
+workers_dev = false
+preview_urls = false
+
+[vars]
+SCHEDULER_ENABLED = "false"
+
+[triggers]
+# Enable only with explicit approval after the GitHub schedule is removed and the secret is installed.
+# Activation: crons = ["17 3 * * *"] and SCHEDULER_ENABLED = "true".
+crons = []
+
+# GITHUB_ACTIONS_TOKEN is a Cloudflare secret, never a plaintext var or committed file.
+# No HTTP route, storage binding, database credential, or R2 binding.

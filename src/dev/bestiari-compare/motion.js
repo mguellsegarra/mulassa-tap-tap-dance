@@ -43,7 +43,7 @@ export function makeMotion(data) {
       out.yaw += (track(rows, t, 2) * rad - out.yaw) * weight;
       out.pitch += (track(rows, t, 3) * rad - out.pitch) * weight;
       out.cameraX = track(rows, t, 4) * weight; out.cameraY = track(rows, t, 5) * weight;
-      out.roll *= 1 - weight * .9;
+
     }
     if (data.secondFit && t > 34 && t < 67) {
       const rows = data.secondFit.rows;
@@ -51,7 +51,7 @@ export function makeMotion(data) {
       out.x += (track(rows, t) - out.x) * weight;
       out.pitch += (track(rows, t, 2) * rad - out.pitch) * weight;
       out.cameraX = track(rows, t, 3) * weight; out.cameraY = track(rows, t, 4) * weight;
-      out.roll *= 1 - weight * .9;
+
     }
     if (data.approachCamera && t > 65 && t < 90) {
       const u = Math.max(0, Math.min(1, t - 65, 90 - t)), w = u * u * (3 - 2 * u);
@@ -65,10 +65,13 @@ export function makeMotion(data) {
       const u = Math.max(0, Math.min(1, t - 89, 121 - t)), w = u * u * (3 - 2 * u);
       out.x += (track(rows, t) - out.x) * w;
       out.pitch += (track(rows, t, 2) * rad - out.pitch) * w;
-      out.roll *= 1 - .9 * w;
+
       out.referenceX = track(rows, t, 3); out.referenceY = track(rows, t, 4);
       out.referenceWeight = w;
     }
+    // Approved stylization: a small, phase-locked emphasis, never extra random motion.
+    out.roll *= 1.15;
+    out.headRoll = out.roll * .12;
     const settle = Math.max(0, Math.min(1, (165 - t) / 3));
     out.lift = Math.max(0, 1.25 * Math.sin(Math.abs(out.pitch)) - .06) + 0.025 * Math.abs(Math.sin(phase)) * settle;
     return out;

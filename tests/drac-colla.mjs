@@ -11,7 +11,7 @@ import { HELPERS, HELPER_CENTRE, HELPER_RADIUS, danceToWorld, danceYaw } from '.
 import { SPOTS, rootAt, END } from '../src/game/drac-path.js';
 import { buildDrac, DRAC_SCALE } from '../src/scene/models/drac.js';
 import { PROFILES, MINIMAL } from '../src/platform/render-quality.js';
-import { ARM } from '../src/scene/models/colla.js';
+import { ARM, COLLA } from '../src/scene/models/colla.js';
 import { createColla, SEATS, SEATED_COUNT } from '../src/scene/drac-colla.js';
 
 const src = f => readFileSync(new URL(`../src/${f}`, import.meta.url), 'utf8');
@@ -190,6 +190,42 @@ assert.equal(labels.visible, true);
 assert.deepEqual(labels.children.map(s => [s.position.x, s.position.z]), HELPERS.map(h => [h.x, h.z]), 'one letter over each helper');
 colla.setLabels(false); colla.setLabels(true);
 assert.equal(labels.children.length, 4, 'built once');
+
+// ---- one suit: every helper and seated member (all looks, every seat) wears the cream suit dyed with small blotches;
+// green only ever comes as a blotch-sized plate, never a band across a jacket, sleeve or leg (a striped jacket, or
+// limbs in green slabs, read as outsiders: Marc, 2026-10-19). Heads (a cap may be green) are left out.
+const hue = c => { const k = new THREE.Color(c); return [k.r / k.g, k.b / k.g]; }, creamHue = hue(COLLA.cream);
+const green = (c, i) => c.getY(i) > 1.2 * c.getX(i) && c.getY(i) > c.getZ(i);
+function suit(mesh, people, label) {
+  const { position: pos, color, skinIndex } = mesh.geometry.attributes, index = mesh.geometry.index, bs = mesh.skeleton.bones;
+  const a = new THREE.Vector3(), b = new THREE.Vector3();
+  people.forEach((p, n) => {
+    const cloth = new Set(p.bones.filter(x => x !== p.head).map(x => bs.indexOf(x)));
+    let plates = 0, cream = 0, dyed = 0;
+    for (let t = 0; t < index.count; t += 3) {
+      const i = index.getX(t);
+      if (!cloth.has(skinIndex.getX(i))) continue;
+      let edge = 0;
+      for (let k = 0; k < 3; k++) edge = Math.max(edge, a.fromBufferAttribute(pos, index.getX(t + k)).distanceTo(b.fromBufferAttribute(pos, index.getX(t + (k + 1) % 3))));
+      const area = a.subVectors(b.fromBufferAttribute(pos, index.getX(t + 1)), v.fromBufferAttribute(pos, i)).cross(b.fromBufferAttribute(pos, index.getX(t + 2)).sub(v)).length() / 2;
+      if (green(color, i)) { assert.ok(edge < 0.2, `${label} ${n}: a green piece ${edge.toFixed(2)} m across (a stripe or slab, not a blotch)`); plates++; dyed += area; }
+      else if (Math.abs(color.getX(i) / color.getY(i) - creamHue[0]) < 1e-3 && Math.abs(color.getZ(i) / color.getY(i) - creamHue[1]) < 1e-3) cream += area; // any jitter
+    }
+    assert.ok(plates >= 16 && cream > 3 * dyed, `${label} ${n}: cream suit with blotches (${plates / 2} blotches, cream ${cream.toFixed(2)} m², green ${dyed.toFixed(2)} m²)`);
+  });
+}
+suit(helperMesh, crew, 'helper');
+suit(seatedMesh, members, 'seated');
+// ...and the Drac's carrier wears the same palette: cream trousers, the same blotch and eye-ring colours
+const suitHues = [COLLA.cream, COLLA.blotch, COLLA.ring].map(hue);
+for (const { pants } of drac.legs) pants.traverse(o => {
+  if (!o.isMesh) return;
+  const c = o.geometry.attributes.color;
+  for (let i = 0; i < c.count; i += 4) {
+    const h = [c.getX(i) / c.getY(i), c.getZ(i) / c.getY(i)];
+    assert.ok(suitHues.some(s => Math.abs(s[0] - h[0]) < 1e-3 && Math.abs(s[1] - h[1]) < 1e-3), `carrier trousers off the colla's palette (${c.getX(i).toFixed(3)}, ${c.getY(i).toFixed(3)}, ${c.getZ(i).toFixed(3)})`);
+  }
+});
 
 // ---- dispose frees the colla's geometries, bone textures and label textures
 let freed = 0;

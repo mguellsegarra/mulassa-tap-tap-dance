@@ -1,5 +1,5 @@
 // Which DOM controls show in each state, and the photo (view) mode.
-import { showAvatars } from './photo-avatars.js';
+import { showAvatars, photoHelpAvailable } from './photo-avatars.js';
 import { sheets } from './sheets.js';
 import { howtoMenu, settingsMenu, privacyMenu, pauseMenu, hide, howtoEl, settingsEl, leadersEl, feedbackEl, musicEl, iosHint, hintOff, pauseEl, skipEl, retryEl } from './handles.js';
 import { G, clock, CHALLENGE } from '../game/state.js';
@@ -38,6 +38,7 @@ export const setHudBlank = v => (hudBlank = v);
 export function setView(on) {
   if (on === viewMode || on && (!menuState() || sheetUp())) return;
   viewMode = on; showAvatars(on); viewT = performance.now();
+  if (!on) hide(howtoEl, true);
   document.body.classList.toggle('view-mode', on);
   for (const el of VIEW_HIDES) el.inert = on;
   viewBtn.setAttribute('aria-pressed', String(on)); // (one name, «Amaga els botons», pressed or not; the tooltip says what a press does)
@@ -65,9 +66,14 @@ export function updateControls() {
   updateHudCursor();
   // Set the hint's final layout before the selector measures its information block.
   hide(iosHint, hintOff || (G.state !== 'title' && G.state !== 'select') || howtoMenu.open || settingsMenu.open || sheets.sync.open);
-  hide(howtoEl, true); // instructions live below the selector's record tiles
   hide(viewBtn, !menuState());
   if (viewMode && (!menuState() || sheetUp())) setView(false); // menu screens only, never under a sheet
+  const photoHelp = photoHelpAvailable();
+  howtoEl.inert = viewMode && !photoHelp;
+  hide(howtoEl, !photoHelp); // reuse the existing ? only after the photo instructions disappear
+  howtoEl.classList.toggle('photo-help', photoHelp);
+  howtoEl.setAttribute('aria-label', photoHelp ? 'Controls del mode foto (?)' : 'Com es juga?');
+  howtoEl.setAttribute('aria-haspopup', photoHelp ? 'false' : 'dialog');
   hide(settingsEl, (G.state !== 'title' && G.state !== 'select'));
   hide(leadersEl, (G.state !== 'title' && G.state !== 'select') || !sheets.board.configured);
   document.getElementById('select').toggleAttribute?.('data-ranking', !leadersEl.hidden);

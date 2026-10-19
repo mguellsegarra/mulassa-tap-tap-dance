@@ -391,7 +391,7 @@ const document = {
   listeners: {},
   addEventListener(type, handler) { const previous = this.listeners[type]; this.listeners[type] = previous ? (...args) => { previous(...args); handler(...args); } : handler; },
   body: { appendChild() {}, classList: { contains: () => false, toggle() {} }, style: { setProperty() {}, removeProperty() {} } },
-  createElement: () => ({ style: {}, setAttribute() {}, appendChild() {}, querySelectorAll: () => [], querySelector: () => ({}) }),
+  createElement: () => ({ style: {}, dataset: {}, after() {}, setAttribute() {}, appendChild() {}, querySelectorAll: () => [], querySelector: () => ({}) }),
   getElementById(id) {
     if (!nodes.has(id)) nodes.set(id, {
       style: {}, dataset: {}, options: [{}, {}], listeners: {}, open: false,
@@ -673,9 +673,39 @@ run('for (let i = 0; i < 200; i++) animConfetti(0.05); burst(0, 0); for (let i =
 run('burst(3, 3); animConfetti(0.001);');
 assert(run('conf.every((c, i) => yBefore[i] > 0.03 ? Math.abs(c.p.y - yBefore[i]) < 1 : true)'), 'a burst leaves the confetti still in the air alone');
 run('for (let i = 0; i < 200; i++) animConfetti(0.05); burst(0, 0); for (let i = 0; i < 100; i++) animConfetti(0.05);');
-assert(run('conf.some(c => c.p.y === 0.02 && c.lay > 0)'), 'confetti rests on the floor for a while');
+assert(run('conf.some(c => c.p.y < 0.05 && c.p.y > 0 && c.lay > 0)'), 'confetti rests on the floor for a while');
 const scales = JSON.parse(run(`(() => { const out = []; for (let i = 0; i < 90; i++) { animConfetti(0.05); const m = new THREE.Matrix4(); confetti.getMatrixAt(0, m); out.push(new THREE.Vector3().setFromMatrixPosition(m).y > -1 ? new THREE.Vector3().setFromMatrixScale(m).x : null); } return JSON.stringify(out); })()`)).filter(v => v !== null); // (parked out of sight: not drawn)
 assert(scales.every((v, i) => i === 0 || Math.abs(v - scales[i - 1]) < 0.35), 'a piece shrinks away over a second, never in one frame');
+// Chained throws (combo milestones 1.5 s apart, then the finale's puff every beat, then a new game's sweep with a throw
+// right after it): each throw still gets its share of pieces (the oldest shrink away to make room), the new throw isn't
+// blown away with the old ones, and no piece on screen ever jumps (re-thrown from the floor or mid-air) or vanishes in
+// a single frame.
+const chain = JSON.parse(run(`(() => {
+  for (let i = 0; i < 400; i++) animConfetti(0.05);
+  const arr = confetti.instanceMatrix.array, N = renderProfile.confetti, prev = new Float32Array(conf.length * 4).fill(0), thrown = [];
+  let jumps = 0, vanish = 0, maxCount = 0, fresh = 0;
+  for (let f = 0; f < 900; f++) {
+    if (f < 180 && f % 45 === 0) { burst(0, 0); thrown.push(conf.filter(c => c.p.y >= -1 && c.age === 0).length); }
+    if (f < 180 && f % 45 === 30) thrown.push(conf.filter(c => c.p.y >= -1 && c.age < 1).length); // the same throws 1 s on
+    if (f >= 200 && f < 380 && f % 12 === 0) spawnConfetti(50, c => c.p.set(Math.random() * 6 - 3, 6, Math.random() * 6 - 3));
+    if (f === 400) sweepConfetti();
+    if (f === 405) burst(0, 0);
+    if (f === 441) { const young = conf.filter(c => c.p.y >= -1 && c.age < 1.25); fresh = young.every(c => !c.gust && c.out < 0) ? young.length : -1; } // (completed as the swept ones leave)
+    animConfetti(1 / 30);
+    maxCount = Math.max(maxCount, confetti.count);
+    for (let i = 0; i < conf.length; i++) {
+      const k = i * 16, s = confetti.visible && i < confetti.count && arr[k + 13] > -1 ? Math.hypot(arr[k], arr[k + 1], arr[k + 2]) : 0, j = i * 4;
+      if (prev[j + 3] > 0.4 && s < prev[j + 3] - 0.35) vanish++;
+      else if (prev[j + 3] > 0.4 && Math.hypot(arr[k + 12] - prev[j], arr[k + 13] - prev[j + 1], arr[k + 14] - prev[j + 2]) > 0.8) jumps++;
+      prev[j] = arr[k + 12]; prev[j + 1] = arr[k + 13]; prev[j + 2] = arr[k + 14]; prev[j + 3] = s;
+    }
+  }
+  return JSON.stringify({ N, thrown, jumps, vanish, maxCount, fresh, settled: confettiSettled && !confetti.visible && confetti.count === 0 });
+})()`));
+assert(chain.jumps === 0 && chain.vanish === 0, `no confetti piece pops between frames: ${JSON.stringify(chain)}`);
+assert(chain.thrown[0] >= 0.55 * chain.N && chain.thrown.every((n, i) => i % 2 === 0 || n >= 0.55 * chain.N), `every chained throw gets its whole share within a second: ${chain.thrown}`);
+assert(chain.fresh >= 0.55 * chain.N, `a throw right after the sweep is whole within 1.2 s and stays (${chain.fresh})`);
+assert(chain.maxCount <= chain.N && chain.settled, 'the pool stays bounded and empties by itself');
 console.log('scene downgrade and particle lifecycle ok');
 
 // Two neighbours on opposite sides of a grid boundary must still repel each other.
@@ -1167,10 +1197,11 @@ run(`var hudT = G.chart[G.next].t;
   var bb = G.balloons[0]; bb.count = 3; G.pop = { t0: clock, word: 'PAM!' }; G.pumpT = clock; drawHud(bb.t + 0.2);
   G.collapseT = clock; drawHud(hudT); G.collapseT = 0; G.finale = false;
   G.errors = { early: 1, late: 2, move: 3, silent: 0, both: 0, hold: 0 }; G.resT = clock - 2;
-  for (const [reason, rec, prev] of [['clear', true, null], ['fail', false, { quality: 80 }], ['collapse', false, null]]) {
+  for (const [reason, rec, prev] of [['clear', true, null], ['fail', false, { quality: 80, score: 182972 }], ['collapse', false, null]]) {
     G.state = 'results'; G.reason = reason; G.stars = 2; G.newRecord = rec; G.previous = prev; drawHud(0);
   }
   for (const st of ['splash', 'title']) { G.state = st; drawHud(0); }`);
+assert(drawnText.includes('NOU RÈCORD DE PUNTS!') && drawnText.includes('MILLOR') && drawnText.includes('182.972 PUNTS'), 'the record is told in points, like the board');
 console.log('HUD screens draw without exceptions ok');
 
 // MANTÉN: head judged like a tap; hold the key to the end (last 0.12 s free) for a PERFECTE tail, half for BÉ,
@@ -1486,6 +1517,10 @@ run(`G.state = 'play'; G.diff = 2; G.counts = { perfect: 200, good: 40, miss: 0 
 assert.equal(run('G.newRecord'), false, 'equal cross-version quality with fewer points cannot announce a record');
 run(`G.state = 'play'; G.score = 139672; finish('end');`);
 assert.equal(run('G.newRecord'), true, 'equal cross-version quality with more points earns a record');
+run(`G.state = 'play'; G.counts = { perfect: 240, good: 0, miss: 0 }; G.score = 139572; finish('end');`);
+assert.equal(run('G.newRecord'), false, 'a higher % with fewer points is no record');
+run(`G.state = 'play'; G.counts = { perfect: 150, good: 50, miss: 40 }; G.score = 149972; finish('end');`);
+assert.equal(run('G.newRecord'), true, 'more points with a lower % is a record (as on the board)');
 run(`G.state = 'play'; toTitle();`);
 assert.equal(boardSheet.verifyStarts, 0, 'a finished or left run asks Cloudflare nothing');
 run('chip = savedChip; G.state = savedState;');
@@ -1506,7 +1541,7 @@ console.log('classificacions integration contracts ok');
 {
   const row = nodes.get('results-actions'), menu = nodes.get('share-menu');
   run(`G.state = 'results'; G.resT = clock - 0.5; G.reason = 'clear'; G.stars = 3; G.newRecord = true; G.challenge = null;
-    G.shareRun = { pct: 96, diff: 2, reason: 'clear', stars: 3, newRecord: true, maxCombo: 80, t: G.resT, practice: false }; updateControls();`);
+    G.shareRun = { pct: 96, score: 190000, diff: 2, reason: 'clear', stars: 3, newRecord: true, maxCombo: 80, t: G.resT, practice: false }; updateControls();`);
   assert(row.hidden !== false, 'no row during the first second (TOCA PER TORNAR waits too)');
   run('G.resT = clock - 2; G.shareRun.t = G.resT; updateControls();');
   assert(row.hidden === false && nodes.get('results-share-tag').hidden === false, 'the row with Comparteix, and «Presumeix-ne!» for a record / S');
@@ -1531,28 +1566,28 @@ console.log('classificacions integration contracts ok');
   run('updateControls();');
   assert(row.hidden === true, 'the row goes with the results');
   run(`G.state = 'results'; G.resT = clock - 2; G.stars = 1; G.newRecord = false;
-    G.shareRun = { pct: 55, diff: 1, reason: 'fail', stars: 1, newRecord: false, maxCombo: 9, t: G.resT, practice: false }; updateControls();`);
+    G.shareRun = { score: 100000, pct: 55, diff: 1, reason: 'fail', stars: 1, newRecord: false, maxCombo: 9, t: G.resT, practice: false }; updateControls();`);
   assert(row.hidden === false && nodes.get('results-share-tag').hidden === true, 'no nudge for an ordinary run');
   drawnText.length = 0;
   run(`G.challenge = challengeResult({ pct: 50, diff: 1 }, G.shareRun); G.counts = { perfect: 40, good: 20, miss: 30 }; drawHud(0);`);
   assert(drawnText.includes('REPTE SUPERAT!') && drawnText.includes(shareLogic.SITE_LABEL), 'the card says the challenge is beaten and where to play');
   drawnText.length = 0;
   run(`G.challenge = challengeResult({ pct: 58, diff: 1 }, G.shareRun); drawHud(0);`);
-  assert(drawnText.includes('Gairebé! et falten 4 punts'), 'or how close it was');
+  assert(drawnText.includes('Gairebé! Et falta un 4%'), 'or how close it was');
   assert.equal(run('resultsReserve()'), 48, 'one row of buttons: 48 px');
   // the row sits right under the card (drawResults writes its top), not pinned to the bottom edge
   const rowTop = parseFloat(row.style.top);
   assert(row.style.bottom === 'auto' && rowTop > 0 && rowTop + 48 < run('HH * K') - 60, `the row under the card, with the tip and the return button below it (top ${rowTop})`);
   // a collapse: nothing to share; «Torna-ho a provar» (the same level) and Classificacions stay
   run(`G.reason = 'collapse'; G.stars = 0; G.diff = 2; G.resT = clock - 2;
-    G.shareRun = { pct: 20, diff: 2, reason: 'collapse', stars: 0, newRecord: false, maxCombo: 3, t: G.resT, practice: false }; updateControls();`);
+    G.shareRun = { score: 100000, pct: 20, diff: 2, reason: 'collapse', stars: 0, newRecord: false, maxCombo: 3, t: G.resT, practice: false }; updateControls();`);
   assert(row.hidden === false && nodes.get('results-share').hidden === true && nodes.get('results-retry').hidden === false, 'collapse: no Comparteix, Torna-ho a provar instead');
   context.shareSheet.openAfterPublish({});
   assert(!menu.open, 'collapse: the share sheet never opens');
   nodes.get('results-retry').listeners.click();
   assert(run("G.state === 'play' && G.diff === 2 && !G.practice"), 'Torna-ho a provar: the same level again');
   run(`G.state = 'results'; G.reason = 'clear'; G.resT = clock - 2;
-    G.shareRun = { pct: 90, diff: 2, reason: 'clear', stars: 3, newRecord: false, maxCombo: 50, t: G.resT, practice: false }; updateControls();`);
+    G.shareRun = { score: 100000, pct: 90, diff: 2, reason: 'clear', stars: 3, newRecord: false, maxCombo: 50, t: G.resT, practice: false }; updateControls();`);
   assert(nodes.get('results-share').hidden === false && nodes.get('results-retry').hidden === false, 'a finished dance offers both Comparteix and another run');
   for (const figure of ['mulassa-valls', 'drac-valls']) for (const reason of ['clear', 'fail', 'collapse']) for (const diff of [0, 1, 2]) {
     run(`G.state = 'results'; setSelectedFigure('${figure}'); G.reason = '${reason}'; G.diff = ${diff}; G.resT = clock - 0.5; updateControls();`);
@@ -2713,15 +2748,49 @@ console.log('view mode ok');
     for (const h of keyHandlers) h({ code, target: { tagName: 'BODY' }, preventDefault() { prevented = true; }, ...more });
     return prevented;
   };
-  run(`G.state = 'select'; setFigureSong(MULASSA); setView(false); setView(true); animMula(1/60, clock/BEAT);`);
+  run(`pfAutoShown.clear(); G.state = 'select'; setFigureSong(MULASSA); setView(false); setView(true); animMula(1/60, clock/BEAT);`);
   assert(run('viewMode && !PHOTO.on && !avatarsEl.hidden'), 'photo mode starts in free view with the bar shown');
   assert(!keyDown('KeyW') && !keyDown('Tab'), 'free view leaves W and Tab alone');
   assert(run('PHOTO.keys.size === 0'));
+  // Timers belong to the current notice: switching/exit cancels them, replay replaces them.
+  const savedPhotoTimers = [context.setTimeout, context.clearTimeout], photoTimers = new Map();
+  let photoTimerId = 0;
+  context.setTimeout = (fn, ms) => { photoTimers.set(++photoTimerId, { fn, ms }); return photoTimerId; };
+  context.clearTimeout = id => photoTimers.delete(id);
   run("takeFigure('drac-valls');");
   assert(run("PHOTO.on && PHOTO.id === 'drac-valls' && !PHOTO.pair"), 'a frame takes that figure');
+  assert(run('!pfTip.hidden && pfTip.dataset.visible === "true" && pfTip.innerHTML.includes("rugeix")'), 'Drac notice describes its real actions');
+  assert([...photoTimers.values()].some(t => t.ms === 7000), 'notice stays for seven seconds and can be replayed');
+  const firstNoticeTimer = run('pfTipT');
+  photoTimers.get(firstNoticeTimer).fn(); // the first figure's help has already disappeared
   assert(keyDown('Tab') && run("PHOTO.id === 'mulassa-valls'"), 'Tab switches only while driving');
+  assert(!photoTimers.has(firstNoticeTimer), 'switching cancels the previous notice timer');
+  assert(run('!pfTip.hidden && pfTip.dataset.visible === "true"'), 'first Tab entry into another figure opens its own automatic help');
+  assert.equal(photoTimers.get(run('pfTipT')).ms, 7000, 'each new figure gets the full initial reading time');
+  assert(run('pfTip.innerHTML.includes("guitza") && !pfTip.innerHTML.includes("rugeix")'), 'switch replaces help with Mulassa actions');
+  photoTimers.get(run('pfTipT')).fn();
+  assert(run('pfTip.dataset.visible === "false" && pfHelp.textContent.includes("guitza")'), 'after fade the accessible help remains');
+  keyDown('Tab');
+  assert(run('pfTip.hidden'), 'returning to an already seen figure does not repeat automatic help');
+  keyDown('Tab');
+  assert(run('pfTip.hidden'), 'each figure remembers its help independently for this visit');
+  keyDown('Slash', { key: '?' });
+  assert(run('pfTip.dataset.visible === "true"'), 'question mark replays help without leaving control');
+  keyDown('KeyW');
+  const usedNoticeTimer = run('pfTipT');
+  assert.equal(photoTimers.get(usedNoticeTimer).ms, 1000, 'first movement key dismisses help after one second');
+  keyDown('KeyA'); keyDown('KeyW', { repeat: true });
+  assert.equal(run('pfTipT'), usedNoticeTimer, 'further movement and held keys do not postpone dismissal');
+  assert(run('pfTip.innerHTML.includes("Mulassa de Valls")'), 'popup uses the catalog full name');
+
   run("takeFigure('mulassa-valls');");
   assert(run('!PHOTO.on && viewMode'), 'clicking the active frame goes back to viewing');
+  run("takeFigure('drac-valls'); updateControls();");
+  assert(run('pfTip.hidden && !howtoEl.hidden && !howtoEl.inert'), 'after the first notice the existing help button replaces automatic popups');
+  run('showPhotoHelp();');
+  assert(run('pfTip.dataset.visible === "true" && pfTip.innerHTML.includes("rugeix")'), 'help button reopens the active figure instructions');
+  run("takeFigure(''); takeFigure('mulassa-valls');");
+
   run("takeFigure('mulassa-valls'); takeFigure('');");
   assert(run('!PHOTO.on && viewMode'), 'Vista lliure goes back to viewing');
   run("takeFigure('mulassa-valls');"); keyDown('KeyW');
@@ -2737,6 +2806,8 @@ console.log('view mode ok');
   run("setView(false); COARSE.matches = false; G.state = 'play';");
   assert(!keyDown('Tab') && !keyDown('KeyA'), 'during a song WASD/Tab are not photo keys');
   run("G.state = 'select';");
+  assert(run('pfTip.hidden && pfTip.dataset.visible === "false"'), 'touch and exit clear the notice');
+  [context.setTimeout, context.clearTimeout] = savedPhotoTimers;
   console.log('photo free view by default, desktop frames, Escape steps back, touch only looks ok');
   // A pending selection: the plaça is bare on the selector, but photo mode shows the last playable figure.
   let ft = 90000; const pendFrame = () => run(`frame(${ft += 1000 / 60})`);

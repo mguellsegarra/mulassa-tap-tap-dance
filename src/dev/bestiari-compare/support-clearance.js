@@ -1,5 +1,5 @@
 // Oriented shoe footprints. Positive gap means separation; negative means overlap.
-export const SHOE = { width: .125, length: .25, height: .075 };
+export const SHOE = { width: .105, length: .20, height: .075 };
 export function shoeSeparation(a, b, out) {
   let gap = -Infinity, nx = 0, nz = 0;
   for (let i = 0; i < 4; i++) {

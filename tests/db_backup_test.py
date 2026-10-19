@@ -594,17 +594,19 @@ class WorkflowTests(unittest.TestCase):
     def setUpClass(cls):
         cls.text = (REPO / ".github" / "workflows" / "db-backup.yml").read_text()
 
-    def test_triggers_are_manual_and_daily_with_separate_activation(self):
+    def test_trigger_is_dispatch_only_with_no_github_cron(self):
         on = re.search(r"^on:\n((?:  .*\n)+)", self.text, re.M).group(1)
         trigger = "\n".join(line.split("#", 1)[0].rstrip() for line in on.strip().splitlines())
-        self.assertEqual(trigger, "workflow_dispatch:\n  schedule:\n    - cron: '17 3 * * *'")
+        self.assertEqual(trigger, "workflow_dispatch:")
+        self.assertNotIn("schedule:", self.text)
+        self.assertNotIn("BACKUP_SCHEDULE_ENABLED", self.text)
         for bad in ("pull_request", "push:", "workflow_run", "inputs:", "repository_dispatch"):
             self.assertNotIn(bad, self.text)
 
     def test_gate_and_environment(self):
         job_if = re.search(r"^    if: (.*)$", self.text, re.M).group(1)
         for part in ("vars.BACKUP_ENABLED == 'true'",
-                     "(github.event_name == 'workflow_dispatch' || (github.event_name == 'schedule' && vars.BACKUP_SCHEDULE_ENABLED == 'true'))",
+                     "github.event_name == 'workflow_dispatch'",
                      "github.ref == format('refs/heads/{0}', github.event.repository.default_branch)",
                      "github.event.repository.fork == false"):
             self.assertIn(part, job_if)

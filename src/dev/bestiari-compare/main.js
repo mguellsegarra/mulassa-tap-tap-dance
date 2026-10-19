@@ -1,13 +1,15 @@
 import choreography from '../../../research/bestiari/mulassa/choreography.json';
 import reconstruction from '../../../research/bestiari/mulassa/reconstruction.json';
 import { makeMotion } from './motion.js';
+import { makeDirections } from './directions.js';
 import { createStage } from './stage.js';
 import { createOverhead } from './overhead.js';
 import { dancePose, newPose } from '../../game/dance.js';
 import song from '../../song.json';
 
 const el = id => document.getElementById(id), video = el('reference');
-const motion = makeMotion(reconstruction), stage = createStage(el('model'), motion), overhead = createOverhead(el('overhead'), motion);
+const motion = makeMotion(reconstruction), directions = makeDirections(motion.pose(0));
+const stage = createStage(el('model'), motion, directions), overhead = createOverhead(el('overhead'), motion, directions);
 const pose = {}, { phases, end, fps } = choreography;
 const baseline = { pose: newPose(), beat: 0 };
 let frameId = 0, active = -1;
@@ -34,6 +36,7 @@ function show(t) {
     pose.lift = baseline.pose.lift;
   }
   stage.render(t, pose, current ? baseline : null); overhead(t, pose, phase, !current);
+  el('direction').textContent = `Mira cap a ${directions.heading(pose.yaw)} · marques fixes de guió`;
   el('time').textContent = `${format(t)} s · ${Math.round(t * fps)} f`;
   el('seek').value = t;
   if (active !== phase.i) {

@@ -39,11 +39,11 @@ export function challengeResult(ch, run) {
   if (!ch || !run || !challengeEligible(run) || run.practice || run.diff !== ch.diff) return null;
   const beaten = run.pct > ch.pct || (ch.pct === 100 && run.pct === 100);
   const missing = beaten ? 0 : ch.pct - run.pct + 1;
-  return { beaten, missing, line: beaten ? 'REPTE SUPERAT!' : `${missing <= 10 ? 'Gairebé! ' : ''}et ${missing === 1 ? 'falta 1 punt' : `falten ${missing} punts`}` };
+  return { beaten, missing, line: beaten ? 'REPTE SUPERAT!' : `${missing <= 10 ? 'Gairebé! ' : ''}Et falta un ${missing}%` };
 }
 
 // --- outcome, text and the funny line
-// run: { pct, diff, reason ('clear'|'fail'), stars (0-3), newRecord, practice } — a collapse is never shared (share-ui.js)
+// run: { pct, score (comparable points), diff, reason ('clear'|'fail'), stars (0-3), newRecord, practice } — a collapse is never shared (share-ui.js)
 export function outcomeOf(run, challenge = null) {
   if (challengeResult(challenge, run)?.beaten) return 'challenge';
   if (run.newRecord) return 'record';
@@ -57,7 +57,7 @@ export function shareText(run, challenge = null) { // the caption (the link goes
   if (run.figureId === 'drac-valls') return `He fet ballar el Drac de Valls amb un ${p} d'encerts a ${d}. #Valls`;
   const line = {
     challenge: `${MULA}🏆 Repte superat! ${p} d’encerts a ${d} fent ballar la Mulassa de Valls 🎉`,
-    record: `${MULA}🔥 Nou rècord personal: ${p} d’encerts a ${d} fent ballar la Mulassa de Valls! 🎉`,
+    record: `${MULA}🔥 Nou rècord de punts: ${run.score.toLocaleString('ca-ES')} a ${d} (${p} d’encerts) fent ballar la Mulassa de Valls! 🎉`,
     clear: `${MULA}💃 He fet ballar la Mulassa de Valls amb un ${p} d’encerts a ${d}. T’hi atreveixes? 🔥`,
     fail: `${MULA} ${p} d’encerts a ${d}… La Mulassa em demana la revenja. I tu, com ho faries? 💃`,
   }[outcomeOf(run, challenge)];

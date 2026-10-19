@@ -4,7 +4,7 @@
   "start": 0,
   "end": 166.2,
   "fps": 50,
-  "version": 2,
+  "version": 3,
   "status": "reconstruction for human review",
   "phases": [
     {
@@ -12,7 +12,7 @@
       "start": 0,
       "end": 10.5,
       "title": "Petites passes i canvi de pes",
-      "action": "Comença amb petits ajustos dels peus. Entre els 4 i els 8 segons es posa una mica més de cara i abaixa el davant.",
+      "action": "Comença mirant cap a W, amb petites passes i canvis de pes. Entre els 4 i els 8 segons es posa una mica més de cara a càmera i abaixa el davant.",
       "evidence": "Peus posteriors visibles en part; no es poden comptar tots els contactes.",
       "status": "observed-outline; inferred-geometry",
       "stepCount": null
@@ -42,7 +42,7 @@
       "start": 31.7,
       "end": 35.5,
       "title": "Primera mitja volta",
-      "action": "Gira passant de cara a la càmera i acaba amb el cap cap a la dreta.",
+      "action": "Fa mitja volta de W cap a E, passant per S. En aquest tram també passa de cara a la càmera.",
       "evidence": "Sentit antihorari vist des de dalt; aproximadament mitja volta.",
       "status": "observed-outline; inferred-geometry",
       "stepCount": null
@@ -52,7 +52,7 @@
       "start": 35.5,
       "end": 46,
       "title": "Balanceig a l’altre costat",
-      "action": "Amb el cap a la dreta i més a prop, es desplaça una mica cap a la dreta fins als 40–42 segons i torna cap a l'esquerra.",
+      "action": "Mirant cap a E, repeteix el balanceig amb un petit desplaçament i retorn.",
       "evidence": "Part dels peus queda oculta pels músics.",
       "status": "observed-outline; inferred-geometry",
       "stepCount": null
@@ -82,7 +82,7 @@
       "start": 66.5,
       "end": 69.5,
       "title": "Segona mitja volta",
-      "action": "Mostra el darrere i torna a deixar el cap cap a l'esquerra.",
+      "action": "Fa mitja volta de E cap a W, passant per N i mostrant el darrere a la càmera.",
       "evidence": "Mateix sentit que a la primera mitja volta.",
       "status": "observed-outline; inferred-geometry",
       "stepCount": null
@@ -92,7 +92,7 @@
       "start": 69.5,
       "end": 76.5,
       "title": "S’acosta amb més moviment",
-      "action": "Avança en diagonal cap al costat esquerre i més a prop de càmera, amb inclinacions més grans.",
+      "action": "Mirant aproximadament cap a W, avança amb més energia en diagonal i més a prop de càmera. La direcció exacta del desplaçament continua sent aproximada.",
       "evidence": "La càmera acompanya; trajectòria mètrica aproximada.",
       "status": "observed-outline; inferred-geometry",
       "stepCount": null
@@ -142,7 +142,7 @@
       "start": 121,
       "end": 124,
       "title": "Mitja volta pel darrere",
-      "action": "Ensenya el darrere i torna cap al costat esquerre.",
+      "action": "Fa mitja volta de E cap a W, passant per N i mostrant el darrere.",
       "evidence": "Orientació contrastada a intervals de mig segon.",
       "status": "observed-outline; inferred-geometry",
       "stepCount": null
@@ -172,7 +172,7 @@
       "start": 138,
       "end": 142.5,
       "title": "Canvia el sentit",
-      "action": "Des del costat esquerre desfà mitja volta, passant pel darrere, fins al costat dret.",
+      "action": "Desfà mitja volta: de W cap a E passant per N, en sentit contrari al gir anterior.",
       "evidence": "Inversió visible als fotogrames de 139,25–142 s; no copiar el sentit del Drac.",
       "status": "observed-outline; inferred-geometry",
       "stepCount": null
@@ -182,7 +182,7 @@
       "start": 142.5,
       "end": 145.5,
       "title": "Torna a invertir el gir",
-      "action": "Torna a passar pel darrere i recupera el costat esquerre.",
+      "action": "Torna a invertir el sentit: de E cap a W passant per N.",
       "evidence": "Segona inversió; encara no és la sèrie de voltes contínues.",
       "status": "observed-outline; inferred-geometry",
       "stepCount": null

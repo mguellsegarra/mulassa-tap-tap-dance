@@ -1,6 +1,6 @@
 # Database backup and restore
 
-Status (2026-10-17): **Manual GitHub backup and local production restore tested; daily automation pending.** On 2026-10-17,
+Status (2026-10-18): **Manual GitHub backups and local production restore tested; Cloudflare scheduling prepared, not activated.** On 2026-10-17,
 the coordinator exported the four production schemas, encrypted the archive and verified its private R2
 readback. A downloaded archive was authenticated by age and restored into an isolated PostgreSQL 17
 container with no network or published ports and tmpfs storage. All 33 table-data entries restored and
@@ -10,8 +10,12 @@ a rolled-back synthetic player flow. The container, plaintext and downloaded cip
 An earlier synthetic rehearsal also restored selected Auth and application data into a fresh managed
 Supabase project and checked password login, anonymous sign-in, ranking, publication and deletion.
 The production rehearsal validates local database restoration, not managed Supabase Auth or email recovery.
-A subsequent manual GitHub Actions run completed with `BACKUP_OK` and zero artifacts. Daily scheduling,
-Sentry notification delivery and production Auth/email recovery remain unverified.
+Manual GitHub Actions runs completed with `BACKUP_OK` and zero artifacts. Sentry recorded a missed
+check-in for the first expected GitHub-scheduled backup on 2026-10-18, then a healthy check-in from the
+manual recovery run. No scheduled backup run had been created at diagnosis time. The existing unrelated
+keep-alive workflow also showed multi-hour scheduling delays. This supports a GitHub scheduler delay
+or omission, not an export failure; GitHub exposes no definitive cause for the missing event.
+Cloudflare scheduling and production Auth/email recovery remain unverified.
 Private manifests and reports stay outside this public repository; no production object names or data belong here.
 
 The pieces:
@@ -19,8 +23,10 @@ The pieces:
 - `tools/db_backup.py`: the coordinator (`preflight [--staged]`, `run`, and guarded `preflight-production [--staged]`, `run-production`). It runs `pg_dump | age`, uploads the
   ciphertext in one PUT, reads it back and compares SHA-256 and size. Plain Python, no framework.
 - `tools/db-backup-requirements.txt`: hash-locked `boto3` (CI only; imported lazily, the tests do not need it).
-- `.github/workflows/db-backup.yml`: manual dispatch plus a daily UTC trigger; all runs require repository
-  variable `BACKUP_ENABLED=true`, and scheduled runs additionally require `BACKUP_SCHEDULE_ENABLED=true`.
+- `.github/workflows/db-backup.yml`: dispatch only (Marc or the Cloudflare scheduler), gated by repository
+  variable `BACKUP_ENABLED=true`. No GitHub cron.
+- `workers/backup-scheduler/`: an isolated Cloudflare scheduled Worker that only dispatches that workflow
+  on `master`; it is shipped disabled, without triggers or public routes.
 - `tests/db_backup_test.py` (run by `npm run check` through `tests/db-backup.mjs`).
 
 ## What a run does
@@ -49,8 +55,7 @@ Failure codes: `CONFIG <SETTING>`, `TOOLS`, `DUMP`, `ENCRYPT`, `TIMEOUT`, `TOO_L
 
 ### Settings
 
-Non-secret (production environment variables, except the repository-level enable gates): `BACKUP_ENABLED`,
-`BACKUP_SCHEDULE_ENABLED` (workflow only; unset or false skips scheduled exports), `BACKUP_PG_HOST`, `BACKUP_PG_PORT`,
+Non-secret (production environment variables, except repository-level `BACKUP_ENABLED`): `BACKUP_ENABLED`, `BACKUP_PG_HOST`, `BACKUP_PG_PORT`,
 `BACKUP_PG_DATABASE`, `BACKUP_PG_USER`, `BACKUP_PG_MAJOR`, `BACKUP_PG_CA_PEM` (workflow only: the public CA
 certificate PEM, written to a file), `BACKUP_AGE_RECIPIENTS` (one to three comma-separated `age1...` public keys),
 `BACKUP_S3_ENDPOINT` (`https://host[:port]`, nothing else), `BACKUP_S3_BUCKET`, `BACKUP_S3_REGION` (default
@@ -67,8 +72,7 @@ can permit temporary objects, large-object creation and other operations. `defau
 prevents accidents but the session can change it. `pg_read_all_data` alone does not bypass RLS.
 Do not use the administrative `postgres` password or a Supabase API key for this connection.
 For a custom role, the shared pooler username is `<role>.<project-ref>`.
-Authentication and complete export passed in the manual production run; GitHub-hosted access still needs
-an explicitly approved check.
+Authentication and complete export passed both locally and in approved GitHub-hosted manual runs.
 On GitHub-hosted runners, use the IPv4
 session pooler, not the transaction pooler. The direct host needs IPv6 or a separately enabled IPv4 option.
 `verify-full` needs a CA that validates the chosen host's certificate. Check this for the pooler during activation. If the
@@ -173,19 +177,19 @@ in chat. A preparation approval does not authorize exports or scheduled runs.
    reviewers from `db-backup-production`. For unattended runs, retain the default-branch deployment restriction and reviewed
    branch protection. Anyone who can merge changes to that branch can then change code that receives the secrets.
    Create and test the Sentry missed-check-in alert before enabling the schedule; monitoring is optional only
-   during manual preparation. GitHub may delay or drop scheduled jobs, and disables schedules in public
-   repositories after 60 days without repository activity.
+   during manual preparation. Cloudflare dispatch avoids the GitHub cron queue; runner availability and
+   downstream failures still require independent monitoring.
 
-   The workflow already declares `17 3 * * *` (03:17 UTC daily, 04:17 winter / 05:17 summer in
-   Europe/Madrid). It does not export automatically until the **repository** variable
-   `BACKUP_SCHEDULE_ENABLED=true` is explicitly approved and set. Missing or false keeps scheduled jobs
-   skipped, even with `BACKUP_ENABLED=true`. Manual dispatch remains available independently.
-   `BACKUP_ENABLED=false` stops both manual and scheduled exports. These switches control jobs, not
-   GitHub's scheduling of the workflow itself.
+   There is no GitHub cron trigger. [Cloudflare scheduler setup](db-backup-scheduler.md) replaces it
+   without changing the export/encryption/R2 pipeline. The old repository `BACKUP_SCHEDULE_ENABLED`
+   variable has no effect and may be removed with separate approval after this change is merged.
+   The scheduler only dispatches `workflow_dispatch` against `master`. Keep `BACKUP_ENABLED=true`
+   for both manual and automatic exports. Set it to false to stop all exports.
 
-   Complete the monitoring setup below and the environment access change first. Activate the schedule
-   switch last, then verify the first scheduled run and its Sentry check-in. Disable the switch if that
-   verification fails. Changing the schedule requires updating the monitor's UTC schedule as well.
+   The Worker ships with `SCHEDULER_ENABLED=false` and `crons=[]`; publication alone does not start
+   recurring exports. Approve deploying it disabled, installing its dedicated secret, and then enabling
+   its UTC trigger separately. Verify its first real invocation, the resulting GitHub run, `BACKUP_OK`
+   and a healthy Sentry check-in before calling daily automation validated.
 
 ### Daily monitoring setup and verification
 
@@ -220,7 +224,7 @@ Before unattended activation:
    restriction to `master`, secrets and variables, branch protections and disabled administrator bypass.
    This allows unattended access to production credentials by merged workflow code. A PR rule with zero
    required reviews/checks does not provide independent review; record that accepted limitation.
-5. Separately approve repository variable `BACKUP_SCHEDULE_ENABLED=true`. Verify the first daily run,
+5. Separately approve the Cloudflare scheduler activation described in [db-backup-scheduler.md](db-backup-scheduler.md). Verify the first daily run,
    its successful encrypted readback and its healthy Sentry check-in before calling automation validated.
 
 A dashboard preparation prompt is in

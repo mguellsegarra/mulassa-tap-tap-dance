@@ -29,7 +29,7 @@ const nodes = new Map(), handlers = {}, classes = new Set();
 const doc = { addEventListener(k, f) { (handlers[k] ||= []).push(f); }, body: { classList: { toggle(c, on) { if (on) classes.add(c); else classes.delete(c); } } },
   getElementById(id) {
     if (!nodes.has(id)) nodes.set(id, { id, hidden: false, inert: false, style: {}, attrs: {}, listeners: {},
-      classList: { add() {}, remove() {} }, addEventListener(k, f) { (this.listeners[k] ||= []).push(f); },
+      classList: { toggle() {}, add() {}, remove() {} }, addEventListener(k, f) { (this.listeners[k] ||= []).push(f); },
       setAttribute(k, v) { this.attrs[k] = v; }, focus() { doc.activeElement = this; }, blur() { doc.activeElement = doc.body; },
       contains(el) { return this === el; }, fire(k, e) { for (const f of this.listeners[k] || []) f(e); } });
     return nodes.get(id);
@@ -44,7 +44,7 @@ const state = { state: 'splash', paused: false }, ctx = { document: doc, perform
   orbitMove() {}, orbitZoom() {}, turnFor: () => 1, orbitDown(o, id) { o.ptrs.set(id, true); }, orbitUp(o, id) { o.ptrs.delete(id); },
   chip: null, down: { keys: new Set(), ptr: new Map() }, KEYS: {}, pageActive: () => true, releaseAll() {}, buttonAt: () => { throw new Error('selector world must never hit a title button'); },
   store: { set() {} }, unlock() { state.state = 'select'; }, toTitle() { state.state = 'select'; },
-  showAvatars: () => run('setPhotoControl(false)'), syncAvatars() {}, stopControl: () => run('PHOTO.on ? (setPhotoControl(false), true) : false') }; // src/ui/photo-avatars.js (its DOM: tests/render-quality.mjs)
+  photoHelpAvailable: () => false, showAvatars: () => run('setPhotoControl(false)'), syncAvatars() {}, stopControl: () => run('PHOTO.on ? (setPhotoControl(false), true) : false') }; // src/ui/photo-avatars.js (its DOM: tests/render-quality.mjs)
 let time = 1000;
 const photoSource = readFileSync(new URL('../src/game/photo-control.js', import.meta.url), 'utf8').replace(/^export /gm, '');
 const code = photoSource + '\n' + ['controls', 'input'].map(name => readFileSync(new URL(`../src/ui/${name}.js`, import.meta.url), 'utf8').replace(/^import .*;\n/gm, '').replace(/^export /gm, '')).join('\n');
@@ -149,24 +149,15 @@ dispatchKey('ArrowDown', 'ArrowDown', menuItems[1]);
 assert.deepEqual(sounds, [], 'unchanged focus does not emit a second selection sound');
 console.log('practice/game input routing: keyboard, mouse/touch pad and bubbling stay separate from menu sounds');
 
-// «Mode foto» on the selector: the figure bar (feedback.css #photo-figs) never covers the eye. The corner row is right-aligned
-// (select.css), so the bar takes the left; portrait phones put it under their row. Bar widths as Chromium lays them out:
-// 196 px portraits only (< 900 px), 598 px with names.
+// Photo navigation reserves the corner-control area, then centres a vertical column.
 {
   const fb = readFileSync(new URL('../src/styles/feedback.css', import.meta.url), 'utf8');
-  const barLeft = Number(fb.match(/body:has\(#select:not\(\[hidden\]\)\) #photo-figs \{ left: max\((\d+)px/)?.[1]);
-  assert(barLeft, 'the bar is left-aligned on the selector');
-  const narrow = Number(fb.match(/max-width: (\d+)px\) \{ #photo-figs \.pf-nb \{ position: absolute/)?.[1]);
-  const phoneTop = Number(fb.match(/@media \(max-width: 519px\) \{ #photo-figs \{ top: calc\((\d+)px/)?.[1]);
-  const row = (re, what) => { const m = css.match(re); assert(m, what); return m.slice(1).map(Number); };
-  const [bigEdge, bigStep] = row(/min-width: 520px\) and \(min-height: 520px\) \{[^}]*right: calc\(max\((\d+)px[^)]*\)\) \+ var\(--cb-r\) \* (\d+)px\)/, 'big corner row');
-  const [shortEdge, shortStep] = row(/max-height: 519px\), \(max-height: 500px\) \{[^}]*right: calc\(max\((\d+)px[^)]*\)\) \+ var\(--cb-r\) \* (\d+)px\)/, 'short corner row');
-  const eyeR = 3; // five buttons, the eye second from the left (or first, without the podium): three to its right
-  for (const [w, h] of [[520, 800], [600, 800], [899, 700], [900, 700], [1024, 768], [1280, 800], [667, 375], [852, 393], [932, 430], [1180, 820]]) {
-    const short = h <= 519, size = short ? 44 : 56, eyeLeft = w - (short ? shortEdge + eyeR * shortStep : bigEdge + eyeR * bigStep) - size;
-    const barRight = barLeft + (w <= narrow ? 196 : 598);
-    assert(barRight + 8 <= eyeLeft, `${w}x${h}: the bar (to ${barRight}) clears the eye (from ${eyeLeft})`);
-  }
-  assert(phoneTop >= 10 + 44 + 8, 'portrait phones: the bar sits under the corner row');
-  console.log('photo bar clears the eye on the selector ok');
+  const rail = fb.match(/#photo-figs \{([^}]+)\}/)?.[1];
+  assert.match(rail, /flex-direction: column/);
+  assert.match(rail, /justify-content: center/);
+  assert.match(rail, /left: max\(16px, env\(safe-area-inset-left\)\)/);
+  assert.match(rail, /top: 50%/);
+  assert.match(rail, /translate: 0 -50%/);
+  assert.match(fb, /#photo-tip \{[^}]*pointer-events: none/);
+  console.log('photo column reserves safe corner controls and notice leaves input unobstructed');
 }

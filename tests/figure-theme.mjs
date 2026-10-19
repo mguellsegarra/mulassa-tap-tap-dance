@@ -21,6 +21,8 @@ const mulassa = () => {
   assert.equal(T.figTheme.drac, false);
   assert.deepEqual(chip.map(themed), chip, 'the Mulassa says everything as before');
   assert.equal(themed('LA MULASSA'), 'LA MULASSA');
+  assert.equal(themed('GLOBUS'), 'GLOBUS');
+  assert.equal(themed('PER PETAR'), 'PER PETAR');
   assert.deepEqual(T.figTheme.chant, [['GUAPA,', 0], ['GUAPA…', 0.8], ['I GUAPA!', 1.8]]);
   assert.equal(T.figTheme.colors.gua, '#ff7a1a'); assert.equal(T.figTheme.colors.pa, '#14b8a6');
   assert(!classes.has('fig-drac') && props.size === 0, 'no overrides on the page');
@@ -29,7 +31,8 @@ mulassa();
 
 assert(setFigureSong(DRAC));
 assert.deepEqual(['GUA!', 'PA!', 'GUAPA!', 'ELS DOS ALHORA!', 'PAM!', 'HA PETAT!'].map(themed), ['CRE!', 'MA!', 'CREMA!', 'ELS DOS ALHORA!', 'PAM!', 'TRO!']);
-assert.equal(themed(undefined), undefined, 'a drumroll has no word'); assert.equal(themed('GLOBUS'), 'TRACA'); assert.equal(themed('PATAPAM!'), 'PATAPAM!'); assert.equal(themed('GUAPÍSSIMA!'), 'GUAPÍSSIMA!', 'only whole words');
+assert.equal(themed(undefined), undefined, 'a drumroll has no word'); assert.equal(themed('GLOBUS'), 'CARRETILLES'); assert.equal(themed('PATAPAM!'), 'PATAPAM!'); assert.equal(themed('GUAPÍSSIMA!'), 'GUAPÍSSIMA!', 'only whole words');
+assert.equal(themed('PER PETAR'), 'PEL TRO FINAL');
 assert.deepEqual(T.figTheme.chant, [['QUE', 0], ['CREMI', 0.8], ['LA PLAÇA!', 1.8]]);
 assert.equal(themed('LA MULASSA'), 'EL DRAC'); assert.equal(themed('S’HA DESMUNTAT!'), 'S’HA APAGAT!');
 assert.equal(themed('LA MULASSA S’HA DESMUNTAT!'), 'EL DRAC S’HA APAGAT!');

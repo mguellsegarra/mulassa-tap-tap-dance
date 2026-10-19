@@ -1,9 +1,9 @@
 // The Drac's colla (observed in pm-lEViiPK0, notes in the integration artefacts): the four helpers who clap round the
 // dance to orient its carrier, and a few members sitting on the paving at the front of the public. Their suit is a loose
-// cream jacket and trousers dyed with green blotches (some jackets green-and-cream striped instead), olive "eye" rings
-// down some trousers (the carrier's own motif), a red or yellow mocador at the throat, a red headband on some, a cream
-// oval with the Drac's head on the back, cream espardenyes with dark laces. All four helpers wear the colla's suit (Marc:
-// a clapper in a green hoodie seen by the camera is not one of them). Metres, +z = where they face, built in the people's proportions.
+// cream jacket and trousers dyed with green blotches, olive "eye" rings down some trousers (the carrier's own motif), a red or yellow mocador at the throat, a red headband on some, a cream
+// oval with the Drac's head on the back, cream espardenyes with dark laces. Everyone here wears that one suit, never a striped or
+// other variant (Marc: a clapper in a green hoodie, and later a striped jacket, read as outsiders); only the mocador,
+// headband, cap, eyes, emblem, face and height vary. The Drac's carrier (models/drac.js) wears the same palette. Metres, +z = where they face, built in the people's proportions.
 // Each person is a set of pivot groups (body, head, arms...) whose meshes skinCrowd bakes into one skinned mesh.
 import * as THREE from 'three';
 import { Vox } from './voxel.js';
@@ -11,30 +11,27 @@ import { SKIN, HAIR } from './people.js';
 import { C } from './mulassa.js';
 
 export const COLLA = {
-  cream: '#ece4c8', blotch: '#5f9a4e', blotchDark: '#2f6b3a', stripe: '#2e6a3c', ring: '#6b5a24', ringCore: '#b9c46a',
+  cream: '#ece4c8', blotch: '#5f9a4e', blotchDark: '#2f6b3a', ring: '#6b5a24', ringCore: '#b9c46a',
   red: '#c62a22', yellow: '#e6b32e', sole: '#e9dfc4', lace: '#2a2522', cap: '#3f7a45',
 };
 // small seeded random (the same colla every load, and no draw on Math.random beyond Vox's colour jitter)
 const seeded = s => () => { s = (s + 0x6d2b79f5) | 0; let t = Math.imul(s ^ (s >>> 15), 1 | s); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 // a box by its centre
 const cbox = (v, x, y, z, w, h, d, c, j = 0.02) => v.box(x, y - h / 2, z, w, h, d, c, j);
-// a limb from a to b ([x, y, z]), w across x and d across z before it is turned (shortest turn from +y)
-const Y_UP = new THREE.Vector3(0, 1, 0);
-// cloth: a random source = dyed, the limb in touching slabs of cream and greens (a box face can't carry a blotch once
-// turned); 'stripes' = even slabs of cream and dark green; none = plain `c`
-function limb(v, a, b, w, d, c, cloth) {
-  const rnd = typeof cloth === 'function' && cloth, stripes = cloth === 'stripes';
+// a limb from a to b ([x, y, z]), w across x and d across z before it is turned (shortest turn from +y): the suit's
+// cream box and its dye blotches, built upright and turned together (so the blotches stay on its faces)
+const Y_UP = new THREE.Vector3(0, 1, 0), Z_IN = new THREE.Vector3();
+function limb(v, a, b, w, d, c, rnd) {
   const dir = new THREE.Vector3(b[0] - a[0], b[1] - a[1], b[2] - a[2]), len = dir.length();
   // lying limbs keep their section upright (the shortest turn tilts it, and its corner dips under the floor)
   const x = new THREE.Vector3().crossVectors(Y_UP, dir.normalize()), lying = Math.abs(dir.y) < 0.7;
   const q = lying ? new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(x.normalize(), dir, new THREE.Vector3().crossVectors(x, dir)))
     : new THREE.Quaternion().setFromUnitVectors(Y_UP, dir);
-  for (let y = 0, i = 0; y < len - 1e-6; i++) {
-    const k = Math.min(len - y, rnd ? 0.04 + rnd() * 0.06 : stripes ? 0.06 : len), r = rnd ? rnd() : 0;
-    const col = stripes ? (i % 2 ? COLLA.stripe : COLLA.cream) : r < 0.6 ? c : r < 0.85 ? COLLA.blotch : COLLA.blotchDark;
-    v.add(new THREE.BoxGeometry(w, k, d).translate(0, y + k / 2, 0).applyQuaternion(q).translate(...a), col, 0.02);
-    y += k;
-  }
+  const t = new Vox().box(0, 0, 0, w, len, d, c, 0.02);
+  // a lying limb's underside is on (or near) the paving: its blotches go on the sides and the top only
+  const faces = lying ? (Z_IN.set(0, 0, 1).applyQuaternion(q).y > 0 ? 'fs' : 'bs') : 'fbs';
+  blotch(t, rnd, [0, 0, 0, w, len, d], Math.max(2, Math.round(60 * len * Math.max(w, d))), faces);
+  for (const g of t.g) v.g.push(g.applyQuaternion(q).translate(...a));
   return v;
 }
 // dye blotches on the faces of a box (centre x, bottom y, centre z, w, h, d): flat plates a few mm proud, each a little
@@ -49,10 +46,9 @@ function blotch(v, rnd, [x, y, z, w, h, d], n, faces = 'fbs') {
 }
 // an olive ring with a lighter core ("eye") on a face looking along +z (k = 1) or -z
 const eye = (v, x, y, z, k, r = 0.11) => v.plate(x, y, z + k * 0.009, r, r, 0, k, COLLA.ring).plate(x, y + r * 0.25, z + k * 0.013, r / 2, r / 2, 0, k, COLLA.ringCore);
-// a sleeve along -y from the pivot, length L: plain with blotches, or striped slabs (touching, never overlapping)
+// a sleeve along -y from the pivot, length L, with blotches
 function sleeve(v, rnd, L, w, look) {
-  if (look.stripes) for (let i = 0, n = 5; i < n; i++) cbox(v, 0, -L * (i + 0.5) / n, 0, w + (i % 2) * 0.006, L / n, w + 0.01 + (i % 2) * 0.006, i % 2 ? COLLA.stripe : COLLA.cream);
-  else { cbox(v, 0, -L / 2, 0, w, L, w + 0.01, look.top); blotch(v, rnd, [0, -L, 0, w, L, w + 0.01], 4); }
+  cbox(v, 0, -L / 2, 0, w, L, w + 0.01, look.top); blotch(v, rnd, [0, -L, 0, w, L, w + 0.01], 4);
 }
 // the head on its neck pivot (people.js's head: skin, hair, eyes), plus a headband or a cap
 function collaHead(look, rnd, top) {
@@ -79,18 +75,18 @@ function back(v, z, y, look) {
   for (const s of [1, -1]) v.plate(s * 0.05, y - 0.25, z - 0.012, 0.04, 0.04, 0, -1, C.black);
   v.plate(0, y - 0.36, z - 0.012, 0.14, 0.03, 0, -1, C.black).plate(0, y - 0.33, z - 0.0135, 0.1, 0.02, 0, -1, COLLA.cream); // jaw and teeth
 }
-// What each person wears. Helpers W, N, S, E in drac-layout's order, all in the camouflage suit.
+// What each person wears on top of the suit. Helpers W, N, S, E in drac-layout's order.
 export const HELPER_LOOKS = [
   { top: COLLA.cream, eyes: true, mocador: COLLA.red, band: true, emblem: true },
-  { top: COLLA.cream, stripes: true, mocador: COLLA.yellow },
+  { top: COLLA.cream, mocador: COLLA.yellow },
   { top: COLLA.cream, eyes: true, mocador: COLLA.yellow, band: true, emblem: true },
   { top: COLLA.cream, eyes: true, mocador: COLLA.red, emblem: true },
 ];
 export const SEATED_LOOKS = [
-  { top: COLLA.cream, stripes: true, cap: true },
+  { top: COLLA.cream, cap: true },
   { top: COLLA.cream, eyes: true, mocador: COLLA.red, band: true },
   { top: COLLA.cream, mocador: COLLA.yellow },
-  { top: COLLA.cream, stripes: true, mocador: COLLA.red },
+  { top: COLLA.cream, mocador: COLLA.red },
   { top: COLLA.cream, eyes: true, band: true },
 ];
 
@@ -152,9 +148,8 @@ export function buildHelper(look, seed = 1) {
     if (look.eyes) [0.22, 0.46].forEach((y, i) => eye(v, s * 0.1, y + 0.08 * i * s, i ? -0.1 : 0.1, i ? -1 : 1, 0.12));
   }
   const jacket = [0, 0.72, 0, 0.46, 0.66, 0.28];
-  if (look.stripes) for (let i = 0; i < 8; i++) v.box(0, 0.72 + i * 0.0825, 0, 0.46 + (i % 2) * 0.006, 0.0825, 0.28 + (i % 2) * 0.006, i % 2 ? COLLA.stripe : COLLA.cream);
-  else v.box(...jacket, look.top);
-  if (!look.stripes) blotch(v, rnd, jacket, 16, look.emblem ? 'fsf' : 'fsbf'); // the back's emblem has the back to itself
+  v.box(...jacket, look.top);
+  blotch(v, rnd, jacket, 16, look.emblem ? 'fsf' : 'fsbf'); // the back's emblem has the back to itself
   if (look.mocador) mocador(v, 0.14, 1.38, look.mocador);
   back(v, -0.14, 1.38, look);
   body.add(v.mesh());
@@ -191,9 +186,9 @@ export function buildSeated(look, posture, seed = 1) {
   const rnd = seeded(seed), P = SEATED[posture], g = new THREE.Group(), body = new THREE.Group();
   look = { skin: SKIN[(rnd() * 5) | 0], ...look };
   g.add(body);
-  const v = new Vox(), [nx, ny, nz] = P.neck, cloth = look.stripes ? 'stripes' : rnd, top = look.top;
+  const v = new Vox(), [nx, ny, nz] = P.neck, top = look.top;
   cbox(v, 0, 0.08, -0.04, 0.4, 0.16, 0.3, COLLA.cream); // the seat of the trousers, on the paving
-  limb(v, [nx * 0.3, 0.1, -0.04], P.neck, 0.44, 0.26, top, cloth); // the jacket
+  limb(v, [nx * 0.3, 0.1, -0.04], P.neck, 0.44, 0.26, top, rnd); // the jacket
   if (look.mocador) cbox(v, nx, ny - 0.035, nz, 0.3, 0.06, 0.3, look.mocador).box(nx, ny - 0.16, nz + 0.12, 0.1, 0.1, 0.06, look.mocador);
   const foot = new THREE.Group(), fv = new Vox(), toe = P.tap === 'foot';
   P.legs.forEach(([H, K, A], i) => {
@@ -208,9 +203,9 @@ export function buildSeated(look, posture, seed = 1) {
   P.hands.forEach((hand, i) => { // shoulder to hand in two segments, the elbow pushed outwards and down
     const s = i ? -1 : 1, sh = [nx + s * 0.27, ny - 0.06, nz];
     const elb = [(sh[0] + hand[0]) / 2 + s * 0.08, (sh[1] + hand[1]) / 2 - 0.04, (sh[2] + hand[2]) / 2];
-    limb(v, sh, elb, 0.12, 0.13, top, cloth);
+    limb(v, sh, elb, 0.12, 0.13, top, rnd);
     const t = !toe && i === 1 ? tv : v; // the forearm that taps
-    limb(t, elb, [hand[0], hand[1] + 0.06, hand[2]], 0.11, 0.12, top, cloth); // to the wrist, over the palm
+    limb(t, elb, [hand[0], hand[1] + 0.06, hand[2]], 0.11, 0.12, top, rnd); // to the wrist, over the palm
     cbox(t, hand[0], hand[1] + 0.03, hand[2], 0.09, 0.06, 0.1, look.skin);
     if (t === tv) { tap.position.set(...elb); tv.g.forEach(geo => geo.translate(-elb[0], -elb[1], -elb[2])); tap.add(tv.mesh()); }
   });

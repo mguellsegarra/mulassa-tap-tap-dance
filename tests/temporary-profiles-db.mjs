@@ -55,6 +55,8 @@ try {
   await query("insert into leaderboard_private.profiles(user_id,alias) values ($1,'Reservat')", [reserved]);
   assert(/^[\x00-\x7f]*$/.test(sql(migration)), 'migration is ASCII');
   await db.exec(sql(migration)); await db.exec(sql(migration)); // idempotent
+  const pointsMigration = '202610190001_temporary_record_by_score.sql';
+  await db.exec(sql(pointsMigration)); await db.exec(sql(pointsMigration)); // also safe for an already migrated database
   await admin();
   assert.equal((await one('select count(*)::int c from leaderboard_private.profiles where expires_at is not null')).c, 0, 'no deadline is backfilled');
 
@@ -94,6 +96,16 @@ try {
   assert.equal(told.expires_at - told.notice_at, 7 * 864e5);
   await unlock(); await as(fresh); const again = await publish('Novell', true, 60000);
   assert(again.started === false && +again.expires_at === +r.expires_at && again.improved, 'a second publication keeps the deadline');
+
+  // The later profile signature must retain master's points-first rule and its notice/deadline contract.
+  await unlock(); await as(fresh);
+  const morePoints = await one("select * from public.submit_result('mulassa-v1',0,100,20,30,70000,50,'Novell',true)");
+  assert(morePoints.improved && morePoints.score === 70000, 'temporary profiles retain more points with a lower percentage');
+  assert(morePoints.started === false && +morePoints.expires_at === +r.expires_at, 'a points improvement never restarts the deadline');
+  await unlock(); await as(fresh);
+  assert.equal((await publish('Novell', true, 69000)).improved, false, 'a higher percentage with fewer points cannot replace the temporary profile record');
+  await unlock(); await as(fresh);
+  assert.equal((await publish('Novell', true, 70000)).improved, true, 'equal points: the higher percentage breaks the tie');
 
   // --- nothing is due: nothing goes, whatever the age of the untold profile
   await admin(); await query("update leaderboard_private.profiles set created_at = now() - interval '2 years'");

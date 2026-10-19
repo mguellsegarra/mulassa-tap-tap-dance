@@ -1,8 +1,12 @@
-export function createOverhead(canvas, motion) {
-  const ctx = canvas.getContext('2d'), W = 560, H = 360, scale = 31, originX = W / 2, originY = 140;
+export function createOverhead(canvas, motion, directions) {
+  const ctx = canvas.getContext('2d'), W = 560, H = 360, scale = 23, originX = W / 2, originY = 165;
   canvas.width = W; canvas.height = H;
-  const path = Array.from({ length: 333 }, (_, i) => motion.pose(i / 2));
-  const x = p => originX + p.x * scale, y = p => originY + p.z * scale;
+  const path = Array.from({ length: 334 }, (_, i) => motion.pose(Math.min(166.2, i / 2)));
+  const x = p => originX + directions.east(p.x, p.z) * scale;
+  const y = p => originY + directions.south(p.x, p.z) * scale;
+  const compass = [['N', 0, -1], ['S', 0, 1], ['W', -1, 0], ['E', 1, 0]];
+  const cx = directions.east(-.95, 10), cy = directions.south(-.95, 10), length = Math.hypot(cx, cy);
+  const cameraX = originX + cx / length * 160, cameraY = originY + cy / length * 160;
   return (t, pose, phase, showPath = true) => {
     ctx.fillStyle = '#f1e6c9'; ctx.fillRect(0, 0, W, H);
     ctx.strokeStyle = '#dfd3b6'; ctx.lineWidth = 1;
@@ -16,19 +20,28 @@ export function createOverhead(canvas, motion) {
       ctx.stroke();
     }
     if (showPath) {
-      trail(0, path.length - 1, '#b6aa90', 2);
-      trail(Math.floor(phase.start * 2), Math.ceil(phase.end * 2), '#c88813', 4);
+      trail(0, path.length - 1, '#cbc1aa', 1);
+      trail(Math.floor(phase.start * 2), Math.ceil(phase.end * 2), '#b87b08', 3);
     }
-    ctx.fillStyle = '#6d6455'; ctx.font = '14px system-ui'; ctx.textAlign = 'center';
-    ctx.fillText('Zona inicial', originX, originY - 85);
-    ctx.save(); ctx.translate(x(pose), y(pose)); ctx.rotate(-pose.yaw);
-    ctx.fillStyle = '#9e3040'; ctx.fillRect(-16, -49, 32, 98);
-    ctx.fillStyle = '#267346'; ctx.fillRect(-17, -22, 34, 32);
-    ctx.fillStyle = '#75462e'; ctx.fillRect(-7, 39, 14, 30);
-    ctx.beginPath(); ctx.moveTo(0, 82); ctx.lineTo(-8, 69); ctx.lineTo(8, 69); ctx.closePath(); ctx.fill();
-    ctx.restore();
-    ctx.fillStyle = '#343c48'; ctx.fillRect(originX - 15, 305, 30, 20);
-    ctx.beginPath(); ctx.moveTo(originX - 10, 305); ctx.lineTo(originX, 292); ctx.lineTo(originX + 10, 305); ctx.fill();
-    ctx.fillText('Càmera · orientació inicial', originX, 348);
+    ctx.fillStyle = '#6d6455'; ctx.font = '13px system-ui'; ctx.textAlign = 'center';
+    ctx.fillText('Marques de guió · W = orientació inicial', W / 2, 20);
+    ctx.strokeStyle = '#8d846e'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(originX - 5, originY); ctx.lineTo(originX + 5, originY); ctx.moveTo(originX, originY - 5); ctx.lineTo(originX, originY + 5); ctx.stroke();
+    for (const [name, dx, dy] of compass) {
+      const mx = originX + dx * 132, my = originY + dy * 132;
+      ctx.fillStyle = '#eac333'; ctx.beginPath(); ctx.arc(mx, my, 14, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#514820'; ctx.font = 'bold 15px system-ui'; ctx.textBaseline = 'middle'; ctx.fillText(name, mx, my + 1);
+    }
+    ctx.textBaseline = 'alphabetic';
+    ctx.save(); ctx.translate(x(pose), y(pose)); ctx.rotate(-directions.angle(pose.yaw));
+    ctx.fillStyle = '#9e3040'; ctx.fillRect(-.55 * scale, -1.65 * scale, 1.1 * scale, 3.3 * scale);
+    ctx.fillStyle = '#267346'; ctx.fillRect(-.57 * scale, -.825 * scale, 1.14 * scale, 1.35 * scale);
+    ctx.fillStyle = '#75462e'; ctx.fillRect(-.22 * scale, 1.4 * scale, .44 * scale, .8 * scale);
+    ctx.beginPath(); ctx.moveTo(0, 2.55 * scale); ctx.lineTo(-.24 * scale, 2.2 * scale); ctx.lineTo(.24 * scale, 2.2 * scale); ctx.closePath(); ctx.fill(); ctx.restore();
+    // Opening camera is an independent direction on the rim, not the S marker.
+    ctx.save(); ctx.translate(cameraX, cameraY); ctx.rotate(Math.atan2(-cx, cy));
+    ctx.fillStyle = '#343c48'; ctx.fillRect(-10, -6, 20, 14);
+    ctx.beginPath(); ctx.moveTo(-7, -6); ctx.lineTo(0, -14); ctx.lineTo(7, -6); ctx.fill(); ctx.restore();
+    ctx.fillStyle = '#514b3c'; ctx.font = '13px system-ui'; ctx.fillText('Càmera inicial', cameraX, 348);
   };
 }

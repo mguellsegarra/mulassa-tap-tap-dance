@@ -266,8 +266,7 @@ kbd { display: inline-block; min-width: 14px; padding: 0 4px; border: 1px solid 
   #privacy-menu .sheet-actions { bottom: -8px; margin: 8px -16px -8px; padding: 8px 16px; }
 }
 /* Classificacions (src/ui/board-ui.js): results row, the lists sheet and the publish / alias sheet */
-/* the results row (src/ui/share-ui.js shows it; board-ui.js its Publica / Classificacions): one row, or two on narrow
-   screens with Publica on its own; main.js resultsReserve() keeps the canvas card above it (48 px rows, 8 px apart, +10) */
+/* The HUD reserves this row's measured height (src/hud/results.js), including wrapped labels. */
 #results-actions { position: fixed; z-index: 3; left: 50%; bottom: calc(var(--app-gap, 0px) + 10px + var(--sab)); transform: translateX(-50%); box-sizing: border-box; display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; width: min(640px, calc(100vw - 24px - var(--sal) - var(--sar))); }
 /* solid and full contrast over the 3D plaça (nothing translucent): gold primary with dark text, dark secondaries with
    cream text and a clear gold border; each with its icon in the same slot (padding reserves it on both sides) */
@@ -275,9 +274,17 @@ kbd { display: inline-block; min-width: 14px; padding: 0 4px; border: 1px solid 
 #results-actions .btn-secondary { border-color: #f5c518; background: #2a1a10; color: #fff3d6; }
 #results-actions .btn-primary { border-color: #f5c518; background: var(--button-gold-bg); color: #2a1a10; }
 #results-actions .btn > svg { width: 20px; height: 20px; margin-right: 8px; }
+/* Follow the HUD's existing scale on roomy screens. Short windows keep the compact row;
+   only this component grows, with equal columns and no per-button width cap. */
+@media (min-width: 640px) and (min-height: 520px) {
+  #results-actions { width: min(calc(680px * var(--ui)), calc(100vw - 24px - var(--sal) - var(--sar))); gap: calc(12px * var(--ui)); }
+  #results-actions .btn { max-width: none; min-height: calc(56px * var(--ui)); padding: calc(8px * var(--ui)) calc(12px * var(--ui)); font-size: calc(18px * var(--ui)); }
+  #results-actions:has(#results-publish:not([hidden])) .btn { flex-basis: calc(50% - 6px * var(--ui)); }
+  #results-actions .btn > svg { width: calc(24px * var(--ui)); height: calc(24px * var(--ui)); margin-right: calc(8px * var(--ui)); }
+}
 /* narrow: «Publica» is exactly as wide as the pair under it (2 × 220 + the gap), never the whole screen */
 @media (max-width: 639px) { #results-actions { width: min(452px, calc(100vw - 24px - var(--sal) - var(--sar))); } #results-actions > #results-publish { flex-basis: 100%; max-width: none; } }
-@media (max-width: 419px) { #results-actions > #results-retry { flex-basis: 100%; max-width: none; } } /* «Torna-ho a provar» on its own row, never broken at the hyphen */
+@media (max-width: 639px) { #results-actions > #results-retry { flex-basis: 100%; max-width: none; } } /* Keep the two secondary labels whole across the narrow breakpoint. */
 @media (max-width: 419px) { #results-actions .btn { padding-inline: 8px; } #results-actions .btn > svg { margin-right: 6px; } } /* phones: «Torna-ho a provar» and its icon on one line (it broke at the hyphen) */
 #board-menu, #publish-menu { max-height: calc(100dvh - 32px - var(--sat) - var(--sab)); }
 /* the board sheet has ONE height from its first frame (loading, list, empty, error, both views, both periods): the

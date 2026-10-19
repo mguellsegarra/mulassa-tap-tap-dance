@@ -35,16 +35,13 @@ function clearPhotoTip() {
   clearTimeout(pfTipT);
   pfTip.hidden = true;
   pfTip.dataset.visible = 'false';
-  pfTipUntil = 0; pfTipUsed = false;
+  pfTipUsed = false;
 }
 function fadePhotoTipAfter(ms) {
   clearTimeout(pfTipT);
-  pfTipUntil = performance.now() + ms;
   pfTipT = setTimeout(() => { pfTip.dataset.visible = 'false'; }, ms);
 }
-export function showPhotoHelp(keepDeadline = false) {
-  const remaining = keepDeadline ? Math.max(0, pfTipUntil - performance.now()) : PF_TIP_MS;
-  const used = keepDeadline && pfTipUsed;
+export function showPhotoHelp() {
   clearPhotoTip();
   if (!pfShown || avatarsEl.hidden || !PHOTO.on) return;
   const fig = PF_FIGS.find(([f]) => f.id === PHOTO.id);
@@ -53,12 +50,11 @@ export function showPhotoHelp(keepDeadline = false) {
   pfTip.innerHTML = `<strong>${fig[0].fullName}</strong><div class="pf-help-grid">${actions.map(([key, label]) => `<span class="pf-help-action"><kbd>${key}</kbd><span>${label}</span></span>`).join('')}</div><small>Prem <kbd>?</kbd> per tornar a veure els controls</small>`;
   pfTip.hidden = false;
   pfTip.dataset.visible = 'true';
-  pfTipUsed = used;
-  fadePhotoTipAfter(remaining);
+  fadePhotoTipAfter(PF_TIP_MS);
 }
 
 const pfAutoShown = new Set(); // once per figure for this page visit, including entry through Tab
-let pfShown = false, pfTipFor = null, pfTipT = 0, pfTipUntil = 0, pfTipUsed = false;
+let pfShown = false, pfTipFor = null, pfTipT = 0, pfTipUsed = false;
 export const photoHelpAvailable = () => pfShown && !avatarsEl.hidden && PHOTO.on && pfTip.dataset.visible !== 'true';
 export function syncAvatars() {
   const active = PHOTO.on ? PHOTO.id : '';
@@ -83,8 +79,7 @@ export function syncAvatars() {
     if (fig && !pfAutoShown.has(active)) {
       pfAutoShown.add(active);
       showPhotoHelp(); // a newly discovered figure gets its own reading time
-    } else if (fig && pfTip.dataset.visible === 'true') showPhotoHelp(true);
-    else clearPhotoTip();
+    } else clearPhotoTip();
   }
 }
 // Called when photo mode opens or closes: control always starts off, in plain viewing.

@@ -6,18 +6,19 @@ import { rnd } from './models.js';
 import { renderProfile, scene } from './stage.js';
 import { smooth01 } from '../core/anim.js';
 import { CALM } from '../core/env.js';
+import { M } from './mula-motion.js';
 
 const CONF = renderProfile.confetti;
 // a flat sheet, lit on both faces (2 triangles a piece); the shapes come from a per-piece scale below
 export const confetti = new THREE.InstancedMesh(new THREE.PlaneGeometry(0.2, 0.2), new THREE.MeshLambertMaterial({ side: THREE.DoubleSide }), CONF);
-const SHAPES = [[1, 1], [1.2, 0.65], [1.9, 0.36], [0.8, 0.8], [1.25, 0.7]]; // square, rectangle, streamer strip, small square, rectangle
+const SHAPES = [[1, 1], [1.2, 0.65], [1.8, 0.5], [0.8, 0.8], [1.25, 0.7]]; // square, rectangle, streamer strip, small square, rectangle
 const conf = Array.from({ length: CONF }, (_, i) => ({
   p: new THREE.Vector3(0, -9, 0), v: new THREE.Vector3(), axis: new THREE.Vector3(), q0: new THREE.Quaternion(), qf: new THREE.Quaternion(),
   ang: rnd(0, 6), spin: 0, amp: 0, w: 0, ph: 0, dir: 0, k: 0, age: 0, // ang: where its tumble (or heading) starts, each throw carries on
   flutter: false, tilt: 0, // most fall like paper (rocking about lying flat, w: its rock and sway), the rest tumble about axis
   lay: -1, // s on the floor (-1: parked or in the air)
   out: -1, dur: 1, gust: false, // out: s into shrinking away (-1: not leaving) over dur s; gust: blown off by sweepConfetti
-  sx: SHAPES[i % 5][0], sy: SHAPES[i % 5][1], floor: 0.012 + (i % 7) * 0.003, // stacked pieces never share a plane (z-fighting)
+  sx: SHAPES[i % 5][0], sy: SHAPES[i % 5][1],
 }));
 ['#d62828', '#f5c518', '#2f62d6', '#3a9d4b', '#ffffff', '#ff8fb1'].forEach((c, k) => conf.forEach((_, i) => i % 6 === k && confetti.setColorAt(i, new THREE.Color(c))));
 const PARKED = new THREE.Matrix4().makeScale(0, 0, 0).setPosition(0, -9, 0);
@@ -43,7 +44,7 @@ function throwUp(c) { // up from above her back in a wide fountain, its top (~5 
   c.p.set(ox + rnd(-0.5, 0.5), rnd(2.2, 2.8), oz + rnd(-0.5, 0.5));
   c.v.set(Math.cos(a) * s, rnd(5, 8), Math.sin(a) * s);
 }
-const GROW = 0.12, RETIRE = 0.3; // s a thrown piece takes to open up; s an old one takes to shrink away when the pool runs short
+const GROW = 0.12, RETIRE = 0.5; // s a thrown piece takes to open up; s an old one takes to shrink away when the pool runs short
 let cursor = 0; // the ring's next slot: pieces are thrown in ring order, so the slots after it hold the oldest ones
 // Throws up to n pieces, parked ones only. Short of pieces, the oldest ones lying on the floor shrink away quickly, ready
 // for the next throw (air: a burst also takes the oldest still in the air; null: they already are): the pool never grows,
@@ -77,8 +78,12 @@ export let confettiSettled = false;
 export const setConfettiSettled = v => (confettiSettled = v);
 // a new game (or the menu) starts with a clean plaça: a quick gust lifts the leftover confetti,
 // blows it off to the side and shrinks it away, done well before BALLA! (reduced motion: it only shrinks away)
-const SWEEP = 0.9, CONF_LAY = 5, CONF_FADE = 1, SETTLE = 0.2; // s: the gust; a piece rests on the floor, then shrinks away; it lies flat
+const SWEEP = 0.9, CONF_LAY = 5, CONF_FADE = 1, SETTLE = 0.2, UNDER = 0.6; // s: the gust; a piece rests on the floor, then shrinks away; it lies flat; one under her goes
 const FALL = 5; // m/s², with each piece's drag k: it falls at FALL / k (1.7-2.5 m/s), paper, not a stone
+// Each piece lands a step above the one before (16 steps, 2.5 mm: far above the depth buffer's resolution at the camera's
+// distance): overlapping papers never share a plane (they used to z-fight, winking as the camera drifts), the last one on top.
+const CONF_LAND = 0.01, CONF_STEP = 0.0025, CONF_STEPS = 16;
+let confLanded = 0;
 export function sweepConfetti() {
   let any = false;
   owed = 0;
@@ -94,14 +99,17 @@ export function sweepConfetti() {
 export function animConfetti(dt) {
   if (confettiSettled) return;
   let top = -1, dirty = false, freed = false;
+  const cy = Math.cos(M.yaw), sy = Math.sin(M.yaw);
   for (let i = 0; i < conf.length; i++) {
     const c = conf[i];
     if (c.p.y < -1) continue; // parked: its matrix already is
     top = i;
     if (c.lay > SETTLE && c.out < 0) { // lying flat on the floor: nothing to redraw until it starts to shrink away
       c.lay += dt;
-      if (c.lay < CONF_LAY) continue;
-      retire(c, CONF_FADE);
+      const dx = c.p.x - M.pos.x, dz = c.p.z - M.pos.y; // under her skirt (the crowd's body box) her dancing edge would
+      if (Math.abs(dx * cy - dz * sy) < 0.75 && Math.abs(dx * sy + dz * cy) < 2.3) retire(c, UNDER); // cover and bare it on and off
+      else if (c.lay < CONF_LAY) continue;
+      else retire(c, CONF_FADE);
     }
     dirty = true;
     if (c.out >= 0 && (c.out += dt) >= c.dur) { c.p.set(0, -9, 0); c.lay = -1; c.out = -1; confetti.setMatrixAt(i, PARKED); freed = true; continue; }
@@ -115,8 +123,8 @@ export function animConfetti(dt) {
       c.ang += c.spin * dt * (c.gust ? 2.5 : 1);
       if (c.flutter) { const r = c.tilt * Math.sin(c.w * c.age + c.ph); dummy.quaternion.setFromEuler(flat.set(-Math.PI / 2 + r, c.ang, r * 0.5)); }
       else dummy.quaternion.setFromAxisAngle(c.axis, c.ang);
-      if (c.p.y <= c.floor) { // landed: it settles flat over SETTLE s (no snap), rests CONF_LAY s, then shrinks away
-        c.p.y = c.floor; c.v.set(0, 0, 0); c.lay = 0;
+      if (c.p.y <= CONF_LAND) { // landed: it settles flat over SETTLE s (no snap), rests CONF_LAY s, then shrinks away
+        c.p.y = CONF_LAND + (confLanded = (confLanded + 1) % CONF_STEPS) * CONF_STEP; c.v.set(0, 0, 0); c.lay = 0;
         const q = c.q0.copy(dummy.quaternion), up = q.y * q.z + q.w * q.x >= 0; // its face's normal points up (else down)
         c.qf.setFromEuler(flat.set(up ? -Math.PI / 2 : Math.PI / 2, c.ang, 0)); // so it lies on the nearer face
       }

@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { buildMulassa } from '../../scene/models/mulassa.js';
+import { createCameraFrame } from './camera.js';
 import { createCarriers } from './carriers.js';
 import { addDirectionMarkers } from './directions.js';
 import { poseMulassa } from '../../scene/mula-pose-rig.js';
@@ -20,7 +21,7 @@ export function createStage(canvas, motion, directions) {
   rig.peek.visible = false;
   const carriers = createCarriers(scene, motion);
   const markers = addDirectionMarkers(THREE, scene, directions);
-  const panel = new THREE.Vector3();
+  const frameCamera = createCameraFrame(camera);
   const resize = new ResizeObserver(() => {
     const { width, height } = canvas.getBoundingClientRect();
     renderer.setSize(width, height, false); camera.aspect = width / height; camera.updateProjectionMatrix();
@@ -28,19 +29,12 @@ export function createStage(canvas, motion, directions) {
   });
   resize.observe(canvas);
   function render(t, pose, baseline) {
-    // Opening camera stays independent of the reconstructed lateral motion.
-    const follow = Math.max(0, Math.min(1, (t - 89) / 4)) * (1 - pose.referenceWeight);
-    const second = Math.max(0, Math.min(1, (t - 34) / 2, (67 - t) / 2));
-    const cameraX = -.95 + .5 * follow - .6 * second + pose.cameraX + pose.x * .65 * follow;
-    camera.fov = 32;
-    camera.position.set(cameraX, 1.5, 10 + pose.z * .6 * follow);
-    camera.lookAt(cameraX, baseline ? 2.05 : 2.05 + .22 * follow + pose.cameraY, pose.z * .6 * follow);
-    camera.updateProjectionMatrix();
     carriers.visible(!baseline);
     if (baseline) {
       for (const leg of rig.legs) leg.visible = true;
       rig.head.rotation.set(0, 0, 0);
       poseMulassa(rig, baseline.pose, baseline.beat, -65 * Math.PI / 180);
+      frameCamera(t, pose, rig.body, true);
       renderer.render(scene, camera); return;
     }
     rig.neck.rotation.set(0.15, 0, 0); rig.head.rotation.set(0.2, 0, pose.headRoll); rig.jaw.rotation.x = 0;
@@ -51,18 +45,7 @@ export function createStage(canvas, motion, directions) {
     rig.body.rotation.set(pose.pitch, 0, pose.roll);
     rig.root.updateMatrixWorld(true);
     carriers.pose(t, pose);
-    if (pose.referenceWeight) {
-      // Match the observed cloth landmark without cancelling the floor trajectory.
-      panel.set(-.565 * Math.tanh(Math.sin(pose.yaw) * 5), .44, -.15);
-      rig.body.localToWorld(panel);
-      const depth = 10 - panel.z, height = 2 * depth * Math.tan(16 * Math.PI / 180);
-      const x = panel.x - (pose.referenceX - .5) * height * (16 / 9);
-      const targetAtPanel = panel.y + (pose.referenceY - .5) * height;
-      const targetY = 1.5 + (targetAtPanel - 1.5) * 10 / depth;
-      const w = pose.referenceWeight;
-      camera.position.x += (x - camera.position.x) * w;
-      camera.lookAt(camera.position.x, (2.05 + pose.cameraY) * (1 - w) + targetY * w, 0);
-    }
+    frameCamera(t, pose, rig.body);
     renderer.render(scene, camera);
   }
   return { render, dispose() { resize.disconnect(); carriers.dispose(); markers.dispose(); renderer.dispose(); } };

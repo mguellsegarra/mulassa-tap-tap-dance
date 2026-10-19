@@ -16,15 +16,14 @@ import { COARSE } from '../core/env.js';
 // Results, three blocks with room between them, centred as a group inside the safe area: the card (title,
 // rank + stats, quality, record badge), the tip under it (its own pill, labelled CONSELL) and a real
 // "TOCA PER TORNAR" button at the bottom.
-// css px kept free under the card for the DOM results row (index.html #results-actions: 48 px buttons, 12 px apart,
-// 10 px off the bottom, 8 px clear above); narrow screens put «Publica el resultat» on a row of its own, when it can show
+// Keep CSS pixels free for the DOM actions: measured height includes desktop UI scaling and wrapped labels.
+// Before measurement, estimate compact 48 px rows, 12 px apart; publish and retry each own a row on narrow screens.
 const NARROW = matchMedia('(max-width: 639px)');
 const ROW_GAP = 20, BELOW_EXTRA = 8, resultsRow = document.getElementById('results-actions');
-const NARROW_ROW = matchMedia('(max-width: 419px)'); // index.html: «Torna-ho a provar» takes a row of its own
 let rowSeen = 0; // the row's real height once laid out (a wrap the estimate below missed must never sit on the tip)
 try { new ResizeObserver(() => { rowSeen = resultsRow.offsetHeight; }).observe(resultsRow); } catch { /* old browser / tests: the estimate alone */ }
 const resultsReserve = () => { // rows of 48, 12 apart. Publish and retry each wrap onto their own row on a narrow phone.
-  const rows = 1 + (sheets.board.publishable && NARROW.matches ? 1 : 0) + (NARROW_ROW.matches ? 1 : 0);
+  const rows = 1 + (sheets.board.publishable && NARROW.matches ? 1 : 0) + (NARROW.matches ? 1 : 0);
   return Math.max(rows * 48 + (rows - 1) * 12, rowSeen);
 };
 // The row sits right under the card (ROW_GAP css px), TOCA PER TORNAR and the tip under it: drawResults() places it by
@@ -39,7 +38,7 @@ export function drawResults() {
   const lost = G.reason === 'collapse'; // a collapse is a defeat: no stars, no quality % (they would read as a pass)
   const row = 17, STAR_H = lost ? 0 : 76, rec = lost ? 0 : G.newRecord ? 34 : G.previous ? 22 : 8, chl = G.challenge ? 20 : 0, url = 14; // chl: a friend's challenge; url: the address
   const pw = Math.min(340, W - 20), ph = (lost ? 154 : 184) + STAR_H + rec + chl + url, x0 = W / 2 - pw / 2;
-  // top to bottom: the card, the DOM row (index.html #results-actions, never scaled), the tip, TOCA PER TORNAR
+  // Top to bottom: the card, the measured DOM row, the tip, TOCA PER TORNAR.
   const top = (SAFE.t + 8) / K, bottom = HH - (SAFE.b + 10) / K, rowH = resultsReserve() / K, rowGap = ROW_GAP / K, extra = BELOW_EXTRA / K;
   const tipH = 26, btnH = 30, room = bottom - top - ph - tipH - btnH - 14 - rowGap - rowH - extra; // 14: the CONSELL label
   const gap = Math.max(8, Math.min(26, room / 3)); // generous on tall phones, tight on an SE or landscape

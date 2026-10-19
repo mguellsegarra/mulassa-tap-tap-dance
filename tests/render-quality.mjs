@@ -706,6 +706,14 @@ assert(chain.jumps === 0 && chain.vanish === 0, `no confetti piece pops between 
 assert(chain.thrown[0] >= 0.55 * chain.N && chain.thrown.every((n, i) => i % 2 === 0 || n >= 0.55 * chain.N), `every chained throw gets its whole share within a second: ${chain.thrown}`);
 assert(chain.fresh >= 0.55 * chain.N, `a throw right after the sweep is whole within 1.2 s and stays (${chain.fresh})`);
 assert(chain.maxCount <= chain.N && chain.settled, 'the pool stays bounded and empties by itself');
+// A piece lying under her skirt shrinks away (her dancing edge would cover and bare it, a wink every step); one beside her stays.
+assert(run(`(() => {
+  burst(M.pos.x, M.pos.y); for (let i = 0; i < 200; i++) animConfetti(1 / 30); // all landed, none old enough to go
+  const [under, beside] = conf.filter(c => c.lay > 0.5 && c.out < 0);
+  under.p.set(M.pos.x, under.p.y, M.pos.y); beside.p.set(M.pos.x + 4, beside.p.y, M.pos.y + 4);
+  animConfetti(1 / 30);
+  return under.out >= 0 && beside.out < 0;
+})()`), 'confetti under her shrinks away, beside her it stays');
 console.log('scene downgrade and particle lifecycle ok');
 
 // Two neighbours on opposite sides of a grid boundary must still repel each other.
@@ -2776,6 +2784,9 @@ console.log('view mode ok');
   assert(run('pfTip.hidden'), 'each figure remembers its help independently for this visit');
   keyDown('Slash', { key: '?' });
   assert(run('pfTip.dataset.visible === "true"'), 'question mark replays help without leaving control');
+  keyDown('Tab');
+  assert(run('pfTip.hidden'), 'switching to an already seen figure closes even an open notice');
+  keyDown('Tab'); keyDown('Slash', { key: '?' });
   keyDown('KeyW');
   const usedNoticeTimer = run('pfTipT');
   assert.equal(photoTimers.get(usedNoticeTimer).ms, 1000, 'first movement key dismisses help after one second');

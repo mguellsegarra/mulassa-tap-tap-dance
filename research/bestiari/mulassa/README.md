@@ -12,15 +12,14 @@ in the external Mulassa research folder. The original footage is not added to pu
 
 This recording offers a continuous performance and readable headings. Musicians obstruct some feet and the
 camera pans/tilts, so it cannot support a complete exact footfall count or a measured ground trajectory.
-The 2021 and 2023 Arditproduccions recordings were screened as alternatives; their choreography has not been
-independently annotated. No claim is made that one recording defines an invariant dance for every performance.
+The 2021 and 2023 Arditproduccions recordings were compared by broad phase in `contrast-2021-2023.md`; exact footfalls and metric travel remain unannotated. No claim is made that one recording defines an invariant dance for every performance.
 
 ## Files and evidence levels
 
 - `choreography.json`: 20 continuous windows covering 0–166.2 s, with plain Catalan actions and evidence limits.
 - `reconstruction.json`: visually fitted unwrapped heading anchors, inferred floor path, sway envelope and two
   matched-frame tilt corrections. Angles, distances and amplitudes are estimates, not motion capture.
-- `spatial-frame.json`: camera-relative axes. No invented geographic N/W/S/E labels or helper positions.
+- `spatial-frame.json`: camera-relative reconstruction axes and approved rehearsal compass. W is the opening-facing direction; the camera is independent. These are not geographic directions.
 - `audio-pulse.json`: spectral-flux periodicity candidates. Harmonics and subdivisions are ambiguous; these are
   not confirmed beat annotations, a tempo map, transcription or proof of listening.
 - `src/dev/bestiari-compare/`: video-clock transport, reconstruction, actual game-model rendering and overhead.
@@ -53,11 +52,16 @@ music replaces it. `Ball actual del joc` evaluates the existing pure dance and r
 beat grid, at the same elapsed seconds, with its original shorter duration. It is explicitly not phrase-aligned
 or globally stretched to pretend to match the source. It also does not include gameplay hit accents.
 
-The proposed shell retains the current game model and rigid neck/head. The fitted camera follows a fraction of
-the inferred travel. Feet use inferred alternating world-fixed stances and smooth lifted swings. Trousers follow
-the shell while the shoes retain their size. They are a support approximation, not transcribed steps or a new
+The proposed shell retains the original game model. The accepted revision in `simple-carriers-v3.md` restores lateral body sway, emphasizes it by 15%, and adds a small artistic head-roll accent. The fitted camera follows a fraction of
+the inferred travel. Feet use inferred alternating world-fixed stances and smooth lifted swings. Simple trouser cuffs meet the cloth while the shoes retain their size; hidden knee/hip geometry is omitted. They are a support approximation, not transcribed steps or a new
 production rig. The model has a narrower body and a proportionally longer neck than the reference; camera fit
 cannot remove that difference. Close approaches and some tilts still need refinement with Marc.
+
+## Current accepted style
+
+For the future plaza characters, see [helpers-design.md](helpers-design.md): timestamped clothing references, standing/seated variants and the distinction between approved N/W/S/E game marks and unverified traditional guide positions.
+
+Marc chose fixed rehearsal marks, simple natural-looking legs, and slightly exaggerated body/head sway. These choices are applied only to the comparison prototype. See `simple-carriers-v3.md` for changes, evidence and limits. The inferred floor trajectory has not been replaced with an invented cardinal route.
 
 ## Next validation / integration
 

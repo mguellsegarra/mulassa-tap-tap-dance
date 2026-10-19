@@ -7,6 +7,7 @@ import { DIFFS } from '../game/chart.js';
 import { num } from './sheet-kit.js';
 import { escutSvg, escutField } from './escuts.js';
 import { PESSIGOLLA_MARK } from './pessigolla-logo.js';
+import { GIFTS } from './pending-gifts.js';
 import { stripScroll } from './strip-scroll.js';
 import { fitPendingTitle, fitPendingNote } from './pending-title.js';
 import { SELECTOR_PORTRAITS, pendingSilhouette } from './selector-portraits.js';
@@ -51,8 +52,6 @@ function stripHtml(figures, later = false, last = null) { // later: what the fol
 // the fold between the playable figures and the rest: › folded, ‹ unfolded
 const moreHtml = () => `<button type="button" class="btn btn-secondary sel-card sel-more" data-more="1" role="option" tabindex="-1" aria-selected="false" aria-expanded="false" aria-label="Pròximament"><span class="sel-more-flag" aria-hidden="true"><svg viewBox="0 0 24 24"><path class="open" d="m9 5 7 7-7 7"/><path class="close" d="m15 5-7 7 7 7"/></svg></span></button>`;
 // the pills' last one: the arms of the towns with nothing to play yet, fanned out; unfolded, «Amaga»
-// The fold's own card while the cursor is on it: three coming figures (one per town), every coming town's arms and the count
-const peekHtml = figures => figures.map(f => `<span class="sel-peek" data-field="${escutField(f.town)}">${portraitHtml(f)}${escutSvg(f.town)}</span>`).join('');
 const soonPillHtml = towns => `<button type="button" class="btn btn-secondary sel-pill sel-soon" data-soon="1" tabindex="0" aria-expanded="false"><span class="sel-fan" aria-hidden="true">${towns.map(t => escutSvg(t.id)).join('')}</span><span class="sel-soon-text">Pròximament</span></button>`;
 
 // keyboard(): true while the player uses keys (focus rings, focus follows); busy(): a sheet is up; reduced(): reduced motion
@@ -91,8 +90,6 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
   const fold = cards.find(c => c.dataset.more), soonPill = bar.find(p => p.dataset.soon), later = [...strip.querySelectorAll('.later')];
   const restPills = pills.filter(p => restTowns.some(t => t.id === p.dataset.town));
   const foldLabel = `${soon.length} figures més, pròximament, de ${new Set(soon.map(f => f.town)).size} poblacions`;
-  const soonTowns = TOWNS.filter(t => soon.some(f => f.town === t.id));
-  const peekFigures = soonTowns.slice(0, 3).map(t => soon.find(f => f.town === t.id));
   let figure = live[0], lastPlayable = figure, open = true; // catalog selection is independent of the host's last playable figure
   let opening = false, shown = false, teasing = false, level = 1, town = null, cur = 0, req = 0, step = 'figures';
   const smooth = () => (reduced() ? 'auto' : 'smooth');
@@ -122,10 +119,10 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
   function teaserFill() {
     pending.toggleAttribute('data-fold', true); // same GitHub/mail row as a pending figure: the fan yields the room (select.css)
     $('aviat-title').textContent = 'Aviat a la plaça';
-    $('aviat-icon').innerHTML = peekHtml(peekFigures); $('aviat-icon').hidden = false;
+    $('aviat-icon').innerHTML = GIFTS; $('aviat-icon').hidden = false;
     $('aviat-entity').hidden = true;
     $('aviat-entity').innerHTML = '';
-    $('aviat-text').innerHTML = '<p>Volem que surtin a la plaça. Tens fotos, vídeos, partitures o coneixes el ball? Ajuda’ns!</p>';
+    $('aviat-text').innerHTML = '<p>Volem que surtin a la plaça. Envia’ns el que tinguis o explica’ns com es balla.</p>';
   }
   // Leaving, the card keeps the box it had: the dock rising and the room it frees would otherwise resize and move it
   // mid-fade (a jump and a repaint as it went). Its next showing lets go first.

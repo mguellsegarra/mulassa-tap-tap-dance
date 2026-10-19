@@ -5,15 +5,15 @@
 // CPU work after birth. Each material has a `uCount` switch so the lab can count shaded fragments (overdraw).
 import * as THREE from 'three';
 
-const hash = i => { const s = Math.sin(i * 12.9898 + 78.233) * 43758.5453; return s - Math.floor(s); };
-const COUNT_FRAG = 'if (uCount > 0.5) { gl_FragColor = vec4(1.0 / 255.0); return; }';
-const COUNT_ALL = 'if (uCount > 1.5) { gl_FragColor = vec4(1.0 / 255.0); return; }'; // every rasterised fragment, before any cutout
-const SRGB = 'vec3 toLin(vec3 c) { return pow(c, vec3(2.2)); }';
+export const hash = i => { const s = Math.sin(i * 12.9898 + 78.233) * 43758.5453; return s - Math.floor(s); };
+export const COUNT_FRAG = 'if (uCount > 0.5) { gl_FragColor = vec4(1.0 / 255.0); return; }';
+export const COUNT_ALL = 'if (uCount > 1.5) { gl_FragColor = vec4(1.0 / 255.0); return; }'; // every rasterised fragment, before any cutout
+export const SRGB = 'vec3 toLin(vec3 c) { return pow(c, vec3(2.2)); }';
 export const FIRE_VIEW = { value: 800 }; // the drawing buffer's height (px): sparks never get thinner than ~1.5 px
 
 // ---------------------------------------------------------------- particle pool (A sparks, B voxels, D fringe)
 // aA = birth position + birth time, aB = birth velocity + life, aC = seed, size, kind, spare
-function particlePool(scene, geo, n, mat) {
+export function particlePool(scene, geo, n, mat) {
   const g = new THREE.InstancedBufferGeometry().copy(geo);
   g.instanceCount = n;
   const mk = () => { const a = new THREE.InstancedBufferAttribute(new Float32Array(n * 4), 4); a.setUsage(THREE.DynamicDrawUsage); return a; };
@@ -45,13 +45,13 @@ function particlePool(scene, geo, n, mat) {
   };
 }
 
-const PARTICLE_HEAD = `
+export const PARTICLE_HEAD = `
 attribute vec4 aA; attribute vec4 aB; attribute vec4 aC;
 uniform float uTime, uDrag, uGrav;
 varying float vU; varying vec2 vUv; varying float vKind;
 `;
 // closed-form flight with drag and gravity (negative gravity = buoyancy)
-const FLIGHT = `
+export const FLIGHT = `
   float age = uTime - aA.w, u = age / aB.w;
   vU = u; vUv = uv; vKind = aC.z;
   if (u < 0.0 || u >= 1.0) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }

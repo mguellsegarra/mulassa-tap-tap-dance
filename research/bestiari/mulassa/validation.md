@@ -1,5 +1,11 @@
 # Local validation — 19 October 2026
 
+Current prototype revision: see `simple-carriers-v3.md` for Marc's accepted rehearsal compass,
+simple cuffs/shoes and expressive body/head sway. Its full-duration playback samples, 240 Hz
+geometry/contact checks, mobile viewport checks, passing check/build and preserved music/model
+hashes supersede the articulated-carrier implementation described in earlier sections below.
+The historical reports are retained as evidence of prior iterations, not current rig anatomy.
+
 Target: `t3/character-select-v1-2-0`. No commit, push or deployment was performed by this research task.
 The checkout has concurrent selector changes; they were not edited or reverted here.
 

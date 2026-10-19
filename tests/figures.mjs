@@ -315,7 +315,15 @@ assert.equal($('aviat-title').textContent, 'Aviat a la plaça');
 assert.equal($('select-next-label').textContent, 'Pròximament?', 'the fold has the disabled pending label');
 assert($('aviat-entity').hidden, 'the teaser has no count pill');
 assert.equal($('aviat-entity').innerHTML, '');
-assert.equal(($('aviat-icon').innerHTML.match(/class="sel-peek"/g) || []).length, 3, 'three coming figures peek out');
+{ // what anyone can send, each in its own gradient, read out as a list
+  const html = $('aviat-icon').innerHTML;
+  assert.deepEqual([...html.matchAll(/<\/svg>([^<]+)<\/li>/g)].map(m => m[1]), ['Fotos', 'Vídeos', 'Partitures', 'El ball']);
+  const stops = [...html.matchAll(/<linearGradient id="(gift-[a-z]+)"[^>]*><stop offset="0" stop-color="(#[0-9a-f]+)"/g)];
+  assert.equal(new Set(stops.map(m => m[1])).size, 4, 'one gradient id per icon');
+  assert.equal(new Set(stops.map(m => m[2])).size, 4, 'four different colours');
+  assert.match(html, /^<ul class="sel-gifts" aria-label="Què ens pots enviar">/, 'a labelled list');
+  assert.match(readFileSync(new URL('../index.html', import.meta.url), 'utf8'), /<span id="aviat-icon" class="sel-pending-icon"><\/span>/, 'the slot is not hidden from screen readers');
+}
 assert($('select-next').disabled && $('select').attrs['data-fold'], 'its action hides; desktop reserves its row and touch reclaims it (select.css)');
 key('ArrowRight'); assert.equal(doc.activeElement, more, 'folded, it is the end of the strip');
 assert.equal(sounds.length, foldSounds + 1, 'no sound when the fold focus cannot move farther');
@@ -465,7 +473,7 @@ assert(!/showModal|aviat\.close|aviat-menu|aviat-close/.test(ui));
     const field = escutField(t.id);
     assert(['gules', 'atzur', 'or', 'argent'].includes(field), `${t.name}: a tincture for its cards and banner`);
     assert.match(css, new RegExp(`\\.sel-banner\\[data-field="${field}"\\] \\{ --cloth: #`), `${t.name}: banner ${field}`);
-    assert.match(css, new RegExp(`:is\\(\\.sel-card, \\.sel-peek, #photo-figs \\.pf\\)\\[data-field="${field}"\\] \\{ --t: #`), `${t.name}: card, peek and avatar ${field}`);
+    assert.match(css, new RegExp(`:is\\(\\.sel-card, #photo-figs \\.pf\\)\\[data-field="${field}"\\] \\{ --t: #`), `${t.name}: card and avatar ${field}`);
   }
   assert.equal(escutField(INVITE_TOWN.id), '', 'the invitation has no arms: the neutral tint');
   assert.match(ui, /data-field="\$\{escutField\(t\.id\)\}"[^`]*sel-card|sel-card[^`]*data-field="\$\{escutField\(t\.id\)\}"/, 'cards carry their tincture');

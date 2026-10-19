@@ -14,6 +14,7 @@ import { feetAt } from '/src/game/drac-steps.js';
 import { placeDance, danceYaw } from '/src/game/drac-layout.js';
 import { PROFILES, MINIMAL, renderDpr } from '/src/platform/render-quality.js';
 import { VARIANTS, FIRE_VIEW } from './variants.js';
+import { makeMock, MOCK } from './mock.js';
 
 const Q = new URLSearchParams(location.search);
 const VKEY = Q.get('v') || 'base', QNAME = Q.get('q') || 'high', VIEW = Q.get('view') || 'play';
@@ -28,7 +29,8 @@ renderer.shadowMap.enabled = profile.shadow > 0; renderer.shadowMap.type = THREE
 const scene = new THREE.Scene();
 scene.background = new THREE.Color('#8fd3ff'); scene.fog = new THREE.Fog('#8fd3ff', 40, 90);
 const camera = new THREE.PerspectiveCamera(54, 1, 0.5, 200);
-scene.add(new THREE.HemisphereLight('#dff3ff', '#a88b63', 1.6));
+const hemi = new THREE.HemisphereLight('#dff3ff', '#a88b63', 1.6);
+scene.add(hemi);
 const sun = new THREE.DirectionalLight('#fff1d6', 2.4);
 sun.position.set(-10, 18, 8); sun.castShadow = true;
 sun.shadow.mapSize.set(profile.shadow || 512, profile.shadow || 512);
@@ -44,7 +46,8 @@ const IN = { on: true, cam: camera, fire: drac.fire, streak: false, flare: false
 
 // ---- the fire under test
 const SIZES = [0.55, 0.55, 0.45, 0.35, 0.35]; // fireNode sizes in drac.fire order: two mouths, the tail, two wing tips
-const variant = VARIANTS[VKEY] ? VARIANTS[VKEY].make(scene, profile.name, CALM) : null;
+// v=M: the mock-up of the chosen direction (everyday spark jets + FLAMARADA, mock.js), with its own script; &mida= scales the flamarada
+const variant = VKEY === 'M' ? makeMock(scene, profile.name, CALM, { size: +Q.get('mida') || 1 }) : VARIANTS[VKEY] ? VARIANTS[VKEY].make(scene, profile.name, CALM) : null;
 if (variant) for (const f of drac.fire) for (const c of f.children) c.visible = false; // the boxes stay built (drac-fx reads them), unseen
 const fireObjects = variant ? variant.objects : drac.fire.flatMap(f => f.children);
 for (const o of fireObjects) o.layers.enable(7);
@@ -62,7 +65,7 @@ function readEmitters() {
 
 // ---- one fixed script, looping every LOOP s: a CREMA (all five at once), a held streak breath, three petards of a traca
 // (one nozzle at a time) and a quiet gap; the dance runs on underneath, never looping
-const LOOP = 7, POSE = newDracPose(), REF0 = 40;
+const LOOP = variant?.own ? MOCK.loop : 7, POSE = newDracPose(), REF0 = 40;
 const S = { t: 0, prev: -1 };
 function script(dt) {
   const a = S.prev % LOOP, b = S.t % LOOP, crossed = x => (a < x && b >= x) || (S.prev < 0 && b >= x && S.t < x + dt);
@@ -76,7 +79,7 @@ const camAt = new THREE.Vector3(), camGo = new THREE.Vector3(), root = new THREE
 let heading = 0, camInit = false;
 const VIEWS = { // [azimuth offset from her heading (rad) or null = the play camera's, elevation deg, distance m, look height m, fov]
   play: [null, 26, 0, 1.45, 54], heads: [0.55, 12, 3.8, 2.3, 42], tail: [Math.PI + 0.7, 18, 4.8, 1.7, 42],
-  side: [Math.PI / 2, 8, 6.5, 1.7, 42], top: [0.3, 58, 7.5, 1.4, 42],
+  side: [Math.PI / 2, 8, 6.5, 1.7, 42], top: [0.3, 58, 7.5, 1.4, 42], wide: [0.75, 14, 9.5, 2.2, 46],
 };
 function placeCamera(dt) {
   const v = VIEWS[VIEW] ?? VIEWS.play;
@@ -103,7 +106,7 @@ const gl = renderer.getContext(), TQ = gl.getExtension('EXT_disjoint_timer_query
 const SYNC = Q.get('sync') === '1', px1 = new Uint8Array(4);
 function advance(dt) {
   S.prev = S.t; S.t += dt;
-  script(dt);
+  if (!variant?.own) script(dt);
   const ref = REF0 + S.t;
   const p = poseAt(POSE, ref, ref * 2.1);
   placeDance(life, DRAC_YAW); life.scale.setScalar(DRAC_SCALE);
@@ -113,7 +116,8 @@ function advance(dt) {
   const t0 = performance.now();
   fx.update(dt, IN);
   const t1 = performance.now();
-  if (variant) { readEmitters(); variant.update(S.t, dt, E); }
+  if (variant) { readEmitters(); variant.own?.(E, S.t); variant.update(S.t, dt, E); }
+  if (variant?.own) { const L = variant.light; hemi.intensity = 1.6 * (1 + 0.9 * L); sun.intensity = 2.4 * (1 + 0.4 * L); hemi.color.setRGB(0.88 + 0.12 * L, 0.95 - 0.1 * L, 1 - 0.35 * L); } // the flamarada lights the plaça for an instant
   const t2 = performance.now();
   return [t1 - t0, t2 - t1];
 }
@@ -141,8 +145,8 @@ function resize() {
 addEventListener('resize', resize); resize();
 
 const label = document.getElementById('label');
-const NAME = (VARIANTS[VKEY]?.name ?? 'Actual · caixes opaques') + ` · ${profile.name}${CALM ? ' · moviment reduït' : ''}`;
-function paintLabel() { if (label) label.textContent = `${NAME} · ${(S.t % LOOP).toFixed(1)} s`; }
+const NAME = (VKEY === 'M' ? 'Maqueta · guspires + flamarada' : VARIANTS[VKEY]?.name ?? 'Actual · caixes opaques') + ` · ${profile.name}${CALM ? ' · moviment reduït' : ''}`;
+function paintLabel() { if (label) label.textContent = `${NAME} · ${(S.t % LOOP).toFixed(1)} s${variant?.phase ? ' · ' + variant.phase() : ''}`; }
 if (Q.get('label') === '0' && label) label.remove();
 
 let last = 0;

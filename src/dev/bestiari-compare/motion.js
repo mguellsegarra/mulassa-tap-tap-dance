@@ -22,6 +22,11 @@ export function makeMotion(data) {
   const rad = Math.PI / 180;
   // Sway is an explicitly inferred performance layer; yaw anchors retain observed inversions.
   const cycles = data.bodyCycles, tilts = data.tiltCorrections || [];
+  // One continuous screen track bridges the last approach sample (89 s) and
+  // first late sample (90 s), preserving tangents instead of freezing each end.
+  const screenRows = data.approachCamera && data.lateFit
+    ? [...data.approachCamera.screenRows, ...data.lateFit.rows.map(row => [row[0], row[3], row[4]])]
+    : null;
   function pose(t, out = {}) {
     const phase = track(cycles, t) * Math.PI * 2;
     out.yaw = track(data.yawDegrees, t) * rad;
@@ -57,8 +62,8 @@ export function makeMotion(data) {
       const u = Math.max(0, Math.min(1, t - 65, 90 - t)), w = u * u * (3 - 2 * u);
       out.cameraX += (track(data.approachCamera.rows, t) - out.cameraX) * w;
       out.cameraY += (track(data.approachCamera.rows, t, 2) - out.cameraY) * w;
-      out.referenceX = track(data.approachCamera.screenRows, t);
-      out.referenceY = track(data.approachCamera.screenRows, t, 2); out.referenceWeight = w;
+      out.referenceX = track(screenRows || data.approachCamera.screenRows, t);
+      out.referenceY = track(screenRows || data.approachCamera.screenRows, t, 2); out.referenceWeight = w;
     }
     if (data.lateFit && t > 89 && t < 121) {
       const rows = data.lateFit.rows;
@@ -66,8 +71,11 @@ export function makeMotion(data) {
       out.x += (track(rows, t) - out.x) * w;
       out.pitch += (track(rows, t, 2) * rad - out.pitch) * w;
 
-      out.referenceX = track(rows, t, 3); out.referenceY = track(rows, t, 4);
-      out.referenceWeight = w;
+      // The outgoing approach and incoming fit overlap at 89–90 s. Blend their
+      // screen landmarks without dropping the active camera fit to zero at 89 s.
+      out.referenceX = screenRows ? track(screenRows, t) : track(rows, t, 3);
+      out.referenceY = screenRows ? track(screenRows, t, 2) : track(rows, t, 4);
+      out.referenceWeight = Math.min(1, out.referenceWeight + w);
     }
     // Approved stylization: a small, phase-locked emphasis, never extra random motion.
     out.roll *= 1.15;

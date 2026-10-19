@@ -128,10 +128,10 @@
    cream choice. The name stays cream and centred; pending figures (.aviat) wear the fold's dashed edge, not a colour. */
 .sel-card { --t: #8a6a4a; position: relative; flex: 0 0 152px; width: 152px; display: grid; grid-template-columns: minmax(0, 1fr); justify-content: stretch; grid-template-rows: minmax(0, 1fr) var(--card-label-h); align-items: stretch; justify-items: stretch; gap: 0; min-height: 0; padding: 0; border: 0; border-radius: var(--sel-r); background: linear-gradient(color-mix(in srgb, var(--t) 34%, #22160e), color-mix(in srgb, var(--t) 16%, #22160e) 42%, #1d130c 72%, #1a110b); box-shadow: 0 6px 16px #0006; text-align: center; transition: transform .15s; }
 /* the same tints for every portrait of a figure: the cards, the fold's peek and the photo mode's avatars */
-:is(.sel-card, .sel-peek, #photo-figs .pf)[data-field="gules"] { --t: #d62a2a; }
-:is(.sel-card, .sel-peek, #photo-figs .pf)[data-field="atzur"] { --t: #2479d0; }
-:is(.sel-card, .sel-peek, #photo-figs .pf)[data-field="or"] { --t: #b8923a; }
-:is(.sel-card, .sel-peek, #photo-figs .pf)[data-field="argent"] { --t: #a8a090; }
+:is(.sel-card, #photo-figs .pf)[data-field="gules"] { --t: #d62a2a; }
+:is(.sel-card, #photo-figs .pf)[data-field="atzur"] { --t: #2479d0; }
+:is(.sel-card, #photo-figs .pf)[data-field="or"] { --t: #b8923a; }
+:is(.sel-card, #photo-figs .pf)[data-field="argent"] { --t: #a8a090; }
 .sel-card::after { content: ''; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1px #fff3d624; pointer-events: none; }
 .sel-card.aviat::after { box-shadow: none; border: 1.5px dashed #e8d8b88c; }
 .sel-card.aviat:not([data-id="la-teva-colla"]) .por svg { filter: saturate(.75) brightness(.92); }
@@ -422,13 +422,15 @@ body:has(:focus-visible) #select .sel-card[aria-selected="true"]:not(:focus-visi
 .sel-pending-links .btn { min-height: 44px; padding: 4px 0; font-size: 14px; white-space: normal; display: flex; justify-content: center; align-items: center; gap: 6px; }
 .sel-pending-links .btn > svg { flex: none; width: 18px; height: 18px; margin: 0; }
 .sel-pending-links .btn > span { min-width: 0; overflow-wrap: normal; }
-.sel-peek { position: relative; box-sizing: border-box; flex: none; width: min(82cqh, 80px); height: min(82cqh, 80px); display: grid; place-items: center; --t: #8a6a4a; border-radius: 12px; box-shadow: 0 4px 10px #0008, inset 0 0 0 1px #fff3d624; background: linear-gradient(color-mix(in srgb, var(--t) 34%, #22160e), color-mix(in srgb, var(--t) 16%, #22160e) 60%, #1d130c); } /* a small card: the strip's own surface */
-.sel-peek + .sel-peek { margin-left: -14%; }
-.sel-peek:nth-child(1) { rotate: -8deg; translate: 0 4%; }
-.sel-peek:nth-child(2) { z-index: 1; }
-.sel-peek:nth-child(3) { rotate: 8deg; translate: 0 4%; }
-.sel-pending-icon .sel-peek :is(svg, img) { width: 76%; height: 76%; }
-.sel-pending-icon .sel-peek .escut { position: absolute; width: 30%; height: 30%; right: -6%; top: -6%; }
+/* The fold's card: four things anyone can send, in the slot's full width (the gaps track the card's height). */
+#select-pending[data-fold] .sel-pending-icon { width: 100%; height: auto; container-type: normal; }
+.sel-gifts { list-style: none; margin: 0; padding: 0; width: 100%; display: grid; grid-template-columns: repeat(4, auto); justify-content: space-evenly; }
+.sel-gifts li { display: flex; flex-direction: column; align-items: center; gap: 4px; font: 700 14px/1.1 'Baloo 2', system-ui, sans-serif; color: #fff3d6; }
+.sel-pending-icon .sel-gifts svg { width: clamp(26px, 13cqh, 46px); height: auto; aspect-ratio: 1; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; image-rendering: auto; }
+@container (max-height: 250px) { /* short cards: icon beside its word, one slim row */
+  .sel-gifts li { flex-direction: row; gap: 4px; font-size: 13px; }
+  .sel-pending-icon .sel-gifts svg { width: 22px; }
+}
 /* Compact bands keep the same five rows. Optional copy yields before readable names and 44px targets. */
 @container (max-height: 300px) {
   .sel-pending-copy p + p { display: none; }

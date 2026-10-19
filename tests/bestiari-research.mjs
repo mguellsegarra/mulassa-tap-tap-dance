@@ -11,12 +11,39 @@ import { shoeSeparation, SHOE } from '../src/dev/bestiari-compare/support-cleara
 import { createCarriers } from '../src/dev/bestiari-compare/carriers.js';
 import { planSupports } from '../src/dev/bestiari-compare/supports.js';
 import { makeDirections } from '../src/dev/bestiari-compare/directions.js';
+import { createCameraFrame } from '../src/dev/bestiari-compare/camera.js';
 import { byteRange } from '../tools/bestiari/media-plugin.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const json = p => JSON.parse(readFileSync(resolve(root, p), 'utf8'));
 const choreography = json('research/bestiari/mulassa/choreography.json');
 const data = json('research/bestiari/mulassa/reconstruction.json'), motion = makeMotion(data);
+// Evaluate the actual rendered camera and body, not just continuous root coordinates.
+const seamRig = buildMulassa(), seamCamera = new THREE.PerspectiveCamera(32, 16 / 9, .1, 60);
+const frameSeamCamera = createCameraFrame(seamCamera);
+const seamPoint = new THREE.Vector3();
+function projectedSeamPoint(t) {
+  const p = motion.pose(t);
+  seamRig.root.position.set(p.x, p.lift, p.z); seamRig.root.rotation.y = p.yaw;
+  seamRig.body.rotation.set(p.pitch, 0, p.roll); seamRig.root.updateMatrixWorld(true);
+  frameSeamCamera(t, p, seamRig.body);
+  seamPoint.set(0, .44, 0); seamRig.body.localToWorld(seamPoint); seamPoint.project(seamCamera);
+  return [seamPoint.x * 640, seamPoint.y * 360]; // pixels in a 1280 x 720 panel
+}
+for (const t of [31.7, 34, 36, 65, 66, 67, 89, 90, 120, 121]) {
+  const a = projectedSeamPoint(t - 1e-6), b = projectedSeamPoint(t + 1e-6);
+  assert(Math.hypot(b[0] - a[0], b[1] - a[1]) < .01, `camera framing jumps at ${t}s`);
+}
+for (const fps of [30, 50, 60, 120]) for (const offset of [0, .37]) {
+  let a = projectedSeamPoint(88 + offset / fps), prior = null;
+  for (let i = 1; i < 3 * fps; i++) {
+    const b = projectedSeamPoint(88 + (i + offset) / fps), delta = [b[0] - a[0], b[1] - a[1]];
+    assert(Math.hypot(...delta) * fps < 150, 'camera handoff must not introduce a screen-space lurch');
+    if (prior) assert(Math.hypot(delta[0] - prior[0], delta[1] - prior[1]) * fps ** 2 < 1600,
+      'camera handoff must not introduce an abrupt velocity change');
+    prior = delta; a = b;
+  }
+}
 assert.equal(choreography.phases[0].start, 0);
 assert.equal(choreography.phases.at(-1).end, 166.2);
 for (let i = 1; i < choreography.phases.length; i++) assert.equal(choreography.phases[i].start, choreography.phases[i - 1].end);

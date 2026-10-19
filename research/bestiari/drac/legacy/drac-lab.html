@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="ca">
+<head>
+<meta charset="utf-8">
+<!-- Dev only (npm run dev → /drac-lab.html?mute): the Drac reference trial. Never a build input (vite build reads index.html). -->
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Laboratori del Drac</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+<link rel="stylesheet" href="/src/dev/drac-lab/lab.css">
+</head>
+<body>
+<header>
+  <h1>Laboratori del Drac</h1>
+  <p class="lead">El ball actual i la proposta, al costat del vídeo de referència. Prova local: res d’aquí arriba al joc.</p>
+</header>
+<main>
+  <section class="views">
+    <figure class="pane">
+      <video id="video" muted playsinline preload="auto" src="/drac-reference/pm-lEViiPK0.mp4"></video>
+      <figcaption>Vídeo de referència · Sant Joan 2018 · <a href="https://www.youtube.com/watch?v=pm-lEViiPK0" rel="noopener">El Camp Difusió</a></figcaption>
+      <p id="video-missing" class="note" hidden>Falta el vídeo. Copia’l a <code>public/drac-reference/pm-lEViiPK0.mp4</code> (no es versiona).</p>
+    </figure>
+    <figure class="pane">
+      <canvas id="stage" aria-label="El Drac en 3D"></canvas>
+      <figcaption id="stage-caption">Ball</figcaption>
+    </figure>
+  </section>
+
+  <section class="transport" aria-label="Reproducció">
+    <button id="play" class="primary" type="button">Reprodueix</button>
+    <label class="seek"><span class="sr">Posició</span><input id="seek" type="range" min="0" max="100" step="0.01" value="0"></label>
+    <output id="readout" class="readout" aria-live="off"></output>
+  </section>
+
+  <section class="controls">
+    <fieldset>
+      <legend>Programa</legend>
+      <div class="seg" data-group="programme">
+        <button type="button" data-value="current">Actual</button>
+        <button type="button" data-value="proposal">Proposta</button>
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>Música</legend>
+      <div class="seg" data-group="variant" id="variants"></div>
+    </fieldset>
+    <fieldset>
+      <legend>So</legend>
+      <div class="seg" data-group="sound">
+        <button type="button" data-value="off">Silenci</button>
+        <button type="button" data-value="lab">Música</button>
+        <button type="button" data-value="video">So del vídeo</button>
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>Vídeo</legend>
+      <div class="seg" data-group="video">
+        <button type="button" data-value="offset" title="El vídeo va al seu ritme des de l’anacrusi">Al seu ritme</button>
+        <button type="button" data-value="anchors" title="El vídeo segueix les correspondències estimades de cada frase">Per frases</button>
+      </div>
+      <label class="offset">Desplaçament <input id="offset" type="number" step="0.05" value="0" inputmode="decimal"> s</label>
+    </fieldset>
+    <fieldset>
+      <legend>Càmera</legend>
+      <div class="seg" data-group="view">
+        <button type="button" data-value="frontal">Frontal</button>
+        <button type="button" data-value="planta">Planta</button>
+        <button type="button" data-value="lateral">Lateral</button>
+      </div>
+    </fieldset>
+  </section>
+  <p id="status" class="status" role="status"></p>
+
+  <section class="markers">
+    <h2>Frases</h2>
+    <div id="sections" class="chips"></div>
+    <h2>El que es veu al vídeo</h2>
+    <div id="observed" class="chips"></div>
+  </section>
+  <p class="note">La proposta és una hipòtesi: la forma amb el retorn sencer, el tempo estimat del vídeo i un ball adaptat. Les síntesis no són el so dels xeremiers; cal escoltar-les abans de donar-les per bones.</p>
+</main>
+<script type="module" src="/src/dev/drac-lab/main.js"></script>
+</body>
+</html>

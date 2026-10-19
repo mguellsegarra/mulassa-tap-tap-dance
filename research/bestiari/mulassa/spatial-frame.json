@@ -1,0 +1,23 @@
+{
+  "x": "camera right at opening",
+  "z": "towards reference camera at opening",
+  "front": "+z for local model",
+  "yaw": "unwrapped degrees; positive anticlockwise in the overhead view",
+  "compass": "not established for this performance; no invented N/W/S/E helper marks",
+  "metricCalibration": "inferred from model dimensions; not surveyed",
+  "camera": {
+    "position": [
+      0,
+      1.5,
+      10
+    ],
+    "target": [
+      0,
+      2.05,
+      0
+    ],
+    "fov": 32,
+    "pan": "follows 65% of inferred x travel, 60% of inferred z travel",
+    "status": "approximate comparison framing; model proportions differ; not camera tracking or geographic calibration"
+  }
+}

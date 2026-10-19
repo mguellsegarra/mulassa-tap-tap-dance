@@ -6,6 +6,10 @@ Obre `/research/bestiari/drac/prototype/drac-compare.html?mute` al servidor Vite
 `snapshot.json` registra els hashes d'origen. S'ha adaptat només l'entrada HTML perquè carregui els mòduls relatius.
 `evidence/` conserva les anotacions petites extretes del directori que abans estava ignorat sencer.
 `music/` i `legacy-music-trial.md` documenten les dues candidates musicals i les incerteses pendents.
+`legacy/` conserva també els generadors i el visor musical anterior amb les dependències; els dos MP3 són a
+`music-candidates/` dins l'arxiu extern del Drac. Els seus hashes són a `legacy/snapshot.json`.
+Les proves copiades mantenen supòsits del repositori antic. La verificació portable de la preservació és
+`node tests/bestiari-research.mjs`, executada des de l'arrel d'aquest checkout.
 
 ## Decisions i límits
 

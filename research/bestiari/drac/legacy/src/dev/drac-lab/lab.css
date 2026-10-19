@@ -1,0 +1,40 @@
+/* The Drac lab (drac-lab.html, dev only): the game's colours, phone first. */
+:root { color-scheme: light only; --bg: #1b1d25; --panel: #262934; --cream: #fff3d6; --gold: #f5c518; --edge: #e8d8b880; --err: #ff8a7a; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--cream); font: 16px/1.45 system-ui, sans-serif; }
+header, main { max-width: 1280px; margin: 0 auto; padding: 0 14px; }
+h1 { margin: 16px 0 4px; font-size: 1.5rem; color: var(--gold); }
+h2 { margin: 18px 0 8px; font-size: 1rem; }
+.lead, .note { margin: 0 0 12px; opacity: 0.85; }
+.note { border-left: 4px solid var(--gold); padding: 6px 10px; background: #2c2f3a; }
+a { color: var(--cream); }
+.views { display: grid; grid-template-columns: 1fr; gap: 12px; }
+.pane { margin: 0; }
+.pane video, .pane canvas { display: block; width: 100%; aspect-ratio: 16 / 9; background: #000; border-radius: 6px; }
+figcaption { font-size: 0.85rem; opacity: 0.8; padding-top: 4px; }
+.transport { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 12px 0; }
+.seek { flex: 1 1 240px; display: flex; }
+.seek input { width: 100%; min-height: 44px; accent-color: var(--gold); }
+.readout { flex: 1 1 100%; font-variant-numeric: tabular-nums; font-size: 0.95rem; }
+button { min-height: 44px; min-width: 44px; padding: 8px 14px; border: 2px solid var(--gold); border-radius: 10px; background: var(--panel); color: var(--cream); font: inherit; cursor: pointer; }
+button.primary { background: var(--gold); color: #1b1d25; font-weight: 700; min-width: 140px; }
+button:disabled { visibility: hidden; }
+button:focus { outline: none; }
+button:focus-visible, input:focus-visible { outline: 3px solid var(--cream); outline-offset: 2px; }
+.controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
+fieldset { border: 0; margin: 0; padding: 0; }
+legend { font-size: 0.85rem; opacity: 0.8; padding: 0 0 4px; }
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.seg button { border-color: var(--edge); border-width: 1px; }
+.seg button[aria-pressed="true"] { background: var(--cream); color: #1b1d25; border-color: var(--cream); }
+.offset { display: inline-flex; align-items: center; gap: 6px; margin-top: 6px; }
+.offset input { width: 6em; min-height: 44px; padding: 4px 8px; border-radius: 8px; border: 1px solid var(--edge); background: var(--panel); color: var(--cream); font: inherit; }
+.status { min-height: 1.5em; margin: 10px 0; }
+.status.err { color: var(--err); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips button { border-width: 1px; border-color: var(--edge); font-size: 0.9rem; padding: 6px 10px; text-align: left; }
+.chips button[aria-current="true"] { border-color: var(--gold); border-width: 2px; }
+.chips small { display: block; opacity: 0.75; font-size: 0.75rem; font-variant-numeric: tabular-nums; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+/* side by side on desktops and on landscape phones (stacked, the video filled an 852x393 screen) */
+@media (min-width: 900px), (min-width: 600px) and (orientation: landscape) { .views { grid-template-columns: 1fr 1fr; } }

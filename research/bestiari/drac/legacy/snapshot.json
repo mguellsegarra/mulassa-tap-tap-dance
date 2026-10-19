@@ -1,0 +1,141 @@
+{
+  "status": "historical source archive, not a standalone runnable page; original absolute asset URLs retained",
+  "files": [
+    {
+      "path": "drac-lab.html",
+      "sha256": "f59df934d52c70824db9e8743197f080b280105c9f538cc745d2d661afcf55ee"
+    },
+    {
+      "path": "music/drac-form.json",
+      "sha256": "13015cb0cd5adba397b3fcb06858997bf7f98b54b83a596577b7e974d915ceb8"
+    },
+    {
+      "path": "music/drac-score.json",
+      "sha256": "444b2ea2d5442bd97eb19487ef5be39813b729586d2751ac70108a5f89b5a932"
+    },
+    {
+      "path": "music/drac-trial-form.json",
+      "sha256": "709c6820e48f51d02713cb4aa2e0e29f34ebf33f228d8c8ed94ead8b8584e7f7"
+    },
+    {
+      "path": "public/music/drac-trial-v1.json",
+      "sha256": "c35077eb8e4ba50fd7537ecd3c7e0913298233bf8011f5f0a838e8a5a16b57ca"
+    },
+    {
+      "path": "src/core/beat-grid.js",
+      "sha256": "3cdbf17cab5e3f5db7c83ab27c9edf822f9d43976f348141cb303ef9f220c7e5"
+    },
+    {
+      "path": "src/dev/drac-lab/clock.js",
+      "sha256": "85b36ff1c1e9ebdfbf063c17d58d27c600ad058f1e2c2706c8929c26994de140"
+    },
+    {
+      "path": "src/dev/drac-lab/lab.css",
+      "sha256": "0223a1cc63500f07fd8117769157640c0d622cd64aa84668d97ad3f12b2acb2e"
+    },
+    {
+      "path": "src/dev/drac-lab/main.js",
+      "sha256": "c3f8127ca4c3ac89b8f38bcd03045ce55e2a1815e94dfdd0b9f7f14a287c2803"
+    },
+    {
+      "path": "src/dev/drac-lab/programmes.js",
+      "sha256": "4df41e25e201e1e21f3b68a25e6180cae5c3ff26d629f79d8dbd1c8e3f6492ba"
+    },
+    {
+      "path": "src/dev/drac-lab/stage.js",
+      "sha256": "8fe9b0daa0cf91378ebef25e060007c5dc181ab56eceac48c577f7e4190c96d3"
+    },
+    {
+      "path": "src/dev/drac-lab/trial-dance.js",
+      "sha256": "ed1c2d08c6dca7e69e922aded225ef3283e9ae1926ba508ad513d5c7a62f6b9e"
+    },
+    {
+      "path": "src/dev/drac-lab/trial-rig.js",
+      "sha256": "89880d8829fb95467f7110892083fb32ba5cc268d1274a5ebe8bfe635303928f"
+    },
+    {
+      "path": "src/dev/music-editor/preview/synth.js",
+      "sha256": "1d60fb2ab7def7e5799ad34690f13cbec03baa2d9e3a063ce63b3d472610b901"
+    },
+    {
+      "path": "src/dev/music-editor/preview/transport.js",
+      "sha256": "c7ab9c8ad8b338ac7f7541ec215e3fc952e0fd8430f3b93ea7372aa2633875b8"
+    },
+    {
+      "path": "src/game/dance-drac.js",
+      "sha256": "5fe0273c163d463e68a4498e96466af9877fad867fd29cfffe67363664efb3f7"
+    },
+    {
+      "path": "src/game/dance.js",
+      "sha256": "a015310afa203f0f5b608c02cecffcfb6cc2afa3e2be4015f80433c8c807135b"
+    },
+    {
+      "path": "src/game/drac-feet.js",
+      "sha256": "db585719c832574a628349024de4e261c715fe56349b58334b0d512cdb5001b4"
+    },
+    {
+      "path": "src/music-form/compile.js",
+      "sha256": "dcde5b065d7c17eacbfeb7582aa93eb5a317fa6346c039731178cafe52c48f53"
+    },
+    {
+      "path": "src/music-form/songs.js",
+      "sha256": "30be7427695d25dce5876d44cddc876051b062e524548780450a317ba3cfbe8e"
+    },
+    {
+      "path": "src/scene/drac-motion.js",
+      "sha256": "fd30446014561a4fd9742471a8456e134d88c620a059f6f1337e5df578dbc65b"
+    },
+    {
+      "path": "src/scene/models/drac.js",
+      "sha256": "dda41ccf810edccaa195d3b7a8ecedc3d9d99820b955ecef96f6fbdc0e71da08"
+    },
+    {
+      "path": "src/scene/models/voxel.js",
+      "sha256": "ecc47187d713e1b984e9a86bbea317ea8f7c0ca9439b28730a484cf16492e55b"
+    },
+    {
+      "path": "src/song-drac.json",
+      "sha256": "76e5fabb56808a7ede93636192df6310f6387000ba108bd334a93e3daf22a3b9"
+    },
+    {
+      "path": "tests/drac-trial-audio.py",
+      "sha256": "8d55e8075300c1c175d88fc3ddf968934ddbcf03343846ddf8fac6733c8626ad"
+    },
+    {
+      "path": "tests/drac-trial.mjs",
+      "sha256": "073fc6c517650db04209aed5377f7e5d200ff2d45a2e8dab8a9f63332460eef7"
+    },
+    {
+      "path": "tools/build_drac.py",
+      "sha256": "840d4e52e2b51d51851dce5513cf9db580100382fe1fce9543195b54561bb82a"
+    },
+    {
+      "path": "tools/build_drac_trial.py",
+      "sha256": "e595db35652164c865ca859130435d397885941eecf89ff5212a0db027424f0d"
+    },
+    {
+      "path": "tools/compile-music-form.mjs",
+      "sha256": "3b907a4fae21d1157e044acf410dd5719f7f6a63de4bbc4bef0563424eada089"
+    },
+    {
+      "path": "tools/prepare-pages.mjs",
+      "sha256": "5d9d06fefe1a01bf8cba3a2e21010194bffcee96f7223a346f26ba56487f9086"
+    },
+    {
+      "path": "tools/synth.py",
+      "sha256": "8b43e28a41a0cc7fdf6130195ade3d8e9214f6f8fa2ab8341585f8298aef4cf1"
+    }
+  ],
+  "externalAudio": [
+    {
+      "file": "drac-trial-v1-austera.mp3",
+      "sha256": "7ec53148cf5be6d4249d7c2e844a1560d2fc0d9259ece093c12bc4b81f6854ef",
+      "bytes": 2197986
+    },
+    {
+      "file": "drac-trial-v1-festiu.mp3",
+      "sha256": "c8e3c2181479c261250b7063fc726ed28efd070b18ddb0cd91fb7ed3fdaa7fb3",
+      "bytes": 2197986
+    }
+  ]
+}

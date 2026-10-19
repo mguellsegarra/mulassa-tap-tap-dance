@@ -189,6 +189,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
   }
   function nextStep() {
     if (!shown || !playable(figure) || teasing || busy()) return;
+    if (closing) { scrolling.stop(); finishFold(); } // the action is valid as soon as the playable selection commits
     sfx('menu'); setStep('level');
     if (keyboard()) levels.children[level].focus({ preventScroll: true });
   }
@@ -271,11 +272,9 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     restPills.forEach(p => { p.hidden = true; });
     return true;
   }
-  function revealItems(on) {
-    for (const el of [...later, ...restPills]) {
-      arrivals.get(el)?.cancel(); el.hidden = !on; el.inert = !on;
-      if (on && !reduced() && el.animate) arrivals.set(el, el.animate({ opacity: [0, 1] }, { duration: 180 }));
-    }
+  const onScreen = el => { const b = el.getBoundingClientRect(); return !(b.right <= 0 || b.left >= win.innerWidth * 2); }; // only these fade: each animated item is a compositor layer (unfolding: 170–355 ms of compositing on an iPhone)
+  function revealItems(on) { // unfold() fades them in after its measure, whose layout its reads reuse
+    for (const el of [...later, ...restPills]) { arrivals.get(el)?.cancel(); el.hidden = !on; el.inert = !on; }
   }
   function finishFold() {
     if (open) return;
@@ -334,6 +333,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
       revealItems(true);
       roveCard(cur);
       if (shown) { measure(); moveHeader(header); }
+      if (!reduced()) for (const el of items) if (el.animate && onScreen(el)) arrivals.set(el, el.animate({ opacity: [0, 1] }, { duration: 180 }));
       // Keep the existing cards in place; reveal just enough of the first new card to invite navigation.
       const first = cards.find(c => later.includes(c));
       const right = first ? first.offsetLeft + first.offsetWidth - strip.clientWidth + 12 : scrolling.target;
@@ -362,9 +362,9 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
         townExit.animation = townExit.layer.animate({ opacity: [1, 0] }, { duration: FOLD_MS, fill: 'forwards', easing: 'ease-in-out' });
         townExit.animation.startTime = fadeStart;
       }
-      for (const el of exiting) {
+      const fade = new Set(reduced() ? [] : exiting.filter(el => el.animate && onScreen(el))); for (const el of exiting) { // every read before the first cancel: each one restyles
         arrivals.get(el)?.cancel();
-        if (!reduced() && el.animate) {
+        if (fade.has(el)) {
           const exit = el.animate({ opacity: [1, 0] }, { duration: FOLD_MS, fill: 'forwards', easing: 'ease-in-out' });
           if (Number.isFinite(fadeStart)) exit.startTime = fadeStart;
           arrivals.set(el, exit);

@@ -1,0 +1,211 @@
+{
+  "source": "D53pgXOeIL0",
+  "timeUnit": "video seconds",
+  "start": 0,
+  "end": 166.2,
+  "fps": 50,
+  "version": 1,
+  "status": "reconstruction for human review",
+  "phases": [
+    {
+      "i": 0,
+      "start": 0,
+      "end": 10.5,
+      "title": "Balanceig inicial",
+      "action": "De tres quarts, amb el cap cap a l'esquerra, es balanceja sobre la mateixa zona.",
+      "evidence": "Silueta i petits ajustos visibles; no hi ha recompte complet de contactes.",
+      "status": "observed-outline; inferred-geometry",
+      "stepCount": null
+    },
+    {
+      "i": 1,
+      "start": 10.5,
+      "end": 21,
+      "title": "Continua al mateix costat",
+      "action": "Repeteix el balanceig i marca petits canvis de pes.",
+      "evidence": "El moviment del fons indica panoràmiques petites; no interpretar-les com un passeig.",
+      "status": "observed-outline; inferred-geometry",
+      "stepCount": null
+    },
+    {
+      "i": 2,
+      "start": 21,
+      "end": 31.7,
+      "title": "Tanca la primera part",
+      "action": "Manté el costat esquerre i prepara el canvi d'orientació.",
+      "evidence": "La distància al centre és aproximada.",
+      "status": "observed-outline; inferred-geometry",
+      "stepCount": null
+    },
+    {
+      "i": 3,
+      "start": 31.7,
+      "end": 35.5,
+      "title": "Primera mitja volta",
+      "action": "Gira passant de cara a la càmera i acaba amb el cap cap a la dreta.",
+      "evidence": "Sentit antihorari vist des de dalt; aproximadament mitja volta.",
+      "status": "observed-outline; inferred-geometry",
+      "stepCount": null
+    },
+    {
+      "i": 4,
+      "start": 35.5,
+      "end": 46,
+      "title": "Balanceig a l’altre costat",
+      "action": "Amb el cap cap a la dreta, torna a balancejar el cos.",
+      "evidence": "Part dels peus queda oculta pels músics.",
+      "status": "observed-outline; inferred-geometry",
+      "stepCount": null
+    },
+    {
+      "i": 5,
+      "start": 46,
+      "end": 56.5,
+      "title": "Repetició del balanceig",
+      "action": "Manté l'orientació i alterna les inclinacions del cos.",
+      "evidence": "No són quatre passes cap a cada punt cardinal.",
+      "status": "observed-outline; inferred-geometry",
+      "stepCount": null
+    },
+    {
+      "i": 6,
+      "start": 56.5,
+      "end": 66.5,
+      "title": "Prepara el retorn",
+      "action": "S'acosta una mica i continua el balanceig abans de tornar a girar.",
+      "evidence": "Quantitat exacta de desplaçament inferida.",
+      "status": "observed-outline; inferred-geometry",
+      "stepCount": null
+    },
+    {
+      "i": 7,
+      "start": 66.5,
+      "end": 69.5,
+      "title": "Segona mitja volta",
+      "action": "Mostra el darrere i torna a deixar el cap cap a l'esquerra.",
+      "evidence": "Mateix sentit que a la primera mitja volta.",
+      "status": "observed-outline; inferred-geometry",
+      "stepCount": null
+    },
+    {
+      "i": 8,
+      "start": 69.5,
+      "end": 76.5,
+      "title": "S’acosta amb més moviment",
+      "action": "Avança en diagonal cap al costat esquerre i més a prop de càmera, amb inclinacions més grans.",
+      "evidence": "La càmera acompanya; trajectòria mètrica aproximada.",
+      "status": "observed-outline; inferred-geometry",
+      "stepCount": null
+    },
+    {
+      "i": 9,
+      "start": 76.5,
+      "end": 86,
+      "title": "Passada i gir cap a la dreta",
+      "action": "Travessa davant de càmera i va canviant de costat fins a mirar cap a la dreta.",
+      "evidence": "Caps de músics tapen alguns suports; amplituds adaptades.",
+      "status": "observed-outline; inferred-geometry",
+      "stepCount": null
+    },
+    {
+      "i": 10,
+      "start": 86,
+      "end": 97,
+      "title": "S’allunya i baixa el ritme del cos",
+      "action": "Torna cap a la zona central, amb el cap encara cap a la dreta.",
+      "evidence": "Retorn espacial inferit a partir de mida aparent i fons.",
+      "status": "observed-outline; inferred-geometry",
+      "stepCount": null
+    },
+    {
+      "i": 11,
+      "start": 97,
+      "end": 110,
+      "title": "Balanceig més recollit",
+      "action": "Es queda més lluny i fa balanceigs petits, mantenint el costat.",
+      "evidence": "La menor amplitud visible no demostra un canvi de tempo musical.",
+      "status": "observed-outline; inferred-geometry",
+      "stepCount": null
+    },
+    {
+      "i": 12,
+      "start": 110,
+      "end": 121,
+      "title": "Prepara la part final",
+      "action": "Reprèn un balanceig més marcat i es prepara per girar.",
+      "evidence": "Continua amb ajustos curts dels portadors.",
+      "status": "observed-outline; inferred-geometry",
+      "stepCount": null
+    },
+    {
+      "i": 13,
+      "start": 121,
+      "end": 124,
+      "title": "Mitja volta pel darrere",
+      "action": "Ensenya el darrere i torna cap al costat esquerre.",
+      "evidence": "Orientació contrastada a intervals de mig segon.",
+      "status": "observed-outline; inferred-geometry",
+      "stepCount": null
+    },
+    {
+      "i": 14,
+      "start": 124,
+      "end": 131,
+      "title": "Inclinacions grans de cara",
+      "action": "Avança, aixeca i baixa el davant, i va quedant de cara.",
+      "evidence": "No es compten salts quan no es poden comprovar tots els peus.",
+      "status": "observed-outline; inferred-geometry",
+      "stepCount": null
+    },
+    {
+      "i": 15,
+      "start": 131,
+      "end": 138,
+      "title": "Volta amb inclinacions",
+      "action": "Continua girant per la dreta, ensenya el darrere i torna cap a l'esquerra.",
+      "evidence": "La volta que comença al costat esquerre cap a 124 s es completa cap a 138 s.",
+      "status": "observed-outline; inferred-geometry",
+      "stepCount": null
+    },
+    {
+      "i": 16,
+      "start": 138,
+      "end": 142.5,
+      "title": "Canvia el sentit",
+      "action": "Des del costat esquerre desfà mitja volta, passant pel darrere, fins al costat dret.",
+      "evidence": "Inversió visible als fotogrames de 139,25–142 s; no copiar el sentit del Drac.",
+      "status": "observed-outline; inferred-geometry",
+      "stepCount": null
+    },
+    {
+      "i": 17,
+      "start": 142.5,
+      "end": 145.5,
+      "title": "Torna a invertir el gir",
+      "action": "Torna a passar pel darrere i recupera el costat esquerre.",
+      "evidence": "Segona inversió; encara no és la sèrie de voltes contínues.",
+      "status": "observed-outline; inferred-geometry",
+      "stepCount": null
+    },
+    {
+      "i": 18,
+      "start": 145.5,
+      "end": 161.3,
+      "title": "Voltes seguides",
+      "action": "Encadena aproximadament quatre voltes en el mateix sentit, amb el cos inclinat.",
+      "evidence": "Passades de cara cap a 147, 151, 155 i 158,5 s. Recomptes de peus pendents.",
+      "status": "observed-outline; inferred-geometry",
+      "stepCount": null
+    },
+    {
+      "i": 19,
+      "start": 161.3,
+      "end": 166.2,
+      "title": "Frenada i final",
+      "action": "Frena amb el cap cap a l'esquerra i es queda assentada mentre el públic aplaudeix.",
+      "evidence": "La gravació acaba aquí; no extrapolar una sortida posterior.",
+      "status": "observed-outline; inferred-geometry",
+      "stepCount": null
+    }
+  ]
+}

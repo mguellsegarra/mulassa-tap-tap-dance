@@ -4,6 +4,7 @@ import { FIGURES, TOWNS, MULASSA, DRAC, MULE_ART, DRAC_ART, portraitArt, portrai
 import { FIGURE_PORTRAITS } from '../src/game/figure-portraits.js';
 import { setupSelect, peekGap, pixelSvg } from '../src/ui/select-ui.js';
 import { cellOutline } from '../src/ui/selector-portraits.js';
+import { DRAWN_SILHOUETTES } from '../src/ui/pending-silhouettes.js';
 import { escutSvg, escutField } from '../src/ui/escuts.js';
 import { clampStand } from '../src/dev/sizes-edit.js';
 import { fitPendingNote } from '../src/ui/pending-title.js';
@@ -199,16 +200,25 @@ assert.equal(sounds.length, soundBefore + 2, 'unavailable scroll actions make no
 const cardMarkup = id => $('select-strip').innerHTML.match(new RegExp(`<button[^>]*data-id="${id}"[^]*?</button>`))[0];
 assert.match(cardMarkup('mulassa-valls'), /aria-label="Mulassa, Unió Anelles de la Flama, Valls/);
 assert.match(cardMarkup('aliga-valls'), /aria-label="Àliga, Ajuntament de Valls \+ Unió Anelles de la Flama, Valls/);
-{ // pending cards wear a vector silhouette traced from their own grid; the Bou has its own, on the Mulassa's skeleton
+{ // pending cards wear a hand-drawn vector silhouette (the Bou on the Mulassa's skeleton); the traced one is the fallback for new figures
+  assert.deepEqual(Object.keys(DRAWN_SILHOUETTES).sort(), cards.filter(c => c.cls.includes('aviat') && !['bou-tradicional-valls', INVITE.id, 'selector-fixture'].includes(c.dataset.id)).map(c => c.dataset.id).sort(), 'every pending card is hand-drawn (the Bou and the invitation have their own)');
   const art = id => cardMarkup(id).match(/<span class="por">([^]*?)<\/span>/)[1];
-  for (const c of cards.filter(c => c.cls.includes('aviat') && c.dataset.id !== 'bou-tradicional-valls')) {
+  for (const c of cards.filter(c => c.cls.includes('aviat') && c.dataset.id !== 'bou-tradicional-valls' && c.dataset.id !== INVITE.id)) {
     if (art(c.dataset.id).startsWith('<img')) { assert.equal(c.dataset.id, 'selector-fixture', 'only a figure with a photo keeps it'); continue; }
     const grid = portraitArt({ id: c.dataset.id }), svg = art(c.dataset.id);
     assert.match(svg, new RegExp(`^<svg viewBox="0 0 ${grid[0].length + 2} ${grid.length + 2}"`), `${c.dataset.id}: same box as its pixel portrait, so the same size`);
-    assert(/<path d="M[^"]+Z" fill="#120b07" stroke="#f5e3b8"/.test(svg) && !svg.includes('crispEdges'), `${c.dataset.id}: one ink path with a halo, no pixel cells`);
+    assert(!svg.includes('crispEdges') && svg.includes('#120b07'), `${c.dataset.id}: ink silhouette, no pixel cells`);
+    assert.match(svg, /stroke-width="2"[^]*?vector-effect="non-scaling-stroke"/, `${c.dataset.id}: the halo is a fixed 2 px line, not a share of a cell`);
+    if (DRAWN_SILHOUETTES[c.dataset.id]) assert.equal(svg, DRAWN_SILHOUETTES[c.dataset.id], `${c.dataset.id}: its hand-drawn silhouette`);
+    else assert.match(svg, /<path d="M[^"]+Z" fill="#120b07" stroke="#f5e3b8"/, `${c.dataset.id}: one traced ink path with its halo`);
   }
   assert.match(art('bou-tradicional-valls'), /class="sel-bou-silhouette"/);
-  for (const id of ['mulassa-valls', 'drac-valls']) assert.doesNotMatch(art(id), /#120b07" stroke="#f5e3b8/, `${id} keeps its colour illustration`);
+  const halo = art('bou-tradicional-valls').match(/<g fill="#f5e3b8"[^>]*>([^]*?)<\/g><g fill="#120b07">/);
+  assert(halo && /stroke-width="2"[^>]*vector-effect="non-scaling-stroke"/.test(halo[0]), 'the Bou\'s halo is the same fixed 2 px line');
+  assert.equal((halo[1].match(/<g transform="translate\(/g) || []).length, 16, 'the Bou\'s halo goes round its carriers\' legs too');
+  assert.match(art(INVITE.id), /class="sel-invite-illustration" aria-hidden="true"/, 'the invitation uses its selected vector illustration');
+  assert.match(art(INVITE.id), /#a3182f/, 'the invitation retains its red standard instead of a silhouette');
+  for (const id of ['mulassa-valls', 'drac-valls', INVITE.id]) assert.doesNotMatch(art(id), /#120b07" stroke="#f5e3b8/, `${id} keeps its colour illustration`);
   for (const [id, { art: grid }] of Object.entries(FIGURE_PORTRAITS)) { // the traced outline encloses exactly the drawn cells (shoelace area)
     const area = cellOutline(grid).reduce((s, l) => s + l.reduce((a, p, i) => { const q = l[(i + 1) % l.length]; return a + p[0] * q[1] - q[0] * p[1]; }, 0) / 2, 0);
     assert.equal(area, grid.join('').replace(/\./g, '').length, `${id}: the outline loses or adds no cell`);
@@ -523,9 +533,13 @@ console.log('catalog selection, the PRÒXIMAMENT fold, pending panel, town pills
   const row = $('select-strip'), toggle = row.children.find(c => c.dataset.more);
   const dragon = row.children.find(c => c.dataset.id === DRAC.id);
   const eagle = row.children.find(c => c.dataset.id === 'aliga-valls');
-  click(row, dragon); click(row, toggle); click(row, eagle);
+  const far = row.children.at(-1); far.getBoundingClientRect = () => ({ left: 5000, right: 5100, top: 100, bottom: 300 });
+  click(row, dragon); click(row, toggle);
+  assert(eagle.animation && !far.animation, 'unfolding fades only what is on or next to the screen (each fade is a compositor layer)');
+  click(row, eagle);
   for (let i = 0; i < 120; i++) tick(1000 / 60);
   click(row, toggle);
+  assert(!far.animation, 'folding never animates an off-screen item either');
   assert.equal(animated.figure, DRAC);
   assert.equal($('aviat-title').textContent, 'Àliga de la Ciutat de Valls', 'the outgoing panel retains its content');
   assert($('select-pending').hidden && !$('select').hasAttribute('data-fold'), 'the pending panel fades without an intermediate teaser');
@@ -536,6 +550,12 @@ console.log('catalog selection, the PRÒXIMAMENT fold, pending panel, town pills
   tick(120);
   assert(eagle.hidden && animated.figure === DRAC, 'completion only removes the faded catalog');
   assert(!$('select-next').disabled && !$('select').hasAttribute('data-folding') && !$('select').hasAttribute('data-fold'), 'the cursor comes back with the figure: its action, the dock up');
+  click(row, toggle); click(row, eagle); tick(500);
+  click(row, toggle); tick(80); click($('select-next'));
+  assert(!$('select-act').hidden, 'the committed playable figure can enter difficulty during folding');
+  assert(eagle.hidden && eagle.inert && !$('select').hasAttribute('data-folding'), 'entering difficulty completes the outgoing catalog');
+  click($('select-figures-back')); tick(500);
+  assert(eagle.hidden && animated.figure === DRAC, 'returning from difficulty preserves the folded catalog and figure');
   click(row, toggle); click(row, dragon); click(row, toggle); tick(300);
   assert(!$('select-next').disabled && !$('select').hasAttribute('data-fold'), 'folding with a playable figure selected brings its action back');
   click(row, dragon);

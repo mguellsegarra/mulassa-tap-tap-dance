@@ -88,7 +88,7 @@
 @media (pointer: fine) { #select:is([data-pending], [data-fold]) { --drop: 0px; } }
 /* The action fades with the drop; it comes back once the dock is on its way up. */
 #select #select-next { transition: transform .12s, filter .12s, box-shadow .12s, opacity .3s var(--sel-ease) .1s, translate .3s var(--sel-ease) .1s, visibility 0s; } /* + .btn-primary's */
-:is(#select #select-next:disabled, #select[data-folding] #select-next) { opacity: 0; pointer-events: none; translate: 0 8px; transition: opacity .2s var(--sel-ease), translate .2s var(--sel-ease), visibility 0s .2s; } /* hidden, or a fold under way: it fades out and back, never pops; translate is free (the breathing uses scale/rotate) */
+#select #select-next:disabled { opacity: 0; pointer-events: none; translate: 0 8px; transition: opacity .2s var(--sel-ease), translate .2s var(--sel-ease), visibility 0s .2s; } /* touch hides unavailable actions; folding already commits a playable selection */
 .sel-bottom { --bl: max(16px, env(safe-area-inset-left)); --br: max(16px, env(safe-area-inset-right)); position: absolute; z-index: 1; bottom: env(safe-area-inset-bottom); left: 50%; translate: -50% 0; transform: translateY(var(--drop)); transition: transform .32s var(--sel-ease); width: 100%; height: var(--dock-h); box-sizing: border-box; display: grid; grid-template-rows: minmax(0, 1fr) var(--action-h); gap: var(--ga); padding: 8px var(--br) calc(var(--ga) + 6px) var(--bl); }
 /* --ga + the strip's 6 px foot = the air over the action = the air under it */
 .sel-carousel { grid-row: 1; grid-column: 1; position: relative; isolation: isolate; display: grid; grid-template-columns: minmax(0, 1fr); align-items: stretch; min-height: 0; margin-inline: calc(-1 * var(--bl)) calc(-1 * var(--br)); }
@@ -127,34 +127,38 @@
 :is(.sel-card, .sel-peek, #photo-figs .pf)[data-field="argent"] { --t: #a8a090; }
 .sel-card::after { content: ''; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1px #fff3d624; pointer-events: none; }
 .sel-card.aviat::after { box-shadow: none; border: 1.5px dashed #e8d8b88c; }
-.sel-card.aviat .por svg { filter: saturate(.75) brightness(.92); }
+.sel-card.aviat:not([data-id="la-teva-colla"]) .por svg { filter: saturate(.75) brightness(.92); }
 /* The portrait stands on the caption, on a floor shared by every card; the svg is exactly its columns × a whole-pixel
    cell, so no figure is resampled (each keeps square, equal pixels). */
 .sel-card .por { position: relative; box-sizing: border-box; width: 100%; height: 100%; min-height: 0; display: grid; place-items: end center; padding: 5px 4px 3px; overflow: hidden; container-type: size;
   background: linear-gradient(#f5e3b800, #f5e3b814 45%, #f5e3b82b) 0 100% / 100% 30% no-repeat; } /* the street: a flat strip at one height on every card, lighter towards the front, so the feet line up and dark legs still read */
 .sel-card .por svg, .sel-card .por img { width: 78%; height: 78%; min-height: 0; object-fit: contain; stroke: none; image-rendering: pixelated; }
 @supports (width: round(down, 5.5px, 1px)) {
-  /* each figure at its real relative size (--s, the gegants = 1, portraitStand) in whole pixels. --ref is the cell of the
-     biggest grid (18 × 14 + rim); a figure's cell is the nearest to its share of that height, never
-     more than its own box holds, so a wide group of gegants held back by the width still stands tallest. */
-  .sel-card .por svg { --ref: round(down, min(100cqh / 16, 100cqw / 20), 1px);
-    --cell: max(2px, min(round(nearest, var(--s, 1) * 16 * var(--ref) / var(--gh), 1px), round(down, 100cqh / var(--gh), 1px), round(down, 100cqw / var(--gw), 1px)));
-    width: calc(var(--gw) * var(--cell)); height: calc(var(--gh) * var(--cell)); }
+  /* each figure at its real relative size (--s, the gegants = 1, portraitStand). The selector's portraits are all vectors
+     now, so no whole-pixel rounding, and the grid's one-cell rim margin is left out of the fit: --ref is the cell of the
+     biggest grid (18 × 14), the tallest figure fills the panel, the rim's bottom row hangs below the floor so the soles
+     stand on it. A figure's cell never exceeds its own box, so a wide group of gegants held back by the width still
+     stands tallest. */
+  .sel-card .por svg { --ref: min(100cqh / 14, 100cqw / 18);
+    --cell: max(2px, min(var(--s, 1) * 14 * var(--ref) / (var(--gh) - 2), 100cqh / (var(--gh) - 2), 100cqw / (var(--gw) - 2)));
+    width: calc(var(--gw) * var(--cell)); height: calc(var(--gh) * var(--cell)); margin-bottom: calc(-1 * var(--cell)); }
 }
 /* Static portraits share a 160x112 viewBox, 100-unit body height and sole baseline 104.
    Keep the previous Mulassa footprint; UAF real heights set Drac/Mulassa = 1.90/2.95. The pending Bou's silhouette is
    drawn on the Mulassa's skeleton at her scale (no published Bou height). */
-.sel-card .por svg:is(.sel-mulassa-illustration, .sel-drac-illustration, .sel-bou-silhouette) {
+.sel-card .por svg:is(.sel-mulassa-illustration, .sel-drac-illustration, .sel-bou-silhouette, .sel-invite-illustration) {
   --mula-cell: 5px; --portrait-scale: 1;
   --portrait-height: calc(11.02 * var(--mula-cell) * var(--portrait-scale));
   height: calc(var(--portrait-height) * 112 / 100); width: calc(var(--portrait-height) * 160 / 100);
-  margin-bottom: calc(.98 * var(--mula-cell) - var(--portrait-height) * 8 / 100);
+  margin-bottom: calc(var(--portrait-height) * -8 / 100); /* the sole baseline (y 104 of 112) on the floor, like the rest */
   image-rendering: auto;
 }
 .sel-card .por svg.sel-drac-illustration { --portrait-scale: calc(1.9 / 2.95); }
+/* Fictional adults ~1.75/1.65 m: tallest person is 79.076 SVG units, excluding the standard. */
+.sel-card .por svg.sel-invite-illustration { --portrait-scale: calc(1.75 / 2.95 * 100 / 79.076); }
 @supports (width: round(down, 5.5px, 1px)) {
-  .sel-card .por svg:is(.sel-mulassa-illustration, .sel-drac-illustration, .sel-bou-silhouette) {
-    --mula-cell: max(2px, min(round(nearest, .8 * 16 * round(down, min(100cqh / 16, 100cqw / 20), 1px) / 12, 1px), round(down, 100cqh / 12, 1px), round(down, 100cqw / 14, 1px)));
+  .sel-card .por svg:is(.sel-mulassa-illustration, .sel-drac-illustration, .sel-bou-silhouette, .sel-invite-illustration) {
+    --mula-cell: max(2px, min(.8 * 14 * min(100cqh / 14, 100cqw / 18) / 11.02, 100cqh / 12, 100cqw / 14)); /* her 100-unit body = STAND .8 of the grids' --ref */
   }
 }
 /* Full names wrap in a shared caption height, just the room two lines of name and one of entity need. */
@@ -271,7 +275,7 @@ body.view-mode #select { opacity: 0; visibility: hidden; pointer-events: none; }
 @media (hover: hover) { #select .btn-primary:hover { transform: translateY(-1px); filter: brightness(1.06); box-shadow: 0 6px 18px #0008; } }
 #select .btn-primary:active { transform: translateY(1px) scale(.98); filter: brightness(.94); box-shadow: 0 2px 8px #0006; }
 @media (prefers-reduced-motion: reduce) {
-  #select, .sel-card, #select .btn-primary, #select .sel-bottom, #select #select-next, #select #select-next:disabled, #select[data-folding] #select-next { transition: none; }
+  #select, .sel-card, #select .btn-primary, #select .sel-bottom, #select #select-next, #select #select-next:disabled { transition: none; }
   #select .btn-primary { animation: none; scale: none; rotate: none; }
   #select .btn-primary::after { display: none; animation: none; }
   #select .btn-primary:is(:hover, :active) { transform: none; }
@@ -314,7 +318,7 @@ body.view-mode #select { opacity: 0; visibility: hidden; pointer-events: none; }
    The 160/100 frame ratio bounds the whole SVG; neither figure is stretched to fill its card. */
 @media (min-width: 900px) and (min-height: 661px) {
   .sel-card { flex-basis: 220px; }
-  .sel-card .por svg:is(.sel-mulassa-illustration, .sel-drac-illustration, .sel-bou-silhouette) {
+  .sel-card .por svg:is(.sel-mulassa-illustration, .sel-drac-illustration, .sel-bou-silhouette, .sel-invite-illustration) {
     --portrait-height: calc(min(100cqh - 16px, 100cqw / 1.6) * var(--portrait-scale));
     margin-bottom: calc(8px - var(--portrait-height) * 8 / 100);
   }

@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="ca"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Mulassa · estudi del ball</title><link rel="stylesheet" href="/src/styles/base.css"><link rel="stylesheet" href="/src/dev/bestiari-compare/style.css"></head>
+<body><main>
+<header><h1>Mulassa · estudi del ball</h1><p>Santa Úrsula 2017 · vídeo, reconstrucció i recorregut, al mateix instant.</p></header>
+<div class="transport"><button class="btn btn-primary" id="play">Reprodueix</button><button class="btn btn-secondary" id="back" aria-label="Fotograma anterior">−1 fotograma</button><button class="btn btn-secondary" id="next" aria-label="Fotograma següent">+1 fotograma</button><label>Velocitat <select id="speed"><option value="0.25">0,25×</option><option value="0.5">0,5×</option><option value="1" selected>1×</option></select></label><button class="btn btn-secondary" id="sound" aria-pressed="false">Activa el so</button><output id="time">0,00 s</output><input id="seek" aria-label="Instant del ball" type="range" min="0" max="166.2" step="0.02" value="0"></div>
+<p><label>Moviment 3D <select id="mode"><option value="proposal">Reconstrucció del vídeo</option><option value="current">Ball actual del joc</option></select></label></p>
+<div class="views">
+<figure><video id="reference" playsinline preload="auto" muted src="/_bestiari/media/mulassa-video"></video><figcaption>Referència · <a href="https://www.youtube.com/watch?v=D53pgXOeIL0" target="_blank" rel="noreferrer">El Camp Difusió</a></figcaption></figure>
+<figure><canvas id="model"></canvas><figcaption id="model-label">Model del joc · nova reconstrucció del ball</figcaption></figure>
+<figure><canvas id="overhead"></canvas><figcaption>Vista zenital · recorregut aproximat del model</figcaption></figure>
+</div>
+<section class="current" aria-live="polite"><h2 id="phase-title"></h2><p id="action"></p><p id="evidence" class="muted"></p></section>
+<p id="error" role="alert" hidden></p>
+<details><summary>Què està comprovat i què falta afinar?</summary><p>Les orientacions i els canvis de sentit segueixen els fotogrames del vídeo. Les distàncies, la intensitat del balanceig i els suports dels peus són aproximacions. Alguns peus queden tapats pels músics: no hi ha un recompte fiable de totes les passes.</p><p>La càmera 3D aproxima el seguiment de la gravació. La vista zenital mostra el model, no un recorregut mesurat. No s'han assignat punts cardinals ni ajudants sense evidència. El so és el de la gravació original; no s'ha canviat la música del joc.</p><p>«Ball actual» mostra la coreografia base amb la durada pròpia del joc, sense allargar-la ni alinear-la per frases. El so continua sent el del vídeo. Aquesta pàgina és una proposta per revisar; el ball del joc continua igual.</p></details>
+<nav id="phases" aria-label="Fases del ball"></nav>
+<footer><a href="/research/bestiari/drac/prototype/drac-compare.html?mute">Obre l'estudi preservat del Drac</a></footer>
+</main><script type="module" src="/src/dev/bestiari-compare/main.js"></script></body></html>

@@ -67,6 +67,7 @@ instructions have propagated through Git or copy them into unrelated projects.
 | Changes to trust boundaries, RPC/Auth, quotas or private diagnostics | `.agents/skills/mulassa-security-boundary-review/SKILL.md` |
 | Runtime incidents, async races, WebGL recovery or Sentry diagnosis | `.agents/skills/mulassa-runtime-incident-diagnosis/SKILL.md` |
 | Backup changes or an explicitly requested restore/scheduler rehearsal | `.agents/skills/mulassa-backup-restore-verification/SKILL.md` |
+| Reference-video choreography analysis and synchronized video/3D/overhead research | `.agents/skills/bestiari-reference-analysis/SKILL.md` |
 
 These guides do not authorize delegation, production access, publication or Git history
 operations. Preserve the existing confirmation and no-messaging rules. Historical thread

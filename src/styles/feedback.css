@@ -3,18 +3,18 @@
    phones: after the podium, [⚙][podium][speaker][bubble]. The bubble is outermost so its nudge has room beside it. */
 #feedback, #music { position: fixed; z-index: 3; top: calc(10px + env(safe-area-inset-top)); width: 44px; height: 44px; min-height: 0; padding: 0; border-width: 2px; border-radius: 50%; }
 #feedback svg, #music svg { width: 24px; height: 24px; }
-#music { right: calc(10px + 44px + 10px + env(safe-area-inset-right)); }
-#feedback { right: calc(10px + 2 * (44px + 10px) + env(safe-area-inset-right)); }
+#feedback { right: calc(10px + 44px + 10px + env(safe-area-inset-right)); }
+#music { right: calc(10px + 2 * (44px + 10px) + env(safe-area-inset-right)); }
 #music[data-state="off"] .on, #music[data-state="on"] .off { display: none; }
 @media (min-width: 520px) and (min-height: 520px) {
   #feedback, #music { top: calc(16px + env(safe-area-inset-top)); width: 56px; height: 56px; border-width: 2px; } #feedback svg, #music svg { width: 30px; height: 30px; }
-  #music { right: calc(16px + 56px + 12px + env(safe-area-inset-right)); }
-  #feedback { right: calc(16px + 2 * (56px + 12px) + env(safe-area-inset-right)); }
+  #feedback { right: calc(16px + 56px + 12px + env(safe-area-inset-right)); }
+  #music { right: calc(16px + 2 * (56px + 12px) + env(safe-area-inset-right)); }
 }
 @media (max-height: 500px) {
   #feedback, #music { right: auto; top: calc(12px + env(safe-area-inset-top)); }
-  #music { left: calc(12px + 2 * (44px + 10px) + env(safe-area-inset-left)); }
-  #feedback { left: calc(12px + 3 * (44px + 10px) + env(safe-area-inset-left)); }
+  #feedback { left: calc(12px + 2 * (44px + 10px) + env(safe-area-inset-left)); }
+  #music { left: calc(12px + 3 * (44px + 10px) + env(safe-area-inset-left)); }
 }
 @media (max-height: 500px) and (max-width: 419px) { #feedback, #music { display: none; } } /* tiny short windows: no room beside the corner pill */
 /* «Mode foto» (main.js setView, title only): a quiet eye in the empty bottom-right corner, level with the «Com es juga?»
@@ -37,40 +37,59 @@ body.view-mode :is(#leaders, #settings, #feedback, #music, #howto, #ios-hint, #f
 #photo-figs { position: fixed; z-index: 5; top: calc(env(safe-area-inset-top) + (var(--app-h, 100dvh) - env(safe-area-inset-top) - env(safe-area-inset-bottom)) * .4); translate: 0 -50%; left: max(16px, env(safe-area-inset-left)); display: flex; flex-direction: column; justify-content: center; gap: 14px; transition: opacity .25s; }
 #photo-figs[hidden] { display: none; }
 body:has(#viewmode.idle) #photo-figs:not(:hover, :focus-within) { opacity: .25; transition-duration: 1s; }
-#photo-figs .pf { position: relative; display: flex; align-items: center; min-height: 44px; padding: 0; border: 0; background: none; color: #fff3d6; font: 700 16px/1.1 'Baloo 2', system-ui, sans-serif; cursor: pointer; text-align: left; }
-#photo-figs .pf-por { z-index: 1; flex: none; display: grid; place-items: center; box-sizing: border-box; width: 56px; height: 56px; border: 2px solid #f5c518; border-radius: 50%; background: radial-gradient(circle at 50% 42%, var(--t, #453322), color-mix(in srgb, var(--t, #453322) 35%, #20150e) 78%); overflow: hidden; } /* the town's tint, as the selector cards (select.css --t) */
+#photo-figs .pf { position: relative; display: flex; align-items: center; min-height: 60px; padding: 0; border: 0; background: none; color: #fff3d6; font: 700 16px/1.1 'Baloo 2', system-ui, sans-serif; cursor: pointer; text-align: left; }
+#photo-figs .pf-por { z-index: 1; flex: none; display: grid; place-items: center; box-sizing: border-box; width: 56px; height: 56px; margin-block: 2px; border: 2px solid #f5c518; border-radius: 50%; background: radial-gradient(circle at 50% 42%, var(--t, #453322), color-mix(in srgb, var(--t, #453322) 35%, #20150e) 78%); overflow: hidden; } /* the town's tint, as the selector cards (select.css --t) */
 #photo-figs .pf-por svg { width: 74%; height: 74%; stroke: none; } /* (not the line icons' stroke) */
 #photo-figs .pf-free .pf-por { --t: #4e3424; }
 #photo-figs .pf-free .pf-por svg { width: 55%; height: 55%; stroke: currentColor; }
 #photo-figs .pf-nb { display: flex; flex-direction: column; justify-content: center; box-sizing: border-box; width: 150px; height: 42px; margin-left: -28px; padding: 0 10px 0 38px; /* starts under the portrait's centre: its square end never shows */ border: 2px solid #f5c518; border-radius: 0 10px 10px 0; background: #140c07e6; }
 /* Cream marks selection; gold remains the action/navigation colour. */
 #photo-figs .pf-por, #photo-figs .pf-nb { transition: background .2s; }
-/* Outsets take part in row height, so either end's ring cannot bias the visual centre. */
-#photo-figs .pf[aria-pressed="true"] .pf-por { margin-block: 2px; border: 4px solid #fff3d6; box-shadow: 0 0 0 2px #7a5a10; }
+/* Reserve the ring in every state; paint its extra thickness without resizing the icon. */
+#photo-figs .pf[aria-pressed="true"] .pf-por { border-color: #fff3d6; box-shadow: inset 0 0 0 2px #fff3d6, 0 0 0 2px #7a5a10; }
 #photo-figs .pf[aria-pressed="true"] .pf-nb { border-color: #fff3d6; background: #fff3d6; color: #2a1a10; }
 @media (prefers-reduced-motion: reduce) { #photo-figs .pf-por, #photo-figs .pf-nb { transition: none; } }
-@media (hover: hover) { #photo-figs .pf[aria-pressed="false"]:hover .pf-por { margin-block: 2px; box-shadow: 0 0 0 2px #f5c51880; } }
+@media (hover: hover) { #photo-figs .pf[aria-pressed="false"]:hover .pf-por { box-shadow: 0 0 0 2px #f5c51880; } }
 #photo-figs .pf:focus-visible { outline: none; }
-#photo-figs .pf:focus-visible .pf-por { margin-block: 6px; outline: 3px solid #fff3d6; outline-offset: 3px; }
+#photo-figs .pf:focus-visible .pf-por { outline: 3px solid #fff3d6; outline-offset: 3px; }
+#photo-figs .pf:active { transform: none; }
+#photo-figs .pf-name { text-wrap: balance; }
 /* Non-modal notice. Fixed to the viewport, independent of the column's idle opacity. */
-#photo-tip { position: fixed; z-index: 6; top: max(calc(16px + env(safe-area-inset-top)), 6vh); left: 50%; translate: -50% 0; box-sizing: border-box; width: min(460px, calc(100vw - 160px - env(safe-area-inset-left) - env(safe-area-inset-right))); margin: 0; padding: 18px 22px; border-radius: 24px; background: #000b; color: #fff3d6; font: 600 18px/1.4 'Baloo 2', system-ui, sans-serif; text-align: center; text-wrap: balance; pointer-events: none; opacity: 0; transition: opacity .3s ease-out; }
+#photo-tip { --help-left: max(16px, env(safe-area-inset-left)); --help-right: max(16px, env(safe-area-inset-right)); position: fixed; z-index: 6; --help-top: max(16px, env(safe-area-inset-top)); --help-bottom: max(16px, env(safe-area-inset-bottom)); top: calc(var(--help-top) + (var(--app-h, 100dvh) - var(--help-top) - var(--help-bottom)) / 2); left: calc((100% + var(--help-left) - var(--help-right)) / 2); translate: -50% -50%; box-sizing: border-box; width: min(460px, calc(100% - var(--help-left) - var(--help-right))); margin: 0; padding: 20px; border-radius: 24px; background: #000c; color: #fff3d6; font: 600 16px/1.25 'Baloo 2', system-ui, sans-serif; text-align: center; pointer-events: none; opacity: 0; transform: translateY(4px); transition: opacity .16s ease-out, transform .16s ease-out; }
 #photo-tip[hidden] { display: none; }
-#photo-tip[data-visible="true"] { opacity: 1; }
-#photo-tip strong { display: block; font-size: 23px; }
-#photo-tip .pf-help-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 20px; margin: 14px 0; text-align: left; }
-#photo-tip .pf-help-action { display: grid; grid-template-columns: 52px minmax(0, 1fr); align-items: center; gap: 10px; }
-#photo-tip .pf-help-action:last-child { grid-column: 1 / -1; } /* Escape has its own row after the movement/action pairs. */
-#photo-tip kbd { display: inline-flex; align-items: center; justify-content: center; flex: none; box-sizing: border-box; min-width: 28px; min-height: 28px; padding: 0 4px; border: 1px solid #fff3d680; border-bottom-width: 3px; border-radius: 6px; background: #ffffff12; font: 700 14px/1 'Baloo 2', system-ui, sans-serif; }
+#photo-tip[data-visible="true"] { opacity: 1; transform: none; }
+@starting-style { #photo-tip[data-visible="true"] { opacity: 0; transform: translateY(4px); } }
+#photo-tip strong { display: block; font-size: 20px; line-height: 1.3; }
+#photo-tip p { margin: 12px 0; }
+#photo-tip .pf-help-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 20px; margin: 14px 0; text-align: left; }
+#photo-tip .pf-help-action { display: grid; grid-template-columns: 72px minmax(0, 1fr); min-height: 28px; align-items: center; gap: 8px; }
+#photo-tip [data-photo-escape] { min-height: 40px; display: flex; align-items: center; } /* lock/unlock wording shares its two-line slot */
+#photo-tip .pf-help-action:last-child:nth-child(odd) { grid-column: 1 / -1; } /* Escape closes the pairs; alone on its row only when it would leave a hole (M, the radio, now shares it) */
+#photo-tip kbd { display: inline-flex; align-items: center; justify-content: center; flex: none; box-sizing: border-box; min-width: 28px; min-height: 28px; padding: 0 3px; border: 1px solid #fff3d680; border-bottom-width: 3px; border-radius: 6px; background: #ffffff12; font: 700 14px/1 'Baloo 2', system-ui, sans-serif; }
 body.view-mode #howto.photo-help { opacity: 1; visibility: visible; pointer-events: auto; }
 #photo-world-focus { display: none; position: fixed; z-index: 7; inset: 6px; border: 2px solid #fff3d6; border-radius: 6px; pointer-events: none; }
 body.view-mode:has(#hud:focus-visible) #photo-world-focus { display: block; }
-#howto.photo-help { z-index: 6; left: auto; right: max(16px, env(safe-area-inset-right)); top: auto; bottom: max(16px, env(safe-area-inset-bottom)); transform: none; width: 44px; height: 44px; min-height: 44px; padding: 0; gap: 0; border: 2px solid #f5c518; border-radius: 50%; background: #21140b; color: #fff3d6; font-size: 0; }
+/* Override title.js's inline pill placement while the same button belongs to free mode, including after resize. */
+#howto.photo-help { z-index: 6; left: auto; right: max(16px, env(safe-area-inset-right)); top: auto !important; bottom: max(16px, env(safe-area-inset-bottom)) !important; transform: none; width: 44px; height: 44px; min-height: 44px; padding: 0; gap: 0; border: 2px solid #f5c518; border-radius: 50%; background: #21140b; color: #fff3d6; font-size: 0; }
 #howto.photo-help .q { width: 100%; height: 100%; background: none; color: #fff3d6; font-size: 24px; }
-@media (max-width: 599px) { #photo-tip .pf-help-grid { grid-template-columns: 1fr; gap: 6px; } #photo-tip { left: auto; right: max(16px, env(safe-area-inset-right)); translate: none; width: calc(100vw - 104px - env(safe-area-inset-right)); font-size: 16px; padding: 12px; } } /* 16 px after the 56 px portraits, without squeezing the instructions */
-@media (max-width: 359px) { #photo-tip { top: max(12px, env(safe-area-inset-top)); } } /* Keep the complete keyboard help inside a 320×568 window. */
-#photo-tip small { display: block; margin-top: 12px; font-size: 14px; color: #e8d8b8; }
-@media (max-height: 519px) { #photo-figs { gap: 8px; } #photo-figs .pf-por { width: 44px; height: 44px; } #photo-tip { top: max(12px, env(safe-area-inset-top)); padding: 10px 16px; } #photo-tip .pf-help-grid { gap: 6px 12px; margin: 8px 0; } }
-@media (min-width: 520px) and (max-height: 519px) { #photo-tip .pf-help-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (pointer: fine) and (max-width: 639px) {
+  #photo-tip { --help-left: max(88px, calc(env(safe-area-inset-left) + 72px)); padding: 16px 12px; }
+  #photo-tip .pf-help-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px 6px; }
+  #photo-tip .pf-help-action { display: flex; flex-direction: column; gap: 4px; text-align: center; }
+  #photo-tip .pf-help-action kbd { min-width: 36px; }
+  #photo-tip .pf-help-action:nth-child(n + 7) { grid-column: 1 / -1; display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 8px; text-align: left; }
+}
+#photo-tip small { display: block; font-size: 14px; line-height: 1.3; color: #e8d8b8; }
+#photo-tip[data-kind="notice"] { --help-left: max(16px, env(safe-area-inset-left)); top: calc(72px + env(safe-area-inset-top)); translate: -50% 0; width: max-content; max-width: calc(100% - var(--help-left) - var(--help-right)); padding: 12px 18px; border-radius: 18px; }
+#photo-tip[data-kind="notice"] strong { font-size: 18px; }
+@media (max-height: 519px) { #photo-figs { gap: 8px; } #photo-figs .pf { min-height: 48px; } #photo-figs .pf-por { width: 44px; height: 44px; } #photo-tip { padding: 10px 12px; } #photo-tip .pf-help-grid { gap: 4px 12px; margin: 8px 0; } }
+@media (pointer: coarse) { #photo-tip { width: min(360px, calc(100% - var(--help-left) - var(--help-right))); } }
+@media (min-width: 520px) and (min-height: 520px) { #photo-tip[data-kind="notice"] { top: calc(88px + env(safe-area-inset-top)); } }
+/* The narrow keyboard guide uses the height below the eye/radio; ? stays in the free lower-left corner. */
+@media (pointer: fine) and (max-width: 639px), (pointer: fine) and (max-height: 519px) {
+  #photo-tip { --help-top: calc(72px + env(safe-area-inset-top)); }
+  #howto.photo-help { left: max(16px, env(safe-area-inset-left)); right: auto; }
+}
 @media (prefers-reduced-motion: reduce) { #photo-tip { transition: none; } }
 @media (max-width: 899px) { #photo-figs .pf-nb { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); } } /* a narrow window: portraits only, clear of the eye (the names stay for screen readers) */
 @media (prefers-reduced-motion: reduce) { #photo-figs { transition: none; } }
@@ -164,11 +183,11 @@ textarea.feedback-field { height: calc(4 * 1.35em + 20px); max-height: calc(8 * 
 #radio:focus-visible, #radio[aria-expanded="true"] { opacity: 1; }
 @media (hover: hover) { #radio:hover { opacity: 1; } }
 body:has(#viewmode.idle) #radio:not(:hover, :focus-visible, [aria-expanded="true"]) { opacity: .25; transition-duration: 1s; }
-#radio-menu { position: fixed; z-index: 7; box-sizing: border-box; padding: 12px 10px 8px; border: 2px solid #f5c518; border-radius: 20px; background: #21140bf2; color: #fff3d6; font: 600 16px/1.3 'Baloo 2', system-ui, sans-serif; }
+#radio-menu { position: fixed; z-index: 7; box-sizing: border-box; padding: 12px 10px 8px; border: 2px solid #f5c518; border-radius: 20px; background: #000c; color: #fff3d6; font: 600 16px/1.3 'Baloo 2', system-ui, sans-serif; }
 #radio-menu[hidden] { display: none; }
-body:has(#radio-menu:not([hidden])) #photo-tip { opacity: 0; } /* the list is read now: the tip would show through under it */
-#radio-menu::before { content: ""; position: absolute; top: -9px; left: var(--arrow); width: 14px; height: 14px; border: 2px solid #f5c518; border-right: 0; border-bottom: 0; background: #21140b; transform: rotate(45deg); }
-#radio-menu h2 { margin: 0 6px 8px; font: 800 18px/1.2 'Baloo 2', system-ui, sans-serif; }
+body:has(#radio-menu:not([hidden]), #radio-now:not([hidden])[data-visible="true"]) #photo-tip { opacity: 0; } /* one information layer while choosing or announcing music */
+#radio-menu::before { content: ""; position: absolute; top: -9px; left: var(--arrow); width: 14px; height: 14px; border: 2px solid #f5c518; border-right: 0; border-bottom: 0; background: #000c; transform: rotate(45deg); }
+#radio-menu h2 { margin: 0 6px 8px; font: 800 18px/1.2 'Baloo 2', system-ui, sans-serif; text-align: center; }
 .fm-row { display: flex; align-items: center; gap: 12px; box-sizing: border-box; width: 100%; min-height: 56px; margin: 0 0 6px; padding: 6px 12px 6px 6px; border: 2px solid #e8d8b880; border-radius: 14px; background: #ffffff08; color: inherit; font: inherit; text-align: left; cursor: pointer; }
 .fm-row[data-kind="off"] { min-height: 48px; }
 .fm-row[aria-checked="true"] { border-color: #fff3d6; background: #fff3d6; color: #2a1a10; }
@@ -190,9 +209,13 @@ body:has(#radio-menu:not([hidden])) #photo-tip { opacity: 0; } /* the list is re
 .fm-keys { margin: 4px 6px 0; color: #e8d8b8; font-size: 12.5px; text-align: center; }
 .fm-keys kbd { display: inline-block; min-width: 20px; padding: 0 4px; border: 1px solid #fff3d680; border-bottom-width: 2px; border-radius: 4px; font: 700 12px/18px 'Baloo 2', system-ui, sans-serif; }
 @media (pointer: coarse) { .fm-keys { display: none; } }
-@media (max-height: 520px) { .fm-row { min-height: 48px; } .fm-art { width: 34px; height: 34px; } }
-#radio-now { position: fixed; z-index: 6; display: flex; align-items: center; gap: 10px; max-width: calc(100vw - 24px); padding: 8px 14px 8px 10px; border-left: 4px solid #f5c518; border-radius: 4px 12px 12px 4px; background: #000b; color: #fff3d6; font: 600 15px/1.25 'Baloo 2', system-ui, sans-serif; pointer-events: none; animation: fm-in .25s ease-out; }
+@media (max-height: 520px) { #radio-menu { padding-block: 8px; } .fm-row { min-height: 48px; margin-bottom: 4px; } .fm-art { width: 34px; height: 34px; } }
+#radio-now { position: fixed; z-index: 6; display: flex; align-items: center; gap: 10px; left: calc((100% + env(safe-area-inset-left) - env(safe-area-inset-right)) / 2); top: calc(72px + env(safe-area-inset-top)); translate: -50% 0; box-sizing: border-box; width: max-content; max-width: calc(100vw - 32px - env(safe-area-inset-left) - env(safe-area-inset-right)); padding: 6px 16px 6px 8px; border-radius: 999px; background: #000c; color: #fff3d6; font: 600 15px/1.25 'Baloo 2', system-ui, sans-serif; pointer-events: none; opacity: 0; transform: translateY(4px); transition: opacity .16s ease-out, transform .16s ease-out; }
+#radio-now[data-visible="true"] { opacity: 1; transform: none; }
+@starting-style { #radio-now[data-visible="true"] { opacity: 0; transform: translateY(4px); } }
+@media (min-width: 520px) and (min-height: 520px) { #radio-now { top: calc(88px + env(safe-area-inset-top)); } }
 #radio-now[hidden] { display: none; }
+#radio-now .fm-art { width: 32px; height: 32px; border-radius: 50%; }
+#radio-now .fm-art svg { width: 26px; height: 26px; }
 #radio-now b { display: block; font-weight: 800; } #radio-now small { display: block; color: #e8d8b8; font-size: 13px; }
-@keyframes fm-in { from { opacity: 0; translate: 0 -6px; } }
 @media (prefers-reduced-motion: reduce) { #radio, #radio-now { transition: none; animation: none; } .fm-bars i { animation: none; height: 60%; } .fm-bars i:nth-child(2) { height: 100%; } .fm-bars i:nth-child(3) { height: 40%; } }

@@ -72,7 +72,7 @@ hud.addEventListener('pointermove', e => {
   if (PHOTO.on && e.pointerType === 'mouse' && PHOTO.mouse) {
     if (lookSkip()) return; // a lock change's first move can jump
     if (lookLocked() && !e.buttons && !e.movementX && !e.movementY) return; // Firefox recenters repeatedly without reporting held buttons
-    PHOTO.mouse = e.buttons & 3; // both held = run; none = the drag is over, even if its pointerup went missing (lookSync unlocks)
+    PHOTO.mouse = e.buttons & 3; // LMB orbits; RMB also steers the figure
     if (PHOTO.mouse) photoLook(e.movementX || 0, e.movementY || 0);
     return;
   }
@@ -83,14 +83,26 @@ hud.addEventListener('pointermove', e => {
   const oldZoom=orbit.x[1];
   worldMove(e); orbitMove(orbit, e.pointerId, e.clientX, e.clientY, pnow());
   if(PHOTO.on && orbit.pinch && oldZoom>0)photoZoom(orbit.x[1]/oldZoom); }); // dragging the view
-hud.addEventListener('pointerdown', e => {
-  if (viewMode && e.pointerType === 'mouse') hud.focus({ preventScroll: true });
-  if (PHOTO.on && e.pointerType === 'mouse' && (e.button === 0 || e.button === 2)) {
-    e.preventDefault(); PHOTO.mouse = e.buttons & 3; // (holding the right button turns her after the view: movePhoto)
-    lookDown(e);
-    return;
+let photoMousePointer = null;
+const photoMouseAllowed = () => PHOTO.on && viewMode && steers() && !G.paused && pageActive();
+// Mouse events report every button transition, including RMB pressed/released while LMB stays down.
+hud.addEventListener('mousedown', e => {
+  if (!photoMouseAllowed()) return;
+  if (PHOTO.mouse & 2) { PHOTO.mouse = e.buttons & 2 ? e.buttons & 3 : 0; return; }
+  if (e.button !== 0 && e.button !== 2) return;
+  e.preventDefault(); PHOTO.mouse = e.buttons & 3;
+  if (e.button === 2) lookDown({ pointerId: photoMousePointer, button: e.button });
+  else {
+    lookSkip(); // a new cursor drag has no pending lock recenter to discard
+    try { hud.setPointerCapture?.(photoMousePointer); } catch { /* already released */ }
   }
+});
+hud.addEventListener('pointerdown', e => {
+  if (e.pointerType === 'mouse') photoMousePointer = e.pointerId;
+  if (!steers() && PHOTO.on) return;
+  if (viewMode && e.pointerType === 'mouse') hud.focus({ preventScroll: true });
   worldDown(e);
+  if (PHOTO.on && e.pointerType === 'mouse') return; // mousedown owns actor camera drags; LMB still taps the world
   if (menuState()) {
     const b = G.state !== 'select' && !viewMode && buttonAt(e); // «mode foto»: the (unseen) button is no target, every press steers
     if (b && !orbit.ptrs.size && G.state === 'splash') unlock(); // ENTRA: the only way in (and the gesture that starts the audio)
@@ -103,8 +115,13 @@ hud.addEventListener('pointerdown', e => {
   } else if (G.state === 'results' && clock - G.resT > 1) toTitle();
 });
 hud.addEventListener('lostpointercapture', () => { PHOTO.mouse=0; });
-hud.addEventListener('contextmenu', e => { if (PHOTO.on) e.preventDefault(); });
-for (const ev of ['pointerup', 'pointercancel']) addEventListener(ev, e => { if (e.pointerType === 'mouse') { PHOTO.mouse &= ev === 'pointercancel' ? 0 : e.buttons & 3; lookUp(e); } });
+hud.addEventListener('contextmenu', e => { if (photoMouseAllowed()) e.preventDefault(); });
+addEventListener('mouseup', e => {
+  if (!PHOTO.mouse) return;
+  PHOTO.mouse = e.buttons & 3;
+  lookUp(e);
+});
+addEventListener('pointercancel', e => { if (e.pointerType === 'mouse') { PHOTO.mouse = 0; lookUp({ buttons: 0 }); } });
 for (const ev of ['pointerup', 'pointercancel']) addEventListener(ev, e => { orbitUp(orbit, e.pointerId, pnow()); });
 hud.addEventListener('wheel', e => { // the wheel, and a trackpad pinch (ctrlKey: never the page zoom over the canvas)
   if (!steers()) return;

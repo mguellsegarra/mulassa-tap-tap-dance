@@ -36,7 +36,7 @@ try {
    await page.goto(`${origin}/?mute&representation=${baseline?'off':'on'}&representationSeed=${seed}${playParams}`,{waitUntil:'networkidle'});
    await page.waitForFunction(()=>window.__mulassaBooted===true);await page.locator('#loader').waitFor({state:'hidden',timeout:30000});
    if(baseline){
-    const rewritten=baseline.replace(/from '(\.\.?\/[^']+)'/g,(_,path)=>`from '${new URL(path,origin+'/src/dev/representation-preview.js').href}'`).replace("from 'three'",`from '${origin}/node_modules/three/build/three.module.js'`);
+    const rewritten=baseline.replace(/from '(\.\.?\/[^']+)'/g,(_,path)=>`from '${new URL(path,origin+'/src/scene/representation.js').href}'`).replace("from 'three'",`from '${origin}/node_modules/three/build/three.module.js'`);
     await page.evaluate(async url=>{const m=await import(url);m.setupRepresentationPreview();},'data:text/javascript;base64,'+Buffer.from(rewritten).toString('base64'));
    }
    await page.waitForFunction(()=>!!window.__representation);await page.evaluate(q=>__representation.quality(q),quality);

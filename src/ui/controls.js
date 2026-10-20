@@ -81,7 +81,7 @@ export function updateControls() {
   lookSync(); // (after it: a sheet or a state change has just dropped control)
   const photoHelp = photoHelpAvailable();
   howtoEl.inert = viewMode && !photoHelp;
-  hide(howtoEl, !photoHelp); // reuse the existing ? only after the photo instructions disappear
+  hide(howtoEl, !photoHelp); // the same ? opens and closes non-modal help, including on touch
   howtoEl.classList.toggle('photo-help', photoHelp);
   howtoEl.setAttribute('aria-label', photoHelp ? 'Controls del mode foto (?)' : 'Com es juga?');
   howtoEl.setAttribute('aria-haspopup', photoHelp ? 'false' : 'dialog');

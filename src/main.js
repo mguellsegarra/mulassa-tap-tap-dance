@@ -6,7 +6,7 @@ import { errors } from './services/errors.js';
 import * as THREE from 'three';
 import { song, figureScale, selectedFigure } from './game/figure-song.js';
 import { DRAC } from './game/figures.js';
-import { frameMonitor } from './platform/render-quality.js';
+import { adaptiveQuality } from './platform/adaptive-quality.js';
 import { waitForWarmup, linkPrograms } from './platform/boot.js';
 import { sectionAt } from './game/chart.js';
 import { judgedCount } from './game/progress.js';
@@ -44,7 +44,7 @@ import './hud/warm.js';
 import './hud/banner.js';
 import './hud/results.js';
 import { orbit, insidePlaza, framePlayCamera, CAMS, frameMenuCamera, lens, easeLensX, clearCameraImpact, applyCameraImpact } from './scene/cameras.js';
-import { PERF, perfSample } from './dev/perf.js';
+import { PERF, perfSample, perfReset, qualitySample } from './dev/perf.js';
 import { heroCam, heroQuadMake, renderHero } from './scene/share-capture.js';
 import { autoplay, advance, collapse, judge, press } from './game/judge.js';
 import { practiceTick, finish, songWait, musicLine, startFinal, previewResults, startPractice, endPractice, choose } from './game/flow.js';
@@ -65,8 +65,8 @@ import { framePhotoCamera, releasePhotoCamera } from './scene/photo-camera.js';
 window.__mulassaBootPhase = 'init';
 initDrac(); // both rigs exist before shader warmup and the first frame
 
-const monitorFrames = frameMonitor((steps = 1) => { // steps: 2 when frames are far too slow
-  if (qualityLevel > -1) { setQualityLevel(Math.max(-1, qualityLevel - steps)); applyRenderQuality({ transition: !loader.covering }); resize(); precompile(); } // now, not at the first GLOBUS pop or firework
+const monitorFrames = adaptiveQuality({ ceiling: qualityLevel, level: () => qualityLevel, report: qualitySample,
+  change: level => { setQualityLevel(level); applyRenderQuality({ transition: !loader.covering }); resize(); precompile(); },
 });
 let glName; // crash reports' context, read only when one is sent
 errors.context(() => ({ state: G.state, diff: G.diff, practice: !!G.practice, paused: G.paused, quality: renderProfile.name, softwareGl,
@@ -74,9 +74,9 @@ errors.context(() => ({ state: G.state, diff: G.diff, practice: !!G.practice, pa
     return String(gl.getParameter(x ? x.UNMASKED_RENDERER_WEBGL : gl.RENDERER)).slice(0, 120); } catch { return 'unknown'; } })() }));
 
 // ------------------------------------------------------------------ loop
-let last = performance.now();
-const resetFrameTime = () => { last = null; clearCameraImpact(); resetMotionImpact(); };
-for (const event of ['blur', 'focus', 'pagehide', 'pageshow']) addEventListener(event, resetFrameTime);
+let last = performance.now(), qualityCost = NaN;
+const resetFrameTime = () => { last = null; qualityCost = NaN; pace.reset(); monitorFrames.reset('activity'); perfReset(); clearCameraImpact(); resetMotionImpact(); };
+for (const event of ['blur', 'focus', 'pagehide', 'pageshow', 'resize', 'orientationchange']) addEventListener(event, resetFrameTime);
 document.addEventListener('visibilitychange', resetFrameTime);
 
 let audioStallT = null;
@@ -87,7 +87,7 @@ if (Q.has('sizes')) setupSizesEdit(); // ?sizes: each selector figure's height b
 function frame(now) {
   if (window.__mulassaBootFailure) return; // an explicit retry owns recovery; no hidden game burning battery
   requestAnimationFrame(frame);
-  if (innerWidth !== sizedW || devicePixelRatio !== sizedDpr || Math.abs(HH * K - appHeight()) > 1) resize();
+  if (innerWidth !== sizedW || devicePixelRatio !== sizedDpr || Math.abs(HH * K - appHeight()) > 1) { resize(); resetFrameTime(); }
   // Safari may leave hasFocus() false until a touch, even with the entrance fully visible.
   // Its demo needs visibility, not keyboard focus; audio still waits for the entrance tap.
   // Other screens retain their focus protection, and every hidden page rests.
@@ -98,9 +98,11 @@ function frame(now) {
   // with no menu up. Stalled for a second mid-run: pause, so the Reprèn tap is the gesture that restarts it.
   if (G.state === 'play' && !G.paused && chip?.t0 != null && chip.ctx.state !== 'running' && pageActive()) { audioStallT ??= now; if (now - audioStallT > 1000) { audioStallT = null; pauseGame(); } } else audioStallT = null;
   if (!pace(now, G.state === 'play')) return; // 120 Hz screens that can't keep up: every other refresh (framePacer); never back up to 120 mid-song
-  const f0 = PERF && performance.now();
+  const f0 = performance.now();
   clearCameraImpact();
-  monitorFrames(now - last, G.state === 'play' && !G.paused); // 60 fps budget, or 30 for a steady cap; hitches count only in play
+  // The previous draw's cost belongs to this interval. Apply profile/DPR changes before drawing: resize clears both canvases.
+  monitorFrames(now - last, qualityCost, pace, G.state === 'play',
+    drawn && !coverUp && !loader.covering && !renderer.getContext().isContextLost(), G.state === 'play' && !G.paused);
   fpsTick(now);
   const frameS = (now - last) / 1000, dt = G.paused ? 0 : Math.min(0.05, frameS); // frameS: real seconds since the last drawn frame
   const heard = chip?.t0 != null ? chip.now(RAWCLOCK ? undefined : now) : -1; // the song at this frame's time (de-stepped: smooth notes)
@@ -158,7 +160,7 @@ function frame(now) {
   // a pending selection hides both models; photo mode shows the existing pair without changing selection
   if (G.state === 'select' && !viewMode && (sheets.select?.pending ?? sheets.select?.figure?.status === 'aviat')) { mula.root.visible = false; drac.root.visible = false; for (const c of [colla, mulaColla]) c.helpers.visible = c.seated.visible = false; } // (the collas with them)
   const c0 = PERF && performance.now();
-  animCrowd(dt, sheets.music?.beat() ?? beat, vt, live); // (free mode's radio: the plaça claps on the song it plays)
+  animCrowd(dt, (G.state === 'play' ? null : sheets.music?.beat() ?? chip?.menuBeat?.()) ?? beat, vt, live); // on the menus the plaça claps on what sounds: the radio's song or the menu loop
   if (PERF) PERF.crowd += performance.now() - c0; // ?perf: the crowd's own share of the js
   animConfetti(dt);
   animFireworks(dt);
@@ -210,8 +212,8 @@ function frame(now) {
   for (const p of plaza.props) p.mesh.visible = !blocks(p, camXYZ, focusXYZ); // a tree or lamp in the way: gone
   if (trauma > 0) { // shake decays; quadratic so small bumps barely move it. During play only a small accent
     setTrauma(Math.max(0, trauma - dt * 1.6)); // (GUAPA, the finale), added on top: it never feeds the camera's springs
-    applyCameraImpact(trauma);
   }
+  applyCameraImpact(trauma);
   const p0 = PERF && performance.now();
   if (PERF?.mode !== 'no3d') renderScreen();
   if (PERF?.mode === 'sync') renderer.getContext().readPixels(0, 0, 1, 1, 6408, 5121, PERF.px ??= new Uint8Array(4)); // RGBA, UNSIGNED_BYTE
@@ -247,6 +249,7 @@ function frame(now) {
   // word is ~20 ms on a desktop, several times that on a phone), at most COVER_WARM ms after the fonts: on a slow first
   // load they were painted on the splash, right under the tap. (loader.ready() still waits for its minimum time.)
   if (coverUp && fontsIn && (!warmups.length || now - (coverAt ??= now) > COVER_WARM)) { coverUp = false; loader.ready(); if (STARS >= 0) previewResults(STARS); } // ?stars: only once the page cover is gone, or the animation plays unseen
+  qualityCost = performance.now() - f0;
   if (PERF) perfSample(f0, p0, p1, now);
   if (PERF?.line) { // on screen too: a tablet has no console
     H.font = '600 6px ui-monospace, monospace'; H.textAlign = 'left'; H.textBaseline = 'top';
@@ -305,4 +308,4 @@ window.__mulassaBooted ||= 'module'; // ran to the end: index.html's boot watchd
 
 // The representation cast on every host; ?representation=off retains the original cast for comparisons.
 const localPeopleReady = Q.get('representation') !== 'off'
-  ? import('./dev/representation-preview.js').then(m => m.setupRepresentationPreview()) : Promise.resolve();
+  ? import('./scene/representation.js').then(m => m.setupRepresentation()) : Promise.resolve();

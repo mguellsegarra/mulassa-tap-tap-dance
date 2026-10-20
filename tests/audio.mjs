@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import './pad-input.mjs';
+import './free-music.mjs';
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { Chip, applause, audioFailureTags } from '../src/platform/audio.js';
@@ -76,6 +77,17 @@ try {
   else globalThis.document = previousDocument;
 }
 console.log('audio wake respects page activity');
+
+{
+  const c = Object.create(Chip.prototype);
+  c.ctx = { state: 'suspended', resume: () => Promise.reject(Object.assign(new Error('blocked'), { name: 'NotAllowedError' })) };
+  assert.equal(await c.resume(), false, 'a browser policy rejection is a failed resume, not playing audio');
+  assert.equal(c.ctx.state, 'suspended');
+  c.ctx.resume = () => { c.ctx.state = 'running'; return Promise.resolve(); };
+  assert.equal(await c.resume(), true, 'a later gesture can resume the same context');
+  c.ctx.resume = () => { throw Object.assign(new Error('closed'), { name: 'InvalidStateError' }); };
+  assert.equal(await c.resume(), false, 'synchronous resume failures are handled too');
+}
 
 // Download order: both start at once, on any connection; only the speaker's own setting silences the menu loop.
 {
@@ -428,8 +440,8 @@ console.log('leaving a run silences everything it queued ok');
   const fake = () => {
     const c = Object.create(Chip.prototype);
     c.ctx = { currentTime: 5, state: 'running',
-      createGain: () => ({ connect: t => t, gain: { setValueAtTime() {}, linearRampToValueAtTime() {}, setTargetAtTime() {} } }),
-      createBufferSource: () => { const s = { connect: t => t, started: false, stopped: false, start() { this.started = true; }, stop() { this.stopped = true; } }; sources.push(s); return s; } };
+      createGain: () => ({ connect: t => t, disconnect() {}, gain: { events: [], setValueAtTime(v, t) { this.events.push(['set', v, t]); }, linearRampToValueAtTime(v, t) { this.events.push(['ramp', v, t]); }, setTargetAtTime(v, t) { this.events.push(['target', v, t]); } } }),
+      createBufferSource: () => { const s = { connect: t => t, started: false, stopped: false, start() { assert(!this.started, 'buffer sources are single use'); this.started = true; }, stop() { this.stopped = true; } }; sources.push(s); return s; } };
     c.out = c.music = {}; c.unlock = () => {}; c.menuMusic = true; c.ambient = Promise.resolve({ duration: 40 });
     return c;
   };
@@ -450,11 +462,33 @@ console.log('leaving a run silences everything it queued ok');
   c.radio(null); await tick();
   assert(song.stopped && c.menuSrc?.src.started, 'leaving it fades back to the menu loop');
   c.radio({ duration: 90 });
-  const ended = []; c.radio({ duration: 90 }, { onEnd: () => ended.push(1) });
+  const ended = []; c.radio({ duration: 90 }, { onEnd: () => { ended.push(1); c.radio(null); } });
   c.radioSrc.src.onended(); await tick();
   assert.deepEqual(ended, [1], 'onEnd when the song plays out');
+  assert(c.menuSrc?.src.started, 'natural completion starts a fresh menu source after radioSrc was cleared');
+  const returned = c.menuSrc;
+  assert.notEqual(returned.src, loop.src, 'return creates a fresh source instead of reusing the stopped loop');
+  assert.equal(returned.g.gain.events.at(-1)[1], 0.9, 'the returned menu fades up to its audible gain');
+  c.radio(null); c.menu(true); await tick();
+  assert.equal(c.menuSrc, returned, 'repeated menu requests keep the sounding loop');
+  const waiting = fake();
+  let decode;
+  waiting.ambient = new Promise(resolve => { decode = resolve; });
+  waiting.menu(true);
+  waiting.radio({ duration: 90 });
+  decode({ duration: 40 }); await tick();
+  assert(waiting.radioSrc && !waiting.menuSrc, 'a late menu decode never starts a second transport under the radio');
+  waiting.radio(null); await tick();
+  assert(waiting.menuSrc?.src.started, 'returning after the cancelled decode still starts the menu');
   c.radio({ duration: 90 });
+  const obsolete = c.radioSrc.src.onended;
+  c.radio({ duration: 80 });
+  const replacement = c.radioSrc;
+  obsolete(); await tick();
+  assert.equal(c.radioSrc, replacement, 'a queued ended callback cannot replace a newer song');
+  const mutedEnd = c.radioSrc.src.onended;
   c.setMenuMusic(false);
+  mutedEnd(); await tick();
   assert(!c.radioSrc && !c.menuSrc, '«Silenci» (the speaker preference) stops the radio and keeps the loop off');
   c.setMenuMusic(true); await tick();
   c.radio({ duration: 90 });

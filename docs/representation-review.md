@@ -2,7 +2,7 @@
 
 Les variants de representació s'activen per defecte als hosts de loopback del joc local.
 `?mute&representation=off` manté els models originals per comparar. No s'activen per defecte als hosts públics.
-Els percentatges aprovats i les decisions de vestuari són a `src/dev/representation/population.js` i `models.js`.
+Els percentatges aprovats i les decisions de vestuari són a `src/scene/representation/population.js` i `models.js`.
 
 ## Cicle de treball
 

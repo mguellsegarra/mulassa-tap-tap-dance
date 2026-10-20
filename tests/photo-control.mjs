@@ -117,8 +117,9 @@ for (const fps of [30,60,120]) {
   assert.equal(photoBody().yaw,0,'left orbit at rest preserves heading');
   press('KeyW');
   for(let i=0;i<fps;i++)movePhoto(1/fps,()=>99);
-  assert(Math.abs(photoBody().yaw+.45)<.001,'W plus left drag aligns smoothly at every frame rate');
-  assert(photoBody().x<-.5 && photoBody().z>1,'walking follows the new heading');
+  assert.equal(photoBody().yaw,0,'W plus LMB preserves heading at every frame rate');
+  assert.equal(photoBody().x,0,'LMB cannot redirect walking');
+  assert(photoBody().z>1,'W still advances');
   PHOTO.keys.delete('KeyW');const heading=photoBody().yaw;
   photoLook(100,0);movePhoto(1/fps,()=>99);
   assert.equal(photoBody().yaw,heading,'releasing W restores free orbit');
@@ -126,7 +127,7 @@ for (const fps of [30,60,120]) {
   assert.equal(photoBody().yaw,heading,'blur cancels left-drag steering');
 }
 setPhotoControl(false);
-console.log('left drag steers while advancing and freely orbits at rest ok');
+console.log('LMB preserves heading while advancing and at rest ok');
 
 // Like WoW: walking forward swings the camera round behind her; mouse look keeps it where the player put it.
 {

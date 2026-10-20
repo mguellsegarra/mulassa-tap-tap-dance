@@ -59,11 +59,34 @@ function stepManualJump(body, dt) {
   body.airV = 0;
   return Math.sqrt(v * v + 28 * y);
 }
+// A manual landing owns its actor and the exact input session that launched it.
+// Separate from gameplay trauma: companions and demo accents cannot reach this channel.
+let manualFlight = null, manualLanding = null;
+const manualContext = token => token?.origin === 'manual-jump' && PHOTO.on && !G.paused && !CALM.matches
+  && ['splash', 'select', 'title'].includes(G.state) && token.actor === PHOTO.id
+  && token.epoch === PHOTO.epoch && token.inputEpoch === PHOTO.inputEpoch;
+function beginManualFlight(actor) {
+  manualFlight = { origin: 'manual-jump', actor, epoch: PHOTO.epoch, inputEpoch: PHOTO.inputEpoch };
+}
+function manualContact(actor) {
+  if (manualFlight?.actor === actor) {
+    if (manualContext(manualFlight)) manualLanding = { ...manualFlight, time: clock, startedAt: performance.now() };
+    manualFlight = null;
+  }
+}
+export function manualLandingStrength() {
+  if (!manualContext(manualLanding)) { manualLanding = null; return 0; }
+  const age = Math.max(clock - manualLanding.time, (performance.now() - manualLanding.startedAt) / 1000);
+  const initial = manualLanding.actor === 'mulassa-valls' ? 0.98 : 0.9;
+  const strength = Math.max(0, initial - age * 1.6);
+  if (age < 0 || strength === 0) { manualLanding = null; return 0; }
+  return strength;
+}
 function landingImpact(strength) {
   if (!CALM.matches) trauma = Math.max(trauma, strength); // replace, never stack repeated landings
 }
 export function resetMotionImpact() {
-  trauma = 0;
+  trauma = 0; manualFlight = manualLanding = null;
   M.air = M.airV = 0; PHOTO.air = false;
   DRAC_JUMP.air = DRAC_JUMP.airV = 0;
 }
@@ -120,6 +143,8 @@ export function stumble(dir) { // PATAPAM: a wrong move trips her up: nose dips,
   M.missT = clock; // (no camera shake: a miss shouldn't jolt the view)
 }
 export function animMula(dt, beat, live = 1) {
+  if (!manualContext(manualFlight)) manualFlight = null;
+  if (!manualContext(manualLanding)) manualLanding = null;
   if (impactState !== G.state || impactFigure !== selectedFigure.id || impactEpoch !== PHOTO.epoch) {
     resetMotionImpact();
     impactState = G.state; impactFigure = selectedFigure.id; impactEpoch = PHOTO.epoch;
@@ -158,7 +183,7 @@ export function animMula(dt, beat, live = 1) {
     manualMula ||= PHOTO.pair && PHOTO.yielding && PHOTO.id === 'drac-valls';
     if (manualMula) { S.yaw.x = S.yaw.t = M.yaw; S.yaw.v = 0; }
     if (manualMula && PHOTO.action && PHOTO.id === 'mulassa-valls') { // (a yielding Mulassa never takes the Drac's jump)
-      if (M.air === 0) M.airV = CALM.matches ? 1.4 : 4.8;
+      if (M.air === 0 && dt > 0) { M.airV = CALM.matches ? 1.4 : 4.8; beginManualFlight('mulassa-valls'); }
       PHOTO.action = false;
     }
   } else if (PHOTO.ready) {
@@ -240,7 +265,11 @@ export function animMula(dt, beat, live = 1) {
     if (dancing && M.air > CAP.air) { M.air = CAP.air; M.airV = Math.min(0, M.airV); }
     contact = M.air === 0 && M.airV < -2;
   }
-  if (contact) { S.squash.v -= 4; landingImpact(manualMula ? 0.98 : 0.35); S.pitch.v += 1; }
+  if (contact) {
+    S.squash.v -= 4; S.pitch.v += 1;
+    if (manualMula) manualContact('mulassa-valls');
+    else if (dancing) landingImpact(0.35);
+  }
   if (M.air === 0) M.airV = 0;
   if (manualMula && PHOTO.id === 'mulassa-valls') PHOTO.air = M.air > 0; // airborne: she keeps her momentum (movePhoto)
   // groove on every beat of the music, even without pressing anything; in play the base pose owns the body's sway,
@@ -259,12 +288,19 @@ export function animMula(dt, beat, live = 1) {
   const rearPitch = -PHOTO_REAR.front * photoRear + PHOTO_REAR.rear * photoKick; // + = rear up (the model faces +z)
   const rearLift = PHOTO_REAR.legZ * Math.abs(Math.sin(rearPitch)); // pivot on the legs that stay down
   const bp = beat * Math.PI, amp = (dancing ? POSE.drive : playful ? 1 : 0.6) * live, base = dancing ? (1 - col) * (1 - 0.5 * miss) : 0;
-  const bounce = dancing ? POSE.lift * base : Math.abs(Math.sin(bp)) * 0.1 * amp;
-  const sway = dancing ? POSE.roll * base : Math.sin(bp) * 0.07 * amp;
+  // Manual travel already has its stride hop/pitch. Replace the music groove, rather than stacking two rhythms.
+  const bounce = dancing ? POSE.lift * base : manualMula ? 0 : Math.abs(Math.sin(bp)) * 0.1 * amp;
+  const manualSway = (Math.sin(bp) * 0.03 * (1 - photoGait) + Math.sin(photoStride) * (0.025 + 0.01 * photoRun) * photoGait) * photoGround
+    * (1 - Math.max(photoRear, photoKick)) * (CALM.matches ? 0.2 : 1);
+  // Weight sinks onto the planted supports on each pulse; the existing cuffs follow the hem without stretching.
+  const kneeMenu = (1 + Math.cos(bp * 2)) / 2, kneeStride = 1 - gallop * gallop;
+  const manualDip = manualMula ? 0.025 * (kneeMenu * kneeMenu * (1 - photoGait) + kneeStride * kneeStride * photoGait)
+    * (1 - photoRun * 0.5) * photoGround * (1 - Math.max(photoRear, photoKick)) * (CALM.matches ? 0.2 : 1) : 0;
+  const sway = dancing ? POSE.roll * base : manualMula ? manualSway : Math.sin(bp) * 0.07 * amp;
   const buzz = dancing ? POSE.shake * base : 0; // the landing of each jump shakes the whole figure
-  poseMulaBody(mula, M.pos.x, col ? -0.42 * col : bounce + M.air + hop + rearLift, M.pos.y, M.yaw,
+  poseMulaBody(mula, M.pos.x, col ? -0.42 * col : bounce + M.air + hop + rearLift - manualDip, M.pos.y, M.yaw,
     col * 0.25 + S.roll.x + sway + buzz + Math.sin(clock * 35) * 0.06 * miss,
-    S.pitch.x + rearPitch + gallop * 0.08 * photoRun + (dancing ? POSE.pitch * base + buzz * 0.6 : Math.sin(bp * 2) * 0.02 * amp));
+    S.pitch.x + rearPitch + gallop * 0.08 * photoRun + (dancing ? POSE.pitch * base + buzz * 0.6 : manualMula ? 0 : Math.sin(bp * 2) * 0.02 * amp));
   if (dancing) trauma = Math.max(trauma, Math.min(0.5, Math.abs(buzz) * 14));
   const sq = 1 + S.squash.x * 0.08 + breath * 0.012 - 0.03 * miss;
   mula.body.scale.set(1 / Math.sqrt(sq), sq, 1 / Math.sqrt(sq));
@@ -318,11 +354,11 @@ function keepClear() {
   }
   M.pos.set(M.pivot.x - sx * PIVOT, M.pivot.y - cz * PIVOT);
 }
-// Space while driving the Drac: the whole rig (shoes too) jumps like her, breathing fire, and the plaça booms and shakes as it lands.
+// Space while driving the Drac: the whole rig (shoes too) jumps, with fire and its manual landing impact.
 const DRAC_JUMP = { air: 0, airV: 0 };
 function dracJump(dt) {
-  if (PHOTO.action && dt > 0) { if (DRAC_JUMP.air === 0) { DRAC_JUMP.airV = CALM.matches ? 1.4 : 4.8; PHOTO.drac.fire = 1.4; } PHOTO.action = false; } // a flamarada as it takes off
-  if (stepManualJump(DRAC_JUMP, dt) > 2) { figureSfx('gran'); landingImpact(0.9); }
+  if (PHOTO.action && dt > 0) { if (DRAC_JUMP.air === 0) { DRAC_JUMP.airV = CALM.matches ? 1.4 : 4.8; beginManualFlight('drac-valls'); PHOTO.drac.fire = 1.4; } PHOTO.action = false; } // a flamarada as it takes off
+  if (stepManualJump(DRAC_JUMP, dt) > 2) { figureSfx('gran'); manualContact('drac-valls'); }
   PHOTO.air = DRAC_JUMP.air > 0;
   return DRAC_JUMP.air;
 }

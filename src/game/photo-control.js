@@ -14,6 +14,7 @@ export const PHOTO_SPIN = { rate: 9, accel: 60, reach: 6, kick: 7, /* reach: the
 export const PHOTO_CAM = { follow:0.8, followWait:1.2, followRate:1.57, alignTau:0.12, alignRate:6.28, alignRateMoving:9.4, pitch:0.35, zoom:10, minZoom:6, maxZoom:20, minPitch:0.08, maxPitch:1.0, aimY:{ 'mulassa-valls':3.3, 'drac-valls':3.2 } };
 export const photoBody = () => PHOTO.id === 'drac-valls' ? PHOTO.drac : PHOTO.mula;
 export function clearPhotoKeys() {
+  PHOTO.inputEpoch = (PHOTO.inputEpoch || 0) + 1;
   PHOTO.keys.clear(); PHOTO.turn = 0; PHOTO.action = false; PHOTO.mouse = 0; PHOTO.intentX = PHOTO.intentZ = 0;
   for (const p of [PHOTO.mula, PHOTO.drac]) { p.vx = p.vz = 0; p.fire = 0; p.sprint = 0; p.spinLeft = 0; p.spinV = 0; }
   PHOTO.speed = 0; PHOTO.air = false; PHOTO.culada = 0; PHOTO.sparks = false;
@@ -62,11 +63,11 @@ export function movePhoto(dt, safe, sideYaw = photoBody().yaw) {
   let forward = Number(keys.has('KeyW') || PHOTO.mouse === 3) - Number(keys.has('KeyS'));
   const length = Math.hypot(side, forward) || 1;
   side /= length; forward /= length;
-  // Right drag (and left drag while advancing) turns her towards the view: eased and at most PHOTO_CAM.alignRate, so
-  // pressing it with the camera at her side swings her round instead of snapping. At rest a left drag only orbits.
+  // Only RMB turns her towards the view, eased and capped at PHOTO_CAM.alignRate.
+  // LMB never changes her heading, including while walking or running.
   // During a culada the turn is hers alone: with mouse look the camera turns with her (the view is still "where she
   // faces" afterwards, nothing pulls her back); without it the camera holds still and recenters only later.
-  const aligning = PHOTO.cameraYaw !== null && (PHOTO.mouse & 2 || PHOTO.mouse === 1 && keys.has('KeyW') && !keys.has('KeyS'));
+  const aligning = PHOTO.cameraYaw !== null && (PHOTO.mouse & 2);
   if (aligning && !p.spinLeft) {
     const delta = Math.atan2(Math.sin(PHOTO.cameraYaw - Math.PI - p.yaw), Math.cos(PHOTO.cameraYaw - Math.PI - p.yaw)), h = Math.min(dt, 0.05);
     const rate = forward || side ? PHOTO_CAM.alignRateMoving : PHOTO_CAM.alignRate;

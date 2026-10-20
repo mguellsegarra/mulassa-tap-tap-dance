@@ -9,9 +9,9 @@ import { lookLocked } from './mouse-look.js';
 
 const PF_FIGS = [[MULASSA, [['Q', 's’alça'], ['E', 'guitza'], ['R', 'culada']]],
   [DRAC, [['Q', 'rugeix'], ['E', 'guspires'], ['R', 'gira']]]];
-const photoHelpActions = fig => [['WASD', 'camina'], ['Shift', 'corre'], ['Espai', 'salta'], ...fig[1], ['Tab', 'canvia de figura a la plaça'], ['Ratolí', 'mantén premut per mirar'], ['Esc', lookLocked() ? 'allibera el ratolí' : 'deixa de moure la figura']];
+const photoHelpActions = fig => [['WASD', 'camina'], ['Shift', 'corre'], ['Espai', 'salta'], ...fig[1], ['Tab', 'canvia figura'], ['Botó dret', 'mantén per mirar'], ['M', 'tria música'], ['Esc', lookLocked() ? 'allibera el ratolí' : 'torna a mirar']];
 const photoHelpDescription = fig => `${fig[0].fullName}: ${photoHelpActions(fig).map(([key, label]) => `${key} ${label}`).join(' · ')}. Prem ? per tornar a veure els controls.`;
-const PF_TIP_MS = 7000; // allow time to read the actions, then fade without interrupting input
+const PF_TIP_MS = 6000; // brief discovery; manual help stays until toggled or the mode changes
 const PF_ORBIT_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M4.5 9.5A8 8 0 0 1 18 6.3M19.5 14.5A8 8 0 0 1 6 17.7M18 2.5v4h-4M6 21.5v-4h4"/></svg>';
 export const avatarsEl = document.createElement('div');
 avatarsEl.id = 'photo-figs';
@@ -19,7 +19,7 @@ avatarsEl.hidden = true;
 avatarsEl.setAttribute('role', 'group');
 avatarsEl.setAttribute('aria-label', 'Mou una figura');
 avatarsEl.innerHTML = '<button type="button" class="pf pf-free" data-id="" aria-pressed="true" title="Mira la plaça"><span class="pf-por">' + PF_ORBIT_SVG + '</span><span class="pf-nb"><span class="pf-name">Mira la plaça</span></span></button>'
-  + PF_FIGS.map(([f]) => `<button type="button" class="pf" data-id="${f.id}" aria-pressed="false" data-town="${f.town}"><span class="pf-por">${pixelSvg(portraitArt(f), portraitPalette(f), '#2a1a10')}</span><span class="pf-nb"><span class="pf-name">Mou ${f.id === DRAC.id ? 'el' : 'la'} ${f.name}</span></span></button>`).join('')
+  + PF_FIGS.map(([f]) => `<button type="button" class="pf" data-id="${f.id}" aria-pressed="false" data-town="${f.town}"><span class="pf-por">${pixelSvg(portraitArt(f), portraitPalette(f), '#2a1a10')}</span><span class="pf-nb"><span class="pf-name">${f.name}</span></span></button>`).join('')
   + '<p id="photo-help" class="sr-only"></p>';
 document.getElementById('viewmode').after(avatarsEl);
 const pfButtons = [...avatarsEl.querySelectorAll('.pf')], pfHelp = avatarsEl.querySelector('#photo-help');
@@ -40,32 +40,45 @@ function clearPhotoTip() {
   clearTimeout(pfTipT);
   pfTip.hidden = true;
   pfTip.dataset.visible = 'false';
-  pfTipUsed = false;
+  pfTip.setAttribute('aria-hidden', 'true');
+  pfTipManual = false;
 }
 function fadePhotoTipAfter(ms) {
   clearTimeout(pfTipT);
-  pfTipT = setTimeout(() => { pfTip.dataset.visible = 'false'; }, ms);
+  pfTipT = setTimeout(() => { pfTip.dataset.visible = 'false'; pfTip.setAttribute('aria-hidden', 'true'); }, ms);
 }
-export function showPhotoHelp() {
+function presentPhotoTip(kind, html, ms) {
+  clearPhotoTip();
+  pfTip.dataset.kind = kind;
+  pfTip.innerHTML = html;
+  pfTip.hidden = false;
+  pfTip.dataset.visible = 'true';
+  pfTip.setAttribute('aria-hidden', 'false');
+  if (ms) fadePhotoTipAfter(ms);
+}
+export function showPhotoHelp(manual = true) {
+  if (manual && pfTipManual && pfTip.dataset.visible === 'true') {
+    clearTimeout(pfTipT); pfTipManual = false; pfTip.dataset.visible = 'false'; pfTip.setAttribute('aria-hidden', 'true'); return;
+  }
   clearPhotoTip();
   if (!pfShown) return;
   const fig = PHOTO.on && PF_FIGS.find(([f]) => f.id === PHOTO.id);
+  let html;
   if (fig) {
     const actions = photoHelpActions(fig);
-    pfTip.innerHTML = `<strong>Ara mous ${fig[0].id === DRAC.id ? 'el Drac' : 'la Mulassa'}.</strong><span class="sr-only">${fig[0].fullName}</span><div class="pf-help-grid">${actions.map(([key, label]) => `<span class="pf-help-action"><kbd>${key}</kbd><span${key === 'Esc' ? ' data-photo-escape' : ''}>${label}</span></span>`).join('')}</div><small>Tab als botons: recorre els controls.<br>Prem <kbd>?</kbd> per tornar a veure els controls.</small>`;
+    html = `<strong>Mou ${fig[0].id === DRAC.id ? 'el Drac' : 'la Mulassa'}</strong><span class="sr-only">${fig[0].fullName}</span><div class="pf-help-grid">${actions.map(([key, label]) => `<span class="pf-help-action"><kbd>${key}</kbd><span${key === 'Esc' ? ' data-photo-escape' : ''}>${label}</span></span>`).join('')}</div><small>Tab als botons: navega.<br>? ${manual ? "amaga l'ajuda" : 'torna a mostrar els controls'}.</small>`;
   } else {
-    pfTip.innerHTML = '<strong>Mira la plaça</strong>' + (COARSE.matches
-      ? '<p>Arrossega per girar · Pessiga per acostar o allunyar.</p><small>Doble toc a la plaça: mostra els botons.</small>'
-      : '<p>Tria una figura per moure-la.</p><small>Arrossega per girar · Roda per acostar o allunyar.<br>Esc: mostra els botons.</small>');
+    html = '<strong>Vista lliure</strong>' + (COARSE.matches
+      ? '<p>Arrossega per girar.<br>Pessiga per acostar o allunyar.</p><small>Doble toc a la plaça: mostra els botons.<br>Botó ?: mostra o amaga l\'ajuda.</small>'
+      : '<p>Arrossega per girar. Roda per fer zoom.<br>Tria una figura per moure-la.</p><small>M: música · Esc: mostra els botons.<br>? ' + (manual ? "amaga l'ajuda" : 'mostra els controls') + '.</small>');
   }
-  pfTip.hidden = false;
-  pfTip.dataset.visible = 'true';
-  fadePhotoTipAfter(PF_TIP_MS);
+  presentPhotoTip('help', html, manual ? 0 : fig ? PF_TIP_MS : 6500);
+  pfTipManual = manual;
 }
 
-const pfAutoShown = new Set(); // once per figure for this page visit, including entry through Tab
-let pfShown = false, pfTipFor = null, pfTipT = 0, pfTipUsed = false;
-export const photoHelpAvailable = () => pfShown && pfTip.dataset.visible !== 'true';
+const pfAutoShown = new Set(); // discovery once per input family, never again for each Tab or refocus
+let pfShown = false, pfTipFor = null, pfTipT = 0, pfTipManual = false;
+export const photoHelpAvailable = () => pfShown;
 export function syncAvatars() {
   const active = PHOTO.on ? PHOTO.id : '';
   for (const b of pfButtons) {
@@ -87,15 +100,13 @@ export function syncAvatars() {
         b.title = pfHelp.textContent;
       }
     }
-    if (fig && !pfAutoShown.has(active)) {
-      pfAutoShown.add(active);
-      showPhotoHelp(); // a newly discovered figure gets its own reading time
-    } else if (fig) {
-      clearPhotoTip();
-      pfTip.innerHTML = `<strong>Ara mous ${active === DRAC.id ? 'el Drac' : 'la Mulassa'}.</strong>`;
-      pfTip.hidden = false; pfTip.dataset.visible = 'true';
-      fadePhotoTipAfter(2000);
-    } else if (pfShown) showPhotoHelp();
+    const family = COARSE.matches ? 'touch' : fig ? 'figure' : 'view';
+    if (pfShown && !pfAutoShown.has(family)) {
+      pfAutoShown.add(family);
+      showPhotoHelp(false);
+    } else if (pfShown) {
+      presentPhotoTip('notice', `<strong>${fig ? `Ara mous ${active === DRAC.id ? 'el Drac' : 'la Mulassa'}` : 'Vista lliure'}</strong>`, 1800);
+    }
     else clearPhotoTip();
   }
 }
@@ -122,32 +133,28 @@ export function takeFigure(id) {
   if (!id) setPhotoControl(false);
   else if (!PHOTO.on || PHOTO.id !== id) setPhotoControl(true, id, true);
   syncAvatars();
-  if (PHOTO.on && pfButtons.includes(document.activeElement)) {
-    pfTip.innerHTML = `<strong>Ara mous ${PHOTO.id === DRAC.id ? 'el Drac' : 'la Mulassa'}.</strong><small>Ves a la plaça per moure la figura.<br>Tab: recorre els controls · Enter o Espai: tria.</small>`;
-    pfTip.hidden = false; pfTip.dataset.visible = 'true'; fadePhotoTipAfter(PF_TIP_MS);
-  }
 }
 // A mouse or touch choice hands the keys to the world at once (keyboard activation keeps the focus on the button)
 for (const b of pfButtons) b.addEventListener('click', e => { takeFigure(b.dataset.id); if (e.detail && PHOTO.on && hud.tabIndex >= 0) hud.focus({ preventScroll: true }); });
 COARSE.addEventListener?.('change', () => showAvatars(pfShown)); // DevTools device mode, a tablet's keyboard dock
 
-// The first movement/action key gives the player one more second; repeats never postpone dismissal.
+// Using a figure immediately clears discovery help, including an already-held movement key.
 // ? (or the existing help button) always reopens the current figure's instructions.
 addEventListener('keydown', e => {
-  if (e.repeat || e.ctrlKey || e.altKey || e.metaKey || !pfShown) return;
+  if (e.ctrlKey || e.altKey || e.metaKey || !pfShown) return;
   if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target?.tagName) || e.target?.isContentEditable) return;
-  if (e.key === '?') { e.preventDefault(); showPhotoHelp(); return; }
-  if (['KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyE', 'KeyQ'].includes(e.code) && pfTip.dataset.visible === 'true' && !pfTipUsed) {
-    pfTipUsed = true;
-    fadePhotoTipAfter(1000);
+  if (e.key === '?') { e.preventDefault(); if (!e.repeat) showPhotoHelp(); return; }
+  if (PHOTO.on && (e.target === hud || e.target?.tagName === 'BODY') && ['KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyE', 'KeyQ', 'KeyR', 'Space', 'ShiftLeft', 'ShiftRight'].includes(e.code) && pfTip.dataset.kind === 'help' && !pfTipManual) {
+    clearPhotoTip();
   }
 });
 // Keep Escape's instruction true while the browser owns the pointer.
 document.addEventListener('pointerlockchange', () => {
   const escape = pfTip.querySelector('[data-photo-escape]');
-  if (escape) escape.textContent = lookLocked() ? 'allibera el ratolí' : 'deixa de moure la figura';
+  if (escape) escape.textContent = lookLocked() ? 'allibera el ratolí' : 'torna a mirar';
   const fig = pfShown && PHOTO.on && PF_FIGS.find(([f]) => f.id === PHOTO.id);
   if (fig) pfHelp.textContent = photoHelpDescription(fig);
 });
-hud.addEventListener('focus', () => { if (pfShown && PHOTO.on) showPhotoHelp(); });
 hud.addEventListener('blur', () => { if (pfShown) clearPhotoKeys(); });
+addEventListener('blur', () => { if (pfShown) clearPhotoTip(); });
+document.addEventListener('visibilitychange', () => { if (document.hidden && pfShown) clearPhotoTip(); });

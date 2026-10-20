@@ -37,6 +37,7 @@ export function setupFreeMusic({ eye, onSound }) {
   eye.after(btn, menu, now);
   const rows = [...menu.querySelectorAll('.fm-row')];
   let shown = false, open = false, cur = 0, playing = -1, loading = -1, failed = -1, token = 0, preT = 0, nowT = 0;
+  const contextChanged = () => { if (shown) render(); };
 
   function render() {
     btn.innerHTML = (cur === FM_OFF ? FM_MUTE : FM_NOTE) + '<span class="fm-dot"></span>';
@@ -45,11 +46,12 @@ export function setupFreeMusic({ eye, onSound }) {
     btn.title = `Música: ${tracks[cur].title} (M)`; btn.setAttribute('aria-label', btn.title);
     rows.forEach((r, i) => {
       r.setAttribute('aria-checked', String(i === cur)); r.tabIndex = i === cur ? 0 : -1;
-      r.querySelector('small').textContent = i === loading ? 'Carregant…' : i === failed ? 'No s’ha pogut carregar' : tracks[i].sub;
+      const paused = i === cur && i !== FM_OFF && chip?.ctx?.state !== 'running';
+      r.querySelector('small').textContent = i === loading ? 'Carregant…' : i === failed ? 'No s’ha pogut reproduir' : paused ? 'Toca per reprendre' : tracks[i].sub;
       const st = r.querySelector('.fm-st');
       st.replaceChildren();
       if (i === loading) st.append(mulaSpinner(document, { mini: true }));
-      else if (i === cur && i !== FM_OFF) st.innerHTML = '<span class="fm-bars"><i></i><i></i><i></i></span>';
+      else if (i === cur && i !== FM_OFF && !paused && i !== failed) st.innerHTML = '<span class="fm-bars"><i></i><i></i><i></i></span>';
     });
   }
   function place() { // on show and resize only: the eye stays put while the free mode lasts
@@ -58,12 +60,12 @@ export function setupFreeMusic({ eye, onSound }) {
     Object.assign(btn.style, { left: `${x}px`, top: `${r.top}px`, width: `${r.width}px`, height: `${r.height}px` });
     Object.assign(menu.style, { left: `${left}px`, top: `${r.bottom + 12}px`, width: `${w}px` });
     menu.style.setProperty('--arrow', `${x + r.width / 2 - left - 8}px`);
-    Object.assign(now.style, { left: `${Math.max(12, Math.min(innerWidth - 292, x))}px`, top: `${r.bottom + 12}px` });
   }
   function announce() {
-    now.innerHTML = `<span class="fm-art">${tracks[cur].art}</span><span><small>Ara sona</small><b>${tracks[cur].title}</b></span>`;
-    now.dataset.kind = tracks[cur].kind; now.hidden = false;
-    clearTimeout(nowT); nowT = setTimeout(() => { now.hidden = true; }, FM_NOW_MS);
+    const status = cur === FM_OFF ? 'Música aturada' : chip?.running ? 'Ara sona' : 'Toca per reprendre';
+    now.innerHTML = `<span class="fm-art">${tracks[cur].art}</span><span><small>${status}</small><b>${tracks[cur].title}</b></span>`;
+    now.dataset.kind = tracks[cur].kind; now.hidden = false; now.dataset.visible = 'true'; now.setAttribute('aria-hidden', 'false');
+    clearTimeout(nowT); nowT = setTimeout(() => { now.dataset.visible = 'false'; now.setAttribute('aria-hidden', 'true'); }, FM_NOW_MS);
   }
   function settle(i) { // the choice took: list, button, toast
     loading = -1; cur = i;
@@ -76,23 +78,23 @@ export function setupFreeMusic({ eye, onSound }) {
     const t = tracks[i];
     if (!chip?.radioLoad) return; // no engine yet (tests, a page without Web Audio)
     if (!t.song) { playing = -1; chip?.radio(null); if (!menuMusic) { setMenuSound(true); onSound(); } settle(i); return; }
-    if (i === playing && !auto) { setOpen(false); return; } // already sounding: no restart
+    if (i === playing && !auto) { loading = -1; chip.wake(); setOpen(false); render(); return; } // resume the same source, never restart it
     const mine = token;
     loading = i; render();
     chip.radioLoad(t.song.audio).then(buf => {
       if (mine !== token || !shown) return;
+      chip.radio(buf, { end: t.song.tail, onEnd: () => { playing = -1; if (shown && loading < 0) pick(nextTrack(i), true); } });
       playing = i;
-      chip.radio(buf, { end: t.song.tail, onEnd: () => { playing = -1; if (shown) pick(nextTrack(i), true); } });
       if (!menuMusic) { setMenuSound(true); onSound(); }
       chip.radioKeep([t.song.audio]);
       const next = tracks[nextTrack(i)].song; // ready by the time this one ends, without two songs held all along
       if (next) preT = setTimeout(() => chip.radioLoad(next.audio).catch(() => {}), Math.max(0, t.song.tail - FM_PRELOAD) * 1000);
       settle(i);
-    }, e => {
+    }).catch(e => {
       if (mine !== token) return;
       errors.report('radio-load-failed', audioFailureTags(e));
       loading = -1; failed = i;
-      if (auto) pick(0); else render(); // the song that was on keeps playing
+      if (auto || playing < 0) pick(0); else render(); // keep a sounding song; if it ended during this load, restore the menu
     });
   }
   function setOpen(on) {
@@ -100,7 +102,7 @@ export function setupFreeMusic({ eye, onSound }) {
     open = on; menu.hidden = !on; btn.setAttribute('aria-expanded', String(on));
     if (on) {
       clearPhotoKeys(); // stops her and drops the mouse look (its pointer lock goes with it: ui/mouse-look.js)
-      now.hidden = true; render();
+      clearTimeout(nowT); now.hidden = true; now.dataset.visible = 'false'; now.setAttribute('aria-hidden', 'true'); render();
       rows[cur].focus({ preventScroll: true });
     } else if (menu.contains(document.activeElement)) {
       if (PHOTO.on) hud.focus({ preventScroll: true }); // the keys drive her again
@@ -136,9 +138,10 @@ export function setupFreeMusic({ eye, onSound }) {
     visible(on) { // ui/controls.js setView: entering starts on what already sounds; leaving fades back to the menu loop
       if (on === shown) return;
       shown = on; btn.hidden = !on;
-      if (on) { cur = menuMusic ? 0 : FM_OFF; failed = -1; place(); render(); return; }
+      if (on) { chip?.ctx?.addEventListener?.('statechange', contextChanged); cur = menuMusic ? 0 : FM_OFF; failed = -1; place(); render(); return; }
+      chip?.ctx?.removeEventListener?.('statechange', contextChanged);
       setOpen(false); token++; clearTimeout(preT); clearTimeout(nowT); now.hidden = true; loading = -1;
-      if (playing >= 0) { playing = -1; chip?.radio(null); }
+      playing = -1; chip?.radio?.(null); // ended may have cleared the source while the next track is still decoding
       chip?.radioKeep?.([]);
     },
     beat() { // the plaça claps on the playing song's beats (main.js → animCrowd); null: the menu's own beat

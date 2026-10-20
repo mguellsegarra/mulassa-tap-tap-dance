@@ -372,7 +372,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
   }
   // ↑↓ jump between the screen's rows like a game menu: the corner buttons, pills, info tiles, «Aviat», figures or levels,
   // footer buttons; ←→ walk the corner row (left to right as drawn).
-  const corner = ['leaders', 'viewmode', 'feedback', 'music', 'settings'].map($).filter(Boolean);
+  const corner = ['leaders', 'viewmode', 'music', 'feedback', 'settings'].map($).filter(Boolean);
   const cornerRow = { contains: el => corner.includes(el) };
   const rows = [cornerRow, towns, $('select-info'), pending, strip, levels, root.querySelector('.sel-footer')];
   const usable = el => el && !el.disabled && !el.closest('[hidden]') && el.getClientRects().length > 0; // fixed corners have no offsetParent

@@ -1,12 +1,12 @@
 import assert from 'node:assert/strict';
 import * as THREE from 'three';
-import { CATALOGUE, buildFigure, disposeFigure } from '../src/dev/representation/models.js';
-import { pose, timeAtDistance, palmLocal } from '../src/dev/representation/pose.js';
-import { crowdMotion, animatePerson } from '../src/dev/representation/live-pose.js';
+import { CATALOGUE, buildFigure, disposeFigure } from '../src/scene/representation/models.js';
+import { pose, timeAtDistance, palmLocal } from '../src/scene/representation/pose.js';
+import { crowdMotion, animatePerson } from '../src/scene/representation/live-pose.js';
 import { buildHelper, poseHelper, MULA_HELPER_LOOKS, ARM } from '../src/scene/models/colla.js';
-import { reviewAttendant, linkRolePose, followRolePose } from '../src/dev/representation/role-models.js';
+import { reviewAttendant, linkRolePose, followRolePose } from '../src/scene/representation/role-models.js';
 import { settleDrawnCrowd } from '../src/scene/crowd-contact.js';
-import { buildPublicSpecs } from '../src/dev/representation/population.js';
+import { buildPublicSpecs } from '../src/scene/representation/population.js';
 
 const hand = (p, i) => palmLocal(p, i).applyMatrix4(p.g.matrixWorld);
 let baselineJump = 0, fixedJump = 0, caneError = 0;
@@ -57,7 +57,7 @@ assert(caneError<.005,`final held cane stays on ground: ${caneError}`);
  assert(Math.hypot(a.g.position.x,a.g.position.z)>=a.rad+wall.rad-1e-9,'static backdrop must stop the drawn person');
  const c=make(0),d=make(.2);c.g.position.x=0;d.g.position.x=.05;c.fall=d.fall=1;
  for(let f=0;f<120;f++){const x0=[c.g.position.clone(),d.g.position.clone()];settleDrawnCrowd([c,d],[wall],2.5/60);
-  assert(c.g.position.distanceTo(x0[0])<=2.5/60+1e-9&&d.g.position.distanceTo(x0[1])<=2.5/60+1e-9,'a deep overlap never jumps a drawn person');}
+  assert(c.g.position.distanceTo(x0[0])<=2*2.5/60+1e-9&&d.g.position.distanceTo(x0[1])<=2*2.5/60+1e-9,'a deep overlap never jumps a drawn person');}
  assert(c.g.position.distanceTo(d.g.position)>=c.rad+d.rad+.8-1e-6,'the capped correction still separates them within two seconds');
 }
 {

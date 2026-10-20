@@ -79,7 +79,7 @@ canvas { position: fixed; left: 0; top: 0; width: 100%; height: 100vh; height: 1
 /* wrong orientation (phones: portrait only; tablets: landscape only): a cover over everything, the song pauses */
 #rotate { display: none; position: fixed; inset: 0; z-index: 50; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 24px; background: var(--page-edge); color: #fff3d6; font: 800 22px/1.3 'Baloo 2', system-ui, sans-serif; text-align: center; }
 #rotate svg { width: 64px; height: 64px; fill: none; stroke: #f5c518; stroke-width: 1.6; stroke-linecap: round; animation: rotate-hint 1.6s ease-in-out infinite; }
-body.wrong-orient #rotate { display: flex; }
+body.wrong-orient:not(.view-mode) #rotate { display: flex; } /* the free camera works in either orientation; play keeps its cover */
 body.wrong-orient dialog[open], body.wrong-orient dialog::backdrop { display: none; } /* a modal sheet (the pause) lives in the top layer, over the cover: back when upright */
 #rotate b::after { content: 'Gira el mòbil en vertical per jugar'; }
 @media (min-width: 600px) and (min-height: 600px) { #rotate b::after { content: 'Gira la tauleta en horitzontal per jugar'; } #rotate svg { animation-direction: reverse; } }

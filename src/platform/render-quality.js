@@ -74,8 +74,12 @@ export function frameMonitor(onSlow) {
   let elapsed = 0, samples = 0, slow = 0, warmup = 2000, clock = 0, n = 0, spiky = false;
   let run = 0, runSlow = 0, capped = false; // runSlow: this window's slow frames of the current run
   const spikes = new Float64Array(SPIKE.count); // when the last few spikes happened (monitor time, ring buffer)
-  return (ms, play = true) => {
-    if (ms <= 0 || ms > 1000) { elapsed = samples = slow = n = run = runSlow = 0; spiky = capped = false; return; }
+  const reset = (settle = true) => {
+    elapsed = samples = slow = n = run = runSlow = 0; spiky = capped = false;
+    if (settle) warmup = 2000;
+  };
+  const monitor = (ms, play = true) => {
+    if (ms <= 0 || ms > 1000) { reset(false); return; }
     clock += ms;
     const inCap = ms >= CAP.lo && ms <= CAP.hi, was = capped;
     run = inCap ? run + 1 : 0;
@@ -92,10 +96,12 @@ export function frameMonitor(onSlow) {
     if (capped && !was) { slow -= runSlow; runSlow = 0; } // the run that showed the cap was its pace, not misses
     if (elapsed >= 4000) {
       const share = samples >= 8 ? slow / samples : 0;
-      if (share > SLOW_SHARE || spiky) { onSlow(share > 0.8 ? 2 : 1); warmup = 2000; n = 0; } // way too slow: two steps
+      if (share > SLOW_SHARE || spiky) { onSlow(share > 0.8 ? 2 : 1, { slowShare: share, spiky, window: elapsed, samples, capped }); warmup = 2000; n = 0; } // way too slow: two steps
       elapsed = samples = slow = runSlow = 0; spiky = false;
     }
   };
+  monitor.reset = reset;
+  return monitor;
 }
 // The HUD canvas is cleared and redrawn every frame: its backing store is capped by a pixel budget (an iPad Pro at
 // DPR 2 would be 5.6 Mpx; at 2.5 Mpx it is drawn at ~1.35x, still crisp) instead of always at the screen's DPR.
@@ -155,6 +161,9 @@ export function framePacer(opts) {
     return true;
   };
   Object.assign(pace, { hz: 60, fps: 60, half: false, lowPower: false });
+  pace.reset = () => {
+    d.fill(Infinity); i = n = prev = good = winN = winSlow = 0; start = -1; lastDraw = -1e9;
+  }; // no hidden/resize time or old refresh samples in the next cadence window; retain anti-oscillation history
   return pace;
 }
 // The song clock the frames are drawn on. The Web Audio clock (ctx.currentTime, so Chip.now()) only moves when the

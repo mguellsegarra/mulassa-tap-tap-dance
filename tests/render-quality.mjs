@@ -1,6 +1,9 @@
 import './fps.mjs';
+import './finale-effects.mjs';
+import './adaptive-quality.mjs';
 import './photo-control.mjs';
 import { verifyJumpImpact } from './jump-impact.mjs';
+import { verifyManualSway } from './manual-sway.mjs';
 import { verifyCarretillesCounter } from './carretilles-counter.mjs';
 import { v1Song } from './v1-song.mjs';
 import { referenceScore } from '../tools/reference-score.mjs';
@@ -2679,7 +2682,7 @@ console.log('view mode ok');
     var qualityCompiles = 0, qualityDpr = 0;
     renderer.compileAsync = () => { qualityCompiles++; return Promise.resolve(); };
     renderer.setPixelRatio = dpr => { qualityDpr = dpr; };
-    for (let i = 0; i < 400; i++) monitorFrames(1000 / 20, false);`);
+    for (let i = 0; i < 400; i++) monitorFrames(1000 / 20, 10, pace, false);`);
   assert.equal(run('qualityLevel'), -1, 'slow frames reach the minimal floor');
   assert.equal(run('renderProfile.name'), 'minimal', 'the scene profile follows the downgrade');
   assert.equal(run('qualityDpr'), run('renderDpr(renderProfile, sizedW, sizedH, devicePixelRatio)'), 'resize applies the lower DPR');
@@ -2694,7 +2697,7 @@ console.log('view mode ok');
   assert.equal(run('qualityLevel'), -1, 'visibility and BFCache resume retain the session level');
   assert.equal(run('renderer'), rendererBefore, 'resume does not recreate the WebGL context');
   context.localStorage = new Proxy({}, { get() { throw new Error('storage blocked'); } });
-  run('qualityLevel = 1; for (let i = 0; i < 400; i++) monitorFrames(1000 / 20, false);');
+  run('qualityLevel = 1; for (let i = 0; i < 400; i++) monitorFrames(1000 / 20, 10, pace, false);');
   assert.equal(run('qualityLevel'), -1, 'adaptation also works with blocked storage');
   console.log('session-only quality recovery ok');
 }
@@ -2855,7 +2858,7 @@ console.log('view mode ok');
   console.log('selector pair: both playable figures, pending, repeated controls/free view and intact HUD return ok');
 }
 
-// Mouse look while driving (src/ui/mouse-look.js): a held button locks the pointer, the look reads movementX past any
+// Mouse look while driving (src/ui/mouse-look.js): held RMB locks the pointer, the look reads movementX past any
 // edge, and every way out (letting go, the browser's Escape, blur, Tab, a sheet, leaving) unlocks with no stray look.
 // A mock lock: this proves the state machine, not a real hidden cursor (that is the browser QA).
 {
@@ -2867,10 +2870,10 @@ console.log('view mode ok');
   document.exitPointerLock = () => { calls.exit++; if (document.pointerLockElement) { document.pointerLockElement = null; change(); } };
   const grant = () => { document.pointerLockElement = hud; change(); };
   const ev = (more = {}) => ({ pointerId: 7, pointerType: 'mouse', button: 2, buttons: 2, clientX: 5, clientY: 5, movementX: 0, movementY: 0, preventDefault() {}, ...more });
-  const up = (more = {}) => (windowHandlers.pointerup || []).forEach(h => h(ev({ buttons: 0, ...more })));
+  const up = (more = {}) => (windowHandlers.mouseup || []).forEach(h => h(ev({ buttons: 0, ...more })));
   const key = code => { let prevented = false; for (const h of keyHandlers) h({ code, target: { tagName: 'BODY' }, preventDefault() { prevented = true; } }); return prevented; };
   run(`G.state = 'select'; setFigureSong(MULASSA); setView(false); setView(true); takeFigure('mulassa-valls'); PHOTO.cameraYaw = 0;`);
-  hud.listeners.pointerdown(ev());
+  hud.listeners.pointerdown(ev()); hud.listeners.mousedown(ev());
   assert(calls.lock === 1 && calls.capture.length === 0 && run('PHOTO.mouse === 2'), 'a right press asks for the lock, no capture');
   grant();
   hud.listeners.pointermove(ev({ buttons: 0, movementX: 190 })); // the lock's first move can jump (Firefox's own also says buttons 0): dropped
@@ -2882,12 +2885,12 @@ console.log('view mode ok');
   assert(run('Math.abs(PHOTO.cameraYaw + 40 * 150 * 0.003) < 1e-9'), 'the look keeps turning on movementX, past where any cursor would stop');
   up();
   assert(!document.pointerLockElement && run('PHOTO.mouse === 0 && PHOTO.on'), 'letting go unlocks and ends the look');
-  hud.listeners.pointerdown(ev()); grant(); hud.listeners.pointermove(ev()); // (the lock's first move)
+  hud.listeners.pointerdown(ev()); hud.listeners.mousedown(ev()); grant(); hud.listeners.pointermove(ev()); // (the lock's first move)
   hud.listeners.pointermove(ev({ buttons: 0, movementX: 0 })); // Firefox's own still move while locked: no button, no motion
   assert(document.pointerLockElement === hud && run('PHOTO.mouse === 2'), 'a still no-button move keeps the lock');
   hud.listeners.pointermove(ev({ buttons: 0, movementX: 6 })); run('updateControls();'); // its pointerup went missing
   assert(!document.pointerLockElement && run('PHOTO.mouse === 0'), 'a move with no button down ends a lock whose pointerup was lost');
-  hud.listeners.pointerdown(ev()); grant(); key('ShiftLeft'); key('KeyW'); key('KeyE');
+  hud.listeners.pointerdown(ev()); hud.listeners.mousedown(ev()); grant(); key('ShiftLeft'); key('KeyW'); key('KeyE');
   document.pointerLockElement = null; change(); // the browser's Escape
   assert(run('PHOTO.mouse === 0 && !PHOTO.keys.size && PHOTO.mula.sprint === 0'), 'browser Escape without keydown releases the drag, Shift and actions');
   assert(key('Escape') && run('PHOTO.on'), 'the Escape that freed the cursor does not also drop the figure');
@@ -2895,20 +2898,20 @@ console.log('view mode ok');
   hud.listeners.pointermove(ev({ movementX: 80 })); up();
   assert.equal(run('PHOTO.cameraYaw'), yaw, 'no stray look after a browser unlock, button still down');
   run('performance.now = () => 1000');
-  hud.listeners.pointerdown(ev()); up(); grant(); // let go before the lock came
+  hud.listeners.pointerdown(ev()); hud.listeners.mousedown(ev()); up(); grant(); // let go before the lock came
   assert(!document.pointerLockElement, 'a late lock is handed straight back');
   answer = () => Promise.reject(new Error('refused')); calls.capture.length = 0;
-  hud.listeners.pointerdown(ev()); await Promise.resolve(); await Promise.resolve();
+  hud.listeners.pointerdown(ev()); hud.listeners.mousedown(ev()); await Promise.resolve(); await Promise.resolve();
   assert.deepEqual(calls.capture, [7], 'refused: the old pointer capture while the button is held'); up();
   answer = () => undefined; calls.capture.length = 0; // Firefox: no promise, an event
-  hud.listeners.pointerdown(ev()); document.listeners.pointerlockerror();
+  hud.listeners.pointerdown(ev()); hud.listeners.mousedown(ev()); document.listeners.pointerlockerror();
   assert.deepEqual(calls.capture, [7]); up();
   answer = () => Promise.resolve();
   for (const [what, leave] of [['blur', () => windowHandlers.blur.forEach(h => h())], ['Tab', () => key('Tab')],
     ['a sheet', () => run('settingsMenu.open = true; updateControls(); settingsMenu.open = false;')], ['Escape back to looking', () => run('stopControl(); syncAvatars();')]]) {
     if (!run('viewMode')) run('setView(true);');
     if (!run('PHOTO.on')) run("takeFigure('mulassa-valls');");
-    hud.listeners.pointerdown(ev()); grant();
+    hud.listeners.pointerdown(ev()); hud.listeners.mousedown(ev()); grant();
     leave();
     run('updateControls();');
     assert(!document.pointerLockElement && run('PHOTO.mouse === 0'), `${what} unlocks`);
@@ -2957,14 +2960,16 @@ console.log('view mode ok');
   run("takeFigure('drac-valls');");
   assert(run("PHOTO.on && PHOTO.id === 'drac-valls' && PHOTO.pair"), 'a frame takes that figure');
   assert(run('!pfTip.hidden && pfTip.dataset.visible === "true" && pfTip.innerHTML.includes("rugeix")'), 'Drac notice describes its real actions');
-  assert([...photoTimers.values()].some(t => t.ms === 7000), 'notice stays for seven seconds and can be replayed');
+  assert([...photoTimers.values()].some(t => t.ms === 6000), 'initial controls stay for at most six seconds');
   const firstNoticeTimer = run('pfTipT');
   photoTimers.get(firstNoticeTimer).fn(); // the first figure's help has already disappeared
   assert(keyDown('Tab') && run("PHOTO.id === 'mulassa-valls'"), 'Tab switches only while driving');
   assert(!photoTimers.has(firstNoticeTimer), 'switching cancels the previous notice timer');
-  assert(run('!pfTip.hidden && pfTip.dataset.visible === "true"'), 'first Tab entry into another figure opens its own automatic help');
-  assert.equal(photoTimers.get(run('pfTipT')).ms, 7000, 'each new figure gets the full initial reading time');
-  assert(run('pfTip.innerHTML.includes("guitza") && !pfTip.innerHTML.includes("rugeix")'), 'switch replaces help with Mulassa actions');
+  assert(run('pfTip.dataset.kind === "notice" && !pfTip.innerHTML.includes("pf-help-grid")'), 'Tab changes actor with compact feedback even on its first visit');
+  assert.equal(photoTimers.get(run('pfTipT')).ms, 1800, 'actor feedback is brief');
+  keyDown('KeyW', { target: nodes.get('hud') });
+  assert(run('pfTip.dataset.visible === "true"') && photoTimers.get(run('pfTipT')).ms === 1800, 'movement preserves brief actor feedback');
+  assert(run('pfHelp.textContent.includes("guitza") && !pfHelp.textContent.includes("rugeix")'), 'accessible controls follow the current actor');
   photoTimers.get(run('pfTipT')).fn();
   assert(run('pfTip.dataset.visible === "false" && pfHelp.textContent.includes("guitza")'), 'after fade the accessible help remains');
   keyDown('Tab');
@@ -2976,11 +2981,28 @@ console.log('view mode ok');
   keyDown('Tab');
   assert(run('!pfTip.innerHTML.includes("pf-help-grid")'), 'switching replaces full help with compact feedback');
   keyDown('Tab'); keyDown('Slash', { key: '?' });
-  keyDown('KeyW');
+  assert(run('pfTipManual'), 'manual help stays available for deliberate reading');
+  const manualNoticeTimer = run('pfTipT');
+  keyDown('KeyW', { target: nodes.get('hud') });
+  assert(!photoTimers.has(manualNoticeTimer) && run('pfTip.dataset.visible === "true"'), 'movement does not time out manual help');
+  keyDown('Slash', { key: '?' });
+  assert(run('pfTip.dataset.visible === "false"'), 'the same shortcut closes manual help');
+  run('showPhotoHelp(false);');
+  keyDown('KeyX');
+  keyDown('KeyW', { target: { tagName: 'BUTTON' } });
+  assert(run('!pfTip.hidden'), 'unrelated keys and focused buttons do not dismiss movement instructions');
+  keyDown('KeyW', { target: nodes.get('hud') });
   const usedNoticeTimer = run('pfTipT');
-  assert.equal(photoTimers.get(usedNoticeTimer).ms, 1000, 'first movement key dismisses help after one second');
+  assert(run('pfTip.hidden && pfTip.dataset.visible === "false"'), 'movement clears initial help immediately');
+  assert(!photoTimers.has(usedNoticeTimer), 'movement cancels the initial help timer');
   keyDown('KeyA'); keyDown('KeyW', { repeat: true });
-  assert.equal(run('pfTipT'), usedNoticeTimer, 'further movement and held keys do not postpone dismissal');
+  assert(!photoTimers.has(usedNoticeTimer) && run('pfTip.hidden'), 'further movement never queues another dismissal');
+  for (const code of ['KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyQ', 'KeyE', 'KeyR', 'Space', 'ShiftLeft', 'ShiftRight']) {
+    run('showPhotoHelp(false);');
+    keyDown(code, { target: nodes.get('hud'), repeat: true });
+    assert(run('pfTip.hidden'), `${code} also clears discovery help when already held`);
+    assert(!photoTimers.has(run('pfTipT')), 'held input leaves no obsolete notice timer');
+  }
   assert(run('pfTip.innerHTML.includes("Mulassa de Valls")'), 'popup uses the catalog full name');
 
   run("takeFigure('mulassa-valls');");
@@ -2990,6 +3012,12 @@ console.log('view mode ok');
   assert(run('!howtoEl.hidden && !howtoEl.inert'), 'after feedback fades the existing help button returns');
   run('showPhotoHelp();');
   assert(run('pfTip.dataset.visible === "true" && pfTip.innerHTML.includes("rugeix")'), 'help button reopens the active figure instructions');
+  assert(run('photoHelpAvailable()'), 'the help control stays available to close manual help');
+  windowHandlers.blur.forEach(h => h());
+  assert(run('pfTip.hidden && pfTip.dataset.visible === "false" && !pfTipManual'), 'backgrounding clears manual help instead of resuming a stale overlay');
+  assert(!photoTimers.has(run('pfTipT')), 'backgrounding cancels the owned notice timer');
+  run('showPhotoHelp();');
+  assert(run('pfTip.dataset.visible === "true"'), 'help can be requested again after backgrounding');
   run("takeFigure(''); takeFigure('mulassa-valls');");
 
   run("takeFigure('mulassa-valls'); takeFigure('');");
@@ -3198,9 +3226,9 @@ console.log('view mode ok');
   assert(run('photoJump>.5 && M.air===0'), 'Space jumps and lands without accumulating lift');
   run(`photoKey({code:'Tab',preventDefault(){}},true); setTrauma(0); var dracUp=0, dracShake=0, booms=0, dracFire=0; chip={menu(){},sfx(k){if(k==='gran')booms++;}};
     photoKey({code:'Space',preventDefault(){}},true);
-    for(let i=0;i<90;i++){clock+=1/60;animMula(1/60,clock/BEAT);dracUp=Math.max(dracUp,drac.root.parent.position.y);dracShake=Math.max(dracShake,trauma);dracFire=Math.max(dracFire,DRAC_POSE.fire);}`);
+    for(let i=0;i<90;i++){clock+=1/60;animMula(1/60,clock/BEAT);dracUp=Math.max(dracUp,drac.root.parent.position.y);dracShake=Math.max(dracShake,Math.abs(manualLandingStrength()));dracFire=Math.max(dracFire,DRAC_POSE.fire);}`);
   assert(run('dracUp>.5 && drac.root.parent.position.y===0 && M.air===0'), 'Space jumps the whole Drac (not her) and lands it');
-  assert(run('dracShake>.8 && booms===0'), 'its selector landing stays silent and still shakes the plaça');
+  assert(run('dracShake===.9 && booms===0'), 'its manual landing stays silent with the original Drac strength');
   assert(run('dracFire>2 && PHOTO.drac.fire===0'), 'it breathes fire as it takes off, and the flame dies away');
   run(`setView(false); animMula(1/60,clock/BEAT); chip=null; setTrauma(0);`);
   console.log('photo Space jumps for both figures; silent Drac landing preserves the shake ok');
@@ -3335,6 +3363,7 @@ console.log('view mode ok');
 }
 
 verifyJumpImpact(run, assert);
+verifyManualSway(run, assert);
 
 {
   const savedTimer = context.setTimeout, timers = [];

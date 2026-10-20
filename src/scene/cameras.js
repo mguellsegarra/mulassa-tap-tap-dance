@@ -6,7 +6,7 @@ import { plaza, camFocus, FRONT, camShift, camShiftX, camera, CAM_AZ, CAM_EL, ca
 import { playStage } from '../hud/layout.js';
 import { figureScale, selectedFigure } from '../game/figure-song.js';
 import { DRAC } from '../game/figures.js';
-import { M } from './mula-motion.js';
+import { M, manualLandingStrength } from './mula-motion.js';
 import { CALM, CAMDRAC } from '../core/env.js';
 import { clock, G } from '../game/state.js';
 import { TAU } from '../core/anim.js';
@@ -19,7 +19,10 @@ export function clearCameraImpact() {
   impactCameraX = impactCameraY = 0;
 }
 export function applyCameraImpact(strength) {
-  const k = CALM.matches || G.paused ? 0 : strength * strength * (G.state === 'play' ? 0.35 : 1);
+  const manual = manualLandingStrength();
+  const closeScale = Math.min(1, camera.position.distanceTo(camFocus) / 6);
+  const k = CALM.matches || G.paused ? 0 : Math.max(
+    strength * strength * (G.state === 'play' ? 0.35 : 1), manual * manual * closeScale);
   impactCameraX = Math.sin(clock * 47) * 0.25 * k;
   impactCameraY = Math.sin(clock * 61) * 0.2 * k;
   camera.position.x += impactCameraX; camera.position.y += impactCameraY;

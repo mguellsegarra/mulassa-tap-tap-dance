@@ -1,7 +1,7 @@
 // Keep the band's instrument rig and the attendants' reference-led uniforms and gestures.
-import { buildPerson } from '../../scene/models/people.js';
-import { buildMusician } from '../../scene/models/band.js';
-import { buildHelper, MULA_HELPER_LOOKS } from '../../scene/models/colla.js';
+import { buildPerson } from '../models/people.js';
+import { buildMusician } from '../models/band.js';
+import { buildHelper, MULA_HELPER_LOOKS } from '../models/colla.js';
 import { buildFigure, disposeFigure } from './models.js';
 
 function prototypeBody(spec, headOnly = false) {

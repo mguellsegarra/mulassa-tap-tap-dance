@@ -14,7 +14,7 @@ const SHOW_ROOT = { x: 0, z: 0, yaw: 0 };
 export const turn = (a, b) => Math.atan2(Math.sin(a - b), Math.cos(a - b)); // a - b, the short way round
 // home: where it wanders round (world m), r: how far it may stray before it heads back
 export function newWalker(x = 0, z = 0, face = 0, r = 2) {
-  const w = { x, z, h: face, face, spin: 0, lb: -1, hx: x, hz: z, r, feet: null, manual: 0, gp: null, gb: null, lp: null, pr: 2, vx: 0, vz: 0, lx: x, lz: z, lface: face, returnPose: {}, local: [0, 1].map(() => ({ x: 0, z: 0, yaw: 0, lift: 0 })) };
+  const w = { x, z, h: face, face, spin: 0, lb: -1, hx: x, hz: z, r, feet: null, manual: 0, sway: 0, swayRoll: 0, swayLift: 0, gp: null, gb: null, lp: null, pr: 2, vx: 0, vz: 0, lx: x, lz: z, lface: face, returnPose: {}, local: [0, 1].map(() => ({ x: 0, z: 0, yaw: 0, lift: 0 })) };
   w.feetAt = () => w.local; // poseDrac's feet planner, for this walker
   return w;
 }
@@ -111,7 +111,13 @@ export function manualDracStep(w, out, dt, beat, body, scale, reduced) {
   // Tab may replace the other figure several metres away: do not drag the old planted shoes there.
   if (Math.hypot(w.x - body.x, w.z - body.z) > 0.15 + Math.hypot(body.vx, body.vz) * dt) w.feet = null; // (more than a frame's run)
   w.x = body.x; w.z = body.z; w.face = body.yaw; w.vx = body.vx; w.vz = body.vz;
-  const k = 1 - Math.exp(-dt / 0.22), moving = Math.min(1, Math.hypot(body.vx, body.vz));
+  const speed = Math.hypot(body.vx, body.vz), k = 1 - Math.exp(-dt / 0.22), moving = Math.min(1, speed);
+  const air = PHOTO.air && PHOTO.id === 'drac-valls'; // (its jump; a yielding Drac never takes the Mulassa's)
+  // The showcase's carried-shell roll, on the feet's continuous phase rather than its musical choreography.
+  // Remove last frame's contribution before relaxing the inherited pose: never accumulate or double the roll.
+  if (w.manual === 1) { out.roll -= w.swayRoll; out.lift -= w.swayLift; }
+  else w.sway = 0;
+  w.sway += ((air || body.roar ? 0 : reduced ? 0.2 : 1) - w.sway) * (1 - Math.exp(-dt / 0.16));
   for (const key in out) {
     if (key === 'beat' || key === 'practice') continue;
     const target = key === 'drive' ? (reduced ? 0 : moving * 0.35) : key === 'fire' && body.fire > 0 ? (reduced ? 0.9 : 3)
@@ -119,10 +125,18 @@ export function manualDracStep(w, out, dt, beat, body, scale, reduced) {
     out[key] += (target - out[key]) * k;
   }
   out.yaw = 0; out.practice = true; out.beat = beat;
+  const phase = air ? w.gp ?? beat : gait(w, beat, dt, speed);
+  // At rest the same phase follows the menu beat; travelling it follows the feet. No autonomous turns or travel.
+  // One slow weight transfer per two foot pairs; faster steps shorten the lean (4.6 -> 2.8 degrees).
+  w.swayRoll = Math.sin(Math.PI * phase) * 0.08 * w.sway / (1 + speed / 14);
+  // The dance's smooth knee dip, on this same phase. Lower the rigid shell, never scale it or move the soles.
+  const knee = (1 + Math.cos(TAU * phase)) / 2;
+  w.swayLift = -0.06 * knee * knee * w.sway / (1 + speed / 6);
+  out.roll += w.swayRoll;
+  out.lift += w.swayLift;
   w.manual = 1;
   for (const key in out) w.returnPose[key] = out[key];
-  const air = PHOTO.air && PHOTO.id === 'drac-valls'; // (its jump; a yielding Drac never takes the Mulassa's)
-  plant(w, out, air ? w.gp ?? beat : gait(w, beat, dt, Math.hypot(body.vx, body.vz)), scale, reduced ? 0 : moving, air);
+  plant(w, out, phase, scale, reduced ? 0 : moving, air);
   if (air) w.gb = beat;
 }
 export function resumeWalker(w, beat) {

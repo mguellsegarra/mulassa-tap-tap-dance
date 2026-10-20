@@ -1,6 +1,6 @@
 // Plays the Taiko arrangement (public/music/mulassa-taiko.mp3, tools/build_taiko.py) with a
 // sample-accurate clock, its ambient loop on the menu, crowd ambience and chiptune sfx on top.
-import { errorName } from '../services/errors.js';
+import { errors, errorName } from '../services/errors.js';
 const hz = m => 440 * 2 ** ((m - 69) / 12);
 // What the browser says it takes a sample to reach the speakers. Chip.now() and the sync calibration's
 // Clicker.heard() both subtract it, so the calibrated offset only holds the delay nobody reports.
@@ -131,7 +131,10 @@ export class Chip {
     return ready;
   }
 
-  resume() { try { Promise.resolve(this.ctx.resume?.()).catch(() => {}); } catch { /* closed/unavailable context: retry on the next gesture */ } } // InvalidStateError when the device won't start (another app holds it): the next gesture retries
+  resume() {
+    const failed = e => { errors.report('audio-resume-failed', audioFailureTags(e)); return false; };
+    try { return Promise.resolve(this.ctx.resume?.()).then(() => this.running, failed); } catch (e) { return Promise.resolve(failed(e)); }
+  } // a rejected wake stays paused; the next real gesture can resume the same transport
 
   wake() { // iOS: resume + a silent sample inside a real gesture, and play even with the ringer switch off
     if (document.hidden || !document.hasFocus()) return;
@@ -263,7 +266,7 @@ export class Chip {
     this.menuPending = token;
     ambient.then(async buf => {
       if (running) await running;
-      if (this.menuToken !== token || this.menuSrc || this.menuMusic === false) return; // menu left, reopened or muted while loading
+      if (this.menuToken !== token || this.menuPending !== token || this.menuSrc || this.menuMusic === false) return; // also invalidated when the radio takes over
       const src = ctx.createBufferSource(), g = ctx.createGain();
       src.buffer = buf; src.loop = true;
       src.loopStart = (this.menuUrls ?? this.urls)?.ambientLoop?.start ?? 0;
@@ -274,7 +277,7 @@ export class Chip {
       src.connect(g).connect(this.out);
       src.start(at);
       this.menuSrc = { src, g, t0: at }; // t0: menuBeat()'s origin
-    }).catch(() => { if (this.ambient === ambient) this.ambient = null; }).finally(() => { if (this.menuPending === token) this.menuPending = null; });
+    }).catch(e => { if (this.ambient === ambient) this.ambient = null; errors.report('menu-load-failed', audioFailureTags(e)); }).finally(() => { if (this.menuPending === token) this.menuPending = null; });
   }
   // The entrance and loop share a tempo; their combined file length is not the loop's period.
   // (the title logo's TAP TAP DANCE taps along)
@@ -308,7 +311,7 @@ export class Chip {
     const ctx = this.ctx, t = ctx.currentTime, old = this.radioSrc;
     this.radioSrc = null;
     if (old) { old.src.onended = null; old.g.gain.setTargetAtTime(0, t, 0.1); try { old.src.stop(t + 0.6); } catch { /* already over */ } }
-    if (!buf) { if (old && this.menuToken) this.menu(true, 0.6); return; }
+    if (!buf) { if (this.menuToken) this.menu(true, 0.6); return; } // natural ended already cleared radioSrc; the menu guard preserves a live loop
     if (!this.menuToken) return; // a run started while it loaded
     this.unlock();
     this.menuPending = null; this.menuFade(0.1);

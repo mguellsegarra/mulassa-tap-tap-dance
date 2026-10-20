@@ -90,6 +90,7 @@ key('KeyH'); tap(7); tap(8, { drag: true }); tap(9); assert(!run('viewMode'), 'c
 run('worldTap = null'); sheets.sync.open = true; tap(10); tap(11); assert(!run('viewMode'), 'sheets own input'); sheets.sync.open = false;
 run('worldTap = null'); $('settings').fire('pointerdown', event(12)); $('settings').fire('pointerup', event(12)); tap(13); assert(!run('viewMode'), 'DOM controls are not world taps');
 run('worldTap = null'); $('hud').fire('pointerdown', event(14)); $('hud').fire('pointerdown', event(15, 180, 350, { isPrimary: false })); $('hud').fire('pointerup', event(14)); tap(16); assert(!run('viewMode'), 'a second finger cancels the pair');
+for (const id of [14, 15]) for (const f of handlers.pointerup || []) f(event(id)); // both fingers leave before the next scenario
 run('worldTap = null; setView(true)'); state.state = 'play'; run('updateControls()'); assert(!run('viewMode') && $('viewmode').hidden && !$('select').inert, 'starting play restores UI and removes photo mode');
 // Cursor follows actionable canvas targets, including changes under a stationary mouse.
 ctx.buttonAt = e => e.clientX === 180 ? { x: 160, y: 330, w: 40, h: 40 } : null;
@@ -141,8 +142,11 @@ $('hud').fire('pointerleave', {}); assert.equal($('hud').style.cursor, '');
   const change = () => emit('pointerlockchange');
   $('hud').requestPointerLock = () => { doc.pointerLockElement = $('hud'); change(); };
   doc.exitPointerLock = () => { doc.pointerLockElement = null; change(); };
-  const mouse = (type, extra = {}) => $('hud').fire(type, event(77, 640, 400, { pointerType: 'mouse', button: 2, buttons: 2, movementX: 0, movementY: 0, ...extra }));
-  const release = () => emit('pointerup', { pointerType: 'mouse', pointerId: 77, buttons: 0 });
+  const mouse = (type, extra = {}) => {
+    const e = event(77, 640, 400, { pointerType: 'mouse', button: 2, buttons: 2, movementX: 0, movementY: 0, ...extra });
+    $('hud').fire(type, e); if (type === 'pointerdown') $('hud').fire('mousedown', e);
+  };
+  const release = () => emit('mouseup', { pointerType: 'mouse', pointerId: 77, buttons: 0 });
   for (const first of ['fire', 'look']) {
     state.state = 'select'; run("setView(true); setPhotoControl(true, 'drac-valls', false); PHOTO.cameraYaw = Math.PI; PHOTO.drac.yaw = 0;");
     if (first === 'fire') emit('keydown');
@@ -182,6 +186,98 @@ $('hud').fire('pointerleave', {}); assert.equal($('hud').style.cursor, '');
   assert(run('PHOTO.mouse === 0'), 'capture fallback still recovers a lost pointerup');
   run('setView(false)'); delete doc.exitPointerLock;
 }
+// RMB owns actor mouse look. Mouse chords have one pointerdown/up for the whole chord,
+// but one mousedown/up per button; movement.button is -1, buttons is the held bitmask.
+{
+  let locks = 0, captures = 0;
+  const emit = (type, e = {}) => { for (const f of handlers[type] || []) f({ target: $('hud'), preventDefault() {}, ...e }); };
+  const change = () => emit('pointerlockchange');
+  $('hud').requestPointerLock = () => { locks++; doc.pointerLockElement = $('hud'); change(); };
+  $('hud').setPointerCapture = () => captures++;
+  doc.exitPointerLock = () => { doc.pointerLockElement = null; change(); };
+  const mouse = (type, button, buttons, dx = 0) => $('hud').fire(type, event(91, 600, 300, { pointerType: 'mouse', button, buttons, movementX: dx, movementY: 0 }));
+  const up = (button, buttons) => emit('mouseup', { button, buttons });
+  const begin = (id, keys = []) => {
+    run(`setView(true); setPhotoControl(true, '${id}', false); PHOTO.cameraYaw = Math.PI; photoBody().yaw = 0;`);
+    keys.forEach(code => emit('keydown', { code }));
+  };
+  for (const id of ['mulassa-valls', 'drac-valls']) for (const keys of [[], ['KeyW'], ['KeyW', 'ShiftLeft']]) {
+    begin(id, keys);
+    for (const [button, buttons] of [[0, 1], [1, 4]]) {
+      const count = locks, yaw = run('photoBody().yaw'), camera = run('PHOTO.cameraYaw');
+      mouse('pointerdown', button, buttons); mouse('mousedown', button, buttons);
+      mouse('pointermove', -1, buttons, 100); run('movePhoto(1/60, () => Infinity)');
+      assert.equal(locks, count, `${id}/${keys}: button ${button} cannot request lock`);
+      assert.equal(run('PHOTO.mouse'), button === 0 ? 1 : 0);
+      assert.equal(run('PHOTO.cameraYaw'), camera - (button === 0 ? 0.3 : 0), 'LMB orbits; middle leaves the camera still');
+      assert.equal(run('photoBody().yaw'), yaw, 'LMB/middle cannot steer heading');
+      up(button, 0);
+    }
+    // LMB first, then RMB: there is deliberately no second pointerdown.
+    mouse('pointerdown', 0, 1); mouse('mousedown', 0, 1);
+    const count = locks; mouse('mousedown', 2, 3); mouse('pointermove', -1, 3); mouse('pointermove', -1, 3, 100);
+    assert.equal(locks, count + 1, 'RMB chord requests exactly one lock');
+    assert.equal(run('PHOTO.mouse'), 3, 'both held keep the existing forward gesture');
+    run('movePhoto(1/60, () => Infinity)'); assert(run('photoBody().yaw < 0'), 'RMB moves heading');
+    up(2, 1); assert(!doc.pointerLockElement && run('PHOTO.mouse === 1'), 'RMB up unlocks while LMB keeps orbiting');
+    mouse('pointermove', -1, 1, 80); assert.equal(run('PHOTO.mouse'), 1, 'held LMB remains an orbit without locking');
+    const orbitYaw = run('PHOTO.cameraYaw'), heading = run('photoBody().yaw'), lockedCount = locks;
+    mouse('pointermove', -1, 1, 80); run('movePhoto(1/60, () => Infinity)');
+    assert.equal(run('PHOTO.cameraYaw'), orbitYaw - 0.24, 'LMB resumes camera orbit after the unlock recenter');
+    assert.equal(run('photoBody().yaw'), heading, 'LMB after RMB release no longer steers the actor');
+    assert.equal(locks, lockedCount, 'continuing LMB orbit does not request another lock');
+    for (const code of keys) assert(run(`PHOTO.keys.has('${code}')`), 'normal unlock preserves held movement keys');
+    up(0, 0);
+    // RMB first, then LMB; release LMB first keeps RMB, release RMB ends it.
+    mouse('pointerdown', 2, 2); mouse('mousedown', 2, 2);
+    const one = locks; mouse('mousedown', 0, 3); assert.equal(locks, one, 'LMB never requests another lock');
+    assert.equal(run('PHOTO.mouse'), 3); up(0, 2);
+    assert(doc.pointerLockElement && run('PHOTO.mouse === 2'), 'LMB up leaves RMB control'); up(2, 0);
+    assert(!doc.pointerLockElement && run('PHOTO.mouse === 0'));
+  }
+  begin('mulassa-valls');
+  for (const blocked of ['modal', 'paused', 'game', 'uncontrolled']) {
+    const count = locks;
+    if (blocked === 'modal') sheets.sync.open = true;
+    if (blocked === 'paused') state.paused = true;
+    if (blocked === 'game') state.state = 'play';
+    if (blocked === 'uncontrolled') run('setPhotoControl(false)');
+    mouse('pointerdown', 2, 2); mouse('mousedown', 2, 2);
+    assert.equal(locks, count, `${blocked} cannot request actor lock`);
+    sheets.sync.open = false; state.paused = false; state.state = 'select'; begin('mulassa-valls');
+  }
+  // UI targets do not bubble through the world canvas. Focus clears held input.
+  const count = locks;
+  $('settings').fire('mousedown', event(91, 600, 300, { button: 2, buttons: 2 }));
+  assert.equal(locks, count, 'UI RMB does not lock');
+  mouse('pointerdown', 2, 2); mouse('mousedown', 2, 2);
+  emit('focusin', { target: { tagName: 'INPUT' } }); run('updateControls()');
+  assert(!doc.pointerLockElement && run('PHOTO.mouse === 0'), 'field focus frees lock');
+  // A refused lock falls back to capture only while RMB is still held.
+  $('hud').requestPointerLock = () => { locks++; emit('pointerlockerror'); };
+  mouse('pointerdown', 2, 2); mouse('mousedown', 2, 2);
+  assert(captures > 0 && run('PHOTO.mouse === 2'), 'error preserves RMB through capture fallback');
+  up(2, 0); const before = captures; emit('pointerlockerror');
+  assert.equal(captures, before, 'late error cannot capture after release');
+  mouse('pointerdown', 0, 1); mouse('mousedown', 0, 1); assert.equal(run('PHOTO.mouse'), 1, 'error recovery allows LMB orbit without locking'); up(0, 0);
+  delete $('hud').requestPointerLock; delete $('hud').setPointerCapture; delete doc.exitPointerLock;
+  run('setPhotoControl(false)');
+  for (const [button, buttons] of [[0, 1], [1, 4], [2, 2]]) {
+    mouse('pointerdown', button, buttons); mouse('mousedown', button, buttons);
+    assert.equal(run('orbit.ptrs.has(91)'), button === 0, 'uncontrolled world reserves orbit drag for LMB');
+    emit('pointerup', { pointerId: 91, pointerType: 'mouse', buttons: 0 });
+  }
+  begin('drac-valls');
+  $('hud').fire('pointerdown', event(92));
+  assert(run('orbit.ptrs.has(92)'), 'touch retains its orbit gesture while controlling');
+  const yaw = run('PHOTO.cameraYaw');
+  run('orbit.ptrs.set(92, { x: 180, y: 350 })');
+  $('hud').fire('pointermove', event(92, 200, 350));
+  assert(run('PHOTO.cameraYaw') < yaw, 'touch still moves the actor camera');
+  emit('pointerup', { pointerId: 92, pointerType: 'touch', buttons: 0 });
+  run('setView(false)');
+}
+
 console.log('selector controls, offline feedback visibility, photo keys and world-only pointer gestures ok');
 
 // Browsers blur a focused card as soon as its selector becomes inert. Preserve the pre-transition focus.

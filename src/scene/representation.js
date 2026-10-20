@@ -1,15 +1,15 @@
-// Local public trial with approved age/gender weights; ?representation=examples retains the earlier fixed set.
+// The plaça's people with approved age/gender weights; ?representation=examples retains the earlier fixed set.
 import * as THREE from 'three';
-import { scene, renderer, camera, plaza, mulaColla, renderProfile, setQualityLevel } from '../scene/stage.js';
-import { crowd, crowdMesh, RING } from '../scene/crowd-build.js';
-import { applyRenderQuality } from '../scene/quality.js';
+import { scene, renderer, camera, plaza, mulaColla, renderProfile, setQualityLevel } from './stage.js';
+import { crowd, crowdMesh, RING } from './crowd-build.js';
+import { applyRenderQuality } from './quality.js';
 import { clock, G, drawT } from '../game/state.js';
-import { mood } from '../scene/crowd.js';
+import { mood } from './crowd.js';
 import { CATALOGUE, buildFigure, skinCrowd, MAT, EYE_COLOURS } from './representation/models.js';
 import { crowdMotion, animatePerson } from './representation/live-pose.js';
 import { reviewMusician, reviewAttendant, linkRolePose, followRolePose } from './representation/role-models.js';
 import { buildPublicSpecs, PUBLIC_GENDER_WEIGHTS, PUBLIC_AGE_WEIGHTS } from './representation/population.js';
-import { sootLink, sootHold, sootHoldApply } from '../scene/drac-soot.js';
+import { sootLink, sootHold, sootHoldApply } from './drac-soot.js';
 
 const PUBLIC_IDS = ['p04', 'p05', 'p08', 'p02', 'p09', 'p12', 'p06', 'p10'];
 const BAND_IDS = ['p01', 'p03', 'p07'];
@@ -28,7 +28,7 @@ function omitPeople(mesh, people) {
 }
 function shown(g) { for (let o = g; o; o = o.parent) if (!o.visible) return false; return true; }
 
-export function setupRepresentationPreview() {
+export function setupRepresentation() {
   if (window.__representation) return window.__representation;
   const entries = [], restore = [], oldBefore = scene.onBeforeRender;
   const params = new URLSearchParams(location.search), population = params.get('representation') !== 'examples';
@@ -121,6 +121,6 @@ export function setupRepresentationPreview() {
   };
   window.__representation = api;
   update();
-  console.info('[representation] Local trial', { population, seed, people: specs.length });
+  console.info('[representation]', { population, seed, people: specs.length });
   return api;
 }

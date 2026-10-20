@@ -620,7 +620,7 @@ body:has(:focus-visible) #select .sel-card[aria-selected="true"]:not(:focus-visi
 @media (min-width: 2200px) and (min-height: 1200px) { #select { zoom: 1.1; } }
 
 /* The selector's header: the title's lettering top-left (index.html .sel-logo, still and not a control), the five corner
-   buttons in one row on the right, looking first (Classificacions, photo mode), then talking (Bústia, music), then ⚙. Only
+   buttons in one row on the right, looking first (Classificacions, photo mode), then sound and talking (music, Bústia), then ⚙. Only
    here: on the title they are the canvas layout's obstacles. A hidden one (no board, no Bústia) closes its gap; --cb-i
    counts from the left, --cb-r from the right. Inside #select, so photo mode hides the logo with the rest. */
 body:has(#select:not([hidden])) { --cb-a: 0; --cb-b: 0; --cb-n: calc(5 - var(--cb-a) - var(--cb-b)); --cb-g: 12px; }
@@ -628,8 +628,8 @@ body:has(#select:not([hidden])):has(#leaders[hidden]) { --cb-a: 1; }
 body:has(#select:not([hidden])):has(#feedback[hidden]) { --cb-b: 1; }
 body:has(#select:not([hidden])) #leaders { --cb-i: 0; }
 body:has(#select:not([hidden])) #viewmode { --cb-i: calc(1 - var(--cb-a)); }
-body:has(#select:not([hidden])) #feedback { --cb-i: calc(2 - var(--cb-a)); }
-body:has(#select:not([hidden])) #music { --cb-i: calc(3 - var(--cb-a) - var(--cb-b)); }
+body:has(#select:not([hidden])) #music { --cb-i: calc(2 - var(--cb-a)); }
+body:has(#select:not([hidden])) #feedback { --cb-i: calc(3 - var(--cb-a)); }
 body:has(#select:not([hidden])) #settings { --cb-i: calc(4 - var(--cb-a) - var(--cb-b)); }
 body:has(#select:not([hidden])) :is(#leaders, #viewmode, #feedback, #music, #settings) { --cb-r: calc(var(--cb-n) - 1 - var(--cb-i)); }
 #select > .sel-logo { position: absolute; z-index: 2; overflow: visible; /* the outline's edge */ left: max(16px, env(safe-area-inset-left)); top: calc(16px + env(safe-area-inset-top)); width: auto; height: 56px; pointer-events: none; }

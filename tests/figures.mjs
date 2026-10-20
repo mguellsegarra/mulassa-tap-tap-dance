@@ -292,7 +292,7 @@ key('ArrowLeft'); key('ArrowLeft'); key('ArrowLeft'); key('ArrowLeft'); key('Arr
 key('ArrowLeft'); assert.equal(doc.activeElement, pills[0]);
 key('ArrowLeft'); assert.equal(doc.activeElement, pills[0], 'Valls is the header\'s left end');
 $('select').toggleAttribute('data-header-inline', false);
-$('viewmode').focus(); key('ArrowRight'); assert.equal(doc.activeElement, $('feedback'), 'on separate rows the corner controls stay together');
+$('viewmode').focus(); key('ArrowRight'); assert.equal(doc.activeElement, $('music'), 'on separate rows the corner controls stay together');
 soonPill.focus(); key('ArrowRight'); assert.equal(doc.activeElement, soonPill, 'folded towns stay out of the separate row');
 const rowSounds = sounds.length;
 pills[0].focus(); key('ArrowUp');

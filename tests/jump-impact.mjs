@@ -1,69 +1,101 @@
-// Executed by render-quality's real motion/camera VM, also callable in a short isolated harness.
+// Real motion/camera VM: manual ownership is independent of the selector/demo state.
 export function verifyJumpImpact(run, assert) {
   const results = [];
-  for (const fps of [30, 60, 120]) for (const id of ['mulassa-valls', 'drac-valls']) {
+  for (const fps of [30, 60, 120]) for (const id of ['mulassa-valls', 'drac-valls']) for (const pair of [false, true]) {
     run(`G.state='select'; G.paused=false; G.collapseT=0; CALM.matches=false; setFigureSong(MULASSA);
-      setView(false); setView(true); setPhotoControl(true,${JSON.stringify(id)},false);
+      setView(false); setView(true); setPhotoControl(true,${JSON.stringify(id)},${pair});
       animMula(1/${fps},0); resetMotionImpact(); PHOTO.action=true;
-      var impactRows=[], impactPulses=0, impactPrevious=0;
+      var impactRows=[], impactPulses=0, impactPrevious=-1;
       for(let i=1;i<=${fps}*1.5;i++) {
         clock+=1/${fps}; animMula(1/${fps},clock/BEAT);
-        const air=PHOTO.id==='mulassa-valls'?M.air:drac.root.parent.position.y;
-        if(trauma>impactPrevious+1e-9)impactPulses++;
-        impactRows.push({t:i/${fps},air,trauma}); impactPrevious=trauma;
-        setTrauma(Math.max(0,trauma-1.6/${fps}));
-        if(i<${fps}*.5) PHOTO.action=true; // repeated input in flight cannot stack or restart it
+        const air=PHOTO.id==='mulassa-valls'?M.air:DRAC_JUMP.air;
+        if(manualLanding && manualLanding.time!==impactPrevious){impactPulses++;impactPrevious=manualLanding.time;}
+        impactRows.push({t:i/${fps},air,pulse:manualLandingStrength(),trauma,contact:manualLanding?.time===clock});
+        if(i<${fps}*.5) PHOTO.action=true; // repeated input in flight cannot restart it
       }`);
-    const rows = run('impactRows'), contact = rows.find(r => r.trauma > 0);
-    assert.equal(run('impactPulses'), 1, `${id}, ${fps} Hz: one landing impulse`);
-    assert(contact && contact.air === 0, 'impact belongs to ground contact');
-    assert(contact.t >= 4.8 / 7 && contact.t <= 4.8 / 7 + 1 / fps + 1e-9, 'physical flight time within one frame');
-    assert(rows.filter(r => r.air > 0).every(r => r.trauma === 0), 'no shake at takeoff or in flight');
-    const peak = Math.max(...rows.map(r => r.trauma));
-    assert(Math.abs(peak - (id === 'mulassa-valls' ? .98 : .9)) < 1e-9, `${id}: bounded intended strength`);
-    assert.equal(rows.at(-1).trauma, 0, 'fully settled; no accumulation');
-    assert(rows.filter(r => r.t > contact.t + .62).every(r => r.trauma === 0), 'decay ends within 620 ms');
-    results.push({ id, fps, contact: contact.t, peak });
+    const rows = run('impactRows'), contact = rows.find(r => r.contact);
+    assert.equal(run('impactPulses'), 1, `${id}, pair ${pair}, ${fps} Hz: exactly one landing`);
+    assert(contact && contact.air === 0, 'impact starts at ground contact');
+    assert(contact.t >= 4.8 / 7 && contact.t <= 4.8 / 7 + 1 / fps + 1e-9, 'unchanged physical flight time');
+    assert(rows.filter(r => r.air > 0).every(r => r.pulse === 0), 'no takeoff or airborne shake');
+    assert(rows.every(r => r.trauma === 0), 'manual jumps and autonomous companion never feed gameplay trauma');
+    const peak = Math.max(...rows.map(r => Math.abs(r.pulse)));
+    assert.equal(peak, id === 'mulassa-valls' ? .98 : .9, 'original per-figure manual landing strength');
+    assert(rows.filter(r => r.t >= contact.t + peak / 1.6).every(r => r.pulse === 0), 'original decay settles within initial strength / 1.6 seconds');
+    assert.equal(rows.at(-1).pulse, 0, 'fully settled');
+    results.push({id,pair,fps,contact:contact.t,peak});
   }
-  run(`// Switching, leaving control, changing mode and backgrounding abandon an unfinished jump silently.
-    var impactCancel=[];
-    for(const id of ['mulassa-valls','drac-valls']) for(const kind of ['tab','view','mode','background']) {
-      G.state='select'; setPhotoControl(true,id,false); animMula(1/60,0); PHOTO.action=true;
-      for(let i=0;i<10;i++){clock+=1/60;animMula(1/60,0);}
+  for (const id of ['mulassa-valls','drac-valls']) {
+    run(`G.state='select';setPhotoControl(true,${JSON.stringify(id)},true);animMula(1/60,0);resetMotionImpact();
+      PHOTO.keys.add('KeyW');PHOTO.keys.add('ShiftLeft');var repeatedCount=0,repeatedStamp=-1,repeatedPeak=0;
+      for(let i=0;i<270;i++){
+        if(i%90===0)PHOTO.action=true;clock+=1/60;animMula(1/60,clock/BEAT);
+        if(manualLanding && manualLanding.time!==repeatedStamp){repeatedCount++;repeatedStamp=manualLanding.time;}
+        repeatedPeak=Math.max(repeatedPeak,Math.abs(manualLandingStrength()));
+      }`);
+    assert(run(`repeatedCount===3 && repeatedPeak===${id === 'mulassa-valls' ? .98 : .9} && manualLandingStrength()===0 && trauma===0`), `${id}: repeated jumps while sprinting settle separately without accumulating`);
+  }
+  run(`var impactCancel=[];
+    for(const id of ['mulassa-valls','drac-valls']) for(const phase of ['flight','landed'])
+    for(const kind of ['tab','view','mode','background','pause','keys']) {
+      G.state='select'; G.paused=false; setPhotoControl(true,id,true); animMula(1/60,0); PHOTO.action=true;
+      for(let i=0;i<(phase==='flight'?10:43);i++){clock+=1/60;animMula(1/60,0);}
       if(kind==='tab')photoKey({code:'Tab',preventDefault(){}},true);
       if(kind==='view')setPhotoControl(false);
       if(kind==='mode')G.state='results';
       if(kind==='background')resetFrameTime();
-      var cancelledPeak=0;
-      for(let i=0;i<60;i++){clock+=1/60;animMula(1/60,0);cancelledPeak=Math.max(cancelledPeak,trauma);}
+      if(kind==='pause')G.paused=true;
+      if(kind==='keys')clearPhotoKeys();
+      var cancelledPeak=Math.abs(manualLandingStrength());
+      animMula(0,0); G.paused=false;
+      for(let i=0;i<60;i++){clock+=1/60;animMula(1/60,0);cancelledPeak=Math.max(cancelledPeak,Math.abs(manualLandingStrength()));}
       impactCancel.push(cancelledPeak);
     }`);
-  assert(run('impactCancel.every(v=>v===0)'), 'no stale landing on Tab, exit, mode change or background');
-  run(`setPhotoControl(false); G.state='play'; animMula(1/60,0);
-    M.air=.18; M.airV=-3; G.state='results'; var resultImpact=0;
-    for(let i=0;i<60;i++){clock+=1/60;animMula(1/60,0);resultImpact=Math.max(resultImpact,trauma);}`);
-  assert(run('resultImpact===0 && M.air===0'), 'a game accent cannot land later on the results screen');
-  run(`G.state='select'; CALM.matches=true; setPhotoControl(true,'mulassa-valls',false); animMula(1/60,0);
-    PHOTO.action=true; var calmImpact=0;
-    for(let i=0;i<90;i++){clock+=1/60;animMula(1/60,0);calmImpact=Math.max(calmImpact,trauma);}
-    var savedCamera=camera.position.clone(); applyCameraImpact(1); var calmCamera=camera.position.distanceTo(savedCamera);
-    clearCameraImpact(); CALM.matches=false; setPhotoControl(true,'drac-valls',false); animMula(1/60,0);
-    PHOTO.action=true; animMula(1/60,0); var pausedAir=DRAC_JUMP.air; G.paused=true;
-    for(let i=0;i<30;i++)animMula(0,0);`);
-  assert(run('calmImpact===0 && calmCamera===0'), 'reduced motion suppresses all camera shake');
-  assert(run('DRAC_JUMP.air===pausedAir && trauma===0'), 'paused flight neither advances nor lands');
-  run(`G.paused=false; resetMotionImpact(); clearCameraImpact(); CALM.matches=false;
-    var cameraBase=camera.position.clone(), impactMaxOffset=0;
+  assert(run('impactCancel.every(v=>v===0)'), 'no residual or stale landing after control, focus or pause changes');
+  run(`G.state='select';setPhotoControl(false);animMula(1/60,0);var demoImpact=0;
+    for(let i=0;i<300;i++){if(i%60===0)act('U');clock+=1/60;animMula(1/60,clock/BEAT);demoImpact=Math.max(demoImpact,trauma,Math.abs(manualLandingStrength()));}
+    setPhotoControl(true,'drac-valls',true);animMula(1/60,0);
+    M.air=.5;M.airV=-4;var companionImpact=0;
+    for(let i=0;i<120;i++){clock+=1/60;animMula(1/60,clock/BEAT);companionImpact=Math.max(companionImpact,trauma,Math.abs(manualLandingStrength()));}`);
+  assert(run('demoImpact===0 && companionImpact===0'), 'no controlled actor or other beast landing: no free shake');
+  run(`G.state='select';CALM.matches=true;setPhotoControl(true,'mulassa-valls',true);animMula(1/60,0);PHOTO.action=true;var calmImpact=0;
+    for(let i=0;i<90;i++){clock+=1/60;animMula(1/60,0);calmImpact=Math.max(calmImpact,Math.abs(manualLandingStrength()));}
+    clearCameraImpact();camera.position.set(0,5,10);camFocus.set(0,3,0);var cameraBase=camera.position.clone();applyCameraImpact(1);var calmOffset=camera.position.distanceTo(cameraBase);
+    clearCameraImpact();CALM.matches=false;`);
+  assert(run('calmImpact===0 && calmOffset===0'), 'reduced motion has no camera shake');
+  run(`var cameraBound=0,focusBase=camFocus.clone(),springBase=JSON.stringify(titleS);
     for(let i=0;i<180;i++){
-      clock+=1/60; clearCameraImpact(); applyCameraImpact(Math.max(0,.98-i/60*1.6));
-      impactMaxOffset=Math.max(impactMaxOffset,camera.position.distanceTo(cameraBase));
+      clock+=1/120;manualLanding={origin:'manual-jump',startedAt:performance.now(),actor:PHOTO.id,epoch:PHOTO.epoch,inputEpoch:PHOTO.inputEpoch,time:clock-i/120};
+      clearCameraImpact();applyCameraImpact(0);cameraBound=Math.max(cameraBound,camera.position.distanceTo(cameraBase));
     }
     clearCameraImpact();`);
-  assert(run('impactMaxOffset<=Math.hypot(.25,.2)*.98**2+1e-9'), 'camera translation bounded independently of frame count');
-  assert(run('camera.position.distanceTo(cameraBase)<1e-9'), 'zero residual offset feeds the camera rig');
-  run(`G.paused=true; applyCameraImpact(1); var pausedOffset=camera.position.distanceTo(cameraBase);
-    clearCameraImpact(); G.paused=false; setPhotoControl(false); G.state='select'; animMula(1/60,0);`);
-  assert(run('pausedOffset<1e-9'), 'no camera shake while paused');
-  console.log('jump impact: contact, single pulse, bounds, 30/60/120 Hz, cancellation, reduced motion and camera isolation ok', JSON.stringify(results));
+  assert(run('cameraBound>.02 && cameraBound<=Math.hypot(.25,.2)*.98**2+1e-9'), 'camera translation hard bounded without accumulation');
+  assert(run('camera.position.distanceTo(cameraBase)<1e-9 && camFocus.distanceTo(focusBase)===0 && JSON.stringify(titleS)===springBase'), 'zero residual; no framing target or spring mutation');
+  for (const id of ['mulassa-valls','drac-valls']) assert.equal(new Set(results.filter(r=>r.id===id).map(r=>r.peak)).size, 1, 'identical initial strength at 30/60/120 Hz');
+  run(`var savedImpactNow=performance.now;
+    manualLanding={origin:'manual-jump',actor:PHOTO.id,epoch:PHOTO.epoch,inputEpoch:PHOTO.inputEpoch,time:clock,startedAt:0};
+    performance.now=()=>620;var wallExpired=manualLandingStrength();performance.now=savedImpactNow;
+    manualLanding={origin:'demo',actor:PHOTO.id,epoch:PHOTO.epoch,inputEpoch:PHOTO.inputEpoch,time:clock-.05,startedAt:performance.now()};
+    var wrongOrigin=manualLandingStrength();
+    manualLanding={origin:'manual-jump',actor:PHOTO.id==='drac-valls'?'mulassa-valls':'drac-valls',epoch:PHOTO.epoch,inputEpoch:PHOTO.inputEpoch,time:clock-.05,startedAt:performance.now()};
+    var wrongActor=manualLandingStrength();
+    manualLanding={origin:'manual-jump',actor:PHOTO.id,epoch:PHOTO.epoch,inputEpoch:PHOTO.inputEpoch,time:clock-.05,startedAt:performance.now()};
+    camera.position.set(0,3,6);camFocus.set(0,3,0);var farBase=camera.position.clone();applyCameraImpact(0);var farPulse=camera.position.distanceTo(farBase);clearCameraImpact();
+    camera.position.set(0,3,.6);var nearBase=camera.position.clone();applyCameraImpact(0);var nearPulse=camera.position.distanceTo(nearBase);clearCameraImpact();
+    camera.position.copy(cameraBase);camFocus.copy(focusBase);`);
+  assert(run('wallExpired===0 && wrongOrigin===0 && wrongActor===0'), 'real-time deadline and explicit manual actor/origin gating');
+  assert(run('farPulse>.02 && nearPulse>0 && nearPulse<=farPulse*.101'), 'close camera attenuates the pulse instead of magnifying it');
+  for (const id of ['mulassa-valls','drac-valls']) {
+    run(`setPhotoControl(true,${JSON.stringify(id)},true);clock=1;camera.position.copy(cameraBase);camFocus.copy(focusBase);
+      manualLanding={origin:'manual-jump',actor:PHOTO.id,epoch:PHOTO.epoch,inputEpoch:PHOTO.inputEpoch,time:clock,startedAt:performance.now()};
+      applyCameraImpact(0);var originalX=camera.position.x-cameraBase.x,originalY=camera.position.y-cameraBase.y;clearCameraImpact();`);
+    const strength = id === 'mulassa-valls' ? .98 : .9;
+    assert(Math.abs(run('originalX') - Math.sin(47)*.25*strength**2)<1e-9 && Math.abs(run('originalY') - Math.sin(61)*.2*strength**2)<1e-9, `${id}: original camera waveform and amplitude`);
+  }
+  run(`G.paused=true;applyCameraImpact(1);var pausedOffset=camera.position.distanceTo(cameraBase);clearCameraImpact();G.paused=false;
+    setPhotoControl(false);G.state='play';setTrauma(.5);applyCameraImpact(trauma);var gameOffset=camera.position.distanceTo(cameraBase);
+    clearCameraImpact();resetMotionImpact();G.state='select';animMula(1/60,0);`);
+  assert(run('pausedOffset<1e-9 && gameOffset>0'), 'pause clears shake; intentional gameplay trauma retained');
+  console.log('manual landing original strength: ownership, single contact, bounds, cleanup, reduced motion, camera isolation and 30/60/120 Hz ok', JSON.stringify(results));
   return results;
 }

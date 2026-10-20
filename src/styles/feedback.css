@@ -59,14 +59,18 @@ body:has(#viewmode.idle) #photo-figs:not(:hover, :focus-within) { opacity: .25; 
 #photo-tip strong { display: block; font-size: 23px; }
 #photo-tip .pf-help-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 20px; margin: 14px 0; text-align: left; }
 #photo-tip .pf-help-action { display: grid; grid-template-columns: 52px minmax(0, 1fr); align-items: center; gap: 10px; }
+#photo-tip .pf-help-action:last-child { grid-column: 1 / -1; } /* Escape has its own row after the movement/action pairs. */
 #photo-tip kbd { display: inline-flex; align-items: center; justify-content: center; flex: none; box-sizing: border-box; min-width: 28px; min-height: 28px; padding: 0 4px; border: 1px solid #fff3d680; border-bottom-width: 3px; border-radius: 6px; background: #ffffff12; font: 700 14px/1 'Baloo 2', system-ui, sans-serif; }
 body.view-mode #howto.photo-help { opacity: 1; visibility: visible; pointer-events: auto; }
-body.view-mode:has(#hud:focus-visible)::after { content: ''; position: fixed; z-index: 7; inset: 6px; border: 2px solid #fff3d6; border-radius: 6px; pointer-events: none; }
+#photo-world-focus { display: none; position: fixed; z-index: 7; inset: 6px; border: 2px solid #fff3d6; border-radius: 6px; pointer-events: none; }
+body.view-mode:has(#hud:focus-visible) #photo-world-focus { display: block; }
 #howto.photo-help { z-index: 6; left: auto; right: max(16px, env(safe-area-inset-right)); top: auto; bottom: max(16px, env(safe-area-inset-bottom)); transform: none; width: 44px; height: 44px; min-height: 44px; padding: 0; gap: 0; border: 2px solid #f5c518; border-radius: 50%; background: #21140b; color: #fff3d6; font-size: 0; }
 #howto.photo-help .q { width: 100%; height: 100%; background: none; color: #fff3d6; font-size: 24px; }
-@media (max-width: 599px) { #photo-tip .pf-help-grid { grid-template-columns: 1fr; gap: 6px; } #photo-tip { font-size: 16px; padding: 12px; } }
+@media (max-width: 599px) { #photo-tip .pf-help-grid { grid-template-columns: 1fr; gap: 6px; } #photo-tip { left: auto; right: max(16px, env(safe-area-inset-right)); translate: none; width: calc(100vw - 104px - env(safe-area-inset-right)); font-size: 16px; padding: 12px; } } /* 16 px after the 56 px portraits, without squeezing the instructions */
+@media (max-width: 359px) { #photo-tip { top: max(12px, env(safe-area-inset-top)); } } /* Keep the complete keyboard help inside a 320×568 window. */
 #photo-tip small { display: block; margin-top: 12px; font-size: 14px; color: #e8d8b8; }
-@media (max-height: 519px) { #photo-figs { gap: 8px; } #photo-figs .pf-por { width: 44px; height: 44px; } #photo-tip { padding: 10px 16px; } }
+@media (max-height: 519px) { #photo-figs { gap: 8px; } #photo-figs .pf-por { width: 44px; height: 44px; } #photo-tip { top: max(12px, env(safe-area-inset-top)); padding: 10px 16px; } #photo-tip .pf-help-grid { gap: 6px 12px; margin: 8px 0; } }
+@media (min-width: 520px) and (max-height: 519px) { #photo-tip .pf-help-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (prefers-reduced-motion: reduce) { #photo-tip { transition: none; } }
 @media (max-width: 899px) { #photo-figs .pf-nb { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); } } /* a narrow window: portraits only, clear of the eye (the names stay for screen readers) */
 @media (prefers-reduced-motion: reduce) { #photo-figs { transition: none; } }

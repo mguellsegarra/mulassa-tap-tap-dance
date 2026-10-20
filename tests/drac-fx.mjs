@@ -6,7 +6,7 @@ import { readFileSync } from 'node:fs';
 import { Session } from 'node:inspector/promises';
 import * as THREE from 'three';
 import { createDracFx, DRAC_FX, streakFire, flareLevel, tracaWindow } from '../src/scene/drac-fx.js';
-import { DRAC_FIRE } from '../src/scene/drac-fire.js';
+import { DRAC_FIRE, DRAC_MANUAL_FIRE } from '../src/scene/drac-fire.js';
 import { PROFILES, MINIMAL } from '../src/platform/render-quality.js';
 import { buildDrac } from '../src/scene/models/drac.js';
 import { timeAtBeat } from '../src/core/beat-grid.js';
@@ -277,7 +277,7 @@ const births = fx => { const a = fx.objects.jets.geometry.attributes.aA.array, o
 // Explicit free-mode hold: no repeated CREMA calls, bounded pools, natural flame decay after release.
 for (const calm of [false, true]) for (const profile of [MINIMAL, ...PROFILES]) {
   const m = make(profile.smoke, profile.jets, profile.wheels, calm);
-  m.s.held = true;
+  m.s.manual = m.s.held = true;
   const geometry = m.fx.objects.jets.geometry, capacity = geometry.attributes.aA.array;
   for (let i = 0; i < 1200; i++) {
     m.drac.root.position.x = Math.sin(i / 60); m.drac.root.rotation.y = i / 120;
@@ -289,7 +289,7 @@ for (const calm of [false, true]) for (const profile of [MINIMAL, ...PROFILES]) 
   const at = m.fx.objects.blast.geometry.attributes.aP.array;
   const mid = mouth(m.drac, 0).add(mouth(m.drac, 1)).multiplyScalar(0.5);
   assert(Math.hypot(at[0] - mid.x, at[1] - mid.y, at[2] - mid.z) < 1e-4, 'the sustained flame follows the moving, turning mouths');
-  assert(m.fx.state().wheels > 0, 'held wheels continue without renewing a timer');
+  assert.equal(m.fx.state().wheels, 0, 'manual fire emits directed jets, no camera-facing wheels');
   m.s.held = false; m.step(1 / 60);
   const born = m.fx.state().born;
   assert(m.fx.objects.blast.visible && m.fx.state().wheels === 0, 'release stops emission while the existing flame fades naturally');
@@ -307,3 +307,25 @@ for (const calm of [false, true]) for (const profile of [MINIMAL, ...PROFILES]) 
   m.run(3); assert(m.fx.idle, 'rapid taps leave no stuck fire');
 }
 console.log('drac fx and sustained free-mode fire ok');
+
+// A held action owns its profile through release, then leaving control restores the dance.
+{
+  const m = make(96, 420, 320);
+  m.s.streak = true; m.run(0.5); m.fx.crema(); m.step(1 / 60);
+  const lw = m.fx.objects.blast.geometry.attributes.aLW.array;
+  assert.deepEqual([...lw].map(v => +v.toFixed(4)), [2, 1.9, 1, 0, 0, 1, 1.8, 1.25, 0, 1.4, 0.95, 0, 1.4, 0.95, 0], 'dance keeps all five original flame dimensions');
+  assert.deepEqual([0, 1, 2, 3, 4].map(i => m.fx.nozzles[i * 8 + 6]), [1, 1, 1, 1, 1], 'dance jets keep equal intensity');
+  m.s.manual = true; m.s.held = true; m.run(0.5);
+  assert.equal(m.fx.fireProfile, DRAC_MANUAL_FIRE);
+  assert.deepEqual([0, 1, 2, 3, 4].map(i => +m.fx.nozzles[i * 8 + 6].toFixed(3)), [1, 1, 0.06, 0.035, 0.035], 'explicit action prioritizes the two mouth sockets');
+  assert(lw[6] < 0.33 && lw[7] < 0.21 && lw[9] < 0.2 && lw[10] < 0.12, 'tail and wings have residual physical volumes');
+  assert.equal(m.fx.state().smoke, 0, 'manual onset has no smoke or radial ember cloud');
+  const small = [...lw]; m.s.held = false; m.step(1 / 60);
+  assert.deepEqual([...lw], small, 'keyup never expands the cooling residual flames');
+  m.s.manual = false; m.s.streak = false; m.step(1 / 60);
+  assert.equal(m.fx.fireProfile, null); assert(m.fx.idle, 'mode exit clears the held effect and its emission debt');
+  m.fx.crema(); m.step(1 / 60);
+  assert.equal(+lw[6].toFixed(2), 1.8, 'the next dance burst restores the full tail');
+  assert.equal(+lw[9].toFixed(2), 1.4, 'the next dance burst restores the full wing');
+  m.fx.clear(); assert(m.fx.idle);
+}

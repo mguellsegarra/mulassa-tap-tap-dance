@@ -227,9 +227,6 @@
 #select-next { flex: 0 1 340px; }
 #select-next > span { display: block; line-height: 24px; }
 #select-play { padding-inline: 12px; }
-/* No level marked yet: A BALLAR! stays in place, off, in the desktop «Pròximament?»'s quiet look (Marc: visible, not hidden). */
-#select #select-play:disabled { visibility: visible; background: transparent; border-color: #746957; color: #c7bca7; box-shadow: none; animation: none; scale: none; rotate: none; transform: none; filter: none; cursor: default; }
-#select #select-play:disabled::after { display: none; animation: none; }
 #select-play > span { white-space: nowrap; }
 :is(#select-next, #select-play, #select-figures-back) > svg { display: block; flex: 0 0 22px; width: 22px; height: 22px; margin: 0; }
 .sel-footer #select-figures-back { min-width: 0; padding: 6px 12px; margin-right: auto; font-size: 15px; }
@@ -270,17 +267,25 @@
 .sel-seg .btn[data-level="2"][aria-pressed="true"]::before { animation-duration: 1.6s; }
 .sel-seg .btn[data-level="2"]:focus-visible { animation: sel-quake .42s cubic-bezier(.36, .07, .19, .97); }
 .sel-seg .btn[data-level="2"][aria-pressed="true"]:focus-visible { animation: sel-quake .42s cubic-bezier(.36, .07, .19, .97), sel-shiver .5s linear .42s infinite, sel-glow var(--lv-t) ease-in-out infinite; }
+/* The level marked on entry (the figure's last one, NORMAL at first, or a challenge's) looks chosen, tremble included,
+   but skips a tap's pop and shake: only a tap shakes (Marc). Its trembles carry their own names (same keyframes) so a tap
+   on it restarts them behind the shake instead of keeping them running over it. */
+.sel-seg[data-quiet] .btn[aria-pressed="true"] { animation: sel-glow var(--lv-t) ease-in-out infinite; }
+.sel-seg[data-quiet] .btn[data-level="1"][aria-pressed="true"] { animation: sel-shiver-soft-idle .6s linear infinite, sel-glow var(--lv-t) ease-in-out infinite; }
+.sel-seg[data-quiet] .btn[data-level="2"][aria-pressed="true"] { animation: sel-shiver-idle .5s linear infinite, sel-glow var(--lv-t) ease-in-out infinite; }
 @keyframes sel-turn { to { --sel-halo: 360deg; } }
 @keyframes sel-glow { 50% { background-size: 100% 125%, auto; } }
-@keyframes sel-shiver { 0%, 100% { translate: 0 0; rotate: 0deg; } 20% { translate: -.6px .3px; rotate: -.35deg; } 40% { translate: .6px -.3px; rotate: .35deg; } 60% { translate: -.4px -.2px; rotate: -.25deg; } 80% { translate: .4px .2px; rotate: .25deg; } } /* under a pixel: lively, still readable */
+@keyframes sel-shiver { 0%, 100% { translate: 0 0; rotate: 0deg; } 20% { translate: -.6px .3px; rotate: -.35deg; } 40% { translate: .6px -.3px; rotate: .35deg; } 60% { translate: -.4px -.2px; rotate: -.25deg; } 80% { translate: .4px .2px; rotate: .25deg; } }
+@keyframes sel-shiver-idle { 0%, 100% { translate: 0 0; rotate: 0deg; } 20% { translate: -.6px .3px; rotate: -.35deg; } 40% { translate: .6px -.3px; rotate: .35deg; } 60% { translate: -.4px -.2px; rotate: -.25deg; } 80% { translate: .4px .2px; rotate: .25deg; } } /* under a pixel: lively, still readable */
 @keyframes sel-shiver-soft { 0%, 100% { translate: 0 0; rotate: 0deg; } 25% { translate: -.4px .2px; rotate: -.22deg; } 50% { translate: .4px -.2px; rotate: .22deg; } 75% { translate: -.25px -.12px; rotate: -.15deg; } }
+@keyframes sel-shiver-soft-idle { 0%, 100% { translate: 0 0; rotate: 0deg; } 25% { translate: -.4px .2px; rotate: -.22deg; } 50% { translate: .4px -.2px; rotate: .22deg; } 75% { translate: -.25px -.12px; rotate: -.15deg; } }
 @keyframes sel-quake-soft { 15%, 85% { translate: -1px 0; rotate: -.4deg; } 35%, 65% { translate: 1.5px -.5px; rotate: .7deg; } 50% { translate: -1.5px .5px; rotate: -.7deg; } }
 @keyframes sel-pop { 40% { scale: 1.02; } } /* small: the 5 px gap to the neighbours */
 @keyframes sel-quake { 10%, 90% { translate: -1px 0; rotate: -.5deg; } 20%, 80% { translate: 2px -1px; rotate: 1deg; } 30%, 50%, 70% { translate: -3px 1px; rotate: -1.4deg; } 40%, 60% { translate: 3px -1px; rotate: 1.4deg; } }
 @media (prefers-reduced-motion: reduce) { .sel-seg .btn, .sel-seg .btn::before { animation: none !important; } }
 
-body.view-mode #select { opacity: 0; visibility: hidden; pointer-events: none; }
-#select { transition: opacity .2s, visibility .2s, display .2s allow-discrete; }
+body.view-mode #select { opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .2s, visibility 0s .2s, display .2s allow-discrete; }
+#select { transition: opacity .2s, visibility 0s, display .2s allow-discrete; } /* return visibility immediately so the saved card can take focus */
 #select[hidden] { opacity: 0; }
 @starting-style { #select { opacity: 0; } }
 
@@ -479,9 +484,13 @@ body:has(:focus-visible) #select .sel-card[aria-selected="true"]:not(:focus-visi
 .sel-pending .sel-entity-part { box-sizing: border-box; padding: 4px 10px; border-radius: 999px; min-height: 24px; background: var(--entity-holo) 0 0 / 300% 100%; box-shadow: inset 0 0 0 1px #fff9, 0 0 4px #d7b8ff40; animation: sel-holo 6s linear infinite; }
 #select .sel-pending .sel-entity svg { width: auto; height: 16px; }
 /* Compact cards give up label and paragraph padding before type or contact targets. */
-@container (max-height: 250px) {
+@container (max-height: 300px) {
   .sel-pending .sel-entity-part { min-height: 20px; padding-block: 2px; }
   .sel-pending:has(.sel-entity-unit) .sel-pending-copy p { padding-block: 1px; }
+  .sel-pending .sel-entity:has(.sel-entity-unit) { row-gap: 2px; }
+  @media (max-width: 519px) and (min-height: 501px) {
+    .sel-pending:has(.sel-entity-unit) h2 { padding-block: 4px; }
+  }
 }
 @keyframes sel-holo { to { background-position: 300% 0; } }
 @media (prefers-reduced-motion: reduce) { .sel-pending :is(.sel-entity, .sel-entity-part) { animation: none; } }
@@ -523,8 +532,13 @@ body:has(:focus-visible) #select .sel-card[aria-selected="true"]:not(:focus-visi
   .sel-pending { --contact-top: calc(60px + env(safe-area-inset-top) + var(--fps-rail, 0px)); }
   .sel-pending { left: max(12px, env(safe-area-inset-left)); translate: 0 -50%; width: calc(43% - max(12px, env(safe-area-inset-left)) - 8px); top: calc((100% + 60px + env(safe-area-inset-top) - 8px - env(safe-area-inset-bottom)) / 2); height: calc(100% - 68px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); }
 }
+/* The narrow landscape column spends footer air on complete attribution names. */
+@media (min-width: 520px) and (max-width: 667px) and (max-height: 400px) {
+  .sel-pending { --contact-pad: 2px; --contact-gap: 2px; }
+}
 
-@media (max-width: 519px) and (max-height: 600px) {
+@media (max-width: 479px) and (max-height: 600px),
+       (max-width: 519px) and (max-height: 400px) {
   /* Short phones spend 4px of each outer gap on reading room; keep the same band centre and targets. */
   .sel-pending { --contact-pad: 0px; --contact-gap: 0px; --pending-max: calc(100% - var(--pending-top) - var(--pending-bottom, 254px) + 8px); padding-top: 0; }
 }
@@ -543,14 +557,6 @@ body:has(:focus-visible) #select .sel-card[aria-selected="true"]:not(:focus-visi
 /* Before the desktop dock breakpoint, pending content needs the same compact footer to keep its reading band. */
 @media (min-width: 668px) and (max-width: 899px) and (min-height: 501px) and (max-height: 660px) {
   #select:is([data-pending], [data-fold]) { --dock-h: 224px; --action-h: 44px; --card-label-h: 68px; }
-}
-
-/* Below the stacked band's minimum reading height, use the landscape contact/dock split.
-   Only pending selections need it; the playable scene and its camera keep their existing layout. */
-@media (min-width: 520px) and (max-height: 599px) {
-  #select:is([data-pending], [data-fold]) .sel-bottom { left: auto; right: 0; translate: none; width: 57%; }
-  .sel-pending { left: 21.5%; translate: -50% -50%; width: min(480px, calc(43% - 24px)); top: calc((100% + var(--contact-top, var(--pending-top)) - 12px) / 2); height: min(360px, calc(100% - var(--contact-top, var(--pending-top)) - 12px)); }
-  .sel-pending-content { display: flex; }
 }
 
 /* Short portrait phones: the clamped dock leaves the level card ~86 px (320×568). Its gaps and padding give first, then the
@@ -572,6 +578,15 @@ body:has(:focus-visible) #select .sel-card[aria-selected="true"]:not(:focus-visi
     .sel-card .por { visibility: hidden; }
     .sel-card .nb { grid-row: 1 / -1; }
   }
+}
+
+/* Below the stacked band's minimum reading height, use the existing contact/dock split.
+   Apply after portrait sizing: a near-square short window also needs the narrow reading column. */
+@media (min-width: 520px) and (max-height: 599px),
+       (min-width: 480px) and (max-width: 667px) and (min-height: 401px) and (max-height: 660px) {
+  #select:is([data-pending], [data-fold]) .sel-bottom { left: auto; right: 0; translate: none; width: 57%; }
+  .sel-pending { left: 21.5%; translate: -50% -50%; width: min(480px, calc(43% - 24px)); top: calc((100% + var(--contact-top, var(--pending-top)) - 12px) / 2); height: min(360px, calc(100% - var(--contact-top, var(--pending-top)) - 12px)); }
+  .sel-pending-content { display: flex; }
 }
 
 /* The shortest landscape phones need a wider reading column; the strip still shows one whole card. */

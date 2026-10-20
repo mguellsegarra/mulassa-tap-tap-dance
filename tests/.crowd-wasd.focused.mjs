@@ -1,6 +1,7 @@
 import './fps.mjs';
 import './photo-control.mjs';
 import { verifyJumpImpact } from './jump-impact.mjs';
+import { verifyCarretillesCounter } from './carretilles-counter.mjs';
 import { v1Song } from './v1-song.mjs';
 import { referenceScore } from '../tools/reference-score.mjs';
 import assert from 'node:assert/strict';
@@ -433,7 +434,7 @@ const context = vm.createContext({
   ...await import('../src/dev/final-test.js'), ALIAS_KEY: 'leaderboard-alias', DECLINES_KEY: 'publish-declines', // ?final: off here (no hostname)
   errors, errorName, audioFailureTags: (await import('../src/platform/audio.js')).audioFailureTags,
   THREE: { ...THREE, WebGLRenderer: Renderer }, ...await import('../src/scene/crowd-fx.js'), ...models, ...chart, ...progress, ...stars,
-  PROFILES, initialQuality, renderDpr, frameMonitor, hudScale, framePacer, smoothClock, profileAt, hudBudget, isSoftwareRenderer, probeRenderer, Chip: class { constructor(song, opts) { context.chipOpts = opts; } setMenuMusic(on) { (context.menuMusicCalls ||= []).push(on); } }, ...practice, ...energy, ...bubblesLogic, ...framing, ...dance, ...titleLayoutLogic, ...orbitLogic, setupSync: hooks => { context.syncHooks = hooks; return context.syncSheet = { open: false, show() { this.open = true; } }; },
+  PROFILES, initialQuality, renderDpr, frameMonitor, hudScale, framePacer, smoothClock, profileAt, hudBudget, isSoftwareRenderer, probeRenderer, Chip: class { constructor(song, opts) { context.chipOpts = opts; } menu() {} setMenuMusic(on) { (context.menuMusicCalls ||= []).push(on); } }, ...practice, ...energy, ...bubblesLogic, ...framing, ...dance, ...titleLayoutLogic, ...orbitLogic, setupSync: hooks => { context.syncHooks = hooks; return context.syncSheet = { open: false, show() { this.open = true; } }; },
   pixelSvg: () => '<svg></svg>', // src/ui/select-ui.js (provided)
   setupSelect: opts => (context.selectScreen = { opts, sheetOpen: false, visible(on) { this.shown = on; }, refocus() {} }),
   setupBoard: opts => (context.boardSheet = { opts, open: false, configured: true, shown: [], opened: [], results(show) { this.shown.push(show); }, publishable: false,
@@ -449,7 +450,7 @@ const context = vm.createContext({
   setupFeedback: opts => (context.feedbackSheet = { opts, open: false, configured: true, shown: 0, show(back) { this.open = true; this.shown++; this.back = back; } }), // src/ui/feedback-ui.js: tests/feedback-ui.mjs
   setupShare: opts => (context.shareSheet = setupShare({ ...opts, doc: document, nav: {}, fonts: null, url: { createObjectURL: () => 'blob:card', revokeObjectURL() {} } })),
   document, navigator: { hardwareConcurrency: 8, deviceMemory: 8 },
-  location: { search: '' }, localStorage: { getItem() {}, setItem() {} },
+  location: { search: '?representation=off' }, localStorage: { getItem() {}, setItem() {} }, // this mocked DOM supplies the original cast; representation-motion tests the new rigs
   matchMedia: () => ({ matches: false }), addEventListener(type, handler) {
     (windowHandlers[type] ||= []).push(handler);
     if (type === 'keydown') keyHandlers.push(handler);
@@ -487,113 +488,41 @@ const COLLAPSE_POINTS = new Float32Array([...silhouettePoints(0.5), ...silhouett
 const MULA_POINTS = silhouettePoints();
 `, context);
 const run = source => vm.runInContext(source, context);
-// Entry follows a playable selector figure; reentry never remembers a different photo actor.
+run('qualityLevel=0;applyRenderQuality();');
+// A spectator pressed against a tree must slide away while either figure keeps asking to walk.
 {
-  const savedEntryFigure = context.selectScreen.figure;
-  for (const figure of ['MULASSA', 'DRAC']) {
-    run(`setView(false); G.state='select'; setFigureSong(${figure}); selectScreen.figure=${figure}; selectScreen.pending=false; setView(true);`);
-    assert(run(`PHOTO.on && PHOTO.id === ${figure}.id && PHOTO.pair`), 'playable entry controls the selector figure');
-    run(`takeFigure('${figure === 'MULASSA' ? 'drac-valls' : 'mulassa-valls'}'); setView(false); setView(true);`);
-    assert(run(`PHOTO.id === ${figure}.id && PHOTO.on`), 'reentry derives the actor from selection');
-    run(`setView(false); selectScreen.pending=true; setView(true);`);
-    assert(run('!PHOTO.on && PHOTO.pair'), 'pending entry only looks, with both beasts');
+  run(`var passageSavedCrowd=activeCrowd, passageSavedProps=plaza.props, passageSavedBand=bandSpots,
+    passageSavedExtras=photoExtras.slice(), passageSavedSource=photoBandSource,
+    passageBackdropCount=plaza.backdrop.mesh.count, passageMidCount=midCrowd.mesh.count;
+    var trappedPerson=activeCrowd[0], trappedRadius=trappedPerson.rad, trappedSootT=trappedPerson.sootT, trappedSootW=trappedPerson.sootW;
+    activeCrowd=[trappedPerson];bandSpots=[];photoBandSource=bandSpots;photoExtras.length=0;
+    plaza.backdrop.mesh.count=midCrowd.mesh.count=0;plaza.props=[{x:15.2,z:-3,r:2.2,h:4}];trappedPerson.rad=.52;`);
+  for (const id of ['mulassa-valls', 'drac-valls']) for (const floor of [false, true]) for (const charred of [false, true]) {
+    const scenario = `${id}, ${floor ? 'floor' : 'live'}, ${charred ? 'charred' : 'normal'}`;
+    run(`G.state='select';setView(false);setFigureSong(MULASSA);setView(true);takeFigure('${id}');setPhotoControl(true,'${id}',false);
+      activeCrowd=${floor ? '[]' : '[trappedPerson]'};photoExtras.length=0;
+      if(${floor})photoExtras.push({pos:trappedPerson.pos,rad:trappedPerson.rad,vx:0,vz:0,band:trappedPerson,offsetX:0,offsetZ:0});
+      PHOTO.ready=true;PHOTO.cameraYaw=Math.atan2(MID.fx,MID.fz)+Math.PI;
+      Object.assign(photoBody(),{x:9.4,z:-1.52,yaw:Math.atan2(MID.fx,MID.fz),vx:0,vz:0});
+      trappedPerson.pos.set(12.5273,-2.4943);trappedPerson.gx=12.5273;trappedPerson.gz=-2.4943;trappedPerson.vel.set(0,0);trappedPerson.g.position.set(12.5273,0,-2.4943);trappedPerson.sootT=${charred ? 4 : 0};trappedPerson.sootW=${charred ? 1 : 0};
+      if(${charred})sootTake(trappedPerson);
+      PHOTO.keys.add('KeyW');var trappedStart=photoBody().x,trappedMoved=0,trappedMin=99,trappedTreeMin=99,trappedMaxStep=0;
+      for(let i=0;i<180;i++){var oldX=photoBody().x,oldZ=photoBody().z;clock+=1/60;
+        animMula(1/60,clock/BEAT);animCrowd(1/60,clock/BEAT,0,1);
+        trappedMoved=Math.max(trappedMoved,Math.hypot(trappedPerson.pos.x-12.5273,trappedPerson.pos.y+2.4943));
+        trappedMin=Math.min(trappedMin,photoClearance(photoBody().x,photoBody().z,photoBody().yaw,${floor ? 'trappedPerson.g.position.x' : 'trappedPerson.gx'},${floor ? 'trappedPerson.g.position.z' : 'trappedPerson.gz'},trappedPerson.rad,PHOTO.id==='drac-valls'));
+        trappedTreeMin=Math.min(trappedTreeMin,Math.hypot(trappedPerson.pos.x-15.2,trappedPerson.pos.y+3)-2.72);
+        trappedMaxStep=Math.max(trappedMaxStep,Math.hypot(photoBody().x-oldX,photoBody().z-oldZ));}`);
+    assert(run('photoBody().x-trappedStart>.4'), `${scenario}: held W advances after the spectator clears the tree (${run('photoBody().x-trappedStart')})`);
+    assert(run('trappedMoved>.6'), `${scenario}: the trapped spectator finds room beside the tree`);
+    assert(run('trappedTreeMin>=-1e-5 && trappedMin>=-.03'), `${scenario}: neither the tree nor the visible spectator is crossed ${run('JSON.stringify([trappedTreeMin,trappedMin])')}`);
+    assert(run('trappedMaxStep<=PHOTO_RUN.trot/60+1e-6'), `${scenario}: opening the path never teleports the figure`);
+    if (charred) assert(run('trappedPerson.sootW===1 && trappedPerson.sootT===4'), `${scenario}: stepping aside preserves the soot effect`);
+    run('setView(false);animMula(1/60,clock/BEAT);');
   }
-  run('setView(false); selectScreen.pending=false; G.state="splash"; setView(true);');
-  assert(run('!PHOTO.on && PHOTO.pair'), 'splash never invents an actor selection');
-  run('setView(false); setFigureSong(MULASSA);');
-  context.selectScreen.figure = savedEntryFigure;
+  run(`trappedPerson.rad=trappedRadius;trappedPerson.sootT=trappedSootT;trappedPerson.sootW=trappedSootW;activeCrowd=passageSavedCrowd;plaza.props=passageSavedProps;bandSpots=passageSavedBand;
+    photoBandSource=passageSavedSource;photoExtras.length=0;photoExtras.push(...passageSavedExtras);
+    plaza.backdrop.mesh.count=passageBackdropCount;midCrowd.mesh.count=passageMidCount;`);
+  console.log('held WASD clears a spectator trapped against scenery for both figures');
 }
 
-// Looking exposes an explicit invitation; desktop frames hand a figure to WASD; touch only looks.
-{
-  const keyDown = (code, more = {}) => {
-    let prevented = false;
-    for (const h of keyHandlers) h({ code, target: { tagName: 'BODY' }, preventDefault() { prevented = true; }, ...more });
-    return prevented;
-  };
-  run(`pfAutoShown.clear(); G.state = 'select'; setFigureSong(MULASSA); setView(false); setView(true); animMula(1/60, clock/BEAT);`);
-  assert(run('viewMode && !PHOTO.on && !avatarsEl.hidden'), 'photo mode starts in free view with the bar shown');
-  assert(!keyDown('KeyW') && !keyDown('Tab'), 'free view leaves W and Tab alone');
-  assert(run('PHOTO.keys.size === 0'));
-  // Timers belong to the current notice: switching/exit cancels them, replay replaces them.
-  const savedPhotoTimers = [context.setTimeout, context.clearTimeout], photoTimers = new Map();
-  let photoTimerId = 0;
-  context.setTimeout = (fn, ms) => { photoTimers.set(++photoTimerId, { fn, ms }); return photoTimerId; };
-  context.clearTimeout = id => photoTimers.delete(id);
-  run("takeFigure('drac-valls');");
-  assert(run("PHOTO.on && PHOTO.id === 'drac-valls' && PHOTO.pair"), 'a frame takes that figure');
-  assert(run('!pfTip.hidden && pfTip.dataset.visible === "true" && pfTip.innerHTML.includes("rugeix")'), 'Drac notice describes its real actions');
-  assert([...photoTimers.values()].some(t => t.ms === 7000), 'notice stays for seven seconds and can be replayed');
-  const firstNoticeTimer = run('pfTipT');
-  photoTimers.get(firstNoticeTimer).fn(); // the first figure's help has already disappeared
-  assert(keyDown('Tab') && run("PHOTO.id === 'mulassa-valls'"), 'Tab switches only while driving');
-  assert(!photoTimers.has(firstNoticeTimer), 'switching cancels the previous notice timer');
-  assert(run('!pfTip.hidden && pfTip.dataset.visible === "true"'), 'first Tab entry into another figure opens its own automatic help');
-  assert.equal(photoTimers.get(run('pfTipT')).ms, 7000, 'each new figure gets the full initial reading time');
-  assert(run('pfTip.innerHTML.includes("guitza") && !pfTip.innerHTML.includes("rugeix")'), 'switch replaces help with Mulassa actions');
-  photoTimers.get(run('pfTipT')).fn();
-  assert(run('pfTip.dataset.visible === "false" && pfHelp.textContent.includes("guitza")'), 'after fade the accessible help remains');
-  keyDown('Tab');
-  assert(run('pfTip.innerHTML.includes("Ara mous el Drac")'), 'returning to an actor gives compact feedback');
-  keyDown('Tab');
-  assert(run('pfTip.innerHTML.includes("Ara mous la Mulassa")'), 'each switch identifies the actual actor');
-  keyDown('Slash', { key: '?' });
-  assert(run('pfTip.dataset.visible === "true"'), 'question mark replays help without leaving control');
-  keyDown('Tab');
-  assert(run('!pfTip.innerHTML.includes("pf-help-grid")'), 'switching replaces full help with compact feedback');
-  keyDown('Tab'); keyDown('Slash', { key: '?' });
-  keyDown('KeyW');
-  const usedNoticeTimer = run('pfTipT');
-  assert.equal(photoTimers.get(usedNoticeTimer).ms, 1000, 'first movement key dismisses help after one second');
-  keyDown('KeyA'); keyDown('KeyW', { repeat: true });
-  assert.equal(run('pfTipT'), usedNoticeTimer, 'further movement and held keys do not postpone dismissal');
-  assert(run('pfTip.innerHTML.includes("Mulassa de Valls")'), 'popup uses the catalog full name');
-
-  run("takeFigure('mulassa-valls');");
-  assert(run('PHOTO.on && viewMode'), 'choosing the active figure is idempotent');
-  run("takeFigure('drac-valls'); updateControls();");
-  photoTimers.get(run('pfTipT')).fn(); run('updateControls();');
-  assert(run('!howtoEl.hidden && !howtoEl.inert'), 'after feedback fades the existing help button returns');
-  run('showPhotoHelp();');
-  assert(run('pfTip.dataset.visible === "true" && pfTip.innerHTML.includes("rugeix")'), 'help button reopens the active figure instructions');
-  run("takeFigure(''); takeFigure('mulassa-valls');");
-
-  run("takeFigure('mulassa-valls'); takeFigure('');");
-  assert(run('!PHOTO.on && viewMode'), 'Vista lliure goes back to viewing');
-  run("takeFigure('mulassa-valls');"); keyDown('KeyW');
-  keyDown('Escape');
-  assert(run('!PHOTO.on && viewMode && PHOTO.keys.size === 0'), 'Escape first drops control (keys cleared)');
-  keyDown('Escape');
-  assert(run('!viewMode && avatarsEl.hidden'), 'the next Escape brings the buttons back');
-  run("setView(true); takeFigure('mulassa-valls');"); keyDown('KeyH');
-  assert(run('!viewMode && !PHOTO.on'), 'H leaves photo mode and control at once');
-  run("COARSE.matches = true; setView(true); takeFigure('mulassa-valls');");
-  assert(run('viewMode && avatarsEl.hidden && !PHOTO.on'), 'touch: no bar, no driving');
-  assert(!keyDown('KeyW') && run('PHOTO.keys.size === 0'), 'touch: keys never steer');
-  run("setView(false); COARSE.matches = false; G.state = 'play';");
-  assert(!keyDown('Tab') && !keyDown('KeyA'), 'during a song WASD/Tab are not photo keys');
-  run("G.state = 'select';");
-  assert(run('pfTip.hidden && pfTip.dataset.visible === "false"'), 'touch and exit clear the notice');
-  [context.setTimeout, context.clearTimeout] = savedPhotoTimers;
-  console.log('photo free view by default, desktop frames, Escape steps back, touch only looks ok');
-  // Pending selection keeps its identity; photo mode shows the two existing playable figures.
-  let ft = 90000; const pendFrame = () => run(`frame(${ft += 1000 / 60})`);
-  run(`var realSel = sheets.select, pendCrowd = activeCrowd; activeCrowd = []; sheets.select = { pending: true, figure: { id: 'aliga-valls', status: 'aviat' }, visible() {}, sheetOpen: false };
-    G.state = 'select'; setView(false); setFigureSong(MULASSA); var pendingSounds = [], pendingChip = chip; chip = { sfx: k => pendingSounds.push(k) };`);
-  pendFrame();
-  assert(run('!mula.root.visible && !drac.root.visible'), 'pending selector: no model');
-  run('setView(true);'); pendFrame();
-  assert(run('mula.root.visible && drac.root.visible && !avatarsEl.hidden'), 'pending photo mode: both figures and the control bar show');
-  run("takeFigure('drac-valls');"); pendFrame();
-  assert(run("drac.root.visible && mula.root.visible && selectedFigure.id === 'mulassa-valls'"), 'driving the Drac never changes the selection');
-  run("PHOTO.sparks = true;"); pendFrame(); pendFrame();
-  run('setView(false);'); pendFrame();
-  assert(run("!mula.root.visible && !drac.root.visible && dracFx.idle && sheets.select.figure.id === 'aliga-valls' && selectedFigure.id === 'mulassa-valls'"), 'leaving: bare again, Drac fx cleared, pending selection kept');
-  run('setFigureSong(DRAC); setView(true);'); pendFrame();
-  assert(run('drac.root.visible && mula.root.visible'), 'both figures show with the last playable Drac');
-  run('setView(false); setFigureSong(MULASSA);'); pendFrame(); // (a frame closes the photo walk, as the game does)
-  assert.equal(run('pendingSounds.length'), 0, 'pending photo controls and figure switches never request SFX');
-  run('chip = pendingChip;');
-
-  run('sheets.select = realSel; activeCrowd = pendCrowd;');
-}

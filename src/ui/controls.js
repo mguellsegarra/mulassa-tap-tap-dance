@@ -7,7 +7,6 @@ import { keyboardNav } from './focus.js';
 import { hud, buttonAt } from '../hud/canvas.js';
 import { lookSync } from './mouse-look.js';
 import { PHOTO } from '../game/photo-control.js';
-import { COARSE } from '../core/env.js';
 
 const practiceLabel = document.getElementById('skip-label'), practiceIcon = document.getElementById('skip-icon');
 
@@ -42,6 +41,7 @@ export let viewMode = false, viewT = 0, viewBack = null, viewIdle = 0, hudBlank 
 export const setHudBlank = v => (hudBlank = v);
 export function setView(on) {
   if (on === viewMode || on && (!menuState() || sheetUp())) return;
+  const entryFocus = on ? document.activeElement : null; // making the selector inert can already blur its card
   if (on && G.state === 'splash') startMenuAudio();
   const entryFigure = on && G.state === 'select' && !sheets.select?.pending && sheets.select?.figure;
   viewMode = on; showAvatars(on, entryFigure?.id); viewT = performance.now();
@@ -51,16 +51,16 @@ export function setView(on) {
   viewBtn.setAttribute('aria-pressed', String(on)); // (one name, «Amaga els botons», pressed or not; the tooltip says what a press does)
   viewBtn.title = on ? 'Mostra els botons (H)' : 'Amaga els botons (H)';
   clearTimeout(viewIdle); viewBtn.classList.remove('idle');
-  hud.tabIndex = on && !COARSE.matches ? 0 : -1;
   hud.setAttribute('role', on ? 'region' : 'img');
-  hud.setAttribute('aria-label', on ? 'Plaça: controls de moviment' : 'La plaça');
+  if (!on) hud.setAttribute('aria-label', 'La plaça');
   if (on) {
-    viewBack = document.activeElement;
+    viewBack = entryFocus;
     (PHOTO.on ? hud : viewBtn).focus({ preventScroll: true });
     viewWake();
   } else {
     const back = viewBack; viewBack = null;
-    if (keyboardNav && back && back !== document.body && back.isConnected && !back.hidden) back.focus({ preventScroll: true });
+    if (keyboardNav && back && back !== document.body && back.isConnected && !back.hidden && !back.closest?.('[hidden], [inert]')) back.focus({ preventScroll: true });
+    else if (keyboardNav && G.state === 'select') sheets.select?.refocus?.();
     else document.activeElement?.blur(); // touch/mouse: Space picks a difficulty again
   }
   updateHudCursor();

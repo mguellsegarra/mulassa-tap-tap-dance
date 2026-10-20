@@ -10,7 +10,7 @@ import { escutSvg } from './escuts.js';
 import { entityLabel, entityHtml, cardEntityHtml, fitEntityLabel } from './figure-entities.js';
 import { GIFTS } from './pending-gifts.js';
 import { stripScroll } from './strip-scroll.js';
-import { fitPendingTitle, fitPendingNote } from './pending-title.js';
+import { fitPendingTitle } from './pending-title.js';
 import { SELECTOR_PORTRAITS, pendingSilhouette } from './selector-portraits.js';
 
 // pixel art as an SVG: each cell a square, the cells round the shape a dark rim
@@ -81,7 +81,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
   const restPills = pills.filter(p => restTowns.some(t => t.id === p.dataset.town));
   const foldLabel = `${soon.length} figures més, pròximament, de ${new Set(soon.map(f => f.town)).size} poblacions`;
   let figure = live[0], lastPlayable = figure, open = true; // catalog selection is independent of the host's last playable figure
-  let opening = false, shown = false, teasing = false, level = 1, chosen = false, challenge = false, town = null, cur = 0, req = 0, step = 'figures';
+  let opening = false, shown = false, teasing = false, level = 1, town = null, cur = 0, req = 0, step = 'figures';
   const smooth = () => (reduced() ? 'auto' : 'smooth');
   const api = { band: null, fpsFooter: [], measure: () => { if (shown) measure(); }, onSelect, get figure() { return figure; }, get pending() { return teasing || !playable(figure); }, get unfolded() { return open; }, visible, toLevels: () => nextStep() };
 
@@ -163,7 +163,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     $('select-act').inert = !choosing;
     $('select-next').hidden = choosing;
     $('select-play').hidden = !choosing;
-    $('select-figures-back').hidden = !choosing; if (choosing && !back) { if (challenge) challenge = false; else setLevel(level, 'open'); } levelStats(); // step 2 opens with no level marked (a friend's challenge keeps its level, once)
+    $('select-figures-back').hidden = !choosing; if (choosing && !back) levels.toggleAttribute('data-quiet', true); levelStats(); // showing it again restarts its animations: no shake
     if (choosing) scrolling.stop(); // a hidden strip cannot finish a motion
     if (shown && !opening) { measure(); if (back && !choosing) centre(strip, cards[cur], 'instant'); }
   }
@@ -197,13 +197,13 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
       b.setAttribute('aria-label', has ? `${d}, el teu rècord ${num(score)} punts` : d);
     }
   }
-  function levelStats() { showLevelStats($, { on: step === 'level' && playable(figure) && chosen, level, record: DEMO ? { score: DEMO_BEST[level], quality: DEMO_PCT[level] } : readFigureRecord(store, figure, level) }); }
-  function setLevel(l, by = 'tap') { // 'open' only remembers the figure's level; a tap, a key or a challenge marks it
+  function levelStats() { showLevelStats($, { on: step === 'level' && playable(figure), level, record: DEMO ? { score: DEMO_BEST[level], quality: DEMO_PCT[level] } : readFigureRecord(store, figure, level) }); }
+  function setLevel(l, by = 'tap') { // 'open': the figure's last level (NORMAL at first) or a challenge's, marked without a tap's shake
     if (!playable(figure)) return;
     l = Math.max(0, Math.min(DIFFS.length - 1, l));
-    if ((l !== level || !chosen) && by !== 'open' && by !== 'challenge') { rememberLevel(store, figure.id, l); sfx('menu'); }
-    level = l; chosen = by !== 'open'; $('select-play').disabled = !chosen; // A BALLAR! waits for a choice, visible but off (Marc)
-    for (const b of levels.children) b.setAttribute('aria-pressed', String(chosen && Number(b.dataset.level) === l));
+    if (l !== level && by !== 'open') { rememberLevel(store, figure.id, l); sfx('menu'); }
+    level = l; levels.toggleAttribute('data-quiet', by === 'open'); // only a tap shakes (Marc; select.css)
+    for (const b of levels.children) b.setAttribute('aria-pressed', String(Number(b.dataset.level) === l));
     levelStats(); // step 2's row (level-stats.js)
   }
   const visibleCards = () => cards.filter(c => !c.hidden && !c.inert);
@@ -402,7 +402,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
   }
   const figureOf = card => card.dataset.id === INVITE.id ? INVITE : FIGURES.find(f => f.id === card.dataset.id);
   const play = () => {
-    if (!shown || step !== 'level' || !playable(figure) || !chosen || busy()) return;
+    if (!shown || step !== 'level' || !playable(figure) || busy()) return;
     rememberLevel(store, figure.id, level); sfx('menu'); onPlay(level, figure);
   };
   function pick(card, how) {
@@ -414,7 +414,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     const next = figureOf(card);
     if (next !== figure) {
       if (how !== 'filter' && how !== 'fold') sfx('menu');
-      figure = next; info(); challenge = false; setLevel(rememberedLevel(store, figure.id), 'open'); // a challenge's level belongs to its own figure
+      figure = next; info(); setLevel(rememberedLevel(store, figure.id), 'open');
       if (how !== 'fold') mark(figure.town, how === 'arrow' ? 'instant' : smooth());
       if (playable(figure)) { lastPlayable = figure; api.onSelect(figure); } // pending figures never replace the song/model state
       if (!settling) measure();
@@ -455,7 +455,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
   $('aviat-write').addEventListener('click', () => { if (teasing) onWrite(''); else if (!playable(figure)) onWrite(figure.invite ? INVITE_DRAFT : aviatDraft(townOf(figure).name)); });
 
   win.addEventListener('keydown', e => {
-    if (!shown || busy() || e.altKey || e.ctrlKey || e.metaKey) return;
+    if (e.defaultPrevented || !shown || busy() || e.altKey || e.ctrlKey || e.metaKey) return;
     const a = doc.activeElement, inTowns = towns.contains(a), card = a?.closest?.('.sel-card');
     const key = e.key, move = { ArrowLeft: -1, ArrowRight: 1 }[key];
     // One move per press. Consume repeats so a held key cannot scroll the browser either.
@@ -491,8 +491,8 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     if (a?.closest?.('a, input, textarea') || pending.contains(a)) return;
     if (step === 'level') {
       if (key === 'Escape') { e.preventDefault(); setStep('figures'); api.refocus(); }
-      else if (move) { e.preventDefault(); setLevel(chosen ? level + move : move > 0 ? 0 : DIFFS.length - 1, 'key'); if (levels.contains(a)) levels.children[level].focus({ preventScroll: true }); }
-      else if ((key === 'Enter' || key === ' ') && (levels.contains(a) || a === $('select-play') || !a || a === doc.body)) { e.preventDefault(); if (levels.contains(a) && !(chosen && Number(a.dataset.level) === level)) setLevel(Number(a.dataset.level), 'key'); else play(); } // the first Enter on a level chooses it
+      else if (move) { e.preventDefault(); setLevel(level + move); if (levels.contains(a)) levels.children[level].focus({ preventScroll: true }); }
+      else if ((key === 'Enter' || key === ' ') && (levels.contains(a) || a === $('select-play') || !a || a === doc.body)) { e.preventDefault(); play(); }
       return;
     }
 
@@ -551,7 +551,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     const stripTop = dockTop + r(strip).top - r(dock).top;
     const pendingEnd = nav ? dockTop + r($('select-nav')).top - r(dock).top : stripTop + Math.min(...base.map(el => el.offsetTop)) * z;
     root.style.setProperty('--pending-rest-bottom', px(Math.max(0, r(root).height - pendingEnd) + 12 * z));
-    if (!pending.hidden) { fitEntityLabel($('aviat-entity')); fitPendingTitle($('aviat-title'), win); fitPendingNote(pending); }
+    if (!pending.hidden) { fitEntityLabel($('aviat-entity')); fitPendingTitle($('aviat-title'), win); }
     // Cached action bounds for diagnostic overlays; no frame-loop layout reads.
     api.fpsFooter = ['select-figures-back', 'select-next', 'select-play'].map($).filter(el => !el.hidden).map(r);
   }
@@ -572,7 +572,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     // Every write first, then one read of the layout, then the scrolls: each read after a write recomputed the whole
     // selector's styles, and this runs in the frame that shows it (the splash's ENTRA: ~0.3 s on a slow phone).
     opening = true; info(); opening = false;
-    challenge = firstLevel != null; setLevel(firstLevel ?? rememberedLevel(store, figure.id), challenge ? 'challenge' : 'open'); firstLevel = null;
+    setLevel(firstLevel ?? rememberedLevel(store, figure.id), 'open'); firstLevel = null;
     const i = cards.findIndex(c => c.dataset.id === figure.id);
     roveCard(i);
     const pill = press(figure.town);
@@ -583,6 +583,10 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     if (keyboard()) cards[i].focus({ preventScroll: true }); else doc.activeElement?.blur?.();
 
   }
-  api.refocus = () => { if (shown && keyboard()) cards[cur].focus({ preventScroll: true }); }; // back from a sheet it opened
+  api.refocus = () => { // back from a sheet or photo mode: keep the current selector step
+    if (!shown || !keyboard()) return;
+    const target = step === 'level' ? levels.children[level] : cards[cur];
+    target?.focus({ preventScroll: true });
+  };
   return api;
 }

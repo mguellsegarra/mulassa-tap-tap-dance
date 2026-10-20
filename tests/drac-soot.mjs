@@ -7,7 +7,8 @@ import * as THREE from 'three';
 
 globalThis.location ??= { search: '', hostname: 'localhost' };
 globalThis.matchMedia ??= () => ({ matches: false, addEventListener() {} });
-const { sootMaterial, sootFrame, sootPose, sootFrozen, sootState, SOOT } = await import('../src/scene/drac-soot.js');
+const { sootMaterial, sootFrame, sootPose, sootFrozen, sootAnchored, sootState, SOOT } = await import('../src/scene/drac-soot.js');
+const { PHOTO } = await import('../src/game/photo-control.js');
 const { createDracFx } = await import('../src/scene/drac-fx.js');
 const { buildDrac, DRAC_SCALE } = await import('../src/scene/models/drac.js');
 const { buildPerson, skinCrowd } = await import('../src/scene/models/people.js');
@@ -18,7 +19,7 @@ const scene = new THREE.Scene(), drac = buildDrac(), cam = new THREE.Perspective
 drac.root.scale.setScalar(DRAC_SCALE); // as the game draws it: mouths ~2.5 m up
 scene.add(drac.root); cam.position.set(0, 4, 12); cam.lookAt(0, 1, 0);
 const fx = createDracFx(scene, { smoke: 96, jets: 420, calm: { matches: false } });
-const IN = { on: true, cam, fire: drac.fire, streak: false, flare: false, held: true, max: 96, jmax: 420, wmax: 0, viewH: 800, x: 0, z: 0 };
+const IN = { on: true, cam, fire: drac.fire, streak: false, flare: false, held: true, manual: true, max: 96, jmax: 420, wmax: 0, viewH: 800, x: 0, z: 0 };
 const people = Array.from({ length: 14 }, (_, i) => { const p = buildPerson({ kid: i % 4 === 3, hat: i % 3 ? null : '#b3122a' }); p.legs.length || assert.fail('standing'); return p; });
 const band = [buildPerson()]; // in the mesh, never charred (not in the list sootFrame gets)
 const mesh = skinCrowd([...people, ...band]);
@@ -45,16 +46,18 @@ const mx = (E[0] + E[8]) / 2, mz = (E[2] + E[10]) / 2;
 const [front, beside, behind, far, ...rest] = people;
 place(front, mx + fwdX * 3, mz + fwdZ * 3); // where the mouths' jets come down to head height (the flamarada burns above heads)
 place(beside, -fwdZ * 2.2, fwdX * 2.2); // right next to the Drac's body, out of every flame
-place(behind, -fwdX * 2.6, -fwdZ * 2.6); // behind: the tail's flame and jet, low and straight back
+place(behind, E[16] + E[19] * 1.4, E[18] + E[21] * 1.4); // behind: the tail's flame and jet, low and straight back
 place(far, mx + fwdX * 9, mz + fwdZ * 9);
 const near = rest.pop(); place(near, mx + fwdX * 1.2, mz + fwdZ * 1.2); // right under the snout, the flame over their head
+const wedge = rest.pop(); place(wedge, mx + fwdX * 2.2 - fwdZ * 1.2, mz + fwdZ * 2.2 + fwdX * 1.2); // in front, off to one side: facing the flamarada
 rest.forEach((p, i) => place(p, 30 + i, 30));
 
 frame(1 / 60);
 assert(sootFrozen(front), 'whoever stands in the flame is charred');
 assert(!sootFrozen(beside) && !sootFrozen(far), 'standing next to the Drac or far down the line is not contact');
 assert(sootFrozen(near), 'under the snout: the flame over their head counts (cartoon licence, SOOT.under)');
-assert(sootFrozen(behind), "the tail's flame reaches whoever stands behind it");
+assert(sootFrozen(wedge), 'anyone in front of the snout within the jets reach burns (SOOT.front)');
+assert(!sootFrozen(behind), "the residual tail no longer chars someone in the old full-size plume");
 for (let i = 0; i < 12; i++) frame(1 / 60);
 assert.deepEqual(bytes(front), [255, 255, 255, 255, 255], 'all five of their bones black');
 assert.deepEqual(bytes(far), [0, 0, 0, 0, 0], 'nobody else');
@@ -75,6 +78,18 @@ const held = front.sootS.slice();
 front.torso.rotation.x = 0.7; front.arms[0].rotation.x = -2; front.g.position.y = 0.2;
 sootPose(front);
 assert(Math.abs(front.torso.rotation.x - held[6]) < 1e-6 && Math.abs(front.arms[0].rotation.x - held[10]) < 1e-6 && Math.abs(front.g.position.y - held[1]) < 1e-6, 'frozen in the pose they had');
+// A held walking intent releases position, including when the figure itself is blocked. The black pose remains.
+assert(sootAnchored(front));
+PHOTO.on = true; PHOTO.intentX = 3.2; PHOTO.intentZ = 0; PHOTO.speed = 0;
+assert(!sootAnchored(front) && sootFrozen(front), 'a blocked WASD walker can ask a charred spectator to yield');
+const heldX = front.g.position.x, heldZ = front.g.position.z;
+front.g.position.x += 1; front.g.position.z += 0.5; sootPose(front);
+assert.equal(front.g.position.x, heldX + 1); assert.equal(front.g.position.z, heldZ + 0.5);
+assert.equal(bytes(front)[0], 255, 'stepping aside never restores the costume colour');
+assert(Math.abs(front.arms[0].rotation.x - held[10]) < 1e-6, 'the held limbs travel with the spectator');
+front.g.position.x = heldX; front.g.position.z = heldZ;
+PHOTO.intentX = 0; PHOTO.on = false;
+assert(sootAnchored(front), 'releasing walking holds the new position without restoring an old world anchor');
 
 // a held E keeps renewing it, never beyond `hold`
 for (let i = 0; i < 120; i++) frame(1 / 60);

@@ -48,14 +48,14 @@ setPhotoControl(false);const facing=photoBody().yaw;photoLook(50,0);assert.equal
 console.log('figure-relative WASD and mouse look ok');
 
 setPhotoControl(true, 'mulassa-valls', false);
-Object.assign(photoBody(), { x: 0, z: 0, yaw: 0 }); press('KeyW');
+Object.assign(photoBody(), { x: 0, z: 0, yaw: 0 }); press('KeyW'); press('ShiftLeft');
 let previousSpeed = 0;
 for (let i=0;i<240;i++) {
   movePhoto(1/60,()=>99);
   const speed=Math.hypot(photoBody().vx,photoBody().vz);
-  assert(speed>=previousSpeed-1e-9 && speed<=PHOTO_RUN.run+1e-9, 'holding W accelerates up to its cap'); previousSpeed=speed;
+  assert(speed>=previousSpeed-1e-9 && speed<=PHOTO_RUN.run+1e-9, 'holding W + Shift accelerates up to its cap'); previousSpeed=speed;
 }
-assert(previousSpeed>PHOTO_RUN.run-0.1, 'held W reaches the full gallop');
+assert(previousSpeed>PHOTO_RUN.run-0.1, 'held W + Shift reaches the full gallop');
 clearPhotoKeys(); press('KeyD');
 movePhoto(1/60,()=>99,Math.PI/2);
 assert(photoBody().vz>0 && Math.abs(photoBody().vx)<1e-8, 'D follows screen right even while camera aligns');
@@ -149,21 +149,73 @@ console.log('left drag steers while advancing and freely orbits at rest ok');
 }
 console.log('camera follows forward walking, figure switch keeps the spot ok');
 
-// A held W builds a trot into a gallop; sideways and backwards stay at the trot; letting go drops the burst.
+// Shift is a held speed modifier for either figure, in every WASD direction.
 {
   const speedAfter = (codes, s) => {
     setPhotoControl(true,'mulassa-valls',false); Object.assign(photoBody(),{x:0,z:0,yaw:0}); codes.forEach(c => press(c));
     for (let i = 0; i < s * 60; i++) movePhoto(1/60, () => 99);
     return Math.hypot(photoBody().vx, photoBody().vz);
   };
-  const early = speedAfter(['KeyW'], 0.3), full = speedAfter(['KeyW'], 1.5);
+  assert(Math.abs(speedAfter(['KeyW'], 2) - PHOTO_RUN.trot) < 0.001, 'W alone keeps walking');
+  const early = speedAfter(['KeyW', 'ShiftLeft'], 0.3), full = speedAfter(['KeyW', 'ShiftLeft'], 1.5);
   assert(early > 2 && early < 5 && full > 8.5, `trot first, then a gallop: ${early} → ${full}`);
   assert(speedAfter(['KeyD'], 2) <= PHOTO_RUN.trot + 1e-9 && speedAfter(['KeyS'], 2) <= PHOTO_RUN.trot + 1e-9, 'strafe/back never gallop');
   PHOTO.keys.clear(); for (let i = 0; i < 30; i++) movePhoto(1/60, () => 99);
   assert(photoBody().sprint === 0 && Math.hypot(photoBody().vx, photoBody().vz) < 0.2, 'letting go stops the run quickly');
   setPhotoControl(false);
 }
-console.log('trot builds into a gallop ok');
+console.log('Shift builds walking into a gallop ok');
+
+for (const id of ['mulassa-valls', 'drac-valls']) for (const fps of [30, 60, 120]) {
+  const step = seconds => { for (let i = 0; i < seconds * fps; i++) movePhoto(1 / fps, () => 99); };
+  setPhotoControl(true, id, false); Object.assign(photoBody(), { x: 0, z: 0, yaw: 0 });
+  press('ShiftLeft'); step(2);
+  assert.equal(PHOTO.speed, 0, 'Shift alone never moves');
+  assert(!PHOTO.action && !PHOTO.sparks && !photoBody().spinLeft, 'Shift alone starts no action');
+  press('KeyW'); step(2);
+  assert(Math.abs(PHOTO.speed - 9) < 0.001, `${id}/${fps}: Shift before W runs`);
+  press('ShiftRight'); PHOTO.keys.delete('ShiftLeft'); step(0.5);
+  assert(Math.abs(PHOTO.speed - 9) < 0.001, 'releasing one Shift keeps the other held');
+  PHOTO.keys.delete('ShiftRight');
+  let before = PHOTO.speed;
+  for (let i = 0; i < fps; i++) {
+    movePhoto(1 / fps, () => 99);
+    assert(PHOTO.speed <= before + 1e-9 && before - PHOTO.speed < 1.2, 'run to walk eases down without a speed jump');
+    before = PHOTO.speed;
+  }
+  assert(Math.abs(PHOTO.speed - 3.2) < 0.01, 'releasing the last Shift returns to walking with W still held');
+  press('ShiftRight'); step(2);
+  assert(PHOTO.speed > 8.99, 'W before Shift runs too');
+  PHOTO.keys.delete('KeyW'); step(0.5);
+  assert(PHOTO.speed < 0.02 && !photoBody().sprint, 'Shift stays held while releasing movement brakes to rest');
+  for (const codes of [['KeyD'], ['KeyS'], ['KeyA'], ['KeyW', 'KeyD'], ['KeyS', 'KeyA']]) {
+    clearPhotoKeys(); press('ShiftLeft'); codes.forEach(c => press(c)); step(2);
+    assert(Math.abs(PHOTO.speed - 9) < 0.001, `${codes}: normalized run in every direction`);
+  }
+  clearPhotoKeys(); press('KeyW'); press('ShiftLeft'); step(2); PHOTO.air = true;
+  const flight = { vx: photoBody().vx, vz: photoBody().vz, sprint: photoBody().sprint };
+  PHOTO.keys.delete('ShiftLeft'); press('KeyD'); step(0.2);
+  assert.deepEqual({ vx: photoBody().vx, vz: photoBody().vz, sprint: photoBody().sprint }, flight, 'Shift release in flight preserves takeoff momentum');
+  PHOTO.air = false; step(1);
+  assert(Math.abs(PHOTO.speed - 3.2) < 0.01, 'landing picks up walking intent');
+  for (const codes of [['KeyE', 'ShiftLeft', 'KeyW'], ['KeyW', 'ShiftRight', 'KeyE']]) {
+    clearPhotoKeys(); codes.forEach(c => press(c)); PHOTO.mouse = 2; PHOTO.cameraYaw = photoBody().yaw + Math.PI + 0.5; step(1.5);
+    assert(PHOTO.speed > 8.9 && PHOTO.keys.has('KeyE'), 'RMB steering, held E and running coexist in either key order');
+    assert.equal(PHOTO.sparks, id === 'drac-valls', 'Drac fire remains held through Shift and RMB');
+  }
+  const actor = PHOTO.id;
+  assert.equal(press('Tab', { shiftKey: true }).prevented, false, 'ShiftTab keeps native backwards navigation');
+  assert(PHOTO.id === actor && !PHOTO.keys.size && !PHOTO.speed, 'ShiftTab releases motion without changing figure');
+  for (const target of [{ tagName: 'BUTTON' }, { tagName: 'TEXTAREA' }, { tagName: 'DIV', closest: () => ({ role: 'dialog' }) }]) {
+    press('ShiftLeft'); press('KeyW');
+    assert(!press('ShiftRight', { target }).taken && !PHOTO.keys.size, 'controls and modals reject and clear held Shift');
+  }
+  press('ShiftLeft'); press('KeyW'); press('Tab');
+  assert(!PHOTO.keys.size && !photoBody().sprint, 'switching figure clears Shift');
+  press('ShiftRight'); setPhotoControl(false);
+  assert(!PHOTO.keys.size && !press('ShiftLeft').taken, 'outside free control Shift is inactive');
+}
+console.log('both Shift keys, walk/run transitions, navigation, E/RMB, flight and resets at 30/60/120 FPS ok');
 
 // R: the Mulassa's culada turns her half round, always the same way: R R = a full turn; the Drac's E is a spark burst, held.
 {

@@ -4,7 +4,8 @@ export const PUBLIC_AGE_WEIGHTS = Object.freeze({ '0-14': 0.13, '15-64': 0.67, '
 // Within the approved 15-64 band, retain Idescat's relative 15-24 share (11.6 of 67.2, 2026 provisional).
 // Youth includes adults aged 18-24; it is an age band, not a claim about legal adulthood.
 export const MIDDLE_YOUTH_SHARE = 11.6 / 67.2;
-export const REVIEW_LOOKS = ['p04', 'p05', 'p08', 'p02', 'p09', 'p12', 'p06', 'p10'];
+const ROBES = ['#33456e', '#2a2a2a', '#5b3b2a', '#6b2f4a', '#2f5a4a', '#8a7d6b', '#a0522d', '#4a4a5c', '#7a6a9a', '#b8a58a'];
+export const REVIEW_LOOKS =['p04', 'p05', 'p08', 'p02', 'p09', 'p12', 'p06', 'p10'];
 export function populationRandom(seed) {
   let s = seed >>> 0;
   return () => { s = (s + 0x6d2b79f5) | 0; let t = Math.imul(s ^ (s >>> 15), 1 | s); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
@@ -37,13 +38,17 @@ export function buildPublicSpecs(sources, catalogue, seed = 20261020) {
   return sources.map((source, i) => {
     // Preserve the existing eight appearance examples for review. Additional figures inherit their source skin;
     // these four fixed mobility examples are coverage fixtures, not approved disability prevalence weights.
-    const look = i < REVIEW_LOOKS.length ? catalogue.find(s => s.id === REVIEW_LOOKS[i]) : ordinary[Math.floor(random() * ordinary.length)];
+    let look = i < REVIEW_LOOKS.length ? catalogue.find(s => s.id === REVIEW_LOOKS[i]) : ordinary[Math.floor(random() * ordinary.length)];
     const age = ages[i] === '0-14' ? 'infant' : ages[i] === '65+' ? 'gran' : stages[j++];
     const ageBand = age === 'jove' ? '15-24' : age === 'adult' ? '25-64' : ages[i];
-    // Local wardrobe decision: keep this headscarf variant off the explicit child age band.
-    // Remove the accessory after allocation, preserving approved age/gender counts and every random draw.
-    const cover = age === 'infant' && look.cover === 'mocador' ? null : look.cover;
-    return { ...look, cover, id: `public-${seed >>> 0}-${source.row}-${source.slot}`, age, height: 1,
+    // Marc: the long tunic + headscarf look read too often and always navy: half as frequent, its own colours each time,
+    // and never on a child (they dress like the other children: another look, so the age/gender counts stay as allocated).
+    if (look.cover === 'mocador' && i >= REVIEW_LOOKS.length && (age === 'infant' || random() < 0.5)) look = ordinary.filter(s => s.cover !== 'mocador')[Math.floor(random() * (ordinary.length - 1))];
+    if (look.cover === 'mocador') {
+      const robe = ROBES[Math.floor(random() * ROBES.length)], scarf = ROBES[Math.floor(random() * ROBES.length)];
+      look = { ...look, coverColour: scarf, top: { ...look.top, colour: robe }, bottom: { ...look.bottom, colour: robe } };
+    }
+    return { ...look, id: `public-${seed >>> 0}-${source.row}-${source.slot}`, age, height: 1,
       skin: i < REVIEW_LOOKS.length ? look.skin : source.appearance.skin,
       meta: { gender: gender[i], age, ageBand, populationBand: ages[i], mobility: look.mobility ?? null,
         ...(look.mobility === 'basto' ? { vision: look.meta.vision } : {}) } };

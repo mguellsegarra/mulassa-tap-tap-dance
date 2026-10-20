@@ -8,11 +8,12 @@ function prototypeBody(spec, headOnly = false) {
   const figure = buildFigure(spec), mesh = figure.body;
   mesh.removeFromParent();
   if (headOnly) {
-    // The model contract places the head at torso-local y=.6. Keep complete triangles above the neck.
+    // The model contract places the head at torso-local y=.6. Keep triangles whose middle is above the neck: the
+    // skull's sides and face reach down to y=.6 itself (an every-vertex test dropped them: only eyes and hair showed).
     const g = mesh.geometry, pos = g.attributes.position, ix = g.index, kept = [];
     for (let i = 0; i < ix.count; i += 3) {
       const tri = [ix.getX(i), ix.getX(i + 1), ix.getX(i + 2)];
-      if (tri.every(v => pos.getY(v) > 0.60001)) kept.push(...tri);
+      if (tri.reduce((y, v) => y + pos.getY(v), 0) / 3 > 0.60001) kept.push(...tri);
     }
     g.setIndex(kept); g.translate(0, -0.6, 0);
   }
@@ -33,4 +34,18 @@ export function reviewAttendant(spec, index) {
   for (const m of [...p.head.children]) { p.head.remove(m); m.geometry.dispose(); }
   p.head.add(prototypeBody({ ...spec, height: 1, mobility: null }, true));
   return Object.assign(p, { meta: spec.meta });
+}
+
+// These variants change appearance, not the owning band's/crew's animation. Link once, follow the canonical rig.
+export function linkRolePose(figure, source) {
+  const bones = p => p.bones ?? [p.torso, ...p.legs, ...p.arms];
+  const own = bones(figure), original = bones(source);
+  if (own.length !== original.length) throw new Error('Representation role rig does not match its source');
+  return own.map((bone, i) => [bone, original[i], original[i].quaternion.clone()]);
+}
+export function followRolePose(links, dt = Infinity) {
+  for (const [bone, source, current] of links) {
+    current.rotateTowards(source.quaternion, 6 * Math.max(0, dt));
+    bone.position.copy(source.position); bone.quaternion.copy(current); bone.scale.copy(source.scale);
+  }
 }

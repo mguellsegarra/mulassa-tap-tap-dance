@@ -10,6 +10,8 @@ export function fitPendingTitle(title, win) {
   }
   const largest = parseFloat(win.getComputedStyle(title).fontSize);
   const content = title.closest('.sel-pending-content');
+  text.style.fontSize = `${largest}px`;
+  fitPendingNote(content.closest('.sel-pending'));
   // Read intrinsic rows, not the distributed gaps. The footer keeps its own fixed tracks.
   const rows = () => [...content.querySelectorAll('h2, .sel-entity, .sel-pending-icon, p')]
     .filter(el => !el.hidden && win.getComputedStyle(el).display !== 'none');
@@ -19,7 +21,8 @@ export function fitPendingTitle(title, win) {
     const identity = wide ? Math.max(...heights.slice(0, 2)) : 0;
     const used = wide ? identity + heights.slice(2).reduce((a, b) => a + b, 0) : heights.reduce((a, b) => a + b, 0);
     return text.scrollWidth <= title.clientWidth + 1 && text.offsetHeight <= size * 1.1 * 2 + 1
-      && used <= content.clientHeight + 1;
+      // Baloo's painted glyphs extend beyond their line boxes; retain air above the fixed footer.
+      && used <= content.clientHeight - 4;
   };
   for (let size = largest; size >= 16; size -= .5) {
     text.style.fontSize = `${size}px`;
@@ -34,5 +37,7 @@ export function fitPendingNote(card) {
   const note = card?.querySelector('.sel-pending-copy p + p');
   if (!note) return;
   note.hidden = false;
-  note.hidden = card.scrollHeight > card.clientHeight + 1;
+  const content = note.closest?.('.sel-pending-content');
+  note.hidden = card.scrollHeight > card.clientHeight + 1
+    || !!content && note.getBoundingClientRect().bottom > content.getBoundingClientRect().bottom + 1;
 }

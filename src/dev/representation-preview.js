@@ -4,14 +4,12 @@ import { scene, renderer, camera, plaza, mulaColla, renderProfile, setQualityLev
 import { crowd, crowdMesh, RING } from '../scene/crowd-build.js';
 import { applyRenderQuality } from '../scene/quality.js';
 import { clock, G, drawT } from '../game/state.js';
-import { beatAt, BEAT } from '../core/env.js';
 import { mood } from '../scene/crowd.js';
-import { poseBand } from '../scene/models/band.js';
-import { poseHelper } from '../scene/models/colla.js';
-import { CATALOGUE, buildFigure, skinCrowd, MAT } from './representation/models.js';
+import { CATALOGUE, buildFigure, skinCrowd, MAT, EYE_COLOURS } from './representation/models.js';
 import { crowdMotion, animatePerson } from './representation/live-pose.js';
-import { reviewMusician, reviewAttendant } from './representation/role-models.js';
+import { reviewMusician, reviewAttendant, linkRolePose, followRolePose } from './representation/role-models.js';
 import { buildPublicSpecs, PUBLIC_GENDER_WEIGHTS, PUBLIC_AGE_WEIGHTS } from './representation/population.js';
+import { sootLink, sootHold, sootHoldApply } from '../scene/drac-soot.js';
 
 const PUBLIC_IDS = ['p04', 'p05', 'p08', 'p02', 'p09', 'p12', 'p06', 'p10'];
 const BAND_IDS = ['p01', 'p03', 'p07'];
@@ -51,11 +49,11 @@ export function setupRepresentationPreview() {
   });
   BAND_IDS.forEach((id, i) => {
     const source = plaza.band[i], p = reviewMusician(byId(id), source.kind);
-    entries.push({ role: 'music', id, source, p, size: 1, oldSize: 1 });
+    entries.push({ role: 'music', id, source, p, size: 1, oldSize: 1, poseLinks: linkRolePose(p, source) });
   });
   if (mulaColla) ['p11', 'p03'].forEach((id, i) => {
     const source = mulaColla.crew[i], p = reviewAttendant(byId(id), i);
-    entries.push({ role: 'acompanyant', id, source, p, size: 1, oldSize: 1 });
+    entries.push({ role: 'acompanyant', id, source, p, size: 1, oldSize: 1, poseLinks: linkRolePose(p, source) });
   });
   restore.push(omitPeople(crowdMesh, entries.filter(e => e.role !== 'acompanyant').map(e => e.source)));
   if (mulaColla) {
@@ -64,20 +62,21 @@ export function setupRepresentationPreview() {
   }
   for (const e of entries) e.source.g.parent.add(e.p.g);
   const mesh = skinCrowd(entries.map(e => e.p));
+  mesh.material = sootLink(mesh, entries.map(e => [e.p, e.source]), EYE_COLOURS); // free mode's fire chars them with the person they draw
   scene.add(mesh);
   let enabled = true, lastTime = clock;
   function update() {
     if (!enabled) return;
-    const t = clock, beat = G.state === 'play' ? beatAt(Math.max(0, drawT)) : clock / BEAT;
+    const t = clock;
     const dt = Math.max(0, t - lastTime); lastTime = t;
     for (const e of entries) {
       const { source: s, p } = e;
-      const scale = shown(s.g) ? s.g.scale.x / e.oldSize * e.size : 0;
+      const scale = shown(s.g) ? s.g.scale.x / e.oldSize * e.size : 0, held = sootHold(p, s);
       p.g.scale.setScalar(scale || e.size); // contact solvers must never divide by a hidden figure's zero scale
       if (e.role === 'public') {
         animatePerson(p, s, e.motion, { dt, time: t, clap: mood.clapK * (1 - mood.calmK), festa: mood.festK });
-      } else if (e.role === 'music') poseBand([p], beat, 1);
-      else poseHelper(p, beat, mulaColla.energy, G.finale ? 1 : 0);
+      } else followRolePose(e.poseLinks, dt);
+      if (held) sootHoldApply(p, held); // charred: limbs held as they were
       const y = p.g.position.y;
       p.g.position.copy(s.g.position); p.g.rotation.copy(s.g.rotation);
       // Standing people follow the simulation's fall. Mobility variants evade the impact in the simulation itself.
@@ -116,7 +115,7 @@ export function setupRepresentationPreview() {
     dispose() {
       scene.onBeforeRender = oldBefore; restore.forEach(f => f());
       for (const e of entries) { e.p.g.removeFromParent(); if (e.role === 'public') { e.source.rad = e.oldRad; e.source.kid = e.oldKid; e.source.comfort = e.oldComfort; e.source.avoidKnock = e.oldAvoidKnock; } }
-      mesh.removeFromParent(); mesh.geometry.dispose(); mesh.skeleton.dispose(); MAT.dispose();
+      mesh.removeFromParent(); mesh.geometry.dispose(); mesh.skeleton.dispose(); mesh.material.dispose(); MAT.dispose();
       delete window.__representation;
     },
   };

@@ -9,7 +9,8 @@ import { lookLocked } from './mouse-look.js';
 
 const PF_FIGS = [[MULASSA, [['Q', 's’alça'], ['E', 'guitza'], ['R', 'culada']]],
   [DRAC, [['Q', 'rugeix'], ['E', 'guspires'], ['R', 'gira']]]];
-const photoHelpActions = fig => [['WASD', 'camina'], ['Espai', 'salta'], ...fig[1], ['Tab', 'canvia de figura a la plaça'], ['Ratolí', 'mantén premut per mirar'], ['Esc', lookLocked() ? 'allibera el ratolí' : 'deixa de moure la figura']];
+const photoHelpActions = fig => [['WASD', 'camina'], ['Shift', 'corre'], ['Espai', 'salta'], ...fig[1], ['Tab', 'canvia de figura a la plaça'], ['Ratolí', 'mantén premut per mirar'], ['Esc', lookLocked() ? 'allibera el ratolí' : 'deixa de moure la figura']];
+const photoHelpDescription = fig => `${fig[0].fullName}: ${photoHelpActions(fig).map(([key, label]) => `${key} ${label}`).join(' · ')}. Prem ? per tornar a veure els controls.`;
 const PF_TIP_MS = 7000; // allow time to read the actions, then fade without interrupting input
 const PF_ORBIT_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M4.5 9.5A8 8 0 0 1 18 6.3M19.5 14.5A8 8 0 0 1 6 17.7M18 2.5v4h-4M6 21.5v-4h4"/></svg>';
 export const avatarsEl = document.createElement('div');
@@ -29,6 +30,11 @@ pfTip.hidden = true;
 pfTip.setAttribute('role', 'status');
 pfTip.setAttribute('aria-atomic', 'true');
 avatarsEl.after(pfTip);
+// The canvas fades out in photo mode, so its keyboard focus needs a separate visible outline.
+const pfWorldFocus = document.createElement('div');
+pfWorldFocus.id = 'photo-world-focus';
+pfWorldFocus.setAttribute('aria-hidden', 'true');
+avatarsEl.after(pfWorldFocus);
 
 function clearPhotoTip() {
   clearTimeout(pfTipT);
@@ -71,7 +77,10 @@ export function syncAvatars() {
   if (active !== pfTipFor) {
     pfTipFor = active;
     const fig = PF_FIGS.find(([f]) => f.id === active);
-    pfHelp.textContent = fig ? `${fig[0].fullName}: ${photoHelpActions(fig).map(([key, label]) => `${key} ${label}`).join(' · ')}. Prem ? per tornar a veure els controls.` : '';
+    const freeHelp = COARSE.matches ? 'Mira la plaça. Arrossega per girar. Pessiga per acostar o allunyar. Doble toc a la plaça: mostra els botons.'
+      : 'Mira la plaça. Tria una figura per moure-la. Esc: mostra els botons.';
+    pfHelp.textContent = fig ? photoHelpDescription(fig) : freeHelp;
+    hud.setAttribute('aria-label', fig ? 'Plaça: controls de moviment' : 'Plaça: mira la plaça');
     for (const b of pfButtons) {
       b.setAttribute('aria-describedby', fig && b.dataset.id === active ? 'photo-help' : '');
       if (b.dataset.id === active && fig) {
@@ -96,6 +105,8 @@ export function showAvatars(on, id) {
   setPhotoControl(Boolean(on && !COARSE.matches && PF_FIGS.some(([f]) => f.id === id)), id, true);
   PHOTO.pair = on; // both existing scene figures, independent of selector identity
   avatarsEl.hidden = !on || COARSE.matches;
+  hud.tabIndex = on && !COARSE.matches ? 0 : -1;
+  hud.setAttribute('aria-describedby', on ? 'photo-help' : '');
   pfTipFor = null;
   syncAvatars();
 }
@@ -116,7 +127,8 @@ export function takeFigure(id) {
     pfTip.hidden = false; pfTip.dataset.visible = 'true'; fadePhotoTipAfter(PF_TIP_MS);
   }
 }
-for (const b of pfButtons) b.addEventListener('click', () => takeFigure(b.dataset.id));
+// A mouse or touch choice hands the keys to the world at once (keyboard activation keeps the focus on the button)
+for (const b of pfButtons) b.addEventListener('click', e => { takeFigure(b.dataset.id); if (e.detail && PHOTO.on && hud.tabIndex >= 0) hud.focus({ preventScroll: true }); });
 COARSE.addEventListener?.('change', () => showAvatars(pfShown)); // DevTools device mode, a tablet's keyboard dock
 
 // The first movement/action key gives the player one more second; repeats never postpone dismissal.
@@ -134,6 +146,8 @@ addEventListener('keydown', e => {
 document.addEventListener('pointerlockchange', () => {
   const escape = pfTip.querySelector('[data-photo-escape]');
   if (escape) escape.textContent = lookLocked() ? 'allibera el ratolí' : 'deixa de moure la figura';
+  const fig = pfShown && PHOTO.on && PF_FIGS.find(([f]) => f.id === PHOTO.id);
+  if (fig) pfHelp.textContent = photoHelpDescription(fig);
 });
 hud.addEventListener('focus', () => { if (pfShown && PHOTO.on) showPhotoHelp(); });
 hud.addEventListener('blur', () => { if (pfShown) clearPhotoKeys(); });

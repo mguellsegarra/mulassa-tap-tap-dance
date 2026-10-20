@@ -441,19 +441,21 @@ assert(selected.every(id => live.some(f => f.id === id)) && selected.at(-1) === 
 key('Home'); assert.equal(api.figure, MULASSA);
 key('Escape'); assert(!$('select').hidden, 'Escape does not create a title loop');
 api.visible(false); api.visible(true);
-assert.equal(rememberedLevel(store, MULASSA.id), 0, 'later visits still remember the figure level');
+assert.equal(lv()[0].attrs['aria-pressed'], 'true', 'later visits restore the figure level');
 click($('select-next'));
-assert([...lv()].every(b => b.attrs['aria-pressed'] === 'false'), 'step 2 opens with no level marked, not even the remembered one (Marc)');
-assert($('select-play').disabled && !$('select-play').hidden, 'A BALLAR! shows, off, until a level is chosen');
-assert($('select-level-stats').hidden, 'no level marked, no level row');
-{ const before = played.length; click($('select-play')); key('Enter'); assert.equal(played.length, before, 'A BALLAR! waits for a level'); }
-lv()[1].focus(); key('Enter'); assert(lv()[1].attrs['aria-pressed'] === 'true' && !$('select-play').disabled, 'the first Enter on a level chooses it (and turns A BALLAR! on), it does not play');
+assert(lv()[0].attrs['aria-pressed'] === 'true' && $('select-level').attrs['data-quiet'], 'step 2 opens on the remembered level, marked but quiet: no shake before a tap (Marc)');
+doc.activeElement = doc.body; api.refocus();
+assert.equal(doc.activeElement, lv()[0], 'returning from photo mode focuses the visible level, not the hidden card strip');
+for (const handler of handlers.keydown) handler({ key: 'Escape', defaultPrevented: true, preventDefault() {} });
+assert(!$('select-act').hidden, 'Escape consumed by photo mode must not also leave the difficulty step');
+click($('select-level'), lv()[0]); assert(!$('select-level').attrs['data-quiet'] && lv()[0].attrs['aria-pressed'] === 'true', 'a tap, even on the marked level, brings its shake');
+click($('select-figures-back')); click($('select-next')); assert($('select-level').attrs['data-quiet'], 'showing step 2 again restarts it quiet');
 click($('select-figures-back'));
 rememberLevel(store, DRAC.id, 2);
 store.set(recordKey(DRAC, 2), JSON.stringify({ quality: 88, score: 1234 })); store.set(recordKey(DRAC, 0), JSON.stringify({ quality: 99 })); // a record from before `score` counts as none
 click($('select-strip'), cards[1]);
 assert.equal(api.figure, DRAC); assert.equal(selected.at(-1), DRAC.id, 'selection notifies the stage host');
-assert.equal(rememberedLevel(store, DRAC.id), 2, 'each figure remembers its own difficulty');
+assert.equal(lv()[2].attrs['aria-pressed'], 'true', 'each figure restores its own difficulty');
 assert.equal(lv()[2].html.replace(/<svg[^]*<\/svg>/, '★'), 'DIFÍCIL<span class="sub">★1.234</span>', 'step 2: the best score under its level, with a trophy');
 assert.equal(lv()[2].attrs['aria-label'], 'DIFÍCIL, el teu rècord 1.234 punts');
 assert(lv()[0].html === 'FÀCIL' && lv()[1].html === 'NORMAL', 'no score, or no record: the name alone, beside a level that has one');
@@ -461,8 +463,7 @@ await Promise.resolve();
 assert($('select-rank-tile').hidden, 'local-only figures show no public Mulassa standings');
 cards[1].focus();
 key('Enter'); assert(!$('select-act').hidden, 'Enter confirms the figure before playing');
-assert([...lv()].every(b => b.attrs['aria-pressed'] === 'false'), 'its remembered DIFÍCIL is not marked either');
-click($('select-level'), lv()[2]);
+assert.equal(lv()[2].attrs['aria-pressed'], 'true', 'its remembered DIFÍCIL is marked');
 assert(!$('select-level-sub').hidden, 'a record restores its stars and percentage');
 assert.equal($('select-level-title').textContent, '1.234 punts a DIFÍCIL', 'the record\'s points head the row');
 assert.equal($('select-level-sub').html.replace(/<span class="stars">([^]*?)<\/span>/, (_, s) => '★'.repeat((s.match(/class="on"/g) || []).length)), '★★★88% d’encerts', 'stars and % of that record');
@@ -477,7 +478,6 @@ key('ArrowLeft'); assert.equal($('select-level').children[1].attrs['aria-pressed
 key('ArrowRight'); key('Escape'); assert($('select-act').hidden, 'Escape leaves difficulty without a run');
 click($('select-next'));
 assert.equal($('select-act').inert, false, 'the difficulty step accepts input');
-key('ArrowLeft'); assert.equal(lv()[2].attrs['aria-pressed'], 'true', 'with nothing marked, ← starts from DIFÍCIL');
 click($('select-play')); assert.deepEqual(played.at(-1), [2, DRAC.id], 'play receives the selected figure and level');
 click($('select-strip'), cards[0]); await Promise.resolve();
 assert(!$('select-rank-tile').hidden);
@@ -703,6 +703,9 @@ console.log('pending fold: immediate selection, preserved outgoing content, shar
   const card = { querySelector: () => note, get clientHeight() { return room; }, get scrollHeight() { return note.hidden ? 90 : 112; } };
   fitPendingNote(card); assert(note.hidden, 'a card that would scroll drops the note');
   room = 120; fitPendingNote(card); assert(!note.hidden, 'room again: the note is back');
+  note.closest = () => ({ getBoundingClientRect: () => ({ bottom: 95 }) });
+  note.getBoundingClientRect = () => ({ bottom: 112 });
+  fitPendingNote(card); assert(note.hidden, 'fixed footer tracks still require the note to fit inside the content row');
   fitPendingNote({ querySelector: () => null }); // a card without a note (the invitation): nothing to do
   console.log('pending note: shown only when it fits ok');
 }

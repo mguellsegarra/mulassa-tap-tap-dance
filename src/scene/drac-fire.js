@@ -19,6 +19,12 @@ export const DRAC_FIRE = {
   flare: [[2.0, 1.9, 1], [0, 0, 1], [1.8, 1.25, 0], [1.4, 0.95, 0], [1.4, 0.95, 0]], flareLife: 1.1, flareFree: 0.32, flareLift: 0.4, flash: 0.16,
   smoke: 1.6, embers: 0.06, // white puffs a second per jet at level 1; embers per point per flamarada (share of the pool)
 };
+// Socket order is models/drac.js: two mouths, tail, two wing tips. Multipliers of the
+// dance contract, selected only by an explicit held action; retained through its cooling.
+const manualMouth = Object.freeze({ intensity: 1, length: 1, width: 0.65, frequency: 0.35, speed: 0.8, life: 0.8, size: 0.75 });
+const manualTail = Object.freeze({ intensity: 0.06, length: 0.18, width: 0.16, frequency: 0.06, speed: 0.25, life: 0.4, size: 0.4 });
+const manualWing = Object.freeze({ intensity: 0.035, length: 0.14, width: 0.12, frequency: 0.04, speed: 0.2, life: 0.35, size: 0.35 });
+export const DRAC_MANUAL_FIRE = Object.freeze([manualMouth, manualMouth, manualTail, manualWing, manualWing]);
 // a table of randoms: a spark's draws are lookups at a counter plus eighths (a flamarada spawns ~200 at once)
 const DFIRE_RT = Float32Array.from({ length: 16384 }, (_, i) => { const s = Math.sin(i * 12.9898 + 78.233) * 43758.5453; return s - Math.floor(s); });
 const dfireRand = x => DFIRE_RT[Math.floor(x * 8) & 16383];
@@ -168,7 +174,7 @@ export function createDracFire(scene, opts = {}) {
   for (let i = 0; i < 5; i++) { BD.array[i * 4 + 3] = -1; FA.array[i] = -1; for (let k = 0; k < 3; k++) BLW.array[i * 3 + k] = DRAC_FIRE.flare[i][k]; }
   const bm = dfireBlastMaterial(opts.octaves ?? 2), blast = dfireQuads(5, { aP: BP, aD: BD, aLW: BLW }, bm), flash = dfireQuads(5, { aP: FP, aAge: FA }, dfireFlashMaterial());
   scene.add(blast, flash);
-  const S = { burst: false, smoked: false, held: false };
+  const S = { burst: false, smoked: false, held: false, manual: false };
   const owe = new Float64Array(5), ows = new Float64Array(5), owc = new Float64Array(5);
   const AT = new THREE.Vector3(), VEL = new THREE.Vector3();
   const age = () => S.held ? Math.min(TT[0] - TT[1], 0.2) : TT[0] - TT[1];
@@ -179,39 +185,44 @@ export function createDracFire(scene, opts = {}) {
     held = held && !!E;
     // A free-mode hold keeps the existing flame attached at its hot, full-size phase.
     // Releasing resumes its normal cooling/detachment; no more sparks are emitted by the hold.
-    if (held && !S.held) { TT[1] = t - dt; S.burst = true; S.smoked = false; }
+    if (held && !S.held) { TT[1] = t - dt; S.burst = true; S.smoked = false; S.manual = true; }
     else if (!held && S.held) { TT[1] = t - Math.min(t - TT[1], 0.2); S.burst = false; }
     S.held = held;
     jm.uniforms.uTime.value = bm.uniforms.uTime.value = t; jm.uniforms.uViewH.value = viewH || 800;
     jm.uniforms.uTrail.value = calm.matches ? 0.012 : 0.028;
     const a = held ? Math.min(t - TT[1], 0.2) : t - TT[1], live = a >= 0 && a < DRAC_FIRE.flareLife;
     if (E) for (let i = 0; i < 5; i++) {
+      const profile = S.manual ? DRAC_MANUAL_FIRE[i] : null;
       const o = i * 8, k = E[o + 6], dx = E[o + 3], dy = E[o + 4], dz = E[o + 5], sn = Math.sqrt(E[o + 7] / 0.27);
+      const frequency = profile ? profile.frequency : 1, speed = profile ? profile.speed : 1, life = profile ? profile.life : 1, size = profile ? profile.size : 1;
       if (k > 0 && J.cap) {
-        const rate = J.cap * 0.85 / (5 * DRAC_FIRE.jetLife * 1.05), sp = (DRAC_FIRE.jetSpeed + 1.5 * Math.min(k, 2)) * sn;
-        owe[i] += rate * Math.min(k, 2.5) * dt;
+        const rate = J.cap * 0.85 / (5 * DRAC_FIRE.jetLife * 1.05), sp = (DRAC_FIRE.jetSpeed + 1.5 * Math.min(k, 2)) * sn * speed;
+        const emission = Math.min(k, 2.5) * frequency;
+        owe[i] += rate * emission * dt;
         while (owe[i] >= 1) {
           owe[i] -= 1; const b = ++J.born, v = sp * (0.65 + 0.55 * dfireRand(b + 0.875)), s = DRAC_FIRE.jetSpread;
           NEW[0] = E[o]; NEW[1] = E[o + 1]; NEW[2] = E[o + 2];
           NEW[3] = (dx + (dfireRand(b) - 0.5) * s) * v; NEW[4] = (dy + (dfireRand(b + 0.25) - 0.5) * s) * v; NEW[5] = (dz + (dfireRand(b + 0.625) - 0.5) * s) * v;
-          NEW[6] = t - owe[i] / (rate * k); NEW[7] = DRAC_FIRE.jetLife * (0.55 + 0.9 * dfireRand(b + 0.125));
-          NEW[8] = dfireRand(b + 0.375); NEW[9] = DRAC_FIRE.jetSize * (0.7 + 0.6 * dfireRand(b + 0.75)); NEW[10] = 0;
+          NEW[6] = t - owe[i] / (rate * (profile ? emission : k)); NEW[7] = DRAC_FIRE.jetLife * life * (0.55 + 0.9 * dfireRand(b + 0.125));
+          NEW[8] = dfireRand(b + 0.375); NEW[9] = DRAC_FIRE.jetSize * size * (0.7 + 0.6 * dfireRand(b + 0.75)); NEW[10] = 0;
           spawn();
         }
-        owc[i] += (calm.matches ? 10 : DRAC_FIRE.stem) * Math.min(k, 1.5) * dt; // the white-hot stem at the tube's mouth
+        owc[i] += (calm.matches ? 10 : DRAC_FIRE.stem) * Math.min(k, 1.5) * frequency * dt; // the white-hot stem at the tube's mouth
         while (owc[i] >= 1) {
-          owc[i] -= 1; const b = ++J.born, v = (2.2 + 1.2 * dfireRand(b + 0.625)) * sn;
+          owc[i] -= 1; const b = ++J.born, v = (2.2 + 1.2 * dfireRand(b + 0.625)) * sn * speed;
           NEW[0] = E[o] + dx * 0.02; NEW[1] = E[o + 1] + dy * 0.02; NEW[2] = E[o + 2] + dz * 0.02; NEW[3] = dx * v; NEW[4] = dy * v; NEW[5] = dz * v;
-          NEW[6] = t; NEW[7] = 0.13; NEW[8] = dfireRand(b); NEW[9] = (0.06 + 0.03 * dfireRand(b + 0.125)) * sn; NEW[10] = 1;
+          NEW[6] = t; NEW[7] = 0.13 * life; NEW[8] = dfireRand(b); NEW[9] = (0.06 + 0.03 * dfireRand(b + 0.125)) * sn * size; NEW[10] = 1;
           spawn();
         }
-        ows[i] += DRAC_FIRE.smoke * Math.min(k, 1.5) * dt; // a little white smoke along the jet
+        ows[i] += (profile ? 0 : DRAC_FIRE.smoke) * Math.min(k, 1.5) * dt; // a little white smoke along the jet
         while (ows[i] >= 1) {
           ows[i] -= 1; const b = ++J.born;
           AT.set(E[o] + dx * 0.5, E[o + 1] + dy * 0.5, E[o + 2] + dz * 0.5); VEL.set(dx * 1.2 + (dfireRand(b) - 0.5) * 0.5, dy * 1.2 + 0.3, dz * 1.2 + (dfireRand(b + 0.5) - 0.5) * 0.5);
           puff(false, AT, VEL, 0);
         }
       } else owe[i] = owc[i] = ows[i] = 0;
+      BLW.array[i * 3] = DRAC_FIRE.flare[i][0] * (profile ? profile.length : 1);
+      BLW.array[i * 3 + 1] = DRAC_FIRE.flare[i][1] * (profile ? profile.width : 1);
       // the flamarada: on its tube until it lets go, then the world's (it no longer follows the dance)
       if (live && a < DRAC_FIRE.flareFree) {
         // the two mouths fire one ball, out of their midpoint along their mean heading (quad 0; quad 1 draws nothing)
@@ -219,10 +230,10 @@ export function createDracFire(scene, opts = {}) {
         const fx = dx * m + E[q + 3] * (1 - m), fz = dz * m + E[q + 5] * (1 - m), uy = dy * m + E[q + 4] * (1 - m) + DRAC_FIRE.flareLift, ul = Math.sqrt(fx * fx + uy * uy + fz * fz); // it climbs a little: never into the floor
         BP.array[i * 4] = x; BP.array[i * 4 + 1] = y; BP.array[i * 4 + 2] = z; BP.array[i * 4 + 3] = i * 0.173 + 0.05;
         BD.array[i * 4] = fx / ul; BD.array[i * 4 + 1] = uy / ul; BD.array[i * 4 + 2] = fz / ul;
-        FP.array[i * 4] = x + dx * 0.3; FP.array[i * 4 + 1] = y + dy * 0.3; FP.array[i * 4 + 2] = z + dz * 0.3; FP.array[i * 4 + 3] = 1.7 * DRAC_FIRE.flare[i][1] / 1.8;
+        FP.array[i * 4] = x + dx * 0.3; FP.array[i * 4 + 1] = y + dy * 0.3; FP.array[i * 4 + 2] = z + dz * 0.3; FP.array[i * 4 + 3] = 1.7 * BLW.array[i * 3 + 1] / 1.8;
       }
       BD.array[i * 4 + 3] = live ? a : -1; FA.array[i] = live && !calm.matches && DRAC_FIRE.flare[i][0] > 0 ? a : -1; // reduced motion: no strobe
-      if (S.burst) { // a shower of embers out of the blast
+      if (S.burst && !S.manual) { // a shower of embers out of the blast
         for (let j = Math.round(J.cap * DRAC_FIRE.embers); j > 0; j--) {
           const b = ++J.born, v = (3 + 4.5 * dfireRand(b + 0.875)) * sn;
           NEW[0] = E[o]; NEW[1] = E[o + 1]; NEW[2] = E[o + 2];
@@ -231,7 +242,7 @@ export function createDracFire(scene, opts = {}) {
           spawn();
         }
       }
-      if (live && !S.smoked && a >= 0.45 && DRAC_FIRE.flare[i][0] > 0) for (let j = 0; j < 2; j++) { // where the fireball dies, dark smoke
+      if (!S.manual && live && !S.smoked && a >= 0.45 && DRAC_FIRE.flare[i][0] > 0) for (let j = 0; j < 2; j++) { // where the fireball dies, dark smoke
         const d = DRAC_FIRE.flare[i][0] * (0.45 + 0.2 * j);
         AT.set(BP.array[i * 4] + BD.array[i * 4] * d, BP.array[i * 4 + 1] + BD.array[i * 4 + 1] * d + 0.6, BP.array[i * 4 + 2] + BD.array[i * 4 + 2] * d); VEL.set(0, 0.8, 0);
         puff(true, AT, VEL, 0);
@@ -240,7 +251,7 @@ export function createDracFire(scene, opts = {}) {
     if (E) S.burst = false;
     if (live && a >= 0.45) S.smoked = true;
     blast.visible = live; flash.visible = live && a < DRAC_FIRE.flash && !calm.matches;
-    BP.needsUpdate = BD.needsUpdate = FP.needsUpdate = FA.needsUpdate = true;
+    BLW.needsUpdate = BP.needsUpdate = BD.needsUpdate = FP.needsUpdate = FA.needsUpdate = true;
     if (jets) {
       if (J.hi >= J.lo) JA.needsUpdate = JB.needsUpdate = JC.needsUpdate = true; // the whole pool (<= 30 kB): update ranges allocate (ours and three's sort)
       J.lo = n; J.hi = -1;
@@ -250,14 +261,15 @@ export function createDracFire(scene, opts = {}) {
   return {
     update,
     // all five at once; another while one burns is ignored (one quad per point: a restart would pop the loose fireball)
-    flamarada() { if (age() >= 0 && age() < DRAC_FIRE.flareLife) return false; TT[1] = TT[0]; S.burst = true; S.smoked = false; return true; },
+    flamarada() { if (age() >= 0 && age() < DRAC_FIRE.flareLife) return false; S.manual = false; TT[1] = TT[0]; S.burst = true; S.smoked = false; return true; },
     cap(c) { J.cap = Math.max(0, Math.min(n, c | 0)); if (J.cur >= J.cap) J.cur = 0; }, // a quality step down: fewer live sparks
     clear() {
       for (let i = 0; i < n; i++) JA.array[i * 4 + 3] = -99;
       if (jets) { JA.needsUpdate = true; jets.visible = false; }
-      TT[1] = TT[2] = -99; S.held = S.burst = false; owe.fill(0); ows.fill(0); owc.fill(0);
+      TT[1] = TT[2] = -99; S.held = S.burst = S.manual = false; owe.fill(0); ows.fill(0); owc.fill(0);
       blast.visible = flash.visible = false;
     },
+    get profile() { return S.manual ? DRAC_MANUAL_FIRE : null; },
     get age() { const a = age(); return a >= 0 && a < DRAC_FIRE.flareLife ? a : -1; },
     get idle() { return TT[0] >= TT[2] && !(age() >= 0 && age() < DRAC_FIRE.flareLife); },
     live() { let c = 0; for (let i = 0; i < n; i++) { const a = TT[0] - JA.array[i * 4 + 3]; if (a >= 0 && a < JB.array[i * 4 + 3]) c++; } return c; }, // tests only

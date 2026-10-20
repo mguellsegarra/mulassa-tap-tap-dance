@@ -20,7 +20,7 @@ import { photoExtras } from './photo-obstacles.js';
 export const dracFx = createDracFx(scene, { smoke: renderProfile.smoke ?? 0, jets: renderProfile.jets ?? 0, wheels: renderProfile.wheels ?? 0, sound: figureSfx, calm: CALM, octaves: qualityLevel > 0 ? 2 : 1 });
 const isDracOn = () => selectedFigure.id === DRAC?.id;
 const FOLK = [activeCrowd, plaza.band, plaza.balcony, photoExtras]; // who the free mode's fire can char (drac-soot.js); [0] refreshed a frame (a quality step makes a new list)
-const IN = { on: false, cam: camera, fire: null, streak: false, flare: false, max: 0, jmax: 0, wmax: 0, held: false, viewH: 800, x: 0, z: 0 };
+const IN = { on: false, cam: camera, fire: null, streak: false, flare: false, max: 0, jmax: 0, wmax: 0, held: false, manual: false, viewH: 800, x: 0, z: 0 };
 setConfettiDivert((sec, reason) => {
   if (!isDracOn()) return false;
   if (reason === 'combo' && !G.practice && (G.combo === 50 || G.combo === 100)) dracFx.wheels(1.2);
@@ -61,7 +61,8 @@ export function dracFrame(dt, t) { // (the red smoke of the last pass rises roun
   const on = isDracOn();
   const photoDrac = PHOTO.on && PHOTO.id === 'drac-valls'; // driven in photo mode
   const show = PAIR.k > 0 || photoDrac || (on && (G.state === 'select' || G.state === 'title')); // its menu showcase (drac-demo.js): a CREMA now and then
-  if (SHOWCASE.crema) { SHOWCASE.crema = false; if (show) { dracFx.crema(); figureSfx('flama'); } }
+  IN.manual = photoDrac;
+  if (SHOWCASE.crema) { SHOWCASE.crema = false; if (show && !photoDrac) { dracFx.crema(); figureSfx('flama'); } }
   IN.held = photoDrac && PHOTO.keys.has('KeyE');
   if (PHOTO.sparks) {
     PHOTO.sparks = false;

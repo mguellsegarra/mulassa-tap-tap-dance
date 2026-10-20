@@ -19,14 +19,13 @@ Els percentatges aprovats i les decisions de vestuari són a `src/dev/representa
    Sempre navega amb `?mute`. Cada cas té un navegador propi, seed del món 424242, seed de població declarat, vídeo WebM,
    captures, dades i índex HTML. La prova sencera té nou casos curts: portada, selector, conducció amb culada, joc,
    finale, dos seeds addicionals, canvi de qualitat i viewport mòbil. La captura mòbil és emulació de viewport.
-4. Llegir `after-manifest.json` i mirar els vídeos. El codi de sortida 1 assenyala errors de pàgina, salt de mà >18 cm,
-   velocitat de mà >9 m/s, velocitat d'arrel >10 m/s, interseccions aproximades de tronc, caigudes/arrossegament de variants
+4. Llegir `after-manifest.json` i mirar els vídeos. El codi de sortida 1 assenyala errors de pàgina, velocitat de mà >9 m/s, velocitat d'arrel >10 m/s, interseccions aproximades de tronc, caigudes/arrossegament de variants
    protegides o dos renders diferents sense avançar el rellotge. Les distàncies de mà descompten la translació de l'arrel;
    conserven els girs del cos. La velocitat usa el rellotge d'animació, no el retard variable d'entrega del navegador.
 5. Corregir la primera relació que falla. Repetir només el cas afectat amb `--case=quality`, `--case=drive`, `--case=play`,
    `--case=finale`, `--case=mobile` o `--case=selector`. El manifest conserva els altres casos i substitueix el repetit.
    Tornar a fer la passada completa si el canvi afecta tots els casos. `--quick` grava només la portada.
-6. Quan les mesures passen, revisar també fotogrames adjacents al vídeo. No ampliar toleràncies per convertir un error en verd.
+6. Quan les mesures passen, revisar també fotogrames adjacents al vídeo. No ampliar toleràncies per convertir un error en verd. El pas brut de mà es conserva com a dada: s'ha de llegir amb dt, ja que un fotograma de 50 ms pot recórrer més espai sense cap discontinuïtat. La prova de rig limita el pas a 18 cm a 30/60/120 Hz.
    Fer les comprovacions generals del projecte i conservar evidència final. No es fa commit ni desplegament automàtic.
 
 `--baseline --quick` carrega una còpia inicial de l'adaptador des de

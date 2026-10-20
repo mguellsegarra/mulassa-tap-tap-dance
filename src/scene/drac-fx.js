@@ -7,7 +7,7 @@
 // the "random" draws are a hash of a counter: the same taps at 60 or 120 fps give the same picture. Pools are made once,
 // nothing per frame.
 import * as THREE from 'three';
-import { createDracFire } from './drac-fire.js';
+import { createDracFire, DRAC_MANUAL_FIRE } from './drac-fire.js';
 
 export const DRAC_FX = {
   streakAt: 30, streakRamp: 0.3, // the jets light on a 30 streak (and in the finale: drac-show.js), eased in/out over 0.3 s
@@ -123,6 +123,7 @@ export function createDracFx(scene, opts = {}) {
     par.localToWorld(P.copy(f.position).addScaledVector(V.set(0, 0, tips[i]).applyQuaternion(f.quaternion), 1));
   }
 
+  let manual = false; // action owner, independent of the lens or selected menu card
   let hazeOwed = 0, hazeN = 0; // the red smoke: puffs owed (a fraction of one), and a counter for where each rises
 
   // ---- the CARRETILLES: their jets burn while the drumroll lasts; a tap kicks the next one, the pop is the TRO from all five
@@ -172,7 +173,7 @@ export function createDracFx(scene, opts = {}) {
   function spinWheels(dt, s) {
     wcap = Math.min(WE, s.wmax ?? WE);
     WH.age += dt;
-    WH.on = (s.on && s.held || F.t < WH.until) && wcap > 0 && !!nodes;
+    WH.on = (F.t < WH.until) && wcap > 0 && !!nodes;
     if (!WH.on) { wEmit.fill(0); return; }
     WH.n = Math.min(nodes.length, wcap >= 96 ? 5 : 2); // (the fire list starts with the two mouths)
     WH.rate = wcap * 0.85 / (WH.n * (DRAC_FX.wheelLife + DRAC_FX.wheelLife2 / 2)); // per wheel: the pool about full with every wheel going
@@ -198,6 +199,7 @@ export function createDracFx(scene, opts = {}) {
   // ---- once a frame. s (reused by the caller): { on, cam, fire (the Drac's fire nodes), streak, flare (bool or level),
   // max (PROFILES smoke now), jmax (jets now), wmax (wheels now), viewH (the canvas's pixel height), x, z }
   function update(dt, s) {
+    if (!!s.manual !== manual) { clear(); manual = !!s.manual; } // no effects leak between action owners
     cap = Math.min(N, s.max ?? N); F.rate = cap / DRAC_FX.full; // (fields, not closure `let`s: a double there is a new heap number each write)
     F.t += dt;
     const on = !!s.on;
@@ -214,7 +216,7 @@ export function createDracFx(scene, opts = {}) {
       F.level = 0;
       for (let i = 0; i < nodes.length && i < 5; i++) {
         nozzle(i);
-        const o = i * 8, k = Math.max(jet, nodes[i].userData.level || 0, kick[i] * DRAC_FX.kickJet);
+        const o = i * 8, k = manual ? (on && s.held ? DRAC_MANUAL_FIRE[i].intensity : 0) : Math.max(jet, nodes[i].userData.level || 0, kick[i] * DRAC_FX.kickJet);
         EM[o] = P.x; EM[o + 1] = P.y; EM[o + 2] = P.z; EM[o + 3] = D.x; EM[o + 4] = D.y; EM[o + 5] = D.z;
         const e = nodes[i].parent.matrixWorld.elements; // its world scale, inline (a call's double result is a heap number)
         EM[o + 6] = k; EM[o + 7] = sizes[i] * Math.sqrt(e[8] * e[8] + e[9] * e[9] + e[10] * e[10]);
@@ -314,6 +316,7 @@ export function createDracFx(scene, opts = {}) {
     jets: fire.live(), born: fire.born(), flamarada: fire.age, kick: [...kick], flashes: flash.map(f => f.visible), puffs: puffs.filter(p => p.live).map(p => [p.x, p.y, p.z, p.age]),
     wsparks: [...EAGE].map((a, i) => [EX[i], EY[i], EZ[i], a]).filter((p, i) => EAGE[i] < ELIFE[i]) }); // tests only
   return { crema, pump, finish, begin, end, wheels, update, warm, clear, state, get tracaOn() { return T.on; },
+    get fireProfile() { return fire.profile; },
     get nozzles() { return nodes ? EM : null; }, // this frame's fire points (world): drac-soot.js reads the held fire's volume
     soot: (x, y, z) => puff(PUFF.soot, x, y, z, 0, 0.15, 0),
     get flare() { return F.flare; }, // the last pass's red mist, 0..1 (drac-show.js thickens the plaça's fog with it)

@@ -11,7 +11,7 @@ const ROOT = process.env.FREE_STEPS_ROOT ? pathToFileURL(process.env.FREE_STEPS_
 const { createStepper, nominalFoot, SUPPORT_LAYOUT } = await import(ROOT + 'src/game/mula-supports.js');
 const { newWalker, manualDracStep, demoStep, resumeWalker } = await import(ROOT + 'src/scene/drac-demo.js');
 const { newDracPose } = await import(ROOT + 'src/game/dance-drac.js');
-const { PHOTO } = await import(ROOT + 'src/game/photo-control.js');
+const { PHOTO, photoBody, setPhotoControl, movePhoto } = await import(ROOT + 'src/game/photo-control.js');
 const DRAC_SCALE = 0.492, PIVOT = 1.3;
 // The cuffs lean, never stretch: a planted shoe within 0.3 m of its carrier, a lifted one within 0.5 (the song's own
 // planted shoes reach 0.47 m).
@@ -28,6 +28,16 @@ const shells = {
   },
   // photo mode: a gallop built up to 9 m/s, then reined in
   gallop(t, dt, s) { s.v += ((t < 3 ? 9 : 0) - s.v) * (1 - Math.exp(-dt / 0.12)); s.pz += s.v * dt; return [0, s.pz, 0]; },
+  // Actual input velocity through walking, Shift, diagonal running, walking again and braking.
+  shiftPaces(t, dt) {
+    if (t <= dt) { setPhotoControl(true, 'mulassa-valls', false); Object.assign(photoBody(), { x: 0, z: 0, yaw: 0 }); }
+    PHOTO.keys.clear();
+    if (t < 4.5) PHOTO.keys.add('KeyW');
+    if (t >= 1 && t < 3) PHOTO.keys.add('ShiftLeft');
+    if (t >= 2 && t < 4) PHOTO.keys.add('KeyD');
+    movePhoto(dt, () => 99);
+    return [photoBody().x, photoBody().z, photoBody().yaw];
+  },
   // about turns at the trot, as fast as the moving turn rate allows (540 deg/s, a right drag)
   reversals(t, dt, s) {
     const want = Math.floor(t / 1.2) % 2 ? Math.PI : 0; s.yx += Math.sign(want - s.yx) * Math.min(Math.abs(want - s.yx), 9.4 * dt);
@@ -117,6 +127,25 @@ for (const hz of [30, 60, 120]) {
   assert(landed && worstAir <= takeoff + 0.02, `...a jump takes them along, not left on the floor (${worstAir.toFixed(2)} m from ${takeoff.toFixed(2)})`);
   assert(moved > 20, `...and they run with it (${moved.toFixed(1)} m)`);
 }
+// The real Shift speed ramp never resets the Drac's step phase or leaves a shoe behind.
+for (const hz of [30, 60, 120]) {
+  setPhotoControl(true, 'drac-valls', false); Object.assign(photoBody(), { x: 0, z: 0, yaw: 0 });
+  const w = newWalker(0, 0, 0), out = newDracPose(), dt = 1 / hz;
+  let phase = null, steps = 0, previousUp = false;
+  for (let k = 1; k <= 5 * hz; k++) {
+    const t = k * dt;
+    PHOTO.keys.clear(); if (t < 4.5) PHOTO.keys.add('KeyW');
+    if (t >= 1 && t < 3) PHOTO.keys.add('ShiftRight');
+    if (t >= 2 && t < 4) PHOTO.keys.add('KeyD');
+    movePhoto(dt, () => 99); manualDracStep(w, out, dt, t * 2, photoBody(), DRAC_SCALE, false);
+    assert(offsets(w, out) <= 0.5 + 1e-9, 'Shift pace changes keep Drac shoes within their support reach');
+    if (phase !== null) assert(w.gp >= phase && w.gp - phase <= dt * 6.5, 'pace changes advance the same phase continuously');
+    if (!previousUp && w.feet[0].up) steps++;
+    previousUp = w.feet[0].up; phase = w.gp;
+  }
+  assert(steps > 10, 'Drac keeps stepping through walk/run/walk');
+}
+setPhotoControl(false);
 { // back to showing off: the steps ease back onto the music's beat, never jumping a phase
   const dt = 1 / 60, w = newWalker(0, 0, 0), out = newDracPose(), body = { x: 0, z: 0, yaw: 0, vx: 0, vz: 6, fire: 0 };
   PHOTO.air = false;

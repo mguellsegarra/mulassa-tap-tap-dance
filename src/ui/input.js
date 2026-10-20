@@ -18,7 +18,7 @@ import { lookDown, lookUp, lookSkip, lookEscape, lookLocked } from './mouse-look
 
 for (const ev of ['touchend', 'click', 'keydown']) addEventListener(ev, () => { if (!G.paused && pageActive()) chip?.wake(); }, { passive: true });
 addEventListener('keydown', e => {
-  if (e.code === 'Escape' && lookEscape()) { e.preventDefault(); return; } // it freed the mouse look, nothing more
+  if (e.code === 'Escape' && lookEscape()) { clearPhotoKeys(); e.preventDefault(); return; } // it freed the mouse look, nothing more
   if (photoKey(e, viewMode && menuState() && !G.paused && pageActive() && !sheetUp() && (e.target === hud || e.target?.tagName === 'BODY'))) { syncAvatars(); return; } // only the world owns actor shortcuts; controls keep native keys
   if (e.repeat || sheets.sync.open || privacyMenu.open || sheets.board.open || sheets.share.open || sheets.feedback.open || sheets.watch?.open) return; // «Bústia de la plaça» is typed into; the sync sheet takes its own keys; Privadesa is read, not played; Classificacions types an alias; Comparteix has its own buttons
   if (G.state === 'play' && e.code === 'Escape') {
@@ -67,11 +67,13 @@ addEventListener('blur', releaseAll);
 addEventListener('blur', clearPhotoKeys);
 document.addEventListener('visibilitychange', clearPhotoKeys);
 addEventListener('pagehide', clearPhotoKeys);
-addEventListener('focusin', e => { if (e.target?.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target?.tagName)) clearPhotoKeys(); });
+addEventListener('focusin', e => { if (e.target !== hud && e.target?.tagName !== 'BODY') clearPhotoKeys(); });
 hud.addEventListener('pointermove', e => {
   if (PHOTO.on && e.pointerType === 'mouse' && PHOTO.mouse) {
-    PHOTO.mouse = e.buttons & 3 || (lookLocked() ? PHOTO.mouse : 0); // (both held = run; locked, Firefox's own move on locking says 0: pointerup ends it)
-    if (PHOTO.mouse && !lookSkip()) photoLook(e.movementX || 0, e.movementY || 0);
+    if (lookSkip()) return; // a lock change's first move can jump
+    if (lookLocked() && !e.buttons && !e.movementX && !e.movementY) return; // Firefox recenters repeatedly without reporting held buttons
+    PHOTO.mouse = e.buttons & 3; // both held = run; none = the drag is over, even if its pointerup went missing (lookSync unlocks)
+    if (PHOTO.mouse) photoLook(e.movementX || 0, e.movementY || 0);
     return;
   }
   if (PHOTO.on && e.pointerType !== 'mouse' && orbit.ptrs.size === 1) {

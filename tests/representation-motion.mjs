@@ -3,6 +3,8 @@ import * as THREE from 'three';
 import { CATALOGUE, buildFigure, disposeFigure } from '../src/dev/representation/models.js';
 import { pose, timeAtDistance, palmLocal } from '../src/dev/representation/pose.js';
 import { crowdMotion, animatePerson } from '../src/dev/representation/live-pose.js';
+import { buildHelper, poseHelper, MULA_HELPER_LOOKS, ARM } from '../src/scene/models/colla.js';
+import { reviewAttendant, linkRolePose, followRolePose } from '../src/dev/representation/role-models.js';
 import { settleDrawnCrowd } from '../src/scene/crowd-contact.js';
 
 const hand = (p, i) => palmLocal(p, i).applyMatrix4(p.g.matrixWorld);
@@ -52,5 +54,30 @@ assert(caneError<.005,`final held cane stays on ground: ${caneError}`);
  assert(a.g.position.distanceTo(b.g.position)>=a.rad+b.rad-1e-9,'final drawn footprints must separate');
  const wall={pos:new THREE.Vector2(0,0),rad:.33,fixed:true};settleDrawnCrowd([a],[wall]);
  assert(Math.hypot(a.g.position.x,a.g.position.z)>=a.rad+wall.rad-1e-9,'static backdrop must stop the drawn person');
+}
+{
+ const source=buildHelper(MULA_HELPER_LOOKS[0],1),p=reviewAttendant(CATALOGUE.find(x=>x.id==='p11'),0),links=linkRolePose(p,source);
+ for(let frame=0;frame<240;frame++){
+  const t=frame/60,cheer=(1-Math.cos(t*Math.PI))/2;poseHelper(source,t*2,.8,cheer);followRolePose(links);p.g.position.copy(source.g.position);
+  source.g.updateMatrixWorld(true);p.g.updateMatrixWorld(true);
+  for(let i=0;i<2;i++){
+   const a=new THREE.Vector3(0,-ARM.fore,0).applyMatrix4(source.arms[i].el.matrixWorld),b=new THREE.Vector3(0,-ARM.fore,0).applyMatrix4(p.arms[i].el.matrixWorld);
+   assert(a.distanceTo(b)<1e-10,'appearance variants must retain the owning crew pose through cheering and recovery');
+  }
+ }
+ disposeFigure(p);
+}
+{
+ const source=buildHelper(MULA_HELPER_LOOKS[0],1),p=reviewAttendant(CATALOGUE.find(x=>x.id==='p11'),0),links=linkRolePose(p,source);
+ for(const hz of [30,60,120])for(let frame=0;frame<hz;frame++){
+  const before=p.bones.map(b=>b.quaternion.clone());poseHelper(source,frame/hz*2,1,frame%2);followRolePose(links,1/hz);
+  p.bones.forEach((b,i)=>assert(b.quaternion.angleTo(before[i])<=6/hz+1e-7,'crew gestures have the same bounded angular speed through cheer changes'));
+ }
+ disposeFigure(p);
+}
+{ // an attendant's grafted head keeps its skull: front face and both sides, not only the eyes and hair
+ const spec=CATALOGUE.find(x=>x.id==='p11'),p=reviewAttendant(spec,0),g=p.head.children.at(-1).geometry,pos=g.attributes.position,col=g.attributes.color,ix=g.index,skin=new THREE.Color(spec.skin),n=new Set();
+ for(let i=0;i<ix.count;i+=3){const v=[0,1,2].map(k=>ix.getX(i+k));if(v.every(j=>Math.abs(col.getX(j)-skin.r)+Math.abs(col.getY(j)-skin.g)+Math.abs(col.getZ(j)-skin.b)<0.08)&&v.some(j=>pos.getY(j)<0.01)){const z=v.map(j=>pos.getZ(j)),x=v.map(j=>pos.getX(j));n.add(z.every(q=>q>0.15)?'front':x.every(q=>q>0.16)?'right':x.every(q=>q<-0.16)?'left':'other');}}
+ for(const side of ['front','left','right']) assert.ok(n.has(side),`attendant head lost its skull ${side} (${[...n]})`);
 }
 console.log('representation live motion ok', {baselineJump,fixedJump,caneError});

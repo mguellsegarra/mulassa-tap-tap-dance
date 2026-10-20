@@ -1,7 +1,7 @@
 // The crowd's behaviour: making way for her, its mood, reactions to hits and to the finale, neighbour separation.
 import { PHOTO, PHOTO_SPIN } from '../game/photo-control.js';
 import { photoClearance } from './photo-collision.js';
-import { photoExtras, updatePhotoExtras, photoEscape } from './photo-obstacles.js';
+import { photoExtras, updatePhotoExtras, photoEscape, stepPhotoPerson } from './photo-obstacles.js';
 import { pushPulse, rippleLive, RIPPLE, ripple } from './crowd-fx.js';
 import * as THREE from 'three';
 import { judgedCount } from '../game/progress.js';
@@ -17,7 +17,7 @@ import { MULA_COLLA_SPOTS } from './mula-stage.js';
 import { RING, REACH, arenaNow } from './crowd-build.js';
 import { easeIn, smooth01, TAU } from '../core/anim.js';
 import { bubble, at } from '../hud/bubbles.js';
-import { sootPose, sootFrozen } from './drac-soot.js';
+import { sootPose, sootAnchored } from './drac-soot.js';
 import { crowdRadius, backdropContacts, settleDrawnCrowd } from './crowd-contact.js';
 
 // During the song (not the finale) the plaça stands still and only answers the player's hits, gently: one "groove"
@@ -92,11 +92,11 @@ function recell(p) {
 // The hard limit: no two footprints (RAD circles) ever overlap, whatever the forces did this frame (fleeing the rear,
 // creeping in, the camera's wedge, the edge of the plaça). Overlapping pairs are pulled apart along the line between
 // them, half each (all of it by a mover when the other is fixed: the band), and the velocity into
-// the neighbour is dropped so they don't walk on the spot. Two sweeps over the same nine-cell neighbourhoods.
+// the neighbour is dropped so they don't walk on the spot. Four sweeps over the nearby cells, including the larger mobility footprints.
 function separate() {
   for (let it = 0; it < 4; it++) {
     for (const p of activeCrowd) {
-      if (p.rest || sootFrozen(p)) continue; // at rest during the song (or charred stiff): only a mover can reach them, and resolves it
+      if (p.rest || sootAnchored(p)) continue; // at rest during the song (or charred stiff): only a mover can reach them, and resolves it
       const cellX = p.cell % 32, cellZ = Math.floor(p.cell / 32);
       for (let z = Math.max(0, cellZ - 2); z <= Math.min(31, cellZ + 2); z++) {
         for (let x = Math.max(0, cellX - 2); x <= Math.min(31, cellX + 2); x++) {
@@ -108,7 +108,7 @@ function separate() {
             if (d2 >= min * min) continue;
             const d = Math.sqrt(d2);
             if (d > 1e-6) { sx /= d; sz /= d; } else { sx = Math.cos(p.ang); sz = Math.sin(p.ang); } // on top of each other: outwards
-            const stiff = q.fixed || sootFrozen(q), push = (min - d) * (stiff ? 1 : 0.5);
+            const stiff = q.fixed || sootAnchored(q), push = (min - d) * (stiff ? 1 : 0.5);
             p.pos.x += sx * push; p.pos.y += sz * push;
             const pv = p.vel.x * sx + p.vel.y * sz;
             if (pv < 0) { p.vel.x -= sx * pv; p.vel.y -= sz * pv; }
@@ -181,7 +181,7 @@ function updateMood(dt, t, live) {
 
 // Step 2: where one person goes: they make way for her (RING), creep in to watch, walk back to their spot, keep clear of the play camera's shot and of each other (a soft push; separate() is the hard limit).
 function steer(p, dt, beat, live) {
-  if (sootFrozen(p)) { p.vel.set(0, 0); p.rest = false; return; } // charred stiff (drac-soot.js): rooted to the spot, a fixed footprint
+  if (sootAnchored(p)) { p.vel.set(0, 0); p.rest = false; return; } // charred stiff (drac-soot.js): rooted to the spot, a fixed footprint
   const { moodK, slow, ringE, velK, wayIn, wayOut } = F, { festK, clapK, partyK, gr2, gr3, shoveK } = mood;
   // during the song only the front row and the first ring (NEAR) make way; the rows behind hold unless she is right
   // on them (1.2 m): fewer movers, less CPU, and the ones people watch still react
@@ -249,7 +249,7 @@ function steer(p, dt, beat, live) {
   // While the song plays, someone standing at rest (nothing pushing, not moving) stays put and costs nothing: no
   // neighbour search, no step. Movers still keep clear of them (their own search, separate()).
   if (slow && p.rest && !tmp.x && !tmp.y) return;
-  // Only the nine nearby metre-wide cells can contain someone that close: a soft push keeps 0.2 m of air between
+  // The nearby metre-wide cells include the larger footprints: a soft push keeps 0.2 m of air between
   // footprints (separate() below is the hard limit), and an arm's length more towards her: clapping and cheering
   // hands reach 0.6 m forward, into the shoulders of whoever stands in front.
   const cellX = p.cell % 32, cellZ = Math.floor(p.cell / 32), dm = Math.hypot(dx, dz) || 1;
@@ -279,14 +279,9 @@ function steer(p, dt, beat, live) {
     if (v > cap) p.vel.multiplyScalar(cap / v); // neighbour repulsion must not accelerate a menu spectator without a bound
   }
   if (PHOTO.on) culadaKnock(p, dt, dx, dz); else if (p.downT > 0) p.vel.set(0, 0); // (photo mode left mid-fall: they still get up first)
-  const r0 = p.pos.length(), oldX=p.pos.x, oldZ=p.pos.y;
-  p.pos.addScaledVector(p.vel, dt);
-  if (PHOTO.on) {
-    const limit=plaza.inner-p.rad-0.2;
-    if(Math.abs(p.pos.x)>limit && Math.abs(p.pos.x)>Math.abs(oldX)) {p.pos.x=oldX;p.vel.x=0;}
-    if(Math.abs(p.pos.y)>limit && Math.abs(p.pos.y)>Math.abs(oldZ)) {p.pos.y=oldZ;p.vel.y=0;}
-    for(const q of plaza.props) if(Math.hypot(p.pos.x-q.x,p.pos.y-q.z)<p.rad+q.r && Math.hypot(p.pos.x-q.x,p.pos.y-q.z)<Math.hypot(oldX-q.x,oldZ-q.z)) {p.pos.set(oldX,oldZ);p.vel.set(0,0);break;}
-  }
+  const r0 = p.pos.length();
+  if (PHOTO.on) p.vel.copy(stepPhotoPerson(p,p.vel.x,p.vel.y,dt));
+  else p.pos.addScaledVector(p.vel, dt);
   const r = p.pos.length();
   if (!PHOTO.on && r > MID.edge) { // the edge of the plaça; on the far side the mid band's front (its figures never step aside)
     const lim = midCrowd?.mesh.count && p.pos.x * MID.fx + p.pos.y * MID.fz > r * MID.cos ? MID.edge : 13;
@@ -376,7 +371,7 @@ function pose(p, dt, beat, live) {
     if (e > lim) { ex *= lim / e; ez *= lim / e; }
     p.gx += ex; p.gz += ez;
   }
-  // the culada's fall (photo mode): flat on their back at once, up again more slowly
+  // The culada's fall and recovery use the same gradual ramp, keeping the rendered body and its footprint continuous.
   if (p.downT > 0) p.downT -= dt; // (counted here: it runs every frame, photo mode or not)
   const down = (p.downT ?? 0) > 0.6 ? 1 : 0;
   if (down || p.fall) { p.fall = (p.fall ?? 0) + (down - (p.fall ?? 0)) * easeIn(dt, 0.35); if (p.fall < 0.01) p.fall = 0; }

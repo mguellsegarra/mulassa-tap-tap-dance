@@ -1,7 +1,8 @@
 // Photo-mode input and figure-relative locomotion. No selection, audio or persistence writes.
 export const PHOTO = { on: false, ready: false, id: 'mulassa-valls', keys: new Set(), pair: false, turn: 0, pitch: 0.34, action: false, mouse: 0, cameraYaw: null, zoom:11,
   speed: 0, air: false, lookAge: 9, culada: 0, spinDir: 1, sparks: false, mula: { x: 0, z: 0, yaw: 0, vx: 0, vz: 0, fire: 0, sprint: 0, spinLeft: 0, spinV: 0 }, drac: { x: 0, z: 0, yaw: 0, vx: 0, vz: 0, fire: 0, sprint: 0, spinLeft: 0, spinV: 0 } };
-// Holding forward builds a trot into a full gallop (eased in, so the burst reads); sideways and backwards stay at the trot.
+// Both figures keep the existing 3.2 m/s walk and 9 m/s gallop cap. Shift builds the gallop in any direction;
+// the same velocity drives planted feet, crowd yielding and the camera. Music/showcase speeds are independent.
 export const PHOTO_RUN = { trot: 3.2, run: 9, build: 0.9, accel: 0.12, brake: 0.08 };
 // R: the culada, half a turn about her centre like the dance's, always the same way: two R = a full turn.
 // It speeds up and settles (rad/s, rad/s²: ~0.5 s a half turn); her rear swings through whoever is near.
@@ -31,7 +32,8 @@ export function photoKey(e, allowed) {
   const interactive = ['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON', 'A', 'SUMMARY'].includes(e.target?.tagName)
     || e.target?.isContentEditable || e.target?.closest?.('button, a, input, textarea, select, summary, dialog, [role="dialog"], [role="button"], [contenteditable="true"]');
   if (!PHOTO.on || !allowed || interactive || e.ctrlKey || e.altKey || e.metaKey) { clearPhotoKeys(); return false; }
-  if (!['KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyQ', 'KeyE', 'KeyR', 'Tab', 'Space'].includes(e.code)) return false;
+  if (e.code === 'Tab' && e.shiftKey) { clearPhotoKeys(); return false; } // native backwards focus navigation, even from the world
+  if (!['KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyQ', 'KeyE', 'KeyR', 'Tab', 'Space', 'ShiftLeft', 'ShiftRight'].includes(e.code)) return false;
   e.preventDefault();
   if (e.code === 'Space') {
     if (!e.repeat) PHOTO.action = true; // a jump, for either figure (mula-motion.js)
@@ -94,8 +96,9 @@ export function movePhoto(dt, safe, sideYaw = photoBody().yaw) {
     // The model faces +Z (read per substep: a culada mid-run carries her round). Its right hand is -X seen from behind.
     const tx = (-Math.cos(sideYaw) * side + Math.sin(p.yaw) * forward), tz = (Math.sin(sideYaw) * side + Math.cos(p.yaw) * forward);
     const norm = Math.hypot(tx, tz) || 1;
-    if (!PHOTO.air) p.sprint = forward > 0 ? Math.min(1, p.sprint + h / PHOTO_RUN.build) : Math.max(0, p.sprint - h * 4);
-    const burst = p.sprint * p.sprint * (3 - 2 * p.sprint), top = PHOTO_RUN.trot + (PHOTO_RUN.run - PHOTO_RUN.trot) * burst * (forward > 0);
+    const running = (side || forward) && (keys.has('ShiftLeft') || keys.has('ShiftRight'));
+    if (!PHOTO.air) p.sprint = running ? Math.min(1, p.sprint + h / PHOTO_RUN.build) : Math.max(0, p.sprint - h * 4);
+    const burst = p.sprint * p.sprint * (3 - 2 * p.sprint), top = PHOTO_RUN.trot + (PHOTO_RUN.run - PHOTO_RUN.trot) * burst;
     const targetX = tx / norm * top, targetZ = tz / norm * top, tau = (side || forward) && p.vx*targetX+p.vz*targetZ>=0 ? PHOTO_RUN.accel : PHOTO_RUN.brake;
     const decay = PHOTO.air ? 1 : Math.exp(-h / tau); left -= h; // airborne: the momentum she jumped with, untouched until she lands (dx below)
     const dx = PHOTO.air ? p.vx * h : targetX * h + (p.vx - targetX) * tau * (1 - decay), dz = PHOTO.air ? p.vz * h : targetZ * h + (p.vz - targetZ) * tau * (1 - decay);

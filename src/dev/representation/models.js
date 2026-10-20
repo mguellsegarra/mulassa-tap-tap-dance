@@ -22,6 +22,7 @@ export const BUILDS = { prim: [0.88, 0.92], mitja: [1, 1], ample: [1.18, 1.26] }
 export const AGES = { infant: { k: 0.7, head: 1.14, stoop: 0 }, jove: { k: 1, head: 1, stoop: 0 }, adult: { k: 1, head: 1, stoop: 0 }, gran: { k: 0.97, head: 1, stoop: 0 } };
 export const MOBILITY = [null, 'cadira', 'basto'];
 const INK = '#1a1412', SHINE = '#f4efe6', SHOE = '#141414';
+export const EYE_COLOURS = [INK, SHINE]; // only the eyes use them (drac-soot.js turns them white on a charred face)
 const COLOURS = { tyre: '#1e1e22', rim: '#b8bcc4', seat: '#2a2d33', grip: '#1c1c1c' };
 const CANE = { white: '#f2f2ee', grip: '#1c1c1c', tip: '#3a3a3a' };
 

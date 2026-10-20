@@ -303,6 +303,6 @@ window.__dbg = { get G() { markLeaderboardDebugUse(); return G; }, get M() { mar
   get crowd() { return activeCrowd; }, get band() { return plaza.band; }, get title() { return titleL; }, get chip() { return chip; }, get camera() { return camera; }, get clock() { return clock; }, songTime: () => songTime(), get drawTime() { return drawT; }, get offset() { return offsetMs; }, hero: (w, h) => renderHero(w, h) }; // debug runs never publish; hero: the share photo (public/og.jpg)
 window.__mulassaBooted ||= 'module'; // ran to the end: index.html's boot watchdog now only waits for the first frame
 
-// Local review by default; ?representation=off retains the original cast for comparisons. Public hosts are unchanged.
-const localPeopleReady = Q.get('representation') !== 'off' && ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname)
+// The representation cast on every host; ?representation=off retains the original cast for comparisons.
+const localPeopleReady = Q.get('representation') !== 'off'
   ? import('./dev/representation-preview.js').then(m => m.setupRepresentationPreview()) : Promise.resolve();

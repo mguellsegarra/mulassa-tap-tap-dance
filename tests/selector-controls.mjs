@@ -134,7 +134,70 @@ $('hud').fire('pointerleave', {}); assert.equal($('hud').style.cursor, '');
   drive(); state.state = 'play'; run('updateControls()'); assert(run('!PHOTO.on && PHOTO.keys.size === 0'), 'starting play cancels free-mode fire');
   state.state = 'select'; run('setView(false)');
 }
+// Firefox may recenter the locked pointer more than once: zero buttons AND zero motion are not a release.
+// Model the native event sequence here; browser evidence separately checks the real Pointer Lock API.
+{
+  const emit = (type, extra = {}) => { for (const f of handlers[type] || []) f({ code: 'KeyE', target: $('hud'), preventDefault() {}, ...extra }); };
+  const change = () => emit('pointerlockchange');
+  $('hud').requestPointerLock = () => { doc.pointerLockElement = $('hud'); change(); };
+  doc.exitPointerLock = () => { doc.pointerLockElement = null; change(); };
+  const mouse = (type, extra = {}) => $('hud').fire(type, event(77, 640, 400, { pointerType: 'mouse', button: 2, buttons: 2, movementX: 0, movementY: 0, ...extra }));
+  const release = () => emit('pointerup', { pointerType: 'mouse', pointerId: 77, buttons: 0 });
+  for (const first of ['fire', 'look']) {
+    state.state = 'select'; run("setView(true); setPhotoControl(true, 'drac-valls', false); PHOTO.cameraYaw = Math.PI; PHOTO.drac.yaw = 0;");
+    if (first === 'fire') emit('keydown');
+    mouse('pointerdown'); mouse('pointermove', { buttons: 0, movementX: 190 }); // discard the lock-change jump
+    if (first === 'look') { mouse('pointermove', { movementX: 20 }); emit('keydown'); }
+    run('PHOTO.sparks = false'); // the frame consumed the onset; looking must never restart it
+    const before = run('PHOTO.cameraYaw');
+    mouse('pointermove', { buttons: 0 }); // a SECOND native recenter, after lookSkip was consumed
+    run('updateControls()');
+    assert(doc.pointerLockElement === $('hud') && run('PHOTO.mouse === 2'), `${first} first: native recenter keeps RMB and lock`);
+    mouse('pointermove', { movementX: 80, movementY: 10 });
+    assert(Math.abs(run('PHOTO.cameraYaw') - before + 0.24) < 1e-9, `${first} first: movement is consumed exactly once`);
+    assert(run("PHOTO.keys.has('KeyE') && !PHOTO.sparks"), `${first} first: looking sustains E without another onset`);
+    run('for(let i=0;i<30;i++) movePhoto(1/60, () => Infinity);');
+    assert(run('Math.abs(PHOTO.drac.yaw) > 0.15'), `${first} first: RMB turns the Drac, not just the camera`);
+    release();
+    assert(!doc.pointerLockElement && run("PHOTO.mouse === 0 && PHOTO.keys.has('KeyE')"), 'RMB release leaves fire held');
+    mouse('pointerdown'); mouse('pointermove'); mouse('pointermove', { buttons: 0 }); mouse('pointermove', { movementX: 40 });
+    assert(doc.pointerLockElement && run("PHOTO.mouse === 2 && PHOTO.keys.has('KeyE') && !PHOTO.sparks"), 'recapture works without releasing/restarting E');
+    emit('keyup');
+    assert(run("!PHOTO.keys.has('KeyE') && PHOTO.mouse === 2"), 'E release keeps RMB control');
+    release();
+  }
+  for (const exit of ['blur', 'visibilitychange', 'pagehide', 'figure', 'mode', 'Escape']) {
+    run("setView(true); setPhotoControl(true, 'drac-valls', false);"); emit('keydown'); mouse('pointerdown');
+    if (exit === 'figure') emit('keydown', { code: 'Tab' });
+    else if (exit === 'mode') run('setView(false)');
+    else if (exit === 'Escape') { emit('keydown', { code: 'Escape' }); emit('keyup'); }
+    else emit(exit);
+    run('updateControls()');
+    assert(!doc.pointerLockElement && run("PHOTO.mouse === 0 && !PHOTO.keys.has('KeyE')"), `${exit} clears the combined controls`);
+  }
+  run("setView(true); setPhotoControl(true, 'drac-valls', false);");
+  // Without a lock, even a stationary no-button move ends capture if pointerup went missing.
+  delete $('hud').requestPointerLock;
+  mouse('pointerdown'); mouse('pointermove'); mouse('pointermove', { buttons: 0 });
+  assert(run('PHOTO.mouse === 0'), 'capture fallback still recovers a lost pointerup');
+  run('setView(false)'); delete doc.exitPointerLock;
+}
 console.log('selector controls, offline feedback visibility, photo keys and world-only pointer gestures ok');
+
+// Browsers blur a focused card as soon as its selector becomes inert. Preserve the pre-transition focus.
+{
+  run('setView(false); G.state = "select";');
+  const selector = $('select'), descriptor = Object.getOwnPropertyDescriptor(selector, 'inert');
+  const card = $('entry-card'); card.isConnected = true;
+  let inert = false;
+  Object.defineProperty(selector, 'inert', { configurable: true, get: () => inert, set(on) { inert = on; if (on) doc.activeElement = doc.body; } });
+  doc.activeElement = card;
+  run('setView(true);');
+  assert.equal(run('viewBack'), card, 'entry saves focus before making the selector inert');
+  run('setView(false);');
+  assert.equal(doc.activeElement, card, 'exit restores the original card');
+  Object.defineProperty(selector, 'inert', descriptor);
+}
 
 // Run the real input listeners and the sheet's capture listener together. A gameplay
 // key must reach press exactly once; menu navigation must sound without reaching press.
@@ -220,6 +283,8 @@ console.log('practice/game input routing: keyboard, mouse/touch pad and bubbling
   assert(trembles('sel-shiver-soft').length && trembles('sel-shiver-soft').every(sel => /data-level="1"\]\[aria-pressed="true"\]/.test(sel)), 'a chosen NORMAL trembles a touch');
   assert(trembles('sel-quake-soft').length && trembles('sel-quake-soft').every(sel => /data-level="1"\]\[aria-pressed="true"\]/.test(sel)), 'a chosen NORMAL gets the softer shake');
   assert(!/data-level="0"[^{]*\{[^}]*sel-(?:shiver|quake)/.test(css), 'FÀCIL never trembles');
+  const quiet = [...css.matchAll(/^\.sel-seg\[data-quiet\][^{]*\{([^}]*)\}/gm)].map(m => m[1]);
+  assert(quiet.length === 3 && quiet.every(r => !/sel-(?:pop|quake)/.test(r)), 'the level marked on entry never pops or shakes: only a tap does (Marc)');
   const amp = name => Math.max(...[...css.match(new RegExp(`@keyframes ${name} \\{([^\\n]*)\\} \\}`))[1].matchAll(/(-?[\d.]+)px/g)].map(([, v]) => Math.abs(v)));
   assert(amp('sel-shiver') < 1 && amp('sel-shiver-soft') < amp('sel-shiver'), 'the trembles stay under a pixel, NORMAL\'s smaller than DIFÍCIL\'s');
   const rings = [...css.matchAll(/\.sel-seg \.btn(?:\[data-level="\d"\])?::before \{[^}]*conic-gradient\(([^;]*)\);/g)].map(m => m[1]);

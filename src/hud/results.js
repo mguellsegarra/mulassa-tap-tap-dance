@@ -62,12 +62,12 @@ export function drawResults() {
   // the stars are the hero: centred under the title, then the stats in full-width rows (like a mobile game's win card)
   if (!lost) { drawStars(H, G.stars, W / 2, y0 + 46 + STAR_H / 2, 84, clock - G.resT); /* the earned ones drop in one by one */ rule(y0 + 46 + STAR_H); }
   const by = y0 + 54 + STAR_H, bh = row * 5, sx = x0 + 26, ex = x0 + pw - 26;
-  [[themed('GUAPA!'), G.counts.perfect, C.gold], ['BÉ', G.counts.good, C.cream], ['XURRO', G.counts.miss, C.blue], ['RATXA', G.maxCombo, C.pink], ['PUNTS', comparableScore(G.score, G.diff, G.figureVersion), C.score, C.score]]
-    .forEach(([s, v, c, vc = C.cream], i) => {
+  [[themed('GUAPA!'), G.counts.perfect, C.gold], ['BÉ', G.counts.good, C.cream], ['XURRO', G.counts.miss, C.blue], ['RATXA', G.maxCombo, C.pink], ['PUNTS', comparableScore(G.score, G.diff, G.figureVersion), C.score]]
+    .forEach(([s, v, c], i) => {
       const y = by + row * (i + 0.5);
       if (i) { H.fillStyle = 'rgba(255,243,214,0.08)'; H.fillRect(sx, y - row / 2, ex - sx, 1); }
       text(s, sx, y, 9, c, 'left');
-      text(v.toLocaleString('ca-ES'), ex, y, 9, vc, 'right'); // 182.972: thousands separated, as on the board
+      text(v.toLocaleString('ca-ES'), ex, y, 9, c, 'right'); // 182.972: thousands separated, as on the board
     });
   rule(by + bh + 8);
   // quality: the headline number of the card

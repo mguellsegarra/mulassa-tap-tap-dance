@@ -3,7 +3,7 @@
 // stopped. Only for the press: letting go, the browser's own unlock (Escape), blur or anything that drops control
 // (PHOTO.mouse = 0) gives the cursor back. Where the lock is missing or refused, the old pointer capture stands in.
 // No unadjustedMovement: the look keeps the OS acceleration it always had, and no browser refuses a plain request for it.
-import { PHOTO } from '../game/photo-control.js';
+import { PHOTO, clearPhotoKeys } from '../game/photo-control.js';
 import { hud } from '../hud/canvas.js';
 
 let held = null, skip = false, freedAt = -1e9; // held: the pressed pointer's id; skip: a lock change's first move (it can jump)
@@ -35,6 +35,6 @@ document.addEventListener('pointerlockerror', capture);
 document.addEventListener('pointerlockchange', () => {
   skip = true;
   if (lookLocked()) { if (!PHOTO.on || !PHOTO.mouse) document.exitPointerLock(); return; } // let go before it came
-  if (PHOTO.mouse) freedAt = performance.now(); // the browser freed it mid-drag: the drag ends, no stray look
+  if (PHOTO.mouse) { freedAt = performance.now(); clearPhotoKeys(); } // browser Escape can unlock without delivering keydown
   PHOTO.mouse = 0; held = null;
 });

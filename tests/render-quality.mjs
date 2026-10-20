@@ -1,6 +1,7 @@
 import './fps.mjs';
 import './photo-control.mjs';
 import { verifyJumpImpact } from './jump-impact.mjs';
+import { verifyCarretillesCounter } from './carretilles-counter.mjs';
 import { v1Song } from './v1-song.mjs';
 import { referenceScore } from '../tools/reference-score.mjs';
 import assert from 'node:assert/strict';
@@ -433,7 +434,7 @@ const context = vm.createContext({
   ...await import('../src/dev/final-test.js'), ALIAS_KEY: 'leaderboard-alias', DECLINES_KEY: 'publish-declines', // ?final: off here (no hostname)
   errors, errorName, audioFailureTags: (await import('../src/platform/audio.js')).audioFailureTags,
   THREE: { ...THREE, WebGLRenderer: Renderer }, ...await import('../src/scene/crowd-fx.js'), ...models, ...chart, ...progress, ...stars,
-  PROFILES, initialQuality, renderDpr, frameMonitor, hudScale, framePacer, smoothClock, profileAt, hudBudget, isSoftwareRenderer, probeRenderer, Chip: class { constructor(song, opts) { context.chipOpts = opts; } setMenuMusic(on) { (context.menuMusicCalls ||= []).push(on); } }, ...practice, ...energy, ...bubblesLogic, ...framing, ...dance, ...titleLayoutLogic, ...orbitLogic, setupSync: hooks => { context.syncHooks = hooks; return context.syncSheet = { open: false, show() { this.open = true; } }; },
+  PROFILES, initialQuality, renderDpr, frameMonitor, hudScale, framePacer, smoothClock, profileAt, hudBudget, isSoftwareRenderer, probeRenderer, Chip: class { constructor(song, opts) { context.chipOpts = opts; } menu() {} setMenuMusic(on) { (context.menuMusicCalls ||= []).push(on); } }, ...practice, ...energy, ...bubblesLogic, ...framing, ...dance, ...titleLayoutLogic, ...orbitLogic, setupSync: hooks => { context.syncHooks = hooks; return context.syncSheet = { open: false, show() { this.open = true; } }; },
   pixelSvg: () => '<svg></svg>', // src/ui/select-ui.js (provided)
   setupSelect: opts => (context.selectScreen = { opts, sheetOpen: false, visible(on) { this.shown = on; }, refocus() {} }),
   setupBoard: opts => (context.boardSheet = { opts, open: false, configured: true, shown: [], opened: [], results(show) { this.shown.push(show); }, publishable: false,
@@ -449,7 +450,7 @@ const context = vm.createContext({
   setupFeedback: opts => (context.feedbackSheet = { opts, open: false, configured: true, shown: 0, show(back) { this.open = true; this.shown++; this.back = back; } }), // src/ui/feedback-ui.js: tests/feedback-ui.mjs
   setupShare: opts => (context.shareSheet = setupShare({ ...opts, doc: document, nav: {}, fonts: null, url: { createObjectURL: () => 'blob:card', revokeObjectURL() {} } })),
   document, navigator: { hardwareConcurrency: 8, deviceMemory: 8 },
-  location: { search: '' }, localStorage: { getItem() {}, setItem() {} },
+  location: { search: '?representation=off' }, localStorage: { getItem() {}, setItem() {} }, // this mocked DOM supplies the original cast; representation-motion tests the new rigs
   matchMedia: () => ({ matches: false }), addEventListener(type, handler) {
     (windowHandlers[type] ||= []).push(handler);
     if (type === 'keydown') keyHandlers.push(handler);
@@ -1173,6 +1174,7 @@ assert.equal(run('b2.count'), run('Math.ceil(b2.need / 2)'), 'taps after the han
 assert.equal(run('b2.hit'), 'good', 'a half-inflated balloon is good');
 assert.equal(run('G.praise'), null, 'balloon completion does not add a headline during the song');
 console.log('balloon contracts ok');
+verifyCarretillesCounter(run);
 
 // GUAPA: from NORMAL, both buttons within 80 ms = hit x2 (judged on the first press); one button alone is an
 // ERROR once the window closes (never a bonk); the partner press never eats the next note. FÀCIL takes either.
@@ -2466,10 +2468,12 @@ console.log('menu camera keeps a drag through a slow frame ok');
   assert(!run('viewMode'), 'no «mode foto» during a game');
   run(`G.state = 'results'; G.resT = clock; updateControls();`);
   assert(btn.hidden, 'nor on the results');
-  run(`G.state = 'select'; updateControls(); worldPress = null; worldTap = null;`);
+  run(`G.state = 'select'; sheets.select.figure = selectedFigure; sheets.select.pending = false; updateControls(); worldPress = null; worldTap = null;`);
   assert(!btn.hidden, 'photo button remains available on the selector');
   keyDown('KeyH');
   assert(run('viewMode') && nodes.get('select').inert, 'H hides and disables selector controls');
+  keyDown('Escape');
+  assert(run('viewMode && !PHOTO.on'), 'first Escape drops control of the selected figure');
   keyDown('Escape');
   assert(!run('viewMode') && !nodes.get('select').inert && run("G.state === 'select'"), 'Escape restores the same selector state');
   const tapWorld = (id, x = 20, y = 160, move = false) => {
@@ -2791,6 +2795,41 @@ console.log('view mode ok');
   console.log('photo walking splash/selector, visible switching, blur and play isolation ok');
 }
 
+// Shift is owned by free control, and every transition that suspends input releases both sides.
+{
+  run('var shiftAudioContext = chip.ctx; chip.ctx = { suspend() {} };'); // focusin suspends the menu context
+  const key = (code, more = {}) => { let prevented = false; for (const h of keyHandlers) h({ code, target: { tagName: 'BODY' }, preventDefault() { prevented = true; }, ...more }); return prevented; };
+  for (const [name, reset] of [
+    ['blur', () => windowHandlers.blur.forEach(h => h())],
+    ['visibility loss', () => document.listeners.visibilitychange()],
+    ['pagehide', () => windowHandlers.pagehide.forEach(h => h())],
+    ['focus control', () => windowHandlers.focusin.forEach(h => h({ target: { tagName: 'BUTTON' } }))],
+    ['Escape', () => key('Escape')], ['Tab figure', () => key('Tab')],
+    ['leave mode', () => run('setView(false);')],
+    ['modal', () => run('settingsMenu.open=true; updateControls(); settingsMenu.open=false;')],
+    ['game', () => run("G.state='play'; updateControls(); animMula(1/60,0);")],
+  ]) {
+    run("setView(false); G.state='select'; setFigureSong(MULASSA); setView(true); takeFigure('mulassa-valls');");
+    assert(key('ShiftLeft') && key('ShiftRight') && key('KeyW'), `${name}: both modifiers accepted in the world`);
+    reset();
+    assert(run('!PHOTO.keys.size && PHOTO.mula.sprint===0 && PHOTO.drac.sprint===0'), `${name}: clears both Shift keys and sprint`);
+    assert(!key('ShiftLeft', { repeat: true }) || run('!PHOTO.keys.has("ShiftLeft")'), 'a repeat cannot restore a released modifier');
+  }
+  run("G.state='select'; setView(true); takeFigure('drac-valls');");
+  key('ShiftLeft'); key('ShiftRight'); key('KeyW');
+  windowHandlers.keyup.forEach(h => h({ code: 'ShiftLeft' }));
+  assert(run('!PHOTO.keys.has("ShiftLeft") && PHOTO.keys.has("ShiftRight") && PHOTO.keys.has("KeyW")'), 'keyup only releases its own Shift');
+  windowHandlers.keyup.forEach(h => h({ code: 'ShiftRight' }));
+  assert(run('!PHOTO.keys.has("ShiftRight") && PHOTO.keys.has("KeyW")'), 'releasing the last Shift keeps movement held');
+  key('ShiftLeft'); const actor = run('PHOTO.id');
+  assert(!key('Tab', { shiftKey: true }) && run('PHOTO.id') === actor && run('!PHOTO.keys.size'), 'ShiftTab navigates backwards without switching actor');
+  run("setView(false); G.state='play';");
+  assert(!key('ShiftLeft') && run('!PHOTO.keys.size'), 'game Shift is never a free control');
+  run("G.state='select'; setFigureSong(MULASSA);");
+  run('chip.ctx = shiftAudioContext;');
+  console.log('free Shift reset on blur/visibility/focus/modal/Escape/figure/exit/play ok');
+}
+
 // The same scene pair on playable/pending selectors; photo controls never change the game's identity.
 {
   for (const figure of ['MULASSA', 'DRAC']) for (const pending of [false, true]) {
@@ -2843,9 +2882,14 @@ console.log('view mode ok');
   assert(run('Math.abs(PHOTO.cameraYaw + 40 * 150 * 0.003) < 1e-9'), 'the look keeps turning on movementX, past where any cursor would stop');
   up();
   assert(!document.pointerLockElement && run('PHOTO.mouse === 0 && PHOTO.on'), 'letting go unlocks and ends the look');
-  hud.listeners.pointerdown(ev()); grant();
+  hud.listeners.pointerdown(ev()); grant(); hud.listeners.pointermove(ev()); // (the lock's first move)
+  hud.listeners.pointermove(ev({ buttons: 0, movementX: 0 })); // Firefox's own still move while locked: no button, no motion
+  assert(document.pointerLockElement === hud && run('PHOTO.mouse === 2'), 'a still no-button move keeps the lock');
+  hud.listeners.pointermove(ev({ buttons: 0, movementX: 6 })); run('updateControls();'); // its pointerup went missing
+  assert(!document.pointerLockElement && run('PHOTO.mouse === 0'), 'a move with no button down ends a lock whose pointerup was lost');
+  hud.listeners.pointerdown(ev()); grant(); key('ShiftLeft'); key('KeyW'); key('KeyE');
   document.pointerLockElement = null; change(); // the browser's Escape
-  assert(run('PHOTO.mouse === 0'), 'a browser unlock ends the drag');
+  assert(run('PHOTO.mouse === 0 && !PHOTO.keys.size && PHOTO.mula.sprint === 0'), 'browser Escape without keydown releases the drag, Shift and actions');
   assert(key('Escape') && run('PHOTO.on'), 'the Escape that freed the cursor does not also drop the figure');
   const yaw = run('PHOTO.cameraYaw');
   hud.listeners.pointermove(ev({ movementX: 80 })); up();
@@ -2901,7 +2945,7 @@ console.log('view mode ok');
     for (const h of keyHandlers) h({ code, target: { tagName: 'BODY' }, preventDefault() { prevented = true; }, ...more });
     return prevented;
   };
-  run(`pfAutoShown.clear(); G.state = 'select'; setFigureSong(MULASSA); setView(false); setView(true); animMula(1/60, clock/BEAT);`);
+  run(`pfAutoShown.clear(); G.state = 'splash'; setFigureSong(MULASSA); setView(false); setView(true); animMula(1/60, clock/BEAT);`);
   assert(run('viewMode && !PHOTO.on && !avatarsEl.hidden'), 'photo mode starts in free view with the bar shown');
   assert(!keyDown('KeyW') && !keyDown('Tab'), 'free view leaves W and Tab alone');
   assert(run('PHOTO.keys.size === 0'));
@@ -3021,7 +3065,7 @@ console.log('view mode ok');
     S.yaw.x=S.yaw.t=Math.PI; S.yaw.v=0; camera.position.set(0,6,10); camFocus.set(0,0,0);
     var savedPhotoCrowd=activeCrowd, photoPerson=activeCrowd[0]; activeCrowd=[photoPerson];
     photoPerson.pos.set(0,-4.3); photoPerson.gx=0; photoPerson.gz=-4.3; photoPerson.vel.set(0,0);
-    setView(true); takeFigure(selectedFigure.id); animMula(1/60,0); PHOTO.keys.add('KeyW');
+    setView(true); takeFigure(selectedFigure.id); animMula(1/60,0); PHOTO.keys.add('KeyW'); PHOTO.keys.add('ShiftLeft');
     var manualMin=99, manualStep=0, personStart=photoPerson.pos.clone();
     for(let i=0;i<360;i++){
       var px=M.pos.x,pz=M.pos.y; clock+=1/60; animMula(1/60,clock/BEAT); animCrowd(1/60,clock/BEAT,0,1);
@@ -3084,7 +3128,7 @@ console.log('view mode ok');
       M.air=0; M.airV=0; M.missT=-9; G.collapseT=0;
       for(const s of Object.values(S)){s.x=s.v=s.t=0;}
       Object.assign(PHOTO.mula,{x:0,z:0,yaw:0,vx:0,vz:9,sprint:1});
-      PHOTO.cameraYaw=Math.PI; PHOTO.keys.add('KeyW');
+      PHOTO.cameraYaw=Math.PI; PHOTO.keys.add('KeyW'); PHOTO.keys.add('ShiftLeft');
       for(let i=0;i<12;i++){clock+=1/${fps};animMula(1/${fps},clock/BEAT,1);}
       PHOTO.action=true;
       var airBounce=0, airStep=0, airSamples=0;
@@ -3152,7 +3196,7 @@ console.log('view mode ok');
     photoKey({code:'Space',preventDefault(){}},true); var photoJump=0;
     for(let i=0;i<90;i++){clock+=1/60;animMula(1/60,clock/BEAT);photoJump=Math.max(photoJump,M.air);}`);
   assert(run('photoJump>.5 && M.air===0'), 'Space jumps and lands without accumulating lift');
-  run(`photoKey({code:'Tab',preventDefault(){}},true); setTrauma(0); var dracUp=0, dracShake=0, booms=0, dracFire=0; chip={sfx(k){if(k==='gran')booms++;}};
+  run(`photoKey({code:'Tab',preventDefault(){}},true); setTrauma(0); var dracUp=0, dracShake=0, booms=0, dracFire=0; chip={menu(){},sfx(k){if(k==='gran')booms++;}};
     photoKey({code:'Space',preventDefault(){}},true);
     for(let i=0;i<90;i++){clock+=1/60;animMula(1/60,clock/BEAT);dracUp=Math.max(dracUp,drac.root.parent.position.y);dracShake=Math.max(dracShake,trauma);dracFire=Math.max(dracFire,DRAC_POSE.fire);}`);
   assert(run('dracUp>.5 && drac.root.parent.position.y===0 && M.air===0'), 'Space jumps the whole Drac (not her) and lands it');
@@ -3166,7 +3210,7 @@ console.log('view mode ok');
   run(`G.state='splash'; setFigureSong(MULASSA); animMula(1/60,0);
     M.pos.set(-4,0);M.pivot.set(-4+PIVOT,0);M.yaw=Math.PI/2;S.yaw.x=S.yaw.t=M.yaw;S.yaw.v=0;
     PAIR.x=PAIR.w.x=3;PAIR.z=PAIR.w.z=0;PAIR.w.face=0;
-    var passageCrowd=activeCrowd;activeCrowd=[];setView(true); takeFigure(selectedFigure.id);animMula(1/60,0);PHOTO.keys.add('KeyW');
+    var passageCrowd=activeCrowd;activeCrowd=[];setView(true); takeFigure(selectedFigure.id);animMula(1/60,0);PHOTO.keys.add('KeyW');PHOTO.keys.add('ShiftLeft');
     var passageStart=PAIR.x,passageGap=99,passageStep=0;
     for(let i=0;i<300;i++){var lastX=PAIR.x,lastZ=PAIR.z;clock+=1/60;animMula(1/60,clock/BEAT);
       passageGap=Math.min(passageGap,photoPairClearance(M.pos.x,M.pos.y,M.yaw,{x:PAIR.x,z:PAIR.z,yaw:PAIR.w.face},false));
@@ -3182,7 +3226,7 @@ console.log('view mode ok');
 
 {
   run(`G.state='select';setFigureSong(MULASSA);M.pos.set(0,0);M.yaw=Math.atan2(MID.fx,MID.fz);M.pivot.set(Math.sin(M.yaw)*PIVOT,Math.cos(M.yaw)*PIVOT);S.yaw.x=S.yaw.t=M.yaw;S.yaw.v=0;
-    setView(true); takeFigure(selectedFigure.id);animMula(1/60,clock/BEAT);PHOTO.keys.add('KeyW');var extrasMoved=0,extraMaxStep=0,travelClear=99;
+    setView(true); takeFigure(selectedFigure.id);animMula(1/60,clock/BEAT);PHOTO.keys.add('KeyW');PHOTO.keys.add('ShiftLeft');var extrasMoved=0,extraMaxStep=0,travelClear=99;
     for(let i=0;i<480;i++){clock+=1/60;animMula(1/60,clock/BEAT);animCrowd(1/60,clock/BEAT,0,1);
       travelClear=Math.min(travelClear,photoSafe(M.pos.x,M.pos.y,M.yaw));
       for(const p of photoExtras)extrasMoved=Math.max(extrasMoved,Math.hypot(p.pos.x-p.homeX,p.pos.y-p.homeZ));}
@@ -3192,6 +3236,43 @@ console.log('view mode ok');
   assert(run('travelClear>-.08'), `passage keeps visible collision clearance: ${run('travelClear')}`);
   run('setView(false);animMula(1/60,clock/BEAT);');
   console.log('dense crowd passage and yielding floor spectators ok');
+}
+
+// A spectator pressed against a tree must slide away while either figure keeps asking to walk.
+{
+  run(`var passageSavedCrowd=activeCrowd, passageSavedProps=plaza.props, passageSavedBand=bandSpots,
+    passageSavedExtras=photoExtras.slice(), passageSavedSource=photoBandSource,
+    passageBackdropCount=plaza.backdrop.mesh.count, passageMidCount=midCrowd.mesh.count;
+    var trappedPerson=activeCrowd[0], trappedRadius=trappedPerson.rad, trappedSootT=trappedPerson.sootT, trappedSootW=trappedPerson.sootW;
+    activeCrowd=[trappedPerson];bandSpots=[];photoBandSource=bandSpots;photoExtras.length=0;
+    plaza.backdrop.mesh.count=midCrowd.mesh.count=0;plaza.props=[{x:15.2,z:-3,r:2.2,h:4}];trappedPerson.rad=.52;`);
+  for (const id of ['mulassa-valls', 'drac-valls']) for (const floor of [false, true]) for (const charred of [false, true]) {
+    const scenario = `${id}, ${floor ? 'floor' : 'live'}, ${charred ? 'charred' : 'normal'}`;
+    run(`G.state='select';setView(false);setFigureSong(MULASSA);setView(true);takeFigure('${id}');setPhotoControl(true,'${id}',false);
+      activeCrowd=${floor ? '[]' : '[trappedPerson]'};photoExtras.length=0;
+      if(${floor})photoExtras.push({pos:trappedPerson.pos,rad:trappedPerson.rad,vx:0,vz:0,band:trappedPerson,offsetX:0,offsetZ:0});
+      PHOTO.ready=true;PHOTO.cameraYaw=Math.atan2(MID.fx,MID.fz)+Math.PI;
+      Object.assign(photoBody(),{x:9.4,z:-1.52,yaw:Math.atan2(MID.fx,MID.fz),vx:0,vz:0});
+      trappedPerson.pos.set(12.5273,-2.4943);trappedPerson.gx=12.5273;trappedPerson.gz=-2.4943;trappedPerson.vel.set(0,0);trappedPerson.g.position.set(12.5273,0,-2.4943);trappedPerson.sootT=${charred ? 4 : 0};trappedPerson.sootW=${charred ? 1 : 0};
+      if(${charred})sootTake(trappedPerson);
+      PHOTO.keys.add('KeyW');var trappedStart=photoBody().x,trappedMoved=0,trappedMin=99,trappedTreeMin=99,trappedMaxStep=0;
+      for(let i=0;i<180;i++){var oldX=photoBody().x,oldZ=photoBody().z;clock+=1/60;
+        animMula(1/60,clock/BEAT);animCrowd(1/60,clock/BEAT,0,1);
+        trappedMoved=Math.max(trappedMoved,Math.hypot(trappedPerson.pos.x-12.5273,trappedPerson.pos.y+2.4943));
+        trappedMin=Math.min(trappedMin,photoClearance(photoBody().x,photoBody().z,photoBody().yaw,${floor ? 'trappedPerson.g.position.x' : 'trappedPerson.gx'},${floor ? 'trappedPerson.g.position.z' : 'trappedPerson.gz'},trappedPerson.rad,PHOTO.id==='drac-valls'));
+        trappedTreeMin=Math.min(trappedTreeMin,Math.hypot(trappedPerson.pos.x-15.2,trappedPerson.pos.y+3)-2.72);
+        trappedMaxStep=Math.max(trappedMaxStep,Math.hypot(photoBody().x-oldX,photoBody().z-oldZ));}`);
+    assert(run('photoBody().x-trappedStart>.4'), `${scenario}: held W advances after the spectator clears the tree (${run('photoBody().x-trappedStart')})`);
+    assert(run('trappedMoved>.6'), `${scenario}: the trapped spectator finds room beside the tree`);
+    assert(run('trappedTreeMin>=-1e-5 && trappedMin>=-.03'), `${scenario}: neither the tree nor the visible spectator is crossed ${run('JSON.stringify([trappedTreeMin,trappedMin])')}`);
+    assert(run('trappedMaxStep<=PHOTO_RUN.trot/60+1e-6'), `${scenario}: opening the path never teleports the figure`);
+    if (charred) assert(run('trappedPerson.sootW===1 && trappedPerson.sootT===4'), `${scenario}: stepping aside preserves the soot effect`);
+    run('setView(false);animMula(1/60,clock/BEAT);');
+  }
+  run(`trappedPerson.rad=trappedRadius;trappedPerson.sootT=trappedSootT;trappedPerson.sootW=trappedSootW;activeCrowd=passageSavedCrowd;plaza.props=passageSavedProps;bandSpots=passageSavedBand;
+    photoBandSource=passageSavedSource;photoExtras.length=0;photoExtras.push(...passageSavedExtras);
+    plaza.backdrop.mesh.count=passageBackdropCount;midCrowd.mesh.count=passageMidCount;`);
+  console.log('held WASD clears a spectator trapped against scenery for both figures');
 }
 
 // Manual camera: one centre, independent of the selector dock, throughout locomotion and at the plaza edge.

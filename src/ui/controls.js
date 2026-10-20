@@ -8,6 +8,7 @@ import { hud, buttonAt } from '../hud/canvas.js';
 import { lookSync } from './mouse-look.js';
 import { PHOTO } from '../game/photo-control.js';
 import { COARSE } from '../core/env.js';
+import { photoOrient } from './fullscreen.js';
 
 const practiceLabel = document.getElementById('skip-label'), practiceIcon = document.getElementById('skip-icon');
 
@@ -49,9 +50,10 @@ export function setView(on) {
   viewMode = on; setFreeSound(on); showAvatars(on, entryFigure?.id); hide(viewBtn, !on); sheets.music?.visible(on); viewT = performance.now(); // (the button first: the radio and ? are placed from it)
   if (!on) hide(howtoEl, true);
   document.body.classList.toggle('view-mode', on);
+  photoOrient();
   for (const el of VIEW_HIDES) el.inert = on;
   viewBtn.setAttribute('aria-pressed', String(on)); // (one name, «Joc lliure», pressed or not; pressed it shows the practice's «surt» door, the tooltip says what a press does)
-  viewBtn.title = on ? 'Surt del joc lliure (Esc)' : 'Joc lliure (H)';
+  viewBtn.title = on ? 'Surt del joc lliure (Esc)' : 'Joc lliure';
   clearTimeout(viewIdle); viewBtn.classList.remove('idle');
   hud.setAttribute('role', on ? 'region' : 'img');
   if (!on) hud.setAttribute('aria-label', 'La plaça');
@@ -74,6 +76,7 @@ function viewWake() {
 }
 for (const ev of ['pointermove', 'pointerdown', 'keydown', 'wheel']) addEventListener(ev, viewWake, { passive: true });
 viewBtn.addEventListener('click', () => setView(!viewMode));
+document.getElementById('rotate-exit').addEventListener('click', () => setView(false));
 export function updateControls() {
   updateHudCursor();
   // Set the hint's final layout before the selector measures its information block.

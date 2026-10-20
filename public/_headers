@@ -19,6 +19,8 @@
   Cache-Control: no-cache
 /index.html
   Cache-Control: no-cache
+/version.json
+  Cache-Control: no-cache
 
 /index.md
   Content-Type: text/markdown; charset=utf-8

@@ -396,7 +396,7 @@ const document = {
   listeners: {},
   addEventListener(type, handler) { const previous = this.listeners[type]; this.listeners[type] = previous ? (...args) => { previous(...args); handler(...args); } : handler; },
   body: { appendChild() {}, classList: { contains: () => false, toggle() {} }, style: { setProperty() {}, removeProperty() {} } },
-  createElement: () => ({ style: { setProperty() {} }, dataset: {}, after() {}, setAttribute() {}, appendChild() {}, addEventListener() {}, contains: () => false, querySelectorAll: () => [], querySelector: () => ({}) }), // (ui/free-music.js listens on its own button)
+  createElement: () => ({ style: { setProperty() {} }, dataset: {}, after() {}, setAttribute() {}, appendChild() {}, addEventListener() {}, contains: () => false, querySelectorAll: () => [], querySelector: () => ({ style: { setProperty() {} }, classList: { toggle() {} } }) }), // (ui/free-music.js listens on its own button; ui/photo-stick.js draws its stick)
   getElementById(id) {
     if (!nodes.has(id)) nodes.set(id, {
       style: {}, dataset: {}, options: [{}, {}], listeners: {}, open: false,
@@ -2421,7 +2421,7 @@ console.log('title camera steering ok');
 console.log('menu camera keeps a drag through a slow frame ok');
 
 // «Mode foto» (#viewmode, selector only): every control, tip and the HUD go (inert, the body class fades them), the camera
-// still steers, a tap or a key picks nothing, no sheet opens; Escape, H or the same button bring it all back.
+// still steers, a tap or a key picks nothing, no sheet opens; Escape or the same button (H does nothing) bring it all back.
 {
   const btn = nodes.get('viewmode'), hud = nodes.get('hud'), k = run('K'), cls = new Set(), attrs = {}, idle = new Set();
   const bodyCl = document.body.classList;
@@ -2444,8 +2444,9 @@ console.log('menu camera keeps a drag through a slow frame ok');
   for (const state of ['play', 'results']) { run(`G.state = '${state}'; G.paused = false; G.resT = clock; updateControls();`); assert(btn.hidden, `no eye during ${state}`); }
   run(`G.state = 'select'; sheets.select.figure = selectedFigure; sheets.select.pending = false; updateControls();`);
   assert(btn.hidden, 'the selector enters free play from its dock: no eye in its corner');
-  keyDown('KeyH');
-  assert(run('viewMode') && nodes.get('select').inert, 'H hides and disables selector controls');
+  keyDown('KeyH'); assert(!run('viewMode'), 'H does not enter free play');
+  run('setView(true)');
+  assert(run('viewMode') && nodes.get('select').inert, 'free play hides and disables selector controls');
   keyDown('Escape');
   assert(run('viewMode && !PHOTO.on'), 'first Escape drops control of the selected figure');
   keyDown('Escape');
@@ -3001,17 +3002,18 @@ console.log('view mode ok');
   keyDown('Escape');
   assert(run('!viewMode && avatarsEl.hidden'), 'the next Escape brings the buttons back');
   run("setView(true); takeFigure('mulassa-valls');"); keyDown('KeyH');
-  assert(run('!viewMode && !PHOTO.on'), 'H leaves photo mode and control at once');
-  run("COARSE.matches = true; setView(true); takeFigure('mulassa-valls');");
-  assert(run('viewMode && avatarsEl.hidden && !PHOTO.on'), 'touch: no bar, no driving');
-  assert(!keyDown('KeyW') && run('PHOTO.keys.size === 0'), 'touch: keys never steer');
-  run("setView(false); COARSE.matches = false; G.state = 'play';");
+  assert(run('viewMode && PHOTO.on'), 'H does not leave free play'); run('setView(false)');
+  run("COARSE.matches = true; setView(true);");
+  assert(run("viewMode && avatarsEl.hidden && PHOTO.on && PHOTO.id === 'mulassa-valls' && !touchEl.hidden"), 'touch: no bar, the stick drives her');
+  run("setView(false);");
+  assert(run('touchEl.hidden && !PHOTO.on'), 'touch: leaving photo mode hides the stick');
+  run("COARSE.matches = false; G.state = 'play';");
   assert(!keyDown('Tab') && !keyDown('KeyA'), 'during a song WASD/Tab are not photo keys');
   run("G.state = 'select';");
   assert(run('pfTip.hidden && pfTip.dataset.visible === "false"'), 'touch and exit clear the notice');
   [context.setTimeout, context.clearTimeout] = savedPhotoTimers;
   context.localStorage = savedHelpStorage;
-  console.log('photo free view by default, desktop frames, Escape steps back, touch only looks ok');
+  console.log('photo free view by default, desktop frames, Escape steps back, touch drives with the stick ok');
   // Pending selection keeps its identity; photo mode shows the two existing playable figures.
     let ft = 90000; const pendFrame = () => run(`frame(${ft += 1000 / 60})`);
   run(`var realSel = sheets.select, pendCrowd = activeCrowd; activeCrowd = []; sheets.select = { pending: true, figure: { id: 'aliga-valls', status: 'aviat' }, visible() {}, sheetOpen: false };

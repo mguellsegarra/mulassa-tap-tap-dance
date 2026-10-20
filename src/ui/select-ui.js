@@ -2,65 +2,24 @@
 // one chevron fold and one «Pròximament» pill; either unfolds it in place (its cards, its towns' pills),
 // the fold and an «Amaga» pill fold it back. A pending figure shows its own panel instead of the records.
 // Arrows rove cards; Enter confirms a figure. On the next step arrows choose difficulty; Escape returns.
-import { FIGURES, TOWNS, MULASSA, portraitArt, portraitPalette, portraitStand, townOf, playable, rememberedLevel, rememberLevel, readFigureRecord, aviatText, aviatDraft, INVITE, INVITE_TOWN, inviteText, INVITE_DRAFT } from '../game/figures.js';
+import { FIGURES, TOWNS, MULASSA, townOf, playable, rememberedLevel, rememberLevel, readFigureRecord, aviatText, aviatDraft, INVITE, INVITE_TOWN, inviteText, INVITE_DRAFT } from '../game/figures.js';
 import { DIFFS } from '../game/chart.js';
 import { num } from './sheet-kit.js';
 import { showLevelStats } from './level-stats.js';
 import { setupStandings } from './select-standings.js';
-import { escutSvg } from './escuts.js';
-import { entityLabel, entityHtml, cardEntityHtml, fitEntityLabel } from './figure-entities.js';
+import { entityHtml, fitEntityLabel } from './figure-entities.js';
 import { GIFTS } from './pending-gifts.js';
 import { stripScroll } from './strip-scroll.js';
 import { fitPendingTitle } from './pending-title.js';
-import { SELECTOR_PORTRAITS, pendingSilhouette } from './selector-portraits.js';
+import { pixelSvg, escapeHtml, pillHtml, stripHtml, moreHtml, soonPillHtml, peekGap } from './select-strip.js';
+export { pixelSvg, peekGap }; // the strip's helpers moved to select-strip.js; their callers keep this path
 
-// pixel art as an SVG: each cell a square, the cells round the shape a dark rim
-export function pixelSvg(art, palette, rim) {
-  // One path per colour, not a rect per pixel: ~200 nodes a card made every selector restyle walk thousands of elements.
-  const h = art.length, w = art[0].length, on = (x, y) => (art[y]?.[x] ?? '.') !== '.', paths = new Map([[rim, '']]);
-  const cell = (fill, x, y) => paths.set(fill, (paths.get(fill) ?? '') + `M${x + 1} ${y + 1}h1.02v1.02h-1.02z`);
-  for (let y = -1; y <= h; y++) for (let x = -1; x <= w; x++) if (!on(x, y) && (on(x - 1, y) || on(x + 1, y) || on(x, y - 1) || on(x, y + 1))) cell(rim, x, y);
-  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (on(x, y)) cell(palette[art[y][x]], x, y);
-  return `<svg viewBox="0 0 ${w + 2} ${h + 2}" shape-rendering="crispEdges" aria-hidden="true">${[...paths].filter(([, d]) => d).map(([fill, d]) => `<path fill="${fill}" d="${d}"/>`).join('')}</svg>`;
-}
-const pillHtml = t => `<button type="button" class="btn btn-secondary sel-pill" data-town="${t.id}" tabindex="0" aria-pressed="false"${t.color ? ` style="--c:${t.color}"` : ''}>${escutSvg(t.id) || '<i aria-hidden="true"></i>'}${t.name}</button>`;
 const DEMO_BEST = [48920, 80000, null], DEMO_PCT = [96, 91, null]; // ?demo: made-up best scores (and their %) per level (NORMAL: the mock board's own row)
 const TROPHY = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h10V9a5 5 0 0 1-10 0zM7 5.5H3.5V7A3.5 3.5 0 0 0 7 10.5M17 5.5h3.5V7a3.5 3.5 0 0 1-3.5 3.5M12 14v3.5M8 20.5h8M9.5 17.5h5"/></svg>';
-const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
-const portraitHtml = f => f.thumbnail ? `<img src="${escapeHtml(f.thumbnail)}" alt="" width="96" height="96" loading="lazy" decoding="async">` : pixelSvg(portraitArt(f), portraitPalette(f), '#2a1a10');
-function stripHtml(figures, later = false, last = null) { // later: what the fold hides; last: the town before (no banner twice)
-  let html = '';
-  for (const f of figures) {
-    const t = townOf(f);
-    if (t !== last) html += `<span class="sel-banner${later ? ' later' : ''}" data-town="${t.id}"${(t.short ?? t.name).length > 9 ? ' data-long' : ''} aria-hidden="true"><span>${(t.short ?? t.name).toUpperCase()}</span></span>`;
-    last = t;
-    const name = f.name || 'Aviat', entity = f.entity || t.name;
-    const ok = playable(f), art = f.thumbnail ? null : portraitArt(f); // the portrait's grid with its rim: whole-pixel sizing (select.css)
-    html += `<button type="button" class="btn btn-secondary sel-card${ok ? '' : ' aviat'}${later ? ' later' : ''}" role="option" data-id="${escapeHtml(f.id)}" data-town="${t.id}" tabindex="-1" aria-selected="false" aria-label="${escapeHtml(f.invite ? `${name}: ${entity.toLowerCase()} per al joc` : `${name}, ${entityLabel(f)}, ${t.name}${ok ? '' : ', pròximament'}`)}"${art ? ` style="--gw:${art[0].length + 2};--gh:${art.length + 2};--s:${portraitStand(f)}"` : ''}><span class="por">${SELECTOR_PORTRAITS[f.id] || (ok || f.thumbnail ? portraitHtml(f) : pendingSilhouette(art))}</span><span class="nb"><span class="sel-card-name">${escapeHtml(name)}</span>${cardEntityHtml(f)}</span></button>`;
-  }
-  return html;
-}
-// the fold between the playable figures and the rest: › folded, ‹ unfolded
-const moreHtml = () => `<button type="button" class="btn btn-secondary sel-card sel-more" data-more="1" role="option" tabindex="-1" aria-selected="false" aria-expanded="false" aria-label="Pròximament"><span class="sel-more-flag" aria-hidden="true"><svg viewBox="0 0 24 24"><path class="open" d="m9 5 7 7-7 7"/><path class="close" d="m15 5-7 7 7 7"/></svg></span></button>`;
-// the pills' last one: the arms of the towns with nothing to play yet, fanned out; unfolded, «Amaga»
-const soonPillHtml = towns => `<button type="button" class="btn btn-secondary sel-pill sel-soon" data-soon="1" tabindex="0" aria-expanded="false"><span class="sel-fan" aria-hidden="true">${towns.map(t => escutSvg(t.id)).join('')}</span><span class="sel-soon-text">Pròximament</span></button>`;
 
 // keyboard(): true while the player uses keys (focus rings, focus follows); busy(): a sheet is up; reduced(): reduced motion
 // firstLevel: a friend's challenge's level, preselected the first time only. standing(): Promise<{ pos, total } | null>;
 // onBoard: the position chip opens Classificacions
-// The gap for a row that scrolls (item widths, its room from the first item to the right edge) that leaves the item at
-// that edge near half shown (a fifth to four fifths), the cue that there is more: the one nearest `base` within 0.6-2x; `base` when all fit.
-export function peekGap(widths, room, base) {
-  if (widths.reduce((s, w) => s + w, 0) + base * (widths.length - 1) <= room) return base;
-  let best = base, worst = Infinity;
-  for (let g = base * 0.6; g <= base * 2; g += 0.25) {
-    let x = 0, f = 0;
-    for (const w of widths) { if (x + w > room) { f = Math.max(0, (room - x) / w); break; } x += w + g; }
-    const off = Math.abs(f - 0.5), miss = (off > 0.3 ? 1000 : 0) + off * 40 + Math.abs(g - base); // 1 px of gap = 2.5% of the cut
-    if (miss < worst) { worst = miss; best = g; }
-  }
-  return best;
-}
 
 export function setupSelect({ doc = document, win = globalThis, store, keyboard = () => false, busy = () => false, reduced = () => false,
   firstLevel = null, demo = false, getError = () => null, standing = () => Promise.resolve(null), onBoard = () => {}, sfx = () => {}, onPlay, onSelect = () => {}, onFree = () => {}, onHowto, onWrite }) {
@@ -521,11 +480,11 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     const r = el => el.getBoundingClientRect(), side = win.innerWidth >= 900 || win.innerHeight <= 500;
     const z = parseFloat(win.getComputedStyle?.(root).zoom) || 1, px = v => `${v / z}px`; // big desktops zoom the layer: rects are screen px, its CSS isn't
     // header: logo left, corner buttons right; the towns fit between (asymmetric gutter: a symmetric one dropped them on an iPad) or get their own row
-    const logoEl = root.querySelector('.sel-logo'), big = parseFloat(win.getComputedStyle?.(logoEl)?.getPropertyValue?.('--logo-big')) || 0; // desktops: the big logo comes only once the towns are inline, so the fit is judged at its size (no flip-flop)
-    const logo = [logoEl].filter(Boolean).map(r).filter(b => b.width > 0).map(b => (big ? { ...b, right: b.left + b.width / b.height * big * z, bottom: b.top + big * z } : b)), right = corner.filter(el => !el.hidden).map(r).filter(b => b.width > 0);
+    const logo = [...root.querySelectorAll('.sel-logo')].map(r).filter(b => b.width > 0), right = corner.filter(el => !el.hidden).map(r).filter(b => b.width > 0);
+    const oneLine = Boolean(root.querySelector('.sel-logo-line')?.getClientRects().length); // desktops: the one-line logo, the towns always on their own row below it
     const needed = bar.reduce((width, pill) => width + r(pill).width, 0) + GAPS.get(towns) * z * (bar.length - 1);
     const gutterL = Math.max(0, ...logo.map(b => b.right)) + 24, gutterR = Math.max(0, ...right.map(b => win.innerWidth - b.left)) + 24;
-    const inline = Boolean(right.length && win.innerWidth - gutterL - gutterR >= needed);
+    const inline = Boolean(!oneLine && right.length && win.innerWidth - gutterL - gutterR >= needed);
     root.toggleAttribute('data-header-inline', inline);
     if (inline) {
       root.style.setProperty('--town-gutter-l', px(gutterL)); root.style.setProperty('--town-gutter-r', px(gutterR));

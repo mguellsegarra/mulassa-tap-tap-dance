@@ -490,7 +490,7 @@ click($('select-strip'), cards[0]); await Promise.resolve();
 assert(!$('select-rank-tile').hidden);
 assert.equal($('select-pos').textContent, 'Ets el número 7 de 1.350', 'returning to Mulassa refreshes its own board');
 const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
-assert.match(html, /<button id="select-free"[^>]*title="Ball lliure \(H\)"[^>]*>.*<span id="select-free-label">Ball lliure<\/span>/, 'free play is «Ball lliure» for every figure');
+assert.match(html, /<button id="select-free"[^>]*title="Ball lliure"[^>]*>.*<span id="select-free-label">Ball lliure<\/span>/, 'free play is «Ball lliure» for every figure');
 assert.match(html, /<section id="select-pending"/); assert(!html.includes('id="soon-menu"'), 'no sheet: it unfolds in place');
 assert.match(html, /href="mailto:holi@mulassa.cat"/);
 assert(html.indexOf('id="select-name"') < html.indexOf('id="select-howto"') && html.indexOf('id="select-howto"') < html.indexOf('id="select-rank-tile"'), 'the ? sits by the name');
@@ -498,14 +498,15 @@ assert.match(html, /id="select-howto"[^>]*aria-label="Com es juga"[^>]*><span ar
 assert.match(html, /<button id="select-rank-tile" type="button" class="sel-tile sel-rank" aria-haspopup="dialog" hidden><svg[^]*class="chev"/, 'the position: a real button, the same chip as the record, a chevron to say so');
 FIGURES.splice(FIGURES.indexOf(catalogFixture), 1);
 const ui = readFileSync(new URL('../src/ui/select-ui.js', import.meta.url), 'utf8');
-assert.match(ui, /f\.thumbnail/); assert.match(ui, /<img src=/);
+const strip = readFileSync(new URL('../src/ui/select-strip.js', import.meta.url), 'utf8'); // the cards' HTML
+assert.match(strip, /f\.thumbnail/); assert.match(strip, /<img src=/);
 assert(!/showModal|aviat\.close|aviat-menu|aviat-close/.test(ui));
 { // every town carries its arms in the pills, each copy with its own clip id
   for (const t of TOWNS) assert.match(escutSvg(t.id), /^<svg class="escut"[^>]*aria-hidden="true"/, `${t.name}: escut`);
   const ids = TOWNS.flatMap(t => [escutSvg(t.id), escutSvg(t.id)]).map(svg => svg.match(/clipPath id="([^"]+)"/)[1]);
   assert.equal(new Set(ids).size, ids.length);
   assert.equal(escutSvg('nowhere'), '');
-  assert.match(ui, /escutSvg\(t\.id\) \|\|/); assert.match(ui, /aria-hidden="true"><span>\$\{\(t\.short/, 'banners carry the name only');
+  assert.match(strip, /escutSvg\(t\.id\) \|\|/); assert.match(strip, /aria-hidden="true"><span>\$\{\(t\.short/, 'banners carry the name only');
   // One accent per town: its banner's cloth and its cards'/avatars' tint at one fixed lightness (Marc chose the game's
   // own palette, 2026-10-19). The accents are the banners' agreed colours.
   const css = readFileSync(new URL('../src/styles/select.css', import.meta.url), 'utf8');
@@ -521,7 +522,7 @@ assert(!/showModal|aviat\.close|aviat-menu|aviat-close/.test(ui));
   assert(css.includes('.sel-banner[data-town="valls"] { background: linear-gradient(90deg, #fff 0 calc(100% / 6), #c8202f 0 calc(500% / 6), #fff 0)'), 'Valls: wide red centre with thin white vertical edges, as requested');
   assert.match(css, /\.sel-banner\[data-town="el-teu-poble"\] \{ background: repeating-linear-gradient\(90deg, #fcdd09 0 calc\(100% \/ 9\), #da121a 0 calc\(200% \/ 9\)\)/, 'the invitation keeps its nine-bar senyera');
   assert(!css.includes(`[data-town="${INVITE_TOWN.id}"] { --town`), 'the invitation has no accent: the neutral tint');
-  assert.match(ui, /sel-card[^`]*data-town="\$\{t\.id\}"/, 'cards carry their town');
+  assert.match(strip, /sel-card[^`]*data-town="\$\{t\.id\}"/, 'cards carry their town');
   // one surface, no divider; each portrait (all vectors now) at its real relative size, never more than its box holds
   assert(!/\.sel-card \.por \{[^}]*border-bottom/.test(css), 'no line between portrait and caption');
   assert.match(css, /--ref: min\(var\(--reach\) \* 100cqh \/ 14, var\(--sky\) \* 100cqw \/ 18\)/, 'one reference cell: the biggest grid without its rim, at the panel\'s reach');
@@ -531,7 +532,7 @@ assert(!/showModal|aviat\.close|aviat-menu|aviat-close/.test(ui));
   assert(Math.max(...FIGURES.map(f => portraitArt(f)[0].length)) === 18 && Math.max(...FIGURES.map(f => portraitArt(f).length)) === 14, 'the reference divisors match the biggest portrait');
   assert.match(css, /width: calc\(var\(--gw\) \* var\(--cell\)\); height: calc\(var\(--gh\) \* var\(--cell\)\); margin: calc\(-1 \* var\(--cell\)\);/, 'the rim hangs outside the box: the drawing stands on the floor');
   assert.match(css, /--mula-cell: max\(2px, min\(\.8 \* 14 \* min\(var\(--reach\) \* 100cqh \/ 14, var\(--sky\) \* 100cqw \/ 18\) \/ 11\.02/, 'the Mulassa\'s body on the same reference, at her stand');
-  assert.match(ui, /--gw:\$\{art\[0\]\.length \+ 2\};--gh:\$\{art\.length \+ 2\};--s:\$\{portraitStand\(f\)\}/, 'the svg grid, rim included, and its stand');
+  assert.match(strip, /--gw:\$\{art\[0\]\.length \+ 2\};--gh:\$\{art\.length \+ 2\};--s:\$\{portraitStand\(f\)\}/, 'the svg grid, rim included, and its stand');
   for (const f of [...FIGURES, INVITE]) assert(STAND[f.id] > 0 && STAND[f.id] <= 1.2 && portraitStand(f) === STAND[f.id], `${f.id}: its own stand beside the gegants (?sizes output pastes over STAND)`);
   assert.deepEqual([clampStand(0), clampStand(0.734), clampStand(9)], [0.2, 0.73, 1.2], '?sizes keeps two decimals within its range');
   assert(portraitStand(FIGURES.find(f => f.id === 'gegants-ciutat-valls')) > portraitStand(MULASSA) && portraitStand(MULASSA) > portraitStand(FIGURES.find(f => f.id === 'cavallets-valls')), 'gegants > mulassa > cavallets');

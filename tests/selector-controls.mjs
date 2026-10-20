@@ -44,7 +44,7 @@ const state = { state: 'splash', paused: false }, ctx = { document: doc, perform
   orbitMove() {}, orbitZoom() {}, turnFor: () => 1, orbitDown(o, id) { o.ptrs.set(id, true); }, orbitUp(o, id) { o.ptrs.delete(id); },
   chip: null, down: { keys: new Set(), ptr: new Map() }, KEYS: {}, pageActive: () => true, releaseAll() {}, buttonAt: () => { throw new Error('selector world must never hit a title button'); },
   store: { set() {} }, unlock() { state.state = 'select'; }, toTitle() { state.state = 'select'; },
-  startMenuAudio() {}, setFreeSound() {}, photoHelpAvailable: () => false, showAvatars: () => run('setPhotoControl(false)'), syncAvatars() {}, stopControl: () => run('PHOTO.on ? (setPhotoControl(false), true) : false') }; // src/ui/photo-avatars.js (its DOM: tests/render-quality.mjs)
+  startMenuAudio() {}, setFreeSound() {}, photoOrient() {}, photoHelpAvailable: () => false, showAvatars: () => run('setPhotoControl(false)'), syncAvatars() {}, stopControl: () => run('PHOTO.on ? (setPhotoControl(false), true) : false') }; // src/ui/photo-avatars.js (its DOM: tests/render-quality.mjs)
 let time = 1000;
 const photoSource = readFileSync(new URL('../src/game/photo-control.js', import.meta.url), 'utf8').replace(/^export /gm, '');
 const code = photoSource + '\n' + ['mouse-look', 'controls', 'input'].map(name => readFileSync(new URL(`../src/ui/${name}.js`, import.meta.url), 'utf8').replace(/^import .*;\n/gm, '').replace(/^export /gm, '')).join('\n');
@@ -80,13 +80,13 @@ state.state = 'select'; run('updateControls()');
 for (const id of ['settings', 'leaders', 'music', 'feedback']) assert(!$(id).hidden, `${id} is available from the selector, including offline feedback`);
 assert($('viewmode').hidden, 'the selector enters free play from its dock, not a corner eye');
 state.figureId = 'drac-valls'; state.sel = 2;
-key('KeyH'); run('updateControls()'); assert(run('viewMode') && $('select').inert && classes.has('view-mode') && sheets.select.shown, 'photo mode hides without closing/reinitializing the selector');
+key('KeyH'); assert(!run('viewMode'), 'H no longer enters free play'); $('select-free').fire?.('click'); run('setView(true)'); run('updateControls()'); assert(run('viewMode') && $('select').inert && classes.has('view-mode') && sheets.select.shown, 'photo mode hides without closing/reinitializing the selector');
 assert(!$('viewmode').hidden, 'inside free play the button is the way back');
 key('Escape'); assert(!run('viewMode') && !$('select').inert && state.state === 'select' && state.figureId === 'drac-valls' && state.sel === 2, 'photo exit keeps the figure and level');
-key('KeyH'); $('viewmode').fire('click'); assert(!run('viewMode'), 'the button leaves free play'); run('updateControls()'); assert($('viewmode').hidden);
+run('setView(true)'); key('KeyH'); assert(run('viewMode'), 'nor leaves it'); $('viewmode').fire('click'); assert(!run('viewMode'), 'the button leaves free play'); run('updateControls()'); assert($('viewmode').hidden);
 tap(1); tap(2); assert(!run('viewMode'), 'world double taps no longer enter the old photo mode');
 tap(3, { type: 'mouse' }); tap(4, { type: 'mouse' }); assert(!run('viewMode'), 'nor does a double click');
-key('KeyH'); tap(5); tap(6); assert(run('viewMode'), 'nor do they leave it'); run('setView(false)');
+run('setView(true)'); tap(5); tap(6); assert(run('viewMode'), 'nor do they leave it'); run('setView(false)');
 { // a mouse's way back fades after 3 idle seconds (clean photos); touch has no Esc, so its never does
   const timers = [], wasTimeout = ctx.setTimeout; ctx.setTimeout = () => timers.push(1);
   run('setView(true)'); assert.equal(timers.length, 1, 'desktop: the exit dims when idle'); run('setView(false)');
@@ -392,3 +392,13 @@ console.log('practice/game input routing: keyboard, mouse/touch pad and bubbling
 // Photo mode: Tab never lands on the full-viewport canvas (it showed a ring round the whole screen).
 { const { readFileSync } = await import('node:fs'); const src = readFileSync(new URL('../src/ui/photo-avatars.js', import.meta.url), 'utf8') + readFileSync(new URL('../src/styles/feedback.css', import.meta.url), 'utf8');
   assert(/hud\.tabIndex = -1/.test(src) && !/hud\.tabIndex = on/.test(src) && !/world-focus/.test(src), 'the photo-mode canvas is not a Tab stop and has no focus ring'); }
+// iPhone double-tap zoom: the quick second tap loses its default (the zoom) but still clicks; text fields keep theirs.
+{
+  const tap = (target, timeStamp) => { let prevented = false; for (const f of handlers.touchend || []) f({ target, timeStamp, touches: [], cancelable: true, preventDefault() { prevented = true; } }); return prevented; };
+  let clicks = 0; const button = { closest: sel => (sel.includes('button') ? { click() { clicks++; } } : null) };
+  const field = { closest: sel => (sel.includes('input') ? {} : null) };
+  assert(!tap(button, 10000) && tap(button, 10200) && clicks === 1, 'a quick second tap is no zoom and still clicks once');
+  assert(!tap(button, 11000), 'a slow tap is untouched');
+  assert(!tap(field, 11100), 'a text field keeps its own taps');
+  console.log('double-tap zoom guard ok');
+}

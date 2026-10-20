@@ -55,7 +55,11 @@
 <style>
   /* #loader paints the Mulassa before the bundle loads. The initial cover leaves after readiness and three full loading lines;
      later waits use a small flat card and only show after 300 ms. Artwork and animation stay inline. */
-  #loader { position: fixed; z-index: 40; inset: 0; display: flex; align-items: center; justify-content: center; box-sizing: border-box; padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); pointer-events: none; color: #fff3d6; font: 800 18px/1.2 'Baloo 2', system-ui, sans-serif; transition: opacity .25s ease-out; }
+  #loader { position: fixed; z-index: 40; inset: 0; display: flex; align-items: center; justify-content: center; box-sizing: border-box; padding: 0 env(safe-area-inset-right) 0 env(safe-area-inset-left); pointer-events: none; color: #fff3d6; font: 800 18px/1.2 'Baloo 2', system-ui, sans-serif; transition: opacity .25s ease-out; }
+  /* The card sits in the middle of the screen and never moves while the page starts. An iOS home-screen app first reports no safe-area insets, then
+     them, and an innerHeight one status bar short (912 → 844 → 912 on an iPhone Air in the first 1.5 s): vertical padding and `inset: 0` carried the card with it.
+     No vertical padding (the card is far from the notch and the home bar) and the large viewport (the whole screen) as its height in the home-screen app. */
+  @media (display-mode: fullscreen), (display-mode: standalone) { #loader { bottom: auto; height: 100lvh; } }
   #loader.page { background: var(--page-edge, #140c07); animation: loader-give-up .3s 30s forwards; } /* no JS at all: never a cover for good */
   #loader.out { opacity: 0; }
   .loader-box { font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: 12px; padding: 10px 18px 10px 14px; border-left: 3px solid #f5c518; border-radius: 4px; background: #2a1a10e8; animation: loader-in .15s ease-out both; }
@@ -213,7 +217,7 @@
 </script>
 <canvas id="gl"></canvas>
 <canvas id="hud"></canvas>
-<div id="rotate" role="alert"><div class="cover-card"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg><b></b></div></div>
+<div id="rotate" role="alert"><div class="cover-card"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg><b></b><button id="rotate-exit" type="button" class="btn btn-secondary">Torna al selector</button></div></div>
 <div id="pad">
   <button data-d="L" class="gua" aria-label="GUA, esquerra" data-fig-aria><span class="lbl"><span class="arr" aria-hidden="true">◀&#xFE0E;</span><span class="word" data-w="GUA" data-fig>GUA</span></span></button>
   <button data-d="R" class="pa" aria-label="PA, dreta" data-fig-aria><span class="lbl"><span class="arr" aria-hidden="true">▶&#xFE0E;</span><span class="word" data-w="PA" data-fig>PA</span></span></button>
@@ -221,7 +225,7 @@
 <div id="fps" hidden aria-hidden="true"></div>
 <div id="ios-hint" hidden role="note"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M8 7l4-4 4 4M6 11H5v10h14V11h-1"/></svg><span>Per jugar a pantalla completa: <b>Compartir → Afegeix a la pantalla d’inici</b></span><button id="ios-hint-close" aria-label="Tanca el consell">×</button></div>
 <button id="leaders" hidden aria-haspopup="dialog" aria-label="Classificacions" title="Classificacions"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 20h20M3.5 20v-7H9v7M9 20V5h6v15M15 20v-5h5.5v5M11 9.2l1.4-1.1V14"/></svg></button>
-<button id="viewmode" hidden aria-pressed="false" aria-label="Joc lliure" title="Joc lliure (H)" aria-keyshortcuts="H"><svg class="on" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><svg class="off" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4H4v16h6M14 8l4 4-4 4M8 12h12"/></svg></button>
+<button id="viewmode" hidden aria-pressed="false" aria-label="Joc lliure" title="Joc lliure"><svg class="on" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><svg class="off" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4H4v16h6M14 8l4 4-4 4M8 12h12"/></svg></button>
 <button id="music" hidden data-state="on" aria-label="Silencia el so del menú" title="Silencia el so del menú"><svg class="on" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 9.5h4l5-4.5v14l-5-4.5h-4z"/><path d="M16 9a4.5 4.5 0 0 1 0 6M18.8 6.2a8.5 8.5 0 0 1 0 11.6"/></svg><svg class="off" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 9.5h4l5-4.5v14l-5-4.5h-4z"/><path d="m16.5 9.5 5 5M21.5 9.5l-5 5"/></svg></button>
 <button id="feedback" hidden aria-haspopup="dialog" aria-label="Bústia de la plaça" title="Bústia de la plaça"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a8.5 8 0 0 1-12.3 7.2L3.5 20l1.4-4.3A8.5 8 0 1 1 21 11.5z"/><path d="M8.5 11.5h.01M12.5 11.5h.01M16.5 11.5h.01" stroke-width="2.6"/></svg></button>
 <div id="feedback-nudge" role="status" hidden></div>
@@ -497,6 +501,11 @@
     <g font-family="'Jersey 10'" font-size="100" stroke-width="12"><text x="154.3" y="66.6" textLength="300" lengthAdjust="spacingAndGlyphs" fill="#5e1514" stroke="#5e1514">MULASSA</text><text x="154.3" y="60.6" textLength="300" lengthAdjust="spacingAndGlyphs" fill="#c0283c" stroke="#fff3d6">MULASSA</text></g>
     <text x="154.3" y="105.8" textLength="295" lengthAdjust="spacingAndGlyphs" font-family="'Baloo 2'" font-weight="800" font-size="42.6" stroke-width="7.1" fill="#f5c518" stroke="#2a1a10">TAP TAP DANCE</text>
   </svg>
+  <!-- Desktops: the same lettering on ONE line (select.css swaps the two), the towns under it. -->
+  <svg class="sel-logo sel-logo-line" aria-hidden="true" focusable="false" width="736" height="84" viewBox="0 -8 736 84" preserveAspectRatio="xMinYMid meet" text-anchor="middle" stroke-linejoin="round" paint-order="stroke">
+    <g font-family="'Jersey 10'" font-size="100" stroke-width="12"><text x="154.3" y="66.6" textLength="300" lengthAdjust="spacingAndGlyphs" fill="#5e1514" stroke="#5e1514">MULASSA</text><text x="154.3" y="60.6" textLength="300" lengthAdjust="spacingAndGlyphs" fill="#c0283c" stroke="#fff3d6">MULASSA</text></g>
+    <text x="527" y="60.6" textLength="390" lengthAdjust="spacingAndGlyphs" font-family="'Baloo 2'" font-weight="800" font-size="56" stroke-width="9.3" fill="#f5c518" stroke="#2a1a10">TAP TAP DANCE</text>
+  </svg>
   <div id="select-towns" class="sel-towns" role="toolbar" aria-label="Pobles"></div>
   <div id="select-info" class="sel-info">
     <p id="select-error" role="status" hidden></p>
@@ -549,7 +558,7 @@
     <div class="sel-footer">
       <button id="select-figures-back" type="button" class="btn btn-secondary" hidden><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20 12H4m7-7-7 7 7 7"/></svg><span>Canvia de figura</span></button>
       <button id="select-next" type="button" class="btn btn-primary"><span id="select-next-label">Tria la dificultat</span></button>
-      <button id="select-free" type="button" class="btn btn-secondary" title="Ball lliure (H)" aria-keyshortcuts="H"><!-- Lucide gamepad-2, ISC licence (lucide.dev) --><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 11h4M8 9v4M15 12h.01M18 10h.01"/><path d="M17.32 5H6.68a4 4 0 0 0-3.978 3.59c-.006.052-.01.101-.017.152C2.604 9.416 2 14.456 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.414-1.414A2 2 0 0 1 9.828 16h4.344a2 2 0 0 1 1.414.586L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.545-.604-6.584-.685-7.258-.007-.05-.011-.1-.017-.151A4 4 0 0 0 17.32 5z"/></svg><span id="select-free-label">Ball lliure</span></button>
+      <button id="select-free" type="button" class="btn btn-secondary" title="Ball lliure"><!-- Lucide gamepad-2, ISC licence (lucide.dev) --><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 11h4M8 9v4M15 12h.01M18 10h.01"/><path d="M17.32 5H6.68a4 4 0 0 0-3.978 3.59c-.006.052-.01.101-.017.152C2.604 9.416 2 14.456 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.414-1.414A2 2 0 0 1 9.828 16h4.344a2 2 0 0 1 1.414.586L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.545-.604-6.584-.685-7.258-.007-.05-.011-.1-.017-.151A4 4 0 0 0 17.32 5z"/></svg><span id="select-free-label">Ball lliure</span></button>
       <button id="select-play" type="button" class="btn btn-primary" hidden><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 16V5l8-2v11" stroke-width="2.4"/><ellipse cx="9.5" cy="16.5" rx="3.5" ry="2.6" transform="rotate(-20 9.5 16.5)" fill="currentColor" stroke="none"/><ellipse cx="17.5" cy="14.5" rx="3.5" ry="2.6" transform="rotate(-20 17.5 14.5)" fill="currentColor" stroke="none"/><path d="M3 5h4M2 9h4"/></svg><span>A BALLAR!</span></button>
     </div>
   </div>
@@ -664,6 +673,21 @@
     </div>
   </section>
 </dialog>
+<script id="vp-debug-temp">/* TEMP (loader jump diagnosis, remove): home-screen app on a dev host only. Logs how the card and the viewport move while the page starts. */
+if (navigator.standalone && location.hostname !== 'mulassa.cat') (function () {
+  var mk = function (css) { var d = document.createElement('div'); d.style.cssText = 'position:fixed;visibility:hidden;pointer-events:none;left:0;top:0;width:1px;' + css; document.documentElement.appendChild(d); return d; };
+  var lvh = mk('height:100lvh'), dvh = mk('height:100dvh'), sat = mk('height:env(safe-area-inset-top)'), sab = mk('height:env(safe-area-inset-bottom)');
+  var pre = document.createElement('pre'); pre.style.cssText = 'position:fixed;z-index:99999;left:4px;bottom:calc(4px + env(safe-area-inset-bottom));margin:0;padding:4px;font:10px/1.2 monospace;color:#0f0;background:#000d;pointer-events:none;white-space:pre-wrap;max-width:98vw';
+  document.documentElement.appendChild(pre);
+  var log = [], last = '', mq = ['standalone', 'fullscreen', 'browser'].filter(function (m) { return matchMedia('(display-mode:' + m + ')').matches; }).join('+');
+  (function tick() {
+    var l = document.getElementById('loader'), b = l && l.querySelector('.loader-box'), r = b && b.getBoundingClientRect(), lr = l && l.getBoundingClientRect(), vv = window.visualViewport;
+    var s = 'card ' + (r ? Math.round(r.top) + '+' + Math.round(r.height) + ' mid ' + Math.round(r.top + r.height / 2) : '-') + ' | loader ' + (lr ? Math.round(lr.top) + '+' + Math.round(lr.height) : '-') + ' | in ' + innerHeight + ' lvh ' + lvh.offsetHeight + ' dvh ' + dvh.offsetHeight + ' vvTop ' + (vv ? Math.round(vv.offsetTop) : '-') + ' scrY ' + Math.round(scrollY) + ' | sat ' + sat.offsetHeight + ' sab ' + sab.offsetHeight;
+    if (s !== last) { last = s; log.push(Math.round(performance.now()) + 'ms ' + s); if (log.length > 10) log.shift(); pre.textContent = mq + ' scr ' + screen.height + '\n' + log.join('\n'); }
+    requestAnimationFrame(tick);
+  })();
+})();
+</script>
 <script type="module" src="/src/main.js"></script>
 </body>
 </html>

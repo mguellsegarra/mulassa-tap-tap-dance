@@ -1,5 +1,5 @@
 // Keyboard and pointer input for the game and for the title camera.
-import { PHOTO, photoKey, clearPhotoKeys, photoLook, photoZoom } from '../game/photo-control.js';
+import { PHOTO, photoKey, photoRelease, clearPhotoKeys, photoLook, photoZoom } from '../game/photo-control.js';
 import { syncAvatars, stopControl } from './photo-avatars.js';
 import { store } from '../platform/storage.js';
 import { orbitMove, turnFor, orbitDown, orbitUp, orbitZoom, wheelFactor } from '../scene/orbit.js';
@@ -25,8 +25,8 @@ addEventListener('keydown', e => {
     if (!pauseMenu.open) { e.preventDefault(); togglePause(); }
     return;
   }
-  if (!['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target?.tagName) && !e.target?.isContentEditable && photoScreen() && !sheetUp() && !e.ctrlKey && !e.metaKey && !e.altKey && (e.code === 'KeyH' || viewMode && e.code === 'Escape')) { // «mode foto» (H is no game key)
-    e.preventDefault(); if (e.code !== 'Escape' || !stopControl()) setView(!viewMode); return; // Escape steps back: driving → looking → buttons
+  if (!['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target?.tagName) && !e.target?.isContentEditable && photoScreen() && !sheetUp() && !e.ctrlKey && !e.metaKey && !e.altKey && viewMode && e.code === 'Escape') { // free play is entered from the dock only (Marc 2026-10-20: no H)
+    e.preventDefault(); if (!stopControl()) setView(false); return; // Escape steps back: driving → looking → buttons
   }
   if (viewMode || G.state === 'select') return; // the selector owns its keys; photo walking has already handled its keys
   if (['INPUT', 'SELECT', 'BUTTON'].includes(e.target.tagName) && !e.target.closest?.('#pad')) return; // a pad with keyboard focus still plays
@@ -61,13 +61,22 @@ function padDown(b, e) {
 padButtons.forEach(b => b.addEventListener('pointerdown', e => padDown(b, e)));
 // letting go: keys, pad fingers, or the window losing focus (which also pauses)
 const letGo = e => { if (G.state === 'play' && !G.paused) settleHold(songTime(eventAt(e))); }; // let go when it happened, like press()
-addEventListener('keyup', e => { PHOTO.keys.delete(e.code); if (e.code === 'KeyE') PHOTO.sparks = false; if (down.keys.delete(e.code)) letGo(e); });
+addEventListener('keyup', e => { photoRelease(e.code); if (down.keys.delete(e.code)) letGo(e); });
 for (const ev of ['pointerup', 'pointercancel']) addEventListener(ev, e => { if (down.ptr.delete(e.pointerId)) { syncPad(); letGo(e); } });
 addEventListener('blur', releaseAll);
+// iPhones zoom on a quick second tap whatever touch-action says: cancel that tap's default and click for it.
+// Pointer events (the pad, the stick), scrolling and single taps are untouched; text fields keep their own taps.
+let lastTouchEnd = -1e9;
+document.addEventListener('touchend', e => {
+  const quick = e.timeStamp - lastTouchEnd < 350; lastTouchEnd = e.timeStamp;
+  if (!quick || e.touches?.length || !e.cancelable || e.target.closest?.('input, textarea, select, [contenteditable="true"]')) return;
+  e.preventDefault();
+  e.target.closest?.('button, a, label, summary, [role="button"]')?.click();
+}, { passive: false });
 addEventListener('blur', clearPhotoKeys);
 document.addEventListener('visibilitychange', clearPhotoKeys);
 addEventListener('pagehide', clearPhotoKeys);
-addEventListener('focusin', e => { if (e.target !== hud && e.target?.tagName !== 'BODY') clearPhotoKeys(); });
+addEventListener('focusin', e => { if (e.target !== hud && e.target?.tagName !== 'BODY' && !e.target?.closest?.('#photo-touch')) clearPhotoKeys(); }); // (a touch action button keeps the stick)
 hud.addEventListener('pointermove', e => {
   if (PHOTO.on && e.pointerType === 'mouse' && PHOTO.mouse) {
     if (lookSkip()) return; // a lock change's first move can jump

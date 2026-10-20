@@ -42,6 +42,7 @@ export async function preparePages(directory, song) {
       || /^fonts\/[\w-]+\.(woff2?|txt)$/.test(name)
       || /^(captures\/[\w-]+\.jpg|videos\/[\w-]+\.(mp4|jpg))$/.test(name) // /projecte/'s screenshots
       || name === 'campanar-valls.svg' // Configuració «Sobre el joc»
+      || name === 'version.json' // vite.config.js buildStamp: the woken app's update check
       || name === 'uaf-logo.jpg' // /projecte/'s credits: the Unió Anelles de la Flama logo
       || ['robots.txt', 'sitemap.xml', 'llms.txt', 'index.md', 'projecte/index.html', 'projecte/index.md'].includes(name); // tools/seo-pages.mjs + public/
     if (!allowed) throw new Error(`Unexpected deployment file: ${name}`);

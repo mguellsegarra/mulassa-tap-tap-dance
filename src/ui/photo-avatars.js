@@ -7,11 +7,14 @@ import { COARSE } from '../core/env.js';
 import { hud } from '../hud/canvas.js';
 import { lookLocked } from './mouse-look.js';
 import { store } from '../platform/storage.js';
+import { showStick, setStickSwitched } from './photo-stick.js';
 
 const PF_FIGS = [[MULASSA, [['Q', 's’alça'], ['E', 'guitza'], ['R', 'culada']]],
   [DRAC, [['Q', 'rugeix'], ['E', 'guspires'], ['R', 'gira']]]];
 const photoHelpActions = fig => [['WASD', 'camina'], ['Shift', 'corre'], ['Espai', 'salta'], ...fig[1], ['Tab', 'canvia figura'], ['Botó dret', 'mantén per mirar'], ['M', 'tria música'], ['Esc', lookLocked() ? 'allibera el ratolí' : 'torna a mirar']];
 const photoHelpDescription = fig => `${fig[0].fullName}: ${photoHelpActions(fig).map(([key, label]) => `${key} ${label}`).join(' · ')}. Prem ? per tornar a veure els controls.`;
+// Safari on an iPhone (not the home-screen app): its bars eat a landscape screen. Said on every entry (Marc).
+const PF_HOME = /iPhone|iPod/.test(navigator.userAgent ?? '') && navigator.standalone === false ? '<small class="pf-home">Per jugar-hi a pantalla completa, afegeix el joc a la pantalla d’inici.</small>' : '';
 const PF_TIP_MS = 6000; // brief discovery; manual help stays until toggled or the mode changes
 const PF_ORBIT_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M4.5 9.5A8 8 0 0 1 18 6.3M19.5 14.5A8 8 0 0 1 6 17.7M18 2.5v4h-4M6 21.5v-4h4"/></svg>';
 export const avatarsEl = document.createElement('div');
@@ -62,7 +65,8 @@ export function showPhotoHelp(manual = true) {
   let html;
   if (fig) {
     const actions = photoHelpActions(fig);
-    html = `<strong>Mou ${fig[0].id === DRAC.id ? 'el Drac' : 'la Mulassa'}</strong><span class="sr-only">${fig[0].fullName}</span><div class="pf-help-grid">${actions.map(([key, label]) => `<span class="pf-help-action"><kbd>${key}</kbd><span${key === 'Esc' ? ' data-photo-escape' : ''}>${label}</span></span>`).join('')}</div><small>Tab als botons: navega.<br>? ${manual ? "amaga l'ajuda" : 'torna a mostrar els controls'}.</small>`;
+    html = COARSE.matches ? `<strong>Mou ${fig[0].id === DRAC.id ? 'el Drac' : 'la Mulassa'}</strong><p>Arrossega a l’esquerra per caminar; fins a la vora, corre.<br>Arrossega a la dreta per mirar.</p><small>Els botons rodons: salta, ${fig[1].map(([, label]) => label).join(', ')} i canvia de figura.<br>Botó ?: mostra o amaga l’ajuda.</small>${PF_HOME}`
+      : `<strong>Mou ${fig[0].id === DRAC.id ? 'el Drac' : 'la Mulassa'}</strong><span class="sr-only">${fig[0].fullName}</span><div class="pf-help-grid">${actions.map(([key, label]) => `<span class="pf-help-action"><kbd>${key}</kbd><span${key === 'Esc' ? ' data-photo-escape' : ''}>${label}</span></span>`).join('')}</div><small>Tab als botons: navega.<br>? ${manual ? "amaga l'ajuda" : 'torna a mostrar els controls'}.</small>`;
   } else {
     html = '<strong>Vista lliure</strong>' + (COARSE.matches
       ? '<p>Arrossega per girar.<br>Pessiga per acostar o allunyar.</p><small>Botó ?: mostra o amaga l\'ajuda.</small>'
@@ -84,7 +88,10 @@ export function syncAvatars() {
     if (!b.dataset.id) continue;
     b.title = on ? pfHelp.textContent : b.querySelector('.pf-name').textContent;
   }
+  const stickFig = PF_FIGS.find(([f]) => f.id === active);
+  showStick(pfShown && PHOTO.on && COARSE.matches, stickFig?.[1], active);
   if (active !== pfTipFor) {
+    const home = pfTipFor === null && COARSE.matches ? PF_HOME : ''; // on entry, not on each figure change
     pfTipFor = active;
     const fig = PF_FIGS.find(([f]) => f.id === active);
     const freeHelp = COARSE.matches ? 'Mira la plaça. Arrossega per girar. Pessiga per acostar o allunyar.'
@@ -103,7 +110,7 @@ export function syncAvatars() {
       store.set(photoHelpSeenKey(family), '1');
       showPhotoHelp(false);
     } else if (pfShown) {
-      presentPhotoTip('notice', `<strong>${fig ? `Ara mous ${active === DRAC.id ? 'el Drac' : 'la Mulassa'}` : 'Vista lliure'}</strong>`, 1800);
+      presentPhotoTip('notice', `<strong>${fig ? `Ara mous ${active === DRAC.id ? 'el Drac' : 'la Mulassa'}` : 'Vista lliure'}</strong>${home}`, home ? 4500 : 1800);
     }
     else clearPhotoTip();
   }
@@ -111,7 +118,8 @@ export function syncAvatars() {
 // Entry is derived anew from the selector, never from the previous photo actor.
 export function showAvatars(on, id) {
   pfShown = on;
-  setPhotoControl(Boolean(on && !COARSE.matches && PF_FIGS.some(([f]) => f.id === id)), id, true);
+  const known = PF_FIGS.some(([f]) => f.id === id); // touch has no bar: it always drives, the Mulassa when the selection can't
+  setPhotoControl(Boolean(on && (known || COARSE.matches)), known ? id : MULASSA.id, true);
   PHOTO.pair = on; // both existing scene figures, independent of selector identity
   avatarsEl.hidden = !on || COARSE.matches;
   hud.tabIndex = -1; // focusable by code or click for the world's keys, never a Tab stop: a full-viewport ring said nothing
@@ -135,6 +143,7 @@ export function takeFigure(id) {
 // A mouse or touch choice hands the keys to the world at once (keyboard activation keeps the focus on the button)
 for (const b of pfButtons) b.addEventListener('click', e => { takeFigure(b.dataset.id); if (e.detail && PHOTO.on && !COARSE.matches) hud.focus({ preventScroll: true }); });
 COARSE.addEventListener?.('change', () => showAvatars(pfShown)); // DevTools device mode, a tablet's keyboard dock
+setStickSwitched(syncAvatars);
 
 // Using a figure immediately clears discovery help, including an already-held movement key.
 // ? (or the existing help button) always reopens the current figure's instructions.

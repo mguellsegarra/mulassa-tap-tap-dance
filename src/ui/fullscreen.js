@@ -6,7 +6,7 @@ import { resize } from '../hud/canvas.js';
 
 function checkOrientation() {
   if (!COARSE.matches) return;
-  const wrong = TABLET ? innerHeight > innerWidth : innerWidth > innerHeight;
+  const wrong = document.body.classList.contains('view-mode') ? !TABLET && innerHeight > innerWidth : TABLET ? innerHeight > innerWidth : innerWidth > innerHeight;
   document.body.classList.toggle('wrong-orient', wrong);
   if (wrong && G.state === 'play') pauseGame();
 }
@@ -14,6 +14,15 @@ addEventListener('resize', checkOrientation);
 addEventListener('orientationchange', checkOrientation);
 setTimeout(checkOrientation);
 let fsLeft = false;
+const wantOrient = () => !TABLET && document.body.classList.contains('view-mode') ? 'landscape' : WANT_ORIENT;
+// Photo mode on/off (controls.js, body.view-mode already set): lock where Android allows it (fullscreen, a tap);
+// iOS has no lock, so the «gira» cover asks instead and lifts by itself on turning.
+export function photoOrient() {
+  checkOrientation();
+  if (!COARSE.matches || TABLET) return;
+  if (!document.fullscreenElement && !document.webkitFullscreenElement) { goFullscreen(); return; } // (it locks once in)
+  try { screen.orientation?.lock?.(wantOrient())?.catch?.(() => {}); } catch { /* no lock here: the cover asks */ }
+}
 // Apple (iPhone, iPad — iPadOS reports a Mac with touch): no page fullscreen. iPad Safari's element fullscreen
 // swallowed touches after the practice; there the way to full screen is "Afegeix a la pantalla d'inici".
 const APPLE = /iP(hone|ad|od)/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
@@ -23,7 +32,7 @@ export function goFullscreen() {
   if (navigator.userActivation && !navigator.userActivation.isActive) return; // only inside a real tap, never from a timer
   try {
     const req = el.requestFullscreen?.({ navigationUI: 'hide' }) ?? el.webkitRequestFullscreen?.();
-    Promise.resolve(req).then(() => screen.orientation?.lock?.(WANT_ORIENT)).catch(() => {});
+    Promise.resolve(req).then(() => screen.orientation?.lock?.(wantOrient())).catch(() => {});
   } catch { /* not allowed here: play in the page */ }
 }
 for (const ev of ['fullscreenchange', 'webkitfullscreenchange']) document.addEventListener(ev, () => {

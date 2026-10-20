@@ -3,6 +3,7 @@
 import './platform/polyfills.js';
 import { PHOTO } from './game/photo-control.js';
 import { errors } from './services/errors.js';
+import './services/update.js';
 import * as THREE from 'three';
 import { song, figureScale, selectedFigure } from './game/figure-song.js';
 import { DRAC } from './game/figures.js';

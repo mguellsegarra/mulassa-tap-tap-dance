@@ -83,4 +83,12 @@ assert(popsAt(NaN, out).every(x => x === 0), 'no beat (reduced motion): still');
 for (const [, css] of readPage().matchAll(/<style>([\s\S]*?)<\/style>/g)) {
   for (const after of css.split('/*').slice(1)) assert(after.includes('*/'), `unclosed CSS comment: /*${after.slice(0, 60)}`);
 }
+// Edge to edge on a notched iPhone: the page asks for the whole screen and the status bar is transparent, and nothing paints
+// a solid band over the safe areas (a body::before/::after in the page colour did, top and bottom, above the scene).
+{
+  const html = readPage();
+  assert.match(html, /<meta name="viewport"[^>]*viewport-fit=cover/);
+  assert.match(html, /<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">/);
+  assert(!/\bbody::(before|after)\b/.test(html), 'body::before/::after must not cover the safe areas');
+}
 console.log(`title layout ok (${cases} cases)`);

@@ -370,6 +370,7 @@ body.view-mode #select { opacity: 0; visibility: hidden; pointer-events: none; t
 @media (min-width: 900px) and (min-height: 600px) {
   #select { --dock-h: 324px; --action-h: 58px; --card-label-h: 72px; --ga: 12px; }
   #select-next { flex-basis: 400px; font-size: 22px; }
+  .sel-towns { --edge-l: max(40px, env(safe-area-inset-left)); } /* the logo's and the info's edge */
   /* a wide, open column a little in from the edge; the type grows with the screen */
   .sel-info { top: calc(var(--info-top) + 16px + env(safe-area-inset-top)); left: calc(max(40px, env(safe-area-inset-left)) - 4px); width: min(640px, 40%); }
   .sel-identity { column-gap: 16px; }
@@ -721,9 +722,11 @@ body.fps-on #select .sel-info { max-height: calc(100% - var(--info-top) - var(--
 }
 
 /* Desktops: a bigger logo, its letters on the info's left edge, its top on the corner buttons' top (Marc, 2026-10-20) */
-/* The big one only while the towns sit inline beside it (data-header-inline, select-ui.js measure()): on their own row, at 84 px, it would cover them. */
-@media (min-width: 900px) and (min-height: 600px) { #select > .sel-logo { --logo-big: 80px; left: calc(max(40px, env(safe-area-inset-left)) + 1px); } #select[data-header-inline] > .sel-logo { height: var(--logo-big); } }
-@media (min-width: 1100px) and (min-height: 900px) { #select > .sel-logo { --logo-big: 96px; } }
+/* One line, 56 px: it ends above the towns' row (84 px), which keeps its own row on desktops (measure() skips the inline fit there). */
+#select > .sel-logo-line { display: none; }
+@media (min-width: 900px) and (min-height: 600px) { #select > .sel-logo:not(.sel-logo-line) { display: none; } #select > .sel-logo-line { display: block; left: calc(max(40px, env(safe-area-inset-left)) + 1px); } }
+@media (min-width: 900px) and (min-height: 600px) and (max-width: 1099px) { #select > .sel-logo-line { height: 48px; } }
+
 /* Wide desktops: the dock's strip sits in the middle, clear of the info column, so the column runs down to the screen's
    foot instead of stopping at the dock's top (the empty band under the position, Marc 2026-10-20). Not while the strip
    overflows (the catalog open): then it spans the width. select-standings.js fills what this gives. */

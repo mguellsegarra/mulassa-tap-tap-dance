@@ -49,7 +49,11 @@ export const JUDGE_WORDS = { perfect: 'PERFECTE', good: 'BÉ', miss: 'ERROR' };
 export let engine = null;
 // the title's speaker button: the menu loop on/off, remembered here ('menu-music': 'off'); off = never fetched nor started
 export let menuMusic = store.get('menu-music') !== 'off';
-export const setMenuMusic = v => (menuMusic = v);
+export function setMenuSound(on) { // the speaker and the radio's «Silenci» are this one preference
+  menuMusic = on;
+  store.set('menu-music', on ? 'on' : 'off');
+  engine?.setMenuMusic(on);
+}
 export const audioEngine = () => (engine ||= new Chip(song, { menuMusic, menuLoop: menuSong }));
 // Called synchronously by entry/photo gestures, sharing the preloaded context and menu transport.
 export function startMenuAudio() {

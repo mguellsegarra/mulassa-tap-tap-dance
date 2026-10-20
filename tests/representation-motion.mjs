@@ -6,6 +6,7 @@ import { crowdMotion, animatePerson } from '../src/dev/representation/live-pose.
 import { buildHelper, poseHelper, MULA_HELPER_LOOKS, ARM } from '../src/scene/models/colla.js';
 import { reviewAttendant, linkRolePose, followRolePose } from '../src/dev/representation/role-models.js';
 import { settleDrawnCrowd } from '../src/scene/crowd-contact.js';
+import { buildPublicSpecs } from '../src/dev/representation/population.js';
 
 const hand = (p, i) => palmLocal(p, i).applyMatrix4(p.g.matrixWorld);
 let baselineJump = 0, fixedJump = 0, caneError = 0;
@@ -54,6 +55,10 @@ assert(caneError<.005,`final held cane stays on ground: ${caneError}`);
  assert(a.g.position.distanceTo(b.g.position)>=a.rad+b.rad-1e-9,'final drawn footprints must separate');
  const wall={pos:new THREE.Vector2(0,0),rad:.33,fixed:true};settleDrawnCrowd([a],[wall]);
  assert(Math.hypot(a.g.position.x,a.g.position.z)>=a.rad+wall.rad-1e-9,'static backdrop must stop the drawn person');
+ const c=make(0),d=make(.2);c.g.position.x=0;d.g.position.x=.05;c.fall=d.fall=1;
+ for(let f=0;f<120;f++){const x0=[c.g.position.clone(),d.g.position.clone()];settleDrawnCrowd([c,d],[wall],2.5/60);
+  assert(c.g.position.distanceTo(x0[0])<=2.5/60+1e-9&&d.g.position.distanceTo(x0[1])<=2.5/60+1e-9,'a deep overlap never jumps a drawn person');}
+ assert(c.g.position.distanceTo(d.g.position)>=c.rad+d.rad+.8-1e-6,'the capped correction still separates them within two seconds');
 }
 {
  const source=buildHelper(MULA_HELPER_LOOKS[0],1),p=reviewAttendant(CATALOGUE.find(x=>x.id==='p11'),0),links=linkRolePose(p,source);
@@ -79,5 +84,11 @@ assert(caneError<.005,`final held cane stays on ground: ${caneError}`);
  const spec=CATALOGUE.find(x=>x.id==='p11'),p=reviewAttendant(spec,0),g=p.head.children.at(-1).geometry,pos=g.attributes.position,col=g.attributes.color,ix=g.index,skin=new THREE.Color(spec.skin),n=new Set();
  for(let i=0;i<ix.count;i+=3){const v=[0,1,2].map(k=>ix.getX(i+k));if(v.every(j=>Math.abs(col.getX(j)-skin.r)+Math.abs(col.getY(j)-skin.g)+Math.abs(col.getZ(j)-skin.b)<0.08)&&v.some(j=>pos.getY(j)<0.01)){const z=v.map(j=>pos.getZ(j)),x=v.map(j=>pos.getX(j));n.add(z.every(q=>q>0.15)?'front':x.every(q=>q>0.16)?'right':x.every(q=>q<-0.16)?'left':'other');}}
  for(const side of ['front','left','right']) assert.ok(n.has(side),`attendant head lost its skull ${side} (${[...n]})`);
+}
+{ // the review examples (wheelchairs, canes) stand spread through the crowd, not side by side at its centre
+ const sources=Array.from({length:60},(_,i)=>({row:0,slot:i,pos:new THREE.Vector2(i*.9,0),appearance:{skin:'#000'}}));
+ const mob=buildPublicSpecs(sources,CATALOGUE,7).map((s,i)=>s.mobility?sources[i].pos:null).filter(Boolean);
+ assert.equal(mob.length,4,'all four mobility examples are placed');
+ for(let i=0;i<mob.length;i++)for(let j=i+1;j<mob.length;j++)assert(mob[i].distanceTo(mob[j])>=3,'mobility examples at least 3 m apart');
 }
 console.log('representation live motion ok', {baselineJump,fixedJump,caneError});

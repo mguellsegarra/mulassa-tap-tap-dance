@@ -8,6 +8,7 @@ import { setFigureTheme } from './figure-theme.js';
 
 const FIGURE_SONGS = { [MULASSA.id]: mulassaSong, [DRAC.id]: dracSong };
 export const menuSong = mulassaSong; // the menu loop, whoever is selected
+export const figureSong = id => FIGURE_SONGS[id]; // any figure's song, selected or not (free mode's radio)
 export let selectedFigure = MULASSA;
 export let song = mulassaSong;
 export let BEATS = song.beats;

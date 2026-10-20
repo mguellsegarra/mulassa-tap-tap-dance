@@ -28,28 +28,43 @@ export function allocatePopulation(n, weights, seed) {
   }
   return shuffle(labels, random);
 }
+// Where the eight review looks stand: the most central sources first (the caller sorts them), but each at least
+// REVIEW_GAP m from the others, so the wheelchairs and canes are spread through the crowd instead of side by side.
+const REVIEW_GAP = 3;
+function reviewSlots(sources) {
+  const slots = new Map();
+  for (const gap of [REVIEW_GAP, REVIEW_GAP / 2, 0]) { // a small crowd relaxes the gap rather than losing an example
+    for (let i = 0; i < sources.length && slots.size < REVIEW_LOOKS.length; i++) {
+      const a = sources[i].pos;
+      if (slots.has(i) || [...slots.keys()].some(k => a && a.distanceTo(sources[k].pos) < gap)) continue;
+      slots.set(i, REVIEW_LOOKS[slots.size]);
+    }
+  }
+  return slots;
+}
 export function buildPublicSpecs(sources, catalogue, seed = 20261020) {
   const n = sources.length, gender = allocatePopulation(n, PUBLIC_GENDER_WEIGHTS, seed ^ 0x53a9);
   const ages = allocatePopulation(n, PUBLIC_AGE_WEIGHTS, seed ^ 0x712a);
   const middle = ages.filter(x => x === '15-64').length;
   const stages = allocatePopulation(middle, { jove: MIDDLE_YOUTH_SHARE, adult: 1 - MIDDLE_YOUTH_SHARE }, seed ^ 0x1635);
   const random = populationRandom(seed ^ 0x42da), ordinary = catalogue.filter(s => !s.mobility);
+  const review = reviewSlots(sources);
   let j = 0;
   return sources.map((source, i) => {
     // Preserve the existing eight appearance examples for review. Additional figures inherit their source skin;
     // these four fixed mobility examples are coverage fixtures, not approved disability prevalence weights.
-    let look = i < REVIEW_LOOKS.length ? catalogue.find(s => s.id === REVIEW_LOOKS[i]) : ordinary[Math.floor(random() * ordinary.length)];
+    let look = review.has(i) ? catalogue.find(s => s.id === review.get(i)) : ordinary[Math.floor(random() * ordinary.length)];
     const age = ages[i] === '0-14' ? 'infant' : ages[i] === '65+' ? 'gran' : stages[j++];
     const ageBand = age === 'jove' ? '15-24' : age === 'adult' ? '25-64' : ages[i];
     // Marc: the long tunic + headscarf look read too often and always navy: half as frequent, its own colours each time,
     // and never on a child (they dress like the other children: another look, so the age/gender counts stay as allocated).
-    if (look.cover === 'mocador' && i >= REVIEW_LOOKS.length && (age === 'infant' || random() < 0.5)) look = ordinary.filter(s => s.cover !== 'mocador')[Math.floor(random() * (ordinary.length - 1))];
+    if (look.cover === 'mocador' && !review.has(i) && (age === 'infant' || random() < 0.5)) look = ordinary.filter(s => s.cover !== 'mocador')[Math.floor(random() * (ordinary.length - 1))];
     if (look.cover === 'mocador') {
       const robe = ROBES[Math.floor(random() * ROBES.length)], scarf = ROBES[Math.floor(random() * ROBES.length)];
       look = { ...look, coverColour: scarf, top: { ...look.top, colour: robe }, bottom: { ...look.bottom, colour: robe } };
     }
     return { ...look, id: `public-${seed >>> 0}-${source.row}-${source.slot}`, age, height: 1,
-      skin: i < REVIEW_LOOKS.length ? look.skin : source.appearance.skin,
+      skin: review.has(i) ? look.skin : source.appearance.skin,
       meta: { gender: gender[i], age, ageBand, populationBand: ages[i], mobility: look.mobility ?? null,
         ...(look.mobility === 'basto' ? { vision: look.meta.vision } : {}) } };
   });

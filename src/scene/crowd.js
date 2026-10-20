@@ -1,7 +1,7 @@
 // The crowd's behaviour: making way for her, its mood, reactions to hits and to the finale, neighbour separation.
 import { PHOTO, PHOTO_SPIN } from '../game/photo-control.js';
 import { photoClearance } from './photo-collision.js';
-import { photoExtras, updatePhotoExtras, photoEscape, stepPhotoPerson } from './photo-obstacles.js';
+import { photoExtras, updatePhotoExtras, photoEscape, stepPhotoPerson, photoPersonClearance } from './photo-obstacles.js';
 import { pushPulse, rippleLive, RIPPLE, ripple } from './crowd-fx.js';
 import * as THREE from 'three';
 import { judgedCount } from '../game/progress.js';
@@ -108,12 +108,21 @@ function separate() {
             if (d2 >= min * min) continue;
             const d = Math.sqrt(d2);
             if (d > 1e-6) { sx /= d; sz /= d; } else { sx = Math.cos(p.ang); sz = Math.sin(p.ang); } // on top of each other: outwards
-            const stiff = q.fixed || sootAnchored(q), push = (min - d) * (stiff ? 1 : 0.5);
-            p.pos.x += sx * push; p.pos.y += sz * push;
+            const stiff = q.fixed || sootAnchored(q), overlap = min - d;
+            let pushP = overlap * (stiff ? 1 : 0.5), pushQ = stiff ? 0 : overlap * 0.5;
+            if (PHOTO.on) { // neighbour separation must not undo a safe detour by pushing someone into a figure or tree
+              const pBase = Math.min(0,photoPersonClearance(p,p.pos.x,p.pos.y))-1e-7;
+              const qBase = stiff ? 0 : Math.min(0,photoPersonClearance(q,q.pos.x,q.pos.y))-1e-7;
+              if (photoPersonClearance(p,p.pos.x+sx*pushP,p.pos.y+sz*pushP)<pBase) { pushP=0;pushQ=stiff?0:overlap; }
+              if (pushQ && photoPersonClearance(q,q.pos.x-sx*pushQ,q.pos.y-sz*pushQ)<qBase) {
+                pushQ=0;pushP=photoPersonClearance(p,p.pos.x+sx*overlap,p.pos.y+sz*overlap)>=pBase?overlap:0;
+              }
+            }
+            p.pos.x += sx * pushP; p.pos.y += sz * pushP;
             const pv = p.vel.x * sx + p.vel.y * sz;
             if (pv < 0) { p.vel.x -= sx * pv; p.vel.y -= sz * pv; }
             if (!stiff) {
-              q.pos.x -= sx * push; q.pos.y -= sz * push; q.rest = false; // nudged: it checks its own neighbours next
+              q.pos.x -= sx * pushQ; q.pos.y -= sz * pushQ; q.rest = false; // nudged: it checks its own neighbours next
               const qv = q.vel.x * sx + q.vel.y * sz;
               if (qv > 0) { q.vel.x -= sx * qv; q.vel.y -= sz * qv; }
             }
@@ -179,6 +188,19 @@ function updateMood(dt, t, live) {
   F.shotX = shotX; F.shotZ = shotZ; F.shotD = shotD;
 }
 
+// Use the existing neighbour grid when a walking spectator needs a detour, rather than stepping into the next person.
+function photoCrowdClearance(p, x, z) {
+  let clear = photoPersonClearance(p,x,z);
+  const cx = Math.floor(x+16), cz = Math.floor(z+16);
+  for (let iz=Math.max(0,cz-2);iz<=Math.min(31,cz+2);iz++) for (let ix=Math.max(0,cx-2);ix<=Math.min(31,cx+2);ix++) {
+    for (const q of crowdCells[ix+iz*32]) {
+      if (q===p) continue;
+      const presence=Math.min(p.qualityScale??1,q.qualityScale??1);
+      clear=Math.min(clear,Math.hypot(x-q.pos.x,z-q.pos.y)-crowdRadius(p)-crowdRadius(q)-.04*presence);
+    }
+  }
+  return clear;
+}
 // Step 2: where one person goes: they make way for her (RING), creep in to watch, walk back to their spot, keep clear of the play camera's shot and of each other (a soft push; separate() is the hard limit).
 function steer(p, dt, beat, live) {
   if (sootAnchored(p)) { p.vel.set(0, 0); p.rest = false; return; } // charred stiff (drac-soot.js): rooted to the spot, a fixed footprint
@@ -280,7 +302,7 @@ function steer(p, dt, beat, live) {
   }
   if (PHOTO.on) culadaKnock(p, dt, dx, dz); else if (p.downT > 0) p.vel.set(0, 0); // (photo mode left mid-fall: they still get up first)
   const r0 = p.pos.length();
-  if (PHOTO.on) p.vel.copy(stepPhotoPerson(p,p.vel.x,p.vel.y,dt));
+  if (PHOTO.on) p.vel.copy(stepPhotoPerson(p,p.vel.x,p.vel.y,dt,photoCrowdClearance));
   else p.pos.addScaledVector(p.vel, dt);
   const r = p.pos.length();
   if (!PHOTO.on && r > MID.edge) { // the edge of the plaça; on the far side the mid band's front (its figures never step aside)
@@ -444,7 +466,7 @@ export function animCrowd(dt, beat, t, live = 1) {
   for (const p of activeCrowd) steer(p, dt, beat, live);
   separate();
   for (const p of activeCrowd) pose(p, dt, beat, live);
-  settleDrawnCrowd(activeCrowd.filter(p => p.g.scale.x > .05), [...bandSpots, ...backgroundContacts]);
+  settleDrawnCrowd(activeCrowd.filter(p => p.g.scale.x > .05), [...bandSpots, ...backgroundContacts], 2.5 * dt); // (as fast as a brisk walk)
   poseScenery(beat, live);
   for (const p of plaza.band) if (p.sootW > 0) sootPose(p); // charred (drac-soot.js): the band and the balconies too
   for (const p of plaza.balcony) if (p.sootW > 0) sootPose(p);

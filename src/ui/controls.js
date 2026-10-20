@@ -44,7 +44,7 @@ export function setView(on) {
   const entryFocus = on ? document.activeElement : null; // making the selector inert can already blur its card
   if (on && G.state === 'splash') startMenuAudio();
   const entryFigure = on && G.state === 'select' && !sheets.select?.pending && sheets.select?.figure;
-  viewMode = on; showAvatars(on, entryFigure?.id); viewT = performance.now();
+  viewMode = on; showAvatars(on, entryFigure?.id); sheets.music?.visible(on); viewT = performance.now();
   if (!on) hide(howtoEl, true);
   document.body.classList.toggle('view-mode', on);
   for (const el of VIEW_HIDES) el.inert = on;

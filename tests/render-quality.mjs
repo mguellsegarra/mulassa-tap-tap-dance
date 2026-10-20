@@ -393,14 +393,14 @@ const document = {
   listeners: {},
   addEventListener(type, handler) { const previous = this.listeners[type]; this.listeners[type] = previous ? (...args) => { previous(...args); handler(...args); } : handler; },
   body: { appendChild() {}, classList: { contains: () => false, toggle() {} }, style: { setProperty() {}, removeProperty() {} } },
-  createElement: () => ({ style: {}, dataset: {}, after() {}, setAttribute() {}, appendChild() {}, querySelectorAll: () => [], querySelector: () => ({}) }),
+  createElement: () => ({ style: { setProperty() {} }, dataset: {}, after() {}, setAttribute() {}, appendChild() {}, addEventListener() {}, contains: () => false, querySelectorAll: () => [], querySelector: () => ({}) }), // (ui/free-music.js listens on its own button)
   getElementById(id) {
     if (!nodes.has(id)) nodes.set(id, {
       style: {}, dataset: {}, options: [{}, {}], listeners: {}, open: false,
       addEventListener(type, handler) { this.listeners[type] = handler; },
       showModal() { this.open = true; }, close() { this.open = false; },
       focus() {}, blur() {}, setAttribute() {}, classList: { toggle() {}, add() {}, remove() {} }, contains: () => false, after() {},
-      getContext: () => drawing,
+      getContext: () => drawing, getBoundingClientRect: () => ({ left: 10, top: 10, right: 54, bottom: 54, width: 44, height: 44 }), // (the radio sits by #viewmode)
     });
     return nodes.get(id);
   },
@@ -3266,10 +3266,22 @@ console.log('view mode ok');
     assert(run('trappedMoved>.6'), `${scenario}: the trapped spectator finds room beside the tree`);
     assert(run('trappedTreeMin>=-1e-5 && trappedMin>=-.03'), `${scenario}: neither the tree nor the visible spectator is crossed ${run('JSON.stringify([trappedTreeMin,trappedMin])')}`);
     assert(run('trappedMaxStep<=PHOTO_RUN.trot/60+1e-6'), `${scenario}: opening the path never teleports the figure`);
+    run('var earlyYield=new THREE.Vector2();photoEscape(photoBody().x+Math.sin(photoBody().yaw)*7.5,photoBody().z+Math.cos(photoBody().yaw)*7.5,earlyYield);');
+    assert(run('earlyYield.fear>0'), `${scenario}: the corridor opens ahead of the walking figure`);
     if (charred) assert(run('trappedPerson.sootW===1 && trappedPerson.sootT===4'), `${scenario}: stepping aside preserves the soot effect`);
     run('setView(false);animMula(1/60,clock/BEAT);');
   }
-  run(`trappedPerson.rad=trappedRadius;trappedPerson.sootT=trappedSootT;trappedPerson.sootW=trappedSootW;activeCrowd=passageSavedCrowd;plaza.props=passageSavedProps;bandSpots=passageSavedBand;
+  // Resolving a crowded pair may move the outer person; it must not push the inner one into the figure.
+  run(`var crowdNeighbour=passageSavedCrowd[1], neighbourRadius=crowdNeighbour.rad;
+    setPhotoControl(true,'drac-valls',false);Object.assign(photoBody(),{x:0,z:0,yaw:0});
+    activeCrowd=[trappedPerson,crowdNeighbour];photoExtras.length=0;plaza.props=[];
+    trappedPerson.rad=crowdNeighbour.rad=.52;trappedPerson.sootT=trappedPerson.sootW=crowdNeighbour.sootT=0;
+    trappedPerson.pos.set(1.95,0);crowdNeighbour.pos.set(2.9,0);trappedPerson.vel.set(0,0);crowdNeighbour.vel.set(0,0);
+    animCrowd(0,0,0,1);`);
+  assert(run('photoClearance(0,0,0,trappedPerson.pos.x,trappedPerson.pos.y,.52,true)>=-1e-6'), 'neighbour separation preserves clearance to the figure');
+  assert(run('trappedPerson.pos.distanceTo(crowdNeighbour.pos)>=1.08-1e-6'), 'the outside spectator makes the remaining room');
+  run(`setPhotoControl(false);crowdNeighbour.rad=neighbourRadius;
+    trappedPerson.rad=trappedRadius;trappedPerson.sootT=trappedSootT;trappedPerson.sootW=trappedSootW;activeCrowd=passageSavedCrowd;plaza.props=passageSavedProps;bandSpots=passageSavedBand;
     photoBandSource=passageSavedSource;photoExtras.length=0;photoExtras.push(...passageSavedExtras);
     plaza.backdrop.mesh.count=passageBackdropCount;midCrowd.mesh.count=passageMidCount;`);
   console.log('held WASD clears a spectator trapped against scenery for both figures');

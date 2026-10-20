@@ -16,11 +16,12 @@ import { setupFeedback, setupNudge } from './feedback-ui.js';
 import { nudgePlace } from '../hud/title-layout.js';
 import { sheets } from './sheets.js';
 import { pauseMenu, howtoMenu, settingsMenu, settingsEl, leadersEl, musicEl, howtoEl, iosHint, feedbackEl, privacyMenu, retryEl } from './handles.js';
-import { G, chip, menuMusic, engine, clock, setMenuMusic, setSelectedFigure, CHALLENGE } from '../game/state.js';
+import { G, chip, menuMusic, clock, setMenuSound, setSelectedFigure, CHALLENGE } from '../game/state.js';
 import { showPauseOptions } from './pause.js';
 import { togglePause, requestPauseAction } from './pause-actions.js';
 import { startPractice, startGame, toTitle, endPractice, choose, startWatch } from '../game/flow.js';
 import { setupWatch } from './watch-ui.js';
+import { setupFreeMusic } from './free-music.js';
 import { focusIn, keyboardNav } from './focus.js';
 import { offsetMs, FINAL, FINALE_T, setOffsetMs, CALM, DEMO } from '../core/env.js';
 import { sheetUp, viewMode, viewBtn } from './controls.js';
@@ -169,11 +170,10 @@ function showMusic() {
 }
 showMusic();
 musicBtn.addEventListener('click', () => {
-  setMenuMusic(!menuMusic);
-  store.set('menu-music', menuMusic ? 'on' : 'off');
-  engine?.setMenuMusic(menuMusic);
+  setMenuSound(!menuMusic);
   showMusic();
 });
+sheets.music = setupFreeMusic({ eye: viewBtn, onSound: showMusic }); // free mode's radio: its «Silenci» is this speaker's preference
 document.getElementById('feedback').addEventListener('click', () => {
   if ((G.state === 'title' || G.state === 'select') && !sheetUp()) feedback.show(() => document.activeElement?.blur());
 });

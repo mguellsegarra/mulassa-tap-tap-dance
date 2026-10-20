@@ -166,7 +166,7 @@ export class Chip {
   // play the recording from `from` after `delay` seconds, fading out at `end`
   async start(delay = 3, from = 0, end = Infinity) {
     this.unlock();
-    this.menuToken = null; this.menuFade(); // cancel ambient playback and pending decodes before a run
+    this.menuToken = null; this.menuFade(); this.radio(null); // cancel ambient playback, the radio and pending decodes before a run
     this.stop();
     const token = (this.token = {});
     await (this.ready ||= this.loadRecording());
@@ -245,9 +245,9 @@ export class Chip {
   // fadeIn is just the click guard; the musical entrance is already in the file.
   menu(on, fadeIn = 0.4) {
     const ctx = this.ctx;
-    if (on && this.menuToken && (this.menuSrc || this.menuPending || this.menuMusic === false)) { this.unlock(); return; }
+    if (on && this.menuToken && (this.menuSrc || this.menuPending || this.menuMusic === false || this.radioSrc)) { this.unlock(); return; } // (the radio rests the loop)
     this.menuFade();
-    if (!on) { this.menuToken = null; this.murmurLevel(); this.beginRun(); return; } // also cancels a loop still loading: it must never start under a game
+    if (!on) { this.menuToken = null; this.radio(null); this.murmurLevel(); this.beginRun(); return; } // also cancels a loop still loading: it must never start under a game
     this.unlock();
     this.endRun(); // back on the menu: whatever the run still had queued on the audio clock never sounds
     const token = (this.menuToken = {});
@@ -284,20 +284,57 @@ export class Chip {
     const t = this.clock.at() - m.t0 - this.clock.latency();
     return t < 0 ? null : (t % len) / len * ((this.menuUrls ?? this.urls)?.ambientLoop?.beats ?? 64);
   }
-  menuFade() { // short fade (~200 ms) so stopping the loop never clicks
+  menuFade(tau = 0.05) { // short fade (~200 ms) so stopping the loop never clicks; the radio's crossfade is longer
     if (!this.menuSrc) return;
     const { src, g } = this.menuSrc, t = this.ctx.currentTime;
-    g.gain.setTargetAtTime(0, t, 0.05);
-    src.stop(t + 0.3);
+    g.gain.setTargetAtTime(0, t, tau);
+    src.stop(t + tau * 6);
     this.menuSrc = null;
   }
   // Menu sound preference: loop, murmur and UI/demo effects. A run keeps its own sound.
   setMenuMusic(on) {
     this.menuMusic = on;
     this.murmurLevel();
+    if (!on) this.radio(null); // «Silenci» on the radio is this same preference
     if (!this.menuToken) return; // not on the menu: the next menu(true) follows the setting
     if (on) { this.menuPending = null; this.menu(true, 0.2); } else { this.clearMenuSfx(); this.menuFade(); }
   }
+
+  // ---------------------------------------------------------------- free mode's radio (ui/free-music.js picks the track)
+  // A whole song to listen to on the menu, on its own source: never this.src / t0 / buf (a run's clock, and setSong
+  // empties buf on a figure change). While it sounds the menu loop rests; radio(null) fades it and, still on the menu,
+  // brings the loop back from its entrance. onEnd: it played to `end` (the song's tail; the file carries on with applause).
+  radio(buf, { end = Infinity, onEnd } = {}) {
+    const ctx = this.ctx, t = ctx.currentTime, old = this.radioSrc;
+    this.radioSrc = null;
+    if (old) { old.src.onended = null; old.g.gain.setTargetAtTime(0, t, 0.1); try { old.src.stop(t + 0.6); } catch { /* already over */ } }
+    if (!buf) { if (old && this.menuToken) this.menu(true, 0.6); return; }
+    if (!this.menuToken) return; // a run started while it loaded
+    this.unlock();
+    this.menuPending = null; this.menuFade(0.1);
+    const src = ctx.createBufferSource(), g = ctx.createGain(), stop = Math.min(end, buf.duration);
+    src.buffer = buf; src.connect(g).connect(this.music);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(1, t + 0.4);
+    g.gain.setValueAtTime(1, t + Math.max(0.4, stop - 0.25)); g.gain.linearRampToValueAtTime(0, t + stop + 0.1);
+    src.onended = () => { if (this.radioSrc?.src === src) { this.radioSrc = null; onEnd?.(); } };
+    src.start(t); src.stop(t + stop + 0.2);
+    this.radioSrc = { src, g, t0: t };
+  }
+  // Seconds into the playing song as heard (the crowd claps on its beats), or null.
+  radioTime() { return this.radioSrc ? this.clock.at() - this.radioSrc.t0 - this.clock.latency() : null; }
+  // The selected figure's song is usually decoded already; any other is fetched once. keep(urls): forget the rest.
+  radioLoad(url) {
+    if (url === this.urls?.audio && this.buf) return Promise.resolve(this.buf);
+    let p = (this.radioBufs ??= new Map()).get(url);
+    if (p) return p;
+    let phase = 'fetch', status;
+    p = Promise.resolve().then(() => fetch(url)).then(r => { if (!r.ok) { phase = 'http'; status = r.status; throw new Error(); } phase = 'read'; return r.arrayBuffer(); })
+      .then(a => { phase = 'decode'; return this.ctx.decodeAudioData(a); })
+      .catch(e => { if (this.radioBufs.get(url) === p) this.radioBufs.delete(url); throw new AudioFailure(phase, e, status); });
+    this.radioBufs.set(url, p);
+    return p;
+  }
+  radioKeep(urls) { for (const url of this.radioBufs?.keys() ?? []) if (!urls.includes(url)) this.radioBufs.delete(url); }
 
   // ---------------------------------------------------------------- a run's sounds
   // Everything a run (a song or the practice) plays goes through its own bus, and every source it starts is kept, so

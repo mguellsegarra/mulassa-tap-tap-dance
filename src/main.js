@@ -158,7 +158,7 @@ function frame(now) {
   // a pending selection hides both models; photo mode shows the existing pair without changing selection
   if (G.state === 'select' && !viewMode && (sheets.select?.pending ?? sheets.select?.figure?.status === 'aviat')) { mula.root.visible = false; drac.root.visible = false; for (const c of [colla, mulaColla]) c.helpers.visible = c.seated.visible = false; } // (the collas with them)
   const c0 = PERF && performance.now();
-  animCrowd(dt, beat, vt, live);
+  animCrowd(dt, sheets.music?.beat() ?? beat, vt, live); // (free mode's radio: the plaça claps on the song it plays)
   if (PERF) PERF.crowd += performance.now() - c0; // ?perf: the crowd's own share of the js
   animConfetti(dt);
   animFireworks(dt);

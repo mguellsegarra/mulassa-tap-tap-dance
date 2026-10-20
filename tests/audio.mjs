@@ -422,3 +422,48 @@ console.log('leaving a run silences everything it queued ok');
   }
   console.log('audio failure phases and privacy ok');
 }
+
+{ // Free mode's radio (ui/free-music.js): its own source, never the run's; the menu loop rests under it and comes back after
+  const sources = [];
+  const fake = () => {
+    const c = Object.create(Chip.prototype);
+    c.ctx = { currentTime: 5, state: 'running',
+      createGain: () => ({ connect: t => t, gain: { setValueAtTime() {}, linearRampToValueAtTime() {}, setTargetAtTime() {} } }),
+      createBufferSource: () => { const s = { connect: t => t, started: false, stopped: false, start() { this.started = true; }, stop() { this.stopped = true; } }; sources.push(s); return s; } };
+    c.out = c.music = {}; c.unlock = () => {}; c.menuMusic = true; c.ambient = Promise.resolve({ duration: 40 });
+    return c;
+  };
+  const tick = () => new Promise(r => setTimeout(r, 5));
+  const c = fake();
+  c.menu(true); await tick();
+  const loop = c.menuSrc;
+  assert(loop?.src.started, 'the menu loop plays');
+  c.radio({ duration: 90 }, { end: 88 });
+  assert(c.radioSrc && loop.src.stopped && !c.menuSrc, 'a song rests the menu loop');
+  c.menu(true); await tick();
+  assert(!c.menuSrc, 'menu(true) (a state change on the menu) never starts the loop under the song');
+  const playing = c.radioSrc;
+  c.loadRecording = () => Promise.resolve(); c.setSong({ audio: 'other.mp3' });
+  assert(playing && c.radioSrc === playing, 'a figure change on the selector does not cut it (setSong empties buf, not the radio)');
+  assert.equal(c.t0, null, 'nor does the radio set the run clock');
+  const song = c.radioSrc.src;
+  c.radio(null); await tick();
+  assert(song.stopped && c.menuSrc?.src.started, 'leaving it fades back to the menu loop');
+  c.radio({ duration: 90 });
+  const ended = []; c.radio({ duration: 90 }, { onEnd: () => ended.push(1) });
+  c.radioSrc.src.onended(); await tick();
+  assert.deepEqual(ended, [1], 'onEnd when the song plays out');
+  c.radio({ duration: 90 });
+  c.setMenuMusic(false);
+  assert(!c.radioSrc && !c.menuSrc, '«Silenci» (the speaker preference) stops the radio and keeps the loop off');
+  c.setMenuMusic(true); await tick();
+  c.radio({ duration: 90 });
+  c.menu(false);
+  assert(!c.radioSrc && !c.menuSrc, 'a run (menu(false)) stops the radio');
+  await tick();
+  assert(!c.menuSrc, 'and the loop does not come back under the run');
+  c.menuToken = null;
+  c.radio({ duration: 90 });
+  assert(!c.radioSrc, 'a song that finishes loading after a run started never plays');
+  console.log('free mode radio contracts ok');
+}

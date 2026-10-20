@@ -23,7 +23,9 @@ export function backdropContacts(groups) {
 
 // A simulation-space separation isn't enough after independent positional easing. Project the rendered envelopes too.
 // Falling bodies use an extended, backwards-offset footprint instead of their upright circle.
-export function settleDrawnCrowd(people, obstacles) {
+// maxStep: the most one person is moved a frame; a deep overlap (a fall's wider footprint against a packed row)
+// is undone over a few frames instead of a metres-long jump.
+export function settleDrawnCrowd(people, obstacles, maxStep = Infinity) {
   const contacts = people.map(p => {
     const fall = p.fall || 0, shift = .65 * fall;
     return { p, x: p.g.position.x - Math.sin(p.yaw) * shift, z: p.g.position.z - Math.cos(p.yaw) * shift,
@@ -58,6 +60,9 @@ export function settleDrawnCrowd(people, obstacles) {
   }
   for (const c of contacts) {
     const p = c.p;
-    p.g.position.x = p.gx = c.x + c.ox; p.g.position.z = p.gz = c.z + c.oz;
+    let dx = c.x + c.ox - p.g.position.x, dz = c.z + c.oz - p.g.position.z;
+    const d = Math.hypot(dx, dz);
+    if (d > maxStep) { dx *= maxStep / d; dz *= maxStep / d; }
+    p.g.position.x = p.gx = p.g.position.x + dx; p.g.position.z = p.gz = p.g.position.z + dz;
   }
 }

@@ -87,9 +87,10 @@ front.g.position.x += 1; front.g.position.z += 0.5; sootPose(front);
 assert.equal(front.g.position.x, heldX + 1); assert.equal(front.g.position.z, heldZ + 0.5);
 assert.equal(bytes(front)[0], 255, 'stepping aside never restores the costume colour');
 assert(Math.abs(front.arms[0].rotation.x - held[10]) < 1e-6, 'the held limbs travel with the spectator');
-front.g.position.x = heldX; front.g.position.z = heldZ;
-PHOTO.intentX = 0; PHOTO.on = false;
+PHOTO.intentX = 0;
 assert(sootAnchored(front), 'releasing walking holds the new position without restoring an old world anchor');
+sootPose(front); assert.equal(front.g.position.x, heldX + 1); assert.equal(front.g.position.z, heldZ + .5);
+front.g.position.x = heldX; front.g.position.z = heldZ; PHOTO.on = false;
 
 // a held E keeps renewing it, never beyond `hold`
 for (let i = 0; i < 120; i++) frame(1 / 60);

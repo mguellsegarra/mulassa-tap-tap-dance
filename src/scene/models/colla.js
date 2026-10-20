@@ -200,15 +200,21 @@ export function buildHelper(look, seed = 1) {
   return { g, body, head: h, arms, bones: [body, h, ...arms.flatMap(a => [a.sh, a.el])] };
 }
 // The clap at `beat` (an integer = palms together) and energy 0..1 (0 = arms hanging, calm). Pure, no allocations.
-export function poseHelper(p, beat, energy) {
+export const ARM_UP = [0.35, -2.7, -0.35]; // a cheer: both arms up over the head
+export function poseHelper(p, beat, energy, cheer = 0) {
   const f = beat - Math.floor(beat), u = Math.cos(Math.PI * f) ** 2, close = u * u; // C1, 1 on the beat, 0 half way
   const e = Math.min(1, Math.max(0, energy)), twist = e * (OPEN_TWIST + (CLAP_TWIST - OPEN_TWIST) * close);
   for (let i = 0; i < 2; i++) {
     const s = i ? -1 : 1, { sh, el } = p.arms[i];
     sh.rotation.set(ARM_REST[1] + (ARM_CLAP[1] - ARM_REST[1]) * e, 0, s * (ARM_REST[0] + (ARM_CLAP[0] - ARM_REST[0]) * e));
     el.rotation.set(ARM_REST[2] + (ARM_CLAP[2] - ARM_REST[2]) * e, s * twist, 0);
+    if (cheer > 0) {
+      sh.rotation.x += (ARM_UP[1] - sh.rotation.x) * cheer; sh.rotation.z += (s * ARM_UP[0] - sh.rotation.z) * cheer;
+      el.rotation.x += (ARM_UP[2] - el.rotation.x) * cheer; el.rotation.y *= 1 - cheer;
+    }
   }
-  p.head.rotation.x = 0.06 * e * close; // a small nod with each clap
+  p.head.rotation.x = 0.06 * e * close - 0.25 * cheer; // a small nod with each clap; a cheer looks up
+  p.g.position.y = 0.12 * cheer * Math.abs(Math.sin(beat * Math.PI * 2)); // and hops
 }
 
 // ---- the seated member, on the paving (hips at y 0), three postures seen at the front of the public:

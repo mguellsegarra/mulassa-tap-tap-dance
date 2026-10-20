@@ -4,7 +4,7 @@
 import * as THREE from 'three';
 import { createDracFx, streakFire, flareLevel, tracaWindow, DRAC_FX } from './drac-fx.js';
 import { dracTime } from '../game/drac-time.js';
-import { scene, camera, drac, renderProfile, glc, qualityLevel } from './stage.js';
+import { scene, camera, drac, renderProfile, glc, qualityLevel, plaza } from './stage.js';
 import { G, figureSfx } from '../game/state.js';
 import { selectedFigure, song } from '../game/figure-song.js';
 import { CALM } from '../core/env.js';
@@ -13,16 +13,20 @@ import { M, PAIR } from './mula-motion.js';
 import { SHOWCASE } from './drac-demo.js';
 import { PHOTO } from '../game/photo-control.js';
 import { setConfettiDivert } from './confetti.js';
+import { activeCrowd } from './quality.js';
+import { sootFrame } from './drac-soot.js';
+import { photoExtras } from './photo-obstacles.js';
 
 export const dracFx = createDracFx(scene, { smoke: renderProfile.smoke ?? 0, jets: renderProfile.jets ?? 0, wheels: renderProfile.wheels ?? 0, sound: figureSfx, calm: CALM, octaves: qualityLevel > 0 ? 2 : 1 });
 const isDracOn = () => selectedFigure.id === DRAC?.id;
-const IN = { on: false, cam: camera, fire: null, streak: false, flare: false, max: 0, jmax: 0, wmax: 0, viewH: 800, x: 0, z: 0 };
+const FOLK = [activeCrowd, plaza.band, plaza.balcony, photoExtras]; // who the free mode's fire can char (drac-soot.js); [0] refreshed a frame (a quality step makes a new list)
+const IN = { on: false, cam: camera, fire: null, streak: false, flare: false, max: 0, jmax: 0, wmax: 0, held: false, viewH: 800, x: 0, z: 0 };
 setConfettiDivert((sec, reason) => {
   if (!isDracOn()) return false;
   if (reason === 'combo' && !G.practice && (G.combo === 50 || G.combo === 100)) dracFx.wheels(1.2);
   return true;
 });
-let flareSong = null, flareT = Infinity, tracaFor = null, hazed = false, sparkT = 0;
+let flareSong = null, flareT = Infinity, tracaFor = null, hazed = false;
 // The last pass's red mist: the plaça's own fog (stage.js) closes in and turns red with the crescendo, the sky with it (a
 // dense mist costs nothing more to draw: old phones). Only while the dance is on; a menu clears it at once.
 // The tint is a bengala's smoke: a smoky red, never a sky-red mix (blue and red went mauve). The fog takes that colour
@@ -48,6 +52,7 @@ export function dracEndTraca(n) {
 // once a frame, after animCrowd. t: the song time drawn
 export function dracFrame(dt, t) { // (the red smoke of the last pass rises round IN.x/z, her spot)
   if (!drac?.root.visible) {
+    FOLK[0] = activeCrowd; sootFrame(dt, dracFx, FOLK, false, false); // anyone charred comes back
     SHOWCASE.crema = false;
     dracFx.clear(); tracaFor = null;
     if (hazed) { scene.fog.color.copy(FOG.sky); scene.background.copy(FOG.sky); scene.fog.near = FOG.near; scene.fog.far = FOG.far; hazed = false; }
@@ -57,13 +62,12 @@ export function dracFrame(dt, t) { // (the red smoke of the last pass rises roun
   const photoDrac = PHOTO.on && PHOTO.id === 'drac-valls'; // driven in photo mode
   const show = PAIR.k > 0 || photoDrac || (on && (G.state === 'select' || G.state === 'title')); // its menu showcase (drac-demo.js): a CREMA now and then
   if (SHOWCASE.crema) { SHOWCASE.crema = false; if (show) { dracFx.crema(); figureSfx('flama'); } }
-  if (photoDrac) { // E: a CREMA's sparks at once; held, the rodes de foc spin and another burst every 0.4 s
-    const held = PHOTO.keys.has('KeyE');
-    if (PHOTO.sparks) { PHOTO.sparks = false; sparkT = 0; dracFx.crema(); figureSfx('flama'); }
-    else if (held && (sparkT += dt) >= 0.4) { sparkT = 0; dracFx.crema(); }
-    if (held) dracFx.wheels(0.3);
+  IN.held = photoDrac && PHOTO.keys.has('KeyE');
+  if (PHOTO.sparks) {
+    PHOTO.sparks = false;
+    if (IN.held) figureSfx('flama'); // one onset; repeats never restart it
   }
-  if (!on && !show && !hazed && dracFx.idle) return; // the Mulassa alone: nothing to do
+  if (!on && !show && !hazed && dracFx.idle) { FOLK[0] = activeCrowd; sootFrame(dt, dracFx, FOLK, false, false); return; } // the Mulassa alone: nothing to do
   const play = on && G.state === 'play' && !G.collapseT;
   IN.on = (play && !G.practice) || show; IN.fire = on || show ? drac?.fire ?? null : null;
   IN.streak = play && !G.practice && (streakFire(G.combo) || t >= song.finale); // the carretilles' jets: a long streak, the FINAL ESBOJARRAT
@@ -75,6 +79,7 @@ export function dracFrame(dt, t) { // (the red smoke of the last pass rises roun
   const bl = play ? tracaWindow(G.balloons, t) : null;
   if (bl !== tracaFor) { tracaFor = bl; if (bl) dracFx.begin(); else dracFx.end(); }
   dracFx.update(dt, IN);
+  FOLK[0] = activeCrowd; sootFrame(dt, dracFx, FOLK, photoDrac, IN.held); // free mode's held fire chars whoever it touches (drac-soot.js)
   const k = dracFx.flare;
   if (k || hazed) {
     hazed = k > 0;

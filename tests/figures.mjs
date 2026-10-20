@@ -5,7 +5,7 @@ import { FIGURE_PORTRAITS } from '../src/game/figure-portraits.js';
 import { setupSelect, peekGap, pixelSvg } from '../src/ui/select-ui.js';
 import { cellOutline } from '../src/ui/selector-portraits.js';
 import { DRAWN_SILHOUETTES } from '../src/ui/pending-silhouettes.js';
-import { escutSvg, escutField } from '../src/ui/escuts.js';
+import { escutSvg } from '../src/ui/escuts.js';
 import { clampStand } from '../src/dev/sizes-edit.js';
 import { fitPendingNote } from '../src/ui/pending-title.js';
 import './strip-scroll.mjs';
@@ -60,7 +60,7 @@ assert.equal(portraitArt(MULASSA), MULE_ART, 'original Mulassa portrait is retai
   assert.equal((svg.match(/h1\.02v1\.02h-1\.02z/g) || []).length > lit, true, 'every lit pixel and its rim are drawn');
 }
 assert.equal(portraitArt(DRAC), DRAC_ART, 'original Drac portrait is retained');
-assert(TOWNS.every(t => !('color' in t)), 'a town\'s colour is its arms\' tincture (escutField), never a bare catalogue value');
+assert(TOWNS.every(t => !('color' in t)), 'a town\'s colour is its accent in select.css (--town), never a bare catalogue value');
 const memory = new Map(), store = { get: k => memory.get(k) ?? null, set: (k, v) => memory.set(k, v) };
 assert.equal(rememberedLevel(store, MULASSA.id), 1);
 rememberLevel(store, MULASSA.id, 2); assert.equal(rememberedLevel(store, MULASSA.id), 2);
@@ -109,7 +109,11 @@ class Node {
   scrollTo({ left, behavior }) { this.scrollLeft = left; this.behavior = behavior; }
   getBoundingClientRect() { return { top: 100, right: 200, bottom: 300 }; }
 }
-for (const id of ['leaders', 'viewmode', 'feedback', 'music', 'settings', 'select-carousel', 'select-prev', 'select-forward', 'select-nav', 'select', 'select-towns', 'select-strip', 'select-level', 'select-song', 'select-entity', 'select-act', 'select-name', 'select-song-name', 'select-song-credit', 'select-play', 'select-next', 'select-next-label', 'select-figures-back', 'select-board', 'select-howto', 'aviat-write', 'aviat-text', 'select-info', 'select-bottom', 'select-pos', 'select-tiles', 'select-rank-tile', 'select-pending', 'aviat-entity', 'aviat-icon', 'aviat-title']) nodes.set(id, new Node(id));
+for (const id of ['leaders', 'viewmode', 'feedback', 'music', 'settings', 'select-carousel', 'select-prev', 'select-forward', 'select-nav', 'select', 'select-towns', 'select-strip', 'select-level', 'select-song', 'select-entity', 'select-act', 'select-name', 'select-song-name', 'select-song-credit', 'select-play', 'select-next', 'select-next-label', 'select-figures-back', 'select-board', 'select-howto', 'aviat-write', 'aviat-text', 'select-info', 'select-bottom', 'select-pos', 'select-tiles', 'select-rank-tile', 'select-pending', 'aviat-entity', 'aviat-icon', 'aviat-title', 'select-level-stats', 'select-level-title', 'select-level-sub']) nodes.set(id, new Node(id));
+// The level row's title reports an overflow while it carries what a narrow screen can't hold (the points).
+Object.defineProperties(nodes.get('select-level-title'), { clientWidth: { value: 200 }, scrollWidth: { get() { return narrow && /punts/.test(this.textContent) ? 999 : 100; } } });
+Object.assign(nodes.get('select-level-sub'), { scrollWidth: 100, clientWidth: 200 });
+let narrow = false;
 const $ = id => nodes.get(id), win = { innerWidth: 393, innerHeight: 852, addEventListener(k, f) { (handlers[k] ||= []).push(f); } };
 let boards = 0, sounds = [], played = [], how = 0, drafts = [], busy = false, selected = [];
 const api = setupSelect({ doc, win, store, keyboard: () => true, reduced: () => true, busy: () => busy,
@@ -123,7 +127,7 @@ assert.equal($('select-song-credit').textContent, 'Francesc Bofarull i Figuerola
 assert.equal($('select-level').children[0].attrs['aria-pressed'], 'true', 'challenge overrides remembered level once');
 assert.equal($('select-pos').textContent, 'Ets el número 7 de 1.350', 'the real board, not the ?demo position'); const lv = () => $('select-level').children;
 assert(!/12\.340|8\.120/.test([...lv()].map(b => b.html).join('')), 'nor its made-up records');
-assert([...lv()].every((b, i) => b.html === `${['FÀCIL', 'NORMAL', 'DIFÍCIL'][i]}<span class="sub">—</span>` && !/rècord/.test(b.attrs['aria-label'])), 'no record: «—» keeps the line, the name alone is read');
+assert([...lv()].every((b, i) => b.html === ['FÀCIL', 'NORMAL', 'DIFÍCIL'][i] && !/rècord/.test(b.attrs['aria-label'])), 'no record: the name alone, no dash or empty line');
 assert.equal($('select-rank-tile').attrs['aria-label'], 'Classificacions: ets el número 7 de 1.350');
 click($('select-rank-tile')); assert.equal(boards, 1, 'the position opens Classificacions');
 assert(!readFileSync(new URL('../index.html', import.meta.url), 'utf8').includes('select-first'), 'the leader lives in Classificacions only');
@@ -131,6 +135,11 @@ assert(!$('select-rank-tile').hidden, 'a position from the board is shown');
 assert($('select-act').hidden, 'difficulty is a second step');
 click($('select-play')); assert.equal(played.length, 0, 'cannot skip the difficulty step');
 click($('select-next')); assert(!$('select-act').hidden && $('select-strip').hidden);
+assert(!$('select-level-stats').hidden, 'step 2 shows the chosen level\'s row');
+assert.equal($('select-level-title').textContent, 'FÀCIL: encara sense rècord');
+assert.equal($('select-level-sub').html, '', 'no record: no subtitle or star goal');
+assert($('select-level-sub').hidden, 'no empty subtitle line');
+assert.equal($('select-level-stats').attrs['aria-label'], 'FÀCIL: encara sense rècord');
 click($('select-level'), $('select-level').children[1]);
 click($('select-level'), $('select-level').children[0]);
 click($('select-figures-back')); assert($('select-act').hidden && !$('select-strip').hidden);
@@ -384,6 +393,8 @@ assert.equal(tarragona.attrs['aria-pressed'], 'true');
   assert.equal(api.figure.id, 'drac-vilanova');
   assert.equal($('aviat-title').textContent, 'Drac de Vilanova i la Geltrú');
   assert.match($('aviat-entity').innerHTML, /Ajuntament de Vilanova i la Geltrú.*La Unió Vilanovina/);
+  assert.equal(($('aviat-entity').innerHTML.match(/class="sel-entity-part"/g) || []).length, 2, 'Vilanova uses the same two attribution labels as Valls');
+  assert.match($('aviat-entity').innerHTML, /class="sel-entity-unit"><span class="sel-entity-plus"> \+ <\/span><span class="sel-entity-part">/, 'the separator stays with the manager when the labels wrap');
   assert.equal(vilanova.attrs['aria-pressed'], 'true');
   key('Enter'); click($('select-next'));
   assert($('select-act').hidden && $('select-info').hidden && !$('select-pending').hidden, 'no game, levels or records for Vilanova');
@@ -430,23 +441,43 @@ assert(selected.every(id => live.some(f => f.id === id)) && selected.at(-1) === 
 key('Home'); assert.equal(api.figure, MULASSA);
 key('Escape'); assert(!$('select').hidden, 'Escape does not create a title loop');
 api.visible(false); api.visible(true);
-assert.equal($('select-level').children[0].attrs['aria-pressed'], 'true', 'later visits restore the figure level');
+assert.equal(rememberedLevel(store, MULASSA.id), 0, 'later visits still remember the figure level');
+click($('select-next'));
+assert([...lv()].every(b => b.attrs['aria-pressed'] === 'false'), 'step 2 opens with no level marked, not even the remembered one (Marc)');
+assert($('select-play').disabled && !$('select-play').hidden, 'A BALLAR! shows, off, until a level is chosen');
+assert($('select-level-stats').hidden, 'no level marked, no level row');
+{ const before = played.length; click($('select-play')); key('Enter'); assert.equal(played.length, before, 'A BALLAR! waits for a level'); }
+lv()[1].focus(); key('Enter'); assert(lv()[1].attrs['aria-pressed'] === 'true' && !$('select-play').disabled, 'the first Enter on a level chooses it (and turns A BALLAR! on), it does not play');
+click($('select-figures-back'));
 rememberLevel(store, DRAC.id, 2);
 store.set(recordKey(DRAC, 2), JSON.stringify({ quality: 88, score: 1234 })); store.set(recordKey(DRAC, 0), JSON.stringify({ quality: 99 })); // a record from before `score` counts as none
 click($('select-strip'), cards[1]);
 assert.equal(api.figure, DRAC); assert.equal(selected.at(-1), DRAC.id, 'selection notifies the stage host');
-assert.equal($('select-level').children[2].attrs['aria-pressed'], 'true', 'each figure restores its own difficulty');
+assert.equal(rememberedLevel(store, DRAC.id), 2, 'each figure remembers its own difficulty');
 assert.equal(lv()[2].html.replace(/<svg[^]*<\/svg>/, '★'), 'DIFÍCIL<span class="sub">★1.234</span>', 'step 2: the best score under its level, with a trophy');
 assert.equal(lv()[2].attrs['aria-label'], 'DIFÍCIL, el teu rècord 1.234 punts');
-assert(lv()[0].html.endsWith('<span class="sub">—</span>') && lv()[1].html.endsWith('<span class="sub">—</span>'), 'no score, or no record: «—»');
+assert(lv()[0].html === 'FÀCIL' && lv()[1].html === 'NORMAL', 'no score, or no record: the name alone, beside a level that has one');
 await Promise.resolve();
 assert($('select-rank-tile').hidden, 'local-only figures show no public Mulassa standings');
 cards[1].focus();
 key('Enter'); assert(!$('select-act').hidden, 'Enter confirms the figure before playing');
+assert([...lv()].every(b => b.attrs['aria-pressed'] === 'false'), 'its remembered DIFÍCIL is not marked either');
+click($('select-level'), lv()[2]);
+assert(!$('select-level-sub').hidden, 'a record restores its stars and percentage');
+assert.equal($('select-level-title').textContent, '1.234 punts a DIFÍCIL', 'the record\'s points head the row');
+assert.equal($('select-level-sub').html.replace(/<span class="stars">([^]*?)<\/span>/, (_, s) => '★'.repeat((s.match(/class="on"/g) || []).length)), '★★★88% d’encerts', 'stars and % of that record');
+assert.equal($('select-level-stats').attrs['aria-label'], '1.234 punts a DIFÍCIL, 3 de 3 estrelles, 88% d’encerts');
+narrow = true; key('ArrowLeft'); key('ArrowRight');
+assert.equal($('select-level-title').textContent, 'El teu rècord a DIFÍCIL', 'too narrow: the points go, never a second line');
+narrow = false;
+Object.assign($('select-info'), { scrollHeight: 500, clientHeight: 400 }); key('ArrowLeft'); key('ArrowRight');
+assert($('select-level-stats').hidden, 'an info block that would scroll drops the row');
+Object.assign($('select-info'), { scrollHeight: 0, clientHeight: 0 });
 key('ArrowLeft'); assert.equal($('select-level').children[1].attrs['aria-pressed'], 'true');
 key('ArrowRight'); key('Escape'); assert($('select-act').hidden, 'Escape leaves difficulty without a run');
 click($('select-next'));
 assert.equal($('select-act').inert, false, 'the difficulty step accepts input');
+key('ArrowLeft'); assert.equal(lv()[2].attrs['aria-pressed'], 'true', 'with nothing marked, ← starts from DIFÍCIL');
 click($('select-play')); assert.deepEqual(played.at(-1), [2, DRAC.id], 'play receives the selected figure and level');
 click($('select-strip'), cards[0]); await Promise.resolve();
 assert(!$('select-rank-tile').hidden);
@@ -467,22 +498,22 @@ assert(!/showModal|aviat\.close|aviat-menu|aviat-close/.test(ui));
   assert.equal(new Set(ids).size, ids.length);
   assert.equal(escutSvg('nowhere'), '');
   assert.match(ui, /escutSvg\(t\.id\) \|\|/); assert.match(ui, /aria-hidden="true"><span>\$\{\(t\.short/, 'banners carry the name only');
-  // Card tints keep their heraldic fields; banner cloth keeps the independently agreed palette.
+  // One accent per town: its banner's cloth and its cards'/avatars' tint at one fixed lightness (Marc chose the game's
+  // own palette, 2026-10-19). The accents are the banners' agreed colours.
   const css = readFileSync(new URL('../src/styles/select.css', import.meta.url), 'utf8');
-  for (const t of TOWNS) {
-    const field = escutField(t.id);
-    assert(['gules', 'atzur', 'or', 'argent'].includes(field), `${t.name}: a tincture for its cards and banner`);
-    assert.match(css, new RegExp(`:is\\(\\.sel-card, #photo-figs \\.pf\\)\\[data-field="${field}"\\] \\{ --t: #`), `${t.name}: card and avatar ${field}`);
+  const accent = { valls: '#c8202f', solsona: '#c0283c', tarragona: '#7d5aa8', reus: '#8f6340', vilanova: '#d9a521', barcelona: '#c8202f', berga: '#1f3f7a', olot: '#8e2a5c', vilafranca: '#00b09a' };
+  assert.deepEqual(Object.keys(accent).sort(), TOWNS.map(t => t.id).sort(), 'every town has an accent');
+  for (const [town, colour] of Object.entries(accent)) {
+    assert(css.includes(`:is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="${town}"] { --town: ${colour}; }`), `${town}: banner, cards and avatars share ${colour}`);
   }
-  const bannerCloth = { solsona: '#c0283c', tarragona: '#7d5aa8', reus: '#8f6340', vilanova: '#d9a521', barcelona: '#c8202f', berga: '#1f3f7a', olot: '#7d1f2e', vilafranca: '#00b09a' };
-  assert.deepEqual(Object.keys(bannerCloth).sort(), TOWNS.filter(t => t.id !== 'valls').map(t => t.id).sort(), 'every solid town banner has an agreed cloth');
-  for (const [town, colour] of Object.entries(bannerCloth)) {
-    assert(css.includes(`.sel-banner[data-town="${town}"] { --cloth: ${colour}; }`), `${town}: preserve the historical banner cloth ${colour}`);
-  }
-  assert(css.includes('.sel-banner[data-town="valls"] { background: linear-gradient(90deg, #c8202f 0 calc(100% / 3), #fff 0 calc(200% / 3), #c8202f 0)'), 'Valls: vertical red-white-red thirds, as requested');
+  assert.match(css, /\.sel-banner \{[^}]*background: linear-gradient\(var\(--town\), var\(--town\)\)/, 'the banner cloth is the accent');
+  assert.match(css, /--t: oklch\(from var\(--town\) \.42 min\(c, \.1\) h\)/, 'cards: the accent at one lightness, chroma capped');
+  assert.match(css, /\[data-town\]:not\(\[data-town="el-teu-poble"\]\) \{ --t: color-mix\(in srgb, var\(--town\) /, 'a fallback without relative colours');
+  assert.match(css, /\.sel-card \{[^}]*background: linear-gradient\(var\(--t\), /, 'the card top is the toned accent');
+  assert(css.includes('.sel-banner[data-town="valls"] { background: linear-gradient(90deg, #fff 0 calc(100% / 6), #c8202f 0 calc(500% / 6), #fff 0)'), 'Valls: wide red centre with thin white vertical edges, as requested');
   assert.match(css, /\.sel-banner\[data-town="el-teu-poble"\] \{ background: repeating-linear-gradient\(90deg, #fcdd09 0 calc\(100% \/ 9\), #da121a 0 calc\(200% \/ 9\)\)/, 'the invitation keeps its nine-bar senyera');
-  assert.equal(escutField(INVITE_TOWN.id), '', 'the invitation has no arms: the neutral tint');
-  assert.match(ui, /data-field="\$\{escutField\(t\.id\)\}"[^`]*sel-card|sel-card[^`]*data-field="\$\{escutField\(t\.id\)\}"/, 'cards carry their tincture');
+  assert(!css.includes(`[data-town="${INVITE_TOWN.id}"] { --town`), 'the invitation has no accent: the neutral tint');
+  assert.match(ui, /sel-card[^`]*data-town="\$\{t\.id\}"/, 'cards carry their town');
   // one surface, no divider; each portrait (all vectors now) at its real relative size, never more than its box holds
   assert(!/\.sel-card \.por \{[^}]*border-bottom/.test(css), 'no line between portrait and caption');
   assert.match(css, /--ref: min\(var\(--reach\) \* 100cqh \/ 14, var\(--sky\) \* 100cqw \/ 18\)/, 'one reference cell: the biggest grid without its rim, at the panel\'s reach');
@@ -498,7 +529,7 @@ assert(!/showModal|aviat\.close|aviat-menu|aviat-close/.test(ui));
   assert(portraitStand(FIGURES.find(f => f.id === 'gegants-ciutat-valls')) > portraitStand(MULASSA) && portraitStand(MULASSA) > portraitStand(FIGURES.find(f => f.id === 'cavallets-valls')), 'gegants > mulassa > cavallets');
   assert.match(css, /\.sel-card\.aviat::after \{ box-shadow: none; border: 1\.5px dashed/, 'pending: a dashed edge, not only a tone');
   assert(!/\.sel-card\[aria-selected="true"\] \{[^}]*transform/.test(css), 'the selected card is not lifted: every foot on one floor line');
-  assert.match(css, /\.sel-card \.por \{[^}]*place-items: end center;[^}]*linear-gradient\(#f5e3b800, #f5e3b814 45%, #f5e3b82b\) 0 100% \/ 100% 30% no-repeat/, 'portraits stand on one flat street');
+  assert.match(css, /\.sel-card \.por \{[^}]*place-items: end center; padding: 5px 4px var\(--floor\);[^}]*at 50% calc\(100% - var\(--floor\)\)/, 'portraits stand on one tiled floor, their contact shadow under the soles');
 }
 assert.match(readFileSync(new URL('../src/styles/select.css', import.meta.url), 'utf8'), /@media \(pointer: coarse\) \{[^}]*\}\s*\.sel-carousel \.sel-arrow \{ display: none; \}/, 'touch screens swipe the strip: no arrows');
 { // Touch reclaims the action row; desktop keeps navigation fixed (verified in the browser).

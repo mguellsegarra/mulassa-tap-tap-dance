@@ -22,7 +22,7 @@ function make(smoke = 128, jets = 640, wheels = 0, calm = false) {
   scene.updateMatrixWorld(true);
   const sounds = [];
   const fx = createDracFx(scene, { smoke, jets, wheels, sound: (k, i) => sounds.push([k, i]), calm: { matches: calm } });
-  const s = { on: true, cam, fire: drac.fire, streak: false, flare: false, max: smoke, jmax: jets, wmax: wheels, viewH: 800, x: 0, z: 0 };
+  const s = { on: true, cam, fire: drac.fire, streak: false, flare: false, held: false, max: smoke, jmax: jets, wmax: wheels, viewH: 800, x: 0, z: 0 };
   const step = dt => { for (const f of drac.fire) f.userData.level = 0; fx.update(dt, s); }; // poseDrac sets the dance's own level every frame
   const run = (sec, fps = 60) => { const n = Math.round(sec * fps); for (let i = 0; i < n; i++) step(1 / fps); };
   return { fx, s, drac, sounds, step, run };
@@ -185,7 +185,7 @@ const births = fx => { const a = fx.objects.jets.geometry.attributes.aA.array, o
   scan('drac-fx.js', 'function wheels(', 'function warm(');
   scan('drac-fire.js', 'function update(', '  return {\n    update,');
   const m = make(128, 640, 512); m.s.flare = true; m.fx.begin();
-  const busy = n => { for (let i = 0; i < n; i++) { m.s.streak = i % 400 < 200; if (i % 70 === 0) m.fx.crema(); if (i % 600 === 0) m.fx.wheels(4); if (i % 4 === 0) m.fx.pump(1 + (i / 4) % 12, 12); m.step(1 / 60); } };
+  const busy = n => { for (let i = 0; i < n; i++) { m.s.held = i % 800 < 400; m.s.streak = i % 400 < 200; if (i % 70 === 0) m.fx.crema(); if (i % 600 === 0) m.fx.wheels(4); if (i % 4 === 0) m.fx.pump(1 + (i / 4) % 12, 12); m.step(1 / 60); } };
   busy(20000); // warm: optimised
   const ses = new Session(); ses.connect();
   await ses.post('HeapProfiler.startSampling', { samplingInterval: 64, includeObjectsCollectedByMajorGC: true, includeObjectsCollectedByMinorGC: true });
@@ -253,7 +253,6 @@ const births = fx => { const a = fx.objects.jets.geometry.attributes.aA.array, o
   const z = make(0, 0, 0); z.fx.wheels(3); z.run(0.5); assert.equal(z.fx.state().wheels, 0, 'no pool: no wheel');
   const nf = make(0, 0, 512); nf.s.fire = null; nf.fx.wheels(3); nf.run(0.5); assert.equal(nf.fx.state().wheelSparks, 0, 'no fire points (the Mulassa): nothing');
 }
-console.log('drac fx ok');
 
 // Pending selections discard every pool and emission debt, then a visible Drac can start fresh.
 {
@@ -274,3 +273,37 @@ console.log('drac fx ok');
   assert(fresh.fx.state().flamarada >= 0 && fresh.fx.state().jets > 0);
   assert(fresh.sounds.some(([k]) => k === 'crack'), 'legitimate carretilles still work after clear');
 }
+
+// Explicit free-mode hold: no repeated CREMA calls, bounded pools, natural flame decay after release.
+for (const calm of [false, true]) for (const profile of [MINIMAL, ...PROFILES]) {
+  const m = make(profile.smoke, profile.jets, profile.wheels, calm);
+  m.s.held = true;
+  const geometry = m.fx.objects.jets.geometry, capacity = geometry.attributes.aA.array;
+  for (let i = 0; i < 1200; i++) {
+    m.drac.root.position.x = Math.sin(i / 60); m.drac.root.rotation.y = i / 120;
+    m.step(1 / 60);
+    assert(m.fx.objects.blast.visible, 'held flame has no gaps, including after the burst timeout');
+    if (i % 60 === 0) assert(m.fx.state().jets <= profile.jets, 'held sparks stay in their fixed pool');
+  }
+  assert.equal(geometry.attributes.aA.array, capacity, 'holding never replaces the particle buffer');
+  const at = m.fx.objects.blast.geometry.attributes.aP.array;
+  const mid = mouth(m.drac, 0).add(mouth(m.drac, 1)).multiplyScalar(0.5);
+  assert(Math.hypot(at[0] - mid.x, at[1] - mid.y, at[2] - mid.z) < 1e-4, 'the sustained flame follows the moving, turning mouths');
+  assert(m.fx.state().wheels > 0, 'held wheels continue without renewing a timer');
+  m.s.held = false; m.step(1 / 60);
+  const born = m.fx.state().born;
+  assert(m.fx.objects.blast.visible && m.fx.state().wheels === 0, 'release stops emission while the existing flame fades naturally');
+  m.run(3);
+  assert.equal(m.fx.state().born, born, 'no extra sparks emitted after release');
+  assert(m.fx.idle, 'already emitted particles die naturally');
+  for (let tap = 0; tap < 3; tap++) {
+    m.s.held = true; m.run(0.05);
+    assert(m.fx.objects.blast.visible, 'short presses light the flame, even during the previous decay');
+    m.s.held = false; m.step(1 / 60);
+    const stopped = m.fx.state().born;
+    m.run(0.1);
+    assert.equal(m.fx.state().born, stopped, 'rapid re-presses leave no extra jet emission after keyup');
+  }
+  m.run(3); assert(m.fx.idle, 'rapid taps leave no stuck fire');
+}
+console.log('drac fx and sustained free-mode fire ok');

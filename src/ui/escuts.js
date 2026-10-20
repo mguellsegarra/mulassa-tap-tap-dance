@@ -1,6 +1,6 @@
 // Each town's coat of arms, simplified to read at pill size (16-24 px), drawn after the arms on Wikimedia Commons
 // ("Escut de <poble>.svg"): each in its own shape (the official ones are "caironats", lozenges), field and charges;
-// crowns and outer ornaments are left out. The banner below a town's group in the strip takes the arms' tinctures.
+// crowns and outer ornaments are left out. Banners and card tints use the game's own town accents (select.css --town).
 const ESC_T = { or: '#f5c518', gules: '#d62a2a', argent: '#fffaf0', atzur: '#2479d0', sinople: '#2e8b3e', sable: '#2a1a10' };
 const ESC_SHAPE = {
   loz: 'M12 .8 23.2 12 12 23.2.8 12z', // caironat
@@ -58,7 +58,3 @@ export function escutSvg(townId, cls = 'escut') {
     + `<g clip-path="url(#${id})" stroke="none">${arms.art}</g><path d="${shape}" fill="none" stroke="${ESC_T.sable}" stroke-width="1.1" stroke-linejoin="round"/></svg>`;
 }
 export const ESCUT_TOWNS = Object.keys(ESC_ARMS);
-// Each arms' first field (the chief or first quarter of the blazons above): the town's tint on its selector cards and
-// its banner's cloth. Heraldic tinctures, not official town colours; '' = no arms (the invitation).
-const ESC_FIELD = { valls: 'gules', tarragona: 'or', reus: 'argent', solsona: 'gules', vilanova: 'atzur', barcelona: 'argent', berga: 'or', olot: 'or', vilafranca: 'atzur' };
-export const escutField = townId => ESC_FIELD[townId] ?? '';

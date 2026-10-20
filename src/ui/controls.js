@@ -2,9 +2,14 @@
 import { showAvatars, photoHelpAvailable } from './photo-avatars.js';
 import { sheets } from './sheets.js';
 import { howtoMenu, settingsMenu, privacyMenu, pauseMenu, hide, howtoEl, settingsEl, leadersEl, feedbackEl, musicEl, iosHint, hintOff, pauseEl, skipEl, retryEl } from './handles.js';
-import { G, clock, CHALLENGE } from '../game/state.js';
+import { G, clock, CHALLENGE, startMenuAudio } from '../game/state.js';
 import { keyboardNav } from './focus.js';
 import { hud, buttonAt } from '../hud/canvas.js';
+import { lookSync } from './mouse-look.js';
+import { PHOTO } from '../game/photo-control.js';
+import { COARSE } from '../core/env.js';
+
+const practiceLabel = document.getElementById('skip-label'), practiceIcon = document.getElementById('skip-icon');
 
 // Canvas buttons need the same hover cursor as DOM buttons. Recheck on state/layout
 // changes too, even when the mouse stays still (photo mode, resize, entering play).
@@ -37,16 +42,21 @@ export let viewMode = false, viewT = 0, viewBack = null, viewIdle = 0, hudBlank 
 export const setHudBlank = v => (hudBlank = v);
 export function setView(on) {
   if (on === viewMode || on && (!menuState() || sheetUp())) return;
-  viewMode = on; showAvatars(on); viewT = performance.now();
+  if (on && G.state === 'splash') startMenuAudio();
+  const entryFigure = on && G.state === 'select' && !sheets.select?.pending && sheets.select?.figure;
+  viewMode = on; showAvatars(on, entryFigure?.id); viewT = performance.now();
   if (!on) hide(howtoEl, true);
   document.body.classList.toggle('view-mode', on);
   for (const el of VIEW_HIDES) el.inert = on;
   viewBtn.setAttribute('aria-pressed', String(on)); // (one name, «Amaga els botons», pressed or not; the tooltip says what a press does)
   viewBtn.title = on ? 'Mostra els botons (H)' : 'Amaga els botons (H)';
   clearTimeout(viewIdle); viewBtn.classList.remove('idle');
+  hud.tabIndex = on && !COARSE.matches ? 0 : -1;
+  hud.setAttribute('role', on ? 'region' : 'img');
+  hud.setAttribute('aria-label', on ? 'Plaça: controls de moviment' : 'La plaça');
   if (on) {
     viewBack = document.activeElement;
-    viewBtn.focus({ preventScroll: true });
+    (PHOTO.on ? hud : viewBtn).focus({ preventScroll: true });
     viewWake();
   } else {
     const back = viewBack; viewBack = null;
@@ -68,6 +78,7 @@ export function updateControls() {
   hide(iosHint, hintOff || (G.state !== 'title' && G.state !== 'select') || howtoMenu.open || settingsMenu.open || sheets.sync.open);
   hide(viewBtn, !menuState());
   if (viewMode && (!menuState() || sheetUp())) setView(false); // menu screens only, never under a sheet
+  lookSync(); // (after it: a sheet or a state change has just dropped control)
   const photoHelp = photoHelpAvailable();
   howtoEl.inert = viewMode && !photoHelp;
   hide(howtoEl, !photoHelp); // reuse the existing ? only after the photo instructions disappear
@@ -82,6 +93,14 @@ export function updateControls() {
   sheets.select?.visible(G.state === 'select'); // measure after the header controls have their final layout
   hide(pauseEl, G.state !== 'play' || G.paused || Boolean(G.collapseT));
   hide(skipEl, G.state !== 'play' || !G.practice || G.paused);
+  if (G.practice) {
+    const exit = G.practice.then == null, label = exit ? 'SURT' : 'SALTA';
+    if (practiceLabel.textContent !== label) {
+      practiceLabel.textContent = label;
+      skipEl.setAttribute('aria-label', exit ? 'Surt de la pràctica' : 'Salta la pràctica');
+      practiceIcon.setAttribute('d', exit ? 'M10 4H4v16h6M14 8l4 4-4 4M8 12h12' : 'm5 5 7 7-7 7M13 5l7 7-7 7');
+    }
+  }
   const result = G.state === 'results' && !G.watch && clock - G.resT > 1; // (the dance demo ends on its own sheet)
   sheets.board.results(result); // with TOCA PER TORNAR: no stray tap from the last notes
   sheets.share.results(result, G.shareRun, CHALLENGE); // the row itself (#results-actions)

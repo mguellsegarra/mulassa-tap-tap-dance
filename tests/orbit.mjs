@@ -134,3 +134,54 @@ console.log('title orbit ok');
   assert(Math.abs(Math.atan2(Math.sin(d.yaw - H.yaw), Math.cos(d.yaw - H.yaw))) < 0.4, 'after the idle time it eases back to home by the short way');
 }
 console.log('title orbit home azimuth ok');
+
+// After a drag the selector eases back to its framing: never while a finger is down, from rest (the velocity grows from 0:
+// no lurch on the first frame), done within a few seconds, and the same at 30 and 120 fps. With keep (photo mode) the
+// player's framing stays however long it waits; once keep ends it eases back the same way.
+{
+  const H = { ...home, yaw: -1.4 };
+  const dragged = () => { const s = createOrbit(home); s.yaw = H.yaw; orbitDown(s, 1, 0, 0, 0); for (let i = 1; i <= 30; i++) orbitMove(s, 1, i * 12, -i * 2, i * 0.02); return s; };
+  { // held still for 10 s: nothing comes back under the finger
+    const s = dragged(), yaw = s.yaw; let t = 0.6;
+    for (let i = 0; i < 600; i++) orbitStep(s, 1 / 60, t += 1 / 60, H, ROOM);
+    assert.equal(s.yaw, yaw, 'a held pointer keeps the view');
+  }
+  const back = (hz, keepFor = 0) => {
+    const s = dragged(); orbitUp(s, 1, 0.65); s.spin = 0; let t = 0.65; const steps = [];
+    for (let i = 0; i < hz * keepFor; i++) orbitStep(s, 1 / hz, t += 1 / hz, H, ROOM, true);
+    const kept = s.yaw;
+    for (let i = 0; i < hz * 11; i++) { const y = s.yaw; orbitStep(s, 1 / hz, t += 1 / hz, H, ROOM); steps.push((s.yaw - y) * hz); }
+    return { s, steps, kept };
+  };
+  const a = back(60), b = back(30), c = back(120);
+  const start = a.steps.findIndex(v => Math.abs(v) > 1e-9);
+  assert(start >= Math.floor((ORBIT.idle - 0.1) * 60) && start <= Math.ceil(ORBIT.idle * 60) + 1, `it waits ORBIT.idle s (${(start / 60).toFixed(2)} s)`);
+  assert(Math.abs(a.steps[start]) < 0.05, 'from rest: no lurch on its first frame');
+  assert(a.steps.slice(start + 1).every((v, i) => Math.abs(v - a.steps[start + i]) < 0.03), 'its speed changes smoothly frame to frame');
+  assert(Math.abs(a.s.yaw - H.yaw) < 0.02, 'a 120 degree drag is back at the framing (within 1 degree) in 11 s');
+  assert(Math.abs(a.s.yaw - b.s.yaw) < 0.01 && Math.abs(a.s.yaw - c.s.yaw) < 0.01, 'the same at 30 and 120 fps');
+  const k = back(60, 30);
+  assert(Math.abs(k.kept - dragged().yaw) < 0.2 && Math.abs(k.kept - H.yaw) > 0.5, 'keep: 30 s later the player\'s framing is still there');
+  assert(Math.abs(k.s.yaw - H.yaw) < 0.02, 'and eases back once keep ends');
+}
+console.log('selector orbit return ok');
+
+// home.time (leaving photo mode): pitch and distance ease back faster, the azimuth keeps its own pace (and speed limit)
+{
+  const H = { ...home, yaw: -1.4 }, go = time => { const s = createOrbit(home); s.fresh = false; s.yaw = H.yaw + 0.8; s.x[1] = home.dist + 4; s.x[0] = home.pitch + 0.3; s.last = -Infinity; let t = 0; for (let i = 0; i < 60; i++) orbitStep(s, 1 / 60, t += 1 / 60, { ...H, time }, ROOM); return s; };
+  const calm = go(undefined), quick = go(0.6);
+  assert(Math.abs(quick.x[1] - home.dist) < 0.25 * Math.abs(calm.x[1] - home.dist) && Math.abs(quick.x[0] - home.pitch) < 0.25 * Math.abs(calm.x[0] - home.pitch), 'home.time: size and height come back much sooner');
+  assert(Math.abs(quick.yaw - calm.yaw) < 1e-12, 'home.time: the azimuth is untouched');
+}
+console.log('quick return after photo mode ok');
+
+// A half turn away (the far side of the plaça) eases back no faster than ORBIT.homeSpeed, smoothly, at any frame rate
+{
+  const H = { ...home, yaw: -1.4 }, back = hz => { const s = createOrbit(home); s.fresh = false; s.yaw = H.yaw + Math.PI - 0.05; s.spin = 0; s.last = -Infinity; let t = 0, top = 0, jump = 0, prev = 0;
+    for (let i = 0; i < hz * 14; i++) { const y = s.yaw; orbitStep(s, 1 / hz, t += 1 / hz, H, ROOM); const r = Math.abs(s.yaw - y) * hz; top = Math.max(top, r); jump = Math.max(jump, Math.abs(r - prev)); prev = r; } return { s, top, jump }; };
+  const a = back(60), b = back(30), c = back(144);
+  assert(a.top <= 0.6 && b.top <= 0.6 && c.top <= 0.6, `half turn: never over 0.6 rad/s (${a.top.toFixed(2)} ${b.top.toFixed(2)} ${c.top.toFixed(2)})`);
+  assert(a.jump < 0.05, 'and its speed changes smoothly');
+  assert(Math.abs(Math.atan2(Math.sin(a.s.yaw - H.yaw), Math.cos(a.s.yaw - H.yaw))) < 0.02, 'home within 14 s');
+}
+console.log('half-turn return speed ok');

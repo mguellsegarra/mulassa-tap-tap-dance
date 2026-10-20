@@ -1,4 +1,6 @@
-// The song's base choreography: where the Mulassa faces and how she sways at any musical moment. Pure, no three.js,
+// The Mulassa's previous, beat-based choreography (the game now dances the reference-led one, game/mula-dance.js; this
+// one still poses the share photo's still) and the dance factories the Drac's beat dance shares: where she faces and how
+// she sways at any musical moment. Pure, no three.js,
 // no randomness, no allocations: dancePose(out, beat) fills a reused pose, so a seek (?from), a pause or a restart
 // shows the right pose directly, without integrating earlier frames. `beat` is the arrangement's beat index
 // (song.beats[i] is beat i; main.js beatAt() turns song time, sync offset included, into it).

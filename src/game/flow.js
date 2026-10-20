@@ -14,7 +14,7 @@ import { pick } from '../scene/models.js';
 import { challengeResult } from '../services/share.js';
 import { fabricateRun } from '../dev/final-test.js';
 import { sheets } from '../ui/sheets.js';
-import { chip, audioEngine, G, clock, CHALLENGE, setChip, setBigPending } from './state.js';
+import { chip, audioEngine, G, clock, CHALLENGE, setChip, setBigPending, startMenuAudio } from './state.js';
 import { audioFailureTags } from '../platform/audio.js';
 import { goFullscreen } from '../ui/fullscreen.js';
 import { closePauseMenu } from '../ui/pause.js';
@@ -32,8 +32,7 @@ import { headline } from '../hud/praise.js';
 import { debugAction } from '../dev/debug.js';
 
 export function unlock() {
-  setChip(audioEngine());
-  chip.unlock();
+  startMenuAudio();
   toTitle();
   goFullscreen();
 }

@@ -10,13 +10,14 @@ const DEG = Math.PI / 180;
 export const ORBIT = {
   tap: 8, // css px a pointer may wander and still be a tap
   turn: 0.006, // rad per css px dragged, at most (turnFor: about 140 degrees across the screen's width)
-  idle: 5, // s without input before the automatic orbit comes back
+  idle: 2, // s without input before the automatic framing eases back (a beat to see the angle you chose; 5 s read as stuck)
   rate: 0.12, // rad/s, the automatic orbit (the title's old clock * 0.12)
   coast: 0.4, // s, time constant of a flick's spin decaying
   fling: 4, // rad/s at most from a flick (at most 1.6 rad of coasting)
   ease: 1.5, // s, time constant of the automatic spin easing back in
   back: 0.25, // s to spring back inside a limit
   home: 2.5, // s to ease back to the automatic framing
+  homeSpeed: 0.55, // rad/s at most while the azimuth eases back (a half turn too: under the 0.6 rad/s a pan can take)
   wheel: 0.2, // s after the last wheel step before its target snaps inside the limits
   pitchMin: 10 * DEG, pitchMax: 60 * DEG, pitchGive: 0.1, // rad the rubber band gives at most beyond a limit
   distMin: 8, distMax: 17, distGive: 1.2, // m: never into her swinging rear / the crowd round her, never past the square
@@ -121,16 +122,17 @@ export const wheelFactor = (deltaY, pinch) => Math.exp(Math.max(-60, Math.min(60
 
 // One frame: coasting, springs back inside the limits, the automatic orbit when idle. home: { pitch, dist, yaw? } (with a yaw the
 // idle camera springs to that azimuth instead of spinning: the caller sways it);
-// room: horizontal metres to the square's edge behind the camera.
-export function orbitStep(s, dt, now, home, room) {
+// home.time (optional): seconds for pitch and distance to ease back (the azimuth keeps ORBIT.home and its speed);
+// room: horizontal metres to the square's edge behind the camera; keep: the player's framing stays (photo mode), no easing back.
+export function orbitStep(s, dt, now, home, room, keep = false) {
   if (dt <= 0) return s;
   if (s.fresh) { s.fresh = false; s.x[0] = home.pitch; s.x[1] = s.zoomRaw = s.zoomTo = home.dist; } // (main.js knows home only then)
   const L = orbitLimits(s.lim, s.x[1], s.x[0], room);
-  const held = s.ptrs.size > 0, auto = !held && now - s.last > ORBIT.idle;
+  const held = s.ptrs.size > 0, auto = !held && !keep && now - s.last > ORBIT.idle;
   if (!held && auto && home.yaw != null) { // idle with a home framing: a critically damped spring to its (slowly swaying) azimuth, never a spin
     const ys = s.ys ??= { x: new Float64Array(1), v: new Float64Array(1) };
     ys.x[0] = Math.atan2(Math.sin(s.yaw - home.yaw), Math.cos(s.yaw - home.yaw)); ys.v[0] = s.spin; // the nearest way round
-    smoothDamp(ys, 0, 0, ORBIT.home, dt);
+    smoothDamp(ys, 0, 0, ORBIT.home, dt, ORBIT.homeSpeed);
     s.yaw = home.yaw + ys.x[0]; s.spin = ys.v[0];
   } else if (!held) { // a flick coasts to rest; idle, the automatic spin eases back in
     const target = auto ? ORBIT.rate : 0, tau = auto ? ORBIT.ease : ORBIT.coast, e = Math.exp(-dt / tau);
@@ -138,13 +140,13 @@ export function orbitStep(s, dt, now, home, room) {
     s.spin = target + (s.spin - target) * e;
   }
   if (!(held && s.drag && !s.pinch)) { // pitch: not under a dragging finger
-    if (auto) smoothDamp(s, 0, clamp(home.pitch, L.pitchMin, L.pitchMax), ORBIT.home, dt);
+    if (auto) smoothDamp(s, 0, clamp(home.pitch, L.pitchMin, L.pitchMax), home.time ?? ORBIT.home, dt);
     else if (s.x[0] < L.pitchMin || s.x[0] > L.pitchMax) smoothDamp(s, 0, clamp(s.x[0], L.pitchMin, L.pitchMax), ORBIT.back, dt);
     else { const e = Math.exp(-dt / ORBIT.coast); s.x[0] += s.v[0] * ORBIT.coast * (1 - e); s.v[0] *= e; }
   }
   if (!s.pinch) { // distance: not under two fingers
     const wheeling = now - s.wheelT < ORBIT.wheel;
-    if (auto) smoothDamp(s, 1, clamp(home.dist, L.distMin, L.distMax), ORBIT.home, dt);
+    if (auto) smoothDamp(s, 1, clamp(home.dist, L.distMin, L.distMax), home.time ?? ORBIT.home, dt);
     else if (wheeling) smoothDamp(s, 1, s.zoomTo, 0.12, dt);
     else smoothDamp(s, 1, clamp(s.x[1], L.distMin, L.distMax), ORBIT.back, dt); // inside: at rest; outside: back in
     if (!wheeling) s.zoomRaw = s.zoomTo = s.x[1];

@@ -98,6 +98,10 @@ comparison). Not copied: the old lab (`drac-lab`), trial mp3s, SOURCE's unrelate
   see `docs/drac-music.md` (round 2).
 - Traca petards (they were already in the game): they now grow out of the mouths and shrink back into them (0.35 / 0.3 s)
   instead of popping in and out in one frame.
+- Fire, 19/10/2026 (replaces the opaque box flames and the traca petards): carretilla tubes on the five fire points, jets of
+  sparks on a long streak / the finale / the CARRETILLES, and a FLAMARADA (one ball for the two mouths) on CREMA, the final
+  hit and the TRO. `scene/drac-fire.js`; mock-up, measurements and decisions in
+  `~/.t3/artifacts/mulassa-drac-fire-mock-20261019/` (lab: `research/bestiari/drac/fire-lab/`).
 
 ## Independent review (GPT-6 Astra, read-only, 2026-10-19)
 

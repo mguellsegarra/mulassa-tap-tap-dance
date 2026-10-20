@@ -634,9 +634,9 @@ def main():
     taps = sorted(taps + extra)
     sect = layout['sections']
     json.dump({
-        'bpm': BPM, 'duration': round(N / SR, 3), 'end': round(sec(END), 3), 'tail': round(sec(END) + 2.5, 3),
+        'bpm': BPM, 'duration': round(N / SR, 3), 'end': round(sec(END), 4), 'tail': round(sec(END) + 2.5, 4),
         'finale': round(sec(FINALE), 4),               # FINAL ESBOJARRAT follows its form anchor
-        'sections': [[round(sec(b), 3), k] for b, k in sect],
+        'sections': [[round(sec(b), 4), k] for b, k in sect],  # (as precise as the beats: a phrase-varying tempo lands between 3-decimal steps)
         'beats': [round(sec(b), 4) for b in range(END + 1)],
         'notes': [[round(sec(s), 4), k, lv, bg, round(sec(he), 4) if he else 0] for s, k, lv, bg, he in taps],
         'balloonBeats': [list(w) for w in BALLOON_B],   # the GLOBUS windows [start, end) in beats (src/game/chart.js)

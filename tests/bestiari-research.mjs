@@ -4,12 +4,11 @@ import { readFileSync, existsSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { makeMotion } from '../src/dev/bestiari-compare/motion.js';
 import * as THREE from 'three';
 import { buildMulassa } from '../src/scene/models/mulassa.js';
-import { shoeSeparation, SHOE } from '../src/dev/bestiari-compare/support-clearance.js';
-import { createCarriers } from '../src/dev/bestiari-compare/carriers.js';
-import { planSupports } from '../src/dev/bestiari-compare/supports.js';
+import { makeMulaMotion } from '../src/game/mula-path.js';
+import { shoeSeparation, SHOE, planSupports } from '../src/game/mula-supports.js';
+import { createCarriers } from '../src/scene/mula-carriers.js';
 import { makeDirections } from '../src/dev/bestiari-compare/directions.js';
 import { createCameraFrame } from '../src/dev/bestiari-compare/camera.js';
 import { byteRange } from '../tools/bestiari/media-plugin.mjs';
@@ -17,7 +16,10 @@ import { byteRange } from '../tools/bestiari/media-plugin.mjs';
 const root = fileURLToPath(new URL('../', import.meta.url));
 const json = p => JSON.parse(readFileSync(resolve(root, p), 'utf8'));
 const choreography = json('research/bestiari/mulassa/choreography.json');
-const data = json('src/game/mula-reconstruction.json'), motion = makeMotion(data);
+// The reconstruction and its shoes now live in the game (game/mula-path.js, mula-supports.js, scene/mula-carriers.js):
+// the comparator and the game pose the same modules, so these checks cover what the game shows.
+const data = json('src/game/mula-reconstruction.json'), reconstruction = makeMulaMotion(data), supports = planSupports(reconstruction.pose);
+const motion = { pose: reconstruction.pose, foot: supports.foot, events: supports.events };
 // Evaluate the actual rendered camera and body, not just continuous root coordinates.
 const seamRig = buildMulassa(), seamCamera = new THREE.PerspectiveCamera(32, 16 / 9, .1, 60);
 const frameSeamCamera = createCameraFrame(seamCamera);
@@ -98,13 +100,26 @@ const footSeek = motion.foot(144.84375, 6);
 for (const t of [17, 161, 33, 84]) motion.foot(t, 6);
 assert.deepEqual(motion.foot(144.84375, 6), footSeek, 'avoidance must not depend on playback history');
 const carrierScene = new THREE.Scene(), shell = buildMulassa(); carrierScene.add(shell.root);
-const carriers = createCarriers(carrierScene, motion);
+const carriers = createCarriers(); shell.root.add(carriers.group);
+const feetNow = Array.from({ length: 8 }, () => ({}));
+function poseCarriers(t, p = motion.pose(t)) { // the shell first (the cuffs reach into its actual cloth), then the shoes
+  shell.root.position.set(p.x, p.lift, p.z); shell.root.rotation.y = p.yaw; shell.body.rotation.set(p.pitch, 0, p.roll);
+  for (let i = 0; i < 8; i++) motion.foot(t, i, feetNow[i]);
+  carriers.pose(shell, feetNow); carrierScene.updateMatrixWorld(true);
+  return p;
+}
+// each instance where the GPU draws it: the instanced mesh's world matrix times its own
+const instanceWorld = (mesh, i, out) => { mesh.getMatrixAt(i, out); return out.premultiply(mesh.matrixWorld); };
+const parts = [0, 1, 2, 3, 4, 5, 6, 7].map(() => ({ cuff: new THREE.Matrix4(), shoe: new THREE.Matrix4(), q: new THREE.Quaternion(), s: new THREE.Vector3(), p: new THREE.Vector3(), sq: new THREE.Quaternion(), ss: new THREE.Vector3(), sp: new THREE.Vector3() }));
+const readParts = () => parts.forEach((o, i) => {
+  instanceWorld(carriers.cuffs, i, o.cuff).decompose(o.p, o.q, o.s); instanceWorld(carriers.shoes, i, o.shoe).decompose(o.sp, o.sq, o.ss);
+});
 // The accepted visual abstraction has straight trouser cuffs, not exposed knee/hip chains.
 const cuffAxis = new THREE.Vector3();
 for (const t of [0, 1, 110, 166.2]) {
-  carriers.pose(t, motion.pose(t));
-  for (const p of carriers.parts) {
-    cuffAxis.set(0, 1, 0).applyQuaternion(p.cuff.quaternion);
+  poseCarriers(t); readParts();
+  for (const o of parts) {
+    cuffAxis.set(0, 1, 0).applyQuaternion(o.q);
     assert(cuffAxis.y > Math.cos(10 * Math.PI / 180), `unnecessary resting cuff lean at ${t}`);
   }
 }
@@ -128,18 +143,15 @@ for (const list of motion.events) for (const event of list) {
   assert(Math.hypot(event.to.x - event.from.x, event.to.z - event.from.z) < .85, 'avoid the former metre-long landing correction');
 }
 const shellInverse = new THREE.Matrix4(), localVertex = new THREE.Vector3();
-const coveredParts = carriers.parts.map(p => p.cuff);
-const end = new THREE.Vector3(), start = new THREE.Vector3();
+const end = new THREE.Vector3(), start = new THREE.Vector3(), cuffPositions = carriers.cuffs.geometry.attributes.position;
 for (let frame = 0; frame <= 39888; frame++) {
-  const t = Math.min(166.2, (frame + .5) / 240), bodyPose = motion.pose(t); carriers.pose(t, bodyPose);
-  shell.root.position.set(bodyPose.x, bodyPose.lift, bodyPose.z); shell.root.rotation.y = bodyPose.yaw;
-  shell.body.rotation.set(bodyPose.pitch, 0, bodyPose.roll); carrierScene.updateMatrixWorld(true);
+  const t = Math.min(166.2, (frame + .5) / 240);
+  poseCarriers(t); readParts();
   shellInverse.copy(shell.body.matrixWorld).invert();
   // Actual rendered vertices against the original skirt's central solid box, not just joint centres.
-  for (const mesh of coveredParts) {
-    const positions = mesh.geometry.attributes.position;
-    for (let i = 0; i < positions.count; i++) {
-      localVertex.fromBufferAttribute(positions, i).applyMatrix4(mesh.matrixWorld).applyMatrix4(shellInverse);
+  for (const o of parts) {
+    for (let i = 0; i < cuffPositions.count; i++) {
+      localVertex.fromBufferAttribute(cuffPositions, i).applyMatrix4(o.cuff).applyMatrix4(shellInverse);
       if (localVertex.y > -.5 && localVertex.y < .75) {
         assert(Math.abs(localVertex.x) < .56 && Math.abs(localVertex.z) < 1.66, `carrier protrudes above hem at ${t}`);
       }
@@ -149,15 +161,15 @@ for (let frame = 0; frame <= 39888; frame++) {
     const a = motion.foot(t, i), b = motion.foot(t, j), gap = shoeSeparation(a, b, {}).gap;
     assert(gap >= -1e-7 || Math.abs(a.y - b.y) >= SHOE.height - 1e-7, `shoes intersect at ${t}: ${i}/${j}`);
   }
-  for (const p of carriers.parts) {
-    end.set(0, -.5, 0).applyMatrix4(p.cuff.matrixWorld);
-    start.copy(p.shoe.position); start.y += SHOE.height * .3;
-    assert(end.distanceTo(start) < 1e-7, `trouser cuff remains attached to shoe at ${t}`);
-    cuffAxis.set(0, 1, 0).applyQuaternion(p.cuff.quaternion);
+  for (const o of parts) {
+    end.set(0, -.5, 0).applyMatrix4(o.cuff);
+    start.copy(o.sp); start.y += SHOE.height * .3;
+    assert(end.distanceTo(start) < 1e-5, `trouser cuff remains attached to shoe at ${t}`); // (float32 instance matrices)
+    cuffAxis.set(0, 1, 0).applyQuaternion(o.q);
     assert(cuffAxis.y > Math.cos(35 * Math.PI / 180), `cuff sprawls outward at ${t}`);
-    assert.equal(p.cuff.scale.x, 1); assert.equal(p.cuff.scale.z, 1);
-    assert.equal(p.shoe.scale.x, 1); assert.equal(p.shoe.scale.y, 1); assert.equal(p.shoe.scale.z, 1);
-    assert(p.shoe.position.y >= SHOE.height / 2 - 1e-9, 'shoe sole stays above ground');
+    assert(Math.abs(o.s.x - 1) < 1e-5 && Math.abs(o.s.z - 1) < 1e-5, 'the cuff keeps its width and depth');
+    assert(Math.abs(o.ss.x - 1) < 1e-5 && Math.abs(o.ss.y - 1) < 1e-5 && Math.abs(o.ss.z - 1) < 1e-5, 'rigid shoes');
+    assert(o.sp.y >= SHOE.height / 2 - 1e-5, 'shoe sole stays above ground');
   }
 }
 assert.equal(motion.pose(166.2).lift, 0, 'settled at the end');

@@ -52,3 +52,39 @@ for (const k of [0.25, 0.5, 1, 2]) { // the same curve whatever the frame rate
   assert.equal(smoothDamp(s2, 0, 9, 0.5, 0), 3, 'a paused frame does not move it');
 }
 console.log('camera smoothing ok');
+
+// The selector camera's fit: the figure fills the free rect (the tighter of its height and width decides), sits centred while
+// it fits, and on a band too short for a readable figure it stands on the band's floor and rises over the soft top, never past
+// the hard one. Continuous as the band shrinks (no step in distance or placement).
+import { menuFit, envelope } from '../src/scene/framing.js';
+{
+  const tan = Math.tan(25 * Math.PI / 180), vh = 852, ppm = vh / (2 * tan), out = {};
+  const band = { top: 260, bottom: 612, hardTop: 114, left: 0, right: 393 };
+  menuFit(out, band, vh, tan, 2, 4); // a tall figure: its height decides
+  const tall = 4 * ppm / out.dist;
+  assert(Math.abs(tall - 0.86 * 352) < 1e-6 && 2 * ppm / out.dist < 0.8 * 393, 'tall: fills 86% of the band, narrower than it');
+  assert.equal(out.cy, 436); assert.equal(out.cx, 196.5);
+  menuFit(out, band, vh, tan, 6, 2); // a long one: its width decides
+  assert(Math.abs(6 * ppm / out.dist - 0.8 * 393) < 1e-6 && 2 * ppm / out.dist < 0.86 * 352, 'long: fills 80% of the width (room for her travel)');
+  const short = { top: 324, bottom: 408, hardTop: 114, left: 0, right: 320 }; // 320x568 under a long info block: an 84 px band
+  menuFit(out, short, 568, tan, 2, 4);
+  const h = 4 * (568 / (2 * tan)) / out.dist, top = out.cy - h / 2, bottom = out.cy + h / 2;
+  assert(Math.abs(h - 0.55 * 294) < 1e-6, `short band: still readable (${h.toFixed(0)} px, not 72)`);
+  assert(bottom <= 408 && bottom > 400 && top > 114, 'standing on the band floor (the dock), clear of the pills');
+  let prev = null; // shrink the band 1 px at a time: distance and centre move smoothly
+  for (let t = 200; t <= 600; t++) {
+    menuFit(out, { ...band, top: t }, vh, tan, 2, 4);
+    if (prev) assert(Math.abs(out.cy - prev.cy) < 1.01 && Math.abs(out.dist - prev.dist) < 0.2, `continuous at top ${t}`);
+    prev = { ...out };
+  }
+  assert.equal(menuFit(out, band, vh, tan, 2, 4), out, 'reuses its output object');
+}
+{ // envelope: quick to grow, slow to shrink, the same at any frame rate
+  const follow = (fps, x, seconds, e0) => { let e = e0; for (let i = 0; i < fps * seconds; i++) e = envelope(e, x, 1 / fps, 0.35, 4); return e; };
+  assert(follow(60, 2, 1, 1) > 1.9 && follow(60, 1, 1, 2) > 1.6, 'grows in a fraction of a second, shrinks over seconds');
+  assert(Math.abs(follow(30, 2, 1, 1) - follow(120, 2, 1, 1)) < 1e-9 && Math.abs(follow(30, 1, 2, 2) - follow(144, 1, 2, 2)) < 1e-9, 'frame-rate independent');
+  let e = 1; for (let i = 0; i < 600; i++) e = envelope(e, 1 + 0.4 * (Math.sin(i / 60 * 3) > 0), 1 / 60, 0.35, 4); // turning side on and back every second
+  let lo = Infinity, hi = 0; for (let i = 600; i < 900; i++) { e = envelope(e, 1 + 0.4 * (Math.sin(i / 60 * 3) > 0), 1 / 60, 0.35, 4); lo = Math.min(lo, e); hi = Math.max(hi, e); }
+  assert(lo > 1.28 && hi - lo < 0.1, `a figure turning back and forth keeps a steady size (${lo.toFixed(2)}-${hi.toFixed(2)})`);
+}
+console.log('menu fit ok');

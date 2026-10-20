@@ -14,9 +14,11 @@ import { activeCrowd, bandSpots, midCrowd, MID, animateRenderQuality } from './q
 import { M, PIVOT, PAIR } from './mula-motion.js';
 import { COLLA_SPOTS } from './drac-dance.js';
 import { MULA_COLLA_SPOTS } from './mula-stage.js';
-import { RING, REACH } from './crowd-build.js';
+import { RING, REACH, arenaNow } from './crowd-build.js';
 import { easeIn, smooth01, TAU } from '../core/anim.js';
 import { bubble, at } from '../hud/bubbles.js';
+import { sootPose, sootFrozen } from './drac-soot.js';
+import { crowdRadius, backdropContacts, settleDrawnCrowd } from './crowd-contact.js';
 
 // During the song (not the finale) the plaça stands still and only answers the player's hits, gently: one "groove"
 // envelope a frame for everyone. A hit re-arms `kick` (a GUAPA, a GLOBUS pop or a well-played phrase a bit more; a
@@ -92,24 +94,25 @@ function recell(p) {
 // them, half each (all of it by a mover when the other is fixed: the band), and the velocity into
 // the neighbour is dropped so they don't walk on the spot. Two sweeps over the same nine-cell neighbourhoods.
 function separate() {
-  for (let it = 0; it < 2; it++) {
+  for (let it = 0; it < 4; it++) {
     for (const p of activeCrowd) {
-      if (p.rest) continue; // at rest during the song: only a mover can reach them, and resolves it
+      if (p.rest || sootFrozen(p)) continue; // at rest during the song (or charred stiff): only a mover can reach them, and resolves it
       const cellX = p.cell % 32, cellZ = Math.floor(p.cell / 32);
-      for (let z = Math.max(0, cellZ - 1); z <= Math.min(31, cellZ + 1); z++) {
-        for (let x = Math.max(0, cellX - 1); x <= Math.min(31, cellX + 1); x++) {
+      for (let z = Math.max(0, cellZ - 2); z <= Math.min(31, cellZ + 2); z++) {
+        for (let x = Math.max(0, cellX - 2); x <= Math.min(31, cellX + 2); x++) {
           for (const q of crowdCells[x + z * 32]) {
             if (q === p) continue;
             let sx = p.pos.x - q.pos.x, sz = p.pos.y - q.pos.y;
-            const min = p.rad + q.rad, d2 = sx * sx + sz * sz;
+            const presence = Math.min(p.qualityScale ?? 1, q.qualityScale ?? 1);
+            const min = crowdRadius(p) + crowdRadius(q) + 0.04 * presence, d2 = sx * sx + sz * sz;
             if (d2 >= min * min) continue;
             const d = Math.sqrt(d2);
             if (d > 1e-6) { sx /= d; sz /= d; } else { sx = Math.cos(p.ang); sz = Math.sin(p.ang); } // on top of each other: outwards
-            const push = (min - d) * (q.fixed ? 1 : 0.5);
+            const stiff = q.fixed || sootFrozen(q), push = (min - d) * (stiff ? 1 : 0.5);
             p.pos.x += sx * push; p.pos.y += sz * push;
             const pv = p.vel.x * sx + p.vel.y * sz;
             if (pv < 0) { p.vel.x -= sx * pv; p.vel.y -= sz * pv; }
-            if (!q.fixed) {
+            if (!stiff) {
               q.pos.x -= sx * push; q.pos.y -= sz * push; q.rest = false; // nudged: it checks its own neighbours next
               const qv = q.vel.x * sx + q.vel.y * sz;
               if (qv > 0) { q.vel.x -= sx * qv; q.vel.y -= sz * qv; }
@@ -178,18 +181,20 @@ function updateMood(dt, t, live) {
 
 // Step 2: where one person goes: they make way for her (RING), creep in to watch, walk back to their spot, keep clear of the play camera's shot and of each other (a soft push; separate() is the hard limit).
 function steer(p, dt, beat, live) {
+  if (sootFrozen(p)) { p.vel.set(0, 0); p.rest = false; return; } // charred stiff (drac-soot.js): rooted to the spot, a fixed footprint
   const { moodK, slow, ringE, velK, wayIn, wayOut } = F, { festK, clapK, partyK, gr2, gr3, shoveK } = mood;
   // during the song only the front row and the first ring (NEAR) make way; the rows behind hold unless she is right
   // on them (1.2 m): fewer movers, less CPU, and the ones people watch still react
   const dx = p.pos.x - M.pos.x, dz = p.pos.y - M.pos.y, want = G.state === 'play' && p.row && !p.near ? Math.min(1.2, p.comfort * F.bold) : p.comfort * F.bold + (shoveK && G.state === 'play' ? SHOVE.extra * shoveK : 0);
   // clearance to her body (a box in her frame, y = forward) and, while she spins, to the circle her rear sweeps
   // round the pivot; only near the ring (RING.reach): everyone further out is simply clear
+  const scale = PAIR.k ? 1 : figureScale(); // M is the Mulassa while the scene pair is visible
   const dpx = p.pos.x - M.pivot.x, dpz = p.pos.y - M.pivot.y, dp = Math.hypot(dpx, dpz) || 1;
   let clear = 99;
-  if (dp < want + RING.reach + PIVOT + 2.4 * figureScale()) {
+  if (dp < want + RING.reach + PIVOT + 2.4 * scale) {
     local.set(dx * F.cy - dz * F.sy, dx * F.sy + dz * F.cy);
-    clear = Math.hypot(Math.max(0, Math.abs(local.x) - 0.75 * figureScale()), Math.max(0, Math.abs(local.y) - 2.3 * figureScale()));
-    if (F.sweep > 0.2) clear = Math.min(clear, dp - (PIVOT + 2.1) * figureScale() * F.sweep);
+    clear = Math.hypot(Math.max(0, Math.abs(local.x) - 0.75 * scale), Math.max(0, Math.abs(local.y) - 2.3 * scale));
+    if (F.sweep > 0.2) clear = Math.min(clear, dp - (PIVOT + 2.1) * scale * F.sweep);
   }
   if (PHOTO.on) clear = photoClearance(M.pos.x, M.pos.y, M.yaw, p.pos.x, p.pos.y, 0, !PHOTO.pair && PHOTO.id === 'drac-valls');
   // the splash's Drac beside her (mula-motion.js PAIR): a round footprint, made way for like her
@@ -225,10 +230,11 @@ function steer(p, dt, beat, live) {
     const rr = p.pos.length(), over = rr - (MID.edge - 0.8);
     if (over > 0 && p.pos.x * MID.fx + p.pos.y * MID.fz > rr * MID.cos) { tmp.x -= (p.pos.x / rr) * over * 10; tmp.y -= (p.pos.y / rr) * over * 10; }
   }
-  const arena = colla?.helpers.visible ? RING.arena : mulaColla?.helpers.visible ? RING.arenaMula : 0;
+  const arena = arenaNow();
   if (arena) { // the figure's dance ground and its colla (shown only with it, never in photo mode): a soft wall round the centre
-    const rr = p.pos.length() || 1, under = arena - rr;
+    const rr = p.pos.length() || 1, under = arena - rr, sr = p.spot.length();
     if (under > 0) { tmp.x += (p.pos.x / rr) * under * 10; tmp.y += (p.pos.y / rr) * under * 10; }
+    if (sr < arena + 0.3) p.spot.multiplyScalar((arena + 0.3) / (sr || 1)); // nobody's spot to come back to is inside it (nor against it)
   }
   if (!p.away && (p.rest || G.state !== 'play')) p.spot.copy(p.pos); // where they stand (to come back to)
   if (fleeing || p.way) { p.way += ((fleeing ? 1 : 0) - p.way) * (fleeing ? wayIn : wayOut); if (p.way < 1e-5) p.way = 0; } // the flinch (eased)
@@ -247,15 +253,16 @@ function steer(p, dt, beat, live) {
   // footprints (separate() below is the hard limit), and an arm's length more towards her: clapping and cheering
   // hands reach 0.6 m forward, into the shoulders of whoever stands in front.
   const cellX = p.cell % 32, cellZ = Math.floor(p.cell / 32), dm = Math.hypot(dx, dz) || 1;
-  for (let z = Math.max(0, cellZ - 1); z <= Math.min(31, cellZ + 1); z++) {
-    for (let x = Math.max(0, cellX - 1); x <= Math.min(31, cellX + 1); x++) {
+  for (let z = Math.max(0, cellZ - 2); z <= Math.min(31, cellZ + 2); z++) {
+    for (let x = Math.max(0, cellX - 2); x <= Math.min(31, cellX + 2); x++) {
       for (const q of crowdCells[x + z * 32]) {
         if (q === p) continue;
         const sx = p.pos.x - q.pos.x, sz = p.pos.y - q.pos.y, d2 = sx * sx + sz * sz;
-        if (d2 > 2.25 || d2 < 1e-6) continue;
+        if (d2 > 3.24 || d2 < 1e-6) continue;
         const d = Math.sqrt(d2), ahead = Math.max(0, (sx * dx + sz * dz) / (d * dm)); // q between p and her
-        const room = p.rad + q.rad + 0.2 + REACH * ahead;
-        if (d < room) { tmp.x += (sx / d) * (room - d) * 6; tmp.y += (sz / d) * (room - d) * 6; }
+        const presence = Math.min(p.qualityScale ?? 1, q.qualityScale ?? 1);
+        const room = crowdRadius(p) + crowdRadius(q) + (0.2 + REACH * ahead) * presence;
+        if (d < room) { tmp.x += (sx / d) * (room - d) * 6 * presence; tmp.y += (sz / d) * (room - d) * 6 * presence; }
       }
     }
   }
@@ -268,7 +275,8 @@ function steer(p, dt, beat, live) {
     if (p.rest) p.vel.set(0, 0);
   } else { // the menus: brisker, but making way stays eased and capped too
     p.vel.lerp(tmp, fleeing ? ringE : Math.min(1, dt * 8)); p.rest = false;
-    if (fleeing) { const v = p.vel.length(); if (v > fleeSpeed) p.vel.multiplyScalar(fleeSpeed / v); }
+    const cap = fleeing ? fleeSpeed : 1.3, v = p.vel.length();
+    if (v > cap) p.vel.multiplyScalar(cap / v); // neighbour repulsion must not accelerate a menu spectator without a bound
   }
   if (PHOTO.on) culadaKnock(p, dt, dx, dz); else if (p.downT > 0) p.vel.set(0, 0); // (photo mode left mid-fall: they still get up first)
   const r0 = p.pos.length(), oldX=p.pos.x, oldZ=p.pos.y;
@@ -293,6 +301,7 @@ function steer(p, dt, beat, live) {
 // sliding to a stop and falling flat for a moment (PHOTO_SPIN); never in the game. It overrides their own steering until they are up.
 let culadaEh = -9;
 function culadaKnock(p, dt, dx, dz) {
+  if (p.avoidKnock) return; // chairs and cane users keep the normal anticipatory escape, never an impulse or a fall
   const d = Math.hypot(dx, dz) || 1;
   if (PHOTO.culada && (p.knockT ?? 0) <= 0 && d < PHOTO_SPIN.reach + p.rad) {
     const k = PHOTO_SPIN.kick * (0.8 + 0.4 * ((p.ph * 5.3) % 1)) * (1 - 0.5 * d / PHOTO_SPIN.reach), // weaker further out
@@ -327,7 +336,8 @@ function pose(p, dt, beat, live) {
   }
   let dy = face - p.yaw;
   dy -= Math.round(dy / TAU) * TAU;
-  p.yaw += dy * Math.min(1, dt * (3 + 6 * run));
+  const turnLimit = (1.8 + 2 * run) * dt;
+  p.yaw += Math.max(-turnLimit, Math.min(turnLimit, dy * Math.min(1, dt * (3 + 6 * run))));
   const k = p.kid ? 0.72 : 1, stride = (0.42 + 0.33 * run) * k; // one step, metres
   p.step += dir * s * dt * Math.PI / stride; // half a cycle per step
   const amp = Math.asin(Math.min(0.9, stride / (1.56 * k))); // hip swing that covers exactly one stride
@@ -369,7 +379,7 @@ function pose(p, dt, beat, live) {
   // the culada's fall (photo mode): flat on their back at once, up again more slowly
   if (p.downT > 0) p.downT -= dt; // (counted here: it runs every frame, photo mode or not)
   const down = (p.downT ?? 0) > 0.6 ? 1 : 0;
-  if (down || p.fall) { p.fall = (p.fall ?? 0) + (down - (p.fall ?? 0)) * easeIn(dt, down ? 0.12 : 0.35); if (p.fall < 0.01) p.fall = 0; }
+  if (down || p.fall) { p.fall = (p.fall ?? 0) + (down - (p.fall ?? 0)) * easeIn(dt, 0.35); if (p.fall < 0.01) p.fall = 0; }
   p.g.position.set(p.gx, bob + hop + 0.15 * (p.fall || 0), p.gz);
   p.g.rotation.set(-1.45 * (p.fall || 0), p.yaw, 0);
   const lean = 0.12 * (1 - live) + w * dir * (0.05 + 0.22 * run) - 0.14 * p.way; // craning before the start; leaning into the stride; back from her
@@ -401,6 +411,7 @@ function pose(p, dt, beat, live) {
   p.r1 = p.r1 === undefined ? x1 : p.r1 + Math.max(-armMax, Math.min(armMax, x1 - p.r1));
   a0.rotation.x = p.r0; a0.rotation.z = z0;
   a1.rotation.x = p.r1; a1.rotation.z = -p.az;
+  if (p.sootW > 0) sootPose(p); // charred: the pose held at the touch over this live one, eased back into it
 }
 
 // Step 4: everyone who isn't in the ring: the band, the balconies and the backdrop's shader.
@@ -420,7 +431,9 @@ function poseScenery(beat, live) {
   }
 }
 
+let cheerSeen = -9;
 export function animCrowd(dt, beat, t, live = 1) {
+  if (M.cheerT !== cheerSeen) { cheerSeen = M.cheerT; if (G.state === 'play') grooveHit(GROOVE.big); } // her culades, charges, final hit
   if (!PHOTO.on) updatePhotoExtras(dt);
   dt = Math.max(0, dt); // (a clock stepped backwards must not blow up the exponential easing)
   for (const k of usedCells) crowdCells[k].length = 0; // only the cells used last frame, not all 1024
@@ -430,10 +443,15 @@ export function animCrowd(dt, beat, t, live = 1) {
   if (colla?.helpers.visible) for (const b of COLLA_SPOTS) cellPush(crowdCell(b), b); // the Drac's colla too
   if (mulaColla?.helpers.visible) for (const b of MULA_COLLA_SPOTS) cellPush(crowdCell(b), b); // and the Mulassa's
   for (const p of photoExtras) if (!p.band) cellPush(crowdCell(p), p);
+  const backgroundContacts = backdropContacts([plaza.backdrop, midCrowd]);
+  for (const b of backgroundContacts) cellPush(crowdCell(b), b);
   updateMood(dt, t, live);
   for (const p of activeCrowd) steer(p, dt, beat, live);
   separate();
   for (const p of activeCrowd) pose(p, dt, beat, live);
+  settleDrawnCrowd(activeCrowd.filter(p => p.g.scale.x > .05), [...bandSpots, ...backgroundContacts]);
   poseScenery(beat, live);
+  for (const p of plaza.band) if (p.sootW > 0) sootPose(p); // charred (drac-soot.js): the band and the balconies too
+  for (const p of plaza.balcony) if (p.sootW > 0) sootPose(p);
   animateRenderQuality(dt); // apply quality presence after the gameplay presence, without changing its state
 }

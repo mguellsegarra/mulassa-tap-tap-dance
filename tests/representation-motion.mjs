@@ -1,0 +1,56 @@
+import assert from 'node:assert/strict';
+import * as THREE from 'three';
+import { CATALOGUE, buildFigure, disposeFigure } from '../src/dev/representation/models.js';
+import { pose, timeAtDistance, palmLocal } from '../src/dev/representation/pose.js';
+import { crowdMotion, animatePerson } from '../src/dev/representation/live-pose.js';
+import { settleDrawnCrowd } from '../src/scene/crowd-contact.js';
+
+const hand = (p, i) => palmLocal(p, i).applyMatrix4(p.g.matrixWorld);
+let baselineJump = 0, fixedJump = 0, caneError = 0;
+for (const hz of [30, 60, 120]) for (const spec of CATALOGUE) {
+  const p = buildFigure(spec), source = { g: new THREE.Group(), vel: new THREE.Vector2(), ph: 0, spd: 0 };
+  const state = crowdMotion(p, source), previous = [new THREE.Vector3(), new THREE.Vector3()];
+  let havePrevious = false;
+  for (let frame = 0; frame <= hz * 4; frame++) {
+    const t = frame / hz, dt = 1 / hz;
+    const speed = t < 1 ? (frame % 2 ? .041 : .035) : t < 2 ? .7 : t < 3 ? -.7 : 0;
+    source.vel.set(0, speed); source.spd = Math.abs(speed); source.g.position.z += speed * dt;
+    animatePerson(p, source, state, { dt, time: t, clap: t < 3 ? 1 : 0, festa: t >= 3 ? 1 : 0 });
+    p.g.updateMatrixWorld(true);
+    for (const i of [0, 1]) { const h = hand(p, i); if (havePrevious) fixedJump = Math.max(fixedJump, h.distanceTo(previous[i])); previous[i].copy(h); }
+    havePrevious = true;
+    if (p.cane) caneError = Math.max(caneError, Math.abs(p.caneTip.clone().applyMatrix4(p.cane.matrixWorld).y));
+    for (const b of p.bones) assert(b.matrixWorld.elements.every(Number.isFinite), `${spec.id} finite transform`);
+  }
+  const before = p.bones.map(b => b.matrixWorld.toArray());
+  animatePerson(p, source, state, { dt: 0, time: 4, clap: 0, festa: 1 });p.g.updateMatrixWorld(true);
+  assert.deepEqual(p.bones.map(b => b.matrixWorld.toArray()), before, 'a second render at the same time cannot advance the rig');
+  disposeFigure(p);
+}
+// Demonstrate that the old instantaneous gallery-mode switch violates the independent continuity bound.
+{
+ const p = buildFigure(CATALOGUE.find(x => x.id === 'p05'));
+ pose(p, 'moure', timeAtDistance(p, .2));p.g.updateMatrixWorld(true);const a=hand(p,1);
+ pose(p, 'picar', .3);p.g.updateMatrixWorld(true);baselineJump=a.distanceTo(hand(p,1));disposeFigure(p);
+}
+assert(baselineJump>.5,'baseline must reproduce the visible arm teleport');
+assert(fixedJump<.18,`live transitions must not teleport a hand: ${fixedJump} m at >=30 Hz`);
+assert(caneError<.005,`final held cane stays on ground: ${caneError}`);
+{
+ const p=buildFigure(CATALOGUE.find(x=>x.id==='p04'));
+ const source={g:new THREE.Group(),vel:new THREE.Vector2(0,-.5),spd:.5,ph:0};const state=crowdMotion(p,source);
+ source.g.position.z=-.2;animatePerson(p,source,state,{dt:.1,time:1});assert(p.wheels.every(w=>w.rotation.x<0),'rolling backwards reverses both wheels');
+ const first=p.wheels.map(w=>w.rotation.x);source.g.rotation.y=.2;animatePerson(p,source,state,{dt:.1,time:1.1});
+ assert((p.wheels[0].rotation.x-first[0])*(p.wheels[1].rotation.x-first[1])<0,'turning in place drives wheels in opposite directions');
+ disposeFigure(p);
+}
+{
+ const make = x => ({g:new THREE.Group(),rad:.52,yaw:0,fall:0,pos:new THREE.Vector2(x,0)});
+ const a=make(0),b=make(1.1);a.g.position.x=.1;b.g.position.x=.9;
+ assert(a.g.position.distanceTo(b.g.position)<a.rad+b.rad,'baseline eased positions must reproduce the overlap');
+ settleDrawnCrowd([a,b],[]);
+ assert(a.g.position.distanceTo(b.g.position)>=a.rad+b.rad-1e-9,'final drawn footprints must separate');
+ const wall={pos:new THREE.Vector2(0,0),rad:.33,fixed:true};settleDrawnCrowd([a],[wall]);
+ assert(Math.hypot(a.g.position.x,a.g.position.z)>=a.rad+wall.rad-1e-9,'static backdrop must stop the drawn person');
+}
+console.log('representation live motion ok', {baselineJump,fixedJump,caneError});

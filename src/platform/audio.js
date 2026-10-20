@@ -131,7 +131,7 @@ export class Chip {
     return ready;
   }
 
-  resume() { Promise.resolve(this.ctx.resume?.()).catch(() => {}); } // InvalidStateError when the device won't start (another app holds it): the next gesture retries
+  resume() { try { Promise.resolve(this.ctx.resume?.()).catch(() => {}); } catch { /* closed/unavailable context: retry on the next gesture */ } } // InvalidStateError when the device won't start (another app holds it): the next gesture retries
 
   wake() { // iOS: resume + a silent sample inside a real gesture, and play even with the ringer switch off
     if (document.hidden || !document.hasFocus()) return;
@@ -245,6 +245,7 @@ export class Chip {
   // fadeIn is just the click guard; the musical entrance is already in the file.
   menu(on, fadeIn = 0.4) {
     const ctx = this.ctx;
+    if (on && this.menuToken && (this.menuSrc || this.menuPending || this.menuMusic === false)) { this.unlock(); return; }
     this.menuFade();
     if (!on) { this.menuToken = null; this.murmurLevel(); this.beginRun(); return; } // also cancels a loop still loading: it must never start under a game
     this.unlock();
@@ -259,6 +260,7 @@ export class Chip {
       const f = () => { if (ctx.state === 'running') { ctx.removeEventListener('statechange', f); done(); } };
       ctx.addEventListener('statechange', f);
     });
+    this.menuPending = token;
     ambient.then(async buf => {
       if (running) await running;
       if (this.menuToken !== token || this.menuSrc || this.menuMusic === false) return; // menu left, reopened or muted while loading
@@ -272,7 +274,7 @@ export class Chip {
       src.connect(g).connect(this.out);
       src.start(at);
       this.menuSrc = { src, g, t0: at }; // t0: menuBeat()'s origin
-    }).catch(() => { if (this.ambient === ambient) this.ambient = null; });
+    }).catch(() => { if (this.ambient === ambient) this.ambient = null; }).finally(() => { if (this.menuPending === token) this.menuPending = null; });
   }
   // The entrance and loop share a tempo; their combined file length is not the loop's period.
   // (the title logo's TAP TAP DANCE taps along)
@@ -294,7 +296,7 @@ export class Chip {
     this.menuMusic = on;
     this.murmurLevel();
     if (!this.menuToken) return; // not on the menu: the next menu(true) follows the setting
-    if (on) this.menu(true, 0.2); else { this.clearMenuSfx(); this.menuFade(); }
+    if (on) { this.menuPending = null; this.menu(true, 0.2); } else { this.clearMenuSfx(); this.menuFade(); }
   }
 
   // ---------------------------------------------------------------- a run's sounds

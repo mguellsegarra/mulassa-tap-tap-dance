@@ -3,7 +3,9 @@ import { buildMulassa } from '../../../scene/models/mulassa.js';
 import { buildDrac, DRAC_SCALE } from '../../../scene/models/drac.js';
 import { poseDrac } from '../../../scene/drac-motion.js';
 import { poseMulassa } from '../../../scene/mula-pose-rig.js';
-import { makeDance, newPose } from '../../../game/dance.js';
+import { createCarriers } from '../../../scene/mula-carriers.js';
+import { makeMulaDance, newMulaPose } from '../../../game/mula-dance.js';
+import { timeAtBeat } from '../../../core/beat-grid.js';
 import { makeDracDance, newDracPose } from '../../../game/dance-drac.js';
 import { makeDracFeet, newDracFeet } from '../../../game/drac-feet.js';
 
@@ -16,15 +18,15 @@ export function createStage(canvas, song) {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
   renderer.setPixelRatio(Math.min(globalThis.devicePixelRatio || 1, 2));
   renderer.setClearColor('#191b24');
-  const life = new THREE.Group();
-  if (isDrac) { life.scale.setScalar(DRAC_SCALE); rig.feet = newDracFeet(); }
+  const life = new THREE.Group(), carriers = isDrac ? null : createCarriers(), feet8 = Array.from({ length: 8 }, () => ({}));
+  if (isDrac) { life.scale.setScalar(DRAC_SCALE); rig.feet = newDracFeet(); } else rig.root.add(carriers.group);
   life.add(rig.root); scene.add(life);
   scene.add(new THREE.HemisphereLight(0xffefcf, 0x454c66, 2.3));
   const light = new THREE.DirectionalLight(0xffe8cb, 2.8); light.position.set(4, 8, 6); scene.add(light);
   const floor = new THREE.Mesh(new THREE.PlaneGeometry(30, 30), new THREE.MeshStandardMaterial({ color: '#42434a', roughness: 1 }));
   floor.rotation.x = -Math.PI / 2; floor.position.y = -0.005; scene.add(floor);
-  const pose = isDrac ? newDracPose() : newPose();
-  let dance = null, feet = null, disposed = false, lastBeat = 0;
+  const pose = isDrac ? newDracPose() : newMulaPose();
+  let dance = null, feet = null, beats = null, disposed = false, lastBeat = 0;
   function resize() {
     if (disposed) return;
     const width = Math.max(1, canvas.clientWidth || canvas.width || 1), height = Math.max(1, canvas.clientHeight || canvas.height || 1);
@@ -37,14 +39,21 @@ export function createStage(canvas, song) {
   function render(beat) {
     if (disposed) return;
     if (!dance) { renderer.render(scene, camera); return; } // an empty sequence: she stands still
-    lastBeat = beat; dance.pose(pose, beat);
-    if (isDrac) poseDrac(rig, pose, 0, feet); else poseMulassa(rig, pose, beat);
+    lastBeat = beat;
+    if (isDrac) { dance.pose(pose, beat); poseDrac(rig, pose, 0, feet); } else { // the game's dance, on this timeline's own clock (game/mula-dance.js)
+      const t = timeAtBeat(beats, beat);
+      dance.pose(pose, t); poseMulassa(rig, pose, beat, pose.x, pose.z, pose.yaw);
+      for (let i = 0; i < 8; i++) dance.foot(t, i, feet8[i]);
+      carriers.pose(rig, feet8);
+    }
     renderer.render(scene, camera);
   }
   function setTimeline(timeline) {
     if (disposed) return;
-    if (!(timeline.end > 0)) { dance = feet = null; render(lastBeat); return; } // nothing in the sequence yet
-    dance = (isDrac ? makeDracDance : makeDance)(timeline);
+    // nothing in the sequence yet (or, for the Mulassa, no reference anchors to dance her on): she stands still
+    if (!(timeline.end > 0) || (!isDrac && !(timeline.ref?.length >= 2))) { dance = feet = null; render(lastBeat); return; }
+    beats = timeline.beats;
+    dance = isDrac ? makeDracDance(timeline) : makeMulaDance({ beats, arrangement: timeline.arrangement, ref: timeline.ref, refEnd: timeline.refEnd, tail: beats[Math.min(beats.length - 1, timeline.end)] + 2.5 });
     feet = isDrac ? makeDracFeet(dance, timeline.end) : null;
     render(lastBeat);
   }

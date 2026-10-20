@@ -1,7 +1,9 @@
 # Mulassa · Santa Úrsula 2017
 
 Open `/mulassa-compare.html?mute` on this checkout's Vite server. The local media mapping described in
-`../README.md` is required. This is a review prototype, not an integrated game dance.
+`../README.md` is required. Since 2026-10-19 the reconstruction is also the game's dance: see
+[game-integration.md](game-integration.md) (time map, tempo, carriers, colla, adaptations). The comparator's «Joc nou»
+mode (`?mute&modo=joc`) plays the new song and drives the video through the time map.
 
 ## Source and coverage
 
@@ -17,12 +19,14 @@ The 2021 and 2023 Arditproduccions recordings were compared by broad phase in `c
 ## Files and evidence levels
 
 - `choreography.json`: 20 continuous windows covering 0–166.2 s, with plain Catalan actions and evidence limits.
-- `reconstruction.json`: visually fitted unwrapped heading anchors, inferred floor path, sway envelope and two
-  matched-frame tilt corrections. Angles, distances and amplitudes are estimates, not motion capture.
+- `src/game/mula-reconstruction.json` (moved from here unchanged, so the game can read it): visually fitted unwrapped
+  heading anchors, inferred floor path, sway envelope and matched-frame tilt corrections. Angles, distances and
+  amplitudes are estimates, not motion capture.
 - `spatial-frame.json`: camera-relative reconstruction axes and approved rehearsal compass. W is the opening-facing direction; the camera is independent. These are not geographic directions.
 - `audio-pulse.json`: spectral-flux periodicity candidates. Harmonics and subdivisions are ambiguous; these are
   not confirmed beat annotations, a tempo map, transcription or proof of listening.
-- `src/dev/bestiari-compare/`: video-clock transport, reconstruction, actual game-model rendering and overhead.
+- `src/dev/bestiari-compare/`: video-clock transport, the comparison camera and overhead; the reconstruction, shoes
+  and carriers are the game's own modules (`src/game/mula-path.js`, `mula-supports.js`, `src/scene/mula-carriers.js`).
 
 The full source was inspected with a coarse 5 s sheet and dense sheets at 1 s, 0.5 s for the more active passages,
 and 0.25 s around 138–146 s. This supports the broad orientation sequence and the two late reversals. It does
@@ -65,11 +69,10 @@ Marc chose fixed rehearsal marks, simple natural-looking legs, and slightly exag
 
 ## Next validation / integration
 
-Review the matched instants 33, 76, 130, 140.75, 142, 144, 151 and 161.5 s. Confirm direction/order first, then
-body sway, distance/camera, supports and proportions. Keep observed and inferred channels distinct. Musical
-listening and manual beat/phrase annotation remain pending; automatic periodicity alone must not drive a new
-tempo map. Do not port this prototype to the game until those choices are reviewed.
+Marc asked for the integration on 2026-10-19 (`game-integration.md`). Still to review with Marc: the new music by ear
+(no listening sign-off is claimed), the phrase pairing of the time map, the 80% travel and the festive sway. Musical
+listening and manual beat/phrase annotation of the 2017 recording remain pending; automatic periodicity did not drive
+the tempo map (its anchors are dance landmarks on the game's phrases).
 
-Run `node tests/bestiari-research.mjs`, `npm run check`, and `npm run build`. Consult `validation.md` for the
-actual results, browser coverage and remaining limits. Production choreography, source score and music are
-unchanged by this research task.
+Run `node tests/bestiari-research.mjs`, `node tests/mula-dance.mjs`, `npm run check`, and `npm run build`. Consult
+`validation.md` for the actual results, browser coverage and remaining limits.

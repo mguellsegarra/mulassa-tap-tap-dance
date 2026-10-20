@@ -74,7 +74,7 @@ export function buildPerson(o = {}) {
     return a;
   });
   g.scale.setScalar(k);
-  return { g, body, torso, arms, legs };
+  return { g, body, torso, arms, legs, appearance: { skin, hair, shirt, pants } };
 }
 // The whole crowd as ONE skinned mesh (a draw call instead of five per person): every part mesh is baked as built
 // (same boxes, same vertex colours) into a shared geometry whose "bones" are each person's own pivot groups (torso,
@@ -85,6 +85,7 @@ export function skinCrowd(people) {
   const parts = [], bones = [];
   for (const p of people) {
     p.scale = p.g.scale.x; // kids are smaller: the size to restore when shown again
+    p.bone0 = bones.length; // their first bone (the torso): drac-soot.js chars a person's bones
     for (const bone of [p.torso, ...p.legs, ...p.arms]) {
       const k = bones.push(bone) - 1;
       for (const mesh of bone.children.filter(o => o.isMesh)) {

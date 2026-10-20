@@ -14,6 +14,12 @@ export const LOADING_JOKES = [
   'Pujant al campanar a mirar la plaça…', 'Esquivant les caques de gos…',
   'Planxant les estelades…', 'Posant una espelmeta a la Mare de Déu de la Candela…',
   'Posant-li les arracades a l’Alcaldessa…', 'Apartant les paneroles…',
+  "Esperant l'entrepà del Safareig…",
+  "Afinant els cascavells…",
+  "Despertant el Drac…",
+  "Aguantant les façanes del Barri Antic perquè no caiguin…",
+  "Demanant al Basilisc que no em miri així…",
+  "Comptant els dies per les Decennals…",
 ];
 export function mulaSpinner(doc = document, { mini = false } = {}) {
   const s = doc.createElement('span');

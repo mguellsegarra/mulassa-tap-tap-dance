@@ -6,8 +6,7 @@
 import * as THREE from 'three';
 import { HELPERS } from '../game/drac-layout.js';
 import { skinCrowd } from './models/people.js';
-import { buildHelper, poseHelper, buildSeated, poseSeated, HELPER_LOOKS, SEATED_LOOKS, MULA_HELPER_LOOKS, MULA_SEATED_LOOKS } from './models/colla.js';
-import { MULA_HELPERS, MULA_SEATS } from '../game/mula-layout.js';
+import { buildHelper, poseHelper, buildSeated, poseSeated, HELPER_LOOKS, SEATED_LOOKS } from './models/colla.js';
 
 // Where the members sit (Marc: spread round the helpers' ring, not in a heap): on the paving just outside the four helpers
 // (5.1 m out, drac-layout.js), in the three gaps between them that the play camera does not look through (it looks in
@@ -54,7 +53,7 @@ const dracSeat = ([a, r]) => ({ x: Math.cos(a) * r, z: Math.sin(a) * r });
 // clap's energy, eased (a collapse or the end of a run lowers the arms, never at once). run: G's state ({ play, paused,
 // collapsed }); in a run a pause (and its resume count-in) or a collapse freezes them on `frozenBeat`, the beat their
 // figure froze on. (No game state import: the tests provide this module to the bundled game.)
-export function tickColla(c, show, beat, dt, { obstacles, toWorld, frozenBeat, run, labels = false }) {
+export function tickColla(c, show, beat, dt, { obstacles, toWorld, frozenBeat, run, labels = false, cheer = 0 }) {
   c.helpers.visible = show; c.seated.visible = show && c.count > 0;
   if (!show) return;
   if (c.obstaclesFor !== c.count) {
@@ -68,7 +67,7 @@ export function tickColla(c, show, beat, dt, { obstacles, toWorld, frozenBeat, r
   c.setLabels(labels);
   const { play, paused, collapsed } = run, frozen = play && (paused || collapsed);
   if (!(play && paused)) c.energy += ((play && !collapsed ? 1 : 0) - c.energy) * (1 - Math.exp(-Math.max(0, dt) / 0.35));
-  c.update(frozen ? frozenBeat : beat, c.energy);
+  c.update(frozen ? frozenBeat : beat, c.energy, cheer * c.energy);
 }
 export function createColla({ profile, spots = HELPERS, seats = SEATS, seatAt = dracSeat, helperLooks = HELPER_LOOKS, seatedLooks = SEATED_LOOKS, seatedCount = SEATED_COUNT, name = 'colla' }) {
   const helpers = new THREE.Group(), seated = new THREE.Group(), labels = new THREE.Group();
@@ -94,8 +93,8 @@ export function createColla({ profile, spots = HELPERS, seats = SEATS, seatAt = 
   const colla = {
     helpers, seated, labels, crew, members, spots, energy: 0, obstaclesFor: -1,
     get count() { return shown; },
-    update(beat, energy) {
-      for (let i = 0; i < crew.length; i++) poseHelper(crew[i], beat, energy);
+    update(beat, energy, cheer = 0) {
+      for (let i = 0; i < crew.length; i++) poseHelper(crew[i], beat, energy, cheer);
       for (let i = 0; i < shown; i++) poseSeated(members[i], beat, energy, i % 3 === 2);
     },
     seatedCount,
@@ -117,7 +116,3 @@ export function createColla({ profile, spots = HELPERS, seats = SEATS, seatAt = 
   colla.setProfile(profile);
   return colla;
 }
-// The Mulassa's group, on the same bodies and costs: four attendants on her compass marks (game/mula-layout.js, the dance
-// frame: its owner places `helpers` with placeMulaDance) and the seated ring, placed by seatAt in the plaça.
-export const createMulaColla = (profile, seatAt) => createColla({ profile, spots: MULA_HELPERS, seats: MULA_SEATS, seatAt,
-  helperLooks: MULA_HELPER_LOOKS, seatedLooks: MULA_SEATED_LOOKS, name: 'mula-colla' });

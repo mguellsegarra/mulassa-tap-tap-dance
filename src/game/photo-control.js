@@ -18,6 +18,7 @@ export function clearPhotoKeys() {
   PHOTO.speed = 0; PHOTO.air = false; PHOTO.culada = 0; PHOTO.sparks = false;
 }
 export function setPhotoControl(on, id, pair) {
+  PHOTO.epoch = (PHOTO.epoch || 0) + 1;
   const prev = PHOTO.on && on && id && id !== PHOTO.id && photoBody(); // switching figures while driving: keep the view
   PHOTO.on = on; if (on && !prev) PHOTO.cameraYaw = null;
   if (on && id) {
@@ -27,8 +28,9 @@ export function setPhotoControl(on, id, pair) {
   clearPhotoKeys();
 }
 export function photoKey(e, allowed) {
-  const editing = ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target?.tagName) || e.target?.isContentEditable;
-  if (!PHOTO.on || !allowed || editing || e.ctrlKey || e.altKey || e.metaKey) { clearPhotoKeys(); return false; }
+  const interactive = ['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON', 'A', 'SUMMARY'].includes(e.target?.tagName)
+    || e.target?.isContentEditable || e.target?.closest?.('button, a, input, textarea, select, summary, dialog, [role="dialog"], [role="button"], [contenteditable="true"]');
+  if (!PHOTO.on || !allowed || interactive || e.ctrlKey || e.altKey || e.metaKey) { clearPhotoKeys(); return false; }
   if (!['KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyQ', 'KeyE', 'KeyR', 'Tab', 'Space'].includes(e.code)) return false;
   e.preventDefault();
   if (e.code === 'Space') {
@@ -36,9 +38,10 @@ export function photoKey(e, allowed) {
   } else if (e.code === 'KeyR') { // R: half a turn (the Mulassa's culada), always the same way; pressed again mid-turn it carries on round
     if (!e.repeat) photoBody().spinLeft += Math.PI * PHOTO.spinDir;
   } else if (e.code === 'KeyE' && PHOTO.id === 'drac-valls') {
-    if (!e.repeat) { PHOTO.sparks = true; PHOTO.keys.add('KeyE'); } // a burst now, wheels while held (drac-show.js)
+    if (!e.repeat && !PHOTO.keys.has('KeyE')) { PHOTO.sparks = true; PHOTO.keys.add('KeyE'); } // one onset; the held key sustains the effect (drac-show.js)
   } else if (e.code === 'Tab') {
     if (!e.repeat) {
+      PHOTO.epoch = (PHOTO.epoch || 0) + 1;
       clearPhotoKeys();
       const prev = photoBody();
       PHOTO.id = PHOTO.id === 'drac-valls' ? 'mulassa-valls' : 'drac-valls';

@@ -1,7 +1,8 @@
 // The spectators: who stands where, their footprints, and the one skinned mesh that draws them.
 import { rnd, pick, HATS, buildPerson, skinCrowd } from './models.js';
 import * as THREE from 'three';
-import { renderProfile, scene, plaza } from './stage.js';
+import { renderProfile, scene, plaza, colla, mulaColla } from './stage.js';
+import { sootMaterial } from './drac-soot.js';
 
 // The crowd are little agents: they creep closer to watch, and scatter when the mulassa's
 // rear comes sweeping round. Seen in every video of the ball.
@@ -24,12 +25,14 @@ export const RAD = { adult: 0.36, kid: 0.26, rider: 0.4, band: 0.55 }, REACH = 0
 export const RING = { front: 5.4, clear: 3.8, kid: -0.4, jitter: 0.6, row: 0.9, flee: 1.3, gain: 3, ease: 0.3, back: 0.5, home: 0.35, flinch: 0.9, reach: 2.5, bold: 0.85, patience: 3,
   // the Drac's dance travels round the plaça's centre with its four helpers 4.5 m out (game/drac-layout.js): while it is
   // the figure, nobody stands closer to the centre than `arena` m (a soft wall, like the mid band's front): beyond the
-  // colla members sitting round the helpers' ring (drac-colla.js SEATS, ~6 m). The Mulassa's travels further (her
-  // whole song's footprint reaches 5.66 m from its centre, game/mula-layout.js): her seated ring sits at ~6.8 m, so
-  // her ground (`arenaMula`) is wider
-  arena: 7.2, arenaMula: 7.9 };
+  // colla members sitting round the helpers' ring (drac-colla.js SEATS, ~6 m). The Mulassa's (`arenaMula`): her whole
+  // song's footprint reaches 4.98 m from its centre (game/mula-layout.js), her seated ring sits at ~6.1 m
+  arena: 7.2, arenaMula: 6.7 };
+// the dance ground's radius while a figure's colla is out (0: none): crowd.js keeps everyone beyond it
+export const arenaNow = () => (colla?.helpers.visible ? RING.arena : mulaColla?.helpers.visible ? RING.arenaMula : 0);
 export function placeHome(p) {
-  const r = RING.front + p.row * 1.1 + rnd(-0.4, 0.4); // the front row near enough that her turns reach it (RING)
+  // the front row near enough that her turns reach it (RING); with a colla out, from the dance ground's edge
+  const r = Math.max(RING.front + p.row * 1.1 + rnd(-0.4, 0.4), arenaNow() && arenaNow() + 0.3 + p.row * 0.6);
   p.pos.set(Math.cos(p.ang) * r, Math.sin(p.ang) * r);
   p.vel.set(0, 0); p.gx = p.gz = undefined; p.away = false; // (drawn there at once, no easing across)
 }
@@ -59,4 +62,5 @@ for (let row = 0; row < renderProfile.rows; row++) {
 }
 // one draw call for everyone (the band and, at high, the balcony people too); p.g/torso/legs/arms drive each pose
 export const crowdMesh = skinCrowd([...crowd, ...plaza.band, ...plaza.balcony]);
+crowdMesh.material = sootMaterial([...crowd, ...plaza.band, ...plaza.balcony], crowdMesh.skeleton.bones.length); // its own copy of SKIN_MAT: anyone in it can be charred (free mode's fire)
 scene.add(crowdMesh);

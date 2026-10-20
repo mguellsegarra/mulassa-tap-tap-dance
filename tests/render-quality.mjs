@@ -1,5 +1,6 @@
 import './fps.mjs';
 import './photo-control.mjs';
+import { verifyJumpImpact } from './jump-impact.mjs';
 import { v1Song } from './v1-song.mjs';
 import { referenceScore } from '../tools/reference-score.mjs';
 import assert from 'node:assert/strict';
@@ -428,7 +429,7 @@ const context = vm.createContext({
   ...await import('../src/game/dance-drac.js'), ...await import('../src/game/drac-feet.js'), ...await import('../src/scene/drac-motion.js'), ...await import('../src/scene/models/drac.js'),
   // the Drac's revised dance (pure modules, provided like the old one): only the names the inlined scene code uses
   poseAt: (await import('../src/game/drac-pose.js')).poseAt, REF_END: (await import('../src/game/drac-pose.js')).REF_END, feetAt: (await import('../src/game/drac-steps.js')).feetAt,
-  dracTime: (await import('../src/game/drac-time.js')).dracTime, ...await import('../src/game/drac-layout.js'), ...await import('../src/scene/drac-rig.js'), ...await import('../src/scene/drac-colla.js'),
+  dracTime: (await import('../src/game/drac-time.js')).dracTime, ...await import('../src/game/drac-layout.js'), ...await import('../src/scene/drac-rig.js'), ...await import('../src/scene/drac-colla.js'), ...await import('../src/scene/mula-colla.js'),
   ...await import('../src/dev/final-test.js'), ALIAS_KEY: 'leaderboard-alias', DECLINES_KEY: 'publish-declines', // ?final: off here (no hostname)
   errors, errorName, audioFailureTags: (await import('../src/platform/audio.js')).audioFailureTags,
   THREE: { ...THREE, WebGLRenderer: Renderer }, ...await import('../src/scene/crowd-fx.js'), ...models, ...chart, ...progress, ...stars,
@@ -529,6 +530,16 @@ for (const hz of [30, 60, 120]) {
 run('var calmBeforeQuality = CALM.matches; CALM.matches = true; qualityLevel = 2; applyRenderQuality({ transition: true });');
 assert(run('!qualityTransition && retiring.g.scale.x === retiring.scale'), 'reduced motion installs the final profile without scaling animation');
 run('CALM.matches = calmBeforeQuality;');
+run(`qualityLevel = 0; applyRenderQuality(); var emerging = crowd.find(p => !p.g.visible);
+  qualityLevel = 2; applyRenderQuality({ transition: true }); animateRenderQuality(0.1);`);
+assert(run('emerging.g.visible && emerging.qualityScale < 1 && activeCrowd.includes(emerging)'), 'a growing spectator is simulated before reaching full size');
+run('animateRenderQuality(1);');
+run(`qualityLevel = 2; applyRenderQuality(); var bandBeforeMove = plaza.band[0].g.position.clone();
+  qualityLevel = 0; applyRenderQuality({ transition: true });`);
+assert(run('plaza.band[0].g.position.distanceTo(bandBeforeMove) < 1e-9'), 'a quality change cannot teleport the visible band');
+run('animateRenderQuality(0.4); var bandMidMove = plaza.band[0].g.position.clone(); animateRenderQuality(0.4);');
+assert(run('bandMidMove.distanceTo(bandBeforeMove) > 0.1 && plaza.band[0].g.position.distanceTo(bandMidMove) > 0.1'), 'the band travels through an intermediate position');
+
 console.log('quality transitions: continuous presence, bounded retirement, reversal, reduced motion and 30/60/120 Hz ok');
 // Changing shadow support needs new material programs, and a visible downgrade fades before releasing its map.
 run(`qualityLevel = 1; applyRenderQuality();
@@ -810,7 +821,7 @@ console.log('crowd footprints never overlap ok');
   hostSeed(11);
   const r = JSON.parse(run(`(() => {
     seedR = 11;
-    qualityLevel = 2; applyRenderQuality(); crowdNow = 33; startGame(1); G.state = 'play'; G.guapo = 90; // A, her rear to the plaça (A2, beats 84-137)
+    qualityLevel = 2; applyRenderQuality(); crowdNow = 20; startGame(1); G.state = 'play'; G.guapo = 90; // A1's last runs (N, S) into A2's circle: the ring's distance to her stays comparable across the windows (game/mula-figures.js; at 5 s the burst caught her running at the W-side ring); her runs out bring the crowd onto its feet (making way)
     mood.kick = mood.gr1 = mood.gr2 = mood.gr3 = mood.gr4 = 0; G.combo = 0;
     const who = () => activeCrowd.filter(p => p.g.scale.x);
     const pose = p => [p.g.position.x, p.g.position.y, p.g.position.z, p.torso.rotation.x, p.torso.rotation.z, ...p.arms.flatMap(a => [a.rotation.x, a.rotation.z])];
@@ -904,22 +915,24 @@ console.log('crowd footprints never overlap ok');
 
 // Making way (RING): a clear ring of open floor round her all song; when her body or swinging rear comes at someone
 // they step back, eased and capped (no jolts), hands up, then walk slowly back to their spot once she has gone.
-// Her turns (61–79 s: the half turn into C and the livelier ones before the finale), 60 fps, the full crowd, seeded.
+// Her turns (50 s to the pause before the first reversal: game/mula-dance.js maps the reference's rear half turn, big
+// tilts and full turn there), 60 fps, the full crowd, seeded.
 {
   const q0 = run('qualityLevel');
   hostSeed(23);
   const r = JSON.parse(run(`(() => {
     seedR = 23;
-    qualityLevel = 2; applyRenderQuality(); crowdNow = 57; startGame(1); G.state = 'play'; G.guapo = 90; G.combo = 0;
+    qualityLevel = 2; applyRenderQuality(); crowdNow = 46; startGame(1); G.state = 'play'; G.guapo = 90; G.combo = 0;
+    const stop = mulaDance.time.songAtRef(138.6); // she stands, between the full turn and the first reversal
     const ppl = [...activeCrowd], prev = new Map(), out = { minClear: 99, step: 0, dv: 0, rot: 0, made: new Set(), back: 0, frames: 0, calmStep: 0, armRate: 0 };
     const clearOf = p => { const dx = p.pos.x - M.pos.x, dz = p.pos.y - M.pos.y, c = Math.cos(M.yaw), s = Math.sin(M.yaw);
       return Math.hypot(Math.max(0, Math.abs(dx * c - dz * s) - 0.75), Math.max(0, Math.abs(dx * s + dz * c) - 2.3)); };
-    for (let f = 0; crowdNow < 79; f++) {
+    for (let f = 0; crowdNow < stop; f++) {
       const dt = 1 / 60; crowdNow += dt; clock += dt;
       const t = songTime(), beat = beatAt(t);
       G.sec = sectionAt(song, t); G.finale = t >= FINALE_T;
       animMula(dt, beat, 1); framePlayCamera(dt, M.pos.x, M.pos.y); animCrowd(dt, beat, t, 1);
-      if (t < 61) continue;
+      if (t < 50) continue;
       out.frames++;
       for (const p of ppl) {
         out.minClear = Math.min(out.minClear, clearOf(p));
@@ -1646,7 +1659,7 @@ console.log('comparteix integration contracts ok');
       const box = new THREE.Box3().setFromObject(mula.root), size = box.getSize(new THREE.Vector3());
       const a = box.min.clone().project(cam), b = box.max.clone().project(cam), c = box.getCenter(new THREE.Vector3()).project(cam);
       const people = crowd.filter(p => p.g.scale.x > 0 && frustum.containsPoint(p.g.getWorldPosition(new THREE.Vector3()))).length;
-      heroShots.push({ w: this.target?.width, h: this.target?.height, shown, legs: mula.legs.every(l => l.visible), tall: size.y,
+      heroShots.push({ w: this.target?.width, h: this.target?.height, shown, legs: mulaCarriers.group.visible, tall: size.y,
         inView: frustum.containsPoint(box.getCenter(new THREE.Vector3())) && Math.abs(c.x) < 0.6 && Math.abs(c.y) < 0.6,
         height: Math.abs(a.y - b.y) / 2, people });
     } });`);
@@ -2128,29 +2141,30 @@ for (const [perfect, miss, doubled] of [[50, 50, false], [100, 0, true]]) {
 }
 console.log('finale festa for everyone, x2 from 70% ok');
 
-// Dance integration (dance.js + accents): the song's choreography owns the heading, hits only accent it and settle
-// back, taps never pile up, holds release smoothly, misses recover, the practice stays front on and a collapse
-// freezes the song pose. No score, judgement or energy rule depends on any of it.
+// Dance integration (game/mula-dance.js + accents): the song's choreography owns the heading, hits only accent it and
+// settle back, taps never pile up, holds release smoothly, misses recover, the practice holds its opening stance and a
+// collapse freezes the song pose. No score, judgement or energy rule depends on any of it.
 run(`chip = { resume() {}, t0: 0, ctx: { currentTime: 0, suspend() {}, resume() {} }, stop() {}, menu() {}, blip() {}, noiseHit() {},
     sfx() {}, now: () => songNow, start: () => Promise.resolve(false), startClock() {}, tick() {}, countIn() {} };
-  var dp = newPose(), frames = (n, dt = 1 / 60) => { for (let i = 0; i < n; i++) { clock += dt; animMula(dt, beatAt(songNow)); } };
+  var dp = newMulaPose(), dv = new THREE.Vector2(), frames = (n, dt = 1 / 60) => { for (let i = 0; i < n; i++) { clock += dt; animMula(dt, beatAt(songNow)); } };
+  var songYaw = () => danceMula(dp, songTimeAtBeat(beatAt(songNow)), beatAt(songNow), false, dv); // the song's own heading now (no accents)
   function danceAt(diff, x) { startGame(diff); songNow = x; M.missT = -9; frames(90); return { yaw: M.yaw, roll: mula.body.rotation.z, pitch: mula.body.rotation.x, y: mula.root.position.y, x: M.pos.x, z: M.pos.y }; }
   var sameEasy = danceAt(0, BEATS[200] + 0.1), sameHard = danceAt(2, BEATS[200] + 0.1);`);
 assert.deepEqual(run('sameEasy'), run('sameHard'), 'the same dance at the same musical moment on every difficulty');
-run(`startGame(1); songNow = BEATS[100]; M.missT = -9; frames(60); dancePose(dp, beatAt(songNow));`);
-assert(run('Math.abs(M.yaw - FRONT - dp.yaw) < 1e-9 && Math.abs(M.yaw - FRONT - Math.PI) < 0.35'), 'untouched, she follows the song: rear to the plaça in A bars 9-16');
+run(`startGame(1); songNow = BEATS[52]; M.missT = -9; frames(60); var dy = songYaw();`); // (running out to N, her rear three-quarter to the lens)
+assert(run('Math.abs(M.yaw - dy) < 1e-9 && M.pos.distanceTo(dv) < 1e-9'), 'untouched, she follows the song: its heading and its path');
 run(`var y0 = M.yaw, r0 = mula.body.rotation.z; act('L'); frames(8); var leaned = mula.body.rotation.z - r0, turned = Math.abs(M.yaw - y0); frames(120);`);
 assert(run('Math.abs(leaned) > 0.03 && turned < 0.05'), 'a GUA hit leans her without turning her away');
-assert(run('Math.abs(M.yaw - FRONT - dp.yaw) < 1e-3 && Math.abs(S.roll.x) < 1e-3 && M.air === 0'), 'the accent settles back onto the dance');
+assert(run('Math.abs(M.yaw - songYaw()) < 1e-3 && Math.abs(S.roll.x) < 1e-3 && M.air === 0'), 'the accent settles back onto the dance');
 run(`songNow = BEATS[20]; frames(60); var rFront = mula.body.rotation.z; act('L'); frames(8); var guaFront = mula.body.rotation.z - rFront;
-  frames(120); songNow = BEATS[100]; frames(60); var rRear = mula.body.rotation.z; act('L'); frames(8); var guaRear = mula.body.rotation.z - rRear; frames(120);`);
-assert(run('guaFront > 0.03 && guaRear < -0.03'), 'GUA leans to the screen’s left whichever way she faces (her own roll flips)');
+  frames(120); songNow = BEATS[52]; frames(60); var rRear = mula.body.rotation.z; act('L'); frames(8); var guaRear = mula.body.rotation.z - rRear; frames(120);`);
+assert(run('Math.cos(songYaw() - CAM_AZ) < -0.5 && guaFront > 0.03 && guaRear < -0.03'), 'GUA leans to the screen’s left whichever way she faces (her own roll flips; beat 52: running out to N, her rear to the lens)');
 run(`var worst = 0, bl = G.balloons[0]; songNow = bl.t + 0.1; G.next = G.chart.indexOf(bl);
-  for (let i = 0; i < 400; i++) { press(i % 2 ? 'L' : 'R'); frames(1, 1 / 120); dancePose(dp, beatAt(songNow));
-    worst = Math.max(worst, Math.abs(M.yaw - FRONT - dp.yaw) / CAP.yaw, Math.abs(S.roll.x) / CAP.roll, Math.abs(S.pitch.x) / CAP.pitch, M.air / CAP.air); }`);
+  for (let i = 0; i < 400; i++) { press(i % 2 ? 'L' : 'R'); frames(1, 1 / 120);
+    worst = Math.max(worst, Math.abs(M.yaw - songYaw()) / CAP.yaw, Math.abs(S.roll.x) / CAP.roll, Math.abs(S.pitch.x) / CAP.pitch, M.air / CAP.air); }`);
 assert(run('bl.count === 400 && worst <= 1 + 1e-9'), 'mashing a GLOBUS (and its pops) stays within the accent caps');
 run(`frames(180);`);
-assert(run('M.air === 0 && Math.abs(S.roll.x) < 1e-3 && Math.abs(M.yaw - FRONT - dp.yaw) < 1e-3'), 'and settles once the mashing stops');
+assert(run('M.air === 0 && Math.abs(S.roll.x) < 1e-3 && Math.abs(M.yaw - songYaw()) < 1e-3'), 'and settles once the mashing stops');
 run(`startGame(1); var hn = G.chart.find(n => n.end && !n.balloon); songNow = hn.t; frames(30);
   G.hold = { n: hn, got: hn.t, pts: 0, auto: true }; frames(60); var holdNeck = S.neck.x, holdRoll = S.roll.x;
   G.hold = null; frames(4); var justLet = S.neck.x; frames(120);`);
@@ -2158,18 +2172,18 @@ assert(run('holdNeck < -0.1 && Math.abs(holdRoll) > 0.02'), 'a held MANTÉN sust
 assert(run('justLet < -0.05 && Math.abs(S.neck.x) < 1e-3'), 'and releases it smoothly, not in one frame');
 run(`startGame(1); songNow = BEATS[40]; frames(30); var gn = G.chart.find(n => n.big); gn.pts = 0; guapaHit(gn); frames(6); var gAir = M.air, gPitch = S.pitch.x; frames(120);`);
 assert(run('gAir > 0.03 && gAir <= CAP.air && gPitch < 0'), 'a GUAPA lifts her whole front, within the cap');
-run(`stumble('L'); frames(4); var stumbled = S.pitch.x; frames(150); dancePose(dp, beatAt(songNow));`);
-assert(run('stumbled > 0.1 && Math.abs(S.pitch.x) < 1e-3 && Math.abs(M.yaw - FRONT - dp.yaw) < 1e-3'), 'a stumble dips her, then she recovers the song pose');
+run(`stumble('L'); frames(4); var stumbled = S.pitch.x; frames(150);`);
+assert(run('stumbled > 0.1 && Math.abs(S.pitch.x) < 1e-3 && Math.abs(M.yaw - songYaw()) < 1e-3'), 'a stumble dips her, then she recovers the song pose');
 run(`var missNote = G.chart.find(n => !n.big && !n.balloon && !n.end && n.t > songNow + 1); G.next = G.chart.indexOf(missNote);
   songNow = missNote.t - WIN.good - 0.02; G.score = 0; var r0m = S.roll.v, s0 = G.score; press(missNote.input);`);
 run(`startGame(1); songNow = song.finale + 1; G.finale = true; M.air = 0; M.airV = 0; var hopped = false;
-  for (let i = 0; i < 240; i++) { frames(1); hopped ||= M.air > 0; } dancePose(dp, beatAt(songNow));`);
-assert(run('!hopped && Math.abs(M.yaw - FRONT - dp.yaw) < 1e-3'), 'the finale follows the choreography: no random hops or free spinning');
+  for (let i = 0; i < 240; i++) { frames(1); hopped ||= M.air > 0; }`);
+assert(run('!hopped && Math.abs(M.yaw - songYaw()) < 1e-3'), 'the finale follows the choreography: no random hops or free spinning');
 run(`startGame(1); songNow = BEATS[100] + 0.2; frames(30); var beforePause = M.yaw; G.paused = true; frames(30, 0); var paused = M.yaw; G.paused = false;
   startGame(1); songNow = BEATS[100] + 0.2; frames(30); var restarted = M.yaw;`);
 assert(run('beforePause === paused && Math.abs(restarted - beforePause) < 1e-9'), 'pause freezes the pose; a restart lands on the same one');
 run(`startPractice(null); songNow = BEATS[100]; frames(60); var practiceYaw = M.yaw; toTitle();`);
-assert(run('Math.abs(practiceYaw - FRONT) < 0.35'), 'the practice keeps her front on, not in the song’s turns');
+assert(run('Math.abs(practiceYaw - MULA_YAW - MULA_W) < 0.1 && Math.cos(practiceYaw - CAM_AZ) > 0.5'), 'the practice holds her opening stance (W, three-quarter to the lens), not the song’s turns');
 run(`startGame(1); songNow = BEATS[76]; frames(10); collapse(); var fell = M.danceBeat; songNow = BEATS[90]; frames(60);`);
 assert(run('M.danceBeat === fell && Math.abs(mula.root.position.y + 0.42) < 1e-6'), 'a collapse freezes the dance where she fell and sinks her');
 run(`finish('collapse'); var leaving = M.yaw; frames(2);`);
@@ -2179,17 +2193,17 @@ run('toTitle();');
 // head on the floor, legs hidden, the crowd sad, until the next game). Same spot, heading and clock for both.
 run(`var titlePose = () => { const b = mula.body, n = mula.neck, r = v => +v.toFixed(4); return JSON.stringify({ root: mula.root.position.toArray().map(r),
     body: [b.rotation.x, b.rotation.z, b.scale.y].map(r), neck: [n.rotation.x, n.rotation.y].map(r), head: r(mula.head.rotation.x), jaw: r(mula.jaw.rotation.x),
-    ears: mula.ears.map(e => r(e.rotation.x)), legs: mula.legs.map(l => [l.visible, r(l.position.y)]), tail: [mula.tail.rotation.x, mula.tail.rotation.z].map(v => +v.toFixed(2)),
+    ears: mula.ears.map(e => r(e.rotation.x)), legs: mulaCarriers.group.visible, tail: [mula.tail.rotation.x, mula.tail.rotation.z].map(v => +v.toFixed(2)),
     collapseT: G.collapseT, sad: Boolean(clock - M.missT < 1 || G.collapseT), air: M.air, state: G.state }); };
-  var titleAt = () => { Object.assign(M, { yaw: 0, dancing: false }); Object.assign(S.yaw, { x: 0, v: 0, t: 0 }); M.pivot.set(0, PIVOT); clock = 5000;
+  var titleAt = () => { Object.assign(M, { yaw: 0, dancing: false }); Object.assign(S.yaw, { x: 0, v: 0, t: 0 }); M.pos.set(0, 0); M.pivot.set(0, PIVOT); clock = 5000;
     for (let i = 0; i < 120; i++) { clock += 1 / 60; animMula(1 / 60, clock / BEAT); } return titlePose(); };
   startGame(1); songNow = BEATS[40]; frames(30); toTitle(); var fresh = titleAt();
   startGame(1); songNow = BEATS[76]; frames(10); stumble('L'); collapse(); frames(60); finish('collapse'); frames(120); var fallen = JSON.parse(titlePose());
   toTitle(); var stood = titleAt();`);
-assert(run('fallen.root[1] < -0.4 && fallen.legs.every(([v]) => !v) && fallen.sad'), 'the results after a collapse still show her fallen');
+assert(run('fallen.root[1] < -0.4 && !fallen.legs && fallen.sad'), 'the results after a collapse still show her fallen (carriers hidden under her)');
 assert.equal(run('stood'), run('fresh'), 'collapse → menu: her pose and state equal a fresh title');
 run(`startGame(1); songNow = BEATS[76]; frames(10); collapse(); frames(30); finish('collapse'); frames(30); startGame(1); frames(1);`);
-assert(run('G.collapseT === 0 && mula.legs.every(l => l.visible) && mula.root.position.y > -0.1'), `and a new run (Torna-ho a provar) starts her upright ${run('JSON.stringify([G.collapseT, mula.legs.map(l=>l.visible).join(), mula.root.position.y])')}`);
+assert(run('G.collapseT === 0 && mulaCarriers.group.visible && mula.root.position.y > -0.1'), `and a new run (Torna-ho a provar) starts her upright ${run('JSON.stringify([G.collapseT, mulaCarriers.group.visible, mula.root.position.y])')}`);
 run('toTitle();');
 // The splash: the Drac dances beside her and her demo walk never runs into it (head, centre and rear stay clear);
 // after the tap the selector shows her alone, from the first frame.
@@ -2391,6 +2405,17 @@ console.log('frame-rate independence and FPS readout ok');
   run(`unlock = realUnlock; choose = realChoose; G.state = 'title'; buttons = [];`);
 }
 console.log('title camera steering ok');
+// A slow frame (a stall, a shader compile) never throws away a drag: the menu camera takes the current camera over only after another
+// camera ran (cameras.js easeLensX), not after a gap in time.
+{
+  let tt = 300000; const f = ms => run(`performance.now = () => ${tt += ms}; frame(${tt})`);
+  run(`G.state = 'title'; buttons = []; orbitCancel(orbit);`); f(16); f(16);
+  run(`orbitDown(orbit, 9, 100, 100, pnow()); orbitMove(orbit, 9, 160, 100, pnow()); orbitMove(orbit, 9, 260, 100, pnow());`);
+  const held = run('orbit.yaw'); f(16); f(300); f(16);
+  assert(Math.abs(run('orbit.yaw') - held) < 1e-9 && run('orbit.ptrs.size') === 1, `a 300 ms frame keeps the held drag (${held.toFixed(3)} -> ${run('orbit.yaw').toFixed(3)})`);
+  run('orbitCancel(orbit); performance.now = () => 0;');
+}
+console.log('menu camera keeps a drag through a slow frame ok');
 
 // «Mode foto» (#viewmode, title only): every control, tip and the HUD go (inert, the body class fades them), the camera
 // still steers, a tap or a key picks nothing, no sheet opens; Escape, H or the same button bring it all back.
@@ -2755,10 +2780,10 @@ console.log('view mode ok');
   assert(!photoKeyDown('Tab'), 'normal Tab untouched');
   run(`G.state='select'; setView(true); takeFigure(selectedFigure.id); animMula(1/60, clock/BEAT);`);
   photoKeyDown('Tab'); run('animMula(1/60, clock/BEAT);');
-  assert(run("drac.root.visible && !mula.root.visible && selectedFigure.id === 'mulassa-valls'"), 'selector shows temporary Drac without changing selected figure');
+  assert(run("drac.root.visible && mula.root.visible && selectedFigure.id === 'mulassa-valls'"), 'selector keeps both figures while controlling Drac without changing selection');
   photoKeyDown('KeyA', { target: { tagName: 'TEXTAREA' } });
   assert(run('PHOTO.keys.size === 0'), 'text fields never steer');
-  photoKeyDown('Escape'); run('animMula(1/60, clock/BEAT);');
+  photoKeyDown('Escape'); photoKeyDown('Escape'); run('animMula(1/60, clock/BEAT);');
   assert(run('mula.root.visible && !drac.root.visible && song === photoSong && G.diff === photoDiff'), 'exit restores original selector figure and song');
   run(`setView(true); takeFigure(selectedFigure.id); animMula(1/60, clock/BEAT); G.state='play'; updateControls(); animMula(1/60, clock/BEAT);`);
   assert(run('!PHOTO.on && PHOTO.keys.size === 0'), 'game transition clears manual mode');
@@ -2766,7 +2791,110 @@ console.log('view mode ok');
   console.log('photo walking splash/selector, visible switching, blur and play isolation ok');
 }
 
-// Photo mode opens on plain viewing; the desktop bar's frames hand a figure to WASD; touch screens only look.
+// The same scene pair on playable/pending selectors; photo controls never change the game's identity.
+{
+  for (const figure of ['MULASSA', 'DRAC']) for (const pending of [false, true]) {
+    run(`setView(false); G.state='select'; setFigureSong(${figure}); selectScreen.pending=${pending};
+      G.sel=2; G.diff=1; var pairSong=song, pairFigure=selectedFigure, pairCrowd=activeCrowd; activeCrowd=[];
+      animMula(1/60,clock/BEAT); setView(true); animMula(1/60,clock/BEAT);`);
+    assert(run('mula.root.visible && drac.root.visible && PAIR.k === 1'), `${figure}, pending=${pending}: free view shows both existing models`);
+    for (const id of ['drac-valls', 'mulassa-valls', 'drac-valls']) {
+      run(`takeFigure('${id}'); animMula(1/60,clock/BEAT); PHOTO.keys.add('KeyW');
+        for(let i=0;i<12;i++){ clock+=1/60; animMula(1/60,clock/BEAT); }
+        clearPhotoKeys();`);
+      assert(run('mula.root.visible && drac.root.visible'), 'control changes keep both visible');
+      assert(run('song===pairSong && selectedFigure===pairFigure && G.sel===2 && G.diff===1'), 'control never changes selection, song or difficulty');
+      run("takeFigure(''); animMula(1/60,clock/BEAT);");
+      assert(run('!PHOTO.on && PAIR.k===1'), 'Vista lliure keeps the pair');
+    }
+    run('setView(false); frame(clock*1000+17); activeCrowd=pairCrowd;');
+    assert(run('!PHOTO.on && !PHOTO.ready && PAIR.k===0 && song===pairSong && selectedFigure===pairFigure && G.sel===2 && G.diff===1'), 'HUD return restores menu identity and releases control');
+    assert(run(pending ? '!mula.root.visible && !drac.root.visible' : figure === 'DRAC' ? 'drac.root.visible && !mula.root.visible' : 'mula.root.visible && !drac.root.visible'), 'HUD return restores selected or pending visibility');
+    run('selectScreen.pending=false;');
+  }
+  run('setFigureSong(MULASSA);');
+  console.log('selector pair: both playable figures, pending, repeated controls/free view and intact HUD return ok');
+}
+
+// Mouse look while driving (src/ui/mouse-look.js): a held button locks the pointer, the look reads movementX past any
+// edge, and every way out (letting go, the browser's Escape, blur, Tab, a sheet, leaving) unlocks with no stray look.
+// A mock lock: this proves the state machine, not a real hidden cursor (that is the browser QA).
+{
+  const hud = nodes.get('hud'), calls = { lock: 0, exit: 0, capture: [] };
+  let answer = () => Promise.resolve();
+  const change = () => document.listeners.pointerlockchange();
+  hud.requestPointerLock = () => { calls.lock++; return answer(); };
+  hud.setPointerCapture = id => calls.capture.push(id);
+  document.exitPointerLock = () => { calls.exit++; if (document.pointerLockElement) { document.pointerLockElement = null; change(); } };
+  const grant = () => { document.pointerLockElement = hud; change(); };
+  const ev = (more = {}) => ({ pointerId: 7, pointerType: 'mouse', button: 2, buttons: 2, clientX: 5, clientY: 5, movementX: 0, movementY: 0, preventDefault() {}, ...more });
+  const up = (more = {}) => (windowHandlers.pointerup || []).forEach(h => h(ev({ buttons: 0, ...more })));
+  const key = code => { let prevented = false; for (const h of keyHandlers) h({ code, target: { tagName: 'BODY' }, preventDefault() { prevented = true; } }); return prevented; };
+  run(`G.state = 'select'; setFigureSong(MULASSA); setView(false); setView(true); takeFigure('mulassa-valls'); PHOTO.cameraYaw = 0;`);
+  hud.listeners.pointerdown(ev());
+  assert(calls.lock === 1 && calls.capture.length === 0 && run('PHOTO.mouse === 2'), 'a right press asks for the lock, no capture');
+  grant();
+  hud.listeners.pointermove(ev({ buttons: 0, movementX: 190 })); // the lock's first move can jump (Firefox's own also says buttons 0): dropped
+  run('updateControls();');
+  assert(document.pointerLockElement === hud && run('PHOTO.mouse === 2 && PHOTO.cameraYaw === 0'), 'the lock survives its own first move');
+  hud.listeners.pointermove(ev({ buttons: 3 })); assert(run('PHOTO.mouse === 3'), 'both buttons held while locked = run');
+  hud.listeners.pointermove(ev({ buttons: 2 }));
+  for (let i = 0; i < 40; i++) hud.listeners.pointermove(ev({ movementX: 150 })); // clientX stays put while locked
+  assert(run('Math.abs(PHOTO.cameraYaw + 40 * 150 * 0.003) < 1e-9'), 'the look keeps turning on movementX, past where any cursor would stop');
+  up();
+  assert(!document.pointerLockElement && run('PHOTO.mouse === 0 && PHOTO.on'), 'letting go unlocks and ends the look');
+  hud.listeners.pointerdown(ev()); grant();
+  document.pointerLockElement = null; change(); // the browser's Escape
+  assert(run('PHOTO.mouse === 0'), 'a browser unlock ends the drag');
+  assert(key('Escape') && run('PHOTO.on'), 'the Escape that freed the cursor does not also drop the figure');
+  const yaw = run('PHOTO.cameraYaw');
+  hud.listeners.pointermove(ev({ movementX: 80 })); up();
+  assert.equal(run('PHOTO.cameraYaw'), yaw, 'no stray look after a browser unlock, button still down');
+  run('performance.now = () => 1000');
+  hud.listeners.pointerdown(ev()); up(); grant(); // let go before the lock came
+  assert(!document.pointerLockElement, 'a late lock is handed straight back');
+  answer = () => Promise.reject(new Error('refused')); calls.capture.length = 0;
+  hud.listeners.pointerdown(ev()); await Promise.resolve(); await Promise.resolve();
+  assert.deepEqual(calls.capture, [7], 'refused: the old pointer capture while the button is held'); up();
+  answer = () => undefined; calls.capture.length = 0; // Firefox: no promise, an event
+  hud.listeners.pointerdown(ev()); document.listeners.pointerlockerror();
+  assert.deepEqual(calls.capture, [7]); up();
+  answer = () => Promise.resolve();
+  for (const [what, leave] of [['blur', () => windowHandlers.blur.forEach(h => h())], ['Tab', () => key('Tab')],
+    ['a sheet', () => run('settingsMenu.open = true; updateControls(); settingsMenu.open = false;')], ['Escape back to looking', () => run('stopControl(); syncAvatars();')]]) {
+    if (!run('viewMode')) run('setView(true);');
+    if (!run('PHOTO.on')) run("takeFigure('mulassa-valls');");
+    hud.listeners.pointerdown(ev()); grant();
+    leave();
+    run('updateControls();');
+    assert(!document.pointerLockElement && run('PHOTO.mouse === 0'), `${what} unlocks`);
+  }
+  calls.lock = 0; run(`if (!viewMode) setView(true); takeFigure('mulassa-valls');`);
+  hud.listeners.pointerdown(ev({ pointerType: 'touch', button: 0, buttons: 1 })); (windowHandlers.pointerup || []).forEach(h => h(ev({ pointerType: 'touch', buttons: 0 })));
+  assert.equal(calls.lock, 0, 'touch never asks for the lock');
+  run('setView(false); performance.now = () => 0;');
+  delete hud.requestPointerLock; delete hud.setPointerCapture; delete document.exitPointerLock; document.pointerLockElement = null;
+  console.log('photo mouse look: pointer lock while held, every exit unlocks ok');
+}
+
+// Entry follows a playable selector figure; reentry never remembers a different photo actor.
+{
+  const savedEntryFigure = context.selectScreen.figure;
+  for (const figure of ['MULASSA', 'DRAC']) {
+    run(`setView(false); G.state='select'; setFigureSong(${figure}); selectScreen.figure=${figure}; selectScreen.pending=false; setView(true);`);
+    assert(run(`PHOTO.on && PHOTO.id === ${figure}.id && PHOTO.pair`), 'playable entry controls the selector figure');
+    run(`takeFigure('${figure === 'MULASSA' ? 'drac-valls' : 'mulassa-valls'}'); setView(false); setView(true);`);
+    assert(run(`PHOTO.id === ${figure}.id && PHOTO.on`), 'reentry derives the actor from selection');
+    run(`setView(false); selectScreen.pending=true; setView(true);`);
+    assert(run('!PHOTO.on && PHOTO.pair'), 'pending entry only looks, with both beasts');
+  }
+  run('setView(false); selectScreen.pending=false; G.state="splash"; setView(true);');
+  assert(run('!PHOTO.on && PHOTO.pair'), 'splash never invents an actor selection');
+  run('setView(false); setFigureSong(MULASSA);');
+  context.selectScreen.figure = savedEntryFigure;
+}
+
+// Looking exposes an explicit invitation; desktop frames hand a figure to WASD; touch only looks.
 {
   const keyDown = (code, more = {}) => {
     let prevented = false;
@@ -2783,7 +2911,7 @@ console.log('view mode ok');
   context.setTimeout = (fn, ms) => { photoTimers.set(++photoTimerId, { fn, ms }); return photoTimerId; };
   context.clearTimeout = id => photoTimers.delete(id);
   run("takeFigure('drac-valls');");
-  assert(run("PHOTO.on && PHOTO.id === 'drac-valls' && !PHOTO.pair"), 'a frame takes that figure');
+  assert(run("PHOTO.on && PHOTO.id === 'drac-valls' && PHOTO.pair"), 'a frame takes that figure');
   assert(run('!pfTip.hidden && pfTip.dataset.visible === "true" && pfTip.innerHTML.includes("rugeix")'), 'Drac notice describes its real actions');
   assert([...photoTimers.values()].some(t => t.ms === 7000), 'notice stays for seven seconds and can be replayed');
   const firstNoticeTimer = run('pfTipT');
@@ -2796,13 +2924,13 @@ console.log('view mode ok');
   photoTimers.get(run('pfTipT')).fn();
   assert(run('pfTip.dataset.visible === "false" && pfHelp.textContent.includes("guitza")'), 'after fade the accessible help remains');
   keyDown('Tab');
-  assert(run('pfTip.hidden'), 'returning to an already seen figure does not repeat automatic help');
+  assert(run('pfTip.innerHTML.includes("Ara mous el Drac")'), 'returning to an actor gives compact feedback');
   keyDown('Tab');
-  assert(run('pfTip.hidden'), 'each figure remembers its help independently for this visit');
+  assert(run('pfTip.innerHTML.includes("Ara mous la Mulassa")'), 'each switch identifies the actual actor');
   keyDown('Slash', { key: '?' });
   assert(run('pfTip.dataset.visible === "true"'), 'question mark replays help without leaving control');
   keyDown('Tab');
-  assert(run('pfTip.hidden'), 'switching to an already seen figure closes even an open notice');
+  assert(run('!pfTip.innerHTML.includes("pf-help-grid")'), 'switching replaces full help with compact feedback');
   keyDown('Tab'); keyDown('Slash', { key: '?' });
   keyDown('KeyW');
   const usedNoticeTimer = run('pfTipT');
@@ -2812,9 +2940,10 @@ console.log('view mode ok');
   assert(run('pfTip.innerHTML.includes("Mulassa de Valls")'), 'popup uses the catalog full name');
 
   run("takeFigure('mulassa-valls');");
-  assert(run('!PHOTO.on && viewMode'), 'clicking the active frame goes back to viewing');
+  assert(run('PHOTO.on && viewMode'), 'choosing the active figure is idempotent');
   run("takeFigure('drac-valls'); updateControls();");
-  assert(run('pfTip.hidden && !howtoEl.hidden && !howtoEl.inert'), 'after the first notice the existing help button replaces automatic popups');
+  photoTimers.get(run('pfTipT')).fn(); run('updateControls();');
+  assert(run('!howtoEl.hidden && !howtoEl.inert'), 'after feedback fades the existing help button returns');
   run('showPhotoHelp();');
   assert(run('pfTip.dataset.visible === "true" && pfTip.innerHTML.includes("rugeix")'), 'help button reopens the active figure instructions');
   run("takeFigure(''); takeFigure('mulassa-valls');");
@@ -2837,35 +2966,53 @@ console.log('view mode ok');
   assert(run('pfTip.hidden && pfTip.dataset.visible === "false"'), 'touch and exit clear the notice');
   [context.setTimeout, context.clearTimeout] = savedPhotoTimers;
   console.log('photo free view by default, desktop frames, Escape steps back, touch only looks ok');
-  // A pending selection: the plaça is bare on the selector, but photo mode shows the last playable figure.
+  // Pending selection keeps its identity; photo mode shows the two existing playable figures.
   let ft = 90000; const pendFrame = () => run(`frame(${ft += 1000 / 60})`);
   run(`var realSel = sheets.select, pendCrowd = activeCrowd; activeCrowd = []; sheets.select = { pending: true, figure: { id: 'aliga-valls', status: 'aviat' }, visible() {}, sheetOpen: false };
     G.state = 'select'; setView(false); setFigureSong(MULASSA); var pendingSounds = [], pendingChip = chip; chip = { sfx: k => pendingSounds.push(k) };`);
   pendFrame();
   assert(run('!mula.root.visible && !drac.root.visible'), 'pending selector: no model');
   run('setView(true);'); pendFrame();
-  assert(run('mula.root.visible && !drac.root.visible && !avatarsEl.hidden'), 'pending photo mode: the Mulassa stands in, the bar shows');
+  assert(run('mula.root.visible && drac.root.visible && !avatarsEl.hidden'), 'pending photo mode: both figures and the control bar show');
   run("takeFigure('drac-valls');"); pendFrame();
-  assert(run("drac.root.visible && !mula.root.visible && selectedFigure.id === 'mulassa-valls'"), 'driving the Drac never changes the selection');
+  assert(run("drac.root.visible && mula.root.visible && selectedFigure.id === 'mulassa-valls'"), 'driving the Drac never changes the selection');
   run("PHOTO.sparks = true;"); pendFrame(); pendFrame();
   run('setView(false);'); pendFrame();
   assert(run("!mula.root.visible && !drac.root.visible && dracFx.idle && sheets.select.figure.id === 'aliga-valls' && selectedFigure.id === 'mulassa-valls'"), 'leaving: bare again, Drac fx cleared, pending selection kept');
   run('setFigureSong(DRAC); setView(true);'); pendFrame();
-  assert(run('drac.root.visible && !mula.root.visible'), 'the last playable Drac stands in');
+  assert(run('drac.root.visible && mula.root.visible'), 'both figures show with the last playable Drac');
   run('setView(false); setFigureSong(MULASSA);'); pendFrame(); // (a frame closes the photo walk, as the game does)
   assert.equal(run('pendingSounds.length'), 0, 'pending photo controls and figure switches never request SFX');
   run('chip = pendingChip;');
   // A portrait phone: photo mode backs the camera off (same angle) so she fits across, and drops the selector band's shift.
   const sizeWas = [context.innerWidth, context.innerHeight]; context.innerWidth = 393; context.innerHeight = 852;
-  run(`resize(); sheets.select.band = { top: 0, bottom: 200 }; setView(false);`); pendFrame();
+  run(`resize(); sheets.select.band = { top: 0, bottom: 200 }; setView(false); titleC.on = false;`); pendFrame(); // (a fresh follow: earlier tests leave the camera far across the plaça)
   const plainDist = run('orbitHome.dist'), plainPitch = run('orbitHome.pitch');
   run('setView(true);'); pendFrame();
   assert(run('orbitHome.dist') > plainDist * 1.3 && Math.abs(run('orbitHome.pitch') - plainPitch) < 1e-9, 'portrait photo mode: farther, same angle');
-  for (let i = 0; i < 120; i++) pendFrame();
-  assert(Math.abs(run('camShift')) < 1, 'portrait photo mode: centred, not in the hidden selector band');
+  // her whole outline in the middle of the screen (cameras.js frameMenuLens: feet on the fitted floor, room above to rear up), not
+  // in the hidden band (0-200 of 852 css px): her vertices through the pinhole (view space, the fov) plus the lens shift, sampled
+  // over 5 s of her dancing (the shot follows her calmly, never locked on)
+  const offAt = () => run(`camera.updateMatrixWorld(); { let lo = Infinity, hi = -Infinity; const v = new THREE.Vector3(), ppm = HH * K / (2 * Math.tan(camera.fov * Math.PI / 360)); mula.root.traverseVisible(o => { const p = o.isMesh && o.geometry.attributes.position; if (p) for (let i = 0; i < p.count; i++) { v.fromBufferAttribute(p, i).applyMatrix4(o.matrixWorld).applyMatrix4(camera.matrixWorldInverse); const y = -v.y / -v.z * ppm; if (Number.isFinite(y)) { lo = Math.min(lo, y); hi = Math.max(hi, y); } } }); [lo + camShift, hi + camShift]; }`);
+  const offs = []; for (let i = 0; i < 20; i++) { for (let j = 0; j < 15; j++) pendFrame(); offs.push(offAt()); }
+  const meanMid = offs.reduce((a, [t, b]) => a + (t + b) / 2, 0) / offs.length, top = Math.min(...offs.map(o => o[0])), bottom = Math.max(...offs.map(o => o[1]));
+  assert(Math.abs(meanMid) < 0.1 * 852 && top > -0.45 * 852 && bottom < 0.45 * 852, `portrait photo mode: in the middle, not the hidden selector band (mean ${meanMid.toFixed(0)}, ${top.toFixed(0)} to ${bottom.toFixed(0)} css px from the middle)`);
+  // Leaving photo mode: the selector comes back at once, so the camera hands back quickly (cameras.js MENU_T.exit): her feet are back
+  // above the dock within ~1.5 s, not the calm ~4 s that left her behind the cards.
+  const feet = () => run(`camera.updateMatrixWorld(); { let hi = -Infinity; const v = new THREE.Vector3(), ppm = HH * K / (2 * Math.tan(camera.fov * Math.PI / 360));
+    mula.root.traverseVisible(o => { const p = o.isMesh && o.geometry.attributes.position; if (p) for (let i = 0; i < p.count; i++) { v.fromBufferAttribute(p, i).applyMatrix4(o.matrixWorld).applyMatrix4(camera.matrixWorldInverse); const y = -v.y / -v.z * ppm; if (Number.isFinite(y)) hi = Math.max(hi, y); } });
+    hi + camShift + HH * K / 2; }`);
+  context.innerWidth = 1280; context.innerHeight = 800; // a desktop: the band right of the info panel, the dock from 476 down
+  run(`resize(); sheets.select = { pending: false, figure: { id: 'mulassa-valls', status: 'joc' }, visible() {}, sheetOpen: false, band: { top: 66, bottom: 476, hardTop: 66, left: 548, right: 1280 } };`);
+  run('setView(false);'); for (let i = 0; i < 360; i++) pendFrame();
+  const settled = Math.max(...Array.from({ length: 30 }, () => (pendFrame(), feet())));
+  run('setView(true);'); for (let i = 0; i < 240; i++) pendFrame();
+  run('setView(false);');
+  let clear = null; for (let i = 0; i < 300 && clear === null; i++) { pendFrame(); if (feet() <= Math.max(476, settled) + 10) clear = i / 60; }
+  assert(clear !== null && clear < 1.5, `leaving photo mode: her feet are back over the dock in ${clear?.toFixed(2)} s (settled ${settled.toFixed(0)} css px, dock at 476)`);
   [context.innerWidth, context.innerHeight] = sizeWas; run('setView(false); resize();'); pendFrame();
   run('sheets.select = realSel; activeCrowd = pendCrowd;'); // (no crowd: the frames must not move the people later tests place)
-  console.log('pending selection: photo mode shows the last playable figure ok');
+  console.log('pending selection: photo mode shows the pair and preserves the pending identity ok');
 }
 
 // A nearby spectator makes way through the regular RING steering; the walker never tunnels through them.
@@ -2907,11 +3054,23 @@ console.log('view mode ok');
   assert(run('!hit.fall && hit.g.rotation.x === 0 && !(hit.downT > 0)'), 'and gets back up');
   assert(run('Math.abs(Math.abs(Math.atan2(Math.sin(M.yaw),Math.cos(M.yaw)))-Math.PI)<0.05'), 'she ends half round');
   assert(run('hit.knockT<=0 && hit.vel.length()<3.5'), `the flung one slides to a stop, back to their own pace (at most the 3.4 m/s flee): ${run('[hit.knockT, hit.vel.length(), hit.pos.x, hit.pos.y].map(v=>v.toFixed(2))')}`);
+  run(`var previousAvoidKnock=hit.avoidKnock; hit.avoidKnock=true; hit.knockT=0; hit.downT=0; hit.fall=0;
+    hit.vel.set(0.1,0); PHOTO.culada=1; culadaKnock(hit,1/60,1,1);`);
+  assert(run('hit.knockT===0 && hit.downT===0 && hit.fall===0 && hit.vel.x===0.1'), 'an evading mobility variant never receives a throw or a fall, even inside the impact radius');
+  run('hit.avoidKnock=previousAvoidKnock; PHOTO.culada=0;');
   run(`activeCrowd=savedCuladaCrowd; setView(false); animMula(1/60,clock/BEAT);
     setFigureSong(MULASSA); G.state='select'; setView(true); takeFigure('drac-valls'); animMula(1/60,clock/BEAT);
     photoKey({code:'KeyE',preventDefault(){}},true);
     for(let i=0;i<30;i++){clock+=1/60;animMula(1/60,clock/BEAT);dracFrame(1/60,0);}`);
   assert(run('drac.root.visible && !PHOTO.sparks && !dracFx.idle'), 'Drac E sets its sparks going');
+  run(`var fireGaps = 0;
+    for(let i=0;i<360;i++){clock+=1/60;animMula(1/60,clock/BEAT);dracFrame(1/60,0);if(!dracFx.objects.blast.visible)fireGaps++;}`);
+  assert.equal(run('fireGaps'), 0, 'one E keydown sustains the flame every frame beyond the old 1.1 s expiry');
+  run("PHOTO.keys.delete('KeyE'); dracFrame(1/60,0);");
+  assert(run('dracFx.objects.blast.visible && dracFx.state().wheels === 0'), 'keyup stops emission and lets the existing flame fade naturally');
+  run('for(let i=0;i<90;i++)dracFrame(1/60,0);');
+  assert(run('!dracFx.objects.blast.visible'), 'released flame finishes its natural lifetime without restarting');
+
   run("setView(false); animMula(1/60,clock/BEAT); dracFrame(1/60,0);");
   console.log('photo culada flings the crowd; Drac E sparks ok');
 }
@@ -2934,7 +3093,7 @@ console.log('view mode ok');
         if(i/${fps}>0.2 && M.air>0.1){
           airSamples++;
           airBounce=Math.max(airBounce,Math.abs(mula.root.position.y-M.air));
-          airStep=Math.max(airStep,...mula.legs.map(l=>Math.abs(l.position.y)));
+          airStep=Math.max(airStep,...MULA_FEET.map(f=>Math.abs(f.y-M.air))); // the carriers' shoes fly with her, no step in the air
         }
       }
       activeCrowd=jumpCrowd; clearPhotoKeys(); setView(false);`);
@@ -2946,13 +3105,13 @@ console.log('view mode ok');
 
 // Q held: the Mulassa rears up on her rear legs; E held: she kicks her rear up on her front legs. The Drac's Q is a roar.
 {
-  const legY = (front) => run(`mula.legs.filter((l,i)=>(i<4)===${front}).reduce((m,l)=>Math.max(m,Math.abs(mula.root.position.y+l.position.y)),0)`);
+  const legY = (front) => run(`MULA_FEET.filter((f,i)=>(i<4)===${front}).reduce((m,f)=>Math.max(m,f.y),0)`); // the carriers' shoes: 0-3 the front pair's, 4-7 the rear's
   run(`G.state='select'; setFigureSong(MULASSA); M.air=0; M.airV=0; setView(false); setView(true); takeFigure('mulassa-valls'); clearPhotoKeys(); PHOTO.keys.add('KeyQ');
     for(let i=0;i<60;i++){clock+=1/60;animMula(1/60,clock/BEAT,1);}`);
   assert(run('mula.body.rotation.x < -0.35'), 'Q: her front up');
-  assert(legY(false) < 0.12 && run('mula.legs.slice(0,4).every(l=>mula.root.position.y+l.position.y>0.3)'), `on her rear legs, the front ones off the floor (rear ${legY(false).toFixed(2)})`);
+  assert(legY(false) < 0.12 && run('MULA_FEET.slice(0,4).every(f=>f.y>0.3)'), `on her rear legs, the front ones off the floor (rear ${legY(false).toFixed(2)})`);
   run(`PHOTO.keys.delete('KeyQ'); PHOTO.keys.add('KeyE'); for(let i=0;i<60;i++){clock+=1/60;animMula(1/60,clock/BEAT,1);}`);
-  assert(run('mula.body.rotation.x > 0.3 && mula.legs.slice(4).every(l=>mula.root.position.y+l.position.y>0.3)'), 'E: her rear up, its legs off the floor');
+  assert(run('mula.body.rotation.x > 0.3 && MULA_FEET.slice(4).every(f=>f.y>0.3)'), 'E: her rear up, its legs off the floor');
   assert(legY(true) < 0.12, `on her front legs (${legY(true).toFixed(2)})`);
   run(`clearPhotoKeys(); for(let i=0;i<90;i++){clock+=1/60;animMula(1/60,clock/BEAT,1);}`);
   assert(run('Math.abs(mula.body.rotation.x) < 0.05'), 'let go: back on all fours');
@@ -3081,6 +3240,8 @@ console.log('view mode ok');
   assert.equal(run('returningSounds.length'), 0, 'even a pending demo burst consumed after focus returns cannot request sound');
   console.log('background demo time and pending effect lifecycle ok');
 }
+
+verifyJumpImpact(run, assert);
 
 {
   const savedTimer = context.setTimeout, timers = [];

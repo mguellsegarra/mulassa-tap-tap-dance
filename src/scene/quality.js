@@ -81,6 +81,7 @@ export function animateRenderQuality(dt) {
   qualityTransition.elapsed += Math.max(0, dt);
   const t = Math.min(1, qualityTransition.elapsed / QUALITY_FADE), k = t * t * (3 - 2 * t);
   for (const write of qualityTransition.items) write(k);
+  refreshQualityCrowd(); // emerging people must already move while small, rather than snapping into place at full size
   if (t < 1) return;
   qualityTransition = null;
   qualityShadowMap(renderProfile.shadow);
@@ -104,8 +105,14 @@ export function applyRenderQuality({ transition = false } = {}) {
   crowdMesh.castShadow = qualityLevel === 2; crowdMesh.receiveShadow = false;
   plaza.balcony.forEach((p, i) => qualityScaleTo(p.g.scale.x, i < renderProfile.balconies ? 1 : 0, value => p.g.scale.setScalar(value)));
   const bandScales = plaza.band.map(p => p.g.scale.x);
+  const bandPositions = plaza.band.map(p => ({ position: p.g.position.clone(), yaw: p.g.rotation.y }));
   placeBand(plaza.band, renderProfile.band, BAND_AZ);
-  plaza.band.forEach((p, i) => qualityScaleTo(bandScales[i], i < renderProfile.band ? 1 : 0, value => p.g.scale.setScalar(value)));
+  plaza.band.forEach((p, i) => {
+    const previous = bandPositions[i], target = p.g.position.clone();
+    const turn = Math.atan2(Math.sin(p.g.rotation.y - previous.yaw), Math.cos(p.g.rotation.y - previous.yaw));
+    qualityScaleTo(0, 1, k => { p.g.position.lerpVectors(previous.position, target, k); p.g.rotation.y = previous.yaw + turn * k; });
+    qualityScaleTo(bandScales[i], i < renderProfile.band ? 1 : 0, value => p.g.scale.setScalar(value));
+  });
   qualityStaticCrowd(plaza.backdrop, renderProfile.backdrop);
   qualityStaticCrowd(midCrowd, renderProfile.mid);
   for (const c of [colla, mulaColla]) if (c) { // both figures' seated members (one colla is out at a time)

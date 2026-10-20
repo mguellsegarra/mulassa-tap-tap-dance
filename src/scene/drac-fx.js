@@ -46,7 +46,8 @@ function dfxGlowTexture(pow, hard = 1) { // a white disc, alpha falling off (no 
 // SMOKE: kinds of puff [life s, start size m, end size m, alpha, rise m/s, r, g, b]
 const PUFF = { crema: [1.9, 0.6, 2.4, 0.65, 1.1, 0.2, 0.19, 0.19], jet: [1.6, 0.3, 1.1, 0.3, 0.45, 0.7, 0.69, 0.67], // the fireball's dark smoke; a jet's white
   flare: [7, 1.2, 7, 0.7, -0.22, 0.6, 0.07, 0.05], // a bengala's smoke, a rosy red (linear RGB); soft alpha edges still reveal the crowd as it spreads and fades
-  tro: [2, 0.7, 2.8, 0.8, 0.7, 0.24, 0.22, 0.21], petard: [1.2, 0.3, 1.2, 0.7, 0.6, 0.33, 0.31, 0.3] };
+  tro: [2, 0.7, 2.8, 0.8, 0.7, 0.24, 0.22, 0.21], petard: [1.2, 0.3, 1.2, 0.7, 0.6, 0.33, 0.31, 0.3],
+  soot: [1.8, 0.25, 0.95, 0.7, 0.5, 0.09, 0.085, 0.08] }; // a wisp off a charred head (drac-soot.js)
 const DRAG = 2.5; // how fast a puff's own push dies (1/s)
 const WHEEL_PAL = [1, 0.78, 0.2, 0.9, 0.1, 0]; // the wheels' sparks, hot to cool: gold, through orange, to red
 const SP = { drag: 1.6, g: 7 }; // their air drag (1/s) and gravity (m/s²)
@@ -171,7 +172,7 @@ export function createDracFx(scene, opts = {}) {
   function spinWheels(dt, s) {
     wcap = Math.min(WE, s.wmax ?? WE);
     WH.age += dt;
-    WH.on = F.t < WH.until && wcap > 0 && !!nodes;
+    WH.on = (s.on && s.held || F.t < WH.until) && wcap > 0 && !!nodes;
     if (!WH.on) { wEmit.fill(0); return; }
     WH.n = Math.min(nodes.length, wcap >= 96 ? 5 : 2); // (the fire list starts with the two mouths)
     WH.rate = wcap * 0.85 / (WH.n * (DRAC_FX.wheelLife + DRAC_FX.wheelLife2 / 2)); // per wheel: the pool about full with every wheel going
@@ -181,11 +182,11 @@ export function createDracFx(scene, opts = {}) {
       wEmit[i] += WH.rate * dt;
       if (wEmit[i] < 1) continue;
       nozzle(i); WP.copy(P).addScaledVector(D, 0.12); // just off the nozzle, where it is this frame
-      while (wEmit[i] >= 1) { wEmit[i] -= 1; wheelSpark(i, wEmit[i] / WH.rate); }
+      while (wEmit[i] >= 1) { wEmit[i] -= 1; wheelSpark(i); } // (its age is read inside: a double argument per spark is a heap number)
     }
   }
-  function wheelSpark(i, back) { // a spark off arm (cnt % arms) of wheel i, emitted `back` s ago (where the arm was then)
-    const e = (WH.cur = (WH.cur + 1) % wcap), b = ++WH.cnt + 7777, dir = i % 2 ? -1 : 1, R = DRAC_FX.wheelR;
+  function wheelSpark(i) { // a spark off arm (cnt % arms) of wheel i, emitted `back` s ago (where the arm was then)
+    const back = wEmit[i] / WH.rate, e = (WH.cur = (WH.cur + 1) % wcap), b = ++WH.cnt + 7777, dir = i % 2 ? -1 : 1, R = DRAC_FX.wheelR;
     const a = dir * (WH.age - back) * DRAC_FX.wheelSpin + (b % DRAC_FX.wheelArms) * 6.2832 / DRAC_FX.wheelArms + i * 1.3, c = Math.cos(a), sn = Math.sin(a);
     const v = DRAC_FX.wheelSpeed * (0.85 + 0.3 * dfxHash(b)), out = 0.25 * dfxHash(b + 0.3), tw = (dfxHash(b + 0.6) - 0.5) * 0.8; // along the circle, a little outwards, a little to/from the lens
     const tu = -sn * dir * v + c * out, tv = c * dir * v + sn * out; // its speed in the wheel's own (right, up) plane
@@ -209,7 +210,7 @@ export function createDracFx(scene, opts = {}) {
     if (nodes) {
       tips ??= nodes.map(f => { const b = f.children[0]; return b.position.z + b.geometry.parameters.depth / 2; }); // (once)
       sizes ??= nodes.map(f => f.userData.size); // (once)
-      const jet = Math.max(F.streak, F.lit * DRAC_FX.tracaJet);
+      const jet = Math.max(F.streak, F.lit * DRAC_FX.tracaJet, on && s.held ? 1 : 0);
       F.level = 0;
       for (let i = 0; i < nodes.length && i < 5; i++) {
         nozzle(i);
@@ -221,7 +222,7 @@ export function createDracFx(scene, opts = {}) {
       }
     } else F.level = 0;
     fire.cap(s.jmax ?? 1e9);
-    fire.update(dt, F.t, nodes ? EM : null, s.viewH);
+    fire.update(dt, F.t, nodes ? EM : null, s.viewH, on && !!s.held);
     // the last pass: red smoke rising from the floor all over the plaça, more and more. s.flare: a level 0..1 to follow
     // (the song's own crescendo, flareLevel), or true / false: build up / thin out over flareRamp s
     const want = s.flare === true ? 1 : +s.flare || 0;
@@ -313,6 +314,8 @@ export function createDracFx(scene, opts = {}) {
     jets: fire.live(), born: fire.born(), flamarada: fire.age, kick: [...kick], flashes: flash.map(f => f.visible), puffs: puffs.filter(p => p.live).map(p => [p.x, p.y, p.z, p.age]),
     wsparks: [...EAGE].map((a, i) => [EX[i], EY[i], EZ[i], a]).filter((p, i) => EAGE[i] < ELIFE[i]) }); // tests only
   return { crema, pump, finish, begin, end, wheels, update, warm, clear, state, get tracaOn() { return T.on; },
+    get nozzles() { return nodes ? EM : null; }, // this frame's fire points (world): drac-soot.js reads the held fire's volume
+    soot: (x, y, z) => puff(PUFF.soot, x, y, z, 0, 0.15, 0),
     get flare() { return F.flare; }, // the last pass's red mist, 0..1 (drac-show.js thickens the plaça's fog with it)
     clearHaze() { F.flare = hazeOwed = 0; for (const p of puffs) if (p.k === PUFF.flare) p.live = false; }, // back on a menu: gone at once
     get idle() { return !liveN && !liveW && F.t >= WH.until && !F.flare && !F.streak && !F.lit && fire.idle && !kick.some(k => k > 0) && fAge.every((a, i) => a >= fLife[i]); },

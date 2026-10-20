@@ -190,6 +190,11 @@ kbd { display: inline-block; min-width: 14px; padding: 0 4px; border: 1px solid 
 #skip { position: fixed; z-index: 3; top: calc(28px + env(safe-area-inset-top)); left: calc(10px + env(safe-area-inset-left)); height: 44px; padding: 0 12px 0 16px; gap: 4px; font-size: 16px; letter-spacing: .04em; }
 #skip svg { width: 18px; height: 18px; }
 @media (max-width: 519px), (max-height: 519px) { #skip { top: calc(18px + env(safe-area-inset-top)); } }
+/* Match the HUD's scale and centre (10px + 20 * K), keeping phones' 44px target. */
+@media (min-width: 520px) and (min-height: 520px) {
+  #skip { top: calc(10px + 12px * var(--ui, 1) + env(safe-area-inset-top)); height: calc(56px * var(--ui, 1)); padding: 0 calc(16px * var(--ui, 1)) 0 calc(20px * var(--ui, 1)); gap: calc(8px * var(--ui, 1)); font-size: calc(22px * var(--ui, 1)); }
+  #skip svg { width: calc(26px * var(--ui, 1)); height: calc(26px * var(--ui, 1)); }
+}
 /* sync calibration sheet: intro (why + what to do) → run (3-2-1, metronome) → result; data-state picks the section */
 #sync-menu { width: min(380px, calc(100vw - 32px)); padding: 18px 20px 12px; text-align: center; }
 #sync-menu h2 { font-size: 28px; margin-bottom: 10px; }

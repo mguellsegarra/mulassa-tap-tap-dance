@@ -15,37 +15,33 @@ export function createMulaTime(song, need) {
   if (!(n >= 2)) throw new RangeError('song.ref needs two anchors');
   for (let i = 1; i < n; i++) if (!(R[i][0] > R[i - 1][0] && R[i][1] > R[i - 1][1])) throw new RangeError('song.ref must rise');
   const r0 = R[0][1], r1 = R[n - 1][1], s0 = R[0][0], s1 = R[n - 1][0];
-  // cumulative need over the reference, smoothed over ±0.5 s so its own jitter never reaches the rate
-  const count = Math.ceil((r1 - r0) / STEP_REF) + 1, raw = new Float64Array(count), cum = new Float64Array(count);
-  for (let i = 0; i < count; i++) raw[i] = need(r0 + i * STEP_REF);
-  const half = Math.round(0.5 / STEP_REF);
-  for (let i = 1; i < count; i++) {
-    let sum = 0, k = 0;
-    for (let j = Math.max(0, i - half); j <= Math.min(count - 1, i + half); j++, k++) sum += raw[j];
-    cum[i] = cum[i - 1] + sum / k * STEP_REF;
-  }
+  // cumulative need over the reference, smoothed over ±0.5 s so its own jitter never reaches the rate (prefix sums)
+  const count = Math.ceil((r1 - r0) / STEP_REF) + 1, raw = new Float64Array(count + 1), cum = new Float64Array(count);
+  for (let i = 0; i < count; i++) raw[i + 1] = raw[i] + need(r0 + i * STEP_REF);
+  const half = Math.round(0.5 / STEP_REF), mean = i => { const a = Math.max(0, i - half), z = Math.min(count - 1, i + half); return (raw[z + 1] - raw[a]) / (z - a + 1); };
+  for (let i = 1; i < count; i++) cum[i] = cum[i - 1] + mean(i) * STEP_REF;
   const cumAt = r => { const x = Math.max(0, Math.min(count - 1, (r - r0) / STEP_REF)), i = Math.min(count - 2, Math.floor(x)); return cum[i] + (cum[i + 1] - cum[i]) * (x - i); };
-  // song second -> reference second, piecewise: inside each anchor pair the song time follows the cumulative need
+  // song second -> reference second, piecewise: inside each anchor pair the song time follows the cumulative need.
+  // Asked in rising order, so one forward walk over the cumulative table inverts it.
   const N = R.map(([, r]) => cumAt(r));
+  let k = 0, j = 0;
   function piecewise(s) {
     if (s <= s0) return r0;
     if (s >= s1) return r1;
-    let k = 0;
     while (R[k + 1][0] < s) k++;
     const goal = N[k] + (N[k + 1] - N[k]) * (s - R[k][0]) / (R[k + 1][0] - R[k][0]);
-    let lo = R[k][1], hi = R[k + 1][1];
-    for (let i = 0; i < 48; i++) { const m = (lo + hi) / 2; if (cumAt(m) < goal) lo = m; else hi = m; }
-    return (lo + hi) / 2;
+    while (j < count - 2 && cum[j + 1] < goal) j++;
+    const r = r0 + (j + (goal - cum[j]) / ((cum[j + 1] - cum[j]) || 1)) * STEP_REF;
+    return Math.min(R[k + 1][1], Math.max(R[k][1], r));
   }
   // the table, from EASE before the first anchor to EASE after the last, eased by a moving average in song time
   // (a monotone map stays monotone; the ends stay put because the map is flat beyond them)
   const t0 = s0 - EASE - STEP_SONG, size = Math.ceil((s1 + EASE - t0) / STEP_SONG) + 2, w = Math.round(EASE / STEP_SONG);
-  const sharp = new Float64Array(size + 2 * w), table = new Float64Array(size);
-  for (let i = 0; i < sharp.length; i++) sharp[i] = piecewise(t0 + (i - w) * STEP_SONG);
+  const sharp = new Float64Array(size + 2 * w + 1), table = new Float64Array(size);
+  for (let i = 0; i < size + 2 * w; i++) sharp[i + 1] = sharp[i] + piecewise(t0 + (i - w) * STEP_SONG);
   for (let i = 0; i < size; i++) {
-    let sum = 0;
-    for (let j = 0; j <= 2 * w; j++) sum += sharp[i + j];
-    table[i] = sum / (2 * w + 1);
+    const avg = (sharp[i + 2 * w + 1] - sharp[i]) / (2 * w + 1);
+    table[i] = Math.min(r1, Math.max(i ? table[i - 1] : r0, avg)); // (rounding never steps it back)
   }
   const refAt = t => {
     const x = (t - t0) / STEP_SONG;

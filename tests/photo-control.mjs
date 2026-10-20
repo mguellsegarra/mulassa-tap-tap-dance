@@ -10,6 +10,12 @@ setPhotoControl(true);
 assert.equal(press('KeyW', { target: { tagName: 'TEXTAREA' } }).taken, false);
 assert.equal(press('Tab', {}, false).taken, false);
 assert.equal(press('KeyW', { ctrlKey: true }).taken, false);
+for (const tagName of ['BUTTON', 'A', 'SUMMARY', 'INPUT', 'TEXTAREA', 'SELECT']) {
+  const actor = PHOTO.id;
+  assert.equal(press('Tab', { target: { tagName } }).prevented, false, `${tagName}: native focus navigation`);
+  assert.equal(press('Space', { target: { tagName } }).taken, false, `${tagName}: native activation`);
+  assert.equal(PHOTO.id, actor, 'focus navigation never changes actor');
+}
 const travel = (fps, diagonal = false) => {
   clearPhotoKeys(); PHOTO.id = 'mulassa-valls';
   Object.assign(photoBody(), { x: 0, z: 0, yaw: 0, vx: 0, vz: 0 });

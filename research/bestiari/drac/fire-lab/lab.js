@@ -172,7 +172,11 @@ function countFragments(mode) { // mode 1: fragments written (after the cutout),
   for (const o of fireObjects) {
     const m = o.material;
     if (m.uniforms?.uCount) swap.set(o, { m, keep: { blending: m.blending, blendSrc: m.blendSrc, blendDst: m.blendDst, blendEquation: m.blendEquation, depthWrite: m.depthWrite, transparent: m.transparent } }), m.uniforms.uCount.value = mode, sum(m);
-    else swap.set(o, { m }), o.material = sum(counter);
+    else if (m.isShaderMaterial) { // the game's own shaders: same vertex stage, the fragment stage counts (mode 2 before any cutout, mode 1 what is written)
+      const c = m.clone(); c.uniforms = m.uniforms;
+      c.fragmentShader = mode === 2 ? m.fragmentShader.replace(/void main\(\) \{/, 'void main() { gl_FragColor = vec4(1.0 / 255.0); return;') : m.fragmentShader.replace('#include <colorspace_fragment>', 'gl_FragColor = vec4(1.0 / 255.0);');
+      swap.set(o, { m, temp: c }); o.material = sum(c);
+    } else swap.set(o, { m }), o.material = sum(counter);
   }
   const vis = fireObjects.map(o => o.visible);
   fireObjects.forEach(o => (o.visible = false));
@@ -187,7 +191,7 @@ function countFragments(mode) { // mode 1: fragments written (after the cutout),
   const px = new Uint8Array(w * h * 4);
   renderer.readRenderTargetPixels(rt, 0, 0, w, h, px);
   renderer.setRenderTarget(null); rt.dispose();
-  for (const [o, s] of swap) { if (s.keep) { s.m.uniforms.uCount.value = 0; Object.assign(s.m, s.keep); } else o.material = s.m; }
+  for (const [o, s] of swap) { if (s.keep) { s.m.uniforms.uCount.value = 0; Object.assign(s.m, s.keep); } else { o.material = s.m; s.temp?.dispose(); } }
   let frags = 0, covered = 0, maxLayer = 0;
   for (let i = 0; i < px.length; i += 4) { const c = px[i]; if (c) { frags += c; covered++; if (c > maxLayer) maxLayer = c; } }
   return { frags, covered, maxLayer, screen: w * h };
@@ -206,7 +210,7 @@ function counters() {
   for (const o of fireObjects) for (const a of Object.values(o.geometry.attributes).concat(o.geometry.index ? [o.geometry.index] : [])) if (!seen.has(a)) { seen.add(a); bytes += a.array.byteLength; }
   return { fireCalls: on.calls - off.calls, fireTris: on.tris - off.tris, totalCalls: on.calls, totalTris: on.tris, written, shaded,
     overdraw: written.covered ? +(written.frags / written.covered).toFixed(2) : 0, shadedPerCovered: written.covered ? +(shaded.frags / written.covered).toFixed(2) : 0,
-    particles: variant ? variant.live(S.t) : 0, pool: variant?.pool?.n ?? 0, bufferKB: +(bytes / 1024).toFixed(1), programs: info.programs.length };
+    particles: variant ? variant.live(S.t) : fx.state().jets, pool: variant?.pool?.n ?? profile.jets, bufferKB: +(bytes / 1024).toFixed(1), programs: info.programs.length };
 }
 const stat = (a, n) => { const v = Array.from(a.slice(0, Math.min(n, RING))).sort((x, y) => x - y); if (!v.length) return null; const m = v.reduce((s, x) => s + x, 0) / v.length; return { mean: +m.toFixed(3), p50: +v[v.length >> 1].toFixed(3), p95: +v[Math.floor(v.length * 0.95)].toFixed(3), max: +v.at(-1).toFixed(3), n: v.length }; };
 window.lab = {

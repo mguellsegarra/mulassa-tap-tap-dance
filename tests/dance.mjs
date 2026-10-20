@@ -2,6 +2,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { ARRANGEMENT, END_BEAT, DANCE_SIZE, dancePose, practicePose, newPose } from '../src/game/dance.js';
+import { beatAtTime } from '../src/core/beat-grid.js';
 
 const read = p => JSON.parse(readFileSync(new URL(p, import.meta.url)));
 const song = read('../src/song.json'), arr = read('../music/taiko-arrangement.json');
@@ -10,10 +11,12 @@ const song = read('../src/song.json'), arr = read('../music/taiko-arrangement.js
 assert.deepEqual(arr.sections.filter(([b]) => b >= 12), ARRANGEMENT, 'cues follow the arrangement sections');
 assert.equal(arr.end_beat, END_BEAT, 'the final hit is the arrangement end');
 assert.equal(arr.bpm, song.bpm, 'arrangement and song share the tempo');
-// Beat <-> song time: beat i is song.beats[i] = offset + i * 60 / bpm (the sync offset is applied before, in songTime).
-const spb = 60 / song.bpm;
-song.beats.forEach((t, i) => assert(Math.abs(t - (arr.offset + i * spb)) < 2e-3, `beat ${i} on the constant grid`));
-const beatOf = t => (t - song.beats[0]) / spb;
+// Beat <-> song time: beat i is song.beats[i], the generated grid (its tempo changes phrase by phrase; the sync offset
+// is applied before, in songTime). This beat choreography now only poses the share photo's still; the game
+// dances the reference-led one (game/mula-dance.js, tests/mula-dance.mjs).
+assert.equal(song.beats[0], arr.offset, 'the grid starts at the arrangement offset');
+song.beats.forEach((t, i) => i && assert(t > song.beats[i - 1], `beat ${i} after beat ${i - 1}`));
+const beatOf = t => beatAtTime(song.beats, t);
 const near = (a, b, e = 1e-3) => Math.abs(a - b) < e;
 for (const [t, k] of song.sections) assert(ARRANGEMENT.some(([b]) => near(beatOf(t), b)) || near(beatOf(t), 0), `song section ${k} at a cue`);
 assert(near(beatOf(song.finale), 208) && near(beatOf(song.end), END_BEAT), 'finale and final hit on their cues');

@@ -4,6 +4,7 @@ import { PHOTO, photoBody } from '../game/photo-control.js';
 import { plaza } from './stage.js';
 import { activeCrowd, bandSpots, midCrowd } from './quality.js';
 import { photoClearance } from './photo-collision.js';
+import { sootFrozen } from './drac-soot.js';
 export const photoExtras = [];
 let photoBandSource = null;
 const photoMatrix = new THREE.Matrix4(), photoAway = new THREE.Vector2();
@@ -60,6 +61,7 @@ export function updatePhotoExtras(dt) {
   if(!photoExtras.length) return;
   const h=Math.min(dt,0.05), ease=1-Math.exp(-h/0.18);
   for(const p of photoExtras) {
+    if(sootFrozen(p.band??p)){p.vx=p.vz=0;continue;} // charred stiff (drac-soot.js): rooted to the spot
     let tx=0,tz=0;
     if(PHOTO.on) {
       photoEscape(p.pos.x,p.pos.y,photoAway);

@@ -14,10 +14,12 @@ import { press, settleHold, eventAt, releaseAll } from '../game/judge.js';
 import { padButtons, haptic, padFeedback, syncPad } from './pad.js';
 import { hud, buttonAt, W, K } from '../hud/canvas.js';
 import { orbit, pnow } from '../scene/cameras.js';
+import { lookDown, lookUp, lookSkip, lookEscape, lookLocked } from './mouse-look.js';
 
 for (const ev of ['touchend', 'click', 'keydown']) addEventListener(ev, () => { if (!G.paused && pageActive()) chip?.wake(); }, { passive: true });
 addEventListener('keydown', e => {
-  if (photoKey(e, viewMode && menuState() && !sheetUp())) { syncAvatars(); return; } // (Tab may have switched figures)
+  if (e.code === 'Escape' && lookEscape()) { e.preventDefault(); return; } // it freed the mouse look, nothing more
+  if (photoKey(e, viewMode && menuState() && !G.paused && pageActive() && !sheetUp() && (e.target === hud || e.target?.tagName === 'BODY'))) { syncAvatars(); return; } // only the world owns actor shortcuts; controls keep native keys
   if (e.repeat || sheets.sync.open || privacyMenu.open || sheets.board.open || sheets.share.open || sheets.feedback.open || sheets.watch?.open) return; // «Bústia de la plaça» is typed into; the sync sheet takes its own keys; Privadesa is read, not played; Classificacions types an alias; Comparteix has its own buttons
   if (G.state === 'play' && e.code === 'Escape') {
     if (!pauseMenu.open) { e.preventDefault(); togglePause(); }
@@ -59,16 +61,17 @@ function padDown(b, e) {
 padButtons.forEach(b => b.addEventListener('pointerdown', e => padDown(b, e)));
 // letting go: keys, pad fingers, or the window losing focus (which also pauses)
 const letGo = e => { if (G.state === 'play' && !G.paused) settleHold(songTime(eventAt(e))); }; // let go when it happened, like press()
-addEventListener('keyup', e => { PHOTO.keys.delete(e.code); if (down.keys.delete(e.code)) letGo(e); });
+addEventListener('keyup', e => { PHOTO.keys.delete(e.code); if (e.code === 'KeyE') PHOTO.sparks = false; if (down.keys.delete(e.code)) letGo(e); });
 for (const ev of ['pointerup', 'pointercancel']) addEventListener(ev, e => { if (down.ptr.delete(e.pointerId)) { syncPad(); letGo(e); } });
 addEventListener('blur', releaseAll);
 addEventListener('blur', clearPhotoKeys);
-addEventListener('visibilitychange', clearPhotoKeys);
+document.addEventListener('visibilitychange', clearPhotoKeys);
+addEventListener('pagehide', clearPhotoKeys);
 addEventListener('focusin', e => { if (e.target?.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target?.tagName)) clearPhotoKeys(); });
 hud.addEventListener('pointermove', e => {
   if (PHOTO.on && e.pointerType === 'mouse' && PHOTO.mouse) {
-    PHOTO.mouse = e.buttons & 3;
-    if (PHOTO.mouse) photoLook(e.movementX || 0, e.movementY || 0);
+    PHOTO.mouse = e.buttons & 3 || (lookLocked() ? PHOTO.mouse : 0); // (both held = run; locked, Firefox's own move on locking says 0: pointerup ends it)
+    if (PHOTO.mouse && !lookSkip()) photoLook(e.movementX || 0, e.movementY || 0);
     return;
   }
   if (PHOTO.on && e.pointerType !== 'mouse' && orbit.ptrs.size === 1) {
@@ -79,9 +82,10 @@ hud.addEventListener('pointermove', e => {
   worldMove(e); orbitMove(orbit, e.pointerId, e.clientX, e.clientY, pnow());
   if(PHOTO.on && orbit.pinch && oldZoom>0)photoZoom(orbit.x[1]/oldZoom); }); // dragging the view
 hud.addEventListener('pointerdown', e => {
+  if (viewMode && e.pointerType === 'mouse') hud.focus({ preventScroll: true });
   if (PHOTO.on && e.pointerType === 'mouse' && (e.button === 0 || e.button === 2)) {
     e.preventDefault(); PHOTO.mouse = e.buttons & 3; // (holding the right button turns her after the view: movePhoto)
-    try { hud.setPointerCapture?.(e.pointerId); } catch { /* pointer already released */ }
+    lookDown(e);
     return;
   }
   worldDown(e);
@@ -98,7 +102,7 @@ hud.addEventListener('pointerdown', e => {
 });
 hud.addEventListener('lostpointercapture', () => { PHOTO.mouse=0; });
 hud.addEventListener('contextmenu', e => { if (PHOTO.on) e.preventDefault(); });
-for (const ev of ['pointerup', 'pointercancel']) addEventListener(ev, e => { if (e.pointerType === 'mouse') PHOTO.mouse &= ev === 'pointercancel' ? 0 : e.buttons & 3; });
+for (const ev of ['pointerup', 'pointercancel']) addEventListener(ev, e => { if (e.pointerType === 'mouse') { PHOTO.mouse &= ev === 'pointercancel' ? 0 : e.buttons & 3; lookUp(e); } });
 for (const ev of ['pointerup', 'pointercancel']) addEventListener(ev, e => { orbitUp(orbit, e.pointerId, pnow()); });
 hud.addEventListener('wheel', e => { // the wheel, and a trackpad pinch (ctrlKey: never the page zoom over the canvas)
   if (!steers()) return;

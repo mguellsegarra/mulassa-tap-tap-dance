@@ -60,6 +60,11 @@ function clearLanding(target, i, group, planted) {
   }
   return false;
 }
+// keeps p within r (m) of c on the floor
+function within(p, c, r) {
+  const dx = p.x - c.x, dz = p.z - c.z, d = Math.hypot(dx, dz);
+  if (d > r) { p.x = c.x + dx * r / d; p.z = c.z + dz * r / d; }
+}
 // a swing from `from` to `to` at u (0-1): lift first, move above the standing shoes, then land; zero speed at both ends
 function mulaSwingAt(from, to, u, out, lift = 1) {
   const travel = ease(Math.max(0, Math.min(1, (u - .15) / .7)));
@@ -117,9 +122,15 @@ export function planSupports(poseAt, end = 166.2, start = 0) {
 // shell's pose this frame ({x, z, yaw, roll, pitch}, world) and fills `feet`; it plans each step from the shell's
 // measured speed and lands the shoe a little ahead of it, so a walk reads as walking. lift 0-1 scales the step height
 // (reduced motion). place(feet) restarts from given shoes (the song's last ones), reset() from the next pose.
+// Past `reach` m from under its carrier a planted shoe steps at once, even with the other group still in the air (a
+// running carrier's flight); it is never left farther than `hold` (the song's own planted shoes reach ~0.47 m). A shell
+// that moves `teleport` m in one update (Tab, back to Vista lliure) gets its shoes planted under it again. Every update
+// runs in `sub` s steps along the shell's move, so the cadence is the same at 30, 60 or 120 fps. Even the culada (9 rad/s)
+// is stepped round: turning the shoes with the shell skated them.
+export const MULA_LIVE = { reach: .3, hold: .5, teleport: 1, sub: 1 / 120 };
 export function createStepper() {
   const feet = SUPPORT_LAYOUT.map(() => ({ x: 0, z: 0, yaw: 0, y: 0, contact: true }));
-  const swings = SUPPORT_LAYOUT.map(() => ({ on: false, t0: 0, dur: 0, from: { x: 0, z: 0, yaw: 0 }, to: { x: 0, z: 0, yaw: 0 } }));
+  const swings = SUPPORT_LAYOUT.map(() => ({ on: false, t0: 0, dur: 0, extra: 0, from: { x: 0, z: 0, yaw: 0 }, to: { x: 0, z: 0, yaw: 0 } }));
   const planted = SUPPORT_LAYOUT.map(() => ({ x: 0, z: 0, yaw: 0 })), last = { x: 0, z: 0, yaw: 0 }, guess = {}, sample = {};
   let time = 0, freeAt = 0, next = 0, ready = false, vx = 0, vz = 0, w = 0;
   function reset() { ready = false; }
@@ -127,12 +138,28 @@ export function createStepper() {
     for (let i = 0; i < 8; i++) { Object.assign(feet[i], from[i]); feet[i].y = 0; feet[i].contact = true; planted[i].x = from[i].x; planted[i].z = from[i].z; planted[i].yaw = from[i].yaw; swings[i].on = false; }
     ready = 'placed';
   }
+  const start = { x: 0, z: 0, yaw: 0 }, at = { x: 0, z: 0, yaw: 0, roll: 0, pitch: 0 };
   function update(dt, pose, lift = 1) {
     if (!(dt >= 0)) dt = 0;
+    if (ready === true && Math.hypot(pose.x - last.x, pose.z - last.z) > MULA_LIVE.teleport) ready = false;
+    if (ready === 'placed') for (let i = 0; i < 8 && ready; i++) { // shoes handed over from somewhere else (stale: she was hidden)
+      nominalFoot(pose, i, sample);
+      if (Math.hypot(feet[i].x - sample.x, feet[i].z - sample.z) > MULA_LIVE.teleport) ready = false;
+    }
     if (ready !== true) {
       if (!ready) for (let i = 0; i < 8; i++) { nominalFoot(pose, i, planted[i]); Object.assign(feet[i], planted[i]); feet[i].y = 0; feet[i].contact = true; swings[i].on = false; }
       last.x = pose.x; last.z = pose.z; last.yaw = pose.yaw; vx = vz = w = 0; ready = true;
     }
+    const n = Math.max(1, Math.ceil(dt / MULA_LIVE.sub - 1e-9));
+    start.x = last.x; start.z = last.z; start.yaw = last.yaw; at.roll = pose.roll; at.pitch = pose.pitch;
+    for (let k = 1; k <= n; k++) {
+      const u = k / n;
+      at.x = start.x + (pose.x - start.x) * u; at.z = start.z + (pose.z - start.z) * u; at.yaw = start.yaw + (pose.yaw - start.yaw) * u;
+      advance(dt / n, at, lift);
+    }
+    return feet;
+  }
+  function advance(dt, pose, lift) {
     time += dt;
     if (dt > 0) { // the shell's velocity, eased over ~0.1 s (a frame's jitter must not throw the shoes about)
       const k = 1 - Math.exp(-dt / .1);
@@ -144,30 +171,44 @@ export function createStepper() {
       const s = swings[i];
       if (!s.on) continue;
       const u = Math.min(1, (time - s.t0) / s.dur);
+      if (u < 1) aim(s, i, pose, s.t0 + s.dur - time); // re-aimed as she goes: a turn that stops must not land it a metre off
       mulaSwingAt(s.from, s.to, u, feet[i], lift);
+      nominalFoot(pose, i, sample); within(feet[i], sample, MULA_LIVE.hold); // in the air too: never trailing on a stretched cuff
       if (u >= 1) { s.on = false; feet[i].y = 0; feet[i].contact = true; Object.assign(planted[i], s.to); } else swinging = true;
     }
-    if (swinging || time < freeAt) return feet;
-    let needed = false;
+    let far = -1, farthest = MULA_LIVE.reach;
+    for (let i = 0; i < 8; i++) {
+      if (swings[i].on) continue;
+      nominalFoot(pose, i, sample);
+      const d = Math.hypot(sample.x - planted[i].x, sample.z - planted[i].z);
+      if (d > MULA_LIVE.hold) { within(planted[i], sample, MULA_LIVE.hold); feet[i].x = planted[i].x; feet[i].z = planted[i].z; } // outrun: dragged at the limit
+      if (d > farthest) { farthest = d; far = i % 2; }
+    }
+    if (far >= 0) next = far;
+    else if (swinging || time < freeAt) return;
+    let needed = far >= 0;
     for (let i = 0; i < 8 && !needed; i++) {
       nominalFoot(pose, i, sample);
       if (Math.hypot(sample.x - planted[i].x, sample.z - planted[i].z) > MULA_STEP.drift || Math.abs(sample.yaw - planted[i].yaw) > MULA_STEP.turn) needed = true;
     }
-    if (!needed) return feet;
+    if (!needed) return;
     const speed = Math.hypot(vx, vz), duration = swingTime(Math.abs(w), speed);
     // land where the shell will be, plus half a step's worth of travel when moving: the body passes over the shoe
-    const lead = duration + (speed > .2 || Math.abs(w) > .3 ? .5 * (duration + MULA_STEP.gap) : 0);
-    guess.x = pose.x + vx * lead; guess.z = pose.z + vz * lead; guess.yaw = pose.yaw + w * lead; guess.roll = pose.roll; guess.pitch = pose.pitch;
+    const extra = speed > .2 || Math.abs(w) > .3 ? .5 * (duration + MULA_STEP.gap) : 0;
     for (let i = next; i < 8; i += 2) {
       const s = swings[i];
-      nominalFoot(guess, i, s.to);
-      if (!clearLanding(s.to, i, next, planted)) { nominalFoot(guess, i, s.to); } // crowded: land on the nominal spot anyway
       s.from.x = planted[i].x; s.from.z = planted[i].z; s.from.yaw = planted[i].yaw;
-      s.on = true; s.t0 = time; s.dur = duration;
+      s.on = true; s.t0 = time; s.dur = duration; s.extra = extra;
+      aim(s, i, pose, duration);
       feet[i].contact = false;
     }
     freeAt = time + duration + MULA_STEP.gap; next = 1 - next;
-    return feet;
+  }
+  function aim(s, i, pose, left) {
+    const lead = left + s.extra;
+    guess.x = pose.x + vx * lead; guess.z = pose.z + vz * lead; guess.yaw = pose.yaw + w * lead; guess.roll = pose.roll; guess.pitch = pose.pitch;
+    nominalFoot(guess, i, s.to);
+    if (!clearLanding(s.to, i, i % 2, planted)) nominalFoot(guess, i, s.to); // crowded: land on the nominal spot anyway
   }
   return { feet, update, reset, place };
 }

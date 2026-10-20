@@ -150,3 +150,35 @@ just after 89 s, complete camera-target fade at 121 s, and numeric/rendered evid
   source choreography annotations or foot solver changes in this correction.
 - LAN URL returned HTTP 200. Existing Vite PID 26476 on port 5188 belongs to this
   worktree and remains running. No new server, commit, push or deployment.
+
+## Game integration — 2026-10-19
+
+See `game-integration.md` for what changed and what is adaptation. Local only: no commit, push or deployment.
+Evidence (outside Git): `Mulassa/revisio-2026-10-19/game-integration/` (`audio/`, `clips/`, `shots/`, perf, hashes).
+
+- `npm run check`: one uninterrupted pass, exit 0, including the new `tests/mula-dance.mjs` and the ported
+  `tests/bestiari-research.mjs` (it now checks the game's own carriers: cuff vertices inside the cloth at 240 Hz, cuffs
+  attached to rigid shoes, no shoe intersection). `npm run build`: exit 0, the existing large-chunk warning only; the
+  comparator and research data stay out of `dist/`.
+- New regressions, each seen failing on a controlled mutation or a real defect: time-map rounding (it caught a
+  non-monotone table end, fixed), culada shoe carry (1.50 m behind without it), cuff containment (a widened clamp).
+  `tests/mula-dance.mjs` also checks the observed order on the song (W sway, half turn W→S→E, E sway, back through N,
+  the two reversals at C, 3.9 final turns, the settle), 30/60/120 Hz smoothness across the tempo ramps, leans on the
+  beat grid, seek determinism, planted shoes, live stepping at 0–9 m/s, attendants and seated clearance, the camera
+  between W and S.
+- Production modules reproduce the accepted prototype exactly (pose 1e-16, planned shoes 4e-16) before the game layer.
+- Scores: same judgments per level (108/128/235 notes; server counts 108/133/240), reference scores, ceilings and
+  extras limits identical to `mulassa-v2-short` (the drumrolls keep their old length for this); no DB change.
+- Audio: only `mulassa-taiko-short.mp3`, `.wav` and `.mid` changed; Drac files, the menu loop and the legacy MP3 are
+  byte-identical (`hashes-*.txt`). Strong low onsets of the new file sit on its own beat grid (median −4 to −7 ms per
+  section, 90% within 10 ms; analysis window 93 ms): `audio/analisi-temporal.txt`. NOT listened to by the agent.
+- Browser (headless Chromium, SwiftShader, `?mute`): game at 375×667, 393×852 (touch emulation), 1024×768, 1366×1024,
+  1280×800; a phone in landscape gets the existing «gira el mòbil» card. Free viewer: walk, gallop, turn, stop, Q, E,
+  jump, culada; Drac selected and played (its own colla only). Comparator «Joc nou»: twelve critical reference
+  moments seeked through the map (video at exactly the mapped second), and live playback windows. No page errors.
+- Performance (AGENTS tablet benchmark, CPU ×4, software GL so the minimal tier): HEAD 23.7 fps / JS 4.4 ms vs now
+  25.1 fps / JS 4.1 ms, 20 draw calls both (noise level). Building the dance at load: ~57 ms on this Mac (the time
+  map's prefix sums cut it from 79 ms); in dev mode on the throttled tablet the module stage starts ~0.5 s later.
+  Not measured on a physical phone or tablet.
+- Live comparator playback can lag the map by a few tenths of a second where the video must run at >3× (headless
+  decode); it re-seeks on drift and lands exactly when paused.

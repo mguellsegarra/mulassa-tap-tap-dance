@@ -4,23 +4,23 @@ import './platform/polyfills.js';
 import { PHOTO } from './game/photo-control.js';
 import { errors } from './services/errors.js';
 import * as THREE from 'three';
-import { song, figureScale } from './game/figure-song.js';
+import { song, figureScale, selectedFigure } from './game/figure-song.js';
+import { DRAC } from './game/figures.js';
 import { frameMonitor } from './platform/render-quality.js';
 import { waitForWarmup, linkPrograms } from './platform/boot.js';
 import { sectionAt } from './game/chart.js';
 import { judgedCount } from './game/progress.js';
 import { markLeaderboardDebugUse } from './services/leaderboard-result.js';
-import { blocks, smoothDamp } from './scene/framing.js';
-import { ORBIT, orbitCancel, orbitStep, roomAlong } from './scene/orbit.js';
+import { blocks } from './scene/framing.js';
+import { orbitCancel } from './scene/orbit.js';
 import { rnd } from './scene/models.js';
 import { setupCamEdit } from './dev/cam-edit.js';
 import { setupSizesEdit } from './dev/sizes-edit.js';
 import { Q, COARSE, pageActive, beatAt, BEAT, offsetMs, playFrom, FINALE_T, AUTOPLAY, CALM, FINAL, STARS } from './core/env.js';
 import { pace, RAWCLOCK, viewClock } from './core/timing.js';
-import { initDrac, mula, drac, colla, mulaColla, qualityLevel, renderProfile, softwareGl, GPU, renderer, camera, CAM_AZ, FRONT, plaza, cameraTarget, camFocus, camFocusTarget, camShift, camXYZ, focusXYZ, scene, setQualityLevel, setCamShift, renderScreen } from './scene/stage.js';
+import { initDrac, mula, drac, colla, mulaColla, qualityLevel, renderProfile, softwareGl, GPU, renderer, camera, plaza, cameraTarget, camFocus, camFocusTarget, camShift, camShiftX, camXYZ, focusXYZ, scene, setQualityLevel, setCamShift, renderScreen } from './scene/stage.js';
 import { afterActive, G, chip, clock, songTime, drawT, bigPending, audioEngine, setClock, setDrawT } from './game/state.js';
 import { audioFailureTags } from './platform/audio.js';
-import { TAU } from './core/anim.js';
 import { spawnConfetti, burst, animConfetti, setConfettiSettled } from './scene/confetti.js';
 import { applyRenderQuality, activeCrowd } from './scene/quality.js';
 import { resize, hud, HH, K, sizedW, sizedDpr, appHeight, baseFov, W, H, SAFE } from './hud/canvas.js';
@@ -30,7 +30,7 @@ import { titleL, fontsReady, warmups } from './hud/sprites.js';
 import { figTheme } from './game/figure-theme.js';
 import './hud/primitives.js';
 import { balloonView, balloonFx, setBalloonView } from './hud/balloon.js';
-import { M, trauma, act, animMula, setTrauma, PAIR } from './scene/mula-motion.js';
+import { M, trauma, act, animMula, setTrauma, resetMotionImpact, PAIR } from './scene/mula-motion.js';
 import { lane, playBottom, padEl } from './hud/layout.js';
 import { bubbles, bubble, at } from './hud/bubbles.js';
 import { animCrowd } from './scene/crowd.js';
@@ -43,7 +43,7 @@ import { splashS } from './hud/title.js';
 import './hud/warm.js';
 import './hud/banner.js';
 import './hud/results.js';
-import { titleC, titleS, TITLE_FOLLOW, orbitHome, TITLE_SWAY, DRIFT, orbit, pnow, insidePlaza, framePlayCamera, CAMS } from './scene/cameras.js';
+import { orbit, insidePlaza, framePlayCamera, CAMS, frameMenuCamera, lens, easeLensX, clearCameraImpact, applyCameraImpact } from './scene/cameras.js';
 import { PERF, perfSample } from './dev/perf.js';
 import { heroCam, heroQuadMake, renderHero } from './scene/share-capture.js';
 import { autoplay, advance, collapse, judge, press } from './game/judge.js';
@@ -75,7 +75,7 @@ errors.context(() => ({ state: G.state, diff: G.diff, practice: !!G.practice, pa
 
 // ------------------------------------------------------------------ loop
 let last = performance.now();
-const resetFrameTime = () => { last = null; };
+const resetFrameTime = () => { last = null; clearCameraImpact(); resetMotionImpact(); };
 for (const event of ['blur', 'focus', 'pagehide', 'pageshow']) addEventListener(event, resetFrameTime);
 document.addEventListener('visibilitychange', resetFrameTime);
 
@@ -99,6 +99,7 @@ function frame(now) {
   if (G.state === 'play' && !G.paused && chip?.t0 != null && chip.ctx.state !== 'running' && pageActive()) { audioStallT ??= now; if (now - audioStallT > 1000) { audioStallT = null; pauseGame(); } } else audioStallT = null;
   if (!pace(now, G.state === 'play')) return; // 120 Hz screens that can't keep up: every other refresh (framePacer); never back up to 120 mid-song
   const f0 = PERF && performance.now();
+  clearCameraImpact();
   monitorFrames(now - last, G.state === 'play' && !G.paused); // 60 fps budget, or 30 for a steady cap; hitches count only in play
   fpsTick(now);
   const frameS = (now - last) / 1000, dt = G.paused ? 0 : Math.min(0.05, frameS); // frameS: real seconds since the last drawn frame
@@ -154,7 +155,7 @@ function frame(now) {
   }
   if (PHOTO.on && !steers()) setView(false);
   animMula(dt, beat, live);
-  // a pending selection hides both models, except in «mode foto»: the last playable one stands in (the selection is untouched)
+  // a pending selection hides both models; photo mode shows the existing pair without changing selection
   if (G.state === 'select' && !viewMode && (sheets.select?.pending ?? sheets.select?.figure?.status === 'aviat')) { mula.root.visible = false; drac.root.visible = false; for (const c of [colla, mulaColla]) c.helpers.visible = c.seated.visible = false; } // (the collas with them)
   const c0 = PERF && performance.now();
   animCrowd(dt, beat, vt, live);
@@ -166,7 +167,7 @@ function frame(now) {
 
   // camera: during play the mulassa sits near the lane, in the free stage above the pad or
   // the bottom edge, with the crowd around her. A lens shift (view offset) puts her there without tilting the view.
-  const pk = PHOTO.on ? (PHOTO.pair && PHOTO.id === 'drac-valls' ? 1 : 0) : G.state === 'splash' ? 0.5 * PAIR.k : 0; // the splash frames both figures; the selector follows its selected figure
+  const pk = PHOTO.on ? (PHOTO.pair && PHOTO.id === 'drac-valls' ? 1 : 0) : 0.5 * PAIR.k; // free viewing frames the pair; driving follows its controlled figure
   const mx = G.state === 'play' ? M.pos.x : (M.pivot.x * 0.5 + M.pos.x * 0.5) * (1 - pk) + PAIR.x * pk, mz = G.state === 'play' ? M.pos.y : (M.pivot.y * 0.5 + M.pos.y * 0.5) * (1 - pk) + PAIR.z * pk, far = camera.aspect < 1 ? 1.4 : 1; // play follows the body; the menu follows her pivot
   const VIEW = { side: [9, 2.2, 0], front: [0, 2.5, 8], back: [-3, 3, -8], top: [4, 9, 6] }[Q.get('view')];
   if (!PHOTO.on) releasePhotoCamera();
@@ -174,37 +175,18 @@ function frame(now) {
   if (PHOTO.on && !VIEW) { framePhotoCamera(dt); } else if (VIEW) {
     camera.position.set(mx + VIEW[0], VIEW[1], mz + VIEW[2]);
     camera.lookAt(mx, 1.4, mz);
-  } else if (G.state === 'title' || G.state === 'splash' || G.state === 'select') {
-    // orbits her, not the middle: wandering about she'd otherwise pass right in front of the lens, huge. The player
-    // may steer it (src/scene/orbit.js: its limits keep it inside the square and above the crowd); left alone it orbits.
-    // «mode foto» on a narrow screen: back off (same angle) until ~7 m fit across, or her 4 m body barely fits
-    const fit = viewMode ? Math.max(1, 3.5 / (Math.tan(camera.fov * Math.PI / 360) * camera.aspect) / 11) : 1;
-    const homeH = ORBIT.focusY + (4.2 * far - ORBIT.focusY) * fit, homeD = 11 * fit; // one shot for every figure, so their sizes compare; plaza level, in among the crowd (the old high wide shot showed mostly bare floor)
-    // her sway and steps never shake the shot: it drifts after her on a critically damped spring (like the play camera; a first-order
-    // filter changes velocity the instant she does, which read as a jerk on every hop)
-    if (!titleC.on) { titleS.x[0] = mx; titleS.x[1] = mz; titleS.v.fill(0); }
-    titleC.x = smoothDamp(titleS, 0, mx, TITLE_FOLLOW, dt); titleC.z = smoothDamp(titleS, 1, mz, TITLE_FOLLOW, dt); titleC.on = true;
-    const cx = titleC.x, cz = titleC.z;
-    orbitHome.pitch = Math.atan2(homeH - ORBIT.focusY, homeD); orbitHome.dist = Math.hypot(homeD, homeH - ORBIT.focusY);
-    // The idle azimuth is the play camera's own (CAM_AZ: no swoop across the plaça when a game starts), swaying slowly and turning
-    // a little with her, like the play camera; the player's drag/flick still steers, and after a few idle seconds it eases back.
-    { const br = CALM.matches ? 0 : 1, T = clock * TAU;
-      orbitHome.yaw = CAM_AZ + br * TITLE_SWAY * (0.65 * Math.sin(T / DRIFT.tAz) + 0.35 * Math.sin(T / DRIFT.tAz2 + 1.3)) + DRIFT.follow * Math.sin(M.yaw - FRONT); }
-    if (orbit.fresh) orbit.yaw = orbitHome.yaw; // (the very first frame starts at home)
-    const o = orbitStep(orbit, dt, pnow(), orbitHome, roomAlong(cx, cz, Math.sin(orbit.yaw), Math.cos(orbit.yaw), plaza.inner - 1.5));
-    const hd = o.x[1] * Math.cos(o.x[0]);
-    camera.position.copy(insidePlaza(cameraTarget.set(cx + Math.sin(o.yaw) * hd, ORBIT.focusY + o.x[1] * Math.sin(o.x[0]), cz + Math.cos(o.yaw) * hd), cx, 1.2, cz));
-    camera.lookAt(camFocus.lerp(camFocusTarget.set(cx, 1.2, cz), Math.min(1, dt * 2)));
+  } else if (G.state === 'title' || G.state === 'splash' || G.state === 'select') { // (cameras.js frameMenuCamera)
+    let aim = 0;
     if (G.state === 'splash') { // her centre between the splash's logo and its prompt; the title's own shift below eases in from it on the tap
       const mid = (HH * 0.2 + splashS() * 1.02 + HH * 0.82 - 14) / 2;
-      shift = Math.max(-0.25 * HH * K, Math.min(0.25 * HH * K, (mid - HH / 2) * K));
+      aim = Math.max(-0.25 * HH * K, Math.min(0.25 * HH * K, (mid - HH / 2) * K));
     }
     if (G.state === 'title' && titleL) { // (the cached layout: measuring here would touch the HUD canvas) a lens shift puts her in the free band between the logo and the button (not behind either)
       const L = titleL, mid = (L.logo.y + L.logo.h + L.choiceY) / 2;
-      shift = Math.max(-0.25 * HH * L.K, Math.min(0.25 * HH * L.K, (mid - HH / 2) * L.K));
+      aim = Math.max(-0.25 * HH * L.K, Math.min(0.25 * HH * L.K, (mid - HH / 2) * L.K));
     }
-    const band = G.state === 'select' && !viewMode && sheets.select?.band; // «QUI BALLA?»: her centre in its free band (css px, measured when it opens or resizes); «mode foto» hides the selector: centred
-    if (band) shift = Math.max(-0.25 * HH * K, Math.min(0.25 * HH * K, (band.top + band.bottom) / 2 - HH * K / 2));
+    const sel = G.state === 'select', root = sel && !PAIR.k ? (selectedFigure.id === DRAC.id ? drac?.root : mula.root) : null; // «QUI BALLA?» frames its figure in the free rect it measured (css px, when it opens or resizes); «mode foto» hides the selector: the whole screen
+    shift = frameMenuCamera(dt, mx, mz, root, sel && !viewMode ? sheets.select?.band : null, viewMode, viewMode && orbit.last * 1000 >= viewT, aim);
   } else if (G.state === 'play') {
     CAMED?.restoreFov();
     shift = framePlayCamera(dt, mx, mz);
@@ -219,16 +201,16 @@ function frame(now) {
     CAMS.live = false;
     if (camera.fov !== baseFov()) { camera.fov = baseFov(); camera.updateProjectionMatrix(); }
   }
-  setCamShift(PHOTO.on || G.state === 'play' && !VIEW ? shift : camShift + (shift - camShift) * Math.min(1, dt * 3)); // play: already smoothed
-  if (Math.abs(camShift) > 0.5) camera.setViewOffset(W * K, HH * K, 0, -camShift, W * K, HH * K);
+  const menuCam = menuState() && !PHOTO.on && !VIEW;
+  setCamShift(PHOTO.on || menuCam || G.state === 'play' && !VIEW ? shift : camShift + (shift - camShift) * Math.min(1, dt * 3), menuCam ? lens.x : easeLensX(dt) * !PHOTO.on); // play and menus: already smoothed (photo driving: no shift)
+  if (Math.abs(camShift) > 0.5 || Math.abs(camShiftX) > 0.5) camera.setViewOffset(W * K, HH * K, -camShiftX, -camShift, W * K, HH * K);
   else if (camera.view?.enabled) camera.clearViewOffset();
   camXYZ[0] = camera.position.x; camXYZ[1] = camera.position.y; camXYZ[2] = camera.position.z;
   focusXYZ[0] = mx; focusXYZ[1] = G.state === 'play' ? 1.4 : 1; focusXYZ[2] = mz;
   for (const p of plaza.props) p.mesh.visible = !blocks(p, camXYZ, focusXYZ); // a tree or lamp in the way: gone
   if (trauma > 0) { // shake decays; quadratic so small bumps barely move it. During play only a small accent
     setTrauma(Math.max(0, trauma - dt * 1.6)); // (GUAPA, the finale), added on top: it never feeds the camera's springs
-    const k = trauma * trauma * (G.state === 'play' ? 0.35 : 1);
-    camera.position.x += Math.sin(clock * 47) * 0.25 * k; camera.position.y += Math.sin(clock * 61) * 0.2 * k;
+    applyCameraImpact(trauma);
   }
   const p0 = PERF && performance.now();
   if (PERF?.mode !== 'no3d') renderScreen();
@@ -281,7 +263,7 @@ requestAnimationFrame(() => setTimeout(() => { // one paint first: that line sho
   if (window.__mulassaBootFailure) return;
   startAudio(); // the song downloads and decodes (off the main thread) while the shaders compile, all under the cover
   window.__mulassaBootPhase = 'shaders';
-  waitForWarmup(() => precompile(true).then(() => linkPrograms(renderer.info.programs))).then(result => {
+  waitForWarmup(() => localPeopleReady.then(() => precompile(true)).then(() => linkPrograms(renderer.info.programs))).then(result => {
     if (window.__mulassaBootFailure) return;
     window.__mulassaBootPhase = 'frame';
     loadMark(result === 'ready' ? 'shaders' : 'shaders fallback');
@@ -320,3 +302,7 @@ window.__dbg = { get G() { markLeaderboardDebugUse(); return G; }, get M() { mar
   get bubbles() { markLeaderboardDebugUse(); return bubbles; }, bubble: debugAction(bubble), at: debugAction(at),
   get crowd() { return activeCrowd; }, get band() { return plaza.band; }, get title() { return titleL; }, get chip() { return chip; }, get camera() { return camera; }, get clock() { return clock; }, songTime: () => songTime(), get drawTime() { return drawT; }, get offset() { return offsetMs; }, hero: (w, h) => renderHero(w, h) }; // debug runs never publish; hero: the share photo (public/og.jpg)
 window.__mulassaBooted ||= 'module'; // ran to the end: index.html's boot watchdog now only waits for the first frame
+
+// Local review by default; ?representation=off retains the original cast for comparisons. Public hosts are unchanged.
+const localPeopleReady = Q.get('representation') !== 'off' && ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname)
+  ? import('./dev/representation-preview.js').then(m => m.setupRepresentationPreview()) : Promise.resolve();

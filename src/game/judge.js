@@ -80,7 +80,7 @@ function landed(n, kind) {
   n.pts = ((kind === 'perfect' ? 300 : 100) + Math.min(G.combo, 100) * 2) * (G.doublePoints ? 2 : 1); // x2 in the finale, from 70%
   G.score += n.pts;
   G.flash = clock;
-  M.biteT = clock;
+  if (n.big || n.input === 'B' || PRAISE[G.combo]) M.biteT = clock; // she bites on the big moments only (every hit read as chewing)
   if ((n.big || n.input === 'B') && !CALM.matches) shoveRing();
   grooveHit((kind === 'perfect' ? GROOVE.hit : GROOVE.good) * (n.big || n.input === 'B' ? GROOVE.big : 1), n.input === 'L' ? 1 : n.input === 'R' ? -1 : 0);
   if (!G.watch) chip.sfx(kind); // the player's own tick: the dance demo has no player

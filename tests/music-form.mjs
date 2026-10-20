@@ -30,7 +30,8 @@ for (const [id, files] of Object.entries(BASE)) {
   // song.json stores the beats rounded to 4 decimals, so that is the exact comparison available here
   assert.deepEqual(tl.beats.map(r4), song.beats, `${id}: beats`);
   assert.equal(r4(tl.beats[tl.finale]), song.finale, `${id}: finale`);
-  assert.equal(Number(tl.beats[tl.end].toFixed(3)), song.end, `${id}: end time (song.json keeps 3 decimals)`);
+  const endDigits = id === 'mulassa' ? 4 : 3; // (the Mulassa's tempo varies by phrase: its end is kept as precisely as its beats)
+  assert.equal(Number(tl.beats[tl.end].toFixed(endDigits)), song.end, `${id}: end time (song.json keeps ${endDigits} decimals)`);
   const holds = song.notes.filter(n => n[4]).map(n => [n[0], n[4], n[1]]);
   assert.deepEqual(tl.holds.map(([a, b, k]) => [r4(tl.beats[a]), r4(tl.beats[b]), k]), holds, `${id}: holds`);
   // the reference recording's clock (the Drac): the compiled anchors in song seconds, as the generator wrote them
@@ -55,9 +56,10 @@ assert.deepEqual(timelines.mulassa.holds.map(h => h.slice(0, 2)), [[32, 34], [64
 assert.deepEqual(timelines.drac.holds.map(h => h.slice(0, 2)), [[66, 69]]);
 assert.equal(timelines.mulassa.finale, 208);
 assert.equal(timelines.drac.finale, 225); // the 8-beat closing roll under the held last note (docs/drac-music.md, round 2)
-// the Mulassa rises phrase by phrase (A 154, A2 156, B 162, C 166, X 170) and broadens to 152 for the closing roll
+// the Mulassa opens at the menu loop's 152, rises phrase by phrase (A2 154, B 158, C 161, X 164) and broadens back to
+// 152 for the closing roll
 const mulassaBpm = b => Math.round(60e7 / timelines.mulassa.tempo.beatUs[b]) / 10;
-assert.deepEqual([0, 40, 100, 160, 190, 212, 226, 228].map(mulassaBpm), [154, 154, 156, 162, 166, 170, 152, 152]);
+assert.deepEqual([0, 40, 100, 160, 190, 212, 226, 228].map(mulassaBpm), [152, 152, 154, 158, 161, 164, 152, 152]);
 { // constant-exact stays the generator's own grid, to the last bit
   const f = clone(forms.mulassa);
   f.tempo = { clock: 'constant-exact', interpolation: 'smoothstep', leadIn: 0.1, knots: [{ at: { beat: 0 }, bpm: 152 }] };

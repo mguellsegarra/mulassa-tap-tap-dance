@@ -58,14 +58,24 @@
 .sel-pending .sel-entity svg:not(.escut):not(.pessigolla) path { stroke: #63202c; stroke-width: 160; paint-order: stroke fill; }
 .sel-pending .sel-entity svg.pessigolla path[fill] { stroke: #243044; stroke-width: 12; paint-order: stroke fill; }
 .sel-entity span { min-width: 0; }
-/* a shared figure names both entities, each with its mark (as on the cards): wraps between the parts, never inside one */
-.sel-entity:has(.sel-entity-part) { flex-wrap: wrap; justify-content: center; row-gap: 2px; }
-.sel-entity-part { display: inline-flex; align-items: center; gap: 5px; }
+/* Keep each mark with its name, and the separator with the following attribution. */
+.sel-entity:has(.sel-entity-unit) { flex-wrap: wrap; justify-content: center; row-gap: 2px; }
+.sel-entity-unit { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-width: 0; max-width: 100%; }
+.sel-entity-plus { flex: none; }
+.sel-entity-part { display: inline-flex; align-items: center; gap: 5px; min-width: 0; max-width: 100%; }
 #select .sel-entity svg.escut { width: 16px; height: 16px; }
 .sel-song { display: flex; align-items: center; gap: 10px; min-width: 0; padding-top: 12px; border-top: 1px solid var(--sel-line); font-size: 16px; line-height: 1.2; }
 .sel-song svg { flex: none; box-sizing: border-box; width: 34px; height: 34px; padding: 8px; border-radius: 50%; background: #f5c5181f; fill: #f5c518; }
 .sel-song-copy { display: grid; gap: 2px; min-width: 0; }
 .sel-song-credit { font-size: 12px; font-weight: 600; color: var(--sel-muted); }
+/* Step 2's level row: the song row's shape with a stroked trophy and inline stars. One line each: what doesn't fit is dropped (select-ui.js levelStats), never wrapped or cut. */
+.sel-level-stats svg { fill: none; stroke: #f5c518; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+/* Keep the record row stable; centre an empty record's single line beside the trophy. */
+.sel-level-stats .sel-song-copy { min-height: calc(1lh + 2px + 14.4px); align-content: center; }
+.sel-level-stats .sel-song-copy > span { white-space: nowrap; overflow: hidden; }
+.sel-level-stats .stars { display: inline-flex; gap: 1px; margin-right: 4px; vertical-align: -1px; }
+.sel-level-stats .stars svg { width: .95em; height: .95em; padding: 0; border-radius: 0; background: none; stroke: none; fill: #fff3d633; }
+.sel-level-stats .stars .on { fill: #f5c518; }
 /* The player's position as a flat chip that opens Classificacions (a muted chevron says so); the row sets its type.
    (The records are on step 2, under each level.) */
 .sel-tiles { display: flex; align-items: center; gap: 8px; min-width: 0; padding-top: 12px; border-top: 1px solid var(--sel-line); font-size: 18px; line-height: 26px; }
@@ -123,22 +133,37 @@
   #select #select-next:disabled::after { display: none; animation: none; }
 }
 .sel-strip { position: relative; display: flex; align-items: stretch; justify-content: flex-start; gap: 8px; min-height: 0; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; touch-action: pan-x; padding: 10px max(6px, var(--strip-inset, 0px)) 6px; margin-inline: 0; box-sizing: border-box; overflow-anchor: none; }
-/* One surface, no divider: the first field of the town's arms (escutField, data-field) tints its top and fades into the
-   game's brown under the caption, so a town's row reads as a group. Or and argent are muted: never the gold action or the
-   cream choice. The name stays cream and centred; pending figures (.aviat) wear the fold's dashed edge, not a colour. */
-.sel-card { --t: #8a6a4a; position: relative; flex: 0 0 152px; width: 152px; display: grid; grid-template-columns: minmax(0, 1fr); justify-content: stretch; grid-template-rows: minmax(0, 1fr) var(--card-label-h); align-items: stretch; justify-items: stretch; gap: 0; min-height: 0; padding: 0; border: 0; border-radius: var(--sel-r); background: linear-gradient(color-mix(in srgb, var(--t) 34%, #22160e), color-mix(in srgb, var(--t) 16%, #22160e) 42%, #1d130c 72%, #1a110b); box-shadow: 0 6px 16px #0006; text-align: center; transition: transform .15s; }
-/* the same tints for every portrait of a figure: the cards, the fold's peek and the photo mode's avatars */
-:is(.sel-card, #photo-figs .pf)[data-field="gules"] { --t: #d62a2a; }
-:is(.sel-card, #photo-figs .pf)[data-field="atzur"] { --t: #2479d0; }
-:is(.sel-card, #photo-figs .pf)[data-field="or"] { --t: #b8923a; }
-:is(.sel-card, #photo-figs .pf)[data-field="argent"] { --t: #a8a090; }
+/* One surface, no divider: the town's accent (--town, below) tints its top and fades into the game's brown under the
+   caption, so a town's row reads as a group. --t is that accent at one fixed lightness and capped chroma: every town's
+   black silhouettes and the cream ring read alike, and no tint comes near the gold action or the cream choice. The name
+   stays cream and centred; pending figures (.aviat) wear the fold's dashed edge, not a colour. */
+.sel-card { --t: #453322; --floor: 15px; position: relative; flex: 0 0 152px; width: 152px; display: grid; grid-template-columns: minmax(0, 1fr); justify-content: stretch; grid-template-rows: minmax(0, 1fr) var(--card-label-h); align-items: stretch; justify-items: stretch; gap: 0; min-height: 0; padding: 0; border: 0; border-radius: var(--sel-r); background: linear-gradient(var(--t), color-mix(in srgb, var(--t) 45%, #22160e) 42%, #1d130c 72%, #1a110b); box-shadow: 0 6px 16px #0006; text-align: center; transition: transform .15s; }
+/* Each town's accent: its banner's cloth and, toned down, every portrait of its figures (the cards and the photo mode's
+   avatars). The game's own palette (Marc, 2026-10-19), not a colla's shirt or a heraldic tincture: the arms are on the pills. */
+:is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="valls"] { --town: #c8202f; } /* the red of its banner */
+:is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="tarragona"] { --town: #7d5aa8; }
+:is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="reus"] { --town: #8f6340; }
+:is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="solsona"] { --town: #c0283c; }
+:is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="vilanova"] { --town: #d9a521; }
+:is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="barcelona"] { --town: #c8202f; }
+:is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="berga"] { --town: #1f3f7a; }
+:is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="olot"] { --town: #8e2a5c; } /* a mulberry granat: a plain granat read as the reds once toned down */
+:is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="vilafranca"] { --town: #00b09a; }
+:is(.sel-card, #photo-figs .pf)[data-town]:not([data-town="el-teu-poble"]) { --t: color-mix(in srgb, var(--town) 45%, #22160e); } /* browsers without relative colours */
+@supports (color: oklch(from red l c h)) { :is(.sel-card, #photo-figs .pf)[data-town]:not([data-town="el-teu-poble"]) { --t: oklch(from var(--town) .42 min(c, .1) h); } }
+.sel-card:not(.sel-more) { overflow: clip; } /* the panels' square corners stay inside the rounded card and its ring */
 .sel-card::after { content: ''; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1px #fff3d624; pointer-events: none; }
 .sel-card.aviat::after { box-shadow: none; border: 1.5px dashed #e8d8b88c; }
 .sel-card.aviat:not([data-id="la-teva-colla"]) .por svg { filter: saturate(.75) brightness(.92); }
 /* The portrait stands on the caption, on a floor shared by every card; the svg is exactly its columns × a whole-pixel
    cell, so no figure is resampled (each keeps square, equal pixels). */
-.sel-card .por { --sky: .93; --reach: 1; /* --sky: the tallest figures' share of the panel (air above the crowns); --reach: the share a stand-1 figure would take, so the gegants are held at --sky and everyone else stands bigger (Marc 2026-10-19: Mulassa and Drac looked small) */ position: relative; box-sizing: border-box; width: 100%; height: 100%; min-height: 0; display: grid; place-items: end center; padding: 5px 4px 3px; overflow: hidden; container-type: size;
-  background: linear-gradient(#f5e3b800, #f5e3b814 45%, #f5e3b82b) 0 100% / 100% 30% no-repeat; } /* the street: a flat strip at one height on every card, lighter towards the front, so the feet line up and dark legs still read */
+.sel-card .por { --sky: .93; --reach: 1; /* --sky: the tallest figures' share of the panel (air above the crowns); --reach: the share a stand-1 figure would take, so the gegants are held at --sky and everyone else stands bigger (Marc 2026-10-19: Mulassa and Drac looked small) */ position: relative; box-sizing: border-box; width: 100%; height: 100%; min-height: 0; display: grid; place-items: end center; padding: 5px 4px var(--floor); overflow: hidden; container-type: size;
+  /* the plaça's tiles (Marc 2026-10-19, «Rajola de plaça»): a wall in the town's colour, a skirting line, tiles in perspective and a contact shadow where the soles stand, at --floor on every card */
+  background:
+    radial-gradient(ellipse 34% 5% at 50% calc(100% - var(--floor)), #0009, transparent),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 60' preserveAspectRatio='none'%3E%3ClinearGradient id='g' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%235a3d26' stop-opacity='.55'/%3E%3Cstop offset='.6' stop-color='%235a3d26' stop-opacity='0'/%3E%3C/linearGradient%3E%3Crect width='200' height='60' fill='%23d8c29a'/%3E%3Crect width='200' height='60' fill='url(%23g)'/%3E%3Cpath d='M-68 0L-300 60M-51.2 0L-260 60M-34.4 0L-220 60M-17.6 0L-180 60M-0.8 0L-140 60M16 0L-100 60M32.8 0L-60 60M49.6 0L-20 60M66.4 0L20 60M83.2 0L60 60M100 0L100 60M116.8 0L140 60M133.6 0L180 60M150.4 0L220 60M167.2 0L260 60M184 0L300 60M200.8 0L340 60M217.6 0L380 60M234.4 0L420 60M251.2 0L460 60M268 0L500 60M0 5H200M0 12H200M0 21H200M0 33H200M0 48H200' stroke='%238a6d48' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E") 0 100% / 100% 36% no-repeat,
+    linear-gradient(#0000 0 calc(64% - 3px), #120b07 calc(64% - 3px) 64%, #0000 64%),
+    radial-gradient(ellipse 70% 60% at 50% 70%, color-mix(in srgb, var(--town, var(--t)) 50%, #6b4a32), var(--t) 70%, #1a110b); }
 .sel-card .por svg, .sel-card .por img { width: 78%; height: 78%; min-height: 0; object-fit: contain; stroke: none; image-rendering: pixelated; }
 @supports (width: round(down, 5.5px, 1px)) {
   /* each figure at its real relative size (--s, the gegants = 1, portraitStand). The selector's portraits are all vectors
@@ -169,7 +194,7 @@
   }
 }
 /* Full names wrap in a shared caption height, just the room two lines of name and one of entity need. */
-.sel-card .nb { box-sizing: border-box; width: 100%; height: 100%; min-height: 0; display: flex; flex-direction: column; justify-content: center; align-items: stretch; gap: 1px; padding: 4px 6px 5px; overflow: hidden; color: #fff3d6; }
+.sel-card .nb { background: linear-gradient(#120b07, #1d130c 30%); box-shadow: inset 0 1px #fff3d61a; box-sizing: border-box; width: 100%; height: 100%; min-height: 0; display: flex; flex-direction: column; justify-content: center; align-items: stretch; gap: 1px; padding: 4px 6px 5px; overflow: hidden; color: #fff3d6; }
 .sel-card-name { flex: none; display: block; white-space: normal; font-size: 15px; line-height: 19px; overflow-wrap: anywhere; text-wrap: balance; }
 .sel-card .nb small { flex: none; display: block; white-space: normal; overflow-wrap: anywhere; font-size: 12px; font-weight: 600; line-height: 1.15; color: var(--sel-muted); }
 .sel-card .nb .sel-entity-icons { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 2px 4px; min-height: 16px; }
@@ -188,13 +213,7 @@
 @media (hover: hover) { .sel-card:not([aria-selected="true"]):hover { transform: translateY(-2px); } }
 /* a town's gonfanó: a plain cloth hung from a gold pole wider than it, a gold fringe at its foot, the name on the cloth;
    it rises 8 px into the strip's top padding, above the cards (the fold too) */
-.sel-banner { position: relative; flex: 0 0 34px; margin-top: -8px; background: linear-gradient(var(--cloth), var(--cloth)) 2px 4px / calc(100% - 4px) calc(100% - 15px) no-repeat; }
-/* the cloth takes the first field of the town's arms (escutField, the same tinctures as escuts.js), like its cards' tint */
-.sel-banner[data-field="gules"] { --cloth: #d62a2a; }
-.sel-banner[data-field="atzur"] { --cloth: #2479d0; }
-.sel-banner[data-field="or"] { --cloth: #b8923a; } /* muted: a gold cloth on the gold pole read as one block, and as the primary action's gold */
-.sel-banner[data-field="argent"] { --cloth: #fffaf0; }
-/* Valls: its arms' argent fess and gules field, hung upright: thin white edges round a red centre two thirds wide. */
+.sel-banner { position: relative; flex: 0 0 34px; margin-top: -8px; background: linear-gradient(var(--town), var(--town)) 2px 4px / calc(100% - 4px) calc(100% - 15px) no-repeat; }
 .sel-banner[data-town="valls"] { background: linear-gradient(90deg, #fff 0 calc(100% / 6), #c8202f 0 calc(500% / 6), #fff 0) 2px 4px / calc(100% - 4px) calc(100% - 15px) no-repeat; }
 .sel-banner[data-town="el-teu-poble"] { background: repeating-linear-gradient(90deg, #fcdd09 0 calc(100% / 9), #da121a 0 calc(200% / 9)) 2px 4px / calc(100% - 4px) calc(100% - 15px) no-repeat; } /* the invitation: no town's colours, the senyera hung vertically (nine bars, four red) */
 .sel-banner::before { content: ''; position: absolute; z-index: 2; top: 1px; left: -5px; right: -5px; height: 6px; border-radius: 3px; background: linear-gradient(#ffe68a, #f5c518 45%, #a87a08); box-shadow: 0 2px 3px #0007; }
@@ -204,22 +223,61 @@
 .sel-footer { grid-row: 2; grid-column: 1; justify-self: center; width: min(640px, 100%); display: flex; align-items: stretch; justify-content: center; gap: 10px; }
 .sel-footer .btn { width: auto; min-width: min(200px, 100%); padding-inline: 28px; font-size: 20px; letter-spacing: .02em; }
 /* Compact on every screen: the label fills the button instead of a wide gold bar; icon and label centred as one group. */
-:is(#select-next, #select-play) { display: flex; align-items: center; justify-content: center; gap: 10px; }
+:is(#select-next, #select-play, #select-figures-back) { display: flex; align-items: center; justify-content: center; gap: 10px; }
 #select-next { flex: 0 1 340px; }
 #select-next > span { display: block; line-height: 24px; }
 #select-play { padding-inline: 12px; }
+/* No level marked yet: A BALLAR! stays in place, off, in the desktop «Pròximament?»'s quiet look (Marc: visible, not hidden). */
+#select #select-play:disabled { visibility: visible; background: transparent; border-color: #746957; color: #c7bca7; box-shadow: none; animation: none; scale: none; rotate: none; transform: none; filter: none; cursor: default; }
+#select #select-play:disabled::after { display: none; animation: none; }
 #select-play > span { white-space: nowrap; }
-:is(#select-next, #select-play) > svg { display: block; flex: 0 0 22px; width: 22px; height: 22px; margin: 0; }
-.sel-footer #select-figures-back { min-width: 0; padding-inline: 12px; margin-right: auto; font-size: 15px; }
+:is(#select-next, #select-play, #select-figures-back) > svg { display: block; flex: 0 0 22px; width: 22px; height: 22px; margin: 0; }
+.sel-footer #select-figures-back { min-width: 0; padding: 6px 12px; margin-right: auto; font-size: 15px; }
+#select-figures-back > svg { box-sizing: border-box; padding: 2px; }
+#select-figures-back > span { min-width: 0; }
 /* Difficulty: the same soft panel, centred, with its two actions aligned to its width (not the screen's edges). */
 .sel-act { grid-row: 1; grid-column: 1; justify-self: center; align-self: center; box-sizing: border-box; width: min(640px, 100%); max-height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 14px; min-height: 0; padding: 16px; border: 1px solid var(--sel-line); border-radius: var(--sel-r); background: var(--sel-surface); box-shadow: 0 8px 24px #0005; }
 #select[data-step='level'] .sel-footer .btn { flex: 1; min-width: 0; margin: 0; }
 .sel-act h2 { margin: 0; font-size: 22px; }
 .sel-seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; width: min(600px, 100%); }
-.sel-seg .btn { padding: 10px; min-height: 52px; border-color: #e8d8b880; font-size: 18px; }
+.sel-seg .btn { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 0; padding: 10px; min-height: 64px; border-color: #e8d8b880; font-size: 18px; } /* a name + record's height whether or not any level has one (no shift); a lone name sits centred */
 .sel-seg .btn[aria-pressed="true"] { color: #2a1a10; border-color: #fff3d6; background: #fff3d6; } .sel-seg .btn[aria-pressed="true"] .sub { color: #2a1a10b3; }
-.sel-seg .sub { display: flex; align-items: center; justify-content: center; gap: 4px; margin-top: 2px; font-size: 13px; line-height: 16px; color: var(--sel-muted); white-space: nowrap; } /* the best score at that level; «—» keeps the line */
+.sel-seg .sub { display: flex; align-items: center; justify-content: center; gap: 4px; margin-top: 2px; font-size: 13px; line-height: 16px; color: var(--sel-muted); white-space: nowrap; } /* the best score at that level */
 .sel-seg .sub svg { flex: none; width: 1em; height: 1em; margin: 0; stroke-width: 2.2; }
+/* Each level warms from its bottom edge, hotter as it gets harder (gold, orange, red); the chosen one's glow breathes
+   and it wears a turning ring of light over its edge (DIFÍCIL's red and lilac, quicker); DIFÍCIL shakes
+   when chosen, then keeps a sub-pixel tremble while it stays chosen; NORMAL a fainter one, FÀCIL none. Reduced motion keeps it all still. */
+@property --sel-halo { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+.sel-seg .btn { isolation: isolate; background: radial-gradient(120% 70% at 50% 120%, var(--lv-bg), #0000 72%), var(--button-bg); }
+.sel-seg .btn[aria-pressed="true"] { background: radial-gradient(120% 70% at 50% 120%, var(--lv-on), #0000 72%) 50% 0 / 100% 100%, #fff3d6; box-shadow: inset 0 0 14px 2px #f5c51840; animation: sel-pop .28s cubic-bezier(.3, 1.6, .5, 1), sel-glow var(--lv-t) ease-in-out infinite; }
+/* the warmth per level (Marc chose it over drawn patterns: nothing behind the name) and its breathing period */
+.sel-seg .btn[data-level="0"] { --lv-bg: #d9a52140; --lv-on: #f5c51838; --lv-t: 2.6s; }
+.sel-seg .btn[data-level="1"] { --lv-bg: #d9732a66; --lv-on: #f59a1848; --lv-t: 1.8s; }
+.sel-seg .btn[data-level="2"] { --lv-bg: #c8283a90; --lv-on: #e8473f4a; --lv-t: 1.4s; }
+/* the ring: a 7 px band over the button's own edge (inside it, so it never reaches the neighbours), under the name */
+.sel-seg .btn::before { content: ''; position: absolute; z-index: -1; inset: -2px; padding: 7px; border-radius: var(--button-radius); opacity: 0; transition: opacity .2s; pointer-events: none;
+  background: conic-gradient(from var(--sel-halo), #f5c518, #ffb020, #ffe066 30%, #f5c518, #ff9f2e 60%, #ffe066 80%, #f5c518);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); filter: blur(1px); }
+/* the ring's colour says the level, two hues each, no white: green and lime FÀCIL, gold and amber NORMAL, red and lilac DIFÍCIL
+   (the greens stay clear of PA's turquoise, the amber of GUA's orange) */
+.sel-seg .btn[data-level="0"]::before { background: conic-gradient(from var(--sel-halo), #4cc35a, #a3e635, #2f9e44 30%, #c5f25a, #4cc35a 60%, #8bd450 80%, #4cc35a); }
+.sel-seg .btn[data-level="0"][aria-pressed="true"] { box-shadow: inset 0 0 14px 2px #4cc35a40; }
+.sel-seg .btn[data-level="2"]::before { background: conic-gradient(from var(--sel-halo), #e8473f, #b061ff 25%, #ff5d8f, #8a5cff 60%, #e8473f, #d27bff 85%, #e8473f); }
+.sel-seg .btn[aria-pressed="true"]::before { opacity: .9; animation: sel-turn 3.2s linear infinite; }
+.sel-seg .btn[aria-pressed="true"]:hover { filter: none; } /* the global hover brightening turned the chosen cream white: it is already chosen */
+.sel-seg .btn[data-level="1"][aria-pressed="true"] { animation: sel-quake-soft .36s cubic-bezier(.36, .07, .19, .97), sel-shiver-soft .6s linear .36s infinite, sel-glow var(--lv-t) ease-in-out infinite; } /* NORMAL: half DIFÍCIL's shake, then a smaller tremble; FÀCIL stays still */
+.sel-seg .btn[data-level="2"][aria-pressed="true"] { box-shadow: inset 0 0 14px 2px #e8473f40, inset 0 0 5px 1px #a45cff55; animation: sel-quake .42s cubic-bezier(.36, .07, .19, .97), sel-shiver .5s linear .42s infinite, sel-glow var(--lv-t) ease-in-out infinite; } /* Marc: DIFÍCIL keeps trembling a little while chosen */
+.sel-seg .btn[data-level="2"][aria-pressed="true"]::before { animation-duration: 1.6s; }
+.sel-seg .btn[data-level="2"]:focus-visible { animation: sel-quake .42s cubic-bezier(.36, .07, .19, .97); }
+.sel-seg .btn[data-level="2"][aria-pressed="true"]:focus-visible { animation: sel-quake .42s cubic-bezier(.36, .07, .19, .97), sel-shiver .5s linear .42s infinite, sel-glow var(--lv-t) ease-in-out infinite; }
+@keyframes sel-turn { to { --sel-halo: 360deg; } }
+@keyframes sel-glow { 50% { background-size: 100% 125%, auto; } }
+@keyframes sel-shiver { 0%, 100% { translate: 0 0; rotate: 0deg; } 20% { translate: -.6px .3px; rotate: -.35deg; } 40% { translate: .6px -.3px; rotate: .35deg; } 60% { translate: -.4px -.2px; rotate: -.25deg; } 80% { translate: .4px .2px; rotate: .25deg; } } /* under a pixel: lively, still readable */
+@keyframes sel-shiver-soft { 0%, 100% { translate: 0 0; rotate: 0deg; } 25% { translate: -.4px .2px; rotate: -.22deg; } 50% { translate: .4px -.2px; rotate: .22deg; } 75% { translate: -.25px -.12px; rotate: -.15deg; } }
+@keyframes sel-quake-soft { 15%, 85% { translate: -1px 0; rotate: -.4deg; } 35%, 65% { translate: 1.5px -.5px; rotate: .7deg; } 50% { translate: -1.5px .5px; rotate: -.7deg; } }
+@keyframes sel-pop { 40% { scale: 1.02; } } /* small: the 5 px gap to the neighbours */
+@keyframes sel-quake { 10%, 90% { translate: -1px 0; rotate: -.5deg; } 20%, 80% { translate: 2px -1px; rotate: 1deg; } 30%, 50%, 70% { translate: -3px 1px; rotate: -1.4deg; } 40%, 60% { translate: 3px -1px; rotate: 1.4deg; } }
+@media (prefers-reduced-motion: reduce) { .sel-seg .btn, .sel-seg .btn::before { animation: none !important; } }
 
 body.view-mode #select { opacity: 0; visibility: hidden; pointer-events: none; }
 #select { transition: opacity .2s, visibility .2s, display .2s allow-discrete; }
@@ -232,6 +290,7 @@ body.view-mode #select { opacity: 0; visibility: hidden; pointer-events: none; }
   .sel-info { width: min(460px, calc(100% - 24px)); }
   .sel-name { font-size: 26px; }
   .sel-card { flex-basis: 144px; }
+  .sel-card .por { --reach: 1.15; } /* phones' short panel: everyone but the gegants (held at --sky) a size bigger, still to scale (Marc 2026-10-19: the Drac read too small) */
   .sel-card-name { font-size: 15px; line-height: 19px; }
 }
 
@@ -310,22 +369,24 @@ body.view-mode #select { opacity: 0; visibility: hidden; pointer-events: none; }
   .sel-entity svg { width: 16px; height: 25px; }
   .sel-song { font-size: 22px; padding-top: 18px; }
   .sel-tiles { padding-top: 18px; } /* the hairlines sit midway: as far below as the panel's gap above */
+  .sel-panel[data-tight] { gap: 12px; } .sel-panel[data-tight] > :is(.sel-song, .sel-tiles) { padding-top: 12px; } /* the info block would scroll (step 2's level row on a laptop, a two-line name at 900 px): the gaps give first (level-stats.js) */
   .sel-song svg { width: 44px; height: 44px; padding: 11px; }
   .sel-song-credit { font-size: 15px; }
+  .sel-level-stats .sel-song-copy { min-height: calc(1lh + 2px + 18px); }
   .sel-tiles { font-size: 20px; line-height: 28px; }
-      .sel-card { flex-basis: 176px; }
+      .sel-card { flex-basis: 176px; --floor: 18px; }
   .sel-card-name { font-size: 17px; line-height: 21px; }
   .sel-card .nb small { font-size: 13px; }
   .sel-banner { flex-basis: 38px; }
   #select { --more-w: 38px; }
 }
 /* Short desktop windows: the dock gives the pending card its room back (a 324 px dock took over half of 600 px). */
-@media (min-width: 900px) and (min-height: 600px) and (max-height: 660px) { #select { --dock-h: 224px; --action-h: 44px; --card-label-h: 68px; } }
+@media (min-width: 900px) and (min-height: 600px) and (max-height: 660px) { #select { --dock-h: 224px; --action-h: 44px; --card-label-h: 68px; } .sel-card { --floor: 9px; } } /* the floor keeps ~16% of the 58 px panel, as elsewhere */
 @media (min-width: 900px) and (min-height: 661px) and (max-height: 700px) { #select { --dock-h: 284px; --action-h: 44px; --card-label-h: 68px; } } /* a step between that and the full desktop dock: the card still fits, the art a size bigger */ /* the pending card needs ~190 px: the label's empty band and the action row give it (the art keeps its size; «Gegant del Campanar» still fits) */
 /* Desktop cards are wider; every portrait keeps the one reference above (--ref, --mula-cell), so the playable
    illustrations and the pending silhouettes share one physical scale and floor at every size. */
 @media (min-width: 900px) and (min-height: 661px) {
-  .sel-card { flex-basis: 220px; }
+  .sel-card { flex-basis: 220px; --floor: 22px; }
 }
 /* Larger desktops keep nearly square cards rather than adding empty height above the artwork. */
 @media (min-width: 1100px) and (min-height: 900px) {
@@ -333,7 +394,7 @@ body.view-mode #select { opacity: 0; visibility: hidden; pointer-events: none; }
   .sel-song { font-size: 24px; padding-top: 20px; }
   .sel-tiles { padding-top: 20px; }
   .sel-panel { gap: 20px; }
-  .sel-card { flex-basis: 248px; }
+  .sel-card { flex-basis: 248px; --floor: 25px; }
   .sel-card-name { font-size: 19px; line-height: 23px; }
   .sel-card .nb small { font-size: 14px; }
   .sel-banner { flex-basis: 42px; }
@@ -402,21 +463,34 @@ body:has(:focus-visible) #select .sel-card[aria-selected="true"]:not(:focus-visi
 }
 @media (prefers-reduced-motion: reduce) { #select { transition: none; } }
 @media (prefers-reduced-motion: reduce) { #select :is(.sel-pending, .sel-info) { transition: none; } }
-.sel-pending { --contact-pad: 12px; --contact-gap: 10px; --pending-max: calc(100% - var(--pending-top) - var(--pending-bottom, 254px)); position: absolute; z-index: 1; top: calc((100% + var(--pending-top) - var(--pending-bottom, 254px)) / 2); left: 50%; translate: -50% -50%; width: min(480px, calc(100% - 28px)); height: min(360px, var(--pending-max)); box-sizing: border-box; display: grid; grid-template-rows: minmax(0, 1fr) 48px calc(44px + var(--contact-gap)); align-items: center; justify-items: center; gap: 0; padding: 3px 16px var(--contact-pad); border: 1px solid var(--sel-line); border-radius: var(--sel-r); text-align: center; background: #1a110bf5; box-shadow: 0 8px 24px #0005; font-size: 16px; font-weight: 500; line-height: 1.3; container-type: size; }
+.sel-pending { --contact-pad: 12px; --contact-gap: 10px; --pending-max: calc(100% - var(--pending-top) - var(--pending-bottom, 254px)); position: absolute; z-index: 1; top: calc((100% + var(--pending-top) - var(--pending-bottom, 254px)) / 2); left: 50%; translate: -50% -50%; width: min(480px, calc(100% - 28px)); height: min(360px, var(--pending-max)); box-sizing: border-box; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) 48px calc(44px + var(--contact-gap)); align-items: center; justify-items: center; gap: 0; padding: 3px 16px var(--contact-pad); border: 1px solid var(--sel-line); border-radius: var(--sel-r); text-align: center; background: #1a110bf5; box-shadow: 0 8px 24px #0005; font-size: 16px; font-weight: 500; line-height: 1.3; container-type: size; }
 .sel-pending-content { grid-row: 1; width: 100%; height: 100%; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: space-evenly; }
 .sel-pending-content > * { flex: none; }
 .sel-pending h2 { --title-size: 26px; margin: 0; padding-block: 6px; width: 100%; box-sizing: border-box; display: flex; align-items: center; justify-content: center; font: 800 var(--title-size)/1.1 'Baloo 2', system-ui, sans-serif; text-wrap: balance; }
 .sel-pending h2 > span { display: block; width: 100%; }
 .sel-pending .sel-pending-icon { min-height: 0; width: min(180px, 100%); height: 48px; display: flex; justify-content: center; align-items: center; container-type: size; }
 .sel-pending-icon :is(svg, img) { width: 100%; height: 100%; min-height: 0; image-rendering: pixelated; }
-.sel-pending .sel-entity { max-width: 100%; box-sizing: border-box; font-size: 12px; line-height: 16px; min-height: 24px; row-gap: 0; background: linear-gradient(105deg, #ffb3c7, #ffe29a, #b8f0c8, #a8dcff, #d7b8ff, #ffb3c7) 0 0 / 300% 100%; color: #2a1a10; box-shadow: inset 0 0 0 1px #fff9, 0 0 4px #d7b8ff40; animation: sel-holo 6s linear infinite; }
+.sel-pending .sel-entity { --entity-holo: linear-gradient(105deg, #ffb3c7, #ffe29a, #b8f0c8, #a8dcff, #d7b8ff, #ffb3c7); max-width: 100%; box-sizing: border-box; font-size: 12px; line-height: 16px; min-height: 24px; row-gap: 0; background: var(--entity-holo) 0 0 / 300% 100%; color: #2a1a10; box-shadow: inset 0 0 0 1px #fff9, 0 0 4px #d7b8ff40; animation: sel-holo 6s linear infinite; }
+/* Each attribution keeps its own holo surface; the separator travels with the second one. */
+.sel-pending .sel-entity:has(.sel-entity-unit) { width: max-content; padding: 0; gap: 4px 6px; justify-content: center; background: none; box-shadow: none; animation: none; }
+.sel-pending .sel-entity[data-stacked] { flex-direction: column; }
+.sel-pending .sel-entity[data-stacked] .sel-entity-unit { gap: 3px; }
+.sel-pending .sel-entity-plus { color: #fff3d6; }
+.sel-pending .sel-entity-part { box-sizing: border-box; padding: 4px 10px; border-radius: 999px; min-height: 24px; background: var(--entity-holo) 0 0 / 300% 100%; box-shadow: inset 0 0 0 1px #fff9, 0 0 4px #d7b8ff40; animation: sel-holo 6s linear infinite; }
 #select .sel-pending .sel-entity svg { width: auto; height: 16px; }
+/* Compact cards give up label and paragraph padding before type or contact targets. */
+@container (max-height: 250px) {
+  .sel-pending .sel-entity-part { min-height: 20px; padding-block: 2px; }
+  .sel-pending:has(.sel-entity-unit) .sel-pending-copy p { padding-block: 1px; }
+}
 @keyframes sel-holo { to { background-position: 300% 0; } }
-@media (prefers-reduced-motion: reduce) { .sel-pending .sel-entity { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .sel-pending :is(.sel-entity, .sel-entity-part) { animation: none; } }
 .sel-pending p { margin: 0; padding-block: 3px; text-wrap: balance; }
 .sel-pending .sel-pending-copy { display: contents; }
 .sel-pending-copy p + p { font-size: 14px; color: #e8d8b8; }
 .sel-pending > .btn-primary { grid-row: 2; width: 100%; height: 100%; min-height: 44px; padding-block: 4px; font-size: 16px; }
+/* One contact action across every pending variant; phones keep their full reading column. */
+@media (min-width: 520px) { .sel-pending > .btn-primary { max-inline-size: 360px; } }
 #select .sel-pending > .btn-primary { animation: none; scale: none; rotate: none; } /* Keep the contact target still while identities change. */
 .sel-pending-links { grid-row: 3; height: 44px; align-self: end; display: grid; grid-template-columns: repeat(2, auto); justify-content: space-evenly; align-items: center; width: 100%; min-height: 44px; }
 .sel-pending-links .btn { min-height: 44px; padding: 4px 0; font-size: 14px; white-space: normal; display: flex; justify-content: center; align-items: center; gap: 6px; }
@@ -446,16 +520,19 @@ body:has(:focus-visible) #select .sel-card[aria-selected="true"]:not(:focus-visi
 }
 @media (max-height: 500px) {
   #select:is([data-pending], [data-fold]) .sel-towns { left: 43%; width: 57%; }
+  .sel-pending { --contact-top: calc(60px + env(safe-area-inset-top) + var(--fps-rail, 0px)); }
   .sel-pending { left: max(12px, env(safe-area-inset-left)); translate: 0 -50%; width: calc(43% - max(12px, env(safe-area-inset-left)) - 8px); top: calc((100% + 60px + env(safe-area-inset-top) - 8px - env(safe-area-inset-bottom)) / 2); height: calc(100% - 68px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); }
 }
 
 @media (max-width: 519px) and (max-height: 600px) {
-  .sel-pending { --contact-pad: 4px; --contact-gap: 0px; }
+  /* Short phones spend 4px of each outer gap on reading room; keep the same band centre and targets. */
+  .sel-pending { --contact-pad: 0px; --contact-gap: 0px; --pending-max: calc(100% - var(--pending-top) - var(--pending-bottom, 254px) + 8px); padding-top: 0; }
 }
 
-/* Wide windows below 800px share the identity row: dock height changes at 660/700px must not squeeze the copy. */
-@media (min-width: 900px) and (max-height: 799px) {
-  .sel-pending { width: min(760px, calc(100% - 28px)); }
+/* A 640 px reading card can share its identity row from 668 px; the dock must leave room on both sides of 900 px. */
+@media (min-width: 668px) and (min-height: 501px) and (max-height: 799px) {
+  /* Pay for extra wrapping with footer air, before fitPendingTitle has to reduce the type. */
+  .sel-pending { --contact-pad: 6px; --contact-gap: 6px; padding-top: 0; width: min(640px, calc(100% - 28px)); }
   .sel-pending-content { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: space-evenly; justify-items: center; }
   .sel-pending h2 { grid-row: 1; grid-column: 1; }
   .sel-pending :is(.sel-entity, .sel-pending-icon) { grid-row: 1; grid-column: 2; }
@@ -463,6 +540,27 @@ body:has(:focus-visible) #select .sel-card[aria-selected="true"]:not(:focus-visi
 
 }
 
+/* Before the desktop dock breakpoint, pending content needs the same compact footer to keep its reading band. */
+@media (min-width: 668px) and (max-width: 899px) and (min-height: 501px) and (max-height: 660px) {
+  #select:is([data-pending], [data-fold]) { --dock-h: 224px; --action-h: 44px; --card-label-h: 68px; }
+}
+
+/* Below the stacked band's minimum reading height, use the landscape contact/dock split.
+   Only pending selections need it; the playable scene and its camera keep their existing layout. */
+@media (min-width: 520px) and (max-height: 599px) {
+  #select:is([data-pending], [data-fold]) .sel-bottom { left: auto; right: 0; translate: none; width: 57%; }
+  .sel-pending { left: 21.5%; translate: -50% -50%; width: min(480px, calc(43% - 24px)); top: calc((100% + var(--contact-top, var(--pending-top)) - 12px) / 2); height: min(360px, calc(100% - var(--contact-top, var(--pending-top)) - 12px)); }
+  .sel-pending-content { display: flex; }
+}
+
+/* Short portrait phones: the clamped dock leaves the level card ~86 px (320×568). Its gaps and padding give first, then the
+   levels take the landscape phones' compact size (44 px targets); heading and records stay. From ~620 px the full card fits. */
+@media (max-width: 519px) and (min-height: 501px) and (max-height: 620px) {
+  .sel-act { gap: 4px; padding: 6px 12px; }
+  .sel-act h2 { font-size: 18px; line-height: 22px; }
+  .sel-seg .btn { padding: 4px; font-size: 14px; min-height: 44px; }
+  .sel-seg .sub { margin-top: 0; font-size: 11px; line-height: 13px; }
+}
 /* Narrow, short portrait windows: the full identity and 44 px contact targets take the room before optional art.
    The wider reading column keeps long names on one line where possible; the compact dock stays fixed for every figure.
    Its portrait slot is too short to read, so captions use the whole card rather than leaving an empty band. */
@@ -477,7 +575,7 @@ body:has(:focus-visible) #select .sel-card[aria-selected="true"]:not(:focus-visi
 }
 
 /* The shortest landscape phones need a wider reading column; the strip still shows one whole card. */
-@media (max-height: 350px) {
+@media (max-width: 899px) and (max-height: 350px) {
   #select:is([data-pending], [data-fold]) .sel-towns { left: 60%; width: 40%; }
   #select:is([data-pending], [data-fold]) .sel-bottom { width: 40%; }
   .sel-pending { width: calc(60% - max(12px, env(safe-area-inset-left)) - 8px); }
@@ -497,6 +595,7 @@ body:has(:focus-visible) #select .sel-card[aria-selected="true"]:not(:focus-visi
   .sel-song-copy { gap: 0; }
   .sel-song-copy > span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
   .sel-song-credit { font-size: 11px; line-height: 14px; }
+  .sel-level-stats .sel-song-copy { min-height: 32px; }
   .sel-tiles { gap: 6px; padding-top: 0; border-top: 0; }
   .sel-tiles { font-size: 14px; line-height: 24px; }
   }

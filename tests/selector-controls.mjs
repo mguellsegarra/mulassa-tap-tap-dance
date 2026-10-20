@@ -36,7 +36,7 @@ const doc = { addEventListener(k, f) { (handlers[k] ||= []).push(f); }, body: { 
   } };
 const $ = id => doc.getElementById(id), sheets = { sync: {}, board: { configured: true, results() {} }, share: { results() {} }, feedback: { configured: false }, select: { visible(on) { this.shown = on; } } };
 const state = { state: 'splash', paused: false }, ctx = { document: doc, performance: { now: () => time },
-  G: state, selectedFigure: { id: 'mulassa-valls' }, sheets, clock: 10, CHALLENGE: null, keyboardNav: true, hintOff: true, hide: (el, hidden) => { el.hidden = hidden; },
+  G: state, selectedFigure: { id: 'mulassa-valls' }, COARSE: { matches: false }, sheets, clock: 10, CHALLENGE: null, keyboardNav: true, hintOff: true, hide: (el, hidden) => { el.hidden = hidden; },
   howtoMenu: {}, settingsMenu: {}, privacyMenu: {}, pauseMenu: {},
   howtoEl: $('howto'), settingsEl: $('settings'), leadersEl: $('leaders'), feedbackEl: $('feedback'), musicEl: $('music'), iosHint: $('ios-hint'), pauseEl: $('pause'), skipEl: $('skip'), retryEl: $('retry'),
   addEventListener(k, f) { (handlers[k] ||= []).push(f); }, clearTimeout() {}, setTimeout() { return 1; },
@@ -44,10 +44,10 @@ const state = { state: 'splash', paused: false }, ctx = { document: doc, perform
   orbitMove() {}, orbitZoom() {}, turnFor: () => 1, orbitDown(o, id) { o.ptrs.set(id, true); }, orbitUp(o, id) { o.ptrs.delete(id); },
   chip: null, down: { keys: new Set(), ptr: new Map() }, KEYS: {}, pageActive: () => true, releaseAll() {}, buttonAt: () => { throw new Error('selector world must never hit a title button'); },
   store: { set() {} }, unlock() { state.state = 'select'; }, toTitle() { state.state = 'select'; },
-  photoHelpAvailable: () => false, showAvatars: () => run('setPhotoControl(false)'), syncAvatars() {}, stopControl: () => run('PHOTO.on ? (setPhotoControl(false), true) : false') }; // src/ui/photo-avatars.js (its DOM: tests/render-quality.mjs)
+  startMenuAudio() {}, photoHelpAvailable: () => false, showAvatars: () => run('setPhotoControl(false)'), syncAvatars() {}, stopControl: () => run('PHOTO.on ? (setPhotoControl(false), true) : false') }; // src/ui/photo-avatars.js (its DOM: tests/render-quality.mjs)
 let time = 1000;
 const photoSource = readFileSync(new URL('../src/game/photo-control.js', import.meta.url), 'utf8').replace(/^export /gm, '');
-const code = photoSource + '\n' + ['controls', 'input'].map(name => readFileSync(new URL(`../src/ui/${name}.js`, import.meta.url), 'utf8').replace(/^import .*;\n/gm, '').replace(/^export /gm, '')).join('\n');
+const code = photoSource + '\n' + ['mouse-look', 'controls', 'input'].map(name => readFileSync(new URL(`../src/ui/${name}.js`, import.meta.url), 'utf8').replace(/^import .*;\n/gm, '').replace(/^export /gm, '')).join('\n');
 vm.createContext(ctx); vm.runInContext(code, ctx);
 const run = code => vm.runInContext(code, ctx);
 const key = code => { for (const f of handlers.keydown || []) f({ code, target: { tagName: 'BODY' }, preventDefault() {} }); };
@@ -60,6 +60,21 @@ const tap = (id, { drag = false, type = 'touch' } = {}) => {
 };
 run('updateControls()'); assert($('howto').hidden, 'splash has no instructions pill');
 assert(!$('viewmode').hidden, 'splash offers photo mode');
+// The same practice control describes its destination, including FÀCIL (level 0).
+state.state = 'play';
+let exitIcon;
+for (const then of [null, 0, null, 2]) {
+  state.practice = { then }; run('updateControls()');
+  const exit = then == null;
+  assert.equal($('skip-label').textContent, exit ? 'SURT' : 'SALTA');
+  assert.equal($('skip').attrs['aria-label'], exit ? 'Surt de la pràctica' : 'Salta la pràctica');
+  if (exit) exitIcon = $('skip-icon').attrs.d;
+  else assert.notEqual($('skip-icon').attrs.d, exitIcon, 'leaving and skipping use distinct icons');
+  assert.equal($('skip').hidden, false);
+}
+state.paused = true; run('updateControls()'); assert($('skip').hidden, 'the contextual control stays hidden while paused');
+state.paused = false; state.practice = null; run('updateControls()'); assert($('skip').hidden, 'no control during the actual song');
+state.state = 'splash'; run('updateControls()');
 key('KeyH'); assert(run('viewMode') && classes.has('view-mode'), 'H hides the splash chrome'); key('Escape'); assert(!run('viewMode'));
 state.state = 'select'; run('updateControls()');
 for (const id of ['settings', 'leaders', 'music', 'feedback', 'viewmode']) assert(!$(id).hidden, `${id} is available from the selector, including offline feedback`);
@@ -91,6 +106,34 @@ $('hud').fire('pointermove', event(20, 180, 350, { pointerType: 'mouse' }));
 state.state = 'select'; run('updateControls()'); assert.equal($('hud').style.cursor, '');
 state.state = 'splash'; run('updateControls()');
 $('hud').fire('pointerleave', {}); assert.equal($('hud').style.cursor, '');
+// Held E uses the same input lifecycle as walking; repeats cannot restart its onset.
+{
+  const emit = (type, extra = {}) => { for (const f of handlers[type] || []) f({ code: 'KeyE', target: { tagName: 'BODY' }, preventDefault() {}, ...extra }); };
+  const drive = () => { state.state = 'select'; state.paused = false; run("setView(true); setPhotoControl(true, 'drac-valls', false)"); emit('keydown'); };
+  drive();
+  assert(run("PHOTO.keys.has('KeyE') && PHOTO.sparks"));
+  run('PHOTO.sparks = false'); emit('keydown', { repeat: true }); emit('keydown');
+  assert(run("PHOTO.keys.has('KeyE') && !PHOTO.sparks"), 'repeat and duplicate keydown never restart fire');
+  emit('keyup'); assert(run("!PHOTO.keys.has('KeyE') && !PHOTO.sparks"), 'keyup clears held input and a queued onset');
+  emit('keydown'); emit('keyup'); assert(run('!PHOTO.sparks'), 'a tap released before the next frame cannot leave a delayed burst');
+  for (const type of ['blur', 'visibilitychange', 'pagehide']) {
+    drive(); emit(type); assert(run('PHOTO.keys.size === 0 && !PHOTO.sparks'), `${type} cancels held fire without keyup`);
+  }
+  for (const target of [{ tagName: 'INPUT' }, { tagName: 'TEXTAREA' }, { tagName: 'SELECT' }, { isContentEditable: true }]) {
+    drive(); emit('focusin', { target }); emit('keydown', { target });
+    assert(run('PHOTO.keys.size === 0 && !PHOTO.sparks'), 'editing a field cancels fire and ignores E');
+  }
+  drive(); emit('keydown', { code: 'Tab' });
+  assert(run("PHOTO.id === 'mulassa-valls' && PHOTO.keys.size === 0"), 'switching figures cancels held fire');
+  emit('keydown'); assert(run("PHOTO.keys.has('KeyE') && !PHOTO.sparks"), 'Mulassa E remains a held kick');
+  drive(); run('stopControl()'); assert(run('!PHOTO.on && PHOTO.keys.size === 0'), 'Vista lliure clears held fire');
+  drive(); run('setView(false)'); assert(run('!PHOTO.on && PHOTO.keys.size === 0'), 'HUD return clears held fire');
+  drive(); state.paused = true; emit('keydown'); assert(run('PHOTO.keys.size === 0'), 'paused input cannot sustain or restart fire'); state.paused = false;
+  drive(); sheets.feedback.open = true; emit('keydown'); run('updateControls()');
+  assert(run('!PHOTO.on && PHOTO.keys.size === 0'), 'a modal cancels control and ignores E'); sheets.feedback.open = false;
+  drive(); state.state = 'play'; run('updateControls()'); assert(run('!PHOTO.on && PHOTO.keys.size === 0'), 'starting play cancels free-mode fire');
+  state.state = 'select'; run('setView(false)');
+}
 console.log('selector controls, offline feedback visibility, photo keys and world-only pointer gestures ok');
 
 // Run the real input listeners and the sheet's capture listener together. A gameplay
@@ -149,15 +192,37 @@ dispatchKey('ArrowDown', 'ArrowDown', menuItems[1]);
 assert.deepEqual(sounds, [], 'unchanged focus does not emit a second selection sound');
 console.log('practice/game input routing: keyboard, mouse/touch pad and bubbling stay separate from menu sounds');
 
-// Photo navigation reserves the corner-control area, then centres a vertical column.
+// Photo navigation reserves the corner-control area, then places its centre at 40% of the safe height.
 {
   const fb = readFileSync(new URL('../src/styles/feedback.css', import.meta.url), 'utf8');
   const rail = fb.match(/#photo-figs \{([^}]+)\}/)?.[1];
   assert.match(rail, /flex-direction: column/);
   assert.match(rail, /justify-content: center/);
   assert.match(rail, /left: max\(16px, env\(safe-area-inset-left\)\)/);
-  assert.match(rail, /top: 50%/);
+  assert.match(rail, /top: calc\(env\(safe-area-inset-top\) \+ \(var\(--app-h, 100dvh\) - env\(safe-area-inset-top\) - env\(safe-area-inset-bottom\)\) \* \.4\)/);
   assert.match(rail, /translate: 0 -50%/);
   assert.match(fb, /#photo-tip \{[^}]*pointer-events: none/);
   console.log('photo column reserves safe corner controls and notice leaves input unobstructed');
+}
+
+{ // level buttons: a backdrop per level, the chosen one drifts and wears the ring; only DIFÍCIL shakes, once; reduced motion stills it all
+  for (const l of [0, 1, 2]) assert.match(css, new RegExp(`\\.sel-seg \\.btn\\[data-level="${l}"\\] \\{ --lv-bg: #[0-9a-f]{8}; --lv-on: #[0-9a-f]{8};`), `level ${l} has its own warmth on both faces`);
+  assert(!/\.sel-seg[^{]*\{[^}]*--lv-bg: url\(/.test(css), 'no drawn pattern behind the names (Marc chose the warm glow)');
+  const quakes = [...css.matchAll(/^([^{\n]+)\{[^}\n]*animation:[^;}\n]*sel-quake [^;}\n]*/gm)];
+  assert(quakes.length && quakes.every(([rule, sel]) => /data-level="2"/.test(sel) && !/sel-quake(?:[^,;()]|\([^)]*\))*infinite/.test(rule)), 'only DIFÍCIL shakes, and never on a loop');
+  assert.match(css, /\.sel-seg \.btn::before \{[^}]*inset: -2px;[^}]*mask:[^}]*exclude/, 'the ring is a band over the button\'s own edge, not outside it');
+  assert(!/\.sel-seg \.btn[^{]*\{[^}]*box-shadow: 0 0 /.test(css), 'no outer glow reaches the neighbouring levels');
+  for (const [l, c] of [[0, '#4cc35a'], [0, '#a3e635'], [2, '#e8473f'], [2, '#b061ff']]) assert.match(css, new RegExp(`\\.sel-seg \\.btn\\[data-level="${l}"\\]::before \\{ background: conic-gradient\\([^;]*${c}`), `level ${l}'s ring has its own colour`);
+  assert.match(css, /\.sel-seg \.btn\[aria-pressed="true"\]:hover \{ filter: none; \}/, 'hovering the chosen level changes nothing (the global hover turned its cream white)');
+  assert.match(css, /@media \(prefers-reduced-motion: reduce\) \{ \.sel-seg \.btn, \.sel-seg \.btn::before \{ animation: none !important; \} \}/, 'reduced motion keeps the level buttons still');
+  const trembles = name => [...css.matchAll(new RegExp(`^([^{\\n]+)\\{[^}\\n]*animation:[^;}\\n]*${name} `, 'gm'))].map(m => m[1]);
+  assert(trembles('sel-shiver').length && trembles('sel-shiver').every(sel => /data-level="2"\]\[aria-pressed="true"\]/.test(sel)), 'only a chosen DIFÍCIL keeps the full tremble');
+  assert(trembles('sel-shiver-soft').length && trembles('sel-shiver-soft').every(sel => /data-level="1"\]\[aria-pressed="true"\]/.test(sel)), 'a chosen NORMAL trembles a touch');
+  assert(trembles('sel-quake-soft').length && trembles('sel-quake-soft').every(sel => /data-level="1"\]\[aria-pressed="true"\]/.test(sel)), 'a chosen NORMAL gets the softer shake');
+  assert(!/data-level="0"[^{]*\{[^}]*sel-(?:shiver|quake)/.test(css), 'FÀCIL never trembles');
+  const amp = name => Math.max(...[...css.match(new RegExp(`@keyframes ${name} \\{([^\\n]*)\\} \\}`))[1].matchAll(/(-?[\d.]+)px/g)].map(([, v]) => Math.abs(v)));
+  assert(amp('sel-shiver') < 1 && amp('sel-shiver-soft') < amp('sel-shiver'), 'the trembles stay under a pixel, NORMAL\'s smaller than DIFÍCIL\'s');
+  const rings = [...css.matchAll(/\.sel-seg \.btn(?:\[data-level="\d"\])?::before \{[^}]*conic-gradient\(([^;]*)\);/g)].map(m => m[1]);
+  assert(rings.length === 3 && rings.every(g => !/#fff3d6|#ffe1/i.test(g)), 'every level\'s ring is two colours, no white');
+  console.log('level buttons: per-level warmth, coloured rings, NORMAL and DIFÍCIL trembles, still under reduced motion');
 }

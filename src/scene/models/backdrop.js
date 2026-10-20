@@ -76,12 +76,15 @@ export function buildBackdrop(n, inner, props = [], { ring = null, share = null 
 attribute float aPart;
 attribute vec4 aSkin; // rgb + beat phase
 attribute vec4 aHair; // rgb + angle round the plaça (the wave)
+attribute vec2 aSoot; // free mode's fire (drac-soot.js): black 0..1, still 0..1
 uniform float uBeat, uHop, uTime, uWave;
-uniform vec3 uLens; // the camera: a figure right by a low lens shrinks away (the title orbit can pass over the mid band)`).replace('#include <color_vertex>', `vColor = aPart < 0.5 ? color : aPart < 1.5 ? instanceColor : aPart < 2.5 ? aSkin.rgb : aHair.rgb;`)
+uniform vec3 uLens; // the camera: a figure right by a low lens shrinks away (the title orbit can pass over the mid band)`).replace('#include <color_vertex>', `vColor = aPart < 0.5 ? color : aPart < 1.5 ? instanceColor : aPart < 2.5 ? aSkin.rgb : aHair.rgb;
+if (aSoot.x > 0.0) vColor = mix(vColor, aPart < 0.5 && position.y > 1.5 ? vec3(0.9) : vColor * 0.012 + vec3(0.014, 0.013, 0.012), aSoot.x); // charred, white eyes`)
       .replace('#include <begin_vertex>', `vec3 transformed = position * max(smoothstep(3.2, 5.0, distance(instanceMatrix[3].xz, uLens.xz)), smoothstep(4.5, 6.0, uLens.y));
 float wave = uWave * smoothstep(0.6, 1.0, cos(aHair.w - uTime * 2.2));
-transformed.y += max(0.0, sin(uBeat * PI + aSkin.w)) * uHop + wave * 0.3;
-transformed.x += sin(uTime * 1.3 + aSkin.w * 3.0) * 0.04 * position.y;`);
+float still = 1.0 - aSoot.y;
+transformed.y += (max(0.0, sin(uBeat * PI + aSkin.w)) * uHop + wave * 0.3) * still;
+transformed.x += sin(uTime * 1.3 + aSkin.w * 3.0) * 0.04 * position.y * still;`);
   };
   if (!share) mat.customProgramCacheKey = () => 'backdrop';
   const mesh = new THREE.InstancedMesh(geo, mat, spots.length);
@@ -99,6 +102,7 @@ transformed.x += sin(uTime * 1.3 + aSkin.w * 3.0) * 0.04 * position.y;`);
   });
   geo.setAttribute('aSkin', new THREE.InstancedBufferAttribute(skin, 4));
   geo.setAttribute('aHair', new THREE.InstancedBufferAttribute(hair, 4));
+  geo.setAttribute('aSoot', new THREE.InstancedBufferAttribute(new Float32Array(spots.length * 2), 2).setUsage(THREE.DynamicDrawUsage)); // (drac-soot.js)
   mesh.frustumCulled = false; // it rings the plaça: always partly in view
   return { mesh, u, n: spots.length };
 }

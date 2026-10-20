@@ -5,9 +5,10 @@ import { errors, errorName } from '../services/errors.js';
 import { buildPlaza, buildMulassa } from './models.js';
 import { newDracFeet } from '../game/drac-feet.js';
 import { buildDrac, DRAC_SCALE } from './models/drac.js';
-import { createColla, createMulaColla } from './drac-colla.js';
+import { createColla } from './drac-colla.js';
+import { createMulaColla, mulaSeatAt } from './mula-colla.js';
 import { danceYaw } from '../game/drac-layout.js';
-import { mulaDanceYaw, mulaToWorld, MULA_CENTRE, MULA_COMPASS } from '../game/mula-layout.js';
+import { mulaDanceYaw } from '../game/mula-layout.js';
 import { createCarriers } from './mula-carriers.js';
 import { COARSE } from '../core/env.js';
 
@@ -83,10 +84,7 @@ export function initDrac() {
   colla = createColla({ profile: renderProfile }); // hidden until the Drac is the figure; built now so the warmup compiles it
   colla.helpers.visible = colla.seated.visible = false;
   scene.add(colla.helpers, colla.seated);
-  // the Mulassa's seated ring, from its dance frame into the plaça (MULA_YAW below)
-  const seatAt = ([a, r]) => { const m = MULA_COMPASS[0], c = Math.cos(a), n = Math.sin(a), dx = m.x * c + m.z * n, dz = -m.x * n + m.z * c;
-    return mulaToWorld({}, MULA_CENTRE[0] + dx * r, MULA_CENTRE[1] + dz * r, MULA_YAW); };
-  mulaColla = createMulaColla(renderProfile, seatAt);
+  mulaColla = createMulaColla(renderProfile, seat => mulaSeatAt(seat, MULA_YAW)); // her seated ring, from its dance frame into the plaça
   mulaColla.helpers.visible = mulaColla.seated.visible = false;
   scene.add(mulaColla.helpers, mulaColla.seated);
 }
@@ -111,8 +109,8 @@ export const CAM_DIR = [Math.cos(CAM_EL) * Math.sin(CAM_AZ), Math.sin(CAM_EL), M
 export const FRONT = CAM_AZ + 0.35; // her dance's front: 20 deg off the play camera, so every pose reads three-quarter (her side, the blanket, the head)
 export const DRAC_YAW = danceYaw(CAM_AZ); // the Drac's dance frame heading (game/drac-layout.js)
 export const MULA_YAW = mulaDanceYaw(CAM_AZ); // the Mulassa's (game/mula-layout.js): the camera looks in between W and S
-export let camShift = 0; // lens shift of the play camera, css px (see frame())
-export const setCamShift = v => (camShift = v);
+export let camShift = 0, camShiftX = 0; // lens shift, css px: her centre below / right of the screen's middle (see frame())
+export const setCamShift = (v, x = 0) => { camShiftX = x; return (camShift = v); };
 
 // The frame's screen render. After a restore, the first one that submitted draw calls to a live context leaves a breadcrumb
 // (draws were submitted: not proof of visible pixels). Reads renderer.info fresh: three replaces it on restore.

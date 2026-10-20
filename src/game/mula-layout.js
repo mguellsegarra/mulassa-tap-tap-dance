@@ -1,5 +1,5 @@
 // Where the Mulassa's dance sits: the fixed rehearsal compass, the four attendants on it, and the one frame that carries
-// the reference's coordinates (game/mula-path.js: x right of the 2017 camera, z towards it) into the plaça.
+// the dance's coordinates (the 2017 reference's: x right of its camera, z towards it) into the plaça.
 // Marc's convention (validated): W is the heading she opens with, E its opposite; positive yaw goes W -> S -> E -> N.
 // Script labels for the floor, not geographic north, never tied to a camera. Pure (no three.js); the scene, the colla,
 // the crowd and dev/bestiari-compare read it.
@@ -13,10 +13,10 @@ export const MULA_COMPASS = Object.freeze(['W', 'S', 'E', 'N'].map((id, i) => {
   const yaw = MULA_W + i * Math.PI / 2;
   return Object.freeze({ id, yaw, x: Math.sin(yaw), z: Math.cos(yaw) });
 }));
-// The centre of the smallest circle round the whole song's swept footprint (her floor box at every pose, radius
-// MULA_REACH m; tests/mula-dance.mjs), and the attendants' radius: the least that keeps W, the closest mark (she opens
-// and advances towards it), 0.75 m clear of the footprint (spot 0.45 + 0.3 m of air) over the whole dance.
-export const MULA_CENTRE = Object.freeze([0.09, 0.8]), MULA_REACH = 5.66, MULA_HELPER_RADIUS = 6.2;
+// The centre her figures are danced round (game/mula-figures.js; the plaça's centre), how far her swept footprint
+// reaches from it (her floor box at every pose, MULA_REACH m; tests/mula-dance.mjs), and the attendants' radius: W and
+// E, where she runs out and turns, stay over 0.75 m clear of the footprint (spot 0.45 + 0.3 m of air).
+export const MULA_CENTRE = Object.freeze([-0.09, 0.5]), MULA_REACH = 4.4, MULA_HELPER_RADIUS = 5.5;
 // each attendant: its spot in the dance frame (m) and the heading that faces the centre (rotation.y; local +z inwards)
 export const MULA_HELPERS = Object.freeze(['W', 'N', 'S', 'E'].map(id => {
   const m = MULA_COMPASS.find(c => c.id === id);
@@ -26,8 +26,8 @@ export const MULA_HELPERS = Object.freeze(['W', 'N', 'S', 'E'].map(id => {
 // spots are adaptation): beyond the footprint, between the marks, never in the W-S gap the play camera looks through.
 // [angle from W (rad, + towards S), radius (m), posture (models/colla.js SEATED), look]
 export const MULA_SEATS = [
-  [2.36, 6.8, 0, 0], [3.93, 6.8, 1, 1], [5.5, 6.8, 2, 2],
-  [2.0, 6.85, 1, 3], [4.3, 6.85, 0, 4], [5.15, 6.85, 2, 3], [2.72, 6.85, 0, 2],
+  [2.36, 6.1, 0, 0], [3.93, 6.1, 1, 1], [5.5, 6.1, 2, 2],
+  [2.0, 6.15, 1, 3], [4.3, 6.15, 0, 4], [5.15, 6.15, 2, 3], [2.72, 6.15, 0, 2],
 ];
 
 // Which way the dance frame turns in the plaça: the play camera looks in between W and S (never over an attendant's

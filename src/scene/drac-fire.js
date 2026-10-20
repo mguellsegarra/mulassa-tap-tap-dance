@@ -168,17 +168,23 @@ export function createDracFire(scene, opts = {}) {
   for (let i = 0; i < 5; i++) { BD.array[i * 4 + 3] = -1; FA.array[i] = -1; for (let k = 0; k < 3; k++) BLW.array[i * 3 + k] = DRAC_FIRE.flare[i][k]; }
   const bm = dfireBlastMaterial(opts.octaves ?? 2), blast = dfireQuads(5, { aP: BP, aD: BD, aLW: BLW }, bm), flash = dfireQuads(5, { aP: FP, aAge: FA }, dfireFlashMaterial());
   scene.add(blast, flash);
-  const S = { burst: false, smoked: false };
+  const S = { burst: false, smoked: false, held: false };
   const owe = new Float64Array(5), ows = new Float64Array(5), owc = new Float64Array(5);
   const AT = new THREE.Vector3(), VEL = new THREE.Vector3();
-  const age = () => TT[0] - TT[1];
+  const age = () => S.held ? Math.min(TT[0] - TT[1], 0.2) : TT[0] - TT[1];
 
   // E: per fire point [x, y, z (its tube's mouth), dx, dy, dz (unit), jet level, nominal size (m)], 8 floats each
-  function update(dt, t, E, viewH) {
+  function update(dt, t, E, viewH, held = false) {
     TT[0] = t;
+    held = held && !!E;
+    // A free-mode hold keeps the existing flame attached at its hot, full-size phase.
+    // Releasing resumes its normal cooling/detachment; no more sparks are emitted by the hold.
+    if (held && !S.held) { TT[1] = t - dt; S.burst = true; S.smoked = false; }
+    else if (!held && S.held) { TT[1] = t - Math.min(t - TT[1], 0.2); S.burst = false; }
+    S.held = held;
     jm.uniforms.uTime.value = bm.uniforms.uTime.value = t; jm.uniforms.uViewH.value = viewH || 800;
     jm.uniforms.uTrail.value = calm.matches ? 0.012 : 0.028;
-    const a = t - TT[1], live = a >= 0 && a < DRAC_FIRE.flareLife;
+    const a = held ? Math.min(t - TT[1], 0.2) : t - TT[1], live = a >= 0 && a < DRAC_FIRE.flareLife;
     if (E) for (let i = 0; i < 5; i++) {
       const o = i * 8, k = E[o + 6], dx = E[o + 3], dy = E[o + 4], dz = E[o + 5], sn = Math.sqrt(E[o + 7] / 0.27);
       if (k > 0 && J.cap) {
@@ -249,7 +255,7 @@ export function createDracFire(scene, opts = {}) {
     clear() {
       for (let i = 0; i < n; i++) JA.array[i * 4 + 3] = -99;
       if (jets) { JA.needsUpdate = true; jets.visible = false; }
-      TT[1] = TT[2] = -99; S.burst = false; owe.fill(0); ows.fill(0); owc.fill(0);
+      TT[1] = TT[2] = -99; S.held = S.burst = false; owe.fill(0); ows.fill(0); owc.fill(0);
       blast.visible = flash.visible = false;
     },
     get age() { const a = age(); return a >= 0 && a < DRAC_FIRE.flareLife ? a : -1; },

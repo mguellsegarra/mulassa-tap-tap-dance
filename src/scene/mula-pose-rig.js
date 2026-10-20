@@ -16,7 +16,7 @@ export function poseMulassa(rig, pose, beat, x, z, yaw) {
   rig.body.scale.set(1, 1, 1);
   rig.neck.rotation.set(0.15 + Math.sin(bp * 2) * 0.08 * amp, Math.sin(bp) * 0.12 * amp, 0);
   rig.head.rotation.set(0.2 + Math.sin(bp * 2 + 1) * 0.08 * amp, 0, pose.headRoll ?? 0);
-  rig.jaw.rotation.x = Math.max(0, Math.sin(bp * 2)) * 0.12 * amp;
+  rig.jaw.rotation.x = Math.max(0, Math.sin(bp * 2)) * 0.04 * amp;
   for (let i = 0; i < rig.ears.length; i++) rig.ears[i].rotation.x = -0.25 + Math.sin(bp * 2 + i) * 0.2;
   rig.tail.rotation.set(0.12, 0, Math.sin(bp) * 0.15 * amp);
   rig.peek.scale.setScalar(0.001);

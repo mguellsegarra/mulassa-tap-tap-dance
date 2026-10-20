@@ -159,7 +159,7 @@ console.log('audio wake respects page activity');
     const pending = make();
     let finishMenu;
     pending.ambient = new Promise(resolve => { finishMenu = resolve; });
-    pending.menu(true);
+    pending.menu(true); pending.menu(true);
     pending.setMenuMusic(false);
     finishMenu({ duration: 30 });
     await pending.ambient;
@@ -169,6 +169,28 @@ console.log('audio wake respects page activity');
     await pending.ambient;
     assert.equal(menuStarts.filter(c => c === pending).length, 1, 're-enabling after the download starts the loop once');
     pending.menu(false);
+    const entering = make();
+    let decoded;
+    entering.ambient = new Promise(resolve => { decoded = resolve; });
+    entering.menu(true); const request = entering.menuToken;
+    entering.menu(true); entering.menu(true);
+    assert.equal(entering.menuToken, request, 'entry shares an in-flight menu request');
+    decoded({ duration: 30 }); await entering.ambient;
+    await new Promise(r => setTimeout(r, 0));
+    assert.equal(menuStarts.filter(c => c === entering).length, 1, 'late decode after repeated entry starts exactly one loop');
+    entering.menu(false);
+    const suspendedMenu = make(); let running;
+    suspendedMenu.ctx.state = 'suspended';
+    suspendedMenu.ctx.addEventListener = (_, f) => { running = f; };
+    suspendedMenu.ctx.removeEventListener = () => {};
+    suspendedMenu.ambient = Promise.resolve({ duration: 30 });
+    suspendedMenu.menu(true); suspendedMenu.menu(true);
+    await suspendedMenu.ambient;
+    assert(!suspendedMenu.menuSrc, 'decoded menu waits for the real audio unlock');
+    suspendedMenu.menu(false); // a run starts before Safari finishes its resume
+    suspendedMenu.ctx.state = 'running'; running();
+    await new Promise(r => setTimeout(r, 0));
+    assert(!suspendedMenu.menuSrc, 'late unlock cannot play a cancelled menu under a run');
   } finally {
     globalThis.fetch = previousFetch;
   }
@@ -204,6 +226,15 @@ console.log('audio download order ok');
     const delta = (c.menuBeat() - n % beats + beats) % beats;
     assert(Math.min(delta, beats - delta) < 1e-8, `beat ${n} stays on tempo through the entrance and repeated loops`);
   }
+  const transport = c.menuSrc, origin = transport.t0, phase = c.menuBeat();
+  c.ctx.currentTime = now;
+  c.menu(true); c.menu(true); // HUD off on splash, then ENTRA, then another menu caller
+  await c.ambient;
+  assert.equal(c.menuSrc, transport, 'repeated menu entry keeps the same source');
+  assert.equal(c.menuSrc.t0, origin, 'entry never resets the transport origin');
+  assert.equal(c.menuBeat(), phase, 'entry keeps the current musical phase');
+  assert.equal(starts.length, 1, 'one loop start across splash/photo/entry');
+  assert.equal(fades.length, 0, 'entry never fades a running menu loop');
   c.menu(false);
   assert.equal(c.menuBeat(), null, 'leaving the menu stops its beat');
   assert.equal(fades.length, 1, 'the entrance stops with the rest of the menu audio');
@@ -321,15 +352,17 @@ console.log('leaving a run silences everything it queued ok');
   let n = 0, worst = 0;
   while (slices.length) { const t = performance.now(); slices.shift()(); worst = Math.max(worst, performance.now() - t); n++; }
   assert(job.done && n >= 30, `built over many slices (${n})`);
-  const t = performance.now(), whole = applause(bufCtx, () => {}).finish(), ms = performance.now() - t;
-  assert(ms < 110, `the whole applause is cheap now (${ms.toFixed(0)} ms here; it was ~160 ms on a laptop)`);
+  // Guard the synthesis cost without charging time spent waiting for CPU on a busy host.
+  const cpuStart = process.cpuUsage(), t = performance.now(), whole = applause(bufCtx, () => {}).finish(), ms = performance.now() - t;
+  const cpu = process.cpuUsage(cpuStart), cpuMs = (cpu.user + cpu.system) / 1000;
+  assert(cpuMs < 110, `the whole applause stays cheap (${cpuMs.toFixed(0)} ms CPU, ${ms.toFixed(0)} ms elapsed)`);
   for (const d of whole.ch) {
     let peak = 0, sum = 0, bad = 0;
     for (const v of d) { if (!Number.isFinite(v)) bad++; peak = Math.max(peak, Math.abs(v)); sum += v * v; }
     const rms = Math.sqrt(sum / d.length);
     assert(!bad && peak < 0.6 && rms > 0.025 && rms < 0.08, `a crowd's level on both channels (peak ${peak.toFixed(2)}, rms ${rms.toFixed(3)})`);
   }
-  console.log(`applause: ${n} slices, worst ${worst.toFixed(1)} ms, whole ${ms.toFixed(0)} ms ok`);
+  console.log(`applause: ${n} slices, worst ${worst.toFixed(1)} ms elapsed, whole ${cpuMs.toFixed(0)} ms CPU / ${ms.toFixed(0)} ms elapsed ok`);
 }
 
 { // a device that won't start rejects ctx.resume(): swallowed, not an unhandled rejection
@@ -338,6 +371,8 @@ console.log('leaving a run silences everything it queued ok');
   const seen = []; process.on('unhandledRejection', e => seen.push(e));
   c.resume(); await new Promise(r => setTimeout(r, 10));
   assert.equal(seen.length, 0, 'resume() rejection is swallowed');
+  c.ctx.resume = () => { throw new DOMException('Context closed', 'InvalidStateError'); };
+  assert.doesNotThrow(() => c.resume(), 'synchronous unlock failure cannot block entry');
 }
 
 {

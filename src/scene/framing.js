@@ -22,10 +22,30 @@ export function stageFrame(out, top, bottom) {
 
 // Critically damped smoothing (no overshoot, the same path at 30, 60 or 120 fps): moves s.x[i] towards `target`,
 // reaching it in about `time` seconds, carrying its velocity s.v[i] so a moving target is followed without jerks.
-export function smoothDamp(s, i, target, time, dt) {
+// max (optional, units/s): a far target is approached at about that speed at most (Unity's maxSpeed: the distance it pulls on is capped).
+export function smoothDamp(s, i, target, time, dt, max = Infinity) {
   if (dt <= 0) return s.x[i];
-  const w = 2 / Math.max(1e-4, time), x = w * dt, e = 1 / (1 + x + 0.48 * x * x + 0.235 * x * x * x);
-  const change = s.x[i] - target, temp = (s.v[i] + w * change) * dt;
+  const w = 2 / Math.max(1e-4, time), x = w * dt, e = 1 / (1 + x + 0.48 * x * x + 0.235 * x * x * x), cap = max * time;
+  const change = Math.max(-cap, Math.min(cap, s.x[i] - target)), temp = (s.v[i] + w * change) * dt;
+  target = s.x[i] - change;
   s.v[i] = (s.v[i] - w * temp) * e;
   return (s.x[i] = target + (change + temp) * e);
 }
+
+// The selector camera's fit (cameras.js frameMenuLens): how far the lens must stand for a figure `w` x `h` metres across / up
+// (measured at its own depth) to fill `fill` of the free rect `r` (css px: top, bottom, left, right, hardTop), and where its
+// centre should sit (out.cx, out.cy, css px) and her lowest point (out.floor). A short band (a portrait phone under a long info block) still gets a readable
+// figure: at least `least` of the room under the hard top (the pills), standing on the band's floor (the dock) and rising
+// over the info block's lower rows, never into the header. vh: the viewport's css px tall; tan: tan(vertical fov / 2).
+export function menuFit(out, r, vh, tan, w, h, fill = 0.86, least = 0.55, across = 0.8) { // across: less of the width (her travel and the follow's lag show sideways)
+  const ppm = vh / (2 * tan), rw = Math.max(1, r.right - r.left), rh = Math.max(1, r.bottom - r.top), room = Math.max(rh, r.bottom - (r.hardTop ?? r.top));
+  const ph = Math.min(Math.max(rh * fill, room * least), room * fill);
+  out.dist = Math.max(h * ppm / ph, w * ppm / (rw * across));
+  out.cx = (r.left + r.right) / 2;
+  out.cy = Math.min((r.top + r.bottom) / 2, r.bottom - rh * (1 - fill) / 2 - h * ppm / out.dist / 2); // continuous: centred while it fits
+  out.floor = out.cy + h * ppm / out.dist / 2; // where her lowest point goes (her feet: the ground never bobs as she rears up)
+  return out;
+}
+// Follows a size that jumps about (a figure turning side on and back) without chasing it: rises in about `up` s (the UI
+// must stay clear), falls in about `down` s (no pumping on every turn). Exact at any frame rate.
+export const envelope = (env, x, dt, up, down) => env + (x - env) * (1 - Math.exp(-dt / (x > env ? up : down)));

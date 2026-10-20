@@ -1,31 +1,31 @@
-// The Mulassa's dance in the game: the song's seconds go through the one time map (game/mula-time.js) to the reference
-// second the reconstruction (game/mula-path.js) is posed at: travel, heading, turns and reversals as validated against the
-// 2017 video. The sway is the MUSIC's: its phase runs on the song's beats (a lean every 4 beats in A, every 2 from B on),
-// its size is the reference's envelope, a little more as the music livens (FESTA, an artistic adaptation) and quiet at
-// the end. The eight shoes are planned in song seconds (game/mula-supports.js), so seeking, a pause or a restart show
-// the same pose and shoes, and a faster phrase steps faster instead of stretching a stance.
-// Pure, no three.js; pose(out, t) fills a reused object. Frame: the reference's (x right of the opening camera, z towards
-// it, yaw + anticlockwise); game/mula-layout.js carries it into the plaça.
+// The Mulassa's dance in the game: the FIGURES of game/mula-figures.js (out and back, the circle, the passada, the
+// culades, the charges, the turns on the spot) on the song's own beats, so music, steps and animation share one clock.
+// The sway is the music's: its phase runs on the song's beats (a lean every 4 beats in A, every 2 from B on), a little
+// more as the music livens (FESTA) and quiet at the end. The eight shoes are planned in song seconds
+// (game/mula-supports.js), so seeking, a pause or a restart show the same pose and shoes, and a faster phrase steps faster.
+// `time` is the comparator's map from the song to the 2017 reference (game/mula-time.js): the phrases' pairing with the
+// video the dance is styled on, no longer what poses her. Pure, no three.js; pose(out, t) fills a reused object.
 import mulaSong from '../song.json' with { type: 'json' };
 import { beatAtTime } from '../core/beat-grid.js';
-import { mulaMotion, mulaLift } from './mula-path.js';
+import { mulaMotion, mulaTrack } from './mula-path.js';
 import { createMulaTime } from './mula-time.js';
 import { planSupports } from './mula-supports.js';
+import { figureAt, accentAt } from './mula-figures.js';
 
-// How much song time a reference second needs (game/mula-time.js shares each phrase out by it): a turn at 150 deg/s,
-// travel at 1.2 m/s, a tilt cue (the front thrown up, a big lean) or swaying in place at 4x take one song second each
-// per `turn`/`travel`/`cue`/`rate`. Only the ratios matter inside a phrase.
+// How much song time a reference second needs in the comparator's map (game/mula-time.js shares each phrase out by it):
+// a turn at 150 deg/s, travel at 1.2 m/s, a tilt cue or swaying in place at 4x take one song second each. Only the
+// ratios matter inside a phrase.
 export const NEED = { turn: 150 * Math.PI / 180, travel: 1.2, cue: 0.6, rate: 4 };
-// Per section label: the sway period (beats), FESTA (extra sway on top of the reference's, which mula-path already
-// emphasises by 15%) and DRIVE (the head, ears and jaw's beat groove, mula-motion.js). Each eases in over EASE_BEATS.
+// Per section label: the sway period (beats), FESTA (extra sway), DRIVE (the head, ears and jaw's beat groove,
+// mula-motion.js) and the sway's roll / pitch (deg; the 2017 envelope's range, 4-15 / 1.5-13). Each eases in over EASE_BEATS.
 const STYLE = {
-  intro: [8, 1, 0.3], intro0: [8, 1, 0.3], intro1: [8, 1, 0.3], intro2: [8, 1, 0.35], pickup: [8, 1, 0.4],
-  A1: [8, 1, 0.55], A2: [8, 1.05, 0.65], B: [4, 1.1, 0.85], C: [4, 1.15, 0.95], X: [4, 1.18, 1], roll: [4, 1, 0.5],
+  intro: [8, 1, 0.3, 3, 1], intro0: [8, 1, 0.3, 3, 1], intro1: [8, 1, 0.3, 3, 1], intro2: [8, 1, 0.35, 3, 1], pickup: [8, 1, 0.4, 4, 1.5],
+  A1: [8, 1, 0.55, 6, 2], A2: [8, 1.05, 0.65, 8, 3], B: [4, 1.1, 0.85, 12, 6], C: [4, 1.15, 0.95, 11, 5], X: [4, 1.18, 1, 14, 7], roll: [4, 1, 0.5, 8, 3],
 };
 const EASE_BEATS = 2, SHIFT = 0.04; // m: the weight shift towards the lean (FESTA only)
 const mulaSmooth = k => k * k * (3 - 2 * k), DEG = Math.PI / 180;
-// (shake: no landing buzz in this dance; kept so the game's accent code reads one pose shape)
-export const newMulaPose = () => ({ x: 0, z: 0, yaw: 0, roll: 0, pitch: 0, headRoll: 0, lift: 0, drive: 0, rollAmp: 0, pitchAmp: 0, shake: 0, beat: 0, ref: 0 });
+// (shake: no landing buzz in this dance, it would shake the camera; kept so the game's accent code reads one pose shape)
+export const newMulaPose = () => ({ x: 0, z: 0, yaw: 0, roll: 0, pitch: 0, headRoll: 0, headYaw: 0, lift: 0, drive: 0, rollAmp: 0, pitchAmp: 0, shake: 0, beat: 0, ref: 0 });
 
 export function makeMulaDance(song, { festive = true } = {}) {
   const motion = mulaMotion, A = {}, B = {};
@@ -42,46 +42,46 @@ export function makeMulaDance(song, { festive = true } = {}) {
   function style(beat, out) { // fills out.phase / festa / drive at a fractional beat
     let i = rows.length - 1;
     while (i > 0 && beat < rows[i][0]) i--;
-    const [b0, period, festa, drive] = rows[i], prev = rows[Math.max(0, i - 1)], k = i ? mulaSmooth(Math.min(1, Math.max(0, (beat - b0) / EASE_BEATS))) : 1;
+    const [b0, period, festa, drive, roll, pitch] = rows[i], prev = rows[Math.max(0, i - 1)], k = i ? mulaSmooth(Math.min(1, Math.max(0, (beat - b0) / EASE_BEATS))) : 1;
     out.phase = phase0[i] + (beat - b0) / period * 2 * Math.PI + Math.PI / 2; // leans land on the section's strong beats
     out.festa = festive ? prev[2] + (festa - prev[2]) * k : 1;
     out.drive = prev[3] + (drive - prev[3]) * k;
+    out.rollAmp = (prev[4] + (roll - prev[4]) * k) * DEG; out.pitchAmp = (prev[5] + (pitch - prev[5]) * k) * DEG;
     return out;
   }
-  // The reference's tilt cues (a lean through the first turn, the front thrown up at 130 s...) at their song time,
-  // never quicker than CUE_MIN s each side: a compressed phrase must not turn them into jolts.
-  const CUE_MIN = 0.5, cues = motion.tilts.map(c => {
-    const at = time.songAtRef(c.time), rate = Math.max(1e-3, time.rateAt(at));
-    return { at, radius: Math.max(CUE_MIN, c.radius / rate), roll: c.roll * DEG, pitch: c.pitch * DEG };
-  });
+  // the figures read a C1 beat (monotone Hermite through the grid: no step in her speed where the tempo ramps), the
+  // grid's last beat length carried on past its ends
+  const grid = beats.map((t, i) => [t, i]), n = beats.length - 1;
+  const smoothBeat = t => t <= beats[0] ? (t - beats[0]) / (beats[1] - beats[0])
+    : t >= beats[n] ? n + (t - beats[n]) / (beats[n] - beats[n - 1]) : mulaTrack(grid, t);
   const S = {};
+  function sway(out, beat, gain) { // the music's sway on the figure, and the carriers' lift
+    out.rollAmp = S.rollAmp * gain; out.pitchAmp = S.pitchAmp * gain;
+    out.roll = Math.sin(S.phase) * out.rollAmp; out.pitch = -Math.max(0, Math.sin(S.phase * 2)) * out.pitchAmp;
+    out.headYaw = 0; out.lift = 0.025 * Math.abs(Math.sin(S.phase)) * gain;
+  }
   function pose(out, t) {
-    const beat = beatAtTime(beats, t), r = time.refAt(t);
+    const beat = beatAtTime(beats, t), b = smoothBeat(t);
     style(beat, S);
-    motion.pose(r, out, S.phase);
-    const quiet = Math.max(0, Math.min(1, (time.refEnd - 1.2 - r) / 3)); // the ending settles before the reference does
-    const gain = 1 + (S.festa - 1) * quiet;
-    out.roll *= gain; out.pitch *= gain;
-    let W = 0, roll = 0, pitch = 0;
-    for (const c of cues) {
-      const d = Math.min(1, Math.abs(t - c.at) / c.radius), w = 1 - d * d * (3 - 2 * d);
-      W += w; roll += w * c.roll * 1.15; pitch += w * c.pitch;
-    }
-    if (W > 0) { const k = Math.min(1, W); out.roll += (roll / W - out.roll) * k; out.pitch += (pitch / W - out.pitch) * k; }
+    figureAt(b, out);
+    const quiet = Math.max(0, Math.min(1, (n + 2 - b) / 3)); // she settles after the final hit
+    const gain = (festive ? S.festa : 1) * quiet;
+    sway(out, beat, gain);
+    accentAt(b, t, out);
     out.headRoll = out.roll * 0.12;
-    out.lift = mulaLift(out.pitch, S.phase, r);
+    out.lift += Math.max(0, 1.25 * Math.sin(Math.abs(out.pitch)) - 0.06); // the carriers lift the shell as its front rises
     if (festive) { // a little weight onto the side she leans to, in her own frame (+roll tips her top towards her -x)
-      const s = -SHIFT * (gain - 1) / 0.18 * Math.sin(S.phase), c = Math.cos(out.yaw), n = Math.sin(out.yaw);
-      out.x += s * c; out.z -= s * n;
+      const s = -SHIFT * (S.festa - 1) * quiet / 0.18 * Math.sin(S.phase), c = Math.cos(out.yaw), q = Math.sin(out.yaw);
+      out.x += s * c; out.z -= s * q;
     }
-    out.drive = S.drive; out.beat = beat; out.ref = r;
+    out.drive = S.drive; out.beat = beat; out.ref = time.refAt(t);
     return out;
   }
   // The practice teaches the buttons, not the song: she holds the opening stance and sways like the first A.
   function practice(out, beat) {
-    S.phase = beat / 8 * 2 * Math.PI + Math.PI / 2;
-    motion.pose(0, out, S.phase);
-    out.headRoll = out.roll * 0.12; out.lift = mulaLift(out.pitch, S.phase, 0);
+    style(16, S); S.phase = beat / 8 * 2 * Math.PI + Math.PI / 2;
+    figureAt(0, out); sway(out, beat, 1);
+    out.headRoll = out.roll * 0.12;
     out.drive = STYLE.A1[2]; out.beat = beat; out.ref = 0;
     return out;
   }

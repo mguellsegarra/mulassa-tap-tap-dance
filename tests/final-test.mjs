@@ -14,6 +14,7 @@ const charts = [0, 1, 2].map(d => makeDanceChart(song, d));
 // Local previews use synthetic ranking rows when the real service is absent, without entering results.
 assert(leaderboardPreviewMode({ hostname: 'localhost', configured: false }));
 assert(leaderboardPreviewMode({ hostname: '192.168.1.195', search: '?mock' }));
+assert(leaderboardPreviewMode({ hostname: 'localhost', search: '?demo', configured: true }), '?demo brings the mock board');
 assert(!leaderboardPreviewMode({ hostname: 'localhost', configured: true }));
 for (const hostname of ['mulassa.cat', 'abc.pages.dev', '8.8.8.8'])
   assert(!leaderboardPreviewMode({ hostname, search: '?mock', configured: false }), 'production never substitutes fake standings');

@@ -1,6 +1,7 @@
 // Plays the Taiko arrangement (public/music/mulassa-taiko.mp3, tools/build_taiko.py) with a
 // sample-accurate clock, its ambient loop on the menu, crowd ambience and chiptune sfx on top.
 import { errors, errorName } from '../services/errors.js';
+import { playThud } from './landing-sound.js';
 const hz = m => 440 * 2 ** ((m - 69) / 12);
 // What the browser says it takes a sample to reach the speakers. Chip.now() and the sync calibration's
 // Clicker.heard() both subtract it, so the calibrated offset only holds the delay nobody reports.
@@ -159,10 +160,12 @@ export class Chip {
     n.connect(f).connect(this.amb).connect(this.out); n.start();
     this.murmurLevel();
   }
-  // the plaça's murmur: silent on the menu while the speaker is off (a muted menu means quiet), back in any game
+  // the plaça's murmur: silent on the menu while the speaker is off (a muted menu means quiet), back in any game and in the
+  // free mode (setFree), where the plaça is the point and the music off only means no tune
+  setFree(on) { this.free = on; this.murmurLevel(); }
   murmurLevel() {
     if (!this.amb) return;
-    const quiet = this.menuToken && this.menuMusic === false;
+    const quiet = this.menuToken && this.menuMusic === false && !this.free;
     this.amb.gain.setTargetAtTime(quiet ? 0 : 0.035 * (1 + 1.2 * (this.crowd ?? 0)), this.ctx.currentTime, this.crowd ? 0.7 : 0.05);
   }
 
@@ -428,8 +431,8 @@ export class Chip {
     this.voice(s).start(t, 0.5 + Math.random() * 3.5); s.stop(t + 0.3);
   }
 
-  sfx(kind, i = 0) { // i: the Drac's petard index (its crack's pitch)
-    if (this.menuToken && this.menuMusic === false) return; // discard muted menu events; never replay on enable / play
+  sfx(kind, i = 0, manual = false, weight = 1) { // manual: explicit free-mode action, independent of the music choice; i: a petard's index, a landing's speed
+    if (this.menuToken && this.menuMusic === false && !manual) return; // discard muted demo/UI events; never replay on enable / play
     if (this.ctx.state && this.ctx.state !== 'running') return; // an immediate effect cannot be queued for a future wake
     if (typeof document !== 'undefined' && (document.hidden || !document.hasFocus())) return;
     const t = this.ctx.currentTime;
@@ -448,6 +451,10 @@ export class Chip {
         this.noiseHit(t, 0.55, 0.45, 'lowpass', 320, 0.7);
         this.noiseHit(t, 0.08, 0.3, 'bandpass', 1500, 0.8);
         for (let k = 0; k < 6; k++) this.noiseHit(t + 0.14 + k * 0.07, 0.03, 0.13 - k * 0.018, 'bandpass', 3000 - k * 260, 2);
+        break;
+      case 'thud': // a free-mode landing: one per landing, a bounce reporting again within 150 ms stays silent
+        if (t - (this.thudAt ?? -9) < 0.15) break;
+        this.thudAt = t; playThud(this, t, i, weight);
         break;
       case 'flama': { // the CREMA's whoosh, quiet under the GUAPA's DON
         const f = this.noiseHit(t, 0.45, 0.07, 'bandpass', 450, 0.9);

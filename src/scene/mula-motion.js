@@ -17,7 +17,8 @@ import { dressCarrier } from './drac-rig.js';
 import { danceDrac, dracColla } from './drac-dance.js';
 import { DRAC_SCALE } from './models/drac.js';
 import { newWalker, resetWalker, demoStep, turn, manualDracStep, resumeWalker } from './drac-demo.js';
-import { G, clock, isDown, figureSfx } from '../game/state.js';
+import { G, clock, isDown, chip } from '../game/state.js';
+import { FIGURE_WEIGHT } from '../game/figures.js';
 import { smooth, pulse, easeIn, hold } from '../core/anim.js';
 
 export const PIVOT = 1.3; // metres from the body centre to the front pivot
@@ -68,9 +69,12 @@ const manualContext = token => token?.origin === 'manual-jump' && PHOTO.on && !G
 function beginManualFlight(actor) {
   manualFlight = { origin: 'manual-jump', actor, epoch: PHOTO.epoch, inputEpoch: PHOTO.inputEpoch };
 }
-function manualContact(actor) {
+function manualContact(actor, speed) {
   if (manualFlight?.actor === actor) {
-    if (manualContext(manualFlight)) manualLanding = { ...manualFlight, time: clock, startedAt: performance.now() };
+    if (manualContext(manualFlight)) {
+      manualLanding = { ...manualFlight, time: clock, startedAt: performance.now() };
+      chip?.sfx('thud', speed, true, FIGURE_WEIGHT[actor]); // the «BUUUM» on the ground, once per flight; an explicit action, so it sounds with the menu music off too
+    }
     manualFlight = null;
   }
 }
@@ -258,8 +262,8 @@ export function animMula(dt, beat, live = 1) {
     if (PAIR.k > 0 && !manualMula) keepClear();
   }
   // jumps: a tiny bit of ballistic flight, with a squash and some camera shake on landing
-  let contact;
-  if (manualMula) contact = stepManualJump(M, dt) > 2;
+  let contact, hit = 0;
+  if (manualMula) contact = (hit = stepManualJump(M, dt)) > 2;
   else {
     M.airV -= 14 * dt; M.air = Math.max(0, M.air + M.airV * dt);
     if (dancing && M.air > CAP.air) { M.air = CAP.air; M.airV = Math.min(0, M.airV); }
@@ -267,7 +271,7 @@ export function animMula(dt, beat, live = 1) {
   }
   if (contact) {
     S.squash.v -= 4; S.pitch.v += 1;
-    if (manualMula) manualContact('mulassa-valls');
+    if (manualMula) manualContact('mulassa-valls', hit);
     else if (dancing) landingImpact(0.35);
   }
   if (M.air === 0) M.airV = 0;
@@ -358,7 +362,8 @@ function keepClear() {
 const DRAC_JUMP = { air: 0, airV: 0 };
 function dracJump(dt) {
   if (PHOTO.action && dt > 0) { if (DRAC_JUMP.air === 0) { DRAC_JUMP.airV = CALM.matches ? 1.4 : 4.8; beginManualFlight('drac-valls'); PHOTO.drac.fire = 1.4; } PHOTO.action = false; } // a flamarada as it takes off
-  if (stepManualJump(DRAC_JUMP, dt) > 2) { figureSfx('gran'); manualContact('drac-valls'); }
+  const hit = stepManualJump(DRAC_JUMP, dt);
+  if (hit > 2) manualContact('drac-valls', hit);
   PHOTO.air = DRAC_JUMP.air > 0;
   return DRAC_JUMP.air;
 }

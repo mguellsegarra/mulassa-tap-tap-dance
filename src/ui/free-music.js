@@ -1,7 +1,7 @@
 // Free mode's music («mode foto»): one button paired with the eye and a short list under it (the menu loop, the two
-// figures' songs, Silenci). Who you drive never changes it; it lasts while the free mode does (leaving fades back to
+// figures' songs, Sense música). Entering through the dock's «Ball lliure» starts that figure's song (playFigure); after that, who you drive never changes it; it lasts while the free mode does (leaving fades back to
 // the menu loop). A song that ends hands over to the next in the list (the Drac's to the menu loop, which never ends).
-// Silenci is the speaker's own preference (setMenuSound). Sound: chip.radio* (platform/audio.js).
+// No music follows the speaker preference; manual figure effects remain available. Sound: chip.radio* (platform/audio.js).
 import { chip, menuMusic, setMenuSound } from '../game/state.js';
 import { figureSong } from '../game/figure-song.js';
 import { MULASSA, DRAC, portraitArt, portraitPalette } from '../game/figures.js';
@@ -15,9 +15,9 @@ import { errors } from '../services/errors.js';
 import { audioFailureTags } from '../platform/audio.js';
 
 const FM_NOTE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V6l11-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/></svg>';
-const FM_MUTE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 9.5h4l5-4.5v14l-5-4.5h-4z"/><path d="m16.5 9.5 5 5M21.5 9.5l-5 5"/></svg>';
+const FM_NO_MUSIC = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V6l11-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/><path d="m3 3 18 18"/></svg>';
 const FM_OFF = 3, FM_NOW_MS = 2600, FM_PRELOAD = 15; // the next song starts loading FM_PRELOAD s before this one ends
-export const nextTrack = i => (i + 1) % FM_OFF; // Mulassa → Drac → the menu loop; Silenci is never next
+export const nextTrack = i => (i + 1) % FM_OFF; // Mulassa → Drac → the menu loop; no music is never next
 
 // onSound: the speaker button shows the preference again (ui/sheets-setup.js).
 export function setupFreeMusic({ eye, onSound }) {
@@ -27,12 +27,11 @@ export function setupFreeMusic({ eye, onSound }) {
       const song = figureSong(f.id);
       return { title: f.song, sub: `${f.composer.replace(/^(\S)\S* (\S+).*/, '$1. $2')} · ${f.year} · ${mmss(song.tail)}`, song, art: pixelSvg(portraitArt(f), portraitPalette(f), '#2a1a10'), kind: f.id };
     }),
-    { title: 'Silenci', sub: 'Només la plaça', art: FM_MUTE, kind: 'off' }];
+    { title: 'Sense música', sub: 'Amb els efectes del joc', art: FM_NO_MUSIC, kind: 'off' }];
   const btn = document.createElement('button'), menu = document.createElement('div'), now = document.createElement('div');
   btn.id = 'radio'; btn.type = 'button'; btn.hidden = true; btn.setAttribute('aria-haspopup', 'true'); btn.setAttribute('aria-controls', 'radio-menu');
   menu.id = 'radio-menu'; menu.hidden = true; menu.setAttribute('role', 'radiogroup'); menu.setAttribute('aria-labelledby', 'radio-title');
-  menu.innerHTML = '<h2 id="radio-title">Música de la plaça</h2>' + tracks.map((t, i) => `<button type="button" class="fm-row" role="radio" data-i="${i}" data-kind="${t.kind}"><span class="fm-art">${t.art}</span><span class="fm-t"><b>${t.title}</b><small></small></span><span class="fm-st"></span></button>`).join('')
-    + '<p class="fm-keys"><kbd>M</kbd> obre i tanca · <kbd>1</kbd>–<kbd>4</kbd> tria · <kbd>Esc</kbd> tanca</p>';
+  menu.innerHTML = '<h2 id="radio-title">Música de la plaça</h2>' + tracks.map((t, i) => `<button type="button" class="fm-row" role="radio" data-i="${i}" data-kind="${t.kind}"><span class="fm-art">${t.art}</span><span class="fm-t"><b>${t.title}</b><small></small></span><span class="fm-st"></span></button>`).join('');
   now.id = 'radio-now'; now.hidden = true; now.setAttribute('role', 'status');
   eye.after(btn, menu, now);
   const rows = [...menu.querySelectorAll('.fm-row')];
@@ -40,7 +39,7 @@ export function setupFreeMusic({ eye, onSound }) {
   const contextChanged = () => { if (shown) render(); };
 
   function render() {
-    btn.innerHTML = (cur === FM_OFF ? FM_MUTE : FM_NOTE) + '<span class="fm-dot"></span>';
+    btn.innerHTML = (cur === FM_OFF ? FM_NO_MUSIC : FM_NOTE) + '<span class="fm-dot"></span>';
     btn.dataset.kind = tracks[cur].kind;
     btn.setAttribute('aria-expanded', String(open));
     btn.title = `Música: ${tracks[cur].title} (M)`; btn.setAttribute('aria-label', btn.title);
@@ -54,12 +53,22 @@ export function setupFreeMusic({ eye, onSound }) {
       else if (i === cur && i !== FM_OFF && !paused && i !== failed) st.innerHTML = '<span class="fm-bars"><i></i><i></i><i></i></span>';
     });
   }
-  function place() { // on show and resize only: the eye stays put while the free mode lasts
-    const r = eye.getBoundingClientRect(), gap = r.width > 50 ? 12 : 8, w = Math.min(320, innerWidth - 24);
-    const x = r.right + gap, left = Math.max(12, Math.min(innerWidth - w - 12, x + r.width / 2 - w / 2));
+  function place() { // the paired icon and desktop bubble share one anchor; CSS keeps narrow layouts centred
+    const r = eye.getBoundingClientRect(), gap = r.width > 50 ? 12 : 8;
+    const x = r.right + gap;
     Object.assign(btn.style, { left: `${x}px`, top: `${r.top}px`, width: `${r.width}px`, height: `${r.height}px` });
-    Object.assign(menu.style, { left: `${left}px`, top: `${r.bottom + 12}px`, width: `${w}px` });
-    menu.style.setProperty('--arrow', `${x + r.width / 2 - left - 8}px`);
+    const root = document.body.style; // «?» (controls.js, #howto.photo-help) sits right of the radio, same size
+    root.setProperty('--help-x', `${x + r.width + gap}px`); root.setProperty('--help-y', `${r.top}px`); root.setProperty('--help-size', `${r.width}px`);
+    menu.style.setProperty('--radio-anchor-right', `${x + r.width}px`);
+    menu.style.setProperty('--radio-anchor-bottom', `${r.bottom}px`);
+    if (!menu.hidden) {
+      const box = menu.getBoundingClientRect(), w = box.width, h = box.height + 12;
+      const tip = Math.max(31, Math.min(w - 31, x + r.width / 2 - box.left));
+      // One filled outline: no border crosses the tail, and translucent surfaces never overlap.
+      const d = `M21 13H${tip - 10}L${tip} 1L${tip + 10} 13H${w - 21}Q${w - 1} 13 ${w - 1} 33V${h - 21}Q${w - 1} ${h - 1} ${w - 21} ${h - 1}H21Q1 ${h - 1} 1 ${h - 21}V33Q1 13 21 13Z`;
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><path d="${d}" fill="black" fill-opacity=".8" stroke="#f5c518" stroke-width="2" stroke-linejoin="round"/></svg>`;
+      menu.style.setProperty('--radio-bubble', `url("data:image/svg+xml,${encodeURIComponent(svg)}")`);
+    }
   }
   function announce() {
     const status = cur === FM_OFF ? 'Música aturada' : chip?.running ? 'Ara sona' : 'Toca per reprendre';
@@ -102,7 +111,7 @@ export function setupFreeMusic({ eye, onSound }) {
     open = on; menu.hidden = !on; btn.setAttribute('aria-expanded', String(on));
     if (on) {
       clearPhotoKeys(); // stops her and drops the mouse look (its pointer lock goes with it: ui/mouse-look.js)
-      clearTimeout(nowT); now.hidden = true; now.dataset.visible = 'false'; now.setAttribute('aria-hidden', 'true'); render();
+      clearTimeout(nowT); now.hidden = true; now.dataset.visible = 'false'; now.setAttribute('aria-hidden', 'true'); render(); place();
       rows[cur].focus({ preventScroll: true });
     } else if (menu.contains(document.activeElement)) {
       if (PHOTO.on) hud.focus({ preventScroll: true }); // the keys drive her again
@@ -143,6 +152,10 @@ export function setupFreeMusic({ eye, onSound }) {
       setOpen(false); token++; clearTimeout(preT); clearTimeout(nowT); now.hidden = true; loading = -1;
       playing = -1; chip?.radio?.(null); // ended may have cleared the source while the next track is still decoding
       chip?.radioKeep?.([]);
+    },
+    playFigure(id) { // the dock's «Ball lliure»: the driven figure's own song and its «Ara sona», unless the speaker is off
+      const i = tracks.findIndex(t => t.kind === id);
+      if (shown && menuMusic && i > 0) pick(i);
     },
     beat() { // the plaça claps on the playing song's beats (main.js → animCrowd); null: the menu's own beat
       const t = playing >= 0 ? chip?.radioTime?.() : null;

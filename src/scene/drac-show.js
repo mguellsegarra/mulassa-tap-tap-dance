@@ -66,7 +66,7 @@ export function dracFrame(dt, t) { // (the red smoke of the last pass rises roun
   IN.held = photoDrac && PHOTO.keys.has('KeyE');
   if (PHOTO.sparks) {
     PHOTO.sparks = false;
-    if (IN.held) figureSfx('flama'); // one onset; repeats never restart it
+    if (IN.held) figureSfx('flama', 0, true); // explicit manual action; one onset, repeats never restart it
   }
   if (!on && !show && !hazed && dracFx.idle) { FOLK[0] = activeCrowd; sootFrame(dt, dracFx, FOLK, false, false); return; } // the Mulassa alone: nothing to do
   const play = on && G.state === 'play' && !G.collapseT;

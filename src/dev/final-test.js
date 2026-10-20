@@ -17,9 +17,10 @@ import { createLeaderboardService } from '../services/leaderboard.js';
 import { comparableScore } from '../game/score-scale.js';
 import { VERSION_RULES } from '../services/leaderboard-rules.js';
 
-// Preview the existing mock board without fabricating a completed run. Never active on public hosts.
+// Preview the existing mock board without fabricating a completed run. Never active on public hosts. ?demo (the selector's
+// made-up facts) brings the board with it, so the rank tile and the sheet's «On sóc» agree.
 export const leaderboardPreviewMode = ({ hostname = '', search = '', configured = true } = {}) =>
-  DEV_HOST.test(hostname) && (!configured || new URLSearchParams(search).has('mock'));
+  DEV_HOST.test(hostname) && (!configured || ['mock', 'demo'].some(k => new URLSearchParams(search).has(k)));
 
 const OUTCOMES = ['record', 'clear', 'collapse'];
 // the review states: the mock account each starts from (and a taken first nickname)

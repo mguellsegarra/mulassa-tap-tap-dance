@@ -6,6 +6,7 @@ import { FIGURES, TOWNS, MULASSA, portraitArt, portraitPalette, portraitStand, t
 import { DIFFS } from '../game/chart.js';
 import { num } from './sheet-kit.js';
 import { showLevelStats } from './level-stats.js';
+import { setupStandings } from './select-standings.js';
 import { escutSvg } from './escuts.js';
 import { entityLabel, entityHtml, cardEntityHtml, fitEntityLabel } from './figure-entities.js';
 import { GIFTS } from './pending-gifts.js';
@@ -23,7 +24,7 @@ export function pixelSvg(art, palette, rim) {
   return `<svg viewBox="0 0 ${w + 2} ${h + 2}" shape-rendering="crispEdges" aria-hidden="true">${[...paths].filter(([, d]) => d).map(([fill, d]) => `<path fill="${fill}" d="${d}"/>`).join('')}</svg>`;
 }
 const pillHtml = t => `<button type="button" class="btn btn-secondary sel-pill" data-town="${t.id}" tabindex="0" aria-pressed="false"${t.color ? ` style="--c:${t.color}"` : ''}>${escutSvg(t.id) || '<i aria-hidden="true"></i>'}${t.name}</button>`;
-const DEMO_BEST = [8120, 12340, null], DEMO_PCT = [92, 78, null]; // ?demo: made-up best scores (and their %) per level
+const DEMO_BEST = [48920, 80000, null], DEMO_PCT = [96, 91, null]; // ?demo: made-up best scores (and their %) per level (NORMAL: the mock board's own row)
 const TROPHY = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h10V9a5 5 0 0 1-10 0zM7 5.5H3.5V7A3.5 3.5 0 0 0 7 10.5M17 5.5h3.5V7a3.5 3.5 0 0 1-3.5 3.5M12 14v3.5M8 20.5h8M9.5 17.5h5"/></svg>';
 const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const portraitHtml = f => f.thumbnail ? `<img src="${escapeHtml(f.thumbnail)}" alt="" width="96" height="96" loading="lazy" decoding="async">` : pixelSvg(portraitArt(f), portraitPalette(f), '#2a1a10');
@@ -62,9 +63,9 @@ export function peekGap(widths, room, base) {
 }
 
 export function setupSelect({ doc = document, win = globalThis, store, keyboard = () => false, busy = () => false, reduced = () => false,
-  firstLevel = null, demo = false, getError = () => null, standing = () => Promise.resolve(null), onBoard = () => {}, sfx = () => {}, onPlay, onSelect = () => {}, onHowto, onWrite }) {
+  firstLevel = null, demo = false, getError = () => null, standing = () => Promise.resolve(null), onBoard = () => {}, sfx = () => {}, onPlay, onSelect = () => {}, onFree = () => {}, onHowto, onWrite }) {
   const DEMO = demo && Boolean((import.meta.env ?? {}).DEV); // ?demo: made-up facts on show only, never stored or sent; gone from production builds
-  const $ = id => doc.getElementById(id);
+  const $ = id => doc.getElementById(id), facts = setupStandings({ doc, $, onBoard, busy }); // facts: desktops' medals and board card (select-standings.js)
   const root = $('select'), towns = $('select-towns'), strip = $('select-strip'), levels = $('select-level'), pending = $('select-pending');
   const live = FIGURES.filter(playable), soon = FIGURES.filter(f => !playable(f));
   const liveTowns = TOWNS.filter(t => live.some(f => f.town === t.id)), restTowns = [...TOWNS.filter(t => !liveTowns.includes(t) && soon.some(f => f.town === t.id)), INVITE_TOWN]; // the invitation folds with what is to come, last
@@ -136,6 +137,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     $('select-info').inert = $('select-info').hidden = !ok || teasing;
     $('select-next').disabled = !ok || teasing; // desktop keeps a disabled placeholder; touch hides it
     $('select-next-label').textContent = !ok || teasing ? 'Pròximament?' : 'Tria la dificultat';
+    freeShown();
     if (teasing) teaserFill();
     else if (!ok) { pending.toggleAttribute('data-fold', false); pendingFill(figure); }
   }
@@ -150,8 +152,10 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
       $('select-song-credit').textContent = [figure.composer, figure.year].filter(Boolean).join(' · ');
     }
     setStep('figures');
-    if (ok) { records(); updateStanding(); }
+    if (ok) { records(); facts.medals(DIFFS.map((_, l) => (DEMO ? DEMO_BEST[l] != null && { score: DEMO_BEST[l], quality: DEMO_PCT[l] } : readFigureRecord(store, figure, l)) || null)); updateStanding(); }
   }
+  // Free play (photo mode, driving this figure) is a step-one action of a playable figure, beside the primary.
+  function freeShown() { $('select-free').hidden = step === 'level' || teasing || !playable(figure); }
   function setStep(next) {
     const back = step === 'level';
     step = next === 'level' && playable(figure) ? 'level' : 'figures';
@@ -163,6 +167,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     $('select-act').inert = !choosing;
     $('select-next').hidden = choosing;
     $('select-play').hidden = !choosing;
+    freeShown();
     $('select-figures-back').hidden = !choosing; if (choosing && !back) levels.toggleAttribute('data-quiet', true); levelStats(); // showing it again restarts its animations: no shake
     if (choosing) scrolling.stop(); // a hidden strip cannot finish a motion
     if (shown && !opening) { measure(); if (back && !choosing) centre(strip, cards[cur], 'instant'); }
@@ -176,13 +181,13 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
   function updateStanding() {
     const mine = ++req;
     rank(DEMO && figure.id === MULASSA.id ? { pos: 12, total: 135 } : null); // until the board gives one
-    if (DEMO || figure.id !== MULASSA.id) return; // the public board currently contains only Mulassa runs
-    standing().then(s => { if (mine === req && s?.pos) rank(s); }, () => {});
+    if (figure.id !== MULASSA.id) return; // the public board currently contains only Mulassa runs
+    standing().then(s => { if (mine === req && s) rank(s); }, () => {});
   }
   function rank(s) { // «Ets el número 12 de 135» («el número»: no gendered ordinal); a button, it opens Classificacions
     const el = $('select-rank-tile');
-    el.hidden = !s; tiles();
-    if (!s) return;
+    el.hidden = !s?.pos; tiles(); facts.board(s);
+    if (!s?.pos) return;
     $('select-pos').textContent = `Ets el número ${num(s.pos)}${s.total ? ` de ${num(s.total)}` : ''}`;
     el.setAttribute('aria-label', `Classificacions: ets el número ${num(s.pos)}${s.total ? ` de ${num(s.total)}` : ''}`);
   }
@@ -197,7 +202,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
       b.setAttribute('aria-label', has ? `${d}, el teu rècord ${num(score)} punts` : d);
     }
   }
-  function levelStats() { showLevelStats($, { on: step === 'level' && playable(figure), level, record: DEMO ? { score: DEMO_BEST[level], quality: DEMO_PCT[level] } : readFigureRecord(store, figure, level) }); }
+  function levelStats() { facts.fit(true); showLevelStats($, { on: step === 'level' && playable(figure), level, record: DEMO ? { score: DEMO_BEST[level], quality: DEMO_PCT[level] } : readFigureRecord(store, figure, level) }); facts.fit(); }
   function setLevel(l, by = 'tap') { // 'open': the figure's last level (NORMAL at first) or a challenge's, marked without a tap's shake
     if (!playable(figure)) return;
     l = Math.max(0, Math.min(DIFFS.length - 1, l));
@@ -372,7 +377,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
   }
   // ↑↓ jump between the screen's rows like a game menu: the corner buttons, pills, info tiles, «Aviat», figures or levels,
   // footer buttons; ←→ walk the corner row (left to right as drawn).
-  const corner = ['leaders', 'viewmode', 'music', 'feedback', 'settings'].map($).filter(Boolean);
+  const corner = ['leaders', 'music', 'feedback', 'settings'].map($).filter(Boolean);
   const cornerRow = { contains: el => corner.includes(el) };
   const rows = [cornerRow, towns, $('select-info'), pending, strip, levels, root.querySelector('.sel-footer')];
   const usable = el => el && !el.disabled && !el.closest('[hidden]') && el.getClientRects().length > 0; // fixed corners have no offsetParent
@@ -449,6 +454,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
   strip.addEventListener('pointerdown', () => { if (!closing) scrolling.stop(); });
   for (const type of ['pointerdown', 'wheel']) towns.addEventListener(type, () => { if (!closing) townScrolling.stop(); }, { passive: true }); // a hand on the pills wins
   $('select-next').addEventListener('click', nextStep);
+  $('select-free').addEventListener('click', () => { sfx('menu'); onFree(figure); });
   $('select-figures-back').addEventListener('click', () => { setStep('figures'); api.refocus(); });
   $('select-play').addEventListener('click', play);
   $('select-howto').addEventListener('click', () => { if (playable(figure)) onHowto(); });
@@ -515,7 +521,8 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     const r = el => el.getBoundingClientRect(), side = win.innerWidth >= 900 || win.innerHeight <= 500;
     const z = parseFloat(win.getComputedStyle?.(root).zoom) || 1, px = v => `${v / z}px`; // big desktops zoom the layer: rects are screen px, its CSS isn't
     // header: logo left, corner buttons right; the towns fit between (asymmetric gutter: a symmetric one dropped them on an iPad) or get their own row
-    const logo = [root.querySelector('.sel-logo')].filter(Boolean).map(r).filter(b => b.width > 0), right = corner.filter(el => !el.hidden).map(r).filter(b => b.width > 0);
+    const logoEl = root.querySelector('.sel-logo'), big = parseFloat(win.getComputedStyle?.(logoEl)?.getPropertyValue?.('--logo-big')) || 0; // desktops: the big logo comes only once the towns are inline, so the fit is judged at its size (no flip-flop)
+    const logo = [logoEl].filter(Boolean).map(r).filter(b => b.width > 0).map(b => (big ? { ...b, right: b.left + b.width / b.height * big * z, bottom: b.top + big * z } : b)), right = corner.filter(el => !el.hidden).map(r).filter(b => b.width > 0);
     const needed = bar.reduce((width, pill) => width + r(pill).width, 0) + GAPS.get(towns) * z * (bar.length - 1);
     const gutterL = Math.max(0, ...logo.map(b => b.right)) + 24, gutterR = Math.max(0, ...right.map(b => win.innerWidth - b.left)) + 24;
     const inline = Boolean(right.length && win.innerWidth - gutterL - gutterR >= needed);
@@ -553,7 +560,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     root.style.setProperty('--pending-rest-bottom', px(Math.max(0, r(root).height - pendingEnd) + 12 * z));
     if (!pending.hidden) { fitEntityLabel($('aviat-entity')); fitPendingTitle($('aviat-title'), win); }
     // Cached action bounds for diagnostic overlays; no frame-loop layout reads.
-    api.fpsFooter = ['select-figures-back', 'select-next', 'select-play'].map($).filter(el => !el.hidden).map(r);
+    api.fpsFooter = ['select-figures-back', 'select-next', 'select-free', 'select-play'].map($).filter(el => !el.hidden).map(r);
   }
   win.addEventListener('resize', () => { if (shown) { scrolling.stop(); if (closing) finishFold(); for (const el of [towns, $('select-info')]) arrivals.get(el)?.cancel(); if (teasing) teaserFill(); levelStats(); measure(); if (step === 'figures') centre(strip, cards[cur], 'instant'); } });
   if (win.ResizeObserver) {

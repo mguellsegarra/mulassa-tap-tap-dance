@@ -24,7 +24,7 @@ import { setupWatch } from './watch-ui.js';
 import { setupFreeMusic } from './free-music.js';
 import { focusIn, keyboardNav } from './focus.js';
 import { offsetMs, FINAL, FINALE_T, setOffsetMs, CALM, DEMO } from '../core/env.js';
-import { sheetUp, viewMode, viewBtn } from './controls.js';
+import { sheetUp, viewMode, viewBtn, setView } from './controls.js';
 import { renderHero } from '../scene/share-capture.js';
 import { titleLayoutNow, CORNER } from '../hud/title.js';
 import { W, K, HH, SAFE } from '../hud/canvas.js';
@@ -98,9 +98,11 @@ document.getElementById('settings-practice').addEventListener('click', () => { s
 const mockBoard = Boolean(FINAL) || leaderboardPreviewMode({ hostname: location.hostname, search: location.search, configured: leaderboard.configured });
 // mocked board: nickname, the profile's last answer and prompt choices live in memory, forgotten on reload
 const finalStore = mockBoard && memoryKeys(store, [ALIAS_KEY, ROW_KEY, DECLINES_KEY, OPTOUT_KEY, PERSIST_KEY, `${ALIAS_KEY}:identity`]);
-if (FINAL?.board === 'me') { finalStore.set(ALIAS_KEY, 'ProvaRetall'); finalStore.set(ROW_KEY, 'ProvaRetall'); }
+const demoAccount = mockBoard && DEMO && !FINAL && 'verified'; // ?demo: a player with a row, so «On sóc» and the rank exist
+if (demoAccount) { finalStore.set(ALIAS_KEY, 'Prova123'); finalStore.set(ROW_KEY, 'Prova123'); }
+else if (FINAL?.board === 'me') { finalStore.set(ALIAS_KEY, 'ProvaRetall'); finalStore.set(ROW_KEY, 'ProvaRetall'); }
 else if (FINAL?.account && FINAL.account !== 'new') finalStore.set(ALIAS_KEY, 'Prova123'); // the mock account's profile is this browser's
-const mockService = mockBoard && mockLeaderboard({ charts: [0, 1, 2].map(d => makeDanceChart(song, d)), finaleT: FINALE_T, taken: FINAL?.taken, board: FINAL?.board, account: FINAL?.account, fail: FINAL?.fail,
+const mockService = mockBoard && mockLeaderboard({ charts: [0, 1, 2].map(d => makeDanceChart(song, d)), finaleT: FINALE_T, taken: FINAL?.taken, board: FINAL?.board, account: FINAL?.account ?? (demoAccount || null), fail: FINAL?.fail,
   ...(FINAL?.review != null && { calls: (globalThis.__reviewCalls = []) }) }); // ?final&review: the mock's calls, for QA
 const board = setupBoard({ focusIn,
   canPrompt: () => FINAL?.review == null && G.state === 'results' && !sheetUp() && !document.hidden && !document.body.classList.contains('wrong-orient'),
@@ -142,7 +144,7 @@ sheets.feedback = feedback;
 const select = setupSelect({ store, keyboard: () => keyboardNav, busy: () => sheetUp() || viewMode, reduced: () => CALM.matches,
   firstLevel: CHALLENGE?.diff ?? null, demo: DEMO, getError: () => G.audioError, standing: () => board.standing(), onBoard: () => board.openBoard(() => select.refocus()),
   sfx: k => chip?.sfx(k), onSelect: setSelectedFigure,
-  onPlay: (level, figure) => { setSelectedFigure(figure); choose(level); },
+  onPlay: (level, figure) => { setSelectedFigure(figure); choose(level); }, onFree: figure => { setView(true); if (viewMode) sheets.music.playFigure(figure.id); },
   onHowto: () => { howtoMenu.showModal(); focusIn(howtoMenu, 'howto-ok'); },
   onWrite: draft => feedback.show(() => select.refocus(), draft) });
 sheets.select = select;

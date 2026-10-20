@@ -6,6 +6,7 @@ import { pixelSvg } from './select-ui.js';
 import { COARSE } from '../core/env.js';
 import { hud } from '../hud/canvas.js';
 import { lookLocked } from './mouse-look.js';
+import { store } from '../platform/storage.js';
 
 const PF_FIGS = [[MULASSA, [['Q', 's’alça'], ['E', 'guitza'], ['R', 'culada']]],
   [DRAC, [['Q', 'rugeix'], ['E', 'guspires'], ['R', 'gira']]]];
@@ -30,11 +31,6 @@ pfTip.hidden = true;
 pfTip.setAttribute('role', 'status');
 pfTip.setAttribute('aria-atomic', 'true');
 avatarsEl.after(pfTip);
-// The canvas fades out in photo mode, so its keyboard focus needs a separate visible outline.
-const pfWorldFocus = document.createElement('div');
-pfWorldFocus.id = 'photo-world-focus';
-pfWorldFocus.setAttribute('aria-hidden', 'true');
-avatarsEl.after(pfWorldFocus);
 
 function clearPhotoTip() {
   clearTimeout(pfTipT);
@@ -69,14 +65,15 @@ export function showPhotoHelp(manual = true) {
     html = `<strong>Mou ${fig[0].id === DRAC.id ? 'el Drac' : 'la Mulassa'}</strong><span class="sr-only">${fig[0].fullName}</span><div class="pf-help-grid">${actions.map(([key, label]) => `<span class="pf-help-action"><kbd>${key}</kbd><span${key === 'Esc' ? ' data-photo-escape' : ''}>${label}</span></span>`).join('')}</div><small>Tab als botons: navega.<br>? ${manual ? "amaga l'ajuda" : 'torna a mostrar els controls'}.</small>`;
   } else {
     html = '<strong>Vista lliure</strong>' + (COARSE.matches
-      ? '<p>Arrossega per girar.<br>Pessiga per acostar o allunyar.</p><small>Doble toc a la plaça: mostra els botons.<br>Botó ?: mostra o amaga l\'ajuda.</small>'
-      : '<p>Arrossega per girar. Roda per fer zoom.<br>Tria una figura per moure-la.</p><small>M: música · Esc: mostra els botons.<br>? ' + (manual ? "amaga l'ajuda" : 'mostra els controls') + '.</small>');
+      ? '<p>Arrossega per girar.<br>Pessiga per acostar o allunyar.</p><small>Botó ?: mostra o amaga l\'ajuda.</small>'
+      : '<p>Arrossega per girar. Roda per fer zoom.<br>Tria una figura per moure-la.</p>');
   }
   presentPhotoTip('help', html, manual ? 0 : fig ? PF_TIP_MS : 6500);
   pfTipManual = manual;
 }
 
-const pfAutoShown = new Set(); // discovery once per input family, never again for each Tab or refocus
+const pfAutoShown = new Set(); // session fallback when browser storage is blocked
+const photoHelpSeenKey = family => `photo-help-seen-${family}`; // Mulassa and Drac share the figure controls introduction
 let pfShown = false, pfTipFor = null, pfTipT = 0, pfTipManual = false;
 export const photoHelpAvailable = () => pfShown;
 export function syncAvatars() {
@@ -90,7 +87,7 @@ export function syncAvatars() {
   if (active !== pfTipFor) {
     pfTipFor = active;
     const fig = PF_FIGS.find(([f]) => f.id === active);
-    const freeHelp = COARSE.matches ? 'Mira la plaça. Arrossega per girar. Pessiga per acostar o allunyar. Doble toc a la plaça: mostra els botons.'
+    const freeHelp = COARSE.matches ? 'Mira la plaça. Arrossega per girar. Pessiga per acostar o allunyar.'
       : 'Mira la plaça. Tria una figura per moure-la. Esc: mostra els botons.';
     pfHelp.textContent = fig ? photoHelpDescription(fig) : freeHelp;
     hud.setAttribute('aria-label', fig ? 'Plaça: controls de moviment' : 'Plaça: mira la plaça');
@@ -101,8 +98,9 @@ export function syncAvatars() {
       }
     }
     const family = COARSE.matches ? 'touch' : fig ? 'figure' : 'view';
-    if (pfShown && !pfAutoShown.has(family)) {
+    if (pfShown && !pfAutoShown.has(family) && store.get(photoHelpSeenKey(family)) !== '1') {
       pfAutoShown.add(family);
+      store.set(photoHelpSeenKey(family), '1');
       showPhotoHelp(false);
     } else if (pfShown) {
       presentPhotoTip('notice', `<strong>${fig ? `Ara mous ${active === DRAC.id ? 'el Drac' : 'la Mulassa'}` : 'Vista lliure'}</strong>`, 1800);
@@ -116,7 +114,7 @@ export function showAvatars(on, id) {
   setPhotoControl(Boolean(on && !COARSE.matches && PF_FIGS.some(([f]) => f.id === id)), id, true);
   PHOTO.pair = on; // both existing scene figures, independent of selector identity
   avatarsEl.hidden = !on || COARSE.matches;
-  hud.tabIndex = on && !COARSE.matches ? 0 : -1;
+  hud.tabIndex = -1; // focusable by code or click for the world's keys, never a Tab stop: a full-viewport ring said nothing
   hud.setAttribute('aria-describedby', on ? 'photo-help' : '');
   pfTipFor = null;
   syncAvatars();
@@ -135,7 +133,7 @@ export function takeFigure(id) {
   syncAvatars();
 }
 // A mouse or touch choice hands the keys to the world at once (keyboard activation keeps the focus on the button)
-for (const b of pfButtons) b.addEventListener('click', e => { takeFigure(b.dataset.id); if (e.detail && PHOTO.on && hud.tabIndex >= 0) hud.focus({ preventScroll: true }); });
+for (const b of pfButtons) b.addEventListener('click', e => { takeFigure(b.dataset.id); if (e.detail && PHOTO.on && !COARSE.matches) hud.focus({ preventScroll: true }); });
 COARSE.addEventListener?.('change', () => showAvatars(pfShown)); // DevTools device mode, a tablet's keyboard dock
 
 // Using a figure immediately clears discovery help, including an already-held movement key.

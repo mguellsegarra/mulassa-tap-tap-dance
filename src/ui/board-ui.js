@@ -566,7 +566,7 @@ export function setupBoard({ focusIn, store = defaultStore, service = leaderboar
     try {
       const rows = await fetchBoard();
       const self = rows.find(r => r.is_self);
-      return { pos: Number(self?.position) || null, total: Number(self?.total) || null };
+      return { pos: Number(self?.position) || null, total: Number(self?.total ?? rows[0]?.total) || null, rows }; // rows: the selector's card (select-standings.js)
     } catch { return null; }
   }
   return {

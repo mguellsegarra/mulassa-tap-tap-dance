@@ -72,3 +72,6 @@ export const STAND = {
   'guites-berga': 1, 'gegants-olot': 1, 'drac-vilafranca': 0.8, 'la-teva-colla': 1,
 };
 export const portraitStand = figure => STAND[figure.id] ?? 0.8;
+// How heavily each figure lands in free mode (the Mulassa = 1): the one place that sets its «BUUUM» (audio.js thud),
+// lower, longer and louder with it. The Drac carries the fire kit and its heavier frame.
+export const FIGURE_WEIGHT = { 'mulassa-valls': 1, 'drac-valls': 1.5 };

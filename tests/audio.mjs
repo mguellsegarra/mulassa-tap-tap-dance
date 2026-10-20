@@ -164,6 +164,10 @@ console.log('audio wake respects page activity');
     quiet.amb = { gain: { setTargetAtTime: v => murmur.push(v) } };
     quiet.setMenuMusic(false); quiet.menu(true);
     assert.equal(murmur.at(-1), 0, 'speaker off on the menu: no murmur either');
+    quiet.setFree(true);
+    assert.equal(murmur.at(-1), 0.035, 'free mode: the plaça’s murmur sounds with the menu music off');
+    quiet.setFree(false);
+    assert.equal(murmur.at(-1), 0, 'leaving free mode: silent again');
     quiet.menu(false);
     assert.equal(murmur.at(-1), 0.035, 'a game: the murmur is back');
     quiet.menu(true); quiet.setMenuMusic(true);
@@ -292,7 +296,7 @@ console.log('menu entrance, loop points, version and tempo ok');
     globalThis.document = { hidden: false, hasFocus: () => false };
     const n = menu.ctx.sources.length; menu.sfx('flama');
     assert.equal(menu.ctx.sources.length, n, 'blur before suspend resolves cannot schedule a flame');
-    document.hidden = true; document.hasFocus = () => true; menu.sfx('flama');
+    document.hidden = true; document.hasFocus = () => true; menu.sfx('flama'); menu.sfx('flama', 0, true);
     assert.equal(menu.ctx.sources.length, n, 'hidden events cannot schedule a flame');
   } finally { if (doc === undefined) delete globalThis.document; else globalThis.document = doc; }
   const menuSound = graph();
@@ -303,6 +307,9 @@ console.log('menu entrance, loop points, version and tempo ok');
   const quietSources = menuSound.ctx.sources.length;
   for (const kind of ['menu', 'flama', 'perfect', 'crack']) menuSound.sfx(kind);
   assert.equal(menuSound.ctx.sources.length, quietSources, 'muted menu buttons and demo effects schedule nothing');
+  menuSound.sfx('flama', 0, true);
+  assert(menuSound.ctx.sources.length > quietSources, 'manual free-mode fire sounds with the music off');
+  menuSound.clearMenuSfx();
   menuSound.menu(false); // A BALLAR: same saved preference, full game sound
   menuSound.sfx('start'); menuSound.sfx('flama');
   assert(menuSound.ctx.sources.length > quietSources && menuSound.menuMusic === false, 'game effects return without changing the saved menu preference');
@@ -315,6 +322,29 @@ console.log('menu entrance, loop points, version and tempo ok');
   const enabledSources = menuSound.ctx.sources.length;
   menuSound.sfx('menu');
   assert(menuSound.ctx.sources.length > enabledSources, 'enabling menu sound restores fresh button effects');
+  // A free-mode landing's «BUUUM»: the sub-bass (the first source) falls in pitch; the figure's weight lowers, lengthens and
+  // loads it, the contact speed scales its level, a bounce within 150 ms stays silent, and with the menu music off it still sounds (an explicit action).
+  const landing = (speed, weight, tweak) => {
+    const g = graph(); tweak?.(g);
+    g.sfx('thud', speed, true, weight);
+    const sub = g.ctx.sources[0];
+    return { g, n: g.ctx.sources.length, from: sub?.frequency.events[0][0], to: sub?.frequency.events[1][0], len: sub && sub.end - sub.at - 0.02, peak: sub?.outs[0].gain.events[1][0] };
+  };
+  const light = landing(4.8, 1), heavy = landing(4.8, 1.5), soft = landing(2.4, 1);
+  assert(light.n === 4 && light.from > light.to && light.len > 0.25, 'a landing is a falling sub-bass, a partial, the cobbles and a tail');
+  assert(heavy.from < light.from && heavy.to < light.to && heavy.len > light.len && heavy.peak > light.peak, 'the heavier figure lands lower, longer and louder');
+  assert(soft.peak < light.peak * 0.6 && soft.from === light.from, 'a gentler contact is quieter, not different in pitch');
+  assert(light.g.ctx.sources.every(s => light.g.audible(s)), 'it reaches the speakers through the usual bus');
+  light.g.sfx('thud', 4.8, true, 1);
+  assert.equal(light.g.ctx.sources.length, light.n, 'a bounce reporting the same landing again is silent');
+  light.g.ctx.currentTime += 0.2; light.g.sfx('thud', 4.8, true, 1);
+  assert(light.g.ctx.sources.length > light.n, 'the next landing sounds');
+  assert.equal(landing(4.8, 1, g => { g.menuToken = {}; g.menuMusic = false; }).n, 4, 'a free-mode landing still sounds with the menu music off, like the fire');
+  assert.equal(landing(4.8, 1, g => { g.ctx.state = 'suspended'; }).n, 0, 'no landing before the audio is unlocked');
+  const runBus = landing(4.8, 1, g => g.menu(false));
+  assert(runBus.n === 4 && runBus.g.voices.size === 4, 'a landing’s voices belong to the bus, so leaving ends them');
+  globalThis.location = { search: '?thud=cavern' };
+  try { assert(landing(4.8, 1).len > light.len, '?thud picks another variant'); } finally { delete globalThis.location; }
   const c = graph(), ctx = c.ctx;
   c.menu(false); // beginRun (main.js): a run's bus
   assert.equal(await c.start(3, 0, 100), true);

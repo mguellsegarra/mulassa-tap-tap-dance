@@ -13,7 +13,7 @@
 #viewmode { top: calc(16px + env(safe-area-inset-top)); left: calc(84px + env(safe-area-inset-left)); right: auto; bottom: auto; width: 56px; height: 56px; opacity: 1; }
 #viewmode svg { width: 30px; height: 30px; }
 #leaders[hidden] ~ #viewmode { left: calc(16px + env(safe-area-inset-left)); }
-/* Keep the eye available on the splash and selector at every viewport size. */
+/* Keep the eye available on the selector at every viewport size. */
 @media (max-width: 519px), (max-height: 519px) {
   #viewmode { top: calc(10px + env(safe-area-inset-top)); left: calc(64px + env(safe-area-inset-left)); width: 44px; height: 44px; }
   #leaders[hidden] ~ #viewmode { left: calc(10px + env(safe-area-inset-left)); }
@@ -223,12 +223,15 @@
 .sel-footer { grid-row: 2; grid-column: 1; justify-self: center; width: min(640px, 100%); display: flex; align-items: stretch; justify-content: center; gap: 10px; }
 .sel-footer .btn { width: auto; min-width: min(200px, 100%); padding-inline: 28px; font-size: 20px; letter-spacing: .02em; }
 /* Compact on every screen: the label fills the button instead of a wide gold bar; icon and label centred as one group. */
-:is(#select-next, #select-play, #select-figures-back) { display: flex; align-items: center; justify-content: center; gap: 10px; }
+:is(#select-next, #select-free, #select-play, #select-figures-back) { display: flex; align-items: center; justify-content: center; gap: 10px; }
 #select-next { flex: 0 1 340px; }
 #select-next > span { display: block; line-height: 24px; }
+#select-free { flex: 0 1 240px; padding-inline: 20px; }
+#select-free > span { white-space: nowrap; }
 #select-play { padding-inline: 12px; }
 #select-play > span { white-space: nowrap; }
-:is(#select-next, #select-play, #select-figures-back) > svg { display: block; flex: 0 0 22px; width: 22px; height: 22px; margin: 0; }
+:is(#select-next, #select-free, #select-play, #select-figures-back) > svg { display: block; flex: 0 0 22px; width: 22px; height: 22px; margin: 0; }
+#select-free > svg { flex-basis: 26px; width: 26px; height: 26px; } /* the gamepad reads as one at 26 px, not 22 */
 .sel-footer #select-figures-back { min-width: 0; padding: 6px 12px; margin-right: auto; font-size: 15px; }
 #select-figures-back > svg { box-sizing: border-box; padding: 2px; }
 #select-figures-back > span { min-width: 0; }
@@ -312,6 +315,8 @@ body.view-mode #select { opacity: 0; visibility: hidden; pointer-events: none; t
   .sel-card-name { font-size: 14px; line-height: 18px; }
   .sel-card .nb small { font-size: 11px; }
   .sel-footer .btn, #select-next { flex: 1; min-width: 0; font-size: 18px; } /* full width, under the thumb */
+  #select-next { flex: 1.4 1 0; } #select-free { flex: 1 1 0; padding-inline: 12px; } /* beside it: the primary keeps one line */
+  #select-free > svg { margin-top: -3px; } /* the smaller label's ink sits higher in its line: the pad meets it (measured) */
   .sel-footer #select-figures-back { font-size: 13px; }
 }
 @media (max-height: 500px) {
@@ -384,6 +389,53 @@ body.view-mode #select { opacity: 0; visibility: hidden; pointer-events: none; t
   .sel-card .nb small { font-size: 13px; }
   .sel-banner { flex-basis: 38px; }
   #select { --more-w: 38px; }
+}
+/* Desktops, step 1 (select-standings.js; Marc, 2026-10-20): the records as three medals and the board as one card, the
+   position its header, in place of the position chip (phones keep the chip and step 2's records). Information chips:
+   dark, cream text, no outline; points lilac. Step 2 keeps the card (its rows give way to the level row) but not the medals. */
+.sel-meds, .sel-standings { display: none; }
+@media (min-width: 900px) and (min-height: 600px) {
+  #select .sel-panel > .sel-tiles.sel-tiles { display: none !important; }
+  #select .sel-meds:not([hidden], [data-gone]) { display: grid; }
+  #select .sel-standings:not([hidden]) { display: block; }
+  #select[data-step="level"] .sel-meds { display: none !important; }
+  .sel-meds { grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; }
+  .sel-med { display: grid; justify-items: center; align-content: center; gap: 2px; padding: 10px 6px; border-radius: var(--sel-chip-r); background: var(--sel-chip-bg); text-align: center; }
+  .sel-med .lvn { font-size: 13px; letter-spacing: .06em; color: var(--sel-muted); }
+  .sel-med .stars { display: inline-flex; gap: 2px; }
+  .sel-med .stars svg { width: 24px; height: 24px; fill: #fff3d633; }
+  .sel-med .stars .on { fill: #f5c518; }
+  .sel-med b { font-size: 24px; line-height: 1.1; color: #c9a7ff; }
+  .sel-med.none b { color: var(--sel-muted); }
+  .sel-med small { font-size: 13px; font-weight: 600; line-height: 1.2; color: var(--sel-muted); }
+  /* one line each when the column is short (1920×1080): the board's names come first (select-standings.js) */
+  .sel-meds[data-compact] .sel-med { grid-auto-flow: column; justify-content: center; align-items: center; gap: 6px; padding: 6px; }
+  .sel-meds[data-compact] .sel-med small { display: none; }
+  #select .sel-meds[data-compact] .sel-med :is(.stars svg) { width: 16px; height: 16px; }
+  #select .sel-meds[data-compact] .sel-med b { font-size: 18px; }
+  .sel-standings { width: 100%; border-radius: var(--sel-chip-r); background: var(--sel-chip-bg); overflow: hidden; }
+  #select .sel-standings-head { position: relative; display: flex; align-items: center; gap: 8px; width: 100%; min-height: 48px; margin: 0; padding: 0 14px; border: 0; border-bottom: 1px solid var(--sel-line); border-radius: 0; background: #fff3d60d; color: inherit; font: inherit; font-size: 20px; text-align: left; cursor: pointer; }
+  .sel-standings-head svg { flex: none; width: 1.1em; height: 1.1em; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+  .sel-standings-head .chev { width: .9em; height: .9em; margin-left: auto; stroke: var(--sel-muted); }
+  #select .sel-standings-head:active { filter: brightness(1.2); }
+  .sel-standings-rows { margin: 0; padding: 2px 0; list-style: none; font-size: 16px; }
+  .sel-standings-rows li { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto 46px 74px; align-items: center; column-gap: 8px; min-height: 34px; padding: 0 14px; }
+  .sel-standings-rows li + li { border-top: 1px solid var(--sel-line); }
+  .sel-standings-rows .n { color: var(--sel-muted); }
+  .sel-standings-rows .lvl { padding: 0 6px; border-radius: 999px; font-size: 10px; font-weight: 800; line-height: 16px; letter-spacing: .05em; color: #2a1a10; }
+  .sel-standings-rows .pc { text-align: right; color: var(--sel-muted); }
+  .sel-standings-rows .pt { text-align: right; color: #c9a7ff; }
+  .sel-standings-rows .me { background: #fff3d61a; box-shadow: inset 3px 0 #fff3d6; }
+  .sel-standings-rows .dots { display: block; min-height: 0; text-align: center; line-height: 18px; color: var(--sel-muted); }
+  .sel-standings-foot { display: flex; align-items: center; gap: 8px; margin: 0; padding: 8px 14px; border-top: 1px solid var(--sel-line); font-size: 16px; }
+  .sel-standings-foot[hidden] { display: none; }
+  .sel-standings-foot svg { flex: none; width: 20px; height: 20px; fill: none; stroke: #f5c518; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+  .sel-standings-foot b { color: #c9a7ff; }
+  .sel-standings-foot i { flex: 1; }
+}
+@media (min-width: 1100px) and (min-height: 900px) {
+  .sel-standings-rows { font-size: 17px; } .sel-standings-rows li { min-height: 38px; }
+  .sel-med b { font-size: 28px; } .sel-med .stars svg { width: 28px; height: 28px; }
 }
 /* Short desktop windows: the dock gives the pending card its room back (a 324 px dock took over half of 600 px). */
 @media (min-width: 900px) and (min-height: 600px) and (max-height: 660px) { #select { --dock-h: 224px; --action-h: 44px; --card-label-h: 68px; } .sel-card { --floor: 9px; } } /* the floor keeps ~16% of the 58 px panel, as elsewhere */
@@ -619,49 +671,64 @@ body:has(:focus-visible) #select .sel-card[aria-selected="true"]:not(:focus-visi
    already as big as a laptop's or bigger: x1.45 made the selector giant on a 27" 5K. measure() divides by it. */
 @media (min-width: 2200px) and (min-height: 1200px) { #select { zoom: 1.1; } }
 
-/* The selector's header: the title's lettering top-left (index.html .sel-logo, still and not a control), the five corner
-   buttons in one row on the right, looking first (Classificacions, photo mode), then sound and talking (music, Bústia), then ⚙. Only
+/* The selector's header: the title's lettering top-left (index.html .sel-logo, still and not a control), the four corner
+   buttons in one row on the right, Classificacions first, then sound and talking (music, Bústia), then ⚙ (free play is the
+   dock's «Ball lliure»; #viewmode shows only inside it, as the exit at the row's right end, the radio and ? beside it). Only
    here: on the title they are the canvas layout's obstacles. A hidden one (no board, no Bústia) closes its gap; --cb-i
    counts from the left, --cb-r from the right. Inside #select, so photo mode hides the logo with the rest. */
-body:has(#select:not([hidden])) { --cb-a: 0; --cb-b: 0; --cb-n: calc(5 - var(--cb-a) - var(--cb-b)); --cb-g: 12px; }
+body:has(#select:not([hidden])) { --cb-a: 0; --cb-b: 0; --cb-n: calc(4 - var(--cb-a) - var(--cb-b)); --cb-g: 12px; }
 body:has(#select:not([hidden])):has(#leaders[hidden]) { --cb-a: 1; }
 body:has(#select:not([hidden])):has(#feedback[hidden]) { --cb-b: 1; }
 body:has(#select:not([hidden])) #leaders { --cb-i: 0; }
-body:has(#select:not([hidden])) #viewmode { --cb-i: calc(1 - var(--cb-a)); }
-body:has(#select:not([hidden])) #music { --cb-i: calc(2 - var(--cb-a)); }
-body:has(#select:not([hidden])) #feedback { --cb-i: calc(3 - var(--cb-a)); }
-body:has(#select:not([hidden])) #settings { --cb-i: calc(4 - var(--cb-a) - var(--cb-b)); }
-body:has(#select:not([hidden])) :is(#leaders, #viewmode, #feedback, #music, #settings) { --cb-r: calc(var(--cb-n) - 1 - var(--cb-i)); }
+body:has(#select:not([hidden])) #music { --cb-i: calc(1 - var(--cb-a)); }
+body:has(#select:not([hidden])) #feedback { --cb-i: calc(2 - var(--cb-a)); }
+body:has(#select:not([hidden])) #settings { --cb-i: calc(3 - var(--cb-a) - var(--cb-b)); }
+body:has(#select:not([hidden])) #viewmode { --cb-r: 2; --cb-i: calc(var(--cb-n) - 3); } /* shown only in free play: the exit, then the radio and the ? (free-music.js places both from it) end the row */
+body:has(#select:not([hidden])) :is(#leaders, #feedback, #music, #settings) { --cb-r: calc(var(--cb-n) - 1 - var(--cb-i)); }
 #select > .sel-logo { position: absolute; z-index: 2; overflow: visible; /* the outline's edge */ left: max(16px, env(safe-area-inset-left)); top: calc(16px + env(safe-area-inset-top)); width: auto; height: 56px; pointer-events: none; }
 @media (min-width: 520px) and (min-height: 520px) { /* 56 px buttons */
-  body:has(#select:not([hidden])) :is(#leaders, #viewmode, #feedback, #music, #settings) { left: auto; right: calc(max(16px, env(safe-area-inset-right)) + var(--cb-r) * 68px); }
+  body:has(#select:not([hidden])) :is(#leaders, #feedback, #music, #settings, #viewmode) { left: auto; right: calc(max(16px, env(safe-area-inset-right)) + var(--cb-r) * 68px); }
 }
 @media (min-width: 520px) and (max-height: 519px), (max-height: 500px) { /* 44 px buttons, short windows */
-  body:has(#select:not([hidden])) :is(#leaders, #viewmode, #feedback, #music, #settings) { left: auto; right: calc(max(12px, env(safe-area-inset-right)) + var(--cb-r) * 56px); }
+  body:has(#select:not([hidden])) :is(#leaders, #feedback, #music, #settings, #viewmode) { left: auto; right: calc(max(12px, env(safe-area-inset-right)) + var(--cb-r) * 56px); }
   #select > .sel-logo { left: max(12px, env(safe-area-inset-left)); top: calc(14px + env(safe-area-inset-top)); height: 40px; }
 }
 /* Portrait phones: 44 px buttons, 8 px apart (6 under 375 px) so the logo keeps >= 82 px (TAP's capitals >= 7 px) beside
    them; it takes what the row leaves, up to the row's height. Under 360 px it cannot fit: no logo, the row centred. */
 @media (max-width: 519px) and (min-height: 501px) {
   body:has(#select:not([hidden])) { --cb-g: 8px; }
-  body:has(#select:not([hidden])) :is(#leaders, #viewmode, #feedback, #music, #settings) { top: calc(10px + env(safe-area-inset-top)); right: auto; bottom: auto; width: 44px; height: 44px; left: calc(100% - max(12px, env(safe-area-inset-right)) - (var(--cb-r) + 1) * 44px - var(--cb-r) * var(--cb-g)); }
-  body:has(#select:not([hidden])) #viewmode { display: inline-flex; }
-  body:has(#select:not([hidden])) #viewmode svg { width: 24px; height: 24px; }
+  body:has(#select:not([hidden])) :is(#leaders, #feedback, #music, #settings, #viewmode) { top: calc(10px + env(safe-area-inset-top)); right: auto; bottom: auto; width: 44px; height: 44px; left: calc(100% - max(12px, env(safe-area-inset-right)) - (var(--cb-r) + 1) * 44px - var(--cb-r) * var(--cb-g)); }
   #select > .sel-logo { left: max(12px, env(safe-area-inset-left)); top: calc(10px + env(safe-area-inset-top)); height: 44px; width: calc(100% - max(12px, env(safe-area-inset-left)) - max(12px, env(safe-area-inset-right)) - 10px - var(--cb-n) * (44px + var(--cb-g)) + var(--cb-g)); }
 }
 @media (max-width: 374px) and (min-height: 501px) { body:has(#select:not([hidden])) { --cb-g: 6px; } }
+@media (max-width: 374px) and (min-height: 501px) { /* both labels on one line, nothing clipped: each button takes its words' width, then shares what is left */
+  .sel-footer #select-next, .sel-footer #select-free { flex: 1 1 auto; padding-inline: 10px; font-size: 16px; } #select-free { gap: 8px; }
+}
 @media (max-width: 359px) and (min-height: 501px) {
   #select > .sel-logo { display: none; }
-  body:has(#select:not([hidden])) :is(#leaders, #viewmode, #feedback, #music, #settings) { left: calc(50% - (var(--cb-n) * 56px - 12px) / 2 + var(--cb-i) * 56px); }
+  body:has(#select:not([hidden])) :is(#leaders, #feedback, #music, #settings, #viewmode) { left: calc(50% - (var(--cb-n) * 56px - 12px) / 2 + var(--cb-i) * 56px); }
 }
 
 .sel-card.later { content-visibility: auto; contain-intrinsic-size: auto 128px auto 200px; } /* the off-screen pending cards skip their layout and paint: unfolding 30-odd cards cost ~150 ms on an iPhone */
 
 /* FPS own a rail, independent of the selected figure, fold, difficulty and footer actions. */
 body.fps-on:has(#select:not([hidden])) { --fps-rail: 24px; }
-body.fps-on:has(#select:not([hidden])) :is(#leaders, #viewmode, #feedback, #music, #settings), body.fps-on #select > .sel-logo { translate: 0 var(--fps-rail); }
+body.fps-on:has(#select:not([hidden])) :is(#leaders, #feedback, #music, #settings, #viewmode), body.fps-on #select > .sel-logo { translate: 0 var(--fps-rail); }
 body.fps-on #select:not([data-header-inline]) > :is(.sel-towns, .sel-info) { translate: 0 var(--fps-rail); }
 body.fps-on #select .sel-info { max-height: calc(100% - var(--info-top) - var(--dock-h) - 6px - env(safe-area-inset-top) - env(safe-area-inset-bottom) - var(--fps-rail)); }
 @media (max-height: 500px) {
   body.fps-on #select .sel-pending { top: calc((100% + 60px + env(safe-area-inset-top) + var(--fps-rail) - 8px - env(safe-area-inset-bottom)) / 2); --pending-max: calc(100% - 68px - env(safe-area-inset-top) - env(safe-area-inset-bottom) - var(--fps-rail)); max-height: var(--pending-max); }
 }
+
+/* Desktops: a bigger logo, its letters on the info's left edge, its top on the corner buttons' top (Marc, 2026-10-20) */
+/* The big one only while the towns sit inline beside it (data-header-inline, select-ui.js measure()): on their own row, at 84 px, it would cover them. */
+@media (min-width: 900px) and (min-height: 600px) { #select > .sel-logo { --logo-big: 80px; left: calc(max(40px, env(safe-area-inset-left)) + 1px); } #select[data-header-inline] > .sel-logo { height: var(--logo-big); } }
+@media (min-width: 1100px) and (min-height: 900px) { #select > .sel-logo { --logo-big: 96px; } }
+/* Wide desktops: the dock's strip sits in the middle, clear of the info column, so the column runs down to the screen's
+   foot instead of stopping at the dock's top (the empty band under the position, Marc 2026-10-20). Not while the strip
+   overflows (the catalog open): then it spans the width. select-standings.js fills what this gives. */
+@media (min-width: 2000px) and (min-height: 900px) { /* from 2000 px the 640 px column ends left of the ~600 px centred strip */
+  #select:has(#select-carousel[data-fits]) .sel-info { max-height: calc(100% - var(--info-top) - 56px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); }
+}
+/* the zoom (x1.1) would push the logo's top 1.6 px under the corner buttons' (which are outside #select) */
+@media (min-width: 2200px) and (min-height: 1200px) { #select > .sel-logo { top: calc((16px + env(safe-area-inset-top)) / 1.1); } }

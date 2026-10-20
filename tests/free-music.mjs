@@ -15,6 +15,7 @@ class Node {
   append() {}
   contains() { return false; }
   focus() {}
+  getBoundingClientRect() { return { left: 0, width: 320, height: 300 }; }
 }
 const rows = [0, 1, 2, 3].map(i => new Node(i));
 const chip = Object.create(Chip.prototype), failures = [], requests = [];
@@ -27,24 +28,26 @@ Object.assign(chip, {
   unlock() {}, beginRun() {}, endRun() {}, wake() { this.ctx.state = 'running'; this.ctx.changed?.(); },
   radioLoad(url) { return new Promise((resolve, reject) => requests.push({ url, resolve, reject })); },
 });
-let button;
+let button, announcement;
 const figure = id => ({ id, song: id, composer: 'F. Bofarull', year: 1987 });
+const helpVars = {};
 const context = vm.createContext({ chip, menuMusic: true, MULASSA: figure('mulassa'), DRAC: figure('drac'),
   figureSong: id => ({ audio: id, tail: 90, beats: [0, 1] }), portraitArt() {}, portraitPalette() {}, pixelSvg: () => '',
   mulaSpinner: () => ({}), PHOTO: { on: false }, clearPhotoKeys() {}, hud: {}, keyboardNav: false, beatAtTime() {},
   errors: { report: (...args) => failures.push(args) }, audioFailureTags: e => ({ name: e.name }),
   setMenuSound(on) { context.menuMusic = on; chip.setMenuMusic(on); },
-  document: { createElement: () => new Node(), activeElement: null },
+  document: { createElement: () => new Node(), activeElement: null, body: { style: { setProperty: (k, v) => { helpVars[k] = v; } } } },
   addEventListener() {}, innerWidth: 1280, setTimeout: () => 0, clearTimeout() {},
 });
 vm.runInContext(readFileSync(new URL('../src/ui/free-music.js', import.meta.url), 'utf8')
   .replace(/^import .*;$/gm, '').replaceAll('export ', ''), context);
 const player = context.setupFreeMusic({ eye: {
-  after(btn) { button = btn; }, getBoundingClientRect: () => ({ right: 60, top: 10, bottom: 60, width: 50, height: 50 }),
+  after(btn, menu, now) { button = btn; announcement = now; }, getBoundingClientRect: () => ({ right: 60, top: 10, bottom: 60, width: 50, height: 50 }),
 }, onSound() {} });
 const pick = i => rows[i].listeners.click();
 const decode = async index => { requests[index].resolve({ duration: 92 }); await tick(); };
 chip.menu(true); await tick(); player.visible(true);
+assert.deepEqual([helpVars['--help-x'], helpVars['--help-y'], helpVars['--help-size']], ['126px', '10px', '50px'], 'the ? help button sits right of the radio, same size and row');
 pick(1); await decode(0);
 const first = chip.radioSrc;
 pick(1);
@@ -85,4 +88,30 @@ pick(2); chip.radioSrc.src.onended();
 player.visible(false);
 await decode(8);
 assert(chip.menuSrc && !chip.radioSrc, 'leaving between natural ended and the next decode restores the menu');
+{ // the dock's «Ball lliure» starts the chosen figure's own song with its status; a speaker turned off stays off
+  player.visible(true); const asked = requests.length;
+  player.playFigure('drac'); await decode(asked);
+  assert(button.dataset.kind === 'drac' && chip.radioSrc && !announcement.hidden && announcement.innerHTML.includes('drac'), 'Ball lliure plays her song and says so');
+  player.visible(false); context.setMenuSound(false); player.visible(true);
+  player.playFigure('mulassa');
+  assert(requests.length === asked + 1 && button.dataset.kind === 'off', 'with the menu music off, nothing starts');
+  player.visible(false); context.setMenuSound(true);
+}
+{
+  const timers = new Map(); let id = 0;
+  context.setTimeout = (fn, ms) => { timers.set(++id, { fn, ms }); return id; };
+  context.clearTimeout = i => timers.delete(i);
+  player.visible(true); pick(3);
+  assert(!announcement.hidden && announcement.dataset.visible === 'true', 'a music choice shows the compact status');
+  assert(announcement.innerHTML.includes('Música aturada'), 'silence has a distinct status instead of repeating its title');
+  const first = [...timers.keys()].find(i => timers.get(i).ms === 2600);
+  assert(first, 'the announcement keeps its proportional reading time');
+  timers.get(first).fn();
+  assert.equal(announcement.dataset.visible, 'false', 'expiry starts the CSS fade');
+  assert(!announcement.hidden && announcement.attrs['aria-hidden'] === 'true', 'fade preserves the painted box without retaining a stale accessible status');
+  pick(3); pick(3);
+  assert(!timers.has(first) && [...timers.values()].filter(t => t.ms === 2600).length === 1, 'rapid choices replace the old announcement timer');
+  player.visible(false);
+  assert(announcement.hidden && timers.size === 0, 'leaving clears the status and its timer');
+}
 console.log('free music: natural handover, manual/ended/decode races, repeated choice, silence, resume and exit ok');

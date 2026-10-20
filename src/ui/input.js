@@ -8,7 +8,7 @@ import { G, chip, KEYS, down, clock, songTime } from '../game/state.js';
 import { pageActive, offsetMs, setOffsetMs } from '../core/env.js';
 import { privacyMenu, pauseMenu, howtoMenu, settingsMenu } from './handles.js';
 import { togglePause } from './pause-actions.js';
-import { sheetUp, viewMode, setView, steers, menuState } from './controls.js';
+import { sheetUp, viewMode, setView, steers, menuState, photoScreen } from './controls.js';
 import { unlock, openSelect, toTitle } from '../game/flow.js';
 import { press, settleHold, eventAt, releaseAll } from '../game/judge.js';
 import { padButtons, haptic, padFeedback, syncPad } from './pad.js';
@@ -19,13 +19,13 @@ import { lookDown, lookUp, lookSkip, lookEscape, lookLocked } from './mouse-look
 for (const ev of ['touchend', 'click', 'keydown']) addEventListener(ev, () => { if (!G.paused && pageActive()) chip?.wake(); }, { passive: true });
 addEventListener('keydown', e => {
   if (e.code === 'Escape' && lookEscape()) { clearPhotoKeys(); e.preventDefault(); return; } // it freed the mouse look, nothing more
-  if (photoKey(e, viewMode && menuState() && !G.paused && pageActive() && !sheetUp() && (e.target === hud || e.target?.tagName === 'BODY'))) { syncAvatars(); return; } // only the world owns actor shortcuts; controls keep native keys
+  if (photoKey(e, viewMode && photoScreen() && !G.paused && pageActive() && !sheetUp() && (e.target === hud || e.target?.tagName === 'BODY'))) { syncAvatars(); return; } // only the world owns actor shortcuts; controls keep native keys
   if (e.repeat || sheets.sync.open || privacyMenu.open || sheets.board.open || sheets.share.open || sheets.feedback.open || sheets.watch?.open) return; // «Bústia de la plaça» is typed into; the sync sheet takes its own keys; Privadesa is read, not played; Classificacions types an alias; Comparteix has its own buttons
   if (G.state === 'play' && e.code === 'Escape') {
     if (!pauseMenu.open) { e.preventDefault(); togglePause(); }
     return;
   }
-  if (!['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target?.tagName) && !e.target?.isContentEditable && menuState() && !sheetUp() && !e.ctrlKey && !e.metaKey && !e.altKey && (e.code === 'KeyH' || viewMode && e.code === 'Escape')) { // «mode foto» (H is no game key)
+  if (!['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target?.tagName) && !e.target?.isContentEditable && photoScreen() && !sheetUp() && !e.ctrlKey && !e.metaKey && !e.altKey && (e.code === 'KeyH' || viewMode && e.code === 'Escape')) { // «mode foto» (H is no game key)
     e.preventDefault(); if (e.code !== 'Escape' || !stopControl()) setView(!viewMode); return; // Escape steps back: driving → looking → buttons
   }
   if (viewMode || G.state === 'select') return; // the selector owns its keys; photo walking has already handled its keys
@@ -81,7 +81,7 @@ hud.addEventListener('pointermove', e => {
     if (p) photoLook(e.clientX - p.x, e.clientY - p.y);
   }
   const oldZoom=orbit.x[1];
-  worldMove(e); orbitMove(orbit, e.pointerId, e.clientX, e.clientY, pnow());
+  orbitMove(orbit, e.pointerId, e.clientX, e.clientY, pnow());
   if(PHOTO.on && orbit.pinch && oldZoom>0)photoZoom(orbit.x[1]/oldZoom); }); // dragging the view
 let photoMousePointer = null;
 const photoMouseAllowed = () => PHOTO.on && viewMode && steers() && !G.paused && pageActive();
@@ -101,10 +101,9 @@ hud.addEventListener('pointerdown', e => {
   if (e.pointerType === 'mouse') photoMousePointer = e.pointerId;
   if (!steers() && PHOTO.on) return;
   if (viewMode && e.pointerType === 'mouse') hud.focus({ preventScroll: true });
-  worldDown(e);
   if (PHOTO.on && e.pointerType === 'mouse') return; // mousedown owns actor camera drags; LMB still taps the world
   if (menuState()) {
-    const b = G.state !== 'select' && !viewMode && buttonAt(e); // «mode foto»: the (unseen) button is no target, every press steers
+    const b = G.state !== 'select' && buttonAt(e);
     if (b && !orbit.ptrs.size && G.state === 'splash') unlock(); // ENTRA: the only way in (and the gesture that starts the audio)
     else if (b && !orbit.ptrs.size) { chip?.sfx('menu'); openSelect(); }
     else if (steers() && (e.pointerType !== 'mouse' || e.button === 0)) {
@@ -137,23 +136,3 @@ hud.addEventListener('gesturechange', e => {
   gestureScale = e.scale || 1;
 });
 
-// Two still taps on the exposed world toggle the chrome. Pointer events cover mouse and touch once;
-// synthesized click/dblclick events are intentionally ignored. A drag or second finger cancels the pair.
-let worldTap = null, worldPress = null;
-function worldDown(e) {
-  if (!steers() || e.button > 0 || e.isPrimary === false || worldPress) { worldPress = null; worldTap = null; return; }
-  worldPress = { id: e.pointerId, x: e.clientX, y: e.clientY, moved: false };
-}
-function worldMove(e) {
-  if (!worldPress || e.pointerId !== worldPress.id) return;
-  if (Math.hypot(e.clientX - worldPress.x, e.clientY - worldPress.y) > 8) { worldPress.moved = true; worldTap = null; }
-}
-hud.addEventListener('pointerup', e => {
-  const press = worldPress; worldPress = null;
-  if (!press || press.id !== e.pointerId || press.moved || Math.hypot(e.clientX - press.x, e.clientY - press.y) > 8 || !steers()) return;
-  const now = performance.now();
-  if (worldTap && now - worldTap.t <= 350 && Math.hypot(e.clientX - worldTap.x, e.clientY - worldTap.y) <= 24) {
-    worldTap = null; setView(!viewMode);
-  } else worldTap = { t: now, x: e.clientX, y: e.clientY };
-});
-hud.addEventListener('pointercancel', () => { worldPress = null; worldTap = null; });

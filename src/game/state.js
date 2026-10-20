@@ -34,10 +34,13 @@ if (CHALLENGE) {
 }
 export let chip = null;
 export const setChip = v => (chip = v);
-// Scene effects belong to the run, even when the same animation is used by the selector / photo demo.
+// Automatic scene effects belong to the run; an explicit free-mode action may also sound.
 // Never enqueue a demo sound for unlock or focus; menu controls and music use their own existing paths.
-export function figureSfx(kind, i = 0) {
-  if ((G.state === 'play' || G.state === 'results') && !G.paused && pageActive()) chip?.sfx(kind, i);
+export function figureSfx(kind, i = 0, manual = false) {
+  if (!G.paused && pageActive()) {
+    if (manual && G.state === 'select') chip?.sfx(kind, i, true);
+    else if (G.state === 'play' || G.state === 'results') chip?.sfx(kind, i);
+  }
 }
 export let clock = 0;
 export const setClock = v => (clock = v);
@@ -54,6 +57,7 @@ export function setMenuSound(on) { // the speaker and the radio's «Silenci» ar
   store.set('menu-music', on ? 'on' : 'off');
   engine?.setMenuMusic(on);
 }
+export const setFreeSound = on => engine?.setFree(on); // free mode: the plaça's murmur stays with the menu music off
 export const audioEngine = () => (engine ||= new Chip(song, { menuMusic, menuLoop: menuSong }));
 // Called synchronously by entry/photo gestures, sharing the preloaded context and menu transport.
 export function startMenuAudio() {

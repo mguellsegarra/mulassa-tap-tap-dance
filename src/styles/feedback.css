@@ -17,19 +17,16 @@
   #music { left: calc(12px + 3 * (44px + 10px) + env(safe-area-inset-left)); }
 }
 @media (max-height: 500px) and (max-width: 419px) { #feedback, #music { display: none; } } /* tiny short windows: no room beside the corner pill */
-/* «Mode foto» (main.js setView, title only): a quiet eye in the empty bottom-right corner, level with the «Com es juga?»
-   pill (the top row is full on a 360 px phone); landscape phones: under the ⚙ (the bottom holds the choice row there).
-   Pressed, every control, tip and the HUD canvas fade out (the canvas keeps its drags: the camera still steers); only
-   this button stays, dimmer, and nearly vanishes after a few idle seconds (main.js adds .idle; any touch/move/key wakes it). */
-#viewmode { position: fixed; z-index: 3; right: calc(10px + env(safe-area-inset-right)); bottom: calc(16px + env(safe-area-inset-bottom)); width: 44px; height: 44px; min-height: 0; padding: 0; border-width: 2px; border-radius: 50%; opacity: .7; transition: opacity .25s; }
+/* «Mode foto» (ui/controls.js setView, selector only; select.css places the eye in the corner row). Pressed, every control,
+   tip and the HUD canvas fade out (the canvas keeps its drags: the camera still steers); only this button stays, dimmer,
+   and nearly vanishes after a few idle seconds (controls.js adds .idle; any touch/move/key wakes it). */
+#viewmode { position: fixed; z-index: 3; width: 44px; height: 44px; min-height: 0; padding: 0; border-width: 2px; border-radius: 50%; opacity: .7; transition: opacity .25s; }
 #viewmode svg { width: 22px; height: 22px; }
 #viewmode:focus-visible { opacity: 1; }
 @media (hover: hover) { #viewmode:hover { opacity: 1; } }
 #viewmode[aria-pressed="true"]:not(:focus-visible) { opacity: .5; }
 #viewmode[aria-pressed="true"].idle:not(:focus-visible) { opacity: .12; transition-duration: 1s; }
 #viewmode[aria-pressed="false"] .off, #viewmode[aria-pressed="true"] .on { display: none; }
-@media (min-width: 520px) and (min-height: 520px) { #viewmode { right: calc(22px + env(safe-area-inset-right)); bottom: calc(22px + env(safe-area-inset-bottom)); } } /* centred on the pill and under the ⚙ */
-@media (max-height: 500px) { #viewmode { right: auto; bottom: auto; left: calc(12px + env(safe-area-inset-left)); top: calc(12px + 44px + 10px + env(safe-area-inset-top)); } }
 :is(#hud, #leaders, #settings, #feedback, #music, #howto, #ios-hint, #fps, #feedback-nudge) { transition: opacity .2s; }
 body.view-mode :is(#hud, #leaders, #settings, #feedback, #music, #howto, #ios-hint, #fps, #feedback-nudge) { opacity: 0; }
 body.view-mode :is(#leaders, #settings, #feedback, #music, #howto, #ios-hint, #fps, #feedback-nudge) { visibility: hidden; pointer-events: none; transition: opacity .2s, visibility 0s .2s; } /* (main.js also makes them inert) */
@@ -55,7 +52,7 @@ body:has(#viewmode.idle) #photo-figs:not(:hover, :focus-within) { opacity: .25; 
 #photo-figs .pf:active { transform: none; }
 #photo-figs .pf-name { text-wrap: balance; }
 /* Non-modal notice. Fixed to the viewport, independent of the column's idle opacity. */
-#photo-tip { --help-left: max(16px, env(safe-area-inset-left)); --help-right: max(16px, env(safe-area-inset-right)); position: fixed; z-index: 6; --help-top: max(16px, env(safe-area-inset-top)); --help-bottom: max(16px, env(safe-area-inset-bottom)); top: calc(var(--help-top) + (var(--app-h, 100dvh) - var(--help-top) - var(--help-bottom)) / 2); left: calc((100% + var(--help-left) - var(--help-right)) / 2); translate: -50% -50%; box-sizing: border-box; width: min(460px, calc(100% - var(--help-left) - var(--help-right))); margin: 0; padding: 20px; border-radius: 24px; background: #000c; color: #fff3d6; font: 600 16px/1.25 'Baloo 2', system-ui, sans-serif; text-align: center; pointer-events: none; opacity: 0; transform: translateY(4px); transition: opacity .16s ease-out, transform .16s ease-out; }
+#photo-tip { --help-left: max(16px, env(safe-area-inset-left)); --help-right: max(16px, env(safe-area-inset-right)); position: fixed; z-index: 6; --help-top: max(16px, env(safe-area-inset-top)); --help-bottom: max(16px, env(safe-area-inset-bottom)); top: calc(var(--help-top) + (var(--app-h, 100dvh) - var(--help-top) - var(--help-bottom)) / 2); --help-width: min(460px, calc(100% - var(--help-left) - var(--help-right))); left: max(calc((100% + env(safe-area-inset-left) - env(safe-area-inset-right)) / 2), calc(var(--help-left) + var(--help-width) / 2)); translate: -50% -50%; box-sizing: border-box; width: var(--help-width); margin: 0; padding: 20px; border-radius: 24px; background: #000c; color: #fff3d6; font: 600 16px/1.25 'Baloo 2', system-ui, sans-serif; text-align: center; pointer-events: none; opacity: 0; transform: translateY(4px); transition: opacity .16s ease-out, transform .16s ease-out; }
 #photo-tip[hidden] { display: none; }
 #photo-tip[data-visible="true"] { opacity: 1; transform: none; }
 @starting-style { #photo-tip[data-visible="true"] { opacity: 0; transform: translateY(4px); } }
@@ -66,29 +63,30 @@ body:has(#viewmode.idle) #photo-figs:not(:hover, :focus-within) { opacity: .25; 
 #photo-tip [data-photo-escape] { min-height: 40px; display: flex; align-items: center; } /* lock/unlock wording shares its two-line slot */
 #photo-tip .pf-help-action:last-child:nth-child(odd) { grid-column: 1 / -1; } /* Escape closes the pairs; alone on its row only when it would leave a hole (M, the radio, now shares it) */
 #photo-tip kbd { display: inline-flex; align-items: center; justify-content: center; flex: none; box-sizing: border-box; min-width: 28px; min-height: 28px; padding: 0 3px; border: 1px solid #fff3d680; border-bottom-width: 3px; border-radius: 6px; background: #ffffff12; font: 700 14px/1 'Baloo 2', system-ui, sans-serif; }
-body.view-mode #howto.photo-help { opacity: 1; visibility: visible; pointer-events: auto; }
-#photo-world-focus { display: none; position: fixed; z-index: 7; inset: 6px; border: 2px solid #fff3d6; border-radius: 6px; pointer-events: none; }
-body.view-mode:has(#hud:focus-visible) #photo-world-focus { display: block; }
-/* Override title.js's inline pill placement while the same button belongs to free mode, including after resize. */
-#howto.photo-help { z-index: 6; left: auto; right: max(16px, env(safe-area-inset-right)); top: auto !important; bottom: max(16px, env(safe-area-inset-bottom)) !important; transform: none; width: 44px; height: 44px; min-height: 44px; padding: 0; gap: 0; border: 2px solid #f5c518; border-radius: 50%; background: #21140b; color: #fff3d6; font-size: 0; }
-#howto.photo-help .q { width: 100%; height: 100%; background: none; color: #fff3d6; font-size: 24px; }
-@media (pointer: fine) and (max-width: 639px) {
-  #photo-tip { --help-left: max(88px, calc(env(safe-area-inset-left) + 72px)); padding: 16px 12px; }
+body.view-mode #howto.photo-help { opacity: .7; visibility: visible; pointer-events: auto; }
+body.view-mode #howto.photo-help:focus-visible { opacity: 1; }
+@media (hover: hover) { body.view-mode #howto.photo-help:hover { opacity: 1; } }
+body.view-mode:has(#viewmode.idle) #howto.photo-help:not(:hover, :focus-visible) { opacity: .25; transition-duration: 1s; }
+#howto.photo-help { z-index: 5; left: var(--help-x, 16px); right: auto; top: var(--help-y, 16px) !important; bottom: auto !important; transform: none; width: var(--help-size, 44px); height: var(--help-size, 44px); min-height: 0; padding: 0; gap: 0; border: 2px solid #f5c518; border-radius: 50%; background: #21140b; color: #fff3d6; font-size: 0; }
+#howto.photo-help .q { box-sizing: border-box; width: 100%; height: 100%; padding-top: .12em; background: none; color: #fff3d6; font-size: calc(var(--help-size, 44px) * .56); } /* the same share of its circle as the radio's note; Baloo's ? sits high: the padding centres it */
+/* Keep the viewport's centre whenever the card clears the figure bar; shift only as far as necessary. */
+@media (pointer: fine) and (max-width: 639px) { #photo-tip { --help-left: max(88px, calc(env(safe-area-inset-left) + 72px)); } }
+@media (pointer: fine) and (max-width: 479px) {
+  #photo-tip { padding: 16px 12px; }
   #photo-tip .pf-help-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px 6px; }
   #photo-tip .pf-help-action { display: flex; flex-direction: column; gap: 4px; text-align: center; }
   #photo-tip .pf-help-action kbd { min-width: 36px; }
   #photo-tip .pf-help-action:nth-child(n + 7) { grid-column: 1 / -1; display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 8px; text-align: left; }
 }
 #photo-tip small { display: block; font-size: 14px; line-height: 1.3; color: #e8d8b8; }
-#photo-tip[data-kind="notice"] { --help-left: max(16px, env(safe-area-inset-left)); top: calc(72px + env(safe-area-inset-top)); translate: -50% 0; width: max-content; max-width: calc(100% - var(--help-left) - var(--help-right)); padding: 12px 18px; border-radius: 18px; }
+#photo-tip[data-kind="notice"] { --help-left: max(16px, env(safe-area-inset-left)); left: calc((100% + env(safe-area-inset-left) - env(safe-area-inset-right)) / 2); top: calc(72px + env(safe-area-inset-top)); translate: -50% 0; width: max-content; max-width: calc(100% - var(--help-left) - var(--help-right)); padding: 12px 18px; border-radius: 18px; }
 #photo-tip[data-kind="notice"] strong { font-size: 18px; }
 @media (max-height: 519px) { #photo-figs { gap: 8px; } #photo-figs .pf { min-height: 48px; } #photo-figs .pf-por { width: 44px; height: 44px; } #photo-tip { padding: 10px 12px; } #photo-tip .pf-help-grid { gap: 4px 12px; margin: 8px 0; } }
-@media (pointer: coarse) { #photo-tip { width: min(360px, calc(100% - var(--help-left) - var(--help-right))); } }
+@media (pointer: coarse) { #photo-tip { --help-width: min(360px, calc(100% - var(--help-left) - var(--help-right))); } }
 @media (min-width: 520px) and (min-height: 520px) { #photo-tip[data-kind="notice"] { top: calc(88px + env(safe-area-inset-top)); } }
-/* The narrow keyboard guide uses the height below the eye/radio; ? stays in the free lower-left corner. */
+/* The narrow keyboard guide uses the height below the eye/radio/?. */
 @media (pointer: fine) and (max-width: 639px), (pointer: fine) and (max-height: 519px) {
   #photo-tip { --help-top: calc(72px + env(safe-area-inset-top)); }
-  #howto.photo-help { left: max(16px, env(safe-area-inset-left)); right: auto; }
 }
 @media (prefers-reduced-motion: reduce) { #photo-tip { transition: none; } }
 @media (max-width: 899px) { #photo-figs .pf-nb { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); } } /* a narrow window: portraits only, clear of the eye (the names stay for screen readers) */
@@ -183,10 +181,16 @@ textarea.feedback-field { height: calc(4 * 1.35em + 20px); max-height: calc(8 * 
 #radio:focus-visible, #radio[aria-expanded="true"] { opacity: 1; }
 @media (hover: hover) { #radio:hover { opacity: 1; } }
 body:has(#viewmode.idle) #radio:not(:hover, :focus-visible, [aria-expanded="true"]) { opacity: .25; transition-duration: 1s; }
-#radio-menu { position: fixed; z-index: 7; box-sizing: border-box; padding: 12px 10px 8px; border: 2px solid #f5c518; border-radius: 20px; background: #000c; color: #fff3d6; font: 600 16px/1.3 'Baloo 2', system-ui, sans-serif; }
+#radio-menu { --radio-left: max(16px, env(safe-area-inset-left)); --radio-right: max(16px, env(safe-area-inset-right)); --radio-width: min(320px, calc(100% - var(--radio-left) - var(--radio-right))); position: fixed; z-index: 7; left: max(calc((100% + env(safe-area-inset-left) - env(safe-area-inset-right)) / 2), calc(var(--radio-left) + var(--radio-width) / 2)); top: calc(72px + env(safe-area-inset-top)); translate: -50% 0; box-sizing: border-box; width: var(--radio-width); padding: 12px 10px 8px; border: 2px solid #f5c518; border-radius: 20px; background: #000c; color: #fff3d6; font: 600 16px/1.3 'Baloo 2', system-ui, sans-serif; }
 #radio-menu[hidden] { display: none; }
 body:has(#radio-menu:not([hidden]), #radio-now:not([hidden])[data-visible="true"]) #photo-tip { opacity: 0; } /* one information layer while choosing or announcing music */
-#radio-menu::before { content: ""; position: absolute; top: -9px; left: var(--arrow); width: 14px; height: 14px; border: 2px solid #f5c518; border-right: 0; border-bottom: 0; background: #000c; transform: rotate(45deg); }
+@media (min-width: 520px) and (min-height: 520px) { #radio-menu { top: calc(88px + env(safe-area-inset-top)); } }
+@media (pointer: fine) and (max-width: 639px) { #radio-menu { --radio-left: max(88px, calc(env(safe-area-inset-left) + 72px)); } }
+@media (pointer: fine) and (max-width: 359px) { #radio-menu .fm-art { display: none; } }
+@media (pointer: fine) and (min-width: 900px) {
+  #radio-menu { --radio-menu-x: clamp(var(--radio-left), calc(var(--radio-anchor-right) + 12px - var(--radio-width)), calc(100% - var(--radio-right) - var(--radio-width))); left: var(--radio-menu-x); top: calc(var(--radio-anchor-bottom) + 14px); translate: none; border: 0; background: none; }
+  #radio-menu::before { content: ''; position: absolute; inset: -12px 0 0; z-index: -1; background: var(--radio-bubble) no-repeat; background-size: 100% 100%; pointer-events: none; }
+}
 #radio-menu h2 { margin: 0 6px 8px; font: 800 18px/1.2 'Baloo 2', system-ui, sans-serif; text-align: center; }
 .fm-row { display: flex; align-items: center; gap: 12px; box-sizing: border-box; width: 100%; min-height: 56px; margin: 0 0 6px; padding: 6px 12px 6px 6px; border: 2px solid #e8d8b880; border-radius: 14px; background: #ffffff08; color: inherit; font: inherit; text-align: left; cursor: pointer; }
 .fm-row[data-kind="off"] { min-height: 48px; }
@@ -206,9 +210,6 @@ body:has(#radio-menu:not([hidden]), #radio-now:not([hidden])[data-visible="true"
 .fm-bars i { width: 4px; height: 30%; border-radius: 1px; background: currentColor; animation: fm-bar .4s ease-in-out infinite alternate; }
 .fm-bars i:nth-child(2) { animation-delay: -.2s; } .fm-bars i:nth-child(3) { animation-delay: -.1s; }
 @keyframes fm-bar { to { height: 100%; } }
-.fm-keys { margin: 4px 6px 0; color: #e8d8b8; font-size: 12.5px; text-align: center; }
-.fm-keys kbd { display: inline-block; min-width: 20px; padding: 0 4px; border: 1px solid #fff3d680; border-bottom-width: 2px; border-radius: 4px; font: 700 12px/18px 'Baloo 2', system-ui, sans-serif; }
-@media (pointer: coarse) { .fm-keys { display: none; } }
 @media (max-height: 520px) { #radio-menu { padding-block: 8px; } .fm-row { min-height: 48px; margin-bottom: 4px; } .fm-art { width: 34px; height: 34px; } }
 #radio-now { position: fixed; z-index: 6; display: flex; align-items: center; gap: 10px; left: calc((100% + env(safe-area-inset-left) - env(safe-area-inset-right)) / 2); top: calc(72px + env(safe-area-inset-top)); translate: -50% 0; box-sizing: border-box; width: max-content; max-width: calc(100vw - 32px - env(safe-area-inset-left) - env(safe-area-inset-right)); padding: 6px 16px 6px 8px; border-radius: 999px; background: #000c; color: #fff3d6; font: 600 15px/1.25 'Baloo 2', system-ui, sans-serif; pointer-events: none; opacity: 0; transform: translateY(4px); transition: opacity .16s ease-out, transform .16s ease-out; }
 #radio-now[data-visible="true"] { opacity: 1; transform: none; }

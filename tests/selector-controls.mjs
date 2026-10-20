@@ -44,7 +44,7 @@ const state = { state: 'splash', paused: false }, ctx = { document: doc, perform
   orbitMove() {}, orbitZoom() {}, turnFor: () => 1, orbitDown(o, id) { o.ptrs.set(id, true); }, orbitUp(o, id) { o.ptrs.delete(id); },
   chip: null, down: { keys: new Set(), ptr: new Map() }, KEYS: {}, pageActive: () => true, releaseAll() {}, buttonAt: () => { throw new Error('selector world must never hit a title button'); },
   store: { set() {} }, unlock() { state.state = 'select'; }, toTitle() { state.state = 'select'; },
-  startMenuAudio() {}, photoHelpAvailable: () => false, showAvatars: () => run('setPhotoControl(false)'), syncAvatars() {}, stopControl: () => run('PHOTO.on ? (setPhotoControl(false), true) : false') }; // src/ui/photo-avatars.js (its DOM: tests/render-quality.mjs)
+  startMenuAudio() {}, setFreeSound() {}, photoHelpAvailable: () => false, showAvatars: () => run('setPhotoControl(false)'), syncAvatars() {}, stopControl: () => run('PHOTO.on ? (setPhotoControl(false), true) : false') }; // src/ui/photo-avatars.js (its DOM: tests/render-quality.mjs)
 let time = 1000;
 const photoSource = readFileSync(new URL('../src/game/photo-control.js', import.meta.url), 'utf8').replace(/^export /gm, '');
 const code = photoSource + '\n' + ['mouse-look', 'controls', 'input'].map(name => readFileSync(new URL(`../src/ui/${name}.js`, import.meta.url), 'utf8').replace(/^import .*;\n/gm, '').replace(/^export /gm, '')).join('\n');
@@ -59,7 +59,7 @@ const tap = (id, { drag = false, type = 'touch' } = {}) => {
   for (const f of handlers.pointerup || []) f(event(id));
 };
 run('updateControls()'); assert($('howto').hidden, 'splash has no instructions pill');
-assert(!$('viewmode').hidden, 'splash offers photo mode');
+assert($('viewmode').hidden, 'splash has no photo mode');
 // The same practice control describes its destination, including FÀCIL (level 0).
 state.state = 'play';
 let exitIcon;
@@ -75,30 +75,31 @@ for (const then of [null, 0, null, 2]) {
 state.paused = true; run('updateControls()'); assert($('skip').hidden, 'the contextual control stays hidden while paused');
 state.paused = false; state.practice = null; run('updateControls()'); assert($('skip').hidden, 'no control during the actual song');
 state.state = 'splash'; run('updateControls()');
-key('KeyH'); assert(run('viewMode') && classes.has('view-mode'), 'H hides the splash chrome'); key('Escape'); assert(!run('viewMode'));
+key('KeyH'); assert(!run('viewMode') && !classes.has('view-mode'), 'H does nothing on the splash');
 state.state = 'select'; run('updateControls()');
-for (const id of ['settings', 'leaders', 'music', 'feedback', 'viewmode']) assert(!$(id).hidden, `${id} is available from the selector, including offline feedback`);
+for (const id of ['settings', 'leaders', 'music', 'feedback']) assert(!$(id).hidden, `${id} is available from the selector, including offline feedback`);
+assert($('viewmode').hidden, 'the selector enters free play from its dock, not a corner eye');
 state.figureId = 'drac-valls'; state.sel = 2;
 key('KeyH'); run('updateControls()'); assert(run('viewMode') && $('select').inert && classes.has('view-mode') && sheets.select.shown, 'photo mode hides without closing/reinitializing the selector');
+assert(!$('viewmode').hidden, 'inside free play the button is the way back');
 key('Escape'); assert(!run('viewMode') && !$('select').inert && state.state === 'select' && state.figureId === 'drac-valls' && state.sel === 2, 'photo exit keeps the figure and level');
-$('viewmode').fire('click'); assert(run('viewMode')); $('viewmode').fire('click'); assert(!run('viewMode'));
-tap(1); tap(2); assert(run('viewMode'), 'touch double tap hides the selector');
-$('hud').fire('dblclick', {}); assert(run('viewMode'), 'synthesized dblclick does not toggle twice');
-tap(3); tap(4); assert(!run('viewMode'), 'world double tap restores it');
-tap(5, { type: 'mouse' }); tap(6, { type: 'mouse' }); assert(run('viewMode'), 'desktop double click uses the same pointer pair');
-key('KeyH'); tap(7); tap(8, { drag: true }); tap(9); assert(!run('viewMode'), 'camera drag cancels a tap pair');
-run('worldTap = null'); sheets.sync.open = true; tap(10); tap(11); assert(!run('viewMode'), 'sheets own input'); sheets.sync.open = false;
-run('worldTap = null'); $('settings').fire('pointerdown', event(12)); $('settings').fire('pointerup', event(12)); tap(13); assert(!run('viewMode'), 'DOM controls are not world taps');
-run('worldTap = null'); $('hud').fire('pointerdown', event(14)); $('hud').fire('pointerdown', event(15, 180, 350, { isPrimary: false })); $('hud').fire('pointerup', event(14)); tap(16); assert(!run('viewMode'), 'a second finger cancels the pair');
-for (const id of [14, 15]) for (const f of handlers.pointerup || []) f(event(id)); // both fingers leave before the next scenario
-run('worldTap = null; setView(true)'); state.state = 'play'; run('updateControls()'); assert(!run('viewMode') && $('viewmode').hidden && !$('select').inert, 'starting play restores UI and removes photo mode');
+key('KeyH'); $('viewmode').fire('click'); assert(!run('viewMode'), 'the button leaves free play'); run('updateControls()'); assert($('viewmode').hidden);
+tap(1); tap(2); assert(!run('viewMode'), 'world double taps no longer enter the old photo mode');
+tap(3, { type: 'mouse' }); tap(4, { type: 'mouse' }); assert(!run('viewMode'), 'nor does a double click');
+key('KeyH'); tap(5); tap(6); assert(run('viewMode'), 'nor do they leave it'); run('setView(false)');
+{ // a mouse's way back fades after 3 idle seconds (clean photos); touch has no Esc, so its never does
+  const timers = [], wasTimeout = ctx.setTimeout; ctx.setTimeout = () => timers.push(1);
+  run('setView(true)'); assert.equal(timers.length, 1, 'desktop: the exit dims when idle'); run('setView(false)');
+  ctx.COARSE.matches = true; timers.length = 0;
+  run('setView(true)'); assert.equal(timers.length, 0, 'touch: the exit, radio and ? never fade'); run('setView(false)');
+  ctx.COARSE.matches = false; ctx.setTimeout = wasTimeout;
+}
+run('setView(true)'); state.state = 'play'; run('updateControls()'); assert(!run('viewMode') && $('viewmode').hidden && !$('select').inert, 'starting play restores UI and removes photo mode');
 // Cursor follows actionable canvas targets, including changes under a stationary mouse.
 ctx.buttonAt = e => e.clientX === 180 ? { x: 160, y: 330, w: 40, h: 40 } : null;
 state.state = 'splash';
 $('hud').fire('pointermove', event(20, 180, 350, { pointerType: 'mouse' }));
 assert.equal($('hud').style.cursor, 'pointer');
-run('setView(true); updateControls()'); assert.equal($('hud').style.cursor, '');
-run('setView(false); updateControls()'); assert.equal($('hud').style.cursor, 'pointer');
 sheets.sync.open = true; run('updateControls()'); assert.equal($('hud').style.cursor, '');
 sheets.sync.open = false;
 $('hud').fire('pointermove', event(20, 40, 350, { pointerType: 'mouse' }));
@@ -387,3 +388,7 @@ console.log('practice/game input routing: keyboard, mouse/touch pad and bubbling
   assert(rings.length === 3 && rings.every(g => !/#fff3d6|#ffe1/i.test(g)), 'every level\'s ring is two colours, no white');
   console.log('level buttons: per-level warmth, coloured rings, NORMAL and DIFÍCIL trembles, still under reduced motion');
 }
+
+// Photo mode: Tab never lands on the full-viewport canvas (it showed a ring round the whole screen).
+{ const { readFileSync } = await import('node:fs'); const src = readFileSync(new URL('../src/ui/photo-avatars.js', import.meta.url), 'utf8') + readFileSync(new URL('../src/styles/feedback.css', import.meta.url), 'utf8');
+  assert(/hud\.tabIndex = -1/.test(src) && !/hud\.tabIndex = on/.test(src) && !/world-focus/.test(src), 'the photo-mode canvas is not a Tab stop and has no focus ring'); }

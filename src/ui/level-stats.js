@@ -7,7 +7,7 @@ import { DIFFS } from '../game/chart.js';
 import { starsFor } from '../game/progress.js';
 import { num } from './sheet-kit.js';
 
-const starIcons = n => `<span class="stars">${[0, 1, 2].map(i => `<svg viewBox="0 0 24 24"${i < n ? ' class="on"' : ''} aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z"/></svg>`).join('')}</span>`;
+export const starIcons = n => `<span class="stars">${[0, 1, 2].map(i => `<svg viewBox="0 0 24 24"${i < n ? ' class="on"' : ''} aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z"/></svg>`).join('')}</span>`;
 
 // record: { score, quality } on this device (or null)
 export function showLevelStats($, { on, level, record }) {

@@ -100,18 +100,19 @@ const submit = $ => $('publish-form').fire('submit');
   const { board, calls, T } = make();
   const profileA = board.standing();
   const signedOut = board.standing();
+  const strip = s => s && { pos: s.pos, total: s.total }; // the rows ride along for the selector's card
   T.alls[1].resolve([{ position: 1, alias: '<Leader>' }]);
-  assert.deepEqual(await signedOut, { pos: null, total: null });
+  assert.deepEqual(await signedOut, { pos: null, total: null, rows: [{ position: 1, alias: '<Leader>' }] }, 'no row of mine: still the board\'s rows');
   T.alls[0].resolve([{ position: 1, alias: '<Leader>', total: 135 }, { position: 22, is_self: true, total: 135 }]);
-  assert.deepEqual(await profileA, { pos: 22, total: 135 });
+  assert.deepEqual(strip(await profileA), { pos: 22, total: 135 });
   const recovered = board.standing();
   assert.equal(calls.all, 3, 'recovery/deletion/sign-out cannot reuse a previous identity response');
   T.alls[2].resolve([{ position: 1, alias: '<Leader>' }, { position: 7, is_self: true }]);
-  assert.deepEqual(await recovered, { pos: 7, total: null });
+  assert.deepEqual(strip(await recovered), { pos: 7, total: null });
   const failed = board.standing(); T.alls[3].reject(new Error('offline'));
   assert.equal(await failed, null);
   const retry = board.standing(); T.alls[4].resolve([]);
-  assert.deepEqual(await retry, { pos: null, total: null });
+  assert.deepEqual(strip(await retry), { pos: null, total: null });
 }
 // The privacy contact is detached at startup, but publishing still requires it.
 {

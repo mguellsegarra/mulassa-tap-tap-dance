@@ -221,7 +221,7 @@
 <div id="fps" hidden aria-hidden="true"></div>
 <div id="ios-hint" hidden role="note"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M8 7l4-4 4 4M6 11H5v10h14V11h-1"/></svg><span>Per jugar a pantalla completa: <b>Compartir → Afegeix a la pantalla d’inici</b></span><button id="ios-hint-close" aria-label="Tanca el consell">×</button></div>
 <button id="leaders" hidden aria-haspopup="dialog" aria-label="Classificacions" title="Classificacions"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 20h20M3.5 20v-7H9v7M9 20V5h6v15M15 20v-5h5.5v5M11 9.2l1.4-1.1V14"/></svg></button>
-<button id="viewmode" hidden aria-pressed="false" aria-label="Amaga els botons" title="Amaga els botons (H)" aria-keyshortcuts="H"><svg class="on" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><svg class="off" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.9 5.2A10 10 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-2.9 3.7M6.5 6.6A17 17 0 0 0 2 12s3.6 7 10 7a10 10 0 0 0 5.3-1.5M9.9 9.9a3 3 0 0 0 4.2 4.2M3 3l18 18"/></svg></button>
+<button id="viewmode" hidden aria-pressed="false" aria-label="Joc lliure" title="Joc lliure (H)" aria-keyshortcuts="H"><svg class="on" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><svg class="off" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4H4v16h6M14 8l4 4-4 4M8 12h12"/></svg></button>
 <button id="music" hidden data-state="on" aria-label="Silencia el so del menú" title="Silencia el so del menú"><svg class="on" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 9.5h4l5-4.5v14l-5-4.5h-4z"/><path d="M16 9a4.5 4.5 0 0 1 0 6M18.8 6.2a8.5 8.5 0 0 1 0 11.6"/></svg><svg class="off" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 9.5h4l5-4.5v14l-5-4.5h-4z"/><path d="m16.5 9.5 5 5M21.5 9.5l-5 5"/></svg></button>
 <button id="feedback" hidden aria-haspopup="dialog" aria-label="Bústia de la plaça" title="Bústia de la plaça"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a8.5 8 0 0 1-12.3 7.2L3.5 20l1.4-4.3A8.5 8 0 1 1 21 11.5z"/><path d="M8.5 11.5h.01M12.5 11.5h.01M16.5 11.5h.01" stroke-width="2.6"/></svg></button>
 <div id="feedback-nudge" role="status" hidden></div>
@@ -513,6 +513,13 @@
       <div id="select-tiles" class="sel-tiles">
         <button id="select-rank-tile" type="button" class="sel-tile sel-rank" aria-haspopup="dialog" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 20h20M3.5 20v-7H9v7M9 20V5h6v15M15 20v-5h5.5v5M11 9.2l1.4-1.1V14"/></svg><span id="select-pos">—</span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button>
       </div>
+      <!-- Desktops, step 1 (select-standings.js): this device's records as three medals, the Mulassa board as one card. -->
+      <div id="select-meds" class="sel-meds" hidden></div>
+      <section id="select-standings" class="sel-standings" aria-label="Classificació" hidden>
+        <button id="select-standings-head" type="button" class="sel-standings-head" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 20h20M3.5 20v-7H9v7M9 20V5h6v15M15 20v-5h5.5v5M11 9.2l1.4-1.1V14"/></svg><span id="select-standings-pos">Classificació</span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button>
+        <ol id="select-standings-rows" class="sel-standings-rows"></ol>
+        <p id="select-standings-foot" class="sel-standings-foot" hidden></p>
+      </section>
     </div>
   </div>
   <section id="select-pending" class="sel-pending" hidden aria-labelledby="aviat-title">
@@ -542,6 +549,7 @@
     <div class="sel-footer">
       <button id="select-figures-back" type="button" class="btn btn-secondary" hidden><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20 12H4m7-7-7 7 7 7"/></svg><span>Canvia de figura</span></button>
       <button id="select-next" type="button" class="btn btn-primary"><span id="select-next-label">Tria la dificultat</span></button>
+      <button id="select-free" type="button" class="btn btn-secondary" title="Ball lliure (H)" aria-keyshortcuts="H"><!-- Lucide gamepad-2, ISC licence (lucide.dev) --><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 11h4M8 9v4M15 12h.01M18 10h.01"/><path d="M17.32 5H6.68a4 4 0 0 0-3.978 3.59c-.006.052-.01.101-.017.152C2.604 9.416 2 14.456 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.414-1.414A2 2 0 0 1 9.828 16h4.344a2 2 0 0 1 1.414.586L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.545-.604-6.584-.685-7.258-.007-.05-.011-.1-.017-.151A4 4 0 0 0 17.32 5z"/></svg><span id="select-free-label">Ball lliure</span></button>
       <button id="select-play" type="button" class="btn btn-primary" hidden><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 16V5l8-2v11" stroke-width="2.4"/><ellipse cx="9.5" cy="16.5" rx="3.5" ry="2.6" transform="rotate(-20 9.5 16.5)" fill="currentColor" stroke="none"/><ellipse cx="17.5" cy="14.5" rx="3.5" ry="2.6" transform="rotate(-20 17.5 14.5)" fill="currentColor" stroke="none"/><path d="M3 5h4M2 9h4"/></svg><span>A BALLAR!</span></button>
     </div>
   </div>

@@ -21,7 +21,7 @@ const context = vm.createContext({
   sheets: { sync: closed(), board: closed(), share: closed(), feedback: closed() },
   privacyMenu: closed(), pauseMenu: closed(), howtoMenu: closed(), settingsMenu: closed(),
   hud: target(), padButtons: buttons, viewMode: false,
-  photoKey: () => false, pageActive: () => true, sheetUp: () => false, menuState: () => G.state === 'title',
+  photoKey: () => false, pageActive: () => true, sheetUp: () => false, menuState: () => G.state === 'title', photoScreen: () => G.state === 'select',
   press: (dir, e) => calls.push({ dir, type: e.type }),
   settleHold: () => releases.push(true), songTime() {}, eventAt() {},
   haptic() {}, padFeedback() {}, syncPad() {}, releaseAll() {}, clearPhotoKeys() {},

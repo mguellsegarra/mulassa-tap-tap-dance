@@ -21,7 +21,8 @@ export const untilText = ms => `Sense confirmar el correu, el perfil caduca ${on
 export const RESERVED_TEXT = 'Encara no has publicat cap resultat: els 7 dies comencen amb el primer.';
 export const EXPIRED_TEXT = 'Ha caducat: el nom i els resultats publicats ja no hi són. Els rècords d’aquest dispositiu es mantenen.';
 
-const CHECK_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m7.5 12.3 3 3 6-6.3"/></svg>';
+// a scalloped seal, the shape people read as «verified» (Marc, 2026-10-20: «estil Twitter»)
+const CHECK_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path class="seal" d="M12 2.7Q17.1-.2 18.6 5.4Q24.2 6.9 21.3 12Q24.2 17.1 18.6 18.6Q17.1 24.2 12 21.3Q6.9 24.2 5.4 18.6Q-.2 17.1 2.7 12Q-.2 6.9 5.4 5.4Q6.9-.2 12 2.7z"/><path d="m7.8 12.2 2.9 2.9 5.6-5.9"/></svg>';
 // A button, so a tap or the keyboard shows what it means (index.html .verified-check: the tip on .tip / :focus-visible)
 export function checkBadge(doc) {
   const b = doc.createElement('button');

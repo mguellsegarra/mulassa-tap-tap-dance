@@ -31,8 +31,6 @@ for (const [cw, ch] of SIZES) for (const keys of [true, false]) for (const hint 
   const css = r => ({ x: r.x * K, y: r.y * K, w: r.w * K, h: r.h * K }), name = `${cw}x${ch} keys=${keys} hint=${hint} safe=${safe.t || safe.l}`;
   const dom = [['gear', gear], ['leaders', leaders], ...(row ? [['feedback', talk], ['music', music]] : []), ['pill', corner ? cornerPill : { x: cw / 2 - pill.w / 2, y: L.pillTopCss, w: pill.w, h: pill.h }]];
   if (hint) dom.push(['ios hint', { x: cw / 2 - iosHint.w / 2, y: L.iosTopCss, w: iosHint.w, h: iosHint.h }]);
-  // «mode foto» (#viewmode, 44 px): bottom-right, centred on the pill's height and under the ⚙; landscape phones: under the ⚙ (none where the row is too narrow)
-  if (row || !corner) dom.push(['view mode', corner ? { x: safe.l + 12, y: safe.t + 12 + 44 + 10, w: 44, h: 44 } : { x: cw - safe.r - (big ? 22 : 10) - 44, y: ch - safe.b - (big ? 22 : 16) - 44, w: 44, h: 44 }]);
   const canvas = [['logo', css(L.logo)], ...L.buttons.map(b => ['button ' + b.i, css(b)])];
   if (L.hintY != null) canvas.push(['key hint', { x: cw / 2 - 100 * K, y: (L.hintY - 7) * K, w: 200 * K, h: 14 * K }]);
   assert(L.fits, `${name}: fits`);

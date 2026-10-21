@@ -6,18 +6,19 @@ import assert from 'node:assert/strict';
 import { loadMainSource } from './load-main.mjs';
 import { readFileSync } from 'node:fs';
 import { makeDanceChart } from '../src/game/chart.js';
-import { MAX_SCORES, EXPECTED_JUDGMENTS, validResult, LEADERBOARD_VERSION, VERSION_RULES } from '../src/services/leaderboard-rules.js';
+import { MAX_SCORES, EXTRAS_MAX, EXPECTED_JUDGMENTS, validResult, LEADERBOARD_VERSION, VERSION_RULES } from '../src/services/leaderboard-rules.js';
 import { fabricateRun, judgments, walk, mockRows } from '../src/dev/final-test.js';
-import { ceilings, perfectMax, ceilingOf, loadSong, SCORING, TAP_RATE, MARGIN } from '../tools/score-ceiling.mjs';
+import { ceilings, extrasCeilings, perfectMax, ceilingOf, loadSong, loadDracSong, SCORING, TAP_RATE, MARGIN } from '../tools/score-ceiling.mjs';
 import { v1Song } from './v1-song.mjs';
 
 const song = loadSong();
-import { comparableScore, FULL_SCORE_ANCHORS, SHORT_SCORE_ANCHORS } from '../src/game/score-scale.js';
+import { comparableScore, SHORT_SCORE_VERSION, FULL_SCORE_ANCHORS, SHORT_SCORE_ANCHORS } from '../src/game/score-scale.js';
 import { referenceScore } from '../tools/reference-score.mjs';
 const charts = [0, 1, 2].map(d => makeDanceChart(song, d));
 const want = ceilings(song);
 
 // one set of numbers: generated = client = server
+assert.deepEqual([...EXTRAS_MAX], extrasCeilings(song), 'EXTRAS_MAX must be the generated extras (node tools/score-ceiling.mjs)');
 assert.deepEqual([...MAX_SCORES], want, `MAX_SCORES must be the generated ceilings ${want} (node tools/score-ceiling.mjs)`);
 const sql = readFileSync(new URL('../supabase/migrations/202609280015_score_ceiling.sql', import.meta.url), 'utf8');
 const values = sql.match(/from \(values ([^)]*\)(?:, \([^)]*\))*)\) as c\(difficulty, max_score\)/)?.[1];
@@ -44,7 +45,7 @@ for (const d of [0, 1, 2]) {
   const counts = { perfect: EXPECTED_JUDGMENTS[d], good: 0, miss: 0 }, res = s => ({ version: LEADERBOARD_VERSION, difficulty: d, counts, score: s, maxCombo: 10 });
   assert(validResult(res(MAX_SCORES[d])) && !validResult(res(MAX_SCORES[d] + 1)), `level ${d}: the client stops at the ceiling`);
 }
-assert(mockRows(charts, song.finale).every(r => r.score <= comparableScore(MAX_SCORES[r.difficulty], r.difficulty)), '?final mock board under the ceilings');
+assert(mockRows(charts, song.finale).every(r => r.score <= comparableScore(MAX_SCORES[r.difficulty], r.difficulty, LEADERBOARD_VERSION)), '?final mock board under the ceilings');
 assert(MAX_SCORES[0] < MAX_SCORES[1] && MAX_SCORES[1] < MAX_SCORES[2], 'harder levels, higher ceilings');
 // Preserve the original published contract independently of the active short chart.
 assert.deepEqual(VERSION_RULES['mulassa-v1'].ceilings, ceilings(v1Song));
@@ -52,10 +53,29 @@ assert.deepEqual(VERSION_RULES['mulassa-v1'].judgments, [0, 1, 2].map(d => perfe
 for (const d of [0, 1, 2]) {
   assert.equal(referenceScore(v1Song, d), FULL_SCORE_ANCHORS[d]);
   assert.equal(referenceScore(song, d), SHORT_SCORE_ANCHORS[d]);
-  assert.equal(comparableScore(SHORT_SCORE_ANCHORS[d], d), FULL_SCORE_ANCHORS[d], 'equal reference performances earn equal displayed points');
+  assert.equal(comparableScore(SHORT_SCORE_ANCHORS[d], d, SHORT_SCORE_VERSION), FULL_SCORE_ANCHORS[d], 'equal reference performances earn equal displayed points');
   assert.equal(comparableScore(54321, d, 'mulassa-v1'), 54321, 'existing published points stay identical');
   assert(!validResult({ version: 'mulassa-v1', difficulty: d, counts: { perfect: EXPECTED_JUDGMENTS[d], good: 0, miss: 0 }, score: 1000, maxCombo: 1 }));
 }
+
+// The retired short chart keeps its contract (judgments and ceilings), and the Drac has its own, from its own chart.
+assert.equal(LEADERBOARD_VERSION, 'mulassa-v3');
+assert.deepEqual(VERSION_RULES['mulassa-v2-short'].judgments, [108, 133, 240]);
+assert.deepEqual(VERSION_RULES['mulassa-v2-short'].ceilings, [109000, 122000, 193000]);
+const drac = loadDracSong(), dracRules = VERSION_RULES['drac-v1'];
+assert.deepEqual([...dracRules.ceilings], ceilings(drac), 'drac-v1 ceilings follow its chart');
+assert.deepEqual([...dracRules.extras], extrasCeilings(drac), 'drac-v1 extras_max follow its chart');
+for (const d of [0, 1, 2]) {
+  const r = perfectMax(drac, d), counts = { perfect: dracRules.judgments[d], good: 0, miss: 0 };
+  assert.equal(r.judgments, dracRules.judgments[d], `drac level ${d}: the model judges what the leaderboard counts`);
+  assert.equal(makeDanceChart(drac, d).reduce((s, n) => s + 1 + (n.end && !n.balloon ? 1 : 0), 0), r.judgments);
+  assert(r.max <= dracRules.ceilings[d] && dracRules.ceilings[d] === ceilingOf(r.max), `drac level ${d}: the ceiling covers a perfect run`);
+  const res = (s, extra) => ({ version: 'drac-v1', difficulty: d, counts, score: s, maxCombo: 10, ...extra });
+  assert(validResult(res(dracRules.ceilings[d])) && !validResult(res(dracRules.ceilings[d] + 1)), `drac level ${d}: the client stops at the ceiling`);
+  assert(validResult(res(1, { figureId: 'drac-valls' })) && !validResult(res(1, { figureId: 'mulassa-valls' })), 'a Drac result is the Drac’s');
+  assert(!validResult({ ...res(1), version: 'mulassa-v3' }), `drac level ${d}: Drac counts are not a Mulassa result`);
+}
+assert(!validResult({ version: 'mulassa-v3', difficulty: 0, counts: { perfect: 108, good: 0, miss: 0 }, score: 1, maxCombo: 1, figureId: 'drac-valls' }), 'a Mulassa version never takes the Drac');
 
 // the scoring the model assumes is still the game's (src/main.js judge / pump / settleHold / guapaHit, the x2 finale)
 const main = loadMainSource();

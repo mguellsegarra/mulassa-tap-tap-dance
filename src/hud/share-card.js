@@ -16,7 +16,7 @@ export async function loadCardFonts(fonts) {
 }
 export function cardRank(d) {
   const r = d.rank;
-  return d.figureId !== 'drac-valls' && Number.isInteger(r?.pos) && Number.isInteger(r?.total)
+  return Number.isInteger(r?.pos) && Number.isInteger(r?.total)
     && r.pos > 0 && r.total >= r.pos ? r : null;
 }
 export function cardLayout(format, d) {
@@ -97,17 +97,28 @@ function cardFooter(c, y, story, ink) {
     x += w + gap;
   });
 }
+// the board's «Correu confirmat» check (src/ui/profile-notes.js CHECK_SVG), the same shape: a blue disc, a white tick.
+// It proves nothing on an image: it repeats what the game knew when it drew it.
+function cardCheck(c, x, y, r) {
+  const k = r / 10;
+  c.beginPath(); c.arc(x, y, r, 0, Math.PI * 2); c.fillStyle = '#3b9cff'; c.fill();
+  c.beginPath(); c.moveTo(x - 4.5 * k, y + 0.3 * k); c.lineTo(x - 1.5 * k, y + 3.3 * k); c.lineTo(x + 4.5 * k, y - 3 * k);
+  c.strokeStyle = '#fff'; c.lineWidth = 2.6 * k; c.lineCap = 'round'; c.lineJoin = 'round'; c.stroke();
+}
 function cardTicket(c, d, L, theme) {
   const { story, ticketY: y, ticketH: h, aliasH, rank } = L;
   const w = story ? 850 : 790, x = (1080 - w) / 2;
   cardBox(c, x, y + 12, w, h, 34, theme.ink);
   cardBox(c, x, y, w, h, 34, PAPER);
-  if (aliasH) {
-    c.font = `600 ${story ? 40 : 34}px ${CARD_FONT}`;
-    let alias = String(d.alias), max = w - 128;
+  if (aliasH) { // the name as the boards show it: a guest's «nom#1234», or the confirmed address's check after it
+    const size = story ? 40 : 34, tick = d.verified ? Math.round(size * 0.8) : 0, gap = tick ? Math.round(size * 0.25) : 0;
+    c.font = `600 ${size}px ${CARD_FONT}`;
+    let alias = String(d.alias), max = w - 128 - tick - gap;
     while (alias.length && c.measureText(alias).width > max) alias = alias.slice(0, -1);
     if (alias !== String(d.alias)) alias = alias.slice(0, -1) + '…';
-    cardText(c, alias, 540, y + 26, story ? 40 : 34, theme.ink, 600, max);
+    const x = 540 - (tick + gap) / 2, tw = Math.min(max, c.measureText(alias).width);
+    cardText(c, alias, x, y + 26, size, theme.ink, 600, max);
+    if (tick) cardCheck(c, x + tw / 2 + gap + tick / 2, y + 26, tick / 2);
   }
   const points = Number.isFinite(d.score) ? Math.round(d.score).toLocaleString('ca-ES') : '—';
   cardText(c, points, 540, y + aliasH + (story ? 88 : 72), story ? 150 : 118, theme.ink, 800, w - 100);

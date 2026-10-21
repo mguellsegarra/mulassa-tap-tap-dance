@@ -8,7 +8,7 @@ import { readFileSync } from 'node:fs';
 import { setupBoard, suggestAlias, ALIAS_KEY, DECLINES_KEY, OPTOUT_KEY, MAX_DECLINES, deviceRisk, DEVICE_NOTES, PERSIST_KEY } from '../src/ui/board-ui.js';
 import { normalizeAlias } from '../src/services/leaderboard-rules.js';
 import { checkAlias, ALIAS_MESSAGES } from '../src/services/alias-rules.js';
-import { KEEP_NOTICE, untilText, keptUntil, VERIFIED } from '../src/ui/profile-notes.js';
+import { VERIFIED } from '../src/ui/profile-notes.js';
 
 class El {
   constructor(tag, id = '') { Object.assign(this, { tag, id, children: [], hidden: false, disabled: false, value: '', readOnly: false, dataset: {}, attrs: {}, on: {}, open: false, own: '', className: '' }); }
@@ -18,7 +18,9 @@ class El {
   appendChild(c) { this.children.push(c); c.parent = this; return c; }
   append(...cs) { for (const c of cs) this.appendChild(typeof c === 'string' ? Object.assign(new El('#text'), { own: c }) : c); }
   prepend(c) { this.children.unshift(c); c.parent = this; return c; }
-  replaceChildren() { this.children = []; }
+  before(...cs) { const sib = this.parent.children; sib.splice(sib.indexOf(this), 0, ...cs); for (const c of cs) c.parent = this.parent; }
+  remove() { const sib = this.parent?.children; if (sib) sib.splice(sib.indexOf(this), 1); this.parent = null; }
+  replaceChildren(...cs) { this.children = []; this.append(...cs); }
   contains(el) { for (let e = el; e; e = e.parent) if (e === this) return true; return false; }
   setAttribute(k, v) { this.attrs[k] = String(v); }
   getAttribute(k) { return this.attrs[k] ?? null; }
@@ -35,16 +37,18 @@ const ids = ['board-menu', 'publish-menu', 'board-rows', 'board-table', 'board-s
   'publish-form', 'publish-title', 'publish-summary', 'publish-about', 'publish-temp', 'publish-alias', 'publish-status', 'publish-send',
   'publish-cancel', 'publish-never', 'settings-prompt-row', 'settings-prompt', 'publish-place', 'publish-as', 'publish-as-name', 'publish-field', 'publish-rule', 'publish-error', 'publish-board',
   'results-actions', 'results-publish', 'results-board', 'settings-board', 'publish-device', 'publish-recover',
-  'board-views', 'board-view-top', 'board-view-me', 'board-more', 'board-more-status', 'board-more-btn', 'board-summary', 'board-publish', 'captcha-menu', 'captcha-box',
-  'publish-keep', 'publish-offer', 'publish-offer-text', 'publish-confirm'];
+  'board-figure', 'board-figure-pic', 'board-figure-name', 'board-picker', 'board-figures', 'board-main', 'board-place', 'board-jump', 'board-place-sub',
+  'board-publish-link', 'board-scroll', 'board-art', 'board-hint', 'board-more', 'board-more-status', 'board-more-btn', 'board-summary', 'board-publish', 'captcha-menu', 'captcha-box',
+  'publish-offer', 'publish-confirm', 'board-season', 'board-previous', 'board-seasons', 'board-play', 'board-play-name'];
+const NOW = Date.parse('2026-10-20T10:00:00Z');
 let doc;
 const tick = () => new Promise(r => setTimeout(r, 0));
 const deferred = () => { let resolve, reject; const p = new Promise((a, b) => { resolve = a; reject = b; }); return { p, resolve, reject }; };
 const RUN = Object.freeze({ version: 'mulassa-v1', difficulty: 1, counts: Object.freeze({ perfect: 150, good: 20, miss: 11 }), score: 43210, maxCombo: 60 });
 
 function make({ configured = true, publishingEnabled = true, captchaRequired = true, siteKey = 'site', session = false, persistent = true, email = 'contacte@example.test',
-  detachedPrivacy = false, alias = null, row = false, declined = 0, afterPublish = null, onRecover = null, automated = false, ua = '', standalone = false, touch = 0,
-  prof, onConfirm = null, mail = '' } = {}) { // prof: what service.profile() answers (undefined: a service without it)
+  detachedPrivacy = false, alias = null, declined = 0, afterPublish = null, onRecover = null, automated = false, ua = '', standalone = false, touch = 0,
+  prof, onConfirm = null, mail = '', onCard, onSeasons, onKeep = null, canPlay, onPlay } = {}) { // prof: what service.profile() answers (undefined: a service without it)
   doc = { activeElement: null, els: new Map(), getElementById(id) { return this.els.get(id); }, createElement: tag => new El(tag) };
   for (const id of ids) doc.els.set(id, new El('x', id));
   doc.els.set('privacy-contact', Object.assign(new El('p', 'privacy-contact'), { hidden: true, dataset: { email } }));
@@ -56,14 +60,14 @@ function make({ configured = true, publishingEnabled = true, captchaRequired = t
     doc.els.set('privacy-content', { content: { querySelector: () => $('privacy-contact') } });
   }
   $('board-table').hidden = true; $('results-actions').hidden = true;
-  const calls = { all: 0, pages: [], identity: 0, publish: [], alias: [], del: 0, captcha: 0, render: [], reset: 0, remove: 0, persist: 0, profile: 0, ack: 0, signout: 0 };
-  const T = { session, persistent, alls: [], publishes: [], prof, paints: [], acks: [], unwatched: 0, visible: true }; // queued deferreds (and paint callbacks) the test runs
+  const calls = { all: 0, pages: [], lists: [], identity: 0, publish: [], alias: [], del: 0, captcha: 0, render: [], reset: 0, remove: 0, persist: 0, profile: 0, signout: 0, accept: 0 };
+  const T = { session, persistent, alls: [], publishes: [], prof, seasons: [] }; // queued deferreds the test runs
   const service = {
     configured, publishingEnabled, captchaRequired,
-    listAll(o = {}) { calls.all++; calls.pages.push(o.offset ?? 0); const x = deferred(); T.alls.push(x); return x.p; },
+    listAll(o = {}) { calls.all++; calls.pages.push(o.offset ?? 0); calls.lists.push(o); const x = deferred(); T.alls.push(x); return x.p; },
+    async seasons() { return T.seasons; },
     async identity() { calls.identity++; return { hasSession: T.session, persistent: T.persistent, ...(mail && { email: mail }) }; },
     ...(prof !== undefined && { async profile() { calls.profile++; return T.prof; } }),
-    ackNotice() { calls.ack++; const x = deferred(); T.acks.push(x); return x.p; },
     async signOut() { calls.signout++; T.session = false; return { signedOut: true }; },
     publish(result, alias, opts) { calls.publish.push({ result, alias, opts }); const x = deferred(); T.publishes.push(x); return x.p; },
   };
@@ -76,7 +80,6 @@ function make({ configured = true, publishingEnabled = true, captchaRequired = t
   const captcha = async () => { calls.captcha++; if (T.captchaFails) throw new Error('offline'); return turnstile; };
   const mem = new Map([['record-v2-duet-1', '{"quality":90}']]);
   if (alias) mem.set(ALIAS_KEY, alias);
-  if (row) mem.set('leaderboard-row', row === true ? alias : row); // the last answer gave this player a row
   if (declined) mem.set(DECLINES_KEY, String(declined));
   const env = { canPrompt: true, online: true, t: 0 }; // the prompt's world: main.js's screen check, navigator.onLine, the clock
   const store = { get: k => mem.get(k) ?? null, set: (k, v) => mem.set(k, String(v)), remove: k => mem.delete(k) };
@@ -85,13 +88,14 @@ function make({ configured = true, publishingEnabled = true, captchaRequired = t
   const focused = [];
   const shares = [], reports = [], io = {};
   const board = setupBoard({ focusIn: (sheet, id) => { focused.push(id); $(id).focus(); }, store, service, siteKey, captcha, doc, subscribe,
-    canPrompt: () => env.canPrompt, online: () => env.online, promptDelay: 0, now: () => env.t, minLoad: 0,
+    canPrompt: () => env.canPrompt, online: () => env.online, promptDelay: 0, now: () => NOW + env.t, minLoad: 0,
     verifyOpts: { report: (k, t) => reports.push([k, t]), log: { warn() {} }, schedule() {} },
     afterPublish: afterPublish && (o => { shares.push(o); afterPublish(o); }), shareDelay: 0, settle: 0, observe: (el, root, fn) => { io.el = el; io.fire = fn; },
     onRecover, env: () => ({ ua, standalone, touch }), persist: async () => { calls.persist++; return true; },
-    onConfirm, seen: (el, cb) => { assert.equal(el, $('publish-keep'), 'the notice itself is watched'); T.paints.push(cb); return () => { T.unwatched++; }; },
-    visible: el => { assert.equal(el, $('publish-keep')); return T.visible; } });
-  return { board, $, calls, T, widgets, mem, focused, env, shares, reports, io, setRun: r => listener(r), rows: () => $('board-rows').children.map(tr => tr.children.map(td => td.textContent)) };
+    onConfirm, onCard, onSeasons, onKeep, canPlay, onPlay, acceptStats: () => { calls.accept++; } });
+  const [figMula, figDrac] = $('board-figures').children; // «Tria figura»: built from the playable figures
+  for (const b of $('board-figures').children) doc.els.set(b.id, b);
+  return { board, $, calls, T, widgets, mem, focused, env, shares, reports, io, figMula, figDrac, setRun: r => listener(r), rows: () => $('board-rows').children.map(tr => tr.children.map(td => td.textContent)) };
 }
 const submit = $ => $('publish-form').fire('submit');
 
@@ -113,6 +117,8 @@ const submit = $ => $('publish-form').fire('submit');
   assert.equal(await failed, null);
   const retry = board.standing(); T.alls[4].resolve([]);
   assert.deepEqual(strip(await retry), { pos: null, total: null });
+  const drac = board.standing('drac-valls'); T.alls[5].resolve([{ position: 3, is_self: true, total: 12 }]);
+  assert.deepEqual(strip(await drac), { pos: 3, total: 12 }); assert.deepEqual(calls.lists.at(-1), { figure: 'drac-valls' }, 'the Drac\'s place on its own board');
 }
 // The privacy contact is detached at startup, but publishing still requires it.
 {
@@ -132,8 +138,8 @@ assert.equal(suggestAlias(() => 0), 'Timbaler100');
   assert.equal(mem.get(ALIAS_KEY), 'Drac101');
 }
 
-// --- nothing online until asked; one all-time board for every level, in pages of 50, two views of it: «Tots» (every
-// rank in order: podium, level line, points) and «On sóc» (own row ±5, «#22 de 60 · top 37%»); stale answers dropped
+// --- nothing online until asked; one board for every level, in pages of 50: every rank in order (podium, level line,
+// points), opened at the own row («Posició 22 de 60»), one link to the top and back; stale answers dropped
 const NAMES = ['<b>Marc</b>', 'Marta', 'Jordi', 'Núria', 'Pau', 'Laia', 'Arnau', 'Ona', 'Pere', 'Carla'];
 // get_leaderboard_all as the server answers it (202609280005): ranks offset+1..offset+50, plus on the first page the
 // caller's row with 5 neighbours each side; `total` on every row
@@ -154,7 +160,7 @@ const BOARD = page(0, 60, 22);
   submit($);
   T.publishes[0].resolve({ improved: false, quality: 100, score: 96572 }); await tick();
   T.alls.at(-1).resolve([{ position: 1, alias: 'Versions', difficulty: 0, quality: 100, score: 100072, is_self: true, total: 1 }]); await tick();
-  assert.equal($('publish-status').textContent, 'Resultat publicat. La classificació mostra el teu millor resultat.', 'publication must not claim the version-specific score is the combined record');
+  assert.match($('publish-status').textContent, /^Publicat com a .+\. La classificació mostra el teu millor resultat\.$/, 'publication must not claim the version-specific score is the combined record');
   assert($('publish-status').classList.contains('ok'), 'a non-improving cross-version retry remains a successful publication');
 }
 {
@@ -163,16 +169,27 @@ const BOARD = page(0, 60, 22);
   board.openBoard();
   assert($('board-menu').open && focused.at(-1) === 'board-close');
   assert.equal($('board-status').textContent, 'Carregant la classificació…');
-  assert($('board-table').hidden && $('board-retry').hidden && $('board-more').hidden);
+  assert($('board-table').hidden && $('board-retry').hidden && $('board-more').hidden && $('board-place').hidden);
   assert.deepEqual(calls.pages, [0], 'one read: the first page of the joint board');
-  assert.equal($('board-view-top').getAttribute('aria-pressed'), 'true', 'never published here: the whole list');
   T.alls[0].resolve(BOARD); await tick();
-  assert.equal(rows().length, 50, 'the first page: 50 ranks');
-  assert.deepEqual(rows()[0], ['1', '<b>Marc</b>FÀCILratxa ' + (1199).toLocaleString('ca-ES'), '99%', (123356).toLocaleString('ca-ES')], 'aliases stay text; level and streak under the name; % rounds like the game; points');
+  assert.equal(rows().length, 50, 'the first page: 50 ranks (the own row among them, once)');
+  assert.deepEqual(rows()[0], ['1', '<b>Marc</b>FÀCILratxa ' + (1199).toLocaleString('ca-ES'), '99%', (123356).toLocaleString('ca-ES') + '99%'], 'aliases stay text; level and streak under the name; % rounds like the game; points (+ the % phones show under them)');
   const trs = () => $('board-rows').children;
   assert.deepEqual(trs().slice(0, 4).map(tr => tr.children[0].children[0].className), ['pos p1', 'pos p2', 'pos p3', 'pos'], 'the podium: top 3 only');
   assert.equal(trs()[0].children.length, 4, 'four columns, as the header: # · Sobrenom · Encerts · Punts');
-  assert.equal($('board-summary').textContent, '', 'Tots: no subtitle (the tab says it)');
+  const me = trs().filter(tr => tr.className === 'me');
+  assert(me.length === 1 && me[0].children[1].textContent === 'Gegant300TUNORMALratxa ' + (1178).toLocaleString('ca-ES'), 'own row highlighted and labelled');
+  assert(!$('board-place').hidden && $('board-summary').textContent === 'Posició 22 de 60', 'where they stand, over the list');
+  // the link follows the list: the own row out of view → back to it; in view → to the top; at the very top with it in view: nothing
+  const box = $('board-scroll'); box.clientHeight = 230;
+  trs().forEach((tr, i) => Object.assign(tr, { offsetTop: i * 46, offsetHeight: 46 }));
+  box.scrollTop = 0; box.fire('scroll');
+  assert($('board-jump').textContent === 'Ves a la meva posició' && !$('board-jump').classList.contains('off'));
+  $('board-jump').click(); box.fire('scroll');
+  assert.equal(box.scrollTop, 19 * 46, 'its row in the middle of the box, snapped to a row');
+  assert.equal($('board-jump').textContent, 'Ves al capdamunt');
+  $('board-jump').click(); box.fire('scroll');
+  assert(box.scrollTop === 0 && $('board-jump').textContent === 'Ves a la meva posició');
   assert(!$('board-more').hidden && !$('board-more-btn').hidden, 'more to come: «Carrega’n més» at the end');
   // the list's end comes into view: the next page (ranks 51-60), appended, then the end
   io.fire();
@@ -183,119 +200,106 @@ const BOARD = page(0, 60, 22);
   assert.deepEqual(rows().map(r => r[0]), Array.from({ length: 60 }, (_, i) => String(i + 1)), 'every rank once, in order');
   assert($('board-more').hidden && $('board-more-btn').hidden && $('board-more-status').textContent === '', 'all 60 here: nothing at the end (no button, no line, no gap)');
   io.fire(); assert.equal(calls.all, 2, 'nothing more to ask');
-  $('board-views').hidden = false; $('board-view-me').click(); // (the switch shows once published: tested below)
-  assert.equal(calls.all, 2, 'switching views reads nothing');
-  assert.deepEqual(rows().map(r => r[0]), ['17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27'], 'On sóc: own row with 5 above and 5 below');
-  const me = trs().filter(tr => tr.className === 'me');
-  assert(me.length === 1 && me[0].children[1].textContent === 'Gegant300TUNORMALratxa ' + (1178).toLocaleString('ca-ES'), 'own row highlighted and labelled');
-  assert.equal($('board-summary').textContent, '#22 de 60 · top 37%');
-  assert($('board-more').hidden, 'On sóc has no list end');
-  assert.equal($('board-view-me').getAttribute('aria-pressed'), 'true');
   // an error, then Torna-ho a provar; a late answer for an earlier read is dropped
   board.openBoard();
   T.alls[2].reject(Object.assign(new Error('No s’ha pogut connectar amb la classificació. Torna-ho a provar.'), { code: 'unavailable' })); await tick();
   assert(!$('board-retry').hidden, 'an error offers Torna-ho a provar');
-  assert.match($('board-status').textContent, /No s’ha pogut connectar/);
+  assert.equal($('board-status').textContent, 'No s’ha pogut carregar la classificació');
+  assert($('board-status').dataset.kind === 'error' && !$('board-art').hidden && $('board-hint').textContent === 'Comprova la connexió i torna-ho a provar.', 'a headline, a picture and what to do (not the same words twice)');
+  assert($('board-place').hidden && $('board-table').hidden);
   $('board-retry').click();
   assert.equal(calls.all, 4, 'retry reads again');
-  assert($('board-retry').hidden && $('board-status').textContent === 'Carregant la classificació…');
+  assert($('board-retry').hidden && $('board-hint').hidden && $('board-status').textContent === 'Carregant la classificació…');
   $('board-close').click();
   T.alls[3].resolve(BOARD); await tick();
   assert.equal(rows().length, 0, 'an answer after closing is dropped');
   assert(!$('board-menu').open);
 }
-// --- a crowded board: pages up to the cap, On sóc's neighbours never in the list before their page, stale pages dropped
+// --- a crowded board: the own row far down shows after a gap, which fills as its pages come (never a rank twice); pages
+// up to the cap, stale pages dropped
 {
   const { board, $, calls, T, rows, io } = make({ alias: 'Gegant300' });
-  board.openBoard(); $('board-view-top').click();
+  board.openBoard();
   T.alls[0].resolve(page(0, 700, 300)); await tick();
-  assert.deepEqual(rows().map(r => r[0]), Array.from({ length: 50 }, (_, i) => String(i + 1)), 'Tots: ranks 1-50 only (the first page’s 295-305 wait for On sóc)');
-  $('board-more-btn').click(); // the fallback button does what the scroll does
-  for (let n = 1; n < 10; n++) { T.alls[n].resolve(page(calls.pages[n], 700, 300)); await tick(); if (n < 9) io.fire(); }
+  const gapBtn = () => $('board-rows').children.find(tr => tr.className === 'gap')?.children[0].children[0];
+  const range = (a, b) => Array.from({ length: b - a + 1 }, (_, i) => String(a + i));
+  assert.deepEqual(rows().map(r => r[0]), [...range(1, 50), 'Carrega’n més', ...range(295, 305)], 'the top, a gap, the own row with 5 each side');
+  assert.equal($('board-summary').textContent, 'Posició 300 de 700');
+  assert($('board-more').hidden, 'past a gap the list end loads nothing: the gap\'s button does');
+  io.fire(); assert.equal(calls.all, 1);
+  gapBtn().click();
+  assert(gapBtn().disabled && gapBtn().textContent === 'Carregant-ne més…');
+  for (let n = 1; n <= 5; n++) { T.alls[n].resolve(page(calls.pages[n], 700, 300)); await tick(); if (n < 5) gapBtn().click(); }
+  assert(!gapBtn(), 'joined up: no gap');
+  assert.deepEqual(rows().map(r => r[0]), range(1, 305), 'every rank once, in order: the neighbours deduped');
+  for (let n = 6; n < 10; n++) { io.fire(); T.alls[n].resolve(page(calls.pages[n], 700, 300)); await tick(); }
   assert.deepEqual(calls.pages, [0, 50, 100, 150, 200, 250, 305, 355, 405, 455], 'offsets follow the unbroken list (301-305 came with the first page)');
   const shown = rows().map(r => Number(r[0]));
-  assert(shown.length === 500 && shown.every((p, i) => p === i + 1), 'ranks 1-500 once each: the neighbours deduped');
+  assert(shown.length === 500 && shown.every((p, i) => p === i + 1), 'ranks 1-500 once each');
   assert($('board-more-btn').hidden && $('board-more-status').textContent === 'Mostrant els 500 primers', 'the cap');
   io.fire(); assert.equal(calls.all, 10, 'nothing past the cap');
-  $('board-view-me').click();
-  assert.deepEqual(rows().map(r => r[0]), ['295', '296', '297', '298', '299', '300', '301', '302', '303', '304', '305']);
   // a page answering after the sheet was reopened belongs to the old list
-  board.openBoard(); $('board-view-top').click();
+  board.openBoard();
   T.alls[10].resolve(page(0, 120)); await tick();
-  io.fire(); board.openBoard(); $('board-view-top').click(); T.alls[11].resolve(page(50, 120)); await tick();
+  io.fire(); board.openBoard(); T.alls[11].resolve(page(50, 120)); await tick();
   assert.equal(rows().length, 0, 'a stale page is dropped');
   T.alls[12].resolve(page(0, 120)); await tick();
   assert.equal(rows().length, 50, 'the new list only');
   io.fire(); T.alls[13].reject(new Error('x')); await tick();
   assert(/No s’han pogut carregar més/.test($('board-more-status').textContent) && !$('board-more-btn').hidden, 'a failed page: the button stays for another try');
+  // past the cap the gap stays, without a button
+  board.openBoard(); T.alls[14].resolve(page(0, 900, 800)); await tick();
+  for (let n = 15; n < 24; n++) { gapBtn().click(); T.alls[n].resolve(page(calls.pages[n], 900, 800)); await tick(); }
+  assert(gapBtn().hidden && rows().length === 500 + 1 + 11, 'capped: the top 500, the gap, the own row\'s neighbours');
 }
-// --- the switch (Tots · On sóc) only for someone who has published: never published = the list alone, decided
-// before the answer (no jump); an own row in the answer brings it quietly
+// --- no own row: the list from the top, the participants over it, the link hidden until the list moves
 {
   const { board, $, T, rows } = make();
   board.openBoard();
-  assert($('board-views').hidden, 'never published here: no switch, from the first frame');
-  assert.equal($('board-view-top').getAttribute('aria-pressed'), 'true');
   T.alls[0].resolve(page(0, 30)); await tick();
-  assert($('board-views').hidden && rows().length === 30, 'the list alone');
-  board.openBoard(); T.alls[1].resolve(BOARD); await tick();
-  assert(!$('board-views').hidden, 'an own row (published on this profile): the switch shows');
-  const known = make({ alias: 'Gegant300', row: true }); known.board.openBoard();
-  assert(!known.$('board-views').hidden && known.$('board-view-me').getAttribute('aria-pressed') === 'true', 'published here: the switch and On sóc from the first frame');
+  assert.equal(rows().length, 30);
+  assert.equal($('board-summary').textContent, '30 participants');
+  assert($('board-jump').textContent === 'Ves al capdamunt' && $('board-jump').classList.contains('off'), 'at the top: nothing to go to (its place kept)');
+  $('board-scroll').scrollTop = 300; $('board-scroll').fire('scroll');
+  assert(!$('board-jump').classList.contains('off'), 'scrolled: back to the top');
+  board.openBoard(); T.alls[1].resolve([{ position: 1, alias: 'Gegant300', difficulty: 2, quality: 99, score: 150000, is_self: true, total: 2140 }]); await tick();
+  assert.equal($('board-summary').textContent, 'Posició 1 de 2.140', 'thousands dots');
+  board.openBoard(); T.alls[2].resolve([{ position: 1, alias: 'Sol', difficulty: 2, quality: 99, score: 1, total: 1 }]); await tick();
+  assert.equal($('board-summary').textContent, '1 participant');
 }
-// a remembered alias with no row (never published, or removed) and nothing to publish: Tots from the first frame, the switch
-// there from the start and still there after the answer (nothing shifts); the next open knows the answer
-{
-  const { board, $, T, rows, mem } = make({ alias: 'Gegant300' });
-  board.openBoard();
-  assert(!$('board-views').hidden && $('board-view-top').getAttribute('aria-pressed') === 'true', 'no row: the switch, Tots active from the first frame');
-  T.alls[0].resolve(page(0, 30)); await tick();
-  assert(!$('board-views').hidden && $('board-view-top').getAttribute('aria-pressed') === 'true' && rows().length === 30, 'the answer changes nothing: switch kept, Tots');
-  assert(!mem.has('leaderboard-row'), 'no row remembered');
-  board.openBoard(); T.alls[1].resolve(BOARD); await tick();
-  assert(mem.has('leaderboard-row'), 'an own row in the answer is remembered');
-}
-// the flag belongs to its alias: a new profile (other alias, no score) opens on Tots from the first frame
-{
-  const { board, $ } = make({ alias: 'Nou123', row: 'Gegant300' });
-  board.openBoard();
-  assert($('board-view-top').getAttribute('aria-pressed') === 'true' && !$('board-views').hidden, 'another alias’s row: Tots, switch there');
-}
-// an error answer leaves the flag alone
-{
-  const { board, T, mem } = make({ alias: 'Gegant300', row: true });
-  board.openBoard(); T.alls[0].reject(new Error('offline')); await tick();
-  assert.equal(mem.get('leaderboard-row'), 'Gegant300', 'offline: the flag is kept');
-}
-// a stale guess (row remembered, the answer has none, nothing to publish): lands on Tots, the switch stays
-{
-  const { board, $, T, rows } = make({ alias: 'Gegant300', row: true });
-  board.openBoard();
-  T.alls[0].resolve(page(0, 30)); await tick();
-  assert(!$('board-views').hidden && $('board-view-top').getAttribute('aria-pressed') === 'true' && rows().length === 30, 'stale row flag: Tots, switch kept');
-}
-// --- published here before: On sóc first, profile buttons from the first frame; «top 1%» at least
-{
-  const { board, $, T, rows } = make({ session: true, alias: 'Gegant300', row: true });
-  board.openBoard();
-  assert.equal($('board-view-me').getAttribute('aria-pressed'), 'true', 'published here: On sóc first');
-  T.alls[0].resolve([{ position: 1, alias: 'Gegant300', difficulty: 2, quality: 99, score: 150000, is_self: true, total: 2140 },
-    ...[2, 3, 4, 5, 6, 7].map(p => ({ position: p, alias: `J${p}`, difficulty: 0, quality: 90, score: 1000 - p, is_self: false, total: 2140 }))]);
-  await tick();
-  assert.deepEqual(rows().map(r => r[0]), ['1', '2', '3', '4', '5', '6'], 'fewer neighbours at the edge');
-  assert.equal($('board-summary').textContent, '#1 de 2.140 · top 1%', 'never «top 0%»');
-}
-// --- On sóc with a result that can still be published: the call to publish it (the one primary in view)
+// --- a result that can still be published: the call to publish it (where it would land)
 {
   const { board, $, T, setRun } = make();
   setRun(RUN); board.results(true);
-  board.openBoard(); $('board-view-me').click();
+  board.openBoard();
   T.alls[0].resolve(BOARD.filter(r => !r.is_self).map(r => ({ ...r }))); await tick();
-  assert(!$('board-publish').hidden && $('board-status').textContent === 'Publica el teu resultat per veure on quedes.');
-  $('board-publish').click();
+  assert(!$('board-publish-link').hidden && $('board-place-sub').hidden, 'no own row: «Publica el teu resultat per veure on quedes» in its place');
+  $('board-publish-link').click();
   assert($('publish-menu').open && !$('board-menu').open, 'the publish sheet, over the results');
   $('publish-cancel').click();
-  board.openBoard(); $('board-view-top').click();
+  board.openBoard(); T.alls.at(-1).resolve([]); await tick(); await tick();
+  assert(!$('board-publish').hidden && $('board-hint').textContent === 'Publica el teu resultat per estrenar la classificació.', 'an empty board: the primary to publish it');
+  board.openBoard(null, { figure: 'drac-valls' }); T.alls.at(-1).resolve([]); await tick(); await tick();
+  assert($('board-publish').hidden, 'a Mulassa run is not the Drac\'s');
+}
+// --- an empty open board over the selector: «Juga amb …» closes it (not back where it came from) and leaves that figure there
+{
+  const played = [], where = { selector: true };
+  let backs = 0;
+  const { board, $, T, setRun } = make({ canPlay: () => where.selector, onPlay: id => played.push(id) });
+  board.openBoard(() => backs++, { figure: 'drac-valls' }); T.alls.at(-1).resolve([]); await tick(); await tick();
+  assert(!$('board-play').hidden && $('board-play-name').textContent === 'Juga amb el Drac' && $('board-publish').hidden, 'the one primary: play that figure');
+  $('board-play').click();
+  assert(!$('board-menu').open && backs === 0, 'closed, and not back to Configuració');
+  assert.deepEqual(played, ['drac-valls']);
+  board.openBoard(); T.alls.at(-1).resolve([]); await tick(); await tick();
+  assert.equal($('board-play-name').textContent, 'Juga amb la Mulassa');
+  where.selector = false; board.openBoard(); T.alls.at(-1).resolve([]); await tick(); await tick();
+  assert($('board-play').hidden, 'no selector under the board (results, another sheet): no button');
+  where.selector = true; setRun(RUN); board.results(true); board.openBoard(); T.alls.at(-1).resolve([]); await tick(); await tick();
+  assert(!$('board-publish').hidden && $('board-play').hidden, 'a run to publish: only its primary');
+  board.openBoard(null, { figure: 'mulassa-valls', seasonId: 0, version: 'mulassa-v2-short', name: 'Estrena 2026' }); T.alls.at(-1).resolve([]); await tick(); await tick();
+  assert($('board-play').hidden, 'a closed season: nothing to play for');
 }
 // --- results row: publish only for an eligible, unpublished run with publishing on; the board button whenever configured
 {
@@ -369,7 +373,7 @@ const BOARD = page(0, 60, 22);
   assert.equal(calls.publish.at(-1).opts.captchaToken, 'tok-3');
   T.session = true;
   T.publishes[1].resolve({ improved: false, quality: 95.4, score: 50000 }); await tick();
-  assert.equal($('publish-status').textContent, 'Resultat publicat. La classificació mostra el teu millor resultat.', 'a non-improvement is a success');
+  assert.match($('publish-status').textContent, /^Publicat com a .+\. La classificació mostra el teu millor resultat\.$/, 'a non-improvement is a success');
   assert($('publish-status').classList.contains('ok') && $('publish-alias').readOnly);
   assert.equal($('publish-title').textContent, 'Publicat!');
   assert.equal(mem.get(ALIAS_KEY), 'Ànecd’Òdena', 'the alias is remembered');
@@ -512,7 +516,7 @@ const BOARD = page(0, 60, 22);
     assert.equal(call.alias, 'Drac101');
   }
   T.publishes[2].resolve({ improved: false, quality: 90, score: RUN.score }); await tick();
-  assert.equal($('publish-status').textContent, 'Resultat publicat. La classificació mostra el teu millor resultat.');
+  assert.match($('publish-status').textContent, /^Publicat com a .+\. La classificació mostra el teu millor resultat\.$/);
   board.results(true);
   assert($('results-publish').hidden, 'a confirmed non-improving retry completes publication');
 }
@@ -740,7 +744,7 @@ const BOARD = page(0, 60, 22);
   // the note the ⚙ «Perfil» block shows (board.deviceNote): the browser decides, `persistent` is identity()'s storage probe
   const noteOf = (o, persistent = true) => make(o).board.deviceNote(persistent);
   assert.equal(noteOf({ ua: UA.iphone }), DEVICE_NOTES.ios, 'iPhone Safari');
-  assert(/7 dies/.test(DEVICE_NOTES.ios) && /pantalla d’inici/.test(DEVICE_NOTES.ios), 'Safari: the 7-day cap, the home screen');
+  assert(/uns dies sense jugar/.test(DEVICE_NOTES.ios) && !/7 dies/.test(DEVICE_NOTES.ios) && /pantalla d’inici/.test(DEVICE_NOTES.ios), 'Safari: its own storage cap (no game deadline), the home screen');
   assert.equal(noteOf({ ua: UA.instagram }), DEVICE_NOTES.inapp, 'an in-app browser');
   assert.equal(noteOf({ ua: UA.iphone, standalone: true }), '', 'the home-screen app: no note');
   assert.equal(noteOf({ ua: UA.chrome }), '', 'ordinary Chrome: no note');
@@ -775,126 +779,52 @@ const BOARD = page(0, 60, 22);
   n.T.publishes[0].reject(Object.assign(new Error('Aquest sobrenom ja és d’algú. Prova’n un altre.'), { code: 'taken' })); await tick();
   assert.equal(n.$('publish-error').textContent, 'Aquest sobrenom ja és d’algú. Si és teu i hi vas confirmar el correu, recupera el perfil.', 'recovery needs a confirmed address: said so');
 }
-// --- temporary profiles (202610180001): the 7-day notice on the sheet goes with the press; a running deadline is shown
-// instead; the first «Publicat!» of a deadline offers «Confirma el correu» once (never by itself, never again); an old
-// profile's notice is acknowledged only once it is painted; a confirmed address: no notice, no offer, a check on the board
-const iso = ms => new Date(ms).toISOString(), UNTIL = Date.parse('2026-10-25T16:42:00Z');
+// --- profiles without a deadline (docs/rankings-strategy.md §6): «Publicat com a» the name as the boards show it (a guest's
+// «#1234» from the server, a confirmed address's check); a guest's «Publicat!» offers «Confirma el correu» (never by
+// itself); the statistics' note goes with the publication (acceptStats); nothing about days or deadlines
 const find = (el, test) => (test(el) ? el : el.children.map(c => find(c, test)).find(Boolean) ?? null);
-{ // a new player: the notice from the first frame, sent with the publication, then the offer under the first Publicat!
+{ // a new player: the guest profile the server made, its tag remembered apart from the name, the offer under Publicat!
   const confirms = [];
-  const n = make({ captchaRequired: false, afterPublish: () => {}, onConfirm: o => confirms.push(o) });
-  n.setRun(RUN); n.board.openPublish();
-  assert.equal(n.$('publish-keep').textContent, KEEP_NOTICE, 'the notice before anything is known');
+  const n = make({ captchaRequired: false, afterPublish: () => {}, onConfirm: o => confirms.push(o), prof: null });
+  n.setRun(RUN); n.board.openPublish(); await tick(); await tick();
   assert(n.$('publish-offer').hidden, 'no offer before publishing');
-  await tick(); await tick();
   n.$('publish-alias').value = 'Drac101'; submit(n.$); await tick();
-  assert.equal(n.calls.publish[0].opts.notice, true, 'the server learns the notice was on screen');
-  n.T.session = true;
-  n.T.publishes[0].resolve({ improved: true, quality: 90, score: 1, expires_at: iso(UNTIL), started: true }); await tick();
+  assert.deepEqual(Object.keys(n.calls.publish[0].opts), ['captchaToken'], 'no notice flag any more');
+  n.T.session = true; n.T.prof = { alias: 'Drac101', tag: 42, verified: false, published: true };
+  n.T.publishes[0].resolve({ improved: true, quality: 90, score: 1 }); await tick();
   assert.equal(n.$('publish-form').dataset.view, 'done');
-  assert(!n.$('publish-offer').hidden && n.$('publish-offer-text').textContent === keptUntil(UNTIL), 'the first Publicat!: when it goes');
-  assert.equal(n.$('publish-send').textContent, 'D’acord', 'D’acord stays the one primary: the offer is optional');
+  assert.equal(n.$('publish-status').textContent, 'Publicat com a Drac101#0042. La classificació mostra el teu millor resultat.', 'the name as the boards show it');
+  assert(!find(n.$('publish-status'), e => e.className?.includes?.('verified-check')), 'a guest: no check');
+  assert(n.mem.get(ALIAS_KEY) === 'Drac101' && n.mem.get('leaderboard-tag') === '42', 'the name without its tag (an old tab reads it), the tag apart');
+  assert.equal(n.calls.accept, 1, 'the statistics may be sent now');
+  assert(!n.$('publish-offer').hidden && n.$('publish-send').textContent === 'D’acord', 'a guest: the offer, D’acord stays');
   assert(n.$('publish-menu').open && !confirms.length && !n.shares.length, 'nothing opens by itself');
   n.$('publish-confirm').click();
-  assert(!n.$('publish-menu').open && confirms.length === 1 && !n.shares.length, '«Confirma el correu»: the profile sheet next, Comparteix after it (onConfirm)');
-  assert('place' in confirms[0], 'the place goes along for Comparteix');
-  n.$('publish-confirm').click(); assert.equal(confirms.length, 1, 'once');
-  // the next publication (same profile, its deadline running): it does not start or offer anything again
-  n.setRun({ ...RUN }); n.board.openPublish(); await tick(); await tick();
-  assert(n.$('publish-offer').hidden, 'a new opening starts without the offer');
-  submit(n.$); await tick();
-  n.T.publishes[1].resolve({ improved: false, quality: 90, score: 1, expires_at: iso(UNTIL), started: false }); await tick();
-  assert(n.$('publish-form').dataset.view === 'done' && n.$('publish-offer').hidden, 'no repeated reminder');
-  // without an onConfirm (no profile sheet to go to): no offer, even on a first publication
-  const q = make({ captchaRequired: false, afterPublish: () => {} });
+  assert(!n.$('publish-menu').open && confirms.length === 1 && 'place' in confirms[0], '«Confirma el correu»: the profile sheet next, the place along for Comparteix');
+  // a confirmed address: the check, no offer
+  const v = make({ session: true, alias: 'Drac101', mail: 'jo@example.test', afterPublish: () => {}, onConfirm: () => {}, prof: { alias: 'Drac101', tag: null, verified: true, published: true } });
+  v.setRun(RUN); v.board.openPublish(); await tick(); await tick();
+  assert(find(v.$('publish-as-name'), e => e.className?.includes?.('verified-check')), 'the one-tap row shows the check');
+  submit(v.$); await tick(); v.T.publishes[0].resolve({ improved: true }); await tick(); await tick();
+  assert(find(v.$('publish-status'), e => e.className?.includes?.('verified-check')) && v.$('publish-offer').hidden, 'confirmed: the check, no offer');
+  // without an onConfirm (no profile sheet to go to): no offer
+  const q = make({ captchaRequired: false, afterPublish: () => {}, prof: null });
   q.setRun(RUN); q.board.openPublish(); await tick(); await tick();
   q.$('publish-alias').value = 'Drac101'; submit(q.$); await tick();
-  q.T.publishes[0].resolve({ improved: true, expires_at: iso(UNTIL), started: true }); await tick();
+  q.T.session = true; q.T.prof = { alias: 'Drac101', tag: 7, verified: false }; q.T.publishes[0].resolve({ improved: true }); await tick(); await tick();
   assert(q.$('publish-offer').hidden);
-  // an older server (no deadline in its answer): no offer
-  const o = make({ captchaRequired: false, afterPublish: () => {}, onConfirm: () => {} });
-  o.setRun(RUN); o.board.openPublish(); await tick(); await tick();
-  o.$('publish-alias').value = 'Drac101'; submit(o.$); await tick();
-  o.T.publishes[0].resolve({ improved: true }); await tick();
-  assert(o.$('publish-offer').hidden);
-}
-{ // a deadline already running: the date instead of the general notice, still sent as shown
-  const d = make({ session: true, alias: 'Drac101', prof: { alias: 'Drac101', verified: false, expiresAt: UNTIL, noticeNeeded: false } });
-  d.setRun(RUN); d.board.openPublish(); await tick(); await tick();
-  assert.equal(d.calls.profile, 1);
-  assert.equal(d.$('publish-keep').textContent, untilText(UNTIL));
-  submit(d.$); await tick(); assert.equal(d.calls.publish[0].opts.notice, true);
-}
-{ // a confirmed address: no notice, the server is not told one was shown, no offer; if it asks for it, the notice appears
-  const v = make({ session: true, alias: 'Drac101', mail: 'jo@example.test', afterPublish: () => {}, onConfirm: () => {}, prof: { alias: 'Drac101', verified: true, expiresAt: null, noticeNeeded: false } });
-  v.setRun(RUN); v.board.openPublish(); await tick(); await tick();
-  assert.equal(v.$('publish-keep').textContent, 'Amb el correu confirmat, el perfil es conserva fins que l’esborris.');
-  submit(v.$); await tick();
-  assert.equal(v.calls.publish[0].opts.notice, false, 'nothing shown: nothing claimed');
-  v.T.publishes[0].reject(Object.assign(new Error('Abans de publicar, llegeix l’avís sobre els 7 dies i torna a prémer Publica.'), { code: 'notice' })); await tick();
-  assert.equal(v.$('publish-keep').textContent, KEEP_NOTICE, 'the server wanted the notice: it is on the sheet now');
-  assert.match(v.$('publish-status').textContent, /llegeix l’avís/);
-  submit(v.$); await tick();
-  assert.equal(v.calls.publish[1].opts.notice, true, 'the next press sends it');
-  v.T.publishes[1].resolve({ improved: true, expires_at: null, started: false }); await tick();
-  assert(v.$('publish-offer').hidden, 'confirmed: no offer');
-}
-{ // an old profile with results and no deadline: acknowledged only once the sheet is painted, then offered once
-  const legacyProf = { alias: 'Drac101', verified: false, expiresAt: null, noticeNeeded: true };
-  const l = make({ session: true, alias: 'Drac101', afterPublish: () => {}, onConfirm: () => {}, prof: legacyProf });
-  l.setRun(RUN); l.board.openPublish(); await tick(); await tick();
-  assert.equal(l.$('publish-keep').textContent, KEEP_NOTICE);
-  assert(l.calls.ack === 0 && l.T.paints.length === 1, 'nothing acknowledged before it is on screen');
-  l.T.paints.shift()(); assert.equal(l.calls.ack, 1, 'painted: the server starts its 7 days');
-  l.T.acks[0].resolve(iso(UNTIL)); await tick();
-  submit(l.$); await tick();
-  l.T.publishes[0].resolve({ improved: false, expires_at: iso(UNTIL), started: false }); await tick();
-  assert(!l.$('publish-offer').hidden && l.$('publish-offer-text').textContent === keptUntil(UNTIL), 'the Publicat! the notice was shown for offers it');
-  // closed before it was painted: nothing acknowledged
-  const c = make({ session: true, alias: 'Drac101', prof: { ...legacyProf } });
-  c.setRun(RUN); c.board.openPublish(); await tick(); await tick();
-  c.$('publish-menu').close(); assert.equal(c.T.unwatched, 1, 'closed: no longer watched');
-  c.T.paints.shift()();
-  assert.equal(c.calls.ack, 0, 'a sheet no longer open acknowledges nothing');
-  // the press says the notice was read only while it is on screen: scrolled away, it comes into view, nothing is sent
-  const off = make({ captchaRequired: false, afterPublish: () => {} });
-  let scrolled = 0; off.$('publish-keep').scrollIntoView = () => { scrolled++; };
-  off.setRun(RUN); off.board.openPublish(); await tick(); await tick();
-  off.$('publish-alias').value = 'Drac101'; off.T.visible = false; submit(off.$); await tick();
-  assert(off.calls.publish.length === 0 && scrolled === 1 && /llegeix l’avís/.test(off.$('publish-status').textContent), 'off screen: shown first, not sent');
-  off.T.visible = true; submit(off.$); await tick();
-  assert(off.calls.publish.length === 1 && off.calls.publish[0].opts.notice === true, 'on screen: the next press sends it');
-  // a confirmed profile has no notice to read: never held back
-  const conf = make({ session: true, alias: 'Drac101', mail: 'jo@example.test', prof: { alias: 'Drac101', verified: true, expiresAt: null, noticeNeeded: false } });
-  conf.setRun(RUN); conf.board.openPublish(); await tick(); await tick(); conf.T.visible = false; submit(conf.$); await tick();
-  assert.equal(conf.calls.publish.length, 1);
-  // an expired profile's sheet: the notice, not a date gone by
-  const gone = make({ session: true, alias: 'Drac101', prof: { alias: 'Drac101', verified: false, expiresAt: Date.parse('2026-10-01T10:00:00Z'), noticeNeeded: false, expired: true } });
-  gone.setRun(RUN); gone.board.openPublish(); await tick(); await tick();
-  assert.equal(gone.$('publish-keep').textContent, KEEP_NOTICE);
   // the account behind the session was purged: the publication left it, the retry asks for a new profile's token
-  const purged = make({ session: true, alias: 'Drac101', afterPublish: () => {}, prof: { alias: 'Drac101', verified: false, expiresAt: UNTIL, noticeNeeded: false } });
+  const purged = make({ session: true, alias: 'Drac101', afterPublish: () => {}, prof: { alias: 'Drac101', tag: 3, verified: false } });
   purged.setRun(RUN); purged.board.openPublish(); await tick(); await tick();
   submit(purged.$); await tick();
   purged.T.session = false; purged.T.publishes[0].reject(Object.assign(new Error('La sessió ha caducat. Torna-ho a provar.'), { code: 'session' })); await tick(); await tick();
-  assert(!purged.$('publish-field').hidden && purged.$('publish-keep').textContent === KEEP_NOTICE, 'a new profile: the field and the notice');
-  submit(purged.$); await tick(); await tick();
-  assert.equal(purged.calls.captcha >= 1 || purged.calls.render.length >= 1, true, 'the retry gets a Turnstile token for the new profile');
-  // a failed acknowledgement: no offer (the server never started its 7 days here), publishing still works
-  const f = make({ session: true, alias: 'Drac101', afterPublish: () => {}, onConfirm: () => {}, prof: { ...legacyProf } });
-  f.setRun(RUN); f.board.openPublish(); await tick(); await tick();
-  f.T.paints.shift()(); f.T.acks[0].reject(new Error('offline')); await tick();
-  submit(f.$); await tick();
-  assert.equal(f.calls.publish[0].opts.notice, true, 'the notice was shown: the publication may start the 7 days');
-  f.T.publishes[0].resolve({ improved: true, expires_at: iso(UNTIL), started: true }); await tick();
-  assert(!f.$('publish-offer').hidden, 'started by this publication instead: offered');
+  assert(!purged.$('publish-field').hidden, 'a new profile: the field');
 }
-{ // a remembered name whose profile row is gone (its deadline passed): this browser leaves the old session, picks a name again
+{ // a remembered name whose profile row is gone (deleted, or 12 months away): this browser leaves the old session, picks a name again
   const g = make({ session: true, alias: 'Drac101', prof: null });
   g.setRun(RUN); g.board.openPublish(); await tick(); await tick(); await tick();
   assert.equal(g.calls.signout, 1, 'the old session goes');
   assert(!g.$('publish-field').hidden && g.$('publish-as').hidden, 'the field: the old name may be free or taken now');
-  assert.equal(g.$('publish-keep').textContent, KEEP_NOTICE);
   // a confirmed account with no row, or a session never published from here: kept
   const keepMail = make({ session: true, alias: 'Drac101', mail: 'jo@example.test', prof: null });
   keepMail.setRun(RUN); keepMail.board.openPublish(); await tick(); await tick(); await tick();
@@ -907,12 +837,73 @@ const find = (el, test) => (test(el) ? el : el.children.map(c => find(c, test)).
   b.T.alls[0].resolve([{ ...player(1, 2, 0), verified: true }, { ...player(2, 2, 0), verified: false }]); await tick(); await tick();
   const [first, second] = b.$('board-rows').children;
   const check = find(first, e => e.className?.includes?.('verified-check'));
-  assert(check && check.tag === 'button' && check.attrs['aria-label'] === VERIFIED && check.dataset.tip === VERIFIED, 'a button named «Correu confirmat»');
+  assert(check && check.tag === 'span' && check.attrs.role === 'img' && check.attrs['aria-label'] === VERIFIED && !check.dataset.tip, 'a mark named «Correu confirmat», no tip');
   assert(!find(second, e => e.className?.includes?.('verified-check')), 'unconfirmed: no check');
-  assert.deepEqual(b.rows()[0], ['1', `${NAMES[0]}FÀCILratxa 1.199`, '99%', '123.356'], 'the check adds no text to the row');
-  check.click(); assert(check.classList.contains('tip'), 'a tap shows the words');
-  check.fire('blur'); assert(!check.classList.contains('tip'), 'and they go when it is left');
+  assert.deepEqual(b.rows()[0], ['1', `${NAMES[0]}FÀCILratxa 1.199`, '99%', '123.35699%'], 'the check adds no text to the row');
   assert(!JSON.stringify(b.$('board-rows').children.map(tr => tr.textContent)).includes('@'), 'never an address');
+}
+// --- one board per figure and season: «Tria figura», the season's name and days left, guests, cards, an empty season, history
+{
+  const cards = [], halls = [], keeps = [];
+  const b = make({ onCard: p => cards.push(p), onSeasons: f => halls.push(f), onKeep: () => keeps.push(1), alias: 'Gegant300' });
+  b.T.seasons = [{ seasonId: 1, name: 'Tardor 2026', startsAt: NOW - 15 * 864e5, endsAt: NOW + 23 * 864e5, version: 'mulassa-v3', previousDance: false, players: 3, podium: [], myPosition: 2 },
+    { seasonId: 0, name: 'Estrena 2026', startsAt: 0, endsAt: null, version: 'mulassa-v2-short', previousDance: false, players: 60, myPosition: null,
+      podium: [{ position: 1, alias: 'Portadora', tag: null, verified: true, score: 172795, difficulty: 2 }, { position: 2, alias: 'Baldufa', tag: 1103, verified: false, score: 171996, difficulty: 2 }] }];
+  b.board.openBoard(); await tick();
+  assert.deepEqual(b.calls.lists.at(-1), { figure: 'mulassa-valls' }, 'the selector\'s figure, the open season');
+  assert.equal(b.$('board-season').textContent.split(' · ')[0], 'Tardor 2026', 'the calendar names the season from the first frame');
+  b.T.alls[0].resolve([{ position: 1, alias: 'Baldufa#1103', tag: 1103, verified: false, difficulty: 2, quality: 98, score: 9, total: 3, season_id: 1 },
+    { position: 2, alias: 'Gegant300#0042', tag: 42, verified: false, is_self: true, difficulty: 1, quality: 90, score: 8, total: 3, season_id: 1 }]); await tick(); await tick(); await tick();
+  assert.equal(b.$('board-season').textContent, 'Tardor 2026 · queden 23 dies', 'the server\'s season: its name and the days left');
+  const rows = b.$('board-rows').children;
+  assert.equal(rows.length, 3, 'a guest\'s own row has its quiet line under it');
+  assert.equal(rows[2].className, 'me-hint');
+  assert.equal(rows[2].textContent, 'Confirma el correu per no perdre el perfil');
+  find(rows[2], e => e.tag === 'button').click(); assert.equal(keeps.length, 1, 'it opens the e-mail step');
+  const guest = find(rows[0], e => e.className?.includes?.('player-name'));
+  assert(guest.className.includes('guest') && find(guest, e => e.className === 'tag').textContent === '#1103' && find(guest, e => e.className === 'alias').textContent === 'Baldufa', 'a guest: the name, its tag apart (quieter)');
+  guest.click(); assert.deepEqual(cards.at(-1), { alias: 'Baldufa', tag: 1103, verified: false,
+    from: { figure: 'mulassa-valls', season: 'Tardor 2026', position: 1, score: 9, difficulty: 2 } }, 'a tap opens that player\'s card, with the row it came from');
+  b.$('board-seasons').click(); assert.deepEqual(halls, ['mulassa-valls'], '«Temporades anteriors» for this figure');
+  assert(b.$('board-menu').open, 'over the board');
+  // «Tria figura»: the button over the list opens it in the same sheet, the shown figure cream; Escape and × come back
+  assert(b.$('board-figure-name').textContent === 'Mulassa de Valls' && /<svg/.test(b.$('board-figure-pic').innerHTML), 'the figure\'s portrait and name');
+  b.$('board-figure').click();
+  assert(!b.$('board-picker').hidden && b.$('board-main').hidden && b.$('board-figure').attrs['aria-expanded'] === 'true', 'the picker in the list\'s place');
+  assert.equal(b.focused.at(-1), 'board-pick-mulassa-valls', 'the shown figure takes the focus (a ring only for keyboard: focus.js)');
+  assert(b.figMula.attrs['aria-pressed'] === 'true' && b.figDrac.attrs['aria-pressed'] === 'false');
+  const esc = b.$('board-menu').fire('cancel');
+  assert(esc.prevented && b.$('board-picker').hidden && !b.$('board-main').hidden && b.$('board-menu').open, 'Escape: back to the board, the sheet stays');
+  assert.equal(b.focused.at(-1), 'board-figure');
+  b.$('board-figure').click(); b.$('board-close').click();
+  assert(b.$('board-picker').hidden && b.$('board-menu').open, '×: back to the board too');
+  const reads = b.calls.all;
+  b.$('board-figure').click(); b.figMula.click();
+  assert(b.$('board-picker').hidden && b.calls.all === reads, 'the same figure: nothing to read');
+  // the Drac: its own board, same season
+  b.$('board-figure').click(); b.figDrac.click(); await tick();
+  assert.deepEqual(b.calls.lists.at(-1), { figure: 'drac-valls' });
+  assert(b.$('board-picker').hidden && b.$('board-figure-name').textContent === 'Drac de Valls');
+  assert(b.figDrac.attrs['aria-pressed'] === 'true' && b.figMula.attrs['aria-pressed'] === 'false');
+  // an empty season: what it means and what to do, and the season before's podium under it
+  b.T.alls.at(-1).resolve([]); await tick(); await tick(); await tick();
+  assert.equal(b.$('board-status').textContent, 'Encara no hi ha resultats');
+  assert.equal(b.$('board-hint').textContent, 'Juga amb el Drac i publica el resultat per estrenar la classificació.');
+  assert(!b.$('board-art').hidden && b.$('board-place').hidden && !b.$('board-seasons').hidden, 'its portrait; a history: «Temporades anteriors» stays');
+  assert(!b.$('board-previous').hidden && b.$('board-previous').textContent.startsWith('Podi d’Estrena 2026'), 'the last season\'s podium, «d’» before a vowel');
+  assert(b.$('board-previous').textContent.includes('Baldufa#1103'));
+  // a closed season from the Saló de la fama: that board, its name alone, no guest line, no publish offer
+  b.board.openBoard(null, { figure: 'mulassa-valls', seasonId: 0, version: 'mulassa-v2-short', name: 'Estrena 2026' }); await tick();
+  assert.deepEqual(b.calls.lists.at(-1), { version: 'mulassa-v2-short', season: 0 });
+  assert.equal(b.$('board-season').textContent, 'Estrena 2026');
+  b.T.alls.at(-1).resolve([{ position: 1, alias: 'Gegant300#0042', tag: 42, is_self: true, difficulty: 1, quality: 90, score: 8, total: 1, season_id: 0 }]); await tick(); await tick();
+  assert(b.$('board-rows').children.every(tr => tr.className !== 'me-hint'), 'history: no «Confirma el correu» line');
+  assert.equal(b.$('board-summary').textContent, 'Posició 1 de 1');
+  b.$('board-figure').click(); b.figMula.click(); await tick();
+  assert.deepEqual(b.calls.lists.at(-1), { figure: 'mulassa-valls' }, 'the pressed figure again: back to the current season');
+  // no history at all: no podium, no «Temporades anteriors»
+  b.T.seasons = []; b.env.t += 61e3; b.board.openBoard(null, { figure: 'drac-valls' }); b.T.alls.at(-1).resolve([]); await tick(); await tick(); await tick(); // (past the season cache's minute)
+  assert(b.$('board-previous').hidden && b.$('board-seasons').hidden && b.$('board-status').textContent === 'Encara no hi ha resultats');
 }
 // --- markup: every id the module needs exists, copy is Catalan, buttons are .btn, live regions, privacy section
 {
@@ -923,13 +914,18 @@ const find = (el, test) => (test(el) ? el : el.children.map(c => find(c, test)).
   assert.deepEqual(heads, [4, 4], 'the visible headings (above the scroll) and the table\u2019s own (screen readers) have the rows\u2019 four columns');
   const cols = [...html.matchAll(/<colgroup>([\s\S]*?)<\/colgroup>/g)].map(m => m[1]);
   assert(cols.length === 2 && cols[0] === cols[1], 'both tables share the same column widths');
+  // portrait phones: the % under the points (its column empty, width 0: a hidden cell would shift the others), the name gets that room
+  const phones = [...html.matchAll(/@media \(max-width: 519px\) \{\n([\s\S]*?)\n\}/g)].map(m => m[1]).find(b => b.includes('pct-sub')) ?? '';
+  assert(/\.c-pct \{ width: 0; \}/.test(phones) && /:nth-child\(3\) \{ visibility: hidden;/.test(phones) && /\.pct-sub \{ display: block;/.test(phones) && /\.pct-sub \{ display: none; \}/.test(html),
+    'phones: the % moves under the points and its column gives its room to the name');
+  assert(!/\.streak \{[^}]*ellipsis/.test(html) && /#board-table \.sub \{[^}]*flex-wrap: wrap;/.test(html), 'the level and streak line wraps, never «ratxa …»');
   for (const id of ['board-status', 'publish-status', 'profile-status']) assert(new RegExp(`id="${id}"[^>]*role="status"`).test(html), `#${id} is announced`);
   const sheet = id => html.slice(html.indexOf(`<dialog id="${id}"`), html.indexOf('</dialog>', html.indexOf(`<dialog id="${id}"`)));
   for (const id of ['board-menu', 'publish-menu']) {
     assert(!/<button(?![^>]*class="(btn|sheet-x))/.test(sheet(id)), `${id}: every button is a .btn (or the corner X)`);
-    // «Publica el teu resultat» only shows while Tanca is secondary (tested above); «Confirma el correu» only while
+    // «Publica el teu resultat» and «Juga amb …» never show together (tested above); «Confirma el correu» only while
     // its .publish-offer steps #publish-send down to secondary (base.css)
-    assert.equal((sheet(id).replace(/id="board-publish"[^>]*/, '').replace(/id="publish-confirm"[^>]*/, '').match(/btn-primary/g) || []).length, id === 'publish-menu' ? 1 : 0, `${id}: one primary per view (the board has none but «Publica el teu resultat»)`);
+    assert.equal((sheet(id).replace(/id="board-(publish|play)"[^>]*/g, '').replace(/id="publish-confirm"[^>]*/, '').match(/btn-primary/g) || []).length, id === 'publish-menu' ? 1 : 0, `${id}: one primary per view (the board has none but «Publica el teu resultat» / «Juga amb …»)`);
     assert(!/\b(OK|Cancel|Delete|Submit|Leaderboard|Settings)(?![·\w])/.test(sheet(id).replace(/<[^>]*>/g, ' ')), `${id}: no English copy`);
   }
   assert(/No cal que sigui el teu nom real · 3–16 caràcters/.test(sheet('publish-menu')), 'a real name is not required (one short line)');
@@ -939,7 +935,7 @@ const find = (el, test) => (test(el) ? el : el.children.map(c => find(c, test)).
   assert(!/Cancel·la|btn-primary/.test(cap), 'not dismissable: no Cancel·la');
   assert(!/setmana|board-period/i.test(sheet('board-menu')) && !/de la setmana/.test(html), 'no weekly board anywhere');
   assert(!/settings-alias|board-alias|publish-edit|board-delete|delete-confirm|board-note/.test(html), 'no nickname editing and no deletion in Classificacions: the profile is one block in Configuració');
-  assert(/id="settings-profile-row"[^>]*>[\s\S]*id="settings-profile-main"[\s\S]*id="settings-profile-alt"/.test(html) && /id="publish-recover"/.test(sheet('publish-menu')), '⚙ Perfil block, and «Recupera» on the publish sheet');
+  assert(/id="profile-row"[^>]*>[\s\S]*id="profile-main"[\s\S]*id="profile-alt"/.test(sheet('account-menu')) && !/settings-profile/.test(html) && /id="publish-recover"/.test(sheet('publish-menu')), 'the profile block lives in Perfil (no longer ⚙), and «Recupera» on the publish sheet');
   assert(/data-privacy-open/.test(sheet('publish-menu')) && /data-privacy-open/.test(sheet('board-menu')), 'privacy reachable before publishing');
   const privacy = sheet('privacy-menu');
   assert(/data-privacy="leaderboards"/.test(privacy) && /Supabase/.test(privacy) && /Turnstile/.test(privacy), 'Privadesa: a Supabase section of its own');
@@ -952,14 +948,15 @@ const find = (el, test) => (test(el) ? el : el.children.map(c => find(c, test)).
   assert.equal((html.match(/data-email="/g) || []).length, 1, 'one place for the contact e-mail');
   assert(/<span id="privacy-contact" data-email="holi@mulassa\.cat" hidden>/.test(owner), 'the contact Marc gave; shown by board-ui as a mailto link');
   assert(/autocomplete="off"/.test(sheet('publish-menu')) && /maxlength="24"/.test(sheet('publish-menu')));
-  // 202610180001: the first frame's notice is the module's text; the offer is the done view's primary (D'acord steps down); privacy says it
-  assert(sheet('publish-menu').includes(`<span id="publish-keep">${KEEP_NOTICE}</span>`), 'the notice in the markup is the one the module writes');
+  // the offer is the done view's primary (D'acord steps down); no deadline anywhere
   assert(/id="publish-offer" class="publish-offer" hidden>[\s\S]*id="publish-confirm" type="button" class="btn btn-primary"/.test(sheet('publish-menu')), 'the offer: hidden, the primary, after the place line');
-  assert(/Ho perdràs si no confirmes el correu\./.test(sheet('publish-menu')));
-  assert.equal(keptUntil(+new Date(2026, 9, 25, 12, 10)), 'El nom es guarda fins al 25 d’octubre.');
-  assert.equal(keptUntil(+new Date(2026, 10, 1)), 'El nom es guarda fins a l’1 de novembre.');
+  assert(/Ets convidat: si esborres les dades del navegador, perdràs el perfil\./.test(sheet('publish-menu')));
+  assert(/els totals de les teves estadístiques seran públics/.test(sheet('publish-menu')), 'publishing says the statistics\' totals go public with the profile (their notice)');
+  assert(!/7 dies|caduca|temporal/.test(html.replace(/<script[\s\S]*?<\/script>/g, '')), 'no 7-day text anywhere');
   assert(/Tens un perfil amb el correu confirmat\? Recupera’l/.test(sheet('publish-menu')), 'recovery needs a confirmed address');
-  assert(/<b>7 dies<\/b> des de la primera publicació/.test(privacy) && /des que el joc te n’avisa/.test(privacy) && /sobrenom queda lliure/.test(privacy) && /rècords del dispositiu es mantenen/.test(privacy), 'Privadesa: the 7 days, the notice for older profiles, the freed name, local records');
+  assert(/<b>convidat<\/b>/.test(privacy) && /Timbaler#3821/.test(privacy) && /<b>12 mesos<\/b> sense jugar ni publicar/.test(privacy) && /rècords del dispositiu es mantenen/.test(privacy), 'Privadesa: guests, their #1234, the 12 months, local records');
+  assert(/totals[^.]*són <b>públics<\/b>[^.]*tocant?[^.]*sobrenom|Els totals són <b>públics<\/b>/.test(privacy) && /Els dies són <b>privats<\/b>/.test(privacy) && /Mai no s’hi envia l’hora/.test(privacy) && /Tot s’esborra amb el perfil/.test(privacy), 'Privadesa: public totals, private days, never times or the device, all deleted with the profile');
+  assert(/<b>estadístiques<\/b>/.test(privacy.slice(privacy.indexOf('data-privacy="device"'), privacy.indexOf('data-privacy="leaderboards"'))), 'Privadesa: the statistics are kept on the device');
   assert(/marca de «Correu confirmat»/.test(privacy) && /no confirmat no compta/.test(privacy) && !/El perfil i els resultats es conserven fins que els esborres: ho/.test(privacy.replace('Amb el correu confirmat, el perfil i els resultats es conserven fins que els esborres', '')), 'Privadesa: the check, a pending address, and no longer «kept until you delete it» for everyone');
   assert(!/torneig|tornejos/i.test(privacy), 'no tournament claims in the privacy text');
 }

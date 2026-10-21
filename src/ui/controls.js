@@ -1,7 +1,7 @@
 // Which DOM controls show in each state, and the photo (view) mode.
 import { showAvatars, photoHelpAvailable } from './photo-avatars.js';
 import { sheets } from './sheets.js';
-import { howtoMenu, settingsMenu, privacyMenu, pauseMenu, hide, howtoEl, settingsEl, leadersEl, feedbackEl, musicEl, iosHint, hintOff, pauseEl, skipEl, retryEl } from './handles.js';
+import { howtoMenu, settingsMenu, privacyMenu, pauseMenu, hide, howtoEl, settingsEl, feedbackEl, musicEl, profileEl, pauseEl, skipEl, retryEl } from './handles.js';
 import { G, clock, CHALLENGE, setFreeSound } from '../game/state.js';
 import { keyboardNav } from './focus.js';
 import { hud, buttonAt } from '../hud/canvas.js';
@@ -30,7 +30,8 @@ hud.addEventListener('pointermove', e => {
 });
 hud.addEventListener('pointerleave', () => { hudMouse = false; updateHudCursor(); });
 
-export const sheetUp = () => howtoMenu.open || settingsMenu.open || sheets.sync.open || sheets.board.open || privacyMenu.open || sheets.share.open || pauseMenu.open || sheets.feedback.open || sheets.profile?.isOpen || sheets.select?.sheetOpen || sheets.watch?.open;
+export const sheetUp = () => howtoMenu.open || settingsMenu.open || sheets.sync.open || sheets.board.open || privacyMenu.open || sheets.share.open || pauseMenu.open || sheets.feedback.open || sheets.profile?.isOpen || sheets.select?.sheetOpen || sheets.watch?.open
+  || sheets.account?.isOpen || sheets.seasons?.isOpen || sheets.seasonEnd?.isOpen || sheets.card?.isOpen || sheets.hint?.isOpen;
 export const menuState = () => G.state === 'splash' || G.state === 'title' || G.state === 'select'; // the camera steers
 export const photoScreen = () => G.state === 'select'; // photo mode lives only on the selector
 export const steers = () => menuState() && !sheetUp();
@@ -40,7 +41,7 @@ export const steers = () => menuState() && !sheetUp();
 // toggles it; Escape or the same button (dimmed after 3 idle seconds, back on any touch, move or key) brings it all back.
 // The hidden controls are inert (never focused or clicked); the focus goes to the button and back to where it was.
 export const viewBtn = document.getElementById('viewmode');
-const VIEW_HIDES = ['leaders', 'settings', 'feedback', 'music', 'howto', 'ios-hint', 'fps', 'feedback-nudge', 'select'].map(id => document.getElementById(id));
+const VIEW_HIDES = ['profile', 'settings', 'feedback', 'music', 'howto', 'fps', 'feedback-nudge', 'select'].map(id => document.getElementById(id));
 export let viewMode = false, viewT = 0, viewBack = null, viewIdle = 0, hudBlank = false;
 export const setHudBlank = v => (hudBlank = v);
 export function setView(on) {
@@ -79,8 +80,6 @@ viewBtn.addEventListener('click', () => setView(!viewMode));
 document.getElementById('rotate-exit').addEventListener('click', () => setView(false));
 export function updateControls() {
   updateHudCursor();
-  // Set the hint's final layout before the selector measures its information block.
-  hide(iosHint, hintOff || (G.state !== 'title' && G.state !== 'select') || howtoMenu.open || settingsMenu.open || sheets.sync.open);
   hide(viewBtn, !photoScreen() || !viewMode);
   if (viewMode && (!photoScreen() || sheetUp())) setView(false); // the selector only, never under a sheet
   lookSync(); // (after it: a sheet or a state change has just dropped control)
@@ -91,10 +90,9 @@ export function updateControls() {
   howtoEl.setAttribute('aria-label', photoHelp ? 'Controls del mode foto (?)' : 'Com es juga?');
   howtoEl.setAttribute('aria-haspopup', photoHelp ? 'false' : 'dialog');
   hide(settingsEl, (G.state !== 'title' && G.state !== 'select'));
-  hide(leadersEl, (G.state !== 'title' && G.state !== 'select') || !sheets.board.configured);
-  document.getElementById('select').toggleAttribute?.('data-ranking', !leadersEl.hidden);
   hide(feedbackEl, (G.state !== 'title' && G.state !== 'select'));
   hide(musicEl, (G.state !== 'title' && G.state !== 'select'));
+  hide(profileEl, G.state !== 'select' || !sheets.board.configured); // the selector's corner row only, first (decision 6; the board is the info's ranking line)
   sheets.select?.visible(G.state === 'select'); // measure after the header controls have their final layout
   hide(pauseEl, G.state !== 'play' || G.paused || Boolean(G.collapseT));
   hide(skipEl, G.state !== 'play' || !G.practice || G.paused);

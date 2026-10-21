@@ -28,6 +28,7 @@ const HANDOFF = 0.06; // main.js: a balloon takes taps until 60 ms before its en
 export const SCORING = Object.freeze({ perfect: 300, comboStep: 2, comboCap: 100, pump: 50, pop: 300, hold: 400 });
 
 export const loadSong = () => JSON.parse(readFileSync(new URL('../src/song.json', import.meta.url)));
+export const loadDracSong = () => JSON.parse(readFileSync(new URL('../src/song-drac.json', import.meta.url)));
 
 // `taps` (one count per balloon) and `slack` replace the assumptions, to compare with a real run (the test's autoplay)
 export function perfectMax(song, diff, { taps: given, slack = FINALE_SLACK } = {}) {
@@ -54,11 +55,12 @@ export function perfectMax(song, diff, { taps: given, slack = FINALE_SLACK } = {
 // rounded up to the next thousand, so the SQL and the client carry round numbers
 export const ceilingOf = max => Math.ceil(max * MARGIN / 1000) * 1000;
 export const ceilings = (song = loadSong()) => [0, 1, 2].map(d => ceilingOf(perfectMax(song, d).max));
+// versions.extras_max: what holds and balloons pay whatever the judgments say, with the same margin
+export const extrasCeilings = (song = loadSong()) => [0, 1, 2].map(d => ceilingOf(perfectMax(song, d).extras));
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  const song = loadSong();
-  for (const d of [0, 1, 2]) {
+  for (const [name, song] of [['mulassa-v3', loadSong()], ['drac-v1', loadDracSong()]]) for (const d of [0, 1, 2]) {
     const r = perfectMax(song, d);
-    console.log(`level ${d}: ${r.judgments} judgments, perfect max ${r.max} (balloons ${r.balloons}), ceiling ${ceilingOf(r.max)}`);
+    console.log(`${name} level ${d}: ${r.judgments} judgments, perfect max ${r.max} (balloons ${r.balloons}), ceiling ${ceilingOf(r.max)}, extras_max ${ceilingOf(r.extras)}`);
   }
 }

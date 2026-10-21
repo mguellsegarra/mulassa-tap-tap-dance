@@ -12,7 +12,7 @@
 <meta name="theme-color" content="#140c07">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Mulassa">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
@@ -56,10 +56,7 @@
   /* #loader paints the Mulassa before the bundle loads. The initial cover leaves after readiness and three full loading lines;
      later waits use a small flat card and only show after 300 ms. Artwork and animation stay inline. */
   #loader { position: fixed; z-index: 40; inset: 0; display: flex; align-items: center; justify-content: center; box-sizing: border-box; padding: 0 env(safe-area-inset-right) 0 env(safe-area-inset-left); pointer-events: none; color: #fff3d6; font: 800 18px/1.2 'Baloo 2', system-ui, sans-serif; transition: opacity .25s ease-out; }
-  /* The card sits in the middle of the screen and never moves while the page starts. An iOS home-screen app first reports no safe-area insets, then
-     them, and an innerHeight one status bar short (912 → 844 → 912 on an iPhone Air in the first 1.5 s): vertical padding and `inset: 0` carried the card with it.
-     No vertical padding (the card is far from the notch and the home bar) and the large viewport (the whole screen) as its height in the home-screen app. */
-  @media (display-mode: fullscreen), (display-mode: standalone) { #loader { bottom: auto; height: 100lvh; } }
+  /* No vertical padding: a home-screen app first reports no safe-area insets and then them, so padding by them moved the centred card while the page started. */
   #loader.page { background: var(--page-edge, #140c07); animation: loader-give-up .3s 30s forwards; } /* no JS at all: never a cover for good */
   #loader.out { opacity: 0; }
   .loader-box { font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: 12px; padding: 10px 18px 10px 14px; border-left: 3px solid #f5c518; border-radius: 4px; background: #2a1a10e8; animation: loader-in .15s ease-out both; }
@@ -148,6 +145,7 @@
 </style>
 <link rel="stylesheet" href="/src/styles/feedback.css">
 <link rel="stylesheet" href="/src/styles/select.css">
+<link rel="stylesheet" href="/src/styles/profile.css">
 </head>
 <body aria-busy="true">
 <div class="sr-only"><h1>Mulassa Tap Tap Dance</h1><p>Joc de ritme gratuït en català: balla la Mulassa de Valls tocant GUA i PA al compàs de la música. Projecte de codi obert, sense ànim de lucre, per difondre el bestiari de la cultura popular catalana. <a href="/projecte/" tabindex="-1">Sobre el projecte</a>. Idea i desenvolupament: Marc Güell Segarra, <a tabindex="-1" href="https://ondori.dev">ondori.dev</a>. <a tabindex="-1" href="/projecte/#autoria-i-credits">Crèdits</a>. Contacte: <a tabindex="-1" href="mailto:holi@mulassa.cat">holi@mulassa.cat</a>.</p></div>
@@ -223,9 +221,8 @@
   <button data-d="R" class="pa" aria-label="PA, dreta" data-fig-aria><span class="lbl"><span class="arr" aria-hidden="true">▶&#xFE0E;</span><span class="word" data-w="PA" data-fig>PA</span></span></button>
 </div>
 <div id="fps" hidden aria-hidden="true"></div>
-<div id="ios-hint" hidden role="note"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M8 7l4-4 4 4M6 11H5v10h14V11h-1"/></svg><span>Per jugar a pantalla completa: <b>Compartir → Afegeix a la pantalla d’inici</b></span><button id="ios-hint-close" aria-label="Tanca el consell">×</button></div>
-<button id="leaders" hidden aria-haspopup="dialog" aria-label="Classificacions" title="Classificacions"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 20h20M3.5 20v-7H9v7M9 20V5h6v15M15 20v-5h5.5v5M11 9.2l1.4-1.1V14"/></svg></button>
 <button id="viewmode" hidden aria-pressed="false" aria-label="Joc lliure" title="Joc lliure"><svg class="on" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><svg class="off" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4H4v16h6M14 8l4 4-4 4M8 12h12"/></svg></button>
+<button id="profile" hidden aria-haspopup="dialog" aria-label="Perfil" title="Perfil"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.2" r="3.9"/><path d="M4.6 20.4a7.4 7.4 0 0 1 14.8 0"/></svg></button>
 <button id="music" hidden data-state="on" aria-label="Silencia el so del menú" title="Silencia el so del menú"><svg class="on" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 9.5h4l5-4.5v14l-5-4.5h-4z"/><path d="M16 9a4.5 4.5 0 0 1 0 6M18.8 6.2a8.5 8.5 0 0 1 0 11.6"/></svg><svg class="off" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 9.5h4l5-4.5v14l-5-4.5h-4z"/><path d="m16.5 9.5 5 5M21.5 9.5l-5 5"/></svg></button>
 <button id="feedback" hidden aria-haspopup="dialog" aria-label="Bústia de la plaça" title="Bústia de la plaça"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a8.5 8 0 0 1-12.3 7.2L3.5 20l1.4-4.3A8.5 8 0 1 1 21 11.5z"/><path d="M8.5 11.5h.01M12.5 11.5h.01M16.5 11.5h.01" stroke-width="2.6"/></svg></button>
 <div id="feedback-nudge" role="status" hidden></div>
@@ -237,12 +234,7 @@
   <form id="settings-form" method="dialog" class="sheet-actions">
     <button id="settings-sync" type="button" class="btn btn-secondary"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 21h8l-3-17h-2zM12 14l6-7"/></svg>Ajusta la sincronia<span class="sub" id="settings-offset">Ara: 0 ms</span></button>
     <button id="settings-practice" type="button" class="btn btn-secondary"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 10 7-10 7Z"/></svg>Fes la pràctica<span class="sub">Els passos bàsics, sense puntuar</span></button>
-    <button id="settings-board" type="button" class="btn btn-secondary" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 20h20M3.5 20v-7H9v7M9 20V5h6v15M15 20v-5h5.5v5M11 9.2l1.4-1.1V14"/></svg>Classificacions<span class="sub">Els millors de tots els nivells</span></button>
-    <!-- «Perfil» (src/ui/profile-ui.js): the nickname, what state the guest profile is in (its deadline while the e-mail is unconfirmed), and only the buttons that fit: create / recover / confirm an e-mail / sign out / delete / forget the name -->
-    <div id="settings-profile-row" class="switch-row setting-row profile-block" hidden>
-      <span>Perfil<span class="profile-name" id="settings-profile-name"></span><span class="sub setting-note" id="settings-profile-sub"></span></span>
-      <div class="profile-actions"><button id="settings-profile-main" type="button" class="btn btn-secondary btn-small" aria-haspopup="dialog"></button><button id="settings-profile-alt" type="button" class="btn btn-secondary btn-small" aria-haspopup="dialog" hidden></button></div>
-    </div>
+    <button id="settings-board" type="button" class="btn btn-secondary" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 20h20M3.5 20v-7H9v7M9 20V5h6v15M15 20v-5h5.5v5M11 9.2l1.4-1.1V14"/></svg>Classificacions<span class="sub">Per figura i temporada</span></button>
     <label class="switch-row" for="settings-fps"><span>Mostra els FPS<span class="sub">Fotogrames per segon, en un racó</span></span><input id="settings-fps" type="checkbox" role="switch"></label>
     <!-- the prompt after a run (src/ui/board-ui.js): on = it opens by itself; off = «No m’ho tornis a recordar» -->
     <!-- only once the prompt is off («No m’ho tornis a recordar», or «Ara no» ×3): a way back (src/ui/board-ui.js syncPromptRow) -->
@@ -275,16 +267,17 @@
   </section>
   <section data-privacy="device" aria-labelledby="privacy-device">
     <h3 id="privacy-device">Al teu dispositiu</h3>
-    <p>El navegador desa els teus rècords i les preferències del joc, com ara la sincronia, el so del menú, la qualitat gràfica, si ja has fet la pràctica o quins avisos ja has vist. No surten del dispositiu i s’esborren si esborres les dades d’aquest lloc al navegador. No fem servir galetes de seguiment ni de publicitat: el que el joc desa al dispositiu és imprescindible perquè funcioni el que has demanat, i per això no et demanem consentiment de galetes.</p>
+    <p>El navegador desa els teus rècords i les preferències del joc, com ara la sincronia, el so del menú, la qualitat gràfica, si ja has fet la pràctica o quins avisos ja has vist. També hi desa les teves <b>estadístiques</b> (partides, temps a la plaça, encerts, errors per tipus, ratxes i els dies que jugues), separades per perfil; si esborres un perfil, també s’esborren les seves. No surten del dispositiu, llevat dels totals que van al teu perfil si en tens (ho trobaràs més avall), i s’esborren si esborres les dades d’aquest lloc al navegador. No fem servir galetes de seguiment ni de publicitat: el que el joc desa al dispositiu és imprescindible perquè funcioni el que has demanat, i per això no et demanem consentiment de galetes.</p>
     <p>Els tipus de lletra i la música es carreguen des d’aquest mateix lloc, no de Google ni de cap altre servei.</p>
   </section>
   <section data-privacy="leaderboards" aria-labelledby="privacy-lb">
     <h3 id="privacy-lb">Classificacions · Supabase</h3>
     <p>Mirar les classificacions no crea cap perfil. Publicar un resultat és <b>opcional</b>: sense publicar, el joc i els rècords del dispositiu funcionen igual.</p>
-    <p>Si publiques, es crea un <b>perfil anònim</b>, sense contrasenya, a <b>Supabase</b> (servidors a Frankfurt, UE). S’hi desen el sobrenom i el millor resultat de cada nivell (encerts, punts, ratxa i data). El sobrenom i els resultats són <b>públics</b>: fes servir un sobrenom, no el teu nom real. Com qualsevol servidor, Supabase també rep l’adreça IP de la connexió.</p>
+    <p>Si publiques, es crea un <b>perfil anònim</b>, sense contrasenya, a <b>Supabase</b> (servidors a Frankfurt, UE). S’hi desen el sobrenom i el millor resultat de cada figura i nivell per temporada (encerts, punts, ratxa i data). El sobrenom i els resultats són <b>públics</b>: fes servir un sobrenom, no el teu nom real. Com qualsevol servidor, Supabase també rep l’adreça IP de la connexió.</p>
     <p>A més, després de la teva primera partida <b>Cloudflare Turnstile</b> comprova que no ets un robot, a tothom, publiquis o no. Normalment no veuràs res; de vegades et demana que marquis una casella. Per fer-ho, Cloudflare tracta senyals tècnics de la connexió i del navegador (l’adreça IP, el navegador i la seva configuració) només per aturar robots: no per seguir-te ni per a publicitat. Si la comprovació no es pot fer, el joc funciona igual.</p>
-    <p>El navegador recorda la sessió del perfil i el sobrenom per tornar a publicar. Sense confirmar el correu, el perfil és <b>temporal</b>: el sobrenom i els resultats publicats es conserven <b>7 dies</b> des de la primera publicació (si ja havies publicat abans d’aquesta norma, des que el joc te n’avisa). Un sobrenom creat amb «Crea» sense publicar cap resultat encara no té data: els 7 dies comencen amb la primera publicació. Després s’esborren amb el perfil i el sobrenom queda lliure; els rècords del dispositiu es mantenen. Si abans esborres les dades del navegador, el perfil no es pot recuperar. Amb el correu confirmat, el perfil i els resultats es conserven fins que els esborres: ho pots fer quan vulguis des de ⚙ Configuració → Perfil (<b>Esborra el perfil</b>).</p>
-    <p><b>Correu (opcional).</b> Si confirmes un correu al perfil (⚙ Configuració → Perfil), el guardem a Supabase perquè el perfil no caduqui i per enviar-te un codi de 6 xifres quan el vulguis recuperar; el codi el fa arribar <b>Resend</b> (empresa dels EUA, amb servidor a la UE, Irlanda). L’adreça no surt mai a la classificació: només s’hi veu una marca de «Correu confirmat» al costat del sobrenom. Un correu escrit però no confirmat no compta i s’esborra amb el perfil. Si el correu ja és d’un altre perfil, el codi et fa entrar en aquell perfil: el d’aquest navegador i els seus resultats no s’hi afegeixen, i si no tenia el correu confirmat caduca igualment. No en fem cap altre ús ni t’hi enviem publicitat. Base jurídica: el teu consentiment, en escriure’l i posar el codi. Si tens menys de 14 anys, demana-ho abans a una persona adulta.</p>
+    <p>El navegador recorda la sessió del perfil i el sobrenom per tornar a publicar. Sense confirmar el correu, el perfil és de <b>convidat</b>: el sobrenom porta quatre xifres (per exemple, <b>Timbaler#3821</b>) i el perfil només viu en aquest navegador. Si n’esborres les dades, el perfil es perd i no es pot recuperar. Un perfil convidat que passa <b>12 mesos</b> sense jugar ni publicar s’esborra sol, amb els seus resultats i estadístiques; els rècords del dispositiu es mantenen. Amb el correu confirmat, el perfil es conserva fins que l’esborres: ho pots fer quan vulguis des del botó Perfil (<b>Esborra el perfil</b>).</p>
+    <p><b>Estadístiques.</b> Si tens perfil, el joc hi envia els totals de les teves estadístiques, sumats entre tots els teus dispositius (partides, temps a la plaça, encerts, GUAPA, globus, MANTÉN, caigudes, ratxes i estrelles) i els <b>dies</b> que has jugat, només la data. Els totals són <b>públics</b>: els veu qui toca el teu sobrenom en una classificació. Els dies són <b>privats</b>: només els veus tu, al teu Perfil. Mai no s’hi envia l’hora en què jugues ni cap dada del dispositiu (el dispositiu hi consta amb un número a l’atzar que no surt mai del servidor). Tot s’esborra amb el perfil.</p>
+    <p><b>Correu (opcional).</b> Si confirmes un correu al perfil (botó Perfil), el guardem a Supabase perquè no perdis el perfil i per enviar-te un codi de 6 xifres quan el vulguis recuperar; el codi el fa arribar <b>Resend</b> (empresa dels EUA, amb servidor a la UE, Irlanda). L’adreça no surt mai a la classificació: només s’hi veu una marca de «Correu confirmat» al costat del sobrenom. Un correu escrit però no confirmat no compta i s’esborra amb el perfil. Si el correu ja és d’un altre perfil, el codi et fa entrar en aquell perfil: el d’aquest navegador i els seus resultats no s’hi afegeixen. No en fem cap altre ús ni t’hi enviem publicitat. Base jurídica: el teu consentiment, en escriure’l i posar el codi. Si tens menys de 14 anys, demana-ho abans a una persona adulta.</p>
   </section>
   <section data-privacy="share" aria-labelledby="privacy-share">
     <h3 id="privacy-share">Compartir un resultat</h3>
@@ -312,7 +305,7 @@
   <p class="privacy-owner">Responsable: <b>Marc Güell Segarra</b>, de <b>Mulassa Tap Tap Dance</b> (projecte de codi obert sense ànim de lucre, Valls). Base jurídica: el teu consentiment quan publiques un resultat, confirmes un correu al perfil o escrius a la bústia, i l’interès legítim de servir el joc i protegir-lo dels robots.<span id="privacy-contact" data-email="holi@mulassa.cat" hidden> Per a dubtes o per exercir els teus drets (accedir a les teves dades, corregir-les, esborrar-les, limitar-ne el tractament, portar-les o oposar-t’hi): <a id="privacy-contact-link"></a>.</span> Si creus que no les hem tractat bé, pots reclamar a l’<a href="https://www.aepd.es" target="_blank" rel="noopener">Agència Espanyola de Protecció de Dades</a>.</p>
   </template>
 </dialog>
-<!-- Classificacions (optional, online): the lists and publishing the run. Driven by src/ui/board-ui.js (the profile itself: src/ui/profile-ui.js) -->
+<!-- Classificacions (optional, online): the lists (src/ui/board-list.js) and publishing the run (src/ui/board-ui.js); the profile itself: src/ui/profile-ui.js -->
 <div id="results-actions" hidden>
   <!-- Repeat the same figure and level after any result; Comparteix stays hidden after a collapse. -->
   <button id="results-retry" type="button" class="btn btn-primary" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v5h-5"/></svg>Torna-ho a provar</button>
@@ -350,36 +343,50 @@
 <dialog id="board-menu" class="sheet" tabindex="-1" aria-labelledby="board-title">
   <button id="board-close" type="button" class="sheet-x" aria-label="Tanca"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
   <section id="board-list-view">
-    <div class="board-head">
-      <h2 id="board-title">Classificacions</h2>
-      <!-- only for someone with a nickname (src/ui/board-ui.js): none = the whole list alone; Tots opens active unless the last answer gave them a row -->
-      <div id="board-views" class="board-seg" role="group" aria-label="Vista">
-        <button id="board-view-top" type="button" class="btn btn-secondary" aria-pressed="true">Tots</button>
-        <button id="board-view-me" type="button" class="btn btn-secondary" aria-pressed="false">On soc</button>
-      </div>
+    <div class="board-top">
+      <h2 id="board-title">Classificació</h2>
+      <!-- the figure (src/ui/board-list.js): its portrait, name and a chevron; it opens «Tria figura» inside this sheet -->
+      <button id="board-figure" type="button" class="btn btn-secondary board-figure" aria-expanded="false" aria-controls="board-picker"><span id="board-figure-pic" class="board-pic" aria-hidden="true"></span><span id="board-figure-name" class="board-figure-name">Mulassa</span><svg class="board-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+      <p id="board-season" class="board-season"></p><!-- «Tardor 2026 · queden 23 dies», or a closed season's name -->
+    </div>
+    <!-- «Tria figura»: the playable figures (board-list.js builds them), the shown one cream; Escape or × goes back to the board -->
+    <div id="board-picker" class="board-picker" hidden>
+      <h3 class="board-picker-title">Tria figura</h3>
+      <div id="board-figures" class="board-figures" role="group" aria-label="Figura"></div>
+    </div>
+    <div id="board-main" class="board-main">
+    <!-- «Posició 48 de 119» (or the participants) and the one link: «Ves al capdamunt» / «Ves a la meva posició», by where the list is -->
+    <div id="board-place" class="board-place" hidden>
+      <div class="board-place-row"><p id="board-summary" class="board-summary"></p><button id="board-jump" type="button" class="btn btn-link btn-small board-jump">Ves a la meva posició</button></div>
+      <p id="board-place-sub" class="board-place-sub">El millor resultat de cada jugador, ordenat per punts.</p>
+      <button id="board-publish-link" type="button" class="btn btn-link btn-small" aria-haspopup="dialog" hidden>Publica el teu resultat per veure on quedes</button>
     </div>
     <!-- a box of fixed size: list, loading, empty and error all live inside it (the sheet never changes height) -->
     <div class="board-box">
     <div class="board-head-wrap" aria-hidden="true"><table class="board-head"><colgroup><col class="c-pos"><col><col class="c-pct"><col class="c-pts"></colgroup><thead><tr><th>#</th><th>Sobrenom</th><th>Encerts</th><th>Punts</th></tr></thead></table></div>
-    <div class="board-scroll">
+    <div id="board-scroll" class="board-scroll">
       <table id="board-table" hidden>
         <caption class="sr-only">Classificació de tots els nivells, per punts</caption>
         <colgroup><col class="c-pos"><col><col class="c-pct"><col class="c-pts"></colgroup>
         <thead><tr><th scope="col">#</th><th scope="col">Sobrenom</th><th scope="col">Encerts</th><th scope="col">Punts</th></tr></thead>
         <tbody id="board-rows"></tbody>
       </table>
-      <!-- the list's end (Tots): pages of 50 load as it comes into view (src/ui/board-ui.js), the button is the fallback -->
+      <!-- the list's end: pages of 50 load as it comes into view (src/ui/board-list.js), the button is the fallback -->
       <div id="board-more" class="board-more" hidden><p id="board-more-status" class="board-more-status" role="status" aria-live="polite"></p><button id="board-more-btn" type="button" class="btn btn-secondary btn-small">Carrega’n més</button></div>
       <div class="board-state">
+        <span id="board-art" class="board-art" aria-hidden="true" hidden></span><!-- empty: the figure's portrait; error: a cloud -->
         <p id="board-status" class="board-status" role="status" aria-live="polite"></p>
-        <button id="board-retry" type="button" class="btn btn-secondary" hidden>Torna-ho a provar</button>
+        <p id="board-hint" class="board-hint" hidden></p>
+        <button id="board-retry" type="button" class="btn btn-secondary" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v4.5h-4.5"/></svg>Torna-ho a provar</button>
         <button id="board-publish" type="button" class="btn btn-primary" aria-haspopup="dialog" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M4 15v5h16v-5"/></svg>Publica el teu resultat</button>
+        <button id="board-play" type="button" class="btn btn-primary" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg><span id="board-play-name"></span></button><!-- empty board over the selector: that figure on its cards -->
+        <div id="board-previous" class="board-previous" hidden></div><!-- an open season with no result yet: the last season's podium -->
       </div>
     </div>
-    <p id="board-summary" class="board-summary"></p>
+    </div>
     </div>
     <div class="sheet-actions">
-      <div class="board-links"><button id="board-privacy" type="button" class="btn btn-link btn-small" data-privacy-open aria-haspopup="dialog">Privadesa</button></div>
+      <div class="board-links"><button id="board-seasons" type="button" class="btn btn-link btn-small" aria-haspopup="dialog">Temporades anteriors</button><button id="board-privacy" type="button" class="btn btn-link btn-small" data-privacy-open aria-haspopup="dialog">Privadesa</button></div>
     </div>
   </section>
 </dialog>
@@ -399,8 +406,8 @@
         <p id="publish-error" class="publish-error" role="alert" hidden></p>
       </div>
       <!-- consent: nothing is sent until Publica -->
-      <!-- publish-keep (board-ui.js keep()): the 7-day notice, the deadline, or «conservat» once the e-mail is confirmed -->
-      <p id="publish-about" class="publish-note">El sobrenom i el resultat seran públics. <span id="publish-keep">Sense confirmar el correu, el teu nom i els resultats publicats es conservaran durant 7 dies.</span> <button id="publish-privacy" type="button" class="btn btn-link btn-small" data-privacy-open aria-haspopup="dialog">Privadesa</button></p>
+      <!-- the statistics' notice too (docs/rankings-strategy.md §7): publishing is the first upload for a new profile -->
+      <p id="publish-about" class="publish-note">El sobrenom, el resultat i els totals de les teves estadístiques seran públics. <button id="publish-privacy" type="button" class="btn btn-link btn-small" data-privacy-open aria-haspopup="dialog">Privadesa</button></p>
       <p id="publish-temp" class="publish-hint" hidden>Aquest navegador no deixa desar dades: el perfil només durarà mentre tinguis la pàgina oberta.</p>
       <p id="publish-device" class="publish-hint" hidden></p>
       <!-- a new player on a new phone: their profile is elsewhere (src/ui/board-ui.js → src/ui/profile-ui.js «Recupera») -->
@@ -409,8 +416,8 @@
     <div class="publish-end"><div id="publish-end-in">
       <p id="publish-status" class="board-status" role="status" aria-live="polite"></p>
       <p id="publish-place" class="publish-place" role="status" aria-live="polite" hidden></p>
-      <!-- under the first «Publicat!» of a profile with a deadline only (board-ui.js): optional, never by itself -->
-      <div id="publish-offer" class="publish-offer" hidden><p class="publish-warning"><span class="publish-warning-when"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><b id="publish-offer-text"></b></span> Ho perdràs si no confirmes el correu.</p><button id="publish-confirm" type="button" class="btn btn-primary" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="5.5" width="18" height="13" rx="2"/><path d="m3.5 7 8.5 6 8.5-6"/></svg>Confirma el correu</button></div>
+      <!-- under a guest's «Publicat!» (board-ui.js): optional, never by itself -->
+      <div id="publish-offer" class="publish-offer" hidden><p class="publish-warning">Ets convidat: si esborres les dades del navegador, perdràs el perfil.</p><button id="publish-confirm" type="button" class="btn btn-primary" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="5.5" width="18" height="13" rx="2"/><path d="m3.5 7 8.5 6 8.5-6"/></svg>Confirma el correu</button></div>
       <div class="sheet-actions">
         <button id="publish-send" type="submit" class="btn btn-primary">Publica</button>
         <button id="publish-board" type="button" class="btn btn-secondary" aria-haspopup="dialog" hidden>Mira la classificació</button>
@@ -419,7 +426,7 @@
     </div></div>
   </form>
 </dialog>
-<!-- «Crea el perfil» (a nickname) / «Confirma el correu» / «Recupera el perfil» (the e-mail, then the 6-digit code it receives): src/ui/profile-ui.js -->
+<!-- «Crea el perfil» (a nickname) / «Confirma el correu» / «Recupera el perfil» (the e-mail, then the 6-digit code it receives) / «Tria el teu nom»: src/ui/profile-ui.js -->
 <dialog id="profile-menu" class="sheet" tabindex="-1" aria-labelledby="profile-title">
   <button id="profile-cancel" type="button" class="sheet-x" aria-label="Tanca"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
   <form id="profile-form" class="sheet-body" novalidate>
@@ -427,7 +434,7 @@
     <p id="profile-lead" class="publish-hint"></p>
     <div class="publish-body">
       <div id="profile-alias-field" hidden>
-        <label for="profile-alias" class="board-label">Sobrenom</label>
+        <label for="profile-alias" id="profile-alias-label" class="board-label">Sobrenom</label>
         <input id="profile-alias" class="feedback-field" type="text" maxlength="24" autocomplete="off" autocapitalize="words" autocorrect="off" spellcheck="false" enterkeyhint="send">
       </div>
       <div id="profile-mail-field">
@@ -438,6 +445,15 @@
         <label for="profile-code" class="board-label">Codi de 6 xifres</label>
         <input id="profile-code" class="feedback-field" type="text" name="code" maxlength="6" autocomplete="one-time-code" inputmode="numeric" pattern="[0-9]*" spellcheck="false" enterkeyhint="done">
       </div>
+      <!-- the statistics notice's three lines (#stats-notice-menu): creating a profile is its first upload -->
+      <div id="profile-stats-note" class="publish-note" hidden>
+        <ul class="stats-facts">
+        <li><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M8 9.5v5M11 9.5l1.5-.8v5.8M15.5 9.5h2.5l-2 2.2a1.6 1.6 0 1 1-.8 2.6"/></svg><span>Guardem les teves partides, el temps jugat i els encerts.</span></li>
+        <li><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.2" r="3.9"/><path d="M4.6 20.4a7.4 7.4 0 0 1 14.8 0"/></svg><span>Tothom pot veure els totals si toca el teu nom.</span></li>
+        <li><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M11 15h2v2h-2z" fill="currentColor"/></svg><span>Els dies que jugues només els veus tu.</span></li>
+        </ul>
+        <button type="button" class="btn btn-link btn-small" data-privacy-open aria-haspopup="dialog">Privadesa</button>
+      </div>
       <p id="profile-note" class="publish-note">El correu només serveix per confirmar el perfil i enviar-te el codi que el recupera. No surt mai a la classificació (només s’hi veu la marca de confirmat) i s’esborra amb el perfil. Si tens menys de 14 anys, demana-ho a una persona adulta. <button type="button" class="btn btn-link btn-small" data-privacy-open aria-haspopup="dialog">Privadesa</button></p>
     </div>
     <p id="profile-status" class="board-status" role="status" aria-live="polite"></p>
@@ -446,6 +462,96 @@
       <button id="profile-send" type="submit" class="btn btn-primary">Envia el codi</button>
     </div>
   </form>
+</dialog>
+<!-- «Perfil» (src/ui/account-ui.js): the profile block (src/ui/profile-ui.js), the statistics (private: the days played) -->
+<dialog id="account-menu" class="sheet" tabindex="-1" aria-labelledby="account-title">
+  <button id="account-close" type="button" class="sheet-x" aria-label="Tanca"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  <div class="sheet-body fade">
+    <h2 id="account-title">Perfil</h2>
+    <section id="profile-row" class="profile-block" aria-label="El teu perfil">
+      <div class="profile-head"><span id="profile-name" class="profile-name who"></span><span id="profile-kind" class="kind-chip" hidden>Convidat</span></div>
+      <p id="profile-sub" class="profile-sub"></p>
+      <div class="profile-actions"><button id="profile-main" type="button" class="btn btn-secondary btn-small" aria-haspopup="dialog"></button><button id="profile-alt" type="button" class="btn btn-secondary btn-small" aria-haspopup="dialog" hidden></button><button id="profile-more" type="button" class="btn btn-secondary btn-small" aria-haspopup="dialog" hidden></button></div>
+    </section>
+    <section class="account-section" aria-labelledby="account-stats-title">
+      <div class="account-title-row"><h3 id="account-stats-title">Les teves estadístiques</h3><span id="account-since" class="account-since"></span></div>
+      <p id="account-empty" class="account-empty" hidden>Encara no has jugat cap partida.</p>
+      <div id="account-stats" class="account-stats"></div>
+      <p id="account-join" class="board-tip" hidden>Crea un perfil per guardar-les i sortir a les classificacions.</p>
+    </section>
+    <section id="account-previous" class="account-section" aria-labelledby="account-previous-title" hidden><h3 id="account-previous-title">Rècord del ball anterior</h3><ul id="account-previous-list" class="account-list"></ul></section>
+    <div class="board-links account-links"><button type="button" class="btn btn-link btn-small" data-privacy-open aria-haspopup="dialog">Privadesa</button></div>
+  </div>
+</dialog>
+<!-- before a profile made earlier sends its first statistics: once (src/ui/account-ui.js, src/services/stats-sync.js) -->
+<dialog id="stats-notice-menu" class="sheet" tabindex="-1" aria-labelledby="stats-notice-title" aria-describedby="stats-notice-text">
+  <button id="stats-notice-close" type="button" class="sheet-x" aria-label="Tanca"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  <div class="sheet-body">
+    <h2 id="stats-notice-title">Les teves estadístiques</h2>
+    <!-- three short lines, a drawn icon each (counter, person, calendar); the details are in Privadesa -->
+    <ul id="stats-notice-text" class="stats-facts">
+      <li><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M8 9.5v5M11 9.5l1.5-.8v5.8M15.5 9.5h2.5l-2 2.2a1.6 1.6 0 1 1-.8 2.6"/></svg><span>Guardem les teves partides, el temps jugat i els encerts.</span></li>
+      <li><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.2" r="3.9"/><path d="M4.6 20.4a7.4 7.4 0 0 1 14.8 0"/></svg><span>Tothom pot veure els totals si toca el teu nom.</span></li>
+      <li><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M11 15h2v2h-2z" fill="currentColor"/></svg><span>Els dies que jugues només els veus tu.</span></li>
+    </ul>
+    <div class="board-links"><button type="button" class="btn btn-link btn-small" data-privacy-open aria-haspopup="dialog">Privadesa</button></div>
+    <div class="sheet-actions"><button id="stats-notice-ok" type="button" class="btn btn-primary">D’acord</button></div>
+  </div>
+</dialog>
+<!-- Device tips (src/ui/device-hint.js): once ever, at an idle selector after the profile's news; WebGL in software first -->
+<dialog id="gpu-hint-menu" class="sheet hint-menu" tabindex="-1" aria-labelledby="gpu-hint-title" aria-describedby="gpu-hint-text">
+  <button id="gpu-hint-close" type="button" class="sheet-x" aria-label="Tanca"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  <div class="sheet-body">
+    <svg class="hint-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h10v10H7zM10 3v4M14 3v4M10 17v4M14 17v4M3 10h4M3 14h4M17 10h4M17 14h4"/></svg>
+    <h2 id="gpu-hint-title">Acceleració per maquinari</h2>
+    <p id="gpu-hint-text" class="board-text">El navegador no fa servir la targeta gràfica: el joc anirà més fluid si actives l’<b>acceleració per maquinari</b>.</p>
+    <div class="sheet-actions"><button id="gpu-hint-ok" type="button" class="btn btn-primary">D’acord</button></div>
+  </div>
+</dialog>
+<dialog id="ios-hint-menu" class="sheet hint-menu" tabindex="-1" aria-labelledby="ios-hint-title" aria-describedby="ios-hint-text">
+  <button id="ios-hint-close" type="button" class="sheet-x" aria-label="Tanca"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  <div class="sheet-body">
+    <svg class="hint-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M8 7l4-4 4 4M6 11H5v10h14V11h-1"/></svg>
+    <h2 id="ios-hint-title">Juga a pantalla completa</h2>
+    <p id="ios-hint-text" class="board-text">Toca <b>Compartir → Afegeix a la pantalla d’inici</b> i obre el joc des de la icona.</p>
+    <div class="sheet-actions"><button id="ios-hint-ok" type="button" class="btn btn-primary">D’acord</button></div>
+  </div>
+</dialog>
+<!-- «Saló de la fama» (src/ui/seasons-ui.js): a figure's closed seasons, one at a time («Tria temporada»: by year); one height, loading/empty/error inside its box -->
+<dialog id="seasons-menu" class="sheet" tabindex="-1" aria-labelledby="seasons-title">
+  <button id="seasons-close" type="button" class="sheet-x" aria-label="Tanca"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  <h2 id="seasons-title">Saló de la fama</h2>
+  <!-- the figure: the same dropdown as Classificació (src/ui/figure-picker.js), «Tria figura» in place of the season -->
+  <button id="seasons-figure" type="button" class="btn btn-secondary board-figure" aria-expanded="false" aria-controls="seasons-picker"><span id="seasons-figure-pic" class="board-pic" aria-hidden="true"></span><span id="seasons-figure-name" class="board-figure-name">Mulassa</span><svg class="board-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+  <div id="seasons-picker" class="board-picker" hidden>
+    <h3 class="board-picker-title">Tria figura</h3>
+    <div id="seasons-figures" class="board-figures" role="group" aria-label="Figura"></div>
+  </div>
+  <div id="seasons-main" class="seasons-box">
+    <div id="seasons-list" class="seasons-list"></div>
+    <div class="board-state"><p id="seasons-status" class="board-status" role="status" aria-live="polite"></p><button id="seasons-retry" type="button" class="btn btn-secondary" hidden>Torna-ho a provar</button></div>
+  </div>
+</dialog>
+<!-- «Tardor 2026 s’ha acabat» (src/ui/seasons-ui.js): once per profile and season; the profile's places, the whole podium in the Saló de la fama -->
+<dialog id="season-end-menu" class="sheet" tabindex="-1" aria-labelledby="season-end-title">
+  <button id="season-end-close" type="button" class="sheet-x" aria-label="Tanca"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  <div class="sheet-body fade">
+    <h2 id="season-end-title"></h2>
+    <div id="season-end-boards" class="season-end-boards"></div>
+    <div class="sheet-actions"><button id="season-end-ok" type="button" class="btn btn-primary">Torna a la plaça</button><button id="season-end-hall" type="button" class="btn btn-link" aria-haspopup="dialog">Saló de la fama</button></div>
+  </div>
+</dialog>
+<!-- A player's public card (src/ui/player-card.js): totals only, never days, streaks or dates -->
+<dialog id="card-menu" class="sheet" tabindex="-1" aria-labelledby="card-name">
+  <button id="card-close" type="button" class="sheet-x" aria-label="Tanca"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  <div class="sheet-body fade">
+    <div class="card-head"><h2 id="card-name" class="card-name who"></h2><span id="card-kind" class="kind-chip" hidden>Convidat</span></div>
+    <div id="card-from" class="card-from" hidden></div>
+    <div class="card-box">
+      <div id="card-stats" class="account-stats"></div>
+      <div class="board-state"><p id="card-status" class="board-status" role="status" aria-live="polite"></p><button id="card-retry" type="button" class="btn btn-secondary" hidden>Torna-ho a provar</button></div>
+    </div>
+  </div>
 </dialog>
 <!-- «Bústia de la plaça» (src/ui/feedback-ui.js): nothing is sent until Envia. The body scrolls, the footer stays -->
 <dialog id="feedback-menu" class="sheet" tabindex="-1" aria-labelledby="feedback-title" aria-describedby="feedback-lead">
@@ -520,14 +626,20 @@
       <!-- Step 2 only: the chosen level's record on this device, shaped like the song's row (level-stats.js). -->
       <span id="select-level-stats" class="sel-song sel-level-stats" role="note" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h10V9a5 5 0 0 1-10 0zM7 5.5H3.5V7A3.5 3.5 0 0 0 7 10.5M17 5.5h3.5V7a3.5 3.5 0 0 1-3.5 3.5M12 14v3.5M8 20.5h8M9.5 17.5h5"/></svg><span class="sel-song-copy"><span id="select-level-title"></span><span id="select-level-sub" class="sel-song-credit"></span></span></span>
       <div id="select-tiles" class="sel-tiles">
-        <button id="select-rank-tile" type="button" class="sel-tile sel-rank" aria-haspopup="dialog" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 20h20M3.5 20v-7H9v7M9 20V5h6v15M15 20v-5h5.5v5M11 9.2l1.4-1.1V14"/></svg><span id="select-pos">—</span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button>
+        <button id="select-rank-tile" type="button" class="sel-tile sel-rank" aria-haspopup="dialog" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 20h20M3.5 20v-7H9v7M9 20V5h6v15M15 20v-5h5.5v5M11 9.2l1.4-1.1V14"/></svg><span id="select-pos">Classificació</span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button>
       </div>
       <!-- Desktops, step 1 (select-standings.js): this device's records as three medals, the Mulassa board as one card. -->
       <div id="select-meds" class="sel-meds" hidden></div>
       <section id="select-standings" class="sel-standings" aria-label="Classificació" hidden>
         <button id="select-standings-head" type="button" class="sel-standings-head" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 20h20M3.5 20v-7H9v7M9 20V5h6v15M15 20v-5h5.5v5M11 9.2l1.4-1.1V14"/></svg><span id="select-standings-pos">Classificació</span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button>
-        <ol id="select-standings-rows" class="sel-standings-rows"></ol>
-        <p id="select-standings-foot" class="sel-standings-foot" hidden></p>
+        <div id="select-standings-body" class="sel-standings-body" data-state="loading">
+          <div id="select-standings-sk" class="sel-standings-sk" aria-hidden="true"></div>
+          <div class="sel-standings-real">
+            <ol id="select-standings-rows" class="sel-standings-rows"></ol>
+            <p id="select-standings-foot" class="sel-standings-foot" hidden></p>
+            <p id="select-standings-msg" class="sel-standings-msg" hidden></p>
+          </div>
+        </div>
       </section>
     </div>
   </div>
@@ -673,21 +785,6 @@
     </div>
   </section>
 </dialog>
-<script id="vp-debug-temp">/* TEMP (loader jump diagnosis, remove): home-screen app on a dev host only. Logs how the card and the viewport move while the page starts. */
-if (navigator.standalone && location.hostname !== 'mulassa.cat') (function () {
-  var mk = function (css) { var d = document.createElement('div'); d.style.cssText = 'position:fixed;visibility:hidden;pointer-events:none;left:0;top:0;width:1px;' + css; document.documentElement.appendChild(d); return d; };
-  var lvh = mk('height:100lvh'), dvh = mk('height:100dvh'), sat = mk('height:env(safe-area-inset-top)'), sab = mk('height:env(safe-area-inset-bottom)');
-  var pre = document.createElement('pre'); pre.style.cssText = 'position:fixed;z-index:99999;left:4px;bottom:calc(4px + env(safe-area-inset-bottom));margin:0;padding:4px;font:10px/1.2 monospace;color:#0f0;background:#000d;pointer-events:none;white-space:pre-wrap;max-width:98vw';
-  document.documentElement.appendChild(pre);
-  var log = [], last = '', mq = ['standalone', 'fullscreen', 'browser'].filter(function (m) { return matchMedia('(display-mode:' + m + ')').matches; }).join('+');
-  (function tick() {
-    var l = document.getElementById('loader'), b = l && l.querySelector('.loader-box'), r = b && b.getBoundingClientRect(), lr = l && l.getBoundingClientRect(), vv = window.visualViewport;
-    var s = 'card ' + (r ? Math.round(r.top) + '+' + Math.round(r.height) + ' mid ' + Math.round(r.top + r.height / 2) : '-') + ' | loader ' + (lr ? Math.round(lr.top) + '+' + Math.round(lr.height) : '-') + ' | in ' + innerHeight + ' lvh ' + lvh.offsetHeight + ' dvh ' + dvh.offsetHeight + ' vvTop ' + (vv ? Math.round(vv.offsetTop) : '-') + ' scrY ' + Math.round(scrollY) + ' | sat ' + sat.offsetHeight + ' sab ' + sab.offsetHeight;
-    if (s !== last) { last = s; log.push(Math.round(performance.now()) + 'ms ' + s); if (log.length > 10) log.shift(); pre.textContent = mq + ' scr ' + screen.height + '\n' + log.join('\n'); }
-    requestAnimationFrame(tick);
-  })();
-})();
-</script>
 <script type="module" src="/src/main.js"></script>
 </body>
 </html>

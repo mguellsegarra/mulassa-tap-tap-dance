@@ -66,7 +66,7 @@ assert.equal(rememberedLevel(store, MULASSA.id), 1);
 rememberLevel(store, MULASSA.id, 2); assert.equal(rememberedLevel(store, MULASSA.id), 2);
 assert.equal(rememberedLevel(store, 'another'), 1, 'memory belongs to the figure');
 for (const value of ['-1', '3', 'NaN', '1.5', '']) { memory.set('level-mulassa-valls', value); assert.equal(rememberedLevel(store, MULASSA.id), 1); }
-assert.equal(recordKey(MULASSA, 2), 'record-points-mulassa-2', 'points-first Mulassa records have a separate namespace');
+assert.equal(recordKey(MULASSA, 2), 'record-points-mulassa-v3-2', 'each Mulassa score version has its own record namespace');
 assert.equal(sourceCatalog.figures.find(f => f.id === 'nans-valls').music, 'Francesc Sans', 'pending Valls figures credit their own music');
 const pendingName = id => sourceCatalog.figures.find(f => f.id === id);
 for (const [id, verb] of [['gegants-ciutat-valls', 'surtin'], ['nans-valls', 'surtin'], ['mulassa-solsona', 'surtin'], ['aliga-solsona', 'surtin'], ['boja-vilanova', 'surti'], ['drac-vilanova', 'surti'], ['guites-berga', 'surtin'],
@@ -109,15 +109,17 @@ class Node {
   scrollTo({ left, behavior }) { this.scrollLeft = left; this.behavior = behavior; }
   getBoundingClientRect() { return { top: 100, right: 200, bottom: 300 }; }
 }
-for (const id of ['leaders', 'viewmode', 'feedback', 'music', 'settings', 'select-carousel', 'select-prev', 'select-forward', 'select-nav', 'select', 'select-towns', 'select-strip', 'select-level', 'select-song', 'select-entity', 'select-act', 'select-name', 'select-song-name', 'select-song-credit', 'select-play', 'select-next', 'select-next-label', 'select-free', 'select-free-label', 'select-figures-back', 'select-board', 'select-howto', 'aviat-write', 'aviat-text', 'select-info', 'select-bottom', 'select-pos', 'select-tiles', 'select-rank-tile', 'select-pending', 'aviat-entity', 'aviat-icon', 'aviat-title', 'select-level-stats', 'select-level-title', 'select-level-sub']) nodes.set(id, new Node(id));
+for (const id of ['profile', 'viewmode', 'feedback', 'music', 'settings', 'select-carousel', 'select-prev', 'select-forward', 'select-nav', 'select', 'select-towns', 'select-strip', 'select-level', 'select-song', 'select-entity', 'select-act', 'select-name', 'select-song-name', 'select-song-credit', 'select-play', 'select-next', 'select-next-label', 'select-free', 'select-free-label', 'select-figures-back', 'select-board', 'select-howto', 'aviat-write', 'aviat-text', 'select-info', 'select-bottom', 'select-pos', 'select-tiles', 'select-rank-tile', 'select-pending', 'aviat-entity', 'aviat-icon', 'aviat-title', 'select-level-stats', 'select-level-title', 'select-level-sub']) nodes.set(id, new Node(id));
 // The level row's title reports an overflow while it carries what a narrow screen can't hold (the points).
-Object.defineProperties(nodes.get('select-level-title'), { clientWidth: { value: 200 }, scrollWidth: { get() { return narrow && /punts/.test(this.textContent) ? 999 : 100; } } });
-Object.assign(nodes.get('select-level-sub'), { scrollWidth: 100, clientWidth: 200 });
-let narrow = false;
+Object.defineProperties(nodes.get('select-level-title'), { clientWidth: { value: 200 }, scrollWidth: { get() { return narrow && /punts/.test(this.textContent) ? 999 : 100; } },
+  textContent: { get() { return (this.html ?? '').replace(/<[^>]*>/g, ''); }, set(v) { this.html = v; } } }); // its level word is a coloured span
+// the no-record subtitle overflows a 308–324 px column (while shown)
+Object.defineProperties(nodes.get('select-level-sub'), { clientWidth: { value: 200 }, scrollWidth: { get() { return narrowSub && !this.hidden && /primer ball/.test(this.html) ? 999 : 100; } } });
+let narrow = false, narrowSub = false;
 const $ = id => nodes.get(id), win = { innerWidth: 393, innerHeight: 852, addEventListener(k, f) { (handlers[k] ||= []).push(f); } };
-let frees = [], boards = 0, sounds = [], played = [], how = 0, drafts = [], busy = false, selected = [];
+let frees = [], boards = [], sounds = [], played = [], how = 0, drafts = [], busy = false, selected = [];
 const api = setupSelect({ doc, win, store, keyboard: () => true, reduced: () => true, busy: () => busy,
-  sfx: k => sounds.push(k), firstLevel: 0, standing: async () => ({ pos: 7, total: 1350 }), onBoard: () => boards++, demo: true, // ?demo stays off outside a dev build
+  sfx: k => sounds.push(k), firstLevel: 0, standing: async f => (f === DRAC.id ? { pos: 3, total: 12 } : { pos: 7, total: 1350 }), onBoard: f => boards.push(f.id), ranked: true, demo: true, // ?demo stays off outside a dev build
   onPlay: (d, f) => played.push([d, f.id]), onFree: f => frees.push(f.id), onSelect: f => selected.push(f.id), onHowto: () => how++, onWrite: draft => drafts.push(draft) });
 const key = (key, options = {}) => { const e = { key, ...options, defaultPrevented: false, preventDefault() { this.defaultPrevented = true; } }; for (const f of handlers.keydown) f(e); return e; };
 const click = (root, target = root) => root.fire('click', { target });
@@ -125,21 +127,27 @@ api.visible(true); await Promise.resolve();
 assert.match($('select-entity').innerHTML, /<svg.*<span>Unió Anelles de la Flama<\/span>/, 'UAF badge uses its flame and full name');
 assert.equal($('select-song-credit').textContent, 'Francesc Bofarull i Figuerola · 1987');
 assert.equal($('select-level').children[0].attrs['aria-pressed'], 'true', 'challenge overrides remembered level once');
-assert.equal($('select-pos').textContent, 'Ets el número 7 de 1.350', 'the real board, not the ?demo position'); const lv = () => $('select-level').children;
+const SEASON = / · (Hivern|Primavera|Estiu|Tardor) \d{4}$/;
+assert.match($('select-pos').textContent, /^Posició 7 de 1\.350 · /, 'the real board, not the ?demo position'); assert.match($('select-pos').textContent, SEASON, 'the open season after the place'); const lv = () => $('select-level').children;
 assert(!/12\.340|8\.120/.test([...lv()].map(b => b.html).join('')), 'nor its made-up records');
 assert([...lv()].every((b, i) => b.html === ['FÀCIL', 'NORMAL', 'DIFÍCIL'][i] && !/rècord/.test(b.attrs['aria-label'])), 'no record: the name alone, no dash or empty line');
-assert.equal($('select-rank-tile').attrs['aria-label'], 'Classificacions: ets el número 7 de 1.350');
-click($('select-rank-tile')); assert.equal(boards, 1, 'the position opens Classificacions');
+assert.equal($('select-rank-tile').attrs['aria-label'], `Classificació: ${$('select-pos').textContent}`);
+click($('select-rank-tile')); assert.deepEqual(boards, [MULASSA.id], 'the line opens Classificacions on the selected figure');
 assert(!readFileSync(new URL('../index.html', import.meta.url), 'utf8').includes('select-first'), 'the leader lives in Classificacions only');
 assert(!$('select-rank-tile').hidden, 'a position from the board is shown');
+assert.equal($('select-rank-tile').attrs['data-loading'], false, 'the answered line is no placeholder bar');
 assert($('select-act').hidden, 'difficulty is a second step');
 click($('select-play')); assert.equal(played.length, 0, 'cannot skip the difficulty step');
 click($('select-next')); assert(!$('select-act').hidden && $('select-strip').hidden);
 assert(!$('select-level-stats').hidden, 'step 2 shows the chosen level\'s row');
-assert.equal($('select-level-title').textContent, 'FÀCIL: encara sense rècord');
-assert.equal($('select-level-sub').html, '', 'no record: no subtitle or star goal');
-assert($('select-level-sub').hidden, 'no empty subtitle line');
-assert.equal($('select-level-stats').attrs['aria-label'], 'FÀCIL: encara sense rècord');
+assert.equal($('select-level-title').html, 'Encara no tens rècord a <span class="lvt0">FÀCIL</span>', 'the level word in its colour');
+assert.equal($('select-level-sub').html, 'El primer ball que acabis serà el teu rècord', 'no record: what makes one (Marc: whose record, and why none)');
+assert(!$('select-level-sub').hidden);
+assert.equal($('select-level-stats').attrs['aria-label'], 'Encara no tens rècord a FÀCIL, El primer ball que acabis serà el teu rècord');
+narrowSub = true; click($('select-level'), $('select-level').children[1]); click($('select-level'), $('select-level').children[0]);
+assert(!$('select-level-stats').hidden && $('select-level-sub').hidden, 'a narrow column drops the subtitle, never the row');
+assert.equal($('select-level-title').textContent, 'Encara no tens rècord a FÀCIL', 'the full title first, without its subtitle');
+narrowSub = false;
 click($('select-level'), $('select-level').children[1]);
 click($('select-level'), $('select-level').children[0]);
 click($('select-figures-back')); assert($('select-act').hidden && !$('select-strip').hidden);
@@ -284,7 +292,7 @@ $('select').toggleAttribute('data-header-inline', true);
 const headerSounds = sounds.length;
 pills[0].focus(); key('ArrowRight');
 assert.equal(doc.activeElement, soonPill);
-key('ArrowRight'); assert.equal(doc.activeElement, $('leaders'), 'Right leaves the towns for the corner buttons');
+key('ArrowRight'); assert.equal(doc.activeElement, $('profile'), 'Right leaves the towns for the corner buttons (Perfil first: no podium)');
 key('ArrowRight'); assert.equal(doc.activeElement, $('music'));
 key('ArrowRight'); key('ArrowRight'); assert.equal(doc.activeElement, $('settings'), 'Settings is reachable without leaving the visible row');
 assert.equal(sounds.length, headerSounds + 5, 'each header focus move plays exactly one menu sound');
@@ -297,7 +305,7 @@ $('music').focus(); key('ArrowRight'); assert.equal(doc.activeElement, $('feedba
 soonPill.focus(); key('ArrowRight'); assert.equal(doc.activeElement, soonPill, 'folded towns stay out of the separate row');
 const rowSounds = sounds.length;
 pills[0].focus(); key('ArrowUp');
-assert.equal(doc.activeElement, $('leaders'));
+assert.equal(doc.activeElement, $('profile'));
 assert.equal(sounds.length, rowSounds + 1, 'moving up to the corner row plays one sound');
 key('ArrowDown');
 assert.equal(doc.activeElement, pills[0]);
@@ -457,6 +465,9 @@ for (const handler of handlers.keydown) handler({ key: 'Escape', defaultPrevente
 assert(!$('select-act').hidden, 'Escape consumed by photo mode must not also leave the difficulty step');
 click($('select-level'), lv()[0]); assert(!$('select-level').attrs['data-quiet'] && lv()[0].attrs['aria-pressed'] === 'true', 'a tap, even on the marked level, brings its shake');
 click($('select-figures-back')); click($('select-next')); assert($('select-level').attrs['data-quiet'], 'showing step 2 again restarts it quiet');
+api.show(DRAC.id); // an empty board's «Juga amb el Drac» (board-list.js): step 1, that figure selected and notified
+assert(api.figure === DRAC && selected.at(-1) === DRAC.id && $('select-act').hidden && !$('select-strip').hidden, 'show(): the Drac on the cards, step 1');
+api.show(MULASSA.id); click($('select-next'));
 click($('select-figures-back'));
 rememberLevel(store, DRAC.id, 2);
 store.set(recordKey(DRAC, 2), JSON.stringify({ quality: 88, score: 1234 })); store.set(recordKey(DRAC, 0), JSON.stringify({ quality: 99 })); // a record from before `score` counts as none
@@ -467,14 +478,15 @@ assert.equal(lv()[2].html.replace(/<svg[^]*<\/svg>/, '★'), 'DIFÍCIL<span clas
 assert.equal(lv()[2].attrs['aria-label'], 'DIFÍCIL, el teu rècord 1.234 punts');
 assert(lv()[0].html === 'FÀCIL' && lv()[1].html === 'NORMAL', 'no score, or no record: the name alone, beside a level that has one');
 await Promise.resolve();
-assert($('select-rank-tile').hidden, 'local-only figures show no public Mulassa standings');
+assert(!$('select-rank-tile').hidden && /^Posició 3 de 12 · /.test($('select-pos').textContent), 'the Drac: its place on its own board (never the Mulassa\'s)');
+click($('select-rank-tile')); assert.equal(boards.at(-1), DRAC.id, 'and its line opens the Drac\'s board');
 cards[1].focus();
 key('Enter'); assert(!$('select-act').hidden, 'Enter confirms the figure before playing');
 assert.equal(lv()[2].attrs['aria-pressed'], 'true', 'its remembered DIFÍCIL is marked');
 assert(!$('select-level-sub').hidden, 'a record restores its stars and percentage');
-assert.equal($('select-level-title').textContent, '1.234 punts a DIFÍCIL', 'the record\'s points head the row');
+assert.equal($('select-level-title').textContent, 'El teu rècord a DIFÍCIL: 1.234 punts', 'the record\'s points head the row, saying what they are');
 assert.equal($('select-level-sub').html.replace(/<span class="stars">([^]*?)<\/span>/, (_, s) => '★'.repeat((s.match(/class="on"/g) || []).length)), '★★★88% d’encerts', 'stars and % of that record');
-assert.equal($('select-level-stats').attrs['aria-label'], '1.234 punts a DIFÍCIL, 3 de 3 estrelles, 88% d’encerts');
+assert.equal($('select-level-stats').attrs['aria-label'], 'El teu rècord a DIFÍCIL: 1.234 punts, 3 de 3 estrelles, 88% d’encerts');
 narrow = true; key('ArrowLeft'); key('ArrowRight');
 assert.equal($('select-level-title').textContent, 'El teu rècord a DIFÍCIL', 'too narrow: the points go, never a second line');
 narrow = false;
@@ -488,14 +500,14 @@ assert.equal($('select-act').inert, false, 'the difficulty step accepts input');
 click($('select-play')); assert.deepEqual(played.at(-1), [2, DRAC.id], 'play receives the selected figure and level');
 click($('select-strip'), cards[0]); await Promise.resolve();
 assert(!$('select-rank-tile').hidden);
-assert.equal($('select-pos').textContent, 'Ets el número 7 de 1.350', 'returning to Mulassa refreshes its own board');
+assert.match($('select-pos').textContent, /^Posició 7 de 1\.350 · /, 'returning to Mulassa refreshes its own board');
 const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 assert.match(html, /<button id="select-free"[^>]*title="Ball lliure"[^>]*>.*<span id="select-free-label">Ball lliure<\/span>/, 'free play is «Ball lliure» for every figure');
 assert.match(html, /<section id="select-pending"/); assert(!html.includes('id="soon-menu"'), 'no sheet: it unfolds in place');
 assert.match(html, /href="mailto:holi@mulassa.cat"/);
 assert(html.indexOf('id="select-name"') < html.indexOf('id="select-howto"') && html.indexOf('id="select-howto"') < html.indexOf('id="select-rank-tile"'), 'the ? sits by the name');
 assert.match(html, /id="select-howto"[^>]*aria-label="Com es juga"[^>]*><span aria-hidden="true">\?<\/span><\/button>/);
-assert.match(html, /<button id="select-rank-tile" type="button" class="sel-tile sel-rank" aria-haspopup="dialog" hidden><svg[^]*class="chev"/, 'the position: a real button, the same chip as the record, a chevron to say so');
+assert.match(html, /<button id="select-rank-tile" type="button" class="sel-tile sel-rank" aria-haspopup="dialog" hidden><svg[^]*<span id="select-pos">Classificació<\/span><svg class="chev"/, 'the ranking line: a real button with the board icon and a chevron, «Classificació» from the first frame');
 FIGURES.splice(FIGURES.indexOf(catalogFixture), 1);
 const ui = readFileSync(new URL('../src/ui/select-ui.js', import.meta.url), 'utf8');
 const strip = readFileSync(new URL('../src/ui/select-strip.js', import.meta.url), 'utf8'); // the cards' HTML

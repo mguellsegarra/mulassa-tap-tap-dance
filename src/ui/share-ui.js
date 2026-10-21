@@ -6,7 +6,8 @@ import { byId } from './sheet-kit.js';
 import { DIFFS } from '../game/chart.js';
 import { shareText, challengeUrl, challengeResult, bragWorthy, shareMode, linkMode, shareLinks, isCancel } from '../services/share.js';
 import { PHOTO, drawCard, cardAlt, toJpeg, loadCardFonts } from '../hud/share-card.js';
-import { ALIAS_KEY } from './board-ui.js';
+import { ALIAS_KEY, savedName } from './board-list.js';
+import { displayName } from '../services/leaderboard.js';
 import { errors } from '../services/errors.js';
 
 const FORMAT_KEY = 'share-format';
@@ -27,10 +28,13 @@ export function setupShare({ focusIn, restore = () => {}, hero = () => null, sta
   // file: the last card made; fresh: it matches what the sheet now shows (a redraw after the nickname / the format
   // makes it stale until the new one is ready); tapped: a tap on the primary waiting for that new card
   let file = null, fresh = false, tapped = false, previewUrl = '', heroes = {}, req = 0, shownKey = '';
+  let named = ''; // the name the card being drawn took ('' until drawn)
+  const nameNow = () => (nick.checked && !nickRow.hidden ? savedName(store) : null); // as the boards show it: «nom#1234», or the check
   const data = () => {
-    const alias = nick.checked && !nickRow.hidden ? store.get(ALIAS_KEY) : null;
+    const who = nameNow();
+    const alias = who?.alias ? displayName(who.alias, who.tag) : null;
     return { figureId: run.figureId, score: run.score, diff: run.diff, rank, stars: run.stars, pct: run.pct, maxCombo: run.maxCombo, diffName: DIFFS[run.diff].name, reason: run.reason,
-      newRecord: run.newRecord, beaten: Boolean(challengeResult(challenge, run)?.beaten), alias };
+      newRecord: run.newRecord, beaten: Boolean(challengeResult(challenge, run)?.beaten), alias, verified: Boolean(alias && who.verified) };
   };
   const say = (text, ok = false) => { status.textContent = text; status.classList.toggle('ok', ok); };
   function setPrimary(mode, busy = !file) { // the label only: the icon (share / save) follows data-mode in CSS
@@ -55,7 +59,7 @@ export function setupShare({ focusIn, restore = () => {}, hero = () => null, sta
     // redrawing only the card over a photo already made (the nickname) leaves the button exactly as it is (label,
     // icon, state): no flash of «Preparant…» for the few tens of ms it takes. Only the first card, or a format whose
     // photo is still to render (a visibly slower change), says «Preparant…», keeping its icon
-    fresh = false;
+    fresh = false; named = '';
     if (!file) setPrimary('download');
     else if (!heroes[f]) setPrimary(primary.dataset.mode, true);
     img.alt = cardAlt(f, d);
@@ -68,7 +72,8 @@ export function setupShare({ focusIn, restore = () => {}, hero = () => null, sta
         if (r !== req || !menu.open) return;
         heroes[f] = photo;
       } // rendered once per results screen and format (a render target, then read back)
-      const canvas = drawCard(doc.createElement('canvas').getContext('2d'), f, d, heroes[f]);
+      named = JSON.stringify(nameNow()); // read now: the profile's answer may have come while the photo rendered
+      const canvas = drawCard(doc.createElement('canvas').getContext('2d'), f, data(), heroes[f]);
       const out = await toJpeg(canvas, 0.9, d.figureId);
       if (r !== req || !menu.open) return;
       file = out; fresh = true;
@@ -100,7 +105,7 @@ export function setupShare({ focusIn, restore = () => {}, hero = () => null, sta
     note.hidden = !published; note.textContent = published ? 'Publicat! Ja surts a la classificació.' : '';
     const o = ++opens, openedRun = run, aliasAtOpen = store.get(ALIAS_KEY);
     rank = null;
-    if (run.figureId !== 'drac-valls' && aliasAtOpen) Promise.resolve().then(() => standing()).then(value => {
+    if (aliasAtOpen) Promise.resolve().then(() => standing(run.figureId)).then(value => { // each figure has its own board
       if (o !== opens || run !== openedRun || !menu.open || store.get(ALIAS_KEY) !== aliasAtOpen) return;
       rank = value; prepare();
     }, () => {});
@@ -166,6 +171,8 @@ export function setupShare({ focusIn, restore = () => {}, hero = () => null, sta
   return {
     get open() { return menu.open; },
     openAfterPublish: ({ place, published = true } = {}) => open({ published, place }),
+    // the profile's name or check changed under an open sheet (the server answered after the publication): redraw the card
+    refreshName() { if (menu.open && run && named && JSON.stringify(nameNow()) !== named) prepare(); },
     // every frame from updateControls(): only real changes touch the DOM. r: the run on the results screen (null: none)
     results(show, r, ch) {
       const key = show && r ? `${r.figureId}|${r.score}|${r.maxCombo}|${r.diff}|${r.pct}|${r.reason}|${r.t}` : '';

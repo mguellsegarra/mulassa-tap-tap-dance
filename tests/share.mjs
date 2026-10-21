@@ -314,6 +314,26 @@ console.log('share: challenge link, captions, fallbacks, eligibility, privacy an
     doc.getElementById('share-close').listeners.click();
     console.log('share sheet: a steady primary while the card is redrawn ok');
   }
+  // the profile's answer arrives after the card is drawn (a publication refreshes the cached name): the card is drawn again,
+  // with the check; an unchanged name draws nothing
+  {
+    nodes.clear();
+    const mem = { 'leaderboard-alias': 'Portadora', 'share-format': 'feed' }, made = [];
+    const ui = setupShare({ focusIn() {}, doc, nav: phone, store: { get: k => mem[k] ?? null, set: (k, v) => { mem[k] = v; } }, fonts: null,
+      url: { createObjectURL: () => (made.push(1), `blob:card${made.length}`), revokeObjectURL() {} }, settle: () => Promise.resolve(), hero: (w, h) => ({ width: w, height: h }) });
+    doc.getElementById('share-nick').checked = true; // on by default in the page
+    ui.results(true, run({ diff: 0, pct: 95, t: 31 }), null);
+    ui.refreshName(); // closed: nothing
+    doc.getElementById('results-share').listeners.click(); await wait();
+    assert.equal(made.length, 1);
+    ui.refreshName(); await wait();
+    assert.equal(made.length, 1, 'same name: no new card');
+    mem['leaderboard-alias:identity'] = JSON.stringify({ prof: { verified: true } });
+    ui.refreshName(); await wait(); await new Promise(r => setTimeout(r, 0));
+    assert.equal(made.length, 2, 'the check arrived: drawn again');
+    ui.refreshName(); await wait();
+    assert.equal(made.length, 2, 'and once');
+  }
   // Late photo/rank answers from the previous figure must not replace a new run.
   {
     nodes.clear(); shared.length = 0;
@@ -323,7 +343,7 @@ console.log('share: challenge link, captions, fallbacks, eligibility, privacy an
       store: { get: key => key === 'share-format' ? 'square' : alias, set() {} }, fonts: null,
       url: { createObjectURL: () => 'blob:card', revokeObjectURL() {} }, settle: async () => {},
       hero: (w, h, figureId) => new Promise(resolve => photos.push({ figureId, resolve, w, h })),
-      standing: () => new Promise(resolve => ranks.push(resolve)) });
+      standing: figure => new Promise(resolve => ranks.push(Object.assign(resolve, { figure }))) });
     ui.results(true, run({ figureId: 'mulassa-valls', score: 15000, t: 9 }), null);
     doc.getElementById('results-share').listeners.click();
     await new Promise(r => setTimeout(r, 0));
@@ -332,7 +352,8 @@ console.log('share: challenge link, captions, fallbacks, eligibility, privacy an
     ui.results(true, run({ figureId: 'drac-valls', score: 12000, t: 9 }), null);
     doc.getElementById('results-share').listeners.click();
     await new Promise(r => setTimeout(r, 0));
-    assert.equal(photos.length, 2); assert.equal(ranks.length, 1, 'Drac never requests the Mulassa board');
+    assert.equal(photos.length, 2); assert.equal(ranks.length, 2, 'the Drac asks for its own board');
+    assert.deepEqual(ranks.map(r => r.figure), ['mulassa-valls', 'drac-valls'], 'each figure its own place');
     ranks[0]({ pos: 2, total: 99 }); photos[0].resolve({ width: 1104, height: 988 });
     await new Promise(r => setTimeout(r, 0));
     assert(doc.getElementById('share-image').disabled, 'old photo cannot finish the current card');
@@ -355,7 +376,7 @@ console.log('share: challenge link, captions, fallbacks, eligibility, privacy an
     assert.deepEqual([L.w, L.h], [1080, 1350]);
     assert(Math.abs((L.discY - L.titleBottom) - (L.footY - L.ticketY - L.ticketH - 12)) < .001, 'equal clear space around combined photo/ticket');
     assert(L.discY > L.titleBottom && L.disc === 540, 'centering preserves the figure size');
-    assert.equal(Boolean(L.rank), figureId === 'mulassa-valls' && Boolean(rank));
+    assert.equal(Boolean(L.rank), Boolean(rank), 'both figures have a board');
     const story = cardLayout('story', d);
     assert.equal(story.footY, 1652); assert.equal(story.discY, 470);
     assert(story.ticketY + story.ticketH + 12 < story.footY, 'story content clears its anchored footer');
@@ -364,9 +385,18 @@ console.log('share: challenge link, captions, fallbacks, eligibility, privacy an
     assert(text.includes('12.345') && text.includes('92%') && text.includes('100'), 'actual points, accuracy and streak');
     assert(text.includes(figureId === 'drac-valls' ? 'DRAC' : 'MULASSA'));
     assert(text.includes('mulassa_cat') && !text.includes('@mulassa_cat'));
-    assert.equal(text.some(s => s.includes('#12')), figureId === 'mulassa-valls' && Boolean(rank));
+    assert.equal(text.some(s => s.includes('#12')), Boolean(rank));
   }
   for (const rank of [{ pos: 0, total: 20 }, { pos: 21, total: 20 }, { pos: '2', total: 20 }, { pos: 1, total: NaN }]) assert.equal(cardRank({ rank }), null);
+  // the name as the boards show it: a confirmed address's check drawn after it (the same shape), a guest's «#1234», no check
+  for (const [alias, verified] of [['Timbaler', true], ['Timbaler#0042', false]]) {
+    const text = [], discs = [], c = new Proxy({ canvas: {} }, { get: (t, k) => k in t ? t[k] : k === 'measureText' ? s => ({ width: String(s).length * 20 }) : k === 'fillText' ? (s, x) => text.push([String(s), x]) : k === 'arc' ? (x, y, r) => discs.push(r) : k.startsWith('create') ? () => ({ addColorStop() {} }) : () => {}, set: (t, k, v) => (t[k] = v, true) });
+    drawCard(c, 'story', { figureId: 'mulassa-valls', alias, verified, rank: null, score: 12345, diff: 2, diffName: 'DIFÍCIL', pct: 92, maxCombo: 100 }, null);
+    const name = text.find(([s]) => s === alias);
+    assert(name, `${alias}: drawn whole`);
+    assert.equal(discs.includes(16), verified, `${alias}: the check only for a confirmed address`);
+    assert.equal(name[1] < 540, verified, 'the name and its check are centred together');
+  }
   const fonts = [];
   await loadCardFonts({ load: async (...args) => fonts.push(args), ready: Promise.resolve() });
   assert(fonts.every(([font]) => font.includes('Baloo 2')) && fonts.length === 2, 'only the local Baloo weights');

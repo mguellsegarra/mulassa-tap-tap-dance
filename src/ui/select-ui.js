@@ -2,11 +2,12 @@
 // one chevron fold and one «Pròximament» pill; either unfolds it in place (its cards, its towns' pills),
 // the fold and an «Amaga» pill fold it back. A pending figure shows its own panel instead of the records.
 // Arrows rove cards; Enter confirms a figure. On the next step arrows choose difficulty; Escape returns.
-import { FIGURES, TOWNS, MULASSA, townOf, playable, rememberedLevel, rememberLevel, readFigureRecord, aviatText, aviatDraft, INVITE, INVITE_TOWN, inviteText, INVITE_DRAFT } from '../game/figures.js';
+import { FIGURES, TOWNS, townOf, playable, rememberedLevel, rememberLevel, readFigureRecord, aviatText, aviatDraft, INVITE, INVITE_TOWN, inviteText, INVITE_DRAFT } from '../game/figures.js';
 import { DIFFS } from '../game/chart.js';
 import { num } from './sheet-kit.js';
 import { showLevelStats } from './level-stats.js';
-import { setupStandings } from './select-standings.js';
+import { setupStandings, rankText, rankLabel } from './select-standings.js';
+import { savedName } from './board-list.js';
 import { entityHtml, fitEntityLabel } from './figure-entities.js';
 import { GIFTS } from './pending-gifts.js';
 import { stripScroll } from './strip-scroll.js';
@@ -19,12 +20,13 @@ const TROPHY = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h10V9
 
 // keyboard(): true while the player uses keys (focus rings, focus follows); busy(): a sheet is up; reduced(): reduced motion
 // firstLevel: a friend's challenge's level, preselected the first time only. standing(): Promise<{ pos, total } | null>;
-// onBoard: the position chip opens Classificacions
+// ranked: a board is configured (the ranking line shows); onBoard(figure): the line opens Classificacions on that figure;
+// onCard(p): a name on the desktop card opens that player's card (player-card.js)
 
 export function setupSelect({ doc = document, win = globalThis, store, keyboard = () => false, busy = () => false, reduced = () => false,
-  firstLevel = null, demo = false, getError = () => null, standing = () => Promise.resolve(null), onBoard = () => {}, sfx = () => {}, onPlay, onSelect = () => {}, onFree = () => {}, onHowto, onWrite }) {
+  firstLevel = null, demo = false, getError = () => null, standing = () => Promise.resolve(null), ranked = false, onBoard = () => {}, onCard = () => {}, sfx = () => {}, onPlay, onSelect = () => {}, onFree = () => {}, onHowto, onWrite }) {
   const DEMO = demo && Boolean((import.meta.env ?? {}).DEV); // ?demo: made-up facts on show only, never stored or sent; gone from production builds
-  const $ = id => doc.getElementById(id), facts = setupStandings({ doc, $, onBoard, busy }); // facts: desktops' medals and board card (select-standings.js)
+  const $ = id => doc.getElementById(id), facts = setupStandings({ doc, $, onBoard: () => onBoard(figure), onCard: p => onCard({ ...p, from: { ...p.from, figure: figure.id } }), busy, levels: () => step === 'level' }); // facts: desktops' medals and board card (select-standings.js)
   const root = $('select'), towns = $('select-towns'), strip = $('select-strip'), levels = $('select-level'), pending = $('select-pending');
   const live = FIGURES.filter(playable), soon = FIGURES.filter(f => !playable(f));
   const liveTowns = TOWNS.filter(t => live.some(f => f.town === t.id)), restTowns = [...TOWNS.filter(t => !liveTowns.includes(t) && soon.some(f => f.town === t.id)), INVITE_TOWN]; // the invitation folds with what is to come, last
@@ -33,9 +35,6 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
   towns.innerHTML = liveTowns.map(pillHtml).join('') + (restTowns.length ? soonPillHtml(restTowns) : '') + restTowns.map(pillHtml).join('');
   strip.innerHTML = stripHtml(live) + (soon.length ? moreHtml() + stripHtml([...soon, INVITE], true, townOf(live.at(-1))) : '');
   levels.innerHTML = DIFFS.map((d, i) => `<button type="button" class="btn btn-secondary" data-level="${i}" aria-pressed="false">${d.name}</button>`).join('');
-  // Keep device guidance in the information flow, clear of the dock and its actions.
-  const hint = $('ios-hint');
-  if (hint) $('select-info').prepend?.(hint);
   const bar = [...towns.querySelectorAll('.sel-pill')], pills = bar.filter(p => p.dataset.town), cards = [...strip.querySelectorAll('.sel-card')];
   const fold = cards.find(c => c.dataset.more), soonPill = bar.find(p => p.dataset.soon), later = [...strip.querySelectorAll('.later')];
   const restPills = pills.filter(p => restTowns.some(t => t.id === p.dataset.town));
@@ -139,18 +138,19 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
   }
   function updateStanding() {
     const mine = ++req;
-    rank(DEMO && figure.id === MULASSA.id ? { pos: 12, total: 135 } : null); // until the board gives one
-    if (figure.id !== MULASSA.id) return; // the public board currently contains only Mulassa runs
-    standing().then(s => { if (mine === req && s) rank(s); }, () => {});
+    rank(null); // until the board gives one (?demo once showed a made-up «12 de 135» here: it flashed before the real place)
+    const fail = () => { if (mine === req) rank(null, true); }; // no answer: the card says so in the room it kept
+    standing(figure.id).then(s => (s ? mine === req && rank(s) : fail()), fail); // each figure has its own board (Drac included)
   }
-  function rank(s) { // «Ets el número 12 de 135» («el número»: no gendered ordinal); a button, it opens Classificacions
-    const el = $('select-rank-tile');
-    el.hidden = !s?.pos; tiles(); facts.board(s);
-    if (!s?.pos) return;
-    $('select-pos').textContent = `Ets el número ${num(s.pos)}${s.total ? ` de ${num(s.total)}` : ''}`;
-    el.setAttribute('aria-label', `Classificacions: ets el número ${num(s.pos)}${s.total ? ` de ${num(s.total)}` : ''}`);
+  function rank(s, failed = false) { // the ranking line («Posició 12 de 135 · Tardor 2026», select-standings.js); a button, it opens Classificacions
+    const el = $('select-rank-tile'), text = rankText(s);
+    el.hidden = !ranked; tiles(); const me = savedName(store); facts.board(s, ranked, failed, `${figure.id}:${me.alias}#${me.tag}`); // the placeholder takes this figure's and owner's last shape
+    if (step === 'level') levelStats(); // step 2: the answer's foot goals are fitted beside the level row again
+    el.toggleAttribute('data-loading', !s && !failed);
+    $('select-pos').textContent = text;
+    el.setAttribute('aria-label', rankLabel(text));
   }
-  function tiles() { // no position yet: the row keeps its height, empty
+  function tiles() { // no board configured: the row keeps its height, empty
     $('select-tiles').hidden = !playable(figure) || $('select-rank-tile').hidden;
   }
   function records() { // step 2: this device's best score on each level under its name; without one the name stands alone, centred (records saved before `score` have none)
@@ -161,7 +161,13 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
       b.setAttribute('aria-label', has ? `${d}, el teu rècord ${num(score)} punts` : d);
     }
   }
-  function levelStats() { facts.fit(true); showLevelStats($, { on: step === 'level' && playable(figure), level, record: DEMO ? { score: DEMO_BEST[level], quality: DEMO_PCT[level] } : readFigureRecord(store, figure, level) }); facts.fit(); }
+  function levelStats() { // desktops, step 2: the info column may run down to the level card (12 px above it), not the dock's top
+    const card = step === 'level' && win.innerWidth >= 900 && win.innerHeight >= 600 && $('select-act').getBoundingClientRect();
+    if (card?.height) root.style.setProperty('--info-dock', `${(root.getBoundingClientRect().bottom - card.top) / (parseFloat(win.getComputedStyle?.(root).zoom) || 1) + 6}px`);
+    else root.style.removeProperty?.('--info-dock');
+    const two = step === 'level' && playable(figure);
+    facts.fit(true); showLevelStats($, { on: two, level, record: DEMO ? { score: DEMO_BEST[level], quality: DEMO_PCT[level] } : readFigureRecord(store, figure, level), goals: facts.goals });
+    if (!two) facts.fit(); } // step 1: the medals and the rows
   function setLevel(l, by = 'tap') { // 'open': the figure's last level (NORMAL at first) or a challenge's, marked without a tap's shake
     if (!playable(figure)) return;
     l = Math.max(0, Math.min(DIFFS.length - 1, l));
@@ -336,7 +342,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
   }
   // ↑↓ jump between the screen's rows like a game menu: the corner buttons, pills, info tiles, «Aviat», figures or levels,
   // footer buttons; ←→ walk the corner row (left to right as drawn).
-  const corner = ['leaders', 'music', 'feedback', 'settings'].map($).filter(Boolean);
+  const corner = ['profile', 'music', 'feedback', 'settings'].map($).filter(Boolean);
   const cornerRow = { contains: el => corner.includes(el) };
   const rows = [cornerRow, towns, $('select-info'), pending, strip, levels, root.querySelector('.sel-footer')];
   const usable = el => el && !el.disabled && !el.closest('[hidden]') && el.getClientRects().length > 0; // fixed corners have no offsetParent
@@ -400,7 +406,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     if (figure === previous) sfx('menu'); // the fold changes no figure, so pick made no sound
     centre(strip, target);
   }
-  $('select-rank-tile').addEventListener('click', () => { if (!busy()) onBoard(); });
+  $('select-rank-tile').addEventListener('click', () => { if (!busy()) onBoard(figure); });
   $('select-prev').addEventListener('click', () => moveStrip(-1));
   $('select-forward').addEventListener('click', () => moveStrip(1));
   strip.addEventListener('wheel', e => {
@@ -495,6 +501,15 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     const dock = $('select-bottom'), dockTop = (dock.offsetTop ?? r(dock).top / z) * z;
     // The pills' layout box, not their rect: unfolding slides them to their new row by a transform that may still be under way.
     const townsBottom = ((towns.offsetTop ?? r(towns).top / z) + (towns.offsetHeight ?? r(towns).height / z)) * z;
+    // Desktops: the first banner never starts left of the narrowest info column (308) + 12 (Marc: the column ends at most there);
+    // a centred strip that would (under ~1180 px) moves right instead, as far as it must. Set before peek(): its room starts there.
+    const desk = win.innerWidth >= 900 && win.innerHeight >= 600, flag = strip.querySelector('.sel-banner');
+    // Fine-pointer desktops: the strip's box starts right of the info column (below), so its cards never scroll under the column
+    // and its empty part never covers the ranking's names. Laid out full width first: the column's width comes from that rest place.
+    const boxed = desk && Boolean(win.matchMedia?.('(pointer: fine)').matches);
+    root.style.setProperty('--strip-x', '0px');
+    const shift = desk && flag?.offsetParent ? (r($('select-info')).left - r(strip).left) / z + 320 - (flag.offsetLeft - (parseFloat(win.getComputedStyle?.(strip).paddingLeft) || 0)) : 0;
+    strip.style.setProperty('--strip-l', `${shift}px`);
     // Reserve the expanded header row even while towns fit inline: folding must not move the contact card.
     peek();
     // The live group keeps its centred origin when the catalog opens. Only scrollLeft moves the cards.
@@ -504,12 +519,22 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
       const css = win.getComputedStyle?.(el);
       return sum + el.offsetWidth + (parseFloat(css?.marginLeft) || 0) + (parseFloat(css?.marginRight) || 0);
     }, 0) + gap * Math.max(0, base.length - 1);
-    strip.style.setProperty('--strip-inset', `${Math.max(0, ($('select-carousel').clientWidth - width) / 2)}px`);
+    const cw = $('select-carousel').clientWidth, centred = Math.max(0, (cw - width) / 2), left = Math.max(centred, shift);
+    strip.style.setProperty('--strip-inset', `${centred}px`);
+    strip.style.setProperty('--strip-l', `${left}px`); strip.style.setProperty('--strip-r', `${Math.max(0, cw - width - left)}px`);
     stripLimit = Math.max(0, Math.min(rowEdge(strip), strip.scrollWidth) - strip.clientWidth);
     $('select-carousel').toggleAttribute('data-fits', stripLimit <= 1);
     updateArrows();
     // The arrow group stands above the strip while it overflows (none on touch): her band and a pending card keep clear of it.
     const nav = stripLimit > 1 ? ($('select-nav').offsetHeight || 0) * z : 0;
+    // Desktops: the info column ends 12 px before the strip's first banner (Marc), at its rest place (offsetLeft: the centring,
+    // not the scroll), never under a 300 px panel; long names wrap. Step 2 hides the strip: the column keeps its width.
+    if (flag && desk) { if (flag.offsetParent) root.style.setProperty('--info-w', px(Math.max(308 * z, r(strip).left + flag.offsetLeft * z - 12 * z - r($('select-info')).left))); }
+    else root.style.removeProperty?.('--info-w');
+    if (boxed && flag?.offsetParent) { // the same rest place inside a box from the column's edge + 12: its room (peek()'s gap) and stripLimit are unchanged
+      const x = Math.max(0, (r($('select-info')).right - r(strip).left) / z + 12);
+      root.style.setProperty('--strip-x', `${x}px`); strip.style.setProperty('--strip-l', `${Math.max(0, left - x)}px`);
+    }
     const info = r($('select-info')); // the camera's free rect (cameras.js frameMenuLens): hardTop = the pills' floor (she may rise behind the info's lower rows), a side panel takes the left
     api.band = { top: side ? townsBottom : info.bottom, bottom: dockTop - nav, hardTop: townsBottom, left: side ? info.right : 0, right: win.innerWidth };
     // Use the strip's final layout position, including its painted top gutter. CSS subtracts
@@ -549,6 +574,11 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     if (keyboard()) cards[i].focus({ preventScroll: true }); else doc.activeElement?.blur?.();
 
   }
+  api.show = id => { // a figure picked elsewhere (an empty board's «Juga amb …»): its card selected and centred, step 1
+    const card = cards.find(c => c.dataset.id === id);
+    if (!shown || !card) return;
+    setStep('figures'); pick(card, 'filter'); centre(strip, card, smooth()); api.refocus();
+  };
   api.refocus = () => { // back from a sheet or photo mode: keep the current selector step
     if (!shown || !keyboard()) return;
     const target = step === 'level' ? levels.children[level] : cards[cur];

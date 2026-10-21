@@ -1,39 +1,34 @@
-// DOM for the optional online side: the Classificacions sheet (one all-time top for every level, the player's own row),
-// publishing the finished run (alias only; a new profile also needs a Turnstile token). The profile itself (link an
-// e-mail, recover, sign out, delete) is src/ui/profile-ui.js. Turnstile (src/services/captcha.js) checks every player once, silently, after their
-// first run; Supabase is touched only when one of these sheets asks for it, never in the game loop, and the anonymous profile
-// is made only on publishing. After an eligible run the publish sheet opens by itself (a prompt: nothing is sent until
-// Publica is pressed; «Ara no» ×3 stops it); a publication shows a Mulassa, then «Publicat!» + the place with an «D'acord» that opens Comparteix (afterPublish).
-import { leaderboard, turnstileSiteKey, subscribeLeaderboardResult, PAGE } from '../services/leaderboard.js';
+// DOM for the optional online side: publishing the finished run (alias only; a new profile also needs a Turnstile token)
+// and the Classificació sheet it builds (src/ui/board-list.js: one board per figure and season). The profile itself (link
+// an e-mail, recover, sign out, delete) is src/ui/profile-ui.js. Turnstile (src/services/captcha.js) checks a player only
+// when a token is needed; Supabase is touched only when one of these sheets asks for it, never in the game loop, and the
+// guest profile is made only on publishing (or «Crea»). After an eligible run the publish sheet opens by itself (a prompt:
+// nothing is sent until Publica is pressed; «Ara no» ×3 stops it); a publication shows a Mulassa, then «Publicat!» + the
+// place with an «D'acord» that opens Comparteix (afterPublish).
+import { leaderboard, turnstileSiteKey, subscribeLeaderboardResult, rememberIdentity } from '../services/leaderboard.js';
+import { VERSION_RULES } from '../services/leaderboard-rules.js';
 import { checkAlias } from '../services/alias-rules.js';
 import { DIFFS } from '../game/chart.js';
 import { quality, starsFor } from '../game/progress.js';
-import { errors } from '../services/errors.js';
 import { store as defaultStore } from '../platform/storage.js';
-import { byId, num, statusLine, setButton, whenSeen, onScreen } from './sheet-kit.js';
+import { byId, num, statusLine, setButton } from './sheet-kit.js';
 import { mulaSpinner } from './loader.js';
 import { setupVerify, turnstileMessage, TURNSTILE_SRC } from '../services/captcha.js';
-import { KEEP_NOTICE, NOTICE_FIRST, untilText, keptUntil, checkBadge, deviceRisk, DEVICE_NOTES, browserEnv } from './profile-notes.js';
+import { appendName, deviceRisk, DEVICE_NOTES, browserEnv } from './profile-notes.js';
+import { forgetSeasons } from './seasons-ui.js';
+import { setupBoardList, ALIAS_KEY, boardIssue, topPct, savedName } from './board-list.js';
 
-export const ALIAS_KEY = 'leaderboard-alias';
-export const ROW_KEY = 'leaderboard-row'; // the alias the last answer (or a publication) gave a row to: only for that alias does the sheet open on On sóc
+export { ALIAS_KEY, refreshIdentity } from './board-list.js';
 // «Ara no» to the prompt that opens by itself after a run, in a row: at MAX_DECLINES it stops opening by itself (the
 // results row's «Publica el resultat» stays); any publication starts the count again. Only this number is kept.
 export const DECLINES_KEY = 'publish-declines', MAX_DECLINES = 3;
 const PROMPT_STARS = 2; // the publish prompt opens by itself only from this many stars
 export const OPTOUT_KEY = 'publish-optout'; // «No m’ho tornis a recordar»: the prompt never opens by itself again (⚙ Configuració turns it back on)
-const BOARD_CAP = 500; // rows the list shows at most (10 pages): past it, «Mostrant els 500 primers»
 const NAMES = ['Timbaler', 'Portador', 'Gegant', 'Capgròs', 'Drac', 'Castellera', 'Balladora', 'Mulasser'];
 
 // A fictional, editable suggestion: nobody should feel asked for their real name.
 export const suggestAlias = (rand = Math.random) => `${NAMES[Math.floor(rand() * NAMES.length)]}${100 + Math.floor(rand() * 900)}`; // no spaces
 
-// Crash reports get service failures only (a code, never the alias): the player's own mistakes and limits are expected.
-// `server`: the provider's own codes and HTTP status (LeaderboardError.detail, e.g. 'rpc:42883:404'), no text.
-const boardIssue = (kind, e) => {
-  if (['invalid', 'blocked', 'taken', 'busy', 'rate_limit'].includes(e?.code)) return;
-  errors.report(kind, { code: e?.code || e?.name || 'Error', ...(e?.detail && { server: String(e.detail).slice(0, 64) }) });
-};
 let turnstileLoad = null;
 function loadTurnstile() { // the widget script; a failed load may be retried
   turnstileLoad ??= new Promise((resolve, reject) => {
@@ -54,11 +49,16 @@ export function setupBoard({ focusIn, store = defaultStore, service = leaderboar
   captcha = loadTurnstile, doc = document, subscribe = subscribeLeaderboardResult,
   // the prompt that opens by itself: main.js says when the screen allows it (results, no other sheet, page visible)
   canPrompt = () => true, onRecover = null, // onRecover: «Recupera’l» on the publish sheet (main.js → src/ui/profile-ui.js)
-  onConfirm = null, // «Confirma el correu» under the first «Publicat!» of a profile with a deadline ({ place }: Comparteix after it)
-  seen = whenSeen, visible = onScreen, online = () => globalThis.navigator?.onLine !== false, promptDelay = 900, now = () => Date.now(), minLoad = 1200,
+  onConfirm = null, // «Confirma el correu» under a guest's «Publicat!» ({ place }: Comparteix after it)
+  onCard = () => {}, onSeasons = () => {}, // a name tapped (src/ui/player-card.js); «Temporades anteriors» (src/ui/seasons-ui.js) for a figure
+  onKeep = null, // «Confirma el correu per no perdre el perfil» under a guest's own row (the Perfil's e-mail step)
+  currentFigure = () => null, // the selector's figure: the board opens on it when no run is on the results screen
+  canPlay = () => false, onPlay = () => {}, // an empty open board over the bare selector: «Juga amb …» leaves that figure selected there
+  acceptStats = () => {}, // a publication showed the statistics note (src/services/stats-sync.js may send them now)
+  online = () => globalThis.navigator?.onLine !== false, promptDelay = 900, now = () => Date.now(), minLoad = 1200,
   // Turnstile's tick box only over the title / results (never mid-song); it runs only when a token is needed (Publica
   // for a new profile, a Bústia message), never ahead: a check after every first run showed the box to people who never publish
-  canVerify = () => true, verifyOpts = {}, // seen / visible: the 7-day notice read on screen (sheet-kit.js), watched (→ a cancel) / at a press
+  canVerify = () => true, verifyOpts = {},
   // after a publication: Comparteix, for that run (main.js → share-ui.js), from the success sheet's «D'acord»; `shareDelay` (ms, null = never)
   // would also open it by itself. `settle`: the Mulassa shows at least this long (and waits for the place line) before «Publicat!»
   afterPublish = null, shareDelay = null, settle = 1100,
@@ -72,11 +72,10 @@ export function setupBoard({ focusIn, store = defaultStore, service = leaderboar
   const old = store.get(ALIAS_KEY);
   if (old && /\s/u.test(old)) store.set(ALIAS_KEY, old.replace(/\s+/gu, ''));
   const boardMenu = $('board-menu'), publishMenu = $('publish-menu');
-  const tbody = $('board-rows'), table = $('board-table'), viewSeg = $('board-views');
   const aliasInput = $('publish-alias'), publishStatus = $('publish-status'), fieldError = $('publish-error'), sendBtn = $('publish-send'), cancelBtn = $('publish-cancel'), neverBtn = $('publish-never');
   const resultsPublish = $('results-publish'), resultsBoard = $('results-board');
   const placeLine = $('publish-place'), asLine = $('publish-as'), field = $('publish-field');
-  let listReq = 0, publishReq = 0, snapshot = null, published = null, back = null;
+  let publishReq = 0, snapshot = null, published = null;
   let done = false, busy = false, shareTimer = null;
   // auto: this sheet opened by itself (closing it unpublished is an «Ara no»); armedAt: a tap already on its way when it
   // appeared must not publish
@@ -98,172 +97,9 @@ export function setupBoard({ focusIn, store = defaultStore, service = leaderboar
     ? setupVerify({ doc, siteKey, load: captcha, canShow: canVerify, ...verifyOpts }) : null;
   subscribe(r => { snapshot = r; }); // the frozen run of the results screen; cleared by the title or a new run
 
-  // --- Classificació: one all-time board for every level, ranked by score, in pages of 50 (leaderboard.js). Two views of
-  // it: «Tots» (every rank in order, the next page as the list's end comes into view, or «Carrega’n més»; at most
-  // BOARD_CAP rows here) and «On sóc» (the player's row with 5 above and 5 below, from the first page). The switch between
-  // them exists for anyone with a nickname (remembered alias, or an own row in the answer): the list alone before that; it opens
-  // on On sóc only while the last answer gave that nickname a row, else on Tots.
-  // A late answer (or one for a closed / reopened sheet) is dropped. The sheet keeps one height throughout
-  // (index.html: a fixed box holds list, loading, empty, error; the list scrolls inside it).
-  const viewBtns = { all: $('board-view-top'), me: $('board-view-me') };
-  const more = $('board-more'), moreStatus = $('board-more-status'), moreBtn = $('board-more-btn');
-  // shownBoard: { byPos (rank → row, pages and On sóc's neighbours), loaded (ranks 1..loaded all here), total, done }
-  let view = 'all', shownBoard = null, moreBusy = false, moreFailed = false;
-  const canPublishNow = () => Boolean(canWrite && snapshot && published !== snapshot);
-  function setBoardStatus(text, { retry = false, publish = false } = {}) {
-    $('board-status').textContent = text;
-    $('board-retry').hidden = !retry;
-    $('board-publish').hidden = !publish;
-  }
-  const fetchBoard = async () => (await service.listAll()) ?? []; // the first page (with the caller's row)
-  // a page (ranks from+1 .. from+PAGE, plus the first page's neighbours) into the board: ranks deduped, `loaded` = how
-  // far the ranks run unbroken from the top; the end: every rank here (total), a short page, or an empty one
-  function absorb(b, rows, from) {
-    for (const r of rows) b.byPos.set(Number(r.position), r);
-    b.total = Number(rows[0]?.total) || b.total;
-    let n = b.loaded;
-    while (b.byPos.has(n + 1)) n++;
-    const page = rows.filter(r => Number(r.position) > from && Number(r.position) <= from + PAGE).length;
-    b.loaded = n;
-    b.done = !page || (b.total ? n >= b.total : page < PAGE);
-  }
-  const topPct = (pos, total) => Math.max(1, Math.ceil(100 * pos / total)); // «top 17%»; never «top 0%»
-  const placeText = (pos, total) => `#${num(pos)} de ${num(total)} · top ${topPct(pos, total)}%`; // «#347 de 2.140 · top 17%»
-  const el = (tag, className, text) => { const e = doc.createElement(tag); e.className = className; if (text != null) e.textContent = text; return e; };
-  function row(r) {
-    const tr = doc.createElement('tr'), td = () => tr.appendChild(doc.createElement('td'));
-    const pos = Number(r.position);
-    td().appendChild(el('span', pos <= 3 ? `pos p${pos}` : 'pos', num(pos)));
-    const name = td(), who = name.appendChild(el('div', 'who'));
-    who.appendChild(el('span', 'alias', String(r.alias))); // aliases are text, never HTML
-    if (r.verified === true) who.appendChild(checkBadge(doc)); // a confirmed address, nothing more (202610180001)
-    if (r.is_self) { tr.className = 'me'; who.appendChild(el('span', 'me-tag', 'TU')); }
-    const level = DIFFS[Number(r.difficulty)]?.name; // the level played (a coloured pill) and the longest streak, on a small line under the name
-    if (level) {
-      const sub = name.appendChild(el('div', 'sub'));
-      sub.appendChild(el('span', `lvl lvl${Number(r.difficulty)}`, level));
-      if (r.max_combo != null) { const st = sub.appendChild(el('span', 'streak', 'ratxa ')); st.appendChild(el('b', '', num(r.max_combo))); }
-    }
-    td().textContent = `${Math.round(Number(r.quality))}%`;
-    td().textContent = num(r.score);
-    return tr;
-  }
-  const shownRanks = b => Math.min(b.loaded, BOARD_CAP);
-  function appendRanks(b, from, to) { for (let p = from; p <= to; p++) tbody.appendChild(row(b.byPos.get(p))); }
-  function updateMore() { // the list's end (Tots only): loading, «Carrega’n més», the cap
-    const b = shownBoard;
-    more.hidden = view !== 'all' || !b || !b.loaded || (b.done && !moreBusy && !moreFailed); // at the end: nothing, no gap
-    if (more.hidden) { moreBtn.hidden = true; moreStatus.textContent = ''; return; }
-    const capped = !b.done && b.loaded >= BOARD_CAP;
-    moreStatus.textContent = moreBusy ? 'Carregant-ne més…' : moreFailed ? 'No s’han pogut carregar més.'
-      : capped ? `Mostrant els ${num(BOARD_CAP)} primers` : ''; // the end of the list needs no line
-    if (moreBusy) moreStatus.prepend(mulaSpinner(doc, { mini: true }));
-    moreBtn.hidden = moreBusy || b.done || capped;
-  }
-  function render() {
-    for (const [k, b] of Object.entries(viewBtns)) b.setAttribute('aria-pressed', String(k === view));
-    tbody.replaceChildren();
-    table.hidden = true;
-    $('board-summary').textContent = '';
-    updateMore();
-    if (!shownBoard) return;
-    const b = shownBoard, self = [...b.byPos.values()].find(r => r.is_self);
-    if (self && viewSeg.hidden) viewSeg.hidden = false; // published elsewhere on this profile: quietly offer On sóc
-    if (view === 'all') {
-      if (!b.loaded) return setBoardStatus('Encara no hi ha cap resultat. Pots ser el primer!');
-      setBoardStatus('');
-      appendRanks(b, 1, shownRanks(b)); // ranks in order only: On sóc's neighbours further down wait for their page
-    } else {
-      if (!self) {
-        if (canPublishNow()) return setBoardStatus('Publica el teu resultat per veure on quedes.', { publish: true });
-        return setBoardStatus('Juga una partida i publica el resultat per veure on quedes.');
-      }
-      setBoardStatus('');
-      const at = Number(self.position);
-      for (let p = at - 5; p <= at + 5; p++) if (b.byPos.has(p)) tbody.appendChild(row(b.byPos.get(p)));
-      $('board-summary').textContent = placeText(at, b.total);
-    }
-    table.hidden = false;
-    // On sóc: the own row in the middle of the box, snapped so no row sits half under the header
-    const box = table.parentElement, me = [...tbody.children].find(tr => tr.className === 'me');
-    if (!box) return;
-    box.scrollTop = 0;
-    if (view !== 'me' || !me?.offsetHeight) return;
-    const head = table.tHead?.offsetHeight ?? 0;
-    const want = me.offsetTop - head - (box.clientHeight - head - me.offsetHeight) / 2;
-    const first = [...tbody.children].reverse().find(tr => tr.offsetTop - head <= want) ?? tbody.children[0];
-    box.scrollTop = first.offsetTop - head;
-  }
-  // The dancing Mulassa shows while it loads, at least `minLoad` ms when the sheet opens so it never just flashes; then
-  // the list fades in (index.html).
-  async function loadList({ min = minLoad } = {}) {
-    const req = ++listReq;
-    shownBoard = null; moreBusy = false; moreFailed = false; render();
-    setBoardStatus('Carregant la classificació…');
-    $('board-status').prepend(mulaSpinner(doc));
-    const shown = min > 0 ? new Promise(r => setTimeout(r, min)) : null;
-    let rows;
-    try { rows = await fetchBoard(); } catch (e) {
-      await shown;
-      boardIssue('leaderboard-list-failed', e);
-      if (req !== listReq || !boardMenu.open) return;
-      setBoardStatus(e?.message || 'No s’ha pogut carregar la classificació.', { retry: true });
-      return;
-    }
-    await shown;
-    if (req !== listReq || !boardMenu.open) return;
-    const b = { byPos: new Map(), loaded: 0, total: 0, done: false };
-    absorb(b, rows, 0);
-    const hasRow = [...b.byPos.values()].some(r => r.is_self);
-    if (hasRow) store.set(ROW_KEY, store.get(ALIAS_KEY) ?? ''); else store.remove(ROW_KEY);
-    if (view === 'me' && !hasRow && !canPublishNow()) view = 'all'; // a stale guess: the switch stays, the list shows
-    shownBoard = b; render();
-  }
-  // the next page: from the scroll (the list's end in view) or «Carrega’n més»; one at a time, dropped if stale
-  async function loadMore() {
-    const b = shownBoard;
-    if (moreBusy || !b || b.done || b.loaded >= BOARD_CAP || view !== 'all' || !boardMenu.open) return;
-    const req = listReq, from = b.loaded;
-    moreBusy = true; moreFailed = false; updateMore();
-    let rows;
-    try { rows = (await service.listAll({ offset: from, limit: PAGE })) ?? []; } catch (e) {
-      if (req !== listReq || shownBoard !== b) return;
-      boardIssue('leaderboard-list-failed', e);
-      moreBusy = false; moreFailed = true; updateMore(); // the button stays: another try
-      return;
-    }
-    if (req !== listReq || shownBoard !== b || !boardMenu.open) return;
-    moreBusy = false;
-    const before = shownRanks(b);
-    absorb(b, rows, from);
-    if (view === 'all') appendRanks(b, before + 1, shownRanks(b));
-    updateMore();
-    const box = table.parentElement; // still at the end (a tall screen, a fast flick): the next one
-    if (box && box.scrollHeight - box.scrollTop - box.clientHeight < 240) loadMore();
-  }
-  moreBtn.addEventListener('click', () => loadMore());
-  observe(more, table.parentElement, () => loadMore());
-  for (const [k, b] of Object.entries(viewBtns)) b.addEventListener('click', () => { if (view !== k) { view = k; render(); } }); // same pages
-  $('board-publish').addEventListener('click', () => { openPublish(); boardMenu.close(); }); // the board doesn't go back behind it
-  // published here before (the remembered alias): the switch, «On sóc» first from the first frame when the last answer gave
-  // a row, else «Tots» (the answer corrects it quietly); never published: the list alone, no switch
-  function openBoard(onBack = null) {
-    if (!service.configured) return;
-    back = onBack;
-    const known = Boolean(store.get(ALIAS_KEY));
-    viewSeg.hidden = !known;
-    view = known && (store.get(ROW_KEY) === store.get(ALIAS_KEY) || canPublishNow()) ? 'me' : 'all'; // no row (never published, or removed): Tots from the first frame, the switch in place so nothing shifts
-    if (!boardMenu.open) boardMenu.showModal();
-    focusIn(boardMenu, 'board-close');
-    loadList();
-  }
-  $('board-retry').addEventListener('click', () => { loadList(); focusIn(boardMenu, 'board-close'); });
-  $('board-close').addEventListener('click', () => boardMenu.close());
-  boardMenu.addEventListener('close', () => {
-    listReq++;
-    const b = back; back = null;
-    if (b && !publishMenu.open) b(); // opened from Configuració: back to it
-  });
+  const { openBoard, standing } = setupBoardList({ doc, $, service, store, focusIn, minLoad, now, observe, onCard, onSeasons, onKeep, currentFigure, canPlay, onPlay,
+    canPublish: () => Boolean(canWrite && snapshot && published !== snapshot), runFigure: () => VERSION_RULES[snapshot?.version]?.figureId,
+    openPublish: () => openPublish(), publishing: () => publishMenu.open });
   let needsCaptcha = false, hadSession = true; // hadSession: a profile here when the publish sheet opened
   // An existing profile publishes with one tap (its alias shown); a new one needs a Turnstile token,
   // asked for only once Publica is pressed (the startup check's, if still fresh): opening the sheet sends nothing.
@@ -271,17 +107,15 @@ export function setupBoard({ focusIn, store = defaultStore, service = leaderboar
     needsCaptcha = false; hadSession = true;
     let id = { hasSession: false, persistent: true }, prof;
     try { id = await service.identity(); } catch { /* the publish call reports it */ }
-    if (id.hasSession && service.profile) try { prof = await service.profile(); } catch { /* unknown: the notice stays */ }
+    if (id.hasSession && service.profile) try { prof = await service.profile(); } catch { /* unknown: the remembered name stands */ }
     if (req !== publishReq || !publishMenu.open) return;
-    // a remembered name whose profile row is gone (its deadline passed): this browser starts a new one
+    // a remembered name whose profile row is gone (deleted elsewhere, or a guest 12 months away): this browser starts a new one
     if (prof === null && !id.email && store.get(ALIAS_KEY)) {
       try { await service.signOut(); } catch { /* the publication reports it */ }
       if (req !== publishReq || !publishMenu.open) return;
       id = { ...id, hasSession: false };
     }
-    keep(prof);
-    // an old profile with results meets the notice here: the server starts its 7 days once it is on screen
-    if (prof?.noticeNeeded) watchNotice(req);
+    if (prof) { rememberIdentity(store, ALIAS_KEY, prof); if (asLine.hidden === false) { aliasInput.value = prof.alias; showField(false, prof); } }
     $('publish-temp').hidden = id.persistent !== false;
     // published before (the remembered alias or a session) in a browser that loses its storage; the blocked-storage case
     // already has publish-temp
@@ -295,34 +129,22 @@ export function setupBoard({ focusIn, store = defaultStore, service = leaderboar
     if (!verify) { setPublishStatus('Ara mateix no es poden publicar resultats.'); sendBtn.disabled = true; return; }
     needsCaptcha = true;
   }
-  // The 7-day notice (or the deadline) on the sheet, from the first frame; `noticeShown` goes with the publication: only
-  // then may the server start a deadline. prof: service.profile() (undefined = unknown: the notice).
-  let noticeShown = true, acked = false, unwatch = null;
-  function keep(prof) {
-    noticeShown = !prof?.verified;
-    $('publish-keep').textContent = prof?.verified ? 'Amb el correu confirmat, el perfil es conserva fins que l’esborris.' : prof?.expiresAt && !prof.expired ? untilText(prof.expiresAt) : KEEP_NOTICE; // expired: started again, the notice
-  }
-  // an old profile's 7 days start once the notice is read here (a second on screen, nothing over it); stale = nothing
-  function watchNotice(req) {
-    unwatch?.(); unwatch = seen($('publish-keep'), () => { unwatch = null; if (req === publishReq && publishMenu.open && !form.dataset.view && $('publish-keep').textContent === KEEP_NOTICE) service.ackNotice().then(t => { if (req === publishReq) acked = Boolean(t); }, () => {}); });
-  }
-  // the ⚙ «Perfil» block's last answer (src/ui/profile-ui.js), so a confirmed profile doesn't flash the notice
-  const lastProf = () => { try { return JSON.parse(store.get(`${ALIAS_KEY}:identity`) || 'null')?.prof || undefined; } catch { return undefined; } };
-  // the one-tap view (the remembered alias as text) or the editable field
-  function showField(on) {
+  // the one-tap view (the remembered name, its tag and check) or the editable field
+  function showField(on, who = savedName(store)) {
     field.hidden = !on;
     asLine.hidden = on;
-    if (!on) $('publish-as-name').textContent = aliasInput.value;
+    if (!on) { const b = $('publish-as-name'); b.replaceChildren(); appendName(doc, b, who); }
   }
   // the run in one line: «94% a DIFÍCIL · ★★★» (the stars as the results card shows them)
   const starText = value => (starsFor(value) ? ` · ${'★'.repeat(starsFor(value))}` : ''); // nothing for 0 stars
-  const runLine = run => `${Math.round(quality(run.counts))}% a ${DIFFS[run.difficulty].name}${starText(quality(run.counts))}`;
+  const runLine = run => { const lvl = doc.createElement('span'); lvl.className = `lvt${run.difficulty}`; lvl.textContent = DIFFS[run.difficulty].name; // the level in its colour
+    return [`${Math.round(quality(run.counts))}% a `, lvl, starText(quality(run.counts))]; };
   // «Ets el número 347 · top 17%!»: the own row of the joint board. Resolves to the line (or null) for Comparteix's
   // header too.
-  async function showPlace(req) {
+  async function showPlace(req, version) {
     let self = null, total = 0;
     try {
-      const rows = await fetchBoard(); // the first page carries the caller's row
+      const rows = (await service.listAll({ version })) ?? []; // the run's board; the first page carries the caller's row
       self = rows.find(r => r.is_self); total = Number(self?.total) || 0;
     } catch { /* the success stays */ }
     if (!self || !total) return null;
@@ -377,10 +199,9 @@ export function setupBoard({ focusIn, store = defaultStore, service = leaderboar
     $('publish-title').textContent = 'Publica el teu resultat!';
     $('publish-temp').hidden = true;
     $('publish-device').hidden = true;
-    $('publish-offer').hidden = true; acked = false;
-    $('publish-summary').textContent = runLine(run);
+    $('publish-offer').hidden = true;
+    $('publish-summary').replaceChildren(...runLine(run));
     const saved = store.get(ALIAS_KEY);
-    keep(saved ? lastProf() : undefined);
     // only a grey example: the player types their own (a filled-in name got published as is)
     aliasInput.value = saved || '';
     aliasInput.placeholder = `p. ex. ${suggestAlias()}`;
@@ -437,8 +258,6 @@ export function setupBoard({ focusIn, store = defaultStore, service = leaderboar
     if (!alias) { setInvalid(true, message); aliasInput.focus(); return; }
     const req = publishReq, run = snapshot;
     if (!run) { setPublishStatus('Aquest resultat ja no es pot publicar.'); return; }
-    // the press says the notice was read only while it is on screen (else it scrolls into view for the next press); it carries it
-    if (noticeShown && !visible($('publish-keep'))) { $('publish-keep').scrollIntoView?.({ block: 'nearest' }); setPublishStatus(NOTICE_FIRST); return; } else { unwatch?.(); unwatch = null; }
     busy = true;
     aliasInput.value = alias;
     setInvalid(false);
@@ -460,23 +279,30 @@ export function setupBoard({ focusIn, store = defaultStore, service = leaderboar
     const t0 = Date.now();
     swap('wait', 'Publicant…'); publishMenu.focus();
     try {
-      const res = await service.publish(run, alias, { captchaToken, notice: noticeShown });
-      store.set(ALIAS_KEY, alias); store.set(ROW_KEY, alias);
+      await service.publish(run, alias, { captchaToken });
+      store.set(ALIAS_KEY, alias);
+      acceptStats(); // the sheet's note said the statistics' totals go with the profile
+      forgetSeasons(service); // the podiums may have moved
       published = run; // the results button goes even if the sheet was closed meanwhile
       store.remove(DECLINES_KEY); // they publish: the prompt may open by itself again
       if (!store.get(PERSIST_KEY)) { store.set(PERSIST_KEY, '1'); try { Promise.resolve(persist()).catch(() => {}); } catch { /* no Storage API */ } }
       if (req !== publishReq) return;
       needsCaptcha = false; // the profile exists now
       auto = false;
-      placeP = showPlace(req);
+      placeP = showPlace(req, run.version);
+      // who published, as the boards will show it (a guest's «#1234» comes from the server)
+      const profP = Promise.resolve(service.profile?.()).catch(() => null);
       // the Mulassa for a beat (never a flash), and until the place is known: «Publicat!» and both lines come together
-      if (settle) await Promise.race([Promise.all([placeP, sleep(settle - (Date.now() - t0))]), sleep(2500)]);
+      if (settle) await Promise.race([Promise.all([placeP, profP, sleep(settle - (Date.now() - t0))]), sleep(2500)]);
       if (req !== publishReq) return;
-      setPublishStatus('Resultat publicat. La classificació mostra el teu millor resultat.', true);
-      // the first «Publicat!» of a deadline (or the one the notice was shown for): a quiet way to keep it, once
-      const until = res?.expires_at && (res.started || acked) && onConfirm ? Date.parse(res.expires_at) : NaN;
-      $('publish-offer').hidden = !until;
-      if (until) $('publish-offer-text').textContent = keptUntil(until);
+      const prof = await Promise.race([profP, sleep(2500).then(() => null)]); // never held up by a slow answer
+      if (req !== publishReq) return;
+      if (prof) rememberIdentity(store, ALIAS_KEY, prof);
+      setPublishStatus('Publicat com a ', true);
+      appendName(doc, publishStatus, prof ?? savedName(store));
+      publishStatus.append('. La classificació mostra el teu millor resultat.');
+      // a guest: a quiet way to keep the profile (the e-mail), under every «Publicat!»; never by itself
+      $('publish-offer').hidden = !(onConfirm && prof && !prof.verified);
       // Comparteix is «D'acord»; only with `shareDelay` does it also come by itself
       if (afterPublish && shareDelay != null) shareTimer = setTimeout(() => { if (req === publishReq && publishMenu.open && done) toShare(); }, shareDelay);
       done = true;
@@ -507,9 +333,8 @@ export function setupBoard({ focusIn, store = defaultStore, service = leaderboar
         }
         aliasInput.focus();
       } else setPublishStatus(err?.message || 'No s’ha pogut publicar. Torna-ho a provar.');
-      if (err?.code === 'notice') keep(undefined); // the server wants the notice: it is on the sheet now, the next press sends it
       // this session's account is gone (service.publish left it): the retry is a new profile (a token, a nickname)
-      if (err?.code === 'session') { hadSession = false; needsCaptcha = Boolean(verify); showField(true); keep(undefined); }
+      if (err?.code === 'session') { hadSession = false; needsCaptcha = Boolean(verify); showField(true); }
       // fix the nickname, then the same press again
       setSend(nick ? 'Publica' : 'Torna-ho a provar');
     } finally { if (req === publishReq) busy = false; }
@@ -533,7 +358,7 @@ export function setupBoard({ focusIn, store = defaultStore, service = leaderboar
     const declined = auto && !done;
     if (declined) store.set(DECLINES_KEY, String(declines() + 1));
     auto = false; clearTimeout(shareTimer); shareTimer = null;
-    publishReq++; busy = false; verify?.cancel(); unwatch?.(); unwatch = null;
+    publishReq++; busy = false; verify?.cancel();
     cancelBtn.hidden = false; neverBtn.hidden = true; $('publish-board').hidden = true;
     if (declined && afterPublish) afterPublish({ place: null, published: false }); // Comparteix next, without «Publicat!»
   });
@@ -559,15 +384,6 @@ export function setupBoard({ focusIn, store = defaultStore, service = leaderboar
     promptTimer = null;
     if (shown !== 2 || published === snapshot || publishMenu.open || boardMenu.open || !canPrompt() || !promptable(snapshot)) return;
     openPublish({ auto: true });
-  }
-  // Each selector visit reads the current session's rank. Never reuse another profile's answer.
-  async function standing() {
-    if (!service.configured) return null;
-    try {
-      const rows = await fetchBoard();
-      const self = rows.find(r => r.is_self);
-      return { pos: Number(self?.position) || null, total: Number(self?.total ?? rows[0]?.total) || null, rows }; // rows: the selector's card (select-standings.js)
-    } catch { return null; }
   }
   return {
     get open() { return boardMenu.open || publishMenu.open || Boolean(verify?.open); },

@@ -5,6 +5,7 @@ import * as runtime from '../src/game/figure-song.js';
 import { createHash } from 'node:crypto';
 import { makeDanceChart } from '../src/game/chart.js';
 import { MULASSA, DRAC, recordKey, readFigureRecord, saveFigureRecord } from '../src/game/figures.js';
+import { readPreviousDanceRecord } from '../src/game/records.js';
 import { snapshotResult, EXPECTED_JUDGMENTS } from '../src/services/leaderboard-rules.js';
 import { challengeEligible, challengeUrl, challengeResult, shareText } from '../src/services/share.js';
 
@@ -46,13 +47,14 @@ for (let diff = 0; diff < 3; diff++) {
   }
   const last = chart.findLast(n => !n.balloon);
   assert.equal(last.phrase, Math.floor(Math.floor(runtime.beatAt(last.t) + 0.01) / 8));
-  // Even forged counts matching Mulassa must never yield a publishable Drac result.
+  // Counts matching the Mulassa's chart are not the Drac's: no publishable Drac result (its own: tests/leaderboard.mjs).
   const fake = { figureId: DRAC.id, figureVersion: DRAC.version, diff,
     counts: { perfect: EXPECTED_JUDGMENTS[diff], good: 0, miss: 0 }, score: 100, maxCombo: 1 };
   const options = { reason: 'end', query: new URLSearchParams() };
   assert.equal(snapshotResult(fake, options), null);
   assert.equal(snapshotResult({ ...fake, figureVersion: 'mulassa-v1' }, options), null);
   assert.equal(snapshotResult({ ...fake, figureId: MULASSA.id }, options), null);
+  assert.equal(snapshotResult({ ...fake, figureVersion: 'mulassa-v2-short', figureId: MULASSA.id }, options), null, 'a retired Mulassa version is never published');
   assert(snapshotResult({ ...fake, figureId: MULASSA.id, figureVersion: MULASSA.version }, options));
 }
 for (const key of ['audio', 'ambient']) {
@@ -60,7 +62,7 @@ for (const key of ['audio', 'ambient']) {
   const bytes = readFileSync(new URL(`../public/${file}`, import.meta.url));
   assert.equal(createHash('sha1').update(bytes).digest('hex').slice(0, 10), hash, `${key}: generated URL matches copied audio`);
 }
-assert.equal(recordKey(MULASSA, 1), 'record-points-mulassa-1');
+assert.equal(recordKey(MULASSA, 1), 'record-points-mulassa-v3-1');
 assert.notEqual(recordKey(DRAC, 1), recordKey(MULASSA, 1));
 const dracRun = { figureId: DRAC.id, pct: 100, diff: 1 };
 assert.equal(challengeEligible(dracRun), false);
@@ -102,21 +104,23 @@ vm.runInContext("G.state = 'select'; setSelectedFigure('mulassa-valls');", conte
 assert.equal(runtime.song, originalSong);
 console.log('selected figure boundary: audio, result identity, pending publication and run guard ok');
 
-// A shorter Mulassa keeps legacy records readable without applying its normalization to the Drac.
+// The previous dance's records stay readable for the Profile; the v3 record is its own, and the Drac keeps raw points.
 const recordData = new Map(), recordStore = { get: k => recordData.get(k) ?? null, set: (k, v) => recordData.set(k, v) };
 recordStore.set('record-v2-duet-1', JSON.stringify({ quality: 90, score: 50000, combo: 40 }));
-assert.equal(readFigureRecord(recordStore, MULASSA, 1).score, 50000);
+assert.equal(readFigureRecord(recordStore, MULASSA, 1), null, 'the previous dance’s record is not a v3 record');
+assert.equal(readPreviousDanceRecord(recordStore, 1).score, 50000);
 saveFigureRecord(recordStore, MULASSA, 1, 95, 40000, 60);
-assert.equal(readFigureRecord(recordStore, MULASSA, 1).score, Math.round(40000 * 113940 / 83540));
+assert.equal(readFigureRecord(recordStore, MULASSA, 1).score, 40000, 'v3 points are raw');
 assert.equal(JSON.parse(recordStore.get('record-v2-duet-1')).score, 50000, 'legacy record remains untouched');
 saveFigureRecord(recordStore, DRAC, 1, 88, 12345, 30);
 assert.equal(readFigureRecord(recordStore, DRAC, 1).score, 12345, 'Drac retains raw score in its own namespace');
 assert.equal(readFigureRecord(recordStore, MULASSA, 1).quality, 95, 'switching figures cannot replace the Mulassa record');
-// The figure adapter uses master points ordering, including records left by older tabs.
+// An older tab keeps writing its own keys: it can neither beat nor replace the v3 record.
 recordStore.set('record-family-mulassa-1', JSON.stringify({ quality: 100, rawScore: 1, score: 1,
   sourceVersion: 'mulassa-v2-short', scoreScale: 'mulassa-family-v1' }));
-assert.equal(readFigureRecord(recordStore, MULASSA, 1).score, Math.round(40000 * 113940 / 83540), 'an older tab cannot replace more points with a higher percentage');
-assert.equal(readFigureRecord(recordStore, DRAC, 1).score, 12345, 'Mulassa migration cannot change Drac records');
+recordStore.set('record-points-mulassa-1', JSON.stringify({ quality: 100, score: 999999, combo: 1 }));
+assert.equal(readFigureRecord(recordStore, MULASSA, 1).score, 40000, 'an older tab cannot touch the v3 record');
+assert.equal(readFigureRecord(recordStore, DRAC, 1).score, 12345, 'Mulassa versions cannot change Drac records');
 console.log('short Mulassa and Drac record isolation ok');
 
 // Scene sounds share the run's ownership, independently of which figure (or pending card) is selected.

@@ -18,7 +18,7 @@ const psBase = touchEl.querySelector('.ps-base'), psKnob = touchEl.querySelector
 
 function drawStick() {
   if (TOUCH.epoch !== PHOTO.inputEpoch) touchReset(); // control was dropped (Tab, blur…): so is the thumb
-  const s = TOUCH.stick, on = s.id >= 0;
+  const s = TOUCH.stick, on = s.id !== null;
   const reach = Math.hypot(PHOTO.stickX, PHOTO.stickY);
   psBase.classList.toggle('on', on);
   psBase.classList.toggle('run', on && reach >= PHOTO_RUN.stick); // the gallop: the ring turns gold
@@ -56,8 +56,8 @@ touchEl.addEventListener('pointerdown', e => {
   try { touchEl.setPointerCapture(e.pointerId); } catch { /* already gone */ }
   drawStick();
 });
-touchEl.addEventListener('pointermove', e => { const stick = TOUCH.stick.id >= 0; touchMove(e.pointerId, e.clientX, e.clientY); if (stick) drawStick(); });
-for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture']) touchEl.addEventListener(ev, e => { const stick = TOUCH.stick.id >= 0; touchUp(e.pointerId); if (stick) drawStick(); });
+touchEl.addEventListener('pointermove', e => { const stick = TOUCH.stick.id !== null; touchMove(e.pointerId, e.clientX, e.clientY); if (stick) drawStick(); });
+for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture']) touchEl.addEventListener(ev, e => { const stick = TOUCH.stick.id !== null; touchUp(e.pointerId); if (stick) drawStick(); });
 for (const b of psButtons) {
   b.addEventListener('pointerdown', e => {
     e.preventDefault(); e.stopPropagation();

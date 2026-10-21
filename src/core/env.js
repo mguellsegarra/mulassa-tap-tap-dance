@@ -29,7 +29,8 @@ export const setOffsetMs = v => (offsetMs = v);
 // home-screen app (manifest + apple-mobile-web-app-capable) is the way, and the title screen says so.
 // Orientation: phones play in portrait, tablets (iPad) in landscape. A page can't lock rotation on iOS, so the
 // wrong one shows a "gira" cover and pauses the song; Android in fullscreen also gets a real lock.
-export const TABLET = COARSE.matches && Math.min(screen.width, screen.height) >= 600;
-export const WANT_ORIENT = TABLET ? 'landscape' : 'portrait';
+// Live, like COARSE: DevTools device mode flips pointer and screen size after the page has loaded.
+export const isTablet = () => COARSE.matches && Math.min(screen.width, screen.height) >= 600;
+export const deviceOrient = () => isTablet() ? 'landscape' : 'portrait';
 export const pageActive = () => !document.hidden && document.hasFocus();
 export const CALM = matchMedia('(prefers-reduced-motion: reduce)');

@@ -2,16 +2,23 @@
 // the in-memory mock (no network, nothing stored outside memory). Each state is reached by pressing the real sheets' own
 // buttons and fields, as a player would, so their animations and focus run for real; a reload starts it again.
 // `&review` alone: the list of states (links), over the results screen. Loaded as its own chunk, only in that mode.
+// The profile, ranking and season states need the UI's own openers (`ctx.openProfile`, `openBoard({ figure })`, `openSeasons`,
+// `showSeasonEnd`, `openCard(name, tag, from)`, `chooseNameReady`): a state whose opener is missing stops with a clear error.
 import { REVIEWS, OTHER_MAIL, MOCK_CODE } from './final-test.js';
+import { demoCards } from './demo-data.js';
 import { G } from '../game/state.js';
-import { ROW_KEY, ALIAS_KEY } from '../ui/board-ui.js';
 
 const LABELS = {
   'share-drac': 'Comparteix el Drac',
   publish: 'Abans de publicar (s’obre sol)', published: 'Publicat! + Confirma el correu', email: 'Correu: escriu l’adreça', code: 'Correu: el codi',
-  verified: 'Correu confirmat!', share: 'Confirmat → Comparteix', switch: 'Correu d’un altre perfil (canvi)', 'legacy-publish': 'Perfil antic: publicar (avís dels 7 dies)',
-  'profile-new': 'Perfil: cap', 'profile-reserved': 'Perfil: nom reservat', 'profile-pending': 'Perfil: caduca el…', 'profile-legacy': 'Perfil antic: avís dels 7 dies',
-  'profile-verified': 'Perfil: correu confirmat', 'profile-expired': 'Perfil: caducat', board: 'Classificació amb marques', 'board-tip': 'Marca: explicació',
+  verified: 'Correu confirmat!', 'choose-name': 'Correu confirmat → Tria el teu nom', switch: 'Correu d’un altre perfil (canvi)',
+  'profile-new': 'Perfil: cap', 'profile-reserved': 'Perfil: convidat sense resultat', 'profile-guest': 'Perfil: convidat (nom#1234)',
+  'profile-verified-unnamed': 'Perfil: correu confirmat, encara amb #', 'profile-verified': 'Perfil: correu confirmat i nom net',
+  board: 'Classificació amb marques', 'board-tip': 'Marca: explicació', 'board-guest': 'Classificació: convidats i verificats',
+  'board-empty': 'Classificació: temporada buida', 'board-drac': 'Classificació del Drac', 'board-drac-empty': 'Classificació del Drac: buida',
+  seasons: 'Temporades anteriors (Saló de la fama)', 'seasons-later': 'Saló de la fama: ball anterior', 'season-end': 'Final de temporada (full d’un sol cop)',
+  'seasons-many': 'Saló de la fama: 11 temporades', 'seasons-drac': 'Saló de la fama: Drac sense temporades', 'season-end-plain': 'Final de temporada sense podi',
+  card: 'Fitxa d’un verificat', 'card-guest': 'Fitxa d’un convidat (nom repetit)', 'card-long': 'Fitxa: nom de 16 lletres', 'card-empty': 'Fitxa sense estadístiques',
   taken: 'Sobrenom agafat', recover: 'Sobrenom agafat → Recupera', retry: 'Publicar sense connexió → Torna-ho a provar',
 };
 const $ = id => document.getElementById(id);
@@ -59,7 +66,9 @@ function panel(list) { // inline styles: dev only, never in the product's CSS
 export async function startReview(o) {
   try { await reach(o); window.__review = 'ready'; } catch (e) { window.__review = `error: ${e.message}`; throw e; }
 }
-async function reach({ state, board, openSettings, toTitle, store }) {
+async function reach(ctx) {
+  const { state, board } = ctx;
+  const need = name => { if (typeof ctx[name] !== 'function') throw new Error(`the ${name} opener is missing`); return ctx[name]; };
   panel(!state);
   if (!state) return;
   if (state === 'share-drac') {
@@ -88,23 +97,31 @@ async function reach({ state, board, openSettings, toTitle, store }) {
     type('profile-email', address); press('profile-send');
     await until(() => shown($('profile-code')) && !$('profile-send').disabled, 'the code step');
   };
-  // Configuració opens from the selector, as a player reaches it after a run
-  const settings = async () => { toTitle(); await until(() => (G.state === 'select' || G.state === 'title') && !$('select').hidden, 'the visible selector'); openSettings(); await until(() => !$('settings-profile-row').dataset.pending && $('settings-profile-row').dataset.state, 'the profile block'); };
+  // the Perfil sheet (the corner row's person), its profile block answered
+  const settings = async () => { await need('openProfile')(); await until(() => !$('profile-row').dataset.pending && $('profile-row').dataset.state, 'the profile block'); };
   switch (state) {
     case 'publish': board().openPublish({ auto: true }); return;
     case 'published': return published();
-    case 'share': case 'verified': case 'code': case 'email':
+    case 'verified': case 'choose-name': case 'code': case 'email':
       await published(); press('publish-confirm');
       if (state === 'email') return;
       await mail(); if (state === 'code') return;
       type('profile-code', MOCK_CODE); press('profile-send');
       await until(() => $('profile-status').textContent === 'Correu confirmat!', 'Correu confirmat!');
-      if (state === 'share') await until(() => $('share-menu').open, 'Comparteix');
+      if (state === 'choose-name') await need('chooseNameReady')();
       return;
-    case 'switch': await settings(); press('settings-profile-main'); return mail(OTHER_MAIL);
-    case 'legacy-publish': board().openPublish(); return until(ready, 'the publish sheet'); // the notice, before Publica (read: its 7 days start)
-    case 'board': case 'board-tip':
-      store.set(ROW_KEY, store.get(ALIAS_KEY)); board().openBoard();
+    case 'switch': await settings(); press('profile-main'); return mail(OTHER_MAIL);
+    case 'board-empty': case 'board-drac': case 'board-drac-empty':
+      return need('openBoard')(state === 'board-empty' ? {} : { figure: 'drac-valls' });
+    case 'seasons': case 'seasons-later': case 'seasons-many': return need('openSeasons')();
+    case 'seasons-drac': return need('openSeasons')('drac-valls');
+    case 'season-end': case 'season-end-plain': return need('showSeasonEnd')();
+    case 'card': case 'card-guest': case 'card-long': case 'card-empty': { // who to open comes from the seeded cast (demo-data.js demoCards)
+      const c = demoCards({ world: REVIEWS[state].seasons }), who = { card: c.plain, 'card-guest': c.guest, 'card-long': c.long, 'card-empty': c.empty }[state];
+      return need('openCard')(who.alias, who.tag, who.from);
+    }
+    case 'board': case 'board-tip': case 'board-guest':
+      board().openBoard();
       await until(() => document.querySelector('#board-rows .verified-check'), 'the board');
       if (state === 'board-tip') (document.querySelector('#board-rows tr.me .verified-check') || document.querySelector('#board-rows .verified-check')).click(); // the own row: in view
       return;

@@ -8,16 +8,17 @@ import { PHOTO, photoBody } from './photo-control.js';
 // radius: css px of reach; dead: the first 12% does nothing (a resting thumb); curve > 1: finer near the centre (a slow
 // walk), full at the rim; look: the y drag counts less (pitch has little range). TOUCH.lookScale: set per screen (photo-stick.js).
 export const STICK = { radius: 60, dead: 0.12, curve: 1.25, lookY: 0.7, turn: 3.3 }; // turn: radians for a drag across the whole screen
-export const TOUCH = { stick: { id: -1, ox: 0, oy: 0, dx: 0, dy: 0 }, look: { id: -1, x: 0, y: 0 }, epoch: -1, lookScale: 1 };
+// Thumb ids are pointerIds: iOS gives large negative ones, so "no thumb" is null, never -1.
+export const TOUCH = { stick: { id: null, ox: 0, oy: 0, dx: 0, dy: 0 }, look: { id: null, x: 0, y: 0 }, epoch: -1, lookScale: 1 };
 
-function touchSteer() { PHOTO.mouse = TOUCH.look.id >= 0 ? 1 : 0; }
+function touchSteer() { PHOTO.mouse = TOUCH.look.id !== null ? 1 : 0; }
 function touchStale() { // control was dropped under the fingers: they steer nothing until lifted and put down again
   if (TOUCH.epoch === PHOTO.inputEpoch) return false;
   touchReset(); return true;
 }
 export function touchReset() {
-  const steering = TOUCH.look.id >= 0;
-  TOUCH.stick.id = TOUCH.look.id = -1; TOUCH.stick.dx = TOUCH.stick.dy = 0;
+  const steering = TOUCH.look.id !== null;
+  TOUCH.stick.id = TOUCH.look.id = null; TOUCH.stick.dx = TOUCH.stick.dy = 0;
   PHOTO.stickX = PHOTO.stickY = 0;
   if (steering) PHOTO.mouse = 0;
   TOUCH.epoch = PHOTO.inputEpoch;
@@ -27,7 +28,7 @@ export function touchDown(id, x, y, left) {
   if (!PHOTO.on) return false;
   touchStale();
   const f = left ? TOUCH.stick : TOUCH.look;
-  if (f.id >= 0) return false; // a second thumb on the same half does nothing
+  if (f.id !== null) return false; // a second thumb on the same half does nothing
   f.id = id;
   if (left) { f.ox = x; f.oy = y; f.dx = f.dy = 0; } else { f.x = x; f.y = y; }
   PHOTO.cameraYaw ??= photoBody().yaw + Math.PI; // the view the stick walks from: where it already is
@@ -50,8 +51,8 @@ export function touchMove(id, x, y) {
 }
 export function touchUp(id) {
   if (touchStale()) return false;
-  if (id === TOUCH.stick.id) { TOUCH.stick.id = -1; TOUCH.stick.dx = TOUCH.stick.dy = 0; PHOTO.stickX = PHOTO.stickY = 0; }
-  else if (id === TOUCH.look.id) TOUCH.look.id = -1;
+  if (id === TOUCH.stick.id) { TOUCH.stick.id = null; TOUCH.stick.dx = TOUCH.stick.dy = 0; PHOTO.stickX = PHOTO.stickY = 0; }
+  else if (id === TOUCH.look.id) TOUCH.look.id = null;
   else return false;
   touchSteer(); return true;
 }

@@ -35,10 +35,10 @@ export function rememberedLevel(store, id) {
   return ['0', '1', '2'].includes(v) ? Number(v) : LEVEL_DEFAULT;
 }
 export const rememberLevel = (store, id, level) => store.set(levelKey(id), String(level));
-// A figure's record at a level on this device: the mulassa's keys predate the figures (record-v2-duet-<level>)
+// A figure's record at a level on this device: the mulassa's per version (records.js), the others' per figure
 export const recordKey = (figure, level) => figure.id === MULASSA.id ? recordPointsKey(level) : `record-${figure.id}-${level}`;
 
-// Mulassa compares its legacy and shortened records; other figures keep their own raw score.
+// The Mulassa's record is the current dance's only (the previous dance's: readPreviousDanceRecord); other figures keep their raw score.
 export function readFigureRecord(store, figure, level) {
   if (figure.id === MULASSA.id) return bestRecord(store, level);
   try { return JSON.parse(store.get(recordKey(figure, level))) || null; } catch { return null; }

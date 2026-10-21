@@ -7,7 +7,7 @@ import { text, textWidth, glowPath, drawButton } from './primitives.js';
 import { C, titleKey, titleL, PIXEL, FONT, setTitleKey, setTitleL } from './sprites.js';
 import { G, chip, clock, CHALLENGE } from '../game/state.js';
 import { W, HH, H, K, SAFE, setButtons } from './canvas.js';
-import { iosHint, howtoEl, settingsEl, leadersEl, feedbackEl, musicEl } from '../ui/handles.js';
+import { howtoEl, settingsEl, feedbackEl, musicEl } from '../ui/handles.js';
 
 // The title's words, at the title's sizes (its logo is not the splash's size): painted on the splash, so the tap's first
 // title frame only blits them (it painted ~10 new outlined sprites, along with the audio unlock and the DOM buttons).
@@ -68,32 +68,30 @@ export function drawSplash() {
   text(s, W / 2, y, 12 * 1.05, C.cream, 'center', C.dark, false, grow / 1.05);
   setButtons([{ x: W / 2 - w / 2, y: y - h / 2, w, h }]);
 }
-// Title layout (src/hud/title-layout.js): one budget for the logo, the choice and the DOM pill (+ iPhone hint) under it,
-// recomputed only when the screen or what is shown changes (the DOM is measured then, never per frame). The pill and
-// the hint are placed from it, so canvas buttons and DOM controls can't overlap. Corner mode = index.html's
+// Title layout (src/hud/title-layout.js): one budget for the logo, the choice and the DOM pill under it,
+// recomputed only when the screen or what is shown changes (the DOM is measured then, never per frame). The pill is
+// placed from it, so canvas buttons and DOM controls can't overlap. Corner mode = index.html's
 // max-height: 500px rules (pill top-right, ⚙ top-left, the podium after it).
 export const CORNER = matchMedia('(max-height: 500px)');
 try { document.fonts?.ready.then(() => { setTitleKey(''); }); } catch { /* no font API (tests) */ } // widths change once the fonts load
 export function titleLayoutNow() {
-  const keys = !COARSE.matches, hint = !iosHint.hidden, corner = CORNER.matches;
-  const key = `${W}|${HH}|${K}|${keys}|${hint}|${corner}|${G.audioError}|${SAFE.t},${SAFE.r},${SAFE.b},${SAFE.l}`;
+  const keys = !COARSE.matches, corner = CORNER.matches;
+  const key = `${W}|${HH}|${K}|${keys}|${corner}|${G.audioError}|${SAFE.t},${SAFE.r},${SAFE.b},${SAFE.l}`;
   if (key === titleKey && titleL) return titleL;
   const rect = el => { const r = el.getBoundingClientRect?.(); return r && r.width ? r : null; };
-  const pillH = howtoEl.offsetHeight, hintH = hint ? iosHint.offsetHeight : 0;
-  setTitleKey(pillH && (!hint || hintH) ? key : ''); // still hidden (first frame): measure again next frame
+  const pillH = howtoEl.offsetHeight;
+  setTitleKey(pillH ? key : ''); // still hidden (first frame): measure again next frame
   H.font = `140px ${PIXEL}`;
   const logoRatio = (H.measureText('MULASSA')?.width || 500) / 100 + 1.4 / 3; // logo(): text size 1.4 s + outline
   mulaRatio = logoRatio;
   setTitleL(titleLayout({
     W, HH, K, safe: SAFE, keys, note: G.audioError, logoRatio,
     subW: textWidth(PLAY.sub, 7),
-    pill: { h: pillH || (K === 2 ? 56 : 44) }, hint: hint ? { h: hintH || 48 } : null, corner,
-    obstacles: [settingsEl, leadersEl, feedbackEl, musicEl, corner && howtoEl].map(el => el && rect(el)).filter(Boolean), chip: Boolean(CHALLENGE),
+    pill: { h: pillH || (K === 2 ? 56 : 44) }, corner,
+    obstacles: [settingsEl, feedbackEl, musicEl, corner && howtoEl].map(el => el && rect(el)).filter(Boolean), chip: Boolean(CHALLENGE),
   }));
   howtoEl.style.top = titleL.pillTopCss == null ? '' : `${titleL.pillTopCss}px`; // corner: index.html places it
   howtoEl.style.bottom = titleL.pillTopCss == null ? '' : 'auto';
-  iosHint.style.top = titleL.iosTopCss == null ? '' : `${titleL.iosTopCss}px`;
-  iosHint.style.bottom = titleL.iosTopCss == null ? '' : 'auto';
   return titleL;
 }
 // The first title ever: a faint "drag to look round" line for 3 s, just over the choice (inside the mulassa's free

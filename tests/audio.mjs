@@ -331,7 +331,7 @@ console.log('menu entrance, loop points, version and tempo ok');
     return { g, n: g.ctx.sources.length, from: sub?.frequency.events[0][0], to: sub?.frequency.events[1][0], len: sub && sub.end - sub.at - 0.02, peak: sub?.outs[0].gain.events[1][0] };
   };
   const light = landing(4.8, 1), heavy = landing(4.8, 1.5), soft = landing(2.4, 1);
-  assert(light.n === 4 && light.from > light.to && light.len > 0.25, 'a landing is a falling sub-bass, a partial, the cobbles and a tail');
+  assert(light.n === 6 && light.from > light.to && light.len > 0.25, 'a landing is a falling sub-bass, a partial, a thump, the cobbles, a tail and a slap');
   assert(heavy.from < light.from && heavy.to < light.to && heavy.len > light.len && heavy.peak > light.peak, 'the heavier figure lands lower, longer and louder');
   assert(soft.peak < light.peak * 0.6 && soft.from === light.from, 'a gentler contact is quieter, not different in pitch');
   assert(light.g.ctx.sources.every(s => light.g.audible(s)), 'it reaches the speakers through the usual bus');
@@ -339,10 +339,24 @@ console.log('menu entrance, loop points, version and tempo ok');
   assert.equal(light.g.ctx.sources.length, light.n, 'a bounce reporting the same landing again is silent');
   light.g.ctx.currentTime += 0.2; light.g.sfx('thud', 4.8, true, 1);
   assert(light.g.ctx.sources.length > light.n, 'the next landing sounds');
-  assert.equal(landing(4.8, 1, g => { g.menuToken = {}; g.menuMusic = false; }).n, 4, 'a free-mode landing still sounds with the menu music off, like the fire');
+  assert.equal(landing(4.8, 1, g => { g.menuToken = {}; g.menuMusic = false; }).n, 6, 'a free-mode landing still sounds with the menu music off, like the fire');
   assert.equal(landing(4.8, 1, g => { g.ctx.state = 'suspended'; }).n, 0, 'no landing before the audio is unlocked');
   const runBus = landing(4.8, 1, g => g.menu(false));
-  assert(runBus.n === 4 && runBus.g.voices.size === 4, 'a landing’s voices belong to the bus, so leaving ends them');
+  assert(runBus.n === 6 && runBus.g.voices.size === 6, 'a landing’s voices belong to the bus, so leaving ends them');
+  // A phone speaker drops everything under ~300 Hz, and the sub alone is 96% of the energy below 150 Hz (measured with an
+  // OfflineAudioContext: through a 350 Hz high-pass its peak fell to ~0.05 of 0.48). The landing must also carry a body in the
+  // 150–800 Hz band at a real fraction of the sub's level, for both figures, and stay warm (nothing above ~1 kHz).
+  for (const weight of [1, 1.5]) {
+    const { g } = landing(4.8, weight), sources = g.ctx.sources;
+    const level = s => Math.max(...(s.outs[0].gain ?? s.outs[0].outs[0].gain).events.map(e => e[0])); // (a filtered voice goes source → filter → gain)
+    const freqs = s => s.frequency.events.map(e => e[0]);
+    const sub = sources[0], thump = sources.find(s => s.type === 'triangle');
+    const slap = sources.find(s => s.outs[0]?.type === 'bandpass');
+    assert(thump && Math.min(...freqs(thump)) >= 100 && Math.max(...freqs(thump)) >= 250 && level(thump) >= level(sub) * 0.6, `weight ${weight}: a thump at the phone speaker's pitch, not far under the sub`);
+    assert(slap && slap.outs[0].frequency.value >= 400 && slap.outs[0].frequency.value <= 800 && level(slap) >= 0.2, `weight ${weight}: a mid-band slap`);
+    assert(sources.every(s => (s.type !== 'sine' && s.type !== 'triangle') || Math.max(...freqs(s)) <= 1000), `weight ${weight}: warm, no oscillator above 1 kHz`);
+    assert(sources.every(s => !s.outs[0]?.frequency || s.outs[0].frequency.value <= 1000), `weight ${weight}: warm, no filter opens above 1 kHz`);
+  }
   globalThis.location = { search: '?thud=cavern' };
   try { assert(landing(4.8, 1).len > light.len, '?thud picks another variant'); } finally { delete globalThis.location; }
   const c = graph(), ctx = c.ctx;

@@ -27,9 +27,9 @@
 #viewmode[aria-pressed="true"]:not(:focus-visible) { opacity: .5; }
 #viewmode[aria-pressed="true"].idle:not(:focus-visible) { opacity: .12; transition-duration: 1s; }
 #viewmode[aria-pressed="false"] .off, #viewmode[aria-pressed="true"] .on { display: none; }
-:is(#hud, #leaders, #settings, #feedback, #music, #howto, #ios-hint, #fps, #feedback-nudge) { transition: opacity .2s; }
-body.view-mode :is(#hud, #leaders, #settings, #feedback, #music, #howto, #ios-hint, #fps, #feedback-nudge) { opacity: 0; }
-body.view-mode :is(#leaders, #settings, #feedback, #music, #howto, #ios-hint, #fps, #feedback-nudge) { visibility: hidden; pointer-events: none; transition: opacity .2s, visibility 0s .2s; } /* (main.js also makes them inert) */
+:is(#hud, #profile, #settings, #feedback, #music, #howto, #fps, #feedback-nudge) { transition: opacity .2s; }
+body.view-mode :is(#hud, #profile, #settings, #feedback, #music, #howto, #fps, #feedback-nudge) { opacity: 0; }
+body.view-mode :is(#profile, #settings, #feedback, #music, #howto, #fps, #feedback-nudge) { visibility: hidden; pointer-events: none; transition: opacity .2s, visibility 0s .2s; } /* (main.js also makes them inert) */
 /* Keep the painted column's centre at 40% of the game's safe height. */
 #photo-figs { position: fixed; z-index: 5; top: calc(env(safe-area-inset-top) + (var(--app-h, 100dvh) - env(safe-area-inset-top) - env(safe-area-inset-bottom)) * .4); translate: 0 -50%; left: max(16px, env(safe-area-inset-left)); display: flex; flex-direction: column; justify-content: center; gap: 14px; transition: opacity .25s; }
 #photo-figs[hidden] { display: none; }
@@ -125,7 +125,7 @@ body.view-mode:has(#viewmode.idle) #howto.photo-help:not(:hover, :focus-visible)
 @media (prefers-reduced-motion: reduce) { #photo-tip { transition: none; } }
 @media (max-width: 899px) { #photo-figs .pf-nb { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); } } /* a narrow window: portraits only, clear of the eye (the names stay for screen readers) */
 @media (prefers-reduced-motion: reduce) { #photo-figs { transition: none; } }
-@media (prefers-reduced-motion: reduce) { #viewmode, :is(#hud,#leaders, #settings, #feedback, #music, #howto, #ios-hint, #fps, #feedback-nudge), body.view-mode :is(#leaders, #settings, #feedback, #music, #howto, #ios-hint, #fps, #feedback-nudge) { transition: none; } }
+@media (prefers-reduced-motion: reduce) { #viewmode, :is(#hud, #profile, #settings, #feedback, #music, #howto, #fps, #feedback-nudge), body.view-mode :is(#profile, #settings, #feedback, #music, #howto, #fps, #feedback-nudge) { transition: none; } }
 /* the nudge after a game (src/ui/feedback-ui.js setupNudge): a speech bubble beside the bubble button (or under it), its
    tail pointing at it; main.js placeNudge (title-layout.js nudgePlace) sets its box clear of the logo and the controls */
 #feedback-nudge { position: fixed; z-index: 3; box-sizing: border-box; display: flex; align-items: center; justify-content: center; padding: 3px 10px; border: 2px solid #f5c518; border-radius: 12px; background: #fff3d6; color: #2a1a10; font: 800 13px/1.15 'Baloo 2', system-ui, sans-serif; text-align: center; text-wrap: balance; pointer-events: none; animation: nudge-in .35s cubic-bezier(.3, 1.6, .5, 1) both; }

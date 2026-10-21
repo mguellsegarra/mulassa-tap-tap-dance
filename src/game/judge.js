@@ -20,6 +20,7 @@ import { dracCrema, dracPump, dracEndTraca } from '../scene/drac-show.js';
 
 export function collapse() {
   G.collapseT = clock;
+  G.playedSec = songTime(); // the clock reads -1 once the song is stopped (the statistics' seconds)
   chip.stop();
   chip.sfx('crash');
   const fell = G.collapseT;

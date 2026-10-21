@@ -1,6 +1,7 @@
 // A home-screen app on iOS (and a tab left open for days) wakes from memory instead of loading the page again, so a
-// deploy never reaches it. On waking, compare the deployed build (/version.json, vite.config.js) with ours and reload
-// on a newer one, but only on the menus with nothing open: never mid-song, never under a sheet or a typed field.
+// deploy never reaches it; iOS has even opened an old copy on a cold start. So on starting and on waking, compare the
+// deployed build (/version.json, vite.config.js) with ours and reload on a newer one, but only on the menus with nothing
+// open: never mid-song, never under a sheet or a typed field.
 import { APP_BUILD } from '../core/version.js';
 import { G } from '../game/state.js';
 import { quietMoment, shouldReload } from './update-rules.js';
@@ -26,3 +27,4 @@ async function checkUpdate() {
 }
 document.addEventListener('visibilitychange', checkUpdate);
 addEventListener('pageshow', e => { if (e?.persisted) checkUpdate(); }); // back from the bfcache
+checkUpdate(); // the start: one 30-byte request; a match does nothing

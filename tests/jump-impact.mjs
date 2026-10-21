@@ -108,6 +108,10 @@ export function verifyJumpImpact(run, assert) {
     assert(thuds[0].k === 'thud' && thuds[0].manual === true && !thuds[0].air, `${id}: a thud at ground contact, an explicit action that sounds with the menu music off`);
     assert(thuds[0].i > 4.5 && thuds[0].i < 5.1, `${id}: carries the real contact speed`);
     weights[id] = thuds[0].w;
+    // the touch jump button's pointerdown (ui/photo-stick.js) is photoPress('Space'): the same path as the key, so its landing sounds too
+    run(`thuds.length=0;setPhotoControl(true,${JSON.stringify(id)},true);animMula(1/60,0);resetMotionImpact();photoPress('Space');
+      for(let i=1;i<=120;i++){clock+=1/60;animMula(1/60,clock/BEAT);}`);
+    assert.equal(run('thuds.length'), 1, `${id}: the touch jump button's landing sounds like the key's`);
     run(`thuds.length=0;setPhotoControl(true,${JSON.stringify(id)},true);animMula(1/60,0);PHOTO.action=true;
       for(let i=0;i<10;i++){clock+=1/60;animMula(1/60,0);}G.paused=true;animMula(0,0);G.paused=false;
       for(let i=0;i<60;i++){clock+=1/60;animMula(1/60,0);}`);

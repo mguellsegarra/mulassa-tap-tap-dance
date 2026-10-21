@@ -1,4 +1,4 @@
-// When the 7-day notice counts as read (src/ui/sheet-kit.js onScreen / whenSeen), on a fake page: below the fold, cut
+// When a notice counts as read (src/ui/sheet-kit.js onScreen / whenSeen), on a fake page: below the fold, cut
 // off by a sheet's scrolling body, in a background tab, under another sheet, hidden or gone never count; it must stay on
 // screen for the whole dwell in a row, and a cancel (the sheet closed, a repaint) stops it for good.
 import assert from 'node:assert/strict';

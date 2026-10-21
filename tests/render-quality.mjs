@@ -442,7 +442,8 @@ const context = vm.createContext({
   setupSelect: opts => (context.selectScreen = { opts, sheetOpen: false, visible(on) { this.shown = on; }, refocus() {} }),
   setupBoard: opts => (context.boardSheet = { opts, open: false, configured: true, shown: [], opened: [], results(show) { this.shown.push(show); }, publishable: false,
     openBoard(back) { this.open = true; this.opened.push(back); this.back = back; }, verifyStarts: 0, verifyStart() { this.verifyStarts++; },
-    settingsRefreshed: 0, refreshSettings() { this.settingsRefreshed++; }, openPublish(o) { this.publishOpened = o; } }), // src/ui/board-ui.js has its own DOM tests (tests/board-ui.mjs)
+    settingsRefreshed: 0, refreshSettings() { this.settingsRefreshed++; }, openPublish(o) { this.publishOpened = o; },
+    standings: [], standing(figure) { this.standings.push(figure); return Promise.resolve(null); } }), // src/ui/board-ui.js has its own DOM tests (tests/board-ui.mjs)
   song: JSON.parse(readFileSync(new URL('../src/song.json', import.meta.url))),
   dracShareSong: JSON.parse(readFileSync(new URL('../src/song-drac.json', import.meta.url))),
   ...shareLogic, // the real Comparteix sheet on the mocked DOM (no canvas here: the image fails quietly)
@@ -450,7 +451,12 @@ const context = vm.createContext({
   sheetFades() {}, // src/ui/sheet-fade.js: scroll fades of the sheets, pure DOM
   setupNudge: opts => (context.nudgeMock = { opts, armed: 0, arm() { this.armed++; }, done() { this.ended = true; }, hide() {} }), // its rules: tests/feedback-ui.mjs
   setupProfile: () => ({ isOpen: false, open() {}, refresh() {} }), // src/ui/profile-ui.js
+  // the Perfil, the seasons and the cards (their DOM: tests/account-ui.mjs); the statistics' upload (tests/stats-sync.mjs)
+  setupAccount: () => (context.accountSheet = { isOpen: false, opened: 0, open() { this.opened++; }, notice: () => false }),
+  setupSeasons: () => ({ isOpen: false, open() {} }), setupSeasonEnd: () => ({ isOpen: false, check: async () => false, news: async () => null }), setupCard: () => ({ isOpen: false, open() {} }),
+  statsSync: { use() {}, holdWhile(fn) { context.statsHold = fn; }, init: async () => {}, afterRun() { context.statsAfterRuns = (context.statsAfterRuns || 0) + 1; }, acceptNotice() {}, noticeNeeded: () => false }, markStatsNoticeSeen() {},
   setupFeedback: opts => (context.feedbackSheet = { opts, open: false, configured: true, shown: 0, show(back) { this.open = true; this.shown++; this.back = back; } }), // src/ui/feedback-ui.js: tests/feedback-ui.mjs
+  refreshIdentity: (service, kv) => { (context.identityAsked ||= []).push(kv); return Promise.resolve(); }, // src/ui/board-list.js: tests/account-ui.mjs
   setupShare: opts => (context.shareSheet = setupShare({ ...opts, doc: document, nav: {}, fonts: null, url: { createObjectURL: () => 'blob:card', revokeObjectURL() {} } })),
   document, navigator: { hardwareConcurrency: 8, deviceMemory: 8 },
   location: { search: '?representation=off' }, localStorage: { getItem() {}, setItem() {} }, // this mocked DOM supplies the original cast; representation-motion tests the new rigs
@@ -458,7 +464,7 @@ const context = vm.createContext({
     (windowHandlers[type] ||= []).push(handler);
     if (type === 'keydown') keyHandlers.push(handler);
   },
-  innerWidth: 1280, innerHeight: 720, devicePixelRatio: 1,
+  innerWidth: 1280, innerHeight: 720, screen: { width: 1280, height: 720 }, devicePixelRatio: 1,
   URLSearchParams, performance: { now: () => 0 }, requestAnimationFrame() {}, window: {}, setTimeout() {}, clearTimeout() {},
 });
 // The vm context has its own Math; models.js's rnd()/pick() (buildPerson, placeHome...) are this realm's, so the
@@ -1470,20 +1476,6 @@ assert(!settingsSheet.open && boardSheet.open && boardSheet.opened.length === 1,
 boardSheet.open = false; boardSheet.back();
 assert(settingsSheet.open, 'closing Classificacions returns to Configuració');
 settingsSheet.close();
-// the title's podium (#leaders): only on the title, straight to Classificacions; closing blurs it, no Configuració
-run('updateControls();');
-assert.equal(nodes.get('leaders').hidden, false, 'the podium shows on the title');
-nodes.get('leaders').listeners.click();
-assert(boardSheet.open && boardSheet.opened.length === 2 && !settingsSheet.open, 'the podium opens Classificacions');
-let podiumBlurred = false;
-document.activeElement = { blur() { podiumBlurred = true; } };
-boardSheet.open = false; boardSheet.back();
-assert(podiumBlurred && !settingsSheet.open, 'closing it blurs the podium (Space picks a level again) and opens nothing else');
-delete document.activeElement;
-run(`G.state = 'results'; updateControls();`);
-assert.equal(nodes.get('leaders').hidden, true, 'no podium outside the title');
-boardSheet.opened.length = 0; nodes.get('leaders').listeners.click();
-assert.equal(boardSheet.opened.length, 0, 'a stale podium click off the title opens nothing');
 // the menu music's speaker (#music): title only; a click switches the loop, remembers it and says what the next click does
 {
   const stored = [], btn = nodes.get('music');
@@ -1557,12 +1549,12 @@ assert.equal(run('G.state'), 'results');
 run(`G.state = 'play'; G.diff = 2; G.counts = { perfect: 200, good: 40, miss: 0 };
   G.previous = { quality: quality({ perfect: 265, good: 53, miss: 0 }), score: 182972 };
   G.score = 139572; finish('end');`);
-assert.equal(run('G.newRecord'), false, 'equal cross-version quality with fewer points cannot announce a record');
-run(`G.state = 'play'; G.score = 139672; finish('end');`);
-assert.equal(run('G.newRecord'), true, 'equal cross-version quality with more points earns a record');
+assert.equal(run('G.newRecord'), false, 'equal quality with fewer points cannot announce a record');
+run(`G.state = 'play'; G.score = 183000; finish('end');`);
+assert.equal(run('G.newRecord'), true, 'equal quality with more points earns a record');
 run(`G.state = 'play'; G.counts = { perfect: 240, good: 0, miss: 0 }; G.score = 139572; finish('end');`);
 assert.equal(run('G.newRecord'), false, 'a higher % with fewer points is no record');
-run(`G.state = 'play'; G.counts = { perfect: 150, good: 50, miss: 40 }; G.score = 149972; finish('end');`);
+run(`G.state = 'play'; G.counts = { perfect: 150, good: 50, miss: 40 }; G.score = 190000; finish('end');`);
 assert.equal(run('G.newRecord'), true, 'more points with a lower % is a record (as on the board)');
 run(`G.state = 'play'; toTitle();`);
 assert.equal(boardSheet.verifyStarts, 0, 'a finished or left run asks Cloudflare nothing');
@@ -1643,6 +1635,23 @@ console.log('classificacions integration contracts ok');
     assert(run(`G.state === 'play' && G.figureId === '${figure}' && G.diff === ${diff} && !G.practice && G.score === 0 && G.energy === 1`), `${figure}/${reason}/${diff}: restart the same figure and level with a fresh run`);
   }
   run(`G.challenge = null; G.state = 'title'; setSelectedFigure('mulassa-valls'); updateControls();`);
+}
+// Comparteix asks for the place on the board of the figure that was played (sheets-setup.js composes share and board), and a
+// publication refreshes the cached name (the check) before the card is drawn again
+{
+  const menu = nodes.get('share-menu'), kept = context.localStorage, mem = new Map();
+  context.localStorage = { getItem: k => mem.get(k) ?? null, setItem: (k, v) => mem.set(k, String(v)), removeItem: k => mem.delete(k) };
+  run(`store.set(ALIAS_KEY, 'Prova'); G.state = 'results'; setSelectedFigure('drac-valls'); G.reason = 'clear'; G.resT = clock - 2; G.stars = 1;
+    G.shareRun = { figureId: 'drac-valls', score: 100000, pct: 90, diff: 1, reason: 'clear', stars: 1, newRecord: false, maxCombo: 50, t: G.resT, practice: false }; updateControls();`);
+  boardSheet.standings.length = 0;
+  nodes.get('results-share').listeners.click(); await Promise.resolve(); await Promise.resolve();
+  assert.deepEqual(boardSheet.standings, ['drac-valls'], 'the Drac\'s share image asks for the Drac\'s board, not the Mulassa\'s');
+  const asked = (context.identityAsked || []).length;
+  boardSheet.opts.afterPublish({}); await Promise.resolve();
+  assert.equal(context.identityAsked.length, asked + 1, 'a publication re-reads the profile for the card');
+  nodes.get('share-close').listeners.click(); menu.listeners.close();
+  context.localStorage = kept;
+  run(`G.state = 'title'; setSelectedFigure('mulassa-valls'); updateControls();`);
 }
 console.log('comparteix integration contracts ok');
 
@@ -1965,7 +1974,7 @@ context.innerWidth = 1280; context.innerHeight = 720; run('resize()');
 // and the pad. Landscape phones and desktops keep them under the lane. The practice's other
 // words stay compact in the judge slot under the ring, and the per-note judge shows beside a big word.
 for (const [w, h, touch, centred] of [[393, 852, true, true], [375, 667, true, true], [360, 760, true, true], [852, 393, true, false], [1280, 800, false, false]]) {
-  context.innerWidth = w; context.innerHeight = h;
+  context.innerWidth = w; context.innerHeight = h; context.screen = { width: w, height: h };
   nodes.get('pad').getBoundingClientRect = () => ({ top: touch ? h - (h < 400 ? 66 : 130) : h });
   run(`COARSE.matches = ${touch}; SAFE.t = SAFE.b = 0; resize(); padTop = null; startGame(1); G.state = 'play';`);
   drawnText.length = 0;
@@ -2429,7 +2438,7 @@ console.log('menu camera keeps a drag through a slow frame ok');
   btn.setAttribute = (a, v) => { attrs[a] = v; };
   btn.classList = { add: c => idle.add(c), remove: c => idle.delete(c), toggle() {} };
   let focused = null; btn.focus = () => { focused = btn; };
-  const HIDES = ['leaders', 'settings', 'feedback', 'music', 'howto', 'ios-hint', 'fps', 'feedback-nudge'];
+  const HIDES = ['settings', 'feedback', 'music', 'howto', 'fps', 'feedback-nudge'];
   const keyDown = code => keyHandlers.forEach(h => h({ code, target: { tagName: 'BODY' }, preventDefault() {} }));
   const up = id => (windowHandlers.pointerup || []).forEach(h => h({ pointerId: id }));
   const ev = (id, x, y) => ({ pointerId: id, clientX: x * k, clientY: y * k, pointerType: 'touch', button: 0, preventDefault() {} });

@@ -45,12 +45,13 @@ export function resize() {
   W = cw / K; HH = ch / K;
   camera.fov = baseFov(); camera.updateProjectionMatrix(); // (after HH: the lens depends on it; framePlayCamera sets its own each frame)
 }
-// iOS home-screen app with a translucent status bar: innerHeight (and 100vh/dvh) can come out one status bar
-// short, leaving an empty band at the bottom. There is no browser chrome there, so the screen height is exact.
+// iOS home-screen app with a translucent status bar (icons added before the bar went opaque): innerHeight (and 100vh/dvh) can come
+// out one status bar short, leaving an empty band at the bottom. There is no browser chrome there, so the screen height is exact.
+// With the opaque bar the page starts below it (no top inset) and innerHeight already is the visible height: never taller.
 const IOS = /iPhone|iPod|iPad/.test(navigator.userAgent ?? '') || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 const STANDALONE = navigator.standalone === true;
 export function appHeight() {
-  if (!(IOS && STANDALONE) || !screen?.height) return innerHeight;
+  if (!(IOS && STANDALONE) || !screen?.height || !SAFE.t) return innerHeight;
   const portrait = innerHeight >= innerWidth, long = Math.max(screen.width, screen.height), short = Math.min(screen.width, screen.height);
   return Math.max(innerHeight, portrait ? long : short);
 }

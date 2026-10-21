@@ -19,10 +19,8 @@ assert(/@media \(prefers-reduced-motion: reduce\)\{\.mula-load \*\{animation:non
 assert(/#loader \{[^}]*pointer-events: none/.test(css), 'the loader never takes a tap');
 assert(/\.boot-fail > \.mula-load \{[^}]*width: 180px; height: 138px/.test(css) && !/\.boot-fail > svg/.test(css), 'the error card sizes the layered artwork (a div), never an svg');
 assert(/#loader\.page \.loader-box \{[^}]*animation-delay: 0s/.test(css), 'the page Mulassa shows at once');
-// A home-screen app on iOS first reports no safe-area insets, then them, and an innerHeight a status bar short that grows back
-// (912 → 844 → 912): the card must not follow either, or it jumps while the page loads.
+// A home-screen app on iOS first reports no safe-area insets, then them: the card must not centre inside them, or it jumps while the page loads.
 assert(!/#loader \{[^}]*padding:[^;}]*env\(safe-area-inset-(top|bottom)\)/.test(css), 'the loader card does not centre inside the vertical safe-area insets');
-assert(/@media \(display-mode: fullscreen\), \(display-mode: standalone\) \{ #loader \{[^}]*height: 100lvh/.test(css), 'in the home-screen app the loader has the whole screen as its height, not the settling viewport');
 // Deterministic time protects the reading time, rather than only a minimum number of milliseconds since navigation.
 function timedLoader({ start = 0, ...options } = {}) {
   let t = start, nextId = 0;

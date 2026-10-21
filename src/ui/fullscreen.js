@@ -1,12 +1,12 @@
 // Fullscreen, orientation and the «gira» cover.
-import { COARSE, TABLET, WANT_ORIENT } from '../core/env.js';
+import { COARSE, isTablet, deviceOrient } from '../core/env.js';
 import { G } from '../game/state.js';
 import { pauseGame } from './pause.js';
 import { resize } from '../hud/canvas.js';
 
 function checkOrientation() {
   if (!COARSE.matches) return;
-  const wrong = document.body.classList.contains('view-mode') ? !TABLET && innerHeight > innerWidth : TABLET ? innerHeight > innerWidth : innerWidth > innerHeight;
+  const wrong = document.body.classList.contains('view-mode') ? !isTablet() && innerHeight > innerWidth : isTablet() ? innerHeight > innerWidth : innerWidth > innerHeight;
   document.body.classList.toggle('wrong-orient', wrong);
   if (wrong && G.state === 'play') pauseGame();
 }
@@ -14,12 +14,12 @@ addEventListener('resize', checkOrientation);
 addEventListener('orientationchange', checkOrientation);
 setTimeout(checkOrientation);
 let fsLeft = false;
-const wantOrient = () => !TABLET && document.body.classList.contains('view-mode') ? 'landscape' : WANT_ORIENT;
+const wantOrient = () => !isTablet() && document.body.classList.contains('view-mode') ? 'landscape' : deviceOrient();
 // Photo mode on/off (controls.js, body.view-mode already set): lock where Android allows it (fullscreen, a tap);
 // iOS has no lock, so the «gira» cover asks instead and lifts by itself on turning.
 export function photoOrient() {
   checkOrientation();
-  if (!COARSE.matches || TABLET) return;
+  if (!COARSE.matches || isTablet()) return;
   if (!document.fullscreenElement && !document.webkitFullscreenElement) { goFullscreen(); return; } // (it locks once in)
   try { screen.orientation?.lock?.(wantOrient())?.catch?.(() => {}); } catch { /* no lock here: the cover asks */ }
 }

@@ -7,9 +7,12 @@ const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const css = readFileSync(new URL('../src/styles/select.css', import.meta.url), 'utf8');
 assert(html.indexOf('/src/styles/select.css') > html.indexOf('/src/styles/feedback.css'), 'selector chrome overrides load last');
 const layer = Number(css.match(/#select \{[^}]*z-index:\s*(\d+)/)[1]);
-const chrome = Number(css.match(/#settings, #music, #feedback, #leaders, #viewmode \{[^}]*z-index:\s*(\d+)/)[1]);
+const chrome = Number(css.match(/#settings, #music, #feedback, #viewmode, #profile \{[^}]*z-index:\s*(\d+)/)[1]);
 assert(chrome > layer, 'original toolbar buttons sit above the selector and both gradient layers');
-assert(!/id="select-(board|back)"/.test(html), 'there is one original podium and no title-loop back button');
+assert(!/id="select-(board|back)"/.test(html), 'no title-loop back button');
+// No corner podium (Marc: «Una línia a tot arreu»): the ranking line under the song opens Classificacions, ⚙ keeps its row
+assert(!/id="leaders"/.test(html) && !/#leaders/.test(css + readFileSync(new URL('../src/styles/base.css', import.meta.url), 'utf8') + readFileSync(new URL('../src/styles/feedback.css', import.meta.url), 'utf8')), 'no #leaders anywhere');
+assert.match(html, /id="settings-board"/);
 assert(!html.includes('id="aviat-menu"') && !html.includes('id="aviat-close"'), 'pending information is part of the selector, with no dialog');
 assert.match(html, /<section id="select-pending"/);
 assert.match(css, /body\.view-mode #select/);
@@ -18,12 +21,14 @@ const logoTag = html.match(/<svg class="sel-logo"[^>]*>/)?.[0] ?? '';
 assert(html.indexOf('class="sel-logo"') > html.indexOf('<section id="select"') && html.indexOf('class="sel-logo"') < html.indexOf('id="select-towns"'), 'the logo is the selector\'s first child');
 assert(/aria-hidden="true"/.test(logoTag) && /focusable="false"/.test(logoTag), 'the logo is decorative (the page H1 names the game)');
 assert.match(css, /#select > \.sel-logo \{[^}]*pointer-events: none/);
-// Portrait phones: five 44 px buttons right-aligned with --cb-g between them; the logo gets the rest (12 px edges, 10 px to
-// the row). >= 82 px keeps TAP TAP DANCE's capitals >= 7 px; under 360 px it cannot fit and is hidden.
+// Portrait phones: four 44 px buttons right-aligned with --cb-g between them; the logo gets the rest (12 px edges, 10 px to
+// the row). >= 82 px keeps TAP TAP DANCE's capitals >= 7 px; under 320 px it cannot fit and is hidden.
 const gap = w => Number((w < 375 ? css.match(/max-width: 374px\) and \(min-height: 501px\) \{[^}]*--cb-g: (\d+)px/) : css.match(/max-width: 519px\) and \(min-height: 501px\) \{\s*body:has\(#select:not\(\[hidden\]\)\) \{ --cb-g: (\d+)px/))[1]);
-const logoW = w => w - 24 - 10 - 5 * (44 + gap(w)) + gap(w);
-for (const w of [360, 375, 393]) assert(logoW(w) >= 82, `logo ${logoW(w)} px at ${w}`);
-assert(logoW(359) < 82 && /max-width: 359px\) and \(min-height: 501px\) \{\s*#select > \.sel-logo \{ display: none/.test(css), 'no logo where it cannot fit');
+const logoW = w => w - 24 - 10 - 4 * (44 + gap(w)) + gap(w);
+for (const w of [320, 340, 360, 375, 393]) assert(logoW(w) >= 82, `logo ${logoW(w)} px at ${w}`);
+assert(/max-width: 319px\) and \(min-height: 501px\) \{\s*#select > \.sel-logo \{ display: none/.test(css), 'no logo on the narrowest phones');
+// ...where the row spans the gutters instead of centring: its first button on the pills' and info's left edge, the last on the right one
+assert.match(css, /max-width: 319px\) and \(min-height: 501px\) \{[^}]*\}\s*(\/\*[^*]*\*\/\s*)?body:has\(#select:not\(\[hidden\]\)\) :is\([^)]*\) \{ left: calc\(max\(12px, env\(safe-area-inset-left\)\) \+ var\(--cb-i\) \* \(100% - max\(12px, env\(safe-area-inset-left\)\) - max\(12px, env\(safe-area-inset-right\)\) - 44px\) \/ max\(1, var\(--cb-n\) - 1\)\); \}/);
 assert(!/#viewmode\s*\{[^}]*display:\s*none/.test(css + readFileSync(new URL('../src/styles/feedback.css', import.meta.url), 'utf8')), 'viewport rules never hide the photo-mode control');
 const nodes = new Map(), handlers = {}, classes = new Set();
 const doc = { addEventListener(k, f) { (handlers[k] ||= []).push(f); }, body: { classList: { toggle(c, on) { if (on) classes.add(c); else classes.delete(c); } } },
@@ -36,9 +41,9 @@ const doc = { addEventListener(k, f) { (handlers[k] ||= []).push(f); }, body: { 
   } };
 const $ = id => doc.getElementById(id), sheets = { sync: {}, board: { configured: true, results() {} }, share: { results() {} }, feedback: { configured: false }, select: { visible(on) { this.shown = on; } } };
 const state = { state: 'splash', paused: false }, ctx = { document: doc, performance: { now: () => time },
-  G: state, selectedFigure: { id: 'mulassa-valls' }, COARSE: { matches: false }, sheets, clock: 10, CHALLENGE: null, keyboardNav: true, hintOff: true, hide: (el, hidden) => { el.hidden = hidden; },
+  G: state, selectedFigure: { id: 'mulassa-valls' }, COARSE: { matches: false }, sheets, clock: 10, CHALLENGE: null, keyboardNav: true, hide: (el, hidden) => { el.hidden = hidden; },
   howtoMenu: {}, settingsMenu: {}, privacyMenu: {}, pauseMenu: {},
-  howtoEl: $('howto'), settingsEl: $('settings'), leadersEl: $('leaders'), feedbackEl: $('feedback'), musicEl: $('music'), iosHint: $('ios-hint'), pauseEl: $('pause'), skipEl: $('skip'), retryEl: $('retry'),
+  howtoEl: $('howto'), settingsEl: $('settings'), feedbackEl: $('feedback'), musicEl: $('music'), profileEl: $('profile'), pauseEl: $('pause'), skipEl: $('skip'), retryEl: $('retry'),
   addEventListener(k, f) { (handlers[k] ||= []).push(f); }, clearTimeout() {}, setTimeout() { return 1; },
   padButtons: [$('pad-left'), $('pad-right')], hud: $('hud'), orbit: { ptrs: new Map(), x: [0.4,11] }, pnow: () => time, W: 375, K: 1,
   orbitMove() {}, orbitZoom() {}, turnFor: () => 1, orbitDown(o, id) { o.ptrs.set(id, true); }, orbitUp(o, id) { o.ptrs.delete(id); },
@@ -77,8 +82,14 @@ state.paused = false; state.practice = null; run('updateControls()'); assert($('
 state.state = 'splash'; run('updateControls()');
 key('KeyH'); assert(!run('viewMode') && !classes.has('view-mode'), 'H does nothing on the splash');
 state.state = 'select'; run('updateControls()');
-for (const id of ['settings', 'leaders', 'music', 'feedback']) assert(!$(id).hidden, `${id} is available from the selector, including offline feedback`);
+assert(!nodes.has('leaders'), 'the controls never look for a corner podium');
+for (const id of ['settings', 'profile', 'music', 'feedback']) assert(!$(id).hidden, `${id} is available from the selector, including offline feedback`);
 assert($('viewmode').hidden, 'the selector enters free play from its dock, not a corner eye');
+// Perfil opens the corner row (docs/rankings-strategy.md decision 6): Perfil, music, Bústia, ⚙
+assert.match(css, /body:has\(#select:not\(\[hidden\]\)\) #profile \{ --cb-i: 0; \}/, 'Perfil comes first');
+assert.match(readFileSync(new URL('../src/styles/feedback.css', import.meta.url), 'utf8'), /body\.view-mode :is\([^)]*#profile[^)]*\) \{ visibility: hidden/, 'photo mode hides Perfil with the other chrome');
+sheets.board.configured = false; run('updateControls()'); assert($('profile').hidden, 'no board: no Perfil');
+sheets.board.configured = true; run('updateControls()');
 state.figureId = 'drac-valls'; state.sel = 2;
 key('KeyH'); assert(!run('viewMode'), 'H no longer enters free play'); $('select-free').fire?.('click'); run('setView(true)'); run('updateControls()'); assert(run('viewMode') && $('select').inert && classes.has('view-mode') && sheets.select.shown, 'photo mode hides without closing/reinitializing the selector');
 assert(!$('viewmode').hidden, 'inside free play the button is the way back');

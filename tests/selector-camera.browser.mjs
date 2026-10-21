@@ -12,7 +12,7 @@ export async function checkSelectorCameraTargets() {
     if (target !== expected && !expected.contains(target)) failures.push(`${name}: expected ${expected.id || expected.className}, got ${target?.id || target?.className}`);
   };
   const box = info.getBoundingClientRect();
-  const surfaces = [...info.querySelectorAll('.sel-name, .sel-entity, .sel-song, button, a, #ios-hint, #select-error')];
+  const surfaces = [...info.querySelectorAll('.sel-name, .sel-entity, .sel-song, button, a, #select-error')];
   // The panel's padding and the empty right side beside each narrow content row
   // are visibly exposed world, even while those rows retain their scroll targets.
   sample('info padding', box.left + 1, box.top + 1, hud);
@@ -27,7 +27,7 @@ export async function checkSelectorCameraTargets() {
     if (!occupied && r.width && right + 8 < box.right && y > box.top && y < box.bottom) sample(`beside ${selector}`, x, y, hud);
     if (r.height && r.top >= box.top && r.bottom <= box.bottom) sample(`on ${selector}`, r.left + r.width / 2, r.top + r.height / 2, el);
   }
-  const controls = [...document.querySelectorAll('#select-info button, #select-info a, #settings, #music, #feedback, #leaders, #viewmode')];
+  const controls = [...document.querySelectorAll('#select-info button, #select-info a, #settings, #music, #feedback, #viewmode')];
   for (const el of controls) {
     const r = el.getBoundingClientRect(), style = getComputedStyle(el);
     if (el.disabled || !r.width || !r.height || style.visibility === 'hidden' || style.pointerEvents === 'none' || el.closest('[inert]')) continue;

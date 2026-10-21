@@ -105,11 +105,6 @@ button svg { width: 22px; height: 22px; flex: none; fill: none; stroke: currentC
 .howto-pill { min-height: 44px; padding: 6px 18px 6px 8px; gap: 8px; border-width: 1.5px; border-radius: 999px; font-size: 15px; letter-spacing: .03em; } /* the title's #howto and «QUI BALLA?»'s #select-howto */
 #howto:active { transform: translate(-50%, 1px); }
 /* iPhone Safari only: how to get the fullscreen home-screen app. Sits just above the "how to play" pill. */
-#ios-hint { position: fixed; z-index: 3; left: 50%; bottom: calc(16px + 44px + 10px + env(safe-area-inset-bottom)); transform: translateX(-50%); box-sizing: border-box; width: max-content; max-width: calc(100vw - 32px); display: flex; align-items: center; gap: 8px; padding: 6px 4px 6px 12px; border-left: 3px solid #f5c518; border-radius: 4px; background: #2a1a10e0; /* a tip, not a button: flat, a coloured strip, no outline */ color: #fff3d6; font: 700 13px/1.25 'Baloo 2', system-ui, sans-serif; }
-#ios-hint svg { flex: none; width: 18px; height: 18px; fill: none; stroke: #f5c518; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-#ios-hint b { color: #f5c518; font-weight: 800; }
-#ios-hint span { flex: 1; text-align: center; text-wrap: balance; } /* centred between the share icon and the close button */
-#ios-hint button { flex: none; min-height: 32px; width: 32px; padding: 0; border: 0; background: none; font-size: 20px; line-height: 1; color: #e8d8b8; }
 .howto-pill .q { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--button-border); color: #2a1a10; font-size: 17px; line-height: 1; }
 @media (min-width: 520px) and (min-height: 520px) { /* the canvas HUD draws at 2x here (1.5x on phones): scale the pill to match its buttons */
   #howto { min-height: 56px; bottom: calc(20px + env(safe-area-inset-bottom)); padding: 8px 24px 8px 10px; gap: 10px; border-width: 2px; font-size: 20px; }
@@ -120,12 +115,6 @@ button svg { width: 22px; height: 22px; flex: none; fill: none; stroke: currentC
 #settings svg { width: 24px; height: 24px; }
 @media (min-width: 520px) and (min-height: 520px) { #settings { top: calc(16px + env(safe-area-inset-top)); right: calc(16px + env(safe-area-inset-right)); width: 56px; height: 56px; border-width: 2px; } #settings svg { width: 30px; height: 30px; } }
 @media (max-height: 500px) { #settings { right: auto; left: calc(12px + env(safe-area-inset-left)); top: calc(12px + env(safe-area-inset-top)); } }
-/* Title: a round podium opens Classificacions. Portrait: top-left, the ⚙'s mirror. Landscape phones: right after the ⚙.
-   Both are title-layout obstacles (titleLayoutNow() measures them), so the logo keeps clear of them. */
-#leaders { position: fixed; z-index: 3; top: calc(10px + env(safe-area-inset-top)); left: calc(10px + env(safe-area-inset-left)); width: 44px; height: 44px; min-height: 0; padding: 0; border-width: 2px; border-radius: 50%; }
-#leaders svg { width: 24px; height: 24px; }
-@media (min-width: 520px) and (min-height: 520px) { #leaders { top: calc(16px + env(safe-area-inset-top)); left: calc(16px + env(safe-area-inset-left)); width: 56px; height: 56px; border-width: 2px; } #leaders svg { width: 30px; height: 30px; } }
-@media (max-height: 500px) { #leaders { left: calc(12px + 44px + 10px + env(safe-area-inset-left)); top: calc(12px + env(safe-area-inset-top)); } }
 #settings-menu { width: min(400px, calc(100vw - 32px)); padding: 20px 20px 18px; }
 /* An on/off setting: a native checkbox with role="switch" (Space toggles, screen readers say on/off) in a flat row
    (a setting, not a button: no outline); the label is the whole row, the switch sits on the right. */
@@ -303,14 +292,39 @@ kbd { display: inline-block; min-width: 14px; padding: 0 4px; border: 1px solid 
 .board-status:empty { display: none; }
 .board-status.ok { color: #7ee081; }
 #publish-status:not(.ok), #profile-status:not(.ok) { color: #ffb4a8; }
-/* header rhythm: title, 16 px, the switch (Tots · On sóc, as wide as the list; only once published), 16 px, the list.
-   Without the switch its space goes to the list box (the dialog's height never changes) */
-#board-menu h2 { margin: 0 0 16px; font-size: 28px; }
-#board-menu .board-seg { width: 100%; margin: 0 0 16px; }
-#board-menu .board-seg .btn { min-height: 44px; } /* a 44 px target like every other control */
-/* «#347 de 2.140 · top 17%»: outside the scroll area so rows cannot bleed below it, On sóc only */
-.board-summary { flex: none; margin: 0; padding: 6px 0; border-top: 1px solid #f5c51866; background: #2a1a10; text-align: center; font-size: 15px; line-height: 1.35; color: #f5c518; }
-.board-summary:empty { display: none; }
+/* header: «Classificació» (a small heading over the corner ×'s row), the figure's button (portrait, name, chevron: it opens
+   «Tria figura» in place of the list), the season line; then the place card and the list box share what is left */
+#board-menu .board-top { flex: none; display: flex; flex-direction: column; align-items: center; gap: 4px; margin: 0 0 10px; }
+#board-menu h2 { margin: 4px 52px 4px; color: #e8d8b8; font-size: 14px; line-height: 20px; letter-spacing: .14em; text-transform: uppercase; }
+.board-figure { display: flex; align-items: center; width: auto; min-width: 210px; max-width: 100%; min-height: 56px; gap: 12px; padding: 5px 16px 5px 6px; font-size: 22px; }
+.board-pic { flex: none; display: grid; place-items: center; width: 52px; height: 44px; padding: 3px 5px; box-sizing: border-box; border-radius: 9px; background: radial-gradient(90% 90% at 50% 30%, #5a2a1f, #1c0f09); }
+.board-pic svg, .board-art svg { width: 100%; height: 100%; margin: 0; stroke: none; } /* pixel art: no button-icon stroke */
+.board-figure-name { flex: 1 1 auto; line-height: 1.05; }
+.board-figure-name .fig-t, .board-option-name .fig-t { display: block; font-size: .64em; opacity: .8; } /* «de Valls»: the town, quieter */
+.board-figure > .board-chev { flex: none; margin: 0; width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; transition: transform .2s; }
+.board-figure[aria-expanded="true"] .board-chev { transform: rotate(180deg); }
+@media (prefers-reduced-motion: reduce) { .board-chev { transition: none; } }
+.board-season { margin: 0; text-align: center; color: #e8d8b8; font-size: 15px; line-height: 1.35; }
+.board-season:empty::before { content: "\a0"; } /* its line from the first frame */
+/* «Tria figura»: the playable figures from the top, under its title (centred, the cards floated off the button), two to a row; the shown one cream, the others a neutral edge */
+.board-picker:not([hidden]) { flex: 1 1 auto; min-height: 0; overflow: auto; display: flex; flex-direction: column; justify-content: flex-start; gap: 10px; padding: 16px 0 12px; border-top: 1px solid #f5c51840; }
+.board-picker-title { margin: 0; color: #e8d8b8; font-size: 16px; }
+.board-figures { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.board-option { display: flex; align-items: center; flex-direction: column; gap: 8px; min-height: 0; padding: 10px 10px 8px; border-color: #e8d8b880; font-size: 19px; }
+.board-option .board-pic { width: 100%; height: auto; aspect-ratio: 7 / 5; padding: 10% 14%; border-radius: 10px; }
+.board-option[aria-pressed="true"] { border-color: #fff3d6; background: #fff3d6; color: #2a1a10; }
+.board-main:not([hidden]) { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+/* «Posició 48 de 119» and the one link (to the top / back to the own row, by where the list is): flat, a gold strip */
+.board-place { flex: none; margin: 0 0 6px; padding: 6px 4px 8px 12px; border-left: 4px solid #f5c518; border-radius: 0 10px 10px 0; background: #fff3d60d; }
+.board-place-row { display: flex; flex-wrap: wrap; align-items: center; column-gap: 8px; }
+.board-summary { flex: 1 0 auto; white-space: nowrap; margin: 0; color: #fff3d6; font-size: 18px; line-height: 1.3; font-variant-numeric: tabular-nums; }
+.board-jump { flex: none; margin-left: auto; padding-inline: 6px; white-space: nowrap; } /* no room beside the place: under it, right-aligned */
+.board-jump.off { visibility: hidden; } /* at the very top with the own row in view: nothing to go to, the line keeps its place */
+.board-place-sub { margin: 0; padding-right: 8px; color: #e8d8b8; font-size: 13px; line-height: 1.35; }
+.board-place .btn-link:not(.board-jump) { min-height: 32px; padding: 0; font-size: 14px; }
+/* the gap between the top of the list and the own row's neighbours: its ranks load from here */
+#board-table tr.gap td { height: 44px; border-top: 1px dashed #fff3d640; text-align: center; }
+#board-table tr.gap + tr td { border-top: 1px dashed #fff3d640; }
 /* the list's end: a spinner row while the next page loads, «Carrega’n més» (the fallback of the scroll) */
 .board-more { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 0 12px; }
 .board-more-status { display: flex; align-items: center; gap: 8px; margin: 0; color: #e8d8b899; font-size: 14px; }
@@ -323,7 +337,16 @@ kbd { display: inline-block; min-width: 14px; padding: 0 4px; border: 1px solid 
 .board-head-wrap { flex: none; overflow: hidden; scrollbar-gutter: stable; }
 #board-menu:has(#board-table[hidden]) .board-head-wrap { visibility: hidden; } /* loading, empty, error: no headings */
 .board-scroll { position: relative; flex: 1 1 auto; min-height: 0; overflow: auto; overscroll-behavior: contain; touch-action: pan-y; scrollbar-gutter: stable; }
-.board-state { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 0 12px; }
+.board-state { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: safe center; gap: 10px; padding: 8px 12px; }
+/* empty: the figure's portrait, a headline and what to do; error: a cloud, the headline in the error colour, Torna-ho a provar */
+.board-art { flex: 0 1 clamp(72px, 22vh, 170px); min-height: 64px; display: grid; place-items: center; aspect-ratio: 7 / 6; padding: 4% 6%; box-sizing: border-box; border-radius: 14px; background: radial-gradient(90% 90% at 50% 30%, #5a2a1f, #1c0f09); }
+.board-art[data-kind="error"] { flex-basis: 72px; aspect-ratio: 1; padding: 0; background: none; }
+.board-art[data-kind="error"] svg { fill: none; stroke: #ff8a7a; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+#board-status[data-kind="empty"], #board-status[data-kind="error"] { margin: 4px 0 0; color: #fff3d6; font-size: 21px; line-height: 1.25; }
+#board-status[data-kind="error"] { color: #ff8a7a; }
+@media (max-height: 620px) { #board-menu .board-state:has(.board-previous:not([hidden])) .board-art { display: none; } } /* short phones: the podium before the art */
+.board-hint { max-width: 320px; margin: 0; text-align: center; color: #e8d8b8; font-size: 15px; line-height: 1.4; text-wrap: pretty; }
+
 .board-state .btn { width: auto; min-width: 220px; }
 #board-menu:has(#board-table:not([hidden])) .board-state { display: none; }
 /* loading: the dancing Mulassa over its line (board-ui.js keeps it ≥ 1.2 s), then the list fades in */
@@ -341,6 +364,7 @@ kbd { display: inline-block; min-width: 14px; padding: 0 4px; border: 1px solid 
 :is(#board-table, .board-head) :is(th, td):first-child { color: #e8d8b8; text-align: center; }
 #board-table td:nth-child(3) { color: #e8d8b8b3; font-size: 13px; } /* % secondary, score the main number */
 #board-table td:nth-child(4) { font-size: 17px; font-weight: 800; }
+.pct-sub { display: none; } /* the % under the points: portrait phones only (profile.css) */
 /* Punts ends 12px short of the box: iOS overlay scrollbars reserve no gutter and would sit on the score (heading too, aligned) */
 :is(#board-table, .board-head) :is(th, td):nth-child(4) { padding-right: 12px; }
 /* the podium: 1-2-3 on a gold / silver / bronze disc */
@@ -348,26 +372,23 @@ kbd { display: inline-block; min-width: 14px; padding: 0 4px; border: 1px solid 
 .pos.p1 { background: #f5c518; } .pos.p2 { background: #d6dbe2; } .pos.p3 { background: #d9955a; }
 /* the name cell: alias (+ TU) on one line, the level on a small muted line under it (a coloured dot, not a tag) */
 .who { display: flex; align-items: center; gap: 5px; min-width: 0; }
-#board-table .sub { display: flex; align-items: center; gap: 6px; margin-top: 2px; font-size: 10.5px; white-space: nowrap; overflow: hidden; }
-#board-table .streak { color: #e8d8b8b3; overflow: hidden; text-overflow: ellipsis; }
+#board-table .sub { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 6px; margin-top: 2px; font-size: 10.5px; white-space: nowrap; }
+#board-table .streak { color: #e8d8b8b3; }
 #board-table .streak b { color: #fff; font-weight: 800; }
 #board-table tr.me .streak { color: #f5c518b3; }
 #board-table .lvl { flex: none; padding: 0 6px; border-radius: 999px; font-size: 9.5px; font-weight: 800; line-height: 15px; letter-spacing: .05em; color: #2a1a10; }
-.lvl0 { background: #8fd98f; } .lvl1 { background: #f0b04a; } .lvl2 { background: #ef7b6a; }
-.who .alias { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* one colour per level (Marc, 2026-10-21): the pills' fill, and the word itself wherever FÀCIL / NORMAL / DIFÍCIL is written
+   as text on a dark ground (.lvt*; never on cream: selected stays dark text). share-card.js repeats them on its canvas. */
+:root { --lvl0: #8fd98f; --lvl1: #f0b04a; --lvl2: #ef7b6a; }
+.lvl0 { background: var(--lvl0); } .lvl1 { background: var(--lvl1); } .lvl2 { background: var(--lvl2); }
+.lvt0 { color: var(--lvl0); } .lvt1 { color: var(--lvl1); } .lvt2 { color: var(--lvl2); }
 #board-table tr.me td { background: #f5c51824; color: #f5c518; }
 #board-table tr.me td:first-child { box-shadow: inset 3px 0 #f5c518; } /* the player's own row: a gold strip */
 .me-tag { flex: none; display: inline-block; padding: 0 5px; border-radius: 4px; background: #f5c518; color: #2a1a10; font-size: 11px; line-height: 16px; letter-spacing: .06em; }
-/* «Correu confirmat» (src/ui/profile-notes.js checkBadge): a blue check after the nickname, meaning only that; a tap or the
-   keyboard shows the words in a flat tip under it */
-.verified-check { position: relative; flex: none; display: inline-grid; place-items: center; width: 16px; height: 16px; min-height: 0; margin: 0; padding: 0; border: 0; border-radius: 50%; background: none; cursor: help; -webkit-tap-highlight-color: transparent; }
+/* «Correu confirmat» (src/ui/profile-notes.js checkBadge): a blue check after the nickname, meaning only that; a mark, no tip */
+.verified-check { position: relative; flex: none; display: inline-grid; place-items: center; width: 16px; height: 16px; margin: 0; }
 .verified-check svg { width: 100%; height: 100%; fill: #3b9cff; stroke: #fff; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
 .verified-check svg .seal { stroke: none; }
-.verified-check::before { content: ""; position: absolute; inset: -14px; } /* touch slop: a 44 px target */
-.verified-check::after { content: attr(data-tip); position: absolute; z-index: 3; left: 50%; top: calc(100% + 6px); translate: -50% 0; padding: 4px 8px 4px 7px; border-left: 3px solid #3b9cff; border-radius: 4px; background: #2a1a10; color: #fff3d6; font: 700 12px/1.3 system-ui, sans-serif; letter-spacing: 0; white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity .15s; }
-.verified-check.tip::after, .verified-check:focus-visible::after { opacity: 1; }
-.profile-name .verified-check { width: 20px; height: 20px; margin-left: 6px; vertical-align: -2px; }
-@media (prefers-reduced-motion: reduce) { .verified-check::after { transition: none; } }
 .board-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 0 16px; }
 .board-text { margin: 0 0 10px; text-align: center; font-size: 16px; line-height: 1.35; color: #e8d8b8; text-wrap: pretty; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
@@ -411,12 +432,9 @@ kbd { display: inline-block; min-width: 14px; padding: 0 4px; border: 1px solid 
 #publish-form[data-view="done"] #publish-status { margin: 0 0 20px; font-size: 16px; line-height: 1.35; color: #e8d8b8; }
 #publish-form[data-view="done"] #publish-status:has(+ .publish-place:not([hidden])) { margin-bottom: 6px; }
 #publish-form[data-view="done"] .publish-place { margin: 0 0 24px; font-size: 26px; line-height: 1.2; }
-/* under the first «Publicat!» of a profile with a deadline: when it goes, and a quiet way to keep it (board-ui.js) */
-/* no box: the deadline in the error red, then «Confirma el correu» takes the primary and «D'acord» steps down to secondary */
+/* under a guest's «Publicat!»: why to confirm the e-mail, quietly (board-ui.js); «Confirma el correu» takes the primary and «D'acord» steps down */
 .publish-offer { margin: -12px 0 10px; text-align: center; }
-.publish-warning { margin: 0 0 18px; color: #ff8a7a; font-size: 15px; line-height: 1.35; text-wrap: balance; }
-.publish-warning-when { display: block; font-size: 16px; }
-.publish-warning-when svg { width: 20px; height: 20px; margin: -3px 6px 0 0; vertical-align: middle; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.publish-warning { margin: 0 0 18px; color: #e8d8b8; font-size: 15px; line-height: 1.35; text-wrap: balance; }
 .publish-offer > .btn > svg { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .publish-offer:not([hidden]) + .sheet-actions > #publish-send { background: var(--button-bg); color: var(--button-text); }
 #publish-form[data-view="done"] .publish-offer { animation: board-in .3s ease-out both; }
@@ -427,6 +445,11 @@ kbd { display: inline-block; min-width: 14px; padding: 0 4px; border: 1px solid 
 /* Turnstile's tick box (src/services/captcha.js), only when Cloudflare asks: centred, its native 300 × 65 never clipped */
 #captcha-menu { width: min(372px, calc(100vw - 16px - var(--sal) - var(--sar))); max-width: none; padding: 20px 16px 12px; text-align: center; }
 #captcha-menu h2 { font-size: 26px; }
+/* the device tips (src/ui/device-hint.js): an icon over the title, the round × beside it; the bold is the step to take */
+.sheet.hint-menu { width: min(360px, calc(100vw - 32px - var(--sal) - var(--sar))); padding: 12px 20px 18px; text-align: center; } /* the icon art sits ~6 px inside its box: equal margins to what shows */
+.hint-icon { display: block; width: 44px; height: 44px; margin: 0 auto 8px; fill: none; stroke: #f5c518; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.hint-menu .board-text { margin-bottom: 4px; text-wrap: balance; }
+.hint-menu .board-text b { color: #fff3d6; font-weight: 800; }
 .captcha-text { margin: 0 0 16px; font-size: 16px; line-height: 1.35; color: #e8d8b8; text-wrap: balance; }
 .captcha-box { display: flex; justify-content: center; min-height: 65px; }
 .captcha-note { margin: 12px 0 0; color: #e8d8b899; font-size: 13px; }
@@ -448,21 +471,8 @@ kbd { display: inline-block; min-width: 14px; padding: 0 4px; border: 1px solid 
 .about-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 14px; }
 .about-links a { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 6px; color: #f5c518; font-weight: 800; font-size: 15px; text-decoration: underline; text-underline-offset: 3px; }
 .about-links svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-@media (max-width: 519px) { .settings-about { padding-inline: 2px; } .about-links { gap: 4px 6px; } .about-links a, #settings-privacy { padding: 0 3px; } .profile-block .profile-actions { grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); } } /* phones: GitHub · Crèdits · Privadesa and Crea | Recupera each on one row, paying back the UAF line's two */
+@media (max-width: 519px) { .settings-about { padding-inline: 2px; } .about-links { gap: 4px 6px; } .about-links a, #settings-privacy { padding: 0 3px; } } /* phones: GitHub · Crèdits · Privadesa on one row, paying back the UAF line's two */
 .setting-row { cursor: default; }
-/* «Perfil»: a small centred card (label, the nickname, one quiet line), its buttons side by side and equal below */
-.profile-block { flex-direction: column; align-items: stretch; gap: 10px; padding: 12px 14px 14px; text-align: center; }
-.profile-block > span { display: block; }
-.profile-name { display: block; margin-top: 2px; font-size: 24px; line-height: 1.1; font-weight: 800; color: #f5c518; overflow-wrap: anywhere; } .profile-name:empty { display: none; }
-.profile-block .sub.setting-note { margin-top: 4px; color: #e8d8b8b3; }
-.profile-block .profile-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; }
-.profile-block .profile-actions .btn { width: 100%; min-height: 44px; padding: 0 10px; }
-.profile-block .profile-actions .btn[hidden] { display: none; }
-/* waiting for the identity: the room is kept and shows as a quiet skeleton (the name is already known), so it reads as loading, not dead */
-.profile-block[data-pending] .btn { color: transparent; border-color: transparent; background: #fff3d614; pointer-events: none; animation: profile-pulse 1.2s ease-in-out infinite; }
-.profile-block[data-pending] .sub.setting-note { width: 60%; margin-inline: auto; border-radius: 6px; background: #fff3d614; animation: profile-pulse 1.2s ease-in-out infinite; }
-@keyframes profile-pulse { 50% { opacity: .45; } }
-@media (prefers-reduced-motion: reduce) { .profile-block[data-pending] :is(.btn, .sub.setting-note) { animation: none; } }
 @media (max-height: 720px) and (orientation: portrait) { /* short phones (iPhone SE): Configuració fits without scrolling */
   #settings-menu { padding: 14px 16px 10px; }
   #settings-menu h2 { margin-bottom: 4px; }
@@ -485,14 +495,14 @@ kbd { display: inline-block; min-width: 14px; padding: 0 4px; border: 1px solid 
 #privacy-menu p a:hover, .feedback-small a:hover { color: #ff9a4a; }
 .about-links a:visited { color: #f5c518; }
 @media (max-height: 500px) { /* landscape phones: the list gets the height, the settings row spans */
-  #settings-menu .sheet-actions > :is(#settings-board, #settings-profile-row) { grid-column: 1 / -1; } /* the wide rows span; the switch rows share a row */
+  #settings-menu .sheet-actions > #settings-board { grid-column: 1 / -1; } /* the wide row spans; the switch rows share a row */
   #board-menu, #publish-menu { width: min(600px, calc(100vw - 32px - var(--sal) - var(--sar))); padding: 12px 16px 8px; }
   #board-menu h2, #publish-menu h2 { font-size: 24px; margin-bottom: 4px; }
   /* the board in two columns: title, switches and buttons on the left, the list box on the right (full height) */
   #board-menu { width: min(760px, calc(100vw - 32px - var(--sal) - var(--sar))); }
   #board-list-view:not([hidden]) { display: grid; grid-template-columns: minmax(230px, 38%) 1fr; grid-template-rows: auto auto 1fr; column-gap: 16px; }
   #board-list-view > :not(.board-box) { grid-column: 1; }
-  #board-list-view > .sheet-actions { align-self: end; }
+  #board-list-view > .sheet-actions { grid-row: 3; align-self: end; } /* the links at the column's foot, the free space above them */
   #board-list-view > .board-box { grid-column: 2; grid-row: 1 / -1; min-height: 0; }
   #board-menu .sheet-actions { gap: 8px; margin-top: 8px; }
   #board-menu .sheet-actions .btn, #publish-menu .btn:not(.btn-link) { min-height: 44px; }

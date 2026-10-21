@@ -1,37 +1,39 @@
-// What a guest profile is told about how long it lasts: the 7-day rule for profiles without a confirmed e-mail
-// (supabase/migrations/202610180001_temporary_profiles.sql), the browsers likely to lose its storage, and the check a
-// confirmed address earns on the board and the ⚙ «Perfil» block (it means only that).
-export const KEEP_NOTICE = 'Sense confirmar el correu, el teu nom i els resultats publicats es conservaran durant 7 dies.';
+// How a player's name is shown, and what a guest profile is told (docs/rankings-strategy.md §6). A confirmed address earns
+// the check (it means only that) and a clean name; a guest («Convidat», no confirmed address) keeps the name it chose plus
+// four digits («Timbaler#3821»), drawn quieter and without the check. Guests don't expire: they live in this browser.
 export const VERIFIED = 'Correu confirmat';
-export const NOTICE_FIRST = 'Abans de publicar, llegeix l’avís sobre els 7 dies i torna a prémer Publica.'; // as leaderboard.js 'notice'
-const DAY = new Intl.DateTimeFormat('ca', { day: 'numeric', month: 'long' });
-const TIME = new Intl.DateTimeFormat('ca', { hour: '2-digit', minute: '2-digit' });
-// «el 25 d’octubre a les 18:42», «l’1 de novembre a les 09:05» (1 and 11 take the apostrophe)
-export function onDate(ms) {
-  const d = new Date(ms), n = d.getDate();
-  return `${n === 1 || n === 11 ? 'l’' : 'el '}${DAY.format(d)} a les ${TIME.format(d)}`;
-}
-// «fins al 25 d’octubre», «fins a l’1 de novembre»: the Publicat! offer's short line (board-ui.js)
-export function keptUntil(ms) {
-  const d = new Date(ms), n = d.getDate();
-  return `El nom es guarda fins ${n === 1 || n === 11 ? 'a l’' : 'al '}${DAY.format(d)}.`;
-}
-export const untilText = ms => `Sense confirmar el correu, el perfil caduca ${onDate(ms)}.`;
-// a nickname made with «Crea» and no result yet: no deadline (202610180001 has no rule for it); said, not promised
-export const RESERVED_TEXT = 'Encara no has publicat cap resultat: els 7 dies comencen amb el primer.';
-export const EXPIRED_TEXT = 'Ha caducat: el nom i els resultats publicats ja no hi són. Els rècords d’aquest dispositiu es mantenen.';
+export const GUEST = 'Convidat';
+export const GUEST_TEXT = 'Ets convidat. Si esborres les dades del navegador, perdràs el perfil. Confirma el correu per guardar-lo.';
+export const GUEST_ROW = 'Confirma el correu per no perdre el perfil'; // under a guest's own row on the board
 
 // a scalloped seal, the shape people read as «verified» (Marc, 2026-10-20: «estil Twitter»)
 const CHECK_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path class="seal" d="M12 2.7Q17.1-.2 18.6 5.4Q24.2 6.9 21.3 12Q24.2 17.1 18.6 18.6Q17.1 24.2 12 21.3Q6.9 24.2 5.4 18.6Q-.2 17.1 2.7 12Q-.2 6.9 5.4 5.4Q6.9-.2 12 2.7z"/><path d="m7.8 12.2 2.9 2.9 5.6-5.9"/></svg>';
-// A button, so a tap or the keyboard shows what it means (index.html .verified-check: the tip on .tip / :focus-visible)
+// A plain mark (Marc, 2026-10-21: no tip, no help cursor; it sits inside the name's button, a tap opens the card);
+// screen readers still hear «Correu confirmat»
 export function checkBadge(doc) {
-  const b = doc.createElement('button');
-  b.type = 'button'; b.className = 'verified-check';
-  b.setAttribute('aria-label', VERIFIED); b.dataset.tip = VERIFIED; b.title = VERIFIED;
+  const b = doc.createElement('span');
+  b.className = 'verified-check'; b.setAttribute('role', 'img'); b.setAttribute('aria-label', VERIFIED);
   b.innerHTML = CHECK_SVG;
-  b.addEventListener('click', e => { e.stopPropagation?.(); b.classList.toggle('tip'); });
-  b.addEventListener('blur', () => b.classList.toggle('tip', false));
   return b;
+}
+// A player's name into `into` (a .who row): the name, its «#1234» for a guest (index.html .guest: quieter), the check for a
+// confirmed address. `p`: { alias (never with the tag), tag (null: a clean name), verified }. With `onOpen` the name is a
+// button that opens the public card (src/ui/player-card.js); the check stays its own button beside it.
+export function appendName(doc, into, p, onOpen = null) {
+  const guest = Number.isInteger(p.tag);
+  const name = doc.createElement(onOpen ? 'button' : 'span');
+  name.className = `player-name${guest ? ' guest' : ''}`;
+  const alias = doc.createElement('span'); alias.className = 'alias'; alias.textContent = String(p.alias ?? ''); // text, never HTML
+  name.appendChild(alias);
+  if (guest) { const t = doc.createElement('span'); t.className = 'tag'; t.textContent = `#${String(p.tag).padStart(4, '0')}`; name.appendChild(t); }
+  if (onOpen) {
+    name.type = 'button';
+    name.setAttribute('aria-haspopup', 'dialog');
+    name.addEventListener('click', e => { e.stopPropagation?.(); onOpen(p); });
+  }
+  into.appendChild(name);
+  if (p.verified === true) into.appendChild(checkBadge(doc));
+  return name;
 }
 
 // A guest profile lives in this browser's storage only: where that storage is likely to go, a short note — only for
@@ -47,9 +49,10 @@ export function deviceRisk({ ua = '', standalone = false, touch = 0, persistent 
   return null;
 }
 const ONLY_HERE = 'Aquest perfil només viu en aquest navegador.';
+// Safari clears a site's storage after some days without a visit (its own rule, not the game's)
 export const DEVICE_NOTES = Object.freeze({
-  ios: `${ONLY_HERE} Safari l’esborra si passes 7 dies sense jugar: afegeix el joc a la pantalla d’inici.`,
-  safari: `${ONLY_HERE} Safari l’esborra si passes 7 dies sense jugar.`,
+  ios: `${ONLY_HERE} Safari l’esborra si estàs uns dies sense jugar: afegeix el joc a la pantalla d’inici.`,
+  safari: `${ONLY_HERE} Safari l’esborra si estàs uns dies sense jugar.`,
   inapp: `${ONLY_HERE} Dins d’una app es perd fàcilment: juga des del navegador.`,
   private: `${ONLY_HERE} Com que no desa dades, es perdrà en tancar la pàgina.`,
 });

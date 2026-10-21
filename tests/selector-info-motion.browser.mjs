@@ -31,7 +31,8 @@ export async function checkSelectorInfoMotion() {
     rows.push({ name, frames });
   }
   await document.fonts.ready;
-  $('#ios-hint-close').click(); await settle();
+  for (const tip of document.querySelectorAll('.hint-menu[open]')) tip.close(); // a device tip (software GL) over the selector
+  await settle();
   $('.sel-card[data-id="mulassa-valls"]').click(); await settle();
   setView(true); await settle();
   if (!root.inert) failures.push('photo controls remain active');

@@ -13,6 +13,7 @@ const PROVIDED = new Set(`song.json song-drac.json platform/polyfills.js platfor
   services/leaderboard-result.js services/leaderboard.js services/share.js game/chart.js game/progress.js game/practice.js game/energy.js game/dance.js
   game/bubble-rules.js game/dance-drac.js game/drac-feet.js scene/drac-motion.js hud/stars.js hud/title-layout.js scene/models.js scene/models/drac.js scene/balloon3d.js scene/framing.js scene/orbit.js
   scene/crowd-fx.js ui/select-ui.js ui/board-ui.js ui/profile-ui.js ui/share-ui.js ui/feedback-ui.js ui/sync-sheet.js ui/loader.js ui/sheet-fade.js
+  ui/account-ui.js ui/seasons-ui.js ui/player-card.js services/stats-sync.js
   game/drac-path.js game/drac-steps.js game/drac-pose.js game/drac-time.js game/drac-layout.js scene/drac-rig.js scene/drac-legs.js scene/drac-colla.js scene/mula-colla.js
   dev/cam-edit.js dev/final-test.js`.split(/\s+/));
 const IMPORT = /^import .*;\n/gm, LOCAL = /^import (?:.* from )?'(\.[^']+)';/gm;

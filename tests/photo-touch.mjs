@@ -51,6 +51,16 @@ assert(!touchUp(3), 'an unknown or lifted pointer is ignored');
   touchUp(4);
 }
 
+// iOS hands out large negative pointerIds: a thumb with one is still a thumb (it once read as "no thumb").
+{
+  touchReset();
+  assert(touchDown(-152773408, 100, 300, true) && TOUCH.stick.id === -152773408, 'a negative id takes the stick');
+  assert(!touchDown(-152773409, 120, 300, true), 'and holds it against a second thumb');
+  touchMove(-152773408, 100, 300 - r);
+  assert(PHOTO.stickY > 0.99 && TOUCH.stick.ox === 100, 'it steers');
+  assert(touchUp(-152773408) && TOUCH.stick.id === null && PHOTO.stickY === 0, 'and lets go');
+}
+
 // Analog: a part push walks slower than the trot; the rim builds the gallop as Shift does.
 const speed = (y, s = 2) => {
   touchReset(); Object.assign(photoBody(), { x: 0, z: 0, yaw: 0, vx: 0, vz: 0, sprint: 0 });
@@ -65,7 +75,7 @@ assert(Math.abs(speed(r) - PHOTO_RUN.run) < 1e-3, 'the rim gallops');
 touchDown(6, 100, 300, true); touchMove(6, 100, 300 - r); touchDown(8, 600, 200, false); touchMove(8, 650, 200);
 clearPhotoKeys();
 assert(PHOTO.stickY === 0 && PHOTO.lookDX === 0);
-assert(!touchMove(6, 100, 300 - r) && PHOTO.stickY === 0 && TOUCH.stick.id === -1 && TOUCH.look.id === -1, 'a dropped thumb steers nothing');
+assert(!touchMove(6, 100, 300 - r) && PHOTO.stickY === 0 && TOUCH.stick.id === null && TOUCH.look.id === null, 'a dropped thumb steers nothing');
 assert(touchDown(7, 100, 300, true), 'a fresh thumb takes it again');
 setPhotoControl(false);
 assert(!touchMove(7, 100, 300 - r) && PHOTO.stickY === 0 && PHOTO.mouse === 0, 'leaving photo mode cancels it');

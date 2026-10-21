@@ -14,7 +14,7 @@ import { pick } from '../scene/models.js';
 import { challengeResult } from '../services/share.js';
 import { fabricateRun } from '../dev/final-test.js';
 import { sheets } from '../ui/sheets.js';
-import { chip, audioEngine, G, clock, CHALLENGE, setChip, setBigPending, startMenuAudio } from './state.js';
+import { chip, audioEngine, G, clock, songTime, CHALLENGE, setChip, setBigPending, startMenuAudio } from './state.js';
 import { audioFailureTags } from '../platform/audio.js';
 import { goFullscreen } from '../ui/fullscreen.js';
 import { closePauseMenu } from '../ui/pause.js';
@@ -29,14 +29,25 @@ import { crowd, placeHome } from '../scene/crowd-build.js';
 import { lane } from '../hud/layout.js';
 import { W } from '../hud/canvas.js';
 import { headline } from '../hud/praise.js';
-import { debugAction } from '../dev/debug.js';
+import { debugAction, debugUsed } from '../dev/debug.js';
+import { armRun, closeRun, chartTallies, localDate } from './stats.js';
+import { statsSync } from '../services/stats-sync.js';
 
 export function unlock() {
   startMenuAudio();
   toTitle();
   goFullscreen();
 }
+function leaveRun(kind) { // every way a run ends calls this; stats.js counts the first one only, then the upload may go (after the song)
+  if (closeRun(() => {
+    const practice = !!G.practice, value = quality(G.counts), done = kind === 'end' || kind === 'collapse';
+    return { kind: practice ? 'practice' : kind, figureId: G.figureId, version: G.figureVersion, level: G.diff, date: localDate(),
+      seconds: practice ? Math.max(0, clock - G.practice.t0) : Math.max(0, Math.min(G.collapseT ? G.playedSec : songTime(), song.end)), counts: done ? G.counts : null, errors: done ? G.errors : null,
+      ...(done && !practice ? chartTallies(G.chart) : {}), maxCombo: G.maxCombo, stars: starsFor(value), score: comparableScore(G.score, G.diff, G.figureVersion), quality: value };
+  }, !debugUsed)) statsSync.afterRun();
+}
 export function toTitle() {
+  leaveRun('quit');
   clearLeaderboardResult();
   closePauseMenu();
   G.paused = false; G.resuming = null;
@@ -60,6 +71,7 @@ export function openSelect() { if (G.state === 'title') G.state = 'select'; }
 export let songWait = null;
 export const musicLine = () => (chip?.loaded < 1 ? `Preparant la música… ${Math.floor(chip.loaded * 100)}%` : 'Preparant la música…');
 export function startGame(diff) {
+  leaveRun('restart');
   G.practice = null;
   G.sel = diff;
   beginRun(diff, makeDanceChart(song, diff).filter(n => n.t >= playFrom));
@@ -88,6 +100,7 @@ export function startGame(diff) {
 export function startWatch() {
   startGame(1);
   G.watch = true;
+  armRun(false); // a demo is nobody's game
 }
 function watched() { // the plaça cheers the dance; ui/watch-ui.js then offers to play it
   chip.stop();
@@ -127,6 +140,7 @@ function beginRun(diff, chart) { // shared by the song and the practice: a clean
   crowd.forEach(p => placeHome(p));
   sweepConfetti();
   G.audioError = null;
+  armRun(!AUTOPLAY && !FROM && STARS < 0 && !FINAL && !debugUsed);
 }
 // ------------------------------------------------------------------ practice (first game)
 // Five short steps (practice.js) on the real lane with the real judge and FX, over a click track on the song's
@@ -137,11 +151,12 @@ export function choose(diff) { // a level picked on the selector (A BALLAR!): th
   if (tutorialDone()) startGame(diff); else startPractice(diff);
 }
 export function startPractice(then = null) { // then: the difficulty to start afterwards (null: back to the selector)
+  leaveRun('restart');
   G.sel = then ?? G.sel;
   beginRun(1, []); // NORMAL rules (GUAPA wants both buttons, holds) ...
   setWIN(WINDOWS[0]); // ... with FÀCIL's forgiving timing
   document.activeElement?.blur();
-  G.practice = { then, step: 0, tries: 0, clickK: 0, wait: null, doneT: null };
+  G.practice = { then, t0: clock, step: 0, tries: 0, clickK: 0, wait: null, doneT: null };
   chip.startClock(0.3, BEATS[0] - 0.3);
   practiceStep(4, BEATS[0] - 0.3); // four clicks to find the pulse
 }
@@ -200,6 +215,7 @@ function practiceDone(P) { // past the last step, however it got there: A BALLAR
 }
 export function endPractice() { // finished or skipped (SALTA): either way it won't come back by itself
   if (!G.practice) return; // already ended (SALTA and the timer in the same frame, a second tap)
+  leaveRun('practice');
   const then = G.practice.then;
   store.set(TUTORIAL, 'done');
   G.practice = null;
@@ -213,6 +229,7 @@ export function previewResults(stars) { // ?stars=0-3: a fake run (never a recor
 }
 export function finish(reason) {
   if (G.watch) return watched();
+  leaveRun(reason);
   captureLeaderboardResult(G, reason, Q); // a frozen run for optional publication; no network during play
   chip.stop();
   const value = quality(G.counts);

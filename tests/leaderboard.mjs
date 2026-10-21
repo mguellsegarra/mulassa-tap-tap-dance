@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { makeDanceChart } from '../src/game/chart.js';
 import { LEADERBOARD_VERSION, EXPECTED_JUDGMENTS, VERSION_RULES, normalizeAlias, snapshotResult, validResult } from '../src/services/leaderboard-rules.js';
-import { createLeaderboardService } from '../src/services/leaderboard.js';
+import { createLeaderboardService, displayName, baseName, rememberIdentity, TAG_KEY, FIGURE_VERSIONS } from '../src/services/leaderboard.js';
 import { captureLeaderboardResult, clearLeaderboardResult, getLeaderboardResult, subscribeLeaderboardResult, markLeaderboardDebugUse } from '../src/services/leaderboard-result.js';
 import { v1Song } from './v1-song.mjs';
 const song = JSON.parse(readFileSync(new URL('../src/song.json', import.meta.url)));
@@ -16,6 +16,16 @@ for (let d = 0; d < 3; d++) {
   assert.equal(result.version, LEADERBOARD_VERSION);
   assert(!validResult({ ...result, version: 'mulassa-v1' }), 'short counts cannot be relabelled as v1');
 }
+// the Drac publishes to its own board, with its own counts, and only as the Drac
+for (const d of [0, 1, 2]) {
+  const n = VERSION_RULES['drac-v1'].judgments[d], drac = { figureId: 'drac-valls', figureVersion: 'drac-v1', diff: d, counts: { perfect: n, good: 0, miss: 0 }, score: 1000, maxCombo: n };
+  const r = snapshotResult(drac, { reason: 'end', query: new URLSearchParams() });
+  assert.equal(r.version, 'drac-v1');
+  assert.equal(snapshotResult({ ...drac, figureId: 'mulassa-valls' }, { reason: 'end', query: new URLSearchParams() }), null, 'the Drac’s version is not the Mulassa’s figure');
+  assert.equal(snapshotResult({ ...drac, practice: {} }, { reason: 'end', query: new URLSearchParams() }), null);
+  assert.equal(snapshotResult(drac, { reason: 'end', query: new URLSearchParams('autoplay') }), null);
+}
+assert.equal(snapshotResult({ figureId: 'mulassa-valls', figureVersion: 'mulassa-v2-short', diff: 0, counts: { perfect: 108, good: 0, miss: 0 }, score: 1, maxCombo: 1 }, { reason: 'end', query: new URLSearchParams() }), null);
 assert.equal(normalizeAlias('  A\u0300necd’Òdena '), 'Ànecd’Òdena'); assert.equal(normalizeAlias('Ànec d’Òdena'), null, 'no spaces');
 for (const a of ['x','<script>','a@example.com','🎮🎮','a'.repeat(21)]) assert.equal(normalizeAlias(a), null);
 const game = { diff:0, counts:{ perfect:70,good:20,miss:18 },score:54321,maxCombo:50 };
@@ -137,5 +147,97 @@ await assert.rejects(absent.listAll(),{code:'disabled'});
   session={access_token:'test-only'}; await assert.rejects(svc.createProfile('Novell'),{code:'session'}); assert.equal(outs,2,'«Crea» too');
   session={access_token:'test-only'}; refuse='leaderboard_rate_limit';
   await assert.rejects(svc.publish(run,'Novell'),{code:'rate_limit'}); assert(outs===2 && session,'any other refusal keeps it');
+}
+
+// 202610200001..4 — guests, seasons, statistics, history: the RPCs the client calls and what it sends and reads back
+{ const log = []; let answer = [], failWith = null, session = { user: { id: 'u-1' } };
+  const c = { auth: { getSession: async () => ({ data: { session } }), signOut: async a => { log.push(['signOut', a]); session = null; return { error: null }; } },
+    rpc: async (name, args) => { log.push([name, args]); return failWith ? { data: null, error: failWith, status: 400 } : { data: answer }; } };
+  const svc = createLeaderboardService({ configured: true, publishingEnabled: true, captchaRequired: false, getClient: async () => c });
+  const events = []; svc.onAccount(e => events.push(e));
+  const last = () => log.at(-1);
+  // names: the stored alias never carries the tag
+  assert.equal(displayName('Timbaler', 3821), 'Timbaler#3821'); assert.equal(displayName('Timbaler', 7), 'Timbaler#0007'); assert.equal(displayName('Timbaler', null), 'Timbaler');
+  assert.equal(displayName('Timbaler', undefined), 'Timbaler'); assert.equal(displayName('Timbaler', 10000), 'Timbaler');
+  assert.equal(baseName('Timbaler#0007', 7), 'Timbaler'); assert.equal(baseName('Timbaler', null), 'Timbaler'); assert.equal(baseName('Timbaler#0007', null), 'Timbaler#0007');
+  { const kv = new Map(), store = { set: (k, v) => kv.set(k, v), remove: k => kv.delete(k) };
+    rememberIdentity(store, 'leaderboard-alias', { alias: 'Timbaler#3821', tag: 3821 }); assert.equal(kv.get('leaderboard-alias'), 'Timbaler'); assert.equal(kv.get(TAG_KEY), '3821');
+    rememberIdentity(store, 'leaderboard-alias', { alias: 'Timbaler', tag: null }); assert.equal(kv.get('leaderboard-alias'), 'Timbaler'); assert(!kv.has(TAG_KEY), 'a clean name has no tag'); }
+  // boards: a version or a figure, a season only when asked
+  await svc.listAll({ figure: 'drac-valls' }); assert.deepEqual(last(), ['get_leaderboard_all', { p_version: FIGURE_VERSIONS['drac-valls'], p_period: 'all', p_offset: 0, p_limit: 50 }]);
+  await svc.listAll({ version: 'mulassa-v2-short', season: 0, offset: 50 }); assert.deepEqual(last()[1], { p_version: 'mulassa-v2-short', p_period: 'all', p_offset: 50, p_limit: 50, p_season: 0 });
+  // the signed-in profile
+  answer = [{ alias: 'Timbaler', tag: 3821, verified: false, published: true }];
+  assert.deepEqual(await svc.profile(), { alias: 'Timbaler', tag: 3821, verified: false, published: true });
+  answer = [{ alias: 'Timbaler', tag: null, verified: true, published: false }]; assert.deepEqual(await svc.profile(), { alias: 'Timbaler', tag: null, verified: true, published: false });
+  answer = []; assert.equal(await svc.profile(), null, 'no row: no profile');
+  // choosing the clean name; a taken one has its own message, a not yet confirmed address its own
+  answer = 'Timbaler'; assert.equal(await svc.chooseVerifiedAlias(' Timbaler '), 'Timbaler'); assert.deepEqual(last(), ['choose_verified_alias', { p_alias: 'Timbaler' }]);
+  failWith = { message: 'leaderboard_alias_taken', code: '23505' };
+  await assert.rejects(svc.chooseVerifiedAlias('Timbaler'), { code: 'name_taken', message: 'Aquest nom ja és d’algú. Prova’n un altre.' });
+  failWith = { message: 'leaderboard_verification_required', code: '28000' };
+  await assert.rejects(svc.chooseVerifiedAlias('Timbaler'), { code: 'verification', message: 'Confirma el correu abans de triar un nom net.' });
+  failWith = null;
+  await assert.rejects(svc.chooseVerifiedAlias('a b'), { code: 'invalid' });
+  // seasons: camelCase, ms, the podium with composed names
+  answer = [{ season_id: 1, name: 'Tardor 2026', starts_at: '2026-11-05T00:00:00Z', ends_at: '2027-01-01T00:00:00Z', version: 'mulassa-v3', previous_dance: false, players: 48, my_position: 12, my_score: 142310, my_difficulty: 1,
+    podium: [{ position: 1, alias: 'Timbaler', tag: 3821, score: 182400, difficulty: 2, verified: false }, { position: 2, alias: 'Portadora', tag: null, score: 171050, difficulty: 1, verified: true }] },
+    { season_id: 0, name: 'Estrena 2026', starts_at: '2026-09-26T22:00:00Z', ends_at: null, version: 'mulassa-v2-short', previous_dance: true, players: 60, my_position: null, podium: [] }];
+  { const r = await svc.seasons('mulassa-valls'); assert.deepEqual(last(), ['get_seasons', { p_figure: 'mulassa-valls' }]);
+    assert.deepEqual(r[0], { seasonId: 1, name: 'Tardor 2026', startsAt: Date.parse('2026-11-05T00:00:00Z'), endsAt: Date.parse('2027-01-01T00:00:00Z'), version: 'mulassa-v3', previousDance: false, players: 48, myPosition: 12, myScore: 142310, myDifficulty: 1,
+      podium: [{ position: 1, alias: 'Timbaler', tag: 3821, score: 182400, difficulty: 2, verified: false, name: 'Timbaler#3821' }, { position: 2, alias: 'Portadora', tag: null, score: 171050, difficulty: 1, verified: true, name: 'Portadora' }] });
+    assert(r[1].endsAt === null && r[1].previousDance && r[1].myPosition === null && r[1].myScore === null && r[1].myDifficulty === null); }
+  // the public card: a guest needs its tag
+  answer = [{ alias: 'Timbaler', tag: 3821, verified: false, totals: { 'mulassa-valls/mulassa-v3/1': { runs: 3 } }, podiums: [{ season_id: 1, version: 'mulassa-v3', position: 2 }] }];
+  assert.deepEqual(await svc.playerCard('Timbaler', 3821), { alias: 'Timbaler', tag: 3821, name: 'Timbaler#3821', verified: false, totals: { 'mulassa-valls/mulassa-v3/1': { runs: 3 } }, podiums: [{ seasonId: 1, version: 'mulassa-v3', position: 2 }] });
+  assert.deepEqual(last(), ['get_player_card', { p_alias: 'Timbaler', p_tag: 3821 }]);
+  await svc.playerCard('Portadora'); assert.deepEqual(last()[1], { p_alias: 'Portadora', p_tag: null });
+  await assert.rejects(svc.playerCard('Timbaler', 12345), { code: 'invalid' }); await assert.rejects(svc.playerCard('', null), { code: 'invalid' });
+  answer = []; assert.equal(await svc.playerCard('Ningu'), null);
+  // statistics
+  answer = null; assert.deepEqual(await svc.syncStats({ owner: 'u-1', device: 'd-1', buckets: { practice: { runs: 1, seconds: 30 } }, days: ['2026-11-06'] }), { synced: true });
+  assert.deepEqual(last(), ['merge_stats', { p_device: 'd-1', p_buckets: { practice: { runs: 1, seconds: 30 } }, p_days: ['2026-11-06'], p_owner: 'u-1' }]);
+  answer = [{ buckets: { practice: { runs: 1, seconds: 30 } }, days: ['2026-11-06'], days_played: 1, current_streak: 1, longest_streak: 4 }];
+  assert.deepEqual(await svc.myStats(), { buckets: { practice: { runs: 1, seconds: 30 } }, days: ['2026-11-06'], daysPlayed: 1, currentStreak: 1, longestStreak: 4 });
+  for (const [message, code] of [['leaderboard_rate_limit', 'rate_limit'], ['leaderboard_device_limit', 'device'], ['leaderboard_invalid_stats', 'stats'], ['leaderboard_invalid_bucket', 'stats'],
+    ['leaderboard_stats_decreased', 'stats'], ['leaderboard_stats_time_limit', 'stats_time'], ['leaderboard_invalid_day', 'stats'], ['leaderboard_auth_profile_missing', 'gone'],
+    ['leaderboard_season_closed', 'season'], ['leaderboard_invalid_season', 'board'], ['leaderboard_invalid_version', 'board'], ['leaderboard_invalid_period', 'board']]) {
+    failWith = { message, code: 'P0001' };
+    await assert.rejects(svc.syncStats({ owner: 'u-1', device: 'd', buckets: {}, days: [] }), e => e.code === code && !/\bP0001\b/.test(e.message), message);
+  }
+  failWith = { message: 'leaderboard_auth_profile_missing', code: '28000' }; assert.equal(await svc.myStats(), null, 'no profile yet: no statistics, not an error');
+  // a vanished account: sign out here and tell the stats layer, once; a missing profile only tells it
+  events.length = 0; session = { user: { id: 'u-gone' } }; failWith = { message: 'leaderboard_auth_required', code: '28000' };
+  await assert.rejects(svc.syncStats({ owner: 'u-gone', device: 'd', buckets: {}, days: [] }), { code: 'session' });
+  assert.deepEqual(events, [{ type: 'gone', userId: 'u-gone' }]); assert.equal(session, null);
+  events.length = 0; session = { user: { id: 'u-2' } }; failWith = { message: 'leaderboard_auth_profile_missing', code: '28000' };
+  await assert.rejects(svc.syncStats({ owner: 'u-2', device: 'd', buckets: {}, days: [] }), { code: 'gone' }); assert.deepEqual(events, [{ type: 'gone', userId: 'u-2' }]); assert(session, 'the session stays');
+  failWith = null; session = null;
+  await assert.rejects(svc.syncStats({ owner: 'u-3', device: 'd', buckets: {}, days: [] }), { code: 'session' }, 'statistics never create a player');
+  // the server saw another session than the owner the client built the counters for (the SDK re-read it): not a failure of the numbers
+  session = { user: { id: 'u-3' } }; failWith = { message: 'leaderboard_owner_mismatch', code: '28000' }; events.length = 0;
+  await assert.rejects(svc.syncStats({ owner: 'u-3', device: 'd', buckets: {}, days: [] }), { code: 'session' }); assert.deepEqual(events, [], 'not a vanished account'); failWith = null; session = null;
+  await assert.rejects(svc.syncStats({ device: 'd', buckets: {}, days: [] }), { code: 'session' }, 'no owner, no upload');
+  assert.equal(await svc.ownerId(), null); assert.equal(await svc.myStats(), null); assert.equal(await svc.profile(), null);
+  session = { user: { id: 'u-3' } }; assert.equal(await svc.ownerId(), 'u-3');
+  await assert.rejects(createLeaderboardService({ configured: true, publishingEnabled: false, captchaRequired: false, getClient: async () => c }).syncStats({ device: 'd', buckets: {}, days: [] }), { code: 'disabled' });
+}
+// publishing sends exactly the eight parameters of the production RPC: no p_notice, the raw alias; and tells the stats layer
+{ const log = [], events = []; let session = { user: { id: 'u-9' } };
+  const c = { auth: { getSession: async () => ({ data: { session } }), signOut: async () => { session = null; return { error: null }; }, verifyOtp: async () => ({ error: null }) },
+    rpc: async (name, args) => { log.push([name, args]); return { data: name === 'submit_result' ? [{ improved: true, quality: 90, score: 54321 }] : 'Novell' }; },
+    functions: { invoke: async () => ({ data: { deleted: true } }) } };
+  const svc = createLeaderboardService({ configured: true, publishingEnabled: true, captchaRequired: false, getClient: async () => c });
+  svc.onAccount(e => events.push(e));
+  await svc.publish(clean, 'Ànec');
+  assert.deepEqual(Object.keys(log.at(-1)[1]).sort(), ['p_alias', 'p_difficulty', 'p_good', 'p_max_combo', 'p_miss', 'p_perfect', 'p_score', 'p_version']);
+  assert.equal(log.at(-1)[1].p_alias, 'Ànec'); assert.equal(log.at(-1)[1].p_version, clean.version);
+  await svc.createProfile('Novell'); await svc.verifyCode('a@b.cat', '123456', 'email');
+  assert.deepEqual(events, [{ type: 'changed' }, { type: 'changed' }, { type: 'changed' }]);
+  events.length = 0; await svc.deleteProfile(); assert.deepEqual(events, [{ type: 'gone', userId: 'u-9' }, { type: 'changed' }], 'a deleted profile takes its statistics');
+  const failing = createLeaderboardService({ configured: true, publishingEnabled: true, captchaRequired: false, getClient: async () => ({ ...c, rpc: async () => ({ data: null, error: { message: 'leaderboard_rate_limit' } }) }) });
+  let heard = 0; failing.onAccount(() => heard++); session = { user: {} };
+  await assert.rejects(failing.createProfile('Novell'), { code: 'rate_limit' }); assert.equal(heard, 0, 'a failed write changes nothing');
+  assert.equal(await createLeaderboardService({ configured: true, publishingEnabled: true, captchaRequired: false, getClient: async () => c }).onAccount(() => { throw new Error('x'); }) instanceof Function, true, 'unsubscribe');
 }
 console.log('leaderboard chart, result, privacy and client contracts ok');

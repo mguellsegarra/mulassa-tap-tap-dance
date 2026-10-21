@@ -8,19 +8,17 @@
    stops (no slope jump at either end: a plain two-stop ramp drew a visible line where it ended), in one colour. */
 #select::before { --shade: linear-gradient(90deg, #140c07f0 6%, #140c07ee 10.7%, #140c07e7 15.3%, #140c07d7 20%, #140c07bd 24.7%, #140c079d 29.3%, #140c0778 34%, #140c0753 38.7%, #140c0732 43.3%, #140c0719 48%, #140c0709 52.7%, #140c0701 57.3%, #140c0700 62%); top: 0; bottom: 0; background: var(--shade), linear-gradient(#140c0799, #140c0798 3.4%, #140c0790 6.8%, #140c0780 10.2%, #140c0768 13.6%, #140c074c 17%, #140c0731 20.4%, #140c0719 23.8%, #140c0709 27.2%, #140c0701 30.6%, #140c0700 34%); }
 #select::after { top: 0; bottom: 0; background: linear-gradient(#140c0700 42%, #140c0701 46.7%, #140c0709 51.3%, #140c0719 56%, #140c0733 60.7%, #140c0754 65.3%, #140c0779 70%, #140c079e 74.7%, #140c07bf 79.3%, #140c07d9 84%, #140c07ea 88.7%, #140c07f1 93.3%, #140c07f2 98%); }
-#settings, #music, #feedback, #leaders, #viewmode { z-index: 5; }
+#settings, #music, #feedback, #viewmode, #profile { z-index: 5; }
 #fps { z-index: 5; } /* Keep the readout above the selector's gradients. */
-#viewmode { top: calc(16px + env(safe-area-inset-top)); left: calc(84px + env(safe-area-inset-left)); right: auto; bottom: auto; width: 56px; height: 56px; opacity: 1; }
+#viewmode { top: calc(16px + env(safe-area-inset-top)); left: calc(16px + env(safe-area-inset-left)); right: auto; bottom: auto; width: 56px; height: 56px; opacity: 1; }
 #viewmode svg { width: 30px; height: 30px; }
-#leaders[hidden] ~ #viewmode { left: calc(16px + env(safe-area-inset-left)); }
 /* Keep the eye available on the selector at every viewport size. */
 @media (max-width: 519px), (max-height: 519px) {
-  #viewmode { top: calc(10px + env(safe-area-inset-top)); left: calc(64px + env(safe-area-inset-left)); width: 44px; height: 44px; }
-  #leaders[hidden] ~ #viewmode { left: calc(10px + env(safe-area-inset-left)); }
+  #viewmode { top: calc(10px + env(safe-area-inset-top)); left: calc(10px + env(safe-area-inset-left)); width: 44px; height: 44px; }
   #viewmode svg { width: 24px; height: 24px; }
 }
 @media (max-height: 500px) {
-  #viewmode, #leaders[hidden] ~ #viewmode { top: calc(12px + env(safe-area-inset-top)); left: auto; right: calc(12px + env(safe-area-inset-right)); }
+  #viewmode { top: calc(12px + env(safe-area-inset-top)); left: auto; right: calc(12px + env(safe-area-inset-right)); }
 }
 
 
@@ -41,22 +39,22 @@
 /* Menu surfaces (info, difficulty) share one soft panel; the cards echo its radius. */
 /* One radius scale: pills (tappable) 999 px · cards and panels 16 · information chips 8 (flat, no border: not buttons). */
 #select { --sel-r: 16px; --sel-chip-r: 8px; --sel-chip-bg: #1a110bd9; --sel-surface: #1a110beb; --sel-line: #fff3d61c; --sel-muted: #d2c0a0; }
-.sel-info { position: absolute; z-index: 1; top: calc(var(--info-top) + env(safe-area-inset-top)); left: calc(max(16px, env(safe-area-inset-left)) - 4px); /* its 4 px padding: the panel starts where the pills do */ width: min(400px, 36%); max-height: calc(100% - var(--info-top) - var(--dock-h) - 6px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); display: grid; gap: 10px; justify-items: start; overflow-y: auto; scrollbar-width: none; overscroll-behavior: contain; padding: 16px 4px 8px; margin-top: -14px; /* room inside the scroll box for the ?'s 44 px target over the name (top) and the position chip's (bottom); the margin keeps the name where it was */ box-sizing: border-box; }
+.sel-info { position: absolute; z-index: 1; top: calc(var(--info-top) + env(safe-area-inset-top)); left: calc(max(16px, env(safe-area-inset-left)) - 4px); /* its 4 px padding: the panel starts where the pills do */ width: min(400px, 36%); max-height: calc(100% - var(--info-top) - var(--info-dock, var(--dock-h)) - 6px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); /* --info-dock: desktops' step 2, down to the level card (select-ui.js levelStats) */ display: grid; gap: 10px; justify-items: start; overflow-y: auto; scrollbar-width: none; overscroll-behavior: contain; padding: 16px 4px 8px; margin-top: -14px; /* room inside the scroll box for the ?'s 44 px target over the name (top) and the position chip's (bottom); the margin keeps the name where it was */ box-sizing: border-box; }
 /* The transparent layout boxes leave exposed plaça to the HUD's orbit handlers.
    Content still takes input (and can scroll the info), including every control. */
 #select > .sel-info { pointer-events: none; }
-.sel-info :is(.sel-name, .sel-entity, .sel-song, button, a, #ios-hint, #select-error) { pointer-events: auto; }
+.sel-info :is(.sel-name, .sel-entity, .sel-song, button, a, #select-error) { pointer-events: auto; }
 .sel-panel { --sel-line: #fff3d630; /* hairlines on the shaded plaça, not a panel */ position: relative; box-sizing: border-box; width: 100%; display: grid; gap: 12px; }
 .sel-identity { display: grid; grid-template-columns: minmax(0, max-content) auto; justify-content: start; justify-items: start; gap: 10px 12px; min-width: 0; } /* the ? right after the name on every layout */
-.sel-identity .sel-entity { grid-column: 1 / -1; padding: 0; border-radius: 0; background: none; color: var(--sel-muted); font-size: 14px; font-weight: 600; text-shadow: 0 1px 3px #000c; } /* who carries her: a quiet line under the name, not a white pill competing with it */
+.sel-identity .sel-entity { grid-column: 1 / -1; } /* who carries her: the same holo chip as a pending figure's (rules below) */
 .sel-name { align-self: center; margin: 0; max-width: 100%; font: 800 30px/1.05 'Baloo 2', system-ui, sans-serif; overflow-wrap: break-word; text-shadow: 0 3px 0 #0009; text-box: trim-both cap alphabetic; } /* its box = the letters: the gaps around it are the gaps you see */
 @supports not (text-box: trim-both cap alphabetic) { .sel-name { margin-block: -.2em -.245em; } } /* Baloo 2's cap top and baseline at line-height 1.05 (Safari < 18.2) */
 
 .sel-entity { display: inline-flex; align-items: center; gap: 7px; box-sizing: border-box; max-width: 100%; padding: 4px 10px; border-radius: 999px; background: #fff3d6; color: #2a1a10; font-size: 12px; font-weight: 700; line-height: 1.25; vertical-align: middle; }
 .sel-entity svg { flex: none; width: 14px; height: 22px; fill: #e73449; stroke: none; }
 /* Keep the original colours legible on the foil. The flame's path has a .1 transform. */
-.sel-pending .sel-entity svg:not(.escut):not(.pessigolla) path { stroke: #63202c; stroke-width: 160; paint-order: stroke fill; }
-.sel-pending .sel-entity svg.pessigolla path[fill] { stroke: #243044; stroke-width: 12; paint-order: stroke fill; }
+:is(.sel-pending, .sel-identity) .sel-entity svg:not(.escut):not(.pessigolla) path { stroke: #63202c; stroke-width: 160; paint-order: stroke fill; }
+:is(.sel-pending, .sel-identity) .sel-entity svg.pessigolla path[fill] { stroke: #243044; stroke-width: 12; paint-order: stroke fill; }
 .sel-entity span { min-width: 0; }
 /* Keep each mark with its name, and the separator with the following attribution. */
 .sel-entity:has(.sel-entity-unit) { flex-wrap: wrap; justify-content: center; row-gap: 2px; }
@@ -84,12 +82,17 @@
 #select .sel-tiles[hidden] { display: flex !important; visibility: hidden; } /* over base.css's global [hidden] */
 .sel-tiles { min-height: calc(1lh + 8px); } /* one chip's height: reserved before the board answers */
 #select-rank-tile { order: 1; }
+/* before the board answers the line is a quiet bar of its usual width, so the words land without moving the chip (profile.css's pulse) */
+#select-pos { transition: color .25s; }
+#select-rank-tile[data-loading] #select-pos { display: inline-block; width: 24ch; max-width: 100%; border-radius: 6px; color: transparent; transition: none; /* the old words never fade out under the bar: only the answer fades in */ background: linear-gradient(#fff3d61f, #fff3d61f) center / 100% .7em no-repeat; animation: profile-pulse 1.2s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { #select-rank-tile[data-loading] #select-pos { animation: none; } }
 .sel-tile { display: flex; flex: none; align-items: center; gap: 6px; box-sizing: border-box; padding: 4px 10px; border-radius: var(--sel-chip-r); background: var(--sel-chip-bg); white-space: nowrap; }
 .sel-tile svg { flex: none; width: 1.1em; height: 1.1em; margin: 0; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
 /* a real button that looks like the info chips: base.css's button border, min-height and type undone; 44 px to tap */
 #select .sel-rank { position: relative; min-height: 0; margin: 0; border: 0; color: inherit; font: inherit; }
 #select .sel-rank::after { content: ''; position: absolute; inset: calc((100% - 44px) / 2) 0; }
 #select .sel-rank .chev { width: .9em; height: .9em; margin-left: -2px; stroke: var(--sel-muted); }
+#select .sel-rank { min-width: 0; white-space: normal; text-align: left; } /* the ranking line: a long place and season wrap, never cut */
 #select .sel-rank:active { transform: translateY(1px); filter: brightness(1.2); }
 /* «Com es juga»: a round ? at the top-right, where a sheet's close button sits, centred on the name's line by the grid */
 #select-howto { grid-column: 2; grid-row: 1; align-self: center; margin-block: -16px; /* the 44 px target overhangs: the name's letters set the row, even a small name's */ display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%; background: none; cursor: pointer; }
@@ -132,7 +135,7 @@
   #select #select-next:disabled { visibility: visible; opacity: 1; translate: none; background: transparent; border-color: #746957; color: #c7bca7; box-shadow: none; animation: none; scale: none; rotate: none; filter: none; cursor: default; }
   #select #select-next:disabled::after { display: none; animation: none; }
 }
-.sel-strip { position: relative; display: flex; align-items: stretch; justify-content: flex-start; gap: 8px; min-height: 0; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; touch-action: pan-x; padding: 10px max(6px, var(--strip-inset, 0px)) 6px; margin-inline: 0; box-sizing: border-box; overflow-anchor: none; }
+.sel-strip { position: relative; display: flex; align-items: stretch; justify-content: flex-start; gap: 8px; min-height: 0; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; touch-action: pan-x; padding: 10px max(6px, var(--strip-r, 0px)) 6px max(6px, var(--strip-l, 0px)); margin-inline: 0; box-sizing: border-box; overflow-anchor: none; }
 /* One surface, no divider: the town's accent (--town, below) tints its top and fades into the game's brown under the
    caption, so a town's row reads as a group. --t is that accent at one fixed lightness and capped chroma: every town's
    black silhouettes and the cream ring read alike, and no tint comes near the gold action or the cream choice. The name
@@ -204,7 +207,7 @@
 /* Keep the jester light on dark captions and the home attribution, dark on the pending foil. */
 #select :is(.sel-entity, .sel-entity-icons) svg.pessigolla { width: auto; height: 1em; aspect-ratio: 845 / 628; fill: initial; } /* Keep the mark centred with its label by the parent flex row. */
 #select :is(.sel-entity-icons, .sel-identity) svg.pessigolla { --jester: currentColor; }
-#select .sel-pending .sel-entity svg.pessigolla { --jester: #1b171c; }
+#select :is(.sel-pending, .sel-identity) .sel-entity svg.pessigolla { --jester: #1b171c; }
 /* Selected: a cream ring over the whole card (drawn above the portrait) and a deeper shadow; never lifted, so every
    figure keeps the strip's one floor line. */
 .sel-card[aria-selected="true"] { box-shadow: 0 10px 22px #000a; }
@@ -232,7 +235,7 @@
 #select-play > span { white-space: nowrap; }
 :is(#select-next, #select-free, #select-play, #select-figures-back) > svg { display: block; flex: 0 0 22px; width: 22px; height: 22px; margin: 0; }
 #select-free > svg { flex-basis: 26px; width: 26px; height: 26px; } /* the gamepad reads as one at 26 px, not 22 */
-.sel-footer #select-figures-back { min-width: 0; padding: 6px 12px; margin-right: auto; font-size: 15px; }
+.sel-footer #select-figures-back { min-width: 0; padding: 6px 12px; margin-right: auto; font-size: 17px; }
 #select-figures-back > svg { box-sizing: border-box; padding: 2px; }
 #select-figures-back > span { min-width: 0; }
 /* Difficulty: the same soft panel, centred, with its two actions aligned to its width (not the screen's edges). */
@@ -317,12 +320,13 @@ body.view-mode #select { opacity: 0; visibility: hidden; pointer-events: none; t
   .sel-footer .btn, #select-next { flex: 1; min-width: 0; font-size: 18px; } /* full width, under the thumb */
   #select-next { flex: 1.4 1 0; } #select-free { flex: 1 1 0; padding-inline: 12px; } /* beside it: the primary keeps one line */
   #select-free > svg { margin-top: -3px; } /* the smaller label's ink sits higher in its line: the pad meets it (measured) */
-  .sel-footer #select-figures-back { font-size: 13px; }
+  .sel-footer #select-figures-back { font-size: 14px; }
 }
 @media (max-height: 500px) {
   /* one 16 px step between the groups (icons → pills → name: the ? disc clears the pills), 10 inside the identity */
   #select { --info-top: 130px; --town-row-top: 72px; --dock-h: 262px; --action-h: 44px; --card-label-h: 64px; --ga: 6px; }
-  .sel-info { left: 12px; width: 40%; max-height: calc(100% - 128px); gap: 6px; }
+  .sel-towns { --edge-l: max(12px, env(safe-area-inset-left)); --edge-r: max(12px, env(safe-area-inset-right)); } /* the logo's and the info's edge */
+  .sel-info { left: calc(max(12px, env(safe-area-inset-left)) - 4px); width: 40%; max-height: calc(100% - 128px); gap: 6px; }
   .sel-panel { gap: 10px; }
   .sel-name { font-size: 22px; }
   .sel-song { padding-top: 10px; font-size: 15px; }
@@ -333,7 +337,7 @@ body.view-mode #select { opacity: 0; visibility: hidden; pointer-events: none; t
   .sel-card { flex-basis: 144px; }
   .sel-card-name { font-size: 14px; line-height: 18px; }
   .sel-footer .btn { width: auto; min-width: 0; flex: 1; padding-inline: 20px; font-size: 17px; }
-  .sel-footer #select-figures-back { font-size: 12px; }
+  .sel-footer #select-figures-back { font-size: 14px; }
   .sel-act { gap: 10px; padding: 12px; }
   .sel-act h2 { font-size: 20px; }
   .sel-seg .btn { padding: 4px; font-size: 14px; min-height: 44px; }
@@ -360,27 +364,29 @@ body.view-mode #select { opacity: 0; visibility: hidden; pointer-events: none; t
 
 @media (max-width: 519px) { .sel-carousel { gap: 4px; } }
 
-/* Device guidance belongs to the info column, never behind the carousel or primary action. */
-.sel-info:has(#ios-hint:not([hidden])) { display: flex; flex-direction: column; align-items: flex-start; }
-.sel-info:has(#ios-hint:not([hidden])) > * { flex-shrink: 0; }
-.sel-info #ios-hint { position: static; transform: none; width: 100%; max-width: 100%; margin: 0; }
-.sel-info #ios-hint button { width: 44px; min-height: 44px; }
-
 /* Desktop and landscape tablets: room to breathe between the cards and a bigger main action. */
 @media (min-width: 900px) and (min-height: 600px) {
   #select { --dock-h: 324px; --action-h: 58px; --card-label-h: 72px; --ga: 12px; }
   #select-next { flex-basis: 400px; font-size: 22px; }
   .sel-towns { --edge-l: max(40px, env(safe-area-inset-left)); } /* the logo's and the info's edge */
   /* a wide, open column a little in from the edge; the type grows with the screen */
-  .sel-info { top: calc(var(--info-top) + 16px + env(safe-area-inset-top)); left: calc(max(40px, env(safe-area-inset-left)) - 4px); width: min(640px, 40%); }
+  .sel-info { top: calc(var(--info-top) + 16px + env(safe-area-inset-top)); left: calc(max(40px, env(safe-area-inset-left)) - 4px); width: min(640px, 40%, var(--info-w, 640px)); } /* --info-w: ends 16 px before the strip's first banner (measure()) */
+  @media (min-width: 1500px) { .sel-info { width: min(560px, 40%, var(--info-w, 560px)); } } /* big screens (a Studio Display, a 1920 window): the table at 640 left a wide empty band */
   .sel-identity { column-gap: 16px; }
   .sel-panel { gap: 18px; }
-  .sel-name { font-size: clamp(40px, min(4.2vw, 6.4vh), 72px); } /* «Mulassa de Valls» on one line beside the ? from 1024 to 1920 px */
-  .sel-identity .sel-entity { font-size: 17px; }
+  .sel-identity .sel-entity { translate: 0 5px; } /* the chip centred between the name and the song's hairline (its gaps are 10 above, 18 below) */
+  .sel-panel[data-tight] .sel-entity { translate: 0 2px; }
+  .sel-info { container-type: inline-size; } /* its width is set (--info-w): the name scales to it */
+  .sel-name { font-size: clamp(30px, min(4.2vw, 6.4vh, 10cqi), 72px); } /* «Mulassa de Valls» on one line beside the ? in the column held left of the strip */
+  @media (max-height: 640px) { .sel-name { font-size: clamp(26px, min(4.2vw, 6.4vh, 9.4cqi), 72px); } } /* 900×600: its 300 px column held it on two lines and the info block scrolled */
   .sel-entity svg { width: 16px; height: 25px; }
-  .sel-song { font-size: 22px; padding-top: 18px; }
+  .sel-song { font-size: clamp(16px, 5.6cqi, 22px); padding-top: 18px; } /* the column's width (--info-w): step 2's «NORMAL: encara sense rècord» keeps one line */
   .sel-tiles { padding-top: 18px; } /* the hairlines sit midway: as far below as the panel's gap above */
   .sel-panel[data-tight] { gap: 12px; } .sel-panel[data-tight] > :is(.sel-song, .sel-tiles) { padding-top: 12px; } /* the info block would scroll (step 2's level row on a laptop, a two-line name at 900 px): the gaps give first (level-stats.js) */
+  /* step 2 on a short laptop (900×700, 1280×600): the level row and the ranking line keep their place (level-stats.js); the song
+     gives way, its credit and a smaller disc first (the glyph keeps its 22 px), then the whole row */
+  .sel-panel[data-snug] #select-song-credit, .sel-panel[data-snug="song"] > #select-song { display: none; }
+  .sel-panel[data-snug] > #select-song svg { width: 32px; height: 32px; padding: 5px; }
   .sel-song svg { width: 44px; height: 44px; padding: 11px; }
   .sel-song-credit { font-size: 15px; }
   .sel-level-stats .sel-song-copy { min-height: calc(1lh + 2px + 18px); }
@@ -393,7 +399,7 @@ body.view-mode #select { opacity: 0; visibility: hidden; pointer-events: none; t
 }
 /* Desktops, step 1 (select-standings.js; Marc, 2026-10-20): the records as three medals and the board as one card, the
    position its header, in place of the position chip (phones keep the chip and step 2's records). Information chips:
-   dark, cream text, no outline; points lilac. Step 2 keeps the card (its rows give way to the level row) but not the medals. */
+   dark, cream text, no outline; points lilac. Step 2 keeps the card's header and foot (no rows: the level row takes their room) but not the medals. */
 .sel-meds, .sel-standings { display: none; }
 @media (min-width: 900px) and (min-height: 600px) {
   #select .sel-panel > .sel-tiles.sel-tiles { display: none !important; }
@@ -402,20 +408,27 @@ body.view-mode #select { opacity: 0; visibility: hidden; pointer-events: none; t
   #select[data-step="level"] .sel-meds { display: none !important; }
   .sel-meds { grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; }
   .sel-med { display: grid; justify-items: center; align-content: center; gap: 2px; padding: 10px 6px; border-radius: var(--sel-chip-r); background: var(--sel-chip-bg); text-align: center; }
-  .sel-med .lvn { font-size: 13px; letter-spacing: .06em; color: var(--sel-muted); }
+  .sel-med .lvn { font-size: 13px; letter-spacing: .06em; } /* its level's colour (.lvt*) */
   .sel-med .stars { display: inline-flex; gap: 2px; }
   .sel-med .stars svg { width: 24px; height: 24px; fill: #fff3d633; }
   .sel-med .stars .on { fill: #f5c518; }
   .sel-med b { font-size: 24px; line-height: 1.1; color: #c9a7ff; }
-  .sel-med.none b { color: var(--sel-muted); }
+  .sel-meds-t { grid-column: 1 / -1; margin: 0; font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--sel-muted); }
+  .sel-med.none b { font-size: 13px; font-weight: 600; line-height: 2.03; color: var(--sel-muted); } /* 13 × 2.03 = the points' 24 × 1.1 */
   .sel-med small { font-size: 13px; font-weight: 600; line-height: 1.2; color: var(--sel-muted); }
   /* one line each when the column is short (1920×1080): the board's names come first (select-standings.js) */
   .sel-meds[data-compact] .sel-med { grid-auto-flow: column; justify-content: center; align-items: center; gap: 6px; padding: 6px; }
-  .sel-meds[data-compact] .sel-med small { display: none; }
+  .sel-meds[data-compact] .sel-med small, .sel-meds[data-compact] .sel-meds-t { display: none; }
   #select .sel-meds[data-compact] .sel-med :is(.stars svg) { width: 16px; height: 16px; }
   #select .sel-meds[data-compact] .sel-med b { font-size: 18px; }
-  .sel-standings { width: 100%; border-radius: var(--sel-chip-r); background: var(--sel-chip-bg); overflow: hidden; }
-  #select .sel-standings-head { position: relative; display: flex; align-items: center; gap: 8px; width: 100%; min-height: 48px; margin: 0; padding: 0 14px; border: 0; border-bottom: 1px solid var(--sel-line); border-radius: 0; background: #fff3d60d; color: inherit; font: inherit; font-size: 20px; text-align: left; cursor: pointer; }
+  /* one line, one height: «Sense rècord» never wraps (it stood 3 lines tall, Marc), and gives its empty stars the room */
+  #select .sel-meds[data-compact] .sel-med b { white-space: nowrap; line-height: 1.2; }
+  #select .sel-meds[data-compact] .sel-med.none b { font-size: 13px; }
+  #select .sel-meds[data-compact] .sel-med.none .stars { display: none; }
+  @container (max-width: 480px) { #select .sel-meds[data-compact] { display: none !important; } } /* one-line medals need a wide column: in the one held left of the strip they go */
+  .sel-panel { grid-template-columns: minmax(0, 1fr); } /* nothing widens the column past --info-w */
+  .sel-standings { width: 100%; border-radius: var(--sel-chip-r); background: #2b1f16d9; /* the body is the lighter tone, the header (below) the darker */ overflow: hidden; container-type: inline-size; }
+  #select .sel-standings-head { position: relative; display: flex; align-items: center; gap: 8px; width: 100%; min-height: 48px; margin: 0; padding: 0 14px; border: 0; border-bottom: 1px solid var(--sel-line); border-radius: 0; background: #0c070459; color: inherit; font: inherit; font-size: 20px; text-align: left; cursor: pointer; }
   .sel-standings-head svg { flex: none; width: 1.1em; height: 1.1em; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
   .sel-standings-head .chev { width: .9em; height: .9em; margin-left: auto; stroke: var(--sel-muted); }
   #select .sel-standings-head:active { filter: brightness(1.2); }
@@ -428,15 +441,48 @@ body.view-mode #select { opacity: 0; visibility: hidden; pointer-events: none; t
   .sel-standings-rows .pt { text-align: right; color: #c9a7ff; }
   .sel-standings-rows .me { background: #fff3d61a; box-shadow: inset 3px 0 #fff3d6; }
   .sel-standings-rows .dots { display: block; min-height: 0; text-align: center; line-height: 18px; color: var(--sel-muted); }
+  /* Loading: the placeholder (select-standings.js) is built from the rows' own markup and shares one grid cell with the real
+     rows, so the card is as tall before the answer as after it; they cross-fade, never swap. Only opacity and the bars' highlight move. */
+  .sel-standings-body { display: grid; }
+  .sel-standings-body[hidden] { display: none; }
+  .sel-standings-body > * { grid-area: 1 / 1; min-width: 0; }
+  .sel-standings-body[data-state="ready"] { position: relative; }
+  .sel-standings-body[data-state="ready"] .sel-standings-sk { position: absolute; inset: 0; } /* answered: out of the flow, the card hugs the rows (or the message); its overflow clips the fade */
+  .sel-standings-sk { position: relative; overflow: hidden; pointer-events: none; opacity: 0; }
+  .sel-standings-sk ol, .sel-standings-sk .sel-standings-foot { margin: 0; }
+  /* pill bars where the words go, each sweeping a highlight (a wave down the rows); no animation on the way out, so a re-shown card never replays it */
+  .sel-standings-sk :is(li, .sel-standings-foot) > :is(span, .bar) { color: transparent; border-radius: 999px; background: linear-gradient(100deg, #fff3d61f 30%, #fff3d64d 50%, #fff3d61f 70%) 100% center / 300% 13px no-repeat; animation: sel-sk-shimmer 1.4s ease-in-out infinite; }
+  .sel-standings-sk li:nth-child(2) > span { animation-delay: .1s; } .sel-standings-sk li:nth-child(3) > span { animation-delay: .2s; } .sel-standings-sk li:nth-child(4) > span { animation-delay: .3s; } .sel-standings-sk li:nth-child(5) > span { animation-delay: .4s; } .sel-standings-sk li:nth-child(n+6) > span { animation-delay: .5s; }
+  .sel-standings-sk .n { max-width: 14px; }
+  .sel-standings-sk .who { max-width: 62%; } .sel-standings-sk li:nth-child(2n) .who { max-width: 46%; } .sel-standings-sk li:nth-child(3n) .who { max-width: 54%; }
+  .sel-standings-sk .bar { flex: none; width: 55%; height: 20px; }
+  .sel-standings-real { display: flex; flex-direction: column; opacity: 0; transition: opacity .25s; }
+  .sel-standings-msg { margin: auto; padding: 8px 14px; text-align: center; color: var(--sel-muted); font-size: 15px; }
+  .sel-standings-msg[hidden] { display: none; }
+  /* opacity transitions, not animations: a card re-shown from display:none (the level step and back) must not replay a fade */
+  .sel-standings-body[data-state="ready"] .sel-standings-real { opacity: 1; }
+  .sel-standings-body[data-state="loading"] .sel-standings-sk { opacity: 1; }
+  .sel-standings-body[data-state="ready"] .sel-standings-sk { transition: opacity .25s; }
+  @keyframes sel-sk-shimmer { to { background-position: 0% center; } }
+  @media (prefers-reduced-motion: reduce) {
+    .sel-standings-sk :is(li, .sel-standings-foot) > :is(span, .bar) { animation: none; background: #fff3d61f; }
+    .sel-standings-real, .sel-standings-sk { transition: none !important; }
+  }
   .sel-standings-foot { display: flex; align-items: center; gap: 8px; margin: 0; padding: 8px 14px; border-top: 1px solid var(--sel-line); font-size: 16px; }
   .sel-standings-foot[hidden] { display: none; }
   .sel-standings-foot svg { flex: none; width: 20px; height: 20px; fill: none; stroke: #f5c518; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
   .sel-standings-foot b { color: #c9a7ff; }
   .sel-standings-foot i { flex: 1; }
+  /* a column held left of the strip (1280 px: ~320): the % goes first, then the header's type steps down, names keep their room */
+  @container (max-width: 400px) {
+    .sel-standings-rows li { grid-template-columns: 28px minmax(0, 1fr) auto 64px; column-gap: 6px; padding-inline: 10px; }
+    .sel-standings-rows .pc { display: none; }
+    #select .sel-standings-head { gap: 6px; padding-inline: 10px; font-size: 17px; }
+  }
 }
 @media (min-width: 1100px) and (min-height: 900px) {
   .sel-standings-rows { font-size: 17px; } .sel-standings-rows li { min-height: 38px; }
-  .sel-med b { font-size: 28px; } .sel-med .stars svg { width: 28px; height: 28px; }
+  .sel-med b { font-size: 28px; } .sel-med.none b { font-size: 13px; line-height: 2.37; } .sel-med .stars svg { width: 28px; height: 28px; }
 }
 /* Short desktop windows: the dock gives the pending card its room back (a 324 px dock took over half of 600 px). */
 @media (min-width: 900px) and (min-height: 600px) and (max-height: 660px) { #select { --dock-h: 224px; --action-h: 44px; --card-label-h: 68px; } .sel-card { --floor: 9px; } } /* the floor keeps ~16% of the 58 px panel, as elsewhere */
@@ -446,12 +492,14 @@ body.view-mode #select { opacity: 0; visibility: hidden; pointer-events: none; t
 @media (min-width: 900px) and (min-height: 661px) {
   .sel-card { flex-basis: 220px; --floor: 22px; }
 }
+@media (min-width: 900px) and (max-width: 919px) and (min-height: 661px) { .sel-card { flex-basis: 200px; --floor: 20px; } } /* both cards right of the narrowest info column (select-ui.js measure()), the fold included */
 /* Larger desktops keep nearly square cards rather than adding empty height above the artwork. */
 @media (min-width: 1100px) and (min-height: 900px) {
   #select { --dock-h: 360px; --card-label-h: 78px; }
-  .sel-song { font-size: 24px; padding-top: 20px; }
+  .sel-song { font-size: clamp(16px, 5.6cqi, 24px); padding-top: 20px; }
   .sel-tiles { padding-top: 20px; }
   .sel-panel { gap: 20px; }
+  .sel-identity .sel-entity { translate: 0 6px; }
   .sel-card { flex-basis: 248px; --floor: 25px; }
   .sel-card-name { font-size: 19px; line-height: 23px; }
   .sel-card .nb small { font-size: 14px; }
@@ -464,7 +512,6 @@ body.view-mode #select { opacity: 0; visibility: hidden; pointer-events: none; t
   .sel-info { gap: 6px; }
   .sel-panel { gap: 6px; }
   .sel-name { font-size: 24px; }
-  .sel-identity .sel-entity { font-size: 13px; }
   .sel-song { padding-top: 6px; font-size: 15px; }
   .sel-song-credit { font-size: 11px; }
   .sel-tiles { padding-top: 6px; }
@@ -528,25 +575,25 @@ body:has(:focus-visible) #select .sel-card[aria-selected="true"]:not(:focus-visi
 .sel-pending h2 > span { display: block; width: 100%; }
 .sel-pending .sel-pending-icon { min-height: 0; width: min(180px, 100%); height: 48px; display: flex; justify-content: center; align-items: center; container-type: size; }
 .sel-pending-icon :is(svg, img) { width: 100%; height: 100%; min-height: 0; image-rendering: pixelated; }
-.sel-pending .sel-entity { --entity-holo: linear-gradient(105deg, #ffb3c7, #ffe29a, #b8f0c8, #a8dcff, #d7b8ff, #ffb3c7); max-width: 100%; box-sizing: border-box; font-size: 12px; line-height: 16px; min-height: 24px; row-gap: 0; background: var(--entity-holo) 0 0 / 300% 100%; color: #2a1a10; box-shadow: inset 0 0 0 1px #fff9, 0 0 4px #d7b8ff40; animation: sel-holo 6s linear infinite; }
+:is(.sel-pending, .sel-identity) .sel-entity { --entity-holo: linear-gradient(105deg, #ffb3c7, #ffe29a, #b8f0c8, #a8dcff, #d7b8ff, #ffb3c7); max-width: 100%; box-sizing: border-box; font-size: 12px; line-height: 16px; min-height: 24px; row-gap: 0; background: var(--entity-holo) 0 0 / 300% 100%; color: #2a1a10; box-shadow: inset 0 0 0 1px #fff9, 0 0 4px #d7b8ff40; animation: sel-holo 6s linear infinite; }
 /* Each attribution keeps its own holo surface; the separator travels with the second one. */
-.sel-pending .sel-entity:has(.sel-entity-unit) { width: max-content; padding: 0; gap: 4px 6px; justify-content: center; background: none; box-shadow: none; animation: none; }
-.sel-pending .sel-entity[data-stacked] { flex-direction: column; }
-.sel-pending .sel-entity[data-stacked] .sel-entity-unit { gap: 3px; }
-.sel-pending .sel-entity-plus { color: #fff3d6; }
-.sel-pending .sel-entity-part { box-sizing: border-box; padding: 4px 10px; border-radius: 999px; min-height: 24px; background: var(--entity-holo) 0 0 / 300% 100%; box-shadow: inset 0 0 0 1px #fff9, 0 0 4px #d7b8ff40; animation: sel-holo 6s linear infinite; }
-#select .sel-pending .sel-entity svg { width: auto; height: 16px; }
+:is(.sel-pending, .sel-identity) .sel-entity:has(.sel-entity-unit) { width: max-content; padding: 0; gap: 4px 6px; justify-content: center; background: none; box-shadow: none; animation: none; }
+:is(.sel-pending, .sel-identity) .sel-entity[data-stacked] { flex-direction: column; }
+:is(.sel-pending, .sel-identity) .sel-entity[data-stacked] .sel-entity-unit { gap: 3px; }
+:is(.sel-pending, .sel-identity) .sel-entity-plus { color: #fff3d6; }
+:is(.sel-pending, .sel-identity) .sel-entity-part { box-sizing: border-box; padding: 4px 10px; border-radius: 999px; min-height: 24px; background: var(--entity-holo) 0 0 / 300% 100%; box-shadow: inset 0 0 0 1px #fff9, 0 0 4px #d7b8ff40; animation: sel-holo 6s linear infinite; }
+#select :is(.sel-pending, .sel-identity) .sel-entity svg { width: auto; height: 16px; }
 /* Compact cards give up label and paragraph padding before type or contact targets. */
 @container (max-height: 300px) {
-  .sel-pending .sel-entity-part { min-height: 20px; padding-block: 2px; }
+  :is(.sel-pending, .sel-identity) .sel-entity-part { min-height: 20px; padding-block: 2px; }
   .sel-pending:has(.sel-entity-unit) .sel-pending-copy p { padding-block: 1px; }
-  .sel-pending .sel-entity:has(.sel-entity-unit) { row-gap: 2px; }
+  :is(.sel-pending, .sel-identity) .sel-entity:has(.sel-entity-unit) { row-gap: 2px; }
   @media (max-width: 519px) and (min-height: 501px) {
     .sel-pending:has(.sel-entity-unit) h2 { padding-block: 4px; }
   }
 }
 @keyframes sel-holo { to { background-position: 300% 0; } }
-@media (prefers-reduced-motion: reduce) { .sel-pending :is(.sel-entity, .sel-entity-part) { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .sel-pending :is(.sel-entity, .sel-entity-part), .sel-identity :is(.sel-entity, .sel-entity-part) { animation: none; } }
 .sel-pending p { margin: 0; padding-block: 3px; text-wrap: balance; }
 .sel-pending .sel-pending-copy { display: contents; }
 .sel-pending-copy p + p { font-size: 14px; color: #e8d8b8; }
@@ -622,14 +669,15 @@ body:has(:focus-visible) #select .sel-card[aria-selected="true"]:not(:focus-visi
 }
 /* Narrow, short portrait windows: the full identity and 44 px contact targets take the room before optional art.
    The wider reading column keeps long names on one line where possible; the compact dock stays fixed for every figure.
-   Its portrait slot is too short to read, so captions use the whole card rather than leaving an empty band. */
+   Its portrait slot over the caption would be a sliver, so a short card (320×568) puts the portrait beside the caption,
+   full height: the drawings stay (Marc, 2026-10-21). */
 @media (max-width: 519px) and (min-height: 501px) and (max-height: 700px) {
   #select { --dock-h: clamp(160px, calc(100dvh - 408px), 240px); }
   .sel-pending { width: calc(100% - 16px); padding-inline: 8px; }
   .sel-card { container-type: size; }
   @container (max-height: 100px) {
-    .sel-card .por { visibility: hidden; }
-    .sel-card .nb { grid-row: 1 / -1; }
+    .sel-card .por { --floor: 9px; grid-area: 1 / 1 / -1 / -1; justify-self: start; width: 46%; }
+    .sel-card .nb { grid-area: 1 / 1 / -1 / -1; justify-self: end; width: 54%; padding-inline: 4px; box-shadow: inset 1px 0 #fff3d61a; }
   }
 }
 
@@ -657,7 +705,6 @@ body:has(:focus-visible) #select .sel-card[aria-selected="true"]:not(:focus-visi
   .sel-identity { row-gap: 12px; } /* the name to its first chip */
   .sel-name { font-size: clamp(30px, 9.6vw, 40px); } /* «Mulassa de Valls» on one line beside the ? from 375 px */
   .sel-song { box-sizing: border-box; max-width: 100%; padding: 4px 10px; border-radius: var(--sel-chip-r); background: var(--sel-chip-bg); } /* the facts' chip */
-  .sel-identity .sel-entity { min-height: 32px; box-sizing: border-box; padding: 4px 10px 4px 6px; border-radius: var(--sel-chip-r); background: var(--sel-chip-bg); color: #fff3d6; font-size: 13px; text-shadow: none; } /* on the open plaça it needs the same backing as the facts */
   .sel-song { gap: 8px; padding-left: 4px; font-size: 14px; line-height: 18px; }
   .sel-song svg { width: 30px; height: 30px; padding: 7px; }
   .sel-song-copy { gap: 0; }
@@ -673,50 +720,56 @@ body:has(:focus-visible) #select .sel-card[aria-selected="true"]:not(:focus-visi
 @media (min-width: 2200px) and (min-height: 1200px) { #select { zoom: 1.1; } }
 
 /* The selector's header: the title's lettering top-left (index.html .sel-logo, still and not a control), the four corner
-   buttons in one row on the right, Classificacions first, then sound and talking (music, Bústia), then ⚙ (free play is the
-   dock's «Ball lliure»; #viewmode shows only inside it, as the exit at the row's right end, the radio and ? beside it). Only
-   here: on the title they are the canvas layout's obstacles. A hidden one (no board, no Bústia) closes its gap; --cb-i
-   counts from the left, --cb-r from the right. Inside #select, so photo mode hides the logo with the rest. */
-body:has(#select:not([hidden])) { --cb-a: 0; --cb-b: 0; --cb-n: calc(4 - var(--cb-a) - var(--cb-b)); --cb-g: 12px; }
-body:has(#select:not([hidden])):has(#leaders[hidden]) { --cb-a: 1; }
+   buttons in one row on the right, Perfil first (decision 6), then sound and talking (music, Bústia), then ⚙ (free play is the
+   dock's «Ball lliure»; #viewmode shows only inside it, as the exit at the row's right end, the radio and ? beside it; the
+   board is the info's ranking line, Marc 2026-10-21). Only here: on the title they are the canvas layout's obstacles. A
+   hidden one (no board: no Perfil; no Bústia) closes its gap; --cb-i counts from the left, --cb-r from the right. Inside
+   #select, so photo mode hides the logo with the rest. */
+body:has(#select:not([hidden])) { --cb-b: 0; --cb-c: 0; --cb-n: calc(4 - var(--cb-b) - var(--cb-c)); --cb-g: 12px; }
 body:has(#select:not([hidden])):has(#feedback[hidden]) { --cb-b: 1; }
-body:has(#select:not([hidden])) #leaders { --cb-i: 0; }
-body:has(#select:not([hidden])) #music { --cb-i: calc(1 - var(--cb-a)); }
-body:has(#select:not([hidden])) #feedback { --cb-i: calc(2 - var(--cb-a)); }
-body:has(#select:not([hidden])) #settings { --cb-i: calc(3 - var(--cb-a) - var(--cb-b)); }
+body:has(#select:not([hidden])):has(#profile[hidden]) { --cb-c: 1; }
+body:has(#select:not([hidden])) #profile { --cb-i: 0; }
+body:has(#select:not([hidden])) #music { --cb-i: calc(1 - var(--cb-c)); }
+body:has(#select:not([hidden])) #feedback { --cb-i: calc(2 - var(--cb-c)); }
+body:has(#select:not([hidden])) #settings { --cb-i: calc(3 - var(--cb-b) - var(--cb-c)); }
 body:has(#select:not([hidden])) #viewmode { --cb-r: 2; --cb-i: calc(var(--cb-n) - 3); } /* shown only in free play: the exit, then the radio and the ? (free-music.js places both from it) end the row */
-body:has(#select:not([hidden])) :is(#leaders, #feedback, #music, #settings) { --cb-r: calc(var(--cb-n) - 1 - var(--cb-i)); }
+body:has(#select:not([hidden])) :is(#profile, #feedback, #music, #settings) { --cb-r: calc(var(--cb-n) - 1 - var(--cb-i)); }
+#profile { position: fixed; top: calc(10px + env(safe-area-inset-top)); width: 44px; height: 44px; min-height: 0; padding: 0; border-width: 2px; border-radius: 50%; }
+#profile svg { width: 24px; height: 24px; }
+@media (min-width: 520px) and (min-height: 520px) { #profile { top: calc(16px + env(safe-area-inset-top)); width: 56px; height: 56px; } #profile svg { width: 30px; height: 30px; } }
+@media (max-height: 500px) { #profile { top: calc(12px + env(safe-area-inset-top)); } }
 #select > .sel-logo { position: absolute; z-index: 2; overflow: visible; /* the outline's edge */ left: max(16px, env(safe-area-inset-left)); top: calc(16px + env(safe-area-inset-top)); width: auto; height: 56px; pointer-events: none; }
 @media (min-width: 520px) and (min-height: 520px) { /* 56 px buttons */
-  body:has(#select:not([hidden])) :is(#leaders, #feedback, #music, #settings, #viewmode) { left: auto; right: calc(max(16px, env(safe-area-inset-right)) + var(--cb-r) * 68px); }
+  body:has(#select:not([hidden])) :is(#profile, #feedback, #music, #settings, #viewmode) { left: auto; right: calc(max(16px, env(safe-area-inset-right)) + var(--cb-r) * 68px); }
 }
 @media (min-width: 520px) and (max-height: 519px), (max-height: 500px) { /* 44 px buttons, short windows */
-  body:has(#select:not([hidden])) :is(#leaders, #feedback, #music, #settings, #viewmode) { left: auto; right: calc(max(12px, env(safe-area-inset-right)) + var(--cb-r) * 56px); }
+  body:has(#select:not([hidden])) :is(#profile, #feedback, #music, #settings, #viewmode) { left: auto; right: calc(max(12px, env(safe-area-inset-right)) + var(--cb-r) * 56px); }
   #select > .sel-logo { left: max(12px, env(safe-area-inset-left)); top: calc(14px + env(safe-area-inset-top)); height: 40px; }
 }
 /* Portrait phones: 44 px buttons, 8 px apart (6 under 375 px) so the logo keeps >= 82 px (TAP's capitals >= 7 px) beside
-   them; it takes what the row leaves, up to the row's height. Under 360 px it cannot fit: no logo, the row centred. */
+   them; it takes what the row leaves, up to the row's height (92 px at 320). Under 320 px no logo: the row spans the gutters. */
 @media (max-width: 519px) and (min-height: 501px) {
   body:has(#select:not([hidden])) { --cb-g: 8px; }
-  body:has(#select:not([hidden])) :is(#leaders, #feedback, #music, #settings, #viewmode) { top: calc(10px + env(safe-area-inset-top)); right: auto; bottom: auto; width: 44px; height: 44px; left: calc(100% - max(12px, env(safe-area-inset-right)) - (var(--cb-r) + 1) * 44px - var(--cb-r) * var(--cb-g)); }
+  body:has(#select:not([hidden])) :is(#profile, #feedback, #music, #settings, #viewmode) { top: calc(10px + env(safe-area-inset-top)); right: auto; bottom: auto; width: 44px; height: 44px; left: calc(100% - max(12px, env(safe-area-inset-right)) - (var(--cb-r) + 1) * 44px - var(--cb-r) * var(--cb-g)); }
   #select > .sel-logo { left: max(12px, env(safe-area-inset-left)); top: calc(10px + env(safe-area-inset-top)); height: 44px; width: calc(100% - max(12px, env(safe-area-inset-left)) - max(12px, env(safe-area-inset-right)) - 10px - var(--cb-n) * (44px + var(--cb-g)) + var(--cb-g)); }
 }
 @media (max-width: 374px) and (min-height: 501px) { body:has(#select:not([hidden])) { --cb-g: 6px; } }
 @media (max-width: 374px) and (min-height: 501px) { /* both labels on one line, nothing clipped: each button takes its words' width, then shares what is left */
   .sel-footer #select-next, .sel-footer #select-free { flex: 1 1 auto; padding-inline: 10px; font-size: 16px; } #select-free { gap: 8px; }
 }
-@media (max-width: 359px) and (min-height: 501px) {
+@media (max-width: 319px) and (min-height: 501px) {
   #select > .sel-logo { display: none; }
-  body:has(#select:not([hidden])) :is(#leaders, #feedback, #music, #settings, #viewmode) { left: calc(50% - (var(--cb-n) * 56px - 12px) / 2 + var(--cb-i) * 56px); }
+  /* no logo: the first button on the left gutter (the pills' and the info's edge), the last on the right one (Marc: a centred row started ~20 px in) */
+  body:has(#select:not([hidden])) :is(#profile, #feedback, #music, #settings, #viewmode) { left: calc(max(12px, env(safe-area-inset-left)) + var(--cb-i) * (100% - max(12px, env(safe-area-inset-left)) - max(12px, env(safe-area-inset-right)) - 44px) / max(1, var(--cb-n) - 1)); }
 }
 
 .sel-card.later { content-visibility: auto; contain-intrinsic-size: auto 128px auto 200px; } /* the off-screen pending cards skip their layout and paint: unfolding 30-odd cards cost ~150 ms on an iPhone */
 
 /* FPS own a rail, independent of the selected figure, fold, difficulty and footer actions. */
 body.fps-on:has(#select:not([hidden])) { --fps-rail: 24px; }
-body.fps-on:has(#select:not([hidden])) :is(#leaders, #feedback, #music, #settings, #viewmode), body.fps-on #select > .sel-logo { translate: 0 var(--fps-rail); }
+body.fps-on:has(#select:not([hidden])) :is(#profile, #feedback, #music, #settings, #viewmode), body.fps-on #select > .sel-logo { translate: 0 var(--fps-rail); }
 body.fps-on #select:not([data-header-inline]) > :is(.sel-towns, .sel-info) { translate: 0 var(--fps-rail); }
-body.fps-on #select .sel-info { max-height: calc(100% - var(--info-top) - var(--dock-h) - 6px - env(safe-area-inset-top) - env(safe-area-inset-bottom) - var(--fps-rail)); }
+body.fps-on #select .sel-info { max-height: calc(100% - var(--info-top) - var(--info-dock, var(--dock-h)) - 6px - env(safe-area-inset-top) - env(safe-area-inset-bottom) - var(--fps-rail)); }
 @media (max-height: 500px) {
   body.fps-on #select .sel-pending { top: calc((100% + 60px + env(safe-area-inset-top) + var(--fps-rail) - 8px - env(safe-area-inset-bottom)) / 2); --pending-max: calc(100% - 68px - env(safe-area-inset-top) - env(safe-area-inset-bottom) - var(--fps-rail)); max-height: var(--pending-max); }
 }
@@ -727,11 +780,19 @@ body.fps-on #select .sel-info { max-height: calc(100% - var(--info-top) - var(--
 @media (min-width: 900px) and (min-height: 600px) { #select > .sel-logo:not(.sel-logo-line) { display: none; } #select > .sel-logo-line { display: block; left: calc(max(40px, env(safe-area-inset-left)) + 1px); } }
 @media (min-width: 900px) and (min-height: 600px) and (max-width: 1099px) { #select > .sel-logo-line { height: 48px; } }
 
+/* Fine-pointer desktops: the strip's box starts at the info column's edge + 12 (--strip-x, measure()), folded or unfolded, so
+   its cards scroll inside it and never under the column; the column sits above the rest of the dock, whose empty band
+   would otherwise catch the clicks on its lower rows. */
+@media (min-width: 900px) and (min-height: 600px) and (pointer: fine) {
+  .sel-carousel { margin-left: calc(var(--strip-x, 0px) - var(--bl)); }
+  #select > .sel-info { z-index: 2; }
+}
 /* Wide desktops: the dock's strip sits in the middle, clear of the info column, so the column runs down to the screen's
-   foot instead of stopping at the dock's top (the empty band under the position, Marc 2026-10-20). Not while the strip
-   overflows (the catalog open): then it spans the width. select-standings.js fills what this gives. */
+   foot instead of stopping at the dock's top (the empty band under the position, Marc 2026-10-20), the catalog open or
+   not (touch: only while its full-width strip fits). select-standings.js fills what this gives. */
 @media (min-width: 2000px) and (min-height: 900px) { /* from 2000 px the 640 px column ends left of the ~600 px centred strip */
   #select:has(#select-carousel[data-fits]) .sel-info { max-height: calc(100% - var(--info-top) - 56px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); }
+  @media (pointer: fine) { #select .sel-info { max-height: calc(100% - var(--info-top) - 56px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); } }
 }
 /* the zoom (x1.1) would push the logo's top 1.6 px under the corner buttons' (which are outside #select) */
 @media (min-width: 2200px) and (min-height: 1200px) { #select > .sel-logo { top: calc((16px + env(safe-area-inset-top)) / 1.1); } }

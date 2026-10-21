@@ -1,5 +1,5 @@
 // Title screen layout (pure): one vertical budget for the logo, the JUGA button (it opens «QUI BALLA?»), the keyboard
-// hint and the DOM "Com es juga?" pill (+ iPhone hint) under it. main.js draws the canvas part and places the pill from
+// hint and the DOM "Com es juga?" pill under it. main.js draws the canvas part and places the pill from
 // the same result, so they can never overlap. Everything is in HUD units (1 unit = K css px) unless named *Css.
 //
 // Too little height: the mulassa's free band shrinks first (a big logo may cover her a little), then the logo, then the
@@ -10,10 +10,10 @@ export const LOGO_TOP = 0.62, LOGO_H = 1.7; // MULASSA + TAP TAP DANCE, around l
 const ICON_GAP_CSS = 22, ICON_GAP_MIN_CSS = 12; // portrait: the logo starts this far under the corner icons' row (breathing room, never glued to it)
 const HINT = 21; // the key hint slot
 export const CHIP = 22, CHIP_GAP = 6; // a friend's challenge (?repte): a tip chip over the button, and its gap to it
-const MARGIN_CSS = 16, HINT_GAP_CSS = 10; // pill above the bottom edge; iPhone hint above the pill
+const MARGIN_CSS = 16; // pill above the bottom edge
 
 // o: { W, HH, K, safe: {t,r,b,l} css, keys, note (audio error shown in the hint slot), logoRatio (logo width / s),
-//      subW (the button's subtitle width at size 7), pill: {w,h} css, hint: {w,h} css | null,
+//      subW (the button's subtitle width at size 7), pill: {w,h} css,
 //      corner (the pill sits top-right, index.html max-height: 500px), obstacles: [{left,top,right,bottom}] css,
 //      chip (true: room for the challenge chip, never dropped: it says which level to beat) }
 export const titleLayout = o => place(o);
@@ -28,11 +28,11 @@ function place(o, pass2 = null) {
   const sMax = Math.max(28, Math.min(W / 4.6, 96, (W - 12) / o.logoRatio, pass2?.s ?? Infinity));
   const bhMin = Math.max(32, 44 * u);
   const hintDroppable = o.keys && !o.note, hintOn = o.keys || Boolean(o.note);
-  const pillH = o.corner ? 0 : o.pill.h * u, ios = o.hint ? o.hint.h * u + HINT_GAP_CSS * u : 0;
+  const pillH = o.corner ? 0 : o.pill.h * u;
   const bottom = HH - (safe.b + MARGIN_CSS) * u;
   const v = { s: sMax, gI: row0 == null ? 0 : ICON_GAP_CSS * u, mid: HH * 0.3, gA: 20, gB: 12, hint: hintOn ? HINT : 0, bh: 50 };
   const chip = o.chip ? CHIP + CHIP_GAP : 0;
-  const need = () => topAt(v.gI) + LOGO_H * v.s + v.gA + v.mid + chip + v.bh + v.hint + v.gB + ios + pillH + (HH - bottom);
+  const need = () => topAt(v.gI) + LOGO_H * v.s + v.gA + v.mid + chip + v.bh + v.hint + v.gB + pillH + (HH - bottom);
   let excess = need() - HH;
   const take = (key, min, per = 1) => { // shrink v[key] towards min by what's left of the excess (per: budget units per unit)
     if (excess <= 0) return;
@@ -60,8 +60,8 @@ function place(o, pass2 = null) {
       return between && (between.fits && !under.fits || between.fits === under.fits && between.s >= under.s) ? between : under;
     }
   }
-  // the button sits on the bottom, right above the pill (and the iPhone hint)
-  const pillTop = bottom - pillH, blockBottom = pillTop - ios - v.gB;
+  // the button sits on the bottom, right above the pill
+  const pillTop = bottom - pillH, blockBottom = pillTop - v.gB;
   const bw = Math.min(200, inner(o) * 0.8), y0 = blockBottom - v.hint - v.bh;
   const button = { x: W / 2 - bw / 2, y: y0, w: bw, h: v.bh, i: 0 };
   return {
@@ -72,7 +72,6 @@ function place(o, pass2 = null) {
     subSize: Math.min(7, 7 * (bw - 12) / o.subW),
     hintY: v.hint ? y0 + v.bh + HINT - 5 : null,
     pillTopCss: o.corner ? null : pillTop * K, // the pill's top edge (css px), centred on W / 2 by index.html
-    iosTopCss: o.hint ? (pillTop - ios) * K : null,
   };
 }
 

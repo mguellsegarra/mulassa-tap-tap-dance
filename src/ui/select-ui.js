@@ -28,7 +28,7 @@ const TROPHY = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h10V9
 export function setupSelect({ doc = document, win = globalThis, store, keyboard = () => false, busy = () => false, reduced = () => false,
   firstLevel = null, demo = false, getError = () => null, standing = () => Promise.resolve(null), levelPodium = null, ranked = false, onBoard = () => {}, onCard = () => {}, sfx = () => {}, onPlay, onSelect = () => {}, onHowto, onWrite }) {
   const DEMO = demo && Boolean((import.meta.env ?? {}).DEV); // ?demo: made-up facts on show only, never stored or sent; gone from production builds
-  const $ = id => doc.getElementById(id), cardOf = p => onCard({ ...p, from: { ...p.from, figure: figure.id } }), facts = setupStandings({ doc, $, onBoard: () => onBoard(figure), onCard: cardOf, busy, levels: () => step === 'level', onEased: () => { if (shown) { levelStats(); measure(); } } }); // facts: desktops' medals and board card (select-standings.js)
+  const $ = id => doc.getElementById(id), cardOf = p => onCard({ ...p, from: { ...p.from, figure: figure.id } }), facts = setupStandings({ doc, $, onBoard: () => onBoard(figure), onCard: cardOf, busy, levels: () => step === 'level', onSwapped: () => { if (shown) { levelStats(); measure(); } } }); // facts: desktops' medals and board card (select-standings.js)
   const podium = setupPodium({ doc, win, $, onBoard: () => { if (!busy()) onBoard(figure); }, onCard: cardOf, load: ranked && levelPodium, refit: () => levelStats() }); // step 2's podium (select-podium.js)
   let standingNow = null; // the board's last answer, for the podium
   const root = $('select'), towns = $('select-towns'), strip = $('select-strip'), levels = $('select-level'), pending = $('select-pending');
@@ -85,11 +85,14 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
       $('select-song-name').textContent = figure.song || '';
       $('select-song-credit').textContent = [figure.composer, figure.year].filter(Boolean).join(' · ');
     }
-    setStep('figures');
-    if (ok) { records(); facts.medals(DIFFS.map((_, l) => (DEMO ? DEMO_BEST[l] != null && { score: DEMO_BEST[l], quality: DEMO_PCT[l] } : readFigureRecord(store, figure, l)) || null)); updateStanding(); }
+    // every write first, then one fit and one measure: fitting after each (the step, the medals, the board) cost ~80 ms a figure change
+    const back = setStep('figures', false);
+    if (ok) { records(); facts.medals(DIFFS.map((_, l) => (DEMO ? DEMO_BEST[l] != null && { score: DEMO_BEST[l], quality: DEMO_PCT[l] } : readFigureRecord(store, figure, l)) || null), false); updateStanding(levelStats); }
+    else levelStats();
+    if (shown && !opening) { measure(); if (back) centre(strip, cards[cur], 'instant'); }
   }
   // Free play (photo mode, driving this figure) is a step-one action of a playable figure, beside the primary.
-  function setStep(next) {
+  function setStep(next, settle = true) { // settle false: the caller fits and measures once its other writes are done (returns whether to recentre)
     const back = step === 'level';
     step = next === 'level' && playable(figure) ? 'level' : 'figures';
     const choosing = step === 'level';
@@ -100,8 +103,10 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     $('select-act').inert = !choosing;
     $('select-next').hidden = choosing;
     $('select-play').hidden = !choosing;
-    $('select-figures-back').hidden = !choosing; if (choosing && !back) levels.toggleAttribute('data-quiet', true); levelStats(); // showing it again restarts its animations: no shake
+    $('select-figures-back').hidden = !choosing; if (choosing && !back) levels.toggleAttribute('data-quiet', true); // showing it again restarts its animations: no shake
     if (choosing) scrolling.stop(); // a hidden strip cannot finish a motion
+    if (!settle) return back && !choosing;
+    levelStats();
     if (shown && !opening) { measure(); if (back && !choosing) centre(strip, cards[cur], 'instant'); }
   }
   function nextStep() {
@@ -114,17 +119,17 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
   // rewrites nothing when the place has not changed (Marc: «Classificació» then «Posició …» flashed on each change)
   const seenRank = new Map();
   const rankKey = () => `${figure.id}:${ownerKey(store)}`; // a sign-out changes it: never the previous profile's place
-  function updateStanding() {
+  function updateStanding(refit) {
     const mine = ++req, key = rankKey();
-    rank(seenRank.get(key) ?? null); // until the board answers (?demo once showed a made-up «12 de 135» here)
+    rank(seenRank.get(key) ?? null, false, refit); // until the board answers (?demo once showed a made-up «12 de 135» here)
     const fail = () => { if (mine === req) { seenRank.delete(key); rank(null, true); } }; // no answer: the card says so in the room it kept
     standing(figure.id).then(s => (s ? mine === req && (seenRank.set(key, s), rank(s)) : fail()), fail); // each figure has its own board (Drac included)
   }
-  function rank(s, failed = false) { // the ranking line («Posició 12 de 135 · Tardor 2026», select-standings.js); a button, it opens Classificacions
+  function rank(s, failed = false, refit = step === 'level' ? levelStats : undefined) { // the ranking line («Posició 12 de 135 · Tardor 2026», select-standings.js); a button, it opens Classificacions
     const el = $('select-rank-tile'), text = rankText(s);
     standingNow = s;
     el.hidden = !ranked; tiles(); // the placeholder takes this figure's and owner's last shape; step 2 fits the answer's goals beside the level row
-    facts.board(s, ranked, failed, rankKey(), step === 'level' ? levelStats : undefined);
+    facts.board(s, ranked, failed, rankKey(), refit);
     el.toggleAttribute('data-loading', !s && !failed);
     $('select-pos').textContent = text;
     el.setAttribute('aria-label', rankLabel(text));
@@ -140,9 +145,8 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
       b.setAttribute('aria-label', has ? tr('ui.select.levelAria', { level: d, score: num(score) }) : d);
     }
   }
-  // desktops, step 2: the info column may run down to the level card (12 px above it), not the dock's top; the board card
-  // eases to its new height (select-standings.js)
-  function levelStats() { facts.eased(() => {
+  // desktops, step 2: the info column may run down to the level card (12 px above it), not the dock's top
+  function levelStats() {
     const card = step === 'level' && win.innerWidth >= 900 && win.innerHeight >= 600 && $('select-act').getBoundingClientRect();
     if (card?.height) root.style.setProperty('--info-dock', `${(root.getBoundingClientRect().bottom - card.top) / (parseFloat(win.getComputedStyle?.(root).zoom) || 1) + 6}px`);
     else if (step === 'level') root.style.removeProperty?.('--info-dock'); // step 1's: measure()
@@ -150,7 +154,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     facts.fit(true); showLevelStats($, { on: two, level, record: DEMO ? { score: DEMO_BEST[level], quality: DEMO_PCT[level] } : readFigureRecord(store, figure, level), goals: facts.goals });
     if (!two) facts.fit(); // step 1: the medals and the rows
     podium.fit({ on: two && ranked, figure: figure.id, level, owner: ownerKey(store), s: standingNow });
-  }); }
+  }
   function setLevel(l, by = 'tap') { // 'open': the figure's last level (NORMAL at first) or a challenge's, marked without a tap's shake
     if (!playable(figure)) return;
     l = Math.max(0, Math.min(DIFFS.length - 1, l));
@@ -323,7 +327,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
   }
   // ↑↓ jump between the screen's rows like a game menu: the corner buttons, pills, info tiles, «Aviat», figures or levels,
   // footer buttons; ←→ walk the corner row (left to right as drawn).
-  const corner = ['free', 'profile', 'music', 'settings'].map($).filter(Boolean);
+  const corner = ['free', 'music', 'settings'].map($).filter(Boolean);
   const cornerRow = { contains: el => corner.includes(el) };
   const rows = [cornerRow, towns, $('select-info'), pending, strip, levels, root.querySelector('.sel-footer')];
   const usable = el => el && !el.disabled && !el.closest('[hidden]') && el.getClientRects().length > 0; // fixed corners have no offsetParent
@@ -529,7 +533,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
         const under = btns.filter(b => b.left - 12 * z < r($('select-info')).right).map(b => b.top - drop);
         root.style.setProperty('--info-dock', under.length ? px(r(root).bottom - Math.min(...under) + 6 * z) : '50px');
       } else root.style.removeProperty?.('--info-dock');
-      if ((root.style.getPropertyValue?.('--info-dock') ?? '') !== was) facts.eased(() => facts.fit());
+      if ((root.style.getPropertyValue?.('--info-dock') ?? '') !== was) facts.fit();
     }
     if (boxed && flag?.offsetParent) { // the same rest place inside a box from the column's edge + 12: its room (peek()'s gap) and stripLimit are unchanged
       // A hidden column (pending figure) keeps its old rect for its 220 ms display fade, and the observer may skip the refit: ignore it.
@@ -547,10 +551,13 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     if (!pending.hidden) { fitEntityLabel($('aviat-entity')); fitPendingTitle($('aviat-title'), win); }
     // Cached action bounds for diagnostic overlays; no frame-loop layout reads.
     api.fpsFooter = ['select-figures-back', 'select-next', 'select-play'].map($).filter(el => !el.hidden).map(r); flip.play();
+    measured = sizes(); // what the observer would report for this layout
   }
+  const sizes = () => [$('select-info'), root].map(el => `${el.offsetWidth}x${el.offsetHeight}`).join(); let measured = '';
   win.addEventListener('resize', () => { if (shown) { scrolling.stop(); if (closing) finishFold(); for (const el of [towns, $('select-info')]) arrivals.get(el)?.cancel(); if (teasing) teaserFill(); levelStats(); measure(); if (step === 'figures') centre(strip, cards[cur], 'instant'); } });
   if (win.ResizeObserver) {
-    const observer = new win.ResizeObserver(() => { if (shown && !facts.easing) { levelStats(); measure(); } }); // a hint closing or the viewport settling: the level row fits again
+    // a hint closing or the viewport settling: the level row fits again; not measure()'s own layout (a figure change's: a second long task)
+    const observer = new win.ResizeObserver(() => { if (shown && !facts.fading && sizes() !== measured) { levelStats(); measure(); } });
     observer.observe($('select-info')); observer.observe(root); // --app-h can settle after Safari's viewport event.
   }
   doc.fonts?.ready.then(() => { if (shown) measure(); });

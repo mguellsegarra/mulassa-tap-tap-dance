@@ -76,9 +76,10 @@ document.addEventListener('touchend', e => {
 addEventListener('blur', clearPhotoKeys);
 // A double tap or double click on the bare plaça enters free play: the world itself, or the selector's empty layers around
 // the dock (its shades are pointer-less; these boxes are only their frame). A drag orbits and is no tap; a card or button is UI.
+// Both taps must start on the selector: the splash's unlocking tap is no first half.
 const bareWorld = t => t === hud || Boolean(t?.matches?.('#select, .sel-bottom, .sel-carousel, .sel-strip, .sel-footer'));
 let freeTapDown = null, freeTapLast = null;
-addEventListener('pointerdown', e => { freeTapDown = e.isPrimary && bareWorld(e.target) ? { t: e.timeStamp, x: e.clientX, y: e.clientY } : null; }, true);
+addEventListener('pointerdown', e => { freeTapDown = e.isPrimary && G.state === 'select' && bareWorld(e.target) ? { t: e.timeStamp, x: e.clientX, y: e.clientY } : null; }, true);
 addEventListener('pointerup', e => {
   const d = freeTapDown, near = (a, r) => Math.hypot(e.clientX - a.x, e.clientY - a.y) < r; freeTapDown = null;
   if (!d || e.timeStamp - d.t > 300 || !near(d, 10)) { freeTapLast = null; return; }

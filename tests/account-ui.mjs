@@ -288,7 +288,7 @@ const service = (o = {}) => ({ configured: true, asked: [], async seasons(f) { t
   const privacy = html.slice(html.indexOf('<section data-privacy="leaderboards"'), html.indexOf('</section>', html.indexOf('<section data-privacy="leaderboards"')));
   assert(/sumats entre (tots )?els teus dispositius/.test(privacy) && /Mai no s’hi envia l’hora en què jugues ni cap dada del dispositiu/.test(privacy) && /Tot s’esborra amb el perfil/.test(privacy), 'Privadesa keeps what the notice dropped');
   assert(/Crea un perfil per guardar-les i sortir a les classificacions\./.test(sheet('account-menu')));
-  assert(/<button id="profile" class="round-btn" hidden aria-haspopup="dialog" aria-label="Perfil"/.test(html), 'the Perfil corner button');
+  assert(/<button id="settings-profile" type="button" class="btn btn-secondary" hidden aria-haspopup="dialog"[^>]*>[^]*?Perfil<span class="sub"/.test(html), 'Perfil opens from ⚙ Configuració');
   // layout rules (docs: names never cut; a lone season card not stranded at the top of the fixed-height hall; stat tiles read from the top)
   assert(/\.who \.player-name \.alias \{ white-space: normal; overflow-wrap: anywhere; \}/.test(html) && /\.who \.player-name \{ flex-wrap: wrap;/.test(html), 'list names wrap, never an ellipsis; a «#1234» goes under the name whole');
   assert(/#seasons-menu \{[^}]*height: var\(--hall-h, fit-content\); max-height:/.test(html) && /\.hall-detail \{[^}]*align-content: start;/.test(html), 'the hall on every screen: the sheet hugs its season, no free band above or under it');

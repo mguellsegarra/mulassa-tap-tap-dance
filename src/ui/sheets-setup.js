@@ -95,12 +95,12 @@ function openSettings() {
   settingsMenu.showModal();
   focusIn(settingsMenu, 'settings-sync');
   board.refreshSettings(); // the «Proposta de publicar» row
+  document.getElementById('settings-profile').hidden = !board.configured; // Perfil (decision 6): only with a board
 }
 const versionEl = document.getElementById('settings-version');
 versionEl.textContent = `v${APP_BUILD.replace('+', ' · ')}`; // v1.0.54 · d40502a: a phone has no hover, so the sha is plain text
 document.getElementById('settings').addEventListener('click', openSettings);
 document.getElementById('settings-sync').addEventListener('click', () => { settingsMenu.close(); syncBack = openSettings; sync.show(); });
-document.getElementById('settings-practice').addEventListener('click', () => { settingsMenu.close(); startPractice(null); });
 document.getElementById('settings-feedback').addEventListener('click', () => { settingsMenu.close(); feedback.show(openSettings); }); // the selector's Bústia (its corner slot went to free play); closing it comes back here
 // Classificacions (optional, online): from Configuració on the title (closing it goes back there) or the results screen.
 // After an eligible run its publish sheet opens by itself, only over a bare, visible, upright results screen.
@@ -163,7 +163,7 @@ const profile = setupProfile({ focusIn, captcha: board.captcha, store: kv, alias
 sheets.profile = profile;
 const account = setupAccount({ focusIn, profile, service, store: kv, stats: statsSync, onSync: back => { syncBack = back; sync.show(); } });
 sheets.account = account;
-document.getElementById('profile').addEventListener('click', () => { if (G.state === 'select' && !sheetUp()) account.open(() => select.refocus()); });
+document.getElementById('settings-profile').addEventListener('click', () => { settingsMenu.close(); account.open(openSettings); }); // Perfil lives in ⚙ Configuració (Marc 2026-10-22: no corner button); closing it comes back here
 // «Tardor 2026 s’ha acabat»: once per profile and season (in memory over the mock, so each review shows it)
 const seasonEnd = setupSeasonEnd({ focusIn, service, store: mockBoard ? new Map() : store, onHall: (f, back) => seasons.open(f, back) });
 sheets.seasonEnd = seasonEnd;

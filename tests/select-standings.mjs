@@ -77,42 +77,35 @@ assert(!$('select-standings').hidden && $('select-standings-pos').textContent ==
 facts.board(null, false);
 assert($('select-standings').hidden, 'no board configured (offline): no card');
 // The loading card: a skeleton made of the rows' own markup (one grid cell while loading, select.css), cross-faded with them.
-// Its shape is the last answer seen for this figure and owner; the first time, the most a board shows.
+// Its shape is the last answer seen for this figure and owner; the first time, the owner's last answer shown, else the most a board shows.
 const bodyEl = $('select-standings-body'), sk = $('select-standings-sk'), msgEl = $('select-standings-msg');
 const kinds = ol => ol.map(k => (k.className === 'dots' ? '·' : 'r')).join('');
-let eased = [], calm = false; // body.animate's calls; prefers-reduced-motion
+let calm = false; // prefers-reduced-motion
 globalThis.matchMedia = () => ({ matches: calm });
-bodyEl.animate = (frames, o) => { eased.push([parseFloat(frames[0].height), parseFloat(frames[1].height), o.duration]); return { cancel() {} }; };
 bodyEl.getBoundingClientRect = () => ({ height: 34 * Math.max(bodyEl.dataset.state === 'loading' ? sk.rows.length : 0, list.kids.length) + 20 }); // in the flow: the skeleton only while loading
 facts.board(null, true, false, 'drac:Jo#1');
 const most = kinds(sk.rows);
 assert.equal(bodyEl.dataset.state, 'loading');
 assert.equal(most, 'rrrrrrrrrr·rrrrr', 'never seen: the most a board shows (the top 10, ···, two each side of yours)');
 const few = rows.slice(0, 12).map(r => ({ ...r, is_self: false }));
-eased = [];
 facts.board({ pos: null, total: 12, rows: few }, true, false, 'drac:Jo#1');
 assert(bodyEl.dataset.state === 'ready' && msgEl.hidden && kinds(list.kids) === 'rrrrrrrrrr', 'twelve players, none of them you: the top 10');
-assert.equal(eased.length, 1, 'a shorter answer eases the card down (no empty band under the last row)');
-assert(eased[0][0] > eased[0][1] && eased[0][1] === 34 * 10 + 20 && eased[0][2] === 250, 'from the placeholder to the rows, 250 ms');
-eased = [];
 facts.board(null, true, false, 'drac:Jo#1');
 assert.equal(kinds(sk.rows), 'rrrrrrrrrr', 'seen before: the placeholder takes that answer\'s shape');
 assert(foot.hidden && !sk.kids.some(k => k.className === 'sel-standings-foot'), 'no gaps last time: no foot in the placeholder either');
 facts.board({ pos: null, total: 12, rows: few }, true, false, 'drac:Jo#1');
-assert.equal(eased.length, 0, 'the same answer again: nothing moves');
 facts.board(null, true, false, 'drac:Altre#2');
 assert.equal(kinds(sk.rows), most, 'another owner: their own shape (none yet: the most)');
 facts.board({ pos: 13, total: 63, rows }, true, false, 'mulassa:Jo#1');
 const real = kinds(list.kids);
+facts.board(null, true, false, 'aliga:Jo#1');
+assert.equal(kinds(sk.rows), real, 'a figure never seen: the shape on screen (the Mulassa\'s), not the most: no grow, then shrink');
 facts.board(null, true, false, 'mulassa:Jo#1');
 assert(kinds(sk.rows) === real && sk.kids.some(k => k.className === 'sel-standings-foot'), 'the Mulassa\'s shape, ··· and the foot included');
 facts.board({ pos: 12, total: 135 }, true, false, 'mulassa:Jo#1');
 assert(bodyEl.dataset.state === 'loading' && msgEl.hidden, 'a position with no rows yet (?demo) keeps the skeleton, never the empty message');
-calm = true; eased = [];
 facts.board({ pos: null, total: null, rows: [] }, true, false, 'mulassa:Jo#1');
 assert(bodyEl.dataset.state === 'ready' && !msgEl.hidden && /Encara no hi ha/.test(msgEl.textContent), 'empty: the message');
-assert.equal(eased.length, 0, 'reduced motion: the height changes at once');
-calm = false;
 facts.board(null, true, false, 'mulassa:Jo#1');
 assert.equal(kinds(sk.rows), 'r', 'an empty board last time: about the message\'s room');
 facts.board(null, true, true, 'mulassa:Jo#1');
@@ -126,26 +119,38 @@ $('select-standings-head').listeners.click[0]();
 assert.equal(boards, 1, 'the header opens Classificacions');
 console.log('selector standings: rows, gaps, verified check and fitting ok');
 
-// The ease, as WAAPI measures it: a running animation's height is its keyframe. Step 2's refit is level-stats' own eased call
-// (select-ui.js levelStats), so the calls nest: still one ease, from the old height to the new.
-{ let lv = false, h = 100, live = null, anims = [];
-  const easeFacts = setupStandings({ doc, $, onBoard() {}, levels: () => lv });
-  bodyEl.getBoundingClientRect = () => ({ height: live ? parseFloat(live.frames[0].height) : h });
-  bodyEl.animate = (frames, o) => { const a = { frames, o, cancel() { this.cancelled = true; if (live === a) live = null; } }; anims.push(a); live = a; return a; };
-  const answer = { pos: 13, total: 63, rows };
-  const kept = () => anims.filter(a => !a.cancelled).map(a => [parseFloat(a.frames[0].height), parseFloat(a.frames[1].height), a.o.duration]);
-  for (const step of [1, 2]) {
-    lv = step === 2; live = null;
-    const refit = to => (lv ? () => easeFacts.eased(() => { bodyEl.hidden = false; h = to; }) : () => { bodyEl.hidden = false; h = to; });
-    easeFacts.board(answer, true, false, 'mulassa:Jo#1', refit(100)); // the step's own layout first: no ease
-    for (const calmNow of [false, true]) {
-      calm = calmNow; anims = []; live = null;
-      easeFacts.board(answer, true, false, 'mulassa:Jo#1', refit(140));
-      assert.deepEqual(kept(), calmNow ? [] : [[100, 140, 250]], `step ${step}${calmNow ? ', reduced motion: at once' : ': one 250 ms ease from the old height'}`);
-      h = 100; live = null; easeFacts.board(answer, true, false, 'mulassa:Jo#1', refit(100)); live = null;
-    }
-  }
-  calm = false; }
+// Another board, or the first answer after a placeholder (Marc, 2026-10-22: a fade, not a height ease): the card fades out
+// with the old board, swaps to the newest answer while unseen, then fades in; a refresh rewrites in place, reduced motion at once.
+{ const card = $('select-standings'), fades = []; let swapped = 0;
+  card.animate = frames => { let done; const a = { frames, cancel() {}, finished: new Promise(r => { done = r; }) }; a.done = done; fades.push(a); return a; };
+  const fadeFacts = setupStandings({ doc, $, onBoard() {}, onSwapped: () => swapped++ });
+  const head = () => $('select-standings-pos').textContent, tick = () => new Promise(r => setTimeout(r));
+  fadeFacts.board({ pos: 13, total: 63, rows }, true, false, 'mulassa:Jo#1');
+  assert.equal(fades.length, 0, 'the first board shows at once');
+  fadeFacts.board({ pos: 13, total: 63, rows }, true, false, 'mulassa:Jo#1');
+  assert.equal(fades.length, 0, 'the same board again: rewritten in place');
+  const before = head();
+  fadeFacts.board(null, true, false, 'drac:Jo#1');
+  assert.deepEqual(fades.map(f => f.frames.opacity), [[1, 0]], 'another figure: the card fades out');
+  assert.equal(head(), before, 'the old board stays while it fades out');
+  fadeFacts.board({ pos: 2, total: 9, rows: rows.slice(0, 9) }, true, false, 'drac:Jo#1');
+  assert(fadeFacts.fading && head() === before, 'an answer meanwhile waits for the fade too');
+  fades[0].done(); await tick();
+  assert(!fadeFacts.fading && head() !== before && /2/.test(head()), 'swapped to the newest answer while unseen');
+  assert.equal(swapped, 1, 'the selector refits the new card');
+  assert.deepEqual(fades[1].frames.opacity, [0, 1], 'then it fades in');
+  fadeFacts.board(null, true, false, 'ós:Jo#1'); fades.at(-1).done(); await tick();
+  fadeFacts.board({ pos: 3, total: 4, rows: rows.slice(0, 4) }, true, false, 'ós:Jo#1');
+  assert(/3/.test(head()) && fades.length === 4, 'no answer when the card is out: it waits unseen, and a prompt answer comes in with one fade');
+  fadeFacts.board(null, true, false, 'aliga:Jo#1'); fades.at(-1).done(); await tick(); await new Promise(r => setTimeout(r, 400));
+  assert(head() === 'Classificació' && fades.length === 6, 'a slow answer: the placeholder fades in after the wait');
+  fadeFacts.board({ pos: 5, total: 7, rows: rows.slice(0, 7) }, true, false, 'aliga:Jo#1');
+  assert.deepEqual(fades.at(-1).frames.opacity, [1, 0], 'its first answer fades the placeholder out (Marc: the card must not grow or shrink in sight)');
+  fades.at(-1).done(); await tick();
+  assert(/5/.test(head()) && fades.length === 8, 'and the answer in');
+  calm = true; fadeFacts.board({ pos: 13, total: 63, rows }, true, false, 'mulassa:Jo#1');
+  assert(fades.length === 8 && /13/.test(head()), 'reduced motion: swapped at once');
+  calm = false; delete card.animate; }
 
 // Step 2 on a short laptop (Marc, 2026-10-21): the song's credit gives way first, then the board's foot goals, then the song row;
 // the level row (and the ranking line, outside it) stays.

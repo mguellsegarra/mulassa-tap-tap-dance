@@ -28,16 +28,17 @@ const FLAG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 21V4M5 4h1
 const TRIES = [[10, 2, true, 2], [10, 1, true, 2], [5, 2, true, 2], [5, 1, true, 2], [3, 1, true, 2], [1, 1, true, 2],
   [0, 1, true, 2], [0, 0, true, 2], [0, 0, false, 2], [0, 0, false, 0]];
 
-export function setupStandings({ doc, $, onBoard, onCard = null, busy = () => false, levels = () => false, onEased = () => {} }) { // levels(): step 2
+export function setupStandings({ doc, $, onBoard, onCard = null, busy = () => false, levels = () => false, onSwapped = () => {} }) { // levels(): step 2
   const meds = $('select-meds'), card = $('select-standings');
-  if (!meds || !card) return { medals() {}, board() {}, fit() {}, eased: f => f() }; // a page without them (the node tests' DOM)
+  if (!meds || !card) return { medals() {}, board() {}, fit() {} }; // a page without them (the node tests' DOM)
   const head = $('select-standings-pos'), list = $('select-standings-rows'), foot = $('select-standings-foot'), info = $('select-info');
   const body = $('select-standings-body'), sk = $('select-standings-sk'), msg = $('select-standings-msg');
   $('select-standings-head').addEventListener('click', () => { if (!busy()) onBoard(); });
   let board = null, on = false; // on: a board is configured (the header shows before its answer)
   let state = 'loading'; // loading | ready | error: the body's skeleton and the rows cross-fade (select.css)
   const seen = new Map(); // figure + owner → the last answer's rows (memory only): the placeholder's shape
-  let key = '', easing = null;
+  let key = '', recent = null; // recent: [owner, rows] of the last answer shown, any figure
+  const owner = k => k.slice(k.indexOf(':') + 1);
 
   function medals(records) { // [{ score, quality } | null] per level, or null: none at all
     meds.hidden = !records;
@@ -80,10 +81,11 @@ export function setupStandings({ doc, $, onBoard, onCard = null, busy = () => fa
   }
   // The placeholder shares the rows' own markup and grid, so it is as tall as the rows it stands for (both layers overlap in one
   // grid cell while loading, select.css). Shape (Marc, 2026-10-21): the last answer seen for this figure and owner (`seen`), so
-  // the answer rarely moves the card; the first time the most a board shows (the top rows, ···, your neighbours, the foot).
-  // Once answered it leaves the flow and the card hugs the rows (board() eases the height).
+  // the answer rarely moves the card; the first time the last answer shown to this owner (another figure's: boards look alike, so the
+  // card does not grow for the placeholder and shrink for the answer), else the most a board shows (the top rows, ···, your neighbours, the foot).
+  // Once answered it leaves the flow and the card hugs the rows.
   function skeleton(top, near, withFoot, withRows) {
-    const blank = i => row({ position: i, alias: 'Jugador', difficulty: 0, quality: 0, score: 0 }, true), last = state === 'loading' ? seen.get(key) : board?.rows;
+    const blank = i => row({ position: i, alias: 'Jugador', difficulty: 0, quality: 0, score: 0 }, true), last = state === 'loading' ? seen.get(key) ?? (recent?.[0] === owner(key) ? recent[1] : null) : board?.rows;
     let lis, lines = withFoot ? null : []; // null: the foot's bar; lines: its words (they may wrap), shimmering
     if (last) {
       lis = pick(last, top, near, withRows).map(r => (r === '···' ? el('li', 'dots', '···') : blank(Number(r.position))));
@@ -112,7 +114,6 @@ export function setupStandings({ doc, $, onBoard, onCard = null, busy = () => fa
   }
   function fit(least = false) { // what fits without scrolling the info block (only while laid out: desktops). least: the
     const scrolls = () => info.scrollHeight > info.clientHeight + 1; // header alone, so step 2's level row is fitted beside it first
-    easing?.cancel(); easing = null; // measure the card as laid out, never mid-ease
     meds.toggleAttribute('data-gone', least);
     card.hidden = !on;
     body.hidden = least;
@@ -126,23 +127,27 @@ export function setupStandings({ doc, $, onBoard, onCard = null, busy = () => fa
     }
     body.hidden = true; // the header stays: the line is the home's way to the board
   }
-  // The card hugs what it holds: a refit that changes its height (an answer shorter or longer than its placeholder, another
-  // figure's placeholder) eases it there, 250 ms (reduced motion: at once). One WAAPI animation, no layout loop.
-  // A step change (rows ↔ the foot alone, beside the level row) is a new layout, not an ease.
-  const height = () => (body.hidden ? 0 : body.getBoundingClientRect?.().height || 0);
-  let laidOut = null, depth = 0; // levels() when the card was last fitted
-  function eased(refit) {
-    // nested (step 2: board()'s refit is level-stats' own eased call): only the outer call eases, or it would read the inner
-    // animation's first keyframe as the new height and cancel it
-    if (depth) return refit();
-    const h0 = height(), same = laidOut === levels(); // mid-ease: where it is now
-    depth++;
-    try { refit(); } finally { depth--; }
-    const h1 = height();
-    easing?.cancel(); easing = null; laidOut = levels();
-    if (same && h0 && h1 && Math.abs(h1 - h0) > 1 && !globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches)
-      easing = body.animate?.([{ height: `${h0}px` }, { height: `${h1}px` }], { duration: 250, easing: 'ease-out' }) ?? null;
-    easing?.finished?.then(onEased, () => {}); // the observer skipped the resizes meanwhile; a cancel (a newer ease) rejects: that one refits itself
+  // Another board (a figure or owner change) or the first answer after the placeholder fades the card out, swaps it while unseen
+  // (its new size included) and fades it in
+  // (Marc, 2026-10-22: easing the height read as jumps, the selector's long tasks stalled it). The same board's answer or refresh
+  // (a refresh, or the cached place then the fresh one) rewrites in place. Opacity only: the compositor runs it through a long task.
+  const OUT = 120, IN = 180, WAIT = 350; // WAIT: unseen, the placeholder waits this long for the answer (one fade, not two)
+  let shownKey = null, swap = null, waiting = false, fade = null, timer = 0; // swap: the newest board waiting for the fade out (the old one stays meanwhile)
+  const unseen = () => card.hidden || !card.getClientRects?.().length || Number(globalThis.getComputedStyle?.(info)?.opacity) < 0.1
+    || globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches || !card.animate;
+  function reveal() {
+    clearTimeout(timer); timer = 0;
+    const apply = swap; swap = null; apply(); shownKey = key;
+    onSwapped(); // the selector refits and measures the new card (step 2: its level row)
+    fade.cancel(); fade = card.animate({ opacity: [0, 1] }, { duration: IN, easing: 'ease-out' });
+  }
+  function crossFade(next, answered, set, refit) { // next: the incoming board's key; answered: it ends the placeholder's wait
+    if (swap) { swap = set; waiting = !answered; if (answered && timer) reveal(); return; } // still out: the newest answer comes in
+    if (shownKey === null || (next === shownKey && !(answered && state === 'loading')) || unseen()) { set(); shownKey = next; return refit(); }
+    swap = set; waiting = !answered;
+    fade?.cancel();
+    fade = card.animate({ opacity: [1, 0] }, { duration: OUT, easing: 'ease-in', fill: 'forwards' });
+    fade.finished.then(() => { if (waiting) timer = setTimeout(reveal, WAIT); else reveal(); }, () => {});
   }
   // Step 2 (Marc, 2026-10-21): the header and the foot's two gaps, no rows (the level row takes their room); level-stats.js
   // decides whether they fit beside it (after the song's credit, before the song), else the header alone.
@@ -156,18 +161,19 @@ export function setupStandings({ doc, $, onBoard, onCard = null, busy = () => fa
   }
   return {
     goals,
-    medals(records) { medals(records); fit(); },
+    medals(records, refit = true) { medals(records); if (refit) fit(); }, // refit false: the caller fits once after its other writes
     // { pos, total, rows } from the board, or null (not answered yet; failed: it will not come); shown: a board is configured;
     // who: figure + owner (the placeholder's shape); refit: the caller's fitting (step 2: the level row's, level-stats.js)
     board(s, shown, failed = false, who = '', refit = fit) {
-      board = s; on = shown; key = who; state = failed ? 'error' : s?.rows ? 'ready' : 'loading'; // a position without rows (the ?demo placeholder) is still waiting for them
-      if (state === 'ready') seen.set(key, s.rows);
-      head.textContent = rankText(s);
-      $('select-standings-head').setAttribute('aria-label', rankLabel(head.textContent));
-      eased(() => refit());
+      const next = failed ? 'error' : s?.rows ? 'ready' : 'loading'; // a position without rows (the ?demo placeholder) is still waiting for them
+      crossFade(who, next !== 'loading', () => {
+        board = s; on = shown; key = who; state = next;
+        if (state === 'ready') { seen.set(key, s.rows); recent = [owner(key), s.rows]; }
+        head.textContent = rankText(s);
+        $('select-standings-head').setAttribute('aria-label', rankLabel(head.textContent));
+      }, () => refit());
     },
-    eased,
-    get easing() { return easing?.playState === 'running'; }, // the info block resizes every frame meanwhile: no refit for that
+    get fading() { return Boolean(swap); }, // fading out: the old board stays put, no refit for that
     fit,
   };
 }

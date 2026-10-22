@@ -73,7 +73,7 @@ export function setupLang({ store, state, location = globalThis.location, doc = 
   select.addEventListener('keydown', () => pick.classList.add('kb'));
   select.addEventListener('blur', () => { pointer = false; pick.classList.remove('kb'); });
   pick.appendChild(left); pick.appendChild(right); pick.appendChild(select);
-  (doc.getElementById('settings-feedback') ?? doc.getElementById('settings-practice'))?.after(pick); // after the sheet's actions (sync, practice, Bústia), before the switches
+  doc.getElementById('settings-feedback')?.after(pick); // after the sheet's actions (sync, Bústia), before the switches
 
   // --- one suggestion on the splash: never an automatic switch
   const code = suggestion({ languages: navigator.languages, saved: store.get(LANG_KEY), url: new URLSearchParams(location.search).get('lang'), seen: store.get(SUGGESTED_KEY), released });

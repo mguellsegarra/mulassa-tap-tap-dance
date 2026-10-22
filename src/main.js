@@ -53,7 +53,7 @@ import './ui/pad.js';
 import './ui/focus.js';
 import { pauseGame } from './ui/pause.js';
 import './ui/fullscreen.js';
-import { updateControls, viewMode, viewT, hudBlank, setHudBlank, menuState, steers, setView } from './ui/controls.js';
+import { updateControls, viewMode, viewT, hudBlank, setHudBlank, menuState, steers, setView, freeDance } from './ui/controls.js';
 import { fpsTick } from './dev/fps.js';
 import { debugAction } from './dev/debug.js';
 import { drawHud } from './hud/draw.js';
@@ -161,7 +161,9 @@ function frame(now) {
   // a pending selection hides both models; photo mode shows the existing pair without changing selection
   if (G.state === 'select' && !viewMode && (sheets.select?.pending ?? sheets.select?.figure?.status === 'aviat')) { mula.root.visible = false; drac.root.visible = false; for (const c of [colla, mulaColla]) c.helpers.visible = c.seated.visible = false; } // (the collas with them)
   const c0 = PERF && performance.now();
-  animCrowd(dt, (G.state === 'play' ? null : sheets.music?.beat() ?? chip?.menuBeat?.()) ?? beat, vt, live); // on the menus the plaça claps on what sounds: the radio's song or the menu loop
+  const menuHeard = G.state === 'play' ? null : sheets.music?.beat() ?? chip?.menuBeat?.(); // on the menus what sounds: the radio's song or the menu loop
+  animCrowd(dt, menuHeard ?? beat, vt, live); // the plaça claps on it
+  freeDance(menuHeard);
   if (PERF) PERF.crowd += performance.now() - c0; // ?perf: the crowd's own share of the js
   animConfetti(dt);
   animFireworks(dt);

@@ -939,7 +939,7 @@ const find = (el, test) => (test(el) ? el : el.children.map(c => find(c, test)).
   assert(!/Cancel·la|btn-primary/.test(cap), 'not dismissable: no Cancel·la');
   assert(!/setmana|board-period/i.test(sheet('board-menu')) && !/de la setmana/.test(html), 'no weekly board anywhere');
   assert(!/settings-alias|board-alias|publish-edit|board-delete|delete-confirm|board-note/.test(html), 'no nickname editing and no deletion in Classificacions: the profile is one block in Configuració');
-  assert(/id="profile-row"[^>]*>[\s\S]*id="profile-main"[\s\S]*id="profile-alt"/.test(sheet('account-menu')) && !/settings-profile/.test(html) && /id="publish-recover"/.test(sheet('publish-menu')), 'the profile block lives in Perfil (no longer ⚙), and «Recupera» on the publish sheet');
+  assert(/id="profile-row"[^>]*>[\s\S]*id="profile-main"[\s\S]*id="profile-alt"/.test(sheet('account-menu')) && !/id="profile-(row|main|alt)"/.test(sheet('settings-menu')) && /id="settings-profile"/.test(sheet('settings-menu')) && /id="publish-recover"/.test(sheet('publish-menu')), 'the profile block lives in Perfil (⚙ only opens it), and «Recupera» on the publish sheet');
   assert(/data-privacy-open/.test(sheet('publish-menu')) && /data-privacy-open/.test(sheet('board-menu')), 'privacy reachable before publishing');
   const privacy = sheet('privacy-menu');
   assert(/data-privacy="leaderboards"/.test(privacy) && /Supabase/.test(privacy) && /Turnstile/.test(privacy), 'Privadesa: a Supabase section of its own');

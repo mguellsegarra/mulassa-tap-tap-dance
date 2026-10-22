@@ -109,7 +109,7 @@ class Node {
   scrollTo({ left, behavior }) { this.scrollLeft = left; this.behavior = behavior; }
   getBoundingClientRect() { return { top: 100, right: 200, bottom: 300 }; }
 }
-for (const id of ['free', 'profile', 'viewmode', 'feedback', 'music', 'settings', 'select-carousel', 'select-prev', 'select-forward', 'select-nav', 'select', 'select-towns', 'select-strip', 'select-level', 'select-song', 'select-entity', 'select-act', 'select-name', 'select-song-name', 'select-song-credit', 'select-play', 'select-next', 'select-next-label', 'select-figures-back', 'select-board', 'select-howto', 'aviat-write', 'aviat-text', 'select-info', 'select-bottom', 'select-pos', 'select-tiles', 'select-rank-tile', 'select-pending', 'aviat-entity', 'aviat-icon', 'aviat-title', 'select-level-stats', 'select-level-title', 'select-level-sub']) nodes.set(id, new Node(id));
+for (const id of ['free', 'viewmode', 'feedback', 'music', 'settings', 'select-carousel', 'select-prev', 'select-forward', 'select-nav', 'select', 'select-towns', 'select-strip', 'select-level', 'select-song', 'select-entity', 'select-act', 'select-name', 'select-song-name', 'select-song-credit', 'select-play', 'select-next', 'select-next-label', 'select-figures-back', 'select-board', 'select-howto', 'aviat-write', 'aviat-text', 'select-info', 'select-bottom', 'select-pos', 'select-tiles', 'select-rank-tile', 'select-pending', 'aviat-entity', 'aviat-icon', 'aviat-title', 'select-level-stats', 'select-level-title', 'select-level-sub']) nodes.set(id, new Node(id));
 // The level row's title reports an overflow while it carries what a narrow screen can't hold (the points).
 Object.defineProperties(nodes.get('select-level-title'), { clientWidth: { value: 200 }, scrollWidth: { get() { return narrow && /punts/.test(this.textContent) ? 999 : 100; } },
   textContent: { get() { return (this.html ?? '').replace(/<[^>]*>/g, ''); }, set(v) { this.html = v; } } }); // its level word is a coloured span
@@ -288,17 +288,16 @@ click($('select-next')); soonPill.focus(); key('Escape');
 assert($('select-act').hidden, 'Escape still leaves difficulty when the town row is folded');
 // A desktop's inline header is one visible row, including its town controls.
 $('select').toggleAttribute('data-header-inline', true);
-// The logo holds the left end (not focusable); the towns come first, then the four corner buttons on the right
+// The logo holds the left end (not focusable); the towns come first, then the three corner buttons on the right
 // (free play's gamepad first: the eye is no corner control on the selector).
 const headerSounds = sounds.length;
 pills[0].focus(); key('ArrowRight');
 assert.equal(doc.activeElement, soonPill);
 key('ArrowRight'); assert.equal(doc.activeElement, $('free'), 'Right leaves the towns for the corner buttons (free play first, as drawn)');
-key('ArrowRight'); assert.equal(doc.activeElement, $('profile'));
 key('ArrowRight'); key('ArrowRight'); assert.equal(doc.activeElement, $('settings'), 'Settings is reachable without leaving the visible row');
-assert.equal(sounds.length, headerSounds + 5, 'each header focus move plays exactly one menu sound');
-key('ArrowRight'); assert.equal(sounds.length, headerSounds + 5, 'no sound at the header boundary');
-key('ArrowLeft'); key('ArrowLeft'); key('ArrowLeft'); key('ArrowLeft'); assert.equal(doc.activeElement, soonPill, 'Left returns from the corner to the towns');
+assert.equal(sounds.length, headerSounds + 4, 'each header focus move plays exactly one menu sound');
+key('ArrowRight'); assert.equal(sounds.length, headerSounds + 4, 'no sound at the header boundary');
+key('ArrowLeft'); key('ArrowLeft'); key('ArrowLeft'); assert.equal(doc.activeElement, soonPill, 'Left returns from the corner to the towns');
 key('ArrowLeft'); assert.equal(doc.activeElement, pills[0]);
 key('ArrowLeft'); assert.equal(doc.activeElement, pills[0], 'Valls is the header\'s left end');
 $('select').toggleAttribute('data-header-inline', false);
@@ -306,7 +305,7 @@ $('music').focus(); key('ArrowRight'); assert.equal(doc.activeElement, $('settin
 soonPill.focus(); key('ArrowRight'); assert.equal(doc.activeElement, soonPill, 'folded towns stay out of the separate row');
 const rowSounds = sounds.length;
 pills[0].focus(); key('ArrowUp');
-assert.equal(doc.activeElement, $('profile'));
+assert.equal(doc.activeElement, $('free'));
 assert.equal(sounds.length, rowSounds + 1, 'moving up to the corner row plays one sound');
 key('ArrowDown');
 assert.equal(doc.activeElement, pills[0]);

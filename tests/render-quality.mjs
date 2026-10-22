@@ -399,7 +399,7 @@ const document = {
   createElement: () => ({ style: { setProperty() {} }, dataset: {}, after() {}, setAttribute() {}, appendChild() {}, addEventListener() {}, contains: () => false, querySelectorAll: () => [], querySelector: () => ({ style: { setProperty() {} }, classList: { toggle() {} } }) }), // (ui/free-music.js listens on its own button; ui/photo-stick.js draws its stick)
   getElementById(id) {
     if (!nodes.has(id)) nodes.set(id, {
-      style: {}, dataset: {}, options: [{}, {}], listeners: {}, open: false,
+      style: { setProperty() {} }, dataset: {}, options: [{}, {}], listeners: {}, open: false, toggleAttribute() {}, // (#free dances on the menu beat: controls.js freeDance)
       addEventListener(type, handler) { this.listeners[type] = handler; },
       showModal() { this.open = true; }, close() { this.open = false; },
       focus() {}, blur() {}, setAttribute() {}, classList: { toggle() {}, add() {}, remove() {} }, contains: () => false, after() {},
@@ -1448,16 +1448,13 @@ assert(!settingsSheet.open && context.syncSheet.open, 'Ajusta la sincronia opens
 context.syncSheet.open = false; run('offsetMs = -20;'); context.syncHooks.onClose();
 assert(settingsSheet.open, 'closing the sync sheet returns to Configuració');
 assert.equal(nodes.get('settings-offset').textContent, 'Ara: −20 ms', 'with the new offset');
-nodes.get('settings-practice').listeners.click();
-assert(!settingsSheet.open && run("G.state === 'play' && G.practice && G.practice.then == null"), 'Fes la pràctica starts the practice, back to the title afterwards');
-run('endPractice();');
-assert.equal(run('G.state'), 'select');
+settingsSheet.open = false;
 context.syncHooks.onClose();
 assert(!settingsSheet.open, 'the sync sheet opened from elsewhere does not reopen Configuració');
 // menu placement: Configuració has both; Com es juga only the practice; the pause menu only the sync (mid-song)
 const html = readPage();
 const sheet = id => html.slice(html.indexOf(`<dialog id="${id}"`), html.indexOf('</dialog>', html.indexOf(`<dialog id="${id}"`)));
-assert(/Ajusta la sincronia/.test(sheet('settings-menu')) && /Fes la pràctica/.test(sheet('settings-menu')), 'Configuració: sync + practice');
+assert(/Ajusta la sincronia/.test(sheet('settings-menu')) && !/Fes la pràctica/.test(sheet('settings-menu')), 'Configuració: sync only (Com es juga has the practice)');
 assert(/Fes la pràctica/.test(sheet('howto-menu')) && !/sincronia/.test(sheet('howto-menu')), 'Com es juga: only the practice');
 assert(/Ajusta la sincronia/.test(sheet('pause-menu')) && !/pràctica/.test(sheet('pause-menu')), 'pause: only the sync');
 run(`G.state = 'title'; G.practice = null;`);

@@ -1,7 +1,7 @@
 // Which DOM controls show in each state, and the photo (view) mode.
 import { showAvatars, photoHelpAvailable } from './photo-avatars.js';
 import { sheets } from './sheets.js';
-import { howtoMenu, settingsMenu, privacyMenu, pauseMenu, hide, howtoEl, settingsEl, feedbackEl, freeEl, musicEl, profileEl, pauseEl, skipEl, retryEl } from './handles.js';
+import { howtoMenu, settingsMenu, privacyMenu, pauseMenu, hide, howtoEl, settingsEl, feedbackEl, freeEl, musicEl, pauseEl, skipEl, retryEl } from './handles.js';
 import { G, clock, CHALLENGE, setFreeSound } from '../game/state.js';
 import { keyboardNav } from './focus.js';
 import { hud, buttonAt } from '../hud/canvas.js';
@@ -44,7 +44,7 @@ export const steers = () => menuState() && !sheetUp();
 // toggles it; Escape or the same button (dimmed after 3 idle seconds, back on any touch, move or key) brings it all back.
 // The hidden controls are inert (never focused or clicked); the focus goes to the button and back to where it was.
 export const viewBtn = document.getElementById('viewmode');
-const VIEW_HIDES = ['profile', 'settings', 'feedback', 'free', 'music', 'howto', 'fps', 'feedback-nudge', 'select'].map(id => document.getElementById(id));
+const VIEW_HIDES = ['settings', 'feedback', 'free', 'music', 'howto', 'fps', 'feedback-nudge', 'select'].map(id => document.getElementById(id));
 export let viewMode = false, viewT = 0, viewBack = null, viewIdle = 0, hudBlank = false;
 export const setHudBlank = v => (hudBlank = v);
 export function setView(on) {
@@ -80,6 +80,13 @@ function viewWake() {
 }
 for (const ev of ['pointermove', 'pointerdown', 'keydown', 'wheel']) addEventListener(ev, viewWake, { passive: true });
 viewBtn.addEventListener('click', () => setView(!viewMode));
+// #free dances on what sounds on the menus (the radio's song or the menu loop; select.css): b = that beat, null = silence
+let freeDancing = false;
+export function freeDance(b) {
+  const on = b != null && !freeEl.hidden && !viewMode;
+  if (on !== freeDancing) freeEl.toggleAttribute('data-dancing', (freeDancing = on));
+  if (on) freeEl.style.setProperty('--b', (b % 2).toFixed(3));
+}
 export function enterFree() { setView(true); if (viewMode) sheets.music?.playFigure(G.figureId); } // the figure's own song (a pending selection: the last playable one, the one she drives)
 freeEl.addEventListener('click', () => { G.state === 'select' && enterFree(); });
 document.getElementById('rotate-exit').addEventListener('click', () => setView(false));
@@ -98,7 +105,6 @@ export function updateControls() {
   hide(feedbackEl, G.state !== 'title'); // on the selector the Bústia is in ⚙ Configuració; its corner slot is #free's
   hide(freeEl, G.state !== 'select');
   hide(musicEl, (G.state !== 'title' && G.state !== 'select'));
-  hide(profileEl, G.state !== 'select' || !sheets.board.configured); // the selector's corner row only, first (decision 6; the board is the info's ranking line)
   sheets.select?.visible(G.state === 'select'); // measure after the header controls have their final layout
   hide(pauseEl, G.state !== 'play' || G.paused || Boolean(G.collapseT));
   hide(skipEl, G.state !== 'play' || !G.practice || G.paused);

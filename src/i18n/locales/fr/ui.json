@@ -297,17 +297,11 @@
   "ui.stats.adjustSync": "Règle la synchro",
   "ui.stats.atPlaza": "sur la place",
   "ui.stats.avgAccuracy": "de précision moyenne",
-  "ui.stats.balloons.own": {
-    "one": "Tu as éclaté {n} ballon",
-    "other": "Tu as éclaté {n} ballons"
+  "ui.stats.balloons": {
+    "one": "{n} roulement réussi",
+    "other": "{n} roulements réussis"
   },
-  "ui.stats.balloons.public": {
-    "one": "A éclaté {n} ballon",
-    "other": "A éclaté {n} ballons"
-  },
-  "ui.stats.balloonsNone.own": "Tu n’as pas encore éclaté de ballon",
-  "ui.stats.balloonsNone.public": "N’a pas encore éclaté de ballon",
-  "ui.stats.balloonsSub": "en tapant sans arrêt",
+  "ui.stats.balloonsNone": "Aucun roulement réussi pour l’instant",
   "ui.stats.bestStreak": "la meilleure série",
   "ui.stats.daysPlayed": {
     "one": "Tu as joué {n} jour",
@@ -321,29 +315,24 @@
   "ui.stats.error.silent": "Pas joué",
   "ui.stats.errorsByKind": "Erreurs par type",
   "ui.stats.errorsTitle": "Les notes qui t’échappent",
-  "ui.stats.falls.own": {
-    "one": "Ta figure est tombée {n} fois",
-    "other": "Ta figure est tombée {n} fois"
+  "ui.stats.falls": {
+    "one": "La place a perdu son entrain {n} fois",
+    "other": "La place a perdu son entrain {n} fois"
   },
-  "ui.stats.falls.public": {
-    "one": "Sa figure est tombée {n} fois",
-    "other": "Sa figure est tombée {n} fois"
-  },
-  "ui.stats.fallsNone.own": "Ta figure n’est jamais tombée",
-  "ui.stats.fallsNone.public": "Sa figure n’est jamais tombée",
-  "ui.stats.fallsSub": "quand la place n’a plus d’énergie",
-  "ui.stats.guapa": "{n} GUAPA sur {total}",
-  "ui.stats.guapaSub": "les deux boutons à la fois",
+  "ui.stats.fallsNone": "La place n’a jamais perdu son entrain",
+  "ui.stats.fallsSub": "la Mulassa tombe, le Drac s’éteint",
+  "ui.stats.guapa": "{n} coups doubles sur {total}",
   "ui.stats.holds": {
     "one": "{n} note tenue",
     "other": "{n} notes tenues"
   },
   "ui.stats.holdsNone": "Aucune note tenue pour l’instant",
-  "ui.stats.holdsSub": "les TIENS, du début à la fin",
   "ui.stats.judged": "{perfect} PARFAIT · {good} BIEN · {miss} RATÉ",
   "ui.stats.judgedOwn": "tous tes coups, évalués",
   "ui.stats.judgedPublic": "tous les coups, évalués",
   "ui.stats.less": "Moins de statistiques",
+  "ui.stats.loadFailed": "Impossible de charger les statistiques",
+  "ui.stats.loading": "Chargement des statistiques…",
   "ui.stats.month.1": "janvier",
   "ui.stats.month.10": "octobre",
   "ui.stats.month.11": "novembre",

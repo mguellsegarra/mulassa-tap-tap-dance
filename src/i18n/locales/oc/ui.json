@@ -297,17 +297,11 @@
   "ui.stats.adjustSync": "Ajusta era sincronia",
   "ui.stats.atPlaza": "ena plaça",
   "ui.stats.avgAccuracy": "de precision mejana",
-  "ui.stats.balloons.own": {
-    "one": "As rebentat {n} balon",
-    "other": "As rebentat {n} balons"
+  "ui.stats.balloons": {
+    "one": "{n} picada de prèssa",
+    "other": "{n} picades de prèssa"
   },
-  "ui.stats.balloons.public": {
-    "one": "A rebentat {n} balon",
-    "other": "A rebentat {n} balons"
-  },
-  "ui.stats.balloonsNone.own": "Encara non as rebentat cap balon",
-  "ui.stats.balloonsNone.public": "Encara non a rebentat cap balon",
-  "ui.stats.balloonsSub": "picant sense arturar",
+  "ui.stats.balloonsNone": "Encara cap picada de prèssa",
   "ui.stats.bestStreak": "era milhor seria",
   "ui.stats.daysPlayed": {
     "one": "As jogat {n} dia",
@@ -321,29 +315,24 @@
   "ui.stats.error.silent": "Sense tòc",
   "ui.stats.errorsByKind": "Errors per tipe",
   "ui.stats.errorsTitle": "A on te huyen es nòtes",
-  "ui.stats.falls.own": {
-    "one": "T’a queigut era figura {n} còp",
-    "other": "T’a queigut era figura {n} còps"
+  "ui.stats.falls": {
+    "one": "Era plaça s’a desanimat {n} còp",
+    "other": "Era plaça s’a desanimat {n} còps"
   },
-  "ui.stats.falls.public": {
-    "one": "Li a queigut era figura {n} còp",
-    "other": "Li a queigut era figura {n} còps"
-  },
-  "ui.stats.fallsNone.own": "Jamès non t’a queigut era figura",
-  "ui.stats.fallsNone.public": "Jamès non li a queigut era figura",
-  "ui.stats.fallsSub": "quan er ànim dera plaça s’agote",
-  "ui.stats.guapa": "{n} GUAPA de {total}",
-  "ui.stats.guapaSub": "es dus botons ath còp",
+  "ui.stats.fallsNone": "Era plaça jamès non s’a desanimat",
+  "ui.stats.fallsSub": "era Mulassa se desmonte, eth Drac s’amòrte",
+  "ui.stats.guapa": "{n} còps dobles de {total}",
   "ui.stats.holds": {
     "one": "{n} nòta mantenguda",
     "other": "{n} nòtes mantengudes"
   },
   "ui.stats.holdsNone": "Cap nòta mantenguda, de moment",
-  "ui.stats.holdsSub": "es MANTEN, de cap a cap",
   "ui.stats.judged": "{perfect} PERFÈCTE · {good} BEN · {miss} ERROR",
   "ui.stats.judgedOwn": "toti es tòns tòcs, jutjats",
   "ui.stats.judgedPublic": "toti es tòcs, jutjats",
   "ui.stats.less": "Mens estadistiques",
+  "ui.stats.loadFailed": "Non s’an pogut cargar es estadistiques",
+  "ui.stats.loading": "Cargant es estadistiques…",
   "ui.stats.month.1": "de gèr",
   "ui.stats.month.10": "d’octobre",
   "ui.stats.month.11": "de noveme",

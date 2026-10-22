@@ -6,13 +6,13 @@ import { LANG_KEY, SUGGESTED_KEY, SUGGEST, reloadUrl, suggestion, reloadWaits } 
 
 const LANG_GLOBE = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/></svg>';
 const LANG_CHEVRON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
-const LANG_CSS = `#lang-tip{position:fixed;z-index:5;left:50%;bottom:calc(16px + env(safe-area-inset-bottom));transform:translateX(-50%);box-sizing:border-box;width:min(360px,calc(100vw - 24px));display:flex;flex-direction:column;gap:10px;padding:12px 14px 12px 12px;border-left:3px solid #f5c518;border-radius:4px;background:#2a1a10f2;color:#fff3d6;text-align:left}
-#lang-tip p{margin:0}#lang-tip .row{display:flex;gap:8px;flex-wrap:wrap}#lang-tip .btn{flex:1 1 auto}
+const LANG_CSS = `#lang-tip,#lang-notice{position:fixed;z-index:5;left:50%;bottom:calc(16px + env(safe-area-inset-bottom));transform:translateX(-50%);box-sizing:border-box;width:min(360px,calc(100vw - 24px));padding:16px;border:2px solid #f5c518;border-radius:18px;background:#2a1a10;color:#fff3d6;font:700 18px/1.25 'Baloo 2',system-ui,sans-serif;text-align:center;box-shadow:0 16px 60px #0008}
+#lang-tip{display:flex;flex-direction:column;gap:12px}#lang-notice{pointer-events:none}
+#lang-tip p{margin:0}#lang-tip .row{display:flex;flex-direction:column;gap:8px}
 .lang-pick{position:relative;color:#fff3d6;cursor:pointer}.lang-pick select{position:absolute;inset:0;z-index:1;width:100%;height:100%;margin:0;opacity:0;appearance:none;-webkit-appearance:none;font-size:16px;cursor:pointer}.lang-pick.kb{outline:var(--focus);outline-offset:var(--focus-off)}
 .lang-pick .l,.lang-pick .v,.lang-pick .chev{display:flex;align-items:center;gap:8px;min-width:0;white-space:nowrap}.lang-pick .v{gap:4px;font-size:15px;font-weight:700;color:#e8d8b8;text-align:right}.lang-pick .endo{white-space:normal;overflow-wrap:anywhere}
 .lang-pick svg{flex:none;width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.lang-pick .v svg{width:22px;height:22px;color:#fff3d6}
 @media (max-width:359px){.lang-pick{gap:8px}.lang-pick .l{gap:6px}}`;
-const NOTICE_CSS = '#lang-notice{position:fixed;z-index:5;left:50%;bottom:calc(16px + env(safe-area-inset-bottom));transform:translateX(-50%);box-sizing:border-box;width:min(360px,calc(100vw - 24px));padding:12px 14px 12px 12px;border-left:3px solid #f5c518;border-radius:4px;background:#2a1a10f2;color:#fff3d6;text-align:left;pointer-events:none}';
 const mk = (tag, props = {}, html = '') => Object.assign(document.createElement(tag), props, html && { innerHTML: html });
 
 // The chosen language failed to load and the game stayed in Catalan: one flat note, once per visit, on the first splash or idle selector.
@@ -21,7 +21,7 @@ export function langNotice({ state, doc = document, notice, ms = 6000 }) {
   const show = () => {
     const el = doc.createElement('div');
     Object.assign(el, { id: 'lang-notice', lang: 'ca', textContent: notice }); el.setAttribute('role', 'status');
-    const css = doc.createElement('style'); css.textContent = NOTICE_CSS;
+    const css = doc.createElement('style'); css.textContent = LANG_CSS;
     doc.body.append(css, el);
     setTimeout(() => { el.remove(); css.remove(); }, ms).unref?.();
   };
@@ -73,7 +73,7 @@ export function setupLang({ store, state, location = globalThis.location, doc = 
   select.addEventListener('keydown', () => pick.classList.add('kb'));
   select.addEventListener('blur', () => { pointer = false; pick.classList.remove('kb'); });
   pick.appendChild(left); pick.appendChild(right); pick.appendChild(select);
-  doc.getElementById('settings-practice')?.after(pick);
+  (doc.getElementById('settings-feedback') ?? doc.getElementById('settings-practice'))?.after(pick); // after the sheet's actions (sync, practice, Bústia), before the switches
 
   // --- one suggestion on the splash: never an automatic switch
   const code = suggestion({ languages: navigator.languages, saved: store.get(LANG_KEY), url: new URLSearchParams(location.search).get('lang'), seen: store.get(SUGGESTED_KEY), released });

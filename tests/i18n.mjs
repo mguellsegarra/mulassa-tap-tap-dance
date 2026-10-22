@@ -144,13 +144,13 @@ await assert.rejects(loadLocale('xx'), /unknown language/);
 
 // (f) the language resolver: ?lang= > saved > ca; aliases; nothing arbitrary; pseudo only on dev hosts; browser languages never
 {
-  const all = ['ca', 'es', 'en', 'pt-BR', 'zh-Hans', 'oc'];
+  const all = ['ca', 'es', 'en', 'pt', 'zh-Hans', 'oc'];
   const pick = (url, saved, extra = {}) => pickLang({ url, saved, allowed: all, ...extra });
   assert.equal(pick('es', 'en'), 'es', 'the URL beats the saved choice');
   assert.equal(pick(null, 'en'), 'en');
   assert.equal(pick('xx', 'en'), 'en', 'an invalid URL tag falls through to the saved choice');
   assert.equal(pick('xx', 'yy'), 'ca');
-  for (const [tag, code] of [['es-MX', 'es'], ['es-ES', 'es'], ['EN_gb', 'en'], ['en-US', 'en'], ['pt', 'pt-BR'], ['pt-br', 'pt-BR'], ['zh', 'zh-Hans'], ['zh-CN', 'zh-Hans'], ['oc-ES', 'oc'], [' es ', 'es']]) assert.equal(pick(tag), code, tag);
+  for (const [tag, code] of [['es-MX', 'es'], ['es-ES', 'es'], ['EN_gb', 'en'], ['en-US', 'en'], ['pt', 'pt'], ['pt-PT', 'pt'], ['pt-br', 'pt'], ['zh', 'zh-Hans'], ['zh-CN', 'zh-Hans'], ['oc-ES', 'oc'], [' es ', 'es']]) assert.equal(pick(tag), code, tag);
   for (const tag of ['uk', 'fr', 'es-', 'es;', '../es', '__proto__', 'constructor', 'toString', 'x'.repeat(40), '', 7, {}, ['es']]) assert.equal(resolveTag(tag, all), null, `invalid tag ${String(tag)}`);
   assert.equal(pickLang({ url: 'es-MX', saved: 'en', allowed: ['ca', 'en'] }), 'en', 'an alias is only as good as its target being released');
   assert.equal(pick('pseudo', null), 'ca', 'pseudo is ignored outside dev hosts');

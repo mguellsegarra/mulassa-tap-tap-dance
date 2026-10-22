@@ -1,8 +1,9 @@
 // The figure dropdown of Classificació and the Saló de la fama: a button (the figure's pixel portrait, its name, a chevron)
-// that opens «Tria figura» in place of the sheet's main view (index.html `.board-figure`, `.board-picker`; CSS in base.css).
+// that opens «Tria figura» (big options: the selector's vector illustration; pixel art only where it is small) in place of the sheet's main view (index.html `.board-figure`, `.board-picker`; CSS in base.css).
 // The shown figure is cream; picking one, Escape or × (the sheet's own handler asks `open`) come back.
 import { FIGURES, playable, portraitArt, portraitPalette } from '../game/figures.js';
 import { pixelSvg } from './select-strip.js';
+import { SELECTOR_PORTRAITS } from './selector-portraits.js';
 
 export const PICKER_FIGURES = FIGURES.filter(playable); // one board each
 export const figurePortrait = f => pixelSvg(portraitArt(f), portraitPalette(f), '#2a1a10');
@@ -20,7 +21,7 @@ export function setupFigurePicker({ doc, menu, ids, prefix, focusIn, onPick }) {
   const options = PICKER_FIGURES.map(f => {
     const b = doc.createElement('button');
     b.className = 'btn btn-secondary board-option'; b.type = 'button'; b.id = `${prefix}${f.id}`; b.dataset.figure = f.id;
-    const pic = doc.createElement('span'); pic.className = 'board-pic'; pic.innerHTML = figurePortrait(f);
+    const pic = doc.createElement('span'); pic.className = 'board-pic'; pic.innerHTML = SELECTOR_PORTRAITS[f.id] ?? figurePortrait(f);
     const name = doc.createElement('span'); name.className = 'board-option-name'; nameInto(doc, name, f);
     b.append(pic, name);
     b.addEventListener('click', () => { show(false); onPick(f.id); });

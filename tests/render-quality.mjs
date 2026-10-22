@@ -2398,18 +2398,13 @@ console.log('frame-rate independence and FPS readout ok');
     assert(run('orbit.ptrs.size === 0') && run('orbit.zoomTo') === z, `${state}: no steering`);
     up(4);
   }
-  // the splash: only its button (ENTRA), or Enter / Space, goes in; anywhere else a drag steers and the wheel zooms, other keys do nothing
+  // the splash: a tap anywhere or any key goes in (the gesture that starts the audio)
   const keyDown = code => keyHandlers.forEach(h => h({ code, target: { tagName: 'BODY' }, preventDefault() {} }));
-  run(`if (chip) chip.wake ??= () => {}; var unlocks = 0, realUnlock = unlock; unlock = () => unlocks++; G.state = 'splash'; orbitCancel(orbit); buttons = [{ x: 100, y: 200, w: 60, h: 30 }];`);
-  const splashYaw = run('orbit.yaw'), splashZoom = run('orbit.zoomTo');
-  hud.listeners.pointerdown(ev(5, 20, 60)); for (let x = 20; x <= 140; x += 10) hud.listeners.pointermove(ev(5, x, 60 + x)); up(5);
-  hud.listeners.wheel(ev(0, 0, 0, { deltaY: 100, deltaMode: 0, ctrlKey: false }));
-  for (const code of ['KeyA', 'ArrowLeft', 'KeyF', 'Escape']) keyDown(code);
-  assert(run('unlocks === 0 && G.state === "splash"') && run('orbit.yaw') !== splashYaw && run('orbit.zoomTo') !== splashZoom, 'splash: a drag steers, the wheel zooms, no tap or key but ENTRA goes in');
-  hud.listeners.pointerdown(ev(6, 120, 210)); up(6);
-  assert.equal(run('unlocks'), 1, 'splash: a press on ENTRA goes in');
-  keyDown('Enter'); keyDown('Space');
-  assert.equal(run('unlocks'), 3, 'splash: Enter and Space press the button');
+  run(`if (chip) chip.wake ??= () => {}; var unlocks = 0, realUnlock = unlock; unlock = () => unlocks++; G.state = 'splash'; orbitCancel(orbit); buttons = [];`);
+  hud.listeners.pointerdown(ev(5, 20, 60)); up(5);
+  assert.equal(run('unlocks'), 1, 'splash: a tap anywhere goes in');
+  keyDown('KeyA'); keyDown('Space');
+  assert.equal(run('unlocks'), 3, 'splash: any key goes in');
   run(`unlock = realUnlock; choose = realChoose; G.state = 'title'; buttons = [];`);
 }
 console.log('title camera steering ok');

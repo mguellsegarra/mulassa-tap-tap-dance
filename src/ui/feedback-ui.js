@@ -39,12 +39,14 @@ export function setupFeedback({ focusIn, captcha, service = defaultService, doc 
     const h = text.scrollHeight, min = text.clientHeight;
     if (h > min) text.style.height = `${h + 4}px`; // + the borders
   }
+  let known = ''; // the confirmed address the last time the sheet asked
   function show(onBack = null, draft = '') { // draft: the first words of an empty message («Sobre Reus: », from QUI BALLA?)
     if (menu.open) return;
     back = onBack; clearTimeout(closeTimer);
     seeded = !!draft;
     if (done || seeded) text.value = draft; // a figure's draft replaces whatever was there; sent: a fresh sheet
     if (locked) { email.value = ''; locked = false; } // the profile's address is asked again below (a sign-out frees the field)
+    if (known && !email.value) { email.value = known; locked = true; email.readOnly = true; } // the last answer, in place before the first paint: the async one below only confirms it
     done = false; busy = false; req++;
     setInvalid(null); setSend(tr('ui.feedback.send'));
     counter();
@@ -53,8 +55,11 @@ export function setupFeedback({ focusIn, captcha, service = defaultService, doc 
     grow();
     const r = req;
     Promise.resolve(confirmedEmail()).then(m => { // a confirmed address is the profile's: filled in, not editable
-      if (!m || r !== req || !menu.open) return;
-      email.value = m; locked = true; email.readOnly = true; setInvalid(null);
+      if (r !== req || !menu.open) return;
+      known = m || '';
+      if (!m) { if (locked) { email.value = ''; locked = false; email.readOnly = false; } return; }
+      email.value = m; locked = true; email.readOnly = true;
+      if (email.getAttribute('aria-invalid') === 'true') setInvalid(null); // not otherwise: it would wipe the «no disponible» line and shift the sheet
     }, () => {});
     onOpen(); // the nudge (setupNudge) goes, for good
     focusIn(menu, 'feedback-message');
@@ -128,6 +133,7 @@ export function setupFeedback({ focusIn, captcha, service = defaultService, doc 
   return {
     get open() { return menu.open; },
     configured, show,
+    warm() { Promise.resolve(confirmedEmail()).then(m => { known = m || ''; }, () => {}); }, // the sheet opens with the address already in place
   };
 }
 

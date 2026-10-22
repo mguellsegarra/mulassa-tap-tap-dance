@@ -158,7 +158,7 @@ for (const account of ['guest', 'verified']) {
   assert.deepEqual(demoOptions('?mock&seasons=later&account=verified'), { account: 'verified', seasons: 'later' });
 }
 // the Perfil statistics read as one player's: a missed GUAPA is an ERROR, a streak is of hits, every run's % is its own counts',
-// and the same URL on the same day shows the same numbers (QA: «240 PERFECTE · 0 ERROR» next to «7 GUAPA de 10» at 88%)
+// and the same URL on the same day shows the same numbers (QA: «240 PERFECTE · 0 ERROR» next to «7 de 10 cops dobles» at 88%)
 { const sane = (where, key, c) => {
     assert.equal(bucketProblem(key, c), null, `${where} ${key}`);
     assert(c.guapaTotal - c.guapa <= c.miss, `${where} ${key}: ${c.guapaTotal - c.guapa} GUAPA missed, ${c.miss} ERROR`);

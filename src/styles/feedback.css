@@ -1,30 +1,30 @@
 /* «Bústia de la plaça» (src/ui/feedback-ui.js) and the menu music's speaker (main.js): round buttons like the ⚙, title-layout
    obstacles like it (main.js titleLayoutNow, tests/layout.mjs). Portrait: [bubble][speaker][⚙] top-right; landscape
    phones: after the podium, [⚙][podium][speaker][bubble]. The bubble is outermost so its nudge has room beside it. */
-#feedback, #music { z-index: 3; top: calc(10px + env(safe-area-inset-top)); }
+#feedback, #free, #music { z-index: 3; top: calc(10px + env(safe-area-inset-top)); }
 #feedback { right: calc(10px + 44px + 10px + env(safe-area-inset-right)); }
 #music { right: calc(10px + 2 * (44px + 10px) + env(safe-area-inset-right)); }
 #music[data-state="off"] .on, #music[data-state="on"] .off { display: none; }
 @media (min-width: 520px) and (min-height: 520px) {
-  #feedback, #music { top: calc(16px + env(safe-area-inset-top)); width: 56px; height: 56px; } #feedback svg, #music svg { width: 30px; height: 30px; }
+  #feedback, #free, #music { top: calc(16px + env(safe-area-inset-top)); width: 56px; height: 56px; } #feedback svg, #free svg, #music svg { width: 30px; height: 30px; }
   #feedback { right: calc(16px + 56px + 12px + env(safe-area-inset-right)); }
   #music { right: calc(16px + 2 * (56px + 12px) + env(safe-area-inset-right)); }
 }
 @media (max-height: 500px) {
-  #feedback, #music { right: auto; top: calc(12px + env(safe-area-inset-top)); }
+  #feedback, #free, #music { right: auto; top: calc(12px + env(safe-area-inset-top)); }
   #feedback { left: calc(12px + 2 * (44px + 10px) + env(safe-area-inset-left)); }
   #music { left: calc(12px + 3 * (44px + 10px) + env(safe-area-inset-left)); }
 }
-@media (max-height: 500px) and (max-width: 419px) { #feedback, #music { display: none; } } /* tiny short windows: no room beside the corner pill */
+@media (max-height: 500px) and (max-width: 419px) { #feedback, #free, #music { display: none; } } /* tiny short windows: no room beside the corner pill */
 /* «Mode foto» (ui/controls.js setView, selector only; select.css places the eye in the corner row). Pressed, every control,
    tip and the HUD canvas fade out (the canvas keeps its drags: the camera still steers); only this button stays, dimmer,
    and nearly vanishes after a few idle seconds (controls.js adds .idle; any touch/move/key wakes it). */
 #viewmode { z-index: 3; transition: opacity .25s; }
 #viewmode[aria-pressed="true"].idle:not(:hover, :focus-visible) { opacity: .25; transition-duration: 1s; } /* the exit, the radio and the ? dim together */
 #viewmode[aria-pressed="false"] .off, #viewmode[aria-pressed="true"] .on { display: none; }
-:is(#hud, #profile, #settings, #feedback, #music, #howto, #fps, #feedback-nudge) { transition: opacity .2s; }
-body.view-mode :is(#hud, #profile, #settings, #feedback, #music, #howto, #fps, #feedback-nudge) { opacity: 0; }
-body.view-mode :is(#profile, #settings, #feedback, #music, #howto, #fps, #feedback-nudge) { visibility: hidden; pointer-events: none; transition: opacity .2s, visibility 0s .2s; } /* (main.js also makes them inert) */
+:is(#hud, #profile, #settings, #feedback, #free, #music, #howto, #fps, #feedback-nudge) { transition: opacity .2s; }
+body.view-mode :is(#hud, #profile, #settings, #feedback, #free, #music, #howto, #fps, #feedback-nudge) { opacity: 0; }
+body.view-mode :is(#profile, #settings, #feedback, #free, #music, #howto, #fps, #feedback-nudge) { visibility: hidden; pointer-events: none; transition: opacity .2s, visibility 0s .2s; } /* (main.js also makes them inert) */
 /* Keep the painted column's centre at 40% of the game's safe height. */
 #photo-figs { position: fixed; z-index: 5; top: calc(env(safe-area-inset-top) + (var(--app-h, 100dvh) - env(safe-area-inset-top) - env(safe-area-inset-bottom)) * .4); translate: 0 -50%; left: max(16px, env(safe-area-inset-left)); display: flex; flex-direction: column; justify-content: center; gap: 14px; transition: opacity .25s; }
 #photo-figs[hidden] { display: none; }
@@ -118,7 +118,7 @@ body.view-mode:has(#viewmode.idle) #howto.photo-help:not(:hover, :focus-visible)
 @media (prefers-reduced-motion: reduce) { #photo-tip { transition: none; } }
 @media (max-width: 899px) { #photo-figs .pf-nb { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); } } /* a narrow window: portraits only, clear of the eye (the names stay for screen readers) */
 @media (prefers-reduced-motion: reduce) { #photo-figs { transition: none; } }
-@media (prefers-reduced-motion: reduce) { #viewmode, :is(#hud, #profile, #settings, #feedback, #music, #howto, #fps, #feedback-nudge), body.view-mode :is(#profile, #settings, #feedback, #music, #howto, #fps, #feedback-nudge) { transition: none; } }
+@media (prefers-reduced-motion: reduce) { #viewmode, :is(#hud, #profile, #settings, #feedback, #free, #music, #howto, #fps, #feedback-nudge), body.view-mode :is(#profile, #settings, #feedback, #free, #music, #howto, #fps, #feedback-nudge) { transition: none; } }
 /* the nudge after a game (src/ui/feedback-ui.js setupNudge): a speech bubble beside the bubble button (or under it), its
    tail pointing at it; main.js placeNudge (title-layout.js nudgePlace) sets its box clear of the logo and the controls */
 #feedback-nudge { position: fixed; z-index: 3; box-sizing: border-box; display: flex; align-items: center; justify-content: center; padding: 3px 10px; border: 2px solid #f5c518; border-radius: 12px; background: #fff3d6; color: #2a1a10; font: 800 13px/1.15 'Baloo 2', system-ui, sans-serif; text-align: center; text-wrap: balance; pointer-events: none; animation: nudge-in .35s cubic-bezier(.3, 1.6, .5, 1) both; }
@@ -134,8 +134,9 @@ body.view-mode:has(#viewmode.idle) #howto.photo-help:not(:hover, :focus-visible)
 #feedback-menu { width: min(420px, calc(100vw - 32px - var(--sal) - var(--sar))); max-height: calc(100dvh - 32px - var(--sat) - var(--sab)); padding: 0; } /* the X on the corner (the shared .sheet-x): the frame doesn't clip, .feedback-scroll scrolls */
 #feedback-menu[open] { display: flex; flex-direction: column; }
 #feedback-form { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; }
-.feedback-scroll { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 18px 20px 4px; text-align: center; }
+.feedback-scroll { flex: 1 1 auto; min-height: 0; overflow: auto; scrollbar-width: none; padding: 18px 20px 4px; text-align: center; }
 .feedback-scroll p { max-width: 34em; margin-inline: auto; text-wrap: balance; }
+#feedback-menu .feedback-scroll::-webkit-scrollbar { display: none; } /* a native bar would run under the corner X; the fades say there is more */
 #feedback-menu::before, #feedback-menu::after, #board-menu::before, #board-menu::after { display: none; } /* these two scroll inside, not the frame */
 .feedback-lead { margin: 0 0 12px; font-size: 16px; line-height: 1.35; color: #e8d8b8; }
 .feedback-form-col .board-label { margin-bottom: 4px; text-align: center; }

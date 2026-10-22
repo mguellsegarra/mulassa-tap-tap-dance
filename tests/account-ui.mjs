@@ -64,14 +64,14 @@ const bucket = o => ({ runs: 0, completed: 0, collapsed: 0, seconds: 0, perfect:
   const text = box.textContent;
   assert(/13 ballsMulassa\u00a011 · Drac\u00a02/.test(text) && /15 mina la plaça/.test(text) && /120la millor ratxa/.test(text) && /\d+%de precisió mitjana/.test(text), 'four facts');
   assert(/1Podi a Estrena 2026 · Mulassa/.test(text), 'the podiums as achievements');
-  assert(/1.100 PERFECTE · 112 BÉ · 64 ERROR/.test(text) && /Li ha caigut la figura 1 cop/.test(text) && /90 GUAPA de 112/.test(text) && /5 de 18 estrelles/.test(text), 'public since Marc 2026-10-21: judgements and falls too');
+  assert(/1.100 PERFECTE · 112 BÉ · 64 ERROR/.test(text) && /La plaça s’ha quedat sense ànim 1 cop/.test(text) && /90 de 112 cops dobles/.test(text) && /5 de 18 estrelles/.test(text), 'public since Marc 2026-10-21: judgements and falls too');
   assert(!/Has jugat|seguits ara|rècord|Aviat|On se t’escapen/.test(text), 'a card: no days, no streaks, no errors per kind');
   const more = box.find(e => e.tag === 'button' && e.className.includes('stat-toggle')), panel = box.find(e => e.id === 'card-stats-more');
   assert(panel.hidden && more.attrs['aria-expanded'] === 'false' && more.attrs['aria-controls'] === 'card-stats-more' && /Més estadístiques/.test(more.textContent), 'a card: folded');
   more.click(); assert(!panel.hidden && more.attrs['aria-expanded'] === 'true' && /Menys estadístiques/.test(more.textContent), '«Més estadístiques» unfolds it in place');
   let synced = 0;
   renderStats(doc, box, d, { own: true, onSync: () => synced++ });
-  assert(/Has jugat 2 dies/.test(box.textContent) && /T’ha caigut la figura 1 cop/.test(box.textContent) && /Has rebentat 9 globus/.test(box.textContent) && /Aviat 30/.test(box.textContent), 'the Perfil: second person, days, errors per kind');
+  assert(/Has jugat 2 dies/.test(box.textContent) && /La plaça s’ha quedat sense ànim 1 cop/.test(box.textContent) && /9 picades ràpides/.test(box.textContent) && /Aviat 30/.test(box.textContent), 'the Perfil: second person, days, errors per kind');
   assert(!box.find(e => e.id === 'card-stats-more').hidden, 'the Perfil: unfolded');
   assert(/Sovint t’avances una mica/.test(box.textContent), 'early taps most of the errors: the tip');
   box.find(e => e.textContent === 'Ajusta la sincronia' && e.tag === 'button').click(); assert.equal(synced, 1, '«Ajusta la sincronia» opens the sync');
@@ -230,7 +230,7 @@ const service = (o = {}) => ({ configured: true, asked: [], async seasons(f) { t
 }
 // --- Perfil: this device's numbers at once, every device's when there is a profile (whichever knows more); the notice once
 {
-  const f = fakeDoc(['account-menu', 'account-close', 'account-stats', 'account-since', 'account-empty', 'account-join',
+  const f = fakeDoc(['account-menu', 'account-close', 'account-stats', 'account-status', 'account-since', 'account-empty', 'account-join',
     'account-previous', 'account-previous-list', 'profile-row', 'stats-notice-menu', 'stats-notice-ok', 'stats-notice-close']);
   const mem = new Map([['record-v2-duet-1', JSON.stringify({ quality: 91.5, score: 70000 })]]);
   const store = { get: k => mem.get(k) ?? null, set: (k, v) => mem.set(k, v) };
@@ -240,7 +240,7 @@ const service = (o = {}) => ({ configured: true, asked: [], async seasons(f) { t
   const acc = setupAccount({ focusIn() {}, profile: { refresh() { refreshed++; }, open(a, back) { opened.push([a, back]); }, forget() {}, isOpen: false }, service: svc, store, doc: f.doc, now: () => NOW,
     stats: { noticeNeeded: () => needed, acceptNotice() { accepted++; needed = false; } } });
   acc.open(); assert(f.$('account-menu').open && refreshed === 1, 'the profile block refreshes with it');
-  assert(!f.$('account-empty').hidden && f.$('account-stats').hidden, 'nothing played on this device yet: said, no zero tiles');
+  assert(f.$('account-empty').hidden && f.$('account-stats').hidden && !f.$('account-status').hidden && /Carregant/.test(f.$('account-status').textContent), 'nothing played here yet and a service: loading inside the statistics\' room, no zero tiles');
   await tick(); await tick(); await tick(); await tick();
   assert(/40 balls/.test(f.$('account-stats').textContent) && /Has jugat 2 dies/.test(f.$('account-stats').textContent), 'every device\'s numbers (the server knows more)');
   assert(f.$('account-join').hidden, 'a profile: no «Crea un perfil…»');
@@ -249,14 +249,16 @@ const service = (o = {}) => ({ configured: true, asked: [], async seasons(f) { t
   assert.equal(wins?.textContent, '2Podi a Estrena 2026 · Mulassa de Valls3Podi a Tardor 2026 · Drac de Valls', 'its podiums among the statistics: closed seasons only (not the open one\'s 6th, not 12th)');
   assert.deepEqual(wins.all(e => /^pos/.test(e.className)).map(e => e.className), ['pos p2', 'pos p3'], 'on the podium\'s discs');
   f.$('account-close').click();
-  // a profile with nothing played here: a skeleton keeps the room until the server answers (no shift), then the numbers, or the empty line if it has none
+  // a profile with nothing played here: the loading line keeps the room until the server answers (no shift), then the numbers, the empty line if it has none, or «No s’han pogut carregar» if it fails
   setStatsOwner('u1'); acc.open();
-  assert(f.$('account-empty').hidden && !f.$('account-stats').hidden && f.$('account-stats').classList.contains('loading'), 'waiting for the server: the skeleton, not «Encara no has jugat»');
+  assert(f.$('account-empty').hidden && !f.$('account-status').hidden && f.$('account-stats').hidden, 'waiting for the server: loading, not «Encara no has jugat»');
   await tick(); await tick(); await tick(); await tick();
-  assert(!f.$('account-stats').classList.contains('loading') && /40 balls/.test(f.$('account-stats').textContent), 'answered: the numbers replace it');
+  assert(f.$('account-status').hidden && /40 balls/.test(f.$('account-stats').textContent), 'answered: the numbers replace it');
   f.$('account-close').click();
   svc.myStats = async () => { throw new Error('offline'); }; acc.open(); await tick(); await tick(); await tick(); await tick();
-  assert(!f.$('account-empty').hidden && f.$('account-stats').hidden && !f.$('account-stats').classList.contains('loading'), 'no answer: the skeleton gives way to the empty line');
+  assert(f.$('account-empty').hidden && f.$('account-stats').hidden && /No s’han pogut carregar/.test(f.$('account-status').textContent), 'a failed answer with nothing played here: said inside the box');
+  f.$('account-close').click(); svc.myStats = async () => null; acc.open(); await tick(); await tick(); await tick(); await tick();
+  assert(!f.$('account-empty').hidden && f.$('account-status').hidden && f.$('account-stats').hidden, 'no answer: the loading gives way to the empty line');
   setStatsOwner(null);
   f.$('account-close').click();
   owner = null; acc.open(); await tick(); await tick();

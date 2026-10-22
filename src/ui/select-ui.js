@@ -13,6 +13,7 @@ import { entityHtml, fitEntityLabel } from './figure-entities.js';
 import { setupPendingPanel } from './pending-panel.js';
 import { stripScroll } from './strip-scroll.js';
 import { fitPendingTitle } from './pending-title.js';
+import { setupFlip } from './select-flip.js';
 import { pixelSvg, pillHtml, stripHtml, moreHtml, soonPillHtml, peekGap, navX } from './select-strip.js';
 import { tr } from '../i18n/messages.js';
 export { pixelSvg, peekGap }; // the strip's helpers moved to select-strip.js; their callers keep this path
@@ -25,7 +26,7 @@ const TROPHY = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h10V9
 // onCard(p): a name on the desktop card opens that player's card (player-card.js)
 
 export function setupSelect({ doc = document, win = globalThis, store, keyboard = () => false, busy = () => false, reduced = () => false,
-  firstLevel = null, demo = false, getError = () => null, standing = () => Promise.resolve(null), levelPodium = null, ranked = false, onBoard = () => {}, onCard = () => {}, sfx = () => {}, onPlay, onSelect = () => {}, onFree = () => {}, onHowto, onWrite }) {
+  firstLevel = null, demo = false, getError = () => null, standing = () => Promise.resolve(null), levelPodium = null, ranked = false, onBoard = () => {}, onCard = () => {}, sfx = () => {}, onPlay, onSelect = () => {}, onHowto, onWrite }) {
   const DEMO = demo && Boolean((import.meta.env ?? {}).DEV); // ?demo: made-up facts on show only, never stored or sent; gone from production builds
   const $ = id => doc.getElementById(id), cardOf = p => onCard({ ...p, from: { ...p.from, figure: figure.id } }), facts = setupStandings({ doc, $, onBoard: () => onBoard(figure), onCard: cardOf, busy, levels: () => step === 'level', onEased: () => { if (shown) { levelStats(); measure(); } } }); // facts: desktops' medals and board card (select-standings.js)
   const podium = setupPodium({ doc, win, $, onBoard: () => { if (!busy()) onBoard(figure); }, onCard: cardOf, load: ranked && levelPodium, refit: () => levelStats() }); // step 2's podium (select-podium.js)
@@ -56,14 +57,13 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     $('select-forward').disabled = fits || i < 0 || i >= available.length - 1;
   }
   const centre = (row, el, behavior = smooth()) => { // both rows share one bounded motion (native smooth scrolling grows with the distance)
-    const left = el.offsetLeft - (row.clientWidth - el.offsetWidth) / 2;
+    const clip = row === strip ? parseFloat(strip.style.getPropertyValue?.('--strip-clip')) || 0 : 0, left = el.offsetLeft - clip - (row.clientWidth - clip - el.offsetWidth) / 2; // the strip's box is constant: its left `clip` px (under the info column) are clipped, not cut off
     if (row === strip) scrolling.to(left, behavior !== 'smooth', closing ? finishFold : null);
     else townScrolling.to(left, behavior !== 'smooth');
   };
-
-  const { fill: pendingFill, teaser: teaserFill, freeze, thaw } = setupPendingPanel({ $, win, pending });
+  const { fill: pendingFill, teaser: teaserFill, freeze, thaw } = setupPendingPanel({ $, win, pending }), flip = setupFlip({ win, root, els: () => [towns, ...towns.children, $('select-prev'), $('select-forward'), $('select-nav'), ...strip.children], reduced: () => reduced() }); // flip: the pending layout slides instead of jumping; never the strip or its carousel: their box clips the cards, and a sliding clip swept the row (only their contents move)
   function panel() { // the centre shows what the cursor is on: the selected figure, or the fold's own card
-    const ok = playable(figure), leave = ok && !(Boolean(fold) && cards[cur] === fold);
+    flip.snap(shown); const ok = playable(figure), leave = ok && !(Boolean(fold) && cards[cur] === fold);
     if (leave && !pending.hidden) freeze(); else if (!leave) thaw(); // read before the attributes below move the dock
     teasing = Boolean(fold) && cards[cur] === fold;
     root.toggleAttribute('data-pending', !ok);
@@ -72,7 +72,6 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     $('select-info').inert = $('select-info').hidden = !ok || teasing;
     $('select-next').disabled = !ok || teasing; // desktop keeps a disabled placeholder; touch hides it
     $('select-next-label').textContent = tr(!ok || teasing ? 'ui.select.soonQ' : 'ui.select.pickLevel');
-    freeShown();
     if (teasing) teaserFill();
     else if (!ok) { pending.toggleAttribute('data-fold', false); pendingFill(figure); }
   }
@@ -90,7 +89,6 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     if (ok) { records(); facts.medals(DIFFS.map((_, l) => (DEMO ? DEMO_BEST[l] != null && { score: DEMO_BEST[l], quality: DEMO_PCT[l] } : readFigureRecord(store, figure, l)) || null)); updateStanding(); }
   }
   // Free play (photo mode, driving this figure) is a step-one action of a playable figure, beside the primary.
-  function freeShown() { $('select-free').hidden = step === 'level' || teasing || !playable(figure); }
   function setStep(next) {
     const back = step === 'level';
     step = next === 'level' && playable(figure) ? 'level' : 'figures';
@@ -102,7 +100,6 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     $('select-act').inert = !choosing;
     $('select-next').hidden = choosing;
     $('select-play').hidden = !choosing;
-    freeShown();
     $('select-figures-back').hidden = !choosing; if (choosing && !back) levels.toggleAttribute('data-quiet', true); levelStats(); // showing it again restarts its animations: no shake
     if (choosing) scrolling.stop(); // a hidden strip cannot finish a motion
     if (shown && !opening) { measure(); if (back && !choosing) centre(strip, cards[cur], 'instant'); }
@@ -221,7 +218,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     clearTownExit();
     closing = false; root.toggleAttribute('data-folding', false);
     arrivals.get(pending)?.cancel(); pending.inert = false;
-    revealItems(false);
+    flip.snap(shown); revealItems(false); // snap before the hidden items re-lay the strip: measure()'s own snap would read it already moved
     if (shown) { measure(); if (header) moveHeader(header); else if (reduced()) for (const el of [towns, $('select-info')]) arrivals.get(el)?.cancel(); }
   }
   // The collapsed towns can fit beside the corner buttons. Preserve their painted position across
@@ -229,16 +226,14 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
   function headerPositions() {
     return [towns, $('select-info')].map(el => ({ el, rect: (el === towns ? pills[0] : el).getBoundingClientRect() }));
   }
-  function moveHeader(before, startTime) {
+  function moveHeader(before) {
     const zoom = parseFloat(win.getComputedStyle?.(root).zoom) || 1;
     for (const { el, rect } of before) {
       arrivals.get(el)?.cancel();
       const after = (el === towns ? pills[0] : el).getBoundingClientRect();
       const x = (rect.left - after.left) / zoom, y = (rect.top - after.top) / zoom;
       if (!reduced() && el.animate && (Math.abs(x) > 1 || Math.abs(y) > 1)) {
-        const motion = el.animate({ transform: [`translate(${x}px, ${y}px)`, 'translate(0, 0)'] }, { duration: FOLD_MS, easing: 'ease-in-out', fill: 'backwards' });
-        if (Number.isFinite(startTime)) motion.startTime = startTime;
-        arrivals.set(el, motion);
+        arrivals.set(el, el.animate({ transform: [`translate(${x}px, ${y}px)`, 'translate(0, 0)'] }, { duration: FOLD_MS, easing: 'ease-in-out', fill: 'backwards' }));
       }
     }
   }
@@ -271,7 +266,8 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
       revealItems(true);
       roveCard(cur);
       if (shown) { measure(); moveHeader(header); }
-      if (!reduced()) for (const el of items) if (el.animate && onScreen(el)) arrivals.set(el, el.animate({ opacity: [0, 1] }, { duration: 180 }));
+      // flip.play() (from the fold card) already fades in what it shows after its slides: a second fade on top ended first and blinked them out
+      if (!reduced()) for (const el of items) if (el.animate && onScreen(el)) arrivals.set(el, el.getAnimations?.()[0] ?? el.animate({ opacity: [0, 1] }, { duration: 180 }));
       // Keep the existing cards in place; reveal just enough of the first new card to invite navigation.
       const first = cards.find(c => later.includes(c));
       const right = first ? first.offsetLeft + first.offsetWidth - strip.clientWidth + 12 : scrolling.target;
@@ -292,24 +288,23 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
       // Both rows arrive before the outgoing items lose their layout boxes (or a far pill would be clamped abruptly).
       const pill = pills.find(p => p.dataset.town === figure.town);
       const townDestination = Math.max(0, Math.min(pill.offsetLeft - (towns.clientWidth - pill.offsetWidth) / 2, rowEdge(towns) - towns.clientWidth));
-      // Start both clocks after layout; a slow first paint must not delay the fade.
-      const fadeStart = win.performance?.now();
+      // No start time: the fades start at their first painted frame. Timed from the click, the re-layout's slow first frame (~150 ms)
+      // ate most of them, so the catalogue jumped to a quarter and vanished.
       if (movingTowns) {
         townScrolling.to(0, true);
-        moveHeader(foldingHeader, fadeStart);
+        moveHeader(foldingHeader);
         townExit.animation = townExit.layer.animate({ opacity: [1, 0] }, { duration: FOLD_MS, fill: 'forwards', easing: 'ease-in-out' });
-        townExit.animation.startTime = fadeStart;
       }
       const fade = new Set(reduced() ? [] : exiting.filter(el => el.animate && onScreen(el))); for (const el of exiting) { // every read before the first cancel: each one restyles
         arrivals.get(el)?.cancel();
         if (fade.has(el)) {
-          const exit = el.animate({ opacity: [1, 0] }, { duration: FOLD_MS, fill: 'forwards', easing: 'ease-in-out' });
-          if (Number.isFinite(fadeStart)) exit.startTime = fadeStart;
-          arrivals.set(el, exit);
+          arrivals.set(el, el.animate({ opacity: [1, 0] }, { duration: FOLD_MS, fill: 'forwards', easing: 'ease-in-out' }));
         }
       }
-      if (!movingTowns) townScrolling.to(townDestination, false, null, FOLD_MS);
-      scrolling.to(destination, false, finishFold, FOLD_MS);
+      // The rows' timed scroll (whose end removes the items) starts with the fades, once they are ready
+      const go = () => { if (!closing || open) return; if (!movingTowns) townScrolling.to(townDestination, false, null, FOLD_MS); scrolling.to(destination, false, finishFold, FOLD_MS); };
+      const first = townExit?.animation ?? exiting.map(el => arrivals.get(el)).find(Boolean);
+      if (first?.ready) first.ready.then(go, () => {}); else go();
     }
   }
   unfold(false, 'open');
@@ -328,7 +323,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
   }
   // ↑↓ jump between the screen's rows like a game menu: the corner buttons, pills, info tiles, «Aviat», figures or levels,
   // footer buttons; ←→ walk the corner row (left to right as drawn).
-  const corner = ['profile', 'music', 'feedback', 'settings'].map($).filter(Boolean);
+  const corner = ['free', 'profile', 'music', 'settings'].map($).filter(Boolean);
   const cornerRow = { contains: el => corner.includes(el) };
   const rows = [cornerRow, towns, $('select-info'), pending, strip, levels, root.querySelector('.sel-footer')];
   const usable = el => el && !el.disabled && !el.closest('[hidden]') && el.getClientRects().length > 0; // fixed corners have no offsetParent
@@ -405,7 +400,6 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
   strip.addEventListener('pointerdown', () => { if (!closing) scrolling.stop(); });
   for (const type of ['pointerdown', 'wheel']) towns.addEventListener(type, () => { if (!closing) townScrolling.stop(); }, { passive: true }); // a hand on the pills wins
   $('select-next').addEventListener('click', nextStep);
-  $('select-free').addEventListener('click', () => { sfx('menu'); onFree(figure); });
   $('select-figures-back').addEventListener('click', () => { setStep('figures'); api.refocus(); });
   $('select-play').addEventListener('click', play);
   $('select-howto').addEventListener('click', () => { if (playable(figure)) onHowto(); });
@@ -468,7 +462,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     if ((key === 'Enter' || key === ' ') && (card || !a || a === doc.body)) { e.preventDefault(); if (card) pick(card, 'enter'); else nextStep(); }
   });
 
-  function measure() { // her free band (css px): under the info block, or (info at the side) under the pills; above the strip
+  function measure() { flip.snap(shown, true); // her free band (css px): under the info block, or (info at the side) under the pills; above the strip
     const r = el => el.getBoundingClientRect(), side = win.innerWidth >= 900 || win.innerHeight <= 500;
     const z = parseFloat(win.getComputedStyle?.(root).zoom) || 1, px = v => `${v / z}px`; // big desktops zoom the layer: rects are screen px, its CSS isn't
     // header: logo left, corner buttons right; the towns fit between (asymmetric gutter: a symmetric one dropped them on an iPad) or get their own row
@@ -496,8 +490,8 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     // Fine-pointer desktops: the strip's box starts right of the info column (below), so its cards never scroll under the column
     // and its empty part never covers the ranking's names. Laid out full width first: the column's width comes from that rest place.
     const boxed = desk && Boolean(win.matchMedia?.('(pointer: fine)').matches);
-    root.style.setProperty('--strip-x', '0px');
-    const shift = desk && flag?.offsetParent ? (r($('select-info')).left - r(strip).left) / z + narrowest + 12 - (flag.offsetLeft - (parseFloat(win.getComputedStyle?.(strip).paddingLeft) || 0)) : 0;
+    root.style.setProperty('--strip-x', '0px'); strip.style.removeProperty?.('--strip-clip');
+    const shift = desk && flag?.offsetParent ? (($('select-info').hidden ? 0 : r($('select-info')).left) - r(strip).left) / z + narrowest + 12 - (flag.offsetLeft - (parseFloat(win.getComputedStyle?.(strip).paddingLeft) || 0)) : 0;
     strip.style.setProperty('--strip-l', `${shift}px`);
     // Reserve the expanded header row even while towns fit inline: folding must not move the contact card.
     peek();
@@ -529,7 +523,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
       const was = root.style.getPropertyValue?.('--info-dock') ?? '';
       if (boxed) {
         const drop = r(dock).top - dockTop, info = r($('select-info')); // drop: a pending figure's transform, the buttons at rest
-        const btns = ['select-next', 'select-free'].map($).filter(el => !el.hidden).map(r).filter(b => b.width);
+        const btns = [r($('select-next'))].filter(b => b.width);
         const edge = Math.min(...btns.map(b => b.left)) - 12 * z;
         if (edge < info.right && edge - info.left >= Math.max(narrowest, 410) * z) root.style.setProperty('--info-w', px(edge - info.left));
         const under = btns.filter(b => b.left - 12 * z < r($('select-info')).right).map(b => b.top - drop);
@@ -540,7 +534,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     if (boxed && flag?.offsetParent) { // the same rest place inside a box from the column's edge + 12: its room (peek()'s gap) and stripLimit are unchanged
       // A hidden column (pending figure) keeps its old rect for its 220 ms display fade, and the observer may skip the refit: ignore it.
       const x = $('select-info').hidden ? 12 : Math.max(0, (r($('select-info')).right - r(strip).left) / z + 12);
-      root.style.setProperty('--strip-x', `${x}px`); strip.style.setProperty('--strip-l', `${Math.max(0, left - x)}px`);
+      const x0 = Math.min(x, 12); root.style.setProperty('--strip-x', `${x0}px`); strip.style.setProperty('--strip-clip', `${x - x0}px`); strip.style.setProperty('--strip-l', `${Math.max(0, left - x0)}px`);
     }
     root.style.setProperty('--nav-x', px(navX(win, towns, $('select-carousel'), z))); // the arrows stand at the screen's middle, whatever the info column or the dock does (clear of the pills)
     const info = r($('select-info')); // the camera's free rect (cameras.js frameMenuLens): hardTop = the pills' floor (she may rise behind the info's lower rows), a side panel takes the left
@@ -552,7 +546,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     root.style.setProperty('--pending-rest-bottom', px(Math.max(0, r(root).height - pendingEnd) + 12 * z));
     if (!pending.hidden) { fitEntityLabel($('aviat-entity')); fitPendingTitle($('aviat-title'), win); }
     // Cached action bounds for diagnostic overlays; no frame-loop layout reads.
-    api.fpsFooter = ['select-figures-back', 'select-next', 'select-free', 'select-play'].map($).filter(el => !el.hidden).map(r);
+    api.fpsFooter = ['select-figures-back', 'select-next', 'select-play'].map($).filter(el => !el.hidden).map(r); flip.play();
   }
   win.addEventListener('resize', () => { if (shown) { scrolling.stop(); if (closing) finishFold(); for (const el of [towns, $('select-info')]) arrivals.get(el)?.cancel(); if (teasing) teaserFill(); levelStats(); measure(); if (step === 'figures') centre(strip, cards[cur], 'instant'); } });
   if (win.ResizeObserver) {

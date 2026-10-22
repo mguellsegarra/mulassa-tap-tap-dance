@@ -301,21 +301,13 @@
   "ui.stats.adjustSync": "Настроить синхронизацию",
   "ui.stats.atPlaza": "на площади",
   "ui.stats.avgAccuracy": "средняя точность",
-  "ui.stats.balloons.own": {
-    "one": "У тебя лопнул {n} шарик",
-    "few": "У тебя лопнуло {n} шарика",
-    "many": "У тебя лопнуло {n} шариков",
-    "other": "У тебя лопнуло {n} шарика"
+  "ui.stats.balloons": {
+    "one": "Пройдена {n} дробь",
+    "few": "Пройдено {n} дроби",
+    "many": "Пройдено {n} дробей",
+    "other": "Пройдено {n} дроби"
   },
-  "ui.stats.balloons.public": {
-    "one": "Лопнул {n} шарик",
-    "few": "Лопнуло {n} шарика",
-    "many": "Лопнуло {n} шариков",
-    "other": "Лопнуло {n} шарика"
-  },
-  "ui.stats.balloonsNone.own": "У тебя пока не лопнул ни один шарик",
-  "ui.stats.balloonsNone.public": "Пока не лопнул ни один шарик",
-  "ui.stats.balloonsSub": "от безостановочных ударов",
+  "ui.stats.balloonsNone": "Пока ни одной дроби",
   "ui.stats.bestStreak": "лучшая серия",
   "ui.stats.daysPlayed": {
     "one": "У тебя {n} день игры",
@@ -331,23 +323,15 @@
   "ui.stats.error.silent": "Пропуск",
   "ui.stats.errorsByKind": "Ошибки по типам",
   "ui.stats.errorsTitle": "Где ускользают ноты",
-  "ui.stats.falls.own": {
-    "one": "Твоя фигура упала {n} раз",
-    "few": "Твоя фигура упала {n} раза",
-    "many": "Твоя фигура упала {n} раз",
-    "other": "Твоя фигура упала {n} раза"
+  "ui.stats.falls": {
+    "one": "Площадь теряла задор {n} раз",
+    "few": "Площадь теряла задор {n} раза",
+    "many": "Площадь теряла задор {n} раз",
+    "other": "Площадь теряла задор {n} раза"
   },
-  "ui.stats.falls.public": {
-    "one": "Фигура упала {n} раз",
-    "few": "Фигура упала {n} раза",
-    "many": "Фигура упала {n} раз",
-    "other": "Фигура упала {n} раза"
-  },
-  "ui.stats.fallsNone.own": "Твоя фигура ещё ни разу не падала",
-  "ui.stats.fallsNone.public": "Фигура ещё ни разу не падала",
-  "ui.stats.fallsSub": "когда задор площади иссяк",
-  "ui.stats.guapa": "{n} GUAPA из {total}",
-  "ui.stats.guapaSub": "обе кнопки сразу",
+  "ui.stats.fallsNone": "Площадь ни разу не теряла задор",
+  "ui.stats.fallsSub": "Mulassa падает, Drac гаснет",
+  "ui.stats.guapa": "Двойные удары: {n} из {total}",
   "ui.stats.holds": {
     "one": "{n} удержанная нота",
     "few": "{n} удержанные ноты",
@@ -355,11 +339,12 @@
     "other": "{n} удержанной ноты"
   },
   "ui.stats.holdsNone": "Удержанных нот пока нет",
-  "ui.stats.holdsSub": "ноты ДЕРЖИ, от начала до конца",
   "ui.stats.judged": "{perfect} ИДЕАЛЬНО · {good} ОК · {miss} ОШИБКА",
   "ui.stats.judgedOwn": "оценки всех твоих ударов",
   "ui.stats.judgedPublic": "оценки всех ударов",
   "ui.stats.less": "Меньше статистики",
+  "ui.stats.loadFailed": "Не удалось загрузить статистику",
+  "ui.stats.loading": "Загружаем статистику…",
   "ui.stats.month.1": "января",
   "ui.stats.month.10": "октября",
   "ui.stats.month.11": "ноября",

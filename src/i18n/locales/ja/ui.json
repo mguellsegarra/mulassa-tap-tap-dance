@@ -295,15 +295,10 @@
   "ui.stats.adjustSync": "タイミング調整",
   "ui.stats.atPlaza": "広場で過ごした時間",
   "ui.stats.avgAccuracy": "平均ヒット率",
-  "ui.stats.balloons.own": {
-    "other": "風船を{n}個割りました"
+  "ui.stats.balloons": {
+    "other": "連打 {n}回クリア"
   },
-  "ui.stats.balloons.public": {
-    "other": "風船を{n}個割りました"
-  },
-  "ui.stats.balloonsNone.own": "まだ風船を割っていません",
-  "ui.stats.balloonsNone.public": "まだ風船を割っていません",
-  "ui.stats.balloonsSub": "ひたすら連打！",
+  "ui.stats.balloonsNone": "連打クリアはまだなし",
   "ui.stats.bestStreak": "最大コンボ",
   "ui.stats.daysPlayed": {
     "other": "{n}日プレイしました"
@@ -316,26 +311,22 @@
   "ui.stats.error.silent": "叩き忘れ",
   "ui.stats.errorsByKind": "種類別ミス",
   "ui.stats.errorsTitle": "ノーツを逃す原因",
-  "ui.stats.falls.own": {
-    "other": "仲間が{n}回倒れました"
+  "ui.stats.falls": {
+    "other": "広場の元気が尽きた回数：{n}"
   },
-  "ui.stats.falls.public": {
-    "other": "仲間が{n}回倒れました"
-  },
-  "ui.stats.fallsNone.own": "まだ一度も倒れていません",
-  "ui.stats.fallsNone.public": "まだ一度も倒れていません",
-  "ui.stats.fallsSub": "広場の元気が尽きると…",
-  "ui.stats.guapa": "GUAPA {n}/{total}",
-  "ui.stats.guapaSub": "両方のボタンを同時に",
+  "ui.stats.fallsNone": "広場の元気が尽きたことはない",
+  "ui.stats.fallsSub": "Mulassaは倒れ、Dracは消える",
+  "ui.stats.guapa": "ダブル {n}/{total}",
   "ui.stats.holds": {
     "other": "ホールド{n}回成功"
   },
   "ui.stats.holdsNone": "ホールド成功はまだありません",
-  "ui.stats.holdsSub": "ホールドを最初から最後まで",
   "ui.stats.judged": "パーフェクト{perfect} · グッド{good} · ミス{miss}",
   "ui.stats.judgedOwn": "自分の全タップの判定",
   "ui.stats.judgedPublic": "全タップの判定",
   "ui.stats.less": "表示を減らす",
+  "ui.stats.loadFailed": "プレイデータを読み込めませんでした",
+  "ui.stats.loading": "プレイデータを読み込み中…",
   "ui.stats.month.1": "1月",
   "ui.stats.month.10": "10月",
   "ui.stats.month.11": "11月",

@@ -8,26 +8,26 @@ import { readPreviousDanceRecord } from '../game/records.js';
 import { DIFFS } from '../game/chart.js';
 import { byId, num } from './sheet-kit.js';
 import { tr } from '../i18n/messages.js';
+import { mulaSpinner } from './loader.js';
 import { statsData, renderStats, sinceText, FIGURE_NAMES } from './stats-view.js';
 import { figureSeasons, boardName } from './seasons-ui.js';
 
 export function setupAccount({ focusIn, profile, service, store, stats, onSync = () => {}, doc = document, now = () => Date.now() }) {
-  const $ = byId(doc), menu = $('account-menu'), box = $('account-stats'), notice = $('stats-notice-menu');
+  const $ = byId(doc), menu = $('account-menu'), box = $('account-stats'), status = $('account-status'), notice = $('stats-notice-menu');
   let req = 0, back = null, shown = null, wins = [];
   const local = () => { const s = loadStats(), o = s.owners[getStatsOwner()]; return { since: s.since, buckets: { ...o?.counters, ...o && { practice: o.practice } }, days: o?.days ?? [] }; };
   // the statistics with the podiums among them (they arrive later: painted again with them)
-  // pending: nothing played here yet but the server may know more: a quiet skeleton keeps the room, so its answer shifts nothing
-  function paint(d, since, pending = false) {
+  // wait: nothing played here yet but the server may know more: 'loading' (the dancing Mulassa) or 'failed' sit inside the statistics' room, so its answer shifts nothing
+  function paint(d, since, wait = '') {
     const played = d.runs > 0;
-    shown = [d, since, pending];
-    $('account-empty').hidden = played || pending;
-    box.hidden = !played && !pending;
-    box.classList.toggle('loading', pending);
-    if (pending) { // the four tiles' shapes
-      const grid = doc.createElement('div'); grid.className = 'stat-facts';
-      for (let i = 0; i < 4; i++) { const t = doc.createElement('div'); t.className = 'stat-fact'; grid.appendChild(t); }
-      box.replaceChildren(grid);
-    }
+    shown = [d, since, wait];
+    $('account-empty').hidden = played || Boolean(wait);
+    status.hidden = !wait;
+    status.replaceChildren();
+    if (wait === 'loading') status.append(mulaSpinner(doc), tr('ui.stats.loading'));
+    else if (wait) status.textContent = tr('ui.stats.loadFailed');
+    box.hidden = !played;
+    if (!played) box.replaceChildren();
     if (played) renderStats(doc, box, d, { own: true, podiums: wins, onSync: () => { const b = leave(); onSync(() => open(b)); } });
     $('account-since').textContent = played && since ? sinceText(since) : '';
   }
@@ -56,8 +56,8 @@ export function setupAccount({ focusIn, profile, service, store, stats, onSync =
     const r = ++req, mine = local();
     const d = statsData(mine.buckets, mine.days);
     wins = [];
-    const waiting = service.configured && !d.runs && getStatsOwner() !== 'none', settle = () => { if (waiting && r === req) paint(d, mine.since); };
-    paint(d, mine.since, waiting);
+    const waiting = service.configured && !d.runs, settle = (wait = '') => { if (waiting && r === req) paint(d, mine.since, wait); };
+    paint(d, mine.since, waiting ? 'loading' : '');
     previous();
     $('account-join').hidden = true;
     if (!service.configured) return;
@@ -68,9 +68,10 @@ export function setupAccount({ focusIn, profile, service, store, stats, onSync =
     if (!signed) return settle();
     podiums(r);
     let server = null;
-    try { server = await service.myStats(); } catch { /* this device's numbers stand */ }
+    let failed = false;
+    try { server = await service.myStats(); } catch { failed = true; } // this device's numbers stand (with none: «No s’han pogut carregar»)
     if (r !== req) return;
-    if (!server) return settle();
+    if (!server) return settle(failed ? 'failed' : '');
     const all = statsData(server.buckets, server.days);
     if (all.runs < d.runs) return; // not sent yet (the notice, offline): this device knows more
     paint({ ...all, daysPlayed: server.daysPlayed, streak: server.currentStreak ?? all.streak, bestStreak: server.longestStreak ?? all.bestStreak }, mine.since);

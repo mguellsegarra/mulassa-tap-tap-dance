@@ -297,17 +297,11 @@
   "ui.stats.adjustSync": "Ajusta la sincronía",
   "ui.stats.atPlaza": "en la plaza",
   "ui.stats.avgAccuracy": "de precisión media",
-  "ui.stats.balloons.own": {
-    "one": "Has reventado {n} globo",
-    "other": "Has reventado {n} globos"
+  "ui.stats.balloons": {
+    "one": "{n} tanda rápida",
+    "other": "{n} tandas rápidas"
   },
-  "ui.stats.balloons.public": {
-    "one": "Ha reventado {n} globo",
-    "other": "Ha reventado {n} globos"
-  },
-  "ui.stats.balloonsNone.own": "Aún no has reventado ningún globo",
-  "ui.stats.balloonsNone.public": "Aún no ha reventado ningún globo",
-  "ui.stats.balloonsSub": "dando sin parar",
+  "ui.stats.balloonsNone": "Aún ninguna tanda rápida",
   "ui.stats.bestStreak": "la mejor racha",
   "ui.stats.daysPlayed": {
     "one": "Has jugado {n} día",
@@ -321,29 +315,24 @@
   "ui.stats.error.silent": "Sin toque",
   "ui.stats.errorsByKind": "Errores por tipo",
   "ui.stats.errorsTitle": "Dónde se te escapan las notas",
-  "ui.stats.falls.own": {
-    "one": "Se te ha caído la figura {n} vez",
-    "other": "Se te ha caído la figura {n} veces"
+  "ui.stats.falls": {
+    "one": "La plaza se ha quedado sin ánimo {n} vez",
+    "other": "La plaza se ha quedado sin ánimo {n} veces"
   },
-  "ui.stats.falls.public": {
-    "one": "Se le ha caído la figura {n} vez",
-    "other": "Se le ha caído la figura {n} veces"
-  },
-  "ui.stats.fallsNone.own": "Nunca se te ha caído la figura",
-  "ui.stats.fallsNone.public": "Nunca se le ha caído la figura",
-  "ui.stats.fallsSub": "cuando se agota el ánimo de la plaza",
-  "ui.stats.guapa": "{n} GUAPA de {total}",
-  "ui.stats.guapaSub": "los dos botones a la vez",
+  "ui.stats.fallsNone": "La plaza nunca se ha quedado sin ánimo",
+  "ui.stats.fallsSub": "la Mulassa cae, el Drac se apaga",
+  "ui.stats.guapa": "{n} de {total} golpes dobles",
   "ui.stats.holds": {
     "one": "{n} nota mantenida",
     "other": "{n} notas mantenidas"
   },
   "ui.stats.holdsNone": "Ninguna nota mantenida, de momento",
-  "ui.stats.holdsSub": "las MANTÉN, de principio a fin",
   "ui.stats.judged": "{perfect} PERFECTO · {good} BIEN · {miss} ERROR",
   "ui.stats.judgedOwn": "todos tus toques, juzgados",
   "ui.stats.judgedPublic": "todos los toques, juzgados",
   "ui.stats.less": "Menos estadísticas",
+  "ui.stats.loadFailed": "No se han podido cargar las estadísticas",
+  "ui.stats.loading": "Cargando las estadísticas…",
   "ui.stats.month.1": "de enero",
   "ui.stats.month.10": "de octubre",
   "ui.stats.month.11": "de noviembre",

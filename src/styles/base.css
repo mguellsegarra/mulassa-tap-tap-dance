@@ -4,7 +4,7 @@
 button { -webkit-appearance: none; appearance: none; display: inline-flex; align-items: center; justify-content: center; gap: 12px; min-height: 44px; border: 2px solid var(--button-border); border-radius: var(--button-radius); background: var(--button-bg); color: var(--button-text); font: 800 18px 'Baloo 2', system-ui, sans-serif; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 @media (hover: hover) { button:hover { filter: brightness(1.15); } } /* touch screens keep :hover after a tap: it stuck lit */
 button:active { transform: translateY(1px); }
-/* THE round icon button: the corner row (Perfil, music, Bústia, ⚙), free play's exit, radio and ?, and the sheets' corner × (.sheet-x, solid: it straddles the frame). A dark disc, 2 px gold edge, cream glyph; size and place stay with each owner. */
+/* THE round icon button: the corner row (free play, Perfil, music, ⚙; #free wears the holo, select.css), free play's exit, radio and ?, and the sheets' corner × (.sheet-x, solid: it straddles the frame). A dark disc, 2 px gold edge, cream glyph; size and place stay with each owner. */
 .round-btn, .sheet-x { width: 44px; height: 44px; min-height: 0; padding: 0; border: 2px solid var(--button-border); border-radius: 50%; background: var(--round-bg, var(--button-bg)); color: var(--button-text); }
 .round-btn { position: fixed; }
 .round-btn svg { width: 24px; height: 24px; }
@@ -123,7 +123,7 @@ button svg { width: 22px; height: 22px; flex: none; fill: none; stroke: currentC
 @media (min-width: 520px) and (min-height: 520px) { #settings { top: calc(16px + env(safe-area-inset-top)); right: calc(16px + env(safe-area-inset-right)); width: 56px; height: 56px; } #settings svg { width: 30px; height: 30px; } }
 @media (max-height: 500px) { #settings { right: auto; left: calc(12px + env(safe-area-inset-left)); top: calc(12px + env(safe-area-inset-top)); } }
 #settings-menu { width: min(400px, calc(100vw - 32px)); padding: 20px 20px 18px; }
-#settings-menu .sheet-actions { grid-template-columns: minmax(0, 1fr); } /* a long label wraps in its row instead of widening the column past the sheet (Português (Brasil) at 320) */
+#settings-menu .sheet-actions { grid-template-columns: minmax(0, 1fr); } /* a long label wraps in its row instead of widening the column past the sheet (Português at 320) */
 /* An on/off setting: a native checkbox with role="switch" (Space toggles, screen readers say on/off) in a flat row
    (a setting, not a button: no outline); the label is the whole row, the switch sits on the right. */
 .switch-row { box-sizing: border-box; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; padding: 6px 12px 6px 16px; border-radius: var(--button-radius); background: #fff3d60d; font: 800 18px/1.2 'Baloo 2', system-ui, sans-serif; cursor: pointer; }
@@ -317,7 +317,7 @@ dialog p, #results-actions .btn { overflow-wrap: break-word; }
 .board-picker-title { margin: 0; color: #e8d8b8; font-size: 16px; }
 .board-figures { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .board-option { display: flex; align-items: center; flex-direction: column; gap: 8px; min-height: 0; padding: 10px 10px 8px; border-color: #e8d8b880; font-size: 19px; }
-.board-option .board-pic { width: 100%; height: auto; aspect-ratio: 7 / 5; padding: 10% 14%; border-radius: 10px; }
+.board-option .board-pic { width: 100%; height: auto; aspect-ratio: 7 / 5; padding: 8% 6% 4%; border-radius: 10px; }
 .board-option[aria-pressed="true"] { border-color: #fff3d6; background: #fff3d6; color: #2a1a10; }
 .board-main:not([hidden]) { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
 /* «Posició 48 de 119» and the one link (to the top / back to the own row, by where the list is): flat, a gold strip */
@@ -495,7 +495,7 @@ html:not([lang="ca"]) .board-links { row-gap: 16px; } /* longer words wrap the t
 .about-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 14px; }
 .about-links a { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 6px; color: #f5c518; font-weight: 800; font-size: 15px; text-decoration: underline; text-underline-offset: 3px; }
 .about-links svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-@media (max-width: 519px) { .settings-about { padding-inline: 2px; } .about-links { gap: 4px 6px; } .about-links a, #settings-privacy { padding: 0 3px; } } /* phones: GitHub · Crèdits · Privadesa on one row, paying back the UAF line's two */
+@media (max-width: 519px) { .settings-about { padding-inline: 2px; } .about-links { gap: 4px 6px; } .about-links a, #settings-privacy { padding: 0 3px; font-size: 14px; } } /* phones: GitHub · Crèdits · Privadesa on one row, paying back the UAF line's two; 14 px so the longer Spanish «Código en GitHub» still leaves Privacidad on the row at 375–393 */
 .setting-row { cursor: default; }
 @media (max-height: 720px) and (orientation: portrait) { /* short phones (iPhone SE): Configuració fits without scrolling */
   #settings-menu { padding: 14px 16px 10px; }

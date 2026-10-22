@@ -297,17 +297,11 @@
   "ui.stats.adjustSync": "Ajusta la sincronia",
   "ui.stats.atPlaza": "a la plaça",
   "ui.stats.avgAccuracy": "de precisió mitjana",
-  "ui.stats.balloons.own": {
-    "one": "Has rebentat {n} globus",
-    "other": "Has rebentat {n} globus"
+  "ui.stats.balloons": {
+    "one": "{n} picada ràpida",
+    "other": "{n} picades ràpides"
   },
-  "ui.stats.balloons.public": {
-    "one": "Ha rebentat {n} globus",
-    "other": "Ha rebentat {n} globus"
-  },
-  "ui.stats.balloonsNone.own": "Encara no has rebentat cap globus",
-  "ui.stats.balloonsNone.public": "Encara no ha rebentat cap globus",
-  "ui.stats.balloonsSub": "picant sense parar",
+  "ui.stats.balloonsNone": "Encara cap picada ràpida",
   "ui.stats.bestStreak": "la millor ratxa",
   "ui.stats.daysPlayed": {
     "one": "Has jugat {n} dia",
@@ -321,29 +315,24 @@
   "ui.stats.error.silent": "Sense toc",
   "ui.stats.errorsByKind": "Errors per tipus",
   "ui.stats.errorsTitle": "On se t’escapen les notes",
-  "ui.stats.falls.own": {
-    "one": "T’ha caigut la figura {n} cop",
-    "other": "T’ha caigut la figura {n} cops"
+  "ui.stats.falls": {
+    "one": "La plaça s’ha quedat sense ànim {n} cop",
+    "other": "La plaça s’ha quedat sense ànim {n} cops"
   },
-  "ui.stats.falls.public": {
-    "one": "Li ha caigut la figura {n} cop",
-    "other": "Li ha caigut la figura {n} cops"
-  },
-  "ui.stats.fallsNone.own": "Mai no t’ha caigut la figura",
-  "ui.stats.fallsNone.public": "Mai no li ha caigut la figura",
-  "ui.stats.fallsSub": "quan l’ànim de la plaça s’esgota",
-  "ui.stats.guapa": "{n} GUAPA de {total}",
-  "ui.stats.guapaSub": "els dos botons alhora",
+  "ui.stats.fallsNone": "Mai sense ànim a la plaça",
+  "ui.stats.fallsSub": "la Mulassa cau, el Drac s’apaga",
+  "ui.stats.guapa": "{n} de {total} cops dobles",
   "ui.stats.holds": {
     "one": "{n} nota mantinguda",
     "other": "{n} notes mantingudes"
   },
   "ui.stats.holdsNone": "Cap nota mantinguda, de moment",
-  "ui.stats.holdsSub": "les MANTÉN, de cap a cua",
   "ui.stats.judged": "{perfect} PERFECTE · {good} BÉ · {miss} ERROR",
   "ui.stats.judgedOwn": "tots els teus tocs, jutjats",
   "ui.stats.judgedPublic": "tots els tocs, jutjats",
   "ui.stats.less": "Menys estadístiques",
+  "ui.stats.loadFailed": "No s’han pogut carregar les estadístiques.",
+  "ui.stats.loading": "Carregant les estadístiques…",
   "ui.stats.month.1": "de gener",
   "ui.stats.month.10": "d’octubre",
   "ui.stats.month.11": "de novembre",

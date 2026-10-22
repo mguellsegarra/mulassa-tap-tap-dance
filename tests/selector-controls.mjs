@@ -8,7 +8,7 @@ const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const css = readFileSync(new URL('../src/styles/select.css', import.meta.url), 'utf8');
 assert(html.indexOf('/src/styles/select.css') > html.indexOf('/src/styles/feedback.css'), 'selector chrome overrides load last');
 const layer = Number(css.match(/#select \{[^}]*z-index:\s*(\d+)/)[1]);
-const chrome = Number(css.match(/#settings, #music, #feedback, #viewmode, #profile \{[^}]*z-index:\s*(\d+)/)[1]);
+const chrome = Number(css.match(/#settings, #music, #free, #viewmode, #profile \{[^}]*z-index:\s*(\d+)/)[1]);
 assert(chrome > layer, 'original toolbar buttons sit above the selector and both gradient layers');
 assert(!/id="select-(board|back)"/.test(html), 'no title-loop back button');
 // No corner podium (Marc: «Una línia a tot arreu»): the ranking line under the song opens Classificacions, ⚙ keeps its row
@@ -43,7 +43,7 @@ const $ = id => doc.getElementById(id), sheets = { sync: {}, board: { configured
 const state = { state: 'splash', paused: false }, ctx = { tr, document: doc, performance: { now: () => time },
   G: state, selectedFigure: { id: 'mulassa-valls' }, COARSE: { matches: false }, sheets, clock: 10, CHALLENGE: null, keyboardNav: true, hide: (el, hidden) => { el.hidden = hidden; },
   howtoMenu: {}, settingsMenu: {}, privacyMenu: {}, pauseMenu: {},
-  howtoEl: $('howto'), settingsEl: $('settings'), feedbackEl: $('feedback'), musicEl: $('music'), profileEl: $('profile'), pauseEl: $('pause'), skipEl: $('skip'), retryEl: $('retry'),
+  howtoEl: $('howto'), settingsEl: $('settings'), feedbackEl: $('feedback'), freeEl: $('free'), musicEl: $('music'), profileEl: $('profile'), pauseEl: $('pause'), skipEl: $('skip'), retryEl: $('retry'),
   addEventListener(k, f) { (handlers[k] ||= []).push(f); }, clearTimeout() {}, setTimeout() { return 1; },
   padButtons: [$('pad-left'), $('pad-right')], hud: $('hud'), orbit: { ptrs: new Map(), x: [0.4,11] }, pnow: () => time, W: 375, K: 1,
   orbitMove() {}, orbitZoom() {}, turnFor: () => 1, orbitDown(o, id) { o.ptrs.set(id, true); }, orbitUp(o, id) { o.ptrs.delete(id); },
@@ -56,12 +56,12 @@ const code = photoSource + '\n' + ['mouse-look', 'controls', 'input'].map(name =
 vm.createContext(ctx); vm.runInContext(code, ctx);
 const run = code => vm.runInContext(code, ctx);
 const key = code => { for (const f of handlers.keydown || []) f({ code, target: { tagName: 'BODY' }, preventDefault() {} }); };
-const event = (id, x = 180, y = 350, more = {}) => ({ pointerId: id, clientX: x, clientY: y, button: 0, isPrimary: true, pointerType: 'touch', preventDefault() {}, ...more });
-const tap = (id, { drag = false, type = 'touch' } = {}) => {
-  time += 80; $('hud').fire('pointerdown', event(id, 180, 350, { pointerType: type }));
+const event = (id, x = 180, y = 350, more = {}) => ({ pointerId: id, clientX: x, clientY: y, button: 0, isPrimary: true, pointerType: 'touch', target: $('hud'), timeStamp: time, preventDefault() {}, ...more });
+const tap = (id, { drag = false, type = 'touch', target = $('hud') } = {}) => {
+  time += 80; for (const f of handlers.pointerdown || []) f(event(id, 180, 350, { pointerType: type, target })); $('hud').fire('pointerdown', event(id, 180, 350, { pointerType: type }));
   if (drag) $('hud').fire('pointermove', event(id, 220));
   $('hud').fire('pointerup', event(id, drag ? 220 : 180));
-  for (const f of handlers.pointerup || []) f(event(id));
+  for (const f of handlers.pointerup || []) f(event(id, drag ? 220 : 180));
 };
 run('updateControls()'); assert($('howto').hidden, 'splash has no instructions pill');
 assert($('viewmode').hidden, 'splash has no photo mode');
@@ -83,21 +83,26 @@ state.state = 'splash'; run('updateControls()');
 key('KeyH'); assert(!run('viewMode') && !classes.has('view-mode'), 'H does nothing on the splash');
 state.state = 'select'; run('updateControls()');
 assert(!nodes.has('leaders'), 'the controls never look for a corner podium');
-for (const id of ['settings', 'profile', 'music', 'feedback']) assert(!$(id).hidden, `${id} is available from the selector, including offline feedback`);
-assert($('viewmode').hidden, 'the selector enters free play from its dock, not a corner eye');
-// Perfil opens the corner row (docs/rankings-strategy.md decision 6): Perfil, music, Bústia, ⚙
-assert.match(css, /body:has\(#select:not\(\[hidden\]\)\) #profile \{ --cb-i: 0; \}/, 'Perfil comes first');
+for (const id of ['settings', 'profile', 'music', 'free']) assert(!$(id).hidden, `${id} is available from the selector`);
+assert($('feedback').hidden, 'the selector\'s Bústia lives in ⚙ Configuració: its corner slot is the gamepad\'s');
+assert($('viewmode').hidden, 'the eye shows only inside free play');
+// free play opens the corner row (Marc, 2026-10-22): free play, Perfil, music, ⚙
+assert.match(css, /body:has\(#select:not\(\[hidden\]\)\) #free \{ --cb-i: 0; \}/, 'free play comes first');
 assert.match(readFileSync(new URL('../src/styles/feedback.css', import.meta.url), 'utf8'), /body\.view-mode :is\([^)]*#profile[^)]*\) \{ visibility: hidden/, 'photo mode hides Perfil with the other chrome');
 sheets.board.configured = false; run('updateControls()'); assert($('profile').hidden, 'no board: no Perfil');
 sheets.board.configured = true; run('updateControls()');
 state.figureId = 'drac-valls'; state.sel = 2;
-key('KeyH'); assert(!run('viewMode'), 'H no longer enters free play'); $('select-free').fire?.('click'); run('setView(true)'); run('updateControls()'); assert(run('viewMode') && $('select').inert && classes.has('view-mode') && sheets.select.shown, 'photo mode hides without closing/reinitializing the selector');
+key('KeyH'); assert(!run('viewMode'), 'H no longer enters free play'); $('free').fire('click'); run('updateControls()'); assert(run('viewMode') && $('select').inert && classes.has('view-mode') && sheets.select.shown, 'photo mode hides without closing/reinitializing the selector');
 assert(!$('viewmode').hidden, 'inside free play the button is the way back');
 key('Escape'); assert(!run('viewMode') && !$('select').inert && state.state === 'select' && state.figureId === 'drac-valls' && state.sel === 2, 'photo exit keeps the figure and level');
 run('setView(true)'); key('KeyH'); assert(run('viewMode'), 'nor leaves it'); $('viewmode').fire('click'); assert(!run('viewMode'), 'the button leaves free play'); run('updateControls()'); assert($('viewmode').hidden);
-tap(1); tap(2); assert(!run('viewMode'), 'world double taps no longer enter the old photo mode');
-tap(3, { type: 'mouse' }); tap(4, { type: 'mouse' }); assert(!run('viewMode'), 'nor does a double click');
-run('setView(true)'); tap(5); tap(6); assert(run('viewMode'), 'nor do they leave it'); run('setView(false)');
+tap(1, { drag: true }); tap(2); assert(!run('viewMode'), 'a drag then a tap is no double tap (the drag orbits)');
+tap(3, { target: { matches: () => false } }); tap(4); assert(!run('viewMode'), 'a tap on the UI (a card, a button) does not count');
+sheets.feedback.open = true; tap(5); tap(6); assert(!run('viewMode'), 'never under a sheet'); sheets.feedback.open = false;
+time += 600; tap(7); time += 600; tap(8); assert(!run('viewMode'), 'two slow taps are no double tap');
+time += 600; tap(9); tap(10); assert(run('viewMode'), 'a double tap on the bare plaça enters free play'); run('setView(false)');
+tap(11, { type: 'mouse', target: { matches: s => s.includes('.sel-bottom') } }); tap(12, { type: 'mouse', target: { matches: s => s.includes('.sel-bottom') } }); assert(run('viewMode'), 'a double click on the dock\'s empty band too (its shades are no UI)');
+tap(13); tap(14); assert(run('viewMode'), 'and it never leaves it'); run('setView(false)');
 { // a mouse's way back fades after 3 idle seconds (clean photos); touch has no Esc, so its never does
   const timers = [], wasTimeout = ctx.setTimeout; ctx.setTimeout = () => timers.push(1);
   run('setView(true)'); assert.equal(timers.length, 1, 'desktop: the exit dims when idle'); run('setView(false)');
@@ -108,7 +113,7 @@ run('setView(true)'); tap(5); tap(6); assert(run('viewMode'), 'nor do they leave
 run('setView(true)'); state.state = 'play'; run('updateControls()'); assert(!run('viewMode') && $('viewmode').hidden && !$('select').inert, 'starting play restores UI and removes photo mode');
 // Cursor follows actionable canvas targets, including changes under a stationary mouse.
 ctx.buttonAt = e => e.clientX === 180 ? { x: 160, y: 330, w: 40, h: 40 } : null;
-state.state = 'splash';
+state.state = 'title'; // (the splash takes a tap anywhere: its cursor is always a pointer)
 $('hud').fire('pointermove', event(20, 180, 350, { pointerType: 'mouse' }));
 assert.equal($('hud').style.cursor, 'pointer');
 sheets.sync.open = true; run('updateControls()'); assert.equal($('hud').style.cursor, '');
@@ -117,7 +122,7 @@ $('hud').fire('pointermove', event(20, 40, 350, { pointerType: 'mouse' }));
 assert.equal($('hud').style.cursor, '');
 $('hud').fire('pointermove', event(20, 180, 350, { pointerType: 'mouse' }));
 state.state = 'select'; run('updateControls()'); assert.equal($('hud').style.cursor, '');
-state.state = 'splash'; run('updateControls()');
+state.state = 'splash'; run('updateControls()'); assert.equal($('hud').style.cursor, 'pointer');
 $('hud').fire('pointerleave', {}); assert.equal($('hud').style.cursor, '');
 // Held E uses the same input lifecycle as walking; repeats cannot restart its onset.
 {
@@ -426,4 +431,13 @@ console.log('practice/game input routing: keyboard, mouse/touch pad and bubbling
   assert.equal(navX(win, { children: [box(12, 72, 100, 116), box(110, 72, 390, 116)] }, carousel, 1), 458, 'a pill under the middle: just right of it');
   assert.equal(navX(win, { children: [box(110, 4, 390, 48)] }, carousel, 1), 333.5, 'pills in the header, far above: the middle');
   assert.equal(navX(win, { children: [box(300, 72, 660, 116)] }, carousel, 1), 603, 'never past the screen edge');
+}
+{ // the FLIP (pending → playable): the primary slides; Ball lliure, hidden before, waits for the slide and fades in instead of popping over it
+  const { setupFlip } = await import('../src/ui/select-flip.js');
+  const btn = (x, w) => ({ x, w, anims: [], getBoundingClientRect() { return { left: this.x, top: 0, width: this.w, height: this.w && 48 }; }, getAnimations() { return []; }, animate(k, o) { this.anims.push(k); return { finished: Promise.resolve(), cancel() {} }; } });
+  const next = btn(155, 315), free = btn(0, 0), win = { performance: { now: () => 0 }, getComputedStyle: () => ({ zoom: '1' }) };
+  const flip = setupFlip({ win, root: {}, els: () => [next, free], reduced: () => false });
+  flip.snap(true); next.x = 78; free.x = 383; free.w = 185; flip.play();
+  assert.ok(next.anims[0]?.transform, 'the primary slides from its old place');
+  assert.deepEqual(free.anims[0]?.opacity, [0, 0, 1], 'the newly shown button fades in after the slide, never pops in at once');
 }

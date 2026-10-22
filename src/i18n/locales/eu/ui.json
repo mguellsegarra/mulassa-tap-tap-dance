@@ -297,17 +297,11 @@
   "ui.stats.adjustSync": "Doitu sinkronia",
   "ui.stats.atPlaza": "plazan",
   "ui.stats.avgAccuracy": "batez besteko zehaztasuna",
-  "ui.stats.balloons.own": {
-    "one": "{n} puxika lehertu duzu",
-    "other": "{n} puxika lehertu dituzu"
+  "ui.stats.balloons": {
+    "one": "{n} jo azkar gaindituta",
+    "other": "{n} jo azkar gaindituta"
   },
-  "ui.stats.balloons.public": {
-    "one": "{n} puxika lehertu du",
-    "other": "{n} puxika lehertu ditu"
-  },
-  "ui.stats.balloonsNone.own": "Oraindik ez duzu puxikarik lehertu",
-  "ui.stats.balloonsNone.public": "Oraindik ez du puxikarik lehertu",
-  "ui.stats.balloonsSub": "gelditu gabe joz",
+  "ui.stats.balloonsNone": "Oraindik jo azkarrik ez",
   "ui.stats.bestStreak": "boladarik onena",
   "ui.stats.daysPlayed": {
     "one": "{n} egunez jokatu duzu",
@@ -321,29 +315,24 @@
   "ui.stats.error.silent": "Ukitu gabe",
   "ui.stats.errorsByKind": "Hutsak motaren arabera",
   "ui.stats.errorsTitle": "Non ihes egiten dizuten notek",
-  "ui.stats.falls.own": {
-    "one": "Figura {n} aldiz erori zaizu",
-    "other": "Figura {n} aldiz erori zaizu"
+  "ui.stats.falls": {
+    "one": "Plazaren gogoa {n} aldiz agortu da",
+    "other": "Plazaren gogoa {n} aldiz agortu da"
   },
-  "ui.stats.falls.public": {
-    "one": "Figura {n} aldiz erori zaio",
-    "other": "Figura {n} aldiz erori zaio"
-  },
-  "ui.stats.fallsNone.own": "Ez zaizu inoiz figura erori",
-  "ui.stats.fallsNone.public": "Ez zaio inoiz figura erori",
-  "ui.stats.fallsSub": "plazaren gogoa agortzean",
-  "ui.stats.guapa": "{n} GUAPA / {total}",
-  "ui.stats.guapaSub": "bi botoiak batera",
+  "ui.stats.fallsNone": "Plazaren gogoa ez da inoiz agortu",
+  "ui.stats.fallsSub": "Mulassa desmuntatzen da, Drac itzaltzen da",
+  "ui.stats.guapa": "{n} / {total} kolpe bikoitz",
   "ui.stats.holds": {
     "one": "{n} nota eutsita",
     "other": "{n} nota eutsita"
   },
   "ui.stats.holdsNone": "Oraindik ez dago nota eutsirik",
-  "ui.stats.holdsSub": "EUTSI notak, hasieratik amaierara",
   "ui.stats.judged": "{perfect} BIKAIN · {good} ONDO · {miss} HUTS",
   "ui.stats.judgedOwn": "zure ukitu guztiak epaituta",
   "ui.stats.judgedPublic": "ukitu guztiak epaituta",
   "ui.stats.less": "Estatistika gutxiago",
+  "ui.stats.loadFailed": "Ezin izan dira estatistikak kargatu",
+  "ui.stats.loading": "Estatistikak kargatzen…",
   "ui.stats.month.1": "urtarrila",
   "ui.stats.month.10": "urria",
   "ui.stats.month.11": "azaroa",

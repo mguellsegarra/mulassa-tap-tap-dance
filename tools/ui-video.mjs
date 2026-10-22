@@ -10,13 +10,14 @@
 // Ho escriu tot a docs/i18n-ui-inventory/video/{findings-video.json, M…mp4, frames/*.jpg}; README-video.md amb --report.
 //
 // Ús (Playwright NOMÉS sota /tmp/ui-inv-pw; ffmpeg només si ja hi és):
-//   node tools/ui-video.mjs [--pw=/tmp/ui-inv-pw] [--no-build] [--scenes=S02,S03] [--vps=V3,V7] [--langs=ca,de] [--jobs=2]
+//   node tools/ui-video.mjs [--pw=/tmp/ui-inv-pw] [--no-build] [--scenes=S02,S03] [--vps=V3,V7] [--langs=ca,de] [--soft]
 //       [--list] [--report] [--out=<dir>] [--src=<dir> --dist=<dir> (referència «abans»)] [--tag=abans]
 //   Cobertura per defecte: V3 (tàctil) en ca de ja ru es pseudo; V7 (punter fi) en ca de ja ru; V5 (852×393) en ca.
 import { spawnSync, execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync, rmSync, readdirSync, statSync, copyFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { lock, launchBrowser } from './capture-lib.mjs';
 import { SCENES, VPS, plan, codeOf, build, serve, bootPage, CAT_WORDS } from './ui-inventory.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -271,7 +272,8 @@ async function main() {
   const { chromium } = await import(pathToFileURL(pwPath).href);
   build();
   const { srv, port } = await serve();
-  const launch = () => chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--mute-audio'] });
+  await lock();
+  const launch = () => launchBrowser(chromium, { soft: !!args.soft });
   const browsers = []; let next = 0, done = 0;
   const record = (cap, fs) => { db.captures = db.captures.filter(c => c.code !== cap.code).concat(cap); db.findings = db.findings.filter(f => f.capture !== cap.code).concat(fs); save(); };
   const worker = async () => {
@@ -283,7 +285,7 @@ async function main() {
     }
     await b.close().catch(() => {});
   };
-  try { await Promise.all(Array.from({ length: Math.max(1, +(args.jobs ?? 2)) }, worker)); }
+  try { await Promise.all(Array.from({ length: 1 }, worker)); }
   finally { for (const b of browsers) await b.close().catch(() => {}); srv.closeAllConnections?.(); srv.close(); rmSync(RAW, { recursive: true, force: true }); rmSync(WORK, { recursive: true, force: true }); }
   save();
   console.log(`fet: ${db.captures.length} vídeos, ${db.findings.length} troballes`);

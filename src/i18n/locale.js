@@ -13,7 +13,7 @@ export const LANGS = ALL_LANGS.filter(code => i18nMeta[code].released); // only 
 // Explicit aliases only (lower case, `-`): a regional tag of a language we ship; nothing is inferred (no uk -> ru).
 const ALIASES = {
   'ca-es': 'ca', 'es-es': 'es', 'es-mx': 'es', 'es-ar': 'es', 'es-419': 'es', 'en-gb': 'en', 'en-us': 'en', 'en-au': 'en',
-  'fr-fr': 'fr', 'it-it': 'it', 'ro-ro': 'ro', pt: 'pt-BR', 'pt-br': 'pt-BR', 'eu-es': 'eu', 'gl-es': 'gl', 'oc-es': 'oc',
+  'fr-fr': 'fr', 'it-it': 'it', 'ro-ro': 'ro', pt: 'pt', 'pt-pt': 'pt', 'pt-br': 'pt', 'eu-es': 'eu', 'gl-es': 'gl', 'oc-es': 'oc',
   'de-de': 'de', zh: 'zh-Hans', 'zh-cn': 'zh-Hans', 'zh-hans-cn': 'zh-Hans', 'ja-jp': 'ja', 'uk-ua': 'uk', 'ru-ru': 'ru', 'ko-kr': 'ko',
 };
 const CANON = new Map([...ALL_LANGS.map(code => [code.toLowerCase(), code]), ...Object.entries(ALIASES)]);

@@ -45,25 +45,27 @@ export function statsData(buckets = {}, days = []) {
   return { ...s, byFigure, errors, stars, starsMax: STARS_MAX };
 }
 
-// Drawn icons (24 px grid, stroked in currentColor; GUAPA keeps its two drums' colours)
+// Drawn icons: coloured flat vectors on a 28 px grid (Marc, 2026-10-22: the outline ones read badly); only the two LINE ones
+// (chevron, empty bars) are stroked in currentColor. GUAPA keeps its two drums' colours.
 const ICONS = {
-  drum: '<ellipse cx="12" cy="9" rx="7.5" ry="2.8"/><path d="M4.5 9v6.2c0 1.6 3.4 2.8 7.5 2.8s7.5-1.2 7.5-2.8V9M8 12v5.6M16 12v5.6M7.5 2.5l3.2 4.6M16.5 2.5l-3.2 4.6"/>',
-  clock: '<circle cx="12" cy="13.5" r="7.5"/><path d="M12 9.5v4l2.8 1.8M9.5 2.8h5M12 2.8V6M18.5 6.5l1.4-1.4"/>',
-  flame: '<path d="M12 21.2c-3.9 0-6.6-2.7-6.6-6.3 0-3.7 2.8-5.4 3.6-9.4 2 1.3 3.2 3.2 3.1 5.6 1.1-.8 1.8-2.1 1.9-3.6 2.6 1.9 4.6 4.6 4.6 7.6 0 3.5-2.7 6.1-6.6 6.1z"/><path d="M12 21.2c-1.6 0-2.7-1.1-2.7-2.6 0-1.6 1.3-2.4 1.7-4 1.9 1 3.6 2.4 3.6 4.1 0 1.5-1.1 2.5-2.6 2.5z"/>',
-  target: '<circle cx="12" cy="12" r="8.6"/><circle cx="12" cy="12" r="4.8"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/>',
-  judge: '<rect x="3.5" y="3.5" width="17" height="17" rx="3"/><path d="M7.5 12.4l3 3 6-6.6"/>',
-  guapa: '<path d="M12 3.4a8.6 8.6 0 0 0 0 17.2z" fill="#FF7A1A" stroke="none"/><path d="M12 3.4a8.6 8.6 0 0 1 0 17.2z" fill="#14B8A6" stroke="none"/><circle cx="12" cy="12" r="8.6"/>',
-  balloon: '<path d="M12 2.8c3.6 0 6.2 2.8 6.2 6.4 0 3.9-3.1 7.2-6.2 7.2s-6.2-3.3-6.2-7.2c0-3.6 2.6-6.4 6.2-6.4z"/><path d="M10.6 16.3l-.9 1.5h4.6l-.9-1.5M12 17.8c0 1.4-1.6 1.9-.9 3.6"/><path d="M9.2 6.6c.6-.9 1.4-1.4 2.4-1.6"/>',
-  hold: '<rect x="2.8" y="8.4" width="18.4" height="7.2" rx="3.6"/><circle cx="6.4" cy="12" r="1.5" fill="currentColor"/><circle cx="17.6" cy="12" r="1.5" fill="currentColor"/>',
-  dizzy: '<path d="M12.4 12.6a1.4 1.4 0 1 1-1.2-1.9 3.2 3.2 0 1 1-3.3 3.6 5.2 5.2 0 1 1 6.1 4.6"/><path d="M18.5 4.2l.5 1.4 1.4.5-1.4.5-.5 1.4-.5-1.4-1.4-.5 1.4-.5zM5.2 3.6l.4 1 1 .4-1 .4-.4 1-.4-1-1-.4 1-.4z"/>',
-  star: '<path d="M12 3.2l2.6 5.4 5.9.8-4.3 4.1 1.1 5.9L12 16.6l-5.3 2.8 1.1-5.9-4.3-4.1 5.9-.8z"/>',
-  calendar: '<rect x="3.5" y="5" width="17" height="15.5" rx="2.2"/><path d="M3.5 10h17M8 2.8v4M16 2.8v4"/><path d="M8 14.2h2M14 14.2h2M8 17.2h2"/>',
+  drum: '<path d="M5 11v9c0 2.2 4 4 9 4s9-1.8 9-4v-9z" fill="#e8b26a"/><path d="M5 15c0 2.2 4 4 9 4s9-1.8 9-4" fill="none" stroke="#8a5a2a" stroke-width="1.6"/><ellipse cx="14" cy="11" rx="9" ry="4" fill="#fff3d6"/><path d="M8 3l6 7M20 3l-6 7" stroke="#8a5a2a" stroke-width="2.2" stroke-linecap="round"/>',
+  clock: '<rect x="11" y="1.5" width="6" height="3" rx="1.5" fill="#3d6aa8"/><circle cx="14" cy="16" r="10.5" fill="#7fb2f0"/><circle cx="14" cy="16" r="7.5" fill="#fff3d6"/><path d="M14 16V11.5M14 16l3 2" stroke="#3d6aa8" stroke-width="2.2" stroke-linecap="round"/>',
+  flame: '<path d="M14 2c1 5 8 8 8 15a8 8 0 0 1-16 0c0-4 2-6 4-8 0 3 1 4 2 4 0-4 0-8 2-11z" fill="#ff9f6e"/><path d="M14 13c3 3 5 5 5 8a5 5 0 0 1-10 0c0-3 3-5 5-8z" fill="#ffd76e"/><path d="M14 18c1.5 1.5 2.5 2.5 2.5 4a2.5 2.5 0 0 1-5 0c0-1.5 1-2.5 2.5-4z" fill="#fff3d6"/>',
+  target: '<circle cx="14" cy="14" r="12" fill="#7ee081"/><circle cx="14" cy="14" r="8" fill="#fff3d6"/><circle cx="14" cy="14" r="4.5" fill="#3f9a4a"/><circle cx="14" cy="14" r="1.6" fill="#fff3d6"/>',
+  judge: '<rect x="2.5" y="2.5" width="23" height="23" rx="6" fill="#d79be8"/><path d="M8 14.5l4 4 8-9" fill="none" stroke="#fff3d6" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>',
+  guapa: '<path d="M14 2a12 12 0 0 0 0 24z" fill="#FF7A1A"/><path d="M14 2a12 12 0 0 1 0 24z" fill="#14B8A6"/><circle cx="14" cy="14" r="12" fill="none" stroke="#fff3d6" stroke-width="2"/>',
+  tap: '<circle cx="15" cy="17" r="9.5" fill="#f08fb8" opacity=".45"/><circle cx="15" cy="17" r="5.5" fill="#f08fb8"/><circle cx="15" cy="17" r="2.2" fill="#fff3d6"/><path d="M3 6l3.5 3M9 2.5l1 4.5M2.5 12.5l4.2-.5" stroke="#f08fb8" stroke-width="2.4" stroke-linecap="round"/>', // a ripple and its taps: GLOBUS and CARRETILLES alike
+  hold: '<rect x="2" y="9" width="24" height="10" rx="5" fill="#7fd4f0"/><rect x="7" y="12" width="14" height="4" rx="2" fill="#fff3d6" opacity=".7"/><circle cx="7" cy="14" r="4" fill="#fff3d6"/><circle cx="21" cy="14" r="4" fill="#fff3d6"/><circle cx="7" cy="14" r="1.8" fill="#2f8aa8"/><circle cx="21" cy="14" r="1.8" fill="#2f8aa8"/>',
+  dizzy: '<path d="M14 25S3 18.5 3 10.5A5.8 5.8 0 0 1 14 7.6a5.8 5.8 0 0 1 11 2.9C25 18.5 14 25 14 25z" fill="#c8e07a"/><path d="M8.5 9.5a2.5 2.5 0 0 1 3-1" stroke="#fff3d6" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M14 11l1.3 3h3.2l-2.6 2 1 3.2L14 17.4l-2.9 1.8 1-3.2-2.6-2h3.2z" fill="#5f7a1f"/>', // the plaza's spirit, a heart
+  star: '<path d="M14 2.5l3.4 7.1 7.8 1-5.7 5.4 1.4 7.7L14 20l-6.9 3.7 1.4-7.7L2.8 10.6l7.8-1z" fill="#f5c518" stroke="#f5c518" stroke-width="1.5" stroke-linejoin="round"/><path d="M14 2.5l3.4 7.1 7.8 1-5.7 5.4L14 20z" fill="#c99a00"/>',
+  calendar: '<rect x="3" y="5" width="22" height="20" rx="4" fill="#fff3d6"/><path d="M3 9a4 4 0 0 1 4-4h14a4 4 0 0 1 4 4v3H3z" fill="#b9a3f0"/><path d="M9 2.5v5M19 2.5v5" stroke="#6b55a8" stroke-width="2.4" stroke-linecap="round"/><g fill="#b9a3f0"><rect x="7" y="15" width="4" height="3" rx="1"/><rect x="12" y="15" width="4" height="3" rx="1"/><rect x="17" y="15" width="4" height="3" rx="1"/><rect x="7" y="19.5" width="4" height="3" rx="1"/><rect x="12" y="19.5" width="4" height="3" rx="1" fill="#6b55a8"/></g>',
   chev: '<path d="M6 9l6 6 6-6"/>',
   bars: '<path d="M5 20V12M10 20V7M15 20v-5M20 20V9" stroke-dasharray="2.4 2.4"/><path d="M3 20.5h18"/>',
 };
+const LINE = new Set(['chev', 'bars']);
 export function icon(doc, key) {
-  const s = doc.createElement('span'); s.className = 'stat-ico'; s.setAttribute('aria-hidden', 'true');
-  s.innerHTML = `<svg viewBox="0 0 24 24">${ICONS[key]}</svg>`;
+  const s = doc.createElement('span'); s.className = LINE.has(key) ? 'stat-ico line' : 'stat-ico'; s.setAttribute('aria-hidden', 'true');
+  s.innerHTML = `<svg viewBox="0 0 ${LINE.has(key) ? 24 : 28} ${LINE.has(key) ? 24 : 28}">${ICONS[key]}</svg>`;
   return s;
 }
 const el = (doc, tag, cls, text = '') => { const e = doc.createElement(tag); e.className = cls; if (text) e.textContent = text; return e; };
@@ -80,9 +82,10 @@ function wins(doc, list) {
   }
   return ul;
 }
-// One line of «Més estadístiques»: an icon, the fact, an optional quiet line under it
-function line(doc, ul, key, text, sub = '') {
-  const li = el(doc, 'li', ''), t = el(doc, 'span', '', text);
+// One tile of «Més estadístiques»: an icon, the fact, an optional quiet line under it; wide = the whole row
+function line(doc, ul, key, text, sub = '', wide = false) {
+  const li = el(doc, 'li', `stat-l-${key}${wide ? ' w' : ''}`), t = el(doc, 'span', '');
+  for (const [i, part] of text.split(/(\d[\d.,\u00a0\u202f]*\d|\d)/).entries()) if (part) t.append(i % 2 ? el(doc, 'b', '', part) : part); // numbers stand out in the row's colour
   if (sub) t.appendChild(el(doc, 'small', '', sub));
   li.append(icon(doc, key), t); ul.appendChild(li);
 }
@@ -95,7 +98,7 @@ export function renderStats(doc, box, d, { own = false, onSync = null, podiums =
   const figures = Object.entries(d.byFigure).filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]).map(([f, n]) => `${SHORT[f] ?? f}\u00a0${num(n)}`).join(' · '); // breaks at the dot, never «Drac / 11»; the short name: a half-width tile
   for (const [key, big, sub] of [['drum', count('ui.stats.runs', d.runs), figures], ['clock', playTime(d.seconds), tr('ui.stats.atPlaza')],
     ['flame', num(d.bestCombo), tr('ui.stats.bestStreak')], ['target', d.accuracy == null ? '—' : `${Math.round(d.accuracy)}%`, tr('ui.stats.avgAccuracy')]]) {
-    const f = el(doc, 'div', 'stat-fact');
+    const f = el(doc, 'div', `stat-fact stat-k-${key}`);
     f.append(icon(doc, key), el(doc, 'b', '', big), el(doc, 'span', '', sub));
     facts.appendChild(f);
   }
@@ -104,16 +107,16 @@ export function renderStats(doc, box, d, { own = false, onSync = null, podiums =
 
   const panel = el(doc, 'div', 'stat-more'); panel.id = `${box.id}-more`;
   const ul = panel.appendChild(el(doc, 'ul', 'stat-lines'));
+  // two half tiles side by side, the three long ones (days, the judge's counts, the ànim sentence) on the whole row
   if (own) line(doc, ul, 'calendar', count('ui.stats.daysPlayed', d.daysPlayed),
-    d.streak > 0 ? count('ui.stats.streakNow', d.streak, { best: num(d.bestStreak) }) : count('ui.stats.streakBest', d.bestStreak));
-  const who = own ? 'own' : 'public';
-  line(doc, ul, 'judge', tr('ui.stats.judged', { perfect: num(d.perfect), good: num(d.good), miss: num(d.miss) }), tr(own ? 'ui.stats.judgedOwn' : 'ui.stats.judgedPublic'));
-  line(doc, ul, 'guapa', tr('ui.stats.guapa', { n: num(d.guapa), total: num(d.guapaTotal) }), tr('ui.stats.guapaSub'));
-  line(doc, ul, 'balloon', d.balloons ? count(`ui.stats.balloons.${who}`, d.balloons) : tr(`ui.stats.balloonsNone.${who}`), tr('ui.stats.balloonsSub'));
-  line(doc, ul, 'hold', d.holds ? count('ui.stats.holds', d.holds) : tr('ui.stats.holdsNone'), tr('ui.stats.holdsSub'));
-  line(doc, ul, 'dizzy', d.collapsed ? count(`ui.stats.falls.${who}`, d.collapsed) : tr(`ui.stats.fallsNone.${who}`),
-    d.collapsed ? tr('ui.stats.fallsSub') : '');
+    d.streak > 0 ? count('ui.stats.streakNow', d.streak, { best: num(d.bestStreak) }) : count('ui.stats.streakBest', d.bestStreak), true);
+  // no sublines on the doubles, taps and held notes: they named figure-specific moves (GUAPA, CREMA, GLOBUS, MANTÉN) and would not scale to fifty figures
+  line(doc, ul, 'guapa', tr('ui.stats.guapa', { n: num(d.guapa), total: num(d.guapaTotal) }));
+  line(doc, ul, 'tap', d.balloons ? count('ui.stats.balloons', d.balloons) : tr('ui.stats.balloonsNone'));
+  line(doc, ul, 'judge', tr('ui.stats.judged', { perfect: num(d.perfect), good: num(d.good), miss: num(d.miss) }), tr(own ? 'ui.stats.judgedOwn' : 'ui.stats.judgedPublic'), true);
+  line(doc, ul, 'hold', d.holds ? count('ui.stats.holds', d.holds) : tr('ui.stats.holdsNone'));
   line(doc, ul, 'star', tr('ui.stats.stars', { n: num(d.stars), max: d.starsMax }), tr('ui.stats.starsSub'));
+  line(doc, ul, 'dizzy', d.collapsed ? count('ui.stats.falls', d.collapsed) : tr('ui.stats.fallsNone'), d.collapsed ? tr('ui.stats.fallsSub') : '', true);
   if (own) errorKinds(doc, panel, d, onSync);
 
   const more = el(doc, 'button', 'btn btn-link stat-toggle'); more.type = 'button';
@@ -132,7 +135,7 @@ function errorKinds(doc, panel, d, onSync) {
   if (!kinds.length) return;
   panel.appendChild(el(doc, 'p', 'stat-errors-k', tr('ui.stats.errorsTitle')));
   const list = el(doc, 'ul', 'stat-errors'); list.setAttribute('aria-label', tr('ui.stats.errorsByKind'));
-  for (const [k, n] of kinds) { const li = el(doc, 'li', '', `${ERROR_NAMES[k]} `); li.appendChild(el(doc, 'b', '', num(n))); list.appendChild(li); }
+  for (const [k, n] of kinds) { const li = el(doc, 'li', `e-${k}`, `${ERROR_NAMES[k]} `); li.appendChild(el(doc, 'b', '', num(n))); list.appendChild(li); }
   panel.appendChild(list);
   const timing = d.errors.early + d.errors.late, all = kinds.reduce((a, [, n]) => a + n, 0);
   if (onSync && timing >= 10 && timing * 2 > all) {

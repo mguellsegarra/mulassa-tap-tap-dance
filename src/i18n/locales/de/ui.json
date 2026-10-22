@@ -297,17 +297,11 @@
   "ui.stats.adjustSync": "Ton abgleichen",
   "ui.stats.atPlaza": "auf dem Platz",
   "ui.stats.avgAccuracy": "Treffer im Schnitt",
-  "ui.stats.balloons.own": {
-    "one": "Du hast {n} Ballon zum Platzen gebracht",
-    "other": "Du hast {n} Ballons zum Platzen gebracht"
+  "ui.stats.balloons": {
+    "one": "{n} Trommelwirbel geschafft",
+    "other": "{n} Trommelwirbel geschafft"
   },
-  "ui.stats.balloons.public": {
-    "one": "{n} Ballon zum Platzen gebracht",
-    "other": "{n} Ballons zum Platzen gebracht"
-  },
-  "ui.stats.balloonsNone.own": "Du hast noch keinen Ballon zum Platzen gebracht",
-  "ui.stats.balloonsNone.public": "Noch keinen Ballon zum Platzen gebracht",
-  "ui.stats.balloonsSub": "durch pausenloses Tippen",
+  "ui.stats.balloonsNone": "Noch kein Trommelwirbel geschafft",
   "ui.stats.bestStreak": "die beste Serie",
   "ui.stats.daysPlayed": {
     "one": "Du hast an {n} Tag gespielt",
@@ -321,29 +315,24 @@
   "ui.stats.error.silent": "Kein Tipp",
   "ui.stats.errorsByKind": "Fehler nach Art",
   "ui.stats.errorsTitle": "Wo dir Noten entwischen",
-  "ui.stats.falls.own": {
-    "one": "Deine Figur fiel {n}-mal um",
-    "other": "Deine Figur fiel {n}-mal um"
+  "ui.stats.falls": {
+    "one": "Der Platz hat {n}-mal den Schwung verloren",
+    "other": "Der Platz hat {n}-mal den Schwung verloren"
   },
-  "ui.stats.falls.public": {
-    "one": "Figur {n}-mal umgefallen",
-    "other": "Figur {n}-mal umgefallen"
-  },
-  "ui.stats.fallsNone.own": "Deine Figur ist nie umgefallen",
-  "ui.stats.fallsNone.public": "Figur nie umgefallen",
-  "ui.stats.fallsSub": "wenn die Stimmung auf null sinkt",
-  "ui.stats.guapa": "{n} GUAPA von {total}",
-  "ui.stats.guapaSub": "beide Knöpfe zugleich",
+  "ui.stats.fallsNone": "Der Platz hat nie den Schwung verloren",
+  "ui.stats.fallsSub": "die Mulassa fällt, der Drac erlischt",
+  "ui.stats.guapa": "{n} von {total} Doppelschlägen",
   "ui.stats.holds": {
     "one": "{n} Note gehalten",
     "other": "{n} Noten gehalten"
   },
   "ui.stats.holdsNone": "Noch keine Note gehalten",
-  "ui.stats.holdsSub": "HALTEN, von Anfang bis Ende",
   "ui.stats.judged": "{perfect} PERFEKT · {good} GUT · {miss} FEHLER",
   "ui.stats.judgedOwn": "all deine Anschläge, bewertet",
   "ui.stats.judgedPublic": "alle Anschläge, bewertet",
   "ui.stats.less": "Weniger Statistik",
+  "ui.stats.loadFailed": "Die Statistik konnte nicht laden",
+  "ui.stats.loading": "Statistik lädt…",
   "ui.stats.month.1": "Januar",
   "ui.stats.month.10": "Oktober",
   "ui.stats.month.11": "November",

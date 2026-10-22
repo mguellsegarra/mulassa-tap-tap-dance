@@ -297,17 +297,11 @@
   "ui.stats.adjustSync": "Axusta a sincronía",
   "ui.stats.atPlaza": "na praza",
   "ui.stats.avgAccuracy": "de precisión media",
-  "ui.stats.balloons.own": {
-    "one": "Rebentaches {n} globo",
-    "other": "Rebentaches {n} globos"
+  "ui.stats.balloons": {
+    "one": "{n} redobre superado",
+    "other": "{n} redobres superados"
   },
-  "ui.stats.balloons.public": {
-    "one": "Rebentou {n} globo",
-    "other": "Rebentou {n} globos"
-  },
-  "ui.stats.balloonsNone.own": "Aínda non rebentaches ningún globo",
-  "ui.stats.balloonsNone.public": "Aínda non rebentou ningún globo",
-  "ui.stats.balloonsSub": "batendo sen parar",
+  "ui.stats.balloonsNone": "Aínda ningún redobre superado",
   "ui.stats.bestStreak": "a mellor racha",
   "ui.stats.daysPlayed": {
     "one": "Xogaches {n} día",
@@ -321,29 +315,24 @@
   "ui.stats.error.silent": "Sen toque",
   "ui.stats.errorsByKind": "Erros por tipo",
   "ui.stats.errorsTitle": "Onde che escapan as notas",
-  "ui.stats.falls.own": {
-    "one": "Caeuche a figura {n} vez",
-    "other": "Caeuche a figura {n} veces"
+  "ui.stats.falls": {
+    "one": "A praza quedou sen ánimo {n} vez",
+    "other": "A praza quedou sen ánimo {n} veces"
   },
-  "ui.stats.falls.public": {
-    "one": "Caeulle a figura {n} vez",
-    "other": "Caeulle a figura {n} veces"
-  },
-  "ui.stats.fallsNone.own": "Nunca che caeu a figura",
-  "ui.stats.fallsNone.public": "Nunca lle caeu a figura",
-  "ui.stats.fallsSub": "cando se esgota o ánimo da praza",
-  "ui.stats.guapa": "{n} GUAPA de {total}",
-  "ui.stats.guapaSub": "os dous botóns á vez",
+  "ui.stats.fallsNone": "A praza nunca quedou sen ánimo",
+  "ui.stats.fallsSub": "a Mulassa cae, o Drac apágase",
+  "ui.stats.guapa": "{n} de {total} golpes dobres",
   "ui.stats.holds": {
     "one": "{n} nota mantida",
     "other": "{n} notas mantidas"
   },
   "ui.stats.holdsNone": "Ningunha nota mantida, polo de agora",
-  "ui.stats.holdsSub": "as MANTÉN, de principio a fin",
   "ui.stats.judged": "{perfect} PERFECTO · {good} BEN · {miss} ERRO",
   "ui.stats.judgedOwn": "todos os teus toques, xulgados",
   "ui.stats.judgedPublic": "todos os toques, xulgados",
   "ui.stats.less": "Menos estatísticas",
+  "ui.stats.loadFailed": "Non se puideron cargar as estatísticas",
+  "ui.stats.loading": "Cargando as estatísticas…",
   "ui.stats.month.1": "de xaneiro",
   "ui.stats.month.10": "de outubro",
   "ui.stats.month.11": "de novembro",

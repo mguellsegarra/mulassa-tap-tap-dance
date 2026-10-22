@@ -295,15 +295,10 @@
   "ui.stats.adjustSync": "调整同步",
   "ui.stats.atPlaza": "在广场的时光",
   "ui.stats.avgAccuracy": "平均命中率",
-  "ui.stats.balloons.own": {
-    "other": "你击破了{n}个气球"
+  "ui.stats.balloons": {
+    "other": "完成连打 {n} 次"
   },
-  "ui.stats.balloons.public": {
-    "other": "击破了{n}个气球"
-  },
-  "ui.stats.balloonsNone.own": "你还没击破过气球",
-  "ui.stats.balloonsNone.public": "还没击破过气球",
-  "ui.stats.balloonsSub": "不停连击",
+  "ui.stats.balloonsNone": "还没有完成过连打",
   "ui.stats.bestStreak": "最高连击",
   "ui.stats.daysPlayed": {
     "other": "你玩了{n}天"
@@ -316,26 +311,22 @@
   "ui.stats.error.silent": "漏击",
   "ui.stats.errorsByKind": "失误类型",
   "ui.stats.errorsTitle": "哪些音符没打好",
-  "ui.stats.falls.own": {
-    "other": "你的角色倒下了{n}次"
+  "ui.stats.falls": {
+    "other": "广场士气耗尽 {n} 次"
   },
-  "ui.stats.falls.public": {
-    "other": "角色倒下了{n}次"
-  },
-  "ui.stats.fallsNone.own": "你的角色从没倒下过",
-  "ui.stats.fallsNone.public": "角色从没倒下过",
-  "ui.stats.fallsSub": "广场气氛耗尽时",
-  "ui.stats.guapa": "{n}/{total}次GUAPA",
-  "ui.stats.guapaSub": "同时按两个按钮",
+  "ui.stats.fallsNone": "广场士气从未耗尽",
+  "ui.stats.fallsSub": "Mulassa倒下，Drac熄灭",
+  "ui.stats.guapa": "{n}/{total}次双键",
   "ui.stats.holds": {
     "other": "按住了{n}个长音"
   },
   "ui.stats.holdsNone": "还没按住过长音",
-  "ui.stats.holdsSub": "长音从头按到尾",
   "ui.stats.judged": "{perfect}完美·{good}良好·{miss}失误",
   "ui.stats.judgedOwn": "你所有击打的判定",
   "ui.stats.judgedPublic": "所有击打的判定",
   "ui.stats.less": "收起统计",
+  "ui.stats.loadFailed": "统计加载失败",
+  "ui.stats.loading": "统计加载中…",
   "ui.stats.month.1": "一月",
   "ui.stats.month.10": "十月",
   "ui.stats.month.11": "十一月",

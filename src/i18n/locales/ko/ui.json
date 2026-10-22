@@ -295,15 +295,10 @@
   "ui.stats.adjustSync": "싱크 조정",
   "ui.stats.atPlaza": "광장에서",
   "ui.stats.avgAccuracy": "평균 정확도",
-  "ui.stats.balloons.own": {
-    "other": "풍선 {n}개를 터뜨렸어요"
+  "ui.stats.balloons": {
+    "other": "연타 {n}번 성공"
   },
-  "ui.stats.balloons.public": {
-    "other": "풍선 {n}개를 터뜨렸어요"
-  },
-  "ui.stats.balloonsNone.own": "아직 터뜨린 풍선이 없어요",
-  "ui.stats.balloonsNone.public": "아직 터뜨린 풍선이 없어요",
-  "ui.stats.balloonsSub": "쉬지 않고 두드려요",
+  "ui.stats.balloonsNone": "아직 성공한 연타 없음",
   "ui.stats.bestStreak": "최대 연속",
   "ui.stats.daysPlayed": {
     "other": "{n}일 플레이했어요"
@@ -316,26 +311,22 @@
   "ui.stats.error.silent": "놓쳤어요",
   "ui.stats.errorsByKind": "유형별 실수",
   "ui.stats.errorsTitle": "어떤 노트를 놓쳤나요",
-  "ui.stats.falls.own": {
-    "other": "캐릭터가 {n}번 쓰러졌어요"
+  "ui.stats.falls": {
+    "other": "광장의 기운이 {n}번 바닥남"
   },
-  "ui.stats.falls.public": {
-    "other": "캐릭터가 {n}번 쓰러졌어요"
-  },
-  "ui.stats.fallsNone.own": "한 번도 쓰러지지 않았어요",
-  "ui.stats.fallsNone.public": "한 번도 쓰러지지 않았어요",
-  "ui.stats.fallsSub": "광장의 기운이 다했을 때",
-  "ui.stats.guapa": "GUAPA {total}개 중 {n}개",
-  "ui.stats.guapaSub": "두 버튼을 동시에",
+  "ui.stats.fallsNone": "광장의 기운이 바닥난 적 없음",
+  "ui.stats.fallsSub": "Mulassa는 쓰러지고 Drac은 꺼짐",
+  "ui.stats.guapa": "더블 {total}개 중 {n}개",
   "ui.stats.holds": {
     "other": "노트 {n}개를 끝까지 눌렀어요"
   },
   "ui.stats.holdsNone": "아직 끝까지 누른 노트가 없어요",
-  "ui.stats.holdsSub": "꾹 누르기를 처음부터 끝까지",
   "ui.stats.judged": "완벽 {perfect} · 좋음 {good} · 실수 {miss}",
   "ui.stats.judgedOwn": "내 모든 입력 판정",
   "ui.stats.judgedPublic": "모든 입력 판정",
   "ui.stats.less": "통계 접기",
+  "ui.stats.loadFailed": "통계를 불러오지 못했어요",
+  "ui.stats.loading": "통계 불러오는 중…",
   "ui.stats.month.1": "1월",
   "ui.stats.month.10": "10월",
   "ui.stats.month.11": "11월",

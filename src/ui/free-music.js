@@ -1,5 +1,5 @@
 // Free mode's music («mode foto»): one button paired with the eye and a short list under it (the menu loop, the two
-// figures' songs, Sense música). Entering through the dock's «Ball lliure» starts that figure's song (playFigure); after that, who you drive never changes it; it lasts while the free mode does (leaving fades back to
+// figures' songs, Sense música). Entering free play (the corner gamepad #free, or a double tap on the plaça) starts that figure's song (playFigure); after that, who you drive never changes it; it lasts while the free mode does (leaving fades back to
 // the menu loop). A song that ends hands over to the next in the list (the Drac's to the menu loop, which never ends).
 // No music follows the speaker preference; manual figure effects remain available. Sound: chip.radio* (platform/audio.js).
 import { chip, menuMusic, setMenuSound } from '../game/state.js';
@@ -154,7 +154,7 @@ export function setupFreeMusic({ eye, onSound }) {
       playing = -1; chip?.radio?.(null); // ended may have cleared the source while the next track is still decoding
       chip?.radioKeep?.([]);
     },
-    playFigure(id) { // the dock's «Ball lliure»: the driven figure's own song and its «Ara sona», unless the speaker is off
+    playFigure(id) { // entering free play: the driven figure's own song and its «Ara sona», unless the speaker is off
       const i = tracks.findIndex(t => t.kind === id);
       if (shown && menuMusic && i > 0) pick(i);
     },

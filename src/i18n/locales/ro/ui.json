@@ -299,19 +299,12 @@
   "ui.stats.adjustSync": "Reglează sincronizarea",
   "ui.stats.atPlaza": "în piață",
   "ui.stats.avgAccuracy": "precizie medie",
-  "ui.stats.balloons.own": {
-    "one": "Ai spart {n} balon",
-    "few": "Ai spart {n} baloane",
-    "other": "Ai spart {n} de baloane"
+  "ui.stats.balloons": {
+    "one": "{n} rafală reușită",
+    "few": "{n} rafale reușite",
+    "other": "{n} de rafale reușite"
   },
-  "ui.stats.balloons.public": {
-    "one": "A spart {n} balon",
-    "few": "A spart {n} baloane",
-    "other": "A spart {n} de baloane"
-  },
-  "ui.stats.balloonsNone.own": "Încă nu ai spart niciun balon",
-  "ui.stats.balloonsNone.public": "Încă nu a spart niciun balon",
-  "ui.stats.balloonsSub": "bătând fără oprire",
+  "ui.stats.balloonsNone": "Nicio rafală reușită încă",
   "ui.stats.bestStreak": "cea mai bună serie",
   "ui.stats.daysPlayed": {
     "one": "Ai jucat {n} zi",
@@ -326,32 +319,26 @@
   "ui.stats.error.silent": "Fără bătaie",
   "ui.stats.errorsByKind": "Greșeli după tip",
   "ui.stats.errorsTitle": "Unde îți scapă notele",
-  "ui.stats.falls.own": {
-    "one": "Figura ta a căzut {n} dată",
-    "few": "Figura ta a căzut de {n} ori",
-    "other": "Figura ta a căzut de {n} de ori"
+  "ui.stats.falls": {
+    "one": "Piața a rămas fără avânt {n} dată",
+    "few": "Piața a rămas fără avânt de {n} ori",
+    "other": "Piața a rămas fără avânt de {n} de ori"
   },
-  "ui.stats.falls.public": {
-    "one": "Figura sa a căzut {n} dată",
-    "few": "Figura sa a căzut de {n} ori",
-    "other": "Figura sa a căzut de {n} de ori"
-  },
-  "ui.stats.fallsNone.own": "Figura ta nu a căzut niciodată",
-  "ui.stats.fallsNone.public": "Figura sa nu a căzut niciodată",
-  "ui.stats.fallsSub": "când elanul pieței se epuizează",
-  "ui.stats.guapa": "{n} GUAPA din {total}",
-  "ui.stats.guapaSub": "ambele butoane odată",
+  "ui.stats.fallsNone": "Piața n-a rămas niciodată fără avânt",
+  "ui.stats.fallsSub": "Mulassa cade, Drac se stinge",
+  "ui.stats.guapa": "{n} lovituri duble din {total}",
   "ui.stats.holds": {
     "one": "{n} notă ținută",
     "few": "{n} note ținute",
     "other": "{n} de note ținute"
   },
   "ui.stats.holdsNone": "Nicio notă ținută, deocamdată",
-  "ui.stats.holdsSub": "notele ȚINE, de la cap la coadă",
   "ui.stats.judged": "{perfect} PERFECT · {good} BINE · {miss} EROARE",
   "ui.stats.judgedOwn": "toate bătăile tale, evaluate",
   "ui.stats.judgedPublic": "toate bătăile, evaluate",
   "ui.stats.less": "Mai puține statistici",
+  "ui.stats.loadFailed": "Statisticile nu s-au încărcat",
+  "ui.stats.loading": "Se încarcă statisticile…",
   "ui.stats.month.1": "ianuarie",
   "ui.stats.month.10": "octombrie",
   "ui.stats.month.11": "noiembrie",

@@ -297,17 +297,11 @@
   "ui.stats.adjustSync": "Regola la sincronia",
   "ui.stats.atPlaza": "in piazza",
   "ui.stats.avgAccuracy": "di precisione media",
-  "ui.stats.balloons.own": {
-    "one": "Hai scoppiato {n} pallone",
-    "other": "Hai scoppiato {n} palloni"
+  "ui.stats.balloons": {
+    "one": "{n} rullata riuscita",
+    "other": "{n} rullate riuscite"
   },
-  "ui.stats.balloons.public": {
-    "one": "Ha scoppiato {n} pallone",
-    "other": "Ha scoppiato {n} palloni"
-  },
-  "ui.stats.balloonsNone.own": "Non hai ancora scoppiato palloni",
-  "ui.stats.balloonsNone.public": "Non ha ancora scoppiato palloni",
-  "ui.stats.balloonsSub": "battendo senza sosta",
+  "ui.stats.balloonsNone": "Ancora nessuna rullata riuscita",
   "ui.stats.bestStreak": "la serie migliore",
   "ui.stats.daysPlayed": {
     "one": "Hai giocato {n} giorno",
@@ -321,29 +315,24 @@
   "ui.stats.error.silent": "Mancato",
   "ui.stats.errorsByKind": "Errori per tipo",
   "ui.stats.errorsTitle": "Dove ti sfuggono le note",
-  "ui.stats.falls.own": {
-    "one": "Ti è caduta la figura {n} volta",
-    "other": "Ti è caduta la figura {n} volte"
+  "ui.stats.falls": {
+    "one": "La piazza ha perso l’entusiasmo {n} volta",
+    "other": "La piazza ha perso l’entusiasmo {n} volte"
   },
-  "ui.stats.falls.public": {
-    "one": "La figura è caduta {n} volta",
-    "other": "La figura è caduta {n} volte"
-  },
-  "ui.stats.fallsNone.own": "Non ti è mai caduta la figura",
-  "ui.stats.fallsNone.public": "La figura non è mai caduta",
-  "ui.stats.fallsSub": "quando il morale della piazza si esaurisce",
-  "ui.stats.guapa": "{n} GUAPA su {total}",
-  "ui.stats.guapaSub": "i due pulsanti insieme",
+  "ui.stats.fallsNone": "La piazza non ha mai perso l’entusiasmo",
+  "ui.stats.fallsSub": "la Mulassa cade, il Drac si spegne",
+  "ui.stats.guapa": "{n} colpi doppi su {total}",
   "ui.stats.holds": {
     "one": "{n} nota tenuta",
     "other": "{n} note tenute"
   },
   "ui.stats.holdsNone": "Nessuna nota tenuta, per ora",
-  "ui.stats.holdsSub": "le TIENI, dall’inizio alla fine",
   "ui.stats.judged": "{perfect} PERFETTO · {good} BENE · {miss} ERRORE",
   "ui.stats.judgedOwn": "tutti i tuoi tocchi, valutati",
   "ui.stats.judgedPublic": "tutti i tocchi, valutati",
   "ui.stats.less": "Meno statistiche",
+  "ui.stats.loadFailed": "Impossibile caricare le statistiche",
+  "ui.stats.loading": "Caricamento statistiche…",
   "ui.stats.month.1": "gennaio",
   "ui.stats.month.10": "ottobre",
   "ui.stats.month.11": "novembre",

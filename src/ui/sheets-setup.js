@@ -33,7 +33,7 @@ import { setupFreeMusic } from './free-music.js';
 import { setupLang } from './lang-ui.js';
 import { focusIn, keyboardNav } from './focus.js';
 import { offsetMs, FINAL, FINALE_T, setOffsetMs, CALM, DEMO } from '../core/env.js';
-import { sheetUp, viewMode, viewBtn, setView } from './controls.js';
+import { sheetUp, viewMode, viewBtn } from './controls.js';
 import { renderHero } from '../scene/share-capture.js';
 import { titleLayoutNow, CORNER } from '../hud/title.js';
 import { W, K, HH, SAFE } from '../hud/canvas.js';
@@ -101,6 +101,7 @@ versionEl.textContent = `v${APP_BUILD.replace('+', ' · ')}`; // v1.0.54 · d405
 document.getElementById('settings').addEventListener('click', openSettings);
 document.getElementById('settings-sync').addEventListener('click', () => { settingsMenu.close(); syncBack = openSettings; sync.show(); });
 document.getElementById('settings-practice').addEventListener('click', () => { settingsMenu.close(); startPractice(null); });
+document.getElementById('settings-feedback').addEventListener('click', () => { settingsMenu.close(); feedback.show(openSettings); }); // the selector's Bústia (its corner slot went to free play); closing it comes back here
 // Classificacions (optional, online): from Configuració on the title (closing it goes back there) or the results screen.
 // After an eligible run its publish sheet opens by itself, only over a bare, visible, upright results screen.
 const mockBoard = Boolean(FINAL) || leaderboardPreviewMode({ hostname: location.hostname, search: location.search, configured: leaderboard.configured });
@@ -172,7 +173,7 @@ const until = (test, ms = 20000) => new Promise((resolve, reject) => { const t0 
 let cardGreeted = false;
 const hint = setupDeviceHint({ focusIn, store, softwareGl }); // the device tips, last: after the profile's own news
 sheets.hint = hint;
-const greeting = setupGreeting({ stats: statsSync, seasonEnd, account, hint, identity: () => refreshIdentity(service, kv), back: () => select.refocus(),
+const greeting = setupGreeting({ stats: statsSync, seasonEnd, account, hint, identity: () => refreshIdentity(service, kv).finally(() => feedback.warm()), back: () => select.refocus(),
   free: () => G.state === 'select' && !sheetUp() && !viewMode && !document.hidden,
   extra: () => {
     const c = !cardGreeted && mockOpts?.card && /^([^#]+)(?:#(\d{1,4}))?$/.exec(mockOpts.card);
@@ -180,7 +181,7 @@ const greeting = setupGreeting({ stats: statsSync, seasonEnd, account, hint, ide
     cardGreeted = true; card.open({ alias: c[1], tag: c[2] ? Number(c[2]) : null }, () => select.refocus());
     return true;
   } });
-service.onAccount?.(() => { refreshIdentity(service, kv, { fresh: true }).then(() => share.refreshName()); greeting.accountChanged(); });
+service.onAccount?.(() => { refreshIdentity(service, kv, { fresh: true }).then(() => { share.refreshName(); feedback.warm(); }); greeting.accountChanged(); });
 document.addEventListener('close', () => greeting.poke(), true); // dialogs' close does not bubble
 settingsMenu.addEventListener('close', () => { if (!sync.open && !board.open && (G.state === 'title' || G.state === 'select')) document.activeElement?.blur(); });
 // «Bústia de la plaça» (src/ui/feedback-ui.js): the title's speech bubble, next to the ⚙; Turnstile is board-ui.js's (one widget)
@@ -189,7 +190,7 @@ sheets.feedback = feedback;
 const select = setupSelect({ store, keyboard: () => keyboardNav, busy: () => sheetUp() || viewMode, reduced: () => CALM.matches,
   firstLevel: CHALLENGE?.diff ?? null, demo: DEMO, getError: () => G.audioError, standing: f => board.standing(f), levelPodium: (f, l) => board.levelPodium(f, l), ranked: board.configured, onBoard: f => board.openBoard(() => select.refocus(), { figure: f.id }), onCard: p => card.open(p, () => select.refocus()),
   sfx: k => chip?.sfx(k), onSelect: f => { setSelectedFigure(f); greeting.greet(); },
-  onPlay: (level, figure) => { setSelectedFigure(figure); choose(level); }, onFree: figure => { setView(true); if (viewMode) sheets.music.playFigure(figure.id); },
+  onPlay: (level, figure) => { setSelectedFigure(figure); choose(level); },
   onHowto: () => { howtoMenu.showModal(); focusIn(howtoMenu, 'howto-ok'); },
   onWrite: draft => feedback.show(() => select.refocus(), draft) });
 sheets.select = select;

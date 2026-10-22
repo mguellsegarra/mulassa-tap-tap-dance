@@ -69,6 +69,7 @@
 .sheet > .sheet-body { min-height: 0; overflow: auto; scrollbar-width: none; --ring-room: 8px; margin-inline: calc(-1 * var(--ring-room)); padding-inline: var(--ring-room); } /* overflow clips sideways too: the keyboard ring (3px + 3px offset) needs room, taken back with the margin so nothing moves */ .sheet > .sheet-body::-webkit-scrollbar { display: none; }
 .sheet-bar { position: absolute; right: 6px; width: 4px; border-radius: 2px; background: #f5c51829; pointer-events: none; } /* src/ui/sheet-fade.js: the body's drawn scrollbar */
 .sheet-bar i { display: block; border-radius: 2px; background: #f5c518d9; }
+.sheet:has(> .sheet-bar:not([hidden])) > .sheet-body { padding-right: calc(var(--ring-room) + 10px); } /* the bar's 6 + 4 px: the content sits as far from the bar as from the left frame */
 .sheet-x::after { content: ""; position: absolute; inset: -4px; } /* touch slop: a ~52 px target for the 44 px circle */
 .sheet-x svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; }
 .sheet-x:focus-visible { outline-offset: 2px; }

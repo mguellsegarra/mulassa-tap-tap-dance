@@ -109,7 +109,7 @@ class Node {
   scrollTo({ left, behavior }) { this.scrollLeft = left; this.behavior = behavior; }
   getBoundingClientRect() { return { top: 100, right: 200, bottom: 300 }; }
 }
-for (const id of ['profile', 'viewmode', 'feedback', 'music', 'settings', 'select-carousel', 'select-prev', 'select-forward', 'select-nav', 'select', 'select-towns', 'select-strip', 'select-level', 'select-song', 'select-entity', 'select-act', 'select-name', 'select-song-name', 'select-song-credit', 'select-play', 'select-next', 'select-next-label', 'select-free', 'select-free-label', 'select-figures-back', 'select-board', 'select-howto', 'aviat-write', 'aviat-text', 'select-info', 'select-bottom', 'select-pos', 'select-tiles', 'select-rank-tile', 'select-pending', 'aviat-entity', 'aviat-icon', 'aviat-title', 'select-level-stats', 'select-level-title', 'select-level-sub']) nodes.set(id, new Node(id));
+for (const id of ['free', 'profile', 'viewmode', 'feedback', 'music', 'settings', 'select-carousel', 'select-prev', 'select-forward', 'select-nav', 'select', 'select-towns', 'select-strip', 'select-level', 'select-song', 'select-entity', 'select-act', 'select-name', 'select-song-name', 'select-song-credit', 'select-play', 'select-next', 'select-next-label', 'select-figures-back', 'select-board', 'select-howto', 'aviat-write', 'aviat-text', 'select-info', 'select-bottom', 'select-pos', 'select-tiles', 'select-rank-tile', 'select-pending', 'aviat-entity', 'aviat-icon', 'aviat-title', 'select-level-stats', 'select-level-title', 'select-level-sub']) nodes.set(id, new Node(id));
 // The level row's title reports an overflow while it carries what a narrow screen can't hold (the points).
 Object.defineProperties(nodes.get('select-level-title'), { clientWidth: { value: 200 }, scrollWidth: { get() { return narrow && /punts/.test(this.textContent) ? 999 : 100; } },
   textContent: { get() { return (this.html ?? '').replace(/<[^>]*>/g, ''); }, set(v) { this.html = v; } } }); // its level word is a coloured span
@@ -117,11 +117,11 @@ Object.defineProperties(nodes.get('select-level-title'), { clientWidth: { value:
 Object.defineProperties(nodes.get('select-level-sub'), { clientWidth: { value: 200 }, scrollWidth: { get() { return narrowSub && !this.hidden && /primer ball/.test(this.html) ? 999 : 100; } } });
 let narrow = false, narrowSub = false;
 const $ = id => nodes.get(id), win = { innerWidth: 393, innerHeight: 852, addEventListener(k, f) { (handlers[k] ||= []).push(f); } };
-let frees = [], boards = [], sounds = [], played = [], how = 0, drafts = [], busy = false, selected = [];
+let boards = [], sounds = [], played = [], how = 0, drafts = [], busy = false, selected = [];
 let standingOf = async f => (f === DRAC.id ? { pos: 3, total: 12 } : { pos: 7, total: 1350 });
 const api = setupSelect({ doc, win, store, keyboard: () => true, reduced: () => true, busy: () => busy,
   sfx: k => sounds.push(k), firstLevel: 0, standing: f => standingOf(f), onBoard: f => boards.push(f.id), ranked: true, demo: true, // ?demo stays off outside a dev build
-  onPlay: (d, f) => played.push([d, f.id]), onFree: f => frees.push(f.id), onSelect: f => selected.push(f.id), onHowto: () => how++, onWrite: draft => drafts.push(draft) });
+  onPlay: (d, f) => played.push([d, f.id]), onSelect: f => selected.push(f.id), onHowto: () => how++, onWrite: draft => drafts.push(draft) });
 const key = (key, options = {}) => { const e = { key, ...options, defaultPrevented: false, preventDefault() { this.defaultPrevented = true; } }; for (const f of handlers.keydown) f(e); return e; };
 const click = (root, target = root) => root.fire('click', { target });
 api.visible(true); await Promise.resolve();
@@ -289,12 +289,12 @@ assert($('select-act').hidden, 'Escape still leaves difficulty when the town row
 // A desktop's inline header is one visible row, including its town controls.
 $('select').toggleAttribute('data-header-inline', true);
 // The logo holds the left end (not focusable); the towns come first, then the four corner buttons on the right
-// (free play is the dock's button: the eye is no corner control on the selector).
+// (free play's gamepad first: the eye is no corner control on the selector).
 const headerSounds = sounds.length;
 pills[0].focus(); key('ArrowRight');
 assert.equal(doc.activeElement, soonPill);
-key('ArrowRight'); assert.equal(doc.activeElement, $('profile'), 'Right leaves the towns for the corner buttons (Perfil first: no podium)');
-key('ArrowRight'); assert.equal(doc.activeElement, $('music'));
+key('ArrowRight'); assert.equal(doc.activeElement, $('free'), 'Right leaves the towns for the corner buttons (free play first, as drawn)');
+key('ArrowRight'); assert.equal(doc.activeElement, $('profile'));
 key('ArrowRight'); key('ArrowRight'); assert.equal(doc.activeElement, $('settings'), 'Settings is reachable without leaving the visible row');
 assert.equal(sounds.length, headerSounds + 5, 'each header focus move plays exactly one menu sound');
 key('ArrowRight'); assert.equal(sounds.length, headerSounds + 5, 'no sound at the header boundary');
@@ -302,7 +302,7 @@ key('ArrowLeft'); key('ArrowLeft'); key('ArrowLeft'); key('ArrowLeft'); assert.e
 key('ArrowLeft'); assert.equal(doc.activeElement, pills[0]);
 key('ArrowLeft'); assert.equal(doc.activeElement, pills[0], 'Valls is the header\'s left end');
 $('select').toggleAttribute('data-header-inline', false);
-$('music').focus(); key('ArrowRight'); assert.equal(doc.activeElement, $('feedback'), 'on separate rows the corner controls stay together');
+$('music').focus(); key('ArrowRight'); assert.equal(doc.activeElement, $('settings'), 'on separate rows the corner controls stay together');
 soonPill.focus(); key('ArrowRight'); assert.equal(doc.activeElement, soonPill, 'folded towns stay out of the separate row');
 const rowSounds = sounds.length;
 pills[0].focus(); key('ArrowUp');
@@ -332,7 +332,6 @@ assert(doc.activeElement === more && api.figure === DRAC && !api.unfolded, 'arro
 assert(!$('select-pending').hidden && $('select-info').hidden && $('select-pending').attrs['data-fold'], 'the fold has its own card');
 assert.equal($('aviat-title').textContent, 'Aviat a la plaça');
 assert.equal($('select-next-label').textContent, 'Pròximament?', 'the fold has the disabled pending label');
-assert($('select-free').hidden, 'the fold offers no free play');
 assert($('aviat-entity').hidden, 'the teaser has no count pill');
 assert.equal($('aviat-entity').innerHTML, '');
 { // what anyone can send, each in its own gradient, read out as a list
@@ -377,7 +376,6 @@ assert.equal(soon[0].entity, 'Ajuntament + UAF'); assert.match($('aviat-entity')
 assert(!$('aviat-entity').hidden, 'a pending figure restores its entity after the teaser');
 assert.equal(($('aviat-text').innerHTML.match(/<p>/g) || []).length, 2); assert.match($('aviat-text').innerHTML, /Volem que surti a la plaça/);
 assert($('select-next').disabled && !$('select-next').hidden, 'pending keeps a disabled action for the desktop placeholder');
-assert($('select-free').hidden, 'a pending figure cannot be driven');
 assert.equal($('select-next-label').textContent, 'Pròximament?');
 assert($('select').attrs['data-pending'], 'pending selection hides the action');
 assert.equal($('select-name').textContent, DRAC.fullName || DRAC.name, 'the playable panel fades out as it was');
@@ -389,10 +387,7 @@ assert.equal(api.figure, DRAC, 'a hidden figure falls back to Drac');
 assert.equal($('select-next-label').textContent, 'Tria la dificultat', 'returning to a playable figure restores its action label');
 assert($('select-pending').hidden && !$('select').attrs['data-fold'], 'closing never replaces the outgoing figure with the teaser');
 click($('select-strip'), cards[1]); assert($('select-pending').hidden && !$('select-info').hidden && !$('select-next').disabled, 'leaving the fold brings the figure back');
-assert(!$('select-free').hidden, 'a playable figure offers free play');
-click($('select-free')); assert.deepEqual(frees, [DRAC.id], 'the dock button hands the selected figure to free play');
-click($('select-next')); assert($('select-free').hidden, 'the difficulty step has no free play');
-click($('select-figures-back')); assert(!$('select-free').hidden, 'back on the figures it returns');
+click($('select-next')); click($('select-figures-back'));
 const tarragona = pills.find(p => p.dataset.town === 'tarragona');
 click($('select-towns'), soonPill); assert(api.unfolded && !tarragona.hidden, 'the pill unfolds too');
 click($('select-towns'), soonPill); assert(!api.unfolded && tarragona.hidden, 'and folds');
@@ -515,7 +510,7 @@ assert.match($('select-pos').textContent, /^Posició 7 de 1\.350 · /, 'returnin
   await swap(); assert(!/^Posició 2 /.test($('select-pos').textContent), 'signed out: never the previous profile\'s place');
   standingOf = answer; await swap(); }
 const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
-assert.match(html, /<button id="select-free"[^>]*title="Ball lliure"[^>]*>.*<span id="select-free-label"[^>]*>Ball lliure<\/span>/, 'free play is «Ball lliure» for every figure');
+assert(!html.includes('id="select-free"') && /<button id="free" class="round-btn"[^>]*aria-label="Ball lliure"/.test(html), 'free play is the corner gamepad «Ball lliure», not a dock button (Marc 2026-10-22)');
 assert.match(html, /<section id="select-pending"/); assert(!html.includes('id="soon-menu"'), 'no sheet: it unfolds in place');
 assert.match(html, /href="mailto:holi@mulassa.cat"/);
 assert(html.indexOf('id="select-name"') < html.indexOf('id="select-howto"') && html.indexOf('id="select-howto"') < html.indexOf('id="select-rank-tile"'), 'the ? sits by the name');

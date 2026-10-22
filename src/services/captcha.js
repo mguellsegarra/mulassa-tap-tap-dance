@@ -11,7 +11,7 @@ import { lang } from '../i18n/locale.js';
 // (eu, gl, oc) get an explicit neighbour rather than `auto`, which follows the browser, not the game. `ca` stays as it
 // always was (Cloudflare does not list it; changing what Catalan players see is not part of the i18n work).
 export const TURNSTILE_LANG = {
-  ca: 'ca', es: 'es', en: 'en', fr: 'fr', it: 'it', ro: 'ro', 'pt-BR': 'pt-br', eu: 'es', gl: 'es', oc: 'fr', de: 'de',
+  ca: 'ca', es: 'es', en: 'en', fr: 'fr', it: 'it', ro: 'ro', pt: 'pt-br', eu: 'es', gl: 'es', oc: 'fr', de: 'de',
   'zh-Hans': 'zh-cn', ja: 'ja', uk: 'uk', ru: 'ru', ko: 'ko',
 };
 export const TURNSTILE_SRC = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';

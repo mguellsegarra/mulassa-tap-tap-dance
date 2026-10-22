@@ -2,7 +2,7 @@
 // Eina de desenvolupament (no entra al build ni a Pages): inventari de pantalles + auditoria automàtica per a la revisió UI de l'i18n.
 // i18n-ok: eina de dev — les cadenes catalanes d'aquest fitxer són noms d'escena i heurístiques, no text del joc.
 //
-// Construeix el joc (`vite build --outDir /tmp/ui-inv-dist`), el serveix en local i, amb Chromium headless (swiftshader),
+// Construeix el joc (`vite build --outDir /tmp/ui-inv-dist`), el serveix en local i, amb Chrome headless amb la GPU real (`--soft` = swiftshader per a tot; la unitat de S24 «gpu» ja el fa servir sola),
 // captura cada ESCENA × VIEWPORT × IDIOMA a docs/i18n-ui-inventory/shots/<codi>.png; el CODI és estable:
 //   S<nn>-V<n>-<idioma>[-<variant>]      p. ex. S03-V3-ja, S13-V7-ca-s3, S02-V3-ca-rm
 // A cada captura passa l'auditoria (DOM + text del canvas) i escriu docs/i18n-ui-inventory/findings.json i README.md.
@@ -13,7 +13,7 @@
 //     --pw=<dir>        directori on és instal·lat playwright (defecte /tmp/ui-inv-pw)
 //     --no-build        reutilitza /tmp/ui-inv-dist (si no, torna a construir)
 //     --scenes=S02,S13  només aquestes escenes        --vps=V1,V3   només aquests viewports
-//     --langs=ca,de     només aquests idiomes         --jobs=3      navegadors en paral·lel (defecte 2)
+//     --langs=ca,de     només aquests idiomes         --soft        SwiftShader per a tot (S24 «gpu» ho fa sola)
 //     --list            escriu el pla (codis) i surt   --report     només regenera README.md des de findings.json
 //     --src=<dir> --out=<dir> --dist=<dir>   construeix i desa des d'un altre checkout (referència HEAD)
 //     --compress        passa pngquant (si és instal·lat) a les captures: mateixa mida, paleta quantitzada (per defecte NO)
@@ -25,6 +25,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync, readdirSync, statSy
 import { extname, join, dirname } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { homedir } from 'node:os';
+import { lock, launchBrowser } from './capture-lib.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const args = Object.fromEntries(process.argv.slice(2).map(a => { const [k, v = '1'] = a.replace(/^--/, '').split('='); return [k, v]; }));
@@ -484,7 +485,9 @@ async function main() {
   const measureSrc = existsSync(measurePath) ? readFileSync(measurePath, 'utf8') : null;
   if (!measureSrc) console.warn('measure-rows.js no trobat: sense auditoria de marges');
   const { srv, port } = await serve();
-  const launch = () => chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--mute-audio'] });
+  await lock();
+  let soft = !!args.soft; // S24 «gpu» needs a software renderer: its unit gets a SwiftShader browser, the rest the real GPU
+  const launch = () => launchBrowser(chromium, { soft });
   const browsers = []; let next = 0, done = 0;
   const record = (cap, fs) => { // merge: a re-captured code replaces its old record and findings
     db.captures = db.captures.filter(c => c.code !== cap.code).concat(cap); db.findings = db.findings.filter(f => f.capture !== cap.code).concat(fs); save();
@@ -493,12 +496,14 @@ async function main() {
     let b = await launch(); browsers.push(b);
     for (;;) {
       const u = units[next++]; if (!u) break;
+      const need = !!args.soft || u.scenes.some(sc => sc.variant === 'gpu');
+      if (need !== soft) { soft = need; await b.close().catch(() => {}); b = await launch(); browsers.push(b); }
       try { if (!b.isConnected()) { b = await launch(); browsers.push(b); } await runUnit(b, u, port, measureSrc, record); if (!b.isConnected()) { b = await launch(); browsers.push(b); await runUnit(b, u, port, measureSrc, record); } } catch (e) { console.error(`✗ unitat ${u.g.group} ${u.vp} ${u.lang}: ${String(e.message).split('\n')[0]}`); try { await b.close(); } catch {} b = await launch(); browsers.push(b); }
       console.log(`  [${++done}/${units.length} càrregues]`);
     }
     await b.close().catch(() => {});
   };
-  try { await Promise.all(Array.from({ length: Math.max(1, +(args.jobs ?? 2)) }, worker)); }
+  try { await Promise.all(Array.from({ length: 1 }, worker)); }
   finally { for (const b of browsers) await b.close().catch(() => {}); srv.closeAllConnections?.(); srv.close(); }
   // optional: pngquant keeps the pixel size and quantises the palette; off unless --compress
   db.config.compressed = false;

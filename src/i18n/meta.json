@@ -135,17 +135,17 @@
     },
     "released": true
   },
-  "pt-BR": {
-    "endonym": "Português (Brasil)",
+  "pt": {
+    "endonym": "Português",
     "dir": "ltr",
-    "intl": "pt-BR",
-    "numberLocale": "pt-BR",
+    "intl": "pt-PT",
+    "numberLocale": "pt-PT",
     "plurals": [
       "one",
       "other"
     ],
     "dates": {
-      "locale": "pt-BR",
+      "locale": "pt-PT",
       "timeZone": "Europe/Madrid"
     },
     "released": true

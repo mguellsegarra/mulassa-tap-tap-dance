@@ -95,10 +95,10 @@ export function setupProfile({ focusIn, captcha, store, aliasKey, deviceNote = (
     if (!online) { row.hidden = true; return; }
     row.hidden = false;
     const r = ++settingsReq, alias = store.get(aliasKey) || '';
-    // the first frame: the last answer; with a name but no answer yet, a blank block of the same size (guessing «stale» and
-    // then repainting moved the buttons and the line under the name); no name: «Encara no en tens cap.»
+    // the first frame: the last answer; with a name but no answer yet, a guest's block in no colour (the commonest answer: the same
+    // size, so repainting moves nothing; guessing «stale» moved the buttons and the line under the name); no name: «Encara no en tens cap.»
     if (known && alias) paint({ alias, ...known });
-    else if (alias) { row.dataset.pending = '1'; nameEl.textContent = alias; kindEl.hidden = true; sub.textContent = ' '; for (const b of btns.slice(0, 2)) { b.hidden = false; b.textContent = ' '; } btns[2].hidden = true; }
+    else if (alias) { row.dataset.pending = '1'; nameEl.replaceChildren(); appendName(doc, nameEl, { alias, tag: 0, verified: false }); kindEl.hidden = false; kindEl.textContent = GUEST; sub.textContent = [GUEST_TEXT, deviceNote(true)].filter(Boolean).join(' '); [tr('ui.profile.btn.link'), tr('ui.profile.btn.delete')].forEach((t, i) => { btns[i].hidden = false; btns[i].textContent = t; delete btns[i].dataset.act; }); btns[2].hidden = true; }
     else paint({ alias, hasSession: false, mailOn: '', persistent: true });
     let id, prof = null, gone = false;
     try {

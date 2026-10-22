@@ -203,7 +203,13 @@ span.player-name { display: inline-flex; align-items: baseline; min-width: 0; }
 }
 
 /* Perfil: the profile block, then the statistics as quiet tiles, podiums and the previous dance's record */
-#account-menu { width: min(460px, calc(100vw - 32px - var(--sal) - var(--sar))); max-height: calc(100dvh - 32px - var(--sat) - var(--sab)); padding: 18px 20px 12px; }
+/* ONE height from the first frame (like Classificació): loading, empty, failed and full statistics all sit inside the statistics' own room,
+   which takes what the profile block and the links leave; a taller answer scrolls the sheet's body as every sheet's */
+#account-menu { width: min(460px, calc(100vw - 32px - var(--sal) - var(--sar))); height: min(760px, calc(100dvh - 32px - var(--sat) - var(--sab))); padding: 18px 20px 12px; }
+#account-menu > .sheet-body { flex: 1 1 auto; display: flex; flex-direction: column; }
+.account-grow { flex: 1 0 auto; display: flex; flex-direction: column; }
+.account-grow > .account-empty { margin-block: auto; }
+.account-grow > .account-stats { margin-bottom: auto; }
 #account-menu h2 { margin-bottom: 12px; }
 .profile-block { padding: 12px 14px; border-radius: var(--button-radius); background: #fff3d60d; text-align: center; }
 .profile-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px 10px; min-height: 28px; }
@@ -214,7 +220,7 @@ span.player-name { display: inline-flex; align-items: baseline; min-width: 0; }
 .profile-block[data-state="none"] .profile-sub, .profile-block[data-pending] .profile-sub { margin-top: 0; }
 /* waiting for the identity: the room is kept and shows as a quiet skeleton (the name is already known), so it reads as loading, not dead */
 .profile-block[data-pending] .btn { color: transparent; border-color: transparent; background: #fff3d614; pointer-events: none; animation: profile-pulse 1.2s ease-in-out infinite; }
-.profile-block[data-pending] .profile-sub { width: 60%; margin-inline: auto; border-radius: 6px; background: #fff3d614; animation: profile-pulse 1.2s ease-in-out infinite; }
+.profile-block[data-pending] .profile-sub { color: transparent; border-radius: 6px; background: #fff3d614; animation: profile-pulse 1.2s ease-in-out infinite; } .profile-block[data-pending] .profile-head { display: flex; } .profile-block[data-pending] :is(.tag, .kind-chip) { visibility: hidden; } /* the guest's words, #tag and chip in no colour: its final size from the first frame */
 @keyframes profile-pulse { 50% { opacity: .45; } }
 @media (prefers-reduced-motion: reduce) { .profile-block[data-pending] :is(.btn, .profile-sub) { animation: none; } }
 .profile-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 10px; }
@@ -224,20 +230,23 @@ span.player-name { display: inline-flex; align-items: baseline; min-width: 0; }
 .account-title-row h3 { margin: 0; }
 #account-previous h3 { text-align: center; } /* every Perfil section's title on the sheet's one centre axis, like «Perfil» */
 .account-since { color: #e8d8b8; font-size: 13px; }
-.account-stats.loading { animation: profile-pulse 1.2s ease-in-out infinite; } .account-stats.loading .stat-fact { min-height: 56px; } /* + the tile's 10 px padding = a real tile's 76 */
-@media (prefers-reduced-motion: reduce) { .account-stats.loading { animation: none; } }
+#account-status .mula-spinner { display: block; width: 72px; height: 72px; margin: 0 auto 10px; }
 .account-empty { margin: 8px 0; color: #e8d8b8; font-size: 15px; text-align: center; }
 .account-list { margin: 0; padding: 0; list-style: none; color: #fff3d6; font-size: 15px; line-height: 1.6; }
 .account-section .board-tip { margin: 10px 0 0; }
 .account-links { margin-top: 10px; padding-bottom: 6px; } /* the link's 44 px slop stays inside the body (no scroll bar for it) */
 /* the statistics (stats-view.js, «Fitxa breu»): four facts in two columns, each an icon, the number and a quiet line; the
    podiums as achievements; «Més estadístiques» unfolds the rest in place. A fact reads from the top: a row's numbers line up */
-.stat-ico { flex: none; display: inline-grid; width: 24px; height: 24px; color: #e8d8b8; }
-.stat-ico svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.stat-ico { flex: none; display: inline-grid; width: 28px; height: 28px; color: #e8d8b8; }
+.stat-ico svg { width: 100%; height: 100%; } /* the drawn icons carry their own colours; only the .line ones (chevron, empty bars) follow the text */
+.stat-ico.line svg { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .stat-facts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.stat-fact { display: grid; grid-template-columns: auto minmax(0, 1fr); align-content: start; column-gap: 8px; padding: 10px; border-radius: 10px; background: #fff3d60d; }
-.stat-fact .stat-ico { grid-row: 1 / 3; margin-top: 3px; }
-.stat-fact b { color: #fff3d6; font-size: clamp(17px, 5.4vw, 21px); line-height: 1.15; white-space: nowrap; font-variant-numeric: tabular-nums; }
+/* every statistic is a tile with its own hue (Marc, 2026-10-22: colourful tiles, F of the A-H proposals): a soft vertical gradient of --h */
+.stat-fact, .stat-lines li { --h: #fff3d6; border-radius: 10px; background: linear-gradient(180deg, color-mix(in srgb, var(--h) 16%, transparent), color-mix(in srgb, var(--h) 6%, transparent)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--h) 14%, transparent); }
+.stat-k-drum { --h: #e8b26a; } .stat-k-clock { --h: #7fb2f0; } .stat-k-flame { --h: #ff9f6e; } .stat-k-target { --h: #7ee081; }
+.stat-fact { display: grid; grid-template-columns: auto minmax(0, 1fr); align-content: start; column-gap: 10px; padding: 12px; }
+.stat-fact .stat-ico { grid-row: 1 / 3; margin-top: 2px; }
+.stat-fact b { color: var(--h); font-size: clamp(17px, 5.4vw, 21px); line-height: 1.15; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .stat-fact span:not(.stat-ico) { color: #e8d8b8; font-size: 13px; line-height: 1.3; }
 .stat-wins { display: grid; gap: 6px; margin: 12px 0 0; padding: 0; list-style: none; }
 .stat-wins li { display: flex; align-items: center; gap: 10px; padding: 6px 10px 6px 6px; border-radius: 999px; background: linear-gradient(90deg, #f5c51829, #f5c51808); color: #fff3d6; font-size: 15px; line-height: 1.25; }
@@ -249,16 +258,25 @@ span.player-name { display: inline-flex; align-items: baseline; min-width: 0; }
 .stat-toggle .stat-ico { width: 18px; height: 18px; color: currentColor; transition: rotate .2s; }
 .stat-toggle[aria-expanded="true"] .stat-ico { rotate: 180deg; }
 @media (prefers-reduced-motion: reduce) { .stat-toggle .stat-ico { transition: none; } }
-.stat-lines { margin: 2px 0 0; padding: 0; list-style: none; }
-.stat-lines li { display: flex; align-items: center; gap: 9px; min-height: 40px; padding: 4px 10px 4px 11px; /* the tiles' inset: icon and text on their columns; the dividers stay full width */ border-top: 1px solid #fff3d614; color: #fff3d6; font-size: 15px; line-height: 1.3; font-variant-numeric: tabular-nums; }
-.stat-lines li:first-child { border-top: 0; }
-.stat-lines .stat-ico { width: 22px; height: 22px; }
-.stat-lines small { display: block; color: #e8d8b8; font-size: 13px; }
-.stat-errors-k { margin: 12px 0 0; color: #e8d8b8; font-size: 14px; }
-.stat-errors { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 0; padding: 0; list-style: none; }
-.stat-errors li { padding: 1px 9px; border: 1px solid #e8d8b84d; border-radius: 999px; color: #e8d8b8; font-size: 13px; line-height: 20px; }
+.stat-lines { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0 0; padding: 0; list-style: none; }
+.stat-lines li { display: grid; grid-template-columns: 28px minmax(0, 1fr); align-items: center; column-gap: 10px; min-height: 56px; padding: 10px 12px; color: #fff3d6; font-size: 15px; font-weight: 700; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.stat-lines .w { grid-column: 1 / -1; } /* the days, the judge's three counts and the ànim sentence need the whole row */
+.stat-lines b { color: var(--h); font-size: 1.4em; line-height: 1; font-weight: 800; } /* the numbers stand out in the tile's hue */
+.stat-lines small { display: block; margin-top: 2px; color: #e8d8b8; font-size: 13px; font-weight: 600; line-height: 1.3; }
+.stat-lines .stat-l-calendar { --h: #b9a3f0; } .stat-lines .stat-l-guapa { --h: #ffd76e; } .stat-lines .stat-l-tap { --h: #f08fb8; } .stat-lines .stat-l-judge { --h: #d79be8; } .stat-lines .stat-l-hold { --h: #7fd4f0; } .stat-lines .stat-l-star { --h: #f5c518; } .stat-lines .stat-l-dizzy { --h: #c8e07a; }
+.stat-l-judge b:nth-of-type(1) { color: #f5c518; } .stat-l-judge b:nth-of-type(2) { color: #fff3d6; } .stat-l-judge b:nth-of-type(3) { color: #6fa8ff; } /* the judge words' own colours (hud/banner.js) */
+.stat-errors-k { margin: 12px 0 0; color: #e8d8b8; font-size: 14px; text-align: center; }
+.stat-errors { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin: 8px 0 0; padding: 0; list-style: none; }
+/* one soft tint per kind so the list reads at a glance (never GUA orange / PA turquoise: those mean the drums) */
+.stat-errors li { --tint: #e8d8b8; padding: 1px 9px; border: 1px solid color-mix(in srgb, var(--tint) 55%, transparent); border-radius: 999px; background: color-mix(in srgb, var(--tint) 18%, transparent); color: #e8d8b8; font-size: 13px; line-height: 20px; }
+.stat-errors .e-early { --tint: #b9a3f0; }
+.stat-errors .e-late { --tint: #7fb2f0; }
+.stat-errors .e-silent { --tint: #c9bba0; }
+.stat-errors .e-move { --tint: #f08fb8; }
+.stat-errors .e-both { --tint: #9ad48a; }
+.stat-errors .e-hold { --tint: #e8b26a; }
 .stat-errors b { color: #fff3d6; }
-.stat-tip { margin: 10px 0 0; padding: 6px 10px; border-left: 3px solid #f5c518; border-radius: 4px; background: #fff3d60d; color: #fff3d6; font-size: 14px; line-height: 1.35; }
+.stat-tip { width: fit-content; max-width: 100%; box-sizing: border-box; margin: 10px auto 0; padding: 6px 10px; border-left: 3px solid #f5c518; border-radius: 4px; background: #fff3d60d; color: #fff3d6; font-size: 14px; line-height: 1.35; text-align: center; }
 .stat-tip .btn-link { display: inline; min-height: 0; padding: 0 2px; font-size: 14px; }
 
 /* the statistics' notice (Marc, 2026-10-21): the title, three short lines with a drawn icon each, Privadesa, «D'acord» */
@@ -293,8 +311,8 @@ body:has(:is(#board-menu, #seasons-menu, #account-menu)[open]) #card-menu { widt
 .card-box { position: relative; min-height: 196px; }
 .card-box .board-state { position: absolute; inset: 0; }
 .card-box .board-status .stat-ico { display: block; width: 40px; height: 40px; margin: 0 auto 8px; color: #b5a385; } .card-box .board-status .stat-ico svg { stroke-width: 1.6; }
-@media (max-width: 359px) { #card-menu, #account-menu { padding-inline: 14px; } .stat-fact { padding: 8px; column-gap: 6px; } .stat-fact b { font-size: 19px; } .stat-fact .stat-ico { width: 18px; height: 18px; }
-  .stat-lines li { gap: 6px; padding-inline: 8px; } .stat-lines .stat-ico { width: 18px; height: 18px; } } /* the lines keep the tiles' compact inset */
+@media (max-width: 359px) { #card-menu, #account-menu { padding-inline: 14px; } .stat-fact { padding: 8px; column-gap: 6px; } .stat-fact b { font-size: 19px; } .stat-fact .stat-ico { width: 22px; height: 22px; }
+  .stat-lines li { grid-template-columns: 22px minmax(0, 1fr); column-gap: 6px; padding: 8px; } .stat-lines .stat-ico { width: 22px; height: 22px; } } /* the lines keep the tiles' compact inset */
 /* portrait phones: the % goes under the points (board-list.js .pct-sub), so the name gets its column's room: a 16-letter
    «nom#1234» with «TU» on one line from 375 px, a 16-letter verified name on one line at 320 */
 @media (max-width: 519px) {

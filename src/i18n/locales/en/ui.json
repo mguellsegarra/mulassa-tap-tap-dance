@@ -297,17 +297,11 @@
   "ui.stats.adjustSync": "Adjust sync",
   "ui.stats.atPlaza": "in the square",
   "ui.stats.avgAccuracy": "average accuracy",
-  "ui.stats.balloons.own": {
-    "one": "You’ve popped {n} balloon",
-    "other": "You’ve popped {n} balloons"
+  "ui.stats.balloons": {
+    "one": "{n} drumroll cleared",
+    "other": "{n} drumrolls cleared"
   },
-  "ui.stats.balloons.public": {
-    "one": "They’ve popped {n} balloon",
-    "other": "They’ve popped {n} balloons"
-  },
-  "ui.stats.balloonsNone.own": "You haven’t popped any balloons yet",
-  "ui.stats.balloonsNone.public": "They haven’t popped any balloons yet",
-  "ui.stats.balloonsSub": "with non-stop tapping",
+  "ui.stats.balloonsNone": "No drumrolls cleared yet",
   "ui.stats.bestStreak": "best streak",
   "ui.stats.daysPlayed": {
     "one": "You’ve played on {n} day",
@@ -321,29 +315,24 @@
   "ui.stats.error.silent": "No tap",
   "ui.stats.errorsByKind": "Misses by type",
   "ui.stats.errorsTitle": "Where you miss notes",
-  "ui.stats.falls.own": {
-    "one": "Your figure has fallen {n} time",
-    "other": "Your figure has fallen {n} times"
+  "ui.stats.falls": {
+    "one": "The square ran out of spirit {n} time",
+    "other": "The square ran out of spirit {n} times"
   },
-  "ui.stats.falls.public": {
-    "one": "Their figure has fallen {n} time",
-    "other": "Their figure has fallen {n} times"
-  },
-  "ui.stats.fallsNone.own": "Your figure has never fallen",
-  "ui.stats.fallsNone.public": "Their figure has never fallen",
-  "ui.stats.fallsSub": "when the square runs out of spirit",
-  "ui.stats.guapa": "{n} GUAPA out of {total}",
-  "ui.stats.guapaSub": "both buttons at once",
+  "ui.stats.fallsNone": "The square has never run out of spirit",
+  "ui.stats.fallsSub": "the Mulassa falls, the Drac goes out",
+  "ui.stats.guapa": "{n} of {total} double hits",
   "ui.stats.holds": {
     "one": "{n} held note",
     "other": "{n} held notes"
   },
   "ui.stats.holdsNone": "No held notes yet",
-  "ui.stats.holdsSub": "HOLD notes, from start to finish",
   "ui.stats.judged": "{perfect} PERFECT · {good} GOOD · {miss} MISS",
   "ui.stats.judgedOwn": "all your taps, judged",
   "ui.stats.judgedPublic": "all taps, judged",
   "ui.stats.less": "Fewer stats",
+  "ui.stats.loadFailed": "Couldn’t load your stats",
+  "ui.stats.loading": "Loading your stats…",
   "ui.stats.month.1": "January",
   "ui.stats.month.10": "October",
   "ui.stats.month.11": "November",

@@ -301,21 +301,13 @@
   "ui.stats.adjustSync": "Налаштуй синхронізацію",
   "ui.stats.atPlaza": "на площі",
   "ui.stats.avgAccuracy": "середня точність",
-  "ui.stats.balloons.own": {
-    "one": "Твій здобуток: {n} луснута кулька",
-    "few": "Твій здобуток: {n} луснуті кульки",
-    "many": "Твій здобуток: {n} луснутих кульок",
-    "other": "Твій здобуток: {n} луснутої кульки"
+  "ui.stats.balloons": {
+    "one": "Пройдено {n} дріб",
+    "few": "Пройдено {n} дроби",
+    "many": "Пройдено {n} дробів",
+    "other": "Пройдено {n} дробу"
   },
-  "ui.stats.balloons.public": {
-    "one": "Здобуток: {n} луснута кулька",
-    "few": "Здобуток: {n} луснуті кульки",
-    "many": "Здобуток: {n} луснутих кульок",
-    "other": "Здобуток: {n} луснутої кульки"
-  },
-  "ui.stats.balloonsNone.own": "Ти ще не луснув жодної кульки",
-  "ui.stats.balloonsNone.public": "Ще жодної луснутої кульки",
-  "ui.stats.balloonsSub": "безупинними ударами",
+  "ui.stats.balloonsNone": "Поки жодного дробу",
   "ui.stats.bestStreak": "найдовша серія",
   "ui.stats.daysPlayed": {
     "one": "Ти граєш {n} день",
@@ -331,23 +323,15 @@
   "ui.stats.error.silent": "Без удару",
   "ui.stats.errorsByKind": "Помилки за типом",
   "ui.stats.errorsTitle": "Де ти втрачаєш ноти",
-  "ui.stats.falls.own": {
-    "one": "Твоя фігура впала {n} раз",
-    "few": "Твоя фігура впала {n} рази",
-    "many": "Твоя фігура впала {n} разів",
-    "other": "Твоя фігура впала {n} раза"
+  "ui.stats.falls": {
+    "one": "Площа втрачала запал {n} раз",
+    "few": "Площа втрачала запал {n} рази",
+    "many": "Площа втрачала запал {n} разів",
+    "other": "Площа втрачала запал {n} разу"
   },
-  "ui.stats.falls.public": {
-    "one": "Фігура впала {n} раз",
-    "few": "Фігура впала {n} рази",
-    "many": "Фігура впала {n} разів",
-    "other": "Фігура впала {n} раза"
-  },
-  "ui.stats.fallsNone.own": "Твоя фігура ще не падала",
-  "ui.stats.fallsNone.public": "Фігура ще не падала",
-  "ui.stats.fallsSub": "коли запал площі згасає",
-  "ui.stats.guapa": "{n} GUAPA із {total}",
-  "ui.stats.guapaSub": "обидві кнопки разом",
+  "ui.stats.fallsNone": "Площа жодного разу не втрачала запал",
+  "ui.stats.fallsSub": "Mulassa падає, Drac гасне",
+  "ui.stats.guapa": "Подвійні удари: {n} із {total}",
   "ui.stats.holds": {
     "one": "{n} утримана нота",
     "few": "{n} утримані ноти",
@@ -355,11 +339,12 @@
     "other": "{n} утриманої ноти"
   },
   "ui.stats.holdsNone": "Ще жодної утриманої ноти",
-  "ui.stats.holdsSub": "ноти ТРИМАЙ від початку до кінця",
   "ui.stats.judged": "{perfect} ІДЕАЛЬНО · {good} ДОБРЕ · {miss} ХИБА",
   "ui.stats.judgedOwn": "оцінки всіх твоїх ударів",
   "ui.stats.judgedPublic": "оцінки всіх ударів",
   "ui.stats.less": "Менше статистики",
+  "ui.stats.loadFailed": "Не вдалося завантажити статистику",
+  "ui.stats.loading": "Завантажуємо статистику…",
   "ui.stats.month.1": "січня",
   "ui.stats.month.10": "жовтня",
   "ui.stats.month.11": "листопада",

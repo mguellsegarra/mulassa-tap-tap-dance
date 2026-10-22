@@ -5,7 +5,7 @@ One `<code>.json` per language (`ca` is the base, `x-default` and the only one w
 and lists them in `sitemap.xml` / `llms.txt`. A new language = a new file with the same keys and structure as `ca.json`:
 
 - `lang` (`<html lang>`, JSON-LD `inLanguage`), `ogLocale` (e.g. `es_ES`).
-- `ui`: page chrome (`play`, `videos`, `download` / `downloadMd` with `{size}` / `{title}`, `footer*`, `ogImageAlt`, `videoDescription`, `genre`, `os`).
+- `ui`: page chrome (`play` links to `/` without `?lang=`: the game reads the saved choice, Marc 2026-10-22; `videos`, `download` / `downloadMd` with `{size}` / `{title}`, `footer*`, `ogImageAlt`, `videoDescription`, `genre`, `os`).
 - `projecte`: `title`, `lead`, `captures` / `videos` (same number and order; tuples, only texts translated), `sections` (same count and order,
   `[heading, [paragraphs]]`). Markers `**bold**`, `[text](url)`, `{cor}`, `{campanar}`, `{uaf}` stay as in `ca.json`.
 - `home` is read from `ca` only.

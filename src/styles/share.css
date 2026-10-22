@@ -66,7 +66,7 @@
 /* shared X component: any .sheet whose first child is a .sheet-x sits it on the frame's corner (no clipping: the frame stops
    scrolling) and scrolls its .sheet-body instead; no per-sheet rules, no «Tanca» button */
 .sheet[open]:has(> .sheet-x) { display: flex; flex-direction: column; overflow: visible; }
-.sheet > .sheet-body { min-height: 0; overflow: auto; scrollbar-width: none; } .sheet > .sheet-body::-webkit-scrollbar { display: none; }
+.sheet > .sheet-body { min-height: 0; overflow: auto; scrollbar-width: none; --ring-room: 8px; margin-inline: calc(-1 * var(--ring-room)); padding-inline: var(--ring-room); } /* overflow clips sideways too: the keyboard ring (3px + 3px offset) needs room, taken back with the margin so nothing moves */ .sheet > .sheet-body::-webkit-scrollbar { display: none; }
 .sheet-bar { position: absolute; right: 6px; width: 4px; border-radius: 2px; background: #f5c51829; pointer-events: none; } /* src/ui/sheet-fade.js: the body's drawn scrollbar */
 .sheet-bar i { display: block; border-radius: 2px; background: #f5c518d9; }
 .sheet-x::after { content: ""; position: absolute; inset: -4px; } /* touch slop: a ~52 px target for the 44 px circle */
@@ -83,7 +83,7 @@
    The same height holds both ratios; format changes preserve the sheet and the vertical control positions. */
 @media (min-width: 900px), (min-width: 600px) and (min-aspect-ratio: 1/1) and (max-height: 700px) {
   #share-menu { --ph: clamp(150px, calc(100dvh - 108px - var(--sat) - var(--sab)), 520px); width: min(840px, calc(100vw - 48px - var(--sal) - var(--sar))); padding: 28px 0; }
-  #share-menu .share-body { display: grid; grid-template-columns: minmax(0, min(392px, var(--share-preview-w))) minmax(280px, 360px); column-gap: 20px; padding: 0 20px; justify-content: space-evenly; align-items: center; } /* equal padding and gap: the visible outer and middle spaces share the free room */
+  #share-menu .share-body { display: grid; grid-template-columns: minmax(0, min(392px, var(--share-preview-w))) minmax(280px, 360px); column-gap: 20px; padding: 0 calc(20px + var(--ring-room)); justify-content: space-evenly; align-items: center; } /* equal padding and gap: the visible outer and middle spaces share the free room */
   .share-side { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
   .share-figure { margin: 0; width: 100%; min-width: 0; }
   #share-menu h2 { font-size: 30px; text-wrap: balance; }

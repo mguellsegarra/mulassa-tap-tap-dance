@@ -123,10 +123,12 @@ button svg { width: 22px; height: 22px; flex: none; fill: none; stroke: currentC
 @media (min-width: 520px) and (min-height: 520px) { #settings { top: calc(16px + env(safe-area-inset-top)); right: calc(16px + env(safe-area-inset-right)); width: 56px; height: 56px; } #settings svg { width: 30px; height: 30px; } }
 @media (max-height: 500px) { #settings { right: auto; left: calc(12px + env(safe-area-inset-left)); top: calc(12px + env(safe-area-inset-top)); } }
 #settings-menu { width: min(400px, calc(100vw - 32px)); padding: 20px 20px 18px; }
+#settings-menu .sheet-actions { grid-template-columns: minmax(0, 1fr); } /* a long label wraps in its row instead of widening the column past the sheet (Português (Brasil) at 320) */
 /* An on/off setting: a native checkbox with role="switch" (Space toggles, screen readers say on/off) in a flat row
    (a setting, not a button: no outline); the label is the whole row, the switch sits on the right. */
 .switch-row { box-sizing: border-box; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; padding: 6px 12px 6px 16px; border-radius: var(--button-radius); background: #fff3d60d; font: 800 18px/1.2 'Baloo 2', system-ui, sans-serif; cursor: pointer; }
 .switch-row .sub { display: block; margin-top: 2px; font-size: 14px; font-weight: 700; color: #e8d8b8; }
+.switch-row.lang-pick { min-height: calc(12px + 1.2em + 2px + 1.2 * 14px); } /* the height of a row with a .sub (Mostra els FPS): padding + label + sub gap + sub line */
 .switch-row input { -webkit-appearance: none; appearance: none; flex: none; position: relative; width: 48px; height: 28px; margin: 0; border: 2px solid var(--button-border); border-radius: 999px; background: #140c07; cursor: pointer; transition: background-color .15s; }
 .switch-row input::before { content: ""; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%; background: #e8d8b8; transition: transform .15s; }
 .switch-row input:checked { background: var(--button-border); }
@@ -180,14 +182,10 @@ kbd { display: inline-block; min-width: 14px; padding: 0 4px; border: 1px solid 
 .touch { display: none; }
 @media (pointer: coarse) { .keys { display: none; } .touch { display: inline; } }
 /* practice (first game): SALTA in the top-left corner, mirroring the pause button */
-#skip { position: fixed; z-index: 3; top: calc(28px + env(safe-area-inset-top)); left: calc(10px + env(safe-area-inset-left)); height: 44px; padding: 0 12px 0 16px; gap: 4px; font-size: 16px; letter-spacing: .04em; }
-#skip svg { width: 18px; height: 18px; }
-@media (max-width: 519px), (max-height: 519px) { #skip { top: calc(18px + env(safe-area-inset-top)); } }
-/* Match the HUD's scale and centre (10px + 20 * K), keeping phones' 44px target. */
-@media (min-width: 520px) and (min-height: 520px) {
-  #skip { top: calc(10px + 12px * var(--ui, 1) + env(safe-area-inset-top)); height: calc(56px * var(--ui, 1)); padding: 0 calc(16px * var(--ui, 1)) 0 calc(20px * var(--ui, 1)); gap: calc(8px * var(--ui, 1)); font-size: calc(22px * var(--ui, 1)); }
-  #skip svg { width: calc(26px * var(--ui, 1)); height: calc(26px * var(--ui, 1)); }
-}
+#skip { position: fixed; z-index: 3; top: calc(18px + env(safe-area-inset-top)); left: calc(10px + env(safe-area-inset-left)); height: 64px; padding: 0 16px 0 20px; gap: 8px; font-size: 20px; letter-spacing: .04em; }
+#skip svg { width: 26px; height: 26px; }
+@media (max-width: 519px), (max-height: 519px) { #skip { top: calc(18px + env(safe-area-inset-top)); height: 44px; padding: 0 12px 0 14px; gap: 6px; font-size: 16px; } #skip svg { width: 20px; height: 20px; } } /* phones: a slim 44px target centred on the 54px #pause (13 + 5); desktop matches #pause's 64px and top */
+@media (max-width: 359px) { #skip { padding: 0 8px 0 10px; gap: 4px; font-size: 14px; letter-spacing: .02em; } #skip svg { width: 18px; height: 18px; } } /* 320 px: a long label (SALTATU, WEITER) stays clear of the HUD's dots */
 /* sync calibration sheet: intro (why + what to do) → run (3-2-1, metronome) → result; data-state picks the section */
 #sync-menu { width: min(380px, calc(100vw - 32px)); padding: 18px 20px 12px; text-align: center; }
 #sync-menu h2 { font-size: 28px; margin-bottom: 10px; }
@@ -323,7 +321,10 @@ dialog p, #results-actions .btn { overflow-wrap: break-word; }
 .board-option[aria-pressed="true"] { border-color: #fff3d6; background: #fff3d6; color: #2a1a10; }
 .board-main:not([hidden]) { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
 /* «Posició 48 de 119» and the one link (to the top / back to the own row, by where the list is): flat, a gold strip */
-.board-place { flex: none; margin: 0 0 6px; padding: 6px 4px 8px 12px; border-left: 4px solid #f5c518; border-radius: 0 10px 10px 0; background: #fff3d60d; }
+/* it reserves the list's scrollbar gutter (as .board-head-wrap does: 0 with overlay scrollbars) and paints its strip and fill
+   on ::before, whose box stops at that gutter, so its right edge meets the rows' instead of overhanging them by 11 px */
+.board-place { position: relative; isolation: isolate; flex: none; margin: 0 0 6px; padding: 6px 4px 8px 16px; overflow: hidden; scrollbar-gutter: stable; }
+.board-place::before { content: ""; position: absolute; inset: 0; z-index: -1; border-left: 4px solid #f5c518; border-radius: 0 10px 10px 0; background: #fff3d60d; }
 .board-place-row { display: flex; flex-wrap: wrap; align-items: center; column-gap: 8px; }
 .board-summary { flex: 1 0 auto; white-space: nowrap; margin: 0; color: #fff3d6; font-size: 18px; line-height: 1.3; font-variant-numeric: tabular-nums; }
 .board-jump { flex: none; display: inline-flex; align-items: center; gap: 4px; margin-left: auto; padding-inline: 4px; border-width: 0; white-space: nowrap; } /* no room beside the place (320 px): under it, right-aligned */
@@ -350,6 +351,7 @@ dialog p, #results-actions .btn { overflow-wrap: break-word; }
    both reserve the same scrollbar gutter, so the columns line up */
 .board-box { position: relative; flex: 1 1 auto; min-height: 96px; display: flex; flex-direction: column; }
 .board-head-wrap { flex: none; overflow: hidden; scrollbar-gutter: stable; }
+#board-menu:has(#board-table[hidden]) .board-scroll { scrollbar-gutter: auto; } /* no rows: the state centres on the title's axis */
 #board-menu:has(#board-table[hidden]) .board-head-wrap { visibility: hidden; } /* loading, empty, error: no headings */
 .board-scroll { position: relative; flex: 1 1 auto; min-height: 0; overflow: auto; overscroll-behavior: contain; touch-action: pan-y; scrollbar-gutter: stable; }
 .board-state { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: safe center; gap: 10px; padding: 8px 12px; }
@@ -384,9 +386,12 @@ dialog p, #results-actions .btn { overflow-wrap: break-word; }
 .pct-sub { display: none; } /* the % under the points: portrait phones only (profile.css) */
 /* Punts ends 12px short of the box: iOS overlay scrollbars reserve no gutter and would sit on the score (heading too, aligned) */
 :is(#board-table, .board-head) :is(th, td):nth-child(4) { padding-right: 12px; }
-/* the podium: 1-2-3 on a gold / silver / bronze disc */
-.pos.p1, .pos.p2, .pos.p3 { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; color: #2a1a10; font-weight: 800; font-size: 14px; }
-.pos.p1 { background: #f5c518; } .pos.p2 { background: #d6dbe2; } .pos.p3 { background: #d9955a; }
+/* the podium: 1-2-3 as the solid ribbon medal (posDisc, sheet-kit.js; Marc, 2026-10-22: the selector's, everywhere): the
+   drawing is the background (one per metal), the number stays text on the disc; --pos-size is the disc's width */
+.pos.p1, .pos.p2, .pos.p3 { display: inline-grid; place-items: center; flex: none; box-sizing: border-box; width: var(--pos-size, 24px); height: calc(var(--pos-size, 24px) * 7 / 6); padding-top: calc(var(--pos-size, 24px) * 7 / 24); background: center / 100% 100% no-repeat; color: #2a1a10; font-weight: 800; font-size: calc(var(--pos-size, 24px) * .54); line-height: 1; vertical-align: middle; }
+.pos.p1 { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 28'%3E%3Cpath d='M5.5 1h5l2.5 8h-5zM18.5 1h-5L11 9h5z' fill='%23f5c518' opacity='.55'/%3E%3Ccircle cx='12' cy='17.5' r='9.5' fill='%23f5c518'/%3E%3C/svg%3E"); }
+.pos.p2 { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 28'%3E%3Cpath d='M5.5 1h5l2.5 8h-5zM18.5 1h-5L11 9h5z' fill='%23d6dbe2' opacity='.55'/%3E%3Ccircle cx='12' cy='17.5' r='9.5' fill='%23d6dbe2'/%3E%3C/svg%3E"); }
+.pos.p3 { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 28'%3E%3Cpath d='M5.5 1h5l2.5 8h-5zM18.5 1h-5L11 9h5z' fill='%23d9955a' opacity='.55'/%3E%3Ccircle cx='12' cy='17.5' r='9.5' fill='%23d9955a'/%3E%3C/svg%3E"); }
 /* the name cell: alias (+ TU) on one line, the level on a small muted line under it (a coloured dot, not a tag) */
 .who { display: flex; align-items: center; gap: 5px; min-width: 0; }
 #board-table .sub { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 6px; margin-top: 2px; font-size: 10.5px; white-space: nowrap; }
@@ -498,7 +503,7 @@ html:not([lang="ca"]) .board-links { row-gap: 16px; } /* longer words wrap the t
   #settings-menu .sheet-actions { gap: 7px; margin-top: 8px; }
   #settings-menu .btn { min-height: 44px; padding-block: 5px; }
   #settings-menu .btn .sub { margin-top: 0; font-size: 13px; }
-  #settings-menu .switch-row { min-height: 44px; }
+  #settings-menu .switch-row:not(.lang-pick) { min-height: 44px; }
   .settings-about { gap: 4px; margin-top: 0; padding-top: 8px; font-size: 15px; }
   .settings-about .sub { margin-top: 2px; line-height: 1.4; }
   .settings-about .about-uaf { margin-top: 10px; line-height: 1.3; } .settings-about .about-version { margin-top: 2px; }

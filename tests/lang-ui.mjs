@@ -5,8 +5,10 @@ import { setupLang, langNotice } from '../src/ui/lang-ui.js';
 import { LANGS } from '../src/i18n/locale.js';
 
 // reload URL: only `lang` changes; challenge, other params and hash stay; Catalan clears it
-assert.equal(reloadUrl('https://x.test/?repte=94-2&mute', 'es'), 'https://x.test/?repte=94-2&mute=&lang=es');
-assert.equal(reloadUrl('https://x.test/?lang=en&repte=94-2#a', 'es'), 'https://x.test/?lang=es&repte=94-2#a');
+assert.equal(reloadUrl('https://x.test/?repte=94-2&mute', 'es'), 'https://x.test/?repte=94-2&mute=', 'saved: no lang in the address');
+assert.equal(reloadUrl('https://x.test/?repte=94-2&mute', 'es', { persisted: false }), 'https://x.test/?repte=94-2&mute=&lang=es', 'blocked storage: the URL carries it');
+assert.equal(reloadUrl('https://x.test/?lang=en&repte=94-2#a', 'es'), 'https://x.test/?repte=94-2#a', 'a stale lang is dropped');
+assert.equal(reloadUrl('https://x.test/?lang=en&repte=94-2#a', 'es', { persisted: false }), 'https://x.test/?lang=es&repte=94-2#a');
 assert.equal(reloadUrl('https://x.test/?lang=en&repte=94-2', 'ca'), 'https://x.test/?repte=94-2');
 
 // suggestion: first visit, first browser language released and not Catalan, no `ca` anywhere

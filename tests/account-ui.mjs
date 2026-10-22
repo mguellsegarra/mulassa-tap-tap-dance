@@ -15,7 +15,7 @@ import { createStatsSync } from '../src/services/stats-sync.js';
 import { readPage } from './page.mjs';
 
 class El {
-  constructor(tag = 'div', id = '') { Object.assign(this, { tag, id, children: [], hidden: false, attrs: {}, dataset: {}, on: {}, open: false, own: '', className: '' }); }
+  constructor(tag = 'div', id = '') { Object.assign(this, { tag, id, children: [], hidden: false, attrs: {}, dataset: {}, on: {}, open: false, own: '', className: '', offsetHeight: 470, style: { p: {}, getPropertyValue(k) { return this.p[k] ?? ''; }, setProperty(k, v) { this.p[k] = v; }, removeProperty(k) { delete this.p[k]; } } }); }
   get textContent() { return this.own + this.children.map(c => c.textContent).join(''); }
   set textContent(v) { this.own = String(v); this.children = []; }
   get classList() { const el = this; return { toggle(n, f) { const s = new Set(el.className.split(' ').filter(Boolean)); (f ?? !s.has(n)) ? s.add(n) : s.delete(n); el.className = [...s].join(' '); }, contains: n => el.className.split(' ').includes(n) }; }
@@ -142,8 +142,13 @@ const service = (o = {}) => ({ configured: true, asked: [], async seasons(f) { t
   view().all(e => e.className === 'idx-row')[1].click();
   assert.deepEqual([text('hall-name')[0], text('hall-meta')[0]], ['Estrena 2026', '60 participants']);
   assert(!view().find(e => e.className?.startsWith?.('hall-mine')) && view().find(e => e.className === 'me')?.find(e => e.className === 'me-tag'), 'on the podium: «TU» there, no band');
-  byId('seasons-pick').click(); view().find(e => e.id === 'seasons-back').click();
-  assert.equal(text('hall-name')[0], 'Estrena 2026', 'back: the season it left');
+  assert.deepEqual(view().all(e => /^pos p[123]$/.test(e.className)).map(e => e.textContent), ['1', '2'], 'the podium (two played): the boards\' solid discs');
+  const held = () => $('seasons-menu').style.p['--hall-h'];
+  assert.equal(held(), undefined, 'a season shown: the sheet hugs it (desktop)');
+  byId('seasons-pick').click();
+  assert(held() === '470px' && view().all(e => e.className === 'r-sub').every(s => s.children[0].className === 'pos p1'), '«Tria temporada» keeps the season\'s height; each winner on the gold disc');
+  view().find(e => e.id === 'seasons-back').click();
+  assert(text('hall-name')[0] === 'Estrena 2026' && held() === undefined, 'back: the season it left, its own height');
   $('seasons-figure').click();
   assert(!$('seasons-picker').hidden && $('seasons-main').hidden && $('seasons-figure').attrs['aria-expanded'] === 'true' && focused.at(-1) === 'seasons-fig-mulassa-valls', 'the picker in the season\'s place');
   let prevented = false; $('seasons-menu').fire('cancel', { preventDefault: () => { prevented = true; } });
@@ -177,11 +182,11 @@ const service = (o = {}) => ({ configured: true, asked: [], async seasons(f) { t
   assert.equal(await end.check(() => true, () => backs++), true);
   assert.equal($('season-end-title').textContent, 'Tardor 2026 s’ha acabat');
   const body = $('season-end-boards'), part = cls => body.find(e => e.className?.startsWith?.(cls));
-  assert.deepEqual(body.all(e => e.tag === 'tr' && e.parent?.tag === 'tbody').map(tr => tr.textContent), ['Mulassa de Valls (ball anterior)12 de 48', 'Drac de Valls3 de 15'],
+  assert.deepEqual(body.all(e => e.tag === 'tr' && e.parent?.tag === 'tbody').map(tr => tr.textContent), ['Mulassa de Valls (ball anterior)12 de 48', 'Drac de Valls33 de 15'], // (the podium's disc, aria-hidden, then its place)
     'each board it played, its place; not the open season, not a board without it');
   assert(part('se-cheer').textContent === 'Has fet podi!' && /blk me/.test(part('se-art-box').innerHTML) && (part('se-art-box').innerHTML.match(/blk me/g) || []).length === 1, 'the podium, its step');
-  assert.equal(part('se-now').textContent, 'Ara: Hivern 2027 · queden 87 dies');
-  assert(!body.find(e => e.className === 'podium'), 'no full podium here');
+  assert.equal(part('se-now').textContent, 'Ara: Hivern 2027\u00a0· queden 87 dies', 'the «·» kept with the name (a no-break space): a wrap falls after it');
+  assert(!body.find(e => e.className === 'podium') && body.all(e => /^pos p/.test(e.className)).map(e => e.className).join() === 'pos p3', 'no full podium here; a podium place on its disc');
   assert.equal(mem.get(seasonSeenKey('u1', 1)), '1', 'seen: per profile and season');
   $('season-end-hall').click();
   assert(!$('season-end-menu').open && backs === 0 && halls[0][0] === 'drac-valls', 'the Saló de la fama of the podium\'s figure, with this sheet\'s way back');
@@ -242,6 +247,7 @@ const service = (o = {}) => ({ configured: true, asked: [], async seasons(f) { t
   assert.equal(f.$('account-previous-list').textContent, 'NORMAL: 70.000 punts · 92%', 'the previous dance\'s record, read only');
   const wins = f.$('account-stats').find(e => e.className === 'stat-wins');
   assert.equal(wins?.textContent, '2Podi a Estrena 2026 · Mulassa de Valls3Podi a Tardor 2026 · Drac de Valls', 'its podiums among the statistics: closed seasons only (not the open one\'s 6th, not 12th)');
+  assert.deepEqual(wins.all(e => /^pos/.test(e.className)).map(e => e.className), ['pos p2', 'pos p3'], 'on the podium\'s discs');
   f.$('account-close').click();
   // a profile with nothing played here: a skeleton keeps the room until the server answers (no shift), then the numbers, or the empty line if it has none
   setStatsOwner('u1'); acc.open();
@@ -283,7 +289,9 @@ const service = (o = {}) => ({ configured: true, asked: [], async seasons(f) { t
   assert(/<button id="profile" class="round-btn" hidden aria-haspopup="dialog" aria-label="Perfil"/.test(html), 'the Perfil corner button');
   // layout rules (docs: names never cut; a lone season card not stranded at the top of the fixed-height hall; stat tiles read from the top)
   assert(/\.who \.player-name \.alias \{ white-space: normal; overflow-wrap: anywhere; \}/.test(html) && /\.who \.player-name \{ flex-wrap: wrap;/.test(html), 'list names wrap, never an ellipsis; a «#1234» goes under the name whole');
-  assert(/\.hall-main \{[^}]*justify-content: space-evenly;/.test(html) && /grid-template-areas: "season season" "pod me" "pod act"/.test(html), 'the hall: its free space shared between the rows; desktop: podium left, context right');
+  assert(/#seasons-menu \{[^}]*height: var\(--hall-h, fit-content\); max-height:/.test(html) && /\.hall-detail \{[^}]*align-content: start;/.test(html), 'the hall on every screen: the sheet hugs its season, no free band above or under it');
+  assert(/\.pos\.p1, \.pos\.p2, \.pos\.p3 \{[^}]*width: var\(--pos-size, 24px\)/.test(html) && !/class="medal|\.medal\b|pod-medal/.test(html), 'one podium medal: the sized disc, no ribbon medal left');
+  assert(/\.hall-main \{[^}]*gap: 16px;/.test(html) && !/\.hall-main \{[^}]*space-evenly/.test(html) && /grid-template-areas: "season season" "pod me" "pod act"/.test(html), 'the hall: one 16 px gap between its blocks (no shared free space); desktop: podium left, context right');
   assert(/<button id="season-end-ok"[^>]*btn-primary[^>]*>Torna a la plaça<\/button><button id="season-end-hall"[^>]*btn-link[^>]*>Saló de la fama</.test(sheet('season-end-menu')) && !/Tria figura/.test(sheet('season-end-menu')), 'the season\'s end: back to the plaça, the hall as a link');
   assert(/\.stat-fact \{[^}]*align-content: start;/.test(html) && /\.stat-facts \{ display: grid; grid-template-columns: 1fr 1fr;/.test(html), 'four facts in two columns, read from the top: a row\'s numbers line up');
   assert(/\.profile-actions \.btn \{[^}]*flex: 1 1 0; min-width: fit-content;/.test(html), 'the profile\'s buttons: equal while side by side');
@@ -478,3 +486,16 @@ const service = (o = {}) => ({ configured: true, asked: [], async seasons(f) { t
   assert(!/id="ios-hint"/.test(html), 'the inline banner is gone');
 }
 console.log('perfil, statistics, seasons and cards ok');
+
+// --- one podium medal everywhere: every renderer of a place takes the boards' disc from posDisc (sheet-kit.js), none draws its own
+{
+  const { readFileSync } = await import('node:fs');
+  for (const f of ['seasons-ui', 'select-podium', 'board-list', 'player-card', 'stats-view']) {
+    const src = readFileSync(new URL(`../src/ui/${f}.js`, import.meta.url), 'utf8');
+    assert(/import \{[^}]*\bposDisc\b[^}]*\} from '\.\/sheet-kit\.js'/.test(src) && /posDisc\(doc, /.test(src) && !/pos p\$\{|<svg[^`]*medal/.test(src), `${f}.js: its podium places through posDisc`);
+  }
+  const { posDisc } = await import('../src/ui/sheet-kit.js');
+  const d = { createElement: () => ({}) };
+  assert.deepEqual([1, 2, 3, 4].map(n => posDisc(d, n)).map(e => [e.className, e.textContent]), [['pos p1', '1'], ['pos p2', '2'], ['pos p3', '3'], ['pos', '4']]);
+}
+console.log('podium discs ok');

@@ -107,7 +107,7 @@ El que segueix descriu producció (`master`), i diu quan una cosa només és a l
 L'HTML és `no-cache` i no hi ha service worker. Els clients antics que poden durar dies són les pestanyes obertes i,
 sobretot, les apps afegides a la pantalla d'inici d'iOS.
 
-**Proves de base de dades**: PGlite en memòria (`tests/short-ranking-db.mjs`, `tests/guest-profiles-db.mjs`...),
+**Proves de base de dades**: PGlite en memòria (`tests/short-ranking-db.mjs`, `tests/seasons-db.mjs`, `tests/player-stats-db.mjs`...),
 dins `npm run check`.
 
 **Còpies**: `docs/db-backup.md`. Les còpies manuals i una restauració local s'han provat. El programador automàtic no

@@ -5,7 +5,7 @@
 import { summary } from '../game/stats.js';
 import { FIGURE_VERSIONS } from '../services/leaderboard.js';
 import { MULASSA, DRAC } from '../game/figures.js';
-import { num } from './sheet-kit.js';
+import { num, posDisc } from './sheet-kit.js';
 import { tr } from '../i18n/messages.js';
 
 const SHORT = { [MULASSA.id]: MULASSA.name, [DRAC.id]: DRAC.name };
@@ -74,7 +74,7 @@ function wins(doc, list) {
   const ul = el(doc, 'ul', 'stat-wins'); ul.setAttribute('aria-label', tr('ui.stats.podiums'));
   for (const p of list) {
     const li = el(doc, 'li', '');
-    const pos = el(doc, 'span', `pos p${p.position}`, p.place), t = el(doc, 'span', '');
+    const pos = posDisc(doc, p.position, p.place), t = el(doc, 'span', '');
     t.append(el(doc, 'b', '', tr('ui.stats.podium')), ` ${p.text}`);
     li.append(pos, t); ul.appendChild(li);
   }

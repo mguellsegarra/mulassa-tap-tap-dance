@@ -44,16 +44,19 @@ span.player-name { display: inline-flex; align-items: baseline; min-width: 0; }
 
 /* Saló de la fama (Marc, 2026-10-21: «L’estendard de la temporada»): one season at a time in the board's frame (one height,
    loading/empty/error inside its box); the estendard and its gold rod are a decorative exception to the colour roles */
-#seasons-menu { width: min(460px, calc(100vw - 32px - var(--sal) - var(--sar))); height: min(680px, calc(100dvh - 32px - var(--sat) - var(--sab))); padding: 16px 18px; }
+#seasons-menu { width: min(460px, calc(100vw - 32px - var(--sal) - var(--sar))); height: var(--hall-h, fit-content); max-height: min(680px, calc(100dvh - 32px - var(--sat) - var(--sab))); padding: 16px 18px; }
 #seasons-menu[open] { display: flex; flex-direction: column; }
 #seasons-menu h2 { margin: 0 0 12px; font-size: 28px; }
 #seasons-figure { flex: none; align-self: center; } /* the board's figure dropdown (base.css .board-figure) */
 .fig-mask { display: inline-block; flex: none; width: 36px; height: 25px; background: currentColor; -webkit-mask: var(--m) center / contain no-repeat; mask: var(--m) center / contain no-repeat; }
-.seasons-box { position: relative; flex: 1 1 auto; min-height: 96px; margin-top: 14px; }
-.seasons-list { position: absolute; inset: 0; display: flex; flex-direction: column; }
+/* the sheet hugs its view on every screen (Marc, 2026-10-22: «A1 s'ajusta»): one 16 px gap between its blocks, no free band; loading,
+   «Tria temporada» and «Tria figura» keep the last view's height (--hall-h, seasons-ui.js), the first load a typical one */
+.seasons-box { position: relative; flex: 0 1 auto; display: flex; flex-direction: column; min-height: 0; margin-top: 16px; }
+.seasons-box:not(:has(.hall-view)) { min-height: 300px; }
+.seasons-list { position: relative; flex: 0 1 auto; min-height: 0; display: flex; flex-direction: column; }
 .seasons-box .board-state { z-index: 1; }
-.hall-view { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; justify-content: space-between; gap: 10px; }
-.hall-main { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; justify-content: space-evenly; gap: 10px; overflow: auto; overscroll-behavior: contain; }
+.hall-view { flex: 0 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 16px; }
+.hall-main { flex: 0 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 16px; overflow: auto; overscroll-behavior: contain; }
 .hall-main > * { flex: none; }
 .hall-season { display: flex; align-items: center; gap: 14px; }
 .estendard { position: relative; flex: none; width: 56px; height: 79px; color: #fff3d6; }
@@ -73,10 +76,9 @@ span.player-name { display: inline-flex; align-items: baseline; min-width: 0; }
 .hall-dance { margin: 4px 0 0; color: #e8d8b8; font-size: 14px; line-height: 1.35; }
 .hall-dance .btn-link { display: inline; min-height: 0; padding: 0 2px; font-size: 14px; color: #fff3d6; }
 /* the podium: the first featured, 2nd and 3rd compact; the profile's own row says «TU» on a gold wash (and no band then) */
-.medal-slot { display: block; flex: none; line-height: 0; } .medal { display: block; width: 26px; height: 30px; }
-.m1 { color: #f5c518; } .m2 { color: #d4dae2; } .m3 { color: #e8a26c; }
+.hall-podium .pos { --pos-size: 26px; }
 .pod-first { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 12px; align-items: center; padding: 6px 0 10px; }
-.pod-first .medal { width: 44px; height: 51px; }
+.pod-first .pos { --pos-size: 40px; }
 .pod-first .who { font-size: 20px; line-height: 1.15; }
 .pod-first .pts { margin-top: 2px; color: #e8d8b8; font-size: 15px; font-variant-numeric: tabular-nums; }
 .hall-podium .lvl { margin-left: 6px; font-size: 12px; letter-spacing: .05em; } /* its level's colour (.lvt*) */
@@ -108,11 +110,10 @@ span.player-name { display: inline-flex; align-items: baseline; min-width: 0; }
 .idx-row[aria-current] { border-radius: 10px; background: #fff3d6; color: #2a1a10; }
 .r-main { min-width: 0; } .r-name { display: block; font-size: 17px; line-height: 1.2; } .r-two { color: #e8d8b8; font-size: 14px; }
 .r-sub { display: flex; align-items: center; gap: 6px; margin-top: 2px; color: #e8d8b8; font-size: 14px; line-height: 1.2; }
-.r-sub .medal { width: 16px; height: 18px; }
+.r-sub .pos { flex: none; --pos-size: 18px; }
 .r-side { display: grid; justify-items: end; line-height: 1.1; font-variant-numeric: tabular-nums; }
 .r-side b { font-size: 19px; } .r-side .dash { color: #e8d8b8; } .r-side small { color: #e8d8b8; font-size: 13px; }
 .idx-row[aria-current] :is(.r-sub, .r-two, .r-side small, .r-side .dash, .player-name.guest, .player-name .tag) { color: #4a3420; }
-.idx-row[aria-current] .m1 { color: #6b5208; }
 /* no closed season yet: the empty estendard, the open season, its board */
 .hall-wait { flex: 1 1 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center; }
 .hall-wait .estendard { width: 84px; height: 118px; } .hall-wait .estendard .fig-mask { width: 60px; height: 42px; }
@@ -122,37 +123,40 @@ span.player-name { display: inline-flex; align-items: baseline; min-width: 0; }
 /* phones up to 700 px tall: a tighter rhythm before anything scrolls */
 @media (max-height: 700px) {
   #seasons-menu { padding: 12px 14px; } #seasons-menu h2 { margin-bottom: 8px; font-size: 24px; }
-  .seasons-box { margin-top: 10px; } .hall-view, .hall-main { gap: 8px; }
   .hall-season .estendard { width: 44px; height: 62px; } .hall-season .estendard .fig-mask { width: 32px; height: 22px; }
   .hall-name { font-size: 23px; } .hall-dates { font-size: 13px; } .hall-meta { font-size: 14px; }
-  .pod-first { padding: 2px 0 6px; } .pod-first .medal { width: 36px; height: 41px; } .pod-first .who { font-size: 18px; }
+  .pod-first { padding: 2px 0 6px; } .pod-first .pos { --pos-size: 34px; } .pod-first .who { font-size: 18px; }
   .pod-rest li { min-height: 44px; padding: 2px 0; }
   .hall-mine { padding: 6px 12px; } .hall-mine .place { font-size: 23px; }
   .hall-actions .btn { min-height: 44px; padding-block: 4px; }
 }
 @media (max-height: 600px) {
-  #seasons-menu h2 { margin-bottom: 6px; font-size: 22px; } .seasons-box { margin-top: 8px; } .hall-view, .hall-main { gap: 4px; } .pod-rest li { padding: 1px 0; }
+  #seasons-menu h2 { margin-bottom: 6px; font-size: 22px; } .pod-rest li { padding: 1px 0; }
   .hall-season { gap: 10px; } .hall-season .estendard { width: 36px; height: 51px; } .hall-season .estendard .fig-mask { width: 26px; height: 18px; }
   #seasons-figure { min-height: 48px; padding-block: 2px; } #seasons-figure .board-pic { width: 46px; height: 38px; } .hall-dance { margin: 0; } .hall-dance-t { display: none; }
-  .pod-first { padding: 0 0 4px; } .pod-first .medal { width: 30px; height: 35px; } .pod-first .pts { font-size: 14px; } .hall-actions { gap: 6px; }
+  .pod-first { padding: 0 0 4px; } .pod-first .pos { --pos-size: 28px; } .pod-first .pts { font-size: 14px; } .hall-actions { gap: 6px; }
   .hall-mine { padding: 4px 10px; } .hall-mine .hall-lab { font-size: 11px; } .hall-mine .place { font-size: 20px; } .hall-mine .mpts { font-size: 13px; }
   .hall-mine.none .hall-lab { display: none; } .hall-mine .none-t { margin: 0; font-size: 14px; } /* «No hi ha cap resultat teu publicat.» says it alone */
 }
 #season-end-menu .sheet-actions { padding-bottom: 2px; } /* the link's 44 px slop stays inside the body (no scroll for it) */
-/* desktop: the season across the top; the podium on the left, the player's place and the actions on the right */
+/* desktop: the season across the top, its estendard and words centred on the sheet's axis (with the title and the figure
+   above); under it the podium on the left, the player's place and the actions on the right, both columns ending on one line.
+   The sheet hugs its view (Marc, 2026-10-22: «A1 tot a dalt»: no free band above the season or under the button); loading,
+   «Tria temporada» and «Tria figura» keep the last view's height (--hall-h, seasons-ui.js) and the first load a typical one */
 @media (min-width: 860px) and (min-height: 560px) {
-  #seasons-menu { width: min(780px, calc(100vw - 32px - var(--sal) - var(--sar))); height: min(580px, calc(100dvh - 32px - var(--sat) - var(--sab))); padding: 22px 30px 24px; }
+  #seasons-menu { width: min(780px, calc(100vw - 32px - var(--sal) - var(--sar))); padding: 22px 30px 24px; }
   #seasons-picker { width: 440px; margin-inline: auto; }
   .seasons-box { margin-top: 18px; }
-  .hall-detail { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); grid-template-rows: auto auto 1fr; grid-template-areas: "season season" "pod me" "pod act"; align-content: center; column-gap: 40px; row-gap: 0; }
+  .seasons-box:not(:has(.hall-view)) { min-height: 334px; } /* loading or an error, nothing shown yet: a detail's typical height */
+  .hall-detail { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); grid-template-rows: auto auto auto; grid-template-areas: "season season" "pod me" "pod act"; align-content: start; column-gap: 40px; row-gap: 0; }
   .hall-main { display: contents; }
-  .hall-season { grid-area: season; gap: 18px; margin-bottom: 18px; padding-bottom: 18px; border-bottom: 1px solid #fff3d61c; }
+  .hall-season { grid-area: season; justify-content: center; gap: 18px; margin-bottom: 18px; padding-bottom: 18px; border-bottom: 1px solid #fff3d61c; }
   .hall-podium { grid-area: pod; } .hall-mine { grid-area: me; align-self: start; margin-top: 22px; } .hall-actions { grid-area: act; align-self: end; }
   .hall-season .estendard { width: 66px; height: 93px; } .hall-season .estendard .fig-mask { width: 46px; height: 32px; }
   .hall-name { font-size: 34px; } .hall-dates { font-size: 15px; } .hall-meta { font-size: 16px; }
   .pod-first .who { font-size: 24px; } .pod-first .pts { font-size: 16px; } .pod-rest li { min-height: 50px; font-size: 16px; }
   .hall-index { width: 560px; margin-inline: auto; }
-  .hall-empty .hall-actions { align-self: center; width: 360px; }
+  .hall-empty { gap: 24px; } .hall-empty .hall-actions { align-self: center; width: 360px; } /* the action apart from the words */
 }
 
 /* «Tardor 2026 s’ha acabat» (Marc, 2026-10-21): a podium on any board shows that figure on its step, none a garland; then a
@@ -164,7 +168,7 @@ span.player-name { display: inline-flex; align-items: baseline; min-width: 0; }
 .se-art { display: block; width: min(220px, 76%); height: auto; margin: 6px auto; } .se-art.garland { width: min(200px, 70%); }
 .se-cheer { margin: 0; color: #fff3d6; font-size: 30px; line-height: 1.1; text-align: center; text-wrap: balance; } .se-cheer.gold { color: #f5c518; }
 .se-ledger { width: 100%; margin-top: 12px; border-collapse: collapse; font-variant-numeric: tabular-nums; }
-.se-ledger caption { margin-bottom: 6px; color: #fff3d6; font-size: 17px; font-weight: 800; text-align: left; }
+.se-ledger caption { margin-bottom: 8px; color: #fff3d6; font-size: 15px; font-weight: 800; letter-spacing: .08em; line-height: 1.2; text-align: center; text-transform: uppercase; } /* a section heading: the hall's uppercase label, in cream, over the quieter column heads */
 .se-ledger thead th { padding: 0 0 4px; border-bottom: 1px solid #e8d8b82e; color: #e8d8b8b3; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-align: left; text-transform: uppercase; }
 .se-ledger thead th + th, .se-ledger td { text-align: right; }
 .se-ledger tbody tr { border-bottom: 1px solid #e8d8b82e; }
@@ -175,9 +179,11 @@ span.player-name { display: inline-flex; align-items: baseline; min-width: 0; }
 .se-ledger .nm { min-width: 0; line-height: 1.15; } .se-ledger .nm small { display: block; color: #e8d8b8; font-size: 14px; font-weight: 700; line-height: 1.1; }
 .se-ledger .val { display: inline-flex; align-items: center; justify-content: flex-end; }
 .se-ledger .val b { margin-right: 4px; font-size: 21px; } .se-ledger .of { color: #e8d8b8; font-size: 15px; }
-.se-ledger .medal { width: 17px; height: 20px; margin-right: 5px; }
-.se-now { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 12px 0 0; color: #e8d8b8; font-size: 15px; line-height: 1.3; text-align: center; }
-.se-now b { color: #fff3d6; } .se-now svg { flex: none; width: 20px; height: 20px; fill: none; stroke: #f5c518; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.se-ledger .pos { --pos-size: 22px; margin-right: 6px; }
+/* one centred inline line: on narrow phones it wraps balanced (the season’s name and «·» on the first line, the days left on the second), the icon leading */
+.se-now { margin: 12px 0 0; color: #e8d8b8; font-size: 15px; line-height: 1.3; text-align: center; text-wrap: balance; }
+.se-now b { color: #fff3d6; white-space: nowrap; } /* the season's name never splits */
+.se-now svg { display: inline-block; width: 20px; height: 20px; margin-right: 8px; vertical-align: -4px; fill: none; stroke: #f5c518; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 #season-end-menu .sheet-actions { gap: 6px; margin-top: 16px; }
 @media (prefers-reduced-motion: no-preference) {
   .se-art .blk { transform-box: fill-box; transform-origin: bottom; animation: se-rise .45s cubic-bezier(.3, 1.5, .5, 1) both; }
@@ -214,10 +220,11 @@ span.player-name { display: inline-flex; align-items: baseline; min-width: 0; }
 .profile-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 10px; }
 .profile-actions .btn { width: auto; flex: 1 1 0; min-width: fit-content; min-height: 44px; padding: 4px 14px; font-size: 15px; white-space: nowrap; } /* side by side and equal while they fit, else a full-width stack */
 .account-section { margin-top: 16px; }
-.account-title-row { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0 12px; margin-bottom: 6px; }
+.account-title-row { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: center; text-align: center; gap: 0 12px; margin-bottom: 6px; }
 .account-title-row h3 { margin: 0; }
+#account-previous h3 { text-align: center; } /* every Perfil section's title on the sheet's one centre axis, like «Perfil» */
 .account-since { color: #e8d8b8; font-size: 13px; }
-.account-stats.loading { min-height: min(560px, 60dvh); border-radius: var(--button-radius); background: #fff3d60d; animation: profile-pulse 1.2s ease-in-out infinite; }
+.account-stats.loading { animation: profile-pulse 1.2s ease-in-out infinite; } .account-stats.loading .stat-fact { min-height: 56px; } /* + the tile's 10 px padding = a real tile's 76 */
 @media (prefers-reduced-motion: reduce) { .account-stats.loading { animation: none; } }
 .account-empty { margin: 8px 0; color: #e8d8b8; font-size: 15px; text-align: center; }
 .account-list { margin: 0; padding: 0; list-style: none; color: #fff3d6; font-size: 15px; line-height: 1.6; }
@@ -236,14 +243,14 @@ span.player-name { display: inline-flex; align-items: baseline; min-width: 0; }
 .stat-wins li { display: flex; align-items: center; gap: 10px; padding: 6px 10px 6px 6px; border-radius: 999px; background: linear-gradient(90deg, #f5c51829, #f5c51808); color: #fff3d6; font-size: 15px; line-height: 1.25; }
 .stat-wins b { color: #f5c518; } /* gold as text: a celebration */
 .stat-wins .pos, .card-from .pos { flex: none; display: inline-grid; place-items: center; min-width: 28px; height: 28px; padding: 0 4px; border-radius: 999px; color: #e8d8b8; font-size: 15px; font-weight: 800; }
-.stat-wins .pos.p1, .stat-wins .pos.p2, .stat-wins .pos.p3, .card-from .pos.p1, .card-from .pos.p2, .card-from .pos.p3 { width: auto; color: #2a1a10; }
+.stat-wins .pos.p1, .stat-wins .pos.p2, .stat-wins .pos.p3, .card-from .pos.p1, .card-from .pos.p2, .card-from .pos.p3 { --pos-size: 28px; min-width: 0; height: calc(var(--pos-size) * 7 / 6); padding: calc(var(--pos-size) * 7 / 24) 0 0; border-radius: 0; color: #2a1a10; } /* the medal, not the pill */
 .stat-toggle-row { display: flex; justify-content: center; margin-top: 6px; }
 .stat-toggle { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; }
 .stat-toggle .stat-ico { width: 18px; height: 18px; color: currentColor; transition: rotate .2s; }
 .stat-toggle[aria-expanded="true"] .stat-ico { rotate: 180deg; }
 @media (prefers-reduced-motion: reduce) { .stat-toggle .stat-ico { transition: none; } }
 .stat-lines { margin: 2px 0 0; padding: 0; list-style: none; }
-.stat-lines li { display: flex; align-items: center; gap: 10px; min-height: 40px; padding: 4px 2px; border-top: 1px solid #fff3d614; color: #fff3d6; font-size: 15px; line-height: 1.3; font-variant-numeric: tabular-nums; }
+.stat-lines li { display: flex; align-items: center; gap: 9px; min-height: 40px; padding: 4px 10px 4px 11px; /* the tiles' inset: icon and text on their columns; the dividers stay full width */ border-top: 1px solid #fff3d614; color: #fff3d6; font-size: 15px; line-height: 1.3; font-variant-numeric: tabular-nums; }
 .stat-lines li:first-child { border-top: 0; }
 .stat-lines .stat-ico { width: 22px; height: 22px; }
 .stat-lines small { display: block; color: #e8d8b8; font-size: 13px; }
@@ -256,6 +263,9 @@ span.player-name { display: inline-flex; align-items: baseline; min-width: 0; }
 
 /* the statistics' notice (Marc, 2026-10-21): the title, three short lines with a drawn icon each, Privadesa, «D'acord» */
 #stats-notice-menu { width: min(380px, calc(100vw - 32px - var(--sal) - var(--sar))); max-height: calc(100dvh - 32px - var(--sat) - var(--sab)); padding: 20px 20px 12px; }
+/* a full-width sheet: one line ran under the corner × (its ring touched «estadístiques»); kept clear on both sides, balanced.
+   Phones already wrap it in two lines clear of the ×, and an inset there would push «estadístiques» off-centre */
+@media (min-width: 412px) { #stats-notice-menu h2 { margin-inline: 34px; text-wrap: balance; } }
 .stats-facts { display: grid; gap: 14px; margin: 6px 0 4px; padding: 0; list-style: none; text-align: left; }
 .stats-facts li { display: grid; grid-template-columns: 28px minmax(0, 1fr); align-items: center; gap: 12px; color: #e8d8b8; font-size: 16px; line-height: 1.3; }
 .stats-facts svg { width: 28px; height: 28px; margin: 0; fill: none; stroke: #f5c518; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
@@ -283,7 +293,8 @@ body:has(:is(#board-menu, #seasons-menu, #account-menu)[open]) #card-menu { widt
 .card-box { position: relative; min-height: 196px; }
 .card-box .board-state { position: absolute; inset: 0; }
 .card-box .board-status .stat-ico { display: block; width: 40px; height: 40px; margin: 0 auto 8px; color: #b5a385; } .card-box .board-status .stat-ico svg { stroke-width: 1.6; }
-@media (max-width: 359px) { #card-menu, #account-menu { padding-inline: 14px; } .stat-fact { padding: 8px; column-gap: 6px; } .stat-fact b { font-size: 19px; } .stat-fact .stat-ico { width: 18px; height: 18px; } }
+@media (max-width: 359px) { #card-menu, #account-menu { padding-inline: 14px; } .stat-fact { padding: 8px; column-gap: 6px; } .stat-fact b { font-size: 19px; } .stat-fact .stat-ico { width: 18px; height: 18px; }
+  .stat-lines li { gap: 6px; padding-inline: 8px; } .stat-lines .stat-ico { width: 18px; height: 18px; } } /* the lines keep the tiles' compact inset */
 /* portrait phones: the % goes under the points (board-list.js .pct-sub), so the name gets its column's room: a 16-letter
    «nom#1234» with «TU» on one line from 375 px, a 16-letter verified name on one line at 320 */
 @media (max-width: 519px) {

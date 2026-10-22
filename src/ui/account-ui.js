@@ -23,7 +23,11 @@ export function setupAccount({ focusIn, profile, service, store, stats, onSync =
     $('account-empty').hidden = played || pending;
     box.hidden = !played && !pending;
     box.classList.toggle('loading', pending);
-    if (pending) box.replaceChildren();
+    if (pending) { // the four tiles' shapes
+      const grid = doc.createElement('div'); grid.className = 'stat-facts';
+      for (let i = 0; i < 4; i++) { const t = doc.createElement('div'); t.className = 'stat-fact'; grid.appendChild(t); }
+      box.replaceChildren(grid);
+    }
     if (played) renderStats(doc, box, d, { own: true, podiums: wins, onSync: () => { const b = leave(); onSync(() => open(b)); } });
     $('account-since').textContent = played && since ? sinceText(since) : '';
   }

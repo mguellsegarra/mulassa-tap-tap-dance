@@ -104,7 +104,7 @@ export function updateControls() {
     if (practiceLabel.textContent !== label) {
       practiceLabel.textContent = label;
       skipEl.setAttribute('aria-label', exit ? CTL.exitPractice : CTL.skipPractice);
-      practiceIcon.setAttribute('d', exit ? 'M10 4H4v16h6M14 8l4 4-4 4M8 12h12' : 'm5 5 7 7-7 7M13 5l7 7-7 7');
+      practiceIcon.setAttribute('d', exit ? 'M10 8v-2a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-7a2 2 0 0 1-2-2v-2M15 12H3l3-3M6 15l-3-3' : 'm5 5 7 7-7 7M13 5l7 7-7 7');
     }
   }
   const result = G.state === 'results' && !G.watch && clock - G.resT > 1; // (the dance demo ends on its own sheet)

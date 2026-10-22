@@ -3,7 +3,7 @@
 import { PAGE, TAG_KEY, baseName, rememberIdentity } from '../services/leaderboard.js';
 import { DIFFS } from '../game/chart.js';
 import { errors } from '../services/errors.js';
-import { num, trSplit } from './sheet-kit.js';
+import { num, trSplit, posDisc } from './sheet-kit.js';
 import { tr } from '../i18n/messages.js';
 import { mulaSpinner } from './loader.js';
 import { appendName, GUEST_ROW } from './profile-notes.js';
@@ -113,7 +113,7 @@ export function setupBoardList({ doc, $, service, store, focusIn, minLoad, now, 
   function row(r) {
     const trow = doc.createElement('tr'), td = () => trow.appendChild(doc.createElement('td'));
     const pos = Number(r.position);
-    td().appendChild(el('span', pos <= 3 ? `pos p${pos}` : 'pos', num(pos)));
+    td().appendChild(posDisc(doc, pos));
     const name = td(), who = name.appendChild(el('div', 'who'));
     const at = figure; // the card shows this row (the season's name read on the tap: the header may answer after the rows)
     const from = () => ({ figure: at, season: season?.name ?? openName ?? calendarSeason(now()).name, position: pos, score: r.score, difficulty: r.difficulty });

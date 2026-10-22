@@ -61,7 +61,7 @@
    "kind": "cls-error",
    "selector": "account-menu",
    "group": "B",
-   "status": "anotat",
+   "status": "arreglat al codi (esquelet de càrrega reservant alçada); sense vídeo «després»",
    "why": "Perfil: la fulla s'obre curta («Encara no has jugat cap partida») i creix a l'alçada màxima quan arriben les estadístiques del servidor; no té a veure amb l'idioma. Recomanació: mostrar l'estat de càrrega dins del bloc d'estadístiques i reservar-ne l'alçada"
   },
   {
@@ -69,8 +69,8 @@
    "kind": "cls-error",
    "selector": "select-(strip|towns)",
    "group": "B",
-   "status": "anotat",
-   "why": "selector nou: en obrir una figura pendent o la targeta del plec la tira i la fila de pobles es reordenen d'un cop (canvi de gestió d'amplada de la UX del character select); és d'abans de l'i18n i cal decidir-ne el disseny (animar-ho en lloc de saltar)"
+   "status": "anotat (no tocat)",
+   "why": "selector nou: en obrir una figura pendent o la targeta del plec la tira i la fila de pobles es reordenen d'un cop (canvi de gestió d'amplada de la UX del character select); és d'abans de l'i18n i cal decidir-ne el disseny (animar-ho en lloc de saltar) Reintentat: mesurat a 1280×800, les cartes visibles es mouen ≤6 px i després llisquen (desplaçament previst); el CLS ve de la caixa invisible de la tira. Sense salt visible reproduït; select-ui.js (595 línies) no es toca."
   },
   {
    "id": "B-board",

@@ -83,12 +83,12 @@ ${langs.length > 1 ? `${langs.map(l => `<link rel="alternate" hreflang="${l}" hr
 <header>
 <h1>${esc(p.title)}</h1>
 <p>${html(p.lead)}</p>
-<a class="play" href="${code === 'ca' ? '/' : `/?lang=${code}`}">${esc(ui.play)}</a>
+<a class="play" href="/">${esc(ui.play)}</a>
 </header>
 ${p.captures ? `<div class="shots">${p.captures.map(([src, alt]) => `<figure><img src="${src}" alt="${esc(alt)}" width="540" height="1169" loading="lazy"><figcaption>${esc(alt)}</figcaption></figure>`).join('')}</div>` : ''}
 ${p.sections.map(([h, ps]) => `<section>\n<h2 id="${slug(h)}">${esc(h)}</h2>\n${ps.map(t => `<p>${inline(t)}</p>`).join('\n')}\n</section>`).join('\n')}
 ${p.videos ? `<section>\n<h2>${esc(ui.videos)}</h2>\n<div class="videos">${p.videos.map(([src, poster, t, w, h, size]) => `<figure><video controls preload="none" poster="${poster}" width="${w}" height="${h}" aria-label="${esc(t)}"><source src="${src}" type="video/mp4"></video><figcaption>${esc(t)} · <a href="${src}" download>${esc(ui.download.replace('{size}', size))}</a></figcaption></figure>`).join('')}</div>\n</section>` : ''}
-<footer><a href="${code === 'ca' ? '/' : `/?lang=${code}`}">${esc(ui.footerGame)}</a> · <a href="${canonical}">${esc(ui.footerProject)}</a> · <a href="https://github.com/mguellsegarra/mulassa-tap-tap-dance">${esc(ui.footerCode)}</a> · <a href="https://ondori.dev">ondori.dev</a></footer>
+<footer><a href="/">${esc(ui.footerGame)}</a> · <a href="${canonical}">${esc(ui.footerProject)}</a> · <a href="https://github.com/mguellsegarra/mulassa-tap-tap-dance">${esc(ui.footerCode)}</a> · <a href="https://ondori.dev">ondori.dev</a></footer>
 </main>
 </body>
 </html>

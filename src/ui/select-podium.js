@@ -5,14 +5,12 @@
 // per figure, level and owner.
 import { DIFFS } from '../game/chart.js';
 import { tr } from '../i18n/messages.js';
-import { num } from './sheet-kit.js';
+import { num, posDisc } from './sheet-kit.js';
 import { appendName } from './profile-notes.js';
 import { calendarSeason } from './seasons-ui.js';
 
 const PODIUM_TTL = 60e3;
 const PODIUM_ROOM = '(min-width: 600px) and (min-height: 600px)'; // tablets and desktops; phones (either way up) keep the line
-// a solid medal (Marc: simpler and solid, not outlined): the disc in its metal, a dark number, the ribbon a shade of it
-const podiumMedal = n => `<svg class="pod-medal m${n}" viewBox="0 0 24 28" aria-hidden="true"><path d="M5.5 1h5l2.5 8h-5zM18.5 1h-5L11 9h5z" fill="currentColor" opacity=".55"/><circle cx="12" cy="17.5" r="9.5" fill="currentColor"/><text x="12" y="22" text-anchor="middle" fill="#2a1a10" font-family="'Baloo 2', sans-serif" font-weight="800" font-size="13">${n}</text></svg>`;
 
 export function setupPodium({ doc, win, $, onBoard, onCard, load, refit, now = () => Date.now() }) {
   const box = $('select-podium');
@@ -23,7 +21,7 @@ export function setupPodium({ doc, win, $, onBoard, onCard, load, refit, now = (
   const el = (tag, cls, text) => { const e = doc.createElement(tag); e.className = cls; if (text != null) e.textContent = text; return e; };
   function place(r, level) {
     const li = el('li', r.is_self ? 'me' : ''), at = Number(r.position);
-    li.insertAdjacentHTML('beforeend', podiumMedal(at)); // a fixed drawing and a number, never data
+    li.appendChild(posDisc(doc, at));
     const who = li.appendChild(el('span', 'who')), p = { alias: r.alias, tag: r.tag ?? null, verified: r.verified === true };
     appendName(doc, who, p, q => onCard({ ...q, from: { season: calendarSeason().name, position: at, score: r.score, difficulty: level } })); // aliases are text, never HTML
     if (r.is_self) who.appendChild(el('span', 'me-tag', tr('ui.board.me')));

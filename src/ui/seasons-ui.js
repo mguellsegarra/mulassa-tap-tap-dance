@@ -3,7 +3,7 @@
 // played, where the player came; «Tria temporada» lists them by year) and the end-of-season sheet, once per profile and
 // season. All of it reads get_seasons (service.seasons).
 import { DIFFS } from '../game/chart.js';
-import { byId, num, trSplit } from './sheet-kit.js';
+import { byId, num, trSplit, posDisc } from './sheet-kit.js';
 import { tr } from '../i18n/messages.js';
 import { fmtDate, fmtDateRange } from '../i18n/format.js';
 import { mulaSpinner } from './loader.js';
@@ -60,7 +60,7 @@ export function podiumList(doc, podium, onName) {
   const ol = doc.createElement('ol'); ol.className = 'podium';
   for (const p of podium) {
     const li = doc.createElement('li');
-    const pos = doc.createElement('span'); pos.className = `pos p${p.position}`; pos.textContent = num(p.position);
+    const pos = posDisc(doc, p.position);
     const who = doc.createElement('span'); who.className = 'who';
     appendName(doc, who, { alias: p.alias, tag: p.tag ?? null, verified: p.verified }, onName);
     const lvl = doc.createElement('span'); lvl.className = `lvl lvl${Number(p.difficulty)}`; lvl.textContent = DIFFS[Number(p.difficulty)]?.name ?? '';
@@ -73,9 +73,7 @@ export function podiumList(doc, podium, onName) {
 // the closed seasons of a list, newest first: an end date passed, or the open-ended «Estrena 2026» (history from the start)
 export const closedSeasons = (list, now = Date.now()) => list.filter(e => e.endsAt == null || e.endsAt <= now);
 
-// --- the drawn pieces (static SVG strings, never data): medals, the estendard, the figures
-// an outline medal (ribbon, ring, number): never a solid gold disc next to the sheet's gold primary
-const medalSvg = n => `<svg class="medal m${n}" viewBox="0 0 40 46" aria-hidden="true"><path d="M11 2h7l4 12h-7zM29 2h-7l-4 12h7z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" opacity=".75"/><circle cx="20" cy="29" r="15" fill="#1d120b" stroke="currentColor" stroke-width="2.6"/><circle cx="20" cy="29" r="11" fill="none" stroke="currentColor" stroke-width="1" opacity=".45"/><text x="20" y="35.5" text-anchor="middle" fill="currentColor" font-family="'Baloo 2', sans-serif" font-weight="800" font-size="17">${n}</text></svg>`;
+// --- the drawn pieces (static SVG strings, never data): the estendard, the figures
 // the figure's selector drawing as a flat silhouette (a CSS mask over currentColor), kept once per figure
 const figMasks = new Map();
 const figMask = id => figMasks.get(id) ?? figMasks.set(id, `url('data:image/svg+xml,${encodeURIComponent(SELECTOR_PORTRAITS[id] ?? '').replace(/'/g, '%27')}')`).get(id);
@@ -127,6 +125,10 @@ export function setupSeasons({ focusIn, service, onBoard = () => {}, onCard = ()
     status.textContent = text; retry.hidden = !again; status.parentElement.hidden = !text;
     if (spin) status.prepend(mulaSpinner(doc));
   }
+  // desktop (profile.css): the sheet hugs its view; a change of view keeps the last one's height until the next is drawn
+  const hold = () => { if (!menu.style.getPropertyValue('--hall-h')) menu.style.setProperty('--hall-h', `${menu.offsetHeight}px`); };
+  const fit = () => menu.style.removeProperty('--hall-h');
+  menu.addEventListener('click', e => { if (e.target.closest('#seasons-figure')) hold(); }, true); // «Tria figura»: before the picker swaps the view
   const button = (cls, text, id, svg = '') => { const b = htmlEl(doc, 'button', cls, svg); b.type = 'button'; b.append(text); if (id) b.id = id; return b; };
   function estendard(empty = false) { const e = htmlEl(doc, 'span', `estendard${empty ? ' empty' : ''}`, ESTENDARD_SVG + figHtml(figure)); return e; }
   function podium(b) {
@@ -136,13 +138,13 @@ export function setupSeasons({ focusIn, service, onBoard = () => {}, onCard = ()
       const top = hallEl(doc, 'div', `pod-first${first.position === b.myPosition ? ' me' : ''}`), text = hallEl(doc, 'div'), name = hallEl(doc, 'div', 'who');
       who(first, name);
       const pts = hallEl(doc, 'div', 'pts', tr('ui.seasons.points', { n: num(first.score) })); pts.appendChild(hallEl(doc, 'span', `lvl lvt${Number(first.difficulty)}`, levelName(first.difficulty)));
-      text.append(name, pts); top.append(htmlEl(doc, 'span', 'medal-slot', medalSvg(1)), text); box.appendChild(top);
+      text.append(name, pts); top.append(posDisc(doc, 1), text); box.appendChild(top);
     }
     const ol = hallEl(doc, 'ol', 'pod-rest');
     for (const p of rest) {
       const li = hallEl(doc, 'li', p.position === b.myPosition ? 'me' : ''), name = hallEl(doc, 'span', 'who'), pts = hallEl(doc, 'span', 'pts', num(p.score));
       who(p, name); pts.appendChild(hallEl(doc, 'span', `lvl lvt${Number(p.difficulty)}`, levelName(p.difficulty)));
-      li.append(htmlEl(doc, 'span', 'medal-slot', medalSvg(p.position)), name, pts); ol.appendChild(li);
+      li.append(posDisc(doc, p.position), name, pts); ol.appendChild(li);
     }
     box.appendChild(ol);
     return box;
@@ -185,11 +187,12 @@ export function setupSeasons({ focusIn, service, onBoard = () => {}, onCard = ()
     acts.appendChild(board);
     if (seasons.length > 1) { const idx = button('btn btn-secondary', tr('ui.seasons.pick'), 'seasons-pick', LIST_SVG); idx.addEventListener('click', () => index()); acts.appendChild(idx); }
     root.append(main, acts);
-    view.replaceChildren(root);
+    view.replaceChildren(root); fit();
     if (focus) focusIn(menu, focus);
   }
   // every closed season by year: its winner, the player's place («—» where they did not publish); the shown one cream
   function index() {
+    hold(); // the index scrolls inside the detail's height
     const root = hallEl(doc, 'div', 'hall-view hall-index'), head = hallEl(doc, 'div', 'hall-idx-head');
     const backBtn = htmlEl(doc, 'button', 'sheet-x hall-back', BACK_SVG); backBtn.type = 'button'; backBtn.id = 'seasons-back';
     backBtn.setAttribute('aria-label', tr('ui.seasons.backTo', { name: seasons[pick].name })); backBtn.addEventListener('click', () => detail('seasons-pick'));
@@ -204,7 +207,7 @@ export function setupSeasons({ focusIn, service, onBoard = () => {}, onCard = ()
       row.type = 'button'; if (i === pick) { row.setAttribute('aria-current', 'true'); row.id = 'seasons-current'; }
       const main = hallEl(doc, 'span', 'r-main'), name = hallEl(doc, 'span', 'r-name', s.name), sub = hallEl(doc, 'span', 'r-sub');
       if (s.boards.length > 1) name.appendChild(hallEl(doc, 'span', 'r-two', tr('ui.seasons.twoBalls', { n: s.boards.length })));
-      if (win) { sub.appendChild(htmlEl(doc, 'span', 'medal-slot', medalSvg(1))); appendName(doc, sub, { alias: win.alias, tag: win.tag ?? null, verified: win.verified }); } // a row is one button: no card from here
+      if (win) { sub.appendChild(posDisc(doc, 1)); appendName(doc, sub, { alias: win.alias, tag: win.tag ?? null, verified: win.verified }); } // a row is one button: no card from here
       main.append(name, sub);
       const side = hallEl(doc, 'span', 'r-side');
       if (me) side.append(hallEl(doc, 'b', '', num(me.myPosition)), hallEl(doc, 'small', '', tr('ui.seasons.ofTotal', { n: num(me.players) })));
@@ -227,10 +230,11 @@ export function setupSeasons({ focusIn, service, onBoard = () => {}, onCard = ()
     board.setAttribute('aria-haspopup', 'dialog');
     board.addEventListener('click', () => { menu.close(); onBoard(figure, null); });
     acts.appendChild(board); root.append(mid, acts);
-    view.replaceChildren(root);
+    view.replaceChildren(root); fit();
   }
   async function load() {
     const r = ++req;
+    if (view.firstChild) hold();
     view.replaceChildren(); say(tr('ui.seasons.loading'), { spin: true });
     picker.paint(figure);
     const shown = minLoad > 0 ? new Promise(res => setTimeout(res, minLoad)) : null;
@@ -252,7 +256,7 @@ export function setupSeasons({ focusIn, service, onBoard = () => {}, onCard = ()
   return {
     open(which = 'mulassa-valls', onBack = null) {
       if (!service.configured || menu.open) return;
-      figure = which; back = onBack; picker.show(false);
+      figure = which; back = onBack; picker.show(false); view.replaceChildren(); fit(); // the last visit's view: not its height
       menu.showModal(); focusIn(menu, 'seasons-close');
       load();
     },
@@ -312,7 +316,7 @@ export function setupSeasonEnd({ focusIn, service, store, onHall = () => {}, doc
     hallFigure = (top ?? boards[0]).figure;
     const art = htmlEl(doc, 'div', 'se-art-box', top ? podiumArt(top.figure, top.entry.myPosition) : garlandArt(hallFigure));
     const cheer = hallEl(doc, 'h3', `se-cheer${top ? ' gold' : ''}`, tr(!top ? 'ui.seasons.thanks' : top.entry.myPosition === 1 ? 'ui.seasons.first' : 'ui.seasons.podium'));
-    // the receipt: a row per board, its place on the right (a medal on a podium)
+    // the receipt: a row per board, its place on the right (the podium's disc on a podium)
     const table = hallEl(doc, 'table', 'se-ledger'), tbody = hallEl(doc, 'tbody'), headRow = hallEl(doc, 'tr'), thead = hallEl(doc, 'thead');
     table.appendChild(hallEl(doc, 'caption', '', tr('ui.seasons.ledger')));
     for (const t of [tr('ui.seasons.colFigure'), tr('ui.seasons.colPlace')]) { const th = hallEl(doc, 'th', '', t); th.setAttribute('scope', 'col'); headRow.appendChild(th); }
@@ -323,13 +327,13 @@ export function setupSeasonEnd({ focusIn, service, store, onHall = () => {}, doc
       if (entry.previousDance) nm.appendChild(hallEl(doc, 'small', '', ` ${tr('ui.seasons.previousTag')}`));
       cell.append(htmlEl(doc, 'span', 'pix', pixelOf(figure)), nm); th.appendChild(cell);
       const td = hallEl(doc, 'td'), val = hallEl(doc, 'span', 'val');
-      if (entry.myPosition <= 3) val.appendChild(htmlEl(doc, 'span', 'medal-slot', medalSvg(entry.myPosition)));
+      if (entry.myPosition <= 3) val.appendChild(posDisc(doc, entry.myPosition)).setAttribute('aria-hidden', 'true'); // the number beside it says it
       val.append(hallEl(doc, 'b', '', num(entry.myPosition)), ' ', hallEl(doc, 'span', 'of', tr('ui.seasons.ofTotal', { n: num(entry.players) })));
       td.appendChild(val); trow.append(th, td); tbody.appendChild(trow);
     }
     table.append(thead, tbody);
     const now2 = htmlEl(doc, 'p', 'se-now', CAL_SVG), line = hallEl(doc, 'span');
-    const [pre, post] = trSplit('ui.seasons.now', 'name'); line.append(pre, hallEl(doc, 'b', '', open.name), post + seasonLine(open, now()).slice(open.name.length));
+    const [pre, post] = trSplit('ui.seasons.now', 'name'); line.append(pre, hallEl(doc, 'b', '', open.name), (post + seasonLine(open, now()).slice(open.name.length)).replace(/^ ·/, '\u00a0·')); // the «·» stays with the name: a wrap falls after it
     now2.appendChild(line);
     body.replaceChildren(art, cheer, table, now2);
     back = onBack;

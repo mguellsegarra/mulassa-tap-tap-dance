@@ -2,9 +2,10 @@
 export const LANG_KEY = 'ui-language-v1', SUGGESTED_KEY = 'ui-language-suggested';
 
 // Replaces only `lang`; `repte` and every other parameter (and the hash) stay as they are. Catalan is the default, so it clears the parameter.
-export function reloadUrl(href, code, base = 'ca') {
+// A saved choice (`persisted`) is the whole story: no `lang` in the address (a stale one would beat it). Only blocked storage keeps `?lang=` for this visit.
+export function reloadUrl(href, code, { persisted = true, base = 'ca' } = {}) {
   const url = new URL(href);
-  if (code === base) url.searchParams.delete('lang'); else url.searchParams.set('lang', code);
+  if (code === base || persisted) url.searchParams.delete('lang'); else url.searchParams.set('lang', code);
   return url.href;
 }
 

@@ -24,3 +24,4 @@ c) es,en translations (astra) ; d) review
 - 00:10 midnight timer fired + deleted (step 0 done). Integration steps 1-7 executed manually by orchestrator once F1 (UI fixes) and P1 (PDF tool) are done and check is green.
 - 01:20 STABLE: F1 done (high 383->71, rest preexisting B), check green, music same, PDF regenerated (14.9MB). Next: integrate into t3-b0a52b07.
 - 01:25 integration worker (Sonnet) running on t3-b0a52b07; backups /tmp/cs-backup-20261022*. Then: translate newkeys (astra x15), recheck at target, regen PDF there, launch video-inventory thread.
+- Marc 2026-10-22: no `&lang=` on prod URLs: challenge link and the Play button of /<code>/projecte/ drop it (share.js, seo-pages.mjs, tests/share.mjs, tests/seo.mjs, strategy/README/AGENTS updated); resolver still accepts a manual ?lang=.

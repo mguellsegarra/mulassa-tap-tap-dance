@@ -3,7 +3,7 @@
 // (src/ui/stats-view.js: four facts, the podiums as achievements, «Més estadístiques» unfolding the rest; never days,
 // streaks, errors per kind or dates) and a quiet line saying where the numbers come from. Loading, «no data» and errors
 // sit inside the sheet's fixed box.
-import { byId, num } from './sheet-kit.js';
+import { byId, num, posDisc } from './sheet-kit.js';
 import { tr } from '../i18n/messages.js';
 import { mulaSpinner } from './loader.js';
 import { appendName, GUEST } from './profile-notes.js';
@@ -67,7 +67,7 @@ export function setupCard({ focusIn, service, doc = document, now = () => Date.n
     const pic = el('span', 'card-from-pic');
     if (figure) pic.innerHTML = pixelSvg(portraitArt(figure), portraitPalette(figure), '#2a1a10');
     const v = el('span', 'card-from-v'), pos = Number(f.position), level = DIFFS[Number(f.difficulty)]?.name;
-    v.append(el('span', pos <= 3 ? `pos p${pos}` : 'pos', num(pos)), el('b', 'pts', tr('ui.card.points', { score: num(f.score) })));
+    v.append(posDisc(doc, pos), el('b', 'pts', tr('ui.card.points', { score: num(f.score) })));
     if (level) v.appendChild(el('span', `lvl lvl${Number(f.difficulty)}`, level));
     const t = el('span', 'card-from-t');
     t.append(el('span', 'card-from-k', [FIGURE_NAMES[f.figure], f.season].filter(Boolean).join(' · ')), v);

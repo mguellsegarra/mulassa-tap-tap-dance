@@ -4,7 +4,6 @@
 import { DIFFS } from '../game/chart.js';
 import { tr } from '../i18n/messages.js';
 import { fmtNum } from '../i18n/format.js';
-import { lang, DEFAULT_LANG } from '../i18n/locale.js';
 
 export const SITE = 'https://mulassa.cat/';
 export const SITE_LABEL = 'mulassa.cat'; // the line printed on the results card and the image
@@ -23,11 +22,7 @@ export const challengeUrl = (pct, diff, base = SITE, figureId = 'mulassa-valls')
   if (!challengeEligible({ figureId })) return base;
   const code = encodeChallenge(pct, diff);
   if (!code) return base;
-  if (lang() === DEFAULT_LANG) return `${base}?repte=${code}`; // Catalan links stay byte-identical
-  const u = new URL(base);
-  u.searchParams.set('repte', code);
-  u.searchParams.set('lang', lang());
-  return u.href;
+  return `${base}?repte=${code}`; // never a `lang`: the recipient's own saved choice or default decides (Marc, 2026-10-22)
 };
 // Junk is ignored (null): only "<0-100>-<0|1|2>"; a percentage over 100 is clamped, never trusted as more.
 export function parseChallenge(search) {

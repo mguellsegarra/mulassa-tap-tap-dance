@@ -5,6 +5,9 @@ export const byId = doc => id => doc.getElementById(id);
 export const num = v => fmtNum(Math.round(Number(v))); // points the Catalan way: 12.340
 // tr() with one slot kept for a DOM node: the text before and after it
 export const trSplit = (key, slot, params = {}) => tr(key, { ...params, [slot]: '\u0000' }).split('\u0000');
+// A place: 1-2-3 as the solid medal (Marc, 2026-10-22: the selector's ribbon medal, solid, everywhere): the disc in its metal
+// (base.css .pos.p1-3: the drawing is the background, the number stays text), sized by --pos-size; 4th on a plain number
+export function posDisc(doc, n, text = num(n)) { const e = doc.createElement('span'); e.className = n >= 1 && n <= 3 ? `pos p${n}` : 'pos'; e.textContent = text; return e; }
 export const statusLine = el => (text, ok = false) => { el.textContent = text; el.classList.toggle('ok', ok); };
 // A button's label; `spin` puts the plain ring in front (index.html .btn-spin). Working buttons are disabled and spin.
 export function setButton(doc, btn, label, disabled = false, spin = disabled) {

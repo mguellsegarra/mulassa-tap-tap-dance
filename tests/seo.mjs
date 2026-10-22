@@ -74,8 +74,8 @@ try {
       assert(h.includes(`href="/projecte/index.md"`) === (l === 'ca'), `${l} md twin is its own`);
     }
     const xx = await readFile(join(multi, 'xx/projecte/index.html'), 'utf8');
-    assert(xx.includes('href="/?lang=xx">Play xx</a>'), 'Play links to ?lang=');
-    assert(!xx.includes('lang=ca') && !/\/\?lang=xx[^"]*"[^>]*hreflang/.test(xx), '?lang is never an indexed edition');
+    assert(xx.includes('href="/">Play xx</a>'), 'Play links to / (the saved language decides)');
+    assert(!xx.includes('?lang='), 'no ?lang= link on public pages');
     const sm = await readFile(join(multi, 'sitemap.xml'), 'utf8');
     for (const url of ['https://mulassa.cat/', ...Object.values(hrefs)]) assert(sm.includes(`<loc>${url}</loc>`), url);
     assert((await readFile(join(multi, 'llms.txt'), 'utf8')).includes('(https://mulassa.cat/xx/projecte/index.md)'));

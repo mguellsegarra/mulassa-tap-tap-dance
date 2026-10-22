@@ -7,6 +7,7 @@ import { encodeChallenge, challengeUrl, parseChallenge, stripChallenge, challeng
   bragWorthy, shareMode, linkMode, shareLinks, isCancel, SITE, HASHTAGS, MULA } from '../src/services/share.js';
 import { snapshotResult, EXPECTED_JUDGMENTS } from '../src/services/leaderboard-rules.js';
 import { titleLayout, CHIP } from '../src/hud/title-layout.js';
+import { setLang } from '../src/i18n/locale.js';
 
 // --- the challenge link: only "<0-100>-<0|1|2>", clamped, junk ignored
 assert.equal(encodeChallenge(94.4, 2), '94-2');
@@ -417,8 +418,10 @@ console.log('share: challenge link, captions, fallbacks, eligibility, privacy an
 }
 console.log('share poster: format, figure identity, scores, rank validation, optional-row centering and fonts ok');
 
-// --- language in the challenge link: only outside Catalan; stripChallenge keeps it
+// --- language in the challenge link: never; stripChallenge keeps a visitor's own
 {
   assert.equal(challengeUrl(94, 2), 'https://mulassa.cat/?repte=94-2', 'ca: no lang, byte-identical');
   assert.equal(stripChallenge('https://x.test/?lang=es&repte=94-2'), '/?lang=es', 'lang survives stripChallenge');
+  for (const code of ['es', 'en', 'pseudo']) { setLang(code); assert(!challengeUrl(94, 2).includes('lang'), `${code}: the challenge link never carries lang`); }
+  setLang('ca');
 }

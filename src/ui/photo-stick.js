@@ -6,12 +6,13 @@
 import { PHOTO, PHOTO_RUN, photoPress, photoRelease } from '../game/photo-control.js';
 import { STICK, TOUCH, touchDown, touchMove, touchUp, touchReset } from '../game/photo-touch.js';
 import { PHOTO_ICONS, swapArt } from './photo-icons.js';
+import { tr } from '../i18n/messages.js';
 
 const PS_CODES = ['Space', 'KeyQ', 'KeyE', 'KeyR', 'Tab'];
 export const touchEl = document.createElement('div');
 touchEl.id = 'photo-touch';
 touchEl.hidden = true;
-touchEl.innerHTML = '<div class="ps-base" aria-hidden="true"><div class="ps-knob"></div></div><div class="ps-actions" role="group" aria-label="Accions">'
+touchEl.innerHTML = '<div class="ps-base" aria-hidden="true"><div class="ps-knob"></div></div><div class="ps-actions" role="group" aria-label="' + tr('ui.photo.actions') + '">'
   + PS_CODES.map(code => `<button type="button" class="ps-btn${code === 'Tab' ? ' ps-swap' : ''}" data-code="${code}"></button>`).join('') + '</div>';
 document.getElementById('viewmode').after(touchEl);
 const psBase = touchEl.querySelector('.ps-base'), psKnob = touchEl.querySelector('.ps-knob'), psButtons = [...touchEl.querySelectorAll('.ps-btn')];
@@ -41,7 +42,7 @@ export function showStick(on, labels, id) {
   touchEl.hidden = !on;
   if (!labels || id === psFor) return;
   psFor = id;
-  const name = { Space: 'salta', Tab: 'canvia figura' }, icons = PHOTO_ICONS[id] ?? {};
+  const name = { Space: tr('ui.photo.act.jump'), Tab: tr('ui.photo.act.swap') }, icons = PHOTO_ICONS[id] ?? {};
   for (const [key, label] of labels) name['Key' + key] = label;
   for (const b of psButtons) {
     b.setAttribute('aria-label', name[b.dataset.code] ?? ''); // icons only, as phone action games; the ? help names them

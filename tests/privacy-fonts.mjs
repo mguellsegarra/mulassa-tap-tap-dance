@@ -9,8 +9,10 @@ assert(!/cloudflareinsights|beacon\.min\.js/.test(html), 'no manual analytics sn
 const fonts = [...html.matchAll(/url\(\/fonts\/([\w-]+\.woff2)\)/g)].map(m => m[1]);
 assert(fonts.length >= 4, 'Baloo 2 and Jersey 10 are declared locally');
 for (const f of new Set(fonts)) assert(existsSync(new URL(`../public/fonts/${f}`, import.meta.url)), `missing font ${f}`);
-for (const family of ['Baloo 2', 'Jersey 10']) {
-  assert(html.includes(`font-family: '${family}'`), `${family} @font-face`);
+for (const family of ['Baloo 2', 'Jersey 10', 'Nunito']) {
+  if (family === 'Nunito') { // Cyrillic: Nunito's file answers to the 'Baloo 2' family name, so the licence is checked by file
+    assert(/font-family: 'Baloo 2'; font-weight: 600;[^}]*\/fonts\/nunito-cyrillic\.woff2/.test(html), 'Nunito Cyrillic face');
+  } else assert(html.includes(`font-family: '${family}'`), `${family} @font-face`);
   const licence = new URL(`../public/fonts/OFL-${family.replace(' ', '-')}.txt`, import.meta.url);
   assert(readFileSync(licence, 'utf8').includes('SIL Open Font License'), `${family} keeps its OFL licence`);
 }

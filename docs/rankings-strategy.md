@@ -107,7 +107,7 @@ El que segueix descriu producció (`master`), i diu quan una cosa només és a l
 L'HTML és `no-cache` i no hi ha service worker. Els clients antics que poden durar dies són les pestanyes obertes i,
 sobretot, les apps afegides a la pantalla d'inici d'iOS.
 
-**Proves de base de dades**: PGlite en memòria (`tests/short-ranking-db.mjs`, `tests/temporary-profiles-db.mjs`...),
+**Proves de base de dades**: PGlite en memòria (`tests/short-ranking-db.mjs`, `tests/guest-profiles-db.mjs`...),
 dins `npm run check`.
 
 **Còpies**: `docs/db-backup.md`. Les còpies manuals i una restauració local s'han provat. El programador automàtic no
@@ -161,8 +161,8 @@ s'ha verificat, així que abans d'una migració cal una còpia manual.
 CLASSIFICACIÓ
 [🐴 Mulassa ⌄]                      ← botó: obre «Tria figura» dins el mateix full
 Tardor 2026 · queden 23 dies
-┃ Posició 48 de 119          Ves al capdamunt
-┃ El millor resultat de cada jugador, ordenat per punts.
+┃ Posició 48 de 119          ↑ Al capdamunt
+┃ El millor resultat de cada participant, ordenat per punts.
  46. DracDeValls_2026#1110   NORMAL    70.486
  47. Baldufa#1103            NORMAL    69.886
  48. Retall ✓  TU            DIFÍCIL   69.286
@@ -172,7 +172,7 @@ Tardor 2026 · queden 23 dies
 
 - Una classificació per figura i temporada: el millor resultat de cada jugador sobre els tres nivells, per punts.
   Cada fila diu el nivell. Una sola llista, en pàgines de 50, que s'obre a la fila del jugador. No hi ha pestanyes
-  "Tots" i "On soc" (Marc, 21/10/2026): un enllaç porta al capdamunt i torna a la posició, segons on sigui la llista.
+  "Tots" i "On soc" (Marc, 21/10/2026): un enllaç porta al capdamunt i torna a la posició, segons on sigui la llista: «Al capdamunt» o «A la meva fila», amb una fletxa dibuixada cap on va.
   Si la fila del jugador queda més avall de la primera pàgina, es veu després d'un buit que s'omple amb «Carrega'n més».
 - La figura es tria amb un botó (retrat, nom i fletxa) que obre «Tria figura» dins el mateix full; Escape o × hi tornen.
 - Temporada buida: «Encara no hi ha resultats», el retrat de la figura i què cal fer («Juga amb el Drac i publica el
@@ -460,14 +460,26 @@ Validacions, sobre l'estat resultant de cada bucket:
   i el nivell del bucket. Una caiguda pot tenir tots els judicis: el judici es compta abans que l'ànim faci caure la
   mulassa (`judge.js`), així que es pot caure a l'última nota.
 - `guapa ≤ guapaTotal`, i `guapaTotal` no supera les GUAPA d'una partida sencera per `completed + collapsed`.
+- `balloons` i `holds` no superen els GLOBUS i els MANTÉN del gràfic del nivell per `completed + collapsed`
+  (`balloon_count`, `hold_count` a `versions`, comptats amb `makeDanceChart` sobre `song.json` i `song-drac.json`:
+  2 GLOBUS a tots els nivells; MANTÉN 0/5/5 a la Mulassa i 0/1/1 al Drac). La suma dels `errors` no supera
+  `good + miss`: `judge.js` posa cada nota no perfecta, llevat dels GLOBUS, en un sol motiu.
 - `bestCombo` no supera els judicis del nivell. El `best` passa les mateixes regles que `submit_result`.
-- Temps: el **primer enviament** de cada dispositiu a cada perfil (marcat amb `imported`, per a tots els buckets alhora) porta tal qual el temps de les partides anteriors (decisió 27), que el
-  servidor no pot comprovar. L'única regla és de coherència i val sempre: `seconds` no supera `runs` per la durada de
-  la cançó d'aquell bucket. Després del primer enviament, el temps nou tampoc no pot créixer més que el temps real
-  des de l'últim enviament.
-- Dies: dates no futures (amb un dia de marge pels fusos) i no anteriors a la data de llançament.
+- Temps: `seconds` no supera `runs` per la durada de la cançó d'aquell bucket. A més, el que creixen `seconds` i
+  `runs` en un enviament, sumat de tots els buckets (pràctica inclosa) i comptant cada partida com a mínim 1 s, no pot
+  passar del temps real des de l'últim enviament d'aquell dispositiu. El mínim és d'1 s perquè una partida deixada
+  durant el compte enrere arriba amb 0 s (`stats.js`), però ha calgut un toc per començar-la i un altre per sortir.
+  Així `runs`, que surt a la fitxa pública, no pot créixer més de pressa que el rellotge. El **primer enviament** de
+  cada dispositiu a cada perfil (el servidor el reconeix perquè encara no té la fila de `player_devices` d'aquest
+  dispositiu i perfil; `imported` només és la marca local del dispositiu; val per a tots els buckets alhora) porta
+  tal qual el temps de les partides anteriors (decisió 27), amb el mateix pressupost comptat des de les 00:00 (hora de
+  Madrid) del primer dia de la Temporada 1: les estadístiques surten amb ella i abans no es podia jugar res que
+  comptés. Passar-se'n és `leaderboard_stats_time_limit`, que el client torna a provar més tard (no és una dada
+  dolenta); la resta de regles són `leaderboard_invalid_stats`.
+- Dies: dates no futures (amb un dia de marge pels fusos) i no anteriors al primer dia de la Temporada 1 (`starts_at` de la temporada 1, hora de Madrid: el moment en què s'aplica la migració).
 
-Això evita els valors impossibles però no demostra res: les estadístiques es poden falsejar com els punts. La fitxa
+Això talla els valors impossibles (més partides que temps, més GLOBUS, MANTÉN, judicis o errors dels que té una
+partida), però no demostra res: dins d'aquests límits les estadístiques es poden falsejar com els punts. La fitxa
 pública no ho anota (Marc, 21/10/2026: la nota sobrava). No hi ha cap rànquing d'estadístiques.
 
 ### Privadesa
@@ -625,6 +637,9 @@ crear, com ja feia `202609300004`. Supabase recarrega l'esquema de PostgREST amb
 
 ### Pla pas a pas
 
+El pla detallat de producció (còpia, recomptes en lectura, ordre, verificació, Sentry i rollback de cada pas) i el
+resultat de l'assaig amb Postgres real són a [`docs/rankings-rollout.md`](rankings-rollout.md).
+
 1. **Local**: escriure la migració i `tests/seasons-db.mjs` amb PGlite, seguint `tests/short-ranking-db.mjs`.
    Aplicar totes les migracions i comprovar els contractes de la llista de sota. `npm run check` en verd.
 2. **Assaig amb Supabase local** (`supabase start`): totes les migracions, `tests/fixtures/seed-leaderboard-2026.sql`
@@ -652,7 +667,9 @@ crear, com ja feia `202609300004`. Supabase recarrega l'esquema de PostgREST amb
 - `verified` és a totes les respostes amb sobrenom, i cap porta l'adreça ni el `user_id`.
 - `anon` no pot llegir `seasons` ni `player_stats` directament ni cridar `submit_result` o `merge_stats`.
 - `merge_stats`: repetició idempotent, valors que baixen rebutjats, claus desconegudes rebutjades, límit de dispositius,
-  estat resultant incoherent rebutjat, primer enviament amb temps importat acceptat si és coherent.
+  estat resultant incoherent rebutjat (GLOBUS, MANTÉN o errors de més; partides sense temps real al darrere),
+  primer enviament amb temps importat acceptat si és coherent; les partides reals més curtes (caiguda als pocs segons,
+  sortida al compte enrere, pràctica) i les més llargues (DIFÍCIL sencer de cada cançó) passen.
 - `submit_result` torna exactament una fila, la de la temporada on ha publicat, encara que el jugador en tingui d'altres.
 - `season_for`: una versió activa no va mai a la 0; el primer dia d'un trimestre sense fila la crea, tant en publicar
   com en obrir la classificació buida; dues temporades normals no es poden encavalcar; una versió retirada a mig
@@ -780,8 +797,8 @@ per als assajos amb Supabase local, els tests de concurrència i la integració 
   convé que la fase 2 surti al mateix temps que el canvi de text.
 - **Temporada 0 oberta per sempre.** Un client antic pot moure el podi de la 0. Si un dia es vol tancar, és una
   migració d'una línia.
-- **Temps importat.** El primer enviament d'estadístiques porta temps que el servidor no pot comprovar. La regla de
-  coherència només talla els valors impossibles. És el mateix risc que els punts, i la fitxa pública ja ho avisa.
+- **Temps importat.** El primer enviament d'estadístiques porta temps que el servidor no pot comprovar. Les regles
+  només fiten partides i temps pel temps real des de l'inici de la Temporada 1 (fins a 8 dispositius per perfil). És el mateix risc que els punts, i la fitxa pública ja ho avisa.
 
 ## 12. Com s'hi ha arribat (preguntes i respostes)
 

@@ -1,5 +1,8 @@
 // DOM handles and the loader singleton the other modules look up here.
 import { setupLoader } from './loader.js';
+import { applyI18n } from '../i18n/apply-dom.js';
+
+applyI18n(document); // the static markup in the active language, before any module reads or rewrites it
 
 export const pauseMenu = document.getElementById('pause-menu');
 export const howtoMenu = document.getElementById('howto-menu'); // "Com es juga?": the notes and their buttons, off the title screen

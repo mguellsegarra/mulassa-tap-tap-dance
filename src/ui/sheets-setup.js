@@ -22,6 +22,7 @@ import { setupProfile } from './profile-ui.js';
 import { setupFeedback, setupNudge } from './feedback-ui.js';
 import { nudgePlace } from '../hud/title-layout.js';
 import { sheets } from './sheets.js';
+import { tr } from '../i18n/messages.js';
 import { pauseMenu, howtoMenu, settingsMenu, settingsEl, musicEl, howtoEl, feedbackEl, privacyMenu, retryEl } from './handles.js';
 import { G, chip, menuMusic, clock, setMenuSound, setSelectedFigure, CHALLENGE } from '../game/state.js';
 import { showPauseOptions } from './pause.js';
@@ -29,6 +30,7 @@ import { togglePause, requestPauseAction } from './pause-actions.js';
 import { startPractice, startGame, toTitle, endPractice, choose, startWatch } from '../game/flow.js';
 import { setupWatch } from './watch-ui.js';
 import { setupFreeMusic } from './free-music.js';
+import { setupLang } from './lang-ui.js';
 import { focusIn, keyboardNav } from './focus.js';
 import { offsetMs, FINAL, FINALE_T, setOffsetMs, CALM, DEMO } from '../core/env.js';
 import { sheetUp, viewMode, viewBtn, setView } from './controls.js';
@@ -86,7 +88,7 @@ const sync = setupSync({
 });
 sheets.sync = sync;
 let syncBack = null;
-const fmtOffset = v => `Ara: ${v > 0 ? '+' : v < 0 ? '−' : ''}${Math.abs(Math.round(v))} ms`;
+const fmtOffset = v => tr('ui.sync.now', { value: `${v > 0 ? '+' : v < 0 ? '−' : ''}${Math.abs(Math.round(v))} ms` });
 function openSettings() {
   if ((G.state !== 'title' && G.state !== 'select') || settingsMenu.open) return;
   document.getElementById('settings-offset').textContent = fmtOffset(offsetMs);
@@ -152,7 +154,6 @@ if (FINAL?.review != null) import('../dev/account-review.js').then(m => m.startR
   openProfile: () => account.open(), openBoard: (o = {}) => board.openBoard(null, o), openSeasons: f => seasons.open(f),
   showSeasonEnd: async () => { const n = await seasonEnd.news(); if (!n) throw new Error('no ended season to tell'); seasonEnd.show(n); },
   openCard: (alias, tag, from) => card.open({ alias, tag, from }), chooseNameReady: () => until(() => profile.choosing) }));
-document.getElementById('settings-board').addEventListener('click', () => { settingsMenu.close(); board.openBoard(() => { openSettings(); focusIn(settingsMenu, 'settings-board'); }); });
 // The player's profile (src/ui/profile-ui.js): recover / link an e-mail / choose a clean name / sign out / delete, from the block
 // at the top of «Perfil» (src/ui/account-ui.js, the corner row's person); closing a step goes back to Perfil. «Recupera’l» on the
 // publish sheet recovers, then the publication opens again. ?final / ?mock: the same sheets over the mock service and the
@@ -183,15 +184,16 @@ service.onAccount?.(() => { refreshIdentity(service, kv, { fresh: true }).then((
 document.addEventListener('close', () => greeting.poke(), true); // dialogs' close does not bubble
 settingsMenu.addEventListener('close', () => { if (!sync.open && !board.open && (G.state === 'title' || G.state === 'select')) document.activeElement?.blur(); });
 // «Bústia de la plaça» (src/ui/feedback-ui.js): the title's speech bubble, next to the ⚙; Turnstile is board-ui.js's (one widget)
-const feedback = setupFeedback({ focusIn, captcha: board.captcha, onOpen: () => nudge.done() });
+const feedback = setupFeedback({ focusIn, captcha: board.captcha, onOpen: () => nudge.done(), confirmedEmail: async () => (await service.identity()).email });
 sheets.feedback = feedback;
 const select = setupSelect({ store, keyboard: () => keyboardNav, busy: () => sheetUp() || viewMode, reduced: () => CALM.matches,
-  firstLevel: CHALLENGE?.diff ?? null, demo: DEMO, getError: () => G.audioError, standing: f => board.standing(f), ranked: board.configured, onBoard: f => board.openBoard(() => select.refocus(), { figure: f.id }), onCard: p => card.open(p, () => select.refocus()),
+  firstLevel: CHALLENGE?.diff ?? null, demo: DEMO, getError: () => G.audioError, standing: f => board.standing(f), levelPodium: (f, l) => board.levelPodium(f, l), ranked: board.configured, onBoard: f => board.openBoard(() => select.refocus(), { figure: f.id }), onCard: p => card.open(p, () => select.refocus()),
   sfx: k => chip?.sfx(k), onSelect: f => { setSelectedFigure(f); greeting.greet(); },
   onPlay: (level, figure) => { setSelectedFigure(figure); choose(level); }, onFree: figure => { setView(true); if (viewMode) sheets.music.playFigure(figure.id); },
   onHowto: () => { howtoMenu.showModal(); focusIn(howtoMenu, 'howto-ok'); },
   onWrite: draft => feedback.show(() => select.refocus(), draft) });
 sheets.select = select;
+sheets.lang = setupLang({ store, state: () => G.state }); // the language dropdown and the one-time suggestion
 sheets.watch = setupWatch({ select, busy: () => sheetUp() || viewMode });
 howtoMenu.addEventListener('close', () => select.refocus());
 const nudge = setupNudge({ store, button: document.getElementById('feedback'), onTitle: () => G.state === 'title',
@@ -210,7 +212,7 @@ function placeNudge() {
 // The speaker controls every menu sound; the saved preference never silences a run.
 const musicBtn = document.getElementById('music');
 function showMusic() {
-  const label = menuMusic ? 'Silencia el so del menú' : 'Activa el so del menú';
+  const label = tr(menuMusic ? 'ui.music.mute' : 'ui.music.unmute');
   musicBtn.dataset.state = menuMusic ? 'on' : 'off';
   musicBtn.setAttribute('aria-label', label); musicBtn.title = label;
 }

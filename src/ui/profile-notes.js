@@ -1,10 +1,11 @@
 // How a player's name is shown, and what a guest profile is told (docs/rankings-strategy.md §6). A confirmed address earns
 // the check (it means only that) and a clean name; a guest («Convidat», no confirmed address) keeps the name it chose plus
 // four digits («Timbaler#3821»), drawn quieter and without the check. Guests don't expire: they live in this browser.
-export const VERIFIED = 'Correu confirmat';
-export const GUEST = 'Convidat';
-export const GUEST_TEXT = 'Ets convidat. Si esborres les dades del navegador, perdràs el perfil. Confirma el correu per guardar-lo.';
-export const GUEST_ROW = 'Confirma el correu per no perdre el perfil'; // under a guest's own row on the board
+import { tr } from '../i18n/messages.js';
+export const VERIFIED = tr('ui.profile.verified');
+export const GUEST = tr('ui.profile.guest');
+export const GUEST_TEXT = tr('ui.profile.guestText');
+export const GUEST_ROW = tr('ui.profile.guestRow'); // under a guest's own row on the board
 
 // a scalloped seal, the shape people read as «verified» (Marc, 2026-10-20: «estil Twitter»)
 const CHECK_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path class="seal" d="M12 2.7Q17.1-.2 18.6 5.4Q24.2 6.9 21.3 12Q24.2 17.1 18.6 18.6Q17.1 24.2 12 21.3Q6.9 24.2 5.4 18.6Q-.2 17.1 2.7 12Q-.2 6.9 5.4 5.4Q6.9-.2 12 2.7z"/><path d="m7.8 12.2 2.9 2.9 5.6-5.9"/></svg>';
@@ -48,13 +49,12 @@ export function deviceRisk({ ua = '', standalone = false, touch = 0, persistent 
     return /iPhone|iPad|iPod/.test(ua) || touch > 1 ? 'ios' : 'safari'; // iPadOS says «Macintosh»: its touch points tell
   return null;
 }
-const ONLY_HERE = 'Aquest perfil només viu en aquest navegador.';
 // Safari clears a site's storage after some days without a visit (its own rule, not the game's)
 export const DEVICE_NOTES = Object.freeze({
-  ios: `${ONLY_HERE} Safari l’esborra si estàs uns dies sense jugar: afegeix el joc a la pantalla d’inici.`,
-  safari: `${ONLY_HERE} Safari l’esborra si estàs uns dies sense jugar.`,
-  inapp: `${ONLY_HERE} Dins d’una app es perd fàcilment: juga des del navegador.`,
-  private: `${ONLY_HERE} Com que no desa dades, es perdrà en tancar la pàgina.`,
+  ios: tr('ui.profile.device.ios'),
+  safari: tr('ui.profile.device.safari'),
+  inapp: tr('ui.profile.device.inapp'),
+  private: tr('ui.profile.device.private'),
 });
 export const browserEnv = () => {
   const nav = globalThis.navigator ?? {};

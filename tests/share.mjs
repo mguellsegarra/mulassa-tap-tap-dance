@@ -121,8 +121,8 @@ assert(/id="results-share" type="button" class="btn btn-secondary"[^>]*><svg/.te
 // then two small shortcuts (WhatsApp · X), Tanca as a link; every control a .btn (or the .switch-row checkbox)
 assert(share.indexOf('id="share-preview"') < share.indexOf('id="share-image"'), 'the card preview is the hero, before the actions');
 assert.equal((share.match(/btn-primary/g) || []).length, 1, 'one primary action');
-assert(/<button id="share-image"[^>]*class="btn btn-primary"[^>]*>(<svg[^>]*>.*?<\/svg>){2}<span id="share-image-label">/.test(share), 'primary: share / save icons first, then its label');
-assert(/class="share-seg" role="group"/.test(share) && /id="share-format-story"[^>]*aria-pressed="true">Història \(9:16\)</.test(share) && /id="share-format-feed"[^>]*>Publicació \(4:5\)</.test(share), 'Història (9:16) / Publicació (4:5): a segmented toggle');
+assert(/<button id="share-image"[^>]*class="btn btn-primary"[^>]*>(<svg[^>]*>.*?<\/svg>){2}<span id="share-image-label"[^>]*>/.test(share), 'primary: share / save icons first, then its label');
+assert(/class="share-seg" role="group"/.test(share) && /id="share-format-story"[^>]*aria-pressed="true"[^>]*>Història \(9:16\)</.test(share) && /id="share-format-feed"[^>]*>Publicació \(4:5\)</.test(share), 'Història (9:16) / Publicació (4:5): a segmented toggle');
 assert(!/>Story<|Instagram 4:5/.test(share), 'Catalan format names with the ratio (Marc, 2026-10-18), no «Story» / «Instagram 4:5»');
 assert(/<p id="share-note" class="share-note" role="status" hidden>/.test(share) && share.indexOf('id="share-note"') > share.indexOf('id="share-title"'), 'after publishing: the place line under the title');
 assert(/<div class="share-foot"><button id="share-privacy"/.test(share), 'Privadesa alone at the foot (Tanca is the X, top right)');
@@ -131,15 +131,15 @@ const direct = share.match(/<a id="share-(?:whatsapp|x)" class="btn btn-link btn
 assert.equal(direct.length, 2, 'WhatsApp · X: quiet icon + label text links (no outline)');
 // image first (Marc, 2026-09-28): the primary is the image alone; the text + link is a quiet area under it
 const linkArea = share.slice(share.indexOf('class="share-links"'), share.indexOf('class="share-foot"'));
-assert(/<div class="share-links" role="group" aria-labelledby="share-links-label">\s*<p id="share-links-label" class="share-links-label">O envia el missatge:<\/p>/.test(share)
+assert(/<div class="share-links" role="group" aria-labelledby="share-links-label">\s*<p id="share-links-label" class="share-links-label"[^>]*>O envia el missatge:<\/p>/.test(share)
   && share.indexOf('id="share-image"') < share.indexOf('class="share-links"') && share.indexOf('id="share-more"') > share.indexOf('id="share-image"'),
   'under the ONE primary: a muted «O envia el missatge:» and its links');
-assert(/<button id="share-more" type="button" class="btn btn-link btn-compact" data-mode="share"><svg class="line ico-more"[^>]*>.*?<\/svg><svg class="line ico-copy"[^>]*>.*?<\/svg><span id="share-more-label">Altres<\/span><\/button>/.test(linkArea),
+assert(/<button id="share-more" type="button" class="btn btn-link btn-compact" data-mode="share"><svg class="line ico-more"[^>]*>.*?<\/svg><svg class="line ico-copy"[^>]*>.*?<\/svg><span id="share-more-label"[^>]*>Altres<\/span><\/button>/.test(linkArea),
   'Més…: a neutral share icon (a link icon when it copies), the same quiet link');
 assert(!/btn-secondary|btn-primary/.test(linkArea), 'the link area has no outlined or filled buttons: clearly lesser than the primary');
 assert(/\.share-links-label \{[^}]*color: #e8d8b8a6; font-size: 14px/.test(html), 'the label is small and muted');
 assert.equal((share.match(/<(?:button|a) /g) || []).length, 8, 'Història · Publicació · Comparteix · WhatsApp · X · Més… · Privadesa · the X: nothing more');
-assert(/<button id="share-close" type="button" class="sheet-x" aria-label="Tanca"><svg/.test(share), 'Tanca: the round X, top right');
+assert(/<button id="share-close" type="button"[^>]*class="sheet-x" aria-label="Tanca"><svg/.test(share), 'Tanca: the round X, top right');
 assert(!/<button(?![^>]*class="(?:btn|sheet-x))/.test(share) && !/<a (?![^>]*class="btn)/.test(share), 'every control is a .btn');
 assert(/\.btn-compact \{[^}]*min-width: 44px; min-height: 44px/.test(html) && /\.share-seg \{/.test(html), 'the compact link is part of the .btn component, a 44 px target; the toggle has its style');
 // the apps' own marks, filled (Simple Icons), not stroke look-alikes
@@ -397,6 +397,17 @@ console.log('share: challenge link, captions, fallbacks, eligibility, privacy an
     assert.equal(discs.includes(16), verified, `${alias}: the check only for a confirmed address`);
     assert.equal(name[1] < 540, verified, 'the name and its check are centred together');
   }
+  { // a rank line too wide for the ticket breaks in two half-size lines (a space-less run just shrinks); one that fits stays a single call
+    const run = per => { const calls = [], fonts = []; let font = '';
+      const c = new Proxy({ canvas: {} }, { get: (t, k) => k in t ? t[k] : k === 'measureText' ? s => ({ width: String(s).length * per * +/(\d+(?:\.\d+)?)px/.exec(font)[1] / 32 }) : k === 'fillText' ? (s, x, y) => calls.push([String(s), y, font]) : k.startsWith('create') ? () => ({ addColorStop() {} }) : () => {}, set: (t, k, v) => (k === 'font' && (font = v), t[k] = v, true) });
+      drawCard(c, 'feed', { figureId: 'mulassa-valls', alias: '', rank: { pos: 12, total: 86 }, score: 12345, diff: 2, diffName: 'DIFÍCIL', pct: 92, maxCombo: 100 }, null);
+      return calls; };
+    const one = run(20).filter(([s]) => /12/.test(s) && /86/.test(s)), words = one[0][0].split(' '), two = run(60).filter(([s]) => s.split(' ').every(w => words.includes(w)) && s.length > 3 && !/^[A-ZÀ-Ú0-9.%]+$/.test(s));
+    assert.equal(one.length, 1, 'fits: one drawing call, as before');
+    assert.equal(two.length, 2, 'too wide: two lines');
+    assert.equal(two.map(l => l[0]).join(' '), one[0][0], 'the same words');
+    assert(two[0][1] < two[1][1] && two[1][1] - two[0][1] <= 32 * 0.55 + .001 && two[1][1] - 32 * .55 / 2 <= one[0][1] + 16 * 1.1, 'both lines stay inside the one-line block');
+  }
   const fonts = [];
   await loadCardFonts({ load: async (...args) => fonts.push(args), ready: Promise.resolve() });
   assert(fonts.every(([font]) => font.includes('Baloo 2')) && fonts.length === 2, 'only the local Baloo weights');
@@ -405,3 +416,9 @@ console.log('share: challenge link, captions, fallbacks, eligibility, privacy an
   assert.equal(file.name, 'drac-de-valls.jpg');
 }
 console.log('share poster: format, figure identity, scores, rank validation, optional-row centering and fonts ok');
+
+// --- language in the challenge link: only outside Catalan; stripChallenge keeps it
+{
+  assert.equal(challengeUrl(94, 2), 'https://mulassa.cat/?repte=94-2', 'ca: no lang, byte-identical');
+  assert.equal(stripChallenge('https://x.test/?lang=es&repte=94-2'), '/?lang=es', 'lang survives stripChallenge');
+}

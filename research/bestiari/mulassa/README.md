@@ -1,6 +1,6 @@
 # Mulassa · Santa Úrsula 2017
 
-Open `/mulassa-compare.html?mute` on this checkout's Vite server. The local media mapping described in
+Open `/tools/dev/mulassa-compare.html?mute` on this checkout's Vite server. The local media mapping described in
 `../README.md` is required. Since 2026-10-19 the reconstruction is also the game's dance: see
 [game-integration.md](game-integration.md) (time map, tempo, carriers, colla, adaptations). The comparator's «Joc nou»
 mode (`?mute&modo=joc`) plays the new song and drives the video through the time map.

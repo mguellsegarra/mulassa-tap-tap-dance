@@ -357,8 +357,6 @@ console.log('menu entrance, loop points, version and tempo ok');
     assert(sources.every(s => (s.type !== 'sine' && s.type !== 'triangle') || Math.max(...freqs(s)) <= 1000), `weight ${weight}: warm, no oscillator above 1 kHz`);
     assert(sources.every(s => !s.outs[0]?.frequency || s.outs[0].frequency.value <= 1000), `weight ${weight}: warm, no filter opens above 1 kHz`);
   }
-  globalThis.location = { search: '?thud=cavern' };
-  try { assert(landing(4.8, 1).len > light.len, '?thud picks another variant'); } finally { delete globalThis.location; }
   const c = graph(), ctx = c.ctx;
   c.menu(false); // beginRun (main.js): a run's bus
   assert.equal(await c.start(3, 0, 100), true);

@@ -36,7 +36,7 @@ Two clocks, never mixed:
 | `scene/drac-rig.js`, `scene/drac-legs.js` | `poseCarrier`: rigid shell, pelvis off the shell, continuous cloth trousers; `dressCarrier` after any other `poseDrac` (menu walker, splash pair) |
 | `scene/drac-dance.js` | the game's frame: song time -> map -> pose -> rig in the dance frame; the colla's frame. `mula-motion.js` only dispatches and lends its bounded accent springs |
 | `scene/drac-colla.js`, `scene/models/colla.js` | four clapping helpers (palms meet on integer beats, pure in the beat) and seated members by the band; one skinned draw call each |
-| `src/dev/drac-compare/` + `drac-compare.html` | dev comparison: video, the SAME modules, overhead plan; optional game music on the map |
+| `src/dev/drac-compare/` + `tools/dev/drac-compare.html` | dev comparison: video, the SAME modules, overhead plan; optional game music on the map |
 
 Ported verbatim from SOURCE `src/dev/drac-compare` (checked: identical rig output, max difference 0): path, steps,
 carrier legs, the rig's pelvis, the pose's base layer. Replaced: the estimated video pulse (`pulse.js`) by the song's
@@ -129,6 +129,6 @@ unreachable from the game, the old-dance sweep cut-off, the compiler change, the
 
 - `npx vite --host --port 5191 --strictPort` from this worktree (`hmr: false`: reload to see changes).
 - Game: `/?mute` (pick Drac). Debug: `?lletres`, `?autoplay&from=<song s>`, `?cam`, `?perf`.
-- Comparison: `/drac-compare.html?mute` (the video comes through the dev media alias `/drac-reference/`,
+- Comparison: `/tools/dev/drac-compare.html?mute` (the video comes through the dev media alias `/drac-reference/`,
   configured in the local `.bestiari-media.json`, see `research/bestiari/README.md`). Without `?mute` it offers "Música del joc" on the map.
-- Colla preview: `/colla-preview.html` (`?beat`, `?energy`, `?t`, `?view=0-3`, `?play`).
+- Colla preview: `/tools/dev/colla-preview.html` (`?beat`, `?energy`, `?t`, `?view=0-3`, `?play`).

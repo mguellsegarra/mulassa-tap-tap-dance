@@ -19,6 +19,7 @@ const WIDE = { step: 0.08, back: 0.08, stride: 0.08, close: 0.04, pivot: 0.1, op
 const H = { step: 0.09, back: 0.07, close: 0.05, adjust: 0.025, open: 0.035, pivot: 0.05, stride: 0.16 };
 const REACH = { stride: 0.9 };
 export const KIND_LABEL = { step: 'pas', back: 'pas enrere', close: 'tancament', adjust: 'ajust', open: 'obertura', pivot: 'pivot', stride: 'gambada' };
+// i18n-ok: dev-only comparator labels (drac-compare)
 export const STATUS_LABEL = { observed: 'observada', probable: 'probable', support: 'acció de suport', adaptation: 'adaptació (no mesurada)' };
 export const PIVOT_DEG = 45; // turn steps: one placement per 45 deg of shell rotation (inferred: keeps both soles clear)
 const DEG = Math.PI / 180;

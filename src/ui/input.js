@@ -100,11 +100,8 @@ hud.addEventListener('mousedown', e => {
   if (PHOTO.mouse & 2) { PHOTO.mouse = e.buttons & 2 ? e.buttons & 3 : 0; return; }
   if (e.button !== 0 && e.button !== 2) return;
   e.preventDefault(); PHOTO.mouse = e.buttons & 3;
-  if (e.button === 2) lookDown({ pointerId: photoMousePointer, button: e.button });
-  else {
-    lookSkip(); // a new cursor drag has no pending lock recenter to discard
-    try { hud.setPointerCapture?.(photoMousePointer); } catch { /* already released */ }
-  }
+  lookSkip(); // a new drag has no pending lock recenter to discard (a granted lock sets its own)
+  lookDown({ pointerId: photoMousePointer, button: e.button }); // either button hides the cursor; only RMB steers
 });
 hud.addEventListener('pointerdown', e => {
   if (e.pointerType === 'mouse') photoMousePointer = e.pointerId;

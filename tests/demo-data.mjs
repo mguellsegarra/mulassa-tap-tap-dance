@@ -8,7 +8,7 @@ import { buildWorld, demoCards, bucketProblem, STAT_RULES, PREVIOUS_VERSION } fr
 import { normalizeAlias, VERSION_RULES } from '../src/services/leaderboard-rules.js';
 
 const dir = new URL('../supabase/migrations/', import.meta.url);
-const migrations = readdirSync(dir).filter(f => /^20261020000[1-4]_/.test(f)).sort().map(f => readFileSync(new URL(f, dir), 'utf8')).join('\n');
+const migrations = readdirSync(dir).filter(f => /^(20261020000[1-4]|202610210001)_/.test(f)).sort().map(f => readFileSync(new URL(f, dir), 'utf8')).join('\n');
 // the columns of the LAST definition of a public function, in order
 const columns = fn => {
   const defs = [...migrations.matchAll(new RegExp(`function public\\.${fn}\\([^)]*\\)\\s*returns table\\(([^)]*)\\)`, 'g'))];
@@ -48,6 +48,11 @@ for (const account of ['guest', 'verified']) {
   const row = board.find(r => r.tag !== null && !r.verified);
   assert(row.alias.endsWith(`#${String(row.tag).padStart(4, '0')}`) && row.is_self !== undefined, 'guests are composed «nom#0000»; verified ones are clean');
   assert(board.filter(r => r.verified).every(r => !r.alias.includes('#')));
+  for (const d of [0, 1, 2]) { // one level's own ranking: 1, 2, 3 of the players with a result on it
+    const lvl = await rpc(c, 'get_level_podium', { p_version: 'mulassa-v3', p_difficulty: d });
+    assert(lvl.length === 3 && lvl.every((r, i) => JSON.stringify(Object.keys(r)) === JSON.stringify(columns('get_level_podium')) && r.position === i + 1), `get_level_podium ${d}`);
+    assert(lvl[0].score >= lvl[1].score && lvl[1].score >= lvl[2].score && lvl[0].total >= 3);
+  }
   const seasons = await rpc(c, 'get_seasons', { p_figure: 'mulassa-valls' });
   assert(seasons.length && seasons.every(r => JSON.stringify(Object.keys(r)) === JSON.stringify(columns('get_seasons'))), 'get_seasons');
   const podium = seasons[0].podium[0]; assert.deepEqual(Object.keys(podium), ['position', 'alias', 'tag', 'score', 'difficulty', 'verified']);
@@ -121,7 +126,7 @@ for (const account of ['guest', 'verified']) {
   assert.equal(bucketProblem('mulassa-valls/mulassa-v3/1', { runs: 1, completed: 2 }), 'invalid_stats');
   // the constants the checks use are the migration's
   assert(migrations.includes(`duration_seconds = ${STAT_RULES['mulassa-v3'].seconds}`) && migrations.includes(`duration_seconds = ${STAT_RULES['drac-v1'].seconds}`));
-  assert(migrations.includes(`guapa_count = ${STAT_RULES['mulassa-v3'].guapa[0]} where version = 'mulassa-v3'`) && migrations.includes('(array[12,12,16])'));
+  assert(migrations.includes(`guapa_count = ${STAT_RULES['mulassa-v3'].guapa[0]}, `) && migrations.includes('(array[12,12,16])'));
   for (const v of ['mulassa-v3', 'drac-v1']) for (const d of [0, 1, 2]) assert(VERSION_RULES[v].judgments[d] > 0);
   const s = mockLeaderboard(opts({ account: 'guest' })), mine = await s.myStats();
   assert.equal(mine.daysPlayed, 12); assert.equal(mine.currentStreak, 4); assert.equal(mine.longestStreak, 6); assert.equal(mine.days.length, 12);
@@ -151,5 +156,24 @@ for (const account of ['guest', 'verified']) {
   }
   assert.equal(leaderboardPreviewMode({ hostname: 'localhost', search: '?mock&seasons=later', configured: true }), true);
   assert.deepEqual(demoOptions('?mock&seasons=later&account=verified'), { account: 'verified', seasons: 'later' });
+}
+// the Perfil statistics read as one player's: a missed GUAPA is an ERROR, a streak is of hits, every run's % is its own counts',
+// and the same URL on the same day shows the same numbers (QA: «240 PERFECTE · 0 ERROR» next to «7 GUAPA de 10» at 88%)
+{ const sane = (where, key, c) => {
+    assert.equal(bucketProblem(key, c), null, `${where} ${key}`);
+    assert(c.guapaTotal - c.guapa <= c.miss, `${where} ${key}: ${c.guapaTotal - c.guapa} GUAPA missed, ${c.miss} ERROR`);
+    assert(c.bestCombo <= c.perfect + c.good, `${where} ${key}: streak ${c.bestCombo} over ${c.perfect + c.good} hits`);
+  };
+  const quality = (where, r) => { const J = r.perfect + r.good + r.miss; assert(J > 0 && Math.abs(r.quality - 100 * (r.perfect + 0.8 * r.good) / J) < 0.06, `${where}: ${r.quality}% from its counts`); };
+  for (const seasons of ['launch', 'later', 'many']) for (const board of [null, 'me']) {
+    const w = buildWorld({ world: seasons, board, now: NOW });
+    for (const b of w.boards) for (const r of b.rows) quality(`${seasons}/${board} ${b.version} ${r.alias}`, r);
+    for (const mine of w.stats.values()) for (const [key, c] of Object.entries(mine)) sane(`${seasons}/${board} cast`, key, c);
+    for (const account of ['guest', 'verified']) {
+      const read = async () => (await mockLeaderboard(opts({ seasons, board, account })).myStats()).buckets, a = await read();
+      for (const [key, c] of Object.entries(a)) if (key !== 'practice') sane(`${seasons}/${board} ${account}`, key, c);
+      assert.deepEqual(await read(), a, `${seasons}/${board} ${account}: deterministic`);
+    }
+  }
 }
 console.log('demo-data: ok');

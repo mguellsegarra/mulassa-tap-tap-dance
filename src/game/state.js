@@ -46,7 +46,6 @@ export let clock = 0;
 export const setClock = v => (clock = v);
 // at: a performance.now() time (a frame's, an input event's; default now): the de-stepped audio clock (audio.js audioClock)
 export const songTime = at => (chip?.t0 != null ? chip.now(at) - offsetMs / 1000 : playFrom - LEAD); // still loading the recording: hold at the count-in's start
-export const JUDGE_WORDS = { perfect: 'PERFECTE', good: 'BÉ', miss: 'ERROR' };
 // The audio engine is made (suspended) right after the first frame, so the menu loop and the song download and decode
 // while the splash waits for its tap; the tap only has to resume it. `chip` stays null until then.
 export let engine = null;

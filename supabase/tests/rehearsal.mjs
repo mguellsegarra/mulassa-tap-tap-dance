@@ -87,7 +87,19 @@ function stop() {
 }
 
 // Production state today: master's migrations, in order. The new ones are applied later, separately.
-const migrate = list => { for (const f of list) { const t0 = Date.now(); sql(read(f)); if (f >= NEW) console.log(`applied ${f} in ${Date.now() - t0} ms`); } };
+// Recorded in supabase_migrations.schema_migrations as `supabase db push` does (the rollout's read-only checks read it).
+const migrate = list => {
+  sql('create schema if not exists supabase_migrations; create table if not exists supabase_migrations.schema_migrations(version text primary key, statements text[], name text);');
+  for (const f of list) {
+    const t0 = Date.now(); sql(read(f));
+    sql(`insert into supabase_migrations.schema_migrations(version, name) values ('${f.slice(0, 12)}', '${f.slice(13, -4)}')`);
+    if (f >= NEW) console.log(`applied ${f} in ${Date.now() - t0} ms`);
+  }
+};
+// The read-only SQL blocks of docs/rankings-rollout.md (steps 2 and 5), run as written: key|value lines.
+const ROLLOUT = readFileSync(new URL('../../docs/rankings-rollout.md', import.meta.url), 'utf8');
+const rolloutSql = i => Object.fromEntries(sql([...ROLLOUT.matchAll(/```sql\n([\s\S]*?)```/g)][i][1]
+  .replace('<T0>', '2026-01-01 00:00+00')).split('\n').filter(l => l.includes('|')).map(l => [l.slice(0, l.indexOf('|')), l.slice(l.indexOf('|') + 1)]));
 
 // Production-like synthetic data: anonymous guests, confirmed e-mail players, pending e-mails, Auth-only sign-ins,
 // the real seed fixture, and (marked) 13-month-old accounts for the purge dry count. Rows only on v1/v2:
@@ -154,7 +166,9 @@ const strip = rows => rows.map(r => ({ ...r, alias: r.alias.replace(/#[0-9]{4}$/
 const v2 = { 0: 108, 1: 133, 2: 240 }, v3 = v2, drac = { 0: 106, 1: 200, 2: 277 };
 const submit = (version, d, perfect, score, alias, j) =>
   `select * from public.submit_result('${version}',${d},${perfect},${j[d] - perfect},0,${score},${perfect},'${alias}')`;
-const unlock = id => sql(`update leaderboard_private.profiles set last_write_at = now()-interval '11 seconds', last_stats_at = null where user_id = '${id}'`);
+// player_devices too: merge_stats charges each run 1 s of real time since the device's last upload
+const unlock = id => sql(`update leaderboard_private.profiles set last_write_at = now()-interval '11 seconds', last_stats_at = null where user_id = '${id}';
+  update leaderboard_private.player_devices set updated_at = now()-interval '1 minute' where user_id = '${id}'`);
 
 async function main() {
   const before = { containers: docker('ps', '-a', '--format', '{{.ID}} {{.Names}} {{.Status}}').split('\n').filter(l => !l.includes('mulassa-rehearsal-')) };
@@ -164,6 +178,13 @@ async function main() {
     migrate(old);
     sql(SEED);
     sql(readFileSync(new URL('../../tests/fixtures/seed-leaderboard-2026.sql', import.meta.url), 'utf8'));
+    let preRead;
+    await check('rollout step 2 SQL (before)', () => {
+      preRead = rolloutSql(0);
+      assert.equal(preRead.last_migration, '202610170001');
+      assert.equal(preRead.entries_unique_constraint, 'entries_user_id_version_difficulty_key');
+      assert.deepEqual([preRead.postgres_can_delete_auth_users, preRead.postgres_can_update_auth_users], ['true', 'true']);
+    });
     const c0 = json(COUNTS);
     const board0 = { v2: legacyBoard('mulassa-v2-short'), v1: legacyBoard('mulassa-v1') };
     console.log('BEFORE', JSON.stringify(c0));
@@ -181,8 +202,19 @@ async function main() {
         assert.equal(out.at(-3), smokeAlias, JSON.stringify(out)); assert.match(out.at(-2), /^[tf]\|[0-9.]+\|[0-9]+$/); assert(Number(out.at(-1)) >= 50, out.at(-1)); // top 50 + the caller's neighbours
       });
     }
-    console.log(`all four migrations: ${Date.now() - t0} ms`);
+    console.log(`all new migrations: ${Date.now() - t0} ms`);
     const c1 = json(COUNTS);
+    await check('rollout step 2 and 5 SQL (after)', () => {
+      const again = rolloutSql(0), post = rolloutSql(1);
+      for (const k of Object.keys(preRead).filter(k => k.startsWith('entries') && k !== 'entries_unique_constraint' || k.startsWith('profiles') || k.startsWith('auth')))
+        assert.equal(again[k], preRead[k], k);
+      assert.equal(again.last_migration, '202610210001');
+      assert.deepEqual([post.guests_without_tag, post.verified_with_tag, post.functions_without_search_path], ['0', '0', '0']);
+      assert.equal(post.anon_functions, 'get_leaderboard_all,get_level_podium,get_player_card,get_seasons');
+      assert.equal(post.entries_unique_constraint, 'entries_user_season_version_difficulty_key');
+      assert.equal(post.entries_by_season, `0=${c0.entries}`);
+      assert.match(post.seasons, /^0:Estrena 2026:.*:- \| 1:Tardor 2026:.*$/);
+    });
     const after = json(`json_build_object(
       'seasons', (select json_agg(json_build_object('id',id,'name',name,'starts',starts_at,'ends',ends_at) order by id) from leaderboard_private.seasons),
       'entries_by_season', (select json_object_agg(season_id,n) from (select season_id,count(*) n from leaderboard_private.entries group by 1) t),
@@ -223,8 +255,8 @@ async function main() {
     await check('one signature per RPC (no PGRST203)', () => {
       const sigs = json(`select json_object_agg(proname, n) from (select proname, count(*) n from pg_proc
         where pronamespace='public'::regnamespace and proname in ('submit_result','get_leaderboard_all','update_alias','my_alias',
-        'my_profile','choose_verified_alias','merge_stats','my_stats','get_seasons','get_player_card','leaderboard_expired_players') group by 1) t`);
-      assert(Object.values(sigs).every(n => n === 1), JSON.stringify(sigs)); assert.equal(Object.keys(sigs).length, 11);
+        'my_profile','choose_verified_alias','merge_stats','my_stats','get_seasons','get_player_card','leaderboard_expired_players','get_level_podium') group by 1) t`);
+      assert(Object.values(sigs).every(n => n === 1), JSON.stringify(sigs)); assert.equal(Object.keys(sigs).length, 12);
     });
 
     // Old client (master) and new client against the migrated database.
@@ -352,8 +384,8 @@ async function main() {
       assert.equal(bad, null, JSON.stringify(bad)); assert.equal(invoker, null, JSON.stringify(invoker));
     });
     const EXPECTED = {
-      anon: ['get_leaderboard_all', 'get_player_card', 'get_seasons'],
-      authenticated: ['choose_verified_alias', 'get_leaderboard_all', 'get_player_card', 'get_seasons', 'merge_stats', 'my_alias', 'my_profile', 'my_stats', 'submit_result', 'update_alias'],
+      anon: ['get_leaderboard_all', 'get_level_podium', 'get_player_card', 'get_seasons'],
+      authenticated: ['choose_verified_alias', 'get_leaderboard_all', 'get_level_podium', 'get_player_card', 'get_seasons', 'merge_stats', 'my_alias', 'my_profile', 'my_stats', 'submit_result', 'update_alias'],
     };
     for (const role of ['anon', 'authenticated']) {
       await check(`${role}: exactly the expected functions are executable`, () => {

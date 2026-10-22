@@ -2,30 +2,31 @@
 // optional e-mail, Envia. The message's own problem shows beside its counter, the rest (e-mail, Turnstile, network,
 // «Rebut!») in the footer's status line over Envia. Opening sends nothing. Envia asks board-ui.js's Turnstile for a single-use token (usually
 // silent; the tick box opens over this sheet if Cloudflare asks), then src/services/feedback.js sends it. The draft survives an
-// accidental close (Escape, a tap outside) until it is sent; after «Rebut!» the sheet closes by itself.
+// accidental close (Escape, a tap outside) until it is sent, except one seeded from an «Aviat» card, cleared on close. The e-mail is kept once typed; a profile's confirmed one is filled in and locked; after «Rebut!» the sheet closes by itself.
 import { feedback as defaultService, checkFeedback, cleanEmail, chars, MESSAGE_MIN, MESSAGE_MAX } from '../services/feedback.js';
 import { turnstileMessage } from '../services/captcha.js';
 import { errors } from '../services/errors.js';
 import { byId, statusLine, setButton } from './sheet-kit.js';
+import { tr } from '../i18n/messages.js';
 
-export function setupFeedback({ focusIn, captcha, service = defaultService, doc = document, closeDelay = 4000, report = errors.report, onOpen = () => {} }) {
+export function setupFeedback({ focusIn, captcha, service = defaultService, doc = document, closeDelay = 4000, report = errors.report, onOpen = () => {}, confirmedEmail = async () => '' }) {
   const $ = byId(doc);
   const menu = $('feedback-menu'), form = $('feedback-form'), text = $('feedback-message'), email = $('feedback-email');
   const count = $('feedback-count'), msgError = $('feedback-error'), status = $('feedback-status'), sendBtn = $('feedback-send'), cancelBtn = $('feedback-cancel');
   const fields = { message: text, email };
   const configured = Boolean(service.configured && captcha);
-  let req = 0, busy = false, done = false, back = null, closeTimer = null;
+  let req = 0, busy = false, done = false, seeded = false, locked = false, back = null, closeTimer = null;
 
   const setStatus = statusLine(status);
   // while it sends: a plain ring spins in the button, and the form is locked (no edits, no «Ara no», no closing)
   function setSend(label, disabled = false) {
     setButton(doc, sendBtn, label, disabled); // the ring is decorative: the form's aria-busy says it
-    text.readOnly = email.readOnly = disabled || done; cancelBtn.disabled = disabled;
+    text.readOnly = disabled || done; email.readOnly = disabled || done || locked; cancelBtn.disabled = disabled;
     form.setAttribute('aria-busy', String(disabled));
   }
   const thanks = $('feedback-thanks'), thanksClose = $('feedback-thanks-close');
   thanksClose?.addEventListener('click', () => thanks.close());
-  const tooShort = () => chars(text.value.trim()) < MESSAGE_MIN ? `Mínim ${MESSAGE_MIN} caràcters` : `Màxim ${MESSAGE_MAX} caràcters`;
+  const tooShort = () => chars(text.value.trim()) < MESSAGE_MIN ? tr('ui.feedback.tooShort', { n: MESSAGE_MIN }) : tr('ui.feedback.tooLong', { n: MESSAGE_MAX });
   function setInvalid(field, message = '') { // the field goes red; the why beside the counter (message) or over Envia (e-mail)
     for (const [k, el] of Object.entries(fields)) el.setAttribute('aria-invalid', String(k === field));
     msgError.textContent = field === 'message' ? tooShort() : '';
@@ -41,15 +42,20 @@ export function setupFeedback({ focusIn, captcha, service = defaultService, doc 
   function show(onBack = null, draft = '') { // draft: the first words of an empty message («Sobre Reus: », from QUI BALLA?)
     if (menu.open) return;
     back = onBack; clearTimeout(closeTimer);
-    if (done) { text.value = ''; email.value = ''; } // sent: a fresh sheet; not sent: the draft is still there
-    if (draft && !text.value.trim()) text.value = draft;
+    seeded = !!draft;
+    if (done || seeded) text.value = draft; // a figure's draft replaces whatever was there; sent: a fresh sheet
+    if (locked) { email.value = ''; locked = false; } // the profile's address is asked again below (a sign-out frees the field)
     done = false; busy = false; req++;
-    text.readOnly = email.readOnly = false;
-    setInvalid(null); setSend('Envia');
+    setInvalid(null); setSend(tr('ui.feedback.send'));
     counter();
-    if (!configured) { sendBtn.disabled = true; setStatus('La bústia no està disponible. Pots escriure a holi@mulassa.cat.'); }
+    if (!configured) { sendBtn.disabled = true; setStatus(tr('ui.feedback.unavailable')); }
     menu.showModal();
     grow();
+    const r = req;
+    Promise.resolve(confirmedEmail()).then(m => { // a confirmed address is the profile's: filled in, not editable
+      if (!m || r !== req || !menu.open) return;
+      email.value = m; locked = true; email.readOnly = true; setInvalid(null);
+    }, () => {});
     onOpen(); // the nudge (setupNudge) goes, for good
     focusIn(menu, 'feedback-message');
   }
@@ -76,25 +82,25 @@ export function setupFeedback({ focusIn, captcha, service = defaultService, doc 
     setInvalid(null);
     const r = ++req;
     busy = true;
-    setSend('Comprovant…', true); setStatus('');
+    setSend(tr('ui.feedback.checking'), true); setStatus('');
     let token;
     try { token = await captcha.token(); } catch (e) {
       if (r !== req) return;
       busy = false;
       setStatus(e?.code === 'cancel' ? '' : turnstileMessage(e?.code));
-      setSend('Torna-ho a provar');
+      setSend(tr('ui.common.retry'));
       return;
     }
     if (r !== req) return;
-    setSend('Enviant…', true);
+    setSend(tr('ui.feedback.sending'), true);
     try {
       await service.send({ message: ok.message, email: ok.email, token });
       if (r !== req) return;
       done = true;
       busy = false;
-      setSend('Envia');
+      setSend(tr('ui.feedback.send'));
       menu.close(); // the box closes; a small «Rebut! Gràcies» sheet says it arrived (it closes by itself too)
-      text.value = ''; email.value = ''; done = false; setStatus(''); counter();
+      text.value = ''; done = false; setStatus(''); counter(); // the e-mail stays for the next message
       if (thanks && !thanks.open) {
         thanks.showModal(); focusIn(thanks, 'feedback-thanks-close');
         closeTimer = setTimeout(() => { if (thanks.open) thanks.close(); }, closeDelay);
@@ -105,8 +111,8 @@ export function setupFeedback({ focusIn, captcha, service = defaultService, doc 
       if (e?.code === 'invalid_message' || e?.code === 'invalid_email') {
         const f = e.code === 'invalid_email' ? 'email' : 'message';
         setInvalid(f, e.message); fields[f].focus();
-        setSend('Envia');
-      } else { setStatus(e?.message || 'Ara mateix no s’ha pogut enviar. Torna-ho a provar més tard.'); setSend('Torna-ho a provar'); }
+        setSend(tr('ui.feedback.send'));
+      } else { setStatus(e?.message || tr('ui.feedback.sendFailed')); setSend(tr('ui.common.retry')); }
     } finally { if (r === req) busy = false; }
   }
   cancelBtn.addEventListener('click', () => { if (!busy) menu.close(); });
@@ -115,6 +121,7 @@ export function setupFeedback({ focusIn, captcha, service = defaultService, doc 
     req++; busy = false; clearTimeout(closeTimer);
     captcha?.cancel(); // nobody waits for a token any more
     cancelBtn.hidden = false;
+    if (seeded) { text.value = ''; counter(); seeded = false; }
     const b = back; back = null;
     b?.();
   });
@@ -129,7 +136,7 @@ export function setupFeedback({ focusIn, captcha, service = defaultService, doc 
 // has been opened; never over a sheet or a song. It goes after `life` ms, on any tap or key, a resize, or when the sheet
 // opens. `place()` (main.js → title-layout.js nudgePlace) finds it a spot clear of the logo and the controls without
 // moving anything; no spot, no bubble (and it doesn't count).
-export const NUDGE_KEY = 'feedback-nudges', NUDGE_MAX = 3, NUDGE_TEXT = 'Com ha anat? Deixa un missatge!';
+export const NUDGE_KEY = 'feedback-nudges', NUDGE_MAX = 3, NUDGE_TEXT = tr('ui.feedback.nudge');
 export function setupNudge({ doc = document, win = globalThis, store, button, onTitle, free, place = () => ({}), delay = 1200, life = 6000,
   timers = { set: (f, ms) => setTimeout(f, ms), clear: id => clearTimeout(id) }, onChange = () => {} }) {
   const el = doc.getElementById('feedback-nudge');

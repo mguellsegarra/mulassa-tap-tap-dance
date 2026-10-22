@@ -1,4 +1,5 @@
 // The title screen: logo, splash, the JUGA button (it opens «QUI BALLA?», src/ui/select-ui.js) and their layout.
+import { tr } from '../i18n/messages.js';
 import { song } from '../game/figure-song.js';
 import { glintAt, POP, popsAt, titleLayout, CHIP } from './title-layout.js';
 import { challengeTip } from '../services/share.js';
@@ -15,7 +16,7 @@ export function titleWarmups() {
   return [() => logo(0, titleLayoutNow().s, true), () => logo(0, titleLayoutNow().s, true),
     () => { text(PLAY.name, 0, 0, 12, C.cream); text(PLAY.sub, 0, 0, titleLayoutNow().subSize, !COARSE.matches ? C.gold : '#e8d8b8'); }];
 }
-const PLAY = { name: 'JUGA', sub: 'Tria qui balla i el nivell' };
+const PLAY = { name: tr('hud.title.play'), sub: tr('hud.title.playSub'), enter: [tr('hud.title.enterTouch'), tr('hud.title.enterClick')], start: tr('hud.title.start') };
 // The logo: MULASSA on a blocky extrusion (one dark copy of its sprite, stacked), a glint of light across its letters
 // every few seconds, and TAP TAP DANCE tapping along to the menu loop, a word a beat (title-layout.js glintAt/popsAt).
 // Every piece is a cached sprite, blitted (the words at a pop's size, drawn smaller: they stay crisp); reduced motion:
@@ -60,12 +61,13 @@ export function drawSplash() {
   H.fillStyle = 'rgba(42,26,16,0.35)'; H.fillRect(0, 0, W, HH);
   logo(HH * 0.2);
   // Breathe as one button. Scale a single text sprite continuously, never its rounded font size.
-  const pulse = CALM.matches ? 0 : (1 - Math.cos(clock * Math.PI * 2 / 2.4)) / 2, grow = 1 + 0.05 * pulse, s = COARSE.matches ? 'TOCA AQUÍ PER ENTRAR' : 'CLICA AQUÍ PER ENTRAR'; // (any tap used to go in: say where)
-  const h = Math.max(32, 48 / K) * grow, w = Math.max(textWidth(s, 12) + 48, 120) * grow, y = HH * 0.82; // >= 44 css px
+  const pulse = CALM.matches ? 0 : (1 - Math.cos(clock * Math.PI * 2 / 2.4)) / 2, grow = 1 + 0.05 * pulse, s = PLAY.enter[COARSE.matches ? 0 : 1]; // (any tap used to go in: say where)
+  const fit = Math.min(1, (W - 12 - 48) / textWidth(s, 12)); // a longer language shrinks its words to the screen; Catalan fits at 1 (CLICA… at 320 px: 150 of 153)
+  const h = Math.max(32, 48 / K) * grow, w = Math.max(textWidth(s, 12) * fit + 48, 120) * grow, y = HH * 0.82; // >= 44 css px
   H.beginPath(); H.roundRect(W / 2 - w / 2, y - h / 2, w, h, h / 2);
   glowPath(C.gold, 5 + 5 * pulse, 0.6 + 0.5 * pulse);
   H.fillStyle = 'rgba(42,26,16,0.8)'; H.fill(); H.strokeStyle = C.gold; H.lineWidth = 1.5; H.stroke();
-  text(s, W / 2, y, 12 * 1.05, C.cream, 'center', C.dark, false, grow / 1.05);
+  text(s, W / 2, y, 12 * 1.05, C.cream, 'center', C.dark, false, grow * fit / 1.05);
   setButtons([{ x: W / 2 - w / 2, y: y - h / 2, w, h }]);
 }
 // Title layout (src/hud/title-layout.js): one budget for the logo, the choice and the DOM pill under it,
@@ -109,7 +111,7 @@ export function drawTitle() {
   }));
   if (L.chipY != null) tipChip(challengeTip(CHALLENGE), W / 2, L.chipY, Math.min(W - 16, 330), false, CHIP); // a friend's ?repte, over the button
   if (L.hintY == null) return; // no room for it (or touch)
-  const s = G.audioError || 'ESPAI per començar', size = G.audioError ? 10 : 9;
+  const s = G.audioError || PLAY.start, size = G.audioError ? 10 : 9;
   text(s, W / 2, L.hintY, Math.min(size, size * (W - 16) / textWidth(s, size)), C.cream);
 }
 export function sparkle(x, y, r, col) { // four-point star

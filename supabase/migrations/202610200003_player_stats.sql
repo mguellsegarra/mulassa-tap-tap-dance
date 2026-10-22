@@ -2,9 +2,14 @@
 begin;
 alter table leaderboard_private.versions add column if not exists duration_seconds numeric check (duration_seconds > 0);
 alter table leaderboard_private.versions add column if not exists guapa_count integer check (guapa_count >= 0);
-update leaderboard_private.versions set duration_seconds = 88.1995, guapa_count = 11 where version = 'mulassa-v3';
+-- GLOBUS and MANTEN per run: makeDanceChart (src/game/chart.js) over src/song.json / src/song-drac.json, per level;
+-- tests/player-stats-db.mjs checks them against the charts. A new chart is a new version row.
+alter table leaderboard_private.versions add column if not exists balloon_count integer check (balloon_count >= 0);
+alter table leaderboard_private.versions add column if not exists hold_count integer check (hold_count >= 0);
+update leaderboard_private.versions set duration_seconds = 88.1995, guapa_count = 11, balloon_count = 2,
+  hold_count = (array[0,5,5])[difficulty+1] where version = 'mulassa-v3';
 update leaderboard_private.versions set duration_seconds = 109.889,
-  guapa_count = (array[12,12,16])[difficulty+1] where version = 'drac-v1';
+  guapa_count = (array[12,12,16])[difficulty+1], balloon_count = 2, hold_count = (array[0,1,1])[difficulty+1] where version = 'drac-v1';
 alter table leaderboard_private.profiles add column if not exists last_stats_at timestamptz;
 -- A device registry makes the first import cover ALL buckets at once, including an empty first import.
 create table if not exists leaderboard_private.player_devices (
@@ -68,7 +73,7 @@ $$;
 create or replace function leaderboard_private.merge_bucket(p_bucket text, p_new jsonb, p_old jsonb) returns jsonb
 language plpgsql stable set search_path = '' as $$
 declare v_rule leaderboard_private.versions; v_out jsonb := coalesce(p_old,'{}'); item record; v_errors jsonb;
-  v_runs numeric; v_complete numeric; v_collapsed numeric; v_judgments numeric;
+  v_runs numeric; v_complete numeric; v_collapsed numeric; v_judgments numeric; v_errors_total numeric;
   v_keys text[] := array['runs','completed','collapsed','seconds','perfect','good','miss','guapa','guapaTotal','balloons','holds','bestCombo','bestStars'];
 begin
   if jsonb_typeof(p_new) is distinct from 'object' then raise exception 'leaderboard_invalid_stats' using errcode = '22023'; end if;
@@ -115,10 +120,15 @@ begin
   v_complete := coalesce((v_out->>'completed')::numeric,0);
   v_collapsed := coalesce((v_out->>'collapsed')::numeric,0);
   v_judgments := coalesce((v_out->>'perfect')::numeric,0)+coalesce((v_out->>'good')::numeric,0)+coalesce((v_out->>'miss')::numeric,0);
+  -- judge.js files every non-perfect note that is not a GLOBUS under exactly one error reason
+  select coalesce(sum((value::text)::numeric),0) into v_errors_total from jsonb_each(coalesce(v_out->'errors','{}'));
   if v_complete + v_collapsed > v_runs or v_judgments < v_complete*v_rule.judgments
     or v_judgments > (v_complete+v_collapsed)*v_rule.judgments
     or coalesce((v_out->>'guapa')::numeric,0) > coalesce((v_out->>'guapaTotal')::numeric,0)
     or coalesce((v_out->>'guapaTotal')::numeric,0) > (v_complete+v_collapsed)*v_rule.guapa_count
+    or coalesce((v_out->>'balloons')::numeric,0) > (v_complete+v_collapsed)*v_rule.balloon_count
+    or coalesce((v_out->>'holds')::numeric,0) > (v_complete+v_collapsed)*v_rule.hold_count
+    or v_errors_total > coalesce((v_out->>'good')::numeric,0)+coalesce((v_out->>'miss')::numeric,0)
     or coalesce((v_out->>'bestCombo')::numeric,0) > v_rule.judgments
     or coalesce((v_out->>'bestStars')::numeric,0) > 3
     or coalesce((v_out->>'seconds')::numeric,0) > v_runs*v_rule.duration_seconds then
@@ -133,7 +143,7 @@ end $$;
 create or replace function public.merge_stats(p_device uuid, p_buckets jsonb, p_days date[], p_owner uuid) returns void
 language plpgsql volatile security definer set search_path = '' as $$
 declare v_uid uuid := leaderboard_private.require_player(); v_last timestamptz; v_device_at timestamptz;
-  v_now timestamptz; item record; v_old jsonb; v_new jsonb; v_growth numeric := 0; v_day date;
+  v_now timestamptz; item record; v_old jsonb; v_new jsonb; v_growth numeric := 0; v_day date; v_since timestamptz;
 begin
   if p_owner is distinct from v_uid then raise exception 'leaderboard_owner_mismatch' using errcode = '28000'; end if;
   if p_device is null or jsonb_typeof(p_buckets) is distinct from 'object' or octet_length(p_buckets::text) > 65536
@@ -155,13 +165,19 @@ begin
   for item in select * from jsonb_each(p_buckets) loop
     select counters into v_old from leaderboard_private.player_stats where user_id = v_uid and device_id = p_device and bucket = item.key;
     v_new := leaderboard_private.merge_bucket(item.key,item.value,v_old);
-    v_growth := v_growth + coalesce((v_new->>'seconds')::numeric,0) - coalesce((v_old->>'seconds')::numeric,0);
+    -- Every run costs at least 1 s of real time: one quit in the count-in reaches here with 0 s (stats.js), yet took a
+    -- tap to start and one to leave. So runs (on the public card) cannot grow faster than the clock.
+    v_growth := v_growth + coalesce((v_new->>'seconds')::numeric,0) - coalesce((v_old->>'seconds')::numeric,0)
+      + coalesce((v_new->>'runs')::numeric,0) - coalesce((v_old->>'runs')::numeric,0);
     insert into leaderboard_private.player_stats(user_id,device_id,bucket,counters,first_at,updated_at)
       values(v_uid,p_device,item.key,v_new,v_now,v_now)
     on conflict(user_id,device_id,bucket) do update set counters = excluded.counters, updated_at = excluded.updated_at;
   end loop;
-  -- Aggregate across ALL buckets, including a newly added bucket on an already imported device.
-  if v_device_at is not null and v_growth > extract(epoch from v_now-v_device_at) then
+  -- Aggregate across ALL buckets, including a newly added bucket on an already imported device. A first import brings
+  -- earlier play (decision 27), none of it before the first season's day: statistics ship with it (the days' floor below).
+  select ((starts_at at time zone 'Europe/Madrid')::date)::timestamp at time zone 'Europe/Madrid' into v_since
+    from leaderboard_private.seasons where id = 1;
+  if v_growth > extract(epoch from v_now-coalesce(v_device_at,v_since)) then
     raise exception 'leaderboard_stats_time_limit' using errcode = '22023';
   end if;
   foreach v_day in array coalesce(p_days,array[]::date[]) loop

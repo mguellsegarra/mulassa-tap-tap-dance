@@ -1,13 +1,16 @@
 // The count-in banner and the judgement and resume overlays.
+import { tr } from '../i18n/messages.js';
 import { G, clock, balloonShown, songTime } from '../game/state.js';
 import { C } from './sprites.js';
 import { H, W } from './canvas.js';
 import { lane, BANNER } from './layout.js';
 import { textWidth, text } from './primitives.js';
 import { BEATS, playFrom } from '../core/env.js';
+import { DETAIL } from '../game/judge-words.js';
 import { countInPhase } from '../game/figure-song.js';
 import { bigWord, elastic } from './praise.js';
 
+const GO_WORD = tr('hud.banner.go'), READY_WORD = tr('hud.banner.ready');
 export function drawJudge() {
   if (G.practice && G.praise && !G.praise.big && clock - G.praise.t0 < G.praise.dur) return; // practice praise shares the compact slot
   if (!G.judge || clock - G.judge.t >= 0.5 || balloonShown(songTime())) return; // a GLOBUS hangs right there
@@ -17,7 +20,7 @@ export function drawJudge() {
   const { bottom, hx, sb: s } = lane(), x = Math.max(hx, textWidth(str, 10 * s * pop) / 2 + 6); // phones: the ring is near the edge, the word stays whole (even as it pops)
   const y = bottom + 16 * s; // fixed slot: it pops in place, never drifts into the headline
   text(str, x, y, 10 * s * pop, col);
-  if (G.judge.detail && (G.practice || G.judge.detail === 'ELS DOS ALHORA!' || G.judge.detail === 'HAS DEIXAT ANAR')) text(G.judge.detail, x, y + 14 * s, 8 * s, C.cream);
+  if (G.judge.detail && (G.practice || G.judge.detail === DETAIL.both || G.judge.detail === DETAIL.hold)) text(G.judge.detail, x, y + 14 * s, 8 * s, C.cream);
   H.globalAlpha = 1;
 }
 export function drawResume() { // 3, 2, 1 after a pause, on the same pulse as the start's count-in
@@ -33,11 +36,11 @@ export function drawBanner(t) {
   const b0 = BEATS.find(b => b >= playFrom) ?? playFrom, phase = countInPhase(t, b0);
   const big = BANNER.big(), y = lane().bottom + 10 + big * 0.55;
   if (t < b0) {
-    if (phase < 0) text('PREPARATS…', W / 2, y, BANNER.ready(), C.cream);
+    if (phase < 0) text(READY_WORD, W / 2, y, BANNER.ready(), C.cream);
     else {
       const i = Math.floor(phase), frac = phase - i; // frac 0 = right on the hit
       bigWord(String(3 - i), W / 2, y, big * elastic(Math.min(1, frac * 4)), BANNER.count, 0, W - 12, big);
     }
   }
-  else if (t < b0 + 0.7 && t < G.go) bigWord('BALLA!', W / 2, y, BANNER.go() * elastic(Math.min(1, (t - b0) * 5)), BANNER.goCols, -0.05, W - 12, BANNER.go());
+  else if (t < b0 + 0.7 && t < G.go) bigWord(GO_WORD, W / 2, y, BANNER.go() * elastic(Math.min(1, (t - b0) * 5)), BANNER.goCols, -0.05, W - 12, BANNER.go());
 }

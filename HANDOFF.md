@@ -24,7 +24,7 @@ create new agents from an old coordination instruction. Follow current local rul
 
 ## Current progress and source of truth
 
-The working reference prototype is `/mulassa-compare.html?mute`, on the existing
+The working reference prototype is `/tools/dev/mulassa-compare.html?mute`, on the existing
 Vite server at port 5188 (verify its process/cwd before reusing it). Its three views
 are original video, proposed real game model, and overhead. The selected mode must
 be `Reconstruccio del video`, not the old-game comparison mode.

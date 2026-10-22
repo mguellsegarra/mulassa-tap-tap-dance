@@ -64,9 +64,9 @@ export function makeBucket(version, best, skill, r) {
   const missShare = best.miss / J, goodShare = best.good / J, miss = Math.round(judged * missShare), good = Math.round(judged * goodShare);
   const hardMiss = Math.min(miss, judged);
   const errors = { early: Math.floor(hardMiss * 0.2) + Math.floor(good * 0.5), late: Math.floor(good * 0.5), silent: Math.floor(hardMiss * 0.5), both: Math.floor(hardMiss * 0.1), hold: Math.floor(hardMiss * 0.1), move: Math.floor(hardMiss * 0.1) };
-  const guapaTotal = Math.floor((completed + collapsed) * stat.guapa[best.difficulty] * (0.7 + 0.3 * r()));
+  const guapaTotal = Math.floor((completed + collapsed) * stat.guapa[best.difficulty] * (0.7 + 0.3 * r())); // a GUAPA missed is an ERROR (below)
   return { runs, completed, collapsed, seconds: Math.floor(runs * stat.seconds * (0.55 + 0.4 * r())), perfect: judged - hardMiss - good, good, miss: hardMiss, errors,
-    guapa: Math.floor(guapaTotal * (0.3 + 0.6 * skill)), guapaTotal, balloons: Math.floor(completed * (1 + 3 * r())), holds: best.difficulty === 0 ? 0 : Math.floor(completed * (2 + 5 * r())),
+    guapa: Math.max(guapaTotal - hardMiss, Math.floor(guapaTotal * (0.3 + 0.6 * skill))), guapaTotal, balloons: Math.floor(completed * (1 + 3 * r())), holds: best.difficulty === 0 ? 0 : Math.floor(completed * (2 + 5 * r())),
     bestCombo: Math.min(J, Math.max(best.max_combo, Math.round(best.max_combo * (1 + 0.15 * r())))), bestStars: best.quality >= 90 ? 3 : best.quality >= 75 ? 2 : best.quality >= 50 ? 1 : 0,
     best: { score: best.score, perfect: best.perfect, good: best.good, miss: best.miss, maxCombo: best.max_combo } };
 }
@@ -156,7 +156,9 @@ export function buildWorld({ world = 'launch', board = null, drac = null, now = 
   if (drac === 'empty') openDrac.rows = [];
   let me = null;
   if (board === 'me') { // a ladder for responsive scroll checks: «Prova1…», the signed-in profile (ProvaRetall) at #48 of 119
-    const ladder = Array.from({ length: 119 }, (_, i) => ({ pid: -1, alias: `Prova${i + 1}`, tag: 1000 + i, verified: false, difficulty: i % 3, quality: 88, perfect: 0, good: 0, miss: 0, max_combo: 50, score: 69286 + (47 - i) * 600 }));
+    const counts = d => { const J = VERSION_RULES[openMulassa.version].judgments[d], miss = Math.round(J * 0.06), good = Math.round(J * 0.3), perfect = J - miss - good; // ~88%, from its own counts
+      return { perfect, good, miss, quality: Math.round(1000 * (perfect + 0.8 * good) / J) / 10 }; };
+    const ladder = Array.from({ length: 119 }, (_, i) => ({ pid: -1, alias: `Prova${i + 1}`, tag: 1000 + i, verified: false, difficulty: i % 3, ...counts(i % 3), max_combo: 50, score: 69286 + (47 - i) * 600 }));
     me = ladder.splice(47, 1)[0];
     openMulassa.rows = ladder;
   }

@@ -9,8 +9,11 @@ import { lookSync } from './mouse-look.js';
 import { PHOTO } from '../game/photo-control.js';
 import { COARSE } from '../core/env.js';
 import { photoOrient } from './fullscreen.js';
+import { tr } from '../i18n/messages.js';
 
 const practiceLabel = document.getElementById('skip-label'), practiceIcon = document.getElementById('skip-icon');
+const CTL = { photoExit: tr('ui.controls.photoExit'), photo: tr('ui.controls.photo'), plaza: tr('ui.controls.plaza'), photoHelp: tr('ui.controls.photoHelp'), howto: tr('ui.controls.howto'), // resolved once: updateControls runs per frame
+  exit: tr('ui.controls.exitLabel'), skip: tr('ui.controls.skipLabel'), exitPractice: tr('ui.controls.exitPractice'), skipPractice: tr('ui.controls.skipPractice') };
 
 // Canvas buttons need the same hover cursor as DOM buttons. Recheck on state/layout
 // changes too, even when the mouse stays still (photo mode, resize, entering play).
@@ -54,10 +57,10 @@ export function setView(on) {
   photoOrient();
   for (const el of VIEW_HIDES) el.inert = on;
   viewBtn.setAttribute('aria-pressed', String(on)); // (one name, «Joc lliure», pressed or not; pressed it shows the practice's «surt» door, the tooltip says what a press does)
-  viewBtn.title = on ? 'Surt del joc lliure (Esc)' : 'Joc lliure';
+  viewBtn.title = on ? CTL.photoExit : CTL.photo;
   clearTimeout(viewIdle); viewBtn.classList.remove('idle');
   hud.setAttribute('role', on ? 'region' : 'img');
-  if (!on) hud.setAttribute('aria-label', 'La plaça');
+  if (!on) hud.setAttribute('aria-label', CTL.plaza);
   if (on) {
     viewBack = entryFocus;
     (PHOTO.on ? hud : viewBtn).focus({ preventScroll: true });
@@ -87,7 +90,7 @@ export function updateControls() {
   howtoEl.inert = viewMode && !photoHelp;
   hide(howtoEl, !photoHelp); // the same ? opens and closes non-modal help, including on touch
   howtoEl.classList.toggle('photo-help', photoHelp);
-  howtoEl.setAttribute('aria-label', photoHelp ? 'Controls del mode foto (?)' : 'Com es juga?');
+  howtoEl.setAttribute('aria-label', photoHelp ? CTL.photoHelp : CTL.howto);
   howtoEl.setAttribute('aria-haspopup', photoHelp ? 'false' : 'dialog');
   hide(settingsEl, (G.state !== 'title' && G.state !== 'select'));
   hide(feedbackEl, (G.state !== 'title' && G.state !== 'select'));
@@ -97,10 +100,10 @@ export function updateControls() {
   hide(pauseEl, G.state !== 'play' || G.paused || Boolean(G.collapseT));
   hide(skipEl, G.state !== 'play' || !G.practice || G.paused);
   if (G.practice) {
-    const exit = G.practice.then == null, label = exit ? 'SURT' : 'SALTA';
+    const exit = G.practice.then == null, label = exit ? CTL.exit : CTL.skip;
     if (practiceLabel.textContent !== label) {
       practiceLabel.textContent = label;
-      skipEl.setAttribute('aria-label', exit ? 'Surt de la pràctica' : 'Salta la pràctica');
+      skipEl.setAttribute('aria-label', exit ? CTL.exitPractice : CTL.skipPractice);
       practiceIcon.setAttribute('d', exit ? 'M10 4H4v16h6M14 8l4 4-4 4M8 12h12' : 'm5 5 7 7-7 7M13 5l7 7-7 7');
     }
   }

@@ -11,7 +11,8 @@ import { checkAlias } from '../services/alias-rules.js';
 import { DIFFS } from '../game/chart.js';
 import { quality, starsFor } from '../game/progress.js';
 import { store as defaultStore } from '../platform/storage.js';
-import { byId, num, statusLine, setButton } from './sheet-kit.js';
+import { byId, num, statusLine, setButton, trSplit } from './sheet-kit.js';
+import { tr } from '../i18n/messages.js';
 import { mulaSpinner } from './loader.js';
 import { setupVerify, turnstileMessage, TURNSTILE_SRC } from '../services/captcha.js';
 import { appendName, deviceRisk, DEVICE_NOTES, browserEnv } from './profile-notes.js';
@@ -24,8 +25,7 @@ export { ALIAS_KEY, refreshIdentity } from './board-list.js';
 export const DECLINES_KEY = 'publish-declines', MAX_DECLINES = 3;
 const PROMPT_STARS = 2; // the publish prompt opens by itself only from this many stars
 export const OPTOUT_KEY = 'publish-optout'; // «No m’ho tornis a recordar»: the prompt never opens by itself again (⚙ Configuració turns it back on)
-const NAMES = ['Timbaler', 'Portador', 'Gegant', 'Capgròs', 'Drac', 'Castellera', 'Balladora', 'Mulasser'];
-
+const NAMES = Array.from({ length: 8 }, (_, i) => tr(`ui.board.alias.${i + 1}`));
 // A fictional, editable suggestion: nobody should feel asked for their real name.
 export const suggestAlias = (rand = Math.random) => `${NAMES[Math.floor(rand() * NAMES.length)]}${100 + Math.floor(rand() * 900)}`; // no spaces
 
@@ -81,7 +81,7 @@ export function setupBoard({ focusIn, store = defaultStore, service = leaderboar
   // appeared must not publish
   let auto = false, armedAt = 0, prompted = null, promptTimer = null;
 
-  if (!service.configured) { $('settings-board').hidden = true; if ($('settings-prompt-row')) $('settings-prompt-row').hidden = true; } // offline game: no online entry points
+  if (!service.configured) { if ($('settings-prompt-row')) $('settings-prompt-row').hidden = true; } // offline game: no online entry points
   // Writes need the build flag AND a privacy contact: index.html #privacy-contact data-email is the one place for it.
   // Empty (or missing): the line stays hidden and nobody can publish; reading still works.
   const privacyRoot = $('privacy-content')?.content;
@@ -97,7 +97,7 @@ export function setupBoard({ focusIn, store = defaultStore, service = leaderboar
     ? setupVerify({ doc, siteKey, load: captcha, canShow: canVerify, ...verifyOpts }) : null;
   subscribe(r => { snapshot = r; }); // the frozen run of the results screen; cleared by the title or a new run
 
-  const { openBoard, standing } = setupBoardList({ doc, $, service, store, focusIn, minLoad, now, observe, onCard, onSeasons, onKeep, currentFigure, canPlay, onPlay,
+  const { openBoard, standing, levelPodium } = setupBoardList({ doc, $, service, store, focusIn, minLoad, now, observe, onCard, onSeasons, onKeep, currentFigure, canPlay, onPlay,
     canPublish: () => Boolean(canWrite && snapshot && published !== snapshot), runFigure: () => VERSION_RULES[snapshot?.version]?.figureId,
     openPublish: () => openPublish(), publishing: () => publishMenu.open });
   let needsCaptcha = false, hadSession = true; // hadSession: a profile here when the publish sheet opened
@@ -126,7 +126,7 @@ export function setupBoard({ focusIn, store = defaultStore, service = leaderboar
     sendBtn.disabled = false;
     if (!id.hasSession) showField(true); // no profile here after all: the nickname is theirs to pick
     if (id.hasSession || !service.captchaRequired) return;
-    if (!verify) { setPublishStatus('Ara mateix no es poden publicar resultats.'); sendBtn.disabled = true; return; }
+    if (!verify) { setPublishStatus(tr('ui.board.publishNoService')); sendBtn.disabled = true; return; }
     needsCaptcha = true;
   }
   // the one-tap view (the remembered name, its tag and check) or the editable field
@@ -138,7 +138,7 @@ export function setupBoard({ focusIn, store = defaultStore, service = leaderboar
   // the run in one line: «94% a DIFÍCIL · ★★★» (the stars as the results card shows them)
   const starText = value => (starsFor(value) ? ` · ${'★'.repeat(starsFor(value))}` : ''); // nothing for 0 stars
   const runLine = run => { const lvl = doc.createElement('span'); lvl.className = `lvt${run.difficulty}`; lvl.textContent = DIFFS[run.difficulty].name; // the level in its colour
-    return [`${Math.round(quality(run.counts))}% a `, lvl, starText(quality(run.counts))]; };
+    const [pre, post] = trSplit('ui.board.runLine', 'level', { pct: Math.round(quality(run.counts)) }); return [pre, lvl, post + starText(quality(run.counts))]; };
   // «Ets el número 347 · top 17%!»: the own row of the joint board. Resolves to the line (or null) for Comparteix's
   // header too.
   async function showPlace(req, version) {
@@ -148,7 +148,7 @@ export function setupBoard({ focusIn, store = defaultStore, service = leaderboar
       self = rows.find(r => r.is_self); total = Number(self?.total) || 0;
     } catch { /* the success stays */ }
     if (!self || !total) return null;
-    const pos = Number(self.position), text = `Ets el número ${num(pos)} · top ${topPct(pos, total)}%!`;
+    const pos = Number(self.position), text = tr('ui.board.place', { pos: num(pos), top: topPct(pos, total) });
     if (req === publishReq) { placeLine.textContent = text; placeLine.hidden = false; }
     return text;
   }
@@ -196,7 +196,7 @@ export function setupBoard({ focusIn, store = defaultStore, service = leaderboar
     const req = ++publishReq, run = snapshot;
     setPublishStatus(''); setInvalid(false);
     placeLine.hidden = true; placeLine.textContent = '';
-    $('publish-title').textContent = 'Publica el teu resultat!';
+    $('publish-title').textContent = tr('ui.board.publishTitle');
     $('publish-temp').hidden = true;
     $('publish-device').hidden = true;
     $('publish-offer').hidden = true;
@@ -204,12 +204,12 @@ export function setupBoard({ focusIn, store = defaultStore, service = leaderboar
     const saved = store.get(ALIAS_KEY);
     // only a grey example: the player types their own (a filled-in name got published as is)
     aliasInput.value = saved || '';
-    aliasInput.placeholder = `p. ex. ${suggestAlias()}`;
+    aliasInput.placeholder = tr('ui.board.aliasPlaceholder', { example: suggestAlias() });
     aliasInput.readOnly = false;
     // published here before: one tap, as that alias (prepare() swaps to the field if the profile turns out to be gone)
     const oneTap = Boolean(saved) && checkAlias(saved).ok;
     showField(!oneTap);
-    setSend('Publica', true);
+    setSend(tr('ui.board.publish'), true);
     neverBtn.hidden = !auto; // only on the prompt that opened by itself; the slot is fixed for that opening
     $('publish-board').hidden = true;
     if (!publishMenu.open) publishMenu.showModal();
@@ -257,27 +257,27 @@ export function setupBoard({ focusIn, store = defaultStore, service = leaderboar
     const { alias, message } = checkAlias(aliasInput.value);
     if (!alias) { setInvalid(true, message); aliasInput.focus(); return; }
     const req = publishReq, run = snapshot;
-    if (!run) { setPublishStatus('Aquest resultat ja no es pot publicar.'); return; }
+    if (!run) { setPublishStatus(tr('ui.board.stale')); return; }
     busy = true;
     aliasInput.value = alias;
     setInvalid(false);
     let captchaToken = null;
     if (needsCaptcha) { // a fresh token (usually silent; the tick box shows over this sheet if asked)
-      setSend('Comprovant…', true, true);
-      setPublishStatus('Comprovant que no ets un robot…');
+      setSend(tr('ui.board.checking'), true, true);
+      setPublishStatus(tr('ui.board.checkingRobot'));
       try { captchaToken = await verify.token(); } catch (e) {
         if (req !== publishReq) return;
         busy = false;
         setPublishStatus(e?.code === 'cancel' ? '' : turnstileMessage(e?.code));
-        setSend('Torna-ho a provar');
+        setSend(tr('ui.common.retry'));
         return;
       }
       if (req !== publishReq) return;
     }
-    setSend('Publicant…', true, true);
+    setSend(tr('ui.board.publishing'), true, true);
     setPublishStatus('');
     const t0 = Date.now();
-    swap('wait', 'Publicant…'); publishMenu.focus();
+    swap('wait', tr('ui.board.publishing')); publishMenu.focus();
     try {
       await service.publish(run, alias, { captchaToken });
       store.set(ALIAS_KEY, alias);
@@ -298,24 +298,24 @@ export function setupBoard({ focusIn, store = defaultStore, service = leaderboar
       const prof = await Promise.race([profP, sleep(2500).then(() => null)]); // never held up by a slow answer
       if (req !== publishReq) return;
       if (prof) rememberIdentity(store, ALIAS_KEY, prof);
-      setPublishStatus('Publicat com a ', true);
+      const [pre, post] = trSplit('ui.board.publishedAs', 'name'); setPublishStatus(pre, true);
       appendName(doc, publishStatus, prof ?? savedName(store));
-      publishStatus.append('. La classificació mostra el teu millor resultat.');
+      publishStatus.append(post);
       // a guest: a quiet way to keep the profile (the e-mail), under every «Publicat!»; never by itself
       $('publish-offer').hidden = !(onConfirm && prof && !prof.verified);
       // Comparteix is «D'acord»; only with `shareDelay` does it also come by itself
       if (afterPublish && shareDelay != null) shareTimer = setTimeout(() => { if (req === publishReq && publishMenu.open && done) toShare(); }, shareDelay);
       done = true;
       aliasInput.readOnly = true;
-      setSend(afterPublish ? 'D’acord' : 'Tanca');
+      setSend(tr(afterPublish ? 'ui.common.ok' : 'ui.common.close'));
       $('publish-board').hidden = true;
       cancelBtn.hidden = true; neverBtn.hidden = true;
-      swap('done', 'Publicat!'); // last: the buttons are final, so the frame eases to its true height
+      swap('done', tr('ui.board.published')); // last: the buttons are final, so the frame eases to its true height
       focusIn(publishMenu, 'publish-send');
     } catch (err) {
       boardIssue('leaderboard-publish-failed', err);
       if (req !== publishReq) return;
-      swap(null, 'Publica el teu resultat!'); // back to the form, with what went wrong
+      swap(null, tr('ui.board.publishTitle')); // back to the form, with what went wrong
       // the sign-in may have worked and the result not: then the retry needs no new Turnstile token
       if (needsCaptcha) service.identity().then(id => { if (req === publishReq && id.hasSession) needsCaptcha = false; }, () => {});
       // the nickname (server rules, blocked, taken): under the field, which gets the focus
@@ -323,20 +323,20 @@ export function setupBoard({ focusIn, store = defaultStore, service = leaderboar
       if (nick) {
         // no profile here yet: maybe theirs from another browser; no self-service recovery, a person releases it by hand
         const elsewhere = err.code === 'taken' && !hadSession;
-        setInvalid(true, elsewhere ? 'Aquest sobrenom ja és d’algú. Si és teu i hi vas confirmar el correu, ' : err?.message || 'Revisa el sobrenom.');
+        const [pre, post] = trSplit('ui.board.takenElsewhere', 'link'); setInvalid(true, elsewhere ? pre : err?.message || tr('ui.board.checkAlias'));
         if (elsewhere) { // the way out is in the message: «recupera el perfil» opens the same flow as the link below
           const link = doc.createElement('button');
-          link.type = 'button'; link.className = 'btn btn-link'; link.textContent = 'recupera el perfil';
+          link.type = 'button'; link.className = 'btn btn-link'; link.textContent = tr('ui.board.recoverLink');
           link.addEventListener('click', () => $('publish-recover').click());
-          fieldError.append(link, '.');
+          fieldError.append(link, post);
           recoverInError ||= !$('publish-recover').hidden; $('publish-recover').hidden = true;
         }
         aliasInput.focus();
-      } else setPublishStatus(err?.message || 'No s’ha pogut publicar. Torna-ho a provar.');
+      } else setPublishStatus(err?.message || tr('ui.board.publishFailed'));
       // this session's account is gone (service.publish left it): the retry is a new profile (a token, a nickname)
       if (err?.code === 'session') { hadSession = false; needsCaptcha = Boolean(verify); showField(true); }
       // fix the nickname, then the same press again
-      setSend(nick ? 'Publica' : 'Torna-ho a provar');
+      setSend(tr(nick ? 'ui.board.publish' : 'ui.common.retry'));
     } finally { if (req === publishReq) busy = false; }
   }
   cancelBtn.addEventListener('click', () => publishMenu.close());
@@ -388,7 +388,7 @@ export function setupBoard({ focusIn, store = defaultStore, service = leaderboar
   return {
     get open() { return boardMenu.open || publishMenu.open || Boolean(verify?.open); },
     configured: service.configured, // offline game: no online entry points (the title's podium button too)
-    openBoard, openPublish, refreshSettings, deviceNote, standing,
+    openBoard, openPublish, refreshSettings, deviceNote, standing, levelPodium,
     // the same Turnstile for «Bústia de la plaça» (src/ui/feedback-ui.js): a single-use token per message; null = none here
     captcha: verify && { token: () => verify.token(), cancel: () => verify.cancel() },
     // every frame: only real changes touch the DOM. `show`: the results screen, once taps may land (after its first second).

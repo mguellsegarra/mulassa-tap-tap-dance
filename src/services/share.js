@@ -2,6 +2,9 @@
 // and which way the platform can share. Everything is made on the device; the link
 // carries only the % and the level (no ids, no tracking parameters).
 import { DIFFS } from '../game/chart.js';
+import { tr } from '../i18n/messages.js';
+import { fmtNum } from '../i18n/format.js';
+import { lang, DEFAULT_LANG } from '../i18n/locale.js';
 
 export const SITE = 'https://mulassa.cat/';
 export const SITE_LABEL = 'mulassa.cat'; // the line printed on the results card and the image
@@ -19,7 +22,12 @@ export function encodeChallenge(pct, diff) {
 export const challengeUrl = (pct, diff, base = SITE, figureId = 'mulassa-valls') => {
   if (!challengeEligible({ figureId })) return base;
   const code = encodeChallenge(pct, diff);
-  return code ? `${base}?repte=${code}` : base;
+  if (!code) return base;
+  if (lang() === DEFAULT_LANG) return `${base}?repte=${code}`; // Catalan links stay byte-identical
+  const u = new URL(base);
+  u.searchParams.set('repte', code);
+  u.searchParams.set('lang', lang());
+  return u.href;
 };
 // Junk is ignored (null): only "<0-100>-<0|1|2>"; a percentage over 100 is clamped, never trusted as more.
 export function parseChallenge(search) {
@@ -28,18 +36,18 @@ export function parseChallenge(search) {
   const m = typeof raw === 'string' && /^\s*(\d{1,3})-([0-2])\s*$/.exec(raw);
   return m ? { pct: Math.min(100, +m[1]), diff: +m[2] } : null;
 }
-export function stripChallenge(href) { // the address without ?repte (other params stay), for history.replaceState
+export function stripChallenge(href) { // the address without ?repte (other params, `lang` included, stay), for history.replaceState
   const u = new URL(href);
   u.searchParams.delete('repte');
   return u.pathname + (u.search.length > 1 ? u.search : '') + u.hash;
 }
-export const challengeTip = ch => `Repte d’un amic: supera el ${ch.pct}% a ${diffName(ch.diff)}`;
+export const challengeTip = ch => tr('services.share.challengeTip', { pct: ch.pct, diff: diffName(ch.diff) });
 // null when the run wasn't the challenge's level (or it was the practice)
 export function challengeResult(ch, run) {
   if (!ch || !run || !challengeEligible(run) || run.practice || run.diff !== ch.diff) return null;
   const beaten = run.pct > ch.pct || (ch.pct === 100 && run.pct === 100);
   const missing = beaten ? 0 : ch.pct - run.pct + 1;
-  return { beaten, missing, line: beaten ? 'REPTE SUPERAT!' : `${missing <= 10 ? 'Gairebé! ' : ''}Et falta un ${missing}%` };
+  return { beaten, missing, line: beaten ? tr('services.share.challengeBeaten') : tr(missing <= 10 ? 'services.share.challengeAlmost' : 'services.share.challengeMissing', { missing }) };
 }
 
 // --- outcome, text and the funny line
@@ -54,12 +62,12 @@ export function outcomeOf(run, challenge = null) {
 export const MULA = '🫏';
 export function shareText(run, challenge = null) { // the caption (the link goes apart: share()'s url, the intents' url=)
   const d = diffName(run.diff), p = `${run.pct}%`;
-  if (run.figureId === 'drac-valls') return `He fet ballar el Drac de Valls amb un ${p} d'encerts a ${d}. #Valls`;
+  if (run.figureId === 'drac-valls') return tr('services.share.drac', { pct: p, diff: d });
   const line = {
-    challenge: `${MULA}🏆 Repte superat! ${p} d’encerts a ${d} fent ballar la Mulassa de Valls 🎉`,
-    record: `${MULA}🔥 Nou rècord de punts: ${run.score.toLocaleString('ca-ES')} a ${d} (${p} d’encerts) fent ballar la Mulassa de Valls! 🎉`,
-    clear: `${MULA}💃 He fet ballar la Mulassa de Valls amb un ${p} d’encerts a ${d}. T’hi atreveixes? 🔥`,
-    fail: `${MULA} ${p} d’encerts a ${d}… La Mulassa em demana la revenja. I tu, com ho faries? 💃`,
+    challenge: tr('services.share.challenge', { mula: MULA, pct: p, diff: d }),
+    record: tr('services.share.record', { mula: MULA, score: fmtNum(run.score), diff: d, pct: p }),
+    clear: tr('services.share.clear', { mula: MULA, pct: p, diff: d }),
+    fail: tr('services.share.fail', { mula: MULA, pct: p, diff: d }),
   }[outcomeOf(run, challenge)];
   return `${line} ${HASHTAGS}`;
 }

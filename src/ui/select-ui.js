@@ -2,19 +2,20 @@
 // one chevron fold and one «Pròximament» pill; either unfolds it in place (its cards, its towns' pills),
 // the fold and an «Amaga» pill fold it back. A pending figure shows its own panel instead of the records.
 // Arrows rove cards; Enter confirms a figure. On the next step arrows choose difficulty; Escape returns.
-import { FIGURES, TOWNS, townOf, playable, rememberedLevel, rememberLevel, readFigureRecord, aviatText, aviatDraft, INVITE, INVITE_TOWN, inviteText, INVITE_DRAFT } from '../game/figures.js';
+import { FIGURES, TOWNS, townOf, playable, rememberedLevel, rememberLevel, readFigureRecord, aviatDraft, INVITE, INVITE_TOWN, INVITE_DRAFT } from '../game/figures.js';
 import { DIFFS } from '../game/chart.js';
 import { num } from './sheet-kit.js';
 import { showLevelStats } from './level-stats.js';
 import { setupStandings, rankText, rankLabel } from './select-standings.js';
-import { savedName } from './board-list.js';
+import { setupPodium } from './select-podium.js';
+import { ownerKey } from './board-list.js';
 import { entityHtml, fitEntityLabel } from './figure-entities.js';
-import { GIFTS } from './pending-gifts.js';
+import { setupPendingPanel } from './pending-panel.js';
 import { stripScroll } from './strip-scroll.js';
 import { fitPendingTitle } from './pending-title.js';
-import { pixelSvg, escapeHtml, pillHtml, stripHtml, moreHtml, soonPillHtml, peekGap } from './select-strip.js';
+import { pixelSvg, pillHtml, stripHtml, moreHtml, soonPillHtml, peekGap, navX } from './select-strip.js';
+import { tr } from '../i18n/messages.js';
 export { pixelSvg, peekGap }; // the strip's helpers moved to select-strip.js; their callers keep this path
-
 const DEMO_BEST = [48920, 80000, null], DEMO_PCT = [96, 91, null]; // ?demo: made-up best scores (and their %) per level (NORMAL: the mock board's own row)
 const TROPHY = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h10V9a5 5 0 0 1-10 0zM7 5.5H3.5V7A3.5 3.5 0 0 0 7 10.5M17 5.5h3.5V7a3.5 3.5 0 0 1-3.5 3.5M12 14v3.5M8 20.5h8M9.5 17.5h5"/></svg>';
 
@@ -24,9 +25,11 @@ const TROPHY = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h10V9
 // onCard(p): a name on the desktop card opens that player's card (player-card.js)
 
 export function setupSelect({ doc = document, win = globalThis, store, keyboard = () => false, busy = () => false, reduced = () => false,
-  firstLevel = null, demo = false, getError = () => null, standing = () => Promise.resolve(null), ranked = false, onBoard = () => {}, onCard = () => {}, sfx = () => {}, onPlay, onSelect = () => {}, onFree = () => {}, onHowto, onWrite }) {
+  firstLevel = null, demo = false, getError = () => null, standing = () => Promise.resolve(null), levelPodium = null, ranked = false, onBoard = () => {}, onCard = () => {}, sfx = () => {}, onPlay, onSelect = () => {}, onFree = () => {}, onHowto, onWrite }) {
   const DEMO = demo && Boolean((import.meta.env ?? {}).DEV); // ?demo: made-up facts on show only, never stored or sent; gone from production builds
-  const $ = id => doc.getElementById(id), facts = setupStandings({ doc, $, onBoard: () => onBoard(figure), onCard: p => onCard({ ...p, from: { ...p.from, figure: figure.id } }), busy, levels: () => step === 'level' }); // facts: desktops' medals and board card (select-standings.js)
+  const $ = id => doc.getElementById(id), cardOf = p => onCard({ ...p, from: { ...p.from, figure: figure.id } }), facts = setupStandings({ doc, $, onBoard: () => onBoard(figure), onCard: cardOf, busy, levels: () => step === 'level', onEased: () => { if (shown) { levelStats(); measure(); } } }); // facts: desktops' medals and board card (select-standings.js)
+  const podium = setupPodium({ doc, win, $, onBoard: () => { if (!busy()) onBoard(figure); }, onCard: cardOf, load: ranked && levelPodium, refit: () => levelStats() }); // step 2's podium (select-podium.js)
+  let standingNow = null; // the board's last answer, for the podium
   const root = $('select'), towns = $('select-towns'), strip = $('select-strip'), levels = $('select-level'), pending = $('select-pending');
   const live = FIGURES.filter(playable), soon = FIGURES.filter(f => !playable(f));
   const liveTowns = TOWNS.filter(t => live.some(f => f.town === t.id)), restTowns = [...TOWNS.filter(t => !liveTowns.includes(t) && soon.some(f => f.town === t.id)), INVITE_TOWN]; // the invitation folds with what is to come, last
@@ -38,7 +41,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
   const bar = [...towns.querySelectorAll('.sel-pill')], pills = bar.filter(p => p.dataset.town), cards = [...strip.querySelectorAll('.sel-card')];
   const fold = cards.find(c => c.dataset.more), soonPill = bar.find(p => p.dataset.soon), later = [...strip.querySelectorAll('.later')];
   const restPills = pills.filter(p => restTowns.some(t => t.id === p.dataset.town));
-  const foldLabel = `${soon.length} figures més, pròximament, de ${new Set(soon.map(f => f.town)).size} poblacions`;
+  const foldLabel = tr('ui.select.foldLabel', { n: soon.length, towns: new Set(soon.map(f => f.town)).size });
   let figure = live[0], lastPlayable = figure, open = true; // catalog selection is independent of the host's last playable figure
   let opening = false, shown = false, teasing = false, level = 1, town = null, cur = 0, req = 0, step = 'figures';
   const smooth = () => (reduced() ? 'auto' : 'smooth');
@@ -46,7 +49,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
 
   const scrolling = stripScroll(strip, win, reduced);
   const townScrolling = stripScroll(towns, win, reduced);
-  let stripLimit = 0;
+  let stripLimit = 0, restWidth = Infinity; // restWidth: what the folded pills add to the header row once opened (unknown until they were shown)
   function updateArrows() { // the selection's neighbours, not the scroll position: the centring padding is never «more»
     const available = visibleCards(), i = available.indexOf(cards[cur]), fits = $('select-carousel').hasAttribute('data-fits');
     $('select-prev').disabled = fits || i <= 0;
@@ -58,33 +61,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     else townScrolling.to(left, behavior !== 'smooth');
   };
 
-  function pendingFill(f) {
-    $('aviat-title').textContent = f.fullName || f.name;
-    $('aviat-entity').hidden = false;
-    $('aviat-entity').innerHTML = entityHtml(f);
-    $('aviat-icon').innerHTML = ''; $('aviat-icon').hidden = true; // the strip below already shows its portrait
-    $('aviat-text').innerHTML = (f.invite ? inviteText() : aviatText(f)).split('\n\n').map(p => `<p>${escapeHtml(p)}</p>`).join('');
-  }
-  function teaserFill() {
-    pending.toggleAttribute('data-fold', true); // same GitHub/mail row as a pending figure: the fan yields the room (select.css)
-    $('aviat-title').textContent = 'Aviat a la plaça';
-    $('aviat-icon').innerHTML = GIFTS; $('aviat-icon').hidden = false;
-    $('aviat-entity').hidden = true;
-    $('aviat-entity').innerHTML = '';
-    $('aviat-text').innerHTML = '<p>Volem que surtin a la plaça. Envia’ns el que tinguis o explica’ns com es balla.</p>';
-  }
-  // Leaving, the card keeps the box it had: the dock rising and the room it frees would otherwise resize and move it
-  // mid-fade (a jump and a repaint as it went). Its next showing lets go first.
-  const FROZEN = ['top', 'maxHeight', 'minHeight', 'height', 'transform'];
-  function freeze() {
-    const cs = win.getComputedStyle?.(pending);
-    if (!cs) return;
-    // getComputedStyle is live: capture every value before any write can change the layout.
-    const values = FROZEN.map(k => k === 'minHeight' ? cs.height : cs[k]);
-    FROZEN.forEach((k, i) => { pending.style[k] = values[i]; });
-    pending.toggleAttribute('data-leaving', true);
-  }
-  function thaw() { for (const k of FROZEN) pending.style[k] = ''; pending.toggleAttribute('data-leaving', false); }
+  const { fill: pendingFill, teaser: teaserFill, freeze, thaw } = setupPendingPanel({ $, win, pending });
   function panel() { // the centre shows what the cursor is on: the selected figure, or the fold's own card
     const ok = playable(figure), leave = ok && !(Boolean(fold) && cards[cur] === fold);
     if (leave && !pending.hidden) freeze(); else if (!leave) thaw(); // read before the attributes below move the dock
@@ -94,7 +71,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     pending.hidden = leave;
     $('select-info').inert = $('select-info').hidden = !ok || teasing;
     $('select-next').disabled = !ok || teasing; // desktop keeps a disabled placeholder; touch hides it
-    $('select-next-label').textContent = !ok || teasing ? 'Pròximament?' : 'Tria la dificultat';
+    $('select-next-label').textContent = tr(!ok || teasing ? 'ui.select.soonQ' : 'ui.select.pickLevel');
     freeShown();
     if (teasing) teaserFill();
     else if (!ok) { pending.toggleAttribute('data-fold', false); pendingFill(figure); }
@@ -105,7 +82,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     panel();
     if (ok) {
       $('select-entity').innerHTML = entityHtml(figure);
-      $('select-name').textContent = figure.fullName || figure.name || 'Aviat';
+      $('select-name').textContent = figure.fullName || figure.name || tr('ui.select.aviat');
       $('select-song-name').textContent = figure.song || '';
       $('select-song-credit').textContent = [figure.composer, figure.year].filter(Boolean).join(' · ');
     }
@@ -136,16 +113,21 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     sfx('menu'); setStep('level');
     if (keyboard()) levels.children[level].focus({ preventScroll: true });
   }
+  // the last answer per figure and owner (memory only): shown again while the board is asked, so a figure change moves and
+  // rewrites nothing when the place has not changed (Marc: «Classificació» then «Posició …» flashed on each change)
+  const seenRank = new Map();
+  const rankKey = () => `${figure.id}:${ownerKey(store)}`; // a sign-out changes it: never the previous profile's place
   function updateStanding() {
-    const mine = ++req;
-    rank(null); // until the board gives one (?demo once showed a made-up «12 de 135» here: it flashed before the real place)
-    const fail = () => { if (mine === req) rank(null, true); }; // no answer: the card says so in the room it kept
-    standing(figure.id).then(s => (s ? mine === req && rank(s) : fail()), fail); // each figure has its own board (Drac included)
+    const mine = ++req, key = rankKey();
+    rank(seenRank.get(key) ?? null); // until the board answers (?demo once showed a made-up «12 de 135» here)
+    const fail = () => { if (mine === req) { seenRank.delete(key); rank(null, true); } }; // no answer: the card says so in the room it kept
+    standing(figure.id).then(s => (s ? mine === req && (seenRank.set(key, s), rank(s)) : fail()), fail); // each figure has its own board (Drac included)
   }
   function rank(s, failed = false) { // the ranking line («Posició 12 de 135 · Tardor 2026», select-standings.js); a button, it opens Classificacions
     const el = $('select-rank-tile'), text = rankText(s);
-    el.hidden = !ranked; tiles(); const me = savedName(store); facts.board(s, ranked, failed, `${figure.id}:${me.alias}#${me.tag}`); // the placeholder takes this figure's and owner's last shape
-    if (step === 'level') levelStats(); // step 2: the answer's foot goals are fitted beside the level row again
+    standingNow = s;
+    el.hidden = !ranked; tiles(); // the placeholder takes this figure's and owner's last shape; step 2 fits the answer's goals beside the level row
+    facts.board(s, ranked, failed, rankKey(), step === 'level' ? levelStats : undefined);
     el.toggleAttribute('data-loading', !s && !failed);
     $('select-pos').textContent = text;
     el.setAttribute('aria-label', rankLabel(text));
@@ -158,16 +140,20 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
       const l = Number(b.dataset.level), d = DIFFS[l].name;
       const score = DEMO ? DEMO_BEST[l] : readFigureRecord(store, figure, l)?.score, has = Number.isFinite(score);
       b.innerHTML = has ? `${d}<span class="sub">${TROPHY}${num(score)}</span>` : d;
-      b.setAttribute('aria-label', has ? `${d}, el teu rècord ${num(score)} punts` : d);
+      b.setAttribute('aria-label', has ? tr('ui.select.levelAria', { level: d, score: num(score) }) : d);
     }
   }
-  function levelStats() { // desktops, step 2: the info column may run down to the level card (12 px above it), not the dock's top
+  // desktops, step 2: the info column may run down to the level card (12 px above it), not the dock's top; the board card
+  // eases to its new height (select-standings.js)
+  function levelStats() { facts.eased(() => {
     const card = step === 'level' && win.innerWidth >= 900 && win.innerHeight >= 600 && $('select-act').getBoundingClientRect();
     if (card?.height) root.style.setProperty('--info-dock', `${(root.getBoundingClientRect().bottom - card.top) / (parseFloat(win.getComputedStyle?.(root).zoom) || 1) + 6}px`);
-    else root.style.removeProperty?.('--info-dock');
+    else if (step === 'level') root.style.removeProperty?.('--info-dock'); // step 1's: measure()
     const two = step === 'level' && playable(figure);
     facts.fit(true); showLevelStats($, { on: two, level, record: DEMO ? { score: DEMO_BEST[level], quality: DEMO_PCT[level] } : readFigureRecord(store, figure, level), goals: facts.goals });
-    if (!two) facts.fit(); } // step 1: the medals and the rows
+    if (!two) facts.fit(); // step 1: the medals and the rows
+    podium.fit({ on: two && ranked, figure: figure.id, level, owner: ownerKey(store), s: standingNow });
+  }); }
   function setLevel(l, by = 'tap') { // 'open': the figure's last level (NORMAL at first) or a challenge's, marked without a tap's shake
     if (!playable(figure)) return;
     l = Math.max(0, Math.min(DIFFS.length - 1, l));
@@ -269,9 +255,9 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     const restoreFocus = !on && items.includes(doc.activeElement);
     restPills.forEach(p => { p.tabIndex = on ? 0 : -1; });
     const text = soonPill?.querySelector?.('.sel-soon-text'), label = () => { // the toggles' state (their look changes with it)
-      fold.setAttribute('aria-expanded', String(open)); fold.setAttribute('aria-label', open ? 'Amaga les figures pròximament' : foldLabel);
+      fold.setAttribute('aria-expanded', String(open)); fold.setAttribute('aria-label', open ? tr('ui.select.foldHide') : foldLabel);
       soonPill?.setAttribute('aria-expanded', String(open));
-      if (text) text.textContent = open ? 'Amaga' : 'Pròximament';
+      if (text) text.textContent = tr(open ? 'ui.select.hide' : 'ui.select.soon');
     };
     if (how === 'open') { label(); for (const el of items) el.hidden = !on; return; }
     sfx('menu');
@@ -423,7 +409,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
   $('select-figures-back').addEventListener('click', () => { setStep('figures'); api.refocus(); });
   $('select-play').addEventListener('click', play);
   $('select-howto').addEventListener('click', () => { if (playable(figure)) onHowto(); });
-  $('aviat-write').addEventListener('click', () => { if (teasing) onWrite(''); else if (!playable(figure)) onWrite(figure.invite ? INVITE_DRAFT : aviatDraft(townOf(figure).name)); });
+  $('aviat-write').addEventListener('click', () => { if (teasing) onWrite(''); else if (!playable(figure)) onWrite(figure.invite ? INVITE_DRAFT : aviatDraft(figure, townOf(figure).name)); });
 
   win.addEventListener('keydown', e => {
     if (e.defaultPrevented || !shown || busy() || e.altKey || e.ctrlKey || e.metaKey) return;
@@ -488,7 +474,9 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     // header: logo left, corner buttons right; the towns fit between (asymmetric gutter: a symmetric one dropped them on an iPad) or get their own row
     const logo = [...root.querySelectorAll('.sel-logo')].map(r).filter(b => b.width > 0), right = corner.filter(el => !el.hidden).map(r).filter(b => b.width > 0);
     const oneLine = Boolean(root.querySelector('.sel-logo-line')?.getClientRects().length); // desktops: the one-line logo, the towns always on their own row below it
-    const needed = bar.reduce((width, pill) => width + r(pill).width, 0) + GAPS.get(towns) * z * (bar.length - 1);
+    // The header must not change with the fold (the info block under it would jump): decide on the unfolded row, the folded pills' width remembered from when they showed.
+    if (restPills.length && restPills.every(pill => !pill.hidden)) restWidth = restPills.reduce((width, pill) => width + r(pill).width, 0); // (the gaps are in `needed` already: it counts every pill)
+    const needed = bar.reduce((width, pill) => width + r(pill).width, 0) + GAPS.get(towns) * z * (bar.length - 1)  + (restPills.some(pill => pill.hidden) ? restWidth : 0);
     const gutterL = Math.max(0, ...logo.map(b => b.right)) + 24, gutterR = Math.max(0, ...right.map(b => win.innerWidth - b.left)) + 24;
     const inline = Boolean(!oneLine && right.length && win.innerWidth - gutterL - gutterR >= needed);
     root.toggleAttribute('data-header-inline', inline);
@@ -501,14 +489,15 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     const dock = $('select-bottom'), dockTop = (dock.offsetTop ?? r(dock).top / z) * z;
     // The pills' layout box, not their rect: unfolding slides them to their new row by a transform that may still be under way.
     const townsBottom = ((towns.offsetTop ?? r(towns).top / z) + (towns.offsetHeight ?? r(towns).height / z)) * z;
-    // Desktops: the first banner never starts left of the narrowest info column (308) + 12 (Marc: the column ends at most there);
+    // Desktops: the first banner never starts left of the narrowest info column + 12 (Marc: the column ends at most there): 308, or
+    // 410 from 1200 px (the board card keeps its %: > 400 px, select.css), 530 from 1280 (its foot keeps one line, ~492 px, ~512 with a 7-digit gap; Marc, 2026-10-21);
     // a centred strip that would (under ~1180 px) moves right instead, as far as it must. Set before peek(): its room starts there.
-    const desk = win.innerWidth >= 900 && win.innerHeight >= 600, flag = strip.querySelector('.sel-banner');
+    const desk = win.innerWidth >= 900 && win.innerHeight >= 600, narrowest = win.innerWidth >= 1280 ? 530 : win.innerWidth >= 1200 ? 410 : 308, flag = strip.querySelector('.sel-banner');
     // Fine-pointer desktops: the strip's box starts right of the info column (below), so its cards never scroll under the column
     // and its empty part never covers the ranking's names. Laid out full width first: the column's width comes from that rest place.
     const boxed = desk && Boolean(win.matchMedia?.('(pointer: fine)').matches);
     root.style.setProperty('--strip-x', '0px');
-    const shift = desk && flag?.offsetParent ? (r($('select-info')).left - r(strip).left) / z + 320 - (flag.offsetLeft - (parseFloat(win.getComputedStyle?.(strip).paddingLeft) || 0)) : 0;
+    const shift = desk && flag?.offsetParent ? (r($('select-info')).left - r(strip).left) / z + narrowest + 12 - (flag.offsetLeft - (parseFloat(win.getComputedStyle?.(strip).paddingLeft) || 0)) : 0;
     strip.style.setProperty('--strip-l', `${shift}px`);
     // Reserve the expanded header row even while towns fit inline: folding must not move the contact card.
     peek();
@@ -529,12 +518,31 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     const nav = stripLimit > 1 ? ($('select-nav').offsetHeight || 0) * z : 0;
     // Desktops: the info column ends 12 px before the strip's first banner (Marc), at its rest place (offsetLeft: the centring,
     // not the scroll), never under a 300 px panel; long names wrap. Step 2 hides the strip: the column keeps its width.
-    if (flag && desk) { if (flag.offsetParent) root.style.setProperty('--info-w', px(Math.max(308 * z, r(strip).left + flag.offsetLeft * z - 12 * z - r($('select-info')).left))); }
+    if (flag && desk) { if (flag.offsetParent) root.style.setProperty('--info-w', px(Math.max(narrowest * z, r(strip).left + flag.offsetLeft * z - 12 * z - r($('select-info')).left))); }
     else root.style.removeProperty?.('--info-w');
+    if (desk) root.style.setProperty('--info-floor', `${narrowest}px`); else root.style.removeProperty?.('--info-floor');
+    // Step 1, fine-pointer desktops: no card sits under the column (boxed, below), only the action row may. The column ends 12 px
+    // before its buttons when it stays as wide as `narrowest` and the card keeps its % (Marc,
+    // 2026-10-21: «no estretis tant») and then runs down to the foot; else down to 12 px above them.
+    // select-standings.js fills what this gives (step 2: levelStats()).
+    if (step !== 'level') {
+      const was = root.style.getPropertyValue?.('--info-dock') ?? '';
+      if (boxed) {
+        const drop = r(dock).top - dockTop, info = r($('select-info')); // drop: a pending figure's transform, the buttons at rest
+        const btns = ['select-next', 'select-free'].map($).filter(el => !el.hidden).map(r).filter(b => b.width);
+        const edge = Math.min(...btns.map(b => b.left)) - 12 * z;
+        if (edge < info.right && edge - info.left >= Math.max(narrowest, 410) * z) root.style.setProperty('--info-w', px(edge - info.left));
+        const under = btns.filter(b => b.left - 12 * z < r($('select-info')).right).map(b => b.top - drop);
+        root.style.setProperty('--info-dock', under.length ? px(r(root).bottom - Math.min(...under) + 6 * z) : '50px');
+      } else root.style.removeProperty?.('--info-dock');
+      if ((root.style.getPropertyValue?.('--info-dock') ?? '') !== was) facts.eased(() => facts.fit());
+    }
     if (boxed && flag?.offsetParent) { // the same rest place inside a box from the column's edge + 12: its room (peek()'s gap) and stripLimit are unchanged
-      const x = Math.max(0, (r($('select-info')).right - r(strip).left) / z + 12);
+      // A hidden column (pending figure) keeps its old rect for its 220 ms display fade, and the observer may skip the refit: ignore it.
+      const x = $('select-info').hidden ? 12 : Math.max(0, (r($('select-info')).right - r(strip).left) / z + 12);
       root.style.setProperty('--strip-x', `${x}px`); strip.style.setProperty('--strip-l', `${Math.max(0, left - x)}px`);
     }
+    root.style.setProperty('--nav-x', px(navX(win, towns, $('select-carousel'), z))); // the arrows stand at the screen's middle, whatever the info column or the dock does (clear of the pills)
     const info = r($('select-info')); // the camera's free rect (cameras.js frameMenuLens): hardTop = the pills' floor (she may rise behind the info's lower rows), a side panel takes the left
     api.band = { top: side ? townsBottom : info.bottom, bottom: dockTop - nav, hardTop: townsBottom, left: side ? info.right : 0, right: win.innerWidth };
     // Use the strip's final layout position, including its painted top gutter. CSS subtracts
@@ -548,7 +556,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
   }
   win.addEventListener('resize', () => { if (shown) { scrolling.stop(); if (closing) finishFold(); for (const el of [towns, $('select-info')]) arrivals.get(el)?.cancel(); if (teasing) teaserFill(); levelStats(); measure(); if (step === 'figures') centre(strip, cards[cur], 'instant'); } });
   if (win.ResizeObserver) {
-    const observer = new win.ResizeObserver(() => { if (shown) { levelStats(); measure(); } }); // a hint closing or the viewport settling: the level row fits again
+    const observer = new win.ResizeObserver(() => { if (shown && !facts.easing) { levelStats(); measure(); } }); // a hint closing or the viewport settling: the level row fits again
     observer.observe($('select-info')); observer.observe(root); // --app-h can settle after Safari's viewport event.
   }
   doc.fonts?.ready.then(() => { if (shown) measure(); });

@@ -1,0 +1,5 @@
+- Traducció: 869 claus en portuguès del Brasil, amb «você» i to informal; sense dubtes lingüístics pendents. «CARRETILLES» es manté com a terme cultural, amb la glossa «fogos giratórios» a l'ajuda.
+- Espai: «BOM», «TOQUES» i «VOCÊ» superen la proporció orientativa en originals molt curts; es mantenen per naturalitat i fidelitat. Els missatges curts de hud/game no passen de 24 caràcters. No s'ha comprovat el resultat visual al navegador.
+- Validació aïllada correcta: claus i ordre, marcadors, 26 formes de plural segons meta.json, etiquetes i atributs, estructura SEO, enllaços, negretes, home intacte i generació HTML/Markdown de pt-BR.
+- `node tests/i18n.mjs` s'ha aturat perquè falta `src/i18n/locales/eu/html.json`; `node tests/seo.mjs` falla a «a single language adds no hreflang», amb diverses llengües presents. No s'han modificat aquests fitxers.
+- Integració pendent: `tools/seo-pages.mjs` filtra els noms amb `/^[a-z]{2,3}\.json$/` i no descobreix `pt-BR.json`; la generació amb el contingut pt-BR explícit funciona. El registre, `load-locale.js`, `meta.json` i el boot queden per a l'orquestrador, tal com mana el brief.

@@ -13,6 +13,7 @@ import { keyboardNav } from './focus.js';
 import { beatAtTime } from '../core/beat-grid.js';
 import { errors } from '../services/errors.js';
 import { audioFailureTags } from '../platform/audio.js';
+import { tr } from '../i18n/messages.js';
 
 const FM_NOTE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V6l11-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/></svg>';
 const FM_NO_MUSIC = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V6l11-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/><path d="m3 3 18 18"/></svg>';
@@ -22,16 +23,16 @@ export const nextTrack = i => (i + 1) % FM_OFF; // Mulassa → Drac → the menu
 // onSound: the speaker button shows the preference again (ui/sheets-setup.js).
 export function setupFreeMusic({ eye, onSound }) {
   const mmss = s => `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, '0')}`;
-  const tracks = [{ title: 'Música del menú', sub: 'Mulassa Tap Tap Dance · sense fi', art: FM_NOTE, kind: 'menu' },
+  const tracks = [{ title: tr('ui.radio.menu'), sub: tr('ui.radio.menuSub'), art: FM_NOTE, kind: 'menu' },
     ...[MULASSA, DRAC].map(f => {
       const song = figureSong(f.id);
       return { title: f.song, sub: `${f.composer.replace(/^(\S)\S* (\S+).*/, '$1. $2')} · ${f.year} · ${mmss(song.tail)}`, song, art: pixelSvg(portraitArt(f), portraitPalette(f), '#2a1a10'), kind: f.id };
     }),
-    { title: 'Sense música', sub: 'Amb els efectes del joc', art: FM_NO_MUSIC, kind: 'off' }];
+    { title: tr('ui.radio.off'), sub: tr('ui.radio.offSub'), art: FM_NO_MUSIC, kind: 'off' }];
   const btn = document.createElement('button'), menu = document.createElement('div'), now = document.createElement('div');
-  btn.id = 'radio'; btn.type = 'button'; btn.hidden = true; btn.setAttribute('aria-haspopup', 'true'); btn.setAttribute('aria-controls', 'radio-menu');
+  btn.id = 'radio'; btn.className = 'round-btn'; btn.type = 'button'; btn.hidden = true; btn.setAttribute('aria-haspopup', 'true'); btn.setAttribute('aria-controls', 'radio-menu');
   menu.id = 'radio-menu'; menu.hidden = true; menu.setAttribute('role', 'radiogroup'); menu.setAttribute('aria-labelledby', 'radio-title');
-  menu.innerHTML = '<h2 id="radio-title">Música de la plaça</h2>' + tracks.map((t, i) => `<button type="button" class="fm-row" role="radio" data-i="${i}" data-kind="${t.kind}"><span class="fm-art">${t.art}</span><span class="fm-t"><b>${t.title}</b><small></small></span><span class="fm-st"></span></button>`).join('');
+  menu.innerHTML = `<h2 id="radio-title">${tr('ui.radio.title')}</h2>` + tracks.map((t, i) => `<button type="button" class="fm-row" role="radio" data-i="${i}" data-kind="${t.kind}"><span class="fm-art">${t.art}</span><span class="fm-t"><b>${t.title}</b><small></small></span><span class="fm-st"></span></button>`).join('');
   now.id = 'radio-now'; now.hidden = true; now.setAttribute('role', 'status');
   eye.after(btn, menu, now);
   const rows = [...menu.querySelectorAll('.fm-row')];
@@ -42,11 +43,11 @@ export function setupFreeMusic({ eye, onSound }) {
     btn.innerHTML = (cur === FM_OFF ? FM_NO_MUSIC : FM_NOTE) + '<span class="fm-dot"></span>';
     btn.dataset.kind = tracks[cur].kind;
     btn.setAttribute('aria-expanded', String(open));
-    btn.title = `Música: ${tracks[cur].title} (M)`; btn.setAttribute('aria-label', btn.title);
+    btn.title = tr('ui.radio.buttonTitle', { track: tracks[cur].title }); btn.setAttribute('aria-label', btn.title);
     rows.forEach((r, i) => {
       r.setAttribute('aria-checked', String(i === cur)); r.tabIndex = i === cur ? 0 : -1;
       const paused = i === cur && i !== FM_OFF && chip?.ctx?.state !== 'running';
-      r.querySelector('small').textContent = i === loading ? 'Carregant…' : i === failed ? 'No s’ha pogut reproduir' : paused ? 'Toca per reprendre' : tracks[i].sub;
+      r.querySelector('small').textContent = i === loading ? tr('ui.radio.loading') : i === failed ? tr('ui.radio.failed') : paused ? tr('ui.radio.tapResume') : tracks[i].sub;
       const st = r.querySelector('.fm-st');
       st.replaceChildren();
       if (i === loading) st.append(mulaSpinner(document, { mini: true }));
@@ -71,7 +72,7 @@ export function setupFreeMusic({ eye, onSound }) {
     }
   }
   function announce() {
-    const status = cur === FM_OFF ? 'Música aturada' : chip?.running ? 'Ara sona' : 'Toca per reprendre';
+    const status = tr(cur === FM_OFF ? 'ui.radio.stopped' : chip?.running ? 'ui.radio.playing' : 'ui.radio.tapResume');
     now.innerHTML = `<span class="fm-art">${tracks[cur].art}</span><span><small>${status}</small><b>${tracks[cur].title}</b></span>`;
     now.dataset.kind = tracks[cur].kind; now.hidden = false; now.dataset.visible = 'true'; now.setAttribute('aria-hidden', 'false');
     clearTimeout(nowT); nowT = setTimeout(() => { now.dataset.visible = 'false'; now.setAttribute('aria-hidden', 'true'); }, FM_NOW_MS);

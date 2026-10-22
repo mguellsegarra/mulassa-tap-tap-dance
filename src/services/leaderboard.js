@@ -1,3 +1,4 @@
+import { tr } from '../i18n/messages.js';
 import { LEADERBOARD_VERSION, normalizeAlias, validResult } from './leaderboard-rules.js';
 import { DRAC_SCORE_VERSION } from '../game/score-scale.js';
 import { ALIAS_MESSAGES } from './alias-rules.js';
@@ -10,33 +11,33 @@ export class LeaderboardError extends Error {
   constructor(code, message, detail = '') { super(message); this.name = 'LeaderboardError'; this.code = code; this.detail = detail; }
 }
 const messages = {
-  disabled: 'La classificació no està disponible.', invalid: 'Revisa el sobrenom i el resultat.',
-  captcha: 'Completa la verificació per publicar el resultat.', busy: 'Espera que acabi l’enviament.',
-  rate_limit: 'Espera uns segons abans de tornar-ho a provar.', session: 'La sessió ha caducat. Torna-ho a provar.',
-  unavailable: 'No s’ha pogut connectar amb la classificació. Revisa la connexió i torna-ho a provar.',
+  disabled: tr('services.board.disabled'), invalid: tr('services.board.invalid'),
+  captcha: tr('services.board.captcha'), busy: tr('services.board.busy'),
+  rate_limit: tr('services.board.rate_limit'), session: tr('services.board.session'),
+  unavailable: tr('services.board.unavailable'),
   // the server answered, and refused: never «connectar» (the connection was fine)
-  server: 'La classificació ha fallat per un error nostre. Torna-ho a provar més tard.',
-  captcha_failed: 'Cloudflare no ha confirmat la verificació. Torna-ho a provar.',
-  closed: 'Ara mateix no es poden crear perfils nous. Torna-ho a provar més tard.',
-  taken: 'Aquest sobrenom ja és d’algú. Prova’n un altre.',
+  server: tr('services.board.server'),
+  captcha_failed: tr('services.board.captcha_failed'),
+  closed: tr('services.board.closed'),
+  taken: tr('services.board.taken'),
   // 0015: more points than a perfect run can make (a tampered or buggy client); nothing to fix on the player's side
-  ceiling: 'Aquesta puntuació supera el màxim possible del nivell i no es pot publicar.',
+  ceiling: tr('services.board.ceiling'),
   // the server refused a nickname the client's rules let through (its lists drifted): it doesn't say which part
   blocked: ALIAS_MESSAGES.blocked,
   spaces: ALIAS_MESSAGES.spaces,
-  email: 'Revisa l’adreça de correu.',
-  code: 'El codi no és correcte o ha caducat. Demana’n un de nou.',
-  noprofile: 'No hi ha cap perfil amb aquest correu confirmat.',
+  email: tr('services.board.email'),
+  code: tr('services.board.code'),
+  noprofile: tr('services.board.noprofile'),
   // 202610200001: «Tria el teu nom» (choose_verified_alias) needs the confirmed address; the clean name may be someone's
-  verification: 'Confirma el correu abans de triar un nom net.',
-  name_taken: 'Aquest nom ja és d’algú. Prova’n un altre.',
-  season: 'Aquesta temporada ja s’ha tancat i no admet més resultats.',
-  board: 'Aquesta classificació no existeix.',
+  verification: tr('services.board.verification'),
+  name_taken: tr('services.board.name_taken'),
+  season: tr('services.board.season'),
+  board: tr('services.board.board'),
   // merge_stats: nothing here is the player's to fix; the sync stays silent and tries again with the next run
-  stats: 'No s’han pogut desar les estadístiques.',
-  stats_time: 'No s’han pogut desar les estadístiques.', // more time than has passed since the last upload: it fits later
-  device: 'Aquest perfil ja guarda estadístiques de massa dispositius.',
-  gone: 'Aquest perfil ja no existeix. Crea’n un de nou.',
+  stats: tr('services.board.stats'),
+  stats_time: tr('services.board.stats'), // more time than has passed since the last upload: it fits later
+  device: tr('services.board.device'),
+  gone: tr('services.board.gone'),
 };
 const fail = (code, detail) => new LeaderboardError(code, messages[code], detail);
 export const PAGE = 50; // rows per page of the joint board (the server's cap too)
@@ -174,6 +175,13 @@ export function createLeaderboardService({ configured, publishingEnabled, captch
       try {
         return await rpc(await client(), 'get_leaderboard_all', { p_version: version ?? FIGURE_VERSIONS[figure] ?? LEADERBOARD_VERSION,
           p_period: 'all', p_offset: offset, p_limit: limit, ...season(seasonId) });
+      } catch (error) { throw translated(error); }
+    },
+    // One level's best three on a figure's open board (get_level_podium, 202610210001; the selector's step 2): [{ position
+    // (within the level), alias (guests already «nom#1234»), score, quality, is_self, total (players on that level), verified, tag }].
+    async levelPodium({ figure, level }) {
+      try {
+        return (await rpc(await client(), 'get_level_podium', { p_version: FIGURE_VERSIONS[figure] ?? LEADERBOARD_VERSION, p_difficulty: level })) ?? [];
       } catch (error) { throw translated(error); }
     },
     // The Saló de la fama of a figure (get_seasons): one entry per (season, dance) with results, newest first, season 0 included.

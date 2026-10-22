@@ -3,7 +3,8 @@
 // so the tests still see (and assign) the shared top-level names of the game's systems (src/core, scene, game, hud, ui, dev).
 // The modules below are NOT inlined: they are pure or self-contained, and the test context supplies them as globals
 // (real, or mocked like setupBoard / setupLoader) before the script runs.
-// Rules for inlined modules: single-line imports, no `as`, no top-level name shared with another inlined module.
+// Rules for inlined modules: single-line imports and re-exports, no `as` on imports, no top-level name shared with another inlined module.
+// Re-exports (`export { a, b as c } from`, `export * from`) inline their source like an import; `b as c` becomes `const c = b;`.
 import { readFileSync } from 'node:fs';
 import { dirname, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -15,8 +16,10 @@ const PROVIDED = new Set(`song.json song-drac.json platform/polyfills.js platfor
   scene/crowd-fx.js ui/select-ui.js ui/board-ui.js ui/profile-ui.js ui/share-ui.js ui/feedback-ui.js ui/sync-sheet.js ui/loader.js ui/sheet-fade.js
   ui/account-ui.js ui/seasons-ui.js ui/player-card.js services/stats-sync.js
   game/drac-path.js game/drac-steps.js game/drac-pose.js game/drac-time.js game/drac-layout.js scene/drac-rig.js scene/drac-legs.js scene/drac-colla.js scene/mula-colla.js
-  dev/cam-edit.js dev/final-test.js`.split(/\s+/));
-const IMPORT = /^import .*;\n/gm, LOCAL = /^import (?:.* from )?'(\.[^']+)';/gm;
+  dev/cam-edit.js dev/final-test.js i18n/load-locale.js i18n/preload.js`.split(/\s+/));
+const IMPORT = /^import .*;\n/gm, LOCAL = /^(?:import|export) (?:.* from )?'(\.[^']+)';/gm;
+const REEXPORT = /^export (?:\*|\{([^}]*)\}) from '[^']+';.*\n/gm;
+const renames = names => (names || '').split(',').map(n => n.trim().split(/\s+as\s+/)).filter(n => n.length === 2).map(([a, b]) => `const ${b} = ${a};\n`).join('');
 
 export function loadMainSource(entry = resolve(root, 'main.js')) {
   const seen = new Set(), out = [];
@@ -28,7 +31,7 @@ export function loadMainSource(entry = resolve(root, 'main.js')) {
       const dep = resolve(dirname(file), spec);
       if (!PROVIDED.has(relative(root, dep))) visit(dep);
     }
-    out.push(`//# sourceURL=${file}\n` + src.replace(/^import (\w+) from '(\.[^']+\.json)'(?: with \{ type: 'json' \})?;$/gm, (_, name, spec) => name === 'song' ? '' : `const ${name} = ${readFileSync(resolve(dirname(file), spec), 'utf8')};`).replace(IMPORT, '').replace(/^export .* from '[^']+';\n/gm, '').replace(/^export (default )?/gm, ''));
+    out.push(`//# sourceURL=${file}\n` + src.replace(/^import (\w+) from '(\.[^']+\.json)'(?: with \{ type: 'json' \})?;$/gm, (_, name, spec) => name === 'song' ? '' : `const ${name} = ${readFileSync(resolve(dirname(file), spec), 'utf8')};`).replace(IMPORT, '').replace(REEXPORT, (_, names) => renames(names)).replace(/^export (default )?/gm, ''));
   };
   visit(entry);
   return out.join('\n');

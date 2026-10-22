@@ -51,6 +51,23 @@ try {
   await unlock();await as(old); await submit('drac-v1',raw,8000);
   assert.equal((await board('drac-v1'))[0].score,8000);
   assert.equal((await board('mulassa-v3'))[0].score,3000);
+  // get_level_podium (202610210001): one level's own ranking. Tercer's best is NORMAL (one row on the joint board, at
+  // NORMAL) yet their FACIL result still ranks on FACIL's podium, which the joint board cannot show.
+  const third=await player('Tercer');
+  await as(third); await submit('mulassa-v3','Tercer',5000,1);
+  await unlock(); await as(third); await submit('mulassa-v3','Tercer',2500,0);
+  await as(old);
+  assert.deepEqual((await board('mulassa-v3')).map(r=>[r.alias.split('#')[0],r.difficulty]),[['Tercer',1],['Historic',0]]);
+  const podium=d=>q('select * from public.get_level_podium($1,$2)',['mulassa-v3',d]);
+  const easy=await podium(0);
+  assert.deepEqual(easy.map(r=>[Number(r.position),r.alias.split('#')[0],r.is_self,Number(r.total)]),[[1,'Historic',true,2],[2,'Tercer',false,2]]);
+  assert.equal(easy[0].score,3000);
+  assert.deepEqual((await podium(1)).map(r=>r.alias.split('#')[0]),['Tercer']);
+  assert.equal((await podium(2)).length,0,'nobody on DIFICIL');
+  await checkReject(()=>podium(7),'leaderboard_invalid_version');
+  await db.exec('reset role'); // Tercer leaves: the checks below count the boards as they were
+  for(const t of ['leaderboard_private.entries','leaderboard_private.profiles']) await q(`delete from ${t} where user_id=$1`,[third]);
+  await q('delete from auth.users where id=$1',[third]); await as(old);
   await checkReject(()=>q("select * from public.get_leaderboard_all('mulassa-v3','week')"),'leaderboard_invalid_period');
   await checkReject(()=>board('bad'),'leaderboard_invalid_version');
   await checkReject(()=>board('mulassa-v3',99),'leaderboard_invalid_season');

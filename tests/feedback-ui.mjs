@@ -1,5 +1,5 @@
 // «Bústia de la plaça» sheet (src/ui/feedback-ui.js) on a tiny mocked DOM: nothing sent on open, field checks, one token per
-// message from the shared Turnstile, success closes by itself, errors in Catalan, a draft survives an accidental close.
+// message from the shared Turnstile, success closes by itself, errors in Catalan, a draft survives an accidental close unless an Aviat card seeded it.
 import assert from 'node:assert/strict';
 import { setupFeedback, setupNudge, NUDGE_KEY, NUDGE_MAX } from '../src/ui/feedback-ui.js';
 import { FeedbackError } from '../src/services/feedback.js';
@@ -87,11 +87,13 @@ assert.deepEqual(sent[0], { message: 'Molt bon joc, però el DIFÍCIL em mata', 
 assert.equal(menu.open, false, 'sent: the box closes');
 assert(el('feedback-thanks').open && focused === 'feedback-thanks-close', 'and «Rebut! Gràcies» opens');
 timers.at(-1)(); assert.equal(el('feedback-thanks').open, false, 'the thank-you closes by itself');
-fb.show(); assert.equal(text.value, ''); assert.equal(email.value, ''); assert(!text.readOnly && !el('feedback-cancel').disabled, 'the next one starts empty and open');
+fb.show(); assert.equal(text.value, ''); assert.equal(email.value, 'jo@exemple.cat', 'the e-mail stays for the next message'); assert(!text.readOnly && !email.readOnly && !el('feedback-cancel').disabled, 'the next one starts empty and open');
 menu.close(); fb.show(null, 'Sobre Tarragona: ');
 assert.equal(text.value, 'Sobre Tarragona: ', 'Aviat can seed an empty draft');
-text.value = 'Un esborrany meu'; menu.close(); fb.show(null, 'Sobre Reus: ');
-assert.equal(text.value, 'Un esborrany meu', 'a figure hint never overwrites an unsent message');
+text.value = 'Un esborrany meu'; email.value = 'jo@exemple.cat'; menu.close(); fb.show(null, 'Sobre Reus: ');
+assert.equal(text.value, 'Sobre Reus: ', 'a figure draft replaces an unsent message'); assert.equal(email.value, 'jo@exemple.cat', 'the typed e-mail stays');
+text.value = 'Sobre Reus: i més'; menu.close(); fb.show();
+assert.equal(text.value, '', 'closing a seeded sheet empties it, so the next plain opening is blank'); assert.equal(email.value, 'jo@exemple.cat');
 { // while it sends: the calçot in the button, the form locked, no closing
   let release; service.send = () => new Promise(r => { release = r; });
   text.value = 'Un altre missatge'; email.value = 'jo@exemple.cat'; el('feedback-form').fire('submit'); await tick(); await tick();
@@ -136,5 +138,18 @@ globalThis.setTimeout = realTimeout;
   // the sheet's opening is what calls done() (main.js onOpen)
   let opened = 0; menu.open = false;
   setupFeedback({ focusIn() {}, captcha, service, doc, onOpen: () => opened++ }).show(); assert.equal(opened, 1);
+}
+{ // a profile's confirmed address: filled in and not editable; a sign-out frees the field again
+  let mail = 'conf@exemple.cat', fail = false;
+  const f = setupFeedback({ focusIn() {}, captcha, service, doc, confirmedEmail: async () => { if (fail) throw new Error('offline'); return mail; } });
+  menu.close(); email.value = 'altre@exemple.cat'; f.show(); await tick();
+  assert.equal(email.value, 'conf@exemple.cat', 'the confirmed address replaces a typed one'); assert(email.readOnly, 'and cannot be changed');
+  let got = null; service.send = async m => { got = m; return true; };
+  text.value = 'Un missatge prou llarg'; await submit(); assert.equal(got?.email, 'conf@exemple.cat', 'it is the one sent'); assert(!menu.open);
+  mail = ''; f.show(); await tick();
+  assert.equal(email.value, '', 'signed out: the locked address goes'); assert(!email.readOnly, 'and the field is free');
+  menu.close(); mail = 'conf@exemple.cat'; fail = true; email.value = 'meu@exemple.cat'; f.show(); await tick();
+  assert.equal(email.value, 'meu@exemple.cat'); assert(!email.readOnly, 'no answer from the server: the field stays as it was');
+  menu.close();
 }
 console.log('feedback sheet and nudge ok');

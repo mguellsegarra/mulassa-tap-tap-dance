@@ -36,8 +36,8 @@ const ids = ['board-menu', 'publish-menu', 'board-rows', 'board-table', 'board-s
   'board-close',
   'publish-form', 'publish-title', 'publish-summary', 'publish-about', 'publish-temp', 'publish-alias', 'publish-status', 'publish-send',
   'publish-cancel', 'publish-never', 'settings-prompt-row', 'settings-prompt', 'publish-place', 'publish-as', 'publish-as-name', 'publish-field', 'publish-rule', 'publish-error', 'publish-board',
-  'results-actions', 'results-publish', 'results-board', 'settings-board', 'publish-device', 'publish-recover',
-  'board-figure', 'board-figure-pic', 'board-figure-name', 'board-picker', 'board-figures', 'board-main', 'board-place', 'board-jump', 'board-place-sub',
+  'results-actions', 'results-publish', 'results-board', 'publish-device', 'publish-recover',
+  'board-figure', 'board-figure-pic', 'board-figure-name', 'board-picker', 'board-figures', 'board-main', 'board-place', 'board-jump', 'board-jump-t', 'board-place-sub',
   'board-publish-link', 'board-scroll', 'board-art', 'board-hint', 'board-more', 'board-more-status', 'board-more-btn', 'board-summary', 'board-publish', 'captcha-menu', 'captcha-box',
   'publish-offer', 'publish-confirm', 'board-season', 'board-previous', 'board-seasons', 'board-play', 'board-play-name'];
 const NOW = Date.parse('2026-10-20T10:00:00Z');
@@ -184,12 +184,16 @@ const BOARD = page(0, 60, 22);
   const box = $('board-scroll'); box.clientHeight = 230;
   trs().forEach((tr, i) => Object.assign(tr, { offsetTop: i * 46, offsetHeight: 46 }));
   box.scrollTop = 0; box.fire('scroll');
-  assert($('board-jump').textContent === 'Ves a la meva posició' && !$('board-jump').classList.contains('off'));
+  const jumpIs = (label, name, down) => { assert.equal($('board-jump-t').textContent, label); assert.equal($('board-jump').getAttribute('aria-label'), name); assert.equal($('board-jump').classList.contains('down'), down, 'its arrow towards where it goes'); };
+  jumpIs('A la meva fila', 'Ves a la teva fila', true); assert(!$('board-jump').classList.contains('off'));
   $('board-jump').click(); box.fire('scroll');
   assert.equal(box.scrollTop, 19 * 46, 'its row in the middle of the box, snapped to a row');
-  assert.equal($('board-jump').textContent, 'Ves al capdamunt');
-  $('board-jump').click(); box.fire('scroll');
-  assert(box.scrollTop === 0 && $('board-jump').textContent === 'Ves a la meva posició');
+  jumpIs('Al capdamunt', 'Ves al capdamunt de la classificació', false);
+  box.scrollTop = 40 * 46; box.fire('scroll');
+  jumpIs('A la meva fila', 'Ves a la teva fila', false); // scrolled past it: the row is above, the arrow up
+  box.scrollTop = 19 * 46; box.fire('scroll'); $('board-jump').click(); box.fire('scroll');
+  assert.equal(box.scrollTop, 0, '«Al capdamunt» goes to the top');
+  jumpIs('A la meva fila', 'Ves a la teva fila', true);
   assert(!$('board-more').hidden && !$('board-more-btn').hidden, 'more to come: «Carrega’n més» at the end');
   // the list's end comes into view: the next page (ranks 51-60), appended, then the end
   io.fire();
@@ -259,7 +263,7 @@ const BOARD = page(0, 60, 22);
   T.alls[0].resolve(page(0, 30)); await tick();
   assert.equal(rows().length, 30);
   assert.equal($('board-summary').textContent, '30 participants');
-  assert($('board-jump').textContent === 'Ves al capdamunt' && $('board-jump').classList.contains('off'), 'at the top: nothing to go to (its place kept)');
+  assert($('board-jump-t').textContent === 'Al capdamunt' && $('board-jump').classList.contains('off'), 'at the top: nothing to go to (its place kept)');
   $('board-scroll').scrollTop = 300; $('board-scroll').fire('scroll');
   assert(!$('board-jump').classList.contains('off'), 'scrolled: back to the top');
   board.openBoard(); T.alls[1].resolve([{ position: 1, alias: 'Gegant300', difficulty: 2, quality: 99, score: 150000, is_self: true, total: 2140 }]); await tick();
@@ -323,7 +327,7 @@ const BOARD = page(0, 60, 22);
   assert(!todo.$('publish-menu').open);
   todo.board.openBoard(); await tick();
   const none = make({ configured: false }); none.setRun(RUN); none.board.results(true);
-  assert(none.$('results-board').hidden && none.$('results-publish').hidden && none.$('settings-board').hidden && !none.board.publishable, 'not configured: no online entry points');
+  assert(none.$('results-board').hidden && none.$('results-publish').hidden && !none.board.publishable, 'not configured: no online entry points');
   none.board.openBoard();
   assert(!none.$('board-menu').open);
 }
@@ -914,9 +918,9 @@ const find = (el, test) => (test(el) ? el : el.children.map(c => find(c, test)).
   assert.deepEqual(heads, [4, 4], 'the visible headings (above the scroll) and the table\u2019s own (screen readers) have the rows\u2019 four columns');
   const cols = [...html.matchAll(/<colgroup>([\s\S]*?)<\/colgroup>/g)].map(m => m[1]);
   assert(cols.length === 2 && cols[0] === cols[1], 'both tables share the same column widths');
-  // portrait phones: the % under the points (its column empty, width 0: a hidden cell would shift the others), the name gets that room
+  // portrait phones: the % under the points, its whole column gone (cells and <col>: WebKit kept a width-0 column's share), the name gets that room
   const phones = [...html.matchAll(/@media \(max-width: 519px\) \{\n([\s\S]*?)\n\}/g)].map(m => m[1]).find(b => b.includes('pct-sub')) ?? '';
-  assert(/\.c-pct \{ width: 0; \}/.test(phones) && /:nth-child\(3\) \{ visibility: hidden;/.test(phones) && /\.pct-sub \{ display: block;/.test(phones) && /\.pct-sub \{ display: none; \}/.test(html),
+  assert(/:is\(\.c-pct, :is\(th, td\):nth-child\(3\)\) \{ display: none; \}/.test(phones) && /\.pct-sub \{ display: block;/.test(phones) && /\.pct-sub \{ display: none; \}/.test(html),
     'phones: the % moves under the points and its column gives its room to the name');
   assert(!/\.streak \{[^}]*ellipsis/.test(html) && /#board-table \.sub \{[^}]*flex-wrap: wrap;/.test(html), 'the level and streak line wraps, never «ratxa …»');
   for (const id of ['board-status', 'publish-status', 'profile-status']) assert(new RegExp(`id="${id}"[^>]*role="status"`).test(html), `#${id} is announced`);

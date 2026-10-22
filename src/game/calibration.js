@@ -2,6 +2,7 @@
 // Click and tap times are "heard" times on the audio clock (currentTime minus the output latency the browser
 // reports, exactly like Chip.now()), so what is measured is only the extra delay the browser can't see
 // (Bluetooth, TV, a slow screen) plus the player's own habit, which is what offsetMs must cancel.
+import { tr } from '../i18n/messages.js';
 export const CAL = { clicks: 10, skip: 2, early: 0.12, min: 4, beat: 0.6 }; // its own 100 BPM: slow enough to read big lags
 
 export const clickTimes = (start, n, beat) => Array.from({ length: n }, (_, i) => start + i * beat);
@@ -33,9 +34,9 @@ export function measureOffset(taps, clicks, { skip = CAL.skip, early = CAL.early
 export const fmtMs = ms => `${ms > 0 ? '+' : ms < 0 ? '−' : ''}${Math.abs(ms)} ms`;
 
 // One line reading the measured lag, for the result screen.
-export const verdict = ms => Math.abs(ms) < 15 ? 'Gairebé perfecte: no cal gaire ajust.'
-  : ms > 0 ? 'Els teus auriculars van amb retard: ho compensarem.'
-  : 'Marques una mica abans del so: ho compensarem.';
+export const verdict = ms => Math.abs(ms) < 15 ? tr('game.calibration.ok')
+  : ms > 0 ? tr('game.calibration.late')
+  : tr('game.calibration.early');
 
 // The sheet edits a draft of the stored offset; commit() writes it only when it really changed, so opening and
 // closing the sheet (or nudging − then +) never touches the saved value or its toast.

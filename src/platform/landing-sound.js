@@ -2,14 +2,13 @@
 // and a longer, duller tail for the cardboard shell, plus a body at 150–800 Hz (a soft triangle «thump» and a band of
 // noise, the slap): a phone speaker drops everything under ~300 Hz, and the sub alone (96% of the energy below 150 Hz)
 // was nearly silent there. Headphones still get the weight from the sub. Everything decays, nothing buzzes.
-// At weight 1 (the Mulassa): [sub start Hz, sub end Hz, sub length s, cobbles' lowpass Hz, tail s]. Three to audition
-// with ?thud=sec|cos|cavern; the figure's weight (figures.js) lowers and lengthens each.
-const THUDS = { cos: [90, 40, 0.32, 320, 0.45], sec: [115, 55, 0.2, 520, 0.18], cavern: [75, 32, 0.5, 220, 0.8] };
-const style = () => { try { return THUDS[new URLSearchParams(location.search).get('thud')] ?? THUDS.cos; } catch { return THUDS.cos; } };
+// At weight 1 (the Mulassa): [sub start Hz, sub end Hz, sub length s, cobbles' lowpass Hz, tail s];
+// the figure's weight (figures.js) lowers and lengthens each.
+const THUD = [90, 40, 0.32, 320, 0.45];
 
 // weight: 1 = the Mulassa, lower / longer / louder above it; speed: m/s at contact (a 4.8 m/s jump = ~0.95 of full level)
 export function playThud(chip, when, speed, weight) {
-  const ctx = chip.ctx, [f0, f1, len, lp, tail] = style(), w = weight, k = Math.min(1.2, Math.max(0.3, speed / 5)), amp = 0.5 * k * (0.8 + 0.2 * w);
+  const ctx = chip.ctx, [f0, f1, len, lp, tail] = THUD, w = weight, k = Math.min(1.2, Math.max(0.3, speed / 5)), amp = 0.5 * k * (0.8 + 0.2 * w);
   const hit = (src, dur, peak, cutoff, type = 'lowpass') => {
     const g = ctx.createGain();
     g.gain.setValueAtTime(0, when);

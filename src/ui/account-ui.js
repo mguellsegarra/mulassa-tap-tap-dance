@@ -7,6 +7,7 @@ import { loadStats, getStatsOwner } from '../game/stats.js';
 import { readPreviousDanceRecord } from '../game/records.js';
 import { DIFFS } from '../game/chart.js';
 import { byId, num } from './sheet-kit.js';
+import { tr } from '../i18n/messages.js';
 import { statsData, renderStats, sinceText, FIGURE_NAMES } from './stats-view.js';
 import { figureSeasons, boardName } from './seasons-ui.js';
 
@@ -15,11 +16,14 @@ export function setupAccount({ focusIn, profile, service, store, stats, onSync =
   let req = 0, back = null, shown = null, wins = [];
   const local = () => { const s = loadStats(), o = s.owners[getStatsOwner()]; return { since: s.since, buckets: { ...o?.counters, ...o && { practice: o.practice } }, days: o?.days ?? [] }; };
   // the statistics with the podiums among them (they arrive later: painted again with them)
-  function paint(d, since) {
+  // pending: nothing played here yet but the server may know more: a quiet skeleton keeps the room, so its answer shifts nothing
+  function paint(d, since, pending = false) {
     const played = d.runs > 0;
-    shown = [d, since];
-    $('account-empty').hidden = played;
-    box.hidden = !played;
+    shown = [d, since, pending];
+    $('account-empty').hidden = played || pending;
+    box.hidden = !played && !pending;
+    box.classList.toggle('loading', pending);
+    if (pending) box.replaceChildren();
     if (played) renderStats(doc, box, d, { own: true, podiums: wins, onSync: () => { const b = leave(); onSync(() => open(b)); } });
     $('account-since').textContent = played && since ? sinceText(since) : '';
   }
@@ -29,7 +33,7 @@ export function setupAccount({ focusIn, profile, service, store, stats, onSync =
     DIFFS.forEach((d, l) => {
       const r = readPreviousDanceRecord(store, l);
       if (!r) return;
-      const li = doc.createElement('li'); li.textContent = `${d.name}: ${num(r.score)} punts · ${Math.round(r.quality)}%`;
+      const li = doc.createElement('li'); li.textContent = tr('ui.account.previousLine', { level: d.name, score: num(r.score), pct: Math.round(r.quality) });
       ul.appendChild(li);
     });
     $('account-previous').hidden = !ul.children.length;
@@ -38,7 +42,7 @@ export function setupAccount({ focusIn, profile, service, store, stats, onSync =
     const lines = [];
     for (const figure of Object.keys(FIGURE_NAMES)) {
       for (const e of await figureSeasons(service, figure, now()).catch(() => [])) {
-        if (e.myPosition && e.myPosition <= 3 && (e.endsAt == null || e.endsAt <= now())) lines.push({ position: e.myPosition, place: num(e.myPosition), text: `a ${e.name} · ${boardName(figure, e)}` });
+        if (e.myPosition && e.myPosition <= 3 && (e.endsAt == null || e.endsAt <= now())) lines.push({ position: e.myPosition, place: num(e.myPosition), text: tr('ui.stats.podiumAt', { season: e.name, board: boardName(figure, e) }) });
       }
     }
     if (r !== req || !lines.length) return;
@@ -48,7 +52,8 @@ export function setupAccount({ focusIn, profile, service, store, stats, onSync =
     const r = ++req, mine = local();
     const d = statsData(mine.buckets, mine.days);
     wins = [];
-    paint(d, mine.since);
+    const waiting = service.configured && !d.runs && getStatsOwner() !== 'none', settle = () => { if (waiting && r === req) paint(d, mine.since); };
+    paint(d, mine.since, waiting);
     previous();
     $('account-join').hidden = true;
     if (!service.configured) return;
@@ -56,11 +61,12 @@ export function setupAccount({ focusIn, profile, service, store, stats, onSync =
     try { signed = Boolean(await service.ownerId()); } catch { /* offline: this device's numbers stand */ }
     if (r !== req) return;
     $('account-join').hidden = signed; // no profile: «Crea un perfil per guardar-les…»
-    if (!signed) return;
+    if (!signed) return settle();
     podiums(r);
     let server = null;
     try { server = await service.myStats(); } catch { /* this device's numbers stand */ }
-    if (r !== req || !server) return;
+    if (r !== req) return;
+    if (!server) return settle();
     const all = statsData(server.buckets, server.days);
     if (all.runs < d.runs) return; // not sent yet (the notice, offline): this device knows more
     paint({ ...all, daysPlayed: server.daysPlayed, streak: server.currentStreak ?? all.streak, bestStreak: server.longestStreak ?? all.bestStreak }, mine.since);

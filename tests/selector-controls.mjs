@@ -2,6 +2,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
+import { tr } from '../src/i18n/messages.js';
 // The selector sheet must load after the older corner CSS; otherwise it darkens/obscures the actual controls.
 const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const css = readFileSync(new URL('../src/styles/select.css', import.meta.url), 'utf8');
@@ -12,7 +13,6 @@ assert(chrome > layer, 'original toolbar buttons sit above the selector and both
 assert(!/id="select-(board|back)"/.test(html), 'no title-loop back button');
 // No corner podium (Marc: «Una línia a tot arreu»): the ranking line under the song opens Classificacions, ⚙ keeps its row
 assert(!/id="leaders"/.test(html) && !/#leaders/.test(css + readFileSync(new URL('../src/styles/base.css', import.meta.url), 'utf8') + readFileSync(new URL('../src/styles/feedback.css', import.meta.url), 'utf8')), 'no #leaders anywhere');
-assert.match(html, /id="settings-board"/);
 assert(!html.includes('id="aviat-menu"') && !html.includes('id="aviat-close"'), 'pending information is part of the selector, with no dialog');
 assert.match(html, /<section id="select-pending"/);
 assert.match(css, /body\.view-mode #select/);
@@ -40,7 +40,7 @@ const doc = { addEventListener(k, f) { (handlers[k] ||= []).push(f); }, body: { 
     return nodes.get(id);
   } };
 const $ = id => doc.getElementById(id), sheets = { sync: {}, board: { configured: true, results() {} }, share: { results() {} }, feedback: { configured: false }, select: { visible(on) { this.shown = on; } } };
-const state = { state: 'splash', paused: false }, ctx = { document: doc, performance: { now: () => time },
+const state = { state: 'splash', paused: false }, ctx = { tr, document: doc, performance: { now: () => time },
   G: state, selectedFigure: { id: 'mulassa-valls' }, COARSE: { matches: false }, sheets, clock: 10, CHALLENGE: null, keyboardNav: true, hide: (el, hidden) => { el.hidden = hidden; },
   howtoMenu: {}, settingsMenu: {}, privacyMenu: {}, pauseMenu: {},
   howtoEl: $('howto'), settingsEl: $('settings'), feedbackEl: $('feedback'), musicEl: $('music'), profileEl: $('profile'), pauseEl: $('pause'), skipEl: $('skip'), retryEl: $('retry'),
@@ -198,7 +198,7 @@ $('hud').fire('pointerleave', {}); assert.equal($('hud').style.cursor, '');
   assert(run('PHOTO.mouse === 0'), 'capture fallback still recovers a lost pointerup');
   run('setView(false)'); delete doc.exitPointerLock;
 }
-// RMB owns actor mouse look. Mouse chords have one pointerdown/up for the whole chord,
+// Either button hides the cursor while driving; only RMB steers. Mouse chords have one pointerdown/up for the whole chord,
 // but one mousedown/up per button; movement.button is -1, buttons is the held bitmask.
 {
   let locks = 0, captures = 0;
@@ -218,8 +218,11 @@ $('hud').fire('pointerleave', {}); assert.equal($('hud').style.cursor, '');
     for (const [button, buttons] of [[0, 1], [1, 4]]) {
       const count = locks, yaw = run('photoBody().yaw'), camera = run('PHOTO.cameraYaw');
       mouse('pointerdown', button, buttons); mouse('mousedown', button, buttons);
-      mouse('pointermove', -1, buttons, 100); run('movePhoto(1/60, () => Infinity)');
-      assert.equal(locks, count, `${id}/${keys}: button ${button} cannot request lock`);
+      mouse('pointermove', -1, buttons); mouse('pointermove', -1, buttons, 100); run('movePhoto(1/60, () => Infinity)'); // (the lock's first move)
+      // Marc, 2026-10-21 (as in WoW): LMB orbit hides the cursor too, so the drag never stops at the window's edge.
+      // Do not take the lock away from LMB again (it went once: 2026-10-20); LMB just must not steer (below).
+      assert.equal(locks, count + (button === 0 ? 1 : 0), `${id}/${keys}: LMB locks, middle does not`);
+      assert.equal(doc.pointerLockElement === $('hud'), button === 0, `${id}/${keys}: the cursor hides while LMB orbits`);
       assert.equal(run('PHOTO.mouse'), button === 0 ? 1 : 0);
       assert.equal(run('PHOTO.cameraYaw'), camera - (button === 0 ? 0.3 : 0), 'LMB orbits; middle leaves the camera still');
       assert.equal(run('photoBody().yaw'), yaw, 'LMB/middle cannot steer heading');
@@ -228,18 +231,18 @@ $('hud').fire('pointerleave', {}); assert.equal($('hud').style.cursor, '');
     // LMB first, then RMB: there is deliberately no second pointerdown.
     mouse('pointerdown', 0, 1); mouse('mousedown', 0, 1);
     const count = locks; mouse('mousedown', 2, 3); mouse('pointermove', -1, 3); mouse('pointermove', -1, 3, 100);
-    assert.equal(locks, count + 1, 'RMB chord requests exactly one lock');
+    assert.equal(locks, count, 'RMB joins the LMB lock, no second request');
     assert.equal(run('PHOTO.mouse'), 3, 'both held keep the existing forward gesture');
     run('movePhoto(1/60, () => Infinity)'); assert(run('photoBody().yaw < 0'), 'RMB moves heading');
-    up(2, 1); assert(!doc.pointerLockElement && run('PHOTO.mouse === 1'), 'RMB up unlocks while LMB keeps orbiting');
-    mouse('pointermove', -1, 1, 80); assert.equal(run('PHOTO.mouse'), 1, 'held LMB remains an orbit without locking');
+    up(2, 1); assert(doc.pointerLockElement && run('PHOTO.mouse === 1'), 'RMB up keeps the lock while LMB orbits');
+    mouse('pointermove', -1, 1, 80); assert.equal(run('PHOTO.mouse'), 1, 'held LMB remains an orbit');
     const orbitYaw = run('PHOTO.cameraYaw'), heading = run('photoBody().yaw'), lockedCount = locks;
     mouse('pointermove', -1, 1, 80); run('movePhoto(1/60, () => Infinity)');
-    assert.equal(run('PHOTO.cameraYaw'), orbitYaw - 0.24, 'LMB resumes camera orbit after the unlock recenter');
+    assert.equal(run('PHOTO.cameraYaw'), orbitYaw - 0.24, 'LMB keeps orbiting after RMB lets go');
     assert.equal(run('photoBody().yaw'), heading, 'LMB after RMB release no longer steers the actor');
     assert.equal(locks, lockedCount, 'continuing LMB orbit does not request another lock');
+    up(0, 0); assert(!doc.pointerLockElement, 'LMB up unlocks');
     for (const code of keys) assert(run(`PHOTO.keys.has('${code}')`), 'normal unlock preserves held movement keys');
-    up(0, 0);
     // RMB first, then LMB; release LMB first keeps RMB, release RMB ends it.
     mouse('pointerdown', 2, 2); mouse('mousedown', 2, 2);
     const one = locks; mouse('mousedown', 0, 3); assert.equal(locks, one, 'LMB never requests another lock');
@@ -271,7 +274,7 @@ $('hud').fire('pointerleave', {}); assert.equal($('hud').style.cursor, '');
   assert(captures > 0 && run('PHOTO.mouse === 2'), 'error preserves RMB through capture fallback');
   up(2, 0); const before = captures; emit('pointerlockerror');
   assert.equal(captures, before, 'late error cannot capture after release');
-  mouse('pointerdown', 0, 1); mouse('mousedown', 0, 1); assert.equal(run('PHOTO.mouse'), 1, 'error recovery allows LMB orbit without locking'); up(0, 0);
+  mouse('pointerdown', 0, 1); mouse('mousedown', 0, 1); assert.equal(run('PHOTO.mouse'), 1, 'a refused lock leaves LMB orbiting through capture'); up(0, 0);
   delete $('hud').requestPointerLock; delete $('hud').setPointerCapture; delete doc.exitPointerLock;
   run('setPhotoControl(false)');
   for (const [button, buttons] of [[0, 1], [1, 4], [2, 2]]) {
@@ -412,4 +415,15 @@ console.log('practice/game input routing: keyboard, mouse/touch pad and bubbling
   assert(!tap(button, 11000), 'a slow tap is untouched');
   assert(!tap(field, 11100), 'a text field keeps its own taps');
   console.log('double-tap zoom guard ok');
+}
+
+// The strip's arrow capsule: the screen's middle, unless a town pill shares its band there (667×375: the pills' own row).
+{
+  const { navX } = await import('../src/ui/select-strip.js');
+  const box = (left, top, right, bottom) => ({ getBoundingClientRect: () => ({ left, top, right, bottom, width: right - left }) });
+  const carousel = box(0, 120, 667, 300), win = { innerWidth: 667 };
+  assert.equal(navX(win, { children: [box(12, 72, 100, 116)] }, carousel, 1), 333.5, 'no pill under it: the middle');
+  assert.equal(navX(win, { children: [box(12, 72, 100, 116), box(110, 72, 390, 116)] }, carousel, 1), 458, 'a pill under the middle: just right of it');
+  assert.equal(navX(win, { children: [box(110, 4, 390, 48)] }, carousel, 1), 333.5, 'pills in the header, far above: the middle');
+  assert.equal(navX(win, { children: [box(300, 72, 660, 116)] }, carousel, 1), 603, 'never past the screen edge');
 }

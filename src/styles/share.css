@@ -62,7 +62,7 @@
 #share-menu #share-status { user-select: text; -webkit-user-select: text; } /* a blocked clipboard shows the link here to copy by hand */
 .share-direct .btn-compact { padding-inline: 3px; text-decoration-color: #e8d8b84d; }
 #share-menu #share-status { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
-.sheet-x { position: absolute; top: -14px; right: -14px; z-index: 1; display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 2px solid #f5c518; border-radius: 50%; background: #2a1a10; color: #fff3d6; cursor: pointer; } /* the round icon button, as the corner ones */
+.sheet-x { position: absolute; top: -14px; right: -14px; z-index: 1; display: grid; place-items: center; --round-bg: #2a1a10; cursor: pointer; } /* the round icon button, as the corner ones */
 /* shared X component: any .sheet whose first child is a .sheet-x sits it on the frame's corner (no clipping: the frame stops
    scrolling) and scrolls its .sheet-body instead; no per-sheet rules, no «Tanca» button */
 .sheet[open]:has(> .sheet-x) { display: flex; flex-direction: column; overflow: visible; }

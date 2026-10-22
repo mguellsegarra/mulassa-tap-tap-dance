@@ -1,4 +1,5 @@
 // Game flow: back to the title, start a run, the practice, finish and the final.
+import { tr } from '../i18n/messages.js';
 import { clearLeaderboardResult, captureLeaderboardResult } from '../services/leaderboard-result.js';
 import { makeDanceChart } from './chart.js';
 import { recordKey, readFigureRecord, saveFigureRecord } from './figures.js';
@@ -69,7 +70,12 @@ export function openSelect() { if (G.state === 'title') G.state = 'select'; }
 // A game picked before its song has arrived (a slow line) waits, frozen at the count-in, and says so (after 300 ms),
 // with the download's % while it lasts; frame() keeps the line current.
 export let songWait = null;
-export const musicLine = () => (chip?.loaded < 1 ? `Preparant la música… ${Math.floor(chip.loaded * 100)}%` : 'Preparant la música…');
+let lineKey = -2, lineText; // the line, rebuilt only when the download's % moves (frame() asks every frame)
+export const musicLine = () => {
+  const k = chip?.loaded < 1 ? Math.floor(chip.loaded * 100) : -1;
+  if (k !== lineKey) { lineKey = k; lineText = k < 0 ? tr('game.flow.musicPreparing') : tr('game.flow.musicLoading', { pct: k }); }
+  return lineText;
+};
 export function startGame(diff) {
   leaveRun('restart');
   G.practice = null;
@@ -92,7 +98,7 @@ export function startGame(diff) {
     errors.report('audio-start-failed', audioFailureTags(e));
     if (G.state !== 'play' || G.chart !== chart) return;
     toTitle();
-    G.audioError = 'No s’ha pogut carregar la música. Torna a provar-ho.';
+    G.audioError = tr('game.flow.musicError');
   });
 }
 // The demo (Com es juga → «Veure un ball de demostració»): the whole song on NORMAL, played by itself (main.js autoplay) on a clean screen.
@@ -203,13 +209,13 @@ export function practiceTick(t) {
   if (ok || ++P.tries >= 3) { P.step++; P.tries = 0; } // three tries and we move on anyway: nobody gets stuck
   if (!stepAt(P.step)) return practiceDone(P);
   P.wait = clock + 1.2;
-  if (ok) { headline(pick(['MOLT BÉ!', 'AIXÍ!', 'GENIAL!']), 1, 3, 1.2); chip.sfx('fanfare1'); }
-  else headline(P.tries ? 'TORNA-HI!' : 'SEGUIM!', P.tries ? 'bonk' : 0, 3, 1.2);
+  if (ok) { headline(pick([tr('game.flow.good1'), tr('game.flow.good2'), tr('game.flow.good3')]), 1, 3, 1.2); chip.sfx('fanfare1'); }
+  else headline(P.tries ? tr('game.flow.retry') : tr('game.flow.next'), P.tries ? 'bonk' : 0, 3, 1.2);
 }
 function practiceDone(P) { // past the last step, however it got there: A BALLAR! once, then endPractice after 2 s
   if (P.doneT != null) return;
   Object.assign(P, { step: STEPS.length, tries: 0, wait: null, doneT: clock + 2 });
-  headline('A BALLAR!', 'rainbow', 4, 2, Math.random(), true); // the practice's celebration: big, like the song's
+  headline(tr('game.flow.dance'), 'rainbow', 4, 2, Math.random(), true); // the practice's celebration: big, like the song's
   chip.sfx('fanfare3');
   burst(M.pos.x, M.pos.y);
 }

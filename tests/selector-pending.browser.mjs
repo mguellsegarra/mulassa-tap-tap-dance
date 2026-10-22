@@ -4,19 +4,32 @@ export async function checkPendingCards() {
   await document.fonts.ready;
   await new Promise(requestAnimationFrame); // Commit any preceding viewport resize before comparing selections.
   const $ = s => document.querySelector(s), panel = $('#select-pending');
-  if ($('.sel-more').getAttribute('aria-expanded') === 'false') $('.sel-soon').click();
+  const header = () => { const i = $('#select-info').getBoundingClientRect(); return [$('#select').hasAttribute('data-header-inline'), Math.round(i.top), Math.round(i.height)]; };
+  const folded = header();
+  if ($('.sel-more').getAttribute('aria-expanded') === 'false') { $('.sel-soon').click(); await new Promise(r => setTimeout(r, 900)); } // the fold's own motion
   const box = e => { const r = e.getBoundingClientRect(); return [r.x, r.y, r.width, r.height]; };
   const rows = [], failures = [];
+  if (header().some((v, i) => v !== folded[i])) failures.push(`info block changed with the fold: ${folded} -> ${header()}`);
+  // The arrow capsule belongs to the strip, not to the selection: a playable figure's place is the reference for every pending one, at the screen's middle on desktops.
+  document.querySelector('.sel-card[data-id]:not(.aviat)')?.click();
+  await Promise.all($('#select-bottom').getAnimations().map(a => a.finished.catch(() => {})));
+  const navRest = box($('#select-nav'));
   for (const card of document.querySelectorAll('.sel-card.aviat[data-id]')) {
     card.click();
     // The contact card uses the final dock position; compare painted bounds once its drop finishes.
     await Promise.all($('#select-bottom').getAnimations().map(a => a.finished.catch(() => {})));
+    await new Promise(requestAnimationFrame); // measure() runs from the selection's own frame
     const entry = { id: card.dataset.id, box: box(panel), button: box($('#aviat-write')), links: box($('.sel-pending-links')) };
     if (innerWidth >= 520 && entry.button[2] > 361) failures.push(`${entry.id}: contact action too wide`);
     if (innerWidth >= 900 && innerHeight > 500 && innerHeight < 800 && entry.box[2] > 641) failures.push(`${entry.id}: contact card too wide`);
     if (Math.abs(entry.button[0] + entry.button[2] / 2 - entry.box[0] - entry.box[2] / 2) > 1) failures.push(`${entry.id}: contact action not centred`);
     const panelBox = panel.getBoundingClientRect(), dockBox = $('#select-bottom').getBoundingClientRect();
     if (panelBox.right > dockBox.left + 1 && panelBox.left < dockBox.right - 1 && panelBox.bottom > dockBox.top + 1 && panelBox.top < dockBox.bottom - 1) failures.push(`${entry.id}: contact card overlaps dock`);
+    const navBox = box($('#select-nav'));
+    if (innerWidth >= 900 && innerHeight >= 600 && !matchMedia('(pointer: coarse)').matches && Math.abs(navBox[0] + navBox[2] / 2 - innerWidth / 2) > 1) failures.push(`${entry.id}: arrow capsule off the screen's middle`);
+    if (navBox.some((v, i) => Math.abs(v - navRest[i]) > 1)) failures.push(`${entry.id}: arrow capsule moved`);
+    // No info column for a pending figure: the strip's box must not still start at the column's old edge (it clipped the first card).
+    if (innerWidth >= 900 && innerHeight >= 600 && matchMedia('(pointer: fine)').matches && box($('#select-carousel'))[0] > 13) failures.push(`${entry.id}: strip box still starts at the hidden info column`);
     const first = rows[0] ?? entry;
     for (const key of ['box', 'button', 'links']) {
       if (entry[key].some((v, i) => Math.abs(v - first[key][i]) > 1)) failures.push(`${entry.id}: ${key} moved`);
@@ -38,7 +51,7 @@ export async function checkPendingCards() {
     };
     const title = $('#aviat-title'), entity = $('#aviat-entity'), copy = $('#aviat-text'), write = $('#aviat-write');
     const owners = [...entity.querySelectorAll('.sel-entity-part')];
-    if (owners.length === 2) {
+    if (owners.length === 2 && getComputedStyle(entity).display !== 'none') {
       const units = [...entity.querySelectorAll('.sel-entity-unit')], plus = entity.querySelector('.sel-entity-plus');
       if (units.length !== 2 || !units[1].contains(plus) || !units[1].contains(owners[1])) failures.push(`${entry.id}: separator detached from manager`);
       else {
@@ -53,6 +66,13 @@ export async function checkPendingCards() {
         const width = stacked ? Math.max(...boxes.map(b => b.width)) : boxes[0].width + boxes[1].width + gap;
         if (Math.abs(entity.getBoundingClientRect().width - width) > 1) failures.push(`${entry.id}: entity labels have excess horizontal space`);
       }
+    }
+
+    // In the two-column card a stacked attribution is dropped and the title takes the row, centred on the card.
+    if (entity.hasAttribute('data-stacked') && getComputedStyle($('.sel-pending-content')).display === 'grid') {
+      const t = title.getBoundingClientRect(), c = panel.getBoundingClientRect();
+      if (getComputedStyle(entity).display !== 'none') failures.push(`${entry.id}: stacked entity still shown beside the title`);
+      if (Math.abs(t.left + t.width / 2 - c.left - c.width / 2) > 1) failures.push(`${entry.id}: title not centred without its entity`);
     }
 
     const paragraphs = [...copy.children].filter(e => !e.hidden && getComputedStyle(e).display !== 'none');

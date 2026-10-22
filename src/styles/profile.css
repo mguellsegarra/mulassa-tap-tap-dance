@@ -4,7 +4,7 @@
 /* A player's name (appendName): a button to their card where it is tappable. A guest («Timbaler#3821») is quieter:
    muted cream (11.9:1 on the sheet), its «#1234» a step more (6.8:1; 6.1:1 on the gold own row), never a check. */
 button.player-name { position: relative; display: inline-flex; align-items: baseline; gap: 0; min-width: 0; min-height: 0; margin: 0; padding: 0; border: 0; border-radius: 4px; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
-@media (pointer: coarse) { button.player-name::after { content: ""; position: absolute; inset: -12px -6px; } } /* touch slop: ~44 px tall on a 46 px row; a mouse: the hand only over the name (Marc) */
+@media (pointer: coarse) { button.player-name::after { content: ""; position: absolute; left: -6px; right: -6px; top: 50%; height: max(100%, 44px); translate: 0 -50%; } } /* a 44 px invisible target on touch; a mouse: the hand only over the name (Marc); rows keep their height and look, every list steps >= 44 px */
 @media (hover: hover) { button.player-name:hover { filter: none; } button.player-name:hover :is(.alias, .tag) { text-decoration: underline; text-decoration-color: #e8d8b899; text-underline-offset: 3px; } }
 span.player-name { display: inline-flex; align-items: baseline; min-width: 0; }
 .player-name .alias { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -28,9 +28,9 @@ span.player-name { display: inline-flex; align-items: baseline; min-width: 0; }
 #board-table tr.me-hint td { height: auto; padding: 0 4px 6px; border-top: 0; background: #f5c51824; text-align: center; }
 #board-table tr.me-hint .btn-link { min-height: 32px; padding: 0 6px; color: #f5c518; font-size: 13px; text-decoration-color: #f5c51899; white-space: normal; }
 .board-previous { width: min(100%, 340px); margin-top: 6px; }
-.board-previous h3, .season-card h3, .account-section h3 { margin: 0 0 6px; color: #f5c518; font-size: 16px; line-height: 1.25; }
+.board-previous h3, .account-section h3 { margin: 0 0 6px; color: #f5c518; font-size: 16px; line-height: 1.25; }
 .board-previous h3 { text-align: center; }
-.board-links { gap: 0 8px; }
+.board-links { column-gap: 8px; }
 
 /* a podium: 1-2-3, the name with its level under it (as on the board), the points; a 46 px row (the name's slop stays in it) */
 .podium { margin: 0; padding: 0; list-style: none; font-size: 15px; line-height: 1.25; font-variant-numeric: tabular-nums; }
@@ -217,6 +217,8 @@ span.player-name { display: inline-flex; align-items: baseline; min-width: 0; }
 .account-title-row { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0 12px; margin-bottom: 6px; }
 .account-title-row h3 { margin: 0; }
 .account-since { color: #e8d8b8; font-size: 13px; }
+.account-stats.loading { min-height: min(560px, 60dvh); border-radius: var(--button-radius); background: #fff3d60d; animation: profile-pulse 1.2s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .account-stats.loading { animation: none; } }
 .account-empty { margin: 8px 0; color: #e8d8b8; font-size: 15px; text-align: center; }
 .account-list { margin: 0; padding: 0; list-style: none; color: #fff3d6; font-size: 15px; line-height: 1.6; }
 .account-section .board-tip { margin: 10px 0 0; }
@@ -262,6 +264,9 @@ span.player-name { display: inline-flex; align-items: baseline; min-width: 0; }
 /* a player's card: the name, «Convidat», the board row it came from, the public statistics (one box: loading, empty, error
    inside it), the source */
 #card-menu { width: min(440px, calc(100vw - 32px - var(--sal) - var(--sar))); max-height: calc(100dvh - 32px - var(--sat) - var(--sab)); padding: 18px 20px 14px; }
+/* over the sheet it was opened from: 12 px clear of that sheet's frame on every side, never two gold frames doubled
+   (on phones that sheet is the dialog default max-width, 100% - 6px - 2em = 100vw - 42px; so 66 here) */
+body:has(:is(#board-menu, #seasons-menu, #account-menu)[open]) #card-menu { width: min(436px, calc(100vw - 66px - var(--sal) - var(--sar))); max-height: min(736px, calc(100dvh - 56px - var(--sat) - var(--sab))); }
 .card-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 4px 10px; margin: 0 28px 12px; }
 .card-name { display: inline-flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0 6px; min-width: 0; max-width: 100%; margin: 0; }
 #card-menu .card-name { font-size: clamp(18px, 5.6vw, 30px); } /* (over .sheet h2) 16 letters and the check on one line from 320 px; a «#1234» goes under the name whole */
@@ -282,15 +287,15 @@ span.player-name { display: inline-flex; align-items: baseline; min-width: 0; }
 /* portrait phones: the % goes under the points (board-list.js .pct-sub), so the name gets its column's room: a 16-letter
    «nom#1234» with «TU» on one line from 375 px, a 16-letter verified name on one line at 320 */
 @media (max-width: 519px) {
-  :is(#board-table, .board-head) .c-pct { width: 0; } /* the column stays (a hidden cell would shift the others), empty and unread */
-  :is(#board-table, .board-head) :is(th, td):nth-child(3) { visibility: hidden; padding: 0; overflow: hidden; }
+  /* the whole column goes, its <col> too: WebKit's fixed layout kept a width-0 column's share (iOS: the names squeezed) */
+  :is(#board-table, .board-head) :is(.c-pct, :is(th, td):nth-child(3)) { display: none; }
   #board-table .pct-sub { display: block; margin-top: 2px; color: #e8d8b8b3; font-size: 11px; font-weight: 700; line-height: 15px; }
   #board-table tr.me .pct-sub { color: #f5c518cc; } /* 5.4:1 on the gold row (b3 was 4.5) */
 }
 /* narrow phones (320–359 px): the numbers keep their room, a step smaller */
 @media (max-width: 359px) {
   #board-menu, #seasons-menu { padding-inline: 12px; }
-  :is(#board-table, .board-head) .c-pos { width: 2.1em; } :is(#board-table, .board-head) .c-pts { width: 4.5em; }
+  :is(#board-table, .board-head) .c-pos { width: 2.1em; } :is(#board-table, .board-head) .c-pts { width: 4.7em; } /* «206.290» at 15 px inside its padding */
   :is(#board-table, .board-head) :is(th, td):nth-child(4) { padding-right: 6px; }
   #board-table td:nth-child(4) { font-size: 15px; }
   #board-menu .board-state { gap: 6px; padding-inline: 0; } /* a new season: its line in two lines, the last podium clear of the links */

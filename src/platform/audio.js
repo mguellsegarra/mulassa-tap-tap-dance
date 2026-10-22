@@ -2,12 +2,13 @@
 // sample-accurate clock, its ambient loop on the menu, crowd ambience and chiptune sfx on top.
 import { errors, errorName } from '../services/errors.js';
 import { playThud } from './landing-sound.js';
+import { Q } from '../core/flags.js';
 const hz = m => 440 * 2 ** ((m - 69) / 12);
 // What the browser says it takes a sample to reach the speakers. Chip.now() and the sync calibration's
 // Clicker.heard() both subtract it, so the calibrated offset only holds the delay nobody reports.
 export const latency = ctx => ctx.outputLatency || ctx.baseLatency || 0;
 // ?rawclock (dev A/B): the old stepped clock, ctx.currentTime read directly, the latency re-read on every call.
-const RAW = (() => { try { return new URLSearchParams(location.search).has('rawclock'); } catch { return false; } })();
+const RAW = Q.has('rawclock');
 // The audio clock without its steps. ctx.currentTime only moves when the audio thread renders a buffer (5.3 ms on a
 // Mac, 10–40 ms on Linux and phones), so a direct read is 0..1 buffer late, differently every time: the lane stuttered
 // and every judgement carried that noise. Against performance.now() the two clocks keep a steady offset: each read
@@ -69,7 +70,7 @@ export function audioFailureTags(e) {
   if (Number.isInteger(e.status) && e.status >= 100 && e.status <= 599) tags.status = e.status;
   return tags;
 }
-const muted = () => { try { return new URLSearchParams(location.search).has('mute'); } catch { return false; } };
+const muted = () => Q.has('mute');
 
 export class Chip {
   constructor(song = {}, { menuMusic = true, menuLoop = song } = {}) {

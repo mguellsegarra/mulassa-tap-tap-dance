@@ -57,6 +57,7 @@ const service=createLeaderboardService({configured:true,publishingEnabled:true,c
 await service.listAll(); assert.equal(auth,null,'public reading does not create a player'); assert.deepEqual(log.at(-1),['get_leaderboard_all',{p_version:LEADERBOARD_VERSION,p_period:'all',p_offset:0,p_limit:50}],'the joint board: every level, all time, the first page');
 await service.listAll({offset:100,limit:500}); assert.deepEqual(log.at(-1),['get_leaderboard_all',{p_version:LEADERBOARD_VERSION,p_period:'all',p_offset:100,p_limit:50}],'a later page; at most 50 a call');
 await service.listAll({offset:-3,limit:0}); assert.deepEqual(log.at(-1)[1].p_offset,0);
+await service.levelPodium({figure:'drac-valls',level:2}); assert.deepEqual(log.at(-1),['get_level_podium',{p_version:FIGURE_VERSIONS['drac-valls'],p_difficulty:2}],'one level of the figure\'s own board');
 { const c3={...client,rpc:async()=>({data:null,error:{message:'boom'},status:500})};
   await assert.rejects(createLeaderboardService({configured:true,publishingEnabled:false,captchaRequired:true,getClient:async()=>c3}).listAll(),{code:'server',detail:'rpc:Error:500'},'the server answered with an error: not «connectar»');
   const c4={...client,rpc:async()=>({data:null,error:{message:'TypeError: Failed to fetch',details:'',hint:'',code:''},status:0})};

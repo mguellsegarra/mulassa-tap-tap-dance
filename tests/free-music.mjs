@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 import { Chip } from '../src/platform/audio.js';
+import { tr } from '../src/i18n/messages.js';
 
 // Exercise the actual picker with deferred decodes and Chip's real menu/radio transitions.
 const tick = () => new Promise(resolve => setImmediate(resolve));
@@ -31,7 +32,7 @@ Object.assign(chip, {
 let button, announcement;
 const figure = id => ({ id, song: id, composer: 'F. Bofarull', year: 1987 });
 const helpVars = {};
-const context = vm.createContext({ chip, menuMusic: true, MULASSA: figure('mulassa'), DRAC: figure('drac'),
+const context = vm.createContext({ tr, chip, menuMusic: true, MULASSA: figure('mulassa'), DRAC: figure('drac'),
   figureSong: id => ({ audio: id, tail: 90, beats: [0, 1] }), portraitArt() {}, portraitPalette() {}, pixelSvg: () => '',
   mulaSpinner: () => ({}), PHOTO: { on: false }, clearPhotoKeys() {}, hud: {}, keyboardNav: false, beatAtTime() {},
   errors: { report: (...args) => failures.push(args) }, audioFailureTags: e => ({ name: e.name }),

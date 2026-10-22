@@ -17,16 +17,17 @@ import { checkAlias } from '../services/alias-rules.js';
 import { turnstileMessage } from '../services/captcha.js';
 import { errors } from '../services/errors.js';
 import { byId, statusLine, setButton } from './sheet-kit.js';
-import { VERIFIED, GUEST, GUEST_TEXT, appendName } from './profile-notes.js';
+import { GUEST, GUEST_TEXT, appendName } from './profile-notes.js';
+import { tr } from '../i18n/messages.js';
 
 const maskEmail = m => { const [u = '', d = ''] = m.split('@'); return `${u.slice(0, 1)}***@${d}`; };
 const CONFIRM = {
-  delete: { title: 'Esborrar el perfil?', yes: 'Sí, esborra-ho tot', done: 'Perfil esborrat. Els rècords d’aquest dispositiu es mantenen.',
-    lead: () => 'S’esborraran el sobrenom, els resultats publicats, les estadístiques i el correu, a tots els nivells. No es pot desfer. Els rècords d’aquest dispositiu es mantenen.' },
-  signout: { title: 'Tancar la sessió?', yes: 'Sí, tanca la sessió', done: 'Sessió tancada.',
-    lead: mail => `Aquest navegador oblidarà el perfil. El recuperaràs amb un codi enviat a ${mail}.` },
+  delete: { title: tr('ui.profile.delete.title'), yes: tr('ui.profile.delete.yes'), done: tr('ui.profile.delete.done'),
+    lead: () => tr('ui.profile.delete.lead') },
+  signout: { title: tr('ui.profile.signout.title'), yes: tr('ui.profile.signout.yes'), done: tr('ui.profile.signout.done'),
+    lead: mail => tr('ui.profile.signout.lead', { mail }) },
 };
-const CHOOSE_LEAD = 'Ja tens el correu confirmat. Tria el nom que sortirà a les classificacions, sense el #: 3–16 caràcters, sense espais.';
+const CHOOSE_LEAD = tr('ui.profile.chooseLead');
 
 // acceptStats(): creating a profile here showed the statistics notice (src/services/stats-sync.js may send them now)
 export function setupProfile({ focusIn, captcha, store, aliasKey, deviceNote = () => '', service = defaultService, doc = document, report = errors.report,
@@ -41,14 +42,14 @@ export function setupProfile({ focusIn, captcha, store, aliasKey, deviceNote = (
   let email = ''; // the address on the profile shown in the block (for «Tanca la sessió»)
 
   const setStatus = statusLine(status);
-  const label = () => ({ alias: 'Crea el perfil', mail: 'Envia el codi', code: 'Comprova el codi', choose: 'Desa el nom', confirm: CONFIRM[kind]?.yes }[step] ?? 'Tanca');
+  const label = () => ({ alias: tr('ui.profile.btn.createProfile'), mail: tr('ui.profile.btn.sendCode'), code: tr('ui.profile.btn.checkCode'), choose: tr('ui.profile.btn.saveName'), confirm: CONFIRM[kind]?.yes }[step] ?? tr('ui.profile.btn.close'));
   // disabled = working: a plain ring spins in the button (index.html .btn-spin, as in feedback-ui.js)
   const setSend = (text, disabled = false) => setButton(doc, sendBtn, text, disabled);
   const show = s => {
     step = s;
     $('profile-alias-field').hidden = s !== 'alias' && s !== 'choose'; $('profile-mail-field').hidden = s !== 'mail'; $('profile-code-field').hidden = s !== 'code';
     $('profile-note').hidden = s !== 'mail' && s !== 'code'; $('profile-stats-note').hidden = s !== 'alias';
-    $('profile-alias-label').textContent = s === 'choose' ? 'Nom' : 'Sobrenom';
+    $('profile-alias-label').textContent = tr(s === 'choose' ? 'ui.profile.field.name' : 'ui.profile.field.alias');
     keepBtn.hidden = s !== 'confirm'; sendBtn.classList.toggle('btn-primary', s !== 'confirm'); sendBtn.classList.toggle('btn-secondary', s === 'confirm'); // delete / sign out: «Cancel·la» leads
     setSend(label());
   };
@@ -78,15 +79,15 @@ export function setupProfile({ focusIn, captcha, store, aliasKey, deviceNote = (
     if (state !== 'none') appendName(doc, nameEl, { alias, tag: hasSession ? tag : null, verified: confirmed && hasSession });
     kindEl.hidden = state !== 'guest'; kindEl.textContent = GUEST;
     btns[2].hidden = true;
-    if (state === 'none') { sub.textContent = 'Encara no en tens cap.'; set(0, 'create', 'Crea', canLink); set(1, 'recover', 'Recupera', canLink); }
-    else if (state === 'stale') { sub.textContent = 'Aquest navegador ja no té el perfil.'; set(0, 'recover', 'Recupera', canLink); set(1, 'forget', 'Oblida el nom'); }
+    if (state === 'none') { sub.textContent = tr('ui.profile.sub.none'); set(0, 'create', tr('ui.profile.btn.create'), canLink); set(1, 'recover', tr('ui.profile.btn.recover'), canLink); }
+    else if (state === 'stale') { sub.textContent = tr('ui.profile.sub.stale'); set(0, 'recover', tr('ui.profile.btn.recover'), canLink); set(1, 'forget', tr('ui.profile.btn.forget')); }
     else if (state === 'guest') {
       sub.textContent = [GUEST_TEXT, deviceNote(persistent)].filter(Boolean).join(' ');
-      set(0, 'link', 'Confirma el correu', canLink); set(1, 'delete', 'Esborra el perfil');
+      set(0, 'link', tr('ui.profile.btn.link'), canLink); set(1, 'delete', tr('ui.profile.btn.delete'));
     } else {
-      sub.textContent = `${mailOn ? `${VERIFIED}: ${maskEmail(mailOn)}` : VERIFIED}.${state === 'named' ? ' Tria un nom sense el #.' : ''}`;
-      if (state === 'named') { set(0, 'choose', 'Tria el teu nom', canLink); set(1, 'signout', 'Tanca la sessió'); set(2, 'delete', 'Esborra el perfil'); }
-      else { set(0, 'signout', 'Tanca la sessió'); set(1, 'delete', 'Esborra el perfil'); }
+      sub.textContent = tr(`ui.profile.sub.${mailOn ? 'mail' : 'nomail'}${state === 'named' ? 'Named' : ''}`, { mail: mailOn && maskEmail(mailOn) });
+      if (state === 'named') { set(0, 'choose', tr('ui.profile.btn.choose'), canLink); set(1, 'signout', tr('ui.profile.btn.signout')); set(2, 'delete', tr('ui.profile.btn.delete')); }
+      else { set(0, 'signout', tr('ui.profile.btn.signout')); set(1, 'delete', tr('ui.profile.btn.delete')); }
     }
     row.dataset.state = state;
   }
@@ -126,16 +127,15 @@ export function setupProfile({ focusIn, captcha, store, aliasKey, deviceNote = (
     mailIn.readOnly = codeIn.readOnly = aliasIn.readOnly = false;
     cancelBtn.hidden = false;
     if (what === 'create') {
-      $('profile-title').textContent = 'Crea el perfil';
-      lead.textContent = 'Tria un sobrenom: és el nom que sortirà a la classificació, amb quatre xifres darrere (#1234) mentre no confirmis el correu. 3–16 caràcters, sense espais.';
+      $('profile-title').textContent = tr('ui.profile.title.create');
+      lead.textContent = tr('ui.profile.lead.create');
       show('alias');
     } else if (what === 'choose') {
-      $('profile-title').textContent = 'Tria el teu nom'; lead.textContent = CHOOSE_LEAD;
+      $('profile-title').textContent = tr('ui.profile.title.choose'); lead.textContent = CHOOSE_LEAD;
       show('choose');
     } else if (what === 'link' || what === 'recover') {
-      $('profile-title').textContent = what === 'link' ? 'Confirma el correu' : 'Recupera el perfil';
-      lead.textContent = what === 'link' ? 'Amb el correu confirmat, el perfil no es perd si esborres les dades del navegador: el recuperes amb un codi en qualsevol dispositiu, sense contrasenya. A més, pots triar un nom sense el #.'
-        : 'Escriu el correu que vas confirmar al perfil i t’enviarem un codi per entrar-hi. Sense contrasenya.';
+      $('profile-title').textContent = tr(`ui.profile.title.${what}`);
+      lead.textContent = tr(`ui.profile.lead.${what}`);
       show('mail');
     } else {
       $('profile-title').textContent = CONFIRM[what].title; lead.textContent = CONFIRM[what].lead(email);
@@ -152,15 +152,15 @@ export function setupProfile({ focusIn, captcha, store, aliasKey, deviceNote = (
     step = 'done'; busy = false; cancelBtn.hidden = keepBtn.hidden = true;
     sendBtn.classList.replace('btn-secondary', 'btn-primary');
     for (const id of ['profile-alias-field', 'profile-mail-field', 'profile-code-field', 'profile-note', 'profile-stats-note']) $(id).hidden = true;
-    lead.textContent = ''; setSend('Tanca'); setStatus(text, true);
+    lead.textContent = ''; setSend(tr('ui.profile.btn.close')); setStatus(text, true);
     closeTimer = setTimeout(() => { if (menu.open) menu.close(); }, 2000);
     refresh();
   }
   // «Tria el teu nom» right after the code confirmed this profile (decision 33): the same sheet, an empty field. Closing it
   // keeps «nom#1234»; the block asks again (named).
   function choose() {
-    $('profile-title').textContent = 'Tria el teu nom'; lead.textContent = CHOOSE_LEAD;
-    aliasIn.value = ''; show('choose'); idle(); setStatus('Correu confirmat!', true);
+    $('profile-title').textContent = tr('ui.profile.title.choose'); lead.textContent = CHOOSE_LEAD;
+    aliasIn.value = ''; show('choose'); idle(); setStatus(tr('ui.profile.done.mailConfirmed'), true);
     focusIn(menu, 'profile-alias');
     refresh();
   }
@@ -170,7 +170,7 @@ export function setupProfile({ focusIn, captcha, store, aliasKey, deviceNote = (
     const r = ++req;
     if (step === 'alias' || step === 'choose') { const a = checkAlias(aliasIn.value); if (!a.ok) { setStatus(a.message); aliasIn.focus(); return; } } // nothing sent
     busy = true; setStatus('');
-    setSend('Un moment…', true); mailIn.readOnly = codeIn.readOnly = aliasIn.readOnly = true;
+    setSend(tr('ui.profile.btn.working'), true); mailIn.readOnly = codeIn.readOnly = aliasIn.readOnly = true;
     try {
       let captchaToken;
       if ((step === 'alias' || step === 'mail') && service.captchaRequired && captcha) {
@@ -187,20 +187,20 @@ export function setupProfile({ focusIn, captcha, store, aliasKey, deviceNote = (
         try { remember(await service.profile?.()); } catch { /* the block asks again */ }
         acceptStats(); // the notice was on this step
         if (r !== req) return;
-        finish('Perfil creat!');
+        finish(tr('ui.profile.done.created'));
       } else if (step === 'choose') {
         const alias = await service.chooseVerifiedAlias(aliasIn.value);
         if (r !== req) return;
         rememberIdentity(store, aliasKey, { alias, tag: null });
-        finish('Nom desat!');
+        finish(tr('ui.profile.done.nameSaved'));
       } else if (step === 'mail') {
         const out = await service.sendCode(mailIn.value, { captchaToken });
         if (r !== req) return;
         mail = mailIn.value; type = out.type;
         // the address already confirmed another profile: the code switches to that one, nothing is merged
         const other = kind === 'link' && type === 'email', mine = store.get(aliasKey);
-        lead.textContent = other ? `Aquest correu ja és d’un altre perfil. Amb el codi que t’hem enviat a ${mail} entraràs en aquell perfil: ${mine || 'el d’aquest navegador'} i els seus resultats no s’hi afegeixen.`
-          : `T’hem enviat un codi de 6 xifres a ${mail}. Mira també la carpeta de correu brossa.`;
+        lead.textContent = other ? tr('ui.profile.lead.codeOther', { mail, mine: mine || tr('ui.profile.thisBrowser') })
+          : tr('ui.profile.lead.codeSent', { mail });
         codeIn.value = ''; show('code'); idle(); focusIn(menu, 'profile-code');
       } else if (step === 'code') {
         await service.verifyCode(mail, codeIn.value, type);
@@ -212,12 +212,12 @@ export function setupProfile({ focusIn, captcha, store, aliasKey, deviceNote = (
         if (type === 'email') { // signed in to an existing profile: bring its name back to this browser
           if (prof) remember(prof); else try { const alias = await service.myAlias(); if (alias) { store.set(aliasKey, alias); store.remove(TAG_KEY); } } catch { /* asked again on the next publication */ }
           if (r !== req) return;
-          finish(kind === 'link' ? 'Ara fas servir aquell perfil.' : 'Perfil recuperat!');
+          finish(tr(kind === 'link' ? 'ui.profile.done.switched' : 'ui.profile.done.recovered'));
           return;
         }
         if (prof) remember(prof);
         if (prof?.verified && Number.isInteger(prof.tag)) { choose(); return; }
-        finish(prof?.verified ? 'Correu confirmat!' : 'Codi comprovat.');
+        finish(tr(prof?.verified ? 'ui.profile.done.mailConfirmed' : 'ui.profile.done.codeChecked'));
       } else { // confirm
         try { await (kind === 'delete' ? service.deleteProfile() : service.signOut()); } catch (e) {
           if (kind === 'delete') report('leaderboard-delete-failed', { code: e?.code || e?.name || 'Error', ...(e?.detail && { server: String(e.detail).slice(0, 64) }) });
@@ -229,7 +229,7 @@ export function setupProfile({ focusIn, captcha, store, aliasKey, deviceNote = (
       }
     } catch (e) {
       if (r !== req) return;
-      setStatus(e?.message || 'Ara mateix no s’ha pogut. Torna-ho a provar.');
+      setStatus(e?.message || tr('ui.profile.failed'));
       if (e?.code === 'noprofile') show('mail');
       idle();
       if (step === 'choose' || step === 'alias') aliasIn.focus(); // a name somebody has: another try, right there

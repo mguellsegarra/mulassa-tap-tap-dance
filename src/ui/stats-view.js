@@ -6,25 +6,25 @@ import { summary } from '../game/stats.js';
 import { FIGURE_VERSIONS } from '../services/leaderboard.js';
 import { MULASSA, DRAC } from '../game/figures.js';
 import { num } from './sheet-kit.js';
+import { tr } from '../i18n/messages.js';
 
 const SHORT = { [MULASSA.id]: MULASSA.name, [DRAC.id]: DRAC.name };
 export const FIGURE_NAMES = Object.freeze({ [MULASSA.id]: MULASSA.fullName, [DRAC.id]: DRAC.fullName }); // with the town: other towns' Mulasses and Dracs will come
 const COUNTS = ['runs', 'completed', 'collapsed', 'seconds', 'perfect', 'good', 'miss', 'guapa', 'guapaTotal', 'balloons', 'holds', 'bestCombo', 'bestStars'];
 // the judge's own words for each kind of error (judge.js, results.js)
-const ERROR_NAMES = { early: 'Aviat', late: 'Tard', silent: 'Sense toc', move: 'Moviment', both: 'Els dos alhora', hold: 'Has deixat anar' };
+const ERROR_NAMES = Object.fromEntries(['early', 'late', 'silent', 'move', 'both', 'hold'].map(k => [k, tr(`ui.stats.error.${k}`)]));
 const STARS_MAX = Object.keys(FIGURE_VERSIONS).length * 3 * 3; // every level of every figure's current dance: 18
 
 // «3 h 12 min», «45 min», «menys d’1 min»: the total only (decision 19), never when
 export function playTime(seconds) {
   const m = Math.floor((Number(seconds) || 0) / 60), h = Math.floor(m / 60);
-  return h ? `${num(h)} h ${m % 60} min` : m ? `${m} min` : 'menys d’1 min';
+  return h ? tr('ui.stats.time.hm', { h: num(h), m: m % 60 }) : m ? tr('ui.stats.time.m', { m }) : tr('ui.stats.time.lt1');
 }
-const MONTHS = ['de gener', 'de febrer', 'de març', 'd’abril', 'de maig', 'de juny', 'de juliol', 'd’agost', 'de setembre', 'd’octubre', 'de novembre', 'de desembre'];
 // «Des del 5 de novembre de 2026», «Des de l’1 d’octubre de 2026» (1 and 11 take the apostrophe); spelled here, not by
 // Intl, whose year varies between engines («del 2026»)
 export function sinceText(ymd) {
   const [y, m, n] = String(ymd).split('-').map(Number);
-  return y && m && n ? `Des ${n === 1 || n === 11 ? 'de l’' : 'del '}${n} ${MONTHS[m - 1]} de ${y}` : '';
+  return y && m && n ? tr(n === 1 || n === 11 ? 'ui.stats.sinceElided' : 'ui.stats.since', { day: n, month: tr(`ui.stats.month.${m}`), year: y }) : '';
 }
 
 // Buckets (local counters, my_stats or a card's totals) → what the sheets show. A bucket may lack a counter (an older
@@ -67,15 +67,15 @@ export function icon(doc, key) {
   return s;
 }
 const el = (doc, tag, cls, text = '') => { const e = doc.createElement(tag); e.className = cls; if (text) e.textContent = text; return e; };
-const count = (n, one, many) => `${num(n)} ${n === 1 ? one : many}`;
+const count = (key, n, extra) => tr(key, { count: n, n: num(n), ...extra });
 
 // A podium as an achievement: the disc, «Podi a Estrena 2026 · Mulassa». p: { position, place («1r»), text («a … · …») }
 function wins(doc, list) {
-  const ul = el(doc, 'ul', 'stat-wins'); ul.setAttribute('aria-label', 'Podis');
+  const ul = el(doc, 'ul', 'stat-wins'); ul.setAttribute('aria-label', tr('ui.stats.podiums'));
   for (const p of list) {
     const li = el(doc, 'li', '');
     const pos = el(doc, 'span', `pos p${p.position}`, p.place), t = el(doc, 'span', '');
-    t.append(el(doc, 'b', '', 'Podi'), ` ${p.text}`);
+    t.append(el(doc, 'b', '', tr('ui.stats.podium')), ` ${p.text}`);
     li.append(pos, t); ul.appendChild(li);
   }
   return ul;
@@ -93,8 +93,8 @@ export function renderStats(doc, box, d, { own = false, onSync = null, podiums =
   box.replaceChildren();
   const facts = el(doc, 'div', 'stat-facts');
   const figures = Object.entries(d.byFigure).filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]).map(([f, n]) => `${SHORT[f] ?? f}\u00a0${num(n)}`).join(' · '); // breaks at the dot, never «Drac / 11»; the short name: a half-width tile
-  for (const [key, big, sub] of [['drum', count(d.runs, 'ball', 'balls'), figures], ['clock', playTime(d.seconds), 'a la plaça'],
-    ['flame', num(d.bestCombo), 'la millor ratxa'], ['target', d.accuracy == null ? '—' : `${Math.round(d.accuracy)}%`, 'de precisió mitjana']]) {
+  for (const [key, big, sub] of [['drum', count('ui.stats.runs', d.runs), figures], ['clock', playTime(d.seconds), tr('ui.stats.atPlaza')],
+    ['flame', num(d.bestCombo), tr('ui.stats.bestStreak')], ['target', d.accuracy == null ? '—' : `${Math.round(d.accuracy)}%`, tr('ui.stats.avgAccuracy')]]) {
     const f = el(doc, 'div', 'stat-fact');
     f.append(icon(doc, key), el(doc, 'b', '', big), el(doc, 'span', '', sub));
     facts.appendChild(f);
@@ -104,22 +104,23 @@ export function renderStats(doc, box, d, { own = false, onSync = null, podiums =
 
   const panel = el(doc, 'div', 'stat-more'); panel.id = `${box.id}-more`;
   const ul = panel.appendChild(el(doc, 'ul', 'stat-lines'));
-  if (own) line(doc, ul, 'calendar', `Has jugat ${count(d.daysPlayed, 'dia', 'dies')}`,
-    d.streak > 0 ? `${count(d.streak, 'dia seguit', 'dies seguits')} ara · rècord: ${num(d.bestStreak)}` : `rècord: ${count(d.bestStreak, 'dia seguit', 'dies seguits')}`);
-  line(doc, ul, 'judge', `${num(d.perfect)} PERFECTE · ${num(d.good)} BÉ · ${num(d.miss)} ERROR`, own ? 'tots els teus tocs, jutjats' : 'tots els tocs, jutjats');
-  line(doc, ul, 'guapa', `${num(d.guapa)} GUAPA de ${num(d.guapaTotal)}`, 'els dos botons alhora');
-  line(doc, ul, 'balloon', d.balloons ? `${own ? 'Has' : 'Ha'} rebentat ${count(d.balloons, 'globus', 'globus')}` : `Encara no ${own ? 'has' : 'ha'} rebentat cap globus`, 'picant sense parar');
-  line(doc, ul, 'hold', d.holds ? count(d.holds, 'nota mantinguda', 'notes mantingudes') : 'Cap nota mantinguda, de moment', 'les MANTÉN, de cap a cua');
-  line(doc, ul, 'dizzy', d.collapsed ? `${own ? 'T’ha' : 'Li ha'} caigut la figura ${count(d.collapsed, 'cop', 'cops')}` : `Mai no ${own ? 't’ha' : 'li ha'} caigut la figura`,
-    d.collapsed ? 'quan l’ànim de la plaça s’esgota' : '');
-  line(doc, ul, 'star', `${num(d.stars)} de ${d.starsMax} estrelles`, 'dels balls actuals');
+  if (own) line(doc, ul, 'calendar', count('ui.stats.daysPlayed', d.daysPlayed),
+    d.streak > 0 ? count('ui.stats.streakNow', d.streak, { best: num(d.bestStreak) }) : count('ui.stats.streakBest', d.bestStreak));
+  const who = own ? 'own' : 'public';
+  line(doc, ul, 'judge', tr('ui.stats.judged', { perfect: num(d.perfect), good: num(d.good), miss: num(d.miss) }), tr(own ? 'ui.stats.judgedOwn' : 'ui.stats.judgedPublic'));
+  line(doc, ul, 'guapa', tr('ui.stats.guapa', { n: num(d.guapa), total: num(d.guapaTotal) }), tr('ui.stats.guapaSub'));
+  line(doc, ul, 'balloon', d.balloons ? count(`ui.stats.balloons.${who}`, d.balloons) : tr(`ui.stats.balloonsNone.${who}`), tr('ui.stats.balloonsSub'));
+  line(doc, ul, 'hold', d.holds ? count('ui.stats.holds', d.holds) : tr('ui.stats.holdsNone'), tr('ui.stats.holdsSub'));
+  line(doc, ul, 'dizzy', d.collapsed ? count(`ui.stats.falls.${who}`, d.collapsed) : tr(`ui.stats.fallsNone.${who}`),
+    d.collapsed ? tr('ui.stats.fallsSub') : '');
+  line(doc, ul, 'star', tr('ui.stats.stars', { n: num(d.stars), max: d.starsMax }), tr('ui.stats.starsSub'));
   if (own) errorKinds(doc, panel, d, onSync);
 
   const more = el(doc, 'button', 'btn btn-link stat-toggle'); more.type = 'button';
   more.setAttribute('aria-controls', panel.id);
   const label = el(doc, 'span', '');
   more.append(label, icon(doc, 'chev'));
-  const set = open => { more.setAttribute('aria-expanded', String(open)); panel.hidden = !open; label.textContent = open ? 'Menys estadístiques' : 'Més estadístiques'; };
+  const set = open => { more.setAttribute('aria-expanded', String(open)); panel.hidden = !open; label.textContent = tr(open ? 'ui.stats.less' : 'ui.stats.more'); };
   more.addEventListener('click', () => set(panel.hidden));
   set(own);
   const row = el(doc, 'div', 'stat-toggle-row'); row.appendChild(more);
@@ -129,14 +130,14 @@ export function renderStats(doc, box, d, { own = false, onSync = null, podiums =
 function errorKinds(doc, panel, d, onSync) {
   const kinds = Object.entries(d.errors).filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]);
   if (!kinds.length) return;
-  panel.appendChild(el(doc, 'p', 'stat-errors-k', 'On se t’escapen les notes'));
-  const list = el(doc, 'ul', 'stat-errors'); list.setAttribute('aria-label', 'Errors per tipus');
+  panel.appendChild(el(doc, 'p', 'stat-errors-k', tr('ui.stats.errorsTitle')));
+  const list = el(doc, 'ul', 'stat-errors'); list.setAttribute('aria-label', tr('ui.stats.errorsByKind'));
   for (const [k, n] of kinds) { const li = el(doc, 'li', '', `${ERROR_NAMES[k]} `); li.appendChild(el(doc, 'b', '', num(n))); list.appendChild(li); }
   panel.appendChild(list);
   const timing = d.errors.early + d.errors.late, all = kinds.reduce((a, [, n]) => a + n, 0);
   if (onSync && timing >= 10 && timing * 2 > all) {
-    const tip = el(doc, 'p', 'stat-tip', d.errors.early > d.errors.late ? 'Sovint t’avances una mica. ' : 'Sovint arribes tard. ');
-    const b = el(doc, 'button', 'btn btn-link btn-small', 'Ajusta la sincronia'); b.type = 'button';
+    const tip = el(doc, 'p', 'stat-tip', tr(d.errors.early > d.errors.late ? 'ui.stats.tipEarly' : 'ui.stats.tipLate'));
+    const b = el(doc, 'button', 'btn btn-link btn-small', tr('ui.stats.adjustSync')); b.type = 'button';
     b.setAttribute('aria-haspopup', 'dialog'); b.addEventListener('click', onSync);
     tip.appendChild(b); panel.appendChild(tip);
   }

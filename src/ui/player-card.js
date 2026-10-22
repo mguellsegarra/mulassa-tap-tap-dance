@@ -4,6 +4,7 @@
 // streaks, errors per kind or dates) and a quiet line saying where the numbers come from. Loading, «no data» and errors
 // sit inside the sheet's fixed box.
 import { byId, num } from './sheet-kit.js';
+import { tr } from '../i18n/messages.js';
 import { mulaSpinner } from './loader.js';
 import { appendName, GUEST } from './profile-notes.js';
 import { statsData, renderStats, icon, FIGURE_NAMES } from './stats-view.js';
@@ -27,14 +28,14 @@ export function setupCard({ focusIn, service, doc = document, now = () => Date.n
     for (const p of list) {
       const figure = String(p.version).startsWith('drac') ? 'drac-valls' : 'mulassa-valls';
       const e = (await figureSeasons(service, figure, now()).catch(() => [])).find(x => x.seasonId === p.seasonId && x.version === p.version);
-      out.push({ position: p.position, place: num(p.position), text: `a ${e?.name ?? 'una temporada'} · ${e ? boardName(figure, e) : FIGURE_NAMES[figure]}` });
+      out.push({ position: p.position, place: num(p.position), text: tr('ui.stats.podiumAt', { season: e?.name ?? tr('ui.card.aSeason'), board: e ? boardName(figure, e) : FIGURE_NAMES[figure] }) });
     }
     return out;
   }
   async function load() {
     const r = ++req;
     box.replaceChildren();
-    say('Carregant la fitxa…', { spin: true });
+    say(tr('ui.card.loading'), { spin: true });
     const shown = minLoad > 0 ? new Promise(res => setTimeout(res, minLoad)) : null;
     let card, podiums = [];
     try {
@@ -42,12 +43,12 @@ export function setupCard({ focusIn, service, doc = document, now = () => Date.n
       if (card?.podiums.length) podiums = await podiumLines(card.podiums);
     } catch (e) {
       await shown; if (r !== req || !menu.open) return;
-      say(e?.message || 'No s’ha pogut carregar la fitxa.', { again: true }); return;
+      say(e?.message || tr('ui.card.loadFailed'), { again: true }); return;
     }
     await shown; if (r !== req || !menu.open) return;
     if (card) paintName(card);
     const d = card && statsData(card.totals);
-    if (!d?.runs) { say('Encara no hi ha estadístiques per mostrar.', { empty: true }); return; }
+    if (!d?.runs) { say(tr('ui.card.noStats'), { empty: true }); return; }
     say('');
     renderStats(doc, box, d, { podiums });
   }
@@ -66,7 +67,7 @@ export function setupCard({ focusIn, service, doc = document, now = () => Date.n
     const pic = el('span', 'card-from-pic');
     if (figure) pic.innerHTML = pixelSvg(portraitArt(figure), portraitPalette(figure), '#2a1a10');
     const v = el('span', 'card-from-v'), pos = Number(f.position), level = DIFFS[Number(f.difficulty)]?.name;
-    v.append(el('span', pos <= 3 ? `pos p${pos}` : 'pos', num(pos)), el('b', 'pts', `${num(f.score)} punts`));
+    v.append(el('span', pos <= 3 ? `pos p${pos}` : 'pos', num(pos)), el('b', 'pts', tr('ui.card.points', { score: num(f.score) })));
     if (level) v.appendChild(el('span', `lvl lvl${Number(f.difficulty)}`, level));
     const t = el('span', 'card-from-t');
     t.append(el('span', 'card-from-k', [FIGURE_NAMES[f.figure], f.season].filter(Boolean).join(' · ')), v);

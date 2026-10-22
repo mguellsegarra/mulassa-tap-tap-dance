@@ -1,28 +1,36 @@
+import { tr } from '../i18n/messages.js';
+import themeMessages from '../i18n/locales/ca/figures.json' with { type: 'json' };
 // The two buttons' words and colours per figure: the Mulassa's GUA | PA | GUAPA!, the Drac's CRE | MA | CREMA!
 // (flame yellow, light | purple, dark: apart in hue and lightness for every common colour blindness). Pure; the canvas (hud/sprites.js) and the DOM
 // (ui/figure-theme-dom.js) subscribe with onTheme(). Switched only outside play, by figure-song's setFigureSong.
 const MULASSA_COLORS = { gua: '#ff7a1a', guaLt: '#ffb56b', guaDk: '#b34d00', pa: '#14b8a6', paLt: '#6ee7d8', paDk: '#0a6e63' };
 const DRAC_COLORS = { gua: '#ffc21f', guaLt: '#ffe38a', guaDk: '#a66f00', pa: '#b0188c', paLt: '#e46cc6', paDk: '#66084f' };
 export const figThemes = {
-  mulassa: { drac: false, colors: MULASSA_COLORS, chant: [['GUAPA,', 0], ['GUAPA…', 0.8], ['I GUAPA!', 1.8]] },
-  drac: { drac: true, colors: DRAC_COLORS, chant: [['QUE', 0], ['CREMI', 0.8], ['LA PLAÇA!', 1.8]] },
+  mulassa: { drac: false, colors: MULASSA_COLORS, chant: [[tr('figures.chant.first.mulassa'), 0], [tr('figures.chant.second.mulassa'), 0.8], [tr('figures.chant.last.mulassa'), 1.8]] },
+  drac: { drac: true, colors: DRAC_COLORS, chant: [[tr('figures.chant.first.drac'), 0], [tr('figures.chant.second.drac'), 0.8], [tr('figures.chant.last.drac'), 1.8]] },
 };
 export let figTheme = figThemes.mulassa;
-const themeHooks = [], themeMemo = new Map();
+const themeHooks = [];
 export const onTheme = fn => themeHooks.push(fn);
 export function setFigureTheme(drac) {
   const next = drac ? figThemes.drac : figThemes.mulassa;
   if (next === figTheme) return;
-  figTheme = next; themeMemo.clear();
+  figTheme = next;
   themeHooks.forEach(fn => fn(next));
 }
-// Every Mulassa word the Drac says differently; ELS DOS ALHORA! (an error key) stays for both.
-const THEME_SWAP = { GUAPA: 'CREMA', GLOBUS: 'CARRETILLES', 'PER PETAR': 'PEL TRO FINAL', GUA: 'CRE', PA: 'MA', 'LA MULASSA': 'EL DRAC', 'la Mulassa cau!': 'el Drac s’apaga!', 'la Mulassa': 'el Drac', 'S’HA DESMUNTAT': 'S’HA APAGAT',
-  'Els portadors demanen un cafè': 'Cal tornar a encendre la metxa', 'HA PETAT!': 'TRO!' };
-const THEME_RE = /\b(?:GUAPA|GLOBUS|GUA|PA)\b|PER PETAR|LA MULASSA|la Mulassa cau!|la Mulassa|S’HA DESMUNTAT|Els portadors demanen un cafè|HA PETAT!/g;
-export function themed(s) { // the text as the selected figure says it (cached: the HUD asks every frame)
-  if (!figTheme.drac || !s) return s; // a drumroll's input has no word: undefined stays undefined
-  let r = themeMemo.get(s);
-  if (r === undefined) themeMemo.set(s, r = s.replace(THEME_RE, m => THEME_SWAP[m]));
-  return r;
+// Resolve semantic variants once; the HUD only reads cached strings.
+const figureTextCache = { mulassa: {}, drac: {} };
+for (const key of Object.keys(themeMessages)) {
+  const variant = key.slice(key.lastIndexOf('.') + 1);
+  if (Object.hasOwn(figureTextCache, variant)) figureTextCache[variant][key.slice(8, key.lastIndexOf('.'))] = tr(key);
 }
+export function trf(key, figureId = figTheme.drac ? 'drac' : 'mulassa') {
+  if (key === undefined) return undefined; // drumroll input has no label
+  const variant = figureId === 'drac-valls' ? 'drac' : figureId === 'mulassa-valls' ? 'mulassa' : figureId;
+  const value = figureTextCache[variant]?.[key];
+  if (value === undefined) throw new Error('i18n: missing figure variant ' + key + '.' + variant);
+  return value;
+}
+const practiceMessageKeys = ['gua', 'pa', 'guapa', 'hold', 'balloon'].map(id => Object.fromEntries(['word', 'touch', 'keys'].map(device => [device, 'practice.' + id + (id === 'balloon' && device !== 'word' ? '.mash.' : '.') + device])));
+export const practiceText = (index, device) => trf(practiceMessageKeys[index][device]);
+export const FIGURE_CHATTER_KEYS = ["chatter.heat","chatter.giant","chatter.calcot","chatter.valls","chatter.amunt","chatter.rhythm","chatter.mula","chatter.coca","chatter.castells","chatter.party","chatter.vinga"];

@@ -1,9 +1,9 @@
 // The SEO/agent files: tools/seo-pages.mjs writes /projecte/ (HTML + Markdown) and /index.md; public/ holds robots, sitemap, llms.txt.
 import assert from 'node:assert/strict';
-import { mkdtemp, readFile, access, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, access, rm, readdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { writeSeoPages } from '../tools/seo-pages.mjs';
+import { writeSeoPages, loadContent, sitemapXml, llmsTxt } from '../tools/seo-pages.mjs';
 
 const dist = await mkdtemp(join(tmpdir(), 'mulassa-seo-'));
 const pub = name => readFile(new URL(`../public/${name}`, import.meta.url), 'utf8');
@@ -47,6 +47,41 @@ try {
     const path = new URL(url).pathname;
     if (path.endsWith('.md')) await access(join(dist, path));
     else await access(new URL(`../public${path}`, import.meta.url));
+  }
+  // The generated sitemap/llms.txt equal the Catalan base while only `ca` exists
+  assert.equal(sitemapXml(['ca']), sitemap);
+  assert.equal(llmsTxt(llms, { ca: {} }), llms);
+  assert((page.match(/hreflang="[^"]+"/g) ?? []).length === (await readdir(new URL('../tools/seo-content/', import.meta.url))).filter(f => f.endsWith('.json')).length + 1, 'the Catalan page lists every edition and x-default');
+
+  // Multi-language: a fixture (never a persistent file) copied from ca with changed text
+  const ca = (await loadContent()).ca;
+  const fx = structuredClone(ca);
+  fx.lang = 'xx'; fx.ogLocale = 'xx_XX'; fx.projecte.title = 'Titol xx'; fx.projecte.lead = 'Lead xx'; fx.ui.play = 'Play xx';
+  const multi = await mkdtemp(join(tmpdir(), 'mulassa-seo-xx-'));
+  try {
+    await writeSeoPages(multi, { ca, xx: fx });
+    const pages = { ca: 'projecte/', xx: 'xx/projecte/' };
+    const hrefs = { ca: 'https://mulassa.cat/projecte/', xx: 'https://mulassa.cat/xx/projecte/' };
+    const shape = c => JSON.stringify({ s: c.projecte.sections.map(([, ps]) => ps.length), c: c.projecte.captures.length, v: c.projecte.videos.length, k: Object.keys(c.ui) });
+    assert.equal(shape(fx), shape(ca), 'same structure in every language');
+    for (const [l, dir] of Object.entries(pages)) {
+      const h = await readFile(join(multi, dir, 'index.html'), 'utf8');
+      await access(join(multi, dir, 'index.md'));
+      assert(h.includes(`<link rel="canonical" href="${hrefs[l]}">`), `${l} canonical`);
+      for (const [m, url] of Object.entries(hrefs)) assert(h.includes(`<link rel="alternate" hreflang="${m}" href="${url}">`), `${l} -> ${m} hreflang`);
+      assert(h.includes(`hreflang="x-default" href="${hrefs.ca}"`), `${l} x-default is Catalan`);
+      assert(h.includes(`<html lang="${l === 'ca' ? 'ca' : 'xx'}">`) && h.includes(`"inLanguage":"${l === 'ca' ? 'ca' : 'xx'}"`), `${l} lang`);
+      assert(h.includes(`href="/projecte/index.md"`) === (l === 'ca'), `${l} md twin is its own`);
+    }
+    const xx = await readFile(join(multi, 'xx/projecte/index.html'), 'utf8');
+    assert(xx.includes('href="/?lang=xx">Play xx</a>'), 'Play links to ?lang=');
+    assert(!xx.includes('lang=ca') && !/\/\?lang=xx[^"]*"[^>]*hreflang/.test(xx), '?lang is never an indexed edition');
+    const sm = await readFile(join(multi, 'sitemap.xml'), 'utf8');
+    for (const url of ['https://mulassa.cat/', ...Object.values(hrefs)]) assert(sm.includes(`<loc>${url}</loc>`), url);
+    assert((await readFile(join(multi, 'llms.txt'), 'utf8')).includes('(https://mulassa.cat/xx/projecte/index.md)'));
+    await assert.rejects(access(join(multi, 'yy/projecte/index.html')), 'no page outside the language list');
+  } finally {
+    await rm(multi, { recursive: true, force: true });
   }
   console.log('seo pages ok');
 } finally {

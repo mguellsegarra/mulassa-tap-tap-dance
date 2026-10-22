@@ -1,10 +1,13 @@
 // Catalog metadata lives in JSON; only the two integrated songs are playable.
+import { tr } from '../i18n/messages.js';
+import figureMessages from '../i18n/locales/ca/figures.json' with { type: 'json' };
 import figureCatalog from './figure-catalog.json' with { type: 'json' };
 import { bestRecord, recordPointsKey, saveRecord } from './records.js';
 import { CURRENT_SCORE_VERSION } from './score-scale.js';
 import { FIGURE_PORTRAITS } from './figure-portraits.js';
 export const TOWNS = figureCatalog.towns;
 const playableSongs = {
+  // i18n-ok: song titles and composers are proper names
   'mulassa-valls': { song: 'Ball de la Mulassa', composer: 'Francesc Bofarull i Figuerola', year: 1987, version: CURRENT_SCORE_VERSION },
   'drac-valls': { song: 'Ball del Drac', composer: 'Francesc Bofarull i Figuerola', year: 1985, version: 'drac-v1' },
 };
@@ -15,8 +18,8 @@ export const FIGURES = figureCatalog.figures.filter(f => f.selectorVisible !== f
 export const MULASSA = FIGURES.find(f => f.id === 'mulassa-valls');
 export const DRAC = FIGURES.find(f => f.id === 'drac-valls');
 // The strip's last card invites a colla to propose its figure: no real town, no song, outside FIGURES (records, board).
-export const INVITE_TOWN = { id: 'el-teu-poble', name: 'El teu poble', color: '#c8202f' };
-export const INVITE = { id: 'la-teva-colla', name: 'La teva colla', fullName: 'La teva colla', town: INVITE_TOWN.id, entity: 'Proposa-la', status: 'aviat', invite: true };
+export const INVITE_TOWN = { id: 'el-teu-poble', name: tr('figures.invite.town'), color: '#c8202f' };
+export const INVITE = { id: 'la-teva-colla', name: tr('figures.invite.name'), fullName: tr('figures.invite.name'), town: INVITE_TOWN.id, entity: tr('figures.invite.entity'), status: 'aviat', invite: true };
 export const townOf = f => f.town === INVITE_TOWN.id ? INVITE_TOWN : TOWNS.find(t => t.id === f.town);
 export const playable = f => f.status === 'playable';
 
@@ -48,12 +51,12 @@ export function saveFigureRecord(store, figure, level, quality, rawScore, combo)
   else store.set(recordKey(figure, level), JSON.stringify({ quality, score: rawScore, combo }));
 }
 
-// «Gegants i Gegantons», «Nans», «Mulassa i Antonio Ricu» are several; «Ós» and «Ball de Diables» (the title says so) are one.
-export const plural = figure => / i /.test(figure.name) || /^\S{3,}s(?=\s|$)/.test(figure.fullName || figure.name);
-export const aviatText = figure => `Volem que ${plural(figure) ? 'surtin' : 'surti'} a la plaça. Tens fotos, vídeos, partitures o coneixes el ball? Dona’ns un cop de mà!\n\nEl joc és de codi obert: també pots ajudar a programar-lo a GitHub.`;
-export const aviatDraft = town => `Sobre ${town}: `; // the Bústia's first words, from an «Aviat» card
-export const inviteText = () => `Tens una colla gegantera o de bestiari? Vols que el teu poble surti al joc? Explica’ns quina figura és i d’on és. Si en tens, envia’ns fotos, vídeos o la música del ball.\n\nEl joc és de codi obert: també pots ajudar a programar-lo a GitHub.`;
-export const INVITE_DRAFT = 'Proposo una figura. Poble i colla: ';
+// Complete locale-owned messages per figure; unknown proposals use the explicit generic message.
+export const aviatText = figure => tr(Object.hasOwn(figureMessages, 'figures.pending.' + figure.id) ? 'figures.pending.' + figure.id : 'figures.pending.default');
+// The Bústia's first words, from an «Aviat» card: the figure and its town (most full names already say the town).
+export const aviatDraft = (figure, town) => { const name = figure.fullName || figure.name; return name.includes(town) ? tr('figures.pending.draftName', { name }) : tr('figures.pending.draftTown', { name, town }); };
+export const inviteText = () => tr('figures.invite.text');
+export const INVITE_DRAFT = tr('figures.invite.draft');
 
 // Two green necks, red jaws and gold wing membranes, in the same portrait box as the Mulassa.
 export const DRAC_ART = ['..gg...gg...', '.ggrr.ggrr..', '..gg...gg...', '..gg...gg...', 'w.ggggggg.w.', '.wggogoggw..', '..ggggggg...', '..ggggggg...', '...d..d.....', '..dd..dd....'];

@@ -1,6 +1,6 @@
 // ?final — a dev-only shortcut to the END of the game (results → publish → «Ets el número N» → Comparteix), for testing it
 // on real devices over the LAN without playing the song and without touching the real leaderboard. Only on dev hosts
-// (errors.js DEV_HOST: localhost, LAN IPs, *.local/.test): on mulassa.cat or pages.dev `finalMode()` is null and nothing
+// (flags.js DEV_HOST: localhost, LAN IPs, *.local/.test): on mulassa.cat or pages.dev `finalMode()` is null and nothing
 // here runs. `?final=<pct>-<level>-<outcome>` (default 95-0-record; outcome record | clear | collapse), `&taken` makes the
 // first nickname tried «ja és d’algú». The run is made up but consistent: judgments walked over the real chart with the
 // game's scoring. The run follows the ànim rules. Sharing stays real (it is all on the device).
@@ -23,7 +23,7 @@
 // reached by pressing the real sheets' buttons; `&review` alone lists them. The mock's account follows the state (`&account=`
 // overrides it). The e-mail flow takes any address and the code 123456; ocupat@exemple.cat already confirmed another profile
 // (switching to it); no mail is sent.
-import { DEV_HOST } from '../services/errors.js';
+import { DEV_HOST } from '../core/flags.js';
 import { quality } from '../game/progress.js';
 import { drain, ENERGY } from '../game/energy.js';
 import { ACCOUNTS } from './mock-leaderboard.js';
@@ -158,12 +158,13 @@ export function markTestMode(doc = document) {
     b.className = 'test-mode';
     b.textContent = 'MODE PROVA';
     b.setAttribute('aria-hidden', 'true');
-    b.style.cssText = (where === 'inline' ? 'display:table;margin:12px auto 0;'
+    b.style.cssText = (where === 'inline' ? ''
       : 'position:absolute;top:-9px;right:64px;') + 'z-index:99;pointer-events:none;' // on a sheet: astride its top edge, over no text or button (left of the close button, clear of the review row)
       + 'padding:2px 7px;border-radius:6px;background:#c62828;color:#fff;font:800 11px/1.4 system-ui,sans-serif;letter-spacing:.06em;opacity:.92';
     return b;
   };
-  doc.getElementById('settings-about')?.appendChild(badge('inline'));
+  const version = doc.getElementById('settings-version'); // on the build's line: a row of its own scrolled Configuració at 320×568
+  if (version) { const row = doc.createElement('div'); row.className = 'about-version'; row.style.cssText = 'display:flex;justify-content:center;align-items:center;gap:8px'; version.replaceWith(row); version.style.margin = '0'; row.append(version, badge('inline')); }
   for (const id of ['publish-menu', 'board-menu', 'profile-menu']) doc.getElementById(id)?.appendChild(badge('absolute'));
   doc.title = `[PROVA] ${doc.title}`;
 }

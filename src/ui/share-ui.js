@@ -3,6 +3,8 @@
 // format/nickname change), so the click that shares calls navigator.share() straight away (iOS wants it inside the
 // tap). Nothing leaves the device unless the person shares it; closing the system sheet (AbortError) says nothing.
 import { byId } from './sheet-kit.js';
+import { tr } from '../i18n/messages.js';
+import { lang } from '../i18n/locale.js';
 import { DIFFS } from '../game/chart.js';
 import { shareText, challengeUrl, challengeResult, bragWorthy, shareMode, linkMode, shareLinks, isCancel } from '../services/share.js';
 import { PHOTO, drawCard, cardAlt, toJpeg, loadCardFonts } from '../hud/share-card.js';
@@ -38,7 +40,7 @@ export function setupShare({ focusIn, restore = () => {}, hero = () => null, sta
   };
   const say = (text, ok = false) => { status.textContent = text; status.classList.toggle('ok', ok); };
   function setPrimary(mode, busy = !file) { // the label only: the icon (share / save) follows data-mode in CSS
-    $('share-image-label').textContent = busy ? 'Preparant la imatge…' : mode === 'share' ? 'Comparteix la imatge' : 'Desa la imatge';
+    $('share-image-label').textContent = tr(busy ? 'ui.share.preparing' : mode === 'share' ? 'ui.share.shareImage' : 'ui.share.saveImage');
     primary.disabled = busy;
     primary.dataset.mode = mode;
   }
@@ -64,7 +66,9 @@ export function setupShare({ focusIn, restore = () => {}, hero = () => null, sta
     else if (!heroes[f]) setPrimary(primary.dataset.mode, true);
     img.alt = cardAlt(f, d);
     try {
+      const l = lang();
       await loadCardFonts(fonts);
+      if (lang() !== l) return prepare(); // the language changed while the fonts loaded: start again in the new one
       if (!heroes[f]) await settle();
       if (r !== req || !menu.open) return;
       if (!heroes[f]) {
@@ -84,7 +88,7 @@ export function setupShare({ focusIn, restore = () => {}, hero = () => null, sta
       errors.report('share-image-failed', { name: e?.name || 'Error' });
       if (r !== req || !menu.open) return;
       file = null; tapped = false; setPrimary('download'); // never the previous card
-      say('No s’ha pogut preparar la imatge. Pots enviar l’enllaç per WhatsApp o X.');
+      say(tr('ui.share.prepareFailed'));
     }
   }
   function selectFormat(f) {
@@ -102,7 +106,7 @@ export function setupShare({ focusIn, restore = () => {}, hero = () => null, sta
     if (!run || !shownKey || menu.open || run.reason === 'collapse') return;
     tag.hidden = true; // the nudge has done its job
     say('');
-    note.hidden = !published; note.textContent = published ? 'Publicat! Ja surts a la classificació.' : '';
+    note.hidden = !published; note.textContent = published ? tr('ui.share.published') : '';
     const o = ++opens, openedRun = run, aliasAtOpen = store.get(ALIAS_KEY);
     rank = null;
     if (aliasAtOpen) Promise.resolve().then(() => standing(run.figureId)).then(value => { // each figure has its own board
@@ -114,7 +118,7 @@ export function setupShare({ focusIn, restore = () => {}, hero = () => null, sta
     const cap = shareText(run, challenge), link = challengeUrl(run.pct, run.diff, undefined, run.figureId), links = shareLinks(cap, link);
     $('share-x').href = links.x; $('share-whatsapp').href = links.whatsapp;
     more.dataset.mode = linkMode(nav, { text: cap, url: link });
-    $('share-more-label').textContent = more.dataset.mode === 'share' ? 'Altres' : 'Copia';
+    $('share-more-label').textContent = tr(more.dataset.mode === 'share' ? 'ui.share.more' : 'ui.share.copy');
     menu.showModal();
     focusIn(menu, 'share-image');
     selectFormat(format);
@@ -133,13 +137,13 @@ export function setupShare({ focusIn, restore = () => {}, hero = () => null, sta
     if (primary.dataset.mode === 'share') {
       let p;
       try { p = nav.share({ files: [file] }); } catch (e) { p = Promise.reject(e); }
-      Promise.resolve(p).then(() => say('Compartit!', true), e => { if (!isCancel(e)) { errors.report('share-failed', { name: e?.name || 'Error' }); say('No s’ha pogut compartir. Desa la imatge i penja-la tu mateix.'); } });
+      Promise.resolve(p).then(() => say(tr('ui.share.shared'), true), e => { if (!isCancel(e)) { errors.report('share-failed', { name: e?.name || 'Error' }); say(tr('ui.share.shareFailed')); } });
       return;
     }
     const a = doc.createElement('a'); // no file sharing here: save it, then post it anywhere
     a.href = previewUrl; a.download = file.name; a.rel = 'noopener';
     doc.body.appendChild(a); a.click(); a.remove();
-    say('Imatge desada. Penja-la on vulguis.', true);
+    say(tr('ui.share.saved'), true);
   }
   // Més…: the caption + challenge link (no image) to the system sheet; without one («Copia»), the link to the clipboard,
   // else a hidden field's copy (http, blocked permission), else the link shown in the status line to copy by hand
@@ -149,11 +153,11 @@ export function setupShare({ focusIn, restore = () => {}, hero = () => null, sta
     if (more.dataset.mode === 'share') {
       let p;
       try { p = nav.share({ text, url: link }); } catch (e) { p = Promise.reject(e); }
-      Promise.resolve(p).then(() => say('Compartit!', true), e => { if (!isCancel(e)) { errors.report('share-failed', { name: e?.name || 'Error' }); say(`No s’ha pogut compartir. L’enllaç: ${link}`); } });
+      Promise.resolve(p).then(() => say(tr('ui.share.shared'), true), e => { if (!isCancel(e)) { errors.report('share-failed', { name: e?.name || 'Error' }); say(tr('ui.share.linkFailed', { link })); } });
       return;
     }
     const full = `${text} ${link}`; // as WhatsApp gets it: the caption + the link
-    const copied = () => say('Text copiat.', true);
+    const copied = () => say(tr('ui.share.textCopied'), true);
     const byHand = () => {
       try { // inside the dialog: a modal's top layer makes everything outside it inert
         const t = doc.createElement('textarea');
@@ -161,7 +165,7 @@ export function setupShare({ focusIn, restore = () => {}, hero = () => null, sta
         menu.appendChild(t); t.select(); const ok = doc.execCommand?.('copy'); t.remove();
         if (ok) return copied();
       } catch { /* no copy at all */ }
-      say(`Copia aquest text: ${full}`);
+      say(tr('ui.share.copyByHand', { text: full }));
     };
     try { nav.clipboard.writeText(full).then(copied, byHand); } catch { byHand(); }
   });

@@ -1,0 +1,242 @@
+{
+  "ca": {
+    "endonym": "Català",
+    "dir": "ltr",
+    "intl": "ca",
+    "numberLocale": "ca-ES",
+    "plurals": [
+      "one",
+      "other"
+    ],
+    "dates": {
+      "locale": "ca",
+      "timeZone": "Europe/Madrid"
+    },
+    "released": true
+  },
+  "oc": {
+    "endonym": "Aranés",
+    "dir": "ltr",
+    "intl": "fr",
+    "numberLocale": "fr-FR",
+    "plurals": [
+      "one",
+      "other"
+    ],
+    "dates": {
+      "locale": "fr-FR",
+      "timeZone": "Europe/Madrid"
+    },
+    "released": true
+  },
+  "eu": {
+    "endonym": "Euskara",
+    "dir": "ltr",
+    "intl": "eu",
+    "numberLocale": "eu",
+    "plurals": [
+      "one",
+      "other"
+    ],
+    "dates": {
+      "locale": "eu",
+      "timeZone": "Europe/Madrid"
+    },
+    "released": true
+  },
+  "gl": {
+    "endonym": "Galego",
+    "dir": "ltr",
+    "intl": "gl",
+    "numberLocale": "gl",
+    "plurals": [
+      "one",
+      "other"
+    ],
+    "dates": {
+      "locale": "gl",
+      "timeZone": "Europe/Madrid"
+    },
+    "released": true
+  },
+  "es": {
+    "endonym": "Castellano",
+    "dir": "ltr",
+    "intl": "es",
+    "numberLocale": "es-ES",
+    "plurals": [
+      "one",
+      "other"
+    ],
+    "dates": {
+      "locale": "es-ES",
+      "timeZone": "Europe/Madrid"
+    },
+    "released": true
+  },
+  "en": {
+    "endonym": "English",
+    "dir": "ltr",
+    "intl": "en",
+    "numberLocale": "en-GB",
+    "plurals": [
+      "one",
+      "other"
+    ],
+    "dates": {
+      "locale": "en-GB",
+      "timeZone": "Europe/Madrid"
+    },
+    "released": true
+  },
+  "fr": {
+    "endonym": "Français",
+    "dir": "ltr",
+    "intl": "fr",
+    "numberLocale": "fr-FR",
+    "plurals": [
+      "one",
+      "other"
+    ],
+    "dates": {
+      "locale": "fr-FR",
+      "timeZone": "Europe/Madrid"
+    },
+    "released": true
+  },
+  "it": {
+    "endonym": "Italiano",
+    "dir": "ltr",
+    "intl": "it",
+    "numberLocale": "it-IT",
+    "plurals": [
+      "one",
+      "other"
+    ],
+    "dates": {
+      "locale": "it-IT",
+      "timeZone": "Europe/Madrid"
+    },
+    "released": true
+  },
+  "ro": {
+    "endonym": "Română",
+    "dir": "ltr",
+    "intl": "ro",
+    "numberLocale": "ro-RO",
+    "plurals": [
+      "one",
+      "few",
+      "other"
+    ],
+    "dates": {
+      "locale": "ro-RO",
+      "timeZone": "Europe/Madrid"
+    },
+    "released": true
+  },
+  "pt-BR": {
+    "endonym": "Português (Brasil)",
+    "dir": "ltr",
+    "intl": "pt-BR",
+    "numberLocale": "pt-BR",
+    "plurals": [
+      "one",
+      "other"
+    ],
+    "dates": {
+      "locale": "pt-BR",
+      "timeZone": "Europe/Madrid"
+    },
+    "released": true
+  },
+  "de": {
+    "endonym": "Deutsch",
+    "dir": "ltr",
+    "intl": "de",
+    "numberLocale": "de-DE",
+    "plurals": [
+      "one",
+      "other"
+    ],
+    "dates": {
+      "locale": "de-DE",
+      "timeZone": "Europe/Madrid"
+    },
+    "released": true
+  },
+  "zh-Hans": {
+    "endonym": "简体中文",
+    "dir": "ltr",
+    "intl": "zh-Hans",
+    "numberLocale": "zh-CN",
+    "plurals": [
+      "other"
+    ],
+    "dates": {
+      "locale": "zh-CN",
+      "timeZone": "Europe/Madrid"
+    },
+    "released": true
+  },
+  "ja": {
+    "endonym": "日本語",
+    "dir": "ltr",
+    "intl": "ja",
+    "numberLocale": "ja-JP",
+    "plurals": [
+      "other"
+    ],
+    "dates": {
+      "locale": "ja-JP",
+      "timeZone": "Europe/Madrid"
+    },
+    "released": true
+  },
+  "uk": {
+    "endonym": "Українська",
+    "dir": "ltr",
+    "intl": "uk",
+    "numberLocale": "uk-UA",
+    "plurals": [
+      "one",
+      "few",
+      "many"
+    ],
+    "dates": {
+      "locale": "uk-UA",
+      "timeZone": "Europe/Madrid"
+    },
+    "released": true
+  },
+  "ru": {
+    "endonym": "Русский",
+    "dir": "ltr",
+    "intl": "ru",
+    "numberLocale": "ru-RU",
+    "plurals": [
+      "one",
+      "few",
+      "many"
+    ],
+    "dates": {
+      "locale": "ru-RU",
+      "timeZone": "Europe/Madrid"
+    },
+    "released": true
+  },
+  "ko": {
+    "endonym": "한국어",
+    "dir": "ltr",
+    "intl": "ko",
+    "numberLocale": "ko-KR",
+    "plurals": [
+      "other"
+    ],
+    "dates": {
+      "locale": "ko-KR",
+      "timeZone": "Europe/Madrid"
+    },
+    "released": true
+  }
+}

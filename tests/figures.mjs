@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { FIGURES, TOWNS, MULASSA, DRAC, MULE_ART, DRAC_ART, portraitArt, portraitPalette, portraitStand, STAND, playable, townOf, rememberedLevel, rememberLevel, recordKey, aviatText, INVITE, INVITE_TOWN, INVITE_DRAFT } from '../src/game/figures.js';
+import { FIGURES, TOWNS, MULASSA, DRAC, MULE_ART, DRAC_ART, portraitArt, portraitPalette, portraitStand, STAND, playable, townOf, rememberedLevel, rememberLevel, recordKey, aviatText, aviatDraft, inviteText, INVITE, INVITE_TOWN, INVITE_DRAFT } from '../src/game/figures.js';
 import { FIGURE_PORTRAITS } from '../src/game/figure-portraits.js';
 import { setupSelect, peekGap, pixelSvg } from '../src/ui/select-ui.js';
 import { cellOutline } from '../src/ui/selector-portraits.js';
@@ -118,8 +118,9 @@ Object.defineProperties(nodes.get('select-level-sub'), { clientWidth: { value: 2
 let narrow = false, narrowSub = false;
 const $ = id => nodes.get(id), win = { innerWidth: 393, innerHeight: 852, addEventListener(k, f) { (handlers[k] ||= []).push(f); } };
 let frees = [], boards = [], sounds = [], played = [], how = 0, drafts = [], busy = false, selected = [];
+let standingOf = async f => (f === DRAC.id ? { pos: 3, total: 12 } : { pos: 7, total: 1350 });
 const api = setupSelect({ doc, win, store, keyboard: () => true, reduced: () => true, busy: () => busy,
-  sfx: k => sounds.push(k), firstLevel: 0, standing: async f => (f === DRAC.id ? { pos: 3, total: 12 } : { pos: 7, total: 1350 }), onBoard: f => boards.push(f.id), ranked: true, demo: true, // ?demo stays off outside a dev build
+  sfx: k => sounds.push(k), firstLevel: 0, standing: f => standingOf(f), onBoard: f => boards.push(f.id), ranked: true, demo: true, // ?demo stays off outside a dev build
   onPlay: (d, f) => played.push([d, f.id]), onFree: f => frees.push(f.id), onSelect: f => selected.push(f.id), onHowto: () => how++, onWrite: draft => drafts.push(draft) });
 const key = (key, options = {}) => { const e = { key, ...options, defaultPrevented: false, preventDefault() { this.defaultPrevented = true; } }; for (const f of handlers.keydown) f(e); return e; };
 const click = (root, target = root) => root.fire('click', { target });
@@ -382,7 +383,7 @@ assert($('select').attrs['data-pending'], 'pending selection hides the action');
 assert.equal($('select-name').textContent, DRAC.fullName || DRAC.name, 'the playable panel fades out as it was');
 assert.equal(selected.at(-1), DRAC.id, 'nor does it change the song or the model');
 click($('select-next')); key('Enter'); assert($('select-act').hidden, 'it cannot be played');
-click($('aviat-write')); assert.deepEqual(drafts, [`Sobre ${townOf(soon[0]).name}: `]);
+click($('aviat-write')); assert.deepEqual(drafts, [aviatDraft(soon[0], townOf(soon[0]).name)]);
 click($('select-strip'), more); assert(!api.unfolded && later.every(c => c.hidden), 'the banner folds it back');
 assert.equal(api.figure, DRAC, 'a hidden figure falls back to Drac');
 assert.equal($('select-next-label').textContent, 'Tria la dificultat', 'returning to a playable figure restores its action label');
@@ -413,7 +414,8 @@ assert.equal(tarragona.attrs['aria-pressed'], 'true');
   assert.equal(vilanova.attrs['aria-pressed'], 'true');
   key('Enter'); click($('select-next'));
   assert($('select-act').hidden && $('select-info').hidden && !$('select-pending').hidden, 'no game, levels or records for Vilanova');
-  click($('aviat-write')); assert.equal(drafts.at(-1), 'Sobre Vilanova i la Geltrú: ', 'the collaboration draft keeps the shared town');
+  const vilanovaBoja = api.figure;
+  click($('aviat-write')); assert.equal(drafts.at(-1), aviatDraft(vilanovaBoja, 'Vilanova i la Geltrú'), 'the collaboration draft names the figure and the shared town');
   click($('select-strip'), cards.find(c => c.dataset.id === 'boja-vilanova'));
   assert.equal(api.figure.id, 'boja-vilanova');
   assert.equal($('aviat-title').textContent, 'Mulassa La Boja de Vilanova i la Geltrú');
@@ -501,13 +503,24 @@ click($('select-play')); assert.deepEqual(played.at(-1), [2, DRAC.id], 'play rec
 click($('select-strip'), cards[0]); await Promise.resolve();
 assert(!$('select-rank-tile').hidden);
 assert.match($('select-pos').textContent, /^Posició 7 de 1\.350 · /, 'returning to Mulassa refreshes its own board');
+{ // the last place shown again while the board is asked belongs to one profile: a sign-out (here or in another tab: refreshIdentity
+  // drops the identity, the name and tag stay for the next publication) never shows that profile's place again
+  const identity = 'leaderboard-alias:identity', answer = standingOf, swap = async () => { click($('select-strip'), cards[1]); click($('select-strip'), cards[0]); await Promise.resolve(); };
+  memory.set('leaderboard-alias', 'Jo'); memory.set('leaderboard-tag', '7'); memory.set(identity, JSON.stringify({ prof: { alias: 'Jo', tag: 7 } }));
+  standingOf = async f => (f === DRAC.id ? null : { pos: 2, total: 1350 }); // Jo's own place
+  await swap(); assert.match($('select-pos').textContent, /^Posició 2 de 1\.350 · /);
+  standingOf = () => new Promise(() => {}); // the board has not answered yet
+  await swap(); assert.match($('select-pos').textContent, /^Posició 2 de 1\.350 · /, 'the same profile: its last place stays meanwhile (nothing moves)');
+  memory.delete(identity);
+  await swap(); assert(!/^Posició 2 /.test($('select-pos').textContent), 'signed out: never the previous profile\'s place');
+  standingOf = answer; await swap(); }
 const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
-assert.match(html, /<button id="select-free"[^>]*title="Ball lliure"[^>]*>.*<span id="select-free-label">Ball lliure<\/span>/, 'free play is «Ball lliure» for every figure');
+assert.match(html, /<button id="select-free"[^>]*title="Ball lliure"[^>]*>.*<span id="select-free-label"[^>]*>Ball lliure<\/span>/, 'free play is «Ball lliure» for every figure');
 assert.match(html, /<section id="select-pending"/); assert(!html.includes('id="soon-menu"'), 'no sheet: it unfolds in place');
 assert.match(html, /href="mailto:holi@mulassa.cat"/);
 assert(html.indexOf('id="select-name"') < html.indexOf('id="select-howto"') && html.indexOf('id="select-howto"') < html.indexOf('id="select-rank-tile"'), 'the ? sits by the name');
 assert.match(html, /id="select-howto"[^>]*aria-label="Com es juga"[^>]*><span aria-hidden="true">\?<\/span><\/button>/);
-assert.match(html, /<button id="select-rank-tile" type="button" class="sel-tile sel-rank" aria-haspopup="dialog" hidden><svg[^]*<span id="select-pos">Classificació<\/span><svg class="chev"/, 'the ranking line: a real button with the board icon and a chevron, «Classificació» from the first frame');
+assert.match(html, /<button id="select-rank-tile" type="button" class="sel-tile sel-rank" aria-haspopup="dialog" hidden><svg[^]*<span id="select-pos"[^>]*>Classificació<\/span><svg class="chev"/, 'the ranking line: a real button with the board icon and a chevron, «Classificació» from the first frame');
 FIGURES.splice(FIGURES.indexOf(catalogFixture), 1);
 const ui = readFileSync(new URL('../src/ui/select-ui.js', import.meta.url), 'utf8');
 const strip = readFileSync(new URL('../src/ui/select-strip.js', import.meta.url), 'utf8'); // the cards' HTML
@@ -730,3 +743,16 @@ console.log('pending fold: immediate selection, preserved outgoing content, shar
   fitPendingNote({ querySelector: () => null }); // a card without a note (the invitation): nothing to do
   console.log('pending note: shown only when it fits ok');
 }
+
+// Literal oracle from git show HEAD:src/game/figures.js.
+const wasPlural = figure => / i /.test(figure.name) || /^\S{3,}s(?=\s|$)/.test(figure.fullName || figure.name);
+const oldAviatText = figure => `Volem que ${wasPlural(figure) ? 'surtin' : 'surti'} a la plaça. Tens fotos, vídeos, partitures o coneixes el ball? Dona’ns un cop de mà!\n\nEl joc és de codi obert: també pots ajudar a programar-lo a GitHub.`;
+
+for (const figure of sourceCatalog.figures) assert.equal(aviatText(figure), oldAviatText(figure), figure.id);
+
+assert.equal(aviatDraft({ name: 'Nans' }, 'Valls'), 'Sobre Nans (Valls): ');
+assert.equal(aviatDraft({ name: 'Nans de Valls' }, 'Valls'), 'Sobre Nans de Valls: ', 'a name that says the town is not repeated');
+assert.equal(aviatDraft({ name: 'A {town} <B>' }, 'Valls'), 'Sobre A {town} <B> (Valls): ', 'the name is opaque user data');
+assert.equal(inviteText(), 'Tens una colla gegantera o de bestiari? Vols que el teu poble surti al joc? Explica’ns quina figura és i d’on és. Si en tens, envia’ns fotos, vídeos o la música del ball.\n\nEl joc és de codi obert: també pots ajudar a programar-lo a GitHub.');
+assert.equal(INVITE_DRAFT, 'Proposo una figura. Poble i colla: ');
+for (const figure of sourceCatalog.figures) assert.equal(aviatText({ ...figure, name: 'Noms canviats', fullName: 'Altres noms' }), oldAviatText(figure), 'grammar is keyed by ID, never inferred from names');

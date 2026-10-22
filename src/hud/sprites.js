@@ -1,9 +1,10 @@
 // The HUD palette, fonts and the text sprite cache (each string is painted once and blitted after).
 import { H } from './canvas.js';
 import { onTheme } from '../game/figure-theme.js';
+import { fontStack, loadScriptFonts, glyphsReady, isLatin } from '../i18n/fonts.js';
 
 // Readable rounded bold font for everything (Taiko style); the pixel font only for the logo and big numbers
-export const FONT = "'Baloo 2', system-ui, sans-serif", PIXEL = "'Jersey 10', monospace";
+export const FONT = fontStack("'Baloo 2', system-ui, sans-serif"), PIXEL = "'Jersey 10', monospace";
 export const C = {
   cream: '#fff3d6', gold: '#f5c518', red: '#c0283c', dark: '#2a1a10', blue: '#6fa8ff', pink: '#ff8fb1', green: '#7ee081',
   score: '#c9a7ff', // lilac, reserved for points (PUNTS, MILLOR, the share card)
@@ -18,19 +19,21 @@ onTheme(t => { Object.assign(C, t.colors); DIRC.L = C.gua; DIRC.R = C.pa; DIRLT.
 // glyph cache), and shadowBlur glows are a Gaussian blur per draw. So each string + style + size is painted once
 // into a small canvas and blitted from then on (LRU, capped by pixels). No offscreen canvas (tests): drawn directly.
 const sprites = new Map(), spare = [], SPRITE_PX = 6_000_000;
-let spritePx = 0, spriteOk = true;
+let spritePx = 0, spriteOk = true, glyphsOk = isLatin(); // glyphsOk false: this language's font is not here yet, so a sprite would freeze a missing-glyph box
 // Web fonts arrived: drop every cached sprite (painted with the fallback font) and re-measure the title.
 export let titleL = null, titleKey = ''; // the title layout cache (titleLayoutNow): declared up here, the font loads below reset it
 export const setTitleL = v => (titleL = v);
 export const setTitleKey = v => (titleKey = v);
-const fontsArrived = () => { sprites.forEach(s => spare.push(s.c)); sprites.clear(); spritePx = 0; titleKey = ''; };
+const fontsArrived = () => { glyphsOk ||= glyphsReady(document.fonts, "'Baloo 2'"); sprites.forEach(s => spare.push(s.c)); sprites.clear(); spritePx = 0; titleKey = ''; };
 try { document.fonts.addEventListener('loadingdone', fontsArrived); } catch { /* no font loading API */ } // Safari does not always fire it: the loads below repaint too
 // canvas-only fonts are never fetched by themselves (no DOM text uses the pixel logo font), so ask for them explicitly;
 // the page cover waits for them (at most 3 s), so the logo never shows in a fallback font
 export let fontsReady = Promise.resolve();
 try {
   fontsReady = Promise.race([
-    Promise.all(["64px 'Jersey 10'", "800 64px 'Baloo 2'", "600 64px 'Baloo 2'"].map(f => document.fonts.load(f, 'MULASSA àç·').then(fontsArrived))),
+    // i18n-ok: glyph sample to preload the fonts
+    Promise.all(["64px 'Jersey 10'", "800 64px 'Baloo 2'", "600 64px 'Baloo 2'"].map(f => document.fonts.load(f, 'MULASSA àç·').then(fontsArrived)))
+      .then(() => isLatin() || loadScriptFonts(document.fonts, "'Baloo 2'").then(ok => { glyphsOk = ok; fontsArrived(); })), // Cyrillic file / CJK check, at most 2 s
     new Promise(r => setTimeout(r, 3000)),
   ]).catch(() => {});
 } catch { /* no font API (tests) */ }
@@ -56,6 +59,7 @@ export function sprite(key, u, size, paint, budget = false) {
   x.setTransform(u, 0, 0, u, 0, 0);
   paint(x, s);
   Object.assign(s, { c, w: c.width / u, h: c.height / u, px: c.width * c.height });
+  if (!glyphsOk) return s; // drawn this once with the fallback font, never cached
   sprites.set(key, s);
   for (spritePx += s.px; spritePx > SPRITE_PX && sprites.size > 1;) { // evict the least recently used
     const [k, old] = sprites.entries().next().value;

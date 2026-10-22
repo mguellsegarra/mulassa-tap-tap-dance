@@ -3,7 +3,9 @@
 // played, where the player came; «Tria temporada» lists them by year) and the end-of-season sheet, once per profile and
 // season. All of it reads get_seasons (service.seasons).
 import { DIFFS } from '../game/chart.js';
-import { byId, num } from './sheet-kit.js';
+import { byId, num, trSplit } from './sheet-kit.js';
+import { tr } from '../i18n/messages.js';
+import { fmtDate, fmtDateRange } from '../i18n/format.js';
 import { mulaSpinner } from './loader.js';
 import { appendName } from './profile-notes.js';
 import { FIGURE_NAMES } from './stats-view.js';
@@ -12,7 +14,7 @@ import { pixelSvg } from './select-strip.js';
 import { SELECTOR_PORTRAITS } from './selector-portraits.js';
 import { setupFigurePicker } from './figure-picker.js';
 
-const DAY = 864e5, SEASON_NAMES = ['Hivern', 'Primavera', 'Estiu', 'Tardor'];
+const DAY = 864e5, SEASON_NAMES = [0, 1, 2, 3].map(i => tr(`ui.seasons.name.${i}`));
 // Europe/Madrid's offset at `t` (ms): seasons turn at 00:00 Catalan time
 function madridOffset(t) {
   const p = Object.fromEntries(new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Madrid', hourCycle: 'h23', year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric' })
@@ -30,12 +32,12 @@ export function calendarSeason(now = Date.now()) {
 export function seasonLine({ name, endsAt }, now = Date.now()) {
   if (endsAt == null || endsAt <= now) return name;
   const days = Math.ceil((endsAt - now) / DAY);
-  return `${name} · ${days <= 1 ? 's’acaba avui' : `queden ${days} dies`}`;
+  return tr('ui.seasons.line', { name, rest: days <= 1 ? tr('ui.seasons.endsToday') : tr('ui.seasons.daysLeft', { days }) });
 }
 // «d’Estrena 2026», «d’Hivern 2027», «de Tardor 2026»: «de» before a season's name, elided before a vowel or h
-export const ofSeason = name => (/^[aeiouàèéíïòóúüh]/i.test(name) ? `d’${name}` : `de ${name}`);
+export const ofSeason = name => tr(/^[aeiouàèéíïòóúüh]/i.test(name) ? 'ui.seasons.ofElided' : 'ui.seasons.of', { name });
 // a board's name in the history: «Mulassa», or «Mulassa (ball anterior)» when a newer dance shares the season (decision 29)
-export const boardName = (figure, e) => `${FIGURE_NAMES[figure] ?? figure}${e.previousDance ? ' (ball anterior)' : ''}`;
+export const boardName = (figure, e) => e.previousDance ? tr('ui.seasons.boardPrevious', { figure: FIGURE_NAMES[figure] ?? figure }) : FIGURE_NAMES[figure] ?? figure;
 
 // get_seasons for a figure, kept a minute: the board, the hall and the cards all ask for it. The answer carries the caller's own
 // places (myPosition), so it is kept per owner, and an account event (another profile, a publication) drops it.
@@ -87,15 +89,15 @@ const BACK_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 
 const CAL_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>';
 const hallEl = (doc, tag, cls = '', text = null) => { const e = doc.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
 const htmlEl = (doc, tag, cls, html) => { const e = hallEl(doc, tag, cls); e.innerHTML = html; return e; };
-const playerCount = n => `${num(n)} ${n === 1 ? 'participant' : 'participants'}`;
+const playerCount = n => tr('ui.seasons.players', { count: n, n: num(n) });
 const levelName = d => DIFFS[Number(d)]?.name ?? '';
 
 // «1 d’octubre – 31 de desembre de 2026» (narrow phones: «1 d’oct. – 31 de des. 2026»), in Catalan time; `until` is the next
 // season's first instant. With no end known («Estrena 2026» alone): «des del 27 de setembre de 2026».
-const catDate = (o, t) => new Intl.DateTimeFormat('ca', { timeZone: 'Europe/Madrid', day: 'numeric', ...o }).format(t).replace(/ del (\d{4})/g, ' de $1');
+const catDate = (o, t) => fmtDate(t, { timeZone: 'Europe/Madrid', day: 'numeric', ...o }).replace(/ del (\d{4})/g, ' de $1');
 export function seasonDates({ startsAt, until }, month = 'long') {
-  if (!Number.isFinite(until)) return `des ${/^1 /.test(catDate({ month }, startsAt)) ? 'de l’' : 'del '}${catDate({ month, year: 'numeric' }, startsAt)}`;
-  return new Intl.DateTimeFormat('ca', { timeZone: 'Europe/Madrid', day: 'numeric', month, year: 'numeric' }).formatRange(startsAt, until - 1).replace(/[\u2009\u202f]/g, ' ').replace(/ del (\d{4})/g, ' de $1'); // ICU's thin spaces: a plain one may wrap
+  if (!Number.isFinite(until)) return tr(/^1 /.test(catDate({ month }, startsAt)) ? 'ui.seasons.sinceElided' : 'ui.seasons.since', { date: catDate({ month, year: 'numeric' }, startsAt) });
+  return fmtDateRange(startsAt, until - 1, { timeZone: 'Europe/Madrid', day: 'numeric', month, year: 'numeric' }).replace(/[\u2009\u202f]/g, ' ').replace(/ del (\d{4})/g, ' de $1'); // ICU's thin spaces: a plain one may wrap
 }
 // a figure's closed seasons, one each (a dance replaced mid-season: its boards, the current dance first), newest first;
 // «Estrena 2026» has no end of its own: it lasted until the next season began
@@ -129,11 +131,11 @@ export function setupSeasons({ focusIn, service, onBoard = () => {}, onCard = ()
   function estendard(empty = false) { const e = htmlEl(doc, 'span', `estendard${empty ? ' empty' : ''}`, ESTENDARD_SVG + figHtml(figure)); return e; }
   function podium(b) {
     const [first, ...rest] = b.podium, box = hallEl(doc, 'div', 'hall-podium-list');
-    const who = (p, into) => { appendName(doc, into, { alias: p.alias, tag: p.tag ?? null, verified: p.verified }, q => onCard(q)); if (p.position === b.myPosition) into.appendChild(hallEl(doc, 'span', 'me-tag', 'TU')); };
+    const who = (p, into) => { appendName(doc, into, { alias: p.alias, tag: p.tag ?? null, verified: p.verified }, q => onCard(q)); if (p.position === b.myPosition) into.appendChild(hallEl(doc, 'span', 'me-tag', tr('ui.seasons.me'))); };
     if (first) {
       const top = hallEl(doc, 'div', `pod-first${first.position === b.myPosition ? ' me' : ''}`), text = hallEl(doc, 'div'), name = hallEl(doc, 'div', 'who');
       who(first, name);
-      const pts = hallEl(doc, 'div', 'pts', `${num(first.score)} punts`); pts.appendChild(hallEl(doc, 'span', `lvl lvt${Number(first.difficulty)}`, levelName(first.difficulty)));
+      const pts = hallEl(doc, 'div', 'pts', tr('ui.seasons.points', { n: num(first.score) })); pts.appendChild(hallEl(doc, 'span', `lvl lvt${Number(first.difficulty)}`, levelName(first.difficulty)));
       text.append(name, pts); top.append(htmlEl(doc, 'span', 'medal-slot', medalSvg(1)), text); box.appendChild(top);
     }
     const ol = hallEl(doc, 'ol', 'pod-rest');
@@ -149,11 +151,11 @@ export function setupSeasons({ focusIn, service, onBoard = () => {}, onCard = ()
   function mine(b) {
     if (b.myPosition != null && b.myPosition <= 3) return null;
     const band = hallEl(doc, 'div', `hall-mine${b.myPosition ? '' : ' none'}`), left = hallEl(doc, 'div');
-    left.appendChild(hallEl(doc, 'span', 'hall-lab', 'La teva posició'));
-    if (!b.myPosition) { left.appendChild(hallEl(doc, 'span', 'none-t', 'No hi ha cap resultat teu publicat.')); band.appendChild(left); return band; }
-    const place = hallEl(doc, 'span', 'place', num(b.myPosition)); place.append(' ', hallEl(doc, 'small', '', `de ${num(b.players)}`));
+    left.appendChild(hallEl(doc, 'span', 'hall-lab', tr('ui.seasons.yourPlace')));
+    if (!b.myPosition) { left.appendChild(hallEl(doc, 'span', 'none-t', tr('ui.seasons.noResult'))); band.appendChild(left); return band; }
+    const place = hallEl(doc, 'span', 'place', num(b.myPosition)); place.append(' ', hallEl(doc, 'small', '', tr('ui.seasons.ofTotal', { n: num(b.players) })));
     left.appendChild(place); band.appendChild(left);
-    if (b.myScore != null) { const pts = hallEl(doc, 'span', 'mpts', `${num(b.myScore)} punts`); pts.appendChild(hallEl(doc, 'span', `lvl lvt${Number(b.myDifficulty)}`, levelName(b.myDifficulty))); band.appendChild(pts); }
+    if (b.myScore != null) { const pts = hallEl(doc, 'span', 'mpts', tr('ui.seasons.points', { n: num(b.myScore) })); pts.appendChild(hallEl(doc, 'span', `lvl lvt${Number(b.myDifficulty)}`, levelName(b.myDifficulty))); band.appendChild(pts); }
     return band;
   }
   function detail(focus = null) {
@@ -161,27 +163,27 @@ export function setupSeasons({ focusIn, service, onBoard = () => {}, onCard = ()
     const root = hallEl(doc, 'div', 'hall-view hall-detail'), main = hallEl(doc, 'div', 'hall-main');
     const head = hallEl(doc, 'section', 'hall-season'), text = hallEl(doc, 'div', 'hall-stext'), dates = hallEl(doc, 'p', 'hall-dates');
     dates.append(hallEl(doc, 'span', 'd-long', seasonDates(s)), hallEl(doc, 'span', 'd-short', seasonDates(s, 'short')));
-    const meta = hallEl(doc, 'p', 'hall-meta', b.previousDance ? `Ball anterior · ${playerCount(b.players)}` : playerCount(b.players)); // the figure: the dropdown above
+    const meta = hallEl(doc, 'p', 'hall-meta', b.previousDance ? tr('ui.seasons.metaPrevious', { players: playerCount(b.players) }) : playerCount(b.players)); // the figure: the dropdown above
     text.append(hallEl(doc, 'h3', 'hall-name', s.name), dates, meta);
     // a dance replaced mid-season: one quiet line to its other board (it opened on the one the player was on)
     if (multi) {
       const next = (dance + 1) % s.boards.length, line = hallEl(doc, 'p', 'hall-dance');
-      line.appendChild(hallEl(doc, 'span', 'hall-dance-t', 'Hi ha dos balls · ')); // short phones drop it: the meta says «(ball anterior)»
-      const go = button('btn btn-link btn-small', s.boards[next].previousDance ? 'Mira el ball anterior' : 'Mira el ball actual', 'seasons-dance');
+      line.appendChild(hallEl(doc, 'span', 'hall-dance-t', tr('ui.seasons.twoDances'))); // short phones drop it: the meta says «(ball anterior)»
+      const go = button('btn btn-link btn-small', tr(s.boards[next].previousDance ? 'ui.seasons.seePrevious' : 'ui.seasons.seeCurrent'), 'seasons-dance');
       go.addEventListener('click', () => { dance = next; detail('seasons-dance'); });
       line.appendChild(go); text.appendChild(line);
     }
     head.append(estendard(), text);
     const pod = hallEl(doc, 'section', 'hall-podium');
-    pod.appendChild(hallEl(doc, 'h4', 'hall-lab', 'Podi de la temporada'));
+    pod.appendChild(hallEl(doc, 'h4', 'hall-lab', tr('ui.seasons.podiumTitle')));
     pod.appendChild(podium(b));
     main.append(head, pod);
     const band = mine(b); if (band) main.appendChild(band);
-    const acts = hallEl(doc, 'div', 'hall-actions'), board = button('btn btn-primary', 'Mira la classificació', 'seasons-board');
+    const acts = hallEl(doc, 'div', 'hall-actions'), board = button('btn btn-primary', tr('ui.seasons.seeBoard'), 'seasons-board');
     board.setAttribute('aria-haspopup', 'dialog');
     board.addEventListener('click', () => { menu.close(); onBoard(figure, b); });
     acts.appendChild(board);
-    if (seasons.length > 1) { const idx = button('btn btn-secondary', 'Tria temporada', 'seasons-pick', LIST_SVG); idx.addEventListener('click', () => index()); acts.appendChild(idx); }
+    if (seasons.length > 1) { const idx = button('btn btn-secondary', tr('ui.seasons.pick'), 'seasons-pick', LIST_SVG); idx.addEventListener('click', () => index()); acts.appendChild(idx); }
     root.append(main, acts);
     view.replaceChildren(root);
     if (focus) focusIn(menu, focus);
@@ -190,9 +192,9 @@ export function setupSeasons({ focusIn, service, onBoard = () => {}, onCard = ()
   function index() {
     const root = hallEl(doc, 'div', 'hall-view hall-index'), head = hallEl(doc, 'div', 'hall-idx-head');
     const backBtn = htmlEl(doc, 'button', 'sheet-x hall-back', BACK_SVG); backBtn.type = 'button'; backBtn.id = 'seasons-back';
-    backBtn.setAttribute('aria-label', `Torna a ${seasons[pick].name}`); backBtn.addEventListener('click', () => detail('seasons-pick'));
-    head.append(backBtn, hallEl(doc, 'h3', '', 'Tria temporada'), hallEl(doc, 'span'));
-    const cap = hallEl(doc, 'div', 'hall-idx-cap'); cap.append(hallEl(doc, 'span', '', 'Temporada i guanyador'), hallEl(doc, 'span', '', 'Tu'));
+    backBtn.setAttribute('aria-label', tr('ui.seasons.backTo', { name: seasons[pick].name })); backBtn.addEventListener('click', () => detail('seasons-pick'));
+    head.append(backBtn, hallEl(doc, 'h3', '', tr('ui.seasons.pick')), hallEl(doc, 'span'));
+    const cap = hallEl(doc, 'div', 'hall-idx-cap'); cap.append(hallEl(doc, 'span', '', tr('ui.seasons.indexCap')), hallEl(doc, 'span', '', tr('ui.seasons.indexYou')));
     const list = hallEl(doc, 'div', 'hall-idx');
     let year = null, ul = null;
     seasons.forEach((s, i) => {
@@ -201,12 +203,12 @@ export function setupSeasons({ focusIn, service, onBoard = () => {}, onCard = ()
       const me = s.boards.find(x => x.myPosition), win = s.boards[0].podium[0], row = hallEl(doc, 'button', 'idx-row');
       row.type = 'button'; if (i === pick) { row.setAttribute('aria-current', 'true'); row.id = 'seasons-current'; }
       const main = hallEl(doc, 'span', 'r-main'), name = hallEl(doc, 'span', 'r-name', s.name), sub = hallEl(doc, 'span', 'r-sub');
-      if (s.boards.length > 1) name.appendChild(hallEl(doc, 'span', 'r-two', ` · ${s.boards.length} balls`));
+      if (s.boards.length > 1) name.appendChild(hallEl(doc, 'span', 'r-two', tr('ui.seasons.twoBalls', { n: s.boards.length })));
       if (win) { sub.appendChild(htmlEl(doc, 'span', 'medal-slot', medalSvg(1))); appendName(doc, sub, { alias: win.alias, tag: win.tag ?? null, verified: win.verified }); } // a row is one button: no card from here
       main.append(name, sub);
       const side = hallEl(doc, 'span', 'r-side');
-      if (me) side.append(hallEl(doc, 'b', '', num(me.myPosition)), hallEl(doc, 'small', '', `de ${num(me.players)}`));
-      else { const dash = hallEl(doc, 'b', 'dash', '—'); dash.setAttribute('aria-label', 'Sense resultat teu'); side.append(dash, hallEl(doc, 'small', '', `de ${num(s.boards[0].players)}`)); }
+      if (me) side.append(hallEl(doc, 'b', '', num(me.myPosition)), hallEl(doc, 'small', '', tr('ui.seasons.ofTotal', { n: num(me.players) })));
+      else { const dash = hallEl(doc, 'b', 'dash', '—'); dash.setAttribute('aria-label', tr('ui.seasons.noMine')); side.append(dash, hallEl(doc, 'small', '', tr('ui.seasons.ofTotal', { n: num(s.boards[0].players) }))); }
       row.append(main, side);
       row.addEventListener('click', () => { pick = i; dance = Math.max(0, s.boards.findIndex(x => x.myPosition)); detail('seasons-pick'); });
       ul.appendChild(hallEl(doc, 'li')).appendChild(row);
@@ -219,9 +221,9 @@ export function setupSeasons({ focusIn, service, onBoard = () => {}, onCard = ()
   // no closed season yet (the Drac's first): an empty estendard, the open season, its board
   function empty() {
     const root = hallEl(doc, 'div', 'hall-view hall-empty'), mid = hallEl(doc, 'div', 'hall-wait'), until = open.endsAt - 1;
-    mid.append(estendard(true), hallEl(doc, 'p', 'empty-h', 'La primera temporada encara està en joc.'), hallEl(doc, 'p', 'empty-p', 'Aquí hi trobaràs el podi quan s’acabi.'),
-      hallEl(doc, 'span', 'kind-chip hall-open', `${open.name} · fins al ${catDate({ month: 'long' }, until)}`));
-    const acts = hallEl(doc, 'div', 'hall-actions'), board = button('btn btn-primary', 'Mira la classificació', 'seasons-board');
+    mid.append(estendard(true), hallEl(doc, 'p', 'empty-h', tr('ui.seasons.firstOpen')), hallEl(doc, 'p', 'empty-p', tr('ui.seasons.firstOpenHint')),
+      hallEl(doc, 'span', 'kind-chip hall-open', tr('ui.seasons.openUntil', { name: open.name, date: catDate({ month: 'long' }, until) })));
+    const acts = hallEl(doc, 'div', 'hall-actions'), board = button('btn btn-primary', tr('ui.seasons.seeBoard'), 'seasons-board');
     board.setAttribute('aria-haspopup', 'dialog');
     board.addEventListener('click', () => { menu.close(); onBoard(figure, null); });
     acts.appendChild(board); root.append(mid, acts);
@@ -229,13 +231,13 @@ export function setupSeasons({ focusIn, service, onBoard = () => {}, onCard = ()
   }
   async function load() {
     const r = ++req;
-    view.replaceChildren(); say('Carregant el saló de la fama…', { spin: true });
+    view.replaceChildren(); say(tr('ui.seasons.loading'), { spin: true });
     picker.paint(figure);
     const shown = minLoad > 0 ? new Promise(res => setTimeout(res, minLoad)) : null;
     let all;
     try { all = await figureSeasons(service, figure, now()); } catch (e) {
       await shown; if (r !== req || !menu.open) return;
-      say(e?.message || 'No s’ha pogut carregar el saló de la fama.', { again: true }); return;
+      say(e?.message || tr('ui.seasons.loadFailed'), { again: true }); return;
     }
     await shown; if (r !== req || !menu.open) return;
     say('');
@@ -305,29 +307,29 @@ export function setupSeasonEnd({ focusIn, service, store, onHall = () => {}, doc
   }
   function show({ userId, season, boards, open = calendarSeason(now()) }, onBack = null) {
     store.set(seasonSeenKey(userId, season.id), '1'); // once, even if closed at once
-    $('season-end-title').textContent = `${season.name} s’ha acabat`;
+    $('season-end-title').textContent = tr('ui.seasons.ended', { name: season.name });
     const top = boards.filter(b => b.entry.myPosition <= 3).sort((a, b) => a.entry.myPosition - b.entry.myPosition)[0];
     hallFigure = (top ?? boards[0]).figure;
     const art = htmlEl(doc, 'div', 'se-art-box', top ? podiumArt(top.figure, top.entry.myPosition) : garlandArt(hallFigure));
-    const cheer = hallEl(doc, 'h3', `se-cheer${top ? ' gold' : ''}`, !top ? 'Gràcies per fer plaça!' : top.entry.myPosition === 1 ? 'Primer lloc!' : 'Has fet podi!');
+    const cheer = hallEl(doc, 'h3', `se-cheer${top ? ' gold' : ''}`, tr(!top ? 'ui.seasons.thanks' : top.entry.myPosition === 1 ? 'ui.seasons.first' : 'ui.seasons.podium'));
     // the receipt: a row per board, its place on the right (a medal on a podium)
     const table = hallEl(doc, 'table', 'se-ledger'), tbody = hallEl(doc, 'tbody'), headRow = hallEl(doc, 'tr'), thead = hallEl(doc, 'thead');
-    table.appendChild(hallEl(doc, 'caption', '', 'Així has quedat'));
-    for (const t of ['Figura', 'Posició']) { const th = hallEl(doc, 'th', '', t); th.setAttribute('scope', 'col'); headRow.appendChild(th); }
+    table.appendChild(hallEl(doc, 'caption', '', tr('ui.seasons.ledger')));
+    for (const t of [tr('ui.seasons.colFigure'), tr('ui.seasons.colPlace')]) { const th = hallEl(doc, 'th', '', t); th.setAttribute('scope', 'col'); headRow.appendChild(th); }
     thead.appendChild(headRow);
     for (const { figure, entry } of boards) {
-      const tr = hallEl(doc, 'tr'), th = hallEl(doc, 'th'), cell = hallEl(doc, 'span', 'cell'), nm = hallEl(doc, 'span', 'nm', FIGURE_NAMES[figure] ?? figure);
+      const trow = hallEl(doc, 'tr'), th = hallEl(doc, 'th'), cell = hallEl(doc, 'span', 'cell'), nm = hallEl(doc, 'span', 'nm', FIGURE_NAMES[figure] ?? figure);
       th.setAttribute('scope', 'row');
-      if (entry.previousDance) nm.appendChild(hallEl(doc, 'small', '', ' (ball anterior)'));
+      if (entry.previousDance) nm.appendChild(hallEl(doc, 'small', '', ` ${tr('ui.seasons.previousTag')}`));
       cell.append(htmlEl(doc, 'span', 'pix', pixelOf(figure)), nm); th.appendChild(cell);
       const td = hallEl(doc, 'td'), val = hallEl(doc, 'span', 'val');
       if (entry.myPosition <= 3) val.appendChild(htmlEl(doc, 'span', 'medal-slot', medalSvg(entry.myPosition)));
-      val.append(hallEl(doc, 'b', '', num(entry.myPosition)), ' ', hallEl(doc, 'span', 'of', `de ${num(entry.players)}`));
-      td.appendChild(val); tr.append(th, td); tbody.appendChild(tr);
+      val.append(hallEl(doc, 'b', '', num(entry.myPosition)), ' ', hallEl(doc, 'span', 'of', tr('ui.seasons.ofTotal', { n: num(entry.players) })));
+      td.appendChild(val); trow.append(th, td); tbody.appendChild(trow);
     }
     table.append(thead, tbody);
     const now2 = htmlEl(doc, 'p', 'se-now', CAL_SVG), line = hallEl(doc, 'span');
-    line.append('Ara: ', hallEl(doc, 'b', '', open.name), seasonLine(open, now()).slice(open.name.length));
+    const [pre, post] = trSplit('ui.seasons.now', 'name'); line.append(pre, hallEl(doc, 'b', '', open.name), post + seasonLine(open, now()).slice(open.name.length));
     now2.appendChild(line);
     body.replaceChildren(art, cheer, table, now2);
     back = onBack;

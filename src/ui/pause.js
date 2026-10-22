@@ -2,6 +2,7 @@
 import { G, chip } from '../game/state.js';
 import { pauseMenu } from './handles.js';
 import { focusIn } from './focus.js';
+import { tr } from '../i18n/messages.js';
 
 export function closePauseMenu() {
   G.pendingAction = null;
@@ -14,8 +15,8 @@ export function showPauseOptions() {
   // The dance demo has no taps to sync and nothing to lose (sheets-setup.js skips the confirmation)
   const watch = Boolean(G.watch);
   document.getElementById('pause-sync').hidden = watch;
-  document.getElementById('pause-text').textContent = watch ? 'La demostració t’espera.' : 'Agafa aire. El ball t’espera.';
-  document.getElementById('restart-label').textContent = watch ? 'Torna a començar' : 'Reinicia';
+  document.getElementById('pause-text').textContent = tr(watch ? 'ui.pause.textWatch' : 'ui.pause.text');
+  document.getElementById('restart-label').textContent = tr(watch ? 'ui.pause.restartWatch' : 'ui.pause.restart');
   pauseMenu.setAttribute('aria-labelledby', 'pause-title');
   focusIn(pauseMenu, 'resume');
 }

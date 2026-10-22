@@ -6,7 +6,9 @@ import { BEATS, BEAT, FINALE_T, beatAt } from '../game/figure-song.js';
 export { BEATS, BEAT, FINALE_T, beatAt };
 import { store } from '../platform/storage.js';
 
-export const Q = new URLSearchParams(location.search);
+// dev hosts only: the debug flags are invisible on a public host
+export { Q } from './flags.js';
+import { Q } from './flags.js';
 export const AUTOPLAY = Q.has('autoplay');
 export const STARS = Q.has('stars') ? Math.max(0, Math.min(3, +Q.get('stars') || 0)) : -1; // debug: open straight on a results card with this many stars
 export const FROM = +Q.get('from') || 0; // debug: start the song at this second

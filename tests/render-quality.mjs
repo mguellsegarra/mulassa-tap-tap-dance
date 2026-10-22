@@ -459,7 +459,7 @@ const context = vm.createContext({
   refreshIdentity: (service, kv) => { (context.identityAsked ||= []).push(kv); return Promise.resolve(); }, // src/ui/board-list.js: tests/account-ui.mjs
   setupShare: opts => (context.shareSheet = setupShare({ ...opts, doc: document, nav: {}, fonts: null, url: { createObjectURL: () => 'blob:card', revokeObjectURL() {} } })),
   document, navigator: { hardwareConcurrency: 8, deviceMemory: 8 },
-  location: { search: '?representation=off' }, localStorage: { getItem() {}, setItem() {} }, // this mocked DOM supplies the original cast; representation-motion tests the new rigs
+  location: { hostname: 'localhost', search: '?representation=off' }, localStorage: { getItem() {}, setItem() {} }, // this mocked DOM supplies the original cast; representation-motion tests the new rigs
   matchMedia: () => ({ matches: false }), addEventListener(type, handler) {
     (windowHandlers[type] ||= []).push(handler);
     if (type === 'keydown') keyHandlers.push(handler);
@@ -1471,10 +1471,6 @@ console.log('settings sheet contracts ok');
 const boardSheet = context.boardSheet;
 run(`G.state = 'title'; G.sel = 2;`);
 nodes.get('settings').listeners.click();
-nodes.get('settings-board').listeners.click();
-assert(!settingsSheet.open && boardSheet.open && boardSheet.opened.length === 1, 'Configuració → Classificacions (one board for every level)');
-boardSheet.open = false; boardSheet.back();
-assert(settingsSheet.open, 'closing Classificacions returns to Configuració');
 settingsSheet.close();
 // the menu music's speaker (#music): title only; a click switches the loop, remembers it and says what the next click does
 {
@@ -2677,7 +2673,7 @@ console.log('view mode ok');
 // The canvas follows the figure's buttons: the note colours change in place and the Mulassa's come back untouched.
 {
   run('setFigureSong(DRAC)');
-  assert.deepEqual(run('JSON.stringify([DIRC.L, DIRC.R, DIRLT.L, DIRDK.R, themed("GUAPA!")])'), JSON.stringify(['#ffc21f', '#b0188c', '#ffe38a', '#66084f', 'CREMA!']));
+  assert.deepEqual(run('JSON.stringify([DIRC.L, DIRC.R, DIRLT.L, DIRDK.R, trf("hit.both")])'), JSON.stringify(['#ffc21f', '#b0188c', '#ffe38a', '#66084f', 'CREMA!']));
   // Wheels celebrate only the 50/100 combo milestones, for 1.2 s; other confetti requests stay silent.
   // Earlier clock tests rewind rAF time. Bring particle time forward before these isolated effect checks.
   run("G.state = 'play'; G.practice = null; G.collapseT = 0; animMula(0, 0, 1); dracFrame(Math.max(0, 1 - dracFx.state().t), 0); for (let i = 0; i < 400; i++) { animConfetti(0.05); dracFrame(0.05, 0); } var confBefore = conf.map(c => c.p.y).join();");
@@ -2728,7 +2724,7 @@ console.log('view mode ok');
   run('setFigureSong(MULASSA)');
   run('for (let i = 0; i < 400; i++) dracFrame(1 / 60, 0); burst(0, 0); animConfetti(0.01);');
   assert(run('confetti.visible && conf.some(c => c.p.y > 1) && dracFx.state().wheels === 0'), 'the Mulassa keeps her confetti');
-  assert.deepEqual(run('JSON.stringify([DIRC.L, DIRC.R, DIRLT.L, DIRDK.R, C.gua, C.pa, themed("GUAPA!")])'), JSON.stringify(['#ff7a1a', '#14b8a6', '#ffb56b', '#0a6e63', '#ff7a1a', '#14b8a6', 'GUAPA!']));
+  assert.deepEqual(run('JSON.stringify([DIRC.L, DIRC.R, DIRLT.L, DIRDK.R, C.gua, C.pa, trf("hit.both")])'), JSON.stringify(['#ff7a1a', '#14b8a6', '#ffb56b', '#0a6e63', '#ff7a1a', '#14b8a6', 'GUAPA!']));
   console.log('figure theme on the canvas ok');
 }
 

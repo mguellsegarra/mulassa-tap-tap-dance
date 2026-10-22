@@ -50,9 +50,8 @@ __pycache__/
 # Supabase CLI cache
 supabase/.temp/
 
-# Generator output kept out of the repo (tools/build_taiko.py)
+# Generator output kept out of the repo (tools/build_taiko.py); the .mid scores are versioned (not deployed: prepare-pages OMIT)
 public/music/*.wav
-public/music/*.mid
 
 # Database backups: ciphertext or plaintext dumps never belong in the repo (tools/db_backup.py)
 *.age

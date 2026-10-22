@@ -1,4 +1,5 @@
 // The top band: the song progress ring, ENCERTS and the ànim (energy) meter.
+import { tr } from '../i18n/messages.js';
 import { song } from '../game/figure-song.js';
 import { judgedCount } from '../game/progress.js';
 import { K, PXU, H, SAFE, W } from './canvas.js';
@@ -10,6 +11,7 @@ import { elastic } from './praise.js';
 import { CALM } from '../core/env.js';
 import { portraitArt, portraitPalette } from '../game/figures.js';
 import { selectedFigure } from '../game/figure-song.js';
+const TOP_TXT = { hits: tr('hud.top.hits'), double: tr('hud.top.double') };
 
 // Top bar: ONE compact row centred at the top, like FNF / osu! / Guitar Hero: L'ÀNIM DE LA PLAÇA is the one bar
 // (the mulassa as its portrait, then the bar: empty, she falls apart) and ENCERTS (the quality: the hit rate) is just a
@@ -50,7 +52,7 @@ export function topLayout() { // drawTop()'s geometry, filled in place; tests ch
   // one row: pad | mulassa | gap | ÀNIM bar | pad; ENCERTS is its own small label + % pill under it, centred
   const b = T.bar, g = T.tag, e = T.enc;
   b.x = snap(T.x + T.pad + MULE_W + 6); b.w = snap(T.x + T.w - T.pad - b.x); b.y = snap(T.cy - b.h / 2);
-  e.w = snap(Math.min(T.w, textWidth('ENCERTS', 6.5) + textWidth('100%', 11) * 0.8 + 28)); e.x = snap(W / 2 - e.w / 2); e.y = snap(T.y + ph + 0.75 + ENC_GAP);
+  e.w = snap(Math.min(T.w, textWidth(TOP_TXT.hits, 6.5) + textWidth('100%', 11) * 0.8 + 28)); e.x = snap(W / 2 - e.w / 2); e.y = snap(T.y + ph + 0.75 + ENC_GAP);
   g.x = W / 2 - g.w / 2; g.y = T.y - 3 - g.h / 2; // the x2 tag: a badge on the panel's top edge, over the ÀNIM bar's gap, inside the safe area
   return T;
 }
@@ -68,7 +70,7 @@ function drawEncerts(T, v, n, up, pk) {
   H.beginPath(); H.roundRect(x, y, w, h, h / 2);
   if (pk > 0) glowPath(C.gold, 8 * pk);
   H.fillStyle = 'rgba(42,26,16,0.86)'; H.fill(); H.strokeStyle = C.gold; H.lineWidth = 1; H.stroke();
-  text('ENCERTS', x + 9, y + h / 2, 6.5, C.cream, 'left', C.dark);
+  text(TOP_TXT.hits, x + 9, y + h / 2, 6.5, C.cream, 'left', C.dark);
   text(`${Math.round(v)}%`, x + w - 9, y + h / 2 - 0.5, 11 + 1.5 * pk, col, 'right', C.dark, true);
 }
 export function drawTop(t = songTime()) { // t: drawHud's smooth draw clock (the notes' time)
@@ -88,7 +90,7 @@ export function drawTop(t = songTime()) { // t: drawHud's smooth draw clock (the
     H.fillStyle = `hsl(${(clock * 200) % 360},80%,45%)`; H.fill();
     H.strokeStyle = C.gold; H.lineWidth = 1.5; H.stroke();
     H.restore();
-    if (pop > 0.3) text('x2 PUNTS', tx + tw / 2, ty + th / 2, 7 * pop, '#fff');
+    if (pop > 0.3) text(TOP_TXT.double, tx + tw / 2, ty + th / 2, 7 * pop, '#fff');
   }
 }
 function meterBar(x, y, w, h, k, col, danger = 0) { // dark track, glossy segmented fill

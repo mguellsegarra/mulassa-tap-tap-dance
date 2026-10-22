@@ -8,6 +8,7 @@
 import { DIFFS } from '../game/chart.js';
 import { starsFor } from '../game/progress.js';
 import { num } from './sheet-kit.js';
+import { tr } from '../i18n/messages.js';
 
 export const starIcons = n => `<span class="stars">${[0, 1, 2].map(i => `<svg viewBox="0 0 24 24"${i < n ? ' class="on"' : ''} aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z"/></svg>`).join('')}</span>`;
 
@@ -19,10 +20,10 @@ export function showLevelStats($, { on, level, record, goals = () => {} }) { // 
   if (!on) return tighten();
   const d = DIFFS[level].name, has = Number.isFinite(record?.score), pct = has && Math.round(record.quality), n = has && starsFor(record.quality);
   // no record yet: whose and why (Marc: «encara sense rècord» read as anyone's), and what makes one
-  const lead = has ? `${pct}% d’encerts` : 'El primer ball que acabis serà el teu rècord';
+  const lead = has ? tr('ui.level.accuracy', { pct }) : tr('ui.level.first');
   // it says what it is (Marc: the points alone read as anything): «El teu rècord a FÀCIL: 48.920 punts», shorter as room runs out
-  const full = has ? `El teu rècord a ${d}: ${num(record.score)} punts` : `Encara no tens rècord a ${d}`, short = has && `Rècord a ${d}: ${num(record.score)} punts`;
-  const heads = [full, ...(has ? [short, `El teu rècord a ${d}`] : [`Sense rècord a ${d}`])];
+  const score = has && num(record.score), full = has ? tr('ui.level.full', { level: d, score }) : tr('ui.level.none', { level: d }), short = has && tr('ui.level.short', { level: d, score });
+  const heads = [full, ...(has ? [short, tr('ui.level.mine', { level: d })] : [tr('ui.level.bare', { level: d })])];
   // [title, tight, snug, subtitle]: no record, the subtitle goes before the song does (a 308–324 px column can't hold it)
   const bare = snug => (has ? [] : heads.map(h => [h, true, snug, false]));
   const snugged = (snug, withGoals) => [...heads.map(h => [h, true, snug, true, withGoals]), ...bare(snug).map(t => [...t, withGoals])];
@@ -33,7 +34,7 @@ export function showLevelStats($, { on, level, record, goals = () => {} }) { // 
     goals(withGoals); panel?.toggleAttribute('data-tight', tight); if (snug) panel?.setAttribute('data-snug', snug); else panel?.removeAttribute('data-snug');
     title.innerHTML = head.replace(d, `<span class="lvt${level}">${d}</span>`); sub.hidden = !withSub; // the level word in its colour
     sub.innerHTML = (has ? starIcons(n) : '') + lead;
-    row.setAttribute('aria-label', [head, has && `${n} de 3 estrelles`, lead].filter(Boolean).join(', '));
+    row.setAttribute('aria-label', [head, has && tr('ui.level.stars', { n }), lead].filter(Boolean).join(', '));
     return fits();
   });
   if (row.hidden) { panel?.toggleAttribute('data-tight', false); panel?.removeAttribute('data-snug'); tighten(); }

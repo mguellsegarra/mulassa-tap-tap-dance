@@ -6,6 +6,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { MULASSA_SVG, MULASSA_MINI_SVG, mulaSpinner, setupLoader, LOADING_JOKES } from '../src/ui/loader.js';
 import { applause } from '../src/platform/audio.js';
+import { renderBoot, INDEX } from '../tools/gen-boot.mjs';
 
 const html = readPage();
 const body = html.slice(html.indexOf('<body'));
@@ -179,11 +180,13 @@ function dom() {
 { // the first line: index.html's inline script picks one not seen yet (same list and memory as jokes())
   const { LOADING_JOKES } = await import('../src/ui/loader.js');
   const src = html.match(/<script id="loader-first-joke">([\s\S]*?)<\/script>/)[1];
-  assert.deepEqual(JSON.parse(src.match(/var L = (\[[\s\S]*?\]), k =/)[1]), LOADING_JOKES, 'index.html and loader.js share one list');
+  assert.deepEqual(JSON.parse(src.match(/L = \(B && B\.jokes\) \|\| \/\* i18n:boot:jokes \*\/(\[[\s\S]*?\])\/\* i18n:boot:end \*\/, k =/)[1]), LOADING_JOKES, 'index.html and loader.js share one list');
+  assert.equal(renderBoot(readFileSync(INDEX, 'utf8')), readFileSync(INDEX, 'utf8'), 'index.html\u2019s boot strings are the catalogue\u2019s (node tools/gen-boot.mjs rewrites them)');
+  assert(LOADING_JOKES.length >= 3 && LOADING_JOKES.every(l => l.endsWith('…')), 'at least three complete loading lines');
   const mem = {}, firsts = [];
   for (let v = 0; v < LOADING_JOKES.length + 3; v++) {
     const label = { textContent: 'Avisant a la brigada…' };
-    vm.runInNewContext(src, { document: { getElementById: () => label }, localStorage: { getItem: k => mem[k] ?? null, setItem: (k, x) => { mem[k] = x; } }, Math, JSON });
+    vm.runInNewContext(src, { document: { getElementById: () => label }, window: {}, localStorage: { getItem: k => mem[k] ?? null, setItem: (k, x) => { mem[k] = x; } }, Math, JSON });
     firsts.push(label.textContent);
   }
   const round = firsts.slice(0, LOADING_JOKES.length);

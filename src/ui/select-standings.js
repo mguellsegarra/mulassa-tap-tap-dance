@@ -6,7 +6,8 @@
 // still shows each level's record), then your neighbours, the foot, the card.
 import { DIFFS } from '../game/chart.js';
 import { starsFor } from '../game/progress.js';
-import { num } from './sheet-kit.js';
+import { num, trSplit } from './sheet-kit.js';
+import { tr } from '../i18n/messages.js';
 import { appendName } from './profile-notes.js';
 import { starIcons } from './level-stats.js';
 import { calendarSeason } from './seasons-ui.js';
@@ -14,21 +15,22 @@ import { calendarSeason } from './seasons-ui.js';
 // The ranking line (phones: under the song; desktops: the card's header), the same words everywhere (Marc: «Una línia a tot
 // arreu»): «Posició 18 de 46 · Tardor 2026» (no gendered ordinal), else how many play, else empty; no answer yet: the name alone
 export function rankText(s, season = calendarSeason().name) {
-  if (!s) return 'Classificació';
-  if (s.pos) return `Posició ${num(s.pos)}${s.total ? ` de ${num(s.total)}` : ''} · ${season}`;
-  return s.total ? `Classificació · ${num(s.total)} ${s.total === 1 ? 'jugador' : 'jugadors'}` : 'Classificació · encara buida';
+  if (!s) return tr('ui.standings.title');
+  if (s.pos) return s.total ? tr('ui.standings.positionOf', { pos: num(s.pos), total: num(s.total), season }) : tr('ui.standings.position', { pos: num(s.pos), season });
+  return s.total ? tr('ui.standings.players', { count: s.total, n: num(s.total) }) : tr('ui.standings.empty');
 }
-export const rankLabel = text => (text.startsWith('Classificació') ? text : `Classificació: ${text}`);
+export const rankLabel = text => (text.startsWith(tr('ui.standings.title')) ? text : tr('ui.standings.labelled', { text }));
 
 const CROWN = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 19h18M4 16.5 3 7l5 4 4-6 4 6 5-4-1 9.5z"/></svg>';
 const FLAG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></svg>';
-// (top rows, rows each side of yours, the foot, the medals: 2 full, 1 one line each, 0 none)
-const TRIES = [[10, 2, true, 2], [10, 1, true, 2], [5, 2, true, 2], [5, 1, true, 2], [3, 1, true, 2],
-  [5, 1, true, 1], [3, 1, true, 1], [5, 1, true, 0], [3, 1, true, 0], [1, 1, true, 1], [1, 1, true, 0], [0, 1, true, 0], [0, 0, true, 0], [0, 0, false, 0]];
+// (top rows, rows each side of yours, the foot, the medals: 2 full, 0 none). The medals never shrink to one line (Marc,
+// 2026-10-21: they flashed compact while loading): rows, then the foot go first; the medals only when even the header alone won't fit
+const TRIES = [[10, 2, true, 2], [10, 1, true, 2], [5, 2, true, 2], [5, 1, true, 2], [3, 1, true, 2], [1, 1, true, 2],
+  [0, 1, true, 2], [0, 0, true, 2], [0, 0, false, 2], [0, 0, false, 0]];
 
-export function setupStandings({ doc, $, onBoard, onCard = null, busy = () => false, levels = () => false }) { // levels(): step 2
+export function setupStandings({ doc, $, onBoard, onCard = null, busy = () => false, levels = () => false, onEased = () => {} }) { // levels(): step 2
   const meds = $('select-meds'), card = $('select-standings');
-  if (!meds || !card) return { medals() {}, board() {}, fit() {} }; // a page without them (the node tests' DOM)
+  if (!meds || !card) return { medals() {}, board() {}, fit() {}, eased: f => f() }; // a page without them (the node tests' DOM)
   const head = $('select-standings-pos'), list = $('select-standings-rows'), foot = $('select-standings-foot'), info = $('select-info');
   const body = $('select-standings-body'), sk = $('select-standings-sk'), msg = $('select-standings-msg');
   $('select-standings-head').addEventListener('click', () => { if (!busy()) onBoard(); });
@@ -40,11 +42,11 @@ export function setupStandings({ doc, $, onBoard, onCard = null, busy = () => fa
   function medals(records) { // [{ score, quality } | null] per level, or null: none at all
     meds.hidden = !records;
     if (!records) return;
-    meds.innerHTML = '<p class="sel-meds-t">Els teus rècords</p>' + records.map((rec, l) => { // only numbers and fixed copy reach innerHTML
+    meds.innerHTML = `<p class="sel-meds-t">${tr('ui.standings.records')}</p>` + records.map((rec, l) => { // only numbers and fixed copy reach innerHTML
       const d = DIFFS[l].name, has = Number.isFinite(rec?.score), pct = has ? Math.round(rec.quality) : 0, n = has ? starsFor(rec.quality) : 0;
       // no record: the quiet words take the points' line and the % line stays as an empty slot, so the first record shifts nothing
-      const label = has ? `${d}: ${num(rec.score)} punts, ${n} de 3 estrelles, ${pct}% d’encerts` : `${d}: encara sense rècord`;
-      return `<div class="sel-med${has ? '' : ' none'}" role="note" aria-label="${label}"><span class="lvn lvt${l}" aria-hidden="true">${d}</span>${starIcons(n)}<b aria-hidden="true">${has ? num(rec.score) : 'Sense rècord'}</b><small aria-hidden="true">${has ? `${pct}% d’encerts` : '&nbsp;'}</small></div>`;
+      const label = has ? tr('ui.standings.medalAria', { level: d, score: num(rec.score), n, pct }) : tr('ui.standings.medalNone', { level: d });
+      return `<div class="sel-med${has ? '' : ' none'}" role="note" aria-label="${label}"><span class="lvn lvt${l}" aria-hidden="true">${d}</span>${starIcons(n)}<b aria-hidden="true">${has ? num(rec.score) : tr('ui.standings.noRecord')}</b><small aria-hidden="true">${has ? tr('ui.standings.accuracy', { pct }) : '&nbsp;'}</small></div>`;
     }).join('');
   }
   const el = (tag, cls, text) => { const e = doc.createElement(tag); e.className = cls; if (text != null) e.textContent = text; return e; };
@@ -68,11 +70,12 @@ export function setupStandings({ doc, $, onBoard, onCard = null, busy = () => fa
     if (pos && withRows) for (let p = pos - near; p <= pos + near; p++) if (p > top && at(p)) shown.push(at(p));
     return shown.flatMap((r, i) => (i && Number(r.position) > Number(shown[i - 1].position) + 1 ? ['···', r] : [r]));
   }
+  const gap = (key, diff, params) => { const [a, b] = trSplit(key, 'n', params); return `<span>${a}<b>${num(diff)}</b>${b}</span>`; }; // the number in bold
   function gaps(rows) { // the foot's lines: to the first and to the next (numbers and fixed copy only)
     const me = rows.find(r => r.is_self), at = p => rows.find(r => Number(r.position) === p), pos = Number(me?.position) || 0;
     const first = at(1), next = at(pos - 1), lines = [];
-    if (me && first && pos > 1 && first.score > me.score) lines.push(`${CROWN}<span>A <b>${num(first.score - me.score)}</b> punts del primer</span>`);
-    if (me && next && pos > 2 && next.score > me.score) lines.push(`${FLAG}<span>A <b>${num(next.score - me.score)}</b> punts del número ${num(pos - 1)}</span>`);
+    if (me && first && pos > 1 && first.score > me.score) lines.push(`${CROWN}${gap('ui.standings.toFirst', first.score - me.score)}`);
+    if (me && next && pos > 2 && next.score > me.score) lines.push(`${FLAG}${gap('ui.standings.toNext', next.score - me.score, { pos: num(pos - 1) })}`);
     return lines;
   }
   // The placeholder shares the rows' own markup and grid, so it is as tall as the rows it stands for (both layers overlap in one
@@ -81,11 +84,11 @@ export function setupStandings({ doc, $, onBoard, onCard = null, busy = () => fa
   // Once answered it leaves the flow and the card hugs the rows (board() eases the height).
   function skeleton(top, near, withFoot, withRows) {
     const blank = i => row({ position: i, alias: 'Jugador', difficulty: 0, quality: 0, score: 0 }, true), last = state === 'loading' ? seen.get(key) : board?.rows;
-    let lis, foots = withFoot;
+    let lis, lines = withFoot ? null : []; // null: the foot's bar; lines: its words (they may wrap), shimmering
     if (last) {
       lis = pick(last, top, near, withRows).map(r => (r === '···' ? el('li', 'dots', '···') : blank(Number(r.position))));
       if (!last.length && withRows) lis.push(blank(1)); // an empty board: about the message's room
-      foots = withFoot && gaps(last).length > 0;
+      if (withFoot) lines = gaps(last);
     } else {
       lis = Array.from({ length: top }, (_, i) => blank(i + 1));
       if (top) lis.push(el('li', 'dots', '···')); // your row (and its neighbours) always shows, even with no top rows
@@ -94,7 +97,7 @@ export function setupStandings({ doc, $, onBoard, onCard = null, busy = () => fa
     const ol = el('ol', 'sel-standings-rows');
     ol.replaceChildren(...lis);
     sk.replaceChildren(ol);
-    if (foots) sk.appendChild(el('p', 'sel-standings-foot')).appendChild(el('span', 'bar'));
+    if (lines?.length !== 0) { const p = sk.appendChild(el('p', 'sel-standings-foot')); if (lines) p.innerHTML = lines.join('<i></i>'); else p.appendChild(el('span', 'bar')); }
   }
   function render(top, near, withFoot, withRows = true) { // withRows false: the foot alone (step 2)
     skeleton(top, near, withFoot, withRows);
@@ -104,26 +107,42 @@ export function setupStandings({ doc, $, onBoard, onCard = null, busy = () => fa
     foot.innerHTML = lines.join('<i></i>');
     foot.hidden = !withFoot || !lines.length;
     msg.hidden = state === 'loading' || !!rows.length || !withRows; // an empty or failed answer says so in the room the rows would take
-    msg.textContent = state === 'error' ? 'No s’han pogut carregar les files.' : 'Encara no hi ha cap resultat.';
+    msg.textContent = tr(state === 'error' ? 'ui.standings.loadFailed' : 'ui.standings.noResults');
     body.dataset.state = state === 'loading' ? 'loading' : 'ready';
   }
-  let chosen = 0; // the TRIES entry the last fit settled on
-  function fit(least = false, from = 0) { // what fits without scrolling the info block (only while laid out: desktops). least: the
+  function fit(least = false) { // what fits without scrolling the info block (only while laid out: desktops). least: the
     const scrolls = () => info.scrollHeight > info.clientHeight + 1; // header alone, so step 2's level row is fitted beside it first
+    easing?.cancel(); easing = null; // measure the card as laid out, never mid-ease
     meds.toggleAttribute('data-gone', least);
     card.hidden = !on;
     body.hidden = least;
     if (least) return;
     if (levels()) { goals(true); if (card.getClientRects().length && scrolls()) body.hidden = true; return; } // step 2: level-stats.js refits it beside the level row
-    for (const [i, [top, near, withFoot, withMeds]] of TRIES.entries()) {
-      if (i < from) continue; // the answer lands on the rows' layout the placeholder held: it never picks a fuller one (a jump)
-      chosen = i;
+    for (const [top, near, withFoot, withMeds] of TRIES) {
       render(top, near, withFoot);
-      meds.toggleAttribute('data-gone', !withMeds); meds.toggleAttribute('data-compact', withMeds === 1);
+      meds.toggleAttribute('data-gone', !withMeds);
       if (!card.getClientRects().length && !meds.getClientRects().length) return; // not shown here: nothing to measure
       if (!scrolls()) return;
     }
     body.hidden = true; // the header stays: the line is the home's way to the board
+  }
+  // The card hugs what it holds: a refit that changes its height (an answer shorter or longer than its placeholder, another
+  // figure's placeholder) eases it there, 250 ms (reduced motion: at once). One WAAPI animation, no layout loop.
+  // A step change (rows ↔ the foot alone, beside the level row) is a new layout, not an ease.
+  const height = () => (body.hidden ? 0 : body.getBoundingClientRect?.().height || 0);
+  let laidOut = null, depth = 0; // levels() when the card was last fitted
+  function eased(refit) {
+    // nested (step 2: board()'s refit is level-stats' own eased call): only the outer call eases, or it would read the inner
+    // animation's first keyframe as the new height and cancel it
+    if (depth) return refit();
+    const h0 = height(), same = laidOut === levels(); // mid-ease: where it is now
+    depth++;
+    try { refit(); } finally { depth--; }
+    const h1 = height();
+    easing?.cancel(); easing = null; laidOut = levels();
+    if (same && h0 && h1 && Math.abs(h1 - h0) > 1 && !globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches)
+      easing = body.animate?.([{ height: `${h0}px` }, { height: `${h1}px` }], { duration: 250, easing: 'ease-out' }) ?? null;
+    easing?.finished?.then(onEased, () => {}); // the observer skipped the resizes meanwhile; a cancel (a newer ease) rejects: that one refits itself
   }
   // Step 2 (Marc, 2026-10-21): the header and the foot's two gaps, no rows (the level row takes their room); level-stats.js
   // decides whether they fit beside it (after the song's credit, before the song), else the header alone.
@@ -138,19 +157,17 @@ export function setupStandings({ doc, $, onBoard, onCard = null, busy = () => fa
   return {
     goals,
     medals(records) { medals(records); fit(); },
-    board(s, shown, failed = false, who = '') { // { pos, total, rows } from the board, or null (not answered yet; failed: it will not come); shown: a board is configured; who: figure + owner
-      const was = state, h0 = body.hidden ? 0 : body.getBoundingClientRect?.().height || 0; // mid-ease: where it is now
-      easing?.cancel();
+    // { pos, total, rows } from the board, or null (not answered yet; failed: it will not come); shown: a board is configured;
+    // who: figure + owner (the placeholder's shape); refit: the caller's fitting (step 2: the level row's, level-stats.js)
+    board(s, shown, failed = false, who = '', refit = fit) {
       board = s; on = shown; key = who; state = failed ? 'error' : s?.rows ? 'ready' : 'loading'; // a position without rows (the ?demo placeholder) is still waiting for them
       if (state === 'ready') seen.set(key, s.rows);
       head.textContent = rankText(s);
       $('select-standings-head').setAttribute('aria-label', rankLabel(head.textContent));
-      fit(false, was === 'loading' && state !== 'loading' ? chosen : 0);
-      // the card hugs what it holds: a shorter or longer answer (or another figure's placeholder) eases its height (reduced motion: at once)
-      const h1 = body.hidden ? 0 : body.getBoundingClientRect?.().height || 0;
-      if (h0 && h1 && Math.abs(h1 - h0) > 1 && !globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches)
-        easing = body.animate?.([{ height: `${h0}px` }, { height: `${h1}px` }], { duration: 250, easing: 'ease-out' }) ?? null;
+      eased(() => refit());
     },
+    eased,
+    get easing() { return easing?.playState === 'running'; }, // the info block resizes every frame meanwhile: no refit for that
     fit,
   };
 }

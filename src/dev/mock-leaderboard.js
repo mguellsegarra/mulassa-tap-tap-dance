@@ -42,7 +42,7 @@ function mockClient({ world, taken, delay, account, now, fail, calls }) {
     session = { user: { id: 'prova', ...(verified && { email: MAIL, email_confirmed_at: '2026-10-01T10:00:00Z' }) } };
     if (world.me) {
       self = { alias: 'ProvaRetall', tag: null, verified: true };
-      entryOf(world.open, 'mulassa-v3', { ...world.me, perfect: 0, good: 0, miss: 0 });
+      entryOf(world.open, 'mulassa-v3', world.me);
     } else {
       self = { alias: DEMO_SELF.alias, tag: kind === 'verified' ? null : DEMO_SELF.tag, verified };
       if (kind === 'reserved') return;
@@ -87,6 +87,17 @@ function mockClient({ world, taken, delay, account, now, fail, calls }) {
       if (!world.seasons.some(s => s.id === season && visible(s))) return no('leaderboard_invalid_season');
       const all = ranked(season, family(a.p_version)), me = all.find(r => r.is_self);
       return ok(all.filter(r => (r.position > a.p_offset && r.position <= a.p_offset + a.p_limit) || (a.p_offset === 0 && me && Math.abs(r.position - me.position) <= 5)).map(r => row(r, season)));
+    },
+    // get_level_podium (202610210001): one level's best three on a figure's board, everyone's result on that level
+    get_level_podium(a) {
+      if (world.listFail) return { data: null, error: Object.assign(new TypeError('Failed to fetch'), { name: 'TypeError' }), status: 0 };
+      if (!KNOWN.has(a.p_version)) return no('leaderboard_invalid_version');
+      const season = a.p_season ?? seasonFor(a.p_version), fam = family(a.p_version), d = a.p_difficulty;
+      const e = [...entries.values()].filter(x => self && x.season === season && family(x.version) === fam && x.difficulty === d).sort(order)[0];
+      const mine = e && { pid: -2, alias: self.alias, tag: self.tag, verified: self.verified, difficulty: d, quality: e.quality, score: e.score };
+      const all = [...(defOf(season, fam)?.rows ?? []).filter(r => r.difficulty === d), ...(mine ? [mine] : [])].sort(order);
+      return ok(all.slice(0, 3).map((r, i) => ({ position: i + 1, alias: displayName(r.alias, r.tag), score: r.score, quality: r.quality,
+        is_self: r === mine, total: all.length, verified: r.verified, tag: r.tag })));
     },
     get_seasons(a) {
       const out = [];

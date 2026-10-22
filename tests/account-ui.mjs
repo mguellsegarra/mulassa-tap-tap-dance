@@ -10,6 +10,7 @@ import { setupAccount } from '../src/ui/account-ui.js';
 import { setupGreeting } from '../src/ui/greeting.js';
 import { setupDeviceHint } from '../src/ui/device-hint.js';
 import { refreshIdentity, savedName } from '../src/ui/board-list.js';
+import { setStatsOwner } from '../src/game/stats.js';
 import { createStatsSync } from '../src/services/stats-sync.js';
 import { readPage } from './page.mjs';
 
@@ -242,6 +243,16 @@ const service = (o = {}) => ({ configured: true, asked: [], async seasons(f) { t
   const wins = f.$('account-stats').find(e => e.className === 'stat-wins');
   assert.equal(wins?.textContent, '2Podi a Estrena 2026 · Mulassa de Valls3Podi a Tardor 2026 · Drac de Valls', 'its podiums among the statistics: closed seasons only (not the open one\'s 6th, not 12th)');
   f.$('account-close').click();
+  // a profile with nothing played here: a skeleton keeps the room until the server answers (no shift), then the numbers, or the empty line if it has none
+  setStatsOwner('u1'); acc.open();
+  assert(f.$('account-empty').hidden && !f.$('account-stats').hidden && f.$('account-stats').classList.contains('loading'), 'waiting for the server: the skeleton, not «Encara no has jugat»');
+  await tick(); await tick(); await tick(); await tick();
+  assert(!f.$('account-stats').classList.contains('loading') && /40 balls/.test(f.$('account-stats').textContent), 'answered: the numbers replace it');
+  f.$('account-close').click();
+  svc.myStats = async () => { throw new Error('offline'); }; acc.open(); await tick(); await tick(); await tick(); await tick();
+  assert(!f.$('account-empty').hidden && f.$('account-stats').hidden && !f.$('account-stats').classList.contains('loading'), 'no answer: the skeleton gives way to the empty line');
+  setStatsOwner(null);
+  f.$('account-close').click();
   owner = null; acc.open(); await tick(); await tick();
   assert(!f.$('account-join').hidden, 'no profile: «Crea un perfil per guardar-les…»');
   f.$('account-close').click();
@@ -263,13 +274,13 @@ const service = (o = {}) => ({ configured: true, asked: [], async seasons(f) { t
   assert(!/card-source/.test(sheet('card-menu')) && /id="card-from" class="card-from" hidden/.test(sheet('card-menu')));
   // the statistics notice (Marc, 2026-10-21): a title and three short lines with a drawn icon each, then Privadesa and D’acord;
   // the details it no longer says stay in the Privadesa text
-  const facts = [...sheet('stats-notice-menu').matchAll(/<li><svg[^>]*aria-hidden="true"[^>]*>[^]*?<\/svg><span>([^<]*)<\/span><\/li>/g)].map(m => m[1]);
+  const facts = [...sheet('stats-notice-menu').matchAll(/<li><svg[^>]*aria-hidden="true"[^>]*>[^]*?<\/svg><span[^>]*>([^<]*)<\/span><\/li>/g)].map(m => m[1]);
   assert.deepEqual(facts, ['Guardem les teves partides, el temps jugat i els encerts.', 'Tothom pot veure els totals si toca el teu nom.', 'Els dies que jugues només els veus tu.'], 'the notice: three short lines, each with its icon');
-  assert(/<h2 id="stats-notice-title">Les teves estadístiques<\/h2>/.test(sheet('stats-notice-menu')) && /data-privacy-open[^>]*>Privadesa<\/button>[^]*id="stats-notice-ok"[^>]*>D’acord</.test(sheet('stats-notice-menu')), 'title, then Privadesa and D’acord');
+  assert(/<h2 id="stats-notice-title"[^>]*>Les teves estadístiques<\/h2>/.test(sheet('stats-notice-menu')) && /data-privacy-open[^>]*>Privadesa<\/button>[^]*id="stats-notice-ok"[^>]*>D’acord</.test(sheet('stats-notice-menu')), 'title, then Privadesa and D’acord');
   const privacy = html.slice(html.indexOf('<section data-privacy="leaderboards"'), html.indexOf('</section>', html.indexOf('<section data-privacy="leaderboards"')));
   assert(/sumats entre (tots )?els teus dispositius/.test(privacy) && /Mai no s’hi envia l’hora en què jugues ni cap dada del dispositiu/.test(privacy) && /Tot s’esborra amb el perfil/.test(privacy), 'Privadesa keeps what the notice dropped');
   assert(/Crea un perfil per guardar-les i sortir a les classificacions\./.test(sheet('account-menu')));
-  assert(/<button id="profile" hidden aria-haspopup="dialog" aria-label="Perfil"/.test(html), 'the Perfil corner button');
+  assert(/<button id="profile" class="round-btn" hidden aria-haspopup="dialog" aria-label="Perfil"/.test(html), 'the Perfil corner button');
   // layout rules (docs: names never cut; a lone season card not stranded at the top of the fixed-height hall; stat tiles read from the top)
   assert(/\.who \.player-name \.alias \{ white-space: normal; overflow-wrap: anywhere; \}/.test(html) && /\.who \.player-name \{ flex-wrap: wrap;/.test(html), 'list names wrap, never an ellipsis; a «#1234» goes under the name whole');
   assert(/\.hall-main \{[^}]*justify-content: space-evenly;/.test(html) && /grid-template-areas: "season season" "pod me" "pod act"/.test(html), 'the hall: its free space shared between the rows; desktop: podium left, context right');
@@ -313,32 +324,41 @@ const service = (o = {}) => ({ configured: true, asked: [], async seasons(f) { t
   assert.deepEqual(told, ['Temporada 3 s’ha acabat', 'Temporada 2 s’ha acabat', 'Temporada 1 s’ha acabat'], 'one at a time, newest first, none lost');
   assert.deepEqual([1, 2, 3].map(id => mem.get(seasonSeenKey('u1', id))), ['1', '1', '1']);
 }
-// --- the greeting: what a profile has pending, told when the selector is idle; never settled for the session
+// --- the greeting: what a profile has pending, told when the selector is idle; one sheet per visit (page load)
 {
   const state = { free: false, news: null, noticeNeeded: false, owner: 'a' };
   const log = [], tick5 = () => new Promise(r => setTimeout(r, 5));
-  const g = setupGreeting({
+  const visit = () => setupGreeting({
     stats: { async init() { log.push(`init:${state.owner}`); } }, identity: async () => { log.push('identity'); },
     seasonEnd: { async news() { return state.news; }, show(n) { log.push(`season:${n}`); state.news = null; state.free = false; } },
-    account: { notice() { if (!state.noticeNeeded) return false; log.push(`notice:${state.owner}`); state.noticeNeeded = false; return true; } },
+    account: { notice() { if (!state.noticeNeeded) return false; log.push(`notice:${state.owner}`); state.noticeNeeded = false; state.free = false; return true; } },
     free: () => state.free, back: () => log.push('back') });
+  let g = visit();
   state.noticeNeeded = true; state.news = 'S1';
   await g.greet(); assert.deepEqual(log, [], 'a sheet is up (or a run): nothing happens, nothing is spent');
   state.free = true; await g.greet();
   assert.deepEqual(log, ['init:a', 'identity', 'season:S1'], 'the season first');
   state.free = true; g.poke(); await tick5();
-  assert.deepEqual(log.slice(3), ['notice:a'], 'its sheet closed: the stats notice follows');
-  state.free = true; state.news = 'S0'; g.poke(); await tick5(); // settled? no: the notice was the last thing told, one more idle pass looks again
-  assert.deepEqual(log.slice(4), ['season:S0'], 'a late-arriving item is still told');
-  state.free = true; g.poke(); await tick5(); g.poke(); await tick5();
+  assert.deepEqual(log.slice(3), [], 'its sheet closed: nothing more this visit');
+  g = visit(); state.free = true; await g.greet();
+  assert.deepEqual(log.slice(3), ['init:a', 'identity', 'notice:a'], 'the next visit: the stats notice, still after the season');
+  state.free = true; state.news = 'S0'; g.poke(); await tick5();
+  assert.equal(log.length, 6, 'a late-arriving item waits too');
+  g = visit(); state.free = true; await g.greet();
+  assert.deepEqual(log.slice(6), ['init:a', 'identity', 'season:S0'], 'and is told at the next visit');
+  state.free = true; g.poke(); await tick5();
   const settledAt = log.length;
   state.free = true; state.noticeNeeded = true; g.poke(); await tick5();
-  assert.equal(log.length, settledAt, 'nothing left for this profile: settled until the account changes');
+  assert.equal(log.length, settledAt, 'settled until the account changes');
   state.owner = 'b'; g.accountChanged(); await tick5();
-  assert.deepEqual(log.slice(settledAt), ['init:b', 'identity', 'notice:b'], 'another profile: its notices are pending, the owner is read again');
-  // asked while a sheet is up (a recovery inside Perfil): told once the selector is idle again
+  assert.equal(log.length, settledAt, 'another profile after this visit\'s sheet: its notice waits for the next visit too');
+  g = visit(); state.free = true; await g.greet();
+  assert.deepEqual(log.slice(settledAt), ['init:b', 'identity', 'notice:b'], 'the next visit tells it, the owner read again');
+  // nothing told yet this visit: an account change (a recovery inside Perfil) is told once the selector is idle again
+  const quiet = log.length; g = visit(); state.free = true; await g.greet();
+  assert.equal(log.length, quiet + 2, 'nothing pending: the visit tells nothing');
   state.free = false; state.owner = 'c'; state.noticeNeeded = true; g.accountChanged(); await tick5();
-  assert.equal(log.at(-1), 'notice:b', 'not while a sheet is up');
+  assert.equal(log.at(-1), 'identity', 'not while a sheet is up');
   state.free = true; g.poke(); await tick5();
   assert.equal(log.at(-1), 'notice:c');
   // a failing season lookup (offline) is not settled: the next visit tries again
@@ -353,12 +373,16 @@ const service = (o = {}) => ({ configured: true, asked: [], async seasons(f) { t
   const svc = { owner: 'a', listeners: new Set(), configured: true, async ownerId() { return this.owner; }, async profile() { return { alias: 'X' }; }, async syncStats() {},
     onAccount(f) { this.listeners.add(f); return () => this.listeners.delete(f); } };
   const stats = createStatsSync({ service: svc, kv: { get: k => kv.get(k) ?? null, set: (k, v) => kv.set(k, v), remove: k => kv.delete(k) }, io, timer: () => 0, clear() {} });
-  const told = [];
-  const g = setupGreeting({ stats, seasonEnd: { news: async () => null }, account: { notice: () => { if (!stats.noticeNeeded()) return false; told.push(stats.owner); stats.acceptNotice(); return true; } }, free: () => true });
+  const told = [], visit = () => setupGreeting({ stats, seasonEnd: { news: async () => null }, account: { notice: () => { if (!stats.noticeNeeded()) return false; told.push(stats.owner); stats.acceptNotice(); return true; } }, free: () => true });
+  let g = visit();
   await g.greet();
   assert.deepEqual(told, ['a'], 'the profile existing before the statistics: its notice is told');
   svc.owner = 'b'; for (const f of svc.listeners) f({ type: 'changed' }); g.accountChanged(); await new Promise(r => setTimeout(r, 5));
-  assert.deepEqual(told, ['a', 'b'], 'recovering another profile re-runs the gate');
+  assert.deepEqual(told, ['a'], 'recovering another profile in the same visit: its notice waits (one sheet per visit)');
+  assert.equal(stats.owner, 'b'); assert.equal(stats.noticeNeeded(), true);
+  assert.equal(await stats.send(), 'notice', 'and nothing of b\'s is uploaded before b has seen it');
+  g = visit(); await g.greet();
+  assert.deepEqual(told, ['a', 'b'], 'the next visit tells it');
 }
 // --- the share image's name: this browser's profile as the server last said it, kept from the first answer
 {
@@ -426,12 +450,17 @@ const service = (o = {}) => ({ configured: true, asked: [], async seasons(f) { t
   // the queue: the season's end, then the statistics notice, then the tip; never while a sheet is up; offline it is still told
   const state = { free: true, news: 'S1', notice: true }, log = [];
   const t = make({ softwareGl: true });
-  const g = setupGreeting({ stats: { async init() {} }, hint: { show: b => { if (!state.free) throw new Error('over a sheet'); const r = t.hint.show(b); if (r) { log.push('tip'); state.free = false; } return r; } },
+  const visit = () => setupGreeting({ stats: { async init() {} }, hint: { show: b => { if (!state.free) throw new Error('over a sheet'); const r = t.hint.show(b); if (r) { log.push('tip'); state.free = false; } return r; } },
     seasonEnd: { async news() { return state.news; }, show(n) { log.push(`season:${n}`); state.news = null; state.free = false; } },
     account: { notice() { if (!state.notice) return false; log.push('notice'); state.notice = false; state.free = false; return true; } }, free: () => state.free });
-  await g.greet(); state.free = true; g.poke(); await tick(); await tick(); state.free = true; g.poke(); await tick(); await tick();
-  assert.deepEqual(log, ['season:S1', 'notice', 'tip'], 'one sheet at a time, in order');
-  state.free = true; t.$('gpu-hint-ok').click(); g.poke(); await tick(); await tick();
+  let g = visit();
+  await g.greet(); state.free = true; g.poke(); await tick(); await tick();
+  assert.deepEqual(log, ['season:S1'], 'one sheet a visit: the notice and the tip wait');
+  await (g = visit()).greet(); state.free = true; g.poke(); await tick(); await tick();
+  assert.deepEqual(log, ['season:S1', 'notice'], 'the next visit: the notice, and the tip still waits');
+  await (g = visit()).greet();
+  assert.deepEqual(log, ['season:S1', 'notice', 'tip'], 'the visit after: the tip, in order');
+  state.free = true; t.$('gpu-hint-ok').click(); g.poke(); await tick(); await tick(); await (g = visit()).greet();
   assert.deepEqual(log, ['season:S1', 'notice', 'tip'], 'told once');
   const off = make({ softwareGl: true }), g3 = setupGreeting({ stats: { async init() {} }, hint: off.hint, seasonEnd: { async news() { throw new Error('offline'); } }, account: { notice: () => false }, free: () => true });
   await g3.greet(); assert.equal(off.$('gpu-hint-menu').open, true, 'offline: the tip needs no network');
@@ -442,7 +471,7 @@ const service = (o = {}) => ({ configured: true, asked: [], async seasons(f) { t
   for (const k of ['gpu-hint', 'ios-hint']) {
     const m = new RegExp(`<dialog id="${k}-menu" class="sheet hint-menu"[^>]*aria-labelledby="${k}-title" aria-describedby="${k}-text">([\\s\\S]*?)</dialog>`).exec(html);
     assert(m, `${k}: a sheet`);
-    assert(m[1].includes(`id="${k}-close" type="button" class="sheet-x" aria-label="Tanca"`) && m[1].includes(`id="${k}-ok" type="button" class="btn btn-primary">D’acord`), `${k}: × and D’acord`);
+    assert(new RegExp(`id="${k}-close" type="button"[^>]*class="sheet-x" aria-label="Tanca"`).test(m[1]) && new RegExp(`id="${k}-ok" type="button" class="btn btn-primary"[^>]*>D’acord`).test(m[1]), `${k}: × and D’acord`);
     assert.equal((m[1].match(/btn-primary/g) || []).length, 1);
   }
   assert(/acceleració per maquinari/.test(html) && /Compartir → Afegeix a la pantalla d’inici/.test(html), 'the same copy');

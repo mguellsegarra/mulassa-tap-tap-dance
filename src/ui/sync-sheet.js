@@ -7,6 +7,7 @@
 import { Clicker } from '../platform/audio.js';
 import { CAL, clickTimes, measureOffset, fmtMs, verdict, offsetDraft } from '../game/calibration.js';
 import { eventAge } from '../game/progress.js';
+import { tr } from '../i18n/messages.js';
 
 const COUNT = 3; // count-in beats before the first click
 
@@ -19,7 +20,7 @@ export function setupSync({ beat = CAL.beat, get, set, onOpen = () => {}, onClos
 
   const state = s => { dlg.dataset.state = s; dlg.focus(); }; // the sheet keeps focus: keys reach it, no button eats a tap
   const now = (ms, saved) => { // "Ara: +40 ms" / "Ara: sense ajust", or "Desat: +73 ms" right after Desa
-    value.textContent = `${saved ? 'Desat' : 'Ara'}: ${ms ? fmtMs(ms) : 'sense ajust'}`;
+    value.textContent = tr(saved ? 'ui.sync.saved' : 'ui.sync.now', { value: ms ? fmtMs(ms) : tr('ui.sync.none') });
     value.classList.toggle('saved', !!saved);
   };
   const nudge = d => { draft.set(d == null ? 0 : draft.value + d); now(draft.value); };
@@ -30,7 +31,7 @@ export function setupSync({ beat = CAL.beat, get, set, onOpen = () => {}, onClos
     clk = new Clicker(); // inside the Comença / Torna-hi gesture: the audio is allowed to start
     clicks = null; taps = [];
     [...dots.children].forEach(d => d.className = '');
-    count.textContent = ''; live.textContent = 'Prepara’t…';
+    count.textContent = ''; live.textContent = tr('ui.sync.getReady');
     circle.style.setProperty('--p', 0);
     state('run');
     loop();
@@ -48,7 +49,7 @@ export function setupSync({ beat = CAL.beat, get, set, onOpen = () => {}, onClos
     const fail = result == null;
     dlg.classList.toggle('fail', fail);
     measured.textContent = fail ? '' : fmtMs(result);
-    note.textContent = fail ? 'No t’he sentit prou cops. Torna-hi i marca cada cop just quan el sentis.' : verdict(result);
+    note.textContent = fail ? tr('ui.sync.tooFew') : verdict(result);
     retry.classList.toggle('btn-primary', fail); retry.classList.toggle('btn-link', !fail); // too few taps: Torna-hi is the one thing to do
     state('result');
   }
@@ -69,7 +70,7 @@ export function setupSync({ beat = CAL.beat, get, set, onOpen = () => {}, onClos
       const txt = k >= 0 && k < COUNT ? String(COUNT - k) : '';
       if (count.textContent !== txt) count.textContent = txt;
       if (k >= 0) since = (h - start - k * beat) * 1.6; // a softer pulse than the clicks
-    } else if (count.textContent) { count.textContent = ''; live.textContent = 'Marca cada cop'; }
+    } else if (count.textContent) { count.textContent = ''; live.textContent = tr('ui.sync.tapEach'); }
     circle.style.setProperty('--p', Math.max(0, 1 - since / 0.22).toFixed(3)); // flash on the click, fading in 220 ms
     [...dots.children].forEach((d, i) => d.classList.toggle('on', i < n));
     if (h > clicks.at(-1) + beat * 0.8) done();

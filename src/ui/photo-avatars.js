@@ -8,21 +8,22 @@ import { hud } from '../hud/canvas.js';
 import { lookLocked } from './mouse-look.js';
 import { store } from '../platform/storage.js';
 import { showStick, setStickSwitched } from './photo-stick.js';
+import { tr } from '../i18n/messages.js';
 
-const PF_FIGS = [[MULASSA, [['Q', 's’alça'], ['E', 'guitza'], ['R', 'culada']]],
-  [DRAC, [['Q', 'rugeix'], ['E', 'guspires'], ['R', 'gira']]]];
-const photoHelpActions = fig => [['WASD', 'camina'], ['Shift', 'corre'], ['Espai', 'salta'], ...fig[1], ['Tab', 'canvia figura'], ['Botó dret', 'mantén per mirar'], ['M', 'tria música'], ['Esc', lookLocked() ? 'allibera el ratolí' : 'torna a mirar']];
-const photoHelpDescription = fig => `${fig[0].fullName}: ${photoHelpActions(fig).map(([key, label]) => `${key} ${label}`).join(' · ')}. Prem ? per tornar a veure els controls.`;
+const PF_FIGS = [[MULASSA, ['q', 'e', 'r'].map(k => [k.toUpperCase(), tr(`ui.photo.act.mula.${k}`)])],
+  [DRAC, ['q', 'e', 'r'].map(k => [k.toUpperCase(), tr(`ui.photo.act.drac.${k}`)])]];
+const photoHelpActions = fig => [['WASD', tr('ui.photo.act.walk')], ['Shift', tr('ui.photo.act.run')], [tr('ui.photo.key.space'), tr('ui.photo.act.jump')], ...fig[1], ['Tab', tr('ui.photo.act.swap')], [tr('ui.photo.key.rightButton'), tr('ui.photo.act.holdLook')], ['M', tr('ui.photo.act.music')], ['Esc', tr(lookLocked() ? 'ui.photo.act.unlock' : 'ui.photo.act.look')]];
+const photoHelpDescription = fig => tr('ui.photo.description', { figure: fig[0].fullName, actions: photoHelpActions(fig).map(([key, label]) => `${key} ${label}`).join(' · ') });
 // Safari on an iPhone (not the home-screen app): its bars eat a landscape screen. Said on every entry (Marc).
-const PF_HOME = /iPhone|iPod/.test(navigator.userAgent ?? '') && navigator.standalone === false ? '<small class="pf-home">Per jugar-hi a pantalla completa, afegeix el joc a la pantalla d’inici.</small>' : '';
+const PF_HOME = /iPhone|iPod/.test(navigator.userAgent ?? '') && navigator.standalone === false ? `<small class="pf-home">${tr('ui.photo.homeScreen')}</small>` : '';
 const PF_TIP_MS = 6000; // brief discovery; manual help stays until toggled or the mode changes
 const PF_ORBIT_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M4.5 9.5A8 8 0 0 1 18 6.3M19.5 14.5A8 8 0 0 1 6 17.7M18 2.5v4h-4M6 21.5v-4h4"/></svg>';
 export const avatarsEl = document.createElement('div');
 avatarsEl.id = 'photo-figs';
 avatarsEl.hidden = true;
 avatarsEl.setAttribute('role', 'group');
-avatarsEl.setAttribute('aria-label', 'Mou una figura');
-avatarsEl.innerHTML = '<button type="button" class="pf pf-free" data-id="" aria-pressed="true" title="Mira la plaça"><span class="pf-por">' + PF_ORBIT_SVG + '</span><span class="pf-nb"><span class="pf-name">Mira la plaça</span></span></button>'
+avatarsEl.setAttribute('aria-label', tr('ui.photo.group'));
+avatarsEl.innerHTML = '<button type="button" class="pf pf-free" data-id="" aria-pressed="true" title="' + tr('ui.photo.look') + '"><span class="pf-por">' + PF_ORBIT_SVG + '</span><span class="pf-nb"><span class="pf-name">' + tr('ui.photo.look') + '</span></span></button>'
   + PF_FIGS.map(([f]) => `<button type="button" class="pf" data-id="${f.id}" aria-pressed="false" data-town="${f.town}"><span class="pf-por">${pixelSvg(portraitArt(f), portraitPalette(f), '#2a1a10')}</span><span class="pf-nb"><span class="pf-name">${f.name}</span></span></button>`).join('')
   + '<p id="photo-help" class="sr-only"></p>';
 document.getElementById('viewmode').after(avatarsEl);
@@ -65,12 +66,13 @@ export function showPhotoHelp(manual = true) {
   let html;
   if (fig) {
     const actions = photoHelpActions(fig);
-    html = COARSE.matches ? `<strong>Mou ${fig[0].id === DRAC.id ? 'el Drac' : 'la Mulassa'}</strong><p>Arrossega a l’esquerra per caminar; fins a la vora, corre.<br>Arrossega a la dreta per mirar.</p><small>Els botons rodons: salta, ${fig[1].map(([, label]) => label).join(', ')} i canvia de figura.<br>Botó ?: mostra o amaga l’ajuda.</small>${PF_HOME}`
-      : `<strong>Mou ${fig[0].id === DRAC.id ? 'el Drac' : 'la Mulassa'}</strong><span class="sr-only">${fig[0].fullName}</span><div class="pf-help-grid">${actions.map(([key, label]) => `<span class="pf-help-action"><kbd>${key}</kbd><span${key === 'Esc' ? ' data-photo-escape' : ''}>${label}</span></span>`).join('')}</div><small>Tab als botons: navega.<br>? ${manual ? "amaga l'ajuda" : 'torna a mostrar els controls'}.</small>`;
+    const move = tr(fig[0].id === DRAC.id ? 'ui.photo.moveDrac' : 'ui.photo.moveMula');
+    html = COARSE.matches ? `<strong>${move}</strong><p>${tr('ui.photo.touch.left')}<br>${tr('ui.photo.touch.right')}</p><small>${tr('ui.photo.touch.buttons', { actions: fig[1].map(([, label]) => label).join(', ') })}<br>${tr('ui.photo.touch.helpButton')}</small>${PF_HOME}`
+      : `<strong>${move}</strong><span class="sr-only">${fig[0].fullName}</span><div class="pf-help-grid">${actions.map(([key, label]) => `<span class="pf-help-action"><kbd>${key}</kbd><span${key === 'Esc' ? ' data-photo-escape' : ''}>${label}</span></span>`).join('')}</div><small>${tr('ui.photo.tabHint')}<br>${tr(manual ? 'ui.photo.hideHelp' : 'ui.photo.showControls')}</small>`;
   } else {
-    html = '<strong>Vista lliure</strong>' + (COARSE.matches
-      ? '<p>Arrossega per girar.<br>Pessiga per acostar o allunyar.</p><small>Botó ?: mostra o amaga l\'ajuda.</small>'
-      : '<p>Arrossega per girar. Roda per fer zoom.<br>Tria una figura per moure-la.</p>');
+    html = `<strong>${tr('ui.photo.freeView')}</strong>` + (COARSE.matches
+      ? `<p>${tr('ui.photo.free.touch1')}<br>${tr('ui.photo.free.touch2')}</p><small>${tr('ui.photo.free.helpButton')}</small>`
+      : `<p>${tr('ui.photo.free.desk1')}<br>${tr('ui.photo.free.desk2')}</p>`);
   }
   presentPhotoTip('help', html, manual ? 0 : fig ? PF_TIP_MS : 6500);
   pfTipManual = manual;
@@ -94,10 +96,9 @@ export function syncAvatars() {
     const home = pfTipFor === null && COARSE.matches ? PF_HOME : ''; // on entry, not on each figure change
     pfTipFor = active;
     const fig = PF_FIGS.find(([f]) => f.id === active);
-    const freeHelp = COARSE.matches ? 'Mira la plaça. Arrossega per girar. Pessiga per acostar o allunyar.'
-      : 'Mira la plaça. Tria una figura per moure-la. Esc: mostra els botons.';
+    const freeHelp = tr(COARSE.matches ? 'ui.photo.freeHelpTouch' : 'ui.photo.freeHelpDesk');
     pfHelp.textContent = fig ? photoHelpDescription(fig) : freeHelp;
-    hud.setAttribute('aria-label', fig ? 'Plaça: controls de moviment' : 'Plaça: mira la plaça');
+    hud.setAttribute('aria-label', tr(fig ? 'ui.photo.hudMove' : 'ui.photo.hudLook'));
     for (const b of pfButtons) {
       b.setAttribute('aria-describedby', fig && b.dataset.id === active ? 'photo-help' : '');
       if (b.dataset.id === active && fig) {
@@ -110,7 +111,7 @@ export function syncAvatars() {
       store.set(photoHelpSeenKey(family), '1');
       showPhotoHelp(false);
     } else if (pfShown) {
-      presentPhotoTip('notice', `<strong>${fig ? `Ara mous ${active === DRAC.id ? 'el Drac' : 'la Mulassa'}` : 'Vista lliure'}</strong>${home}`, home ? 4500 : 1800);
+      presentPhotoTip('notice', `<strong>${fig ? tr(active === DRAC.id ? 'ui.photo.nowDrac' : 'ui.photo.nowMula') : tr('ui.photo.freeView')}</strong>${home}`, home ? 4500 : 1800);
     }
     else clearPhotoTip();
   }
@@ -158,7 +159,7 @@ addEventListener('keydown', e => {
 // Keep Escape's instruction true while the browser owns the pointer.
 document.addEventListener('pointerlockchange', () => {
   const escape = pfTip.querySelector('[data-photo-escape]');
-  if (escape) escape.textContent = lookLocked() ? 'allibera el ratolí' : 'torna a mirar';
+  if (escape) escape.textContent = tr(lookLocked() ? 'ui.photo.act.unlock' : 'ui.photo.act.look');
   const fig = pfShown && PHOTO.on && PF_FIGS.find(([f]) => f.id === PHOTO.id);
   if (fig) pfHelp.textContent = photoHelpDescription(fig);
 });

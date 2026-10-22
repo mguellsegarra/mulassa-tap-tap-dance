@@ -4,7 +4,7 @@
 // one test error. The SDK loads when idle after the first frame; errors before that are buffered and forwarded.
 
 const LOOPBACK = /^(localhost|127\.0\.0\.1|\[::1\])$/;
-export const DEV_HOST = /^(localhost|127(\.\d+){3}|\[::1\]|0\.0\.0\.0|.+\.(localhost|local|test)|10(\.\d+){3}|192\.168(\.\d+){2}|172\.(1[6-9]|2\d|3[01])(\.\d+){2})$/;
+import { DEV_HOST } from '../core/flags.js';
 const DEBUG_PARAMS = ['autoplay', 'from', 'view']; // self-playing or debug-camera runs are not players
 const PROD_HOST = 'mulassa-tap-tap-dance.pages.dev';
 const MAX_EVENTS = 10; // per page: a bug in the frame loop must not send one report per frame

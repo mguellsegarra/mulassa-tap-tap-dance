@@ -1,0 +1,195 @@
+{
+ "rules": [
+  {
+   "id": "C-error",
+   "kind": "catala-sense-traduir",
+   "capture": "-error$",
+   "group": "C",
+   "status": "fals positiu",
+   "why": "targeta d'error de càrrega: el paquet principal està bloquejat a propòsit, així que mai no corre el JS que aplica l'idioma (el HTML de reserva és català); no es veu"
+  },
+  {
+   "id": "C-lang-notice",
+   "kind": "catala-sense-traduir",
+   "capture": "^M27-",
+   "group": "C",
+   "status": "fals positiu",
+   "why": "S27: el paquet de l'idioma falla a propòsit i el joc es queda en català amb l'avís; és el comportament dissenyat"
+  },
+  {
+   "id": "C-switch",
+   "kind": "catala-sense-traduir",
+   "capture": "-switch$",
+   "group": "C",
+   "status": "fals positiu",
+   "why": "després del canvi d'idioma la pàgina ja és a l'idioma d'arribada (català); l'eina compara amb l'idioma de sortida"
+  },
+  {
+   "id": "C-css-attr",
+   "kind": "catala-sense-traduir",
+   "text": "::before|::after",
+   "group": "C",
+   "status": "fals positiu",
+   "why": "text de ::before/::after que ve d'attr() (#board-jump) i ja és al idioma de la pàgina"
+  },
+  {
+   "id": "A1-prep",
+   "kind": "catala-sense-traduir",
+   "text": "PREPARATS",
+   "group": "A",
+   "status": "arreglat",
+   "why": "«PREPARATS…» del compte enrere estava escrit al HUD (banner.js, warm.js) i es veia en català en totes les llengües: ara hud.banner.ready"
+  },
+  {
+   "id": "A2-energia",
+   "kind": "catala-sense-traduir",
+   "text": "Cada error desanima",
+   "group": "A",
+   "status": "arreglat",
+   "why": "la fila ÀNIM de «Com es juga» i les etiquetes aria dels botons GUA/PA es quedaven amb el text de reserva català: el tema per defecte (Mulassa) mai dispara el canvi de figura i no s'aplicava"
+  },
+  {
+   "id": "A2-aria",
+   "kind": "catala-sense-traduir",
+   "text": "aria-label: GUA, esquerra",
+   "group": "A",
+   "status": "arreglat",
+   "why": "etiquetes aria dels botons GUA/PA en català a totes les llengües (mateixa causa que la fila ÀNIM: el tema per defecte no s'aplicava en arrencar)"
+  },
+  {
+   "id": "B-perfil",
+   "kind": "cls-error",
+   "selector": "account-menu",
+   "group": "B",
+   "status": "anotat",
+   "why": "Perfil: la fulla s'obre curta («Encara no has jugat cap partida») i creix a l'alçada màxima quan arriben les estadístiques del servidor; no té a veure amb l'idioma. Recomanació: mostrar l'estat de càrrega dins del bloc d'estadístiques i reservar-ne l'alçada"
+  },
+  {
+   "id": "B-tira",
+   "kind": "cls-error",
+   "selector": "select-(strip|towns)",
+   "group": "B",
+   "status": "anotat",
+   "why": "selector nou: en obrir una figura pendent o la targeta del plec la tira i la fila de pobles es reordenen d'un cop (canvi de gestió d'amplada de la UX del character select); és d'abans de l'i18n i cal decidir-ne el disseny (animar-ho en lloc de saltar)"
+  },
+  {
+   "id": "B-board",
+   "kind": "cls-avis",
+   "selector": "board-box",
+   "group": "B",
+   "status": "anotat",
+   "why": "Classificació: la targeta de posició (87 px) apareix quan arriba la resposta i empeny la llista; CLS 0,053, just per sobre de l'avís, igual en tots els idiomes"
+  },
+  {
+   "id": "B-font",
+   "kind": "font-tardana-amb-salt",
+   "group": "B",
+   "status": "anotat",
+   "why": "Baloo 2 (600/800) arriba amb la pantalla ja visible a 1 de 341 clips (de, 1280×800); no hi ha salt de text mesurable"
+  },
+  {
+   "id": "C-canvis-font",
+   "kind": "canvis-de-font",
+   "group": "C",
+   "status": "fals positiu",
+   "why": "recàrrega de l'idioma: durant la recàrrega la família efectiva passa per la de reserva (Times) i les fonts locals; només es veu el carregador"
+  },
+  {
+   "id": "C-cls-menor",
+   "kind": "cls-menor",
+   "group": "C",
+   "status": "soroll",
+   "why": "CLS < 0,05 (icones, línies d'1–20 px i vores de pseudoelements); no es veu a ull"
+  },
+  {
+   "id": "C-ssim",
+   "kind": "final-vs-estatica",
+   "group": "C",
+   "status": "soroll de la mesura",
+   "why": "l'últim estat del vídeo es compara amb la captura estàtica: la compressió del vídeo, l'animació de la fulla i el rellotge del clip (±0,3 s) donen SSIM baix; els fotogrames revisats a ull coincideixen"
+  },
+  {
+   "id": "C-flick-video",
+   "kind": "parpelleig-video",
+   "group": "C",
+   "status": "fals positiu",
+   "why": "salt de lluminositat en passar de la splash al selector (el títol s'esvaeix i entra el degradat del selector) o en obrir-se un consell: transició dissenyada, 1–2 fotogrames"
+  },
+  {
+   "id": "C-flick-dom",
+   "kind": "parpelleig-dom",
+   "group": "C",
+   "status": "fals positiu",
+   "why": "una fulla tancada i la següent oberta en menys de 50 ms (de Configuració a Sincronia/Privadesa) o la barreja d'opacitat d'#select-info; el mostrador de 50 ms no distingeix un parpelleig d'un canvi de fulla"
+  },
+  {
+   "id": "C-captura",
+   "kind": "captura-fallida",
+   "group": "C",
+   "status": "fals positiu",
+   "why": "ffmpeg no ha tallat un clip a la primera passada; es repeteix"
+  }
+ ],
+ "fixes": [
+  {
+   "id": "A1",
+   "title": "Coberta «gira el mòbil»: text només en català",
+   "explain": "Les tres frases («Gira el mòbil en vertical per jugar», «…en horitzontal per moure la figura», «Gira la tauleta…») eren `content:` al CSS i es veien en català a totes les llengües (el clip M05-V3-ja ho mostrava amb el botó en japonès). Ara són tres <span data-i18n> dins #rotate b i el CSS només tria quin es veu (mòbil, tauleta, mode foto). Claus noves html.rotate.photo/play/tablet a les 16 llengües (traduccions d'una passada: cal revisió nativa).",
+   "measures": "M05-V3-ja: la frase de la coberta era catalana tot el clip; ara és japonesa. Cap canvi de layout (el contenidor és el mateix; abans ::after, ara el mateix <b>).",
+   "files": [
+    "index.html",
+    "src/styles/base.css",
+    "src/i18n/locales/*/html.json (3 claus × 16)",
+    "tests/i18n.mjs"
+   ],
+   "test": "tests/i18n.mjs (l): cap `content:` amb paraules al CSS; falla amb el CSS antic",
+   "pairs": [
+    {
+     "code": "M05-V3-ja",
+     "note": "coberta de gira (mode foto, tàctil)",
+     "before": "frames/pairs/M05-V3-ja-abans.jpg",
+     "after": "frames/pairs/M05-V3-ja-despres.jpg"
+    }
+   ]
+  },
+  {
+   "id": "A2",
+   "title": "«PREPARATS…» del compte enrere, sempre en català",
+   "explain": "El compte enrere de la partida pintava la cadena fixa «PREPARATS…» (hud/banner.js i la pre-pintada de hud/warm.js). Ara usa la clau hud.banner.ready (16 llengües), llegida una vegada com GO_WORD (cap tr() per fotograma).",
+   "measures": "M11-V3-ja: «PREPARATS…» durant ~3 s del compte enrere → «よーい…». Els 207 «text del catàleg català en una altra llengua» de les 341 passades baixen a 7, tots falsos positius (C).",
+   "files": [
+    "src/hud/banner.js",
+    "src/hud/warm.js",
+    "src/i18n/locales/*/hud.json (1 clau × 16)"
+   ],
+   "test": "tests/i18n.mjs (a): paritat de claus; (k): amplada del HUD ≤ 1,3×",
+   "pairs": [
+    {
+     "code": "M11-V3-ja",
+     "note": "compte enrere de la partida",
+     "before": "frames/pairs/M11-V3-ja-abans.jpg",
+     "after": "frames/pairs/M11-V3-ja-despres.jpg"
+    }
+   ]
+  },
+  {
+   "id": "A3",
+   "title": "Fila ÀNIM de «Com es juga» i etiquetes aria GUA/PA en català",
+   "explain": "figure-theme-dom.js només aplicava els textos del tema de la figura en canviar de figura; el tema per defecte (Mulassa) no dispara cap canvi, així que el text de reserva del HTML («Cada error desanima la plaça…») i els aria-label dels botons es quedaven en català en totes les llengües. Ara s'apliquen una vegada en carregar el mòdul i en cada canvi.",
+   "measures": "M07-V3-ja: la fila ÀNIM era catalana → japonesa; aria-label «GUA, esquerra»/«PA, dreta» → traduïts a les 207 passades afectades.",
+   "files": [
+    "src/ui/figure-theme-dom.js",
+    "tests/figure-theme.mjs"
+   ],
+   "test": "tests/figure-theme.mjs: el text d'ÀNIM és el de trf('help.energy') en carregar (falla sense la línia apply(figTheme))",
+   "pairs": [
+    {
+     "code": "M07-V3-ja",
+     "note": "Com es juga, fila ÀNIM",
+     "before": "frames/pairs/M07-V3-ja-abans.jpg",
+     "after": "frames/pairs/M07-V3-ja-despres.jpg"
+    }
+   ]
+  }
+ ]
+}

@@ -1,5 +1,6 @@
 // The plaça's people with approved age/gender weights; ?representation=examples retains the earlier fixed set.
 import * as THREE from 'three';
+import { Q } from '../core/flags.js';
 import { scene, renderer, camera, plaza, mulaColla, renderProfile, setQualityLevel } from './stage.js';
 import { crowd, crowdMesh, RING } from './crowd-build.js';
 import { applyRenderQuality } from './quality.js';
@@ -31,7 +32,7 @@ function shown(g) { for (let o = g; o; o = o.parent) if (!o.visible) return fals
 export function setupRepresentation() {
   if (window.__representation) return window.__representation;
   const entries = [], restore = [], oldBefore = scene.onBeforeRender;
-  const params = new URLSearchParams(location.search), population = params.get('representation') !== 'examples';
+  const params = Q, population = params.get('representation') !== 'examples';
   const rawSeed = params.get('representationSeed'), seed = rawSeed == null ? 20261020 : Number(rawSeed);
   if (!Number.isInteger(seed) || seed < 0 || seed > 0xffffffff) throw new RangeError('Invalid representationSeed');
   const eligible = crowd.filter(p => population || (p.row === 0 && p.slot % 2 === 0 && !p.rider))

@@ -1,3 +1,4 @@
+import { tr } from '../i18n/messages.js';
 import { beatAtTime } from '../core/beat-grid.js';
 // The chart comes straight from the arrangement (tools/build_taiko.py -> song.notes):
 // every tap is a note of the tune, on the song's own beat grid (song.beats: its tempo changes phrase by phrase), so it
@@ -9,7 +10,7 @@ import { beatAtTime } from '../core/beat-grid.js';
 // Each note carries the easiest difficulty that includes it.
 // GLOBUS (Taiko's balloon): over the arrangement's drumrolls you mash either side to pop it.
 // The mulassa's dance is not in the chart: it follows the song (dance.js), the same on every difficulty; hits only accent it.
-export const DIFFS = [{ name: 'FÀCIL', sub: 'Només les notes principals' }, { name: 'NORMAL', sub: 'Tota la melodia, al temps' }, { name: 'DIFÍCIL', sub: 'Totes les notes' }];
+export const DIFFS = ['easy', 'normal', 'hard'].map(k => ({ name: tr(`game.diff.${k}.name`), sub: tr(`game.diff.${k}.sub`) }));
 
 export const sectionAt = (song, t) => (song.sections.filter(([s]) => s <= t).pop() ?? song.sections[0])[1]; // before the first section: the first one
 

@@ -5,6 +5,7 @@ import { pageActive, BEATS, playFrom } from '../core/env.js';
 import { pauseGame, closePauseMenu } from './pause.js';
 import { pauseMenu } from './handles.js';
 import { focusIn } from './focus.js';
+import { tr } from '../i18n/messages.js';
 
 export function togglePause() {
   if (G.state !== 'play' || !pageActive()) return;
@@ -49,8 +50,8 @@ export function requestPauseAction(action) {
   G.pendingAction = action;
   document.getElementById('pause-options').hidden = true;
   document.getElementById('pause-confirmation').hidden = false;
-  document.getElementById('confirm-title').textContent = action === 'restart' ? 'Reiniciar el ball?' : 'Tornar al menú?';
-  document.getElementById('confirm-action').textContent = action === 'restart' ? 'Sí, reinicia' : 'Sí, torna al menú';
+  document.getElementById('confirm-title').textContent = tr(action === 'restart' ? 'ui.pause.confirmRestartTitle' : 'ui.pause.confirmMenuTitle');
+  document.getElementById('confirm-action').textContent = tr(action === 'restart' ? 'ui.pause.confirmRestart' : 'ui.pause.confirmMenu');
   pauseMenu.setAttribute('aria-labelledby', 'confirm-title');
   focusIn(pauseMenu, 'cancel-action');
 }

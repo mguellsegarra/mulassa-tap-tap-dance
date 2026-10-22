@@ -7,7 +7,7 @@ el desplegament ni cap altre llegeix secrets, es connecta a la base de dades rem
 Decisions i disseny: [`docs/rankings-strategy.md`](rankings-strategy.md) (secció 8, migració). Còpies:
 [`docs/db-backup.md`](db-backup.md).
 
-Què es desplega: les quatre migracions noves i el client que les fa servir.
+Què es desplega: les cinc migracions noves i el client que les fa servir.
 
 | Fitxer | Què fa |
 | --- | --- |
@@ -15,17 +15,18 @@ Què es desplega: les quatre migracions noves i el client que les fa servir.
 | `202610200002_seasons.sql` | `seasons` (0 "Estrena 2026", 1 "Tardor 2026"), `season_id` a `entries`, `mulassa-v3` i `drac-v1`, RPC per temporada. |
 | `202610200003_player_stats.sql` | `player_devices`, `player_stats`, `player_days`, `merge_stats`, `my_stats`. |
 | `202610200004_history_retention.sql` | `get_seasons`, `get_player_card`, `purge_inactive_guests` (sense programar). |
+| `202610210001_level_podium.sql` | `get_level_podium`: els tres millors d'un sol nivell (el podi del pas 2 del selector). |
 
 ## 0. Assaig local (fet, es pot repetir)
 
 `node supabase/tests/rehearsal.mjs` aixeca un Postgres d'un sol ús amb la imatge de Supabase
 (`public.ecr.aws/supabase/postgres:17.11.0.004`, la mateixa versió major que producció) i hi passa les migracions de
 GoTrue perquè `auth` sigui la real. Aplica les migracions de `master` com a `postgres` (el rol de `supabase db push`),
-hi posa dades sintètiques semblants a les de producció i després aplica les quatre noves, una per una. Només parla amb
+hi posa dades sintètiques semblants a les de producció i després aplica les noves, una per una. Només parla amb
 el contenidor que crea (`mulassa-rehearsal-<data>`) i l'esborra en acabar (`--keep` el deixa per inspeccionar-lo).
 No necessita cap credencial.
 
-Resultat del 2026-10-21 (31 de 31 comprovacions):
+Resultat del 2026-10-21 (33 de 33 comprovacions):
 
 - Dades: 529 usuaris d'Auth, 467 perfils (16 seeds), 1.045 resultats de `mulassa-v1` i `mulassa-v2-short`.
   Abans i després, els mateixos recomptes i les mateixes sumes MD5 de `entries` i `profiles`.
@@ -41,7 +42,7 @@ Resultat del 2026-10-21 (31 de 31 comprovacions):
   l'esborrat del compte en tots dos ordres, i dotze `ensure_season` al límit del 31/12 al 1/1 (una sola "Hivern 2027").
   Cap bloqueig mutu.
 - Seguretat: totes les funcions tenen `search_path=''` i les RPC públiques són `security definer`. `anon` només pot
-  executar `get_leaderboard_all`, `get_seasons` i `get_player_card`. `authenticated` hi afegeix les seves pròpies RPC,
+  executar `get_leaderboard_all`, `get_level_podium`, `get_seasons` i `get_player_card`. `authenticated` hi afegeix les seves pròpies RPC,
   i cap funció privada. Ningú no llegeix les taules privades. Un jugador no pot enviar estadístiques a un altre perfil
   (`leaderboard_owner_mismatch`). La fitxa pública i el Saló de la fama no porten ids, dies ni adreces.
 - La neteja de convidats inactius: el recompte de `supabase/ops/guest-retention-cron.sql` coincideix amb el que
@@ -112,8 +113,9 @@ Què ha de sortir per continuar:
 
 Sense producció, a la branca que es fusionarà:
 
-- `npm run check` en verd, i `node supabase/tests/rehearsal.mjs` en verd (31 de 31).
-- `git diff master -- supabase/migrations/` només hi afegeix els quatre fitxers nous. Les migracions dels 7 dies
+- `npm run check` en verd, i `node supabase/tests/rehearsal.mjs` en verd. L'assaig també executa els dos blocs SQL
+  d'aquest document (passos 2 i 5) tal com són, abans i després de les migracions.
+- `git diff master -- supabase/migrations/` només hi afegeix els cinc fitxers nous. Les migracions dels 7 dies
   (`202610180001`, `202610190001`) no hi són (decisió 32).
 - `shasum public/music/*` igual que a `master`, si el canvi no és de música.
 - Una prova manual del client nou i del de `master` contra un Supabase local, amb `?mute` (la secció 8, pas 2, de
@@ -135,7 +137,7 @@ antic en aquest interval va a la Temporada 0, com ha de ser.
 
 Verificació, llegint el registre del workflow (sense secrets):
 
-- `Show history` llista les quatre migracions noves com a pendents i `Apply pending migrations` les aplica totes.
+- `Show history` llista les cinc migracions noves com a pendents i `Apply pending migrations` les aplica totes.
 - `deploy` acaba bé i la versió publicada és la del commit fusionat.
 
 ## 5. [prod] Recomptes en lectura, després
@@ -167,12 +169,13 @@ rollback;
 
 Què ha de sortir:
 
-- `seasons`: `0:Estrena 2026:...:-` i `1:Tardor 2026:<hora de la migració>:2027-01-01 00:00:00+01`.
+- `seasons`: `0:Estrena 2026:2026-09-26 22:00:00+00:-` i `1:Tardor 2026:<hora de la migració>:2026-12-31 23:00:00+00`
+  (el SQL Editor escriu en UTC: són les 00:00 del 27 de setembre i de l'1 de gener a Catalunya).
 - `entries_by_season`: tot a la `0`, amb el mateix nombre que `entries` al pas 2 més les publicacions noves.
 - `versions/mulassa-v1` i `versions/mulassa-v2-short` retirades cap a la `0`; `mulassa-v3` i `drac-v1` `open`.
 - `guests_without_tag` = 0 i `verified_with_tag` = 0.
 - `entries_unique_constraint` = `entries_user_season_version_difficulty_key`, sola.
-- `functions_without_search_path` = 0. `anon_functions` = `get_leaderboard_all,get_player_card,get_seasons`.
+- `functions_without_search_path` = 0. `anon_functions` = `get_leaderboard_all,get_level_podium,get_player_card,get_seasons`.
 - Els recomptes d'`auth_users`, `profiles` i `profiles_seed` com al pas 2, o més. Si `entries_after_T0` és 0, també
   la mateixa `entries_md5`. Si és més de 0, la suma canvia per les publicacions noves i no és cap error.
 

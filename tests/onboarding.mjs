@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { CAL, clickTimes, measureOffset, fmtMs, verdict, offsetDraft } from '../src/game/calibration.js';
 import { Chip, Clicker } from '../src/platform/audio.js';
 import { STEPS, buildStep, stepBeats, stepDone, stepPassed } from '../src/game/practice.js';
+import { practiceText } from '../src/game/figure-theme.js';
 import { WINDOWS } from '../src/game/progress.js';
 
 const song = JSON.parse(readFileSync(new URL('../src/song.json', import.meta.url)));
@@ -58,7 +59,8 @@ assert.deepEqual(STEPS.map(s => s.word), ['GUA', 'PA', 'GUAPA', 'MANTÉN', 'GLOB
 let total = 0;
 for (const [i, step] of STEPS.entries()) {
   const notes = buildStep(step, song.beats, 4, i);
-  assert(step.touch && step.keys && step.touch.length <= 45 && step.keys.length <= 45, `${step.word}: one short line per input`);
+  const line = d => practiceText(i, d);
+  assert(line('touch') && line('keys') && line('touch').length <= 45 && line('keys').length <= 45, `${step.word}: one short line per input`);
   assert(step.need >= 1 && step.need <= notes.length, `${step.word}: passable`);
   notes.forEach((n, j) => {
     assert(song.beats.includes(n.t) && (!n.end || song.beats.includes(n.end)), `${step.word}: on the song's beat grid`);

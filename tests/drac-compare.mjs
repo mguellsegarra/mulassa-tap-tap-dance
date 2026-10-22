@@ -392,7 +392,7 @@ const partsOf = () => [...rig.necks.flatMap(n => [n.root, ...n.segs, n.head, n.j
 
 // ---- (7) the page
 {
-  const html = read('drac-compare.html');
+  const html = read('tools/dev/drac-compare.html');
   assert.ok(/<video[^>]*\smuted[\s>]/.test(html) && !/autoplay/.test(html) && /src="\/drac-reference\/pm-lEViiPK0\.mp4"/.test(html), 'local video, muted, no autoplay');
   assert.ok(!read('vite.config.js').includes('drac-compare') && !read('index.html').includes('drac-compare'), 'not a build input');
   const seen = new Set(), bare = new Set(), stack = [fileURLToPath(new URL('../src/dev/drac-compare/main.js', import.meta.url))];

@@ -69,7 +69,7 @@ setStatsOwner('prova'); endRun(doc, 'none', run({ date: '2026-11-11' }));
 await svc.deleteProfile();
 assert.equal(doc.owners.prova, undefined, 'forgotten'); assert.equal(statsNoticeSeen('prova', mem), false); assert.equal(sync.owner, null); assert.equal(getStatsOwner(), 'none');
 assert(doc.owners.none, 'what was played without a profile stays under none');
-await svc.createProfile('Novell'); await new Promise(r => setTimeout(r, 20));
+await svc.createProfile('Novell'); await new Promise(r => setTimeout(r, 100)); // the account event also asks the mock server whether the profile exists
 assert.equal(sync.owner, 'prova'); assert.equal(Object.keys(doc.owners.prova.counters).length, 1, 'a new profile starts from zero plus what was played unowned');
 assert.equal(sync.noticeNeeded(), true, 'a new profile shows the notice again');
 
@@ -177,4 +177,15 @@ assert.equal(sync.noticeNeeded(), true, 'a new profile shows the notice again');
   await s7.init(); s7.cancel(); queue = []; flip = true;
   assert.equal(await s7.send(), 'session'); assert.deepEqual(credited, [], 'A\'s counters were not credited to B'); assert.equal(d7.owners.A.sent, undefined);
   assert.equal(s7.owner, 'B', 'the live owner is adopted'); t += 61000; assert.equal(await s7.send(), 'sent'); assert.deepEqual(credited, [{ as: 'B', buckets: ['drac-valls/drac-v1/1'] }]); s7.cancel(); }
+// Crea with a taken name: the anonymous sign-in exists but has no profile yet. Its account event must not move what was played
+// without a profile onto it (decision 30): recovering another profile by e-mail would leave them stranded there
+{ let owner = 'anon', profile = null, listener;
+  const stub = { ownerId: async () => owner, profile: async () => profile, onAccount: f => { listener = f; return () => {}; }, syncStats: async () => {} };
+  let d8 = newStats(); endRun(d8, 'none', run());
+  const s8 = createStatsSync({ service: stub, kv: mem, io: { load: () => d8, save: s => { d8 = s; } }, now, timer, clear });
+  await s8.init(); assert.equal(s8.owner, null);
+  listener({ type: 'changed' }); await new Promise(r => setTimeout(r, 20)); s8.cancel(); queue = [];
+  assert.equal(s8.owner, null, 'a session without a profile owns nothing'); assert(d8.owners.none && !d8.owners.anon, 'the unowned numbers wait');
+  owner = 'P'; profile = { alias: 'Recuperat' }; listener({ type: 'changed' }); await new Promise(r => setTimeout(r, 20)); s8.cancel(); queue = [];
+  assert.equal(s8.owner, 'P'); assert(!d8.owners.none && d8.owners.P.counters['mulassa-valls/mulassa-v3/1'].runs === 1, 'they join the profile recovered'); }
 console.log('stats-sync: ok');

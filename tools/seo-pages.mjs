@@ -1,6 +1,6 @@
 // One content, two renderings: /projecte/ (HTML) and /projecte/index.md + /index.md (Markdown for agents), written into dist/
-// after the build. Edit the text here only; llms.txt, robots.txt and sitemap.xml are plain files in public/.
-import { mkdir, writeFile, readFile } from 'node:fs/promises';
+// after the build. Edit the text in tools/seo-content/<lang>.json only; llms.txt, robots.txt and sitemap.xml are plain files in public/.
+import { mkdir, writeFile, readFile, readdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { pathToFileURL, fileURLToPath } from 'node:url';
 
@@ -11,37 +11,22 @@ const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&
 const slug = h => h.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 const html = s => esc(s).replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
 
-export const PAGES = {
-  home: {
-    title: 'Mulassa Tap Tap Dance',
-    lead: 'Joc de ritme en català: balla la Mulassa de Valls al compàs de la música tocant GUA i PA.',
-    sections: [
-      ['Com es juga', ['Toca **GUA** (esquerra) i **PA** (dreta) quan les notes arribin al cercle. Si en surt una de dues colors, toca els dos botons alhora: és una **GUAPA!** i puntua el doble. Mantén premut a les notes llargues (**MANTÉN**) i pica sense parar als redobles (**GLOBUS**). Cada error desanima la plaça, i si es buida la Mulassa cau.', 'Hi ha tres nivells (fàcil, normal i difícil), una pràctica inicial, classificacions i targetes per compartir el resultat. Es juga des del navegador, al mòbil, a la tauleta o a l’ordinador.']],
-      ['Més informació', ['[Sobre el projecte](https://mulassa.cat/projecte/): què és, d’on surt i qui l’ha fet.', 'El [codi és obert a GitHub](https://github.com/mguellsegarra/mulassa-tap-tap-dance), sense ànim de lucre, per difondre el bestiari de la cultura popular catalana.', 'Per jugar, obre [mulassa.cat](https://mulassa.cat/).']],
-    ],
-  },
-  projecte: {
-    title: 'Sobre Mulassa Tap Tap Dance',
-    captures: [['/captures/titol.jpg', 'Pantalla de títol: la Mulassa de Valls a la plaça, amb el logotip Mulassa Tap Tap Dance.'], ['/captures/joc.jpg', 'En joc: les notes del carril, els botons GUA i PA i la Mulassa ballant davant la gent.'], ['/captures/resultats.jpg', 'Targeta de resultats per compartir: tres estrelles i un 92 % d’encerts.']],
-    videos: [['/videos/promo-16x9.mp4', '/videos/promo-16x9.jpg', 'Vídeo promocional (horitzontal, 16:9)', 1920, 1080, '20 MB'], ['/videos/promo-9x16.mp4', '/videos/promo-9x16.jpg', 'Vídeo promocional (vertical, 9:16)', 1080, 1920, '17 MB']],
-    lead: 'Mulassa Tap Tap Dance és un joc de ritme gratuït, en català, inspirat en el ball de la Mulassa de Valls. És un projecte de codi obert, sense ànim de lucre, per difondre el bestiari de la cultura popular catalana.',
-    sections: [
-      ['Què és', ['Un joc de ritme. Les notes avancen pel carril i les has de tocar a temps amb dos botons: GUA (taronja, esquerra) i PA (turquesa, dreta). Mentre toques, una Mulassa en 3D balla enmig d’una plaça plena de gent. Es juga des del navegador, sense instal·lar res ni registrar-se.']],
-      ['La Mulassa de Valls i la Fira de Santa Úrsula', ['La Mulassa és una de les peces del bestiari festiu de Valls (Alt Camp). Surt al seguici de les festes, com la Fira de Santa Úrsula, i la fa ballar la Unió Anelles de la Flama. Aprofito la Fira de Santa Úrsula de Valls per llançar el joc, com a homenatge a la festa i a la Mulassa. El ball intenta reproduir el ball real, amb algunes petites exageracions per fer-lo més esbojarrat. És una adaptació meva a partir de vídeos públics, no la coreografia oficial.', 'La música és un arranjament nou, de festa major, que només aprofita la melodia del Ball de la Mulassa, composta per Francesc Bofarull i Figuerola.']],
-      ['Com es juga', ['**GUA** i **PA**: toca el botó esquerre o el dret quan la nota arribi al cercle (al teclat, ← i → o D i K).', '**GUAPA!** Els dos botons alhora. Doble punt; un de sol és error.', '**MANTÉN**: manté premut fins al final de la nota llarga (normal i difícil).', '**GLOBUS**: als redobles, pica tantes vegades com puguis fins que peti.', '**ÀNIM**: cada error desanima la plaça; si es buida, la Mulassa cau.', '**FINAL ESBOJARRAT**: l’última frase de la cançó. Els punts valen el doble si portes almenys un 70 % d’encerts.', 'El primer ball és una pràctica guiada. Després tries entre fàcil, normal i difícil, i pots publicar el resultat a les classificacions amb un sobrenom o compartir-ne la targeta.']],
-      ['Autoria i crèdits', ['Idea, disseny i desenvolupament: Marc Güell Segarra · [ondori.dev](https://ondori.dev).', 'Amb la col·laboració de la [Unió Anelles de la Flama](https://uaf.cat), que m’ha deixat fer aquest joc de la Mulassa. {uaf}', 'Melodia: Francesc Bofarull i Figuerola. L’arranjament i els sons els genera el codi del joc.', 'Tipografies Baloo 2 i Jersey 10, amb llicència SIL Open Font License.', 'Fet amb carinyo {cor} i molta IA a Valls {campanar}']],
-      ['Codi obert i col·laboració', ['El [codi és obert a GitHub](https://github.com/mguellsegarra/mulassa-tap-tap-dance) i tothom qui vulgui hi pot col·laborar: afegir-hi les seves mulasses i el seu bestiari, amb els seus balls i la seva música.', 'Si t’ha fet somriure, pots [convidar-me a un cafè](https://buymeacoffee.com/mguellsegarra).', 'El joc no fa servir galetes de seguiment. Pots consultar les dades que es tracten i els teus drets a «Privadesa», dins de Configuració. Per a imatges o qualsevol dubte: [holi@mulassa.cat](mailto:holi@mulassa.cat).']],
-    ],
-  },
-};
+// One JSON per language in tools/seo-content/ (schema: README.md); ca first, the rest alphabetical.
+export async function loadContent() {
+  const dir = new URL('./seo-content/', import.meta.url);
+  const codes = (await readdir(dir)).filter(f => /^[a-z]{2,3}(?:-[A-Za-z]{2,4})?\.json$/.test(f)).map(f => f.slice(0, -5)).sort((a, b) => (b === 'ca') - (a === 'ca') || a.localeCompare(b));
+  return Object.fromEntries(await Promise.all(codes.map(async c => [c, JSON.parse(await readFile(new URL(`${c}.json`, dir), 'utf8'))])));
+}
+const base = code => (code === 'ca' ? '' : `/${code}`);
+const projectPath = code => `${base(code)}/projecte/`;
 
-const toMd = p => `# ${p.title}\n\n${p.lead}\n\n${(p.captures ?? []).map(([src, alt]) => `![${alt}](${SITE}${src})`).join('\n\n')}${p.captures ? '\n\n' : ''}${p.sections.map(([h, ps]) => `## ${h}\n\n${ps.join('\n\n').replace('{cor}', '♥').replace(' {campanar}', '').replace(' {uaf}', '')}`).join('\n\n')}${p.videos ? `\n\n## Vídeos\n\n${p.videos.map(([src,, t,,, size]) => `- [${t}, descarrega (MP4, ${size})](${SITE}${src})`).join('\n')}` : ''}\n`;
+const toMd = (p, ui) => `# ${p.title}\n\n${p.lead}\n\n${(p.captures ?? []).map(([src, alt]) => `![${alt}](${SITE}${src})`).join('\n\n')}${p.captures ? '\n\n' : ''}${p.sections.map(([h, ps]) => `## ${h}\n\n${ps.join('\n\n').replace('{cor}', '♥').replace(' {campanar}', '').replace(' {uaf}', '')}`).join('\n\n')}${p.videos ? `\n\n## ${ui.videos}\n\n${p.videos.map(([src,, t,,, size]) => `- [${ui.downloadMd.replace('{title}', t).replace('{size}', size)}](${SITE}${src})`).join('\n')}` : ''}\n`;
 
 const HEART = '<svg class="heart" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.2 3.6 13A5.2 5.2 0 0 1 12 6.6a5.2 5.2 0 0 1 8.4 6.4z"/></svg>';
 const inline = s => html(s).replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>').replace('{cor}', HEART).replace('{campanar}', '<img class="campanar" src="/campanar-valls.svg" alt="" width="29" height="65">')
   .replace(' {uaf}', '<a class="uaf" href="https://uaf.cat"><img src="/uaf-logo.jpg" alt="Unió Anelles de la Flama, Valls" width="640" height="327" loading="lazy"></a>');
-const toHtml = (p, canonical, alternate) => `<!doctype html>
-<html lang="ca">
+const toHtml = (p, code, c, langs) => { const { ui } = c; const canonical = projectPath(code); const alternate = `${canonical}index.md`; return `<!doctype html>
+<html lang="${c.lang}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -49,7 +34,7 @@ const toHtml = (p, canonical, alternate) => `<!doctype html>
 <meta name="description" content="${esc(p.lead)}">
 <link rel="canonical" href="${SITE}${canonical}">
 <link rel="alternate" type="text/markdown" href="${alternate}">
-<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+${langs.length > 1 ? `${langs.map(l => `<link rel="alternate" hreflang="${l}" href="${SITE}${projectPath(l)}">`).join('\n')}\n<link rel="alternate" hreflang="x-default" href="${SITE}${projectPath('ca')}">\n` : ''}<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
 <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="manifest" href="/manifest.webmanifest">
@@ -63,15 +48,15 @@ const toHtml = (p, canonical, alternate) => `<!doctype html>
 <meta property="og:image:type" content="image/jpeg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="La Mulassa i el Drac de Valls amb el logotip de Mulassa Tap Tap Dance.">
-<meta property="og:locale" content="ca_ES">
+<meta property="og:image:alt" content="${esc(ui.ogImageAlt)}">
+<meta property="og:locale" content="${c.ogLocale}">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image:alt" content="La Mulassa i el Drac de Valls amb el logotip de Mulassa Tap Tap Dance.">
+<meta name="twitter:image:alt" content="${esc(ui.ogImageAlt)}">
 <script type="application/ld+json">${JSON.stringify({
-  '@context': 'https://schema.org', '@type': 'AboutPage', name: p.title, inLanguage: 'ca', url: `${SITE}${canonical}`,
-  about: { '@type': 'VideoGame', name: 'Mulassa Tap Tap Dance', url: `${SITE}/`, inLanguage: 'ca', genre: 'Joc de ritme', applicationCategory: 'GameApplication', operatingSystem: 'Qualsevol navegador', isAccessibleForFree: true,
+  '@context': 'https://schema.org', '@type': 'AboutPage', name: p.title, inLanguage: c.lang, url: `${SITE}${canonical}`,
+  about: { '@type': 'VideoGame', name: 'Mulassa Tap Tap Dance', url: `${SITE}/`, inLanguage: c.lang, genre: ui.genre, applicationCategory: 'GameApplication', operatingSystem: ui.os, isAccessibleForFree: true,
     author: { '@type': 'Person', name: 'Marc Güell Segarra', url: 'https://ondori.dev' } },
-  ...(p.videos && { video: p.videos.map(([src, poster, t]) => ({ '@type': 'VideoObject', name: t, description: 'Vídeo promocional de Mulassa Tap Tap Dance.', thumbnailUrl: `${SITE}${poster}`, contentUrl: `${SITE}${src}`, uploadDate: '2026-10-01', duration: 'PT34S', inLanguage: 'ca' })) }),
+  ...(p.videos && { video: p.videos.map(([src, poster, t]) => ({ '@type': 'VideoObject', name: t, description: ui.videoDescription, thumbnailUrl: `${SITE}${poster}`, contentUrl: `${SITE}${src}`, uploadDate: '2026-10-01', duration: 'PT34S', inLanguage: c.lang })) }),
 })}</script>
 <style>
   body { margin: 0; background: #2a1a10; color: #fff3d6; font: 400 18px/1.6 'Baloo 2', system-ui, sans-serif; }
@@ -98,25 +83,45 @@ const toHtml = (p, canonical, alternate) => `<!doctype html>
 <header>
 <h1>${esc(p.title)}</h1>
 <p>${html(p.lead)}</p>
-<a class="play" href="/">Juga ara</a>
+<a class="play" href="${code === 'ca' ? '/' : `/?lang=${code}`}">${esc(ui.play)}</a>
 </header>
 ${p.captures ? `<div class="shots">${p.captures.map(([src, alt]) => `<figure><img src="${src}" alt="${esc(alt)}" width="540" height="1169" loading="lazy"><figcaption>${esc(alt)}</figcaption></figure>`).join('')}</div>` : ''}
 ${p.sections.map(([h, ps]) => `<section>\n<h2 id="${slug(h)}">${esc(h)}</h2>\n${ps.map(t => `<p>${inline(t)}</p>`).join('\n')}\n</section>`).join('\n')}
-${p.videos ? `<section>\n<h2>Vídeos</h2>\n<div class="videos">${p.videos.map(([src, poster, t, w, h, size]) => `<figure><video controls preload="none" poster="${poster}" width="${w}" height="${h}" aria-label="${esc(t)}"><source src="${src}" type="video/mp4"></video><figcaption>${esc(t)} · <a href="${src}" download>Descarrega (MP4, ${size})</a></figcaption></figure>`).join('')}</div>\n</section>` : ''}
-<footer><a href="/">Joc</a> · <a href="/projecte/">Sobre el projecte</a> · <a href="https://github.com/mguellsegarra/mulassa-tap-tap-dance">Codi</a> · <a href="https://ondori.dev">ondori.dev</a></footer>
+${p.videos ? `<section>\n<h2>${esc(ui.videos)}</h2>\n<div class="videos">${p.videos.map(([src, poster, t, w, h, size]) => `<figure><video controls preload="none" poster="${poster}" width="${w}" height="${h}" aria-label="${esc(t)}"><source src="${src}" type="video/mp4"></video><figcaption>${esc(t)} · <a href="${src}" download>${esc(ui.download.replace('{size}', size))}</a></figcaption></figure>`).join('')}</div>\n</section>` : ''}
+<footer><a href="${code === 'ca' ? '/' : `/?lang=${code}`}">${esc(ui.footerGame)}</a> · <a href="${canonical}">${esc(ui.footerProject)}</a> · <a href="https://github.com/mguellsegarra/mulassa-tap-tap-dance">${esc(ui.footerCode)}</a> · <a href="https://ondori.dev">ondori.dev</a></footer>
 </main>
 </body>
 </html>
+`; };
+
+export const sitemapXml = langs => `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>${SITE}/</loc></url>
+${langs.map(l => `  <url><loc>${SITE}${projectPath(l)}</loc></url>`).join('\n')}
+</urlset>
 `;
 
-export async function writeSeoPages(dist) {
+// public/llms.txt is the Catalan base; each further language adds its project twin right after the Catalan one.
+export const llmsTxt = (baseTxt, content) => {
+  const extra = Object.entries(content).filter(([l]) => l !== 'ca').map(([l, c]) => `- [${c.projecte.title}](${SITE}${projectPath(l)}index.md): ${c.projecte.lead}`);
+  return extra.length ? baseTxt.replace(/^(- \[Sobre el projecte\].*)$/m, `$1\n${extra.join('\n')}`) : baseTxt;
+};
+
+export async function writeSeoPages(dist, content) {
+  content ??= await loadContent();
+  const langs = Object.keys(content);
   await mkdir(resolve(dist, 'projecte'), { recursive: true });
-  await writeFile(resolve(dist, 'index.md'), toMd(PAGES.home));
-  await writeFile(resolve(dist, 'projecte/index.md'), toMd(PAGES.projecte));
-  await writeFile(resolve(dist, 'projecte/index.html'), toHtml(PAGES.projecte, '/projecte/', '/projecte/index.md'));
+  await writeFile(resolve(dist, 'index.md'), toMd(content.ca.home, content.ca.ui));
+  for (const l of langs) {
+    await mkdir(resolve(dist, base(l).slice(1), 'projecte'), { recursive: true });
+    await writeFile(resolve(dist, base(l).slice(1), 'projecte/index.md'), toMd(content[l].projecte, content[l].ui));
+    await writeFile(resolve(dist, base(l).slice(1), 'projecte/index.html'), toHtml(content[l].projecte, l, content[l], langs));
+  }
+  await writeFile(resolve(dist, 'sitemap.xml'), sitemapXml(langs));
+  await writeFile(resolve(dist, 'llms.txt'), llmsTxt(await readFile(new URL('../public/llms.txt', import.meta.url), 'utf8'), content));
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
   await writeSeoPages(fileURLToPath(new URL('../dist', import.meta.url)));
-  console.log('SEO pages written: /projecte/, /projecte/index.md, /index.md');
+  console.log('SEO pages written: /projecte/, /projecte/index.md, /index.md (+ /<lang>/projecte/ per tools/seo-content/*.json)');
 }

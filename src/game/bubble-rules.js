@@ -1,5 +1,7 @@
 // Crowd speech belongs in musical rests, never among the notes.
 // Pure logic (no DOM, no three.js); main.js measures, anchors and draws.
+import { tr } from '../i18n/messages.js';
+import { trf, FIGURE_CHATTER_KEYS } from './figure-theme.js';
 export const TALK = Array.from({ length: 3 }, () => ({ max: 1, gap: 8, crowd: true, chatter: true, celebrate: [20, 0.8] }));
 export const BUBBLE_SECONDS = 2;
 
@@ -20,9 +22,8 @@ export function updateRest(rest, t, blocked = false) {
   return rest;
 }
 
-export const CHATTER = ['QUINA CALOR!', 'ON ÉS EL GEGANT?', 'UN CALÇOT, SISPLAU!', 'VISCA VALLS!', 'AMUNT!', 'QUIN RITME!',
-  'MIRA, LA MULASSA!', 'QUI VOL COCA?', 'ENS VEIEM ALS CASTELLS!', 'QUINA FESTA!', 'VINGA, VINGA!'];
-export const CELEBRATE = ['QUIN CRAC!', 'BRAVO!', 'IMPRESSIONANT!', 'VISCA!', 'OLÉ!'];
+export const CHATTER = FIGURE_CHATTER_KEYS.map(k => trf(k, 'mulassa')); // the Mulassa's lines; the Drac's come from the same keys
+export const CELEBRATE = ['crac', 'bravo', 'impressive', 'visca', 'ole'].map(k => tr('game.celebrate.' + k));
 const QUIET_AFTER_MISS = 2; // s of calm after any miss
 
 // Struggling latch: on with a miss streak >= 2 or the ànim under half, off again after 4 hits in a row with it >= half.

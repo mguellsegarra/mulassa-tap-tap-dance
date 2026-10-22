@@ -20,14 +20,14 @@ const nodes = new Map(ids.map(id => [id, new Node()]));
 const $ = id => nodes.get(id);
 let room = Infinity; // rows the info column holds before it scrolls (full medals take two, one-line ones one)
 const info = $('select-info'), list = $('select-standings-rows'), foot = $('select-standings-foot');
-Object.defineProperties(info, { clientHeight: { value: 0 }, scrollHeight: { get: () => { const m = $('select-meds').attrs; return list.kids.length + ('data-gone' in m ? 0 : 'data-compact' in m ? 1 : 2) > room ? 10 : 0; } } });
+Object.defineProperties(info, { clientHeight: { value: 0 }, scrollHeight: { get: () => { const m = $('select-meds').attrs; return list.kids.length + ('data-gone' in m ? 0 : 2) > room ? 10 : 0; } } });
 let boards = 0;
 const facts = setupStandings({ doc, $, onBoard: () => boards++ });
 
 // The ranking line (phones: under the song; desktops: this card's header), one wording everywhere (Marc: «Una línia a tot arreu»)
 assert.equal(rankText({ pos: 18, total: 46 }, 'Tardor 2026'), 'Posició 18 de 46 · Tardor 2026');
-assert.equal(rankText({ pos: null, total: 46 }, 'Tardor 2026'), 'Classificació · 46 jugadors', 'no row of yours: how many play');
-assert.equal(rankText({ pos: null, total: 1 }), 'Classificació · 1 jugador');
+assert.equal(rankText({ pos: null, total: 46 }, 'Tardor 2026'), 'Classificació · 46 participants', 'no row of yours: how many play');
+assert.equal(rankText({ pos: null, total: 1 }), 'Classificació · 1 participant');
 assert.equal(rankText({ pos: null, total: null, rows: [] }), 'Classificació · encara buida');
 assert.equal(rankText(null), 'Classificació', 'not answered yet (or offline): the name alone');
 assert.match(rankText({ pos: 3, total: 1200 }), /^Posició 3 de 1\.200 · (Hivern|Primavera|Estiu|Tardor) \d{4}$/, 'the open season by default');
@@ -46,7 +46,7 @@ assert.equal(name(me).kids[0].textContent, '<b>Jo</b>', 'a nickname is text, nev
 assert(list.kids[2].kids[1].kids.some(k => k.className === 'verified-check'), 'a confirmed address gets the check');
 assert(!list.kids[0].kids[1].kids.some(k => k.className === 'verified-check'), 'an unconfirmed one does not');
 assert.equal(name(list.kids[1]).kids[1].textContent, '#0007', 'a guest shows its tag, as on the boards');
-assert.match(foot.innerHTML, /A <b>12\.000<\/b> punts del primer/);
+assert.match(foot.innerHTML, /A <b>12\.000<\/b> punts del primer lloc/);
 assert.match(foot.innerHTML, /A <b>1\.000<\/b> punts del número 12/);
 
 room = 11; facts.fit();
@@ -56,11 +56,11 @@ facts.medals([null, { score: 52000, quality: 90 }, null]);
 assert.match($('select-meds').innerHTML, /sel-meds-t[^>]*>Els teus rècords<.*Sense rècord/s, 'the medals say they are yours; no record is quiet words, no dash or star goal');
 assert(!/—|1a estrella/.test($('select-meds').innerHTML));
 room = 8; facts.fit();
-assert.deepEqual(shown(), [1, 2, 3, '·', 12, 13, 14], 'shorter still: the medals shrink to one line first');
-assert('data-compact' in $('select-meds').attrs && !('data-gone' in $('select-meds').attrs));
+assert.deepEqual(shown(), [1, '·', 12, 13, 14], 'shorter still: rows go, the medals stay full (never one line: Marc)');
+assert(!('data-compact' in $('select-meds').attrs) && !('data-gone' in $('select-meds').attrs));
 room = 5; facts.fit();
-assert.deepEqual(shown(), [1, '·', 12, 13, 14], 'names before the medals');
-assert('data-gone' in $('select-meds').attrs);
+assert.deepEqual(shown(), [12, 13, 14], 'then the top rows: your neighbours stay beside the medals');
+assert(!('data-gone' in $('select-meds').attrs), 'the medals stay while any row fits');
 room = -1; facts.fit();
 assert(!$('select-standings').hidden && $('select-standings-body').hidden, 'no room at all: the rows go, the header (the way to the board) stays');
 room = Infinity;
@@ -71,7 +71,7 @@ room = Infinity;
 facts.board({ pos: 1, total: 63, rows: rows.map((r, i) => ({ ...r, is_self: i === 0 })) }, true);
 assert(foot.hidden, 'the first has no gap to show');
 facts.board({ pos: null, total: 63, rows }, true);
-assert.equal($('select-standings-pos').textContent, 'Classificació · 63 jugadors', 'no row of yours: the board still shows');
+assert.equal($('select-standings-pos').textContent, 'Classificació · 63 participants', 'no row of yours: the board still shows');
 facts.board(null, true);
 assert(!$('select-standings').hidden && $('select-standings-pos').textContent === 'Classificació', 'before the answer: the header and the placeholder');
 facts.board(null, false);
@@ -126,6 +126,27 @@ $('select-standings-head').listeners.click[0]();
 assert.equal(boards, 1, 'the header opens Classificacions');
 console.log('selector standings: rows, gaps, verified check and fitting ok');
 
+// The ease, as WAAPI measures it: a running animation's height is its keyframe. Step 2's refit is level-stats' own eased call
+// (select-ui.js levelStats), so the calls nest: still one ease, from the old height to the new.
+{ let lv = false, h = 100, live = null, anims = [];
+  const easeFacts = setupStandings({ doc, $, onBoard() {}, levels: () => lv });
+  bodyEl.getBoundingClientRect = () => ({ height: live ? parseFloat(live.frames[0].height) : h });
+  bodyEl.animate = (frames, o) => { const a = { frames, o, cancel() { this.cancelled = true; if (live === a) live = null; } }; anims.push(a); live = a; return a; };
+  const answer = { pos: 13, total: 63, rows };
+  const kept = () => anims.filter(a => !a.cancelled).map(a => [parseFloat(a.frames[0].height), parseFloat(a.frames[1].height), a.o.duration]);
+  for (const step of [1, 2]) {
+    lv = step === 2; live = null;
+    const refit = to => (lv ? () => easeFacts.eased(() => { bodyEl.hidden = false; h = to; }) : () => { bodyEl.hidden = false; h = to; });
+    easeFacts.board(answer, true, false, 'mulassa:Jo#1', refit(100)); // the step's own layout first: no ease
+    for (const calmNow of [false, true]) {
+      calm = calmNow; anims = []; live = null;
+      easeFacts.board(answer, true, false, 'mulassa:Jo#1', refit(140));
+      assert.deepEqual(kept(), calmNow ? [] : [[100, 140, 250]], `step ${step}${calmNow ? ', reduced motion: at once' : ': one 250 ms ease from the old height'}`);
+      h = 100; live = null; easeFacts.board(answer, true, false, 'mulassa:Jo#1', refit(100)); live = null;
+    }
+  }
+  calm = false; }
+
 // Step 2 on a short laptop (Marc, 2026-10-21): the song's credit gives way first, then the board's foot goals, then the song row;
 // the level row (and the ranking line, outside it) stays.
 const { showLevelStats } = await import('../src/ui/level-stats.js');
@@ -144,3 +165,4 @@ assert.deepEqual(fitAt(2), ['credit', true, true], 'first the credit goes');
 assert.deepEqual(fitAt(1), ['credit', false, true], 'then the foot goals');
 assert.deepEqual(fitAt(0), ['song', false, true], 'then the song row; the level row stays');
 console.log('step 2 give-way order: credit, goals, song ok');
+

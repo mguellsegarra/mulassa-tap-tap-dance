@@ -4,6 +4,7 @@ import { G, clock, setSelectedFigure } from '../game/state.js';
 import { startWatch, toTitle } from '../game/flow.js';
 import { hide, howtoMenu } from './handles.js';
 import { focusIn } from './focus.js';
+import { tr } from '../i18n/messages.js';
 
 // select: the selector's api (figure, pending, visible, toLevels); busy(): another sheet or «mode foto» is up
 export function setupWatch({ select, busy }) {
@@ -15,7 +16,7 @@ export function setupWatch({ select, busy }) {
     if (howtoMenu.open) howtoMenu.close();
     if (G.state !== 'select' || busy() || !figure || select.pending || !setSelectedFigure(figure)) return;
     $('watch-song').textContent = figure.song;
-    $('watch-text').textContent = `Ja coneixes el ${figure.song}. Tria la dificultat i balla’l amb els teus botons.`;
+    $('watch-text').textContent = tr('ui.watch.text', { song: figure.song });
     startWatch();
   }
   function leave(levels) { // back to the selector: its figure step, or straight to the levels with the remembered one

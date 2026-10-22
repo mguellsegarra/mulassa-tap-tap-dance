@@ -5,6 +5,7 @@ import { readFileSync } from 'node:fs';
 import { fixture } from '../supabase/tests/fixture.mjs';
 globalThis.localStorage = { getItem: () => null, setItem() {}, removeItem() {} };
 const { newStats, endRun, payload } = await import('../src/game/stats.js');
+const { makeDanceChart } = await import('../src/game/chart.js');
 const songs = { 'mulassa-valls': JSON.parse(readFileSync(new URL('../src/song.json', import.meta.url))), 'drac-valls': JSON.parse(readFileSync(new URL('../src/song-drac.json', import.meta.url))) };
 const {db,q,as,player,migrate,uid,unlock} = await fixture();
 const bucket='mulassa-valls/mulassa-v3/2', other='drac-valls/drac-v1/0';
@@ -20,18 +21,34 @@ const relax=async id=>{
 };
 try {
   await migrate();
+  // The game has been out a month: a first import's time budget starts at the first season's day (merge_stats).
+  await db.exec("update leaderboard_private.seasons set starts_at='2026-09-21 00:00 Europe/Madrid' where id=1");
   // The REAL client payload (stats.js) of full completed runs of both actual songs, at their real length (flow.js caps a run at
   // song.end), on every level, must be accepted: 109.889 s once rounded to 110 and the server refused every upload after it.
   {
-    const rules=await q("select figure_id,version,difficulty,judgments,max_score,guapa_count from leaderboard_private.versions where duration_seconds is not null order by 1,2,3");
+    const rules=await q("select figure_id,version,difficulty,judgments,max_score,guapa_count,balloon_count,hold_count from leaderboard_private.versions where duration_seconds is not null order by 1,2,3");
     assert(rules.some(r=>r.figure_id==='drac-valls')&&rules.some(r=>r.figure_id==='mulassa-valls'));
+    // The per-run ceilings are the real charts' (chart.js), so a fully popped and held run is never refused.
+    for(const r of rules){
+      const chart=makeDanceChart(songs[r.figure_id],r.difficulty);
+      assert.equal(r.judgments,chart.length+chart.filter(n=>n.end&&!n.balloon).length,`${r.figure_id}/${r.difficulty} judgments`);
+      assert.equal(r.balloon_count,chart.filter(n=>n.balloon).length,`${r.figure_id}/${r.difficulty} balloons`);
+      assert.equal(r.hold_count,chart.filter(n=>n.end&&!n.balloon).length,`${r.figure_id}/${r.difficulty} holds`);
+    }
     const mine=await player(null);await as(mine);await q("select public.update_alias('RealRuns')");
     for(const runs of [1,3]){ // a second device: its own first import, so the elapsed-time budget is not the subject here
       const stats=newStats();
       for(const r of rules) for(let i=0;i<runs;i++) endRun(stats,'u',{kind:'end',date:'2026-10-20',figureId:r.figure_id,version:r.version,level:r.difficulty,
-        seconds:songs[r.figure_id].end,counts:{perfect:r.judgments,good:0,miss:0},errors:{},guapa:r.guapa_count,guapaTotal:r.guapa_count,balloons:1,holds:1,
+        seconds:songs[r.figure_id].end,counts:{perfect:r.judgments,good:0,miss:0},errors:{},guapa:r.guapa_count,guapaTotal:r.guapa_count,balloons:r.balloon_count,holds:r.hold_count,
         maxCombo:r.judgments,stars:3,score:r.max_score,quality:100});
+      // the shortest real runs: a collapse a few seconds in (every judgment an error), a quit in the count-in (0 s), a tiny practice
+      for(const r of rules){
+        endRun(stats,'u',{kind:'collapse',date:'2026-10-20',figureId:r.figure_id,version:r.version,level:r.difficulty,seconds:3.9,
+          counts:{perfect:0,good:1,miss:12},errors:{late:1,silent:12},guapa:0,guapaTotal:1,balloons:0,holds:0,maxCombo:0});
+        endRun(stats,'u',{kind:'quit',date:'2026-10-20',figureId:r.figure_id,version:r.version,level:r.difficulty,seconds:0});
+      }
       endRun(stats,'u',{kind:'practice',date:'2026-10-20',seconds:180.4});
+      endRun(stats,'u',{kind:'practice',date:'2026-10-20',seconds:0.3});
       const p=payload(stats,'u');
       assert.equal(Object.keys(p.buckets).length,rules.length+1);
       await relax(mine);await merge(uid(),p.buckets,p.days);
@@ -76,6 +93,15 @@ try {
   await fail(()=>merge(device,{[bucket]:{bestCombo:241}}),'leaderboard_invalid_stats');
   await fail(()=>merge(device,{[bucket]:{bestStars:4}}),'leaderboard_invalid_stats');
   await fail(()=>merge(device,{[bucket]:{seconds:900000}}),'leaderboard_invalid_stats');
+  // Per run, no more GLOBUS or MANTÉN than the chart has (2 and 5 on this level), no more errors than non-perfect judgments.
+  await fail(()=>merge(device,{[bucket]:{balloons:20001}}),'leaderboard_invalid_stats');
+  await fail(()=>merge(device,{[bucket]:{holds:50001}}),'leaderboard_invalid_stats');
+  await fail(()=>merge(device,{[bucket]:{errors:{early:79993}}}),'leaderboard_invalid_stats');
+  // Runs cost real time, even quit at once (1 s each): runs (shown on the public card) cannot jump with no time behind them.
+  await fail(()=>merge(device,{[bucket]:{runs:10100}}),'leaderboard_stats_time_limit');
+  await fail(()=>merge(device,{practice:{runs:9007199254740991,seconds:400}}),'leaderboard_stats_time_limit');
+  await merge(device,{[bucket]:{balloons:20000,holds:50000,errors:{early:79992}}});
+  await relax(a);
   for(const bad of [
     {...complete.best,score:193001}, {...complete.best,score:193000,perfect:1,miss:239,maxCombo:1},
     {...complete.best,perfect:233}, {...complete.best,maxCombo:233}, {...complete.best,user_id:a}
@@ -102,6 +128,8 @@ try {
   await relax(a);await merge(uid(),{[bucket]:{runs:1,completed:0,collapsed:1,seconds:4,perfect:2,good:1,miss:8}});
   // Abandoned runs count time/runs but no judgments.
   await relax(a);await merge(uid(),{[bucket]:{runs:1,seconds:5}});
+  // A first import's budget is the time since the first season's day: no device has played more than that.
+  await relax(a);await fail(()=>merge(uid(),{[bucket]:{runs:3e9}}),'leaderboard_stats_time_limit');
   // Day bounds are checked inside the transaction, so invalid days cannot partially store counters/devices.
   await relax(a);
   for(const day of ['2026-01-01','2099-01-01',null,'infinity'])

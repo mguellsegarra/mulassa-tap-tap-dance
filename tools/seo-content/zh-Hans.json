@@ -1,0 +1,119 @@
+{
+  "lang": "zh-Hans",
+  "ogLocale": "zh_CN",
+  "ui": {
+    "play": "现在开玩",
+    "videos": "视频",
+    "download": "下载（MP4，{size}）",
+    "downloadMd": "{title}，下载（MP4，{size}）",
+    "footerGame": "游戏",
+    "footerProject": "关于项目",
+    "footerCode": "代码",
+    "ogImageAlt": "Mulassa de Valls和Drac de Valls，以及Mulassa Tap Tap Dance标志。",
+    "videoDescription": "Mulassa Tap Tap Dance宣传视频。",
+    "genre": "节奏游戏",
+    "os": "任何浏览器"
+  },
+  "home": {
+    "title": "Mulassa Tap Tap Dance",
+    "lead": "Joc de ritme en català: balla la Mulassa de Valls al compàs de la música tocant GUA i PA.",
+    "sections": [
+      [
+        "Com es juga",
+        [
+          "Toca **GUA** (esquerra) i **PA** (dreta) quan les notes arribin al cercle. Si en surt una de dues colors, toca els dos botons alhora: és una **GUAPA!** i puntua el doble. Mantén premut a les notes llargues (**MANTÉN**) i pica sense parar als redobles (**GLOBUS**). Cada error desanima la plaça, i si es buida la Mulassa cau.",
+          "Hi ha tres nivells (fàcil, normal i difícil), una pràctica inicial, classificacions i targetes per compartir el resultat. Es juga des del navegador, al mòbil, a la tauleta o a l’ordinador."
+        ]
+      ],
+      [
+        "Més informació",
+        [
+          "[Sobre el projecte](https://mulassa.cat/projecte/): què és, d’on surt i qui l’ha fet.",
+          "El [codi és obert a GitHub](https://github.com/mguellsegarra/mulassa-tap-tap-dance), sense ànim de lucre, per difondre el bestiari de la cultura popular catalana.",
+          "Per jugar, obre [mulassa.cat](https://mulassa.cat/)."
+        ]
+      ]
+    ]
+  },
+  "projecte": {
+    "title": "关于Mulassa Tap Tap Dance",
+    "captures": [
+      [
+        "/captures/titol.jpg",
+        "标题界面：广场上的Mulassa de Valls，以及Mulassa Tap Tap Dance标志。"
+      ],
+      [
+        "/captures/joc.jpg",
+        "游戏中：轨道上的音符、GUA和PA按钮，以及在人群前跳舞的Mulassa。"
+      ],
+      [
+        "/captures/resultats.jpg",
+        "可分享的成绩卡：三颗星，命中率92%。"
+      ]
+    ],
+    "videos": [
+      [
+        "/videos/promo-16x9.mp4",
+        "/videos/promo-16x9.jpg",
+        "宣传视频（横屏，16:9）",
+        1920,
+        1080,
+        "20 MB"
+      ],
+      [
+        "/videos/promo-9x16.mp4",
+        "/videos/promo-9x16.jpg",
+        "宣传视频（竖屏，9:16）",
+        1080,
+        1920,
+        "17 MB"
+      ]
+    ],
+    "lead": "Mulassa Tap Tap Dance是一款免费的加泰罗尼亚语节奏游戏，灵感来自Mulassa de Valls的舞蹈。这是一个非营利开源项目，希望让更多人认识加泰罗尼亚民俗文化中的bestiari（节庆兽偶）。",
+    "sections": [
+      [
+        "这是什么游戏",
+        [
+          "一款节奏游戏。音符沿轨道前进，你要用两个按钮准确击打：GUA（橙色，左侧）和PA（青绿色，右侧）。击打时，一只3D的Mulassa会在热闹的广场中央跳舞。打开浏览器就能玩，不用安装，也不用注册。"
+        ]
+      ],
+      [
+        "Mulassa de Valls与Fira de Santa Úrsula",
+        [
+          "Mulassa是Valls（Alt Camp）的节庆bestiari之一，由Unió Anelles de la Flama带着跳舞，参加Fira de Santa Úrsula等节庆的seguici（传统巡游队伍）。我借Valls的Fira de Santa Úrsula推出这个游戏，向节庆和Mulassa致敬。舞蹈尽量还原真实动作，也加了一点夸张，让它更疯一点。这是我根据公开视频改编的版本，并非官方编舞。",
+          "音乐采用全新的festa major（地方传统大节）风格编曲，仅沿用Francesc Bofarull i Figuerola创作的Ball de la Mulassa的旋律。"
+        ]
+      ],
+      [
+        "怎么玩",
+        [
+          "**GUA**和**PA**：音符到达圆环时，轻触左侧或右侧按钮（键盘用←和→，或D和K）。",
+          "**GUAPA!**同时按两个按钮，得分翻倍；只按一个算失误。",
+          "**按住**：一直按到长音结束（普通和困难难度）。",
+          "**气球**：鼓点连响时尽量快速连击，直到击破。",
+          "**气氛**：每次失误都会降低广场气氛；耗尽时，Mulassa就会倒下。",
+          "**疯狂终曲**：歌曲的最后一段，命中率达到70%时得分翻倍。",
+          "第一支舞有练习引导。之后可以选择简单、普通或困难，用昵称把成绩发布到排行榜，也可以分享成绩卡。"
+        ]
+      ],
+      [
+        "作者与制作名单",
+        [
+          "创意、设计与开发：Marc Güell Segarra·[ondori.dev](https://ondori.dev)。",
+          "感谢[Unió Anelles de la Flama](https://uaf.cat)的合作，让我能制作这款Mulassa游戏。{uaf}",
+          "旋律：Francesc Bofarull i Figuerola。编曲和音效由游戏代码生成。",
+          "字体Baloo 2和Jersey 10，采用SIL Open Font License许可。",
+          "在Valls{campanar}用心{cor}制作，还有大量AI帮忙"
+        ]
+      ],
+      [
+        "开源与合作",
+        [
+          "[代码在GitHub开源](https://github.com/mguellsegarra/mulassa-tap-tap-dance)，欢迎任何人参与，把自己的mulasses和bestiari，以及它们的舞蹈和音乐加入游戏。",
+          "如果让你笑了，可以[请我喝杯咖啡](https://buymeacoffee.com/mguellsegarra)。",
+          "游戏不使用追踪Cookie。处理哪些数据、你有哪些权利，都可以在“设置”里的“隐私”查看。关于图片或任何疑问，请联系[holi@mulassa.cat](mailto:holi@mulassa.cat)。"
+        ]
+      ]
+    ]
+  }
+}

@@ -41,6 +41,7 @@ export async function preparePages(directory, song) {
       || /^assets\/[\w-]+\.(js|css)$/.test(name)
       || /^fonts\/[\w-]+\.(woff2?|txt)$/.test(name)
       || /^(captures\/[\w-]+\.jpg|videos\/[\w-]+\.(mp4|jpg))$/.test(name) // /projecte/'s screenshots
+      || /^[a-z]{2,3}(?:-[A-Za-z]{2,4})?\/projecte\/index\.(html|md)$/.test(name) // /<lang>/projecte/ from tools/seo-content/<lang>.json
       || name === 'campanar-valls.svg' // Configuració «Sobre el joc»
       || name === 'version.json' // vite.config.js buildStamp: the woken app's update check
       || name === 'uaf-logo.jpg' // /projecte/'s credits: the Unió Anelles de la Flama logo

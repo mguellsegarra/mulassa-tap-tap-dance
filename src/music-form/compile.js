@@ -133,7 +133,8 @@ function setup(form, score) {
   const unfolded = new Map();
   (src.unfolded ?? []).forEach((u, i) => {
     if (unfolded.has(u.id)) bad(`source.unfolded[${i}].id`, `duplicate id ${u.id}`);
-    else if (!bars.has(u.bar)) bad(`source.unfolded[${i}].bar`, `score has no bar ${u.bar}`);
+    // i18n-ok: build-tool diagnostic (English)
+  else if (!bars.has(u.bar)) bad(`source.unfolded[${i}].bar`, `score has no bar ${u.bar}`);
     else unfolded.set(u.id, u);
   });
   const tokens = (u, notes, path) => {

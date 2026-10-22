@@ -1,6 +1,7 @@
 // The 3D world: the renderer (with the no-WebGL card), scene, lights, the plaza, the mulassa, and the play camera's fixed direction.
 import { initialQuality, probeRenderer, isSoftwareRenderer, profileAt } from '../platform/render-quality.js';
 import * as THREE from 'three';
+import { tr } from '../i18n/messages.js';
 import { errors, errorName } from '../services/errors.js';
 import { buildPlaza, buildMulassa } from './models.js';
 import { newDracFeet } from '../game/drac-feet.js';
@@ -26,9 +27,9 @@ export const setRenderProfile = v => (renderProfile = v);
 export const glc = document.getElementById('gl');
 export const renderer = (() => { // no WebGL 2 (disabled, blocklisted GPU, very old browser): say so instead of a calçot forever
   try { return new THREE.WebGLRenderer({ canvas: glc, antialias: qualityLevel > 0, powerPreference: 'high-performance' }); } catch (err) {
-    const msg = 'El teu navegador no pot mostrar el joc en 3D. Actualitza’l o obre’l amb Chrome o Safari.';
+    const msg = tr('ui.webgl.unavailable');
     window.__mulassaBooted = 'no-webgl'; // index.html's boot watchdog: this card, not its generic one
-    if (window.__mulassaFail) window.__mulassaFail('Ups! No es pot mostrar el joc', msg); // no retry: it wouldn't help
+    if (window.__mulassaFail) window.__mulassaFail(tr('ui.webgl.title'), msg); // no retry: it wouldn't help
     else { const t = document.getElementById('loader-text'); if (t) t.textContent = msg; }
     errors.report('webgl-unavailable', { phase: 'renderer-create', webgl2: String(typeof WebGL2RenderingContext !== 'undefined'), name: errorName(err), probe: GPU.probe });
     errors.start();

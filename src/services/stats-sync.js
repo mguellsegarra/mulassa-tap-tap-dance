@@ -40,8 +40,14 @@ export function createStatsSync({ service, kv = store, io = { load: loadStats, s
     kv.remove?.(NOTICE(userId));
     if (owner === userId) adopt(null);
   }
+  // The session's user, only once it has a profile: an anonymous sign-in (Crea with a taken name) owns nothing yet
+  async function current() {
+    const id = await svc.ownerId();
+    if (!id) return null;
+    try { return (await svc.profile()) ? id : null; } catch { return id; } // offline: trust the session
+  }
   async function refresh() {
-    try { adopt(await svc.ownerId()); } catch { /* offline: the owner stays as it was */ }
+    try { adopt(await current()); } catch { /* offline: the owner stays as it was */ }
   }
   async function send() {
     if (!owner) return 'no-profile';
@@ -104,14 +110,8 @@ export function createStatsSync({ service, kv = store, io = { load: loadStats, s
   return {
     use,
     async init() {
-      try {
-        const id = await svc.ownerId();
-        if (!id) return adopt(null);
-        let profile = true;
-        try { profile = !!(await svc.profile()); } catch { /* offline: trust the session */ }
-        adopt(profile ? id : null);
-        request();
-      } catch { adopt(null); }
+      try { adopt(await current()); } catch { return adopt(null); }
+      if (owner) request();
     },
     afterRun: request,
     holdWhile(fn) { hold = fn; },

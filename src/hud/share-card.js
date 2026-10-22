@@ -1,18 +1,26 @@
 // On-device poster exports. Geometry is shared by drawing and regression checks.
+import { tr } from '../i18n/messages.js';
+import { fmtNum } from '../i18n/format.js';
+import { fontStack } from '../i18n/fonts.js';
+import { wrapLines } from './text-wrap.js';
+import { DIFFS } from '../game/chart.js';
 import { SITE_LABEL, CARD_FILE } from '../services/share.js';
 
 export const PHOTO = { story: [1104, 988], feed: [1104, 988], og: [1560, 630] };
-const CARD_FONT = "'Baloo 2', sans-serif";
+const CARD_FONT = fontStack("'Baloo 2', sans-serif");
 const PAPER = '#fff4df';
 const CARD_THEMES = {
   'mulassa-valls': { name: 'MULASSA', bg: '#8a1628', ray: '#a8283e', ink: '#24050c' },
   'drac-valls': { name: 'DRAC', bg: '#1f8a4c', ray: '#2a9e5a', ink: '#0b2414' },
 };
+// Catalan diacritics always, plus the active language's sample (hud.share.fontSample).
 export async function loadCardFonts(fonts) {
   if (!fonts) return;
-  await Promise.all([600, 800].map(weight => fonts.load(`${weight} 80px "Baloo 2"`, 'MULASSA DRAC DE VALLS FÀCIL DIFÍCIL 0123456789')));
+  // i18n-ok: glyph sample to preload the fonts
+  const sample = `MULASSA DRAC DE VALLS FÀCIL DIFÍCIL 0123456789 ${tr('hud.share.fontSample')}`;
+  await Promise.all([600, 800].map(weight => fonts.load(`${weight} 80px "Baloo 2"`, sample)));
   await fonts.ready;
-  if (fonts.check && ![600, 800].every(weight => fonts.check(`${weight} 80px "Baloo 2"`))) throw new Error('card fonts unavailable');
+  if (fonts.check && ![600, 800].every(weight => fonts.check(`${weight} 80px "Baloo 2"`, sample))) throw new Error('card fonts unavailable');
 }
 export function cardRank(d) {
   const r = d.rank;
@@ -31,11 +39,28 @@ export function cardLayout(format, d) {
   return { w: 1080, h: story ? 1920 : 1350, story, disc, discY, ticketY: discY + disc - overlap,
     ticketH, aliasH, footY, titleBottom, groupH, rank, titleY: story ? 310 : 160 };
 }
+const CJK = /[぀-ヿ㐀-鿿가-힯]/;
 function cardText(c, text, x, y, size, color, weight = 800, max = Infinity) {
   c.font = `${weight} ${size}px ${CARD_FONT}`;
   const width = c.measureText(String(text)).width;
-  if (width > max) c.font = `${weight} ${size * max / width}px ${CARD_FONT}`;
-  c.fillStyle = color; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(String(text), x, y);
+  c.fillStyle = color; c.textAlign = 'center'; c.textBaseline = 'middle';
+  if (width > max) {
+    // Too wide: break it in two lines inside the one-line block (half-size lines, same centre) before shrinking; a single unbreakable run just shrinks.
+    const half = size * 0.55, measure = s => c.measureText(s).width;
+    c.font = `${weight} ${half}px ${CARD_FONT}`;
+    const lines = wrapLines(String(text), measure, max, CJK.test(text));
+    if (lines.length > 1) {
+      const two = [lines[0], lines.slice(1).join(' ')];
+      two.forEach((line, i) => {
+        const w = measure(line);
+        if (w > max) c.font = `${weight} ${half * max / w}px ${CARD_FONT}`; else c.font = `${weight} ${half}px ${CARD_FONT}`;
+        c.fillText(line, x, y + (i - 0.5) * half);
+      });
+      return;
+    }
+    c.font = `${weight} ${size * max / width}px ${CARD_FONT}`;
+  }
+  c.fillText(String(text), x, y);
 }
 function cardBox(c, x, y, w, h, r, color) {
   c.beginPath(); c.roundRect(x, y, w, h, r); c.fillStyle = color; c.fill();
@@ -68,8 +93,8 @@ function cardTitle(c, theme, y, story) {
   const sub = story ? 82 : 56;
   cardText(c, theme.name, 10, 10, size, theme.ink);
   cardText(c, theme.name, 0, 0, size, PAPER);
-  cardText(c, 'D E  V A L L S', 6, size * 0.54 + 6, sub, theme.ink);
-  cardText(c, 'D E  V A L L S', 0, size * 0.54, sub, PAPER);
+  cardText(c, tr('hud.card.deValls'), 6, size * 0.54 + 6, sub, theme.ink);
+  cardText(c, tr('hud.card.deValls'), 0, size * 0.54, sub, PAPER);
   c.restore();
 }
 function cardFooter(c, y, story, ink) {
@@ -120,17 +145,17 @@ function cardTicket(c, d, L, theme) {
     cardText(c, alias, x, y + 26, size, theme.ink, 600, max);
     if (tick) cardCheck(c, x + tw / 2 + gap + tick / 2, y + 26, tick / 2);
   }
-  const points = Number.isFinite(d.score) ? Math.round(d.score).toLocaleString('ca-ES') : '—';
+  const points = Number.isFinite(d.score) ? fmtNum(Math.round(d.score)) : '—';
   cardText(c, points, 540, y + aliasH + (story ? 88 : 72), story ? 150 : 118, theme.ink, 800, w - 100);
-  cardText(c, 'P U N T S', 540, y + aliasH + (story ? 170 : 140), story ? 30 : 26, theme.ink);
+  cardText(c, tr('hud.card.points'), 540, y + aliasH + (story ? 170 : 140), story ? 30 : 26, theme.ink);
   const rowY = y + aliasH + (story ? 232 : 194), levelH = story ? 62 : 54;
-  const level = ['FÀCIL', 'NORMAL', 'DIFÍCIL'][d.diff] || d.diffName || 'FÀCIL';
+  const levels = DIFFS.map(l => l.name), level = levels[d.diff] || d.diffName || levels[0];
   const colors = ['#8fd98f', '#f0b04a', '#ef7b6a'];
-  const diff = Number.isInteger(d.diff) ? d.diff : ['FÀCIL', 'NORMAL', 'DIFÍCIL'].indexOf(level);
+  const diff = Number.isInteger(d.diff) ? d.diff : levels.indexOf(level);
   // Measure the whole row before drawing: 100%, long streaks and every level stay separated.
   const statSize = story ? 54 : 46, labSize = story ? 31 : 28, gap = story ? 28 : 24;
-  const pieces = [[`${d.pct}%`, statSize, 800], ['encerts', labSize, 600],
-    [String(d.maxCombo), statSize, 800], ['de ratxa', labSize, 600]];
+  const pieces = [[`${d.pct}%`, statSize, 800], [tr('hud.card.hits'), labSize, 600],
+    [String(d.maxCombo), statSize, 800], [tr('hud.card.streak'), labSize, 600]];
   const widths = pieces.map(([text, size, weight]) => { c.font = `${weight} ${size}px ${CARD_FONT}`; return c.measureText(text).width; });
   const total = 194 + gap * 3 + 3 + widths.reduce((a, b) => a + b, 0) + 16;
   const rowScale = Math.min(1, (w - 96) / total);
@@ -149,7 +174,7 @@ function cardTicket(c, d, L, theme) {
     const lineY = rowY + levelH / 2 + 18;
     c.save(); c.setLineDash([7, 5]); c.lineWidth = 3; c.strokeStyle = theme.ink + '70';
     c.beginPath(); c.moveTo(x + 64, lineY); c.lineTo(x + w - 64, lineY); c.stroke(); c.restore();
-    cardText(c, `Millor marca · #${rank.pos.toLocaleString('ca-ES')} de ${rank.total.toLocaleString('ca-ES')}`, 540, lineY + (story ? 42 : 35), story ? 38 : 32, theme.bg, 800, w - 100);
+    cardText(c, tr('hud.card.best', { pos: fmtNum(rank.pos), total: fmtNum(rank.total) }), 540, lineY + (story ? 42 : 35), story ? 38 : 32, theme.bg, 800, w - 100);
   }
 }
 export function drawCard(c, format, d, hero) {
@@ -168,7 +193,7 @@ export function drawCard(c, format, d, hero) {
   cardTicket(c, d, L, theme); cardFooter(c, L.footY, L.story, theme.ink);
   c.restore(); return c.canvas;
 }
-export const cardAlt = (format, d) => `Imatge per compartir (${format === 'story' ? 'Història (9:16)' : 'Publicació (4:5)'}): ${d.figureId === 'drac-valls' ? 'el Drac de Valls' : 'la Mulassa de Valls'}, ${d.score ?? '—'} punts, ${d.pct}% d’encerts a ${d.diffName}, ratxa màxima ${d.maxCombo}.`;
+export const cardAlt = (format, d) => tr('hud.card.alt', { format: tr(format === 'story' ? 'hud.card.altStory' : 'hud.card.altPost'), figure: tr(d.figureId === 'drac-valls' ? 'hud.card.altDrac' : 'hud.card.altMula'), score: d.score ?? '—', pct: d.pct, level: d.diffName, combo: d.maxCombo });
 export function toJpeg(canvas, quality = 0.9, figureId = 'mulassa-valls') {
   const name = figureId === 'drac-valls' ? 'drac-de-valls.jpg' : CARD_FILE;
   return new Promise((resolve, reject) => canvas.toBlob(b => b ? resolve(new File([b], name, { type: 'image/jpeg' })) : reject(new Error('card')), 'image/jpeg', quality));

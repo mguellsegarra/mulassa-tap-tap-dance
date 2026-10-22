@@ -3,7 +3,8 @@
 import { PAGE, TAG_KEY, baseName, rememberIdentity } from '../services/leaderboard.js';
 import { DIFFS } from '../game/chart.js';
 import { errors } from '../services/errors.js';
-import { num } from './sheet-kit.js';
+import { num, trSplit } from './sheet-kit.js';
+import { tr } from '../i18n/messages.js';
 import { mulaSpinner } from './loader.js';
 import { appendName, GUEST_ROW } from './profile-notes.js';
 import { figureSeasons, seasonLine, calendarSeason, closedSeasons, podiumList, ofSeason } from './seasons-ui.js';
@@ -19,6 +20,9 @@ export function savedName(store) {
   const t = store.get(TAG_KEY), n = Number(t);
   return { alias: store.get(ALIAS_KEY) || '', tag: t != null && Number.isInteger(n) ? n : null, verified };
 }
+// whose board answers the selector may show again (select-ui.js, select-standings.js): the remembered name, only while this browser
+// still has that profile. A sign-out, here or in another tab, drops the identity (refreshIdentity); the name and tag stay
+export const ownerKey = store => (store.get(`${ALIAS_KEY}:identity`) == null ? '' : (me => `${me.alias}#${me.tag}`)(savedName(store)));
 // savedName's source, kept fresh from the server's answer (profile(): null = no profile or session, which clears it): the share
 // image and the publish sheet then show the check for a confirmed profile without Perfil ever having been opened. The Perfil
 // block (src/ui/profile-ui.js) writes the same key with its own fields, which this keeps. One request at a time; an offline
@@ -48,7 +52,7 @@ export const boardIssue = (kind, e) => {
 };
 export const topPct = (pos, total) => Math.max(1, Math.ceil(100 * pos / total)); // «top 17%»; never «top 0%»
 
-const withArticle = f => `${f.id === DRAC.id ? 'el' : 'la'} ${f.name}`;
+const withArticle = f => tr(f.id === DRAC.id ? 'ui.board.withArticle.masc' : 'ui.board.withArticle.fem', { name: f.name });
 const CLOUD_OFF = '<svg viewBox="0 0 24 24"><path d="M8 18h9.5a3.5 3.5 0 0 0 .4-7A6 6 0 0 0 7 9.1 4.5 4.5 0 0 0 8 18zM4 4l16 16"/></svg>';
 
 // canPublish(): a run on the results screen not yet published (with runFigure() its figure) for «Publica el teu resultat»;
@@ -56,7 +60,8 @@ const CLOUD_OFF = '<svg viewBox="0 0 24 24"><path d="M8 18h9.5a3.5 3.5 0 0 0 .4-
 export function setupBoardList({ doc, $, service, store, focusIn, minLoad, now, observe, onCard, onSeasons, onKeep, currentFigure,
   canPlay = () => false, onPlay = () => {}, canPublish, runFigure, openPublish, publishing }) {
   const boardMenu = $('board-menu'), tbody = $('board-rows'), table = $('board-table'), box = $('board-scroll');
-  const place = $('board-place'), jump = $('board-jump');
+  const place = $('board-place'), jump = $('board-jump'), jumpLabel = $('board-jump-t');
+  Object.assign(jumpLabel.dataset, { top: tr('ui.board.jumpTopShort'), me: tr('ui.board.jumpMeShort') }); // both labels' width reserved (base.css)
   let listReq = 0, back = null;
   // --- Classificació: one board per figure and season (the open one unless the Saló de la fama asked for a closed one),
   // every level ranked by points, in pages of 50 (leaderboard.js): every rank in order, the next page as the list's end
@@ -106,42 +111,42 @@ export function setupBoardList({ doc, $, service, store, focusIn, minLoad, now, 
   // a row's player: the name without its «#1234» (get_leaderboard_all composes it for old clients), the tag, the check
   const playerOf = r => ({ alias: baseName(r.alias, r.tag ?? null), tag: r.tag ?? null, verified: r.verified === true });
   function row(r) {
-    const tr = doc.createElement('tr'), td = () => tr.appendChild(doc.createElement('td'));
+    const trow = doc.createElement('tr'), td = () => trow.appendChild(doc.createElement('td'));
     const pos = Number(r.position);
     td().appendChild(el('span', pos <= 3 ? `pos p${pos}` : 'pos', num(pos)));
     const name = td(), who = name.appendChild(el('div', 'who'));
     const at = figure; // the card shows this row (the season's name read on the tap: the header may answer after the rows)
     const from = () => ({ figure: at, season: season?.name ?? openName ?? calendarSeason(now()).name, position: pos, score: r.score, difficulty: r.difficulty });
     appendName(doc, who, playerOf(r), p => onCard({ ...p, from: from() })); // a confirmed address: the check (nothing more); a guest: «#1234», quieter
-    if (r.is_self) { tr.className = 'me'; meRow = tr; who.appendChild(el('span', 'me-tag', 'TU')); }
+    if (r.is_self) { trow.className = 'me'; meRow = trow; who.appendChild(el('span', 'me-tag', tr('ui.board.me'))); }
     const level = DIFFS[Number(r.difficulty)]?.name; // the level played (a coloured pill) and the longest streak, on a small line under the name
     if (level) {
       const sub = name.appendChild(el('div', 'sub'));
       sub.appendChild(el('span', `lvl lvl${Number(r.difficulty)}`, level));
-      if (r.max_combo != null) { const st = sub.appendChild(el('span', 'streak', 'ratxa ')); st.appendChild(el('b', '', num(r.max_combo))); }
+      if (r.max_combo != null) { const [pre, post] = trSplit('ui.board.streak', 'n'), st = sub.appendChild(el('span', 'streak', pre)); st.append(el('b', '', num(r.max_combo)), post); }
     }
     const pct = `${Math.round(Number(r.quality))}%`;
     td().textContent = pct;
     const pts = td(); pts.textContent = num(r.score);
     pts.appendChild(el('span', 'pct-sub', pct)); // portrait phones: the % under the points, its column's room goes to the name (CSS shows one)
-    return tr;
+    return trow;
   }
   // under a guest's own row: a quiet way to keep the profile (the Perfil's e-mail step)
   function guestHint() {
-    const tr = el('tr', 'me-hint'), td = tr.appendChild(doc.createElement('td'));
+    const trow = el('tr', 'me-hint'), td = trow.appendChild(doc.createElement('td'));
     td.colSpan = 4; td.setAttribute?.('colspan', '4');
     const b = td.appendChild(el('button', 'btn btn-link btn-small', GUEST_ROW));
     b.type = 'button'; b.setAttribute('aria-haspopup', 'dialog');
     b.addEventListener('click', () => onKeep()); // over the board
-    return tr;
+    return trow;
   }
   // between the unbroken list and the own row's neighbours: the ranks not loaded yet, and a way to load them
   function gapRow() {
-    const tr = el('tr', 'gap'), td = tr.appendChild(doc.createElement('td'));
+    const trow = el('tr', 'gap'), td = trow.appendChild(doc.createElement('td'));
     td.colSpan = 4; td.setAttribute?.('colspan', '4');
-    const btn = td.appendChild(el('button', 'btn btn-link btn-small', 'Carrega’n més'));
+    const btn = td.appendChild(el('button', 'btn btn-link btn-small', tr('ui.board.loadMore')));
     btn.type = 'button'; btn.addEventListener('click', () => loadMore());
-    return { row: tr, btn };
+    return { row: trow, btn };
   }
   const rowsOf = r => (r.is_self && r.tag != null && !season && onKeep ? [row(r), guestHint()] : [row(r)]);
   const shownRanks = b => Math.min(b.loaded, BOARD_CAP);
@@ -157,12 +162,12 @@ export function setupBoardList({ doc, $, service, store, focusIn, minLoad, now, 
     const b = shownBoard, capped = Boolean(b && !b.done && b.loaded >= BOARD_CAP);
     if (gap) {
       gap.btn.hidden = capped; gap.btn.disabled = moreBusy;
-      gap.btn.textContent = moreBusy ? 'Carregant-ne més…' : moreFailed ? 'No s’han pogut carregar més. Torna-ho a provar' : 'Carrega’n més';
+      gap.btn.textContent = tr(moreBusy ? 'ui.board.loadingMore' : moreFailed ? 'ui.board.moreFailedRetry' : 'ui.board.loadMore');
     }
     more.hidden = Boolean(gap) || !b || !b.loaded || (b.done && !moreBusy && !moreFailed); // at the end: nothing, no gap
     if (more.hidden) { moreBtn.hidden = true; moreStatus.textContent = ''; return; }
-    moreStatus.textContent = moreBusy ? 'Carregant-ne més…' : moreFailed ? 'No s’han pogut carregar més.'
-      : capped ? `Mostrant els ${num(BOARD_CAP)} primers` : ''; // the end of the list needs no line
+    moreStatus.textContent = moreBusy ? tr('ui.board.loadingMore') : moreFailed ? tr('ui.board.moreFailed')
+      : capped ? tr('ui.board.capped', { n: num(BOARD_CAP) }) : ''; // the end of the list needs no line
     if (moreBusy) moreStatus.prepend(mulaSpinner(doc, { mini: true }));
     moreBtn.hidden = moreBusy || b.done || capped;
   }
@@ -176,7 +181,7 @@ export function setupBoardList({ doc, $, service, store, focusIn, minLoad, now, 
     $('board-seasons').hidden = !e;
     if (!e?.podium?.length) return;
     const box = $('board-previous');
-    box.replaceChildren(el('h3', '', `Podi ${ofSeason(e.name)}`), podiumList(doc, e.podium, p => onCard(p)));
+    box.replaceChildren(el('h3', '', tr('ui.board.podiumOf', { season: ofSeason(e.name) })), podiumList(doc, e.podium, p => onCard(p)));
     box.hidden = false;
   }
   const reduced = () => globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
@@ -189,12 +194,14 @@ export function setupBoardList({ doc, $, service, store, focusIn, minLoad, now, 
     const first = [...tbody.children].reverse().find(tr => tr.offsetTop - head <= want) ?? tbody.children[0];
     return Math.max(0, first.offsetTop - head);
   }
-  // the link follows the list: the own row in view → «Ves al capdamunt» (nothing at the very top), else «Ves a la meva posició»
+  // the link follows the list: the own row in view → «Al capdamunt» (nothing at the very top), else «A la meva fila», its arrow towards it
   let jumpTo = 'top';
   function syncJump() {
     const seen = meRow && meRow.offsetTop < box.scrollTop + box.clientHeight && meRow.offsetTop + meRow.offsetHeight > box.scrollTop;
     jumpTo = !meRow || seen ? 'top' : 'me';
-    jump.textContent = jumpTo === 'top' ? 'Ves al capdamunt' : 'Ves a la meva posició';
+    jumpLabel.textContent = tr(jumpTo === 'top' ? 'ui.board.jumpTopShort' : 'ui.board.jumpMeShort');
+    jump.setAttribute('aria-label', tr(jumpTo === 'top' ? 'ui.board.jumpTopAria' : 'ui.board.jumpMeAria'));
+    jump.classList.toggle('down', jumpTo === 'me' && meRow.offsetTop >= box.scrollTop);
     const off = jumpTo === 'top' && box.scrollTop < 4;
     jump.classList.toggle('off', off); // kept in place (visibility) for a player with a row, so the line never shifts
     jump.hidden = off && !meRow; // no position: no empty band under «12 participants» (it may shift when the link comes)
@@ -203,10 +210,10 @@ export function setupBoardList({ doc, $, service, store, focusIn, minLoad, now, 
   jump.addEventListener('click', () => scrollList(jumpTo === 'top' ? 0 : meTop(), true));
   function showEmpty() {
     const f = figureOf(figure), publish = canPublishNow();
-    if (season) return setBoardStatus('Ningú no hi va publicar cap resultat.', { kind: 'empty', art: figurePortrait(f) });
-    const play = !publish && canPlay() ? `Juga amb ${withArticle(f)}` : ''; // the button says it: the hint doesn't repeat it
-    setBoardStatus('Encara no hi ha resultats', { kind: 'empty', art: figurePortrait(f), publish, play,
-      hint: publish ? 'Publica el teu resultat per estrenar la classificació.' : play ? 'Publica el primer resultat i estrena la classificació.' : `Juga amb ${withArticle(f)} i publica el resultat per estrenar la classificació.` });
+    if (season) return setBoardStatus(tr('ui.board.nobody'), { kind: 'empty', art: figurePortrait(f) });
+    const play = !publish && canPlay() ? tr('ui.board.playWith', { figure: withArticle(f) }) : ''; // the button says it: the hint doesn't repeat it
+    setBoardStatus(tr('ui.board.emptyTitle'), { kind: 'empty', art: figurePortrait(f), publish, play,
+      hint: tr(publish ? 'ui.board.emptyHintPublish' : play ? 'ui.board.emptyHintFirst' : 'ui.board.emptyHintPlay', { figure: withArticle(f) }) });
     previousPodium(listReq);
   }
   function render() {
@@ -227,7 +234,7 @@ export function setupBoardList({ doc, $, service, store, focusIn, minLoad, now, 
     }
     updateMore();
     const total = b.total || b.loaded;
-    $('board-summary').textContent = self ? `Posició ${num(at)}${b.total ? ` de ${num(b.total)}` : ''}` : `${num(total)} ${total === 1 ? 'participant' : 'participants'}`;
+    $('board-summary').textContent = self ? (b.total ? tr('ui.board.positionOf', { pos: num(at), total: num(b.total) }) : tr('ui.board.position', { pos: num(at) })) : tr('ui.seasons.players', { count: total, n: num(total) });
     const offer = !self && canPublishNow(); // a run on the results screen not published yet: where it would land
     $('board-place-sub').hidden = offer; $('board-publish-link').hidden = !offer;
     place.hidden = false;
@@ -255,7 +262,7 @@ export function setupBoardList({ doc, $, service, store, focusIn, minLoad, now, 
     const req = ++listReq;
     shownBoard = null; moreBusy = false; moreFailed = false; render();
     $('board-seasons').hidden = false;
-    setBoardStatus('Carregant la classificació…');
+    setBoardStatus(tr('ui.board.loading'));
     $('board-status').prepend(mulaSpinner(doc));
     $('board-season').textContent = season ? season.name : seasonLine(calendarSeason(now()), now()); // from the first frame
     const shown = min > 0 ? new Promise(r => setTimeout(r, min)) : null;
@@ -265,8 +272,8 @@ export function setupBoardList({ doc, $, service, store, focusIn, minLoad, now, 
       boardIssue('leaderboard-list-failed', e);
       if (req !== listReq || !boardMenu.open) return;
       // the headline says what failed; under it what to do (the service's own words unless it is the connection again)
-      const hint = e?.code === 'unavailable' || !e?.message ? 'Comprova la connexió i torna-ho a provar.' : e.message;
-      setBoardStatus('No s’ha pogut carregar la classificació', { retry: true, kind: 'error', art: CLOUD_OFF, hint });
+      const hint = e?.code === 'unavailable' || !e?.message ? tr('ui.board.checkConnection') : e.message;
+      setBoardStatus(tr('ui.board.loadFailed'), { retry: true, kind: 'error', art: CLOUD_OFF, hint });
       return;
     }
     await shown;
@@ -331,5 +338,10 @@ export function setupBoardList({ doc, $, service, store, focusIn, minLoad, now, 
         rows: rows.map(r => ({ ...r, alias: baseName(r.alias, r.tag ?? null) })) }; // its names go through appendName, as here
     } catch { return null; }
   }
-  return { openBoard, standing, get open() { return boardMenu.open; } };
+  // the selector's step 2 podium (select-podium.js): that level's best three, names as the boards show them; null: no answer
+  async function levelPodium(f, level) {
+    if (!service.configured) return null;
+    try { return ((await service.levelPodium({ figure: f, level })) ?? []).map(r => ({ ...r, alias: baseName(r.alias, r.tag ?? null) })); } catch { return null; }
+  }
+  return { openBoard, standing, levelPodium, get open() { return boardMenu.open; } };
 }

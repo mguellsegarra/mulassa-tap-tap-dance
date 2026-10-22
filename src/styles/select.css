@@ -731,13 +731,13 @@ body:has(#select:not([hidden])):has(#free[hidden]) { --cb-b: 1; }
 body:has(#select:not([hidden])) #free { --cb-i: 0; }
 body:has(#select:not([hidden])) #music { --cb-i: calc(1 - var(--cb-b)); }
 body:has(#select:not([hidden])) #settings { --cb-i: calc(2 - var(--cb-b)); }
-/* free play stands out (Marc, 2026-10-22): a dark lilac disc, cream edge; the gamepad dances on what sounds (controls.js
-   freeDance sets --b, the menu beat mod 2): a small lean left and right, landing on each beat (Marc: no ring, nothing bigger, it distracted) */
+/* free play stands out (Marc, 2026-10-22): a dark lilac disc, the row's gold edge; the gamepad dances on what sounds (controls.js
+   freeDance sets --b, the menu beat mod 2): a sway left and right, each beat landing on one side (Marc: no ring, it distracted) */
 #free { background: radial-gradient(circle at 50% 50%, #9a52b0, #9a52b000 45%), radial-gradient(circle at 50% 50%, #c2477e99, #c2477e00 40%), #24122c; background-size: 200% 200%; animation: free-glow 7s ease-in-out infinite alternate; } /* two lilac and plum glows drifting slowly over the dark disc */
 @keyframes free-glow { from { background-position: 15% 10%, 90% 95%; } 50% { background-position: 85% 35%, 20% 70%; } to { background-position: 40% 90%, 75% 15%; } }
 #free svg { transform-origin: 50% 80%; }
-#free[data-dancing] svg { animation: free-step 2s linear calc(var(--b, 0) * -1s) infinite paused; }
-@keyframes free-step { 0%, 50%, 100% { transform: none; animation-timing-function: ease-out; } 25% { transform: translateY(-2px) rotate(-7deg); animation-timing-function: ease-in; } 75% { transform: translateY(-2px) rotate(7deg); animation-timing-function: ease-in; } }
+#free[data-dancing] svg { animation: free-step 2s ease-in-out calc(var(--b, 0) * -1s) infinite paused; }
+@keyframes free-step { 0%, 100% { transform: rotate(-8deg); } 50% { transform: rotate(8deg); } } /* a pendulum: each beat lands on one side */
 @media (prefers-reduced-motion: reduce) { #free, #free[data-dancing] svg { animation: none; } }
 body:has(#select:not([hidden])) #viewmode { --cb-r: 2; --cb-i: calc(var(--cb-n) - 3); } /* shown only in free play: the exit, then the radio and the ? (free-music.js places both from it) end the row */
 body:has(#select:not([hidden])) :is(#free, #music, #settings) { --cb-r: calc(var(--cb-n) - 1 - var(--cb-i)); }

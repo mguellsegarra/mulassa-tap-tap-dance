@@ -65,3 +65,42 @@ For multi-carrier rigs, test all shoe pairs, not just each person's two feet. In
 torso vertices against the unchanged shell. Sample between source frames as well as at frame times. Verify
 both sides of every lift-off and landing: collision avoidance that passes still-frame checks can introduce
 visible pops. Preserve fixed bones and planted contacts. Do not enlarge the costume to conceal a rig defect.
+
+### Accepted silhouette and simple visible supports
+
+Preserve an approved model's proportions, head, neck, costume and palette unless changes are requested. Separate
+geometry defects from rig, animation and camera defects. Marc rejected the exposed, heavily bent multi-joint
+"spider" appearance: prefer concealed thighs/knees and short trouser cuffs with rigid shoes when the reference
+supports that simplification. Cuff cloth may fit beneath the hem; this is not permission to stretch anatomical
+bones or shoes. Validate the actual visible geometry, world contact position, sole orientation and all shoe pairs.
+Derive carrier count anew for each figure. A research gait must also be adapted to actual travel in the free viewer.
+
+### Head motion, expressiveness and camera seams
+
+Inspect head/body sway even when heading is stable. Reproduce observed structural motion before adding bounded
+festive exaggeration. Avoid independent animal-like neck motion when the real head moves with a rigid shell.
+Keep source-aligned and artistic variants available; acceleration and stronger sway must preserve contact quality.
+
+When a user reports a bad frame, inspect several seconds on both sides. Check pose, camera position, target height
+and depth, blend weights, angle wrapping and phase resets independently. The Mulassa camera audit demonstrated
+that an incoming fit could overwrite an outgoing weight and jump the image while body motion stayed continuous.
+Validate the projected model across blend entry and exit, including between-frame times, not only scalar curves.
+Keep the failing baseline and a regression that detects the reported symptom; do not relax limits to pass it.
+
+### Helpers, music adaptation and integration
+
+Research each figure's own helpers and uniform with source crops and timestamps. Distinguish carriers, guides,
+relief members, musicians and spectators. Four interior carriers do not establish four exterior cardinal guides.
+Label a four-guide game layout as an adaptation unless documented; never copy the Drac's camouflage by default.
+Record garment colours, accessories and insignia confidence. Keep seated members and standing guides distinct,
+reuse the game's crowd infrastructure and check clearance against the full swept dance path.
+
+Adapt festive music only within the requested scope, preserving the target project's sound and generation pipeline.
+Retain phrase-level source/song/beat anchors when accelerating or shortening. Avoid compressing an entire reference
+into a shorter song by normalized duration. Review audio by listening, with clear disclosure when unavailable.
+Integrate the accepted model/rig consistently in the game and free viewer; keep research cameras separate from
+play cameras. Revalidate support motion, chart timing and finale after any timing or amplitude change.
+
+For delivery, verify the preview server's worktree, media routes and LAN address before giving a mobile link.
+Distinguish local edits, numerical checks, visual inspection, listening, user acceptance and publication. Preserve
+concurrent changes and retain actionable evidence in the dossier rather than relying on chat history alone.

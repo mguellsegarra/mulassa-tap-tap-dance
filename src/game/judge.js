@@ -17,7 +17,7 @@ import { CALM, AUTOPLAY, WIN } from '../core/env.js';
 import { PRAISE, headline } from '../hud/praise.js';
 import { burst } from '../scene/confetti.js';
 import { balloonFx } from '../hud/balloon.js';
-import { syncPad } from '../ui/pad.js';
+import { syncPad, haptic } from '../ui/pad.js';
 import { dracCrema, dracPump, dracEndTraca } from '../scene/drac-show.js';
 
 export function collapse() {
@@ -136,7 +136,7 @@ function pump(n) {
   ringFx('pop', C.gold);
 }
 function endBalloon(n) { // time's up: any pop is perfect, half-inflated still good
-  dracEndTraca(n);
+  if (dracEndTraca(n)) haptic('big'); // the TRO lands on the song clock, not on a tap: Android's sticky activation still lets it vibrate
   n.detail = n.count >= n.need ? tr('game.detail.taps', { count: n.count }) : n.count ? DETAIL.faster : DETAIL.silent;
   judge(n, n.count >= n.need ? 'perfect' : n.count * 2 >= n.need ? 'good' : 'miss');
   if (G.practice && n.count) headline(tr('game.pop.taps', { count: n.count }), n.count >= n.need * 2 ? 2 : n.count >= n.need ? 1 : 0, 3, 1.4, 0.5); // the tally wins over its own PAM!

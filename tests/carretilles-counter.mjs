@@ -32,7 +32,9 @@ export function verifyCarretillesCounter(run) {
           counterText = []; drawLane(songNow);`);
         assert.equal(run('counterRoll.count'), run('counterBefore'), 'pause and handoff do not add taps');
         assert.equal(run('counterText.includes("TOCS")'), false, 'tap indicator ends with the active input window');
-        run(`songNow = counterRoll.end; advance(songNow); advance(songNow + 0.01); press('L');`);
+        run(`var counterBuzz = []; navigator.vibrate = p => counterBuzz.push(p);
+          songNow = counterRoll.end; advance(songNow); advance(songNow + 0.01); press('L'); delete navigator.vibrate;`);
+        assert.equal(run('counterBuzz.filter(Array.isArray).length'), figure === 'DRAC' ? 1 : 0, `${figure}/${diff}/${ix}: the TRO (Drac only) vibrates once`);
         assert.equal(run('counterRoll.count'), run('counterBefore'), 'closed window ignores more taps');
         assert.equal(run('counterRoll.hit'), 'perfect', 'repeated groups still produce one end judgement');
       }

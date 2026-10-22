@@ -57,7 +57,9 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     $('select-forward').disabled = fits || i < 0 || i >= available.length - 1;
   }
   const centre = (row, el, behavior = smooth()) => { // both rows share one bounded motion (native smooth scrolling grows with the distance)
-    const clip = row === strip ? parseFloat(strip.style.getPropertyValue?.('--strip-clip')) || 0 : 0, left = el.offsetLeft - clip - (row.clientWidth - clip - el.offsetWidth) / 2; // the strip's box is constant: its left `clip` px (under the info column) are clipped, not cut off
+    const clip = row === strip ? parseFloat(strip.style.getPropertyValue?.('--strip-clip')) || 0 : 0; // the strip's box is constant: its left `clip` px (under the info column) are clipped, not cut off
+    let left = el.offsetLeft - clip - (row.clientWidth - clip - el.offsetWidth) / 2;
+    if (clip && !later.includes(el) && el.offsetLeft + el.offsetWidth <= row.clientWidth) left = Math.min(left, 0); // a live card in view at rest stays: centring it slid Valls's banner under the column's clip
     if (row === strip) scrolling.to(left, behavior !== 'smooth', closing ? finishFold : null);
     else townScrolling.to(left, behavior !== 'smooth');
   };

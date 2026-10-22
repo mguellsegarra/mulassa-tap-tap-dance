@@ -45,9 +45,9 @@ export function dracPump(n) {
   dracFx.pump(n.count, n.need);
   return true;
 }
-// Called by the judge on the song clock, exactly when the drumroll closes, once per window.
+// Called by the judge on the song clock, exactly when the drumroll closes, once per window. true = the TRO fired.
 export function dracEndTraca(n) {
-  if (isDracOn() && !G.practice) dracFx.finish(n.count, n.need);
+  return isDracOn() && !G.practice && dracFx.finish(n.count, n.need);
 }
 // once a frame, after animCrowd. t: the song time drawn
 export function dracFrame(dt, t) { // (the red smoke of the last pass rises round IN.x/z, her spot)

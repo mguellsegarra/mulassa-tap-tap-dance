@@ -7,6 +7,8 @@ description: Analyse a festive figure's dance from reference video and music, an
 
 Use the project's AGENTS.md and authorization rules. This skill does not authorize delegation, publishing, Git history
 changes or replacement of a game's music. Read `references/workflow.md` for the evidence and reconstruction contract.
+For a new figure, use the Catalan, copyable [new-figure brief](../../../research/bestiari/pla-nova-figura.md).
+It consolidates Marc's review priorities; replace its task fields and keep figure-specific facts evidence-led.
 
 1. Locate the existing dossier in `research/bestiari/<figure>/` before repeating research. Preserve approved baselines
    and record what remains inferred. A dirty worktree is not preserved by copying HEAD.

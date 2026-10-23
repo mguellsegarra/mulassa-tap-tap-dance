@@ -52,6 +52,7 @@
   "services.share.challengeTip": "A friend’s challenge: beat {pct}% on {diff}",
   "services.share.clear": "{mula}💃 I made the Mulassa de Valls dance with {pct} hits on {diff}. Your turn? 🔥",
   "services.share.drac": "I made the Drac de Valls dance with {pct} hits on {diff}. #Valls",
+  "services.share.bou": "I made the Bou Tradicional de Valls dance with {pct} hits on {diff}. #Valls",
   "services.share.fail": "{mula} {pct} hits on {diff}… The Mulassa wants a rematch. Can you do better? 💃",
   "services.share.record": "{mula}🔥 New high score: {score} on {diff} ({pct} hits), dancing with the Mulassa de Valls! 🎉"
 }

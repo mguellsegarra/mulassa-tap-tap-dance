@@ -58,6 +58,7 @@ export const MULA = '🫏';
 export function shareText(run, challenge = null) { // the caption (the link goes apart: share()'s url, the intents' url=)
   const d = diffName(run.diff), p = `${run.pct}%`;
   if (run.figureId === 'drac-valls') return tr('services.share.drac', { pct: p, diff: d });
+  if (run.figureId === 'bou-tradicional-valls') return tr('services.share.bou', { pct: p, diff: d });
   const line = {
     challenge: tr('services.share.challenge', { mula: MULA, pct: p, diff: d }),
     record: tr('services.share.record', { mula: MULA, score: fmtNum(run.score), diff: d, pct: p }),

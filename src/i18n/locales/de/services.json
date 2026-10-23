@@ -52,6 +52,7 @@
   "services.share.challengeTip": "Challenge von einem Freund: übertriff {pct}% auf {diff}",
   "services.share.clear": "{mula}💃 Ich habe die Mulassa de Valls tanzen lassen: {pct} Treffer auf {diff}. Traust du dich? 🔥",
   "services.share.drac": "Ich habe den Drac de Valls tanzen lassen: {pct} Treffer auf {diff}. #Valls",
+  "services.share.bou": "Ich habe den Bou Tradicional de Valls tanzen lassen: {pct} Treffer auf {diff}. #Valls",
   "services.share.fail": "{mula} {pct} Treffer auf {diff}… Die Mulassa will Revanche. Wie würdest du abschneiden? 💃",
   "services.share.record": "{mula}🔥 Neuer Rekord: {score} Punkte auf {diff} ({pct} Treffer) beim Tanz der Mulassa de Valls! 🎉"
 }

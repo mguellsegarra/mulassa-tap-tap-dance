@@ -46,8 +46,7 @@ export async function checkSelectorInfoMotion() {
   if (!$('#select-name').textContent.includes('Mulassa')) failures.push('Mulassa identity');
   $('#select-next').click(); await settle(); $('#select-figures-back').click(); await settle();
   if (root.dataset.step !== 'figures' || info.hidden) failures.push('difficulty return');
-  if ($('#select-watch')) $('#select-watch').click();
-  else { $('#select-howto').click(); $('#howto-watch').click(); }
+  $('#select-watch').click(); // «Mira el ball», on the song row
   await settle();
   if (!G.watch || G.state !== 'play') failures.push('watch button did not start demo');
   await entry('demo-return', toTitle);

@@ -91,4 +91,10 @@ assert(caneError<.005,`final held cane stays on ground: ${caneError}`);
  assert.equal(mob.length,4,'all four mobility examples are placed');
  for(let i=0;i<mob.length;i++)for(let j=i+1;j<mob.length;j++)assert(mob[i].distanceTo(mob[j])>=3,'mobility examples at least 3 m apart');
 }
+{ // the look and the age are drawn apart: no child keeps a bearded look's beard
+ const sources=Array.from({length:400},(_,i)=>({row:0,slot:i,pos:new THREE.Vector2(i*.9,0),appearance:{skin:'#000'}}));
+ const specs=buildPublicSpecs(sources,CATALOGUE,7);
+ assert(specs.some(s=>s.beard),'some adult keeps a beard');
+ assert(!specs.some(s=>s.beard&&s.age==='infant'),'no bearded child');
+}
 console.log('representation live motion ok', {baselineJump,fixedJump,caneError});

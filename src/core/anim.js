@@ -11,7 +11,7 @@ import { clock } from '../game/state.js';
 export const smooth = k => k * k * (3 - 2 * k);
 export function pulse(t0, len) { // 0 -> 1 fast, then eases back to 0
   const k = (clock - t0) / len;
-  if (k < 0 || k > 1) return 0;
+  if (!(k >= 0 && k <= 1)) return 0; // also a t0 not set yet (NaN): a NaN scale would hide the text drawn with it
   return k < 0.2 ? smooth(k / 0.2) : 1 - smooth((k - 0.2) / 0.8);
 }
 export function hold(t0, len) { // 0 -> 1, stays, -> 0

@@ -3,13 +3,15 @@ import { tr } from '../i18n/messages.js';
 import figureMessages from '../i18n/locales/ca/figures.json' with { type: 'json' };
 import figureCatalog from './figure-catalog.json' with { type: 'json' };
 import { bestRecord, recordPointsKey, saveRecord } from './records.js';
-import { CURRENT_SCORE_VERSION } from './score-scale.js';
+import { CURRENT_SCORE_VERSION, BOU_SCORE_VERSION } from './score-scale.js';
 import { FIGURE_PORTRAITS } from './figure-portraits.js';
 export const TOWNS = figureCatalog.towns;
 const playableSongs = {
   // i18n-ok: song titles and composers are proper names
   'mulassa-valls': { song: 'Ball de la Mulassa', composer: 'Francesc Bofarull i Figuerola', year: 1987, version: CURRENT_SCORE_VERSION },
   'drac-valls': { song: 'Ball del Drac', composer: 'Francesc Bofarull i Figuerola', year: 1985, version: 'drac-v1' },
+  // the UAF's Bou Tradicional (2012), not the Turba's; no board yet: its version is not publishable (leaderboard-rules.js)
+  'bou-tradicional-valls': { song: 'Ball del Bou', composer: 'Francesc Bofarull i Figuerola', year: 2012, version: BOU_SCORE_VERSION, noBoard: true },
 };
 // Hidden entries keep their catalog data and portraits but cannot enter selector navigation.
 export const FIGURES = figureCatalog.figures.filter(f => f.selectorVisible !== false).map(f => ({
@@ -17,11 +19,15 @@ export const FIGURES = figureCatalog.figures.filter(f => f.selectorVisible !== f
 })).sort((a, b) => Number(b.status === 'playable') - Number(a.status === 'playable'));
 export const MULASSA = FIGURES.find(f => f.id === 'mulassa-valls');
 export const DRAC = FIGURES.find(f => f.id === 'drac-valls');
+export const BOU = FIGURES.find(f => f.id === 'bou-tradicional-valls');
 // The strip's last card invites a colla to propose its figure: no real town, no song, outside FIGURES (records, board).
 export const INVITE_TOWN = { id: 'el-teu-poble', name: tr('figures.invite.town'), color: '#c8202f' };
 export const INVITE = { id: 'la-teva-colla', name: tr('figures.invite.name'), fullName: tr('figures.invite.name'), town: INVITE_TOWN.id, entity: tr('figures.invite.entity'), status: 'aviat', invite: true };
 export const townOf = f => f.town === INVITE_TOWN.id ? INVITE_TOWN : TOWNS.find(t => t.id === f.town);
 export const playable = f => f.status === 'playable';
+export const hasBoard = f => playable(f) && !f.noBoard; // an online board (Classificació, the ranking line, publishing)
+// Shown before the fold: the playable figures (the Bou, up front since 2026-10-23, is one now)
+export const upFront = f => playable(f);
 
 // The mulassa as 12 × 10 pixel art, side-on, facing right: ears, head, long neck, the red caparison with gold dots and
 // fringe, the portadors' legs (the ÀNIM portrait, src/hud/top.js, and her card on the select screen)
@@ -77,4 +83,4 @@ export const STAND = {
 export const portraitStand = figure => STAND[figure.id] ?? 0.8;
 // How heavily each figure lands in free mode (the Mulassa = 1): the one place that sets its «BUUUM» (audio.js thud),
 // lower, longer and louder with it. The Drac carries the fire kit and its heavier frame.
-export const FIGURE_WEIGHT = { 'mulassa-valls': 1, 'drac-valls': 1.5 };
+export const FIGURE_WEIGHT = { 'mulassa-valls': 1, 'drac-valls': 1.5, 'bou-tradicional-valls': 1 };

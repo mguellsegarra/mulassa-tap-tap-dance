@@ -8,7 +8,7 @@ let active = true, cleared = 0, suspended = 0, woke = 0;
 const activityEpoch = Number(read('../src/game/state.js').match(/export const G = \{ activityEpoch: (\d+),/)[1]);
 const G = { activityEpoch, state: 'select', paused: false };
 const ctx = vm.createContext({ G, pageActive: () => active,
-  chip: { clearMenuSfx() { cleared++; }, ctx: { suspend() { suspended++; } }, wake() { woke++; } },
+  chip: { clearMenuSfx() { cleared++; }, ctx: { state: 'running', currentTime: 0, suspend() { suspended++; } }, wake() { woke++; } },
   pauseGame() { if (G.state === 'play') G.paused = true; },
   document: { addEventListener(k, f) { handlers[k] = f; } },
   addEventListener(k, f) { handlers[k] = f; }, setTimeout(f, ms) { timers.push({ f, ms }); },
@@ -30,4 +30,14 @@ for (const state of ['select', 'play']) for (const gap of [300, 120000]) for (co
   assert.equal(fired, 1, 'a fresh, uninterrupted effect still fires');
 }
 assert(cleared > 0 && suspended > 0 && woke > 0);
+
+// A run's audio clock that stands still (suspended, or `running` with a frozen currentTime) pauses the run after 1 s.
+const audio = ctx.chip.ctx;
+const watch = (ms, step, frames = 75) => { for (let i = 0; i <= frames; i++) { audio.currentTime += step; ctx.watchAudio(ms + i * 16); } };
+Object.assign(G, { state: 'play', paused: false }); ctx.chip.t0 = 0; active = true;
+watch(0, 0.016); assert.equal(G.paused, false, 'a moving clock plays on');
+watch(2000, 0); assert.equal(G.paused, true, 'running but frozen (stuck at PREPARATS): paused');
+G.paused = false; audio.state = 'suspended'; watch(4000, 0); assert.equal(G.paused, true, 'suspended mid-run: paused');
+G.paused = false; audio.state = 'running'; watch(6000, 0, 50); assert.equal(G.paused, false, 'under a second: no pause');
+G.paused = false; ctx.chip.t0 = null; watch(8000, 0); assert.equal(G.paused, false, 'still loading the song (no clock yet): no pause');
 console.log('deferred effects expire on blur, visibility and page exit; fresh effects and explicit pause preserved');

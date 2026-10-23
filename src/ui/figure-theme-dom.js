@@ -17,8 +17,8 @@ const figureDomAria = [['#pad .gua', 'input.leftAria'], ['#pad .pa', 'input.righ
 // the default (Mulassa) theme never fires a switch, so it is applied once here: index.html's Catalan fallback text would otherwise stay in every language
 const apply = t => {
   const b = document.body;
-  b.classList.toggle('fig-drac', t.drac);
-  for (const [k, v] of Object.entries(VARS)) t.drac ? b.style.setProperty(v, t.colors[k]) : b.style.removeProperty(v);
+  b.classList.toggle('fig-drac', t.drac); b.classList.toggle('fig-bou', t.id === 'bou');
+  for (const [k, v] of Object.entries(VARS)) t.id !== 'mulassa' ? b.style.setProperty(v, t.colors[k]) : b.style.removeProperty(v);
   for (const [selector, key] of figureDomText) document.querySelectorAll(selector).forEach(el => { el.textContent = trf(key); if (el.dataset.w) el.dataset.w = el.textContent; });
   document.querySelectorAll('#howto-portrait').forEach(face => { // «Com es juga»'s ÀNIM row: the HUD's portrait of who dances
     face.dataset.base ??= face.innerHTML; face.innerHTML = t.drac ? portraitSvg(DRAC) : face.dataset.base;

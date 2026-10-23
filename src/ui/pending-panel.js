@@ -5,6 +5,7 @@ import { tr } from '../i18n/messages.js';
 import { entityHtml } from './figure-entities.js';
 import { GIFTS } from './pending-gifts.js';
 import { escapeHtml } from './select-strip.js';
+import { DEV_HOST } from '../core/flags.js';
 
 const FROZEN = ['top', 'maxHeight', 'minHeight', 'height', 'transform'];
 
@@ -15,6 +16,13 @@ export function setupPendingPanel({ $, win, pending }) {
     $('aviat-entity').innerHTML = entityHtml(f);
     $('aviat-icon').innerHTML = ''; $('aviat-icon').hidden = true; // the strip below already shows its portrait
     $('aviat-text').innerHTML = (f.invite ? inviteText() : aviatText(f)).split('\n\n').map(p => `<p>${escapeHtml(p)}</p>`).join('');
+    // i18n-ok: local development dance review; never shown on the public selector.
+    if (f.id === 'bou-tradicional-valls' && DEV_HOST.test(win.location?.hostname ?? '')) {
+      const link = pending.ownerDocument.createElement('a');
+      link.className = 'btn btn-link'; link.href = '/tools/dev/bou-dance.html' + (win.location.search.includes('mute') ? '?mute' : '');
+      link.textContent = 'Veure el ball amb la música'; // i18n-ok: local development review only
+      $('aviat-text').append(link);
+    }
   }
   function teaser() {
     pending.toggleAttribute('data-fold', true); // same GitHub/mail row as a pending figure: the fan yields the room (select.css)

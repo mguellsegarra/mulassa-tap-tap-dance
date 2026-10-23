@@ -64,6 +64,7 @@ export function setupLoader(doc = document, { delay = 300, fade = 250, giveUp = 
     jokes(lines = LOADING_JOKES, every = 1600) {
       if (!cover || !lines.length || jokesActive) return;
       jokesActive = true;
+      const turn = () => Math.min(3000, Math.max(every, 45 * (label?.textContent?.length || 0))); // long lines stay longer, to be read whole
       let shown = 1; // the inline first-paint line gets a full turn too, even after a slow module load
       const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
       let seen = [];
@@ -87,9 +88,9 @@ export function setupLoader(doc = document, { delay = 300, fade = 250, giveUp = 
         if (++i >= order.length) { const last = order[order.length - 1]; order = shuffle([...lines]); i = 0; if (order[0] === last) order.push(order.shift()); }
         show();
         shown++;
-        jokeTimer = timers.setTimeout(tick, every);
+        jokeTimer = timers.setTimeout(tick, turn());
       };
-      jokeTimer = timers.setTimeout(tick, every);
+      jokeTimer = timers.setTimeout(tick, turn());
     },
     ready() { // joke ticks release only at a complete line boundary, once the minimum is met
       if (!cover) return;

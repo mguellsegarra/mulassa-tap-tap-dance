@@ -19,6 +19,7 @@ export function verifyCarretillesCounter(run) {
             assert.equal(words.filter(w => w === String(count)).length, 1, 'one cumulative tap total');
             assert(words.includes('TOCS'), `DRAC/${diff}/${ix}/${count}: taps labelled, got ${words}`);
             assert(words.join(' ').includes('PICA RÀPID!'), 'keep tapping throughout the roll');
+            if (count) assert(run('SPRAY.some(q => clock - q.t0 < q.life)'), 'a tap throws the hanging carretilla’s sparks');
             assert(!words.some(w => /^x\d+$/.test(w) || ['CARRETILLES', 'TRO', 'A PUNT', 'PEL TRO FINAL'].includes(w)), 'no group, countdown or target-ready indicator');
           } else {
             const reached = count >= need;

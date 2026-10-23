@@ -2,7 +2,7 @@
 // one chevron fold and one «Pròximament» pill; either unfolds it in place (its cards, its towns' pills),
 // the fold and an «Amaga» pill fold it back. A pending figure shows its own panel instead of the records.
 // Arrows rove cards; Enter confirms a figure. On the next step arrows choose difficulty; Escape returns.
-import { FIGURES, TOWNS, townOf, playable, rememberedLevel, rememberLevel, readFigureRecord, aviatDraft, INVITE, INVITE_TOWN, INVITE_DRAFT } from '../game/figures.js';
+import { FIGURES, TOWNS, townOf, playable, hasBoard, upFront, rememberedLevel, rememberLevel, readFigureRecord, aviatDraft, INVITE, INVITE_TOWN, INVITE_DRAFT } from '../game/figures.js';
 import { DIFFS } from '../game/chart.js';
 import { num } from './sheet-kit.js';
 import { showLevelStats } from './level-stats.js';
@@ -32,7 +32,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
   const podium = setupPodium({ doc, win, $, onBoard: () => { if (!busy()) onBoard(figure); }, onCard: cardOf, load: ranked && levelPodium, refit: () => levelStats() }); // step 2's podium (select-podium.js)
   let standingNow = null; // the board's last answer, for the podium
   const root = $('select'), towns = $('select-towns'), strip = $('select-strip'), levels = $('select-level'), pending = $('select-pending');
-  const live = FIGURES.filter(playable), soon = FIGURES.filter(f => !playable(f));
+  const live = FIGURES.filter(upFront), soon = FIGURES.filter(f => !upFront(f));
   const liveTowns = TOWNS.filter(t => live.some(f => f.town === t.id)), restTowns = [...TOWNS.filter(t => !liveTowns.includes(t) && soon.some(f => f.town === t.id)), INVITE_TOWN]; // the invitation folds with what is to come, last
   // the toggle sits right after the live towns, like the strip's fold: it stays under the finger and the rest opens after it
   towns.setAttribute('role', 'group'); // Native Tab order, with optional arrow shortcuts between visible buttons.
@@ -64,8 +64,8 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     else townScrolling.to(left, behavior !== 'smooth');
   };
   const { fill: pendingFill, teaser: teaserFill, freeze, thaw } = setupPendingPanel({ $, win, pending }), flip = setupFlip({ win, root, els: () => [towns, ...towns.children, $('select-prev'), $('select-forward'), $('select-nav'), ...strip.children], reduced: () => reduced() }); // flip: the pending layout slides instead of jumping; never the strip or its carousel: their box clips the cards, and a sliding clip swept the row (only their contents move)
-  function panel() { // the centre shows what the cursor is on: the selected figure, or the fold's own card
-    flip.snap(shown); const ok = playable(figure), leave = ok && !(Boolean(fold) && cards[cur] === fold);
+  function panel() { // the centre shows what the cursor is on: the selected figure, or the fold's own card (opening: it was hidden, nothing slides)
+    flip.snap(shown && !opening); const ok = playable(figure), leave = ok && !(Boolean(fold) && cards[cur] === fold);
     if (leave && !pending.hidden) freeze(); else if (!leave) thaw(); // read before the attributes below move the dock
     teasing = Boolean(fold) && cards[cur] === fold;
     root.toggleAttribute('data-pending', !ok);
@@ -122,16 +122,16 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
   const seenRank = new Map();
   const rankKey = () => `${figure.id}:${ownerKey(store)}`; // a sign-out changes it: never the previous profile's place
   function updateStanding(refit) {
-    const mine = ++req, key = rankKey();
+    const mine = ++req, key = rankKey(); if (!hasBoard(figure)) return rank(null, false, refit); // no online board (the Bou): no line, no request
     rank(seenRank.get(key) ?? null, false, refit); // until the board answers (?demo once showed a made-up «12 de 135» here)
     const fail = () => { if (mine === req) { seenRank.delete(key); rank(null, true); } }; // no answer: the card says so in the room it kept
     standing(figure.id).then(s => (s ? mine === req && (seenRank.set(key, s), rank(s)) : fail()), fail); // each figure has its own board (Drac included)
   }
   function rank(s, failed = false, refit = step === 'level' ? levelStats : undefined) { // the ranking line («Posició 12 de 135 · Tardor 2026», select-standings.js); a button, it opens Classificacions
-    const el = $('select-rank-tile'), text = rankText(s);
+    const el = $('select-rank-tile'), text = rankText(s), on = ranked && hasBoard(figure);
     standingNow = s;
-    el.hidden = !ranked; tiles(); // the placeholder takes this figure's and owner's last shape; step 2 fits the answer's goals beside the level row
-    facts.board(s, ranked, failed, rankKey(), refit);
+    el.hidden = !on; tiles(); // the placeholder takes this figure's and owner's last shape; step 2 fits the answer's goals beside the level row
+    facts.board(s, on, failed, rankKey(), refit);
     el.toggleAttribute('data-loading', !s && !failed);
     $('select-pos').textContent = text;
     el.setAttribute('aria-label', rankLabel(text));
@@ -148,14 +148,14 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     }
   }
   // desktops, step 2: the info column may run down to the level card (12 px above it), not the dock's top
-  function levelStats() {
+  function levelStats() { if (opening) return; // visible() fits once, after measure() has laid the column out (before it every try failed: ~60 ms of layouts)
     const card = step === 'level' && win.innerWidth >= 900 && win.innerHeight >= 600 && $('select-act').getBoundingClientRect();
     if (card?.height) root.style.setProperty('--info-dock', `${(root.getBoundingClientRect().bottom - card.top) / (parseFloat(win.getComputedStyle?.(root).zoom) || 1) + 6}px`);
     else if (step === 'level') root.style.removeProperty?.('--info-dock'); // step 1's: measure()
     const two = step === 'level' && playable(figure);
     facts.fit(true); showLevelStats($, { on: two, level, record: DEMO ? { score: DEMO_BEST[level], quality: DEMO_PCT[level] } : readFigureRecord(store, figure, level), goals: facts.goals });
     if (!two) facts.fit(); // step 1: the medals and the rows
-    podium.fit({ on: two && ranked, figure: figure.id, level, owner: ownerKey(store), s: standingNow });
+    podium.fit({ on: two && ranked && hasBoard(figure), figure: figure.id, level, owner: ownerKey(store), s: standingNow });
   }
   function setLevel(l, by = 'tap') { // 'open': the figure's last level (NORMAL at first) or a challenge's, marked without a tap's shake
     if (!playable(figure)) return;
@@ -371,10 +371,10 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     const next = figureOf(card);
     if (next !== figure) {
       if (how !== 'filter' && how !== 'fold') sfx('menu');
-      figure = next; info(); setLevel(rememberedLevel(store, figure.id), 'open');
+      figure = next; opening = !settling; info(); setLevel(rememberedLevel(store, figure.id), 'open'); opening = false; // one fit after one measure, as visible()
       if (how !== 'fold') mark(figure.town, how === 'arrow' ? 'instant' : smooth());
       if (playable(figure)) { lastPlayable = figure; api.onSelect(figure); } // pending figures never replace the song/model state
-      if (!settling) measure();
+      if (!settling) { measure(); levelStats(); }
     }
     if (how === 'enter') nextStep();
   }
@@ -573,12 +573,12 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     if (!on) { scrolling.stop(); if (closing) finishFold(); townScrolling.stop(); for (const el of [towns, $('select-info')]) arrivals.get(el)?.cancel(); if (root.contains(doc.activeElement)) doc.activeElement.blur(); return; }
     // Every write first, then one read of the layout, then the scrolls: each read after a write recomputed the whole
     // selector's styles, and this runs in the frame that shows it (the splash's ENTRA: ~0.3 s on a slow phone).
-    opening = true; info(); opening = false;
-    setLevel(firstLevel ?? rememberedLevel(store, figure.id), 'open'); firstLevel = null;
+    opening = true; info();
+    setLevel(firstLevel ?? rememberedLevel(store, figure.id), 'open'); firstLevel = null; opening = false;
     const i = cards.findIndex(c => c.dataset.id === figure.id);
     roveCard(i);
     const pill = press(figure.town);
-    measure();
+    measure(); levelStats();
     centre(strip, cards[i], 'auto');
     if (pill) centre(towns, pill, 'auto');
     if (playable(figure)) api.onSelect(figure);

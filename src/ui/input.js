@@ -8,7 +8,7 @@ import { G, chip, KEYS, down, clock, songTime } from '../game/state.js';
 import { pageActive, offsetMs, setOffsetMs } from '../core/env.js';
 import { privacyMenu, pauseMenu, howtoMenu, settingsMenu } from './handles.js';
 import { togglePause } from './pause-actions.js';
-import { sheetUp, viewMode, setView, steers, menuState, photoScreen, enterFree } from './controls.js';
+import { sheetUp, viewMode, setView, steers, menuState, photoScreen } from './controls.js';
 import { unlock, openSelect, toTitle } from '../game/flow.js';
 import { press, settleHold, eventAt, releaseAll } from '../game/judge.js';
 import { padButtons, haptic, padFeedback, syncPad } from './pad.js';
@@ -33,7 +33,7 @@ addEventListener('keydown', e => {
   const dir = KEYS[e.code];
   if (dir || e.code === 'Space') down.keys.add(e.code); // held for MANTÉN notes
   if (dir || e.code === 'Space') e.preventDefault();
-  if (G.state === 'splash') return unlock(); // any key goes in (and starts the audio)
+  if (G.state === 'splash') return navigator.userActivation?.isActive === false ? undefined : unlock(); // any key that can start the audio goes in (Shift, Cmd+R… can't)
   if (e.code === 'BracketLeft' || e.code === 'BracketRight') {
     setOffsetMs(offsetMs + (e.code === 'BracketLeft' ? -10 : 10));
     store.set('offset', offsetMs);
@@ -74,18 +74,6 @@ document.addEventListener('touchend', e => {
   e.target.closest?.('button, a, label, summary, [role="button"]')?.click();
 }, { passive: false });
 addEventListener('blur', clearPhotoKeys);
-// A double tap or double click on the bare plaça enters free play: the world itself, or the selector's empty layers around
-// the dock (its shades are pointer-less; these boxes are only their frame). A drag orbits and is no tap; a card or button is UI.
-// Both taps must start on the selector: the splash's unlocking tap is no first half.
-const bareWorld = t => t === hud || Boolean(t?.matches?.('#select, .sel-bottom, .sel-carousel, .sel-strip, .sel-footer'));
-let freeTapDown = null, freeTapLast = null;
-addEventListener('pointerdown', e => { freeTapDown = e.isPrimary && G.state === 'select' && bareWorld(e.target) ? { t: e.timeStamp, x: e.clientX, y: e.clientY } : null; }, true);
-addEventListener('pointerup', e => {
-  const d = freeTapDown, near = (a, r) => Math.hypot(e.clientX - a.x, e.clientY - a.y) < r; freeTapDown = null;
-  if (!d || e.timeStamp - d.t > 300 || !near(d, 10)) { freeTapLast = null; return; }
-  const was = freeTapLast; freeTapLast = { t: e.timeStamp, x: e.clientX, y: e.clientY };
-  if (was && e.timeStamp - was.t < 400 && near(was, 40) && G.state === 'select' && !viewMode && !sheetUp()) { freeTapLast = null; enterFree(); }
-}, true);
 document.addEventListener('visibilitychange', clearPhotoKeys);
 addEventListener('pagehide', clearPhotoKeys);
 addEventListener('focusin', e => { if (e.target !== hud && e.target?.tagName !== 'BODY' && !e.target?.closest?.('#photo-touch')) clearPhotoKeys(); }); // (a touch action button keeps the stick)
@@ -105,6 +93,8 @@ hud.addEventListener('pointermove', e => {
   orbitMove(orbit, e.pointerId, e.clientX, e.clientY, pnow());
   if(PHOTO.on && orbit.pinch && oldZoom>0)photoZoom(orbit.x[1]/oldZoom); }); // dragging the view
 let photoMousePointer = null;
+// The selector's camera is the showreel's (Marc, 2026-10-23): no drag turns it, no wheel or pinch zooms it; free play keeps both
+const homeLocked = () => G.state === 'select' && !viewMode;
 const photoMouseAllowed = () => PHOTO.on && viewMode && steers() && !G.paused && pageActive();
 // Mouse events report every button transition, including RMB pressed/released while LMB stays down.
 hud.addEventListener('mousedown', e => {
@@ -124,7 +114,7 @@ hud.addEventListener('pointerdown', e => {
   if (menuState()) {
     const b = G.state !== 'select' && buttonAt(e);
     if (b && !orbit.ptrs.size) { chip?.sfx('menu'); openSelect(); }
-    else if (steers() && (e.pointerType !== 'mouse' || e.button === 0)) {
+    else if (steers() && !homeLocked() && (e.pointerType !== 'mouse' || e.button === 0)) {
       orbit.turn = turnFor(W * K);
       orbitDown(orbit, e.pointerId, e.clientX, e.clientY, pnow());
       try { hud.setPointerCapture?.(e.pointerId); } catch { /* already gone */ }
@@ -142,7 +132,8 @@ addEventListener('pointercancel', e => { if (e.pointerType === 'mouse') { PHOTO.
 for (const ev of ['pointerup', 'pointercancel']) addEventListener(ev, e => { orbitUp(orbit, e.pointerId, pnow()); });
 hud.addEventListener('wheel', e => { // the wheel, and a trackpad pinch (ctrlKey: never the page zoom over the canvas)
   if (!steers()) return;
-  e.preventDefault();
+  e.preventDefault(); // (the page itself never zooms over the canvas)
+  if (homeLocked()) return;
   const factor=wheelFactor(e.deltaMode ? e.deltaY * 16 : e.deltaY,e.ctrlKey);
   if(PHOTO.on) photoZoom(factor); else orbitZoom(orbit,factor,pnow());
 }, { passive: false });
@@ -150,7 +141,7 @@ let gestureScale = 1; // Safari's trackpad pinch (gesture events); on iOS the fi
 hud.addEventListener('gesturestart', e => { e.preventDefault(); gestureScale = e.scale || 1; });
 hud.addEventListener('gesturechange', e => {
   e.preventDefault();
-  if (steers() && !orbit.ptrs.size && e.scale > 0) { if(PHOTO.on)photoZoom(gestureScale/e.scale);else orbitZoom(orbit,gestureScale/e.scale,pnow()); }
+  if (steers() && !homeLocked() && !orbit.ptrs.size && e.scale > 0) { if(PHOTO.on)photoZoom(gestureScale/e.scale);else orbitZoom(orbit,gestureScale/e.scale,pnow()); }
   gestureScale = e.scale || 1;
 });
 

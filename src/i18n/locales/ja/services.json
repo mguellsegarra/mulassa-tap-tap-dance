@@ -52,6 +52,7 @@
   "services.share.challengeTip": "友達からの挑戦：{diff}で{pct}%を超えよう",
   "services.share.clear": "{mula}💃 Mulassa de Vallsを踊らせて、{diff}でヒット率{pct}でした。挑戦してみる？ 🔥",
   "services.share.drac": "Drac de Vallsを踊らせて、{diff}でヒット率{pct}でした。 #Valls",
+  "services.share.bou": "Bou Tradicional de Vallsを踊らせて、{diff}でヒット率{pct}でした。 #Valls",
   "services.share.fail": "{mula} {diff}でヒット率{pct}… Mulassaがリベンジを待ってます。あなたならどう？ 💃",
   "services.share.record": "{mula}🔥 スコア新記録！Mulassa de Vallsを踊らせて、{diff}で{score}点（ヒット率{pct}）！ 🎉"
 }

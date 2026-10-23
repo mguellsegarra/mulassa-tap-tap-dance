@@ -1,6 +1,7 @@
 // Photo-mode input and figure-relative locomotion. No selection, audio or persistence writes.
 export const PHOTO = { on: false, ready: false, id: 'mulassa-valls', keys: new Set(), pair: false, turn: 0, pitch: 0.34, action: false, mouse: 0, stickX: 0, stickY: 0, lookDX: 0, lookDY: 0, cameraYaw: null, zoom:11,
-  speed: 0, air: false, lookAge: 9, culada: 0, spinDir: 1, sparks: false, mula: { x: 0, z: 0, yaw: 0, vx: 0, vz: 0, fire: 0, sprint: 0, spinLeft: 0, spinV: 0 }, drac: { x: 0, z: 0, yaw: 0, vx: 0, vz: 0, fire: 0, sprint: 0, spinLeft: 0, spinV: 0 } };
+  speed: 0, air: false, lookAge: 9, culada: 0, spinDir: 1, sparks: false, mula: { x: 0, z: 0, yaw: 0, vx: 0, vz: 0, fire: 0, sprint: 0, spinLeft: 0, spinV: 0 }, drac: { x: 0, z: 0, yaw: 0, vx: 0, vz: 0, fire: 0, sprint: 0, spinLeft: 0, spinV: 0 },
+  bou: { x: 0, z: 0, yaw: 0, vx: 0, vz: 0, fire: 0, sprint: 0, spinLeft: 0, spinV: 0 } }; // the Bou drives alone (no pair: ui/photo-avatars.js)
 // Both figures keep the existing 3.2 m/s walk and 9 m/s gallop cap. Shift builds the gallop in any direction;
 // the same velocity drives planted feet, crowd yielding and the camera. Music/showcase speeds are independent.
 export const PHOTO_RUN = { trot: 3.2, run: 9, build: 0.9, accel: 0.12, brake: 0.08, stick: 0.92 }; // stick: a touch stick pushed this far builds the gallop (no Shift on a phone)
@@ -11,12 +12,12 @@ export const PHOTO_SPIN = { rate: 9, accel: 60, reach: 6, kick: 7, /* reach: the
 // Third person like WoW: aim just over her head from behind and a little above, so she sits low and the plaça shows ahead.
 // Turns and recentering are capped (rad/s: 360°/s standing, 540°/s moving, like Unreal's character turn rate) so a big
 // difference swings round instead of snapping; the camera recenters behind her only after `followWait` s without mouse look.
-export const PHOTO_CAM = { follow:0.8, followWait:1.2, followRate:1.57, alignTau:0.12, alignRate:6.28, alignRateMoving:9.4, pitch:0.35, zoom:10, minZoom:6, maxZoom:20, minPitch:0.08, maxPitch:1.0, touchSmooth:0.045, aimY:{ 'mulassa-valls':3.3, 'drac-valls':3.2 } };
-export const photoBody = () => PHOTO.id === 'drac-valls' ? PHOTO.drac : PHOTO.mula;
+export const PHOTO_CAM = { follow:0.8, followWait:1.2, followRate:1.57, alignTau:0.12, alignRate:6.28, alignRateMoving:9.4, pitch:0.35, zoom:10, minZoom:6, maxZoom:20, minPitch:0.08, maxPitch:1.0, touchSmooth:0.045, aimY:{ 'mulassa-valls':3.3, 'drac-valls':3.2, 'bou-tradicional-valls':2.2 } };
+export const photoBody = () => PHOTO.id === 'drac-valls' ? PHOTO.drac : PHOTO.id === 'bou-tradicional-valls' ? PHOTO.bou : PHOTO.mula;
 export function clearPhotoKeys() {
   PHOTO.inputEpoch = (PHOTO.inputEpoch || 0) + 1;
   PHOTO.keys.clear(); PHOTO.turn = 0; PHOTO.action = false; PHOTO.mouse = 0; PHOTO.stickX = PHOTO.stickY = PHOTO.lookDX = PHOTO.lookDY = 0; PHOTO.intentX = PHOTO.intentZ = 0;
-  for (const p of [PHOTO.mula, PHOTO.drac]) { p.vx = p.vz = 0; p.fire = 0; p.sprint = 0; p.spinLeft = 0; p.spinV = 0; }
+  for (const p of [PHOTO.mula, PHOTO.drac, PHOTO.bou]) { p.vx = p.vz = 0; p.fire = 0; p.sprint = 0; p.spinLeft = 0; p.spinV = 0; }
   PHOTO.speed = 0; PHOTO.air = false; PHOTO.culada = 0; PHOTO.sparks = false;
 }
 export function setPhotoControl(on, id, pair) {
@@ -48,7 +49,7 @@ export function photoPress(code, repeat = false) {
   } else if (code === 'KeyE' && PHOTO.id === 'drac-valls') {
     if (!repeat && !PHOTO.keys.has('KeyE')) { PHOTO.sparks = true; PHOTO.keys.add('KeyE'); } // one onset; the held key sustains the effect (drac-show.js)
   } else if (code === 'Tab') {
-    if (!repeat) {
+    if (!repeat && PHOTO.id !== 'bou-tradicional-valls') { // the Bou is on its own: nobody to swap with
       PHOTO.epoch = (PHOTO.epoch || 0) + 1;
       clearPhotoKeys();
       const prev = photoBody();

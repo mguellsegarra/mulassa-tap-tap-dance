@@ -8,16 +8,18 @@ import * as THREE from 'three';
 import { poseMulaBody } from './mula-pose-rig.js';
 import { newMulaPose } from '../game/mula-dance.js';
 import { MULA_CHEERS, cheerAt } from '../game/mula-figures.js';
-import { CAM_AZ, FRONT, mula, drac, mulaCarriers } from './stage.js';
+import { CAM_AZ, FRONT, mula, drac, bou, mulaCarriers } from './stage.js';
 import { selectedFigure, songTimeAtBeat } from '../game/figure-song.js';
 import { danceMula, stepMulaFeet, resetMulaFeet, mulaCollaTick } from './mula-stage.js';
 import { newDracPose } from '../game/dance-drac.js';
 import { poseDrac } from './drac-motion.js';
 import { dressCarrier } from './drac-rig.js';
 import { danceDrac, dracColla } from './drac-dance.js';
+import { danceBou, driveBou, bouCollaTick } from './bou-stage.js';
 import { DRAC_SCALE } from './models/drac.js';
 import { newWalker, resetWalker, demoStep, turn, manualDracStep, resumeWalker } from './drac-demo.js';
 import { G, clock, isDown, chip } from '../game/state.js';
+import { REEL } from '../game/showreel.js';
 import { FIGURE_WEIGHT } from '../game/figures.js';
 import { smooth, pulse, easeIn, hold } from '../core/anim.js';
 
@@ -202,18 +204,21 @@ export function animMula(dt, beat, live = 1) {
     S.yaw.x = S.yaw.t = M.yaw; S.yaw.v = 0;
     endPhoto(); photoLastId = null;
   }
-  const isDrac = !pair && (PHOTO.on && !PHOTO.pair ? PHOTO.id : selectedFigure.id) === 'drac-valls';
-  mula.root.visible = !isDrac; drac.root.visible = isDrac;
-  dracColla(isDrac, beat, dt);
+  const solo = PHOTO.on && !PHOTO.pair ? PHOTO.id : selectedFigure.id; // (free play with the Bou drives it alone: no pair)
+  const isBou = !pair && solo === 'bou-tradicional-valls', isDrac = !pair && solo === 'drac-valls';
+  const reel = REEL.on && G.state === 'select' && !PHOTO.on && !pair, danceNow = reel ? REEL.beat : beat; // the selector's showreel: the song dance on the menu loop's beat (game/showreel.js)
+  mula.root.visible = !isDrac && !isBou; drac.root.visible = isDrac; if (bou) bou.frame.visible = isBou;
+  dracColla(isDrac, beat, dt); bouCollaTick(isBou, beat, dt);
   // the plaça answers her culades, charges and final hit (cheerT: the crowd's cue, crowd.js) and every big hit (biteT)
-  const cheering = !isDrac && G.state === 'play' && !G.practice && !G.collapseT;
-  if (cheering && beat - M.danceBeat < 1) for (const c of MULA_CHEERS) if (M.danceBeat < c && c <= beat) M.cheerT = clock;
-  mulaCollaTick(!isDrac && !pair, beat, dt, M.danceBeat, Math.max(cheering ? cheerAt(beat) : 0, pulse(M.biteT, 0.8))); // (the splash has both figures: no colla)
-  if (isDrac) { PAIR.k = 0; animPlayableDrac(dt, beat, live); return; }
+  const cheering = !isDrac && !isBou && (G.state === 'play' && !G.practice && !G.collapseT || reel);
+  if (cheering && danceNow - M.danceBeat < 1) for (const c of MULA_CHEERS) if (M.danceBeat < c && c <= danceNow) M.cheerT = clock;
+  mulaCollaTick(!isDrac && !isBou && !pair, beat, dt, M.danceBeat, Math.max(cheering ? cheerAt(danceNow) : 0, pulse(M.biteT, 0.8))); // (the splash has both figures: no colla)
+  if (isDrac) { PAIR.k = 0; animPlayableDrac(dt, beat, live, reel); return; }
+  if (isBou) { PAIR.k = 0; animPlayableBou(dt, beat, reel); return; }
   animPair(dt, beat, pair);
   const breath = Math.sin(clock * 2.2) * (1 - live); // standing still, only breathing
-  const col = G.collapseT ? smooth(Math.min(1, (clock - G.collapseT) / 0.6)) : 0;
-  const dancing = G.state === 'play';
+  const col = G.collapseT && !reel ? smooth(Math.min(1, (clock - G.collapseT) / 0.6)) : 0; // (a run's collapse is still in G on the selector)
+  const dancing = G.state === 'play' || reel;
   if (M.dancing && !dancing) { // back to the free demo from wherever she faces and stands
     S.yaw.x = S.yaw.t = M.yaw; S.yaw.v = 0;
     M.pivot.set(M.pos.x + Math.sin(M.yaw) * PIVOT, M.pos.y + Math.cos(M.yaw) * PIVOT);
@@ -223,12 +228,12 @@ export function animMula(dt, beat, live = 1) {
   const miss = pulse(M.missT, 0.7);
   let danceYaw = 0;
   if (dancing) { // the song's choreography (the practice holds its opening stance); a collapse freezes it where she fell
-    if (!G.collapseT) M.danceBeat = beat;
+    if (reel || !G.collapseT) M.danceBeat = danceNow;
     M.danceT = songTimeAtBeat(M.danceBeat);
     danceYaw = danceMula(POSE, M.danceT, M.danceBeat, !!G.practice, M.pos);
     // Missing note after note calms her body (her path, heading and turns stay: the shoes are planned on them): she
     // eases down slowly, and springs back quickly on the first hit.
-    const target = 1 - 0.92 * Math.min(1, G.streak / 2);
+    const target = reel ? 1 : 1 - 0.92 * Math.min(1, G.streak / 2);
     M.vigor += (target - M.vigor) * easeIn(dt, target < M.vigor ? 0.8 : 0.25);
     for (const k of ['roll', 'pitch', 'lift', 'headRoll', 'headYaw', 'drive']) POSE[k] *= M.vigor;
   } else if (!manualMula && !col && live) { // the demo walks: solemn = slowly round the plaça, playful = trotting about
@@ -380,8 +385,8 @@ function animPair(dt, beat, pair) {
   poseDrac(drac, DRAC_POSE, 0, w.feetAt); dressCarrier(drac);
 }
 
-function animPlayableDrac(dt, beat, live) {
-  if (G.state === 'select' || G.state === 'title') { // picked on the selector: it wanders and shows off, from where it stands
+function animPlayableDrac(dt, beat, live, reel) {
+  if (!reel && (G.state === 'select' || G.state === 'title')) { // picked on the selector: it wanders and shows off, from where it stands
     if (!soloOn) { resetWalker(SOLO, M.pos.x, M.pos.y, M.yaw); SOLO.hx = SOLO.hz = 0; soloOn = true; }
     PHOTO.drac.roar = PHOTO.on && PHOTO.id === 'drac-valls' && PHOTO.keys.has('KeyQ');
     if (PHOTO.on) manualDracStep(SOLO, DRAC_POSE, dt, beat, PHOTO.drac, DRAC_SCALE, CALM.matches);
@@ -394,21 +399,37 @@ function animPlayableDrac(dt, beat, live) {
     return;
   }
   soloOn = false;
-  const dancing = G.state === 'play';
+  const dancing = G.state === 'play' || reel;
   // Reuse the bounded tap/hold/stumble springs; the dance itself is drac-dance.js's.
   for (const k in S) S[k].t = 0;
   holdGesture();
   stepSprings(Math.min(dt, 0.04));
   for (const k in CAP) if (S[k]) capSpring(S[k], CAP[k]);
-  const col = G.collapseT ? smooth(Math.min(1, (clock - G.collapseT) / 0.6)) : 0;
-  const target = dancing ? 1 - 0.92 * Math.min(1, (G.streak || 0) / 2) : live;
+  const col = G.collapseT && !reel ? smooth(Math.min(1, (clock - G.collapseT) / 0.6)) : 0;
+  const target = reel ? 1 : dancing ? 1 - 0.92 * Math.min(1, (G.streak || 0) / 2) : live;
   M.vigor += (target - M.vigor) * easeIn(dt, 0.5);
   M.airV -= 14 * dt; M.air = Math.min(CAP.air, Math.max(0, M.air + M.airV * dt));
   if (M.air === 0 || M.air === CAP.air) M.airV = 0;
   DRAC_ACC.roll = S.roll.x; DRAC_ACC.pitch = S.pitch.x; DRAC_ACC.lift = M.air; DRAC_ACC.col = col; DRAC_ACC.vigor = M.vigor; // (no literal: no garbage a frame)
   const prev = M.yaw;
-  M.yaw = danceDrac(beat, DRAC_ACC, M.pos);
+  M.yaw = danceDrac(reel ? REEL.beat : beat, DRAC_ACC, M.pos);
   M.yawVel = dt > 0 ? (M.yaw - prev) / dt : 0;
   M.pivot.copy(M.pos);
   M.dancing = dancing;
+}
+// The Bou (bou-stage.js poses it at the song clock): the same bounded tap/hold springs as the Drac, at half the lean.
+const BOU_ACC = { roll: 0, pitch: 0, col: 0 };
+function animPlayableBou(dt, beat, reel) {
+  soloOn = false;
+  for (const k in S) S[k].t = 0;
+  holdGesture();
+  stepSprings(Math.min(dt, 0.04));
+  for (const k in CAP) if (S[k]) capSpring(S[k], CAP[k]);
+  BOU_ACC.roll = S.roll.x * 0.5; BOU_ACC.pitch = S.pitch.x * 0.5;
+  BOU_ACC.col = G.collapseT && !reel ? smooth(Math.min(1, (clock - G.collapseT) / 0.6)) : 0;
+  const prev = M.yaw, b = PHOTO.bou;
+  M.yaw = PHOTO.on && PHOTO.id === 'bou-tradicional-valls' ? driveBou(dt, b, b.vx, b.vz, M.pos) : danceBou(reel ? REEL.beat : beat, dt, BOU_ACC, M.pos);
+  M.yawVel = dt > 0 ? (M.yaw - prev) / dt : 0;
+  M.pivot.copy(M.pos);
+  M.dancing = G.state === 'play' || reel;
 }

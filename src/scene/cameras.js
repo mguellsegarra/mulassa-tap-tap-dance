@@ -1,8 +1,8 @@
 // Cameras: the play camera (framePlayCamera), the menu camera (frameMenuCamera: splash, title, selector) and its state.
 import * as THREE from 'three';
-import { createOrbit, orbitStep, roomAlong, ORBIT } from './orbit.js';
+import { createOrbit, orbitStep, orbitLimits, roomAlong, ORBIT } from './orbit.js';
 import { smoothDamp, menuFit, envelope } from './framing.js';
-import { plaza, camFocus, FRONT, camShift, camShiftX, camera, CAM_AZ, CAM_EL, cameraTarget } from './stage.js';
+import { plaza, camFocus, FRONT, camShift, camShiftX, camera, CAM_AZ, CAM_EL, cameraTarget, colla, mulaColla, bouColla } from './stage.js';
 import { playStage } from '../hud/layout.js';
 import { figureScale, selectedFigure } from '../game/figure-song.js';
 import { DRAC } from '../game/figures.js';
@@ -10,7 +10,7 @@ import { M, manualLandingStrength } from './mula-motion.js';
 import { CALM, CAMDRAC } from '../core/env.js';
 import { clock, G } from '../game/state.js';
 import { TAU } from '../core/anim.js';
-import { HH, K, W, SAFE } from '../hud/canvas.js';
+import { HH, K, W, SAFE, baseFov } from '../hud/canvas.js';
 
 // Remove the previous render's offset before any rig reads the camera. The short impact never enters framing springs.
 let impactCameraX = 0, impactCameraY = 0;
@@ -40,8 +40,8 @@ export const titleS = { x: new Float64Array(2), v: new Float64Array(2) }, TITLE_
 // the dock, right of a side panel), and a lens shift (view offset, both axes: never a tilt) puts her centre there. The splash
 // and the title keep their one shot for every figure, with the caller's `aim` (css px below the middle).
 export const lens = { x: 0, y: 0 }; // the menu's lens shift, css px (her centre right of / below the screen's middle), smoothed
-const MENU = { x: new Float64Array(2), v: new Float64Array(2), w: 0, h: 0, ox: 0, oy: 0, mx: 0, mz: 0, tx: 0, ty: 0, root: null, away: true, view: false, quick: false, fit: { dist: 11, cx: 0, cy: 0, floor: 0 } }; // shift spring; her extents' envelope (m); her outline's middle across / feet off the focus (tangents, slow)
-const MENU_T = { shift: 0.9, up: 0.35, down: 4, centre: 1.2, exit: 0.6 }; // s: the lens shift's spring (exit: it and her size/height after photo mode, so the returning dock never covers her for seconds); her extents rise / fall (turning side on and back never pumps the shot); her centre's slow average (the focus already follows her: a turn must not swing the shot)
+const MENU = { held: false, directed: false, soft: false, softT: -Infinity, lent: new Float64Array(2), x: new Float64Array(2), v: new Float64Array(2), w: 0, h: 0, ox: 0, oy: 0, mx: 0, mz: 0, tx: 0, ty: 0, root: null, away: true, view: false, quick: false, fit: { dist: 11, cx: 0, cy: 0, floor: 0 } }; // shift spring; her extents' envelope (m); her outline's middle across / feet off the focus (tangents, slow)
+const MENU_T = { reel: 0.7, soft: 1.1, wake: 0.45, softFor: 2.5, shift: 0.9, up: 0.35, down: 4, centre: 1.2, exit: 0.6 }; // s: the showreel's follow and shift (a little quicker than the menu's: she travels round the plaça); soft: into a `soft` band (the idle screen), wake: back out of it (the UI is back in 0.25 s: she must not linger under it), for softFor s; the lens shift's spring (exit: it and her size/height after photo mode, so the returning dock never covers her for seconds); her extents rise / fall (turning side on and back never pumps the shot); her centre's slow average (the focus already follows her: a turn must not swing the shot)
 const OUTLINES = new Map(), V3 = new THREE.Vector3(), FREE = { top: 0, bottom: 0, left: 0, right: 0, hardTop: 0 };
 // Her outline, cheaply: for each of her meshes, its farthest vertices along 14 directions (axes and diagonals: its hull's support
 // points, in its own space, once per figure). Each frame they go through the mesh's live matrix, so the shot reads her real pose
@@ -70,12 +70,21 @@ function outline(root) {
   return list;
 }
 const shown = (o, root) => { for (; o && o !== root; o = o.parent) if (!o.visible) return false; return true; };
-export function frameMenuCamera(dt, mx, mz, root, rect, view, keep, aim) {
+// reel: the selector's showreel (game/showreel.js REEL: { cut, shot: { az, el, fill } }) or null
+export function frameMenuCamera(dt, mx, mz, root, rect, view, keep, aim, reel = null) {
   const far = camera.aspect < 1 ? 1.4 : 1, now = pnow();
   if (MENU.view && !view) { MENU.quick = true; orbit.last = -Infinity; } // leaving photo mode hands the camera back at once, quickly (until it is framed again)
   MENU.view = view; if (orbit.ptrs.size || view) MENU.quick = false;
   orbitHome.time = MENU.quick ? MENU_T.exit : undefined;
   if (root !== MENU.root) { MENU.root = root; MENU.w = MENU.h = MENU.ox = MENU.oy = MENU.tx = MENU.ty = 0; if (root) orbit.last = -Infinity; } // another figure: frame it now, from scratch
+  // The showreel directs the camera: its shot's angle and size, cut at once (no spring across a cut). A drag keeps the
+  // player's angle until the next cut.
+  const shot = reel && root && !view ? reel.shot : null;
+  if (!!rect?.soft !== MENU.soft) { MENU.soft = !!rect?.soft; MENU.softT = now; } // into a `soft` band (the idle screen) slowly, ~2 s; out of it quickly
+  const slow = now - MENU.softT < MENU_T.softFor ? (MENU.soft ? MENU_T.soft : MENU_T.wake) : 0; // (s: the spring's time, 0 = the usual)
+  if (orbit.ptrs.size || now - orbit.last <= ORBIT.idle) MENU.held = true;
+  const cut = shot && reel.cut && !orbit.ptrs.size, direct = shot && (cut || !MENU.held);
+  if (cut) { MENU.held = false; MENU.w = MENU.h = MENU.ox = MENU.oy = 0; } // her size and middle measured afresh from the new angle
   if (root?.visible && MENU.w && Math.hypot(MENU.mx - mx, MENU.mz - mz) < 4) { mx = MENU.mx; mz = MENU.mz; } // follow the middle of her outline (her pivot is off it as she turns), measured last frame; never a stray part metres away
   // «mode foto» on a narrow screen: back off (same angle) until ~7 m fit across, or her 4 m body barely fits
   const fit = view ? Math.max(1, 3.5 / (Math.tan(camera.fov * Math.PI / 360) * camera.aspect) / 11) : 1;
@@ -84,21 +93,84 @@ export function frameMenuCamera(dt, mx, mz, root, rect, view, keep, aim) {
   if (root && MENU.w && !bandless(rect)) orbitHome.dist = view ? Math.max(orbitHome.dist, MENU.fit.dist) : MENU.fit.dist; // (photo mode: the plaça round her, and all of her)
   // her sway and steps never shake the shot: it drifts after her on a critically damped spring (like the play camera; a first-order
   // filter changes velocity the instant she does, which read as a jerk on every hop)
-  if (!titleC.on) { titleS.x[0] = mx; titleS.x[1] = mz; titleS.v.fill(0); }
+  if (!titleC.on || cut) { titleS.x[0] = mx; titleS.x[1] = mz; titleS.v.fill(0); }
   else if (MENU.away && !view && !orbit.fresh && !orbit.ptrs.size) adopt(); // back from another camera (results, a game): carry on from it, then ease to the framing
-  titleC.x = smoothDamp(titleS, 0, mx, TITLE_FOLLOW, dt); titleC.z = smoothDamp(titleS, 1, mz, TITLE_FOLLOW, dt); titleC.on = true;
+  const follow = direct ? MENU_T.reel : TITLE_FOLLOW; // (the showreel: she travels the whole plaça)
+  titleC.x = smoothDamp(titleS, 0, mx, follow, dt); titleC.z = smoothDamp(titleS, 1, mz, follow, dt); titleC.on = true;
   const cx = titleC.x, cz = titleC.z;
   // The idle azimuth is the play camera's own (CAM_AZ: no swoop across the plaça when a game starts), swaying slowly; like the play
   // camera it no longer turns with her heading (both figures spin in their dances: it swung the shot ~0.3 rad a turn; ?camdrac=segueix
   // brings it back). The player's drag/flick still steers, and after a few idle seconds it eases back.
   { const br = CALM.matches ? 0 : 1, T = clock * TAU;
     orbitHome.yaw = CAM_AZ + br * TITLE_SWAY * (0.65 * Math.sin(T / DRIFT.tAz) + 0.35 * Math.sin(T / DRIFT.tAz2 + 1.3)) + (CAMDRAC === 'segueix' ? DRIFT.follow * Math.sin(M.yaw - FRONT) : 0); }
+  if (shot) { orbitHome.yaw = CAM_AZ + shot.az; orbitHome.pitch = shot.el; } // (held by a drag: where it eases back to)
+  if (shot && direct) orbitHome.yaw += clearOfColla(orbitHome.yaw, cx, cz, cut, dt);
+  // The showreel borrows the orbit's height and distance and gives them back when it stops (photo mode, a pending card):
+  // what follows starts from the plain framing, never from its close or high shot.
+  if (direct && !MENU.directed) MENU.lent.set(orbit.x);
+  else if (MENU.directed && !direct && !MENU.held) { orbit.x.set(MENU.lent); orbit.zoomRaw = orbit.zoomTo = orbit.x[1]; orbit.v.fill(0); } // (a drag keeps the angle it took over)
+  MENU.directed = direct;
   if (orbit.fresh) orbit.yaw = orbitHome.yaw; // (the very first frame starts at home)
-  const o = orbitStep(orbit, dt, now, orbitHome, roomAlong(cx, cz, Math.sin(orbit.yaw), Math.cos(orbit.yaw), plaza.inner - 1.5), keep);
-  const hd = o.x[1] * Math.cos(o.x[0]);
-  camera.position.copy(insidePlaza(cameraTarget.set(cx + Math.sin(o.yaw) * hd, ORBIT.focusY + o.x[1] * Math.sin(o.x[0]), cz + Math.cos(o.yaw) * hd), cx, 1.2, cz));
+  if (direct) aimShot(dt, cut, cx, cz, slow || 0.6); else orbitStep(orbit, dt, now, orbitHome, roomAt(cx, cz), keep);
+  placeMenu(cx, cz, cut ? Infinity : dt);
+  zoomMenu(cut ? 0 : dt, root && !view && MENU.w && !bandless(rect), slow || MENU_T.shift);
+  const y = frameMenuLens(dt, root, rect, aim, shot?.fill, cut, direct, slow);
+  if (!cut) return y;
+  MENU.w = MENU.h = 0; aimShot(dt, true, cx, cz, 0.6); placeMenu(cx, cz, Infinity); // a cut: again, at the distance its size wants from the new angle
+  return frameMenuLens(dt, root, rect, aim, shot.fill, true);
+}
+// A band too short for the square (a 1280x800 desktop: ~23 m wanted, 15-17 m to the façades) left her head over the
+// header: where the dolly stops short, the lens widens the rest of the way (eased; at most ZOOM_MAX the title's tangent, ~54°
+// on a desktop: the play camera's own).
+// Any other camera takes the title's lens back (easeLensX; the play camera sets its own).
+const ZOOM = { x: new Float64Array([1]), v: new Float64Array(1) }, ZOOM_MAX = 1.45;
+function zoomMenu(dt, on, time) {
+  const z = on ? Math.max(1 / ZOOM_MAX, Math.min(1, orbit.lim.distMax / MENU.fit.dist)) : 1;
+  if (dt) smoothDamp(ZOOM, 0, z, time, dt); else { ZOOM.x[0] = z; ZOOM.v[0] = 0; } // (a cut: at once)
+  const fov = Math.atan(Math.tan(baseFov() * Math.PI / 360) / ZOOM.x[0]) * 360 / Math.PI;
+  if (Math.abs(camera.fov - fov) > 1e-3) { camera.fov = fov; camera.updateProjectionMatrix(); }
+}
+// The showreel never shoots over an attendant's shoulder (Marc, 2026-10-23: at the foot of the full screen one loomed half
+// her size): the shot's azimuth leaves `rad` either side of every colla helper standing between the lens and her, all of
+// them at once (two windows can join), by the nearer way out when a cut or the shot's own arc brings one in, then the same way
+// round while it stays (the other only past `max`: no swing across), eased and slow (her travel turns their bearings).
+const HELPER_CLEAR = { rad: 0.5, max: 1.2, ease: 0.6, speed: 0.12 }, AVOID = { x: new Float64Array(1), v: new Float64Array(1), side: 1, free: true, d: new Float64Array(16), n: 0 };
+function pushOut(dir) { // from the shot's own azimuth out past every window, one way round
+  let o = 0;
+  for (let k = 0; k < 4; k++) for (let i = 0; i < AVOID.n; i++) if (Math.abs(o - AVOID.d[i]) < HELPER_CLEAR.rad) o = AVOID.d[i] + dir * HELPER_CLEAR.rad;
+  return o;
+}
+function clearOfColla(yaw, cx, cz, cut, dt) {
+  const hd = orbit.x[1] * Math.cos(orbitHome.pitch); // (the shot's own height: on a cut the orbit still has the last one's)
+  AVOID.n = 0;
+  for (const c of [colla, mulaColla, bouColla]) if (c?.helpers.visible) for (const p of c.crew) {
+    p.g.getWorldPosition(V3);
+    const dx = V3.x - cx, dz = V3.z - cz;
+    if (dx * dx + dz * dz > hd * hd || AVOID.n === AVOID.d.length) continue; // beyond her: in the background
+    const b = Math.atan2(dx, dz); AVOID.d[AVOID.n++] = Math.atan2(Math.sin(b - yaw), Math.cos(b - yaw));
+  }
+  let off = pushOut(AVOID.side);
+  const fresh = cut || AVOID.free; // (nothing in the way until now: the nearer way out)
+  if (fresh || Math.abs(off) > HELPER_CLEAR.max) { const other = pushOut(-AVOID.side); if (fresh ? Math.abs(other) < Math.abs(off) : Math.abs(other) < HELPER_CLEAR.max) { AVOID.side = -AVOID.side; off = other; } }
+  AVOID.free = off === 0;
+  if (cut) { AVOID.x[0] = off; AVOID.v[0] = 0; return off; }
+  return smoothDamp(AVOID, 0, off, HELPER_CLEAR.ease, dt, HELPER_CLEAR.speed); // (at most `speed` rad/s: a quick dodge turned the whole plaça, dizzying on a big screen)
+}
+function placeMenu(cx, cz, dt) {
+  const hd = orbit.x[1] * Math.cos(orbit.x[0]);
+  camera.position.copy(insidePlaza(cameraTarget.set(cx + Math.sin(orbit.yaw) * hd, ORBIT.focusY + orbit.x[1] * Math.sin(orbit.x[0]), cz + Math.cos(orbit.yaw) * hd), cx, 1.2, cz));
   camera.lookAt(camFocus.set(cx, camFocus.y + (1.2 - camFocus.y) * (1 - Math.exp(-dt / 0.3)), cz)); // (the aim is the spring itself: a lag on top swung her across the shot; its height eases in from another camera's)
-  return frameMenuLens(dt, root, rect, aim);
+}
+// The showreel's shot: its angle exactly (the shot list itself moves it), the distance its size wants eased (her outline
+// changes as she turns) or at once on a cut; inside the orbit's limits (the lens above the crowd, inside the square).
+const roomAt = (cx, cz) => roomAlong(cx, cz, Math.sin(orbit.yaw), Math.cos(orbit.yaw), plaza.inner - 1.5); // behind the lens, to the square's edge
+function aimShot(dt, snap, cx, cz, ease) {
+  orbit.yaw = orbitHome.yaw; orbit.spin = 0;
+  const L = orbitLimits(orbit.lim, orbit.x[1], orbitHome.pitch, roomAt(cx, cz));
+  orbit.x[0] = Math.max(L.pitchMin, Math.min(L.pitchMax, orbitHome.pitch)); orbit.v[0] = 0;
+  const d = Math.max(L.distMin, Math.min(L.distMax, MENU.fit.dist));
+  if (snap) { orbit.x[1] = d; orbit.v[1] = 0; } else smoothDamp(orbit, 1, d, ease, dt);
+  orbit.zoomRaw = orbit.zoomTo = orbit.x[1];
 }
 function adopt() { // the orbit and the follow spring take the current camera as it is, at rest
   const hx = camera.position.x - camFocus.x, hz = camera.position.z - camFocus.z, hd = Math.hypot(hx, hz), up = camera.position.y - ORBIT.focusY;
@@ -112,8 +184,8 @@ function adopt() { // the orbit and the follow spring take the current camera as
 // negative): nowhere is free, so she keeps the old shot (fixed distance, focus up at the band) rather than hiding behind the pills or
 // the cards. A short band (a 320x568 phone's 84 px) is not empty: menuFit stands her on it.
 const bandless = rect => rect && rect.bottom - rect.top < 48;
-function frameMenuLens(dt, root, rect, aim) {
-  const vw = W * K, vh = HH * K, tan = Math.tan(camera.fov * Math.PI / 360), ppm = vh / (2 * tan);
+function frameMenuLens(dt, root, rect, aim, fill = 0.86, snap = false, quick = false, slow = 0) { // fill: the share of the band she fills; snap: a cut, the shift at once
+  const vw = W * K, vh = HH * K, tan = Math.tan(baseFov() * Math.PI / 360), ppm = vh / (2 * Math.tan(camera.fov * Math.PI / 360)); // tan: the title's lens, what the fit is for (zoomMenu widens it); ppm: the lens now
   if (MENU.away) { MENU.x[0] = camShiftX; MENU.x[1] = camShift; MENU.v.fill(0); MENU.away = false; } // coming from another camera: on from its shift
   const none = bandless(rect); // (the old shot: her focus at the band's middle, as far as a quarter screen up)
   let tx = root && !none ? MENU.tx : 0, ty = none ? Math.max(-0.25 * vh, Math.min(0.25 * vh, (rect.top + rect.bottom) / 2 - vh / 2)) : root ? MENU.ty : aim; // (a hidden figure, a pending card: the shot holds still)
@@ -145,13 +217,14 @@ function frameMenuLens(dt, root, rect, aim) {
     FREE.top = rect ? rect.top : SAFE.t; FREE.bottom = rect ? rect.bottom : vh - SAFE.b; FREE.hardTop = rect?.hardTop ?? FREE.top;
     FREE.left = Math.max(rect?.left ?? 0, SAFE.l); FREE.right = Math.min(rect?.right ?? vw, vw - SAFE.r);
     if (MENU.w && !none) {
-      menuFit(MENU.fit, FREE, vh, tan, MENU.w, MENU.h);
+      menuFit(MENU.fit, FREE, vh, tan, MENU.w, MENU.h, fill);
       MENU.tx = tx = MENU.fit.cx - vw / 2 - MENU.ox * ppm; MENU.ty = ty = MENU.fit.floor - vh / 2 + MENU.oy * ppm; // minus where she sits now (css px from the middle, unshifted)
     }
   }
-  const st = MENU.quick ? MENU_T.exit : MENU_T.shift;
-  lens.x = smoothDamp(MENU, 0, Math.max(-0.3 * vw, Math.min(0.3 * vw, tx)), st, dt);
-  lens.y = smoothDamp(MENU, 1, Math.max(-0.3 * vh, Math.min(0.3 * vh, ty)), st, dt);
+  const st = slow || (quick ? MENU_T.reel : MENU.quick ? MENU_T.exit : MENU_T.shift), cx = Math.max(-0.3 * vw, Math.min(0.3 * vw, tx)), cy = Math.max(-0.3 * vh, Math.min(0.3 * vh, ty));
+  if (snap) { MENU.x[0] = cx; MENU.x[1] = cy; MENU.v.fill(0); }
+  lens.x = smoothDamp(MENU, 0, cx, st, dt);
+  lens.y = smoothDamp(MENU, 1, cy, st, dt);
   // back to the calm springs only once framed and nearly still (a spring softened while far from its target whiplashes)
   const hd = Math.min(orbit.lim.distMax, Math.max(orbit.lim.distMin, orbitHome.dist)); // (the distance it can reach)
   if (MENU.quick && Math.abs(orbit.x[1] - hd) < 0.03 * hd && Math.abs(lens.y - ty) + Math.abs(lens.x - tx) < 6 && Math.abs(orbit.v[1]) < 0.2) MENU.quick = false;
@@ -159,7 +232,10 @@ function frameMenuLens(dt, root, rect, aim) {
 }
 // Every frame another camera runs (a game, results, photo driving): the menu's sideways shift glides back to the middle (the play
 // camera owns the vertical one), and the menu camera knows to take over from that camera next time (never from a mere slow frame).
-export const easeLensX = dt => { MENU.away = true; return (MENU.x[0] = lens.x = smoothDamp(MENU, 0, 0, MENU_T.shift, dt)); };
+export const easeLensX = dt => {
+  MENU.away = true;
+  if (ZOOM.x[0] !== 1) { ZOOM.x[0] = 1; ZOOM.v[0] = 0; if (G.state !== 'play') { camera.fov = baseFov(); camera.updateProjectionMatrix(); } }
+  return (MENU.x[0] = lens.x = smoothDamp(MENU, 0, 0, MENU_T.shift, dt)); };
 // Keeps the play camera inside the open square (plaza.inner, minus a margin), or it ends up behind a building and
 // sees its roof: when the wanted spot is outside, it comes closer horizontally and rises by the same distance, so
 // she keeps her size on screen and is seen a bit more from above. No allocations: it edits `p` in place.

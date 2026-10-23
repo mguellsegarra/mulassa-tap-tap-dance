@@ -25,6 +25,17 @@ export function togglePause() {
     chip.start(lead, tp, song.tail).then(ok => { if (ok && G.chart === chart) chip.countIn(at); });
   }
 }
+// A run whose audio clock stands still is stuck at its count-in («PREPARATS…») or mid-song: suspended (iOS after an app
+// switch: resume() only works inside a tap) or `running` with a frozen currentTime (a stalled output device, seen on a
+// phone after several runs). Pause it after 1 s: the pause's suspend and Continua's resume() inside a tap wake it.
+let stallT = null, lastCt = NaN;
+export function watchAudio(now) {
+  const ct = chip?.ctx?.currentTime, moved = ct !== lastCt;
+  lastCt = ct;
+  if (G.state !== 'play' || G.paused || chip?.t0 == null || !pageActive() || (moved && chip.ctx.state === 'running')) { stallT = null; return; }
+  stallT ??= now;
+  if (now - stallT > 1000) { stallT = null; pauseGame(); }
+}
 function syncPageActivity() {
   if (!pageActive()) {
     G.activityEpoch++;

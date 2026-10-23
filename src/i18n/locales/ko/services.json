@@ -52,6 +52,7 @@
   "services.share.challengeTip": "친구의 도전: {diff}에서 {pct}%를 넘겨봐요",
   "services.share.clear": "{mula}💃 Mulassa de Valls 춤, {diff}에서 정확도 {pct} 달성했어요. 도전해볼래요? 🔥",
   "services.share.drac": "Drac de Valls 춤, {diff}에서 정확도 {pct} 달성했어요. #Valls",
+  "services.share.bou": "Bou Tradicional de Valls 춤, {diff}에서 정확도 {pct} 달성했어요. #Valls",
   "services.share.fail": "{mula} {diff}에서 정확도 {pct}… Mulassa가 다시 해보래요. 얼마나 잘할 수 있어요? 💃",
   "services.share.record": "{mula}🔥 Mulassa de Valls 춤, {diff}에서 최고 점수 갱신! {score}점 (정확도 {pct}) 🎉"
 }

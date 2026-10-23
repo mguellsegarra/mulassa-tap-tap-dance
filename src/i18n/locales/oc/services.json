@@ -52,6 +52,7 @@
   "services.share.challengeTip": "Rèpte d’un amic: supèra eth {pct}% en {diff}",
   "services.share.clear": "{mula}💃 È hèt a balhar era Mulassa de Valls damb un {pct} d’encèrts en {diff}. Te i atrevis? 🔥",
   "services.share.drac": "È hèt a balhar eth Drac de Valls damb un {pct} d’encèrts en {diff}. #Valls",
+  "services.share.bou": "È hèt a balhar eth Bou Tradicional de Valls damb un {pct} d’encèrts en {diff}. #Valls",
   "services.share.fail": "{mula} {pct} d’encèrts en {diff}… Era Mulassa me demane era revenja. E tu, com ac haries? 💃",
   "services.share.record": "{mula}🔥 Nau recòrd de punts: {score} en {diff} ({pct} d’encèrts) hènt a balhar era Mulassa de Valls! 🎉"
 }

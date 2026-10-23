@@ -52,6 +52,7 @@
   "services.share.challengeTip": "Виклик друга: переверш {pct}% на рівні {diff}",
   "services.share.clear": "{mula}💃 Мій танець Mulassa de Valls: {pct} влучань на рівні {diff}. А тобі слабо? 🔥",
   "services.share.drac": "Мій танець Drac de Valls: {pct} влучань на рівні {diff}. #Valls",
+  "services.share.bou": "Мій танець Bou Tradicional de Valls: {pct} влучань на рівні {diff}. #Valls",
   "services.share.fail": "{mula} {pct} влучань на рівні {diff}… Mulassa вимагає реваншу. А як зіграєш ти? 💃",
   "services.share.record": "{mula}🔥 Новий рекорд: {score} очок на рівні {diff} ({pct} влучань) у танці Mulassa de Valls! 🎉"
 }

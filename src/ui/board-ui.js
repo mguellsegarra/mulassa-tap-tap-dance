@@ -9,6 +9,7 @@ import { leaderboard, turnstileSiteKey, subscribeLeaderboardResult, rememberIden
 import { VERSION_RULES } from '../services/leaderboard-rules.js';
 import { checkAlias } from '../services/alias-rules.js';
 import { DIFFS } from '../game/chart.js';
+import { FIGURES, hasBoard } from '../game/figures.js';
 import { quality, starsFor } from '../game/progress.js';
 import { store as defaultStore } from '../platform/storage.js';
 import { byId, num, statusLine, setButton, trSplit } from './sheet-kit.js';
@@ -394,7 +395,8 @@ export function setupBoard({ focusIn, store = defaultStore, service = leaderboar
     // every frame: only real changes touch the DOM. `show`: the results screen, once taps may land (after its first second).
     // The row (#results-actions) itself is src/ui/share-ui.js's: Comparteix is there even offline; these are its buttons.
     results(show) {
-      const key = !show || !service.configured ? 0 : canWrite && snapshot && published !== snapshot ? 2 : 1;
+      const offBoard = FIGURES.some(f => f.id === currentFigure() && !hasBoard(f)); // the Bou: no board to show it on
+      const key = !show || !service.configured || offBoard ? 0 : canWrite && snapshot && published !== snapshot ? 2 : 1;
       if (key === shown) return;
       if (doc.activeElement === resultsPublish || doc.activeElement === resultsBoard) doc.activeElement.blur?.(); // no focus on a hidden button
       shown = key;

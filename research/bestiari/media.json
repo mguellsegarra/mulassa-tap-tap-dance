@@ -2,5 +2,7 @@
   "drac-video": { "root": "drac", "file": "pm-lEViiPK0.mp4", "type": "video/mp4" },
   "mulassa-2021": { "root": "mulassa", "file": "sources/WzO1q5mdPes.mp4", "type": "video/mp4" },
   "mulassa-2023": { "root": "mulassa", "file": "sources/BaVEzBKbm4U.mp4", "type": "video/mp4" },
-  "mulassa-video": { "root": "mulassa", "file": "sources/D53pgXOeIL0.mp4", "type": "video/mp4" }
+  "mulassa-video": { "root": "mulassa", "file": "sources/D53pgXOeIL0.mp4", "type": "video/mp4" },
+  "bou-2xG98OA1QqI": { "root": "bou-tradicional", "file": "03-videos/2xG98OA1QqI.mp4", "type": "video/mp4" },
+  "bou-review-video": { "root": "bou-review", "file": "reference-720p.mp4", "type": "video/mp4" }
 }

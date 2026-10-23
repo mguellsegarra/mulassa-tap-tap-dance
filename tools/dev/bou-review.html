@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="ca"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Revisem el ball del Bou</title><link rel="stylesheet" href="/src/dev/bou-review/style.css"></head>
+<body><header><a href="/tools/dev/bou-dance.html">Visor del ball</a><h1>Revisem el ball del Bou</h1><p>Tria un tram, compara el vídeo amb el ball actual i escriu com l'hem de corregir.</p></header>
+<main>
+<section class="transport" aria-label="Reproducció compartida">
+<div class="controls"><button class="btn btn-secondary" id="previous" aria-label="Tram anterior">Anterior</button><label class="grow">Tram de la nostra cançó<select id="fragment"></select></label><button class="btn btn-secondary" id="next" aria-label="Tram següent">Següent</button></div>
+<audio id="audio" controls preload="metadata"></audio>
+<div class="controls"><button class="btn btn-primary" id="restart">Reprodueix el tram</button><label class="check"><input type="checkbox" id="loop" checked> Repeteix el tram</label><label>Velocitat<select id="speed"><option value="1">Normal</option><option value="0.75">75%</option><option value="0.5">Meitat</option></select></label><output id="clock">0:00</output></div>
+<p id="alignment" class="notice">Correspondència musical automàtica, pendent de revisar. Pots ajustar els segons del vídeo de cada tram.</p>
+</section>
+<div class="comparison">
+<section class="panel"><h2>Vídeo original · 2023</h2><div class="viewport"><video id="reference" muted playsinline preload="auto" aria-label="Vídeo original sincronitzat"></video><span id="video-clock" class="badge"></span></div>
+<div class="controls"><label>Inici al vídeo (s)<input id="source-start" type="number" min="0" step="0.001"></label><label>Final al vídeo (s)<input id="source-end" type="number" min="0" step="0.001"></label></div>
+<p id="video-rate"></p><label>Què fa el Bou al vídeo<textarea id="observed" rows="4"></textarea></label><p class="hint">Notes de l'estudi anterior. Límits aproximats; revisa-les mirant el tram.</p>
+</section>
+<section class="panel"><h2>El nostre model · ball actual</h2><div class="viewport"><canvas id="stage" aria-label="Model 3D amb el ball actual"></canvas><canvas id="map" width="144" height="144" aria-label="Mapa del recorregut, amb N E S W" class="map"></canvas></div>
+<div class="controls"><label>Vista<select id="view"><option value="front">Tres quarts</option><option value="side">Costat</option><option value="rear">Darrere</option><option value="top">Des de dalt</option></select></label></div>
+<p id="model-description"></p><label>Com vull que sigui aquest tram<textarea id="wanted" rows="4" placeholder="Ex.: va cap al N fent balanceig, gira cap al W i torna al mig. Fa 3 tombs."></textarea></label><p class="hint">N, E, S i W són marques del mapa, no punts geogràfics. W és la direcció inicial del cap.</p>
+</section></div>
+<p id="status" role="status">Els canvis es desen en aquest navegador.</p><p id="error" role="alert" hidden></p>
+<section class="export"><div class="controls"><h2 class="grow">Guió per passar-me</h2><button class="btn btn-primary" id="copy">Copia tots els trams</button><button class="btn btn-secondary" id="download">Desa una còpia</button></div><label>Text complet, preparat per copiar<textarea id="export" rows="8" readonly></textarea></label></section>
+</main><script type="module" src="/src/dev/bou-review/main.js"></script></body></html>

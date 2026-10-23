@@ -5,16 +5,18 @@ import { photoExtras, updatePhotoExtras, photoEscape, stepPhotoPerson, photoPers
 import { pushPulse, rippleLive, RIPPLE, ripple } from './crowd-fx.js';
 import * as THREE from 'three';
 import { judgedCount } from '../game/progress.js';
-import { song, figureScale } from '../game/figure-song.js';
+import { song, figureReach } from '../game/figure-song.js';
 import { pick, poseBand } from './models.js';
-import { renderProfile, camera, plaza, colla, mulaColla } from './stage.js';
+import { renderProfile, camera, plaza, colla, mulaColla, bouColla } from './stage.js';
 import { CALM } from '../core/env.js';
 import { clock, G, chip, figureSfx } from '../game/state.js';
 import { activeCrowd, bandSpots, midCrowd, MID, animateRenderQuality } from './quality.js';
 import { M, PIVOT, PAIR } from './mula-motion.js';
 import { COLLA_SPOTS } from './drac-dance.js';
 import { MULA_COLLA_SPOTS } from './mula-stage.js';
+import { BOU_COLLA_SPOTS } from './bou-stage.js';
 import { RING, REACH, arenaNow } from './crowd-build.js';
+import { lensShrink } from './framing.js';
 import { easeIn, smooth01, TAU } from '../core/anim.js';
 import { bubble, at } from '../hud/bubbles.js';
 import { sootPose, sootAnchored } from './drac-soot.js';
@@ -186,6 +188,7 @@ function updateMood(dt, t, live) {
   let shotX = camera.position.x - M.pos.x, shotZ = camera.position.z - M.pos.y, shotD = G.state === 'play' ? Math.hypot(shotX, shotZ) : 0;
   if (shotD > 1e-3) { shotX /= shotD; shotZ /= shotD; } else shotD = 0;
   F.shotX = shotX; F.shotZ = shotZ; F.shotD = shotD;
+  F.lens = G.state === 'select' ? camera.position : null; // (framing.js lensShrink: on the selector, gone by a low lens)
 }
 
 // Use the existing neighbour grid when a walking spectator needs a detour, rather than stepping into the next person.
@@ -210,7 +213,7 @@ function steer(p, dt, beat, live) {
   const dx = p.pos.x - M.pos.x, dz = p.pos.y - M.pos.y, want = G.state === 'play' && p.row && !p.near ? Math.min(1.2, p.comfort * F.bold) : p.comfort * F.bold + (shoveK && G.state === 'play' ? SHOVE.extra * shoveK : 0);
   // clearance to her body (a box in her frame, y = forward) and, while she spins, to the circle her rear sweeps
   // round the pivot; only near the ring (RING.reach): everyone further out is simply clear
-  const scale = PAIR.k ? 1 : figureScale(); // M is the Mulassa while the scene pair is visible
+  const scale = PAIR.k ? 1 : figureReach(); // M is the Mulassa while the scene pair is visible
   const dpx = p.pos.x - M.pivot.x, dpz = p.pos.y - M.pivot.y, dp = Math.hypot(dpx, dpz) || 1;
   let clear = 99;
   if (dp < want + RING.reach + PIVOT + 2.4 * scale) {
@@ -371,14 +374,17 @@ function pose(p, dt, beat, live) {
     ringUp = nk * (nv * NEAR.bob + ringBeat * NEAR.bounce * (0.5 + 0.5 * Math.cos(TAU * (beat - p.lag * 0.15)))); // up on the beat
     ringNod = nk * nv * NEAR.nod; ringArms = nk * nv * NEAR.arms;
   }
+  const lens = lensShrink(F.lens, p.pos.x, p.pos.y);
+  if (lens !== (p.lensK ?? 1)) { p.lensK = lens; p.g.scale.setScalar(p.scale * (p.pres ?? 1) * p.qualityScale * lens); }
   if (p.thr) { // one of those who come and go with how well it goes (PRES)
     const to = smooth01((presK - p.thr) / PRES.soft);
     if (to !== p.pres) {
       p.pres += (to - p.pres) * presE; if (Math.abs(to - p.pres) < 1e-3) p.pres = to;
-      p.g.scale.setScalar(p.pres < 0.01 ? (p.pres = 0) : p.scale * p.pres * p.qualityScale);
+      p.g.scale.setScalar(p.pres < 0.01 ? (p.pres = 0) : p.scale * p.pres * p.qualityScale * lens);
     }
     if (!p.pres) return; // not there (scale 0: the skinned mesh skips them)
   }
+  if (!lens) return; // (by the lens: not drawn either)
   let rip = p.rip || 0; // eased, so stacked pulses and the last one leaving never step
   if (F.rippling || rip) {
     const to = F.rippling && p.dM < RIPPLE.reach && (p.near || p.row < renderProfile.ripple) ? ripple(clock, p.dM, p.side, p.resp) * calmK : 0;
@@ -459,6 +465,7 @@ export function animCrowd(dt, beat, t, live = 1) {
   for (const b of bandSpots) cellPush(crowdCell(b), b); // the band: fixed, never in anyone's way
   if (colla?.helpers.visible) for (const b of COLLA_SPOTS) cellPush(crowdCell(b), b); // the Drac's colla too
   if (mulaColla?.helpers.visible) for (const b of MULA_COLLA_SPOTS) cellPush(crowdCell(b), b); // and the Mulassa's
+  if (bouColla?.helpers.visible) for (const b of BOU_COLLA_SPOTS) cellPush(crowdCell(b), b); // and the Bou's
   for (const p of photoExtras) if (!p.band) cellPush(crowdCell(p), p);
   const backgroundContacts = backdropContacts([plaza.backdrop, midCrowd]);
   for (const b of backgroundContacts) cellPush(crowdCell(b), b);

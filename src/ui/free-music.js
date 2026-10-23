@@ -1,10 +1,10 @@
-// Free mode's music («mode foto»): one button paired with the eye and a short list under it (the menu loop, the two
+// Free mode's music («mode foto»): one button paired with the eye and a short list under it (the menu loop, the three
 // figures' songs, Sense música). Entering free play (the corner gamepad #free, or a double tap on the plaça) starts that figure's song (playFigure); after that, who you drive never changes it; it lasts while the free mode does (leaving fades back to
-// the menu loop). A song that ends hands over to the next in the list (the Drac's to the menu loop, which never ends).
+// the menu loop). A song that ends hands over to the next in the list (the Bou's to the menu loop, which never ends).
 // No music follows the speaker preference; manual figure effects remain available. Sound: chip.radio* (platform/audio.js).
 import { chip, menuMusic, setMenuSound } from '../game/state.js';
 import { figureSong } from '../game/figure-song.js';
-import { MULASSA, DRAC, portraitArt, portraitPalette } from '../game/figures.js';
+import { MULASSA, DRAC, BOU, portraitArt, portraitPalette } from '../game/figures.js';
 import { pixelSvg } from './select-ui.js';
 import { mulaSpinner } from './loader.js';
 import { PHOTO, clearPhotoKeys } from '../game/photo-control.js';
@@ -17,14 +17,14 @@ import { tr } from '../i18n/messages.js';
 
 const FM_NOTE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V6l11-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/></svg>';
 const FM_NO_MUSIC = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V6l11-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/><path d="m3 3 18 18"/></svg>';
-const FM_OFF = 3, FM_NOW_MS = 2600, FM_PRELOAD = 15; // the next song starts loading FM_PRELOAD s before this one ends
-export const nextTrack = i => (i + 1) % FM_OFF; // Mulassa → Drac → the menu loop; no music is never next
+const FM_OFF = 4, FM_NOW_MS = 2600, FM_PRELOAD = 15; // the next song starts loading FM_PRELOAD s before this one ends
+export const nextTrack = i => (i + 1) % FM_OFF; // Mulassa → Drac → Bou → the menu loop; no music is never next
 
 // onSound: the speaker button shows the preference again (ui/sheets-setup.js).
 export function setupFreeMusic({ eye, onSound }) {
   const mmss = s => `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, '0')}`;
   const tracks = [{ title: tr('ui.radio.menu'), sub: tr('ui.radio.menuSub'), art: FM_NOTE, kind: 'menu' },
-    ...[MULASSA, DRAC].map(f => {
+    ...[MULASSA, DRAC, BOU].map(f => {
       const song = figureSong(f.id);
       return { title: f.song, sub: `${f.composer.replace(/^(\S)\S* (\S+).*/, '$1. $2')} · ${f.year} · ${mmss(song.tail)}`, song, art: pixelSvg(portraitArt(f), portraitPalette(f), '#2a1a10'), kind: f.id };
     }),
@@ -135,7 +135,7 @@ export function setupFreeMusic({ eye, onSound }) {
     const take = () => { e.preventDefault(); e.stopPropagation(); };
     if (e.code === 'KeyM') { take(); if (!e.repeat) setOpen(!open); return; }
     if (!open) return;
-    const digit = /^Digit([1-4])$/.exec(e.code), step = { ArrowDown: 1, ArrowRight: 1, ArrowUp: -1, ArrowLeft: -1 }[e.code];
+    const digit = /^Digit([1-5])$/.exec(e.code), step = { ArrowDown: 1, ArrowRight: 1, ArrowUp: -1, ArrowLeft: -1 }[e.code];
     if (e.code === 'Escape') { take(); setOpen(false); }
     else if (digit) { take(); pick(+digit[1] - 1); }
     else if (step) { take(); const i = rows.indexOf(document.activeElement); rows[((i < 0 ? cur : i) + step + rows.length) % rows.length].focus(); }

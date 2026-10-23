@@ -47,8 +47,9 @@ export function drawLane(t) {
       const xe = hx + (n.end - t) * speed - 14, xh = Math.max(hx, x); // tail stops short of the next note
       if (x > W1 + 20 || xe < hx) continue;
       const live = balloonShown(t) === n, k = live ? (n.count % n.need) / n.need : 0, pp = pulse(G.popT ?? -9, 0.35), hit = live ? Math.max(pulse(G.pumpT, 0.14), pp * 2) : 0, w = balloonFx?.wobble() ?? { sq: 0, rot: 0 };
-      H.fillStyle = C.dark; H.beginPath(); H.roundRect(xh, cy - 10 - hit * 2, Math.max(0, xe - xh) + 10, 20 + hit * 4, 10); H.fill(); // the roll's bar swells on every tap
-      H.fillStyle = pp > 0.3 ? C.cream : hit > 0.05 ? '#ffd166' : '#ff9f1c'; H.beginPath(); H.roundRect(xh, cy - 8 - hit * 1.5, Math.max(0, xe - xh) + 8, 16 + hit * 3, 8); H.fill();
+      const br = 8 + hit * 1.5, bw = Math.max(0, xe - xh) + 8; // the roll's bar swells on every tap; a pill at any height, its 2 px rim even all round (the carretilla leaves the left end in view)
+      H.fillStyle = C.dark; H.beginPath(); H.roundRect(xh - 2, cy - br - 2, bw + 4, 2 * br + 4, br + 2); H.fill();
+      H.fillStyle = pp > 0.3 ? C.cream : hit > 0.05 ? '#ffd166' : '#ff9f1c'; H.beginPath(); H.roundRect(xh, cy - br, bw, 2 * br, br); H.fill();
       const bob = live ? 0 : Math.sin(clock * 6 + n.t) * 1.6, shake = Math.sin(clock * 80) * hit * 2; // waiting: a restless bob; tapped: a jolt
       balloonHead(xh + shake, cy - 3 + bob, 14 * (1 + 0.22 * k + pp * 0.35), k, w.sq, w.rot);
       continue;

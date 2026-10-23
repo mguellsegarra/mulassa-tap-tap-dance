@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { FIGURES, TOWNS, MULASSA, DRAC, MULE_ART, DRAC_ART, portraitArt, portraitPalette, portraitStand, STAND, playable, townOf, rememberedLevel, rememberLevel, recordKey, aviatText, aviatDraft, inviteText, INVITE, INVITE_TOWN, INVITE_DRAFT } from '../src/game/figures.js';
+import { FIGURES, TOWNS, MULASSA, DRAC, BOU, MULE_ART, DRAC_ART, portraitArt, portraitPalette, portraitStand, STAND, playable, upFront, townOf, rememberedLevel, rememberLevel, recordKey, aviatText, aviatDraft, inviteText, INVITE, INVITE_TOWN, INVITE_DRAFT } from '../src/game/figures.js';
 import { FIGURE_PORTRAITS } from '../src/game/figure-portraits.js';
 import { setupSelect, peekGap, pixelSvg } from '../src/ui/select-ui.js';
 import { cellOutline } from '../src/ui/selector-portraits.js';
@@ -13,7 +13,7 @@ assert.equal(new Set(FIGURES.map(f => f.id)).size, FIGURES.length);
 assert.equal(new Set(TOWNS.map(t => t.id)).size, TOWNS.length);
 assert(FIGURES.filter(playable).includes(MULASSA));
 for (const id of ['valls', 'tarragona', 'reus', 'solsona', 'vilanova']) assert(TOWNS.some(t => t.id === id), `existing town ${id} remains`);
-assert.deepEqual(FIGURES.filter(playable).map(f => f.id), [MULASSA.id, DRAC.id]);
+assert.deepEqual(FIGURES.filter(playable).map(f => f.id), [MULASSA.id, DRAC.id, 'bou-tradicional-valls']);
 assert(FIGURES.slice(0, FIGURES.filter(playable).length).every(playable), 'available figures come first');
 assert(FIGURES.every(f => townOf(f) && ['playable', 'aviat'].includes(f.status)));
 assert.deepEqual(FIGURES.filter(f => f.town === 'valls').map(f => f.id).sort(), ['mulassa-valls', 'drac-valls', 'aliga-valls', 'bou-tradicional-valls', 'os-trabucaires-valls', 'gegants-ciutat-valls', 'cavallets-valls', 'gegant-calcot-valls', 'campanar-valls', 'basilisc-valls'].sort(), 'only the requested principal Valls figures remain');
@@ -195,12 +195,18 @@ assert.equal(sounds.length, soundBefore + 2, 'unavailable scroll actions make no
   assert.equal(sounds.length, sound + 1, 'with one menu sound');
   assert(!$('select-prev').disabled, 'Drac always has Mulassa before it, whatever the scroll');
   busy = true; click($('select-prev')); assert.equal(api.figure, DRAC, 'sheets guard the arrows'); busy = false;
+  const bou = cards.find(c => c.dataset.id === 'bou-tradicional-valls');
+  assert.equal(cards.indexOf(bou), 2, 'the Bou stands beside the Drac, before the fold (Marc, 2026-10-23)');
+  assert(!bou.cls.includes('aviat') && !bou.cls.includes('later'), 'playable now (2026-10-23), never folded away');
   click($('select-forward'));
-  assert(more.attrs['aria-selected'] === 'true' && cards[1].attrs['aria-selected'] === 'false', 'the fold is the one selection, no figure marked underneath');
-  assert(api.figure === DRAC && !api.unfolded && !$('select-pending').hidden && $('aviat-title').textContent === 'Aviat a la plaça', 'it shows its own card without unfolding');
-  assert.equal(sounds.length, sound + 2, 'reaching the fold sounds too');
+  assert(api.figure.id === 'bou-tradicional-valls' && bou.attrs['aria-selected'] === 'true' && $('select-pending').hidden, 'the arrow reaches the Bou, with its own info (no pending card)');
+  click($('select-forward'));
+  assert(more.attrs['aria-selected'] === 'true' && bou.attrs['aria-selected'] === 'false', 'the fold is the one selection, no figure marked underneath');
+  assert(!api.unfolded && !$('select-pending').hidden && $('aviat-title').textContent === 'Aviat a la plaça', 'it shows its own card without unfolding');
+  assert.equal(sounds.length, sound + 3, 'reaching the fold sounds too');
   assert($('select-forward').disabled, 'folded, the fold is the last stop');
-  click($('select-prev')); assert(api.figure === DRAC && cards[1].attrs['aria-selected'] === 'true' && more.attrs['aria-selected'] === 'false');
+  click($('select-prev')); assert(bou.attrs['aria-selected'] === 'true' && more.attrs['aria-selected'] === 'false');
+  click($('select-prev')); assert(api.figure === DRAC && cards[1].attrs['aria-selected'] === 'true');
   click($('select-prev')); assert(api.figure === MULASSA && $('select-prev').disabled);
   let prevented = false;
   strip.fire('wheel', { deltaY: 100, deltaX: 0, deltaMode: 0, preventDefault() { prevented = true; } });
@@ -218,7 +224,7 @@ assert.equal(sounds.length, soundBefore + 2, 'unavailable scroll actions make no
 const cardMarkup = id => $('select-strip').innerHTML.match(new RegExp(`<button[^>]*data-id="${id}"[^]*?</button>`))[0];
 assert.match(cardMarkup('mulassa-valls'), /aria-label="Mulassa, Unió Anelles de la Flama, Valls/);
 assert.match(cardMarkup('aliga-valls'), /aria-label="Àliga, Ajuntament de Valls \+ Unió Anelles de la Flama, Valls/);
-{ // pending cards wear a hand-drawn vector silhouette (the Bou on the Mulassa's skeleton); the traced one is the fallback for new figures
+{ // pending cards wear a hand-drawn vector silhouette, the Bou its colour drawing; the traced one is the fallback for new figures
   assert.deepEqual(Object.keys(DRAWN_SILHOUETTES).sort(), cards.filter(c => c.cls.includes('aviat') && !['bou-tradicional-valls', INVITE.id, 'selector-fixture'].includes(c.dataset.id)).map(c => c.dataset.id).sort(), 'every pending card is hand-drawn (the Bou and the invitation have their own)');
   const art = id => cardMarkup(id).match(/<span class="por">([^]*?)<\/span>/)[1];
   for (const c of cards.filter(c => c.cls.includes('aviat') && c.dataset.id !== 'bou-tradicional-valls' && c.dataset.id !== INVITE.id)) {
@@ -230,13 +236,11 @@ assert.match(cardMarkup('aliga-valls'), /aria-label="Àliga, Ajuntament de Valls
     if (DRAWN_SILHOUETTES[c.dataset.id]) assert.equal(svg, DRAWN_SILHOUETTES[c.dataset.id], `${c.dataset.id}: its hand-drawn silhouette`);
     else assert.match(svg, /<path d="M[^"]+Z" fill="#120b07" stroke="#f5e3b8"/, `${c.dataset.id}: one traced ink path with its halo`);
   }
-  assert.match(art('bou-tradicional-valls'), /class="sel-bou-silhouette"/);
-  const halo = art('bou-tradicional-valls').match(/<g fill="#f5e3b8"[^>]*>([^]*?)<\/g><g fill="#120b07">/);
-  assert(halo && /stroke-width="2"[^>]*vector-effect="non-scaling-stroke"/.test(halo[0]), 'the Bou\'s halo is the same fixed 2 px line');
-  assert.equal((halo[1].match(/<g transform="translate\(/g) || []).length, 16, 'the Bou\'s halo goes round its carriers\' legs too');
+  assert.match(art('bou-tradicional-valls'), /class="sel-bou-illustration" aria-hidden="true"/, 'the Bou wears its colour illustration');
+  assert.doesNotMatch(art('bou-tradicional-valls'), /\sid="/, 'no ids in the Bou: a card and the figure picker may show it at once');
   assert.match(art(INVITE.id), /class="sel-invite-illustration" aria-hidden="true"/, 'the invitation uses its selected vector illustration');
   assert.match(art(INVITE.id), /#a3182f/, 'the invitation retains its red standard instead of a silhouette');
-  for (const id of ['mulassa-valls', 'drac-valls', INVITE.id]) assert.doesNotMatch(art(id), /#120b07" stroke="#f5e3b8/, `${id} keeps its colour illustration`);
+  for (const id of ['mulassa-valls', 'drac-valls', 'bou-tradicional-valls', INVITE.id]) assert.doesNotMatch(art(id), /#120b07" stroke="#f5e3b8/, `${id} keeps its colour illustration`);
   for (const [id, { art: grid }] of Object.entries(FIGURE_PORTRAITS)) { // the traced outline encloses exactly the drawn cells (shoelace area)
     const area = cellOutline(grid).reduce((s, l) => s + l.reduce((a, p, i) => { const q = l[(i + 1) % l.length]; return a + p[0] * q[1] - q[0] * p[1]; }, 0) / 2, 0);
     assert.equal(area, grid.join('').replace(/\./g, '').length, `${id}: the outline loses or adds no cell`);
@@ -248,10 +252,10 @@ for (const [id, count] of [['mulassa-valls', 1], ['aliga-valls', 2]]) {
   if (count === 2) assert.match(icons, /Ajuntament<\/span>/);
   assert.equal((icons.match(/<svg/g) || []).length, count, `${id}: entity icons accompany the card caption`);
 }
-const live = FIGURES.filter(f => playable(f)), soon = FIGURES.filter(f => !playable(f));
+const live = FIGURES.filter(upFront), soon = FIGURES.filter(f => !upFront(f));
 const more = cards.find(c => c.dataset.more), later = cards.filter(c => c.cls.includes('later'));
 assert(!cards.some(c => ['diables-valls', 'nans-valls'].includes(c.dataset.id)), 'Diables and Nans have no card for clicks, keyboard navigation or town selection');
-assert.deepEqual(cards.slice(0, live.length).map(c => c.dataset.id), live.map(f => f.id), 'the playable figures come first');
+assert.deepEqual(cards.slice(0, live.length).map(c => c.dataset.id), live.map(f => f.id), 'the playable figures (and the Bou, up front) come first');
 assert.equal(cards[live.length], more, 'then the fold');
 assert.deepEqual(later.map(c => c.dataset.id), [...soon, INVITE].map(f => f.id), 'then everything still to come, and the invitation last');
 const foldMarkup = $('select-strip').innerHTML.match(/<button[^>]*data-more="1"[^]*?<\/button>/)[0];
@@ -323,10 +327,13 @@ assert.equal($('select-strip').behavior, 'instant', 'reduced motion centres keyb
   assert.equal($('select-strip').scrollLeft, scroll, 'holding Right does not retarget scrolling');
   assert.equal(sounds.length, sound, 'holding Right does not repeat menu sounds');
 }
+key('ArrowRight');
+const bouCard = cards.find(c => c.dataset.id === 'bou-tradicional-valls');
+assert(api.figure.id === 'bou-tradicional-valls' && doc.activeElement === bouCard, 'Right goes on to the Bou, beside the Drac');
 const foldSounds = sounds.length;
 key('ArrowRight');
 assert.equal(sounds.length, foldSounds + 1, 'focusing the fold plays one sound without changing figure');
-assert(doc.activeElement === more && api.figure === DRAC && !api.unfolded, 'arrows reach the fold without unfolding it or changing the figure');
+assert(doc.activeElement === more && api.figure.id === 'bou-tradicional-valls' && !api.unfolded, 'arrows reach the fold without unfolding it or changing the figure');
 // the cursor on the fold shows the fold's own card: what is coming, no difficulty, the dock where it was
 assert(!$('select-pending').hidden && $('select-info').hidden && $('select-pending').attrs['data-fold'], 'the fold has its own card');
 assert.equal($('aviat-title').textContent, 'Aviat a la plaça');
@@ -377,12 +384,12 @@ assert.equal(($('aviat-text').innerHTML.match(/<p>/g) || []).length, 2); assert.
 assert($('select-next').disabled && !$('select-next').hidden, 'pending keeps a disabled action for the desktop placeholder');
 assert.equal($('select-next-label').textContent, 'Pròximament?');
 assert($('select').attrs['data-pending'], 'pending selection hides the action');
-assert.equal($('select-name').textContent, DRAC.fullName || DRAC.name, 'the playable panel fades out as it was');
-assert.equal(selected.at(-1), DRAC.id, 'nor does it change the song or the model');
+assert.equal($('select-name').textContent, BOU.fullName || BOU.name, 'the playable panel fades out as it was');
+assert.equal(selected.at(-1), BOU.id, 'nor does it change the song or the model');
 click($('select-next')); key('Enter'); assert($('select-act').hidden, 'it cannot be played');
 click($('aviat-write')); assert.deepEqual(drafts, [aviatDraft(soon[0], townOf(soon[0]).name)]);
 click($('select-strip'), more); assert(!api.unfolded && later.every(c => c.hidden), 'the banner folds it back');
-assert.equal(api.figure, DRAC, 'a hidden figure falls back to Drac');
+assert.equal(api.figure, BOU, 'a hidden figure falls back to the last playable one (the Bou, beside the fold)');
 assert.equal($('select-next-label').textContent, 'Tria la dificultat', 'returning to a playable figure restores its action label');
 assert($('select-pending').hidden && !$('select').attrs['data-fold'], 'closing never replaces the outgoing figure with the teaser');
 click($('select-strip'), cards[1]); assert($('select-pending').hidden && !$('select-info').hidden && !$('select-next').disabled, 'leaving the fold brings the figure back');

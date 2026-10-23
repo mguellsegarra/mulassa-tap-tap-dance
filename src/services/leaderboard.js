@@ -172,16 +172,20 @@ export function createLeaderboardService({ configured, publishingEnabled, captch
     // verified, tag (null for verified), season_id }. No weekly board (202609280004): p_period is always 'all'.
     async listAll({ version, figure, season: seasonId = null, offset = 0, limit = PAGE } = {}) {
       offset = Math.max(0, Math.floor(Number(offset) || 0)); limit = Math.min(PAGE, Math.max(1, Math.floor(Number(limit) || PAGE)));
+      const v = version ?? (figure ? FIGURE_VERSIONS[figure] : LEADERBOARD_VERSION);
+      if (!v) return []; // a figure with no board (the Bou): never another figure's
       try {
-        return await rpc(await client(), 'get_leaderboard_all', { p_version: version ?? FIGURE_VERSIONS[figure] ?? LEADERBOARD_VERSION,
+        return await rpc(await client(), 'get_leaderboard_all', { p_version: v,
           p_period: 'all', p_offset: offset, p_limit: limit, ...season(seasonId) });
       } catch (error) { throw translated(error); }
     },
     // One level's best three on a figure's open board (get_level_podium, 202610210001; the selector's step 2): [{ position
     // (within the level), alias (guests already «nom#1234»), score, quality, is_self, total (players on that level), verified, tag }].
     async levelPodium({ figure, level }) {
+      const v = figure ? FIGURE_VERSIONS[figure] : LEADERBOARD_VERSION;
+      if (!v) return [];
       try {
-        return (await rpc(await client(), 'get_level_podium', { p_version: FIGURE_VERSIONS[figure] ?? LEADERBOARD_VERSION, p_difficulty: level })) ?? [];
+        return (await rpc(await client(), 'get_level_podium', { p_version: v, p_difficulty: level })) ?? [];
       } catch (error) { throw translated(error); }
     },
     // The Saló de la fama of a figure (get_seasons): one entry per (season, dance) with results, newest first, season 0 included.

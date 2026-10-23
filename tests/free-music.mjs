@@ -18,7 +18,7 @@ class Node {
   focus() {}
   getBoundingClientRect() { return { left: 0, width: 320, height: 300 }; }
 }
-const rows = [0, 1, 2, 3].map(i => new Node(i));
+const rows = [0, 1, 2, 3, 4].map(i => new Node(i));
 const chip = Object.create(Chip.prototype), failures = [], requests = [];
 const gain = () => ({ connect: t => t, gain: { setValueAtTime() {}, linearRampToValueAtTime() {}, setTargetAtTime() {} } });
 Object.assign(chip, {
@@ -32,7 +32,7 @@ Object.assign(chip, {
 let button, announcement;
 const figure = id => ({ id, song: id, composer: 'F. Bofarull', year: 1987 });
 const helpVars = {};
-const context = vm.createContext({ tr, chip, menuMusic: true, MULASSA: figure('mulassa'), DRAC: figure('drac'),
+const context = vm.createContext({ tr, chip, menuMusic: true, MULASSA: figure('mulassa'), DRAC: figure('drac'), BOU: figure('bou'),
   figureSong: id => ({ audio: id, tail: 90, beats: [0, 1] }), portraitArt() {}, portraitPalette() {}, pixelSvg: () => '',
   mulaSpinner: () => ({}), PHOTO: { on: false }, clearPhotoKeys() {}, hud: {}, keyboardNav: false, beatAtTime() {},
   errors: { report: (...args) => failures.push(args) }, audioFailureTags: e => ({ name: e.name }),
@@ -59,14 +59,16 @@ assert.equal(requests.length, 2, 'ended cannot supersede a newer pending manual 
 await decode(1);
 assert.equal(button.dataset.kind, 'drac');
 assert(chip.radioSrc && !chip.menuSrc);
+chip.radioSrc.src.onended(); await tick(); await decode(2);
+assert.equal(button.dataset.kind, 'bou', 'the Drac\'s song hands over to the Bou\'s');
 chip.radioSrc.src.onended(); await tick();
 assert.equal(button.dataset.kind, 'menu');
 assert(chip.menuSrc && !chip.radioSrc, 'the selected menu has a real source after natural completion');
 
-pick(1); pick(3); await decode(2);
+pick(1); pick(4); await decode(3);
 assert.equal(button.dataset.kind, 'off');
 assert(!chip.radioSrc && !chip.menuSrc, 'a late decode cannot override Silenci');
-pick(1); await decode(3);
+pick(1); await decode(4);
 chip.ctx.state = 'suspended'; chip.ctx.changed();
 assert.equal(rows[1].querySelector('small').textContent, 'Toca per reprendre');
 assert.equal(rows[1].querySelector('.fm-st').innerHTML, '', 'paused audio has no playing animation');
@@ -75,19 +77,19 @@ pick(1);
 assert.equal(chip.radioSrc, suspended, 'a resume gesture preserves the song position');
 assert.equal(chip.ctx.state, 'running');
 
-pick(2); player.visible(false); await decode(4);
+pick(2); player.visible(false); await decode(5);
 assert(!chip.radioSrc && chip.menuSrc, 'leaving free mode cancels the pending song and restores the menu');
 player.visible(true);
-pick(1); await decode(5);
+pick(1); await decode(6);
 pick(2); chip.radioSrc.src.onended();
-requests[6].reject(new Error('decode failed')); await tick();
+requests[7].reject(new Error('decode failed')); await tick();
 assert(failures.some(([kind]) => kind === 'radio-load-failed'));
 assert.equal(button.dataset.kind, 'menu');
 assert(chip.menuSrc && !chip.radioSrc, 'failure after the old song ended restores a real menu transport');
-pick(1); await decode(7);
+pick(1); await decode(8);
 pick(2); chip.radioSrc.src.onended();
 player.visible(false);
-await decode(8);
+await decode(9);
 assert(chip.menuSrc && !chip.radioSrc, 'leaving between natural ended and the next decode restores the menu');
 { // the dock's «Ball lliure» starts the chosen figure's own song with its status; a speaker turned off stays off
   player.visible(true); const asked = requests.length;
@@ -102,7 +104,7 @@ assert(chip.menuSrc && !chip.radioSrc, 'leaving between natural ended and the ne
   const timers = new Map(); let id = 0;
   context.setTimeout = (fn, ms) => { timers.set(++id, { fn, ms }); return id; };
   context.clearTimeout = i => timers.delete(i);
-  player.visible(true); pick(3);
+  player.visible(true); pick(4);
   assert(!announcement.hidden && announcement.dataset.visible === 'true', 'a music choice shows the compact status');
   assert(announcement.innerHTML.includes('Música aturada'), 'silence has a distinct status instead of repeating its title');
   const first = [...timers.keys()].find(i => timers.get(i).ms === 2600);
@@ -110,7 +112,7 @@ assert(chip.menuSrc && !chip.radioSrc, 'leaving between natural ended and the ne
   timers.get(first).fn();
   assert.equal(announcement.dataset.visible, 'false', 'expiry starts the CSS fade');
   assert(!announcement.hidden && announcement.attrs['aria-hidden'] === 'true', 'fade preserves the painted box without retaining a stale accessible status');
-  pick(3); pick(3);
+  pick(4); pick(4);
   assert(!timers.has(first) && [...timers.values()].filter(t => t.ms === 2600).length === 1, 'rapid choices replace the old announcement timer');
   player.visible(false);
   assert(announcement.hidden && timers.size === 0, 'leaving clears the status and its timer');

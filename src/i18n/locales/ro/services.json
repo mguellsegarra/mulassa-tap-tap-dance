@@ -52,6 +52,7 @@
   "services.share.challengeTip": "Provocare de la un prieten: depășește {pct}% la {diff}",
   "services.share.clear": "{mula}💃 Am făcut Mulassa de Valls să danseze cu {pct} reușite la {diff}. Te încumeți? 🔥",
   "services.share.drac": "Am făcut Drac de Valls să danseze cu {pct} reușite la {diff}. #Valls",
+  "services.share.bou": "Am făcut Bou Tradicional de Valls să danseze cu {pct} reușite la {diff}. #Valls",
   "services.share.fail": "{mula} {pct} reușite la {diff}… Mulassa cere revanșa. Tu cum te-ai descurca? 💃",
   "services.share.record": "{mula}🔥 Record nou de puncte: {score} la {diff} ({pct} reușite), făcând Mulassa de Valls să danseze! 🎉"
 }

@@ -1,11 +1,11 @@
 // The figure dropdown of Classificació and the Saló de la fama: a button (the figure's pixel portrait, its name, a chevron)
 // that opens «Tria figura» (big options: the selector's vector illustration; pixel art only where it is small) in place of the sheet's main view (index.html `.board-figure`, `.board-picker`; CSS in base.css).
 // The shown figure is cream; picking one, Escape or × (the sheet's own handler asks `open`) come back.
-import { FIGURES, playable, portraitArt, portraitPalette } from '../game/figures.js';
+import { FIGURES, hasBoard, portraitArt, portraitPalette } from '../game/figures.js';
 import { pixelSvg } from './select-strip.js';
 import { SELECTOR_PORTRAITS } from './selector-portraits.js';
 
-export const PICKER_FIGURES = FIGURES.filter(playable); // one board each
+export const PICKER_FIGURES = FIGURES.filter(hasBoard); // one board each
 export const figurePortrait = f => pixelSvg(portraitArt(f), portraitPalette(f), '#2a1a10');
 // «Drac» big, «de Valls» small under it (Marc: other towns' Dracs will come): one designed second line, never a wrap
 function nameInto(doc, into, f) {

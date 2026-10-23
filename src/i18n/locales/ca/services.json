@@ -52,6 +52,7 @@
   "services.share.challengeTip": "Repte d’un amic: supera el {pct}% a {diff}",
   "services.share.clear": "{mula}💃 He fet ballar la Mulassa de Valls amb un {pct} d’encerts a {diff}. T’hi atreveixes? 🔥",
   "services.share.drac": "He fet ballar el Drac de Valls amb un {pct} d'encerts a {diff}. #Valls",
+  "services.share.bou": "He fet ballar el Bou Tradicional de Valls amb un {pct} d'encerts a {diff}. #Valls",
   "services.share.fail": "{mula} {pct} d’encerts a {diff}… La Mulassa em demana la revenja. I tu, com ho faries? 💃",
   "services.share.record": "{mula}🔥 Nou rècord de punts: {score} a {diff} ({pct} d’encerts) fent ballar la Mulassa de Valls! 🎉"
 }

@@ -13,10 +13,11 @@ import * as THREE from 'three';
 import { newPose, dancePose, END_BEAT } from '../game/dance.js';
 import { blocks } from './framing.js';
 import { errors, errorName } from '../services/errors.js';
-import { plaza, mula, drac, dracMat, renderer, FRONT, CAM_AZ, DRAC_YAW, scene, mulaCarriers } from './stage.js';
+import { plaza, mula, drac, bou, dracMat, renderer, FRONT, CAM_AZ, DRAC_YAW, scene, mulaCarriers } from './stage.js';
 import { nominalFoot } from '../game/mula-supports.js';
 import { M } from './mula-motion.js';
 import { insidePlaza } from './cameras.js';
+import { poseBou, BOU_END } from './bou-stage.js';
 
 // The share card's photo (share-card.js): her from the crowd's gap (the play camera's side)
 // with a camera of its own, rendered into a render target and read back, so the screen's buffer is never touched
@@ -52,10 +53,10 @@ function heroIssue(phase, target, e) {
 export function renderHero(w, h, figureId = selectedFigure.id) {
   if (gpuLost()) { errors.breadcrumb('share-hero-context-lost', { phase: 'context', target: 'none' }); return null; }
   const saved = [], props = plaza.props.map(p => p.mesh.visible);
-  const isDrac = figureId === 'drac-valls', model = isDrac ? drac : mula;
-  const scale = isDrac ? DRAC_SIZE.h * DRAC_SCALE / 4.03 : 1;
+  const isDrac = figureId === 'drac-valls', isBou = figureId === 'bou-tradicional-valls', model = isDrac ? drac : isBou ? { root: bou.frame } : mula;
+  const scale = isDrac ? DRAC_SIZE.h * DRAC_SCALE / 4.03 : isBou ? 0.8 : 1; // (figure-song.js figureScale)
   const effects = [confetti, fireworks, ...Object.values(dracFx.objects).flat()].filter(Boolean);
-  const visibility = [...effects, mula.root, drac.root].map(o => [o, o.visible]);
+  const visibility = [...effects, mula.root, drac.root, bou.frame].map(o => [o, o.visible]);
   model.root.traverse(o => saved.push([o, o.position.clone(), o.quaternion.clone(), o.scale.clone(), o.visible]));
   const opacity = dracMat?.opacity;
   if (isDrac) {
@@ -66,8 +67,9 @@ export function renderHero(w, h, figureId = selectedFigure.id) {
   try {
     prevTarget = renderer.getRenderTarget();
     effects.forEach(o => { o.visible = false; });
-    mula.root.visible = !isDrac; drac.root.visible = isDrac;
-    if (isDrac) {
+    mula.root.visible = !isDrac && !isBou; drac.root.visible = isDrac; bou.frame.visible = isBou;
+    if (isBou) poseBou(BOU_END); // its last stance, back on its entrance facing
+    else if (isDrac) {
       const life = drac.root.parent;
       placeDance(life, DRAC_YAW).scale.setScalar(DRAC_SCALE); life.visible = true; // its dance frame, where it settled (M.pos)
       if (dracMat) dracMat.opacity = 1;

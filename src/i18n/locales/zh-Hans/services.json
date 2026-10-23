@@ -52,6 +52,7 @@
   "services.share.challengeTip": "朋友的挑战：在{diff}难度超过{pct}%",
   "services.share.clear": "{mula}💃我让Mulassa de Valls跳起来了！{diff}难度命中率{pct}。你敢来吗？🔥",
   "services.share.drac": "我让Drac de Valls跳起来了！{diff}难度命中率{pct}。#Valls",
+  "services.share.bou": "我让Bou Tradicional de Valls跳起来了！{diff}难度命中率{pct}。#Valls",
   "services.share.fail": "{mula}{diff}难度命中率{pct}…Mulassa喊我再战一局。换你来会怎样？💃",
   "services.share.record": "{mula}🔥刷新得分纪录！Mulassa de Valls，{diff}难度{score}分（命中率{pct}）！🎉"
 }

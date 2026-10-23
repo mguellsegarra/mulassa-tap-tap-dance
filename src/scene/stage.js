@@ -6,8 +6,10 @@ import { errors, errorName } from '../services/errors.js';
 import { buildPlaza, buildMulassa } from './models.js';
 import { newDracFeet } from '../game/drac-feet.js';
 import { buildDrac, DRAC_SCALE } from './models/drac.js';
+import { buildBou } from './models/bou.js';
 import { createColla } from './drac-colla.js';
 import { createMulaColla, mulaSeatAt } from './mula-colla.js';
+import { createBouColla } from './bou-colla.js';
 import { danceYaw } from '../game/drac-layout.js';
 import { mulaDanceYaw } from '../game/mula-layout.js';
 import { createCarriers } from './mula-carriers.js';
@@ -64,9 +66,14 @@ mula.root.add(mulaCarriers.group);
 export let drac = null;
 export let colla = null; // the Drac's colla: its four clapping helpers and a few members sitting round the plaça (drac-colla.js)
 export let mulaColla = null; // the Mulassa's: four attendants on her compass marks and a seated ring (drac-colla.js createMulaColla)
+export let bouColla = null; // the Bou's: four garnet attendants on the plaça's compass and its capatàs (bou-colla.js)
 // Keep the Drac's material separate for share captures; its body stays opaque.
 // Copied from its own meshes in initDrac (no voxel.js import here: the tests' one-script bundle keeps its module order).
 export let dracMat = null;
+// The Bou Tradicional (models/bou.js, Marc's p13): its rig in metres, and `frame`, its dance frame (the feet and legs
+// are the frame's children beside the root: they stay planted in it), turned so the dance's front faces the play camera.
+export let bou = null;
+export const figureRoot = id => id === 'drac-valls' ? drac?.root : id === 'bou-tradicional-valls' ? bou?.root : mula.root; // the selector frames its outline
 // Build after the existing plaza/crowd setup so its material jitter does not change their random layout.
 export function initDrac() {
   if (drac) return;
@@ -82,12 +89,20 @@ export function initDrac() {
   life.scale.setScalar(DRAC_SCALE);
   life.add(drac.root);
   scene.add(life);
+  bou = buildBou();
+  bou.frame = new THREE.Group(); bou.frame.rotation.y = FRONT; bou.frame.visible = false;
+  bou.frame.add(bou.root, ...bou.feet, ...bou.legs);
+  scene.add(bou.frame);
   colla = createColla({ profile: renderProfile }); // hidden until the Drac is the figure; built now so the warmup compiles it
   colla.helpers.visible = colla.seated.visible = false;
   scene.add(colla.helpers, colla.seated);
   mulaColla = createMulaColla(renderProfile, seat => mulaSeatAt(seat, MULA_YAW)); // her seated ring, from its dance frame into the plaça
   mulaColla.helpers.visible = mulaColla.seated.visible = false;
   scene.add(mulaColla.helpers, mulaColla.seated);
+  bouColla = createBouColla(renderProfile);
+  bouColla.helpers.rotation.y = BOU_COLLA_YAW;
+  bouColla.helpers.visible = bouColla.seated.visible = false;
+  scene.add(bouColla.helpers, bouColla.seated);
 }
 // Her standing pose at load (what the camera-fit silhouettes used to leave behind): animMula overwrites it every frame.
 mula.neck.rotation.x = 0.15;
@@ -109,6 +124,7 @@ export const CAM_EL = 26 * Math.PI / 180, CAM_AZ = -81 * Math.PI / 180;
 export const CAM_DIR = [Math.cos(CAM_EL) * Math.sin(CAM_AZ), Math.sin(CAM_EL), Math.cos(CAM_EL) * Math.cos(CAM_AZ)]; // from her to the camera (unit)
 export const FRONT = CAM_AZ + 0.35; // her dance's front: 20 deg off the play camera, so every pose reads three-quarter (her side, the blanket, the head)
 export const DRAC_YAW = danceYaw(CAM_AZ); // the Drac's dance frame heading (game/drac-layout.js)
+export const BOU_COLLA_YAW = CAM_AZ - Math.PI / 4; // the Bou's colla compass (bou-colla.js): the camera looks in between W and S
 export const MULA_YAW = mulaDanceYaw(CAM_AZ); // the Mulassa's (game/mula-layout.js): the camera looks in between W and S
 export let camShift = 0, camShiftX = 0; // lens shift, css px: her centre below / right of the screen's middle (see frame())
 export const setCamShift = (v, x = 0) => { camShiftX = x; return (camShift = v); };

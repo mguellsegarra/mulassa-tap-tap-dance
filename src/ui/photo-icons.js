@@ -1,6 +1,6 @@
 // Photo mode's touch buttons (ui/photo-stick.js): what each figure does, drawn. The Mulassa's three from the loader's
 // side view (red cloth, green saddle, the carriers' legs), the Drac's from its pixel portrait (figures.js).
-import { MULASSA, DRAC, portraitArt, portraitPalette } from '../game/figures.js';
+import { MULASSA, DRAC, BOU, portraitArt, portraitPalette } from '../game/figures.js';
 import { pixelSvg } from './select-ui.js';
 
 // 48-unit drawn icons (no emoji). The Mulassa seen from the side, head to the right: red cloth body, green saddle, gold hem,
@@ -27,9 +27,20 @@ const DRAC_SPARKS = piSvg(`${DRAC_PX(2, 22, 24)}<g stroke-linecap="round" stroke
 // R: it turns round.
 const DRAC_SPIN = piSvg(`${DRAC_PX(10, 15, 26)}${piLines('M41.5 31A20 13 0 1 1 33 9.6')}${piLines('M27.5 5.5l6 4-3.6 5.6')}`);
 const PI_JUMP = piSvg(`${piLines('M24 34V10M14.5 19.5 24 10l9.5 9.5', 3.4)}${piLines('M12 41h24', 3.4)}`);
+// The Bou, from its pixel portrait (head to the right, 20 × 15 with the rim): it never leaves the floor, so no jump.
+const BOU_PX = (x, y, w) => pixelSvg(portraitArt(BOU), portraitPalette(BOU), '#2a1a10').replace('<svg ', `<svg x="${x}" y="${y}" width="${w}" height="${w * 15 / 20}" `);
+// Space: the charge, head down and speed lines behind it.
+const BOU_CHARGE = piSvg(`<g transform="rotate(10 30 30)">${BOU_PX(13, 16, 32)}</g>${piLines('M2 20h8M4 28h7M2 36h8')}`);
+// Q: the head lifted (an arrow up over the horns).
+const BOU_HEAD = piSvg(`${BOU_PX(4, 20, 32)}${piLines('M38 17V5M33 10l5-5 5 5')}`);
+// E: the carriers' leg stretched forward, heel down and toe up (the dance's gesture).
+const BOU_LEG = piSvg(`${BOU_PX(2, 10, 30)}${piLines('M20 33l14 7', 3.2)}${piLines('M33 37l4 6')}`);
+// R: the half turn.
+const BOU_SPIN = piSvg(`${BOU_PX(9, 16, 28)}${piLines('M41.5 31A20 13 0 1 1 33 9.6')}${piLines('M27.5 5.5l6 4-3.6 5.6')}`);
 export const PHOTO_ICONS = {
   [MULASSA.id]: { Space: PI_JUMP, KeyQ: MULA_REAR, KeyE: MULA_KICK, KeyR: MULA_SPIN },
   [DRAC.id]: { Space: PI_JUMP, KeyQ: DRAC_ROAR, KeyE: DRAC_SPARKS, KeyR: DRAC_SPIN },
+  [BOU.id]: { Space: BOU_CHARGE, KeyQ: BOU_HEAD, KeyE: BOU_LEG, KeyR: BOU_SPIN },
 };
 // The swap button shows who you'd become: the other figure's pixel portrait.
 export const swapArt = id => { const f = id === DRAC.id ? MULASSA : DRAC; return pixelSvg(portraitArt(f), portraitPalette(f), '#2a1a10'); };

@@ -52,6 +52,7 @@
   "services.share.challengeTip": "Sfida di un amico: supera il {pct}% a {diff}",
   "services.share.clear": "{mula}💃 Ho fatto ballare la Mulassa de Valls con un {pct} di centri a {diff}. Ci provi? 🔥",
   "services.share.drac": "Ho fatto ballare il Drac de Valls con un {pct} di centri a {diff}. #Valls",
+  "services.share.bou": "Ho fatto ballare il Bou Tradicional de Valls con un {pct} di centri a {diff}. #Valls",
   "services.share.fail": "{mula} {pct} di centri a {diff}… La Mulassa vuole la rivincita. E tu, come te la caveresti? 💃",
   "services.share.record": "{mula}🔥 Nuovo record di punti: {score} a {diff} ({pct} di centri) facendo ballare la Mulassa de Valls! 🎉"
 }

@@ -52,6 +52,7 @@
   "services.share.challengeTip": "Lagun baten erronka: gainditu %{pct}. Maila: {diff}",
   "services.share.clear": "{mula}💃 Mulassa de Valls dantzan jarri dut: {pct} asmatze. Maila: {diff}. Ausartzen zara? 🔥",
   "services.share.drac": "Drac de Valls dantzan jarri dut: {pct} asmatze. Maila: {diff}. #Valls",
+  "services.share.bou": "Bou Tradicional de Valls dantzan jarri dut: {pct} asmatze. Maila: {diff}. #Valls",
   "services.share.fail": "{mula} {pct} asmatze, maila: {diff}… Mulassa errebantxa eske daukat. Eta zuk, zer moduz? 💃",
   "services.share.record": "{mula}🔥 Puntu-errekor berria: {score}, maila: {diff} ({pct} asmatze), Mulassa de Valls dantzan! 🎉"
 }

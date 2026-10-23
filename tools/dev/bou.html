@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="ca"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Bou Tradicional · model</title>
+<style>html,body{margin:0;height:100%;overflow:hidden;background:#b8c7c9;font-family:system-ui}canvas{display:block;width:100%;height:100%;touch-action:none}
+#bar{position:fixed;left:8px;top:8px;display:flex;gap:6px}#bar select,#bar button{font:15px system-ui;padding:8px 10px;border-radius:10px;border:1px solid #6b5a3c;background:#fff8e8}</style></head>
+<body><canvas id="c"></canvas><div id="bar"><select id="m" hidden></select><button id="spin">Gira</button><button id="dance">Balla</button></div>
+<script type="module">
+// Free 3D look at the Bou model, scene/models/bou.js (dev only; «Balla» shakes it so the tail swings): drag to orbit, pinch or wheel to zoom, two fingers to pan.
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { buildBou } from '/src/scene/models/bou.js';
+const models = { bou: 'Bou Tradicional' };
+const sel = document.getElementById('m');
+for (const [k, n] of Object.entries(models)) sel.add(new Option(n, k));
+const q = new URLSearchParams(location.search); sel.value = 'bou';
+const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('c'), antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+const scene = new THREE.Scene(); scene.background = new THREE.Color('#b8c7c9');
+scene.add(new THREE.HemisphereLight('#fff4df', '#867253', 2.3));
+const sun = new THREE.DirectionalLight('#fff0cf', 2.2); sun.position.set(-4, 8, 4); scene.add(sun);
+const floor = new THREE.Mesh(new THREE.CircleGeometry(6, 48), new THREE.MeshLambertMaterial({ color: '#d5c69f' }));
+floor.rotation.x = -Math.PI / 2; floor.position.y = -.005; scene.add(floor);   // below the soles (they shimmered on it)
+const camera = new THREE.PerspectiveCamera(40, 1, .05, 60); camera.position.set(4.5, 2.4, 5.5);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 1.1, .2); controls.enableDamping = true; controls.minDistance = 1.2; controls.maxDistance = 14;
+controls.maxPolarAngle = Math.PI * .52;
+let rig = null;
+// For automated sweeps (flicker checks): the camera and its controls.
+window.__orbit = { camera, controls, render: () => { controls.update(); renderer.render(scene, camera); } };
+function load(key) {
+  if (rig) { scene.remove(rig.root, ...rig.feet, ...rig.legs); rig.dispose?.(); }
+  rig = buildBou();
+  scene.add(rig.root, ...rig.feet, ...rig.legs);
+  [[-.12, -.66], [.12, -.66], [-.12, .66], [.12, .66]].forEach(([x, z], i) => rig.feet[i].position.set(x, 0, z));
+  rig.poseLegs(); rig.swingTail?.reset();
+  
+}
+sel.onchange = () => load(sel.value); load(sel.value);
+// «Balla»: a little test dance (steps back and forth, turns, a bow) so the tail's weight shows.
+const danceBtn = document.getElementById('dance'); let dancing = false, tDance = 0, last = performance.now();
+danceBtn.onclick = () => { dancing = !dancing; danceBtn.textContent = dancing ? 'Quiet' : 'Balla'; if (!dancing) load(sel.value); };
+const spin = document.getElementById('spin');
+spin.onclick = () => { controls.autoRotate = !controls.autoRotate; spin.textContent = controls.autoRotate ? 'Atura' : 'Gira'; };
+function frame() {
+  const w = innerWidth, h = innerHeight;
+  if (renderer.domElement.width !== Math.round(w * renderer.getPixelRatio())) {
+    renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
+    // Back off on narrow screens so the whole Bou (~3.6 m with the head) fits across.
+    const fit = 2.4 / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2) * Math.min(1, camera.aspect));
+    camera.position.sub(controls.target).setLength(Math.max(7.5, fit)).add(controls.target);
+  }
+  const now = performance.now(), dt = Math.min(.1, (now - last) / 1000); last = now;
+  if (dancing) {
+    tDance += dt; const k = tDance;
+    rig.root.position.z = .35 * Math.sin(k * 2.2); rig.root.position.y = .04 * Math.abs(Math.sin(k * 4.4));
+    rig.root.rotation.y = .5 * Math.sin(k * 1.1);
+    rig.body.rotation.x = .18 * Math.sin(k * 2.2 + 1) * (Math.sin(k * .5) > 0 ? 1 : .3); rig.body.rotation.z = .06 * Math.sin(k * 3.3);
+    // The carriers walk along with it.
+    const c = Math.cos(rig.root.rotation.y), sn = Math.sin(rig.root.rotation.y);
+    [[-.12, -.66], [.12, -.66], [-.12, .66], [.12, .66]].forEach(([x, z], i) => {
+      rig.feet[i].position.set(x * c + z * sn, 0, -x * sn + z * c + rig.root.position.z); rig.feet[i].rotation.y = rig.root.rotation.y; });
+    rig.poseLegs();
+  }
+  rig.swingTail?.(dt);
+  controls.update(); renderer.render(scene, camera); requestAnimationFrame(frame);
+}
+frame();
+</script></body></html>

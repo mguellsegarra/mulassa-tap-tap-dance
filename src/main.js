@@ -6,7 +6,6 @@ import { errors } from './services/errors.js';
 import './services/update.js';
 import * as THREE from 'three';
 import { song, figureScale, selectedFigure } from './game/figure-song.js';
-import { DRAC } from './game/figures.js';
 import { adaptiveQuality } from './platform/adaptive-quality.js';
 import { waitForWarmup, linkPrograms } from './platform/boot.js';
 import { sectionAt } from './game/chart.js';
@@ -19,7 +18,7 @@ import { setupCamEdit } from './dev/cam-edit.js';
 import { setupSizesEdit } from './dev/sizes-edit.js';
 import { Q, COARSE, pageActive, beatAt, BEAT, offsetMs, playFrom, FINALE_T, AUTOPLAY, CALM, FINAL, STARS } from './core/env.js';
 import { pace, RAWCLOCK, viewClock } from './core/timing.js';
-import { initDrac, mula, drac, colla, mulaColla, qualityLevel, renderProfile, softwareGl, GPU, renderer, camera, plaza, cameraTarget, camFocus, camFocusTarget, camShift, camShiftX, camXYZ, focusXYZ, scene, setQualityLevel, setCamShift, renderScreen } from './scene/stage.js';
+import { initDrac, figureRoot, mula, drac, bou, colla, mulaColla, bouColla, qualityLevel, renderProfile, softwareGl, GPU, renderer, camera, plaza, cameraTarget, camFocus, camFocusTarget, camShift, camShiftX, camXYZ, focusXYZ, scene, setQualityLevel, setCamShift, renderScreen } from './scene/stage.js';
 import { afterActive, G, chip, clock, songTime, drawT, bigPending, audioEngine, setClock, setDrawT } from './game/state.js';
 import { audioFailureTags } from './platform/audio.js';
 import { spawnConfetti, burst, animConfetti, setConfettiSettled } from './scene/confetti.js';
@@ -51,13 +50,14 @@ import { autoplay, advance, collapse, judge, press } from './game/judge.js';
 import { practiceTick, finish, songWait, musicLine, startFinal, previewResults, startPractice, endPractice, choose } from './game/flow.js';
 import './ui/pad.js';
 import './ui/focus.js';
-import { pauseGame } from './ui/pause.js';
 import './ui/fullscreen.js';
 import { updateControls, viewMode, viewT, hudBlank, setHudBlank, menuState, steers, setView, freeDance } from './ui/controls.js';
 import { fpsTick } from './dev/fps.js';
 import { debugAction } from './dev/debug.js';
 import { drawHud } from './hud/draw.js';
-import './ui/pause-actions.js';
+import { watchAudio } from './ui/pause-actions.js';
+import { tickReel, REEL } from './game/showreel.js';
+import { reelIdle, idleBand } from './ui/reel-idle.js';
 import './ui/backdrop.js';
 import './ui/input.js';
 import './ui/sheets-setup.js';
@@ -80,7 +80,6 @@ const resetFrameTime = () => { last = null; qualityCost = NaN; pace.reset(); mon
 for (const event of ['blur', 'focus', 'pagehide', 'pageshow', 'resize', 'orientationchange']) addEventListener(event, resetFrameTime);
 document.addEventListener('visibilitychange', resetFrameTime);
 
-let audioStallT = null;
 // ?cam: the camera editor over the game (src/dev/cam-edit.js): choose a view by eye, copy its numbers, the per-device camera is fitted from them
 const CAMED = Q.has('cam') ? setupCamEdit({ hud, camera, active: () => G.state === 'play' && !G.paused, info: () => ({
   cw: innerWidth, ch: HH * K, dpr: devicePixelRatio, K, practice: !!G.practice, touch: COARSE.matches, laneBottom: lane().bottom * K, padTop: playBottom() * K }) }) : null;
@@ -95,9 +94,7 @@ function frame(now) {
   if (document.hidden || (!coverUp && G.state !== 'splash' && !pageActive())) { last = null; return; }
   if (!drawn && renderer.getContext().isContextLost()) { last = null; return; } // a no-op render cannot certify readiness
   if (last === null) last = now; // no elapsed background time enters the demo or effect emitters
-  // iOS can leave the audio context stopped after an app switch (resume() only works inside a tap): the song clock would stand still
-  // with no menu up. Stalled for a second mid-run: pause, so the Reprèn tap is the gesture that restarts it.
-  if (G.state === 'play' && !G.paused && chip?.t0 != null && chip.ctx.state !== 'running' && pageActive()) { audioStallT ??= now; if (now - audioStallT > 1000) { audioStallT = null; pauseGame(); } } else audioStallT = null;
+  watchAudio(now); // a run whose audio clock stands still pauses, so the Continua tap restarts it
   if (!pace(now, G.state === 'play')) return; // 120 Hz screens that can't keep up: every other refresh (framePacer); never back up to 120 mid-song
   const f0 = performance.now();
   clearCameraImpact();
@@ -114,6 +111,9 @@ function frame(now) {
   if (G.resuming != null && (G.state !== 'play' || songTime() >= G.resuming)) { G.resuming = null; G.paused = false; }
   if (G.state === 'play') { t = songTime(); vt = setDrawT(chip?.t0 != null ? viewClock(heard - offsetMs / 1000, G.paused ? 0 : frameS) : t); live = Math.min(1, Math.max(0, (vt - G.go) / 0.12 + 1)); } // t: the song now (misses, autoplay); vt: at the frame's rAF time, what is drawn. Same clock, eased over the audio device's own jumps (viewClock). Still until the first note
   if (G.resuming != null) t = vt = setDrawT(G.resuming); // the 3, 2, 1 after a pause: the scene holds still at the pause point (the song clock is running back up to it)
+  const pendingSel = sheets.select?.pending ?? sheets.select?.figure?.status === 'aviat';
+  tickReel(G.state === 'select' && !viewMode && !PHOTO.on && !pendingSel && !Q.has('still'), selectedFigure.id, chip?.menuBeat?.(), dt, CALM.matches); // the selector's showreel: her song dance on the menu loop's beat, filmed as a dance film
+  const reelWide = reelIdle(now); // left untouched, its UI fades
   if (G.state === 'play' && !G.paused) {
     beat = beatAt(Math.max(0, vt));
     const sec = t < playFrom ? G.sec : sectionAt(song, t);
@@ -137,10 +137,10 @@ function frame(now) {
     }
     if (t >= song.end && G.next >= G.chart.length && !G.hold && !bigPending && !G.eeeh && !G.collapseT) { // the "eeeeh!": grand finale volley, for everyone
       G.eeeh = true;
-      for (let i = 0; i < 6; i++) afterActive(i * 180, () => { if (G.state === 'play') firework(rnd(-10, 10), rnd(10, 15), rnd(-10, 3), 90); });
+      for (let i = 0; i < 6; i++) afterActive(figTheme.volley * 1000 + i * 180, () => { if (G.state === 'play') firework(rnd(-10, 10), rnd(10, 15), rnd(-10, 3), 90); });
       burst(M.pos.x, M.pos.y);
       // the crowd's chant, in its own rhythm: "guapa, guapa... i guapa!"
-      figTheme.chant.forEach(([w, at]) => afterActive(at * 1000, () => { if (G.state === 'play') headline(w, 'rainbow', 4, at > 1 ? 1.6 : 0.8, 0.5); }));
+      figTheme.chant.forEach(([w, at, dur]) => afterActive(at * 1000, () => { if (G.state === 'play') headline(w, 'rainbow', 4, dur, 0.5); }));
       setTrauma(1);
     }
     if (judgedCount(G.counts) > 1) G.shown += (G.guapo - G.shown) * Math.min(1, dt * 4); // the meter eases, it never jumps
@@ -152,14 +152,14 @@ function frame(now) {
       if (G.practice) practiceTick(t);
       else if (t > song.tail + 1) finish('end');
     } else if (clock - G.collapseT > 3.5) finish('collapse');
-  } else if ((G.state === 'title' || G.state === 'select') && Math.floor(beat) !== G.lastBeat) { // demo dance on the menu
+  } else if ((G.state === 'title' || G.state === 'select') && !REEL.on && Math.floor(beat) !== G.lastBeat) { // demo dance on the menu
     G.lastBeat = Math.floor(beat);
     if (G.lastBeat % 2 === 0 && !Q.has('still') && !(PHOTO.on && PHOTO.id === 'mulassa-valls')) act('LDRU'[(G.lastBeat / 2) % 4]);
   }
   if (PHOTO.on && !steers()) setView(false);
   animMula(dt, beat, live);
   // a pending selection hides both models; photo mode shows the existing pair without changing selection
-  if (G.state === 'select' && !viewMode && (sheets.select?.pending ?? sheets.select?.figure?.status === 'aviat')) { mula.root.visible = false; drac.root.visible = false; for (const c of [colla, mulaColla]) c.helpers.visible = c.seated.visible = false; } // (the collas with them)
+  if (G.state === 'select' && !viewMode && pendingSel) { mula.root.visible = false; drac.root.visible = false; bou.frame.visible = false; for (const c of [colla, mulaColla, bouColla]) c.helpers.visible = c.seated.visible = false; } // (the collas with them)
   const c0 = PERF && performance.now();
   const menuHeard = G.state === 'play' ? null : sheets.music?.beat() ?? chip?.menuBeat?.(); // on the menus what sounds: the radio's song or the menu loop
   animCrowd(dt, menuHeard ?? beat, vt, live); // the plaça claps on it
@@ -190,8 +190,8 @@ function frame(now) {
       const L = titleL, mid = (L.logo.y + L.logo.h + L.choiceY) / 2;
       aim = Math.max(-0.25 * HH * L.K, Math.min(0.25 * HH * L.K, (mid - HH / 2) * L.K));
     }
-    const sel = G.state === 'select', root = sel && !PAIR.k ? (selectedFigure.id === DRAC.id ? drac?.root : mula.root) : null; // «QUI BALLA?» frames its figure in the free rect it measured (css px, when it opens or resizes); «mode foto» hides the selector: the whole screen
-    shift = frameMenuCamera(dt, mx, mz, root, sel && !viewMode ? sheets.select?.band : null, viewMode, viewMode && orbit.last * 1000 >= viewT, aim);
+    const sel = G.state === 'select', root = sel && !PAIR.k ? figureRoot(selectedFigure.id) : null; // «QUI BALLA?» frames its figure in the free rect it measured (css px, when it opens or resizes); «mode foto» hides the selector: the whole screen
+    shift = frameMenuCamera(dt, mx, mz, root, sel && !viewMode ? (reelWide ? idleBand(sheets.select?.band, W * K, HH * K, SAFE) : sheets.select?.band) : null, viewMode, viewMode && orbit.last * 1000 >= viewT, aim, REEL.on ? REEL : null);
   } else if (G.state === 'play') {
     CAMED?.restoreFov();
     shift = framePlayCamera(dt, mx, mz);

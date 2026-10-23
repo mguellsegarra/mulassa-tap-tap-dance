@@ -14,7 +14,7 @@ assert(body.indexOf('id="loader"') < body.indexOf('<script'), 'the loader is pla
 assert(/<div id="loader" class="page" role="status" aria-live="polite">/.test(html), 'a live status region, the page cover to start');
 assert(/<body aria-busy="true">/.test(html), 'the page says it is busy until the first frame');
 assert(html.includes(MULASSA_SVG), 'index.html carries the same Mulassa as src/ui/loader.js');
-assert(html.includes('Avisant a la brigada…'), 'Catalan status on the first paint');
+assert(html.includes('Avisant la brigada…'), 'Catalan status on the first paint');
 const css = html.slice(html.indexOf('#loader {'), html.indexOf('</style>', html.indexOf('#loader {')));
 assert(/@media \(prefers-reduced-motion: reduce\)\{\.mula-load \*\{animation:none!important\}\}/.test(css), 'reduced motion: all character parts rest');
 assert(/#loader \{[^}]*pointer-events: none/.test(css), 'the loader never takes a tap');
@@ -38,9 +38,10 @@ function timedLoader({ start = 0, ...options } = {}) {
   const L = setupLoader(d.doc, { timers, storage: null, random: () => 0, ...options });
   return { ...d, L, run };
 }
+const SHORT = ['a', 'b', 'c', 'd']; // short lines: the 1.6 s floor
 for (const start of [0, 7000]) { // also after a slow module load: elapsed navigation time never skips the three lines
   const d = timedLoader({ start });
-  d.L.jokes();
+  d.L.jokes(SHORT);
   const first = d.label.textContent;
   d.run(start + 500); d.L.ready(); d.L.ready();
   d.run(start + 1599); assert.equal(d.label.textContent, first);
@@ -54,25 +55,34 @@ for (const start of [0, 7000]) { // also after a slow module load: elapsed navig
   d.run(start + 20000); assert.equal(d.label.textContent, third, 'no fourth phrase flashes during or after the fade');
 }
 {
-  const d = timedLoader(); d.L.jokes();
+  const d = timedLoader(); d.L.jokes(SHORT);
   d.run(5350); const fourth = d.label.textContent;
   assert(d.L.covering, 'three phrases alone never release a game that is still loading');
   d.L.ready();
   d.run(6399); assert(d.L.covering && d.label.textContent === fourth, 'a slow load finishes the current phrase too');
   d.run(6400); assert(!d.L.covering && d.label.textContent === fourth);
 }
+{ // a long line stays up longer (45 ms a character, up to 3 s), so it can be read whole
+  const d = timedLoader(); d.L.jokes(['x', 'y', 'z'].map(c => c.repeat(50)));
+  d.run(1600); const long = d.label.textContent;
+  d.run(3849); assert.equal(d.label.textContent, long);
+  d.run(3850); assert.notEqual(d.label.textContent, long);
+  const e = timedLoader(); e.L.jokes(['x', 'y', 'z'].map(c => c.repeat(200)));
+  e.run(1600); const huge = e.label.textContent;
+  e.run(4600); assert.notEqual(e.label.textContent, huge, 'never more than 3 s');
+}
 {
-  const d = timedLoader({ giveUp: 3500 }); d.L.jokes();
+  const d = timedLoader({ giveUp: 3500 }); d.L.jokes(SHORT);
   d.run(3500); assert(!d.L.covering, 'the safety timeout overrides the minimum reading time');
   const last = d.label.textContent;
   d.run(5000); assert(d.el.hidden && d.label.textContent === last, 'no joke timer survives the timeout');
 }
 {
-  const d = timedLoader(); d.L.jokes(); d.classes.add('fail');
+  const d = timedLoader(); d.L.jokes(SHORT); d.classes.add('fail');
   d.run(28000); assert(!d.el.hidden && !d.classes.has('out'), 'a boot error stays visible past the loader timeout');
 }
 {
-  const d = timedLoader(); d.L.jokes();
+  const d = timedLoader(); d.L.jokes(SHORT);
   d.doc.defaultView = { __mulassaCheckBoot() { d.classes.add('fail'); return false; } };
   d.run(20000);
   const last = d.label.textContent;
@@ -92,7 +102,7 @@ for (const start of [0, 7000]) { // also after a slow module load: elapsed navig
 function dom() {
   const classes = new Set(['page']), attrs = {};
   const el = { hidden: false, classList: { toggle: (c, on) => (on ? classes.add(c) : classes.delete(c)), contains: c => classes.has(c) }, setAttribute: (k, v) => { attrs[k] = v; } };
-  const label = { textContent: 'Avisant a la brigada…' };
+  const label = { textContent: 'Avisant la brigada…' };
   let busy = true;
   const doc = { getElementById: id => ({ loader: el, 'loader-text': label })[id], body: { removeAttribute: () => { busy = false; } } };
   const queue = [];
@@ -166,7 +176,7 @@ function dom() {
     const timers = { setTimeout: f => queue.push(f), clearTimeout() {} };
     setupLoader(d.doc, { timers, storage }).jokes(lines, 1);
     queue.shift(); // the giveUp timer
-    assert.equal(d.label.textContent, 'Avisant a la brigada…', 'the page\u2019s own line stays a full turn (no flash)');
+    assert.equal(d.label.textContent, 'Avisant la brigada…', 'the page\u2019s own line stays a full turn (no flash)');
     for (let i = 0; i < n; i++) { queue.shift()(); shown.push(d.label.textContent); }
     return shown;
   };
@@ -185,7 +195,7 @@ function dom() {
   assert(LOADING_JOKES.length >= 3 && LOADING_JOKES.every(l => l.endsWith('…')), 'at least three complete loading lines');
   const mem = {}, firsts = [];
   for (let v = 0; v < LOADING_JOKES.length + 3; v++) {
-    const label = { textContent: 'Avisant a la brigada…' };
+    const label = { textContent: 'Avisant la brigada…' };
     vm.runInNewContext(src, { document: { getElementById: () => label }, window: {}, localStorage: { getItem: k => mem[k] ?? null, setItem: (k, x) => { mem[k] = x; } }, Math, JSON });
     firsts.push(label.textContent);
   }

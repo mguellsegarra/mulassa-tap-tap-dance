@@ -34,6 +34,7 @@ export function setupStandings({ doc, $, onBoard, onCard = null, busy = () => fa
   const head = $('select-standings-pos'), list = $('select-standings-rows'), foot = $('select-standings-foot'), info = $('select-info');
   const body = $('select-standings-body'), sk = $('select-standings-sk'), msg = $('select-standings-msg');
   $('select-standings-head').addEventListener('click', () => { if (!busy()) onBoard(); });
+  let fitAt = 0; // TRIES' index that fitted last
   let board = null, on = false; // on: a board is configured (the header shows before its answer)
   let state = 'loading'; // loading | ready | error: the body's skeleton and the rows cross-fade (select.css)
   const seen = new Map(); // figure + owner → the last answer's rows (memory only): the placeholder's shape
@@ -119,13 +120,19 @@ export function setupStandings({ doc, $, onBoard, onCard = null, busy = () => fa
     body.hidden = least;
     if (least) return;
     if (levels()) { goals(true); if (card.getClientRects().length && scrolls()) body.hidden = true; return; } // step 2: level-stats.js refits it beside the level row
-    for (const [top, near, withFoot, withMeds] of TRIES) {
-      render(top, near, withFoot);
-      meds.toggleAttribute('data-gone', !withMeds);
-      if (!card.getClientRects().length && !meds.getClientRects().length) return; // not shown here: nothing to measure
-      if (!scrolls()) return;
-    }
-    body.hidden = true; // the header stays: the line is the home's way to the board
+    // The biggest try that fits (each one is a forced layout of the selector): the last answer and the one above it first
+    // (unchanged: two layouts), else a binary search (the tries only shrink).
+    let drawn = -1;
+    const at = i => { const [top, near, withFoot, withMeds] = TRIES[i]; render(top, near, withFoot); meds.toggleAttribute('data-gone', !withMeds); drawn = i; };
+    const fits = i => (at(i), !scrolls());
+    at(fitAt);
+    if (!card.getClientRects().length && !meds.getClientRects().length) return; // not shown here: nothing to measure
+    let lo = 0, hi = TRIES.length; // hi: the biggest known to fit (TRIES.length: none)
+    if (!scrolls()) { hi = fitAt; if (fitAt) { if (fits(fitAt - 1)) hi = fitAt - 1; else lo = fitAt; } } else lo = fitAt + 1;
+    while (lo < hi) { const m = (lo + hi) >> 1; if (fits(m)) hi = m; else lo = m + 1; }
+    fitAt = Math.min(hi, TRIES.length - 1);
+    if (drawn !== fitAt) at(fitAt);
+    if (hi === TRIES.length) body.hidden = true; // the header stays: the line is the home's way to the board
   }
   // Another board (a figure or owner change) or the first answer after the placeholder fades the card out, swaps it while unseen
   // (its new size included) and fades it in

@@ -20,6 +20,16 @@ export function stageFrame(out, top, bottom) {
   return out;
 }
 
+// On the selector a figure right by a low lens shrinks away (its showreel and the idle full screen stand the camera
+// among the people), as the backdrop's figures do (uLens): the share of its size at (x, z) for lens = the camera's position
+// (null: always 1). Gone within `near` m of the lens on the ground, back over `soft`; none above `high`.
+export const LENS_CLEAR = { near: 3.4, soft: 1.6, high: 7.5 };
+export function lensShrink(lens, x, z) {
+  if (!lens || lens.y >= LENS_CLEAR.high) return 1;
+  const t = (Math.hypot(x - lens.x, z - lens.z) - LENS_CLEAR.near) / LENS_CLEAR.soft;
+  return t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t);
+}
+
 // Critically damped smoothing (no overshoot, the same path at 30, 60 or 120 fps): moves s.x[i] towards `target`,
 // reaching it in about `time` seconds, carrying its velocity s.v[i] so a moving target is followed without jerks.
 // max (optional, units/s): a far target is approached at about that speed at most (Unity's maxSpeed: the distance it pulls on is capped).

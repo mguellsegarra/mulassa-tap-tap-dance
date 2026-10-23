@@ -139,7 +139,7 @@ export class Chip {
   } // a rejected wake stays paused; the next real gesture can resume the same transport
 
   wake() { // iOS: resume + a silent sample inside a real gesture, and play even with the ringer switch off
-    if (document.hidden || !document.hasFocus()) return;
+    if (document.hidden || !document.hasFocus() || navigator.userActivation?.isActive === false) return; // a modifier key, Cmd+R…: no gesture, the browser would refuse (and warn)
     try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch { /* older iOS */ }
     if (this.ctx.state !== 'running') this.resume();
     if (!this.woke) {

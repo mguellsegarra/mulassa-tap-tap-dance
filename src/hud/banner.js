@@ -5,9 +5,9 @@ import { C } from './sprites.js';
 import { H, W } from './canvas.js';
 import { lane, BANNER } from './layout.js';
 import { textWidth, text } from './primitives.js';
-import { BEATS, playFrom } from '../core/env.js';
+import { playFrom } from '../core/env.js';
 import { DETAIL } from '../game/judge-words.js';
-import { countInPhase } from '../game/figure-song.js';
+import { countInPhase, startCueAt, hasRecordedIntro } from '../game/figure-song.js';
 import { bigWord, elastic } from './praise.js';
 
 const GO_WORD = tr('hud.banner.go'), READY_WORD = tr('hud.banner.ready');
@@ -33,7 +33,7 @@ export function drawBanner(t) {
   if (G.collapseT) return;
   // count-in locked to the timbal: each number appears exactly on its hit, BALLA! on the song's first beat
   // in the band under the lane (the headline slot and a bit more), above the mulassa's body
-  const b0 = BEATS.find(b => b >= playFrom) ?? playFrom, phase = countInPhase(t, b0);
+  const b0 = startCueAt(playFrom), phase = countInPhase(t, b0);
   const big = BANNER.big(), y = lane().bottom + 10 + big * 0.55;
   if (t < b0) {
     if (phase < 0) text(READY_WORD, W / 2, y, BANNER.ready(), C.cream);
@@ -42,5 +42,5 @@ export function drawBanner(t) {
       bigWord(String(3 - i), W / 2, y, big * elastic(Math.min(1, frac * 4)), BANNER.count, 0, W - 12, big);
     }
   }
-  else if (t < b0 + 0.7 && t < G.go) bigWord(GO_WORD, W / 2, y, BANNER.go() * elastic(Math.min(1, (t - b0) * 5)), BANNER.goCols, -0.05, W - 12, BANNER.go());
+  else if (t < b0 + 0.7 && (t < G.go || hasRecordedIntro(playFrom))) bigWord(GO_WORD, W / 2, y, BANNER.go() * elastic(Math.min(1, (t - b0) * 5)), BANNER.goCols, -0.05, W - 12, BANNER.go());
 }

@@ -3,7 +3,7 @@
 // sees them; bottom right: the ring from above with the Drac at rest on its path at a reference second (?t=).
 // ?beat= (the clap's phase: an integer = palms together), ?energy= (0 calm .. 1 playing), ?play (beats run at 120 bpm),
 // ?view=0-3 (one view, full size). ?figura=mulassa: the Mulassa's group instead (its looks, marks and seated ring, her
-// reference-led dance at song second ?t=).
+// reference-led dance at song second ?t=); ?figura=bou: the Bou's (its garnet colla round it, its dance at song second ?t=).
 import * as THREE from 'three';
 import { createColla } from '../scene/drac-colla.js';
 import { placeDance, danceYaw, HELPER_RADIUS } from '../game/drac-layout.js';
@@ -15,12 +15,15 @@ import { mulaDanceYaw, placeMulaDance, MULA_HELPER_RADIUS } from '../game/mula-l
 import { mulaDance, newMulaPose } from '../game/mula-dance.js';
 import { buildMulassa } from '../scene/models/mulassa.js';
 import { createCarriers } from '../scene/mula-carriers.js';
+import { createBouColla, BOU_HELPER_RADIUS } from '../scene/bou-colla.js';
+import { buildBou } from '../scene/models/bou.js';
+import { createBouMotion } from '../scene/bou-motion.js';
 
 const q = new URLSearchParams(location.search), num = (k, d) => (q.has(k) && q.get(k) !== '' ? Number(q.get(k)) : d);
-const BEAT = num('beat', 0), ENERGY = num('energy', 1), T = num('t', 34.36), PLAY = q.has('play'), ONE = num('view', -1), MULA = q.get('figura') === 'mulassa';
-const CAM_AZ = -81 * Math.PI / 180, FRONT = MULA ? mulaDanceYaw(CAM_AZ) : danceYaw(CAM_AZ); // stage.js CAM_AZ / DRAC_YAW / MULA_YAW (not imported: it builds the whole game)
-const makeColla = () => (MULA ? createMulaColla(PROFILES[2], seat => mulaSeatAt(seat, FRONT)) : createColla({ profile: PROFILES[2] }));
-const place = MULA ? placeMulaDance : placeDance;
+const BEAT = num('beat', 0), ENERGY = num('energy', 1), T = num('t', 34.36), PLAY = q.has('play'), ONE = num('view', -1), BACK = q.has('back'), ZOOM = num('zoom', 1), MULA = q.get('figura') === 'mulassa', BOU = q.get('figura') === 'bou';
+const CAM_AZ = -81 * Math.PI / 180, FRONT = BOU ? CAM_AZ - Math.PI / 4 : MULA ? mulaDanceYaw(CAM_AZ) : danceYaw(CAM_AZ); // stage.js CAM_AZ / DRAC_YAW / MULA_YAW / BOU_COLLA_YAW (not imported: it builds the whole game)
+const makeColla = () => (BOU ? createBouColla(PROFILES[2]) : MULA ? createMulaColla(PROFILES[2], seat => mulaSeatAt(seat, FRONT)) : createColla({ profile: PROFILES[2] }));
+const place = BOU ? (obj, yaw) => { obj.rotation.y = yaw; return obj; } : MULA ? placeMulaDance : placeDance;
 const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('gl'), antialias: true });
 renderer.setPixelRatio(Math.min(2, devicePixelRatio));
 renderer.shadowMap.enabled = true;
@@ -40,14 +43,18 @@ const lit = s => {
 const studio = lit(new THREE.Scene()), row = makeColla();
 studio.add(row.helpers, row.seated);
 row.setProfile({ name: 'low' }); // the first three: one of each posture
-row.crew.forEach((p, i) => { p.g.position.set(-2.4 + i * 0.9, 0, 0); p.g.rotation.y = 0; });
-row.members.slice(0, 3).forEach((p, i) => { p.g.position.set(1.4 + i * 1.0, 0, 0.3); p.g.rotation.y = 0; });
+row.crew.forEach((p, i) => { p.g.position.set(-2.4 + i * 0.9, 0, 0); p.g.rotation.y = BACK ? Math.PI : 0; }); // ?back: the helpers' backs
+row.members.slice(0, 3).forEach((p, i) => { p.g.position.set((BOU ? 2.2 : 1.4) + i * 1.0, 0, 0.3); p.g.rotation.y = 0; });
 // the plaça: the ring as placed in play, the Drac at rest on its path
 const plaza = lit(new THREE.Scene()), colla = makeColla();
 place(colla.helpers, FRONT);
 colla.setLabels(true);
 plaza.add(colla.helpers, colla.seated);
-if (MULA) { // her body and carriers at song second T, in the dance frame
+if (BOU) { // the Bou at song second T in its dance frame (stage.js: turned to FRONT, CAM_AZ + 0.35)
+  const bou = buildBou(), frame = new THREE.Group();
+  frame.rotation.y = CAM_AZ + 0.35; frame.add(bou.root, ...bou.feet, ...bou.legs); plaza.add(frame);
+  createBouMotion(bou)(T, 0);
+} else if (MULA) { // her body and carriers at song second T, in the dance frame
   const rig = buildMulassa(), carriers = createCarriers(), p = mulaDance.pose(newMulaPose(), T), feet = Array.from({ length: 8 }, (_, i) => mulaDance.foot(T, i, {}));
   const frame = place(new THREE.Group(), FRONT); frame.add(rig.root); plaza.add(frame); rig.root.add(carriers.group);
   rig.root.position.set(p.x, p.lift, p.z); rig.root.rotation.y = p.yaw; rig.body.rotation.set(p.pitch, 0, p.roll);
@@ -61,11 +68,11 @@ if (MULA) { // her body and carriers at song second T, in the dance frame
   plaza.add(placeDance(life, FRONT));
 }
 const circle = R => new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(Array.from({ length: 96 }, (_, i) => new THREE.Vector3(Math.cos(i / 96 * 2 * Math.PI) * R, 0.02, Math.sin(i / 96 * 2 * Math.PI) * R))), new THREE.LineBasicMaterial({ color: '#f5c518' }));
-plaza.add(circle(MULA ? MULA_HELPER_RADIUS : HELPER_RADIUS)); // (both frames put their centre on the plaça's)
+plaza.add(circle(BOU ? BOU_HELPER_RADIUS : MULA ? MULA_HELPER_RADIUS : HELPER_RADIUS)); // (both frames put their centre on the plaça's)
 
 const persp = (fov, pos, at) => { const c = new THREE.PerspectiveCamera(fov, 1, 0.1, 200); c.position.set(...pos); c.lookAt(...at); return c; };
 const views = [
-  [studio, persp(30, [0, 1.3, 8.5], [0, 0.85, 0])],
+  [studio, persp(30 / ZOOM, [0, 1.3, 8.5], [0, 0.85, 0])], // ?zoom=: a narrower lens on the row (faces, details)
   [studio, persp(30, [Math.sin(0.7) * 8.5, 1.6, Math.cos(0.7) * 8.5], [0, 0.85, 0])],
   // the play camera's direction from the centre (26 deg up), looking across the ring and its seated members
   [plaza, persp(40, [Math.sin(CAM_AZ) * 13 * Math.cos(0.45), 13 * Math.sin(0.45), Math.cos(CAM_AZ) * 13 * Math.cos(0.45)], [0, 0.4, 0])],

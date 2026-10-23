@@ -38,7 +38,7 @@ export const sheetUp = () => howtoMenu.open || settingsMenu.open || sheets.sync.
 export const menuState = () => G.state === 'splash' || G.state === 'title' || G.state === 'select'; // the camera steers
 export const photoScreen = () => G.state === 'select'; // photo mode lives only on the selector
 export const steers = () => menuState() && !sheetUp();
-// «Mode foto» (free play: entered through the selector's round gamepad button #free, or a double tap on the bare plaça (input.js); #viewmode shows only inside
+// «Mode foto» (free play: entered through the selector's round gamepad button #free; #viewmode shows only inside
 // it, as the way back): every control, tip and the HUD fade out (index.html body.view-mode) and the plaça
 // is all there is: the camera steers as on the selector, the menu loop plays on, a tap picks nothing, no sheet opens. H
 // toggles it; Escape or the same button (dimmed after 3 idle seconds, back on any touch, move or key) brings it all back.

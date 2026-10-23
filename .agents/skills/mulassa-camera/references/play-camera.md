@@ -1,0 +1,27 @@
+# Play camera
+
+The current rules are AGENTS.md «Play camera». This file adds the reasons. Owner: `framePlayCamera` in `scene/cameras.js` (`CAMV`, `DRIFT`, `DRAC_CAM`, `MULA_CAM`, `insidePlaza`); tune with `?cam` (`src/dev/cam-edit.js`), whose «copia» line is the input to fit a per-device camera.
+
+Threads: the Drac camera decisions in [Integració jugable del Drac](t3-thread://v1/mcp:ee44771a-cf78-44b8-8afd-29b0a7176a1a) (2026-10-19); the play camera v3 values come from Marc's own `?cam` sessions on a desktop.
+
+## Why it is built this way
+
+- Defined by what you SEE (a slice of world 8.25 m tall at her, 8.4 m across on narrow screens, her focus 42% down the stage), not by fitting her whole turn/jump envelope: fitting the envelope made her tiny.
+- Never still, never rhythmic: a slow sway with unrelated 13-29 s periods (`DRIFT`). A visible rhythm in the camera reads as a bug.
+- The player stares at the note lane; anything that slides under it makes the plaça seem to swim. That is the reason for every follow limit below.
+
+## Drac follow (Marc: «la càmera que segueix el drac mentre balla... mareja»)
+
+- Before: it followed the Drac like the Mulassa, heading included. The Drac walks ~4 m and spins twelve times, so the plaça slid and swung under the lane at every turn.
+- Now (`DRAC_CAM`): half its travel across, 90% in depth (less in depth put the heads under the lane on desktop), no heading follow, 12% further so it fits on a phone. Measured while playing: look-direction turn 1.5-1.8°/s on average (was 2-4°/s), peaks 6-7°/s (were 10-12°/s). The Drac never leaves the shot.
+- The Mulassa's travelling dance got the same calm follow (`MULA_CAM`: all her travel across, towards the lens only as far as the square lets the camera back away).
+- `?camdrac=segueix` restores the old heading follow for both (A/B). If it still dizzies, the remaining option is a fixed camera: no background motion, but a smaller figure (the whole path must fit).
+- The dance frame was rotated so the play camera looks between two attendants; on phones attendant S covered the Drac. Helpers at 5.1 m, not 4.5 (the Drac walked through S at the close pass).
+
+## Shake
+
+Small, additive, only GUAPA and the finale during play. Misses and pops do not shake. Never fed back into the springs.
+
+## Open
+
+On tablets the heads can sit under the lane at the Drac's close passes; adjust with `?cam`.

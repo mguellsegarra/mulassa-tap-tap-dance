@@ -2,6 +2,7 @@
 // storage key. Everything is per owner: 'none' (played without a profile) or a user id. The server gets the same
 // counters through payload(); it keeps the maximum per device and bucket.
 import { store } from '../platform/storage.js';
+import { FIGURES, playable, hasBoard } from './figures.js';
 
 const KEY = 'stats-v1', NONE = 'none';
 const ERRORS = ['early', 'late', 'silent', 'both', 'hold', 'move'];
@@ -92,11 +93,14 @@ export function forgetOwner(stats, userId) {
 export function markSent(stats, owner, signature) { const o = ownerOf(stats, owner); o.sent = signature; o.imported = true; return stats; }
 
 // What the server's merge_stats receives: cumulative counters per bucket (never a single run) and the days, in a fixed order.
+// A figure with no online board (the Bou) stays on the device: merge_stats refuses a bucket it has no version for,
+// and one refused bucket would stop every other figure's statistics from being sent.
+const DEVICE_ONLY = new Set(FIGURES.filter(f => playable(f) && !hasBoard(f)).map(f => f.id));
 export function payload(stats, owner) {
   const o = stats.owners[owner || NONE] ?? emptyOwner(), buckets = {};
   for (const key of Object.keys(o.counters).sort()) {
     const c = o.counters[key];
-    if (c.runs <= 0) continue;
+    if (c.runs <= 0 || DEVICE_ONLY.has(key.split('/')[0])) continue;
     const { quality, ...best } = c.best ?? {}; // eslint-disable-line no-unused-vars
     buckets[key] = { ...c, best: c.best ? best : null };
   }

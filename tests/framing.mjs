@@ -88,3 +88,15 @@ import { menuFit, envelope } from '../src/scene/framing.js';
   assert(lo > 1.28 && hi - lo < 0.1, `a figure turning back and forth keeps a steady size (${lo.toFixed(2)}-${hi.toFixed(2)})`);
 }
 console.log('menu fit ok');
+
+// On the menus whoever stands right by a low lens shrinks away; farther off, or under a high lens, nobody changes size.
+import { lensShrink, LENS_CLEAR } from '../src/scene/framing.js';
+{
+  const low = { x: 0, y: 4, z: 0 };
+  assert.equal(lensShrink(null, 0.5, 0), 1, 'no lens (a song): nobody shrinks');
+  assert.equal(lensShrink(low, 1, 1), 0, 'right by a low lens: gone');
+  assert.equal(lensShrink(low, 8, 0), 1, 'a few metres off: their own size');
+  const mid = lensShrink(low, 4.2, 0); assert(mid > 0 && mid < 1, 'in between: part way');
+  assert.equal(lensShrink({ x: 0, y: LENS_CLEAR.high + 0.1, z: 0 }, 1, 1), 1, 'a high lens hides nobody');
+}
+console.log('lens clearance ok');

@@ -12,12 +12,13 @@ const PAPER = '#fff4df';
 const CARD_THEMES = {
   'mulassa-valls': { name: 'MULASSA', bg: '#8a1628', ray: '#a8283e', ink: '#24050c' },
   'drac-valls': { name: 'DRAC', bg: '#1f8a4c', ray: '#2a9e5a', ink: '#0b2414' },
+  'bou-tradicional-valls': { name: 'BOU', bg: '#7a4a1e', ray: '#93602f', ink: '#241306' }, // its hide's brown
 };
 // Catalan diacritics always, plus the active language's sample (hud.share.fontSample).
 export async function loadCardFonts(fonts) {
   if (!fonts) return;
   // i18n-ok: glyph sample to preload the fonts
-  const sample = `MULASSA DRAC DE VALLS FÀCIL DIFÍCIL 0123456789 ${tr('hud.share.fontSample')}`;
+  const sample = `MULASSA DRAC BOU DE VALLS FÀCIL DIFÍCIL 0123456789 ${tr('hud.share.fontSample')}`;
   await Promise.all([600, 800].map(weight => fonts.load(`${weight} 80px "Baloo 2"`, sample)));
   await fonts.ready;
   if (fonts.check && ![600, 800].every(weight => fonts.check(`${weight} 80px "Baloo 2"`, sample))) throw new Error('card fonts unavailable');
@@ -89,7 +90,7 @@ function cardPhoto(c, hero, x, y, diameter, ink) {
 }
 function cardTitle(c, theme, y, story) {
   c.save(); c.translate(540, y); c.rotate(-Math.PI / 45);
-  const size = story ? (theme.name === 'DRAC' ? 224 : 214) : (theme.name === 'DRAC' ? 176 : 150);
+  const size = story ? (theme.name === 'MULASSA' ? 214 : 224) : (theme.name === 'MULASSA' ? 150 : 176); // (the short names fill the same width larger)
   const sub = story ? 82 : 56;
   cardText(c, theme.name, 10, 10, size, theme.ink);
   cardText(c, theme.name, 0, 0, size, PAPER);
@@ -193,8 +194,8 @@ export function drawCard(c, format, d, hero) {
   cardTicket(c, d, L, theme); cardFooter(c, L.footY, L.story, theme.ink);
   c.restore(); return c.canvas;
 }
-export const cardAlt = (format, d) => tr('hud.card.alt', { format: tr(format === 'story' ? 'hud.card.altStory' : 'hud.card.altPost'), figure: tr(d.figureId === 'drac-valls' ? 'hud.card.altDrac' : 'hud.card.altMula'), score: d.score ?? '—', pct: d.pct, level: d.diffName, combo: d.maxCombo });
+export const cardAlt = (format, d) => tr('hud.card.alt', { format: tr(format === 'story' ? 'hud.card.altStory' : 'hud.card.altPost'), figure: tr(d.figureId === 'drac-valls' ? 'hud.card.altDrac' : d.figureId === 'bou-tradicional-valls' ? 'hud.card.altBou' : 'hud.card.altMula'), score: d.score ?? '—', pct: d.pct, level: d.diffName, combo: d.maxCombo });
 export function toJpeg(canvas, quality = 0.9, figureId = 'mulassa-valls') {
-  const name = figureId === 'drac-valls' ? 'drac-de-valls.jpg' : CARD_FILE;
+  const name = figureId === 'drac-valls' ? 'drac-de-valls.jpg' : figureId === 'bou-tradicional-valls' ? 'bou-tradicional-de-valls.jpg' : CARD_FILE;
   return new Promise((resolve, reject) => canvas.toBlob(b => b ? resolve(new File([b], name, { type: 'image/jpeg' })) : reject(new Error('card')), 'image/jpeg', quality));
 }

@@ -2,7 +2,7 @@
 import { parseChallenge, stripChallenge } from '../services/share.js';
 import { store } from '../platform/storage.js';
 import { Chip } from '../platform/audio.js';
-import { song, menuSong, selectedFigure, setFigureSong } from './figure-song.js';
+import { song, menuSong, selectedFigure, setFigureSong, hasRecordedIntro } from './figure-song.js';
 import { clearLeaderboardResult } from '../services/leaderboard-result.js';
 import { Q, offsetMs, playFrom, LEAD, WIN, pageActive } from '../core/env.js';
 
@@ -45,7 +45,7 @@ export function figureSfx(kind, i = 0, manual = false) {
 export let clock = 0;
 export const setClock = v => (clock = v);
 // at: a performance.now() time (a frame's, an input event's; default now): the de-stepped audio clock (audio.js audioClock)
-export const songTime = at => (chip?.t0 != null ? chip.now(at) - offsetMs / 1000 : playFrom - LEAD); // still loading the recording: hold at the count-in's start
+export const songTime = at => (chip?.t0 != null ? chip.now(at) - offsetMs / 1000 : playFrom - (hasRecordedIntro(playFrom) ? 0 : LEAD)); // still loading the recording: hold at the count-in's start
 // The audio engine is made (suspended) right after the first frame, so the menu loop and the song download and decode
 // while the splash waits for its tap; the tap only has to resume it. `chip` stays null until then.
 export let engine = null;

@@ -130,7 +130,7 @@ export const SCENES = [
   { group: 'review-season-end', scenes: [review('S18', '', 'Fi de temporada', 'season-end', 'season-end-menu')] },
   { group: 'review-card', scenes: [review('S19', '', 'Fitxa de jugador', 'card', 'card-menu')] },
   { group: 'review-publish', scenes: [review('S22', '', 'Publica el teu resultat', 'publish', 'publish-menu')] },
-  { group: 'loader', scenes: [{ code: 'S25', variant: 'load', name: 'Carregador (Avisant a la brigada…)', how: 'càrrega, captura a ~1 s abans que el carregador s’aixequi', run: async () => {} }],
+  { group: 'loader', scenes: [{ code: 'S25', variant: 'load', name: 'Carregador (Avisant la brigada…)', how: 'càrrega, captura a ~1 s abans que el carregador s’aixequi', run: async () => {} }],
     boot: 'loader', vps: STRESS_VPS, langs: ALL_LANGS, vpsOther: ['V3'] },
   { group: 'loader-error', scenes: [{ code: 'S25', variant: 'error', name: 'Targeta d’error de càrrega', how: 'es bloqueja el paquet principal → el boot-watchdog mostra la targeta', run: async h => { await until(h, () => document.getElementById('loader')?.classList.contains('fail'), null, 90000); await wait(h, 1200); } }],
     boot: 'blocked', vps: STRESS_VPS, langs: ALL_LANGS, vpsOther: ['V3'] },

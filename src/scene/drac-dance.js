@@ -2,10 +2,12 @@
 // (game/drac-time.js) to reference seconds, which pose the shell (game/drac-pose.js) and its carrier's feet
 // (game/drac-steps.js) inside the dance frame (game/drac-layout.js). mula-motion.js only dispatches here and hands over
 // its bounded accent springs; the selector / photo walkers stay in drac-demo.js.
-import { drac, colla, DRAC_YAW } from './stage.js';
+import { drac, colla, DRAC_YAW, camera } from './stage.js';
 import { LETTERS } from '../core/env.js';
 import { G } from '../game/state.js';
 import { PHOTO } from '../game/photo-control.js';
+import { lensShrink } from './framing.js';
+import { REEL } from '../game/showreel.js';
 import { songTimeAtBeat } from '../game/figure-song.js';
 import { newDracPose } from '../game/dance-drac.js';
 import { poseAt } from '../game/drac-pose.js';
@@ -25,10 +27,10 @@ const DANCE_AT = { x: 0, z: 0 }; // the root in the plaça (m)
 // One frame. acc: the game's accents on top of the base pose ({ roll, pitch, lift } added, `vigor` 0-1 scales the base
 // lean, `col` 0-1 the collapse). Fills `pos` (a Vector2, the plaça's metres) and returns the world heading.
 export function danceDrac(beat, acc, pos) {
-  const dancing = G.state === 'play';
-  if (!G.collapseT && !(dancing && G.paused)) DANCE.beat = beat;
+  const reel = REEL.on && G.state === 'select', dancing = G.state === 'play' || reel; // (the selector's showreel: a run's collapse is still in G)
+  if (reel || !G.collapseT && !(dancing && G.paused)) DANCE.beat = beat;
   if (G.practice) DANCE.ref = 0;
-  else if (dancing && !G.collapseT && !G.paused) DANCE.ref = dracTime.refAt(songTimeAtBeat(DANCE.beat));
+  else if (reel || dancing && !G.collapseT && !G.paused) DANCE.ref = dracTime.refAt(songTimeAtBeat(DANCE.beat));
   const P = poseAt(DRAC_DANCE_POSE, DANCE.ref, DANCE.beat);
   P.roll = P.roll * acc.vigor + acc.roll + acc.col * 0.6;
   P.pitch = P.pitch * acc.vigor + acc.pitch + acc.col * 0.5;
@@ -46,8 +48,8 @@ export function danceDrac(beat, acc, pos) {
 // the helpers on the dance frame's spots, clapping on the music's beat while a run is on (calm on the menus).
 export const COLLA_SPOTS = []; // fixed obstacles for the crowd while the colla is out (crowd.js): helpers and the seated shown
 // the run's state for tickColla, refreshed in place (no object a frame)
-export function collaRun(run) { run.play = G.state === 'play'; run.paused = !!G.paused; run.collapsed = !!G.collapseT; return run; }
-const DRAC_TICK = { obstacles: COLLA_SPOTS, toWorld: h => danceToWorld({}, h.x, h.z, DRAC_YAW), frozenBeat: 0, run: {}, labels: LETTERS };
+export function collaRun(run) { const reel = REEL.on && G.state === 'select'; run.play = reel || G.state === 'play'; run.paused = !reel && !!G.paused; run.collapsed = !reel && !!G.collapseT; run.lens = G.state === 'select' ? camera.position : null; return run; } // (the showreel dances as a run does; lens: on the selector, framing.js lensShrink)
+const DRAC_TICK = { obstacles: COLLA_SPOTS, toWorld: h => danceToWorld({}, h.x, h.z, DRAC_YAW), frozenBeat: 0, run: {}, labels: LETTERS, shrink: lensShrink };
 export function dracColla(on, beat, dt) {
   if (!colla) return;
   placeDance(colla.helpers, DRAC_YAW);

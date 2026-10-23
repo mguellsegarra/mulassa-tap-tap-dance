@@ -40,7 +40,7 @@ const doc = { addEventListener(k, f) { (handlers[k] ||= []).push(f); }, body: { 
     return nodes.get(id);
   } };
 const $ = id => doc.getElementById(id), sheets = { sync: {}, board: { configured: true, results() {} }, share: { results() {} }, feedback: { configured: false }, select: { visible(on) { this.shown = on; } } };
-const state = { state: 'splash', paused: false }, ctx = { tr, document: doc, performance: { now: () => time },
+const state = { state: 'splash', paused: false }, ctx = { tr, document: doc, navigator: { userActivation: { isActive: true } }, performance: { now: () => time },
   G: state, selectedFigure: { id: 'mulassa-valls' }, COARSE: { matches: false }, sheets, clock: 10, CHALLENGE: null, keyboardNav: true, hide: (el, hidden) => { el.hidden = hidden; },
   howtoMenu: {}, settingsMenu: {}, privacyMenu: {}, pauseMenu: {},
   howtoEl: $('howto'), settingsEl: $('settings'), feedbackEl: $('feedback'), freeEl: $('free'), musicEl: $('music'), pauseEl: $('pause'), skipEl: $('skip'), retryEl: $('retry'),
@@ -95,13 +95,8 @@ key('KeyH'); assert(!run('viewMode'), 'H no longer enters free play'); $('free')
 assert(!$('viewmode').hidden, 'inside free play the button is the way back');
 key('Escape'); assert(!run('viewMode') && !$('select').inert && state.state === 'select' && state.figureId === 'drac-valls' && state.sel === 2, 'photo exit keeps the figure and level');
 run('setView(true)'); key('KeyH'); assert(run('viewMode'), 'nor leaves it'); $('viewmode').fire('click'); assert(!run('viewMode'), 'the button leaves free play'); run('updateControls()'); assert($('viewmode').hidden);
-tap(1, { drag: true }); tap(2); assert(!run('viewMode'), 'a drag then a tap is no double tap (the drag orbits)');
-tap(3, { target: { matches: () => false } }); tap(4); assert(!run('viewMode'), 'a tap on the UI (a card, a button) does not count');
-sheets.feedback.open = true; tap(5); tap(6); assert(!run('viewMode'), 'never under a sheet'); sheets.feedback.open = false;
-time += 600; tap(7); time += 600; tap(8); assert(!run('viewMode'), 'two slow taps are no double tap');
-time += 600; tap(9); tap(10); assert(run('viewMode'), 'a double tap on the bare plaça enters free play'); run('setView(false)');
-tap(11, { type: 'mouse', target: { matches: s => s.includes('.sel-bottom') } }); tap(12, { type: 'mouse', target: { matches: s => s.includes('.sel-bottom') } }); assert(run('viewMode'), 'a double click on the dock\'s empty band too (its shades are no UI)');
-tap(13); tap(14); assert(run('viewMode'), 'and it never leaves it'); run('setView(false)');
+tap(1); tap(2); assert(!run('viewMode'), 'a double tap on the bare plaça no longer enters free play (Marc, 2026-10-23)');
+tap(3, { type: 'mouse' }); tap(4, { type: 'mouse' }); assert(!run('viewMode'), 'nor a double click');
 { // a mouse's way back fades after 3 idle seconds (clean photos); touch has no Esc, so its never does
   const timers = [], wasTimeout = ctx.setTimeout; ctx.setTimeout = () => timers.push(1);
   run('setView(true)'); assert.equal(timers.length, 1, 'desktop: the exit dims when idle'); run('setView(false)');

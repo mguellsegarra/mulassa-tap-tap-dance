@@ -433,7 +433,8 @@ const context = vm.createContext({
   ...await import('../src/game/dance-drac.js'), ...await import('../src/game/drac-feet.js'), ...await import('../src/scene/drac-motion.js'), ...await import('../src/scene/models/drac.js'),
   // the Drac's revised dance (pure modules, provided like the old one): only the names the inlined scene code uses
   poseAt: (await import('../src/game/drac-pose.js')).poseAt, REF_END: (await import('../src/game/drac-pose.js')).REF_END, feetAt: (await import('../src/game/drac-steps.js')).feetAt,
-  dracTime: (await import('../src/game/drac-time.js')).dracTime, ...await import('../src/game/drac-layout.js'), ...await import('../src/scene/drac-rig.js'), ...await import('../src/scene/drac-colla.js'), ...await import('../src/scene/mula-colla.js'),
+  dracTime: (await import('../src/game/drac-time.js')).dracTime, ...await import('../src/game/drac-layout.js'), ...await import('../src/scene/drac-rig.js'), ...await import('../src/scene/drac-colla.js'), ...await import('../src/scene/mula-colla.js'), ...await import('../src/scene/bou-colla.js'),
+  buildBou: (await import('../src/scene/models/bou.js')).buildBou, createBouMotion: (await import('../src/scene/bou-motion.js')).createBouMotion, BOU_TIMING: (await import('../src/game/bou-dance.js')).BOU_TIMING, // the Bou (provided)
   ...await import('../src/dev/final-test.js'), ALIAS_KEY: 'leaderboard-alias', DECLINES_KEY: 'publish-declines', // ?final: off here (no hostname)
   errors, errorName, audioFailureTags: (await import('../src/platform/audio.js')).audioFailureTags,
   THREE: { ...THREE, WebGLRenderer: Renderer }, ...await import('../src/scene/crowd-fx.js'), ...models, ...chart, ...progress, ...stars,
@@ -1390,7 +1391,7 @@ run(`var preWatch = { chip, stored }; stored = {}; songNow = 0; var watchSfx = [
     sfx(k) { watchSfx.push(k); }, start() { this.t0 = 0; return Promise.resolve(true); }, now: () => songNow };
   offsetMs = 0; G.state = 'select'; G.paused = false;
   var toLevels = 0; Object.assign(sheets.select, { figure: selectedFigure, pending: false, toLevels() { toLevels++; } }); // (the selector is stubbed here)`);
-nodes.get('howto-watch').listeners.click();
+nodes.get('select-watch').listeners.click();
 assert(run("G.state === 'play' && G.watch && G.diff === 1 && !G.practice"), 'Com es juga starts the demo on NORMAL, never the practice');
 assert.equal(nodes.get('watch-song').textContent, run('selectedFigure.song'), 'the label names the dance');
 run(`var watchFirst = G.chart.find(n => !n.balloon && !n.big && !n.end); songNow = watchFirst.t; press('L', { timeStamp: 0 });`);
@@ -1409,7 +1410,7 @@ keyHandlers.forEach(h => h({ code: 'Space', target: { tagName: 'BUTTON' }, preve
 assert.equal(run('G.state'), 'results', 'Space acts on the sheet, not on the results behind it');
 nodes.get('watch-play').listeners.click();
 assert(run("G.state === 'select' && !G.watch && toLevels === 1 && sheets.select.shown") && !nodes.get('watch-menu').open, '«Juga-hi»: the selector, on its level step');
-nodes.get('howto-watch').listeners.click(); run('togglePause();');
+nodes.get('select-watch').listeners.click(); run('togglePause();');
 assert(run('G.paused && G.watch') && nodes.get('pause-sync').hidden, 'its pause has no sync');
 assert.equal(nodes.get('restart-label').textContent, 'Torna a començar');
 const demoChart = run('G.chart');
@@ -2386,6 +2387,14 @@ console.log('frame-rate independence and FPS readout ok');
   let prevented = false;
   hud.listeners.wheel(ev(0, 0, 0, { deltaY: 100, deltaMode: 0, ctrlKey: true, preventDefault() { prevented = true; } }));
   assert(prevented && run('orbit.zoomTo') > zoom, 'the wheel / trackpad pinch backs off, never zooming the page');
+  { // the selector: the camera is the showreel's (Marc, 2026-10-23): no drag turns it, no wheel or pinch zooms it, and the page never zooms
+    run("G.state = 'select'; setView(false); orbitCancel(orbit);");
+    const y = run('orbit.yaw'), z = run('orbit.zoomTo'); let kept = false;
+    hud.listeners.pointerdown(ev(6, 20, 60)); for (let x = 20; x <= 140; x += 10) hud.listeners.pointermove(ev(6, x, 60)); up(6);
+    hud.listeners.wheel(ev(0, 0, 0, { deltaY: 100, deltaMode: 0, ctrlKey: true, preventDefault() { kept = true; } }));
+    assert(run('orbit.ptrs.size === 0') && run('orbit.yaw') === y && run('orbit.zoomTo') === z && kept, 'selector: no drag, no zoom, no page zoom');
+    run("G.state = 'title';");
+  }
   for (const state of ['play', 'results']) {
     run(`G.state = '${state}'; G.resT = clock; G.paused = false;`);
     const z = run('orbit.zoomTo');
@@ -3352,3 +3361,38 @@ verifyManualSway(run, assert);
   assert.equal(run('delayedEffects'), 1, 'uninterrupted delayed effects still fire');
   context.setTimeout = savedTimer;
 }
+
+// The showreel's idle screen (ui/reel-idle.js): untouched on the selector, its UI fades (she keeps her framing);
+// any move brings it back; never in photo mode.
+{ let it = 300000; const idleFrames = n => { for (let i = 0; i < n; i++) run(`frame(${it += 1000 / 60})`); };
+  run("var idleSel = sheets.select; sheets.select = { pending: false, figure: MULASSA, visible() {}, sheetOpen: false, band: { top: 300, bottom: 600 } }; setView(false); G.state = 'select'; setFigureSong(MULASSA);"); windowHandlers.pointermove.forEach(h => h({})); idleFrames(30);
+  assert(run('REEL.on && !reelIdleOn'), 'showreel: the selector stays while it was just touched');
+  idleFrames(Math.ceil(run('REEL_IDLE.after') * 60) + 30);
+  assert(run('reelIdleOn'), 'showreel idle: untouched, the UI fades and the dance has the screen');
+  windowHandlers.pointermove.forEach(h => h({})); idleFrames(1);
+  assert(run('!reelIdleOn'), 'showreel idle: a move brings the selector back at once');
+  idleFrames(Math.ceil(run('REEL_IDLE.after') * 60) + 30); // the press that wakes it only wakes it: it, its up and its click never reach the game
+  const ptr = type => { const e = { type, pointerId: 7, cancelable: true, stopped: false, stopImmediatePropagation() { this.stopped = true; }, preventDefault() {} }; windowHandlers[type].forEach(h => h(e)); return e.stopped; };
+  assert(ptr('pointerdown') && run('!reelIdleOn') && ptr('pointerup') && ptr('click'), 'showreel idle: the waking tap is swallowed whole');
+  assert(!ptr('pointerdown') && !ptr('pointerup') && !ptr('click'), 'showreel idle: the next tap is a real one');
+  idleFrames(1); assert(run('!reelIdleOn'), 'awake after that tap');
+  // leaving the page puts the selector back (everything pauses), and coming back the time away never counts
+  idleFrames(Math.ceil(run('REEL_IDLE.after') * 60) + 30); assert(run('reelIdleOn'));
+  document.focused = false; (windowHandlers.blur || []).forEach(h => h());
+  assert(run('!reelIdleOn'), 'showreel idle: leaving the page brings the selector back');
+  it += 60000; document.focused = true; (windowHandlers.focus || []).forEach(h => h()); idleFrames(2);
+  assert(run('!reelIdleOn'), 'showreel idle: a minute away is not idleness');
+  run('setView(true);'); idleFrames(Math.ceil(run('REEL_IDLE.after') * 60) + 30);
+  assert(run('!reelIdleOn'), 'showreel idle: never in photo mode');
+  run('setView(false);'); console.log('showreel idle screen ok');
+// The showreel never shoots over an attendant's shoulder: over a stretch of her dance (runs to the attendants' marks
+// included), no colla helper between the lens and her stands near the line of sight.
+run(`frame(${it += 1000 / 60})`); // (leaving photo mode hands its camera over: the player's angle, held for a while)
+run('var shoulder = { worst: 9, seen: 0 }; orbit.ptrs.clear(); orbit.last = -Infinity;'); // (and the mock clock never moves past it)
+const shoulderCheck = `{ const v = new THREE.Vector3(), cx = camFocus.x, cz = camFocus.z, yaw = Math.atan2(camera.position.x - cx, camera.position.z - cz), hd = Math.hypot(camera.position.x - cx, camera.position.z - cz);
+  for (const p of mulaColla.crew) { p.g.getWorldPosition(v); const dx = v.x - cx, dz = v.z - cz; if (dx * dx + dz * dz > hd * hd) continue; shoulder.seen++;
+    shoulder.worst = Math.min(shoulder.worst, Math.abs(Math.atan2(Math.sin(yaw - Math.atan2(dx, dz)), Math.cos(yaw - Math.atan2(dx, dz))))); } }`;
+for (let i = 0; i < 60 * 40; i++) { run(`frame(${it += 1000 / 60})`); if (i % 4 === 0 && !run('orbit.ptrs.size')) run(shoulderCheck); }
+const sh = JSON.parse(run('JSON.stringify(shoulder)'));
+assert(sh.seen > 0 && sh.worst > 0.3, `showreel: no attendant over the lens's shoulder (closest ${sh.worst.toFixed(2)} rad off the line of sight)`);
+run('sheets.select = idleSel;'); console.log('showreel clear of the attendants ok'); }

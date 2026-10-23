@@ -53,7 +53,7 @@ const dracSeat = ([a, r]) => ({ x: Math.cos(a) * r, z: Math.sin(a) * r });
 // clap's energy, eased (a collapse or the end of a run lowers the arms, never at once). run: G's state ({ play, paused,
 // collapsed }); in a run a pause (and its resume count-in) or a collapse freezes them on `frozenBeat`, the beat their
 // figure froze on. (No game state import: the tests provide this module to the bundled game.)
-export function tickColla(c, show, beat, dt, { obstacles, toWorld, frozenBeat, run, labels = false, cheer = 0 }) {
+export function tickColla(c, show, beat, dt, { obstacles, toWorld, frozenBeat, run, labels = false, cheer = 0, shrink = null }) {
   c.helpers.visible = show; c.seated.visible = show && c.count > 0;
   if (!show) return;
   if (c.obstaclesFor !== c.count) {
@@ -68,7 +68,14 @@ export function tickColla(c, show, beat, dt, { obstacles, toWorld, frozenBeat, r
   const { play, paused, collapsed } = run, frozen = play && (paused || collapsed);
   if (!(play && paused)) c.energy += ((play && !collapsed ? 1 : 0) - c.energy) * (1 - Math.exp(-Math.max(0, dt) / 0.35));
   c.update(frozen ? frozenBeat : beat, c.energy, cheer * c.energy);
+  if (shrink) for (let i = 0; i < c.crew.length + c.count; i++) { // a helper or seated member right by a low menu lens (run.lens) shrinks away: shrink = framing.js lensShrink
+    const p = i < c.crew.length ? c.crew[i] : c.members[i - c.crew.length];
+    p.g.getWorldPosition(COLLA_AT);
+    const k = shrink(run.lens, COLLA_AT.x, COLLA_AT.z);
+    if (k !== (p.lensK ?? 1)) { p.base ??= p.g.scale.x; p.lensK = k; p.g.scale.setScalar(p.base * k); }
+  }
 }
+const COLLA_AT = new THREE.Vector3();
 export function createColla({ profile, spots = HELPERS, seats = SEATS, seatAt = dracSeat, helperLooks = HELPER_LOOKS, seatedLooks = SEATED_LOOKS, seatedCount = SEATED_COUNT, name = 'colla' }) {
   const helpers = new THREE.Group(), seated = new THREE.Group(), labels = new THREE.Group();
   helpers.name = `${name}-helpers`; seated.name = `${name}-seated`; labels.name = `${name}-labels`;
@@ -85,9 +92,9 @@ export function createColla({ profile, spots = HELPERS, seats = SEATS, seatAt = 
     seated.add(p.g);
     return p;
   });
-  const H = skin(crew), S = skin(members);
+  const H = skin(crew), S = members.length ? skin(members) : null; // (the Bou's colla has no one seated)
   helpers.add(H.mesh, labels);
-  seated.add(S.mesh);
+  if (S) seated.add(S.mesh);
   labels.visible = false;
   let shown = 0;
   const colla = {
@@ -100,16 +107,16 @@ export function createColla({ profile, spots = HELPERS, seats = SEATS, seatAt = 
     seatedCount,
     setProfile(p, count = seatedCount[p.name] ?? 0) {
       shown = Math.min(members.length, count);
-      S.mesh.geometry.setDrawRange(0, shown ? S.ends[shown - 1] : 0);
+      S?.mesh.geometry.setDrawRange(0, shown ? S.ends[shown - 1] : 0);
       seated.visible = shown > 0;
-      H.mesh.castShadow = S.mesh.castShadow = p.name === 'high'; // like the crowd
+      for (const k of S ? [H, S] : [H]) k.mesh.castShadow = p.name === 'high'; // like the crowd
     },
     setLabels(on) {
       if (on && !labels.children.length) for (const h of spots) labels.add(letter(h.id).translateX(h.x).translateY(2.2).translateZ(h.z)); // created once
       labels.visible = on;
     },
     dispose() {
-      for (const { mesh } of [H, S]) { mesh.geometry.dispose(); mesh.skeleton.dispose(); }
+      for (const { mesh } of S ? [H, S] : [H]) { mesh.geometry.dispose(); mesh.skeleton.dispose(); }
       for (const s of labels.children) { s.material.map.dispose(); s.material.dispose(); }
     },
   };

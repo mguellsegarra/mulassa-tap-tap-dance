@@ -27,6 +27,7 @@ function photoSafe(x, z, yaw, dragon = PHOTO.id === 'drac-valls') {
 export function beginPhoto(m, pair) {
   PHOTO.ready = true;
   Object.assign(PHOTO.mula, { x: m.pos.x, z: m.pos.y, yaw: m.yaw });
+  Object.assign(PHOTO.bou, { x: m.pos.x, z: m.pos.y, yaw: m.yaw }); // (driven alone, from where it stands)
   Object.assign(PHOTO.drac, { x: PHOTO.pair ? pair.x : m.pos.x, z: PHOTO.pair ? pair.z : m.pos.y, yaw: PHOTO.pair ? pair.w.face : m.yaw });
 }
 export function tickPhoto(dt, m, pair, pivot) {

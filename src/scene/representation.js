@@ -122,6 +122,5 @@ export function setupRepresentation() {
   };
   window.__representation = api;
   update();
-  console.info('[representation]', { population, seed, people: specs.length });
   return api;
 }

@@ -9,6 +9,7 @@ import { menuSong } from '../game/figure-song.js';
 import { mulaToWorld, placeMulaDance } from '../game/mula-layout.js';
 import { createStepper, SUPPORT_LAYOUT } from '../game/mula-supports.js';
 import { tickColla } from './drac-colla.js';
+import { lensShrink } from './framing.js';
 import { CUFF } from './mula-carriers.js';
 import { collaRun } from './drac-dance.js';
 
@@ -64,7 +65,7 @@ export const resetMulaFeet = () => { stepper.reset(); onSong = false; }; // the 
 // the music's beat while a run is on (calm on the menus); frozen with her by a pause or a collapse on `frozenBeat`;
 // cheer 0-1: arms up and a hop (her culades, charges, the final hit, a GUAPA).
 export const MULA_COLLA_SPOTS = []; // fixed obstacles for the crowd while it is out (crowd.js)
-const TICK = { obstacles: MULA_COLLA_SPOTS, toWorld: h => mulaToWorld({}, h.x, h.z, MULA_YAW), frozenBeat: 0, run: {}, labels: LETTERS, cheer: 0 };
+const TICK = { obstacles: MULA_COLLA_SPOTS, toWorld: h => mulaToWorld({}, h.x, h.z, MULA_YAW), frozenBeat: 0, run: {}, labels: LETTERS, cheer: 0, shrink: lensShrink };
 export function mulaCollaTick(on, beat, dt, frozenBeat, cheer = 0) {
   if (!mulaColla) return;
   placeMulaDance(mulaColla.helpers, MULA_YAW);

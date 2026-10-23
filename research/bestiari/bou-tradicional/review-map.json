@@ -1,0 +1,684 @@
+{
+  "source": {
+    "id": "2xG98OA1QqI",
+    "media": "bou-2xG98OA1QqI",
+    "url": "https://www.youtube.com/watch?v=2xG98OA1QqI",
+    "title": "Ball del BOU Tradicional (Festa Major Sant Joan Valls 2023)",
+    "author": "arditproduccions",
+    "uploadDate": "20230718",
+    "duration": 272.741587,
+    "width": 1920,
+    "height": 1080,
+    "fps": "60/1",
+    "sha256": "faa9e0f6c62416fdbebf7fb9a3ec4a4a93b19202c103b75450dcc7469d1780d3",
+    "file": "03-videos/2xG98OA1QqI.mp4",
+    "previewMedia": "bou-review-video",
+    "previewDuration": 272.666667
+  },
+  "method": "Full written form chroma DTW, bounded steps; automatic unverified",
+  "pitchClassShift": 11,
+  "alignmentStatus": "Automatic, unverified by listening or continuous video; editable per phrase. Full score form aligned before selecting retained bars. First occurrences used for omitted repeats.",
+  "phrases": [
+    {
+      "id": "bar-0",
+      "title": "Entrada musical",
+      "start": 0,
+      "end": 6.0,
+      "sourceStart": 20,
+      "sourceEnd": 26,
+      "observed": "Es prepara abans de començar el ball.",
+      "anchors": [
+        [
+          0,
+          20
+        ],
+        [
+          6.0,
+          26
+        ]
+      ]
+    },
+    {
+      "id": "bar-1",
+      "title": "Compassos 1–4",
+      "start": 6.0,
+      "end": 14.0,
+      "sourceStart": 26.0,
+      "sourceEnd": 35.604,
+      "observed": "Comença de tres quarts, canvia de cara, mostra la cua i torna de cara. Es mou al voltant del centre; no hi ha un recompte fiable de passes.",
+      "anchors": [
+        [
+          6.0,
+          26.0
+        ],
+        [
+          8.0,
+          28.901
+        ],
+        [
+          10.0,
+          31.202
+        ],
+        [
+          12.0,
+          33.153
+        ],
+        [
+          14.0,
+          35.604
+        ]
+      ]
+    },
+    {
+      "id": "bar-5",
+      "title": "Compassos 5–8",
+      "start": 14.0,
+      "end": 22.0,
+      "sourceStart": 35.604,
+      "sourceEnd": 43.508,
+      "observed": "Comença de tres quarts, canvia de cara, mostra la cua i torna de cara. Es mou al voltant del centre; no hi ha un recompte fiable de passes. Inclina tot el cos amunt i avall mentre completa un gir. Cap als 52 s canvia de sentit i torna a desfer aproximadament una volta. El cap forma part de la carcassa rígida; no té una articulació pròpia.",
+      "anchors": [
+        [
+          14.0,
+          35.604
+        ],
+        [
+          16.0,
+          37.305
+        ],
+        [
+          18.0,
+          39.456
+        ],
+        [
+          20.0,
+          41.657
+        ],
+        [
+          22.0,
+          43.508
+        ]
+      ]
+    },
+    {
+      "id": "bar-9",
+      "title": "Compassos 9–12",
+      "start": 22.0,
+      "end": 30.0,
+      "sourceStart": 43.508,
+      "sourceEnd": 51.712,
+      "observed": "Inclina tot el cos amunt i avall mentre completa un gir. Cap als 52 s canvia de sentit i torna a desfer aproximadament una volta. El cap forma part de la carcassa rígida; no té una articulació pròpia.",
+      "anchors": [
+        [
+          22.0,
+          43.508
+        ],
+        [
+          24.0,
+          45.459
+        ],
+        [
+          26.0,
+          47.61
+        ],
+        [
+          28.0,
+          49.661
+        ],
+        [
+          30.0,
+          51.712
+        ]
+      ]
+    },
+    {
+      "id": "bar-13",
+      "title": "Compassos 13–16",
+      "start": 30.0,
+      "end": 38.0,
+      "sourceStart": 51.712,
+      "sourceEnd": 59.715,
+      "observed": "Inclina tot el cos amunt i avall mentre completa un gir. Cap als 52 s canvia de sentit i torna a desfer aproximadament una volta. El cap forma part de la carcassa rígida; no té una articulació pròpia.",
+      "anchors": [
+        [
+          30.0,
+          51.712
+        ],
+        [
+          32.0,
+          53.562
+        ],
+        [
+          34.0,
+          54.813
+        ],
+        [
+          36.0,
+          57.414
+        ],
+        [
+          38.0,
+          59.715
+        ]
+      ]
+    },
+    {
+      "id": "bar-18",
+      "title": "Compàs 18",
+      "start": 38.0,
+      "end": 40.0,
+      "sourceStart": 94.031,
+      "sourceEnd": 96.332,
+      "observed": "Un membre de la colla passa pel davant. El Bou s'apropa molt a la càmera a 102–110 s, mostra el costat i la cua, i torna a una zona més allunyada.",
+      "anchors": [
+        [
+          38.0,
+          94.031
+        ],
+        [
+          40.0,
+          96.332
+        ]
+      ]
+    },
+    {
+      "id": "bar-19",
+      "title": "Compassos 19–22",
+      "start": 40.0,
+      "end": 47.619,
+      "sourceStart": 96.332,
+      "sourceEnd": 108.337,
+      "observed": "Un membre de la colla passa pel davant. El Bou s'apropa molt a la càmera a 102–110 s, mostra el costat i la cua, i torna a una zona més allunyada.",
+      "anchors": [
+        [
+          40.0,
+          96.332
+        ],
+        [
+          41.9048,
+          99.533
+        ],
+        [
+          43.8095,
+          102.535
+        ],
+        [
+          45.7143,
+          105.436
+        ],
+        [
+          47.619,
+          108.337
+        ]
+      ]
+    },
+    {
+      "id": "bar-23",
+      "title": "Compassos 23–26",
+      "start": 47.619,
+      "end": 55.2381,
+      "sourceStart": 108.337,
+      "sourceEnd": 118.542,
+      "observed": "Un membre de la colla passa pel davant. El Bou s'apropa molt a la càmera a 102–110 s, mostra el costat i la cua, i torna a una zona més allunyada. Passa cap a l'esquerra de la imatge, gira i torna de cara. Les persones i les façanes permeten veure que no és només un canvi d'orientació.",
+      "anchors": [
+        [
+          47.619,
+          108.337
+        ],
+        [
+          49.5238,
+          111.239
+        ],
+        [
+          51.4286,
+          113.84
+        ],
+        [
+          53.3333,
+          116.391
+        ],
+        [
+          55.2381,
+          118.542
+        ]
+      ]
+    },
+    {
+      "id": "bar-27",
+      "title": "Compassos 27–30",
+      "start": 55.2381,
+      "end": 62.5108,
+      "sourceStart": 118.542,
+      "sourceEnd": 126.045,
+      "observed": "Passa cap a l'esquerra de la imatge, gira i torna de cara. Les persones i les façanes permeten veure que no és només un canvi d'orientació.",
+      "anchors": [
+        [
+          55.2381,
+          118.542
+        ],
+        [
+          57.0563,
+          120.543
+        ],
+        [
+          58.8745,
+          121.943
+        ],
+        [
+          60.6926,
+          124.245
+        ],
+        [
+          62.5108,
+          126.045
+        ]
+      ]
+    },
+    {
+      "id": "bar-31",
+      "title": "Compassos 31–34",
+      "start": 62.5108,
+      "end": 69.5696,
+      "sourceStart": 126.045,
+      "sourceEnd": 133.549,
+      "observed": "Passa cap a l'esquerra de la imatge, gira i torna de cara. Les persones i les façanes permeten veure que no és només un canvi d'orientació.",
+      "anchors": [
+        [
+          62.5108,
+          126.045
+        ],
+        [
+          64.2755,
+          127.746
+        ],
+        [
+          66.0402,
+          129.447
+        ],
+        [
+          67.8049,
+          131.648
+        ],
+        [
+          69.5696,
+          133.549
+        ]
+      ]
+    },
+    {
+      "id": "bar-35",
+      "title": "Compassos 35–38",
+      "start": 69.5696,
+      "end": 76.6285,
+      "sourceStart": 133.549,
+      "sourceEnd": 140.052,
+      "observed": "Passa cap a l'esquerra de la imatge, gira i torna de cara. Les persones i les façanes permeten veure que no és només un canvi d'orientació. Torna a acostar-se molt a la càmera. Alterna frontal, costat i cua mentre travessa l'espai proper. A 164 s torna a ser lluny.",
+      "anchors": [
+        [
+          69.5696,
+          133.549
+        ],
+        [
+          71.3344,
+          134.949
+        ],
+        [
+          73.0991,
+          136.35
+        ],
+        [
+          74.8638,
+          138.351
+        ],
+        [
+          76.6285,
+          140.052
+        ]
+      ]
+    },
+    {
+      "id": "bar-39",
+      "title": "Compassos 39–42",
+      "start": 76.6285,
+      "end": 83.6873,
+      "sourceStart": 140.052,
+      "sourceEnd": 147.655,
+      "observed": "Torna a acostar-se molt a la càmera. Alterna frontal, costat i cua mentre travessa l'espai proper. A 164 s torna a ser lluny.",
+      "anchors": [
+        [
+          76.6285,
+          140.052
+        ],
+        [
+          78.3932,
+          142.253
+        ],
+        [
+          80.1579,
+          143.953
+        ],
+        [
+          81.9226,
+          146.104
+        ],
+        [
+          83.6873,
+          147.655
+        ]
+      ]
+    },
+    {
+      "id": "bar-43",
+      "title": "Compassos 43–45",
+      "start": 83.6873,
+      "end": 88.9814,
+      "sourceStart": 147.655,
+      "sourceEnd": 153.058,
+      "observed": "Torna a acostar-se molt a la càmera. Alterna frontal, costat i cua mentre travessa l'espai proper. A 164 s torna a ser lluny.",
+      "anchors": [
+        [
+          83.6873,
+          147.655
+        ],
+        [
+          85.452,
+          149.656
+        ],
+        [
+          87.2167,
+          151.057
+        ],
+        [
+          88.9814,
+          153.058
+        ]
+      ]
+    },
+    {
+      "id": "bar-47",
+      "title": "Compàs 47",
+      "start": 88.9814,
+      "end": 90.7461,
+      "sourceStart": 160.261,
+      "sourceEnd": 162.162,
+      "observed": "Torna a acostar-se molt a la càmera. Alterna frontal, costat i cua mentre travessa l'espai proper. A 164 s torna a ser lluny.",
+      "anchors": [
+        [
+          88.9814,
+          160.261
+        ],
+        [
+          90.7461,
+          162.162
+        ]
+      ]
+    },
+    {
+      "id": "bar-60",
+      "title": "Compassos 60–63",
+      "start": 90.7461,
+      "end": 98.7426,
+      "sourceStart": 183.071,
+      "sourceEnd": 193.276,
+      "observed": "Gira en el mateix sentit entre 168 i 176 s, manté el costat uns segons i torna a girar entre 180 i 184 s. Després queda de tres quarts amb canvis de pes i passes curtes fins a 196 s. No es pot comptar cada passa.",
+      "anchors": [
+        [
+          90.7461,
+          183.071
+        ],
+        [
+          92.5108,
+          185.072
+        ],
+        [
+          94.2755,
+          187.873
+        ],
+        [
+          96.0402,
+          190.475
+        ],
+        [
+          98.7426,
+          193.276
+        ]
+      ]
+    },
+    {
+      "id": "bar-64",
+      "title": "Compassos 64–67",
+      "start": 98.7426,
+      "end": 109.4286,
+      "sourceStart": 193.276,
+      "sourceEnd": 202.53,
+      "observed": "Gira en el mateix sentit entre 168 i 176 s, manté el costat uns segons i torna a girar entre 180 i 184 s. Després queda de tres quarts amb canvis de pes i passes curtes fins a 196 s. No es pot comptar cada passa. S'acosta de nou, ensenya el flanc i la cua i retorna. S'hi acosten ajudants abans de l'aixecament.",
+      "anchors": [
+        [
+          98.7426,
+          193.276
+        ],
+        [
+          101.8716,
+          196.377
+        ],
+        [
+          104.6523,
+          198.678
+        ],
+        [
+          107.1544,
+          200.979
+        ],
+        [
+          109.4286,
+          202.53
+        ]
+      ]
+    },
+    {
+      "id": "bar-68",
+      "title": "Compassos 68–71",
+      "start": 109.4286,
+      "end": 116.9046,
+      "sourceStart": 202.53,
+      "sourceEnd": 208.933,
+      "observed": "S'acosta de nou, ensenya el flanc i la cua i retorna. S'hi acosten ajudants abans de l'aixecament.",
+      "anchors": [
+        [
+          109.4286,
+          202.53
+        ],
+        [
+          111.5132,
+          204.181
+        ],
+        [
+          113.4372,
+          205.781
+        ],
+        [
+          115.2237,
+          207.382
+        ],
+        [
+          116.9046,
+          208.933
+        ]
+      ]
+    },
+    {
+      "id": "bar-72",
+      "title": "Compassos 72–75",
+      "start": 116.9046,
+      "end": 123.5712,
+      "sourceStart": 208.933,
+      "sourceEnd": 215.386,
+      "observed": "S'acosta de nou, ensenya el flanc i la cua i retorna. S'hi acosten ajudants abans de l'aixecament. Diverses persones aixequen el Bou i el fan voltar. Hi ha fum i cossos que tapen els suports. La maqueta encara no representa les mans i els ajudants d'aquest tram.",
+      "anchors": [
+        [
+          116.9046,
+          208.933
+        ],
+        [
+          118.5712,
+          211.084
+        ],
+        [
+          120.2379,
+          212.034
+        ],
+        [
+          121.9046,
+          214.285
+        ],
+        [
+          123.5712,
+          215.386
+        ]
+      ]
+    },
+    {
+      "id": "bar-76",
+      "title": "Compassos 76–79",
+      "start": 123.5712,
+      "end": 130.2379,
+      "sourceStart": 215.386,
+      "sourceEnd": 221.789,
+      "observed": "Diverses persones aixequen el Bou i el fan voltar. Hi ha fum i cossos que tapen els suports. La maqueta encara no representa les mans i els ajudants d'aquest tram.",
+      "anchors": [
+        [
+          123.5712,
+          215.386
+        ],
+        [
+          125.2379,
+          217.387
+        ],
+        [
+          126.9046,
+          218.837
+        ],
+        [
+          128.5712,
+          220.688
+        ],
+        [
+          130.2379,
+          221.789
+        ]
+      ]
+    },
+    {
+      "id": "bar-80",
+      "title": "Compassos 80–83",
+      "start": 130.2379,
+      "end": 136.9046,
+      "sourceStart": 221.789,
+      "sourceEnd": 228.792,
+      "observed": "Diverses persones aixequen el Bou i el fan voltar. Hi ha fum i cossos que tapen els suports. La maqueta encara no representa les mans i els ajudants d'aquest tram. El Bou torna a una altura baixa i continua girant. La gent el deixa al centre. El nombre de voltes queda pendent.",
+      "anchors": [
+        [
+          130.2379,
+          221.789
+        ],
+        [
+          131.9046,
+          223.99
+        ],
+        [
+          133.5712,
+          225.39
+        ],
+        [
+          135.2379,
+          227.091
+        ],
+        [
+          136.9046,
+          228.792
+        ]
+      ]
+    },
+    {
+      "id": "bar-84",
+      "title": "Compassos 84–87",
+      "start": 136.9046,
+      "end": 143.4931,
+      "sourceStart": 228.792,
+      "sourceEnd": 232.444,
+      "observed": "El Bou torna a una altura baixa i continua girant. La gent el deixa al centre. El nombre de voltes queda pendent.",
+      "anchors": [
+        [
+          136.9046,
+          228.792
+        ],
+        [
+          138.5663,
+          229.892
+        ],
+        [
+          140.2182,
+          230.843
+        ],
+        [
+          141.8604,
+          231.643
+        ],
+        [
+          143.4931,
+          232.444
+        ]
+      ]
+    },
+    {
+      "id": "bar-88",
+      "title": "Compassos 88–91",
+      "start": 143.4931,
+      "end": 149.9347,
+      "sourceStart": 232.444,
+      "sourceEnd": 236.796,
+      "observed": "El Bou torna a una altura baixa i continua girant. La gent el deixa al centre. El nombre de voltes queda pendent.",
+      "anchors": [
+        [
+          143.4931,
+          232.444
+        ],
+        [
+          145.1163,
+          233.394
+        ],
+        [
+          146.7301,
+          234.244
+        ],
+        [
+          148.3347,
+          235.995
+        ],
+        [
+          149.9347,
+          236.796
+        ]
+      ]
+    },
+    {
+      "id": "bar-92",
+      "title": "Compàs 92",
+      "start": 149.9347,
+      "end": 154.3347,
+      "sourceStart": 236.796,
+      "sourceEnd": 237.996,
+      "observed": "El Bou torna a una altura baixa i continua girant. La gent el deixa al centre. El nombre de voltes queda pendent.",
+      "anchors": [
+        [
+          149.9347,
+          236.796
+        ],
+        [
+          154.3347,
+          237.996
+        ]
+      ]
+    }
+  ]
+}

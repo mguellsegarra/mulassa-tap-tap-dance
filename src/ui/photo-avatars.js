@@ -1,7 +1,7 @@
 // Photo mode keeps the selector identity separate from the actor we drive. A playable selection starts driving;
 // the splash, pending figures and touch start looking. Both scene figures stay present throughout.
 import { PHOTO, setPhotoControl, clearPhotoKeys } from '../game/photo-control.js';
-import { MULASSA, DRAC, portraitArt, portraitPalette } from '../game/figures.js';
+import { MULASSA, DRAC, BOU, portraitArt, portraitPalette } from '../game/figures.js';
 import { pixelSvg } from './select-ui.js';
 import { COARSE } from '../core/env.js';
 import { hud } from '../hud/canvas.js';
@@ -11,8 +11,10 @@ import { showStick, setStickSwitched } from './photo-stick.js';
 import { tr } from '../i18n/messages.js';
 
 const PF_FIGS = [[MULASSA, ['q', 'e', 'r'].map(k => [k.toUpperCase(), tr(`ui.photo.act.mula.${k}`)])],
-  [DRAC, ['q', 'e', 'r'].map(k => [k.toUpperCase(), tr(`ui.photo.act.drac.${k}`)])]];
-const photoHelpActions = fig => [['WASD', tr('ui.photo.act.walk')], ['Shift', tr('ui.photo.act.run')], [tr('ui.photo.key.space'), tr('ui.photo.act.jump')], ...fig[1], ['Tab', tr('ui.photo.act.swap')], [tr('ui.photo.key.rightButton'), tr('ui.photo.act.holdLook')], ['M', tr('ui.photo.act.music')], ['Esc', tr(lookLocked() ? 'ui.photo.act.unlock' : 'ui.photo.act.look')]];
+  [DRAC, ['q', 'e', 'r'].map(k => [k.toUpperCase(), tr(`ui.photo.act.drac.${k}`)])],
+  [BOU, ['q', 'e', 'r'].map(k => [k.toUpperCase(), tr(`ui.photo.act.bou.${k}`)])]]; // driven alone: no pair, no Tab
+const PF_WORDS = { [MULASSA.id]: ['ui.photo.moveMula', 'ui.photo.nowMula'], [DRAC.id]: ['ui.photo.moveDrac', 'ui.photo.nowDrac'], [BOU.id]: ['ui.photo.moveBou', 'ui.photo.nowBou'] };
+const photoHelpActions = fig => [['WASD', tr('ui.photo.act.walk')], ['Shift', tr('ui.photo.act.run')], [tr('ui.photo.key.space'), tr(fig[0] === BOU ? 'ui.photo.act.bou.space' : 'ui.photo.act.jump')], ...fig[1], ...(fig[0] === BOU ? [] : [['Tab', tr('ui.photo.act.swap')]]), [tr('ui.photo.key.rightButton'), tr('ui.photo.act.holdLook')], ['M', tr('ui.photo.act.music')], ['Esc', tr(lookLocked() ? 'ui.photo.act.unlock' : 'ui.photo.act.look')]];
 const photoHelpDescription = fig => tr('ui.photo.description', { figure: fig[0].fullName, actions: photoHelpActions(fig).map(([key, label]) => `${key} ${label}`).join(' · ') });
 // Safari on an iPhone (not the home-screen app): its bars eat a landscape screen. Said on every entry (Marc).
 const PF_HOME = /iPhone|iPod/.test(navigator.userAgent ?? '') && navigator.standalone === false ? `<small class="pf-home">${tr('ui.photo.homeScreen')}</small>` : '';
@@ -66,7 +68,7 @@ export function showPhotoHelp(manual = true) {
   let html;
   if (fig) {
     const actions = photoHelpActions(fig);
-    const move = tr(fig[0].id === DRAC.id ? 'ui.photo.moveDrac' : 'ui.photo.moveMula');
+    const move = tr(PF_WORDS[fig[0].id][0]);
     html = COARSE.matches ? `<strong>${move}</strong><p>${tr('ui.photo.touch.left')}<br>${tr('ui.photo.touch.right')}</p><small>${tr('ui.photo.touch.buttons', { actions: fig[1].map(([, label]) => label).join(', ') })}<br>${tr('ui.photo.touch.helpButton')}</small>${PF_HOME}`
       : `<strong>${move}</strong><span class="sr-only">${fig[0].fullName}</span><div class="pf-help-grid">${actions.map(([key, label]) => `<span class="pf-help-action"><kbd>${key}</kbd><span${key === 'Esc' ? ' data-photo-escape' : ''}>${label}</span></span>`).join('')}</div><small>${tr('ui.photo.tabHint')}<br>${tr(manual ? 'ui.photo.hideHelp' : 'ui.photo.showControls')}</small>`;
   } else {
@@ -111,7 +113,7 @@ export function syncAvatars() {
       store.set(photoHelpSeenKey(family), '1');
       showPhotoHelp(false);
     } else if (pfShown) {
-      presentPhotoTip('notice', `<strong>${fig ? tr(active === DRAC.id ? 'ui.photo.nowDrac' : 'ui.photo.nowMula') : tr('ui.photo.freeView')}</strong>${home}`, home ? 4500 : 1800);
+      presentPhotoTip('notice', `<strong>${fig ? tr(PF_WORDS[active][1]) : tr('ui.photo.freeView')}</strong>${home}`, home ? 4500 : 1800);
     }
     else clearPhotoTip();
   }
@@ -120,8 +122,10 @@ export function syncAvatars() {
 export function showAvatars(on, id) {
   pfShown = on;
   const known = PF_FIGS.some(([f]) => f.id === id); // touch has no bar: it always drives, the Mulassa when the selection can't
-  setPhotoControl(Boolean(on && (known || COARSE.matches)), known ? id : MULASSA.id, true);
-  PHOTO.pair = on; // both existing scene figures, independent of selector identity
+  const solo = id === BOU.id; // the Bou is driven on its own; the Mulassa and the Drac share the plaça (a pair)
+  setPhotoControl(Boolean(on && (known || COARSE.matches)), known ? id : MULASSA.id, !solo);
+  PHOTO.pair = on && !solo; // both existing scene figures, independent of selector identity
+  for (const b of pfButtons) if (b.dataset.id) b.hidden = solo ? b.dataset.id !== BOU.id : b.dataset.id === BOU.id;
   avatarsEl.hidden = !on || COARSE.matches;
   hud.tabIndex = -1; // focusable by code or click for the world's keys, never a Tab stop: a full-viewport ring said nothing
   hud.setAttribute('aria-describedby', on ? 'photo-help' : '');

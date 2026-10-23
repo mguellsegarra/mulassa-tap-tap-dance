@@ -52,14 +52,29 @@ const eye = (v, x, y, z, k, r = 0.11) => v.plate(x, y, z + k * 0.009, r, r, 0, k
 function sleeve(v, rnd, L, w, look) {
   cbox(v, 0, -L / 2, 0, w, L, w + 0.01, look.top); if (look.dye !== false) blotch(v, rnd, [0, -L, 0, w, L, w + 0.01], 4);
 }
-// the head on its neck pivot (people.js's head: skin, hair, eyes), plus a headband or a cap
+// the head on its neck pivot (people.js's head: skin, hair, eyes), plus a headband or a cap; the Bou's colla: a hood
+// up, sunglasses, a black fire hat
 function collaHead(look, rnd, top) {
-  const v = new Vox(), hair = HAIR[(rnd() * 4) | 0];
+  const v = new Vox(), dyed = HAIR[(rnd() * 4) | 0], hair = look.hair ?? dyed;
   cbox(v, 0, 0.17, 0, 0.34, 0.34, 0.32, look.skin);
   v.box(0, 0.26, -0.02, 0.36, 0.12, 0.34, hair).box(0, 0.1, -0.17, 0.36, 0.16, 0.04, hair);
   v.box(0.08, 0.17, 0.165, 0.05, 0.05, 0.01, C.black, 0).box(-0.08, 0.17, 0.165, 0.05, 0.05, 0.01, C.black, 0);
   if (look.band) v.box(0, 0.225, 0, 0.35, 0.05, 0.335, COLLA.red); // above the eyes (0.22), into the hair
   if (look.cap) v.box(0, 0.3, -0.01, 0.38, 0.12, 0.37, COLLA.cap).box(0, 0.31, 0.2, 0.3, 0.03, 0.08, COLLA.cap);
+  if (look.shades) { // against the sparks: two dark lenses over the eyes (0.17-0.22) with a glint, the brow bar, the bridge, the arms to the ears
+    for (const x of [0.075, -0.075]) v.box(x, 0.155, 0.172, 0.1, 0.07, 0.012, BOU.lens, 0).plate(x + 0.025, 0.2, 0.1795, 0.03, 0.014, 0, 1, BOU.glint);
+    v.box(0, 0.222, 0.172, 0.27, 0.018, 0.016, BOU.black, 0).box(0, 0.19, 0.174, 0.05, 0.016, 0.012, BOU.black, 0);
+    for (const x of [0.177, -0.177]) v.box(x, 0.205, 0.06, 0.012, 0.016, 0.22, BOU.black, 0);
+  }
+  if (look.moustache) v.box(0, 0.07, 0.165, 0.16, 0.04, 0.012, hair, 0);
+  if (look.hood === 'up') { // crown, sides and back over the hair (clear of its faces), the face left open
+    v.box(0, 0.39, -0.03, 0.44, 0.05, 0.4, look.top).box(0, -0.02, -0.215, 0.37, 0.41, 0.03, look.top);
+    for (const s of [1, -1]) v.box(s * 0.205, -0.02, -0.03, 0.04, 0.41, 0.4, look.top);
+  }
+  if (look.hat) { // a soft black hat with a flap down the neck and the colla's pale badge
+    v.box(0, 0.35, -0.01, 0.46, 0.025, 0.45, BOU.black).box(0, 0.375, -0.01, 0.38, 0.12, 0.37, BOU.black).box(0, 0.495, -0.01, 0.3, 0.035, 0.29, BOU.black).box(0, 0.12, -0.215, 0.4, 0.23, 0.03, BOU.black);
+    v.plate(0, 0.4, 0.1795, 0.09, 0.07, 0, 1, BOU.pale);
+  }
   const m = v.mesh(), g = new THREE.Group();
   g.position.y = top;
   g.add(m);
@@ -102,6 +117,22 @@ export const MULA_SEATED_LOOKS = [
   { ...MULA_SUIT, top: '#a8b9c8', sash: '#24382b' },
   { ...MULA_SUIT, top: '#9fb2c2', sash: '#171e23', rolled: false },
 ];
+// The Bou Tradicional's colla (Ardit's recordings 2021-2026, the 2026 Santa Úrsula cercavila closest; UAF photos): correfoc
+// wear, the Bou being a fire beast. A garnet hooded jacket worn long as a tunic, buttoned, with «BOU TRADICIONAL DE VALLS»
+// down the front and a cartoon bull's face on the back; hoods up on some (at the correfoc), sunglasses against the
+// sparks on others; black trousers with a pale mark on the thigh, dark shoes. W, N, S, E, then the capatàs (Marc), a fifth
+// standing near the dance, not on a mark (scene/bou-colla.js BOU_CAPATAS): an older
+// man, short and stout, grey hair, a black fire hat with the badge and the long wooden staff with the fire pot.
+// Colours are approximations under the game's light.
+export const BOU = { lens: '#1f2638', glint: '#8f9cbf', black: '#121114', pale: '#ece2cf', white: '#f6f2ea', wood: '#7a5230', pot: '#3c3b40', potRim: '#5b5a60' };
+export const BOU_SUIT = { legs: '#17161a', dye: false, sole: '#3a3434', upper: '#121114', lace: null, shade: '#55142e', tunic: true, rolled: false };
+export const BOU_HELPER_LOOKS = [
+  { ...BOU_SUIT, top: '#80203f', hood: 'up', shades: true },
+  { ...BOU_SUIT, top: '#8c2347' },
+  { ...BOU_SUIT, top: '#93284d', shades: true },
+  { ...BOU_SUIT, top: '#7a1d3b', hood: 'up' },
+  { ...BOU_SUIT, top: '#8c2347', build: [1.2, 0.84], belly: true, hair: '#c9c4bd', moustache: true, skin: SKIN[1], hat: true, staff: true }, // the capatàs
+];
 export const SEATED_LOOKS = [
   { top: COLLA.cream, cap: true },
   { top: COLLA.cream, eyes: true, mocador: COLLA.red, band: true },
@@ -133,6 +164,20 @@ export const CLAP_TWIST = (() => {
 export const OPEN_TWIST = CLAP_TWIST + 0.95; // hands about 0.3 m apart at the off-beat
 // the hand's fixed turn in the forearm: upright (fingers up, palm facing in) at the moment of contact
 const handTurn = s => shoulderQ(s, ARM_CLAP).multiply(elbowQ(s, ARM_CLAP[2], CLAP_TWIST)).invert();
+// The Bou's portador holds his staff in the right hand [roll out, pitch forward, elbow bend]: the arm never moves, so the
+// staff (built in the forearm) stands upright on the paving.
+export const ARM_STAFF = [0.08, -0.1, -1.1];
+function staff(look) {
+  const qs = shoulderQ(1, ARM_STAFF), q = qs.clone().multiply(elbowQ(1, ARM_STAFF[2], 0));
+  const hand = new THREE.Vector3(0, -ARM.fore, 0).applyQuaternion(q).add(new THREE.Vector3(0, -ARM.upper, 0).applyQuaternion(qs)).y + ARM.y;
+  const up = new THREE.Vector3(0, 1, 0).applyQuaternion(q.invert()), L = hand + 1.0, v = new Vox();
+  cbox(v, 0, (L + 0.06) / 2, 0, 0.04, L + 0.06, 0.04, BOU.wood); // (cbox: by its centre) from the paving up into the pot // a long wooden staff with the fire pot hung at its top
+  cbox(v, 0, L + 0.12, 0, 0.1, 0.13, 0.1, BOU.pot).box(0, L + 0.12, 0, 0.11, 0.02, 0.11, BOU.potRim);
+  const m = v.mesh();
+  m.quaternion.setFromUnitVectors(Y_UP, up);
+  m.position.set(0, -ARM.fore, 0).addScaledVector(up, -hand); // its foot on the paving
+  return m;
+}
 function arm(s, look, rnd) {
   const sh = new THREE.Group(), el = new THREE.Group();
   sh.rotation.order = el.rotation.order = 'YXZ';
@@ -157,6 +202,7 @@ function arm(s, look, rnd) {
   hand.position.y = -ARM.fore;
   hand.quaternion.copy(handTurn(s));
   el.add(hand);
+  if (look.staff && s === 1) el.add(staff(look));
   sh.add(el);
   return { sh, el };
 }
@@ -175,10 +221,35 @@ function shirt(v, look) {
   v.plate(0, 0.86, 0.1415, 0.03, 0.5, 0, 1, look.shade);
   if (look.scarf) [0.22, 0.14, 0.06].forEach((w, i) => v.plate(0, 1.3 - 0.06 * i, -0.149, w, 0.06, 0, -1, look.scarf));
 }
+// the Bou's jacket worn as a tunic: long and loose (to mid-thigh), buttoned, the hood down on the back unless it is up,
+// «BOU TRADICIONAL DE VALLS» down the front (a pale strip: no lettering at this size), the cartoon bull's face on the
+// back's lower half; `belly` pushes the front out. Faces at z = ±0.155 (the tunic's), belly front at 0.2.
+function tunic(v, look) {
+  const zb = -0.155, zf = y => (look.belly && y >= 0.78 && y < 1.14 ? 0.2 : 0.155);
+  if (look.belly) v.box(0, 0.78, 0.17, 0.4, 0.36, 0.06, look.top);
+  for (const y of [0.6, 0.8, 0.96, 1.1, 1.24]) v.plate(0, y, zf(y) + 0.005, 0.035, 0.035, 0, 1, BOU.black);
+  if (!look.belly) v.plate(0.14, 0.56, 0.161, 0.035, 0.36, 0, 1, BOU.pale);
+  v.box(0, 1.33, -0.04, 0.34, 0.08, 0.26, look.top); // the collar round the neck
+  if (look.hood !== 'up') v.box(0, 1.1, -0.185, 0.36, 0.22, 0.07, look.top).box(0, 1.15, -0.19, 0.26, 0.12, 0.07, look.shade);
+  // the bull printed straight on the cloth, the whole back wide, from the hem up (no frame): a big pale muzzle with a
+  // black nose on the hem, googly eyes glancing aside, pale horns rising outwards with black tips, a black curly tuft
+  v.plate(0, 0.505, zb - 0.004, 0.24, 0.07, 0, -1, BOU.pale).plate(0, 0.575, zb - 0.004, 0.19, 0.07, 0, -1, BOU.pale)
+    .plate(0, 0.53, zb - 0.008, 0.12, 0.08, 0, -1, BOU.black).plate(0, 0.61, zb - 0.008, 0.07, 0.02, 0, -1, BOU.black);
+  for (const s of [1, -1]) {
+    v.plate(s * 0.095, 0.69, zb - 0.004, 0.085, 0.075, 0, -1, BOU.black).plate(s * 0.095, 0.7, zb - 0.008, 0.065, 0.055, 0, -1, BOU.pale)
+      .plate(s * 0.095 - 0.017, 0.71, zb - 0.012, 0.022, 0.03, 0, -1, BOU.black); // the pupils both to one side
+    v.plate(s * 0.14, 0.775, zb - 0.004, 0.07, 0.035, 0, -1, BOU.pale).plate(s * 0.195, 0.795, zb - 0.004, 0.06, 0.035, 0, -1, BOU.pale)
+      .plate(s * 0.232, 0.81, zb - 0.008, 0.026, 0.03, 0, -1, BOU.black);
+  }
+  v.plate(0, 0.785, zb - 0.004, 0.13, 0.04, 0, -1, BOU.black);
+  for (const x of [-0.045, 0, 0.045]) v.plate(x, 0.82, zb - 0.004, 0.03, 0.02, 0, -1, BOU.black);
+  v.plate(0.1, 0.4, 0.106, 0.08, 0.08, 0, 1, BOU.pale); // the pale mark on the trousers' left thigh
+}
 export function buildHelper(look, seed = 1) {
-  const rnd = seeded(seed), g = new THREE.Group(), body = new THREE.Group();
+  const rnd = seeded(seed), g = new THREE.Group(), fig = new THREE.Group(), body = new THREE.Group();
   look = { skin: SKIN[(rnd() * 3) | 0], legs: COLLA.cream, dye: true, sole: COLLA.sole, lace: COLLA.lace, ...look };
-  g.add(body);
+  g.add(fig); fig.add(body);
+  if (look.build) fig.scale.set(look.build[0], look.build[1], look.build[0]); // short and stout (the bones keep their poses)
   const v = new Vox();
   for (const s of [1, -1]) {
     shoe(v, s * 0.1, 0.03, look);
@@ -187,17 +258,18 @@ export function buildHelper(look, seed = 1) {
     if (look.dye) blotch(v, rnd, leg, 9);
     if (look.eyes) [0.22, 0.46].forEach((y, i) => eye(v, s * 0.1, y + 0.08 * i * s, i ? -0.1 : 0.1, i ? -1 : 1, 0.12));
   }
-  const jacket = [0, 0.72, 0, 0.46, 0.66, 0.28];
+  const jacket = look.tunic ? [0, 0.5, 0, 0.5, 0.88, 0.31] : [0, 0.72, 0, 0.46, 0.66, 0.28];
   v.box(...jacket, look.top);
+  if (look.tunic) tunic(v, look);
   if (look.dye) blotch(v, rnd, jacket, 16, look.emblem ? 'fsf' : 'fsbf'); // the back's emblem has the back to itself
   if (look.sash) shirt(v, look);
   if (look.mocador) mocador(v, 0.14, 1.38, look.mocador);
   back(v, -0.14, 1.38, look);
   body.add(v.mesh());
   const h = collaHead(look, rnd, 1.38), arms = [1, -1].map(s => arm(s, look, rnd));
-  for (const a of arms) g.add(a.sh);
-  g.add(h);
-  return { g, body, head: h, arms, bones: [body, h, ...arms.flatMap(a => [a.sh, a.el])] };
+  for (const a of arms) fig.add(a.sh);
+  fig.add(h);
+  return { g, body, head: h, arms, staff: !!look.staff, bones: [body, h, ...arms.flatMap(a => [a.sh, a.el])] };
 }
 // The clap at `beat` (an integer = palms together) and energy 0..1 (0 = arms hanging, calm). Pure, no allocations.
 export const ARM_UP = [0.35, -2.7, -0.35]; // a cheer: both arms up over the head
@@ -206,6 +278,12 @@ export function poseHelper(p, beat, energy, cheer = 0) {
   const e = Math.min(1, Math.max(0, energy)), twist = e * (OPEN_TWIST + (CLAP_TWIST - OPEN_TWIST) * close);
   for (let i = 0; i < 2; i++) {
     const s = i ? -1 : 1, { sh, el } = p.arms[i];
+    if (p.staff) { // the staff stays put; the free hand beats time at his side, and waves up on a cheer
+      if (i === 0) { sh.rotation.set(ARM_STAFF[1], 0, ARM_STAFF[0]); el.rotation.set(ARM_STAFF[2], 0, 0); continue; }
+      sh.rotation.set(ARM_REST[1] - 0.25 * e * close + (ARM_UP[1] - ARM_REST[1]) * cheer, 0, -ARM_REST[0] - 0.2 * cheer);
+      el.rotation.set(ARM_REST[2] - 0.25 * e, 0, 0);
+      continue;
+    }
     sh.rotation.set(ARM_REST[1] + (ARM_CLAP[1] - ARM_REST[1]) * e, 0, s * (ARM_REST[0] + (ARM_CLAP[0] - ARM_REST[0]) * e));
     el.rotation.set(ARM_REST[2] + (ARM_CLAP[2] - ARM_REST[2]) * e, s * twist, 0);
     if (cheer > 0) {
@@ -214,7 +292,7 @@ export function poseHelper(p, beat, energy, cheer = 0) {
     }
   }
   p.head.rotation.x = 0.06 * e * close - 0.25 * cheer; // a small nod with each clap; a cheer looks up
-  p.g.position.y = 0.12 * cheer * Math.abs(Math.sin(beat * Math.PI * 2)); // and hops
+  p.g.position.y = (p.staff ? 0.04 : 0.12) * cheer * Math.abs(Math.sin(beat * Math.PI * 2)); // and hops (the portador only bobs)
 }
 
 // ---- the seated member, on the paving (hips at y 0), three postures seen at the front of the public:

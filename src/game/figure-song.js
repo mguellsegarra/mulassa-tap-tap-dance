@@ -1,12 +1,13 @@
 // Active generated arrangement. Live bindings keep every consumer on the same song without editing its data.
 import mulassaSong from '../song.json' with { type: 'json' };
 import dracSong from '../song-drac.json' with { type: 'json' };
+import bouSong from '../song-bou.json' with { type: 'json' };
 import { beatAtTime, timeAtBeat } from '../core/beat-grid.js';
-import { FIGURES, MULASSA, DRAC } from './figures.js';
+import { FIGURES, MULASSA, DRAC, BOU } from './figures.js';
 import { DRAC_SIZE, DRAC_SCALE } from '../scene/models/drac.js';
 import { setFigureTheme } from './figure-theme.js';
 
-const FIGURE_SONGS = { [MULASSA.id]: mulassaSong, [DRAC.id]: dracSong };
+const FIGURE_SONGS = { [MULASSA.id]: mulassaSong, [DRAC.id]: dracSong, [BOU.id]: bouSong };
 export const menuSong = mulassaSong; // the menu loop, whoever is selected
 export const figureSong = id => FIGURE_SONGS[id]; // any figure's song, selected or not (free mode's radio)
 export let selectedFigure = MULASSA;
@@ -16,12 +17,16 @@ export let BEAT = (BEATS.at(-1) - BEATS[0]) / (BEATS.length - 1);
 export let FINALE_T = song.finale;
 // Scene dimensions are independent of choreography's travel envelope.
 // cameras and the crowd's clearance were tuned around the Mulassa (4.03 m): the Drac's height over hers
-export const figureScale = () => selectedFigure.id === DRAC.id ? DRAC_SIZE.h * DRAC_SCALE / 4.03 : 1;
+// the Bou stands ~2.2 m to the horns, but travels and turns with its two carriers: a little more room than its height
+const BOU_SCALE = 0.8;
+export const figureScale = () => selectedFigure.id === DRAC.id ? DRAC_SIZE.h * DRAC_SCALE / 4.03 : selectedFigure.id === BOU.id ? BOU_SCALE : 1;
+// the crowd's clearance to its body box (crowd.js): the Bou is low but as long as the Mulassa (3.8 m, horns to tail)
+export const figureReach = () => selectedFigure.id === BOU.id ? 0.9 : figureScale();
 export function setFigureSong(value) {
   const figure = FIGURES.find(f => f.id === (typeof value === 'string' ? value : value?.id));
   if (!figure || !FIGURE_SONGS[figure.id]) return false;
   selectedFigure = figure;
-  setFigureTheme(figure.id === DRAC.id); // buttons, words and colours follow the figure
+  setFigureTheme(figure.id === DRAC.id ? 'drac' : figure.id === BOU.id ? 'bou' : 'mulassa'); // buttons, words and colours follow the figure
   song = FIGURE_SONGS[figure.id];
   BEATS = song.beats;
   BEAT = (BEATS.at(-1) - BEATS[0]) / (BEATS.length - 1);
@@ -42,3 +47,7 @@ export function countInPhase(t, target) {
   const whole = Math.round(phase) || 0;
   return Math.abs(phase - whole) < 1e-9 ? whole : phase;
 }
+
+// Only a run from the beginning uses the recorded intro; mid-song starts retain preparation.
+export const hasRecordedIntro = from => from === 0 && song.introEnd > 0;
+export const startCueAt = from => hasRecordedIntro(from) ? song.introEnd : BEATS.find(b => b >= from) ?? from;

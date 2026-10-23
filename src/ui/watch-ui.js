@@ -1,8 +1,8 @@
-// The dance's demo: «Veure un ball de demostració» in Com es juga, the DEMOSTRACIÓ label while the song plays and the end
+// The dance's demo: «Mira el ball» on the selector's song row (Marc, 2026-10-23: out of Com es juga, where nobody found it), the DEMOSTRACIÓ label while the song plays and the end
 // sheet that offers to play it. The run is game/flow.js's (startWatch): the same song, plaça and camera as a game, played by itself, never scored.
 import { G, clock, setSelectedFigure } from '../game/state.js';
 import { startWatch, toTitle } from '../game/flow.js';
-import { hide, howtoMenu } from './handles.js';
+import { hide } from './handles.js';
 import { focusIn } from './focus.js';
 import { tr } from '../i18n/messages.js';
 
@@ -11,9 +11,8 @@ export function setupWatch({ select, busy }) {
   const $ = id => document.getElementById(id);
   const menu = $('watch-menu'), tag = $('watch-tag');
   let offered = false; // this demo's end sheet has opened (once: closing it always leaves the results)
-  function start() { // from Com es juga, which only the selector's playable figures open
+  function start() { // from the song row, which only a playable figure's panel shows
     const figure = select.figure;
-    if (howtoMenu.open) howtoMenu.close();
     if (G.state !== 'select' || busy() || !figure || select.pending || !setSelectedFigure(figure)) return;
     $('watch-song').textContent = figure.song;
     $('watch-text').textContent = tr('ui.watch.text', { song: figure.song });
@@ -26,7 +25,7 @@ export function setupWatch({ select, busy }) {
     select.visible(true); // (this frame, so the level step opens on a shown selector)
     select.toLevels();
   }
-  $('howto-watch').addEventListener('click', start);
+  $('select-watch').addEventListener('click', start);
   $('watch-play').addEventListener('click', () => leave(true));
   $('watch-again').addEventListener('click', () => { menu.close(); startWatch(); });
   $('watch-figures').addEventListener('click', () => leave(false));

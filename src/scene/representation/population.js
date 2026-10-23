@@ -63,7 +63,8 @@ export function buildPublicSpecs(sources, catalogue, seed = 20261020) {
       const robe = ROBES[Math.floor(random() * ROBES.length)], scarf = ROBES[Math.floor(random() * ROBES.length)];
       look = { ...look, coverColour: scarf, top: { ...look.top, colour: robe }, bottom: { ...look.bottom, colour: robe } };
     }
-    return { ...look, id: `public-${seed >>> 0}-${source.row}-${source.slot}`, age, height: 1,
+    // The look and the age are drawn apart: a child never keeps the look's beard.
+    return { ...look, id: `public-${seed >>> 0}-${source.row}-${source.slot}`, age, height: 1, beard: !!look.beard && age !== 'infant',
       skin: review.has(i) ? look.skin : source.appearance.skin,
       meta: { gender: gender[i], age, ageBand, populationBand: ages[i], mobility: look.mobility ?? null,
         ...(look.mobility === 'basto' ? { vision: look.meta.vision } : {}) } };

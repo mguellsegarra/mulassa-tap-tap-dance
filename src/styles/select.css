@@ -65,7 +65,11 @@
 .sel-song { display: flex; align-items: center; gap: 10px; min-width: 0; padding-top: 12px; border-top: 1px solid var(--sel-line); font-size: 16px; line-height: 1.2; }
 .sel-song svg { flex: none; box-sizing: border-box; width: 34px; height: 34px; padding: 8px; border-radius: 50%; background: #f5c5181f; fill: #f5c518; }
 .sel-song-copy { display: grid; gap: 2px; min-width: 0; }
+.sel-song-plate { display: flex; align-items: center; gap: inherit; min-width: 0; } /* the song itself (disc and words): the phones' chip, «Mira el ball» beside it */
 .sel-song-credit { font-size: 12px; font-weight: 600; color: var(--sel-muted); }
+/* «Mira el ball» (ui/watch-ui.js; Marc, 2026-10-23): the song's own dance, at the song row's end; a secondary .btn sized to the row */
+.sel-song .sel-watch { display: inline-flex; flex: none; align-items: center; justify-content: center; gap: 6px; width: auto; min-height: 44px; margin-inline-start: auto; padding: 0 16px 0 12px; font-size: 15px; white-space: nowrap; }
+.sel-song .sel-watch > svg { width: 16px; height: 16px; margin: 0; padding: 0; border-radius: 0; background: none; fill: currentColor; }
 /* Step 2's level row: the song row's shape with a stroked trophy and inline stars. One line each: what doesn't fit is dropped (select-ui.js levelStats), never wrapped or cut. */
 .sel-level-stats svg { fill: none; stroke: #f5c518; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 /* Keep the record row stable; centre an empty record's single line beside the trophy. */
@@ -179,9 +183,9 @@
     width: calc(var(--gw) * var(--cell)); height: calc(var(--gh) * var(--cell)); margin: calc(-1 * var(--cell)); } /* the rim on every side: the margin box is the drawing, so a full-height figure still aligns to the floor */
 }
 /* Static portraits share a 160x112 viewBox, 100-unit body height and sole baseline 104.
-   The Mulassa stands on the grids' reference at her STAND .8; UAF real heights set Drac/Mulassa = 1.90/2.95. The pending Bou's silhouette is
-   drawn on the Mulassa's skeleton at her scale (no published Bou height). */
-.sel-card .por svg:is(.sel-mulassa-illustration, .sel-drac-illustration, .sel-bou-silhouette, .sel-invite-illustration) {
+   The Mulassa stands on the grids' reference at her STAND .8; UAF real heights set Drac/Mulassa = 1.90/2.95. The Bou's 100 units run from
+   its horn tips to the soles; the UAF publishes no height, ~2 m is read off photos beside its carriers. */
+.sel-card .por svg:is(.sel-mulassa-illustration, .sel-drac-illustration, .sel-bou-illustration, .sel-invite-illustration) {
   --mula-cell: 5px; --portrait-scale: 1;
   --portrait-height: calc(11.02 * var(--mula-cell) * var(--portrait-scale));
   height: calc(var(--portrait-height) * 112 / 100); width: calc(var(--portrait-height) * 160 / 100);
@@ -189,10 +193,11 @@
   image-rendering: auto;
 }
 .sel-card .por svg.sel-drac-illustration { --portrait-scale: calc(1.9 / 2.95); }
+.sel-card .por svg.sel-bou-illustration { --portrait-scale: calc(2 / 2.95); }
 /* Fictional adults ~1.75/1.65 m: tallest person is 79.076 SVG units, excluding the standard. */
 .sel-card .por svg.sel-invite-illustration { --portrait-scale: calc(1.75 / 2.95 * 100 / 79.076); }
 @supports (width: round(down, 5.5px, 1px)) {
-  .sel-card .por svg:is(.sel-mulassa-illustration, .sel-drac-illustration, .sel-bou-silhouette, .sel-invite-illustration) {
+  .sel-card .por svg:is(.sel-mulassa-illustration, .sel-drac-illustration, .sel-bou-illustration, .sel-invite-illustration) {
     --mula-cell: max(2px, min(.8 * 14 * min(var(--reach) * 100cqh / 14, var(--sky) * 100cqw / 18) / 11.02, 100cqh / 12, 100cqw / 14)); /* her 100-unit body = STAND .8 of the grids' --ref */
   }
 }
@@ -292,6 +297,13 @@ html:not([lang="ca"]) .sel-footer :is(#select-next, #select-play, #select-figure
 
 body.view-mode #select { opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .2s, visibility 0s .2s, display .2s allow-discrete; }
 #select { transition: opacity .2s, visibility 0s, display .2s allow-discrete; } /* return visibility immediately so the saved card can take focus */
+/* The showreel's idle screen (ui/reel-idle.js): untouched for a while, the selector and its corner row fade out and the
+   dance has the whole screen; any touch, move or key brings them back. Short and eased both ways (Marc: a 1.2 s fade drew
+   the eye): out in .4 s, back in .25 s (body.reel-wake, for as long as that fade lasts) */
+body.reel-idle :is(#select, #settings, #free, #music, #howto, #fps, #feedback-nudge) { opacity: 0; pointer-events: none; transition: opacity .4s cubic-bezier(.4, 0, .2, 1); }
+body.reel-wake :is(#select, #settings, #free, #music, #howto, #fps, #feedback-nudge) { transition: opacity .25s cubic-bezier(0, 0, .2, 1); }
+body.reel-idle #select > * { pointer-events: none; }
+@media (prefers-reduced-motion: reduce) { :is(body.reel-idle, body.reel-wake) :is(#select, #settings, #free, #music, #howto, #fps, #feedback-nudge) { transition: none; } }
 #select[hidden] { opacity: 0; }
 @starting-style { #select { opacity: 0; } }
 
@@ -387,6 +399,10 @@ body.view-mode #select { opacity: 0; visibility: hidden; pointer-events: none; t
   .sel-panel[data-snug] > #select-song svg { width: 32px; height: 32px; padding: 5px; }
   .sel-song svg { width: 44px; height: 44px; padding: 11px; }
   .sel-song-credit { font-size: 15px; }
+  @container (max-width: 470px) { /* a narrow column (900-1100 px windows, an iPad): «Mira el ball» stays beside the song, the play alone (its name for screen readers), rather than the credit in four lines or the button below (Marc) */
+    .sel-song .sel-watch { width: 44px; padding: 0; } .sel-song .sel-watch > span { display: none; }
+    .sel-song { gap: 6px; } .sel-song .sel-song-plate { gap: 6px; } .sel-song .sel-song-plate > svg { width: 30px; height: 30px; padding: 6px; } .sel-song-credit { font-size: 14px; } /* and the credit keeps one line: a smaller disc, gaps and type */
+  }
   .sel-level-stats .sel-song-copy { min-height: calc(1lh + 2px + 18px); }
   .sel-tiles { font-size: 20px; line-height: 28px; }
       .sel-card { flex-basis: 176px; --floor: 18px; }
@@ -418,6 +434,7 @@ body.view-mode #select { opacity: 0; visibility: hidden; pointer-events: none; t
   .sel-meds:not(:has(.sel-med:not(.none))) .sel-med.none small { display: none; } /* no record at any level: no % line to line up with, so the three rows sit centred (a row with one record keeps the slot) */
   .sel-panel { grid-template-columns: minmax(0, 1fr); } /* nothing widens the column past --info-w */
   .sel-standings { width: 100%; border-radius: var(--sel-chip-r); background: #2b1f16d9; /* the body is the lighter tone, the header (below) the darker */ overflow: hidden; container-type: inline-size; }
+  #select .sel-standings:not(:has(.sel-standings-rows li, .sel-standings-foot:not([hidden]))) .sel-standings-head { border-bottom-color: transparent; } /* nothing under it (a short column has dropped the rows and the foot): no separator left alone */
   #select .sel-standings-head { position: relative; display: flex; align-items: center; gap: 8px; width: 100%; min-height: 48px; margin: 0; padding: 0 14px; border: 0; border-bottom: 1px solid var(--sel-line); border-radius: 0; background: #0c070459; color: inherit; font: inherit; font-size: 20px; text-align: left; cursor: pointer; }
   .sel-standings-head svg { flex: none; width: 1.1em; height: 1.1em; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
   .sel-standings-head .chev { width: .9em; height: .9em; margin-left: auto; stroke: var(--sel-muted); }
@@ -712,9 +729,16 @@ body:has(:focus-visible) #select .sel-card[aria-selected="true"]:not(:focus-visi
   .sel-song-copy > span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
   .sel-song-credit { font-size: 11px; line-height: 14px; }
   .sel-level-stats .sel-song-copy { min-height: 32px; }
+  #select-song { padding: 0; border: 0; border-radius: 0; background: none; } /* the chip is the song's own (its plate); «Mira el ball» stands beside it, outside (Marc, 2026-10-23: inside it read oddly) */
+  #select-song .sel-song-plate { box-sizing: border-box; padding: 4px 10px 4px 4px; border-radius: var(--sel-chip-r); background: var(--sel-chip-bg); } /* (no hairline on phones: the desktop's row separator, across the row here it read as a stray bar; Marc) */
+  .sel-song .sel-watch { min-height: 38px; margin-inline-start: 0; padding: 0 14px 0 10px; font-size: 14px; } /* the chip's height; the slop keeps a 44 px target */
+  .sel-song .sel-watch::after { content: ''; position: absolute; inset: -3px -2px; }
   .sel-tiles { gap: 6px; padding-top: 0; border-top: 0; }
   .sel-tiles { font-size: 14px; line-height: 24px; }
   }
+
+/* Under 375 px no room beside the chip for the label: the play alone (its name stays for screen readers, aria-label) */
+@media (max-width: 374px) and (min-height: 501px) { .sel-song .sel-watch { width: 38px; padding: 0; } .sel-song .sel-watch > span { display: none; } }
 
 /* Big desktops: only a nudge (zoom keeps cards, type, pills, dock and button in proportion). A desktop's css px are
    already as big as a laptop's or bigger: x1.45 made the selector giant on a 27" 5K. measure() divides by it. */

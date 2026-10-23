@@ -89,7 +89,7 @@ assert.throws(() => trf('unknown'), /missing figure variant/);
 assert.equal(trf(undefined), undefined);
 const mulassa = () => {
   assert.equal(T.figTheme.drac, false);
-  assert.deepEqual(T.figTheme.chant, [['GUAPA,', 0], ['GUAPA…', 0.8], ['I GUAPA!', 1.8]]);
+  assert.deepEqual(T.figTheme.chant, [['GUAPA,', 0, 0.8], ['GUAPA…', 0.8, 0.8], ['I GUAPA!', 1.8, 1.6]]);
   assert.equal(T.figTheme.colors.gua, '#ff7a1a'); assert.equal(T.figTheme.colors.pa, '#14b8a6');
   assert(!classes.has('fig-drac') && props.size === 0, 'no overrides on the page');
 };
@@ -100,7 +100,7 @@ for (const [i, id] of ['gua', 'pa', 'guapa', 'hold', 'balloon'].entries()) for (
   const original = originalMessages['practice.' + id + (id === 'balloon' && device !== 'word' ? '.mash.' : '.') + device];
   assert.equal(practiceText(i, device), oldTheme.themed(original));
 }
-assert.deepEqual(T.figTheme.chant, [['QUE', 0], ['CREMI', 0.8], ['LA PLAÇA!', 1.8]]);
+assert.deepEqual(T.figTheme.chant, [['QUE', 0, 0.8], ['CREMI', 0.8, 0.8], ['LA PLAÇA!', 1.8, 1.6]]);
 assert.equal(word.textContent, 'CRE'); assert.equal(padWord.textContent, 'MA'); assert.equal(padWord.dataset.w, 'MA');
 assert.equal(legend.textContent, 'CREMA!'); assert.equal(aria.attrs['aria-label'], 'CRE, esquerra');
 assert.equal(anim.textContent, 'Cada error desanima la plaça: si es buida, el Drac s’apaga!');
@@ -114,4 +114,9 @@ mulassa();
 assert.equal(face.innerHTML, '<path fill="#c0283c"/>', 'and back to the Mulassa’s');
 assert.equal(word.textContent, 'GUA'); assert.equal(padWord.dataset.w, 'PA'); assert.equal(legend.textContent, 'GUAPA!');
 assert.equal(aria.attrs['aria-label'], 'GUA, esquerra'); assert.equal(anim.textContent, 'Cada error desanima la plaça: si es buida, la Mulassa cau!');
+// the Bou: BRA | MA | BRAMA!, and a longer chant whose volley waits for its last word
+assert.deepEqual(T.figThemes.bou.chant, [['BRAMA, BOU!', 0, 1], ['QUE LA PLAÇA…', 1, 1.2], ['ES MOU!', 2.2, 1.8]]);
+assert.equal(T.figThemes.bou.volley, T.figThemes.bou.chant.at(-1)[1]);
+assert.deepEqual(['input.left', 'input.right', 'hit.both'].map(k => trf(k, 'bou')), ['BRA', 'MA', 'BRAMA!']);
+assert(lum(T.figThemes.bou.colors.gua) > 2.5 * lum(T.figThemes.bou.colors.pa), 'BRA and MA differ in lightness, not only hue');
 console.log('figure-theme ok');

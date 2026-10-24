@@ -45,7 +45,7 @@ const state = { state: 'splash', paused: false }, ctx = { tr, document: doc, nav
   howtoMenu: {}, settingsMenu: {}, privacyMenu: {}, pauseMenu: {},
   howtoEl: $('howto'), settingsEl: $('settings'), feedbackEl: $('feedback'), freeEl: $('free'), musicEl: $('music'), pauseEl: $('pause'), skipEl: $('skip'), retryEl: $('retry'),
   addEventListener(k, f) { (handlers[k] ||= []).push(f); }, clearTimeout() {}, setTimeout() { return 1; },
-  padButtons: [$('pad-left'), $('pad-right')], hud: $('hud'), orbit: { ptrs: new Map(), x: [0.4,11] }, pnow: () => time, W: 375, K: 1,
+  padButtons: [$('pad-left'), $('pad-right')], hud: $('hud'), orbit: { ptrs: new Map(), x: [0.4,11] }, look: { ptrs: new Map(), x: [0,1] }, pnow: () => time, W: 375, K: 1,
   orbitMove() {}, orbitZoom() {}, turnFor: () => 1, orbitDown(o, id) { o.ptrs.set(id, true); }, orbitUp(o, id) { o.ptrs.delete(id); },
   chip: null, down: { keys: new Set(), ptr: new Map() }, KEYS: {}, pageActive: () => true, releaseAll() {}, buttonAt: () => { throw new Error('selector world must never hit a title button'); },
   store: { set() {} }, unlock() { state.state = 'select'; }, toTitle() { state.state = 'select'; },

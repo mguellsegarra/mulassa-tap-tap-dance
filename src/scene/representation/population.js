@@ -30,14 +30,23 @@ export function allocatePopulation(n, weights, seed) {
 }
 // Where the eight review looks stand: the most central sources first (the caller sorts them), but each at least
 // REVIEW_GAP m from the others, so the wheelchairs and canes are spread through the crowd instead of side by side.
+// The wheelchairs (Marc, 2026-10-23: always in the middle of every figure's shot) stand off to the sides and a row
+// back (CHAIR_FAR: row, rad off the play shot's centre, the far side: crowd-build's camera looks in from 2.62 rad), for
+// every figure; a crowd of one row (low quality) still sends them to the sides; anywhere only if neither exists.
 const REVIEW_GAP = 3;
-function reviewSlots(sources) {
-  const slots = new Map();
-  for (const gap of [REVIEW_GAP, REVIEW_GAP / 2, 0]) { // a small crowd relaxes the gap rather than losing an example
-    for (let i = 0; i < sources.length && slots.size < REVIEW_LOOKS.length; i++) {
+export const CHAIR_FAR = Object.freeze({ row: 1, off: 0.7, centre: 2.62 - Math.PI }); // (the crowd's sides are by the play lens: 1-1.4 put a chair in the shot's near corner)
+const offShot = ang => Math.abs(Math.atan2(Math.sin(ang - CHAIR_FAR.centre), Math.cos(ang - CHAIR_FAR.centre)));
+export const sideways = (s, row = CHAIR_FAR.row) => (s.row ?? 0) >= row && s.ang != null && offShot(s.ang) >= CHAIR_FAR.off;
+function reviewSlots(sources, chairs) {
+  const slots = new Map(), row = sources.some(s => sideways(s)) ? CHAIR_FAR.row : 0, anyFar = sources.some(s => sideways(s, row));
+  const order = sources.map((_, i) => i), nearShot = order.slice().sort((a, b) => offShot(sources[a].ang ?? 0) - offShot(sources[b].ang ?? 0));
+  for (const id of REVIEW_LOOKS) { // a small crowd relaxes the gap rather than losing an example
+    const chair = chairs.has(id) && anyFar, fits = i => !chair || sideways(sources[i], row);
+    // a chair takes the first place just off the shot's centre (back in the shot), not the one by the lens
+    pick: for (const gap of [REVIEW_GAP, REVIEW_GAP / 2, 0]) for (const i of chair ? nearShot : order) {
       const a = sources[i].pos;
-      if (slots.has(i) || [...slots.keys()].some(k => a && a.distanceTo(sources[k].pos) < gap)) continue;
-      slots.set(i, REVIEW_LOOKS[slots.size]);
+      if (slots.has(i) || !fits(i) || [...slots.keys()].some(k => a && a.distanceTo(sources[k].pos) < gap)) continue;
+      slots.set(i, id); break pick;
     }
   }
   return slots;
@@ -48,7 +57,7 @@ export function buildPublicSpecs(sources, catalogue, seed = 20261020) {
   const middle = ages.filter(x => x === '15-64').length;
   const stages = allocatePopulation(middle, { jove: MIDDLE_YOUTH_SHARE, adult: 1 - MIDDLE_YOUTH_SHARE }, seed ^ 0x1635);
   const random = populationRandom(seed ^ 0x42da), ordinary = catalogue.filter(s => !s.mobility);
-  const review = reviewSlots(sources);
+  const review = reviewSlots(sources, new Set(catalogue.filter(s => s.mobility === 'cadira').map(s => s.id)));
   let j = 0;
   return sources.map((source, i) => {
     // Preserve the existing eight appearance examples for review. Additional figures inherit their source skin;

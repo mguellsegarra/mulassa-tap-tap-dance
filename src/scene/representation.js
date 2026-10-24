@@ -25,7 +25,24 @@ function omitPeople(mesh, people) {
   }
   mesh.geometry.setIndex(index);
   const filtered = mesh.geometry.index;
-  return (enabled = false) => mesh.geometry.setIndex(enabled ? filtered : original);
+  // The omitted people's bones drive no triangle any more: the skeleton uploads only the others' (the whole public, on
+  // the crowd's mesh: its 464 bones a frame for nothing).
+  const skeleton = mesh.skeleton, fullUpdate = skeleton.update, kept = skeleton.bones.map((_, i) => i).filter(i => !ids.has(i));
+  function keptUpdate() {
+    for (const i of kept) { boneOffset.multiplyMatrices(this.bones[i]?.matrixWorld ?? BONE_IDENTITY, this.boneInverses[i]); boneOffset.toArray(this.boneMatrices, i * 16); }
+    if (this.boneTexture !== null) this.boneTexture.needsUpdate = true;
+  }
+  skeleton.update = keptUpdate;
+  return (enabled = false) => { mesh.geometry.setIndex(enabled ? filtered : original); skeleton.update = enabled ? keptUpdate : fullUpdate; };
+}
+const boneOffset = new THREE.Matrix4(), BONE_IDENTITY = new THREE.Matrix4();
+// The represented public's own rigs keep walking and steering (their g: drawn people follow it), but their limbs are
+// drawn by nobody: they skip the matrix walk until the representation is switched off.
+function quietLimbs(people) {
+  const limbs = people.flatMap(p => [p.torso, ...(p.legs ?? [])]).filter(Boolean), skip = () => {};
+  const set = on => { for (const o of limbs) if (on) o.updateMatrixWorld = skip; else delete o.updateMatrixWorld; };
+  set(true);
+  return set;
 }
 function shown(g) { for (let o = g; o; o = o.parent) if (!o.visible) return false; return true; }
 
@@ -57,6 +74,7 @@ export function setupRepresentation() {
     entries.push({ role: 'acompanyant', id, source, p, size: 1, oldSize: 1, poseLinks: linkRolePose(p, source) });
   });
   restore.push(omitPeople(crowdMesh, entries.filter(e => e.role !== 'acompanyant').map(e => e.source)));
+  restore.push(quietLimbs(entries.filter(e => e.role === 'public').map(e => e.source)));
   if (mulaColla) {
     const mesh = mulaColla.helpers.children.find(o => o.isSkinnedMesh);
     restore.push(omitPeople(mesh, entries.filter(e => e.role === 'acompanyant').map(e => e.source)));

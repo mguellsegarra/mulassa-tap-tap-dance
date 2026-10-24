@@ -229,6 +229,7 @@ function tunic(v, look) {
   if (look.belly) v.box(0, 0.78, 0.17, 0.4, 0.36, 0.06, look.top);
   for (const y of [0.6, 0.8, 0.96, 1.1, 1.24]) v.plate(0, y, zf(y) + 0.005, 0.035, 0.035, 0, 1, BOU.black);
   if (!look.belly) v.plate(0.14, 0.56, 0.161, 0.035, 0.36, 0, 1, BOU.pale);
+  else v.plate(0.14, 0.56, 0.161, 0.035, 0.22, 0, 1, BOU.pale).plate(0.14, 0.78, 0.206, 0.035, 0.14, 0, 1, BOU.pale); // over the belly too
   v.box(0, 1.33, -0.04, 0.34, 0.08, 0.26, look.top); // the collar round the neck
   if (look.hood !== 'up') v.box(0, 1.1, -0.185, 0.36, 0.22, 0.07, look.top).box(0, 1.15, -0.19, 0.26, 0.12, 0.07, look.shade);
   // the bull printed straight on the cloth, the whole back wide, from the hem up (no frame): a big pale muzzle with a

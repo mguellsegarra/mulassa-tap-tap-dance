@@ -3392,7 +3392,11 @@ run('var shoulder = { worst: 9, seen: 0 }; orbit.ptrs.clear(); orbit.last = -Inf
 const shoulderCheck = `{ const v = new THREE.Vector3(), cx = camFocus.x, cz = camFocus.z, yaw = Math.atan2(camera.position.x - cx, camera.position.z - cz), hd = Math.hypot(camera.position.x - cx, camera.position.z - cz);
   for (const p of mulaColla.crew) { p.g.getWorldPosition(v); const dx = v.x - cx, dz = v.z - cz; if (dx * dx + dz * dz > hd * hd) continue; shoulder.seen++;
     shoulder.worst = Math.min(shoulder.worst, Math.abs(Math.atan2(Math.sin(yaw - Math.atan2(dx, dz)), Math.cos(yaw - Math.atan2(dx, dz))))); } }`;
-for (let i = 0; i < 60 * 40; i++) { run(`frame(${it += 1000 / 60})`); if (i % 4 === 0 && !run('orbit.ptrs.size')) run(shoulderCheck); }
+// (and its cuts dissolve: the copy that fades out is taken in the outgoing shot's camera, before the cut moves it)
+run("var fades = [], lastCam = camera.position.clone(); document.getElementById('reel-fade').animate = () => (fades.push(camera.position.distanceTo(lastCam)), { cancel() {} });");
+for (let i = 0; i < 60 * 40; i++) { run(`frame(${it += 1000 / 60}); lastCam.copy(camera.position);`); if (i % 4 === 0 && !run('orbit.ptrs.size')) run(shoulderCheck); }
+const fades = JSON.parse(run('JSON.stringify(fades)'));
+assert(fades.length > 0 && fades.every(d => d < 1e-6), `showreel: every cut dissolves from the outgoing shot (${fades.length} cuts, ${JSON.stringify(fades)})`);
 const sh = JSON.parse(run('JSON.stringify(shoulder)'));
 assert(sh.seen > 0 && sh.worst > 0.3, `showreel: no attendant over the lens's shoulder (closest ${sh.worst.toFixed(2)} rad off the line of sight)`);
 run('sheets.select = idleSel;'); console.log('showreel clear of the attendants ok'); }

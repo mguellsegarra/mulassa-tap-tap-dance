@@ -44,7 +44,7 @@ import './hud/warm.js';
 import './hud/banner.js';
 import './hud/results.js';
 import { orbit, insidePlaza, framePlayCamera, CAMS, frameMenuCamera, lens, easeLensX, clearCameraImpact, applyCameraImpact } from './scene/cameras.js';
-import { PERF, perfSample, perfReset, qualitySample } from './dev/perf.js';
+import { PERF, perfSample, perfReset, qualitySample, drawPerfLine } from './dev/perf.js';
 import { heroCam, heroQuadMake, renderHero } from './scene/share-capture.js';
 import { autoplay, advance, collapse, judge, press } from './game/judge.js';
 import { practiceTick, finish, songWait, musicLine, startFinal, previewResults, startPractice, endPractice, choose } from './game/flow.js';
@@ -58,6 +58,7 @@ import { drawHud } from './hud/draw.js';
 import { watchAudio } from './ui/pause-actions.js';
 import { tickReel, REEL } from './game/showreel.js';
 import { reelIdle, idleBand } from './ui/reel-idle.js';
+import { reelDissolve, reelFadeLive } from './ui/reel-fade.js';
 import './ui/backdrop.js';
 import './ui/input.js';
 import './ui/sheets-setup.js';
@@ -76,6 +77,7 @@ errors.context(() => ({ state: G.state, diff: G.diff, practice: !!G.practice, pa
 
 // ------------------------------------------------------------------ loop
 let last = performance.now(), qualityCost = NaN;
+const renderReelFade = cam => renderer.render(scene, cam); // (ui/reel-fade.js: the dissolve's outgoing shot)
 const resetFrameTime = () => { last = null; qualityCost = NaN; pace.reset(); monitorFrames.reset('activity'); perfReset(); clearCameraImpact(); resetMotionImpact(); };
 for (const event of ['blur', 'focus', 'pagehide', 'pageshow', 'resize', 'orientationchange']) addEventListener(event, resetFrameTime);
 document.addEventListener('visibilitychange', resetFrameTime);
@@ -113,6 +115,7 @@ function frame(now) {
   if (G.resuming != null) t = vt = setDrawT(G.resuming); // the 3, 2, 1 after a pause: the scene holds still at the pause point (the song clock is running back up to it)
   const pendingSel = sheets.select?.pending ?? sheets.select?.figure?.status === 'aviat';
   tickReel(G.state === 'select' && !viewMode && !PHOTO.on && !pendingSel && !Q.has('still'), selectedFigure.id, chip?.menuBeat?.(), dt, CALM.matches); // the selector's showreel: her song dance on the menu loop's beat, filmed as a dance film
+  if (REEL.cut && PERF?.mode !== 'no3d') { renderScreen(); reelDissolve(renderer.domElement, W * K, HH * K, camera); } // a cut dissolves: the outgoing shot once more, still in its camera, copied to fade out over the new one
   const reelWide = reelIdle(now); // left untouched, its UI fades
   if (G.state === 'play' && !G.paused) {
     beat = beatAt(Math.max(0, vt));
@@ -218,7 +221,7 @@ function frame(now) {
   }
   applyCameraImpact(trauma);
   const p0 = PERF && performance.now();
-  if (PERF?.mode !== 'no3d') renderScreen();
+  if (PERF?.mode !== 'no3d') { reelFadeLive(renderReelFade, renderer.domElement); renderScreen(); } // (a dissolve: the outgoing shot first, live)
   if (PERF?.mode === 'sync') renderer.getContext().readPixels(0, 0, 1, 1, 6408, 5121, PERF.px ??= new Uint8Array(4)); // RGBA, UNSIGNED_BYTE
   const p1 = PERF && performance.now();
   if (PERF) { const ri = renderer.info.render; PERF.calls = ri.calls; PERF.tris = ri.triangles; } // the plaza pass only: the balloon overlay's render() resets renderer.info
@@ -254,10 +257,7 @@ function frame(now) {
   if (coverUp && fontsIn && (!warmups.length || now - (coverAt ??= now) > COVER_WARM)) { coverUp = false; loader.ready(); if (STARS >= 0) previewResults(STARS); } // ?stars: only once the page cover is gone, or the animation plays unseen
   qualityCost = performance.now() - f0;
   if (PERF) perfSample(f0, p0, p1, now);
-  if (PERF?.line) { // on screen too: a tablet has no console
-    H.font = '600 6px ui-monospace, monospace'; H.textAlign = 'left'; H.textBaseline = 'top';
-    H.fillStyle = 'rgba(0,0,0,0.6)'; H.fillRect(0, SAFE.t / K, W, 8); H.fillStyle = '#fff'; H.fillText(PERF.line, 2, SAFE.t / K + 1);
-  }
+  if (PERF?.line) drawPerfLine(H, SAFE.t / K, W); // on screen too: a tablet has no console
 }
 let hudError = '', drawn = false, fontsIn = false, coverUp = true, coverAt = null;
 const COVER_WARM = 1500;

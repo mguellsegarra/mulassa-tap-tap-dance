@@ -1,5 +1,5 @@
 // HUD drawing primitives: text, panels, glows, note discs, hold tails, arrows.
-import { C, devScale, qSize, PIXEL, FONT, sprite, DIRDK, DIRC, DIRLT } from './sprites.js';
+import { C, devScale, qSize, PIXEL, FONT, sprite, DIRDK, DIRC, DIRLT, textWidths } from './sprites.js';
 import { trf } from '../game/figure-theme.js';
 import { H, K } from './canvas.js';
 import { clock } from '../game/state.js';
@@ -149,7 +149,12 @@ export function holdCharge(dir, hx, cy, frac) { // over the head: a gold arc cha
 // on-time note visibly fits, and a thick outer ring (RING_R, about a GUAPA's size). The socket is drawn under
 // the notes (drawRing), the rings, shockwaves and sparks over them (drawRingTop), so the target never disappears.
 export const NOTE_R = 16, RING_R = 21; // NOTE_R: a normal note's outer edge (14 + its dark rim)
-export function textWidth(s, size) { // width in HUD units of text(s, ..., size)
-  H.font = `800 ${Math.round(size * 11.5) / 10}px ${FONT}`;
-  return H.measureText(s)?.width || s.length * size * AVG_EM();
+export function textWidth(s, size) { // width in HUD units of text(s, ..., size); the lane, top panel and banners ask every frame
+  const font = `800 ${Math.round(size * 11.5) / 10}px ${FONT}`, key = `${font}|${s}`;
+  let w = textWidths.get(key);
+  if (w === undefined) {
+    if (textWidths.size > 2000) textWidths.clear(); // popping sizes sweep many fonts: keep it bounded
+    H.font = font; w = H.measureText(s)?.width || s.length * size * AVG_EM(); textWidths.set(key, w);
+  }
+  return w;
 }

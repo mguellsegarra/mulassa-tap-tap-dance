@@ -29,7 +29,7 @@ export const RING = { front: 5.4, clear: 3.8, kid: -0.4, jitter: 0.6, row: 0.9, 
   // song's footprint reaches 4.98 m from its centre (game/mula-layout.js), her seated ring sits at ~6.1 m
   arena: 7.2, arenaMula: 6.7 };
 // the dance ground's radius while a figure's colla is out (0: none): crowd.js keeps everyone beyond it
-export const arenaNow = () => (colla?.helpers.visible ? RING.arena : mulaColla?.helpers.visible || bouColla?.helpers.visible ? RING.arenaMula : 0); // (the Bou's: its five standing 5.2-5.5 m out, as her attendants)
+export const arenaNow = () => (colla?.helpers.visible ? RING.arena : mulaColla?.helpers.visible || bouColla?.helpers.visible ? RING.arenaMula : 0); // (the Bou's: four attendants 5.5 m out, as hers, its capatàs at 6.4)
 export function placeHome(p) {
   // the front row near enough that her turns reach it (RING); with a colla out, from the dance ground's edge
   const r = Math.max(RING.front + p.row * 1.1 + rnd(-0.4, 0.4), arenaNow() && arenaNow() + 0.3 + p.row * 0.6);

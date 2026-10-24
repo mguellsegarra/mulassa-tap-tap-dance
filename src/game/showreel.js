@@ -23,6 +23,9 @@ export const SHOT_KINDS = {
   right: { az: [0.48, 0.42], el: 0.28, fill: [0.75, 0.75] },
   front: { az: [0.15, 0.08], el: 0.22, fill: [0.78, 0.8] }, // as low and near as the crowd lets the lens, still her whole body
   high: { az: [-0.2, -0.1], el: 0.42, fill: [0.68, 0.68] }, // from a little higher: the circle, the turns
+  // a short close-up of one part (cameras.js: a long lens from the orbit's nearest, never in among the crowd), cut in and out,
+  // only where that part stands still (Marc, 2026-10-23: «primers plans curts en certs moments», humour)
+  close: { az: [0.1, 0.06], el: 0.3, fill: [0.55, 0.56], part: 'head' }, // (one head: the other crowds in beside it)
 };
 const REEL_CALM_SHOT = { az: [0, 0], el: 0.5, fill: [0.75, 0.75] }; // reduced motion: one still shot, no cuts
 // beats a glide to the next angle takes (~7 s), eased in and out; never more than REEL_GLIDE_AZ rad round her (Marc: on a
@@ -36,15 +39,23 @@ export const SHOWREELS = {
   [MULASSA.id]: { start: 16, loop: 232, shots: [
     [0, 'wide', 'cut'], // the intro
     [16, 'left', 'glide'], [48, 'front', 'glide'], // A1: the four runs, two by two
-    [80, 'high', 'cut'], [112, 'right', 'glide'], // A2: the circle from above; the passada and the drumroll
-    [144, 'left', 'cut'], [176, 'wide', 'glide'], // B: the culades; C: the charges
-    [208, 'right', 'cut'], // X: the spins and the final hit
+    // each cut a bar off its part's first beat, where she stands still (Marc, 2026-10-23: a dissolve over her turning read oddly;
+    // measured on the selector, her turn in the fade ≤ 0.2 rad a beat, it was 0.5-1.1 on 80, 144 and 208)
+    [84, 'high', 'cut'], [112, 'right', 'glide'], // A2: the circle from above; the passada and the drumroll
+    [140, 'left', 'cut'], [176, 'wide', 'glide'], // B: the culades; C: the charges
+    [204, 'right', 'cut'], // X: the spins and the final hit
   ] },
-  [DRAC.id]: { start: 0, loop: 236, shots: [
-    [0, 'wide', 'cut'], [28, 'left', 'glide'], [48, 'high', 'glide'], // the walk out to its points, back, the turn and torsions
-    [72, 'right', 'cut'], [104, 'wide', 'glide'], // the arc and the close pass; the walks
-    [128, 'high', 'cut'], [164, 'left', 'glide'], // the second turn and torsions; the second arc
-    [188, 'front', 'cut'], [212, 'right', 'glide'], // the spins, braking, reversing, the settle
+  // Its comedy is in the timing (Marc, 2026-10-23: humorous, few changes): the star's two faces first, waiting, then the wide
+  // shot the moment it sets off; the charge at the lens low and from the front, held until it stops dead, and its stare
+  // straight back in close-up; the dizzy spins from above, never cut, and the settle facing us. Close-ups only where its
+  // heads stand still (beats 0-10 before the dance, 96-100 after the charge; tools: drac-path.js through drac-time.js).
+  // A fresh selection opens on the wide shot (Marc, 2026-10-24: a close-up as the first thing you see reads as a framing
+  // bug); the opening close-up plays from the second loop on.
+  [DRAC.id]: { start: 8, loop: 236, shots: [
+    [0, 'close', 'cut'], [8, 'wide', 'cut'], [36, 'left', 'glide'], // its faces; the walk out to its points, back, the turn and torsions
+    [64, 'front', 'glide'], [96, 'close', 'cut'], [104, 'right', 'cut'], // the arc and the charge at the lens; the stare; the walks
+    [132, 'wide', 'glide'], [164, 'left', 'glide'], // the second turn and torsions; the second arc
+    [188, 'high', 'glide'], [216, 'front', 'glide'], // the spins, braking, reversing; the settle
   ] },
   // on its source bars (game/bou-dance.js): 1 the first steps, 9 the changes of facing, 19 the lateral pass, 27 the
   // drums and turns, 64 the start, 72 the festive turns, 88 the ending
@@ -58,7 +69,7 @@ export const SHOWREELS = {
 };
 
 // Live state (owned here; main.js runs tickReel each frame). acc: menu beats counted since the page began (unwrapped).
-export const REEL = { on: false, id: null, beat: 0, cut: false, shot: { az: 0, el: 0.5, fill: 0.75 }, acc: 0, prev: null, alone: false, still: 0, err: 0, locked: false, anchor: 0, idx: -1 };
+export const REEL = { on: false, id: null, beat: 0, cut: false, shot: { az: 0, el: 0.5, fill: 0.75, part: null }, acc: 0, prev: null, alone: false, still: 0, err: 0, locked: false, anchor: 0, idx: -1 };
 
 // Counts the menu loop's beats across its wraps. Silent, or standing still while the page runs (its context suspended: a tab
 // or app switch, iOS waiting for a tap), the dance carries on alone at the loop's tempo, never frozen. Back to the music, or
@@ -84,7 +95,7 @@ export function followBeat(s, menuBeat, dt) {
   s.prev = menuBeat; s.alone = false; s.locked = true;
 }
 
-const kindAt = (k, u, out) => { out.az = k.az[0] + (k.az[1] - k.az[0]) * u; out.el = k.el; out.fill = k.fill[0] + (k.fill[1] - k.fill[0]) * u; };
+const kindAt = (k, u, out) => { out.az = k.az[0] + (k.az[1] - k.az[0]) * u; out.el = k.el; out.fill = k.fill[0] + (k.fill[1] - k.fill[0]) * u; out.part = k.part ?? null; };
 const GLIDE_FROM = { az: 0, el: 0, fill: 0 };
 // The shot at song beat b (fills out: az, el, fill); returns the index of the cut it belongs to (a glide is no cut)
 export function shotAt(reel, b, out, calm = false) {

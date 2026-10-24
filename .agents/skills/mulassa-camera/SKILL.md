@@ -12,7 +12,7 @@ Apply only to Mulassa and its checkouts. Read the current AGENTS.md first: its Â
 | Camera | When | Owner | Reference |
 | --- | --- | --- | --- |
 | Selector (home) framing | `G.state = 'select'` | `scene/cameras.js` `frameMenuCamera` / `frameMenuLens` / `zoomMenu`, `scene/framing.js` (`menuFit`, `envelope`, `smoothDamp`), the band from `sheets.select.band` | [selector](references/selector-and-showreel.md) |
-| Showreel shots | selector, playable figure | `game/showreel.js` (`SHOWREELS`, `SHOT_KINDS`, `followBeat`), framed by cameras.js | [selector](references/selector-and-showreel.md) |
+| Showreel shots | selector, playable figure | `game/showreel.js` (`SHOWREELS`, `SHOT_KINDS`, `followBeat`), framed by cameras.js; cuts dissolve through `ui/reel-fade.js` | [selector](references/selector-and-showreel.md) |
 | Idle screen | selector untouched 10 s | `ui/reel-idle.js` (`idleBand`), `MENU_T.soft` / `.wake` in cameras.js | [selector](references/selector-and-showreel.md) |
 | Play camera | run, practice, results | `framePlayCamera` (`CAMV`, `DRIFT`, `DRAC_CAM`, `MULA_CAM`), tuned with `?cam` | [play](references/play-camera.md) |
 | Free play / photo mode | `#free`, `PHOTO.on` | `scene/orbit.js` (`ORBIT`), `ui/input.js`, `ui/mouse-look.js`, `game/photo-touch.js`, `ui/photo-stick.js`, `game/photo-control.js`, `applyCameraImpact` | [free play](references/free-play-camera.md) |

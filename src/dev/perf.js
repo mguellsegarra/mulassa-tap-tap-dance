@@ -37,3 +37,19 @@ export function perfSample(f0, p0, p1, now) {
   console.log('[perf]', JSON.stringify(f));
   Object.assign(P, { n: 0, frame: 0, worst: 0, late: 0, js: 0, gl: 0, hud: 0, ov: 0, crowd: 0, t0: now });
 }
+// The on-screen line, painted into its own canvas only when its text changes (every 3 s): setting the font and filling
+// the long string every frame cost ~20% of a throttled frame, enough to make the quality monitor step down while measuring.
+let perfLineCanvas = null, perfLineText = '', perfLineScale = 0;
+export function drawPerfLine(H, y, w) {
+  const s = H.getTransform().a;
+  if (PERF.line !== perfLineText || s !== perfLineScale) {
+    perfLineText = PERF.line; perfLineScale = s;
+    perfLineCanvas ??= document.createElement('canvas');
+    perfLineCanvas.width = Math.ceil(w * s); perfLineCanvas.height = Math.ceil(8 * s);
+    const c = perfLineCanvas.getContext('2d');
+    c.setTransform(s, 0, 0, s, 0, 0);
+    c.fillStyle = 'rgba(0,0,0,0.6)'; c.fillRect(0, 0, w, 8);
+    c.font = '600 6px ui-monospace, monospace'; c.textAlign = 'left'; c.textBaseline = 'top'; c.fillStyle = '#fff'; c.fillText(perfLineText, 2, 1);
+  }
+  H.drawImage(perfLineCanvas, 0, y, w, 8);
+}

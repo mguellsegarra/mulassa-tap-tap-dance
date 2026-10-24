@@ -69,15 +69,18 @@ function handReachX(p, i, centre) {
 }
 // Puts arm i's hand box with its inner face on the plane x = s·x0 (torso-local), its palm at (y, z): a clap's two
 // palms then touch on the body's middle plane. The box's reach along x
-// depends on the arm's solved orientation, so solve, measure, re-aim (it settles in a few passes).
+// depends on the arm's solved orientation, so solve, measure, re-aim (it settles in a few passes: ~2 on average, so
+// stop once the face is within 0.1 mm instead of always running 8: it was a fifth of a clapping crowd's frame).
 const C0 = new THREE.Vector3(), T1 = new THREE.Vector3();
+const CLAP_POLE = [0, 1].map(i => new THREE.Vector3(side(i), -0.5, -0.3).normalize()); // the clap's elbows, per arm (read only)
 function reachBeside(p, i, x0, y, z, pole) {
   const s = side(i);
   let x = x0 + s * 0.06;
   for (let n = 0; n < 8; n++) {
     reach(p, i, T1.set(x, y, z), pole);
-    const rx = handReachX(p, i, C0);
-    x += x0 + s * rx - C0.x;
+    const miss = x0 + s * handReachX(p, i, C0) - C0.x;
+    if (Math.abs(miss) < 1e-4) break;
+    x += miss;
   }
 }
 // figure (g-local) point → torso-local, and figure direction → torso-local
@@ -151,7 +154,7 @@ export function pose(p, mode, t) {
       p.forearms[i].rotation.set(-0.5 - 0.4 * hop, 0, 0);
     } else { // palms meet in front of the chest on every beat
       const sep = 0.26 * (1 - Math.cos(2 * Math.PI * beat)) / 2, D = p.spec.torsoD;
-      for (const i of [0, 1]) reachBeside(p, i, side(i) * sep / 2, 0.36, D / 2 + 0.2, new THREE.Vector3(side(i), -0.5, -0.3).normalize());
+      for (const i of [0, 1]) reachBeside(p, i, side(i) * sep / 2, 0.36, D / 2 + 0.2, CLAP_POLE[i]);
     }
   }
   if (mode === 'festa') {

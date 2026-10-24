@@ -35,6 +35,7 @@ html, body { margin: 0; height: 100%; height: var(--app-h, 100%); overflow: hidd
 body { position: fixed; top: 0; left: 0; width: 100%; } /* Safari (iPad, after the share sheet) could still scroll the page under its bars: nothing to scroll now (see settle() in main.js) */
 /* No overlay on the safe areas: the scene runs edge to edge (viewport-fit=cover); only controls keep clear of the insets. */
 canvas { position: fixed; left: 0; top: 0; width: 100%; height: 100vh; height: 100dvh; height: var(--app-h, 100dvh); } /* --app-h: the real screen height, set by resize() (iOS home-screen app fix); dvh follows Safari's toolbars */
+#reel-fade { opacity: 0; pointer-events: none; } /* the showreel's dissolve (ui/reel-fade.js) */
 #hud { touch-action: none; overscroll-behavior: none; } /* the title's drag / pinch steer the camera (src/scene/orbit.js): never a page pan or zoom */
 /* Touch pad: two halves edge to edge, GUA | PA, reading "GUAPA" together. Insets go inside the padding. */
 #pad { position: fixed; z-index: 2; left: 0; right: 0; bottom: var(--app-gap, 0px); display: none; visibility: hidden; } /* transparent: the plaza shows through */

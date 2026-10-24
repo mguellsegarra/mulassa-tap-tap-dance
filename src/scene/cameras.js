@@ -1,8 +1,8 @@
 // Cameras: the play camera (framePlayCamera), the menu camera (frameMenuCamera: splash, title, selector) and its state.
 import * as THREE from 'three';
-import { createOrbit, orbitStep, orbitLimits, roomAlong, ORBIT } from './orbit.js';
+import { createOrbit, orbitStep, orbitLimits, roomAlong, ORBIT, createLook, lookStep, resetLook } from './orbit.js';
 import { smoothDamp, menuFit, envelope } from './framing.js';
-import { plaza, camFocus, FRONT, camShift, camShiftX, camera, CAM_AZ, CAM_EL, cameraTarget, colla, mulaColla, bouColla } from './stage.js';
+import { plaza, camFocus, FRONT, camShift, camShiftX, camera, CAM_AZ, CAM_EL, cameraTarget, colla, mulaColla, bouColla, mula, drac } from './stage.js';
 import { playStage } from '../hud/layout.js';
 import { figureScale, selectedFigure } from '../game/figure-song.js';
 import { DRAC } from '../game/figures.js';
@@ -31,6 +31,7 @@ export function applyCameraImpact(strength) {
 // Title only: a drag that starts on empty canvas steers the camera round her, two fingers / the wheel zoom
 // (src/scene/orbit.js); a press on a canvas button still picks it at once. Never with a sheet up, never outside the title.
 export const titleC = { x: 0, z: 0, on: false }, orbitHome = { pitch: 0, dist: 11 }, orbit = createOrbit(orbitHome), pnow = () => performance.now() / 1000;
+export const look = createLook(); // «Mira el ball»: the player's turn and zoom on top of the play camera (orbit.js lookStep)
 export const titleS = { x: new Float64Array(2), v: new Float64Array(2) }, TITLE_FOLLOW = 0.7, TITLE_SWAY = 0.3; // the menu camera's follow spring (seconds to catch up: 1.6 lagged the Mulassa's travelling dance by ~2 m, out of her band) and its sway (rad, twice the play camera's)
 // The menu camera (splash, title, selector) orbits her, not the middle: wandering about she'd otherwise pass right in front of the
 // lens, huge. The player may steer it (orbit.js: its limits keep it inside the square and above the crowd); left alone it eases
@@ -40,7 +41,7 @@ export const titleS = { x: new Float64Array(2), v: new Float64Array(2) }, TITLE_
 // the dock, right of a side panel), and a lens shift (view offset, both axes: never a tilt) puts her centre there. The splash
 // and the title keep their one shot for every figure, with the caller's `aim` (css px below the middle).
 export const lens = { x: 0, y: 0 }; // the menu's lens shift, css px (her centre right of / below the screen's middle), smoothed
-const MENU = { held: false, directed: false, soft: false, softT: -Infinity, lent: new Float64Array(2), x: new Float64Array(2), v: new Float64Array(2), w: 0, h: 0, ox: 0, oy: 0, mx: 0, mz: 0, tx: 0, ty: 0, root: null, away: true, view: false, quick: false, fit: { dist: 11, cx: 0, cy: 0, floor: 0 } }; // shift spring; her extents' envelope (m); her outline's middle across / feet off the focus (tangents, slow)
+const MENU = { late: false, held: false, directed: false, soft: false, softT: -Infinity, lent: new Float64Array(2), x: new Float64Array(2), v: new Float64Array(2), w: 0, h: 0, ox: 0, oy: 0, mx: 0, mz: 0, tx: 0, ty: 0, root: null, away: true, view: false, quick: false, fit: { dist: 11, cx: 0, cy: 0, floor: 0 } }; // shift spring; her extents' envelope (m); her outline's middle across / feet off the focus (tangents, slow)
 const MENU_T = { reel: 0.7, soft: 1.1, wake: 0.45, softFor: 2.5, shift: 0.9, up: 0.35, down: 4, centre: 1.2, exit: 0.6 }; // s: the showreel's follow and shift (a little quicker than the menu's: she travels round the plaça); soft: into a `soft` band (the idle screen), wake: back out of it (the UI is back in 0.25 s: she must not linger under it), for softFor s; the lens shift's spring (exit: it and her size/height after photo mode, so the returning dock never covers her for seconds); her extents rise / fall (turning side on and back never pumps the shot); her centre's slow average (the focus already follows her: a turn must not swing the shot)
 const OUTLINES = new Map(), V3 = new THREE.Vector3(), FREE = { top: 0, bottom: 0, left: 0, right: 0, hardTop: 0 };
 // Her outline, cheaply: for each of her meshes, its farthest vertices along 14 directions (axes and diagonals: its hull's support
@@ -69,7 +70,25 @@ function outline(root) {
   OUTLINES.set(root, list);
   return list;
 }
+// A close-up's outline: her first node named `part` (one of the Drac's two heads: both side by side made a mid shot)
+const PARTS = new Map();
+function partOutline(root, part) {
+  const key = root.uuid + part;
+  if (!PARTS.has(key)) PARTS.set(key, outline(root.getObjectByName(part) ?? root));
+  return PARTS.get(key);
+}
 const shown = (o, root) => { for (; o && o !== root; o = o.parent) if (!o.visible) return false; return true; };
+// The splash's pair (mula-motion.js PAIR: the Mulassa and the Drac dancing side by side) framed as one outline, so both stand
+// whole in the free band on every screen (Marc, 2026-10-24: a phone's fixed 11 m shot left the plaça empty between them);
+// the Drac joins the outline once it is built and shown (the envelope eases the shot out for it)
+const PAIR_SHOT = { roots: [], visible: false }, ONE = [];
+export function pairShot() {
+  PAIR_SHOT.roots.length = 0;
+  if (shown(mula.root, null)) PAIR_SHOT.roots.push(mula.root);
+  if (drac?.root && shown(drac.root, null)) PAIR_SHOT.roots.push(drac.root);
+  PAIR_SHOT.visible = PAIR_SHOT.roots.length > 0;
+  return PAIR_SHOT;
+}
 // reel: the selector's showreel (game/showreel.js REEL: { cut, shot: { az, el, fill } }) or null
 export function frameMenuCamera(dt, mx, mz, root, rect, view, keep, aim, reel = null) {
   const far = camera.aspect < 1 ? 1.4 : 1, now = pnow();
@@ -113,19 +132,26 @@ export function frameMenuCamera(dt, mx, mz, root, rect, view, keep, aim, reel = 
   if (orbit.fresh) orbit.yaw = orbitHome.yaw; // (the very first frame starts at home)
   if (direct) aimShot(dt, cut, cx, cz, slow || 0.6); else orbitStep(orbit, dt, now, orbitHome, roomAt(cx, cz), keep);
   placeMenu(cx, cz, cut ? Infinity : dt);
-  zoomMenu(cut ? 0 : dt, root && !view && MENU.w && !bandless(rect), slow || MENU_T.shift);
-  const y = frameMenuLens(dt, root, rect, aim, shot?.fill, cut, direct, slow);
-  if (!cut) return y;
-  MENU.w = MENU.h = 0; aimShot(dt, true, cx, cz, 0.6); placeMenu(cx, cz, Infinity); // a cut: again, at the distance its size wants from the new angle
-  return frameMenuLens(dt, root, rect, aim, shot.fill, true);
+  const zoomOn = root && !view && MENU.w && !bandless(rect);
+  zoomMenu(cut ? 0 : dt, zoomOn, slow || MENU_T.shift, shot?.part);
+  const y = frameMenuLens(dt, root, rect, aim, shot?.fill, cut, direct, slow, shot?.part);
+  const late = !cut && MENU.late && MENU.w && shot; // (a new figure shows a frame after its cut: its first measure snaps as the cut would have)
+  if (!cut && !late) return y;
+  MENU.w = MENU.h = 0; aimShot(dt, true, cx, cz, 0.6); placeMenu(cx, cz, Infinity); // a cut: again, at the distance its size wants from the new angle,
+  frameMenuLens(dt, root, rect, aim, shot.fill, true, false, 0, shot.part); zoomMenu(0, root && !view && MENU.w && !bandless(rect), 0, shot.part); // then the lens that size wants (a close-up's long lens at once, never a zoom after the cut)
+  const out = frameMenuLens(dt, root, rect, aim, shot.fill, true, false, 0, shot.part); // and the shift for that lens
+  MENU.late = !MENU.w;
+  return out;
 }
 // A band too short for the square (a 1280x800 desktop: ~23 m wanted, 15-17 m to the façades) left her head over the
 // header: where the dolly stops short, the lens widens the rest of the way (eased; at most ZOOM_MAX the title's tangent, ~54°
 // on a desktop: the play camera's own).
+// A showreel close-up (a shot of one `part`) is the other way round: the lens stays out at the orbit's nearest (the crowd
+// and the colla round her) and a long lens brings the part in, up to ZOOM_TELE (Marc, 2026-10-23: short close-ups).
 // Any other camera takes the title's lens back (easeLensX; the play camera sets its own).
-const ZOOM = { x: new Float64Array([1]), v: new Float64Array(1) }, ZOOM_MAX = 1.45;
-function zoomMenu(dt, on, time) {
-  const z = on ? Math.max(1 / ZOOM_MAX, Math.min(1, orbit.lim.distMax / MENU.fit.dist)) : 1;
+const ZOOM = { x: new Float64Array([1]), v: new Float64Array(1) }, ZOOM_MAX = 1.45, ZOOM_TELE = 3;
+function zoomMenu(dt, on, time, tele = false) {
+  const z = on ? Math.max(1 / ZOOM_MAX, Math.min(tele ? ZOOM_TELE : 1, MENU.fit.dist > orbit.lim.distMax ? orbit.lim.distMax / MENU.fit.dist : tele ? orbit.lim.distMin / MENU.fit.dist : 1)) : 1;
   if (dt) smoothDamp(ZOOM, 0, z, time, dt); else { ZOOM.x[0] = z; ZOOM.v[0] = 0; } // (a cut: at once)
   const fov = Math.atan(Math.tan(baseFov() * Math.PI / 360) / ZOOM.x[0]) * 360 / Math.PI;
   if (Math.abs(camera.fov - fov) > 1e-3) { camera.fov = fov; camera.updateProjectionMatrix(); }
@@ -184,7 +210,7 @@ function adopt() { // the orbit and the follow spring take the current camera as
 // negative): nowhere is free, so she keeps the old shot (fixed distance, focus up at the band) rather than hiding behind the pills or
 // the cards. A short band (a 320x568 phone's 84 px) is not empty: menuFit stands her on it.
 const bandless = rect => rect && rect.bottom - rect.top < 48;
-function frameMenuLens(dt, root, rect, aim, fill = 0.86, snap = false, quick = false, slow = 0) { // fill: the share of the band she fills; snap: a cut, the shift at once
+function frameMenuLens(dt, root, rect, aim, fill = 0.86, snap = false, quick = false, slow = 0, part = null) { // fill: the share of the band she fills (part: of it, a close-up); snap: a cut, the shift at once
   const vw = W * K, vh = HH * K, tan = Math.tan(baseFov() * Math.PI / 360), ppm = vh / (2 * Math.tan(camera.fov * Math.PI / 360)); // tan: the title's lens, what the fit is for (zoomMenu widens it); ppm: the lens now
   if (MENU.away) { MENU.x[0] = camShiftX; MENU.x[1] = camShift; MENU.v.fill(0); MENU.away = false; } // coming from another camera: on from its shift
   const none = bandless(rect); // (the old shot: her focus at the band's middle, as far as a quarter screen up)
@@ -193,17 +219,20 @@ function frameMenuLens(dt, root, rect, aim, fill = 0.86, snap = false, quick = f
     camera.updateMatrixWorld();
     const view = camera.matrixWorldInverse, D = camera.position.distanceTo(camFocus);
     let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity, wx0 = Infinity, wx1 = -Infinity, wz0 = Infinity, wz1 = -Infinity, near = false;
-    const parts = outline(root);
-    for (let j = 0; j < parts.length; j++) {
-      const { o, pts } = parts[j];
-      if (!shown(o, root)) continue;
-      for (let i = 0; i < pts.length; i += 3) { // world middle, and the angular extents (tangents) this camera sees
-        const p = V3.fromArray(pts, i).applyMatrix4(o.matrixWorld);
-        if (p.x < wx0) wx0 = p.x; if (p.x > wx1) wx1 = p.x; if (p.z < wz0) wz0 = p.z; if (p.z > wz1) wz1 = p.z;
-        p.applyMatrix4(view);
-        if (-p.z < 0.5) near = true; // (part of her by or behind the lens, a photo camera handing over: no measure this frame)
-        const z = Math.max(0.1, -p.z), ax = p.x / z, ay = p.y / z;
-        if (ax < x0) x0 = ax; if (ax > x1) x1 = ax; if (ay < y0) y0 = ay; if (ay > y1) y1 = ay;
+    const roots = root.roots ?? (ONE[0] = root, ONE);
+    for (let r = 0; r < roots.length; r++) {
+      const parts = part ? partOutline(roots[r], part) : outline(roots[r]);
+      for (let j = 0; j < parts.length; j++) {
+        const { o, pts } = parts[j];
+        if (!shown(o, roots[r])) continue;
+        for (let i = 0; i < pts.length; i += 3) { // world middle, and the angular extents (tangents) this camera sees
+          const p = V3.fromArray(pts, i).applyMatrix4(o.matrixWorld);
+          if (p.x < wx0) wx0 = p.x; if (p.x > wx1) wx1 = p.x; if (p.z < wz0) wz0 = p.z; if (p.z > wz1) wz1 = p.z;
+          p.applyMatrix4(view);
+          if (-p.z < 0.5) near = true; // (part of her by or behind the lens, a photo camera handing over: no measure this frame)
+          const z = Math.max(0.1, -p.z), ax = p.x / z, ay = p.y / z;
+          if (ax < x0) x0 = ax; if (ax > x1) x1 = ax; if (ay < y0) y0 = ay; if (ay > y1) y1 = ay;
+        }
       }
     }
     const inView = Math.abs(x0 + x1) < 3 * tan * camera.aspect && Math.abs(y0 + y1) < 3 * tan; // her middle within 1.5 fields of view: the camera is on her (not catching up from far away)
@@ -291,6 +320,7 @@ export function framePlayCamera(dt, mx, mz, snap = false) { // snap: jump straig
     s.x[2] = Math.hypot(camera.position.x - s.x[0], camera.position.y - focusY, camera.position.z - s.x[1]);
     s.x[5] = camera.position.x; s.x[6] = camera.position.y; s.x[7] = camera.position.z;
     s.live = true;
+    resetLook(look); // every run starts on the film's own shot
   }
   const t = snap ? 0 : dt;
   const head = calm ? 0 : Math.sin(M.yaw - FRONT), flat = calm ? 0 : Math.cos(M.yaw - FRONT) ** 2;
@@ -309,6 +339,14 @@ export function framePlayCamera(dt, mx, mz, snap = false) { // snap: jump straig
   insidePlaza(cameraTarget.set(fx + d * ce * Math.sin(az), focusY + d * Math.sin(el), fz + d * ce * Math.cos(az)), fx, focusY, fz);
   if (snap) { s.x[5] = cameraTarget.x; s.x[6] = cameraTarget.y; s.x[7] = cameraTarget.z; }
   camera.position.set(smoothDamp(s, 5, cameraTarget.x, CAM_T.pos, t), smoothDamp(s, 6, cameraTarget.y, CAM_T.pos, t), smoothDamp(s, 7, cameraTarget.z, CAM_T.pos, t));
+  if (G.watch && !snap) { // «Mira el ball»: the player's offsets turn and scale the shot round her, after the springs (a drag never lags)
+    lookStep(look, dt, pnow());
+    if (Math.abs(look.yaw) + Math.abs(look.x[0]) + Math.abs(look.x[1] - 1) > 1e-4) {
+      const ox = camera.position.x - fx, oy = camera.position.y - focusY, oz = camera.position.z - fz, hd = Math.hypot(ox, oz);
+      const r = Math.hypot(hd, oy) * look.x[1], a = Math.atan2(ox, oz) + look.yaw, e = Math.max(0.12, Math.min(1.1, Math.atan2(oy, hd) + look.x[0]));
+      camera.position.copy(insidePlaza(cameraTarget.set(fx + r * Math.cos(e) * Math.sin(a), focusY + r * Math.sin(e), fz + r * Math.cos(e) * Math.cos(a)), fx, focusY, fz));
+    }
+  }
   camera.lookAt(camFocus.set(fx, focusY, fz));
   // the lens shift puts her focus point CAMV.stage of the way down the stage (css px: the focus is at the middle of the screen without it)
   const shift = (area.top + (G.collapseT ? 0.6 : CAMV.stage) * (area.bottom - area.top)) * K - HH * K / 2; // (collapsed: lower, her legs kick up)

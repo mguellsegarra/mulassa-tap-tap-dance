@@ -153,3 +153,24 @@ export function orbitStep(s, dt, now, home, room, keep = false) {
   }
   return s;
 }
+
+// «Mira el ball» (Marc, 2026-10-23): the player turns and zooms the dance's own camera, which never stops filming underneath.
+// The same gestures (orbitDown/Move/Up, orbitZoom) on an orbit whose yaw / pitch (x[0]) / distance (x[1]) are OFFSETS from it:
+// 0, 0 and a factor of 1 are the film's shot. Let go, a flick coasts out; after ORBIT.idle they ease back to it (no cut).
+export const LOOK_LIM = { pitchMin: -0.3, pitchMax: 0.55, distMin: 0.55, distMax: 1.8 }; // rad round her 26°; the distance's factor
+export function createLook() { const s = createOrbit({ pitch: 0, dist: 1 }); s.lim = LOOK_LIM; s.fresh = false; s.ys = { x: new Float64Array(1), v: new Float64Array(1) }; return s; }
+export function resetLook(s) { orbitCancel(s); s.yaw = s.spin = s.x[0] = s.raw = 0; s.x[1] = s.zoomRaw = s.zoomTo = 1; s.v.fill(0); s.last = s.wheelT = -Infinity; }
+export function lookStep(s, dt, now) {
+  if (dt <= 0 || s.ptrs.size) return s;
+  if (now - s.last > ORBIT.idle) { // back to the film: the nearest way round, at the orbit's own capped speed
+    s.ys.x[0] = Math.atan2(Math.sin(s.yaw), Math.cos(s.yaw)); s.ys.v[0] = s.spin;
+    s.yaw = smoothDamp(s.ys, 0, 0, ORBIT.home, dt, ORBIT.homeSpeed); s.spin = s.ys.v[0];
+    smoothDamp(s, 0, 0, ORBIT.home, dt); smoothDamp(s, 1, 1, ORBIT.home, dt);
+  } else {
+    const e = Math.exp(-dt / ORBIT.coast); s.yaw += s.spin * ORBIT.coast * (1 - e); s.spin *= e; // a flick coasts to rest
+    smoothDamp(s, 0, clamp(s.x[0], LOOK_LIM.pitchMin, LOOK_LIM.pitchMax), ORBIT.back, dt);
+    smoothDamp(s, 1, now - s.wheelT < ORBIT.wheel ? s.zoomTo : clamp(s.x[1], LOOK_LIM.distMin, LOOK_LIM.distMax), now - s.wheelT < ORBIT.wheel ? 0.12 : ORBIT.back, dt);
+  }
+  s.raw = s.x[0]; if (now - s.wheelT >= ORBIT.wheel) s.zoomRaw = s.zoomTo = s.x[1];
+  return s;
+}

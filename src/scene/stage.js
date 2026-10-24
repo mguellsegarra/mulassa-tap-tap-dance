@@ -131,7 +131,13 @@ export const setCamShift = (v, x = 0) => { camShiftX = x; return (camShift = v);
 
 // The frame's screen render. After a restore, the first one that submitted draw calls to a live context leaves a breadcrumb
 // (draws were submitted: not proof of visible pixels). Reads renderer.info fresh: three replaces it on restore.
+// A hidden top-level branch (the other figures' collas and models, props off stage: ~15% of the scene's objects) skips
+// the per-render matrix walk; it catches up the render it shows again, and a forced update or getWorldPosition still
+// reaches it. Only the plain Object3D walk is swapped: a subclass's own updateMatrixWorld is left alone.
+const walkMatrices = THREE.Object3D.prototype.updateMatrixWorld;
+function walkIfShown(force) { if (this.visible || force) walkMatrices.call(this, force); }
 export function renderScreen() {
+  for (const o of scene.children) if (o.updateMatrixWorld === walkMatrices) o.updateMatrixWorld = walkIfShown;
   renderer.render(scene, camera);
   if (restorePending && renderer.getRenderTarget() === null && !renderer.getContext().isContextLost() && renderer.info.render.calls > 0) {
     restorePending = false;

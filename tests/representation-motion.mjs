@@ -6,7 +6,7 @@ import { crowdMotion, animatePerson } from '../src/scene/representation/live-pos
 import { buildHelper, poseHelper, MULA_HELPER_LOOKS, ARM } from '../src/scene/models/colla.js';
 import { reviewAttendant, linkRolePose, followRolePose } from '../src/scene/representation/role-models.js';
 import { settleDrawnCrowd } from '../src/scene/crowd-contact.js';
-import { buildPublicSpecs } from '../src/scene/representation/population.js';
+import { buildPublicSpecs, CHAIR_FAR, sideways } from '../src/scene/representation/population.js';
 
 const hand = (p, i) => palmLocal(p, i).applyMatrix4(p.g.matrixWorld);
 let baselineJump = 0, fixedJump = 0, caneError = 0;
@@ -90,6 +90,16 @@ assert(caneError<.005,`final held cane stays on ground: ${caneError}`);
  const mob=buildPublicSpecs(sources,CATALOGUE,7).map((s,i)=>s.mobility?sources[i].pos:null).filter(Boolean);
  assert.equal(mob.length,4,'all four mobility examples are placed');
  for(let i=0;i<mob.length;i++)for(let j=i+1;j<mob.length;j++)assert(mob[i].distanceTo(mob[j])>=3,'mobility examples at least 3 m apart');
+}
+{ // the wheelchairs stand off to the sides of the shot and a row back, for every figure (Marc)
+ const sources=[];for(let row=0;row<3;row++)for(let i=0;i<40;i++){const ang=-Math.PI+i/40*2*Math.PI,r=5.4+row*1.1;sources.push({row,slot:i,ang,pos:new THREE.Vector2(Math.cos(ang)*r,Math.sin(ang)*r),appearance:{skin:'#000'}});}
+ sources.sort((a,b)=>Math.abs(a.ang)-Math.abs(b.ang)); // as representation.js orders them
+ assert(!sideways({row:1,ang:CHAIR_FAR.centre+0.2})&&!sideways({row:0,ang:CHAIR_FAR.centre+2}),'the shot centre and the front row are not off to the side');
+ const specs=buildPublicSpecs(sources,CATALOGUE,7),chairs=sources.filter((_,i)=>specs[i].mobility==='cadira');
+ assert.equal(chairs.length,2,'both wheelchairs placed');
+ for(const s of chairs)assert(sideways(s),`a wheelchair in the middle of the shot (row ${s.row}, ang ${s.ang.toFixed(2)})`);
+ const one=sources.filter(s=>s.row===0),specs1=buildPublicSpecs(one,CATALOGUE,7); // low quality: one row
+ for(const s of one.filter((_,i)=>specs1[i].mobility==='cadira'))assert(sideways(s,0),`a one-row crowd keeps a wheelchair in the middle (ang ${s.ang.toFixed(2)})`);
 }
 { // the look and the age are drawn apart: no child keeps a bearded look's beard
  const sources=Array.from({length:400},(_,i)=>({row:0,slot:i,pos:new THREE.Vector2(i*.9,0),appearance:{skin:'#000'}}));

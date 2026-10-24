@@ -28,12 +28,14 @@ export function animatePerson(p, source, motion, { dt, time, clap = 0, festa = 0
   const fall = source.fall || 0;
   const walk = smooth((motion.speed - 0.1) / 0.3) * (1 - fall), phase = time + (source.ph ?? 0) / (2 * Math.PI);
   pose(p, 'repos', phase); capturePose(motion, 1, true);
-  if (clap > 0) { pose(p, 'picar', phase); capturePose(motion, clamp01(clap) * (1 - fall)); }
-  if (festa > 0 || fall > 0) { pose(p, 'festa', phase); capturePose(motion, Math.max(clamp01(festa), fall * .6)); }
+  // A pose blended in at (almost) no weight changes nothing: skip it (the eased moods never reach 0 exactly, and most of
+  // the plaça stands still, walk 0). Each pose rebuilds the whole rig, the clap two arm solves.
+  if (clap * (1 - fall) > 1e-3) { pose(p, 'picar', phase); capturePose(motion, clamp01(clap) * (1 - fall)); }
+  if (festa > 1e-3 || fall > 1e-3) { pose(p, 'festa', phase); capturePose(motion, Math.max(clamp01(festa), fall * .6)); }
   const standingY = p.g.position.y;
   // No binary speed threshold: tiny separation corrections don't switch the whole rig into a walk.
   const gait = timeAtDistance(p, motion.distance);
-  pose(p, 'moure', gait); capturePose(motion, walk);
+  if (walk > 0) { pose(p, 'moure', gait); capturePose(motion, walk); }
   const targetY = standingY * (1 - walk) + p.g.position.y * walk;
   const ease = 1 - Math.exp(-h / 0.08);
   for (const j of motion.joints) {

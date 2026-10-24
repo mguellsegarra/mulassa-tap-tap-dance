@@ -13,9 +13,10 @@ export const BOU_HELPER_RADIUS = 5.5;
 // each attendant in the compass frame (x = sin heading, z = cos heading; local +z faces the centre)
 export const BOU_HELPERS = Object.freeze([['W', 0], ['N', 1.5 * Math.PI], ['S', 0.5 * Math.PI], ['E', Math.PI]].map(([id, a]) =>
   Object.freeze({ id, x: Math.sin(a) * BOU_HELPER_RADIUS, z: Math.cos(a) * BOU_HELPER_RADIUS, yaw: a + Math.PI })));
-// The capatàs (Marc: near the dance, never one of the four marks): standing on the far side, between E and N, 5.2 m
-// out, facing the centre, so the play camera sees him beside the Bou; his look is the last of BOU_HELPER_LOOKS.
-export const BOU_CAPATAS = Object.freeze({ id: 'C', x: Math.sin(3.55) * 5.2, z: Math.cos(3.55) * 5.2, yaw: 3.55 + Math.PI });
+// The capatàs (Marc: near the dance, never one of the four marks, further back, almost against the public): on the far
+// side between E and N, 6.4 m out (the crowd keeps beyond RING.arenaMula 6.7 m), facing the centre, so the play camera
+// sees him beside the Bou; his look is the last of BOU_HELPER_LOOKS.
+export const BOU_CAPATAS = Object.freeze({ id: 'C', x: Math.sin(3.55) * 6.4, z: Math.cos(3.55) * 6.4, yaw: 3.55 + Math.PI });
 // a compass-frame point in the plaça, the compass turned to `yaw`
 export const bouToWorld = (x, z, yaw) => ({ x: x * Math.cos(yaw) + z * Math.sin(yaw), z: -x * Math.sin(yaw) + z * Math.cos(yaw) });
 export const createBouColla = profile => createColla({ profile, spots: [...BOU_HELPERS, BOU_CAPATAS], seats: [],

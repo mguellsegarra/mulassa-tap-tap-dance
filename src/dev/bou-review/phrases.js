@@ -22,7 +22,7 @@ export function describe(start,end) {
   return `${travel}. ${turning}. Acaba mirant cap al ${heading(b.yaw)}. ${sways?'Fa balanceig suau.':'Sense balanceig.'}`;
 }
 export function makePhrases() {
-  return reference.phrases.map(p=>({...p,model:describe(p.start,p.end),wanted:''}));
+  return reference.phrases.map(p=>({...p,model:describe(p.start,p.end),wanted:p.proposal,draftRevision:2}));
 }
 function mappingInterval(phrase,t) {
   const points=phrase.anchors;
@@ -42,5 +42,5 @@ export function sourceRate(phrase,t) {
 }
 export function validBounds(start,end) {return Number.isFinite(start)&&Number.isFinite(end)&&start>=0&&end>start&&end<=source.previewDuration;}
 export function scriptText(phrases,audio) {
-  return [`BALL DEL BOU · música ${audio}`,`Vídeo: ${source.url}`,'N/E/S/W: convenció del mapa; W = cap inicial. Correspondència automàtica pendent de revisar. Els textos no modifiquen el ball.',...phrases.map((p,i)=>`\n${i+1}. ${p.title} | cançó ${stamp(p.start)}–${stamp(p.end)} | vídeo ${p.sourceStart.toFixed(2)}–${p.sourceEnd.toFixed(2)} s\nVÍDEO: ${p.observed}\nMODEL ACTUAL: ${p.model}\nVULL: ${p.wanted||'[pendent d’escriure]'}`)].join('\n');
+  return [`BALL DEL BOU · música ${audio}`,`Vídeo: ${source.url}`,'N/E/S/W: convenció del mapa; W = cap inicial. Correspondència automàtica pendent de revisar. Els textos no modifiquen el ball.',...phrases.map((p,i)=>`\n${i+1}. ${p.title} | cançó ${stamp(p.start)}–${stamp(p.end)} | vídeo ${p.sourceStart.toFixed(2)}–${p.sourceEnd.toFixed(2)} s\nPARTITURA: ${p.scoreBars?.join(', ')||'entrada afegida'}\nENCAIX: ${p.alignmentNote}\nVÍDEO: ${p.observed}\nMODEL ACTUAL: ${p.model}\nPROPOSTA: ${p.wanted||'[pendent d’escriure]'}`)].join('\n');
 }

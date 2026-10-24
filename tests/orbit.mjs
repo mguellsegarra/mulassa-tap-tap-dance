@@ -185,3 +185,21 @@ console.log('quick return after photo mode ok');
   assert(Math.abs(Math.atan2(Math.sin(a.s.yaw - H.yaw), Math.cos(a.s.yaw - H.yaw))) < 0.02, 'home within 14 s');
 }
 console.log('half-turn return speed ok');
+
+{ // «Mira el ball»: a drag and a zoom offset the film's shot; let go, they ease back to it, slowly, at any frame rate
+  const { createLook, lookStep, resetLook } = await import('../src/scene/orbit.js');
+  for (const hz of [30, 60, 120]) {
+    const s = createLook();
+    orbitDown(s, 1, 100, 100, 0); orbitMove(s, 1, 120, 100, 0.02); orbitMove(s, 1, 320, 160, 0.5); orbitUp(s, 1, 0.6);
+    orbitZoom(s, 1.5, 0.6);
+    assert(Math.abs(s.yaw) > 0.5 && s.x[0] > 0.1, 'the drag turns and lifts the shot');
+    let t = 0.6, maxV = 0;
+    for (let i = 0; i < 1.5 * hz; i++) lookStep(s, 1 / hz, t += 1 / hz);
+    assert(s.x[1] > 1.2 && Math.abs(s.yaw) > 0.5, 'held a moment after letting go: the chosen view stays');
+    for (let i = 0; i < 14 * hz; i++) { const y = s.yaw; lookStep(s, 1 / hz, t += 1 / hz); maxV = Math.max(maxV, Math.abs(s.yaw - y) * hz); }
+    assert(Math.abs(s.yaw) < 5e-3 && Math.abs(s.x[0]) < 5e-3 && Math.abs(s.x[1] - 1) < 5e-3, `back on the film at ${hz} Hz`);
+    assert(maxV <= ORBIT.homeSpeed + 1e-6, 'eases back no faster than the orbit');
+    resetLook(s); assert.equal(s.yaw, 0);
+  }
+  console.log('watch look ok');
+}

@@ -13,7 +13,7 @@ import { unlock, openSelect, toTitle } from '../game/flow.js';
 import { press, settleHold, eventAt, releaseAll } from '../game/judge.js';
 import { padButtons, haptic, padFeedback, syncPad } from './pad.js';
 import { hud, buttonAt, W, K } from '../hud/canvas.js';
-import { orbit, pnow } from '../scene/cameras.js';
+import { orbit, look, pnow } from '../scene/cameras.js';
 import { lookDown, lookUp, lookSkip, lookEscape, lookLocked } from './mouse-look.js';
 
 for (const ev of ['touchend', 'click', 'keydown']) addEventListener(ev, () => { if (!G.paused && pageActive()) chip?.wake(); }, { passive: true });
@@ -89,12 +89,14 @@ hud.addEventListener('pointermove', e => {
     const p = orbit.ptrs.get(e.pointerId);
     if (p) photoLook(e.clientX - p.x, e.clientY - p.y);
   }
+  orbitMove(look, e.pointerId, e.clientX, e.clientY, pnow()); // «Mira el ball» (not ours: nothing)
   const oldZoom=orbit.x[1];
   orbitMove(orbit, e.pointerId, e.clientX, e.clientY, pnow());
   if(PHOTO.on && orbit.pinch && oldZoom>0)photoZoom(orbit.x[1]/oldZoom); }); // dragging the view
 let photoMousePointer = null;
 // The selector's camera is the showreel's (Marc, 2026-10-23): no drag turns it, no wheel or pinch zooms it; free play keeps both
 const homeLocked = () => G.state === 'select' && !viewMode;
+const watchLook = () => G.state === 'play' && G.watch && !G.paused; // «Mira el ball»: the dance's camera turns and zooms (cameras.js look)
 const photoMouseAllowed = () => PHOTO.on && viewMode && steers() && !G.paused && pageActive();
 // Mouse events report every button transition, including RMB pressed/released while LMB stays down.
 hud.addEventListener('mousedown', e => {
@@ -119,6 +121,10 @@ hud.addEventListener('pointerdown', e => {
       orbitDown(orbit, e.pointerId, e.clientX, e.clientY, pnow());
       try { hud.setPointerCapture?.(e.pointerId); } catch { /* already gone */ }
     }
+  } else if (watchLook() && (e.pointerType !== 'mouse' || e.button === 0)) {
+    look.turn = turnFor(W * K);
+    orbitDown(look, e.pointerId, e.clientX, e.clientY, pnow());
+    try { hud.setPointerCapture?.(e.pointerId); } catch { /* already gone */ }
   } else if (G.state === 'results' && clock - G.resT > 1) toTitle();
 });
 hud.addEventListener('lostpointercapture', () => { PHOTO.mouse=0; });
@@ -129,8 +135,9 @@ addEventListener('mouseup', e => {
   lookUp(e);
 });
 addEventListener('pointercancel', e => { if (e.pointerType === 'mouse') { PHOTO.mouse = 0; lookUp({ buttons: 0 }); } });
-for (const ev of ['pointerup', 'pointercancel']) addEventListener(ev, e => { orbitUp(orbit, e.pointerId, pnow()); });
+for (const ev of ['pointerup', 'pointercancel']) addEventListener(ev, e => { orbitUp(orbit, e.pointerId, pnow()); orbitUp(look, e.pointerId, pnow()); });
 hud.addEventListener('wheel', e => { // the wheel, and a trackpad pinch (ctrlKey: never the page zoom over the canvas)
+  if (watchLook()) { e.preventDefault(); orbitZoom(look, wheelFactor(e.deltaMode ? e.deltaY * 16 : e.deltaY, e.ctrlKey), pnow()); return; }
   if (!steers()) return;
   e.preventDefault(); // (the page itself never zooms over the canvas)
   if (homeLocked()) return;
@@ -141,7 +148,8 @@ let gestureScale = 1; // Safari's trackpad pinch (gesture events); on iOS the fi
 hud.addEventListener('gesturestart', e => { e.preventDefault(); gestureScale = e.scale || 1; });
 hud.addEventListener('gesturechange', e => {
   e.preventDefault();
-  if (steers() && !homeLocked() && !orbit.ptrs.size && e.scale > 0) { if(PHOTO.on)photoZoom(gestureScale/e.scale);else orbitZoom(orbit,gestureScale/e.scale,pnow()); }
+  if (watchLook() && !look.ptrs.size && e.scale > 0) orbitZoom(look, gestureScale / e.scale, pnow());
+  else if (steers() && !homeLocked() && !orbit.ptrs.size && e.scale > 0) { if(PHOTO.on)photoZoom(gestureScale/e.scale);else orbitZoom(orbit,gestureScale/e.scale,pnow()); }
   gestureScale = e.scale || 1;
 });
 

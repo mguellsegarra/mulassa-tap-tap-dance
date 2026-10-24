@@ -67,6 +67,7 @@ function spot(v, axis, s, a0, a1, u, y, r) {
 const EYE = [[0.24, 0.24, 0.445, 0.485, D.red], [0.18, 0.18, 0.47, 0.5, D.iris], [0.1, 0.1, 0.48, 0.515, D.irisCore], [0.04, 0.15, 0.49, 0.53, D.pupil]];
 function head() {
   const g = new THREE.Group(), v = new Vox();
+  g.name = 'head'; // (the showreel's close-ups frame both: cameras.js partOutline)
   // origin = the neck joint; +z = the snout. The stem fits inside the last neck segment's knuckle at any angle.
   cb(v, 0, 0.15, 0, 0.5, 0.5, 0.5, D.green); // stem
   cb(v, 0, -0.02, 0, 0.76, 0.1, 0.76, D.greenLight); // collar

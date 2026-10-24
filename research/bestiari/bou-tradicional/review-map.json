@@ -17,7 +17,7 @@
   },
   "method": "Full written form chroma DTW, bounded steps; automatic unverified",
   "pitchClassShift": 11,
-  "alignmentStatus": "Automatic, unverified by listening or continuous video; editable per phrase. Full score form aligned before selecting retained bars. First occurrences used for omitted repeats.",
+  "alignmentStatus": "Score to generated song checked; source audio checked with two spectral alignments and an independent automatic pitch transcription. Fermata restart anchors added. Not listening-verified; finale still provisional.",
   "phrases": [
     {
       "id": "bar-0",
@@ -25,8 +25,8 @@
       "start": 0,
       "end": 6.0,
       "sourceStart": 20,
-      "sourceEnd": 26,
-      "observed": "Es prepara abans de començar el ball.",
+      "sourceEnd": 26.6006,
+      "observed": "Es prepara al centre abans del ball. Aquest tros de la nostra cançó és una entrada afegida; no és una frase equivalent del vídeo.",
       "anchors": [
         [
           0,
@@ -34,477 +34,1387 @@
         ],
         [
           6.0,
-          26
+          26.6006
         ]
-      ]
+      ],
+      "previousObserved": "Es prepara abans de començar el ball.",
+      "previousBounds": [
+        20,
+        26
+      ],
+      "proposal": "Queda al centre mirant cap al W. Fes un balanceig petit de preparació, sense començar les voltes.",
+      "scoreBars": [],
+      "scoreNotes": "",
+      "alignmentNote": "Entrada afegida: sense equivalència musical exacta."
     },
     {
       "id": "bar-1",
       "title": "Compassos 1–4",
       "start": 6.0,
       "end": 14.0,
-      "sourceStart": 26.0,
-      "sourceEnd": 35.604,
-      "observed": "Comença de tres quarts, canvia de cara, mostra la cua i torna de cara. Es mou al voltant del centre; no hi ha un recompte fiable de passes.",
+      "sourceStart": 26.6006,
+      "sourceEnd": 35.4707,
+      "observed": "Comença de tres quarts. Estira una cama i després l'altra, es balanceja i gira aproximadament mitja volta fins a ensenyar l'altre costat.",
       "anchors": [
         [
           6.0,
-          26.0
+          26.6006
+        ],
+        [
+          6.5,
+          27.2972
+        ],
+        [
+          7.0,
+          27.7616
+        ],
+        [
+          7.5,
+          28.4118
         ],
         [
           8.0,
-          28.901
+          29.1084
+        ],
+        [
+          8.5,
+          29.5263
+        ],
+        [
+          9.0,
+          30.0836
+        ],
+        [
+          9.5,
+          30.5016
         ],
         [
           10.0,
-          31.202
+          31.2446
+        ],
+        [
+          10.5,
+          31.6626
+        ],
+        [
+          11.0,
+          32.2199
+        ],
+        [
+          11.5,
+          32.7307
         ],
         [
           12.0,
-          33.153
+          33.1487
+        ],
+        [
+          12.5,
+          33.6595
+        ],
+        [
+          13.0,
+          34.2632
+        ],
+        [
+          13.5,
+          34.9134
         ],
         [
           14.0,
-          35.604
+          35.4707
         ]
-      ]
+      ],
+      "previousObserved": "Comença de tres quarts, canvia de cara, mostra la cua i torna de cara. Es mou al voltant del centre; no hi ha un recompte fiable de passes.",
+      "previousBounds": [
+        26.0,
+        35.604
+      ],
+      "proposal": "Mirant al W, estira una cama i després l'altra al ritme de la música. Fes mitja volta amb balanceig fins a mirar a l'E.",
+      "scoreBars": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "scoreNotes": "Do5 · Sol5 · Do5 · Sol5 · Sol5 · La♭5 · Sol5 · Fa5 · Sol5 · Fa5 · Mi♭5 · Fa5 · Mi♭5 · Re5 · Mi♭5 · Re5 · Do5 · Re5 · Do5 · Si4 · Do5 · Re5 · Sol5 · Sol4",
+      "alignmentNote": "Frase identificada per notes en dues anàlisis; encaix auditiu pendent."
     },
     {
       "id": "bar-5",
       "title": "Compassos 5–8",
       "start": 14.0,
       "end": 22.0,
-      "sourceStart": 35.604,
-      "sourceEnd": 43.508,
-      "observed": "Comença de tres quarts, canvia de cara, mostra la cua i torna de cara. Es mou al voltant del centre; no hi ha un recompte fiable de passes. Inclina tot el cos amunt i avall mentre completa un gir. Cap als 52 s canvia de sentit i torna a desfer aproximadament una volta. El cap forma part de la carcassa rígida; no té una articulació pròpia.",
+      "sourceStart": 35.4707,
+      "sourceEnd": 43.5512,
+      "observed": "Continua girant, ensenya la cua i acaba tornant a la cara del començament. Completa l'altra mitja volta.",
       "anchors": [
         [
           14.0,
-          35.604
+          35.4707
+        ],
+        [
+          14.5,
+          35.9351
+        ],
+        [
+          15.0,
+          36.3066
+        ],
+        [
+          15.5,
+          36.6781
         ],
         [
           16.0,
-          37.305
+          37.3747
+        ],
+        [
+          16.5,
+          37.7927
+        ],
+        [
+          17.0,
+          38.0713
+        ],
+        [
+          17.5,
+          38.7679
         ],
         [
           18.0,
-          39.456
+          39.5574
+        ],
+        [
+          18.5,
+          40.0218
+        ],
+        [
+          19.0,
+          40.5326
+        ],
+        [
+          19.5,
+          40.9506
         ],
         [
           20.0,
-          41.657
+          41.5543
+        ],
+        [
+          20.5,
+          41.9722
+        ],
+        [
+          21.0,
+          42.5295
+        ],
+        [
+          21.5,
+          42.8546
         ],
         [
           22.0,
-          43.508
+          43.5512
         ]
-      ]
+      ],
+      "previousObserved": "Comença de tres quarts, canvia de cara, mostra la cua i torna de cara. Es mou al voltant del centre; no hi ha un recompte fiable de passes. Inclina tot el cos amunt i avall mentre completa un gir. Cap als 52 s canvia de sentit i torna a desfer aproximadament una volta. El cap forma part de la carcassa rígida; no té una articulació pròpia.",
+      "previousBounds": [
+        35.604,
+        43.508
+      ],
+      "proposal": "Continua en el mateix sentit: de l'E, passa pel N i torna al W. Completa la volta sencera començada al tram anterior.",
+      "scoreBars": [
+        5,
+        6,
+        7,
+        8
+      ],
+      "scoreNotes": "Do5 · Sol5 · Do5 · Sol5 · Sol5 · La♭5 · Sol5 · Fa5 · Sol5 · Fa5 · Mi♭5 · Fa5 · Mi♭5 · Re5 · Mi♭5 · Re5 · Do5 · Re5 · Do5 · Si4 · Mi♭5 · Re5 · Do5",
+      "alignmentNote": "Frase identificada per notes en dues anàlisis; encaix auditiu pendent."
     },
     {
       "id": "bar-9",
       "title": "Compassos 9–12",
       "start": 22.0,
       "end": 30.0,
-      "sourceStart": 43.508,
-      "sourceEnd": 51.712,
-      "observed": "Inclina tot el cos amunt i avall mentre completa un gir. Cap als 52 s canvia de sentit i torna a desfer aproximadament una volta. El cap forma part de la carcassa rígida; no té una articulació pròpia.",
+      "sourceStart": 43.5512,
+      "sourceEnd": 51.6782,
+      "observed": "Fa una volta completa. Mentre gira, baixa i puja clarament el davant; la inclinació és de tot el cos.",
       "anchors": [
         [
           22.0,
-          43.508
+          43.5512
+        ],
+        [
+          22.5,
+          44.1085
+        ],
+        [
+          23.0,
+          44.5729
+        ],
+        [
+          23.5,
+          45.0837
         ],
         [
           24.0,
-          45.459
+          45.5946
+        ],
+        [
+          24.5,
+          46.1518
+        ],
+        [
+          25.0,
+          46.8484
+        ],
+        [
+          25.5,
+          47.1271
         ],
         [
           26.0,
-          47.61
+          47.5915
+        ],
+        [
+          26.5,
+          48.1023
+        ],
+        [
+          27.0,
+          48.5203
+        ],
+        [
+          27.5,
+          49.0311
         ],
         [
           28.0,
-          49.661
+          49.7277
+        ],
+        [
+          28.5,
+          50.1921
+        ],
+        [
+          29.0,
+          50.5636
+        ],
+        [
+          29.5,
+          51.0745
         ],
         [
           30.0,
-          51.712
+          51.6782
         ]
-      ]
+      ],
+      "previousObserved": "Inclina tot el cos amunt i avall mentre completa un gir. Cap als 52 s canvia de sentit i torna a desfer aproximadament una volta. El cap forma part de la carcassa rígida; no té una articulació pròpia.",
+      "previousBounds": [
+        43.508,
+        51.712
+      ],
+      "proposal": "Fes una volta completa, del W al W, passant pel S. Baixa i aixeca el davant mentre gires.",
+      "scoreBars": [
+        9,
+        10,
+        11,
+        12
+      ],
+      "scoreNotes": "Sol4 · Sol4 · Mi♭5 · Mi♭5 · Re5 · Re5 · Do5 · Do5 · Sol4 · Sol4 · Mi♭5 · Mi♭5 · Re5 · Do5 · Re5 · Sol4 · Sol4 · Fa5 · Fa5 · Mi♭5 · Mi♭5 · Re5 · Re5 · Re5 · Do5 · Si♭4 · Do5 · Re5 · Mi♭5",
+      "alignmentNote": "Frase identificada per notes en dues anàlisis; encaix auditiu pendent."
     },
     {
       "id": "bar-13",
       "title": "Compassos 13–16",
       "start": 30.0,
       "end": 38.0,
-      "sourceStart": 51.712,
-      "sourceEnd": 59.715,
-      "observed": "Inclina tot el cos amunt i avall mentre completa un gir. Cap als 52 s canvia de sentit i torna a desfer aproximadament una volta. El cap forma part de la carcassa rígida; no té una articulació pròpia.",
+      "sourceStart": 51.6782,
+      "sourceEnd": 59.7587,
+      "observed": "Canvia el sentit del gir i desfà aproximadament una volta, alternant les inclinacions del cos.",
       "anchors": [
         [
           30.0,
-          51.712
+          51.6782
+        ],
+        [
+          30.5,
+          52.2355
+        ],
+        [
+          31.0,
+          52.607
+        ],
+        [
+          31.5,
+          53.0714
         ],
         [
           32.0,
-          53.562
+          53.6287
+        ],
+        [
+          32.5,
+          54.1395
+        ],
+        [
+          33.0,
+          54.7432
+        ],
+        [
+          33.5,
+          55.3005
         ],
         [
           34.0,
-          54.813
+          55.7185
+        ],
+        [
+          34.5,
+          56.0435
+        ],
+        [
+          35.0,
+          56.7401
+        ],
+        [
+          35.5,
+          57.251
         ],
         [
           36.0,
-          57.414
+          57.7618
+        ],
+        [
+          36.5,
+          58.3191
+        ],
+        [
+          37.0,
+          58.6906
+        ],
+        [
+          37.5,
+          59.2479
         ],
         [
           38.0,
-          59.715
+          59.7587
         ]
-      ]
+      ],
+      "previousObserved": "Inclina tot el cos amunt i avall mentre completa un gir. Cap als 52 s canvia de sentit i torna a desfer aproximadament una volta. El cap forma part de la carcassa rígida; no té una articulació pròpia.",
+      "previousBounds": [
+        51.712,
+        59.715
+      ],
+      "proposal": "Canvia de sentit i desfés una volta, del W al W passant pel N. Mantén el balanceig del cos.",
+      "scoreBars": [
+        13,
+        14,
+        15,
+        16
+      ],
+      "scoreNotes": "Do5 · Sol4 · Sol4 · Mi♭5 · Mi♭5 · Re5 · Re5 · Do5 · Do5 · Do5 · Si♭4 · La♭4 · La♭4 · Sol4 · Sol4 · Fa4 · Fa5 · Mi♭5 · Re5 · Re5 · Do5 · Do5 · Si4 · Si4 · Sol4 · Sol4 · Mi♭5 · Mi♭5 · Re5 · Re5",
+      "alignmentNote": "Frase identificada per notes en dues anàlisis; encaix auditiu pendent."
     },
     {
       "id": "bar-18",
       "title": "Compàs 18",
       "start": 38.0,
       "end": 40.0,
-      "sourceStart": 94.031,
-      "sourceEnd": 96.332,
-      "observed": "Un membre de la colla passa pel davant. El Bou s'apropa molt a la càmera a 102–110 s, mostra el costat i la cua, i torna a una zona més allunyada.",
+      "sourceStart": 93.9385,
+      "sourceEnd": 96.4927,
+      "observed": "Es manté de tres quarts amb passes petites. Un membre de la colla passa pel davant i tapa part de les cames.",
       "anchors": [
         [
           38.0,
-          94.031
+          93.9385
+        ],
+        [
+          38.5,
+          94.2636
+        ],
+        [
+          39.0,
+          94.9137
+        ],
+        [
+          39.5,
+          95.7497
         ],
         [
           40.0,
-          96.332
+          96.4927
         ]
-      ]
+      ],
+      "previousObserved": "Un membre de la colla passa pel davant. El Bou s'apropa molt a la càmera a 102–110 s, mostra el costat i la cua, i torna a una zona més allunyada.",
+      "previousBounds": [
+        94.031,
+        96.332
+      ],
+      "proposal": "Mantén el cap al W amb passes curtes i balanceig suau. Prepara l'avanç següent.",
+      "scoreBars": [
+        18
+      ],
+      "scoreNotes": "Do5 · Sol4 · Do5 · Mi♭5",
+      "alignmentNote": "Frase identificada per notes en dues anàlisis; encaix auditiu pendent."
     },
     {
       "id": "bar-19",
       "title": "Compassos 19–22",
       "start": 40.0,
       "end": 47.619,
-      "sourceStart": 96.332,
-      "sourceEnd": 108.337,
-      "observed": "Un membre de la colla passa pel davant. El Bou s'apropa molt a la càmera a 102–110 s, mostra el costat i la cua, i torna a una zona més allunyada.",
+      "sourceStart": 96.4927,
+      "sourceEnd": 108.2884,
+      "observed": "S'acosta molt a la càmera. Avança amb balanceig i va girant fins a mostrar el costat contrari.",
       "anchors": [
         [
           40.0,
-          96.332
+          96.4927
+        ],
+        [
+          40.4762,
+          97.2822
+        ],
+        [
+          40.9524,
+          98.0252
+        ],
+        [
+          41.4286,
+          98.8611
         ],
         [
           41.9048,
-          99.533
+          99.6042
+        ],
+        [
+          42.381,
+          100.2543
+        ],
+        [
+          42.8571,
+          100.9509
+        ],
+        [
+          43.3333,
+          101.7868
         ],
         [
           43.8095,
-          102.535
+          102.5763
+        ],
+        [
+          44.2857,
+          103.2729
+        ],
+        [
+          44.7619,
+          104.0624
+        ],
+        [
+          45.2381,
+          104.6661
         ],
         [
           45.7143,
-          105.436
+          105.3627
+        ],
+        [
+          46.1905,
+          106.1522
+        ],
+        [
+          46.6667,
+          106.9417
+        ],
+        [
+          47.1429,
+          107.4525
         ],
         [
           47.619,
-          108.337
+          108.2884
         ]
-      ]
+      ],
+      "previousObserved": "Un membre de la colla passa pel davant. El Bou s'apropa molt a la càmera a 102–110 s, mostra el costat i la cua, i torna a una zona més allunyada.",
+      "previousBounds": [
+        96.332,
+        108.337
+      ],
+      "proposal": "Avança cap al W amb balanceig i gira aproximadament mitja volta fins a mirar a l'E. La direcció del desplaçament és inferida.",
+      "scoreBars": [
+        19,
+        20,
+        21,
+        22
+      ],
+      "scoreNotes": "Sol5 · Sol5 · Fa5 · La♭5 · Sol5 · Mi♭5 · Fa5 · Mi♭5 · Re5 · Fa5 · Mi♭5 · Re5 · Mi♭5 · Do5 · Sol4 · Do5 · Mi♭5",
+      "alignmentNote": "Frase identificada per notes en dues anàlisis; encaix auditiu pendent."
     },
     {
       "id": "bar-23",
       "title": "Compassos 23–26",
       "start": 47.619,
       "end": 55.2381,
-      "sourceStart": 108.337,
-      "sourceEnd": 118.542,
-      "observed": "Un membre de la colla passa pel davant. El Bou s'apropa molt a la càmera a 102–110 s, mostra el costat i la cua, i torna a una zona més allunyada. Passa cap a l'esquerra de la imatge, gira i torna de cara. Les persones i les façanes permeten veure que no és només un canvi d'orientació.",
+      "sourceStart": 108.2884,
+      "sourceEnd": 118.4123,
+      "observed": "S'allunya de la càmera, mostra la cua i torna a girar fins a recuperar la cara inicial.",
       "anchors": [
         [
           47.619,
-          108.337
+          108.2884
+        ],
+        [
+          48.0952,
+          108.985
+        ],
+        [
+          48.5714,
+          109.7281
+        ],
+        [
+          49.0476,
+          110.5176
         ],
         [
           49.5238,
-          111.239
+          111.2141
+        ],
+        [
+          50.0,
+          111.8179
+        ],
+        [
+          50.4762,
+          112.4216
+        ],
+        [
+          50.9524,
+          113.1646
         ],
         [
           51.4286,
-          113.84
+          113.8148
+        ],
+        [
+          51.9048,
+          114.6507
+        ],
+        [
+          52.381,
+          115.3009
+        ],
+        [
+          52.8571,
+          115.9975
         ],
         [
           53.3333,
-          116.391
+          116.5547
+        ],
+        [
+          53.8095,
+          116.9727
+        ],
+        [
+          54.2857,
+          117.4371
+        ],
+        [
+          54.7619,
+          117.9944
         ],
         [
           55.2381,
-          118.542
+          118.4123
         ]
-      ]
+      ],
+      "previousObserved": "Un membre de la colla passa pel davant. El Bou s'apropa molt a la càmera a 102–110 s, mostra el costat i la cua, i torna a una zona més allunyada. Passa cap a l'esquerra de la imatge, gira i torna de cara. Les persones i les façanes permeten veure que no és només un canvi d'orientació.",
+      "previousBounds": [
+        108.337,
+        118.542
+      ],
+      "proposal": "Torna cap al mig, en direcció E, i completa l'altra mitja volta fins a mirar al W. La direcció del retorn és inferida.",
+      "scoreBars": [
+        23,
+        24,
+        25,
+        26
+      ],
+      "scoreNotes": "Sol5 · Sol5 · Fa5 · La♭5 · Sol5 · Mi♭5 · Fa5 · Mi♭5 · Re5 · Fa5 · Mi♭5 · Re5 · Do5",
+      "alignmentNote": "Frase identificada per notes en dues anàlisis; encaix auditiu pendent."
     },
     {
       "id": "bar-27",
       "title": "Compassos 27–30",
       "start": 55.2381,
       "end": 62.5108,
-      "sourceStart": 118.542,
-      "sourceEnd": 126.045,
-      "observed": "Passa cap a l'esquerra de la imatge, gira i torna de cara. Les persones i les façanes permeten veure que no és només un canvi d'orientació.",
+      "sourceStart": 118.4123,
+      "sourceEnd": 125.982,
+      "observed": "Fa una passada lateral i manté força la mateixa cara. Després canvia el pes i prepara el retorn.",
       "anchors": [
         [
           55.2381,
-          118.542
+          118.4123
+        ],
+        [
+          55.6926,
+          118.9232
+        ],
+        [
+          56.1472,
+          119.434
+        ],
+        [
+          56.6017,
+          119.9449
         ],
         [
           57.0563,
-          120.543
+          120.5021
+        ],
+        [
+          57.5108,
+          120.9201
+        ],
+        [
+          57.9654,
+          121.3845
+        ],
+        [
+          58.4199,
+          121.8024
         ],
         [
           58.8745,
-          121.943
+          122.0811
+        ],
+        [
+          59.329,
+          122.6384
+        ],
+        [
+          59.7835,
+          123.1492
+        ],
+        [
+          60.2381,
+          123.66
         ],
         [
           60.6926,
-          124.245
+          124.078
+        ],
+        [
+          61.1472,
+          124.5424
+        ],
+        [
+          61.6017,
+          125.0068
+        ],
+        [
+          62.0563,
+          125.3783
         ],
         [
           62.5108,
-          126.045
+          125.982
         ]
-      ]
+      ],
+      "previousObserved": "Passa cap a l'esquerra de la imatge, gira i torna de cara. Les persones i les façanes permeten veure que no és només un canvi d'orientació.",
+      "previousBounds": [
+        118.542,
+        126.045
+      ],
+      "proposal": "Fes una passada cap al S sense deixar de mirar aproximadament al W, amb balanceig. S és una proposta basada en el recorregut reconstruït.",
+      "scoreBars": [
+        27,
+        28,
+        29,
+        30
+      ],
+      "scoreNotes": "Sol5 · Fa5 · Mi♭5 · Re5 · Do5 · Sol4 · Do5 · Mi♭5 · Re5 · Sol4 · Re5 · Fa5 · Mi♭5 · Do5 · Sol5 · Fa5 · Mi♭5 · Re5 · Do5 · Sol4 · Do5 · Mi♭5 · Re5 · Fa5 · Mi♭5 · Re5 · Do5",
+      "alignmentNote": "Frase identificada per notes en dues anàlisis; encaix auditiu pendent."
     },
     {
       "id": "bar-31",
       "title": "Compassos 31–34",
       "start": 62.5108,
       "end": 69.5696,
-      "sourceStart": 126.045,
-      "sourceEnd": 133.549,
-      "observed": "Passa cap a l'esquerra de la imatge, gira i torna de cara. Les persones i les façanes permeten veure que no és només un canvi d'orientació.",
+      "sourceStart": 125.982,
+      "sourceEnd": 133.5982,
+      "observed": "Desfà la passada lateral. Canvia breument de cara, es mou cap a l'altre costat i torna a quedar de tres quarts.",
       "anchors": [
         [
           62.5108,
-          126.045
+          125.982
+        ],
+        [
+          62.952,
+          126.4
+        ],
+        [
+          63.3932,
+          126.818
+        ],
+        [
+          63.8344,
+          127.3288
         ],
         [
           64.2755,
-          127.746
+          127.7932
+        ],
+        [
+          64.7167,
+          128.2112
+        ],
+        [
+          65.1579,
+          128.6756
+        ],
+        [
+          65.5991,
+          129.14
         ],
         [
           66.0402,
-          129.447
+          129.465
+        ],
+        [
+          66.4814,
+          130.0223
+        ],
+        [
+          66.9226,
+          130.5796
+        ],
+        [
+          67.3638,
+          130.9976
         ],
         [
           67.8049,
-          131.648
+          131.4155
+        ],
+        [
+          68.2461,
+          131.8799
+        ],
+        [
+          68.6873,
+          132.7158
+        ],
+        [
+          69.1285,
+          133.2731
         ],
         [
           69.5696,
-          133.549
+          133.5982
         ]
-      ]
+      ],
+      "previousObserved": "Passa cap a l'esquerra de la imatge, gira i torna de cara. Les persones i les façanes permeten veure que no és només un canvi d'orientació.",
+      "previousBounds": [
+        126.045,
+        133.549
+      ],
+      "proposal": "Torna cap al N i cap al mig, mantenint el cap prop del W. Fes les passes de retorn amb balanceig; N és una direcció inferida.",
+      "scoreBars": [
+        31,
+        32,
+        33,
+        34
+      ],
+      "scoreNotes": "Mi5 · Re5 · Do5 · Si4 · La4 · Mi4 · La4 · Do5 · Si4 · Mi4 · Si4 · Re5 · Do5 · La4 · Mi5 · Re5 · Do5 · Si4 · La4 · Mi4 · La4 · Do5 · Si4 · Re5 · Do5 · Si4 · La4 · Sol4",
+      "alignmentNote": "Frase identificada per notes en dues anàlisis; encaix auditiu pendent."
     },
     {
       "id": "bar-35",
       "title": "Compassos 35–38",
       "start": 69.5696,
       "end": 76.6285,
-      "sourceStart": 133.549,
-      "sourceEnd": 140.052,
-      "observed": "Passa cap a l'esquerra de la imatge, gira i torna de cara. Les persones i les façanes permeten veure que no és només un canvi d'orientació. Torna a acostar-se molt a la càmera. Alterna frontal, costat i cua mentre travessa l'espai proper. A 164 s torna a ser lluny.",
+      "sourceStart": 133.5982,
+      "sourceEnd": 140.6106,
+      "observed": "Torna a acostar-se molt a la càmera i gira fins a mostrar l'altre flanc. El cos ocupa bona part de la imatge.",
       "anchors": [
         [
           69.5696,
-          133.549
+          133.5982
+        ],
+        [
+          70.0108,
+          133.8768
+        ],
+        [
+          70.452,
+          134.2483
+        ],
+        [
+          70.8932,
+          134.5734
         ],
         [
           71.3344,
-          134.949
+          134.9449
+        ],
+        [
+          71.7755,
+          135.5487
+        ],
+        [
+          72.2167,
+          136.0131
+        ],
+        [
+          72.6579,
+          136.3381
         ],
         [
           73.0991,
-          136.35
+          136.9883
+        ],
+        [
+          73.5402,
+          137.3134
+        ],
+        [
+          73.9814,
+          137.6385
+        ],
+        [
+          74.4226,
+          138.1493
         ],
         [
           74.8638,
-          138.351
+          138.6137
+        ],
+        [
+          75.3049,
+          139.2639
+        ],
+        [
+          75.7461,
+          139.6354
+        ],
+        [
+          76.1873,
+          140.0998
         ],
         [
           76.6285,
-          140.052
+          140.6106
         ]
-      ]
+      ],
+      "previousObserved": "Passa cap a l'esquerra de la imatge, gira i torna de cara. Les persones i les façanes permeten veure que no és només un canvi d'orientació. Torna a acostar-se molt a la càmera. Alterna frontal, costat i cua mentre travessa l'espai proper. A 164 s torna a ser lluny.",
+      "previousBounds": [
+        133.549,
+        140.052
+      ],
+      "proposal": "Avança cap al W i gira aproximadament mitja volta, del W a l'E. Marca més el recorregut que en el ball actual.",
+      "scoreBars": [
+        35,
+        36,
+        37,
+        38
+      ],
+      "scoreNotes": "Sol5 · Sol5 · Sol5 · Sol5 · Sol5 · Sol5 · La5 · Sol5 · Fa5 · Mi5 · Mi5 · Re5 · Re5 · Do5 · Sol4 · Sol5 · Sol5 · Sol5 · Sol5 · Sol5 · Sol5 · La5 · Sol5 · Fa5 · Mi5 · Re5 · Do5",
+      "alignmentNote": "Frase identificada per notes en dues anàlisis; encaix auditiu pendent."
     },
     {
       "id": "bar-39",
       "title": "Compassos 39–42",
       "start": 76.6285,
       "end": 83.6873,
-      "sourceStart": 140.052,
-      "sourceEnd": 147.655,
-      "observed": "Torna a acostar-se molt a la càmera. Alterna frontal, costat i cua mentre travessa l'espai proper. A 164 s torna a ser lluny.",
+      "sourceStart": 140.6106,
+      "sourceEnd": 147.8088,
+      "observed": "S'allunya mostrant la cua, continua girant i torna a acostar-se. Alterna costat, davant i cua.",
       "anchors": [
         [
           76.6285,
-          140.052
+          140.6106
+        ],
+        [
+          77.0696,
+          140.9821
+        ],
+        [
+          77.5108,
+          141.4001
+        ],
+        [
+          77.952,
+          141.8645
         ],
         [
           78.3932,
-          142.253
+          142.2824
+        ],
+        [
+          78.8344,
+          142.7933
+        ],
+        [
+          79.2755,
+          143.2577
+        ],
+        [
+          79.7167,
+          143.5828
         ],
         [
           80.1579,
-          143.953
+          144.0472
+        ],
+        [
+          80.5991,
+          144.558
+        ],
+        [
+          81.0402,
+          145.0688
+        ],
+        [
+          81.4814,
+          145.4868
         ],
         [
           81.9226,
-          146.104
+          145.9048
+        ],
+        [
+          82.3638,
+          146.3692
+        ],
+        [
+          82.8049,
+          146.9729
+        ],
+        [
+          83.2461,
+          147.4373
         ],
         [
           83.6873,
-          147.655
+          147.8088
         ]
-      ]
+      ],
+      "previousObserved": "Torna a acostar-se molt a la càmera. Alterna frontal, costat i cua mentre travessa l'espai proper. A 164 s torna a ser lluny.",
+      "previousBounds": [
+        140.052,
+        147.655
+      ],
+      "proposal": "Descriu un recorregut ampli d'anada i tornada mentre gires gairebé una volta. Evita quedar-te girant sempre al mateix punt.",
+      "scoreBars": [
+        39,
+        40,
+        41,
+        42
+      ],
+      "scoreNotes": "Mi5 · Mi5 · Mi5 · Mi5 · Mi5 · Mi5 · Fa5 · Mi5 · Re5 · Do5 · Do5 · Si4 · Si4 · La4 · Mi4 · Mi5 · Mi5 · Mi5 · Mi5 · Mi5 · Mi5 · Fa5 · Mi5 · Re5 · Do5 · Si4 · La4 · Sol4",
+      "alignmentNote": "Frase identificada per notes en dues anàlisis; encaix auditiu pendent."
     },
     {
       "id": "bar-43",
       "title": "Compassos 43–45",
       "start": 83.6873,
       "end": 88.9814,
-      "sourceStart": 147.655,
-      "sourceEnd": 153.058,
-      "observed": "Torna a acostar-se molt a la càmera. Alterna frontal, costat i cua mentre travessa l'espai proper. A 164 s torna a ser lluny.",
+      "sourceStart": 147.8088,
+      "sourceEnd": 153.1029,
+      "observed": "Passa molt a prop de la càmera i continua girant. Canvia del flanc amb el cap a un costat al flanc contrari; part del cos queda fora de pla.",
       "anchors": [
         [
           83.6873,
-          147.655
+          147.8088
+        ],
+        [
+          84.1285,
+          148.1339
+        ],
+        [
+          84.5696,
+          148.5983
+        ],
+        [
+          85.0108,
+          149.1091
         ],
         [
           85.452,
-          149.656
+          149.7593
+        ],
+        [
+          85.8932,
+          150.2237
+        ],
+        [
+          86.3344,
+          150.6881
+        ],
+        [
+          86.7755,
+          151.0596
         ],
         [
           87.2167,
-          151.057
+          151.3847
+        ],
+        [
+          87.6579,
+          151.7562
+        ],
+        [
+          88.0991,
+          152.1741
+        ],
+        [
+          88.5402,
+          152.6385
         ],
         [
           88.9814,
-          153.058
+          153.1029
         ]
-      ]
+      ],
+      "previousObserved": "Torna a acostar-se molt a la càmera. Alterna frontal, costat i cua mentre travessa l'espai proper. A 164 s torna a ser lluny.",
+      "previousBounds": [
+        147.655,
+        153.058
+      ],
+      "proposal": "Continua la passada i fes aproximadament mitja volta. Conserva el desplaçament; el recompte exacte queda pendent perquè el cos es retalla.",
+      "scoreBars": [
+        43,
+        44,
+        45
+      ],
+      "scoreNotes": "Sol5 · Fa5 · Mi5 · Re5 · Do5 · Sol4 · Do5 · Mi5 · Re5 · Sol4 · Re5 · Fa5 · Mi5 · Do5 · Sol5 · Fa5 · Mi5 · Re5 · Do5 · Sol4 · Do5 · Mi5",
+      "alignmentNote": "Frase identificada per notes en dues anàlisis; encaix auditiu pendent."
     },
     {
       "id": "bar-47",
       "title": "Compàs 47",
       "start": 88.9814,
       "end": 90.7461,
-      "sourceStart": 160.261,
-      "sourceEnd": 162.162,
-      "observed": "Torna a acostar-se molt a la càmera. Alterna frontal, costat i cua mentre travessa l'espai proper. A 164 s torna a ser lluny.",
+      "sourceStart": 160.0689,
+      "sourceEnd": 161.8801,
+      "observed": "Mostra la cua i comença a girar per ensenyar el costat. És un fragment molt curt del retorn.",
       "anchors": [
         [
           88.9814,
-          160.261
+          160.0689
+        ],
+        [
+          89.4226,
+          160.5798
+        ],
+        [
+          89.8638,
+          161.0442
+        ],
+        [
+          90.3049,
+          161.5086
         ],
         [
           90.7461,
-          162.162
+          161.8801
         ]
-      ]
+      ],
+      "previousObserved": "Torna a acostar-se molt a la càmera. Alterna frontal, costat i cua mentre travessa l'espai proper. A 164 s torna a ser lluny.",
+      "previousBounds": [
+        160.261,
+        162.162
+      ],
+      "proposal": "Continua el gir que ja venia en marxa, amb una passa lateral. No hi afegeixis una volta completa nova.",
+      "scoreBars": [
+        47
+      ],
+      "scoreNotes": "Re5 · Fa5 · Mi5 · Re5 · Do5",
+      "alignmentNote": "Frase identificada per notes en dues anàlisis; encaix auditiu pendent."
     },
     {
       "id": "bar-60",
       "title": "Compassos 60–63",
       "start": 90.7461,
       "end": 98.7426,
-      "sourceStart": 183.071,
-      "sourceEnd": 193.276,
-      "observed": "Gira en el mateix sentit entre 168 i 176 s, manté el costat uns segons i torna a girar entre 180 i 184 s. Després queda de tres quarts amb canvis de pes i passes curtes fins a 196 s. No es pot comptar cada passa.",
+      "sourceStart": 183.1031,
+      "sourceEnd": 193.1806,
+      "observed": "Es queda de tres quarts, amb petites passes i canvis de pes. Baixa i puja una mica el davant i prepara una arrencada lenta.",
       "anchors": [
         [
           90.7461,
-          183.071
+          183.1031
+        ],
+        [
+          91.1873,
+          183.6604
+        ],
+        [
+          91.6285,
+          184.0319
+        ],
+        [
+          92.0696,
+          184.4963
         ],
         [
           92.5108,
-          185.072
+          184.9607
+        ],
+        [
+          92.952,
+          185.2858
+        ],
+        [
+          93.3932,
+          185.8431
+        ],
+        [
+          93.8344,
+          186.1682
         ],
         [
           94.2755,
-          187.873
+          186.4932
+        ],
+        [
+          94.7167,
+          187.4685
+        ],
+        [
+          95.1579,
+          188.2115
+        ],
+        [
+          95.5991,
+          188.4902
         ],
         [
           96.0402,
-          190.475
+          189.2332
+        ],
+        [
+          96.4814,
+          189.8369
+        ],
+        [
+          97.0269,
+          190.9515
+        ],
+        [
+          97.9092,
+          192.066
         ],
         [
           98.7426,
-          193.276
+          193.1806
         ]
-      ]
+      ],
+      "previousObserved": "Gira en el mateix sentit entre 168 i 176 s, manté el costat uns segons i torna a girar entre 180 i 184 s. Després queda de tres quarts amb canvis de pes i passes curtes fins a 196 s. No es pot comptar cada passa.",
+      "previousBounds": [
+        183.071,
+        193.276
+      ],
+      "proposal": "Redueix el recorregut. Mantén el cap prop del W, amb passes curtes i balanceig; deixa respirar la parada i la represa musical.",
+      "scoreBars": [
+        60,
+        61,
+        62,
+        63
+      ],
+      "scoreNotes": "Sol5 · Fa5 · Mi5 · Re5 · Do5 · Sol4 · Do5 · Mi5 · Re5 · Sol4 · Re5 · Fa5 · Mi5 · Do5 · Sol5 · Fa5 · Mi5 · Re5 · Do5 · Sol4 · Do5 · Mi5 · Re5 · Fa5 · Mi5 · Re5 · Do5",
+      "alignmentNote": "Calderó i acceleració: represa contrastada amb patrons de notes; tempo local pendent d’escolta."
     },
     {
       "id": "bar-64",
       "title": "Compassos 64–67",
       "start": 98.7426,
       "end": 109.4286,
-      "sourceStart": 193.276,
-      "sourceEnd": 202.53,
-      "observed": "Gira en el mateix sentit entre 168 i 176 s, manté el costat uns segons i torna a girar entre 180 i 184 s. Després queda de tres quarts amb canvis de pes i passes curtes fins a 196 s. No es pot comptar cada passa. S'acosta de nou, ensenya el flanc i la cua i retorna. S'hi acosten ajudants abans de l'aixecament.",
+      "sourceStart": 193.1806,
+      "sourceEnd": 202.3757,
+      "observed": "Comença amb passes lentes i s'acosta progressivament a la càmera. Va canviant de cara fins a presentar més el costat.",
       "anchors": [
         [
           98.7426,
-          193.276
+          193.1806
+        ],
+        [
+          99.5623,
+          194.1094
+        ],
+        [
+          100.356,
+          194.8989
+        ],
+        [
+          101.1253,
+          195.7348
         ],
         [
           101.8716,
-          196.377
+          196.4314
+        ],
+        [
+          102.5963,
+          197.0351
+        ],
+        [
+          103.3006,
+          197.871
+        ],
+        [
+          103.9856,
+          198.2425
         ],
         [
           104.6523,
-          198.678
+          198.5212
+        ],
+        [
+          105.3017,
+          199.3107
+        ],
+        [
+          105.9346,
+          199.7286
+        ],
+        [
+          106.5519,
+          200.2859
         ],
         [
           107.1544,
-          200.979
+          200.8896
+        ],
+        [
+          107.7426,
+          201.354
+        ],
+        [
+          108.3174,
+          201.7255
+        ],
+        [
+          108.8792,
+          202.0506
         ],
         [
           109.4286,
-          202.53
+          202.3757
         ]
-      ]
+      ],
+      "previousObserved": "Gira en el mateix sentit entre 168 i 176 s, manté el costat uns segons i torna a girar entre 180 i 184 s. Després queda de tres quarts amb canvis de pes i passes curtes fins a 196 s. No es pot comptar cada passa. S'acosta de nou, ensenya el flanc i la cua i retorna. S'hi acosten ajudants abans de l'aixecament.",
+      "previousBounds": [
+        193.276,
+        202.53
+      ],
+      "proposal": "Arrenca molt lent, avança amb balanceig i accelera amb la frase. Fes un gir progressiu; encara no facis tombs ràpids seguits.",
+      "scoreBars": [
+        64,
+        65,
+        66,
+        67
+      ],
+      "scoreNotes": "Sol5 · Fa5 · Mi5 · Re5 · Do5 · Sol4 · Do5 · Mi5 · Re5 · Sol4 · Re5 · Fa5 · Mi5 · Do5 · Sol5 · Fa5 · Mi5 · Re5 · Do5 · Sol4 · Do5 · Mi5 · Re5 · Fa5 · Mi5 · Re5 · Do5",
+      "alignmentNote": "Calderó i acceleració: represa contrastada amb patrons de notes; tempo local pendent d’escolta."
     },
     {
       "id": "bar-68",
       "title": "Compassos 68–71",
       "start": 109.4286,
       "end": 116.9046,
-      "sourceStart": 202.53,
-      "sourceEnd": 208.933,
-      "observed": "S'acosta de nou, ensenya el flanc i la cua i retorna. S'hi acosten ajudants abans de l'aixecament.",
+      "sourceStart": 202.3757,
+      "sourceEnd": 208.9237,
+      "observed": "Passa a prop, ensenya el costat i la cua, s'allunya i torna a la cara inicial. Els ajudants ja s'hi acosten.",
       "anchors": [
         [
           109.4286,
-          202.53
+          202.3757
+        ],
+        [
+          109.9663,
+          202.7937
+        ],
+        [
+          110.4926,
+          203.258
+        ],
+        [
+          111.0081,
+          203.676
         ],
         [
           111.5132,
-          204.181
+          204.1404
+        ],
+        [
+          112.0083,
+          204.419
+        ],
+        [
+          112.4937,
+          205.0228
+        ],
+        [
+          112.9699,
+          205.4407
         ],
         [
           113.4372,
-          205.781
+          205.7194
+        ],
+        [
+          113.8959,
+          205.998
+        ],
+        [
+          114.3464,
+          206.4624
+        ],
+        [
+          114.7889,
+          206.8804
         ],
         [
           115.2237,
-          207.382
+          207.159
+        ],
+        [
+          115.651,
+          207.7627
+        ],
+        [
+          116.0712,
+          208.2271
+        ],
+        [
+          116.4879,
+          208.5058
         ],
         [
           116.9046,
-          208.933
+          208.9237
         ]
-      ]
+      ],
+      "previousObserved": "S'acosta de nou, ensenya el flanc i la cua i retorna. S'hi acosten ajudants abans de l'aixecament.",
+      "previousBounds": [
+        202.53,
+        208.933
+      ],
+      "proposal": "Completa una passada d'anada i tornada amb gairebé una volta. Acaba prop del mig i deixa espai perquè s'hi acostin els ajudants.",
+      "scoreBars": [
+        68,
+        69,
+        70,
+        71
+      ],
+      "scoreNotes": "Sol5 · Fa5 · Mi5 · Re5 · Do5 · Sol4 · Do5 · Mi5 · Re5 · Sol4 · Re5 · Fa5 · Mi5 · Do5 · Sol5 · Fa5 · Mi5 · Re5 · Do5 · Sol4 · Do5 · Mi5 · Re5 · Fa5 · Mi5 · Re5 · Do5",
+      "alignmentNote": "Calderó i acceleració: represa contrastada amb patrons de notes; tempo local pendent d’escolta."
     },
     {
       "id": "bar-72",
@@ -513,7 +1423,7 @@
       "end": 123.5712,
       "sourceStart": 208.933,
       "sourceEnd": 215.386,
-      "observed": "S'acosta de nou, ensenya el flanc i la cua i retorna. S'hi acosten ajudants abans de l'aixecament. Diverses persones aixequen el Bou i el fan voltar. Hi ha fum i cossos que tapen els suports. La maqueta encara no representa les mans i els ajudants d'aquest tram.",
+      "observed": "Els ajudants l'agafen i l'aixequen. El fan girar mentre surt fum; les mans i alguns suports queden tapats.",
       "anchors": [
         [
           116.9046,
@@ -535,7 +1445,21 @@
           123.5712,
           215.386
         ]
-      ]
+      ],
+      "previousObserved": "S'acosta de nou, ensenya el flanc i la cua i retorna. S'hi acosten ajudants abans de l'aixecament. Diverses persones aixequen el Bou i el fan voltar. Hi ha fum i cossos que tapen els suports. La maqueta encara no representa les mans i els ajudants d'aquest tram.",
+      "previousBounds": [
+        208.933,
+        215.386
+      ],
+      "proposal": "Fes entrar els ajudants, agafar la figura i aixecar-la entre tots mentre comença el gir. No facis flotar la carcassa sense suport.",
+      "scoreBars": [
+        72,
+        73,
+        74,
+        75
+      ],
+      "scoreNotes": "Mi5 · Mi5 · Mi5 · Mi5 · Mi5 · Mi5 · Fa5 · Mi5 · Re5 · Do5 · Do5 · Si4 · Si4 · La4 · Mi4 · Mi5 · Mi5 · Mi5 · Mi5 · Mi5 · Mi5 · Fa5 · Mi5 · Re5 · Do5 · Si4 · La4 · Sol4",
+      "alignmentNote": "Final amb foc: correspondència i possibles repeticions encara no confirmades."
     },
     {
       "id": "bar-76",
@@ -544,7 +1468,7 @@
       "end": 130.2379,
       "sourceStart": 215.386,
       "sourceEnd": 221.789,
-      "observed": "Diverses persones aixequen el Bou i el fan voltar. Hi ha fum i cossos que tapen els suports. La maqueta encara no representa les mans i els ajudants d'aquest tram.",
+      "observed": "Continua alçat i girant entre els ajudants. Ensenya cua, flanc i davant; el fum no permet comptar tots els girs amb seguretat.",
       "anchors": [
         [
           123.5712,
@@ -566,7 +1490,21 @@
           130.2379,
           221.789
         ]
-      ]
+      ],
+      "previousObserved": "Diverses persones aixequen el Bou i el fan voltar. Hi ha fum i cossos que tapen els suports. La maqueta encara no representa les mans i els ajudants d'aquest tram.",
+      "previousBounds": [
+        215.386,
+        221.789
+      ],
+      "proposal": "Mantén l'aixecament col·lectiu i continua girant amb els ajudants. Deixa el nombre exacte de tombs pendent de revisar.",
+      "scoreBars": [
+        76,
+        77,
+        78,
+        79
+      ],
+      "scoreNotes": "Sol5 · Sol5 · Sol5 · Sol5 · Sol5 · Sol5 · La5 · Sol5 · Fa5 · Mi5 · Mi5 · Re5 · Re5 · Do5 · Sol4 · Sol5 · Sol5 · Sol5 · Sol5 · Sol5 · Sol5 · La5 · Sol5 · Fa5 · Mi5 · Re5 · Do5",
+      "alignmentNote": "Final amb foc: correspondència i possibles repeticions encara no confirmades."
     },
     {
       "id": "bar-80",
@@ -575,7 +1513,7 @@
       "end": 136.9046,
       "sourceStart": 221.789,
       "sourceEnd": 228.792,
-      "observed": "Diverses persones aixequen el Bou i el fan voltar. Hi ha fum i cossos que tapen els suports. La maqueta encara no representa les mans i els ajudants d'aquest tram. El Bou torna a una altura baixa i continua girant. La gent el deixa al centre. El nombre de voltes queda pendent.",
+      "observed": "Encara gira alçat i després el van abaixant. La colla l'envolta i tapa bona part de les cames.",
       "anchors": [
         [
           130.2379,
@@ -597,7 +1535,21 @@
           136.9046,
           228.792
         ]
-      ]
+      ],
+      "previousObserved": "Diverses persones aixequen el Bou i el fan voltar. Hi ha fum i cossos que tapen els suports. La maqueta encara no representa les mans i els ajudants d'aquest tram. El Bou torna a una altura baixa i continua girant. La gent el deixa al centre. El nombre de voltes queda pendent.",
+      "previousBounds": [
+        221.789,
+        228.792
+      ],
+      "proposal": "Acaba el gir alçat i baixa el Bou de manera progressiva, amb les mans dels ajudants acompanyant-lo fins a terra.",
+      "scoreBars": [
+        80,
+        81,
+        82,
+        83
+      ],
+      "scoreNotes": "Mi5 · Mi5 · Fa5 · Mi5 · Fa5 · Mi5 · La5 · Mi5 · Re5 · Do5 · Do5 · Si4 · Si4 · La4 · Mi4 · Mi5 · Mi5 · Fa5 · Mi5 · Fa5 · Mi5 · La5 · Mi5 · Re5 · Do5 · Mi5 · Si4 · Mi5 · La4 · Sol4",
+      "alignmentNote": "Final amb foc: correspondència i possibles repeticions encara no confirmades."
     },
     {
       "id": "bar-84",
@@ -606,7 +1558,7 @@
       "end": 143.4931,
       "sourceStart": 228.792,
       "sourceEnd": 232.444,
-      "observed": "El Bou torna a una altura baixa i continua girant. La gent el deixa al centre. El nombre de voltes queda pendent.",
+      "observed": "Ja és baix i continua girant amb passes curtes. Diversos membres de la colla travessen el pla.",
       "anchors": [
         [
           136.9046,
@@ -628,7 +1580,21 @@
           143.4931,
           232.444
         ]
-      ]
+      ],
+      "previousObserved": "El Bou torna a una altura baixa i continua girant. La gent el deixa al centre. El nombre de voltes queda pendent.",
+      "previousBounds": [
+        228.792,
+        232.444
+      ],
+      "proposal": "Amb el Bou a terra, continua un gir curt i deixa que els ajudants se separin. No mantinguis l'alçada de l'aixecament.",
+      "scoreBars": [
+        84,
+        85,
+        86,
+        87
+      ],
+      "scoreNotes": "Sol5 · Fa5 · Mi5 · Re5 · Do5 · Sol4 · Do5 · Mi5 · Re5 · Sol4 · Re5 · Fa5 · Mi5 · Do5 · Sol5 · Fa5 · Mi5 · Re5 · Do5 · Sol4 · Do5 · Mi5 · Re5 · Fa5 · Mi5 · Re5 · Do5",
+      "alignmentNote": "Final amb foc: correspondència i possibles repeticions encara no confirmades."
     },
     {
       "id": "bar-88",
@@ -637,7 +1603,7 @@
       "end": 149.9347,
       "sourceStart": 232.444,
       "sourceEnd": 236.796,
-      "observed": "El Bou torna a una altura baixa i continua girant. La gent el deixa al centre. El nombre de voltes queda pendent.",
+      "observed": "Mostra la cua, torna a ensenyar el costat i va recuperant la cara inicial. El gir perd intensitat.",
       "anchors": [
         [
           143.4931,
@@ -659,7 +1625,21 @@
           149.9347,
           236.796
         ]
-      ]
+      ],
+      "previousObserved": "El Bou torna a una altura baixa i continua girant. La gent el deixa al centre. El nombre de voltes queda pendent.",
+      "previousBounds": [
+        232.444,
+        236.796
+      ],
+      "proposal": "Desfés el gir final i torna a mirar cap al W. Redueix les passes i el balanceig; el recompte exacte de voltes d'aquest tram no està confirmat.",
+      "scoreBars": [
+        88,
+        89,
+        90,
+        91
+      ],
+      "scoreNotes": "Sol5 · Fa5 · Mi5 · Re5 · Do5 · Sol4 · Do5 · Mi5 · Re5 · Sol4 · Re5 · Fa5 · Mi5 · Do5 · Sol5 · Fa5 · Mi5 · Re5 · Do5 · Sol4 · Do5 · Mi5 · Re5 · Fa5 · Mi5 · Re5",
+      "alignmentNote": "Final amb foc: correspondència i possibles repeticions encara no confirmades."
     },
     {
       "id": "bar-92",
@@ -668,7 +1648,7 @@
       "end": 154.3347,
       "sourceStart": 236.796,
       "sourceEnd": 237.996,
-      "observed": "El Bou torna a una altura baixa i continua girant. La gent el deixa al centre. El nombre de voltes queda pendent.",
+      "observed": "Queda de tres quarts i s'estabilitza. El moviment del Bou disminueix mentre la colla es prepara per acostar-s'hi.",
       "anchors": [
         [
           149.9347,
@@ -678,7 +1658,19 @@
           154.3347,
           237.996
         ]
-      ]
+      ],
+      "previousObserved": "El Bou torna a una altura baixa i continua girant. La gent el deixa al centre. El nombre de voltes queda pendent.",
+      "previousBounds": [
+        236.796,
+        237.996
+      ],
+      "proposal": "Acaba al mig, mirant cap al W, i deixa que el balanceig s'aturi suaument amb la nota final.",
+      "scoreBars": [
+        92
+      ],
+      "scoreNotes": "Do5",
+      "alignmentNote": "Final amb foc: correspondència i possibles repeticions encara no confirmades."
     }
-  ]
+  ],
+  "notesStatus": "Plain-language source observations from timestamped frames at 2-second spacing; direction proposals use the prior inferred reconstruction. Occlusion and turn-count limits retained."
 }

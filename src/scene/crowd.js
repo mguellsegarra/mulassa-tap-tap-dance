@@ -473,7 +473,7 @@ export function animCrowd(dt, beat, t, live = 1) {
   for (const p of activeCrowd) steer(p, dt, beat, live);
   separate();
   for (const p of activeCrowd) pose(p, dt, beat, live);
-  settleDrawnCrowd(activeCrowd.filter(p => p.g.scale.x > .05), [...bandSpots, ...backgroundContacts], 2.5 * dt); // (as fast as a brisk walk)
+  settleDrawnCrowd(activeCrowd, bandSpots, 2.5 * dt, backgroundContacts); // (as fast as a brisk walk; the shrunk-away are skipped)
   poseScenery(beat, live);
   for (const p of plaza.band) if (p.sootW > 0) sootPose(p); // charred (drac-soot.js): the band and the balconies too
   for (const p of plaza.balcony) if (p.sootW > 0) sootPose(p);

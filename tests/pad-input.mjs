@@ -25,7 +25,7 @@ const context = vm.createContext({
   press: (dir, e) => calls.push({ dir, type: e.type }),
   settleHold: () => releases.push(true), songTime() {}, eventAt() {},
   haptic() {}, padFeedback() {}, syncPad() {}, releaseAll() {}, clearPhotoKeys() {}, photoRelease() {},
-  orbit: { ptrs: new Map() }, orbitUp() {}, pnow() {},
+  orbit: { ptrs: new Map() }, look: { ptrs: new Map() }, orbitUp() {}, pnow() {},
   openSelect() { G.state = 'select'; },
   addEventListener(type, handler) {
     if (!listeners.has(type)) listeners.set(type, []);

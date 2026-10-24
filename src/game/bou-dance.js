@@ -20,15 +20,16 @@ const PI = Math.PI;
 // The carried lap (m, source bars): round the plaça's centre inside the colla's marks (5.5 m), from its N point
 // Twice round (Marc 2026-10-24: «el bou ha d'anar més ràpid i corrent al ritme de la música»; «una mica més ràpid»; «el cercle s'ha d'obrir més»): r 3 m, ~2.7 m/s (faster, a carrier's stride outruns the other's feet), its carriers'
 // steps on the half beats
-export const LAP = { r: 3, from: 73, beats: 34, turns: 2, ease: .15, a0: Math.PI / 2 }; // a0: its S point, where it faces its way already (E)
+export const LAP = { r: 3, from: 72, in: 3, beats: 35, turns: 2, ease: .15, a0: Math.PI / 2 }; // a0: its S point, where it faces its way already (E)
 // The colla's part in the festa, in song beats: they come in from their marks, grip and lift it (`lift` m) over their
 // heads in a single heave on bar 71's last beat: up on bar 72's downbeat, where the music's festa starts (Marc
 // 24/10/2026: «no agafen el bou en el moment que comença el compàs»), its nose up (`rear` rad), pump it on the beat (`pump` m) and rock it (`wobble`
 // rad), lower it and walk back (scene/bou-colla.js carries it,
 // scene/bou-parade.js runs the public behind it). The videos (2xG98OA1QqI 208-228 s, G_R-ZvzS95k 200-215 s, Klr8m3U6qzg
 // 216-232 s): raised at arm's length, the front well up, everyone's hands up under it.
-export const BOU_CARRY = { come: at(71), grip: at(71,3), up: at(72), lower: at(81,2), down: at(83,2), back: at(85,2), lift: .75, rear: .3, pump: .1, wobble: .07, buck: .1,
-  lap: [at(LAP.from), at(LAP.from) + LAP.beats] };
+// (Marc 24/10/2026: «a l'hora d'agafar el bou i deixar-lo, menys pausa»: off round 3 beats after the lift, set down in 4)
+export const BOU_CARRY = { come: at(71), grip: at(71,3), up: at(72), lower: at(81,2), down: at(82,2), back: at(84,2), lift: .75, rear: .3, pump: .1, wobble: .07, buck: .1,
+  lap: [at(LAP.from, LAP.in), at(LAP.from, LAP.in) + LAP.beats] };
 // 0-1, how far into the festa's carry (the colla coming in to walking back), eased: the play camera holds the whole ring
 export function bouFestaAt(beat) {
   const r = (a, b) => ease((beat - a) / (b - a));
@@ -42,7 +43,7 @@ function lapTime(f) { // (constant acceleration over `ease`, then steady: the in
 }
 // its inverse: the share of the laps' way run at song beat `beat` (scene/bou-parade.js runs the public on the same clock)
 export function lapWay(beat) {
-  const e = LAP.ease, k = 2 * e * (1 - e), t = Math.min(1, Math.max(0, (beat - at(LAP.from)) / LAP.beats));
+  const e = LAP.ease, k = 2 * e * (1 - e), t = Math.min(1, Math.max(0, (beat - at(LAP.from, LAP.in)) / LAP.beats));
   return t < e ? t * t / k : t > 1 - e ? 1 - (1 - t) * (1 - t) / k : (t - e / 2) / (1 - e);
 }
 const LAPS = 2 * PI * (LAP.turns - 1); // the extra laps' turn, carried on to the end (it still ends facing W)
@@ -102,10 +103,10 @@ const PATH = [
   // 72-83, the festa (Marc 24/10/2026): in the middle facing E while the colla comes in and lifts it (BOU_CARRY); carried
   // out sideways to S, then once round the plaça on LAP (S -> E -> N -> W -> S: Marc's N W S E round, facing its way) with
   // part of the public running behind (scene/bou-parade.js); back to the middle, set down
-  [72,0, 3*PI,0,0], [73,0, 3*PI,LAP.r,0],
-  ...Array.from({ length: 16 * LAP.turns }, (_, k) => { const a = LAP.a0 + PI * (k + 1) / 8, b = LAP.beats * lapTime((k + 1) / (16 * LAP.turns));
+  [72,0, 3*PI,0,0], [LAP.from,LAP.in, 3*PI,LAP.r,0],
+  ...Array.from({ length: 16 * LAP.turns }, (_, k) => { const a = LAP.a0 + PI * (k + 1) / 8, b = LAP.in + LAP.beats * lapTime((k + 1) / (16 * LAP.turns));
     return [LAP.from + Math.floor(b / 4), b % 4, 2*PI + a + PI / 2, LAP.r * Math.sin(a), LAP.r * Math.cos(a)]; }),
-  [83,2, 5*PI+LAPS,0,0],
+  [82,2, 5*PI+LAPS,0,0],
   // 84-91: the turn unwinds, quieter, back to W; 92: the middle, facing W
   [86,2, 4.5*PI+LAPS,.25,.1], [88,0, 4.5*PI+LAPS,.25,.1], [91,0, 4*PI+LAPS,0,0],
 ];

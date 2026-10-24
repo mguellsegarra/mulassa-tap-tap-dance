@@ -86,12 +86,26 @@ const SHADES = {
     v.box(0, 0.218, 0.173, 0.356, 0.022, 0.018, frame, 0);
   },
 };
+// A full beard (Marc's portador 2026-10-24): along the jaw and the chin, hanging a little under it, round the mouth to the
+// moustache and up the sideburns, with grey streaks; a curve of bare cheek left under the glasses (Marc's sketch: a beard straight up to them read as a lump).
+function beard(v, c) {
+  v.box(0, -0.05, 0.05, 0.36, 0.135, 0.25, c).box(0, 0.085, 0.168, 0.17, 0.02, 0.015, c); // jaw and chin; round the mouth
+  v.box(0, 0.1, 0.17, 0.17, 0.022, 0.016, c).box(0, 0.075, 0.172, 0.06, 0.016, 0.012, '#5a2f2a', 0); // moustache; the mouth
+  for (const s of [1, -1]) {
+    v.box(s * 0.175, 0.04, 0.03, 0.016, 0.12, 0.13, c).plate(s * 0.1, 0.118, 0.1605, 0.04, 0.022, 0, 1, '#c98a6e'); // sideburns; rosy cheeks
+    // from the moustache the beard covers the cheeks up to the glasses, a step higher at their outer corners (Marc's sketches)
+    v.box(s * 0.095, 0.085, 0.168, 0.11, 0.05, 0.015, c).box(s * 0.1625, 0.085, 0.168, 0.025, 0.06, 0.015, c).box(s * 0.175, 0.085, 0.13, 0.016, 0.06, 0.09, c); // the cheek's side to the sideburn
+  }
+  for (const [x, y, w] of [[0.1, -0.03, 0.03], [-0.06, -0.045, 0.025], [0.05, 0.0, 0.02], [-0.13, -0.01, 0.02]]) v.plate(x, y, 0.177, w, 0.04, 0, 1, '#6f6b67'); // grey streaks
+}
 // the head on its neck pivot (people.js's head: skin, hair, eyes), plus a headband or a cap; the Bou's colla: a hood
 // up, sunglasses, a black fire hat
 function collaHead(look, rnd, top) {
   const v = new Vox(), dyed = HAIR[(rnd() * 4) | 0], hair = look.hair ?? dyed;
   cbox(v, 0, 0.17, 0, 0.34, 0.34, 0.32, look.skin);
-  v.box(0, 0.26, -0.02, 0.36, 0.12, 0.34, hair).box(0, 0.1, -0.17, 0.36, 0.16, 0.04, hair);
+  if (!look.bald) v.box(0, 0.26, -0.02, 0.36, 0.12, 0.34, hair).box(0, 0.1, -0.17, 0.36, 0.16, 0.04, hair);
+  else v.plate(0.05, 0.27, 0.1605, 0.08, 0.035, 0, 1, '#c79a76'); // the shine on a bald forehead
+  if (look.beard) beard(v, look.beard);
   v.box(0.08, 0.17, 0.165, 0.05, 0.05, 0.01, C.black, 0).box(-0.08, 0.17, 0.165, 0.05, 0.05, 0.01, C.black, 0);
   if (look.band) v.box(0, 0.225, 0, 0.35, 0.05, 0.335, COLLA.red); // above the eyes (0.22), into the hair
   if (look.cap) v.box(0, 0.3, -0.01, 0.38, 0.12, 0.37, COLLA.cap).box(0, 0.31, 0.2, 0.3, 0.03, 0.08, COLLA.cap);
@@ -152,15 +166,16 @@ export const MULA_SEATED_LOOKS = [
 // down the front and a cartoon bull's face on the back; hoods up on some (at the correfoc), black sunglasses
 // against the sparks on all four (Marc 2026-10-24: they are in focus in the showreel and the dance); black trousers with a pale mark on the thigh, dark shoes. W, N, S, E, then the capatàs (Marc), a fifth
 // standing near the dance, not on a mark (scene/bou-colla.js BOU_CAPATAS): an older
-// man, short and stout, grey hair, a black fire hat with the badge and the long wooden staff with the fire pot.
+// man, short and stout, grey hair, a black fire hat with the badge and the long wooden staff with a crook and the esquella
+// (a bronze cowbell) hung from it.
 // Colours are approximations under the game's light.
-export const BOU = { lens: '#0f1013', frame: '#060607', glint: '#aab2c4', black: '#121114', pale: '#ece2cf', white: '#f6f2ea', wood: '#7a5230', pot: '#3c3b40', potRim: '#5b5a60' };
+export const BOU = { lens: '#0f1013', frame: '#060607', glint: '#aab2c4', black: '#121114', pale: '#ece2cf', white: '#f6f2ea', wood: '#7a5230', bell: '#8a6a3a', bellRim: '#5e4626' };
 export const BOU_SUIT = { stride: true, legs: '#17161a', dye: false, sole: '#3a3434', upper: '#121114', lace: null, shade: '#55142e', tunic: true, rolled: false };
 export const BOU_HELPER_LOOKS = [
   { ...BOU_SUIT, top: '#80203f', hood: 'up', shades: 'sport' },
   { ...BOU_SUIT, top: '#8c2347', shades: 'sport', frame: '#2f9e4f' },
-  { ...BOU_SUIT, top: '#93284d', shades: 'sport' },
-  { ...BOU_SUIT, top: '#7a1d3b', hood: 'up', shades: 'sport', frame: '#f2c230' },
+  { ...BOU_SUIT, top: '#93284d', hood: 'up', shades: 'sport', frame: '#f2c230' },
+  { ...BOU_SUIT, top: '#7a1d3b', shades: 'sport', frame: '#f2efe8', bald: true, beard: '#2b2624', trunk: [1.07, 0.02], belly: true }, // bald, bearded, 2 cm shorter, a belly (Marc)
   { ...BOU_SUIT, top: '#8c2347', build: [1.2, 0.84], belly: true, hair: '#c9c4bd', moustache: true, skin: SKIN[1], hat: true, staff: true }, // the capatàs
 ];
 export const SEATED_LOOKS = [
@@ -201,8 +216,11 @@ function staff(look) {
   const qs = shoulderQ(1, ARM_STAFF), q = qs.clone().multiply(elbowQ(1, ARM_STAFF[2], 0));
   const hand = new THREE.Vector3(0, -ARM.fore, 0).applyQuaternion(q).add(new THREE.Vector3(0, -ARM.upper, 0).applyQuaternion(qs)).y + ARM.y;
   const up = new THREE.Vector3(0, 1, 0).applyQuaternion(q.invert()), L = hand + 1.0, v = new Vox();
-  cbox(v, 0, (L + 0.06) / 2, 0, 0.04, L + 0.06, 0.04, BOU.wood); // (cbox: by its centre) from the paving up into the pot // a long wooden staff with the fire pot hung at its top
-  cbox(v, 0, L + 0.12, 0, 0.1, 0.13, 0.1, BOU.pot).box(0, L + 0.12, 0, 0.11, 0.02, 0.11, BOU.potRim);
+  cbox(v, 0, (L + 0.06) / 2, 0, 0.04, L + 0.06, 0.04, BOU.wood); // (cbox: by its centre) a long wooden staff from the paving
+  v.box(0.07, L + 0.03, 0, 0.17, 0.035, 0.035, BOU.wood).box(0.14, L - 0.02, 0, 0.03, 0.06, 0.03, BOU.wood); // its crook, bent outward and down
+  // the esquella hung from the crook (Marc's photo 2026-10-24): a bronze cowbell, narrow at the top, its strap and clapper
+  v.box(0.14, L - 0.055, 0, 0.03, 0.04, 0.012, BOU.black, 0).box(0.14, L - 0.1, 0, 0.08, 0.045, 0.065, BOU.bell);
+  v.box(0.14, L - 0.21, 0, 0.12, 0.11, 0.09, BOU.bell).box(0.14, L - 0.235, 0, 0.13, 0.025, 0.1, BOU.bellRim).box(0.14, L - 0.265, 0, 0.025, 0.035, 0.025, BOU.black);
   const m = v.mesh();
   m.quaternion.setFromUnitVectors(Y_UP, up);
   m.position.set(0, -ARM.fore, 0).addScaledVector(up, -hand); // its foot on the paving
@@ -304,6 +322,11 @@ export function buildHelper(look, seed = 1) {
   const h = collaHead(look, rnd, 1.38), arms = [1, -1].map(s => arm(s, look, rnd));
   for (const a of arms) fig.add(a.sh);
   fig.add(h);
+  if (look.trunk) { // [width, drop]: a wider trunk set lower on the same legs (a carrier's feet are planned for these legs)
+    const [w, dy] = look.trunk;
+    body.scale.x = w; body.position.y -= dy; h.position.y -= dy;
+    for (const a of arms) { a.sh.position.x *= w; a.sh.position.y -= dy; }
+  }
   return { g, body, head: h, arms, legs, staff: !!look.staff, bones: [body, h, ...arms.flatMap(a => [a.sh, a.el]), ...legs] };
 }
 export const HELPER_HIP = 0.76; // a standing helper's hip (the legs' tops)

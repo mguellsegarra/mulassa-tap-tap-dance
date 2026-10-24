@@ -109,7 +109,8 @@ const PATH = [
   // 84-91: the turn unwinds, quieter, back to W; 92: the middle, facing W
   [86,2, 4.5*PI+LAPS,.25,.1], [88,0, 4.5*PI+LAPS,.25,.1], [91,0, 4*PI+LAPS,0,0],
 ];
-const SWING = { out: .7, hold: 1.4, cross: 1, back: 3.2, len: 3.9, kick: .07 }; // beats; kick: rad, the front's lift while out
+const SWING = { out: .7, hold: 1.4, cross: 1, back: 3.2, len: 3.9, kick: .07, knee: .12 }; // beats; kick: rad, the front's lift
+// while out; knee: m the foot rises on each of its three moves (out, through, home), a step with the knee up, not a slide
 // [bar, beats in, leg ('R' right = feet 0 and 2, 'L' left = 1 and 3), beats out, way]: a leg stretched forward, heel
 // down, toe up (way 1), or back on its toes (-1), both carriers together; way 'swing' (SWING): the front carrier's leg
 // alone, forward on the bar's long note and swung back on its second (Marc 24/10/2026 and his reference video: the
@@ -127,7 +128,7 @@ const DIP = 1.25; // the dips read small at the play camera's distance
 // (the intro only bounces and waddles: no nod nor see-saw before the tune, Marc 24/10/2026: «s'aixeca massa aviat»)
 const COMIC = [
   [0,0, .03,.02,0,0,0], [1,0, .015,.005,.01,0,0], [2,3, .015,.005,.01,0,0], [3,0, .05,.03,.02,0,0], [4,3, .05,.03,.02,0,0],
-  [5,0, .015,.005,.025,0,0], [6,3, .015,.005,.025,0,0], [7,0, .05,.03,.04,0,0], [8,3, .05,.025,.02,0,0],
+  [5,0, .015,.005,.01,0,0], [6,3, .015,.005,.01,0,0], [7,0, .05,.03,.04,0,0], [8,3, .05,.025,.02,0,0],
   [9,0, .06,.02,.01,.13,0], [18,-.5, .06,.02,.01,.13,0], [18,0, .055,.04,.02,0,0],
   [19,0, .05,.055,.02,0,0], [23,0, .05,.035,.02,0,0], [26,0, .07,.045,.03,0,0],
   [27,0, .09,.045,.03,0,.4], [34,3, .09,.045,.03,0,.4], // (warp .4: the rushes pulsed harder outran the carriers' legs) [35,0, .05,.05,.02,0,0],
@@ -211,9 +212,23 @@ function swing(s) {
   return s < k.hold ? ease(s / k.out) : s < k.hold + k.cross ? 1 - 2 * ease((s - k.hold) / k.cross)
     : s < k.back ? -1 : -1 + ease((s - k.back) / (k.len - k.back));
 }
-// 0-1: how far the front carrier's leg is out in front, at song beat `beat`
+// m the swinging foot is up at song second t (an arc on each move of the swing, flat while it holds)
+function swingRaise(t, index) {
+  if (index < 2) return 0;
+  const beat = beatAtTime(timing.subdivisionTimes, Math.max(0, t)) / timing.subdivision, k = SWING;
+  for (const g of GESTURES) if (g.way === 'swing' && g.side === index % 2) {
+    const s = beat - g.start; if (s > 0 && s < g.len) return k.knee * swingArc(s);
+  }
+  return 0;
+}
+// 0-1: the swing's knee up, an arc on each move (out, through, home)
+function swingArc(s) {
+  const k = SWING, arc = (a, b) => (s > a && s < b ? Math.sin(PI * (s - a) / (b - a)) : 0);
+  return arc(0, k.out) + arc(k.hold, k.hold + k.cross) + arc(k.back, k.len);
+}
+// 0-1: how far the front carrier's leg is out in front or its knee up, at song beat `beat`
 function frontKick(beat) {
-  for (const g of GESTURES) if (g.way === 'swing') { const s = beat - g.start; if (s > 0 && s < g.len) return Math.max(0, swing(s)); }
+  for (const g of GESTURES) if (g.way === 'swing') { const s = beat - g.start; if (s > 0 && s < g.len) return Math.max(0, swing(s), swingArc(s)); }
   return 0;
 }
 // 0-1: how far leg `index` is stretched at song second t (a quick reach, held, a quick fold); negative: back
@@ -227,5 +242,5 @@ function gesture(t, index) {
   return 0;
 }
 export function createBouDance() {
-  return {pose:bouPose,foot:planBouFeet(bouPose,0,timing.duration,gesture)};
+  return {pose:bouPose,foot:planBouFeet(bouPose,0,timing.duration,gesture,swingRaise)};
 }

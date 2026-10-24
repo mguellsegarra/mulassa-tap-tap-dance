@@ -7,7 +7,7 @@ import { bouPose, BOU_TIMING, BOU_CARRY, bouFestaAt } from '../src/game/bou-danc
 import { buildBou } from '../src/scene/models/bou.js';
 import { createBouMotion } from '../src/scene/bou-motion.js';
 import { BOU_CAPATAS, bouToWorld, createBouColla, carryColla } from '../src/scene/bou-colla.js';
-import { PARADE, PARADE_K, paradeTick, paradeSteer, paradeSlot } from '../src/scene/bou-parade.js';
+import { PARADE, PARADE_K, paradeTick, paradeSteer, paradeSlot, paradeLeaveAt } from '../src/scene/bou-parade.js';
 import { ARM, HELPER_HIP } from '../src/scene/models/colla.js';
 import { PROFILES } from '../src/platform/render-quality.js';
 
@@ -38,7 +38,8 @@ const capatas = bouToWorld(BOU_CAPATAS.x, BOU_CAPATAS.z, YAW);
 const C = BOU_CARRY, dt = 1 / 60, pose = { x: 0, z: 0, yaw: 0, beat: 0 }, hand = new THREE.Vector3(), w = new THREE.Vector3();
 const beatTime = b => BOU_TIMING.subdivisionTimes[Math.min(BOU_TIMING.subdivisionTimes.length - 1, Math.round(b * BOU_TIMING.subdivision))];
 const planted = [];
-let formed = null;
+let formed = null, stillIn = 0;
+const leftAt = {};
 let steps = 0, onGrid = 0;
 let worst = { shell: 9, hand: 0, crowdShell: 9, crowdHelper: 9, crowdCap: 9, crowdEach: 9, helpers: 9, gap: 0 }, joined = 0, behind = 0;
 for (let t = beatTime(C.come - 4); t < beatTime(C.back + 10); t += dt) {
@@ -75,7 +76,9 @@ for (let t = beatTime(C.come - 4); t < beatTime(C.back + 10); t += dt) {
   const moving = crowd.filter(p => p.parade);
   for (const p of moving) paradeSteer(p, dt);
   joined = Math.max(joined, moving.length);
-  if (formed === null && pose.beat >= C.up + 2) { // lifted (two beats on, while it is carried out to its start): the snake in place behind it (Marc 24/10/2026)
+  for (const p of moving) if (p.parade === 'home' && p.paradeSlot != null && !(p.paradeSlot in leftAt)) leftAt[p.paradeSlot] = pose.beat; // when each left the file
+  if (pose.beat >= C.lower) stillIn = Math.max(stillIn, moving.filter(p => p.parade === 'run').length);
+  if (formed === null && pose.beat >= C.lap[0] + 4) { // under way round: the file in place behind it (Marc 24/10/2026)
     const run = moving.filter(p => p.parade === 'run'), at = run.filter(p => { const q = paradeSlot(p.paradeSlot, pose.beat, YAW, {}); return Math.hypot(q.x - p.pos.x, q.z - p.pos.y) < 0.6; });
     formed = at.length / Math.max(1, run.length);
   }
@@ -85,12 +88,12 @@ for (let t = beatTime(C.come - 4); t < beatTime(C.back + 10); t += dt) {
     const dx = p.pos.x - mid.x, dz = p.pos.y - mid.z, along = dx * bx + dz * bz, side = dx * bz - dz * bx;
     // its floor footprint (flank to flank, muzzle to tail), less a person's half-width (0.2 m)
     worst.crowdShell = Math.min(worst.crowdShell, Math.hypot(Math.max(0, Math.abs(side) - 0.66), Math.max(0, along > 0 ? along - 1.95 : -along - 1.65)) - 0.2);
-    if (p.parade === 'run' && p.paradeSlot < PARADE_K.ranks) near = Math.min(near, Math.hypot(along + 1.65, side)); // the first row, from its tail
+    if (p.parade === 'run' && p.paradeSlot < PARADE_K.tail) near = Math.min(near, Math.hypot(along + 1.65, side)); // the first row, from its tail
     for (const h of helpers) worst.crowdHelper = Math.min(worst.crowdHelper, Math.hypot(p.pos.x - h.x, p.pos.y - h.z));
     worst.crowdCap = Math.min(worst.crowdCap, Math.hypot(p.pos.x - capatas.x, p.pos.y - capatas.z));
     for (const o of moving) if (o !== p) worst.crowdEach = Math.min(worst.crowdEach, p.pos.distanceTo(o.pos));
   }
-  if (pose.beat > C.lap[0] + 3 && pose.beat < C.lap[1] - 1) behind = Math.max(behind, near); // all the way round, someone right at its tail
+  if (pose.beat > C.lap[0] + 3 && pose.beat < paradeLeaveAt(0, PARADE_K.count) - 1) behind = Math.max(behind, near); // all the way round, someone right at its tail
 }
 console.log('bou festa', { joined, formed, behind: +behind.toFixed(2), ...Object.fromEntries(Object.entries(worst).map(([k, v]) => [k, +v.toFixed(3)])) });
 assert.ok(worst.shell > 0.02, `an attendant inside the Bou (${worst.shell.toFixed(3)} m)`);
@@ -107,10 +110,14 @@ assert.ok(worst.crowdHelper > 0.4, `the public runs through an attendant (${wors
 assert.ok(worst.crowdCap > 0.5, `the public runs through the capatàs (${worst.crowdCap.toFixed(2)} m)`);
 assert.ok(worst.crowdEach > 0.4, `two of the public through each other (${worst.crowdEach.toFixed(2)} m)`);
 assert.equal(joined, Math.min(PARADE_K.count, Math.floor(crowd.length * PARADE_K.share)), 'the snake fills');
-assert.ok(joined >= 18, `a snake of ${joined} at medium quality`);
-assert.ok(formed > 0.8, `the snake is not formed when its colla lifts it (${(formed * 100).toFixed(0)}% in place)`);
+assert.ok(joined >= 10, `a file of ${joined} at medium quality`);
+assert.ok(formed > 0.8, `the file is not formed under way (${(formed * 100).toFixed(0)}% in place)`);
 assert.ok(behind < 1.5, `nobody right at its tail (${behind.toFixed(2)} m)`);
 assert.ok(crowd.every(p => !p.parade || p.parade === 'home'), 'everyone heads home');
+// they leave before it is lowered (Marc: «un o dos segons abans»), from the tail, one after another
+assert.equal(stillIn, 0, 'someone still behind it as it is lowered');
+const order = Object.entries(leftAt).sort((a, b) => a[1] - b[1]).map(([k]) => +k);
+assert.ok(order.length >= 10 && order.every((k, i) => i === 0 || k < order[i - 1]), `they leave tail first (${order})`);
 // at its height: lifted at arm's length, nose up
 const top = bouPose(beatTime((C.up + C.lower) / 2));
 assert.ok(top.lift > 0.6 && top.pitch < -0.2, `carried ${top.lift.toFixed(2)} m, pitch ${top.pitch.toFixed(2)}`);

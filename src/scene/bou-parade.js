@@ -11,67 +11,64 @@ export const PARADE = { on: false, beat: 0, yaw: 0, x: 0, z: 0, heading: 0, coll
 // who: up to `count` (and `share` of the crowd) of those standing round it, each the nearest to their place; the conga's first row `gap` m (along the
 // ring) behind its middle (its tail ends 1.45 m back, the rear attendants 0.7), `space` m apart, `ranks` files `files` m apart round
 // of the ring, weaving `weave` m in and out; `run` / `walk` m/s; `room` m kept from each other, `wide` m from the capatàs on the way; `bou` m from its spine, `clear` m from an attendant
-export const PARADE_K = { count: 20, share: 0.6, tail: 3, touch: 2.02, ranks: 2, hold: 0.6, out: 0.6, close: 3, weave: 0.08, gap: 2.75, space: 0.85, files: 0.6, run: 5, form: 4.5, stagger: 0.04, walk: 1.4, join: 1, leave: 0.5, room: 0.5, touchMin: 0.45, bouMin: 0.12, collaMin: 0.52, hop: 0.16, clear: 0.8, wide: 1.2, bou: 0.22 };
-const paraders = [], homers = [], PARADE_LISTS = [paraders, homers], paradeAt = { x: 0, z: 0 }; // running behind it; walking back home
+// who and when: up to `count` (and `share` of the crowd), one file behind it; its first `tail` side by side right at its
+// rump (`touch` m from its middle), reaching to touch it, then the file on its trail round the ring, `gap` m behind its
+// middle, `space` m apart. They join one at a time from its head, `every` beats apart from `after` beats past its
+// colla's grip, each the one standing nearest to their place (in from outside, so no one crosses the file); `leadOut`
+// beats before it is lowered they leave one at a time from the tail, `outEvery` apart, each straight out to the front
+// row (Marc 24/10/2026: «que es vegi la serp des del principi… quan van a baixar el bou, un o dos segons abans han de
+// marxar suaument»). `run` / `walk` m/s; `room` m kept from each other, `wide` m from the capatàs on the way; `bou` m from
+// its footprint, `clear` m from an attendant; the hard limits `touchMin`, `bouMin`, `collaMin`
+export const PARADE_K = { count: 12, share: 0.6, tail: 2, touch: 2.02, gap: 2.75, space: 0.9, files: 0.6, weave: 0.08, run: 5, walk: 1.4,
+  every: 0.5, after: 0.5, leadOut: 4, outEvery: 0.25, room: 0.5, touchMin: 0.45, bouMin: 0.12, collaMin: 0.52, hop: 0.16, clear: 0.8, wide: 1.2, bou: 0.22 };
+const paraders = [], homers = [], PARADE_LISTS = [paraders, homers], paradeAt = { x: 0, z: 0 }; // in the file; walking back
 const paradeWorld = (x, z, yaw, out) => { out.x = x * Math.cos(yaw) + z * Math.sin(yaw); out.z = -x * Math.sin(yaw) + z * Math.cos(yaw); return out; };
-// they set off `join` beats after its colla, running in behind them (their paths never cross: the colla is already in
-// past the ring when they get there), a snake behind it by the time it is lifted (Marc 24/10/2026)
-const [paradeLap0, paradeLap1] = BOU_CARRY.lap, paradeFrom = BOU_CARRY.come + PARADE_K.join, paradeTo = paradeLap1 + PARADE_K.leave;
-const paradeLive = () => PARADE.on && PARADE.beat >= paradeFrom && PARADE.beat < paradeTo;
+export const paradeJoinAt = k => BOU_CARRY.grip + PARADE_K.after + k * PARADE_K.every;
+export const paradeLeaveAt = (k, n) => BOU_CARRY.lower - PARADE_K.leadOut + (n - 1 - k) * PARADE_K.outEvery;
+const paradeLive = () => PARADE.on && PARADE.beat >= paradeJoinAt(0) && PARADE.beat < BOU_CARRY.lower;
+let paradeN = 0, paradeNext = 0; // this festa's file length, the next place to fill
 
-// person k's place at song beat `beat` (the plaça's metres): the first `tail` right at its rump, straight behind it
-// (`touch` m from its middle: a hand from its tail), reaching to touch it; the rest a conga `ranks` abreast on its
-// trail round the ring
+// person k's place at song beat `beat` (the plaça's metres)
 export function paradeSlot(k, beat, yaw, out) {
   if (k < PARADE_K.tail) {
     const h = PARADE.heading, side = (k - (PARADE_K.tail - 1) / 2) * PARADE_K.files;
     return paradeWorld(PARADE.x - Math.sin(h) * PARADE_K.touch + Math.cos(h) * side, PARADE.z - Math.cos(h) * PARADE_K.touch - Math.sin(h) * side, yaw, out);
   }
-  // waiting a little further back and further out while it is lifted in the middle and carried out to its start (its
-  // colla closing in on its flanks, its rear swinging that way), closing in as it sets off
-  const wait = 1 - Math.min(1, Math.max(0, (beat - paradeLap0) / PARADE_K.close)), ease = wait * wait * (3 - 2 * wait), back = PARADE_K.hold * ease;
-  const j = k - PARADE_K.tail, n = PARADE_K.ranks, r = LAP.r + PARADE_K.out * ease + (j % n - (n - 1) / 2) * PARADE_K.files, lap = lapWay(beat); // (the Bou's own pace round)
-  const a = LAP.a0 + 2 * Math.PI * LAP.turns * lap - (PARADE_K.gap + back + PARADE_K.space * Math.floor(j / n)) / LAP.r; // rows abreast (an inner file spaced by its own radius would wrap round onto the Bou's head)
-  // dancing, not marching: each row weaves a little in and out on its own beat
-  const row = Math.floor(j / n), rr = r + PARADE_K.weave * Math.sin(beat * Math.PI * (0.5 + 0.13 * (row % 5)) + row * 1.7); // (a row sways as one)
-  return paradeWorld(rr * Math.sin(a), rr * Math.cos(a), yaw, out);
+  const j = k - PARADE_K.tail, lap = lapWay(beat); // (the Bou's own pace round)
+  const a = LAP.a0 + 2 * Math.PI * LAP.turns * lap - (PARADE_K.gap + PARADE_K.space * j) / LAP.r;
+  const r = LAP.r + PARADE_K.weave * Math.sin(beat * Math.PI * 0.5 + j * 0.6); // dancing, not marching: the file sways in and out, a wave down it
+  return paradeWorld(r * Math.sin(a), r * Math.cos(a), yaw, out);
 }
 // once a frame, before the crowd steers (crowd.js animCrowd)
 export function paradeTick(crowd) {
-  if (!paradeLive()) { for (const p of paraders) { p.parade = 'home'; homers.push(p); } paraders.length = 0; return; }
-  if (paraders.length) return;
-  // An orderly join (Marc 24/10/2026: «fins que no es forma és un merder»): the n standing nearest to the snake's places
-  // (from any row: a sixth of a medium crowd, 59 people, made a snake of 9; never one who comes and goes with how well
-  // it goes, PRES p.thr, nor one whose run in or back would pass the capatàs), paired with the places in the same order
-  // round the plaça (no two runs cross), setting off one after another from the snake's head, at a jog (`form` m/s).
-  const n0 = Math.min(PARADE_K.count, Math.floor(crowd.length * PARADE_K.share));
-  const slots = Array.from({ length: n0 }, (_, k) => { paradeSlot(k, paradeLap0, PARADE.yaw, paradeAt); return { k, x: paradeAt.x, z: paradeAt.z }; });
-  const cap = bouToWorld(BOU_CAPATAS.x, BOU_CAPATAS.z, PARADE.yaw), nearest = p => {
-    let best = null, bd = Infinity; for (const q of slots) { const d = Math.hypot(p.pos.x - q.x, p.pos.y - q.z); if (d < bd) { bd = d; best = q; } } return { q: best, d: bd };
-  }, clearOf = (p, q) => { // the capatàs off the straight run from p to place q
-    const ax = p.pos.x, az = p.pos.y, bx = q.x - ax, bz = q.z - az;
-    const u = Math.min(1, Math.max(0, ((cap.x - ax) * bx + (cap.z - az) * bz) / (bx * bx + bz * bz || 1)));
-    return Math.hypot(ax + bx * u - cap.x, az + bz * u - cap.z) > PARADE_K.wide;
-  };
-  const front = crowd.filter(p => !p.parade && !p.thr && (p.qualityScale ?? 1) > 0.5).map(p => ({ p, ...nearest(p) })).filter(o => clearOf(o.p, o.q));
-  const n = Math.min(n0, front.length);
-  slots.length = n;
-  const picked = front.sort((a, b) => a.d - b.d).slice(0, n).map(o => o.p);
-  const ang = (x, z) => Math.atan2(x, z), byAng = (a, b) => a.a - b.a;
-  const ps = picked.map(p => ({ p, a: ang(p.pos.x, p.pos.y) })).sort(byAng), ss = slots.map(q => ({ q, a: ang(q.x, q.z) })).sort(byAng);
-  let shift = 0, best = Infinity; // the rotation of one ring onto the other that runs least
-  for (let r = 0; r < n; r++) { let sum = 0; for (let i = 0; i < n; i++) { const p = ps[i].p, q = ss[(i + r) % n].q; sum += Math.hypot(p.pos.x - q.x, p.pos.y - q.z); } if (sum < best) { best = sum; shift = r; } }
-  for (let i = 0; i < n; i++) {
-    const p = ps[i].p, k = ss[(i + shift) % n].q.k;
-    p.parade = 'run'; p.paradeSlot = k; p.paradeGo = paradeFrom + k * PARADE_K.stagger; p.paradeHome ??= p.pos.clone(); paraders.push(p);
+  if (!paradeLive()) { for (const p of paraders) { p.parade = 'home'; homers.push(p); } paraders.length = 0; paradeN = paradeNext = 0; return; }
+  const n = paradeN ||= Math.min(PARADE_K.count, Math.floor(crowd.length * PARADE_K.share));
+  for (let i = paraders.length - 1; i >= 0; i--) { // leaving, from the tail: straight out to the front row's distance
+    const p = paraders[i];
+    if (PARADE.beat < paradeLeaveAt(p.paradeSlot, n)) continue;
+    const a = Math.atan2(p.pos.x, p.pos.y), r = Math.hypot(p.paradeHome.x, p.paradeHome.y);
+    p.paradeHome.set(r * Math.sin(a), r * Math.cos(a)); p.parade = 'home'; homers.push(p); paraders.splice(i, 1);
+  }
+  const cap = bouToWorld(BOU_CAPATAS.x, BOU_CAPATAS.z, PARADE.yaw);
+  for (; paradeNext < n && PARADE.beat >= paradeJoinAt(paradeNext); paradeNext++) { // joining, from the head
+    if (PARADE.beat >= paradeLeaveAt(paradeNext, n)) continue;
+    paradeSlot(paradeNext, PARADE.beat, PARADE.yaw, paradeAt);
+    let best = null, bd = Infinity;
+    for (const p of crowd) {
+      if (p.parade || p.thr || (p.qualityScale ?? 1) <= 0.5) continue;
+      const ax = p.pos.x, az = p.pos.y, bx = paradeAt.x - ax, bz = paradeAt.z - az, d = Math.hypot(bx, bz);
+      const u = Math.min(1, Math.max(0, ((cap.x - ax) * bx + (cap.z - az) * bz) / (d * d || 1)));
+      if (d < bd && Math.hypot(ax + bx * u - cap.x, az + bz * u - cap.z) > PARADE_K.wide) { bd = d; best = p; } // (the capatàs off their way)
+    }
+    if (!best) continue;
+    best.parade = 'run'; best.paradeSlot = paradeNext; best.paradeHome ??= best.pos.clone(); paraders.push(best);
   }
 }
 // Moves one person under the parade's control (true), or leaves them to their own steering (false).
 export function paradeSteer(p, dt) {
   let tx, tz, cap, fx = 0, fz = 0;
   if (p.parade === 'run') {
-    if (PARADE.beat < p.paradeGo) return false; // not their turn yet: still with the crowd, cheering
-    paradeSlot(p.paradeSlot, PARADE.beat, PARADE.yaw, paradeAt); tx = paradeAt.x; tz = paradeAt.z; cap = PARADE.beat < paradeLap0 ? PARADE_K.form : PARADE_K.run;
+    paradeSlot(p.paradeSlot, PARADE.beat, PARADE.yaw, paradeAt); tx = paradeAt.x; tz = paradeAt.z; cap = PARADE_K.run;
     // run at their place's own pace (it moves with the Bou), closing the gap on top: a lag-free chase
     if (p.paradeAt && dt > 0 && Math.hypot(tx - p.paradeAt.x, tz - p.paradeAt.y) < 0.5) { fx = (tx - p.paradeAt.x) / dt; fz = (tz - p.paradeAt.y) / dt; }
     (p.paradeAt ??= p.pos.clone()).set(tx, tz);

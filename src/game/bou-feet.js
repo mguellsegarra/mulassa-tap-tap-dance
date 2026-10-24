@@ -46,7 +46,7 @@ const nominal = (p, i) => ({ x: p.x + layout[i].x * Math.cos(p.yaw) + layout[i].
 // legRoom: the least distance across between a carrier's two feet (m; .26 at rest, legs .14-.16 wide).
 // due/half/late: step units off before a pair steps on a beat / on a half beat / off the grid; a step lasts `share` of a half beat.
 const STEP = { legRoom: .22, legPush: .45, due: .5, half: .8, late: 2.5, share: .9, min: .18, max: .34, lead: .3, lift: .1, run: { speed: .3, carrier: .5, share: 1, lead: .5 } };   // lift: a stepping sole 1.5 cm over the other shoe (8.5 cm) when it passes over it
-export function planBouFeet(poseAt, start, end, gesture = () => 0) {
+export function planBouFeet(poseAt, start, end, gesture = () => 0, raise = () => 0) {
   const initial = layout.map((_, i) => nominal(poseAt(start), i)), planted = initial.map(p => ({ ...p }));
   const events = layout.map(() => []), busy = [start, start, start, start], quiet = [start, start, start, start];
   // Gesture cycles a foot sits out, [from, to], for the sampler too.
@@ -138,14 +138,14 @@ export function planBouFeet(poseAt, start, end, gesture = () => 0) {
     if (!e || t >= e.end) {
       Object.assign(res, p); res.y = 0; res.contact = true;
       const a = rests[index].some(([a, b]) => a <= t && t < b) ? 0 : gesture(t, index);
-      if (a !== 0) Object.assign(res, stretch(p, index, a), { contact: false });
+      if (a !== 0) { Object.assign(res, stretch(p, index, a), { contact: false }); res.y += raise(t, index); }
       return res;
     }
     if (e.gesture) {
       // The leg folds back in to its new place: the stretch's own fall, the foot sliding to the landing.
       const s = ease((t - e.start) / (e.end - e.start)), base = { x: e.from.x + (e.to.x - e.from.x) * s,
         z: e.from.z + (e.to.z - e.from.z) * s, yaw: e.from.yaw + (e.to.yaw - e.from.yaw) * s };
-      Object.assign(res, base, stretch(base, index, gesture(t, index)), { contact: false });
+      Object.assign(res, base, stretch(base, index, gesture(t, index)), { contact: false }); res.y += raise(t, index);
       // Moving to a new place is a real step: the foot lifts over the floor (and the other shoe) on the way.
       const u = (t - e.start) / (e.end - e.start), moved = clamp(Math.hypot(e.to.x - e.from.x, e.to.z - e.from.z) / .1);
       res.y = Math.max(res.y, .09 * moved * ease(Math.min(u / .15, (1 - u) / .15)));
@@ -159,6 +159,7 @@ export function planBouFeet(poseAt, start, end, gesture = () => 0) {
     return res;
   };
 }
+// raise(t, index): m the stretched foot is lifted on its way (a stepped gesture, the knee bending), 0 for a slide.
 // Foot pose with the leg stretched by a (0-1): forward and a little out along the carrier's heading, toe up; a < 0
 // (-1-0): stretched back instead, on its toes (heel up).
 function stretch(p, index, a) {

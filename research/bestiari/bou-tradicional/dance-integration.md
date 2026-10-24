@@ -82,7 +82,7 @@ Observed: correfoc wear, the Bou being a fire beast. A garnet/magenta hooded jac
 buttoned, «BOU TRADICIONAL DE VALLS» printed down the front, a large cartoon bull's face on the
 lower back; hoods down by day, up at the correfoc; some wear sunglasses (and a headscarf or beanie);
 black trousers with a pale mark on the thigh. One member carries a tall wooden staff with a metal
-fire pot at the top; another wears a soft black hat with a neck flap and a pale badge.
+crook at the top with an esquella (a bronze cowbell) hung from it (Marc 2026-10-24); another wears a soft black hat with a neck flap and a pale badge.
 
 In the game (`models/colla.js` BOU_SUIT, `scene/bou-colla.js`): four attendants W/N/S/E 5.5 m out,
 no one seated (Marc: fewer people than the Drac's and the Mulassa's), in that tunic; hoods up on some, sunglasses on others. A fifth person, the

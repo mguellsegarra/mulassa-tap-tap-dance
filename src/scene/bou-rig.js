@@ -1,5 +1,7 @@
 import * as THREE from 'three';
-const HIP=.93, THIGH=.43, SHIN=.425, HIP_FLAT=.6, CARRIER_TRUNK=.5, CARRIER_ARM=.62;
+// SHOW_RISE: an end lifted less leaves no gap under its hem (the front's small lift on the leg swing switched them on and
+// off every beat: a flicker)
+const HIP=.93, THIGH=.43, SHIN=.425, HIP_FLAT=.6, SHOW_RISE=.12, CARRIER_TRUNK=.5, CARRIER_ARM=.62;
 export function buildBouRig() {
   const root=new THREE.Group(), body=new THREE.Group(), tail=new THREE.Group();
   root.add(body); body.add(tail); body.position.y=.85;
@@ -53,7 +55,7 @@ export function buildBouRig() {
       place(legs[i * 2], hip, knee); place(legs[i * 2 + 1], knee, ankle);
       if (i % 2) { // the carrier's trunk on the middle of his two hips, facing his feet; arms up from the shoulders
         // how far this carrier's end of the shell has risen (the lift, the see-saw): its trunk shows under a raised hem
-        const c = i >> 1, t = trunks[c], rise = root.position.y - (c ? .66 : -.66) * Math.sin(body.rotation.x), on = rise > .02;
+        const c = i >> 1, t = trunks[c], rise = root.position.y - (c ? .66 : -.66) * Math.sin(body.rotation.x), on = rise > SHOW_RISE;
         t.visible = arms[c * 2].visible = arms[c * 2 + 1].visible = on;
         if (!on) continue;
         t.position.set(hip.x - side * .11 * Math.cos(yaw), hip.y, hip.z + side * .11 * Math.sin(yaw)); t.rotation.set(0, yaw, 0);

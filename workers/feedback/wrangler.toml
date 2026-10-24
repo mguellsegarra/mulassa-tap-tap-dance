@@ -12,7 +12,7 @@ workers_dev = true
 [vars]
 # production origins only; for `wrangler dev` put your local ones in .dev.vars (not in the repo), e.g.
 # ALLOWED_ORIGINS="http://localhost:5178,http://<your LAN IP>:5178"
-ALLOWED_ORIGINS = "https://mulassa-tap-tap-dance.pages.dev,https://mulassa.cat,https://www.mulassa.cat"
+ALLOWED_ORIGINS = "https://mulassa-tap-tap-dance.pages.dev,https://mulassa.cat,https://www.mulassa.cat,https://beta.mulassa.cat"
 # the sender: an address on mulassa.cat, the zone with Email Routing
 FEEDBACK_FROM = "holi@mulassa.cat"
 # about this many e-mails a day in total (counted in DAILY; KV has no atomic increment, so concurrent requests from

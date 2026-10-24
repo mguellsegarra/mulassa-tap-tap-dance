@@ -59,6 +59,11 @@ by everyone below it as `sheets.board`… (`ui/sheets.js`), so no import cycle i
 - Regenerate music + chart (only when the task is about music/chart):
   `uv run --python 3.11 --with numpy --with scipy --with soundfile --with mido tools/build_taiko.py`
 - Never hardcode the BPM (it has changed before): use `song.bpm` / `song.beats` in JS, `BPM` in the generator.
+- Release channels (one branch, channels by deploy): `main` is the only long-lived branch; every
+  push to it deploys beta.mulassa.cat on the test Supabase (GitHub environment `beta`: its own `VITE_SUPABASE_*`,
+  `SUPABASE_PROJECT_REF`, `SUPABASE_POOLER_HOST`, `SUPABASE_DB_PASSWORD`), a tag `vX.Y.Z` equal to package.json's version
+  deploys mulassa.cat (environment `production`); running the workflow by hand on an old tag redeploys it. Each tag is a
+  separately confirmed operation. `.github/workflows/deploy-pages.yml` refuses a beta build on the real Supabase.
 - Audio must stay **bit-identical** unless the task is about music: compare `shasum public/music/*` before/after.
 
 ## Testing in a browser

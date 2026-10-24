@@ -23,7 +23,7 @@ export async function dispatchBackup(controller, env, send = fetch) {
         'User-Agent': 'mulassa-backup-scheduler',
         'X-GitHub-Api-Version': '2026-03-10',
       },
-      body: JSON.stringify({ ref: 'master' }),
+      body: JSON.stringify({ ref: 'main' }),
     });
     // Never log or parse a remote body. Both API generations acknowledge dispatch this way.
     if (response.body) await response.body.cancel();

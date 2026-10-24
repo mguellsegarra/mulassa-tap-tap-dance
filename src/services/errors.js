@@ -7,19 +7,20 @@ const LOOPBACK = /^(localhost|127\.0\.0\.1|\[::1\])$/;
 export const DEV_HOST = /^(localhost|127(\.\d+){3}|\[::1\]|0\.0\.0\.0|.+\.(localhost|local|test)|10(\.\d+){3}|192\.168(\.\d+){2}|172\.(1[6-9]|2\d|3[01])(\.\d+){2})$/;
 const DEBUG_PARAMS = ['autoplay', 'from', 'view']; // self-playing or debug-camera runs are not players
 const PROD_HOST = 'mulassa-tap-tap-dance.pages.dev';
+const BETA_HOST = 'beta.mulassa.cat'; // main's channel, on the test Supabase
 const MAX_EVENTS = 10; // per page: a bug in the frame loop must not send one report per frame
 const BUFFER = { exception: 10, report: 10, breadcrumb: 20 };
 const KNOWN_ERROR_NAMES = new Set(['Error', 'TypeError', 'RangeError', 'ReferenceError', 'SyntaxError', 'SecurityError', 'InvalidStateError', 'NotSupportedError', 'AbortError',
   'NetworkError', 'EncodingError', 'OperationError', 'UnknownError', 'NotAllowedError', 'DataCloneError']);
 export const errorName = e => (KNOWN_ERROR_NAMES.has(e?.name) ? e.name : 'Other');
 
-// 'production' | 'preview' | 'development', or null when nothing may be sent.
+// 'production' | 'beta' | 'preview' | 'development', or null when nothing may be sent.
 export function errorsMode({ dsn, hostname = '', search = '', webdriver = false }) {
   if (!dsn) return null;
   const q = new URLSearchParams(search);
   if (q.has('sentry-test') && LOOPBACK.test(hostname)) return 'development';
   if (webdriver || DEBUG_PARAMS.some(k => q.has(k)) || DEV_HOST.test(hostname)) return null;
-  return hostname === PROD_HOST ? 'production' : hostname.endsWith('.pages.dev') ? 'preview' : 'production';
+  return hostname === PROD_HOST ? 'production' : hostname === BETA_HOST ? 'beta' : hostname.endsWith('.pages.dev') ? 'preview' : 'production';
 }
 
 // Query strings and fragments go (?repte=…, tokens a provider might put there); the path stays.

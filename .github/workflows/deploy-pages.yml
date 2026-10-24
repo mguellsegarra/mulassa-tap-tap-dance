@@ -1,15 +1,18 @@
 name: Desplegament
 
+# Two channels from one branch: every push to main goes to beta.mulassa.cat (test Supabase),
+# a version tag (v1.2.3, matching package.json) goes to mulassa.cat. Running it by hand on a tag redeploys that release.
 on:
   push:
-    branches: [master]
+    branches: [main]
+    tags: ['v*']
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: deploy-pages
+  group: deploy-pages-${{ github.ref_type == 'tag' && 'production' || 'beta' }}
   queue: max # keep a pending release when a later push only changes documentation
   cancel-in-progress: false
 
@@ -34,13 +37,17 @@ jobs:
     uses: ./.github/workflows/supabase-migrations.yml
     needs: changes
     if: needs.changes.outputs.deploy == 'true'
+    with:
+      environment: ${{ github.ref_type == 'tag' && 'production' || 'beta' }}
     secrets:
       SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
   deploy:
     needs: migrate
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    environment: ${{ github.ref_type == 'tag' && 'production' || 'beta' }}
     env:
+      CHANNEL: ${{ github.ref_type == 'tag' && 'production' || 'beta' }}
       # Public client configuration (Settings → Variables → Actions); same names as .env.local.
       VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
       VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
@@ -58,11 +65,19 @@ jobs:
         with:
           node-version-file: .node-version
           cache: npm
+      # beta must never build against the real leaderboard, and a tag must name the version it ships
+      - name: Check the channel
+        run: |
+          if [ "$CHANNEL" = beta ]; then
+            case "$VITE_SUPABASE_URL" in ''|*oajlkitufibpfvhgtqwr*) echo "beta needs the test Supabase (environment beta)"; exit 1;; esac
+          else
+            test "$GITHUB_REF_NAME" = "v$(node -p "require('./package.json').version")" || { echo "tag $GITHUB_REF_NAME does not match package.json"; exit 1; }
+          fi
       - run: npm ci
       # checks + vite build + the Pages allowlist artifact in dist/
       - run: npm run build:pages
       - name: Deploy dist/
-        run: npx --yes wrangler@4.142.0 pages deploy dist --project-name mulassa-tap-tap-dance --branch main --commit-dirty=true
+        run: npx --yes wrangler@4.142.0 pages deploy dist --project-name mulassa-tap-tap-dance --branch ${{ env.CHANNEL == 'production' && 'main' || 'beta' }} --commit-dirty=true
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

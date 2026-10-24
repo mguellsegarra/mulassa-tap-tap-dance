@@ -27,7 +27,7 @@ for (const status of [200, 204]) {
     assert.equal(url, 'https://api.github.com/repos/mguellsegarra/mulassa-tap-tap-dance/actions/workflows/db-backup.yml/dispatches');
     assert.equal(init.method, 'POST');
     assert.equal(init.redirect, 'manual');
-    assert.deepEqual(JSON.parse(init.body), { ref: 'master' });
+    assert.deepEqual(JSON.parse(init.body), { ref: 'main' });
     assert.equal(init.headers.Authorization, `Bearer ${token}`);
     assert.equal(init.headers['X-GitHub-Api-Version'], '2026-03-10');
     assert(init.signal instanceof AbortSignal);

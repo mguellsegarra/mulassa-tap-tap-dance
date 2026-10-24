@@ -6,7 +6,7 @@ independently detects failure, timeout or absence. Dispatch acceptance is not ba
 
 ## Scope and credentials
 
-Worker `mulassa-backup-scheduler` has one fixed destination: `db-backup.yml` on `master` in this
+Worker `mulassa-backup-scheduler` has one fixed destination: `db-backup.yml` on `main` in this
 repository. It has no public HTTP/preview URL, route, storage binding, database access or R2 access.
 Its HTTP handler always returns 404, including if someone later exposes a route accidentally.
 
@@ -34,8 +34,8 @@ test requires explicit chat confirmation under AGENTS.md. Preparation is not act
 
 1. Merge the dispatch-only GitHub workflow and this Worker. Verify the Pages deploy job is skipped.
    Retain `BACKUP_ENABLED=true`, `BACKUP_SENTRY_ENABLED=true`, production environment secrets and the
-   `master` deployment restriction. Required-reviewer removal is already an explicitly accepted policy;
-   confirm its current state. Required reviews/checks on `master` remain zero by Marc's decision, so
+   `main` deployment restriction. Required-reviewer removal is already an explicitly accepted policy;
+   confirm its current state. Required reviews/checks on `main` remain zero by decision, so
    branch protection does not enforce independent review of code receiving production credentials.
 2. With separate approval, remove obsolete repository variable `BACKUP_SCHEDULE_ENABLED`. Do not
    delete the backup workflow, Sentry monitor, existing backups, or other scheduled workflows.
@@ -55,7 +55,7 @@ test requires explicit chat confirmation under AGENTS.md. Preparation is not act
    dispatch result codes. Cron changes can take up to 15 minutes to propagate.
 7. Approve one end-to-end dispatch test if needed. If the dashboard cannot trigger a scheduled event,
    wait for the daily trigger; do not expose an HTTP trigger or invent a broad token-based test command.
-   Verify Worker invocation, resulting GitHub run on `master`, `BACKUP_OK`, zero artifacts, and the
+   Verify Worker invocation, resulting GitHub run on `main`, `BACKUP_OK`, zero artifacts, and the
    corresponding healthy Sentry check-in. Confirm an actual timed execution before calling daily
    scheduling validated. Sentry's previously proven missed-check-in alert remains independent.
 

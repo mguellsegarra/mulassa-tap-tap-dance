@@ -7,6 +7,10 @@
   # https only for a year; no includeSubDomains (other subdomains of mulassa.cat are not ours to decide)
   Strict-Transport-Security: max-age=31536000
 
+# the beta channel is for testers, not search engines (the page's canonical already points at mulassa.cat)
+https://beta.mulassa.cat/*
+  X-Robots-Tag: noindex
+
 # Content-hashed, never change in place: Vite's /assets/*-<hash>.js|css, and the music (song.json asks for ?v=<hash>,
 # tools/prepare-pages.mjs refuses unversioned audio URLs). A new build or mix gets a new URL.
 /assets/*

@@ -1,8 +1,10 @@
 name: Supabase functions
 
+# main → the beta project, a version tag → production (tags skip the paths filter: each release redeploys)
 on:
   push:
-    branches: [master]
+    branches: [main]
+    tags: ['v*']
     paths: ['supabase/functions/**', 'supabase/config.toml']
   workflow_dispatch:
 
@@ -10,14 +12,16 @@ permissions:
   contents: read
 
 concurrency:
-  group: supabase-functions
+  group: supabase-functions-${{ github.ref_type == 'tag' && 'production' || 'beta' }}
   cancel-in-progress: false
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    environment: ${{ github.ref_type == 'tag' && 'production' || 'beta' }}
     env:
+      PROJECT_REF: ${{ github.ref_type == 'tag' && 'oajlkitufibpfvhgtqwr' || vars.SUPABASE_PROJECT_REF }}
       # Needs Edge Functions read-write; the database migrations job does not use it.
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
     steps:
@@ -26,4 +30,6 @@ jobs:
         with:
           version: latest
       # --use-api bundles on Supabase's side: no Docker on the runner. verify_jwt comes from supabase/config.toml.
-      - run: supabase functions deploy delete-player --project-ref oajlkitufibpfvhgtqwr --use-api
+      - run: |
+          [ -n "$PROJECT_REF" ] || { echo "missing Supabase project"; exit 1; }
+          supabase functions deploy delete-player --project-ref "$PROJECT_REF" --use-api

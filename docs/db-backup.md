@@ -26,7 +26,7 @@ The pieces:
 - `.github/workflows/db-backup.yml`: dispatch only (Marc or the Cloudflare scheduler), gated by repository
   variable `BACKUP_ENABLED=true`. No GitHub cron.
 - `workers/backup-scheduler/`: an isolated Cloudflare scheduled Worker that only dispatches that workflow
-  on `master`; it is shipped disabled, without triggers or public routes.
+  on `main`; it is shipped disabled, without triggers or public routes.
 - `tests/db_backup_test.py` (run by `npm run check` through `tests/db-backup.mjs`).
 
 ## What a run does
@@ -183,7 +183,7 @@ in chat. A preparation approval does not authorize exports or scheduled runs.
    There is no GitHub cron trigger. [Cloudflare scheduler setup](db-backup-scheduler.md) replaces it
    without changing the export/encryption/R2 pipeline. The old repository `BACKUP_SCHEDULE_ENABLED`
    variable has no effect and may be removed with separate approval after this change is merged.
-   The scheduler only dispatches `workflow_dispatch` against `master`. Keep `BACKUP_ENABLED=true`
+   The scheduler only dispatches `workflow_dispatch` against `main`. Keep `BACKUP_ENABLED=true`
    for both manual and automatic exports. Set it to false to stop all exports.
 
    The Worker ships with `SCHEDULER_ENABLED=false` and `crons=[]`; publication alone does not start
@@ -221,7 +221,7 @@ Before unattended activation:
    approve setting environment variable `BACKUP_SENTRY_ENABLED=true` and a manual Actions backup.
    Verify both `BACKUP_OK` and the matching healthy check-in in the dashboard.
 4. Separately approve removing only required reviewers from `db-backup-production`; preserve the
-   restriction to `master`, secrets and variables, branch protections and disabled administrator bypass.
+   restriction to `main`, secrets and variables, branch protections and disabled administrator bypass.
    This allows unattended access to production credentials by merged workflow code. A PR rule with zero
    required reviews/checks does not provide independent review; record that accepted limitation.
 5. Separately approve the Cloudflare scheduler activation described in [db-backup-scheduler.md](db-backup-scheduler.md). Verify the first daily run,

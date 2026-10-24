@@ -434,8 +434,8 @@ const context = vm.createContext({
   // the Drac's revised dance (pure modules, provided like the old one): only the names the inlined scene code uses
   poseAt: (await import('../src/game/drac-pose.js')).poseAt, REF_END: (await import('../src/game/drac-pose.js')).REF_END, feetAt: (await import('../src/game/drac-steps.js')).feetAt,
   dracTime: (await import('../src/game/drac-time.js')).dracTime, ...await import('../src/game/drac-layout.js'), ...await import('../src/scene/drac-rig.js'), ...await import('../src/scene/drac-colla.js'), ...await import('../src/scene/mula-colla.js'), ...await import('../src/scene/bou-colla.js'),
-  buildBou: (await import('../src/scene/models/bou.js')).buildBou, createBouMotion: (await import('../src/scene/bou-motion.js')).createBouMotion, ...await import('../src/game/bou-dance.js'), // the Bou (provided)
-  ...await import('../src/dev/final-test.js'), ALIAS_KEY: 'leaderboard-alias', DECLINES_KEY: 'publish-declines', // ?final: off here (no hostname)
+  buildBou: (await import('../src/scene/models/bou.js')).buildBou, createBouMotion: (await import('../src/scene/bou-motion.js')).createBouMotion, ...await import('../src/game/bou-dance.js'), liveBouFeet: (await import('../src/game/bou-feet.js')).liveBouFeet, // the Bou (provided)
+  ...await import('../src/dev/final-test.js'), MOCK_BOARD: false, ALIAS_KEY: 'leaderboard-alias', DECLINES_KEY: 'publish-declines', // ?final: off here (no hostname)
   errors, errorName, audioFailureTags: (await import('../src/platform/audio.js')).audioFailureTags,
   THREE: { ...THREE, WebGLRenderer: Renderer }, ...await import('../src/scene/crowd-fx.js'), ...models, ...chart, ...progress, ...stars,
   PROFILES, initialQuality, renderDpr, frameMonitor, hudScale, framePacer, smoothClock, profileAt, hudBudget, isSoftwareRenderer, probeRenderer, Chip: class { constructor(song, opts) { context.chipOpts = opts; } menu() {} setMenuMusic(on) { (context.menuMusicCalls ||= []).push(on); } }, ...practice, ...energy, ...bubblesLogic, ...framing, ...dance, ...titleLayoutLogic, ...orbitLogic, setupSync: hooks => { context.syncHooks = hooks; return context.syncSheet = { open: false, show() { this.open = true; } }; },
@@ -777,7 +777,7 @@ console.log('crowd neighbour separation ok');
 {
   const q0 = run('qualityLevel');
   hostSeed(7); run(`seedR = 7; var crowdNow = 60;
-    chip = { resume() {}, t0: 0, ctx: { currentTime: 0, suspend() {} }, resume() {}, stop() {}, menu() {}, sfx() {}, noiseHit() {}, blip() {}, wake() {},
+    chip = { suspend() { this.ctx.suspend(); }, resume() {}, t0: 0, ctx: { currentTime: 0, suspend() {} }, resume() {}, stop() {}, menu() {}, sfx() {}, noiseHit() {}, blip() {}, wake() {},
       now: () => crowdNow, start: () => Promise.resolve(false) };
     qualityLevel = 2; applyRenderQuality(); offsetMs = 0; startGame(1); G.state = 'play'; G.guapo = 80;
     var footprintLog = { overlaps: [], minD: 9, frames: 0, midD: 9 };
@@ -1090,7 +1090,7 @@ assert(run('Boolean(G.audioError)'), 'failed recording explains how to retry');
 assert.equal(rejectedLoads.length, 0, 'failed loading is handled');
 console.log('audio error recovery contract ok');
 
-run(`chip = { resume() {}, wake() {}, ctx: { suspend() {}, resume() {} }, stop() {}, menu() {} };
+run(`chip = { suspend() { this.ctx.suspend(); }, resume() {}, wake() {}, ctx: { suspend() {}, resume() {} }, stop() {}, menu() {} };
   G.state = 'play'; G.paused = false; G.collapseT = 0;`);
 for (const handler of keyHandlers) handler({ code: 'Escape', target: { tagName: 'BODY' }, preventDefault() {} });
 assert.equal(run('G.state'), 'play', 'Escape keeps the game');
@@ -1106,7 +1106,7 @@ run('requestPauseAction("exit");');
 nodes.get('confirm-action').listeners.click();
 assert.equal(run('G.state'), 'select', 'confirmed menu exits');
 assert.equal(nodes.get('pause-menu').open, false);
-run(`chip = { resume() {}, ctx: { suspend() {}, resume() {} }, stop() {}, menu() {}, sfx() {},
+run(`chip = { suspend() { this.ctx.suspend(); }, resume() {}, ctx: { suspend() {}, resume() {} }, stop() {}, menu() {}, sfx() {},
   start() { return Promise.resolve(false); } };
   startGame(0); togglePause(); requestPauseAction('restart');`);
 const chartBeforeRestart = run('G.chart');
@@ -1120,7 +1120,7 @@ assert.equal(run('G.paused'), false);
 console.log('Escape, pause menu and confirmation contracts ok');
 
 run(`let suspends = 0, wakes = 0;
-  chip = { resume() {}, wake() { wakes++; }, t0: 0, now: () => 5, start() { return Promise.resolve(true); }, countIn() {}, ctx: { suspend() { suspends++; }, resume() {} } };
+  chip = { suspend() { this.ctx.suspend(); }, resume() {}, wake() { wakes++; }, t0: 0, now: () => 5, start() { return Promise.resolve(true); }, countIn() {}, ctx: { suspend() { suspends++; }, resume() {} } };
   G.state = 'play'; G.paused = false; G.collapseT = 0;`);
 document.hidden = true;
 document.listeners.visibilitychange?.();
@@ -1162,7 +1162,7 @@ console.log('results advice matches two-sided control ok');
 
 // GLOBUS: every tap in its window counts (never a wrong move); pops repeat every `need` taps; judged once at the end.
 run(`let songNow = 0, bonks = 0;
-  chip = { resume() {}, t0: 0, ctx: { currentTime: 0, suspend() {}, resume() {} }, stop() {}, menu() {}, blip() {}, noiseHit() {},
+  chip = { suspend() { this.ctx.suspend(); }, resume() {}, t0: 0, ctx: { currentTime: 0, suspend() {}, resume() {} }, stop() {}, menu() {}, blip() {}, noiseHit() {},
     sfx(k) { if (k === 'bonk') bonks++; }, now: () => songNow, start: () => Promise.resolve(false) };
   startGame(1); G.state = 'play'; offsetMs = 0;
   var [b1, b2] = G.balloons; G.next = G.chart.indexOf(b1);
@@ -1321,7 +1321,7 @@ console.log('autoplay GUAPA and hold contracts ok');
 // Skipping every input still gets through (three tries per step), back to the title. Nothing is recorded.
 run(`var stored = {}; localStorage.getItem = k => stored[k] ?? null; localStorage.setItem = (k, v) => { stored[k] = String(v); };
   var minEnergy = 1, clicks = 0, started = null, maxTries = 0, seen = new Set(), ticks = [], hits = [], noteTimes = [];
-  var menuOn = true; chip = { resume() {}, t0: null, ctx: { currentTime: 50, suspend() {}, resume() {} }, stop() { this.t0 = null; }, menu(on) { menuOn = on; }, sfx() {}, noiseHit() {},
+  var menuOn = true; chip = { suspend() { this.ctx.suspend(); }, resume() {}, t0: null, ctx: { currentTime: 50, suspend() {}, resume() {} }, stop() { this.t0 = null; }, menu(on) { menuOn = on; }, sfx() {}, noiseHit() {},
     blip(w, f) { clicks++; if (f === 1320) ticks.push(w - this.t0); }, timbal(w) { clicks++; hits.push(w - this.t0); }, startClock(d, from) { this.t0 = this.ctx.currentTime + d - from; },
     now() { return this.ctx.currentTime - this.t0; }, start() { started = G.diff; return Promise.resolve(false); } };
   function practise(auto, seconds) {
@@ -1387,7 +1387,7 @@ console.log('practice contracts ok');
 // practice was ever done; GUA/PA do nothing, the ànim never drains, the player's tick is silent. Its end records,
 // snapshots, prompts and shares nothing, and its own sheet leads back to the selector.
 run(`var preWatch = { chip, stored }; stored = {}; songNow = 0; var watchSfx = [];
-  chip = { resume() {}, wake() {}, t0: null, ctx: { currentTime: 0, suspend() {}, resume() {} }, stop() {}, menu() {}, noiseHit() {}, blip() {}, countIn() {},
+  chip = { suspend() { this.ctx.suspend(); }, resume() {}, wake() {}, t0: null, ctx: { currentTime: 0, suspend() {}, resume() {} }, stop() {}, menu() {}, noiseHit() {}, blip() {}, countIn() {},
     sfx(k) { watchSfx.push(k); }, start() { this.t0 = 0; return Promise.resolve(true); }, now: () => songNow };
   offsetMs = 0; G.state = 'select'; G.paused = false;
   var toLevels = 0; Object.assign(sheets.select, { figure: selectedFigure, pending: false, toLevels() { toLevels++; } }); // (the selector is stubbed here)`);
@@ -1804,7 +1804,7 @@ console.log('screen render after a restore ok');
 // L'ÀNIM DE LA PLAÇA: standing idle drains it note by note until the mulassa falls apart, on every difficulty;
 // the count-in and the intro before the first note never drain; each warning threshold pulses once on the way down.
 for (const diff of [0, 1, 2]) {
-  run(`songNow = 0; chip = { resume() {}, t0: 0, ctx: { currentTime: 0, suspend() {}, resume() {} }, stop() {}, menu() {}, sfx() {}, noiseHit() {}, blip() {},
+  run(`songNow = 0; chip = { suspend() { this.ctx.suspend(); }, resume() {}, t0: 0, ctx: { currentTime: 0, suspend() {}, resume() {} }, stop() {}, menu() {}, sfx() {}, noiseHit() {}, blip() {},
       now: () => songNow, start: () => Promise.resolve(false) };
     offsetMs = 0; startGame(${diff}); bubbles.length = 0; var diedAt = null, introE = 1;
     for (songNow = -LEAD; songNow < G.chart[0].t; songNow += 1 / 30) { advance(songNow); introE = Math.min(introE, G.energy); }
@@ -2020,7 +2020,7 @@ run('performance.now = () => 0');
 console.log('input event-time judging ok');
 
 // Compact feedback retains useful instruction without repeating routine error explanations.
-run(`chip = { resume() {}, t0: 0, ctx: { currentTime: 0, suspend() {}, resume() {} }, stop() {}, menu() {}, sfx() {}, noiseHit() {}, blip() {}, now: () => songNow, start: () => Promise.resolve(false) };
+run(`chip = { suspend() { this.ctx.suspend(); }, resume() {}, t0: 0, ctx: { currentTime: 0, suspend() {}, resume() {} }, stop() {}, menu() {}, sfx() {}, noiseHit() {}, blip() {}, now: () => songNow, start: () => Promise.resolve(false) };
   startGame(1); offsetMs = 0; G.state = 'play'; clock += 1; songNow = G.chart[0].t;
   G.balloons = []; G.next = 0; G.hold = null; bigPending = null;`);
 for (const kind of ['perfect', 'good', 'miss']) {
@@ -2152,7 +2152,7 @@ console.log('finale festa for everyone, x2 from 70% ok');
 // Dance integration (game/mula-dance.js + accents): the song's choreography owns the heading, hits only accent it and
 // settle back, taps never pile up, holds release smoothly, misses recover, the practice holds its opening stance and a
 // collapse freezes the song pose. No score, judgement or energy rule depends on any of it.
-run(`chip = { resume() {}, t0: 0, ctx: { currentTime: 0, suspend() {}, resume() {} }, stop() {}, menu() {}, blip() {}, noiseHit() {},
+run(`chip = { suspend() { this.ctx.suspend(); }, resume() {}, t0: 0, ctx: { currentTime: 0, suspend() {}, resume() {} }, stop() {}, menu() {}, blip() {}, noiseHit() {},
     sfx() {}, now: () => songNow, start: () => Promise.resolve(false), startClock() {}, tick() {}, countIn() {} };
   var dp = newMulaPose(), dv = new THREE.Vector2(), frames = (n, dt = 1 / 60) => { for (let i = 0; i < n; i++) { clock += dt; animMula(dt, beatAt(songNow)); } };
   var songYaw = () => danceMula(dp, songTimeAtBeat(beatAt(songNow)), beatAt(songNow), false, dv); // the song's own heading now (no accents)
@@ -2454,9 +2454,7 @@ console.log('menu camera keeps a drag through a slow frame ok');
   run('setView(true)');
   assert(run('viewMode') && nodes.get('select').inert, 'free play hides and disables selector controls');
   keyDown('Escape');
-  assert(run('viewMode && !PHOTO.on'), 'first Escape drops control of the selected figure');
-  keyDown('Escape');
-  assert(!run('viewMode') && !nodes.get('select').inert && run("G.state === 'select'"), 'Escape restores the same selector state');
+  assert(!run('viewMode') && !nodes.get('select').inert && run("G.state === 'select'"), 'one Escape leaves free play, same selector state');
   const tapWorld = id => { hud.listeners.pointerdown(ev(id, 20, 160)); hud.listeners.pointerup?.(ev(id, 20, 160)); up(id); };
   tapWorld(21); tapWorld(22);
   assert(!run('viewMode'), 'two still world taps no longer open the old photo mode');
@@ -2738,16 +2736,17 @@ console.log('view mode ok');
   };
   run(`if (chip) chip.wake = () => {}; setFigureSong(MULASSA); G.state = 'select'; sheets.select.figure = selectedFigure; sheets.select.pending = false; animMula(1/60, 0); M.pos.set(-3,0); M.pivot.set(-3, PIVOT); PAIR.w.x=3; PAIR.w.z=0; PAIR.x=3; PAIR.z=0; camera.position.set(0,6,10); camFocus.set(0,0,0); var photoCrowd=activeCrowd; activeCrowd=[]; setView(true); takeFigure(selectedFigure.id); animMula(1/60, 0);
     var photoSong = song, photoDiff = G.diff, photoStart = M.pos.clone();`);
-  assert(run('PHOTO.on && PHOTO.pair && mula.root.visible && drac.root.visible'));
+  assert(run('PHOTO.on && mula.root.visible && !drac.root.visible'));
   photoKeyDown('KeyW');
   run(`for (let i=0;i<120;i++) { clock+=1/60; animMula(1/60, clock/BEAT); animCrowd(1/60, clock/BEAT, 0, 1); }`);
   assert(run('M.pos.distanceTo(photoStart) > 0.1'), 'W moves the Mulassa in free space');
   assert(photoKeyDown('Tab'), 'photo Tab consumed');
   assert(run("PHOTO.id === 'drac-valls' && PHOTO.keys.size === 0"));
-  run('var photoDracStart = {x: PAIR.x, z: PAIR.z};');
+  run('animMula(1/60, clock/BEAT); var photoDracStart = {x: M.pos.x, z: M.pos.y};');
+  assert(run('drac.root.visible && !mula.root.visible'), 'Tab hands the plaça to the Drac alone');
   photoKeyDown('KeyD');
   run(`for (let i=0;i<120;i++) { clock+=1/60; animMula(1/60, clock/BEAT); animCrowd(1/60, clock/BEAT, 0, 1); }`);
-  assert(run('Math.hypot(PAIR.x-photoDracStart.x, PAIR.z-photoDracStart.z)>0.1'), 'Tab controls the visible Drac');
+  assert(run('Math.hypot(M.pos.x-photoDracStart.x, M.pos.y-photoDracStart.z)>0.1'), 'Tab controls the visible Drac');
   run("activeCrowd=photoCrowd;");
   windowHandlers.blur.forEach(h => h());
   assert(run('PHOTO.keys.size === 0 && PHOTO.drac.vx === 0'), 'blur releases locomotion');
@@ -2756,10 +2755,10 @@ console.log('view mode ok');
   assert(!photoKeyDown('Tab'), 'normal Tab untouched');
   run(`G.state='select'; setView(true); takeFigure(selectedFigure.id); animMula(1/60, clock/BEAT);`);
   photoKeyDown('Tab'); run('animMula(1/60, clock/BEAT);');
-  assert(run("drac.root.visible && mula.root.visible && selectedFigure.id === 'mulassa-valls'"), 'selector keeps both figures while controlling Drac without changing selection');
+  assert(run("drac.root.visible && !mula.root.visible && selectedFigure.id === 'mulassa-valls'"), 'the driven Drac alone, without changing selection');
   photoKeyDown('KeyA', { target: { tagName: 'TEXTAREA' } });
   assert(run('PHOTO.keys.size === 0'), 'text fields never steer');
-  photoKeyDown('Escape'); photoKeyDown('Escape'); run('animMula(1/60, clock/BEAT);');
+  photoKeyDown('Escape'); run('animMula(1/60, clock/BEAT);');
   assert(run('mula.root.visible && !drac.root.visible && song === photoSong && G.diff === photoDiff'), 'exit restores original selector figure and song');
   run(`setView(true); takeFigure(selectedFigure.id); animMula(1/60, clock/BEAT); G.state='play'; updateControls(); animMula(1/60, clock/BEAT);`);
   assert(run('!PHOTO.on && PHOTO.keys.size === 0'), 'game transition clears manual mode');
@@ -2769,7 +2768,7 @@ console.log('view mode ok');
 
 // Shift is owned by free control, and every transition that suspends input releases both sides.
 {
-  run('var shiftAudioContext = chip.ctx; chip.ctx = { suspend() {} };'); // focusin suspends the menu context
+  run('var shiftAudioContext = chip.ctx; chip.ctx = { suspend() {} }; chip.suspend ??= () => {};'); // focusin suspends the menu context
   const key = (code, more = {}) => { let prevented = false; for (const h of keyHandlers) h({ code, target: { tagName: 'BODY' }, preventDefault() { prevented = true; }, ...more }); return prevented; };
   for (const [name, reset] of [
     ['blur', () => windowHandlers.blur.forEach(h => h())],
@@ -2802,21 +2801,20 @@ console.log('view mode ok');
   console.log('free Shift reset on blur/visibility/focus/modal/Escape/figure/exit/play ok');
 }
 
-// The same scene pair on playable/pending selectors; photo controls never change the game's identity.
+// One beast on show at a time on playable/pending selectors (Marc 2026-10-24); photo controls never change the game's identity.
 {
+  const shown = { 'mulassa-valls': 'mula.root.visible && !drac.root.visible && !bou.frame.visible', 'drac-valls': 'drac.root.visible && !mula.root.visible && !bou.frame.visible', 'bou-tradicional-valls': 'bou.frame.visible && !mula.root.visible && !drac.root.visible' };
   for (const figure of ['MULASSA', 'DRAC']) for (const pending of [false, true]) {
-    run(`setView(false); G.state='select'; setFigureSong(${figure}); selectScreen.pending=${pending};
+    run(`setView(false); G.state='select'; setFigureSong(${figure}); selectScreen.figure=${figure}; selectScreen.pending=${pending};
       G.sel=2; G.diff=1; var pairSong=song, pairFigure=selectedFigure, pairCrowd=activeCrowd; activeCrowd=[];
       animMula(1/60,clock/BEAT); setView(true); animMula(1/60,clock/BEAT);`);
-    assert(run('mula.root.visible && drac.root.visible && PAIR.k === 1'), `${figure}, pending=${pending}: free view shows both existing models`);
-    for (const id of ['drac-valls', 'mulassa-valls', 'drac-valls']) {
+    assert(run(`PHOTO.on && PAIR.k === 0 && ${shown[figure === 'DRAC' ? 'drac-valls' : 'mulassa-valls']}`), `${figure}, pending=${pending}: free play shows only the driven beast`);
+    for (const id of ['drac-valls', 'bou-tradicional-valls', 'mulassa-valls', 'drac-valls']) {
       run(`takeFigure('${id}'); animMula(1/60,clock/BEAT); PHOTO.keys.add('KeyW');
         for(let i=0;i<12;i++){ clock+=1/60; animMula(1/60,clock/BEAT); }
         clearPhotoKeys();`);
-      assert(run('mula.root.visible && drac.root.visible'), 'control changes keep both visible');
+      assert(run(shown[id]), `${id}: only the driven beast is visible`);
       assert(run('song===pairSong && selectedFigure===pairFigure && G.sel===2 && G.diff===1'), 'control never changes selection, song or difficulty');
-      run("takeFigure(''); animMula(1/60,clock/BEAT);");
-      assert(run('!PHOTO.on && PAIR.k===1'), 'Vista lliure keeps the pair');
     }
     run('setView(false); frame(clock*1000+17); activeCrowd=pairCrowd;');
     assert(run('!PHOTO.on && !PHOTO.ready && PAIR.k===0 && song===pairSong && selectedFigure===pairFigure && G.sel===2 && G.diff===1'), 'HUD return restores menu identity and releases control');
@@ -2877,7 +2875,7 @@ console.log('view mode ok');
   assert.deepEqual(calls.capture, [7]); up();
   answer = () => Promise.resolve();
   for (const [what, leave] of [['blur', () => windowHandlers.blur.forEach(h => h())], ['Tab', () => key('Tab')],
-    ['a sheet', () => run('settingsMenu.open = true; updateControls(); settingsMenu.open = false;')], ['Escape back to looking', () => run('stopControl(); syncAvatars();')]]) {
+    ['a sheet', () => run('settingsMenu.open = true; updateControls(); settingsMenu.open = false;')], ['leaving free play', () => run('setView(false);')]]) {
     if (!run('viewMode')) run('setView(true);');
     if (!run('PHOTO.on')) run("takeFigure('mulassa-valls');");
     hud.listeners.pointerdown(ev()); hud.listeners.mousedown(ev()); grant();
@@ -2896,13 +2894,13 @@ console.log('view mode ok');
 // Entry follows a playable selector figure; reentry never remembers a different photo actor.
 {
   const savedEntryFigure = context.selectScreen.figure;
-  for (const figure of ['MULASSA', 'DRAC']) {
+  for (const figure of ['MULASSA', 'DRAC', 'BOU']) {
     run(`setView(false); G.state='select'; setFigureSong(${figure}); selectScreen.figure=${figure}; selectScreen.pending=false; setView(true);`);
-    assert(run(`PHOTO.on && PHOTO.id === ${figure}.id && PHOTO.pair`), 'playable entry controls the selector figure');
+    assert(run(`PHOTO.on && PHOTO.id === ${figure}.id`), 'playable entry controls the selector figure, alone');
     run(`takeFigure('${figure === 'MULASSA' ? 'drac-valls' : 'mulassa-valls'}'); setView(false); setView(true);`);
     assert(run(`PHOTO.id === ${figure}.id && PHOTO.on`), 'reentry derives the actor from selection');
     run(`setView(false); selectScreen.pending=true; setView(true);`);
-    assert(run('!PHOTO.on && PHOTO.pair'), 'pending entry only looks, with both beasts');
+    assert(run(`PHOTO.on && PHOTO.id === ${figure}.id`), 'pending entry drives the last playable figure');
   }
   run('setView(false); selectScreen.pending=false; G.state="splash"; setView(true);');
   assert(run('!viewMode && !PHOTO.on'), 'the splash never enters photo mode');
@@ -2910,7 +2908,7 @@ console.log('view mode ok');
   context.selectScreen.figure = savedEntryFigure;
 }
 
-// Looking exposes an explicit invitation; desktop frames hand a figure to WASD; touch only looks.
+// Free play drives from the start (no «Mira la plaça»: Marc 2026-10-24); desktop frames hand a figure to WASD; Tab goes round the three.
 {
   const savedHelpStorage = context.localStorage, helpStorage = {};
   context.localStorage = { getItem: k => helpStorage[k] ?? null, setItem: (k, v) => { helpStorage[k] = String(v); } };
@@ -2919,33 +2917,30 @@ console.log('view mode ok');
     for (const h of keyHandlers) h({ code, target: { tagName: 'BODY' }, preventDefault() { prevented = true; }, ...more });
     return prevented;
   };
-  run(`pfAutoShown.clear(); G.state='select'; selectScreen.figure = selectedFigure; selectScreen.pending = true; setFigureSong(MULASSA); setView(false); setView(true); animMula(1/60, clock/BEAT);`);
-  assert(run('viewMode && !PHOTO.on && !avatarsEl.hidden'), 'photo mode starts in free view with the bar shown');
-  assert(!keyDown('KeyW') && !keyDown('Tab'), 'free view leaves W and Tab alone');
-  assert(run('PHOTO.keys.size === 0'));
   // Timers belong to the current notice: switching/exit cancels them, replay replaces them.
   const savedPhotoTimers = [context.setTimeout, context.clearTimeout], photoTimers = new Map();
   let photoTimerId = 0;
   context.setTimeout = (fn, ms) => { photoTimers.set(++photoTimerId, { fn, ms }); return photoTimerId; };
   context.clearTimeout = id => photoTimers.delete(id);
-  run("takeFigure('drac-valls');");
-  assert(run("PHOTO.on && PHOTO.id === 'drac-valls' && PHOTO.pair"), 'a frame takes that figure');
-  assert(run('!pfTip.hidden && pfTip.dataset.visible === "true" && pfTip.innerHTML.includes("rugeix")'), 'Drac notice describes its real actions');
+  run(`pfAutoShown.clear(); G.state='select'; selectScreen.figure = selectedFigure; selectScreen.pending = true; setFigureSong(MULASSA); setView(false); setView(true); animMula(1/60, clock/BEAT);`);
+  assert(run("viewMode && PHOTO.on && PHOTO.id === 'mulassa-valls' && !avatarsEl.hidden"), 'free play drives at once (a pending selection: the Mulassa), with the bar shown');
+  assert(run('!avatarsEl.innerHTML.includes("pf-free") && avatarsEl.innerHTML.split(\'class="pf"\').length === 4'), 'the bar has the three beasts and no Mira la plaça');
+  assert(run('!pfTip.hidden && pfTip.dataset.visible === "true" && pfTip.innerHTML.includes("guitza")'), 'Mulassa help describes her real actions');
   assert([...photoTimers.values()].some(t => t.ms === 6000), 'initial controls stay for at most six seconds');
   assert.equal(helpStorage['photo-help-seen-figure'], '1', 'first figure help is remembered in browser storage');
   const firstNoticeTimer = run('pfTipT');
   photoTimers.get(firstNoticeTimer).fn(); // the first figure's help has already disappeared
-  assert(keyDown('Tab') && run("PHOTO.id === 'mulassa-valls'"), 'Tab switches only while driving');
+  assert(keyDown('Tab') && run("PHOTO.id === 'drac-valls'"), 'Tab hands the plaça to the next beast');
   assert(!photoTimers.has(firstNoticeTimer), 'switching cancels the previous notice timer');
   assert(run('pfTip.dataset.kind === "notice" && !pfTip.innerHTML.includes("pf-help-grid")'), 'Tab changes actor with compact feedback even on its first visit');
   assert.equal(photoTimers.get(run('pfTipT')).ms, 1800, 'actor feedback is brief');
   keyDown('KeyW', { target: nodes.get('hud') });
   assert(run('pfTip.dataset.visible === "true"') && photoTimers.get(run('pfTipT')).ms === 1800, 'movement preserves brief actor feedback');
-  assert(run('pfHelp.textContent.includes("guitza") && !pfHelp.textContent.includes("rugeix")'), 'accessible controls follow the current actor');
+  assert(run('pfHelp.textContent.includes("rugeix") && !pfHelp.textContent.includes("guitza")'), 'accessible controls follow the current actor');
   photoTimers.get(run('pfTipT')).fn();
-  assert(run('pfTip.dataset.visible === "false" && pfHelp.textContent.includes("guitza")'), 'after fade the accessible help remains');
+  assert(run('pfTip.dataset.visible === "false" && pfHelp.textContent.includes("rugeix")'), 'after fade the accessible help remains');
   keyDown('Tab');
-  assert(run('pfTip.innerHTML.includes("Ara mous el Drac")'), 'returning to an actor gives compact feedback');
+  assert(run('pfTip.innerHTML.includes("Ara mous el Bou") && pfHelp.textContent.includes("envesteix") && pfHelp.textContent.includes("Tab")'), 'the Bou comes next, and Tab goes on from it');
   keyDown('Tab');
   assert(run('pfTip.innerHTML.includes("Ara mous la Mulassa")'), 'each switch identifies the actual actor');
   keyDown('Slash', { key: '?' });
@@ -2998,15 +2993,9 @@ console.log('view mode ok');
   assert(!photoTimers.has(run('pfTipT')), 'backgrounding cancels the owned notice timer');
   run('showPhotoHelp();');
   assert(run('pfTip.dataset.visible === "true"'), 'help can be requested again after backgrounding');
-  run("takeFigure(''); takeFigure('mulassa-valls');");
-
-  run("takeFigure('mulassa-valls'); takeFigure('');");
-  assert(run('!PHOTO.on && viewMode'), 'Vista lliure goes back to viewing');
   run("takeFigure('mulassa-valls');"); keyDown('KeyW');
   keyDown('Escape');
-  assert(run('!PHOTO.on && viewMode && PHOTO.keys.size === 0'), 'Escape first drops control (keys cleared)');
-  keyDown('Escape');
-  assert(run('!viewMode && avatarsEl.hidden'), 'the next Escape brings the buttons back');
+  assert(run('!viewMode && !PHOTO.on && PHOTO.keys.size === 0 && avatarsEl.hidden'), 'Escape leaves free play (keys cleared)');
   run("setView(true); takeFigure('mulassa-valls');"); keyDown('KeyH');
   assert(run('viewMode && PHOTO.on'), 'H does not leave free play'); run('setView(false)');
   run("COARSE.matches = true; setView(true);");
@@ -3019,38 +3008,27 @@ console.log('view mode ok');
   assert(run('pfTip.hidden && pfTip.dataset.visible === "false"'), 'touch and exit clear the notice');
   [context.setTimeout, context.clearTimeout] = savedPhotoTimers;
   context.localStorage = savedHelpStorage;
-  console.log('photo free view by default, desktop frames, Escape steps back, touch drives with the stick ok');
-  // Pending selection keeps its identity; photo mode shows the two existing playable figures.
+  console.log('photo drives at once, three beasts round Tab, desktop frames, Escape leaves, touch drives with the stick ok');
+  // Pending selection keeps its identity; photo mode shows the driven playable figure alone.
     let ft = 90000; const pendFrame = () => run(`frame(${ft += 1000 / 60})`);
   run(`var realSel = sheets.select, pendCrowd = activeCrowd; activeCrowd = []; sheets.select = { pending: true, figure: { id: 'aliga-valls', status: 'aviat' }, visible() {}, sheetOpen: false };
     G.state = 'select'; setView(false); setFigureSong(MULASSA); var pendingSounds = [], pendingChip = chip; chip = { sfx: k => pendingSounds.push(k) };`);
   pendFrame();
   assert(run('!mula.root.visible && !drac.root.visible'), 'pending selector: no model');
   run('setView(true);'); pendFrame();
-  assert(run('mula.root.visible && drac.root.visible && !avatarsEl.hidden'), 'pending photo mode: both figures and the control bar show');
+  assert(run('mula.root.visible && !drac.root.visible && !avatarsEl.hidden'), 'pending photo mode: the Mulassa alone and the control bar show');
   run("takeFigure('drac-valls');"); pendFrame();
-  assert(run("drac.root.visible && mula.root.visible && selectedFigure.id === 'mulassa-valls'"), 'driving the Drac never changes the selection');
+  assert(run("drac.root.visible && !mula.root.visible && selectedFigure.id === 'mulassa-valls'"), 'driving the Drac never changes the selection');
   run("PHOTO.sparks = true;"); pendFrame(); pendFrame();
   run('setView(false);'); pendFrame();
   assert(run("!mula.root.visible && !drac.root.visible && dracFx.idle && sheets.select.figure.id === 'aliga-valls' && selectedFigure.id === 'mulassa-valls'"), 'leaving: bare again, Drac fx cleared, pending selection kept');
   run('setFigureSong(DRAC); setView(true);'); pendFrame();
-  assert(run('drac.root.visible && mula.root.visible'), 'both figures show with the last playable Drac');
+  assert(run('drac.root.visible && !mula.root.visible'), 'the last playable Drac shows alone');
   run('setView(false); setFigureSong(MULASSA);'); pendFrame(); // (a frame closes the photo walk, as the game does)
   assert.equal(run('pendingSounds.length'), 0, 'pending photo controls and figure switches never request SFX');
   run('chip = pendingChip;');
-  // A portrait phone: photo mode backs the camera off (same angle) so she fits across, and drops the selector band's shift.
-  const sizeWas = [context.innerWidth, context.innerHeight]; context.innerWidth = 393; context.innerHeight = 852;
-  run(`resize(); sheets.select.band = { top: 0, bottom: 200 }; setView(false); titleC.on = false;`); pendFrame(); // (a fresh follow: earlier tests leave the camera far across the plaça)
-  const plainDist = run('orbitHome.dist'), plainPitch = run('orbitHome.pitch');
-  run('setView(true);'); pendFrame();
-    // her whole outline in the middle of the screen (cameras.js frameMenuLens: feet on the fitted floor, room above to rear up), not
-  // in the hidden band (0-200 of 852 css px): her vertices through the pinhole (view space, the fov) plus the lens shift, sampled
-  // over 5 s of her dancing (the shot follows her calmly, never locked on)
-  const offAt = () => run(`camera.updateMatrixWorld(); { let lo = Infinity, hi = -Infinity; const v = new THREE.Vector3(), ppm = HH * K / (2 * Math.tan(camera.fov * Math.PI / 360)); mula.root.traverseVisible(o => { const p = o.isMesh && o.geometry.attributes.position; if (p) for (let i = 0; i < p.count; i++) { v.fromBufferAttribute(p, i).applyMatrix4(o.matrixWorld).applyMatrix4(camera.matrixWorldInverse); const y = -v.y / -v.z * ppm; if (Number.isFinite(y)) { lo = Math.min(lo, y); hi = Math.max(hi, y); } } }); [lo + camShift, hi + camShift]; }`);
-  const offs = []; for (let i = 0; i < 20; i++) { for (let j = 0; j < 15; j++) pendFrame(); offs.push(offAt()); }
-  const meanMid = offs.reduce((a, [t, b]) => a + (t + b) / 2, 0) / offs.length, top = Math.min(...offs.map(o => o[0])), bottom = Math.max(...offs.map(o => o[1]));
-  assert(Math.abs(meanMid) < 0.1 * 852 && top > -0.45 * 852 && bottom < 0.45 * 852, `portrait photo mode: in the middle, not the hidden selector band (mean ${meanMid.toFixed(0)}, ${top.toFixed(0)} to ${bottom.toFixed(0)} css px from the middle)`);
-  // Leaving photo mode: the selector comes back at once, so the camera hands back quickly (cameras.js MENU_T.exit): her feet are back
+  const sizeWas = [context.innerWidth, context.innerHeight];
+  // Leaving photo mode: the selector comes back at once, so the camera hands back quickly: her feet are back
   // above the dock within ~1.5 s, not the calm ~4 s that left her behind the cards.
   const feet = () => run(`camera.updateMatrixWorld(); { let hi = -Infinity; const v = new THREE.Vector3(), ppm = HH * K / (2 * Math.tan(camera.fov * Math.PI / 360));
     mula.root.traverseVisible(o => { const p = o.isMesh && o.geometry.attributes.position; if (p) for (let i = 0; i < p.count; i++) { v.fromBufferAttribute(p, i).applyMatrix4(o.matrixWorld).applyMatrix4(camera.matrixWorldInverse); const y = -v.y / -v.z * ppm; if (Number.isFinite(y)) hi = Math.max(hi, y); } });
@@ -3065,7 +3043,7 @@ console.log('view mode ok');
   assert(clear !== null && clear < 1.5, `leaving photo mode: her feet are back over the dock in ${clear?.toFixed(2)} s (settled ${settled.toFixed(0)} css px, dock at 476)`);
   [context.innerWidth, context.innerHeight] = sizeWas; run('setView(false); resize();'); pendFrame();
   run('sheets.select = realSel; activeCrowd = pendCrowd;'); // (no crowd: the frames must not move the people later tests place)
-  console.log('pending selection: photo mode shows the pair and preserves the pending identity ok');
+  console.log('pending selection: photo mode shows the driven figure and preserves the pending identity ok');
 }
 
 // A nearby spectator makes way through the regular RING steering; the walker never tunnels through them.
@@ -3170,7 +3148,7 @@ console.log('view mode ok');
   assert(run('mula.body.rotation.x > 0.3 && MULA_FEET.slice(4).every(f=>f.y>0.3)'), 'E: her rear up, its legs off the floor');
   assert(legY(true) < 0.12, `on her front legs (${legY(true).toFixed(2)})`);
   run(`clearPhotoKeys(); for(let i=0;i<90;i++){clock+=1/60;animMula(1/60,clock/BEAT,1);}`);
-  assert(run('Math.abs(mula.body.rotation.x) < 0.05'), 'let go: back on all fours');
+  assert(run('Math.abs(mula.body.rotation.x) < 0.1'), 'let go: back on all fours (alone she keeps her idle sway, < 0.08)');
   run(`takeFigure('drac-valls'); PHOTO.keys.add('KeyQ'); for(let i=0;i<60;i++){clock+=1/60;animMula(1/60,clock/BEAT,1);}`);
   assert(run('DRAC_POSE.rear > 0.8 && DRAC_POSE.jaw > 0.8'), 'Drac Q: heads up, jaws open');
   run(`clearPhotoKeys(); setView(false); animMula(1/60,clock/BEAT,1);`);
@@ -3178,29 +3156,25 @@ console.log('view mode ok');
 }
 
 {
-  assert(run('photoPairClearance(0,0,0,{x:2.5,z:0,yaw:0},false)>0'), 'parallel figures have room beside each other');
-  assert(run('photoPairClearance(0,0,Math.PI/2,{x:2.5,z:0,yaw:0},false)<0'), 'turning the long body into the other figure is blocked');
   run(`var switchedWalker=newWalker(0,0,0), switchedPose=newDracPose();
     manualDracStep(switchedWalker,switchedPose,1/60,0,{x:0,z:0,yaw:0,vx:0,vz:0},DRAC_SCALE,false);
     manualDracStep(switchedWalker,switchedPose,1/60,0,{x:4,z:0,yaw:0,vx:0,vz:0},DRAC_SCALE,true);`);
   assert(run('switchedWalker.feet.every(f=>Math.abs(f.x-4)<0.01) && switchedWalker.local.every(f=>f.lift===0)'), 'swapping back plants shoes at the new spot; reduced motion has no idle stepping');
-  console.log('photo figure rotation clearance and returning Drac feet ok');
+  console.log('returning Drac feet ok');
 }
 
-// Only the currently driven figure leaves the autonomous menu walk.
+// The driven figure is alone on the plaça (Marc 2026-10-24) and stays put without keys, before and after Tab.
 {
   run(`G.state='select'; selectScreen.figure = selectedFigure; selectScreen.pending = false; setFigureSong(MULASSA); animMula(1/60,0); setView(true); takeFigure(selectedFigure.id); animMula(1/60,0);
-    clearPhotoKeys(); var idleM=M.pos.clone(), idleD={x:PAIR.x,z:PAIR.z};
+    clearPhotoKeys(); var idleM=M.pos.clone();
     for(let i=0;i<180;i++){clock+=1/60;animMula(1/60,clock/BEAT);}`);
-  assert(run('M.pos.distanceTo(idleM)<1e-6'), 'controlled Mulassa stays put without keys');
-  assert(run('Math.hypot(PAIR.x-idleD.x,PAIR.z-idleD.z)>.01'), 'uncontrolled Drac keeps walking');
+  assert(run('M.pos.distanceTo(idleM)<1e-6 && !drac.root.visible'), 'controlled Mulassa stays put without keys, no Drac beside her');
   run(`photoKey({code:'Tab',preventDefault(){}},true); animMula(1/60,clock/BEAT);
-    idleM=M.pos.clone(); idleD={x:PAIR.x,z:PAIR.z};
+    idleM=M.pos.clone();
     for(let i=0;i<180;i++){clock+=1/60;animMula(1/60,clock/BEAT);}`);
-  assert(run('Math.hypot(PAIR.x-idleD.x,PAIR.z-idleD.z)<1e-6'), 'controlled Drac stays put without keys');
-  assert(run('M.pos.distanceTo(idleM)>.01'), 'Mulassa resumes her walk after Tab');
+  assert(run('M.pos.distanceTo(idleM)<1e-6 && drac.root.visible && !mula.root.visible'), 'controlled Drac stays put without keys, alone');
   run('setView(false); animMula(1/60,clock/BEAT);');
-  console.log('manual ownership and autonomous companion ok');
+  console.log('one driven figure at a time ok');
 }
 
 {
@@ -3219,21 +3193,8 @@ console.log('view mode ok');
 }
 
 {
-  run(`G.state='select'; selectScreen.figure = selectedFigure; selectScreen.pending = false; setFigureSong(MULASSA); animMula(1/60,0);
-    M.pos.set(-4,0);M.pivot.set(-4+PIVOT,0);M.yaw=Math.PI/2;S.yaw.x=S.yaw.t=M.yaw;S.yaw.v=0;
-    PAIR.x=PAIR.w.x=3;PAIR.z=PAIR.w.z=0;PAIR.w.face=0;
-    var passageCrowd=activeCrowd;activeCrowd=[];setView(true); takeFigure(selectedFigure.id);animMula(1/60,0);PHOTO.keys.add('KeyW');PHOTO.keys.add('ShiftLeft');
-    var passageStart=PAIR.x,passageGap=99,passageStep=0;
-    for(let i=0;i<300;i++){var lastX=PAIR.x,lastZ=PAIR.z;clock+=1/60;animMula(1/60,clock/BEAT);
-      passageGap=Math.min(passageGap,photoPairClearance(M.pos.x,M.pos.y,M.yaw,{x:PAIR.x,z:PAIR.z,yaw:PAIR.w.face},false));
-      passageStep=Math.max(passageStep,Math.hypot(PAIR.x-lastX,PAIR.z-lastZ));}
-  `);
-  assert(run('M.pos.x>-2'), 'manual figure advances toward its companion');
-  assert(run('Math.abs(PAIR.x-passageStart)+Math.abs(PAIR.z)>1'), 'companion yields instead of becoming a wall');
-  assert(run('passageGap>=-0.03 && passageStep<0.08'), `companion yielding is collision-free and bounded: ${run('JSON.stringify([passageGap,passageStep])')}`);
-  run('setView(false);animMula(1/60,clock/BEAT);activeCrowd=passageCrowd;');
   assert(run('photoFixedClearance(10,0,0,false)>0 && photoFixedClearance(plaza.inner,0,0,false)<0'), 'actual plaza bounds replace the circular fence');
-  console.log('companion yields smoothly and open plaza bounds are reachable');
+  console.log('open plaza bounds are reachable');
 }
 
 {
@@ -3260,7 +3221,7 @@ console.log('view mode ok');
     plaza.backdrop.mesh.count=midCrowd.mesh.count=0;plaza.props=[{x:15.2,z:-3,r:2.2,h:4}];trappedPerson.rad=.52;`);
   for (const id of ['mulassa-valls', 'drac-valls']) for (const floor of [false, true]) for (const charred of [false, true]) {
     const scenario = `${id}, ${floor ? 'floor' : 'live'}, ${charred ? 'charred' : 'normal'}`;
-    run(`G.state='select';setView(false);setFigureSong(MULASSA);setView(true);takeFigure('${id}');setPhotoControl(true,'${id}',false);
+    run(`G.state='select';setView(false);setFigureSong(MULASSA);setView(true);takeFigure('${id}');setPhotoControl(true, '${id}');
       activeCrowd=${floor ? '[]' : '[trappedPerson]'};photoExtras.length=0;
       if(${floor})photoExtras.push({pos:trappedPerson.pos,rad:trappedPerson.rad,vx:0,vz:0,band:trappedPerson,offsetX:0,offsetZ:0});
       PHOTO.ready=true;PHOTO.cameraYaw=Math.atan2(MID.fx,MID.fz)+Math.PI;
@@ -3285,7 +3246,7 @@ console.log('view mode ok');
   }
   // Resolving a crowded pair may move the outer person; it must not push the inner one into the figure.
   run(`var crowdNeighbour=passageSavedCrowd[1], neighbourRadius=crowdNeighbour.rad;
-    setPhotoControl(true,'drac-valls',false);Object.assign(photoBody(),{x:0,z:0,yaw:0});
+    setPhotoControl(true, 'drac-valls');Object.assign(photoBody(),{x:0,z:0,yaw:0});
     activeCrowd=[trappedPerson,crowdNeighbour];photoExtras.length=0;plaza.props=[];
     trappedPerson.rad=crowdNeighbour.rad=.52;trappedPerson.sootT=trappedPerson.sootW=crowdNeighbour.sootT=0;
     trappedPerson.pos.set(1.95,0);crowdNeighbour.pos.set(2.9,0);trappedPerson.vel.set(0,0);crowdNeighbour.vel.set(0,0);
@@ -3327,7 +3288,7 @@ console.log('view mode ok');
 
 // Visible-but-blurred menus used to advance the demo against a suspended audio clock.
 {
-  run("G.state = 'select'; G.paused = false; G.resuming = null; setView(false); setFigureSong(DRAC); var returningSounds = []; chip = { sfx: k => returningSounds.push(k), wake() {}, ctx: { state: 'suspended', suspend() {} } }; last = 1000;");
+  run("G.state = 'select'; G.paused = false; G.resuming = null; setView(false); setFigureSong(DRAC); var returningSounds = []; chip = { suspend() { this.ctx.suspend(); }, sfx: k => returningSounds.push(k), wake() {}, ctx: { state: 'suspended', suspend() {} } }; last = 1000;");
   const before = run('clock');
   document.focused = false;
   run('frame(2000); frame(122000);');

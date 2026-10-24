@@ -10,8 +10,9 @@ import { G, clock } from '../game/state.js';
 import { CALM } from '../core/env.js';
 import { pulse } from '../core/anim.js';
 import { glowDisc } from './primitives.js';
+import { esquellotShape, esquellotHang } from './esquellot.js';
 
-const dracFig = () => selectedFigure.id === 'drac-valls';
+const dracFig = () => selectedFigure.id === 'drac-valls', bouFig = () => selectedFigure.id === 'bou-tradicional-valls';
 // The Drac's repeated-tap icon: approved A artwork, a plain tube and a fan of sparks.
 // Same 56 × 44 design as index.html's help; progress lengthens the sparks, never burns a fuse.
 const CARRETILLA_RAYS = [[36, 4], [45, 7], [52, 15], [51, 25], [45, 33]];
@@ -66,6 +67,7 @@ function carretillaHang(x, y, r, k) {
 
 export function balloonShape(x, y, r, col = '#ff5a7a') { // flat fallback (lane head, no WebGL overlay): round balloon, knot at the bottom
   if (dracFig()) return carretillaHang(x, y, r, 0);
+  if (bouFig()) return esquellotHang(x, y, r);
   H.fillStyle = C.dark;
   H.beginPath(); H.ellipse(x, y, r * 0.9 + 2, r + 2, 0, 0, 7); H.fill();
   H.beginPath(); H.moveTo(x, y + r * 0.85); H.lineTo(x - r * 0.3 - 2, y + r * 1.3 + 2); H.lineTo(x + r * 0.3 + 2, y + r * 1.3 + 2); H.fill();
@@ -78,8 +80,9 @@ export function balloonShape(x, y, r, col = '#ff5a7a') { // flat fallback (lane 
 // GLOBUS in 3D: drawLane fills `balloonView` each frame it hangs; frame() steps and renders it (balloon3d.js). null = the flat fallback.
 export const balloonFx = (() => { try { return createBalloonFx(); } catch (err) { console.error(err); return null; } })();
 export let balloonView = null;
-export const setBalloonView = v => { // the Drac: a flat carretilla icon; lane.js draws its counter separately below
+export const setBalloonView = v => { // the Drac: a flat carretilla icon, the Bou its esquellot; lane.js draws their counter separately below
   if (v && dracFig()) { H.save(); H.setTransform(PXU, 0, 0, PXU, 0, 0); carretillaHang(v.x, v.y, v.r, v.k); H.restore(); return (balloonView = null); }
+  if (v && bouFig()) { H.save(); H.setTransform(PXU, 0, 0, PXU, 0, 0); esquellotHang(v.x, v.y, v.r); H.restore(); return (balloonView = null); }
   return (balloonView = v);
 };
 let headArt = null; // the lane's drumroll head: stills of the same 3D balloon at three inflations (a live one would sit under the HUD band); vector until made
@@ -88,6 +91,7 @@ setTimeout(function snap() { if (loader.covering) return setTimeout(snap, 500); 
 // k 0..1 blends the tones; sq / rot are balloon3d's springs (squash, tilt) so it punches with every tap like the big one; the vector stays flat
 export function balloonHead(x, y, r, k = 0.5, sq = 0, rot = 0) {
   if (dracFig()) return carretillaShape(x, y + r * 0.1, r * 1.35, k, rot); // a thin diagonal: drawn larger than r so its ink matches the balloon's
+  if (bouFig()) return esquellotShape(x, y, r * 1.2, rot * 0.5);
   if (!headArt) return balloonShape(x, y, r);
   const f = Math.min(0.999, k) * 2, i = Math.floor(f);
   H.save(); H.translate(x, y); H.rotate(rot * 0.3); H.scale(1 + sq * 0.5, 1 - sq * 0.5);

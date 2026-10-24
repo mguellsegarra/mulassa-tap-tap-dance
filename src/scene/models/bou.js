@@ -1,6 +1,7 @@
 // Approved p13 silhouette from the Bou study, kept unchanged for its song dance.
 import * as THREE from 'three';
-import { Vox } from './voxel.js';
+import { Vox, MAT } from './voxel.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { buildBouRig } from '../bou-rig.js';
 import { buildBouHead } from './bou-heads.js';
 const K = {
@@ -23,6 +24,14 @@ const extrude = (pts, depth, x) => {
   // Shape x -> body z, the extrusion across the body.
   return new THREE.ExtrudeGeometry(shape, { depth, bevelEnabled: false, curveSegments: 1 }).rotateY(-H).translate(x, 0, 0);
 };
+// One carretilla: a kraft tube and its red cap, mouth at +z. Painted by hand, not through Vox: Vox draws a random per box
+// (its colour jitter, even at 0), and the tubes must not shift the plaça's random layout built after the Bou.
+let BOU_TUBE = null;
+function bouTube() {
+  const paint = (g, hex) => { const c = new THREE.Color(hex), n = g.attributes.position.count, a = new Float32Array(n * 3);
+    for (let i = 0; i < a.length; i += 3) { a[i] = c.r; a[i + 1] = c.g; a[i + 2] = c.b; } return g.setAttribute('color', new THREE.BufferAttribute(a, 3)); };
+  return mergeGeometries([paint(new THREE.BoxGeometry(.05, .05, .18).translate(0, 0, .09), K.letter), paint(new THREE.BoxGeometry(.056, .056, .025).translate(0, 0, .1695), K.red)]);
+}
 // cap: one of bou-heads.js's heads, «Bonàs» ('a', Marc 24/10/2026) by default; null keeps the p13 head (and its neck block).
 export function buildBou({ cap = 'a' } = {}) {
   const p={horn:[.45,.18,.05],eyes:'round',...PROFILE}, rig=buildBouRig(), W=1.22, top=p.top;
@@ -186,6 +195,18 @@ export function buildBou({ cap = 'a' } = {}) {
     }
   }
   const shell = new THREE.Group(); shell.position.y = -.85; shell.add(...(solid.g.length ? [solid.mesh()] : []), v.mesh()); rig.body.add(shell);
+  // Its carretilles (UAF videos 2021/2024: a comb of tubes along both edges of the back): no rack (Marc, 24/10/2026), only
+  // small tubes where its comb stands, hidden until they burn (scene/bou-show.js grows them in and out). Pairs from the
+  // rump out of both flanks, nearly flat, then three straight up the middle. Their mouths at +z (scene/bou-show.js BOU_JET_NOZZLE).
+  const back = new THREE.Box3(); for (const m of shell.children) { m.geometry.computeBoundingBox(); back.union(m.geometry.boundingBox); }
+  const fire = [], Z = new THREE.Vector3(0, 0, 1);
+  const carretilla = (x, z, dir) => {
+    const g = new THREE.Group(); g.position.set(x, back.max.y - .87, z); g.quaternion.setFromUnitVectors(Z, dir.normalize());
+    g.add(new THREE.Mesh(BOU_TUBE ??= bouTube(), MAT));
+    g.visible = false; rig.body.add(g); fire.push(g);
+  };
+  for (let k = 0; k < 6; k++) for (const s of [-1, 1]) carretilla(s * (back.max.x - .12), zc - .8 + k * .32, new THREE.Vector3(s, .06, 0));
+  for (let k = 0; k < 3; k++) carretilla(0, zc - .45 + k * .45, new THREE.Vector3(0, 1, -.1));
   const alt = cap && buildBouHead(cap, rig.body), head = alt ? alt.head : slimHead(p, F2 - .02); if (!alt) rig.body.add(head);
   // The tail (Marc, 24/10/2026: free of the body, a proper chain, comic): it springs from a small dock at the top of
   // the rump, where the back ends, then hangs in links that swing and bounce on their own and never enter the body:
@@ -214,7 +235,7 @@ export function buildBou({ cap = 'a' } = {}) {
   for (let i = 1; i < LINKS.length; i++) { const g = new THREE.Group(); g.add(new Vox().box(0, -.04, 0, .08, .08, .08, K.hide, 0).mesh()); rig.tail.add(g); }
   rig.tail.position.set(0, dockY - .85, dockZ);
   const swingTail = makeTailSwing(rig.tail, LINKS.map(([l]) => l));
-  return { ...rig, head, cap: alt, swingTail };
+  return { ...rig, head, cap: alt, swingTail, fire };
 }
 
 function slimHead(p, front) {

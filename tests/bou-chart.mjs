@@ -5,7 +5,7 @@ import vm from 'node:vm';
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import song from '../src/song-bou.json' with { type: 'json' };
-import timing from '../music/bou-tradicional/timing.json' with { type: 'json' };
+import approved from '../music/bou-tradicional/timing.json' with { type: 'json' };
 import playback from '../music/bou-tradicional/playback.json' with { type: 'json' };
 import { makeDanceChart } from '../src/game/chart.js';
 import { beatAtTime } from '../src/core/beat-grid.js';
@@ -16,6 +16,12 @@ import { payload, endRun } from '../src/game/stats.js';
 import { trf } from '../src/game/figure-theme.js';
 import { PICKER_FIGURES } from '../src/ui/figure-picker.js';
 
+// the mix starts `cutBeats` into v13's intro (tools/build_bou_mobile.py): v13's times, that much earlier
+const T0 = approved.subdivisionTimes[playback.cutBeats * approved.subdivision], early = t => t - T0;
+const timing = { ...approved, duration: early(approved.duration), musicEnd: early(approved.musicEnd), finalNoteStart: early(approved.finalNoteStart),
+  finaleCandidate: early(approved.finaleCandidate), beats: approved.beats.slice(playback.cutBeats).map(early),
+  events: approved.events.map(e => ({ ...e, start: early(e.start), end: early(e.end) })) };
+assert.equal(playback.cutBeats, 4); assert(Math.abs(T0 - 2) < 1e-9, 'one 2 s bar of the intro cut');
 // Current mix, byte for byte, where the game loads it
 const sha = p => createHash('sha256').update(readFileSync(new URL(p, import.meta.url))).digest('hex');
 assert.equal(sha('../public/music/' + playback.audio), playback.audioSha256, 'the public MP3 matches the active playback manifest');
@@ -47,7 +53,13 @@ const [easy, normal, hard] = charts.map(per7);
 assert(Math.max(...easy) <= 9 && Math.min(...easy.slice(0, -2)) >= 4, `FÀCIL stays flat (${Math.min(...easy)}-${Math.max(...easy)})`);
 assert(Math.max(...normal) <= 14, `NORMAL grows to ~12 (max ${Math.max(...normal)})`);
 assert(Math.max(...hard) <= 31, `DIFÍCIL ~30 only at its densest (max ${Math.max(...hard)})`);
-assert(charts[0].every(n => !n.end) && charts[1].some(n => n.end), 'MANTÉN from NORMAL up');
+assert(charts[0].every(n => !n.end || n.balloon) && charts[1].some(n => n.end && !n.balloon), 'MANTÉN from NORMAL up');
+// the ESQUELLOT: on every level the last two bars are mashed, up to the final hit, which stays a tap
+for (const c of charts) {
+  const bl = c.filter(n => n.balloon);
+  assert(bl.length === 1 && Math.abs(bl[0].end - song.end) < 1e-6 && bl[0].end - bl[0].t > 3, 'one esquellot, the last two bars');
+  assert(c.at(-1).t === song.end && c.at(-1).big, 'the final BRAMA! after it');
+}
 for (const c of charts) for (let i = 1; i < c.length; i++) assert(c[i].t - c[i - 1].t >= 0.19, 'never two taps closer than a sixteenth at 150');
 for (const c of charts) { // at most four in a row on one side
   let run = 0, prev = null;
@@ -68,10 +80,10 @@ assert.equal(recordKey(BOU, 2), 'record-bou-tradicional-valls-2');
 saveFigureRecord(store, BOU, 2, 91, 123456, 200);
 assert.equal(readFigureRecord(store, BOU, 2).score, 123456);
 assert.equal(readFigureRecord(store, MULASSA, 2), null, 'never the Mulassa\'s record');
-const game = { figureId: BOU.id, figureVersion: BOU.version, diff: 1, practice: false, counts: { perfect: 225, good: 0, miss: 0 }, score: 1000, maxCombo: 225 }; // a valid NORMAL run
+const game = { figureId: BOU.id, figureVersion: BOU.version, diff: 1, practice: false, counts: { perfect: 220, good: 0, miss: 0 }, score: 1000, maxCombo: 220 }; // a valid NORMAL run
 assert.equal(snapshotResult(game, { reason: 'end', query: new URLSearchParams() }), null, 'a Bou run is never published');
 assert.equal(snapshotResult({ ...game, figureVersion: 'mulassa-v3' }, { reason: 'end', query: new URLSearchParams() }), null, 'nor under the Mulassa\'s version');
-assert(validResult({ version: 'bou-v1', difficulty: 1, counts: { perfect: 225, good: 0, miss: 0 }, score: 1, maxCombo: 1, figureId: BOU.id }) && !validResult({ version: 'bou-v1', difficulty: 1, counts: { perfect: 225, good: 0, miss: 0 }, score: 1, maxCombo: 1, figureId: MULASSA.id }), 'bou-v1 is the Bou\'s, mirrored for when its board exists');
+assert(validResult({ version: 'bou-v1', difficulty: 1, counts: { perfect: 220, good: 0, miss: 0 }, score: 1, maxCombo: 1, figureId: BOU.id }) && !validResult({ version: 'bou-v1', difficulty: 1, counts: { perfect: 220, good: 0, miss: 0 }, score: 1, maxCombo: 1, figureId: MULASSA.id }), 'bou-v1 is the Bou\'s, mirrored for when its board exists');
 const stats = { deviceId: 'd', owners: {} };
 endRun(stats, 'none', { kind: 'end', date: '2026-10-23', figureId: BOU.id, version: BOU.version, level: 1, completed: true, seconds: 150, counts: { perfect: 1, good: 0, miss: 0 } });
 endRun(stats, 'none', { kind: 'end', date: '2026-10-23', figureId: MULASSA.id, version: MULASSA.version, level: 1, completed: true, seconds: 88, counts: { perfect: 1, good: 0, miss: 0 } });
@@ -95,13 +107,8 @@ for (const [figure, from] of [[BOU, 0], [BOU, 30], [MULASSA, 0], [DRAC, 0]]) {
   assert.equal(calls.find(c => c[0] === 'start')[1], 3.2, 'every figure gets the same lead-in');
   assert.deepEqual(calls.find(c => c[0] === 'countIn')[1], runtime.countInAt(runtime.startCueAt(from)), 'and the same timbals');
 }
-// A run from the start skips the Bou's soft pre-roll: BALLA! lands on the band's entry, the melody two beats later.
-runtime.setPlayFrom(0);
+// BALLA! on the song's first beat for every figure: the Bou's own 8-beat intro follows it (4 s: the Mulassa's 4.7, the Drac's 5.6).
 runtime.setFigureSong(BOU);
-assert.equal(runtime.playFrom, 5); assert.equal(runtime.startCueAt(runtime.playFrom), 5); assert.equal(song.notes[0][0] - runtime.playFrom, 1);
-runtime.setPlayFrom(30); assert.equal(runtime.playFrom, 30, '?from still wins');
-runtime.setPlayFrom(0);
-runtime.setFigureSong(MULASSA); assert.equal(runtime.playFrom, 0, 'the Mulassa and the Drac keep their whole recording');
-runtime.setFigureSong(DRAC); assert.equal(runtime.playFrom, 0);
+assert.equal(runtime.startCueAt(0), 0); assert.equal(song.notes[0][0], 4);
 runtime.setFigureSong(MULASSA);
 console.log('Bou counts in like the Mulassa and the Drac');

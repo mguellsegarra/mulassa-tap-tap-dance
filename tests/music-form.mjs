@@ -56,10 +56,9 @@ assert.deepEqual(timelines.mulassa.holds.map(h => h.slice(0, 2)), [[32, 34], [64
 assert.deepEqual(timelines.drac.holds.map(h => h.slice(0, 2)), [[66, 69]]);
 assert.equal(timelines.mulassa.finale, 208);
 assert.equal(timelines.drac.finale, 225); // the 8-beat closing roll under the held last note (docs/drac-music.md, round 2)
-// the Mulassa opens at the menu loop's 152, rises phrase by phrase (A2 154, B 158, C 161, X 164) and broadens back to
-// 152 for the closing roll
+// the Mulassa keeps the menu loop's 152 all through (Marc 2026-10-24: the phrase-by-phrase rise to 164 went back to master's)
 const mulassaBpm = b => Math.round(60e7 / timelines.mulassa.tempo.beatUs[b]) / 10;
-assert.deepEqual([0, 40, 100, 160, 190, 212, 226, 228].map(mulassaBpm), [152, 152, 154, 158, 161, 164, 152, 152]);
+assert.deepEqual([0, 40, 100, 160, 190, 212, 226, 228].map(mulassaBpm), [152, 152, 152, 152, 152, 152, 152, 152]);
 { // constant-exact stays the generator's own grid, to the last bit
   const f = clone(forms.mulassa);
   f.tempo = { clock: 'constant-exact', interpolation: 'smoothstep', leadIn: 0.1, knots: [{ at: { beat: 0 }, bpm: 152 }] };

@@ -8,7 +8,7 @@ import { G } from '../game/state.js';
 import { REEL } from '../game/showreel.js';
 import { songTimeAtBeat } from '../game/figure-song.js';
 import { createBouMotion } from './bou-motion.js';
-import { BOU_TIMING, BOU_CARRY, bouPose, newBouPose } from '../game/bou-dance.js';
+import { BOU_TIMING, BOU_CARRY, bouPose, newBouPose, bouFestaAt } from '../game/bou-dance.js';
 import { liveBouFeet } from '../game/bou-feet.js';
 import { PHOTO } from '../game/photo-control.js';
 import { LETTERS } from '../core/env.js';
@@ -17,6 +17,7 @@ import { collaRun } from './drac-dance.js';
 import { lensShrink } from './framing.js';
 import { bouToWorld, carryColla } from './bou-colla.js';
 import { PARADE } from './bou-parade.js';
+import { smooth } from '../core/anim.js';
 
 export const BOU_DANCE = { t: 0 }; // the song second shown
 export const BOU_END = BOU_TIMING.duration;
@@ -36,7 +37,7 @@ export function danceBou(beat, dt, acc, pos) {
   else if (reel || dancing && !G.collapseT && !G.paused) BOU_DANCE.t = Math.max(0, songTimeAtBeat(beat));
   const jump = Math.abs(BOU_DANCE.t - bouShown) > 0.5; // a seek (restart, a new reel loop): the tail hangs still again
   bouShown = BOU_DANCE.t;
-  const P = bouMotion(BOU_DANCE.t, jump ? 0 : dt);
+  const P = bouMotion(BOU_DANCE.t, jump ? 0 : dt, bramaAt(BOU_DANCE.t));
   // a collapse: the shell slumps forward and sideways on its tired carriers, its head well clear of the floor
   bou.body.rotation.x += acc.pitch + acc.col * 0.1; // (the motion set the base pose this frame: nothing piles up)
   bou.body.rotation.z += acc.roll + acc.col * 0.12;
@@ -44,6 +45,17 @@ export function danceBou(beat, dt, acc, pos) {
   pos.set(BOU_WORLD.x, BOU_WORLD.z);
   return bou.frame.rotation.y + P.yaw;
 }
+// A BRAMA hit (judge.js guapaHit) squashes its head: in, held, out on the song clock (a pause holds it, a restart
+// drops it). A second one mid-squash rises from where the first had got to: never a pop.
+const BRAMA = { at: -9, from: 0 }, BRAMA_T = { in: 0.1, hold: 0.3, out: 0.45 };
+const bramaEase = x => smooth(Math.max(0, Math.min(1, x)));
+function bramaAt(t) {
+  const s = t - BRAMA.at;
+  if (s < 0 || s > BRAMA_T.hold + BRAMA_T.out) return 0;
+  const up = BRAMA.from + (1 - BRAMA.from) * bramaEase(s / BRAMA_T.in);
+  return up * (1 - bramaEase((s - BRAMA_T.hold) / BRAMA_T.out));
+}
+export function bouBrama() { BRAMA.from = bramaAt(BOU_DANCE.t); BRAMA.at = BOU_DANCE.t; }
 // One still pose, no tail swing (the share photo, share-capture.js): the next frame poses it again from BOU_DANCE.
 export function poseBou(t) { bouMotion ??= createBouMotion(bou); return bouMotion(t, 0); }
 
@@ -90,8 +102,12 @@ export function bouCollaTick(on, beat, dt) {
   // the festa: the attendants carry it (their obstacles for the crowd go with them) and the public runs behind
   bouPose(BOU_DANCE.t, BOU_CARRY_POSE);
   PARADE.on = show; PARADE.beat = BOU_CARRY_POSE.beat; PARADE.yaw = BOU_COLLA_YAW;
+  PARADE.x = BOU_CARRY_POSE.x; PARADE.z = BOU_CARRY_POSE.z; PARADE.heading = BOU_CARRY_POSE.yaw; PARADE.colla = BOU_COLLA_SPOTS;
+  BOU_FESTA.k = show ? bouFestaAt(BOU_CARRY_POSE.beat) : 0;
   if (!show) return;
-  carryColla(bouColla, BOU_CARRY_POSE, BOU_CARRY);
+  carryColla(bouColla, BOU_CARRY_POSE, BOU_CARRY, dt);
   for (let i = 0; i < 4; i++) { const g = bouColla.crew[i].g.position, w = bouToWorld(g.x, g.z, BOU_COLLA_YAW); BOU_COLLA_SPOTS[i]?.pos.set(w.x, w.z); }
 }
 const BOU_CARRY_POSE = newBouPose();
+// 0-1 while its colla carries it round (bouFestaAt): the play camera stops following and steps back (cameras.js)
+export const BOU_FESTA = { k: 0 };

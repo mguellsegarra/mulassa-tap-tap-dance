@@ -134,10 +134,12 @@ export function buildFlag(kind, big = false) {
 }
 // backdrop: how many simple figures stand along the façades; balconies: how many people look out of the first floors
 // (waving: skinnable people returned in `balcony` for the crowd mesh, else static boxes merged into the buildings).
+// the paving: S m square of T m tiles, alternating light/dark (scene/bou-show.js lights them for the Bou's disco)
+export const PAVING = { size: 34, tile: 2 };
 export function buildPlaza({ backdrop = 0, balconies = 0, waving = false } = {}) {
   const group = new THREE.Group();
   const v = new Vox();
-  const S = 34, T = 2;
+  const S = PAVING.size, T = PAVING.tile;
   for (let x = -S / 2; x < S / 2; x += T) for (let z = -S / 2; z < S / 2; z += T) {
     const light = ((x + z) / T) % 2 === 0;
     v.box(x + T / 2, -0.1, z + T / 2, T - 0.06, 0.1, T - 0.06, light ? '#dccaa8' : '#cfb994', 0.03);

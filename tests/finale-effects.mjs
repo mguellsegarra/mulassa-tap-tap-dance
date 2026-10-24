@@ -7,7 +7,7 @@ import * as THREE from 'three';
 // separate scene so a decorative release pool fails even if initially hidden.
 const scene = new THREE.Scene(), G = { finale: true };
 const sun = new THREE.DirectionalLight(), hemi = new THREE.HemisphereLight();
-const context = vm.createContext({ THREE, scene, G, sun, hemi,
+const context = vm.createContext({ THREE, scene, G, sun, hemi, LIGHT: { sky: '#fff0dc', sun: '#ffe6bd' },
   renderProfile: { fireworks: 700 }, dummy: new THREE.Object3D(),
   rnd: (a, b) => (a + b) / 2, pick: values => values[0],
 });

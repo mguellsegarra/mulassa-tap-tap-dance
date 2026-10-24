@@ -2,8 +2,8 @@
 // and the sync offset.
 import { finalMode } from '../dev/final-test.js';
 import { WINDOWS } from '../game/progress.js';
-import { BEATS, BEAT, FINALE_T, beatAt, playFrom, setPlayFrom } from '../game/figure-song.js';
-export { BEATS, BEAT, FINALE_T, beatAt, playFrom };
+import { BEATS, BEAT, FINALE_T, beatAt } from '../game/figure-song.js';
+export { BEATS, BEAT, FINALE_T, beatAt };
 import { store } from '../platform/storage.js';
 
 // dev hosts only: the debug flags are invisible on a public host
@@ -16,6 +16,7 @@ export const CLICKS = Q.has('clicks'); // debug: tick on every note, to check sy
 export const CAMDRAC = Q.get('camdrac'); // 'segueix': the play camera follows the figure's heading, as it did before the travelling dances (the calmer default: cameras.js DRAC_CAM)
 export const LETTERS = Q.has('lletres'); // debug: the helpers' W / N / S / E letters over their heads (Drac and Mulassa)
 export const FESTA = Q.get('festiu') !== '0'; // ?festiu=0: the Mulassa's dance without its extra festive sway (A/B against the reference's own)
+export const FIGURA = { mulassa: 'mulassa-valls', drac: 'drac-valls', bou: 'bou-tradicional-valls' }[Q.get('figura')] ?? null; // debug: the selector opens on this figure
 export const DEMO = Q.has('demo'); // debug, dev builds only (select-ui.js): the selector shows a made-up record and position
 // ?final[=95-0-record] (dev hosts only, src/dev/final-test.js): straight to the results of a made-up run, a mock leaderboard
 export const FINAL = finalMode({ hostname: location.hostname, search: location.search });
@@ -23,7 +24,7 @@ export const COARSE = matchMedia('(pointer: coarse)'); // live: DevTools device 
 export let WIN = WINDOWS[0];
 export const setWIN = v => (WIN = v);
 export const LEAD = 3.2; // seconds between pressing start and the recording, filled by a timbal count-in
-setPlayFrom(FROM);
+export const playFrom = FROM;
 export let offsetMs = +(Q.get('offset') ?? store.get('offset') ?? 0); // calibration knob: the sync sheet, or [ and ] keys
 export const setOffsetMs = v => (offsetMs = v);
 // Fullscreen on touch devices (Android, iPad): asked for inside the tap that starts the game or picks a difficulty.

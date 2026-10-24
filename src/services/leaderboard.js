@@ -1,6 +1,7 @@
 import { tr } from '../i18n/messages.js';
 import { LEADERBOARD_VERSION, normalizeAlias, validResult } from './leaderboard-rules.js';
-import { DRAC_SCORE_VERSION } from '../game/score-scale.js';
+import { DRAC_SCORE_VERSION, BOU_SCORE_VERSION } from '../game/score-scale.js';
+import { MOCK_BOARD } from '../core/mock-board.js';
 import { ALIAS_MESSAGES } from './alias-rules.js';
 import { cleanEmail } from './feedback.js';
 export { LEADERBOARD_VERSION, normalizeAlias } from './leaderboard-rules.js';
@@ -42,7 +43,7 @@ const messages = {
 const fail = (code, detail) => new LeaderboardError(code, messages[code], detail);
 export const PAGE = 50; // rows per page of the joint board (the server's cap too)
 // The version each figure publishes to now (the board of its current dance); get_seasons takes the figure itself.
-export const FIGURE_VERSIONS = Object.freeze({ 'mulassa-valls': LEADERBOARD_VERSION, 'drac-valls': DRAC_SCORE_VERSION });
+export const FIGURE_VERSIONS = Object.freeze({ 'mulassa-valls': LEADERBOARD_VERSION, 'drac-valls': DRAC_SCORE_VERSION, ...(MOCK_BOARD && { 'bou-tradicional-valls': BOU_SCORE_VERSION }) });
 export const TAG_KEY = 'leaderboard-tag'; // beside 'leaderboard-alias', which keeps the name WITHOUT the tag (an old tab reads and sends it)
 const pad4 = n => String(n).padStart(4, '0');
 // «Timbaler#3821» for a guest (a tag), «Timbaler» for a verified profile (no tag); never what is stored under the alias key.

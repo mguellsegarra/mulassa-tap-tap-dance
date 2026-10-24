@@ -1,9 +1,9 @@
 // Real motion/camera VM: manual ownership is independent of the selector/demo state.
 export function verifyJumpImpact(run, assert) {
   const results = [];
-  for (const fps of [30, 60, 120]) for (const id of ['mulassa-valls', 'drac-valls']) for (const pair of [false, true]) {
+  for (const fps of [30, 60, 120]) for (const id of ['mulassa-valls', 'drac-valls']) {
     run(`G.state='select'; G.paused=false; G.collapseT=0; CALM.matches=false; setFigureSong(MULASSA);
-      setView(false); setView(true); setPhotoControl(true,${JSON.stringify(id)},${pair});
+      setView(false); setView(true); setPhotoControl(true,${JSON.stringify(id)});
       animMula(1/${fps},0); resetMotionImpact(); PHOTO.action=true;
       var impactRows=[], impactPulses=0, impactPrevious=-1;
       for(let i=1;i<=${fps}*1.5;i++) {
@@ -14,7 +14,7 @@ export function verifyJumpImpact(run, assert) {
         if(i<${fps}*.5) PHOTO.action=true; // repeated input in flight cannot restart it
       }`);
     const rows = run('impactRows'), contact = rows.find(r => r.contact);
-    assert.equal(run('impactPulses'), 1, `${id}, pair ${pair}, ${fps} Hz: exactly one landing`);
+    assert.equal(run('impactPulses'), 1, `${id}, ${fps} Hz: exactly one landing`);
     assert(contact && contact.air === 0, 'impact starts at ground contact');
     assert(contact.t >= 4.8 / 7 && contact.t <= 4.8 / 7 + 1 / fps + 1e-9, 'unchanged physical flight time');
     assert(rows.filter(r => r.air > 0).every(r => r.pulse === 0), 'no takeoff or airborne shake');
@@ -23,10 +23,10 @@ export function verifyJumpImpact(run, assert) {
     assert.equal(peak, id === 'mulassa-valls' ? .98 : .9, 'original per-figure manual landing strength');
     assert(rows.filter(r => r.t >= contact.t + peak / 1.6).every(r => r.pulse === 0), 'original decay settles within initial strength / 1.6 seconds');
     assert.equal(rows.at(-1).pulse, 0, 'fully settled');
-    results.push({id,pair,fps,contact:contact.t,peak});
+    results.push({id,fps,contact:contact.t,peak});
   }
   for (const id of ['mulassa-valls','drac-valls']) {
-    run(`G.state='select';setPhotoControl(true,${JSON.stringify(id)},true);animMula(1/60,0);resetMotionImpact();
+    run(`G.state='select';setPhotoControl(true,${JSON.stringify(id)});animMula(1/60,0);resetMotionImpact();
       PHOTO.keys.add('KeyW');PHOTO.keys.add('ShiftLeft');var repeatedCount=0,repeatedStamp=-1,repeatedPeak=0;
       for(let i=0;i<270;i++){
         if(i%90===0)PHOTO.action=true;clock+=1/60;animMula(1/60,clock/BEAT);
@@ -38,7 +38,7 @@ export function verifyJumpImpact(run, assert) {
   run(`var impactCancel=[];
     for(const id of ['mulassa-valls','drac-valls']) for(const phase of ['flight','landed'])
     for(const kind of ['tab','view','mode','background','pause','keys']) {
-      G.state='select'; G.paused=false; setPhotoControl(true,id,true); animMula(1/60,0); PHOTO.action=true;
+      G.state='select'; G.paused=false; setPhotoControl(true,id); animMula(1/60,0); PHOTO.action=true;
       for(let i=0;i<(phase==='flight'?10:43);i++){clock+=1/60;animMula(1/60,0);}
       if(kind==='tab')photoKey({code:'Tab',preventDefault(){}},true);
       if(kind==='view')setPhotoControl(false);
@@ -52,13 +52,7 @@ export function verifyJumpImpact(run, assert) {
       impactCancel.push(cancelledPeak);
     }`);
   assert(run('impactCancel.every(v=>v===0)'), 'no residual or stale landing after control, focus or pause changes');
-  run(`G.state='select';setPhotoControl(false);animMula(1/60,0);var demoImpact=0;
-    for(let i=0;i<300;i++){if(i%60===0)act('U');clock+=1/60;animMula(1/60,clock/BEAT);demoImpact=Math.max(demoImpact,trauma,Math.abs(manualLandingStrength()));}
-    setPhotoControl(true,'drac-valls',true);animMula(1/60,0);
-    M.air=.5;M.airV=-4;var companionImpact=0;
-    for(let i=0;i<120;i++){clock+=1/60;animMula(1/60,clock/BEAT);companionImpact=Math.max(companionImpact,trauma,Math.abs(manualLandingStrength()));}`);
-  assert(run('demoImpact===0 && companionImpact===0'), 'no controlled actor or other beast landing: no free shake');
-  run(`G.state='select';CALM.matches=true;setPhotoControl(true,'mulassa-valls',true);animMula(1/60,0);PHOTO.action=true;var calmImpact=0;
+  run(`G.state='select';CALM.matches=true;setPhotoControl(true,'mulassa-valls');animMula(1/60,0);PHOTO.action=true;var calmImpact=0;
     for(let i=0;i<90;i++){clock+=1/60;animMula(1/60,0);calmImpact=Math.max(calmImpact,Math.abs(manualLandingStrength()));}
     clearCameraImpact();camera.position.set(0,5,10);camFocus.set(0,3,0);var cameraBase=camera.position.clone();applyCameraImpact(1);var calmOffset=camera.position.distanceTo(cameraBase);
     clearCameraImpact();CALM.matches=false;`);
@@ -86,7 +80,7 @@ export function verifyJumpImpact(run, assert) {
   assert(run('wallExpired===0 && wrongOrigin===0 && wrongActor===0'), 'real-time deadline and explicit manual actor/origin gating');
   assert(run('farPulse>.02 && nearPulse>0 && nearPulse<=farPulse*.101'), 'close camera attenuates the pulse instead of magnifying it');
   for (const id of ['mulassa-valls','drac-valls']) {
-    run(`setPhotoControl(true,${JSON.stringify(id)},true);clock=1;camera.position.copy(cameraBase);camFocus.copy(focusBase);
+    run(`setPhotoControl(true,${JSON.stringify(id)});clock=1;camera.position.copy(cameraBase);camFocus.copy(focusBase);
       manualLanding={origin:'manual-jump',actor:PHOTO.id,epoch:PHOTO.epoch,inputEpoch:PHOTO.inputEpoch,time:clock,startedAt:performance.now()};
       applyCameraImpact(0);var originalX=camera.position.x-cameraBase.x,originalY=camera.position.y-cameraBase.y;clearCameraImpact();`);
     const strength = id === 'mulassa-valls' ? .98 : .9;
@@ -101,7 +95,7 @@ export function verifyJumpImpact(run, assert) {
   run(`var savedChip=chip,thuds=[];chip={sfx:(k,i,manual,w)=>thuds.push({k,i,manual,w,air:PHOTO.id==='mulassa-valls'?M.air:DRAC_JUMP.air})};`);
   const weights = {};
   for (const id of ['mulassa-valls', 'drac-valls']) {
-    run(`thuds.length=0;G.state='select';G.paused=false;CALM.matches=false;setPhotoControl(true,${JSON.stringify(id)},true);animMula(1/60,0);resetMotionImpact();PHOTO.action=true;
+    run(`thuds.length=0;G.state='select';G.paused=false;CALM.matches=false;setPhotoControl(true,${JSON.stringify(id)});animMula(1/60,0);resetMotionImpact();PHOTO.action=true;
       for(let i=1;i<=120;i++){clock+=1/60;animMula(1/60,clock/BEAT);if(i<30)PHOTO.action=true;}`);
     const thuds = run('thuds');
     assert.equal(thuds.length, 1, `${id}: one landing sound, repeated Space in flight adds none`);
@@ -109,14 +103,14 @@ export function verifyJumpImpact(run, assert) {
     assert(thuds[0].i > 4.5 && thuds[0].i < 5.1, `${id}: carries the real contact speed`);
     weights[id] = thuds[0].w;
     // the touch jump button's pointerdown (ui/photo-stick.js) is photoPress('Space'): the same path as the key, so its landing sounds too
-    run(`thuds.length=0;setPhotoControl(true,${JSON.stringify(id)},true);animMula(1/60,0);resetMotionImpact();photoPress('Space');
+    run(`thuds.length=0;setPhotoControl(true,${JSON.stringify(id)});animMula(1/60,0);resetMotionImpact();photoPress('Space');
       for(let i=1;i<=120;i++){clock+=1/60;animMula(1/60,clock/BEAT);}`);
     assert.equal(run('thuds.length'), 1, `${id}: the touch jump button's landing sounds like the key's`);
-    run(`thuds.length=0;setPhotoControl(true,${JSON.stringify(id)},true);animMula(1/60,0);PHOTO.action=true;
+    run(`thuds.length=0;setPhotoControl(true,${JSON.stringify(id)});animMula(1/60,0);PHOTO.action=true;
       for(let i=0;i<10;i++){clock+=1/60;animMula(1/60,0);}G.paused=true;animMula(0,0);G.paused=false;
       for(let i=0;i<60;i++){clock+=1/60;animMula(1/60,0);}`);
     assert.equal(run('thuds.length'), 0, `${id}: a jump cut short by a pause never lands audibly`);
-    run(`CALM.matches=true;setPhotoControl(true,${JSON.stringify(id)},true);animMula(1/60,0);PHOTO.action=true;
+    run(`CALM.matches=true;setPhotoControl(true,${JSON.stringify(id)});animMula(1/60,0);PHOTO.action=true;
       for(let i=0;i<60;i++){clock+=1/60;animMula(1/60,0);}CALM.matches=false;`);
     assert.equal(run('thuds.length'), 0, `${id}: reduced motion's small hop makes no impact sound`);
   }

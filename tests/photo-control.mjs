@@ -28,7 +28,7 @@ for (const fps of [30, 60, 120]) {
   assert(Math.abs(travel(fps, true) - travel(fps)) < 1e-8, 'normalized diagonal');
 }
 clearPhotoKeys(); assert.equal(PHOTO.keys.size, 0); assert.equal(photoBody().vz, 0);
-PHOTO.pair = false; const before = { ...photoBody() };
+const before = { ...photoBody() };
 assert(press('Tab').prevented); assert.equal(PHOTO.id, 'drac-valls'); assert.equal(photoBody().x, before.x);
 press('Tab', { repeat: true }); assert.equal(PHOTO.id, 'drac-valls');
 Object.assign(photoBody(), { x: 0, z: 0 });
@@ -47,7 +47,7 @@ PHOTO.mouse=2; photoLook(100,20); movePhoto(1/60,()=>99);assert(photoBody().yaw<
 setPhotoControl(false);const facing=photoBody().yaw;photoLook(50,0);assert.equal(PHOTO.turn,0);
 console.log('figure-relative WASD and mouse look ok');
 
-setPhotoControl(true, 'mulassa-valls', false);
+setPhotoControl(true, 'mulassa-valls');
 Object.assign(photoBody(), { x: 0, z: 0, yaw: 0 }); press('KeyW'); press('ShiftLeft');
 let previousSpeed = 0;
 for (let i=0;i<240;i++) {
@@ -61,11 +61,11 @@ movePhoto(1/60,()=>99,Math.PI/2);
 assert(photoBody().vz>0 && Math.abs(photoBody().vx)<1e-8, 'D follows screen right even while camera aligns');
 press('Space'); assert(PHOTO.action); PHOTO.action=false;
 press('Space',{repeat:true}); assert(!PHOTO.action, 'held Space never repeats jumps');
-setPhotoControl(true,'drac-valls',false);press('Space');assert(PHOTO.action,'the Drac jumps on Space too');
+setPhotoControl(true,'drac-valls');press('Space');assert(PHOTO.action,'the Drac jumps on Space too');
 setPhotoControl(false); assert(!press('Space').taken, 'game Space remains untouched');
 console.log('progressive acceleration, camera lateral axis and isolated Space actions ok');
 
-setPhotoControl(true,'mulassa-valls',false);
+setPhotoControl(true,'mulassa-valls');
 Object.assign(photoBody(),{x:0,z:0,yaw:0});
 PHOTO.mouse=1;photoLook(120,0);movePhoto(1/60,()=>99);
 assert.equal(photoBody().yaw,0,'left drag only orbits the camera');
@@ -84,7 +84,7 @@ clearPhotoKeys();assert.equal(PHOTO.mouse,0,'blur clears mouse walking as well a
 setPhotoControl(false);
 console.log('free orbit, right-drag steering and two-button walking ok');
 
-setPhotoControl(true,'mulassa-valls',false);
+setPhotoControl(true,'mulassa-valls');
 Object.assign(photoBody(),{x:0,z:0,yaw:0});press('KeyW');press('KeyD');
 for(let i=0;i<240;i++) movePhoto(1/60,(x,z)=>x+0.2);
 assert(photoBody().x>=-0.2 && photoBody().z>2,'diagonal motion slides along a wall instead of sticking');
@@ -93,13 +93,13 @@ for(let i=0;i<120;i++)movePhoto(1/60,(x,z)=>x+0.2);
 assert(photoBody().vz<0,'can back away from a boundary');setPhotoControl(false);
 console.log('collision sliding and retreat from a boundary ok');
 
-setPhotoControl(true,'mulassa-valls',false);Object.assign(photoBody(),{x:0,z:0,yaw:0});PHOTO.turn=1;
+setPhotoControl(true,'mulassa-valls');Object.assign(photoBody(),{x:0,z:0,yaw:0});PHOTO.turn=1;
 movePhoto(1/60,(x,z,yaw)=>yaw>.4&&yaw<.6?-1:1);
 assert(photoBody().yaw<=.4,'turning tests the swept angles rather than only the end pose');setPhotoControl(false);
 console.log('rotational collision sweep ok');
 
 for(const fps of [30,60,120]) {
-  setPhotoControl(true,'mulassa-valls',false);Object.assign(photoBody(),{x:0,z:0,yaw:0});press('KeyW');
+  setPhotoControl(true,'mulassa-valls');Object.assign(photoBody(),{x:0,z:0,yaw:0});press('KeyW');
   for(let i=0;i<fps/2;i++)movePhoto(1/fps,()=>99);
   assert(photoBody().vz>2.47,'quick progressive start');
   PHOTO.keys.delete('KeyW');press('KeyS');
@@ -110,7 +110,7 @@ setPhotoControl(false);
 console.log('responsive acceleration and reversal at 30/60/120 FPS ok');
 
 for (const fps of [30,60,120]) {
-  setPhotoControl(true,'mulassa-valls',false);
+  setPhotoControl(true,'mulassa-valls');
   Object.assign(photoBody(),{x:0,z:0,yaw:0});
   PHOTO.mouse=1; photoLook(150,0);
   movePhoto(1/fps,()=>99);
@@ -131,7 +131,7 @@ console.log('LMB preserves heading while advancing and at rest ok');
 
 // Like WoW: walking forward swings the camera round behind her; mouse look keeps it where the player put it.
 {
-  setPhotoControl(true,'mulassa-valls',false); Object.assign(photoBody(),{x:0,z:0,yaw:0});
+  setPhotoControl(true,'mulassa-valls'); Object.assign(photoBody(),{x:0,z:0,yaw:0});
   PHOTO.cameraYaw = Math.PI + 1; photoLook(1, 0); press('KeyW');
   for (let i = 0; i < 60; i++) movePhoto(1/60, () => 99);
   assert.equal(PHOTO.cameraYaw, Math.PI + 1 - 0.003, 'just after mouse look the view is the player\'s');
@@ -143,9 +143,9 @@ console.log('LMB preserves heading while advancing and at rest ok');
   clearPhotoKeys(); PHOTO.cameraYaw = Math.PI + 1; movePhoto(1/60, () => 99);
   assert.equal(PHOTO.cameraYaw, Math.PI + 1, 'standing still never moves the camera');
   // switching figures from a frame keeps the spot and the view; re-taking the same one starts fresh
-  Object.assign(photoBody(),{x:2,z:-1,yaw:0.5}); setPhotoControl(true,'drac-valls',false);
+  Object.assign(photoBody(),{x:2,z:-1,yaw:0.5}); setPhotoControl(true,'drac-valls');
   assert(PHOTO.drac.x === 2 && PHOTO.drac.z === -1 && PHOTO.drac.yaw === 0.5 && PHOTO.cameraYaw === Math.PI + 1);
-  setPhotoControl(true,'drac-valls',false); assert.equal(PHOTO.cameraYaw, null);
+  setPhotoControl(true,'drac-valls'); assert.equal(PHOTO.cameraYaw, null);
   setPhotoControl(false);
 }
 console.log('camera follows forward walking, figure switch keeps the spot ok');
@@ -153,7 +153,7 @@ console.log('camera follows forward walking, figure switch keeps the spot ok');
 // Shift is a held speed modifier for either figure, in every WASD direction.
 {
   const speedAfter = (codes, s) => {
-    setPhotoControl(true,'mulassa-valls',false); Object.assign(photoBody(),{x:0,z:0,yaw:0}); codes.forEach(c => press(c));
+    setPhotoControl(true,'mulassa-valls'); Object.assign(photoBody(),{x:0,z:0,yaw:0}); codes.forEach(c => press(c));
     for (let i = 0; i < s * 60; i++) movePhoto(1/60, () => 99);
     return Math.hypot(photoBody().vx, photoBody().vz);
   };
@@ -220,7 +220,7 @@ console.log('both Shift keys, walk/run transitions, navigation, E/RMB, flight an
 
 // R: the Mulassa's culada turns her half round, always the same way: R R = a full turn; the Drac's E is a spark burst, held.
 {
-  setPhotoControl(true,'mulassa-valls',false); Object.assign(photoBody(),{x:0,z:0,yaw:0});
+  setPhotoControl(true,'mulassa-valls'); Object.assign(photoBody(),{x:0,z:0,yaw:0});
   assert(press('KeyR').prevented);
   let culada = false, t = 0;
   for (; photoBody().spinLeft && t < 2; t += 1/60) { movePhoto(1/60, () => -1); culada ||= PHOTO.culada !== 0; } // (blocked everywhere: it still goes round)
@@ -230,10 +230,10 @@ console.log('both Shift keys, walk/run transitions, navigation, E/RMB, flight an
   press('KeyR'); for (let i = 0; i < 6; i++) movePhoto(1/60, () => 99); press('KeyR'); // the second R mid-turn: it carries on round
   let worst = 0; for (let i = 0; i < 120; i++) { const y = photoBody().yaw; movePhoto(1/60, () => 99); worst = Math.max(worst, photoBody().yaw - y); }
   assert(Math.abs(photoBody().yaw - 3 * Math.PI) < 1e-9 && worst <= PHOTO_SPIN.rate / 60 + 1e-9, 'R R is a full turn, the same way, without a stop or a jump');
-  setPhotoControl(true,'drac-valls',false); press('KeyE');
+  setPhotoControl(true,'drac-valls'); press('KeyE');
   assert(PHOTO.sparks && PHOTO.keys.has('KeyE') && PHOTO.drac.spinLeft === 0, 'Drac E sparks (held), no turn');
   press('KeyR'); assert.equal(PHOTO.drac.spinLeft, Math.PI, 'Drac R: half a turn too');
-  setPhotoControl(true,'mulassa-valls',false); press('KeyQ'); press('KeyE');
+  setPhotoControl(true,'mulassa-valls'); press('KeyQ'); press('KeyE');
   assert(PHOTO.keys.has('KeyQ') && PHOTO.keys.has('KeyE') && !PHOTO.sparks && PHOTO.mula.spinLeft === 0, 'Mulassa Q/E are held poses, not a turn');
   clearPhotoKeys(); assert(!PHOTO.sparks && !PHOTO.keys.size, 'blur ends the sparks');
   setPhotoControl(false);
@@ -243,7 +243,7 @@ console.log('culada and Drac sparks input ok');
 // The culada while moving with the camera: nothing undoes or fights it.
 {
   const turnWith = (setup) => {
-    setPhotoControl(true,'mulassa-valls',false); Object.assign(photoBody(),{x:0,z:0,yaw:0}); PHOTO.cameraYaw = Math.PI; PHOTO.lookAge = 9;
+    setPhotoControl(true,'mulassa-valls'); Object.assign(photoBody(),{x:0,z:0,yaw:0}); PHOTO.cameraYaw = Math.PI; PHOTO.lookAge = 9;
     setup(); press('KeyR'); const cam0 = PHOTO.cameraYaw;
     for (let i = 0; i < 60; i++) movePhoto(1/60, () => 99); // the turn (~0.5 s)
     const camAtEnd = PHOTO.cameraYaw;
@@ -265,7 +265,7 @@ console.log('culada while moving with mouse look or keys ok');
 
 // Airborne: the velocity she jumped with stays as it is (no steering, no gallop build-up) until she lands.
 {
-  setPhotoControl(true,'mulassa-valls',false); Object.assign(photoBody(),{x:0,z:0,yaw:0}); press('KeyW');
+  setPhotoControl(true,'mulassa-valls'); Object.assign(photoBody(),{x:0,z:0,yaw:0}); press('KeyW');
   for (let i = 0; i < 30; i++) movePhoto(1/60, () => 99);
   const v0 = photoBody().vz, s0 = photoBody().sprint, z0 = photoBody().z; PHOTO.air = true; PHOTO.keys.delete('KeyW'); press('KeyS');
   for (let i = 0; i < 12; i++) movePhoto(1/60, () => 99);

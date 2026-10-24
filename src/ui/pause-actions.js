@@ -41,10 +41,11 @@ function syncPageActivity() {
     G.activityEpoch++;
     pauseGame();
     chip?.clearMenuSfx?.();
-    chip?.ctx.suspend();
+    chip?.suspend();
   } else if (!G.paused || G.resuming != null) {
     chip?.wake();
-  }
+    if (chip?.woke) chip.resume(); // back from another app there is no gesture (wake() skips it): an unlocked context may resume, else it stayed mute until a tap (iOS)
+  } else chip?.suspend(); // paused: a hidden page may never have run suspend()'s timer
 }
 document.addEventListener('visibilitychange', syncPageActivity);
 addEventListener('blur', syncPageActivity);
@@ -53,7 +54,7 @@ addEventListener('pagehide', () => {
   G.activityEpoch++;
   chip?.clearMenuSfx?.();
   pauseGame();
-  chip?.ctx.suspend();
+  chip?.suspend();
 });
 addEventListener('pageshow', syncPageActivity);
 export function requestPauseAction(action) {

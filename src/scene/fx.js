@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import { rnd, pick } from './models.js';
 import { G } from '../game/state.js';
-import { sun, hemi, renderProfile, scene } from './stage.js';
+import { sun, hemi, LIGHT, renderProfile, scene } from './stage.js';
 import { dummy } from './confetti.js';
 
 export function animFinaleLights(beat) {
@@ -13,7 +13,7 @@ export function animFinaleLights(beat) {
     hemi.intensity = 1.4 + pulse1 * 0.9;
 
   } else if (hemi.intensity !== 1.6) {
-    sun.color.set('#fff1d6'); hemi.color.set('#dff3ff'); hemi.intensity = 1.6;
+    sun.color.set(LIGHT.sun); hemi.color.set(LIGHT.sky); hemi.intensity = 1.6;
   }
 }
 // Fireworks for the finale: little glowing voxels bursting over the plaça

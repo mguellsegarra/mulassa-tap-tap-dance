@@ -6,7 +6,7 @@ alter table leaderboard_private.versions add column if not exists guapa_count in
 -- tests/player-stats-db.mjs checks them against the charts. A new chart is a new version row.
 alter table leaderboard_private.versions add column if not exists balloon_count integer check (balloon_count >= 0);
 alter table leaderboard_private.versions add column if not exists hold_count integer check (hold_count >= 0);
-update leaderboard_private.versions set duration_seconds = 88.1995, guapa_count = 11, balloon_count = 2,
+update leaderboard_private.versions set duration_seconds = 90.1, guapa_count = 11, balloon_count = 2,
   hold_count = (array[0,5,5])[difficulty+1] where version = 'mulassa-v3';
 update leaderboard_private.versions set duration_seconds = 109.889,
   guapa_count = (array[12,12,16])[difficulty+1], balloon_count = 2, hold_count = (array[0,1,1])[difficulty+1] where version = 'drac-v1';

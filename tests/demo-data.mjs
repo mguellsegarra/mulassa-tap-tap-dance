@@ -34,8 +34,8 @@ const opts = o => ({ delay: 0, now, ...o });
 }
 
 // the seasons
-for (const [world, expected] of [['launch', [[0, 'mulassa-v2-short', 60], [1, 'mulassa-v3', 45], [1, 'drac-v1', 12]]],
-  ['later', [[0, 'mulassa-v2-short', 60], [1, PREVIOUS_VERSION, 47], [1, 'mulassa-v3', 20], [1, 'drac-v1', 14], [2, 'mulassa-v3', 15], [2, 'drac-v1', 6]]]]) {
+for (const [world, expected] of [['launch', [[0, 'mulassa-v2-short', 60], [1, 'mulassa-v3', 45], [1, 'drac-v1', 12], [1, 'bou-v1', 10]]],
+  ['later', [[0, 'mulassa-v2-short', 60], [1, PREVIOUS_VERSION, 47], [1, 'mulassa-v3', 20], [1, 'drac-v1', 14], [2, 'mulassa-v3', 15], [2, 'drac-v1', 6], [2, 'bou-v1', 8]]]]) {
   const w = buildWorld({ world, now: NOW });
   assert.deepEqual(w.boards.map(b => [b.seasonId, b.version, b.rows.length]), expected, world);
 }

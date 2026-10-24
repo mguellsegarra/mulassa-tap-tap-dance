@@ -1,6 +1,7 @@
 // Photo mode's touch buttons (ui/photo-stick.js): what each figure does, drawn. The Mulassa's three from the loader's
 // side view (red cloth, green saddle, the carriers' legs), the Drac's from its pixel portrait (figures.js).
-import { MULASSA, DRAC, BOU, portraitArt, portraitPalette } from '../game/figures.js';
+import { MULASSA, DRAC, BOU, FIGURES, portraitArt, portraitPalette } from '../game/figures.js';
+import { nextPhotoId } from '../game/photo-control.js';
 import { pixelSvg } from './select-ui.js';
 
 // 48-unit drawn icons (no emoji). The Mulassa seen from the side, head to the right: red cloth body, green saddle, gold hem,
@@ -42,5 +43,5 @@ export const PHOTO_ICONS = {
   [DRAC.id]: { Space: PI_JUMP, KeyQ: DRAC_ROAR, KeyE: DRAC_SPARKS, KeyR: DRAC_SPIN },
   [BOU.id]: { Space: BOU_CHARGE, KeyQ: BOU_HEAD, KeyE: BOU_LEG, KeyR: BOU_SPIN },
 };
-// The swap button shows who you'd become: the other figure's pixel portrait.
-export const swapArt = id => { const f = id === DRAC.id ? MULASSA : DRAC; return pixelSvg(portraitArt(f), portraitPalette(f), '#2a1a10'); };
+// The swap button shows who you'd become: the next figure's pixel portrait.
+export const swapArt = id => { const f = FIGURES.find(g => g.id === nextPhotoId(id)); return pixelSvg(portraitArt(f), portraitPalette(f), '#2a1a10'); };

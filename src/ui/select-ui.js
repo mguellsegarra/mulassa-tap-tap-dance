@@ -21,12 +21,12 @@ const DEMO_BEST = [48920, 80000, null], DEMO_PCT = [96, 91, null]; // ?demo: mad
 const TROPHY = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h10V9a5 5 0 0 1-10 0zM7 5.5H3.5V7A3.5 3.5 0 0 0 7 10.5M17 5.5h3.5V7a3.5 3.5 0 0 1-3.5 3.5M12 14v3.5M8 20.5h8M9.5 17.5h5"/></svg>';
 
 // keyboard(): true while the player uses keys (focus rings, focus follows); busy(): a sheet is up; reduced(): reduced motion
-// firstLevel: a friend's challenge's level, preselected the first time only. standing(): Promise<{ pos, total } | null>;
+// firstLevel: a friend's challenge's level, preselected the first time only; firstFigure: the figure it opens on (?figura, debug). standing(): Promise<{ pos, total } | null>;
 // ranked: a board is configured (the ranking line shows); onBoard(figure): the line opens Classificacions on that figure;
 // onCard(p): a name on the desktop card opens that player's card (player-card.js)
 
 export function setupSelect({ doc = document, win = globalThis, store, keyboard = () => false, busy = () => false, reduced = () => false,
-  firstLevel = null, demo = false, getError = () => null, standing = () => Promise.resolve(null), levelPodium = null, ranked = false, onBoard = () => {}, onCard = () => {}, sfx = () => {}, onPlay, onSelect = () => {}, onHowto, onWrite }) {
+  firstLevel = null, firstFigure = null, demo = false, getError = () => null, standing = () => Promise.resolve(null), levelPodium = null, ranked = false, onBoard = () => {}, onCard = () => {}, sfx = () => {}, onPlay, onSelect = () => {}, onHowto, onWrite }) {
   const DEMO = demo && Boolean((import.meta.env ?? {}).DEV); // ?demo: made-up facts on show only, never stored or sent; gone from production builds
   const $ = id => doc.getElementById(id), cardOf = p => onCard({ ...p, from: { ...p.from, figure: figure.id } }), facts = setupStandings({ doc, $, onBoard: () => onBoard(figure), onCard: cardOf, busy, levels: () => step === 'level', onSwapped: () => { if (shown) { levelStats(); measure(); } } }); // facts: desktops' medals and board card (select-standings.js)
   const podium = setupPodium({ doc, win, $, onBoard: () => { if (!busy()) onBoard(figure); }, onCard: cardOf, load: ranked && levelPodium, refit: () => levelStats() }); // step 2's podium (select-podium.js)
@@ -43,7 +43,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
   const fold = cards.find(c => c.dataset.more), soonPill = bar.find(p => p.dataset.soon), later = [...strip.querySelectorAll('.later')];
   const restPills = pills.filter(p => restTowns.some(t => t.id === p.dataset.town));
   const foldLabel = tr('ui.select.foldLabel', { n: soon.length, towns: new Set(soon.map(f => f.town)).size });
-  let figure = live[0], lastPlayable = figure, open = true; // catalog selection is independent of the host's last playable figure
+  let figure = live.find(f => f.id === firstFigure) ?? live[0], lastPlayable = figure, open = true; // catalog selection is independent of the host's last playable figure
   let opening = false, shown = false, teasing = false, level = 1, town = null, cur = 0, req = 0, step = 'figures';
   const smooth = () => (reduced() ? 'auto' : 'smooth');
   const api = { band: null, fpsFooter: [], measure: () => { if (shown) measure(); }, onSelect, get figure() { return figure; }, get pending() { return teasing || !playable(figure); }, get unfolded() { return open; }, visible, toLevels: () => nextStep() };

@@ -48,7 +48,7 @@ function mockClient({ world, taken, delay, account, now, fail, calls }) {
       if (kind === 'reserved') return;
       // 'many': on a podium twice (3r, 1r), the newest closed season 7th (no podium: the end-of-season thanks), absent from one
       if (world.open === 12) { [[1, 9], [2, 15], [3, 3], [5, 21], [6, 4], [7, 12], [8, 1], [10, 9], [11, 7]].forEach(([id, n]) => place(id, id < 7 ? PREVIOUS_VERSION : 'mulassa-v3', n)); place(12, 'mulassa-v3', 6); }
-      else if (world.open === 2) { place(1, PREVIOUS_VERSION, 12); place(1, 'drac-v1', 3); place(2, 'mulassa-v3', 6); } else place(1, 'mulassa-v3', 18);
+      else if (world.open === 2) { place(1, PREVIOUS_VERSION, 12); place(1, 'drac-v1', 3); place(2, 'mulassa-v3', 6); place(2, 'bou-v1', 5); } else { place(1, 'mulassa-v3', 18); place(1, 'bou-v1', 4); }
     }
     baseline = selfStats([...entries.values()], now());
   }

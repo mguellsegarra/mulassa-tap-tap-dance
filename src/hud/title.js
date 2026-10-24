@@ -4,7 +4,7 @@ import { song } from '../game/figure-song.js';
 import { glintAt, POP, popsAt, titleLayout, CHIP } from './title-layout.js';
 import { challengeTip } from '../services/share.js';
 import { COARSE, beatAt, CALM } from '../core/env.js';
-import { text, textWidth, glowPath, drawButton } from './primitives.js';
+import { text, textWidth, drawButton } from './primitives.js';
 import { C, titleKey, titleL, PIXEL, FONT, setTitleKey, setTitleL } from './sprites.js';
 import { G, chip, clock, CHALLENGE } from '../game/state.js';
 import { W, HH, H, K, SAFE, setButtons } from './canvas.js';
@@ -69,14 +69,13 @@ export function splashBand(out) {
 export function drawSplash() {
   H.fillStyle = 'rgba(42,26,16,0.35)'; H.fillRect(0, 0, W, HH);
   logo(HH * 0.2);
-  // A breathing prompt (a tap or key anywhere goes in, input.js). Scale a single text sprite continuously, never its rounded font size.
-  const pulse = CALM.matches ? 0 : (1 - Math.cos(clock * Math.PI * 2 / 2.4)) / 2, grow = 1 + 0.05 * pulse, s = PLAY.enter[COARSE.matches ? 0 : 1];
-  const fit = Math.min(1, (W - 12 - 48) / textWidth(s, 12)); // a longer language shrinks its words to the screen; Catalan fits at 1 (CLICA… at 320 px: 150 of 153)
-  const h = splashPrompt() * grow, w = Math.max(textWidth(s, 12) * fit + 48, 120) * grow, y = HH * 0.82; // >= 44 css px
-  H.beginPath(); H.roundRect(W / 2 - w / 2, y - h / 2, w, h, h / 2);
-  glowPath(C.gold, 5 + 5 * pulse, 0.6 + 0.5 * pulse);
-  H.fillStyle = 'rgba(42,26,16,0.8)'; H.fill(); H.strokeStyle = C.gold; H.lineWidth = 1.5; H.stroke();
-  text(s, W / 2, y, 12 * 1.05, C.cream, 'center', C.dark, false, grow * fit / 1.05);
+  // White outlined words breathing (opacity 1 -> 0.35 -> 1 every 1.6 s; never gone, so they read at any moment), no button:
+  // a tap or key anywhere goes in (input.js). Reduced motion: still.
+  const s = PLAY.enter[COARSE.matches ? 0 : 1];
+  const fit = Math.min(1, (W - 24) / textWidth(s, 16)); // a longer language shrinks its words to the screen
+  H.save(); H.globalAlpha *= CALM.matches ? 1 : 1 - 0.65 * (1 - Math.cos(clock * Math.PI * 2 / 1.6)) / 2;
+  text(s, W / 2, HH * 0.82, 16, '#fff', 'center', C.dark, false, fit);
+  H.restore();
 }
 // Title layout (src/hud/title-layout.js): one budget for the logo, the choice and the DOM pill under it,
 // recomputed only when the screen or what is shown changes (the DOM is measured then, never per frame). The pill is

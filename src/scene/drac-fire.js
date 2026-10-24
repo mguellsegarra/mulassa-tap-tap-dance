@@ -151,7 +151,7 @@ const dfireQuads = (n, attrs, mat) => {
 // opts: { jets: spark pool (PROFILES jets), octaves: the flamarada's noise (1 on low tiers), calm: a reduced-motion query
 // ({ matches }), puff(dark, at, vel, age): white jet smoke / the fireball's dark smoke through drac-fx's pool }
 export function createDracFire(scene, opts = {}) {
-  const n = Math.max(0, opts.jets | 0), calm = opts.calm ?? { matches: false }, puff = opts.puff ?? (() => {});
+  const n = Math.max(0, opts.jets | 0), calm = opts.calm ?? { matches: false }, puff = opts.puff ?? (() => {}), grain = opts.grain ?? 1; // grain: the jets' spark size (the Bou's thicker ones: bou-show.js)
   // ---- the jets' pool (and the flamarada's embers): a ring, written as particles are born
   const JA = dfireAttr(n, 4), JB = dfireAttr(n, 4), JC = dfireAttr(n, 4), jm = dfireJetMaterial();
   for (let i = 0; i < n; i++) { JA.array[i * 4 + 3] = -99; JB.array[i * 4 + 3] = 1; }
@@ -204,7 +204,7 @@ export function createDracFire(scene, opts = {}) {
           NEW[0] = E[o]; NEW[1] = E[o + 1]; NEW[2] = E[o + 2];
           NEW[3] = (dx + (dfireRand(b) - 0.5) * s) * v; NEW[4] = (dy + (dfireRand(b + 0.25) - 0.5) * s) * v; NEW[5] = (dz + (dfireRand(b + 0.625) - 0.5) * s) * v;
           NEW[6] = t - owe[i] / (rate * (profile ? emission : k)); NEW[7] = DRAC_FIRE.jetLife * life * (0.55 + 0.9 * dfireRand(b + 0.125));
-          NEW[8] = dfireRand(b + 0.375); NEW[9] = DRAC_FIRE.jetSize * size * (0.7 + 0.6 * dfireRand(b + 0.75)); NEW[10] = 0;
+          NEW[8] = dfireRand(b + 0.375); NEW[9] = DRAC_FIRE.jetSize * size * grain * (0.7 + 0.6 * dfireRand(b + 0.75)); NEW[10] = 0;
           spawn();
         }
         owc[i] += (calm.matches ? 10 : DRAC_FIRE.stem) * Math.min(k, 1.5) * frequency * dt; // the white-hot stem at the tube's mouth

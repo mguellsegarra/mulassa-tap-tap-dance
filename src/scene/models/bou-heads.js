@@ -18,6 +18,7 @@ function horn(v, s, x, y, z, span, rise, fwd, size, tube) {
     v.box(s * (x + span * t), y + rise * t * t, z + fwd * t, w, w, w, k > 3 ? K.hornTip : K.horn, 0); }
   if (tube) v.box(s * (x + span + .02), y + rise + .02, z + fwd, .06, .06, .22, K.tube, 0).box(s * (x + span + .02), y + rise + .02, z + fwd + .12, .065, .065, .025, K.red, 0);
 }
+const TONGUE_PEEK = .3;   // how far out the dance's own gapes put the tongue (1 = all of it, as a BRAMA does)
 const eye = (v, s, x, y, z, w, h) => v.box(s * x, y, z, .02, h, w, K.white, 0);
 
 // A · «Bonàs»: a big square head, nose ring, floppy ears, B's big horns and odd googly eyes (Marc, 2026-10-24); every
@@ -51,23 +52,25 @@ function bonas(neck) {
     new Vox().box(0, -.02, .06, .19 - .02 * i, .04, .14, K.tongue, 0))], []);
   const ears = [-1, 1].map(s => group(head, s * .38, .02, -.08, new Vox().box(s * .06, -.08, 0, .26, .16, .1, K.hide).box(s * .07, -.06, .045, .16, .1, .02, K.pale, 0)));   // hinged clear of the skull
   // beat: the music's (the song's grid); without music a steady ~96 bpm of its own. All of it on the beat, smooth:
-  // a nod on each, the head a side a beat, the ears flapping, and a big gape with the tongue out every six bars.
-  return { head, jaw, ears, play(t, beat = t * 1.6) {
+  // a nod on each, the head a side a beat, the ears flapping, and a big gape with the tongue's tip out every six bars.
+  // sq 0-1: a BRAMA (both buttons) squashes it, the mouth wide and the whole tongue out (bou-stage.js bouBrama).
+  return { head, jaw, ears, play(t, beat = t * 1.6, sq = 0) {
     const c = (1 + Math.cos(2 * Math.PI * beat)) / 2, dip = c * c, gape = win(beat % 24, 20, 23.6);   // every six bars (Marc: every two was too often)
-    eyes.forEach((e, i) => { const k = 1 + .25 * gape * (i ? 1.4 : 1); e.scale.set(k, k, 1); });   // not deeper: into the brow
+    eyes.forEach((e, i) => { const k = 1 + Math.max(.25 * gape, .35 * sq) * (i ? 1.4 : 1); e.scale.set(k, k, 1); });   // not deeper: into the brow
     pupils[0].position.set(.04 * Math.sin(t * 6), .04 * Math.cos(t * 6), .052);          // one spins round
     pupils[1].position.set(.03 * Math.sin(t * 2.3 + 1), .03 * Math.sin(t * 3.7), .052);  // the other wanders
     // gaping, it throws its head back: the open jaw clears the dewlap
-    neck.rotation.x = .12 * dip - .05 - .22 * gape; head.rotation.z = .13 * Math.sin(Math.PI * beat);
-    jaw.rotation.x = .55 * Math.min(1, gape * 1.6);
-    // The tongue comes out with every gape (Marc). Out, it slides forward and thickens (gape .4-.7), then curls down
-    // over the lip (.7-1); going back it does the same in reverse and thins away to nothing before it hides, so it
-    // never vanishes in sight (Marc: it popped out of existence).
-    const curl = clamp01((gape - .7) / .3), out = smooth01((gape - .4) / .3);
+    neck.rotation.x = .12 * dip - .05 - .22 * Math.max(gape, sq); head.rotation.z = .13 * Math.sin(Math.PI * beat) * (1 - sq);
+    neck.scale.set(1 + .1 * sq, 1 - .14 * sq, 1);   // squashed from above, bulging out
+    jaw.rotation.x = Math.max(.55 * Math.min(1, gape * 1.6), .7 * sq);
+    // The tongue comes out with every gape (Marc), but only its tip (TONGUE_PEEK of the way, no curl over the lip):
+    // the whole of it, stretched long with a tremble, only when a BRAMA squashes it (Marc 2026-10-24). It slides
+    // forward as it thickens and thins away to nothing before it hides (Marc: it popped out of existence).
+    const shown = smooth01((gape - .4) / .3), out = Math.max(TONGUE_PEEK * shown, sq);
     tongue[0].position.z = .45 + .18 * out; base.position.z = tongue[0].position.z - .15;   // at the front of the mouth, clear of the skull by the hinge
-    const k = Math.max(.01, out); tongue[0].scale.set(.4 + .6 * k, k, 1); base.scale.set(.4 + .6 * k, k, 1);   // thins away on the mouth's floor
-    base.visible = tongue[0].visible = out > 0;
-    tongue.forEach((l, i) => { l.rotation.x = .45 * curl; l.rotation.y = .12 * curl * Math.sin(t * 9 - i); });
+    const k = Math.max(.01, shown, sq); tongue[0].scale.set(.4 + .6 * k + .15 * sq, k, .5 + 1.1 * sq);   // half length: just past the lip base.scale.set(.4 + .6 * k, k, 1);   // thins away on the mouth's floor
+    base.visible = tongue[0].visible = k > .01;
+    tongue.forEach((l, i) => { l.rotation.x = .12 * sq; l.rotation.y = .1 * sq * Math.sin(t * 30 - i); });   // only its tip peeks: no curl over the lip
     ears.forEach((e, i) => { e.rotation.z = (i ? 1 : -1) * (.15 + .35 * dip); });
     ring.rotation.x = -.25 - .25 * Math.sin(Math.PI * beat);   // swings out only: back past hanging it would sink into the muzzle
   } };

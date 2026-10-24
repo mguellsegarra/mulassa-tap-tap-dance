@@ -23,7 +23,7 @@ export function showPauseOptions() {
 export function pauseGame() {
   if (G.state !== 'play' || G.paused) return;
   G.paused = true;
-  chip.ctx.suspend();
+  chip.suspend();
   showPauseOptions();
   pauseMenu.showModal();
   focusIn(pauseMenu, 'resume');

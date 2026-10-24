@@ -32,7 +32,7 @@ try {
   assert.deepEqual(rules.map(r => r.judgments), VERSION_RULES['bou-v1'].judgments, 'the client mirror (leaderboard-rules.js)');
   assert.deepEqual(rules.map(r => r.max_score), VERSION_RULES['bou-v1'].ceilings);
   assert.deepEqual(rules.map(r => r.extras_max), VERSION_RULES['bou-v1'].extras);
-  assert(rules.every(r => r.figure_id === 'bou-tradicional-valls' && Number(r.duration_seconds) === song.end && r.guapa_count === 9 && r.balloon_count === 0));
+  assert(rules.every(r => r.figure_id === 'bou-tradicional-valls' && Number(r.duration_seconds) === song.end && r.guapa_count === 9 && r.balloon_count === 1));
   await unlock(); await as(me); await submit(1, 120000);
   const rows = await board();
   assert.equal(rows.length, 1); assert.equal(rows[0].score, 120000);

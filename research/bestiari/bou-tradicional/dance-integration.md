@@ -56,9 +56,8 @@ are tied to retained musical bars. Travel is bounded to the central plaza.
 
 ## Explicit boundary
 
-The collective overhead lift is not implemented: it needs external carriers and
-hand/body contacts. The shell only has a small carrier-driven vertical accent.
-Do not replace that missing choreography with an unsupported floating shell.
+The collective overhead lift is carried by the colla's attendants and the carriers'
+visible trunks and arms (see «Festa lift» below); the shell never floats without support.
 Choreography review against full footage and real-phone QA remain open.
 
 ## Validation
@@ -92,3 +91,30 @@ and moustache, the black hat and the staff (held still; his free hand beats time
 and the staff into one person, the four-point formation and the colours are artistic adaptation;
 no lettering is drawn (a pale strip stands for it). `tests/bou-colla.mjs` keeps them clear of the
 whole dance and out of the play camera's gap, and the staff upright on the paving.
+
+## Festa lift (2026-10-24)
+
+Sources for the final lift (daytime dances; the night fire dances `3lJvmqcp7r4`, `FkOKangAXv4`,
+`KppcBHMvd6s` have no lift): `2xG98OA1QqI` 207–228 s (Sant Joan 2023), `G_R-ZvzS95k` 200–222 s
+(vigília de Sant Joan 2024), `Klr8m3U6qzg` 216–236 s (Alió 2014), `jB8pjfCi29g` near its end.
+Observed in all of them: colla and public crowd in under it, raise it at arm's length over
+their heads, the front well up (roughly 20–40°), fire from the horns, then turn it inside a
+tight ring of people with their hands up before lowering it.
+
+In the game (`BOU_CARRY`, `carryAt`, bou-parade.js): lifted 0.75 m with the nose 0.3 rad up and a
+small pump on the beat, run twice round the lap (~2.8 m/s, carriers stepping on the half beats);
+the four attendants hold its flanks with raised arms, running with planted feet; the two carriers'
+trunks and arms fill the gap under the risen hem; the plaça cheers and up to 30 of the front row
+follow it: three at its rump reaching to touch it, a bouncing, clapping conga behind them. The heave takes one beat; up there it
+is bucked and rocked on every beat. The running pace is a game choice: the
+videos show it turned inside the crowd rather than raced round. The exact number of people under it and the fire are not modelled.
+`tests/bou-festa.mjs` simulates the festa frame by frame for collisions and contacts.
+
+## Rushes and see-saw (2026-10-24)
+
+Game choices, not observed: its moves out to N/S/W/E are rushes that stop a hand short of that
+attendant (0.14 m) in a cartoon skid; the front/rump see-saw is doubled and lifts the high end
+instead of sinking the low one, showing the carriers' legs (as the Mulassa's carriers show). The
+attendants run in through bar 71 and have it up on bar 72's downbeat (the festa's B section); every rush
+arrives on a bar's downbeat. `tests/bou-colla.mjs` measures the near
+misses against the real footprint (horns and tail included).

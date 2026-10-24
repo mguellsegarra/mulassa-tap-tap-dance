@@ -48,9 +48,11 @@ renderer.shadowMap.type = THREE.PCFShadowMap;
 export const scene = new THREE.Scene();
 buildSky(scene, qualityLevel >= 0); // gradient dome + voxel clouds (sky.js); its horizon is the fog's colour
 export const camera = new THREE.PerspectiveCamera(38, 1, 0.5, 200); // near 0.5: nothing gets closer (props by the lens are hidden)
-export const hemi = new THREE.HemisphereLight('#dff3ff', '#a88b63', 1.6);
+// warm light (a cool sky fill greyed the paving; Marc 2026-10-24); fx.js puts these back after the finale's colours
+export const LIGHT = { sky: '#fff0dc', ground: '#b88a5a', sun: '#ffe6bd' };
+export const hemi = new THREE.HemisphereLight(LIGHT.sky, LIGHT.ground, 1.6);
 scene.add(hemi);
-export const sun = new THREE.DirectionalLight('#fff1d6', 2.4);
+export const sun = new THREE.DirectionalLight(LIGHT.sun, 2.4);
 sun.position.set(-10, 18, 8);
 sun.castShadow = true;
 sun.shadow.mapSize.set(renderProfile.shadow || 512, renderProfile.shadow || 512);
@@ -73,6 +75,19 @@ export let dracMat = null;
 // The Bou Tradicional (models/bou.js, Marc's p13): its rig in metres, and `frame`, its dance frame (the feet and legs
 // are the frame's children beside the root: they stay planted in it), turned to its colla's compass (BOU_COLLA_YAW): its opening heading, W, 45 deg off the play camera.
 export let bou = null;
+// The Bou lit on its own in its disco night (scene/bou-show.js sets value 0-1): its own colours added after the lights,
+// as if a spot were on it, without lighting the floor or casting anything (Marc: a real spot read badly on the tiles).
+export const bouGlow = { value: 0 };
+let bouMat = null;
+function bouGlowMaterial(base) {
+  const m = base.clone();
+  m.onBeforeCompile = sh => {
+    sh.uniforms.uBouGlow = bouGlow;
+    sh.fragmentShader = 'uniform float uBouGlow;\n' + sh.fragmentShader.replace('#include <opaque_fragment>', 'outgoingLight += diffuseColor.rgb * uBouGlow;\n#include <opaque_fragment>');
+  };
+  m.customProgramCacheKey = () => 'bou-glow';
+  return m;
+}
 export const figureRoot = id => id === 'drac-valls' ? drac?.root : id === 'bou-tradicional-valls' ? bou?.root : mula.root; // the selector frames its outline
 // Build after the existing plaza/crowd setup so its material jitter does not change their random layout.
 export function initDrac() {
@@ -92,8 +107,13 @@ export function initDrac() {
   bou = buildBou();
   bou.frame = new THREE.Group(); bou.frame.rotation.y = BOU_COLLA_YAW; // its colla's compass: the dance's W is the W attendant's (Marc 24/10/2026)
   bou.frame.visible = false;
-  bou.frame.add(bou.root, ...bou.feet, ...bou.legs);
+  bou.frame.add(bou.root, ...bou.feet, ...bou.legs, ...bou.trunks, ...bou.arms);
   scene.add(bou.frame);
+  bou.frame.traverse(o => { // its voxel parts get their own copy, which can light itself (bouGlow)
+    if (!o.isMesh || o.isSkinnedMesh || !o.material?.isMeshLambertMaterial || !o.material.vertexColors) return;
+    bouMat ??= bouGlowMaterial(o.material);
+    o.material = bouMat;
+  });
   colla = createColla({ profile: renderProfile }); // hidden until the Drac is the figure; built now so the warmup compiles it
   colla.helpers.visible = colla.seated.visible = false;
   scene.add(colla.helpers, colla.seated);

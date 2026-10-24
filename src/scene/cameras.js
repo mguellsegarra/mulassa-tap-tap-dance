@@ -7,6 +7,7 @@ import { playStage } from '../hud/layout.js';
 import { figureScale, selectedFigure } from '../game/figure-song.js';
 import { DRAC } from '../game/figures.js';
 import { M, manualLandingStrength } from './mula-motion.js';
+import { BOU_FESTA } from './bou-stage.js';
 import { CALM, CAMDRAC } from '../core/env.js';
 import { clock, G } from '../game/state.js';
 import { TAU } from '../core/anim.js';
@@ -35,14 +36,14 @@ export const look = createLook(); // «Mira el ball»: the player's turn and zoo
 export const titleS = { x: new Float64Array(2), v: new Float64Array(2) }, TITLE_FOLLOW = 0.7, TITLE_SWAY = 0.3; // the menu camera's follow spring (seconds to catch up: 1.6 lagged the Mulassa's travelling dance by ~2 m, out of her band) and its sway (rad, twice the play camera's)
 // The menu camera (splash, title, selector) orbits her, not the middle: wandering about she'd otherwise pass right in front of the
 // lens, huge. The player may steer it (orbit.js: its limits keep it inside the square and above the crowd); left alone it eases
-// back after ORBIT.idle s, and at once when the figure changes. In «mode foto» (keep) the player's framing stays.
+// back after ORBIT.idle s, and at once when the figure changes.
 // On the selector the figure is framed, not placed at a fixed distance: frameMenuLens measures her rigid outline as this camera sees it
 // and backs off / comes closer until she fills the free rect the selector measured (select-ui.js band: under the info block, above
 // the dock, right of a side panel), and a lens shift (view offset, both axes: never a tilt) puts her centre there. The splash
 // and the title keep their one shot for every figure, with the caller's `aim` (css px below the middle).
 export const lens = { x: 0, y: 0 }; // the menu's lens shift, css px (her centre right of / below the screen's middle), smoothed
-const MENU = { late: false, held: false, directed: false, soft: false, softT: -Infinity, lent: new Float64Array(2), x: new Float64Array(2), v: new Float64Array(2), w: 0, h: 0, ox: 0, oy: 0, mx: 0, mz: 0, tx: 0, ty: 0, root: null, away: true, view: false, quick: false, fit: { dist: 11, cx: 0, cy: 0, floor: 0 } }; // shift spring; her extents' envelope (m); her outline's middle across / feet off the focus (tangents, slow)
-const MENU_T = { reel: 0.7, soft: 1.1, wake: 0.45, softFor: 2.5, shift: 0.9, up: 0.35, down: 4, centre: 1.2, exit: 0.6, pair: 1.2 }; // s: the showreel's follow and shift (a little quicker than the menu's: she travels round the plaça); soft: into a `soft` band (the idle screen), wake: back out of it (the UI is back in 0.25 s: she must not linger under it), for softFor s; the lens shift's spring (exit: it and her size/height after photo mode, so the returning dock never covers her for seconds); her extents rise / fall (turning side on and back never pumps the shot); her centre's slow average (the focus already follows her: a turn must not swing the shot); pair: the splash's distance and height (the pair spreads apart quicker than one figure turns)
+const MENU = { late: false, held: false, directed: false, soft: false, softT: -Infinity, lent: new Float64Array(2), x: new Float64Array(2), v: new Float64Array(2), w: 0, h: 0, ox: 0, oy: 0, mx: 0, mz: 0, tx: 0, ty: 0, root: null, away: true, fit: { dist: 11, cx: 0, cy: 0, floor: 0 } }; // shift spring; her extents' envelope (m); her outline's middle across / feet off the focus (tangents, slow)
+const MENU_T = { reel: 0.7, soft: 1.1, wake: 0.45, softFor: 2.5, shift: 0.9, up: 0.35, down: 4, centre: 1.2, pair: 1.2 }; // s: the showreel's follow and shift (a little quicker than the menu's: she travels round the plaça); soft: into a `soft` band (the idle screen), wake: back out of it (the UI is back in 0.25 s: she must not linger under it), for softFor s; the lens shift's spring; her extents rise / fall (turning side on and back never pumps the shot); her centre's slow average (the focus already follows her: a turn must not swing the shot); pair: the splash's distance and height (the pair spreads apart quicker than one figure turns)
 const OUTLINES = new Map(), V3 = new THREE.Vector3(), FREE = { top: 0, bottom: 0, left: 0, right: 0, hardTop: 0 };
 // Her outline, cheaply: for each of her meshes, its farthest vertices along 14 directions (axes and diagonals: its hull's support
 // points, in its own space, once per figure). Each frame they go through the mesh's live matrix, so the shot reads her real pose
@@ -90,30 +91,26 @@ export function pairShot() {
   return PAIR_SHOT;
 }
 // reel: the selector's showreel (game/showreel.js REEL: { cut, shot: { az, el, fill } }) or null
-export function frameMenuCamera(dt, mx, mz, root, rect, view, keep, aim, reel = null) {
+export function frameMenuCamera(dt, mx, mz, root, rect, aim, reel = null) {
   const far = camera.aspect < 1 ? 1.4 : 1, now = pnow();
-  if (MENU.view && !view) { MENU.quick = true; orbit.last = -Infinity; } // leaving photo mode hands the camera back at once, quickly (until it is framed again)
-  MENU.view = view; if (orbit.ptrs.size || view) MENU.quick = false;
-  orbitHome.time = MENU.quick ? MENU_T.exit : root?.roots ? MENU_T.pair : undefined;
+  orbitHome.time = root?.roots ? MENU_T.pair : undefined;
   if (root !== MENU.root) { MENU.root = root; MENU.w = MENU.h = MENU.ox = MENU.oy = MENU.tx = MENU.ty = 0; if (root) orbit.last = -Infinity; MENU.first = !!root?.roots; } // another figure: frame it now, from scratch (the splash's pair: at once, below)
   // The showreel directs the camera: its shot's angle and size, cut at once (no spring across a cut). A drag keeps the
   // player's angle until the next cut.
-  const shot = reel && root && !view ? reel.shot : null;
+  const shot = reel && root ? reel.shot : null;
   if (!!rect?.soft !== MENU.soft) { MENU.soft = !!rect?.soft; MENU.softT = now; } // into a `soft` band (the idle screen) slowly, ~2 s; out of it quickly
   const slow = now - MENU.softT < MENU_T.softFor ? (MENU.soft ? MENU_T.soft : MENU_T.wake) : 0; // (s: the spring's time, 0 = the usual)
   if (orbit.ptrs.size || now - orbit.last <= ORBIT.idle) MENU.held = true;
   const cut = shot && reel.cut && !orbit.ptrs.size, direct = shot && (cut || !MENU.held);
   if (cut) { MENU.held = false; MENU.w = MENU.h = MENU.ox = MENU.oy = 0; } // her size and middle measured afresh from the new angle
   if (root?.visible && MENU.w && Math.hypot(MENU.mx - mx, MENU.mz - mz) < 4) { mx = MENU.mx; mz = MENU.mz; } // follow the middle of her outline (her pivot is off it as she turns), measured last frame; never a stray part metres away
-  // «mode foto» on a narrow screen: back off (same angle) until ~7 m fit across, or her 4 m body barely fits
-  const fit = view ? Math.max(1, 3.5 / (Math.tan(camera.fov * Math.PI / 360) * camera.aspect) / 11) : 1;
-  const homeH = ORBIT.focusY + (4.2 * far - ORBIT.focusY) * fit, homeD = 11 * fit; // plaza level, in among the crowd (the old high wide shot showed mostly bare floor)
+  const homeH = 4.2 * far, homeD = 11; // plaza level, in among the crowd (the old high wide shot showed mostly bare floor)
   orbitHome.pitch = Math.atan2(homeH - ORBIT.focusY, homeD); orbitHome.dist = Math.hypot(homeD, homeH - ORBIT.focusY);
-  if (root && MENU.w && !bandless(rect)) orbitHome.dist = view ? Math.max(orbitHome.dist, MENU.fit.dist) : MENU.fit.dist; // (photo mode: the plaça round her, and all of her)
+  if (root && MENU.w && !bandless(rect)) orbitHome.dist = MENU.fit.dist;
   // her sway and steps never shake the shot: it drifts after her on a critically damped spring (like the play camera; a first-order
   // filter changes velocity the instant she does, which read as a jerk on every hop)
   if (!titleC.on || cut) { titleS.x[0] = mx; titleS.x[1] = mz; titleS.v.fill(0); }
-  else if (MENU.away && !view && !orbit.fresh && !orbit.ptrs.size) adopt(); // back from another camera (results, a game): carry on from it, then ease to the framing
+  else if (MENU.away && !orbit.fresh && !orbit.ptrs.size) adopt(); // back from another camera (results, a game): carry on from it, then ease to the framing
   const follow = direct ? MENU_T.reel : TITLE_FOLLOW; // (the showreel: she travels the whole plaça)
   titleC.x = smoothDamp(titleS, 0, mx, follow, dt); titleC.z = smoothDamp(titleS, 1, mz, follow, dt); titleC.on = true;
   const cx = titleC.x, cz = titleC.z;
@@ -130,9 +127,9 @@ export function frameMenuCamera(dt, mx, mz, root, rect, view, keep, aim, reel = 
   else if (MENU.directed && !direct && !MENU.held) { orbit.x.set(MENU.lent); orbit.zoomRaw = orbit.zoomTo = orbit.x[1]; orbit.v.fill(0); } // (a drag keeps the angle it took over)
   MENU.directed = direct;
   if (orbit.fresh) orbit.yaw = orbitHome.yaw; // (the very first frame starts at home)
-  if (direct) aimShot(dt, cut, cx, cz, slow || 0.6); else orbitStep(orbit, dt, now, orbitHome, roomAt(cx, cz), keep);
+  if (direct) aimShot(dt, cut, cx, cz, slow || 0.6); else orbitStep(orbit, dt, now, orbitHome, roomAt(cx, cz));
   placeMenu(cx, cz, cut ? Infinity : dt);
-  const zoomOn = root && !view && MENU.w && !bandless(rect);
+  const zoomOn = root && MENU.w && !bandless(rect);
   zoomMenu(cut ? 0 : dt, zoomOn, slow || MENU_T.shift, shot?.part);
   const y = frameMenuLens(dt, root, rect, aim, shot?.fill, cut, direct, slow, shot?.part);
   const late = !cut && MENU.late && MENU.w && shot; // (a new figure shows a frame after its cut: its first measure snaps as the cut would have)
@@ -149,7 +146,7 @@ export function frameMenuCamera(dt, mx, mz, root, rect, view, keep, aim, reel = 
     const fx = MENU.mx, fz = MENU.mz; titleS.x[0] = titleC.x = fx; titleS.x[1] = titleC.z = fz; titleS.v.fill(0);
     MENU.w = MENU.h = MENU.ox = MENU.oy = 0; aimShot(dt, true, fx, fz, 0.6); placeMenu(fx, fz, Infinity); frameMenuLens(dt, root, rect, aim, shot.fill, true, false, 0, shot.part);
   }
-  zoomMenu(0, root && !view && MENU.w && !bandless(rect), 0, shot.part); // then the lens that size wants (a close-up's long lens at once, never a zoom after the cut)
+  zoomMenu(0, root && MENU.w && !bandless(rect), 0, shot.part); // then the lens that size wants (a close-up's long lens at once, never a zoom after the cut)
   const out = frameMenuLens(dt, root, rect, aim, shot.fill, true, false, 0, shot.part); // and the shift for that lens
   MENU.late = !MENU.w;
   return out;
@@ -254,7 +251,7 @@ function frameMenuLens(dt, root, rect, aim, fill = 0.86, snap = false, quick = f
       MENU.w = MENU.w ? envelope(MENU.w, w, dt, MENU_T.up, MENU_T.down) : w; MENU.h = MENU.h ? envelope(MENU.h, h, dt, MENU_T.up, MENU_T.down) : h;
       MENU.ox += ((x0 + x1) / 2 - MENU.ox) * k; MENU.oy += (y0 - MENU.oy) * k; // her middle across, her feet down
     }
-    // the free rect: the selector's band, or (photo mode) the whole screen; inside the safe areas either way
+    // the free rect: the selector's band, or the whole screen; inside the safe areas either way
     FREE.top = rect ? rect.top : SAFE.t; FREE.bottom = rect ? rect.bottom : vh - SAFE.b; FREE.hardTop = rect?.hardTop ?? FREE.top; FREE.ground = !!rect?.ground;
     FREE.left = Math.max(rect?.left ?? 0, SAFE.l); FREE.right = Math.min(rect?.right ?? vw, vw - SAFE.r);
     if (MENU.w && !none) {
@@ -262,13 +259,10 @@ function frameMenuLens(dt, root, rect, aim, fill = 0.86, snap = false, quick = f
       MENU.tx = tx = MENU.fit.cx - vw / 2 - MENU.ox * ppm; MENU.ty = ty = MENU.fit.floor - vh / 2 + MENU.oy * ppm; // minus where she sits now (css px from the middle, unshifted)
     }
   }
-  const st = slow || (quick ? MENU_T.reel : MENU.quick ? MENU_T.exit : MENU_T.shift), cx = Math.max(-0.3 * vw, Math.min(0.3 * vw, tx)), cy = Math.max(-0.3 * vh, Math.min(0.3 * vh, ty));
+  const st = slow || (quick ? MENU_T.reel : MENU_T.shift), cx = Math.max(-0.3 * vw, Math.min(0.3 * vw, tx)), cy = Math.max(-0.3 * vh, Math.min(0.3 * vh, ty));
   if (snap) { MENU.x[0] = cx; MENU.x[1] = cy; MENU.v.fill(0); }
   lens.x = smoothDamp(MENU, 0, cx, st, dt);
   lens.y = smoothDamp(MENU, 1, cy, st, dt);
-  // back to the calm springs only once framed and nearly still (a spring softened while far from its target whiplashes)
-  const hd = Math.min(orbit.lim.distMax, Math.max(orbit.lim.distMin, orbitHome.dist)); // (the distance it can reach)
-  if (MENU.quick && Math.abs(orbit.x[1] - hd) < 0.03 * hd && Math.abs(lens.y - ty) + Math.abs(lens.x - tx) < 6 && Math.abs(orbit.v[1]) < 0.2) MENU.quick = false;
   return lens.y;
 }
 // Every frame another camera runs (a game, results, photo driving): the menu's sideways shift glides back to the middle (the play
@@ -311,6 +305,11 @@ export const DRIFT = { az: 0.2, el: 0.05, dist: 0.03, follow: 0.26, oblique: 0.4
 // from above): `room` keeps the camera's extra distance (dist) and its retreat with her inside the square; beyond, she
 // comes closer.
 const DRAC_CAM = { side: 0.5, depth: 0.9, dist: 1.12 }, MULA_CAM = { side: 1, depth: 0.9, dist: 1.12, room: true };
+// The Bou's festa: carried round a 2.6 m ring, followed it came within 4 m of a desktop's lens and filled the screen
+// (Marc 2026-10-24: step back). While its colla carries it the camera lets `hold` of its follow go (towards the plaça's
+// centre: all of it cropped the Bou at a phone's edge) and stands at least `dist` m off (a phone's camera is already
+// further: it stays), so the whole rotllana is in the shot; eased in and out with the carry (bouFestaAt).
+const FESTA_CAM = { hold: 0.6, dist: 13, rise: 0.25 }; // rise: rad higher (26° -> ~40°), the public's snake round the plaça in view (Marc 24/10/2026)
 const CAM_T = { focus: 0.5, dist: 1.8, follow: 2.8, shift: 0.5, pos: 1.5 }; // seconds to (about) catch up. Constant (a spring whose stiffness changes while it is still far from its target whiplashes); the swoop in from the title camera is just this slow
 export function framePlayCamera(dt, mx, mz, snap = false) { // snap: jump straight to the settled framing (tests)
   const area = playStage(), focusY = 1.4 * figureScale(), s = CAMS, calm = CAMDRAC !== 'segueix', F = selectedFigure.id === DRAC.id ? DRAC_CAM : MULA_CAM;
@@ -326,6 +325,8 @@ export function framePlayCamera(dt, mx, mz, snap = false) { // snap: jump straig
     }
     mx = (mx - along * ax) * F.side + ax * depth; mz = (mz - along * az) * F.side + az * depth;
   }
+  const festa = BOU_FESTA.k; // 0 but in the Bou's festa
+  if (festa > 0) { mx *= 1 - FESTA_CAM.hold * festa; mz *= 1 - FESTA_CAM.hold * festa; }
   if (!s.live || snap) { // carry on from wherever the camera is (the title's orbit), at rest
     s.v.fill(0);
     s.x[0] = snap ? mx : camFocus.x; s.x[1] = snap ? mz : camFocus.z; s.x[3] = Math.sin(M.yaw - FRONT); s.x[8] = Math.cos(M.yaw - FRONT) ** 2; s.x[4] = camShift;
@@ -343,8 +344,9 @@ export function framePlayCamera(dt, mx, mz, snap = false) { // snap: jump straig
   const br = CALM.matches ? 0 : 1, T = clock * TAU;
   const az = CAM_AZ + br * DRIFT.az * (0.65 * Math.sin(T / DRIFT.tAz) + 0.35 * Math.sin(T / DRIFT.tAz2 + 1.3))
     + DRIFT.follow * follow - DRIFT.oblique * obl;
-  const el = CAM_EL + br * DRIFT.el * (0.7 * Math.sin(T / DRIFT.tEl + 0.7) + 0.3 * Math.sin(T / 9));
-  const dT = Math.max(CAMV.h, CAMV.w / camera.aspect) * figureScale() / (2 * tan) * (1 + br * DRIFT.dist * Math.sin(T / DRIFT.tD)) * (G.collapseT ? 1.2 : 1) * (HH < 300 ? 1.2 : 1) * far; // (lying down she is wider; a short window has little stage above her: a little more room)
+  const el = CAM_EL + br * DRIFT.el * (0.7 * Math.sin(T / DRIFT.tEl + 0.7) + 0.3 * Math.sin(T / 9)) + FESTA_CAM.rise * festa;
+  let dT = Math.max(CAMV.h, CAMV.w / camera.aspect) * figureScale() / (2 * tan) * (1 + br * DRIFT.dist * Math.sin(T / DRIFT.tD)) * (G.collapseT ? 1.2 : 1) * (HH < 300 ? 1.2 : 1) * far; // (lying down she is wider; a short window has little stage above her: a little more room)
+  if (festa > 0) dT += Math.max(0, FESTA_CAM.dist * figureScale() - dT) * festa;
   if (snap) { s.x[0] = mx; s.x[1] = mz; s.x[2] = dT; }
   const fx = smoothDamp(s, 0, mx, CAM_T.focus, t), fz = smoothDamp(s, 1, mz, CAM_T.focus, t), d = smoothDamp(s, 2, dT, CAM_T.dist, t);
   const ce = Math.cos(el);

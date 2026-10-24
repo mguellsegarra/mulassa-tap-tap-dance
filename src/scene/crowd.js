@@ -14,8 +14,8 @@ import { activeCrowd, bandSpots, midCrowd, MID, animateRenderQuality } from './q
 import { M, PIVOT, PAIR } from './mula-motion.js';
 import { COLLA_SPOTS } from './drac-dance.js';
 import { MULA_COLLA_SPOTS } from './mula-stage.js';
-import { BOU_COLLA_SPOTS } from './bou-stage.js';
-import { paradeTick, paradeSteer } from './bou-parade.js';
+import { BOU_COLLA_SPOTS, BOU_FESTA } from './bou-stage.js';
+import { paradeTick, paradeSteer, PARADE_K } from './bou-parade.js';
 import { RING, REACH, arenaNow } from './crowd-build.js';
 import { lensShrink } from './framing.js';
 import { easeIn, smooth01, TAU } from '../core/anim.js';
@@ -137,7 +137,7 @@ function separate() {
   }
 }
 // This frame's numbers, shared by the steps below (one object, reused: nothing is allocated per frame).
-const F = { calm: false, moodK: 0, eager: 0, ex: 0, beatHop: 0, nearFade: 0, wayIn: 0, wayOut: 0, ringE: 0, velK: 0, presE: 0, ripE: 0, standE: 0, showE: 0, fanE: 0,
+const F = { calm: false, festa: 0, moodK: 0, eager: 0, ex: 0, beatHop: 0, nearFade: 0, wayIn: 0, wayOut: 0, ringE: 0, velK: 0, presE: 0, ripE: 0, standE: 0, showE: 0, fanE: 0,
   slow: false, bold: 1, wavePos: 0, rippling: false, cy: 1, sy: 0, sweep: 0, rearX: 0, rearZ: 0, shotX: 0, shotZ: 0, shotD: 0 };
 
 // Step 1: the mood, every part eased in real time (no pose ever switches in one frame): calm = the song itself, the plaça
@@ -146,8 +146,10 @@ const F = { calm: false, moodK: 0, eager: 0, ex: 0, beatHop: 0, nearFade: 0, way
 function updateMood(dt, t, live) {
   const g = G.state === 'title' || G.state === 'splash' || G.state === 'select' ? 70 : G.guapo;
   mood.respect += (g - mood.respect) * Math.min(1, dt * 1.5);
-  const calm = G.state === 'play' && !G.finale && !G.eeeh && !G.collapseT;
-  const cheering = G.finale || (G.state === 'play' && G.eeeh && !G.collapseT) || (G.state === 'results' && G.reason === 'clear') || (G.state !== 'play' && clock - G.chantT < 2.5);
+  const festa = BOU_FESTA.k > 0.5; // the Bou held up over the colla's heads: the plaça goes wild (Marc 2026-10-24)
+  F.festa = BOU_FESTA.k;
+  const calm = G.state === 'play' && !G.finale && !G.eeeh && !G.collapseT && !festa;
+  const cheering = G.finale || festa || (G.state === 'play' && G.eeeh && !G.collapseT) || (G.state === 'results' && G.reason === 'clear') || (G.state !== 'play' && clock - G.chantT < 2.5);
   mood.calmK += ((calm ? 1 : 0) - mood.calmK) * easeIn(dt, 0.35);
   mood.festK += ((cheering ? 1 : 0) - mood.festK) * easeIn(dt, 0.25);
   mood.sadK += ((G.collapseT ? 1 : 0) - mood.sadK) * easeIn(dt, 0.25);
@@ -178,7 +180,7 @@ function updateMood(dt, t, live) {
   F.slow = G.state === 'play' && live > 0; // the song is on: nobody hurries (before the first note they may settle)
   const prog = G.state === 'play' ? Math.min(1, Math.max(0, t / song.end)) : 0.3;
   F.bold = G.state === 'results' ? 0.7 : 1 - prog * (1 - RING.bold); // a little bolder as the dance goes on
-  const waving = G.finale || (G.state === 'results' && G.reason === 'clear');
+  const waving = G.finale || festa || (G.state === 'results' && G.reason === 'clear');
   mood.waveK += ((waving ? 1 : 0) - mood.waveK) * easeIn(dt, 0.65);
   F.wavePos = clock * 2.2; // where the wave is round the ring (radians); the backdrop's shader uses the same
   F.rippling = calm && renderProfile.ripple >= 0 && rippleLive(clock); // a pulse still on its way (crowd-fx.js)
@@ -223,7 +225,7 @@ function steer(p, dt, beat, live) {
     clear = Math.hypot(Math.max(0, Math.abs(local.x) - 0.75 * scale), Math.max(0, Math.abs(local.y) - 2.3 * scale));
     if (F.sweep > 0.2) clear = Math.min(clear, dp - (PIVOT + 2.1) * scale * F.sweep);
   }
-  if (PHOTO.on) clear = photoClearance(M.pos.x, M.pos.y, M.yaw, p.pos.x, p.pos.y, 0, !PHOTO.pair && PHOTO.id === 'drac-valls');
+  if (PHOTO.on) clear = photoClearance(M.pos.x, M.pos.y, M.yaw, p.pos.x, p.pos.y, 0, PHOTO.id === 'drac-valls');
   // the splash's Drac beside her (mula-motion.js PAIR): a round footprint, made way for like her
   const qx = p.pos.x - PAIR.x, qz = p.pos.y - PAIR.z, qd = PAIR.k ? Math.hypot(qx, qz) || 1 : 99, pairClear = qd - 1.5;
   if (pairClear < clear) clear = pairClear;
@@ -397,7 +399,7 @@ function pose(p, dt, beat, live) {
   const hop = (Math.max(0, Math.sin(beat * Math.PI + p.ph)) * F.beatHop + up * 0.25) * p.stand + (gv * GROOVE.bob + ringUp + rip * RIP.bob) * k;
   // drawn a hair behind the simulation (a 40 ms ease): the no-overlap limit's small corrections in a packed crowd never pop
   if (p.gx === undefined) { p.gx = p.pos.x; p.gz = p.pos.y; } else { // (and never faster than 1.6 m/s: a shove is caught up with, not jumped)
-    let ex = (p.pos.x - p.gx) * showE, ez = (p.pos.y - p.gz) * showE; const e = Math.hypot(ex, ez), lim = (PHOTO.on ? Math.max(3.4, PHOTO.speed * 1.3, p.knockT > 0 ? PHOTO_SPIN.kick * 1.3 : 0) : 1.6) * dt;
+    let ex = (p.pos.x - p.gx) * showE, ez = (p.pos.y - p.gz) * showE; const e = Math.hypot(ex, ez), lim = (PHOTO.on ? Math.max(3.4, PHOTO.speed * 1.3, p.knockT > 0 ? PHOTO_SPIN.kick * 1.3 : 0) : p.parade ? PARADE_K.run * 1.3 : 1.6) * dt; // (the Bou's snake runs: drawn at 1.6 m/s its bodies lagged, merged and popped)
     if (e > lim) { ex *= lim / e; ez *= lim / e; }
     p.gx += ex; p.gz += ez;
   }
@@ -405,7 +407,8 @@ function pose(p, dt, beat, live) {
   if (p.downT > 0) p.downT -= dt; // (counted here: it runs every frame, photo mode or not)
   const down = (p.downT ?? 0) > 0.6 ? 1 : 0;
   if (down || p.fall) { p.fall = (p.fall ?? 0) + (down - (p.fall ?? 0)) * easeIn(dt, 0.35); if (p.fall < 0.01) p.fall = 0; }
-  p.g.position.set(p.gx, bob + hop + 0.15 * (p.fall || 0), p.gz);
+  const dance = p.parade === 'run' ? F.festa * PARADE_K.hop * Math.abs(Math.sin(beat * Math.PI + p.ph * 0.2)) : 0; // the conga bounces on every beat
+  p.g.position.set(p.gx, bob + hop + dance + 0.15 * (p.fall || 0), p.gz);
   p.g.rotation.set(-1.45 * (p.fall || 0), p.yaw, 0);
   const lean = 0.12 * (1 - live) + w * dir * (0.05 + 0.22 * run) - 0.14 * p.way; // craning before the start; leaning into the stride; back from her
   p.lean += (lean - p.lean) * Math.min(1, dt * 8);
@@ -420,18 +423,28 @@ function pose(p, dt, beat, live) {
   tx += (-2.8 + Math.sin(clock * 9 + p.ph) * 0.25 - tx) * festK; tz += (0.25 - tz) * festK;
   tx += (-2.9 - tx) * up; tz += (0.3 - tz) * up;
   tx += (-0.05 - 0.75 * run - tx) * w; tz += (0.06 + 0.25 * run - tz) * w; // walking arms, bent up when fleeing
+  // the conga behind the carried Bou (bou-parade.js): the ones at its rump reach out to touch it, grabbing; the rest clap
+  // on the beat, hands up high
+  const conga = p.parade === 'run' ? F.festa : 0, touch = p.paradeSlot < PARADE_K.tail;
+  if (conga && touch) { tx += (-1.75 + Math.sin(clock * 11 + p.ph) * 0.3 - tx) * conga; tz += (0.1 + Math.sin(clock * 7 + p.ph) * 0.1 - tz) * conga; }
+  else if (conga) { // euphoric: a bar clapping on the beat, a bar both arms up waving, each on their own bar
+    const up = Math.floor(beat / 4 + p.ph) % 2 === 0;
+    if (up) { tx += (-2.85 + Math.sin(beat * Math.PI + p.ph) * 0.2 - tx) * conga; tz += (0.3 + Math.sin(beat * Math.PI) * 0.15 - tz) * conga; }
+    else { tx += (-1.9 - tx) * conga; tz += (0.08 + Math.abs(Math.sin(beat * Math.PI)) * 0.42 - tz) * conga; }
+  }
   const armEase = Math.min(1, dt * 10), armMax = 6 * dt; // eased, and never faster than 6 rad/s (a mood or a stride switching mid-swing)
   p.ax += Math.max(-armMax, Math.min(armMax, (tx - p.ax) * armEase));
   p.az += Math.max(-armMax, Math.min(armMax, (tz - p.az) * armEase));
   const a0 = p.arms[0], a1 = p.arms[1]; // counter-swing: each arm goes with the opposite leg
-  let x0 = p.ax - sw * armK, z0 = p.az;
+  const swing = sw * armK * (1 - conga); // (clapping in the conga: no counter-swing)
+  let x0 = p.ax - swing, z0 = p.az;
   if (p.fan) { // fanning themselves: the ventall arm up by the face, flicking (slow and small while the song plays)
     const f = p.fanK = (p.fanK ?? 1) + ((1 - w) * (1 - festK) * (1 - up) - (p.fanK ?? 1)) * fanE; // eased: a first step never flicks it down
     x0 += (-1.9 - x0) * f;
     z0 += (Math.sin(clock * 13 + p.ph) * 0.2 * (1 - moodK) + Math.sin(clock * 3.5 + p.ph) * 0.06 * moodK) * f;
   }
   // the arm as drawn, swing and ventall included, keeps the 6 rad/s too (raised while a slowing stride swings it the same way)
-  const x1 = p.ax + sw * armK;
+  const x1 = p.ax + swing;
   p.r0 = p.r0 === undefined ? x0 : p.r0 + Math.max(-armMax, Math.min(armMax, x0 - p.r0));
   p.r1 = p.r1 === undefined ? x1 : p.r1 + Math.max(-armMax, Math.min(armMax, x1 - p.r1));
   a0.rotation.x = p.r0; a0.rotation.z = z0;

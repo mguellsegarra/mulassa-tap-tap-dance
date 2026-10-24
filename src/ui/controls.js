@@ -3,6 +3,7 @@ import { showAvatars, photoHelpAvailable } from './photo-avatars.js';
 import { sheets } from './sheets.js';
 import { howtoMenu, settingsMenu, privacyMenu, pauseMenu, hide, howtoEl, settingsEl, feedbackEl, freeEl, musicEl, pauseEl, skipEl, retryEl } from './handles.js';
 import { G, clock, CHALLENGE, setFreeSound } from '../game/state.js';
+import { selectedFigure } from '../game/figure-song.js';
 import { keyboardNav } from './focus.js';
 import { hud, buttonAt } from '../hud/canvas.js';
 import { lookSync } from './mouse-look.js';
@@ -51,7 +52,7 @@ export function setView(on) {
   if (on === viewMode || on && (!photoScreen() || sheetUp())) return;
   const entryFocus = on ? document.activeElement : null; // making the selector inert can already blur its card
   const entryFigure = on && G.state === 'select' && !sheets.select?.pending && sheets.select?.figure;
-  viewMode = on; setFreeSound(on); showAvatars(on, entryFigure?.id); hide(viewBtn, !on); sheets.music?.visible(on); viewT = performance.now(); // (the button first: the radio and ? are placed from it)
+  viewMode = on; setFreeSound(on); showAvatars(on, (entryFigure || selectedFigure).id); hide(viewBtn, !on); sheets.music?.visible(on); viewT = performance.now(); // (a pending selection drives the last playable figure; the button first: the radio and ? are placed from it)
   if (!on) hide(howtoEl, true);
   document.body.classList.toggle('view-mode', on);
   photoOrient();

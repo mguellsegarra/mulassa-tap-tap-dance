@@ -4,7 +4,9 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { BOU_HELPERS, BOU_CAPATAS, bouToWorld, createBouColla } from '../src/scene/bou-colla.js';
-import { bouPose, BOU_TIMING } from '../src/game/bou-dance.js';
+import { BOU_TIMING, BOU_CARRY } from '../src/game/bou-dance.js';
+import { buildBou } from '../src/scene/models/bou.js';
+import { createBouMotion } from '../src/scene/bou-motion.js';
 import { BOU_HELPER_LOOKS, buildHelper, poseHelper } from '../src/scene/models/colla.js';
 import * as THREE from 'three';
 import { PROFILES } from '../src/platform/render-quality.js';
@@ -16,23 +18,34 @@ const FRONT = CAM_AZ + 0.35, YAW = CAM_AZ - Math.PI / 4;
 const turn = (x, z, a) => ({ x: x * Math.cos(a) + z * Math.sin(a), z: -x * Math.sin(a) + z * Math.cos(a) });
 const off = (a, b) => Math.abs(Math.atan2(Math.sin(a - b), Math.cos(a - b)));
 
-// the Bou's floor box (horns to tail, flank to flank, with margin) at every pose of its song, in the plaça
-const box = [];
-for (let t = 0; t <= BOU_TIMING.duration; t += 0.05) {
-  const p = bouPose(t);
-  for (const [bx, bz] of [[0.7, 1.9], [-0.7, 1.9], [0.7, -1.7], [-0.7, -1.7], [0, 1.9], [0, -1.7]]) {
-    const local = turn(bx, bz, p.yaw); box.push(turn(p.x + local.x, p.z + local.z, YAW));
+// the Bou's real footprint (each mesh's box in its body frame, horns and tail included) at every pose of its song: it
+// never touches an attendant (a 0.2 m column), and its rushes come almost onto each of the four (Marc 24/10/2026: «ha
+// d'arribar quasi a tocar les persones que estan a NSWE»)
+const rig = buildBou(), motion = createBouMotion(rig), parts = [], v = new THREE.Vector3();
+rig.root.updateMatrixWorld(true);
+const toBody = new THREE.Matrix4().copy(rig.body.matrixWorld).invert();
+rig.body.traverse(o => { if (!o.isMesh) return; const m = new THREE.Matrix4().multiplyMatrices(toBody, o.matrixWorld), b = new THREE.Box3(), at = o.geometry.attributes.position;
+  for (let i = 0; i < at.count; i++) b.expandByPoint(v.fromBufferAttribute(at, i).applyMatrix4(m)); parts.push(b); });
+const helpers = [...BOU_HELPERS, BOU_CAPATAS].map(h => ({ ...h, w: bouToWorld(h.x, h.z, YAW), near: 9 }));
+const inv = new THREE.Matrix4(), q = new THREE.Vector3();
+let reach = 0;
+for (let t = 0; t <= BOU_TIMING.duration; t += 1 / 30) {
+  const p = motion(t);
+  if (p.beat > BOU_CARRY.come && p.beat < BOU_CARRY.back) continue; // the festa: they hold it (tests/bou-festa.mjs)
+  inv.copy(rig.body.matrixWorld).invert(); reach = Math.max(reach, Math.hypot(p.x, p.z));
+  for (const h of helpers) for (let y = 0.1; y < 1.7; y += 0.2) { // its column, in the dance frame (the compass turned by YAW)
+    const c = turn(h.w.x, h.w.z, -YAW); q.set(c.x, y, c.z).applyMatrix4(inv);
+    for (const b of parts) h.near = Math.min(h.near, Math.hypot(Math.max(b.min.x - q.x, 0, q.x - b.max.x), Math.max(b.min.y - q.y, 0, q.y - b.max.y), Math.max(b.min.z - q.z, 0, q.z - b.max.z)) - 0.2);
   }
 }
-const reach = Math.max(...box.map(q => Math.hypot(q.x, q.z)));
-const helpers = [...BOU_HELPERS, BOU_CAPATAS].map(h => ({ ...h, w: bouToWorld(h.x, h.z, YAW) }));
 for (const h of helpers) {
-  const near = Math.min(...box.map(q => Math.hypot(q.x - h.w.x, q.z - h.w.z)));
-  assert.ok(near > 0.45 + 0.75, `${h.id} is ${near.toFixed(2)} m from the Bou`);
+  assert.ok(h.near > 0.04, `${h.id} is touched by the Bou (${h.near.toFixed(2)} m)`);
+  if (h.id !== 'C') assert.ok(h.near < 0.3, `the Bou never comes near ${h.id} (${h.near.toFixed(2)} m)`);
   assert.ok(off(Math.atan2(h.w.x, h.w.z), CAM_AZ) > 0.7, `${h.id} stands in the camera's shot`);
   const face = h.yaw + YAW; // its local +z, in the plaça: towards the centre
   assert.ok(off(face, Math.atan2(-h.w.x, -h.w.z)) < 1e-9, `${h.id} faces the centre`);
 }
+console.log('closest passes', helpers.map(h => `${h.id} ${h.near.toFixed(2)}`).join(', '));
 const head = id => Math.atan2(helpers.find(h => h.id === id).w.x, helpers.find(h => h.id === id).w.z);
 assert.ok(off(head('W'), CAM_AZ) - Math.PI / 4 < 1e-9 && off(head('S'), CAM_AZ) - Math.PI / 4 < 1e-9, 'the camera looks in between W and S');
 const colla = createBouColla(PROFILES[2]);
@@ -52,4 +65,4 @@ for (const [beat, cheer] of [[0, 0], [3.5, 0], [7.25, 1]]) {
   assert.ok(Math.abs(box.min.y) < 0.005 && box.max.y > 1.5, `the staff spans ${box.min.y.toFixed(3)}-${box.max.y.toFixed(2)} m`);
   assert.ok(Math.abs(a.y) < 1e-6 && Math.hypot(a.x, a.z) < 0.6, `the staff's foot at ${a.toArray().map(n => n.toFixed(2))}`);
 }
-console.log(`bou colla ok (footprint ${reach.toFixed(2)} m, attendants ${BOU_HELPERS[0].z} m)`);
+console.log(`bou colla ok (its dance reaches ${reach.toFixed(2)} m, attendants ${BOU_HELPERS[0].z} m)`);

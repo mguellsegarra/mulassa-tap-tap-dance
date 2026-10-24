@@ -17,11 +17,13 @@ import { buildMulassa } from '../scene/models/mulassa.js';
 import { createCarriers } from '../scene/mula-carriers.js';
 import { createBouColla, BOU_HELPER_RADIUS } from '../scene/bou-colla.js';
 import { buildBou } from '../scene/models/bou.js';
+import { BOU_HELPER_LOOKS } from '../scene/models/colla.js';
 import { createBouMotion } from '../scene/bou-motion.js';
 
 const q = new URLSearchParams(location.search), num = (k, d) => (q.has(k) && q.get(k) !== '' ? Number(q.get(k)) : d);
 const BEAT = num('beat', 0), ENERGY = num('energy', 1), T = num('t', 34.36), PLAY = q.has('play'), ONE = num('view', -1), BACK = q.has('back'), ZOOM = num('zoom', 1), MULA = q.get('figura') === 'mulassa', BOU = q.get('figura') === 'bou';
 const CAM_AZ = -81 * Math.PI / 180, FRONT = BOU ? CAM_AZ - Math.PI / 4 : MULA ? mulaDanceYaw(CAM_AZ) : danceYaw(CAM_AZ); // stage.js CAM_AZ / DRAC_YAW / MULA_YAW / BOU_COLLA_YAW (not imported: it builds the whole game)
+if (q.get('ulleres')) BOU_HELPER_LOOKS.slice(0, 4).forEach(l => { l.shades = q.get('ulleres'); }); // ?ulleres=wayfarer|aviator|sport
 const makeColla = () => (BOU ? createBouColla(PROFILES[2]) : MULA ? createMulaColla(PROFILES[2], seat => mulaSeatAt(seat, FRONT)) : createColla({ profile: PROFILES[2] }));
 const place = BOU ? (obj, yaw) => { obj.rotation.y = yaw; return obj; } : MULA ? placeMulaDance : placeDance;
 const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('gl'), antialias: true });
@@ -52,7 +54,7 @@ colla.setLabels(true);
 plaza.add(colla.helpers, colla.seated);
 if (BOU) { // the Bou at song second T in its dance frame (stage.js: turned to FRONT, CAM_AZ + 0.35)
   const bou = buildBou(), frame = new THREE.Group();
-  frame.rotation.y = CAM_AZ + 0.35; frame.add(bou.root, ...bou.feet, ...bou.legs); plaza.add(frame);
+  frame.rotation.y = CAM_AZ + 0.35; frame.add(bou.root, ...bou.feet, ...bou.legs, ...bou.trunks, ...bou.arms); plaza.add(frame);
   createBouMotion(bou)(T, 0);
 } else if (MULA) { // her body and carriers at song second T, in the dance frame
   const rig = buildMulassa(), carriers = createCarriers(), p = mulaDance.pose(newMulaPose(), T), feet = Array.from({ length: 8 }, (_, i) => mulaDance.foot(T, i, {}));

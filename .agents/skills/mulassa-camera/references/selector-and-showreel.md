@@ -28,7 +28,7 @@ Design kept since:
 - Extents through an envelope (up 0.35 s, down 4 s) so turning side-on never pumps the size; centre through a slow average; no heading follow.
 - Short bands (320×568, 375×667: 84-132 px) keep her readable and let her rise behind the info's lower rows, on purpose.
 - After a drag, return after 2 s (`ORBIT.idle`), eased, capped at 0.55 rad/s (a half-turn return used to reach 0.91 rad/s). A figure change returns at once.
-- Photo mode keeps the player's shot (Marc's choice). Leaving it uses quick springs (`MENU_T.exit` 0.6 s) so the returning dock does not cover her (it took 2.25 s, now 0.77 s).
+- Free play always drives one figure with its chase camera (Marc 2026-10-24: no «Mira la plaça» orbit, no `keep`, no `MENU_T.exit`); the selector's leaving-photo test still bounds her feet back over the dock within 1.5 s.
 - Accepted limits: the Mulassa can leave the edge ~11% at 393×852 while travelling fast; desktop windows ≤ 500 px tall have no free band and keep the old shot.
 
 Pitfall: `getMatrixAt` on this three.js version returns nothing; pass the target matrix in.

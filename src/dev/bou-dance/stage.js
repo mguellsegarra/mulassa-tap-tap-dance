@@ -10,7 +10,7 @@ export function createBouStage(canvas) {
   scene.add(new THREE.HemisphereLight('#fff4e0','#776c55',2.2));
   const sun=new THREE.DirectionalLight('#fff0d6',2.0);sun.position.set(-4,8,5);scene.add(sun);
   const plaza=buildPlaza();scene.add(plaza.group);plaza.band.forEach(p=>p.g.visible=false);
-  const rig=buildBou();scene.add(rig.root,...rig.feet,...rig.legs);
+  const rig=buildBou();scene.add(rig.root,...rig.feet,...rig.legs,...rig.trunks,...rig.arms);
   const motion=createBouMotion(rig);let view='front',time=0;
   function frame() {
     const ratio=Math.max(1,1/camera.aspect),d=7.3*Math.sqrt(ratio);

@@ -2,7 +2,7 @@
 // (--gua… with the Mulassa's own as the CSS fallbacks), `fig-drac` for the few Drac-only rules, and the labels of the
 // semantic DOM roles; only the portrait keeps its original markup.
 import { onTheme, trf, figTheme } from '../game/figure-theme.js';
-import { DRAC, portraitArt, portraitPalette } from '../game/figures.js';
+import { DRAC, BOU, portraitArt, portraitPalette } from '../game/figures.js';
 
 const VARS = { gua: '--gua', guaLt: '--gua-lt', guaDk: '--gua-dk', pa: '--pa', paLt: '--pa-lt', paDk: '--pa-dk' };
 // Bind semantic roles explicitly; no message is identified by its rendered words.
@@ -21,18 +21,20 @@ const apply = t => {
   for (const [k, v] of Object.entries(VARS)) t.id !== 'mulassa' ? b.style.setProperty(v, t.colors[k]) : b.style.removeProperty(v);
   for (const [selector, key] of figureDomText) document.querySelectorAll(selector).forEach(el => { el.textContent = trf(key); if (el.dataset.w) el.dataset.w = el.textContent; });
   document.querySelectorAll('#howto-portrait').forEach(face => { // «Com es juga»'s ÀNIM row: the HUD's portrait of who dances
-    face.dataset.base ??= face.innerHTML; face.innerHTML = t.drac ? portraitSvg(DRAC) : face.dataset.base;
+    face.dataset.base ??= face.innerHTML; face.innerHTML = t.drac ? portraitSvg(DRAC) : t.id === 'bou' ? portraitSvg(BOU) : face.dataset.base;
   });
   for (const [selector, key] of figureDomAria) document.querySelectorAll(selector).forEach(el => el.setAttribute('aria-label', trf(key)));
 };
 apply(figTheme);
 onTheme(apply);
 
-// the same pixels as hud/top.js paintMule(): a dark 1.8-unit square under every pixel, then the palette
+// the same pixels as hud/top.js paintMule(): a dark 1.8-unit square under every pixel, then the palette; a portrait
+// bigger than 12×10 (the Bou's) shrinks to fit whole in the same box, centred, feet down, as paintMule's
 function portraitSvg(figure) {
-  const art = portraitArt(figure), pal = portraitPalette(figure), px = [];
+  const art = portraitArt(figure), pal = portraitPalette(figure), px = [], w = art[0].length, h = art.length, fit = Math.min(1, 12 / w, 10 / h);
   art.forEach((row, y) => [...row].forEach((k, x) => k !== '.' && px.push([x, y, k])));
   const by = {};
   for (const [x, y, k] of px) (by[pal[k]] ??= []).push(`M${x} ${y}h1v1h-1z`);
-  return `<path fill="#2a1a10" d="${px.map(([x, y]) => `M${x - 0.4} ${y - 0.4}h1.8v1.8h-1.8z`).join('')}"/>` + Object.entries(by).map(([c, d]) => `<path fill="${c}" d="${d.join('')}"/>`).join('');
+  const paths = `<path fill="#2a1a10" d="${px.map(([x, y]) => `M${x - 0.4} ${y - 0.4}h1.8v1.8h-1.8z`).join('')}"/>` + Object.entries(by).map(([c, d]) => `<path fill="${c}" d="${d.join('')}"/>`).join('');
+  return fit < 1 ? `<g transform="scale(${fit}) translate(${((12 / fit - w) / 2).toFixed(2)} ${(10 / fit - h).toFixed(2)})">${paths}</g>` : paths;
 }

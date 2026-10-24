@@ -6,16 +6,17 @@
 //   world 'many': the eleven calendar quarters before today closed (the Saló de la fama's «Tria temporada» by year; one with
 //   two Mulassa dances), today's quarter open; the Drac has no closed season. No «Estrena 2026» in it.
 import { VERSION_RULES } from '../services/leaderboard-rules.js';
-import { DRAC_SCORE_VERSION, SHORT_SCORE_VERSION } from '../game/score-scale.js';
+import { DRAC_SCORE_VERSION, SHORT_SCORE_VERSION, BOU_SCORE_VERSION } from '../game/score-scale.js';
 import { fold } from '../services/alias-rules.js';
 
 export const DEMO_SELF = Object.freeze({ alias: 'Prova123', tag: 4821 }); // the signed-in demo account (ALIAS_KEY / TAG_KEY of its browser)
 export const PREVIOUS_VERSION = 'mulassa-v2b'; // the dance mulassa-v3 replaced mid-Tardor, world 'later' only
 const DAY = 864e5;
 // song length and GUAPA count per version (202610200003_player_stats.sql); the statistics checks need them
-export const STAT_RULES = Object.freeze({ 'mulassa-v3': { seconds: 88.1995, guapa: [11, 11, 11] }, [DRAC_SCORE_VERSION]: { seconds: 109.889, guapa: [12, 12, 16] } });
+export const STAT_RULES = Object.freeze({ 'mulassa-v3': { seconds: 90.1, guapa: [11, 11, 11] }, [DRAC_SCORE_VERSION]: { seconds: 109.889, guapa: [12, 12, 16] },
+  [BOU_SCORE_VERSION]: { seconds: 149.9347, guapa: [9, 9, 9] } }); // the Bou: no server version yet, song-bou.json's end and its charts' GUAPAs
 export const family = version => (version === 'mulassa-v1' || version === SHORT_SCORE_VERSION ? SHORT_SCORE_VERSION : version);
-export const figureOf = version => (version === DRAC_SCORE_VERSION ? 'drac-valls' : 'mulassa-valls');
+export const figureOf = version => VERSION_RULES[version]?.figureId ?? 'mulassa-valls'; // v2-short and PREVIOUS_VERSION: the Mulassa
 export const aliasKey = a => fold(a).replace(/[^a-z0-9]/g, '');
 
 const rng = seed => () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
@@ -143,16 +144,16 @@ export function buildWorld({ world = 'launch', board = null, drac = null, now = 
   if (world !== 'many') fill(0, SHORT_SCORE_VERSION, 60, 0);
   if (world === 'many') { // 1-11 closed (the old dance until 7, both in 7), 12 open; the Drac only in the open one
     for (let id = 1; id <= 11; id++) { if (id <= 7) fill(id, PREVIOUS_VERSION, 20 + (id * 7) % 31, 1, id === 7); if (id >= 7) fill(id, 'mulassa-v3', 18 + (id * 11) % 37, 2); }
-    fill(12, 'mulassa-v3', 15, 3); fill(12, DRAC_SCORE_VERSION, 6, 3);
+    fill(12, 'mulassa-v3', 15, 3); fill(12, DRAC_SCORE_VERSION, 6, 3); fill(12, BOU_SCORE_VERSION, 5, 3);
   } else if (world === 'later') {
     fill(1, PREVIOUS_VERSION, 47, 1, true); fill(1, 'mulassa-v3', 20, 2); fill(1, DRAC_SCORE_VERSION, 14, 1);
-    fill(2, 'mulassa-v3', 15, 3); fill(2, DRAC_SCORE_VERSION, 6, 3);
+    fill(2, 'mulassa-v3', 15, 3); fill(2, DRAC_SCORE_VERSION, 6, 3); fill(2, BOU_SCORE_VERSION, 8, 3); // the Bou is new: open season only
   } else {
-    fill(1, 'mulassa-v3', 45, 1); fill(1, DRAC_SCORE_VERSION, 12, 1);
+    fill(1, 'mulassa-v3', 45, 1); fill(1, DRAC_SCORE_VERSION, 12, 1); fill(1, BOU_SCORE_VERSION, 10, 1);
   }
   const openMulassa = boards.find(b => b.seasonId === cal.open && b.figure === 'mulassa-valls' && b.order === Math.max(...boards.filter(x => x.seasonId === cal.open && x.figure === 'mulassa-valls').map(x => x.order)));
   const openDrac = boards.find(b => b.seasonId === cal.open && b.figure === 'drac-valls');
-  if (board === 'empty') { openMulassa.rows = []; openDrac.rows = []; }
+  if (board === 'empty') boards.filter(b => b.seasonId === cal.open).forEach(b => (b.rows = []));
   if (drac === 'empty') openDrac.rows = [];
   let me = null;
   if (board === 'me') { // a ladder for responsive scroll checks: «Prova1…», the signed-in profile (ProvaRetall) at #48 of 119

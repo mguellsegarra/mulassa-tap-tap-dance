@@ -52,6 +52,40 @@ const eye = (v, x, y, z, k, r = 0.11) => v.plate(x, y, z + k * 0.009, r, r, 0, k
 function sleeve(v, rnd, L, w, look) {
   cbox(v, 0, -L / 2, 0, w, L, w + 0.01, look.top); if (look.dye !== false) blotch(v, rnd, [0, -L, 0, w, L, w + 0.01], 4);
 }
+// Black sunglasses on collaHead's face (front z 0.16, eyes y 0.17-0.22 at x ±0.08), the frame a little proud of the
+// lenses so no two faces share a plane; arms back to the ears over the head's sides (±0.17). Three styles; the frame's colour per look, the lenses always black (Marc 2026-10-24).
+const SHADES = {
+  wayfarer(v, frame) { // thick black acetate, lenses wider at the top, a heavy brow
+    for (const s of [1, -1]) {
+      const x = s * 0.078;
+      v.box(x, 0.18, 0.172, 0.11, 0.04, 0.01, BOU.lens, 0).box(x, 0.157, 0.172, 0.094, 0.023, 0.01, BOU.lens, 0);
+      v.box(x, 0.147, 0.173, 0.096, 0.012, 0.014, frame, 0).box(s * 0.139, 0.155, 0.173, 0.016, 0.065, 0.014, frame, 0);
+      v.box(s * 0.16, 0.2, 0.166, 0.03, 0.03, 0.016, frame, 0).box(s * 0.177, 0.205, 0.06, 0.014, 0.022, 0.22, frame, 0);
+      v.plate(x + s * 0.028, 0.199, 0.179, 0.024, 0.012, 0, 1, BOU.glint).plate(x + s * 0.012, 0.188, 0.179, 0.01, 0.006, 0, 1, BOU.glint);
+    }
+    v.box(0, 0.215, 0.174, 0.296, 0.03, 0.016, frame, 0).box(0, 0.19, 0.174, 0.05, 0.016, 0.012, frame, 0);
+  },
+  aviator(v, frame) { // thin black metal, teardrop lenses, a double bridge
+    for (const s of [1, -1]) {
+      const x = s * 0.078;
+      v.box(x, 0.193, 0.172, 0.112, 0.027, 0.008, BOU.lens, 0).box(x - s * 0.004, 0.168, 0.172, 0.104, 0.025, 0.008, BOU.lens, 0)
+        .box(x - s * 0.01, 0.148, 0.172, 0.078, 0.02, 0.008, BOU.lens, 0);
+      v.box(s * 0.137, 0.162, 0.174, 0.008, 0.058, 0.01, frame, 0).box(x - s * 0.01, 0.141, 0.174, 0.08, 0.007, 0.01, frame, 0);
+      v.box(s * 0.16, 0.208, 0.168, 0.04, 0.012, 0.012, frame, 0).box(s * 0.177, 0.206, 0.06, 0.01, 0.012, 0.22, frame, 0);
+      v.plate(x + s * 0.03, 0.196, 0.178, 0.022, 0.016, 0, 1, BOU.glint).plate(x - s * 0.022, 0.155, 0.178, 0.014, 0.008, 0, 1, BOU.glint);
+    }
+    v.box(0, 0.22, 0.174, 0.29, 0.009, 0.012, frame, 0).box(0, 0.2, 0.174, 0.05, 0.008, 0.01, frame, 0);
+  },
+  sport(v, frame) { // one wraparound black visor round to the temples, a thin brow, thick arms
+    v.box(0, 0.19, 0.172, 0.352, 0.032, 0.012, BOU.lens, 0); // edge to edge: no skin between the lenses and the temples
+    for (const s of [1, -1]) {
+      v.box(s * 0.097, 0.152, 0.172, 0.158, 0.038, 0.012, BOU.lens, 0).box(s * 0.168, 0.152, 0.13, 0.016, 0.07, 0.08, frame, 0);
+      v.box(s * 0.178, 0.192, 0.03, 0.014, 0.03, 0.2, frame, 0).box(s * 0.097, 0.145, 0.173, 0.158, 0.009, 0.016, frame, 0); // and a rim under each lens
+      v.plate(s * 0.07, 0.207, 0.18, 0.11, 0.007, 0, 1, BOU.glint).plate(s * 0.1775, 0.19, 0.12, 0.04, 0.008, s, 0, BOU.glint);
+    }
+    v.box(0, 0.218, 0.173, 0.356, 0.022, 0.018, frame, 0);
+  },
+};
 // the head on its neck pivot (people.js's head: skin, hair, eyes), plus a headband or a cap; the Bou's colla: a hood
 // up, sunglasses, a black fire hat
 function collaHead(look, rnd, top) {
@@ -61,11 +95,7 @@ function collaHead(look, rnd, top) {
   v.box(0.08, 0.17, 0.165, 0.05, 0.05, 0.01, C.black, 0).box(-0.08, 0.17, 0.165, 0.05, 0.05, 0.01, C.black, 0);
   if (look.band) v.box(0, 0.225, 0, 0.35, 0.05, 0.335, COLLA.red); // above the eyes (0.22), into the hair
   if (look.cap) v.box(0, 0.3, -0.01, 0.38, 0.12, 0.37, COLLA.cap).box(0, 0.31, 0.2, 0.3, 0.03, 0.08, COLLA.cap);
-  if (look.shades) { // against the sparks: two dark lenses over the eyes (0.17-0.22) with a glint, the brow bar, the bridge, the arms to the ears
-    for (const x of [0.075, -0.075]) v.box(x, 0.155, 0.172, 0.1, 0.07, 0.012, BOU.lens, 0).plate(x + 0.025, 0.2, 0.1795, 0.03, 0.014, 0, 1, BOU.glint);
-    v.box(0, 0.222, 0.172, 0.27, 0.018, 0.016, BOU.black, 0).box(0, 0.19, 0.174, 0.05, 0.016, 0.012, BOU.black, 0);
-    for (const x of [0.177, -0.177]) v.box(x, 0.205, 0.06, 0.012, 0.016, 0.22, BOU.black, 0);
-  }
+  if (look.shades) SHADES[look.shades](v, look.frame ?? BOU.frame); // against the sparks
   if (look.moustache) v.box(0, 0.07, 0.165, 0.16, 0.04, 0.012, hair, 0);
   if (look.hood === 'up') { // crown, sides and back over the hair (clear of its faces), the face left open
     v.box(0, 0.39, -0.03, 0.44, 0.05, 0.4, look.top).box(0, -0.02, -0.215, 0.37, 0.41, 0.03, look.top);
@@ -119,18 +149,18 @@ export const MULA_SEATED_LOOKS = [
 ];
 // The Bou Tradicional's colla (Ardit's recordings 2021-2026, the 2026 Santa Úrsula cercavila closest; UAF photos): correfoc
 // wear, the Bou being a fire beast. A garnet hooded jacket worn long as a tunic, buttoned, with «BOU TRADICIONAL DE VALLS»
-// down the front and a cartoon bull's face on the back; hoods up on some (at the correfoc), sunglasses against the
-// sparks on others; black trousers with a pale mark on the thigh, dark shoes. W, N, S, E, then the capatàs (Marc), a fifth
+// down the front and a cartoon bull's face on the back; hoods up on some (at the correfoc), black sunglasses
+// against the sparks on all four (Marc 2026-10-24: they are in focus in the showreel and the dance); black trousers with a pale mark on the thigh, dark shoes. W, N, S, E, then the capatàs (Marc), a fifth
 // standing near the dance, not on a mark (scene/bou-colla.js BOU_CAPATAS): an older
 // man, short and stout, grey hair, a black fire hat with the badge and the long wooden staff with the fire pot.
 // Colours are approximations under the game's light.
-export const BOU = { lens: '#1f2638', glint: '#8f9cbf', black: '#121114', pale: '#ece2cf', white: '#f6f2ea', wood: '#7a5230', pot: '#3c3b40', potRim: '#5b5a60' };
-export const BOU_SUIT = { legs: '#17161a', dye: false, sole: '#3a3434', upper: '#121114', lace: null, shade: '#55142e', tunic: true, rolled: false };
+export const BOU = { lens: '#0f1013', frame: '#060607', glint: '#aab2c4', black: '#121114', pale: '#ece2cf', white: '#f6f2ea', wood: '#7a5230', pot: '#3c3b40', potRim: '#5b5a60' };
+export const BOU_SUIT = { stride: true, legs: '#17161a', dye: false, sole: '#3a3434', upper: '#121114', lace: null, shade: '#55142e', tunic: true, rolled: false };
 export const BOU_HELPER_LOOKS = [
-  { ...BOU_SUIT, top: '#80203f', hood: 'up', shades: true },
-  { ...BOU_SUIT, top: '#8c2347' },
-  { ...BOU_SUIT, top: '#93284d', shades: true },
-  { ...BOU_SUIT, top: '#7a1d3b', hood: 'up' },
+  { ...BOU_SUIT, top: '#80203f', hood: 'up', shades: 'sport' },
+  { ...BOU_SUIT, top: '#8c2347', shades: 'sport', frame: '#2f9e4f' },
+  { ...BOU_SUIT, top: '#93284d', shades: 'sport' },
+  { ...BOU_SUIT, top: '#7a1d3b', hood: 'up', shades: 'sport', frame: '#f2c230' },
   { ...BOU_SUIT, top: '#8c2347', build: [1.2, 0.84], belly: true, hair: '#c9c4bd', moustache: true, skin: SKIN[1], hat: true, staff: true }, // the capatàs
 ];
 export const SEATED_LOOKS = [
@@ -251,13 +281,17 @@ export function buildHelper(look, seed = 1) {
   look = { skin: SKIN[(rnd() * 3) | 0], legs: COLLA.cream, dye: true, sole: COLLA.sole, lace: COLLA.lace, ...look };
   g.add(fig); fig.add(body);
   if (look.build) fig.scale.set(look.build[0], look.build[1], look.build[0]); // short and stout (the bones keep their poses)
-  const v = new Vox();
+  const v = new Vox(), legs = [];
   for (const s of [1, -1]) {
-    shoe(v, s * 0.1, 0.03, look);
+    // `stride` (the Bou's colla, who run with it in the festa): each leg its own bone pivoting at its hip (legs[0] the
+    // right, x +0.1), so a walk can point it at its foot
+    const lv = look.stride ? new Vox() : v;
+    shoe(lv, s * 0.1, 0.03, look);
     const leg = [s * 0.1, 0.06, 0, 0.17, 0.7, 0.2];
-    v.box(...leg, look.legs);
-    if (look.dye) blotch(v, rnd, leg, 9);
-    if (look.eyes) [0.22, 0.46].forEach((y, i) => eye(v, s * 0.1, y + 0.08 * i * s, i ? -0.1 : 0.1, i ? -1 : 1, 0.12));
+    lv.box(...leg, look.legs);
+    if (look.dye) blotch(lv, rnd, leg, 9);
+    if (look.eyes) [0.22, 0.46].forEach((y, i) => eye(lv, s * 0.1, y + 0.08 * i * s, i ? -0.1 : 0.1, i ? -1 : 1, 0.12));
+    if (look.stride) { const hip = new THREE.Group(), m = lv.mesh(); hip.position.set(s * 0.1, HELPER_HIP, 0); m.position.set(-s * 0.1, -HELPER_HIP, 0); hip.add(m); fig.add(hip); legs.push(hip); }
   }
   const jacket = look.tunic ? [0, 0.5, 0, 0.5, 0.88, 0.31] : [0, 0.72, 0, 0.46, 0.66, 0.28];
   v.box(...jacket, look.top);
@@ -270,8 +304,9 @@ export function buildHelper(look, seed = 1) {
   const h = collaHead(look, rnd, 1.38), arms = [1, -1].map(s => arm(s, look, rnd));
   for (const a of arms) fig.add(a.sh);
   fig.add(h);
-  return { g, body, head: h, arms, staff: !!look.staff, bones: [body, h, ...arms.flatMap(a => [a.sh, a.el])] };
+  return { g, body, head: h, arms, legs, staff: !!look.staff, bones: [body, h, ...arms.flatMap(a => [a.sh, a.el]), ...legs] };
 }
+export const HELPER_HIP = 0.76; // a standing helper's hip (the legs' tops)
 // The clap at `beat` (an integer = palms together) and energy 0..1 (0 = arms hanging, calm). Pure, no allocations.
 export const ARM_UP = [0.35, -2.7, -0.35]; // a cheer: both arms up over the head
 export function poseHelper(p, beat, energy, cheer = 0) {

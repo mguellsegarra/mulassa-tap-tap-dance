@@ -5,6 +5,7 @@ import figureCatalog from './figure-catalog.json' with { type: 'json' };
 import { bestRecord, recordPointsKey, saveRecord } from './records.js';
 import { CURRENT_SCORE_VERSION, BOU_SCORE_VERSION } from './score-scale.js';
 import { FIGURE_PORTRAITS } from './figure-portraits.js';
+import { MOCK_BOARD } from '../core/mock-board.js';
 export const TOWNS = figureCatalog.towns;
 const playableSongs = {
   // i18n-ok: song titles and composers are proper names
@@ -25,7 +26,7 @@ export const INVITE_TOWN = { id: 'el-teu-poble', name: tr('figures.invite.town')
 export const INVITE = { id: 'la-teva-colla', name: tr('figures.invite.name'), fullName: tr('figures.invite.name'), town: INVITE_TOWN.id, entity: tr('figures.invite.entity'), status: 'aviat', invite: true };
 export const townOf = f => f.town === INVITE_TOWN.id ? INVITE_TOWN : TOWNS.find(t => t.id === f.town);
 export const playable = f => f.status === 'playable';
-export const hasBoard = f => playable(f) && !f.noBoard; // an online board (Classificació, the ranking line, publishing)
+export const hasBoard = f => playable(f) && (!f.noBoard || MOCK_BOARD); // the mock boards have the Bou too; an online board (Classificació, the ranking line, publishing)
 // Shown before the fold: the playable figures (the Bou, up front since 2026-10-23, is one now)
 export const upFront = f => playable(f);
 

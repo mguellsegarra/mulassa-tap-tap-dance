@@ -32,8 +32,6 @@ body:has(#viewmode.idle) #photo-figs:not(:hover, :focus-within) { opacity: .25; 
 #photo-figs .pf { position: relative; display: flex; align-items: center; min-height: 60px; padding: 0; border: 0; background: none; color: #fff3d6; font: 700 16px/1.1 'Baloo 2', system-ui, sans-serif; cursor: pointer; text-align: left; }
 #photo-figs .pf-por { z-index: 1; flex: none; display: grid; place-items: center; box-sizing: border-box; width: 56px; height: 56px; margin-block: 2px; border: 2px solid #f5c518; border-radius: 50%; background: radial-gradient(circle at 50% 42%, var(--t, #453322), color-mix(in srgb, var(--t, #453322) 35%, #20150e) 78%); overflow: hidden; } /* the town's tint, as the selector cards (select.css --t) */
 #photo-figs .pf-por svg { width: 74%; height: 74%; stroke: none; } /* (not the line icons' stroke) */
-#photo-figs .pf-free .pf-por { --t: #4e3424; }
-#photo-figs .pf-free .pf-por svg { width: 55%; height: 55%; stroke: currentColor; }
 #photo-figs .pf-nb { display: flex; flex-direction: column; justify-content: center; box-sizing: border-box; min-width: 150px; max-width: 220px; height: 42px; margin-left: -28px; padding: 0 10px 0 38px; /* starts under the portrait's centre: its square end never shows */ border: 2px solid #f5c518; border-radius: 0 10px 10px 0; background: #140c07e6; }
 /* Cream marks selection; gold remains the action/navigation colour. */
 #photo-figs .pf-por, #photo-figs .pf-nb { transition: background .2s; }

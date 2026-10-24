@@ -36,6 +36,7 @@ import { bubbles, bubble, at } from './hud/bubbles.js';
 import { animCrowd } from './scene/crowd.js';
 import { firework, animFireworks, animFinaleLights } from './scene/fx.js';
 import { dracFrame, dracWarm } from './scene/drac-show.js';
+import { bouFrame } from './scene/bou-show.js';
 import './hud/lane.js';
 import './hud/top.js';
 import { headline } from './hud/praise.js';
@@ -172,11 +173,12 @@ function frame(now) {
   animConfetti(dt);
   animFireworks(dt);
   dracFrame(dt, vt); // the Drac's fire, red smoke and traca; nothing for the Mulassa
+  bouFrame(dt, vt); // the Bou's disco night, carretilles and banknotes
   animFinaleLights(beat);
 
   // camera: during play the mulassa sits near the lane, in the free stage above the pad or
   // the bottom edge, with the crowd around her. A lens shift (view offset) puts her there without tilting the view.
-  const pk = PHOTO.on ? (PHOTO.pair && PHOTO.id === 'drac-valls' ? 1 : 0) : 0.5 * PAIR.k; // free viewing frames the pair; driving follows its controlled figure
+  const pk = PHOTO.on ? 0 : 0.5 * PAIR.k; // the splash frames the pair; free play follows the figure driven
   const mx = G.state === 'play' ? M.pos.x : (M.pivot.x * 0.5 + M.pos.x * 0.5) * (1 - pk) + PAIR.x * pk, mz = G.state === 'play' ? M.pos.y : (M.pivot.y * 0.5 + M.pos.y * 0.5) * (1 - pk) + PAIR.z * pk, far = camera.aspect < 1 ? 1.4 : 1; // play follows the body; the menu follows her pivot
   const VIEW = { side: [9, 2.2, 0], front: [0, 2.5, 8], back: [-3, 3, -8], top: [4, 9, 6] }[Q.get('view')];
   if (!PHOTO.on) releasePhotoCamera();
@@ -196,7 +198,7 @@ function frame(now) {
       aim = Math.max(-0.25 * HH * L.K, Math.min(0.25 * HH * L.K, (mid - HH / 2) * L.K));
     }
     const sel = G.state === 'select', root = splash ? pairShot() : sel && !PAIR.k ? figureRoot(selectedFigure.id) : null; // «QUI BALLA?» frames its figure in the free rect it measured (css px, when it opens or resizes); «mode foto» hides the selector: the whole screen
-    shift = frameMenuCamera(dt, mx, mz, root, splash ? splashBand(SPLASH_BAND) : sel && !viewMode ? (reelWide ? idleBand(sheets.select?.band, W * K, HH * K, SAFE) : sheets.select?.band) : null, viewMode, viewMode && orbit.last * 1000 >= viewT, aim, REEL.on ? REEL : null);
+    shift = frameMenuCamera(dt, mx, mz, root, splash ? splashBand(SPLASH_BAND) : sel && !viewMode ? (reelWide ? idleBand(sheets.select?.band, W * K, HH * K, SAFE) : sheets.select?.band) : null, aim, REEL.on ? REEL : null);
   } else if (G.state === 'play') {
     CAMED?.restoreFov();
     shift = framePlayCamera(dt, mx, mz);

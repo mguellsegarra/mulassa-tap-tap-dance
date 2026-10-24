@@ -80,9 +80,11 @@ export class Chip {
     this.out = ctx.createGain();
     this.out.gain.value = 0.8;
     const comp = ctx.createDynamicsCompressor();
-    this.out.connect(comp).connect(ctx.destination);
+    this.master = ctx.createGain(); // hush()/unhush(): fades everything before a suspend
+    this.master.connect(ctx.destination);
+    this.out.connect(comp).connect(this.master);
     this.music = ctx.createGain();
-    this.music.connect(ctx.destination); // the recording skips the sfx compressor
+    this.music.connect(this.master); // the recording skips the sfx compressor
     if (muted()) this.out.gain.value = this.music.gain.value = 0; // ?mute: silent test runs, the clock still runs
     const sr = ctx.sampleRate;
     this.noise = ctx.createBuffer(1, sr * 2, sr);
@@ -133,15 +135,34 @@ export class Chip {
     return ready;
   }
 
+  // A bare ctx.suspend() mid-sound left the device's last buffer behind (a stray note on a phone's app/tab switch): fade first
+  suspend() {
+    const g = this.master.gain, t = this.ctx.currentTime;
+    g.cancelScheduledValues(t); g.setTargetAtTime(0, t, 0.006);
+    clearTimeout(this.hushT);
+    this.hushT = setTimeout(() => this.ctx.suspend(), 40);
+  }
+  unhush() {
+    clearTimeout(this.hushT);
+    const g = this.master.gain, t = this.ctx.currentTime;
+    g.cancelScheduledValues(t); g.setTargetAtTime(1, t, 0.01);
+  }
   resume() {
+    this.unhush();
     const failed = e => { errors.report('audio-resume-failed', audioFailureTags(e)); return false; };
     try { return Promise.resolve(this.ctx.resume?.()).then(() => this.running, failed); } catch (e) { return Promise.resolve(failed(e)); }
   } // a rejected wake stays paused; the next real gesture can resume the same transport
 
-  wake() { // iOS: resume + a silent sample inside a real gesture, and play even with the ringer switch off
+  // iOS: a silent menu is 'ambient' (sfx mix with Spotify or any other app's music, which keeps playing); the menu music,
+  // the radio or a run take the 'playback' session (the other app pauses, and the ringer switch can't silence the song)
+  session() {
+    try { if (navigator.audioSession) navigator.audioSession.type = this.menuMusic === false && !this.bus ? 'ambient' : 'playback'; } catch { /* older iOS */ }
+  }
+
+  wake() { // iOS: resume + a silent sample inside a real gesture
+    this.session();
     if (document.hidden || !document.hasFocus() || navigator.userActivation?.isActive === false) return; // a modifier key, Cmd+R…: no gesture, the browser would refuse (and warn)
-    try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch { /* older iOS */ }
-    if (this.ctx.state !== 'running') this.resume();
+    if (this.ctx.state !== 'running') this.resume(); else this.unhush(); // a hidden page's timer may never have suspended it
     if (!this.woke) {
       const b = this.ctx.createBufferSource();
       b.buffer = this.ctx.createBuffer(1, 1, this.ctx.sampleRate);
@@ -301,6 +322,7 @@ export class Chip {
   // Menu sound preference: loop, murmur and UI/demo effects. A run keeps its own sound.
   setMenuMusic(on) {
     this.menuMusic = on;
+    this.session();
     this.murmurLevel();
     if (!on) this.radio(null); // «Silenci» on the radio is this same preference
     if (!this.menuToken) return; // not on the menu: the next menu(true) follows the setting
@@ -352,10 +374,12 @@ export class Chip {
     this.endRun();
     this.bus = this.ctx.createGain();
     this.bus.connect(this.out);
+    this.session();
   }
   endRun() {
     const bus = this.bus, t = this.ctx.currentTime;
     this.bus = null;
+    this.session();
     for (const n of this.voices ?? []) try { n.stop(t + 0.05); } catch { /* already over */ } // queued ones never start
     this.voices?.clear();
     if (!bus) return;

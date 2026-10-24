@@ -165,7 +165,8 @@ function clockPart(c, form, endBeat, knots) {
 }
 
 // The reference recording's clock (optional): anchors (any anchor -> a second of the source video), strictly rising in
-// both, the last on `end`. Song seconds follow the generator's sec(): leadIn + whole beats' µs + the fraction of the next.
+// both, the last on `end`. Song seconds follow the generator's sec(): leadIn + whole beats' µs + the fraction of the next
+// (a constant-exact form: leadIn + b * 60 / bpm, its own grid).
 function referencePart(c, form, anchor, beatUs) {
   const r = form.reference;
   if (!r) return { ref: [], refEnd: null, refAnchors: [] };
@@ -180,7 +181,8 @@ function referencePart(c, form, anchor, beatUs) {
     if (k < 0 || k >= beatUs.length) return c.bad(`reference.anchors[${i}].at`, `beat ${b} is outside the tempo map`);
     const prev = anchors[anchors.length - 1];
     if (prev && !(b > prev[0] && a.ref > prev[2])) return c.bad(`reference.anchors[${i}]`, 'anchors must rise in beats and seconds');
-    anchors.push([b, leadIn + at[k] + (b - k) * beatUs[k] / 1e6, a.ref]);
+    const sec = form.tempo.clock === 'constant-exact' ? leadIn + b * 60 / form.tempo.knots[0].bpm : leadIn + at[k] + (b - k) * beatUs[k] / 1e6;
+    anchors.push([b, sec, a.ref]);
   });
   if (!(r.end > 0)) c.bad('reference.end', 'end must be a positive second');
   else if (anchors.length && anchors[anchors.length - 1][2] !== r.end) c.bad('reference.end', 'the last anchor must sit on end');

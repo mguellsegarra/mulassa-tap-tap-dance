@@ -17,7 +17,7 @@ const PROVIDED = new Set(`song.json song-drac.json platform/polyfills.js platfor
   ui/account-ui.js ui/seasons-ui.js ui/player-card.js services/stats-sync.js
   game/bou-dance.js game/bou-feet.js scene/bou-rig.js scene/bou-motion.js scene/models/bou.js
   game/drac-path.js game/drac-steps.js game/drac-pose.js game/drac-time.js game/drac-layout.js scene/drac-rig.js scene/drac-legs.js scene/drac-colla.js scene/mula-colla.js scene/bou-colla.js
-  dev/cam-edit.js dev/final-test.js i18n/load-locale.js i18n/preload.js`.split(/\s+/));
+  core/mock-board.js dev/cam-edit.js dev/final-test.js i18n/load-locale.js i18n/preload.js`.split(/\s+/));
 const IMPORT = /^import .*;\n/gm, LOCAL = /^(?:import|export) (?:.* from )?'(\.[^']+)';/gm;
 const REEXPORT = /^export (?:\*|\{([^}]*)\}) from '[^']+';.*\n/gm;
 const renames = names => (names || '').split(',').map(n => n.trim().split(/\s+as\s+/)).filter(n => n.length === 2).map(([a, b]) => `const ${b} = ${a};\n`).join('');

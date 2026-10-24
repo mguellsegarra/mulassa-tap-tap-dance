@@ -38,7 +38,7 @@ function stepSprings(dt) {
 }
 export const M = { pivot: new THREE.Vector2(0, PIVOT), pos: new THREE.Vector2(0, 0), yaw: 0, yawVel: 0, missT: -9, biteT: -9, peekT: -9, cheerT: -9, air: 0, airV: 0, dancing: false, danceBeat: 0, danceT: 0, vigor: 1 };
 const MULA_OFF_COMIC = { lift: 0, roll: 0, pitch: 0 }; // the comic layer off the song (mula-dance.js)
-let photoGait = 1, photoLastId = null, photoStride = 0, photoGround = 1, photoRear = 0, photoKick = 0;
+let photoGait = 1, photoStride = 0, photoGround = 1, photoRear = 0, photoKick = 0;
 // Q held: she rears up like a horse (front up, on her rear legs); E held: a kick (rear up, on her front legs). rad.
 export const PHOTO_REAR = { front: 0.5, rear: 0.45, legZ: 1.05, ease: 0.15 };
 let animatedFigureId = selectedFigure.id;
@@ -163,9 +163,9 @@ export function animMula(dt, beat, live = 1) {
     Object.assign(S.yaw, { x: FRONT, v: 0, t: FRONT });
   }
   if (G.state !== 'splash' && G.state !== 'select' && G.state !== 'title' && PHOTO.ready) {
-    setPhotoControl(false); endPhoto(); photoLastId = null;
+    setPhotoControl(false); endPhoto();
   }
-  const pair = G.state === 'splash' || PHOTO.pair && (G.state === 'select' || G.state === 'title');
+  const pair = G.state === 'splash'; // (free play shows one figure at a time: the one driven)
   // M owns the Mulassa in a pair, but the selected figure in the solo menu. Hand the existing Drac walker over.
   if (pair !== Boolean(PAIR.k) && selectedFigure.id === 'drac-valls' && G.state !== 'play' && G.state !== 'results') {
     if (pair) {
@@ -177,35 +177,29 @@ export function animMula(dt, beat, live = 1) {
     } else {
       M.pos.set(PAIR.x, PAIR.z); M.yaw = PAIR.w.face; M.pivot.copy(M.pos);
       resetWalker(SOLO, M.pos.x, M.pos.y, M.yaw); SOLO.hx = SOLO.hz = 0; soloOn = true;
-      PHOTO.ready = false; photoLastId = null;
+      PHOTO.ready = false;
     }
     S.yaw.x = S.yaw.t = M.yaw; S.yaw.v = 0;
   }
   if (pair && !PAIR.k) keepClear();
   let manualMula = PHOTO.on && PHOTO.id === 'mulassa-valls';
   if (PHOTO.on) {
-    if (PHOTO.pair && photoLastId === 'drac-valls' && PHOTO.id !== photoLastId) resumeWalker(PAIR.w, beat);
-    photoLastId = PHOTO.id;
-    tickPhoto(dt, M, PAIR, PIVOT);
-    manualMula ||= PHOTO.pair && PHOTO.yielding && PHOTO.id === 'drac-valls';
+    tickPhoto(dt, M, PIVOT);
     if (manualMula) { S.yaw.x = S.yaw.t = M.yaw; S.yaw.v = 0; }
-    if (manualMula && PHOTO.action && PHOTO.id === 'mulassa-valls') { // (a yielding Mulassa never takes the Drac's jump)
+    if (manualMula && PHOTO.action && PHOTO.id === 'mulassa-valls') { // (her jump; the Drac has its own)
       if (M.air === 0 && dt > 0) { M.airV = CALM.matches ? 1.4 : 4.8; beginManualFlight('mulassa-valls'); }
       PHOTO.action = false;
     }
   } else if (PHOTO.ready) {
-    if (PAIR.k && photoLastId === 'drac-valls') {
-      PAIR.w.x = PHOTO.drac.x; PAIR.w.z = PHOTO.drac.z; PAIR.w.face = PHOTO.drac.yaw;
-      resumeWalker(PAIR.w, beat);
-    } else if (!PAIR.k) {
+    if (!PAIR.k) {
       const p = photoBody(); M.pos.set(p.x, p.z); M.yaw = p.yaw;
       resetWalker(SOLO, p.x, p.z, p.yaw); SOLO.hx = SOLO.hz = 0; resumeWalker(SOLO, beat); soloOn = true;
     }
     M.pivot.set(M.pos.x + Math.sin(M.yaw) * PIVOT, M.pos.y + Math.cos(M.yaw) * PIVOT);
     S.yaw.x = S.yaw.t = M.yaw; S.yaw.v = 0;
-    endPhoto(); photoLastId = null;
+    endPhoto();
   }
-  const solo = PHOTO.on && !PHOTO.pair ? PHOTO.id : selectedFigure.id; // (free play with the Bou drives it alone: no pair)
+  const solo = PHOTO.on ? PHOTO.id : selectedFigure.id; // (free play: the figure driven, whatever the selector shows)
   const isBou = !pair && solo === 'bou-tradicional-valls', isDrac = !pair && solo === 'drac-valls';
   const reel = REEL.on && G.state === 'select' && !PHOTO.on && !pair, danceNow = reel ? REEL.beat : beat; // the selector's showreel: the song dance on the menu loop's beat (game/showreel.js)
   mula.root.visible = !isDrac && !isBou; drac.root.visible = isDrac; if (bou) bou.frame.visible = isBou;
@@ -380,11 +374,9 @@ function animPair(dt, beat, pair) {
   drac.root.visible = PAIR.k > 0;
   if (!PAIR.k) return;
   const w = PAIR.w;
-  PHOTO.drac.roar = PHOTO.on && PHOTO.id === 'drac-valls' && PHOTO.keys.has('KeyQ'); // Q: heads up, jaws open, wings out
-  const manual = PHOTO.on && PHOTO.pair && (PHOTO.id === 'drac-valls' || PHOTO.yielding);
-  if (manual) manualDracStep(w, DRAC_POSE, dt, beat, PHOTO.drac, DRAC_SCALE, CALM.matches);
-  else { if (w.manual > 0) resumeWalker(w, beat); demoStep(w, DRAC_POSE, dt, beat, M.pos, DRAC_SCALE); PAIR.x = w.x; PAIR.z = w.z; }
-  placeLife(w.x, w.z, w.face, PHOTO.on && PHOTO.id === 'drac-valls' ? dracJump(dt) : (DRAC_JUMP.air = 0));
+  if (w.manual > 0) resumeWalker(w, beat);
+  demoStep(w, DRAC_POSE, dt, beat, M.pos, DRAC_SCALE); PAIR.x = w.x; PAIR.z = w.z;
+  placeLife(w.x, w.z, w.face, DRAC_JUMP.air = 0);
   poseDrac(drac, DRAC_POSE, 0, w.feetAt); dressCarrier(drac);
 }
 

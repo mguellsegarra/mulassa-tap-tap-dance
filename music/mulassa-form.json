@@ -146,24 +146,10 @@
     "labels": [[0, "intro0"], [4, "intro1"], [8, "intro2"]]
   },
   "tempo": {
-    "clock": "drac-midpoint-us",
+    "clock": "constant-exact",
     "interpolation": "smoothstep",
     "leadIn": 0.1,
-    "knots": [
-      { "at": { "beat": 0 }, "bpm": 152 },
-      { "at": { "item": "s3", "edge": "start", "offset": -2 }, "bpm": 152 },
-      { "at": { "item": "s3", "edge": "start" }, "bpm": 154 },
-      { "at": { "item": "s4", "edge": "start", "offset": 24 }, "bpm": 154 },
-      { "at": { "item": "s4", "edge": "start", "offset": 28 }, "bpm": 152 },
-      { "at": { "item": "s5", "edge": "start", "offset": -1 }, "bpm": 152 },
-      { "at": { "item": "s5", "edge": "start", "offset": 2 }, "bpm": 158 },
-      { "at": { "item": "s10", "edge": "start", "offset": -2 }, "bpm": 158 },
-      { "at": { "item": "s10", "edge": "start" }, "bpm": 161 },
-      { "at": { "item": "s14", "edge": "start", "offset": -2 }, "bpm": 161 },
-      { "at": { "item": "s14", "edge": "start" }, "bpm": 164 },
-      { "at": { "item": "s15", "edge": "start", "offset": 4 }, "bpm": 164 },
-      { "at": { "item": "s15", "edge": "end" }, "bpm": 152 }
-    ]
+    "knots": [{ "at": { "beat": 0 }, "bpm": 152 }]
   },
   "events": {
     "balloons": [

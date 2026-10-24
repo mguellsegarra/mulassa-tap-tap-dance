@@ -167,7 +167,7 @@ button svg { width: 22px; height: 22px; flex: none; fill: none; stroke: currentC
 #controls-legend { margin: 12px 0 0; padding: 0; list-style: none; display: grid; gap: 6px; font: 700 14px/1.2 'Baloo 2', system-ui, sans-serif; }
 #controls-legend li { display: grid; grid-template-columns: 76px 1fr; align-items: center; gap: 12px; padding: 8px 10px; border-radius: 12px; background: #fff3d60a; }
 #controls-legend li > :first-child { justify-self: center; }
-#controls-legend li.only-drac, .fig-drac #controls-legend li.only-mula { display: none; } .fig-drac #controls-legend li.only-drac { display: grid; } /* one figure's rows (ui/figure-theme-dom.js sets .fig-drac) */
+#controls-legend li.only-drac, #controls-legend li.only-bou, .fig-drac #controls-legend li.only-mula, .fig-bou #controls-legend li.only-mula { display: none; } .fig-drac #controls-legend li.only-drac, .fig-bou #controls-legend li.only-bou { display: grid; } /* one figure's rows (ui/figure-theme-dom.js sets .fig-drac / .fig-bou) */
 #controls-legend b { display: block; color: #f5c518; font-size: 16px; letter-spacing: .03em; }
 @media (max-height: 700px) { #howto-menu { padding: 14px 16px 14px; } #howto-menu h2 { font-size: 26px; } #controls-legend { margin-top: 8px; gap: 4px; } #controls-legend li { padding: 4px 8px; } } /* short phones (360×640): the whole list and «Entesos!» fit without scrolling */
 #controls-legend small { display: block; font-size: 14px; color: #e8d8b8; }

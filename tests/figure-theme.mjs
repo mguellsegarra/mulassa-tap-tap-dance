@@ -28,7 +28,7 @@ const { setFigureSong } = await import('../src/game/figure-song.js');
 const T = await import('../src/game/figure-theme.js'), { trf, practiceText } = T;
 await import('../src/ui/figure-theme-dom.js');
 assert.equal(anim.textContent, trf('help.energy'), 'the default theme is applied at load: the page\'s fallback text must not stay in another language');
-const { MULASSA, DRAC } = await import('../src/game/figures.js');
+const { MULASSA, DRAC, BOU } = await import('../src/game/figures.js');
 
 // Captured complete Mulassa inputs before migration; the HEAD oracle produces the Drac outputs.
 const originalMessages = {
@@ -109,6 +109,9 @@ assert(classes.has('fig-drac')); assert.equal(props.get('--gua'), '#ffc21f'); as
 const lum = hex => { const [r, g, b] = hex.match(/\w\w/g).map(n => { const c = parseInt(n, 16) / 255; return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; }); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
 assert(lum(T.figTheme.colors.gua) > 2.5 * lum(T.figTheme.colors.pa), 'CRE and MA differ in lightness, not only hue');
 
+assert(setFigureSong(BOU));
+assert(face.innerHTML.includes('#8f4124') && !face.innerHTML.includes('#c0283c'), 'the help shows the Bou’s portrait, not the Mulassa’s');
+assert(/^<g transform="scale\(0\.66/.test(face.innerHTML), 'its 18×13 pixels shrink into the 12×10 box, as the HUD draws it');
 assert(setFigureSong(MULASSA));
 mulassa();
 assert.equal(face.innerHTML, '<path fill="#c0283c"/>', 'and back to the Mulassa’s');

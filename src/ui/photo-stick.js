@@ -42,13 +42,11 @@ export function showStick(on, labels, id) {
   touchEl.hidden = !on;
   if (!labels || id === psFor) return;
   psFor = id;
-  const alone = id === 'bou-tradicional-valls'; // the Bou is driven on its own: it charges instead of jumping, nobody to swap with
-  const name = { Space: tr(alone ? 'ui.photo.act.bou.space' : 'ui.photo.act.jump'), Tab: tr('ui.photo.act.swap') }, icons = PHOTO_ICONS[id] ?? {};
+  const name = { Space: tr(id === 'bou-tradicional-valls' ? 'ui.photo.act.bou.space' : 'ui.photo.act.jump'), Tab: tr('ui.photo.act.swap') }, icons = PHOTO_ICONS[id] ?? {};
   for (const [key, label] of labels) name['Key' + key] = label;
   for (const b of psButtons) {
     b.setAttribute('aria-label', name[b.dataset.code] ?? ''); // icons only, as phone action games; the ? help names them
     b.innerHTML = b.dataset.code === 'Tab' ? swapArt(id) : icons[b.dataset.code] ?? '';
-    if (b.dataset.code === 'Tab') b.hidden = alone;
   }
 }
 touchEl.addEventListener('pointerdown', e => {

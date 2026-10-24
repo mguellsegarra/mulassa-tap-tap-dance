@@ -112,7 +112,7 @@ export function manualDracStep(w, out, dt, beat, body, scale, reduced) {
   if (Math.hypot(w.x - body.x, w.z - body.z) > 0.15 + Math.hypot(body.vx, body.vz) * dt) w.feet = null; // (more than a frame's run)
   w.x = body.x; w.z = body.z; w.face = body.yaw; w.vx = body.vx; w.vz = body.vz;
   const speed = Math.hypot(body.vx, body.vz), k = 1 - Math.exp(-dt / 0.22), moving = Math.min(1, speed);
-  const air = PHOTO.air && PHOTO.id === 'drac-valls'; // (its jump; a yielding Drac never takes the Mulassa's)
+  const air = PHOTO.air && PHOTO.id === 'drac-valls'; // (its jump, never the Mulassa's)
   // The showcase's carried-shell roll, on the feet's continuous phase rather than its musical choreography.
   // Remove last frame's contribution before relaxing the inherited pose: never accumulate or double the roll.
   if (w.manual === 1) { out.roll -= w.swayRoll; out.lift -= w.swayLift; }

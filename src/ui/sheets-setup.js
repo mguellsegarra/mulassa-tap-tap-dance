@@ -32,7 +32,7 @@ import { setupWatch } from './watch-ui.js';
 import { setupFreeMusic } from './free-music.js';
 import { setupLang } from './lang-ui.js';
 import { focusIn, keyboardNav } from './focus.js';
-import { offsetMs, FINAL, FINALE_T, setOffsetMs, CALM, DEMO } from '../core/env.js';
+import { offsetMs, FINAL, FINALE_T, setOffsetMs, CALM, DEMO, FIGURA } from '../core/env.js';
 import { sheetUp, viewMode, viewBtn } from './controls.js';
 import { renderHero } from '../scene/share-capture.js';
 import { titleLayoutNow, CORNER } from '../hud/title.js';
@@ -188,7 +188,7 @@ settingsMenu.addEventListener('close', () => { if (!sync.open && !board.open && 
 const feedback = setupFeedback({ focusIn, captcha: board.captcha, onOpen: () => nudge.done(), confirmedEmail: async () => (await service.identity()).email });
 sheets.feedback = feedback;
 const select = setupSelect({ store, keyboard: () => keyboardNav, busy: () => sheetUp() || viewMode, reduced: () => CALM.matches,
-  firstLevel: CHALLENGE?.diff ?? null, demo: DEMO, getError: () => G.audioError, standing: f => board.standing(f), levelPodium: (f, l) => board.levelPodium(f, l), ranked: board.configured, onBoard: f => board.openBoard(() => select.refocus(), { figure: f.id }), onCard: p => card.open(p, () => select.refocus()),
+  firstLevel: CHALLENGE?.diff ?? null, firstFigure: FIGURA, demo: DEMO, getError: () => G.audioError, standing: f => board.standing(f), levelPodium: (f, l) => board.levelPodium(f, l), ranked: board.configured, onBoard: f => board.openBoard(() => select.refocus(), { figure: f.id }), onCard: p => card.open(p, () => select.refocus()),
   sfx: k => chip?.sfx(k), onSelect: f => { setSelectedFigure(f); greeting.greet(); },
   onPlay: (level, figure) => { setSelectedFigure(figure); choose(level); },
   onHowto: () => { howtoMenu.showModal(); focusIn(howtoMenu, 'howto-ok'); },

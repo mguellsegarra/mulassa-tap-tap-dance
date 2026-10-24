@@ -49,7 +49,7 @@ const state = { state: 'splash', paused: false }, ctx = { tr, document: doc, nav
   orbitMove() {}, orbitZoom() {}, turnFor: () => 1, orbitDown(o, id) { o.ptrs.set(id, true); }, orbitUp(o, id) { o.ptrs.delete(id); },
   chip: null, down: { keys: new Set(), ptr: new Map() }, KEYS: {}, pageActive: () => true, releaseAll() {}, buttonAt: () => { throw new Error('selector world must never hit a title button'); },
   store: { set() {} }, unlock() { state.state = 'select'; }, toTitle() { state.state = 'select'; },
-  startMenuAudio() {}, setFreeSound() {}, photoOrient() {}, photoHelpAvailable: () => false, showAvatars: () => run('setPhotoControl(false)'), syncAvatars() {}, stopControl: () => run('PHOTO.on ? (setPhotoControl(false), true) : false') }; // src/ui/photo-avatars.js (its DOM: tests/render-quality.mjs)
+  startMenuAudio() {}, setFreeSound() {}, photoOrient() {}, photoHelpAvailable: () => false, showAvatars: () => run('setPhotoControl(false)'), syncAvatars() {} }; // src/ui/photo-avatars.js (its DOM: tests/render-quality.mjs)
 let time = 1000;
 const photoSource = readFileSync(new URL('../src/game/photo-control.js', import.meta.url), 'utf8').replace(/^export /gm, '');
 const code = photoSource + '\n' + ['mouse-look', 'controls', 'input'].map(name => readFileSync(new URL(`../src/ui/${name}.js`, import.meta.url), 'utf8').replace(/^import .*;\n/gm, '').replace(/^export /gm, '')).join('\n');
@@ -121,7 +121,7 @@ $('hud').fire('pointerleave', {}); assert.equal($('hud').style.cursor, '');
 // Held E uses the same input lifecycle as walking; repeats cannot restart its onset.
 {
   const emit = (type, extra = {}) => { for (const f of handlers[type] || []) f({ code: 'KeyE', target: { tagName: 'BODY' }, preventDefault() {}, ...extra }); };
-  const drive = () => { state.state = 'select'; state.paused = false; run("setView(true); setPhotoControl(true, 'drac-valls', false)"); emit('keydown'); };
+  const drive = () => { state.state = 'select'; state.paused = false; run("setView(true); setPhotoControl(true, 'drac-valls')"); emit('keydown'); };
   drive();
   assert(run("PHOTO.keys.has('KeyE') && PHOTO.sparks"));
   run('PHOTO.sparks = false'); emit('keydown', { repeat: true }); emit('keydown');
@@ -136,9 +136,9 @@ $('hud').fire('pointerleave', {}); assert.equal($('hud').style.cursor, '');
     assert(run('PHOTO.keys.size === 0 && !PHOTO.sparks'), 'editing a field cancels fire and ignores E');
   }
   drive(); emit('keydown', { code: 'Tab' });
-  assert(run("PHOTO.id === 'mulassa-valls' && PHOTO.keys.size === 0"), 'switching figures cancels held fire');
+  assert(run("PHOTO.id === 'bou-tradicional-valls' && PHOTO.keys.size === 0"), 'switching figures cancels held fire');
+  emit('keydown', { code: 'Tab' }); assert(run("PHOTO.id === 'mulassa-valls'"), 'Tab goes round the three beasts');
   emit('keydown'); assert(run("PHOTO.keys.has('KeyE') && !PHOTO.sparks"), 'Mulassa E remains a held kick');
-  drive(); run('stopControl()'); assert(run('!PHOTO.on && PHOTO.keys.size === 0'), 'Vista lliure clears held fire');
   drive(); run('setView(false)'); assert(run('!PHOTO.on && PHOTO.keys.size === 0'), 'HUD return clears held fire');
   drive(); state.paused = true; emit('keydown'); assert(run('PHOTO.keys.size === 0'), 'paused input cannot sustain or restart fire'); state.paused = false;
   drive(); sheets.feedback.open = true; emit('keydown'); run('updateControls()');
@@ -159,7 +159,7 @@ $('hud').fire('pointerleave', {}); assert.equal($('hud').style.cursor, '');
   };
   const release = () => emit('mouseup', { pointerType: 'mouse', pointerId: 77, buttons: 0 });
   for (const first of ['fire', 'look']) {
-    state.state = 'select'; run("setView(true); setPhotoControl(true, 'drac-valls', false); PHOTO.cameraYaw = Math.PI; PHOTO.drac.yaw = 0;");
+    state.state = 'select'; run("setView(true); setPhotoControl(true, 'drac-valls'); PHOTO.cameraYaw = Math.PI; PHOTO.drac.yaw = 0;");
     if (first === 'fire') emit('keydown');
     mouse('pointerdown'); mouse('pointermove', { buttons: 0, movementX: 190 }); // discard the lock-change jump
     if (first === 'look') { mouse('pointermove', { movementX: 20 }); emit('keydown'); }
@@ -182,7 +182,7 @@ $('hud').fire('pointerleave', {}); assert.equal($('hud').style.cursor, '');
     release();
   }
   for (const exit of ['blur', 'visibilitychange', 'pagehide', 'figure', 'mode', 'Escape']) {
-    run("setView(true); setPhotoControl(true, 'drac-valls', false);"); emit('keydown'); mouse('pointerdown');
+    run("setView(true); setPhotoControl(true, 'drac-valls');"); emit('keydown'); mouse('pointerdown');
     if (exit === 'figure') emit('keydown', { code: 'Tab' });
     else if (exit === 'mode') run('setView(false)');
     else if (exit === 'Escape') { emit('keydown', { code: 'Escape' }); emit('keyup'); }
@@ -190,7 +190,7 @@ $('hud').fire('pointerleave', {}); assert.equal($('hud').style.cursor, '');
     run('updateControls()');
     assert(!doc.pointerLockElement && run("PHOTO.mouse === 0 && !PHOTO.keys.has('KeyE')"), `${exit} clears the combined controls`);
   }
-  run("setView(true); setPhotoControl(true, 'drac-valls', false);");
+  run("setView(true); setPhotoControl(true, 'drac-valls');");
   // Without a lock, even a stationary no-button move ends capture if pointerup went missing.
   delete $('hud').requestPointerLock;
   mouse('pointerdown'); mouse('pointermove'); mouse('pointermove', { buttons: 0 });
@@ -209,7 +209,7 @@ $('hud').fire('pointerleave', {}); assert.equal($('hud').style.cursor, '');
   const mouse = (type, button, buttons, dx = 0) => $('hud').fire(type, event(91, 600, 300, { pointerType: 'mouse', button, buttons, movementX: dx, movementY: 0 }));
   const up = (button, buttons) => emit('mouseup', { button, buttons });
   const begin = (id, keys = []) => {
-    run(`setView(true); setPhotoControl(true, '${id}', false); PHOTO.cameraYaw = Math.PI; photoBody().yaw = 0;`);
+    run(`setView(true); setPhotoControl(true, '${id}'); PHOTO.cameraYaw = Math.PI; photoBody().yaw = 0;`);
     keys.forEach(code => emit('keydown', { code }));
   };
   for (const id of ['mulassa-valls', 'drac-valls']) for (const keys of [[], ['KeyW'], ['KeyW', 'ShiftLeft']]) {

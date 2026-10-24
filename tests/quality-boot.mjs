@@ -16,7 +16,7 @@ class Renderer {
 const boot = ({ saved = {}, software = false, nav = {}, blocked = false } = {}) => {
   const writes = [];
   const context = vm.createContext({
-    THREE: { ...THREE, WebGLRenderer: Renderer }, ...rq, ...finalTest, ...progress, song: { bpm: 120, beats: [], sections: [], notes: [] }, probeRenderer: () => ({ renderer: software ? 'llvmpipe' : 'Apple GPU', vendor: '', caveat: software, probe: 'test' }),
+    THREE: { ...THREE, WebGLRenderer: Renderer }, ...rq, ...finalTest, ...progress, MOCK_BOARD: false, song: { bpm: 120, beats: [], sections: [], notes: [] }, probeRenderer: () => ({ renderer: software ? 'llvmpipe' : 'Apple GPU', vendor: '', caveat: software, probe: 'test' }),
     errors: { report() {}, start() {}, breadcrumb() {} }, errorName: String, buildPlaza: stubModel, buildMulassa: stubModel,
     danceYaw: az => az, createColla: () => ({}), // the Drac's dance frame and colla (provided modules; built by initDrac, not at boot)
     localStorage: blocked ? new Proxy({}, { get() { throw new Error('storage blocked'); } }) : { getItem: k => saved[k] ?? null, setItem: (k, v) => writes.push([k, v]), removeItem: k => writes.push([k]) },

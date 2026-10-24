@@ -4,7 +4,9 @@ import * as THREE from 'three';
 import { CALM } from '../core/env.js';
 
 // horizon = the plaça's fog (stage.js) and drac-show's clear sky; near: the fog's rest distance (drac-show closes it in)
-export const SKY = { top: '#19c9f5', horizon: '#9fe2ff', near: 40, far: 90, drift: 0.004 };
+export const SKY = { top: '#19c9f5', horizon: '#9fe2ff', near: 40, far: 90, drift: 0.004, night: 0 }; // night: 0-1, the Bou's disco (bou-show.js)
+// the dome's top colour, live (scene/bou-show.js darkens it for the Bou's night)
+export const skyTop = new THREE.Color();
 
 const DOME = `varying vec3 vDir;
 void main() { vDir = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); gl_Position.z = gl_Position.w; }`;
@@ -46,7 +48,7 @@ export function buildSky(scene, clouds = true) {
   const base = new THREE.Color(SKY.horizon);
   const dome = new THREE.Mesh(new THREE.SphereGeometry(150, 24, 12), new THREE.ShaderMaterial({
     vertexShader: DOME, fragmentShader: SHADE, side: THREE.BackSide, depthWrite: false, fog: false,
-    uniforms: { uTop: { value: new THREE.Color(SKY.top) }, uHorizon: { value: scene.fog.color }, uBg: { value: scene.background }, uBase: { value: base } },
+    uniforms: { uTop: { value: skyTop.set(SKY.top) }, uHorizon: { value: scene.fog.color }, uBg: { value: scene.background }, uBase: { value: base } },
   }));
   dome.frustumCulled = false; dome.renderOrder = -1;
   dome.onBeforeRender = (r, s, cam) => { dome.position.copy(cam.position); dome.updateMatrixWorld(); }; // always round the lens, inside its far plane
@@ -64,7 +66,7 @@ export function buildSky(scene, clouds = true) {
   const white = new THREE.Color('#ffffff');
   ring.onBeforeRender = () => {
     if (!CALM.matches) { ring.rotation.y = (performance.now() / 1000) * SKY.drift; ring.updateMatrixWorld(); }
-    mat.color.copy(white).lerp(scene.fog.color, Math.min(1, Math.max(0, (SKY.near - scene.fog.near) / 38))); // they sink into the Drac's red smoke
+    mat.color.copy(white).lerp(scene.fog.color, Math.max(SKY.night, Math.min(1, Math.max(0, (SKY.near - scene.fog.near) / 38)))); // they sink into the Drac's red smoke, and the Bou's night
   };
   scene.add(ring);
 }

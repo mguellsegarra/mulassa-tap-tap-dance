@@ -8,6 +8,7 @@ import { Chip, applause, audioFailureTags } from '../src/platform/audio.js';
 let resolveReady;
 let starts = 0;
 const chip = Object.create(Chip.prototype);
+chip.master = { gain: { cancelScheduledValues() {}, setTargetAtTime() {} } };
 chip.ctx = {
   currentTime: 10,
   createBufferSource: () => ({ connect(target) { return target; }, start() { starts++; }, stop() {} }),
@@ -61,6 +62,7 @@ try {
   globalThis.document = { hidden: true, hasFocus: () => true };
   let resumes = 0;
   const idleChip = Object.create(Chip.prototype);
+  idleChip.master = { gain: { cancelScheduledValues() {}, setTargetAtTime() {} } };
   idleChip.woke = true;
   idleChip.ctx = { state: 'suspended', resume() { resumes++; } };
   idleChip.wake();
@@ -80,6 +82,7 @@ console.log('audio wake respects page activity');
 
 {
   const c = Object.create(Chip.prototype);
+  c.master = { gain: { cancelScheduledValues() {}, setTargetAtTime() {} } };
   c.ctx = { state: 'suspended', resume: () => Promise.reject(Object.assign(new Error('blocked'), { name: 'NotAllowedError' })) };
   assert.equal(await c.resume(), false, 'a browser policy rejection is a failed resume, not playing audio');
   assert.equal(c.ctx.state, 'suspended');
@@ -87,6 +90,19 @@ console.log('audio wake respects page activity');
   assert.equal(await c.resume(), true, 'a later gesture can resume the same context');
   c.ctx.resume = () => { throw Object.assign(new Error('closed'), { name: 'InvalidStateError' }); };
   assert.equal(await c.resume(), false, 'synchronous resume failures are handled too');
+}
+
+{ // a phone's app/tab switch: fade to silence, then suspend (a bare suspend left a stray note); a quick return cancels it
+  const c = Object.create(Chip.prototype), to = [];
+  let suspends = 0;
+  c.master = { gain: { cancelScheduledValues() {}, setTargetAtTime: v => to.push(v) } };
+  c.ctx = { currentTime: 0, state: 'running', suspend() { suspends++; }, resume: () => Promise.resolve() };
+  c.suspend();
+  assert.deepEqual([to, suspends], [[0], 0], 'fades first, never suspends mid-sound');
+  await new Promise(r => setTimeout(r, 60));
+  assert.equal(suspends, 1, 'suspends once silent');
+  c.suspend(); await c.resume(); await new Promise(r => setTimeout(r, 60));
+  assert.deepEqual([to.at(-1), suspends], [1, 1], 'a resume before the fade ends cancels the suspend and fades back in');
 }
 
 // Download order: both start at once, on any connection; only the speaker's own setting silences the menu loop.
@@ -103,6 +119,7 @@ console.log('audio wake respects page activity');
     const menuStarts = [];
     const make = () => {
       const c = Object.create(Chip.prototype);
+      c.master = { gain: { cancelScheduledValues() {}, setTargetAtTime() {} } };
       c.urls = { audio: 'song', ambient: 'menu' };
       c.unlock = () => {};
       c.ctx = { currentTime: 0, decodeAudioData: async () => ({ duration: 30 }),
@@ -421,6 +438,7 @@ console.log('leaving a run silences everything it queued ok');
 
 { // a device that won't start rejects ctx.resume(): swallowed, not an unhandled rejection
   const c = Object.create(Chip.prototype);
+  c.master = { gain: { cancelScheduledValues() {}, setTargetAtTime() {} } };
   c.ctx = { resume: () => Promise.reject(new DOMException('Failed to start the audio device', 'InvalidStateError')) };
   const seen = []; process.on('unhandledRejection', e => seen.push(e));
   c.resume(); await new Promise(r => setTimeout(r, 10));
@@ -436,6 +454,7 @@ console.log('leaving a run silences everything it queued ok');
   const tags = async (fetchImpl, decode = async () => ({ duration: 1 })) => {
     globalThis.fetch = fetchImpl;
     const c = Object.create(Chip.prototype);
+    c.master = { gain: { cancelScheduledValues() {}, setTargetAtTime() {} } };
     c.ctx = { decodeAudioData: decode };
     c.urls = { audio: 'song' };
     c.ready = c.loadRecording();
@@ -464,6 +483,7 @@ console.log('leaving a run silences everything it queued ok');
     let n = 0;
     globalThis.fetch = async () => (++n === 1 ? { ok: false, status: 500 } : ok());
     const c = Object.create(Chip.prototype);
+    c.master = { gain: { cancelScheduledValues() {}, setTargetAtTime() {} } };
     c.ctx = { decodeAudioData: async () => ({ duration: 2 }), currentTime: 0, createBufferSource: () => ({ connect: t => t, start() {}, stop() {} }), createGain: () => ({ connect: t => t, gain: { setValueAtTime() {}, linearRampToValueAtTime() {} } }) };
     c.unlock = () => {};
     Object.defineProperty(c, 'clock', { value: { run() {} } });
@@ -481,6 +501,7 @@ console.log('leaving a run silences everything it queued ok');
   const sources = [];
   const fake = () => {
     const c = Object.create(Chip.prototype);
+    c.master = { gain: { cancelScheduledValues() {}, setTargetAtTime() {} } };
     c.ctx = { currentTime: 5, state: 'running',
       createGain: () => ({ connect: t => t, disconnect() {}, gain: { events: [], setValueAtTime(v, t) { this.events.push(['set', v, t]); }, linearRampToValueAtTime(v, t) { this.events.push(['ramp', v, t]); }, setTargetAtTime(v, t) { this.events.push(['target', v, t]); } } }),
       createBufferSource: () => { const s = { connect: t => t, started: false, stopped: false, start() { assert(!this.started, 'buffer sources are single use'); this.started = true; }, stop() { this.stopped = true; } }; sources.push(s); return s; } };
@@ -542,4 +563,28 @@ console.log('leaving a run silences everything it queued ok');
   c.radio({ duration: 90 });
   assert(!c.radioSrc, 'a song that finishes loading after a run started never plays');
   console.log('free mode radio contracts ok');
+}
+
+// iOS audio session: a silent menu mixes with other apps' music (Spotify keeps playing); menu music or a run takes it over
+{
+  const navDesc = Object.getOwnPropertyDescriptor(globalThis, 'navigator');
+  const audioSession = { type: 'auto' };
+  Object.defineProperty(globalThis, 'navigator', { configurable: true, value: { audioSession } });
+  try {
+    const c = Object.create(Chip.prototype);
+    c.master = { gain: { cancelScheduledValues() {}, setTargetAtTime() {} } };
+    c.ctx = { currentTime: 0, createGain: () => ({ connect: t => t, disconnect() {}, gain: { setTargetAtTime() {} } }) };
+    c.out = {}; c.menuToken = {}; c.menuMusic = true;
+    c.session();
+    assert.equal(audioSession.type, 'playback', 'menu music: playback');
+    c.menuMusic = false; c.session();
+    assert.equal(audioSession.type, 'ambient', 'music off on the menu: ambient, other apps keep playing');
+    c.beginRun();
+    assert.equal(audioSession.type, 'playback', 'a run takes the session even with the menu music off');
+    c.endRun();
+    assert.equal(audioSession.type, 'ambient', 'back on the silent menu: ambient again');
+  } finally {
+    if (navDesc) Object.defineProperty(globalThis, 'navigator', navDesc); else delete globalThis.navigator;
+  }
+  console.log('audio session contracts ok');
 }

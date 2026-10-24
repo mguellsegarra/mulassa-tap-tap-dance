@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="ca"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Bou · assenyala una nota</title>
+<style>
+body{margin:0;background:#1e140c;color:#fff3d6;font:15px system-ui;padding:16px;display:grid;gap:12px;max-width:1100px}
+h1{font-size:18px;margin:0}audio{width:100%}
+canvas{width:100%;height:260px;touch-action:none;background:#2a1a10;border:1px solid #6b5a3c;border-radius:10px;cursor:pointer;display:block}
+.card{background:#2a1a10;border-left:4px solid #f5c518;padding:10px 14px;display:grid;gap:6px}
+.big{font-size:22px;font-weight:700}.tok{font:16px ui-monospace,monospace;padding:2px 6px;border-radius:6px}
+.tok.on{background:#f5c518;color:#2a1a10}.tok.rest{opacity:.5}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+button{font:15px system-ui;padding:8px 12px;border-radius:10px;border:2px solid #f5c518;background:#2a1a10;color:#fff3d6;cursor:pointer}
+button[aria-pressed=true]{background:#fff3d6;color:#2a1a10;border-color:#fff3d6}
+input{flex:1;min-width:240px;font:15px system-ui;padding:8px;border-radius:8px;border:1px solid #6b5a3c;background:#1e140c;color:#fff3d6}
+small{opacity:.7}
+</style></head>
+<body>
+<h1>El Bou Tradicional · assenyala una nota</h1>
+<div class="row" id="voices"></div>
+<div class="row"><audio id="audio" controls preload="auto" style="flex:1"></audio><button id="src" title="S">So: àudio del joc</button></div>
+<canvas id="roll"></canvas>
+<div class="card">
+  <div class="big" id="name">—</div>
+  <div id="where"></div>
+  <div class="row" id="bar"></div>
+</div>
+<div class="row" id="edits-row" hidden><span id="edits" style="flex:1;white-space:pre-line"></span><button id="copy-edits">Copia els canvis</button><button id="clear">Treu els canvis</button></div>
+<div class="row"><input id="prop" placeholder="Què hi canviaries? (p. ex. «hauria de ser D5»)"><button id="copy">Copia la referència</button></div>
+<small><kbd>Espai</kbd> reprodueix/pausa · <kbd>←</kbd> <kbd>→</kbd> nota anterior/següent · <kbd>⇧←</kbd> <kbd>⇧→</kbd> compàs · <kbd>Enter</kbd> torna a sonar la nota · <kbd>1</kbd>–<kbd>3</kbd> veu · clic al rotllo = salta-hi · arrossega un bloc amunt/avall = prova una altra nota · <kbd>S</kbd> àudio del joc / síntesi amb canvis</small>
+<script type="module">
+// Dev only (npm run dev → /tools/dev/notes.html): plays the game's Bou audio and says which note of the score
+// (music/bou-tradicional/score.json) is sounding, so Marc can point at one and propose a change. Times are timing.json's
+// events moved back by playback.json's cut, as tools/build_bou_chart.mjs does for the chart.
+import score from '/music/bou-tradicional/score.json';
+import timing from '/music/bou-tradicional/timing.json';
+import playback from '/music/bou-tradicional/playback.json';
+import song from '/src/song-bou.json';
+
+const $ = id => document.getElementById(id);
+const audio = $('audio'), cv = $('roll'), g = cv.getContext('2d');
+audio.src = '/' + song.audio;
+const T0 = timing.subdivisionTimes[(playback.cutBeats ?? 0) * timing.subdivision];
+const bars = new Map(score.bars.map(b => [b.bar, b]));
+const occStart = new Map(timing.bars.map(b => [b.occurrence, b.beat]));
+const NAMES = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
+const nm = m => NAMES[m % 12] + (Math.floor(m / 12) - 1);
+const all = timing.events.map(e => ({ ...e, t0: e.start - T0, t1: e.end - T0, name: nm(e.writtenPitch), inBar: e.beat - occStart.get(e.occurrence) }));
+const lo = Math.min(...all.map(n => n.writtenPitch)) - 2, hi = Math.max(...all.map(n => n.writtenPitch)) + 2;
+let voice = 0, notes = [], cur = -1, stopAt = null;
+// Marc's tries: event → new pitch. The game's mp3 is a mix (a note can't be swapped in it), so with changes the page
+// plays a soft synth of the three voices instead, on the audio element's clock (muted)
+const edits = new Map(), P = n => edits.get(n) ?? n.writtenPitch;
+let synth = false, actx = null, live = [];
+const scheduled = new Set();
+function tone(m, at, dur, gain = 0.12) {
+  actx ??= new AudioContext();
+  const f = 440 * 2 ** ((m - 69) / 12), env = actx.createGain(), end = at + Math.max(0.08, dur);
+  env.gain.setValueAtTime(0, at); env.gain.linearRampToValueAtTime(gain, at + 0.012);
+  env.gain.setTargetAtTime(gain * 0.6, at + 0.03, 0.15); env.gain.setTargetAtTime(0, end - 0.04, 0.02);
+  env.connect(actx.destination);
+  for (const [type, mul, g] of [['sine', 1, 1], ['triangle', 2, 0.25]]) {
+    const o = actx.createOscillator(), og = actx.createGain(); o.type = type; o.frequency.value = f * mul; og.gain.value = g;
+    o.connect(og).connect(env); o.start(at); o.stop(end + 0.1); live.push(o);
+  }
+}
+const hush = () => { live.forEach(o => { try { o.stop(); } catch {} }); live = []; scheduled.clear(); };
+function schedule() {
+  if (!synth || audio.paused || !actx) return;
+  const now = audio.currentTime;
+  for (const n of all) if (n.t0 >= now - 0.02 && n.t0 < now + 0.25 && !scheduled.has(n)) {
+    scheduled.add(n); tone(P(n), actx.currentTime + Math.max(0, n.t0 - now), n.t1 - n.t0, n.voice === 2 ? 0.1 : 0.08);
+  }
+}
+function setSynth(on) {
+  synth = on; audio.muted = on; hush();
+  $('src').textContent = on ? 'So: síntesi amb els canvis' : 'So: àudio del joc';
+  if (on) { actx ??= new AudioContext(); actx.resume(); }
+}
+audio.addEventListener('pause', hush); audio.addEventListener('seeking', hush);
+// durations as the score's fractions (triplets: 1/3, 2/3), not 0.6666…
+const frac = d => { for (const q of [1, 2, 3, 4, 6, 8, 12]) { const k = Math.round(d * q); if (Math.abs(k / q - d) < 1e-6) return q === 1 ? `${k}` : `${k}/${q}`; } return d.toFixed(3); };
+
+function setVoice(v) {
+  voice = v; notes = all.filter(e => e.voice === v); cur = -2;
+  [...$('voices').children].forEach((b, i) => b.setAttribute('aria-pressed', i === v));
+}
+$('voices').innerHTML = score.voices.map((v, i) => `<button>${i + 1} · ${v}</button>`).join('');
+[...$('voices').children].forEach((b, i) => { b.onclick = () => setVoice(i); });
+setVoice(0);
+
+// the note of the voice sounding (or the last one started) at time t; a chord's notes share t0: take its first
+const at = t => { let i = -1; for (let j = 0; j < notes.length && notes[j].t0 <= t + 1e-3; j++) if (j === 0 || notes[j].t0 > notes[j - 1].t0) i = j; return i; };
+const chordOf = i => notes.filter(n => n.t0 === notes[i].t0);
+const label = i => chordOf(i).map(n => edits.has(n) ? `${n.name} → ${nm(P(n))}` : n.name).join('+');
+
+function info(i) {
+  const n = notes[i];
+  if (!n) { $('name').textContent = '—'; $('where').textContent = 'Encara no sona aquesta veu'; $('bar').textContent = ''; return; }
+  const b = bars.get(n.sourceBar), sc = b.voices[voice] ?? [];
+  $('name').textContent = `${label(i)} · compàs ${n.sourceBar} · temps ${n.inBar + 1} del compàs`;
+  $('where').textContent = `${score.voices[voice]} · aparició ${n.occurrence} · pàgina ${b.page}, sistema ${b.system} del PDF · ${n.t0.toFixed(2)} s`;
+  $('bar').innerHTML = sc.map(x => {
+    const on = Math.abs(x.beat - n.inBar) < 1e-3 && x.pitch !== null, rest = x.pitch === null;
+    return `<span class="tok${on ? ' on' : ''}${rest ? ' rest' : ''}">${x.chord ? '+' : ''}${rest ? 'silenci' : x.name}:${frac(x.duration)}</span>`;
+  }).join('');
+}
+const ref = () => { const n = notes[cur]; if (!n) return ''; const p = $('prop').value.trim(), b = bars.get(n.sourceBar);
+  return `Bou: compàs ${n.sourceBar} (aparició ${n.occurrence}, pàg. ${b.page} sist. ${b.system}), ${score.voices[voice]}, temps ${n.inBar + 1}, «${label(cur)}», ${n.t0.toFixed(2)} s${p ? ` → ${p}` : ''}`; };
+
+const SPAN = 6;
+function draw() {
+  const w = cv.clientWidth, h = cv.clientHeight, dpr = devicePixelRatio;
+  if (cv.width !== w * dpr) { cv.width = w * dpr; cv.height = h * dpr; }
+  g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h);
+  const t = audio.currentTime, x = s => w / 2 + (s - t) * w / SPAN, y = m => h - (m - lo) / (hi - lo) * h, rh = h / (hi - lo);
+  g.strokeStyle = '#6b5a3c'; g.fillStyle = '#e8d8b8'; g.font = '11px system-ui';
+  for (const b of timing.bars) { const xs = x(b.time - T0); if (xs < -40 || xs > w) continue;
+    g.beginPath(); g.moveTo(xs, 0); g.lineTo(xs, h); g.stroke(); g.fillText(b.sourceBar, xs + 3, 12); }
+  const on = new Set(cur >= 0 ? chordOf(cur) : []);
+  for (const n of [...all.filter(n => n.voice !== voice), ...notes]) { const x0 = x(n.t0), x1 = x(n.t1); if (x1 < 0 || x0 > w) continue;
+    const mine = n.voice === voice;
+    g.globalAlpha = mine ? 1 : 0.25;
+    const ed = edits.has(n), bw = Math.max(2, x1 - x0 - 2);
+    if (ed) { g.strokeStyle = '#c9a0ff'; g.setLineDash([3, 3]); g.strokeRect(x0, y(n.writtenPitch) - rh / 2, bw, rh); g.setLineDash([]); }
+    g.fillStyle = on.has(n) ? '#f5c518' : ed ? '#c9a0ff' : '#14B8A6'; g.fillRect(x0, y(P(n)) - rh / 2, bw, rh);
+    if (mine && x1 - x0 > 24) { g.fillStyle = on.has(n) || ed ? '#2a1a10' : '#fff3d6'; g.fillText(nm(P(n)), x0 + 3, y(P(n)) + 4); } }
+  g.globalAlpha = 1; g.strokeStyle = '#ff8a7a'; g.beginPath(); g.moveTo(w / 2, 0); g.lineTo(w / 2, h); g.stroke();
+}
+function tick() {
+  schedule();
+  if (stopAt !== null && audio.currentTime >= stopAt) { audio.pause(); stopAt = null; }
+  const i = at(audio.currentTime); if (i !== cur) { cur = i; info(i); }
+  draw(); requestAnimationFrame(tick);
+}
+const go = i => { if (i < 0 || i >= notes.length) return; audio.pause(); stopAt = null; audio.currentTime = notes[i].t0 + 0.001; };
+const next = d => { let i = cur; do i += d; while (i > 0 && i < notes.length && notes[i].t0 === notes[i - 1].t0); if (cur < 0 && d > 0) i = 0; go(i); };
+const playNote = () => { const n = notes[cur]; if (!n) return; audio.currentTime = n.t0; stopAt = n.t1; audio.play(); };
+const barStep = d => { if (cur < 0) return go(0); const o = notes[cur].occurrence;
+  const target = d > 0 ? notes.find(n => n.occurrence > o) : notes.findLast(n => n.occurrence < o);
+  if (target) go(notes.findIndex(n => n.occurrence === target.occurrence)); };
+
+// press on a block of the chosen voice and drag it up/down a semitone at a time; a press without moving = seek
+const pt = e => { const r = cv.getBoundingClientRect();
+  return { t: audio.currentTime + (e.clientX - r.left - r.width / 2) * SPAN / r.width, m: lo + (r.height - (e.clientY - r.top)) / r.height * (hi - lo) }; };
+let drag = null;
+cv.onpointerdown = e => { const { t, m } = pt(e);
+  const n = notes.find(n => n.t0 <= t && t <= n.t1 && Math.abs(P(n) - m) < 0.8);
+  drag = { n, t, moved: false }; cv.setPointerCapture(e.pointerId); };
+cv.onpointermove = e => { if (!drag?.n) return; const m = Math.round(pt(e).m);
+  if (m === P(drag.n)) return;
+  drag.moved = true; m === drag.n.writtenPitch ? edits.delete(drag.n) : edits.set(drag.n, m);
+  if (!synth && edits.size) setSynth(true);
+  tone(m, (actx ??= new AudioContext()).currentTime, 0.3, 0.15); cur = -2; listEdits(); };
+cv.onpointerup = () => { if (drag && !drag.moved) { const i = drag.n ? notes.indexOf(drag.n) : at(drag.t); if (i >= 0) go(i); } drag = null; };
+const where = n => `compàs ${n.sourceBar} (aparició ${n.occurrence}), ${score.voices[n.voice]}, temps ${n.inBar + 1}`;
+const editLines = () => [...edits].sort(([a], [b]) => a.t0 - b.t0).map(([n, m]) => `Bou: ${where(n)}, ${n.name} → ${nm(m)} (${n.t0.toFixed(2)} s)`);
+function listEdits() { $('edits-row').hidden = !edits.size; $('edits').textContent = editLines().join('\n'); }
+$('clear').onclick = () => { edits.clear(); listEdits(); cur = -2; };
+$('src').onclick = () => setSynth(!synth);
+$('copy-edits').onclick = async () => { await navigator.clipboard.writeText(editLines().join('\n')); $('copy-edits').textContent = 'Copiat!'; setTimeout(() => { $('copy-edits').textContent = 'Copia els canvis'; }, 1200); };
+addEventListener('keydown', e => {
+  if (e.target === $('prop')) { if (e.key === 'Enter') $('copy').click(); return; }
+  if (e.key === ' ') { e.preventDefault(); stopAt = null; audio.paused ? audio.play() : audio.pause(); }
+  else if (e.key === 'ArrowRight') { e.preventDefault(); e.shiftKey ? barStep(1) : next(1); }
+  else if (e.key === 'ArrowLeft') { e.preventDefault(); e.shiftKey ? barStep(-1) : next(-1); }
+  else if (e.key === 'Enter') playNote();
+  else if (e.key === 's' || e.key === 'S') setSynth(!synth);
+  else if (['1', '2', '3'].includes(e.key) && score.voices[e.key - 1]) setVoice(e.key - 1);
+});
+$('copy').onclick = async () => { const s = ref(); if (!s) return; await navigator.clipboard.writeText(s); $('copy').textContent = 'Copiat!'; setTimeout(() => { $('copy').textContent = 'Copia la referència'; }, 1200); };
+tick();
+</script>
+</body></html>

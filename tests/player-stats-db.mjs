@@ -92,7 +92,7 @@ try {
   await fail(()=>merge(device,{[bucket]:{guapaTotal:110001}}),'leaderboard_invalid_stats');
   await fail(()=>merge(device,{[bucket]:{bestCombo:241}}),'leaderboard_invalid_stats');
   await fail(()=>merge(device,{[bucket]:{bestStars:4}}),'leaderboard_invalid_stats');
-  await fail(()=>merge(device,{[bucket]:{seconds:900000}}),'leaderboard_invalid_stats');
+  await fail(()=>merge(device,{[bucket]:{seconds:920000}}),'leaderboard_invalid_stats');
   // Per run, no more GLOBUS or MANTÉN than the chart has (2 and 5 on this level), no more errors than non-perfect judgments.
   await fail(()=>merge(device,{[bucket]:{balloons:20001}}),'leaderboard_invalid_stats');
   await fail(()=>merge(device,{[bucket]:{holds:50001}}),'leaderboard_invalid_stats');

@@ -74,7 +74,7 @@ assert.deepEqual(base.crashes.map(c => c.beat), [16, 48, 80, 112, 144, 160, 176,
   assert.deepEqual(l.a_ranges, [[20, 148]]);
 }
 {
-  assert.equal(compile(form).tempo.clock, 'drac-midpoint-us', 'the layout does not depend on the tempo map (the generator renders it)');
+  assert.equal(compile(form).tempo.clock, 'constant-exact', 'the layout does not depend on the tempo map (the generator renders it)');
   const invalid = compile(form); invalid.unresolved.push({ path: 'ending', message: 'missing' });
   assert.match(run(invalid).stderr, /unresolved anchors/);
 }

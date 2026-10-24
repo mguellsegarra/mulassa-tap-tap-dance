@@ -10,7 +10,7 @@ import { bubbles, talkState, bubble } from '../hud/bubbles.js';
 import { updateControls } from '../ui/controls.js';
 import { ringFx, ringSparks } from '../hud/lane.js';
 import { C, DIRC, DIRLT } from '../hud/sprites.js';
-import { trf } from '../game/figure-theme.js';
+import { trf, figTheme } from '../game/figure-theme.js';
 import { grooveHit, GROOVE, settleGroove, shoveRing } from '../scene/crowd.js';
 import { M, act, trauma, stumble, setTrauma } from '../scene/mula-motion.js';
 import { CALM, AUTOPLAY, WIN } from '../core/env.js';
@@ -19,6 +19,7 @@ import { burst } from '../scene/confetti.js';
 import { balloonFx } from '../hud/balloon.js';
 import { syncPad, haptic } from '../ui/pad.js';
 import { dracCrema, dracPump, dracEndTraca } from '../scene/drac-show.js';
+import { bouBrama } from '../scene/bou-stage.js';
 
 export function collapse() {
   G.collapseT = clock;
@@ -114,7 +115,8 @@ function pump(n) {
   act(n.count % 2 ? 'L' : 'R');
   grooveHit(n.count % n.need ? GROOVE.pump : GROOVE.big); // each pump a small nod, the pop a GUAPA's
   G.score += 50 * (G.doublePoints ? 2 : 1);
-  const k = (n.count % n.need || n.need) / n.need, t0 = chip.ctx.currentTime, traca = dracPump(n); // the Drac: a traca's petard (and the TRO) instead
+  const k = (n.count % n.need || n.need) / n.need, t0 = chip.ctx.currentTime, bell = figTheme.id === 'bou', traca = dracPump(n) || bell; // the Drac: a traca's petard (and the TRO) instead; the Bou: its esquellot rings
+  if (bell) bellRing(t0, k, !(n.count % n.need));
   if (!traca) chip.blip(t0, 300 + k * 700, 500 + k * 900, 0.06, 0.05, 'triangle'); // rising pitch as it fills
   if (!traca) chip.noiseHit(t0, 0.05, 0.12, 'bandpass', 900 + k * 1500, 2); // pff of air
   if (n.count % n.need) return;
@@ -135,6 +137,12 @@ function pump(n) {
   bubble(trf(pick(['pop.pam', 'pop.burst', 'pop.visca'])), null, C.red);
   ringFx('pop', C.gold);
 }
+// The Bou's esquellot (hud/esquellot.js): a cowbell's two inharmonic partials (soft triangles) and the clapper's knock,
+// low (Marc 2026-10-24: a touch deeper than the first 560 Hz), a little higher as the pop fills; the pop a long clang
+function bellRing(t0, k, big) {
+  const f = 400 + 60 * k, len = big ? 1 : 0.32, amp = big ? 0.12 : 0.07;
+  chip.blip(t0, f, f * 0.98, len, amp); chip.blip(t0, f * 1.48, f * 1.46, len * 0.7, amp * 0.6); chip.noiseHit(t0, 0.02, big ? 0.25 : 0.12, 'bandpass', 1900, 1.4);
+}
 function endBalloon(n) { // time's up: any pop is perfect, half-inflated still good
   if (dracEndTraca(n)) haptic('big'); // the TRO lands on the song clock, not on a tap: Android's sticky activation still lets it vibrate
   n.detail = n.count >= n.need ? tr('game.detail.taps', { count: n.count }) : n.count ? DETAIL.faster : DETAIL.silent;
@@ -152,6 +160,7 @@ function guapaHit(n) {
   G.score += n.pts;
   chip.sfx('gran');
   dracCrema(); // the Drac: the CREMA (flames and smoke)
+  if (figTheme.id === 'bou') bouBrama(); // the Bou: squashed, mouth wide, tongue out
   ringFx('gran', C.gold, trf('hit.both'));
   setTrauma(Math.min(1, trauma + 0.15));
 }

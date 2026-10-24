@@ -17,8 +17,6 @@ export function photoPersonClearance(p, x, z) {
   if (PHOTO.on) {
     const b = photoBody();
     clear = Math.min(clear, photoClearance(b.x,b.z,b.yaw,x,z,p.rad,PHOTO.id==='drac-valls'));
-    if (PHOTO.pair) { const q = PHOTO.id==='drac-valls' ? PHOTO.mula : PHOTO.drac;
-      clear = Math.min(clear, photoClearance(q.x,q.z,q.yaw,x,z,p.rad,PHOTO.id!=='drac-valls')); }
   }
   return clear;
 }

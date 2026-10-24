@@ -8,7 +8,7 @@ let active = true, cleared = 0, suspended = 0, woke = 0;
 const activityEpoch = Number(read('../src/game/state.js').match(/export const G = \{ activityEpoch: (\d+),/)[1]);
 const G = { activityEpoch, state: 'select', paused: false };
 const ctx = vm.createContext({ G, pageActive: () => active,
-  chip: { clearMenuSfx() { cleared++; }, ctx: { state: 'running', currentTime: 0, suspend() { suspended++; } }, wake() { woke++; } },
+  chip: { suspend() { this.ctx.suspend(); }, clearMenuSfx() { cleared++; }, ctx: { state: 'running', currentTime: 0, suspend() { suspended++; } }, wake() { woke++; } },
   pauseGame() { if (G.state === 'play') G.paused = true; },
   document: { addEventListener(k, f) { handlers[k] = f; } },
   addEventListener(k, f) { handlers[k] = f; }, setTimeout(f, ms) { timers.push({ f, ms }); },
@@ -30,6 +30,17 @@ for (const state of ['select', 'play']) for (const gap of [300, 120000]) for (co
   assert.equal(fired, 1, 'a fresh, uninterrupted effect still fires');
 }
 assert(cleared > 0 && suspended > 0 && woke > 0);
+
+// Back from another app (no gesture): an unlocked menu resumes by itself, a paused run stays suspended (iOS stayed mute until a tap).
+{
+  let resumes = 0; const chip = ctx.chip; chip.woke = true; chip.resume = () => { resumes++; };
+  Object.assign(G, { state: 'select', paused: false }); active = true; handlers.focus();
+  assert.equal(resumes, 1, 'the selector comes back with its sound');
+  const before = suspended; Object.assign(G, { state: 'play', paused: true, resuming: null }); handlers.focus();
+  assert.equal(resumes, 1, 'a paused run is not resumed');
+  assert.equal(suspended, before + 1, 'and stays suspended');
+  delete chip.woke; delete chip.resume; G.resuming = undefined;
+}
 
 // A run's audio clock that stands still (suspended, or `running` with a frozen currentTime) pauses the run after 1 s.
 const audio = ctx.chip.ctx;

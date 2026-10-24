@@ -8,7 +8,7 @@ const r = STICK.radius, near = x => Math.abs(x) < 1e-9;
 const shaped = m => ((m - STICK.dead) / (1 - STICK.dead)) ** STICK.curve; // what a push of m (0..1 of the ring) gives
 assert.equal(touchDown(1, 100, 300, true), false, 'no driving, no stick');
 
-setPhotoControl(true, 'mulassa-valls', false); Object.assign(photoBody(), { x: 0, z: 0, yaw: 0 });
+setPhotoControl(true, 'mulassa-valls'); Object.assign(photoBody(), { x: 0, z: 0, yaw: 0 });
 assert(touchDown(1, 100, 300, true) && PHOTO.mouse === 0, 'a thumb on the left takes the stick; the camera stays free to follow her');
 touchMove(1, 100, 300 - r * STICK.dead * 0.9);
 assert.equal(PHOTO.stickY, 0, 'inside the dead zone: nothing');

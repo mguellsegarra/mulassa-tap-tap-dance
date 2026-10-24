@@ -4,9 +4,12 @@
 <style>html,body{margin:0;height:100%;overflow:hidden;background:#b8c7c9;font-family:system-ui}canvas{display:block;width:100%;height:100%;touch-action:none}
 #bar{position:fixed;left:8px;top:8px;display:flex;gap:6px}#views{position:fixed;left:8px;bottom:8px;right:8px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 #cam{position:fixed;right:8px;top:8px;font:12px ui-monospace,monospace;background:#fff8e8e0;padding:6px 8px;border-radius:8px;white-space:pre}
-#bar select,#bar button,#views button{font:15px system-ui;padding:8px 10px;border-radius:10px;border:1px solid #6b5a3c;background:#fff8e8}</style></head>
+#ref{position:fixed;right:8px;bottom:64px;width:38vw;max-height:60vh;border-radius:12px;background:#000}
+#sync{font:13px ui-monospace,monospace;padding:8px;border-radius:10px;border:1px solid #6b5a3c}
+#bar select,#bar button,#views button,#pick{font:15px system-ui;padding:8px 10px;border-radius:10px;border:1px solid #6b5a3c;background:#fff8e8}</style></head>
 <body><canvas id="c"></canvas><div id="bar"><select id="m"></select><button id="spin">Gira</button><button id="dance">Balla</button><button id="music">Música</button>
-</div>
+<label id="pick">Vídeo…<input id="vidfile" type="file" accept="video/*" hidden></label><input id="sync" size="22" title="Segons del vídeo on sonen les 4 notes llargues (compassos 1, 2, 5 i 6)"><button id="ears">So: joc</button>
+</div><video id="ref" muted playsinline hidden></video>
 <div id="views"><button data-v="front">Davant</button><button data-v="side">Costat</button><button data-v="q">3/4</button><button data-v="top">Dalt</button><button data-v="head">Cap</button><button data-v="back">Darrere</button>
 <button id="anim">Atura l'animació</button><input id="time" type="range" min="0" max="15" step="0.02" value="0" disabled><span id="tlab"></span><button id="copy">Copia la vista</button></div>
 <div id="cam"></div>
@@ -24,7 +27,7 @@ import bouSong from '/src/song-bou.json';
 const models = { bou: 'Bou Tradicional (p13)', ...Object.fromEntries(Object.entries(BOU_HEADS).map(([k, [n]]) => [k, `Cap ${k.toUpperCase()} · ${n}`])) };
 const sel = document.getElementById('m');
 for (const [k, n] of Object.entries(models)) sel.add(new Option(n, k));
-const q = new URLSearchParams(location.search); sel.value = models[q.get('cap')] ? q.get('cap') : 'bou';
+const q = new URLSearchParams(location.search); sel.value = models[q.get('cap')] ? q.get('cap') : 'a'; // the game's (buildBou's default cap)
 const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('c'), antialias: true });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 const scene = new THREE.Scene(); scene.background = new THREE.Color('#b8c7c9');
@@ -76,7 +79,7 @@ function frame() {
   if (!paused) gagT = now / 1000;
   let beat;
   if (musicOn) { // the game's whole dance on the song (scene/bou-motion.js: its path, turns, planned steps, tail); paused, it holds
-    if (!song.paused) shown = motion(song.currentTime, dt); beat = shown?.beat;
+    if (!song.paused) shown = motion(song.currentTime, dt); beat = shown?.beat; syncRef();
   } else {
     if (!paused) rig.swingTail?.beat?.(gagT * 1.6);
     rig.swingTail?.(dt);
@@ -107,12 +110,13 @@ renderer.domElement.addEventListener('dblclick', e => {
 });
 controls.minDistance = .4;
 // «Música»: the Bou's song, the Bou bouncing in place on it: knees, waddle and nod (the game's), head on the beat.
+// ?from=N (s) starts it there, ?rate=0.5 plays it slower (to see the steps)
 let musicOn = false, shown = null;
 const song = new Audio('/' + bouSong.audio);
 song.muted = q.has('mute'); song.loop = true; window.__song = song; window.__bouPose = t => bouPose(t, newBouPose());   // tools/bou-sweep.mjs
 document.getElementById('music').onclick = e => {
   musicOn = song.paused;
-  if (musicOn) { if (dancing) danceBtn.click(); motion = createBouMotion(rig); song.play(); e.target.textContent = 'Para la música'; }
+  if (musicOn) { if (dancing) danceBtn.click(); motion = createBouMotion(rig); if (!song.currentTime) song.currentTime = +q.get('from') || 0; song.playbackRate = +q.get('rate') || 1; song.preservesPitch = false; song.play(); e.target.textContent = 'Para la música'; }
   else { song.pause(); e.target.textContent = 'Música'; load(sel.value); }
 };
 // Grab the tail (Marc): drag it on a plane facing the camera, let go and it swings by its own weight (bou.js
@@ -131,5 +135,37 @@ addEventListener('pointermove', e => {
   if (e.target === renderer.domElement && !e.buttons) { toRay(e); renderer.domElement.style.cursor = ray.intersectObject(rig.tail, true).length ? 'grab' : ''; }
 }, true);
 addEventListener('pointerup', e => { if (!holding) return; e.stopPropagation(); holding = false; rig.swingTail.grab = null; }, true);
+// «Vídeo…» (Marc 2026-10-24): a reference video beside the dance, kept on the song by the four long notes of its
+// opening (bars 1, 2, 5, 6): «sync» = the video's seconds where they sound (?sync=a,b,c,d, defaults: Marc's CleanShot
+// of 24/10, measured from its audio). Between them the video runs at the speed that keeps both on the same notes, and
+// beyond them at the nearest stretch's. «So» swaps which one you hear (the video's own sound shows if it matches).
+const ref = document.getElementById('ref'), syncIn = document.getElementById('sync'), ears = document.getElementById('ears');
+syncIn.value = q.get('sync') ?? '3.04,5.36,11.83,13.96';
+const songAt = [1, 2, 5, 6].map(n => bouSong.dance.bars.find(b => b[0] === n)[2]);
+const anchors = () => { const v = syncIn.value.split(',').map(Number); return v.length === 4 && v.every(Number.isFinite) ? v : null; };
+function toVideo(t) { // piecewise linear song -> video time, and its slope
+  const v = anchors(); if (!v) return null;
+  let i = 0; while (i < 2 && t > songAt[i + 1]) i++;
+  const k = (v[i + 1] - v[i]) / (songAt[i + 1] - songAt[i]);
+  return { at: v[i] + (t - songAt[i]) * k, rate: k };
+}
+function syncRef() {
+  if (ref.hidden || !ref.duration) return;
+  const m = toVideo(song.currentTime); if (!m || m.at < 0 || m.at > ref.duration) { ref.pause(); return; }
+  const rate = m.rate * song.playbackRate, drift = m.at - ref.currentTime; // a small drift is caught up by speed, not a seek
+  ref.playbackRate = Math.max(.25, Math.min(4, rate * (1 + Math.max(-.2, Math.min(.2, drift * 2)))));
+  if (song.paused) { ref.pause(); return; }
+  if (Math.abs(ref.currentTime - m.at) > .12 && !ref.seeking) ref.currentTime = m.at;
+  if (ref.paused) ref.play().catch(() => {});
+}
+document.getElementById('vidfile').onchange = e => {
+  const f = e.target.files[0]; if (!f) return;
+  ref.src = URL.createObjectURL(f); ref.hidden = false;
+  // from where the video starts, unless ?from says otherwise
+  const v = anchors(); if (v && !q.has('from') && song.paused) song.currentTime = Math.max(0, songAt[0] - v[0] * (songAt[1] - songAt[0]) / (v[1] - v[0]));
+};
+ears.textContent = song.muted ? 'So: cap' : 'So: joc';
+ears.onclick = () => { const vid = song.muted === false; song.muted = vid; ref.muted = !vid; ears.textContent = vid ? 'So: vídeo' : 'So: joc'; };
+song.addEventListener('pause', () => ref.pause());
 frame();
 </script></body></html>

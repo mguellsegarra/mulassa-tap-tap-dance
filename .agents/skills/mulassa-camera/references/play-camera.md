@@ -18,6 +18,11 @@ Threads: the Drac camera decisions in [Integració jugable del Drac](t3-thread:/
 - `?camdrac=segueix` restores the old heading follow for both (A/B). If it still dizzies, the remaining option is a fixed camera: no background motion, but a smaller figure (the whole path must fit).
 - The dance frame was rotated so the play camera looks between two attendants; on phones attendant S covered the Drac. Helpers at 5.1 m, not 4.5 (the Drac walked through S at the close pass).
 
+## Bou festa (Marc 2026-10-24: «allunyar la càmera a la festa»)
+
+- Followed like the others, the carried lap (a 2.6 m ring) brought the Bou within 4.0 m of a 1280×800 camera (it sits ~7 m from the centre): it filled the screen.
+- `FESTA_CAM`: while `BOU_FESTA.k` > 0, 60% of the follow is let go (`hold`) and the distance is at least 13 m. Measured on GPU captures: nearest pass 6.3 m at 1280×800, 9.3 m at 375×667. Letting all of the follow go cropped the Bou at a 375 px phone's edge (only ~5 m across fit there). A bare multiplier (×1.45) also pushed the phones' camera (already ~13 m) far back, the figure tiny: a minimum distance does not.
+
 ## Shake
 
 Small, additive, only GUAPA and the finale during play. Misses and pops do not shake. Never fed back into the springs.

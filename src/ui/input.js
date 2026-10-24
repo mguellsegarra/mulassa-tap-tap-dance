@@ -1,6 +1,6 @@
 // Keyboard and pointer input for the game and for the title camera.
 import { PHOTO, photoKey, photoRelease, clearPhotoKeys, photoLook, photoZoom } from '../game/photo-control.js';
-import { syncAvatars, stopControl } from './photo-avatars.js';
+import { syncAvatars } from './photo-avatars.js';
 import { store } from '../platform/storage.js';
 import { orbitMove, turnFor, orbitDown, orbitUp, orbitZoom, wheelFactor } from '../scene/orbit.js';
 import { sheets } from './sheets.js';
@@ -26,7 +26,7 @@ addEventListener('keydown', e => {
     return;
   }
   if (!['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target?.tagName) && !e.target?.isContentEditable && photoScreen() && !sheetUp() && !e.ctrlKey && !e.metaKey && !e.altKey && viewMode && e.code === 'Escape') { // free play is entered from the dock only (Marc 2026-10-20: no H)
-    e.preventDefault(); if (!stopControl()) setView(false); return; // Escape steps back: driving → looking → buttons
+    e.preventDefault(); setView(false); return; // Escape leaves free play (the mouse look is freed first, above)
   }
   if (viewMode || G.state === 'select') return; // the selector owns its keys; photo walking has already handled its keys
   if (['INPUT', 'SELECT', 'BUTTON'].includes(e.target.tagName) && !e.target.closest?.('#pad')) return; // a pad with keyboard focus still plays

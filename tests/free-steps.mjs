@@ -1,5 +1,5 @@
-// Live steps off the song, driven hard (the selector's beat turns, photo mode's gallop, reversals, jumps, Tab and back
-// to Vista lliure): the Mulassa's eight shoes (game/mula-supports.js createStepper) and the Drac's two
+// Live steps off the song, driven hard (the selector's beat turns, photo mode's gallop, reversals, jumps, Tab round the
+// beasts): the Mulassa's eight shoes (game/mula-supports.js createStepper) and the Drac's two
 // (scene/drac-demo.js) keep under their carriers at 30, 60 and 120 fps, planted shoes never skate, and a figure that
 // reappears somewhere else gets its shoes there, not stretched back to where it was. The song's planned shoes are
 // mula-dance.mjs's and drac-feet.mjs's.
@@ -30,7 +30,7 @@ const shells = {
   gallop(t, dt, s) { s.v += ((t < 3 ? 9 : 0) - s.v) * (1 - Math.exp(-dt / 0.12)); s.pz += s.v * dt; return [0, s.pz, 0]; },
   // Actual input velocity through walking, Shift, diagonal running, walking again and braking.
   shiftPaces(t, dt) {
-    if (t <= dt) { setPhotoControl(true, 'mulassa-valls', false); Object.assign(photoBody(), { x: 0, z: 0, yaw: 0 }); }
+    if (t <= dt) { setPhotoControl(true, 'mulassa-valls'); Object.assign(photoBody(), { x: 0, z: 0, yaw: 0 }); }
     PHOTO.keys.clear();
     if (t < 4.5) PHOTO.keys.add('KeyW');
     if (t >= 1 && t < 3) PHOTO.keys.add('ShiftLeft');
@@ -75,7 +75,7 @@ for (const [name, move] of Object.entries(shells)) for (const hz of [30, 60, 120
 for (const [name, m] of Object.entries(means)) // the same gait at any frame rate (the cadence once waited for whole frames)
   assert(Math.max(...m) / Math.min(...m) < 1.25, `${name}: the same steps at 30, 60, 120 fps (mean ${m.map(v => v.toFixed(2)).join(' / ')} m)`);
 
-{ // Vista lliure after the Drac, Tab: she reappears metres away; her shoes are planted there, not stretched back
+{ // Tab from the Drac back to her: she reappears metres away; her shoes are planted there, not stretched back
   const st = createStepper(), shell = { x: 0, z: 0, yaw: 0, roll: 0, pitch: 0 }, nom = {};
   for (let k = 0; k < 30; k++) st.update(1 / 60, shell);
   Object.assign(shell, { x: 6, z: -3, yaw: 0.3 });
@@ -129,7 +129,7 @@ for (const hz of [30, 60, 120]) {
 }
 // The real Shift speed ramp never resets the Drac's step phase or leaves a shoe behind.
 for (const hz of [30, 60, 120]) {
-  setPhotoControl(true, 'drac-valls', false); Object.assign(photoBody(), { x: 0, z: 0, yaw: 0 });
+  setPhotoControl(true, 'drac-valls'); Object.assign(photoBody(), { x: 0, z: 0, yaw: 0 });
   const w = newWalker(0, 0, 0), out = newDracPose(), dt = 1 / hz;
   let phase = null, steps = 0, previousUp = false;
   for (let k = 1; k <= 5 * hz; k++) {

@@ -7,9 +7,18 @@ import { createHash } from 'node:crypto';
 import assert from 'node:assert/strict';
 
 const root = new URL('../', import.meta.url), at = p => new URL(p, root);
-const timing = JSON.parse(readFileSync(at('music/bou-tradicional/timing.json')));
 const approval = JSON.parse(readFileSync(at('music/bou-tradicional/approval.json')));
 const playback = JSON.parse(readFileSync(at('music/bou-tradicional/playback.json')));
+// the current mix starts `cutBeats` into v13's intro (tools/build_bou_mobile.py): the whole map moves back as far
+const shiftTiming = (raw, cut) => {
+  const T0 = raw.subdivisionTimes[cut * raw.subdivision], s = t => t - T0;
+  return { ...raw, introBeats: raw.introBeats - cut, duration: s(raw.duration), musicEnd: s(raw.musicEnd), melodyStart: s(raw.melodyStart),
+    technoStart: s(raw.technoStart), finaleCandidate: s(raw.finaleCandidate), finalNoteStart: s(raw.finalNoteStart),
+    beats: raw.beats.slice(cut).map(s), subdivisionTimes: raw.subdivisionTimes.slice(cut * raw.subdivision).map(s),
+    bars: raw.bars.map(b => ({ ...b, beat: b.beat - cut, time: s(b.time), end: s(b.end) })),
+    events: raw.events.map(e => ({ ...e, beat: e.beat - cut, start: s(e.start), end: s(e.end) })) };
+};
+const timing = shiftTiming(JSON.parse(readFileSync(at('music/bou-tradicional/timing.json'))), playback.cutBeats ?? 0);
 assert.equal(playback.baseSha256, approval.audioSha256, 'remix must retain the approved v13 source');
 const MP3 = 'public/music/' + playback.audio;
 
@@ -24,7 +33,7 @@ assert.equal(sha(at(MP3)), playback.audioSha256);
 const SUB = timing.subdivision, ST = timing.subdivisionTimes;
 const sec = b => { const x = b * SUB, i = Math.min(Math.floor(x), ST.length - 2); return ST[i] + (x - i) * (ST[i + 1] - ST[i]); };
 const r4 = x => Math.round(x * 1e4) / 1e4, r6 = x => Math.round(x * 1e6) / 1e6;
-const FIRST = timing.introBeats, LAST = timing.bars.at(-1).beat; // melody from beat 12; the final do on beat 320
+const FIRST = timing.introBeats, LAST = timing.bars.at(-1).beat; // melody from beat 8; the final do on beat 316
 const barAt = n => timing.bars.find(b => b.sourceBar === n).beat;
 
 // The tune: voice 0, one note per attack (bar 4's octave chord keeps its top note).
@@ -86,11 +95,9 @@ const song = {
   tail: Math.floor(timing.duration * 10) / 10, // the whole approved fade
   finale: S(barAt(88)), // timing.json finaleCandidate: the last phrase, the festive ending
   sections: [[0, 'A'], [S(barAt(19)), 'B'], [S(barAt(27)), 'A'], [S(barAt(35)), 'B'], [S(barAt(60)), 'A'], [S(barAt(72)), 'B']],
-  // a run starts where the band comes in, two beats before the melody: the soft pulse before it, after the game's
-  // own 3 2 1, sounded like a second count-in (the recording is untouched; the radio still plays it whole)
-  start: r4(timing.beats[timing.introBeats - 2]),
   beats: timing.beats.map(r4),
-  balloons: [], // no drumroll in this arrangement
+  // the ESQUELLOT (the Bou's GLOBUS, Marc 2026-10-24): the last two bars mashed up to the final hit; its notes give way (chart.js)
+  balloons: [[barAt(90), barAt(92)]],
   notes,
   audio: `music/${playback.audio}?v=${playback.audioSha256.slice(0, 12)}`,
   // what the dance (game/bou-dance.js) needs from timing.json, so the game never bundles the whole 470 KB file:

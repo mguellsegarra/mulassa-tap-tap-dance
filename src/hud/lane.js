@@ -64,7 +64,7 @@ export function drawLane(t) {
   }
   const bl = balloonShown(t);
   if (bl) { // the balloon hangs from the ring, under the lane, and inflates with every tap; the counter keeps going after each pop
-    const k = (bl.count % bl.need) / bl.need, carretilles = figTheme.drac;
+    const k = (bl.count % bl.need) / bl.need, carretilles = figTheme.drac || figTheme.id === 'bou'; // the Drac's carretilles and the Bou's esquellot: a fixed icon and a tap total
     const r = carretilles ? 24 : 9 + 17 * k + pulse(G.pumpT, 0.15) * 3, by = carretilles ? bottom + 24 : bottom + 8 + r;
     const m = balloonFx && H.getTransform?.(); // the 3D balloon (balloon3d.js) is drawn under the HUD: say where it hangs, the counter below sits on top
     if (m) {

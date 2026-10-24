@@ -1,5 +1,6 @@
 import { checkAlias } from './alias-rules.js';
 import { CURRENT_SCORE_VERSION, SHORT_SCORE_VERSION, DRAC_SCORE_VERSION, BOU_SCORE_VERSION } from '../game/score-scale.js';
+import { MOCK_BOARD } from '../core/mock-board.js';
 // Charts retain their own raw counts and validation; the server combines their comparable points.
 export const LEADERBOARD_VERSION = CURRENT_SCORE_VERSION;
 export const EXPECTED_JUDGMENTS = Object.freeze([108, 133, 240]);
@@ -17,10 +18,10 @@ export const VERSION_RULES = Object.freeze({
   [LEADERBOARD_VERSION]: rules(EXPECTED_JUDGMENTS, MAX_SCORES, EXTRAS_MAX, 'mulassa-valls'),
   [DRAC_SCORE_VERSION]: rules([106, 200, 277], [157000, 205000, 237000], [104000, 103000, 92000], 'drac-valls'),
   // the server's rows wait in supabase/pending/202610230001_bou_board.sql: not publishable until that is applied
-  [BOU_SCORE_VERSION]: rules([131, 225, 423], [69000, 126000, 237000], [0, 5000, 5000], 'bou-tradicional-valls'),
+  [BOU_SCORE_VERSION]: rules([129, 220, 413], [139000, 187000, 297000], [73000, 71000, 76000], 'bou-tradicional-valls'),
 });
 // Only these may be published from this client.
-const PUBLISHABLE = [LEADERBOARD_VERSION, DRAC_SCORE_VERSION];
+const PUBLISHABLE = [LEADERBOARD_VERSION, DRAC_SCORE_VERSION, ...(MOCK_BOARD ? [BOU_SCORE_VERSION] : [])]; // the Bou: the mock's board only
 
 // the server's rules (202609280009_alias_hardening.sql) mirrored by src/services/alias-rules.js: one check for both
 export function normalizeAlias(value) {

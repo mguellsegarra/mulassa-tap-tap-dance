@@ -2186,8 +2186,8 @@
             "chord": false
           },
           {
-            "pitch": 70,
-            "name": "Bb4",
+            "pitch": 71,
+            "name": "B4",
             "duration": 0.6666666666666666,
             "x": 379.438,
             "y": 238.468,
@@ -16396,6 +16396,7 @@
     "Bar 4 contains an octave chord on the last eighth note.",
     "Bars 17 and 46 are first endings; bars 18 and 47 are second endings.",
     "Bar 93 is an alternative fire-loop return and is excluded from lluïment.",
-    "Tempo after Moderat, ritardando, fermatas and accelerando requires interpretation."
+    "Tempo after Moderat, ritardando, fermatas and accelerando requires interpretation.",
+    "Bar 12, Gralla I, beat 3: B natural, not the printed B flat. The PDF misses the natural sign: the bass holds G (the dominant), Gralla II plays B naturals a third below in the same bar and live performances play B natural (Marc, 2026-10-24)."
   ]
 }

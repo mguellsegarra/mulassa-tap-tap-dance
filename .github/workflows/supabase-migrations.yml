@@ -2,11 +2,19 @@ name: Supabase migrations
 
 on:
   workflow_call:
+    inputs:
+      environment:
+        type: string
+        required: true
     secrets:
       SUPABASE_DB_PASSWORD:
         required: true
   workflow_dispatch:
     inputs:
+      environment:
+        type: choice
+        options: [beta, production]
+        default: beta
       baseline:
         description: 'One-off: mark every local migration as already applied (no SQL runs). Only if the remote schema already has them all.'
         type: boolean
@@ -16,18 +24,21 @@ permissions:
   contents: read
 
 concurrency:
-  group: supabase-migrations
+  group: supabase-migrations-${{ inputs.environment }}
   cancel-in-progress: false
 
 jobs:
   migrate:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    # the environment's own SUPABASE_DB_PASSWORD wins over the one the caller passes
+    environment: ${{ inputs.environment }}
     env:
       SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
-      # Session pooler (IPv4; the direct host is IPv6-only). Region: Central EU (Frankfurt).
-      POOLER_HOST: aws-0-eu-central-1.pooler.supabase.com
-      PROJECT_REF: oajlkitufibpfvhgtqwr
+      # Session pooler (IPv4; the direct host is IPv6-only). Production: Central EU (Frankfurt); beta's project and
+      # region live in the beta environment's variables, never falling back to production's.
+      POOLER_HOST: ${{ inputs.environment == 'production' && 'aws-0-eu-central-1.pooler.supabase.com' || vars.SUPABASE_POOLER_HOST }}
+      PROJECT_REF: ${{ inputs.environment == 'production' && 'oajlkitufibpfvhgtqwr' || vars.SUPABASE_PROJECT_REF }}
     steps:
       - uses: actions/checkout@v4
       - uses: supabase/setup-cli@v1
@@ -36,6 +47,8 @@ jobs:
       # No `supabase link` and no access token: the CLI only needs the database URL.
       - name: Build database URL
         run: |
+          [ -n "$PROJECT_REF" ] && [ -n "$POOLER_HOST" ] || { echo "missing Supabase project for ${{ inputs.environment }}"; exit 1; }
+          if [ "${{ inputs.environment }}" != production ] && [ "$PROJECT_REF" = oajlkitufibpfvhgtqwr ]; then echo "beta must not migrate production"; exit 1; fi
           pw=$(python3 -c 'import os,urllib.parse; print(urllib.parse.quote(os.environ["SUPABASE_DB_PASSWORD"], safe=""))')
           echo "::add-mask::$pw"
           echo "DB_URL=postgresql://postgres.${PROJECT_REF}:${pw}@${POOLER_HOST}:5432/postgres" >> "$GITHUB_ENV"

@@ -7,6 +7,7 @@ const prod = { dsn: DSN, hostname: 'mulassa-tap-tap-dance.pages.dev', search: ''
 
 // On/off
 assert.equal(errorsMode(prod), 'production');
+assert.equal(errorsMode({ ...prod, hostname: 'beta.mulassa.cat' }), 'beta', 'the beta channel reports apart');
 assert.equal(errorsMode({ ...prod, dsn: '' }), null, 'no DSN: off');
 assert.equal(errorsMode({ ...prod, webdriver: true }), null, 'headless/automation: off');
 for (const q of ['?autoplay', '?mute&autoplay', '?from=40', '?view=side']) assert.equal(errorsMode({ ...prod, search: q }), null, `${q}: off`);

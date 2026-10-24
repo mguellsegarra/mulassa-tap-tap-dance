@@ -59,7 +59,13 @@ try {
   assert.match(deployWorkflow, /  migrate:\n    uses: \.\/\.github\/workflows\/supabase-migrations\.yml/);
   assert.match(deployWorkflow, /  deploy:\n    needs: migrate\n/);
   assert(!/if:.*(?:always\(|failure\(|cancelled\()/.test(deployWorkflow), 'deployment cannot bypass a failed migration');
-  assert.match(migrationWorkflow, /  workflow_call:\n    secrets:\n      SUPABASE_DB_PASSWORD:\n        required: true/);
+  assert.match(migrationWorkflow, /  workflow_call:\n(?:    .*\n|      .*\n|        .*\n)*?    secrets:\n      SUPABASE_DB_PASSWORD:\n        required: true/);
+  // Two channels from main: a push builds beta on the test project, only a version tag reaches production.
+  assert.match(deployWorkflow, /branches: \[main\]\n    tags: \['v\*'\]/);
+  assert.match(deployWorkflow, /environment: \$\{\{ github\.ref_type == 'tag' && 'production' \|\| 'beta' \}\}/);
+  assert.match(deployWorkflow, /\*oajlkitufibpfvhgtqwr\*\) echo "beta needs the test Supabase/, 'beta never builds against the real leaderboard');
+  assert.match(migrationWorkflow, /environment: \$\{\{ inputs\.environment \}\}/);
+  assert.match(migrationWorkflow, /"\$PROJECT_REF" = oajlkitufibpfvhgtqwr \]; then echo "beta must not migrate production"; exit 1/);
   assert(!/  push:/.test(migrationWorkflow), 'one migration run per deployment, rather than a parallel push trigger');
   assert.match(migrationWorkflow, /supabase db push --db-url/);
   const valid = await fixture('valid');
@@ -114,6 +120,7 @@ try {
   for (const path of ['/', '/index.html']) assert.equal(rules[path]?.['cache-control'], 'no-cache', `${path} revalidates`);
   assert.equal(rules['/*']['cache-control'], undefined, 'no site-wide Cache-Control (Pages would merge it into every rule)');
   assert.equal(rules['/*']['x-content-type-options'], 'nosniff');
+  assert.equal(rules['https://beta.mulassa.cat/*']?.['x-robots-tag'], 'noindex', 'beta stays out of search engines');
   assert.equal(rules['/*']['strict-transport-security'], 'max-age=31536000', 'HSTS for a year, never includeSubDomains');
   const real = JSON.parse(await readFile(new URL('../src/song.json', import.meta.url), 'utf8'));
   // An old tab may retry its audio download after the new deployment, without its old cached response.

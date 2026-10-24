@@ -16,7 +16,7 @@ for (const id of ['valls', 'tarragona', 'reus', 'solsona', 'vilanova']) assert(T
 assert.deepEqual(FIGURES.filter(playable).map(f => f.id), [MULASSA.id, DRAC.id, 'bou-tradicional-valls']);
 assert(FIGURES.slice(0, FIGURES.filter(playable).length).every(playable), 'available figures come first');
 assert(FIGURES.every(f => townOf(f) && ['playable', 'aviat'].includes(f.status)));
-assert.deepEqual(FIGURES.filter(f => f.town === 'valls').map(f => f.id).sort(), ['mulassa-valls', 'drac-valls', 'aliga-valls', 'bou-tradicional-valls', 'os-trabucaires-valls', 'gegants-ciutat-valls', 'cavallets-valls', 'gegant-calcot-valls', 'campanar-valls', 'basilisc-valls'].sort(), 'only the requested principal Valls figures remain');
+assert.deepEqual(FIGURES.filter(f => f.town === 'valls').map(f => f.id).sort(), ['mulassa-valls', 'drac-valls', 'aliga-valls', 'bou-tradicional-valls', 'os-trabucaires-valls', 'gegants-ciutat-valls', 'cavallets-valls', 'basilisc-valls'].sort(), 'only the requested principal Valls figures remain');
 const sourceCatalog = JSON.parse(readFileSync(new URL('../src/game/figure-catalog.json', import.meta.url), 'utf8'));
 assert.deepEqual(sourceCatalog.figures.filter(f => f.selectorVisible === false).map(f => f.id), ['nans-valls', 'diables-valls']);
 for (const id of ['nans-valls', 'diables-valls']) {
@@ -70,7 +70,7 @@ assert.equal(recordKey(MULASSA, 2), 'record-points-mulassa-v3-2', 'each Mulassa 
 assert.equal(sourceCatalog.figures.find(f => f.id === 'nans-valls').music, 'Francesc Sans', 'pending Valls figures credit their own music');
 const pendingName = id => sourceCatalog.figures.find(f => f.id === id);
 for (const [id, verb] of [['gegants-ciutat-valls', 'surtin'], ['nans-valls', 'surtin'], ['mulassa-solsona', 'surtin'], ['aliga-solsona', 'surtin'], ['boja-vilanova', 'surti'], ['drac-vilanova', 'surti'], ['guites-berga', 'surtin'],
-  ['os-trabucaires-valls', 'surti'], ['diables-valls', 'surti'], ['cavallets-valls', 'surti'], ['gegant-calcot-valls', 'surti'], ['gegants-mulassa-reus', 'surtin'], ['gegants-bojos-solsona', 'surtin'], ['basilisc-valls', 'surti'], ['aliga-valls', 'surti'], ['cucafera-tarragona', 'surti']]) {
+  ['os-trabucaires-valls', 'surti'], ['diables-valls', 'surti'], ['cavallets-valls', 'surti'], ['gegants-mulassa-reus', 'surtin'], ['gegants-bojos-solsona', 'surtin'], ['basilisc-valls', 'surti'], ['aliga-valls', 'surti'], ['cucafera-tarragona', 'surti']]) {
   assert.match(aviatText(pendingName(id)), new RegExp(`^Volem que ${verb} a la plaça`), `${id}: the verb agrees with its name`);
 }
 assert.equal(aviatText(pendingName('aliga-valls')).split('\n\n').length, 2, 'pending cards: how to help, then the open code');
@@ -378,7 +378,7 @@ key('ArrowRight'); assert.equal(api.figure, soon[0], 'the arrows go on into it')
 }
 assert(!$('select-pending').hidden && $('select-info').hidden, 'a pending figure shows its own panel');
 assert.equal($('aviat-title').textContent, soon[0].fullName || soon[0].name); assert($('aviat-icon').hidden && !$('aviat-icon').innerHTML, 'no portrait in the panel: the strip shows it');
-assert.equal(soon[0].entity, 'Ajuntament + UAF'); assert.match($('aviat-entity').innerHTML, /class="escut".*Ajuntament de Valls.*viewBox="0 0 525 829".*Unió Anelles de la Flama/, 'a shared figure shows both marks, as its card does');
+assert.equal(soon[0].id, 'os-trabucaires-valls', 'Marc\'s order: Ós, Cavallets, Basilisc, Àliga, Gegants'); assert.match($('aviat-entity').innerHTML, /viewBox="0 0 525 829".*Unió Anelles de la Flama/, 'a pending figure shows its entity\'s mark, as its card does'); assert.doesNotMatch($('aviat-entity').innerHTML, /class="escut"/);
 assert(!$('aviat-entity').hidden, 'a pending figure restores its entity after the teaser');
 assert.equal(($('aviat-text').innerHTML.match(/<p>/g) || []).length, 2); assert.match($('aviat-text').innerHTML, /Volem que surti a la plaça/);
 assert($('select-next').disabled && !$('select-next').hidden, 'pending keeps a disabled action for the desktop placeholder');

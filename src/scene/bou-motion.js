@@ -11,8 +11,9 @@ export function createBouMotion(rig) {
       const f=dance.foot(t,i,feet[i]);
       rig.feet[i].position.set(f.x,f.y,f.z);rig.feet[i].rotation.set(f.tilt??0,f.yaw,0,'YXZ');
     }
+    rig.cap?.play(t,pose.beat); // the head's gags on the song's beat (bou-heads.js)
     rig.poseLegs();rig.root.updateMatrixWorld(true);
-    if(dt>0)rig.swingTail?.(dt);else rig.swingTail?.reset();
+    if(dt>0){rig.swingTail?.beat?.(pose.beat);rig.swingTail?.(dt);}else rig.swingTail?.reset();
     return pose;
   };
 }

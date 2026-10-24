@@ -115,6 +115,12 @@ const leanOn = b => { // |roll| on the beat is the local extreme (within 1%: the
 for (const b of quietA) assert(leanOn(b), `A: a lean on beat ${b}`);
 for (const b of [148, 150, 200, 202]) assert(leanOn(b), `B/C: a lean on beat ${b} (from B on, every second beat)`);
 for (const b of [26, 58, 122]) assert(!leanOn(b), `A: no lean half way between (${b})`);
+// the comic layer (the Bou's): the knees dip on every beat and the waddle goes a side a beat
+for (const b of [24, 60, 170]) { // (away from the culades, whose pitch lifts the shell)
+  const on = at(songAtBeat(b)), off = at(songAtBeat(b + 0.5)), l = at(songAtBeat(b + 0.5)).waddle, r = at(songAtBeat(b + 1.5)).waddle;
+  assert(off.lift - on.lift > 0.02, `a knee dip on beat ${b} (${(off.lift - on.lift).toFixed(3)} m)`);
+  assert(l * r < 0 && Math.abs(l) > 1 * DEG, `the waddle swaps sides beat to beat (${b})`);
+}
 // FESTA: a little more sway as the music livens, never on the path; nothing extra once she settles
 {
   const plain = makeMulaDance(song, { festive: false }), a = newMulaPose(), b = newMulaPose();

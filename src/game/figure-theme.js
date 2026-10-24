@@ -8,11 +8,11 @@ const DRAC_COLORS = { gua: '#ffc21f', guaLt: '#ffe38a', guaDk: '#a66f00', pa: '#
 // the Bou's sand | grana (Marc, 2026-10-23): light | dark again, apart for every colour blindness and in grey
 const BOU_COLORS = { gua: '#f0d58a', guaLt: '#fff1c2', guaDk: '#a3832f', pa: '#7a1f3d', paLt: '#c05a7e', paDk: '#45081f' };
 export const figThemes = {
-  mulassa: { drac: false, colors: MULASSA_COLORS, chant: [[tr('figures.chant.first.mulassa'), 0, 0.8], [tr('figures.chant.second.mulassa'), 0.8, 0.8], [tr('figures.chant.last.mulassa'), 1.8, 1.6]], volley: 0 },
-  drac: { drac: true, colors: DRAC_COLORS, chant: [[tr('figures.chant.first.drac'), 0, 0.8], [tr('figures.chant.second.drac'), 0.8, 0.8], [tr('figures.chant.last.drac'), 1.8, 1.6]], volley: 0 },
-  // the Bou's own words, BRA | MA | BRAMA!; its chant (BRAMA, BOU! / QUE LA PLAÇA… / ES MOU!)
-  // is longer and saves the fireworks' volley for the last word
-  bou: { drac: false, colors: BOU_COLORS, chant: [[tr('figures.chant.first.bou'), 0, 1], [tr('figures.chant.second.bou'), 1, 1.2], [tr('figures.chant.last.bou'), 2.2, 1.8]], volley: 2.2 },
+  mulassa: { drac: false, colors: MULASSA_COLORS, chant: [[tr('figures.chant.first.mulassa'), 0, 0.8], [tr('figures.chant.second.mulassa'), 0.8, 0.8], [tr('figures.chant.last.mulassa'), 1.8, 1.6]] },
+  drac: { drac: true, colors: DRAC_COLORS, chant: [[tr('figures.chant.first.drac'), 0, 0.8], [tr('figures.chant.second.drac'), 0.8, 0.8], [tr('figures.chant.last.drac'), 1.8, 1.6]] },
+  // the Bou's own words, BRA | MA | BRAMA!; its chant (BOU! / QUE TOT… / HO MOU!; Marc, 2026-10-24) rises to the rhyme,
+  // like the others: «BRAMA, BOU!» first then a long fall read as a letdown wherever it was placed
+  bou: { drac: false, colors: BOU_COLORS, chant: [[tr('figures.chant.first.bou'), 0, 0.8], [tr('figures.chant.second.bou'), 0.8, 0.8], [tr('figures.chant.last.bou'), 1.8, 1.6]] },
 };
 for (const k in figThemes) figThemes[k].id = k;
 export let figTheme = figThemes.mulassa;

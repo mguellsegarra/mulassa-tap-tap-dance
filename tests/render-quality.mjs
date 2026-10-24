@@ -434,7 +434,7 @@ const context = vm.createContext({
   // the Drac's revised dance (pure modules, provided like the old one): only the names the inlined scene code uses
   poseAt: (await import('../src/game/drac-pose.js')).poseAt, REF_END: (await import('../src/game/drac-pose.js')).REF_END, feetAt: (await import('../src/game/drac-steps.js')).feetAt,
   dracTime: (await import('../src/game/drac-time.js')).dracTime, ...await import('../src/game/drac-layout.js'), ...await import('../src/scene/drac-rig.js'), ...await import('../src/scene/drac-colla.js'), ...await import('../src/scene/mula-colla.js'), ...await import('../src/scene/bou-colla.js'),
-  buildBou: (await import('../src/scene/models/bou.js')).buildBou, createBouMotion: (await import('../src/scene/bou-motion.js')).createBouMotion, BOU_TIMING: (await import('../src/game/bou-dance.js')).BOU_TIMING, // the Bou (provided)
+  buildBou: (await import('../src/scene/models/bou.js')).buildBou, createBouMotion: (await import('../src/scene/bou-motion.js')).createBouMotion, ...await import('../src/game/bou-dance.js'), // the Bou (provided)
   ...await import('../src/dev/final-test.js'), ALIAS_KEY: 'leaderboard-alias', DECLINES_KEY: 'publish-declines', // ?final: off here (no hostname)
   errors, errorName, audioFailureTags: (await import('../src/platform/audio.js')).audioFailureTags,
   THREE: { ...THREE, WebGLRenderer: Renderer }, ...await import('../src/scene/crowd-fx.js'), ...models, ...chart, ...progress, ...stars,
@@ -3393,10 +3393,26 @@ const shoulderCheck = `{ const v = new THREE.Vector3(), cx = camFocus.x, cz = ca
   for (const p of mulaColla.crew) { p.g.getWorldPosition(v); const dx = v.x - cx, dz = v.z - cz; if (dx * dx + dz * dz > hd * hd) continue; shoulder.seen++;
     shoulder.worst = Math.min(shoulder.worst, Math.abs(Math.atan2(Math.sin(yaw - Math.atan2(dx, dz)), Math.cos(yaw - Math.atan2(dx, dz))))); } }`;
 // (and its cuts dissolve: the copy that fades out is taken in the outgoing shot's camera, before the cut moves it)
-run("var fades = [], lastCam = camera.position.clone(); document.getElementById('reel-fade').animate = () => (fades.push(camera.position.distanceTo(lastCam)), { cancel() {} });");
-for (let i = 0; i < 60 * 40; i++) { run(`frame(${it += 1000 / 60}); lastCam.copy(camera.position);`); if (i % 4 === 0 && !run('orbit.ptrs.size')) run(shoulderCheck); }
+run("var fades = [], cutSettle = [], seenFades = 0, cutLast = false, lastCam = camera.position.clone(); document.getElementById('reel-fade').animate = () => (fades.push(camera.position.distanceTo(lastCam)), { cancel() {} });");
+// (and the frame after a cut holds the new shot: no second step, Marc 2026-10-24: the cut was aimed at the old shot's distance)
+for (let i = 0; i < 60 * 40; i++) { run(`frame(${it += 1000 / 60}); if (cutLast) cutSettle.push(camera.position.distanceTo(lastCam)); cutLast = fades.length > seenFades; seenFades = fades.length; lastCam.copy(camera.position);`); if (i % 4 === 0 && !run('orbit.ptrs.size')) run(shoulderCheck); }
 const fades = JSON.parse(run('JSON.stringify(fades)'));
+const cutSettle = JSON.parse(run('JSON.stringify(cutSettle)'));
+assert(cutSettle.length > 0 && cutSettle.every(d => d < 0.1), `showreel: one step per cut, the next frame holds it (${JSON.stringify(cutSettle.map(d => +d.toFixed(3)))})`);
 assert(fades.length > 0 && fades.every(d => d < 1e-6), `showreel: every cut dissolves from the outgoing shot (${fades.length} cuts, ${JSON.stringify(fades)})`);
+// a figure change is one plain cut: its "outgoing shot" would already show the new figure (Marc saw two shot changes)
+run("fades.length = 0; setSelectedFigure('drac-valls');"); windowHandlers.pointermove.forEach(h => h({}));
+const swapMoves = []; for (let i = 0; i < 4; i++) { run(`lastCam.copy(camera.position); frame(${it += 1000 / 60});`); swapMoves.push(run('camera.position.distanceTo(lastCam)')); }
+assert(run('REEL.id') === 'drac-valls' && run('fades.length') === 0, 'showreel: a figure change cuts without a dissolve');
+// and that cut is final in its own frame: the new figure measured where it stands now (Marc 2026-10-24: a provisional frame, then a snap)
+assert(swapMoves[0] > 0.3 && swapMoves.slice(1).every(d => d < 0.1), `showreel: a figure change is one step (${JSON.stringify(swapMoves.map(d => +d.toFixed(3)))})`);
+// the Drac's close-up (beats 96-104: in on a long lens at the orbit's nearest, out to a wide shot) is one step each way too
+run('sheets.select.band = { top: 430, bottom: 600, hardTop: 60, left: 0, right: 1280 }; REEL.anchor = REEL.acc + SHOWREELS[DRAC.id].start - 93; cutSettle.length = 0; seenFades = fades.length; cutLast = false;');
+windowHandlers.pointermove.forEach(h => h({})); // (awake: the selector's band, not the idle screen's)
+for (let i = 0; i < 60 * 6; i++) run(`frame(${it += 1000 / 60}); if (cutLast) cutSettle.push(camera.position.distanceTo(lastCam)); cutLast = fades.length > seenFades; seenFades = fades.length; lastCam.copy(camera.position);`);
+const dracSettle = JSON.parse(run('JSON.stringify(cutSettle)'));
+assert(dracSettle.length >= 2 && dracSettle.every(d => d < 0.1), `showreel: the Drac's close-up cuts in and out in one step (${JSON.stringify(dracSettle.map(d => +d.toFixed(3)))})`);
+run("setSelectedFigure('mulassa-valls');"); for (let i = 0; i < 3; i++) run(`frame(${it += 1000 / 60});`);
 const sh = JSON.parse(run('JSON.stringify(shoulder)'));
 assert(sh.seen > 0 && sh.worst > 0.3, `showreel: no attendant over the lens's shoulder (closest ${sh.worst.toFixed(2)} rad off the line of sight)`);
 run('sheets.select = idleSel;'); console.log('showreel clear of the attendants ok'); }

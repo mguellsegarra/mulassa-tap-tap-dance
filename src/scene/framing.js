@@ -52,7 +52,8 @@ export function menuFit(out, r, vh, tan, w, h, fill = 0.86, least = 0.55, across
   const ph = Math.min(Math.max(rh * fill, room * least), room * fill);
   out.dist = Math.max(h * ppm / ph, w * ppm / (rw * across));
   out.cx = (r.left + r.right) / 2;
-  out.cy = Math.min((r.top + r.bottom) / 2, r.bottom - rh * (1 - fill) / 2 - h * ppm / out.dist / 2); // continuous: centred while it fits
+  const low = r.bottom - rh * (1 - fill) / 2 - h * ppm / out.dist / 2; // standing on the band's floor
+  out.cy = r.ground ? low : Math.min((r.top + r.bottom) / 2, low); // continuous: centred while it fits (r.ground: always on the floor, the splash's pair over its prompt)
   out.floor = out.cy + h * ppm / out.dist / 2; // where her lowest point goes (her feet: the ground never bobs as she rears up)
   return out;
 }

@@ -41,6 +41,8 @@ export function legGesture(beats, first) {
 const layout = [-.66, .66].flatMap(z => [-.13, .13].map(x => ({ x, z })));
 const nominal = (p, i) => ({ x: p.x + layout[i].x * Math.cos(p.yaw) + layout[i].z * Math.sin(p.yaw),
   z: p.z - layout[i].x * Math.sin(p.yaw) + layout[i].z * Math.cos(p.yaw), yaw: p.yaw });
+// due/half/late: step units off before a pair steps on a beat / on a half beat / off the grid; a step lasts `share` of a half beat.
+const STEP = { due: .5, half: .8, late: 2.5, share: .9, min: .18, max: .34, lead: .3, lift: .1 };   // lift: a stepping sole 1.5 cm over the other shoe (8.5 cm) when it passes over it
 export function planBouFeet(poseAt, start, end, gesture = () => 0) {
   const initial = layout.map((_, i) => nominal(poseAt(start), i)), planted = initial.map(p => ({ ...p }));
   const events = layout.map(() => []), busy = [start, start, start, start], quiet = [start, start, start, start];
@@ -61,9 +63,13 @@ export function planBouFeet(poseAt, start, end, gesture = () => 0) {
   const out = (i, t) => (t < quiet[i] ? 0 : gesture(t, i));
   // How far a foot is from where the body wants it, in step units (0.11 m, 0.2 rad).
   const gap = (i, p) => { const n = nominal(p, i), f = planted[i]; return Math.max(Math.hypot(n.x - f.x, n.z - f.z) / .11, Math.abs(n.yaw - f.yaw) / .2); };
-  let free = start, group = 0;
+  let free = start, group = 0, lastBeat = poseAt(start).beat;
   for (let frame = 1; start + frame / 100 < end; frame++) {
-    const t = start + frame / 100, p = poseAt(t);
+    const t = start + frame / 100, p = poseAt(t), beats = (p.beat - lastBeat) * 100;   // beats a second here
+    // Ordinary steps keep the music (Marc, 24/10/2026: natural steps when it turns, not a shuffle): a pair steps on a
+    // beat when half a step unit out, on the half beat between only when further behind (a fast turn), taking most of a
+    // half beat; only a body running away from its feet steps off the grid.
+    const onHalf = Math.floor(p.beat * 2) !== Math.floor(lastBeat * 2), onBeat = Math.floor(p.beat) !== Math.floor(lastBeat); lastBeat = p.beat;
     // No stretch when the body will turn or travel too far for the carrier to stay put until the leg is back.
     for (let i = 0; i < 4; i++) if (t >= quiet[i] && gesture(t - .01, i) === 0 && gesture(t, i) > 0) {
       const back = zeroAfter(i, t);
@@ -78,13 +84,13 @@ export function planBouFeet(poseAt, start, end, gesture = () => 0) {
     if (t < free) continue;
     const worst = Math.max(...[0, 1, 2, 3].map(i => gap(i, p))), feet = [group, group + 2];
     const lifted = feet.some(i => t < busy[i] || out(i, t) > 0 || t < busy[i ^ 1] || out(i ^ 1, t) > 0);
-    if (worst <= 1 || (lifted && worst < 4.5)) continue;
-    const finish = Math.min(end, t + .14);
+    if (worst <= (onBeat ? STEP.due : onHalf ? STEP.half : STEP.late) || (lifted && worst < 4.5)) continue;
+    const finish = Math.min(end, t + Math.max(STEP.min, Math.min(STEP.max, STEP.share * .5 / Math.max(beats, 1e-3))));
     for (const i of feet) {
       // A step out of a stretched leg starts where that leg is, and its gesture rests until the next cycle.
       const from = { ...planted[i] }, a = t < busy[i] ? 0 : out(i, t);
       if (a > 0) Object.assign(from, stretch(from, i, a));
-      const to = land(i, finish);
+      const to = land(i, Math.min(end, finish + (finish - t) * STEP.lead));   // a little ahead: the feet keep under a turning body till the next step
       events[i].push({ start: t, end: finish, from, to });
       Object.assign(planted[i], to); busy[i] = finish; rest(i, t, zeroAfter(i, finish));
     }
@@ -111,10 +117,11 @@ export function planBouFeet(poseAt, start, end, gesture = () => 0) {
       res.y = Math.max(res.y, .09 * moved * ease(Math.min(u / .15, (1 - u) / .15)));
       return res;
     }
-    const u = (t - e.start) / (e.end - e.start), s = ease((u - .2) / .6), lift = 1 - ease(u);
+    // the foot travels through most of the swing: no dart in its middle
+    const u = (t - e.start) / (e.end - e.start), s = ease((u - .1) / .8), lift = 1 - ease(u);
     res.x = e.from.x + (e.to.x - e.from.x) * s; res.z = e.from.z + (e.to.z - e.from.z) * s;
     res.yaw = e.from.yaw + (e.to.yaw - e.from.yaw) * s; res.contact = false; res.swing = true;
-    res.y = Math.max(.09 * ease(Math.min(u / .2, (1 - u) / .2)), (e.from.y ?? 0) * lift); res.tilt = (e.from.tilt ?? 0) * lift;
+    res.y = Math.max(STEP.lift * ease(Math.min(u / .1, (1 - u) / .1)), (e.from.y ?? 0) * lift);   // up over the other shoe before it travels res.tilt = (e.from.tilt ?? 0) * lift;
     return res;
   };
 }

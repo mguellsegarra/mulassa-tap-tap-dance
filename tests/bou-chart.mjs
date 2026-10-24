@@ -78,41 +78,30 @@ endRun(stats, 'none', { kind: 'end', date: '2026-10-23', figureId: MULASSA.id, v
 assert.deepEqual(Object.keys(payload(stats, 'none').buckets), [`${MULASSA.id}/${MULASSA.version}/1`], 'the Bou\'s statistics stay on the device');
 console.log(`bou chart ok: ${charts.map(c => c.length).join(' / ')} taps, per 7 s FÀCIL ${Math.min(...easy)}-${Math.max(...easy)}, NORMAL ${Math.min(...normal)}-${Math.max(...normal)}, DIFÍCIL ${Math.min(...hard)}-${Math.max(...hard)}; identity, records and server isolation`);
 
-// Exercise the production startGame call site: one recorded intro, no extra timbals or start jingle.
+// Exercise the production startGame call site: the Bou counts in like the others (lead-in, jingle, timbals), its recorded intro after BALLA!.
 const flowSource = readFileSync(new URL('../src/game/flow.js', import.meta.url), 'utf8');
 const startSource = flowSource.slice(flowSource.indexOf('export function startGame('), flowSource.indexOf('// The demo (')).replace('export ', '');
-for (const [figure, from, embedded] of [[BOU, 0, true], [BOU, 30, false], [MULASSA, 0, false], [DRAC, 0, false]]) {
+for (const [figure, from] of [[BOU, 0], [BOU, 30], [MULASSA, 0], [DRAC, 0]]) {
   runtime.setFigureSong(figure);
   const calls = [], G = {};
   const ctx = vm.createContext({ ...runtime, G, playFrom: from, LEAD: 3.2, CLICKS: false, songWait: null,
     leaveRun() {}, warmStart() {}, makeDanceChart, recordKey, readFigureRecord: () => null, store: {},
-    beginRun(diff, chart, startSound) { G.chart = chart; calls.push(['sound', startSound]); },
+    beginRun(diff, chart) { G.chart = chart; },
     chip: { buf: {}, start(...args) { calls.push(['start', ...args]); return Promise.resolve(true); }, countIn(times) { calls.push(['countIn', times]); } },
     loader: { done() {} }, errors: { report() { throw new Error('unexpected audio failure'); } },
   });
   vm.runInContext(startSource + '; startGame(1);', ctx);
   await Promise.resolve();
-  assert.equal(calls.find(c => c[0] === 'start')[1], embedded ? 0 : 3.2, 'only recorded-intro starts skip external lead-in');
-  assert.equal(calls.find(c => c[0] === 'sound')[1], !embedded, 'no start jingle over the Bou intro');
-  assert.equal(calls.filter(c => c[0] === 'countIn').length, embedded ? 0 : 1, 'no duplicate audible count-in');
-  assert.equal(runtime.startCueAt(from), embedded ? 6 : runtime.BEATS.find(b => b >= from));
+  assert.equal(calls.find(c => c[0] === 'start')[1], 3.2, 'every figure gets the same lead-in');
+  assert.deepEqual(calls.find(c => c[0] === 'countIn')[1], runtime.countInAt(runtime.startCueAt(from)), 'and the same timbals');
 }
-runtime.setFigureSong(MULASSA);
-console.log('Bou recorded intro replaces external delay, jingle and timbals; other figures and mid-song starts keep their preparation');
-
-// The visual countdown lives inside the recorded intro; BALLA appears at the first playable note.
+// A run from the start skips the Bou's soft pre-roll: BALLA! lands on the band's entry, the melody two beats later.
+runtime.setPlayFrom(0);
 runtime.setFigureSong(BOU);
-const bannerSource = readFileSync(new URL('../src/hud/banner.js', import.meta.url), 'utf8');
-const words = [];
-const bannerContext = vm.createContext({ ...runtime, G: { collapseT: null, go: 6 }, playFrom: 0,
-  READY_WORD: 'PREPARA', GO_WORD: 'BALLA', W: 375, C: { cream: '' },
-  BANNER: { big: () => 20, ready: () => 10, go: () => 20, count: '', goCols: [] },
-  lane: () => ({ bottom: 100 }), elastic: x => x,
-  text: word => words.push(word), bigWord: word => words.push(word),
-});
-vm.runInContext(bannerSource.slice(bannerSource.indexOf('export function drawBanner(')).replace('export ', ''), bannerContext);
-for (const [t, expected] of [[0, 'PREPARA'], [4.5, '3'], [5, '2'], [5.5, '1'], [6, 'BALLA']]) {
-  words.length = 0; vm.runInContext(`drawBanner(${t})`, bannerContext); assert.deepEqual(words, [expected]);
-}
+assert.equal(runtime.playFrom, 5); assert.equal(runtime.startCueAt(runtime.playFrom), 5); assert.equal(song.notes[0][0] - runtime.playFrom, 1);
+runtime.setPlayFrom(30); assert.equal(runtime.playFrom, 30, '?from still wins');
+runtime.setPlayFrom(0);
+runtime.setFigureSong(MULASSA); assert.equal(runtime.playFrom, 0, 'the Mulassa and the Drac keep their whole recording');
+runtime.setFigureSong(DRAC); assert.equal(runtime.playFrom, 0);
 runtime.setFigureSong(MULASSA);
-console.log('Bou visual countdown uses its recorded intro and first playable attack');
+console.log('Bou counts in like the Mulassa and the Drac');

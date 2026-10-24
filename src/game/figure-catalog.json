@@ -78,26 +78,6 @@
       ]
     },
     {
-      "id": "aliga-valls",
-      "name": "Àliga",
-      "fullName": "Àliga de la Ciutat de Valls",
-      "town": "valls",
-      "entity": "Ajuntament + UAF",
-      "entityName": "Ajuntament + UAF",
-      "music": "tradicional",
-      "sources": [
-        "https://uaf.cat/seguici-ceremonial/aliga-de-la-ciutat/"
-      ],
-      "includes": [
-        "Aligons",
-        "Àliga de la Ciutat petita"
-      ],
-      "modelYear": 1991,
-      "owner": "Ajuntament de Valls",
-      "manager": "Unió Anelles de la Flama",
-      "attributionNote": "La UAF gestiona la peça municipal i aporta els aligons. La fitxa documenta la nissaga Tondo com a balladors històrics, sense identificar el ballador actual."
-    },
-    {
       "id": "bou-tradicional-valls",
       "name": "Bou Tradicional",
       "fullName": "Bou Tradicional de Valls",
@@ -154,26 +134,6 @@
       "selectorVisible": false
     },
     {
-      "id": "gegants-ciutat-valls",
-      "name": "Gegants i Gegantons",
-      "fullName": "Gegants i Gegantons de la Ciutat de Valls",
-      "town": "valls",
-      "entity": "Ajuntament + UAF",
-      "entityName": "Ajuntament + UAF",
-      "music": "tradicional",
-      "sources": [
-        "https://uaf.cat/seguici-ceremonial/gegants-de-la-ciutat/"
-      ],
-      "includes": [
-        "Gegant de la Porra",
-        "Geganta",
-        "Lladrefaves",
-        "Gegantona"
-      ],
-      "owner": "Ajuntament de Valls",
-      "manager": "Unió Anelles de la Flama"
-    },
-    {
       "id": "cavallets-valls",
       "name": "Cavallets",
       "fullName": "Ball de Cavallets de Valls",
@@ -201,6 +161,46 @@
       ]
     },
     {
+      "id": "aliga-valls",
+      "name": "Àliga",
+      "fullName": "Àliga de la Ciutat de Valls",
+      "town": "valls",
+      "entity": "Ajuntament + UAF",
+      "entityName": "Ajuntament + UAF",
+      "music": "tradicional",
+      "sources": [
+        "https://uaf.cat/seguici-ceremonial/aliga-de-la-ciutat/"
+      ],
+      "includes": [
+        "Aligons",
+        "Àliga de la Ciutat petita"
+      ],
+      "modelYear": 1991,
+      "owner": "Ajuntament de Valls",
+      "manager": "Unió Anelles de la Flama",
+      "attributionNote": "La UAF gestiona la peça municipal i aporta els aligons. La fitxa documenta la nissaga Tondo com a balladors històrics, sense identificar el ballador actual."
+    },
+    {
+      "id": "gegants-ciutat-valls",
+      "name": "Gegants i Gegantons",
+      "fullName": "Gegants i Gegantons de la Ciutat de Valls",
+      "town": "valls",
+      "entity": "Ajuntament + UAF",
+      "entityName": "Ajuntament + UAF",
+      "music": "tradicional",
+      "sources": [
+        "https://uaf.cat/seguici-ceremonial/gegants-de-la-ciutat/"
+      ],
+      "includes": [
+        "Gegant de la Porra",
+        "Geganta",
+        "Lladrefaves",
+        "Gegantona"
+      ],
+      "owner": "Ajuntament de Valls",
+      "manager": "Unió Anelles de la Flama"
+    },
+    {
       "id": "diables-valls",
       "name": "Diables",
       "fullName": "Ball de Diables de Valls",
@@ -219,32 +219,6 @@
         "Sant Miquel"
       ],
       "selectorVisible": false
-    },
-    {
-      "id": "gegant-calcot-valls",
-      "name": "Gegant del Calçot",
-      "fullName": "Gegant del Calçot de Valls",
-      "town": "valls",
-      "entity": "UAF",
-      "entityName": "Unió Anelles de la Flama",
-      "music": "Roser Olivé",
-      "sources": [
-        "https://uaf.cat/elements-festius-de-nova-tradicio/gegant-del-calcot/"
-      ],
-      "attributionNote": "Figura presentada per la UAF com a mascota de la Gran Festa de la Calçotada; no confondre amb els gegants de la Colla Gegantera El Calçot."
-    },
-    {
-      "id": "campanar-valls",
-      "name": "Gegant del Campanar",
-      "fullName": "Gegant del Campanar de Valls",
-      "town": "valls",
-      "entity": "UAF",
-      "entityName": "Unió Anelles de la Flama",
-      "sources": [
-        "https://www.valls.cat/images/aa2026noticies/260604PROGRAMA_santjoan_web.pdf",
-        "https://costadaurada.info/file/9322/download?token=Ru315H-c"
-      ],
-      "attributionNote": "El programa municipal de Sant Joan 2026, pàgina 12, l’atribueix a la UAF. No hi especifica separadament la titularitat ni la colla portadora."
     },
     {
       "id": "aliga-tarragona",

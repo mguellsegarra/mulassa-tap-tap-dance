@@ -33,7 +33,9 @@ const songProgress = t => Math.min(1, Math.max(0, (t - song.notes[0][0]) / (song
 // The mulassa's pixel art (src/game/figures.js), facing the way the song goes. Painted once per HUD scale into a sprite, dark-outlined.
 const MULE_S = 17 / 10.8, MULE_W = 12.8 * MULE_S, MULE_H = 10.8 * MULE_S; // 17 units tall with its outline
 function paintMule(c) { // in a MULE_W × MULE_H box, feet at the bottom
-  c.scale(MULE_S, MULE_S); c.translate(0.4, 0.4);
+  // the box fits a 12×10 portrait (Mulassa, Drac); a bigger one (the Bou's 18×13) shrinks to fit whole, centred, feet down
+  const art = portraitArt(selectedFigure), w = art[0].length, h = art.length, fit = Math.min(1, 12 / w, 10 / h);
+  c.scale(MULE_S * fit, MULE_S * fit); c.translate((12.8 / fit - w) / 2, 10.8 / fit - 0.4 - h);
   c.fillStyle = C.dark;
   portraitArt(selectedFigure).forEach((row, y) => [...row].forEach((k, x) => k !== '.' && c.fillRect(x - 0.4, y - 0.4, 1.8, 1.8))); // outline
   portraitArt(selectedFigure).forEach((row, y) => [...row].forEach((k, x) => { if (k !== '.') { c.fillStyle = portraitPalette(selectedFigure)[k]; c.fillRect(x, y, 1, 1); } }));

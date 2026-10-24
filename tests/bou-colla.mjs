@@ -21,7 +21,7 @@ const box = [];
 for (let t = 0; t <= BOU_TIMING.duration; t += 0.05) {
   const p = bouPose(t);
   for (const [bx, bz] of [[0.7, 1.9], [-0.7, 1.9], [0.7, -1.7], [-0.7, -1.7], [0, 1.9], [0, -1.7]]) {
-    const local = turn(bx, bz, p.yaw); box.push(turn(p.x + local.x, p.z + local.z, FRONT));
+    const local = turn(bx, bz, p.yaw); box.push(turn(p.x + local.x, p.z + local.z, YAW));
   }
 }
 const reach = Math.max(...box.map(q => Math.hypot(q.x, q.z)));

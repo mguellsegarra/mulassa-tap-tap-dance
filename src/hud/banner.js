@@ -7,7 +7,7 @@ import { lane, BANNER } from './layout.js';
 import { textWidth, text } from './primitives.js';
 import { playFrom } from '../core/env.js';
 import { DETAIL } from '../game/judge-words.js';
-import { countInPhase, startCueAt, hasRecordedIntro } from '../game/figure-song.js';
+import { countInPhase, startCueAt } from '../game/figure-song.js';
 import { bigWord, elastic } from './praise.js';
 
 const GO_WORD = tr('hud.banner.go'), READY_WORD = tr('hud.banner.ready');
@@ -42,5 +42,5 @@ export function drawBanner(t) {
       bigWord(String(3 - i), W / 2, y, big * elastic(Math.min(1, frac * 4)), BANNER.count, 0, W - 12, big);
     }
   }
-  else if (t < b0 + 0.7 && (t < G.go || hasRecordedIntro(playFrom))) bigWord(GO_WORD, W / 2, y, BANNER.go() * elastic(Math.min(1, (t - b0) * 5)), BANNER.goCols, -0.05, W - 12, BANNER.go());
+  else if (t < b0 + 0.7 && t < G.go) bigWord(GO_WORD, W / 2, y, BANNER.go() * elastic(Math.min(1, (t - b0) * 5)), BANNER.goCols, -0.05, W - 12, BANNER.go());
 }

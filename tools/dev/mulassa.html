@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="ca"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Mulassa de Valls · model</title>
+<style>html,body{margin:0;height:100%;overflow:hidden;background:#b8c7c9;font-family:system-ui}canvas{display:block;width:100%;height:100%;touch-action:none}
+#bar{position:fixed;left:8px;top:8px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}#bar button{font:15px system-ui;padding:8px 10px;border-radius:10px;border:1px solid #6b5a3c;background:#fff8e8}
+#t{font:13px ui-monospace,monospace;color:#2a1a10}</style></head>
+<body><canvas id="c"></canvas><div id="bar"><button id="spin">Gira</button><button id="dance">Balla</button><button id="path">Recorregut: no</button><span id="t"></span></div>
+<script type="module">
+// Free 3D look at the Mulassa model, scene/models/mulassa.js (dev only), the Bou viewer's twin (tools/dev/bou.html):
+// drag to orbit, pinch or wheel to zoom, two fingers to pan. «Balla» plays her song dance (game/mula-dance.js: figures,
+// sway and the comic beat layer) with the planned shoes, on the song's own audio (?mute: silent, on a clock).
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { buildMulassa } from '/src/scene/models/mulassa.js';
+import { createCarriers } from '/src/scene/mula-carriers.js';
+import { poseMulassa } from '/src/scene/mula-pose-rig.js';
+import { mulaDance, newMulaPose } from '/src/game/mula-dance.js';
+import { SUPPORT_LAYOUT } from '/src/game/mula-supports.js';
+import song from '/src/song.json';
+const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('c'), antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+const scene = new THREE.Scene(); scene.background = new THREE.Color('#b8c7c9');
+scene.add(new THREE.HemisphereLight('#fff4df', '#867253', 2.3));
+const sun = new THREE.DirectionalLight('#fff0cf', 2.2); sun.position.set(-4, 8, 4); scene.add(sun);
+const floor = new THREE.Mesh(new THREE.CircleGeometry(8, 48), new THREE.MeshLambertMaterial({ color: '#d5c69f' }));
+floor.rotation.x = -Math.PI / 2; floor.position.y = -.005; scene.add(floor);
+const camera = new THREE.PerspectiveCamera(40, 1, .05, 60); camera.position.set(5, 2.6, 6);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 1.1, 0); controls.enableDamping = true; controls.minDistance = 1.2; controls.maxDistance = 16;
+controls.maxPolarAngle = Math.PI * .52;
+const rig = buildMulassa(), carriers = createCarriers();
+rig.root.add(carriers.group); scene.add(rig.root); // (the carriers live in the root's frame: mula-carriers.js)
+window.__orbit = { camera, controls, render: () => { controls.update(); renderer.render(scene, camera); } };
+const pose = newMulaPose(), feet = SUPPORT_LAYOUT.map(() => ({ x: 0, y: 0, z: 0, yaw: 0, contact: true }));
+const q = new URLSearchParams(location.search), audio = new Audio('/' + song.audio), mute = q.has('mute'), from = +q.get('from') || 0; // ?from=N: «Balla» starts at song second N
+let dancing = false, follow = false, t = 0, last = performance.now();
+const AIM = new THREE.Vector3();
+function stand() { // rest: the opening pose's shoes, in place, no travel
+  mulaDance.pose(pose, 0);
+  for (let i = 0; i < 8; i++) mulaDance.foot(0, i, feet[i]);
+  t = 0;
+}
+const danceBtn = document.getElementById('dance');
+danceBtn.onclick = () => {
+  dancing = !dancing; danceBtn.textContent = dancing ? 'Atura' : 'Balla';
+  if (dancing) { t = from; if (!mute) { audio.currentTime = from; audio.play(); } } else { audio.pause(); stand(); }
+};
+const pathBtn = document.getElementById('path'); // off: she dances in place (the sway reads better); on: her real path
+pathBtn.onclick = () => { follow = !follow; pathBtn.textContent = `Recorregut: ${follow ? 'sí' : 'no'}`; };
+const spin = document.getElementById('spin');
+spin.onclick = () => { controls.autoRotate = !controls.autoRotate; spin.textContent = controls.autoRotate ? 'Quiet' : 'Gira'; };
+stand();
+function frame() {
+  const w = innerWidth, h = innerHeight;
+  if (renderer.domElement.width !== Math.round(w * renderer.getPixelRatio())) {
+    renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
+    const fit = 2.4 / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2) * Math.min(1, camera.aspect)); // ~4 m with the head
+    camera.position.sub(controls.target).setLength(Math.max(9.5, fit)).add(controls.target);
+  }
+  const now = performance.now(), dt = Math.min(.1, (now - last) / 1000); last = now;
+  if (dancing) {
+    t = mute || audio.paused ? t + dt : audio.currentTime;
+    if (t > mulaDance.end) { t = 0; if (!mute) { audio.currentTime = 0; audio.play(); } }
+    mulaDance.pose(pose, t);
+    for (let i = 0; i < 8; i++) mulaDance.foot(t, i, feet[i]);
+  }
+  // in place: the pose and shoes brought back to the middle in her own frame
+  const ox = follow ? 0 : pose.x, oz = follow ? 0 : pose.z;
+  poseMulassa(rig, pose, pose.beat, pose.x - ox, pose.z - oz, pose.yaw);
+  rig.root.updateMatrixWorld(true);
+  for (const f of feet) { f.x -= ox; f.z -= oz; }
+  carriers.pose(rig, feet);
+  for (const f of feet) { f.x += ox; f.z += oz; }
+  if (follow) controls.target.lerp(AIM.set(pose.x, 1.1, pose.z), 1 - Math.exp(-dt * 2));
+  document.getElementById('t').textContent = dancing ? `${t.toFixed(1)} s · temps ${pose.beat.toFixed(1)}` : '';
+  controls.update(); renderer.render(scene, camera); requestAnimationFrame(frame);
+}
+frame();
+</script></body></html>

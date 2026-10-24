@@ -68,7 +68,7 @@
 .sel-song-plate { display: flex; align-items: center; gap: inherit; min-width: 0; } /* the song itself (disc and words): the phones' chip, «Mira el ball» beside it */
 .sel-song-credit { font-size: 12px; font-weight: 600; color: var(--sel-muted); }
 /* «Mira el ball» (ui/watch-ui.js; Marc, 2026-10-23): the song's own dance, at the song row's end; a secondary .btn sized to the row */
-.sel-song .sel-watch { display: inline-flex; flex: none; align-items: center; justify-content: center; gap: 6px; width: auto; min-height: 44px; margin-inline-start: auto; padding: 0 16px 0 12px; font-size: 15px; white-space: nowrap; }
+.sel-song .sel-watch { display: inline-flex; flex: none; align-items: center; justify-content: center; gap: 6px; width: auto; min-height: 44px; margin-inline-start: auto; padding: 0 16px 0 12px; font-size: 15px; white-space: nowrap; border-radius: var(--sel-chip-r); } /* the chips beside it are 8 px: a 12 px button next to them read as a stray radius (Marc) */
 .sel-song .sel-watch > svg { width: 16px; height: 16px; margin: 0; padding: 0; border-radius: 0; background: none; fill: currentColor; }
 /* Step 2's level row: the song row's shape with a stroked trophy and inline stars. One line each: what doesn't fit is dropped (select-ui.js levelStats), never wrapped or cut. */
 .sel-level-stats svg { fill: none; stroke: #f5c518; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }

@@ -7,6 +7,8 @@
     "dev": "vite --host --port 5178",
     "build": "vite build",
     "capture": "node tools/capture.mjs",
+    "audit:bou": "node tools/bou-audit.mjs",
+    "sweep:bou": "node tools/bou-sweep.mjs",
     "build:pages": "npm run check && npm run build && node tools/seo-pages.mjs && node tools/prepare-pages.mjs",
     "cf:login": "node tools/cloudflare.mjs login",
     "cf:whoami": "node tools/cloudflare.mjs whoami",

@@ -2,9 +2,11 @@
 import * as THREE from 'three';
 import { Vox } from './voxel.js';
 import { buildBouRig } from '../bou-rig.js';
+import { buildBouHead } from './bou-heads.js';
 const K = {
   hide: '#6b3d31', top: '#7d4f42',   // a livelier, redder brown (Marc, 23/10/2026)
-  ochre: '#9a6a48', head: '#5b5157', muzzle: '#2a2629', lip: '#9a949c',
+  ochre: '#82503d',   // a touch lighter than the hide, no strong contrast (Marc, 24/10/2026)
+  head: '#5b5157', muzzle: '#2a2629', lip: '#9a949c',
   horn: '#9c948f', hornTip: '#3a3436', ear: '#5e5860', earIn: '#b8b4bd', rim: '#c2a06a', letter: '#c9b48c',
   skirt: '#4a353b', strip: ['#4c3838', '#5e4743'], inside: '#1e1614', gold: '#d9a521', hole: '#120e0e',
   white: '#f4efe4', black: '#1a1412', red: '#b02a36', pink: '#e58a8a', tuft: '#7d6450',
@@ -21,7 +23,8 @@ const extrude = (pts, depth, x) => {
   // Shape x -> body z, the extrusion across the body.
   return new THREE.ExtrudeGeometry(shape, { depth, bevelEnabled: false, curveSegments: 1 }).rotateY(-H).translate(x, 0, 0);
 };
-export function buildBou() {
+// cap: one of bou-heads.js's heads, «Bonàs» ('a', Marc 24/10/2026) by default; null keeps the p13 head (and its neck block).
+export function buildBou({ cap = 'a' } = {}) {
   const p={horn:[.45,.18,.05],eyes:'round',...PROFILE}, rig=buildBouRig(), W=1.22, top=p.top;
   const solid = new Vox(), v = new Vox();
   // Blocky (Marc: "less caravan", like the Mulassa): a core box with stepped edges all round instead of a curved rump.
@@ -139,15 +142,18 @@ export function buildBou() {
   }
   const dew = p.dewlap ?? [];
   const tone = u => '#' + new THREE.Color(p.headTone === 'grey' ? K.head : K.hide).lerp(new THREE.Color(K.hide), u).getHexString();
-  dew.forEach(([y, h, d, w], i) => v.box(0, y, F2 + d / 2 - .02 + i * .003, w, h, d + .02 - i * .006, tone(.35 + .65 * i / Math.max(1, dew.length - 1)), 0));
+  // A comic head (cap) leaves out the top step: its chin swings down right there (tools/bou-audit.mjs).
+  dew.forEach(([y, h, d, w], i) => (!cap || i) && v.box(0, y, F2 + d / 2 - .02 + i * .003, w, h, d + .02 - i * .006, tone(.35 + .65 * i / Math.max(1, dew.length - 1)), 0));
   // The chest under the dewlap, down to the apron's hem: the lower bands sit back, which left a hole there (Marc).
   if (p.closed && bands) {
     const fz = zc + lb / 2;
     v.box(0, .805, (fz + F2) / 2 - .01, wb - .06, 1.16 - .805, F2 - fz + .02, K.hide, 0);   // flush with the hem's sides
   }
-  if (p.slim) v.box(0, 1.28, F2 + .11, .72, .46, .26, tone(.45), 0);   // neck: one block in a tone between head and body (Marc: the shoulder read too busy)
+  if (p.slim && !cap) v.box(0, 1.28, F2 + .11, .72, .46, .26, tone(.45), 0);   // neck: one block in a tone between head and body (Marc: the shoulder read too busy)
   // Without a dewlap they sit on the chest under the chin; with one, on its lower steps, clear of the head.
-  const frames = dew.length ? [[dew[2][0] + .05, dew[2][2] - .02], [dew[1][0] + .06, dew[1][2] - .02]] : [[1.12, .0], [1.28, .04]];
+  // The lower frame sits low on its step, under the next one (Marc, 24/10/2026: 5 cm high, the step above hid its top
+  // border and its holes stood out of the gold), 2 mm clear of the step's underside (no shared plane).
+  const frames = dew.length ? [[dew[2][0] + .002, dew[2][2] - .02], [dew[1][0] + .06, dew[1][2] - .02]] : [[1.12, .0], [1.28, .04]];
   for (const [y, dz] of frames) {
     const z = F2 + .03 + dz;
     v.box(0, y, z, .4, .14, .06, K.gold, 0);
@@ -180,31 +186,35 @@ export function buildBou() {
     }
   }
   const shell = new THREE.Group(); shell.position.y = -.85; shell.add(...(solid.g.length ? [solid.mesh()] : []), v.mesh()); rig.body.add(shell);
-  const head = slimHead(p, F2 - .02); rig.body.add(head);
-  // The tail (Marc's photo): a plain brown root down the rump; the red and white ribbon only round the part that
-  // hangs below it, wound in diagonal turns; then a long brush.
-  const root = p.mantle ? 1.3 : p.blocky ? top - .3 : top - .45, t = new Vox();
-  if (p.mantle) {
-    t.box(0, -.36, -.03, .1, .38, .1, K.hide, 0);
-    // A continuous sleeve, its stripes shifting one face per turn so they read as a wound ribbon.
-    [[0, .058, .124, .012], [.058, 0, .012, .102], [0, -.058, .124, .012], [-.058, 0, .012, .102]].forEach(([dx, dz, w, d], k) => {
-      for (let i = 0; i < 6; i++) t.box(dx, -.36 + i * .06, -.03 + dz, w, .06, d, (i + k) % 2 ? K.white : K.red, 0);
-    });
-    t.box(0, -.7, -.03, .16, .35, .12, K.tuft, 0).box(0, -.76, -.03, .1, .07, .08, K.tuft, 0);
-  } else {
-    t.box(0, -.6, -.03, .08, .62, .08, K.hide, 0);
-    for (let i = 0; i < 7; i++) t.box(0, -.15 - i * .06, -.03, .1, .06, .1, i % 2 ? K.white : K.red, 0);
-    t.box(0, -.95, -.03, .14, .35, .1, K.tuft, 0);
-  }
-  if (p.blocky) { const r = new Vox();
-    // The root lies on the rump, stepping in with each band (it floated off the narrower top bands).
-    if (bands) for (const [y0, y1, w] of bands) { if (y1 <= root - .02) continue;
-      const back = zc - (L - tuck(y0, w)) / 2, a = Math.max(y0, root - .02); r.box(0, a - (a > root ? .012 : 0), back - .03, .15, y1 - a + (a > root ? .012 : 0) + (y1 < top ? .004 : .03), .1, K.hide, 0); }   // sunk 2 cm into the rump, each piece overlapping the one below: no slits
-    else r.box(0, root - .02, R2 - .045, .13, top - .06 - root, .09, K.hide, 0).box(0, top - .1, R2 + .02, .13, .07, .14, K.hide, 0);
-    if (!p.mantle) for (let i = 0; i < 3; i++) r.box(0, root + .04 + i * .07, R2 - .05, .11, .035, .09, i % 2 ? K.white : K.red, 0);
-    const m = r.mesh(); m.position.y = -.85; rig.body.add(m); }
-  rig.tail.add(t.mesh()); rig.tail.position.set(0, root - .85, R2 - (p.mantle ? .005 : .05));   // its top sunk into the rump
-  return { ...rig, head, swingTail: makeTailSwing(rig.tail, .7) };
+  const alt = cap && buildBouHead(cap, rig.body), head = alt ? alt.head : slimHead(p, F2 - .02); if (!alt) rig.body.add(head);
+  // The tail (Marc, 24/10/2026: free of the body, a proper chain, comic): it springs from a small dock at the top of
+  // the rump, where the back ends, then hangs in links that swing and bounce on their own and never enter the body:
+  // a hide link, three wound red and white ribbon links, a hide link, the brush.
+  const bandAt = y => bands.find(b => y >= b[0] && y < b[1]) ?? bands.at(-1);
+  const rearAt = y => y < B2 - .04 ? zc - lb / 2 + .05 : y < B2 ? zc - (lb + .02) / 2 : zc - (L - tuck(bandAt(y)[0], bandAt(y)[2])) / 2;   // skirt, rim, then each band's rear face
+  const dockY = top - .17, dockZ = rearAt(top - .25) - .1;   // 10 cm off the rump's most protruding band: the tail (never swinging forward) keeps clear
+  const dock = new Vox().box(0, dockY - .07, (dockZ + rearAt(dockY) + .03) / 2, .13, .14, rearAt(dockY) + .03 - dockZ, K.hide, 0).mesh();   // the dock, sunk 3 cm into the rump
+  dock.position.y = -.85; rig.body.add(dock);
+  const LINKS = [[.12, 'hide'], [.13, 'rib'], [.13, 'rib'], [.13, 'rib'], [.1, 'hide'], [.28, 'tuft']];
+  // Each link spans exactly its two nodes (overlapping ends crossed their stripes at every bend: flicker), and a hide
+  // knuckle a little thinner than any link fills the outside of each bend; its faces sit inside the links' (never one
+  // plane with theirs).
+  LINKS.forEach(([l, kind], i) => {
+    const g = new THREE.Group(), t = new Vox();
+    if (kind === 'tuft') t.box(0, -l, 0, .16, l, .13, K.tuft, 0).box(0, -l - .05, 0, .1, .07, .08, K.tuft, 0);
+    else if (kind === 'hide') t.box(0, -l, 0, .1, l, .1, K.hide, 0);
+    else for (let k = 0; k < 4; k++) {   // a sleeve, its stripes one face further each turn: a wound ribbon
+      const [dx, dz, w, d] = [[0, .056, .128, .016], [.056, 0, .016, .096], [0, -.056, .128, .016], [-.056, 0, .016, .096]][k];   // sunk into the core: no face just off another
+      if (!k) t.box(0, -l, 0, .1, l, .1, K.hide, 0);
+      for (let j = 0; j < 2; j++) t.box(dx, -l + j * l / 2 + (j ? 0 : .002), dz, w, l / 2 - .002, d, (i + j + k) % 2 ? K.white : K.red, 0);   // 2 mm short of the link's ends: not the core's end plane
+    }
+    const m = t.mesh(); if (i % 2) m.scale.set(.9, 1, .9);   // every other link a little thinner: straight, their sides never share a plane
+    g.add(m); rig.tail.add(g);
+  });
+  for (let i = 1; i < LINKS.length; i++) { const g = new THREE.Group(); g.add(new Vox().box(0, -.04, 0, .08, .08, .08, K.hide, 0).mesh()); rig.tail.add(g); }
+  rig.tail.position.set(0, dockY - .85, dockZ);
+  const swingTail = makeTailSwing(rig.tail, LINKS.map(([l]) => l));
+  return { ...rig, head, cap: alt, swingTail };
 }
 
 function slimHead(p, front) {
@@ -267,30 +277,82 @@ function slimHead(p, front) {
 }
 
 
-// The hanging tail as a weighted pendulum (p13, the study's makeTailSwing): call it each frame with real dt after the
-// body is posed. Sub-stepped, so the same at 60 and 120 Hz; a dt over 0.5 s (a seek, a long pause) hangs it still again.
-const TAIL = { gravity: 9.8, damping: 2.2, maxBack: .12, maxStep: 1 / 30 };
-export function makeTailSwing(tail, len) {
-  const pivot = new THREE.Vector3(), tip = new THREE.Vector3(), prev = new THREE.Vector3(), vel = new THREE.Vector3();
-  const dir = new THREE.Vector3(), q = new THREE.Quaternion(), down = new THREE.Vector3(0, -1, 0);
-  let ready = false;
-  function reset() { tail.parent.updateMatrixWorld(true); tail.getWorldPosition(pivot); tip.copy(pivot).y -= len; vel.set(0, 0, 0); ready = true; }
-  function swing(dt) {
-    if (!ready || !(dt > 0) || dt > .5) { reset(); if (!(dt > 0)) return; }   // first frame, a seek or a long pause: hang still
-    tail.parent.updateMatrixWorld(true); tail.getWorldPosition(pivot);
-    for (let left = dt; left > 1e-6; left -= TAIL.maxStep) {
-      const h = Math.min(left, TAIL.maxStep);
-      prev.copy(tip);
-      vel.y -= TAIL.gravity * h; vel.multiplyScalar(Math.exp(-TAIL.damping * h));
-      tip.addScaledVector(vel, h);
-      dir.subVectors(tip, pivot).setLength(len); tip.copy(pivot).add(dir);   // the rod: the pivot drags the mass
-      vel.subVectors(tip, prev).divideScalar(h);
+// The tail as a chain of jointed links, each a pair of damped angle springs (Marc, 24/10/2026: the free Verlet chain
+// shook against its own collisions). Angles in the body's frame: `a` swings a link back (0 = straight down, + = back,
+// never forward: the whole tail stays behind the rump, it can't touch the body), `b` to the side. Each link is pulled
+// towards where gravity hangs it (the real gravity minus the dock's own acceleration: it trails when the body moves)
+// and towards its parent's angle (the chain carries a swing down to the brush), and no joint bends more than
+// TAIL.joint (it curls, it never folds onto itself). Fixed sub-steps: the same at 60 and 120 Hz; a dt over 0.5 s (a
+// seek, a long pause) settles it again unseen.
+export const TAIL = { step: 1 / 120, hang: 26, follow: 50, damp: 7, dock: 120, rest: .75, min: .12, max: 2.3, side: 1.3, joint: 1, smooth: .06 };
+// Its own comic life on the music (Marc, 24/10/2026: like the Mulassa's, it must jump and move): on each beat a flick
+// to one side, then the other; every two bars a big flick up and back that falls by its weight.
+// Angular speeds (rad/s) given over `ramp` seconds, more down the chain.
+export const TAIL_KICK = { side: 6, back: 14, every: 8, at: 4, ramp: .12 };
+export function makeTailSwing(tail, lens) {
+  const n = lens.length, A = new Float32Array(n), B = new Float32Array(n), VA = new Float32Array(n), VB = new Float32Array(n);
+  const body = tail.parent, P = Array.from({ length: n + 1 }, () => new THREE.Vector3()), dir = new THREE.Vector3();
+  const pivot = new THREE.Vector3(), last = new THREE.Vector3(), vel = new THREE.Vector3(), lastVel = new THREE.Vector3(), acc = new THREE.Vector3();
+  const g = new THREE.Vector3(), q = new THREE.Quaternion(), qi = new THREE.Quaternion(), e = new THREE.Euler(0, 0, 0, 'ZYX');
+  let ready = false, left = 0, kickLeft = 0, kickA = 0, kickB = 0, hangA = 0, hangB = 0;
+  const clamp = (x, lo, hi) => Math.max(lo, Math.min(hi, x));
+  function hang() {   // the angles a link would hang at: effective gravity (or the dev viewer's hand) in the body's frame
+    if (swing.grab) g.copy(swing.grab).sub(pivot).multiplyScalar(30); else g.set(0, -9.8, 0).sub(acc);
+    g.applyQuaternion(qi); const l = g.length() || 1;
+    hangA = clamp(Math.asin(clamp(-g.z / l, -1, 1)), TAIL.min, TAIL.max); hangB = clamp(Math.atan2(g.x, -g.y), -TAIL.side, TAIL.side);
+  }
+  function step(h) {
+    if (kickLeft > 0) { const k = Math.min(h, kickLeft) / TAIL_KICK.ramp; kickLeft -= h;
+      for (let i = 1; i < n; i++) { VA[i] += kickA * k * i / (n - 1); VB[i] += kickB * k * i / (n - 1); } }
+    for (let i = 0; i < n; i++) {
+      // the dock link mostly holds its angle off the rump; the rest hang and follow the link above
+      const pa = i ? A[i - 1] : TAIL.rest, pb = i ? B[i - 1] : 0, kh = i ? TAIL.hang : TAIL.hang * .3, kf = i ? TAIL.follow : TAIL.dock;
+      VA[i] += (kh * (hangA - A[i]) + kf * (pa - A[i]) - TAIL.damp * VA[i]) * h;
+      VB[i] += (kh * (hangB - B[i]) + kf * (pb - B[i]) - TAIL.damp * VB[i]) * h;
     }
-    // Into the body's frame; keep it out of the rump.
-    tail.parent.getWorldQuaternion(q).invert(); dir.subVectors(tip, pivot).applyQuaternion(q).normalize();
-    if (dir.z > TAIL.maxBack) { dir.z = TAIL.maxBack; dir.normalize(); }
-    tail.quaternion.setFromUnitVectors(down, dir);
+    for (let i = 0; i < n; i++) {
+      A[i] += VA[i] * h; B[i] += VB[i] * h;
+      // limits: soft stops (the speed into a stop goes, nothing bounces)
+      const lo = Math.max(TAIL.min, i ? A[i - 1] - TAIL.joint : TAIL.min), hi = Math.min(TAIL.max, i ? A[i - 1] + TAIL.joint : TAIL.max);
+      if (A[i] < lo) { A[i] = lo; VA[i] = Math.max(VA[i], 0); } else if (A[i] > hi) { A[i] = hi; VA[i] = Math.min(VA[i], 0); }
+      const bl = Math.max(-TAIL.side, i ? B[i - 1] - TAIL.joint : -TAIL.side), bh = Math.min(TAIL.side, i ? B[i - 1] + TAIL.joint : TAIL.side);
+      if (B[i] < bl) { B[i] = bl; VB[i] = Math.max(VB[i], 0); } else if (B[i] > bh) { B[i] = bh; VB[i] = Math.min(VB[i], 0); }
+    }
+  }
+  function frame(dt) {   // the dock's world motion this frame -> its smoothed acceleration
+    body.updateWorldMatrix(true, true); body.getWorldQuaternion(q); qi.copy(q).invert(); tail.getWorldPosition(pivot);
+    if (dt > 0) { vel.subVectors(pivot, last).divideScalar(dt); acc.lerp(lastVel.sub(vel).multiplyScalar(-1 / dt), 1 - Math.exp(-dt / TAIL.smooth)); lastVel.copy(vel); }
+    last.copy(pivot);
+  }
+  function draw() {   // each link from its node, in the tail's (unrotated, body-relative) frame; knuckles halfway
+    P[0].set(0, 0, 0);
+    for (let i = 0; i < n; i++) {
+      const link = tail.children[i]; link.position.copy(P[i]); e.set(A[i], 0, B[i]); link.quaternion.setFromEuler(e);
+      dir.set(0, -lens[i], 0).applyQuaternion(link.quaternion); P[i + 1].copy(P[i]).add(dir);
+    }
+    for (let i = 1; i < n; i++) { const k = tail.children[n - 1 + i]; k.position.copy(P[i]); k.quaternion.slerpQuaternions(tail.children[i - 1].quaternion, tail.children[i].quaternion, .5); }
+  }
+  function reset() {
+    frame(0); acc.set(0, 0, 0); lastVel.set(0, 0, 0); hang();
+    for (let i = 0; i < n; i++) { A[i] = i ? hangA : TAIL.rest; B[i] = 0; VA[i] = VB[i] = 0; }
+    for (let k = 0; k < 120; k++) step(TAIL.step);   // a second of settling, unseen
+    ready = true; left = 0; kickLeft = 0; draw();
+  }
+  function swing(dt) {
+    if (!ready || !(dt > 0) || dt > .5) { reset(); return; }   // first frame, a seek or a long pause: hang still
+    frame(dt); hang();
+    for (left += dt; left >= TAIL.step; left -= TAIL.step) step(TAIL.step);
+    draw();
   }
   swing.reset = () => { ready = false; };
+  swing.grab = null;   // a world point the tail reaches for (dev viewer), or null: let go and it falls by its weight
+  // beat: the music's beat now (fractional). Kicks on each whole beat crossed; a jump (a seek) only resyncs.
+  let lastBeat = NaN;
+  swing.beat = beat => {
+    const k = Math.floor(beat), crossed = k - Math.floor(lastBeat); lastBeat = beat;
+    if (!ready || crossed !== 1) return;
+    const big = ((k % TAIL_KICK.every) + TAIL_KICK.every) % TAIL_KICK.every === TAIL_KICK.at;
+    kickA = big ? TAIL_KICK.back : .6; kickB = big ? 0 : (k % 2 ? 1 : -1) * TAIL_KICK.side; kickLeft = TAIL_KICK.ramp;
+  };
   return swing;
 }

@@ -6,7 +6,7 @@ import { tickPhoto, endPhoto } from './photo-motion.js';
 import { CALM } from '../core/env.js';
 import * as THREE from 'three';
 import { poseMulaBody } from './mula-pose-rig.js';
-import { newMulaPose } from '../game/mula-dance.js';
+import { newMulaPose, mulaComic, MULA_COMIC } from '../game/mula-dance.js';
 import { MULA_CHEERS, cheerAt } from '../game/mula-figures.js';
 import { CAM_AZ, FRONT, mula, drac, bou, mulaCarriers } from './stage.js';
 import { selectedFigure, songTimeAtBeat } from '../game/figure-song.js';
@@ -37,6 +37,7 @@ function stepSprings(dt) {
   }
 }
 export const M = { pivot: new THREE.Vector2(0, PIVOT), pos: new THREE.Vector2(0, 0), yaw: 0, yawVel: 0, missT: -9, biteT: -9, peekT: -9, cheerT: -9, air: 0, airV: 0, dancing: false, danceBeat: 0, danceT: 0, vigor: 1 };
+const MULA_OFF_COMIC = { lift: 0, roll: 0, pitch: 0 }; // the comic layer off the song (mula-dance.js)
 let photoGait = 1, photoLastId = null, photoStride = 0, photoGround = 1, photoRear = 0, photoKick = 0;
 // Q held: she rears up like a horse (front up, on her rear legs); E held: a kick (rear up, on her front legs). rad.
 export const PHOTO_REAR = { front: 0.5, rear: 0.45, legZ: 1.05, ease: 0.15 };
@@ -235,7 +236,7 @@ export function animMula(dt, beat, live = 1) {
     // eases down slowly, and springs back quickly on the first hit.
     const target = reel ? 1 : 1 - 0.92 * Math.min(1, G.streak / 2);
     M.vigor += (target - M.vigor) * easeIn(dt, target < M.vigor ? 0.8 : 0.25);
-    for (const k of ['roll', 'pitch', 'lift', 'headRoll', 'headYaw', 'drive']) POSE[k] *= M.vigor;
+    for (const k of ['roll', 'pitch', 'lift', 'waddle', 'headRoll', 'headYaw', 'drive']) POSE[k] *= M.vigor;
   } else if (!manualMula && !col && live) { // the demo walks: solemn = slowly round the plaça, playful = trotting about
     const fx = Math.sin(M.yaw), fz = Math.cos(M.yaw);
     const hx = PAIR.k ? PAIR.hx : 0, hz = PAIR.k ? PAIR.hz : 0; // the middle; on the splash, her half of the shot (the Drac has the other)
@@ -298,18 +299,20 @@ export function animMula(dt, beat, live = 1) {
   const rearLift = PHOTO_REAR.legZ * Math.abs(Math.sin(rearPitch)); // pivot on the legs that stay down
   const bp = beat * Math.PI, amp = (dancing ? POSE.drive : playful ? 1 : 0.6) * live, base = dancing ? (1 - col) * (1 - 0.5 * miss) : 0;
   // Manual travel already has its stride hop/pitch. Replace the music groove, rather than stacking two rhythms.
-  const bounce = dancing ? POSE.lift * base : manualMula ? 0 : Math.abs(Math.sin(bp)) * 0.1 * amp;
-  const manualSway = (Math.sin(bp) * 0.03 * (1 - photoGait) + Math.sin(photoStride) * (0.025 + 0.01 * photoRun) * photoGait) * photoGround
-    * (1 - Math.max(photoRear, photoKick)) * (CALM.matches ? 0.2 : 1);
-  // Weight sinks onto the planted supports on each pulse; the existing cuffs follow the hem without stretching.
-  const kneeMenu = (1 + Math.cos(bp * 2)) / 2, kneeStride = 1 - gallop * gallop;
-  const manualDip = manualMula ? 0.025 * (kneeMenu * kneeMenu * (1 - photoGait) + kneeStride * kneeStride * photoGait)
-    * (1 - photoRun * 0.5) * photoGround * (1 - Math.max(photoRear, photoKick)) * (CALM.matches ? 0.2 : 1) : 0;
-  const sway = dancing ? POSE.roll * base : manualMula ? manualSway : Math.sin(bp) * 0.07 * amp;
+  // Off the song the comic layer on the music's beat (the splash's and results' walk: amp; free play: standing only, the
+  // stride owns her body while she walks); the song dance carries its own
+  mulaComic(MULA_OFF_COMIC, beat, MULA_COMIC);
+  const manualK = manualMula ? photoGround * (1 - Math.max(photoRear, photoKick)) * (CALM.matches ? 0.2 : 1) : 0, still = manualK * (1 - photoGait);
+  const bounce = dancing ? POSE.lift * base : manualMula ? MULA_OFF_COMIC.lift * still : MULA_OFF_COMIC.lift * amp;
+  const manualSway = MULA_OFF_COMIC.roll * still + Math.sin(photoStride) * (0.025 + 0.01 * photoRun) * photoGait * manualK;
+  // Weight sinks onto the planted supports on each stride; the existing cuffs follow the hem without stretching.
+  const kneeStride = 1 - gallop * gallop;
+  const manualDip = 0.025 * kneeStride * kneeStride * photoGait * (1 - photoRun * 0.5) * manualK;
+  const sway = dancing ? (POSE.roll + POSE.waddle) * base : manualMula ? manualSway : MULA_OFF_COMIC.roll * amp;
   const buzz = dancing ? POSE.shake * base : 0; // the landing of each jump shakes the whole figure
   poseMulaBody(mula, M.pos.x, col ? -0.42 * col : bounce + M.air + hop + rearLift - manualDip, M.pos.y, M.yaw,
     col * 0.25 + S.roll.x + sway + buzz + Math.sin(clock * 35) * 0.06 * miss,
-    S.pitch.x + rearPitch + gallop * 0.08 * photoRun + (dancing ? POSE.pitch * base + buzz * 0.6 : manualMula ? 0 : Math.sin(bp * 2) * 0.02 * amp));
+    S.pitch.x + rearPitch + gallop * 0.08 * photoRun + (dancing ? POSE.pitch * base + buzz * 0.6 : MULA_OFF_COMIC.pitch * (manualMula ? still : amp)));
   if (dancing) trauma = Math.max(trauma, Math.min(0.5, Math.abs(buzz) * 14));
   const sq = 1 + S.squash.x * 0.08 + breath * 0.012 - 0.03 * miss;
   mula.body.scale.set(1 / Math.sqrt(sq), sq, 1 / Math.sqrt(sq));

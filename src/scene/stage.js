@@ -14,6 +14,7 @@ import { danceYaw } from '../game/drac-layout.js';
 import { mulaDanceYaw } from '../game/mula-layout.js';
 import { createCarriers } from './mula-carriers.js';
 import { COARSE } from '../core/env.js';
+import { buildSky } from './sky.js';
 
 // ------------------------------------------------------------------ 3D
 window.__mulassaBootPhase = 'graphics';
@@ -45,8 +46,7 @@ glc.addEventListener('webglcontextrestored', () => { restorePending = true; erro
 renderer.shadowMap.enabled = renderProfile.shadow > 0;
 renderer.shadowMap.type = THREE.PCFShadowMap;
 export const scene = new THREE.Scene();
-scene.background = new THREE.Color('#8fd3ff');
-scene.fog = new THREE.Fog('#8fd3ff', 40, 90);
+buildSky(scene, qualityLevel >= 0); // gradient dome + voxel clouds (sky.js); its horizon is the fog's colour
 export const camera = new THREE.PerspectiveCamera(38, 1, 0.5, 200); // near 0.5: nothing gets closer (props by the lens are hidden)
 export const hemi = new THREE.HemisphereLight('#dff3ff', '#a88b63', 1.6);
 scene.add(hemi);
@@ -71,7 +71,7 @@ export let bouColla = null; // the Bou's: four garnet attendants on the plaça's
 // Copied from its own meshes in initDrac (no voxel.js import here: the tests' one-script bundle keeps its module order).
 export let dracMat = null;
 // The Bou Tradicional (models/bou.js, Marc's p13): its rig in metres, and `frame`, its dance frame (the feet and legs
-// are the frame's children beside the root: they stay planted in it), turned so the dance's front faces the play camera.
+// are the frame's children beside the root: they stay planted in it), turned to its colla's compass (BOU_COLLA_YAW): its opening heading, W, 45 deg off the play camera.
 export let bou = null;
 export const figureRoot = id => id === 'drac-valls' ? drac?.root : id === 'bou-tradicional-valls' ? bou?.root : mula.root; // the selector frames its outline
 // Build after the existing plaza/crowd setup so its material jitter does not change their random layout.
@@ -90,7 +90,8 @@ export function initDrac() {
   life.add(drac.root);
   scene.add(life);
   bou = buildBou();
-  bou.frame = new THREE.Group(); bou.frame.rotation.y = FRONT; bou.frame.visible = false;
+  bou.frame = new THREE.Group(); bou.frame.rotation.y = BOU_COLLA_YAW; // its colla's compass: the dance's W is the W attendant's (Marc 24/10/2026)
+  bou.frame.visible = false;
   bou.frame.add(bou.root, ...bou.feet, ...bou.legs);
   scene.add(bou.frame);
   colla = createColla({ profile: renderProfile }); // hidden until the Drac is the figure; built now so the warmup compiles it

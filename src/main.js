@@ -39,11 +39,11 @@ import { dracFrame, dracWarm } from './scene/drac-show.js';
 import './hud/lane.js';
 import './hud/top.js';
 import { headline } from './hud/praise.js';
-import { splashS } from './hud/title.js';
+import { splashS, splashBand } from './hud/title.js';
 import './hud/warm.js';
 import './hud/banner.js';
 import './hud/results.js';
-import { orbit, insidePlaza, framePlayCamera, CAMS, frameMenuCamera, lens, easeLensX, clearCameraImpact, applyCameraImpact } from './scene/cameras.js';
+import { orbit, insidePlaza, framePlayCamera, CAMS, frameMenuCamera, lens, easeLensX, clearCameraImpact, applyCameraImpact, pairShot } from './scene/cameras.js';
 import { PERF, perfSample, perfReset, qualitySample, drawPerfLine } from './dev/perf.js';
 import { heroCam, heroQuadMake, renderHero } from './scene/share-capture.js';
 import { autoplay, advance, collapse, judge, press } from './game/judge.js';
@@ -77,6 +77,7 @@ errors.context(() => ({ state: G.state, diff: G.diff, practice: !!G.practice, pa
 
 // ------------------------------------------------------------------ loop
 let last = performance.now(), qualityCost = NaN;
+const SPLASH_BAND = {}; // (main.js frame: the splash's free band, refilled each frame)
 const renderReelFade = cam => renderer.render(scene, cam); // (ui/reel-fade.js: the dissolve's outgoing shot)
 const resetFrameTime = () => { last = null; qualityCost = NaN; pace.reset(); monitorFrames.reset('activity'); perfReset(); clearCameraImpact(); resetMotionImpact(); };
 for (const event of ['blur', 'focus', 'pagehide', 'pageshow', 'resize', 'orientationchange']) addEventListener(event, resetFrameTime);
@@ -115,7 +116,7 @@ function frame(now) {
   if (G.resuming != null) t = vt = setDrawT(G.resuming); // the 3, 2, 1 after a pause: the scene holds still at the pause point (the song clock is running back up to it)
   const pendingSel = sheets.select?.pending ?? sheets.select?.figure?.status === 'aviat';
   tickReel(G.state === 'select' && !viewMode && !PHOTO.on && !pendingSel && !Q.has('still'), selectedFigure.id, chip?.menuBeat?.(), dt, CALM.matches); // the selector's showreel: her song dance on the menu loop's beat, filmed as a dance film
-  if (REEL.cut && PERF?.mode !== 'no3d') { renderScreen(); reelDissolve(renderer.domElement, W * K, HH * K, camera); } // a cut dissolves: the outgoing shot once more, still in its camera, copied to fade out over the new one
+  if (REEL.cut && !REEL.fresh && PERF?.mode !== 'no3d') { renderScreen(); reelDissolve(renderer.domElement, W * K, HH * K, camera); } // a cut dissolves: the outgoing shot once more, still in its camera, copied to fade out over the new one; a figure change cuts (its old shot already shows the new figure: two changes, Marc 2026-10-24)
   const reelWide = reelIdle(now); // left untouched, its UI fades
   if (G.state === 'play' && !G.paused) {
     beat = beatAt(Math.max(0, vt));
@@ -140,7 +141,7 @@ function frame(now) {
     }
     if (t >= song.end && G.next >= G.chart.length && !G.hold && !bigPending && !G.eeeh && !G.collapseT) { // the "eeeeh!": grand finale volley, for everyone
       G.eeeh = true;
-      for (let i = 0; i < 6; i++) afterActive(figTheme.volley * 1000 + i * 180, () => { if (G.state === 'play') firework(rnd(-10, 10), rnd(10, 15), rnd(-10, 3), 90); });
+      for (let i = 0; i < 6; i++) afterActive(i * 180, () => { if (G.state === 'play') firework(rnd(-10, 10), rnd(10, 15), rnd(-10, 3), 90); });
       burst(M.pos.x, M.pos.y);
       // the crowd's chant, in its own rhythm: "guapa, guapa... i guapa!"
       figTheme.chant.forEach(([w, at, dur]) => afterActive(at * 1000, () => { if (G.state === 'play') headline(w, 'rainbow', 4, dur, 0.5); }));
@@ -189,12 +190,13 @@ function frame(now) {
       const mid = (HH * 0.2 + splashS() * 1.02 + HH * 0.82 - 14) / 2;
       aim = Math.max(-0.25 * HH * K, Math.min(0.25 * HH * K, (mid - HH / 2) * K));
     }
+    const splash = G.state === 'splash'; // the pair, framed whole between the logo and the prompt (cameras.js pairShot)
     if (G.state === 'title' && titleL) { // (the cached layout: measuring here would touch the HUD canvas) a lens shift puts her in the free band between the logo and the button (not behind either)
       const L = titleL, mid = (L.logo.y + L.logo.h + L.choiceY) / 2;
       aim = Math.max(-0.25 * HH * L.K, Math.min(0.25 * HH * L.K, (mid - HH / 2) * L.K));
     }
-    const sel = G.state === 'select', root = sel && !PAIR.k ? figureRoot(selectedFigure.id) : null; // «QUI BALLA?» frames its figure in the free rect it measured (css px, when it opens or resizes); «mode foto» hides the selector: the whole screen
-    shift = frameMenuCamera(dt, mx, mz, root, sel && !viewMode ? (reelWide ? idleBand(sheets.select?.band, W * K, HH * K, SAFE) : sheets.select?.band) : null, viewMode, viewMode && orbit.last * 1000 >= viewT, aim, REEL.on ? REEL : null);
+    const sel = G.state === 'select', root = splash ? pairShot() : sel && !PAIR.k ? figureRoot(selectedFigure.id) : null; // «QUI BALLA?» frames its figure in the free rect it measured (css px, when it opens or resizes); «mode foto» hides the selector: the whole screen
+    shift = frameMenuCamera(dt, mx, mz, root, splash ? splashBand(SPLASH_BAND) : sel && !viewMode ? (reelWide ? idleBand(sheets.select?.band, W * K, HH * K, SAFE) : sheets.select?.band) : null, viewMode, viewMode && orbit.last * 1000 >= viewT, aim, REEL.on ? REEL : null);
   } else if (G.state === 'play') {
     CAMED?.restoreFov();
     shift = framePlayCamera(dt, mx, mz);

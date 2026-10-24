@@ -61,11 +61,13 @@ export function buildMulassa() {
   body.add(v.mesh());
   // long tail with white ribbons, it flies around in the voltes
   const tail = new THREE.Group();
-  tail.position.set(0, y0 + 1.05, -1.9); // behind the back panel (ends at z -1.83), so the hair never sinks into it
-  const tv = new Vox().box(0, -0.12, 0, 0.14, 0.14, 0.14, C.redDark, 0).box(0, -0.85, -0.03, 0.12, 0.75, 0.1, '#2a1a12');
-  // ribbons wrap the hair with clearance on all four sides (hair x ±0.06, z -0.08..0.02): a ribbon face flush
+  // pivot 2 cm inside the back panel (its face z -1.74 at this height): the knot reaches into it and stays joined as the
+  // tail swings (Marc 24/10/2026: it hung 9 cm off); the hair hangs where it did, clear of the low panel (to z -1.83)
+  tail.position.set(0, y0 + 1.05, -1.76);
+  const tv = new Vox().box(0, -0.12, -0.09, 0.14, 0.14, 0.24, C.redDark, 0).box(0, -0.85, -0.17, 0.12, 0.75, 0.1, '#2a1a12');
+  // ribbons wrap the hair with clearance on all four sides (hair x ±0.06, z -0.22..-0.12): a ribbon face flush
   // with a hair face z-fights and the ribbons strobe as she turns
-  for (let i = 0; i < 3; i++) tv.box(0, -0.3 - i * 0.2, -0.03, 0.16, 0.06, 0.14, i % 2 ? '#ffb3c7' : '#ffffff', 0);
+  for (let i = 0; i < 3; i++) tv.box(0, -0.3 - i * 0.2, -0.17, 0.16, 0.06, 0.14, i % 2 ? '#ffb3c7' : '#ffffff', 0);
   tail.add(tv.mesh());
   body.add(tail);
   // a portador who sticks his head out when things go wrong

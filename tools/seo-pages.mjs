@@ -34,7 +34,8 @@ const toHtml = (p, code, c, langs) => { const { ui } = c; const canonical = proj
 <meta name="description" content="${esc(p.lead)}">
 <link rel="canonical" href="${SITE}${canonical}">
 <link rel="alternate" type="text/markdown" href="${alternate}">
-${langs.length > 1 ? `${langs.map(l => `<link rel="alternate" hreflang="${l}" href="${SITE}${projectPath(l)}">`).join('\n')}\n<link rel="alternate" hreflang="x-default" href="${SITE}${projectPath('ca')}">\n` : ''}<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+${langs.length > 1 ? `${langs.map(l => `<link rel="alternate" hreflang="${l}" href="${SITE}${projectPath(l)}">`).join('\n')}\n<link rel="alternate" hreflang="x-default" href="${SITE}${projectPath('ca')}">\n` : ''}<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
 <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="manifest" href="/manifest.webmanifest">

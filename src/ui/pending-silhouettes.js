@@ -1,8 +1,8 @@
 // Hand-drawn silhouettes for every pending figure, in each figure's pixel viewBox ×10 (so the selector keeps its size:
 // STAND and whole-cell sizing are untouched). Cell rows span y 10 to the ground (y 150; y 130 for the 12-row grids).
-// From the figures' own photos: the Valls figures (uaf.cat) but the Basilisc and the Campanar, Àliga and Cucafera de
+// From the figures' own photos: the Valls figures (uaf.cat) but the Basilisc, Àliga and Cucafera de
 // Tarragona, Mulassa de Reus, Gegants Bojos, Mulasses de Vilanova, Drac de Vilanova, Àliga de Barcelona, Gegants d'Olot,
-// Drac de Vilafranca (a historic drawing). The Basilisc, the Campanar, the Solsona Corpus figures, the Draca and the
+// Drac de Vilafranca (a historic drawing). The Basilisc, the Solsona Corpus figures, the Draca and the
 // Guites had no usable photo in their sources: drawn from the pixel portraits' shapes and notes.
 // Every shape of a figure overlaps the next (parts: how many separate figures a card shows); tests/silhouettes.mjs
 // rasterises them and fails on any gap, which would show the halo as a seam.
@@ -83,25 +83,6 @@ export const SILHOUETTE_DRAWINGS = {
     'M114 98Q134 82 140 58Q144 36 142 12Q136 24 132 36Q128 30 124 34Q126 48 120 56Q116 50 112 54Q114 70 106 86Z',
     carrierLeg(92, 122), carrierLeg(108, 122, 1),
   ] },
-  // The tall calçot: dark leaf fan over the head, long white stalk with the face, short sleeves, carrier's shoes.
-  'gegant-calcot-valls': { vb: [12, 16], d: [
-    'M54 48Q34 30 14 12Q30 14 50 32Q42 18 38 6Q52 14 58 36Q60 18 62 6Q68 18 64 36Q72 14 84 6Q80 18 72 32Q90 14 106 12Q88 30 68 48Z', // leaves
-    'M32 52Q32 42 44 42H76Q88 42 88 52L90 138Q90 144 82 144H38Q30 144 30 138Z', // stalk
-    'M38 80Q18 82 16 96Q16 112 22 116Q30 114 38 106Z', 'M82 80Q102 82 104 96Q104 112 98 116Q90 114 82 106Z', // sleeves, into the stalk
-    carrierLeg(48, 140, -1, 8), carrierLeg(72, 140, 1, 8),
-  ] },
-  // The belfry giant: weather vane and spire, belfry head with the face below it, tower torso, gloved arms, pleated skirt.
-  'campanar-valls': { vb: [13, 16], d: [
-    'M64 6h3V22h-3ZM58 10h15v3H58Z', // weather vane
-    'M65 16L48 37H82Z', // spire
-    'M46 34H84V62Q84 68 80 68H50Q46 68 46 62Z', // belfry
-    'M48 64H84Q94 72 92 78L84 80V94H48Z', // face, nose to the right
-    'M42 96Q42 90 48 90H84Q90 90 90 96V128H42Z', // tower torso
-    'M48 94H38Q22 94 18 104V124Q18 130 24 130Q30 128 28 120V108Q32 102 40 102H48Z', // arms, into the torso
-    'M84 94H94Q110 94 114 104V124Q114 130 108 130Q102 128 104 120V108Q100 102 92 102H84Z',
-    'M36 126H96L118 146Q118 150 112 150H20Q14 150 14 146Z', // skirt
-  ] },
-
   // ---- the other towns ----
   'aliga-tarragona': { vb: [20, 16], d: DANCED_EAGLE },
   'aliga-solsona': { vb: [20, 16], d: DANCED_EAGLE },

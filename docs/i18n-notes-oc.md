@@ -169,7 +169,7 @@ Cada fila és una clau; els objectes plurals es compten una sola vegada.
 | `figures.practice.guapa.word.drac` | `CREMA` | Token de joc protegit; es conserva també la puntuació. |
 | `figures.chant.first.mulassa` | `GUAPA,` | Token de joc protegit; es conserva també la puntuació. |
 | `figures.chant.second.mulassa` | `GUAPA…` | Token de joc protegit; es conserva també la puntuació. |
-| `figures.chant.first.drac` | `QUE` | Conjunció que, compartida en la frase del cant. |
+| `figures.chant.*` | català original | Els crits finals de les tres figures es queden en català a tots els idiomes (Marc, 2026-10-24). |
 | `html.profile.aria` | `Perfil` | Lèxic i flexió compartits amb l'aranès; marcadors i noms propis intactes. |
 | `html.settingsOffset` | `Ara: 0 ms` | Lèxic i flexió compartits amb l'aranès; marcadors i noms propis intactes. |
 | `html.settingsPrompt` | `Activa` | Lèxic i flexió compartits amb l'aranès; marcadors i noms propis intactes. |

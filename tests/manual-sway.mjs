@@ -31,10 +31,11 @@ export function verifyManualSway(run, assert) {
     assert(walk > (id==='drac-valls' ? .045 : .017), `${id}/${fps}: visible walking weight transfer (${walk})`);
     assert(walk < (id==='drac-valls' ? .09 : .04) && gallop < .09, 'restrained lean, without stacked oscillations');
     assert(gallop > .018, 'Shift keeps a visible body rhythm');
-    assert(rest > (id==='drac-valls' ? .06 : .025) && rest < (id==='drac-valls' ? .085 : .032), 'stopping returns to the restrained menu sway');
+    // the Mulassa standing does the song's comic layer (mula-dance.js MULA_COMIC: a 3 deg waddle; Marc 2026-10-24)
+    assert(rest > (id==='drac-valls' ? .06 : .045) && rest < (id==='drac-valls' ? .085 : .06), `${id}/${fps}: stopping returns to the menu sway (${rest})`);
     assert(rows.filter(r=>r.t>5).every(r=>r.speed<.001), 'idle dancing never moves the controlled figure');
     const idle=rows.filter(r=>r.t>5), dip=Math.max(...idle.map(r=>r.height))-Math.min(...idle.map(r=>r.height));
-    assert(dip>.02 && dip<.031, `${id}/${fps}: visible restrained knee flex (${dip} m)`);
+    assert(id==='drac-valls' ? dip>.02 && dip<.031 : dip>.04 && dip<.065, `${id}/${fps}: visible knee flex (${dip} m)`);
     assert(idle.every(r=>Math.abs(r.sole)<1e-6), 'idle knee flex preserves actual ground support');
     assert(rows.every(r=>Math.abs(r.x)<1e-8 && r.yaw===0), 'body sway cannot steer the input trajectory');
     assert(rows.filter(r=>r.t>2).every(r=>Math.abs(r.horizon)<1e-8 && Math.abs(r.camY-(id==='drac-valls'?3.2:3.3))<.002), 'camera aim and horizon ignore the body lean');

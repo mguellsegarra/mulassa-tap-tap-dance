@@ -20,8 +20,13 @@ export function buildBouRig() {
   function poseLegs() {
     for (let i = 0; i < 4; i++) {
       const f = feet[i], mate = feet[i ^ 1], yaw = (f.rotation.y + mate.rotation.y) / 2, side = i % 2 ? 1 : -1;
-      hip.set((f.position.x + mate.position.x) / 2 + side * .11 * Math.cos(yaw), HIP, (f.position.z + mate.position.z) / 2 - side * .11 * Math.sin(yaw));
+      // the hips ride with the shell (its dip, see-saw and waddle bend the knees), never past the legs' reach
+      const y = HIP + root.position.y - (i < 2 ? -.66 : .66) * Math.sin(body.rotation.x) + side * .11 * Math.sin(body.rotation.z);
+      hip.set((f.position.x + mate.position.x) / 2 + side * .11 * Math.cos(yaw), Math.min(HIP, y), (f.position.z + mate.position.z) / 2 - side * .11 * Math.sin(yaw));
       ankle.set(f.position.x, f.position.y + .08, f.position.z);
+      // a straight leg at most: a planted foot left behind lowers its hip a touch instead of stretching the shin
+      const reachMax = THIGH + SHIN - 1e-3, flat = Math.hypot(hip.x - ankle.x, hip.z - ankle.z);
+      hip.y = Math.min(hip.y, ankle.y + Math.sqrt(Math.max(0, reachMax * reachMax - flat * flat)));
       fwd.set(Math.sin(yaw), 0, Math.cos(yaw));
       const dist = hip.distanceTo(ankle);
       d.subVectors(ankle, hip).divideScalar(dist);

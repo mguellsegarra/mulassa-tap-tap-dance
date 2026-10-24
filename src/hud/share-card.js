@@ -4,6 +4,7 @@ import { fmtNum } from '../i18n/format.js';
 import { fontStack } from '../i18n/fonts.js';
 import { wrapLines } from './text-wrap.js';
 import { DIFFS } from '../game/chart.js';
+import { figThemes } from '../game/figure-theme.js';
 import { SITE_LABEL, CARD_FILE } from '../services/share.js';
 
 export const PHOTO = { story: [1104, 988], feed: [1104, 988], og: [1560, 630] };
@@ -12,7 +13,7 @@ const PAPER = '#fff4df';
 const CARD_THEMES = {
   'mulassa-valls': { name: 'MULASSA', bg: '#8a1628', ray: '#a8283e', ink: '#24050c' },
   'drac-valls': { name: 'DRAC', bg: '#1f8a4c', ray: '#2a9e5a', ink: '#0b2414' },
-  'bou-tradicional-valls': { name: 'BOU', bg: '#7a4a1e', ray: '#93602f', ink: '#241306' }, // its hide's brown
+  'bou-tradicional-valls': { name: 'BOU', sub: 'hud.card.bouSub', bg: figThemes.bou.colors.pa, ray: figThemes.bou.colors.gua, ink: figThemes.bou.colors.paDk, rayA: 0.2 }, // its buttons' MA grana, faint rays of BRA sand (the light sand at 0.5 drowned the title); «Bou Tradicional» is its name
 };
 // Catalan diacritics always, plus the active language's sample (hud.share.fontSample).
 export async function loadCardFonts(fonts) {
@@ -68,7 +69,7 @@ function cardBox(c, x, y, w, h, r, color) {
 }
 function cardRays(c, w, h, cy, theme) {
   c.fillStyle = theme.bg; c.fillRect(0, 0, w, h);
-  c.save(); c.translate(w / 2, cy); c.globalAlpha = 0.5; c.fillStyle = theme.ray;
+  c.save(); c.translate(w / 2, cy); c.globalAlpha = theme.rayA ?? 0.5; c.fillStyle = theme.ray;
   for (let i = 0; i < 24; i++) {
     const a = i * Math.PI / 12;
     c.beginPath(); c.moveTo(0, 0); c.arc(0, 0, 2400, a, a + Math.PI / 24); c.closePath(); c.fill();
@@ -91,11 +92,13 @@ function cardPhoto(c, hero, x, y, diameter, ink) {
 function cardTitle(c, theme, y, story) {
   c.save(); c.translate(540, y); c.rotate(-Math.PI / 45);
   const size = story ? (theme.name === 'MULASSA' ? 214 : 224) : (theme.name === 'MULASSA' ? 150 : 176); // (the short names fill the same width larger)
-  const sub = story ? 82 : 56;
+  const label = tr(theme.sub || 'hud.card.deValls');
+  c.font = `800 ${story ? 82 : 56}px ${CARD_FONT}`;
+  const sub = (story ? 82 : 56) * Math.min(1, (story ? 760 : 560) / c.measureText(label).width); // a longer name shrinks to the title's width
   cardText(c, theme.name, 10, 10, size, theme.ink);
   cardText(c, theme.name, 0, 0, size, PAPER);
-  cardText(c, tr('hud.card.deValls'), 6, size * 0.54 + 6, sub, theme.ink);
-  cardText(c, tr('hud.card.deValls'), 0, size * 0.54, sub, PAPER);
+  cardText(c, label, 6, size * 0.54 + 6, sub, theme.ink);
+  cardText(c, label, 0, size * 0.54, sub, PAPER);
   c.restore();
 }
 function cardFooter(c, y, story, ink) {

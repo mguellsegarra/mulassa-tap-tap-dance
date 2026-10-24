@@ -2,14 +2,14 @@
 // Eina de dev (no entra al build): captura d'una sessió del joc amb la GPU real (Chrome + Metal), no SwiftShader.
 // Sortida a --out (def. /tmp/mulassa-capture/<hora>): frames.csv (ms de cada rAF), summary.json, video.mp4 i spike-N.jpg
 // (contact sheet al voltant dels pitjors frames). Un lock a /tmp fa que els agents facin cua: només un Chrome GPU alhora.
-// Ús: node tools/capture.mjs --url='http://localhost:5178/?mute&autoplay&from=40' [--seconds=20] [--vp=393x852] [--dpr=2] [--touch] [--pw=/tmp/ui-inv-pw]
+// Ús: node tools/capture.mjs --url='http://localhost:5178/?mute&autoplay&from=40' [--seconds=20] [--vp=393x852] [--dpr=2] [--touch] [--pw=/tmp/ui-inv-pw] [--js='codi un cop carregat']
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, writeFileSync, readFileSync, rmSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { lock, launchBrowser } from './capture-lib.mjs';
 
-const args = Object.fromEntries(process.argv.slice(2).map(a => { const [k, v = '1'] = a.replace(/^--/, '').split('='); return [k, v]; }));
+const args = Object.fromEntries(process.argv.slice(2).map(a => { const [k, ...v] = a.replace(/^--/, '').split('='); return [k, v.length ? v.join('=') : '1']; }));
 if (!args.url) { console.error('cal --url=…'); process.exit(2); }
 const secs = +(args.seconds ?? 20), [W, H] = (args.vp ?? '1280x800').split('x').map(Number), dpr = +(args.dpr ?? 1);
 const out = args.out ?? join('/tmp/mulassa-capture', new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19));
@@ -37,6 +37,7 @@ try {
   if (/swiftshader|llvmpipe/i.test(gpu)) throw new Error(`sense GPU real: ${gpu}`);
   // mesura només el joc ja carregat: sense la càrrega del dev server (cobertura del loader fora)
   await page.waitForFunction(() => document.getElementById('loader')?.hidden ?? true, null, { timeout: 120000 });
+  if (args.js) await page.evaluate(args.js); // e.g. pick a figure and start: --js='document.querySelector(`[data-id=bou-tradicional-valls]`).click(); __dbg.choose(1)'
   await page.evaluate(() => { window.__frames.length = 0; window.__long.length = 0; });
   await page.waitForTimeout(secs * 1000);
   const { frames, long, hz } = await page.evaluate(() => ({ frames: window.__frames, long: window.__long, hz: null }));

@@ -69,7 +69,7 @@ export const SHOWREELS = {
 };
 
 // Live state (owned here; main.js runs tickReel each frame). acc: menu beats counted since the page began (unwrapped).
-export const REEL = { on: false, id: null, beat: 0, cut: false, shot: { az: 0, el: 0.5, fill: 0.75, part: null }, acc: 0, prev: null, alone: false, still: 0, err: 0, locked: false, anchor: 0, idx: -1 };
+export const REEL = { on: false, id: null, beat: 0, cut: false, fresh: false, shot: { az: 0, el: 0.5, fill: 0.75, part: null }, acc: 0, prev: null, alone: false, still: 0, err: 0, locked: false, anchor: 0, idx: -1 };
 
 // Counts the menu loop's beats across its wraps. Silent, or standing still while the page runs (its context suspended: a tab
 // or app switch, iOS waiting for a tap), the dance carries on alone at the loop's tempo, never frozen. Back to the music, or
@@ -126,6 +126,6 @@ export function tickReel(on, id, menuBeat, dt, calm = false) {
   REEL.on = true;
   REEL.beat = reelMod(reel.start + REEL.acc - REEL.anchor, reel.loop);
   const i = shotAt(reel, REEL.beat, REEL.shot, calm);
-  REEL.cut = i !== REEL.idx; REEL.idx = i;
+  REEL.cut = i !== REEL.idx; REEL.fresh = REEL.idx === -1; REEL.idx = i; // fresh: a new selection's first shot (no dissolve: the old shot is gone)
   return REEL;
 }

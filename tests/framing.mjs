@@ -100,3 +100,10 @@ import { lensShrink, LENS_CLEAR } from '../src/scene/framing.js';
   assert.equal(lensShrink({ x: 0, y: LENS_CLEAR.high + 0.1, z: 0 }, 1, 1), 1, 'a high lens hides nobody');
 }
 console.log('lens clearance ok');
+
+{ // the splash's band (r.ground): a pair fitted by width stands on the band's floor, not floating mid-band
+  const { menuFit } = await import('../src/scene/framing.js');
+  const r = { top: 150, bottom: 650, left: 0, right: 393, hardTop: 150 }, a = menuFit({}, r, 852, Math.tan(25 * Math.PI / 180), 9, 2.5), g = menuFit({}, { ...r, ground: true }, 852, Math.tan(25 * Math.PI / 180), 9, 2.5);
+  assert.ok(Math.abs(a.cy - 400) < 1 && Math.abs(g.floor - (650 - 500 * 0.07)) < 1 && g.dist === a.dist, `ground: on the floor (${a.floor.toFixed(0)} -> ${g.floor.toFixed(0)}), same size`);
+  console.log('splash band on the floor ok');
+}

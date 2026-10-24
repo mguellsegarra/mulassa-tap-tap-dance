@@ -86,7 +86,9 @@ const song = {
   tail: Math.floor(timing.duration * 10) / 10, // the whole approved fade
   finale: S(barAt(88)), // timing.json finaleCandidate: the last phrase, the festive ending
   sections: [[0, 'A'], [S(barAt(19)), 'B'], [S(barAt(27)), 'A'], [S(barAt(35)), 'B'], [S(barAt(60)), 'A'], [S(barAt(72)), 'B']],
-  introEnd: r6(timing.melodyStart), // the recorded introduction replaces the external start cue
+  // a run starts where the band comes in, two beats before the melody: the soft pulse before it, after the game's
+  // own 3 2 1, sounded like a second count-in (the recording is untouched; the radio still plays it whole)
+  start: r4(timing.beats[timing.introBeats - 2]),
   beats: timing.beats.map(r4),
   balloons: [], // no drumroll in this arrangement
   notes,

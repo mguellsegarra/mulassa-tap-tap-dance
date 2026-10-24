@@ -3,19 +3,20 @@
 // bou.frame). mula-motion.js only dispatches here and hands over its bounded accent springs. No elapsed clock of its
 // own: a pause or a collapse freezes the song second shown, a restart seeks it, the results keep the last one.
 import * as THREE from 'three';
-import { bou, bouColla, FRONT, BOU_COLLA_YAW } from './stage.js';
+import { bou, bouColla, BOU_COLLA_YAW } from './stage.js';
 import { G } from '../game/state.js';
 import { REEL } from '../game/showreel.js';
 import { songTimeAtBeat } from '../game/figure-song.js';
 import { createBouMotion } from './bou-motion.js';
-import { BOU_TIMING } from '../game/bou-dance.js';
+import { BOU_TIMING, BOU_CARRY, bouPose, newBouPose } from '../game/bou-dance.js';
 import { liveBouFeet } from '../game/bou-feet.js';
 import { PHOTO } from '../game/photo-control.js';
 import { LETTERS } from '../core/env.js';
 import { tickColla } from './drac-colla.js';
 import { collaRun } from './drac-dance.js';
 import { lensShrink } from './framing.js';
-import { bouToWorld } from './bou-colla.js';
+import { bouToWorld, carryColla } from './bou-colla.js';
+import { PARADE } from './bou-parade.js';
 
 export const BOU_DANCE = { t: 0 }; // the song second shown
 export const BOU_END = BOU_TIMING.duration;
@@ -30,7 +31,7 @@ export function danceBou(beat, dt, acc, pos) {
   const reel = REEL.on && G.state === 'select', dancing = G.state === 'play' || reel;
   if (BOU_LIVE.parked && !dancing && G.state === 'select') return driveBou(dt, BOU_LIVE.at, 0, 0, pos); // free play, just looking: it stays where it was driven
   if (BOU_LIVE.parked) { BOU_LIVE.parked = false; bouSteps = null; bouShown = -9; } // back to its dance: fresh steps next time, the tail hangs still
-  bou.frame.rotation.y = FRONT; // (the dance frame, which free play turned to the plaça's)
+  bou.frame.rotation.y = BOU_COLLA_YAW; // (the dance frame, its colla's compass, which free play turned to the plaça's)
   if (G.practice || !dancing && G.state !== 'results') BOU_DANCE.t = 0; // the practice and the menus: its opening stance
   else if (reel || dancing && !G.collapseT && !G.paused) BOU_DANCE.t = Math.max(0, songTimeAtBeat(beat));
   const jump = Math.abs(BOU_DANCE.t - bouShown) > 0.5; // a seek (restart, a new reel loop): the tail hangs still again
@@ -70,6 +71,7 @@ export function driveBou(dt, body, vx, vz, pos) {
   bou.body.rotation.set(BOU_LIVE.head + 0.012 * Math.min(1, speed / 3) * Math.sin(bouClock * 9), 0, 0); // a little trot nod
   bouSteps(bouClock, body, vx, vz, BOU_REACH, BOU_FEET);
   for (let i = 0; i < 4; i++) { const f = BOU_FEET[i]; bou.feet[i].position.set(f.x, f.y, f.z); bou.feet[i].rotation.set(f.tilt ?? 0, f.yaw, 0, 'YXZ'); }
+  bou.cap?.play(bouClock); // free play: the head's gags on its own steady beat
   bou.poseLegs(); bou.root.updateMatrixWorld(true); bou.swingTail(dt);
   pos.set(body.x, body.z);
   return body.yaw;
@@ -83,5 +85,13 @@ export function bouCollaTick(on, beat, dt) {
   if (!bouColla) return;
   const run = collaRun(BOU_TICK.run);
   if (!(run.play && (run.paused || run.collapsed))) BOU_TICK.frozenBeat = beat;
-  tickColla(bouColla, on && !PHOTO.on, beat, dt, BOU_TICK);
+  const show = on && !PHOTO.on;
+  tickColla(bouColla, show, beat, dt, BOU_TICK);
+  // the festa: the attendants carry it (their obstacles for the crowd go with them) and the public runs behind
+  bouPose(BOU_DANCE.t, BOU_CARRY_POSE);
+  PARADE.on = show; PARADE.beat = BOU_CARRY_POSE.beat; PARADE.yaw = BOU_COLLA_YAW;
+  if (!show) return;
+  carryColla(bouColla, BOU_CARRY_POSE, BOU_CARRY);
+  for (let i = 0; i < 4; i++) { const g = bouColla.crew[i].g.position, w = bouToWorld(g.x, g.z, BOU_COLLA_YAW); BOU_COLLA_SPOTS[i]?.pos.set(w.x, w.z); }
 }
+const BOU_CARRY_POSE = newBouPose();

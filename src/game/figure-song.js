@@ -15,6 +15,10 @@ export let song = mulassaSong;
 export let BEATS = song.beats;
 export let BEAT = (BEATS.at(-1) - BEATS[0]) / (BEATS.length - 1);
 export let FINALE_T = song.finale;
+// Where a run starts in the recording: ?from (env.js), else the song's own start (the Bou skips its soft pre-roll).
+let from = 0;
+export let playFrom = 0;
+export const setPlayFrom = s => { from = s; playFrom = from || song.start || 0; };
 // Scene dimensions are independent of choreography's travel envelope.
 // cameras and the crowd's clearance were tuned around the Mulassa (4.03 m): the Drac's height over hers
 // the Bou stands ~2.2 m to the horns, but travels and turns with its two carriers: a little more room than its height
@@ -31,6 +35,7 @@ export function setFigureSong(value) {
   BEATS = song.beats;
   BEAT = (BEATS.at(-1) - BEATS[0]) / (BEATS.length - 1);
   FINALE_T = song.finale;
+  playFrom = from || song.start || 0;
   return true;
 }
 // Both songs change tempo phrase by phrase: every reading goes through the local beat grid (beyond its ends, the first /
@@ -48,6 +53,5 @@ export function countInPhase(t, target) {
   return Math.abs(phase - whole) < 1e-9 ? whole : phase;
 }
 
-// Only a run from the beginning uses the recorded intro; mid-song starts retain preparation.
-export const hasRecordedIntro = from => from === 0 && song.introEnd > 0;
-export const startCueAt = from => hasRecordedIntro(from) ? song.introEnd : BEATS.find(b => b >= from) ?? from;
+// Every figure counts in the same way (timbal, 3 2 1, BALLA! on the song's first beat); its song's own intro plays after.
+export const startCueAt = from => BEATS.find(b => b >= from) ?? from;

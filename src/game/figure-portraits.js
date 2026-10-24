@@ -176,46 +176,6 @@ export const FIGURE_PORTRAITS = {
     ],
     palette: { g: '#f5c518', y: '#f0b56b', h: '#9b7044', r: '#bf3039', s: '#e0a868', k: '#34281f', d: '#2a1a10' },
   },
-  // Tall calçot: green leaf fan over the face, ochre sleeves, ribbon belt and red diamond.
-  'gegant-calcot-valls': {
-    art: [
-      'g...gg...g',
-      'gg..gg..gg',
-      '.gg.gg.gg.',
-      '.gggggggg.',
-      '..llllll..',
-      '..fkffkf..',
-      '..ffmmff..',
-      '.ywwffwwy.',
-      '.yrrrrrry.',
-      '.ywwwrwwy.',
-      '.ywwddwwy.',
-      '..wwwwww..',
-      '..wwwwww..',
-      '..tttttt..',
-    ],
-    palette: { g: '#3f7a3a', l: '#9cc27a', w: '#f1ead8', f: '#e8b48e', k: '#2a1a10', m: '#a8262e', y: '#d9a43a', r: '#6e2030', d: '#c4302f', t: '#c9a46a' },
-  },
-  // Beige belfry with a weather vane over the face, tower torso with a clock, gloved arms, pleated skirt.
-  'campanar-valls': {
-    art: [
-      '.....k.....',
-      '....lll....',
-      '...lldll...',
-      '...lldll...',
-      '...lllll...',
-      '...ffkfk...',
-      '...fffnnn..',
-      '...fmmff...',
-      '.sswtttwss.',
-      '.s.wtwtw.s.',
-      '.s.wtttw.s.',
-      '.w.wtdtw.w.',
-      '..ttststt..',
-      '.ttstttstt.',
-    ],
-    palette: { k: '#34281f', w: '#f4efe2', d: '#26304a', f: '#e8946a', n: '#c4643f', t: '#cdb588', s: '#9c7e54', m: '#b04838', l: '#e6d6b4' },
-  },
   // Valls eagle shape, all gold: pointed crown on a red velvet band, deeper gold beak.
   'aliga-tarragona': {
     art: [

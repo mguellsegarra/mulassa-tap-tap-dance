@@ -75,7 +75,7 @@ export const portraitPalette = figure => figure.id === DRAC.id ? DRAC_PALETTE : 
 // relative size whatever zoom their pixel art was drawn at. Set by eye with ?sizes (src/dev/sizes-edit.js), not measured.
 export const STAND = {
   'mulassa-valls': 0.8, 'drac-valls': 0.7, 'aliga-valls': 0.8, 'bou-tradicional-valls': 0.65, 'os-trabucaires-valls': 0.65, 'nans-valls': 0.55,
-  'gegants-ciutat-valls': 1, 'cavallets-valls': 0.55, 'basilisc-valls': 0.65, 'diables-valls': 0.8, 'gegant-calcot-valls': 1, 'campanar-valls': 1,
+  'gegants-ciutat-valls': 1, 'cavallets-valls': 0.55, 'basilisc-valls': 0.65, 'diables-valls': 0.8,
   'aliga-tarragona': 0.8, 'cucafera-tarragona': 0.65, 'gegants-mulassa-reus': 0.8, 'gegants-solsona': 1, 'drac-solsona': 0.8, 'bou-solsona': 0.65,
   'mulassa-solsona': 0.8, 'aliga-solsona': 0.8, 'gegants-bojos-solsona': 1, 'draca-solsona': 0.8, 'boja-vilanova': 0.8, 'drac-vilanova': 0.8, 'aliga-barcelona': 0.8,
   'guites-berga': 1, 'gegants-olot': 1, 'drac-vilafranca': 0.8, 'la-teva-colla': 1,

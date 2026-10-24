@@ -15,6 +15,7 @@ import { M, PIVOT, PAIR } from './mula-motion.js';
 import { COLLA_SPOTS } from './drac-dance.js';
 import { MULA_COLLA_SPOTS } from './mula-stage.js';
 import { BOU_COLLA_SPOTS } from './bou-stage.js';
+import { paradeTick, paradeSteer } from './bou-parade.js';
 import { RING, REACH, arenaNow } from './crowd-build.js';
 import { lensShrink } from './framing.js';
 import { easeIn, smooth01, TAU } from '../core/anim.js';
@@ -206,6 +207,7 @@ function photoCrowdClearance(p, x, z) {
 }
 // Step 2: where one person goes: they make way for her (RING), creep in to watch, walk back to their spot, keep clear of the play camera's shot and of each other (a soft push; separate() is the hard limit).
 function steer(p, dt, beat, live) {
+  if (p.parade && paradeSteer(p, dt)) { recell(p); return; } // running behind the carried Bou (bou-parade.js), or walking back
   if (sootAnchored(p)) { p.vel.set(0, 0); p.rest = false; return; } // charred stiff (drac-soot.js): rooted to the spot, a fixed footprint
   const { moodK, slow, ringE, velK, wayIn, wayOut } = F, { festK, clapK, partyK, gr2, gr3, shoveK } = mood;
   // during the song only the front row and the first ring (NEAR) make way; the rows behind hold unless she is right
@@ -470,6 +472,7 @@ export function animCrowd(dt, beat, t, live = 1) {
   const backgroundContacts = backdropContacts([plaza.backdrop, midCrowd]);
   for (const b of backgroundContacts) cellPush(crowdCell(b), b);
   updateMood(dt, t, live);
+  paradeTick(activeCrowd);
   for (const p of activeCrowd) steer(p, dt, beat, live);
   separate();
   for (const p of activeCrowd) pose(p, dt, beat, live);

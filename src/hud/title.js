@@ -57,13 +57,22 @@ function glint(x, y, s, p) {
 }
 // Cap in CSS pixels too: the HUD scale grows on large displays, but the logo must leave the models visible.
 export const splashS = () => Math.min(W / 5, HH / 4.6, 130, 180 / K);
+const splashPrompt = () => Math.max(32, 48 / K); // the prompt's height (drawSplash)
+// The band between the splash's logo and its prompt (css px, the selector band's shape: cameras.js frames the pair in it); their
+// heads may rise behind TAP TAP DANCE (under the logo alone, a desktop's band left them small and far)
+export function splashBand(out) {
+  out.top = out.hardTop = (HH * 0.2 + splashS() * 0.3) * K;
+  out.bottom = (HH * 0.82 - splashPrompt() / 2 - 6) * K;
+  out.left = SAFE.l; out.right = W * K - SAFE.r; out.ground = true; // (a narrow screen fits them by width: on the floor, not floating mid-band)
+  return out;
+}
 export function drawSplash() {
   H.fillStyle = 'rgba(42,26,16,0.35)'; H.fillRect(0, 0, W, HH);
   logo(HH * 0.2);
   // A breathing prompt (a tap or key anywhere goes in, input.js). Scale a single text sprite continuously, never its rounded font size.
   const pulse = CALM.matches ? 0 : (1 - Math.cos(clock * Math.PI * 2 / 2.4)) / 2, grow = 1 + 0.05 * pulse, s = PLAY.enter[COARSE.matches ? 0 : 1];
   const fit = Math.min(1, (W - 12 - 48) / textWidth(s, 12)); // a longer language shrinks its words to the screen; Catalan fits at 1 (CLICA… at 320 px: 150 of 153)
-  const h = Math.max(32, 48 / K) * grow, w = Math.max(textWidth(s, 12) * fit + 48, 120) * grow, y = HH * 0.82; // >= 44 css px
+  const h = splashPrompt() * grow, w = Math.max(textWidth(s, 12) * fit + 48, 120) * grow, y = HH * 0.82; // >= 44 css px
   H.beginPath(); H.roundRect(W / 2 - w / 2, y - h / 2, w, h, h / 2);
   glowPath(C.gold, 5 + 5 * pulse, 0.6 + 0.5 * pulse);
   H.fillStyle = 'rgba(42,26,16,0.8)'; H.fill(); H.strokeStyle = C.gold; H.lineWidth = 1.5; H.stroke();

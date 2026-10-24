@@ -2,8 +2,8 @@
 // and the sync offset.
 import { finalMode } from '../dev/final-test.js';
 import { WINDOWS } from '../game/progress.js';
-import { BEATS, BEAT, FINALE_T, beatAt } from '../game/figure-song.js';
-export { BEATS, BEAT, FINALE_T, beatAt };
+import { BEATS, BEAT, FINALE_T, beatAt, playFrom, setPlayFrom } from '../game/figure-song.js';
+export { BEATS, BEAT, FINALE_T, beatAt, playFrom };
 import { store } from '../platform/storage.js';
 
 // dev hosts only: the debug flags are invisible on a public host
@@ -23,7 +23,7 @@ export const COARSE = matchMedia('(pointer: coarse)'); // live: DevTools device 
 export let WIN = WINDOWS[0];
 export const setWIN = v => (WIN = v);
 export const LEAD = 3.2; // seconds between pressing start and the recording, filled by a timbal count-in
-export const playFrom = FROM;
+setPlayFrom(FROM);
 export let offsetMs = +(Q.get('offset') ?? store.get('offset') ?? 0); // calibration knob: the sync sheet, or [ and ] keys
 export const setOffsetMs = v => (offsetMs = v);
 // Fullscreen on touch devices (Android, iPad): asked for inside the tap that starts the game or picks a difficulty.

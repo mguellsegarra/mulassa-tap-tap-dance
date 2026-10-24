@@ -12,7 +12,7 @@ export function poseMulaBody(rig, x, y, z, yaw, roll, pitch) {
 // carriers' shoes are posed separately (scene/mula-carriers.js), after this.
 export function poseMulassa(rig, pose, beat, x, z, yaw) {
   const bp = beat * Math.PI, amp = pose.drive;
-  poseMulaBody(rig, x, pose.lift, z, yaw, pose.roll, pose.pitch);
+  poseMulaBody(rig, x, pose.lift, z, yaw, pose.roll + (pose.waddle ?? 0), pose.pitch);
   rig.body.scale.set(1, 1, 1);
   rig.neck.rotation.set(0.15 + Math.sin(bp * 2) * 0.08 * amp, Math.sin(bp) * 0.12 * amp, 0);
   rig.head.rotation.set(0.2 + Math.sin(bp * 2 + 1) * 0.08 * amp, 0, pose.headRoll ?? 0);

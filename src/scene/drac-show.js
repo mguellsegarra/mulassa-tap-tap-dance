@@ -15,6 +15,7 @@ import { PHOTO } from '../game/photo-control.js';
 import { setConfettiDivert } from './confetti.js';
 import { activeCrowd } from './quality.js';
 import { sootFrame } from './drac-soot.js';
+import { SKY } from './sky.js';
 import { photoExtras } from './photo-obstacles.js';
 
 export const dracFx = createDracFx(scene, { smoke: renderProfile.smoke ?? 0, jets: renderProfile.jets ?? 0, wheels: renderProfile.wheels ?? 0, sound: figureSfx, calm: CALM, octaves: qualityLevel > 0 ? 2 : 1 });
@@ -31,7 +32,7 @@ let flareSong = null, flareT = Infinity, tracaFor = null, hazed = false;
 // dense mist costs nothing more to draw: old phones). Only while the dance is on; a menu clears it at once.
 // The tint is a bengala's smoke: a smoky red, never a sky-red mix (blue and red went mauve). The fog takes that colour
 // at once and the crescendo is its density; the sky behind only half tints (a flat red sky read as odd).
-const FOG = { sky: new THREE.Color('#8fd3ff'), red: new THREE.Color('#b5473a'), sky_mix: 0.6, near: 40, far: 90 };
+const FOG = { sky: new THREE.Color(SKY.horizon), red: new THREE.Color('#b5473a'), sky_mix: 0.6, near: 40, far: 90 };
 
 export function dracCrema() { // a CREMA (the Drac's GUAPA) and the final hit: the flamarada
   if (!isDracOn() || G.practice) return;

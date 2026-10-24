@@ -4,7 +4,7 @@ import { pathToFileURL, fileURLToPath } from 'node:url';
 
 const OMIT = new Set(['music/mulassa-taiko.wav', 'music/mulassa-taiko.mid', 'music/drac-taiko.mid', 'music/bou-tradicional-v13.mp3', '.DS_Store']);
 // A root 404 disables Pages' SPA fallback: unknown URLs must not serve the game with HTTP 200.
-const REQUIRED = ['index.html', '404.html', '_headers', 'favicon.ico', 'favicon-32.png',
+const REQUIRED = ['index.html', '404.html', '_headers', 'favicon.ico', 'favicon.svg', 'favicon-32.png',
   'apple-touch-icon.png', 'icon-512.png', 'manifest.webmanifest', 'og.jpg']; // og.jpg: index.html's og:image / twitter:image
 
 // Reject unexpected public files rather than accidentally publishing sources or server code.

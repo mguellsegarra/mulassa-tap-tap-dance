@@ -30,7 +30,7 @@ export function setupWatch({ select, busy }) {
   $('watch-again').addEventListener('click', () => { menu.close(); startWatch(); });
   $('watch-figures').addEventListener('click', () => leave(false));
   $('watch-close').addEventListener('click', () => leave(false));
-  menu.addEventListener('cancel', e => { e.preventDefault(); leave(false); }); // Escape: the figures, as the ×
+  menu.addEventListener('cancel', e => { e.preventDefault(); leave(false); }); // Escape: back to the menu, as the ×
   return {
     get open() { return menu.open; },
     frame() { // every frame (ui/controls.js): the label while it plays; the sheet once the plaça has cheered a moment
@@ -40,7 +40,7 @@ export function setupWatch({ select, busy }) {
       if (offered || document.hidden) return;
       offered = true;
       menu.showModal();
-      focusIn(menu, 'watch-play');
+      focusIn(menu, 'watch-figures');
     },
   };
 }

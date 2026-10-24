@@ -5,7 +5,7 @@ import { makeDanceChart } from './chart.js';
 import { recordKey, readFigureRecord, saveFigureRecord } from './figures.js';
 import { comparableScore } from './score-scale.js';
 import { beatsRecord } from './records.js';
-import { song, selectedFigure, countInAt, hasRecordedIntro } from './figure-song.js';
+import { song, selectedFigure, countInAt, startCueAt } from './figure-song.js';
 import { store } from '../platform/storage.js';
 import { errors } from '../services/errors.js';
 import { WINDOWS, quality, starsFor } from './progress.js';
@@ -80,18 +80,17 @@ export function startGame(diff) {
   leaveRun('restart');
   G.practice = null;
   G.sel = diff;
-  beginRun(diff, makeDanceChart(song, diff).filter(n => n.t >= playFrom), !hasRecordedIntro(playFrom));
+  beginRun(diff, makeDanceChart(song, diff).filter(n => n.t >= playFrom));
   warmStart(); // already painted on the title unless the screen changed since (sprites are per size)
   G.recordKey = recordKey(selectedFigure, diff);
   G.previous = readFigureRecord(store, selectedFigure, diff);
   const chart = G.chart;
   const wait = songWait = chip.buf ? null : loader.wait(musicLine());
   const waited = () => { loader.done(wait); if (songWait === wait) songWait = null; };
-  chip.start(hasRecordedIntro(playFrom) ? 0 : LEAD, playFrom, song.tail).then(started => {
+  chip.start(LEAD, playFrom, song.tail).then(started => {
     waited();
     if (!started) return;
-    const b0 = BEATS.find(b => b >= playFrom) ?? playFrom;
-    if (!hasRecordedIntro(playFrom)) chip.countIn(countInAt(b0)); // 3, 2, 1 on the song's pulse; BALLA! lands on its first beat
+    chip.countIn(countInAt(startCueAt(playFrom))); // 3, 2, 1 on the song's pulse; BALLA! lands on its first beat
     if (CLICKS) chart.forEach(n => chip.tick(n.t));
   }).catch(e => {
     waited();
@@ -114,7 +113,7 @@ function watched() { // the plaça cheers the dance; ui/watch-ui.js then offers 
   burst(M.pos.x, M.pos.y);
   chip.sfx('ovation');
 }
-function beginRun(diff, chart, startSound = true) { // shared by the song and the practice: a clean plaça and score, `chart` on the lane
+function beginRun(diff, chart) { // shared by the song and the practice: a clean plaça and score, `chart` on the lane
   clearLeaderboardResult();
   closePauseMenu();
   goFullscreen();
@@ -124,7 +123,7 @@ function beginRun(diff, chart, startSound = true) { // shared by the song and th
   G.figureId = selectedFigure.id; G.figureVersion = selectedFigure.version;
   chip.stop();
   chip.menu(false);
-  if (startSound) chip.sfx('start');
+  chip.sfx('start');
   setWIN(WINDOWS[diff]);
   G.paused = false; G.resuming = null;
   G.chart = chart.map(n => ({ ...n, hit: null, count: 0 }));

@@ -53,7 +53,10 @@
   "services.share.drac.clear": "{mula}💃 Мой Drac de Valls танцует с точностью {pct} на уровне {diff}. Рискнёшь повторить? 🔥",
   "services.share.drac.fail": "{mula} Точность {pct}, уровень {diff}… Drac требует реванша. А как справишься ты? 💃",
   "services.share.drac.record": "{mula}🔥 Новый рекорд очков: {score}, уровень {diff} (точность {pct}), танцует Drac de Valls! 🎉",
-  "services.share.bou": "Мой Bou Tradicional de Valls танцует с точностью {pct} на уровне {diff}. #Valls",
+  "services.share.bou.challenge": "{mula}🏆 Испытание пройдено! Моя точность — {pct}, уровень {diff}, на площади танцует Bou Tradicional de Valls 🎉",
+  "services.share.bou.clear": "{mula}💃 Мой Bou Tradicional de Valls танцует с точностью {pct} на уровне {diff}. Рискнёшь повторить? 🔥",
+  "services.share.bou.fail": "{mula} Точность {pct}, уровень {diff}… Bou требует реванша. А как справишься ты? 💃",
+  "services.share.bou.record": "{mula}🔥 Новый рекорд очков: {score}, уровень {diff} (точность {pct}), танцует Bou Tradicional de Valls! 🎉",
   "services.share.fail": "{mula} Точность {pct}, уровень {diff}… Mulassa требует реванша. А как справишься ты? 💃",
   "services.share.record": "{mula}🔥 Новый рекорд очков: {score}, уровень {diff} (точность {pct}), танцует Mulassa de Valls! 🎉"
 }

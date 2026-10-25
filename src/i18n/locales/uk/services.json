@@ -53,7 +53,10 @@
   "services.share.drac.clear": "{mula}💃 Мій танець Drac de Valls: {pct} влучань на рівні {diff}. А тобі слабо? 🔥",
   "services.share.drac.fail": "{mula} {pct} влучань на рівні {diff}… Drac вимагає реваншу. А як зіграєш ти? 💃",
   "services.share.drac.record": "{mula}🔥 Новий рекорд: {score} очок на рівні {diff} ({pct} влучань) у танці Drac de Valls! 🎉",
-  "services.share.bou": "Мій танець Bou Tradicional de Valls: {pct} влучань на рівні {diff}. #Valls",
+  "services.share.bou.challenge": "{mula}🏆 Виклик подолано! {pct} влучань на рівні {diff} у танці Bou Tradicional de Valls 🎉",
+  "services.share.bou.clear": "{mula}💃 Мій танець Bou Tradicional de Valls: {pct} влучань на рівні {diff}. А тобі слабо? 🔥",
+  "services.share.bou.fail": "{mula} {pct} влучань на рівні {diff}… Bou вимагає реваншу. А як зіграєш ти? 💃",
+  "services.share.bou.record": "{mula}🔥 Новий рекорд: {score} очок на рівні {diff} ({pct} влучань) у танці Bou Tradicional de Valls! 🎉",
   "services.share.fail": "{mula} {pct} влучань на рівні {diff}… Mulassa вимагає реваншу. А як зіграєш ти? 💃",
   "services.share.record": "{mula}🔥 Новий рекорд: {score} очок на рівні {diff} ({pct} влучань) у танці Mulassa de Valls! 🎉"
 }

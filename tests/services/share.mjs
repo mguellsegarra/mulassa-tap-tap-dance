@@ -7,6 +7,7 @@ import { encodeChallenge, challengeUrl, parseChallenge, stripChallenge, challeng
   bragWorthy, shareMode, linkMode, shareLinks, isCancel, SITE, HASHTAGS, MULA } from '../../src/services/share.js';
 import { snapshotResult, EXPECTED_JUDGMENTS } from '../../src/services/leaderboard-rules.js';
 import { setLang } from '../../src/i18n/locale.js';
+import { UNRELEASED_IDS } from '../../src/figures/index.js';
 
 // --- the challenge link: only "<0-100>-<0|1|2>", clamped, junk ignored
 assert.equal(encodeChallenge(94.4, 2), '94-2');
@@ -18,6 +19,9 @@ assert.equal(challengeUrl(94, 7), SITE, 'an impossible level: just the game');
 assert.deepEqual(parseChallenge('?repte=94-2'), { pct: 94, diff: 2, figure: 'mulassa-valls' }, 'no figure: the Mulassa (every link before the Drac\'s)');
 assert.deepEqual(parseChallenge('?repte=94-2-drac'), { pct: 94, diff: 2, figure: 'drac-valls' });
 assert.equal(challengeUrl(94, 2, SITE, 'drac-valls'), `${SITE}?repte=94-2-drac`);
+// a pending figure's link is ignored until it ships
+assert.deepEqual(parseChallenge('?repte=94-2-bou'), UNRELEASED_IDS.has('bou-tradicional-valls') ? null : { pct: 94, diff: 2, figure: 'bou-tradicional-valls' });
+assert.equal(challengeUrl(94, 2, SITE, 'bou-tradicional-valls'), `${SITE}?repte=94-2-bou`);
 assert.deepEqual(parseChallenge(new URLSearchParams('mute&repte=100-0')), { pct: 100, diff: 0, figure: 'mulassa-valls' });
 assert.deepEqual(parseChallenge('?repte=250-1'), { pct: 100, diff: 1, figure: 'mulassa-valls' }, 'over 100 is clamped');
 for (const junk of ['', '?repte=', '?repte=abc', '?repte=94', '?repte=94-3', '?repte=-5-1', '?repte=1234-1', '?repte=94-2-1', '?repte=94-2-xyz', '?repte=94-2-Drac', '?repte=94_2', '?other=94-2', '?repte=<script>'])

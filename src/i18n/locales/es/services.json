@@ -53,7 +53,10 @@
   "services.share.drac.clear": "{mula}💃 He hecho bailar al Drac de Valls con un {pct} de aciertos en {diff}. ¿Te atreves? 🔥",
   "services.share.drac.fail": "{mula} {pct} de aciertos en {diff}… El Drac me pide la revancha. ¿Y tú, cómo lo harías? 💃",
   "services.share.drac.record": "{mula}🔥 ¡Nuevo récord de puntos: {score} en {diff} ({pct} de aciertos) haciendo bailar al Drac de Valls! 🎉",
-  "services.share.bou": "He hecho bailar al Bou Tradicional de Valls con un {pct} de aciertos en {diff}. #Valls",
+  "services.share.bou.challenge": "{mula}🏆 ¡Reto superado! {pct} de aciertos en {diff} haciendo bailar al Bou Tradicional de Valls 🎉",
+  "services.share.bou.clear": "{mula}💃 He hecho bailar al Bou Tradicional de Valls con un {pct} de aciertos en {diff}. ¿Te atreves? 🔥",
+  "services.share.bou.fail": "{mula} {pct} de aciertos en {diff}… El Bou me pide la revancha. ¿Y tú, cómo lo harías? 💃",
+  "services.share.bou.record": "{mula}🔥 ¡Nuevo récord de puntos: {score} en {diff} ({pct} de aciertos) haciendo bailar al Bou Tradicional de Valls! 🎉",
   "services.share.fail": "{mula} {pct} de aciertos en {diff}… La Mulassa me pide la revancha. ¿Y tú, cómo lo harías? 💃",
   "services.share.record": "{mula}🔥 ¡Nuevo récord de puntos: {score} en {diff} ({pct} de aciertos) haciendo bailar a la Mulassa de Valls! 🎉"
 }

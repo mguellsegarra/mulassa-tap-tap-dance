@@ -18,7 +18,7 @@
 
 </div>
 
-Mulassa Tap Tap Dance és un joc de ritme gratuït i en català per fer ballar figures del bestiari festiu dels Països Catalans. Marques el ritme de la música amb dos botons mentre la figura balla. Les melodies són les de les figures, però he agafat la llibertat de portar-les al terreny dels videojocs: més desenfadades, amb una estètica de blocs i amb una sorpresa amagada a cada ball. Que les reconeguis, però que en algun moment pensis: "Uala, això al carrer no ho fa!".
+Mulassa Tap Tap Dance és un joc de ritme gratuït i en català per fer ballar figures del bestiari festiu dels Països Catalans. Marques el ritme de la música amb dos botons mentre la figura balla. Les melodies són les de les figures, però he agafat la llibertat de portar-les al terreny dels videojocs: més desenfadades, amb una estètica de blocs i amb una sorpresa amagada a cada ball.
 
 Va començar amb la Mulassa de Valls, que forma part del Seguici Cerimonial de la ciutat, i s'ha anat obrint a més figures. Ara hi ha la Mulassa i el Drac, el Bou Tradicional és a punt de sortir i la idea és que s'hi vagin afegint bèsties d'arreu dels Països Catalans. Es pot jugar en 16 llengües, perquè hi pugui jugar qui no parla català.
 

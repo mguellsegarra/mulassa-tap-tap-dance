@@ -7,7 +7,7 @@
   </picture>
 </a>
 
-**Un joc de ritme sobre el Ball de la Mulassa de Valls, per jugar al navegador.**
+**Un joc de ritme sobre els balls del bestiari de Valls (la Mulassa i el Drac), per jugar al navegador.**
 
 [![Desplegament](https://github.com/mguellsegarra/mulassa-tap-tap-dance/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/mguellsegarra/mulassa-tap-tap-dance/actions/workflows/deploy-pages.yml)
 [![Llicència: MIT](https://img.shields.io/badge/codi-MIT-a3182f)](LICENSE)
@@ -18,7 +18,7 @@
 
 </div>
 
-La Mulassa és una peça del bestiari popular de Valls i forma part del Seguici Cerimonial de la ciutat. Aquest joc surt amb motiu de la Fira de Santa Úrsula de 2026.
+La Mulassa i el Drac són peces del bestiari popular de Valls i formen part del Seguici Cerimonial de la ciutat. Aquest joc surt amb motiu de la Fira de Santa Úrsula de 2026.
 
 <p align="center"><img src=".github/readme/partida.webp" alt="Una partida en marxa: la pista de notes a dalt, la Mulassa ballant a la plaça i confeti en encertar una GUAPA" width="100%"></p>
 
@@ -73,13 +73,14 @@ Els menús i les finestres de configuració, rànquing i opcions per compartir s
 
 ### Els mòduls
 
-`src/main.js` és el punt d'entrada: importa cada sistema en ordre i fa girar el bucle de frames. Cada carpeta de `src/` té una feina:
+`src/main.js` és el punt d'entrada: importa cada sistema en ordre i fa girar el bucle de frames. Cada carpeta de `src/` té una feina (hi ha també `i18n/` per als idiomes, `music-form/` per compilar la música i `dev/` per als modes de desenvolupament):
 
 ```mermaid
 flowchart LR
     main["main.js<br/>arrenca i executa el bucle"]
     core["core/<br/>rellotge, temps, paràmetres d'URL"]
-    scene["scene/<br/>món 3D: plaça, Mulassa, gent, càmeres"]
+    scene["scene/<br/>món 3D: plaça, gent, càmeres"]
+    figures["figures/<br/>una carpeta per figura: model, ball, colla, festa"]
     hud["hud/<br/>canvas 2D: pista, puntuació, resultats"]
     ui["ui/<br/>DOM: botons, finestres, entrada"]
     platform["platform/<br/>àudio, qualitat de render, localStorage"]
@@ -89,16 +90,16 @@ flowchart LR
         rules["chart, dance, energy, progress...<br/>regles pures"]
         flow --> rules
     end
-    main --> core & game & scene & hud & ui & platform & services
+    main --> core & game & scene & figures & hud & ui & platform & services
 ```
 
-Les carpetes depenen les unes de les altres: quan encertes una nota, `judge.js` avisa l'escena, el HUD i l'àudio. Les regles, en canvi, van a part. `chart.js`, `dance.js`, `energy.js`, `progress.js`, `practice.js`, `calibration.js` i `bubble-rules.js` no importen res, ni three.js ni el DOM, i per això els tests les poden provar amb Node.
+Les carpetes depenen les unes de les altres: quan encertes una nota, `judge.js` avisa l'escena, el HUD i l'àudio. Les regles, en canvi, van a part. `chart.js`, `dance.js`, `energy.js`, `progress.js`, `practice.js`, `calibration.js` i `bubble-rules.js` no depenen ni de three.js ni del DOM (només de mòduls purs com `core/math.js` i els missatges), i per això els tests les poden provar amb Node.
 
-`tests/build/modules.mjs` comprova que no hi hagi cicles d'imports, que `main.js` no passi de 400 línies i que cap altre mòdul passi de 600.
+`tests/build/modules.mjs` comprova que no hi hagi cicles d'imports, que `main.js` no passi de 400 línies i que cap altre mòdul passi de 300.
 
 ### Música, notes i ball surten de la mateixa partitura
 
-La melodia està transcrita a mà a `music/mulassa/score.json`. Un sol script en Python en genera tota la resta:
+La melodia de cada figura està transcrita a mà (`music/<figura>/`). Aquí, l'exemple de la Mulassa: `music/mulassa/score.json`, i un sol script en Python en genera tota la resta (el Drac té `tools/music/build_drac.py` i el Bou `tools/music/build_bou_chart.mjs`):
 
 ```mermaid
 flowchart LR
@@ -128,7 +129,38 @@ Tot això és opcional.
 - **Un [Worker de Cloudflare](https://workers.cloudflare.com)** (`workers/feedback/`) rep els missatges de la bústia i me'ls envia per correu sense guardar-los.
 - **[Cloudflare Turnstile](https://www.cloudflare.com/products/turnstile/)** evita que els bots omplin el rànquing o la bústia.
 - **[Sentry](https://sentry.io)** recull errors del joc, si hi ha un DSN configurat.
-- **[Cloudflare Pages](https://pages.cloudflare.com)** serveix la web. Els workflows de `.github/workflows/` despleguen la web, les migracions i les funcions quan hi ha canvis a `master`.
+- **[Cloudflare Pages](https://pages.cloudflare.com)** serveix la web. Els workflows de `.github/workflows/` despleguen la web, les migracions i les funcions quan hi ha canvis: cada push a `main` desplega la beta (beta.mulassa.cat) i una etiqueta `vX.Y.Z` desplega mulassa.cat.
+
+## Figures i idiomes
+
+| Figura | Estat |
+|---|---|
+| Mulassa de Valls | Jugable |
+| Drac de Valls | Jugable |
+| Bou Tradicional de Valls | Al codi, encara sense publicar |
+
+El selector mostra també altres figures del bestiari com a "aviat", sense música ni model: el catàleg és a [docs/figures/figure-catalog.md](docs/figures/figure-catalog.md).
+
+Els textos del joc són en català i es tradueixen amb catàlegs a `src/i18n/locales/<codi>/` (ara: ca, de, en, es, eu, fr, gl, it, ja, ko, oc, pt, ro, ru, uk i zh-Hans). Per provar l'estructura sense traduir, `?lang=pseudo`. Com s'ha pensat i què queda obert: [docs/i18n/strategy.md](docs/i18n/strategy.md).
+
+## Documentació
+
+Les guies són a `docs/`:
+
+| Tema | On |
+|---|---|
+| Capes, dependències i com repartir feina | [docs/architecture.md](docs/architecture.md) |
+| Estructura de `src/` i fitxers generats | [docs/agents/structure.md](docs/agents/structure.md) |
+| Figures: música, ball, model, integració | [docs/figures/](docs/figures/) |
+| Escena: càmera de joc, plaça i gent, render | [docs/scene/](docs/scene/) |
+| Selector i joc lliure | [docs/ui/](docs/ui/) |
+| Rànquing, temporades i desplegament | [docs/rankings/](docs/rankings/) |
+| Còpies de seguretat i Sentry | [docs/ops/](docs/ops/) |
+| Idiomes | [docs/i18n/](docs/i18n/) |
+
+### Versions i llançaments
+
+`main` és l'única branca llarga. Cada push a `main` desplega la beta (beta.mulassa.cat, amb el seu Supabase de proves) i una etiqueta `vX.Y.Z`, igual a la versió de `package.json`, desplega mulassa.cat. Les etiquetes les confirma el propietari una per una. El detall és a [AGENTS.md](AGENTS.md).
 
 ## Inspiració
 
@@ -166,6 +198,7 @@ Amb la col·laboració de la [Unió Anelles de la Flama (UAF) de Valls](https://
 <p align="center"><a href="https://uaf.cat"><img src="public/uaf-logo.jpg" alt="Unió Anelles de la Flama, Valls" width="320"></a></p>
 
 - **Música**: el Ball de la Mulassa és de Francesc Bofarull i Figuerola (1987). La melodia de `music/mulassa/score.json` es va transcriure a partir de la [reducció per a banda publicada per l'ESMUC](https://www.esmuc.cat/wp-content/uploads/2026/04/AB-Analisi-Partitura-ARRE-2025JU-Partitura_compressed.pdf).
+- **Música del Drac**: el Ball del Drac de Valls és de Francesc (Cisco) Bofarull i Figuerola (1985). La melodia de `music/drac/drac-score.json` es va transcriure a partir de la [partitura publicada pels Grallers d'Alfés](https://grallersalfes.wordpress.com/wp-content/uploads/2014/01/ball-del-drac-de-valls.pdf).
 - **La Mulassa**: peça del bestiari de Valls, de la Unió Anelles de la Flama.
 - **Mecànica**: inspirada en Taiko no Tatsujin, de Bandai Namco.
 - **Tipografies**: [Baloo 2](https://github.com/EkType/Baloo2) i [Jersey 10](https://github.com/scfried/soft-type-jersey), totes dues amb llicència OFL.

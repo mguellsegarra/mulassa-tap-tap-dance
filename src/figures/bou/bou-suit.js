@@ -45,11 +45,12 @@ export const SHADES = {
     v.box(0, 0.218, 0.173, 0.356, 0.022, 0.018, frame, 0);
   },
 };
-export const BOU_SUIT = { stride: true, legs: '#17161a', dye: false, sole: '#3a3434', upper: '#121114', lace: null, shade: '#55142e', tunic: true, rolled: false };
+export const BOU_SUIT = { stride: true, legs: '#17161a', dye: false, sole: '#3a3434', upper: '#121114', lace: null, shade: '#3c1838', tunic: true, rolled: false };
+// the colla's plum tunics, a few shades apart and bluer than the photo: the plaza's warm light reddens them
 export const BOU_HELPER_LOOKS = [
-  { ...BOU_SUIT, top: '#80203f', hood: 'up', shades: 'sport' },
-  { ...BOU_SUIT, top: '#8c2347', shades: 'sport', frame: '#2f9e4f' },
-  { ...BOU_SUIT, top: '#93284d', hood: 'up', shades: 'sport', frame: '#f2c230' },
-  { ...BOU_SUIT, top: '#7a1d3b', shades: 'sport', frame: '#f2efe8', bald: true, beard: '#2b2624', trunk: [1.07, 0.02], belly: true }, // bald, bearded, 2 cm shorter, a belly
-  { ...BOU_SUIT, top: '#8c2347', build: [1.2, 0.84], belly: true, hair: '#c9c4bd', moustache: true, skin: SKIN[1], hat: true, staff: true }, // the capatàs
+  { ...BOU_SUIT, top: '#6a2f6a', hood: 'up', shades: 'sport' },
+  { ...BOU_SUIT, top: '#70336f', shades: 'sport', frame: '#2f9e4f' },
+  { ...BOU_SUIT, top: '#743a72', hood: 'up', shades: 'sport', frame: '#f2c230' },
+  { ...BOU_SUIT, top: '#683066', shades: 'sport', frame: '#f2efe8', bald: true, beard: '#2b2624', trunk: [1.07, 0.02], belly: true }, // bald, bearded, 2 cm shorter, a belly
+  { ...BOU_SUIT, top: '#6e3470', build: [1.2, 0.84], belly: true, hair: '#c9c4bd', moustache: true, skin: SKIN[1], hat: true, staff: true }, // the capatàs
 ];

@@ -53,7 +53,8 @@ const colla = createBouColla(PROFILES[2]);
 assert.equal(colla.members.length, 0, 'no one seated'); colla.setProfile(PROFILES[2]); assert.equal(colla.count, 0);
 assert.deepEqual(colla.crew.map(p => p.g.name), ['helper-W', 'helper-N', 'helper-S', 'helper-E', 'helper-C']);
 assert.ok(BOU_HELPER_LOOKS.slice(0, 4).every(l => !l.staff) && BOU_HELPER_LOOKS[4].staff, 'the capatàs is a fifth, none of the four marks');
-assert.ok(BOU_HELPER_LOOKS.every(l => l.tunic && /^#[789]/.test(l.top)), 'garnet tunics');
+const plum = h => { const [r, g, b] = [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16)); return b > g && b >= 0.55 * r; }; // purple, not the wine red they were
+assert.ok(BOU_HELPER_LOOKS.every(l => l.tunic && plum(l.top)), 'plum tunics');
 assert.equal(BOU_HELPER_LOOKS.filter(l => l.staff).length, 1, 'one capatàs with the staff');
 colla.update(3.5, 1); colla.dispose();
 // the capatàs's staff, at any beat or cheer: upright, its foot on the paving

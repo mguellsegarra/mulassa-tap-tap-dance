@@ -1,13 +1,17 @@
-// Sharing a result (pure, no DOM): the challenge link (?repte=<pct>-<diff>), the text that goes with the image,
-// and which way the platform can share. Everything is made on the device; the link
-// carries only the % and the level (no ids, no tracking parameters).
+// Sharing a result (pure, no DOM): the challenge link (?repte=<pct>-<diff>[-<figure key>]), the text that goes with the
+// image, and which way the platform can share. Everything is made on the device; the link carries only the %, the
+// level and, for any figure but the Mulassa, its short name (no ids, no tracking parameters).
 import { DIFFS } from '../game/chart.js';
+import { tr } from '../i18n/messages.js';
+import { fmtNum } from '../i18n/format.js';
+import { traitsOf, idOfKey } from '../figures/index.js';
 
 export const SITE = 'https://mulassa.cat/';
 export const SITE_LABEL = 'mulassa.cat'; // the line printed on the results card and the image
 export const HASHTAGS = '#MulassaTapTap #Valls';
 export const CARD_FILE = 'mulassa-tap-tap-dance.jpg';
 
+export const challengeEligible = run => !run?.figureId || traitsOf(run.figureId).challenge;
 const diffName = d => DIFFS[d]?.name ?? DIFFS[0].name;
 
 // --- the challenge: «supera el 94% a DIFÍCIL»
@@ -15,29 +19,33 @@ export function encodeChallenge(pct, diff) {
   if (!Number.isFinite(pct) || !Number.isInteger(diff) || diff < 0 || diff > 2) return null;
   return `${Math.max(0, Math.min(100, Math.round(pct)))}-${diff}`;
 }
-export const challengeUrl = (pct, diff, base = SITE) => {
+export const challengeUrl = (pct, diff, base = SITE, figureId = 'mulassa-valls') => {
+  if (!challengeEligible({ figureId })) return base;
   const code = encodeChallenge(pct, diff);
-  return code ? `${base}?repte=${code}` : base;
+  if (!code) return base;
+  const key = traitsOf(figureId).key; // the Mulassa's links stay as they always were
+  return `${base}?repte=${code}${key === 'mulassa' ? '' : `-${key}`}`; // never a `lang`: the recipient's own saved choice or default decides
 };
-// Junk is ignored (null): only "<0-100>-<0|1|2>"; a percentage over 100 is clamped, never trusted as more.
+// Junk is ignored (null): only "<0-100>-<0|1|2>[-<playable figure's key>]" (none: the Mulassa); a percentage over 100
+// is clamped, never trusted as more.
 export function parseChallenge(search) {
   let raw;
   try { raw = (typeof search === 'string' ? new URLSearchParams(search) : search)?.get('repte'); } catch { return null; }
-  const m = typeof raw === 'string' && /^\s*(\d{1,3})-([0-2])\s*$/.exec(raw);
-  return m ? { pct: Math.min(100, +m[1]), diff: +m[2] } : null;
+  const m = typeof raw === 'string' && /^\s*(\d{1,3})-([0-2])(?:-([a-z]+))?\s*$/.exec(raw);
+  const figure = m && (m[3] ? idOfKey(m[3]) : 'mulassa-valls');
+  return figure ? { pct: Math.min(100, +m[1]), diff: +m[2], figure } : null;
 }
-export function stripChallenge(href) { // the address without ?repte (other params stay), for history.replaceState
+export function stripChallenge(href) { // the address without ?repte (other params, `lang` included, stay), for history.replaceState
   const u = new URL(href);
   u.searchParams.delete('repte');
   return u.pathname + (u.search.length > 1 ? u.search : '') + u.hash;
 }
-export const challengeTip = ch => `Repte d’un amic: supera el ${ch.pct}% a ${diffName(ch.diff)}`;
 // null when the run wasn't the challenge's level (or it was the practice)
 export function challengeResult(ch, run) {
-  if (!ch || !run || run.practice || run.diff !== ch.diff) return null;
+  if (!ch || !run || !challengeEligible(run) || run.practice || run.diff !== ch.diff || (run.figureId ?? 'mulassa-valls') !== (ch.figure ?? 'mulassa-valls')) return null;
   const beaten = run.pct > ch.pct || (ch.pct === 100 && run.pct === 100);
   const missing = beaten ? 0 : ch.pct - run.pct + 1;
-  return { beaten, missing, line: beaten ? 'REPTE SUPERAT!' : `${missing <= 10 ? 'Gairebé! ' : ''}Et falta un ${missing}%` };
+  return { beaten, missing, line: beaten ? tr('services.share.challengeBeaten') : tr(missing <= 10 ? 'services.share.challengeAlmost' : 'services.share.challengeMissing', { missing }) };
 }
 
 // --- outcome, text and the funny line
@@ -48,16 +56,14 @@ export function outcomeOf(run, challenge = null) {
   return run.reason === 'clear' ? 'clear' : 'fail';
 }
 // Emojis: 🫏 (the donkey: the nearest to a mulassa; iOS 16.4+ / recent Android) opens every text, a festive one per
-// outcome closes it. Short on purpose: X counts an emoji as 2 and the link as 23 (tests/share.mjs keeps it under 280).
+// outcome closes it. Short on purpose: X counts an emoji as 2 and the link as 23 (tests/services/share.mjs keeps it under 280).
 export const MULA = '🫏';
 export function shareText(run, challenge = null) { // the caption (the link goes apart: share()'s url, the intents' url=)
   const d = diffName(run.diff), p = `${run.pct}%`;
-  const line = {
-    challenge: `${MULA}🏆 Repte superat! ${p} d’encerts a ${d} fent ballar la Mulassa de Valls 🎉`,
-    record: `${MULA}🔥 Nou rècord de punts: ${run.score.toLocaleString('ca-ES')} a ${d} (${p} d’encerts) fent ballar la Mulassa de Valls! 🎉`,
-    clear: `${MULA}💃 He fet ballar la Mulassa de Valls amb un ${p} d’encerts a ${d}. T’hi atreveixes? 🔥`,
-    fail: `${MULA} ${p} d’encerts a ${d}… La Mulassa em demana la revenja. I tu, com ho faries? 💃`,
-  }[outcomeOf(run, challenge)];
+  const t = traitsOf(run.figureId); // (no figure: the Mulassa)
+  if (t.shareKey) return tr(t.shareKey, { pct: p, diff: d }); // a figure with its own caption (no outcome lines yet)
+  const outcome = outcomeOf(run, challenge);
+  const line = tr(t.shareLines + outcome, { mula: t.shareEmoji, pct: p, diff: d, ...(outcome === 'record' && { score: fmtNum(run.score) }) });
   return `${line} ${HASHTAGS}`;
 }
 // «Presumeix-ne!»: a gentle nudge only when there's something to show off; never in the practice

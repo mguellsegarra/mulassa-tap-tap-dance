@@ -1,9 +1,11 @@
-// Game flow: back to the title, start a run, the practice, finish and the final.
+// Game flow: back to the selector, start a run, the practice, finish and the final.
+import { tr } from '../i18n/messages.js';
 import { clearLeaderboardResult, captureLeaderboardResult } from '../services/leaderboard-result.js';
 import { makeDanceChart } from './chart.js';
+import { recordKey, readFigureRecord, saveFigureRecord } from './figures.js';
 import { comparableScore } from './score-scale.js';
-import { bestRecord, beatsRecord, recordPointsKey, saveRecord } from './records.js';
-import song from '../song.json';
+import { beatsRecord } from './records.js';
+import { song, selectedFigure, countInAt, startCueAt, BEATS, beatAt, FINALE_T } from './figure-song.js';
 import { store } from '../platform/storage.js';
 import { errors } from '../services/errors.js';
 import { WINDOWS, quality, starsFor } from './progress.js';
@@ -11,14 +13,13 @@ import { restTimeline } from './bubble-rules.js';
 import { stepAt, buildStep, stepBeats, stepDone, stepPassed, STEPS } from './practice.js';
 import { pick } from '../scene/models.js';
 import { challengeResult } from '../services/share.js';
-import { fabricateRun } from '../dev/final-test.js';
-import { sheets } from '../ui/sheets.js';
-import { chip, audioEngine, G, clock, CHALLENGE, setChip, setBigPending } from './state.js';
-import { audioFailureTags } from '../platform/audio.js';
+import { fabricateRun, FINAL } from '../dev/final-test.js';
+import { chip, audioEngine, G, clock, songTime, CHALLENGE, setChip, setBigPending, startMenuAudio, setWIN } from './state.js';
+import { audioFailureTags } from '../platform/audio-load.js';
 import { goFullscreen } from '../ui/fullscreen.js';
 import { closePauseMenu } from '../ui/pause.js';
-import { pageActive, playFrom, LEAD, BEATS, BEAT, CLICKS, AUTOPLAY, FROM, beatAt, Q, STARS, FINAL, FINALE_T, setWIN } from '../core/env.js';
-import { standUp, M, S, PIVOT } from '../scene/mula-motion.js';
+import { pageActive, playFrom, LEAD, CLICKS, AUTOPLAY, FROM, Q, STARS } from '../core/env.js';
+import { standUp, M, S, PIVOT } from '../scene/figure-springs.js';
 import { loader } from '../ui/handles.js';
 import { sweepConfetti, burst } from '../scene/confetti.js';
 import { warmStart } from '../hud/warm.js';
@@ -28,21 +29,31 @@ import { crowd, placeHome } from '../scene/crowd-build.js';
 import { lane } from '../hud/layout.js';
 import { W } from '../hud/canvas.js';
 import { headline } from '../hud/praise.js';
-import { debugAction } from '../dev/debug.js';
+import { debugAction, debugUsed } from '../dev/debug.js';
+import { armRun, closeRun, chartTallies, localDate } from './stats.js';
+import { statsSync } from '../services/stats-sync.js';
 
 export function unlock() {
-  setChip(audioEngine());
-  chip.unlock();
+  startMenuAudio();
   toTitle();
   goFullscreen();
 }
+function leaveRun(kind) { // every way a run ends calls this; stats.js counts the first one only, then the upload may go (after the song)
+  if (closeRun(() => {
+    const practice = !!G.practice, value = quality(G.counts), done = kind === 'end' || kind === 'collapse';
+    return { kind: practice ? 'practice' : kind, figureId: G.figureId, version: G.figureVersion, level: G.diff, date: localDate(),
+      seconds: practice ? Math.max(0, clock - G.practice.t0) : Math.max(0, Math.min(G.collapseT ? G.playedSec : songTime(), song.end)), counts: done ? G.counts : null, errors: done ? G.errors : null,
+      ...(done && !practice ? chartTallies(G.chart) : {}), maxCombo: G.maxCombo, stars: starsFor(value), score: comparableScore(G.score, G.diff, G.figureVersion), quality: value };
+  }, !debugUsed)) statsSync.afterRun();
+}
 export function toTitle() {
+  leaveRun('quit');
   clearLeaderboardResult();
   closePauseMenu();
   G.paused = false; G.resuming = null;
   G.practice = null;
-  const fromGame = G.state === 'play' || G.state === 'results';
-  G.state = 'title';
+  G.watch = false;
+  G.state = 'select';
   chip.stop();
   chip.menu(true); // also silences whatever the run still had queued (the count-in) before the clock runs again
   if (pageActive()) chip.resume();
@@ -50,35 +61,52 @@ export function toTitle() {
   loader.cancel(); songWait = null; // left a game still waiting for its music
   sweepConfetti();
   warmStart();
-  if (fromGame && sheets.feedback.configured) sheets.nudge.arm(); // a run finished or left: the feedback bubble may say hello (src/ui/feedback-ui.js setupNudge)
 }
 // A game picked before its song has arrived (a slow line) waits, frozen at the count-in, and says so (after 300 ms),
 // with the download's % while it lasts; frame() keeps the line current.
 export let songWait = null;
-export const musicLine = () => (chip?.loaded < 1 ? `Preparant la música… ${Math.floor(chip.loaded * 100)}%` : 'Preparant la música…');
+let lineKey = -2, lineText; // the line, rebuilt only when the download's % moves (frame() asks every frame)
+export const musicLine = () => {
+  const k = chip?.loaded < 1 ? Math.floor(chip.loaded * 100) : -1;
+  if (k !== lineKey) { lineKey = k; lineText = k < 0 ? tr('game.flow.musicPreparing') : tr('game.flow.musicLoading', { pct: k }); }
+  return lineText;
+};
 export function startGame(diff) {
+  leaveRun('restart');
   G.practice = null;
   G.sel = diff;
   beginRun(diff, makeDanceChart(song, diff).filter(n => n.t >= playFrom));
-  warmStart(); // already painted on the title unless the screen changed since (sprites are per size)
-  G.recordKey = recordPointsKey(diff);
-  G.previous = bestRecord(store, diff);
+  warmStart(); // already painted on the menu unless the screen changed since (sprites are per size)
+  G.recordKey = recordKey(selectedFigure, diff);
+  G.previous = readFigureRecord(store, selectedFigure, diff);
   const chart = G.chart;
   const wait = songWait = chip.buf ? null : loader.wait(musicLine());
   const waited = () => { loader.done(wait); if (songWait === wait) songWait = null; };
   chip.start(LEAD, playFrom, song.tail).then(started => {
     waited();
     if (!started) return;
-    const b0 = BEATS.find(b => b >= playFrom) ?? playFrom;
-    chip.countIn([3, 2, 1].map(k => b0 - k * BEAT)); // 3, 2, 1 on the song's pulse; BALLA! lands on its first beat
+    chip.countIn(countInAt(startCueAt(playFrom))); // 3, 2, 1 on the song's pulse; BALLA! lands on its first beat
     if (CLICKS) chart.forEach(n => chip.tick(n.t));
   }).catch(e => {
     waited();
     errors.report('audio-start-failed', audioFailureTags(e));
     if (G.state !== 'play' || G.chart !== chart) return;
     toTitle();
-    G.audioError = 'No s’ha pogut carregar la música. Torna a provar-ho.';
+    G.audioError = tr('game.flow.musicError');
   });
+}
+// The demo (Com es juga → «Veure un ball de demostració»): the whole song on NORMAL, played by itself (main.js autoplay) on a clean screen.
+// It never reaches the results: finish() hands it to watched(), so no record, leaderboard snapshot, prompt or share.
+export function startWatch() {
+  startGame(1);
+  G.watch = true;
+  armRun(false); // a demo is nobody's game
+}
+function watched() { // the plaça cheers the dance; ui/watch-ui.js then offers to play it
+  chip.stop();
+  Object.assign(G, { state: 'results', resT: clock, reason: 'clear', challenge: null, shareRun: null });
+  burst(M.pos.x, M.pos.y);
+  chip.sfx('ovation');
 }
 function beginRun(diff, chart) { // shared by the song and the practice: a clean plaça and score, `chart` on the lane
   clearLeaderboardResult();
@@ -87,6 +115,7 @@ function beginRun(diff, chart) { // shared by the song and the practice: a clean
   loader.cancel(); songWait = null; // a restart drops the last run's wait (startGame makes its own)
   if (!chip) { setChip(audioEngine()); chip.unlock(); } // never start without an audio engine
   G.diff = diff;
+  G.figureId = selectedFigure.id; G.figureVersion = selectedFigure.version;
   chip.stop();
   chip.menu(false);
   chip.sfx('start');
@@ -101,7 +130,7 @@ function beginRun(diff, chart) { // shared by the song and the practice: a clean
   setBigPending(null);
   G.hold = null;
   releaseAll();
-  Object.assign(G, { praise: null, ring: null, finale: false, doublePoints: false, eeeh: false, state: 'play', next: 0, score: 0, combo: 0, maxCombo: 0, streak: 0, guapo: 0, shown: 0, phraseCounts: { perfect: 0, good: 0, miss: 0 }, activePhrase: null, judge: null, chantT: -99, collapseT: 0, sec: null, flash: -9, energy: 1, shownE: 1, energyWarn: [true, true], energyT: -9, energyWarnT: -9 });
+  Object.assign(G, { watch: false, praise: null, ring: null, finale: false, doublePoints: false, eeeh: false, state: 'play', next: 0, score: 0, combo: 0, maxCombo: 0, streak: 0, guapo: 0, shown: 0, phraseCounts: { perfect: 0, good: 0, miss: 0 }, activePhrase: null, judge: null, chantT: -99, collapseT: 0, sec: null, flash: -9, energy: 1, shownE: 1, energyWarn: [true, true], energyT: -9, energyWarnT: -9 });
   G.counts = { perfect: 0, good: 0, miss: 0 };
   G.errors = { early: 0, late: 0, move: 0, silent: 0, both: 0, hold: 0 };
   G.hold = null;
@@ -111,21 +140,23 @@ function beginRun(diff, chart) { // shared by the song and the practice: a clean
   crowd.forEach(p => placeHome(p));
   sweepConfetti();
   G.audioError = null;
+  armRun(!AUTOPLAY && !FROM && STARS < 0 && !FINAL && !debugUsed);
 }
 // ------------------------------------------------------------------ practice (first game)
 // Five short steps (practice.js) on the real lane with the real judge and FX, over a click track on the song's
 // beat grid, scheduled on the audio clock. Pass a step (or try it three times) to move on; nothing is recorded.
 const TUTORIAL = 'tutorial';
 const tutorialDone = () => AUTOPLAY || FROM || store.get(TUTORIAL) === 'done';
-export function choose(diff) { // a difficulty picked on the title: the very first time, the practice comes first
+export function choose(diff) { // a level picked on the selector (A BALLAR!): the very first time, the practice comes first
   if (tutorialDone()) startGame(diff); else startPractice(diff);
 }
-export function startPractice(then = null) { // then: the difficulty to start afterwards (null: back to the title)
+export function startPractice(then = null) { // then: the difficulty to start afterwards (null: back to the selector)
+  leaveRun('restart');
   G.sel = then ?? G.sel;
   beginRun(1, []); // NORMAL rules (GUAPA wants both buttons, holds) ...
   setWIN(WINDOWS[0]); // ... with FÀCIL's forgiving timing
   document.activeElement?.blur();
-  G.practice = { then, step: 0, tries: 0, clickK: 0, wait: null, doneT: null };
+  G.practice = { then, t0: clock, step: 0, tries: 0, clickK: 0, wait: null, doneT: null };
   chip.startClock(0.3, BEATS[0] - 0.3);
   practiceStep(4, BEATS[0] - 0.3); // four clicks to find the pulse
 }
@@ -172,18 +203,19 @@ export function practiceTick(t) {
   if (ok || ++P.tries >= 3) { P.step++; P.tries = 0; } // three tries and we move on anyway: nobody gets stuck
   if (!stepAt(P.step)) return practiceDone(P);
   P.wait = clock + 1.2;
-  if (ok) { headline(pick(['MOLT BÉ!', 'AIXÍ!', 'GENIAL!']), 1, 3, 1.2); chip.sfx('fanfare1'); }
-  else headline(P.tries ? 'TORNA-HI!' : 'SEGUIM!', P.tries ? 'bonk' : 0, 3, 1.2);
+  if (ok) { headline(pick([tr('game.flow.good1'), tr('game.flow.good2'), tr('game.flow.good3')]), 1, 3, 1.2); chip.sfx('fanfare1'); }
+  else headline(P.tries ? tr('game.flow.retry') : tr('game.flow.next'), P.tries ? 'bonk' : 0, 3, 1.2);
 }
 function practiceDone(P) { // past the last step, however it got there: A BALLAR! once, then endPractice after 2 s
   if (P.doneT != null) return;
   Object.assign(P, { step: STEPS.length, tries: 0, wait: null, doneT: clock + 2 });
-  headline('A BALLAR!', 'rainbow', 4, 2, Math.random(), true); // the practice's celebration: big, like the song's
+  headline(tr('game.flow.dance'), 'rainbow', 4, 2, Math.random(), true); // the practice's celebration: big, like the song's
   chip.sfx('fanfare3');
   burst(M.pos.x, M.pos.y);
 }
 export function endPractice() { // finished or skipped (SALTA): either way it won't come back by itself
   if (!G.practice) return; // already ended (SALTA and the timer in the same frame, a second tap)
+  leaveRun('practice');
   const then = G.practice.then;
   store.set(TUTORIAL, 'done');
   G.practice = null;
@@ -196,17 +228,19 @@ export function previewResults(stars) { // ?stars=0-3: a fake run (never a recor
   }), 1200);
 }
 export function finish(reason) {
+  if (G.watch) return watched();
+  leaveRun(reason);
   captureLeaderboardResult(G, reason, Q); // a frozen run for optional publication; no network during play
   chip.stop();
   const value = quality(G.counts);
   G.stars = starsFor(value);
   G.reason = reason === 'collapse' ? 'collapse' : value >= 70 ? 'clear' : 'fail';
-  const recordScore = comparableScore(G.score, G.diff);
+  const recordScore = comparableScore(G.score, G.diff, G.figureVersion);
   G.newRecord = !AUTOPLAY && !FROM && STARS < 0 && reason !== 'collapse' && beatsRecord(value, recordScore, G.previous);
-  if (G.newRecord && !FINAL) saveRecord(store, G.diff, value, G.score, G.maxCombo);
+  if (G.newRecord && !FINAL) saveFigureRecord(store, selectedFigure, G.diff, value, G.score, G.maxCombo);
   G.state = 'results';
   G.resT = clock;
-  const run = { pct: Math.round(value), score: recordScore, diff: G.diff, reason: G.reason, stars: G.stars, newRecord: G.newRecord, maxCombo: G.maxCombo, t: G.resT, practice: false };
+  const run = { figureId: selectedFigure.id, score: recordScore, pct: Math.round(value), diff: G.diff, reason: G.reason, stars: G.stars, newRecord: G.newRecord, maxCombo: G.maxCombo, t: G.resT, practice: false };
   G.challenge = challengeResult(CHALLENGE, run); // null unless it was the challenge's level
   G.shareRun = run; // what «Comparteix» shows (share-ui.js); the leaderboard's snapshot above is untouched
   if (G.reason === 'clear') { G.chantT = clock; burst(M.pos.x, M.pos.y); chip.sfx('ovation'); }
@@ -221,8 +255,8 @@ export function startFinal() {
   beginRun(diff, makeDanceChart(song, diff));
   const run = fabricateRun(G.chart, FINAL, FINALE_T);
   Object.assign(G, { counts: run.counts, errors: run.errors, score: run.score, combo: run.combo, maxCombo: run.maxCombo, energy: run.energy,
-    shownE: run.energy, guapo: quality(run.counts), next: G.chart.length, recordKey: recordPointsKey(diff) });
-  G.previous = outcome === 'record' ? null : { quality: Math.min(100, quality(run.counts) + 3), score: comparableScore(run.score, diff) + 1000, combo: run.maxCombo };
+    shownE: run.energy, guapo: quality(run.counts), next: G.chart.length, recordKey: recordKey(selectedFigure, diff) });
+  G.previous = outcome === 'record' ? null : { quality: Math.min(100, quality(run.counts) + 3), score: comparableScore(run.score, diff, G.figureVersion) + 1000, combo: run.maxCombo };
   if (run.collapsed) G.collapseT = clock;
   finish(run.collapsed ? 'collapse' : 'end');
 }

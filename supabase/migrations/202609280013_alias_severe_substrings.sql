@@ -1,4 +1,4 @@
--- Severe nickname terms match anywhere, even glued to digits or other words (Marc, 2026-09-28). Mirrors
+-- Severe nickname terms match anywhere, even glued to digits or other words. Mirrors
 -- src/alias-rules.js SEVERE (tests/alias-rules.mjs runs 0009-0013 on PGlite and compares both answers and both lists).
 --   * alias_terms gets a "severe" flag: hate symbols, the worst slurs, sexual violence. Severe terms are always 'sub'
 --     (anywhere in the skeleton: "Nazi88", "xHitlerx", "SiegHeil", "h1tl3r"). nazi/heil/kkk move from 'word' to severe

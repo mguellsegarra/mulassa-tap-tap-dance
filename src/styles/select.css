@@ -1,0 +1,144 @@
+/* The selector (docs/ui/selector.md), in five sheets linked in this order: layout, info column, dock and carousel here;
+   select-cards.css, select-sizes.css, select-pending.css, select-chrome.css. */
+/* The town row and bottom dock reserve their space; information scrolls within the free stage. */
+#select { --dock-h: 264px; --action-h: 52px; --card-label-h: 64px; --info-top: 142px; --town-row-top: 84px; --u: 1px; position: fixed; z-index: 3; inset: 0; pointer-events: none; color: #fff3d6; font: 700 16px/1.25 'Baloo 2', system-ui, sans-serif; }
+#select[hidden], #select [hidden] { display: none; }
+#select > * { pointer-events: auto; }
+#select::before, #select::after { content: ''; position: absolute; inset-inline: 0; pointer-events: none; }
+/* No box behind the info: the plaça darkens towards its column (left here, the top on portrait screens), a soft pool of
+   light sits on the floor under her and the floor fades out under the dock. The ramps are smootherstep curves sampled in
+   stops (no slope jump at either end: a plain two-stop ramp drew a visible line where it ended), in one colour. */
+#select::before { --shade: linear-gradient(90deg, #140c07f0 6%, #140c07ee 10.7%, #140c07e7 15.3%, #140c07d7 20%, #140c07bd 24.7%, #140c079d 29.3%, #140c0778 34%, #140c0753 38.7%, #140c0732 43.3%, #140c0719 48%, #140c0709 52.7%, #140c0701 57.3%, #140c0700 62%); top: 0; bottom: 0; background: var(--shade), linear-gradient(#140c0799, #140c0798 3.4%, #140c0790 6.8%, #140c0780 10.2%, #140c0768 13.6%, #140c074c 17%, #140c0731 20.4%, #140c0719 23.8%, #140c0709 27.2%, #140c0701 30.6%, #140c0700 34%); }
+#select::after { top: 0; bottom: 0; background: linear-gradient(#140c0700 42%, #140c0701 46.7%, #140c0709 51.3%, #140c0719 56%, #140c0733 60.7%, #140c0754 65.3%, #140c0779 70%, #140c079e 74.7%, #140c07bf 79.3%, #140c07d9 84%, #140c07ea 88.7%, #140c07f1 93.3%, #140c07f2 98%); }
+#settings, #music, #free, #viewmode { z-index: 5; }
+#fps { z-index: 5; } /* Keep the readout above the selector's gradients. */
+#viewmode { top: calc(16px + env(safe-area-inset-top)); left: calc(16px + env(safe-area-inset-left)); right: auto; bottom: auto; width: 56px; height: 56px; opacity: 1; }
+#viewmode svg { width: 30px; height: 30px; translate: -1px 0; } /* the exit glyph's frame weighs right: optical centring */
+/* Keep the eye available on the selector at every viewport size. */
+@media (max-width: 519px), (max-height: 519px) {
+  #viewmode { top: calc(10px + env(safe-area-inset-top)); left: calc(10px + env(safe-area-inset-left)); width: 44px; height: 44px; }
+  #viewmode svg { width: 24px; height: 24px; }
+}
+@media (max-height: 500px) {
+  #viewmode { top: calc(12px + env(safe-area-inset-top)); left: auto; right: calc(12px + env(safe-area-inset-right)); }
+}
+
+
+/* A separate row until the complete town list fits between the corner controls with breathing room. */
+.sel-towns { --edge-l: max(16px, env(safe-area-inset-left)); --edge-r: max(16px, env(safe-area-inset-right)); position: absolute; z-index: 2; /* over the info's top padding, which reaches under the pills */ top: calc(var(--town-row-top) + env(safe-area-inset-top)); inset-inline: 0; box-sizing: border-box; padding-inline: var(--edge-l) var(--edge-r); scroll-padding-inline: var(--edge-l) var(--edge-r); display: flex; justify-content: flex-start; /* under the corner icons, from the panel's edge */ align-items: center; gap: 7px; height: 44px; overflow-x: auto; scrollbar-width: none; touch-action: pan-x; }
+.sel-towns::-webkit-scrollbar, .sel-strip::-webkit-scrollbar { display: none; }
+#select .sel-pill { min-width: 44px; flex: none; display: inline-flex; align-items: center; gap: 7px; width: auto; min-height: 44px; padding: 3px 13px; border: 1.5px solid #e8d8b880; border-radius: 999px; background: #140c07e6; color: #e8d8b8; font-size: 15px; touch-action: pan-x; }
+.sel-pill .escut { flex: none; width: 22px; height: 22px; margin: 0; /* not the .btn icon slot's offset: the arms sit with their name */ filter: drop-shadow(0 0 1px #fff3d699); }
+#select .sel-pill[aria-pressed="true"] .escut { filter: none; }
+.sel-pill i { width: 12px; height: 12px; border-radius: 50%; background: var(--c); box-shadow: 0 0 0 1.5px #fff3d6aa; }
+#select .sel-pill[data-town="el-teu-poble"][aria-pressed] i { border-radius: 0; background: linear-gradient(currentColor 0 0) center / 100% 3px no-repeat, linear-gradient(currentColor 0 0) center / 3px 100% no-repeat; box-shadow: none; } /* a plus in the text colour: add your town */
+#select .sel-pill:active { transform: scale(.96); } /* the row clips its overflow: the usual 1 px drop cut its bottom edge */
+#select .sel-pill[aria-pressed="true"] { background: #fff3d6; color: #2a1a10; border-color: #fff3d6; } /* cream = selected; gold fill is only the primary action */
+#select .sel-pill[aria-pressed="true"] i { box-shadow: 0 0 0 1.5px #2a1a1080; }
+.sel-pill:focus-visible, .sel-card:focus-visible { outline-offset: 2px; }
+#select .sel-card[aria-selected="true"]:focus-visible { outline: none; } /* its cream ring already is the cursor: never two rings */
+
+/* Menu surfaces (info, difficulty) share one soft panel; the cards echo its radius. */
+/* One radius scale: pills (tappable) 999 px · cards and panels 16 · information chips 8 (flat, no border: not buttons). */
+#select { --sel-r: 16px; --sel-chip-r: 8px; --sel-chip-bg: #1a110bd9; --sel-surface: #1a110beb; --sel-line: #fff3d61c; --sel-muted: #d2c0a0; }
+.sel-info { position: absolute; z-index: 1; top: calc(var(--info-top) + env(safe-area-inset-top)); left: calc(max(16px, env(safe-area-inset-left)) - 4px); /* its 4 px padding: the panel starts where the pills do */ width: min(400px, 36%); max-height: calc(100% - var(--info-top) - var(--info-dock, var(--dock-h)) - 6px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); /* --info-dock: desktops' step 2, down to the level card (select-ui.js levelStats) */ display: grid; gap: 10px; justify-items: start; overflow-y: auto; scrollbar-width: none; overscroll-behavior: contain; padding: 16px 4px 8px; margin-top: -14px; /* room inside the scroll box for the ?'s 44 px target over the name (top) and the position chip's (bottom); the margin keeps the name where it was */ box-sizing: border-box; }
+/* The transparent layout boxes leave exposed plaça to the HUD's orbit handlers.
+   Content still takes input (and can scroll the info), including every control. */
+#select > .sel-info { pointer-events: none; }
+.sel-info :is(.sel-name, .sel-entity, .sel-song, button, a, #select-error) { pointer-events: auto; }
+.sel-panel { --sel-line: #fff3d630; /* hairlines on the shaded plaça, not a panel */ position: relative; box-sizing: border-box; width: 100%; display: grid; gap: 12px; }
+.sel-identity { display: grid; grid-template-columns: minmax(0, max-content) auto; justify-content: start; justify-items: start; gap: 10px 12px; min-width: 0; } /* the ? right after the name on every layout */
+.sel-identity .sel-entity { grid-column: 1 / -1; } /* who carries her: the same holo chip as a pending figure's (rules below) */
+.sel-name { align-self: center; margin: 0; max-width: 100%; font: 800 30px/1.05 'Baloo 2', system-ui, sans-serif; overflow-wrap: break-word; text-shadow: 0 3px 0 #0009; text-box: trim-both cap alphabetic; } /* its box = the letters: the gaps around it are the gaps you see */
+@supports not (text-box: trim-both cap alphabetic) { .sel-name { margin-block: -.2em -.245em; } } /* Baloo 2's cap top and baseline at line-height 1.05 (Safari < 18.2) */
+
+.sel-entity { display: inline-flex; align-items: center; gap: 7px; box-sizing: border-box; max-width: 100%; padding: 4px 10px; border-radius: 999px; background: #fff3d6; color: #2a1a10; font-size: 12px; font-weight: 700; line-height: 1.25; vertical-align: middle; }
+.sel-entity svg { flex: none; width: 14px; height: 22px; fill: #e73449; stroke: none; }
+/* Keep the original colours legible on the foil. The flame's path has a .1 transform. */
+:is(.sel-pending, .sel-identity, .about-uaf) .sel-entity svg:not(.escut):not(.pessigolla) path { stroke: #63202c; stroke-width: 160; paint-order: stroke fill; }
+:is(.sel-pending, .sel-identity) .sel-entity svg.pessigolla path[fill] { stroke: #243044; stroke-width: 12; paint-order: stroke fill; }
+.sel-entity span { min-width: 0; }
+/* Keep each mark with its name, and the separator with the following attribution. */
+.sel-entity:has(.sel-entity-unit) { flex-wrap: wrap; justify-content: center; row-gap: 2px; }
+.sel-entity-unit { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-width: 0; max-width: 100%; }
+.sel-entity-plus { flex: none; }
+.sel-entity-part { display: inline-flex; align-items: center; gap: 5px; min-width: 0; max-width: 100%; }
+#select .sel-entity svg.escut { width: 16px; height: 16px; }
+.sel-song { display: flex; align-items: center; gap: 10px; min-width: 0; padding-top: 12px; border-top: 1px solid var(--sel-line); font-size: 16px; line-height: 1.2; }
+.sel-song svg { flex: none; box-sizing: border-box; width: 34px; height: 34px; padding: 8px; border-radius: 50%; background: #f5c5181f; fill: #f5c518; }
+.sel-song-copy { display: grid; gap: 2px; min-width: 0; }
+.sel-song-plate { display: flex; align-items: center; gap: inherit; min-width: 0; } /* the song itself (disc and words): the phones' chip, «Mira el ball» beside it */
+.sel-song-credit { font-size: 12px; font-weight: 600; color: var(--sel-muted); }
+/* «Mira el ball» (ui/watch-ui.js): the song's own dance, at the song row's end; a secondary .btn sized to the row */
+.sel-song .sel-watch { display: inline-flex; flex: none; align-items: center; justify-content: center; gap: 6px; width: auto; min-height: 44px; margin-inline-start: auto; padding: 0 16px 0 12px; font-size: 15px; white-space: nowrap; border-radius: var(--sel-chip-r); } /* the chips beside it are 8 px: a 12 px button next to them read as a stray radius */
+.sel-song .sel-watch > svg { width: 16px; height: 16px; margin: 0; padding: 0; border-radius: 0; background: none; fill: currentColor; }
+/* Step 2's level row: the song row's shape with a stroked trophy and inline stars. One line each: what doesn't fit is dropped (select-ui.js levelStats), never wrapped or cut. */
+.sel-level-stats svg { fill: none; stroke: #f5c518; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+/* Keep the record row stable; centre an empty record's single line beside the trophy. */
+.sel-level-stats .sel-song-copy { min-height: calc(1lh + 2px + 14.4px); align-content: center; }
+.sel-level-stats .sel-song-copy > span { white-space: nowrap; overflow: hidden; }
+.sel-level-stats .stars { display: inline-flex; gap: 1px; margin-right: 4px; vertical-align: -1px; }
+.sel-level-stats .stars svg { width: .95em; height: .95em; padding: 0; border-radius: 0; background: none; stroke: none; fill: #fff3d633; }
+.sel-level-stats .stars .on { fill: #f5c518; }
+/* The player's position as a flat chip that opens Classificacions (a muted chevron says so); the row sets its type.
+   (The records are on step 2, under each level.) */
+.sel-tiles { display: flex; align-items: center; gap: 8px; min-width: 0; padding-top: 12px; border-top: 1px solid var(--sel-line); font-size: 18px; line-height: 26px; }
+/* A figure with no facts yet keeps the row's box (empty), and the position, which only comes with the board's answer,
+   goes last: nothing beside or under the row moves when the standing loads or the figure changes. */
+#select .sel-tiles[hidden] { display: flex !important; visibility: hidden; } /* over base.css's global [hidden] */
+.sel-tiles { min-height: calc(1lh + 8px); } /* one chip's height: reserved before the board answers */
+#select-rank-tile { order: 1; }
+/* before the board answers the line is a quiet bar of its usual width, so the words land without moving the chip (profile.css's pulse) */
+#select-pos { transition: color .25s; }
+#select-rank-tile[data-loading] #select-pos { display: inline-block; width: 24ch; max-width: 100%; border-radius: 6px; color: transparent; transition: none; /* the old words never fade out under the bar: only the answer fades in */ background: linear-gradient(#fff3d61f, #fff3d61f) center / 100% .7em no-repeat; animation: profile-pulse 1.2s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { #select-rank-tile[data-loading] #select-pos { animation: none; } }
+.sel-tile { display: flex; flex: none; align-items: center; gap: 6px; box-sizing: border-box; padding: 4px 10px; border-radius: var(--sel-chip-r); background: var(--sel-chip-bg); white-space: nowrap; }
+.sel-tile svg { flex: none; width: 1.1em; height: 1.1em; margin: 0; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+/* a real button that looks like the info chips: base.css's button border, min-height and type undone; 44 px to tap */
+#select .sel-rank { position: relative; min-height: 0; margin: 0; border: 0; color: inherit; font: inherit; }
+#select .sel-rank::after { content: ''; position: absolute; inset: calc((100% - 44px) / 2) 0; }
+#select .sel-rank .chev { width: .9em; height: .9em; margin-left: -2px; stroke: var(--sel-muted); }
+#select .sel-rank { min-width: 0; white-space: normal; text-align: left; } /* the ranking line: a long place and season wrap, never cut */
+#select .sel-rank:active { transform: translateY(1px); filter: brightness(1.2); }
+/* «Com es juga»: a round ? at the top-right, where a sheet's close button sits, centred on the name's line by the grid */
+#select-howto { grid-column: 2; grid-row: 1; align-self: center; margin-block: -16px; /* the 44 px target overhangs: the name's letters set the row, even a small name's */ display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%; background: none; cursor: pointer; }
+#select-howto span { display: grid; place-items: center; width: 34px; height: 34px; border: 2px solid var(--button-border, #f5c518); border-radius: 50%; background: var(--button-bg); color: var(--button-text); font: 800 21px/1 'Baloo 2', system-ui, sans-serif; padding-top: 3px; box-sizing: border-box; box-shadow: 0 2px 6px #0006; }
+#select-howto:active span { translate: 0 1px; }
+#select-howto[hidden] { display: none; }
+#select-error { margin: 0; padding: 4px 8px; border-left: 3px solid #ff8a7a; background: #1b110be6; font-size: 14px; }
+
+/* Both steps occupy this same dock. Touch gives a pending figure the action row back through --drop.
+   Desktop reserves that row so repeated arrow clicks keep the same target (measure() reads the layout box). */
+#select { --ga: 8px; --drop-h: calc(var(--action-h) + var(--ga)); --drop: 0px; --sel-ease: cubic-bezier(.35, 0, .15, 1); }
+#select:is([data-pending], [data-fold]) { --drop: var(--drop-h); } /* the fold's own card has no action either */
+@media (pointer: fine) { #select:is([data-pending], [data-fold]) { --drop: 0px; } }
+/* The action fades with the drop; it comes back once the dock is on its way up. */
+#select #select-next { transition: transform .12s, filter .12s, box-shadow .12s, opacity .3s var(--sel-ease) .1s, translate .3s var(--sel-ease) .1s, visibility 0s; } /* + .btn-primary's */
+#select #select-next:disabled { opacity: 0; pointer-events: none; translate: 0 8px; transition: opacity .2s var(--sel-ease), translate .2s var(--sel-ease), visibility 0s .2s; } /* touch hides unavailable actions; folding already commits a playable selection */
+.sel-bottom { --bl: max(16px, env(safe-area-inset-left)); --br: max(16px, env(safe-area-inset-right)); position: absolute; z-index: 1; bottom: env(safe-area-inset-bottom); left: 50%; translate: -50% 0; transform: translateY(var(--drop)); transition: transform .32s var(--sel-ease); width: 100%; height: var(--dock-h); box-sizing: border-box; display: grid; grid-template-rows: minmax(0, 1fr) var(--action-h); gap: var(--ga); padding: 8px var(--br) calc(var(--ga) + 6px) var(--bl); }
+/* --ga + the strip's 6 px foot = the air over the action = the air under it */
+.sel-carousel { grid-row: 1; grid-column: 1; position: relative; isolation: isolate; display: grid; grid-template-columns: minmax(0, 1fr); align-items: stretch; min-height: 0; margin-inline: calc(-1 * var(--bl)) calc(-1 * var(--br)); }
+/* One minimal brown capsule above the strip; both arrows stay visible at the navigation boundaries. */
+.sel-carousel .sel-arrow { position: absolute; z-index: 2; bottom: calc(100% + 4px); width: 60px; min-width: 60px; height: 44px; min-height: 44px; padding: 0; display: grid; place-items: center; border: 0; background: transparent; color: var(--button-text); box-shadow: none; }
+#select-prev { left: calc(var(--nav-x, 50%) - 60px); border-radius: 999px 0 0 999px; }
+#select-forward { left: var(--nav-x, 50%); border-radius: 0 999px 999px 0; }
+.sel-nav { position: absolute; z-index: 1; bottom: calc(100% + 4px); left: var(--nav-x, 50%); translate: -50% 0; box-sizing: border-box; width: 120px; height: 44px; border: 2px solid var(--button-border); border-radius: 999px; background: var(--button-bg); box-shadow: 0 4px 12px #0006; pointer-events: none; }
+.sel-nav::after { content: ""; position: absolute; left: 50%; top: 10px; bottom: 10px; width: 1px; background: #f5c51860; }
+/* Keep the capsule still at either end; the unavailable arrow stays visible but dimmed. */
+#select :is(.sel-arrow, .sel-nav) { opacity: 1; transition: opacity .26s var(--sel-ease), visibility 0s; }
+#select .sel-arrow:disabled { opacity: .35; visibility: visible; pointer-events: none; cursor: default; }
+#select .sel-carousel[data-fits] :is(.sel-arrow, .sel-nav) { opacity: 0; visibility: hidden; pointer-events: none; transition-delay: 0s, .26s; }
+@media (prefers-reduced-motion: reduce) {
+  #select :is(.sel-arrow, .sel-nav), #select .sel-arrow:disabled, #select .sel-carousel[data-fits] :is(.sel-arrow, .sel-nav) { transition: none; }
+}
+/* Opening measures overflow before data-shown is set. Never animate out of an unmeasured visible state. */
+#select:not([data-shown]) :is(.sel-arrow, .sel-nav) { opacity: 0; visibility: hidden; pointer-events: none; transition: none; }
+.sel-carousel .sel-arrow svg { position: static; width: 26px; height: 26px; margin: 0; transform: none; stroke-width: 2.8; stroke-linecap: round; stroke-linejoin: round; }
+@media (pointer: coarse) { .sel-carousel { margin-inline: calc(-1 * var(--bl)) calc(-1 * var(--br)); } .sel-carousel .sel-arrow { display: none; } .sel-carousel .sel-nav { display: none; } .sel-carousel .sel-strip { padding-inline: max(var(--bl), var(--strip-inset, 0px)) max(var(--br), var(--strip-inset, 0px)); scroll-padding-inline: var(--bl) var(--br); } } /* touch keeps the edge-to-edge swipe strip */
+#select button:disabled { visibility: hidden; pointer-events: none; }
+/* Desktop keeps the reserved action legible, without the playable button's invitation animation. */
+@media (pointer: fine) {
+  #select #select-next:disabled { visibility: visible; opacity: 1; translate: none; background: transparent; border-color: #746957; color: #c7bca7; box-shadow: none; animation: none; scale: none; rotate: none; filter: none; cursor: default; }
+  #select #select-next:disabled::after { display: none; animation: none; }
+}
+.sel-strip { position: relative; display: flex; align-items: stretch; justify-content: flex-start; gap: 8px; min-height: 0; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; touch-action: pan-x; padding: 10px max(6px, var(--strip-r, 0px)) 6px max(6px, var(--strip-l, 0px)); margin-inline: 0; box-sizing: border-box; overflow-anchor: none; }

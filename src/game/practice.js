@@ -1,12 +1,13 @@
 // First-game practice: five short steps played on the real lane (same notes, judge and FX as the song), each
 // a few notes on the song's own beat grid (song.bpm), two beats apart so there is time to think.
 // notes: [beat, input, holdBeats]; input L = GUA, R = PA, B = GUAPA (both), P = GLOBUS (balloon, any side).
+import { tr } from '../i18n/messages.js';
 export const STEPS = [
-  { word: 'GUA', touch: 'Toca GUA quan la nota arribi a l’anella', keys: 'Prem ← o D quan la nota arribi a l’anella', notes: [[0, 'L'], [2, 'L'], [4, 'L'], [6, 'L']], need: 3 },
-  { word: 'PA', touch: 'Toca PA quan la nota arribi a l’anella', keys: 'Prem → o K quan la nota arribi a l’anella', notes: [[0, 'R'], [2, 'R'], [4, 'R'], [6, 'R']], need: 3 },
-  { word: 'GUAPA', touch: 'Toca GUA i PA alhora!', keys: 'Prem ← i → alhora (o ESPAI)', notes: [[0, 'B'], [2, 'B'], [4, 'B']], need: 2 },
-  { word: 'MANTÉN', touch: 'Mantén premut fins al final de la barra', keys: 'Mantén la tecla fins al final de la barra', notes: [[0, 'L', 3], [5, 'R', 3]], need: 1 },
-  { word: 'GLOBUS', touch: 'Pica molt ràpid, amb qualsevol botó!', keys: 'Pica molt ràpid, amb qualsevol tecla!', notes: [[0, 'P', 4]], need: 1, pumps: 6 },
+  { word: 'GUA', notes: [[0, 'L'], [2, 'L'], [4, 'L'], [6, 'L']], need: 3 },
+  { word: 'PA', notes: [[0, 'R'], [2, 'R'], [4, 'R'], [6, 'R']], need: 3 },
+  { word: 'GUAPA', notes: [[0, 'B'], [2, 'B'], [4, 'B']], need: 2 },
+  { word: tr('game.practice.hold.word'), notes: [[0, 'L', 3], [5, 'R', 3]], need: 1 },
+  { word: tr('game.practice.balloon.word'), notes: [[0, 'P', 4]], need: 1, pumps: 6 },
 ];
 
 // The step's notes, starting on beat k0 of `beats` (the song's beat times), shaped like makeDanceChart's.

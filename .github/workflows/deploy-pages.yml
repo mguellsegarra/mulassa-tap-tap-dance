@@ -31,7 +31,7 @@ jobs:
         env:
           DEPLOY_EVENT_NAME: ${{ github.event_name }}
           DEPLOY_BASE_SHA: ${{ github.event.before }}
-        run: node tools/pages-deploy-needed.mjs
+        run: node tools/deploy/pages-deploy-needed.mjs
 
   migrate:
     uses: ./.github/workflows/supabase-migrations.yml

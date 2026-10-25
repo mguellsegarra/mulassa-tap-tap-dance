@@ -1,0 +1,246 @@
+/* Classificacions and publishing (src/ui/board-ui.js, publish-ui.js): the results row, the lists sheet, the publish / alias sheet. */
+/* The HUD reserves this row's measured height (src/hud/results.js), including wrapped labels. */
+#results-actions { position: fixed; z-index: 3; left: 50%; bottom: calc(var(--app-gap, 0px) + 10px + var(--sab)); transform: translateX(-50%); box-sizing: border-box; display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; width: min(640px, calc(100vw - 24px - var(--sal) - var(--sar))); }
+/* solid and full contrast over the 3D plaça (nothing translucent): gold primary with dark text, dark secondaries with
+   cream text and a clear gold border; each with its icon in the same slot (padding reserves it on both sides) */
+#results-actions .btn { flex: 1 1 0; max-width: 220px; min-width: 0; min-height: 48px; padding: 6px 16px; font-size: 16px; opacity: 1; box-shadow: 0 4px 14px #000b; }
+#results-actions .btn-secondary { border-color: #f5c518; background: #2a1a10; color: #fff3d6; }
+#results-actions .btn-primary { border-color: #f5c518; background: var(--button-gold-bg); color: #2a1a10; }
+/* a word longer than its line (a long compound in another language) breaks instead of sticking out; nothing that fits changes */
+dialog p, #results-actions .btn { overflow-wrap: break-word; }
+#results-actions .btn > svg { width: 20px; height: 20px; margin-right: 8px; }
+/* Follow the HUD's existing scale on roomy screens. Short windows keep the compact row;
+   only this component grows, with equal columns and no per-button width cap. */
+@media (min-width: 640px) and (min-height: 520px) {
+  #results-actions { width: min(calc(680px * var(--ui)), calc(100vw - 24px - var(--sal) - var(--sar))); gap: calc(12px * var(--ui)); }
+  #results-actions .btn { max-width: none; min-height: calc(56px * var(--ui)); padding: calc(8px * var(--ui)) calc(12px * var(--ui)); font-size: calc(18px * var(--ui)); }
+  #results-actions:has(#results-publish:not([hidden])) .btn { flex-basis: calc(50% - 6px * var(--ui)); }
+  #results-actions .btn > svg { width: calc(24px * var(--ui)); height: calc(24px * var(--ui)); margin-right: calc(8px * var(--ui)); }
+}
+/* narrow: «Publica» is exactly as wide as the pair under it (2 × 220 + the gap), never the whole screen */
+@media (max-width: 639px) { #results-actions { width: min(452px, calc(100vw - 24px - var(--sal) - var(--sar))); } #results-actions > #results-publish { flex-basis: 100%; max-width: none; } }
+@media (max-width: 639px) { #results-actions > #results-retry { flex-basis: 100%; max-width: none; } } /* Keep the two secondary labels whole across the narrow breakpoint. */
+@media (max-width: 419px) { #results-actions .btn { padding-inline: 8px; } #results-actions .btn > svg { margin-right: 6px; } } /* phones: «Torna-ho a provar» and its icon on one line (it broke at the hyphen) */
+#board-menu, #publish-menu { max-height: calc(100dvh - 32px - var(--sat) - var(--sab)); }
+/* the board sheet has ONE height from its first frame (loading, list, empty, error, both views, both periods): the
+   dialog's height is fixed and the list box takes what is left, scrolling inside */
+#board-menu { width: min(460px, calc(100vw - 32px - var(--sal) - var(--sar))); height: min(760px, calc(100dvh - 32px - var(--sat) - var(--sab))); padding: 16px 18px 12px; }
+#board-menu[open] { display: flex; flex-direction: column; }
+#board-list-view:not([hidden]) { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; }
+#publish-menu { width: min(400px, calc(100vw - 32px - var(--sal) - var(--sar))); padding: 18px 20px 12px; }
+#profile-menu { width: min(400px, calc(100vw - 32px - var(--sal) - var(--sar))); max-height: calc(100dvh - 32px - var(--sat) - var(--sab)); padding: 18px 20px 12px; }
+#profile-menu .board-label { display: block; text-align: center; } #profile-code { text-align: center; letter-spacing: .3em; }
+#profile-menu .publish-body { margin-top: 10px; } #profile-menu .sheet-actions { margin-top: 12px; gap: 8px; }
+.board-status { margin: 4px 0; text-align: center; font-size: 15px; line-height: 1.35; color: #e8d8b8; text-wrap: pretty; }
+.board-status:empty { display: none; }
+.board-status.ok { color: #7ee081; }
+#publish-status:not(.ok), #profile-status:not(.ok) { color: #ffb4a8; }
+/* header: «Classificació» (a small heading over the corner ×'s row), the figure's button (portrait, name, chevron: it opens
+   «Tria figura» in place of the list), the season line; then the place card and the list box share what is left */
+#board-menu .board-top { flex: none; display: flex; flex-direction: column; align-items: center; gap: 4px; margin: 0 0 10px; }
+#board-menu h2 { margin: 4px 52px 4px; color: #e8d8b8; font-size: 14px; line-height: 20px; letter-spacing: .14em; text-transform: uppercase; }
+.board-figure { display: flex; align-items: center; width: auto; min-width: 210px; max-width: 100%; min-height: 56px; gap: 12px; padding: 5px 16px 5px 6px; font-size: 22px; }
+.board-pic { flex: none; display: grid; place-items: center; width: 52px; height: 44px; padding: 3px 5px; box-sizing: border-box; border-radius: 9px; background: radial-gradient(90% 90% at 50% 30%, #5a2a1f, #1c0f09); }
+.board-pic svg, .board-art svg { width: 100%; height: 100%; margin: 0; stroke: none; } /* pixel art: no button-icon stroke */
+.board-figure-name { flex: 1 1 auto; line-height: 1.05; }
+.board-figure-name .fig-t, .board-option-name .fig-t { display: block; font-size: .64em; opacity: .8; } /* «de Valls»: the town, quieter */
+.board-figure > .board-chev { flex: none; margin: 0; width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; transition: transform .2s; }
+.board-figure[aria-expanded="true"] .board-chev { transform: rotate(180deg); }
+@media (prefers-reduced-motion: reduce) { .board-chev { transition: none; } }
+.board-season { margin: 0; text-align: center; color: #e8d8b8; font-size: 15px; line-height: 1.35; }
+.board-season:empty::before { content: "\a0"; } /* its line from the first frame */
+/* «Tria figura»: the playable figures from the top, under its title (centred, the cards floated off the button), two to a row; the shown one cream, the others a neutral edge */
+.board-picker:not([hidden]) { flex: 1 1 auto; min-height: 0; overflow: auto; display: flex; flex-direction: column; justify-content: flex-start; gap: 10px; padding: 16px 0 12px; border-top: 1px solid #f5c51840; }
+.board-picker-title { margin: 0; color: #e8d8b8; font-size: 16px; }
+.board-figures { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.board-option { display: flex; align-items: center; flex-direction: column; gap: 8px; min-height: 0; padding: 10px 10px 8px; border-color: #e8d8b880; font-size: 19px; }
+.board-option .board-pic { width: 100%; height: auto; aspect-ratio: 7 / 5; padding: 8% 6% 4%; border-radius: 10px; }
+.board-option[aria-pressed="true"] { border-color: #fff3d6; background: #fff3d6; color: #2a1a10; }
+.board-main:not([hidden]) { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+/* «Posició 48 de 119» and the one link (to the top / back to the own row, by where the list is): flat, a gold strip */
+/* it reserves the list's scrollbar gutter (as .board-head-wrap does: 0 with overlay scrollbars) and paints its strip and fill
+   on ::before, whose box stops at that gutter, so its right edge meets the rows' instead of overhanging them by 11 px */
+.board-place { position: relative; isolation: isolate; flex: none; margin: 0 0 6px; padding: 6px 4px 8px 16px; overflow: hidden; scrollbar-gutter: stable; }
+.board-place::before { content: ""; position: absolute; inset: 0; z-index: -1; border-left: 4px solid #f5c518; border-radius: 0 10px 10px 0; background: #fff3d60d; }
+.board-place-row { display: flex; flex-wrap: wrap; align-items: center; column-gap: 8px; }
+.board-summary { flex: 1 0 auto; white-space: nowrap; margin: 0; color: #fff3d6; font-size: 18px; line-height: 1.3; font-variant-numeric: tabular-nums; }
+.board-jump { flex: none; display: inline-flex; align-items: center; gap: 4px; margin-left: auto; padding-inline: 4px; border-width: 0; white-space: nowrap; } /* no room beside the place (320 px): under it, right-aligned */
+.board-jump > svg { width: 16px; height: 16px; margin: 0; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.board-jump.down > svg { transform: rotate(180deg); }
+/* both labels' width reserved (the longer one, unseen and unread; ::after is the touch slop): swapping them never rewraps the line (iOS) */
+#board-jump-t::before, #board-jump-t::after { content: attr(data-top); content: attr(data-top) / ''; display: block; height: 0; overflow: hidden; visibility: hidden; } /* the page's language (board-list.js) */
+#board-jump-t::after { content: attr(data-me); content: attr(data-me) / ''; }
+/* phones from 360 px: «Posició 48 de 119» and the link on one line */
+@media (max-width: 400px) { .board-place-row { column-gap: 6px; } .board-summary { font-size: 17px; } .board-jump { font-size: 13px; } }
+.board-jump.off { visibility: hidden; } /* at the very top with the own row in view: nothing to go to, the line keeps its place */
+.board-place-sub { margin: 0; padding-right: 8px; color: #e8d8b8; font-size: 13px; line-height: 1.35; }
+.board-place .btn-link:not(.board-jump) { min-height: 32px; padding: 0; font-size: 14px; }
+/* the gap between the top of the list and the own row's neighbours: its ranks load from here */
+#board-table tr.gap td { height: 44px; border-top: 1px dashed #fff3d640; text-align: center; }
+#board-table tr.gap + tr td { border-top: 1px dashed #fff3d640; }
+/* the list's end: a spinner row while the next page loads, «Carrega’n més» (the fallback of the scroll) */
+.board-more { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 0 12px; }
+.board-more-status { display: flex; align-items: center; gap: 8px; margin: 0; color: #e8d8b899; font-size: 14px; }
+.board-more-status:empty { display: none; }
+.board-more-status .mula-spinner { width: 24px; height: 24px; }
+.board-more .btn { width: auto; min-height: 44px; padding: 0 18px; border-width: 1.5px; font-size: 15px; }
+/* the list box: the column headings sit above the scrolling part (so its scrollbar starts under them, not beside them);
+   both reserve the same scrollbar gutter, so the columns line up */
+.board-box { position: relative; flex: 1 1 auto; min-height: 96px; display: flex; flex-direction: column; }
+.board-head-wrap { flex: none; overflow: hidden; scrollbar-gutter: stable; }
+#board-menu:has(#board-table[hidden]) .board-scroll { scrollbar-gutter: auto; } /* no rows: the state centres on the title's axis */
+#board-menu:has(#board-table[hidden]) .board-head-wrap { visibility: hidden; } /* loading, empty, error: no headings */
+.board-scroll { position: relative; flex: 1 1 auto; min-height: 0; overflow: auto; overscroll-behavior: contain; touch-action: pan-y; scrollbar-gutter: stable; }
+.board-state { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: safe center; gap: 10px; padding: 8px 12px; }
+/* empty: the figure's portrait, a headline and what to do; error: a cloud, the headline in the error colour, Torna-ho a provar */
+.board-art { flex: 0 1 clamp(72px, 22vh, 170px); min-height: 64px; display: grid; place-items: center; aspect-ratio: 7 / 6; padding: 4% 6%; box-sizing: border-box; border-radius: 14px; background: radial-gradient(90% 90% at 50% 30%, #5a2a1f, #1c0f09); }
+.board-art[data-kind="error"] { flex-basis: 72px; aspect-ratio: 1; padding: 0; background: none; }
+.board-art[data-kind="error"] svg { fill: none; stroke: #ff8a7a; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+#board-status[data-kind="empty"], #board-status[data-kind="error"] { margin: 4px 0 0; color: #fff3d6; font-size: 21px; line-height: 1.25; }
+#board-status[data-kind="error"] { color: #ff8a7a; }
+@media (max-height: 620px) { #board-menu .board-state:has(.board-previous:not([hidden])) .board-art { display: none; } } /* short phones: the podium before the art */
+.board-hint { max-width: 320px; margin: 0; text-align: center; color: #e8d8b8; font-size: 15px; line-height: 1.4; text-wrap: pretty; }
+
+.board-state .btn { width: auto; min-width: 220px; }
+#board-menu:has(#board-table:not([hidden])) .board-state { display: none; }
+/* loading: the dancing Mulassa over its line (board-ui.js keeps it ≥ 1.2 s), then the list fades in */
+#board-status .mula-spinner { display: block; width: 72px; height: 72px; margin: 0 auto 10px; }
+#board-status:has(.mula-spinner) { animation: board-in .25s ease-out both; }
+#board-table:not([hidden]) tbody { animation: board-in .35s ease-out both; }
+@keyframes board-in { from { opacity: 0; transform: translateY(6px); } }
+@media (prefers-reduced-motion: reduce) { #board-table tbody, #board-status { animation: none; } }
+#board-table, .board-head { width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 15px; line-height: 1.25; font-variant-numeric: tabular-nums; }
+:is(#board-table, .board-head) .c-pos { width: 2.6em; } :is(#board-table, .board-head) .c-pct { width: 3.6em; } :is(#board-table, .board-head) .c-pts { width: 5.6em; } /* «206.290» at 17 px inside its padding */
+/* Catalan's «Encerts» is what 3.6em fits; longer headings (Точность, Aciertos) get a wider % column, and a word wider still breaks */
+@media (min-width: 520px) { html:not([lang="ca"]) :is(#board-table, .board-head) .c-pct { width: 4.8em; } html:not([lang="ca"]) .board-head th { overflow-wrap: anywhere; } } /* (phones keep a 0-wide % column) */
+#board-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); } /* for screen readers; .board-head shows them */
+.board-head th { padding: 4px 4px 6px; box-shadow: inset 0 -1px 0 #f5c51855; /* a clear edge the long list scrolls under */ background: #2a1a10; color: #e8d8b8aa; font-size: 12px; letter-spacing: .08em; text-align: right; }
+#board-table td { height: 46px; padding: 4px 4px; border-top: 1px solid #fff3d614; color: #fff3d6; text-align: right; }
+:is(#board-table, .board-head) :is(th, td):nth-child(2) { text-align: left; }
+:is(#board-table, .board-head) :is(th, td):first-child { color: #e8d8b8; text-align: center; }
+#board-table td:nth-child(3) { color: #e8d8b8b3; font-size: 13px; } /* % secondary, score the main number */
+#board-table td:nth-child(4) { font-size: 17px; font-weight: 800; }
+.pct-sub { display: none; } /* the % under the points: portrait phones only (profile.css) */
+/* Punts ends 12px short of the box: iOS overlay scrollbars reserve no gutter and would sit on the score (heading too, aligned) */
+:is(#board-table, .board-head) :is(th, td):nth-child(4) { padding-right: 12px; }
+/* the podium: 1-2-3 as the solid ribbon medal (posDisc, sheet-kit.js; the selector's, everywhere): the
+   drawing is the background (one per metal), the number stays text on the disc; --pos-size is the disc's width */
+.pos.p1, .pos.p2, .pos.p3 { display: inline-grid; place-items: center; flex: none; box-sizing: border-box; width: var(--pos-size, 24px); height: calc(var(--pos-size, 24px) * 7 / 6); padding-top: calc(var(--pos-size, 24px) * 7 / 24); background: center / 100% 100% no-repeat; color: #2a1a10; font-weight: 800; font-size: calc(var(--pos-size, 24px) * .54); line-height: 1; vertical-align: middle; }
+.pos.p1 { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 28'%3E%3Cpath d='M5.5 1h5l2.5 8h-5zM18.5 1h-5L11 9h5z' fill='%23f5c518' opacity='.55'/%3E%3Ccircle cx='12' cy='17.5' r='9.5' fill='%23f5c518'/%3E%3C/svg%3E"); }
+.pos.p2 { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 28'%3E%3Cpath d='M5.5 1h5l2.5 8h-5zM18.5 1h-5L11 9h5z' fill='%23d6dbe2' opacity='.55'/%3E%3Ccircle cx='12' cy='17.5' r='9.5' fill='%23d6dbe2'/%3E%3C/svg%3E"); }
+.pos.p3 { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 28'%3E%3Cpath d='M5.5 1h5l2.5 8h-5zM18.5 1h-5L11 9h5z' fill='%23d9955a' opacity='.55'/%3E%3Ccircle cx='12' cy='17.5' r='9.5' fill='%23d9955a'/%3E%3C/svg%3E"); }
+/* the name cell: alias (+ TU) on one line, the level on a small muted line under it (a coloured dot, not a tag) */
+.who { display: flex; align-items: center; gap: 5px; min-width: 0; }
+#board-table .sub { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 6px; margin-top: 2px; font-size: 10.5px; white-space: nowrap; }
+#board-table .streak { color: #e8d8b8b3; }
+#board-table .streak b { color: #fff; font-weight: 800; }
+#board-table tr.me .streak { color: #f5c518b3; }
+#board-table .lvl { flex: none; padding: 0 6px; border-radius: 999px; font-size: 9.5px; font-weight: 800; line-height: 15px; letter-spacing: .05em; color: #2a1a10; }
+/* one colour per level: the pills' fill, and the word itself wherever FÀCIL / NORMAL / DIFÍCIL is written
+   as text on a dark ground (.lvt*; never on cream: selected stays dark text). share-card.js repeats them on its canvas. */
+:root { --lvl0: #8fd98f; --lvl1: #f0b04a; --lvl2: #ef7b6a; }
+.lvl0 { background: var(--lvl0); } .lvl1 { background: var(--lvl1); } .lvl2 { background: var(--lvl2); }
+.lvt0 { color: var(--lvl0); } .lvt1 { color: var(--lvl1); } .lvt2 { color: var(--lvl2); }
+#board-table tr.me td { background: #f5c51824; color: #f5c518; }
+#board-table tr.me td:first-child { box-shadow: inset 3px 0 #f5c518; } /* the player's own row: a gold strip */
+.me-tag { flex: none; display: inline-block; padding: 0 5px; border-radius: 4px; background: #f5c518; color: #2a1a10; font-size: 11px; line-height: 16px; letter-spacing: .06em; }
+/* «Correu confirmat» (src/ui/profile-notes.js checkBadge): a blue check after the nickname, meaning only that; a mark, no tip */
+.verified-check { position: relative; flex: none; display: inline-grid; place-items: center; width: 16px; height: 16px; margin: 0; }
+.verified-check svg { width: 100%; height: 100%; fill: #3b9cff; stroke: #fff; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.verified-check svg .seal { stroke: none; }
+.board-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 0 16px; }
+html:not([lang="ca"]) .board-links { row-gap: 16px; } /* longer words wrap the two 32 px links onto two rows: each keeps its own 44 px slop (Catalan fits one row, or stacks 44 px links) */
+.board-text { margin: 0 0 10px; text-align: center; font-size: 16px; line-height: 1.35; color: #e8d8b8; text-wrap: pretty; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.board-tip { margin: 0 0 12px; padding: 8px 12px; border-left: 3px solid #f5c518; border-radius: 4px; background: #fff3d60d; color: #fff3d6; font-size: 15px; line-height: 1.35; text-wrap: pretty; } /* notes: flat, coloured strip */
+/* the prompt (opens by itself after an eligible run): the run in one big line, the alias (or its field), Publica */
+/* the publish / alias sheet: a centred header (title, the run), then one column left-aligned to the field (label,
+   field, its hint or its error, the consent note) on a 4 / 8 / 12 / 16 px rhythm, then the status and the actions */
+.publish-run { margin: 0 0 16px; text-align: center; font-size: 22px; line-height: 1.2; color: #f5c518; text-wrap: balance; }
+.publish-body { display: flex; flex-direction: column; gap: 12px; text-align: left; }
+.board-label { display: block; margin: 0 0 4px; color: #e8d8b8; font-size: 14px; letter-spacing: .08em; }
+.publish-as-row { box-sizing: border-box; display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 48px; padding: 0 4px 0 12px; border-radius: 10px; background: #fff3d60d; }
+.publish-as-row b { min-width: 0; overflow-wrap: anywhere; color: #fff3d6; font-size: 18px; }
+#publish-alias { box-sizing: border-box; width: 100%; min-height: 48px; padding: 8px 12px; border: 2px solid #f5c51899; border-radius: 10px; background: #140c07; color: #fff3d6; font: 700 18px 'Baloo 2', system-ui, sans-serif; user-select: text; -webkit-user-select: text; touch-action: manipulation; } /* 18 px: iOS doesn't zoom; body's user-select: none must not reach the caret */
+#publish-alias { text-align: center; } #publish-menu .board-label { display: block; text-align: center; } /* label, field and placeholder on the sheet's axis */
+#publish-alias:focus { outline: none; border-color: #f5c518; box-shadow: 0 0 0 3px #f5c51840; }
+#publish-alias[aria-invalid="true"] { border-color: #ff8a7a; }
+#publish-alias[aria-invalid="true"]:focus { box-shadow: 0 0 0 3px #ff8a7a40; }
+#publish-alias[readonly] { opacity: .75; }
+.publish-hint { margin: 4px 0 0; text-align: center; color: #e8d8b8b3; font-size: 14px; line-height: 1.3; text-wrap: pretty; }
+.publish-error { margin: 4px 0 0; padding-left: 8px; border-left: 3px solid #ff8a7a; color: #ffb4a8; font-size: 14px; line-height: 1.3; }
+.publish-error .btn-link { display: inline; min-height: 0; padding: 0; border: 0; font: inherit; font-weight: 700; color: inherit; text-wrap: wrap; text-decoration-color: currentColor; } /* «recupera el perfil» runs on in the sentence */ /* the field's own error, where the hint was */
+.publish-note { margin: 0; padding: 8px 12px; border: 1px solid #f5c51833; border-radius: 8px; background: #fff3d60a; text-align: center; color: #e8d8b8cc; font-size: 13px; line-height: 1.35; text-wrap: pretty; } /* consent: a flat note + Privadesa */
+.publish-note .btn-link { display: inline; min-height: 0; padding: 0 2px; font-size: 13px; }
+.publish-end { margin-top: 16px; }
+/* Publica → «Publicat!» → «Ets el número…»: no room kept blank before publishing (it read as a hole); board-ui.js eases
+   the end's height (0.2 s) when a line comes, the buttons stay at its bottom and the new line slides in over them */
+.publish-end { display: flex; flex-direction: column; justify-content: flex-end; }
+#publish-end-in { flex: none; }
+#publish-status, .publish-place { margin: 0 0 8px; }
+.publish-place { text-align: center; font-size: 22px; line-height: 1.25; color: #7ee081; text-wrap: balance; }
+/* the sheet's views (board-ui.js swap()): the calçot while publishing, then «Publicat!» + the place + D'acord */
+#publish-form[data-view] :is(#publish-summary, .publish-body) { display: none; }
+#publish-wait { display: none; }
+#publish-form[data-view="wait"] #publish-wait { display: block; animation: board-in .25s ease-out both; }
+#publish-form[data-view="wait"] .publish-end { display: none; }
+#publish-form[data-view="done"] :is(#publish-status, .publish-place, .sheet-actions) { animation: board-in .3s ease-out both; }
+/* a calm result card, one rhythm (8 px steps): title → what happened (quiet) → where they stand (the green highlight) → D'acord */
+#publish-form[data-view] .publish-end { margin-top: 0; }
+#publish-form[data-view] h2 { margin-bottom: 12px; }
+#publish-wait .mula-spinner { display: block; width: 88px; height: 88px; margin: 4px auto 8px; }
+#publish-form[data-view="done"] #publish-status { margin: 0 0 20px; font-size: 16px; line-height: 1.35; color: #e8d8b8; }
+#publish-form[data-view="done"] #publish-status:has(+ .publish-place:not([hidden])) { margin-bottom: 6px; }
+#publish-form[data-view="done"] .publish-place { margin: 0 0 24px; font-size: 26px; line-height: 1.2; }
+/* under a guest's «Publicat!»: why to confirm the e-mail, quietly (board-ui.js); «Confirma el correu» takes the primary and «D'acord» steps down */
+.publish-offer { margin: -12px 0 10px; text-align: center; }
+.publish-warning { margin: 0 0 18px; color: #e8d8b8; font-size: 15px; line-height: 1.35; text-wrap: balance; }
+.publish-offer > .btn > svg { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.publish-offer:not([hidden]) + .sheet-actions > #publish-send { background: var(--button-bg); color: var(--button-text); }
+#publish-form[data-view="done"] .publish-offer { animation: board-in .3s ease-out both; }
+@media (min-height: 501px) { #publish-menu:has(#publish-form[data-view]) { padding: 24px 24px 24px; } } /* even air all round (not the compact landscape sheet) */
+#publish-menu .sheet-actions { margin-top: 0; gap: 8px; }
+#publish-menu:has(#publish-form[data-view="wait"]) #publish-cancel { display: none; }
+#publish-menu .sheet-actions:has(> #publish-never:not([hidden])) > .btn-link { min-height: 36px; padding-block: 2px; } /* the two quiet links stack tight under Publica */ /* «Ara no» as tall as «Mira la classificació», which takes its place: the buttons don't shift */
+@media (max-width: 400px) { #publish-menu { padding-inline: 16px; } #publish-menu h2 { font-size: 27px; } .publish-hint { font-size: 13px; } } /* the hint and «Publica el teu resultat!» stay one line (the title never shrinks to «Publicat!» with a jump) */
+@media (max-height: 500px) { /* landscape phones: the list gets the height, the settings row spans */
+  #board-menu, #publish-menu { width: min(600px, calc(100vw - 32px - var(--sal) - var(--sar))); padding: 12px 16px 8px; }
+  #board-menu h2, #publish-menu h2 { font-size: 24px; margin-bottom: 4px; }
+  /* the board in two columns: title, switches and buttons on the left, the list box on the right (full height) */
+  #board-menu { width: min(760px, calc(100vw - 32px - var(--sal) - var(--sar))); }
+  #board-list-view:not([hidden]) { display: grid; grid-template-columns: minmax(230px, 38%) 1fr; grid-template-rows: auto auto 1fr; column-gap: 16px; }
+  #board-list-view > :not(.board-box) { grid-column: 1; }
+  #board-list-view > .sheet-actions { grid-row: 3; align-self: end; } /* the links at the column's foot, the free space above them */
+  #board-list-view > .board-box { grid-column: 2; grid-row: 1 / -1; min-height: 0; }
+  #board-menu .sheet-actions { gap: 8px; margin-top: 8px; }
+  #board-menu .sheet-actions .btn, #publish-menu .btn:not(.btn-link) { min-height: 44px; }
+}
+@media (max-height: 700px) { /* short screens: the same rhythm, one step tighter; the primary and its second choice side by side */
+  .publish-run { margin-bottom: 12px; font-size: 20px; }
+  .publish-body { gap: 8px; }
+  .publish-end { margin-top: 12px; }
+  #publish-menu .sheet-actions { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; }
+  #publish-menu .sheet-actions > .btn-link { grid-column: 1 / -1; }
+  :where(#publish-menu .sheet-actions:has(> #publish-board[hidden])) > .btn-primary { grid-column: 1 / -1; } /* :where — the landscape grid places «Publica» itself */
+}
+@media (max-height: 500px), (min-width: 700px) and (max-height: 700px) { /* landscape / short windows: the run and the field | status and actions */
+  #publish-menu { width: min(660px, calc(100vw - 32px - var(--sal) - var(--sar))); }
+  #publish-form { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 20px; align-items: start; }
+  #publish-form > h2 { grid-column: 1 / -1; }
+  #publish-form > .publish-run { grid-column: 1 / -1; }
+  /* the form's own view, two columns split by a hairline: LEFT the nickname, its hint, «Publica» under it;
+     RIGHT the consent note, «No m'ho tornis a recordar», «Ja tens un perfil?». Every box joins the grid (display: contents), so the rows
+     line up: field | note, Publica | the quiet links. Status / device hints, when they show, span both columns */
+  #publish-form:not([data-view]) :is(.publish-body, .publish-end, #publish-end-in, .sheet-actions) { display: contents; }
+  #publish-form:not([data-view]) { row-gap: 8px; position: relative; }
+  #publish-form:not([data-view])::before { content: ''; grid-column: 2; grid-row: 3 / span 3; align-self: stretch; margin-left: -10px; border-left: 1px solid #f5c51840; pointer-events: none; } /* half the 20 px gap: the divider sits between the columns */
+  #publish-form:not([data-view]) :is(#publish-as, #publish-field) { grid-column: 1; grid-row: 3; }
+  #publish-form:not([data-view]) #publish-about { grid-column: 2; grid-row: 3; align-self: stretch; display: grid; align-content: center; justify-items: center; } /* the card is as tall as the field: its text sits in the middle, «Privadesa» under it */
+  #publish-form:not([data-view]) #publish-send { grid-column: 1; grid-row: 4 / span 2; align-self: start; }
+  #publish-form:not([data-view]) #publish-never { grid-column: 2; grid-row: 4; justify-self: center; }
+  #publish-form:not([data-view]) #publish-recover { grid-column: 2; grid-row: 5; justify-self: center; }
+  #publish-form:not([data-view]) :is(#publish-temp, #publish-device, #publish-status) { grid-column: 1 / -1; grid-row: auto; margin: 0; }
+  #publish-form[data-view] > .publish-end { grid-column: 1 / -1; grid-row: auto; justify-self: center; width: min(100%, 320px); } /* «Publicant…» / «Publicat!» alone: centred, not pushed to a half */
+  #publish-menu .sheet-actions { grid-template-columns: 1fr; }
+  #publish-menu .sheet-actions > .btn-primary { grid-column: auto; }
+}

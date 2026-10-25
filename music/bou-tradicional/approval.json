@@ -1,0 +1,19 @@
+{
+  "revision": 13,
+  "status": "approved-for-future-integration",
+  "approvedOn": "2026-10-23",
+  "audio": "bou-tradicional-v13.mp3",
+  "audioSha256": "798aed470cc580269fee005cceb7e3df2cb795fec9ae459222e2267293345918",
+  "futureAudioUrl": "music/bou-tradicional-v13.mp3?v=798aed470cc5",
+  "duration": 154.334716553288,
+  "form": "v1 - sense el retorn central",
+  "ascendingEnding": [
+    79,
+    83,
+    84
+  ],
+  "finalNote": "Normal melody instrument, only volume fade",
+  "userListeningAccepted": true,
+  "agentListeningVerified": false,
+  "playable": false
+}

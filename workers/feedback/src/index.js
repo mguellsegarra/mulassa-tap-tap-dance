@@ -1,12 +1,12 @@
 import { EmailMessage } from 'cloudflare:email';
 
 // «Bústia de la plaça» (src/services/feedback.js): POST { message, email?, turnstileToken, version } → 200 { ok: true } or 4xx/5xx
-// { error: code } (src/services/feedback.js maps the codes to Catalan). Turnstile first, then the message goes straight to Marc's
+// { error: code } (src/services/feedback.js maps the codes to Catalan). Turnstile first, then the message goes straight to the owner's
 // inbox as one plain-text e-mail through Email Routing's send_email binding (env.MAIL, wrangler.toml). Nothing is stored
-// (Marc's choice): if sending fails, the player sees «Torna-ho a provar».
+//: if sending fails, the player sees «Torna-ho a provar».
 // Vars: ALLOWED_ORIGINS, FEEDBACK_FROM, DAILY_MAX. Secrets: TURNSTILE_SECRET_KEY, FEEDBACK_TO (a verified Email Routing
 // destination of the account; a secret so no personal address lives in the repo). Bindings: MAIL, PER_IP + ALL (rate
-// limits), DAILY (KV: the day's e-mail count). Tests: tests/feedback.mjs.
+// limits), DAILY (KV: the day's e-mail count). Tests: tests/services/feedback.mjs.
 // Abuse, cheapest first: Turnstile (single use, its hostname must be one of ours), then 3/min per IP (binding) + 3/10 min
 // per IP (isolate memory), 10/min in total, and at most DAILY_MAX e-mails a day: even a Turnstile bypass can't flood the inbox.
 const MIN = 5, MAX = 1000, EMAIL_MAX = 254;

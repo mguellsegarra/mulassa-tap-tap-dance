@@ -1,4 +1,4 @@
--- Nicknames without spaces (Marc, 2026-09-28: "que no puguin tenir espais"). Mirrors src/alias-rules.js checkAlias
+-- Nicknames without spaces. Mirrors src/alias-rules.js checkAlias
 -- (tests/alias-rules.mjs runs 0009-0012 on PGlite and compares both answers).
 --   * normalized_alias(): as in 0009, except that whitespace is no longer collapsed into one space: after the same
 --     clean-up (NFC, invisible characters removed, l-middle-dot (U+0140), dashes, apostrophes, l.l) the ends are trimmed of spaces and

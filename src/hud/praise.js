@@ -1,12 +1,14 @@
 // Big words and praise (headline, bigWord) and the slot that dodges the balloon.
+import { tr } from '../i18n/messages.js';
 import { C, devScale, qSize, FONT, sprite } from './sprites.js';
 import { W, H } from './canvas.js';
 import { G, clock, BALLOON_DROP, balloonShown, songTime } from '../game/state.js';
 import { lane, HEADLINE_SIZE, PRAISE_CENTRED, PRAISE_Y } from './layout.js';
 import { textWidth } from './primitives.js';
+const MASH_TAIL = tr('hud.lane.mash2'); // the second line of the GLOBUS «PICA RÀPID!» label, for dodgeBalloon's width
 
 // combo -> [word, tier]: like Candy Crush's "Sweet! Tasty! Divine!", each step louder
-export const PRAISE = { 10: ['QUIN ESTIL!', 0], 20: ['GUAPÍSSIMA!', 1], 30: ['IMPARABLE!', 1], 40: ['ESPECTACULAR!', 2], 50: ['VALLENQUISME O BARBÀRIE!', 2], 60: ['FARMEJANT AURA!', 2], 75: ['LLEGENDÀRIA!', 3], 100: ['+1000 AURA', 3] };
+export const PRAISE = Object.fromEntries([[10, 0], [20, 1], [30, 1], [40, 2], [50, 2], [60, 2], [75, 3], [100, 3]].map(([combo, tier]) => [combo, [tr('hud.praise.c' + combo), tier]]));
 const PRAISE_COL = { 0: [C.gold, '#ff9f1c'], 1: ['#7ee0ff', '#3f6fe0'], 2: ['#ffb3d9', '#e0457b'], 3: ['#fff27a', '#ff5ea8'], bad: ['#b6ff3b', '#7a2fb8'], bonk: ['#ffd27a', '#e0452b'] }; // bad = poison green to purple; bonk (PATAPAM!) = bruise orange to red
 // base: the size it settles at (a sprite is painted at it once; pops and count-ins scale that image). The word is
 // blitted as one image, so fading it never lets the dark rim show through the letters.
@@ -70,7 +72,7 @@ function dodgeBalloon(p, lvl) {
   const hw = (H.measureText(p.word).width + S * 0.6) / 2, bw = 31 * s, room = hw + bw + 6, py = PRAISE_Y(big);
   if (py - S * 0.6 > bottom + BALLOON_DROP * s || Math.abs(p.dx || 0) >= room) return; // clear already
   // beside it are its labels (the counter, PICA RÀPID!), stacked lower when there's no room left of the ring
-  const labels = bottom + (hx / s - 34 > textWidth('RÀPID!', 9) + 2 ? 31 : 46) * s, under = py - S * 0.6 >= labels;
+  const labels = bottom + (hx / s - 34 > textWidth(MASH_TAIL, 9) + 2 ? 31 : 46) * s, under = py - S * 0.6 >= labels;
   if (under && hx + room + hw <= W - 4) p.dx = room;
   else if (under && hx - room - hw >= 4) p.dx = -room;
   else p.dy = Math.max(p.dy || 0, bottom + BALLOON_DROP * s + S * 0.6 + 2 - py);

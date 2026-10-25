@@ -1,0 +1,119 @@
+{
+  "lang": "ko",
+  "ogLocale": "ko_KR",
+  "ui": {
+    "play": "지금 플레이",
+    "videos": "영상",
+    "download": "다운로드 (MP4, {size})",
+    "downloadMd": "{title}, 다운로드 (MP4, {size})",
+    "footerGame": "게임",
+    "footerProject": "프로젝트 소개",
+    "footerCode": "코드",
+    "ogImageAlt": "Mulassa Tap Tap Dance 로고와 Mulassa, Drac de Valls.",
+    "videoDescription": "Mulassa Tap Tap Dance 홍보 영상.",
+    "genre": "리듬 게임",
+    "os": "모든 브라우저"
+  },
+  "home": {
+    "title": "Mulassa Tap Tap Dance",
+    "lead": "Joc de ritme en català: balla la Mulassa de Valls al compàs de la música tocant GUA i PA.",
+    "sections": [
+      [
+        "Com es juga",
+        [
+          "Toca **GUA** (esquerra) i **PA** (dreta) quan les notes arribin al cercle. Si en surt una de dues colors, toca els dos botons alhora: és una **GUAPA!** i puntua el doble. Mantén premut a les notes llargues (**MANTÉN**) i pica sense parar als redobles (**GLOBUS**). Cada error desanima la plaça, i si es buida la Mulassa cau.",
+          "Hi ha tres nivells (fàcil, normal i difícil), una pràctica inicial, classificacions i targetes per compartir el resultat. Es juga des del navegador, al mòbil, a la tauleta o a l’ordinador."
+        ]
+      ],
+      [
+        "Més informació",
+        [
+          "[Sobre el projecte](https://mulassa.cat/projecte/): què és, d’on surt i qui l’ha fet.",
+          "El [codi és obert a GitHub](https://github.com/mguellsegarra/mulassa-tap-tap-dance), sense ànim de lucre, per difondre el bestiari de la cultura popular catalana.",
+          "Per jugar, obre [mulassa.cat](https://mulassa.cat/)."
+        ]
+      ]
+    ]
+  },
+  "projecte": {
+    "title": "Mulassa Tap Tap Dance 소개",
+    "captures": [
+      [
+        "/captures/titol.jpg",
+        "타이틀 화면: Mulassa Tap Tap Dance 로고와 광장의 Mulassa de Valls."
+      ],
+      [
+        "/captures/joc.jpg",
+        "플레이 화면: 노트 레인, GUA와 PA 버튼, 사람들 앞에서 춤추는 Mulassa."
+      ],
+      [
+        "/captures/resultats.jpg",
+        "공유용 결과 카드: 별 세 개와 정확도 92 %."
+      ]
+    ],
+    "videos": [
+      [
+        "/videos/promo-16x9.mp4",
+        "/videos/promo-16x9.jpg",
+        "홍보 영상 (가로, 16:9)",
+        1920,
+        1080,
+        "20 MB"
+      ],
+      [
+        "/videos/promo-9x16.mp4",
+        "/videos/promo-9x16.jpg",
+        "홍보 영상 (세로, 9:16)",
+        1080,
+        1920,
+        "17 MB"
+      ]
+    ],
+    "lead": "Mulassa Tap Tap Dance는 Mulassa de Valls의 춤에서 영감을 받은 카탈루냐어 무료 리듬 게임이에요. 카탈루냐 민속 문화의 bestiari(축제용 동물 조형물)를 알리기 위한 비영리 오픈 소스 프로젝트예요.",
+    "sections": [
+      [
+        "어떤 게임인가요",
+        [
+          "리듬 게임이에요. 레인을 따라 오는 노트에 맞춰 두 버튼을 눌러요. GUA는 주황색 왼쪽, PA는 청록색 오른쪽이에요. 누르는 동안 3D Mulassa가 사람들로 가득한 광장에서 춤춰요. 설치나 가입 없이 브라우저에서 즐겨요."
+        ]
+      ],
+      [
+        "Mulassa de Valls와 Fira de Santa Úrsula",
+        [
+          "Mulassa는 Valls(Alt Camp)의 bestiari 중 하나예요. Fira de Santa Úrsula 같은 축제의 seguici(전통 축제 행렬)에 등장하고, Unió Anelles de la Flama가 춤을 추게 해요. Fira는 지역 축제와 장이 함께 열리는 행사예요. 저는 Valls의 Fira de Santa Úrsula에 맞춰 축제와 Mulassa에 대한 애정을 담아 이 게임을 공개해요. 실제 춤을 재현하되 조금 과장해서 더 신나게 만들었어요. 공개 영상을 보고 제가 각색한 것으로, 공식 안무는 아니에요.",
+          "음악은 Francesc Bofarull i Figuerola가 작곡한 Ball de la Mulassa의 멜로디만 가져와 festa major(지역의 큰 연례 축제) 분위기로 새롭게 편곡했어요."
+        ]
+      ],
+      [
+        "게임 방법",
+        [
+          "**GUA**와 **PA**: 노트가 원에 오면 왼쪽 또는 오른쪽 버튼을 터치해요(키보드는 ←와 → 또는 D와 K).",
+          "**GUAPA!** 두 버튼을 동시에 눌러요. 점수가 두 배예요. 하나만 누르면 실수예요.",
+          "**꾹 누르기**: 긴 노트가 끝날 때까지 눌러요(보통과 어려움).",
+          "**풍선**: 북이 빠르게 울리면 터질 때까지 최대한 많이 두드려요.",
+          "**기운**: 실수할 때마다 광장의 기운이 줄어요. 다 떨어지면 Mulassa가 쓰러져요.",
+          "**신나는 피날레**: 곡의 마지막 구절이에요. 정확도가 70 % 이상이면 점수가 두 배예요.",
+          "첫 춤은 안내에 따라 연습해요. 그다음 쉬움, 보통, 어려움 중 골라요. 별명으로 순위표에 결과를 올리거나 결과 카드를 공유할 수 있어요."
+        ]
+      ],
+      [
+        "만든 사람과 크레딧",
+        [
+          "기획, 디자인, 개발: Marc Güell Segarra · [ondori.dev](https://ondori.dev).",
+          "이 Mulassa 게임을 만들 수 있도록 허락해준 [Unió Anelles de la Flama](https://uaf.cat)와 함께했어요. {uaf}",
+          "멜로디: Francesc Bofarull i Figuerola. 편곡과 소리는 게임 코드가 만들어요.",
+          "Baloo 2와 Jersey 10 글꼴은 SIL Open Font License로 사용해요.",
+          "Valls에서 {campanar} 애정 {cor}과 많은 AI의 도움으로 만들었어요"
+        ]
+      ],
+      [
+        "오픈 소스와 함께 만들기",
+        [
+          "[GitHub에 코드가 공개되어 있어요](https://github.com/mguellsegarra/mulassa-tap-tap-dance). 누구나 함께할 수 있어요. 자기 지역의 mulasses와 bestiari, 그 춤과 음악도 추가해봐요.",
+          "미소가 났다면 [커피 한 잔 사주세요](https://buymeacoffee.com/mguellsegarra).",
+          "게임은 추적용 쿠키를 쓰지 않아요. 처리하는 데이터와 권리는 설정의 ‘개인정보’에서 확인할 수 있어요. 이미지 관련 문의나 궁금한 점은 [holi@mulassa.cat](mailto:holi@mulassa.cat)으로 보내요."
+        ]
+      ]
+    ]
+  }
+}

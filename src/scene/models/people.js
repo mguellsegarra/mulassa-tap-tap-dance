@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { pick, Vox, SKIN_MAT } from './voxel.js';
-import { C } from './mulassa.js';
+import { C } from '../../figures/mulassa/mulassa.js';
 
 // ---------------------------------------------------------------- People
 export const SKIN = ['#f1c9a5', '#e0ac85', '#c68d63', '#8d5a3b', '#f6d7bd'];
@@ -74,18 +74,20 @@ export function buildPerson(o = {}) {
     return a;
   });
   g.scale.setScalar(k);
-  return { g, body, torso, arms, legs };
+  return { g, body, torso, arms, legs, appearance: { skin, hair, shirt, pants } };
 }
 // The whole crowd as ONE skinned mesh (a draw call instead of five per person): every part mesh is baked as built
 // (same boxes, same vertex colours) into a shared geometry whose "bones" are each person's own pivot groups (torso,
 // legs, arms). The groups stay in the scene and animate exactly as before; the GPU puts each part where its group's
 // world matrix says. Bind pose = identity, so a vertex lands at bone.matrixWorld × (its part-local position).
 // A hidden person must be scaled to zero (p.g.scale 0): the groups still update, only the mesh draws them.
-export function skinCrowd(people) {
+// A person with p.bones (the representation's figures: a chair and its wheels are bones too) bakes those instead.
+export function skinCrowd(people, mat = SKIN_MAT) {
   const parts = [], bones = [];
   for (const p of people) {
     p.scale = p.g.scale.x; // kids are smaller: the size to restore when shown again
-    for (const bone of [p.torso, ...p.legs, ...p.arms]) {
+    p.bone0 = bones.length; // their first bone (the torso): drac-soot.js chars a person's bones
+    for (const bone of p.bones ?? [p.torso, ...p.legs, ...p.arms]) {
       const k = bones.push(bone) - 1;
       for (const mesh of bone.children.filter(o => o.isMesh)) {
         mesh.updateMatrix();
@@ -99,7 +101,7 @@ export function skinCrowd(people) {
       }
     }
   }
-  const mesh = new THREE.SkinnedMesh(mergeGeometries(parts), SKIN_MAT);
+  const mesh = new THREE.SkinnedMesh(mergeGeometries(parts), mat);
   parts.forEach(geo => geo.dispose());
   mesh.bind(new THREE.Skeleton(bones, bones.map(() => new THREE.Matrix4())), new THREE.Matrix4());
   mesh.frustumCulled = false; // people walk about: bounds from the bones would be stale (and they ring the camera anyway)

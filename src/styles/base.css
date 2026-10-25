@@ -1,20 +1,27 @@
-/* The page: layout, the HUD chrome, the touch pad and the sheets (settings, pause, sync, classificacions...). */
-:root { --sat: env(safe-area-inset-top, 0px); --sar: env(safe-area-inset-right, 0px); --sal: env(safe-area-inset-left, 0px); --sab: env(safe-area-inset-bottom, 0px); --button-radius: 12px; --button-border: #f5c518; --button-bg: #2a1a10e8; --button-text: #fff3d6; }
+/* The page: layout, the HUD chrome, the touch pad and the sheets (settings, pause, sync, privadesa...; the boards are in board.css). */
+:root { --sat: env(safe-area-inset-top, 0px); --sar: env(safe-area-inset-right, 0px); --sal: env(safe-area-inset-left, 0px); --sab: env(safe-area-inset-bottom, 0px); --button-radius: 12px; --button-border: #f5c518; --button-gold-bg: linear-gradient(180deg, #ffe066 0%, #f5c518 55%, #dfad13 100%); --button-bg: #2a1a10e8; --button-text: #fff3d6; --focus: 3px solid var(--button-text); --focus-off: 3px; } /* ONE keyboard cursor everywhere: --focus, never stacked on a selection ring */
 :root { color-scheme: light only; } /* never let iOS/Android dark mode restyle our colours */
 button { -webkit-appearance: none; appearance: none; display: inline-flex; align-items: center; justify-content: center; gap: 12px; min-height: 44px; border: 2px solid var(--button-border); border-radius: var(--button-radius); background: var(--button-bg); color: var(--button-text); font: 800 18px 'Baloo 2', system-ui, sans-serif; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-button:hover { filter: brightness(1.15); }
+@media (hover: hover) { button:hover { filter: brightness(1.15); } } /* touch screens keep :hover after a tap: it stuck lit */
 button:active { transform: translateY(1px); }
-button:focus-visible { outline: 3px solid var(--button-text); outline-offset: 4px; }
+/* THE round icon button: the corner row (free play, Perfil, music, ⚙; #free wears the holo, select-chrome.css), free play's exit, radio and ?, and the sheets' corner × (.sheet-x, solid: it straddles the frame). A dark disc, 2 px gold edge, cream glyph; size and place stay with each owner. */
+.round-btn, .sheet-x { width: 44px; height: 44px; min-height: 0; padding: 0; border: 2px solid var(--button-border); border-radius: 50%; background: var(--round-bg, var(--button-bg)); color: var(--button-text); }
+.round-btn { position: fixed; }
+.round-btn svg { width: 24px; height: 24px; }
+button:focus-visible, a:focus-visible { outline: var(--focus); outline-offset: var(--focus-off); }
 /* .btn: THE button of every sheet. An optional icon sits right before the label and the two are centred together
    (icon + label read as one; no gap that changes with the label's length); an optional .sub line below.
    .btn-primary = filled gold (one per sheet), .btn-secondary = outlined, .btn-link = plain text (minor actions). */
 .btn { position: relative; box-sizing: border-box; display: block; width: 100%; min-height: 48px; padding: 8px 20px; border: 2px solid var(--button-border); border-radius: var(--button-radius); background: var(--button-bg); color: var(--button-text); font: 800 18px/1.2 'Baloo 2', system-ui, sans-serif; text-align: center; text-wrap: balance; }
 .btn > svg { display: inline-block; flex: none; width: 22px; height: 22px; margin: -3px 10px 0 0; vertical-align: middle; }
 .btn .sub { display: block; margin-top: 2px; font-size: 14px; font-weight: 700; color: #e8d8b8; }
-.btn-primary { background: var(--button-border); color: #2a1a10; }
+.btn-primary { background: var(--button-gold-bg); color: #2a1a10; }
 .btn-primary .sub { color: #2a1a10b3; }
+.btn-secondary { background: var(--button-bg); border-color: var(--button-border); color: var(--button-text); } /* = the plain .btn, spelled out: gold edge, never filled */
 .btn-link { display: inline-block; width: auto; min-height: 40px; padding: 4px 12px; border-color: transparent; background: none; color: #e8d8b8; font-size: 16px; text-decoration: underline; text-decoration-color: #e8d8b866; text-underline-offset: 3px; }
 .btn-link:active { transform: none; }
+.btn-link::after { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 100%; min-height: 44px; translate: 0 -50%; } /* touch slop: a 44 px target whatever the text's height */
+p .btn-link::after { display: none; } /* a link inside a sentence: its slop would cover the lines around it (WCAG 2.5.8 exempts inline targets) */
 .btn-small { min-height: 32px; padding: 0 4px; font-size: 14px; }
 /* .btn-compact (with .btn-link): a quiet icon + label text link, clearly lesser than the sheet's buttons, e.g. the
    share sheet's WhatsApp · X · Més…; small to the eye, still a 44 px target (padding); never a sheet's main action */
@@ -23,9 +30,12 @@ button:focus-visible { outline: 3px solid var(--button-text); outline-offset: 4p
 .btn-compact > svg.line { fill: none; stroke: currentColor; stroke-width: 2.2; } /* our own line icons (share, link) */
 .sheet-actions { display: grid; gap: 12px; margin-top: 14px; } /* a sheet's stack of .btn */
 
-html, body { margin: 0; height: 100%; height: var(--app-h, 100%); overflow: hidden; overscroll-behavior: none; background: #2a1a10; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+:root { --page-edge: #140c07; } /* Match theme-color and the manifest; Safari also samples the document background. */
+html, body { margin: 0; height: 100%; height: var(--app-h, 100%); overflow: hidden; overscroll-behavior: none; background: var(--page-edge); touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
 body { position: fixed; top: 0; left: 0; width: 100%; } /* Safari (iPad, after the share sheet) could still scroll the page under its bars: nothing to scroll now (see settle() in main.js) */
+/* No overlay on the safe areas: the scene runs edge to edge (viewport-fit=cover); only controls keep clear of the insets. */
 canvas { position: fixed; left: 0; top: 0; width: 100%; height: 100vh; height: 100dvh; height: var(--app-h, 100dvh); } /* --app-h: the real screen height, set by resize() (iOS home-screen app fix); dvh follows Safari's toolbars */
+#reel-fade { opacity: 0; pointer-events: none; } /* the showreel's dissolve (ui/reel-fade.js) */
 #hud { touch-action: none; overscroll-behavior: none; } /* the title's drag / pinch steer the camera (src/scene/orbit.js): never a page pan or zoom */
 /* Touch pad: two halves edge to edge, GUA | PA, reading "GUAPA" together. Insets go inside the padding. */
 #pad { position: fixed; z-index: 2; left: 0; right: 0; bottom: var(--app-gap, 0px); display: none; visibility: hidden; } /* transparent: the plaza shows through */
@@ -34,15 +44,15 @@ canvas { position: fixed; left: 0; top: 0; width: 100%; height: 100vh; height: 1
 /* The buttons are the same round notes as the lane: a white disc with a dark rim and the note's colour inside. The whole half
    stays the hit zone (transparent); only the disc is drawn. */
 #pad button { background: none; justify-content: center; }
-#pad .gua { padding-left: env(safe-area-inset-left); --c: #ff7a1a; --lt: #ffb56b; --dk: #b34d00; }
-#pad .pa { padding-right: env(safe-area-inset-right); --c: #14b8a6; --lt: #5eead4; --dk: #0b7f72; }
+#pad .gua { padding-left: env(safe-area-inset-left); --c: var(--gua, #ff7a1a); --lt: var(--gua-lt, #ffb56b); --dk: var(--gua-dk, #b34d00); }
+#pad .pa { padding-right: env(safe-area-inset-right); --c: var(--pa, #14b8a6); --lt: var(--pa-lt, #5eead4); --dk: var(--pa-dk, #0b7f72); }
 /* A press scales the disc and lights it (compositor work only); the GUAPA glow is a ring on ::after. */
 #pad button::before { display: none; }
 #pad button::after { content: ""; position: absolute; z-index: 0; top: -50px; bottom: calc(-32px + env(safe-area-inset-bottom)); left: 50%; aspect-ratio: 1; translate: -50% 0; opacity: 0; transition: opacity .3s ease-out; pointer-events: none; background: radial-gradient(circle closest-side, #f5c518 60%, #f5c518 68%, #f5c518aa 76%, #f5c51844 88%, #f5c51800 100%); } /* GUAPA glow: a round gradient that fades to nothing inside its box, so no square edge (a blurred box-shadow got cropped) */
 #pad .lbl { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; box-sizing: border-box; height: calc(100% - 10px); aspect-ratio: 1; max-width: calc(100% - 14px); border: 6px solid #fff; border-radius: 50%; background: radial-gradient(circle at 50% 30%, var(--lt), var(--c) 62%); box-shadow: 0 0 0 5px #2a1a10, 0 6px 0 5px #0006, inset 0 -8px 0 var(--dk); pointer-events: none; transition: transform .38s cubic-bezier(.3, 1.8, .5, 1), box-shadow .3s ease-out; will-change: transform; } /* release: springs back past 1 and settles */
 /* The outline is painted once: a stroked copy of the word under it (::before), not 16 text-shadows (iOS Safari
    ignores paint-order on HTML text). The word's own shadow drops under it; over the outline it's the same colour. */
-#pad .word { text-shadow: 0 2px 8px #0000002e; } /* plain white, just a soft shadow for contrast */
+#pad .word { text-shadow: 0 2px 8px #0000002e; } .fig-drac #pad .word, .fig-bou #pad .word { text-shadow: 0 1px 0 var(--dk), 0 2px 6px #0006; } /* white on the light yellow (sand) needs a darker edge */ /* plain white, just a soft shadow for contrast */
 #pad .arr { font-size: 18px; line-height: 1; color: #fff; text-shadow: 0 1px 4px #0000002e; margin-bottom: 2px; }
 #pad button:hover { filter: none; }
 #pad button:active { transform: none; }
@@ -68,12 +78,18 @@ canvas { position: fixed; left: 0; top: 0; width: 100%; height: 100vh; height: 1
 @media (pointer: coarse) and (orientation: landscape) and (max-height: 519px) { #pad button { height: calc(108px + env(safe-area-inset-bottom)); font-size: 30px; } } /* landscape phones: keep room for the lane and the mulassa */
 [hidden] { display: none !important; }
 /* wrong orientation (phones: portrait only; tablets: landscape only): a cover over everything, the song pauses */
-#rotate { display: none; position: fixed; inset: 0; z-index: 50; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 24px; background: #2a1a10; color: #fff3d6; font: 800 22px/1.3 'Baloo 2', system-ui, sans-serif; text-align: center; }
+#rotate { display: none; position: fixed; inset: 0; z-index: 50; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 24px; background: var(--page-edge); color: #fff3d6; font: 800 22px/1.3 'Baloo 2', system-ui, sans-serif; text-align: center; }
 #rotate svg { width: 64px; height: 64px; fill: none; stroke: #f5c518; stroke-width: 1.6; stroke-linecap: round; animation: rotate-hint 1.6s ease-in-out infinite; }
-body.wrong-orient #rotate { display: flex; }
-body.wrong-orient dialog[open], body.wrong-orient dialog::backdrop { display: none; } /* a modal sheet (the pause) lives in the top layer, over the cover: back when upright */
-#rotate b::after { content: 'Gira el mòbil en vertical per jugar'; }
-@media (min-width: 600px) and (min-height: 600px) { #rotate b::after { content: 'Gira la tauleta en horitzontal per jugar'; } #rotate svg { animation-direction: reverse; } }
+body.wrong-orient #rotate { display: flex; } /* photo mode: phones want landscape (two thumbs, fullscreen.js), tablets either way */
+#rotate-exit { display: none; } body.view-mode #rotate-exit { display: flex; } /* (a locked rotation must not trap you in photo mode) */
+body.view-mode #rotate svg { animation-direction: reverse; }
+/* a modal sheet lives in the top layer, over the cover: hidden until upright, untouched (visibility: a sheet's own
+   #id[open] display rule outranked display: none, iOS showed Classificació over the cover) */
+body.wrong-orient dialog[open] { visibility: hidden; } body.wrong-orient dialog::backdrop { display: none; }
+/* the three lines are real text (translated); one shows: photo mode, else the tablet's on big screens, else the phone's */
+#rotate b span { display: none; } #rotate .r-play { display: inline; }
+@media (min-width: 600px) and (min-height: 600px) { #rotate .r-play { display: none; } #rotate .r-tablet { display: inline; } #rotate svg { animation-direction: reverse; } }
+body.view-mode #rotate b span { display: none; } body.view-mode #rotate .r-photo { display: inline; }
 @keyframes rotate-hint { 0%, 30% { transform: rotate(-90deg); } 60%, 100% { transform: rotate(0); } }
 #pause { position: fixed; z-index: 3; top: calc(18px + env(safe-area-inset-top)); right: calc(10px + env(safe-area-inset-right)); /* the canvas HUD leaves this corner free and centres its one-row top panel on it: see drawTop() (PAUSE_PX) */ width: 64px; height: 64px; padding: 0; border-radius: 50%; }
 #pause svg { width: 30px; height: 30px; stroke-width: 3; }
@@ -83,48 +99,45 @@ button svg { width: 22px; height: 22px; flex: none; fill: none; stroke: currentC
 #pause-menu h2 { font-size: 32px; }
 #pause-menu p { margin: 0 0 20px; text-align: center; font-size: 16px; }
 #pause-menu .sheet-actions { margin-top: 0; }
-/* Title: one small "how to play" pill under the difficulty buttons; the key lives in a sheet it opens.
-   main.js (titleLayoutNow, src/hud/title-layout.js) sets its top inline from the canvas layout, and the iPhone hint's;
-   the bottom values here are only the first frame's fallback. Corner mode (max-height: 500px) stays CSS-placed. */
-#howto { position: fixed; z-index: 3; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom)); transform: translateX(-50%); min-height: 44px; padding: 6px 18px 6px 8px; gap: 8px; border-width: 1.5px; border-radius: 999px; font-size: 15px; letter-spacing: .03em; }
+/* The demo (Com es juga → «Veure un ball de demostració»): what is playing. A label (flat, a gold strip), top left, clear of #pause */
+.watch-tag { position: fixed; z-index: 3; top: calc(18px + env(safe-area-inset-top)); left: env(safe-area-inset-left); margin: 0; display: grid; padding: 6px 14px 7px 12px; border-left: 4px solid #f5c518; border-radius: 0 8px 8px 0; background: #2a1a10e0; color: #fff3d6; font: 600 13px/1.25 'Baloo 2', system-ui, sans-serif; pointer-events: none; }
+.watch-tag b { font-weight: 800; letter-spacing: .08em; }
+@media (min-width: 900px) and (min-height: 600px) { .watch-tag { padding: 8px 18px 9px 14px; font-size: 15px; } }
+#watch-menu { width: min(360px, calc(100vw - 48px)); padding: 24px; text-align: center; }
+#watch-menu h2 { margin-bottom: 6px; color: #f5c518; } /* a celebration: gold as text */
+#watch-menu p { margin: 0 0 18px; color: #e8d8b8; font-size: 16px; text-wrap: balance; }
+#watch-menu .sheet-actions { margin-top: 0; }
+/* Shared how-to pill; the selector owns its inline placement. */
+#howto { position: fixed; z-index: 3; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom)); transform: translateX(-50%); }
+.howto-pill { min-height: 44px; padding: 6px 18px 6px 8px; gap: 8px; border-width: 1.5px; border-radius: 999px; font-size: 15px; letter-spacing: .03em; } /* #howto and «QUI BALLA?»'s #select-howto */
 #howto:active { transform: translate(-50%, 1px); }
 /* iPhone Safari only: how to get the fullscreen home-screen app. Sits just above the "how to play" pill. */
-#ios-hint { position: fixed; z-index: 3; left: 50%; bottom: calc(16px + 44px + 10px + env(safe-area-inset-bottom)); transform: translateX(-50%); box-sizing: border-box; width: max-content; max-width: calc(100vw - 32px); display: flex; align-items: center; gap: 8px; padding: 6px 4px 6px 12px; border-left: 3px solid #f5c518; border-radius: 4px; background: #2a1a10e0; /* a tip, not a button: flat, a coloured strip, no outline */ color: #fff3d6; font: 700 13px/1.25 'Baloo 2', system-ui, sans-serif; }
-#ios-hint svg { flex: none; width: 18px; height: 18px; fill: none; stroke: #f5c518; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-#ios-hint b { color: #f5c518; font-weight: 800; }
-#ios-hint span { flex: 1; text-align: center; text-wrap: balance; } /* centred between the share icon and the close button */
-#ios-hint button { flex: none; min-height: 32px; width: 32px; padding: 0; border: 0; background: none; font-size: 20px; line-height: 1; color: #e8d8b8; }
-#howto .q { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--button-border); color: #2a1a10; font-size: 17px; line-height: 1; }
+.howto-pill .q { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--button-border); color: #2a1a10; font-size: 17px; line-height: 1; }
 @media (min-width: 520px) and (min-height: 520px) { /* the canvas HUD draws at 2x here (1.5x on phones): scale the pill to match its buttons */
   #howto { min-height: 56px; bottom: calc(20px + env(safe-area-inset-bottom)); padding: 8px 24px 8px 10px; gap: 10px; border-width: 2px; font-size: 20px; }
   #howto .q { width: 36px; height: 36px; font-size: 22px; }
 }
 /* Title: a round gear top-right opens "Configuració" (sync + practice). Landscape phones: top-left, the Com es juga pill has the top-right corner. */
-#settings { position: fixed; z-index: 3; top: calc(10px + env(safe-area-inset-top)); right: calc(10px + env(safe-area-inset-right)); width: 44px; height: 44px; min-height: 0; padding: 0; border-width: 1.5px; border-radius: 50%; }
-#settings svg { width: 24px; height: 24px; }
-@media (min-width: 520px) and (min-height: 520px) { #settings { top: calc(16px + env(safe-area-inset-top)); right: calc(16px + env(safe-area-inset-right)); width: 56px; height: 56px; border-width: 2px; } #settings svg { width: 30px; height: 30px; } }
+#settings { z-index: 3; top: calc(10px + env(safe-area-inset-top)); right: calc(10px + env(safe-area-inset-right)); }
+@media (min-width: 520px) and (min-height: 520px) { #settings { top: calc(16px + env(safe-area-inset-top)); right: calc(16px + env(safe-area-inset-right)); width: 56px; height: 56px; } #settings svg { width: 30px; height: 30px; } }
 @media (max-height: 500px) { #settings { right: auto; left: calc(12px + env(safe-area-inset-left)); top: calc(12px + env(safe-area-inset-top)); } }
-/* Title: a round podium opens Classificacions. Portrait: top-left, the ⚙'s mirror. Landscape phones: right after the ⚙.
-   Both are title-layout obstacles (titleLayoutNow() measures them), so the logo keeps clear of them. */
-#leaders { position: fixed; z-index: 3; top: calc(10px + env(safe-area-inset-top)); left: calc(10px + env(safe-area-inset-left)); width: 44px; height: 44px; min-height: 0; padding: 0; border-width: 1.5px; border-radius: 50%; }
-#leaders svg { width: 24px; height: 24px; }
-@media (min-width: 520px) and (min-height: 520px) { #leaders { top: calc(16px + env(safe-area-inset-top)); left: calc(16px + env(safe-area-inset-left)); width: 56px; height: 56px; border-width: 2px; } #leaders svg { width: 30px; height: 30px; } }
-@media (max-height: 500px) { #leaders { left: calc(12px + 44px + 10px + env(safe-area-inset-left)); top: calc(12px + env(safe-area-inset-top)); } }
 #settings-menu { width: min(400px, calc(100vw - 32px)); padding: 20px 20px 18px; }
+#settings-menu .sheet-actions { grid-template-columns: minmax(0, 1fr); } /* a long label wraps in its row instead of widening the column past the sheet (Português at 320) */
 /* An on/off setting: a native checkbox with role="switch" (Space toggles, screen readers say on/off) in a flat row
    (a setting, not a button: no outline); the label is the whole row, the switch sits on the right. */
 .switch-row { box-sizing: border-box; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; padding: 6px 12px 6px 16px; border-radius: var(--button-radius); background: #fff3d60d; font: 800 18px/1.2 'Baloo 2', system-ui, sans-serif; cursor: pointer; }
 .switch-row .sub { display: block; margin-top: 2px; font-size: 14px; font-weight: 700; color: #e8d8b8; }
-.switch-row .setting-note { margin-top: 4px; font-size: 13px; font-weight: 600; line-height: 1.3; color: #e8d8b8b3; text-wrap: pretty; } /* quiet: a hint, not an alarm */
+.switch-row.lang-pick { min-height: calc(12px + 1.2em + 2px + 1.2 * 14px); } /* the height of a row with a .sub (Mostra els FPS): padding + label + sub gap + sub line */
 .switch-row input { -webkit-appearance: none; appearance: none; flex: none; position: relative; width: 48px; height: 28px; margin: 0; border: 2px solid var(--button-border); border-radius: 999px; background: #140c07; cursor: pointer; transition: background-color .15s; }
 .switch-row input::before { content: ""; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%; background: #e8d8b8; transition: transform .15s; }
 .switch-row input:checked { background: var(--button-border); }
 .switch-row input:checked::before { transform: translateX(20px); background: #2a1a10; }
-.switch-row input:focus-visible { outline: 3px solid var(--button-text); outline-offset: 3px; }
+.switch-row input:focus-visible { outline: var(--focus); outline-offset: var(--focus-off); }
 @media (prefers-reduced-motion: reduce) { .switch-row input, .switch-row input::before { transition: none; } }
 /* «Mostra els FPS»: a discreet readout, bottom-left, a flat label with a coloured strip (green / amber / red against
    the target rate). main.js fpsTick() sets its bottom: above the pad (and the practice instruction) in play. */
-#fps { position: fixed; z-index: 3; left: calc(8px + var(--sal)); bottom: calc(8px + var(--sab)); padding: 1px 7px 1px 6px; border-left: 3px solid #7ee081; border-radius: 3px; background: #2a1a1099; color: #fff3d6d9; font: 700 12px/16px 'Baloo 2', system-ui, sans-serif; font-variant-numeric: tabular-nums; white-space: pre-line; pointer-events: none; }
+#fps { position: fixed; inset: auto; margin: 0; width: max-content; overflow: visible; border: 0; z-index: 3; left: calc(8px + var(--sal)); bottom: calc(8px + var(--sab)); padding: 1px 7px 1px 6px; border-left: 3px solid #7ee081; border-radius: 3px; background: #2a1a1099; color: #fff3d6d9; font: 700 12px/16px 'Baloo 2', system-ui, sans-serif; font-variant-numeric: tabular-nums; white-space: pre-line; pointer-events: none; }
+#fps::backdrop { background: transparent; pointer-events: none; }
 #fps[data-l="mid"] { border-left-color: #f5a623; } #fps[data-l="low"] { border-left-color: #ff6b5b; }
 /* phones: «mode d’estalvi?» wraps under «30 FPS» (mode / d’estalvi?) so the box stays left of «Com es juga?» (it ran
    4 px into it on an iPhone SE, 12 on a 360 px Android); «120 FPS» still fits on one line */
@@ -152,23 +165,25 @@ button svg { width: 22px; height: 22px; flex: none; fill: none; stroke: currentC
 #controls-legend { margin: 12px 0 0; padding: 0; list-style: none; display: grid; gap: 6px; font: 700 14px/1.2 'Baloo 2', system-ui, sans-serif; }
 #controls-legend li { display: grid; grid-template-columns: 76px 1fr; align-items: center; gap: 12px; padding: 8px 10px; border-radius: 12px; background: #fff3d60a; }
 #controls-legend li > :first-child { justify-self: center; }
+#controls-legend li.only-drac, #controls-legend li.only-bou, .fig-drac #controls-legend li.only-mula, .fig-bou #controls-legend li.only-mula { display: none; } .fig-drac #controls-legend li.only-drac, .fig-bou #controls-legend li.only-bou { display: grid; } /* one figure's rows (ui/figure-theme-dom.js sets .fig-drac / .fig-bou) */
 #controls-legend b { display: block; color: #f5c518; font-size: 16px; letter-spacing: .03em; }
 @media (max-height: 700px) { #howto-menu { padding: 14px 16px 14px; } #howto-menu h2 { font-size: 26px; } #controls-legend { margin-top: 8px; gap: 4px; } #controls-legend li { padding: 4px 8px; } } /* short phones (360×640): the whole list and «Entesos!» fit without scrolling */
 #controls-legend small { display: block; font-size: 14px; color: #e8d8b8; }
 .note { flex: none; box-sizing: border-box; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 2px #2a1a10; color: #fff; font-size: 13px; }
-.note.gua { background: #ff7a1a; text-shadow: 0 0 2px #b34d00, 0 0 1px #b34d00; } .note.pa { background: #14b8a6; text-shadow: 0 0 2px #0a6e63, 0 0 1px #0a6e63; } /* GUA orange, PA turquoise; dark outline keeps the white arrow readable */
-.note.guapa { display: grid; place-items: center; width: 44px; height: 44px; border: 3px solid #f5c518; background: linear-gradient(90deg, #ff7a1a 50%, #14b8a6 50%); box-shadow: 0 0 0 3px #2a1a10, 0 0 10px 2px #f5c51899; font-size: 9px; line-height: 1; letter-spacing: 0; text-shadow: 0 0 2px #2a1a10, 0 0 2px #2a1a10; } /* GUAPA: 1.4x, gold rim, half GUA orange / half PA turquoise */
+.note.gua { background: var(--gua, #ff7a1a); text-shadow: 0 0 2px var(--gua-dk, #b34d00), 0 0 1px var(--gua-dk, #b34d00); } .note.pa { background: var(--pa, #14b8a6); text-shadow: 0 0 2px var(--pa-dk, #0a6e63), 0 0 1px var(--pa-dk, #0a6e63); } /* GUA orange, PA turquoise; dark outline keeps the white arrow readable */
+.note.guapa { display: grid; place-items: center; width: 44px; height: 44px; border: 3px solid #f5c518; background: linear-gradient(90deg, var(--gua, #ff7a1a) 50%, var(--pa, #14b8a6) 50%); box-shadow: 0 0 0 3px #2a1a10, 0 0 10px 2px #f5c51899; font-size: 9px; line-height: 1; letter-spacing: 0; text-shadow: 0 0 2px #2a1a10, 0 0 2px #2a1a10; } /* GUAPA: 1.4x, gold rim, half GUA orange / half PA turquoise */
 .legend-icon { flex: none; overflow: visible; } /* drawn like the lane: MANTÉN head + tail + cap, GLOBUS balloon */
-.legend-icon.hold { filter: drop-shadow(0 0 3px #ff7a1a99); }
+.legend-icon.hold { filter: drop-shadow(0 0 3px color-mix(in srgb, var(--gua, #ff7a1a) 60%, transparent)); }
 kbd { display: inline-block; min-width: 14px; padding: 0 4px; border: 1px solid #fff3d660; border-radius: 4px; background: #fff3d60c; font: 800 12px/16px 'Baloo 2', system-ui, sans-serif; text-align: center; }
 .pad-key { display: inline-block; padding: 0 5px; border-radius: 4px; color: #fff; font-size: 10px; line-height: 16px; vertical-align: 1px; }
 .keys, .touch { white-space: nowrap; }
 .touch { display: none; }
 @media (pointer: coarse) { .keys { display: none; } .touch { display: inline; } }
 /* practice (first game): SALTA in the top-left corner, mirroring the pause button */
-#skip { position: fixed; z-index: 3; top: calc(28px + env(safe-area-inset-top)); left: calc(10px + env(safe-area-inset-left)); height: 44px; padding: 0 12px 0 16px; gap: 4px; font-size: 16px; letter-spacing: .04em; }
-#skip svg { width: 18px; height: 18px; }
-@media (max-width: 519px), (max-height: 519px) { #skip { top: calc(18px + env(safe-area-inset-top)); } }
+#skip { position: fixed; z-index: 3; top: calc(18px + env(safe-area-inset-top)); left: calc(10px + env(safe-area-inset-left)); height: 64px; padding: 0 16px 0 20px; gap: 8px; font-size: 20px; letter-spacing: .04em; }
+#skip svg { width: 26px; height: 26px; }
+@media (max-width: 519px), (max-height: 519px) { #skip { top: calc(18px + env(safe-area-inset-top)); height: 44px; padding: 0 12px 0 14px; gap: 6px; font-size: 16px; } #skip svg { width: 20px; height: 20px; } } /* phones: a slim 44px target centred on the 54px #pause (13 + 5); desktop matches #pause's 64px and top */
+@media (max-width: 359px) { #skip { padding: 0 8px 0 10px; gap: 4px; font-size: 14px; letter-spacing: .02em; } #skip svg { width: 18px; height: 18px; } } /* 320 px: a long label (SALTATU, WEITER) stays clear of the HUD's dots */
 /* sync calibration sheet: intro (why + what to do) → run (3-2-1, metronome) → result; data-state picks the section */
 #sync-menu { width: min(380px, calc(100vw - 32px)); padding: 18px 20px 12px; text-align: center; }
 #sync-menu h2 { font-size: 28px; margin-bottom: 10px; }
@@ -206,7 +221,7 @@ kbd { display: inline-block; min-width: 14px; padding: 0 4px; border: 1px solid 
 #sync-menu #sync-live { min-height: 1.3em; margin-bottom: 12px; font-size: 20px; color: #fff3d6; }
 #sync-pad { display: flex; margin: 0 0 6px; border: 2px solid #f5c518; border-radius: 14px; overflow: hidden; }
 #sync-pad span { flex: 1; display: grid; place-items: center; min-height: 64px; color: #fff; font-size: 24px; letter-spacing: .04em; text-shadow: -2px 0 #2a1a10, 2px 0 #2a1a10, 0 -2px #2a1a10, 0 2px #2a1a10; }
-#sync-pad .gua { background: #ff7a1a; border-right: 2px solid #2a1a10; } #sync-pad .pa { background: #14b8a6; }
+#sync-pad .gua { background: var(--gua, #ff7a1a); border-right: 2px solid #2a1a10; } #sync-pad .pa { background: var(--pa, #14b8a6); }
 #sync-menu .sync-kicker { margin: 4px 0 0; font-size: 13px; letter-spacing: .12em; }
 #sync-measured { display: block; margin: 0 0 6px; font: 800 58px/1.05 'Baloo 2', system-ui, sans-serif; color: #f5c518; }
 #sync-menu #sync-verdict { margin-bottom: 16px; font-size: 16px; color: #fff3d6; }
@@ -226,7 +241,7 @@ kbd { display: inline-block; min-width: 14px; padding: 0 4px; border: 1px solid 
   #sync-menu #sync-verdict { margin-bottom: 10px; }
   .btn { min-height: 44px; }
 }
-@media (max-height: 500px) { #howto { left: auto; right: calc(12px + env(safe-area-inset-right)); bottom: auto; top: calc(12px + env(safe-area-inset-top)); transform: none; } #howto:active { transform: translateY(1px); } #howto-menu { width: min(640px, calc(100vw - 32px)); padding: 14px 16px; } #howto-menu h2 { font-size: 24px; margin: 0; } #controls-legend { grid-template-columns: 1fr 1fr; margin-top: 8px; } #controls-legend li { padding: 5px 8px; } #howto-menu form { text-align: center; } #howto-menu .sheet-actions { grid-template-columns: repeat(2, minmax(0, 220px)); justify-content: center; margin-top: 10px; } } /* landscape phones: two columns so it fits without scrolling */
+@media (max-height: 500px) { #howto { left: auto; right: calc(12px + env(safe-area-inset-right)); bottom: auto; top: calc(12px + env(safe-area-inset-top)); transform: none; } #howto:active { transform: translateY(1px); } #howto-menu { width: min(640px, calc(100vw - 32px)); padding: 14px 16px; } #howto-menu h2 { font-size: 24px; margin: 0; } #controls-legend { grid-template-columns: 1fr 1fr; margin-top: 8px; } #controls-legend li { padding: 5px 8px; } #howto-menu form { text-align: center; } #howto-menu .sheet-actions { grid-template-columns: minmax(0, 270px); justify-content: center; margin-top: 10px; } } /* landscape phones: two columns so it fits without scrolling */
 /* Privadesa: one sheet, one <section data-privacy="…"> per service (hosting/analytics, this device, rankings…) */
 .sheet-actions > .btn-link { justify-self: center; } /* a minor action under the stack, centred */
 #privacy-menu { width: min(440px, calc(100vw - 32px)); padding: 20px 20px 14px; }
@@ -244,139 +259,14 @@ kbd { display: inline-block; min-width: 14px; padding: 0 4px; border: 1px solid 
   #privacy-menu { width: min(640px, calc(100vw - 32px)); padding: 12px 16px 8px; }
   #privacy-menu .sheet-actions { bottom: -8px; margin: 8px -16px -8px; padding: 8px 16px; }
 }
-/* Classificacions (src/ui/board-ui.js): results row, the lists sheet and the publish / alias sheet */
-/* the results row (src/ui/share-ui.js shows it; board-ui.js its Publica / Classificacions): one row, or two on narrow
-   screens with Publica on its own; main.js resultsReserve() keeps the canvas card above it (48 px rows, 8 px apart, +10) */
-#results-actions { position: fixed; z-index: 3; left: 50%; bottom: calc(var(--app-gap, 0px) + 10px + var(--sab)); transform: translateX(-50%); box-sizing: border-box; display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; width: min(640px, calc(100vw - 24px - var(--sal) - var(--sar))); }
-/* solid and full contrast over the 3D plaça (nothing translucent): gold primary with dark text, dark secondaries with
-   cream text and a clear gold border; each with its icon in the same slot (padding reserves it on both sides) */
-#results-actions .btn { flex: 1 1 0; max-width: 220px; min-width: 0; min-height: 48px; padding: 6px 16px; font-size: 16px; opacity: 1; box-shadow: 0 4px 14px #000b; }
-#results-actions .btn-secondary { border-color: #f5c518; background: #2a1a10; color: #fff3d6; }
-#results-actions .btn-primary { border-color: #f5c518; background: #f5c518; color: #2a1a10; }
-#results-actions .btn > svg { width: 20px; height: 20px; margin-right: 8px; }
-/* narrow: «Publica» is exactly as wide as the pair under it (2 × 220 + the gap), never the whole screen */
-@media (max-width: 639px) { #results-actions { width: min(452px, calc(100vw - 24px - var(--sal) - var(--sar))); } #results-actions > #results-publish { flex-basis: 100%; max-width: none; } }
-@media (max-width: 419px) { #results-actions > #results-retry { flex-basis: 100%; max-width: none; } } /* a collapse on a narrow phone: «Torna-ho a provar» on its own row, never broken at the hyphen */ /* a collapse's Torna-ho a provar stays in the one row */
-@media (max-width: 419px) { #results-actions .btn { padding-inline: 8px; } #results-actions .btn > svg { margin-right: 6px; } } /* phones: «Torna-ho a provar» and its icon on one line (it broke at the hyphen) */
-#board-menu, #publish-menu { max-height: calc(100dvh - 32px - var(--sat) - var(--sab)); }
-/* the board sheet has ONE height from its first frame (loading, list, empty, error, both views, both periods): the
-   dialog's height is fixed and the list box takes what is left, scrolling inside */
-#board-menu { width: min(460px, calc(100vw - 32px - var(--sal) - var(--sar))); height: min(760px, calc(100dvh - 32px - var(--sat) - var(--sab))); padding: 16px 18px 12px; }
-#board-menu[open] { display: flex; flex-direction: column; }
-#board-list-view:not([hidden]) { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; }
-#publish-menu { width: min(400px, calc(100vw - 32px - var(--sal) - var(--sar))); padding: 18px 20px 12px; }
-#profile-menu { width: min(400px, calc(100vw - 32px - var(--sal) - var(--sar))); max-height: calc(100dvh - 32px - var(--sat) - var(--sab)); padding: 18px 20px 12px; }
-#profile-menu .board-label { display: block; text-align: center; } #profile-code { text-align: center; letter-spacing: .3em; }
-#profile-menu .publish-body { margin-top: 10px; } #profile-menu .sheet-actions { margin-top: 12px; gap: 8px; }
-.board-status { margin: 4px 0; text-align: center; font-size: 15px; line-height: 1.35; color: #e8d8b8; text-wrap: pretty; }
-.board-status:empty { display: none; }
-.board-status.ok { color: #7ee081; }
-#publish-status:not(.ok), #profile-status:not(.ok) { color: #ffb4a8; }
-/* header rhythm: title, 16 px, the switch (Tots · On sóc, as wide as the list; only once published), 16 px, the list.
-   Without the switch its space goes to the list box (the dialog's height never changes) */
-#board-menu h2 { margin: 0 0 16px; font-size: 28px; }
-#board-menu .board-seg { width: 100%; margin: 0 0 16px; }
-#board-menu .board-seg .btn { min-height: 34px; }
-/* «#347 de 2.140 · top 17%»: outside the scroll area so rows cannot bleed below it, On sóc only */
-.board-summary { flex: none; margin: 0; padding: 6px 0; border-top: 1px solid #f5c51866; background: #2a1a10; text-align: center; font-size: 15px; line-height: 1.35; color: #f5c518; }
-.board-summary:empty { display: none; }
-/* the list's end: a spinner row while the next page loads, «Carrega’n més» (the fallback of the scroll) */
-.board-more { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 0 12px; }
-.board-more-status { display: flex; align-items: center; gap: 8px; margin: 0; color: #e8d8b899; font-size: 14px; }
-.board-more-status:empty { display: none; }
-.board-more-status .calcot-spin { width: 24px; height: 24px; }
-.board-more .btn { width: auto; min-height: 40px; padding: 0 18px; border-width: 1.5px; font-size: 15px; }
-/* the list box: the column headings sit above the scrolling part (so its scrollbar starts under them, not beside them);
-   both reserve the same scrollbar gutter, so the columns line up */
-.board-box { position: relative; flex: 1 1 auto; min-height: 96px; display: flex; flex-direction: column; }
-.board-head-wrap { flex: none; overflow: hidden; scrollbar-gutter: stable; }
-#board-menu:has(#board-table[hidden]) .board-head-wrap { visibility: hidden; } /* loading, empty, error: no headings */
-.board-scroll { position: relative; flex: 1 1 auto; min-height: 0; overflow: auto; overscroll-behavior: contain; touch-action: pan-y; scrollbar-gutter: stable; }
-.board-state { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 0 12px; }
-.board-state .btn { width: auto; min-width: 220px; }
-#board-menu:has(#board-table:not([hidden])) .board-state { display: none; }
-/* loading: the dancing calçot over its line (board-ui.js keeps it ≥ 1.2 s), then the list fades in */
-#board-status .calcot-spin { display: block; width: 72px; height: 72px; margin: 0 auto 10px; }
-#board-status:has(.calcot-spin) { animation: board-in .25s ease-out both; }
-#board-table:not([hidden]) tbody { animation: board-in .35s ease-out both; }
-@keyframes board-in { from { opacity: 0; transform: translateY(6px); } }
-@media (prefers-reduced-motion: reduce) { #board-table tbody, #board-status { animation: none; } }
-#board-table, .board-head { width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 15px; line-height: 1.25; font-variant-numeric: tabular-nums; }
-:is(#board-table, .board-head) .c-pos { width: 2.6em; } :is(#board-table, .board-head) .c-pct { width: 3.6em; } :is(#board-table, .board-head) .c-pts { width: 5em; }
-#board-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); } /* for screen readers; .board-head shows them */
-.board-head th { padding: 4px 4px 6px; box-shadow: inset 0 -1px 0 #f5c51855; /* a clear edge the long list scrolls under */ background: #2a1a10; color: #e8d8b8aa; font-size: 12px; letter-spacing: .08em; text-align: right; }
-#board-table td { height: 46px; padding: 4px 4px; border-top: 1px solid #fff3d614; color: #fff3d6; text-align: right; }
-:is(#board-table, .board-head) :is(th, td):nth-child(2) { text-align: left; }
-:is(#board-table, .board-head) :is(th, td):first-child { color: #e8d8b8; text-align: center; }
-#board-table td:nth-child(3) { color: #e8d8b8b3; font-size: 13px; } /* % secondary, score the main number */
-#board-table td:nth-child(4) { font-size: 17px; font-weight: 800; }
-/* Punts ends 12px short of the box: iOS overlay scrollbars reserve no gutter and would sit on the score (heading too, aligned) */
-:is(#board-table, .board-head) :is(th, td):nth-child(4) { padding-right: 12px; }
-/* the podium: 1-2-3 on a gold / silver / bronze disc */
-.pos.p1, .pos.p2, .pos.p3 { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; color: #2a1a10; font-weight: 800; font-size: 14px; }
-.pos.p1 { background: #f5c518; } .pos.p2 { background: #d6dbe2; } .pos.p3 { background: #d9955a; }
-/* the name cell: alias (+ TU) on one line, the level on a small muted line under it (a coloured dot, not a tag) */
-.who { display: flex; align-items: center; gap: 5px; min-width: 0; }
-#board-table .sub { display: flex; align-items: center; gap: 6px; margin-top: 2px; font-size: 10.5px; white-space: nowrap; overflow: hidden; }
-#board-table .streak { color: #e8d8b8b3; overflow: hidden; text-overflow: ellipsis; }
-#board-table .streak b { color: #fff; font-weight: 800; }
-#board-table tr.me .streak { color: #f5c518b3; }
-#board-table .lvl { flex: none; padding: 0 6px; border-radius: 999px; font-size: 9.5px; font-weight: 800; line-height: 15px; letter-spacing: .05em; color: #2a1a10; }
-.lvl0 { background: #8fd98f; } .lvl1 { background: #f0b04a; } .lvl2 { background: #ef7b6a; }
-.who .alias { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-#board-table tr.me td { background: #f5c51824; color: #f5c518; }
-#board-table tr.me td:first-child { box-shadow: inset 3px 0 #f5c518; } /* the player's own row: a gold strip */
-.me-tag { flex: none; display: inline-block; padding: 0 5px; border-radius: 4px; background: #f5c518; color: #2a1a10; font-size: 11px; line-height: 16px; letter-spacing: .06em; }
-.board-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 0 16px; }
-.board-text { margin: 0 0 10px; text-align: center; font-size: 16px; line-height: 1.35; color: #e8d8b8; text-wrap: pretty; }
-.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-.board-tip { margin: 0 0 12px; padding: 8px 12px; border-left: 3px solid #f5c518; border-radius: 4px; background: #fff3d60d; color: #fff3d6; font-size: 15px; line-height: 1.35; text-wrap: pretty; } /* notes: flat, coloured strip */
-/* the prompt (opens by itself after an eligible run): the run in one big line, the alias (or its field), Publica */
-/* the publish / alias sheet: a centred header (title, the run), then one column left-aligned to the field (label,
-   field, its hint or its error, the consent note) on a 4 / 8 / 12 / 16 px rhythm, then the status and the actions */
-.publish-run { margin: 0 0 16px; text-align: center; font-size: 22px; line-height: 1.2; color: #f5c518; text-wrap: balance; }
-.publish-body { display: flex; flex-direction: column; gap: 12px; text-align: left; }
-.board-label { display: block; margin: 0 0 4px; color: #e8d8b8; font-size: 14px; letter-spacing: .08em; }
-.publish-as-row { box-sizing: border-box; display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 48px; padding: 0 4px 0 12px; border-radius: 10px; background: #fff3d60d; }
-.publish-as-row b { min-width: 0; overflow-wrap: anywhere; color: #fff3d6; font-size: 18px; }
-#publish-alias { box-sizing: border-box; width: 100%; min-height: 48px; padding: 8px 12px; border: 2px solid #f5c51899; border-radius: 10px; background: #140c07; color: #fff3d6; font: 700 18px 'Baloo 2', system-ui, sans-serif; user-select: text; -webkit-user-select: text; touch-action: manipulation; } /* 18 px: iOS doesn't zoom; body's user-select: none must not reach the caret */
-#publish-alias { text-align: center; } #publish-menu .board-label { display: block; text-align: center; } /* label, field and placeholder on the sheet's axis */
-#publish-alias:focus { outline: none; border-color: #f5c518; box-shadow: 0 0 0 3px #f5c51840; }
-#publish-alias[aria-invalid="true"] { border-color: #ff8a7a; }
-#publish-alias[aria-invalid="true"]:focus { box-shadow: 0 0 0 3px #ff8a7a40; }
-#publish-alias[readonly] { opacity: .75; }
-.publish-hint { margin: 4px 0 0; text-align: center; color: #e8d8b8b3; font-size: 14px; line-height: 1.3; text-wrap: pretty; }
-.publish-error { margin: 4px 0 0; padding-left: 8px; border-left: 3px solid #ff8a7a; color: #ffb4a8; font-size: 14px; line-height: 1.3; }
-.publish-error .btn-link { display: inline; min-height: 0; padding: 0; border: 0; font: inherit; font-weight: 700; color: inherit; text-wrap: wrap; text-decoration-color: currentColor; } /* «recupera el perfil» runs on in the sentence */ /* the field's own error, where the hint was */
-.publish-note { margin: 0; padding: 8px 12px; border: 1px solid #f5c51833; border-radius: 8px; background: #fff3d60a; text-align: center; color: #e8d8b8cc; font-size: 13px; line-height: 1.35; text-wrap: pretty; } /* consent: a flat note + Privadesa */
-.publish-note .btn-link { display: inline; min-height: 0; padding: 0 2px; font-size: 13px; }
-.publish-end { margin-top: 16px; }
-/* Publica → «Publicat!» → «Ets el número…»: no room kept blank before publishing (it read as a hole); board-ui.js eases
-   the end's height (0.2 s) when a line comes, the buttons stay at its bottom and the new line slides in over them */
-.publish-end { display: flex; flex-direction: column; justify-content: flex-end; }
-#publish-end-in { flex: none; }
-#publish-status, .publish-place { margin: 0 0 8px; }
-.publish-place { text-align: center; font-size: 22px; line-height: 1.25; color: #7ee081; text-wrap: balance; }
-/* the sheet's views (board-ui.js swap()): the calçot while publishing, then «Publicat!» + the place + D'acord */
-#publish-form[data-view] :is(#publish-summary, .publish-body) { display: none; }
-#publish-wait { display: none; }
-#publish-form[data-view="wait"] #publish-wait { display: block; animation: board-in .25s ease-out both; }
-#publish-form[data-view="wait"] .publish-end { display: none; }
-#publish-form[data-view="done"] :is(#publish-status, .publish-place, .sheet-actions) { animation: board-in .3s ease-out both; }
-/* a calm result card, one rhythm (8 px steps): title → what happened (quiet) → where they stand (the green highlight) → D'acord */
-#publish-form[data-view] .publish-end { margin-top: 0; }
-#publish-form[data-view] h2 { margin-bottom: 12px; }
-#publish-wait .calcot-spin { display: block; width: 88px; height: 88px; margin: 4px auto 8px; }
-#publish-form[data-view="done"] #publish-status { margin: 0 0 20px; font-size: 16px; line-height: 1.35; color: #e8d8b8; }
-#publish-form[data-view="done"] #publish-status:has(+ .publish-place:not([hidden])) { margin-bottom: 6px; }
-#publish-form[data-view="done"] .publish-place { margin: 0 0 24px; font-size: 26px; line-height: 1.2; }
-@media (min-height: 501px) { #publish-menu:has(#publish-form[data-view]) { padding: 24px 24px 24px; } } /* even air all round (not the compact landscape sheet) */
-#publish-menu .sheet-actions { margin-top: 0; gap: 8px; }
-#publish-menu:has(#publish-form[data-view="wait"]) #publish-cancel { display: none; }
-#publish-menu .sheet-actions:has(> #publish-never:not([hidden])) > .btn-link { min-height: 36px; padding-block: 2px; } /* the two quiet links stack tight under Publica */ /* «Ara no» as tall as «Mira la classificació», which takes its place: the buttons don't shift */
 /* Turnstile's tick box (src/services/captcha.js), only when Cloudflare asks: centred, its native 300 × 65 never clipped */
 #captcha-menu { width: min(372px, calc(100vw - 16px - var(--sal) - var(--sar))); max-width: none; padding: 20px 16px 12px; text-align: center; }
 #captcha-menu h2 { font-size: 26px; }
+/* the device tips (src/ui/device-hint.js): an icon over the title, the round × beside it; the bold is the step to take */
+.sheet.hint-menu { width: min(360px, calc(100vw - 32px - var(--sal) - var(--sar))); padding: 12px 20px 18px; text-align: center; } /* the icon art sits ~6 px inside its box: equal margins to what shows */
+.hint-icon { display: block; width: 44px; height: 44px; margin: 0 auto 8px; fill: none; stroke: #f5c518; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.hint-menu .board-text { margin-bottom: 4px; text-wrap: balance; }
+.hint-menu .board-text b { color: #fff3d6; font-weight: 800; }
 .captcha-text { margin: 0 0 16px; font-size: 16px; line-height: 1.35; color: #e8d8b8; text-wrap: balance; }
 .captcha-box { display: flex; justify-content: center; min-height: 65px; }
 .captcha-note { margin: 12px 0 0; color: #e8d8b899; font-size: 13px; }
@@ -392,88 +282,39 @@ kbd { display: inline-block; min-width: 14px; padding: 0 4px; border: 1px solid 
 .settings-about .about-version { margin-top: 8px; font: 600 12px/1 'Baloo 2', system-ui, sans-serif; color: #e8d8b8aa; } /* the build, in the space under the links */
 .about-coffee { color: #f5c518; font-weight: 800; white-space: nowrap; text-decoration: underline; text-underline-offset: 3px; } /* inline in the sub-line: cup + words, one tap target */
 .about-coffee svg { width: 1.1em; height: 1.1em; margin-right: .25em; vertical-align: -.2em; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-.settings-about .about-uaf { margin-top: 10px; font-weight: 600; font-size: 14px; line-height: 1.5; color: #e8d8b8aa; } /* the entitat's credit (their requirement): their flame, quiet like the sub-line */
-.about-uaf a { color: #f5c518; font-weight: 800; white-space: nowrap; text-decoration: underline; text-underline-offset: 3px; }
-.about-uaf svg { width: auto; height: 1.15em; margin-right: .25em; vertical-align: -.2em; fill: #e73449; }
+.settings-about .about-uaf { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px 8px; margin-top: 12px; font-weight: 600; font-size: 14px; line-height: 1.5; color: #e8d8b8aa; } /* the entitat's credit (their requirement): their flame, quiet like the sub-line */
+/* the entitat: the selector's holo chip (.sel-entity, select-pending.css); the ::after slop makes it a 44 px target */
+.about-uaf .sel-entity { position: relative; white-space: nowrap; text-decoration: none; }
+.about-uaf .sel-entity::after { content: ''; position: absolute; inset: -10px 0; } /* 24 + 20 = 44 */
 .about-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 14px; }
 .about-links a { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 6px; color: #f5c518; font-weight: 800; font-size: 15px; text-decoration: underline; text-underline-offset: 3px; }
 .about-links svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-@media (max-width: 519px) { .settings-about { padding-inline: 2px; } .about-links { gap: 4px 6px; } .about-links a, #settings-privacy { padding: 0 3px; } .profile-block .profile-actions { grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); } } /* phones: GitHub · Crèdits · Privadesa and Crea | Recupera each on one row, paying back the UAF line's two */
+@media (max-width: 519px) { .settings-about { padding-inline: 2px; } .about-links { gap: 4px 6px; } .about-links a, #settings-privacy { padding: 0 3px; font-size: 14px; } } /* phones: GitHub · Crèdits · Privadesa on one row, paying back the UAF line's two; 14 px so the longer Spanish «Código en GitHub» still leaves Privacidad on the row at 375–393 */
 .setting-row { cursor: default; }
-/* «Perfil»: a small centred card (label, the nickname, one quiet line), its buttons side by side and equal below */
-.profile-block { flex-direction: column; align-items: stretch; gap: 10px; padding: 12px 14px 14px; text-align: center; }
-.profile-block > span { display: block; }
-.profile-name { display: block; margin-top: 2px; font-size: 24px; line-height: 1.1; font-weight: 800; color: #f5c518; overflow-wrap: anywhere; } .profile-name:empty { display: none; }
-.profile-block .sub.setting-note { margin-top: 4px; color: #e8d8b8b3; }
-.profile-block .profile-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; }
-.profile-block .profile-actions .btn { width: 100%; min-height: 40px; padding: 0 10px; }
-.profile-block .profile-actions .btn[hidden] { display: none; }
-/* waiting for the identity: the room is kept and shows as a quiet skeleton (the name is already known), so it reads as loading, not dead */
-.profile-block[data-pending] .btn { color: transparent; border-color: transparent; background: #fff3d614; pointer-events: none; animation: profile-pulse 1.2s ease-in-out infinite; }
-.profile-block[data-pending] .sub.setting-note { width: 60%; margin-inline: auto; border-radius: 6px; background: #fff3d614; animation: profile-pulse 1.2s ease-in-out infinite; }
-@keyframes profile-pulse { 50% { opacity: .45; } }
-@media (prefers-reduced-motion: reduce) { .profile-block[data-pending] :is(.btn, .sub.setting-note) { animation: none; } }
 @media (max-height: 720px) and (orientation: portrait) { /* short phones (iPhone SE): Configuració fits without scrolling */
   #settings-menu { padding: 14px 16px 10px; }
   #settings-menu h2 { margin-bottom: 4px; }
   #settings-menu .sheet-actions { gap: 7px; margin-top: 8px; }
   #settings-menu .btn { min-height: 44px; padding-block: 5px; }
   #settings-menu .btn .sub { margin-top: 0; font-size: 13px; }
-  #settings-menu .switch-row { min-height: 44px; }
+  #settings-menu .switch-row:not(.lang-pick) { min-height: 44px; }
   .settings-about { gap: 4px; margin-top: 0; padding-top: 8px; font-size: 15px; }
   .settings-about .sub { margin-top: 2px; line-height: 1.4; }
-  .settings-about .about-uaf { margin-top: 2px; line-height: 1.3; } .settings-about .about-version { margin-top: 2px; }
+  .settings-about .about-uaf { margin-top: 10px; line-height: 1.3; } .settings-about .about-version { margin-top: 2px; }
   .about-links a { min-height: 40px; }
 }
-.setting-row .btn { flex: none; width: auto; min-height: 36px; padding: 0 14px; border-width: 1.5px; font-size: 15px; }
+@media (max-width: 359px) { /* 320 px: GitHub · Crèdits · Privadesa need 267 px of a 238 px row; a little sheet edge and 14 px links put them on one row */
+  #settings-menu { padding-inline: 12px; }
+  .about-links { gap: 4px; } .about-links a, #settings-privacy { padding: 0 2px; font-size: 14px; } .about-links a { gap: 4px; }
+}
+@media (max-width: 359px) and (max-height: 720px) { /* 320×568: the gaps give the last 12 px so Configuració needs no scroll */
+  #settings-menu .sheet-actions { gap: 5px; } .settings-about { gap: 2px; }
+}
+.setting-row .btn { flex: none; width: auto; min-height: 44px; padding: 0 14px; border-width: 1.5px; font-size: 15px; }
 .setting-row .sub { overflow-wrap: anywhere; color: #f5c518; }
-@media (max-width: 400px) { #publish-menu { padding-inline: 16px; } #publish-menu h2 { font-size: 27px; } .publish-hint { font-size: 13px; } } /* the hint and «Publica el teu resultat!» stay one line (the title never shrinks to «Publicat!» with a jump) */
 #privacy-menu .privacy-owner { margin: 12px 0 0; text-align: center; }
 /* links in running text (the mailtos): GUA orange, 6.4:1 on the sheet and 5.6:1 on a section's tint, underlined, the same once
    visited, a keyboard ring; gold stays for the .btn-link buttons and the Configuració icon links */
-#privacy-menu p a, #privacy-menu p a:visited, .feedback-small a, .feedback-small a:visited { color: #ff7a1a; text-decoration: underline; text-decoration-thickness: 1.5px; text-underline-offset: 3px; overflow-wrap: anywhere; border-radius: 3px; }
+#privacy-menu p a, #privacy-menu p a:visited, .feedback-small a, .feedback-small a:visited { color: #fff3d6; text-decoration: underline; text-decoration-thickness: 1.5px; text-underline-offset: 3px; overflow-wrap: anywhere; border-radius: 3px; }
 #privacy-menu p a:hover, .feedback-small a:hover { color: #ff9a4a; }
-#privacy-menu p a:focus-visible, .feedback-small a:focus-visible, .about-links a:focus-visible, .about-uaf a:focus-visible { outline: 3px solid var(--button-text); outline-offset: 2px; }
 .about-links a:visited { color: #f5c518; }
-@media (max-height: 500px) { /* landscape phones: the list gets the height, the settings row spans */
-  #settings-menu .sheet-actions > :is(#settings-board, #settings-profile-row) { grid-column: 1 / -1; } /* the wide rows span; the switch rows share a row */
-  #board-menu, #publish-menu { width: min(600px, calc(100vw - 32px - var(--sal) - var(--sar))); padding: 12px 16px 8px; }
-  #board-menu h2, #publish-menu h2 { font-size: 24px; margin-bottom: 4px; }
-  /* the board in two columns: title, switches and buttons on the left, the list box on the right (full height) */
-  #board-menu { width: min(760px, calc(100vw - 32px - var(--sal) - var(--sar))); }
-  #board-list-view:not([hidden]) { display: grid; grid-template-columns: minmax(230px, 38%) 1fr; grid-template-rows: auto auto 1fr; column-gap: 16px; }
-  #board-list-view > :not(.board-box) { grid-column: 1; }
-  #board-list-view > .sheet-actions { align-self: end; }
-  #board-list-view > .board-box { grid-column: 2; grid-row: 1 / -1; min-height: 0; }
-  #board-menu .sheet-actions { gap: 8px; margin-top: 8px; }
-  #board-menu .sheet-actions .btn, #publish-menu .btn:not(.btn-link) { min-height: 44px; }
-}
-@media (max-height: 700px) { /* short screens: the same rhythm, one step tighter; the primary and its second choice side by side */
-  .publish-run { margin-bottom: 12px; font-size: 20px; }
-  .publish-body { gap: 8px; }
-  .publish-end { margin-top: 12px; }
-  #publish-menu .sheet-actions { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; }
-  #publish-menu .sheet-actions > .btn-link { grid-column: 1 / -1; }
-  :where(#publish-menu .sheet-actions:has(> #publish-board[hidden])) > .btn-primary { grid-column: 1 / -1; } /* :where — the landscape grid places «Publica» itself */
-}
-@media (max-height: 500px), (min-width: 700px) and (max-height: 700px) { /* landscape / short windows: the run and the field | status and actions */
-  #publish-menu { width: min(660px, calc(100vw - 32px - var(--sal) - var(--sar))); }
-  #publish-form { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 20px; align-items: start; }
-  #publish-form > h2 { grid-column: 1 / -1; }
-  #publish-form > .publish-run { grid-column: 1 / -1; }
-  /* the form's own view, two columns split by a hairline: LEFT the nickname, its hint, «Publica» under it;
-     RIGHT the consent note, «No m'ho tornis a recordar», «Ja tens un perfil?». Every box joins the grid (display: contents), so the rows
-     line up: field | note, Publica | the quiet links. Status / device hints, when they show, span both columns */
-  #publish-form:not([data-view]) :is(.publish-body, .publish-end, #publish-end-in, .sheet-actions) { display: contents; }
-  #publish-form:not([data-view]) { row-gap: 8px; position: relative; }
-  #publish-form:not([data-view])::before { content: ''; grid-column: 2; grid-row: 3 / span 3; align-self: stretch; margin-left: -10px; border-left: 1px solid #f5c51840; pointer-events: none; } /* half the 20 px gap: the divider sits between the columns */
-  #publish-form:not([data-view]) :is(#publish-as, #publish-field) { grid-column: 1; grid-row: 3; }
-  #publish-form:not([data-view]) #publish-about { grid-column: 2; grid-row: 3; align-self: stretch; display: grid; align-content: center; justify-items: center; } /* the card is as tall as the field: its text sits in the middle, «Privadesa» under it */
-  #publish-form:not([data-view]) #publish-send { grid-column: 1; grid-row: 4 / span 2; align-self: start; }
-  #publish-form:not([data-view]) #publish-never { grid-column: 2; grid-row: 4; justify-self: center; }
-  #publish-form:not([data-view]) #publish-recover { grid-column: 2; grid-row: 5; justify-self: center; }
-  #publish-form:not([data-view]) :is(#publish-temp, #publish-device, #publish-status) { grid-column: 1 / -1; grid-row: auto; margin: 0; }
-  #publish-form[data-view] > .publish-end { grid-column: 1 / -1; grid-row: auto; justify-self: center; width: min(100%, 320px); } /* «Publicant…» / «Publicat!» alone: centred, not pushed to a half */
-  #publish-menu .sheet-actions { grid-template-columns: 1fr; }
-  #publish-menu .sheet-actions > .btn-primary { grid-column: auto; }
-}

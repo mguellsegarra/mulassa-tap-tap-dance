@@ -1,0 +1,474 @@
+{
+  "towns": [
+    {
+      "id": "valls",
+      "name": "Valls",
+      "comarca": "Alt Camp"
+    },
+    {
+      "id": "tarragona",
+      "name": "Tarragona",
+      "comarca": "Tarragonès"
+    },
+    {
+      "id": "reus",
+      "name": "Reus",
+      "comarca": "Baix Camp"
+    },
+    {
+      "id": "solsona",
+      "name": "Solsona",
+      "comarca": "Solsonès"
+    },
+    {
+      "id": "vilanova",
+      "name": "Vilanova i la Geltrú",
+      "short": "Vilanova",
+      "comarca": "Garraf"
+    },
+    {
+      "id": "barcelona",
+      "name": "Barcelona",
+      "comarca": "Barcelonès"
+    },
+    {
+      "id": "berga",
+      "name": "Berga",
+      "comarca": "Berguedà"
+    },
+    {
+      "id": "olot",
+      "name": "Olot",
+      "comarca": "Garrotxa"
+    },
+    {
+      "id": "vilafranca",
+      "name": "Vilafranca del Penedès",
+      "short": "Vilafranca",
+      "comarca": "Alt Penedès"
+    }
+  ],
+  "figures": [
+    {
+      "id": "mulassa-valls",
+      "name": "Mulassa",
+      "fullName": "Mulassa de Valls",
+      "town": "valls",
+      "entity": "UAF",
+      "entityName": "Unió Anelles de la Flama",
+      "sources": [
+        "https://uaf.cat/seguici-ceremonial/mulassa/"
+      ],
+      "includes": [
+        "Mulassa petita"
+      ]
+    },
+    {
+      "id": "drac-valls",
+      "name": "Drac",
+      "fullName": "Drac de Valls",
+      "town": "valls",
+      "entity": "UAF",
+      "entityName": "Unió Anelles de la Flama",
+      "sources": [
+        "https://uaf.cat/seguici-ceremonial/drac/"
+      ],
+      "includes": [
+        "Drac Petit"
+      ]
+    },
+    {
+      "id": "bou-tradicional-valls",
+      "name": "Bou Tradicional",
+      "fullName": "Bou Tradicional de Valls",
+      "town": "valls",
+      "entity": "UAF",
+      "entityName": "Unió Anelles de la Flama",
+      "music": "Francesc Bofarull i Figuerola",
+      "sources": [
+        "https://uaf.cat/seguici-ceremonial/bou-tradicional/"
+      ],
+      "attributionNote": "Bou Tradicional recuperat per la UAF el 2012; no identifica altres bous de Valls."
+    },
+    {
+      "id": "os-trabucaires-valls",
+      "name": "Ós",
+      "fullName": "Ós de Valls",
+      "town": "valls",
+      "entity": "UAF",
+      "entityName": "Unió Anelles de la Flama",
+      "music": "Francesc Bofarull i Figuerola",
+      "sources": [
+        "https://uaf.cat/seguici-ceremonial/os-i-trabucaires/"
+      ],
+      "includes": [
+        "Ós petit"
+      ],
+      "attributionNote": "Els Trabucaires acompanyen l’Ós; són un grup diferenciat de la figura. Es conserva l’identificador històric os-trabucaires-valls."
+    },
+    {
+      "id": "nans-valls",
+      "name": "Nans",
+      "fullName": "Nans de la Ciutat de Valls",
+      "town": "valls",
+      "entity": "Ajuntament + UAF",
+      "entityName": "Ajuntament + UAF",
+      "music": "Francesc Sans",
+      "sources": [
+        "https://uaf.cat/seguici-ceremonial/nans-de-la-ciutat/"
+      ],
+      "includes": [
+        "Armats",
+        "Regidors",
+        "Alcalde",
+        "Jaia",
+        "Dona de l’Ullet",
+        "Barret Verd",
+        "Sabater",
+        "Català",
+        "Noia Maca",
+        "Arlequí"
+      ],
+      "owner": "Ajuntament de Valls",
+      "manager": "Unió Anelles de la Flama",
+      "selectorVisible": false
+    },
+    {
+      "id": "cavallets-valls",
+      "name": "Cavallets",
+      "fullName": "Ball de Cavallets de Valls",
+      "town": "valls",
+      "entity": "UAF",
+      "entityName": "Unió Anelles de la Flama",
+      "music": "Francesc Bofarull i Figuerola",
+      "sources": [
+        "https://uaf.cat/seguici-ceremonial/ball-de-cavallets/"
+      ]
+    },
+    {
+      "id": "basilisc-valls",
+      "name": "Basilisc",
+      "fullName": "Basilisc de Valls",
+      "town": "valls",
+      "entity": "La Pessigolla",
+      "entityName": "Agrupació Cultural La Pessigolla",
+      "manager": "Agrupació Cultural La Pessigolla",
+      "music": "Roger Borràs",
+      "sources": [
+        "https://www.bestiari.cat/figura/basilisc-de-valls/",
+        "https://lapessigolla.cat/fem-poble/efemerides-especials/10-anys/",
+        "https://www.visitavalls.cat/ca/descobreix-valls/seguici-popular/"
+      ]
+    },
+    {
+      "id": "aliga-valls",
+      "name": "Àliga",
+      "fullName": "Àliga de la Ciutat de Valls",
+      "town": "valls",
+      "entity": "Ajuntament + UAF",
+      "entityName": "Ajuntament + UAF",
+      "music": "tradicional",
+      "sources": [
+        "https://uaf.cat/seguici-ceremonial/aliga-de-la-ciutat/"
+      ],
+      "includes": [
+        "Aligons",
+        "Àliga de la Ciutat petita"
+      ],
+      "modelYear": 1991,
+      "owner": "Ajuntament de Valls",
+      "manager": "Unió Anelles de la Flama",
+      "attributionNote": "La UAF gestiona la peça municipal i aporta els aligons. La fitxa documenta la nissaga Tondo com a balladors històrics, sense identificar el ballador actual."
+    },
+    {
+      "id": "gegants-ciutat-valls",
+      "name": "Gegants i Gegantons",
+      "fullName": "Gegants i Gegantons de la Ciutat de Valls",
+      "town": "valls",
+      "entity": "Ajuntament + UAF",
+      "entityName": "Ajuntament + UAF",
+      "music": "tradicional",
+      "sources": [
+        "https://uaf.cat/seguici-ceremonial/gegants-de-la-ciutat/"
+      ],
+      "includes": [
+        "Gegant de la Porra",
+        "Geganta",
+        "Lladrefaves",
+        "Gegantona"
+      ],
+      "owner": "Ajuntament de Valls",
+      "manager": "Unió Anelles de la Flama"
+    },
+    {
+      "id": "diables-valls",
+      "name": "Diables",
+      "fullName": "Ball de Diables de Valls",
+      "town": "valls",
+      "entity": "UAF",
+      "entityName": "Unió Anelles de la Flama",
+      "music": "Francesc Sans",
+      "sources": [
+        "https://uaf.cat/seguici-ceremonial/ball-de-diables/"
+      ],
+      "includes": [
+        "Ball de Diables infantil",
+        "Llucifer",
+        "Diablessa",
+        "Abanderat",
+        "Sant Miquel"
+      ],
+      "selectorVisible": false
+    },
+    {
+      "id": "aliga-tarragona",
+      "name": "Àliga",
+      "fullName": "Àliga de Tarragona",
+      "town": "tarragona",
+      "entity": "Diables de Tarragona",
+      "entityName": "Ball de Diables de Tarragona",
+      "sources": [
+        "https://www.tarragona.cat/cultura/festes-i-cultura-popular/santa-tecla/descobreix-la-festa/seguici-popular/aliga",
+        "https://www.tarragona.cat/cultura/festes-i-cultura-popular/santa-tecla/noticies/noticies-2025/laliga-de-tarragona-celebra-40-tecles"
+      ]
+    },
+    {
+      "id": "cucafera-tarragona",
+      "name": "Cucafera",
+      "fullName": "Cucafera de Tarragona",
+      "town": "tarragona",
+      "entity": "Cucafera de Tarragona",
+      "entityName": "Associació Cucafera de Tarragona",
+      "sources": [
+        "https://www.tarragona.cat/cultura/festes-i-cultura-popular/santa-tecla/descobreix-la-festa/seguici-popular/cucafera",
+        "https://www.tarragona.cat/cultura/festes-i-cultura-popular/santa-tecla/activitats/2026/dissabte-12/la-cucafera-baixa",
+        "https://www.diaridetarragona.com/tarragona/184335/la-cucafera-prepara-su-bajada-y-ya-es-una-entidad-independiente-nj16864669.html"
+      ]
+    },
+    {
+      "id": "gegants-mulassa-reus",
+      "name": "Mulassa",
+      "fullName": "Mulassa de Reus",
+      "town": "reus",
+      "entity": "Geganters de Reus",
+      "entityName": "Colla Gegantera de Reus",
+      "sources": [
+        "https://webs.gegants.cat/reus/la-mulassa/",
+        "https://www.reus.cat/sites/reus/files/programa_gegants_.pdf"
+      ],
+      "attributionNote": "La fitxa és la Mulassa, que acompanya els gegants de la Colla Gegantera. Es conserva l’identificador històric gegants-mulassa-reus."
+    },
+    {
+      "id": "gegants-solsona",
+      "name": "Gegants",
+      "fullName": "Gegants de Solsona",
+      "town": "solsona",
+      "entity": "Geganters de Solsona",
+      "entityName": "Agrupació de Geganters de Solsona",
+      "sources": [
+        "https://solsonalafesta.net/elements-folklorics/",
+        "https://patrimonifestiu.cultura.gencat.cat/Festes-i-elements-festius-catalogats-o-declarats/Festes-Majors/La-Festa-Major-de-Solsona/Els-gegants",
+        "https://reserves.ajsolsona.cat/ajsolsona/fitxers/protocol-gegants.pdf"
+      ],
+      "includes": [
+        "Gegant Vell",
+        "Geganta Vella",
+        "Gegant Jove",
+        "Geganta Jove"
+      ],
+      "owner": "Confraria de la Mare de Déu del Claustre"
+    },
+    {
+      "id": "drac-solsona",
+      "name": "Drac",
+      "fullName": "Drac de Solsona",
+      "town": "solsona",
+      "entity": "Geganters de Solsona",
+      "entityName": "Agrupació de Geganters de Solsona",
+      "sources": [
+        "https://patrimonifestiu.cultura.gencat.cat/Festes-i-elements-festius-catalogats-o-declarats/Festes-Majors/La-Festa-Major-de-Solsona/El-drac",
+        "https://solsonalafesta.net/elements-folklorics/",
+        "https://reserves.ajsolsona.cat/ajsolsona/fitxers/protocol-gegants.pdf"
+      ],
+      "owner": "Confraria de la Mare de Déu del Claustre"
+    },
+    {
+      "id": "mulassa-solsona",
+      "name": "Mulassa i Antonio Ricu",
+      "fullName": "Mulassa i Antonio Ricu",
+      "town": "solsona",
+      "entity": "Geganters de Solsona",
+      "entityName": "Agrupació de Geganters de Solsona",
+      "sources": [
+        "https://patrimonifestiu.cultura.gencat.cat/Festes-i-elements-festius-catalogats-o-declarats/Festes-Majors/La-Festa-Major-de-Solsona/La-mulassa",
+        "https://solsonalafesta.net/elements-folklorics/",
+        "https://reserves.ajsolsona.cat/ajsolsona/fitxers/protocol-gegants.pdf"
+      ],
+      "owner": "Confraria de la Mare de Déu del Claustre"
+    },
+    {
+      "id": "aliga-solsona",
+      "name": "Àliga i Aligons",
+      "fullName": "Àliga i Aligons de Solsona",
+      "town": "solsona",
+      "entity": "Geganters de Solsona",
+      "entityName": "Agrupació de Geganters de Solsona",
+      "sources": [
+        "https://patrimonifestiu.cultura.gencat.cat/Festes-i-elements-festius-catalogats-o-declarats/Festes-Majors/La-Festa-Major-de-Solsona/L-aliga",
+        "https://solsonalafesta.net/elements-folklorics/",
+        "https://reserves.ajsolsona.cat/ajsolsona/fitxers/protocol-gegants.pdf"
+      ],
+      "includes": [
+        "Dos aligons"
+      ],
+      "owner": "Confraria de la Mare de Déu del Claustre"
+    },
+    {
+      "id": "gegants-bojos-solsona",
+      "name": "Gegants Bojos",
+      "fullName": "Gegants Bojos de Solsona",
+      "town": "solsona",
+      "entity": "Carnaval de Solsona",
+      "entityName": "Associació de Festes del Carnaval de Solsona",
+      "sources": [
+        "https://carnavalsolsona.com/la-festa/gegants/",
+        "https://carnavalsolsona.com/programa-2026/"
+      ],
+      "includes": [
+        "Gegant Boig",
+        "Geganta Boja",
+        "Mocós",
+        "Geganteta"
+      ]
+    },
+    {
+      "id": "draca-solsona",
+      "name": "Draca del Carnaval",
+      "fullName": "Draca del Carnaval de Solsona",
+      "town": "solsona",
+      "entity": "Carnaval de Solsona",
+      "entityName": "Associació de Festes del Carnaval de Solsona",
+      "sources": [
+        "https://carnavalsolsona.com/la-festa/gegants/"
+      ]
+    },
+    {
+      "id": "boja-vilanova",
+      "name": "La Boja",
+      "fullName": "Mulassa La Boja de Vilanova i la Geltrú",
+      "town": "vilanova",
+      "entity": "ABP Vilanova",
+      "entityName": "Agrupació de Balls Populars de Vilanova i la Geltrú",
+      "manager": "Agrupació de Balls Populars de Vilanova i la Geltrú",
+      "description": "La mulassa grossa de Vilanova, recuperada el 1947. És una figura pròpia, diferent de la Presumida i la Cabreta.",
+      "sources": [
+        "https://ballspopularsvilanova.cat/mulassa/",
+        "https://www.vilanova.cat/noticies/detall?id=99996656",
+        "https://www.bestiari.cat/2021/03/coneix-quatre-figures-de-bestiari-que-tenen-la-dona-com-a-referent/"
+      ],
+      "visualSources": [
+        "https://ballspopularsvilanova.cat/wp-content/uploads/2023/07/mulasses-de-vilanova.jpg",
+        "https://ballspopularsvilanova.cat/wp-content/uploads/2023/07/mulasses-de-vilanova-geltru.jpg"
+      ]
+    },
+    {
+      "id": "drac-vilanova",
+      "name": "Drac de Vilanova",
+      "fullName": "Drac de Vilanova i la Geltrú",
+      "town": "vilanova",
+      "entity": "La Unió Vilanovina",
+      "entityName": "La Unió Vilanovina",
+      "owner": "Ajuntament de Vilanova i la Geltrú",
+      "manager": "La Unió Vilanovina",
+      "description": "Figura de 1991 del Taller L'Estaquirot, inspirada en el disseny de 1948 d'E. C. Ricart. Un sol cap, coll llarg, ales i cua cargolada; quatre punts de foc a la boca.",
+      "dimensionsMeters": {
+        "length": 2,
+        "height": 1.9
+      },
+      "dimensionsSource": "https://dracvilanova.wordpress.com/2020/04/14/figura-actual/",
+      "sources": [
+        "https://www.bestiari.cat/figura/drac-de-vilanova-i-la-geltru/",
+        "https://dracvilanova.wordpress.com/72-2/",
+        "https://dracvilanova.wordpress.com/2020/04/14/figura-actual/",
+        "https://www.vilanova.cat/doc/doc_29618862.pdf"
+      ],
+      "visualSources": [
+        "https://www.bestiari.cat/wp-content/uploads/2016/07/DracVilanova-1991-1.jpg",
+        "https://www.bestiari.cat/wp-content/uploads/2016/07/DracVilanova-1991-2.jpg",
+        "https://www.bestiari.cat/wp-content/uploads/2016/07/DracVilanova-1991-3.jpg"
+      ]
+    },
+    {
+      "id": "aliga-barcelona",
+      "name": "Àliga",
+      "fullName": "Àliga de la Ciutat de Barcelona",
+      "town": "barcelona",
+      "entity": "Festes de la Plaça Nova",
+      "entityName": "Associació de Festes de la Plaça Nova",
+      "sources": [
+        "https://plnova.cat/qui-som/",
+        "https://plnova.cat/aliga-sen-va-de-festa/",
+        "https://www.barcelona.cat/culturapopular/sites/default/files/protocolsfestiusajbcn.pdf"
+      ]
+    },
+    {
+      "id": "guites-berga",
+      "name": "Guites de la Patum",
+      "fullName": "Guites de la Patum",
+      "town": "berga",
+      "entity": "Ajuntament de Berga",
+      "entityName": "Ajuntament de Berga",
+      "sources": [
+        "https://lapatum.cat/comparses/",
+        "https://lapatum.cat/wp-content/uploads/2026/06/CAT-Dossier-de-premsa-La-Patum-2026.pdf",
+        "https://www.ajberga.cat/media/repository/patrimoni/2025/2025-01-31_Mobles.pdf"
+      ],
+      "includes": [
+        "Guita Grossa",
+        "Guita Xica"
+      ]
+    },
+    {
+      "id": "aliga-berga",
+      "name": "Àliga",
+      "fullName": "Àliga de la Patum",
+      "town": "berga",
+      "entity": "Ajuntament de Berga",
+      "entityName": "Ajuntament de Berga",
+      "sources": [
+        "https://patrimonicultural.diba.cat/print/pdf/node/43268",
+        "https://patrimonicultural.diba.cat/print/pdf/node/43265",
+        "https://lapatum.cat/wp-content/uploads/2026/06/CAT-Dossier-de-premsa-La-Patum-2026.pdf"
+      ],
+      "modelYear": 1756
+    },
+    {
+      "id": "gegants-olot",
+      "name": "Gegants",
+      "fullName": "Gegants d’Olot",
+      "town": "olot",
+      "entity": "Ajuntament d’Olot",
+      "entityName": "Ajuntament d’Olot",
+      "sources": [
+        "https://www.olotcultura.cat/projecte/farandula/",
+        "https://www.olotcultura.cat/renovacio-vestits-gegants-olot-2026/"
+      ],
+      "includes": [
+        "Gegant",
+        "Gegantessa"
+      ]
+    },
+    {
+      "id": "drac-vilafranca",
+      "name": "Drac",
+      "fullName": "Drac de Vilafranca del Penedès",
+      "town": "vilafranca",
+      "entity": "Amics del Drac",
+      "entityName": "Amics del Drac de Vilafranca del Penedès",
+      "sources": [
+        "https://www.dracdevilafranca.com/el-drac.html",
+        "https://www.dracdevilafranca.com/els-amics-del-drac.html"
+      ]
+    }
+  ]
+}

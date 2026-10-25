@@ -94,28 +94,28 @@ flowchart LR
 
 Les carpetes depenen les unes de les altres: quan encertes una nota, `judge.js` avisa l'escena, el HUD i l'àudio. Les regles, en canvi, van a part. `chart.js`, `dance.js`, `energy.js`, `progress.js`, `practice.js`, `calibration.js` i `bubble-rules.js` no importen res, ni three.js ni el DOM, i per això els tests les poden provar amb Node.
 
-`tests/modules.mjs` comprova que no hi hagi cicles d'imports, que `main.js` no passi de 400 línies i que cap altre mòdul passi de 600.
+`tests/build/modules.mjs` comprova que no hi hagi cicles d'imports, que `main.js` no passi de 400 línies i que cap altre mòdul passi de 600.
 
 ### Música, notes i ball surten de la mateixa partitura
 
-La melodia està transcrita a mà a `music/score.json`. Un sol script en Python en genera tota la resta:
+La melodia està transcrita a mà a `music/mulassa/score.json`. Un sol script en Python en genera tota la resta:
 
 ```mermaid
 flowchart LR
-    score["music/score.json<br/>la melodia"] --> py["tools/build_taiko.py"]
+    score["music/mulassa/score.json<br/>la melodia"] --> py["tools/music/build_taiko.py"]
     py --> mp3["public/music/*.mp3<br/>l'àudio"]
-    py --> song["src/song.json<br/>temps i notes"]
-    py --> arr["music/taiko-arrangement.json<br/>seccions de la cançó"]
+    py --> song["src/song-mulassa.json<br/>temps i notes"]
+    py --> arr["music/mulassa/taiko-arrangement.json<br/>seccions de la cançó"]
     song --> chart["game/chart.js<br/>notes de cada nivell"]
     arr --> dance["game/dance.js<br/>coreografia per temps"]
 ```
 
-Com que l'àudio i les notes surten del mateix lloc, cada toc cau exactament sobre una nota que sents. La coreografia (`src/game/dance.js`) està escrita en temps musicals, no en segons: "al temps 80, mitja volta per ensenyar la part del darrere". Si regeneres la música amb un altre tempo, el ball el segueix sol. `tests/dance.mjs` falla si les seccions de la cançó es mouen i deixen el ball desquadrat.
+Com que l'àudio i les notes surten del mateix lloc, cada toc cau exactament sobre una nota que sents. La coreografia (`src/game/dance.js`) està escrita en temps musicals, no en segons: "al temps 80, mitja volta per ensenyar la part del darrere". Si regeneres la música amb un altre tempo, el ball el segueix sol. `tests/figures/mulassa/dance.mjs` falla si les seccions de la cançó es mouen i deixen el ball desquadrat.
 
 Per regenerar la música necessites [uv](https://docs.astral.sh/uv/):
 
 ```bash
-uv run --python 3.11 --with numpy --with scipy --with soundfile --with mido tools/build_taiko.py
+uv run --python 3.11 --with numpy --with scipy --with soundfile --with mido tools/music/build_taiko.py
 ```
 
 Els detalls musicals (arranjament, regles de cada tipus de nota) són a [music/README.md](music/README.md).
@@ -141,7 +141,7 @@ La mecànica ve de [Taiko no Tatsujin](https://en.wikipedia.org/wiki/Taiko_no_Ta
 | Notes grans, amb les dues mans alhora | **GUAPA!**, els dos botons alhora |
 | Globus (*fūsen*), redoble fins que rebenta | **GLOBUS** |
 
-Les notes llargues (**MANTÉN**) no existeixen a Taiko. Les he afegit perquè la melodia del Ball de la Mulassa té notes sostingudes que demanaven aguantar el botó. Al codi encara es veu l'origen: el mapa de notes fa servir `don` i `ka` (`src/song.json`).
+Les notes llargues (**MANTÉN**) no existeixen a Taiko. Les he afegit perquè la melodia del Ball de la Mulassa té notes sostingudes que demanaven aguantar el botó. Al codi encara es veu l'origen: el mapa de notes fa servir `don` i `ka` (`src/song-mulassa.json`).
 
 ## Contribueix
 
@@ -149,59 +149,15 @@ Pots obrir una issue per avisar d'un problema o proposar un canvi, o enviar un p
 
 ### Afegeix la teva figura
 
-Si vols veure un gegant, una àliga, un drac o qualsevol figura del teu poble ballant a la plaça, fes un fork, afegeix-hi el model de la teva figura i obre un PR. De moment el joc només té la Mulassa, però tot arribarà. La idea és que les figures noves es puguin triar i que cadascuna balli amb la seva música.
+Si vols veure un gegant, una àliga o qualsevol figura del teu poble ballant a la plaça, la pots portar al joc. Ara hi ha la Mulassa i el Drac, i el Bou Tradicional arriba aviat. Cada figura té el seu model vòxel, la seva música, el seu ball, la seva colla, les seves paraules als botons i la seva festa.
 
-Abans de començar, mira `?autoplay&mute` una estona per veure com es mou la Mulassa. T'ajudarà a entendre què ha de poder fer la teva figura.
+La guia [docs/figures/nova-figura.md](docs/figures/nova-figura.md) explica:
+- què has d'aportar abans de començar (vídeos sencers del ball, partitura, fotos de la colla);
+- les fases de la feina, de la música fins a la validació;
+- on va cada peça, des dels retrats fins a les tecles del joc lliure;
+- una plantilla per omplir a la PR.
 
-#### El model
-
-Cada figura és un fitxer a `src/scene/models/`. La Mulassa és a `mulassa.js`, i la teva pot anar al costat, per exemple a `drac.js` amb una funció `buildDrac()`. Els models estan fets amb la classe `Vox` de `voxel.js`, que apila caixes de colors i les fusiona en una sola malla:
-
-```js
-const v = new Vox();
-// x, y (base de la caixa), z, amplada, alçada, fondària, color
-v.box(0, 0.5, 0, 1.1, 1.2, 3.3, '#a3182f');
-body.add(v.mesh());
-```
-
-`box()` rep la posició vertical de la base, no la del centre, perquè així és més fàcil pensar en blocs apilats. L'eix z positiu és el davant de la figura.
-
-La funció ha de retornar un objecte amb les peces que el joc fa moure. Aquestes són les de la Mulassa:
-
-| Peça | Què és |
-|---|---|
-| `root` | Tota la figura, que el joc col·loca a la plaça |
-| `body` | El cos, que s'inclina i salta |
-| `neck`, `head` | Coll i cap, que s'aixequen i giren |
-| `jaw` | La mandíbula, per a la mossegada |
-| `ears`, `tail` | Orelles i cua |
-| `legs` | Les cames dels portadors |
-| `peek` | El portador que treu el cap |
-
-Fes servir els mateixos noms encara que la teva figura sigui diferent. Un drac pot tenir `jaw` (per escopir foc) i `tail` (la cua llarga), i les `ears` poden ser banyes. Si una peça no té sentit, crea un `THREE.Group()` buit amb aquest nom. El joc el continuarà movent, però no es veurà.
-
-Indica també l'alçada i la llargada de la figura en metres. El ball les fa servir per calcular quant es desplaça (mira `DANCE_SIZE` a `src/game/dance.js`).
-
-#### La música i el ball
-
-Són opcionals. Si coneixes bé el ball de la teva figura, els pots afegir al mateix PR.
-
-La melodia va en un fitxer com `music/score.json`. Cada compàs és una llista de notes amb la seva durada en negres, i `R` és un silenci:
-
-```json
-[1, "C5:1.5 D5:0.5 Eb5:1 F5:1"]
-```
-
-La coreografia es descriu en temps musicals, com a `src/game/dance.js`: `YAW` diu cap on mira la figura a cada temps i `STYLE` com es mou (quant s'inclina, si salta, si avança). Mira vídeos del ball real i anota en quin moment de la música fa cada gir.
-
-Abans d'afegir una melodia, comprova que es pot fer servir. Moltes músiques de bestiari tenen autor i drets.
-
-#### Què ha de portar el PR
-
-- El fitxer del model a `src/scene/models/`.
-- L'alçada i la llargada de la figura, en metres.
-- Fotos o vídeos de referència de la figura real.
-- Si hi ha música, d'on surt la partitura i si es pot fer servir.
+Abans d'afegir una melodia, comprova que es pot fer servir: moltes músiques de bestiari tenen autor i drets.
 
 ## Crèdits
 
@@ -209,7 +165,7 @@ Amb la col·laboració de la [Unió Anelles de la Flama (UAF) de Valls](https://
 
 <p align="center"><a href="https://uaf.cat"><img src="public/uaf-logo.jpg" alt="Unió Anelles de la Flama, Valls" width="320"></a></p>
 
-- **Música**: el Ball de la Mulassa és de Francesc Bofarull i Figuerola (1987). La melodia de `music/score.json` es va transcriure a partir de la [reducció per a banda publicada per l'ESMUC](https://www.esmuc.cat/wp-content/uploads/2026/04/AB-Analisi-Partitura-ARRE-2025JU-Partitura_compressed.pdf).
+- **Música**: el Ball de la Mulassa és de Francesc Bofarull i Figuerola (1987). La melodia de `music/mulassa/score.json` es va transcriure a partir de la [reducció per a banda publicada per l'ESMUC](https://www.esmuc.cat/wp-content/uploads/2026/04/AB-Analisi-Partitura-ARRE-2025JU-Partitura_compressed.pdf).
 - **La Mulassa**: peça del bestiari de Valls, de la Unió Anelles de la Flama.
 - **Mecànica**: inspirada en Taiko no Tatsujin, de Bandai Namco.
 - **Tipografies**: [Baloo 2](https://github.com/EkType/Baloo2) i [Jersey 10](https://github.com/scfried/soft-type-jersey), totes dues amb llicència OFL.

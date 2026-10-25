@@ -26,12 +26,12 @@ export const FIGURE_TRAITS = Object.freeze({
   }),
   'bou-tradicional-valls': Object.freeze({
     key: 'bou', drumroll: 'esquellot', article: 'masc', cardFile: 'bou-tradicional-de-valls.jpg', cardAlt: 'hud.card.altBou',
-    shareKey: 'services.share.bou', shareLines: null, shareEmoji: null, challenge: false, playCam: 'mula', wideClearance: false, photoSpace: 'ui.photo.act.bou.space', photoE: null,
+    shareKey: null, shareLines: 'services.share.bou.', shareEmoji: '🐂', challenge: true, playCam: 'mula', wideClearance: false, photoSpace: 'ui.photo.act.bou.space', photoE: null,
     photoBody: 'bou', springs: false, splashHost: false, splashPartner: false, landing: 0.9,
   }),
 });
 // The Bou ships with 1.3.0 (branch feat/bou empties this set); until then the selector shows it as pending.
-export const UNRELEASED_IDS = Object.freeze(new Set(['bou-tradicional-valls']));
+export const UNRELEASED_IDS = Object.freeze(new Set([]));
 export const PLAYABLE_IDS = Object.freeze(Object.keys(FIGURE_TRAITS).filter(id => !UNRELEASED_IDS.has(id))); // in the order free play's Tab goes round
 export const traitsOf = id => FIGURE_TRAITS[id] ?? FIGURE_TRAITS['mulassa-valls'];
 export const traitsByKey = key => PLAYABLE_IDS.map(id => FIGURE_TRAITS[id]).find(t => t.key === key) ?? FIGURE_TRAITS['mulassa-valls'];

@@ -4,7 +4,7 @@ import vm from 'node:vm';
 import * as runtime from '../../../src/game/figure-song.js';
 import { createHash } from 'node:crypto';
 import { makeDanceChart } from '../../../src/game/chart.js';
-import { MULASSA, DRAC, recordKey, readFigureRecord, saveFigureRecord } from '../../../src/game/figures.js';
+import { MULASSA, DRAC, BOU, recordKey, readFigureRecord, saveFigureRecord } from '../../../src/game/figures.js';
 import { readPreviousDanceRecord } from '../../../src/game/records.js';
 import { snapshotResult, EXPECTED_JUDGMENTS } from '../../../src/services/leaderboard-rules.js';
 import { challengeEligible, challengeUrl, challengeResult, shareText, HASHTAGS } from '../../../src/services/share.js';
@@ -72,6 +72,16 @@ assert.equal(challengeUrl(100, 1, 'https://mulassa.cat/', DRAC.id), 'https://mul
 assert(shareText(dracRun).includes('Drac'));
 assert(!shareText(dracRun).replace(HASHTAGS, '').includes('Mulassa'), 'the Drac\'s caption names the Drac (the game\'s hashtag aside)');
 assert(shareText(dracRun).startsWith('🐉'));
+// The Bou's challenge needs no board: the link and the caption are made on the device
+const bouRun = { figureId: BOU.id, pct: 94, diff: 2 };
+assert.equal(challengeEligible(bouRun), true);
+assert.equal(challengeResult({ pct: 95, diff: 2, figure: DRAC.id }, bouRun), null, 'a Drac challenge is not the Bou\'s');
+assert(challengeResult({ pct: 90, diff: 2, figure: BOU.id }, bouRun).beaten);
+assert.equal(challengeUrl(94, 2, 'https://mulassa.cat/', BOU.id), 'https://mulassa.cat/?repte=94-2-bou');
+for (const ch of [null, { pct: 90, diff: 2, figure: BOU.id }]) for (const r of [bouRun, { ...bouRun, newRecord: true, score: 1000 }, { ...bouRun, reason: 'clear' }]) {
+  const text = shareText(r, ch);
+  assert(text.startsWith('🐂') && text.includes('Bou') && !text.replace(HASHTAGS, '').includes('Mulassa'), `the Bou's caption names the Bou: ${text}`);
+}
 assert.equal(runtime.setFigureSong('aviat-reus'), false);
 assert.equal(runtime.selectedFigure, DRAC);
 assert.equal(runtime.setFigureSong(MULASSA.id), true);

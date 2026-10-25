@@ -53,7 +53,10 @@
   "services.share.drac.clear": "{mula}💃 He fet ballar el Drac de Valls amb un {pct} d’encerts a {diff}. T’hi atreveixes? 🔥",
   "services.share.drac.fail": "{mula} {pct} d’encerts a {diff}… El Drac em demana la revenja. I tu, com ho faries? 💃",
   "services.share.drac.record": "{mula}🔥 Nou rècord de punts: {score} a {diff} ({pct} d’encerts) fent ballar el Drac de Valls! 🎉",
-  "services.share.bou": "He fet ballar el Bou Tradicional de Valls amb un {pct} d'encerts a {diff}. #Valls",
+  "services.share.bou.challenge": "{mula}🏆 Repte superat! {pct} d’encerts a {diff} fent ballar el Bou Tradicional de Valls 🎉",
+  "services.share.bou.clear": "{mula}💃 He fet ballar el Bou Tradicional de Valls amb un {pct} d’encerts a {diff}. T’hi atreveixes? 🔥",
+  "services.share.bou.fail": "{mula} {pct} d’encerts a {diff}… El Bou em demana la revenja. I tu, com ho faries? 💃",
+  "services.share.bou.record": "{mula}🔥 Nou rècord de punts: {score} a {diff} ({pct} d’encerts) fent ballar el Bou Tradicional de Valls! 🎉",
   "services.share.fail": "{mula} {pct} d’encerts a {diff}… La Mulassa em demana la revenja. I tu, com ho faries? 💃",
   "services.share.record": "{mula}🔥 Nou rècord de punts: {score} a {diff} ({pct} d’encerts) fent ballar la Mulassa de Valls! 🎉"
 }

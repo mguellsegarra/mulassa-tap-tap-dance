@@ -36,7 +36,7 @@ export const leaderboardPreviewMode = ({ hostname = '', search = '', configured 
 const OUTCOMES = ['record', 'clear', 'collapse'];
 // the review states: the mock account / world each starts from (and a taken first nickname)
 export const REVIEWS = Object.freeze({
-  'share-drac': { account: 'verified' },
+  'share-drac': { account: 'verified' }, 'share-bou': { account: 'verified' },
   publish: { account: 'new' }, published: { account: 'new' }, share: { account: 'new' }, email: { account: 'new' }, code: { account: 'new' },
   verified: { account: 'new' }, 'choose-name': { account: 'new' }, switch: { account: 'guest' },
   'profile-new': { account: 'new' }, 'profile-reserved': { account: 'reserved' }, 'profile-guest': { account: 'guest' },

@@ -9,7 +9,7 @@ import { demoCards } from './demo-data.js';
 import { G } from '../game/state.js';
 
 const LABELS = {
-  'share-drac': 'Comparteix el Drac',
+  'share-drac': 'Comparteix el Drac', 'share-bou': 'Comparteix el Bou',
   publish: 'Abans de publicar (s’obre sol)', published: 'Publicat! + Confirma el correu', email: 'Correu: escriu l’adreça', code: 'Correu: el codi',
   verified: 'Correu confirmat!', 'choose-name': 'Correu confirmat → Tria el teu nom', switch: 'Correu d’un altre perfil (canvi)',
   'profile-new': 'Perfil: cap', 'profile-reserved': 'Perfil: convidat sense resultat', 'profile-guest': 'Perfil: convidat (nom#1234)',
@@ -71,16 +71,17 @@ async function reach(ctx) {
   const need = name => { if (typeof ctx[name] !== 'function') throw new Error(`the ${name} opener is missing`); return ctx[name]; };
   panel(!state);
   if (!state) return;
-  if (state === 'share-drac') {
+  const shareFigure = { 'share-drac': 'drac-valls', 'share-bou': 'bou-tradicional-valls' }[state]; // a figure's own share sheet
+  if (shareFigure) {
     await until(() => G.state === 'results', 'the initial results');
     const { setSelectedFigure } = await import('../game/state.js');
     const { startFinal } = await import('../game/flow.js');
-    setSelectedFigure('drac-valls');
+    setSelectedFigure(shareFigure);
     startFinal();
-    await until(() => !$('results-actions').hidden && !$('results-share').hidden && G.shareRun?.figureId === 'drac-valls', 'the Drac result');
+    await until(() => !$('results-actions').hidden && !$('results-share').hidden && G.shareRun?.figureId === shareFigure, 'the figure\'s result');
     await sleep(1200);
     press('results-share');
-    await until(() => $('share-menu').open && !$('share-image').disabled, 'the Drac share image');
+    await until(() => $('share-menu').open && !$('share-image').disabled, 'its share image');
     return;
   }
   await until(() => G.state === 'results' && board().publishable, 'the results screen');

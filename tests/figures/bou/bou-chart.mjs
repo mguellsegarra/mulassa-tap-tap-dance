@@ -16,6 +16,7 @@ import { snapshotResult, validResult } from '../../../src/services/leaderboard-r
 import { payload, endRun } from '../../../src/game/stats.js';
 import { trf } from '../../../src/game/figure-theme.js';
 import { PICKER_FIGURES } from '../../../src/ui/figure-picker.js';
+import { challengeEligible } from '../../../src/services/share.js';
 
 // the mix starts `cutBeats` into v13's intro (tools/music/build_bou_mobile.py): v13's times, that much earlier
 const T0 = approved.subdivisionTimes[playback.cutBeats * approved.subdivision], early = t => t - T0;
@@ -72,6 +73,7 @@ for (const n of song.notes) { const b = beatAtTime(song.dance.subdivisionTimes, 
 assert(playable(BOU) === !UNRELEASED_IDS.has(BOU.id) && !hasBoard(BOU) && hasBoard(MULASSA) && hasBoard(DRAC));
 assert.equal(BOU.version, 'bou-v1');
 assert(!PICKER_FIGURES.includes(BOU), 'no Classificació for the Bou');
+assert(challengeEligible({ figureId: BOU.id }), 'a friend\'s ?repte works without a board (made on the device)');
 assert.equal(runtime.setFigureSong(BOU), true);
 assert.equal(runtime.song, song); assert.equal(runtime.FINALE_T, song.finale);
 assert.equal(trf('collapse.line1'), 'EL BOU'); assert.deepEqual(['input.left', 'input.right', 'input.both'].map(k => trf(k)), ['BRA', 'MA', 'BRAMA'], 'its own drums');

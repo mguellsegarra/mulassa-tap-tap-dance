@@ -53,7 +53,10 @@
   "services.share.drac.clear": "{mula}💃 Drac de Valls 춤, {diff}에서 정확도 {pct} 달성했어요. 도전해볼래요? 🔥",
   "services.share.drac.fail": "{mula} {diff}에서 정확도 {pct}… Drac이 다시 해보래요. 얼마나 잘할 수 있어요? 💃",
   "services.share.drac.record": "{mula}🔥 Drac de Valls 춤, {diff}에서 최고 점수 갱신! {score}점 (정확도 {pct}) 🎉",
-  "services.share.bou": "Bou Tradicional de Valls 춤, {diff}에서 정확도 {pct} 달성했어요. #Valls",
+  "services.share.bou.challenge": "{mula}🏆 도전 성공! Bou Tradicional de Valls 춤, {diff}에서 정확도 {pct} 달성했어요 🎉",
+  "services.share.bou.clear": "{mula}💃 Bou Tradicional de Valls 춤, {diff}에서 정확도 {pct} 달성했어요. 도전해볼래요? 🔥",
+  "services.share.bou.fail": "{mula} {diff}에서 정확도 {pct}… Bou가 다시 해보래요. 얼마나 잘할 수 있어요? 💃",
+  "services.share.bou.record": "{mula}🔥 Bou Tradicional de Valls 춤, {diff}에서 최고 점수 갱신! {score}점 (정확도 {pct}) 🎉",
   "services.share.fail": "{mula} {diff}에서 정확도 {pct}… Mulassa가 다시 해보래요. 얼마나 잘할 수 있어요? 💃",
   "services.share.record": "{mula}🔥 Mulassa de Valls 춤, {diff}에서 최고 점수 갱신! {score}점 (정확도 {pct}) 🎉"
 }

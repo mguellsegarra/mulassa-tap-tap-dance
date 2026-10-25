@@ -53,7 +53,10 @@
   "services.share.drac.clear": "{mula}💃我让Drac de Valls跳起来了！{diff}难度命中率{pct}。你敢来吗？🔥",
   "services.share.drac.fail": "{mula}{diff}难度命中率{pct}…Drac喊我再战一局。换你来会怎样？💃",
   "services.share.drac.record": "{mula}🔥刷新得分纪录！Drac de Valls，{diff}难度{score}分（命中率{pct}）！🎉",
-  "services.share.bou": "我让Bou Tradicional de Valls跳起来了！{diff}难度命中率{pct}。#Valls",
+  "services.share.bou.challenge": "{mula}🏆挑战成功！我让Bou Tradicional de Valls跳完了{diff}难度，命中率{pct}🎉",
+  "services.share.bou.clear": "{mula}💃我让Bou Tradicional de Valls跳起来了！{diff}难度命中率{pct}。你敢来吗？🔥",
+  "services.share.bou.fail": "{mula}{diff}难度命中率{pct}…Bou喊我再战一局。换你来会怎样？💃",
+  "services.share.bou.record": "{mula}🔥刷新得分纪录！Bou Tradicional de Valls，{diff}难度{score}分（命中率{pct}）！🎉",
   "services.share.fail": "{mula}{diff}难度命中率{pct}…Mulassa喊我再战一局。换你来会怎样？💃",
   "services.share.record": "{mula}🔥刷新得分纪录！Mulassa de Valls，{diff}难度{score}分（命中率{pct}）！🎉"
 }

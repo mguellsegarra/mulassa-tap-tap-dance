@@ -53,7 +53,10 @@
   "services.share.drac.clear": "{mula}💃 Drac de Valls dantzan jarri dut: {pct} asmatze. Maila: {diff}. Ausartzen zara? 🔥",
   "services.share.drac.fail": "{mula} {pct} asmatze, maila: {diff}… Drac errebantxa eske daukat. Eta zuk, zer moduz? 💃",
   "services.share.drac.record": "{mula}🔥 Puntu-errekor berria: {score}, maila: {diff} ({pct} asmatze), Drac de Valls dantzan! 🎉",
-  "services.share.bou": "Bou Tradicional de Valls dantzan jarri dut: {pct} asmatze. Maila: {diff}. #Valls",
+  "services.share.bou.challenge": "{mula}🏆 Erronka gaindituta! {pct} asmatze Bou Tradicional de Valls dantzan jarriz 🎉 Maila: {diff}",
+  "services.share.bou.clear": "{mula}💃 Bou Tradicional de Valls dantzan jarri dut: {pct} asmatze. Maila: {diff}. Ausartzen zara? 🔥",
+  "services.share.bou.fail": "{mula} {pct} asmatze, maila: {diff}… Bou errebantxa eske daukat. Eta zuk, zer moduz? 💃",
+  "services.share.bou.record": "{mula}🔥 Puntu-errekor berria: {score}, maila: {diff} ({pct} asmatze), Bou Tradicional de Valls dantzan! 🎉",
   "services.share.fail": "{mula} {pct} asmatze, maila: {diff}… Mulassa errebantxa eske daukat. Eta zuk, zer moduz? 💃",
   "services.share.record": "{mula}🔥 Puntu-errekor berria: {score}, maila: {diff} ({pct} asmatze), Mulassa de Valls dantzan! 🎉"
 }

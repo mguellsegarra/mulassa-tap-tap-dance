@@ -7,7 +7,7 @@
   </picture>
 </a>
 
-**Un joc de ritme sobre els balls del bestiari de Valls (la Mulassa i el Drac), per jugar al navegador.**
+**El joc de ritme del bestiari festiu català.**<br>Tu posa-hi els dits. Les bèsties ja posen les potes.
 
 [![Desplegament](https://github.com/mguellsegarra/mulassa-tap-tap-dance/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/mguellsegarra/mulassa-tap-tap-dance/actions/workflows/deploy-pages.yml)
 [![Llicència: MIT](https://img.shields.io/badge/codi-MIT-a3182f)](LICENSE)
@@ -18,13 +18,15 @@
 
 </div>
 
-La Mulassa i el Drac són peces del bestiari popular de Valls i formen part del Seguici Cerimonial de la ciutat. Aquest joc surt amb motiu de la Fira de Santa Úrsula de 2026.
+Mulassa Tap Tap Dance és un joc de ritme gratuït i en català per fer ballar figures del bestiari festiu dels Països Catalans. Marques el ritme de la música amb dos botons mentre la figura balla. Les melodies són les de les figures, però he agafat la llibertat de portar-les al terreny dels videojocs: més desenfadades, amb una estètica de blocs i amb una sorpresa amagada a cada ball. Que les reconeguis, però que en algun moment pensis: "Uala, això al carrer no ho fa!".
+
+Va començar amb la Mulassa de Valls, que forma part del Seguici Cerimonial de la ciutat, i s'ha anat obrint a més figures. Ara hi ha la Mulassa i el Drac, el Bou Tradicional és a punt de sortir i la idea és que s'hi vagin afegint bèsties d'arreu dels Països Catalans. Es pot jugar en 16 llengües, perquè hi pugui jugar qui no parla català.
 
 <p align="center"><img src=".github/readme/partida.webp" alt="Una partida en marxa: la pista de notes a dalt, la Mulassa ballant a la plaça i confeti en encertar una GUAPA" width="100%"></p>
 
 ## Juga
 
-Es juga a **[mulassa.cat](https://mulassa.cat)**, des del navegador del mòbil o de l'ordinador.
+Es juga a **[mulassa.cat](https://mulassa.cat)**, des del navegador del mòbil o de l'ordinador. El joc també té Instagram: [@mulassa_cat](https://www.instagram.com/mulassa_cat/).
 
 ## Posar-lo en marxa
 
@@ -181,7 +183,7 @@ Pots obrir una issue per avisar d'un problema o proposar un canvi, o enviar un p
 
 ### Afegeix la teva figura
 
-Si vols veure un gegant, una àliga o qualsevol figura del teu poble ballant a la plaça, la pots portar al joc. Ara hi ha la Mulassa i el Drac, i el Bou Tradicional arriba aviat. Cada figura té el seu model vòxel, la seva música, el seu ball, la seva colla, les seves paraules als botons i la seva festa.
+El codi és obert i el joc vol créixer amb bèsties de tot arreu. Si vols veure un gegant, una àliga o qualsevol figura del teu poble ballant a la plaça, la pots portar al joc. Ara hi ha la Mulassa i el Drac, i el Bou Tradicional arriba aviat. Cada figura té el seu model vòxel, la seva música, el seu ball, la seva colla, les seves paraules als botons i la seva festa.
 
 La guia [docs/figures/nova-figura.md](docs/figures/nova-figura.md) explica:
 - què has d'aportar abans de començar (vídeos sencers del ball, partitura, fotos de la colla);
@@ -193,7 +195,7 @@ Abans d'afegir una melodia, comprova que es pot fer servir: moltes músiques de 
 
 ## Crèdits
 
-Amb la col·laboració de la [Unió Anelles de la Flama (UAF) de Valls](https://uaf.cat), que m'ha deixat fer aquest joc de la Mulassa.
+Amb la col·laboració de la [Unió Anelles de la Flama (UAF) de Valls](https://uaf.cat), que m'ha donat permís per portar les seves figures al joc. El que he fet neix de la feina de la gent de l'entitat que les cuida i les fa sortir a plaça.
 
 <p align="center"><a href="https://uaf.cat"><img src="public/uaf-logo.jpg" alt="Unió Anelles de la Flama, Valls" width="320"></a></p>
 

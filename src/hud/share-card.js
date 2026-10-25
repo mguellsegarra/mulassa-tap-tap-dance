@@ -25,7 +25,7 @@ const PAPER = '#fff4df';
 const CARD_THEMES = {
   'mulassa-valls': { name: 'MULASSA', bg: '#8a1628', ray: '#a8283e', ink: '#24050c' },
   'drac-valls': { name: 'DRAC', bg: '#1f8a4c', ray: '#2a9e5a', ink: '#0b2414' },
-  'bou-tradicional-valls': { name: 'BOU', sub: 'hud.card.bouSub', bg: figThemes.bou.colors.pa, ray: figThemes.bou.colors.gua, ink: figThemes.bou.colors.paDk, rayA: 0.2 }, // its buttons' MA grana, faint rays of BRA sand (the light sand at 0.5 drowned the title); «Bou Tradicional» is its name
+  'bou-tradicional-valls': { name: 'BOU', sub: 'hud.card.bouSub', bg: figThemes.bou.colors.pa, ray: figThemes.bou.colors.gua, ink: figThemes.bou.colors.paDk, rayA: 0.2 }, // its buttons' MA plum, faint rays of BRA sand (the light sand at 0.5 drowned the title); «Bou Tradicional» is its name
 };
 // Catalan diacritics always, plus the active language's sample (hud.share.fontSample).
 export async function loadCardFonts(fonts) {

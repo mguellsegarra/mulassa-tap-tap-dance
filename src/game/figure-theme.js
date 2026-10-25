@@ -2,12 +2,12 @@ import { tr } from '../i18n/messages.js';
 import themeMessages from '../i18n/locales/ca/figures.json' with { type: 'json' };
 import { FIGURE_TRAITS } from '../figures/index.js';
 // The two buttons' words and colours per figure: the Mulassa's GUA | PA | GUAPA!, the Drac's CRE | MA | CREMA!, the Bou's BRA | MA | BRAMA!
-// (flame yellow, light | purple, dark; the Bou's sand | grana alike: apart in hue and lightness for every common colour blindness). Pure; the canvas (hud/sprites.js) and the DOM
+// (flame yellow, light | purple, dark; the Bou's sand | plum alike: apart in hue and lightness for every common colour blindness). Pure; the canvas (hud/sprites.js) and the DOM
 // (ui/figure-theme-dom.js) subscribe with onTheme(). Switched only outside play, by figure-song's setFigureSong.
 const MULASSA_COLORS = { gua: '#ff7a1a', guaLt: '#ffb56b', guaDk: '#b34d00', pa: '#14b8a6', paLt: '#6ee7d8', paDk: '#0a6e63' };
 const DRAC_COLORS = { gua: '#ffc21f', guaLt: '#ffe38a', guaDk: '#a66f00', pa: '#b0188c', paLt: '#e46cc6', paDk: '#66084f' };
-// the Bou's sand | grana: light | dark again, apart for every colour blindness and in grey
-const BOU_COLORS = { gua: '#f0d58a', guaLt: '#fff1c2', guaDk: '#a3832f', pa: '#7a1f3d', paLt: '#c05a7e', paDk: '#45081f' };
+// the Bou's sand | plum (its carriers' tunics, darker and bluer than the Drac's magenta): light | dark again, apart for every colour blindness and in grey
+const BOU_COLORS = { gua: '#f0d58a', guaLt: '#fff1c2', guaDk: '#a3832f', pa: '#6e2a62', paLt: '#b06aa6', paDk: '#3e0f36' };
 export const figThemes = {
   mulassa: { drac: false, colors: MULASSA_COLORS, chant: [[tr('figures.chant.first.mulassa'), 0, 0.8], [tr('figures.chant.second.mulassa'), 0.8, 0.8], [tr('figures.chant.last.mulassa'), 1.8, 1.6]] },
   drac: { drac: true, colors: DRAC_COLORS, chant: [[tr('figures.chant.first.drac'), 0, 0.8], [tr('figures.chant.second.drac'), 0.8, 0.8], [tr('figures.chant.last.drac'), 1.8, 1.6]] },

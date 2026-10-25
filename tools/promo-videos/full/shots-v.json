@@ -1,0 +1,301 @@
+{
+ "fps": 60,
+ "width": 720,
+ "height": 1280,
+ "scale": 1.8,
+ "outW": 1080,
+ "outH": 1920,
+ "out": "../public/clips-v",
+ "shots": [
+  {
+   "name": "01-ull",
+   "from": 7.99909,
+   "len": 1.8,
+   "cam": {
+    "target": "head",
+    "azFrom": "heading",
+    "az": [
+     84,
+     74
+    ],
+    "el": [
+     2,
+     5
+    ],
+    "dist": [
+     5.6,
+     4.6
+    ],
+    "fov": 34,
+    "up": 0.1,
+    "lag": 0.1,
+    "yawLag": 0.3
+   },
+   "events": []
+  },
+  {
+   "name": "02-potes",
+   "from": 22.60175,
+   "len": 1.2166666666666666,
+   "cam": {
+    "target": "body",
+    "azFrom": "heading",
+    "az": [
+     80,
+     66
+    ],
+    "el": 2,
+    "dist": [
+     3.2,
+     2.9
+    ],
+    "fov": 56,
+    "up": -0.72,
+    "lag": 0.2,
+    "yawLag": 0.5,
+    "fwd": 1
+   },
+   "events": []
+  },
+  {
+   "name": "03-boca",
+   "from": 30.10088,
+   "len": 1.6166666666666667,
+   "cam": {
+    "target": "head",
+    "azFrom": "heading",
+    "az": [
+     34,
+     12
+    ],
+    "el": [
+     3,
+     6
+    ],
+    "dist": [
+     6,
+     4.8
+    ],
+    "fov": 40,
+    "up": 0,
+    "lag": 0.12
+   },
+   "events": []
+  },
+  {
+   "name": "04-entra",
+   "from": 6.42106,
+   "len": 1.6,
+   "cam": {
+    "target": "body",
+    "azFrom": "world",
+    "az": [
+     -46,
+     -54
+    ],
+    "el": 6,
+    "dist": [
+     9.6,
+     8.6
+    ],
+    "fov": 52,
+    "up": 1.2,
+    "lag": 0.3,
+    "fwd": 0.6
+   },
+   "events": []
+  },
+  {
+   "name": "05-joc",
+   "from": 9.57107,
+   "len": 4.766666666666667,
+   "play": true,
+   "events": [],
+   "mobile": true,
+   "width": 432,
+   "height": 768,
+   "scale": 2.5
+  },
+  {
+   "name": "08-cap",
+   "from": 53.78245,
+   "len": 1.6166666666666667,
+   "cam": {
+    "target": "head",
+    "azFrom": "heading",
+    "az": [
+     34,
+     14
+    ],
+    "el": [
+     3,
+     7
+    ],
+    "dist": [
+     6.2,
+     5
+    ],
+    "fov": 40,
+    "up": 0,
+    "lag": 0.12
+   },
+   "events": []
+  },
+  {
+   "name": "09-globus",
+   "from": 55.36583,
+   "len": 1.6166666666666667,
+   "play": true,
+   "events": [],
+   "mobile": true,
+   "width": 432,
+   "height": 768,
+   "scale": 2.5
+  },
+  {
+   "name": "10-entrebanc",
+   "from": 56.94912,
+   "len": 1.6,
+   "cam": {
+    "target": "body",
+    "azFrom": "world",
+    "az": [
+     -30,
+     -38
+    ],
+    "el": 7,
+    "dist": [
+     11.2,
+     10.4
+    ],
+    "fov": 54,
+    "up": 1.5,
+    "lag": 0.3,
+    "fwd": 0.6
+   },
+   "events": [
+    {
+     "t": 56.9121,
+     "js": "window.__dbg.press('R')"
+    }
+   ]
+  },
+  {
+   "name": "11-plaça",
+   "from": 58.51584,
+   "len": 1.2166666666666666,
+   "cam": {
+    "target": "body",
+    "azFrom": "world",
+    "az": [
+     -100,
+     -92
+    ],
+    "el": 10,
+    "dist": [
+     11,
+     10.2
+    ],
+    "fov": 52,
+    "up": 1.5,
+    "lag": 0.4
+   },
+   "events": []
+  },
+  {
+   "name": "14-focs",
+   "from": 114.96228,
+   "len": 2.0166666666666666,
+   "cam": {
+    "target": "body",
+    "azFrom": "world",
+    "az": [
+     -45,
+     -55
+    ],
+    "el": 4,
+    "dist": [
+     10.2,
+     9.4
+    ],
+    "fov": 60,
+    "up": 2.4,
+    "lag": 0.4
+   },
+   "events": []
+  },
+  {
+   "name": "15-voltes",
+   "from": 116.94561,
+   "len": 1.6166666666666667,
+   "cam": {
+    "target": "body",
+    "azFrom": "world",
+    "az": [
+     -18,
+     -24
+    ],
+    "el": 8,
+    "dist": [
+     11,
+     10.2
+    ],
+    "fov": 54,
+    "up": 1.5,
+    "lag": 0.3,
+    "fwd": 0.6
+   },
+   "events": []
+  },
+  {
+   "name": "16-joc-guapa",
+   "from": 118.52895,
+   "len": 3.183333333333333,
+   "play": true,
+   "events": [
+    {
+     "t": 118.91578947368421,
+     "js": "window.__dbg.G.praise = { word: \"GUAPA,\", tier: 'rainbow', pri: 9, dur: 0.8, t0: window.__dbg.clock, seed: 0.5, big: true }"
+    },
+    {
+     "t": 119.70526315789473,
+     "js": "window.__dbg.G.praise = { word: \"GUAPA…\", tier: 'rainbow', pri: 9, dur: 0.8, t0: window.__dbg.clock, seed: 0.5, big: true }"
+    },
+    {
+     "t": 120.69210526315788,
+     "js": "window.__dbg.G.praise = { word: \"I GUAPA!\", tier: 'rainbow', pri: 9, dur: 1.6, t0: window.__dbg.clock, seed: 0.5, big: true }"
+    }
+   ],
+   "mobile": true,
+   "width": 432,
+   "height": 768,
+   "scale": 2.5
+  },
+  {
+   "name": "17-plaça-final",
+   "from": 121.67895,
+   "len": 3.9166666666666665,
+   "cam": {
+    "target": "body",
+    "azFrom": "world",
+    "az": [
+     -72,
+     -84
+    ],
+    "el": [
+     12,
+     34
+    ],
+    "dist": [
+     9.2,
+     19
+    ],
+    "fov": 58,
+    "up": 1.1,
+    "lag": 0.5,
+    "dur": 2.763157894736842
+   },
+   "events": []
+  }
+ ]
+}

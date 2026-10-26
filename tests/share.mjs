@@ -280,7 +280,7 @@ console.log('share: challenge link, captions, fallbacks, eligibility, privacy an
   {
     nodes.clear(); shared.length = 0;
     const ui = setupShare({ focusIn() {}, doc, nav: phone, store: { get: () => null, set() {} }, fonts: null,
-      url: { createObjectURL: () => 'blob:card', revokeObjectURL() {} }, settle: () => Promise.resolve(), hero: (w, h) => ({ width: w, height: h }) });
+      url: { createObjectURL: () => 'blob:card', revokeObjectURL() {} }, settle: () => Promise.resolve(), hero: () => ({ width: 960, height: 540 }) });
     ui.results(true, run({ diff: 0, pct: 95, t: 4 }), null);
     doc.getElementById('results-share').listeners.click(); await wait();
     const primary = doc.getElementById('share-image'), label = doc.getElementById('share-image-label');
@@ -315,23 +315,21 @@ console.log('share: challenge link, captions, fallbacks, eligibility, privacy an
     doc.getElementById('share-close').listeners.click();
     console.log('share sheet: a steady primary while the card is redrawn ok');
   }
-  // the photo is rendered once per results screen and format, but a GPU process crash blanks its canvas: once it is
-  // restored (empty) the next card renders it again instead of drawing a blank photo
+  // the photo is the format's fixed file (share-card.js loadPhoto), asked by format and awaited, once per results screen
   {
     nodes.clear(); shared.length = 0;
-    const photos = [];
-    const hero = (w, h) => { const p = { width: w, height: h, listeners: {}, addEventListener(t, f) { this.listeners[t] = f; } }; photos.push(p); return p; };
+    const asked = [];
+    const hero = f => { asked.push(f); return Promise.resolve({ width: 960, height: 540 }); };
     const ui = setupShare({ focusIn() {}, doc, nav: phone, store: { get: () => null, set() {} }, fonts: null,
       url: { createObjectURL: () => 'blob:card', revokeObjectURL() {} }, settle: () => Promise.resolve(), hero });
     ui.results(true, run({ diff: 0, pct: 95, t: 5 }), null);
     doc.getElementById('results-share').listeners.click(); await wait();
-    assert.equal(photos.length, 1, 'the first card renders its photo');
+    assert.deepEqual(asked, ['story'], 'the first card asks for its format\'s photo');
     doc.getElementById('share-nick').listeners.change(); await wait();
-    assert.equal(photos.length, 1, 'a redraw reuses it');
-    photos[0].listeners.contextrestored();
-    doc.getElementById('share-nick').listeners.change(); await wait();
-    assert.equal(photos.length, 2, 'a restored (blank) photo is rendered again');
+    assert.deepEqual(asked, ['story'], 'a redraw reuses it');
+    doc.getElementById('share-format-square').listeners.click(); await wait();
+    assert.deepEqual(asked, ['story', 'square'], 'another format asks for its own');
     doc.getElementById('share-close').listeners.click();
-    console.log('share sheet: a photo blanked by a GPU crash is rendered again ok');
+    console.log('share sheet: the fixed photo per format ok');
   }
 }

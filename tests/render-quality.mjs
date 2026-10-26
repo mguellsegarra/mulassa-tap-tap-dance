@@ -428,6 +428,7 @@ const context = vm.createContext({
   setupNudge: opts => (context.nudgeMock = { opts, armed: 0, arm() { this.armed++; }, done() { this.ended = true; }, hide() {} }), // its rules: tests/feedback-ui.mjs
   setupProfile: () => ({ isOpen: false, open() {}, refresh() {} }), // src/ui/profile-ui.js
   setupFeedback: opts => (context.feedbackSheet = { opts, open: false, configured: true, shown: 0, show(back) { this.open = true; this.shown++; this.back = back; } }), // src/ui/feedback-ui.js: tests/feedback-ui.mjs
+  loadPhoto: () => Promise.resolve(null), // src/hud/share-card.js: the share card's fixed photo (none here: the stand-in sky)
   setupShare: opts => (context.shareSheet = setupShare({ ...opts, doc: document, nav: {}, fonts: null, url: { createObjectURL: () => 'blob:card', revokeObjectURL() {} } })),
   document, navigator: { hardwareConcurrency: 8, deviceMemory: 8 },
   location: { search: '' }, localStorage: { getItem() {}, setItem() {} },
@@ -1514,20 +1515,6 @@ console.log('comparteix integration contracts ok');
     seen.crumbs.length = 0;
     assert(run('renderHero(960, 620)'), 'healthy again after a loss: a photo');
     assert(!seen.reports.length && !seen.crumbs.length, 'a healthy capture reports nothing');
-    // a context lost right after the photo (an Adreno 618, every results screen): that GPU never renders it again
-    const savedStorage = context.localStorage, kept = {};
-    context.localStorage = { getItem: k => kept[k] ?? null, setItem: (k, v) => { kept[k] = String(v); } };
-    const lose = () => nodes.get('gl').listeners.webglcontextlost();
-    run('heroAt = performance.now() - 10000;'); lose();
-    assert(run('renderHero(960, 620)'), 'a loss long after the last photo leaves the photo on');
-    lose(); seen.crumbs.length = 0;
-    run('heroShots.length = 0;');
-    assert.equal(run('renderHero(960, 620)'), null, 'a loss just after the photo turns it off');
-    assert.equal(run('heroShots.length'), 0, 'off: nothing is rendered at all');
-    assert.equal(kept['share-hero-off'], run('heroGpu()'), 'remembered for this GPU');
-    kept['share-hero-off'] = 'Another GPU';
-    assert(run('renderHero(960, 620)'), 'another GPU string tries again');
-    context.localStorage = savedStorage;
   } finally {
     errors.report = originalReport; errors.breadcrumb = originalBreadcrumb;
     console.warn = warn;

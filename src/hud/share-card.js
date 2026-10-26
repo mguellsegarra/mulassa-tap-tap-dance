@@ -1,12 +1,22 @@
 // The share image, drawn on an offscreen canvas: Story 1080×1920 or Quadrat 1080×1080 (and the 1200×630 social
-// preview, public/og.jpg). The logo, a hero render of the mulassa (main.js renderHero(): a render target, never the
-// screen's buffer), the stars in the medallion, ENCERTS as the big number, RATXA (the best streak), the level, the record
+// preview, public/og.jpg). The logo, a fixed photo of the mulassa (public/share/photo-<format>.jpg), the stars in the medallion, ENCERTS as the big number, RATXA (the best streak), the level, the record
 // ribbon, an optional nickname and the address. No QR, nothing fetched.
 import { drawStars } from './stars.js';
 import { SITE_LABEL, CARD_FILE } from '../services/share.js';
 
 const FORMATS = { story: { w: 1080, h: 1920 }, square: { w: 1080, h: 1080 }, og: { w: 1200, h: 630 } };
-export const PHOTO = { story: [960, 540], square: [992, 360], og: [1560, 630] }; // the hero render's size per format (css = image px)
+export const PHOTO = { story: [960, 540], square: [992, 360], og: [1560, 630] }; // each format's photo size (css = image px)
+// The photos are fixed files, not a render of the live scene: rendering one on the results screen crashed some GPUs
+// (an Adreno 618 on every game). Made again with `__dbg.hero(w, h).toDataURL('image/jpeg', 0.9)` at PHOTO's sizes on a
+// desktop's results screen (?final), saved as public/share/photo-<format>.jpg (story, square; og only for public/og.jpg). Loaded once; null (the card's stand-in
+// sky) when it can't be.
+const photos = {};
+export const loadPhoto = f => (photos[f] ??= typeof Image === 'undefined' ? Promise.resolve(null) : new Promise(resolve => {
+  const img = new Image();
+  img.onload = () => resolve(img);
+  img.onerror = () => { delete photos[f]; resolve(null); }; // the next card tries again
+  img.src = `share/photo-${f}.jpg`;
+}));
 const BALOO = "'Baloo 2', system-ui, sans-serif", PIXEL = "'Jersey 10', monospace";
 const INK = { cream: '#fff3d6', gold: '#f5c518', red: '#c0283c', dark: '#2a1a10', soft: '#e8d8b8', score: '#c9a7ff' }; // score = C.score (sprites.js): points only
 const HEAD = { clear: ['BALL COMPLET!', INK.gold], fail: ['TORNEM-HI!', '#6fa8ff'] }; // a collapse is never shared
@@ -31,7 +41,7 @@ function logo(c, cx, y, s) { // MULASSA (pixel, red, cream outline) over TAP TAP
   outlined(c, 'MULASSA', cx, y, s, INK.red, INK.cream, PIXEL, 0, s * 0.1);
   outlined(c, 'TAP TAP DANCE', cx, y + s * 0.72, s * 0.36, INK.gold, INK.dark);
 }
-function photo(c, hero, x, y, w, h, r, ax = 0.5) { // the render, framed (cover; ax: which side a wider one keeps); without WebGL a sky and a plaça stand in
+function photo(c, hero, x, y, w, h, r, ax = 0.5) { // the photo, framed (cover; ax: which side a wider one keeps); without it a sky and a plaça stand in
   c.save();
   c.beginPath(); c.roundRect(x, y, w, h, r); c.clip();
   if (hero) {

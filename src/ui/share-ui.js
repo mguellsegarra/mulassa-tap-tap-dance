@@ -5,7 +5,7 @@
 import { byId } from './sheet-kit.js';
 import { DIFFS } from '../game/chart.js';
 import { shareText, challengeUrl, challengeResult, bragWorthy, shareMode, linkMode, shareLinks, isCancel } from '../services/share.js';
-import { PHOTO, drawCard, cardAlt, toJpeg, loadCardFonts } from '../hud/share-card.js';
+import { drawCard, cardAlt, toJpeg, loadCardFonts } from '../hud/share-card.js';
 import { ALIAS_KEY } from './board-ui.js';
 import { errors } from '../services/errors.js';
 
@@ -63,11 +63,7 @@ export function setupShare({ focusIn, restore = () => {}, hero = () => null, sfx
       await loadCardFonts(fonts);
       if (!heroes[f]) await settle();
       if (r !== req || !menu.open) return;
-      if (!heroes[f]) { // rendered once per results screen and format (a render target, then read back)
-        const photo = heroes[f] = hero(...PHOTO[f]);
-        // a GPU process crash blanks its canvas: the next card renders it again (or draws the stand-in, share-capture.js)
-        photo?.addEventListener?.('contextrestored', () => { if (heroes[f] === photo) delete heroes[f]; });
-      }
+      if (!heroes[f]) { heroes[f] = await hero(f); if (r !== req || !menu.open) return; } // the format's fixed photo (share-card.js loadPhoto)
       const canvas = drawCard(doc.createElement('canvas').getContext('2d'), f, d, heroes[f]);
       const out = await toJpeg(canvas, 0.9);
       if (r !== req || !menu.open) return;

@@ -1,5 +1,5 @@
 // A home-screen app on iOS (and a tab left open for days) wakes from memory instead of loading the page again, so a
-// deploy never reaches it; iOS has even opened an old copy on a cold start. So on starting and on waking, compare the
+// deploy never reaches it; iOS has even opened an old copy on a cold start. So on waking (the start: index.html), compare the
 // deployed build (/version.json, vite.config.js) with ours and reload on a newer one, but only on the menus with nothing
 // open: never mid-song, never under a sheet or a typed field.
 import { APP_BUILD } from '../core/version.js';
@@ -31,4 +31,4 @@ setInterval(checkUpdate, 30 * 60 * 1000); // a menu left on screen for hours: on
 // (not preventDefault: Vite would resolve the import with nothing and break its caller)
 addEventListener('vite:preloadError', checkUpdate);
 addEventListener('pageshow', e => { if (e?.persisted) checkUpdate(); }); // back from the bfcache
-checkUpdate(); // the start: one 30-byte request; a match does nothing
+// the start needs no check here: index.html's #build-check already compared the build before the game booted

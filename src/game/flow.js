@@ -16,7 +16,6 @@ import { challengeResult } from '../services/share.js';
 import { fabricateRun, FINAL } from '../dev/final-test.js';
 import { chip, audioEngine, G, clock, songTime, CHALLENGE, setChip, setBigPending, startMenuAudio, setWIN } from './state.js';
 import { audioFailureTags } from '../platform/audio-load.js';
-import { goFullscreen } from '../ui/fullscreen.js';
 import { closePauseMenu } from '../ui/pause.js';
 import { pageActive, playFrom, LEAD, CLICKS, AUTOPLAY, FROM, Q, STARS } from '../core/env.js';
 import { standUp, M, S, PIVOT } from '../scene/figure-springs.js';
@@ -36,7 +35,6 @@ import { statsSync } from '../services/stats-sync.js';
 export function unlock() {
   startMenuAudio();
   toTitle();
-  goFullscreen();
 }
 function leaveRun(kind) { // every way a run ends calls this; stats.js counts the first one only, then the upload may go (after the song)
   if (closeRun(() => {
@@ -111,7 +109,6 @@ function watched() { // the plaça cheers the dance; ui/watch-ui.js then offers 
 function beginRun(diff, chart) { // shared by the song and the practice: a clean plaça and score, `chart` on the lane
   clearLeaderboardResult();
   closePauseMenu();
-  goFullscreen();
   loader.cancel(); songWait = null; // a restart drops the last run's wait (startGame makes its own)
   if (!chip) { setChip(audioEngine()); chip.unlock(); } // never start without an audio engine
   G.diff = diff;

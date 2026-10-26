@@ -152,6 +152,8 @@ body:has(:focus-visible) #select .sel-card[aria-selected="true"]:not(:focus-visi
   @container (max-height: 100px) {
     .sel-card .por { --floor: 9px; grid-area: 1 / 1 / -1 / -1; justify-self: start; width: 46%; }
     .sel-card .nb { grid-area: 1 / 1 / -1 / -1; justify-self: end; width: 54%; padding-inline: 4px; box-shadow: inset 1px 0 #fff3d61a; }
+    /* a three-line name leaves the entity one line (Tio Gori i Tia Caballera); the town is on the banner beside it */
+    .sel-card .nb small:not(.sel-entity-icons) { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 1; overflow: hidden; }
   }
 }
 

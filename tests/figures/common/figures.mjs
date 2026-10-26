@@ -243,7 +243,7 @@ assert.match(cardMarkup('aliga-valls'), /aria-label="Àliga, Ajuntament de Valls
     if (DRAWN_SILHOUETTES[c.dataset.id]) assert.equal(svg, DRAWN_SILHOUETTES[c.dataset.id], `${c.dataset.id}: its hand-drawn silhouette`);
     else assert.match(svg, /<path d="M[^"]+Z" fill="#120b07" stroke="#f5e3b8"/, `${c.dataset.id}: one traced ink path with its halo`);
   }
-  if (UNRELEASED_IDS.has('bou-tradicional-valls')) assert.doesNotMatch(art('bou-tradicional-valls'), /sel-bou-illustration/, 'until its release the Bou is a silhouette like the other pending figures');
+  if (UNRELEASED_IDS.has('bou-tradicional-valls')) assert.deepEqual([...new Set(art('bou-tradicional-valls').match(/(?:fill|stroke)="#\w+"/g))].sort(), ['fill="#120b07"', 'stroke="#120b07"', 'stroke="#f5e3b8"'], 'until its release the Bou is its own drawing in ink with the pending halo');
   else assert.match(art('bou-tradicional-valls'), /class="sel-bou-illustration" aria-hidden="true"/, 'the Bou wears its colour illustration');
   assert.doesNotMatch(art('bou-tradicional-valls'), /\sid="/, 'no ids in the Bou: a card and the figure picker may show it at once');
   assert.match(art(INVITE.id), /class="sel-invite-illustration" aria-hidden="true"/, 'the invitation uses its selected vector illustration');

@@ -78,7 +78,7 @@ let cursor = 0; // the ring's next slot: pieces are thrown in ring order, so the
 // and nothing on screen jumps or vanishes in one frame. Returns how many it couldn't throw yet.
 export function spawnConfetti(n, place, air = false) {
   if (confettiDivert(1.5)) return 0; // the Drac also suppresses the finale's confetti puffs
-  const N = renderProfile.confetti, calm = CALM.matches;
+  const N = Math.min(renderProfile.confetti, CONF), calm = CALM.matches; // (the pool keeps its boot size: a later step up the quality ladder only asks for more)
   let left = Math.min(n, N);
   const from = cursor % N;
   for (let j = 0; j < N && left > 0; j++) {

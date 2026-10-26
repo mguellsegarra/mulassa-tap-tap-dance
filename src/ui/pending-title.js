@@ -13,7 +13,7 @@ export function fitPendingTitle(title, win) {
   text.style.fontSize = `${largest}px`;
   fitPendingNote(content.closest('.sel-pending'));
   // Read intrinsic rows, not the distributed gaps. The footer keeps its own fixed tracks.
-  const rows = () => [...content.querySelectorAll('h2, .sel-entity, .sel-pending-icon, p')]
+  const rows = () => [...content.querySelectorAll('h2, .sel-entity, p')]
     .filter(el => !el.hidden && win.getComputedStyle(el).display !== 'none');
   const fits = size => {
     const visible = rows(), heights = visible.map(el => el.getBoundingClientRect().height);

@@ -42,9 +42,9 @@ body:has(#select:not([hidden])) :is(#free, #music, #settings) { --cb-r: calc(var
   body:has(#select:not([hidden])) :is(#free, #music, #settings, #viewmode) { left: calc(max(12px, env(safe-area-inset-left)) + var(--cb-i) * (100% - max(12px, env(safe-area-inset-left)) - max(12px, env(safe-area-inset-right)) - 44px) / max(1, var(--cb-n) - 1)); }
 }
 
-.sel-card.later { content-visibility: auto; contain-intrinsic-size: auto 128px auto 200px; } /* the off-screen pending cards skip their layout and paint: unfolding 30-odd cards cost ~150 ms on an iPhone */
+.sel-card.later { content-visibility: auto; contain-intrinsic-size: auto 128px auto 200px; } /* the off-screen pending cards skip their layout and paint: opening the selector with 30-odd cards cost ~150 ms on an iPhone */
 
-/* FPS own a rail, independent of the selected figure, fold, difficulty and footer actions. */
+/* FPS own a rail, independent of the selected figure, difficulty and footer actions. */
 body.fps-on:has(#select:not([hidden])) { --fps-rail: 24px; }
 body.fps-on:has(#select:not([hidden])) :is(#free, #music, #settings, #viewmode), body.fps-on #select > .sel-logo { translate: 0 var(--fps-rail); }
 body.fps-on #select:not([data-header-inline]) > :is(.sel-towns, .sel-info) { translate: 0 var(--fps-rail); }
@@ -60,7 +60,7 @@ body.fps-on #select .sel-info { max-height: calc(100% - var(--info-top) - var(--
 @media (min-width: 900px) and (min-height: 600px) and (max-width: 1099px) { #select > .sel-logo-line { height: 48px; } }
 
 /* Fine-pointer desktops: the strip's box starts at the page gutter (--strip-x, measure()) whatever the column does, and its left part
-   under the info column (--strip-clip: the column's edge + 12) is clipped, folded or unfolded, so its cards never show under the column; the column sits above the rest of the dock, whose empty band
+   under the info column (--strip-clip: the column's edge + 12) is clipped, so its cards never show under the column; the column sits above the rest of the dock, whose empty band
    would otherwise catch the clicks on its lower rows. */
 @media (min-width: 900px) and (min-height: 600px) and (pointer: fine) {
   .sel-carousel { margin-left: calc(var(--strip-x, 0px) - var(--bl)); }

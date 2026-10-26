@@ -112,7 +112,6 @@ const MOTION = {
   S02: async h => { await carousel(h, 1); await carousel(h, 1); await carousel(h, -1); },
   S03: async h => { await click(h, '#select-level button:nth-child(1)'); await nap(700); await click(h, '#select-level button:nth-child(3)'); await nap(700); await click(h, '#select-figures-back'); await nap(1200); },
   S04: async h => { await click(h, '.sel-pill:not([data-town="tarragona"])'); await nap(1400); },
-  S31: async h => { await click(h, '.sel-pill:not([data-town="tarragona"])'); await nap(1400); },
   S05: async h => { await h.page.keyboard.down('w'); await nap(900); await h.page.keyboard.up('w'); const r = h.page.viewportSize(); await swipe(h, r.width * 0.7, r.height * 0.5, r.width * 0.5, r.height * 0.5); await nap(800); await press(h, 'Escape'); await nap(1200); },
   S10: async h => { for (const k of ['f', 'j', 'f', 'j']) { await press(h, k); await nap(450); } },
   S12: async h => { await nap(1800); },

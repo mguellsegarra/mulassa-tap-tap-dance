@@ -1,31 +1,7 @@
-/* The selector's pending figures: the fold, the pending identity and attributions, the fold's card and their sizes. */
-/* What is still to come, folded: the pills' fan of arms and the strip's fold unfold it in place; the fold (and the pill's
-   «Amaga») fold it back. */
-#select .sel-soon { color: #e8d8b8; border-style: dashed; }
-.sel-fan { display: inline-flex; flex: none; }
-.sel-fan .escut { width: 20px; height: 20px; margin: 0 0 0 -6px; filter: grayscale(.55) brightness(.8) drop-shadow(0 0 1px #2a1a10); }
-.sel-fan .escut:first-child { margin-left: 0; }
-.sel-fan-more { align-self: center; margin-left: 5px; font-size: 12px; font-weight: 700; line-height: 1; color: #e8d8b8; font-variant-numeric: tabular-nums; } /* the towns left out of the fan, in the arms' own tone */
+/* The selector's pending figures: the pending identity and attributions, and their sizes. */
 .sel-info::-webkit-scrollbar { display: none; }
-/* The full-height fold keeps its original outline and 44 px target width, with a centred chevron. */
-#select { --more-w: 34px; }
-.sel-card.sel-more { flex: 0 0 44px; width: 44px; margin: 0 calc((var(--more-w) - 44px) / 2); border-radius: 0; background: none; box-shadow: none; transform: none; }
-.sel-card.sel-more::before { content: ''; position: absolute; inset: 0 calc((44px - var(--more-w)) / 2); border: 1.5px dashed #f5c51877; border-radius: 999px; background: #140c07c0; }
-.sel-card.sel-more::after { display: none; }
-.sel-more-flag { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-.sel-more-flag > svg { position: static; flex: none; width: 20px; height: 20px; margin: 0; fill: none; stroke: #f5c518; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; transform: none; }
-.sel-more[aria-expanded="false"] .close, .sel-more[aria-expanded="true"] .open { display: none; }
-@media (max-width: 519px), (max-height: 600px) { .sel-more-flag > svg { width: 16px; height: 16px; } }
-#select .sel-card.sel-more:hover { transform: none; }
-/* the keyboard cursor on the fold draws its own pill, never a square box next to the chosen card's ring */
-#select .sel-card.sel-more:focus-visible { outline: none; }
-#select .sel-card.sel-more:focus-visible::before { border: var(--focus); }
 body:has(:focus-visible) #select .sel-card[aria-selected="true"]:not(:focus-visible)::after { box-shadow: inset 0 0 0 2px #fff3d640; } /* Keep selection quieter while the keyboard cursor is on another control. */
-@media (hover: hover) { #select .sel-card.sel-more:hover:not(:focus-visible)::before { border-style: solid; border-color: #f5c518aa; } }
-/* Selected, the fold draws the cream ring on its own pill (it is the strip's one selection then). */
-#select .sel-card.sel-more[aria-selected="true"]:not(:focus-visible)::before { border: 3px solid #fff3d6; }
-#select .sel-soon[aria-expanded="true"] .sel-fan { display: none; }
-/* All pending identities and the catalogue teaser occupy the same viewport-owned box.
+/* All pending identities occupy the same viewport-owned box.
    Only opacity changes on entry/exit; content never sizes or translates the box. */
 #select { bottom: var(--app-gap, 0px); --pending-top: calc(var(--town-row-top) + 44px + 12px + env(safe-area-inset-top) + var(--fps-rail, 0px)); --pending-bottom: calc(var(--pending-rest-bottom, 254px) - var(--drop)); }
 #select .sel-info { transition: opacity .22s var(--sel-ease), display .22s allow-discrete; }
@@ -43,8 +19,6 @@ body:has(:focus-visible) #select .sel-card[aria-selected="true"]:not(:focus-visi
 .sel-pending-content > * { flex: none; }
 .sel-pending h2 { --title-size: 26px; margin: 0; padding-block: 6px; width: 100%; box-sizing: border-box; display: flex; align-items: center; justify-content: center; font: 800 var(--title-size)/1.1 'Baloo 2', system-ui, sans-serif; text-wrap: balance; }
 .sel-pending h2 > span { display: block; width: 100%; }
-.sel-pending .sel-pending-icon { min-height: 0; width: min(180px, 100%); height: 48px; display: flex; justify-content: center; align-items: center; container-type: size; }
-.sel-pending-icon :is(svg, img) { width: 100%; height: 100%; min-height: 0; image-rendering: pixelated; }
 :is(.sel-pending, .sel-identity, .about-uaf) .sel-entity { --entity-holo: linear-gradient(105deg, #ffb3c7, #ffe29a, #b8f0c8, #a8dcff, #d7b8ff, #ffb3c7); max-width: 100%; box-sizing: border-box; font-size: 12px; line-height: 16px; min-height: 24px; row-gap: 0; background: var(--entity-holo) 0 0 / 300% 100%; color: #2a1a10; box-shadow: inset 0 0 0 1px #fff9, 0 0 4px #d7b8ff40; animation: sel-holo 6s linear infinite; }
 /* Each attribution keeps its own holo surface; the separator travels with the second one. */
 :is(.sel-pending, .sel-identity) .sel-entity:has(.sel-entity-unit) { width: max-content; padding: 0; gap: 4px 6px; justify-content: center; background: none; box-shadow: none; animation: none; }
@@ -77,15 +51,6 @@ body:has(:focus-visible) #select .sel-card[aria-selected="true"]:not(:focus-visi
 .sel-pending-links .btn { min-height: 44px; padding: 4px 0; font-size: 14px; white-space: normal; display: flex; justify-content: center; align-items: center; gap: 6px; }
 .sel-pending-links .btn > svg { flex: none; width: 18px; height: 18px; margin: 0; }
 .sel-pending-links .btn > span { min-width: 0; overflow-wrap: normal; }
-/* The fold's card: four things anyone can send, in the slot's full width (the gaps track the card's height). */
-#select-pending[data-fold] .sel-pending-icon { width: 100%; height: auto; container-type: normal; }
-.sel-gifts { list-style: none; margin: 0; padding: 0; width: 100%; display: grid; grid-template-columns: repeat(4, auto); justify-content: space-evenly; }
-.sel-gifts li { display: flex; flex-direction: column; align-items: center; gap: 4px; font: 700 14px/1.1 'Baloo 2', system-ui, sans-serif; color: #fff3d6; }
-.sel-pending-icon .sel-gifts svg { width: clamp(26px, 13cqh, 46px); height: auto; aspect-ratio: 1; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; image-rendering: auto; }
-@container (max-height: 250px) { /* short cards: icon beside its word, one slim row */
-  .sel-gifts li { flex-direction: row; gap: 4px; font-size: 13px; }
-  .sel-pending-icon .sel-gifts svg { width: 22px; }
-}
 /* Compact bands keep the same five rows. Optional copy yields before readable names and 44px targets. */
 @container (max-height: 300px) {
   .sel-pending-copy p + p { display: none; }
@@ -100,7 +65,7 @@ body:has(:focus-visible) #select .sel-card[aria-selected="true"]:not(:focus-visi
   .sel-pending { --contact-pad: 12px; --contact-gap: 10px; }
 }
 @media (max-height: 500px) {
-  #select:is([data-pending], [data-fold]) .sel-towns { left: 43%; width: 57%; }
+  #select[data-pending] .sel-towns { left: 43%; width: 57%; }
   .sel-pending { --contact-top: calc(60px + env(safe-area-inset-top) + var(--fps-rail, 0px)); }
   .sel-pending { left: max(12px, env(safe-area-inset-left)); translate: 0 -50%; width: calc(43% - max(12px, env(safe-area-inset-left)) - 8px); top: calc((100% + 60px + env(safe-area-inset-top) - 8px - env(safe-area-inset-bottom)) / 2); height: calc(100% - 68px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); }
 }
@@ -121,7 +86,7 @@ body:has(:focus-visible) #select .sel-card[aria-selected="true"]:not(:focus-visi
   .sel-pending { --contact-pad: 6px; --contact-gap: 6px; padding-top: 0; width: min(640px, calc(100% - 28px)); }
   .sel-pending-content { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: space-evenly; justify-items: center; }
   .sel-pending h2 { grid-row: 1; grid-column: 1; }
-  .sel-pending :is(.sel-entity, .sel-pending-icon) { grid-row: 1; grid-column: 2; }
+  .sel-pending .sel-entity { grid-row: 1; grid-column: 2; }
   .sel-pending-copy > *, .sel-pending .sel-where { grid-column: 1 / -1; }
   /* Two attributions that have to stack (fitEntityLabel) crowd the row: drop them and let the title take it, centred. */
   .sel-pending .sel-entity[data-stacked] { display: none; }
@@ -139,7 +104,7 @@ body:has(:focus-visible) #select .sel-card[aria-selected="true"]:not(:focus-visi
 
 /* Before the desktop dock breakpoint, pending content needs the same compact footer to keep its reading band. */
 @media (min-width: 668px) and (max-width: 899px) and (min-height: 501px) and (max-height: 660px) {
-  #select:is([data-pending], [data-fold]) { --dock-h: 224px; --action-h: 44px; --card-label-h: 68px; }
+  #select[data-pending] { --dock-h: 224px; --action-h: 44px; --card-label-h: 68px; }
 }
 
 /* Short portrait phones: the clamped dock leaves the level card ~86 px (320×568). Its gaps and padding give first, then the
@@ -170,15 +135,15 @@ body:has(:focus-visible) #select .sel-card[aria-selected="true"]:not(:focus-visi
    Apply after portrait sizing: a near-square short window also needs the narrow reading column. */
 @media (min-width: 520px) and (max-height: 599px),
        (min-width: 480px) and (max-width: 667px) and (min-height: 401px) and (max-height: 660px) {
-  #select:is([data-pending], [data-fold]) .sel-bottom { left: auto; right: 0; translate: none; width: 57%; }
+  #select[data-pending] .sel-bottom { left: auto; right: 0; translate: none; width: 57%; }
   .sel-pending { left: 21.5%; translate: -50% -50%; width: min(480px, calc(43% - 24px)); top: calc((100% + var(--contact-top, var(--pending-top)) - 12px) / 2); height: min(360px, calc(100% - var(--contact-top, var(--pending-top)) - 12px)); }
   .sel-pending-content { display: flex; }
 }
 
 /* The shortest landscape phones need a wider reading column; the strip still shows one whole card. */
 @media (max-width: 899px) and (max-height: 350px) {
-  #select:is([data-pending], [data-fold]) .sel-towns { left: 60%; width: 40%; }
-  #select:is([data-pending], [data-fold]) .sel-bottom { width: 40%; }
+  #select[data-pending] .sel-towns { left: 60%; width: 40%; }
+  #select[data-pending] .sel-bottom { width: 40%; }
   .sel-pending { width: calc(60% - max(12px, env(safe-area-inset-left)) - 8px); }
 }
 

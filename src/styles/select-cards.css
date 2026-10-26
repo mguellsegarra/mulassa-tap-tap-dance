@@ -2,7 +2,7 @@
 /* One surface, no divider: the town's accent (--town, below) tints its top and fades into the game's brown under the
    caption, so a town's row reads as a group. --t is that accent at one fixed lightness and capped chroma: every town's
    black silhouettes and the cream ring read alike, and no tint comes near the gold action or the cream choice. The name
-   stays cream and centred; pending figures (.aviat) wear the fold's dashed edge, not a colour. */
+   stays cream and centred; pending figures (.aviat) wear a dashed edge, not a colour. */
 .sel-card { --t: #453322; --floor: 15px; position: relative; flex: 0 0 152px; width: 152px; display: grid; grid-template-columns: minmax(0, 1fr); justify-content: stretch; grid-template-rows: minmax(0, 1fr) var(--card-label-h); align-items: stretch; justify-items: stretch; gap: 0; min-height: 0; padding: 0; border: 0; border-radius: var(--sel-r); background: linear-gradient(var(--t), color-mix(in srgb, var(--t) 45%, #22160e) 42%, #1d130c 72%, #1a110b); box-shadow: 0 6px 16px #0006; text-align: center; transition: transform .15s; }
 /* Each town's accent: its banner's cloth and, toned down, every portrait of its figures (the cards and the photo mode's
    avatars). The game's own palette, not a colla's shirt or a heraldic tincture: the arms are on the pills. */
@@ -31,7 +31,7 @@
 :is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="fraga"] { --town: #76628f; }
 :is(.sel-card, #photo-figs .pf)[data-town]:not([data-town="el-teu-poble"]) { --t: color-mix(in srgb, var(--town) 45%, #22160e); } /* browsers without relative colours */
 @supports (color: oklch(from red l c h)) { :is(.sel-card, #photo-figs .pf)[data-town]:not([data-town="el-teu-poble"]) { --t: oklch(from var(--town) .42 min(c, .1) h); } }
-.sel-card:not(.sel-more) { overflow: clip; } /* the panels' square corners stay inside the rounded card and its ring */
+.sel-card { overflow: clip; } /* the panels' square corners stay inside the rounded card and its ring */
 .sel-card::after { content: ''; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1px #fff3d624; pointer-events: none; }
 .sel-card.aviat::after { box-shadow: none; border: 1.5px dashed #e8d8b88c; }
 .sel-card.aviat:not([data-id="la-teva-colla"]) .por svg { filter: saturate(.75) brightness(.92); }
@@ -93,7 +93,7 @@
 .sel-card[aria-selected="true"] .sel-card-name { color: #fff3d6; }
 @media (hover: hover) { .sel-card:not([aria-selected="true"]):hover { transform: translateY(-2px); } }
 /* a town's gonfanó: a plain cloth hung from a gold pole wider than it, a gold fringe at its foot, the name on the cloth;
-   it rises 8 px into the strip's top padding, above the cards (the fold too) */
+   it rises 8 px into the strip's top padding, above the cards */
 .sel-banner { position: relative; flex: 0 0 34px; margin-top: -8px; background: linear-gradient(var(--town), var(--town)) 2px 4px / calc(100% - 4px) calc(100% - 15px) no-repeat; }
 .sel-banner[data-town="valls"] { background: linear-gradient(90deg, #fff 0 calc(100% / 6), #c8202f 0 calc(500% / 6), #fff 0) 2px 4px / calc(100% - 4px) calc(100% - 15px) no-repeat; }
 .sel-banner[data-town="el-teu-poble"] { background: repeating-linear-gradient(90deg, #fcdd09 0 calc(100% / 9), #da121a 0 calc(200% / 9)) 2px 4px / calc(100% - 4px) calc(100% - 15px) no-repeat; } /* the invitation: no town's colours, the senyera hung vertically (nine bars, four red) */

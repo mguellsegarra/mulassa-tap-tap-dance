@@ -1,8 +1,8 @@
 // The selector's keyboard: ↑↓ jump between the screen's rows like a game menu, ←→ walk a row (the corner buttons, the
 // pills, the cards or the levels), Home / End, PageUp / PageDown (towns), Enter / Space and Escape. setupSelect (select-ui.js)
 // owns what each move does.
-export function setupSelectKeys({ doc, win, $, root, towns, strip, levels, pending, bar, cards, pills, corner, view, folding, soonPill,
-  busy, sfx, centre, visibleCards, pick, setStep, setLevel, setTown, nextStep, play, refocus }) {
+export function setupSelectKeys({ doc, win, $, root, towns, strip, levels, pending, bar, cards, pills, corner, view,
+  busy, sfx, centre, pick, setStep, setLevel, setTown, nextStep, play, refocus }) {
   // ↑↓ jump between the screen's rows like a game menu: the corner buttons, pills, info tiles, «Aviat», figures or levels,
   // footer buttons; ←→ walk the corner row (left to right as drawn).
   const cornerRow = { contains: el => corner.includes(el) };
@@ -24,8 +24,7 @@ export function setupSelectKeys({ doc, win, $, root, towns, strip, levels, pendi
     }
   }
   function focusCard(i) {
-    const available = visibleCards();
-    const target = available[Math.max(0, Math.min(available.length - 1, i))];
+    const target = cards[Math.max(0, Math.min(cards.length - 1, i))];
     if (target === doc.activeElement && target === cards[view.cur]) return;
     const previousFigure = view.figure;
     pick(target, 'arrow');
@@ -58,13 +57,11 @@ export function setupSelectKeys({ doc, win, $, root, towns, strip, levels, pendi
     }
     if (inTowns && (move || key === 'Home' || key === 'End')) { // Optional arrows; Tab and native Enter / Space still work.
       e.preventDefault();
-      const visible = bar.filter(p => !p.hidden);
-      const i = Math.max(0, Math.min(visible.length - 1, key === 'Home' ? 0 : key === 'End' ? visible.length - 1 : visible.indexOf(a) + move));
-      focusMove(visible[i]); centre(towns, visible[i], 'instant');
+      const i = Math.max(0, Math.min(bar.length - 1, key === 'Home' ? 0 : key === 'End' ? bar.length - 1 : bar.indexOf(a) + move));
+      focusMove(bar[i]); centre(towns, bar[i], 'instant');
       return;
     }
     if (inTowns) {
-      if (key === 'Escape' && folding.open) { e.preventDefault(); folding.unfold(false, 'pill'); soonPill?.focus({ preventScroll: true }); return; }
       if (key !== 'Escape' || view.step !== 'level') return; // Keep Escape's existing return from difficulty.
     }
     if (a?.closest?.('a, input, textarea') || pending.contains(a)) return;
@@ -77,8 +74,7 @@ export function setupSelectKeys({ doc, win, $, root, towns, strip, levels, pendi
 
     if (move || key === 'Home' || key === 'End') {
       e.preventDefault();
-      const available = visibleCards();
-      focusCard(key === 'Home' ? 0 : key === 'End' ? available.length - 1 : available.indexOf(card ?? cards[view.cur]) + move);
+      focusCard(key === 'Home' ? 0 : key === 'End' ? cards.length - 1 : cards.indexOf(card ?? cards[view.cur]) + move);
       return;
     }
     if (key === 'PageUp' || key === 'PageDown') {

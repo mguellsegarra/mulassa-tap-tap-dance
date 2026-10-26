@@ -71,9 +71,8 @@ const SELECT = [
   { code: 'S07', name: 'Com es juga', how: 'clic a #howto (o #select-howto)', run: async h => { await closeAll(h); await $c(h, (await has(h, '#howto')) ? '#howto' : '#select-howto'); await open(h, 'howto-menu'); await wait(h); } },
   { code: 'S20', name: 'Feedback (Bústia)', how: 'clic a #feedback', run: async h => { await closeAll(h); await $c(h, '#feedback'); await open(h, 'feedback-menu'); await wait(h); } },
   { code: 'S03', name: 'Selector, pas 2 (nivells)', how: 'pas 1 → #select-next («TRIA DIFICULTAT»)', run: async h => { await backToStepOne(h); await $c(h, '#select-next'); await wait(h, 1400); } },
-  { code: 'S31', name: 'Aviat a la plaça (panell del plec, sense figura)', how: 'pas 1 → clic a la targeta del plec (.sel-more): el panell pendent mostra la invitació', run: async h => { await backToStepOne(h); await $c(h, '.sel-card.sel-more'); await wait(h, 2200); } },
   { code: 'S04', name: 'Figura pendent (informació inline)', how: 'pas 1 → pastilla d’una vila amb figures pendents (Tarragona)', run: async h => { await backToStepOne(h); await $c(h, '.sel-pill[data-town="tarragona"]'); await wait(h, 2200); } },
-  { code: 'S05', name: 'Mode foto (joc lliure)', how: 'pas 1 amb figura jugable → #select-free', run: async h => { await closeAll(h); await $c(h, '.sel-card:not(.aviat):not(.sel-more)'); await wait(h, 900); await $c(h, '#select-free'); await wait(h, 2500); } },
+  { code: 'S05', name: 'Mode foto (joc lliure)', how: 'pas 1 amb figura jugable → #select-free', run: async h => { await closeAll(h); await $c(h, '.sel-card:not(.aviat)'); await wait(h, 900); await $c(h, '#select-free'); await wait(h, 2500); } },
 ];
 const SELECT_FINE = [ // variant: punter fi en un viewport de mòbil
   { code: 'S02', variant: 'fine', name: 'Selector, pas 1 amb punter fi', how: 'com S02 però amb ratolí (sense hasTouch)', run: async h => { await toSelect(h); } },

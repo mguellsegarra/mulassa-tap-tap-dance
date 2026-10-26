@@ -110,8 +110,8 @@
 /* Both steps occupy this same dock. Touch gives a pending figure the action row back through --drop.
    Desktop reserves that row so repeated arrow clicks keep the same target (measure() reads the layout box). */
 #select { --ga: 8px; --drop-h: calc(var(--action-h) + var(--ga)); --drop: 0px; --sel-ease: cubic-bezier(.35, 0, .15, 1); }
-#select:is([data-pending], [data-fold]) { --drop: var(--drop-h); } /* the fold's own card has no action either */
-@media (pointer: fine) { #select:is([data-pending], [data-fold]) { --drop: 0px; } }
+#select[data-pending] { --drop: var(--drop-h); }
+@media (pointer: fine) { #select[data-pending] { --drop: 0px; } }
 /* The action fades with the drop; it comes back once the dock is on its way up. */
 #select #select-next { transition: transform .12s, filter .12s, box-shadow .12s, opacity .3s var(--sel-ease) .1s, translate .3s var(--sel-ease) .1s, visibility 0s; } /* + .btn-primary's */
 #select #select-next:disabled { opacity: 0; pointer-events: none; translate: 0 8px; transition: opacity .2s var(--sel-ease), translate .2s var(--sel-ease), visibility 0s .2s; } /* touch hides unavailable actions; folding already commits a playable selection */

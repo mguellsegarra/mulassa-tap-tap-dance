@@ -486,7 +486,10 @@ import { THREE, models, framing, dance, nodes, keyHandlers, windowHandlers, docu
   assert(run('extrasMoved>.1'), 'the instanced spectators also yield');
   assert(run('M.pos.length()>7'), `walk through the old fence towards the dense audience: ${run('M.pos.length()')}`);
   assert(run('travelClear>-.08'), `passage keeps visible collision clearance: ${run('travelClear')}`);
-  run('setView(false);animStage(1/60,clock/BEAT);');
+  run(`setView(false);animStage(1/60,clock/BEAT);
+    for(let i=0;i<600;i++){clock+=1/60;animStage(1/60,clock/BEAT);animCrowd(1/60,clock/BEAT,0,1);}
+    var extrasAway=photoExtras.filter(p=>Math.hypot(p.pos.x-p.homeX,p.pos.y-p.homeZ)>.01||Math.abs(p.vx)+Math.abs(p.vz)>=.001).length;`);
+  assert.equal(run('extrasAway'), 0, 'after free play every instanced spectator is home and still (no per-frame collision search left running)');
   console.log('dense crowd passage and yielding floor spectators ok');
 }
 

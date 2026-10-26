@@ -95,7 +95,10 @@ export function updatePhotoExtras(dt) {
     }
     p.vx+=(tx-p.vx)*ease;p.vz+=(tz-p.vz)*ease;
     if(Math.abs(p.vx)+Math.abs(p.vz)<0.001)continue;
-    const step=stepPhotoPerson(p,p.vx,p.vz,h,extraClear);p.vx=step.x;p.vz=step.y;
+    if(PHOTO.on){const step=stepPhotoPerson(p,p.vx,p.vz,h,extraClear);p.vx=step.x;p.vz=step.y;}
+    // home again, straight: a short walk back in the background. Blocked by a neighbour still out of place or the plaza
+    // edge, a colliding return never arrived and retried against every spectator each frame (~11 ms) all session.
+    else p.pos.set(p.pos.x+p.vx*h,p.pos.y+p.vz*h);
     if(p.band){p.band.g.position.x=p.pos.x+p.offsetX;p.band.g.position.z=p.pos.y+p.offsetZ;}
     else {
       p.matrix.elements[12]=p.pos.x;p.matrix.elements[14]=p.pos.y;

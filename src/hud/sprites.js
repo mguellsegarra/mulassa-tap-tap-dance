@@ -1,5 +1,5 @@
 // The HUD palette, fonts and the text sprite cache (each string is painted once and blitted after).
-import { H } from './canvas.js';
+import { H, hud } from './canvas.js';
 
 // Readable rounded bold font for everything (Taiko style); the pixel font only for the logo and big numbers
 export const FONT = "'Baloo 2', system-ui, sans-serif", PIXEL = "'Jersey 10', monospace";
@@ -20,14 +20,16 @@ let spritePx = 0, spriteOk = true;
 export let titleL = null, titleKey = ''; // the title layout cache (titleLayoutNow): declared up here, the font loads below reset it
 export const setTitleL = v => (titleL = v);
 export const setTitleKey = v => (titleKey = v);
-const fontsArrived = () => { sprites.forEach(s => spare.push(s.c)); sprites.clear(); spritePx = 0; titleKey = ''; };
-try { document.fonts.addEventListener('loadingdone', fontsArrived); } catch { /* no font loading API */ } // Safari does not always fire it: the loads below repaint too
+const dropSprites = () => { sprites.forEach(s => spare.push(s.c)); sprites.clear(); spritePx = 0; titleKey = ''; };
+try { document.fonts.addEventListener('loadingdone', dropSprites); } catch { /* no font loading API */ } // Safari does not always fire it: the loads below repaint too
+// a GPU process crash also blanks the sprites' canvases (restored empty with the HUD's): paint them again
+hud.addEventListener('contextrestored', dropSprites);
 // canvas-only fonts are never fetched by themselves (no DOM text uses the pixel logo font), so ask for them explicitly;
 // the page cover waits for them (at most 3 s), so the logo never shows in a fallback font
 export let fontsReady = Promise.resolve();
 try {
   fontsReady = Promise.race([
-    Promise.all(["64px 'Jersey 10'", "800 64px 'Baloo 2'", "600 64px 'Baloo 2'"].map(f => document.fonts.load(f, 'MULASSA àç·').then(fontsArrived))),
+    Promise.all(["64px 'Jersey 10'", "800 64px 'Baloo 2'", "600 64px 'Baloo 2'"].map(f => document.fonts.load(f, 'MULASSA àç·').then(dropSprites))),
     new Promise(r => setTimeout(r, 3000)),
   ]).catch(() => {});
 } catch { /* no font API (tests) */ }

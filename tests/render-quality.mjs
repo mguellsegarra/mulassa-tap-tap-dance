@@ -381,7 +381,10 @@ const document = {
   getElementById(id) {
     if (!nodes.has(id)) nodes.set(id, {
       style: {}, dataset: {}, options: [{}, {}], listeners: {}, open: false,
-      addEventListener(type, handler) { this.listeners[type] = handler; },
+      addEventListener(type, handler) { // the DOM runs every listener of a type (the HUD's contextrestored has two owners)
+        const prev = this.listeners[type];
+        this.listeners[type] = prev ? (...args) => { prev(...args); return handler(...args); } : handler;
+      },
       showModal() { this.open = true; }, close() { this.open = false; },
       focus() {}, blur() {}, setAttribute() {}, classList: { toggle() {}, add() {}, remove() {} }, contains: () => false,
       getContext: () => drawing,
@@ -465,6 +468,16 @@ const COLLAPSE_POINTS = new Float32Array([...silhouettePoints(0.5), ...silhouett
 const MULA_POINTS = silhouettePoints();
 `, context);
 const run = source => vm.runInContext(source, context);
+{ // a GPU crash restores the 2D contexts blank, with the identity transform: the HUD is sized and scaled again and the
+  // text sprites (their own canvases, blanked too) are painted afresh
+  const hudNode = nodes.get('hud');
+  assert.equal(typeof hudNode.listeners.contextrestored, 'function', 'the HUD listens for its 2D context restore');
+  run(`sprites.set('restore-probe', { c: {}, px: 16 });`); // the stub document has no 2D canvases to paint one
+  hudNode.width = 0;
+  hudNode.listeners.contextrestored();
+  assert(hudNode.width > 0, 'a context restore re-runs resize()');
+  assert(!run(`sprites.has('restore-probe')`), 'a context restore drops the blanked text sprites');
+}
 run('qualityLevel = 0; applyRenderQuality();');
 assert(run('crowd.some(p => !p.g.visible)'), 'downgrade hides some spectators');
 assert(run('crowd.every(p => p.g.scale.x === (p.g.visible ? p.scale : 0))'), 'hidden spectators shrink to nothing in the skinned crowd mesh');

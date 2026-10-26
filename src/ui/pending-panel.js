@@ -3,7 +3,6 @@
 import { aviatText, inviteText, locationOf } from '../game/figures.js';
 import { entityHtml } from './figure-entities.js';
 import { escapeHtml } from './select-strip.js';
-import { bouReviewLink } from '../figures/bou/bou-review-link.js';
 
 const FROZEN = ['top', 'maxHeight', 'minHeight', 'height', 'transform'];
 
@@ -13,8 +12,6 @@ export function setupPendingPanel({ $, win, pending }) {
     $('aviat-entity').innerHTML = entityHtml(f);
     $('aviat-where').textContent = locationOf(f); $('aviat-where').hidden = !$('aviat-where').textContent;
     $('aviat-text').innerHTML = (f.invite ? inviteText() : aviatText(f)).split('\n\n').map(p => `<p>${escapeHtml(p)}</p>`).join('');
-    const link = f.id === 'bou-tradicional-valls' && bouReviewLink(pending.ownerDocument, win);
-    if (link?.nodeType) $('aviat-text').append(link); // a build's stub answers with a proxy, not a node
   }
   // Leaving, the card keeps the box it had: the dock rising and the room it frees would otherwise resize and move it
   // mid-fade (a jump and a repaint as it went). Its next showing lets go first.

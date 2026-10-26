@@ -36,5 +36,5 @@ export function stripScroll(row, win, reduced) {
     v0 = Math.abs(span) < 0.5 ? 0 : Math.max(-4, Math.min(4, speed * duration / span));
     if (!frame) { last = win.performance.now(); frame = win.requestAnimationFrame(tick); }
   }
-  return { to, by: delta => to((frame ? target : row.scrollLeft) + delta), stop, get target() { return frame ? target : row.scrollLeft; } };
+  return { to, stop, get target() { return frame ? target : row.scrollLeft; } };
 }

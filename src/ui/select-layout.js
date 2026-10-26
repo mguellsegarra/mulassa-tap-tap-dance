@@ -103,5 +103,5 @@ export function createSelectLayout({ win, $, root, towns, strip, pending, bar, l
   }
   const sizes = () => [$('select-info'), root].map(el => `${el.offsetWidth}x${el.offsetHeight}`).join();
   let measured = '';
-  return { measure, peek, get stripLimit() { return stripLimit; }, stale: () => sizes() !== measured };
+  return { measure, get stripLimit() { return stripLimit; }, stale: () => sizes() !== measured };
 }

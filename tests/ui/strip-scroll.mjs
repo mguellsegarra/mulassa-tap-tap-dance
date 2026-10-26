@@ -19,7 +19,7 @@ for (const hz of [60, 120]) {
   const before = row.scrollLeft;
   scroll.to(1200); assert.equal(row.scrollLeft, before, 'retargeting keeps the visible position');
   tick(); assert(row.scrollLeft > before, 'repeated keys keep moving, with no restarted animation delay');
-  scroll.by(100); scroll.by(100); scroll.by(100);
+  for (let i = 0; i < 3; i++) scroll.to(scroll.target + 100); // what the wheel does
   assert.equal(scroll.target, 1500, 'rapid wheel events accumulate their full distance');
   settle(); assert.equal(row.scrollLeft, 1500);
   const steps = h.samples.slice(1).map((x, i) => x - h.samples[i]);

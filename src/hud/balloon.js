@@ -17,8 +17,17 @@ export function balloonShape(x, y, r, col = '#ff5a7a') { // flat fallback (lane 
 export const balloonFx = (() => { try { return createBalloonFx(); } catch (err) { console.error(err); return null; } })();
 export let balloonView = null;
 export const setBalloonView = v => (balloonView = v);
-let headArt = null; // the lane's drumroll head: stills of the same 3D balloon at three inflations (a live one would sit under the HUD band); vector until made
-setTimeout(() => { try { headArt = [0.05, 0.55, 1].map(k => balloonFx.snapshot(k)); } catch (err) { console.error(err); } }, 2500); // after the first frames: a one-off context
+let headArt = null, headTimer = 0; // the lane's drumroll head: stills of the same 3D balloon at three inflations (a live one would sit under the HUD band); vector until made
+const makeHeadArt = () => {
+  headTimer = 0;
+  try {
+    headArt = [0.05, 0.55, 1].map(k => balloonFx.snapshot(k));
+    headArt.forEach(c => c.addEventListener?.('contextrestored', remakeHeadArt));
+  } catch (err) { console.error(err); }
+};
+// a GPU process crash blanks the stills: the vector head until they are taken again (a fresh context, once the GPU is back)
+const remakeHeadArt = () => { headArt = null; headTimer ||= setTimeout(makeHeadArt, 2500); };
+headTimer = setTimeout(makeHeadArt, 2500); // after the first frames: a one-off context
 // k 0..1 blends the tones; sq / rot are balloon3d's springs (squash, tilt) so it punches with every tap like the big one; the vector stays flat
 export function balloonHead(x, y, r, k = 0.5, sq = 0, rot = 0) {
   if (!headArt) return balloonShape(x, y, r);

@@ -63,7 +63,11 @@ export function setupShare({ focusIn, restore = () => {}, hero = () => null, sfx
       await loadCardFonts(fonts);
       if (!heroes[f]) await settle();
       if (r !== req || !menu.open) return;
-      heroes[f] ??= hero(...PHOTO[f]); // rendered once per results screen and format (a render target, then read back)
+      if (!heroes[f]) { // rendered once per results screen and format (a render target, then read back)
+        const photo = heroes[f] = hero(...PHOTO[f]);
+        // a GPU process crash blanks its canvas: the next card renders it again (or draws the stand-in, share-capture.js)
+        photo?.addEventListener?.('contextrestored', () => { if (heroes[f] === photo) delete heroes[f]; });
+      }
       const canvas = drawCard(doc.createElement('canvas').getContext('2d'), f, d, heroes[f]);
       const out = await toJpeg(canvas, 0.9);
       if (r !== req || !menu.open) return;

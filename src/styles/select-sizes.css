@@ -247,3 +247,4 @@ body.reel-idle #select > * { pointer-events: none; }
 @media (min-width: 900px) and (min-height: 600px) { .sel-banner span { font-size: 18px; } .sel-banner[data-long] span { font-size: 16px; } }
 
 #select[data-header-inline] .sel-towns { top: var(--town-top); inset-inline: var(--town-gutter-l) var(--town-gutter-r); padding-inline: 0; justify-content: safe center; } /* between the logo and the corner icons: a bounded row */
+@media (max-width: 519px) and (max-height: 600px) { .sel-banner span { font-size: 12px; } .sel-banner[data-mid] span { font-size: 10px; letter-spacing: .01em; } .sel-banner[data-long] span { font-size: 9px; letter-spacing: 0; } } /* the cloth of the short phone cards is ~80 px: 8 letters or fewer fit at 12 px, 9-10 letters need 10 px, more 9 px */

@@ -7,18 +7,28 @@
 /* Each town's accent: its banner's cloth and, toned down, every portrait of its figures (the cards and the photo mode's
    avatars). The game's own palette, not a colla's shirt or a heraldic tincture: the arms are on the pills. */
 :is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="valls"] { --town: #c8202f; } /* the red of its banner */
-:is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="tarragona"] { --town: #7d5aa8; }
+:is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="tarragona"] { --town: #8a3d9a; }
 :is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="reus"] { --town: #8f6340; }
-:is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="solsona"] { --town: #c0283c; }
-:is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="vilanova"] { --town: #d9a521; }
-:is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="barcelona"] { --town: #c8202f; }
+:is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="solsona"] { --town: #0b8fa8; }
+:is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="vilanova"] { --town: #10ade3; }
+:is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="barcelona"] { --town: #b659a2; }
 :is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="berga"] { --town: #1f3f7a; }
 :is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="olot"] { --town: #8e2a5c; } /* a mulberry granat: a plain granat read as the reds once toned down */
 :is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="vilafranca"] { --town: #00b09a; }
 :is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="lleida"] { --town: #7e2236; }
 :is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="terrassa"] { --town: #8d68c0; }
-:is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="manresa"] { --town: #3f6fc0; }
-:is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="montblanc"] { --town: #b03a48; }
+:is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="manresa"] { --town: #d18519; }
+:is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="montblanc"] { --town: #5f9205; }
+:is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="girona"] { --town: #3f86b5; }
+:is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="molins"] { --town: #c55f12; }
+:is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="sant-sadurni"] { --town: #c49a25; }
+:is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="mataro"] { --town: #227702; }
+:is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="tortosa"] { --town: #0e985b; }
+:is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="sineu"] { --town: #696708; }
+:is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="vinaros"] { --town: #5c52b4; }
+:is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="castello"] { --town: #397f69; }
+:is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="bao"] { --town: #00717a; }
+:is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="fraga"] { --town: #76628f; }
 :is(.sel-card, #photo-figs .pf)[data-town]:not([data-town="el-teu-poble"]) { --t: color-mix(in srgb, var(--town) 45%, #22160e); } /* browsers without relative colours */
 @supports (color: oklch(from red l c h)) { :is(.sel-card, #photo-figs .pf)[data-town]:not([data-town="el-teu-poble"]) { --t: oklch(from var(--town) .42 min(c, .1) h); } }
 .sel-card:not(.sel-more) { overflow: clip; } /* the panels' square corners stay inside the rounded card and its ring */

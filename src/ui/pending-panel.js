@@ -1,6 +1,6 @@
 // The pending figure's panel (and the fold's «Aviat a la plaça» card) in the selector: its words, and the box it keeps while
 // it fades out. The selector decides which one shows (select-ui.js panel()).
-import { aviatText, inviteText } from '../game/figures.js';
+import { aviatText, inviteText, locationOf } from '../game/figures.js';
 import { tr } from '../i18n/messages.js';
 import { entityHtml } from './figure-entities.js';
 import { GIFTS } from './pending-gifts.js';
@@ -14,6 +14,7 @@ export function setupPendingPanel({ $, win, pending }) {
     $('aviat-title').textContent = f.fullName || f.name;
     $('aviat-entity').hidden = false;
     $('aviat-entity').innerHTML = entityHtml(f);
+    $('aviat-where').textContent = locationOf(f); $('aviat-where').hidden = !$('aviat-where').textContent;
     $('aviat-icon').innerHTML = ''; $('aviat-icon').hidden = true; // the strip below already shows its portrait
     $('aviat-text').innerHTML = (f.invite ? inviteText() : aviatText(f)).split('\n\n').map(p => `<p>${escapeHtml(p)}</p>`).join('');
     // i18n-ok: local development dance review; never shown on the public selector.
@@ -30,6 +31,7 @@ export function setupPendingPanel({ $, win, pending }) {
     $('aviat-icon').innerHTML = GIFTS; $('aviat-icon').hidden = false;
     $('aviat-entity').hidden = true;
     $('aviat-entity').innerHTML = '';
+    $('aviat-where').hidden = true;
     $('aviat-text').innerHTML = `<p>${tr('ui.select.teaserText')}</p>`;
   }
   // Leaving, the card keeps the box it had: the dock rising and the room it frees would otherwise resize and move it

@@ -2,12 +2,13 @@ import { UNRELEASED_IDS } from '../../../src/figures/index.js';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { selectCss } from '../../ui/page.mjs';
-import { FIGURES, TOWNS, MULASSA, DRAC, BOU, portraitArt, portraitPalette, portraitStand, STAND, playable, upFront, townOf, rememberedLevel, rememberLevel, recordKey, aviatText, aviatDraft, inviteText, INVITE, INVITE_TOWN, INVITE_DRAFT } from '../../../src/game/figures.js';
+import { FIGURES, TOWNS, MULASSA, DRAC, BOU, portraitArt, portraitPalette, portraitStand, STAND, playable, upFront, townOf, rememberedLevel, rememberLevel, recordKey, locationOf, aviatText, aviatDraft, inviteText, INVITE, INVITE_TOWN, INVITE_DRAFT } from '../../../src/game/figures.js';
 import { FIGURE_PORTRAITS } from '../../../src/game/figure-portraits.js';
 import { setupSelect, peekGap, pixelSvg } from '../../../src/ui/select-ui.js';
 import { cellOutline } from '../../../src/ui/selector-portraits.js';
-import { DRAWN_SILHOUETTES } from '../../../src/ui/pending-silhouettes.js';
+import { DRAWN_SILHOUETTES, SILHOUETTE_DRAWINGS, silhouetteBox } from '../../../src/ui/pending-silhouettes.js';
 import { escutSvg } from '../../../src/ui/escuts.js';
+import { soonPillHtml, FAN_MAX } from '../../../src/ui/select-strip.js';
 import { clampStand } from '../../../src/dev/sizes-edit.js';
 import { fitPendingNote } from '../../../src/ui/pending-title.js';
 import '../../ui/strip-scroll.mjs';
@@ -22,8 +23,11 @@ assert(FIGURES.slice(0, FIGURES.filter(playable).length).every(playable), 'avail
 assert(FIGURES.every(f => townOf(f) && ['playable', 'aviat'].includes(f.status)));
 assert.deepEqual(FIGURES.filter(f => f.town === 'valls').map(f => f.id).sort(), ['mulassa-valls', 'drac-valls', 'aliga-valls', 'bou-tradicional-valls', 'os-trabucaires-valls', 'gegants-ciutat-valls', 'cavallets-valls', 'basilisc-valls'].sort(), 'only the requested principal Valls figures remain');
 const sourceCatalog = JSON.parse(readFileSync(new URL('../../../src/game/figure-catalog.json', import.meta.url), 'utf8'));
-assert.deepEqual(sourceCatalog.figures.filter(f => f.selectorVisible === false).map(f => f.id), ['nans-valls', 'diables-valls']);
-for (const id of ['nans-valls', 'diables-valls']) {
+// Solsona keeps the Drac and the Gegants Bojos on the selector (an editorial choice); the other four stay in the catalogue
+const HIDDEN = ['nans-valls', 'diables-valls', 'gegants-solsona', 'mulassa-solsona', 'aliga-solsona', 'draca-solsona'];
+assert.deepEqual(sourceCatalog.figures.filter(f => f.selectorVisible === false).map(f => f.id), HIDDEN);
+assert.deepEqual(FIGURES.filter(f => f.town === 'solsona').map(f => f.id), ['drac-solsona', 'gegants-bojos-solsona']);
+for (const id of HIDDEN) {
   assert(sourceCatalog.figures.find(f => f.id === id).sources.length && FIGURE_PORTRAITS[id], `${id}: hidden figure retains sources and portrait`);
 }
 assert.equal(FIGURES.find(f => f.id === 'os-trabucaires-valls').fullName, 'Ós de Valls', 'the figure is distinct from its accompanying Trabucaires');
@@ -49,9 +53,9 @@ assert.notDeepEqual(portraitArt(vilanovaFigures[1]), DRAC_ART, 'Vilanova has its
 for (const f of FIGURES) {
   assert(f.name && f.entity && f.sources?.length, `${f.id}: named and attributed catalog entry`);
   assert(!f.thumbnail, `${f.id}: native pixel portrait`);
-  if (!playable(f)) assert(FIGURE_PORTRAITS[f.id], `${f.id}: has its own portrait`);
+  // a pending figure needs no pixel portrait (nothing shows it yet): the shared «Aviat» grid stands in until it is playable
   const art = portraitArt(f), palette = portraitPalette(f);
-  assert(art.length <= 14 && art[0].length <= 18, `${f.id}: small sprite grid`);
+  if (FIGURE_PORTRAITS[f.id]) assert(art.length <= 14 && art[0].length <= 18, `${f.id}: small sprite grid`);
   assert(art.every(row => row.length === art[0].length), `${f.id}: uniform rows`);
   for (const cell of art.join('')) assert(cell === '.' || palette[cell], `${f.id}: unknown palette cell ${cell}`);
 }
@@ -80,7 +84,7 @@ for (const [id, verb] of [['gegants-ciutat-valls', 'surtin'], ['nans-valls', 'su
 assert.equal(aviatText(pendingName('aliga-valls')).split('\n\n').length, 2, 'pending cards: how to help, then the open code');
 
 // A named asset-backed fixture exercises future catalog entries without prescribing the research roster.
-const catalogFixture = { id: 'selector-fixture', town: 'vilanova', status: 'aviat', name: 'Figura de prova amb nom llarg', entity: 'Entitat de prova amb nom llarg', thumbnail: '/figures/selector-fixture.webp' };
+const catalogFixture = { id: 'selector-fixture', town: TOWNS.at(-1).id, status: 'aviat', name: 'Figura de prova amb nom llarg', entity: 'Entitat de prova amb nom llarg', thumbnail: '/figures/selector-fixture.webp' };
 FIGURES.push(catalogFixture);
 // The selector's DOM contract, with no rendering or network dependency.
 const nodes = new Map(), handlers = {};
@@ -113,7 +117,7 @@ class Node {
   scrollTo({ left, behavior }) { this.scrollLeft = left; this.behavior = behavior; }
   getBoundingClientRect() { return { top: 100, right: 200, bottom: 300 }; }
 }
-for (const id of ['free', 'viewmode', 'feedback', 'music', 'settings', 'select-carousel', 'select-prev', 'select-forward', 'select-nav', 'select', 'select-towns', 'select-strip', 'select-level', 'select-song', 'select-entity', 'select-act', 'select-name', 'select-song-name', 'select-song-credit', 'select-play', 'select-next', 'select-next-label', 'select-figures-back', 'select-board', 'select-howto', 'aviat-write', 'aviat-text', 'select-info', 'select-bottom', 'select-pos', 'select-tiles', 'select-rank-tile', 'select-pending', 'aviat-entity', 'aviat-icon', 'aviat-title', 'select-level-stats', 'select-level-title', 'select-level-sub']) nodes.set(id, new Node(id));
+for (const id of ['free', 'viewmode', 'feedback', 'music', 'settings', 'select-carousel', 'select-prev', 'select-forward', 'select-nav', 'select', 'select-towns', 'select-strip', 'select-level', 'select-song', 'select-entity', 'select-act', 'select-name', 'select-song-name', 'select-song-credit', 'select-play', 'select-next', 'select-next-label', 'select-figures-back', 'select-board', 'select-howto', 'aviat-write', 'aviat-text', 'select-info', 'select-bottom', 'select-pos', 'select-tiles', 'select-rank-tile', 'select-pending', 'aviat-entity', 'aviat-where', 'aviat-icon', 'aviat-title', 'select-level-stats', 'select-level-title', 'select-level-sub']) nodes.set(id, new Node(id));
 // The level row's title reports an overflow while it carries what a narrow screen can't hold (the points).
 Object.defineProperties(nodes.get('select-level-title'), { clientWidth: { value: 200 }, scrollWidth: { get() { return narrow && /punts/.test(this.textContent) ? 999 : 100; } },
   textContent: { get() { return (this.html ?? '').replace(/<[^>]*>/g, ''); }, set(v) { this.html = v; } } }); // its level word is a coloured span
@@ -232,12 +236,14 @@ const cardMarkup = id => $('select-strip').innerHTML.match(new RegExp(`<button[^
 assert.match(cardMarkup('mulassa-valls'), /aria-label="Mulassa, Unió Anelles de la Flama, Valls/);
 assert.match(cardMarkup('aliga-valls'), /aria-label="Àliga, Ajuntament de Valls \+ Unió Anelles de la Flama, Valls/);
 { // pending cards wear a hand-drawn vector silhouette, the Bou its colour drawing; the traced one is the fallback for new figures
-  assert.deepEqual(Object.keys(DRAWN_SILHOUETTES).sort(), cards.filter(c => c.cls.includes('aviat') && !['bou-tradicional-valls', INVITE.id, 'selector-fixture'].includes(c.dataset.id)).map(c => c.dataset.id).sort(), 'every pending card is hand-drawn (the Bou and the invitation have their own)');
+  assert.deepEqual(Object.keys(DRAWN_SILHOUETTES).filter(id => !HIDDEN.includes(id)).sort(), cards.filter(c => c.cls.includes('aviat') && !['bou-tradicional-valls', INVITE.id, 'selector-fixture'].includes(c.dataset.id)).map(c => c.dataset.id).sort(), 'every pending card is hand-drawn (the Bou and the invitation have their own)');
   const art = id => cardMarkup(id).match(/<span class="por">([^]*?)<\/span>/)[1];
   for (const c of cards.filter(c => c.cls.includes('aviat') && c.dataset.id !== 'bou-tradicional-valls' && c.dataset.id !== INVITE.id)) {
     if (art(c.dataset.id).startsWith('<img')) { assert.equal(c.dataset.id, 'selector-fixture', 'only a figure with a photo keeps it'); continue; }
-    const grid = portraitArt({ id: c.dataset.id }), svg = art(c.dataset.id);
-    assert.match(svg, new RegExp(`^<svg viewBox="0 0 ${grid[0].length + 2} ${grid.length + 2}"`), `${c.dataset.id}: same box as its pixel portrait, so the same size`);
+    const own = FIGURE_PORTRAITS[c.dataset.id]?.art, grid = own ?? portraitArt({ id: c.dataset.id }), svg = art(c.dataset.id), [bw, bh] = silhouetteBox(c.dataset.id);
+    if (own) assert.match(svg, new RegExp(`^<svg viewBox="0 0 ${grid[0].length + 2} ${grid.length + 2}"`), `${c.dataset.id}: same box as its pixel portrait, so the same size`);
+    else assert.match(svg, new RegExp(`^<svg viewBox="0 0 ${bw} ${bh}"`), `${c.dataset.id}: no pixel portrait yet, its card is sized by the silhouette's own box`);
+    assert.match(cardMarkup(c.dataset.id), new RegExp(`--gw:${own ? grid[0].length + 2 : bw};--gh:${own ? grid.length + 2 : bh}`), `${c.dataset.id}: the card's cell box`);
     assert(!svg.includes('crispEdges') && svg.includes('#120b07'), `${c.dataset.id}: ink silhouette, no pixel cells`);
     assert.match(svg, /stroke-width="2"[^]*?vector-effect="non-scaling-stroke"/, `${c.dataset.id}: the halo is a fixed 2 px line, not a share of a cell`);
     if (DRAWN_SILHOUETTES[c.dataset.id]) assert.equal(svg, DRAWN_SILHOUETTES[c.dataset.id], `${c.dataset.id}: its hand-drawn silhouette`);
@@ -278,7 +284,52 @@ const pills = $('select-towns').children, soonPill = pills.find(p => p.dataset.s
 const restTowns = TOWNS.filter(t => t.id !== 'valls' && soon.some(f => f.town === t.id));
 assert.deepEqual(pills.filter(p => p.dataset.town && !p.hidden).map(p => p.dataset.town), ['valls'], 'folded: only towns with something to play');
 assert(soonPill && $('select-towns').innerHTML.includes('<span class="sel-soon-text">Pròximament</span>'), 'the other towns fold into one pill');
-assert.equal(($('select-towns').innerHTML.match(/class="escut"/g) || []).length, 1 + 2 * restTowns.length, 'their arms fanned out in it');
+{ // the fan shows at most FAN_MAX real, different towns and «+N» for the rest (the invitation never counts)
+  const html = $('select-towns').innerHTML, fan = html.slice(html.indexOf('<span class="sel-fan"'), html.indexOf('<span class="sel-soon-text">'));
+  assert.equal((fan.match(/class="escut"/g) || []).length, Math.min(FAN_MAX, restTowns.length), 'a bounded fan of arms');
+  assert.equal(new Set(fan.match(/esc-[a-z-]+-\d+/g).map(id => id.replace(/-\d+$/, ''))).size, Math.min(FAN_MAX, restTowns.length), 'each arms once');
+  assert.equal(fan.match(/sel-fan-more">\+(\d+)</)?.[1], restTowns.length > FAN_MAX ? String(restTowns.length - FAN_MAX) : undefined, '+N counts the towns left out, not their figures');
+  assert.equal(($('select-towns').innerHTML.match(/class="escut"/g) || []).length, 1 + restTowns.length + Math.min(FAN_MAX, restTowns.length), 'the pills keep their own arms');
+}
+{ // many towns, without touching the real catalogue
+  const many = Array.from({ length: 40 }, (_, i) => ({ id: i % 2 ? 'olot' : 'berga' })), html = soonPillHtml(many);
+  assert.equal((html.match(/class="escut"/g) || []).length, FAN_MAX, '40 towns still show three arms');
+  assert.match(html, /sel-fan-more">\+37</, '+37');
+  assert.doesNotMatch(soonPillHtml(many.slice(0, FAN_MAX)), /sel-fan-more/, 'no +N when everything is shown');
+  assert.doesNotMatch(soonPillHtml([]), /sel-fan-more|class="escut"/, 'nothing left to show');
+}
+{ // the second wave: eleven pending figures in ten new towns, pairs drawn as two subjects, arms and a location line for every town
+  const WAVE = ['beatusaure-girona', 'camell-molins', 'filloxera-sant-sadurni', 'momerota-mataro', 'cucafera-tortosa', 'gegants-pi-barcelona', 'much-muca-sineu', 'gegants-vinaros', 'haca-traca-castello', 'hamlet-bao', 'gegants-fraga'];
+  for (const id of WAVE) {
+    const f = FIGURES.find(g => g.id === id);
+    assert(f && !playable(f) && f.sources.length && f.entityName && DRAWN_SILHOUETTES[id] && STAND[id], `${id}: a pending, attributed, drawn figure with its own stand`);
+    assert(!JSON.stringify(f).includes('/Users/'), `${id}: no local path in the catalogue`);
+  }
+  for (const id of ['gegants-pi-barcelona', 'much-muca-sineu', 'gegants-vinaros', 'gegants-fraga']) {
+    assert.equal(FIGURES.find(g => g.id === id).includes.length, 2, `${id}: two subjects in one card`);
+    assert.equal(SILHOUETTE_DRAWINGS[id].parts, 2, `${id}: drawn as two`);
+    assert.match(aviatText(FIGURES.find(g => g.id === id)), /^Volem que surtin a la plaça/, `${id}: plural invitation`);
+  }
+  assert(TOWNS.every(t => escutSvg(t.id)), 'every town has arms');
+  const sineu = sourceCatalog.towns.find(t => t.id === 'sineu');
+  assert(sineu.island === 'Mallorca' && sineu.comarca === 'Pla de Mallorca' && sineu.territory === 'Illes Balears', 'comarca, island and territory are separate fields');
+  assert.deepEqual(['berga', 'sineu', 'vinaros', 'bao', 'fraga'].map(id => locationOf({ town: id })), ['Berga · Berguedà', 'Sineu · Mallorca', 'Vinaròs · País Valencià', 'Baó · Catalunya Nord', 'Fraga · Franja'], 'the location line');
+  assert.equal(FIGURES.find(f => f.id === 'drac-baluk-terrassa').sources[0], 'https://www.bestiari.cat/figura/drac-baluk-astharot-2/', 'the 2014 copy is the source');
+}
+{ // order: Valls first, the others by Catalan name; each town keeps its catalogue order; the invitation stays last
+  const names = TOWNS.slice(1).map(t => t.name);
+  assert.equal(TOWNS[0].id, 'valls');
+  assert.deepEqual(names, [...names].sort((a, b) => a.localeCompare(b, 'ca')), 'the rest alphabetical (ca)');
+  const rank = f => TOWNS.findIndex(t => t.id === f.town);
+  const real = FIGURES.filter(f => f !== catalogFixture);
+  assert(real.every((f, i) => !i || rank(real[i - 1]) <= rank(f) || playable(real[i - 1]) !== playable(f)), 'figures follow the town order');
+  for (const t of TOWNS) assert.deepEqual(FIGURES.filter(f => f.town === t.id && !playable(f) && f !== catalogFixture).map(f => f.id), sourceCatalog.figures.filter(f => f.town === t.id && f.selectorVisible !== false && !playable(FIGURES.find(g => g.id === f.id))).map(f => f.id), `${t.id}: its own order`);
+  const strip = $('select-strip'), banners = strip.banners.map(b => b.dataset.town);
+  assert.equal(banners.at(-1), INVITE_TOWN.id, 'the invitation stays last');
+  assert.deepEqual(banners.filter(t => t !== 'valls' && t !== INVITE_TOWN.id), TOWNS.slice(1).filter(t => FIGURES.some(f => f.town === t.id)).map(t => t.id), 'the strip groups follow the pills');
+  assert.equal(strip.banners[0].dataset.town, 'valls');
+  assert.deepEqual(FIGURES.filter(f => f.town === 'valls' && !playable(f)).map(f => f.id).slice(0, 6), ['bou-tradicional-valls', 'os-trabucaires-valls', 'cavallets-valls', 'basilisc-valls', 'aliga-valls', 'gegants-ciutat-valls'], "Valls' agreed order");
+}
 
 // Visible town controls stay in DOM Tab order; arrows must never land on folded towns.
 assert.equal(soonPill.tabIndex, 0, 'Pròximament is reachable by Tab');
@@ -546,7 +597,7 @@ assert(!/showModal|aviat\.close|aviat-menu|aviat-close/.test(ui));
   // One accent per town: its banner's cloth and its cards'/avatars' tint at one fixed lightness (the owner chose the game's
   // own palette, 2026-10-19). The accents are the banners' agreed colours.
   const css = selectCss();
-  const accent = { valls: '#c8202f', solsona: '#c0283c', tarragona: '#7d5aa8', reus: '#8f6340', vilanova: '#d9a521', barcelona: '#c8202f', berga: '#1f3f7a', olot: '#8e2a5c', vilafranca: '#00b09a', lleida: '#7e2236', terrassa: '#8d68c0', manresa: '#3f6fc0', montblanc: '#b03a48' };
+  const accent = { valls: '#c8202f', solsona: '#0b8fa8', tarragona: '#8a3d9a', reus: '#8f6340', vilanova: '#10ade3', barcelona: '#b659a2', berga: '#1f3f7a', olot: '#8e2a5c', vilafranca: '#00b09a', lleida: '#7e2236', terrassa: '#8d68c0', manresa: '#d18519', montblanc: '#5f9205', girona: '#3f86b5', molins: '#c55f12', 'sant-sadurni': '#c49a25', mataro: '#227702', tortosa: '#0e985b', sineu: '#696708', vinaros: '#5c52b4', castello: '#397f69', bao: '#00717a', fraga: '#76628f' };
   assert.deepEqual(Object.keys(accent).sort(), TOWNS.map(t => t.id).sort(), 'every town has an accent');
   for (const [town, colour] of Object.entries(accent)) {
     assert(css.includes(`:is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="${town}"] { --town: ${colour}; }`), `${town}: banner, cards and avatars share ${colour}`);
@@ -565,10 +616,12 @@ assert(!/showModal|aviat\.close|aviat-menu|aviat-close/.test(ui));
   const [, sky, reach] = css.match(/\.sel-card \.por \{ --sky: (\.\d+); --reach: ([\d.]+);/) ?? [];
   assert(sky < 1 && reach > sky && portraitStand(MULASSA) * reach < sky && sky / (portraitStand(MULASSA) * reach) >= 1.15, 'the tallest figures leave air above them; the rest grow, still clearly under the gegants');
   assert.match(css, /min\(var\(--s, 1\) \* 14 \* var\(--ref\) \/ \(var\(--gh\) - 2\), var\(--sky\) \* 100cqh \/ \(var\(--gh\) - 2\), var\(--sky\) \* 100cqw \/ \(var\(--gw\) - 2\)\)/, 'the cell at the figure\'s share, clamped to fit');
-  assert(Math.max(...FIGURES.map(f => portraitArt(f)[0].length)) === 18 && Math.max(...FIGURES.map(f => portraitArt(f).length)) === 14, 'the reference divisors match the biggest portrait');
+  const cells = f => { const b = !playable(f) && silhouetteBox(f.id); return b ? [b[0] - 2, b[1] - 2] : [portraitArt(f)[0].length, portraitArt(f).length]; }; // a pending card's grid is its silhouette's box
+  assert(Math.max(...FIGURES.map(f => cells(f)[0])) === 18 && Math.max(...FIGURES.map(f => cells(f)[1])) === 14, 'the reference divisors match the biggest portrait');
   assert.match(css, /width: calc\(var\(--gw\) \* var\(--cell\)\); height: calc\(var\(--gh\) \* var\(--cell\)\); margin: calc\(-1 \* var\(--cell\)\);/, 'the rim hangs outside the box: the drawing stands on the floor');
   assert.match(css, /--mula-cell: max\(2px, min\(\.8 \* 14 \* min\(var\(--reach\) \* 100cqh \/ 14, var\(--sky\) \* 100cqw \/ 18\) \/ 11\.02/, 'the Mulassa\'s body on the same reference, at her stand');
-  assert.match(strip, /--gw:\$\{art\[0\]\.length \+ 2\};--gh:\$\{art\.length \+ 2\};--s:\$\{portraitStand\(f\)\}/, 'the svg grid, rim included, and its stand');
+  assert.match(strip, /--gw:\$\{box\[0\]\};--gh:\$\{box\[1\]\};--s:\$\{portraitStand\(f\)\}/, 'the svg grid, rim included, and its stand');
+  assert.match(strip, /\[art\[0\]\.length \+ 2, art\.length \+ 2\]/, 'the rim: the grid plus one cell each side');
   for (const f of [...FIGURES, INVITE]) assert(STAND[f.id] > 0 && STAND[f.id] <= 1.2 && portraitStand(f) === STAND[f.id], `${f.id}: its own stand beside the gegants (?sizes output pastes over STAND)`);
   assert.deepEqual([clampStand(0), clampStand(0.734), clampStand(9)], [0.2, 0.73, 1.2], '?sizes keeps two decimals within its range');
   assert(portraitStand(FIGURES.find(f => f.id === 'gegants-ciutat-valls')) > portraitStand(MULASSA) && portraitStand(MULASSA) > portraitStand(FIGURES.find(f => f.id === 'cavallets-valls')), 'gegants > mulassa > cavallets');

@@ -115,7 +115,7 @@ function arm(o, s, x, y, aw) {
   }
   return { a, v, f, fv };
 }
-// Fills defaults: age and build give the scale and widths. Declared metadata is copied, never read for looks.
+// Fills defaults: age and build give the scale and widths. Declared metadata is copied, never read for looks here (population.js picks the public's hair and clothes by it).
 export function normalise(spec) {
   const A = AGES[spec.age ?? 'adult'], [bw, bd] = BUILDS[spec.build ?? 'mitja'];
   return {

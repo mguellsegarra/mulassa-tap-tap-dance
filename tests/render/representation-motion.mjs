@@ -110,6 +110,15 @@ assert(caneError<.005,`final held cane stays on ground: ${caneError}`);
  // a handful of looks must not read as copies: skirts in many colours, children not an adult's look minus the beard
  const skirts=new Set(specs.filter(s=>s.cover!=='mocador'&&(s.bottom.kind==='faldilla'||s.top.kind==='vestit')).map(s=>s.top.kind==='vestit'?s.top.colour:s.bottom.colour));
  assert(!specs.some(s=>s.beard&&!['curt','rapat','calb','monyo'].includes(s.hair.style)),'a beard under long hair');
+ for(const s of specs.filter(s=>s.age==='infant'))assert(!['#8c8c8c','#d9d6cf'].includes(s.hair.colour)&&s.hair.style!=='calb'&&s.top.kind!=='jaqueta'&&s.build!=='ample',`a child dressed or aged as an adult: ${s.id}`);
+ const pub=specs.filter(s=>!CATALOGUE.some(c=>c.hair===s.hair)),bald=pub.filter(s=>s.hair.style==='calb'),women=pub.filter(s=>s.meta.gender==='dona'&&s.cover!=='mocador');
+ assert(bald.every(s=>s.meta.gender==='home'&&['adult','gran'].includes(s.age)),'bald only on men from 25 up');
+ assert(bald.length<pub.length*0.06,`too many bald: ${bald.length}/${pub.length}`);
+ assert(women.filter(s=>['llarg','mitja','trenes','cua'].includes(s.hair.style)).length>women.length*0.5,'women mostly long hair');
+ assert(women.filter(s=>['#c9a45c','#e3c27a'].includes(s.hair.colour)).length>women.length*0.15,'some blonde women');
+ assert(!pub.some(s=>s.beard&&s.meta.gender!=='home'),'a beard only on a man');
+ assert(!pub.some(s=>s.meta.gender==='home'&&(s.top.kind==='vestit'||s.bottom.kind==='faldilla'||s.cover==='mocador')),'a man in a skirt');
+ for(const id of ['p02','p06','p08','p09','p10'])assert(specs.some(s=>s.hair===CATALOGUE.find(c=>c.id===id).hair&&s.age===CATALOGUE.find(c=>c.id===id).age),`review example ${id} keeps its age`);
  assert(skirts.size>=8,`skirts in only ${skirts.size} colours`);
  const dress=s=>[s.hair.style,s.hair.colour,s.top.colour,s.bottom.colour].join();
  const adults=new Set(specs.filter(s=>s.age!=='infant'&&!s.mobility).map(dress)),kids=specs.filter(s=>s.age==='infant'&&!s.mobility);

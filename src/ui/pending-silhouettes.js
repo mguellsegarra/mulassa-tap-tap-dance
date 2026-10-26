@@ -6,6 +6,7 @@
 // Guites had no usable photo in their sources: drawn from the pixel portraits' shapes and notes.
 // Every shape of a figure overlaps the next (parts: how many separate figures a card shows); tests/figures/common/silhouettes.mjs
 // rasterises them and fails on any gap, which would show the halo as a seam.
+import { moreDrawings } from './pending-silhouettes-more.js';
 const oval = (cx, cy, rx, ry = rx) => `M${cx - rx} ${cy}a${rx} ${ry} 0 1 0 ${2 * rx} 0a${rx} ${ry} 0 1 0 ${-2 * rx} 0Z`;
 // a ring (a looped tail): the inner circle runs the other way, so it stays open under nonzero fill
 const ring = (cx, cy, R, r) => `M${cx - R} ${cy}a${R} ${R} 0 1 1 ${2 * R} 0a${R} ${R} 0 1 1 ${-2 * R} 0ZM${cx - r} ${cy}a${r} ${r} 0 1 0 ${2 * r} 0a${r} ${r} 0 1 0 ${-2 * r} 0Z`;
@@ -214,11 +215,12 @@ SILHOUETTE_DRAWINGS['vibria-manresa'] = { vb: [20, 16], d: [
   'M80 112L58 114L48 118L58 122L82 122Z', // arms and claws
   carrierLeg(100, 118), carrierLeg(80, 118),
 ] };
-// Provisional: the dragons of Terrassa and Montblanc wear an existing dragon drawing until their own photos are traced.
-Object.assign(SILHOUETTE_DRAWINGS, { 'drac-baluk-terrassa': SILHOUETTE_DRAWINGS['drac-solsona'], 'drac-montblanc': SILHOUETTE_DRAWINGS['drac-vilanova'] });
+Object.assign(SILHOUETTE_DRAWINGS, moreDrawings({ oval, ring, carrierLeg })); // the second wave of figures (pending-silhouettes-more.js)
 const DRAWN_INK = '#120b07', DRAWN_HALO = '#f5e3b8';
 // One <path> per shape (overlaps never cancel into holes); the halo group, 2 screen px wide (1 px outside), sits under
 // the ink: the same line as the Bou's and the traced silhouettes'.
 const drawnSvg = ({ vb: [w, h], d, dx = 0 }) => { const paths = d.map(x => `<path d="${x}"/>`).join('');
   return `<svg viewBox="0 0 ${w} ${h}" aria-hidden="true"><g transform="scale(.1) translate(${dx} 0)"><g fill="${DRAWN_HALO}" stroke="${DRAWN_HALO}" opacity=".38" stroke-width="2" stroke-linejoin="round">${paths.replace(/<path/g, '<path vector-effect="non-scaling-stroke"')}</g><g fill="${DRAWN_INK}">${paths}</g></g></svg>`; };
+// A drawn silhouette's box (its viewBox, the pixel grid + 2): the card sizes by it when the figure has no pixel portrait yet.
+export const silhouetteBox = id => SILHOUETTE_DRAWINGS[id]?.vb;
 export const DRAWN_SILHOUETTES = Object.fromEntries(Object.entries(SILHOUETTE_DRAWINGS).map(([id, drawing]) => [id, drawnSvg(drawing)]));

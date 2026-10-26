@@ -5,6 +5,7 @@
 .sel-fan { display: inline-flex; flex: none; }
 .sel-fan .escut { width: 20px; height: 20px; margin: 0 0 0 -6px; filter: grayscale(.55) brightness(.8) drop-shadow(0 0 1px #2a1a10); }
 .sel-fan .escut:first-child { margin-left: 0; }
+.sel-fan-more { align-self: center; margin-left: 5px; font-size: 12px; font-weight: 700; line-height: 1; color: #e8d8b8; font-variant-numeric: tabular-nums; } /* the towns left out of the fan, in the arms' own tone */
 .sel-info::-webkit-scrollbar { display: none; }
 /* The full-height fold keeps its original outline and 44 px target width, with a centred chevron. */
 #select { --more-w: 34px; }
@@ -63,6 +64,8 @@ body:has(:focus-visible) #select .sel-card[aria-selected="true"]:not(:focus-visi
 }
 @keyframes sel-holo { to { background-position: 300% 0; } }
 @media (prefers-reduced-motion: reduce) { :is(.sel-pending, .sel-identity, .about-uaf) :is(.sel-entity, .sel-entity-part) { animation: none; } }
+.sel-pending .sel-where { display: block; width: 100%; text-align: center; font: 600 12px/16px 'Baloo 2', system-ui, sans-serif; color: #e8d8b8; } /* town · comarca, island or territory */
+.sel-pending .sel-where[hidden] { display: none; }
 .sel-pending p { margin: 0; padding-block: 3px; text-wrap: balance; }
 .sel-pending .sel-pending-copy { display: contents; }
 .sel-pending-copy p + p { font-size: 14px; color: #e8d8b8; }

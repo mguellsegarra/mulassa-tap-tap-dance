@@ -2,25 +2,56 @@
 
 Les dades editables són a `src/game/figure-catalog.json`. `figures.js` només activa les dues cançons integrades: Mulassa i Drac de Valls. Les altres fitxes mostren informació dins el selector, sense modal.
 
-Selecció editorial, sense un rànquing objectiu de popularitat. Les entitats indiquen qui gestiona o porta les figures; no impliquen necessàriament propietat jurídica. Les rèpliques petites i alguns conjunts comparteixen fitxa. La miniatura representa una figura o un grup identificable, no totes les variants alhora.
+Selecció editorial, sense un rànquing objectiu de popularitat ni de seguidors. Les entitats indiquen qui gestiona o porta les figures; no impliquen necessàriament propietat jurídica, i quan la font distingeix propietari i gestor (Valls, Mataró, Vinaròs, Vilanova) el catàleg ho conserva als camps `owner` i `manager`. Les rèpliques petites i alguns conjunts comparteixen fitxa; les parelles (Much i Muca, Tio Gori i Tia Caballera, Mustafà i Elisenda, Lo Mangüel i la Pilara, els Gegants d'Olot) són una sola targeta amb dos subjectes.
 
-Les miniatures són icones planes de píxels adaptades de referències oficials. Les graelles i paletes es defineixen a `src/game/figure-portraits.js` i es dibuixen amb el mateix SVG de píxels que els dos retrats originals. Les fotografies només són referències i no s'inclouen al joc.
+Estat actual: 41 entrades de catàleg, 35 visibles al selector i 23 poblacions; només Mulassa i Drac són jugables. Les poblacions es guarden amb tres camps separats: `comarca`, `island` (només Mallorca, per ara) i `territory` (Catalunya, Illes Balears, País Valencià, Catalunya Nord, Franja). El panell pendent mostra una línia discreta "Població · Comarca" (a Catalunya) o "Població · Illa/Territori" (Sineu: Mallorca; Vinaròs i Castelló: País Valencià; Baó: Catalunya Nord; Fraga: Franja).
 
-Solsona distingeix les figures del Corpus i la Festa Major de les del Carnaval. Les de la Festa Major són majoritàriament de la Confraria de la Mare de Déu del Claustre i les conserva l'Agrupació de Geganters. El Bou de Solsona no hi és: no té ball propi. Valls es limita a les onze fitxes acordades, totes vinculades a la UAF. L'Àliga de Valls representa la figura grisa i platejada de 1991, d'Anton Gurí. La Mulassa i el Drac conserven els seus retrats originals en SVG; les altres miniatures segueixen el mateix estil de píxels plans.
+Les figures pendents només porten la silueta dibuixada a mà (`pending-silhouettes.js` i `pending-silhouettes-more.js`), traçada de les fotos de la mateixa figura. El retrat de píxels no cal fins que la figura sigui disponible, perquè no surt enlloc; els dos retrats originals de la Mulassa i el Drac en SVG es conserven. Les fotografies són referències d'estudi locals i no s'inclouen al joc; la recerca documenta fonts i no concedeix permisos d'imatge ni de música.
+
+Solsona distingeix les figures del Corpus i la Festa Major de les del Carnaval. Al selector només es veuen el Drac i els Gegants Bojos (selecció editorial, `selectorVisible: false` a les altres quatre: Gegants, Mulassa i Antonio Ricu, Àliga i Aligons, i la Draca, que és una figura real amb ball propi). Les fitxes ocultes conserven fonts, identificadors, traduccions i recursos. El Bou de Solsona no hi és: no té ball propi.
+
+Valls té 10 entrades, 8 de visibles. La majoria són de la Unió Anelles de la Flama (UAF). L'Àliga, els Gegants i els Nans són propietat de l'Ajuntament de Valls i els gestiona la UAF; el Basilisc és de l'Agrupació Cultural La Pessigolla. L'Àliga de Valls representa la figura grisa i platejada de 1991, d'Anton Gurí.
+
+## Ordre, colors i escuts
+
+L'ordre és Valls primer i la resta de poblacions per ordre alfabètic català (`localeCompare` `ca`), tant a les pestanyes com als grups del carrusel; dins de cada població es conserva l'ordre del catàleg i les jugables van davant del plegat. El botó "Pròximament" mostra com a molt tres escuts i "+N" amb les poblacions que no hi caben.
+
+Cada població té un accent editorial (`--town`, `select-cards.css`) per a l'estendard, la targeta i l'avatar de foto. No són colors oficials municipals ni la camisa d'una colla. Es repassen perquè dues poblacions veïnes no es confonguin: la distància OKLab entre accents queda per sobre de ~0,06 (Valls es manté vermell i cap altra població n'hi comparteix). Alguns van néixer d'una referència de l'àrea (Marrecs de Salt per a Girona, la Fil·loxera groga a Sant Sadurní, el faldó de l'Haca a Castelló, les faldetes de la Pilara a Fraga), però el criteri és la distinció visual, no la procedència; el motiu original de cada color és al dossier de recerca (`towns[].colorReason`).
+
+Els escuts (`src/ui/escuts.js`) són versions simplificades dels de Wikimedia Commons, que conserven les seves llicències. Molins de Rei porta la versió oficialitzada el 2025, amb la mola blanca i la nadilla negra.
+
+## Segona tanda
+
+Onze fitxes noves, totes "Aviat", amb les variants exactes que van quedar triades (no es barregen amb les petites):
+
+| Figura | Població | Entitat | Variant | Font |
+|---|---|---|---|---|
+| Beatusaure de Girona | Girona | Fal·lera Gironina | set caps, 2004 | [Font](https://fal-leragironina.cat/cat/cercavila/bestiari/beatusaurus/gal.html) |
+| Camell de Molins de Rei | Molins de Rei | Amics del Camell | Camell gran, recuperat el 1981 (no el Petit Camell) | [Font](https://www.bestiari.cat/figura/el-camell/) |
+| Fil·loxera de Sant Sadurní d'Anoia | Sant Sadurní d'Anoia | Associació Festa de la Fil·loxera | Fil·loxera gran de 1990, groga i alada | [Font](https://www.bestiari.cat/figura/fil%C2%B7loxera/) |
+| Momerota de Mataró | Mataró | Colla de la Momerota | Momerota grossa (no la Momeroteta ni la Família Robafaves) | [Font](https://www.lessantes.cat/la-momerota-i-la-momeroteta) |
+| Cucafera gran de Tortosa | Tortosa | Ajuntament de Tortosa | Cucafera gran de 2017 (no les altres dues) | [Font](https://tortosacultura.cat/cucaferes-tortosa/) |
+| Gegants del Pi de Barcelona | Barcelona | Associació Amics dels Gegants del Pi | Mustafà i Elisenda, còpies de 1986/1987 | [Font](https://www.lacasadelsentremesos.cat/gegants-del-pi) |
+| Much i Muca de Sineu | Sineu | Muchal Foundation | Much i Muca, personatges emmascarats (sense ball propi) | [Font](https://www.instagram.com/muchdereig/) |
+| Tio Gori i Tia Caballera de Vinaròs | Vinaròs | Associació Cultural Colla de Nanos i Gegants de Vinaròs | Tio Gori i Tia Caballera, parella de 2000 reformada el 2008 | [Font](https://www.nanosigegants.com/els-nanos-i-gegants/) |
+| Haca Traca Almalafa de Castelló | Castelló de la Plana | Botafocs Ball de Diables de Castelló | Haca Traca Almalafa de Botafocs (2009) | [Font](https://www.bestiari.cat/figura/haca-traca-almalafa/) |
+| Hamlet de Baó | Baó | Aire Nou de Bao | Hamlet, el drac verd (no el Berrugues) | [Font](https://www.bestiari.cat/figura/hamlet/) |
+| Lo Mangüel i la Pilara de Fraga | Fraga | Gigants de Fraga | Lo Mangüel i la Pilara, parella de 1998 | [Font](https://www.fraga.org/contexto/area-tematica/fiestas/gigants-de-fraga/) |
+
+La cobertura territorial investigada i no afegida encara (Andorra, Menorca i Eivissa) queda documentada al dossier de recerca per a una ampliació posterior; per a l'Alguer i Formentera no hi ha una figura local prou confirmada. Les dues correccions de provisionals: el Drac Baluk Astharot usa la rèplica de 2014 de Jordi Grau (font [bestiari.cat](https://www.bestiari.cat/figura/drac-baluk-astharot-2/)), i el Drac de Montblanc és el drac verd gros, no el Drac Petit ni l'articulat de la Setmana Medieval.
 
 | Figura | Població | Entitat | Font |
 |---|---|---|---|
 | Mulassa de Valls | Valls | Unió Anelles de la Flama | [Font](https://uaf.cat/seguici-ceremonial/mulassa/) |
 | Drac de Valls | Valls | Unió Anelles de la Flama | [Font](https://uaf.cat/seguici-ceremonial/drac/) |
-| Àliga de la Ciutat de Valls | Valls | Unió Anelles de la Flama | [Font](https://uaf.cat/seguici-ceremonial/aliga-de-la-ciutat/) |
+| Àliga de la Ciutat de Valls | Valls | Ajuntament de Valls (propietat) / UAF (gestió) | [Font](https://uaf.cat/seguici-ceremonial/aliga-de-la-ciutat/) |
 | Bou Tradicional de Valls | Valls | Unió Anelles de la Flama | [Font](https://uaf.cat/seguici-ceremonial/bou-tradicional/) |
 | Ós i Trabucaires de Valls | Valls | Unió Anelles de la Flama | [Font](https://uaf.cat/seguici-ceremonial/os-i-trabucaires/) |
-| Nans de la Ciutat de Valls | Valls | Unió Anelles de la Flama | [Font](https://uaf.cat/seguici-ceremonial/nans-de-la-ciutat/) |
-| Gegants i Gegantons de la Ciutat de Valls | Valls | Unió Anelles de la Flama | [Font](https://uaf.cat/seguici-ceremonial/gegants-de-la-ciutat/) |
+| Nans de la Ciutat de Valls | Valls | Ajuntament de Valls (propietat) / UAF (gestió) | [Font](https://uaf.cat/seguici-ceremonial/nans-de-la-ciutat/) |
+| Gegants i Gegantons de la Ciutat de Valls | Valls | Ajuntament de Valls (propietat) / UAF (gestió) | [Font](https://uaf.cat/seguici-ceremonial/gegants-de-la-ciutat/) |
 | Ball de Cavallets de Valls | Valls | Unió Anelles de la Flama | [Font](https://uaf.cat/seguici-ceremonial/ball-de-cavallets/) |
 | Ball de Diables de Valls | Valls | Unió Anelles de la Flama | [Font](https://uaf.cat/seguici-ceremonial/ball-de-diables/) |
-| Gegant del Calçot | Valls | Unió Anelles de la Flama | [Font](https://uaf.cat/elements-festius-de-nova-tradicio/gegant-del-calcot/) |
-| Gegant del Campanar de Valls | Valls | Unió Anelles de la Flama | [Programa municipal de Sant Joan 2026, p. 12](https://www.valls.cat/images/aa2026noticies/260604PROGRAMA_santjoan_web.pdf) |
+| Basilisc de Valls | Valls | Agrupació Cultural La Pessigolla | [Font](https://uaf.cat/) |
 | Àliga de Tarragona | Tarragona | Ball de Diables de Tarragona | [Font](https://www.tarragona.cat/cultura/festes-i-cultura-popular/santa-tecla/descobreix-la-festa/seguici-popular/aliga) |
 | Cucafera de Tarragona | Tarragona | Associació Cucafera de Tarragona | [Font](https://www.tarragona.cat/cultura/festes-i-cultura-popular/santa-tecla/descobreix-la-festa/seguici-popular/cucafera) |
 | Mulassa de Reus | Reus | Colla Gegantera de Reus | [Font](https://webs.gegants.cat/reus/la-mulassa/) |
@@ -37,6 +68,10 @@ Solsona distingeix les figures del Corpus i la Festa Major de les del Carnaval. 
 | Àliga de la Patum | Berga | Ajuntament de Berga | [Font](https://patrimonicultural.diba.cat/print/pdf/node/43268) |
 | Gegants d’Olot | Olot | Ajuntament d’Olot | [Font](https://www.olotcultura.cat/projecte/farandula/) |
 | Drac de Vilafranca del Penedès | Vilafranca del Penedès | Amics del Drac de Vilafranca del Penedès | [Font](https://www.dracdevilafranca.com/el-drac.html) |
+| Lo Marraco de Lleida | Lleida | Colla Gegantera dels Gegants de la Paeria | [Font](https://www.bestiari.cat/figura/lo-marraco/) |
+| Drac Baluk Astharot de Terrassa | Terrassa | Associació Juvenil Drac Baluk Astharot i Diables de Ca n'Aurell | [Font](https://www.bestiari.cat/figura/drac-baluk-astharot-2/) |
+| Víbria de Manresa | Manresa | Xàldiga, Taller de Festes | [Font](https://www.bestiari.cat/figura/vibria-de-manresa/) |
+| Drac de Montblanc | Montblanc | Associació Colla Drac i L'Àliga de Montblanc | [Font](https://www.bestiari.cat/figura/drac-de-montblanc/) |
 
 ## Vilanova: la Boja i el Drac
 

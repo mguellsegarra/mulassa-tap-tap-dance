@@ -12,7 +12,7 @@ Apply only to Mulassa and its checkouts. For a whole new figure, start from `mul
 | Picture | Where it shows | Owner |
 | --- | --- | --- |
 | Vector portrait | selector cards (big) | `src/figures/<figure>/*-portrait.js` (one per playable figure), gathered by `src/ui/selector-portraits.js` (`SELECTOR_PORTRAITS`); SVG masters in `assets/` |
-| Pixel portrait | HUD top bar, photo mode, help, boards, small cards | `src/game/figure-portraits.js` (native pixel cells and palettes, drawn by `pixelSvg`) |
+| Pixel portrait | HUD top bar, photo mode, help, boards, small cards | `src/game/figure-portraits.js` (native pixel cells and palettes, drawn by `pixelSvg`); not needed while the figure is pending (nothing shows it yet), drawn when it becomes playable |
 | Silhouette | pending ("Aviat a la plaça") figures | `src/ui/pending-silhouettes.js` |
 
 Big cards use the vector portrait; pixel art only where the picture is small.

@@ -39,7 +39,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
   const liveTowns = TOWNS.filter(t => live.some(f => f.town === t.id)), restTowns = [...TOWNS.filter(t => !liveTowns.includes(t) && soon.some(f => f.town === t.id)), INVITE_TOWN]; // the invitation folds with what is to come, last
   // the toggle sits right after the live towns, like the strip's fold: it stays under the finger and the rest opens after it
   towns.setAttribute('role', 'group'); // Native Tab order, with optional arrow shortcuts between visible buttons.
-  towns.innerHTML = liveTowns.map(pillHtml).join('') + (restTowns.length ? soonPillHtml(restTowns) : '') + restTowns.map(pillHtml).join('');
+  towns.innerHTML = liveTowns.map(pillHtml).join('') + (restTowns.length ? soonPillHtml(restTowns.filter(t => t !== INVITE_TOWN)) : '') + restTowns.map(pillHtml).join('');
   strip.innerHTML = stripHtml(live) + (soon.length ? moreHtml() + stripHtml([...soon, INVITE], true, townOf(live.at(-1))) : '');
   levels.innerHTML = DIFFS.map((d, i) => `<button type="button" class="btn btn-secondary" data-level="${i}" aria-pressed="false">${d.name}</button>`).join('');
   const bar = [...towns.querySelectorAll('.sel-pill')], pills = bar.filter(p => p.dataset.town), cards = [...strip.querySelectorAll('.sel-card')];

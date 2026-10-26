@@ -66,6 +66,70 @@
       "id": "montblanc",
       "name": "Montblanc",
       "comarca": "Conca de Barberà"
+    },
+    {
+      "id": "girona",
+      "name": "Girona",
+      "comarca": "Gironès",
+      "territory": "Catalunya"
+    },
+    {
+      "id": "molins",
+      "name": "Molins de Rei",
+      "short": "Molins",
+      "comarca": "Baix Llobregat",
+      "territory": "Catalunya"
+    },
+    {
+      "id": "sant-sadurni",
+      "name": "Sant Sadurní d'Anoia",
+      "short": "Sant Sadurní",
+      "comarca": "Alt Penedès",
+      "territory": "Catalunya"
+    },
+    {
+      "id": "mataro",
+      "name": "Mataró",
+      "comarca": "Maresme",
+      "territory": "Catalunya"
+    },
+    {
+      "id": "tortosa",
+      "name": "Tortosa",
+      "comarca": "Baix Ebre",
+      "territory": "Catalunya"
+    },
+    {
+      "id": "sineu",
+      "name": "Sineu",
+      "comarca": "Pla de Mallorca",
+      "island": "Mallorca",
+      "territory": "Illes Balears"
+    },
+    {
+      "id": "vinaros",
+      "name": "Vinaròs",
+      "comarca": "Baix Maestrat",
+      "territory": "País Valencià"
+    },
+    {
+      "id": "castello",
+      "name": "Castelló de la Plana",
+      "short": "Castelló",
+      "comarca": "Plana Alta",
+      "territory": "País Valencià"
+    },
+    {
+      "id": "bao",
+      "name": "Baó",
+      "comarca": "Rosselló",
+      "territory": "Catalunya Nord"
+    },
+    {
+      "id": "fraga",
+      "name": "Fraga",
+      "comarca": "Baix Cinca",
+      "territory": "Franja"
     }
   ],
   "figures": [
@@ -127,7 +191,8 @@
       "attributionNote": "Els Trabucaires acompanyen l’Ós; són un grup diferenciat de la figura. Es conserva l’identificador històric os-trabucaires-valls."
     },
     {
-      "id": "nans-valls", "plural": true,
+      "id": "nans-valls",
+      "plural": true,
       "name": "Nans",
       "fullName": "Nans de la Ciutat de Valls",
       "town": "valls",
@@ -201,7 +266,8 @@
       "attributionNote": "La UAF gestiona la peça municipal i aporta els aligons. La fitxa documenta la nissaga Tondo com a balladors històrics, sense identificar el ballador actual."
     },
     {
-      "id": "gegants-ciutat-valls", "plural": true,
+      "id": "gegants-ciutat-valls",
+      "plural": true,
       "name": "Gegants i Gegantons",
       "fullName": "Gegants i Gegantons de la Ciutat de Valls",
       "town": "valls",
@@ -279,7 +345,8 @@
       "attributionNote": "La fitxa és la Mulassa, que acompanya els gegants de la Colla Gegantera. Es conserva l’identificador històric gegants-mulassa-reus."
     },
     {
-      "id": "gegants-solsona", "plural": true,
+      "id": "gegants-solsona",
+      "plural": true,
       "name": "Gegants",
       "fullName": "Gegants de Solsona",
       "town": "solsona",
@@ -296,7 +363,8 @@
         "Gegant Jove",
         "Geganta Jove"
       ],
-      "owner": "Confraria de la Mare de Déu del Claustre"
+      "owner": "Confraria de la Mare de Déu del Claustre",
+      "selectorVisible": false
     },
     {
       "id": "drac-solsona",
@@ -313,7 +381,8 @@
       "owner": "Confraria de la Mare de Déu del Claustre"
     },
     {
-      "id": "mulassa-solsona", "plural": true,
+      "id": "mulassa-solsona",
+      "plural": true,
       "name": "Mulassa i Antonio Ricu",
       "fullName": "Mulassa i Antonio Ricu",
       "town": "solsona",
@@ -324,10 +393,12 @@
         "https://solsonalafesta.net/elements-folklorics/",
         "https://reserves.ajsolsona.cat/ajsolsona/fitxers/protocol-gegants.pdf"
       ],
-      "owner": "Confraria de la Mare de Déu del Claustre"
+      "owner": "Confraria de la Mare de Déu del Claustre",
+      "selectorVisible": false
     },
     {
-      "id": "aliga-solsona", "plural": true,
+      "id": "aliga-solsona",
+      "plural": true,
       "name": "Àliga i Aligons",
       "fullName": "Àliga i Aligons de Solsona",
       "town": "solsona",
@@ -341,10 +412,12 @@
       "includes": [
         "Dos aligons"
       ],
-      "owner": "Confraria de la Mare de Déu del Claustre"
+      "owner": "Confraria de la Mare de Déu del Claustre",
+      "selectorVisible": false
     },
     {
-      "id": "gegants-bojos-solsona", "plural": true,
+      "id": "gegants-bojos-solsona",
+      "plural": true,
       "name": "Gegants Bojos",
       "fullName": "Gegants Bojos de Solsona",
       "town": "solsona",
@@ -370,7 +443,8 @@
       "entityName": "Associació de Festes del Carnaval de Solsona",
       "sources": [
         "https://carnavalsolsona.com/la-festa/gegants/"
-      ]
+      ],
+      "selectorVisible": false
     },
     {
       "id": "boja-vilanova",
@@ -432,7 +506,8 @@
       ]
     },
     {
-      "id": "guites-berga", "plural": true,
+      "id": "guites-berga",
+      "plural": true,
       "name": "Guites de la Patum",
       "fullName": "Guites de la Patum",
       "town": "berga",
@@ -463,7 +538,8 @@
       "modelYear": 1756
     },
     {
-      "id": "gegants-olot", "plural": true,
+      "id": "gegants-olot",
+      "plural": true,
       "name": "Gegants",
       "fullName": "Gegants d’Olot",
       "town": "olot",
@@ -509,7 +585,7 @@
       "entity": "Drac Baluk Astharot",
       "entityName": "Associació Juvenil Drac Baluk Astharot i Diables de Ca n’Aurell",
       "sources": [
-        "https://www.bestiari.cat/figura/drac-baluk-astharot/"
+        "https://www.bestiari.cat/figura/drac-baluk-astharot-2/"
       ]
     },
     {
@@ -532,6 +608,220 @@
       "entityName": "Associació Colla Drac i L’Àliga de Montblanc",
       "sources": [
         "https://www.bestiari.cat/figura/drac-de-montblanc/"
+      ]
+    },
+    {
+      "id": "beatusaure-girona",
+      "name": "Beatusaure",
+      "fullName": "Beatusaure de Girona",
+      "town": "girona",
+      "entity": "Fal·lera Gironina",
+      "entityName": "Fal·lera Gironina",
+      "description": "Drac de set caps de la Fal·lera Gironina, estrenat el 2004.",
+      "sources": [
+        "https://fal-leragironina.cat/cat/cercavila/bestiari/beatusaurus/gal.html"
+      ],
+      "manager": "Associació Colla Gegantera Fal·lera Gironina",
+      "visualSources": [
+        "https://fal-leragironina.cat/files/figures/bestiari/beatusaurus.png",
+        "https://live.staticflickr.com/2572/5740376466_38dd9bd924_c.jpg",
+        "https://live.staticflickr.com/3413/3485212601_0cf5f0bf01_c.jpg"
+      ]
+    },
+    {
+      "id": "camell-molins",
+      "name": "Camell",
+      "fullName": "Camell de Molins de Rei",
+      "town": "molins",
+      "entity": "Amics del Camell",
+      "entityName": "Amics del Camell",
+      "description": "Bèstia de foc recuperada el 1981, vinculada al Carnaval i a la Festa Major de Sant Miquel.",
+      "sources": [
+        "https://www.bestiari.cat/figura/el-camell/"
+      ],
+      "manager": "Amics del Camell",
+      "visualSources": [
+        "https://www.bestiari.cat/wp-content/uploads/2021/05/CAMELL_bestiari-768x512.jpg",
+        "https://www.bestiari.cat/wp-content/uploads/2021/05/CAMELL_bestiari_-768x512.jpg"
+      ]
+    },
+    {
+      "id": "filloxera-sant-sadurni",
+      "name": "Fil·loxera",
+      "fullName": "Fil·loxera de Sant Sadurní d'Anoia",
+      "town": "sant-sadurni",
+      "entity": "Festa de la Fil·loxera",
+      "entityName": "Associació Festa de la Fil·loxera",
+      "description": "Insecte alat gegant de la Festa de la Fil·loxera, a Sant Sadurní d'Anoia.",
+      "sources": [
+        "https://www.bestiari.cat/figura/fil%C2%B7loxera/",
+        "https://www.festadelafiloxera.cat/"
+      ],
+      "manager": "Associació Festa de la Fil·loxera",
+      "visualSources": [
+        "https://www.bestiari.cat/wp-content/uploads/2016/08/Filloxera-Gran-Baixada-1-768x519.jpg",
+        "https://www.bestiari.cat/wp-content/uploads/2016/08/Filloxera-Gran-Aire-768x512.jpg"
+      ]
+    },
+    {
+      "id": "momerota-mataro",
+      "name": "Momerota",
+      "fullName": "Momerota de Mataró",
+      "town": "mataro",
+      "entity": "Colla de la Momerota",
+      "entityName": "Colla de la Momerota",
+      "description": "Figura de foc amb cap de bou i cos de mulassa, recuperada el 1979 i patrimoni de la ciutat des de 1981.",
+      "sources": [
+        "https://www.lessantes.cat/la-momerota-i-la-momeroteta"
+      ],
+      "owner": "Ajuntament de Mataró",
+      "manager": "Colla de la Momerota",
+      "visualSources": [
+        "https://cdn.appculturamataro.cat/medias/santes-new/2021/c_auto/af9eb5670ca884a2e2ac51c8a5bc3670.jpeg",
+        "https://cdn.appculturamataro.cat/medias/santes-new/2021/c_auto/c398e7bf0b55f9588a0d7dab64ddf59c.jpeg"
+      ]
+    },
+    {
+      "id": "cucafera-tortosa",
+      "name": "Cucafera",
+      "fullName": "Cucafera gran de Tortosa",
+      "town": "tortosa",
+      "entity": "Ajuntament de Tortosa",
+      "entityName": "Ajuntament de Tortosa",
+      "description": "Cucafera gran de 2017, una de les tres cucaferes del seguici de Tortosa.",
+      "sources": [
+        "https://tortosacultura.cat/cucaferes-tortosa/"
+      ],
+      "visualSources": [
+        "https://tortosacultura.cat/wp-content/uploads/2025/07/cuca-2-scaled.jpg"
+      ]
+    },
+    {
+      "id": "gegants-pi-barcelona",
+      "plural": true,
+      "name": "Gegants del Pi",
+      "fullName": "Gegants del Pi de Barcelona",
+      "town": "barcelona",
+      "entity": "Amics dels Gegants del Pi",
+      "entityName": "Associació Amics dels Gegants del Pi",
+      "description": "Mustafà i Elisenda, els gegants grans del Pi en les còpies que surten habitualment al carrer.",
+      "sources": [
+        "https://www.lacasadelsentremesos.cat/gegants-del-pi"
+      ],
+      "manager": "Associació Amics dels Gegants del Pi",
+      "includes": [
+        "Mustafà",
+        "Elisenda"
+      ],
+      "visualSources": [
+        "https://lacasadelsentremesos.cat/sites/default/files/styles/colorbox_gran/public/Elisenda---Geganta-del-Pi.jpg?itok=mzdpNwz9",
+        "https://lacasadelsentremesos.cat/sites/default/files/styles/colorbox_gran/public/Mustaf%C3%A0---Gegant-del-Pi.jpg?itok=UTuGsfOT",
+        "https://lacasadelsentremesos.cat/sites/default/files/styles/colorbox_gran/public/Gegants-del-Pi-1_1.jpg?itok=jl6EPO4T"
+      ]
+    },
+    {
+      "id": "much-muca-sineu",
+      "plural": true,
+      "name": "Much i Muca",
+      "fullName": "Much i Muca de Sineu",
+      "town": "sineu",
+      "entity": "Muchal Foundation",
+      "entityName": "Muchal Foundation",
+      "description": "Els dos personatges emmascarats de la Mucada de Sineu, inspirats en el Much de Reig.",
+      "sources": [
+        "https://www.instagram.com/muchdereig/",
+        "https://ib3.org/mes-de-dues-decades-celebrant-el-much",
+        "https://diposit.ub.edu/server/api/core/bitstreams/002c3b01-b4f0-46d1-9325-32955f4f1983/content"
+      ],
+      "manager": "Muchal Foundation",
+      "includes": [
+        "Much",
+        "Muca"
+      ],
+      "visualSources": [
+        "https://d3u5tmyuxvrrla.cloudfront.net/files_flutter/751-muchhistory.webp",
+        "https://estaticos-cdn.prensaiberica.es/clip/53819f31-49b3-4865-9c8a-1ed8db2603d2_alta-libre-aspect-ratio_default_0.jpg",
+        "https://estaticos-cdn.prensaiberica.es/clip/8342d38f-fc2a-412d-8f5e-98c2970e18d2_alta-libre-aspect-ratio_default_0.jpg"
+      ]
+    },
+    {
+      "id": "gegants-vinaros",
+      "plural": true,
+      "name": "Tio Gori i Tia Caballera",
+      "fullName": "Tio Gori i Tia Caballera de Vinaròs",
+      "town": "vinaros",
+      "entity": "Nanos i Gegants de Vinaròs",
+      "entityName": "Associació Cultural Colla de Nanos i Gegants de Vinaròs",
+      "description": "Parella de gegants que representa Cristóbal Farcha, el Tio Gori, i Angelín Caballer, la Tia Caballera.",
+      "sources": [
+        "https://www.nanosigegants.com/els-nanos-i-gegants/"
+      ],
+      "owner": "Ajuntament de Vinaròs",
+      "manager": "Associació Cultural Colla de Nanos i Gegants de Vinaròs",
+      "includes": [
+        "Tio Gori",
+        "Tia Caballera"
+      ],
+      "visualSources": [
+        "https://www.nanosigegants.com/wp-content/uploads/2024/12/els-gegants-2.jpg",
+        "https://www.nanosigegants.com/wp-content/uploads/2024/12/els-gegants-3.jpg"
+      ]
+    },
+    {
+      "id": "haca-traca-castello",
+      "name": "Haca Traca Almalafa",
+      "fullName": "Haca Traca Almalafa de Castelló",
+      "town": "castello",
+      "entity": "Botafocs",
+      "entityName": "Botafocs Ball de Diables de Castelló",
+      "description": "Figura equina de Botafocs, construïda el 2009 per Ramon Aumedes, amb música i ball propis.",
+      "sources": [
+        "https://www.bestiari.cat/figura/haca-traca-almalafa/"
+      ],
+      "manager": "Botafocs Ball de Diables de Castelló",
+      "visualSources": [
+        "https://www.bestiari.cat/wp-content/uploads/2016/07/Haca3-Botafocs.jpg",
+        "https://www.bestiari.cat/wp-content/uploads/2016/07/Haca4-Botafocs-768x746.jpg",
+        "https://www.bestiari.cat/wp-content/uploads/2016/07/Haca1_Botafocs-768x636.jpg"
+      ]
+    },
+    {
+      "id": "hamlet-bao",
+      "name": "Hamlet",
+      "fullName": "Hamlet de Baó",
+      "town": "bao",
+      "entity": "Aire Nou de Bao",
+      "entityName": "Aire Nou de Bao",
+      "description": "Drac de foc d'Aire Nou de Bao, creat el 2006 i reconstruït el 2014.",
+      "sources": [
+        "https://www.bestiari.cat/figura/hamlet/"
+      ],
+      "manager": "Aire Nou de Bao",
+      "visualSources": [
+        "https://www.bestiari.cat/wp-content/uploads/2016/07/Hamlet--768x1007.jpg",
+        "https://www.bestiari.cat/wp-content/uploads/2016/07/Hamlet-i-Berrugues.jpg"
+      ]
+    },
+    {
+      "id": "gegants-fraga",
+      "plural": true,
+      "name": "Lo Mangüel i la Pilara",
+      "fullName": "Lo Mangüel i la Pilara de Fraga",
+      "town": "fraga",
+      "entity": "Gigants de Fraga",
+      "entityName": "Gigants de Fraga",
+      "description": "Parella de gegants amb indumentària tradicional fragatina de balons i faldetes, reconstruïda el 1998.",
+      "sources": [
+        "https://www.fraga.org/contexto/area-tematica/fiestas/gigants-de-fraga/",
+        "https://gegantcat.com/fitxa/gegants-de-fraga"
+      ],
+      "manager": "Gigants de Fraga",
+      "includes": [
+        "Lo Mangüel",
+        "la Pilara"
+      ],
+      "visualSources": [
+        "https://gegantcat.com/storage/img/elements/gegants-de-fraga-1613267683.jpg"
       ]
     }
   ]

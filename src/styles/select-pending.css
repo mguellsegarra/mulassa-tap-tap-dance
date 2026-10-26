@@ -17,7 +17,7 @@ body:has(:focus-visible) #select .sel-card[aria-selected="true"]:not(:focus-visi
 .sel-pending { --contact-pad: 12px; --contact-gap: 10px; --pending-max: calc(100% - var(--pending-top) - var(--pending-bottom, 254px)); position: absolute; z-index: 1; top: calc((100% + var(--pending-top) - var(--pending-bottom, 254px)) / 2); left: 50%; translate: -50% -50%; width: min(480px, calc(100% - 28px)); height: min(360px, var(--pending-max)); box-sizing: border-box; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) 48px calc(44px + var(--contact-gap)); align-items: center; justify-items: center; gap: 0; padding: 3px 16px var(--contact-pad); border: 1px solid var(--sel-line); border-radius: var(--sel-r); text-align: center; background: #1a110bf5; box-shadow: 0 8px 24px #0005; font-size: 16px; font-weight: 500; line-height: 1.3; container-type: size; }
 .sel-pending-content { grid-row: 1; width: 100%; height: 100%; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: space-evenly; }
 .sel-pending-content > * { flex: none; }
-.sel-pending h2 { --title-size: 26px; color: #f5c518; margin: 0; padding-block: 6px; width: 100%; box-sizing: border-box; display: flex; align-items: center; justify-content: center; font: 800 var(--title-size)/1.1 'Baloo 2', system-ui, sans-serif; text-wrap: balance; }
+.sel-pending h2 { --title-size: 26px; color: #f5c518; margin: 0; padding: 6px 14px; width: 100%; box-sizing: border-box; display: flex; align-items: center; justify-content: center; font: 800 var(--title-size)/1.1 'Baloo 2', system-ui, sans-serif; text-wrap: balance; }
 .sel-pending h2 > span { display: block; width: 100%; }
 :is(.sel-pending, .sel-identity, .about-uaf) .sel-entity { --entity-holo: linear-gradient(105deg, #ffb3c7, #ffe29a, #b8f0c8, #a8dcff, #d7b8ff, #ffb3c7); max-width: 100%; box-sizing: border-box; font-size: 12px; line-height: 16px; min-height: 24px; row-gap: 0; background: var(--entity-holo) 0 0 / 300% 100%; color: #2a1a10; box-shadow: inset 0 0 0 1px #fff9, 0 0 4px #d7b8ff40; animation: sel-holo 6s linear infinite; }
 /* Each attribution keeps its own holo surface; the separator travels with the second one. */
@@ -42,7 +42,7 @@ body:has(:focus-visible) #select .sel-card[aria-selected="true"]:not(:focus-visi
 .sel-pending .sel-where[hidden] { display: none; }
 .sel-pending p { margin: 0; padding-block: 3px; text-wrap: balance; }
 .sel-pending .sel-pending-copy { display: contents; }
-.sel-pending-copy p + p { font-size: 14px; color: #e8d8b8; }
+.sel-pending-copy p + p { font-size: 14px; color: #b9a98c; } /* the side note steps back from the call */
 .sel-pending > .btn-primary { grid-row: 2; width: 100%; height: 100%; min-height: 44px; padding-block: 4px; font-size: 16px; }
 /* One contact action across every pending variant; phones keep their full reading column. */
 @media (min-width: 520px) { .sel-pending > .btn-primary { max-inline-size: 360px; } }
@@ -97,7 +97,6 @@ body:has(:focus-visible) #select .sel-card[aria-selected="true"]:not(:focus-visi
     .sel-pending .sel-entity[data-stacked] { display: flex; }
     /* Place first, then who runs it: the place gets the heavier type. */
     .sel-pending h2 { order: -2; }
-    .sel-pending-copy p + p { font-size: 13px; color: #b9a98c; } /* the side note steps back from the call */
     .sel-pending .sel-where { order: -1; font-size: 15px; line-height: 20px; font-weight: 700; }
   }
 }

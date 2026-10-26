@@ -1,3 +1,5 @@
+const ONE_LINE_MAX = 36, ONE_LINE_MIN = 20;
+
 // Keep the title's row stable while retaining the full name. Run on selection/resize/font load, never per frame.
 export function fitPendingTitle(title, win) {
   const doc = title?.ownerDocument;
@@ -15,15 +17,23 @@ export function fitPendingTitle(title, win) {
   // Read intrinsic rows, not the distributed gaps. The footer keeps its own fixed tracks.
   const rows = () => [...content.querySelectorAll('h2, .sel-entity, p')]
     .filter(el => !el.hidden && win.getComputedStyle(el).display !== 'none');
+  const pad = parseFloat(win.getComputedStyle(title).paddingLeft) + parseFloat(win.getComputedStyle(title).paddingRight);
   const fits = size => {
     const visible = rows(), heights = visible.map(el => el.getBoundingClientRect().height);
     const wide = win.getComputedStyle(content).display === 'grid';
     const identity = wide ? Math.max(...heights.slice(0, 2)) : 0;
     const used = wide ? identity + heights.slice(2).reduce((a, b) => a + b, 0) : heights.reduce((a, b) => a + b, 0);
-    return text.scrollWidth <= title.clientWidth + 1 && text.offsetHeight <= size * 1.1 * 2 + 1
+    return text.scrollWidth <= title.clientWidth - pad + 1 && text.offsetHeight <= size * 1.1 * 2 + 1
       // Baloo's painted glyphs extend beyond their line boxes; retain air above the fixed footer.
       && used <= content.clientHeight - 4;
   };
+  // One line filling the width, up to a cap; a name too long for it at the floor wraps as before.
+  text.style.whiteSpace = 'nowrap';
+  for (let size = ONE_LINE_MAX; size >= ONE_LINE_MIN; size -= .5) {
+    text.style.fontSize = `${size}px`;
+    if (fits(size)) return;
+  }
+  text.style.whiteSpace = '';
   for (let size = largest; size >= 16; size -= .5) {
     text.style.fontSize = `${size}px`;
     if (fits(size)) break;

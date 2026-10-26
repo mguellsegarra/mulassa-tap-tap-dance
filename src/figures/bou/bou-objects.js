@@ -27,7 +27,7 @@ export function initBouModel() {
   bou = buildBou();
   bou.frame = new THREE.Group(); bou.frame.rotation.y = BOU_COLLA_YAW; // its colla's compass: the dance's W is the W attendant's
   bou.frame.visible = false;
-  bou.frame.add(bou.root, ...bou.feet, ...bou.legs, ...bou.trunks, ...bou.arms);
+  bou.frame.add(bou.root, ...bou.feet, ...bou.legs, ...bou.trunks, ...bou.arms, bou.limbs);
   scene.add(bou.frame);
   bou.frame.traverse(o => { // its voxel parts get their own copy, which can light itself (bouGlow)
     if (!o.isMesh || o.isSkinnedMesh || !o.material?.isMeshLambertMaterial || !o.material.vertexColors) return;

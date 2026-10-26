@@ -210,7 +210,24 @@ export function drawCard(c, format, d, hero) {
   c.restore(); return c.canvas;
 }
 export const cardAlt = (format, d) => tr('hud.card.alt', { format: tr(format === 'story' ? 'hud.card.altStory' : 'hud.card.altPost'), figure: tr(traitsOf(d.figureId).cardAlt), score: d.score ?? '—', pct: d.pct, level: d.diffName, combo: d.maxCombo });
+// The JPEG is encoded in a worker where the browser can: on the main thread toBlob froze the share sheet's opening
+// (~100 ms on a Galaxy S10, 3 s into the results). Without OffscreenCanvas, or if the worker fails, toBlob as before.
+let jpegWorker = null, jpegSeq = 0;
+const offscreenJpeg = typeof Worker === 'function' && typeof OffscreenCanvas === 'function' && typeof createImageBitmap === 'function';
+const mainJpeg = (canvas, quality) => new Promise((resolve, reject) => canvas.toBlob(b => b ? resolve(b) : reject(new Error('card')), 'image/jpeg', quality));
+async function workerJpeg(canvas, quality) {
+  jpegWorker ??= new Worker(new URL('./card-jpeg-worker.js', import.meta.url), { type: 'module' });
+  const bitmap = await createImageBitmap(canvas), id = ++jpegSeq, worker = jpegWorker;
+  return new Promise((resolve, reject) => {
+    const done = () => { worker.removeEventListener('message', reply); worker.removeEventListener('error', failed); };
+    const reply = ({ data }) => { if (data.id !== id) return; done(); data.blob ? resolve(data.blob) : reject(new Error(data.error)); };
+    const failed = () => { done(); if (jpegWorker === worker) jpegWorker = null; reject(new Error('card-worker')); }; // (a worker that never loaded: the next card tries a new one)
+    worker.addEventListener('message', reply); worker.addEventListener('error', failed);
+    worker.postMessage({ id, bitmap, quality }, [bitmap]);
+  });
+}
 export function toJpeg(canvas, quality = 0.9, figureId = 'mulassa-valls') {
   const name = traitsOf(figureId).cardFile ?? CARD_FILE;
-  return new Promise((resolve, reject) => canvas.toBlob(b => b ? resolve(new File([b], name, { type: 'image/jpeg' })) : reject(new Error('card')), 'image/jpeg', quality));
+  const blob = offscreenJpeg ? workerJpeg(canvas, quality).catch(() => mainJpeg(canvas, quality)) : mainJpeg(canvas, quality);
+  return blob.then(b => new File([b], name, { type: 'image/jpeg' }));
 }

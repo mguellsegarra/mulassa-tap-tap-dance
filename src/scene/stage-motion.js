@@ -12,7 +12,7 @@ import { PIVOT, S, M, standUp } from './figure-springs.js';
 import { clearManualImpact, expireManual } from './manual-jump.js';
 import { PAIR, DRAC_JUMP, keepClear, takeSolo, animPair } from '../figures/drac/drac-play.js';
 import { FIGURE_SCENES, sceneOf } from './figure-scenes.js';
-import { traitsOf } from '../figures/index.js';
+import { traitsOf, SPLASH_HOST_ID } from '../figures/index.js';
 
 const SPLASH = { pair: PAIR, keepClear };
 let animatedFigureId = selectedFigure.id;
@@ -65,11 +65,11 @@ export function animStage(dt, beat, live = 1) {
     endPhoto();
   }
   const solo = PHOTO.on ? PHOTO.id : selectedFigure.id; // (free play: the figure driven, whatever the selector shows)
-  const own = (pair ? FIGURE_SCENES.find(f => f.hostsSplash) : sceneOf(solo)) ?? FIGURE_SCENES[0]; // the figure on show
+  const own = (pair ? sceneOf(SPLASH_HOST_ID) : sceneOf(solo)) ?? FIGURE_SCENES[0]; // the figure on show
   const reel = REEL.on && G.state === 'select' && !PHOTO.on && !pair; // the selector's showreel: the song dance on the menu loop's beat (game/showreel.js)
   for (const f of FIGURE_SCENES) f.show(f === own);
   for (const f of FIGURE_SCENES) f.collaTick(f === own && !pair, beat, dt, reel); // (the splash has two figures: no colla)
-  if (own.hostsSplash) animPair(dt, beat, pair);
+  if (own.id === SPLASH_HOST_ID) animPair(dt, beat, pair);
   else {
     PAIR.k = 0;
     for (const f of FIGURE_SCENES) if (f !== own) f.leave?.();

@@ -14,13 +14,15 @@ export const setOffsetMs = v => (offsetMs = v);
 
 // ------------------------------------------------------------------ game
 // G is the one shared record. Most fields appear on first write, so this is the map of who owns what:
-//   the run (game/flow.js starts and ends it; game/judge.js scores it)
+//   the run (game/flow.js starts and ends it; game/judge.js scores it; game/tick.js, once a frame, sets sec, finale,
+//     doublePoints and eeeh, and eases shown / shownE)
 //     chart, balloons, next (the next unjudged note), diff, counts {perfect, good, miss}, errors, score, combo, maxCombo, streak
 //     (misses in a row), guapo (the ENCERTS %), energy (l'ànim), energyWarn, hold, activePhrase / phraseCounts, doublePoints,
 //     sec ('A' | 'B'), go (the first note's time), finale / eeeh / collapseT (the coda, its shout, the fall), previous / newRecord /
 //     recordKey / stars / reason / challenge / shareRun / resT (the result), practice, resuming, watch (the dance demo: the song
 //     plays itself, nothing is judged for the player, saved or shared)
-//   what the screens show (eased or stamped with `clock`, read by hud/* and the crowd; the rules never read them)
+//   what the screens show (eased or stamped with `clock`, read by hud/* and the crowd; the rules never read them; the
+//     beat counters clapBeat, finBeat and lastBeat are game/tick.js's)
 //     shown, shownE (the smoothed guapo and energy), judge, praise, ring, pop, popT, pumpT, tapT, flash, holdDone, energyT,
 //     energyWarnT, doubleT, finaleT, chantT, offsetT, uiT, clapBeat, finBeat, lastBeat
 //   the app (which screen, what is open)

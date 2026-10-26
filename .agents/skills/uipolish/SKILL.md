@@ -5,7 +5,7 @@ description: UI harmony and balanced layout. Rules plus a measured self-check fo
 
 # Balanced layout QA
 
-Marc's standing rule: content uses the space its container already has, and that space is shared fairly. Each row keeps its hierarchy and intrinsic size; the free space goes to the gaps, items in one row are spread evenly, and nothing leaves an arbitrary hole, an unequal margin or a crammed group. He should not have to point it out per card.
+The owner's standing rule: content uses the space its container already has, and that space is shared fairly. Each row keeps its hierarchy and intrinsic size; the free space goes to the gaps, items in one row are spread evenly, and nothing leaves an arbitrary hole, an unequal margin or a crammed group. They should not have to point it out per card.
 
 Follow the project's own instructions (AGENTS.md, approvals, browser rules) for servers, browsers and screenshots; this skill adds the design criteria and the measurement loop.
 
@@ -14,12 +14,12 @@ Follow the project's own instructions (AGENTS.md, approvals, browser rules) for 
 - **Use the given box.** Keep the card's outer size (or its existing sizing rule). Do not grow it to hide a spacing bug or add an internal scroll.
 - **Judge ink, not boxes.** What reads as space is the distance between painted things: text lines, art, filled buttons. A 44 px link around 15 px of text, an art slot larger than its art, a reserved two-line title slot holding one line, or line-height above a paragraph all hide slack. Compensate for it where it skews the rhythm (see the case).
 - **Equal by default, not by dogma.** Gaps between rows and the outer margins should read as equal, with deliberate exceptions: a primary action may sit a little apart, a heading may hug its content. Never stretch icons, art or text to fill; free space goes to gaps or flexible tracks.
-- **Rows of items** (link pairs, button pairs, figure groups): equal space before, between and after, and no column narrower than its words. Do not truncate; wrap at sensible points (e.g. after `@` with `<wbr>`). A grouped motif (a fan of cards) is one item: do not spread it unless Marc asks; show an A/B when unsure.
+- **Rows of items** (link pairs, button pairs, figure groups): equal space before, between and after, and no column narrower than its words. Do not truncate; wrap at sensible points (e.g. after `@` with `<wbr>`). A grouped motif (a fan of cards) is one item: do not spread it unless the owner asks; show an A/B when unsure.
 - **When room runs out:** gaps shrink first, then optional art (hide it below a readable size instead of a smudge), never copy, actions or 44 px targets. If even zero gaps cannot fit, report it: the fix is the container's room, not squeezing the content.
 
 ## Harmony rules (apply to every UI proposal, silently, before showing it)
 
-Marc should not have to draw red arrows on screenshots. Defaults; deviate only on purpose and say so.
+The owner should not have to draw red arrows on screenshots. Defaults; deviate only on purpose and say so.
 
 1. **One spacing scale.** Project tokens, else 4/8/12/16/24/32/48. Use `gap` between siblings, not ad hoc margins.
 2. **Proximity.** Gap inside a group < gap between groups < section gap.
@@ -44,9 +44,11 @@ The measurement loop below is the self-check: list child left/right edges, gaps,
 
 ## QA matrix
 
-Phones 320×568, 375×667, 393×852; landscape 667×375, 852×393; tablet 768×1024; desktop 1280×800, a wide-short window (e.g. 1440×600 or 1440×700) and a large one (1920×1080). Add a resize sweep across the component's breakpoints, the longest real copy and names, and reduced motion if the change touches animation. Check the neighbouring states that share the CSS (e.g. the single-item variant of the same card) so the fix doesn't break them.
+Phones 320×568, 375×667, 393×852; tablet 768×1024; desktop 1280×800, a wide-short window (e.g. 1440×600 or 1440×700) and a large one (1920×1080). Add a resize sweep across the component's breakpoints, the longest real copy and names, and reduced motion if the change touches animation. Check the neighbouring states that share the CSS (e.g. the single-item variant of the same card) so the fix doesn't break them.
 
 A desktop browser resized to phone sizes keeps `pointer: fine`; layouts that differ by pointer (touch docks, hidden desktop controls) need a note or a touch-emulating run. Say which you used.
+
+No landscape phone sizes: landscape phones are not supported and show the rotate cover (`docs/agents/testing.md`).
 
 ## Report
 

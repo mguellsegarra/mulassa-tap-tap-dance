@@ -15,7 +15,6 @@ import { M } from '../../scene/figure-springs.js';
 const HERO_POSE = newPose(), HERO_SHELL = {}, HERO_FEET = Array.from({ length: 8 }, () => ({}));
 export const MULA_SCENE = {
   id: 'mulassa-valls',
-  hostsSplash: true, // the splash's pair is hers: the stage hands her the Drac beside her
   root: () => mula.root,
   show(on) { mula.root.visible = on; },
   reset: resetMulaFeet, // another figure took the stage, or the splash pair changed hands: her shoes start afresh

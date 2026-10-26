@@ -28,7 +28,7 @@ export function tickGame(t, vt, beat, dt) {
     G.sec = sec; // solemn (A) or playful (B): drives the dancers' mood
     if (Math.floor(beat) !== G.clapBeat) { // section B: a few hands on beats 2 and 4, louder on a streak (audio.js clapBurst)
       G.clapBeat = Math.floor(beat);
-      if (sec === 'B' && (G.clapBeat & 1) && G.combo >= 5 && !G.paused && !G.collapseT) chip.clapBurst?.(0.04 + 0.05 * Math.min(1, G.combo / 30));
+      if (sec === 'B' && (G.clapBeat & 1) && G.combo >= 5 && !G.collapseT) chip.clapBurst?.(0.04 + 0.05 * Math.min(1, G.combo / 30));
     }
     // FINAL ESBOJARRAT: the coda until the last hit and the crowd's "eeeeh!" (Taiko's go-go time)
     // The festa (fireworks, lights, crowd, chant) is for everyone; only the double points need >= 70%.

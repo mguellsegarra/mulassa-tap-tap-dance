@@ -1,4 +1,4 @@
-// The Bou's end on the play camera (BOU_SCENE.endShot: main.js runs each figure's over play and results).
+// The Bou's end on the play camera (BOU_SCENE.endShot: ui/frame-camera.js runs each figure's over play and results).
 import * as THREE from 'three';
 import { camera } from '../../scene/stage.js';
 import { CALM } from '../../core/env.js';
@@ -9,7 +9,7 @@ import { BOU_FINALE } from './bou-bills.js';
 // leaves the Bou for the note first, the lens closes in last (`fov`: a long lens, the note filling `view` m of the screen's
 // smaller side), looking down at `el`; then it keeps pushing in a little (`push`, easing out over `pushT` s) and drifts
 // round the note (`arc` rad/s, `arcMax` in all), so the shot never freezes while the plaça waits for a tap. Measured:
-// <= 0.15 rad/s of turn. Shake waits (main.js scales it by 1 - k), the lens shift eases away with k; reduced motion keeps
+// <= 0.15 rad/s of turn. Shake waits (frame-camera.js scales it by 1 - k), the lens shift eases away with k; reduced motion keeps
 // the play camera.
 export const END_SHOT = { wait: 0.4, ease: 3.4, fov: 22, view: 0.38, el: 0.8, push: 0.25, pushT: 3, arc: 0.03, arcMax: 0.3 };
 const endPos = new THREE.Vector3(), endLook = new THREE.Vector3();

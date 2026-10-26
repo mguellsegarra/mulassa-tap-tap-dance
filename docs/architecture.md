@@ -22,7 +22,7 @@ agents touch at once and the lanes that keep them apart. Every folder and file i
 | `ui/` | DOM, sheets, selector | each sheet's own | everything above |
 | `main.js` | composition, frame loop | `frame()` | everything |
 | `game/tick.js`, `ui/frame-camera.js` | one frame's rules; one frame's camera decision | none (`tick.js` writes `G`) | everything above them: orchestrators called by `frame()` |
-| `dev/` | dev modes | — | everything, through `import()` only |
+| `dev/` | dev modes | — | everything; the editors and reviews load through `import()`, only the small flag readers (`final-test.js`, `debug.js`, `perf.js`, `autoplay-jitter.js`) are imported statically |
 
 `tests/build/modules.mjs` enforces no cycles, the line limits, `core/` as a leaf (bar `anim.js` and `timing.js`), `game/` rules and state importing no `hud/`, `scene/` or `ui/` (bar `flow.js`, `judge.js` and `tick.js`), `scene/stage.js`, `quality.js` and `crowd-build.js` reaching figures only through `figures/objects.js`, and that nothing imports upward: `i18n/` and `platform/` import no `game/`, `scene/`, `hud/`, `ui/`, `services/` or `figures/`; `services/` no `scene/`, `hud/`, `ui/` or `figures/`; `figures/` no `hud/`, `ui/` or `services/`; `scene/` and `hud/` no `ui/` or `services/`. Its allow-list holds the known exceptions (`services/errors.js`, the crash reporter every layer calls; `figures/index.js`, data with no imports; five `hud/` edges to `ui/handles.js`, `ui/sheets.js` and `services/share.js`). Not checked: `scene/` importing `hud/` (canvas size, layout, bubbles) and `hud/` importing `scene/`, and `game/` importing `services/`.
 

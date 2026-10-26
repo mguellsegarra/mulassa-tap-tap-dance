@@ -1,7 +1,7 @@
 // The Bou's banknotes at the end (figures/bou/bou-correfoc.js BOU_BILLS: where and when): from the final bombo
 // (song.finale) «BANC DEL BOU» notes rain from the sky round it and stay, a carpet the wind keeps stirring, until the next
 // game or the menu; the last of them, the hero, lands face up on a mound of them between the Bou and the camera, where
-// bou-end-shot.js comes down to it, and the plaça waits there for a tap before its results (main.js bouHolds).
+// bou-end-shot.js comes down to it, and the plaça waits there for a tap before its results (game/tick.js bouHolds).
 // One instanced mesh with its own paper material: a Lambert whose vertex shader curls each note and ripples it in the
 // wind (`aPaper`: how much, its phase), so the notes read as paper, not cards; compiled up front with the rest (main.js
 // precompile: hidden meshes too). Its matrices and `aPaper` are written in place, nothing allocated per frame.

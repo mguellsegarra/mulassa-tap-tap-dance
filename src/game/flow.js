@@ -95,7 +95,7 @@ export function startGame(diff) {
     G.audioError = tr('game.flow.musicError');
   });
 }
-// The demo (Com es juga → «Veure un ball de demostració»): the whole song on NORMAL, played by itself (main.js autoplay) on a clean screen.
+// The demo (Com es juga → «Veure un ball de demostració»): the whole song on NORMAL, played by itself (game/tick.js autoplay) on a clean screen.
 // It never reaches the results: finish() hands it to watched(), so no record, leaderboard snapshot, prompt or share.
 export function startWatch() {
   startGame(1);

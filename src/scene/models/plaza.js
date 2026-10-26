@@ -195,7 +195,7 @@ export function buildPlaza({ backdrop = 0, balconies = 0, waving = false, sun = 
   for (const [dx, dz, w, d] of [[0, 2.32, 1.4, 0.1], [0, -2.32, 1.4, 0.1], [2.32, 0, 0.1, 1.4], [-2.32, 0, 0.1, 1.4]]) b.box(cx + dx, 27.5, cz + dz, w, 2.6, d, '#2b2525', 0);
   b.box(cx, 31.5, cz, 3.4, 0.5, 3.4, '#b59c74').box(cx, 32, cz, 2, 2.5, 2, '#c9ae83').box(cx, 34.5, cz, 0.8, 1.5, 0.8, '#b59c74').box(cx, 36, cz, 0.12, 1.4, 0.12, '#333');
   b.box(cx, 18, cz + 3.02, 1.8, 1.8, 0.06, '#f5f0e0', 0).box(cx, 18.85, cz + 3.06, 0.8, 0.1, 0.02, '#222', 0);
-  // Trees and lamps: each its own mesh (main.js hides one that would stand between the camera and the mulassa or
+  // Trees and lamps: each its own mesh (ui/frame-camera.js hides one that would stand between the camera and the mulassa or
   // against the lens) and set back by the building fronts, out of the play camera's path (south of her, x within ~9).
   const props = [];
   const prop = (make, x, z, r, h) => { const pv = new Vox(); make(pv, x, z); const m = pv.mesh(); m.castShadow = false; group.add(freezeStatic(m)); props.push({ mesh: m, x, z, r, h }); };

@@ -1,5 +1,5 @@
-// The Drac's fire and powder wired to the game (drac-fx.js / common/fire.js do the work): judge.js calls dracCrema / dracPump, main.js
-// dracFrame (after the crowd is posed) and dracWarm. With the Mulassa every hook
+// The Drac's fire and powder wired to the game (drac-fx.js / common/fire.js do the work): judge.js calls dracCrema (through DRAC_SCENE.onBoth) /
+// dracPump, main.js dracFrame (after the crowd is posed), scene/precompile.js dracWarm. With the Mulassa every hook
 // is a no-op, so she looks and sounds exactly as before. Its confetti (confetti.js burst / spawnConfetti) are rodes de foc.
 import * as THREE from 'three';
 import { createDracFx } from './drac-fx.js';

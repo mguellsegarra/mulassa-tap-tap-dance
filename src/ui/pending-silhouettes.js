@@ -202,12 +202,17 @@ SILHOUETTE_DRAWINGS['marraco-lleida'] = { vb: [20, 16], d: [
   oval(46, 142, 20, 10), oval(154, 142, 20, 10), // claws on the ground
   'M70 62L40 52L56 66L34 74L58 78L40 94L70 86Z', 'M130 62L160 52L144 66L166 74L142 78L160 94L130 86Z', // frill
   ] };
-// La Víbria (bestiari.cat photo): upright pear of a body, a long neck and a head with two ears, a round lobe on each side, short feet.
+// La Víbria (side photo in «El Correfoc de Manresa», Ajuntament de Manresa), to the left like the other dragons: a heavy
+// body low over the bearer's legs, a short spike of a tail up at the rump, a long neck rising from the breasts to a crested
+// head with a beak, and small clawed arms reaching forward.
 SILHOUETTE_DRAWINGS['vibria-manresa'] = { vb: [20, 16], d: [
-  'M64 150Q54 110 66 84Q78 66 100 66Q122 66 134 84Q146 110 136 150Z', // body
-  oval(68, 100, 18, 24), oval(132, 100, 18, 24), // lobes
-  'M86 72Q84 48 88 34H112Q116 48 114 72Z', oval(100, 28, 17, 16), 'M86 22L82 6L96 16Z', 'M114 22L118 6L104 16Z', // neck, head, ears
-  'M66 144H94V150H62Z', 'M106 144H134V150H138Z',
+  // one outline: beak, head, the thick neck, the breasts out in front, the belly and the rump
+  'M44 32L58 24Q66 10 82 9Q92 11 94 26Q94 40 96 52Q98 64 104 70Q124 76 142 88Q156 98 154 112Q152 122 140 122H70Q62 120 62 108'
+    + 'Q60 94 60 86Q46 84 48 74Q50 64 64 64Q68 52 66 44L48 40Z',
+  'M78 12L84 4L88 11Z', 'M88 14L97 9L94 21Z', 'M92 26L101 24L95 34Z', // crest
+  'M140 92L148 64Q154 68 152 96Z', // tail
+  'M80 112L58 114L48 118L58 122L82 122Z', // arms and claws
+  carrierLeg(100, 118), carrierLeg(80, 118),
 ] };
 // Provisional: the dragons of Terrassa and Montblanc wear an existing dragon drawing until their own photos are traced.
 Object.assign(SILHOUETTE_DRAWINGS, { 'drac-baluk-terrassa': SILHOUETTE_DRAWINGS['drac-solsona'], 'drac-montblanc': SILHOUETTE_DRAWINGS['drac-vilanova'] });

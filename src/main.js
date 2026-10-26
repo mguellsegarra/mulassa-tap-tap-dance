@@ -255,7 +255,7 @@ requestAnimationFrame(() => setTimeout(() => { // one paint first: that line sho
 // The audio engine, suspended (the splash's tap resumes it): the song, the menu loop and the applause are made behind
 // the page cover. Made at the first frame they finished on the splash on a slow first load, right under the tap.
 function startAudio() {
-  try { audioEngine().ready?.then(() => loadMark('song decoded'), e => errors.report('audio-load-failed', audioFailureTags(e))); } catch { /* no Web Audio: made at the tap */ }
+  try { audioEngine().ready?.then(() => loadMark('song decoded'), e => errors.breadcrumb('audio-load-failed', audioFailureTags(e))); } catch { /* no Web Audio: made at the tap */ } // the run's start loads it again (a failure there is audio-start-failed)
 }
 // Every program up front, for the screen and (hero) for the share photo's render target: that renders with linear
 // output, i.e. other programs, which cost ~0.45 s on the first Comparteix (desktop at 4x CPU; more on a phone). Run again

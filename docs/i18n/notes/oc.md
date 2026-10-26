@@ -48,7 +48,6 @@ He comprovat també [ànim al diccionari de l'IEA](https://www.diccionari.cat/ar
 - `ui.pause.restart`: `Reinicia` → `Torna a començar`.
 - `ui.photo.act.mula.r`: `culada` → `còp de cu`.
 - `ui.photo.key.space`: `Espai` → `Espaci`.
-- `ui.select.soon`: `Pròximament` → `Lèu`.
 - `ui.select.soonQ`: `Pròximament?` → `Lèu?`.
 - `ui.sync.none`: `sense ajust` → `sense ajustament`.
 - `hud.praise.c30`: `IMPARABLE!` → `NON T'ARTURES`.
@@ -100,7 +99,6 @@ Cada fila és una clau; els objectes plurals es compten una sola vegada.
 | `ui.card.points` | `{score} punts` | Lèxic i flexió compartits amb l'aranès; marcadors i noms propis intactes. |
 | `ui.feedback.send` | `Envia` | Lèxic i flexió compartits amb l'aranès; marcadors i noms propis intactes. |
 | `ui.feedback.sending` | `Enviant…` | Lèxic i flexió compartits amb l'aranès; marcadors i noms propis intactes. |
-| `ui.gifts.scores` | `Partitures` | Lèxic i flexió compartits amb l'aranès; marcadors i noms propis intactes. |
 | `ui.pause.restartWatch` | `Torna a començar` | Lèxic i flexió compartits amb l'aranès; marcadors i noms propis intactes. |
 | `ui.photo.actions` | `Accions` | Lèxic i flexió compartits amb l'aranès; marcadors i noms propis intactes. |
 | `ui.profile.btn.create` | `Crea` | Lèxic i flexió compartits amb l'aranès; marcadors i noms propis intactes. |
@@ -122,7 +120,6 @@ Cada fila és una clau; els objectes plurals es compten una sola vegada.
 | `ui.seasons.players` | `{"one": "{n} participant", "other": "{n} participants"}` | Lèxic i flexió compartits amb l'aranès; marcadors i noms propis intactes. |
 | `ui.seasons.points` | `{n} punts` | Lèxic i flexió compartits amb l'aranès; marcadors i noms propis intactes. |
 | `ui.select.card` | `{name}, {entity}, {town}` | Només marcadors dinàmics i puntuació. |
-| `ui.select.hide` | `Amaga` | Lèxic i flexió compartits amb l'aranès; marcadors i noms propis intactes. |
 | `ui.share.shared` | `Compartit!` | Lèxic i flexió compartits amb l'aranès; marcadors i noms propis intactes. |
 | `ui.stats.error.late` | `Tard` | Lèxic i flexió compartits amb l'aranès; marcadors i noms propis intactes. |
 | `ui.stats.error.move` | `Moviment` | Lèxic i flexió compartits amb l'aranès; marcadors i noms propis intactes. |

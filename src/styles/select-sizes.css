@@ -111,7 +111,6 @@ body.reel-idle #select > * { pointer-events: none; }
   .sel-card-name { font-size: 17px; line-height: 21px; }
   .sel-card .nb small { font-size: 13px; }
   .sel-banner { flex-basis: 38px; }
-  #select { --more-w: 38px; }
 }
 /* Desktops, step 1 (select-standings.js): the records as three medals and the board as one card, the
    position its header, in place of the position chip (phones keep the chip and step 2's records). Information chips:
@@ -212,7 +211,7 @@ body.reel-idle #select > * { pointer-events: none; }
 @media (min-width: 900px) and (min-height: 661px) {
   .sel-card { flex-basis: 220px; --floor: 22px; }
 }
-@media (min-width: 900px) and (max-width: 919px) and (min-height: 661px) { .sel-card { flex-basis: 200px; --floor: 20px; } } /* both cards right of the narrowest info column (select-ui.js measure()), the fold included */
+@media (min-width: 900px) and (max-width: 919px) and (min-height: 661px) { .sel-card { flex-basis: 200px; --floor: 20px; } } /* both cards right of the narrowest info column (select-ui.js measure()) */
 /* Larger desktops keep nearly square cards rather than adding empty height above the artwork. */
 @media (min-width: 1100px) and (min-height: 900px) {
   #select { --dock-h: 360px; --card-label-h: 78px; }
@@ -224,7 +223,6 @@ body.reel-idle #select > * { pointer-events: none; }
   .sel-card-name { font-size: 19px; line-height: 23px; }
   .sel-card .nb small { font-size: 14px; }
   .sel-banner { flex-basis: 42px; }
-  #select { --more-w: 42px; }
 }
 /* Safari's toolbars can leave a short portrait viewport on a small phone. */
 @media (max-width: 519px) and (min-height: 501px) and (max-height: 600px) {

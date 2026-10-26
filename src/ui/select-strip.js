@@ -18,7 +18,7 @@ export function pixelSvg(art, palette, rim) {
 export const pillHtml = t => `<button type="button" class="btn btn-secondary sel-pill" data-town="${t.id}" tabindex="0" aria-pressed="false"${t.color ? ` style="--c:${t.color}"` : ''}>${escutSvg(t.id) || '<i aria-hidden="true"></i>'}${t.name}</button>`;
 export const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const portraitHtml = f => f.thumbnail ? `<img src="${escapeHtml(f.thumbnail)}" alt="" width="96" height="96" loading="lazy" decoding="async">` : pixelSvg(portraitArt(f), portraitPalette(f), '#2a1a10');
-export function stripHtml(figures, later = false, last = null) { // later: what the fold hides; last: the town before (no banner twice)
+export function stripHtml(figures, later = false, last = null) { // later: the figures still to come, after the playable ones; last: the town before (no banner twice)
   let html = '';
   for (const f of figures) {
     const t = townOf(f);
@@ -31,14 +31,6 @@ export function stripHtml(figures, later = false, last = null) { // later: what 
   }
   return html;
 }
-// the fold between the playable figures and the rest: › folded, ‹ unfolded
-export const moreHtml = () => `<button type="button" class="btn btn-secondary sel-card sel-more" data-more="1" role="option" tabindex="-1" aria-selected="false" aria-expanded="false" aria-label="${tr('ui.select.soon')}"><span class="sel-more-flag" aria-hidden="true"><svg viewBox="0 0 24 24"><path class="open" d="m9 5 7 7-7 7"/><path class="close" d="m15 5-7 7 7 7"/></svg></span></button>`;
-// the pills' last one: the arms of the first FAN_MAX towns with nothing to play yet, fanned out, and «+N» for the towns left over
-// (the button's width stays bounded as the catalogue grows); unfolded, «Amaga»
-export const FAN_MAX = 3;
-export const soonPillHtml = towns => { const shown = towns.slice(0, FAN_MAX), more = towns.length - shown.length;
-  return `<button type="button" class="btn btn-secondary sel-pill sel-soon" data-soon="1" tabindex="0" aria-expanded="false"><span class="sel-fan" aria-hidden="true">${shown.map(t => escutSvg(t.id)).join('')}${more > 0 ? `<span class="sel-fan-more">+${more}</span>` : ''}</span><span class="sel-soon-text">${tr('ui.select.soon')}</span></button>`; };
-
 // The gap for a row that scrolls (item widths, its room from the first item to the right edge) that leaves the item at
 // that edge near half shown (a fifth to four fifths), the cue that there is more: the one nearest `base` within 0.6-2x; `base` when all fit.
 export function peekGap(widths, room, base) {

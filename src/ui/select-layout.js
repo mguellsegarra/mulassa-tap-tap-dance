@@ -4,16 +4,15 @@ import { fitEntityLabel } from './figure-entities.js';
 import { fitPendingTitle } from './pending-title.js';
 import { peekGap, navX } from './select-strip.js';
 
-export function createSelectLayout({ win, $, root, towns, strip, pending, bar, restPills, later, corner, facts, flip, api, view, updateArrows }) {
-  let stripLimit = 0, restWidth = Infinity; // restWidth: what the folded pills add to the header row once opened (unknown until they were shown)
-  // Only available items count: the closing catalog stays laid out until scrolling comes to rest.
-  const rowEdge = row => Math.max(0, ...[...row.children].filter(el => !el.hidden && !el.inert).map(el =>
+export function createSelectLayout({ win, $, root, towns, strip, pending, bar, later, corner, facts, flip, api, view, updateArrows }) {
+  let stripLimit = 0;
+  const rowEdge = row => Math.max(0, ...[...row.children].map(el =>
     el.offsetLeft + el.offsetWidth + (parseFloat(win.getComputedStyle?.(el).marginRight) || 0)))
     + (parseFloat(win.getComputedStyle?.(row).paddingRight) || 0);
   const GAPS = new Map([[towns, 7], [strip, 8]]); // their CSS gaps
   function peek() { // spaces both rows so the one at the right edge is cut (all fit: as CSS has them)
     for (const [row, base] of GAPS) {
-      const items = [...row.children].filter(el => !el.hidden && !el.inert && el.offsetWidth && (row !== strip || !later.includes(el))), cs = win.getComputedStyle?.(row);
+      const items = [...row.children].filter(el => el.offsetWidth && (row !== strip || !later.includes(el))), cs = win.getComputedStyle?.(row);
       const room = row.clientWidth - (parseFloat(cs?.paddingLeft) || 0);
       if (items.length && room > 0) row.style.gap = `${peekGap(items.map(el => el.offsetWidth), room, base)}px`;
     }
@@ -24,9 +23,7 @@ export function createSelectLayout({ win, $, root, towns, strip, pending, bar, r
     // header: logo left, corner buttons right; the towns fit between (asymmetric gutter: a symmetric one dropped them on an iPad) or get their own row
     const logo = [...root.querySelectorAll('.sel-logo')].map(r).filter(b => b.width > 0), right = corner.filter(el => !el.hidden).map(r).filter(b => b.width > 0);
     const oneLine = Boolean(root.querySelector('.sel-logo-line')?.getClientRects().length); // desktops: the one-line logo, the towns always on their own row below it
-    // The header must not change with the fold (the info block under it would jump): decide on the unfolded row, the folded pills' width remembered from when they showed.
-    if (restPills.length && restPills.every(pill => !pill.hidden)) restWidth = restPills.reduce((width, pill) => width + r(pill).width, 0); // (the gaps are in `needed` already: it counts every pill)
-    const needed = bar.reduce((width, pill) => width + r(pill).width, 0) + GAPS.get(towns) * z * (bar.length - 1)  + (restPills.some(pill => pill.hidden) ? restWidth : 0);
+    const needed = bar.reduce((width, pill) => width + r(pill).width, 0) + GAPS.get(towns) * z * (bar.length - 1);
     const gutterL = Math.max(0, ...logo.map(b => b.right)) + 24, gutterR = Math.max(0, ...right.map(b => win.innerWidth - b.left)) + 24;
     const inline = Boolean(!oneLine && right.length && win.innerWidth - gutterL - gutterR >= needed);
     root.toggleAttribute('data-header-inline', inline);
@@ -37,7 +34,7 @@ export function createSelectLayout({ win, $, root, towns, strip, pending, bar, r
     } else root.style.removeProperty?.('--info-top');
     // The dock's layout box, not its rect: a pending figure drops it by a transform that may still be under way.
     const dock = $('select-bottom'), dockTop = (dock.offsetTop ?? r(dock).top / z) * z;
-    // The pills' layout box, not their rect: unfolding slides them to their new row by a transform that may still be under way.
+    // The pills' layout box, not their rect: a pending figure slides them to their new row by a transform that may still be under way.
     const townsBottom = ((towns.offsetTop ?? r(towns).top / z) + (towns.offsetHeight ?? r(towns).height / z)) * z;
     // Desktops: the first banner never starts left of the narrowest info column + 12 (the column ends at most there): 308, or
     // 410 from 1200 px (the board card keeps its %: > 400 px, select-sizes.css), 530 from 1280 (its foot keeps one line, ~492 px, ~512 with a 7-digit gap);
@@ -49,9 +46,8 @@ export function createSelectLayout({ win, $, root, towns, strip, pending, bar, r
     root.style.setProperty('--strip-x', '0px'); strip.style.removeProperty?.('--strip-clip');
     const shift = desk && flag?.offsetParent ? (($('select-info').hidden ? 0 : r($('select-info')).left) - r(strip).left) / z + narrowest + 12 - (flag.offsetLeft - (parseFloat(win.getComputedStyle?.(strip).paddingLeft) || 0)) : 0;
     strip.style.setProperty('--strip-l', `${shift}px`);
-    // Reserve the expanded header row even while towns fit inline: folding must not move the contact card.
     peek();
-    // The live group keeps its centred origin when the catalog opens. Only scrollLeft moves the cards.
+    // The live group keeps its centred origin; the pending cards follow it. Only scrollLeft moves the cards.
     const base = [...strip.children].filter(el => !later.includes(el));
     const style = win.getComputedStyle?.(strip), gap = parseFloat(style?.gap) || 8;
     const width = base.reduce((sum, el) => {
@@ -107,5 +103,5 @@ export function createSelectLayout({ win, $, root, towns, strip, pending, bar, r
   }
   const sizes = () => [$('select-info'), root].map(el => `${el.offsetWidth}x${el.offsetHeight}`).join();
   let measured = '';
-  return { measure, peek, rowEdge, get stripLimit() { return stripLimit; }, stale: () => sizes() !== measured };
+  return { measure, get stripLimit() { return stripLimit; }, stale: () => sizes() !== measured };
 }

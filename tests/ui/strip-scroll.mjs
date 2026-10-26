@@ -19,7 +19,7 @@ for (const hz of [60, 120]) {
   const before = row.scrollLeft;
   scroll.to(1200); assert.equal(row.scrollLeft, before, 'retargeting keeps the visible position');
   tick(); assert(row.scrollLeft > before, 'repeated keys keep moving, with no restarted animation delay');
-  scroll.by(100); scroll.by(100); scroll.by(100);
+  for (let i = 0; i < 3; i++) scroll.to(scroll.target + 100); // what the wheel does
   assert.equal(scroll.target, 1500, 'rapid wheel events accumulate their full distance');
   settle(); assert.equal(row.scrollLeft, 1500);
   const steps = h.samples.slice(1).map((x, i) => x - h.samples[i]);
@@ -27,11 +27,6 @@ for (const hz of [60, 120]) {
   assert(Math.max(...steps) <= 1.8 * 1500 / scrollMs(1500) * 1000 / hz + 0.5, 'no animation completion or retargeting causes a large scroll jump');
   scroll.to(0); for (let i = 0; i < hz / 10; i++) tick();
   scroll.to(1800); settle(); assert.equal(row.scrollLeft, 1800, 'direction reversal settles on the latest request');
-  let closed = 0;
-  scroll.to(0, false, () => closed++);
-  tick(); assert.equal(closed, 0, 'folding waits until the strip has returned before removing cards');
-  scroll.to(1200); settle(); assert.equal(closed, 0, 'new navigation cancels an obsolete fold completion');
-  scroll.to(0, false, () => closed++); settle(); assert.equal(closed, 1);
   scroll.to(500); tick(); scroll.stop(); const stopped = row.scrollLeft;
   tick(); assert.equal(row.scrollLeft, stopped, 'direct manipulation cancels programmatic scrolling');
   scroll.to(10000); settle(); assert.equal(row.scrollLeft, 4600, 'the real right boundary clamps the destination');
@@ -45,11 +40,11 @@ for (const hz of [60, 120]) {
 for (const hz of [30, 60, 120]) for (const distance of [150, 450, 1200, 4600]) for (const dir of [1, -1]) {
   const h = harness(hz), start = dir > 0 ? 0 : 4600;
   h.scroll.to(start, true); h.samples.length = 0;
-  let done = 0, frames = 0;
-  h.scroll.to(start + dir * distance, false, () => done++);
-  while (!done && frames < hz * 2) { h.tick(); frames++; }
+  let frames = 0;
+  h.scroll.to(start + dir * distance);
+  while (h.frames.size && frames < hz * 2) { h.tick(); frames++; }
   const ms = frames * 1000 / hz;
-  assert(done === 1 && h.row.scrollLeft === start + dir * distance, `${hz} Hz ${distance}px: arrives exactly`);
+  assert(!h.frames.size && h.row.scrollLeft === start + dir * distance, `${hz} Hz ${distance}px: arrives exactly`);
   assert(ms <= scrollMs(distance) + 1000 / hz && scrollMs(distance) <= 450, `${hz} Hz ${distance}px: in ${ms.toFixed(0)} ms, capped`);
   assert(h.samples[0] !== start, 'the first frame already moves (a quick start)');
   const s = [start, ...h.samples];
@@ -69,31 +64,8 @@ for (const hz of [60, 120]) {
   assert(frames * 1000 / hz <= scrollMs(Math.abs(a - 200)) + 1000 / hz, 'the new destination takes its own bounded time');
 }
 console.log('strip scroll: bounded arrival at 30/60/120 Hz, both directions, soft landing and mid-way reversal ok');
-console.log('strip scroll: retargeting, rapid wheel, reversal, boundaries, fold completion and reduced motion ok');
+console.log('strip scroll: retargeting, rapid wheel, reversal, boundaries and reduced motion ok');
 const rounded = harness(120, Math.round);
-let folded = false;
-rounded.scroll.to(283.25, false, () => { folded = true; });
-rounded.settle();
-assert.equal(rounded.row.scrollLeft, 283);
-assert(folded, 'browser pixel rounding cannot leave a fold animation running forever');
-
-for (const hz of [60, 120]) {
-  const h = harness(hz);
-  h.scroll.to(1200, true);
-  let completed = 0;
-  h.scroll.to(0, false, () => completed++, 240);
-  const positions = [];
-  for (let i = 0; i < Math.ceil(hz * .24); i++) {
-    h.tick(); positions.push(h.row.scrollLeft);
-    if (i < Math.floor(hz * .24) - 1) assert.equal(completed, 0, 'fold does not finish ahead of its fade');
-  }
-  assert.equal(completed, 1, 'fold finishes within its fixed duration, without a spring tail');
-  assert.equal(h.row.scrollLeft, 0);
-  assert(positions.every((x, i) => i === 0 || x <= positions[i - 1]), 'fold never reverses direction');
-  h.scroll.to(1200, false, () => completed++, 240); h.tick();
-  h.scroll.to(600); h.settle();
-  assert.equal(completed, 1, 'reopening cancels the old timed completion');
-  h.reduce(); h.scroll.to(0, false, () => completed++, 240);
-  assert.equal(completed, 2, 'reduced motion finishes the timed fold immediately');
-}
-console.log('timed fold: shared duration, monotonic motion, cancellation and reduced motion ok');
+rounded.scroll.to(283.25);
+rounded.settle(); // settle() fails if the animation never comes to rest
+assert.equal(rounded.row.scrollLeft, 283, 'browser pixel rounding cannot leave the animation running forever');

@@ -1,18 +1,23 @@
-// GPU resources and draw calls in a real (software) WebGL page. Cycling the figures and quality levels must leave
+// GPU resources and draw calls in a real WebGL page. Cycling the figures and quality levels must leave
 // renderer.info.memory where it was (a leaked geometry or texture fails), and each quality profile stays inside its
-// draw-call budget at the selector and in play. Needs Playwright (PLAYWRIGHT_DIR, default /tmp/ui-inv-pw) and a Chromium:
+// draw-call budget at the selector and in play (real GPU by default, software GL as a fallback). Needs Playwright (PLAYWRIGHT_DIR, default /tmp/ui-inv-pw) and a Chromium:
 // skipped with a message otherwise. The Bou is unreleased: a Vite plugin empties UNRELEASED_IDS for this server only.
 import assert from 'node:assert/strict';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL, fileURLToPath } from 'node:url';
 import { createServer } from 'vite';
+import { launchBrowser } from '../../tools/qa/capture-lib.mjs';
 
 const pw = process.env.PLAYWRIGHT_DIR ?? '/tmp/ui-inv-pw', entry = join(pw, 'node_modules/playwright/index.mjs');
 if (!existsSync(entry)) { console.log(`gl budget: skipped (no Playwright at ${pw})`); process.exit(0); }
 const { chromium } = await import(pathToFileURL(entry).href);
+// Real GPU (Metal) by default, as the captures; GL_BUDGET_SOFT=1 or no Chrome falls back to software GL (slower, and the quality monitor steps down more).
 let browser;
-try { browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--mute-audio'] }); } catch (err) { console.log(`gl budget: skipped (no Chromium: ${String(err.message).split('\n')[0]})`); process.exit(0); }
+for (const soft of process.env.GL_BUDGET_SOFT === '1' ? [true] : [false, true]) {
+  try { browser = await launchBrowser(chromium, { soft }); console.log(`gl budget: ${soft ? 'software' : 'real GPU'} WebGL`); break; }
+  catch (err) { if (soft) { console.log(`gl budget: skipped (no Chromium: ${String(err.message).split('\n')[0]})`); process.exit(0); } }
+}
 
 // Real GL draw calls a frame (the shadow pass included; renderer.info.render does not count it) per profile: the worst
 // figure at the selector and in play, measured plus HEADROOM. Raise one only for a deliberate new draw, and say so in docs/agents/graphics.md.

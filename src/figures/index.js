@@ -31,6 +31,7 @@ export const FIGURE_TRAITS = Object.freeze({
   }),
 });
 // The Bou ships with 1.3.0 (branch feat/bou empties this set); until then the selector shows it as pending.
+// While the set holds it, a build also leaves its modules and song out (tools/deploy/unreleased-figure.mjs); empty it to ship it.
 export const UNRELEASED_IDS = Object.freeze(new Set([]));
 export const PLAYABLE_IDS = Object.freeze(Object.keys(FIGURE_TRAITS).filter(id => !UNRELEASED_IDS.has(id))); // in the order free play's Tab goes round
 export const traitsOf = id => FIGURE_TRAITS[id] ?? FIGURE_TRAITS['mulassa-valls'];

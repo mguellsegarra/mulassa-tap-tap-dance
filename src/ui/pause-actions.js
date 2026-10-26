@@ -1,7 +1,7 @@
 // Pause toggling, page visibility, a WebGL context that never comes back, and the restart and exit actions.
 import { song, countInAt, countInDuration, BEATS } from '../game/figure-song.js';
 import { G, songTime, chip } from '../game/state.js';
-import { pageActive, playFrom } from '../core/env.js';
+import { pageActive, playFrom, COARSE } from '../core/env.js';
 import { pauseGame, closePauseMenu } from './pause.js';
 import { pauseMenu } from './handles.js';
 import { offerAudioResume } from './audio-resume.js';
@@ -45,7 +45,7 @@ function syncPageActivity(e) {
     pauseGame();
     chip?.clearMenuSfx?.();
     chip?.suspend();
-    if (e?.type === 'visibilitychange' && !document.hidden && chip?.woke) offerAudioResume(); // iOS, back from another tab: shown, but no focus until a tap
+    if ((e?.type === 'visibilitychange' || e?.type === 'blur' && COARSE.matches) && !document.hidden && chip?.woke) offerAudioResume(); // iOS, back from another tab or the URL bar: shown, but no focus until a tap
   } else if (!G.paused || G.resuming != null) {
     chip?.wake();
     if (chip?.woke) { chip.resume(); offerAudioResume(); } // back from another app there is no gesture (wake() skips it): an unlocked context may resume, else it stays mute until a tap (iOS), and the card says so

@@ -57,7 +57,7 @@ Scene objects are built once and toggled (shown, hidden, posed), not rebuilt per
 
 Share of small commits (≤ 20 files, all branches) that touched the file, most frequent first, measured before the split
 that followed: `select.css` is now five sheets, `render-quality.mjs` an index of eight area files, `select-ui.js` gave
-its fold, keys and layout to `select-fold.js`, `select-keys.js` and `select-layout.js`, AGENTS.md moved its detail to
+its keys and layout to `select-keys.js` and `select-layout.js`, AGENTS.md moved its detail to
 `docs/agents/`, and `tests/run.mjs` finds new tests by itself.
 
 | File | Share | Why |
@@ -83,7 +83,7 @@ Parallel agents each take one lane and stay inside its files; two agents never w
 
 | Lane | Files |
 | --- | --- |
-| A. Selector | `ui/select-*` (with `select-fold`, `select-keys`, `select-layout`), `ui/selector-*`, `ui/level-stats`, `ui/pending-*`, `styles/select*.css`, `tests/ui/selector-*` |
+| A. Selector | `ui/select-*` (with `select-keys`, `select-layout`), `ui/selector-*`, `ui/level-stats`, `ui/pending-*`, `styles/select*.css`, `tests/ui/selector-*` |
 | B. One figure | `figures/<id>/`, `tests/figures/<id>/`, its music and `song-<id>.json` |
 | C. Cameras and scene | `scene/cameras`, `play-camera`, `framing`, `orbit`, `crowd*`, `game/showreel`, `ui/reel-*`, `tests/render/scene-crowd`, `photo-showreel` |
 | D. Play | `game/judge`, `flow`, `energy`, `progress`, `hud/*`, `tests/render/game-*`, `hud-play` |

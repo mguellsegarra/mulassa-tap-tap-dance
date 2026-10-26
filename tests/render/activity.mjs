@@ -7,7 +7,8 @@ const handlers = {}, timers = [];
 let active = true, cleared = 0, suspended = 0, woke = 0;
 const activityEpoch = Number(read('../../src/game/state.js').match(/export const G = \{ activityEpoch: (\d+),/)[1]);
 const G = { activityEpoch, state: 'select', paused: false };
-const ctx = vm.createContext({ G, pageActive: () => active,
+const COARSE = { matches: false };
+const ctx = vm.createContext({ G, COARSE, pageActive: () => active,
   chip: { suspend() { this.ctx.suspend(); }, clearMenuSfx() { cleared++; }, ctx: { state: 'running', currentTime: 0, suspend() { suspended++; } }, wake() { woke++; } },
   pauseGame() { if (G.state === 'play') G.paused = true; },
   offerAudioResume() { ctx.offers = (ctx.offers || 0) + 1; }, // its card: tests/ui/audio-resume.mjs
@@ -48,6 +49,9 @@ assert(cleared > 0 && suspended > 0 && woke > 0);
   assert.equal(ctx.offers, 2, 'visible without focus: the «Música en pausa» card is offered');
   handlers.blur({ type: 'blur' });
   assert.equal(ctx.offers, 2, 'a window that only loses focus (desktop) gets no card');
+  COARSE.matches = true; handlers.blur({ type: 'blur' });
+  assert.equal(ctx.offers, 3, 'a touch screen (Safari URL bar) loses focus while visible: the card is offered');
+  COARSE.matches = false;
   active = true; delete chip.woke; delete chip.resume; G.resuming = undefined;
 }
 

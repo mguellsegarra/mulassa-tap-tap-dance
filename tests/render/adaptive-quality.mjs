@@ -44,6 +44,12 @@ for (const policy of [{ hold: true }, { half: true, hz: 120, fps: 60 }, { lowPow
   assert.equal(r.level, low, 'background time and old headroom cannot qualify reentry');
   r.run(40, { hz: 120 }); assert.equal(r.level, 2, 'stable 120 Hz uses its own budget');
 }
+{ // a ProMotion phone: a 5 ms frame is plenty for 60 fps but more than 45% of 8.3 ms; a drop must not last the session
+  const r = rig(); r.run(10, { miss: 4 }); r.run(6, { cost: 12 }); const low = r.level;
+  assert(low < 2); r.run(120, { hz: 120, cost: 5 }); assert.equal(r.level, 2, '120 Hz recovers with a cost that fits 60 fps');
+  const s = rig(); s.run(10, { miss: 4 }); s.run(6, { cost: 12 }); s.run(120, { hz: 120, cost: 9 });
+  assert(s.level < 2, 'a frame over 45% of a 60 fps budget is still no recovery evidence at 120 Hz');
+}
 {
   const r = rig(-1); r.run(90); assert.equal(r.level, -1, 'software renderer ceiling is preserved');
 }

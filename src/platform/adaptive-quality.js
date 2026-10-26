@@ -52,8 +52,12 @@ export function adaptiveQuality({ ceiling, level, change, report = () => {} }) {
     if (elapsed < 4000) return;
     const evidence = { window: elapsed, samples, late, cost: costSum / samples, peak: costPeak, ...context() };
     // Half-pacing and a power cap can hide overload: let the pacer recover first. A missing/invalid cost proves nothing.
+    // The cost is weighed against a 60 fps frame at least: on a 120 Hz screen (ProMotion) a frame that fits 60 fps
+    // with room to spare never fitted 45% of 8.3 ms, so a profile dropped once in free play stayed down all session.
+    // Restoring it may only halve the pacer to 60 fps, the game's own target; a real overload still steps back down.
+    const costBudget = Math.max(budget, 1000 / 60);
     const headroom = !hold && !pacedHalf && !lowPower && fps >= 40 && Number.isFinite(costSum) &&
-      late / samples <= 0.02 && costSum / samples < budget * 0.45 && costPeak < budget * 0.9;
+      late / samples <= 0.02 && costSum / samples < costBudget * 0.45 && costPeak < costBudget * 0.9;
     good = headroom ? good + elapsed : 0;
     report({ time, reason: 'window', level: level(), good, retry, ...evidence });
     if (trial && sinceChange >= 12000 && headroom) trial = false;

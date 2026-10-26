@@ -12,6 +12,8 @@ import { ALIAS_KEY, savedName, displayName } from '../services/leaderboard-ident
 import { errors } from '../services/errors.js';
 
 const FORMAT_KEY = 'share-format';
+// the sheet opening by itself (a record, after the publish prompt) is a nudge, not a toll: once a day at most; the button always works
+const NUDGE_KEY = 'share-nudge-at', NUDGE_GAP = 24 * 3600e3;
 // The photo is a synchronous GPU render and read-back: let the sheet paint and finish coming in (index.html share-in,
 // 0.2 s) first, so it never waits behind the publish sheet or freezes mid-way; the shimmer holds the card's place.
 const afterEntrance = () => new Promise(r => (globalThis.requestAnimationFrame ?? setTimeout)(() => setTimeout(r, 200)));
@@ -20,7 +22,7 @@ export function setupShare({ focusIn, restore = () => {}, hero = () => null, sta
   store, fonts = doc.fonts, url = globalThis.URL, settle = afterEntrance,
   // a run worth showing off (and ≥ 2 stars: a weak one is never pushed) opens Comparteix by itself `autoDelay` ms after its results: `auto()` says nobody else will (the publish
   // prompt, when it opens, ends in Comparteix anyway), `ready()` that nothing is open over the screen by then
-  auto = () => false, ready = () => true, autoDelay = 1400 }) {
+  auto = () => false, ready = () => true, autoDelay = 1400, now = Date.now }) {
   const $ = byId(doc);
   const menu = $('share-menu'), row = $('results-actions'), btn = $('results-share'), tag = $('results-share-tag');
   const img = $('share-preview'), frame = $('share-frame'), status = $('share-status'), primary = $('share-image');
@@ -122,6 +124,13 @@ export function setupShare({ focusIn, restore = () => {}, hero = () => null, sta
     focusIn(menu, 'share-image');
     selectFormat(format);
   }
+  function nudge(o) { // open() by itself, unless it already did within NUDGE_GAP (a clock set back counts as recent)
+    const ago = now() - (Number(store.get(NUDGE_KEY)) || 0);
+    if (ago >= 0 && ago < NUDGE_GAP) return false;
+    open(o);
+    if (menu.open) store.set(NUDGE_KEY, String(now()));
+    return true;
+  }
   btn.addEventListener('click', () => { sfx('menu'); open(); });
   for (const [k, b] of Object.entries(formats)) b.addEventListener('click', () => { if (k !== format) { sfx('menu'); selectFormat(k); } });
   nick.addEventListener('change', () => prepare());
@@ -173,7 +182,7 @@ export function setupShare({ focusIn, restore = () => {}, hero = () => null, sta
 
   return {
     get open() { return menu.open; },
-    openAfterPublish: ({ place, published = true } = {}) => open({ published, place }),
+    openAfterPublish: ({ place, published = true } = {}) => { if (!nudge({ published, place })) restore(); }, // skipped: focus back on the results
     // the profile's name or check changed under an open sheet (the server answered after the publication): redraw the card
     refreshName() { if (menu.open && run && named && JSON.stringify(nameNow()) !== named) prepare(); },
     // every frame from updateControls(): only real changes touch the DOM. r: the run on the results screen (null: none)
@@ -191,7 +200,7 @@ export function setupShare({ focusIn, restore = () => {}, hero = () => null, sta
         btn.hidden = r.reason === 'collapse'; // she fell apart: nothing to show off (the row keeps Torna-ho a provar)
         tag.hidden = !bragWorthy(r, ch);
         clearTimeout(autoT); autoT = null;
-        if (bragWorthy(r, ch) && r.stars >= 2 && auto()) autoT = setTimeout(() => { autoT = null; if (shownKey === key && ready()) open(); }, autoDelay);
+        if (bragWorthy(r, ch) && r.stars >= 2 && auto()) autoT = setTimeout(() => { autoT = null; if (shownKey === key && ready()) nudge(); }, autoDelay);
       }
       if (!key) { clearTimeout(autoT); autoT = null; }
       if (!key && menu.open) menu.close();

@@ -266,6 +266,23 @@ console.log('share: challenge link, captions, fallbacks, eligibility, privacy an
     ui = mk({ auto: () => true, autoDelay: 30 });
     ui.results(true, run({ diff: 0, pct: 95, newRecord: true, t: 24 }), null); ui.results(false, null, null); await new Promise(r => setTimeout(r, 60));
     assert(!sheet(), 'leaving the results first: it never comes late');
+    // once a day at most, by either way in; the button still opens it
+    const mem = {}, store = { get: k => mem[k] ?? null, set: (k, v) => { mem[k] = v; } };
+    let t = 1e12, restored = 0;
+    const day = extra => mk({ auto: () => true, store, now: () => t, restore: () => restored++, ...extra });
+    ui = day();
+    ui.results(true, run({ diff: 0, pct: 95, newRecord: true, t: 30 }), null); await tick();
+    assert(sheet(), 'the first record of the day: it opens by itself');
+    t += 3600e3; ui = day();
+    ui.results(true, run({ diff: 0, pct: 97, newRecord: true, t: 31 }), null); await tick();
+    assert(!sheet(), 'another record an hour later: it stays closed');
+    ui.openAfterPublish({});
+    assert(!sheet() && restored === 1, 'after the publish prompt too: closed, focus back on the results');
+    doc.getElementById('results-share').listeners.click();
+    assert(sheet(), 'Comparteix itself always opens it');
+    t += 24 * 3600e3; ui = day();
+    ui.results(true, run({ diff: 0, pct: 98, newRecord: true, t: 32 }), null); ui.openAfterPublish({});
+    assert(sheet(), 'a day later: by itself again');
   }
   // the nickname switch redraws the card behind a steady primary: no «Preparant…» flash, even for a slow encode (only a format whose
   // photo is still to render says it, keeping its icon); same label, icon (mode) and state; a tap during the redraw

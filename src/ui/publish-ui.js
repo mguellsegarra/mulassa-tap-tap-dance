@@ -11,7 +11,7 @@ import { tr } from '../i18n/messages.js';
 import { mulaSpinner } from './loader.js';
 import { turnstileMessage } from '../services/captcha.js';
 import { appendName } from './profile-notes.js';
-import { forgetSeasons } from './seasons-ui.js';
+import { setupLanding } from './publish-land.js';
 
 // «Ara no» to the prompt that opens by itself after a run, in a row: at MAX_DECLINES it stops opening by itself (the
 // results row's «Publica el resultat» stays); any publication starts the count again. Only this number is kept.
@@ -20,7 +20,7 @@ export const OPTOUT_KEY = 'publish-optout'; // «No m’ho tornis a recordar»: 
 const NAMES = Array.from({ length: 8 }, (_, i) => tr(`ui.board.alias.${i + 1}`));
 // A fictional, editable suggestion: nobody should feel asked for their real name.
 export const suggestAlias = (rand = Math.random) => `${NAMES[Math.floor(rand() * NAMES.length)]}${100 + Math.floor(rand() * 900)}`; // no spaces
-export const PERSIST_KEY = 'storage-persist'; // once, after the first publication: storage.persist() was asked
+export { PERSIST_KEY } from './publish-land.js';
 const topPct = (pos, total) => Math.max(1, Math.ceil(100 * pos / total)); // «top 17%»; never «top 0%»
 export const declines = store => Number(store.get(DECLINES_KEY)) || 0;
 
@@ -28,6 +28,7 @@ export function setupPublish({ doc, $, service, store, focusIn, now, runs, canWr
   onRecover, onConfirm, acceptStats, afterPublish, shareDelay, settle, persist }) {
   const publishMenu = $('publish-menu');
   const aliasInput = $('publish-alias'), publishStatus = $('publish-status'), fieldError = $('publish-error'), sendBtn = $('publish-send'), cancelBtn = $('publish-cancel'), neverBtn = $('publish-never');
+  const { landed, publishQuietly } = setupLanding({ service, store, runs, canWrite, acceptStats, persist, declinesKey: DECLINES_KEY });
   const placeLine = $('publish-place'), asLine = $('publish-as'), field = $('publish-field');
   let publishReq = 0, done = false, busy = false, shareTimer = null;
   // auto: this sheet opened by itself (closing it unpublished is an «Ara no»); armedAt: a tap already on its way when it
@@ -213,12 +214,7 @@ export function setupPublish({ doc, $, service, store, focusIn, now, runs, canWr
     swap('wait', tr('ui.board.publishing')); publishMenu.focus();
     try {
       await service.publish(run, alias, { captchaToken });
-      store.set(ALIAS_KEY, alias);
-      acceptStats(); // the sheet's note said the statistics' totals go with the profile
-      forgetSeasons(service); // the podiums may have moved
-      runs.published = run; // the results button goes even if the sheet was closed meanwhile
-      store.remove(DECLINES_KEY); // they publish: the prompt may open by itself again
-      if (!store.get(PERSIST_KEY)) { store.set(PERSIST_KEY, '1'); try { Promise.resolve(persist()).catch(() => {}); } catch { /* no Storage API */ } }
+      landed(run, alias);
       if (req !== publishReq) return;
       needsCaptcha = false; // the profile exists now
       auto = false;
@@ -295,5 +291,5 @@ export function setupPublish({ doc, $, service, store, focusIn, now, runs, canWr
     cancelBtn.hidden = false; neverBtn.hidden = true; $('publish-board').hidden = true;
     if (declined && afterPublish) afterPublish({ place: null, published: false }); // Comparteix next, without «Publicat!»
   });
-  return { openPublish };
+  return { openPublish, publishQuietly };
 }

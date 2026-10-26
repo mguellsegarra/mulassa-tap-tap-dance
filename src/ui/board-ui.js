@@ -72,7 +72,7 @@ export function setupBoard({ focusIn, store = defaultStore, service = leaderboar
   const { openBoard } = setupBoardList({ doc, $, service, store, focusIn, minLoad, now, observe, onCard, onSeasons, onKeep, currentFigure, canPlay, onPlay,
     canPublish: () => Boolean(canWrite && runs.snapshot && runs.published !== runs.snapshot), runFigure: () => VERSION_RULES[runs.snapshot?.version]?.figureId,
     openPublish: () => openPublish(), publishing: () => publishMenu.open });
-  const { openPublish } = setupPublish({ doc, $, service, store, focusIn, now, runs, canWrite, verify, deviceNote, openBoard,
+  const { openPublish, publishQuietly } = setupPublish({ doc, $, service, store, focusIn, now, runs, canWrite, verify, deviceNote, openBoard,
     onRecover, onConfirm, acceptStats, afterPublish, shareDelay, settle, persist });
 
   // --- ⚙ Configuració: the «Proposta de publicar» row
@@ -90,7 +90,10 @@ export function setupBoard({ focusIn, store = defaultStore, service = leaderboar
   // --- the prompt that opens by itself: once per eligible run, a moment after the row appears, never to nag
   // eligible (not practice/autoplay/?from: no snapshot), ≥ 2 stars, online, not declined MAX_DECLINES times in a row
   // ≥ 2 stars: a weak run never gets asked (its «Publica el resultat» button stays for whoever wants it)
-  const promptable = run => Boolean(canWrite && run && starsFor(quality(run.counts)) >= PROMPT_STARS && online() && promptsOn());
+  const worthIt = run => Boolean(canWrite && run && starsFor(quality(run.counts)) >= PROMPT_STARS && online());
+  const promptable = run => worthIt(run) && promptsOn();
+  // a nickname already chosen: the same runs go up by themselves instead (publish-ui.js publishQuietly), no prompt
+  const quietly = run => worthIt(run) && Boolean(store.get(ALIAS_KEY));
   function firePrompt() {
     promptTimer = null;
     if (shown !== 2 || runs.published === runs.snapshot || publishMenu.open || boardMenu.open || !canPrompt() || !promptable(runs.snapshot)) return;
@@ -115,13 +118,15 @@ export function setupBoard({ focusIn, store = defaultStore, service = leaderboar
       if (key !== 2) { clearTimeout(promptTimer); promptTimer = null; }
       else if (prompted !== runs.snapshot) { // this run's one chance
         prompted = runs.snapshot;
-        if (promptable(runs.snapshot)) promptTimer = setTimeout(firePrompt, promptDelay);
+        const run = runs.snapshot;
+        if (quietly(run)) publishQuietly().then(ok => { if (!ok && runs.snapshot === run && promptable(run)) firePrompt(); });
+        else if (promptable(run)) promptTimer = setTimeout(firePrompt, promptDelay);
       }
     },
     // «Publica el resultat» may show on this results screen (narrow screens then need a second row, main.js
     // resultsReserve()): for the whole screen, so the card doesn't jump when the button goes after publishing
     // the publish prompt opens (or already did) by itself for this results screen: Comparteix follows that, not this
-    get promptsItself() { return shown === 2 && promptable(runs.snapshot); },
+    get promptsItself() { return shown === 2 && promptable(runs.snapshot) && !quietly(runs.snapshot); },
     get publishable() { return service.configured && canWrite && Boolean(runs.snapshot); },
   };
 }

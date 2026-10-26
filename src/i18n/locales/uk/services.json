@@ -44,7 +44,6 @@
   "services.feedback.invalid_message": "Повідомлення має містити від {min} до {max} символів.",
   "services.feedback.offline": "Немає з’єднання. Перевір його і спробуй ще раз.",
   "services.feedback.rate_limit": "Ти надсилаєш забагато повідомлень поспіль. Зачекай трохи і спробуй ще раз.",
-  "services.feedback.unavailable": "Зараз не вдалося надіслати. Спробуй пізніше.",
   "services.share.challenge": "{mula}🏆 Виклик подолано! {pct} влучань на рівні {diff} у танці Mulassa de Valls 🎉",
   "services.share.challengeAlmost": "Майже! Бракує {missing}%",
   "services.share.challengeBeaten": "ВИКЛИК ПОДОЛАНО!",

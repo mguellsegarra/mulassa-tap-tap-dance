@@ -44,7 +44,6 @@
   "services.feedback.invalid_message": "Mezuak {min} eta {max} karaktere artean izan behar ditu.",
   "services.feedback.offline": "Konexiorik ez. Begiratu eta saiatu berriro.",
   "services.feedback.rate_limit": "Mezu asko bidali dituzu jarraian. Itxaron pixka bat eta saiatu berriro.",
-  "services.feedback.unavailable": "Orain ezin izan da bidali. Saiatu geroago.",
   "services.share.challenge": "{mula}🏆 Erronka gaindituta! {pct} asmatze Mulassa de Valls dantzan jarriz 🎉 Maila: {diff}",
   "services.share.challengeAlmost": "Ia-ia! %{missing} falta zaizu",
   "services.share.challengeBeaten": "ERRONKA GAINDITUTA!",

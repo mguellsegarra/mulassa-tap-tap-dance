@@ -44,7 +44,6 @@
   "services.feedback.invalid_message": "Mesajul trebuie să aibă între {min} și {max} caractere.",
   "services.feedback.offline": "Fără conexiune. Verific-o și încearcă din nou.",
   "services.feedback.rate_limit": "Ai trimis multe mesaje la rând. Așteaptă puțin și încearcă din nou.",
-  "services.feedback.unavailable": "Mesajul nu s-a putut trimite acum. Încearcă mai târziu.",
   "services.share.challenge": "{mula}🏆 Provocare reușită! {pct} reușite la {diff}, făcând Mulassa de Valls să danseze 🎉",
   "services.share.challengeAlmost": "Aproape! Îți mai lipsesc {missing}%",
   "services.share.challengeBeaten": "PROVOCARE REUȘITĂ!",

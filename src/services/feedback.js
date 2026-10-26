@@ -21,7 +21,7 @@ const messages = {
   captcha: tr('services.feedback.captcha'),
   rate_limit: tr('services.feedback.rate_limit'),
   offline: tr('services.feedback.offline'),
-  unavailable: tr('services.feedback.unavailable'),
+  unavailable: tr('ui.feedback.sendFailed'),
 };
 const fail = code => new FeedbackError(code, messages[code] ?? messages.unavailable);
 

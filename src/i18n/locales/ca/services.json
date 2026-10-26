@@ -44,7 +44,6 @@
   "services.feedback.invalid_message": "El missatge ha de tenir entre {min} i {max} caràcters.",
   "services.feedback.offline": "Sense connexió. Revisa-la i torna-ho a provar.",
   "services.feedback.rate_limit": "Has enviat molts missatges seguits. Espera una estona i torna-ho a provar.",
-  "services.feedback.unavailable": "Ara mateix no s’ha pogut enviar. Torna-ho a provar més tard.",
   "services.share.challenge": "{mula}🏆 Repte superat! {pct} d’encerts a {diff} fent ballar la Mulassa de Valls 🎉",
   "services.share.challengeAlmost": "Gairebé! Et falta un {missing}%",
   "services.share.challengeBeaten": "REPTE SUPERAT!",

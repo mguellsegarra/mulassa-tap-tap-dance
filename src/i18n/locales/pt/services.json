@@ -44,7 +44,6 @@
   "services.feedback.invalid_message": "A mensagem tem de ter entre {min} e {max} caracteres.",
   "services.feedback.offline": "Sem ligação. Verifica e tenta outra vez.",
   "services.feedback.rate_limit": "Enviaste demasiadas mensagens seguidas. Espera um pouco e tenta outra vez.",
-  "services.feedback.unavailable": "Não foi possível enviar agora. Tenta mais tarde.",
   "services.share.challenge": "{mula}🏆 Desafio vencido! {pct} de acertos em {diff} a fazer dançar a Mulassa de Valls 🎉",
   "services.share.challengeAlmost": "Quase! Faltam {missing}%",
   "services.share.challengeBeaten": "DESAFIO VENCIDO!",

@@ -44,7 +44,6 @@
   "services.feedback.invalid_message": "El mensaje debe tener entre {min} y {max} caracteres.",
   "services.feedback.offline": "Sin conexión. Revísala y vuelve a intentarlo.",
   "services.feedback.rate_limit": "Has enviado muchos mensajes seguidos. Espera un rato y vuelve a intentarlo.",
-  "services.feedback.unavailable": "Ahora mismo no se ha podido enviar. Inténtalo más tarde.",
   "services.share.challenge": "{mula}🏆 ¡Reto superado! {pct} de aciertos en {diff} haciendo bailar a la Mulassa de Valls 🎉",
   "services.share.challengeAlmost": "¡Casi! Te falta un {missing}%",
   "services.share.challengeBeaten": "¡RETO SUPERADO!",

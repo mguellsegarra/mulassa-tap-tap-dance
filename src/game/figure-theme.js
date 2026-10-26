@@ -29,7 +29,9 @@ export function setFigureTheme(variant) { // 'mulassa' | 'drac' | 'bou' (true / 
 const figureTextCache = { mulassa: {}, drac: {}, bou: {} };
 for (const key of Object.keys(themeMessages)) {
   const variant = key.slice(key.lastIndexOf('.') + 1);
-  if (Object.hasOwn(figureTextCache, variant)) figureTextCache[variant][key.slice(8, key.lastIndexOf('.'))] = tr(key);
+  const name = key.slice(8, key.lastIndexOf('.'));
+  if (variant === 'all') for (const v in figureTextCache) figureTextCache[v][name] ??= tr(key); // one text for every figure; a variant key overrides it
+  else if (Object.hasOwn(figureTextCache, variant)) figureTextCache[variant][name] = tr(key);
 }
 export function trf(key, figureId = figTheme.id) {
   if (key === undefined) return undefined; // drumroll input has no label

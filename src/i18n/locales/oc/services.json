@@ -44,7 +44,6 @@
   "services.feedback.invalid_message": "Eth messatge a de tier entre {min} e {max} caractèrs.",
   "services.feedback.offline": "Sense connexion. Revisa-la e torna-ac a provar.",
   "services.feedback.rate_limit": "As enviat fòrça messatges seguits. Demora ua estona e torna-ac a provar.",
-  "services.feedback.unavailable": "Ara madeish non s’a pogut enviar. Torna-ac a provar mès tard.",
   "services.share.challenge": "{mula}🏆 Rèpte superat! {pct} d’encèrts en {diff} hènt a balhar era Mulassa de Valls 🎉",
   "services.share.challengeAlmost": "Gaireben! Te manque un {missing}%",
   "services.share.challengeBeaten": "RÈPTE SUPERAT!",

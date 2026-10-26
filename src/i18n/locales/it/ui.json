@@ -66,7 +66,7 @@
   "ui.controls.skipPractice": "Salta la pratica",
   "ui.feedback.checking": "Verifica…",
   "ui.feedback.send": "Invia",
-  "ui.feedback.sendFailed": "Invio non riuscito. Riprova più tardi.",
+  "ui.feedback.sendFailed": "Al momento l’invio non è riuscito. Riprova più tardi.",
   "ui.feedback.sending": "Invio…",
   "ui.feedback.tooLong": "Massimo {n} caratteri",
   "ui.feedback.tooShort": "Minimo {n} caratteri",

@@ -127,7 +127,7 @@
       "attributionNote": "Els Trabucaires acompanyen l’Ós; són un grup diferenciat de la figura. Es conserva l’identificador històric os-trabucaires-valls."
     },
     {
-      "id": "nans-valls",
+      "id": "nans-valls", "plural": true,
       "name": "Nans",
       "fullName": "Nans de la Ciutat de Valls",
       "town": "valls",
@@ -201,7 +201,7 @@
       "attributionNote": "La UAF gestiona la peça municipal i aporta els aligons. La fitxa documenta la nissaga Tondo com a balladors històrics, sense identificar el ballador actual."
     },
     {
-      "id": "gegants-ciutat-valls",
+      "id": "gegants-ciutat-valls", "plural": true,
       "name": "Gegants i Gegantons",
       "fullName": "Gegants i Gegantons de la Ciutat de Valls",
       "town": "valls",
@@ -279,7 +279,7 @@
       "attributionNote": "La fitxa és la Mulassa, que acompanya els gegants de la Colla Gegantera. Es conserva l’identificador històric gegants-mulassa-reus."
     },
     {
-      "id": "gegants-solsona",
+      "id": "gegants-solsona", "plural": true,
       "name": "Gegants",
       "fullName": "Gegants de Solsona",
       "town": "solsona",
@@ -313,7 +313,7 @@
       "owner": "Confraria de la Mare de Déu del Claustre"
     },
     {
-      "id": "mulassa-solsona",
+      "id": "mulassa-solsona", "plural": true,
       "name": "Mulassa i Antonio Ricu",
       "fullName": "Mulassa i Antonio Ricu",
       "town": "solsona",
@@ -327,7 +327,7 @@
       "owner": "Confraria de la Mare de Déu del Claustre"
     },
     {
-      "id": "aliga-solsona",
+      "id": "aliga-solsona", "plural": true,
       "name": "Àliga i Aligons",
       "fullName": "Àliga i Aligons de Solsona",
       "town": "solsona",
@@ -344,7 +344,7 @@
       "owner": "Confraria de la Mare de Déu del Claustre"
     },
     {
-      "id": "gegants-bojos-solsona",
+      "id": "gegants-bojos-solsona", "plural": true,
       "name": "Gegants Bojos",
       "fullName": "Gegants Bojos de Solsona",
       "town": "solsona",
@@ -432,7 +432,7 @@
       ]
     },
     {
-      "id": "guites-berga",
+      "id": "guites-berga", "plural": true,
       "name": "Guites de la Patum",
       "fullName": "Guites de la Patum",
       "town": "berga",
@@ -463,7 +463,7 @@
       "modelYear": 1756
     },
     {
-      "id": "gegants-olot",
+      "id": "gegants-olot", "plural": true,
       "name": "Gegants",
       "fullName": "Gegants d’Olot",
       "town": "olot",

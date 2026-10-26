@@ -44,7 +44,6 @@
   "services.feedback.invalid_message": "메시지는 {min}~{max}자여야 해요.",
   "services.feedback.offline": "연결이 끊겼어요. 연결을 확인하고 다시 해봐요.",
   "services.feedback.rate_limit": "메시지를 너무 많이 보냈어요. 잠시 뒤에 다시 해봐요.",
-  "services.feedback.unavailable": "지금은 보내지 못했어요. 나중에 다시 해봐요.",
   "services.share.challenge": "{mula}🏆 도전 성공! Mulassa de Valls 춤, {diff}에서 정확도 {pct} 달성했어요 🎉",
   "services.share.challengeAlmost": "거의 다 왔어요! {missing}%만 더요",
   "services.share.challengeBeaten": "도전 성공!",

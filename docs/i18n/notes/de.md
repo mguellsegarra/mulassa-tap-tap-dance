@@ -26,7 +26,7 @@ Formes curtes triades: `SERIE` per RATXA, `HALTEN` per MANTÉN, `TREFFER` per EN
 
 - `ui.board.withArticle.fem` i `ui.board.withArticle.masc`: `{name}` sense article, perquè s'insereix darrere de `mit` i el gènere de les figures no sempre es pot inferir del català. No he canviat el contracte ni els noms.
 - `ui.seasons.ofElided` i `ui.stats.sinceElided`: mateixa construcció que les variants sense elisió; l'alemany no necessita l'elisió catalana. Els mesos es combinen com `Seit {day}. {month} {year}`.
-- `figures.pending.*`: distingeixo singular i plural de la font amb `Diese Figur` / `Diese Figuren`, sense endevinar el gènere dels noms.
+- `figures.pending.default` / `.plural`: distingeixo singular i plural de la font amb `Diese Figur` / `Diese Figuren`, sense endevinar el gènere dels noms.
 - `figures.chant.*`: els crits finals de les tres figures es queden en català original a tots els idiomes.
 - `figures.practice.balloon.word.drac` i `html.legend.carretillesName`: conservo `CARRETILLES` com a terme cultural; la primera explicació d'ajuda el glossa com a `Sprühfeuer`.
 - `figures.invite.text`: glossa breu de `colla`, `gegants` i `bestiari`. A la pàgina del projecte, glosses de `bestiari`, `seguici`, `Fira de Santa Úrsula` i `festa major`; les bromes i bombolles conserven les referències locals sense carregar-les d'explicacions.

@@ -44,7 +44,6 @@
   "services.feedback.invalid_message": "Il messaggio deve avere da {min} a {max} caratteri.",
   "services.feedback.offline": "Nessuna connessione. Controllala e riprova.",
   "services.feedback.rate_limit": "Hai inviato molti messaggi di fila. Aspetta un po’ e riprova.",
-  "services.feedback.unavailable": "Al momento l’invio non è riuscito. Riprova più tardi.",
   "services.share.challenge": "{mula}🏆 Sfida superata! {pct} di centri a {diff} facendo ballare la Mulassa de Valls 🎉",
   "services.share.challengeAlmost": "Quasi! Ti manca un {missing}%",
   "services.share.challengeBeaten": "SFIDA SUPERATA!",

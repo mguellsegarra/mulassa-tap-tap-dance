@@ -62,8 +62,8 @@ Cada figura nova s'afegeix amb una línia a cada registre, i res més a `src/sce
 | Peça | Per a què | On va |
 | --- | --- | --- |
 | Retrat vectorial | La targeta gran del selector | `src/figures/<carpeta>/<clau>-portrait.js`; l'SVG editable, a `.agents/skills/mulassacat-miniatures/assets/` |
-| Retrat de píxels | HUD, ajuda, mode foto, ràdio, temporades | `src/game/figure-portraits.js` (una graella i la paleta) |
-| Silueta | La figura mentre és pendent | dibuixada a mà a `src/ui/pending-silhouettes.js`; si no, se'n calcula una dels píxels |
+| Retrat de píxels | HUD, ajuda, mode foto, ràdio, temporades | `src/game/figure-portraits.js` (una graella i la paleta). No cal mentre la figura és pendent, perquè encara no surt enlloc: es dibuixa quan la figura passa a ser disponible |
+| Silueta | La figura mentre és pendent | dibuixada a mà a `src/ui/pending-silhouettes.js` (i `pending-silhouettes-more.js`), des de les fotos de la mateixa figura; si no, se'n calcula una dels píxels |
 | Icona de redoblament | La llegenda de "Com es juga" | `index.html` (`li.only-<clau>`) i `src/styles/base.css` |
 | Imatge de compartir | La foto de la targeta de compartir | `cardFile` a la fitxa i el tema a `src/hud/share-card.js` |
 | Icones del joc lliure | Les tecles Espai, Q, E i R | `src/ui/photo-icons.js` |
@@ -87,10 +87,11 @@ Copia aquesta llista a la PR i omple-la. Cada línia diu què cal decidir, l'exe
 - [ ] **Clau curta i identificador.** `bou` i `bou-tradicional-valls`. Va a la fitxa (`key`).
 - [ ] **Gènere de l'article.** "la Mulassa", "el Drac". Va a la fitxa (`article`).
 - [ ] **Mida relativa** al selector. Va a `STAND` a `src/game/figures.js`.
-- [ ] **Text de figura pendent**, mentre no es pot jugar. Va a `figures.pending.<id>`.
+- [ ] **Text de figura pendent**, mentre no es pot jugar. Cap clau per figura: surt de `figures.pending.default` (singular) o `figures.pending.plural`, segons el camp `plural: true` de `figure-catalog.json`.
 
 ### Paraules del joc
 - [ ] **Paraules dels botons**: esquerre, dret i tots dos. Mulassa GUA | PA | GUAPA!, Drac CRE | MA | CREMA!, Bou BRA | MA | BRAMA!. Van a `figures.input.*`, `figures.hit.*` i `figures.practice.*.<clau>`.
+- [ ] **Textos per figura (`figures.practice.*`, `figures.chatter.*`)**: una clau `.all` serveix a totes les figures; afegeix `.mulassa|.drac|.bou|<variant>` només si la nova figura ha de dir una altra cosa (el de la variant guanya).
 - [ ] **Colors dels botons**: clar | fosc, distingibles per a qualsevol daltonisme i en gris. Van a `src/game/figure-theme.js`.
 - [ ] **Càntic final**, en tres temps. Bou: "BOU!" / "QUE TOT…" / "HO MOU!". Va a `figures.chant.first|second|last.<clau>`.
 - [ ] **Frases del públic.** "MIRA, EL BOU!", "QUINA FESTA!"… Van a `figures.chatter.*.<clau>`.

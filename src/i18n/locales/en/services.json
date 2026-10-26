@@ -44,7 +44,6 @@
   "services.feedback.invalid_message": "Your message must be {min}–{max} characters long.",
   "services.feedback.offline": "No connection. Check it and try again.",
   "services.feedback.rate_limit": "You’ve sent lots of messages in a row. Wait a while and try again.",
-  "services.feedback.unavailable": "Couldn’t send it right now. Try again later.",
   "services.share.challenge": "{mula}🏆 Challenge beaten! {pct} hits on {diff}, dancing with the Mulassa de Valls 🎉",
   "services.share.challengeAlmost": "Nearly! {missing}% to go",
   "services.share.challengeBeaten": "CHALLENGE BEATEN!",

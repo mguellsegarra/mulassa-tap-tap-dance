@@ -44,7 +44,6 @@
   "services.feedback.invalid_message": "留言须为{min}至{max}个字符。",
   "services.feedback.offline": "网络未连接，请检查后重试。",
   "services.feedback.rate_limit": "你连续发了太多留言，等一会儿再试吧。",
-  "services.feedback.unavailable": "暂时发送失败，请稍后重试。",
   "services.share.challenge": "{mula}🏆挑战成功！我让Mulassa de Valls跳完了{diff}难度，命中率{pct}🎉",
   "services.share.challengeAlmost": "就差一点！还差{missing}%",
   "services.share.challengeBeaten": "挑战成功",

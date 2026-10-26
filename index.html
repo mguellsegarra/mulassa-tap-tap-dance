@@ -263,7 +263,7 @@
   <h2 id="settings-title" data-i18n="html.settingsTitle">Configuració</h2>
   <form id="settings-form" method="dialog" class="sheet-actions">
     <button id="settings-profile" type="button" class="btn btn-secondary" hidden aria-haspopup="dialog" data-i18n="html.profile.aria"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.2" r="3.9"/><path d="M4.6 20.4a7.4 7.4 0 0 1 14.8 0"/></svg>Perfil<span class="sub" data-i18n="html.settingsProfileSub">El teu nom, estadístiques i podis</span></button>
-    <button id="settings-sync" type="button" class="btn btn-secondary" data-i18n="html.settingsSync"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 21h8l-3-17h-2zM12 14l6-7"/></svg>Ajusta la sincronia<span class="sub" id="settings-offset" data-i18n="html.settingsOffset">Ara: 0 ms</span></button>
+    <button id="settings-sync" type="button" class="btn btn-secondary" data-i18n="html.sync"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 21h8l-3-17h-2zM12 14l6-7"/></svg>Ajusta la sincronia<span class="sub" id="settings-offset" data-i18n="html.settingsOffset">Ara: 0 ms</span></button>
     <button id="settings-feedback" type="button" class="btn btn-secondary" aria-haspopup="dialog" data-i18n="html.feedbackTitle"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a8.5 8 0 0 1-12.3 7.2L3.5 20l1.4-4.3A8.5 8 0 1 1 21 11.5z"/><path d="M8.5 11.5h.01M12.5 11.5h.01M16.5 11.5h.01" stroke-width="2.6"/></svg>Bústia de la plaça<span class="sub" data-i18n="html.settingsFeedbackSub">Idees, queixes o felicitacions</span></button>
     <label class="switch-row" for="settings-fps"><span data-i18n="html.settingsFps">Mostra els FPS<span class="sub" data-i18n="html.settingsFpsSub">Fotogrames per segon, en un raconet</span></span><input id="settings-fps" type="checkbox" role="switch"></label>
     <!-- the prompt after a run (src/ui/board-ui.js): on = it opens by itself; off = «No m’ho tornis a recordar» -->
@@ -755,7 +755,7 @@
 <dialog id="sync-menu" class="sheet" tabindex="-1" aria-labelledby="sync-title" data-state="intro">
   <button id="sync-close" type="button" data-i18n-attr="aria-label:html.attr.close" class="sheet-x" aria-label="Tanca"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
   <div class="sheet-body">
-  <h2 id="sync-title" data-i18n="html.syncTitle">Ajusta la sincronia</h2>
+  <h2 id="sync-title" data-i18n="html.sync">Ajusta la sincronia</h2>
   <section class="sync-intro">
     <div class="sync-col">
       <p class="sync-why" data-i18n="html.syncWhy">Si jugues amb auriculars Bluetooth o notes que les notes no quadren amb la música, calibra-ho.</p>
@@ -812,7 +812,7 @@
     <div class="sheet-actions">
       <button id="resume" class="btn btn-primary" data-i18n="html.resume"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 10 7-10 7Z"/></svg>Continua</button>
       <button id="restart" class="btn btn-secondary"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10a9 9 0 1 1 2 9M3 4v6h6"/></svg><span id="restart-label" data-i18n="html.restartLabel">Reinicia</span></button>
-      <button id="pause-sync" class="btn btn-secondary" data-i18n="html.pauseSync"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 21h8l-3-17h-2zM12 14l6-7"/></svg>Ajusta la sincronia</button>
+      <button id="pause-sync" class="btn btn-secondary" data-i18n="html.sync"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 21h8l-3-17h-2zM12 14l6-7"/></svg>Ajusta la sincronia</button>
       <button id="exit" class="btn btn-secondary" data-i18n="html.exit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 8v-2a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-7a2 2 0 0 1-2-2v-2M15 12H3l3-3M6 15l-3-3"/></svg>Torna al menú</button>
     </div>
   </section>

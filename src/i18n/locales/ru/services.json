@@ -44,7 +44,6 @@
   "services.feedback.invalid_message": "В сообщении должно быть от {min} до {max} символов.",
   "services.feedback.offline": "Нет соединения. Проверь его и попробуй снова.",
   "services.feedback.rate_limit": "Слишком много сообщений подряд. Подожди немного и попробуй снова.",
-  "services.feedback.unavailable": "Сейчас не удалось отправить. Попробуй позже.",
   "services.share.challenge": "{mula}🏆 Испытание пройдено! Моя точность — {pct}, уровень {diff}, на площади танцует Mulassa de Valls 🎉",
   "services.share.challengeAlmost": "Почти! Не хватает {missing}%",
   "services.share.challengeBeaten": "ИСПЫТАНИЕ ПРОЙДЕНО!",

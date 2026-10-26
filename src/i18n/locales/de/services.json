@@ -44,7 +44,6 @@
   "services.feedback.invalid_message": "Die Nachricht muss {min} bis {max} Zeichen haben.",
   "services.feedback.offline": "Keine Verbindung. Prüfe sie und versuch’s noch mal.",
   "services.feedback.rate_limit": "Du hast viele Nachrichten auf einmal geschickt. Warte kurz und versuch’s noch mal.",
-  "services.feedback.unavailable": "Senden gerade fehlgeschlagen. Versuch’s später noch mal.",
   "services.share.challenge": "{mula}🏆 Challenge geschafft! {pct} Treffer auf {diff} beim Tanz der Mulassa de Valls 🎉",
   "services.share.challengeAlmost": "Fast! Dir fehlen {missing}%",
   "services.share.challengeBeaten": "CHALLENGE GESCHAFFT!",

@@ -1,6 +1,5 @@
 // Catalog metadata lives in JSON; only the two integrated songs are playable.
 import { tr } from '../i18n/messages.js';
-import figureMessages from '../i18n/locales/ca/figures.json' with { type: 'json' };
 import figureCatalog from './figure-catalog.json' with { type: 'json' };
 import { bestRecord, recordPointsKey, saveRecord } from './records.js';
 import { CURRENT_SCORE_VERSION, DRAC_SCORE_VERSION, BOU_SCORE_VERSION } from './score-scale.js';
@@ -55,8 +54,8 @@ export function saveFigureRecord(store, figure, level, quality, rawScore, combo)
   else store.set(recordKey(figure, level), JSON.stringify({ quality, score: rawScore, combo }));
 }
 
-// Complete locale-owned messages per figure; unknown proposals use the explicit generic message.
-export const aviatText = figure => tr(Object.hasOwn(figureMessages, 'figures.pending.' + figure.id) ? 'figures.pending.' + figure.id : 'figures.pending.default');
+// One message per grammatical number: the catalogue's `plural` flag picks it (gegants, guites), anything else is singular.
+export const aviatText = figure => tr(figure.plural ? 'figures.pending.plural' : 'figures.pending.default');
 // The Bústia's first words, from an «Aviat» card: the figure and its town (most full names already say the town).
 export const aviatDraft = (figure, town) => { const name = figure.fullName || figure.name; return name.includes(town) ? tr('figures.pending.draftName', { name }) : tr('figures.pending.draftTown', { name, town }); };
 export const inviteText = () => tr('figures.invite.text');

@@ -44,7 +44,6 @@
   "services.feedback.invalid_message": "メッセージは{min}～{max}文字にしてね。",
   "services.feedback.offline": "接続がありません。確認してもう一度試してね。",
   "services.feedback.rate_limit": "続けてたくさん送信しています。少し待ってからもう一度試してね。",
-  "services.feedback.unavailable": "今は送信できませんでした。あとでもう一度試してね。",
   "services.share.challenge": "{mula}🏆 チャレンジ達成！Mulassa de Vallsを踊らせて、{diff}でヒット率{pct} 🎉",
   "services.share.challengeAlmost": "惜しい！あと{missing}%",
   "services.share.challengeBeaten": "チャレンジ達成！",

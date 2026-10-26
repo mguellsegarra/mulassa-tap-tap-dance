@@ -12,12 +12,11 @@ const escRect = (x, y, w, h, c) => `<rect x="${x}" y="${y}" width="${w}" height=
 const escPales = (x, y, w, h) => escRect(x, y, w, h, 'or') + [1, 3, 5, 7].map(i => escRect(+(x + i * w / 9).toFixed(2), y, +(w / 9).toFixed(2), h, 'gules')).join('');
 const escCrescent = (x, y, r) => `<path d="M${x - r} ${y - r * 0.2}a${r} ${r} 0 0 0 ${2 * r} 0a${r} ${r * 0.7} 0 0 1 ${-2 * r} 0z" fill="${ESC_T.argent}"/>`;
 const escTower = (x, y, w, h, c) => escRect(x, y + 1, w, h - 1, c) + [0, 2, 4].map(i => escRect(+(x + i * w / 5).toFixed(2), y, +(w / 5).toFixed(2), 1.2, c)).join('');
-const escCross = (cx, cy, arm, t, c) => escRect(cx - t / 2, cy - arm, t, 2 * arm, c) + escRect(cx - arm, cy - t / 2, 2 * arm, t, c);
 // a fleur-de-lis s units tall, centred on (x, y): the middle petal, two curled side petals, the band and the foot
 const escLisSide = '<path d="M.12 .22C.25-.3.85-.55.95-.12c.06.3-.2.48-.42.36.12-.12.06-.3-.12-.24-.14.06-.2.2-.18.34z"/>';
 const escLis = (x, y, s, c) => `<g transform="translate(${x} ${y}) scale(${s / 2})" fill="${ESC_T[c]}"><path d="M0-1C.38-.6.36-.15 0 .25-.36-.15-.38-.6 0-1zM-.12.45 0 .95.12.45z"/>`
   + `${escLisSide}<g transform="scale(-1 1)">${escLisSide}</g><rect x="-.48" y=".24" width=".96" height=".2"/></g>`;
-const escPolar =(n, r, cx, cy, f, turn = 0) => Array.from({ length: n }, (_, i) => { const a = (i / n + turn) * 2 * Math.PI - Math.PI / 2; return f(+(cx + r * Math.cos(a)).toFixed(2), +(cy + r * Math.sin(a)).toFixed(2)); }).join('');
+const escPolar = (n, r, cx, cy, f, turn = 0) => Array.from({ length: n }, (_, i) => { const a = (i / n + turn) * 2 * Math.PI - Math.PI / 2; return f(+(cx + r * Math.cos(a)).toFixed(2), +(cy + r * Math.sin(a)).toFixed(2)); }).join('');
 
 const ESC_ARMS = {
   valls: { shape: 'loz', // de gules, una faixa d'argent

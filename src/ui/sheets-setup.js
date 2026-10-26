@@ -13,7 +13,7 @@ import { setupAccount } from './account-ui.js';
 import { setupSeasons } from './seasons-ui.js';
 import { setupSeasonEnd } from './season-end-ui.js';
 import { setupCard } from './player-card.js';
-import { setupBoard } from './board-ui.js';
+import { setupBoard, QUIET_OFF_KEY } from './board-ui.js';
 import { DECLINES_KEY, OPTOUT_KEY, PERSIST_KEY } from './publish-ui.js';
 import { setupGreeting } from './greeting.js';
 import { setupDeviceHint } from './device-hint.js';
@@ -111,7 +111,7 @@ const mockBoard = Boolean(FINAL) || leaderboardPreviewMode({ hostname: location.
 const mockOpts = mockBoard && { ...demoOptions(location.search), ...FINAL };
 const demoAccount = mockBoard && DEMO && !FINAL && !mockOpts.account; // ?demo: a player with a row, so the board's own row and the rank exist
 if (demoAccount) mockOpts.account = 'verified';
-const finalStore = mockBoard && memoryKeys(store, [ALIAS_KEY, TAG_KEY, DECLINES_KEY, OPTOUT_KEY, PERSIST_KEY, `${ALIAS_KEY}:identity`]);
+const finalStore = mockBoard && memoryKeys(store, [ALIAS_KEY, TAG_KEY, DECLINES_KEY, OPTOUT_KEY, QUIET_OFF_KEY, PERSIST_KEY, `${ALIAS_KEY}:identity`]);
 if (mockOpts?.board === 'me') finalStore.set(ALIAS_KEY, 'ProvaRetall');
 else if (mockOpts?.account && mockOpts.account !== 'new') { // the mock account's profile is this browser's
   finalStore.set(ALIAS_KEY, DEMO_SELF.alias);

@@ -241,12 +241,12 @@ assert(run(`(() => {
   animConfetti(1 / 30);
   return under.out >= 0 && beside.out < 0;
 })()`), 'confetti under her shrinks away, beside her it stays');
-// Overlapping papers on the floor never share a plane (same normal, same height): those z-fought, winking as the camera
-// drifted. A whole pool dropped onto one square metre, every close pair checked.
 // The confetti pool is sized at boot: a later step up the quality ladder asks for more pieces than it holds, and a burst
 // then must throw what there is, not crash (it did, mid-song, on a page that had stepped up past its boot profile).
 assert.doesNotThrow(() => run(`(() => { const saved = renderProfile; setRenderProfile({ ...renderProfile, confetti: conf.length * 2 });
   try { burst(0, 0); spawnConfetti(conf.length * 2, c => c.p.set(0, 5, 0)); } finally { setRenderProfile(saved); } })()`), 'a profile above the boot pool');
+// Overlapping papers on the floor never share a plane (same normal, same height): those z-fought, winking as the camera
+// drifted. A whole pool dropped onto one square metre, every close pair checked.
 const coplanar = run(`(() => {
   for (let i = 0; i < 400; i++) animConfetti(0.05);
   const n = new THREE.Vector3(), m = new THREE.Vector3(); let pairs = 0, same = 0;

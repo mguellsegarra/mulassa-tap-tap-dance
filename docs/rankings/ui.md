@@ -5,7 +5,7 @@ Current rules, moved out of AGENTS.md so they load only when the task needs them
 - The Saló de la fama's estendard (`seasons-ui.js`: a red cloth with the figure's silhouette, hung from a gold rod) and its season name in gold are an approved decorative exception to the colour roles, used nowhere else.
 - Publish prompt («Publica el teu resultat!», `#publish-menu`, publish-ui.js): opens by itself once per eligible run; texts centred. A player with a
   nickname and a live profile here gets no prompt: the same runs (≥ 2 stars) go up by themselves, with nothing on screen (`publish-land.js`
-  `publishQuietly`); if that fails (no session, profile gone, network) the prompt opens as for anyone. On that
+  `publishQuietly`); if that fails (no session, profile gone, network) the prompt opens as for anyone. ⚙ Configuració «Publicació automàtica» (`#settings-quiet-row`, `QUIET_OFF_KEY`), shown only to a player with a nickname here, turns it off: the prompt asks again. On that
   auto opening only, «Ara no» (a decline, ×`MAX_DECLINES` stops it) and quiet «No m’ho tornis a recordar» (`OPTOUT_KEY`, permanent) both
   open Comparteix next. ⚙ Configuració «Proposta de publicar» (`#settings-prompt-row`) shows only while `promptsOn()` is false, with an «Activa» button that clears both.
 - Classificació (`#board-menu`, `ui/board-list.js`; docs/rankings/strategy.md §4): no view tabs (the owner removed «Tots · On soc», 2026-10-21). The title row is a

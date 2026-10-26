@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { readPage } from './page.mjs';
 import { readFileSync } from 'node:fs';
 import { ALIAS_KEY } from '../../src/services/leaderboard-identity.js';
-import { setupBoard } from '../../src/ui/board-ui.js';
+import { setupBoard, QUIET_OFF_KEY } from '../../src/ui/board-ui.js';
 import { suggestAlias, DECLINES_KEY, OPTOUT_KEY, MAX_DECLINES, PERSIST_KEY } from '../../src/ui/publish-ui.js';
 import { deviceRisk, DEVICE_NOTES } from '../../src/ui/profile-notes.js';
 import { normalizeAlias } from '../../src/services/leaderboard-rules.js';
@@ -38,7 +38,7 @@ class El {
 const ids = ['board-menu', 'publish-menu', 'board-rows', 'board-table', 'board-status', 'board-retry', 'board-list-view',
   'board-close',
   'publish-form', 'publish-title', 'publish-summary', 'publish-about', 'publish-temp', 'publish-alias', 'publish-status', 'publish-send',
-  'publish-cancel', 'publish-never', 'settings-prompt-row', 'settings-prompt', 'publish-place', 'publish-as', 'publish-as-name', 'publish-field', 'publish-rule', 'publish-error', 'publish-board',
+  'publish-cancel', 'publish-never', 'settings-prompt-row', 'settings-prompt', 'settings-quiet-row', 'settings-quiet', 'publish-place', 'publish-as', 'publish-as-name', 'publish-field', 'publish-rule', 'publish-error', 'publish-board',
   'results-actions', 'results-publish', 'results-board', 'publish-device', 'publish-recover',
   'board-figure', 'board-figure-pic', 'board-figure-name', 'board-picker', 'board-figures', 'board-main', 'board-place', 'board-jump', 'board-jump-t', 'board-place-sub',
   'board-publish-link', 'board-scroll', 'board-art', 'board-hint', 'board-more', 'board-more-status', 'board-more-btn', 'board-summary', 'board-publish', 'captcha-menu', 'captcha-box',
@@ -656,6 +656,17 @@ const BOARD = page(0, 60, 22);
   const gone = make({ session: true, alias: 'Drac101', prof: null });
   gone.setRun(RUN); gone.board.results(true); await wait(); await wait();
   assert(gone.calls.publish.length === 0 && gone.$('publish-menu').open, 'a profile gone: never quietly, the sheet makes a new one');
+  // ⚙ «Publicació automàtica»: shown only to a named player, on by default; off, the prompt asks as it does anyone
+  { const anon = make(); anon.board.refreshSettings(); assert(anon.$('settings-quiet-row').hidden, 'no nickname here: no switch'); }
+  const off = make({ session: true, alias: 'Drac101' });
+  off.board.refreshSettings();
+  assert(!off.$('settings-quiet-row').hidden && off.$('settings-quiet').checked, 'a nickname here: the switch, on');
+  off.$('settings-quiet').checked = false; off.$('settings-quiet').fire('change');
+  assert.equal(off.mem.get(QUIET_OFF_KEY), '1');
+  off.setRun(RUN); off.board.results(true); await wait(); await wait();
+  assert(off.calls.publish.length === 0 && off.$('publish-menu').open, 'switched off: nothing goes up by itself, the prompt asks');
+  off.$('settings-quiet').checked = true; off.$('settings-quiet').fire('change');
+  assert(!off.mem.has(QUIET_OFF_KEY), 'switched back on');
   // opened by hand (or a weak run): ONE tap, as that alias
   const r = make({ session: true, alias: 'Drac101' });
   r.setRun(WEAK); r.board.results(true); r.board.openPublish(); await wait();

@@ -19,6 +19,7 @@ import { standingOf, podiumOf } from './board-reads.js';
 import { setupPublish, declines, DECLINES_KEY, MAX_DECLINES, OPTOUT_KEY } from './publish-ui.js';
 
 const PROMPT_STARS = 2; // the publish prompt opens by itself only from this many stars
+export const QUIET_OFF_KEY = 'publish-quiet-off'; // ⚙ «Publicació automàtica» off: a named player gets the prompt instead
 // once, after the first publication: ask the browser to keep this site's storage (Chrome decides quietly)
 const askPersist = () => globalThis.navigator?.storage?.persist?.();
 
@@ -80,7 +81,14 @@ export function setupBoard({ focusIn, store = defaultStore, service = leaderboar
   function syncPromptRow() { const row = $('settings-prompt-row'); if (row) row.hidden = promptsOn(); } // the row exists only while the prompt is off
   // ⚙ «Proposta de publicar» → «Activa»: clears the opt-out and the decline count, and the row goes away
   $('settings-prompt')?.addEventListener('click', () => { store.remove(OPTOUT_KEY); store.remove(DECLINES_KEY); syncPromptRow(); });
-  function refreshSettings() { if (service.configured) syncPromptRow(); } // the «Perfil» block is src/ui/profile-ui.js's
+  // ⚙ «Publicació automàtica»: only for a player with a nickname here (the only one it applies to); on unless switched off
+  function syncQuietRow() {
+    const row = $('settings-quiet-row'), sw = $('settings-quiet');
+    if (row) row.hidden = !canWrite || !store.get(ALIAS_KEY);
+    if (sw) sw.checked = !store.get(QUIET_OFF_KEY);
+  }
+  $('settings-quiet')?.addEventListener('change', () => { if ($('settings-quiet').checked) store.remove(QUIET_OFF_KEY); else store.set(QUIET_OFF_KEY, '1'); });
+  function refreshSettings() { if (service.configured) { syncPromptRow(); syncQuietRow(); } } // the «Perfil» block is src/ui/profile-ui.js's
 
   // --- results screen: two DOM buttons under the canvas card
   resultsPublish.addEventListener('click', () => openPublish());
@@ -92,8 +100,8 @@ export function setupBoard({ focusIn, store = defaultStore, service = leaderboar
   // ≥ 2 stars: a weak run never gets asked (its «Publica el resultat» button stays for whoever wants it)
   const worthIt = run => Boolean(canWrite && run && starsFor(quality(run.counts)) >= PROMPT_STARS && online());
   const promptable = run => worthIt(run) && promptsOn();
-  // a nickname already chosen: the same runs go up by themselves instead (publish-ui.js publishQuietly), no prompt
-  const quietly = run => worthIt(run) && Boolean(store.get(ALIAS_KEY));
+  // a nickname already chosen: the same runs go up by themselves instead (publish-land.js publishQuietly), no prompt, unless ⚙ says not to
+  const quietly = run => worthIt(run) && Boolean(store.get(ALIAS_KEY)) && !store.get(QUIET_OFF_KEY);
   function firePrompt() {
     promptTimer = null;
     if (shown !== 2 || runs.published === runs.snapshot || publishMenu.open || boardMenu.open || !canPrompt() || !promptable(runs.snapshot)) return;

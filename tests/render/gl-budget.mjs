@@ -87,10 +87,12 @@ try {
     assert.equal(end.texs, first[`${FIGURES[0]} medium`].texs, 'textures back at the start');
     assert.deepEqual(page.errors, []);
   }
-  for (const figura of ['mulassa', 'drac']) { // in play: the lane, the colla, the effects
+  for (const [figura, id] of [['mulassa', FIGURES[0]], ['drac', FIGURES[1]]]) { // in play: the lane, the colla, the effects
     const page = await open(`&autoplay&from=40&figura=${figura}`);
     await page.keyboard.press('Enter');
     await page.waitForFunction(() => window.__dbg.G.state === 'select', null, { timeout: 30000 });
+    // ?figura opens the selector on its figure a moment later: choosing before that plays the Mulassa
+    await page.waitForFunction(async id => (await import('/src/game/figure-song.js')).selectedFigure.id === id, id, { timeout: 30000 });
     await page.evaluate(() => window.__dbg.choose(1));
     await page.waitForFunction(() => window.__dbg.G.state === 'play', null, { timeout: 30000 });
     for (const name of Object.keys(LEVELS)) { const s = await sample(page, name); out.push(`play ${figura} ${name}: ${s.draws} draws, ${s.calls} calls, ${s.tris} tris`); note('play', name, s); }

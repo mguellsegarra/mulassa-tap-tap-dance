@@ -1,8 +1,8 @@
+// renderHero: the share photo rendered off-screen from the live scene, for the fixed photos (public/share/, share-card.js)
+// and public/og.jpg via __dbg.hero: never on a player's results screen (it crashed some GPUs).
 import { selectedFigure } from '../game/figure-song.js';
 import { confetti } from './confetti.js';
 import { fireworks } from './fx.js';
-// renderHero: the share photo rendered off-screen from the live scene, for the fixed photos (public/share/, share-card.js)
-// and public/og.jpg via __dbg.hero: never on a player's results screen (it crashed some GPUs).
 import * as THREE from 'three';
 import { blocks } from './framing.js';
 import { errors, errorName } from '../services/errors.js';

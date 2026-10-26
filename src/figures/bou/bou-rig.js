@@ -21,6 +21,26 @@ export function buildBouRig() {
     const t = new THREE.Mesh(unit, shirt); t.scale.set(.34, CARRIER_TRUNK, .2); t.visible = false; trunks.push(t);
     for (let k = 0; k < 2; k++) { const a = new THREE.Mesh(unit, shirt); a.scale.set(.09, CARRIER_ARM, .09); a.visible = false; arms.push(a); }
   }
+  // One instanced box mesh draws every carrier part (a colour each; the trunks and arms only while shown). The Mesh
+  // handles stay in the rig for the pose, the tests and the audit, but on a layer the camera never draws.
+  const parts = [], m4 = new THREE.Matrix4(), none = new THREE.Matrix4().makeScale(0, 0, 0), lift = new THREE.Matrix4().makeTranslation(0, .5, 0);
+  const limbs = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshLambertMaterial(), 22);
+  limbs.frustumCulled = false; limbs.instanceMatrix.setUsage(THREE.DynamicDrawUsage); // (instances leave the origin's bounds)
+  const part = (m, foot) => { // pre: the handle's box (a unit box standing on its origin, or a centred one of its size) to the instance's centred unit box
+    const g = m.geometry.parameters; m.layers.set(31); limbs.setColorAt(parts.length, m.material.color);
+    parts.push({ m, foot, pre: foot ? new THREE.Matrix4().makeScale(g.width, g.height, g.depth) : lift });
+  };
+  for (const m of [...legs, ...trunks, ...arms]) part(m);
+  for (const f of feet) for (const m of f.children) part(m, f);
+  function syncLimbs() {
+    parts.forEach(({ m, foot, pre }, i) => {
+      if (!m.visible) return limbs.setMatrixAt(i, none);
+      m.updateMatrix(); m4.multiplyMatrices(m.matrix, pre);
+      if (foot) { foot.updateMatrix(); m4.premultiply(foot.matrix); }
+      limbs.setMatrixAt(i, m4);
+    });
+    limbs.instanceMatrix.needsUpdate = true;
+  }
   const hip = new THREE.Vector3(), ankle = new THREE.Vector3(), knee = new THREE.Vector3(), d = new THREE.Vector3();
   const fwd = new THREE.Vector3(), up = new THREE.Vector3(0, 1, 0);
   const place = (m, a, b) => { d.subVectors(b, a); m.position.copy(a); m.scale.y = d.length(); m.quaternion.setFromUnitVectors(up, d.normalize()); };
@@ -66,7 +86,8 @@ export function buildBouRig() {
         }
       }
     }
+    syncLimbs();
   }
 
-  return {root,body,tail,feet,legs,trunks,arms,poseLegs};
+  return {root,body,tail,feet,legs,trunks,arms,limbs,poseLegs};
 }

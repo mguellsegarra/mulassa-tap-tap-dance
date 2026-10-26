@@ -209,8 +209,8 @@ export function buildBou({ cap = 'a' } = {}) {
   const bandAt = y => bands.find(b => y >= b[0] && y < b[1]) ?? bands.at(-1);
   const rearAt = y => y < B2 - .04 ? zc - lb / 2 + .05 : y < B2 ? zc - (lb + .02) / 2 : zc - (L - tuck(bandAt(y)[0], bandAt(y)[2])) / 2;   // skirt, rim, then each band's rear face
   const dockY = top - .17, dockZ = rearAt(top - .25) - .1;   // 10 cm off the rump's most protruding band: the tail (never swinging forward) keeps clear
-  const dock = new Vox().box(0, dockY - .07, (dockZ + rearAt(dockY) + .03) / 2, .13, .14, rearAt(dockY) + .03 - dockZ, K.hide, 0).mesh();   // the dock, sunk 3 cm into the rump
-  dock.position.y = -.85; rig.body.add(dock);
+  const dock = new Vox().box(0, dockY - .07, (dockZ + rearAt(dockY) + .03) / 2, .13, .14, rearAt(dockY) + .03 - dockZ, K.hide, 0);   // the dock, sunk 3 cm into the rump
+  const shellMesh = shell.children.at(-1); shellMesh.geometry = mergeGeometries([shellMesh.geometry, ...dock.g]);   // drawn with the shell: same frame, never moves
   const LINKS = [[.12, 'hide'], [.13, 'rib'], [.13, 'rib'], [.13, 'rib'], [.1, 'hide'], [.28, 'tuft']];
   // Each link spans exactly its two nodes (overlapping ends crossed their stripes at every bend: flicker), and a hide
   // knuckle a little thinner than any link fills the outside of each bend; its faces sit inside the links' (never one

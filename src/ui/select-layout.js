@@ -55,7 +55,9 @@ export function createSelectLayout({ win, $, root, towns, strip, pending, bar, l
       return sum + el.offsetWidth + (parseFloat(css?.marginLeft) || 0) + (parseFloat(css?.marginRight) || 0);
     }, 0) + gap * Math.max(0, base.length - 1);
     const cw = $('select-carousel').clientWidth, centred = Math.max(0, (cw - width) / 2), left = Math.max(centred, shift);
-    strip.style.setProperty('--strip-inset', `${centred}px`);
+    // Touch: a strip that scrolls anyway (pending cards past the edge) starts at the dock's margin, under the logo, not centred.
+    const all = [...strip.children].filter(el => el.offsetWidth), scrolls = all.reduce((sum, el) => sum + el.offsetWidth, 0) + gap * (all.length - 1) > cw;
+    strip.style.setProperty('--strip-inset', `${!desk && win.matchMedia?.('(pointer: coarse)').matches && scrolls ? 0 : centred}px`);
     strip.style.setProperty('--strip-l', `${left}px`); strip.style.setProperty('--strip-r', `${Math.max(0, cw - width - left)}px`);
     stripLimit = Math.max(0, Math.min(rowEdge(strip), strip.scrollWidth) - strip.clientWidth);
     $('select-carousel').toggleAttribute('data-fits', stripLimit <= 1);

@@ -39,20 +39,23 @@ const open = async query => {
   await page.waitForFunction(() => window.__representation && window.__perfLive, null, { timeout: 60000 });
   return page;
 };
-// Applies a level and samples it: the adaptive monitor may step a slow software page down meanwhile, so a sample that
-// did not land on the asked profile is taken again.
+// Applies a level and samples it: the adaptive monitor may step a slow software page down meanwhile (or, at minimal,
+// restore a futile drop and step down again), so a sample that did not hold the asked profile throughout is taken again.
 const sample = async (page, name) => {
   for (let i = 0; i < 4; i++) {
     const s = await page.evaluate(async ([level, name]) => {
+      const t0 = performance.now();
       window.__representation.quality(level);
       const frame = () => new Promise(r => requestAnimationFrame(r));
       await frame(); await frame();
       let draws = Infinity; // the steady frame: the least of six windows (a one-off burst, like a share render or a busy machine's
       // stalled frame, is not the budget; a real regression stays high in every window)
       for (let w = 0; w < 6; w++) { const d0 = window.__draws; for (let i = 0; i < 3; i++) await frame(); draws = Math.min(draws, Math.ceil((window.__draws - d0) / 3)); }
-      return { ...window.__perfLive(), draws };
+      const switched = (window.__qualityTrace ?? []).some(e => e.at >= t0 && 'to' in e); // dev/perf.js's monitor log
+      return { ...window.__perfLive(), draws, switched };
     }, [LEVELS[name], name]);
-    if (s.quality === name) return s;
+    if (s.switched) console.log(`gl budget: the monitor changed the ${name} profile while sampling; again`);
+    if (s.quality === name && !s.switched) return s;
   }
   throw new Error(`could not hold the ${name} profile`);
 };

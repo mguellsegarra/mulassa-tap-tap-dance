@@ -1,10 +1,10 @@
-// renderHero: the share photo, rendered off-screen from the live scene.
+// renderHero: the share photo rendered off-screen from the live scene, for the fixed photos (public/share/, share-card.js)
+// and public/og.jpg via __dbg.hero: never on a player's results screen (it crashed some GPUs).
 import * as THREE from 'three';
 import { newPose, dancePose, END_BEAT } from '../game/dance.js';
 import { blocks } from './framing.js';
 import { errors, errorName } from '../services/errors.js';
-import { plaza, mula, renderer, FRONT, CAM_AZ, scene, glc, GPU } from './stage.js';
-import { store } from '../platform/storage.js';
+import { plaza, mula, renderer, FRONT, CAM_AZ, scene } from './stage.js';
 import { M } from './mula-motion.js';
 import { insidePlaza } from './cameras.js';
 
@@ -31,25 +31,13 @@ function flatImage(px) { // one colour everywhere (sampled): nothing was drawn
   return true;
 }
 const gpuLost = () => { try { return renderer.getContext().isContextLost() === true; } catch { return false; } };
-// A GPU whose context is lost while (or just after) the photo renders never renders it again on this device: the card
-// draws its sky and plaça instead. An Adreno 618 lost it on every results screen. Keyed by the GPU string: another
-// device, or a driver that reports a new one, tries again.
-const HERO_OFF_KEY = 'share-hero-off', HERO_LOSS_MS = 3000, heroGpu = () => GPU.renderer || 'unknown';
-let heroAt = -Infinity; // when the last photo finished (performance.now)
-glc.addEventListener('webglcontextlost', () => {
-  if (performance.now() - heroAt > HERO_LOSS_MS) return;
-  store.set(HERO_OFF_KEY, heroGpu());
-  errors.breadcrumb('share-hero-off');
-});
 function heroIssue(phase, target, e) {
   if (gpuLost()) return errors.breadcrumb('share-hero-context-lost', { phase, target });
   console.warn('[share] hero render failed', e);
   errors.report('share-hero-failed', { phase, target, name: errorName(e) });
 }
 export function renderHero(w, h) {
-  if (store.get(HERO_OFF_KEY) === heroGpu()) return null;
   if (gpuLost()) { errors.breadcrumb('share-hero-context-lost', { phase: 'context', target: 'none' }); return null; }
-  heroAt = performance.now(); // a loss from here until HERO_LOSS_MS after the last read counts against the photo
   const saved = [], props = plaza.props.map(p => p.mesh.visible);
   mula.root.traverse(o => saved.push([o, o.position.clone(), o.quaternion.clone(), o.scale.clone(), o.visible]));
   let rt = null, out = null, prevTarget = null, phase = 'setup', target = 'none';
@@ -113,6 +101,5 @@ export function renderHero(w, h) {
       rt?.dispose(); out?.dispose(); // restore may throw: release the temporary targets first
       renderer.setRenderTarget(prevTarget);
     } catch (e) { heroIssue('cleanup', target, e); }
-    heroAt = performance.now();
   }
 }

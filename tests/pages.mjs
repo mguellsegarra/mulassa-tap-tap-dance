@@ -41,7 +41,7 @@ console.log('Pages deployment change detection ok');
 
 const song = { audio: 'music/main.mp3?v=abc123', ambient: 'music/menu.mp3?v=def456' };
 const files = ['index.html', '404.html', '_headers', 'favicon.ico', 'favicon-32.png', 'apple-touch-icon.png',
-  'icon-512.png', 'manifest.webmanifest', 'og.jpg', 'assets/index-abc.js', 'music/main.mp3', 'music/menu.mp3',
+  'icon-512.png', 'manifest.webmanifest', 'og.jpg', 'share/photo-story.jpg', 'share/photo-square.jpg', 'assets/index-abc.js', 'music/main.mp3', 'music/menu.mp3',
   'music/mulassa-taiko.wav', 'music/mulassa-taiko.mid', '.DS_Store'];
 const root = await mkdtemp(join(tmpdir(), 'mulassa-pages-'));
 async function fixture(name) {

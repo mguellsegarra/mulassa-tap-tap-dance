@@ -2,7 +2,6 @@
 // this file imports them in the order they must start, wires the input and the sheets' buttons together, and runs the frame loop.
 import './platform/polyfills.js';
 import { errors } from './services/errors.js';
-import * as THREE from 'three';
 import song from './song.json';
 import { frameMonitor } from './platform/render-quality.js';
 import { sectionAt } from './game/chart.js';
@@ -40,7 +39,7 @@ import './hud/banner.js';
 import './hud/results.js';
 import { titleC, titleS, TITLE_FOLLOW, orbitHome, TITLE_SWAY, DRIFT, orbit, pnow, insidePlaza, framePlayCamera, CAMS } from './scene/cameras.js';
 import { PERF, perfSample } from './dev/perf.js';
-import { heroCam, heroQuadMake, renderHero } from './scene/share-capture.js';
+import { renderHero } from './scene/share-capture.js';
 import { autoplay, advance, collapse, judge, press } from './game/judge.js';
 import { practiceTick, finish, songWait, musicLine, startFinal, previewResults, startPractice, endPractice, choose } from './game/flow.js';
 import './ui/pad.js';
@@ -250,32 +249,23 @@ loadMark('module');
 loader.jokes(); // funny lines under the calçot until the plaça is ready
 requestAnimationFrame(() => setTimeout(() => { // one paint first: that line shows while a compile holds the thread
   startAudio(); // the song downloads and decodes (off the main thread) while the shaders compile, all under the cover
-  precompile(true).then(() => { loadMark('shaders'); requestAnimationFrame(frame); });
+  precompile().then(() => { loadMark('shaders'); requestAnimationFrame(frame); });
 }));
 // The audio engine, suspended (the splash's tap resumes it): the song, the menu loop and the applause are made behind
 // the page cover. Made at the first frame they finished on the splash on a slow first load, right under the tap.
 function startAudio() {
   try { audioEngine().ready?.then(() => loadMark('song decoded'), e => errors.breadcrumb('audio-load-failed', audioFailureTags(e))); } catch { /* no Web Audio: made at the tap */ } // the run's start loads it again (a failure there is audio-start-failed)
 }
-// Every program up front, for the screen and (hero) for the share photo's render target: that renders with linear
-// output, i.e. other programs, which cost ~0.45 s on the first Comparteix (desktop at 4x CPU; more on a phone). Run again
-// after a quality step (screen only: the step's own frame is long enough): the shadow map on/off changes every program,
+// Every program up front. Run again after a quality step: the shadow map on/off changes every program,
 // and the hidden ones (confetti, fireworks) would otherwise compile on their first appearance mid-song (a GLOBUS pop,
 // the finale). Never throws; resolves when ready.
-function precompile(hero = false) {
-  const jobs = [], prev = renderer.getRenderTarget?.() ?? null;
-  let rt = null;
+function precompile() {
+  const jobs = [];
   try {
     jobs.push(renderer.compileAsync(scene, camera));
     if (balloonFx) jobs.push(balloonFx.warm(renderer));
-    if (hero) {
-      renderer.setRenderTarget(rt = new THREE.WebGLRenderTarget(1, 1));
-      jobs.push(renderer.compileAsync(scene, heroCam), renderer.compileAsync(heroQuadMake().scene, heroQuadMake().cam));
-    }
-  } catch { /* compiled by the first render that needs them instead */ } finally {
-    if (rt) renderer.setRenderTarget(prev);
-  }
-  return Promise.all(jobs.map(j => Promise.resolve(j).catch(() => {}))).then(() => { rt?.dispose(); });
+  } catch { /* compiled by the first render that needs them instead */ }
+  return Promise.all(jobs.map(j => Promise.resolve(j).catch(() => {})));
 }
 window.__dbg = { get G() { markLeaderboardDebugUse(); return G; }, get M() { markLeaderboardDebugUse(); return M; },
   act: debugAction(act), finish: debugAction(finish), collapse: debugAction(collapse), judge: debugAction(judge), press: debugAction(press),

@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../src');
 const PROVIDED = new Set(`song.json platform/polyfills.js platform/render-quality.js platform/audio.js services/errors.js
-  services/leaderboard-result.js services/share.js game/chart.js game/progress.js game/practice.js game/energy.js game/dance.js
+  services/leaderboard-result.js services/share.js hud/share-card.js game/chart.js game/progress.js game/practice.js game/energy.js game/dance.js
   game/bubble-rules.js hud/stars.js hud/title-layout.js scene/models.js scene/balloon3d.js scene/framing.js scene/orbit.js
   scene/crowd-fx.js ui/board-ui.js ui/profile-ui.js ui/share-ui.js ui/feedback-ui.js ui/sync-sheet.js ui/loader.js ui/sheet-fade.js
   dev/cam-edit.js dev/final-test.js`.split(/\s+/));

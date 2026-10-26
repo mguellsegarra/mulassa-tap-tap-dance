@@ -15,7 +15,7 @@ const rig = (ceiling = 2) => {
   return { sample, run, events, changes, get level() { return level; } };
 };
 {
-  const r = rig(); r.run(3); r.run(9, { miss: 4, cost: 14 });
+  const r = rig(); r.run(3); for (let i = 0; i < 9; i++) r.run(1, { miss: r.level === 2 ? 4 : 0, cost: 14 }); // the drop relieves the load
   assert(r.level < 2, 'sustained drag overload lowers actual quality');
   const low = r.level; r.run(11);
   assert.equal(r.level, low, 'a few smooth frames cannot immediately undo the drop');
@@ -49,6 +49,12 @@ for (const policy of [{ hold: true }, { half: true, hz: 120, fps: 60 }, { lowPow
   assert(low < 2); r.run(120, { hz: 120, cost: 5 }); assert.equal(r.level, 2, '120 Hz recovers with a cost that fits 60 fps');
   const s = rig(); s.run(10, { miss: 4 }); s.run(6, { cost: 12 }); s.run(120, { hz: 120, cost: 9 });
   assert(s.level < 2, 'a frame over 45% of a 60 fps budget is still no recovery evidence at 120 Hz');
+}
+{ // a Galaxy S10 misses ~1 refresh in 6 with any canvas redrawn every frame: a drop that changes nothing is undone
+  const r = rig(); r.run(120, { miss: 6 });
+  assert.equal(r.level, 2, 'misses no profile changes do not keep quality down');
+  assert(r.events.some(e => e.reason === 'futile'), 'the futile drop is reported');
+  r.run(12, { miss: 3, cost: 14 }); assert(r.level < 2, 'a heavier overload than the tolerated misses still lowers quality');
 }
 {
   const r = rig(-1); r.run(90); assert.equal(r.level, -1, 'software renderer ceiling is preserved');

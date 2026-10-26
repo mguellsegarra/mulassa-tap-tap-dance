@@ -1,5 +1,5 @@
 // Quality recovery owns its evidence windows, not the scene. The caller supplies drawn-frame CPU cost and cadence.
-import { frameMonitor } from './render-quality.js';
+import { frameMonitor, SLOW_SHARE } from './render-quality.js';
 
 // A stable cadence is necessary but not proof of GPU headroom. A menu-only one-level trial, followed by the existing
 // overload monitor, tests actual restored work. Failed trials back off (30 s → 5 min); never probe during a song.
@@ -22,7 +22,20 @@ export function adaptiveQuality({ ceiling, level, change, report = () => {} }) {
     change(next); down.reset(); sinceChange = 0; cooldown = 2000; clear();
     report({ time, reason, from, to: next, retry, ...context(), ...evidence });
   };
-  const down = frameMonitor((steps, evidence) => switchTo(Math.max(-1, level() - steps), 'overload', evidence));
+  // Some phones miss a share of refreshes with any canvas redrawn every frame (a Galaxy S10: ~17%, a tiny WebGL clear
+  // included): no profile helps. When the lowest one gains less than the overload threshold over the level the drops
+  // started from, that level is restored and the threshold counts from this device's floor. A drowning one stays down.
+  let drops = null, tolerated = 0; // drops: the level and slow share the current run of drops started from
+  const down = frameMonitor((steps, evidence) => {
+    const share = evidence.slowShare, spiky = evidence.spiky;
+    if (!spiky && share <= tolerated) return;
+    if (drops && level() === -1 && !spiky && share < 0.35 && drops.share - share < SLOW_SHARE) {
+      tolerated = share + SLOW_SHARE; const to = drops.from; drops = null;
+      switchTo(to, 'futile', evidence); return;
+    }
+    drops ??= { from: level(), share };
+    switchTo(Math.max(-1, level() - steps), 'overload', evidence);
+  });
   const reset = (reason = 'reset') => {
     down.reset(); clear(); cooldown = 2000; cadence = 0; lastHold = lastPlay = lastHalf = lastLowPower = null;
     report({ time, reason, level: level() });
@@ -61,7 +74,7 @@ export function adaptiveQuality({ ceiling, level, change, report = () => {} }) {
     good = headroom ? good + elapsed : 0;
     report({ time, reason: 'window', level: level(), good, retry, ...evidence });
     if (trial && sinceChange >= 12000 && headroom) trial = false;
-    if (good >= 12000 && sinceChange >= retry && level() < ceiling) switchTo(level() + 1, 'headroom-trial', evidence);
+    if (good >= 12000 && sinceChange >= retry && level() < ceiling) { drops = null; switchTo(level() + 1, 'headroom-trial', evidence); }
     elapsed = samples = late = costSum = costPeak = 0;
   };
   sample.reset = reset;

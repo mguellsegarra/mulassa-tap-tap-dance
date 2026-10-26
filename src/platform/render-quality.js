@@ -62,7 +62,7 @@ export function renderDpr(profile, width, height, dpr) {
 // does. `play` = false (menus, the pause sheet) counts no spikes; a gap over 1 s (hidden tab, a stall) resets it all.
 // SLOW_SHARE: over a 4 s window, the share of frames that missed a 60 Hz vsync (> 24 ms) that steps quality down. 12% is
 // ~53 fps: a steady judder on the note lane although the fps counter never reads far under 60.
-const SLOW_SHARE = 0.12;
+export const SLOW_SHARE = 0.12;
 const SPIKE = { ms: 50, count: 5, within: 3000 };
 // iOS Low Power Mode (and thermal throttling) caps Safari's rAF at 30 Hz (WebKit AnimationFrameRate.cpp): every frame is
 // 33 ms, all of them read as slow and medium fell straight to minimal. CAP.run frames in a row at a steady ~33 ms suggest

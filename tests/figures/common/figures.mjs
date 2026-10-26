@@ -521,7 +521,7 @@ assert(!/showModal|aviat\.close|aviat-menu|aviat-close/.test(ui));
   // One accent per town: its banner's cloth and its cards'/avatars' tint at one fixed lightness (the owner chose the game's
   // own palette, 2026-10-19). The accents are the banners' agreed colours.
   const css = selectCss();
-  const accent = { valls: '#c8202f', solsona: '#0b8fa8', tarragona: '#8a3d9a', reus: '#8f6340', vilanova: '#10ade3', barcelona: '#b659a2', berga: '#1f3f7a', olot: '#8e2a5c', vilafranca: '#00b09a', lleida: '#7e2236', terrassa: '#8d68c0', manresa: '#d18519', montblanc: '#5f9205', girona: '#3f86b5', molins: '#c55f12', 'sant-sadurni': '#c49a25', mataro: '#227702', tortosa: '#0e985b', sineu: '#696708', vinaros: '#5c52b4', castello: '#397f69', bao: '#00717a', fraga: '#76628f' };
+  const accent = { valls: '#c8202f', solsona: '#0b8fa8', tarragona: '#8a3d9a', reus: '#8b5e3c', vilanova: '#10ade3', barcelona: '#b659a2', berga: '#16306b', olot: '#8e2a5c', vilafranca: '#00b09a', lleida: '#6d1a2d', terrassa: '#8d68c0', manresa: '#2a63b5', montblanc: '#5f9205', girona: '#3f86b5', molins: '#c55f12', 'sant-sadurni': '#c49a25', mataro: '#227702', tortosa: '#0e985b', sineu: '#696708', vinaros: '#5c52b4', castello: '#397f69', bao: '#00717a', fraga: '#76628f' };
   assert.deepEqual(Object.keys(accent).sort(), TOWNS.map(t => t.id).sort(), 'every town has an accent');
   for (const [town, colour] of Object.entries(accent)) {
     assert(css.includes(`:is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="${town}"] { --town: ${colour}; }`), `${town}: banner, cards and avatars share ${colour}`);

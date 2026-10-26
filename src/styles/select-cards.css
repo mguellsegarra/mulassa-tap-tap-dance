@@ -8,16 +8,16 @@
    avatars). The game's own palette, not a colla's shirt or a heraldic tincture: the arms are on the pills. */
 :is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="valls"] { --town: #c8202f; } /* the red of its banner */
 :is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="tarragona"] { --town: #8a3d9a; }
-:is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="reus"] { --town: #8f6340; }
+:is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="reus"] { --town: #8b5e3c; }
 :is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="solsona"] { --town: #0b8fa8; }
 :is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="vilanova"] { --town: #10ade3; }
 :is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="barcelona"] { --town: #b659a2; }
-:is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="berga"] { --town: #1f3f7a; }
+:is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="berga"] { --town: #16306b; }
 :is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="olot"] { --town: #8e2a5c; } /* a mulberry granat: a plain granat read as the reds once toned down */
 :is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="vilafranca"] { --town: #00b09a; }
-:is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="lleida"] { --town: #7e2236; }
+:is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="lleida"] { --town: #6d1a2d; }
 :is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="terrassa"] { --town: #8d68c0; }
-:is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="manresa"] { --town: #d18519; }
+:is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="manresa"] { --town: #2a63b5; }
 :is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="montblanc"] { --town: #5f9205; }
 :is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="girona"] { --town: #3f86b5; }
 :is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="molins"] { --town: #c55f12; }

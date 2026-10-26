@@ -15,16 +15,14 @@ addEventListener('orientationchange', checkOrientation);
 setTimeout(checkOrientation);
 const wantOrient = () => !isTablet() && document.body.classList.contains('view-mode') ? 'landscape' : deviceOrient();
 const inFs = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
-let fsLeft = false, fsBefore = false, exitingFs = false, freeAsked = false; // fsBefore: fullscreen already on when free play began
-// Photo mode on/off (controls.js, body.view-mode already set, inside a tap): free play is always fullscreen on
-// Android, phones locked to landscape; leaving it puts the page back as it was. iOS has no lock: the «gira» cover asks.
+const freeOn = () => document.body.classList.contains('view-mode');
+// Fullscreen is free play's alone, on Android (controls.js, body.view-mode already set, inside a tap): in on entering it,
+// phones locked to landscape; out on leaving it (which also lifts the lock). iOS has no lock: the «gira» cover asks.
 export function photoOrient() {
   checkOrientation();
   if (!COARSE.matches) return;
-  const on = document.body.classList.contains('view-mode');
-  if (on) fsBefore = inFs();
-  if (!inFs()) { if (on) freeAsked = enterFullscreen(); return; } // (it locks once in)
-  if (!on && !fsBefore) { leaveFs(); return; } // free play put it on: off again (which also lifts the lock)
+  if (!freeOn()) { leaveFs(); return; }
+  if (!inFs()) { enterFullscreen(); return; } // (it locks once in)
   if (isTablet()) return;
   try { screen.orientation?.lock?.(wantOrient())?.catch?.(() => {}); } catch { /* no lock here: the cover asks */ }
 }
@@ -33,27 +31,20 @@ export function photoOrient() {
 const APPLE = /iP(hone|ad|od)/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
 function enterFullscreen() {
   const el = document.documentElement;
-  if (!COARSE.matches || APPLE || inFs()) return false;
-  if (navigator.userActivation && !navigator.userActivation.isActive) return false; // only inside a real tap, never from a timer
+  if (!COARSE.matches || APPLE || inFs()) return;
+  if (navigator.userActivation && !navigator.userActivation.isActive) return; // only inside a real tap, never from a timer
   try {
     const req = el.requestFullscreen?.({ navigationUI: 'hide' }) ?? el.webkitRequestFullscreen?.();
     Promise.resolve(req).then(() => screen.orientation?.lock?.(wantOrient())).catch(() => {});
-    return true;
-  } catch { return false; /* not allowed here: play in the page */ }
+  } catch { /* not allowed here: play in the page */ }
 }
-function leaveFs() {
-  exitingFs = true;
-  Promise.resolve(document.exitFullscreen?.() ?? document.webkitExitFullscreen?.()).catch(() => { exitingFs = false; });
-}
-export function goFullscreen() { if (!fsLeft) enterFullscreen(); } // the game's taps: not again once the player left it
+function leaveFs() { if (inFs()) Promise.resolve(document.exitFullscreen?.() ?? document.webkitExitFullscreen?.()).catch(() => {}); }
 for (const ev of ['fullscreenchange', 'webkitfullscreenchange']) document.addEventListener(ev, () => {
-  if (!inFs()) { if (!exitingFs) fsLeft = true; exitingFs = false; }
-  else if (freeAsked && !document.body.classList.contains('view-mode')) leaveFs(); // free play ended before it came in
-  if (inFs()) freeAsked = false;
+  if (!freeOn()) leaveFs(); // free play ended before it came in
   resize();
 });
 // Left it inside free play (back gesture, swipe)? The next tap there goes back in. Bubble phase: the button that
 // ends free play has already taken view-mode off. The stick cancels touchstart (no click): its lift is the tap.
-const backInFree = () => { if (document.body.classList.contains('view-mode') && enterFullscreen()) freeAsked = true; };
+const backInFree = () => { if (freeOn()) enterFullscreen(); };
 document.addEventListener('click', backInFree);
 document.addEventListener('pointerup', e => { if (e.pointerType !== 'mouse' && e.target.closest?.('#photo-touch')) backInFree(); });

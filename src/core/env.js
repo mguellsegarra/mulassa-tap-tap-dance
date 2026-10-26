@@ -5,6 +5,7 @@
 export { Q } from './flags.js';
 import { Q } from './flags.js';
 export const AUTOPLAY = Q.has('autoplay');
+export const JITTER = AUTOPLAY ? Math.max(0, +Q.get('jitter') || 0) : 0; // debug: ?autoplay&jitter=<ms> presses each note that far off the beat (dev/autoplay-jitter.js)
 export const STARS = Q.has('stars') ? Math.max(0, Math.min(3, +Q.get('stars') || 0)) : -1; // debug: open straight on a results card with this many stars
 export const FROM = +Q.get('from') || 0; // debug: start the song at this second
 export const CLICKS = Q.has('clicks'); // debug: tick on every note, to check sync by ear

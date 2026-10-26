@@ -52,7 +52,7 @@ export function drawLane(t) {
       const br = 8 + hit * 1.5, bw = Math.max(0, xe - xh) + 8; // the roll's bar swells on every tap; a pill at any height, its 2 px rim even all round (the carretilla leaves the left end in view)
       H.fillStyle = C.dark; H.beginPath(); H.roundRect(xh - 2, cy - br - 2, bw + 4, 2 * br + 4, br + 2); H.fill();
       H.fillStyle = pp > 0.3 ? C.cream : hit > 0.05 ? '#ffd166' : '#ff9f1c'; H.beginPath(); H.roundRect(xh, cy - br, bw, 2 * br, br); H.fill();
-      const bob = live ? 0 : Math.sin(clock * 6 + n.t) * 1.6, shake = Math.sin(clock * 80) * hit * 2; // waiting: a restless bob; tapped: a jolt
+      const bob = live ? 0 : Math.sin(clock * 6 + n.t) * 1.6, shake = CALM.matches ? 0 : Math.sin(clock * 80) * hit * 2; // waiting: a restless bob; tapped: a jolt
       balloonHead(xh + shake, cy - 3 + bob, 14 * (1 + 0.22 * k + pp * 0.35), k, w.sq, w.rot);
       continue;
     }
@@ -121,7 +121,7 @@ function ringAnim(t) {
   return { r, wide, on, e, miss: on && r.kind === 'miss' };
 }
 function drawRing(t, hx, cy) {
-  const { r, wide, on, e, miss } = ringAnim(t), fl = pulse(G.flash, 0.2), x = hx + (miss ? Math.sin(clock * 90) * 3 * e : 0);
+  const { r, wide, on, e, miss } = ringAnim(t), fl = pulse(G.flash, 0.2), x = hx + (miss && !CALM.matches ? Math.sin(clock * 90) * 3 * e : 0);
   H.fillStyle = 'rgba(20,12,6,0.16)'; H.beginPath(); H.arc(x, cy, RING_R, 0, 7); H.fill();
   H.fillStyle = miss ? `rgba(40,55,95,${0.3 + 0.4 * e})` : 'rgba(20,12,6,0.32)'; H.beginPath(); H.arc(x, cy, NOTE_R, 0, 7); H.fill(); // the socket
   if (fl > 0) { H.fillStyle = `rgba(255,243,214,${fl * 0.35})`; H.beginPath(); H.arc(x, cy, NOTE_R, 0, 7); H.fill(); }
@@ -137,7 +137,7 @@ function drawRing(t, hx, cy) {
   if (miss) { H.strokeStyle = `rgba(20,20,30,${e})`; H.lineWidth = 1.5; H.beginPath(); H.moveTo(x - 9, cy - 10); H.lineTo(x - 2, cy - 1); H.lineTo(x - 6, cy + 3); H.lineTo(x + 4, cy + 11); H.stroke(); } // crack
 }
 function drawRingTop(t, hx, cy, holding) {
-  const { r, wide, on, e, miss } = ringAnim(t), x = hx + (miss ? Math.sin(clock * 90) * 3 * e : 0);
+  const { r, wide, on, e, miss } = ringAnim(t), x = hx + (miss && !CALM.matches ? Math.sin(clock * 90) * 3 * e : 0);
   const fl = pulse(G.flash, 0.2), bt = beatAt(Math.max(0, t)), beatPulse = Math.max(0, 1 - (bt % 1) * 4), squash = pulse(G.tapT ?? -9, 0.12), pp = pulse(G.popT ?? -9, 0.35);
   const barPulse = t > 0 && Math.floor(bt) % 4 === 0 ? beatPulse : 0; // the ring beats with the music, gold and bigger on each bar
   H.strokeStyle = miss ? '#8aa0c8' : 'rgba(255,243,214,0.6)'; H.lineWidth = 1; // thin inner ring: where the note's edge lands

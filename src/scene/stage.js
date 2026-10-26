@@ -45,13 +45,17 @@ export const LIGHT = { sky: '#fff0dc', ground: '#b88a5a', sun: '#ffe6bd' };
 export const hemi = new THREE.HemisphereLight(LIGHT.sky, LIGHT.ground, 1.6);
 scene.add(hemi);
 export const sun = new THREE.DirectionalLight(LIGHT.sun, 2.4);
-sun.position.set(-10, 18, 8);
+const SUN_AT = [-10, 18, 8]; // also where the fronts' painted balcony shadows fall from (buildPlaza's `sun`)
+sun.position.set(...SUN_AT);
 sun.castShadow = true;
 sun.shadow.mapSize.set(renderProfile.shadow || 512, renderProfile.shadow || 512);
-Object.assign(sun.shadow.camera, { left: -26, right: 26, top: 26, bottom: -26, near: 1, far: 60 });
+// The shadow frustum covers the played ground (the dancer, the colla, the ring and the band: within ~12 m) plus a margin,
+// not the façades: the same map then has ~1.7x the texels on what the camera frames.
+const SHADOW_REACH = 15;
+Object.assign(sun.shadow.camera, { left: -SHADOW_REACH, right: SHADOW_REACH, top: SHADOW_REACH, bottom: -SHADOW_REACH, near: 1, far: 60 });
 sun.shadow.bias = -0.0005;
 scene.add(sun);
-export const plaza = buildPlaza({ backdrop: renderProfile.backdrop, balconies: renderProfile.balconies, waving: qualityLevel === 2 });
+export const plaza = buildPlaza({ backdrop: renderProfile.backdrop, balconies: renderProfile.balconies, waving: qualityLevel === 2, sun: SUN_AT });
 scene.add(plaza.group);
 export const cameraTarget = new THREE.Vector3(), camFocus = new THREE.Vector3(0, 1.2, 0), camFocusTarget = new THREE.Vector3();
 export const camXYZ = [0, 0, 0], focusXYZ = [0, 0, 0]; // reused by the prop check in frame()

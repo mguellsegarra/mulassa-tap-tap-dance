@@ -20,10 +20,11 @@ const PROVIDED = new Set(`song-mulassa.json song-drac.json platform/polyfills.js
   core/mock-board.js dev/cam-edit.js dev/final-test.js i18n/load-locale.js i18n/preload.js`.split(/\s+/));
 const IMPORT = /^import .*;\n/gm, LOCAL = /^(?:import|export) (?:.* from )?'(\.[^']+)';/gm;
 const REEXPORT = /^export (?:\*|\{([^}]*)\}) from '[^']+';.*\n/gm;
+const DECL = /^(?:async )?(?:function\*? |class |const |let |var )(\w+)/gm; // a top-level declaration starts in column 0 (the first name of a `let a, b`)
 const renames = names => (names || '').split(',').map(n => n.trim().split(/\s+as\s+/)).filter(n => n.length === 2).map(([a, b]) => `const ${b} = ${a};\n`).join('');
 
 export function loadMainSource(entry = resolve(root, 'main.js')) {
-  const seen = new Set(), out = [];
+  const seen = new Set(), out = [], owner = new Map(); // owner: top-level name -> the module that declared it
   const visit = file => {
     if (seen.has(file)) return;
     seen.add(file);
@@ -32,7 +33,12 @@ export function loadMainSource(entry = resolve(root, 'main.js')) {
       const dep = resolve(dirname(file), spec);
       if (!PROVIDED.has(relative(root, dep))) visit(dep);
     }
-    out.push(`//# sourceURL=${file}\n` + src.replace(/^import (\w+) from '(\.[^']+\.json)'(?: with \{ type: 'json' \})?;$/gm, (_, name, spec) => name === 'song' ? '' : `const ${name} = ${readFileSync(resolve(dirname(file), spec), 'utf8')};`).replace(IMPORT, '').replace(REEXPORT, (_, names) => renames(names)).replace(/^export (default )?/gm, ''));
+    const code = src.replace(/^import (\w+) from '(\.[^']+\.json)'(?: with \{ type: 'json' \})?;$/gm, (_, name, spec) => name === 'song' ? '' : `const ${name} = ${readFileSync(resolve(dirname(file), spec), 'utf8')};`).replace(IMPORT, '').replace(REEXPORT, (_, names) => renames(names)).replace(/^export (default )?/gm, '');
+    for (const [, name] of code.matchAll(DECL)) { // two inlined modules sharing a name is a vm SyntaxError (or a silent overwrite) far from the cause
+      if (owner.has(name) && owner.get(name) !== file) throw new Error(`top-level name "${name}" is declared by both ${relative(root, owner.get(name))} and ${relative(root, file)}: names must be unique across inlined modules`);
+      owner.set(name, file);
+    }
+    out.push(`//# sourceURL=${file}\n` + code);
   };
   visit(entry);
   return out.join('\n');

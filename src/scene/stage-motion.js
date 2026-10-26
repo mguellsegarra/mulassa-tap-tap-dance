@@ -12,6 +12,7 @@ import { PIVOT, S, M, standUp } from './figure-springs.js';
 import { clearManualImpact, expireManual } from './manual-jump.js';
 import { PAIR, DRAC_JUMP, keepClear, takeSolo, animPair } from '../figures/drac/drac-play.js';
 import { FIGURE_SCENES, sceneOf } from './figure-scenes.js';
+import { traitsOf } from '../figures/index.js';
 
 const SPLASH = { pair: PAIR, keepClear };
 let animatedFigureId = selectedFigure.id;
@@ -38,7 +39,7 @@ export function animStage(dt, beat, live = 1) {
   }
   const pair = G.state === 'splash'; // (free play shows one figure at a time: the one driven)
   // M owns the Mulassa in a pair, but the selected figure in the solo menu. Hand the existing Drac walker over.
-  if (pair !== Boolean(PAIR.k) && selectedFigure.id === 'drac-valls' && G.state !== 'play' && G.state !== 'results') {
+  if (pair !== Boolean(PAIR.k) && traitsOf(selectedFigure.id).splashPartner && G.state !== 'play' && G.state !== 'results') {
     if (pair) {
       resetWalker(PAIR.w, M.pos.x, M.pos.y, M.yaw);
       PAIR.x = M.pos.x; PAIR.z = M.pos.y;

@@ -4,9 +4,10 @@ import { PHOTO } from '../game/photo-control.js';
 import { CALM } from '../core/env.js';
 import { G, clock, chip } from '../game/state.js';
 import { FIGURE_WEIGHT } from '../game/figures.js';
+import { traitsOf } from '../figures/index.js';
 
 export let trauma = 0; // camera shake
-export const setTrauma = v => (trauma = v);
+export const setTrauma = v => (trauma = CALM.matches && v > trauma ? trauma : v); // reduced motion: the shake can only decay
 // Manual flight uses exact ballistic integration: the same contact time/speed at 30, 60 and 120 Hz.
 // Return an impact only on the crossing, never on subsequent grounded frames or a paused frame.
 export function stepManualJump(body, dt) {
@@ -39,7 +40,7 @@ export function manualContact(actor, speed) {
 export function manualLandingStrength() {
   if (!manualContext(manualLanding)) { manualLanding = null; return 0; }
   const age = Math.max(clock - manualLanding.time, (performance.now() - manualLanding.startedAt) / 1000);
-  const initial = manualLanding.actor === 'mulassa-valls' ? 0.98 : 0.9;
+  const initial = traitsOf(manualLanding.actor).landing;
   const strength = Math.max(0, initial - age * 1.6);
   if (age < 0 || strength === 0) { manualLanding = null; return 0; }
   return strength;

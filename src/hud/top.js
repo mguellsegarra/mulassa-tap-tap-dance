@@ -112,7 +112,7 @@ function drawEnergy(mx, bx, bw, by, cy) {
   const e = Math.max(0, Math.min(1, G.shownE)), low = G.energy < 0.35, danger = G.energy < 0.15;
   const hue = e > 0.5 ? 50 + (e - 0.5) * 140 : e * 100; // 120 green .. 50 yellow .. 0 red
   const col = `hsl(${hue},85%,${danger ? 55 + 10 * Math.sin(clock * 18) : 52}%)`;
-  const dx = danger ? Math.sin(clock * 47) * 1.2 : low ? Math.sin(clock * 31) * 0.5 : 0;
+  const dx = CALM.matches ? 0 : danger ? Math.sin(clock * 47) * 1.2 : low ? Math.sin(clock * 31) * 0.5 : 0;
   const fk = Math.max(0, 1 - (clock - G.energyT) / 0.6); // refill flash
   const bh = 10; // by: topLayout()
   mulaPortrait(mx + dx, cy, e, fk, low);

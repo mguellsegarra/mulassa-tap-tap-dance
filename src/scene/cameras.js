@@ -12,6 +12,7 @@ import { clock, G } from '../game/state.js';
 import { TAU } from '../core/math.js';
 import { HH, K, W, SAFE, baseFov } from '../hud/canvas.js';
 import { COLLAS, figureRoot } from '../figures/objects.js';
+import { SPLASH_HOST_ID } from '../figures/index.js';
 
 // Remove the previous render's offset before any rig reads the camera. The short impact never enters framing springs.
 let impactCameraX = 0, impactCameraY = 0;
@@ -85,7 +86,7 @@ const shown = (o, root) => { for (; o && o !== root; o = o.parent) if (!o.visibl
 const PAIR_SHOT = { roots: [], visible: false }, ONE = [];
 export function pairShot() {
   PAIR_SHOT.roots.length = 0;
-  if (shown(figureRoot('mulassa-valls'), null)) PAIR_SHOT.roots.push(figureRoot('mulassa-valls'));
+  if (shown(figureRoot(SPLASH_HOST_ID), null)) PAIR_SHOT.roots.push(figureRoot(SPLASH_HOST_ID));
   if (drac?.root && shown(drac.root, null)) PAIR_SHOT.roots.push(drac.root);
   PAIR_SHOT.visible = PAIR_SHOT.roots.length > 0;
   return PAIR_SHOT;

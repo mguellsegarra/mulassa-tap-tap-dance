@@ -4,72 +4,61 @@ import './platform/polyfills.js';
 import { PHOTO } from './game/photo-control.js';
 import { errors } from './services/errors.js';
 import './services/update.js';
-import { song, figureScale, selectedFigure, beatAt, BEAT, FINALE_T } from './game/figure-song.js';
+import { song, selectedFigure, beatAt, BEAT } from './game/figure-song.js';
 import { adaptiveQuality } from './platform/adaptive-quality.js';
 import { waitForWarmup, linkPrograms } from './platform/boot.js';
-import { sectionAt } from './game/chart.js';
-import { judgedCount } from './game/progress.js';
 import { markLeaderboardDebugUse } from './services/leaderboard-result.js';
-import { blocks } from './scene/framing.js';
-import { orbitCancel } from './scene/orbit.js';
-import { rnd } from './scene/models.js';
-import { Q, COARSE, pageActive, playFrom, AUTOPLAY, CALM, STARS } from './core/env.js';
+import { Q, pageActive, CALM, STARS } from './core/env.js';
 import { FINAL } from './dev/final-test.js';
 import { pace, RAWCLOCK, viewClock } from './core/timing.js';
-import { qualityLevel, renderProfile, softwareGl, GPU, renderer, camera, plaza, cameraTarget, camFocus, camFocusTarget, camShift, camShiftX, camXYZ, focusXYZ, scene, setQualityLevel, setCamShift, renderScreen } from './scene/stage.js';
-import { initFigureObjects, figureRoot, hideFigures } from './figures/objects.js';
-import { afterActive, G, chip, clock, songTime, drawT, bigPending, audioEngine, setClock, setDrawT, offsetMs } from './game/state.js';
+import { qualityLevel, renderProfile, softwareGl, GPU, renderer, camera, plaza, scene, setQualityLevel, renderScreen } from './scene/stage.js';
+import { initFigureObjects, hideFigures } from './figures/objects.js';
+import { G, chip, clock, songTime, drawT, audioEngine, setClock, setDrawT, offsetMs } from './game/state.js';
 import { audioFailureTags } from './platform/audio-load.js';
-import { spawnConfetti, burst, animConfetti, setConfettiSettled } from './scene/confetti.js';
+import { animConfetti } from './scene/confetti.js';
 import { applyRenderQuality, activeCrowd } from './scene/quality.js';
-import { resize, hud, HH, K, sizedW, sizedDpr, appHeight, baseFov, W, H, SAFE } from './hud/canvas.js';
+import { resize, hud, HH, K, sizedW, sizedDpr, appHeight, W, H, SAFE } from './hud/canvas.js';
 import { loader } from './ui/handles.js';
 import { sheets } from './ui/sheets.js';
 import { fontsReady, warmups } from './hud/sprites.js';
-import { figTheme } from './game/figure-theme.js';
 import './hud/primitives.js';
 import { balloonView, balloonFx, setBalloonView } from './hud/balloon.js';
 import { M, act } from './scene/figure-springs.js';
-import { trauma, setTrauma } from './scene/manual-jump.js';
 import { animStage, resetMotionImpact } from './scene/stage-motion.js';
-import { PAIR } from './figures/drac/drac-play.js';
-import { lane, playBottom, padEl } from './hud/layout.js';
+import { padEl } from './hud/layout.js';
 import { bubbles, bubble, at } from './hud/bubbles.js';
 import { animCrowd } from './scene/crowd.js';
-import { firework, animFireworks, animFinaleLights } from './scene/fx.js';
+import { animFireworks, animFinaleLights } from './scene/fx.js';
 import { dracFrame } from './figures/drac/drac-show.js';
 import { bouFrame } from './figures/bou/bou-show.js';
 import './hud/lane.js';
 import './hud/top.js';
-import { headline } from './hud/praise.js';
-import { splashS, splashBand } from './hud/title.js';
 import './hud/warm.js';
 import './hud/banner.js';
 import './hud/results.js';
-import { orbit, insidePlaza, frameMenuCamera, lens, easeLensX, clearCameraImpact, applyCameraImpact, pairShot } from './scene/cameras.js';
-import { framePlayCamera, CAMS } from './scene/play-camera.js';
-import { FIGURE_SCENES } from './scene/figure-scenes.js';
-import { BOU_FINALE, bouHolds } from './figures/bou/bou-bills.js';
+import { clearCameraImpact } from './scene/cameras.js';
+import { BOU_FINALE } from './figures/bou/bou-bills.js';
 import { PERF, perfSample, perfReset, qualitySample, drawPerfLine } from './dev/perf.js';
 import { renderHero } from './scene/share-capture.js';
 import { precompile } from './scene/precompile.js';
-import { autoplay, advance, collapse, judge, press } from './game/judge.js';
-import { practiceTick, finish, songWait, musicLine, startFinal, previewResults, startPractice, endPractice, choose } from './game/flow.js';
+import { autoplay, collapse, judge, press } from './game/judge.js';
+import { finish, songWait, musicLine, startFinal, previewResults, startPractice, endPractice, choose } from './game/flow.js';
 import './ui/pad.js';
 import './ui/focus.js';
 import './ui/fullscreen.js';
-import { updateControls, viewMode, viewT, hudBlank, setHudBlank, menuState, steers, setView, freeDance } from './ui/controls.js';
+import { updateControls, viewMode, viewT, hudBlank, setHudBlank, steers, setView, freeDance } from './ui/controls.js';
 import { fpsTick } from './ui/fps.js';
 import { debugAction } from './dev/debug.js';
 import { drawHud } from './hud/draw.js';
 import { watchAudio } from './ui/pause-actions.js';
 import { tickReel, REEL } from './game/showreel.js';
-import { reelIdle, idleBand } from './ui/reel-idle.js';
+import { reelIdle } from './ui/reel-idle.js';
 import { reelDissolve, reelFadeLive } from './ui/reel-fade.js';
 import './ui/backdrop.js';
 import './ui/input.js';
 import './ui/sheets-setup.js';
-import { framePhotoCamera, releasePhotoCamera } from './scene/photo-camera.js';
+import { frameCamera } from './ui/frame-camera.js';
+import { tickGame } from './game/tick.js';
 
 window.__mulassaBootPhase = 'init';
 initFigureObjects(); // both rigs exist before shader warmup and the first frame
@@ -84,17 +73,11 @@ errors.context(() => ({ state: G.state, diff: G.diff, practice: !!G.practice, pa
 
 // ------------------------------------------------------------------ loop
 let last = performance.now(), qualityCost = NaN;
-const SPLASH_BAND = {}; // (main.js frame: the splash's free band, refilled each frame)
 const renderReelFade = cam => renderer.render(scene, cam); // (ui/reel-fade.js: the dissolve's outgoing shot)
 const resetFrameTime = () => { last = null; qualityCost = NaN; pace.reset(); monitorFrames.reset('activity'); perfReset(); clearCameraImpact(); resetMotionImpact(); };
 for (const event of ['blur', 'focus', 'pagehide', 'pageshow', 'resize', 'orientationchange']) addEventListener(event, resetFrameTime);
 document.addEventListener('visibilitychange', resetFrameTime);
 
-// ?cam: the camera editor over the game (src/dev/cam-edit.js): choose a view by eye, copy its numbers, the per-device camera is fitted from them
-// The dev editors load only when asked for (their own chunks): the published game never downloads them
-let CAMED = null;
-if (Q.has('cam')) import('./dev/cam-edit.js').then(m => { CAMED = m.setupCamEdit({ hud, camera, active: () => G.state === 'play' && !G.paused, info: () => ({
-  cw: innerWidth, ch: HH * K, dpr: devicePixelRatio, K, practice: !!G.practice, touch: COARSE.matches, laneBottom: lane().bottom * K, padTop: playBottom() * K }) }); });
 if (Q.has('sizes')) import('./dev/sizes-edit.js').then(m => m.setupSizesEdit()); // ?sizes: each selector figure's height beside the gegants, set by eye (src/dev/sizes-edit.js)
 function frame(now) {
   if (window.__mulassaBootFailure) return; // an explicit retry owns recovery; no hidden game burning battery
@@ -127,48 +110,7 @@ function frame(now) {
   tickReel(G.state === 'select' && !viewMode && !PHOTO.on && !pendingSel && !Q.has('still'), selectedFigure.id, chip?.menuBeat?.(), dt, CALM.matches); // the selector's showreel: her song dance on the menu loop's beat, filmed as a dance film
   if (REEL.cut && !REEL.fresh && PERF?.mode !== 'no3d') { renderScreen(); reelDissolve(renderer.domElement, W * K, HH * K, camera); } // a cut dissolves: the outgoing shot once more, still in its camera, copied to fade out over the new one; a figure change cuts (its old shot already shows the new figure: two changes)
   const reelWide = reelIdle(now); // left untouched, its UI fades
-  if (G.state === 'play' && !G.paused) {
-    beat = beatAt(Math.max(0, vt));
-    const sec = t < playFrom ? G.sec : sectionAt(song, t);
-    G.sec = sec; // solemn (A) or playful (B): drives the dancers' mood
-    if (Math.floor(beat) !== G.clapBeat) { // section B: a few hands on beats 2 and 4, louder on a streak (audio.js clapBurst)
-      G.clapBeat = Math.floor(beat);
-      if (sec === 'B' && (G.clapBeat & 1) && G.combo >= 5 && !G.paused && !G.collapseT) chip.clapBurst?.(0.04 + 0.05 * Math.min(1, G.combo / 30));
-    }
-    // FINAL ESBOJARRAT: the coda until the last hit and the crowd's "eeeeh!" (Taiko's go-go time)
-    // The festa (fireworks, lights, crowd, chant) is for everyone; only the double points need >= 70%.
-    const fin = t >= FINALE_T && t < song.tail + 0.6 && !G.collapseT, dbl = fin && G.guapo >= 70;
-    if (fin && !G.finale) { G.finaleT = clock; chip.sfx('fanfare3'); firework(); firework(); }
-    if (dbl && !G.doublePoints) G.doubleT = clock; // the x2 tag pops when the bonus starts (maybe mid-finale)
-    G.finale = fin; G.doublePoints = dbl;
-    if (fin && Math.floor(beat) !== G.finBeat) { // every beat: a firework, a puff of confetti, a thump
-      G.finBeat = Math.floor(beat);
-      firework();
-      setConfettiSettled(false);
-      spawnConfetti(50, c => { c.p.set(M.pos.x + rnd(-3, 3), rnd(5, 7), M.pos.y + rnd(-3, 3)); c.v.set(rnd(-2, 2), rnd(0, 2), rnd(-2, 2)); });
-      setTrauma(Math.min(1, trauma + 0.12));
-    }
-    if (t >= song.end && G.next >= G.chart.length && !G.hold && !bigPending && !G.eeeh && !G.collapseT) { // the "eeeeh!": grand finale volley, for everyone
-      G.eeeh = true;
-      for (let i = 0; i < 6; i++) afterActive(i * 180, () => { if (G.state === 'play') firework(rnd(-10, 10), rnd(10, 15), rnd(-10, 3), 90); });
-      burst(M.pos.x, M.pos.y, 'end'); // (the Bou: its banknotes, bou-show.js)
-      // the crowd's chant, in its own rhythm: "guapa, guapa... i guapa!"
-      figTheme.chant.forEach(([w, at, dur]) => afterActive(at * 1000, () => { if (G.state === 'play') headline(w, 'rainbow', 4, dur, 0.5); }));
-      setTrauma(1);
-    }
-    if (judgedCount(G.counts) > 1) G.shown += (G.guapo - G.shown) * Math.min(1, dt * 4); // the meter eases, it never jumps
-    else G.shown = G.guapo; // ...except onto the first judged note: it starts from the real value, not 0
-    G.shownE += (G.energy - G.shownE) * Math.min(1, dt * 8); // so does the ànim, a bit quicker
-    if ((AUTOPLAY || G.watch) && !G.collapseT) autoplay(t);
-    if (!G.collapseT) {
-      advance(t);
-      if (G.practice) practiceTick(t);
-      else if (BOU_FINALE.go || t > song.tail + 1 && !bouHolds()) finish('end'); // (the Bou: its banknotes' close-up waits for a tap, and a tap goes on at once)
-    } else if (clock - G.collapseT > 3.5) finish('collapse');
-  } else if (G.state === 'select' && !REEL.on && Math.floor(beat) !== G.lastBeat) { // demo dance on the menu
-    G.lastBeat = Math.floor(beat);
-    if (G.lastBeat % 2 === 0 && !Q.has('still') && !(PHOTO.on && PHOTO.id === 'mulassa-valls')) act('LDRU'[(G.lastBeat / 2) % 4]);
-  }
+  beat = tickGame(t, vt, beat, dt);
   if (PHOTO.on && !steers()) setView(false);
   animStage(dt, beat, live);
   // a pending selection hides both models; photo mode shows the existing pair without changing selection
@@ -184,51 +126,7 @@ function frame(now) {
   bouFrame(dt, vt); // the Bou's disco night, carretilles and banknotes
   animFinaleLights(beat);
 
-  // camera: during play the mulassa sits near the lane, in the free stage above the pad or
-  // the bottom edge, with the crowd around her. A lens shift (view offset) puts her there without tilting the view.
-  const pk = PHOTO.on ? 0 : 0.5 * PAIR.k; // the splash frames the pair; free play follows the figure driven
-  const mx = G.state === 'play' ? M.pos.x : (M.pivot.x * 0.5 + M.pos.x * 0.5) * (1 - pk) + PAIR.x * pk, mz = G.state === 'play' ? M.pos.y : (M.pivot.y * 0.5 + M.pos.y * 0.5) * (1 - pk) + PAIR.z * pk, far = camera.aspect < 1 ? 1.4 : 1; // play follows the body; the menu follows her pivot
-  const VIEW = { side: [9, 2.2, 0], front: [0, 2.5, 8], back: [-3, 3, -8], top: [4, 9, 6] }[Q.get('view')];
-  if (!PHOTO.on) releasePhotoCamera();
-  let shift = 0; // where her centre should sit, in css px below the middle of the screen
-  if (PHOTO.on && !VIEW) { framePhotoCamera(dt); } else if (VIEW) {
-    camera.position.set(mx + VIEW[0], VIEW[1], mz + VIEW[2]);
-    camera.lookAt(mx, 1.4, mz);
-  } else if (G.state === 'splash' || G.state === 'select') { // (cameras.js frameMenuCamera)
-    let aim = 0;
-    if (G.state === 'splash') { // her centre between the splash's logo and its prompt
-      const mid = (HH * 0.2 + splashS() * 1.02 + HH * 0.82 - 14) / 2;
-      aim = Math.max(-0.25 * HH * K, Math.min(0.25 * HH * K, (mid - HH / 2) * K));
-    }
-    const splash = G.state === 'splash'; // the pair, framed whole between the logo and the prompt (cameras.js pairShot)
-    const sel = G.state === 'select', root = splash ? pairShot() : sel && !PAIR.k ? figureRoot(selectedFigure.id) : null; // «QUI BALLA?» frames its figure in the free rect it measured (css px, when it opens or resizes); «mode foto» hides the selector: the whole screen
-    shift = frameMenuCamera(dt, mx, mz, root, splash ? splashBand(SPLASH_BAND) : sel && !viewMode ? (reelWide ? idleBand(sheets.select?.band, W * K, HH * K, SAFE) : sheets.select?.band) : null, aim, REEL.on ? REEL : null);
-  } else if (G.state === 'play') {
-    CAMED?.restoreFov();
-    shift = framePlayCamera(dt, mx, mz);
-    if (CAMED) shift = CAMED.apply(shift, mx, mz, now);
-  } else {
-    camera.position.lerp(insidePlaza(cameraTarget.set(mx * 0.6 + 1.5, 9.5 * far * figureScale(), mz * 0.6 + 11 * far * figureScale()), mx * 0.8, 0.6, mz * 0.8 + 1.1), Math.min(1, dt * 2));
-    camera.lookAt(camFocus.lerp(camFocusTarget.set(mx * 0.8, 0.6 * figureScale(), mz * 0.8 + 1.1), Math.min(1, dt * 2)));
-  }
-  if (G.state !== 'play') CAMED?.idle();
-  if (!menuState() && orbit.ptrs.size) orbitCancel(orbit); // a game started mid-drag: let go
-  if ((G.state !== 'play' || VIEW) && CAMS.live) { // the next game's camera starts from wherever this one is
-    CAMS.live = false;
-    if (camera.fov !== baseFov()) { camera.fov = baseFov(); camera.updateProjectionMatrix(); }
-  }
-  if (!VIEW && !PHOTO.on) for (const f of FIGURE_SCENES) if (f.endShot) shift = f.endShot(dt, shift); // a figure's end shot (the Bou: down to its banknotes, over play and results)
-  const menuCam = menuState() && !PHOTO.on && !VIEW;
-  setCamShift(PHOTO.on || menuCam || G.state === 'play' && !VIEW ? shift : camShift + (shift - camShift) * Math.min(1, dt * 3), menuCam ? lens.x : easeLensX(dt) * !PHOTO.on); // play and menus: already smoothed (photo driving: no shift)
-  if (Math.abs(camShift) > 0.5 || Math.abs(camShiftX) > 0.5) camera.setViewOffset(W * K, HH * K, -camShiftX, -camShift, W * K, HH * K);
-  else if (camera.view?.enabled) camera.clearViewOffset();
-  camXYZ[0] = camera.position.x; camXYZ[1] = camera.position.y; camXYZ[2] = camera.position.z;
-  focusXYZ[0] = mx; focusXYZ[1] = G.state === 'play' ? 1.4 : 1; focusXYZ[2] = mz;
-  for (const p of plaza.props) p.mesh.visible = !blocks(p, camXYZ, focusXYZ); // a tree or lamp in the way: gone
-  if (trauma > 0) { // shake decays; quadratic so small bumps barely move it. During play only a small accent
-    setTrauma(Math.max(0, trauma - dt * 1.6)); // (GUAPA, the finale), added on top: it never feeds the camera's springs
-  }
-  applyCameraImpact(trauma * (1 - BOU_FINALE.k)); // (no shake on the Bou's close-up)
+  frameCamera(dt, now, reelWide);
   const p0 = PERF && performance.now();
   if (PERF?.mode !== 'no3d') { reelFadeLive(renderReelFade, renderer.domElement); renderScreen(); } // (a dissolve: the outgoing shot first, live)
   if (PERF?.mode === 'sync') renderer.getContext().readPixels(0, 0, 1, 1, 6408, 5121, PERF.px ??= new Uint8Array(4)); // RGBA, UNSIGNED_BYTE

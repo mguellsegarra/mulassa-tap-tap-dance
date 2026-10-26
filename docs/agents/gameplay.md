@@ -13,6 +13,7 @@
   otherwise); judging keeps the audio clock. `?rawclock` = the old stepped clock (A/B). Never judge or draw on a raw
   `currentTime` read (scheduling sounds on it is fine).
 - **Judging rules**: judge on |error| in song seconds and keep the signed error for feedback (early/late); never adapt the windows silently. Every input path (touch, key, gamepad) calls `press(dir, e)` with the real event, so its `timeStamp` reaches `songTime`. The practice's speed scales the clock, not the windows: they stay in song time.
+- **Judge core** (`judge-core.js`, pure): the target note (first unresolved within `miss`, so a tie goes to the earlier one), grades, the GUAPA pairing window and partner swallow, hold and balloon verdicts; `judge.js` only applies their effects. A window or tie-rule change must fail `tests/game/judge-core.mjs` and `judge-jitter.mjs` (`?autoplay&jitter=<ms>`, `src/dev/autoplay-jitter.js`). Under reduced motion `setTrauma` (manual-jump.js) refuses to raise the camera shake.
 - **GLOBUS** balloons on the drumrolls: every tap on either side counts.
 - **FINAL ESBOJARRAT** starts at the last coda phrase (`song.finale`): the festa (fireworks, lights, chant) for everyone; double points and the «x2 PUNTS» tag only while ENCERTS ≥ 70% (`G.finale` / `G.doublePoints`).
 - Density targets (notes per 7 s): FÀCIL 6–7 flat; NORMAL 8 → 12; DIFÍCIL 13–15 → 20–25, ~30 only in the finale.

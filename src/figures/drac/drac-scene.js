@@ -8,7 +8,7 @@ import { poseAt, REF_END } from './drac-pose.js';
 import { feetAt } from './drac-steps.js';
 import { placeDance } from './drac-layout.js';
 import { poseCarrier } from './drac-rig.js';
-import { dracFx } from './drac-show.js';
+import { dracFx, dracCrema } from './drac-show.js';
 
 const SHARE_POSE = newDracPose();
 let shareOpacity = 1;
@@ -17,7 +17,7 @@ export const DRAC_SCENE = {
   root: () => drac.root,
   show(on) { drac.root.visible = on; },
   collaTick: dracColla, collaSpots: COLLA_SPOTS, colla: () => colla,
-  animate: animPlayableDrac, leave: leaveSolo,
+  animate: animPlayableDrac, leave: leaveSolo, onBoth: dracCrema,
   hero: {
     scale: DRAC_SIZE.h * DRAC_SCALE / 4.03, // (figure-song.js figureScale)
     fx: () => Object.values(dracFx.objects).flat(),

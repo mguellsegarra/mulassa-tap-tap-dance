@@ -107,6 +107,7 @@ Copia aquesta llista a la PR i omple-la. Cada línia diu què cal decidir, l'exe
 - [ ] **La festa pròpia**: el foc i el sutge del Drac, la discoteca techno i les carretilles del Bou, el confeti de la Mulassa. Va a `src/figures/<carpeta>/` (`-show.js`, `-fx.js`, `-correfoc.js`).
 - [ ] **El toc surrealista**: el Bou que brama amb la llengua fora i acaba amb una pluja de bitllets, la Mulassa del loader que esquiva les caques de gos. Va al ball o a la festa de la figura.
 - [ ] **Què fa al públic**: el sutge que deixa la gent negra, la conga, la culada. Va a `<clau>-crowd.js`.
+- [ ] **Resposta al toc dels dos botons**: les flames del Drac (CREMA), el bram del Bou. Va al ganxo `onBoth` del seu `<clau>-scene.js`.
 - [ ] **Pla final** (opcional): el Bou baixa la càmera als bitllets. Va al ganxo `endShot` (`figures/bou/bou-end-shot.js`).
 
 ### Model, ball i colla
@@ -125,7 +126,8 @@ Copia aquesta llista a la PR i omple-la. Cada línia diu què cal decidir, l'exe
 - [ ] **Acció especial de la E**: les espurnes del Drac. Va a la fitxa (`photoE`).
 - [ ] **"Mou el Bou" i "Ara mous el Bou"**: van a `ui.photo.move<Clau>` i `ui.photo.now<Clau>`, i a la barra de figures de `src/ui/photo-avatars.js`.
 - [ ] **Espai que necessita**: el Drac en vol més. Va a la fitxa (`wideClearance`).
-- [ ] **Estat del moviment manual**: va a `PHOTO.<cos>` a `src/game/photo-control.js`.
+- [ ] **Estat del moviment manual**: va a `PHOTO.<cos>` a `src/game/photo-control.js`, i la fitxa diu quin cos fa servir (`photoBody`) i la sacsejada en aterrar d'un salt (`landing`).
+- [ ] **Pantalla inicial**: si la figura balla a la pantalla d'inici al costat de la Mulassa. Va a la fitxa (`splashHost`, `splashPartner`).
 
 ### Compartir, repte i classificació
 - [ ] **Frases de compartir** per a repte superat, rècord, superat i fallat, amb el seu emoji. Van a la fitxa (`shareLines`, `shareEmoji`) i a `services.share.<clau>.*`.

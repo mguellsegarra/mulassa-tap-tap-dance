@@ -5,7 +5,7 @@
 - Frame/glitch checks and videos: `npm run capture -- --url='http://localhost:5178/?mute&autoplay&from=40' --seconds=20 --vp=393x852 --dpr=2 --touch` (`tools/qa/capture.mjs`). Real GPU (Chrome + Metal), not SwiftShader, whose CPU rendering saturates the machine and fakes hitches; one capture at a time (lock `/tmp/mulassa-capture.lock`, shared with `ui-video.mjs`/`ui-inventory.mjs`, `--soft` there = SwiftShader; the inventory's S24 «gpu» scene picks it by itself). It writes `frames.csv` (rAF ms), `summary.json` (fps, p99, spikes), `video.mp4` and `spike-N.jpg` contact sheets: read the numbers first, the video second. The clock starts once `#loader` is gone, so the dev server's load is not counted.
 - Check mobile first (375×667 and iPhone 16, 393×852) and desktop (e.g. 1280×800). Landscape phones only for the game itself (play, practice, results): they get the rotate cover everywhere else, so never QA menus, sheets or the selector at landscape phone sizes.
 - URL params (dev hosts only; `Q` in `src/core/flags.js` is empty elsewhere, so each is ignored on public hosts, except `?repte` and `?lang`, real features that read their own search):
-  - `?mute` silent; `?autoplay` plays itself; `?from=N` start at N s; `?still` the Mulassa doesn't dance on the selector; `?offset=ms` sync offset.
+  - `?mute` silent; `?autoplay` plays itself (`&jitter=<ms>` presses every note that many ms early or late, deterministic: ~70 ms is BÉ on NORMAL, 300 misses); `?from=N` start at N s; `?still` the Mulassa doesn't dance on the selector; `?offset=ms` sync offset.
   - `?view=side|front|back|top` fixed camera, no HUD; `?camdrac=segueix` the play camera follows the Drac's heading (the old behaviour).
   - `?figura=<key>` the selector opens on that figure (`mulassa`, `drac`, `bou`); `?repte=<pct>-<diff>[-<key>]` a friend's challenge link, also on public hosts.
   - `?festiu=0` the Mulassa's dance without the extra festive sway; `?nobou` the Bou's colla and plaça without the Bou; `?lletres` the helpers' W/N/S/E letters; `?clicks` a tick on every note (sync by ear); `?rawclock` the old stepped audio clock (A/B); `?representation=off` the original crowd cast.
@@ -21,6 +21,6 @@
   `Emulation.setCPUThrottlingRate` 4, `?mute&perf&autoplay&from=40`, then `__dbg.choose(1)`.
   `?perf` also logs the load stages: `[load] module|shaders|first frame|song decoded <ms since navigation>`.
 - The first game ever is the practice; SALTA or `__dbg.startPractice/endPractice` to control it.
-- Judge and clock logic is tested without the scene (pure modules); render tests cover drawing only.
+- Judge and clock logic is tested without the scene (pure modules); render tests cover drawing only. `node tests/run.mjs game/judge game/chart-playable game/calm-trauma` runs the judge core (window edges, ties, GUAPA partner, holds, balloons), the jittered-autoplay grade mix over the three songs, chart gaps/balloon reachability and the reduced-motion shake.
 - Reduced motion: test it with Playwright `reducedMotion: 'reduce'`.
 - Leak checks: repeat the action (a run, a sheet, a quality step) and compare `renderer.info.memory` before and after.

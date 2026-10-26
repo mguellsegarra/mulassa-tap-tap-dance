@@ -39,11 +39,30 @@ files.forEach(visit);
 const CORE_OUT = new Set(['core/anim.js', 'core/timing.js']);
 for (const f of files.filter(f => relative(root, f).startsWith('core/') && !CORE_OUT.has(relative(root, f))))
   for (const d of deps.get(f)) assert(relative(root, d).startsWith('core/'), `${relative(root, f)} imports ${relative(root, d)}: core/ must stay a leaf`);
-// game/'s rules and state never reach the drawing or the DOM (flow.js and judge.js orchestrate the run, so they may);
+// game/'s rules and state never reach the drawing or the DOM (flow.js, judge.js and tick.js orchestrate the run, so they may);
 // the low layers reach a figure's scene objects through figures/objects.js, never one figure's *-objects.js
 const reaches = (f, dir) => (deps.get(f) ?? []).map(d => relative(root, d)).filter(d => d.startsWith(dir));
-for (const f of files.filter(f => relative(root, f).startsWith('game/') && !/\/(flow|judge)\.js$/.test(f)))
+for (const f of files.filter(f => relative(root, f).startsWith('game/') && !/\/(flow|judge|tick)\.js$/.test(f)))
   assert.deepEqual(['hud/', 'scene/', 'ui/'].flatMap(dir => reaches(f, dir)), [], `${relative(root, f)}: game rules and state import no hud/, scene/ or ui/`);
+// the layers below never import the ones above (docs/architecture.md); a ratchet: the known wrong-way edges are listed
+// with their reason, so a new one fails here instead of hardening into the graph
+const FORBID = {
+  i18n: ['game', 'scene', 'hud', 'ui', 'services', 'figures', 'dev'],
+  platform: ['game', 'scene', 'hud', 'ui', 'services', 'figures', 'dev'],
+  services: ['scene', 'hud', 'ui', 'figures', 'dev'],
+  figures: ['hud', 'ui', 'services', 'dev'],
+  scene: ['ui', 'services', 'dev'],
+  hud: ['ui', 'services', 'dev'],
+};
+const ALLOWED_UP = new Set(['services/errors.js', 'figures/index.js']); // any importer: the crash reporter every layer calls; the traits table is data with no imports
+const ALLOWED_EDGES = new Set(`hud/balloon.js>ui/handles.js hud/draw.js>ui/handles.js hud/results.js>ui/sheets.js hud/results.js>services/share.js hud/share-card.js>services/share.js`.split(' ')); // the HUD reads the DOM handles and builds the share text
+for (const f of files) {
+  const from = relative(root, f);
+  for (const d of deps.get(f)) {
+    const to = relative(root, d), dir = to.split('/')[0];
+    if (FORBID[from.split('/')[0]]?.includes(dir) && !ALLOWED_UP.has(to) && !ALLOWED_EDGES.has(`${from}>${to}`)) assert.fail(`${from} imports ${to}: ${from.split('/')[0]}/ must not reach ${dir}/ (docs/architecture.md)`);
+  }
+}
 for (const name of ['scene/stage.js', 'scene/quality.js', 'scene/crowd-build.js'])
   assert.deepEqual(reaches(join(root, name), 'figures/').filter(d => /-objects\.js$/.test(d)), [], `${name} goes round figures/objects.js, not one figure's objects`);
 

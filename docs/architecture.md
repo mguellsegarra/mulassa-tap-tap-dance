@@ -21,13 +21,14 @@ agents touch at once and the lanes that keep them apart. Every folder and file i
 | `hud/` | the 2D canvas | sprite caches | `core`, `game`, `scene` (read only) |
 | `ui/` | DOM, sheets, selector | each sheet's own | everything above |
 | `main.js` | composition, frame loop | `frame()` | everything |
+| `game/tick.js`, `ui/frame-camera.js` | one frame's rules; one frame's camera decision | none (`tick.js` writes `G`) | everything above them: orchestrators called by `frame()` |
 | `dev/` | dev modes | — | everything, through `import()` only |
 
-`tests/build/modules.mjs` enforces no cycles, the line limits, `core/` as a leaf (bar `anim.js` and `timing.js`), `game/` rules and state importing no `hud/`, `scene/` or `ui/` (bar `flow.js` and `judge.js`), and `scene/stage.js`, `quality.js` and `crowd-build.js` reaching figures only through `figures/objects.js`. The other directions are not checked.
+`tests/build/modules.mjs` enforces no cycles, the line limits, `core/` as a leaf (bar `anim.js` and `timing.js`), `game/` rules and state importing no `hud/`, `scene/` or `ui/` (bar `flow.js`, `judge.js` and `tick.js`), `scene/stage.js`, `quality.js` and `crowd-build.js` reaching figures only through `figures/objects.js`, and that nothing imports upward: `i18n/` and `platform/` import no `game/`, `scene/`, `hud/`, `ui/`, `services/` or `figures/`; `services/` no `scene/`, `hud/`, `ui/` or `figures/`; `figures/` no `hud/`, `ui/` or `services/`; `scene/` and `hud/` no `ui/` or `services/`. Its allow-list holds the known exceptions (`services/errors.js`, the crash reporter every layer calls; `figures/index.js`, data with no imports; five `hud/` edges to `ui/handles.js`, `ui/sheets.js` and `services/share.js`). Not checked: `scene/` importing `hud/` (canvas size, layout, bubbles) and `hud/` importing `scene/`, and `game/` importing `services/`.
 
 ## Time
 
-Judging reads the song clock (`songTime`, the de-stepped audio clock); drawing the lane reads the eased `viewClock` (`core/timing.js`); the simulation's `dt` is the frame time clamped to 50 ms, and 0 while paused (`main.js` `frame()`). Nothing judges on `dt` or on the eased clock.
+Judging reads the song clock (`songTime`, the de-stepped audio clock); drawing the lane reads the eased `viewClock` (`core/timing.js`); the simulation's `dt` is the frame time clamped to 50 ms, and 0 while paused (`main.js` `frame()`, which hands it to `game/tick.js`). Nothing judges on `dt` or on the eased clock.
 
 ## Lifetime
 
@@ -46,7 +47,7 @@ Scene objects are built once and toggled (shown, hidden, posed), not rebuilt per
    the motion, the collas' obstacles, the share photo and the end shot go through each figure's hooks
    (`figures/<key>/<key>-scene.js`, listed in `scene/figure-scenes.js`), and what a figure does to the people round it
    (the Drac's soot, the Bou's conga and festa) through `figures/<key>/<key>-crowd.js`, listed in `scene/crowd-effects.js`.
-   Only the splash's Drac beside her (`figures/drac/drac-play.js`) is still named in `scene/stage-motion.js` and `crowd.js`;
+   Only the splash's Drac beside her (`PAIR` in `figures/drac/drac-play.js`) is still imported by `scene/stage-motion.js`, `crowd.js` and `cameras.js`; no figure id is: the splash's host and partner, the PHOTO body, M's owner and the landing shake are `FIGURE_TRAITS` fields. Id-keyed catalogue data stays where it is (`game/figures.js`, `figure-portraits.js`, `PHOTO_CAM.aimY`), and `game/judge.js` still tests `figTheme.id === 'bou'`;
    `tests/figures/common/scenes.mjs` keeps the rest of `scene/` that walks these lists off the figures' folders.
 3. `hud/` reads `ui/` (`balloon`, `draw`, `results`), and `hud/draw.js` imports `figures/bou/bou-bills.js`.
 4. `tests/render/load-main.mjs` concatenates every module into one script, so top-level names must be unique across

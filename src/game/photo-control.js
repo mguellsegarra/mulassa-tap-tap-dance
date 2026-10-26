@@ -16,7 +16,7 @@ export const PHOTO_SPIN = { rate: 9, accel: 60, reach: 6, kick: 7, /* reach: the
 export const PHOTO_CAM = { follow:0.8, followWait:1.2, followRate:1.57, alignTau:0.12, alignRate:6.28, alignRateMoving:9.4, pitch:0.35, zoom:10, minZoom:6, maxZoom:20, minPitch:0.08, maxPitch:1.0, touchSmooth:0.045, aimY:{ 'mulassa-valls':3.3, 'drac-valls':3.2, 'bou-tradicional-valls':2.2 } };
 export const PHOTO_IDS = PLAYABLE_IDS; // Tab's order
 export const nextPhotoId = id => PHOTO_IDS[(PHOTO_IDS.indexOf(id) + 1) % PHOTO_IDS.length];
-export const photoBody = () => PHOTO.id === 'drac-valls' ? PHOTO.drac : PHOTO.id === 'bou-tradicional-valls' ? PHOTO.bou : PHOTO.mula;
+export const photoBody = () => PHOTO[traitsOf(PHOTO.id).photoBody];
 export function clearPhotoKeys() {
   PHOTO.inputEpoch = (PHOTO.inputEpoch || 0) + 1;
   PHOTO.keys.clear(); PHOTO.turn = 0; PHOTO.action = false; PHOTO.mouse = 0; PHOTO.stickX = PHOTO.stickY = PHOTO.lookDX = PHOTO.lookDY = 0; PHOTO.intentX = PHOTO.intentZ = 0;

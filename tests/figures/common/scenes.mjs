@@ -3,6 +3,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { FIGURE_TRAITS } from '../../../src/figures/index.js';
+import { run } from '../../render/game-context.mjs'; // the running game: the scene modules need its DOM and WebGL mocks
 
 const read = p => readFileSync(new URL(`../../../src/${p}`, import.meta.url), 'utf8');
 const registry = read('scene/figure-scenes.js');
@@ -11,8 +12,15 @@ const ids = files.map(f => read(f).match(/^  id: '([a-z-]+)',$/m)?.[1]);
 assert.deepEqual([...ids].sort(), Object.keys(FIGURE_TRAITS).sort(), 'one hook set per figure with a folder (a pending one\'s hooks wait unused)');
 for (const [i, f] of files.entries()) {
   assert(f.startsWith(`figures/${FIGURE_TRAITS[ids[i]].key}/`), `${ids[i]}: its hooks live in its own folder`);
-  const src = read(f);
-  for (const hook of ['root', 'show', 'collaTick', 'collaSpots', 'colla', 'animate', 'hero']) assert.match(src, new RegExp(`\\b${hook}[:(]`), `${ids[i]}: ${hook}`);
+}
+// each registered scene has the shape the shared stage calls (the real objects, not a source grep)
+const KINDS = { root: 'function', show: 'function', collaTick: 'function', collaSpots: 'object', colla: 'function', animate: 'function' };
+const shapes = run(`FIGURE_SCENES.map(f => ({ id: f.id, kinds: Object.fromEntries([${Object.keys(KINDS).map(k => `'${k}'`)}].map(k => [k, typeof f[k]])), heroScale: typeof f.hero?.scale, heroPose: typeof f.hero?.pose }))`);
+assert.deepEqual([...shapes].map(x => x.id), ids, 'the registry lists the hook sets of the figures\' folders, in order');
+for (const x of shapes) {
+  for (const [hook, kind] of Object.entries(KINDS)) assert.equal(x.kinds[hook], kind, `${x.id}: ${hook} is a ${kind}`);
+  assert.equal(x.heroScale, 'number', `${x.id}: hero.scale`);
+  assert.equal(x.heroPose, 'function', `${x.id}: hero.pose`);
 }
 // what each still takes from a figure's folder: the splash's Drac beside the Mulassa
 const ALLOWED = { 'scene/stage-motion.js': ['drac/drac-play.js', 'drac/drac-demo.js'], 'scene/crowd.js': ['drac/drac-play.js'] };

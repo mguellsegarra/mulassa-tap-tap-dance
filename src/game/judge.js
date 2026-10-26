@@ -1,6 +1,7 @@
 // Judging: hits, GUAPA pairs, holds, balloons and the collapse, plus the autoplay and advance ticks.
 import { tr } from '../i18n/messages.js';
 import { quality, eventAge } from './progress.js';
+import { gradeOf, pressTarget, pairWindow, isPartnerPress, pairClosed, HOLD_GRACE, holdVerdict, balloonVerdict, isOverdue } from './judge-core.js';
 import { pick } from '../scene/models.js';
 import { CELEBRATE } from './bubble-rules.js';
 import { drain, warnings } from './energy.js';
@@ -14,13 +15,15 @@ import { trf, figTheme } from './figure-theme.js';
 import { grooveHit, GROOVE, settleGroove, shoveRing } from '../scene/crowd-mood.js';
 import { M, act, stumble } from '../scene/figure-springs.js';
 import { trauma, setTrauma } from '../scene/manual-jump.js';
-import { CALM, AUTOPLAY } from '../core/env.js';
+import { CALM, AUTOPLAY, JITTER } from '../core/env.js';
+import { autoplayError } from '../dev/autoplay-jitter.js';
 import { PRAISE, headline } from '../hud/praise.js';
 import { burst } from '../scene/confetti.js';
 import { balloonFx } from '../hud/balloon.js';
 import { syncPad, haptic } from '../ui/pad.js';
-import { dracCrema, dracPump, dracEndTraca } from '../figures/drac/drac-show.js';
-import { bouBrama } from '../figures/bou/bou-stage.js';
+import { dracPump, dracEndTraca } from '../figures/drac/drac-show.js';
+import { sceneOf } from '../scene/figure-scenes.js';
+import { selectedFigure } from './figure-song.js';
 import { traitsByKey } from '../figures/index.js';
 
 export function collapse() {
@@ -148,27 +151,25 @@ function bellRing(t0, k, big) {
 function endBalloon(n) { // time's up: any pop is perfect, half-inflated still good
   if (dracEndTraca(n)) haptic('big'); // the TRO lands on the song clock, not on a tap: Android's sticky activation still lets it vibrate
   n.detail = n.count >= n.need ? tr('game.detail.taps', { count: n.count }) : n.count ? DETAIL.faster : DETAIL.silent;
-  judge(n, n.count >= n.need ? 'perfect' : n.count * 2 >= n.need ? 'good' : 'miss');
+  judge(n, balloonVerdict(n.count, n.need));
   if (G.practice && n.count) headline(tr('game.pop.taps', { count: n.count }), n.count >= n.need * 2 ? 2 : n.count >= n.need ? 1 : 0, 3, 1.4, 0.5); // the tally wins over its own PAM!
 }
-// GUAPA (Taiko's big notes, GUA + PA): on every level it wants both buttons, the second within bothWin() of the
+// GUAPA (Taiko's big notes, GUA + PA): on every level it wants both buttons, the second within pairWindow() of the
 // first (Space is both): double points and the GUAPA! burst, timing judged on the first press. One button alone
 // is an ERROR once the window closes. FÀCIL just gets a wider window. The partner press is always
 // swallowed so it cannot eat the next note.
-const bothWin = () => (G.diff === 0 ? 0.15 : 0.08);
 function guapaHit(n) {
   n.gran = true;
   act('B');
   G.score += n.pts;
   chip.sfx('gran');
-  dracCrema(); // the Drac: the CREMA (flames and smoke)
-  if (figTheme.id === 'bou') bouBrama(); // the Bou: squashed, mouth wide, tongue out
+  sceneOf(selectedFigure.id)?.onBoth?.(); // the figure's own answer (the Drac's CREMA flames, the Bou's brama)
   ringFx('gran', C.gold, trf('hit.both'));
   setTrauma(Math.min(1, trauma + 0.15));
 }
 function settleBig(t) { // the pairing window closed with one button only
   const bp = bigPending;
-  if (!bp || t - bp.t <= bothWin()) return;
+  if (!pairClosed(bp, t, G.diff)) return;
   setBigPending(null);
   if (bp.done) return;
   bp.n.detail = DETAIL.both;
@@ -177,7 +178,6 @@ function settleBig(t) { // the pairing window closed with one button only
 // MANTÉN (holds, NORMAL and DIFÍCIL): the head is a tap; then keep its button down until the end of the tail.
 // While held the tail is eaten at the ring with a steady trickle of points; the tail is judged once, when you
 // let go or it ends: 90%+ held PERFECTE, half BÉ, less ERROR. A hold is two judgements, head and tail.
-const HOLD_GRACE = 0.12; // letting go this close to the end counts as holding to the end
 function endHold(n, kind, detail = '') {
   n.tail = kind;
   if (G.hold?.n === n) G.hold = null;
@@ -195,10 +195,10 @@ export function settleHold(t) {
     if (clock - (h.sparkT ?? -9) > 0.05) { h.sparkT = clock; ringSparks(3, Math.random() < 0.4 ? C.gold : Math.random() < 0.5 ? DIRC[n.input] : DIRLT[n.input], 26); }
   }
   if (held && t < n.end) return;
-  const frac = t >= n.end - HOLD_GRACE ? 1 : (h.got - n.t) / len; // let go early: judged on what was held
+  const { frac, kind, more } = holdVerdict(n, h.got, t); // let go early: judged on what was held
   if (frac < 1) n.dropAt = h.got; // the rest of the tail greys out
-  endHold(n, frac >= 0.9 ? 'perfect' : frac >= 0.5 ? 'good' : 'miss', frac >= 0.9 ? '' : frac >= 0.5 ? DETAIL.holdMore : DETAIL.hold);
-  if (frac >= 0.9) { ringFx('gran', DIRC[n.input]); G.holdDone = { t0: clock, dir: n.input }; if (G.practice) headline(tr('game.pop.held'), 0, 3, 0.9); } // held to the end: burst; the practice also names it
+  endHold(n, kind, more && DETAIL[more]);
+  if (kind === 'perfect') { ringFx('gran', DIRC[n.input]); G.holdDone = { t0: clock, dir: n.input }; if (G.practice) headline(tr('game.pop.held'), 0, 3, 0.9); } // held to the end: burst; the practice also names it
 }
 export function releaseAll() { down.keys.clear(); down.ptr.clear(); syncPad(); if (G.state === 'play' && !G.paused) settleHold(songTime()); }
 // e: the input event. A tap is judged at its timeStamp on the de-stepped song clock: one that waited behind a long
@@ -211,18 +211,14 @@ export function press(dir, e) {
   if (bl) { pump(bl); return; } // never a wrong move, never spills onto the next note
   settleBig(t);
   const bp = bigPending;
-  if (bp && dir !== bp.dir && dir !== 'P' && (dir === 'L' || dir === 'R')) { // the partner press of a GUAPA pair
+  if (isPartnerPress(bp, dir)) { // the partner press of a GUAPA pair
     setBigPending(null);
     if (!bp.done) { bp.n.detail = bp.detail; judge(bp.n, bp.kind); guapaHit(bp.n); }
     return;
   }
-  for (let i = G.next; i < G.chart.length; i++) {
-    const n = G.chart[i];
-    if (n.t - t > WIN.miss) break;
-    if (n.hit || n.balloon || n === bp?.n) continue;
-    const dt = Math.abs(t - n.t);
-    if (dt > WIN.miss) continue;
-    const kind = dt <= WIN.perfect ? 'perfect' : dt <= WIN.good ? 'good' : 'miss', detail = dt <= WIN.perfect ? '' : t < n.t ? DETAIL.early : DETAIL.late;
+  const hitNote = pressTarget(G.chart, G.next, t, WIN, bp?.n);
+  if (hitNote) {
+    const { n, kind } = hitNote, detail = kind === 'perfect' ? '' : hitNote.early ? DETAIL.early : DETAIL.late;
     if (n.big) {
       if (kind === 'miss' || dir === 'P') { // a timing miss or Space: judged right away
         n.detail = detail;
@@ -254,10 +250,12 @@ export function autoplay(t) {
     const n = G.chart[i];
     if (n.hit) continue;
     if (!n.balloon) { // both buttons on a GUAPA, and holds kept down to the end
-      if (!n.big) act(n.input); // a GUAPA's accent comes from guapaHit
-      judge(n, 'perfect');
-      if (n.big) guapaHit(n);
-      if (n.end) G.hold = { n, got: n.t, pts: 0, auto: true };
+      const e = autoplayError(i, JITTER), kind = gradeOf(Math.abs(e), WIN); // ?jitter: a press that far off the beat
+      if (kind !== 'miss' && !n.big) act(n.input); // a GUAPA's accent comes from guapaHit
+      if (e) n.detail = Math.abs(e) > WIN.miss ? DETAIL.silent : kind === 'perfect' ? '' : e < 0 ? DETAIL.early : DETAIL.late;
+      judge(n, kind);
+      if (n.big && kind !== 'miss') guapaHit(n);
+      if (n.end && kind !== 'miss') G.hold = { n, got: n.t, pts: 0, auto: true };
       continue;
     }
     while (n.count < (Math.min(t, n.end - HANDOFF) - n.t) * 12) pump(n); // mashes at a human 12 taps/s
@@ -270,7 +268,7 @@ export function advance(t) { // time moves on: close GUAPA pairs and holds, judg
     const n = G.chart[G.next];
     if (n === bigPending?.n) break; // still waiting for its second button
     if (!n.hit && n.balloon && t >= n.end) endBalloon(n);
-    else if (!n.hit && !n.balloon && t - n.t > WIN.miss) { n.detail = DETAIL.silent; judge(n, 'miss'); }
+    else if (!n.hit && !n.balloon && isOverdue(n, t, WIN)) { n.detail = DETAIL.silent; judge(n, 'miss'); }
     if (n.hit) G.next++; else break;
   }
 }

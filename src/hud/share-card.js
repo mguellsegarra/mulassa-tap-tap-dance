@@ -9,6 +9,17 @@ import { SITE_LABEL, CARD_FILE } from '../services/share.js';
 import { traitsOf } from '../figures/index.js';
 
 export const PHOTO = { story: [1104, 988], feed: [1104, 988], og: [1560, 630] };
+// The photos are fixed files, one per figure (story and feed frame the same 1104×988), not a render of the live scene:
+// rendering one on the results screen crashed some GPUs (an Adreno 618 on every game). Made again with
+// `__dbg.hero(1104, 988, id).toDataURL('image/jpeg', 0.9)` on a desktop's results screen (?final), saved as
+// public/share/<figure id>.jpg (og only for public/og.jpg). Loaded once; null (the card's stand-in) when it can't be.
+const photos = {};
+export const loadPhoto = figureId => (photos[figureId] ??= typeof Image === 'undefined' ? Promise.resolve(null) : new Promise(resolve => {
+  const img = new Image();
+  img.onload = () => resolve(img);
+  img.onerror = () => { delete photos[figureId]; resolve(null); }; // the next card tries again
+  img.src = `share/${figureId}.jpg`;
+}));
 const CARD_FONT = fontStack("'Baloo 2', sans-serif");
 const PAPER = '#fff4df';
 const CARD_THEMES = {

@@ -376,6 +376,8 @@
   "ui.lang.title": "Sprache",
   "ui.webgl.unavailable": "Dein Browser kann das Spiel nicht in 3D zeigen. Aktualisiere ihn oder öffne es in Chrome oder Safari.",
   "ui.webgl.title": "Ups! Das Spiel kann nicht angezeigt werden",
+  "ui.webgl.lostTitle": "Ups! Das Spiel wurde angehalten",
+  "ui.webgl.lostText": "Dein Handy zeigt das Spiel nicht mehr in 3D. Versuch es noch einmal.",
   "ui.board.jumpTopShort": "Nach oben",
   "ui.board.jumpMeShort": "Zu meiner Zeile",
   "ui.board.jumpTopAria": "Geh zum Anfang der Rangliste",

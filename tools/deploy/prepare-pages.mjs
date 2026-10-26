@@ -6,7 +6,8 @@ import { UNRELEASED_IDS } from '../../src/figures/index.js';
 const OMIT = new Set(['music/mulassa-taiko.wav', 'music/mulassa-taiko.mid', 'music/drac-taiko.mid', '.DS_Store']);
 // A root 404 disables Pages' SPA fallback: unknown URLs must not serve the game with HTTP 200.
 const REQUIRED = ['index.html', '404.html', '_headers', 'favicon.ico', 'favicon.svg', 'favicon-32.png',
-  'apple-touch-icon.png', 'icon-512.png', 'manifest.webmanifest', 'og.jpg']; // og.jpg: index.html's og:image / twitter:image
+  'apple-touch-icon.png', 'icon-512.png', 'manifest.webmanifest', 'og.jpg', // og.jpg: index.html's og:image / twitter:image
+  'share/mulassa-valls.jpg', 'share/drac-valls.jpg']; // the share card's fixed photos (share-card.js loadPhoto)
 
 // Reject unexpected public files rather than accidentally publishing sources or server code.
 export async function preparePages(directory, song) {
@@ -47,6 +48,7 @@ export async function preparePages(directory, song) {
       || name === 'version.json' // vite.config.js buildStamp: the woken app's update check
       || name === 'uaf-logo.jpg' // /projecte/'s credits: the Unió Anelles de la Flama logo
       || name === 'textures/bitllet-bou.png' // the Bou's banknote (figures/bou/bou-bills.js)
+      || name === 'share/bou-tradicional-valls.jpg' // the Bou's share photo, once it is released
       || ['robots.txt', 'sitemap.xml', 'llms.txt', 'index.md', 'projecte/index.html', 'projecte/index.md'].includes(name); // tools/deploy/seo-pages.mjs + public/
     if (!allowed) throw new Error(`Unexpected deployment file: ${name}`);
     if ((await stat(resolve(root, name))).size > 25 * 1024 * 1024) {
@@ -62,9 +64,9 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
   const dist = fileURLToPath(new URL('../../dist', import.meta.url));
   const read = async name => JSON.parse(await readFile(new URL(`../../src/${name}`, import.meta.url), 'utf8'));
   const songs = [await read('song-mulassa.json'), await read('song-drac.json')];
-  // an unreleased figure (src/figures/index.js) ships neither its song's audio nor its textures
+  // an unreleased figure (src/figures/index.js) ships neither its song's audio nor its textures nor its share photo
   if (UNRELEASED_IDS.has('bou-tradicional-valls')) {
-    for (const name of [(await read('song-bou.json')).audio.split('?')[0], 'textures/bitllet-bou.png']) await rm(resolve(dist, name), { force: true });
+    for (const name of [(await read('song-bou.json')).audio.split('?')[0], 'textures/bitllet-bou.png', 'share/bou-tradicional-valls.jpg']) await rm(resolve(dist, name), { force: true });
   } else songs.push(await read('song-bou.json'));
   const files = await preparePages(dist, songs);
   console.log(`Pages static artifact ready: ${files.length} files; no Functions or Workers.`);

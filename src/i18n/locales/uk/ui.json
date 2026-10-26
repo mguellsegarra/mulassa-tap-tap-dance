@@ -394,6 +394,8 @@
   "ui.lang.title": "Мова",
   "ui.webgl.unavailable": "Твій браузер не може показати гру в 3D. Онови його або відкрий гру в Chrome чи Safari.",
   "ui.webgl.title": "Ой! Не вдалося показати гру",
+  "ui.webgl.lostTitle": "Ой! Гра зупинилася",
+  "ui.webgl.lostText": "Телефон перестав показувати гру в 3D. Спробуй ще раз.",
   "ui.board.jumpTopShort": "Нагору",
   "ui.board.jumpMeShort": "До мого рядка",
   "ui.board.jumpTopAria": "Перейди на початок рейтингу",

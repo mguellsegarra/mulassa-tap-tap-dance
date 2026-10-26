@@ -7,7 +7,7 @@ import { tr } from '../i18n/messages.js';
 import { lang } from '../i18n/locale.js';
 import { DIFFS } from '../game/chart.js';
 import { shareText, challengeUrl, challengeResult, bragWorthy, shareMode, linkMode, shareLinks, isCancel } from '../services/share.js';
-import { PHOTO, drawCard, cardAlt, toJpeg, loadCardFonts } from '../hud/share-card.js';
+import { drawCard, cardAlt, toJpeg, loadCardFonts } from '../hud/share-card.js';
 import { ALIAS_KEY, savedName, displayName } from '../services/leaderboard-identity.js';
 import { errors } from '../services/errors.js';
 
@@ -30,7 +30,7 @@ export function setupShare({ focusIn, restore = () => {}, hero = () => null, sta
   let rank = null, run = null, challenge = null, format = ['square', 'feed'].includes(store.get(FORMAT_KEY)) ? 'feed' : 'story';
   // file: the last card made; fresh: it matches what the sheet now shows (a redraw after the nickname / the format
   // makes it stale until the new one is ready); tapped: a tap on the primary waiting for that new card
-  let file = null, fresh = false, tapped = false, previewUrl = '', heroes = {}, req = 0, shownKey = '';
+  let file = null, fresh = false, tapped = false, previewUrl = '', photo = null, req = 0, shownKey = '';
   let named = ''; // the name the card being drawn took ('' until drawn)
   const nameNow = () => (nick.checked && !nickRow.hidden ? savedName(store) : null); // as the boards show it: «nom#1234», or the check
   const data = () => {
@@ -59,28 +59,22 @@ export function setupShare({ focusIn, restore = () => {}, hero = () => null, sta
   }
   async function prepare() { // the card for the current format; a newer request (or a closed sheet) wins
     const r = ++req, f = format, d = data();
-    // redrawing only the card over a photo already made (the nickname) leaves the button exactly as it is (label,
-    // icon, state): no flash of «Preparant…» for the few tens of ms it takes. Only the first card, or a format whose
-    // photo is still to render (a visibly slower change), says «Preparant…», keeping its icon
+    // redrawing only the card over the photo already loaded (the nickname, the other format) leaves the button exactly
+    // as it is (label, icon, state): no flash of «Preparant…» for the few tens of ms it takes. Only the first card, or
+    // one whose photo is still loading, says «Preparant…», keeping its icon
     fresh = false; named = '';
     if (!file) setPrimary('download');
-    else if (!heroes[f]) setPrimary(primary.dataset.mode, true);
+    else if (!photo) setPrimary(primary.dataset.mode, true);
     img.alt = cardAlt(f, d);
     try {
       const l = lang();
       await loadCardFonts(fonts);
       if (lang() !== l) return prepare(); // the language changed while the fonts loaded: start again in the new one
-      if (!heroes[f]) await settle();
+      if (!photo) await settle();
       if (r !== req || !menu.open) return;
-      if (!heroes[f]) { // rendered once per results screen and format (a render target, then read back)
-        const photo = await hero(...PHOTO[f], d.figureId);
-        if (r !== req || !menu.open) return;
-        heroes[f] = photo;
-        // a GPU process crash blanks its canvas: the next card renders it again (or draws the stand-in, share-capture.js)
-        photo?.addEventListener?.('contextrestored', () => { if (heroes[f] === photo) delete heroes[f]; });
-      }
-      named = JSON.stringify(nameNow()); // read now: the profile's answer may have come while the photo rendered
-      const canvas = drawCard(doc.createElement('canvas').getContext('2d'), f, data(), heroes[f]);
+      if (!photo) { photo = await hero(d.figureId); if (r !== req || !menu.open) return; } // the figure's fixed photo, every format (share-card.js loadPhoto)
+      named = JSON.stringify(nameNow()); // read now: the profile's answer may have come while the photo loaded
+      const canvas = drawCard(doc.createElement('canvas').getContext('2d'), f, data(), photo);
       const out = await toJpeg(canvas, 0.9, d.figureId);
       if (r !== req || !menu.open) return;
       file = out; fresh = true;
@@ -192,10 +186,10 @@ export function setupShare({ focusIn, restore = () => {}, hero = () => null, sta
       const key = show && r ? `${r.figureId}|${r.score}|${r.maxCombo}|${r.diff}|${r.pct}|${r.reason}|${r.t}` : '';
       if (key === shownKey) return;
       if (!key && row.contains(doc.activeElement)) doc.activeElement.blur?.();
-      if (key && key !== shownKey) { // a new results screen: its heroes, its nudge
+      if (key && key !== shownKey) { // a new results screen: its photo, its nudge
         req++; opens++; rank = null;
         if (menu.open) menu.close();
-        run = r; challenge = ch; heroes = {};
+        run = r; challenge = ch; photo = null;
         if (previewUrl) url.revokeObjectURL(previewUrl); // another run: the shimmer again, never the last run's card
         file = null; fresh = false;
         previewUrl = ''; img.classList.remove('ready'); frame.classList.remove('has-img'); frame.style.backgroundImage = '';

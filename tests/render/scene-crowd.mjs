@@ -2,13 +2,26 @@
 // running game (game-context.mjs; render-quality.mjs runs the files in order).
 import assert from 'node:assert/strict';
 import { PROFILES } from '../../src/platform/render-quality.js';
-import { THREE, energy, drawing, context, hostSeed, run, nodes, document } from './game-context.mjs';
+import { THREE, energy, drawing, context, hostSeed, run, nodes, document, errors } from './game-context.mjs';
 { // a GPU crash restores the 2D contexts blank, with the identity transform: the HUD is sized and scaled again
   const hudNode = nodes.get('hud');
   assert.equal(typeof hudNode.listeners.contextrestored, 'function', 'the HUD listens for its 2D context restore');
   hudNode.width = 0;
   hudNode.listeners.contextrestored();
   assert(hudNode.width > 0, 'a context restore re-runs resize()');
+}
+{ // a WebGL context lost and never restored: after NO_RESTORE_MS on screen the music stops and the error card offers a reload
+  const fails = [], reports = [], report = errors.report, paused = run('G.paused');
+  context.window.__mulassaFail = (...a) => fails.push(a); errors.report = k => reports.push(k);
+  try {
+    run('renderer.lost = false; restoreLate();');
+    assert(!fails.length && !reports.length, 'restored in time: nothing happens');
+    run('renderer.lost = true; restoreLate();');
+    assert.deepEqual(reports, ['webgl-not-restored'], 'never restored: reported');
+    assert(fails.length === 1 && fails[0][2] === true, 'never restored: the error card, with a reload');
+    assert.equal(fails[0][0], 'Ups! El joc s’ha aturat', 'its words from the catalogue');
+    assert(run('G.paused'), 'and the run is held, so the pause menu never opens over the card');
+  } finally { errors.report = report; delete context.window.__mulassaFail; run(`renderer.lost = false; G.paused = ${paused};`); }
 }
 { // the text sprites' canvases are blanked too, each restoring on its own: any one coming back drops the cache, and a
   // sprite painted while its context is still lost is never kept (it would stay blank)

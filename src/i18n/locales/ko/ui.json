@@ -367,6 +367,8 @@
   "ui.lang.title": "언어",
   "ui.webgl.unavailable": "이 브라우저는 3D 게임을 표시할 수 없어요. 업데이트하거나 Chrome 또는 Safari로 열어요.",
   "ui.webgl.title": "앗! 게임을 표시할 수 없어요",
+  "ui.webgl.lostTitle": "앗! 게임이 멈췄어요",
+  "ui.webgl.lostText": "휴대폰에서 게임을 3D로 표시하지 못하게 됐어요. 다시 해 봐요.",
   "ui.board.jumpTopShort": "맨 위로",
   "ui.board.jumpMeShort": "내 순위로",
   "ui.board.jumpTopAria": "순위표 맨 위로 가요",

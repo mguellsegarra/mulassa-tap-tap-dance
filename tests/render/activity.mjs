@@ -12,6 +12,7 @@ const ctx = vm.createContext({ G, pageActive: () => active,
   pauseGame() { if (G.state === 'play') G.paused = true; },
   document: { addEventListener(k, f) { handlers[k] = f; } },
   addEventListener(k, f) { handlers[k] = f; }, setTimeout(f, ms) { timers.push({ f, ms }); },
+  glc: { addEventListener() {} }, // the WebGL watchdog's listeners (tests/render/scene-crowd.mjs)
 });
 vm.runInContext(read('../../src/ui/pause-actions.js').replace(/^import .*;$/gm, '').replaceAll('export ', ''), ctx);
 vm.runInContext(read('../../src/game/state.js').match(/export function afterActive\([\s\S]*?\n\}/)[0].replace('export ', ''), ctx);

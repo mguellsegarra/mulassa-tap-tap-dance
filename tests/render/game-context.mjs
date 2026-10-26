@@ -104,6 +104,7 @@ const context = vm.createContext({
   setupAccount: () => (context.accountSheet = { isOpen: false, opened: 0, open() { this.opened++; }, notice: () => false }),
   setupSeasons: () => ({ isOpen: false, open() {} }), setupSeasonEnd: () => ({ isOpen: false, check: async () => false, news: async () => null }), setupCard: () => ({ isOpen: false, open() {} }),
   statsSync: { use() {}, holdWhile(fn) { context.statsHold = fn; }, init: async () => {}, afterRun() { context.statsAfterRuns = (context.statsAfterRuns || 0) + 1; }, acceptNotice() {}, noticeNeeded: () => false }, markStatsNoticeSeen() {},
+  loadPhoto: () => Promise.resolve(null), // src/hud/share-card.js: the share card's fixed photo (none here: the stand-in sky)
   setupFeedback: opts => (context.feedbackSheet = { opts, open: false, configured: true, shown: 0, show(back) { this.open = true; this.shown++; this.back = back; } }), // src/ui/feedback-ui.js: tests/ui/feedback-ui.mjs
   refreshIdentity: (service, kv) => { (context.identityAsked ||= []).push(kv); return Promise.resolve(); }, // src/ui/board-list.js: tests/ui/account-ui.mjs
   setupShare: opts => (context.shareSheet = setupShare({ ...opts, doc: document, nav: {}, fonts: null, url: { createObjectURL: () => 'blob:card', revokeObjectURL() {} } })),

@@ -376,6 +376,8 @@
   "ui.lang.title": "Lengua",
   "ui.webgl.unavailable": "Eth tòn navegador non pòt mostrar eth jòc en 3D. Actualiza-lo o daurís-lo damb Chrome o Safari.",
   "ui.webgl.title": "Uep! Non se pòt mostrar eth jòc",
+  "ui.webgl.lostTitle": "Uep! Eth jòc s’a arturat",
+  "ui.webgl.lostText": "Eth mobil a deishat de mostrar eth jòc en 3D. Torna-ac a provar.",
   "ui.board.jumpTopShort": "Entà naut",
   "ui.board.jumpMeShort": "Tara mia fila",
   "ui.board.jumpTopAria": "Vè entà naut dera classificacion",

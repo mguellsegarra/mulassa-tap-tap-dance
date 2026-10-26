@@ -376,6 +376,8 @@
   "ui.lang.title": "Hizkuntza",
   "ui.webgl.unavailable": "Zure nabigatzaileak ezin du jokoa 3Dn erakutsi. Eguneratu edo ireki Chrome edo Safari erabiliz.",
   "ui.webgl.title": "Ene! Ezin da jokoa erakutsi",
+  "ui.webgl.lostTitle": "Ene! Jokoa gelditu da",
+  "ui.webgl.lostText": "Mugikorrak jokoa 3Dn erakusteari utzi dio. Saiatu berriro.",
   "ui.board.jumpTopShort": "Gora",
   "ui.board.jumpMeShort": "Nire lerrora",
   "ui.board.jumpTopAria": "Joan sailkapenaren gorenera",

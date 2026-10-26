@@ -37,7 +37,7 @@ import { focusIn, keyboardNav } from './focus.js';
 import { Q, CALM, DEMO } from '../core/env.js';
 import { idOfKey } from '../figures/index.js';
 import { sheetUp, viewMode, viewBtn } from './controls.js';
-import { renderHero } from '../scene/share-capture.js';
+import { loadPhoto } from '../hud/share-card.js';
 
 sheetFades();
 // The keyboard works in every sheet: ↑↓ (and ←→ outside text fields) move between its controls, and Enter/Space act on
@@ -147,7 +147,7 @@ const board = setupBoard({ focusIn,
 sheets.board = board;
 // Comparteix (results only): the image and the challenge link, made on this device; closing gives the focus back to
 // the button only for keyboard players (Space would otherwise press it again instead of leaving the results)
-const share = setupShare({ focusIn, restore: () => focusIn({ focus: () => document.activeElement?.blur() }, 'results-share'), hero: (w, h, figureId) => renderHero(w, h, figureId), standing: f => board.standing(f), sfx: k => chip?.sfx(k), store: finalStore || store,
+const share = setupShare({ focusIn, restore: () => focusIn({ focus: () => document.activeElement?.blur() }, 'results-share'), hero: loadPhoto, standing: f => board.standing(f), sfx: k => chip?.sfx(k), store: finalStore || store,
   auto: () => !board.promptsItself, ready: () => !sheetUp() && !document.hidden && !document.body.classList.contains('wrong-orient') }); // a record / 3 stars / a beaten challenge: Comparteix by itself when no publish prompt does it
 sheets.share = share;
 if (mockBoard) markTestMode(); // «MODE PROVA»: synthetic rows remain clearly labelled

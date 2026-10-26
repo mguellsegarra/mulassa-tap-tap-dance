@@ -284,13 +284,13 @@ console.log('share: challenge link, captions, fallbacks, eligibility, privacy an
     ui.results(true, run({ diff: 0, pct: 98, newRecord: true, t: 32 }), null); ui.openAfterPublish({});
     assert(sheet(), 'a day later: by itself again');
   }
-  // the nickname switch redraws the card behind a steady primary: no «Preparant…» flash, even for a slow encode (only a format whose
-  // photo is still to render says it, keeping its icon); same label, icon (mode) and state; a tap during the redraw
+  // the nickname switch and the other format redraw the card behind a steady primary: no «Preparant…» flash, even for a
+  // slow encode (the photo is already loaded); same label, icon (mode) and state; a tap during the redraw
   // never sends the previous card: it waits for the new one and shares that
   {
     nodes.clear(); shared.length = 0;
     const ui = setupShare({ focusIn() {}, doc, nav: phone, store: { get: () => null, set() {} }, fonts: null,
-      url: { createObjectURL: () => 'blob:card', revokeObjectURL() {} }, settle: () => Promise.resolve(), hero: (w, h) => ({ width: w, height: h }) });
+      url: { createObjectURL: () => 'blob:card', revokeObjectURL() {} }, settle: () => Promise.resolve(), hero: () => ({ width: 960, height: 540 }) });
     ui.results(true, run({ diff: 0, pct: 95, t: 4 }), null);
     doc.getElementById('results-share').listeners.click(); await wait();
     const primary = doc.getElementById('share-image'), label = doc.getElementById('share-image-label');
@@ -317,7 +317,7 @@ console.log('share: challenge link, captions, fallbacks, eligibility, privacy an
     assert.equal(look(), ready);
     slow = gate = [];
     doc.getElementById('share-format-feed').listeners.click();
-    assert.equal(look(), 'Preparant la imatge…|true|share', 'a format whose photo is still to render says so (keeping its icon)');
+    assert.equal(look(), ready, 'the other format: the same photo, so no «Preparant…» either');
     for (let i = 0; i < 20 && !slow.length; i++) await new Promise(r => setTimeout(r, 0));
     gate = null; slow.shift()(); await new Promise(r => setTimeout(r, 0)); await new Promise(r => setTimeout(r, 0));
     assert.equal(look(), ready);
@@ -325,24 +325,34 @@ console.log('share: challenge link, captions, fallbacks, eligibility, privacy an
     doc.getElementById('share-close').listeners.click();
     console.log('share sheet: a steady primary while the card is redrawn ok');
   }
-  // the photo is rendered once per results screen and format, but a GPU process crash blanks its canvas: once it is
-  // restored (empty) the next card renders it again instead of drawing a blank photo
+  // the photo is the figure's fixed file (share-card.js loadPhoto), never rendered on the device: asked once per results
+  // screen for the figure played, both formats framing the same one; no photo leaves the card its stand-in sky
   {
     nodes.clear(); shared.length = 0;
-    const photos = [];
-    const hero = (w, h) => { const p = { width: w, height: h, listeners: {}, addEventListener(t, f) { this.listeners[t] = f; } }; photos.push(p); return p; };
+    const asked = [];
+    const hero = id => { asked.push(id); return Promise.resolve(id === 'drac-valls' ? null : { width: 1104, height: 988 }); };
     const ui = setupShare({ focusIn() {}, doc, nav: phone, store: { get: () => null, set() {} }, fonts: null,
       url: { createObjectURL: () => 'blob:card', revokeObjectURL() {} }, settle: () => Promise.resolve(), hero });
-    ui.results(true, run({ diff: 0, pct: 95, t: 5 }), null);
+    ui.results(true, run({ figureId: 'mulassa-valls', diff: 0, pct: 95, t: 5 }), null);
     doc.getElementById('results-share').listeners.click(); await wait();
-    assert.equal(photos.length, 1, 'the first card renders its photo');
+    assert.deepEqual(asked, ['mulassa-valls'], 'the first card asks for the figure\'s photo');
     doc.getElementById('share-nick').listeners.change(); await wait();
-    assert.equal(photos.length, 1, 'a redraw reuses it');
-    photos[0].listeners.contextrestored();
-    doc.getElementById('share-nick').listeners.change(); await wait();
-    assert.equal(photos.length, 2, 'a restored (blank) photo is rendered again');
+    doc.getElementById('share-format-feed').listeners.click(); await wait();
+    assert.deepEqual(asked, ['mulassa-valls'], 'a redraw and the other format reuse it');
     doc.getElementById('share-close').listeners.click();
-    console.log('share sheet: a photo blanked by a GPU crash is rendered again ok');
+    ui.results(true, run({ figureId: 'drac-valls', diff: 0, pct: 95, t: 6 }), null);
+    doc.getElementById('results-share').listeners.click(); await wait();
+    assert.deepEqual(asked, ['mulassa-valls', 'drac-valls'], 'another results screen: its own figure\'s photo');
+    assert(!doc.getElementById('share-image').disabled, 'no photo: the card is made all the same');
+    doc.getElementById('share-close').listeners.click();
+    // the files themselves: one per figure (public/share/), at the size both formats frame
+    const { PHOTO } = await import('../../src/hud/share-card.js');
+    for (const id of ['mulassa-valls', 'drac-valls', 'bou-tradicional-valls']) {
+      const jpg = readFileSync(new URL(`../../public/share/${id}.jpg`, import.meta.url));
+      let i = 2; while (i < jpg.length && !(jpg[i] === 0xff && (jpg[i + 1] === 0xc0 || jpg[i + 1] === 0xc2))) i += 2 + jpg.readUInt16BE(i + 2);
+      assert.deepEqual([jpg.readUInt16BE(i + 7), jpg.readUInt16BE(i + 5)], PHOTO.story, `${id}: the photo's size`);
+    }
+    console.log('share sheet: the fixed photo per figure ok');
   }
   // the profile's answer arrives after the card is drawn (a publication refreshes the cached name): the card is drawn again,
   // with the check; an unchanged name draws nothing

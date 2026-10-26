@@ -185,13 +185,13 @@ requestAnimationFrame(() => setTimeout(() => { // one paint first: that line sho
 // The audio engine, suspended (the splash's tap resumes it): the song, the menu loop and the applause are made behind
 // the page cover. Made at the first frame they finished on the splash on a slow first load, right under the tap.
 function startAudio() {
-  try { audioEngine().ready?.then(() => loadMark('song decoded'), e => errors.report('audio-load-failed', audioFailureTags(e))); } catch { /* no Web Audio: made at the tap */ }
+  try { audioEngine().ready?.then(() => loadMark('song decoded'), e => errors.breadcrumb('audio-load-failed', audioFailureTags(e))); } catch { /* no Web Audio: made at the tap */ } // the run's start loads it again (a failure there is audio-start-failed)
 }
 window.__dbg = { get G() { markLeaderboardDebugUse(); return G; }, get M() { markLeaderboardDebugUse(); return M; },
   act: debugAction(act), finish: debugAction(finish), collapse: debugAction(collapse), judge: debugAction(judge), press: debugAction(press),
   startPractice: debugAction(startPractice), endPractice: debugAction(endPractice), choose: debugAction(choose),
   get bubbles() { markLeaderboardDebugUse(); return bubbles; }, bubble: debugAction(bubble), at: debugAction(at),
-  get crowd() { return activeCrowd; }, get band() { return plaza.band; }, get chip() { return chip; }, get camera() { return camera; }, get clock() { return clock; }, songTime: () => songTime(), get drawTime() { return drawT; }, get offset() { return offsetMs; }, hero: (w, h) => renderHero(w, h) }; // debug runs never publish; hero: the share photo (public/og.jpg)
+  get crowd() { return activeCrowd; }, get band() { return plaza.band; }, get chip() { return chip; }, get camera() { return camera; }, get clock() { return clock; }, songTime: () => songTime(), get drawTime() { return drawT; }, get offset() { return offsetMs; }, hero: (w, h, id) => renderHero(w, h, id) }; // debug runs never publish; hero: the share photos (public/share/, public/og.jpg)
 window.__mulassaBooted ||= 'module'; // ran to the end: index.html's boot watchdog now only waits for the first frame
 // The representation cast on every host; ?representation=off retains the original cast for comparisons.
 const localPeopleReady = Q.get('representation') !== 'off'

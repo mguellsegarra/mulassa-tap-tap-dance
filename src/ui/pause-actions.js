@@ -1,4 +1,4 @@
-// Pause toggling, page visibility, and the restart and exit actions.
+// Pause toggling, page visibility, a WebGL context that never comes back, and the restart and exit actions.
 import { song, countInAt, countInDuration, BEATS } from '../game/figure-song.js';
 import { G, songTime, chip } from '../game/state.js';
 import { pageActive, playFrom } from '../core/env.js';
@@ -6,6 +6,8 @@ import { pauseGame, closePauseMenu } from './pause.js';
 import { pauseMenu } from './handles.js';
 import { focusIn } from './focus.js';
 import { tr } from '../i18n/messages.js';
+import { glc, renderer } from '../scene/stage.js';
+import { errors } from '../services/errors.js';
 
 export function togglePause() {
   if (G.state !== 'play' || !pageActive()) return;
@@ -57,6 +59,22 @@ addEventListener('pagehide', () => {
   chip?.suspend();
 });
 addEventListener('pageshow', syncPageActivity);
+// A lost WebGL context that is never restored (a browser that stops WebGL for the page after repeated GPU crashes) left
+// the run going on with no 3D and nothing said. After NO_RESTORE_MS on screen: the music stops and the error card offers a reload.
+const NO_RESTORE_MS = 5000;
+let restoreTimer = 0;
+function restoreLate() {
+  restoreTimer = 0;
+  if (!renderer.getContext().isContextLost()) return;
+  if (!pageActive()) { restoreTimer = setTimeout(restoreLate, NO_RESTORE_MS); return; } // hidden: the browser may restore it once back
+  errors.report('webgl-not-restored');
+  G.paused = true; // so the suspended music doesn't open the pause menu, a modal that would sit over the card
+  chip?.suspend();
+  document.querySelectorAll('dialog[open]').forEach(d => d.close());
+  window.__mulassaFail?.(tr('ui.webgl.lostTitle'), tr('ui.webgl.lostText'), true);
+}
+glc.addEventListener('webglcontextlost', () => { clearTimeout(restoreTimer); restoreTimer = setTimeout(restoreLate, NO_RESTORE_MS); });
+glc.addEventListener('webglcontextrestored', () => { clearTimeout(restoreTimer); restoreTimer = 0; });
 export function requestPauseAction(action) {
   if (!G.paused) return;
   G.pendingAction = action;

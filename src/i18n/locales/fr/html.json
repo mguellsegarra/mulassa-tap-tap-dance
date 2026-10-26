@@ -79,6 +79,8 @@
   "html.accountPreviousTitle": "Record de l’ancienne danse",
   "html.gpuHintTitle": "Accélération matérielle",
   "html.iosHintTitle": "Joue en plein écran",
+  "html.audioResumeTitle": "Musique en pause",
+  "html.audioResumeText": "Tu as quitté le jeu et elle s’est arrêtée. Touche n’importe où pour continuer.",
   "html.seasonsTitle": "Palmarès",
   "html.seasonsPickerTitle": "Choisis une figure",
   "html.seasonsFigures.aria": "Figure",

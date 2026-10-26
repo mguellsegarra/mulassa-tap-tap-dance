@@ -77,6 +77,7 @@ export class Chip {
     const g = this.master.gain, t = this.ctx.currentTime;
     g.cancelScheduledValues(t); g.setTargetAtTime(0, t, 0.006);
     clearTimeout(this.hushT);
+    this.session(); // hidden: 'auto', in case iOS freezes the timer below
     this.hushT = setTimeout(() => this.ctx.suspend(), 40);
   }
   unhush() {
@@ -85,15 +86,18 @@ export class Chip {
     g.cancelScheduledValues(t); g.setTargetAtTime(1, t, 0.01);
   }
   resume() {
+    this.session(); // back from a hidden page's 'auto'
     this.unhush();
     const failed = e => { errors.report('audio-resume-failed', audioFailureTags(e)); return false; };
     try { return Promise.resolve(this.ctx.resume?.()).then(() => this.running, failed); } catch (e) { return Promise.resolve(failed(e)); }
   } // a rejected wake stays paused; the next real gesture can resume the same transport
 
   // iOS: a silent menu is 'ambient' (sfx mix with Spotify or any other app's music, which keeps playing); the menu music,
-  // the radio or a run take the 'playback' session (the other app pauses, and the ringer switch can't silence the song)
+  // the radio or a run take the 'playback' session (the other app pauses, and the ringer switch can't silence the song).
+  // A hidden page drops to 'auto': only 'playback' sounds in the background, so iOS itself stops it if our suspend never ran
   session() {
-    try { if (navigator.audioSession) navigator.audioSession.type = this.menuMusic === false && !this.bus ? 'ambient' : 'playback'; } catch { /* older iOS */ }
+    const type = globalThis.document?.hidden ? 'auto' : this.menuMusic === false && !this.bus ? 'ambient' : 'playback';
+    try { if (navigator.audioSession) navigator.audioSession.type = type; } catch { /* older iOS */ }
   }
 
   wake() { // iOS: resume + a silent sample inside a real gesture

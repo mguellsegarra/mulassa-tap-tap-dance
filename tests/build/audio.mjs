@@ -585,6 +585,13 @@ console.log('leaving a run silences everything it queued ok');
     assert.equal(audioSession.type, 'playback', 'a run takes the session even with the menu music off');
     c.endRun();
     assert.equal(audioSession.type, 'ambient', 'back on the silent menu: ambient again');
+    c.ctx.suspend = c.ctx.resume = () => {}; c.beginRun();
+    const doc = globalThis.document;
+    globalThis.document = { hidden: true };
+    try { c.suspend(); assert.equal(audioSession.type, 'auto', 'a hidden page gives up playback: iOS stops it in the background'); } finally { globalThis.document = doc; }
+    await c.resume();
+    assert.equal(audioSession.type, 'playback', 'Continua takes playback back');
+    c.endRun();
   } finally {
     if (navDesc) Object.defineProperty(globalThis, 'navigator', navDesc); else delete globalThis.navigator;
   }

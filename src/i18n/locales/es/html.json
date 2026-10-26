@@ -79,6 +79,8 @@
   "html.accountPreviousTitle": "Récord del baile anterior",
   "html.gpuHintTitle": "Aceleración por hardware",
   "html.iosHintTitle": "Juega a pantalla completa",
+  "html.audioResumeTitle": "Música en pausa",
+  "html.audioResumeText": "Has salido del juego y se ha parado. Toca en cualquier sitio para continuar.",
   "html.seasonsTitle": "Salón de la fama",
   "html.seasonsPickerTitle": "Elige figura",
   "html.seasonsFigures.aria": "Figura",

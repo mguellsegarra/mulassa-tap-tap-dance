@@ -73,7 +73,7 @@ export const STAND = {
   'gegants-ciutat-valls': 1, 'cavallets-valls': 0.55, 'basilisc-valls': 0.65, 'diables-valls': 0.8,
   'aliga-tarragona': 0.8, 'cucafera-tarragona': 0.65, 'gegants-mulassa-reus': 0.8, 'gegants-solsona': 1, 'drac-solsona': 0.8,
   'mulassa-solsona': 0.8, 'aliga-solsona': 0.8, 'gegants-bojos-solsona': 1, 'draca-solsona': 0.8, 'boja-vilanova': 0.8, 'drac-vilanova': 0.8, 'aliga-barcelona': 0.8,
-  'guites-berga': 1, 'aliga-berga': 0.8, 'gegants-olot': 1, 'drac-vilafranca': 0.8, 'la-teva-colla': 1,
+  'guites-berga': 1, 'aliga-berga': 0.8, 'gegants-olot': 1, 'drac-vilafranca': 0.8, 'marraco-lleida': 0.8, 'drac-baluk-terrassa': 0.8, 'vibria-manresa': 0.8, 'drac-montblanc': 0.8, 'la-teva-colla': 1,
 };
 export const portraitStand = figure => STAND[figure.id] ?? 0.8;
 // How heavily each figure lands in free mode (the Mulassa = 1): the one place that sets its «BUUUM» (audio.js thud),

@@ -546,7 +546,7 @@ assert(!/showModal|aviat\.close|aviat-menu|aviat-close/.test(ui));
   // One accent per town: its banner's cloth and its cards'/avatars' tint at one fixed lightness (the owner chose the game's
   // own palette, 2026-10-19). The accents are the banners' agreed colours.
   const css = selectCss();
-  const accent = { valls: '#c8202f', solsona: '#c0283c', tarragona: '#7d5aa8', reus: '#8f6340', vilanova: '#d9a521', barcelona: '#c8202f', berga: '#1f3f7a', olot: '#8e2a5c', vilafranca: '#00b09a' };
+  const accent = { valls: '#c8202f', solsona: '#c0283c', tarragona: '#7d5aa8', reus: '#8f6340', vilanova: '#d9a521', barcelona: '#c8202f', berga: '#1f3f7a', olot: '#8e2a5c', vilafranca: '#00b09a', lleida: '#7e2236', terrassa: '#8d68c0', manresa: '#3f6fc0', montblanc: '#b03a48' };
   assert.deepEqual(Object.keys(accent).sort(), TOWNS.map(t => t.id).sort(), 'every town has an accent');
   for (const [town, colour] of Object.entries(accent)) {
     assert(css.includes(`:is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="${town}"] { --town: ${colour}; }`), `${town}: banner, cards and avatars share ${colour}`);

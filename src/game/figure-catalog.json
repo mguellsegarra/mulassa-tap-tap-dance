@@ -46,6 +46,26 @@
       "name": "Vilafranca del Penedès",
       "short": "Vilafranca",
       "comarca": "Alt Penedès"
+    },
+    {
+      "id": "lleida",
+      "name": "Lleida",
+      "comarca": "Segrià"
+    },
+    {
+      "id": "terrassa",
+      "name": "Terrassa",
+      "comarca": "Vallès Occidental"
+    },
+    {
+      "id": "manresa",
+      "name": "Manresa",
+      "comarca": "Bages"
+    },
+    {
+      "id": "montblanc",
+      "name": "Montblanc",
+      "comarca": "Conca de Barberà"
     }
   ],
   "figures": [
@@ -468,6 +488,50 @@
       "sources": [
         "https://www.dracdevilafranca.com/el-drac.html",
         "https://www.dracdevilafranca.com/els-amics-del-drac.html"
+      ]
+    },
+    {
+      "id": "marraco-lleida",
+      "name": "Marraco",
+      "fullName": "Lo Marraco de Lleida",
+      "town": "lleida",
+      "entity": "Gegants de la Paeria",
+      "entityName": "Colla Gegantera dels Gegants de la Paeria",
+      "sources": [
+        "https://www.bestiari.cat/figura/lo-marraco/"
+      ]
+    },
+    {
+      "id": "drac-baluk-terrassa",
+      "name": "Drac Baluk Astharot",
+      "fullName": "Drac Baluk Astharot de Terrassa",
+      "town": "terrassa",
+      "entity": "Drac Baluk Astharot",
+      "entityName": "Associació Juvenil Drac Baluk Astharot i Diables de Ca n’Aurell",
+      "sources": [
+        "https://www.bestiari.cat/figura/drac-baluk-astharot/"
+      ]
+    },
+    {
+      "id": "vibria-manresa",
+      "name": "Víbria",
+      "fullName": "Víbria de Manresa",
+      "town": "manresa",
+      "entity": "Xàldiga",
+      "entityName": "Xàldiga, Taller de Festes",
+      "sources": [
+        "https://www.bestiari.cat/figura/vibria-de-manresa/"
+      ]
+    },
+    {
+      "id": "drac-montblanc",
+      "name": "Drac",
+      "fullName": "Drac de Montblanc",
+      "town": "montblanc",
+      "entity": "Colla Drac i Àliga",
+      "entityName": "Associació Colla Drac i L’Àliga de Montblanc",
+      "sources": [
+        "https://www.bestiari.cat/figura/drac-de-montblanc/"
       ]
     }
   ]

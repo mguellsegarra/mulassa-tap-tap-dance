@@ -15,6 +15,10 @@
 :is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="berga"] { --town: #1f3f7a; }
 :is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="olot"] { --town: #8e2a5c; } /* a mulberry granat: a plain granat read as the reds once toned down */
 :is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="vilafranca"] { --town: #00b09a; }
+:is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="lleida"] { --town: #7e2236; }
+:is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="terrassa"] { --town: #8d68c0; }
+:is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="manresa"] { --town: #3f6fc0; }
+:is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="montblanc"] { --town: #b03a48; }
 :is(.sel-card, #photo-figs .pf)[data-town]:not([data-town="el-teu-poble"]) { --t: color-mix(in srgb, var(--town) 45%, #22160e); } /* browsers without relative colours */
 @supports (color: oklch(from red l c h)) { :is(.sel-card, #photo-figs .pf)[data-town]:not([data-town="el-teu-poble"]) { --t: oklch(from var(--town) .42 min(c, .1) h); } }
 .sel-card:not(.sel-more) { overflow: clip; } /* the panels' square corners stay inside the rounded card and its ring */

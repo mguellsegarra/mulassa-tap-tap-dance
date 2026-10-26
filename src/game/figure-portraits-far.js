@@ -259,3 +259,6 @@ export const FAR_PORTRAITS = {
     palette: { b: '#45454d', h: '#6e6e7a', m: '#5c5c68', o: '#d08a50', w: '#f2ead8', c: '#e0c890', r: '#c42a2a', k: '#5a5262' },
   },
 };
+// Provisional: the dragons of Lleida, Terrassa, Manresa and Montblanc reuse an existing dragon portrait until their own photos are drawn.
+Object.assign(FAR_PORTRAITS, { 'marraco-lleida': FAR_PORTRAITS['drac-vilafranca'], 'drac-baluk-terrassa': FAR_PORTRAITS['drac-solsona'],
+  'vibria-manresa': FAR_PORTRAITS['draca-solsona'], 'drac-montblanc': FAR_PORTRAITS['drac-vilanova'] });

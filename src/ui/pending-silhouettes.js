@@ -194,6 +194,23 @@ export const SILHOUETTE_DRAWINGS = {
     'M127 20Q127 8 136 8Q148 8 154 16L168 20Q170 26 164 28H132Z', carrierLeg(110, 116, 1, 6, 130), carrierLeg(136, 116, 1, 6, 130),
   ] },
 };
+// Lo Marraco (bestiari.cat photo): seen from the front, a low wide body, two horns, a frill of spikes round the head and
+// the jaws open; carried from inside, so no legs.
+SILHOUETTE_DRAWINGS['marraco-lleida'] = { vb: [20, 16], d: [
+  'M24 150Q12 122 34 104Q66 86 100 86Q134 86 166 104Q188 122 176 150Z', // body, shoulders lower than the head
+  oval(100, 60, 36, 32), 'M76 42L62 8L90 34Z', 'M124 42L138 8L110 34Z', // head, horns
+  oval(46, 142, 20, 10), oval(154, 142, 20, 10), // claws on the ground
+  'M70 62L40 52L56 66L34 74L58 78L40 94L70 86Z', 'M130 62L160 52L144 66L166 74L142 78L160 94L130 86Z', // frill
+  ] };
+// La Víbria (bestiari.cat photo): upright pear of a body, a long neck and a head with two ears, a round lobe on each side, short feet.
+SILHOUETTE_DRAWINGS['vibria-manresa'] = { vb: [20, 16], d: [
+  'M64 150Q54 110 66 84Q78 66 100 66Q122 66 134 84Q146 110 136 150Z', // body
+  oval(68, 100, 18, 24), oval(132, 100, 18, 24), // lobes
+  'M86 72Q84 48 88 34H112Q116 48 114 72Z', oval(100, 28, 17, 16), 'M86 22L82 6L96 16Z', 'M114 22L118 6L104 16Z', // neck, head, ears
+  'M66 144H94V150H62Z', 'M106 144H134V150H138Z',
+] };
+// Provisional: the dragons of Terrassa and Montblanc wear an existing dragon drawing until their own photos are traced.
+Object.assign(SILHOUETTE_DRAWINGS, { 'drac-baluk-terrassa': SILHOUETTE_DRAWINGS['drac-solsona'], 'drac-montblanc': SILHOUETTE_DRAWINGS['drac-vilanova'] });
 const DRAWN_INK = '#120b07', DRAWN_HALO = '#f5e3b8';
 // One <path> per shape (overlaps never cancel into holes); the halo group, 2 screen px wide (1 px outside), sits under
 // the ink: the same line as the Bou's and the traced silhouettes'.

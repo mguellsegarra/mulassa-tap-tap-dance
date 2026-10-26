@@ -45,6 +45,15 @@ const ESC_ARMS = {
   vilafranca: { shape: 'loz', // d'atzur, una muralla torrejada d'or oberta; al cap, un escudet d'or amb quatre pals de gules
     art: escRect(0, 0, 24, 24, 'atzur') + escRect(2.5, 13, 19, 5, 'or') + [0, 1, 2, 3, 4, 5, 6, 7].map(i => escRect(2.5 + i * 2.5, 12, 1.4, 1.2, 'or')).join('')
       + escTower(7, 10, 3, 8, 'or') + escTower(14, 10, 3, 8, 'or') + escRect(11, 14.6, 2, 3.4, 'atzur') + escPales(10.3, 4, 3.4, 4.2) },
+  lleida: { shape: 'ibe', // d'or, quatre pals de gules; un ram de lliri de sinople movent de la punta, amb tres flors de lis d'argent
+    art: escPales(0, 0, 24, 24) + `<path d="M12 23V9M12 17l-4-4M12 17l4-4" stroke="${ESC_T.sinople}" stroke-width="1.6" fill="none"/>`
+      + [[12, 7.5], [7.4, 11.5], [16.6, 11.5]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="2.2" fill="${ESC_T.argent}"/>`).join('') },
+  terrassa: { shape: 'ibe', // partit: de gules, un castell d'argent tancat de sable; d'or, quatre pals de gules
+    art: escRect(0, 0, 12, 24, 'gules') + escTower(3, 8, 6, 9, 'argent') + escRect(5.4, 13, 1.2, 4, 'sable') + escPales(12, 0, 12, 24) },
+  manresa: { shape: 'ibe', // truncat: d'or, quatre pals de gules; d'argent, una creu de Sant Jordi de gules
+    art: escPales(0, 0, 24, 12) + escRect(0, 12, 24, 12, 'argent') + escCross(12, 18, 5, 2.2, 'gules') },
+  montblanc: { shape: 'ibe', // d'or, quatre pals de gules; un mont floronat d'argent
+    art: escPales(0, 0, 24, 24) + `<path d="M3 21Q12 6 21 21z" fill="${ESC_T.argent}"/>` },
 };
 
 let escN = 0;

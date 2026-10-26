@@ -16,7 +16,9 @@ try { browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--ena
 
 // Real GL draw calls a frame (the shadow pass included; renderer.info.render does not count it) per profile: the worst
 // figure at the selector and in play, measured plus HEADROOM. Raise one only for a deliberate new draw, and say so in docs/agents/graphics.md.
-const DRAWS = { selector: { minimal: 21, low: 22, medium: 33, high: 36 }, play: { minimal: 36, low: 37, medium: 59, high: 62 } };
+const DRAWS = { selector: { minimal: 21, low: 22, medium: 33, high: 36 }, play: { minimal: 36, low: 37, medium: 59, high: 62 },
+  // the Bou in its techno part: its rig is many separate parts and its disco lights add ~30 calls (a Galaxy S10 held 58 fps)
+  playBou: { minimal: 50, low: 50, medium: 73, high: 76 } };
 const HEADROOM = 4, MAX_PROGRAMS = 90, LEVELS = { minimal: -1, low: 0, medium: 1, high: 2 };
 const FIGURES = ['mulassa-valls', 'drac-valls', 'bou-tradicional-valls'];
 
@@ -56,7 +58,7 @@ const sample = async (page, name) => {
   }
   throw new Error(`could not hold the ${name} profile`);
 };
-const out = [], worst = { selector: {}, play: {} };
+const out = [], worst = { selector: {}, play: {}, playBou: {} };
 const note = (where, name, s) => { worst[where][name] = Math.max(worst[where][name] ?? 0, s.draws); };
 try {
   { // selector: every figure at every profile; the second round (and the return to the start) must match the first
@@ -93,11 +95,11 @@ try {
     await page.waitForFunction(() => window.__dbg.G.state === 'select', null, { timeout: 30000 });
     await page.evaluate(() => window.__dbg.choose(1));
     await page.waitForFunction(() => window.__dbg.G.state === 'play', null, { timeout: 30000 });
-    for (const name of Object.keys(LEVELS)) { const s = await sample(page, name); out.push(`play ${figura} ${name}: ${s.draws} draws, ${s.calls} calls, ${s.tris} tris`); note('play', name, s); }
+    for (const name of Object.keys(LEVELS)) { const s = await sample(page, name); out.push(`play ${figura} ${name}: ${s.draws} draws, ${s.calls} calls, ${s.tris} tris`); note(figura === 'bou' ? 'playBou' : 'play', name, s); }
     assert.deepEqual(page.errors, []);
   }
   console.log(out.join('\n'));
-  for (const where of ['selector', 'play']) for (const name of Object.keys(LEVELS))
+  for (const where of ['selector', 'play', 'playBou']) for (const name of Object.keys(LEVELS))
     assert(worst[where][name] <= DRAWS[where][name] + HEADROOM, `${where} ${name}: ${worst[where][name]} draws a frame, budget ${DRAWS[where][name]} + ${HEADROOM}`);
 } finally { await browser.close(); await server.close(); }
 console.log('gl budget ok');

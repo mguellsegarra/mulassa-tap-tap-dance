@@ -26,5 +26,9 @@ async function checkUpdate() {
   } catch { /* offline: try on the next wake */ }
 }
 document.addEventListener('visibilitychange', checkUpdate);
+setInterval(checkUpdate, 30 * 60 * 1000); // a menu left on screen for hours: one tiny request now and then (hidden: skipped)
+// a tab older than the deploy whose lazy chunk failed to load: check now, so a newer build reloads on the next quiet moment
+// (not preventDefault: Vite would resolve the import with nothing and break its caller)
+addEventListener('vite:preloadError', checkUpdate);
 addEventListener('pageshow', e => { if (e?.persisted) checkUpdate(); }); // back from the bfcache
 checkUpdate(); // the start: one 30-byte request; a match does nothing

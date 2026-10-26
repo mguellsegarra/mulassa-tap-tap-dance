@@ -61,8 +61,10 @@ by everyone below it as `sheets.board`… (`ui/sheets.js`), so no import cycle i
 - Never hardcode the BPM (it has changed before): use `song.bpm` / `song.beats` in JS, `BPM` in the generator.
 - Release channels (one branch, channels by deploy): `main` is the only long-lived branch; every
   push to it deploys beta.mulassa.cat on the test Supabase (GitHub environment `beta`: its own `VITE_SUPABASE_*`,
-  `SUPABASE_PROJECT_REF`, `SUPABASE_POOLER_HOST`, `SUPABASE_DB_PASSWORD`), a tag `vX.Y.Z` equal to package.json's version
-  deploys mulassa.cat (environment `production`); running the workflow by hand on an old tag redeploys it. Each tag is a
+  `SUPABASE_PROJECT_REF`, `SUPABASE_POOLER_HOST`, `SUPABASE_DB_PASSWORD`), a tag `vX.Y.Z` deploys mulassa.cat (environment
+  `production`); running the workflow by hand on an old tag redeploys it. The tag's name is the version its commit builds as
+  (MAJOR.MINOR from package.json, PATCH = commit count; `tools/app-version.mjs`), so no release needs a version commit:
+  `npm run release` prints the tag for main's tip, `npm run release -- --push` creates and pushes it. Each tag is a
   separately confirmed operation. `.github/workflows/deploy-pages.yml` refuses a beta build on the real Supabase.
 - Audio must stay **bit-identical** unless the task is about music: compare `shasum public/music/*` before/after.
 

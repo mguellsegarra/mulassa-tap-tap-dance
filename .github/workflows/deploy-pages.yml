@@ -1,7 +1,7 @@
 name: Desplegament
 
 # Two channels from one branch: every push to main goes to beta.mulassa.cat (test Supabase),
-# a version tag (v1.2.3, matching package.json) goes to mulassa.cat. Running it by hand on a tag redeploys that release.
+# a version tag (v1.2.3, the version that commit builds as: `npm run release` creates it) goes to mulassa.cat. Running it by hand on a tag redeploys that release.
 on:
   push:
     branches: [main]
@@ -71,7 +71,7 @@ jobs:
           if [ "$CHANNEL" = beta ]; then
             case "$VITE_SUPABASE_URL" in ''|*oajlkitufibpfvhgtqwr*) echo "beta needs the test Supabase (environment beta)"; exit 1;; esac
           else
-            test "$GITHUB_REF_NAME" = "v$(node -p "require('./package.json').version")" || { echo "tag $GITHUB_REF_NAME does not match package.json"; exit 1; }
+            node tools/release.mjs --check "$GITHUB_REF_NAME" # the tag is the version this commit builds as (npm run release)
           fi
       - run: npm ci
       # checks + vite build + the Pages allowlist artifact in dist/

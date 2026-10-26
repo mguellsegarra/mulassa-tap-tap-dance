@@ -122,10 +122,19 @@ body:has(:focus-visible) #select .sel-card[aria-selected="true"]:not(:focus-visi
   .sel-pending-content { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: space-evenly; justify-items: center; }
   .sel-pending h2 { grid-row: 1; grid-column: 1; }
   .sel-pending :is(.sel-entity, .sel-pending-icon) { grid-row: 1; grid-column: 2; }
-  .sel-pending-copy p { grid-column: 1 / -1; }
+  .sel-pending-copy > *, .sel-pending .sel-where { grid-column: 1 / -1; }
   /* Two attributions that have to stack (fitEntityLabel) crowd the row: drop them and let the title take it, centred. */
   .sel-pending .sel-entity[data-stacked] { display: none; }
   .sel-pending-content:has(.sel-entity[data-stacked]) h2 { grid-column: 1 / -1; }
+  /* With the height to spare the identity stacks like in every other size: title, attribution, place, one axis. */
+  @container (min-height: 300px) {
+    .sel-pending-content { display: flex; }
+    .sel-pending .sel-entity[data-stacked] { display: flex; }
+    /* Place first, then who runs it: the place gets the heavier type. */
+    .sel-pending h2 { order: -2; color: #f5c518; } /* the gold of the logo's tagline */
+    .sel-pending-copy p + p { font-size: 13px; color: #b9a98c; } /* the side note steps back from the call */
+    .sel-pending .sel-where { order: -1; font-size: 15px; line-height: 20px; font-weight: 700; }
+  }
 }
 
 /* Before the desktop dock breakpoint, pending content needs the same compact footer to keep its reading band. */

@@ -10,7 +10,7 @@ const ESC_SHAPE = {
 const escRect = (x, y, w, h, c) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${ESC_T[c]}"/>`;
 // the four red pales on gold (the "senyal reial"), in a box: nine equal strips, the even ones red
 const escPales = (x, y, w, h) => escRect(x, y, w, h, 'or') + [1, 3, 5, 7].map(i => escRect(+(x + i * w / 9).toFixed(2), y, +(w / 9).toFixed(2), h, 'gules')).join('');
-const escCrescent = (x, y, r) => `<path d="M${x - r} ${y - r * 0.2}a${r} ${r} 0 0 0 ${2 * r} 0a${r} ${r * 0.7} 0 0 1 ${-2 * r} 0z" fill="${ESC_T.argent}"/>`;
+const escCrescent = (x, y, r) => `<path d="M${x - r} ${y - r * 0.2}a${r} ${r} 0 0 0 ${2 * r} 0a${r} ${r * 0.35} 0 0 1 ${-2 * r} 0z" fill="${ESC_T.argent}"/>`;
 const escTower = (x, y, w, h, c) => escRect(x, y + 1, w, h - 1, c) + [0, 2, 4].map(i => escRect(+(x + i * w / 5).toFixed(2), y, +(w / 5).toFixed(2), 1.2, c)).join('');
 // a fleur-de-lis s units tall, centred on (x, y): the middle petal, two curled side petals, the band and the foot
 const escLisSide = '<path d="M.12 .22C.25-.3.85-.55.95-.12c.06.3-.2.48-.42.36.12-.12.06-.3-.12-.24-.14.06-.2.2-.18.34z"/>';
@@ -39,8 +39,9 @@ const ESC_ARMS = {
   solsona: { shape: 'ibe', // de gules, un sol d'or; una torre, una creu i un card d'or
     art: escRect(0, 0, 24, 24, 'gules') + `<g stroke="${ESC_T.or}" stroke-width=".9">${escPolar(12, 3.6, 12, 5.4, (x, y) => `<line x1="12" y1="5.4" x2="${x}" y2="${y}"/>`)}</g>`
       + `<circle cx="12" cy="5.4" r="2" fill="${ESC_T.or}"/>` + escRect(11.25, 9.8, 1.5, 12.4, 'or') + escRect(8.6, 12.2, 6.8, 1.5, 'or')
-      + escTower(4.8, 11.4, 3.2, 6.8, 'or') + escRect(5.8, 15.4, 1.2, 2.8, 'gules') + `<path d="M17.8 18v-4.6M17.8 15.5l-1.5-1.5M17.8 15.5l1.5-1.5" stroke="${ESC_T.or}" stroke-width=".8" fill="none"/>`
-      + [[16.3, 13.6], [17.8, 12.8], [19.3, 13.6]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r=".9" fill="${ESC_T.or}"/>`).join('') },
+      + escTower(4.8, 11.4, 3.2, 6.8, 'or') + escRect(5.8, 15.4, 1.2, 2.8, 'gules') + `<path d="M17.8 17.6V13M17.8 16.2 16.3 13.6M17.8 16.2 19.3 13.6" stroke="${ESC_T.or}" stroke-width=".5" fill="none"/>`
+      + `<path d="M15.4 15.6Q17.8 19.4 20.2 15.6 17.8 17.2 15.4 15.6z" fill="${ESC_T.or}"/>`
+      + [[16.3, 13.2], [17.8, 12.4], [19.3, 13.2]].map(([x, y]) => `<ellipse cx="${x}" cy="${y}" rx=".75" ry="1" fill="${ESC_T.or}"/><path d="M${x - .6} ${y - .7}l.3-1.1.3.9.3-.9.3 1.1" stroke="${ESC_T.or}" stroke-width=".3" fill="none"/>`).join('') },
   vilanova: { shape: 'loz', // truncat: d'atzur, un castell d'or obert; d'or, quatre pals de gules
     art: escRect(0, 0, 24, 13, 'atzur') + escTower(10.3, 3.6, 3.4, 9.4, 'or') + escTower(7.2, 8.4, 2.6, 4.6, 'or') + escTower(14.2, 8.4, 2.6, 4.6, 'or')
       + escRect(11.2, 10, 1.6, 3, 'atzur') + escPales(0, 13, 24, 11) },
@@ -49,17 +50,17 @@ const ESC_ARMS = {
       + escRect(12, 12, 12, 12, 'argent') + escRect(14.6, 12, 1.8, 12, 'gules') + escRect(12, 14.6, 12, 1.8, 'gules') },
   berga: { shape: 'ibe', // quarterat: d'or, quatre pals de gules; d'atzur, cinc llunes d'argent
     art: escPales(0, 0, 12, 12) + escRect(12, 0, 12, 12, 'atzur') + escRect(0, 12, 12, 12, 'atzur') + escPales(12, 12, 12, 12)
-      + [[14.6, 3.4], [19.4, 3.4], [17, 6.6], [14.6, 9.8], [19.4, 9.8]].map(([x, y]) => escCrescent(x, y, 1.6)).join('')
-      + [[5, 14.4], [9.6, 14.4], [7.3, 17.2], [5.4, 20], [9.6, 20]].map(([x, y]) => escCrescent(x, y, 1.6)).join('') },
+      + [[14.6, 3.4], [19.4, 3.4], [17, 6.6], [14.6, 9.8], [19.4, 9.8]].map(([x, y]) => escCrescent(x, y, 1.8)).join('')
+      + [[5, 14.4], [9.6, 14.4], [7.3, 17.2], [5.4, 20], [9.6, 20]].map(([x, y]) => escCrescent(x, y, 1.8)).join('') },
   olot: { shape: 'ibe', // partit: d'or, quatre pals de gules; d'atzur, una ala d'argent
     art: escPales(0, 0, 12, 24) + escRect(12, 0, 12, 24, 'atzur')
       + escWing },
   vilafranca: { shape: 'loz', // d'atzur, una muralla torrejada d'or oberta; al cap, un escudet d'or amb quatre pals de gules
     art: escRect(0, 0, 24, 24, 'atzur') + escRect(0, 13, 24, 4.4, 'or') + Array.from({ length: 10 }, (_, i) => escRect(i * 2.5, 12, 1.4, 1.2, 'or')).join('')
-      + escTower(6, 10, 3, 7.4, 'or') + escTower(15, 10, 3, 7.4, 'or') + escRect(11.1, 14.6, 1.8, 2.8, 'atzur') + escPales(10.3, 4, 3.4, 4.2) },
+      + escTower(6, 10, 3, 7.4, 'or') + escTower(15, 10, 3, 7.4, 'or') + escRect(11.1, 14.6, 1.8, 2.8, 'atzur') + `<clipPath id="{id}-e"><path d="M10.2 3.6h3.6v2.8a1.8 2 0 0 1-3.6 0z"/></clipPath><g clip-path="url(#{id}-e)">${escPales(10.2, 3.6, 3.6, 4.8)}</g>` },
   lleida: { shape: 'loz', // d'or, quatre pals de gules; un ram de lliri de sinople movent de la punta, amb tres flors de lis d'argent
-    art: escPales(0, 0, 24, 24) + `<path d="M12 23V7.5M12 18Q9 16 7.4 13.2M12 18Q15 16 16.6 13.2" stroke="${ESC_T.sinople}" stroke-width="1.3" fill="none"/>`
-      + [[12, 5.6], [6.8, 11.4], [17.2, 11.4]].map(([x, y]) => escLis(x, y, 4.6, 'argent')).join('') },
+    art: escPales(0, 0, 24, 24) + `<path d="M12 23V8M12 16Q10.6 12.4 9.4 12M12 16Q13.4 12.4 14.6 12" stroke="${ESC_T.sinople}" stroke-width=".9" fill="none"/>`
+      + escLis(12, 5.4, 6, 'argent') + [[6.6, -90], [17.4, 90]].map(([x, a]) => `<g transform="rotate(${a} ${x} 12)">${escLis(x, 12, 6, 'argent')}</g>`).join('') },
   terrassa: { shape: 'loz', // partit: de gules, un castell d'argent tancat de sable; d'or, quatre pals de gules
     art: escRect(0, 0, 12, 24, 'gules') + escRect(4.6, 11.8, 6.4, 3.8, 'argent') + escTower(4.6, 9.8, 1.8, 2.4, 'argent') + escTower(6.9, 8.2, 1.8, 4, 'argent')
       + escTower(9.2, 9.8, 1.8, 2.4, 'argent') + escRect(7.2, 13.4, 1.2, 2.2, 'sable') + escPales(12, 0, 12, 24) },

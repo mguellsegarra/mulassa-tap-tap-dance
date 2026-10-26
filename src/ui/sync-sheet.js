@@ -82,6 +82,10 @@ export function setupSync({ beat = CAL.beat, get, set, onOpen = () => {}, onClos
   }
 
   dlg.addEventListener('close', () => { stop(); draft.commit(set); onClose(); }); // Tanca / Esc keep a manual change
+  // the metronome has its own context, which the game's suspend never reaches: leaving the page mid-run ends it
+  const away = () => { if (dlg.dataset.state === 'run') intro(); };
+  document.addEventListener('visibilitychange', () => { if (document.hidden) away(); });
+  addEventListener('pagehide', away);
   dlg.addEventListener('pointerdown', e => { // running: a tap anywhere on the sheet (not on Cancel·la) counts
     if (dlg.dataset.state !== 'run' || e.target.closest('#sync-stop, #sync-close')) return;
     e.preventDefault(); tap(e);

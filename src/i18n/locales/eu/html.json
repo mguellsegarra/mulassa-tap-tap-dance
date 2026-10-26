@@ -79,6 +79,8 @@
   "html.accountPreviousTitle": "Aurreko dantzaren errekorra",
   "html.gpuHintTitle": "Hardware-azelerazioa",
   "html.iosHintTitle": "Jokatu pantaila osoan",
+  "html.audioResumeTitle": "Musika geldituta",
+  "html.audioResumeText": "Jokotik irten zara eta gelditu egin da. Ukitu edozein tokitan jarraitzeko.",
   "html.seasonsTitle": "Ospearen aretoa",
   "html.seasonsPickerTitle": "Aukeratu figura",
   "html.seasonsFigures.aria": "Figura",

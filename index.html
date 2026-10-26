@@ -563,6 +563,15 @@
     <div class="sheet-actions"><button id="ios-hint-ok" type="button" class="btn btn-primary" data-i18n="ui.common.ok">D’acord</button></div>
   </div>
 </dialog>
+<!-- «Música en pausa» (src/ui/audio-resume.js): back from another app, iOS keeps the sound stopped until a tap; no X, any tap resumes -->
+<dialog id="audio-resume-menu" class="sheet hint-menu" tabindex="-1" aria-labelledby="audio-resume-title" aria-describedby="audio-resume-text">
+  <div class="sheet-body">
+    <svg class="hint-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4zM17 9v6M20.5 9v6"/></svg>
+    <h2 id="audio-resume-title" data-i18n="html.audioResumeTitle">Música en pausa</h2>
+    <p id="audio-resume-text" class="board-text" data-i18n="html.audioResumeText">Has sortit del joc i s’ha aturat. Toca qualsevol lloc per continuar.</p>
+    <div class="sheet-actions"><button id="audio-resume-ok" type="button" class="btn btn-primary" data-i18n="html.resume"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 10 7-10 7Z"/></svg>Continua</button></div>
+  </div>
+</dialog>
 <!-- «Saló de la fama» (src/ui/seasons-ui.js): a figure's closed seasons, one at a time («Tria temporada»: by year); one height, loading/empty/error inside its box -->
 <dialog id="seasons-menu" class="sheet" tabindex="-1" aria-labelledby="seasons-title">
   <button id="seasons-close" type="button" data-i18n-attr="aria-label:html.attr.close" class="sheet-x" aria-label="Tanca"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>

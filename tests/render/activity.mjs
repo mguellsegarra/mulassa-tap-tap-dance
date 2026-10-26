@@ -10,6 +10,7 @@ const G = { activityEpoch, state: 'select', paused: false };
 const ctx = vm.createContext({ G, pageActive: () => active,
   chip: { suspend() { this.ctx.suspend(); }, clearMenuSfx() { cleared++; }, ctx: { state: 'running', currentTime: 0, suspend() { suspended++; } }, wake() { woke++; } },
   pauseGame() { if (G.state === 'play') G.paused = true; },
+  offerAudioResume() { ctx.offers = (ctx.offers || 0) + 1; }, // its card: tests/ui/audio-resume.mjs
   document: { addEventListener(k, f) { handlers[k] = f; } },
   addEventListener(k, f) { handlers[k] = f; }, setTimeout(f, ms) { timers.push({ f, ms }); },
   glc: { addEventListener() {} }, // the WebGL watchdog's listeners (tests/render/scene-crowd.mjs)
@@ -37,10 +38,17 @@ assert(cleared > 0 && suspended > 0 && woke > 0);
   let resumes = 0; const chip = ctx.chip; chip.woke = true; chip.resume = () => { resumes++; };
   Object.assign(G, { state: 'select', paused: false }); active = true; handlers.focus();
   assert.equal(resumes, 1, 'the selector comes back with its sound');
+  assert.equal(ctx.offers, 1, 'and offers the «Música en pausa» card in case iOS keeps it stopped');
   const before = suspended; Object.assign(G, { state: 'play', paused: true, resuming: null }); handlers.focus();
   assert.equal(resumes, 1, 'a paused run is not resumed');
   assert.equal(suspended, before + 1, 'and stays suspended');
-  delete chip.woke; delete chip.resume; G.resuming = undefined;
+  // Back from another Safari tab, iOS shows the page without focus until a tap: inactive, but the card may still tell
+  Object.assign(G, { state: 'select', paused: false }); active = false;
+  handlers.visibilitychange({ type: 'visibilitychange' });
+  assert.equal(ctx.offers, 2, 'visible without focus: the «Música en pausa» card is offered');
+  handlers.blur({ type: 'blur' });
+  assert.equal(ctx.offers, 2, 'a window that only loses focus (desktop) gets no card');
+  active = true; delete chip.woke; delete chip.resume; G.resuming = undefined;
 }
 
 // A run's audio clock that stands still (suspended, or `running` with a frozen currentTime) pauses the run after 1 s.

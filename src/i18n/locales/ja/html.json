@@ -79,6 +79,8 @@
   "html.accountPreviousTitle": "前の踊りの記録",
   "html.gpuHintTitle": "ハードウェアアクセラレーション",
   "html.iosHintTitle": "全画面で遊ぶ",
+  "html.audioResumeTitle": "音楽を一時停止中",
+  "html.audioResumeText": "ゲームを離れたので止まりました。どこでもタップすると続きます。",
   "html.seasonsTitle": "殿堂",
   "html.seasonsPickerTitle": "仲間を選ぶ",
   "html.seasonsFigures.aria": "仲間",

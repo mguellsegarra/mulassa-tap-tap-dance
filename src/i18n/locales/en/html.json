@@ -79,6 +79,8 @@
   "html.accountPreviousTitle": "Previous dance’s personal best",
   "html.gpuHintTitle": "Hardware acceleration",
   "html.iosHintTitle": "Play in full screen",
+  "html.audioResumeTitle": "Music paused",
+  "html.audioResumeText": "You left the game and it stopped. Tap anywhere to continue.",
   "html.seasonsTitle": "Hall of fame",
   "html.seasonsPickerTitle": "Choose figure",
   "html.seasonsFigures.aria": "Figure",

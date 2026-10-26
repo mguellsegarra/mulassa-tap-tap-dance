@@ -475,6 +475,18 @@ const run = source => vm.runInContext(source, context);
   hudNode.listeners.contextrestored();
   assert(hudNode.width > 0, 'a context restore re-runs resize()');
 }
+{ // a WebGL context lost and never restored: after NO_RESTORE_MS on screen the music stops and the error card offers a reload
+  const fails = [], reports = [], report = errors.report, paused = run('G.paused');
+  context.window.__mulassaFail = (...a) => fails.push(a); errors.report = k => reports.push(k);
+  try {
+    run('renderer.lost = false; restoreLate();');
+    assert(!fails.length && !reports.length, 'restored in time: nothing happens');
+    run('renderer.lost = true; restoreLate();');
+    assert.deepEqual(reports, ['webgl-not-restored'], 'never restored: reported');
+    assert(fails.length === 1 && fails[0][2] === true, 'never restored: the error card, with a reload');
+    assert(run('G.paused'), 'and the run is held, so the pause menu never opens over the card');
+  } finally { errors.report = report; delete context.window.__mulassaFail; run(`renderer.lost = false; G.paused = ${paused};`); }
+}
 { // the text sprites' canvases are blanked too, each restoring on its own: any one coming back drops the cache, and a
   // sprite painted while its context is still lost is never kept (it would stay blank)
   const made = document.createElement, canvases = [], ctx = { lost: false, setTransform() {}, isContextLost() { return this.lost; } };

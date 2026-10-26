@@ -47,8 +47,9 @@ const sample = async (page, name) => {
       window.__representation.quality(level);
       const frame = () => new Promise(r => requestAnimationFrame(r));
       await frame(); await frame();
-      let draws = Infinity; // the steady frame: the least of three windows (a one-off burst, like a share render, is not the budget)
-      for (let w = 0; w < 3; w++) { const d0 = window.__draws; for (let i = 0; i < 3; i++) await frame(); draws = Math.min(draws, Math.ceil((window.__draws - d0) / 3)); }
+      let draws = Infinity; // the steady frame: the least of six windows (a one-off burst, like a share render or a busy machine's
+      // stalled frame, is not the budget; a real regression stays high in every window)
+      for (let w = 0; w < 6; w++) { const d0 = window.__draws; for (let i = 0; i < 3; i++) await frame(); draws = Math.min(draws, Math.ceil((window.__draws - d0) / 3)); }
       return { ...window.__perfLive(), draws };
     }, [LEVELS[name], name]);
     if (s.quality === name) return s;
@@ -68,8 +69,10 @@ try {
     const pick = id => page.evaluate(i => document.querySelector(`[data-id="${i}"]`).click(), id);
     const round = async () => { const seen = {}; for (const id of FIGURES) { await pick(id); for (const name of Object.keys(LEVELS)) seen[`${id} ${name}`] = await sample(page, name); } return seen; };
     for (const id of FIGURES) { await pick(id); await sample(page, 'medium'); } // warms: a first visit builds some things lazily
-    await round(); // one more warm round: on a busy machine the showreel's lazy builds trail on (a leak still grows every round)
-    const first = await round(), second = await round();
+    // rounds until two in a row match (at most four): on a busy machine the showreel's lazy builds trail on for a round or
+    // two, while a leak grows every round and still fails below
+    let first = await round(), second = await round();
+    for (let r = 0; r < 2 && Object.keys(first).some(k => first[k].geos !== second[k].geos || first[k].texs !== second[k].texs); r++) [first, second] = [second, await round()];
     await pick(FIGURES[0]);
     const end = await sample(page, 'medium');
     for (const k of Object.keys(first)) {

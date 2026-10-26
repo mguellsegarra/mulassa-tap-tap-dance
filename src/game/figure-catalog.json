@@ -584,6 +584,8 @@
       "town": "terrassa",
       "entity": "Drac Baluk Astharot",
       "entityName": "Associació Juvenil Drac Baluk Astharot i Diables de Ca n’Aurell",
+      "owner": "Associació Juvenil Drac Baluk Astharot",
+      "manager": "Diables de Ca n’Aurell",
       "sources": [
         "https://www.bestiari.cat/figura/drac-baluk-astharot-2/"
       ]

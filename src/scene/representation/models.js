@@ -17,6 +17,8 @@ function head(o) {
   v.box(0, 0, 0, 0.34, 0.34, 0.32, o.skin);
   for (const s of [1, -1]) v.box(s * 0.08, 0.17, 0.165, 0.05, 0.05, 0.01, INK, 0).box(s * 0.08 + s * 0.012, 0.198, 0.1705, 0.018, 0.018, 0.003, SHINE, 0);
   if (o.cover !== 'mocador') HAIRDO[o.hair.style](v, hair, capped, o);
+  // under a cap or hat the hair reaches the brim: a bare band of nape between them read, from behind, as a face
+  if (capped && o.cover !== 'mocador' && !['calb', 'rapat'].includes(o.hair.style)) v.box(0, 0.26, -0.17, 0.36, 0.04, 0.04, hair);
   if (o.beard) {
     v.box(0, -0.01, 0.15, 0.3, 0.12, 0.04, hair).box(0, 0.11, 0.165, 0.14, 0.03, 0.02, hair);
     for (const s of [1, -1]) v.box(s * 0.155, 0.005, 0.09, 0.04, 0.165, 0.15, hair);
@@ -49,7 +51,7 @@ const HAIRDO = {
   },
   cua(v, c, capped, o) {
     if (!capped) crown(v, c);
-    nape(v, c, 0.12);
+    nape(v, c, 0.05); // down to the neck: a short nape over a dark skin read as a face from behind
     const z = -Math.max(0.235, o.torsoD / 2 / o.headK + 0.05);
     v.box(0, 0.21, -0.215, 0.08, 0.06, 0.05, c).box(0, -0.06, z, 0.09, 0.28, 0.07, c);
   },
@@ -86,7 +88,7 @@ const COVER = {
     v.box(0, -0.14, -0.02, 0.36, 0.13, 0.4, c);
   },
   gorra(v, c) { v.box(0, 0.3, -0.01, 0.39, 0.12, 0.37, c).box(0, 0.31, 0.21, 0.3, 0.03, 0.09, c); },
-  barret(v, c) { v.box(0, 0.34, 0, 0.3, 0.1, 0.32, c).box(0, 0.3, 0.08, 0.43, 0.03, 0.45, c); },
+  barret(v, c) { v.box(0, 0.34, 0, 0.3, 0.1, 0.32, c).box(0, 0.3, 0.04, 0.43, 0.03, 0.52, c); }, // the brim all round, the back too
 };
 
 // ---------------------------------------------------------------- the body

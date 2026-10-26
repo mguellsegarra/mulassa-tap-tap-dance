@@ -1,3 +1,5 @@
+import { HAIR } from './kit.js';
+
 // The owner\'s approved artistic weights for the LOCAL public trial. No ethnicity/origin fields or inferred identities.
 export const PUBLIC_GENDER_WEIGHTS = Object.freeze({ dona: 0.5, home: 0.45, 'no binaria': 0.025, 'no declarat': 0.025 });
 export const PUBLIC_AGE_WEIGHTS = Object.freeze({ '0-14': 0.13, '15-64': 0.67, '65+': 0.2 });
@@ -5,6 +7,11 @@ export const PUBLIC_AGE_WEIGHTS = Object.freeze({ '0-14': 0.13, '15-64': 0.67, '
 // Youth includes adults aged 18-24; it is an age band, not a claim about legal adulthood.
 export const MIDDLE_YOUTH_SHARE = 11.6 / 67.2;
 const ROBES = ['#33456e', '#2a2a2a', '#5b3b2a', '#6b2f4a', '#2f5a4a', '#8a7d6b', '#a0522d', '#4a4a5c', '#7a6a9a', '#b8a58a'];
+const CLOTHES = [...ROBES, '#2f62d6', '#d93a3a', '#3a9d4b', '#f2c230', '#f07a1a', '#ff8fb1', '#29b6c6', '#8e44ad', '#eeeeee', '#c8b28a'];
+const LEGS = ['#2a2a2a', '#5b4a42', '#33456e', '#4a4a5c', '#6b2f4a', '#8a7d6b']; // tights under a skirt
+const BEARD_STYLES = ['curt', 'rapat', 'calb', 'monyo']; // a beard under long hair or braids read odd
+const darker = c => '#' + c.slice(1).match(/../g).map(h => Math.round(parseInt(h, 16) * 0.75).toString(16).padStart(2, '0')).join('');
+const CHILD_HAIR = HAIR.filter(c => c !== '#8c8c8c' && c !== '#d9d6cf'); // no grey or white on a child
 export const REVIEW_LOOKS =['p04', 'p05', 'p08', 'p02', 'p09', 'p12', 'p06', 'p10'];
 export function populationRandom(seed) {
   let s = seed >>> 0;
@@ -56,7 +63,8 @@ export function buildPublicSpecs(sources, catalogue, seed = 20261020) {
   const ages = allocatePopulation(n, PUBLIC_AGE_WEIGHTS, seed ^ 0x712a);
   const middle = ages.filter(x => x === '15-64').length;
   const stages = allocatePopulation(middle, { jove: MIDDLE_YOUTH_SHARE, adult: 1 - MIDDLE_YOUTH_SHARE }, seed ^ 0x1635);
-  const random = populationRandom(seed ^ 0x42da), ordinary = catalogue.filter(s => !s.mobility);
+  const random = populationRandom(seed ^ 0x42da), ordinary = catalogue.filter(s => !s.mobility), pick = a => a[Math.floor(random() * a.length)];
+  const styles = [...new Set(catalogue.map(s => s.hair.style))], childStyles = styles.filter(s => s !== 'calb');
   const review = reviewSlots(sources, new Set(catalogue.filter(s => s.mobility === 'cadira').map(s => s.id)));
   let j = 0;
   return sources.map((source, i) => {
@@ -68,9 +76,15 @@ export function buildPublicSpecs(sources, catalogue, seed = 20261020) {
     // The long tunic + headscarf look read too often and always navy: half as frequent, its own colours each time,
     // and never on a child (they dress like the other children: another look, so the age/gender counts stay as allocated).
     if (look.cover === 'mocador' && !review.has(i) && (age === 'infant' || random() < 0.5)) look = ordinary.filter(s => s.cover !== 'mocador')[Math.floor(random() * (ordinary.length - 1))];
-    if (look.cover === 'mocador') {
-      const robe = ROBES[Math.floor(random() * ROBES.length)], scarf = ROBES[Math.floor(random() * ROBES.length)];
-      look = { ...look, coverColour: scarf, top: { ...look.top, colour: robe }, bottom: { ...look.bottom, colour: robe } };
+    // A few looks for hundreds of people: everyone outside the review examples redraws their hair and their clothes'
+    // colours, so skirts are not all one colour and a child is not an adult's look without the beard.
+    if (!review.has(i)) {
+      const robe = look.cover === 'mocador', top = pick(robe ? ROBES : CLOTHES), whole = robe || look.top.kind === 'vestit';
+      const style = pick(age === 'infant' ? childStyles : look.beard ? BEARD_STYLES : styles);
+      look = { ...look, hair: { style, colour: pick(age === 'infant' ? CHILD_HAIR : HAIR) },
+        top: { ...look.top, colour: top, ...(look.top.trim ? { trim: darker(top) } : {}) },
+        bottom: { ...look.bottom, colour: whole ? top : pick(CLOTHES), ...(look.bottom.legs ? { legs: pick(LEGS) } : {}) },
+        ...(look.cover ? { coverColour: pick(robe ? ROBES : CLOTHES) } : {}) };
     }
     // The look and the age are drawn apart: a child never keeps the look's beard.
     return { ...look, id: `public-${seed >>> 0}-${source.row}-${source.slot}`, age, height: 1, beard: !!look.beard && age !== 'infant',

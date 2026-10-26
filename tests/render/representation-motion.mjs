@@ -107,5 +107,12 @@ assert(caneError<.005,`final held cane stays on ground: ${caneError}`);
  const specs=buildPublicSpecs(sources,CATALOGUE,7);
  assert(specs.some(s=>s.beard),'some adult keeps a beard');
  assert(!specs.some(s=>s.beard&&s.age==='infant'),'no bearded child');
+ // a handful of looks must not read as copies: skirts in many colours, children not an adult's look minus the beard
+ const skirts=new Set(specs.filter(s=>s.cover!=='mocador'&&(s.bottom.kind==='faldilla'||s.top.kind==='vestit')).map(s=>s.top.kind==='vestit'?s.top.colour:s.bottom.colour));
+ assert(!specs.some(s=>s.beard&&!['curt','rapat','calb','monyo'].includes(s.hair.style)),'a beard under long hair');
+ assert(skirts.size>=8,`skirts in only ${skirts.size} colours`);
+ const dress=s=>[s.hair.style,s.hair.colour,s.top.colour,s.bottom.colour].join();
+ const adults=new Set(specs.filter(s=>s.age!=='infant'&&!s.mobility).map(dress)),kids=specs.filter(s=>s.age==='infant'&&!s.mobility);
+ assert(kids.filter(s=>adults.has(dress(s))).length<=kids.length*0.05,'children dressed as adults minus the beard');
 }
 console.log('representation live motion ok', {baselineJump,fixedJump,caneError});

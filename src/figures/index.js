@@ -30,7 +30,7 @@ export const FIGURE_TRAITS = Object.freeze({
     photoBody: 'bou', springs: false, splashHost: false, splashPartner: false, landing: 0.9,
   }),
 });
-// The Bou ships with 1.2.0 (branch feat/bou empties this set); until then the selector shows it as pending.
+// The Bou ships with 1.3.0 (branch feat/bou empties this set); until then the selector shows it as pending.
 export const UNRELEASED_IDS = Object.freeze(new Set(['bou-tradicional-valls']));
 export const PLAYABLE_IDS = Object.freeze(Object.keys(FIGURE_TRAITS).filter(id => !UNRELEASED_IDS.has(id))); // in the order free play's Tab goes round
 export const traitsOf = id => FIGURE_TRAITS[id] ?? FIGURE_TRAITS['mulassa-valls'];

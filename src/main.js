@@ -1,5 +1,7 @@
 // Mulassa Tap Tap Dance: the composition root. Each system lives in its own module (core, scene, game, hud, ui, dev);
 // this file imports them in the order they must start, wires the input and the sheets' buttons together, and runs the frame loop.
+// a tab or home-screen app woken from memory reloads for a new deploy, on a quiet menu
+import './services/update.js';
 import './platform/polyfills.js';
 import { errors } from './services/errors.js';
 import song from './song.json';

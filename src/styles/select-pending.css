@@ -199,3 +199,6 @@ body:has(:focus-visible) #select .sel-card[aria-selected="true"]:not(:focus-visi
 /* Big desktops: only a nudge (zoom keeps cards, type, pills, dock and button in proportion). A desktop's css px are
    already as big as a laptop's or bigger: x1.45 made the selector giant on a 27" 5K. measure() divides by it. */
 @media (min-width: 2200px) and (min-height: 1200px) { #select { zoom: 1.1; } }
+/* Laptops and 1080p screens up to a 16" MacBook (a 13"'s ~1440×790 window): the desktop dock and type crowded the plaça; read better
+   at 90%, the corner row too (select-chrome.css), as the browser's own zoom would. A mouse only: touch targets keep their size. */
+@media (min-width: 1200px) and (min-height: 600px) and (max-height: 1010px) and (pointer: fine) { #select { zoom: 0.9; } }

@@ -74,6 +74,7 @@ body.fps-on #select .sel-info { max-height: calc(100% - var(--info-top) - var(--
   #select:has(#select-carousel[data-fits]) .sel-info { max-height: calc(100% - var(--info-top) - 56px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); }}
 /* the zoom (x1.1) would push the logo's top 1.6 px under the corner buttons' (which are outside #select) */
 @media (min-width: 2200px) and (min-height: 1200px) { #select > .sel-logo { top: calc((16px + env(safe-area-inset-top)) / 1.1); } }
+@media (min-width: 1200px) and (min-height: 600px) and (max-height: 1010px) and (pointer: fine) { body:has(#select:not([hidden])) :is(#free, #music, #settings) { zoom: 0.9; } } /* the selector's 90% (select-pending.css): logo and row keep one top */
 
 /* Step 2's podium (select-podium.js): the standings card's look (one card style per role), its header
    the ranking line; while it shows, the line and the standings card give way. A row per place: the disc, the name, the points. */

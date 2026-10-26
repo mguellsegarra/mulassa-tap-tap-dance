@@ -22,10 +22,16 @@ function bodyGeometry() { // a balloon, not a ball: the lower half narrows towar
 }
 function glowTexture() { // a soft white disc for the pop's flash
   const c = document.createElement('canvas'); c.width = c.height = 64;
-  const x = c.getContext('2d'), g = x.createRadialGradient(32, 32, 0, 32, 32, 32);
-  g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.35, 'rgba(255,236,160,0.85)'); g.addColorStop(1, 'rgba(255,190,60,0)');
-  x.fillStyle = g; x.fillRect(0, 0, 64, 64);
-  return new THREE.CanvasTexture(c);
+  const x = c.getContext('2d'), paint = () => {
+    const g = x.createRadialGradient(32, 32, 0, 32, 32, 32);
+    g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.35, 'rgba(255,236,160,0.85)'); g.addColorStop(1, 'rgba(255,190,60,0)');
+    x.fillStyle = g; x.fillRect(0, 0, 64, 64);
+  };
+  paint();
+  const tex = new THREE.CanvasTexture(c);
+  // a GPU process crash blanks the canvas, and three.js re-uploads the texture from it after the WebGL restore: paint it again
+  c.addEventListener?.('contextrestored', () => { paint(); tex.needsUpdate = true; });
+  return tex;
 }
 function shardGeometry() { // a torn scrap of rubber: a curved sliver
   const s = new THREE.Shape();

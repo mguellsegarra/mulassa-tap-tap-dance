@@ -468,15 +468,27 @@ const COLLAPSE_POINTS = new Float32Array([...silhouettePoints(0.5), ...silhouett
 const MULA_POINTS = silhouettePoints();
 `, context);
 const run = source => vm.runInContext(source, context);
-{ // a GPU crash restores the 2D contexts blank, with the identity transform: the HUD is sized and scaled again and the
-  // text sprites (their own canvases, blanked too) are painted afresh
+{ // a GPU crash restores the 2D contexts blank, with the identity transform: the HUD is sized and scaled again
   const hudNode = nodes.get('hud');
   assert.equal(typeof hudNode.listeners.contextrestored, 'function', 'the HUD listens for its 2D context restore');
-  run(`sprites.set('restore-probe', { c: {}, px: 16 });`); // the stub document has no 2D canvases to paint one
   hudNode.width = 0;
   hudNode.listeners.contextrestored();
   assert(hudNode.width > 0, 'a context restore re-runs resize()');
-  assert(!run(`sprites.has('restore-probe')`), 'a context restore drops the blanked text sprites');
+}
+{ // the text sprites' canvases are blanked too, each restoring on its own: any one coming back drops the cache, and a
+  // sprite painted while its context is still lost is never kept (it would stay blank)
+  const made = document.createElement, canvases = [], ctx = { lost: false, setTransform() {}, isContextLost() { return this.lost; } };
+  document.createElement = tag => tag === 'canvas' ? (canvases.push({ listeners: {}, addEventListener(t, h) { this.listeners[t] = h; }, getContext: () => ctx }), canvases.at(-1)) : made(tag);
+  const okBefore = run('spriteOk'); run('spriteOk = true;');
+  const probe = key => run(`sprite('${key}', 1, () => ({ w: 4, h: 4 }), () => {})`);
+  assert(probe('restore-a') && run(`sprites.has('restore-a')`), 'a healthy sprite is cached');
+  assert.equal(typeof canvases[0].listeners.contextrestored, 'function', 'each sprite canvas listens for its own restore');
+  canvases[0].listeners.contextrestored();
+  assert(!run(`sprites.has('restore-a')`), 'a restored (blank) sprite canvas drops the cache');
+  ctx.lost = true;
+  assert.equal(probe('restore-b'), null, 'painted into a lost context: drawn directly instead');
+  assert(!run(`sprites.has('restore-b')`), 'and never cached blank');
+  document.createElement = made; run(`spriteOk = ${okBefore}; sprites.clear(); spare.length = 0; spritePx = 0;`);
 }
 run('qualityLevel = 0; applyRenderQuality();');
 assert(run('crowd.some(p => !p.g.visible)'), 'downgrade hides some spectators');

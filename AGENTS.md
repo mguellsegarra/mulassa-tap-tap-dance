@@ -92,6 +92,7 @@ instructions have propagated through Git or copy them into unrelated projects.
 | A figure's colla, the crowd around it and its own festa effects | `.agents/skills/mulassacat-colla-festa/SKILL.md` |
 | Selector vector portraits, pixel portraits and pending silhouettes | `.agents/skills/mulassacat-miniatures/SKILL.md` |
 | Making an approved figure playable on every screen | `.agents/skills/mulassacat-integracio-figura/SKILL.md` |
+| **Any UI change or proposal (mandatory):** centred, equal margins, proportional and equidistant spacing, one card style per role; measured at several viewports | `.agents/skills/uipolish/SKILL.md` |
 | UI changes affecting interaction, focus, layout or loading states; before reporting any visual change; the owner's screen recordings | `.agents/skills/mulassacat-validacio-visual/SKILL.md` |
 | Proposals, review pages, prototypes and decisions with the owner | `.agents/skills/mulassacat-revisio-amb-marc/SKILL.md` |
 
@@ -121,7 +122,7 @@ Read-only issue inspection (organization `ondori`, project `mulassa-tap-tap-danc
 
 ## Process
 
-- Every UI change is validated with a real screenshot (at least 375×667 and 320×568, plus desktop when it applies) before it is reported done; apply `/uipolish` inside that evaluation loop (measure, look at the capture, fix, repeat). Unit tests alone never prove a layout.
+- Every UI change is validated with a real screenshot (at least 375×667 and 320×568, plus desktop when it applies) before it is reported done; apply `.agents/skills/uipolish/SKILL.md` (a must, not optional) inside that evaluation loop (measure, look at the capture, fix, repeat). Unit tests alone never prove a layout.
 - Small, targeted edits; keep the existing style and comment voice (short "why" comments).
 - Add a test for new logic (a new file in the right `tests/<area>/` folder, which `tests/run.mjs` finds, or `check.mjs`); keep `npm run check` green.
 - Don't commit unless asked.

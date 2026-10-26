@@ -5,7 +5,7 @@ description: "Mulassa project only. Prove a visual or interaction change before 
 
 # Visual validation
 
-Apply only to Mulassa and its checkouts. Complements `mulassacat-web-performance-diagnosis` (frame cost) and the global `uipolish` layout check. It does not authorize using a physical device, publishing or Git operations.
+Apply only to Mulassa and its checkouts. Complements `mulassacat-web-performance-diagnosis` (frame cost) and the `uipolish` layout check (`.agents/skills/uipolish/`). It does not authorize using a physical device, publishing or Git operations.
 
 ## The bar
 

@@ -5,7 +5,7 @@ description: "Mulassa project only. How to run a review round with the project's
 
 # Review rounds with the owner
 
-Apply only to Mulassa and its checkouts. The global CLAUDE/AGENTS instructions (approvals in chat, `resum` reports, `unslop` prose, `uipolish`) and the project's AGENTS.md (no messages between agents, one-server rules) still apply; this skill adds what the owner keeps asking for on this project.
+Apply only to Mulassa and its checkouts. The global CLAUDE/AGENTS instructions (approvals in chat, `resum` reports, `unslop` prose); `uipolish` is a repo skill (`.agents/skills/uipolish/`) and mandatory for any UI proposal and the project's AGENTS.md (no messages between agents, one-server rules) still apply; this skill adds what the owner keeps asking for on this project.
 
 ## Proposals
 

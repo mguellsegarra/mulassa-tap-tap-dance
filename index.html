@@ -5,6 +5,19 @@
 <!-- One address: the old Pages host (exactly it, not previews or dev) goes to mulassa.cat, keeping path, ?repte=… and hash.
      Pages _redirects can't match a hostname, so this runs first; tests/pages.mjs checks it. -->
 <script>if (location.hostname === 'mulassa-tap-tap-dance.pages.dev') location.replace('https://mulassa.cat' + location.pathname + location.search + location.hash);</script>
+<!-- A copy of this page kept from before a deploy (a tab woken from memory, iOS's cold start from an old copy) would boot the
+     old game: compare this page's build with /version.json first and load the new one at once, before the game starts.
+     One try per build (sessionStorage, the key src/services/update.js uses), so a CDN still serving the old page can't loop. -->
+<script id="build-check">(function () {
+  var own = '__MULASSA_BUILD__';
+  if (!window.fetch) return;
+  fetch('/version.json', { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (v) {
+    var tried = null; try { tried = sessionStorage.getItem('reloaded-for'); } catch (e) { /* private mode */ }
+    if (!v || !v.build || v.build === own || v.build === tried) return;
+    try { sessionStorage.setItem('reloaded-for', v.build); } catch (e) { /* at worst one more check */ }
+    location.reload();
+  }).catch(function () { /* offline or no file (dev server): the game boots as it is */ });
+})();</script>
 <link rel="canonical" href="https://mulassa.cat/">
 <link rel="alternate" type="text/markdown" href="/index.md">
 <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebSite","@id":"https://mulassa.cat/#site","name":"Mulassa Tap Tap Dance","url":"https://mulassa.cat/","inLanguage":"ca","publisher":{"@id":"https://mulassa.cat/#autor"}},{"@type":"Person","@id":"https://mulassa.cat/#autor","name":"Marc Güell Segarra","url":"https://ondori.dev","sameAs":["https://ondori.dev","https://github.com/mguellsegarra","https://github.com/mguellsegarra/mulassa-tap-tap-dance"],"contactPoint":{"@type":"ContactPoint","contactType":"general","email":"holi@mulassa.cat"}},{"@type":"VideoGame","name":"Mulassa Tap Tap Dance","url":"https://mulassa.cat/","description":"Joc de ritme en català: balla la Mulassa de Valls al ritme tocant GUA i PA.","inLanguage":"ca","genre":"Joc de ritme","applicationCategory":"GameApplication","operatingSystem":"Qualsevol navegador","isAccessibleForFree":true,"image":"https://mulassa.cat/og.jpg","author":{"@id":"https://mulassa.cat/#autor"},"isPartOf":{"@id":"https://mulassa.cat/#site"}}]}</script>

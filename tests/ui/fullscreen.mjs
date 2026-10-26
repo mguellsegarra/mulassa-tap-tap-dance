@@ -41,6 +41,11 @@ goFullscreen(); assert.equal(asked, 5, 'still out after it');
 doc.fullscreenElement = {}; free(true); free(false); assert.equal(exited, 2, 'fullscreen from before free play is kept');
 doc.fullscreenElement = null;
 
+// In and out of free play before the browser has gone fullscreen: when it arrives, it is taken off again.
+free(true); assert.equal(asked, 6); free(false); assert.equal(exited, 2, 'nothing to take off yet');
+fsIn(); assert.equal(exited, 3, 'the late fullscreen goes off at once'); fsOut();
+goFullscreen(); assert.equal(asked, 6, 'and it is not counted for the game (the player had left it before)');
+
 // Not iPhone/iPad, not desktop.
-ctx.COARSE.matches = false; free(true); free(false); assert.equal(asked, 5, 'no touch screen: nothing');
+ctx.COARSE.matches = false; free(true); free(false); assert.equal(asked, 6, 'no touch screen: nothing');
 console.log('fullscreen ok');

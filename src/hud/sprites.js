@@ -1,5 +1,5 @@
 // The HUD palette, fonts and the text sprite cache (each string is painted once and blitted after).
-import { H, hud } from './canvas.js';
+import { H } from './canvas.js';
 import { onTheme } from '../game/figure-theme.js';
 import { fontStack, loadScriptFonts, glyphsReady, isLatin } from '../i18n/fonts.js';
 
@@ -24,8 +24,13 @@ let spritePx = 0, spriteOk = true, glyphsOk = isLatin(); // glyphsOk false: this
 export const textWidths = new Map(); // primitives.js textWidth(): measured once per font and string, dropped with the sprites
 const fontsArrived = () => { glyphsOk ||= glyphsReady(document.fonts, "'Baloo 2'"); sprites.forEach(s => spare.push(s.c)); sprites.clear(); spritePx = 0; textWidths.clear(); };
 try { document.fonts.addEventListener('loadingdone', fontsArrived); } catch { /* no font loading API */ } // Safari does not always fire it: the loads below repaint too
-// a GPU process crash also blanks the sprites' canvases (restored empty with the HUD's): paint them again
-hud.addEventListener('contextrestored', fontsArrived);
+// A GPU process crash blanks every sprite's canvas, each restoring empty on its own and not with the HUD's: any one
+// coming back drops them all, and sprite() never keeps one painted into a lost context (spriteCanvas, below).
+const spriteCanvas = () => {
+  const c = document.createElement('canvas');
+  c.addEventListener?.('contextrestored', fontsArrived);
+  return c;
+};
 // canvas-only fonts are never fetched by themselves (no DOM text uses the pixel logo font), so ask for them explicitly;
 // the page cover waits for them (at most 3 s), so the logo never shows in a fallback font
 export let fontsReady = Promise.resolve();
@@ -52,12 +57,13 @@ export function sprite(key, u, size, paint, budget = false) {
   if (s) { sprites.delete(key); sprites.set(key, s); return s; } // most recently used goes last
   if (budget === true && spriteBudget <= 0) return null; // this frame has painted enough: the caller draws it directly
   if (budget) spriteBudget--;
-  const c = spare.pop() ?? (spriteOk ? document.createElement('canvas') : null), x = c?.getContext?.('2d');
+  const c = spare.pop() ?? (spriteOk ? spriteCanvas() : null), x = c?.getContext?.('2d');
   if (!x) { spriteOk = false; return null; }
   s = size(x);
   c.width = Math.max(1, Math.ceil(s.w * u)); c.height = Math.max(1, Math.ceil(s.h * u)); // also resets the context
   x.setTransform(u, 0, 0, u, 0, 0);
   paint(x, s);
+  if (x.isContextLost?.()) { spare.push(c); return null; } // painted into nothing: drawn directly until its canvas is back
   Object.assign(s, { c, w: c.width / u, h: c.height / u, px: c.width * c.height });
   if (!glyphsOk) return s; // drawn this once with the fallback font, never cached
   sprites.set(key, s);

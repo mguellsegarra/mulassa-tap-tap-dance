@@ -325,6 +325,25 @@ console.log('share: challenge link, captions, fallbacks, eligibility, privacy an
     doc.getElementById('share-close').listeners.click();
     console.log('share sheet: a steady primary while the card is redrawn ok');
   }
+  // the photo is rendered once per results screen and format, but a GPU process crash blanks its canvas: once it is
+  // restored (empty) the next card renders it again instead of drawing a blank photo
+  {
+    nodes.clear(); shared.length = 0;
+    const photos = [];
+    const hero = (w, h) => { const p = { width: w, height: h, listeners: {}, addEventListener(t, f) { this.listeners[t] = f; } }; photos.push(p); return p; };
+    const ui = setupShare({ focusIn() {}, doc, nav: phone, store: { get: () => null, set() {} }, fonts: null,
+      url: { createObjectURL: () => 'blob:card', revokeObjectURL() {} }, settle: () => Promise.resolve(), hero });
+    ui.results(true, run({ diff: 0, pct: 95, t: 5 }), null);
+    doc.getElementById('results-share').listeners.click(); await wait();
+    assert.equal(photos.length, 1, 'the first card renders its photo');
+    doc.getElementById('share-nick').listeners.change(); await wait();
+    assert.equal(photos.length, 1, 'a redraw reuses it');
+    photos[0].listeners.contextrestored();
+    doc.getElementById('share-nick').listeners.change(); await wait();
+    assert.equal(photos.length, 2, 'a restored (blank) photo is rendered again');
+    doc.getElementById('share-close').listeners.click();
+    console.log('share sheet: a photo blanked by a GPU crash is rendered again ok');
+  }
   // the profile's answer arrives after the card is drawn (a publication refreshes the cached name): the card is drawn again,
   // with the check; an unchanged name draws nothing
   {

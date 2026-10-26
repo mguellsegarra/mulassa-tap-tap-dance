@@ -72,11 +72,13 @@ export function setupShare({ focusIn, restore = () => {}, hero = () => null, sta
       if (lang() !== l) return prepare(); // the language changed while the fonts loaded: start again in the new one
       if (!heroes[f]) await settle();
       if (r !== req || !menu.open) return;
-      if (!heroes[f]) {
+      if (!heroes[f]) { // rendered once per results screen and format (a render target, then read back)
         const photo = await hero(...PHOTO[f], d.figureId);
         if (r !== req || !menu.open) return;
         heroes[f] = photo;
-      } // rendered once per results screen and format (a render target, then read back)
+        // a GPU process crash blanks its canvas: the next card renders it again (or draws the stand-in, share-capture.js)
+        photo?.addEventListener?.('contextrestored', () => { if (heroes[f] === photo) delete heroes[f]; });
+      }
       named = JSON.stringify(nameNow()); // read now: the profile's answer may have come while the photo rendered
       const canvas = drawCard(doc.createElement('canvas').getContext('2d'), f, data(), heroes[f]);
       const out = await toJpeg(canvas, 0.9, d.figureId);

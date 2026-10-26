@@ -86,9 +86,19 @@ export const setBalloonView = v => { // the Drac: a flat carretilla icon, the Bo
   if (v && bouFig()) { H.save(); H.setTransform(PXU, 0, 0, PXU, 0, 0); esquellotHang(v.x, v.y, v.r); H.restore(); return (balloonView = null); }
   return (balloonView = v);
 };
-let headArt = null; // the lane's drumroll head: stills of the same 3D balloon at three inflations (a live one would sit under the HUD band); vector until made
+let headArt = null, headTimer = 0; // the lane's drumroll head: stills of the same 3D balloon at three inflations (a live one would sit under the HUD band); vector until made
 // After the first frames and the page cover: drawing them holds the thread a moment, and froze the loader's Mulassa.
-setTimeout(function snap() { if (loader.covering) return setTimeout(snap, 500); try { headArt = balloonFx.snapshots(renderer, heroQuadMake(), [0.05, 0.55, 1]); } catch (err) { console.error(err); } }, 2500);
+const makeHeadArt = () => {
+  if (loader.covering) return (headTimer = setTimeout(makeHeadArt, 500));
+  headTimer = 0;
+  try {
+    headArt = balloonFx.snapshots(renderer, heroQuadMake(), [0.05, 0.55, 1]);
+    headArt.forEach(c => c.addEventListener?.('contextrestored', remakeHeadArt));
+  } catch (err) { console.error(err); }
+};
+// a GPU process crash blanks the stills: the vector head until they are taken again (a fresh context, once the GPU is back)
+const remakeHeadArt = () => { headArt = null; headTimer ||= setTimeout(makeHeadArt, 2500); };
+headTimer = setTimeout(makeHeadArt, 2500);
 // k 0..1 blends the tones; sq / rot are balloon3d's springs (squash, tilt) so it punches with every tap like the big one; the vector stays flat
 export function balloonHead(x, y, r, k = 0.5, sq = 0, rot = 0) {
   if (dracFig()) return carretillaShape(x, y + r * 0.1, r * 1.35, k, rot); // a thin diagonal: drawn larger than r so its ink matches the balloon's

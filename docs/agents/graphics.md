@@ -14,7 +14,7 @@
 - Hitches (first uses): animated text sizes use `text(..., grow)` (one sprite, scaled) instead of a new sprite per size;
   at most `SPRITES_NEW` new text sprites a frame (the rest drawn directly that frame); big words share one outline sprite
   per word/size (`bigWord` rim) and words needed on a beat are painted ahead (`warmStart`, `warmups`; on the splash the logo first). Every program,
-  hidden objects and the share photo's render-target variants included, is compiled up front (`precompile`), and again
+  hidden objects and the GLOBUS stills' sRGB pass included, is compiled up front (`precompile`), and again
   (screen only) after a quality step. Never share one material between plain and skinned/instanced meshes.
 - Mobile GPUs: respect `render-quality.js` profiles; don't raise DPR or shadow cost casually.
 
@@ -25,9 +25,31 @@
 - Shadow casters are an allow-list: a new mesh is `castShadow = false`, and only gameplay-relevant ones turn it on, at medium/high. A change to lights or colour fx re-checks the shadow programs (`material.needsUpdate`).
 - A new material, hidden mesh or shader variant must be reachable by `precompile`; check a first-use capture for a compile hitch.
 - Whatever is created at runtime and removed (render targets, canvas textures, geometries) has a named owner that calls `dispose()`; leak checks read `renderer.info.memory` after repeated use. Scene objects are built once and toggled (`docs/architecture.md`, Lifetime).
-- No synchronous GL reads (`readPixels`, queries) in the frame loop, except under `?perf=sync` and the share photo.
+- No synchronous GL reads (`readPixels`, queries) in the frame loop, except under `?perf=sync` and the one-off GLOBUS stills.
 - Real-device checks play a full song, not a short burst, and report device, thermal state, refresh rate and the `?perf` summary.
 - No WebGPU, `BatchedMesh` or KTX2 without a measured need; list the `onBeforeCompile` / `ShaderMaterial` patches that would have to be rewritten first.
+
+## GPU context loss (mobile GPUs)
+
+Android Chrome can crash its GPU process mid-game (an Adreno 618 did it on every results screen, from an off-screen
+render). Chrome then loses and restores the WebGL context **and every 2D canvas**, even small or detached ones: each
+comes back blank, with its default state (identity transform, default font), and fires its own `contextlost` /
+`contextrestored`, not at the same moment as the others. three.js restores the WebGL scene by itself; nothing restores
+2D state or canvas caches. Before adding a canvas or GPU work:
+
+- State set on a 2D context outside the frame (a transform, a font) is set again on that canvas's `contextrestored`
+  (the HUD runs `resize()`: without it the HUD was drawn at 1/3 in the top-left corner until the next rotation).
+- A canvas kept as a cache (text sprites, the GLOBUS stills, a `CanvasTexture`'s source) listens to its **own**
+  `contextrestored` and drops or repaints itself; never keep what was painted while `ctx.isContextLost()` (it stays
+  blank). A `CanvasTexture` repaints its canvas and sets `needsUpdate` (three.js re-uploads it from the blank canvas).
+- No heavy off-screen GPU work on a player's path (render targets plus a read back of a big image): the share photo is
+  a fixed file per figure (`public/share/`, made with `__dbg.hero`), never rendered on the device.
+- A lost context that never comes back shows the reload card after 5 s on screen (`src/ui/pause-actions.js`); a
+  failure card shown after boot passes its own reason so `errors.js` doesn't report it again as `boot-failed`.
+- Test with a real crash, not only `WEBGL_lose_context` (it never touches 2D canvases): Playwright's CDP
+  `Browser.crashGpuProcess` (`chrome://gpucrash` is blocked headless) on each screen you touch, then check the HUD's
+  scale and text, the GLOBUS head, the share card and the 3D. Contracts: `tests/render/scene-crowd.mjs` (HUD and
+  sprite restore, the never-restored card).
 
 ### Measured budgets (enforced by tests)
 

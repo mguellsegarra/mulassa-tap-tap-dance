@@ -15,7 +15,7 @@ This file holds the rules that apply to every task. Read the page for the area y
 | Public pages, SEO, `llms.txt` | `docs/agents/seo.md` |
 | Chart, judging, scoring, energy, HUD lane | `docs/agents/gameplay.md` |
 | UI conventions, selector, sheets, loading, safe areas | `docs/agents/ui.md` |
-| Dances, cameras, crowd, frame pacing, mobile GPUs | `docs/agents/graphics.md` |
+| Dances, cameras, crowd, frame pacing, mobile GPUs, GPU context loss and canvas caches | `docs/agents/graphics.md` |
 | Music style and audio rules | `docs/agents/audio.md` |
 
 ## T3 conversations: no automatic messages between agents

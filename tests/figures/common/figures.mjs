@@ -328,7 +328,8 @@ assert(soonPill && $('select-towns').innerHTML.includes('<span class="sel-soon-t
   assert.equal(banners.at(-1), INVITE_TOWN.id, 'the invitation stays last');
   assert.deepEqual(banners.filter(t => t !== 'valls' && t !== INVITE_TOWN.id), TOWNS.slice(1).filter(t => FIGURES.some(f => f.town === t.id)).map(t => t.id), 'the strip groups follow the pills');
   assert.equal(strip.banners[0].dataset.town, 'valls');
-  assert.deepEqual(FIGURES.filter(f => f.town === 'valls' && !playable(f)).map(f => f.id).slice(0, 6), ['bou-tradicional-valls', 'os-trabucaires-valls', 'cavallets-valls', 'basilisc-valls', 'aliga-valls', 'gegants-ciutat-valls'], "Valls' agreed order");
+  const vallsOrder = ['bou-tradicional-valls', 'os-trabucaires-valls', 'cavallets-valls', 'basilisc-valls', 'aliga-valls', 'gegants-ciutat-valls'].filter(id => UNRELEASED_IDS.has(id) || id !== 'bou-tradicional-valls'); // (the Bou, until its release)
+  assert.deepEqual(FIGURES.filter(f => f.town === 'valls' && !playable(f)).map(f => f.id).slice(0, 6), vallsOrder.slice(0, 6), "Valls' agreed order");
 }
 
 // Visible town controls stay in DOM Tab order; arrows must never land on folded towns.

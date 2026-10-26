@@ -5,7 +5,7 @@
 import { byId } from './sheet-kit.js';
 import { DIFFS } from '../game/chart.js';
 import { shareText, challengeUrl, challengeResult, bragWorthy, shareMode, linkMode, shareLinks, isCancel } from '../services/share.js';
-import { PHOTO, drawCard, cardAlt, toJpeg, loadCardFonts } from '../hud/share-card.js';
+import { drawCard, cardAlt, toJpeg, loadCardFonts } from '../hud/share-card.js';
 import { ALIAS_KEY } from './board-ui.js';
 import { errors } from '../services/errors.js';
 
@@ -13,8 +13,11 @@ const FORMAT_KEY = 'share-format';
 // The photo is a synchronous GPU render and read-back: let the sheet paint and finish coming in (index.html share-in,
 // 0.2 s) first, so it never waits behind the publish sheet or freezes mid-way; the shimmer holds the card's place.
 const afterEntrance = () => new Promise(r => (globalThis.requestAnimationFrame ?? setTimeout)(() => setTimeout(r, 200)));
+// The card's photo, made beforehand (public/share/, tools/share-photos.mjs): rendering it on the player's GPU lost the
+// WebGL context on some phones. null (offline, blocked): share-card.js draws a sky and a plaça instead.
+const sharePhoto = format => { const i = new Image(); i.src = `share/mulassa-${format}.jpg`; return i.decode().then(() => i, () => null); };
 
-export function setupShare({ focusIn, restore = () => {}, hero = () => null, sfx = () => {}, doc = document, nav = navigator,
+export function setupShare({ focusIn, restore = () => {}, hero = sharePhoto, sfx = () => {}, doc = document, nav = navigator,
   store, fonts = doc.fonts, url = globalThis.URL, settle = afterEntrance,
   // a run worth showing off (and ≥ 2 stars: a weak one is never pushed) opens Comparteix by itself `autoDelay` ms after its results: `auto()` says nobody else will (the publish
   // prompt, when it opens, ends in Comparteix anyway), `ready()` that nothing is open over the screen by then
@@ -63,11 +66,8 @@ export function setupShare({ focusIn, restore = () => {}, hero = () => null, sfx
       await loadCardFonts(fonts);
       if (!heroes[f]) await settle();
       if (r !== req || !menu.open) return;
-      if (!heroes[f]) { // rendered once per results screen and format (a render target, then read back)
-        const photo = heroes[f] = hero(...PHOTO[f]);
-        // a GPU process crash blanks its canvas: the next card renders it again (or draws the stand-in, share-capture.js)
-        photo?.addEventListener?.('contextrestored', () => { if (heroes[f] === photo) delete heroes[f]; });
-      }
+      if (!heroes[f]) heroes[f] = await hero(f); // loaded once per results screen and format
+      if (r !== req || !menu.open) return;
       const canvas = drawCard(doc.createElement('canvas').getContext('2d'), f, d, heroes[f]);
       const out = await toJpeg(canvas, 0.9);
       if (r !== req || !menu.open) return;

@@ -20,7 +20,6 @@ import { startPractice, startGame, toTitle, endPractice } from '../game/flow.js'
 import { focusIn } from './focus.js';
 import { offsetMs, FINAL, FINALE_T, setOffsetMs } from '../core/env.js';
 import { sheetUp, viewMode, viewBtn } from './controls.js';
-import { renderHero } from '../scene/share-capture.js';
 import { titleLayoutNow, CORNER } from '../hud/title.js';
 import { W, K, HH, SAFE } from '../hud/canvas.js';
 
@@ -97,7 +96,7 @@ const board = setupBoard({ focusIn,
 sheets.board = board;
 // Comparteix (results only): the image and the challenge link, made on this device; closing gives the focus back to
 // the button only for keyboard players (Space would otherwise press it again instead of leaving the results)
-const share = setupShare({ focusIn, restore: () => focusIn({ focus: () => document.activeElement?.blur() }, 'results-share'), hero: (w, h) => renderHero(w, h), sfx: k => chip?.sfx(k), store: finalStore || store,
+const share = setupShare({ focusIn, restore: () => focusIn({ focus: () => document.activeElement?.blur() }, 'results-share'), sfx: k => chip?.sfx(k), store: finalStore || store,
   auto: () => !board.promptsItself, ready: () => !sheetUp() && !document.hidden && !document.body.classList.contains('wrong-orient') }); // a record / 3 stars / a beaten challenge: Comparteix by itself when no publish prompt does it
 sheets.share = share;
 if (FINAL) markTestMode(); // «MODE PROVA»: nobody takes the mock leaderboard for the real one

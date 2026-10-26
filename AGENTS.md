@@ -25,7 +25,7 @@ by everyone below it as `sheets.board`… (`ui/sheets.js`), so no import cycle i
 - `src/scene/` — the 3D world: `stage.js` (renderer, scene, lights, plaza, mulassa, the play camera's direction), `quality.js`
   (a render-quality level applied), `crowd-build.js` (who stands where), `crowd.js` (`animCrowd` = `updateMood` →
   `steer` → `separate` → `pose` → `poseScenery`; the mood is the `mood` object), `mula-motion.js` (springs on top of the choreography),
-  `cameras.js`, `confetti.js`, `fx.js` (finale lights, fireworks), `share-capture.js` (`renderHero`), `balloon3d.js` (the GLOBUS
+  `cameras.js`, `confetti.js`, `fx.js` (finale lights, fireworks), `share-capture.js` (`renderHero`: the share photo, only through `tools/share-photos.mjs`), `balloon3d.js` (the GLOBUS
   balloon in 3D), `models.js` → `models/*.js` (voxel models by subject), `framing.js`, `orbit.js` (pure camera helpers), `crowd-fx.js` (the ripple).
 - `src/hud/` — everything drawn on the 2D canvas: `canvas.js` (size, K, safe areas, resize), `sprites.js` (palette + text sprite cache),
   `primitives.js`, `layout.js`, `lane.js`, `top.js`, `praise.js`, `bubbles.js`, `banner.js`, `title.js`, `results.js`, `warm.js`, `balloon.js`,

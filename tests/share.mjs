@@ -7,6 +7,8 @@ import { encodeChallenge, challengeUrl, parseChallenge, stripChallenge, challeng
   bragWorthy, shareMode, linkMode, shareLinks, isCancel, SITE, HASHTAGS, MULA } from '../src/services/share.js';
 import { snapshotResult, EXPECTED_JUDGMENTS } from '../src/services/leaderboard-rules.js';
 import { titleLayout, CHIP } from '../src/hud/title-layout.js';
+// node has no Image: the share sheet's default photo (public/share/) never loads here, so cards draw the stand-in
+globalThis.Image ??= class { decode() { return Promise.reject(new Error('no images in node')); } };
 
 // --- the challenge link: only "<0-100>-<0|1|2>", clamped, junk ignored
 assert.equal(encodeChallenge(94.4, 2), '94-2');
@@ -280,7 +282,7 @@ console.log('share: challenge link, captions, fallbacks, eligibility, privacy an
   {
     nodes.clear(); shared.length = 0;
     const ui = setupShare({ focusIn() {}, doc, nav: phone, store: { get: () => null, set() {} }, fonts: null,
-      url: { createObjectURL: () => 'blob:card', revokeObjectURL() {} }, settle: () => Promise.resolve(), hero: (w, h) => ({ width: w, height: h }) });
+      url: { createObjectURL: () => 'blob:card', revokeObjectURL() {} }, settle: () => Promise.resolve(), hero: f => ({ width: f === 'story' ? 960 : 992, height: f === 'story' ? 540 : 360 }) });
     ui.results(true, run({ diff: 0, pct: 95, t: 4 }), null);
     doc.getElementById('results-share').listeners.click(); await wait();
     const primary = doc.getElementById('share-image'), label = doc.getElementById('share-image-label');
@@ -315,23 +317,38 @@ console.log('share: challenge link, captions, fallbacks, eligibility, privacy an
     doc.getElementById('share-close').listeners.click();
     console.log('share sheet: a steady primary while the card is redrawn ok');
   }
-  // the photo is rendered once per results screen and format, but a GPU process crash blanks its canvas: once it is
-  // restored (empty) the next card renders it again instead of drawing a blank photo
+  // the photo is made beforehand (public/share/): asked for by format, once per results screen and format, and never
+  // rendered on the player's GPU; a photo that does not load leaves the card its drawn sky and plaça
   {
     nodes.clear(); shared.length = 0;
-    const photos = [];
-    const hero = (w, h) => { const p = { width: w, height: h, listeners: {}, addEventListener(t, f) { this.listeners[t] = f; } }; photos.push(p); return p; };
+    const asked = [];
+    const hero = f => (asked.push(f), Promise.resolve(f === 'square' ? null : { width: 960, height: 540 }));
     const ui = setupShare({ focusIn() {}, doc, nav: phone, store: { get: () => null, set() {} }, fonts: null,
       url: { createObjectURL: () => 'blob:card', revokeObjectURL() {} }, settle: () => Promise.resolve(), hero });
     ui.results(true, run({ diff: 0, pct: 95, t: 5 }), null);
     doc.getElementById('results-share').listeners.click(); await wait();
-    assert.equal(photos.length, 1, 'the first card renders its photo');
     doc.getElementById('share-nick').listeners.change(); await wait();
-    assert.equal(photos.length, 1, 'a redraw reuses it');
-    photos[0].listeners.contextrestored();
-    doc.getElementById('share-nick').listeners.change(); await wait();
-    assert.equal(photos.length, 2, 'a restored (blank) photo is rendered again');
+    assert.deepEqual(asked, ['story'], 'one photo per format: a redraw reuses it');
+    doc.getElementById('share-format-square').listeners.click(); await wait();
+    assert.deepEqual(asked, ['story', 'square'], 'the other format asks for its own');
+    assert(!doc.getElementById('share-image').disabled, 'no photo: the card is made all the same');
     doc.getElementById('share-close').listeners.click();
-    console.log('share sheet: a photo blanked by a GPU crash is rendered again ok');
+    const made = [], Image = globalThis.Image;
+    globalThis.Image = class { constructor() { made.push(this); } decode() { return this.src.includes('square') ? Promise.reject(new Error('404')) : Promise.resolve(); } };
+    const ui2 = setupShare({ focusIn() {}, doc, nav: phone, store: { get: () => null, set() {} }, fonts: null,
+      url: { createObjectURL: () => 'blob:card', revokeObjectURL() {} }, settle: () => Promise.resolve() });
+    ui2.results(true, run({ diff: 0, pct: 95, t: 6 }), null);
+    doc.getElementById('results-share').listeners.click(); await wait();
+    assert.deepEqual(made.map(i => i.src), ['share/mulassa-story.jpg'], 'the default photo: the format\'s file in public/share/');
+    globalThis.Image = Image;
+    doc.getElementById('share-close').listeners.click();
+    // the files themselves (tools/share-photos.mjs): one per format, at the size the card frames
+    const { PHOTO } = await import('../src/hud/share-card.js');
+    for (const f of ['story', 'square']) {
+      const jpg = readFileSync(`public/share/mulassa-${f}.jpg`);
+      let i = 2; while (i < jpg.length && !(jpg[i] === 0xff && (jpg[i + 1] === 0xc0 || jpg[i + 1] === 0xc2))) i += 2 + jpg.readUInt16BE(i + 2);
+      assert.deepEqual([jpg.readUInt16BE(i + 7), jpg.readUInt16BE(i + 5)], PHOTO[f], `${f}: the photo's size`);
+    }
+    console.log('share sheet: the photo made beforehand, by format ok');
   }
 }

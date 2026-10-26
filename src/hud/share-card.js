@@ -1,7 +1,7 @@
 // The share image, drawn on an offscreen canvas: Story 1080×1920 or Quadrat 1080×1080 (and the 1200×630 social
-// preview, public/og.jpg). The logo, a hero render of the mulassa (main.js renderHero(): a render target, never the
-// screen's buffer), the stars in the medallion, ENCERTS as the big number, RATXA (the best streak), the level, the record
-// ribbon, an optional nickname and the address. No QR, nothing fetched.
+// preview, public/og.jpg). The logo, a photo of the mulassa made beforehand (public/share/, tools/share-photos.mjs), the
+// stars in the medallion, ENCERTS as the big number, RATXA (the best streak), the level, the record ribbon, an optional
+// nickname and the address. No QR.
 import { drawStars } from './stars.js';
 import { SITE_LABEL, CARD_FILE } from '../services/share.js';
 

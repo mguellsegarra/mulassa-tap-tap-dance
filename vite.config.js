@@ -3,6 +3,8 @@ import { readFileSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 import musicEditor from './tools/music/music-editor/vite-plugin.mjs';
 import bestiariMedia from './tools/bestiari/media-plugin.mjs';
+import { unreleasedFigure } from './tools/deploy/unreleased-figure.mjs';
+import { UNRELEASED_IDS } from './src/figures/index.js';
 
 // The build's version, shown in Configuració and sent with feedback and crash reports (src/core/version.js):
 // The release version comes from package.json; the build adds the short Git SHA.
@@ -18,4 +20,4 @@ const https = process.env.DEV_HTTPS ? { key: readFileSync('.cert/dev.key'), cert
 const buildStamp = { name: 'build-stamp', generateBundle() { this.emitFile({ type: 'asset', fileName: 'version.json', source: JSON.stringify({ build }) }); },
   transformIndexHtml: html => html.replace("'__MULASSA_BUILD__'", JSON.stringify(build)) };
 // Keep playtests intact until a manual reload; file watching still invalidates cached modules.
-export default defineConfig({ define: { __APP_VERSION__: JSON.stringify(version), __APP_BUILD__: JSON.stringify(build) }, server: { https, hmr: false }, plugins: [musicEditor(), bestiariMedia(), buildStamp] }); // dev-only backends; buildStamp: the build's /version.json
+export default defineConfig({ define: { __APP_VERSION__: JSON.stringify(version), __APP_BUILD__: JSON.stringify(build) }, server: { https, hmr: false }, plugins: [musicEditor(), bestiariMedia(), unreleasedFigure(UNRELEASED_IDS), buildStamp] }); // dev-only backends; buildStamp: the build's /version.json

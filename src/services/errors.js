@@ -147,7 +147,7 @@ if (w) {
   let bootReported = false;
   w.__mulassaReportBoot = () => {
     const failure = w.__mulassaBootFailure;
-    if (!failure || bootReported || w.__mulassaBooted === 'no-webgl') return; // renderer creation has its own richer report
+    if (!failure || bootReported || w.__mulassaBooted === 'no-webgl' || failure.reason === 'webgl-not-restored') return; // each has its own report (stage.js, pause-actions.js)
     bootReported = true;
     const phase = ['download', 'graphics', 'init', 'shaders', 'frame'].includes(failure.phase) ? failure.phase : 'unknown';
     const reason = ['deadline', 'module-load', 'module-init', 'startup'].includes(failure.reason) ? failure.reason : 'unknown';

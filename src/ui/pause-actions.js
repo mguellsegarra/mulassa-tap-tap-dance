@@ -71,7 +71,7 @@ function restoreLate() {
   G.paused = true; // so the suspended music doesn't open the pause menu, a modal that would sit over the card
   chip?.suspend();
   document.querySelectorAll('dialog[open]').forEach(d => d.close());
-  window.__mulassaFail?.(tr('ui.webgl.lostTitle'), tr('ui.webgl.lostText'), true);
+  window.__mulassaFail?.(tr('ui.webgl.lostTitle'), tr('ui.webgl.lostText'), true, 'webgl-not-restored'); // reported above, not as boot-failed
 }
 glc.addEventListener('webglcontextlost', () => { clearTimeout(restoreTimer); restoreTimer = setTimeout(restoreLate, NO_RESTORE_MS); });
 glc.addEventListener('webglcontextrestored', () => { clearTimeout(restoreTimer); restoreTimer = 0; });

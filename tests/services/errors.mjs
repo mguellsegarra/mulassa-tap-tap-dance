@@ -139,4 +139,9 @@ console.log('crash reports: gating, scrubbing, early buffer ok');
     win.__mulassaReportBoot();
     assert.deepEqual(sent, [['boot-failed', early ? { phase: 'shaders', reason: 'deadline' } : { phase: 'unknown', reason: 'unknown' }]]);
   }
+  // the card for a WebGL context that never came back (pause-actions.js) already sent webgl-not-restored: no boot-failed too
+  const sent = [], win = {};
+  runInNewContext(bridge, { w: win, errors: { report: (kind, tags) => sent.push([kind, tags]), start() {} } });
+  win.__mulassaBootFailure = { phase: 'frame', reason: 'webgl-not-restored' }; win.__mulassaReportBoot();
+  assert.deepEqual(sent, [], 'a WebGL context that never came back is not reported again as boot-failed');
 }

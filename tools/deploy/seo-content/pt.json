@@ -16,12 +16,12 @@
   },
   "home": {
     "title": "Mulassa Tap Tap Dance",
-    "lead": "Joc de ritme en català: balla la Mulassa de Valls al compàs de la música tocant GUA i PA.",
+    "lead": "Joc de ritme en català: fes ballar la Mulassa i el Drac de Valls al compàs de la música tocant dos botons.",
     "sections": [
       [
         "Com es juga",
         [
-          "Toca **GUA** (esquerra) i **PA** (dreta) quan les notes arribin al cercle. Si en surt una de dues colors, toca els dos botons alhora: és una **GUAPA!** i puntua el doble. Mantén premut a les notes llargues (**MANTÉN**) i pica sense parar als redobles (**GLOBUS**). Cada error desanima la plaça, i si es buida la Mulassa cau.",
+          "Toca **GUA** (esquerra) i **PA** (dreta) quan les notes arribin al cercle. Si en surt una de dues colors, toca els dos botons alhora: és una **GUAPA!** i puntua el doble. Mantén premut a les notes llargues (**MANTÉN**) i pica sense parar als redobles (**GLOBUS**). Cada error desanima la plaça, i si es buida la Mulassa cau i el Drac s’apaga.",
           "Hi ha tres nivells (fàcil, normal i difícil), una pràctica inicial, classificacions i targetes per compartir el resultat. Es juga des del navegador, al mòbil, a la tauleta o a l’ordinador."
         ]
       ],
@@ -29,7 +29,7 @@
         "Més informació",
         [
           "[Sobre el projecte](https://mulassa.cat/projecte/): què és, d’on surt i qui l’ha fet.",
-          "El [codi és obert a GitHub](https://github.com/mguellsegarra/mulassa-tap-tap-dance), sense ànim de lucre, per difondre el bestiari de la cultura popular catalana.",
+          "El [codi és obert a GitHub](https://github.com/mguellsegarra/mulassa-tap-tap-dance): la idea és que s’hi vagin afegint figures del bestiari festiu d’arreu dels Països Catalans.",
           "Per jugar, obre [mulassa.cat](https://mulassa.cat/)."
         ]
       ]
@@ -69,29 +69,23 @@
         "17 MB"
       ]
     ],
-    "lead": "Mulassa Tap Tap Dance é um jogo de ritmo gratuito, em catalão, inspirado na dança da Mulassa de Valls. É um projeto de código aberto, sem fins lucrativos, para divulgar o bestiari (figuras de animais festivos) da cultura popular catalã.",
+    "lead": "Mulassa Tap Tap Dance é um jogo de ritmo gratuito, originalmente em catalão, para pôr a dançar figuras do bestiari festivo dos Països Catalans.",
     "sections": [
       [
         "O que é",
         [
-          "Um jogo de ritmo. As notas avançam pela pista e tens de tocar no tempo certo com dois botões: GUA (laranja, esquerda) e PA (turquesa, direita). Enquanto tocas, uma Mulassa em 3D dança no meio de uma praça cheia de gente. Jogas no navegador, sem instalar nada nem te registares."
-        ]
-      ],
-      [
-        "A Mulassa de Valls e a Fira de Santa Úrsula",
-        [
-          "A Mulassa é uma das figuras do bestiari festivo de Valls (Alt Camp). Ela participa do seguici (cortejo festivo) das festas, como a Fira de Santa Úrsula (feira de Santa Úrsula), e quem a faz dançar é a Unió Anelles de la Flama. Aproveito a Fira de Santa Úrsula de Valls para lançar o jogo, como homenagem à festa e à Mulassa. A dança tenta reproduzir a dança real, com pequenos exageros para ficar mais maluca. É uma adaptação minha a partir de vídeos públicos, não a coreografia oficial.",
-          "A música é um arranjo novo, de festa major (festa tradicional da cidade), que aproveita apenas a melodia do Ball de la Mulassa, composta por Francesc Bofarull i Figuerola."
+          "Um jogo de ritmo. As notas avançam pela pista e tens de as tocar a tempo com dois botões enquanto a figura dança no meio de uma praça cheia de gente. Joga-se no navegador, no telemóvel, no tablet ou no computador, sem instalar nada nem criar conta. Podes jogar em 16 línguas, contando com o catalão.",
+          "Tomei a liberdade de tornar as figuras um pouco mais malucas e de levar as suas melodias para o terreno dos videojogos, com um ar mais descontraído, uma estética de blocos e uma surpresa escondida em cada dança."
         ]
       ],
       [
         "Como jogar",
         [
-          "**GUA** e **PA**: toca no botão esquerdo ou direito quando a nota chegar ao círculo (no teclado, ← e → ou D e K).",
-          "**GUAPA!** Os dois botões juntos. Pontuação em dobro; um só conta como erro.",
+          "**GUA** e **PA**: toca no botão esquerdo ou direito quando a nota chegar ao círculo (no teclado, ← e → ou D e K). Cada figura tem as suas palavras: com o Drac são **CRE** e **MA**.",
+          "**GUAPA!** Os dois botões juntos (**CREMA!** com o Drac). Pontuação em dobro; um só conta como erro.",
           "**SEGURA**: segura até ao fim da nota longa (normal e difícil).",
           "**BALÃO**: nos rufos, bate o máximo de vezes que conseguires até rebentar.",
-          "**ÂNIMO**: cada erro desanima a praça; se a barra esvaziar, a Mulassa cai.",
+          "**ÂNIMO**: cada erro desanima a praça; se a barra esvaziar, a Mulassa cai e o Drac apaga-se.",
           "**FINAL MALUCO**: a última frase da música. Os pontos valem o dobro se tiveres pelo menos 70 % de acertos.",
           "A primeira dança é um treino guiado. Depois escolhes entre fácil, normal e difícil, e podes publicar o teu resultado nas classificações com uma alcunha ou partilhar o cartão."
         ]
@@ -100,8 +94,8 @@
         "Autoria e créditos",
         [
           "Ideia, design e desenvolvimento: Marc Güell Segarra · [ondori.dev](https://ondori.dev).",
-          "Com a colaboração da [Unió Anelles de la Flama](https://uaf.cat), que me deixou fazer este jogo da Mulassa. {uaf}",
-          "Melodia: Francesc Bofarull i Figuerola. O arranjo e os sons são gerados pelo código do jogo.",
+          "Com a colaboração da [Unió Anelles de la Flama](https://uaf.cat), que me deu autorização para trazer as suas figuras para o jogo. O que fiz nasce do trabalho das pessoas da associação que cuidam delas e as levam à praça. {uaf}",
+          "Melodias: Francesc Bofarull i Figuerola. O arranjo e os sons são gerados pelo código do jogo.",
           "Tipos de letra Baloo 2 e Jersey 10, sob a licença SIL Open Font License.",
           "Feito com carinho {cor} e muita IA em Valls {campanar}"
         ]
@@ -109,8 +103,8 @@
       [
         "Código aberto e colaboração",
         [
-          "O [código é aberto no GitHub](https://github.com/mguellsegarra/mulassa-tap-tap-dance) e quem quiser pode colaborar: acrescentar as suas mulasses e o seu bestiari, com as suas danças e músicas.",
-          "Se te fez sorrir, podes [pagar-me um café](https://buymeacoffee.com/mguellsegarra).",
+          "O [código é aberto no GitHub](https://github.com/mguellsegarra/mulassa-tap-tap-dance) e quem tiver tempo, vontade e conhecimentos pode colaborar. Se quiseres ver dançar uma figura da tua terra, podes trazê-la para o jogo com a sua música, a sua dança e a sua festa.",
+          "Se te fez sorrir, podes [pagar-me um café](https://buymeacoffee.com/mguellsegarra). As novidades saem no Instagram: [@mulassa_cat](https://www.instagram.com/mulassa_cat/).",
           "O jogo não usa cookies de rastreamento. Podes consultar os dados tratados e os teus direitos em “Privacidade”, dentro de Definições. Para imagens ou qualquer dúvida: [holi@mulassa.cat](mailto:holi@mulassa.cat)."
         ]
       ]

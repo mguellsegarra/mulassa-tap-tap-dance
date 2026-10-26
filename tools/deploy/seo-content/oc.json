@@ -48,29 +48,23 @@
         "17 MB"
       ]
     ],
-    "lead": "Mulassa Tap Tap Dance ei un jòc de ritme gratuït, en catalan, inspirat en balh dera Mulassa de Valls. Ei un projècte de còdi dubèrt, sense tòca lucrativa, tà difóner eth bestiari (figures festives d’animaus) dera cultura populara catalana.",
+    "lead": "Mulassa Tap Tap Dance ei un jòc de ritme gratuït, en catalan, entà hèr balhar figures deth bestiari (figures festives d’animaus) des Païsi Catalans.",
     "sections": [
       [
         "Qué ei",
         [
-          "Un jòc de ritme. Es nòtes auancen peth carril e les as de tocar a temps damb dus botons: GUA (iranja, quèrra) e PA (turquesa, dreta). Mentre tòques, ua Mulassa en 3D balhe ath miei d’ua plaça plea de gent. Se jògue des deth navegador, sense installar arren ne registrar-se."
-        ]
-      ],
-      [
-        "Era Mulassa de Valls e era Fira de Santa Úrsula",
-        [
-          "Era Mulassa ei ua des pèces deth bestiari festiu de Valls (Alt Camp). Ges en seguici (cortègi popular de hèsta) des hèstes, coma era Fira de Santa Úrsula, e la hè a balhar era Unió Anelles de la Flama. Profiti era Fira de Santa Úrsula de Valls tà lançar eth jòc, coma aunoratge ara hèsta e ara Mulassa. Eth balh pròve de reprodusir eth balh reau, damb bères petites exageracions tà hè-lo mès hòl. Ei ua adaptacion mia a partir de vidèos publics, non era coreografia oficiau.",
-          "Era musica ei un arranjament nau, de hèsta major, que sonque profite era melodia deth Ball de la Mulassa, compausada per Francesc Bofarull i Figuerola."
+          "Un jòc de ritme. Es nòtes auancen peth carril e les as de tocar a temps damb dus botons mentre era figura balhe ath miei d’ua plaça plea de gent. Se jògue des deth navegador, en mobil, en tauleta o en ordenador, sense installar arren ne registrar-se. I pòdes jogar en 16 lengües, comptant eth catalan.",
+          "M’è pres era libertat de hèr es figures un shinhau mès hòles e de portar es sues melodies en terren des vidèojòcs, damb un aire mès desenfadat, ua estetica de blòcs e ua suspresa amagada en cada balh."
         ]
       ],
       [
         "Com se jògue",
         [
-          "**GUA** e **PA**: toca eth boton quèrre o eth dret quan era nòta arribe ath cercle (en teclat, ← e → o D e K).",
-          "**GUAPA!** Es dus botons ath còp. Punts dobles; un de solet ei error.",
+          "**GUA** e **PA**: toca eth boton quèrre o eth dret quan era nòta arribe ath cercle (en teclat, ← e → o D e K). Cada figura a es sues paraules: damb eth Drac son **CRE** e **MA**.",
+          "**GUAPA!** Es dus botons ath còp (**CREMA!** damb eth Drac). Punts dobles; un de solet ei error.",
           "**MANTEN**: manten sarrat enquia ara fin dera nòta longa (normau e dificil).",
           "**BALON**: enes redoblaments, pica tantes viatges com pogues enquia que pète.",
-          "**ÀNIM**: cada error desanime era plaça; se se vueide, era Mulassa què.",
+          "**ÀNIM**: cada error desanime era plaça; se se vueide, era Mulassa què e eth Drac s’amòrte.",
           "**FINAU HÒL**: era darrèra frasa dera cançon. Es punts valen eth doble se pòrtes aumens un 70 % d’encèrts.",
           "Eth prumèr balh ei ua practica guidada. Dempús trigues entre facil, normau e dificil, e pòdes publicar eth resultat enes classificacions damb un subernòm o compartir-ne era carta."
         ]
@@ -79,8 +73,8 @@
         "Autoria e crèdits",
         [
           "Idèa, dessenh e desvolopament: Marc Güell Segarra · [ondori.dev](https://ondori.dev).",
-          "Damb era collaboracion dera [Unió Anelles de la Flama](https://uaf.cat), que m’a deishat hèr aguest jòc dera Mulassa. {uaf}",
-          "Melodia: Francesc Bofarull i Figuerola. Er arranjament e es sons les genère eth còdi deth jòc.",
+          "Damb era collaboracion dera [Unió Anelles de la Flama](https://uaf.cat), que m’a dat permís tà portar es sues figures ath jòc. Çò que è hèt neish deth trabalh dera gent dera entitat que les sonhe e les hè gésser ena plaça. {uaf}",
+          "Melodies: Francesc Bofarull i Figuerola. Er arranjament e es sons les genère eth còdi deth jòc.",
           "Tipografies Baloo 2 e Jersey 10, damb licéncia SIL Open Font License.",
           "Hèt damb estima {cor} e fòrça IA en Valls {campanar}"
         ]
@@ -88,8 +82,8 @@
       [
         "Còdi dubèrt e collaboracion",
         [
-          "Eth [còdi ei dubèrt en GitHub](https://github.com/mguellsegarra/mulassa-tap-tap-dance) e toti es que volguen i pòden collaborar: ahíger-i es sues mulasses e eth sòn bestiari, damb es sòns balhs e era sua musica.",
-          "Se t’a hèt arrir, pòdes [convidar-me a un cafè](https://buymeacoffee.com/mguellsegarra).",
+          "Eth [còdi ei dubèrt en GitHub](https://github.com/mguellsegarra/mulassa-tap-tap-dance) e qui age temps, ganes e coneishements i pòt collaborar. Se vòs veir balhar ua figura deth tòn pòble, la pòdes portar ath jòc damb era sua musica, eth sòn balh e era sua hèsta.",
+          "Se t’a hèt arrir, pòdes [convidar-me a un cafè](https://buymeacoffee.com/mguellsegarra). Es nautats gessen en Instagram: [@mulassa_cat](https://www.instagram.com/mulassa_cat/).",
           "Eth jòc non emplegue galetes de seguiment. Pòdes consultar es donades que se tracten e es tòns drets en «Privadança», laguens de Configuracion. Tà imatges o quinsevolh dobte: [holi@mulassa.cat](mailto:holi@mulassa.cat)."
         ]
       ]

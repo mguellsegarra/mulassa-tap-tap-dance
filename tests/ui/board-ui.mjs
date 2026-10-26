@@ -949,7 +949,7 @@ const find = (el, test) => (test(el) ? el : el.children.map(c => find(c, test)).
   assert(/després de la teva primera partida <b>Cloudflare Turnstile<\/b>/.test(privacy) && /a tothom, publiquis o no/.test(privacy) && !/Només es carrega quan prems/.test(privacy), 'Turnstile runs for everyone after their first game: said plainly');
   assert(!/RGPD|GDPR|compleix/i.test(privacy), 'no compliance claims');
   const owner = privacy.slice(privacy.lastIndexOf('</section>'));
-  assert(/Responsable: <b>Marc Güell Segarra<\/b>, de <b>Mulassa Tap Tap Dance<\/b> \(projecte de codi obert sense ànim de lucre, Valls\)/.test(owner) && /aepd\.es/.test(owner), 'the controller (a person), once, for the whole sheet (after every section), and where to complain');
+  assert(/Responsable: <b>Marc Güell Segarra<\/b>, de <b>Mulassa Tap Tap Dance<\/b> \(projecte de codi obert, Valls\)/.test(owner) && /aepd\.es/.test(owner), 'the controller (a person), once, for the whole sheet (after every section), and where to complain');
   assert(/Correu \(opcional\)/.test(privacy) && /Resend/.test(privacy) && /menys de 14 anys/.test(privacy) && /No fem servir galetes de seguiment/.test(privacy), 'the optional e-mail, its processor, minors, and the cookie statement');
   assert.equal((html.match(/Responsable:/g) || []).length, 1, 'not repeated per section');
   assert.equal((html.match(/data-email="/g) || []).length, 1, 'one place for the contact e-mail');

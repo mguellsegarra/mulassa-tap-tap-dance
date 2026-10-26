@@ -144,7 +144,7 @@ Copia aquesta llista a la PR i omple-la. Cada línia diu què cal decidir, l'exe
 ## Com obrir la PR
 
 1. **Branca pròpia** sortint de la versió en curs, per exemple `feat/<figura>`.
-2. **Mentre no estigui aprovada, la figura és pendent.** Afegeix-la a `UNRELEASED_IDS` a `src/figures/index.js`: surt en silueta i no es pot jugar. Perquè la build de producció tampoc en publiqui la música ni les textures, afegeix-la a `tools/deploy/prepare-pages.mjs` com el Bou. Per provar-la, buida el conjunt només a la teva branca. Així és com la 1.1.0 porta el codi del Bou sense publicar-lo.
+2. **Mentre no estigui aprovada, la figura és pendent.** Afegeix-la a `UNRELEASED_IDS` a `src/figures/index.js`: surt en silueta i no es pot jugar. Perquè la build de producció tampoc en publiqui la música ni les textures, afegeix-la a `tools/deploy/prepare-pages.mjs` com el Bou. Per provar-la, buida el conjunt només a la teva branca. Així és com la 1.2.0 porta el codi del Bou sense publicar-lo.
 3. **Què ha de portar la PR**:
    - la plantilla de dalt, omplerta;
    - les fonts de la fase 0;

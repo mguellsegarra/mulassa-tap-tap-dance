@@ -73,8 +73,8 @@ matrix that covers the change; do not exercise the entire application for a loca
   disabled states against the actual product rules. Do not copy a historical design that
   was rejected or superseded.
 - Select representative narrow portrait, landscape and desktop layouts plus the affected
-  device family. Landscape phones run only the game itself (menus and sheets get the rotate
-  cover), so check UI layout there only for play, practice and results. Inspect overflow, reserved space and obstruction at extreme content sizes
+  device family. Phones run menus and the game in portrait and free play in landscape;
+  tablets run everything in landscape (src/ui/fullscreen.js); the other orientation only shows the rotate cover. Inspect overflow, reserved space and obstruction at extreme content sizes
   or animation poses. Use a dedicated layout skill when geometry needs deeper analysis.
 - Preserve baseline captures separately with revision, viewport, state and timing. Never
   overwrite them or reconstruct an alleged original by reversing CSS. Dynamic screenshots

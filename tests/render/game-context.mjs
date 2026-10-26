@@ -115,7 +115,7 @@ const context = vm.createContext({
     if (type === 'keydown') keyHandlers.push(handler);
   },
   innerWidth: 1280, innerHeight: 720, screen: { width: 1280, height: 720 }, devicePixelRatio: 1,
-  URLSearchParams, performance: { now: () => 0 }, requestAnimationFrame() {}, window: {}, setTimeout() {}, clearTimeout() {},
+  URLSearchParams, performance: { now: () => 0 }, requestAnimationFrame() {}, window: {}, setTimeout() {}, clearTimeout() {}, setInterval() {},
 });
 // The vm context has its own Math; models.js's rnd()/pick() (buildPerson, placeHome...) are this realm's, so the
 // tests below seed BOTH (they stay seeded from here on): `seedR = n` inside the context and hostSeed(n) here (else crowd variety is unseeded).

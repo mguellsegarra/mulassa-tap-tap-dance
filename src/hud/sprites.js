@@ -1,5 +1,5 @@
 // The HUD palette, fonts and the text sprite cache (each string is painted once and blitted after).
-import { H } from './canvas.js';
+import { H, hud } from './canvas.js';
 import { onTheme } from '../game/figure-theme.js';
 import { fontStack, loadScriptFonts, glyphsReady, isLatin } from '../i18n/fonts.js';
 
@@ -24,6 +24,8 @@ let spritePx = 0, spriteOk = true, glyphsOk = isLatin(); // glyphsOk false: this
 export const textWidths = new Map(); // primitives.js textWidth(): measured once per font and string, dropped with the sprites
 const fontsArrived = () => { glyphsOk ||= glyphsReady(document.fonts, "'Baloo 2'"); sprites.forEach(s => spare.push(s.c)); sprites.clear(); spritePx = 0; textWidths.clear(); };
 try { document.fonts.addEventListener('loadingdone', fontsArrived); } catch { /* no font loading API */ } // Safari does not always fire it: the loads below repaint too
+// a GPU process crash also blanks the sprites' canvases (restored empty with the HUD's): paint them again
+hud.addEventListener('contextrestored', fontsArrived);
 // canvas-only fonts are never fetched by themselves (no DOM text uses the pixel logo font), so ask for them explicitly;
 // the page cover waits for them (at most 3 s), so the logo never shows in a fallback font
 export let fontsReady = Promise.resolve();

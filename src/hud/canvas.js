@@ -62,6 +62,8 @@ addEventListener('scroll', settle);
 addEventListener('focus', settle);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) settle(); });
 addEventListener('orientationchange', resize);
+// a GPU process crash (Android Adreno) restores the 2D context with its default state: the identity transform drew the HUD at 1/3
+hud.addEventListener('contextrestored', resize);
 addEventListener('pageshow', () => requestAnimationFrame(resize)); // standalone launch: sizes can settle a frame late
 try { visualViewport.addEventListener('resize', resize); visualViewport.addEventListener('scroll', settle); } catch { /* none */ }
 resize();

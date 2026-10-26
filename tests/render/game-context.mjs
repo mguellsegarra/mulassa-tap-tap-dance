@@ -46,7 +46,10 @@ const document = {
   getElementById(id) {
     if (!nodes.has(id)) nodes.set(id, {
       style: { setProperty() {} }, dataset: {}, options: [{}, {}], listeners: {}, open: false, toggleAttribute() {}, // (#free dances on the menu beat: controls.js freeDance)
-      addEventListener(type, handler) { this.listeners[type] = handler; },
+      addEventListener(type, handler) { // the DOM runs every listener of a type (the HUD's contextrestored has two owners)
+        const prev = this.listeners[type];
+        this.listeners[type] = prev ? (...args) => { prev(...args); return handler(...args); } : handler;
+      },
       showModal() { this.open = true; }, close() { this.open = false; },
       focus() {}, blur() {}, setAttribute() {}, classList: { toggle() {}, add() {}, remove() {} }, contains: () => false, after() {},
       getContext: () => drawing, getBoundingClientRect: () => ({ left: 10, top: 10, right: 54, bottom: 54, width: 44, height: 44 }), // (the radio sits by #viewmode)

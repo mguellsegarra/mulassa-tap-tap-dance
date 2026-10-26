@@ -11,5 +11,7 @@ const build = `${version}+${git('rev-parse', '--short=7', 'HEAD') || 'dev'}`;
 // «?final»). Phones need a secure context for Web Share with files and the clipboard; http://192.168.x.x has neither.
 const https = process.env.DEV_HTTPS ? { key: readFileSync('.cert/dev.key'), cert: readFileSync('.cert/dev.crt') } : undefined;
 // A tab or home-screen app woken from memory doesn't load the page again: src/services/update.js compares this file with its own build.
-const buildStamp = { name: 'build-stamp', generateBundle() { this.emitFile({ type: 'asset', fileName: 'version.json', source: JSON.stringify({ build }) }); } };
+// index.html's #build-check carries the same build, so a page kept from before a deploy reloads before the game boots.
+const buildStamp = { name: 'build-stamp', generateBundle() { this.emitFile({ type: 'asset', fileName: 'version.json', source: JSON.stringify({ build }) }); },
+  transformIndexHtml: html => html.replace("'__MULASSA_BUILD__'", JSON.stringify(build)) };
 export default defineConfig({ define: { __APP_VERSION__: JSON.stringify(version), __APP_BUILD__: JSON.stringify(build) }, server: { https }, plugins: [buildStamp] });

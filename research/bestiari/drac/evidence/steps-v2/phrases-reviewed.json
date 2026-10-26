@@ -1,0 +1,279 @@
+{
+  "source": "pm-lEViiPK0",
+  "timeUnit": "video seconds",
+  "countConvention": "new foot placements, closing steps explicitly identified; not heel rolls",
+  "status": "reviewed; occluded and inferred counts are explicitly marked",
+  "phrases": [
+    {
+      "start": 0,
+      "end": 2.2,
+      "action": "Avança en diagonal cap a càmera i tanca la base.",
+      "count": "4 col·locacions: 3 que avancen + 1 tancament.",
+      "evidence": "Flors, cercles, flors, cercles. Arribades aprox. 0,5–0,7; 1,0–1,2; 1,5–1,7; 2,0–2,1 s. El suport inicial no es compta.",
+      "status": "observed"
+    },
+    {
+      "start": 2.2,
+      "end": 6.4,
+      "action": "Recula mantenint el davant del cos, allunyant-se de càmera.",
+      "count": "8 col·locacions alternes; confiança mitjana-alta.",
+      "evidence": "Arribades aprox. 2,7; 3,2; 3,7; 4,2; 4,7; 5,2; 5,7; 6,2. La setena queda parcialment tapada. L'última prepara la inversió.",
+      "status": "observed"
+    },
+    {
+      "start": 6.4,
+      "end": 8.4,
+      "action": "Torna a avançar fins aproximadament a la zona intermèdia i recull la base.",
+      "count": "3 passes clares + 1 tancament curt.",
+      "evidence": "Flors a 6,6–6,8; cercles a 7,1–7,3; flors a 7,6–7,7; cercles es recol·loca cap a 7,9–8,1. La posició intermèdia és aproximada, no mesurada.",
+      "status": "observed"
+    },
+    {
+      "start": 8.4,
+      "end": 10.4,
+      "action": "Nou avanç més cap a l'esquerra; es va posant de perfil mentre camina.",
+      "count": "3 passes clares + 1 ajust de suport.",
+      "evidence": "Arribades aprox. 8,7; 9,2; 9,7. Cap a 10,0 cercles ajusta gairebé al mateix lloc: no es confirma un altre aterratge. No hi ha un pivot sec previ.",
+      "status": "observed"
+    },
+    {
+      "start": 10.4,
+      "end": 14.4,
+      "action": "Recula sense mitja volta, travessa la zona central i continua fins a l'altre extrem.",
+      "count": "8 col·locacions probables: 5 clares i 3 parcialment ocultes.",
+      "evidence": "Clares: aprox. 10,7; 11,2; 11,7; 12,2; 12,7. Les de 13,2; 13,7 i 14,1 tenen evidència parcial o indirecta per oclusió.",
+      "status": "partial"
+    },
+    {
+      "start": 14.4,
+      "end": 16.7,
+      "action": "Avança de retorn cap a la zona intermèdia i obre la base per girar.",
+      "count": "3 passes clares + obertura/pivot de suport.",
+      "evidence": "Flors a 14,6; cercles a 15,1; flors a 15,6. Cercles obre la punta cap a 16,0; flors reorienta a 16,3–16,6. La preparació del gir ja ha començat abans de 16,7.",
+      "status": "observed"
+    },
+    {
+      "start": 16.7,
+      "end": 19.8,
+      "action": "Una volta completa antihorària, amb recol·locació dels suports.",
+      "count": "1 volta. El recompte de petjades no està tancat.",
+      "evidence": "De cara, perfil amb caps a la dreta, esquena, perfil esquerre i de cara. Antihorari vist des de dalt.",
+      "status": "orientation_verified"
+    },
+    {
+      "start": 19.8,
+      "end": 21.8,
+      "action": "Amb base ampla, torça la closca cap al davant/dreta i carrega el pes.",
+      "count": "Torsió sobre els suports; no una caminada de quatre passes.",
+      "evidence": "Les posicions dels peus respecte a les rajoles canvien poc; hi ha flexió i canvi de càrrega. No equival a cos immòbil.",
+      "status": "observed"
+    },
+    {
+      "start": 21.8,
+      "end": 24.2,
+      "action": "Desfà la torsió fins al perfil esquerre i sosté.",
+      "count": "Canvi de rumb amb base de suport gairebé fixa.",
+      "evidence": "Els caps van cap a l'esquerra. Possible microrecol·locació; no hi ha una anada/retorn llarg verificat.",
+      "status": "observed"
+    },
+    {
+      "start": 24.2,
+      "end": 26.4,
+      "action": "Torna la closca cap al davant/dreta i sosté.",
+      "count": "Canvi de pes i torsió.",
+      "evidence": "Manté la base oberta, sense una seqüència de desplaçament comparable a la inicial.",
+      "status": "observed"
+    },
+    {
+      "start": 26.4,
+      "end": 28.8,
+      "action": "Torna al perfil esquerre i reuneix els peus per sortir.",
+      "count": "Torsió seguida d'un tancament visible.",
+      "evidence": "La preparació de la caminada és aproximadament de 28,2 a 28,8 s.",
+      "status": "observed"
+    },
+    {
+      "start": 28.8,
+      "end": 33,
+      "action": "Avança amb gambades llargues i va arquejant el recorregut cap a càmera.",
+      "count": "4 gambades visibles: flors, cercles, flors, cercles.",
+      "evidence": "Arribades aprox. 29,3; 30,3; 31,3; 32,3. El peu s'avança i es manté una estona a l'aire. La caminada continua mentre canvia el rumb.",
+      "status": "observed"
+    },
+    {
+      "start": 33,
+      "end": 39.2,
+      "action": "Passa a prop de càmera, continua l'arc i mostra l'esquena.",
+      "count": "Total de passes no observable.",
+      "evidence": "Els peus són fora del pla durant bona part del tram. La rotació es veu; les petjades no es poden completar.",
+      "status": "partial"
+    },
+    {
+      "start": 39.2,
+      "end": 40.9,
+      "action": "S'allunya de càmera caminant cap on miren els caps.",
+      "count": "2 suports nous visibles al final; no són el total del retorn.",
+      "evidence": "Arribades aprox. 39,8–40,0 i 40,7–40,9. Allunyar-se de càmera aquí no vol dir caminar enrere.",
+      "status": "partial"
+    },
+    {
+      "start": 40.9,
+      "end": 44.3,
+      "action": "Reuneix, pivota fins a frontal i s'assenta; marca el pes abans de la nova frase.",
+      "count": "Tancament i recol·locació; sense total de contactes.",
+      "evidence": "La volta acaba aproximadament a 41,8. De 42 a 44,3 predomina una base estable, amb petits canvis de càrrega.",
+      "status": "observed"
+    },
+    {
+      "start": 44.3,
+      "end": 46,
+      "action": "Nova aproximació en diagonal cap a càmera i cap a l'esquerra.",
+      "count": "Recompte incomplet: peus tallats a partir d'aprox. 45,5.",
+      "evidence": "El recorregut repeteix el tipus d'avanç inicial. No es confirma un total només per analogia amb la primera vegada.",
+      "status": "partial"
+    },
+    {
+      "start": 46,
+      "end": 50,
+      "action": "Retorn cap a la dreta, reculant i allunyant-se.",
+      "count": "Total no verificable en aquest tram.",
+      "evidence": "Peus fora del pla fins aproximadament a 47,8; després apareixen suports, i a 49,4–50,6 hi ha oclusió.",
+      "status": "partial"
+    },
+    {
+      "start": 50,
+      "end": 53,
+      "action": "Torna a avançar cap a l'esquerra, obrint el rumb.",
+      "count": "Passes visibles; total no tancat.",
+      "evidence": "Els peus reapareixen després de l'oclusió inicial. Les gambades es fan més àmplies cap a 52–53. No es dedueix el recompte només per la durada.",
+      "status": "partial"
+    },
+    {
+      "start": 53,
+      "end": 54,
+      "action": "Frena el desplaçament i manté el perfil.",
+      "count": "Base recollida amb possibles ajustos.",
+      "evidence": "La translació s'atura aproximadament entre 53,0 i 53,9; això no demostra absència de qualsevol microrecol·locació.",
+      "status": "observed"
+    },
+    {
+      "start": 54,
+      "end": 57.3,
+      "action": "Recula cap a la dreta de la imatge i va tornant frontal.",
+      "count": "Total de contactes no verificat.",
+      "evidence": "El recorregut és clar; cap a 56,9–57,2 la figura queda tallada per la vora. No es trasllada automàticament el recompte del primer bloc.",
+      "status": "partial"
+    },
+    {
+      "start": 57.3,
+      "end": 59,
+      "action": "Nou avanç cap a l'esquerra amb gambades.",
+      "count": "2 passes comprovades a 58–58,7; no són tot el tram.",
+      "evidence": "Cercles aterra aproximadament a 58,3 i flors a 58,7. La primera part del tram no té un recompte tancat.",
+      "status": "partial"
+    },
+    {
+      "start": 59,
+      "end": 60,
+      "action": "Manté la base oberta i reorienta el cos fins a frontal per girar.",
+      "count": "Suport i preparació; sense nova caminada llarga.",
+      "evidence": "El cos canvia de rumb mentre els peus mantenen aproximadament la posició.",
+      "status": "observed"
+    },
+    {
+      "start": 60,
+      "end": 63.4,
+      "action": "Una altra volta completa antihorària.",
+      "count": "1 volta; petjades sense recompte complet.",
+      "evidence": "Mateix ordre de perfils que a 16,7–19,8.",
+      "status": "orientation_verified"
+    },
+    {
+      "start": 63.4,
+      "end": 65,
+      "action": "Obre la base i torça la closca cap al davant/dreta.",
+      "count": "Suport ampli amb canvi de pes.",
+      "evidence": "No és una caminada d'anada/tornada.",
+      "status": "observed"
+    },
+    {
+      "start": 65,
+      "end": 67.5,
+      "action": "Desfà la torsió fins al perfil esquerre i sosté.",
+      "count": "Base de peus gairebé fixa.",
+      "evidence": "Canvien els genolls i la càrrega entre suports.",
+      "status": "observed"
+    },
+    {
+      "start": 67.5,
+      "end": 69.5,
+      "action": "Torna a torçar cap al davant/dreta i sosté.",
+      "count": "Torsió sobre els suports.",
+      "evidence": "Repetició del motiu, no passos regulars de trasllat.",
+      "status": "observed"
+    },
+    {
+      "start": 69.5,
+      "end": 72.8,
+      "action": "Torna al perfil esquerre i prepara la sortida.",
+      "count": "Torsió, tancament i recol·locació.",
+      "evidence": "Preparació visible des d'aprox. 71,7; no vol dir que la gambada ja comenci en aquell instant.",
+      "status": "observed"
+    },
+    {
+      "start": 72.8,
+      "end": 76.5,
+      "action": "Quatre gambades llargues, de perfil i després en arc cap a càmera.",
+      "count": "4 gambades visibles: flors, cercles, flors, cercles.",
+      "evidence": "Arribades aprox. 73,4; 74,4; 75,4; 76,3. El peu projectat a l'aire no compta com un suport nou abans d'aterrar.",
+      "status": "observed"
+    },
+    {
+      "start": 76.5,
+      "end": 86.4,
+      "action": "Passa a prop, gira, retorna i es prepara per al final.",
+      "count": "Total de petjades no observable.",
+      "evidence": "La figura fa el recorregut, però molts contactes queden per sota del quadre. No s'hi copia un recompte inventat.",
+      "status": "partial"
+    },
+    {
+      "start": 86.4,
+      "end": 93.8,
+      "action": "Tres voltes antihoràries cada vegada més ràpides.",
+      "count": "3 voltes; no un total verificat de passes.",
+      "evidence": "Passades frontals aprox. 86,6; 89,5; 91,8; 93,8. La base es recol·loca per girar.",
+      "status": "orientation_verified"
+    },
+    {
+      "start": 93.8,
+      "end": 94.8,
+      "action": "Frena de cara, carrega el pes i prepara el sentit contrari.",
+      "count": "Aturada del gir, amb preparació dels suports.",
+      "evidence": "No és una transició contínua entre voltes del mateix sentit.",
+      "status": "orientation_verified"
+    },
+    {
+      "start": 94.8,
+      "end": 104,
+      "action": "Sis voltes horàries i frenada final.",
+      "count": "6 voltes; recompte de petjades no tancat.",
+      "evidence": "El perfil esquerre ve abans de l'esquena, en ordre invers a les primeres voltes.",
+      "status": "orientation_verified"
+    },
+    {
+      "start": 104,
+      "end": 104.8,
+      "action": "Queda de cara i s'assenta.",
+      "count": "Final del gir.",
+      "evidence": "Petites correccions de suport; els acompanyants comencen a entrar.",
+      "status": "orientation_verified"
+    }
+  ],
+  "phraseHypothesis": "4/8/4 then4/8/4 in the opening; fourth actions include close, mark or pivot. Not32 demonstrated landings or an audio beat transcription.",
+  "references": [
+    "first-steps.md",
+    "phrases.md",
+    "phrases-middle.md",
+    "../analisi-coreografia.md"
+  ]
+}

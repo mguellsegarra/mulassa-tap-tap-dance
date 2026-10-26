@@ -1,57 +1,128 @@
-/* «Bústia de la plaça» (src/ui/feedback-ui.js) and the menu music's speaker (main.js): round buttons like the ⚙, title-layout
-   obstacles like it (main.js titleLayoutNow, tests/layout.mjs). Portrait: [bubble][speaker][⚙] top-right; landscape
-   phones: after the podium, [⚙][podium][speaker][bubble]. The bubble is outermost so its nudge has room beside it. */
-#feedback, #music { position: fixed; z-index: 3; top: calc(10px + env(safe-area-inset-top)); width: 44px; height: 44px; min-height: 0; padding: 0; border-width: 1.5px; border-radius: 50%; }
-#feedback svg, #music svg { width: 24px; height: 24px; }
-#music { right: calc(10px + 44px + 10px + env(safe-area-inset-right)); }
-#feedback { right: calc(10px + 2 * (44px + 10px) + env(safe-area-inset-right)); }
+/* Free-play and music controls, plus the feedback sheet opened from Settings. */
+#free, #music { z-index: 3; top: calc(10px + env(safe-area-inset-top)); }
+
+#music { right: calc(10px + 2 * (44px + 10px) + env(safe-area-inset-right)); }
 #music[data-state="off"] .on, #music[data-state="on"] .off { display: none; }
 @media (min-width: 520px) and (min-height: 520px) {
-  #feedback, #music { top: calc(16px + env(safe-area-inset-top)); width: 56px; height: 56px; border-width: 2px; } #feedback svg, #music svg { width: 30px; height: 30px; }
-  #music { right: calc(16px + 56px + 12px + env(safe-area-inset-right)); }
-  #feedback { right: calc(16px + 2 * (56px + 12px) + env(safe-area-inset-right)); }
+  #free, #music { top: calc(16px + env(safe-area-inset-top)); width: 56px; height: 56px; } #free svg, #music svg { width: 30px; height: 30px; }
+
+  #music { right: calc(16px + 2 * (56px + 12px) + env(safe-area-inset-right)); }
 }
 @media (max-height: 500px) {
-  #feedback, #music { right: auto; top: calc(12px + env(safe-area-inset-top)); }
-  #music { left: calc(12px + 2 * (44px + 10px) + env(safe-area-inset-left)); }
-  #feedback { left: calc(12px + 3 * (44px + 10px) + env(safe-area-inset-left)); }
+  #free, #music { right: auto; top: calc(12px + env(safe-area-inset-top)); }
+
+  #music { left: calc(12px + 3 * (44px + 10px) + env(safe-area-inset-left)); }
 }
-@media (max-height: 500px) and (max-width: 419px) { #feedback, #music { display: none; } } /* tiny short windows: no room beside the corner pill */
-/* «Mode foto» (main.js setView, title only): a quiet eye in the empty bottom-right corner, level with the «Com es juga?»
-   pill (the top row is full on a 360 px phone); landscape phones: under the ⚙ (the bottom holds the choice row there).
-   Pressed, every control, tip and the HUD canvas fade out (the canvas keeps its drags: the camera still steers); only
-   this button stays, dimmer, and nearly vanishes after a few idle seconds (main.js adds .idle; any touch/move/key wakes it). */
-#viewmode { position: fixed; z-index: 3; right: calc(10px + env(safe-area-inset-right)); bottom: calc(16px + env(safe-area-inset-bottom)); width: 44px; height: 44px; min-height: 0; padding: 0; border-width: 1.5px; border-radius: 50%; opacity: .7; transition: opacity .25s; }
-#viewmode svg { width: 22px; height: 22px; }
-#viewmode:focus-visible { opacity: 1; }
-@media (hover: hover) { #viewmode:hover { opacity: 1; } }
-#viewmode[aria-pressed="true"]:not(:focus-visible) { opacity: .5; }
-#viewmode[aria-pressed="true"].idle:not(:focus-visible) { opacity: .12; transition-duration: 1s; }
+@media (max-height: 500px) and (max-width: 419px) { #free, #music { display: none; } } /* tiny short windows: no room beside the corner pill */
+/* «Mode foto» (ui/controls.js setView, selector only; select-chrome.css places the eye in the corner row). Pressed, every control,
+   tip and the HUD canvas fade out (the canvas keeps its drags: the camera still steers); only this button stays, dimmer,
+   and nearly vanishes after a few idle seconds (controls.js adds .idle; any touch/move/key wakes it). */
+#viewmode { z-index: 3; transition: opacity .25s; }
+#viewmode[aria-pressed="true"].idle:not(:hover, :focus-visible) { opacity: .25; transition-duration: 1s; } /* the exit, the radio and the ? dim together */
 #viewmode[aria-pressed="false"] .off, #viewmode[aria-pressed="true"] .on { display: none; }
-@media (min-width: 520px) and (min-height: 520px) { #viewmode { right: calc(22px + env(safe-area-inset-right)); bottom: calc(22px + env(safe-area-inset-bottom)); } } /* centred on the pill and under the ⚙ */
-@media (max-height: 500px) { #viewmode { right: auto; bottom: auto; left: calc(12px + env(safe-area-inset-left)); top: calc(12px + 44px + 10px + env(safe-area-inset-top)); } }
-@media (max-height: 500px) and (max-width: 419px) { #viewmode { display: none; } } /* tiny short windows: the logo needs that corner */
-:is(#hud, #leaders, #settings, #feedback, #music, #howto, #ios-hint, #fps, #feedback-nudge) { transition: opacity .2s; }
-body.view-mode :is(#hud, #leaders, #settings, #feedback, #music, #howto, #ios-hint, #fps, #feedback-nudge) { opacity: 0; }
-body.view-mode :is(#leaders, #settings, #feedback, #music, #howto, #ios-hint, #fps, #feedback-nudge) { visibility: hidden; pointer-events: none; transition: opacity .2s, visibility 0s .2s; } /* (main.js also makes them inert) */
-@media (prefers-reduced-motion: reduce) { #viewmode, :is(#hud, #leaders, #settings, #feedback, #music, #howto, #ios-hint, #fps, #feedback-nudge), body.view-mode :is(#leaders, #settings, #feedback, #music, #howto, #ios-hint, #fps, #feedback-nudge) { transition: none; } }
-/* the nudge after a game (src/ui/feedback-ui.js setupNudge): a speech bubble beside the bubble button (or under it), its
-   tail pointing at it; main.js placeNudge (title-layout.js nudgePlace) sets its box clear of the logo and the controls */
-#feedback-nudge { position: fixed; z-index: 3; box-sizing: border-box; display: flex; align-items: center; justify-content: center; padding: 3px 10px; border: 2px solid #f5c518; border-radius: 12px; background: #fff3d6; color: #2a1a10; font: 800 13px/1.15 'Baloo 2', system-ui, sans-serif; text-align: center; text-wrap: balance; pointer-events: none; animation: nudge-in .35s cubic-bezier(.3, 1.6, .5, 1) both; }
-#feedback-nudge[data-big="true"] { padding: 4px 14px; font-size: 15px; }
-#feedback-nudge::after { content: ""; position: absolute; width: 12px; height: 12px; border: solid #f5c518; border-width: 2px 2px 0 0; background: #fff3d6; } /* the tail */
-#feedback-nudge[data-tail="right"] { transform-origin: right center; } #feedback-nudge[data-tail="right"]::after { top: 50%; right: -8px; margin-top: -6px; transform: rotate(45deg); }
-#feedback-nudge[data-tail="left"] { transform-origin: left center; } #feedback-nudge[data-tail="left"]::after { top: 50%; left: -8px; margin-top: -6px; transform: rotate(-135deg); }
-#feedback-nudge[data-tail="up"] { transform-origin: var(--tail-x, 50%) top; } #feedback-nudge[data-tail="up"]::after { top: -8px; left: calc(var(--tail-x, 50%) - 7px); transform: rotate(-45deg); }
-@keyframes nudge-in { from { opacity: 0; transform: scale(.6); } to { opacity: 1; transform: none; } }
-@media (prefers-reduced-motion: reduce) { #feedback-nudge { animation: none; } }
+:is(#hud, #settings, #free, #music, #howto, #fps) { transition: opacity .2s; }
+body.view-mode :is(#hud, #settings, #free, #music, #howto, #fps) { opacity: 0; }
+body.view-mode :is(#settings, #free, #music, #howto, #fps) { visibility: hidden; pointer-events: none; transition: opacity .2s, visibility 0s .2s; } /* (main.js also makes them inert) */
+/* Keep the painted column's centre at 40% of the game's safe height. */
+#photo-figs { position: fixed; z-index: 5; top: calc(env(safe-area-inset-top) + (var(--app-h, 100dvh) - env(safe-area-inset-top) - env(safe-area-inset-bottom)) * .4); translate: 0 -50%; left: max(16px, env(safe-area-inset-left)); display: flex; flex-direction: column; justify-content: center; gap: 14px; transition: opacity .25s; }
+#photo-figs[hidden] { display: none; }
+body:has(#viewmode.idle) #photo-figs:not(:hover, :focus-within) { opacity: .25; transition-duration: 1s; }
+#photo-figs .pf { position: relative; display: flex; align-items: center; min-height: 60px; padding: 0; border: 0; background: none; color: #fff3d6; font: 700 16px/1.1 'Baloo 2', system-ui, sans-serif; cursor: pointer; text-align: left; }
+#photo-figs .pf-por { z-index: 1; flex: none; display: grid; place-items: center; box-sizing: border-box; width: 56px; height: 56px; margin-block: 2px; border: 2px solid #f5c518; border-radius: 50%; background: radial-gradient(circle at 50% 42%, var(--t, #453322), color-mix(in srgb, var(--t, #453322) 35%, #20150e) 78%); overflow: hidden; } /* the town's tint, as the selector cards (select-cards.css --t) */
+#photo-figs .pf-por svg { width: 74%; height: 74%; stroke: none; } /* (not the line icons' stroke) */
+#photo-figs .pf-nb { display: flex; flex-direction: column; justify-content: center; box-sizing: border-box; min-width: 150px; max-width: 220px; height: 42px; margin-left: -28px; padding: 0 10px 0 38px; /* starts under the portrait's centre: its square end never shows */ border: 2px solid #f5c518; border-radius: 0 10px 10px 0; background: #140c07e6; }
+/* Cream marks selection; gold remains the action/navigation colour. */
+#photo-figs .pf-por, #photo-figs .pf-nb { transition: background .2s; }
+/* Reserve the ring in every state; paint its extra thickness without resizing the icon. */
+#photo-figs .pf[aria-pressed="true"] .pf-por { border-color: #fff3d6; box-shadow: inset 0 0 0 2px #fff3d6, 0 0 0 2px #7a5a10; }
+#photo-figs .pf[aria-pressed="true"] .pf-nb { border-color: #fff3d6; background: #fff3d6; color: #2a1a10; }
+@media (prefers-reduced-motion: reduce) { #photo-figs .pf-por, #photo-figs .pf-nb { transition: none; } }
+@media (hover: hover) { #photo-figs .pf[aria-pressed="false"]:hover .pf-por { box-shadow: 0 0 0 2px #f5c51880; } }
+#photo-figs .pf:focus-visible { outline: none; }
+#photo-figs .pf:focus-visible .pf-por { outline: 3px solid #fff3d6; outline-offset: 3px; }
+#photo-figs .pf:active { transform: none; }
+#photo-figs .pf-name { text-wrap: balance; }
+/* Non-modal notice. Fixed to the viewport, independent of the column's idle opacity. */
+/* Photo mode on touch (ui/photo-stick.js), laid out as phone action games are (Genshin, Fortnite, Roblox: handcam videos,
+   2026-10-20). Left: the stick floats where the thumb lands (at rest it waits faintly in the corner) and follows past
+   its ring; an arc shows the heading, gold = gallop. Right: drag to look. The jump sits where the right thumb rests
+   (~90% across, ~78% down), the three moves on an arc of 106 px round it, the swap away on the right edge. */
+#photo-touch { --ps-mx: max(20px, env(safe-area-inset-left), env(safe-area-inset-right)); --ps-my: max(16px, env(safe-area-inset-bottom)); position: fixed; z-index: 2; inset: 0; touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+#photo-touch .ps-base { position: fixed; left: calc(var(--ps-mx) + 84px); top: calc(100% - var(--ps-my) - 84px); width: 140px; height: 140px; translate: -50% -50%; box-sizing: border-box; border: 2px solid #fff3d699; border-radius: 50%; background: radial-gradient(circle, #21140b33 40%, #21140b80 70%); opacity: .45; pointer-events: none; transition: opacity .2s; }
+#photo-touch .ps-base::before { content: ""; position: absolute; inset: -2px; border-radius: 50%; background: conic-gradient(from calc(var(--ps-a, 0rad) - 35deg), #f5c518 0 70deg, #0000 70deg); -webkit-mask: radial-gradient(circle, #0000 calc(50% - 7px), #000 calc(50% - 6px)); mask: radial-gradient(circle, #0000 calc(50% - 7px), #000 calc(50% - 6px)); opacity: var(--ps-m, 0); }
+#photo-touch .ps-base.on { opacity: 1; transition: none; }
+#photo-touch .ps-base.run { border-color: #f5c518; box-shadow: 0 0 0 3px #f5c51859; }
+#photo-touch .ps-knob { position: absolute; left: 50%; top: 50%; width: 64px; height: 64px; margin: -32px 0 0 -32px; box-sizing: border-box; border: 2px solid #f5c518; border-radius: 50%; background: #fff3d6e6; box-shadow: 0 2px 6px #0008; }
+#photo-touch .ps-base.run .ps-knob { background: #f5c518; }
+/* the jump's centre: 64 px in from the edge, 70 px up; the others are placed from it */
+#photo-touch .ps-actions { position: fixed; right: calc(var(--ps-mx) + 64px); bottom: calc(var(--ps-my) + 70px); width: 0; height: 0; pointer-events: none; }
+#photo-touch .ps-btn { position: absolute; display: grid; place-items: center; width: 64px; height: 64px; margin: -32px -32px 0 0; min-height: 0; padding: 0; border: 2px solid #f5c518cc; border-radius: 50%; background: #21140bb3; color: #fff3d6; pointer-events: auto; touch-action: none; -webkit-tap-highlight-color: transparent; } /* the round icon buttons' look, a little see-through like the games' (AGENTS: 2 px gold edge, dark fill) */
+#photo-touch .ps-btn svg { width: 44px; height: 44px; stroke-width: 0; }
+#photo-touch .ps-btn.down { background: #fff3d6; border-color: #f5c518; transform: scale(.94); }
+#photo-touch .ps-btn[data-code="Space"] { right: 0; top: 0; width: 84px; height: 84px; margin: -42px -42px 0 0; } #photo-touch .ps-btn[data-code="Space"] svg { width: 48px; height: 48px; }
+#photo-touch .ps-btn[data-code="KeyE"] { right: 106px; top: 0; }
+#photo-touch .ps-btn[data-code="KeyQ"] { right: 75px; top: -75px; }
+#photo-touch .ps-btn[data-code="KeyR"] { right: 0; top: -106px; }
+#photo-touch .ps-btn.down svg path[stroke="#fff3d6"] { stroke: #2a1a10; }
+/* the swap: off the right thumb's arc, top-left where nothing else sits at any height (Safari's bars leave ~290 px) */
+#photo-touch .ps-swap { position: fixed; left: var(--ps-mx); top: calc(12px + env(safe-area-inset-top)); width: 60px; height: 60px; margin: 0; background: radial-gradient(circle at 50% 42%, #4e3424, #20150e 78%); }
+#photo-touch .ps-swap svg { width: 70%; height: 70%; }
+@media (max-height: 340px) { /* a phone in Safari with its bars: the same layout, smaller, so the arc stays under the top row */
+  #photo-touch .ps-actions { bottom: calc(var(--ps-my) + 56px); right: calc(var(--ps-mx) + 54px); }
+  #photo-touch .ps-btn { width: 54px; height: 54px; margin: -27px -27px 0 0; } #photo-touch .ps-btn svg { width: 38px; height: 38px; }
+  #photo-touch .ps-btn[data-code="Space"] { width: 70px; height: 70px; margin: -35px -35px 0 0; } #photo-touch .ps-btn[data-code="Space"] svg { width: 40px; height: 40px; }
+  #photo-touch .ps-btn[data-code="KeyE"] { right: 88px; } #photo-touch .ps-btn[data-code="KeyQ"] { right: 62px; top: -62px; } #photo-touch .ps-btn[data-code="KeyR"] { top: -88px; }
+  #photo-touch .ps-swap { width: 52px; height: 52px; margin: 0; }
+  #photo-touch .ps-base { left: calc(var(--ps-mx) + 70px); top: calc(100% - var(--ps-my) - 70px); }
+}
+@media (prefers-reduced-motion: reduce) { #photo-touch .ps-base { transition: none; } #photo-touch .ps-btn.down { transform: none; } }
+#photo-tip { --help-left: max(16px, env(safe-area-inset-left)); --help-right: max(16px, env(safe-area-inset-right)); position: fixed; z-index: 6; --help-top: max(16px, env(safe-area-inset-top)); --help-bottom: max(16px, env(safe-area-inset-bottom)); top: calc(var(--help-top) + (var(--app-h, 100dvh) - var(--help-top) - var(--help-bottom)) / 2); --help-width: min(460px, calc(100% - var(--help-left) - var(--help-right))); left: max(calc((100% + env(safe-area-inset-left) - env(safe-area-inset-right)) / 2), calc(var(--help-left) + var(--help-width) / 2)); translate: -50% -50%; box-sizing: border-box; width: var(--help-width); margin: 0; padding: 20px; border-radius: 24px; background: #000c; color: #fff3d6; font: 600 16px/1.25 'Baloo 2', system-ui, sans-serif; text-align: center; pointer-events: none; opacity: 0; transform: translateY(4px); transition: opacity .16s ease-out, transform .16s ease-out; }
+#photo-tip[hidden] { display: none; }
+#photo-tip[data-visible="true"] { opacity: 1; transform: none; }
+@starting-style { #photo-tip[data-visible="true"] { opacity: 0; transform: translateY(4px); } }
+#photo-tip strong { display: block; font-size: 20px; line-height: 1.3; }
+#photo-tip p { margin: 12px 0; }
+#photo-tip .pf-help-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 20px; margin: 14px 0; text-align: left; }
+#photo-tip .pf-help-action { display: grid; grid-template-columns: 72px minmax(0, 1fr); min-height: 28px; align-items: center; gap: 8px; }
+#photo-tip [data-photo-escape] { min-height: 40px; display: flex; align-items: center; } /* lock/unlock wording shares its two-line slot */
+#photo-tip .pf-help-action:last-child:nth-child(odd) { grid-column: 1 / -1; } /* Escape closes the pairs; alone on its row only when it would leave a hole (M, the radio, now shares it) */
+#photo-tip kbd { display: inline-flex; align-items: center; justify-content: center; flex: none; box-sizing: border-box; min-width: 28px; min-height: 28px; padding: 0 3px; border: 1px solid #fff3d680; border-bottom-width: 3px; border-radius: 6px; background: #ffffff12; font: 700 14px/1 'Baloo 2', system-ui, sans-serif; }
+body.view-mode #howto.photo-help { opacity: 1; visibility: visible; pointer-events: auto; }
+body.view-mode:has(#viewmode.idle) #howto.photo-help:not(:hover, :focus-visible) { opacity: .25; transition-duration: 1s; }
+#howto.photo-help { z-index: 5; left: var(--help-x, 16px); right: auto; top: var(--help-y, 16px) !important; bottom: auto !important; transform: none; width: var(--help-size, 44px); height: var(--help-size, 44px); min-height: 0; padding: 0; gap: 0; border: 2px solid var(--button-border); border-radius: 50%; background: var(--button-bg); color: var(--button-text); font-size: 0; }
+#howto.photo-help .q { box-sizing: border-box; width: 100%; height: 100%; padding-top: .12em; background: none; color: #fff3d6; font-size: calc(var(--help-size, 44px) * .56); } /* the same share of its circle as the radio's note; Baloo's ? sits high: the padding centres it */
+/* Keep the viewport's centre whenever the card clears the figure bar; shift only as far as necessary. */
+@media (pointer: fine) and (max-width: 639px) { #photo-tip { --help-left: max(88px, calc(env(safe-area-inset-left) + 72px)); } }
+@media (pointer: fine) and (max-width: 479px) {
+  #photo-tip { padding: 16px 12px; }
+  #photo-tip .pf-help-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px 6px; }
+  #photo-tip .pf-help-action { display: flex; flex-direction: column; gap: 4px; text-align: center; }
+  #photo-tip .pf-help-action kbd { min-width: 36px; }
+  #photo-tip .pf-help-action:nth-child(n + 7) { grid-column: 1 / -1; display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 8px; text-align: left; }
+}
+#photo-tip .pf-home { margin-top: 8px; padding-left: 8px; border-left: 3px solid #f5c518; text-align: left; } /* a tip: flat, a coloured strip */
+#photo-tip small { display: block; font-size: 14px; line-height: 1.3; color: #e8d8b8; }
+#photo-tip[data-kind="notice"] { --help-left: max(16px, env(safe-area-inset-left)); left: calc((100% + env(safe-area-inset-left) - env(safe-area-inset-right)) / 2); top: calc(72px + env(safe-area-inset-top)); translate: -50% 0; width: max-content; max-width: calc(100% - var(--help-left) - var(--help-right)); padding: 12px 18px; border-radius: 18px; }
+#photo-tip[data-kind="notice"] strong { font-size: 18px; }
+@media (max-height: 519px) { #photo-figs { gap: 8px; } #photo-figs .pf { min-height: 48px; } #photo-figs .pf-por { width: 44px; height: 44px; } #photo-tip { padding: 10px 12px; } #photo-tip .pf-help-grid { gap: 4px 12px; margin: 8px 0; } }
+@media (pointer: coarse) { #photo-tip { --help-width: min(360px, calc(100% - var(--help-left) - var(--help-right))); } }
+@media (min-width: 520px) and (min-height: 520px) { #photo-tip[data-kind="notice"] { top: calc(88px + env(safe-area-inset-top)); } }
+/* The narrow keyboard guide uses the height below the eye/radio/?. */
+@media (pointer: fine) and (max-width: 639px), (pointer: fine) and (max-height: 519px) {
+  #photo-tip { --help-top: calc(72px + env(safe-area-inset-top)); }
+}
+@media (prefers-reduced-motion: reduce) { #photo-tip { transition: none; } }
+@media (max-width: 899px) { #photo-figs .pf-nb { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); } } /* a narrow window: portraits only, clear of the eye (the names stay for screen readers) */
+@media (prefers-reduced-motion: reduce) { #photo-figs { transition: none; } }
+@media (prefers-reduced-motion: reduce) { #viewmode, :is(#hud, #settings, #free, #music, #howto, #fps), body.view-mode :is(#settings, #free, #music, #howto, #fps) { transition: none; } }
 /* the sheet: a scrolling body (title … rights note) over a footer that always shows (status, Envia, Ara no). Every text
    is centred on one column (max 34em, balanced lines); only the typing inside the fields is left-aligned */
 #feedback-menu { width: min(420px, calc(100vw - 32px - var(--sal) - var(--sar))); max-height: calc(100dvh - 32px - var(--sat) - var(--sab)); padding: 0; } /* the X on the corner (the shared .sheet-x): the frame doesn't clip, .feedback-scroll scrolls */
 #feedback-menu[open] { display: flex; flex-direction: column; }
 #feedback-form { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; }
-.feedback-scroll { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 18px 20px 4px; text-align: center; }
+.feedback-scroll { flex: 1 1 auto; min-height: 0; overflow: auto; scrollbar-width: none; padding: 18px 20px 4px; text-align: center; }
 .feedback-scroll p { max-width: 34em; margin-inline: auto; text-wrap: balance; }
+#feedback-menu .feedback-scroll::-webkit-scrollbar { display: none; } /* a native bar would run under the corner X; the fades say there is more */
 #feedback-menu::before, #feedback-menu::after, #board-menu::before, #board-menu::after { display: none; } /* these two scroll inside, not the frame */
 .feedback-lead { margin: 0 0 12px; font-size: 16px; line-height: 1.35; color: #e8d8b8; }
 .feedback-form-col .board-label { margin-bottom: 4px; text-align: center; }
@@ -74,7 +145,7 @@ textarea.feedback-field { height: calc(4 * 1.35em + 20px); max-height: calc(8 * 
 #feedback-status { margin: 0 0 8px; }
 #feedback-status:not(.ok) { color: #ffb4a8; }
 #feedback-status.ok { display: flex; align-items: center; justify-content: center; font-size: 20px; }
-#feedback-status.ok::after { content: ""; flex: none; width: 20px; height: 20px; margin-left: 6px; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23ff7a1a' d='M12 21s-8-5.1-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.9-8 11-8 11z'/%3E%3C/svg%3E") center / contain no-repeat; } /* a drawn heart, no emoji */
+#feedback-status.ok::after { content: ""; flex: none; width: 20px; height: 20px; margin-left: 6px; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23f5c518' d='M12 21s-8-5.1-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.9-8 11-8 11z'/%3E%3C/svg%3E") center / contain no-repeat; } /* a drawn heart, no emoji */
 #feedback-menu .sheet-actions { margin-top: 0; gap: 4px; }
 @media (max-height: 700px) { /* 375 × 667: all of it without scrolling */
   .feedback-scroll { padding-top: 14px; }
@@ -112,3 +183,53 @@ textarea.feedback-field { height: calc(4 * 1.35em + 20px); max-height: calc(8 * 
 #share-image:disabled::before { content: ''; display: inline-block; box-sizing: border-box; width: 1.1em; height: 1.1em; margin-right: 8px; vertical-align: -0.15em; border: 2.5px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: btn-spin .7s linear infinite; }
 @media (prefers-reduced-motion: reduce) { .btn-spin, #share-image:disabled::before { animation-duration: 2s; } }
 #feedback-form[aria-busy="true"] :is(textarea, input) { opacity: .6; }
+/* Free mode's radio (ui/free-music.js): a round icon button next to the eye (placed by JS: the eye moves with the screen),
+   dimmed with it when idle; its list hangs under it. Selected = cream, the rest a neutral edge (colour roles). */
+#radio { z-index: 5; transition: opacity .25s; }
+#radio[hidden] { display: none; }
+#radio svg { width: 54%; height: 54%; } /* (base.css draws button icons as lines) */
+#radio .fm-dot { position: absolute; right: -2px; bottom: -2px; width: 12px; height: 12px; border: 3px solid #2a1a10; border-radius: 50%; background: #f5c518; }
+#radio[data-kind="mulassa-valls"] .fm-dot { background: #c8202f; }
+#radio[data-kind="drac-valls"] .fm-dot { background: #2f8a3c; }
+#radio[data-kind="bou-tradicional-valls"] .fm-dot { background: #8f4124; } /* its hide (figure-portraits.js) */
+#radio[data-kind="off"] .fm-dot { display: none; }
+body:has(#viewmode.idle) #radio:not(:hover, :focus-visible, [aria-expanded="true"]) { opacity: .25; transition-duration: 1s; }
+#radio-menu { --radio-left: max(16px, env(safe-area-inset-left)); --radio-right: max(16px, env(safe-area-inset-right)); --radio-width: min(320px, calc(100% - var(--radio-left) - var(--radio-right))); position: fixed; z-index: 7; left: max(calc((100% + env(safe-area-inset-left) - env(safe-area-inset-right)) / 2), calc(var(--radio-left) + var(--radio-width) / 2)); top: calc(72px + env(safe-area-inset-top)); translate: -50% 0; box-sizing: border-box; width: var(--radio-width); padding: 12px 10px 8px; border: 2px solid #f5c518; border-radius: 20px; background: #000c; color: #fff3d6; font: 600 16px/1.3 'Baloo 2', system-ui, sans-serif; }
+#radio-menu[hidden] { display: none; }
+body:has(#radio-menu:not([hidden]), #radio-now:not([hidden])[data-visible="true"]) #photo-tip { opacity: 0; } /* one information layer while choosing or announcing music */
+@media (min-width: 520px) and (min-height: 520px) { #radio-menu { top: calc(88px + env(safe-area-inset-top)); } }
+@media (pointer: fine) and (max-width: 639px) { #radio-menu { --radio-left: max(88px, calc(env(safe-area-inset-left) + 72px)); } }
+@media (pointer: fine) and (max-width: 359px) { #radio-menu .fm-art { display: none; } }
+@media (pointer: fine) and (min-width: 900px) {
+  #radio-menu { --radio-menu-x: clamp(var(--radio-left), calc(var(--radio-anchor-right) + 12px - var(--radio-width)), calc(100% - var(--radio-right) - var(--radio-width))); left: var(--radio-menu-x); top: calc(var(--radio-anchor-bottom) + 14px); translate: none; border: 0; background: none; }
+  #radio-menu::before { content: ''; position: absolute; inset: -12px 0 0; z-index: -1; background: var(--radio-bubble) no-repeat; background-size: 100% 100%; pointer-events: none; }
+}
+#radio-menu h2 { margin: 0 6px 8px; font: 800 18px/1.2 'Baloo 2', system-ui, sans-serif; text-align: center; }
+.fm-row { display: flex; align-items: center; gap: 12px; box-sizing: border-box; width: 100%; min-height: 56px; margin: 0 0 6px; padding: 6px 12px 6px 6px; border: 2px solid #e8d8b880; border-radius: 14px; background: #ffffff08; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.fm-row[data-kind="off"] { min-height: 48px; }
+.fm-row[aria-checked="true"] { border-color: #fff3d6; background: #fff3d6; color: #2a1a10; }
+@media (hover: hover) { .fm-row:hover:not([aria-checked="true"]) { border-color: #f5c518; } }
+.fm-art { display: grid; flex: none; place-items: center; width: 40px; height: 40px; border-radius: 10px; background: #2a1a10; }
+.fm-art svg { width: 34px; height: 34px; stroke: none; } /* the figures' pixel portraits: their own fills, not base.css's line icons */
+[data-kind="menu"] .fm-art { background: linear-gradient(135deg, #c8202f, #f5c518); }
+:is([data-kind="menu"], [data-kind="off"]) .fm-art svg { width: 24px; height: 24px; fill: none; stroke: #fff3d6; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+[data-kind="menu"] .fm-art svg { stroke: #2a1a10; }
+.fm-t { flex: 1; min-width: 0; }
+.fm-t b { display: block; font-weight: 800; line-height: 1.15; }
+.fm-t small { display: block; color: #e8d8b8; font-size: 13px; }
+.fm-row[aria-checked="true"] small { color: #2a1a10b3; }
+.fm-st { display: grid; flex: none; place-items: center; min-width: 18px; font-size: 18px; }
+.fm-bars { display: inline-flex; align-items: flex-end; gap: 2px; width: 16px; height: 16px; }
+.fm-bars i { width: 4px; height: 30%; border-radius: 1px; background: currentColor; animation: fm-bar .4s ease-in-out infinite alternate; }
+.fm-bars i:nth-child(2) { animation-delay: -.2s; } .fm-bars i:nth-child(3) { animation-delay: -.1s; }
+@keyframes fm-bar { to { height: 100%; } }
+@media (max-height: 520px) { #radio-menu { padding-block: 8px; } .fm-row { min-height: 48px; margin-bottom: 4px; } .fm-art { width: 34px; height: 34px; } }
+#radio-now { position: fixed; z-index: 6; display: flex; align-items: center; gap: 10px; left: calc((100% + env(safe-area-inset-left) - env(safe-area-inset-right)) / 2); top: calc(72px + env(safe-area-inset-top)); translate: -50% 0; box-sizing: border-box; width: max-content; max-width: calc(100vw - 32px - env(safe-area-inset-left) - env(safe-area-inset-right)); padding: 6px 16px 6px 8px; border-radius: 999px; background: #000c; color: #fff3d6; font: 600 15px/1.25 'Baloo 2', system-ui, sans-serif; pointer-events: none; opacity: 0; transform: translateY(4px); transition: opacity .16s ease-out, transform .16s ease-out; }
+#radio-now[data-visible="true"] { opacity: 1; transform: none; }
+@starting-style { #radio-now[data-visible="true"] { opacity: 0; transform: translateY(4px); } }
+@media (min-width: 520px) and (min-height: 520px) { #radio-now { top: calc(88px + env(safe-area-inset-top)); } }
+#radio-now[hidden] { display: none; }
+#radio-now .fm-art { width: 32px; height: 32px; border-radius: 50%; }
+#radio-now .fm-art svg { width: 26px; height: 26px; }
+#radio-now b { display: block; font-weight: 800; } #radio-now small { display: block; color: #e8d8b8; font-size: 13px; }
+@media (prefers-reduced-motion: reduce) { #radio, #radio-now { transition: none; animation: none; } .fm-bars i { animation: none; height: 60%; } .fm-bars i:nth-child(2) { height: 100%; } .fm-bars i:nth-child(3) { height: 40%; } }

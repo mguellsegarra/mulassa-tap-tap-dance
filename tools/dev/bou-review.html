@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="ca"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Revisem el ball del Bou</title><link rel="stylesheet" href="/tools/dev/bou-review/style.css"></head>
+<body><header><a href="/tools/dev/bou-dance.html">Visor del ball</a><h1>Revisem el ball del Bou</h1><p>Tria un tram, compara el vídeo amb el ball actual i escriu com l'hem de corregir.</p></header>
+<main>
+<section class="transport" aria-label="Reproducció compartida">
+<div class="controls"><button class="btn btn-secondary" id="previous" aria-label="Tram anterior">Anterior</button><label class="grow">Tram de la nostra cançó<select id="fragment"></select></label><button class="btn btn-secondary" id="next" aria-label="Tram següent">Següent</button></div>
+<audio id="audio" controls preload="metadata"></audio>
+<div class="controls"><button class="btn btn-primary" id="restart">Reprodueix el tram</button><label class="check"><input type="checkbox" id="loop" checked> Repeteix el tram</label><label>Velocitat<select id="speed"><option value="1">Normal</option><option value="0.75">75%</option><option value="0.5">Meitat</option></select></label><output id="clock">0:00</output></div>
+<p id="alignment" class="notice">Correspondència musical automàtica, pendent de revisar. Pots ajustar els segons del vídeo de cada tram.</p>
+<details class="score-details"><summary>Relació amb la partitura</summary><p id="score-match"></p><p>Els compassos i les notes identifiquen la frase. El mapa temporal del vídeo és una estimació i encara necessita contrast auditiu.</p></details></section>
+<div class="comparison">
+<section class="panel"><h2>Vídeo original · 2023</h2><div class="viewport"><video id="reference" muted playsinline preload="auto" aria-label="Vídeo original sincronitzat"></video><span id="video-clock" class="badge"></span></div>
+<div class="controls"><label>Inici al vídeo (s)<input id="source-start" type="number" min="0" step="0.001"></label><label>Final al vídeo (s)<input id="source-end" type="number" min="0" step="0.001"></label></div>
+<p id="video-rate"></p><label>Què fa el Bou al vídeo<textarea id="observed" rows="4"></textarea></label><p class="hint">Primera lectura del vídeo. Els moviments tapats i les direccions inferides s'indiquen al text.</p><a id="original-link" class="original-link" target="_blank" rel="noopener">Obre l’original amb so en aquest punt</a>
+</section>
+<section class="panel"><h2>El nostre model · ball actual</h2><div class="viewport"><canvas id="stage" aria-label="Model 3D amb el ball actual"></canvas></div>
+<div class="controls"><label>Vista<select id="view"><option value="front">Tres quarts</option><option value="side">Costat</option><option value="rear">Darrere</option><option value="top">Des de dalt</option></select></label></div>
+<p id="model-description"></p><p class="hint">Resum del ball que executa el model ara. Encara no incorpora les propostes del guió.</p>
+</section>
+<section class="panel"><h2>Vista zenital · N / E / S / W</h2><div class="viewport overhead"><canvas id="map" aria-label="Vista zenital del Bou: posició, orientació i recorregut"></canvas></div>
+<div class="controls map-legend"><span><b class="face">Verd:</b> cap on mira<br><b class="travel">Blau:</b> cap on avança<br><b class="trail">Groc:</b> recorregut del tram</span></div>
+<p class="hint map-explanation">W és la direcció inicial del cap. Marques fixes de guió, no punts geogràfics. El mapa mostra el model actual.</p>
+<label>Proposta de guió per a aquest tram<textarea id="wanted" rows="4" placeholder="Ex.: va cap al N fent balanceig, gira cap al W i torna al mig. Fa 3 tombs."></textarea></label><p class="hint">Proposta meva, pendent de revisar. Pots reescriure-la i copiar tots els trams.</p>
+</section></div>
+<p id="status" role="status">Els canvis es desen en aquest navegador.</p><p id="error" role="alert" hidden></p>
+<section class="export"><div class="controls"><h2 class="grow">Guió per passar-me</h2><button class="btn btn-primary" id="copy">Copia tots els trams</button><button class="btn btn-secondary" id="download">Desa una còpia</button></div><label>Text complet, preparat per copiar<textarea id="export" rows="8" readonly></textarea></label></section>
+</main><script type="module" src="/tools/dev/bou-review/main.js"></script></body></html>

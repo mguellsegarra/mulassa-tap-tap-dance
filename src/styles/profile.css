@@ -1,0 +1,335 @@
+/* Names, the Perfil sheet, statistics, seasons and players' cards (src/ui/profile-notes.js, account-ui.js, stats-view.js,
+   seasons-ui.js, player-card.js); the board's own rows are in board.css. */
+
+/* A player's name (appendName): a button to their card where it is tappable. A guest («Timbaler#3821») is quieter:
+   muted cream (11.9:1 on the sheet), its «#1234» a step more (6.8:1; 6.1:1 on the gold own row), never a check. */
+button.player-name { position: relative; display: inline-flex; align-items: baseline; gap: 0; min-width: 0; min-height: 0; margin: 0; padding: 0; border: 0; border-radius: 4px; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+@media (pointer: coarse) { button.player-name::after { content: ""; position: absolute; left: -6px; right: -6px; top: 50%; height: max(100%, 44px); translate: 0 -50%; } } /* a 44 px invisible target on touch; a mouse: the hand only over the name; rows keep their height and look, every list steps >= 44 px */
+@media (hover: hover) { button.player-name:hover { filter: none; } button.player-name:hover :is(.alias, .tag) { text-decoration: underline; text-decoration-color: #e8d8b899; text-underline-offset: 3px; } }
+span.player-name { display: inline-flex; align-items: baseline; min-width: 0; }
+.player-name .alias { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.player-name .tag { flex: none; color: #b5a385; font-size: .87em; font-weight: 700; }
+/* in a list (board rows, podiums) a name is never cut: a long one wraps, its «#1234» whole on the next line; the check or «TU»
+   follows it, on the next line only when they cannot share one */
+.who { flex-wrap: wrap; column-gap: 5px; }
+.who .player-name { flex-wrap: wrap; justify-content: flex-start; }
+.who .player-name .alias { white-space: normal; overflow-wrap: anywhere; }
+/* in a sentence («Publicat com a Timbaler#3821.»): inline, so the full stop never wraps alone */
+.board-status .player-name { display: inline; } .board-status .player-name .alias { white-space: normal; }
+.board-status .verified-check { margin-left: 4px; vertical-align: -3px; }
+.player-name.guest { color: #b5a385; } /* a guest: the whole name as quiet as its tag (a confirmed name stands out) */
+.player-name.guest .tag { color: inherit; }
+#board-table tr.me .player-name.guest { color: inherit; }
+#board-table tr.me .player-name .tag { color: #d7b43a; }
+/* «Convidat»: an information chip (dark, cream text), never a button or a cream fill */
+.kind-chip { flex: none; display: inline-block; padding: 1px 9px; border: 1px solid #e8d8b866; border-radius: 999px; background: #140c07; color: #e8d8b8; font-size: 13px; font-weight: 800; line-height: 20px; letter-spacing: .04em; }
+
+/* Classificació: a guest's hint under its own row */
+#board-table tr.me-hint td { height: auto; padding: 0 4px 6px; border-top: 0; background: #f5c51824; text-align: center; }
+#board-table tr.me-hint .btn-link { min-height: 32px; padding: 0 6px; color: #f5c518; font-size: 13px; text-decoration-color: #f5c51899; white-space: normal; }
+.board-previous { width: min(100%, 340px); margin-top: 6px; }
+.board-previous h3, .account-section h3 { margin: 0 0 6px; color: #f5c518; font-size: 16px; line-height: 1.25; }
+.board-previous h3 { text-align: center; }
+.board-links { column-gap: 8px; }
+
+/* a podium: 1-2-3, the name with its level under it (as on the board), the points; a 46 px row (the name's slop stays in it) */
+.podium { margin: 0; padding: 0; list-style: none; font-size: 15px; line-height: 1.25; font-variant-numeric: tabular-nums; }
+.podium li { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; grid-template-rows: auto auto; align-content: center; column-gap: 10px; row-gap: 2px; min-height: 46px; padding: 3px 0; box-sizing: border-box; border-top: 1px solid #fff3d614; }
+.podium li:first-child { border-top: 0; }
+.podium .pos { grid-row: 1 / 3; align-self: center; }
+.podium .who { grid-column: 2; min-width: 0; }
+.podium .lvl { grid-column: 2; grid-row: 2; justify-self: start; padding: 0 6px; border-radius: 999px; font-size: 9.5px; font-weight: 800; line-height: 15px; letter-spacing: .05em; color: #2a1a10; }
+.podium .pts { grid-column: 3; grid-row: 1 / 3; align-self: center; text-align: right; font-weight: 800; font-size: 16px; }
+.podium .pos:not(.p1, .p2, .p3) { color: #e8d8b8; text-align: center; }
+
+/* Saló de la fama: one season at a time in the board's frame (one height,
+   loading/empty/error inside its box); the estendard and its gold rod are a decorative exception to the colour roles */
+#seasons-menu { width: min(460px, calc(100vw - 32px - var(--sal) - var(--sar))); height: var(--hall-h, fit-content); max-height: min(680px, calc(100dvh - 32px - var(--sat) - var(--sab))); padding: 16px 18px; }
+#seasons-menu[open] { display: flex; flex-direction: column; }
+#seasons-menu h2 { margin: 0 0 12px; font-size: 28px; }
+#seasons-figure { flex: none; align-self: center; } /* the board's figure dropdown (board.css .board-figure) */
+.fig-mask { display: inline-block; flex: none; width: 36px; height: 25px; background: currentColor; -webkit-mask: var(--m) center / contain no-repeat; mask: var(--m) center / contain no-repeat; }
+/* the sheet hugs its view on every screen: one 16 px gap between its blocks, no free band; loading,
+   «Tria temporada» and «Tria figura» keep the last view's height (--hall-h, seasons-ui.js), the first load a typical one */
+.seasons-box { position: relative; flex: 0 1 auto; display: flex; flex-direction: column; min-height: 0; margin-top: 16px; }
+.seasons-box:not(:has(.hall-view)) { min-height: 300px; }
+.seasons-list { position: relative; flex: 0 1 auto; min-height: 0; display: flex; flex-direction: column; }
+.seasons-box .board-state { z-index: 1; }
+.hall-view { flex: 0 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 16px; }
+.hall-main { flex: 0 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 16px; overflow: auto; overscroll-behavior: contain; }
+.hall-main > * { flex: none; }
+.hall-season { display: flex; align-items: center; gap: 14px; }
+.estendard { position: relative; flex: none; width: 56px; height: 79px; color: #fff3d6; }
+.estendard svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.estendard .fig-mask { position: absolute; left: 50%; top: 45%; translate: -50% -50%; width: 40px; height: 28px; }
+.estendard .cloth { fill: #a11d2a; } .estendard .inner { fill: none; stroke: #fff3d6; stroke-opacity: .35; stroke-width: 1; }
+.estendard .rod { stroke: #f5c518; stroke-width: 3.5; stroke-linecap: round; } .estendard .knob { fill: #f5c518; } .estendard .cord { fill: none; stroke: #f5c518; stroke-width: 1.2; opacity: .8; }
+.estendard.empty { color: #e8d8b8; } .estendard.empty .cloth { fill: none; stroke: #e8d8b880; stroke-width: 1.5; stroke-dasharray: 4 4; } .estendard.empty .inner { display: none; } .estendard.empty .fig-mask { opacity: .4; }
+.hall-stext { min-width: 0; }
+.hall-name { margin: 0; color: #f5c518; font-size: 26px; line-height: 1.05; }
+.hall-dates { margin: 4px 0 0; color: #e8d8b8; font-size: 14px; font-weight: 600; line-height: 1.3; }
+.hall-dates .d-short { display: none; }
+@media (max-width: 359px) { .hall-dates .d-long { display: none; } .hall-dates .d-short { display: inline; } } /* the same days, one line */
+.hall-meta { margin: 2px 0 0; color: #fff3d6; font-size: 15px; line-height: 1.3; }
+.hall-lab { display: block; margin: 0 0 4px; color: #e8d8b8; font-size: 13px; font-weight: 800; letter-spacing: .06em; line-height: 1.2; text-transform: uppercase; }
+/* a dance replaced mid-season: one quiet line, its link inline (no full switch for it) */
+.hall-dance { margin: 4px 0 0; color: #e8d8b8; font-size: 14px; line-height: 1.35; }
+.hall-dance .btn-link { display: inline; min-height: 0; padding: 0 2px; font-size: 14px; color: #fff3d6; }
+/* the podium: the first featured, 2nd and 3rd compact; the profile's own row says «TU» on a gold wash (and no band then) */
+.hall-podium .pos { --pos-size: 26px; }
+.pod-first { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 12px; align-items: center; padding: 6px 0 10px; }
+.pod-first .pos { --pos-size: 40px; }
+.pod-first .who { font-size: 20px; line-height: 1.15; }
+.pod-first .pts { margin-top: 2px; color: #e8d8b8; font-size: 15px; font-variant-numeric: tabular-nums; }
+.hall-podium .lvl { margin-left: 6px; font-size: 12px; letter-spacing: .05em; } /* its level's colour (.lvt*) */
+.pod-rest { margin: 0; padding: 0; list-style: none; }
+.pod-rest li { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto; column-gap: 10px; align-items: center; min-height: 46px; padding: 3px 0; border-top: 1px solid #fff3d61c; font-size: 15px; line-height: 1.2; }
+.pod-rest .pts { text-align: right; font-weight: 800; font-variant-numeric: tabular-nums; }
+.pod-rest .pts .lvl { display: block; margin: 0; font-size: 11px; }
+.pod-first.me, .pod-rest li.me { border-radius: 2px; background: #f5c51817; box-shadow: -8px 0 0 #f5c51817, 8px 0 0 #f5c51817; }
+.hall-mine { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 2px 10px; padding: 8px 12px; border-left: 3px solid #f5c518; border-radius: 4px; background: #fff3d60d; }
+.hall-mine .hall-lab { margin: 0; }
+.hall-mine .place { display: block; color: #fff3d6; font-size: 26px; font-weight: 800; line-height: 1.05; } .hall-mine .place small { color: #e8d8b8; font-size: 17px; }
+.hall-mine .mpts { margin-left: auto; color: #e8d8b8; font-size: 14px; text-align: right; font-variant-numeric: tabular-nums; } .hall-mine .mpts .lvl { display: block; margin: 0; }
+.hall-mine.none { display: block; border-left-color: #e8d8b866; } .hall-mine .none-t { display: block; margin-top: 2px; color: #e8d8b8; font-size: 15px; }
+.hall-actions { flex: none; display: grid; gap: 8px; }
+.hall-actions .btn > svg { fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+/* «Tria temporada»: the seasons by year (a dashed cord under each year), inside the same sheet; the one shown is cream */
+.hall-index { justify-content: flex-start; gap: 0; }
+.hall-idx-head { flex: none; display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; margin-bottom: 6px; }
+.hall-idx-head h3 { margin: 0; font-size: 20px; text-align: center; }
+#seasons-menu .hall-back { position: relative; top: auto; right: auto; }
+.hall-idx-cap { flex: none; display: flex; justify-content: space-between; padding: 4px 12px 4px 10px; color: #e8d8b8; font-size: 12px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+.hall-idx { flex: 1 1 auto; min-height: 0; overflow: auto; overscroll-behavior: contain; padding-right: 2px; -webkit-mask: linear-gradient(#000 calc(100% - 24px), #0000); mask: linear-gradient(#000 calc(100% - 24px), #0000); }
+.hall-idx ul { margin: 0; padding: 0; list-style: none; }
+.hall-year { display: flex; align-items: center; gap: 10px; margin: 10px 0 4px; color: #e8d8b8; font-size: 15px; letter-spacing: .08em; }
+.hall-year:first-child { margin-top: 2px; }
+.hall-year::after { content: ""; flex: 1; border-top: 1.5px dashed #e8d8b84d; }
+.idx-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px; width: 100%; min-height: 56px; margin: 2px 0; padding: 6px 12px 6px 10px; border: 0; border-radius: 10px; background: none; color: #fff3d6; text-align: left; }
+.hall-idx li + li .idx-row { border-top: 1px solid #fff3d61c; border-radius: 0 0 10px 10px; }
+.idx-row[aria-current] { border-radius: 10px; background: #fff3d6; color: #2a1a10; }
+.r-main { min-width: 0; } .r-name { display: block; font-size: 17px; line-height: 1.2; } .r-two { color: #e8d8b8; font-size: 14px; }
+.r-sub { display: flex; align-items: center; gap: 6px; margin-top: 2px; color: #e8d8b8; font-size: 14px; line-height: 1.2; }
+.r-sub .pos { flex: none; --pos-size: 18px; }
+.r-side { display: grid; justify-items: end; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.r-side b { font-size: 19px; } .r-side .dash { color: #e8d8b8; } .r-side small { color: #e8d8b8; font-size: 13px; }
+.idx-row[aria-current] :is(.r-sub, .r-two, .r-side small, .r-side .dash, .player-name.guest, .player-name .tag) { color: #4a3420; }
+/* no closed season yet: the empty estendard, the open season, its board */
+.hall-wait { flex: 1 1 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center; }
+.hall-wait .estendard { width: 84px; height: 118px; } .hall-wait .estendard .fig-mask { width: 60px; height: 42px; }
+.hall-wait .empty-h { margin: 4px 0 0; font-size: 19px; line-height: 1.25; text-wrap: balance; }
+.hall-wait .empty-p { margin: -6px 0 0; color: #e8d8b8; font-size: 15px; text-wrap: balance; }
+.hall-open { font-size: 14px; line-height: 24px; }
+/* phones up to 700 px tall: a tighter rhythm before anything scrolls */
+@media (max-height: 700px) {
+  #seasons-menu { padding: 12px 14px; } #seasons-menu h2 { margin-bottom: 8px; font-size: 24px; }
+  .hall-season .estendard { width: 44px; height: 62px; } .hall-season .estendard .fig-mask { width: 32px; height: 22px; }
+  .hall-name { font-size: 23px; } .hall-dates { font-size: 13px; } .hall-meta { font-size: 14px; }
+  .pod-first { padding: 2px 0 6px; } .pod-first .pos { --pos-size: 34px; } .pod-first .who { font-size: 18px; }
+  .pod-rest li { min-height: 44px; padding: 2px 0; }
+  .hall-mine { padding: 6px 12px; } .hall-mine .place { font-size: 23px; }
+  .hall-actions .btn { min-height: 44px; padding-block: 4px; }
+}
+@media (max-height: 600px) {
+  #seasons-menu h2 { margin-bottom: 6px; font-size: 22px; } .pod-rest li { padding: 1px 0; }
+  .hall-season { gap: 10px; } .hall-season .estendard { width: 36px; height: 51px; } .hall-season .estendard .fig-mask { width: 26px; height: 18px; }
+  #seasons-figure { min-height: 48px; padding-block: 2px; } #seasons-figure .board-pic { width: 46px; height: 38px; } .hall-dance { margin: 0; } .hall-dance-t { display: none; }
+  .pod-first { padding: 0 0 4px; } .pod-first .pos { --pos-size: 28px; } .pod-first .pts { font-size: 14px; } .hall-actions { gap: 6px; }
+  .hall-mine { padding: 4px 10px; } .hall-mine .hall-lab { font-size: 11px; } .hall-mine .place { font-size: 20px; } .hall-mine .mpts { font-size: 13px; }
+  .hall-mine.none .hall-lab { display: none; } .hall-mine .none-t { margin: 0; font-size: 14px; } /* «No hi ha cap resultat teu publicat.» says it alone */
+}
+#season-end-menu .sheet-actions { padding-bottom: 2px; } /* the link's 44 px slop stays inside the body (no scroll for it) */
+/* desktop: the season across the top, its estendard and words centred on the sheet's axis (with the title and the figure
+   above); under it the podium on the left, the player's place and the actions on the right, both columns ending on one line.
+   The sheet hugs its view (no free band above the season or under the button); loading,
+   «Tria temporada» and «Tria figura» keep the last view's height (--hall-h, seasons-ui.js) and the first load a typical one */
+@media (min-width: 860px) and (min-height: 560px) {
+  #seasons-menu { width: min(780px, calc(100vw - 32px - var(--sal) - var(--sar))); padding: 22px 30px 24px; }
+  #seasons-picker { width: 440px; margin-inline: auto; }
+  .seasons-box { margin-top: 18px; }
+  .seasons-box:not(:has(.hall-view)) { min-height: 334px; } /* loading or an error, nothing shown yet: a detail's typical height */
+  .hall-detail { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); grid-template-rows: auto auto auto; grid-template-areas: "season season" "pod me" "pod act"; align-content: start; column-gap: 40px; row-gap: 0; }
+  .hall-main { display: contents; }
+  .hall-season { grid-area: season; justify-content: center; gap: 18px; margin-bottom: 18px; padding-bottom: 18px; border-bottom: 1px solid #fff3d61c; }
+  .hall-podium { grid-area: pod; } .hall-mine { grid-area: me; align-self: start; margin-top: 22px; } .hall-actions { grid-area: act; align-self: end; }
+  .hall-season .estendard { width: 66px; height: 93px; } .hall-season .estendard .fig-mask { width: 46px; height: 32px; }
+  .hall-name { font-size: 34px; } .hall-dates { font-size: 15px; } .hall-meta { font-size: 16px; }
+  .pod-first .who { font-size: 24px; } .pod-first .pts { font-size: 16px; } .pod-rest li { min-height: 50px; font-size: 16px; }
+  .hall-index { width: 560px; margin-inline: auto; }
+  .hall-empty { gap: 24px; } .hall-empty .hall-actions { align-self: center; width: 360px; } /* the action apart from the words */
+}
+
+/* «Tardor 2026 s’ha acabat»: a podium on any board shows that figure on its step, none a garland; then a
+   calm receipt (a row per board, its place on the right) and the season now open. The whole podium is in the Saló de la fama. */
+#season-end-menu { width: min(400px, calc(100vw - 32px - var(--sal) - var(--sar))); max-height: calc(100dvh - 32px - var(--sat) - var(--sab)); padding: 18px 20px 10px; }
+#season-end-menu h2 { margin: 0; color: #e8d8b8; font-size: 15px; letter-spacing: .06em; line-height: 1.3; text-wrap: balance; }
+.season-end-boards { display: flex; flex-direction: column; }
+.se-art-box { line-height: 0; }
+.se-art { display: block; width: min(220px, 76%); height: auto; margin: 6px auto; } .se-art.garland { width: min(200px, 70%); }
+.se-cheer { margin: 0; color: #fff3d6; font-size: 30px; line-height: 1.1; text-align: center; text-wrap: balance; } .se-cheer.gold { color: #f5c518; }
+.se-ledger { width: 100%; margin-top: 12px; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.se-ledger caption { margin-bottom: 8px; color: #fff3d6; font-size: 15px; font-weight: 800; letter-spacing: .08em; line-height: 1.2; text-align: center; text-transform: uppercase; } /* a section heading: the hall's uppercase label, in cream, over the quieter column heads */
+.se-ledger thead th { padding: 0 0 4px; border-bottom: 1px solid #e8d8b82e; color: #e8d8b8b3; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-align: left; text-transform: uppercase; }
+.se-ledger thead th + th, .se-ledger td { text-align: right; }
+.se-ledger tbody tr { border-bottom: 1px solid #e8d8b82e; }
+.se-ledger tbody th { padding: 8px 0; font-size: 17px; text-align: left; }
+.se-ledger td { padding-left: 10px; white-space: nowrap; }
+.se-ledger .cell { display: flex; align-items: center; gap: 10px; }
+.se-ledger .pix { display: block; flex: none; width: 34px; height: 30px; } .se-ledger .pix svg { display: block; width: 100%; height: 100%; }
+.se-ledger .nm { min-width: 0; line-height: 1.15; } .se-ledger .nm small { display: block; color: #e8d8b8; font-size: 14px; font-weight: 700; line-height: 1.1; }
+.se-ledger .val { display: inline-flex; align-items: center; justify-content: flex-end; }
+.se-ledger .val b { margin-right: 4px; font-size: 21px; } .se-ledger .of { color: #e8d8b8; font-size: 15px; }
+.se-ledger .pos { --pos-size: 22px; margin-right: 6px; }
+/* one centred inline line: on narrow phones it wraps balanced (the season’s name and «·» on the first line, the days left on the second), the icon leading */
+.se-now { margin: 12px 0 0; color: #e8d8b8; font-size: 15px; line-height: 1.3; text-align: center; text-wrap: balance; }
+.se-now b { color: #fff3d6; white-space: nowrap; } /* the season's name never splits */
+.se-now svg { display: inline-block; width: 20px; height: 20px; margin-right: 8px; vertical-align: -4px; fill: none; stroke: #f5c518; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+#season-end-menu .sheet-actions { gap: 6px; margin-top: 16px; }
+@media (prefers-reduced-motion: no-preference) {
+  .se-art .blk { transform-box: fill-box; transform-origin: bottom; animation: se-rise .45s cubic-bezier(.3, 1.5, .5, 1) both; }
+  .se-art .blk.me { animation-delay: .15s; }
+  .se-art .who { animation: se-drop .5s .45s cubic-bezier(.3, 1.6, .5, 1) both; }
+  .se-art .cf { animation: se-pop .4s calc(.6s + var(--i) * 40ms) ease-out both; }
+  .se-art .flag { transform-box: fill-box; transform-origin: top; animation: se-swing .5s calc(var(--i) * 50ms) ease-out both; }
+}
+@keyframes se-rise { from { transform: scaleY(0); } }
+@keyframes se-drop { from { transform: translateY(-14px); opacity: 0; } }
+@keyframes se-pop { from { opacity: 0; } }
+@keyframes se-swing { from { transform: scaleY(0); } }
+@media (max-height: 600px) {
+  #season-end-menu { padding-top: 14px; }
+  .se-art { width: min(170px, 60%); margin: 2px auto; } .se-cheer { font-size: 26px; }
+  .se-ledger tbody th { padding: 5px 0; } #season-end-menu .sheet-actions { margin-top: 12px; }
+}
+
+/* Perfil: the profile block, then the statistics as quiet tiles, podiums and the previous dance's record */
+/* ONE height from the first frame (like Classificació): loading, empty, failed and full statistics all sit inside the statistics' own room,
+   which takes what the profile block and the links leave; a taller answer scrolls the sheet's body as every sheet's */
+#account-menu { width: min(460px, calc(100vw - 32px - var(--sal) - var(--sar))); height: min(760px, calc(100dvh - 32px - var(--sat) - var(--sab))); padding: 18px 20px 12px; }
+#account-menu > .sheet-body { flex: 1 1 auto; display: flex; flex-direction: column; }
+.account-grow { flex: 1 0 auto; display: flex; flex-direction: column; }
+.account-grow > .account-empty { margin-block: auto; }
+.account-grow > .account-stats { margin-bottom: auto; }
+#account-menu h2 { margin-bottom: 12px; }
+.profile-block { padding: 12px 14px; border-radius: var(--button-radius); background: #fff3d60d; text-align: center; }
+.profile-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px 10px; min-height: 28px; }
+.profile-name { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; color: #fff3d6; font-size: 22px; font-weight: 800; line-height: 1.2; }
+.profile-head:not(:has(.player-name, .kind-chip:not([hidden]))) { display: none; } /* no profile: no empty name line */
+.profile-name .verified-check, .card-name .verified-check { width: 20px; height: 20px; }
+.profile-sub { margin: 4px 0 0; color: #e8d8b8; font-size: 14px; line-height: 1.35; text-wrap: pretty; }
+.profile-block[data-state="none"] .profile-sub, .profile-block[data-pending] .profile-sub { margin-top: 0; }
+/* waiting for the identity: the room is kept and shows as a quiet skeleton (the name is already known), so it reads as loading, not dead */
+.profile-block[data-pending] .btn { color: transparent; border-color: transparent; background: #fff3d614; pointer-events: none; animation: profile-pulse 1.2s ease-in-out infinite; }
+.profile-block[data-pending] .profile-sub { color: transparent; border-radius: 6px; background: #fff3d614; animation: profile-pulse 1.2s ease-in-out infinite; } .profile-block[data-pending] .profile-head { display: flex; } .profile-block[data-pending] :is(.tag, .kind-chip) { visibility: hidden; } /* the guest's words, #tag and chip in no colour: its final size from the first frame */
+@keyframes profile-pulse { 50% { opacity: .45; } }
+@media (prefers-reduced-motion: reduce) { .profile-block[data-pending] :is(.btn, .profile-sub) { animation: none; } }
+.profile-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 10px; }
+.profile-actions .btn { width: auto; flex: 1 1 0; min-width: fit-content; min-height: 44px; padding: 4px 14px; font-size: 15px; white-space: nowrap; } /* side by side and equal while they fit, else a full-width stack */
+.account-section { margin-top: 16px; }
+.account-title-row { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: center; text-align: center; gap: 0 12px; margin-bottom: 6px; }
+.account-title-row h3 { margin: 0; }
+#account-previous h3 { text-align: center; } /* every Perfil section's title on the sheet's one centre axis, like «Perfil» */
+.account-since { color: #e8d8b8; font-size: 13px; }
+#account-status .mula-spinner { display: block; width: 72px; height: 72px; margin: 0 auto 10px; }
+.account-empty { margin: 8px 0; color: #e8d8b8; font-size: 15px; text-align: center; }
+.account-list { margin: 0; padding: 0; list-style: none; color: #fff3d6; font-size: 15px; line-height: 1.6; }
+.account-section .board-tip { margin: 10px 0 0; }
+.account-links { margin-top: 10px; padding-bottom: 6px; } /* the link's 44 px slop stays inside the body (no scroll bar for it) */
+/* the statistics (stats-view.js, «Fitxa breu»): four facts in two columns, each an icon, the number and a quiet line; the
+   podiums as achievements; «Més estadístiques» unfolds the rest in place. A fact reads from the top: a row's numbers line up */
+.stat-ico { flex: none; display: inline-grid; width: 28px; height: 28px; color: #e8d8b8; }
+.stat-ico svg { width: 100%; height: 100%; } /* the drawn icons carry their own colours; only the .line ones (chevron, empty bars) follow the text */
+.stat-ico.line svg { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.stat-facts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+/* every statistic is a tile with its own hue (colourful tiles, F of the A-H proposals): a soft vertical gradient of --h */
+.stat-fact, .stat-lines li { --h: #fff3d6; border-radius: 10px; background: linear-gradient(180deg, color-mix(in srgb, var(--h) 16%, transparent), color-mix(in srgb, var(--h) 6%, transparent)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--h) 14%, transparent); }
+.stat-k-drum { --h: #e8b26a; } .stat-k-clock { --h: #7fb2f0; } .stat-k-flame { --h: #ff9f6e; } .stat-k-target { --h: #7ee081; }
+.stat-fact { display: grid; grid-template-columns: auto minmax(0, 1fr); align-content: start; column-gap: 10px; padding: 12px; }
+.stat-fact .stat-ico { grid-row: 1 / 3; margin-top: 2px; }
+.stat-fact b { min-width: 0; color: var(--h); font-size: clamp(17px, 5.4vw, 21px); line-height: 1.15; white-space: normal; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.stat-fact span:not(.stat-ico) { color: #e8d8b8; font-size: 13px; line-height: 1.3; }
+.stat-wins { display: grid; gap: 6px; margin: 12px 0 0; padding: 0; list-style: none; }
+.stat-wins li { display: flex; align-items: center; gap: 10px; padding: 6px 10px 6px 6px; border-radius: 999px; background: linear-gradient(90deg, #f5c51829, #f5c51808); color: #fff3d6; font-size: 15px; line-height: 1.25; }
+.stat-wins b { color: #f5c518; } /* gold as text: a celebration */
+.stat-wins .pos, .card-from .pos { flex: none; display: inline-grid; place-items: center; min-width: 28px; height: 28px; padding: 0 4px; border-radius: 999px; color: #e8d8b8; font-size: 15px; font-weight: 800; }
+.stat-wins .pos.p1, .stat-wins .pos.p2, .stat-wins .pos.p3, .card-from .pos.p1, .card-from .pos.p2, .card-from .pos.p3 { --pos-size: 28px; min-width: 0; height: calc(var(--pos-size) * 7 / 6); padding: calc(var(--pos-size) * 7 / 24) 0 0; border-radius: 0; color: #2a1a10; } /* the medal, not the pill */
+.stat-toggle-row { display: flex; justify-content: center; margin-top: 6px; }
+.stat-toggle { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; }
+.stat-toggle .stat-ico { width: 18px; height: 18px; color: currentColor; transition: rotate .2s; }
+.stat-toggle[aria-expanded="true"] .stat-ico { rotate: 180deg; }
+@media (prefers-reduced-motion: reduce) { .stat-toggle .stat-ico { transition: none; } }
+.stat-lines { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0 0; padding: 0; list-style: none; }
+.stat-lines li { display: grid; grid-template-columns: 28px minmax(0, 1fr); align-items: center; column-gap: 10px; min-height: 56px; padding: 10px 12px; color: #fff3d6; font-size: 15px; font-weight: 700; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.stat-lines li > span:not(.stat-ico) { min-width: 0; overflow-wrap: anywhere; }
+.stat-lines .w { grid-column: 1 / -1; } /* the days, the judge's three counts and the ànim sentence need the whole row */
+.stat-lines b { color: var(--h); font-size: 1.4em; line-height: 1; font-weight: 800; } /* the numbers stand out in the tile's hue */
+.stat-lines small { display: block; margin-top: 2px; color: #e8d8b8; font-size: 13px; font-weight: 600; line-height: 1.3; }
+.stat-lines .stat-l-calendar { --h: #b9a3f0; } .stat-lines .stat-l-guapa { --h: #ffd76e; } .stat-lines .stat-l-tap { --h: #f08fb8; } .stat-lines .stat-l-judge { --h: #d79be8; } .stat-lines .stat-l-hold { --h: #7fd4f0; } .stat-lines .stat-l-star { --h: #f5c518; } .stat-lines .stat-l-dizzy { --h: #c8e07a; }
+.stat-l-judge b:nth-of-type(1) { color: #f5c518; } .stat-l-judge b:nth-of-type(2) { color: #fff3d6; } .stat-l-judge b:nth-of-type(3) { color: #6fa8ff; } /* the judge words' own colours (hud/banner.js) */
+.stat-errors-k { margin: 12px 0 0; color: #e8d8b8; font-size: 14px; text-align: center; }
+.stat-errors { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin: 8px 0 0; padding: 0; list-style: none; }
+/* one soft tint per kind so the list reads at a glance (never GUA orange / PA turquoise: those mean the drums) */
+.stat-errors li { --tint: #e8d8b8; padding: 1px 9px; border: 1px solid color-mix(in srgb, var(--tint) 55%, transparent); border-radius: 999px; background: color-mix(in srgb, var(--tint) 18%, transparent); color: #e8d8b8; font-size: 13px; line-height: 20px; }
+.stat-errors .e-early { --tint: #b9a3f0; }
+.stat-errors .e-late { --tint: #7fb2f0; }
+.stat-errors .e-silent { --tint: #c9bba0; }
+.stat-errors .e-move { --tint: #f08fb8; }
+.stat-errors .e-both { --tint: #9ad48a; }
+.stat-errors .e-hold { --tint: #e8b26a; }
+.stat-errors b { color: #fff3d6; }
+.stat-tip { width: fit-content; max-width: 100%; box-sizing: border-box; margin: 10px auto 0; padding: 6px 10px; border-left: 3px solid #f5c518; border-radius: 4px; background: #fff3d60d; color: #fff3d6; font-size: 14px; line-height: 1.35; text-align: center; }
+.stat-tip .btn-link { display: inline; min-height: 0; padding: 0 2px; font-size: 14px; }
+
+/* the statistics' notice: the title, three short lines with a drawn icon each, Privadesa, «D'acord» */
+#stats-notice-menu { width: min(380px, calc(100vw - 32px - var(--sal) - var(--sar))); max-height: calc(100dvh - 32px - var(--sat) - var(--sab)); padding: 20px 20px 12px; }
+/* a full-width sheet: one line ran under the corner × (its ring touched «estadístiques»); kept clear on both sides, balanced.
+   Phones already wrap it in two lines clear of the ×, and an inset there would push «estadístiques» off-centre */
+@media (min-width: 412px) { #stats-notice-menu h2 { margin-inline: 34px; text-wrap: balance; } }
+.stats-facts { display: grid; gap: 14px; margin: 6px 0 4px; padding: 0; list-style: none; text-align: left; }
+.stats-facts li { display: grid; grid-template-columns: 28px minmax(0, 1fr); align-items: center; gap: 12px; color: #e8d8b8; font-size: 16px; line-height: 1.3; }
+.stats-facts svg { width: 28px; height: 28px; margin: 0; fill: none; stroke: #f5c518; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+#profile-stats-note .stats-facts { gap: 8px; margin: 0; } #profile-stats-note .stats-facts li { grid-template-columns: 22px minmax(0, 1fr); gap: 10px; font-size: 13px; } #profile-stats-note .stats-facts svg { width: 22px; height: 22px; } /* the Crea step: the same three lines, quieter */
+
+/* a player's card: the name, «Convidat», the board row it came from, the public statistics (one box: loading, empty, error
+   inside it), the source */
+#card-menu { width: min(440px, calc(100vw - 32px - var(--sal) - var(--sar))); max-height: calc(100dvh - 32px - var(--sat) - var(--sab)); padding: 18px 20px 14px; }
+/* over the sheet it was opened from: 12 px clear of that sheet's frame on every side, never two gold frames doubled
+   (on phones that sheet is the dialog default max-width, 100% - 6px - 2em = 100vw - 42px; so 66 here) */
+body:has(:is(#board-menu, #seasons-menu, #account-menu)[open]) #card-menu { width: min(436px, calc(100vw - 66px - var(--sal) - var(--sar))); max-height: min(736px, calc(100dvh - 56px - var(--sat) - var(--sab))); }
+.card-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 4px 10px; margin: 0 28px 12px; }
+.card-name { display: inline-flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0 6px; min-width: 0; max-width: 100%; margin: 0; }
+#card-menu .card-name { font-size: clamp(18px, 5.6vw, 30px); } /* (over .sheet h2) 16 letters and the check on one line from 320 px; a «#1234» goes under the name whole */
+.card-name .alias { white-space: normal; overflow-wrap: anywhere; }
+.card-name .player-name { justify-content: center; } /* the whole name, wrapped if it must: it is the sheet's title */
+/* the row it was tapped on: information, so flat with a strip, never a button */
+.card-from { display: grid; grid-template-columns: 52px minmax(0, 1fr); align-items: center; gap: 10px; margin: 0 0 12px; padding: 6px 10px 6px 8px; border-left: 3px solid #f5c518; border-radius: 4px; background: #fff3d60d; }
+.card-from[hidden] { display: none; }
+.card-from-pic { display: grid; place-items: center; height: 40px; } .card-from-pic svg { max-width: 100%; max-height: 100%; }
+.card-from-k { display: block; color: #e8d8b8; font-size: 13px; line-height: 1.25; }
+.card-from-v { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 8px; margin-top: 2px; font-size: 17px; line-height: 1.2; }
+.card-from .pts { color: #c9a7ff; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.card-from .lvl { padding: 0 6px; border-radius: 999px; color: #2a1a10; font-size: 10px; font-weight: 800; line-height: 16px; letter-spacing: .05em; }
+.card-box { position: relative; min-height: 196px; }
+.card-box .board-state { position: absolute; inset: 0; }
+.card-box .board-status .stat-ico { display: block; width: 40px; height: 40px; margin: 0 auto 8px; color: #b5a385; } .card-box .board-status .stat-ico svg { stroke-width: 1.6; }
+@media (max-width: 359px) { #card-menu, #account-menu { padding-inline: 14px; } .stat-fact { padding: 8px; column-gap: 6px; } .stat-fact b { font-size: 19px; } .stat-fact .stat-ico { width: 22px; height: 22px; }
+  .stat-lines li { grid-template-columns: 22px minmax(0, 1fr); column-gap: 6px; padding: 8px; } .stat-lines .stat-ico { width: 22px; height: 22px; } } /* the lines keep the tiles' compact inset */
+/* The detailed labels need whole words on phones; the four headline facts stay paired. */
+@media (max-width: 519px) { .stat-lines { grid-template-columns: 1fr; } }
+/* portrait phones: the % goes under the points (board-list.js .pct-sub), so the name gets its column's room: a 16-letter
+   «nom#1234» with «TU» on one line from 375 px, a 16-letter verified name on one line at 320 */
+@media (max-width: 519px) {
+  /* the whole column goes, its <col> too: WebKit's fixed layout kept a width-0 column's share (iOS: the names squeezed) */
+  :is(#board-table, .board-head) :is(.c-pct, :is(th, td):nth-child(3)) { display: none; }
+  #board-table .pct-sub { display: block; margin-top: 2px; color: #e8d8b8b3; font-size: 11px; font-weight: 700; line-height: 15px; }
+  #board-table tr.me .pct-sub { color: #f5c518cc; } /* 5.4:1 on the gold row (b3 was 4.5) */
+}
+/* narrow phones (320–359 px): the numbers keep their room, a step smaller */
+@media (max-width: 359px) {
+  #board-menu, #seasons-menu { padding-inline: 12px; }
+  :is(#board-table, .board-head) .c-pos { width: 2.1em; } :is(#board-table, .board-head) .c-pts { width: 4.7em; } /* «206.290» at 15 px inside its padding */
+  :is(#board-table, .board-head) :is(th, td):nth-child(4) { padding-right: 6px; }
+  #board-table td:nth-child(4) { font-size: 15px; }
+  #board-menu .board-state { gap: 6px; padding-inline: 0; } /* a new season: its line in two lines, the last podium clear of the links */
+  #board-menu .board-previous { margin-top: 0; }
+}

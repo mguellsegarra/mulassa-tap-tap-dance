@@ -40,8 +40,7 @@ function onArm(arm, v) {
   m.geometry.applyMatrix4(_m.makeTranslation(0, HIP, 0).multiply(arm.matrix).invert());
   arm.add(m);
 }
-export function buildMusician(kind) {
-  const p = buildPerson({ shirt: '#f5f5ef', pants: '#1f2230' });
+export function buildMusician(kind, p = buildPerson({ shirt: '#f5f5ef', pants: '#1f2230' })) {
   const [L, R] = p.arms; // arms[0] is at +x: their left (they face +z)
   const t = new Vox(), l = new Vox(), r = new Vox();
   t.box(0, 1.0, 0.135, 0.07, 0.32, 0.02, TIE, 0).box(0, 1.27, 0.14, 0.1, 0.07, 0.03, TIE, 0); // tie and knot

@@ -1,0 +1,888 @@
+{
+  "version": 1,
+  "status": "final",
+  "major_discrepancies": [
+    "86.6-104.0: real 3 CCW (accelerating) + stop 93.8-94.6 + reversal + 6 CW until 103.8-104.0; proposal ending 5 turns all CCW, no reversal in the ending, yaw fixed at 3240 deg from video 98.677 s (beat 222), about 5.1-5.3 s before the real turns end",
+    "20-31 and 64-74: real ~120 deg heading swings F-a <-> HL profile with 1.2-2.2 s holds and 3 reversals each; proposal C/C3 also reverse but narrower and symmetric about 0 (+-47 / +-36 deg), never reach HL profile, no sustained holds",
+    "31-42 and 74-86: real ~+450 deg CCW from HL through front, HR filling the frame, back, HL, front; proposal -90 then +360 from 0; at 35.8 and 79.0 real HR vs model front-on",
+    "0-16 and 43-60: real heading opens to one side only (toward HL, ~0..-45 deg, span ~45); proposal symmetric both sides (A2 +-14..25, span up to ~50; E +-36, span ~72): wrong asymmetry and phasing, not a smaller total range",
+    "match: one CCW full turn at 16.7-19.6 and 60.0-63.2 (recorded yaw up to ~120 deg out of phase within the turn)"
+  ],
+  "rendered_captures_viewed": [
+    "compare-028.0.png",
+    "compare-035.8.png",
+    "compare-096.0.png",
+    "compare-100.4.png"
+  ],
+  "source": {
+    "video": "pm-lEViiPK0.mp4",
+    "duration_s": 111.934,
+    "fps": 50
+  },
+  "sampling": {
+    "inspected": "dense/seq-*.jpg, 44 sheets, 525 frames every 0.2 s, 0.0-104.8 s",
+    "rendered_inspected": "4 rendered captures viewed + 13 recorded poses in rendered-pose-samples.json",
+    "evidence_kinds": "categorical silhouette order and turn direction = reliable; angles = uncalibrated estimates; occlusion by spectators at times",
+    "continuous_playback": false,
+    "audio_listened": false,
+    "aliasing_note": "fastest observed turn ~1.4 s => ~51 deg per 0.2 s sample, far below 180 deg; turn direction is unambiguous, intermediate angles are not measured"
+  },
+  "convention": {
+    "frame": "top view; camera at south looking north; screen-right = east",
+    "psi_zero": "beast forward points at camera (placard faces camera)",
+    "positive": "counter-clockwise seen from above: front -> HR -> back -> HL -> front",
+    "accumulated": true,
+    "landmarks": {
+      "F-b": "placard faces camera, low green head in profile pointing screen-left, upper head up toward camera; front biased toward HL, est. -15..-40 deg",
+      "F-a": "low green head faces camera directly, wing visible screen-left; front biased toward HR, est. +15..+40 deg",
+      "HR": "heads screen-right, curled ringed tail screen-left; +90",
+      "BACK": "curled tail centred toward camera, placard hidden; 180",
+      "HL": "heads screen-left, tail screen-right; -90"
+    },
+    "sign_checks": [
+      "CCW turns always pass F-b -> F-a -> HR; CW turns always pass HR -> F-a -> F-b -> HL (independent of the tail landmark)",
+      "code: stage.js beast faces +z, front camera at +z, drac-motion.js root.rotation.y = front + yaw: positive yaw moves the head to +x = screen-right = CCW from above; code sign == psi sign"
+    ]
+  },
+  "events": [
+    {
+      "t0": 0.0,
+      "t1": 16.6,
+      "action": "steps, front-on",
+      "headings": [
+        "F-b",
+        "opens toward HL ~9.6-10.2",
+        "opens toward HL ~15.2-15.8",
+        "F-b 16.0-16.6"
+      ],
+      "direction": "oscillation",
+      "full_turns": 0,
+      "psi_start": 0,
+      "psi_end": 0,
+      "psi_range_est": [
+        -45,
+        0
+      ],
+      "translation": "small; camera pans right ~12.6-14.2, cannot separate",
+      "steps": "alternating foot lifts e.g. 0.4, 1.4, 2.6, 5.0, 7.2, 9.2, 10.6, 12.6",
+      "confidence": "medium (amplitude), high (no turn)",
+      "refs": [
+        "dense/seq-000.00-002.20.jpg",
+        "dense/seq-002.40-004.60.jpg",
+        "dense/seq-004.80-007.00.jpg",
+        "dense/seq-007.20-009.40.jpg",
+        "dense/seq-009.60-011.80.jpg",
+        "dense/seq-012.00-014.20.jpg",
+        "dense/seq-014.40-016.60.jpg"
+      ]
+    },
+    {
+      "t0": 16.7,
+      "t1": 19.6,
+      "action": "full turn on the spot",
+      "headings": [
+        [
+          16.8,
+          "F-a"
+        ],
+        [
+          17.6,
+          "HR"
+        ],
+        [
+          18.4,
+          "BACK"
+        ],
+        [
+          19.0,
+          "HL"
+        ],
+        [
+          19.6,
+          "F-b"
+        ],
+        [
+          20.0,
+          "F-a"
+        ]
+      ],
+      "direction": "CCW",
+      "full_turns": 1,
+      "psi_start": 0,
+      "psi_end": 360,
+      "turn_duration_s": 2.9,
+      "translation": "none visible",
+      "confidence": "high",
+      "refs": [
+        "dense/seq-016.80-019.00.jpg",
+        "dense/seq-019.20-021.40.jpg"
+      ]
+    },
+    {
+      "t0": 19.8,
+      "t1": 21.8,
+      "action": "overshoot to F-a and hold",
+      "headings": [
+        "F-a"
+      ],
+      "direction": "CCW then hold",
+      "psi_end_est": 390,
+      "confidence": "high",
+      "refs": [
+        "dense/seq-019.20-021.40.jpg",
+        "dense/seq-021.60-023.80.jpg"
+      ]
+    },
+    {
+      "t0": 21.9,
+      "t1": 24.2,
+      "action": "reversal, swing to HL profile, hold 22.6-24.2",
+      "reversal_at": [
+        21.9,
+        22.0
+      ],
+      "headings": [
+        [
+          22.0,
+          "F-b"
+        ],
+        [
+          22.3,
+          "3/4 HL"
+        ],
+        [
+          22.6,
+          "HL"
+        ]
+      ],
+      "direction": "CW",
+      "span_est_deg": 120,
+      "psi_end_est": 270,
+      "confidence": "high",
+      "refs": [
+        "dense/seq-021.60-023.80.jpg",
+        "dense/seq-024.00-026.20.jpg"
+      ]
+    },
+    {
+      "t0": 24.3,
+      "t1": 26.4,
+      "action": "reversal, swing to F-a, hold 25.0-26.4",
+      "reversal_at": [
+        24.2,
+        24.4
+      ],
+      "direction": "CCW",
+      "span_est_deg": 120,
+      "psi_end_est": 390,
+      "confidence": "high",
+      "refs": [
+        "dense/seq-024.00-026.20.jpg"
+      ]
+    },
+    {
+      "t0": 26.5,
+      "t1": 28.6,
+      "action": "reversal, swing to HL profile, hold 27.2-28.6",
+      "reversal_at": [
+        26.4,
+        26.6
+      ],
+      "direction": "CW",
+      "span_est_deg": 120,
+      "psi_end_est": 270,
+      "confidence": "high",
+      "refs": [
+        "dense/seq-026.40-028.60.jpg"
+      ]
+    },
+    {
+      "t0": 28.8,
+      "t1": 31.0,
+      "action": "walks forward in HL (screen-left)",
+      "headings": [
+        "HL"
+      ],
+      "direction": "none",
+      "translation": "forward along heading, long strides 29.2, 29.6, 30.4, 30.6; camera pans left",
+      "confidence": "medium",
+      "refs": [
+        "dense/seq-028.80-031.00.jpg"
+      ]
+    },
+    {
+      "t0": 31.2,
+      "t1": 42.0,
+      "action": "walk-out arc toward and past camera while turning",
+      "headings": [
+        [
+          31.6,
+          "3/4 HL"
+        ],
+        [
+          32.8,
+          "F-b"
+        ],
+        [
+          34.0,
+          "F-a"
+        ],
+        [
+          35.2,
+          "HR"
+        ],
+        [
+          36.3,
+          "HR close"
+        ],
+        [
+          37.2,
+          "HR->BACK"
+        ],
+        [
+          38.0,
+          "BACK"
+        ],
+        [
+          38.7,
+          "3/4"
+        ],
+        [
+          39.8,
+          "HL"
+        ],
+        [
+          41.4,
+          "3/4"
+        ],
+        [
+          41.8,
+          "F-b"
+        ]
+      ],
+      "direction": "CCW",
+      "rotation_deg_est": 450,
+      "psi_start": 270,
+      "psi_end": 720,
+      "translation": "approaches until filling frame 33-38, recedes in HL 39-41; no metric",
+      "confidence": "high (direction), low (distance)",
+      "refs": [
+        "dense/seq-031.20-033.40.jpg",
+        "dense/seq-033.60-035.80.jpg",
+        "dense/seq-036.00-038.20.jpg",
+        "dense/seq-038.40-040.60.jpg",
+        "dense/seq-040.80-043.00.jpg"
+      ]
+    },
+    {
+      "t0": 43.2,
+      "t1": 50.2,
+      "action": "steps in F-b, heading opening toward HL (rings on right of body 44.8-47.8)",
+      "direction": "oscillation",
+      "full_turns": 0,
+      "psi_range_est": [
+        675,
+        720
+      ],
+      "steps": "visible lifts 44.8, 45.0, 45.2, 47.2",
+      "translation": "45.6-47.8 beast much larger and screen-left: approach and/or zoom, not separable; 48.0-50.2 back to normal size",
+      "confidence": "high (no turn), medium (amplitude)",
+      "refs": [
+        "dense/seq-043.20-045.40.jpg",
+        "dense/seq-045.60-047.80.jpg",
+        "dense/seq-048.00-050.20.jpg"
+      ]
+    },
+    {
+      "t0": 50.4,
+      "t1": 59.8,
+      "action": "steps, front-on, heading opening toward HL",
+      "headings": [
+        [
+          51.0,
+          "F-b high leg lift"
+        ],
+        [
+          53.0,
+          "toward HL"
+        ],
+        [
+          54.0,
+          "3/4 HL"
+        ],
+        [
+          56.5,
+          "F-b"
+        ],
+        [
+          58.3,
+          "~-45"
+        ],
+        [
+          59.6,
+          "toward F-a"
+        ]
+      ],
+      "direction": "oscillation",
+      "full_turns": 0,
+      "psi_range_est": [
+        675,
+        750
+      ],
+      "translation": "moves across frame, camera follows",
+      "confidence": "medium",
+      "refs": [
+        "dense/seq-050.40-052.60.jpg",
+        "dense/seq-052.80-055.00.jpg",
+        "dense/seq-055.20-057.40.jpg",
+        "dense/seq-057.60-059.80.jpg"
+      ]
+    },
+    {
+      "t0": 60.0,
+      "t1": 63.2,
+      "action": "full turn on the spot",
+      "headings": [
+        [
+          60.0,
+          "F-a"
+        ],
+        [
+          61.0,
+          "HR"
+        ],
+        [
+          61.7,
+          "BACK"
+        ],
+        [
+          62.5,
+          "HL"
+        ],
+        [
+          63.1,
+          "F-b"
+        ],
+        [
+          63.5,
+          "F-a"
+        ]
+      ],
+      "direction": "CCW",
+      "full_turns": 1,
+      "psi_start": 720,
+      "psi_end": 1080,
+      "turn_duration_s": 3.1,
+      "confidence": "high",
+      "refs": [
+        "dense/seq-060.00-062.20.jpg",
+        "dense/seq-062.40-064.60.jpg"
+      ]
+    },
+    {
+      "t0": 63.8,
+      "t1": 65.0,
+      "action": "overshoot to F-a and hold",
+      "psi_end_est": 1110,
+      "confidence": "high",
+      "refs": [
+        "dense/seq-062.40-064.60.jpg",
+        "dense/seq-064.80-067.00.jpg"
+      ]
+    },
+    {
+      "t0": 65.0,
+      "t1": 67.4,
+      "action": "reversal, swing to HL, hold 66.2-67.4",
+      "reversal_at": [
+        64.9,
+        65.2
+      ],
+      "direction": "CW",
+      "psi_end_est": 990,
+      "confidence": "high",
+      "refs": [
+        "dense/seq-064.80-067.00.jpg",
+        "dense/seq-067.20-069.40.jpg"
+      ]
+    },
+    {
+      "t0": 67.5,
+      "t1": 69.4,
+      "action": "reversal, swing to F-a, hold 68.2-69.4",
+      "reversal_at": [
+        67.4,
+        67.6
+      ],
+      "direction": "CCW",
+      "psi_end_est": 1110,
+      "confidence": "high",
+      "refs": [
+        "dense/seq-067.20-069.40.jpg"
+      ]
+    },
+    {
+      "t0": 69.5,
+      "t1": 72.6,
+      "action": "reversal, swing to HL, hold 70.4-72.6",
+      "reversal_at": [
+        69.4,
+        69.6
+      ],
+      "direction": "CW",
+      "psi_end_est": 990,
+      "confidence": "high",
+      "refs": [
+        "dense/seq-069.60-071.80.jpg",
+        "dense/seq-072.00-074.20.jpg"
+      ]
+    },
+    {
+      "t0": 72.8,
+      "t1": 74.4,
+      "action": "walks forward in HL",
+      "translation": "long stride 73.0-73.4; camera follows",
+      "confidence": "medium",
+      "refs": [
+        "dense/seq-072.00-074.20.jpg"
+      ]
+    },
+    {
+      "t0": 74.4,
+      "t1": 85.6,
+      "action": "second walk-out arc toward and past camera while turning",
+      "headings": [
+        [
+          74.6,
+          "3/4 HL"
+        ],
+        [
+          75.2,
+          "->F-b"
+        ],
+        [
+          76.1,
+          "F-b close"
+        ],
+        [
+          77.1,
+          "F-a"
+        ],
+        [
+          78.7,
+          "HR"
+        ],
+        [
+          79.6,
+          "HR filling frame"
+        ],
+        [
+          80.4,
+          "HR->BACK"
+        ],
+        [
+          81.9,
+          "BACK"
+        ],
+        [
+          82.5,
+          "3/4"
+        ],
+        [
+          83.3,
+          "HL"
+        ],
+        [
+          84.7,
+          "HL"
+        ],
+        [
+          85.8,
+          "F-b"
+        ]
+      ],
+      "direction": "CCW",
+      "rotation_deg_est": 450,
+      "psi_start": 990,
+      "psi_end": 1440,
+      "translation": "approaches until beast fills or exceeds frame 78-82, recedes in HL 83-85; apparent size only, moving camera",
+      "confidence": "high (direction), low (distance)",
+      "refs": [
+        "dense/seq-074.40-076.60.jpg",
+        "dense/seq-076.80-079.00.jpg",
+        "dense/seq-079.20-081.40.jpg",
+        "dense/seq-081.60-083.80.jpg",
+        "dense/seq-084.00-086.20.jpg"
+      ]
+    },
+    {
+      "t0": 86.6,
+      "t1": 93.8,
+      "action": "ending phase 1: consecutive turns on the spot, accelerating",
+      "front_Fb_passes": [
+        86.6,
+        89.5,
+        91.8,
+        93.8
+      ],
+      "HR_passes": [
+        87.8,
+        90.4,
+        92.5
+      ],
+      "BACK_passes": [
+        88.5,
+        90.9,
+        92.9
+      ],
+      "HL_passes": [
+        88.9,
+        91.3,
+        93.3
+      ],
+      "direction": "CCW",
+      "full_turns": 3,
+      "turn_durations_s": [
+        2.9,
+        2.3,
+        2.0
+      ],
+      "psi_start": 1440,
+      "psi_end": 2520,
+      "confidence": "high",
+      "refs": [
+        "dense/seq-086.40-088.60.jpg",
+        "dense/seq-088.80-091.00.jpg",
+        "dense/seq-091.20-093.40.jpg",
+        "dense/seq-093.60-095.80.jpg"
+      ]
+    },
+    {
+      "t0": 93.8,
+      "t1": 94.6,
+      "action": "stop facing front (F-b), 5 near-identical samples",
+      "direction": "none",
+      "psi": 2520,
+      "confidence": "high",
+      "refs": [
+        "dense/seq-093.60-095.80.jpg"
+      ]
+    },
+    {
+      "t0": 94.6,
+      "t1": 104.0,
+      "action": "ending phase 2: reversal, consecutive faster turns on the spot",
+      "reversal_at": [
+        94.6,
+        94.8
+      ],
+      "reversal_evidence": "94.6 F-b -> 94.8 3/4 HL -> 95.0-95.2 HL -> 95.4-95.6 BACK -> 95.8-96.0 HR -> 96.2 F-a -> 96.4-96.6 F-b",
+      "BACK_passes": [
+        95.5,
+        97.2,
+        98.8,
+        100.2,
+        101.6,
+        103.0
+      ],
+      "front_Fb_passes": [
+        96.5,
+        98.0,
+        99.6,
+        101.0,
+        102.4,
+        104.0
+      ],
+      "direction": "CW",
+      "full_turns": 6,
+      "turn_durations_s": [
+        1.9,
+        1.5,
+        1.6,
+        1.4,
+        1.4,
+        1.6
+      ],
+      "psi_start": 2520,
+      "psi_end": 360,
+      "steps": "quick steps on the spot, e.g. foot lifted 96.2, 99.2, 101.2, 103.2",
+      "confidence": "high",
+      "refs": [
+        "dense/seq-093.60-095.80.jpg",
+        "dense/seq-096.00-098.20.jpg",
+        "dense/seq-098.40-100.60.jpg",
+        "dense/seq-100.80-103.00.jpg",
+        "dense/seq-103.20-104.80.jpg"
+      ]
+    },
+    {
+      "t0": 104.0,
+      "t1": 104.8,
+      "action": "front (F-b), slight drift toward HL; spectator enters foreground",
+      "psi_est": 360,
+      "confidence": "medium",
+      "refs": [
+        "dense/seq-103.20-104.80.jpg"
+      ]
+    }
+  ],
+  "motifs": {
+    "iteration_1": {
+      "steps_front": [
+        0.0,
+        16.6
+      ],
+      "turn_ccw": [
+        16.7,
+        19.6
+      ],
+      "hold_Fa": [
+        19.8,
+        21.8
+      ],
+      "swings": [
+        [
+          "HL",
+          22.6,
+          24.2
+        ],
+        [
+          "F-a",
+          25.0,
+          26.4
+        ],
+        [
+          "HL",
+          27.2,
+          28.6
+        ]
+      ],
+      "walk_HL": [
+        28.8,
+        31.0
+      ],
+      "walkout_ccw_450": [
+        31.2,
+        42.0
+      ]
+    },
+    "iteration_2": {
+      "steps_front": [
+        42.0,
+        59.8
+      ],
+      "turn_ccw": [
+        60.0,
+        63.2
+      ],
+      "hold_Fa": [
+        63.8,
+        65.0
+      ],
+      "swings": [
+        [
+          "HL",
+          66.2,
+          67.4
+        ],
+        [
+          "F-a",
+          68.2,
+          69.4
+        ],
+        [
+          "HL",
+          70.4,
+          72.6
+        ]
+      ],
+      "walk_HL": [
+        72.8,
+        74.4
+      ],
+      "walkout_ccw_450": [
+        74.4,
+        85.6
+      ]
+    },
+    "turn_to_walkout_interval_s": [
+      14.3,
+      14.4
+    ],
+    "walk_HL_duration_s": [
+      2.2,
+      1.6
+    ],
+    "differences": "2nd iteration: first two swing holds shorter (1.2 vs 1.4-1.6 s), last HL hold longer (2.2 vs 1.4 s), HL walk shorter (1.6 vs 2.2 s); both walk-outs fill the frame, relative closeness not determinable with a moving camera",
+    "ending": {
+      "ccw_turns": 3,
+      "stop": [
+        93.8,
+        94.6
+      ],
+      "cw_turns": 6,
+      "end_front": 104.0
+    }
+  },
+  "code_comparison_source_only": {
+    "sign": "code yaw positive == psi positive (CCW from above)",
+    "proposal_trial_dance_js": {
+      "total_full_turns": "+9 (B +1, D +1, B3 +1, D3 +1, E3 +4, coda +1), all CCW, final yaw 3240 deg",
+      "cw_full_turns": 0,
+      "ending": "E3 4 CCW turns of 5.5 beats (~2.2 s at 151 BPM) + coda 1 CCW, no reversal; real: 3 CCW + stop + 6 CW",
+      "yaw_stop": "yaw reaches 3240 deg at beat 222 and stays fixed; coordinator Node check: videoAt(buildProgrammes().proposal, 222, 'offset') = 98.67678900000016 s; real turns end 103.8-104.0 (gap ~5.1-5.3 s)",
+      "A2_yaw_turns": "+-0.04..0.07 symmetric (+-14..25 deg); real 0..-45 one-sided; similar total span, wrong asymmetry/phasing",
+      "C_yaw_turns": "+-0.13 symmetric (+-47 deg) with reversals; real F-a (+20..45) <-> HL (-90) with holds: proposal narrower, no HL profile, no sustained holds",
+      "E_yaw_turns": "+-0.1 symmetric (+-36 deg); real one-sided ~45 deg span",
+      "C3_yaw_turns": "+-0.1 symmetric (+-36 deg) with reversals; same deficiency as C",
+      "walk_out": "yaw -0.25 then +1 turn; x -1.4..+1.3, z up to 3.4 model units (DRAC_SCALE 0.492 m/unit)",
+      "motion": {
+        "bank_deg": 6,
+        "pitch_deg": 3,
+        "bob_units": 0.03,
+        "sway_roll_deg": [
+          1,
+          3.5
+        ],
+        "jaw": 0.45,
+        "flap": 0.3
+      }
+    },
+    "baseline_dance_drac_js": "different reference video (2023) and beat grid; yaw cues in half-turns with unwinding (C back to 0, E -2), active style roll amplitudes up to42deg (44deg belongs to inactive D3/E3), hops and fire; not aligned to this recording"
+  },
+  "rendered_model_vs_video": {
+    "source": "rendered-pose-samples.json (coordinator, offset mode, offset 0, proposal austera); real_psi = my uncalibrated frame-based estimate",
+    "columns": {
+      "diff_accumulated": "model - real, unwrapped: accumulated-turn discrepancy, not apparent orientation",
+      "diff_apparent": "same difference wrapped to -180..180: apparent orientation difference (estimate)"
+    },
+    "rows": [
+      {
+        "video": 16.8,
+        "real": "F-a turn start",
+        "real_psi": 30,
+        "model_yaw_deg": 75.6,
+        "diff_accumulated": 46,
+        "diff_apparent": 46
+      },
+      {
+        "video": 18.4,
+        "real": "BACK",
+        "real_psi": 180,
+        "model_yaw_deg": 303.0,
+        "diff_accumulated": 123,
+        "diff_apparent": 123
+      },
+      {
+        "video": 20.8,
+        "real": "F-a hold",
+        "real_psi": 390,
+        "model_yaw_deg": 380.3,
+        "diff_accumulated": -10,
+        "diff_apparent": -10
+      },
+      {
+        "video": 23.0,
+        "real": "HL profile",
+        "real_psi": 270,
+        "model_yaw_deg": 396.0,
+        "diff_accumulated": 126,
+        "diff_apparent": 126
+      },
+      {
+        "video": 28.0,
+        "real": "HL profile",
+        "model_image": "compare-028.0.png: model front-on",
+        "evidence": "categorical image"
+      },
+      {
+        "video": 35.8,
+        "real": "HR filling frame",
+        "real_psi": 450,
+        "model_yaw_deg": 360.0,
+        "model_z_units": 3.38,
+        "diff_accumulated": -90,
+        "diff_apparent": -90,
+        "model_image": "front-on"
+      },
+      {
+        "video": 39.0,
+        "real": "HL walking",
+        "real_psi": 630,
+        "model_yaw_deg": 540.0,
+        "diff_accumulated": -90,
+        "diff_apparent": -90
+      },
+      {
+        "video": 53.8,
+        "real": "3/4 HL",
+        "real_psi": 675,
+        "model_yaw_deg": 746.9,
+        "diff_accumulated": 72,
+        "diff_apparent": 72
+      },
+      {
+        "video": 61.6,
+        "real": "BACK (turn 2)",
+        "real_psi": 900,
+        "model_yaw_deg": 957.5,
+        "diff_accumulated": 57,
+        "diff_apparent": 57
+      },
+      {
+        "video": 68.0,
+        "real": "F-a hold",
+        "real_psi": 1110,
+        "model_yaw_deg": 1044.3,
+        "diff_accumulated": -66,
+        "diff_apparent": -66
+      },
+      {
+        "video": 79.0,
+        "real": "HR filling frame",
+        "real_psi": 1170,
+        "model_yaw_deg": 1099.6,
+        "model_z_units": 3.4,
+        "diff_accumulated": -70,
+        "diff_apparent": -70
+      },
+      {
+        "video": 90.0,
+        "real": "between F-a and HR, CCW ending turns",
+        "real_psi": 1860,
+        "model_yaw_deg": 1883.8,
+        "diff_accumulated": 24,
+        "diff_apparent": 24
+      },
+      {
+        "video": 96.0,
+        "real": "HR, turning CW",
+        "real_psi": 2250,
+        "model_yaw_deg": 2876.9,
+        "diff_accumulated": 627,
+        "diff_apparent": -93,
+        "model_image": "front-on"
+      },
+      {
+        "video": 100.4,
+        "real": "HR, turning CW",
+        "real_psi": 1170,
+        "model_yaw_deg": 3240.0,
+        "model_still": true,
+        "diff_accumulated": 2070,
+        "diff_apparent": -90,
+        "model_image": "front-on"
+      }
+    ],
+    "summary": "apparent difference over the 13 samples ranges -93..+126 deg (estimates); approximate agreement at 20.8 and 90.0 is a point match, not proof of sequence fidelity; the accumulated difference grows to +2070 deg at 100.4 because the real ending reverses and the proposal does not, and the proposal yaw is fixed from 98.677 s"
+  },
+  "uncertainties": [
+    "45.6-47.8 approach vs zoom not separable",
+    "rendered model has both heads side by side facing camera; real has one low forward head and one high head, so silhouette landmarks do not transfer 1:1",
+    "F-a / F-b exact angles are estimates",
+    "roll/pitch, step height, distances not measured (monocular, moving camera, zoom)",
+    "pan vs travel not separable at 0-16, 28-31, 50-60, 72-74",
+    "no audio/bar mapping",
+    "rendered comparison: only 4 captures viewed; other instants rely on recorded yaw and source code"
+  ]
+}

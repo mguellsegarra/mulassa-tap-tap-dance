@@ -1,26 +1,69 @@
 // ?final — a dev-only shortcut to the END of the game (results → publish → «Ets el número N» → Comparteix), for testing it
 // on real devices over the LAN without playing the song and without touching the real leaderboard. Only on dev hosts
-// (errors.js DEV_HOST: localhost, LAN IPs, *.local/.test): on mulassa.cat or pages.dev `finalMode()` is null and nothing
+// (flags.js DEV_HOST: localhost, LAN IPs, *.local/.test): on mulassa.cat or pages.dev `finalMode()` is null and nothing
 // here runs. `?final=<pct>-<level>-<outcome>` (default 95-0-record; outcome record | clear | collapse), `&taken` makes the
 // first nickname tried «ja és d’algú». The run is made up but consistent: judgments walked over the real chart with the
-// game's scoring. `?final&board=me` opens On soc directly with a fictitious #48 of 119, for responsive scroll checks.
-// The run follows the ànim rules. The leaderboard is an in-memory mock behind the real service (same validation and
-// messages): no network, no Turnstile, nothing kept after a reload. Sharing stays real (it is all on the device).
-import { DEV_HOST } from '../services/errors.js';
+// game's scoring. The run follows the ànim rules. Sharing stays real (it is all on the device).
+//
+// The leaderboard is an in-memory mock behind the real service (src/dev/mock-leaderboard.js, seeded data in demo-data.js):
+// same validation and messages, no network, no Turnstile, nothing kept after a reload. Its demo URL parameters (read by
+// `demoOptions`, so `?mock` alone takes them too; every one is dev-hosts-only because the mock is):
+//   &account=new|reserved|guest|verified-unnamed|verified  who is signed in: nobody | a guest with no result | a guest «Prova123#4821»
+//       with results | a confirmed address that still has its tag (asks «Tria el teu nom») | a confirmed profile with a clean name
+//   &seasons=launch|later   launch (default): «Estrena 2026» (history) + «Tardor 2026» open, Mulassa 45 players, Drac 12.
+//       later: Tardor closed (two Mulassa boards: «ball anterior» + the new dance, Drac) and «Hivern 2027» open: the end-of-season sheet
+//       with a podium (the Drac's 3r); many: the eleven quarters before today closed (Mulassa only, one with both dances), the
+//       end-of-season sheet without a podium
+//   &board=empty            the open season has no result (Mulassa and Drac); &drac=empty only the Drac's
+//   &board=me               a 119-player ladder with the signed-in profile (ProvaRetall) at #48, for responsive scroll checks
+//   &board=fail             every board read fails (offline): the Classificació's error state
+//   &card=<Name>[#tag]      (UI) open that player's public card; names in the data: Timbaler, Estrella#0007, PortadoraDeValls (16 letters)
+//   &taken, &fail           the first nickname tried is taken / the first publication gets no answer (offline)
+// `&review=<state>` (src/dev/account-review.js, REVIEWS below): the profile, e-mail and ranking flows over the same mock, each state
+// reached by pressing the real sheets' buttons; `&review` alone lists them. The mock's account follows the state (`&account=`
+// overrides it). The e-mail flow takes any address and the code 123456; ocupat@exemple.cat already confirmed another profile
+// (switching to it); no mail is sent.
+import { DEV_HOST } from '../core/flags.js';
 import { quality } from '../game/progress.js';
 import { drain, ENERGY } from '../game/energy.js';
-import { createLeaderboardService } from '../services/leaderboard.js';
-import { comparableScore } from '../game/score-scale.js';
-import { VERSION_RULES } from '../services/leaderboard-rules.js';
+import { ACCOUNTS } from './mock-leaderboard.js';
+export { mockLeaderboard, ACCOUNTS, OTHER_MAIL, MOCK_CODE, DEMO_SELF } from './mock-leaderboard.js';
+// Preview the existing mock board without fabricating a completed run. Never active on public hosts. ?demo (the selector's
+// made-up facts) brings the board with it, so the rank tile and the sheet's own row agree.
+export const leaderboardPreviewMode = ({ hostname = '', search = '', configured = true } = {}) =>
+  DEV_HOST.test(hostname) && (!configured || ['mock', 'demo'].some(k => new URLSearchParams(search).has(k)));
 
 const OUTCOMES = ['record', 'clear', 'collapse'];
+// the review states: the mock account / world each starts from (and a taken first nickname)
+export const REVIEWS = Object.freeze({
+  'share-drac': { account: 'verified' }, 'share-bou': { account: 'verified' },
+  publish: { account: 'new' }, published: { account: 'new' }, share: { account: 'new' }, email: { account: 'new' }, code: { account: 'new' },
+  verified: { account: 'new' }, 'choose-name': { account: 'new' }, switch: { account: 'guest' },
+  'profile-new': { account: 'new' }, 'profile-reserved': { account: 'reserved' }, 'profile-guest': { account: 'guest' },
+  'profile-verified-unnamed': { account: 'verified-unnamed' }, 'profile-verified': { account: 'verified' },
+  board: { account: 'verified' }, 'board-tip': { account: 'verified' }, 'board-guest': { account: 'guest' }, 'board-empty': { account: 'guest', board: 'empty' },
+  'board-drac': { account: 'verified' }, 'board-drac-empty': { account: 'verified', drac: 'empty' },
+  seasons: { account: 'guest' }, 'seasons-later': { account: 'guest', seasons: 'later' }, 'season-end': { account: 'guest', seasons: 'later' },
+  'seasons-many': { account: 'guest', seasons: 'many' }, 'season-end-plain': { account: 'guest', seasons: 'many' }, 'seasons-drac': { account: 'guest' },
+  card: { account: 'guest' }, 'card-guest': { account: 'new' }, 'card-long': { account: 'new' }, 'card-empty': { account: 'new' },
+  taken: { account: 'new', taken: true }, recover: { account: 'new', taken: true }, retry: { account: 'new', fail: true },
+});
+// The mock's options from a query string; no host check, the caller already knows it is on the mock (finalMode, leaderboardPreviewMode).
+export function demoOptions(search = '') {
+  const q = new URLSearchParams(search), pick = (k, list) => (list.includes(q.get(k)) ? q.get(k) : undefined);
+  return Object.fromEntries(Object.entries({ account: pick('account', ACCOUNTS), board: pick('board', ['me', 'empty', 'fail']), seasons: pick('seasons', ['launch', 'later', 'many']),
+    drac: pick('drac', ['empty']), ...(q.has('card') && { card: q.get('card').slice(0, 40) }) }).filter(([, v]) => v !== undefined));
+}
 export function finalMode({ hostname = '', search = '' } = {}) {
   const q = new URLSearchParams(search);
   if (!q.has('final') || !DEV_HOST.test(hostname)) return null;
   const [p, d, o] = (q.get('final') || '').split('-');
   const pct = /^\d{1,3}$/.test(p ?? '') ? Math.min(100, +p) : 95;
   const diff = /^[0-2]$/.test(d ?? '') ? +d : 0;
-  return { pct, diff, outcome: OUTCOMES.includes(o) ? o : 'record', taken: q.has('taken'), ...(q.get('board') === 'me' && { board: 'me' }) };
+  const review = q.has('review') ? (Object.hasOwn(REVIEWS, q.get('review')) ? q.get('review') : '') : null, preset = review ? REVIEWS[review] : {};
+  const { taken: _t, fail: _f, ...presetOptions } = preset;
+  return { pct, diff, outcome: OUTCOMES.includes(o) ? o : 'record', taken: q.has('taken') || Boolean(preset.taken), ...(preset.fail && { fail: true }),
+    ...presetOptions, ...demoOptions(search), ...(review != null && { review }) };
 }
 
 // Every judgment of a chart in song order: notes, hold tails (at their end), balloons (judged at their end).
@@ -63,7 +106,7 @@ const spread = (slots, k) => new Set(Array.from({ length: k }, (_, j) => slots[M
 // A finished run at `pct`: misses and goods spread evenly (never a missed hold head, so every tail stands on its own);
 // if the ànim can't survive that, the next % up that it survives (a collapse is asked for with outcome 'collapse').
 function finished(events, pct, diff, finaleT) {
-  const n = events.length, heads = events.filter(e => e.head).length;
+  const n = events.length;
   const idx = events.map((_, i) => i), missable = idx.filter(i => !events[i].head);
   for (let want = pct; want <= 100; want++) {
     const def = n * (1 - want / 100), splits = [];
@@ -95,82 +138,6 @@ export function fabricateRun(chart, { pct = 95, diff = 0, outcome = 'record' } =
   return outcome === 'collapse' ? fallen(events, pct, diff, finaleT) : finished(events, pct, diff, finaleT);
 }
 
-// --- the mock leaderboard: the real service (leaderboard.js) over a fake Supabase client kept in memory
-const NAMES = ['Timbaler', 'Portadora', 'Capgròs', 'Drac', 'Castellera', 'Balladora', 'Mulasser', 'Gegantó', 'Calçot', 'Anxaneta', 'Grallera', 'Trabucaire'];
-// ~60 made-up players (consistent runs of every level), so the list pages and «On sóc» have neighbours
-export function mockRows(charts, finaleT) {
-  let seed = 7;
-  const rand = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
-  return Array.from({ length: 62 }, (_, i) => {
-    const diff = i % 3, pct = 55 + Math.floor(rand() * 46), run = fabricateRun(charts[diff], { pct, diff, outcome: 'clear' }, finaleT);
-    return { alias: `${NAMES[Math.floor(rand() * NAMES.length)]}${100 + Math.floor(rand() * 900)}`, difficulty: diff, quality: quality(run.counts), score: comparableScore(run.score, diff) };
-  });
-}
-function mockClient({ rows, taken = false, delay = 500, initialSelf = null }) {
-  let session = initialSelf ? { user: { id: 'prova' } } : null, self = initialSelf;
-  const entries = new Map();
-  if (initialSelf) entries.set(`mulassa-v1:${initialSelf.difficulty}`, { ...initialSelf, rawScore: initialSelf.score });
-  const refused = new Set(); // with ?taken: the first nickname tried, and it stays taken
-  const wait = () => new Promise(r => setTimeout(r, delay * (0.6 + 0.8 * Math.random())));
-  const board = () => {
-    const tie = r => r.quality * VERSION_RULES['mulassa-v1'].judgments[r.difficulty];
-    const order = (a, b) => b.score - a.score || tie(b) - tie(a);
-    const best = [...entries.values()].sort(order)[0];
-    const mine = best && self ? { ...best, alias: self.alias } : null;
-    const all = [...rows, ...(mine ? [mine] : [])].sort(order);
-    return all.map((r, i) => ({ ...r, position: i + 1, total: all.length, is_self: r === mine }));
-  };
-  const isTaken = alias => {
-    const k = alias.toLowerCase();
-    if (taken && !refused.size) refused.add(k);
-    return refused.has(k) || rows.some(r => r.alias.toLowerCase() === k);
-  };
-  const ok = data => ({ data, error: null, status: 200 });
-  const no = (message, status = 400) => ({ data: null, error: { message, code: 'P0001' }, status });
-  return {
-    mulassaPersistentStorage: true,
-    auth: {
-      async getSession() { await wait(); return { data: { session }, error: null }; },
-      async signInAnonymously() { await wait(); session = { user: { id: 'prova' } }; return { data: { session }, error: null }; },
-      async signOut() { session = null; return { error: null }; },
-    },
-    functions: { async invoke() { await wait(); self = null; entries.clear(); return { data: { deleted: true }, error: null }; } },
-    async rpc(name, a) {
-      await wait();
-      if (name === 'get_leaderboard_all') {
-        const b = board(), me = b.find(r => r.is_self);
-        return ok(b.filter(r => (r.position > a.p_offset && r.position <= a.p_offset + a.p_limit)
-          || (a.p_offset === 0 && me && Math.abs(r.position - me.position) <= 5)));
-      }
-      if (!session) return no('leaderboard_auth', 401);
-      if (name === 'submit_result') {
-        if (self?.alias !== a.p_alias && isTaken(a.p_alias)) return no('leaderboard_alias_taken', 409);
-        const q = quality({ perfect: a.p_perfect, good: a.p_good, miss: a.p_miss }), units = 5 * a.p_perfect + 4 * a.p_good;
-        const points = comparableScore(a.p_score, a.p_difficulty, a.p_version), key = `${a.p_version}:${a.p_difficulty}`;
-        const previous = entries.get(key), improved = !previous || points > previous.score || (points === previous.score && units > previous.units); // as submit_result
-        self = { alias: a.p_alias };
-        if (improved) entries.set(key, { difficulty: a.p_difficulty, quality: q, units, score: points, rawScore: a.p_score, max_combo: a.p_max_combo });
-        const saved = entries.get(key);
-        return ok([{ improved, quality: saved.quality, score: saved.score }]);
-      }
-      if (name === 'update_alias') {
-        if (!self) return no('leaderboard_auth', 401);
-        if (self.alias !== a.p_alias && isTaken(a.p_alias)) return no('leaderboard_alias_taken', 409);
-        self.alias = a.p_alias;
-        return ok(a.p_alias);
-      }
-      return no('unknown', 404);
-    },
-  };
-}
-export function mockLeaderboard({ charts, finaleT, taken = false, delay = 500, board = null }) {
-  const rows = board === 'me' ? Array.from({ length: 119 }, (_, i) => ({
-    alias: i === 47 ? 'ProvaRetall' : `Prova${i + 1}`, difficulty: i % 3, quality: 88, score: 69286 + (47 - i) * 600,
-  })) : mockRows(charts, finaleT);
-  const initialSelf = board === 'me' ? rows.splice(47, 1)[0] : null;
-  const c = mockClient({ rows, taken, delay, initialSelf });
-  return createLeaderboardService({ configured: true, publishingEnabled: true, captchaRequired: false, getClient: async () => c });
-}
 // the nickname and the «Ara no» count live in memory here: every load is a first-time player, and a few «Ara no» while
 // testing never stop the prompt on this device
 export const memoryKeys = (base, keys) => {
@@ -179,19 +146,22 @@ export const memoryKeys = (base, keys) => {
     remove: k => (keys.includes(k) ? mem.delete(k) : base.remove?.(k)) };
 };
 
-// «MODE PROVA» in a corner, and on the leaderboard sheets (they sit in the top layer, over the page's corner)
+// «MODE PROVA» stays inside settings and the mock leaderboard sheets, clear of the game controls.
 export function markTestMode(doc = document) {
   const badge = where => {
     const b = doc.createElement('div');
     b.className = 'test-mode';
     b.textContent = 'MODE PROVA';
     b.setAttribute('aria-hidden', 'true');
-    b.style.cssText = (where === 'fixed' ? 'position:fixed;top:max(4px,env(safe-area-inset-top));right:max(4px,env(safe-area-inset-right));'
-      : 'position:absolute;bottom:8px;left:10px;') + 'z-index:99;pointer-events:none;' // on a sheet: its bottom corner, clear of the title
+    b.style.cssText = (where === 'inline' ? ''
+      : 'position:absolute;top:-9px;right:64px;') + 'z-index:99;pointer-events:none;' // on a sheet: astride its top edge, over no text or button (left of the close button, clear of the review row)
       + 'padding:2px 7px;border-radius:6px;background:#c62828;color:#fff;font:800 11px/1.4 system-ui,sans-serif;letter-spacing:.06em;opacity:.92';
     return b;
   };
-  doc.body.appendChild(badge('fixed'));
-  for (const id of ['publish-menu', 'board-menu']) doc.getElementById(id)?.appendChild(badge('absolute'));
+  const version = doc.getElementById('settings-version'); // on the build's line: a row of its own scrolled Configuració at 320×568
+  if (version) { const row = doc.createElement('div'); row.className = 'about-version'; row.style.cssText = 'display:flex;justify-content:center;align-items:center;gap:8px'; version.replaceWith(row); version.style.margin = '0'; row.append(version, badge('inline')); }
+  for (const id of ['publish-menu', 'board-menu', 'profile-menu']) doc.getElementById(id)?.appendChild(badge('absolute'));
   doc.title = `[PROVA] ${doc.title}`;
 }
+// ?final[=95-0-record] on this page (dev hosts only): straight to the results of a made-up run, a mock leaderboard
+export const FINAL = finalMode(globalThis.location ?? {});

@@ -4,7 +4,7 @@
 // one test error. The SDK loads when idle after the first frame; errors before that are buffered and forwarded.
 
 const LOOPBACK = /^(localhost|127\.0\.0\.1|\[::1\])$/;
-export const DEV_HOST = /^(localhost|127(\.\d+){3}|\[::1\]|0\.0\.0\.0|.+\.(localhost|local|test)|10(\.\d+){3}|192\.168(\.\d+){2}|172\.(1[6-9]|2\d|3[01])(\.\d+){2})$/;
+import { DEV_HOST } from '../core/flags.js';
 const DEBUG_PARAMS = ['autoplay', 'from', 'view']; // self-playing or debug-camera runs are not players
 const PROD_HOST = 'mulassa-tap-tap-dance.pages.dev';
 const BETA_HOST = 'beta.mulassa.cat'; // main's channel, on the test Supabase
@@ -126,7 +126,7 @@ export function createErrors({ mode, win, load, idle }) {
       });
     },
   };
-  win.setTimeout?.(() => api.start(), 12000); // the first frame never came (a crash while starting): send anyway
+  win.setTimeout?.(() => api.start(), 20000); // the first frame never came by the boot deadline (a crash while starting): send anyway
   return api;
 }
 
@@ -141,4 +141,19 @@ export const errors = createErrors({
   load: api => import('./sentry-load.js').then(m => m.start(sentryOptions({ dsn: DSN, environment: MODE, tags: api.tags,
     release: `mulassa-tap-tap-dance@${APP_BUILD}` }))),
 });
+// Only fixed categories from the pre-bundle watchdog, never exception text, URLs or player data.
+// Also forward a failure that happened before this module arrived. Existing consent/dev gates apply.
+if (w) {
+  let bootReported = false;
+  w.__mulassaReportBoot = () => {
+    const failure = w.__mulassaBootFailure;
+    if (!failure || bootReported || w.__mulassaBooted === 'no-webgl' || failure.reason === 'webgl-not-restored') return; // each has its own report (stage.js, pause-actions.js)
+    bootReported = true;
+    const phase = ['download', 'graphics', 'init', 'shaders', 'frame'].includes(failure.phase) ? failure.phase : 'unknown';
+    const reason = ['deadline', 'module-load', 'module-init', 'startup'].includes(failure.reason) ? failure.reason : 'unknown';
+    errors.report('boot-failed', { phase, reason });
+    errors.start();
+  };
+  w.__mulassaReportBoot();
+}
 if (MODE === 'development' && w) w.__sentryTest = (msg = 'sentry-test: deliberate test error') => w.setTimeout(() => { throw new Error(msg); });

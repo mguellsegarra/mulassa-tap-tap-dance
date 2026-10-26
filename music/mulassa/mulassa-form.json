@@ -1,0 +1,244 @@
+{
+  "version": 1,
+  "song": "mulassa",
+  "labels": ["intro0", "intro1", "intro2", "pickup", "A1", "A2", "B", "C", "X", "roll"],
+  "source": {
+    "score": "mulassa/score.json",
+    "transpose": 0,
+    "beatsPerBar": 4,
+    "unfolded": [
+      { "id": "u001", "bar": 0, "section": "A" },
+      { "id": "u002", "bar": 1, "section": "A" },
+      { "id": "u003", "bar": 2, "section": "A" },
+      { "id": "u004", "bar": 3, "section": "A" },
+      { "id": "u005", "bar": 4, "section": "A" },
+      { "id": "u006", "bar": 5, "section": "A" },
+      { "id": "u007", "bar": 6, "section": "A" },
+      { "id": "u008", "bar": 7, "section": "A" },
+      { "id": "u009", "bar": 8, "section": "A" },
+      { "id": "u010", "bar": 9, "section": "A" },
+      { "id": "u011", "bar": 10, "section": "A" },
+      { "id": "u012", "bar": 11, "section": "A" },
+      { "id": "u013", "bar": 12, "section": "A" },
+      { "id": "u014", "bar": 13, "section": "A" },
+      { "id": "u015", "bar": 14, "section": "A" },
+      { "id": "u016", "bar": 15, "section": "A" },
+      { "id": "u017", "bar": 16, "section": "A" },
+      { "id": "u018", "bar": 17, "section": "B" },
+      { "id": "u019", "bar": 18, "section": "B" },
+      { "id": "u020", "bar": 19, "section": "B" },
+      { "id": "u021", "bar": 20, "section": "B" },
+      { "id": "u022", "bar": 21, "section": "B" },
+      { "id": "u023", "bar": 22, "section": "B" },
+      { "id": "u024", "bar": 23, "section": "B" },
+      { "id": "u025", "bar": 24, "section": "B" },
+      { "id": "u026", "bar": 25, "section": "B" },
+      { "id": "u027", "bar": 26, "section": "B" },
+      { "id": "u028", "bar": 27, "section": "B" },
+      { "id": "u029", "bar": 28, "section": "B" },
+      { "id": "u030", "bar": 29, "section": "B" },
+      { "id": "u031", "bar": 30, "section": "B" },
+      { "id": "u032", "bar": 31, "section": "B" },
+      { "id": "u033", "bar": 32, "section": "B" },
+      { "id": "u034", "bar": 33, "section": "A′" },
+      { "id": "u035", "bar": 34, "section": "A′" },
+      { "id": "u036", "bar": 35, "section": "A′" },
+      { "id": "u037", "bar": 36, "section": "A′" },
+      { "id": "u038", "bar": 37, "section": "A′" },
+      { "id": "u039", "bar": 38, "section": "A′" },
+      { "id": "u040", "bar": 39, "section": "A′" },
+      { "id": "u041", "bar": 40, "section": "A′" },
+      { "id": "u042", "bar": 41, "section": "A′" },
+      { "id": "u043", "bar": 42, "section": "B′" },
+      { "id": "u044", "bar": 43, "section": "B′" },
+      { "id": "u045", "bar": 44, "section": "B′" },
+      { "id": "u046", "bar": 45, "section": "B′" },
+      { "id": "u047", "bar": 46, "section": "B′" },
+      { "id": "u048", "bar": 47, "section": "B′" },
+      { "id": "u049", "bar": 48, "section": "B′" },
+      { "id": "u050", "bar": 49, "section": "B′" },
+      { "id": "u051", "bar": 50, "section": "C" },
+      { "id": "u052", "bar": 51, "section": "C" },
+      { "id": "u053", "bar": 52, "section": "C" },
+      { "id": "u054", "bar": 53, "section": "C" },
+      { "id": "u055", "bar": 54, "section": "C" },
+      { "id": "u056", "bar": 55, "section": "C" },
+      { "id": "u057", "bar": 56, "section": "C" },
+      { "id": "u058", "bar": 57, "section": "C" },
+      { "id": "u059", "bar": 58, "section": "C" },
+      { "id": "u060", "bar": 59, "section": "C" },
+      { "id": "u061", "bar": 60, "section": "C" },
+      { "id": "u062", "bar": 61, "section": "C" },
+      { "id": "u063", "bar": 62, "section": "C" },
+      { "id": "u064", "bar": 63, "section": "C" },
+      { "id": "u065", "bar": 64, "section": "C" },
+      { "id": "u066", "bar": 65, "section": "C" },
+      { "id": "u067", "bar": 66, "section": "C" },
+      { "id": "u068", "bar": 67, "section": "C" },
+      { "id": "u069", "bar": 68, "section": "C" },
+      { "id": "u070", "bar": 69, "section": "C" },
+      { "id": "u071", "bar": 70, "section": "C" },
+      { "id": "u072", "bar": 71, "section": "C" },
+      { "id": "u073", "bar": 72, "section": "C" },
+      { "id": "u074", "bar": 73, "section": "C" }
+    ],
+    "ties": []
+  },
+  "phrases": [
+    { "id": "p-a1", "name": "A, primera frase", "bars": ["u002", "u003", "u004", "u005"] },
+    { "id": "p-a2", "name": "A, segona frase", "bars": ["u006", "u007", "u008", "u009"] },
+    { "id": "p-a3", "name": "A, tercera frase", "bars": ["u010", "u011", "u012", "u013"] },
+    { "id": "p-a4", "name": "A, quarta frase (cap a B)", "bars": ["u014", "u015", "u016", "u017"] },
+    { "id": "p-b1", "name": "B, primera frase", "bars": ["u018", "u019", "u020", "u021"] },
+    { "id": "p-b2", "name": "B, segona frase", "bars": ["u022", "u023", "u024", "u025"] },
+    { "id": "p-b3", "name": "B, tercera frase", "bars": ["u026", "u027", "u028", "u029"] },
+    { "id": "p-b4", "name": "B, quarta frase (sense el compàs 32)", "bars": ["u030", "u031", "u032"] },
+    { "id": "p-b-enllac", "name": "B, enllaç (compàs 32)", "bars": ["u033"] },
+    { "id": "p-a2-anac", "name": "A′, anacrusi (compàs 33)", "bars": ["u034"] },
+    { "id": "p-a2-1", "name": "A′, primera frase", "bars": ["u035", "u036", "u037", "u038"] },
+    { "id": "p-a2-2", "name": "A′, segona frase", "bars": ["u039", "u040", "u041", "u042"] },
+    { "id": "p-b2-1", "name": "B′, primera frase", "bars": ["u043", "u044", "u045", "u046"] },
+    { "id": "p-b2-2", "name": "B′, segona frase", "bars": ["u047", "u048", "u049"] },
+    { "id": "p-entrada", "name": "Entrada a C (compàs 49)", "bars": ["u050"] },
+    { "id": "p-c1", "name": "C, primera frase", "bars": ["u051", "u052", "u053", "u054"] },
+    { "id": "p-c2", "name": "C, segona frase", "bars": ["u055", "u056", "u057", "u058"] },
+    { "id": "p-c3", "name": "C, tercera frase", "bars": ["u059", "u060", "u061", "u062"] },
+    { "id": "p-c4", "name": "C, quarta frase", "bars": ["u063", "u064", "u065", "u066"] },
+    { "id": "p-x1", "name": "Coda, primera frase", "bars": ["u067", "u068", "u069", "u070"] },
+    { "id": "p-x2", "name": "Coda, frase final", "bars": ["u071", "u072", "u073", "u074"] }
+  ],
+  "sequence": [
+    { "id": "s1", "phrase": "p-a1", "label": "A1", "repeat": 1, "beatScale": 2, "bars": null, "barOverrides": {  } },
+    { "id": "s2", "phrase": "p-a2", "label": "A1", "repeat": 1, "beatScale": 2, "bars": null, "barOverrides": {  } },
+    { "id": "s3", "phrase": "p-a3", "label": "A2", "repeat": 1, "beatScale": 2, "bars": null, "barOverrides": {  } },
+    {
+      "id": "s4",
+      "phrase": "p-a4",
+      "label": "A2",
+      "repeat": 1,
+      "beatScale": 2,
+      "bars": null,
+      "barOverrides": { "u017": { "notes": "C5:4 R:3 E5:0.5 E5:0.5", "beatScale": 1 } }
+    },
+    { "id": "s5", "phrase": "p-b1", "label": "B", "repeat": 1, "beatScale": 1, "bars": null, "barOverrides": {  } },
+    { "id": "s6", "phrase": "p-b2", "label": "B", "repeat": 1, "beatScale": 1, "bars": null, "barOverrides": {  } },
+    { "id": "s7", "phrase": "p-b3", "label": "B", "repeat": 1, "beatScale": 1, "bars": null, "barOverrides": {  } },
+    { "id": "s8", "phrase": "p-b4", "label": "B", "repeat": 1, "beatScale": 1, "bars": null, "barOverrides": {  } },
+    {
+      "id": "s9",
+      "phrase": "p-entrada",
+      "label": "B",
+      "repeat": 1,
+      "beatScale": 1,
+      "bars": null,
+      "barOverrides": {  }
+    },
+    { "id": "s10", "phrase": "p-c1", "label": "C", "repeat": 1, "beatScale": 1, "bars": null, "barOverrides": {  } },
+    { "id": "s11", "phrase": "p-c2", "label": "C", "repeat": 1, "beatScale": 1, "bars": null, "barOverrides": {  } },
+    { "id": "s12", "phrase": "p-c3", "label": "C", "repeat": 1, "beatScale": 1, "bars": null, "barOverrides": {  } },
+    { "id": "s13", "phrase": "p-c4", "label": "C", "repeat": 1, "beatScale": 1, "bars": null, "barOverrides": {  } },
+    { "id": "s14", "phrase": "p-x1", "label": "X", "repeat": 1, "beatScale": 1, "bars": null, "barOverrides": {  } },
+    { "id": "s15", "phrase": "p-x2", "label": "X", "repeat": 1, "beatScale": 1, "bars": null, "barOverrides": {  } }
+  ],
+  "intro": {
+    "beats": 16,
+    "pickup": { "bar": "u001", "beatScale": 2, "label": "pickup" },
+    "labels": [[0, "intro0"], [4, "intro1"], [8, "intro2"]]
+  },
+  "tempo": {
+    "clock": "constant-exact",
+    "interpolation": "smoothstep",
+    "leadIn": 0.1,
+    "knots": [{ "at": { "beat": 0 }, "bpm": 152 }]
+  },
+  "events": {
+    "balloons": [
+      {
+        "id": "g1",
+        "start": { "item": "s4", "iteration": 0, "bar": "u017", "note": 0, "offset": 4 },
+        "end": { "item": "s4", "iteration": 0, "bar": "u017", "note": 0, "offset": 7 }
+      },
+      { "id": "g2", "start": { "item": "s15", "edge": "end" }, "end": { "item": "s15", "edge": "end", "offset": 4 } }
+    ],
+    "holds": [
+      {
+        "id": "h1",
+        "start": { "item": "s1", "iteration": 0, "bar": "u004", "note": 0 },
+        "end": { "item": "s1", "iteration": 0, "bar": "u004", "note": 0, "offset": 2 },
+        "kind": "don"
+      },
+      {
+        "id": "h2",
+        "start": { "item": "s2", "iteration": 0, "bar": "u008", "note": 0 },
+        "end": { "item": "s2", "iteration": 0, "bar": "u008", "note": 0, "offset": 3 },
+        "kind": "ka"
+      },
+      {
+        "id": "h3",
+        "start": { "item": "s3", "iteration": 0, "bar": "u012", "note": 0 },
+        "end": { "item": "s3", "iteration": 0, "bar": "u012", "note": 0, "offset": 2 },
+        "kind": "don"
+      },
+      {
+        "id": "h4",
+        "start": { "item": "s4", "iteration": 0, "bar": "u016", "note": 0 },
+        "end": { "item": "s4", "iteration": 0, "bar": "u016", "note": 0, "offset": 3 },
+        "kind": "ka"
+      },
+      {
+        "id": "h5",
+        "start": { "item": "s4", "iteration": 0, "bar": "u017", "note": 0 },
+        "end": { "item": "s4", "iteration": 0, "bar": "u017", "note": 0, "offset": 3 },
+        "kind": "don"
+      }
+    ],
+    "fills": [
+      { "id": "fill1", "at": { "item": "s10", "edge": "start", "offset": -4 }, "kind": "half" },
+      { "id": "fill2", "at": { "item": "s12", "edge": "start", "offset": -4 }, "kind": "half" },
+      { "id": "fill3", "at": { "item": "s14", "edge": "start", "offset": -4 }, "kind": "half" },
+      { "id": "crash1", "at": { "item": "s1", "edge": "start" }, "kind": "crash", "gain": 0.7 },
+      { "id": "crash2", "at": { "item": "s2", "edge": "start" }, "kind": "crash", "gain": 0.7 },
+      { "id": "crash3", "at": { "item": "s3", "edge": "start" }, "kind": "crash", "gain": 0.7 },
+      { "id": "crash4", "at": { "item": "s4", "edge": "start" }, "kind": "crash", "gain": 0.7 },
+      { "id": "crash5", "at": { "item": "s5", "edge": "start" }, "kind": "crash", "gain": 1 },
+      { "id": "crash6", "at": { "item": "s7", "edge": "start" }, "kind": "crash", "gain": 0.7 },
+      { "id": "crash7", "at": { "item": "s10", "edge": "start" }, "kind": "crash", "gain": 1 },
+      { "id": "crash8", "at": { "item": "s12", "edge": "start" }, "kind": "crash", "gain": 0.7 },
+      { "id": "crash9", "at": { "item": "s14", "edge": "start" }, "kind": "crash", "gain": 1 },
+      { "id": "crash10", "at": { "item": "s15", "edge": "start" }, "kind": "crash", "gain": 0.7, "accent": false },
+      {
+        "id": "crash-end",
+        "at": { "item": "s15", "edge": "end", "offset": 4 },
+        "kind": "crash",
+        "gain": 1,
+        "accent": false
+      },
+      {
+        "id": "crash-finale",
+        "at": { "item": "s14", "edge": "start", "offset": 0.02 },
+        "kind": "crash",
+        "gain": 0.8,
+        "accent": false
+      }
+    ],
+    "noteDurations": [{ "at": { "item": "s15", "edge": "end", "note": -1 }, "beats": 6 }]
+  },
+  "ending": {
+    "finale": { "item": "s14", "edge": "start" },
+    "roll": { "item": "s15", "edge": "end" },
+    "hit": { "item": "s15", "edge": "end", "offset": 4 }
+  },
+  "reference": {
+    "video": "Balladeta de la Mulassa, Santa Úrsula 2017 (El Camp Difusió), https://www.youtube.com/watch?v=D53pgXOeIL0",
+    "end": 166.2,
+    "anchors": [
+      { "at": { "beat": 12 }, "ref": 0 },
+      { "at": { "item": "s2", "edge": "start" }, "ref": 35.5 },
+      { "at": { "item": "s3", "edge": "start" }, "ref": 69.5 },
+      { "at": { "item": "s4", "edge": "start", "offset": 8 }, "ref": 86 },
+      { "at": { "item": "s4", "edge": "start", "offset": 24 }, "ref": 110 },
+      { "at": { "item": "s15", "edge": "end" }, "ref": 161.3 },
+      { "at": { "item": "s15", "edge": "end", "offset": 10 }, "ref": 166.2 }
+    ]
+  }
+}

@@ -1,9 +1,9 @@
 # Mulassa Tap Tap Dance
 
-> Joc de ritme gratuït, en català, inspirat en el ball de la Mulassa de Valls. Es juga al navegador tocant dos botons, GUA i PA, al compàs de la música. Projecte de codi obert de Marc Güell Segarra, sense ànim de lucre, per difondre el bestiari de la cultura popular catalana. Es llança coincidint amb la Fira de Santa Úrsula de Valls. Tothom hi pot col·laborar i afegir-hi les seves mulasses i bestiari, amb els seus balls i música.
+> Joc de ritme gratuït i en català per fer ballar figures del bestiari festiu dels Països Catalans. Va començar amb la Mulassa de Valls i ara també hi balla el Drac. Es juga al navegador tocant dos botons al compàs de la música, en 16 llengües. Projecte de codi obert de Marc Güell Segarra, estrenat per la Fira de Santa Úrsula de Valls. Tothom hi pot col·laborar i portar-hi figures del seu poble, amb la seva música, el seu ball i la seva festa.
 
 - [Joc](https://mulassa.cat/index.md): presentació breu i com jugar-hi
-- [Sobre el projecte](https://mulassa.cat/projecte/index.md): què és, relació amb Valls i la Fira de Santa Úrsula, instruccions, imatges, vídeos i crèdits
+- [Sobre el projecte](https://mulassa.cat/projecte/index.md): què és, instruccions, imatges, vídeos i crèdits
 - [Codi a GitHub](https://github.com/mguellsegarra/mulassa-tap-tap-dance): codi obert, obert a col·laboracions
 - [Vídeo horitzontal](https://mulassa.cat/videos/promo-16x9.mp4) · [Vídeo vertical](https://mulassa.cat/videos/promo-9x16.mp4): material promocional, MP4 1080p
 - [Autor](https://ondori.dev): Marc Güell Segarra · Ondori

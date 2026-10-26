@@ -1,7 +1,7 @@
 // HUD layout numbers shared by the screens: the top band, the lane, the stage and the praise slots.
 import { stageFrame } from '../scene/framing.js';
 import { SAFE, K, HH, padTop, W, setPadTop } from './canvas.js';
-import { COARSE, TABLET } from '../core/env.js';
+import { COARSE, isTablet } from '../core/env.js';
 import { G } from '../game/state.js';
 import { NOTE_R, RING_R } from './primitives.js';
 import { C } from './sprites.js';
@@ -51,8 +51,8 @@ export const ENC_H = HUD_H, ENC_GAP = 6; // the ENCERTS pill: as tall as the pan
 export const HEADLINE_SIZE = (big = !G.practice) => Math.min((big ? 26 : 10) * bandScale(), W / 9);
 // tablets and portrait screens (phones): the big words sit centred in the free space between the lane and the pad,
 // clear of a GLOBUS and the practice instruction; landscape phones and desktops (little height): just under the lane.
-// Portrait phones too sit exactly in the middle (Marc: centred reads better than clearing her face at 0.6).
-export const PRAISE_CENTRED = (big = !G.practice) => big && (TABLET || HH > W);
+// Portrait phones too sit exactly in the middle (centred reads better than clearing her face at 0.6).
+export const PRAISE_CENTRED = (big = !G.practice) => big && (isTablet() || HH > W);
 export const PRAISE_Y = (big = !G.practice) => {
   if (!big) return lane().bottom + 16 * bandScale();
   const { bottom } = lane(), under = bottom + 44 * bandScale() + HEADLINE_SIZE(big) * 0.6;
@@ -64,9 +64,9 @@ const praiseFloor = () => (G.practice && HH < W ? Math.min(playBottom(), PRACTIC
 export const PRACTICE_Y = () => playBottom() - 22; // instruction stays above the pad, away from the feedback slot
 const RESERVED_BOTTOM = () => lane().bottom + (G.practice ? 26 : 34) * bandScale();
 const stage = {}; // shared by camera framing and bubble exclusion; temporary text never changes it
-export function playStage() {
-  const top = G.collapseT ? SAFE.t / K + 8 : RESERVED_BOTTOM();
-  const bottom = G.collapseT ? HH - SAFE.b / K - 38 : playBottom() - (G.practice ? 36 : 0);
+export function playStage() { // the dance demo has no lane or pad: the whole screen under the pause button and its tag
+  const top = G.collapseT ? SAFE.t / K + 8 : G.watch ? (SAFE.t + 84) / K : RESERVED_BOTTOM();
+  const bottom = G.collapseT ? HH - SAFE.b / K - 38 : G.watch ? HH - (SAFE.b + 16) / K : playBottom() - (G.practice ? 36 : 0);
   return stageFrame(stage, top, bottom);
 }
 // The count-in's sizes and colours, shared with warmStart(): its words are painted ahead on the title and during

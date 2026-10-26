@@ -1,0 +1,101 @@
+{
+  "method": "Spectral-flux autocorrelation, 22050 Hz mono, 1024 window / 256 hop. Candidates can be harmonics, not confirmed musical beats. No listening verification.",
+  "windows": [
+    {
+      "start": 2,
+      "end": 30,
+      "periodCandidatesSeconds": [
+        0.348,
+        0.255,
+        0.43,
+        0.522
+      ],
+      "tempoCandidatesBpm": [
+        172.3,
+        234.9,
+        139.7,
+        114.8
+      ]
+    },
+    {
+      "start": 36,
+      "end": 64,
+      "periodCandidatesSeconds": [
+        0.267,
+        0.348,
+        0.441,
+        0.522
+      ],
+      "tempoCandidatesBpm": [
+        224.7,
+        172.3,
+        136.0,
+        114.8
+      ]
+    },
+    {
+      "start": 70,
+      "end": 85,
+      "periodCandidatesSeconds": [
+        0.546,
+        1.057,
+        0.255,
+        0.801
+      ],
+      "tempoCandidatesBpm": [
+        110.0,
+        56.8,
+        234.9,
+        74.9
+      ]
+    },
+    {
+      "start": 90,
+      "end": 115,
+      "periodCandidatesSeconds": [
+        0.348,
+        0.267,
+        0.441,
+        0.522
+      ],
+      "tempoCandidatesBpm": [
+        172.3,
+        224.7,
+        136.0,
+        114.8
+      ]
+    },
+    {
+      "start": 125,
+      "end": 138,
+      "periodCandidatesSeconds": [
+        0.998,
+        0.488,
+        1.033,
+        0.255
+      ],
+      "tempoCandidatesBpm": [
+        60.1,
+        123.0,
+        58.1,
+        234.9
+      ]
+    },
+    {
+      "start": 146,
+      "end": 160,
+      "periodCandidatesSeconds": [
+        0.848,
+        1.242,
+        0.418,
+        0.395
+      ],
+      "tempoCandidatesBpm": [
+        70.8,
+        48.3,
+        143.6,
+        152.0
+      ]
+    }
+  ]
+}

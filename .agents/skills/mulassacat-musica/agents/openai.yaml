@@ -1,0 +1,4 @@
+interface:
+  display_name: "Música d'una figura"
+  short_description: "De la partitura a la cançó i el chart del joc"
+  default_prompt: "Aplica $mulassacat-musica per portar la música de la figura al joc o revisar-ne l'arranjament, els talls i la sincronització, distingint les proves de l'audició."

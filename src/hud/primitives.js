@@ -1,7 +1,9 @@
 // HUD drawing primitives: text, panels, glows, note discs, hold tails, arrows.
-import { C, devScale, qSize, PIXEL, FONT, sprite, DIRDK, DIRC, DIRLT } from './sprites.js';
+import { C, devScale, qSize, PIXEL, FONT, sprite, DIRDK, DIRC, DIRLT, textWidths } from './sprites.js';
+import { trf } from '../game/figure-theme.js';
 import { H, K } from './canvas.js';
 import { clock } from '../game/state.js';
+import { spriteHeight, baselineShift, AVG_EM } from '../i18n/fonts.js';
 
 // grow: drawn at size × grow from the sprite painted at `size` (a pulse or a pop-in reuses one sprite instead of a new
 // one per step; keep grow <= 1 so it stays crisp)
@@ -10,14 +12,14 @@ export function text(s, x, y, size, col = C.cream, align = 'center', outline = C
   const k = devScale();
   if (k && size > 0) { // blit a sprite painted at a size within 1.5% of this one
     const q = qSize(size * k) / k, lw = Math.max(1.5, q / 6), pad = lw / 2 + 1, font = pixel ? `${q}px ${PIXEL}` : `800 ${q}px ${FONT}`;
-    const sp = sprite(`${s}|${font}|${k}|${col}|${outline}`, k, c => { c.font = font; const tw = c.measureText(s).width; return { tw, w: tw + 2 * pad, h: q * 1.7 + lw, cy: (q * 1.7 + lw) / 2 }; }, (c, d) => {
+    const sp = sprite(`${s}|${font}|${k}|${col}|${outline}`, k, c => { c.font = font; const m = c.measureText(s), tw = m.width, h = spriteHeight(m, q, lw); return { tw, w: tw + 2 * pad, h, cy: h / 2 }; }, (c, d) => {
       c.font = font; c.textAlign = 'left'; c.textBaseline = 'middle'; c.lineJoin = 'round';
       c.lineWidth = lw; c.strokeStyle = outline; c.strokeText(s, pad, d.cy);
       c.fillStyle = col; c.fillText(s, pad, d.cy);
     }, true);
     if (sp) {
       const r = size * grow / q, left = align === 'left' ? 0 : align === 'right' ? sp.tw : sp.tw / 2;
-      H.drawImage(sp.c, x - (left + pad) * r, (pixel ? y : y + size * grow * 0.08) - sp.cy * r, sp.w * r, sp.h * r);
+      H.drawImage(sp.c, x - (left + pad) * r, (pixel ? y : y + baselineShift(size * grow)) - sp.cy * r, sp.w * r, sp.h * r);
       return;
     }
   }
@@ -25,7 +27,7 @@ export function text(s, x, y, size, col = C.cream, align = 'center', outline = C
   H.font = pixel ? `${size}px ${PIXEL}` : `800 ${size}px ${FONT}`;
   H.textAlign = align;
   H.textBaseline = 'middle';
-  const yy = pixel ? y : y + size * 0.08; // Baloo sits a little high
+  const yy = pixel ? y : y + baselineShift(size); // Baloo sits a little high
   H.lineJoin = 'round';
   H.lineWidth = Math.max(1.5, size / 6);
   H.strokeStyle = outline;
@@ -54,15 +56,6 @@ export function panel(x, y, w, h, fill = 'rgba(42,26,16,0.88)') {
   H.fillStyle = fill; H.fillRect(x, y, w, h);
   H.fillStyle = C.gold; H.fillRect(x, y, w, 2); H.fillRect(x, y + h - 2, w, 2);
 }
-export function drawButton(x, y, w, h, focused) { // three equal choices; keyboard focus is a glowing ring, not a fill
-  if (focused) {
-    H.beginPath(); H.roundRect(x - 4, y - 4, w + 8, h + 8, 16 / K); glowPath(C.gold, 7);
-    H.strokeStyle = C.cream; H.lineWidth = 3 / K; H.stroke();
-  }
-  H.beginPath(); H.roundRect(x, y, w, h, 12 / K);
-  H.fillStyle = focused ? 'rgba(74,46,24,0.95)' : 'rgba(42,26,16,0.91)'; H.fill();
-  H.strokeStyle = C.gold; H.lineWidth = 2 / K; H.stroke();
-}
 function arrow(dir, x, y, r) {
   H.save();
   H.translate(x, y);
@@ -89,7 +82,7 @@ export function noteDisc(dir, x, y, r, big = false) { // big = GUAPA: 1.4x, gold
     H.fillStyle = DIRC.L; H.beginPath(); H.arc(x, y, r - rim, Math.PI / 2, Math.PI * 1.5); H.fill();
     H.fillStyle = DIRC.R; H.beginPath(); H.arc(x, y, r - rim, -Math.PI / 2, Math.PI / 2); H.fill();
     H.fillStyle = 'rgba(255,255,255,0.28)'; H.beginPath(); H.ellipse(x, y - r * 0.5, r * 0.5, r * 0.2, 0, 0, 7); H.fill(); // shine across both halves
-    text('GUAPA', x, y + 0.4, 6.5, '#fff', 'center'); // +0.4: Baloo's caps sit a hair high
+    text(trf('input.both'), x, y + 0.4, 6.5, '#fff', 'center'); // +0.4: Baloo's caps sit a hair high
     return;
   }
   noteFace(dir, x, y, r - rim);
@@ -147,7 +140,12 @@ export function holdCharge(dir, hx, cy, frac) { // over the head: a gold arc cha
 // on-time note visibly fits, and a thick outer ring (RING_R, about a GUAPA's size). The socket is drawn under
 // the notes (drawRing), the rings, shockwaves and sparks over them (drawRingTop), so the target never disappears.
 export const NOTE_R = 16, RING_R = 21; // NOTE_R: a normal note's outer edge (14 + its dark rim)
-export function textWidth(s, size) { // width in HUD units of text(s, ..., size)
-  H.font = `800 ${Math.round(size * 11.5) / 10}px ${FONT}`;
-  return H.measureText(s)?.width || s.length * size * 0.62;
+export function textWidth(s, size) { // width in HUD units of text(s, ..., size); the lane, top panel and banners ask every frame
+  const font = `800 ${Math.round(size * 11.5) / 10}px ${FONT}`, key = `${font}|${s}`;
+  let w = textWidths.get(key);
+  if (w === undefined) {
+    if (textWidths.size > 2000) textWidths.clear(); // popping sizes sweep many fonts: keep it bounded
+    H.font = font; w = H.measureText(s)?.width || s.length * size * AVG_EM(); textWidths.set(key, w);
+  }
+  return w;
 }

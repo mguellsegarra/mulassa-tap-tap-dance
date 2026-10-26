@@ -1,264 +1,233 @@
-// The share image, drawn on an offscreen canvas: Story 1080×1920 or Quadrat 1080×1080 (and the 1200×630 social
-// preview, public/og.jpg). The logo, a fixed photo of the mulassa (public/share/photo-<format>.jpg), the stars in the medallion, ENCERTS as the big number, RATXA (the best streak), the level, the record
-// ribbon, an optional nickname and the address. No QR, nothing fetched.
-import { drawStars } from './stars.js';
+// On-device poster exports. Geometry is shared by drawing and regression checks.
+import { tr } from '../i18n/messages.js';
+import { fmtNum } from '../i18n/format.js';
+import { fontStack } from '../i18n/fonts.js';
+import { wrapLines } from './text-wrap.js';
+import { DIFFS } from '../game/chart.js';
+import { figThemes } from '../game/figure-theme.js';
 import { SITE_LABEL, CARD_FILE } from '../services/share.js';
+import { traitsOf } from '../figures/index.js';
 
-const FORMATS = { story: { w: 1080, h: 1920 }, square: { w: 1080, h: 1080 }, og: { w: 1200, h: 630 } };
-export const PHOTO = { story: [960, 540], square: [992, 360], og: [1560, 630] }; // each format's photo size (css = image px)
-// The photos are fixed files, not a render of the live scene: rendering one on the results screen crashed some GPUs
-// (an Adreno 618 on every game). Made again with `__dbg.hero(w, h).toDataURL('image/jpeg', 0.9)` at PHOTO's sizes on a
-// desktop's results screen (?final), saved as public/share/photo-<format>.jpg (story, square; og only for public/og.jpg). Loaded once; null (the card's stand-in
-// sky) when it can't be.
+export const PHOTO = { story: [1104, 988], feed: [1104, 988], og: [1560, 630] };
+// The photos are fixed files, one per figure (story and feed frame the same 1104×988), not a render of the live scene:
+// rendering one on the results screen crashed some GPUs (an Adreno 618 on every game). Made again with
+// `__dbg.hero(1104, 988, id).toDataURL('image/jpeg', 0.9)` on a desktop's results screen (?final), saved as
+// public/share/<figure id>.jpg (og only for public/og.jpg). Loaded once; null (the card's stand-in) when it can't be.
 const photos = {};
-export const loadPhoto = f => (photos[f] ??= typeof Image === 'undefined' ? Promise.resolve(null) : new Promise(resolve => {
+export const loadPhoto = figureId => (photos[figureId] ??= typeof Image === 'undefined' ? Promise.resolve(null) : new Promise(resolve => {
   const img = new Image();
   img.onload = () => resolve(img);
-  img.onerror = () => { delete photos[f]; resolve(null); }; // the next card tries again
-  img.src = `share/photo-${f}.jpg`;
+  img.onerror = () => { delete photos[figureId]; resolve(null); }; // the next card tries again
+  img.src = `share/${figureId}.jpg`;
 }));
-const BALOO = "'Baloo 2', system-ui, sans-serif", PIXEL = "'Jersey 10', monospace";
-const INK = { cream: '#fff3d6', gold: '#f5c518', red: '#c0283c', dark: '#2a1a10', soft: '#e8d8b8', score: '#c9a7ff' }; // score = C.score (sprites.js): points only
-const HEAD = { clear: ['BALL COMPLET!', INK.gold], fail: ['TORNEM-HI!', '#6fa8ff'] }; // a collapse is never shared
-
-export async function loadCardFonts(fonts) { // before drawing: a card drawn with the fallback font is shared as is
-  try { await Promise.all(['800 80px "Baloo 2"', '600 40px "Baloo 2"', '80px "Jersey 10"'].map(f => fonts?.load(f))); } catch { /* system font */ }
-}
-
-function outlined(c, s, x, y, size, fill, stroke, font = BALOO, weight = 800, lw = size * 0.16) {
-  c.font = `${font === PIXEL ? '' : weight + ' '}${size}px ${font}`;
-  c.lineJoin = 'round'; c.lineWidth = lw; c.strokeStyle = stroke;
-  if (lw) c.strokeText(s, x, y);
-  c.fillStyle = fill; c.fillText(s, x, y);
-}
-function fit(c, s, size, maxW, font = BALOO, weight = 800) { // the font size that keeps s within maxW
-  c.font = `${font === PIXEL ? '' : weight + ' '}${size}px ${font}`;
-  const w = c.measureText(s).width;
-  return w > maxW ? size * maxW / w : size;
-}
-function logo(c, cx, y, s) { // MULASSA (pixel, red, cream outline) over TAP TAP DANCE (gold), as on the title
-  c.textAlign = 'center'; c.textBaseline = 'middle';
-  outlined(c, 'MULASSA', cx, y, s, INK.red, INK.cream, PIXEL, 0, s * 0.1);
-  outlined(c, 'TAP TAP DANCE', cx, y + s * 0.72, s * 0.36, INK.gold, INK.dark);
-}
-function photo(c, hero, x, y, w, h, r, ax = 0.5) { // the photo, framed (cover; ax: which side a wider one keeps); without it a sky and a plaça stand in
-  c.save();
-  c.beginPath(); c.roundRect(x, y, w, h, r); c.clip();
-  if (hero) {
-    const k = Math.max(w / hero.width, h / hero.height), hw = hero.width * k, hh = hero.height * k;
-    c.drawImage(hero, x + (w - hw) * ax, y + (h - hh) / 2, hw, hh);
-  }
-  else {
-    const g = c.createLinearGradient(0, y, 0, y + h);
-    g.addColorStop(0, '#8fd3ff'); g.addColorStop(0.62, '#cfeaff'); g.addColorStop(0.63, '#c9a36b'); g.addColorStop(1, '#a8834f');
-    c.fillStyle = g; c.fillRect(x, y, w, h);
-  }
-  const shade = c.createLinearGradient(0, y + h * 0.7, 0, y + h); // the ribbon reads on any background
-  shade.addColorStop(0, 'rgba(28,17,10,0)'); shade.addColorStop(1, 'rgba(28,17,10,0.45)');
-  c.fillStyle = shade; c.fillRect(x, y, w, h);
-  c.restore();
-  c.beginPath(); c.roundRect(x, y, w, h, r); c.lineWidth = 6; c.strokeStyle = INK.gold; c.stroke();
-}
-function ribbon(c, s, cx, cy, size) { // gold pill, dark letters, a star at each end (drawResults' record badge)
-  c.font = `800 ${size}px ${BALOO}`;
-  const w = c.measureText(s).width + size * 2.6, h = size * 1.7;
-  c.save(); c.translate(cx, cy); c.rotate(-0.035);
-  c.beginPath(); c.roundRect(-w / 2, -h / 2, w, h, h / 2);
-  c.fillStyle = INK.gold; c.fill(); c.lineWidth = size * 0.12; c.strokeStyle = INK.dark; c.stroke();
-  c.fillStyle = INK.dark; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(s, 0, size * 0.06);
-  for (const sx of [-1, 1]) star(c, sx * (w / 2 - size * 0.75), 0, size * 0.42, INK.dark);
-  c.restore();
-}
-function star(c, x, y, r, col) {
-  c.beginPath();
-  for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4, rr = i % 2 ? r * 0.35 : r; c.lineTo(x + Math.sin(a) * rr, y - Math.cos(a) * rr); }
-  c.closePath(); c.fillStyle = col; c.fill();
-}
-const medallion = (c, stars, x, y, r) => drawStars(c, stars, x, y, r); // settled: the image is a still
-function pill(c, s, x, y, size, col, align = 'left') { // a flat tag: coloured strip on the left, no outline (a note, not a button)
-  c.font = `800 ${size}px ${BALOO}`;
-  const w = c.measureText(s).width + size * 1.1, h = size * 1.6, x0 = align === 'center' ? x - w / 2 : x;
-  c.fillStyle = 'rgba(255,243,214,0.08)'; c.beginPath(); c.roundRect(x0, y - h / 2, w, h, 6); c.fill();
-  c.fillStyle = col; c.fillRect(x0, y - h / 2, size * 0.18, h);
-  c.fillStyle = INK.cream; c.textAlign = 'left'; c.textBaseline = 'middle'; c.fillText(s, x0 + size * 0.6, y + size * 0.05);
-  return w;
-}
-const pillWidth = (c, s, size) => { c.font = `800 ${size}px ${BALOO}`; return c.measureText(s).width + size * 1.1; };
-function chips(c, list, cx, y, size, gap) { // the flat tags in one row, centred as a group
-  const ws = list.map(([s]) => pillWidth(c, s, size));
-  let x = cx - (ws.reduce((a, b) => a + b, 0) + gap * (list.length - 1)) / 2;
-  list.forEach(([s, col], i) => { pill(c, s, x, y, size, col); x += ws[i] + gap; });
-}
-function bunting(c, x0, x1, y, sag, n, size) { // the plaça's garland of flags (banderetes): a sagging string, triangles hanging from it
-  const at = t => [x0 + (x1 - x0) * t, y + sag * 4 * t * (1 - t)];
-  const cols = ['#f5c518', '#ff7a1a', '#14b8a6', '#ff8fb1', '#c0283c'];
-  c.save();
-  c.beginPath(); for (let i = 0; i <= 40; i++) c.lineTo(...at(i / 40));
-  c.lineWidth = 3; c.strokeStyle = 'rgba(232,216,184,0.45)'; c.stroke();
-  for (let i = 0; i < n; i++) {
-    const [ax, ay] = at((i + 0.15) / n), [bx, by] = at((i + 0.85) / n), mx = (ax + bx) / 2, my = (ay + by) / 2;
-    c.beginPath(); c.moveTo(ax, ay); c.lineTo(bx, by); c.lineTo(mx, my + size); c.closePath();
-    c.globalAlpha = 0.8; c.fillStyle = cols[i % cols.length]; c.fill();
-  }
-  c.restore();
-}
-// ink ascent of a string (cap height for caps/digits): what the layout measures, so gaps are between glyphs, not text boxes
-function ascent(c, s, size, font = BALOO, weight = 800) {
-  c.font = `${font === PIXEL ? '' : weight + ' '}${size}px ${font}`; c.textBaseline = 'alphabetic'; // ascents are from the baseline
-  return c.measureText(s).actualBoundingBoxAscent ?? size * 0.72;
-}
-// the star medallion and ENCERTS over the % side by side, centred as ONE group (never left-heavy): the label is centred
-// over the number, the two-line stack is centred on the medallion's middle
-function score(c, d, cx, cy, r, labelSize, pctSize) {
-  const p = `${d.pct}%`, gap = r * 0.36, inner = labelSize * 0.32, lw1 = labelSize * 0.16, lw2 = pctSize * 0.085;
-  const a1 = ascent(c, 'ENCERTS', labelSize), a2 = ascent(c, p, pctSize);
-  const inkOf = (s, size, lw) => { // ink width incl. the outline, and how far the ink's middle sits right of the text origin (side bearings)
-    c.font = `800 ${size}px ${BALOO}`; const m = c.measureText(s), l = m.actualBoundingBoxLeft ?? 0, rr = m.actualBoundingBoxRight ?? m.width;
-    return [l + rr + lw, (rr - l) / 2];
-  };
-  const [lw, ldx] = inkOf('ENCERTS', labelSize, lw1), [pw, pdx] = inkOf(p, pctSize, lw2);
-  const col = Math.max(lw, pw), x0 = cx - (2 * r + gap + col) / 2, tx = x0 + 2 * r + gap + col / 2;
-  medallion(c, d.stars, x0 + r, cy, r);
-  const top = cy - (a1 + lw1 + inner + a2 + lw2) / 2, b1 = top + lw1 / 2 + a1, b2 = b1 + lw1 / 2 + inner + lw2 / 2 + a2;
-  c.textAlign = 'center'; c.textBaseline = 'alphabetic';
-  outlined(c, 'ENCERTS', tx - ldx, b1, labelSize, INK.cream, INK.dark);
-  outlined(c, p, tx - pdx, b2, pctSize, INK.gold, INK.dark, BALOO, 800, lw2);
-  c.textBaseline = 'middle';
-}
-function confetti(c, w, y0, y1, n, seed) { // festive, faint, deterministic: only in the story's covered bands
-  const cols = ['#f5c518', '#ff7a1a', '#14b8a6', '#ff8fb1'];
-  let s = seed;
-  const rnd = () => ((s = (s * 16807) % 2147483647) / 2147483647);
-  c.save();
-  for (let i = 0; i < n; i++) {
-    c.globalAlpha = 0.18 + rnd() * 0.2; c.fillStyle = cols[i % 4];
-    c.save(); c.translate(60 + rnd() * (w - 120), y0 + rnd() * (y1 - y0)); c.rotate(rnd() * Math.PI);
-    c.fillRect(-9, -4, 18, 8); c.restore();
-  }
-  c.restore();
-}
-function frame(c, w, h) {
-  const g = c.createLinearGradient(0, 0, 0, h);
-  g.addColorStop(0, '#3a2414'); g.addColorStop(1, '#1c110a');
-  c.fillStyle = g; c.fillRect(0, 0, w, h);
-  c.beginPath(); c.roundRect(18, 18, w - 36, h - 36, 34); c.lineWidth = 5; c.strokeStyle = 'rgba(245,197,24,0.55)'; c.stroke();
-}
-function address(c, cx, y, size) { // the og card's gold pill (same proportions: 34 px text in a 60 px pill)
-  c.textAlign = 'center'; c.textBaseline = 'middle';
-  c.font = `800 ${size}px ${BALOO}`;
-  const w = c.measureText(SITE_LABEL).width + size * 1.65, h = size * 1.76;
-  c.beginPath(); c.roundRect(cx - w / 2, y - h / 2, w, h, h / 2); c.fillStyle = INK.gold; c.fill();
-  c.fillStyle = INK.dark; c.fillText(SITE_LABEL, cx, y + size * 0.06);
-}
-function dancer(c, alias, cx, y, size, maxW) { // «Ha ballat:» soft, the nickname bold cream; one line, shrunk to fit; y = the baseline
-  const pre = 'Ha ballat: ';
-  const width = s => { c.font = `600 ${s}px ${BALOO}`; const a = c.measureText(pre).width; c.font = `800 ${s}px ${BALOO}`; return a + c.measureText(alias).width; };
-  const s = Math.min(size, size * maxW / width(size)), total = width(s);
-  c.font = `600 ${s}px ${BALOO}`; const pw = c.measureText(pre).width, x = cx - total / 2;
-  c.textAlign = 'left'; c.textBaseline = 'alphabetic';
-  c.fillStyle = INK.soft; c.fillText(pre, x, y);
-  c.font = `800 ${s}px ${BALOO}`; c.fillStyle = INK.cream; c.fillText(alias, x + pw, y);
-  c.textBaseline = 'middle';
-}
-// One vertical rhythm per format. Blocks are measured by their ink (glyph edges, not text boxes) and stacked between
-// `top` and `bottom` (story: inside the ~250 px the apps cover at both ends): logo · photo · verdict (headline, score,
-// chips) · footer (nickname, address). The verdict and footer are tight groups (`near` gaps: headline→score,
-// score→chips, nickname→address); the leftover height is shared equally by the gaps between the groups, so the rhythm
-// never depends on the record ribbon or the nickname being there.
-const LAYOUT = {
-  story: {
-    top: 246, bottom: 1700, min: 40, logo: 196, photo: [60, 960, 540, 30], ribbon: 46,
-    head: 88, score: [108, 48, 190, 560], chips: [50, 22], alias: 48, url: 40, near: { score: 32, chips: 40, url: 32 },
-  },
-  square: {
-    top: 46, bottom: 1034, min: 22, logo: 136, photo: [44, 992, 360, 26], ribbon: 34,
-    head: 56, score: [70, 32, 118, 420], chips: [36, 18], alias: 34, url: 30, near: { score: 18, chips: 22, url: 20 },
-  },
+const CARD_FONT = fontStack("'Baloo 2', sans-serif");
+const PAPER = '#fff4df';
+const CARD_THEMES = {
+  'mulassa-valls': { name: 'MULASSA', bg: '#8a1628', ray: '#a8283e', ink: '#24050c' },
+  'drac-valls': { name: 'DRAC', bg: '#1f8a4c', ray: '#2a9e5a', ink: '#0b2414' },
+  'bou-tradicional-valls': { name: 'BOU', sub: 'hud.card.bouSub', bg: figThemes.bou.colors.pa, ray: figThemes.bou.colors.gua, ink: figThemes.bou.colors.paDk, rayA: 0.2 }, // its buttons' MA plum, faint rays of BRA sand (the light sand at 0.5 drowned the title); «Bou Tradicional» is its name
 };
-
-// items: [height, draw(top), fixed gap above (omit = a shared gap)]; the shared gap fills what the fixed ones leave
-function stack(top, bottom, min, items) {
-  const fixed = items.reduce((a, [h, , g = 0], i) => a + h + (i ? g : 0), 0), flex = items.filter(([, , g], i) => i && g === undefined).length;
-  const gap = Math.max(min, (bottom - top - fixed) / Math.max(1, flex));
-  let y = top;
-  items.forEach(([h, draw, g], i) => { if (i) y += g ?? gap; draw(y); y += h; });
+// Catalan diacritics always, plus the active language's sample (hud.share.fontSample).
+export async function loadCardFonts(fonts) {
+  if (!fonts) return;
+  // i18n-ok: glyph sample to preload the fonts
+  const sample = `MULASSA DRAC BOU DE VALLS FÀCIL DIFÍCIL 0123456789 ${tr('hud.share.fontSample')}`;
+  await Promise.all([600, 800].map(weight => fonts.load(`${weight} 80px "Baloo 2"`, sample)));
+  await fonts.ready;
+  if (fonts.check && ![600, 800].every(weight => fonts.check(`${weight} 80px "Baloo 2"`, sample))) throw new Error('card fonts unavailable');
 }
-
-// d: { stars, pct, score (comparable points), maxCombo, diffName, reason, newRecord, beaten, alias }
-export function drawCard(c, format, d, hero) {
-  const { w, h } = FORMATS[format];
-  c.canvas.width = w; c.canvas.height = h;
-  c.save();
-  frame(c, w, h);
-  const [head, headCol] = HEAD[d.reason] ?? HEAD.clear;
-  const badge = d.newRecord ? 'NOU RÈCORD DE PUNTS!' : d.beaten ? 'REPTE SUPERAT!' : null;
-  const L = LAYOUT[format];
-  if (L) { // story and square: one centre axis
-    const cx = w / 2;
-    if (format === 'story') { // the covered bands get the festa (garlands, confetti), never content
-      bunting(c, 30, w - 30, 40, 120, 17, 46); confetti(c, w, 60, 230, 14, 7);
-      bunting(c, 30, w - 30, 1780, 80, 17, 46); confetti(c, w, 1740, 1880, 16, 11);
+export function cardRank(d) {
+  const r = d.rank;
+  return Number.isInteger(r?.pos) && Number.isInteger(r?.total)
+    && r.pos > 0 && r.total >= r.pos ? r : null;
+}
+export function cardLayout(format, d) {
+  const story = format === 'story', rank = cardRank(d);
+  const aliasH = d.alias ? (story ? 36 : 31) : 0;
+  const ticketH = (story ? 282 : 236) + aliasH + (rank ? (story ? 88 : 74) : 0);
+  const disc = story ? 680 : 540, overlap = story ? 64 : 54;
+  const footY = story ? 1652 : 1236, titleBottom = story ? 460 : 295;
+  // Include the ticket shadow in the group's bounds. Feed has equal clear space above and below.
+  const groupH = disc - overlap + ticketH + 12;
+  const discY = story ? 470 : titleBottom + (footY - titleBottom - groupH) / 2;
+  return { w: 1080, h: story ? 1920 : 1350, story, disc, discY, ticketY: discY + disc - overlap,
+    ticketH, aliasH, footY, titleBottom, groupH, rank, titleY: story ? 310 : 160 };
+}
+const CJK = /[぀-ヿ㐀-鿿가-힯]/;
+function cardText(c, text, x, y, size, color, weight = 800, max = Infinity) {
+  c.font = `${weight} ${size}px ${CARD_FONT}`;
+  const width = c.measureText(String(text)).width;
+  c.fillStyle = color; c.textAlign = 'center'; c.textBaseline = 'middle';
+  if (width > max) {
+    // Too wide: break it in two lines inside the one-line block (half-size lines, same centre) before shrinking; a single unbreakable run just shrinks.
+    const half = size * 0.55, measure = s => c.measureText(s).width;
+    c.font = `${weight} ${half}px ${CARD_FONT}`;
+    const lines = wrapLines(String(text), measure, max, CJK.test(text));
+    if (lines.length > 1) {
+      const two = [lines[0], lines.slice(1).join(' ')];
+      two.forEach((line, i) => {
+        const w = measure(line);
+        if (w > max) c.font = `${weight} ${half * max / w}px ${CARD_FONT}`; else c.font = `${weight} ${half}px ${CARD_FONT}`;
+        c.fillText(line, x, y + (i - 0.5) * half);
+      });
+      return;
     }
-    const items = [], N = L.near;
-    { // the logo: MULASSA over TAP TAP DANCE, a fixed gap between their outlines
-      const big = L.logo, small = big * 0.36, lw1 = big * 0.1, lw2 = small * 0.16, a1 = ascent(c, 'MULASSA', big, PIXEL, 0), a2 = ascent(c, 'TAP TAP DANCE', small), lg = big * 0.12;
-      items.push([lw1 + a1 + lg + lw2 + a2, top => {
-        const b1 = top + lw1 / 2 + a1;
-        c.textAlign = 'center'; c.textBaseline = 'alphabetic';
-        outlined(c, 'MULASSA', cx, b1, big, INK.red, INK.cream, PIXEL, 0, lw1);
-        outlined(c, 'TAP TAP DANCE', cx, b1 + lw1 / 2 + lg + lw2 / 2 + a2, small, INK.gold, INK.dark);
-        c.textBaseline = 'middle';
-      }]);
-    }
-    { // the photo and the record ribbon on its top edge (it overhangs it: its room counts)
-      const [px, pw, ph, pr] = L.photo, up = badge ? L.ribbon * 0.25 + 4 : 0;
-      items.push([up + ph, top => {
-        const py = top + up;
-        photo(c, hero, px, py, pw, ph, pr);
-        if (badge) ribbon(c, badge, cx, py + L.ribbon * 0.6, L.ribbon);
-      }]);
-    }
-    { // the verdict: headline, then the score group, then the chips
-      const hs = fit(c, head, L.head, w - 160), lw = hs * 0.16, a = ascent(c, head, hs);
-      items.push([a + lw, top => {
-        c.textAlign = 'center'; c.textBaseline = 'alphabetic';
-        outlined(c, head, cx, top + lw / 2 + a, hs, headCol, INK.dark);
-        c.textBaseline = 'middle';
-      }]);
-      const [r, label, pct, maxW] = L.score;
-      items.push([2 * r, top => score(c, d, cx, top + r, r, label, fit(c, `${d.pct}%`, pct, maxW)), N.score]);
-      const [cs, cg] = L.chips;
-      items.push([cs * 1.6, top => chips(c, [[d.diffName, INK.gold], [`RATXA ${d.maxCombo}`, '#ff8fb1'], [`${d.score.toLocaleString('ca-ES')} PUNTS`, INK.score]], cx, top + cs * 0.8, cs, cg), N.chips]);
-    }
-    if (d.alias) { // the footer: nickname (its cap height) over the address, close together
-      const a = ascent(c, 'H', L.alias, BALOO, 800);
-      items.push([a, top => dancer(c, d.alias, cx, top + a, L.alias, w - 240)]);
-    }
-    items.push([L.url * 1.76, top => address(c, cx, top + L.url * 0.88, L.url), d.alias ? N.url : undefined]);
-    stack(L.top, L.bottom, L.min, items);
-  } else { // og (the link preview): the plaça full bleed, her on the right; logo, GUA | PA and the address left
-    photo(c, hero, 0, 0, w, h, 0, 0); // a wider render keeps her on the right, clear of the logo
-    const g = c.createLinearGradient(0, 0, w * 0.66, 0);
-    g.addColorStop(0, 'rgba(28,17,10,0.86)'); g.addColorStop(0.55, 'rgba(28,17,10,0.55)'); g.addColorStop(1, 'rgba(28,17,10,0)');
-    c.fillStyle = g; c.fillRect(0, 0, w, h);
-    const cx = 330;
-    logo(c, cx, 170, 148);
-    c.textAlign = 'center'; c.textBaseline = 'middle';
-    for (const [s, col, x] of [['GUA', '#ff7a1a', cx - 92], ['PA', '#14b8a6', cx + 92]]) { // the two halves of the pad
-      c.beginPath(); c.roundRect(x - 84, 360, 168, 84, 18); c.fillStyle = col; c.fill(); c.lineWidth = 5; c.strokeStyle = INK.dark; c.stroke();
-      outlined(c, s, x, 406, 52, '#ffffff', INK.dark);
-    }
-    c.font = `800 34px ${BALOO}`;
-    const aw = c.measureText(SITE_LABEL).width + 56;
-    c.beginPath(); c.roundRect(cx - aw / 2, 492, aw, 60, 30); c.fillStyle = INK.gold; c.fill();
-    c.fillStyle = INK.dark; c.fillText(SITE_LABEL, cx, 524);
+    c.font = `${weight} ${size * max / width}px ${CARD_FONT}`;
+  }
+  c.fillText(String(text), x, y);
+}
+function cardBox(c, x, y, w, h, r, color) {
+  c.beginPath(); c.roundRect(x, y, w, h, r); c.fillStyle = color; c.fill();
+}
+function cardRays(c, w, h, cy, theme) {
+  c.fillStyle = theme.bg; c.fillRect(0, 0, w, h);
+  c.save(); c.translate(w / 2, cy); c.globalAlpha = theme.rayA ?? 0.5; c.fillStyle = theme.ray;
+  for (let i = 0; i < 24; i++) {
+    const a = i * Math.PI / 12;
+    c.beginPath(); c.moveTo(0, 0); c.arc(0, 0, 2400, a, a + Math.PI / 24); c.closePath(); c.fill();
   }
   c.restore();
-  return c.canvas;
 }
-
-export const cardAlt = (format, d) => `Imatge per compartir (${format === 'story' ? 'story' : 'quadrada'}): la Mulassa de Valls, ${d.stars} ${d.stars === 1 ? 'estrella' : 'estrelles'}, ${d.pct}% d’encerts a ${d.diffName}, ratxa màxima ${d.maxCombo}, ${d.score.toLocaleString('ca-ES')} punts${d.newRecord ? ' (nou rècord)' : ''}.`;
-
-export function toJpeg(canvas, quality = 0.9) { // -> File (the name the share sheet and the download use)
-  return new Promise((resolve, reject) => canvas.toBlob(b => (b ? resolve(new File([b], CARD_FILE, { type: 'image/jpeg' })) : reject(new Error('card'))), 'image/jpeg', quality));
+function cardPhoto(c, hero, x, y, diameter, ink) {
+  const r = diameter / 2;
+  c.beginPath(); c.arc(x + 22, y + 26, r, 0, Math.PI * 2); c.fillStyle = ink; c.fill();
+  c.beginPath(); c.arc(x, y, r, 0, Math.PI * 2); c.fillStyle = PAPER; c.fill();
+  c.save(); c.beginPath(); c.arc(x, y, r - 18, 0, Math.PI * 2); c.clip();
+  if (hero) {
+    const k = (diameter - 36) / Math.min(hero.width, hero.height);
+    c.drawImage(hero, x - hero.width * k / 2, y - hero.height * k / 2, hero.width * k, hero.height * k);
+  } else {
+    c.fillStyle = '#d2bd91'; c.fillRect(x - r, y - r, diameter, diameter);
+  }
+  c.restore();
+}
+function cardTitle(c, theme, y, story) {
+  c.save(); c.translate(540, y); c.rotate(-Math.PI / 45);
+  const size = story ? (theme.name === 'MULASSA' ? 214 : 224) : (theme.name === 'MULASSA' ? 150 : 176); // (the short names fill the same width larger)
+  const label = tr(theme.sub || 'hud.card.deValls');
+  c.font = `800 ${story ? 82 : 56}px ${CARD_FONT}`;
+  const sub = (story ? 82 : 56) * Math.min(1, (story ? 760 : 560) / c.measureText(label).width); // a longer name shrinks to the title's width
+  cardText(c, theme.name, 10, 10, size, theme.ink);
+  cardText(c, theme.name, 0, 0, size, PAPER);
+  cardText(c, label, 6, size * 0.54 + 6, sub, theme.ink);
+  cardText(c, label, 0, size * 0.54, sub, PAPER);
+  c.restore();
+}
+function cardFooter(c, y, story, ink) {
+  const size = story ? 38 : 32, h = story ? 78 : 68, gap = story ? 26 : 22;
+  c.font = `800 ${size}px ${CARD_FONT}`;
+  const labels = [SITE_LABEL, 'mulassa_cat'];
+  const widths = labels.map(s => c.measureText(s).width + size * 2.94);
+  let x = (1080 - widths[0] - widths[1] - gap) / 2;
+  labels.forEach((label, i) => {
+    const w = widths[i];
+    cardBox(c, x + 7, y + 8, w, h, h / 2, ink);
+    const grad = c.createLinearGradient(x, y + h, x + w, y);
+    [['#fdd56b', 0], ['#f56040', .13], ['#e1306c', .36], ['#c13584', .62], ['#833ab4', .84], ['#5b51d8', 1]].forEach(([col, stop]) => grad.addColorStop(stop, col));
+    cardBox(c, x, y, w, h, h / 2, i ? grad : '#f5c518');
+    const ix = x + size * 1.14, iy = y + h / 2, color = i ? '#fff' : '#24050c';
+    if (i) {
+      c.save(); c.translate(ix, iy); c.strokeStyle = color; c.lineWidth = size * .095;
+      c.beginPath(); c.roundRect(-size * .43, -size * .43, size * .86, size * .86, size * .23); c.stroke();
+      c.beginPath(); c.arc(0, 0, size * .19, 0, Math.PI * 2); c.stroke();
+      c.beginPath(); c.arc(size * .25, -size * .25, size * .05, 0, Math.PI * 2); c.fillStyle = color; c.fill(); c.restore();
+    } else {
+      c.beginPath(); c.moveTo(ix - size * .28, iy - size * .36); c.lineTo(ix + size * .35, iy); c.lineTo(ix - size * .28, iy + size * .36); c.closePath(); c.fillStyle = color; c.fill();
+    }
+    cardText(c, label, x + w / 2 + size * .6, iy + 2, size, color);
+    x += w + gap;
+  });
+}
+// the board's «Correu confirmat» check (src/ui/profile-notes.js CHECK_SVG), the same shape: a blue disc, a white tick.
+// It proves nothing on an image: it repeats what the game knew when it drew it.
+function cardCheck(c, x, y, r) {
+  const k = r / 10;
+  c.beginPath(); c.arc(x, y, r, 0, Math.PI * 2); c.fillStyle = '#3b9cff'; c.fill();
+  c.beginPath(); c.moveTo(x - 4.5 * k, y + 0.3 * k); c.lineTo(x - 1.5 * k, y + 3.3 * k); c.lineTo(x + 4.5 * k, y - 3 * k);
+  c.strokeStyle = '#fff'; c.lineWidth = 2.6 * k; c.lineCap = 'round'; c.lineJoin = 'round'; c.stroke();
+}
+function cardTicket(c, d, L, theme) {
+  const { story, ticketY: y, ticketH: h, aliasH, rank } = L;
+  const w = story ? 850 : 790, x = (1080 - w) / 2;
+  cardBox(c, x, y + 12, w, h, 34, theme.ink);
+  cardBox(c, x, y, w, h, 34, PAPER);
+  if (aliasH) { // the name as the boards show it: a guest's «nom#1234», or the confirmed address's check after it
+    const size = story ? 40 : 34, tick = d.verified ? Math.round(size * 0.8) : 0, gap = tick ? Math.round(size * 0.25) : 0;
+    c.font = `600 ${size}px ${CARD_FONT}`;
+    let alias = String(d.alias), max = w - 128 - tick - gap;
+    while (alias.length && c.measureText(alias).width > max) alias = alias.slice(0, -1);
+    if (alias !== String(d.alias)) alias = alias.slice(0, -1) + '…';
+    const x = 540 - (tick + gap) / 2, tw = Math.min(max, c.measureText(alias).width);
+    cardText(c, alias, x, y + 26, size, theme.ink, 600, max);
+    if (tick) cardCheck(c, x + tw / 2 + gap + tick / 2, y + 26, tick / 2);
+  }
+  const points = Number.isFinite(d.score) ? fmtNum(Math.round(d.score)) : '—';
+  cardText(c, points, 540, y + aliasH + (story ? 88 : 72), story ? 150 : 118, theme.ink, 800, w - 100);
+  cardText(c, tr('hud.card.points'), 540, y + aliasH + (story ? 170 : 140), story ? 30 : 26, theme.ink);
+  const rowY = y + aliasH + (story ? 232 : 194), levelH = story ? 62 : 54;
+  const levels = DIFFS.map(l => l.name), level = levels[d.diff] || d.diffName || levels[0];
+  const colors = ['#8fd98f', '#f0b04a', '#ef7b6a'];
+  const diff = Number.isInteger(d.diff) ? d.diff : levels.indexOf(level);
+  // Measure the whole row before drawing: 100%, long streaks and every level stay separated.
+  const statSize = story ? 54 : 46, labSize = story ? 31 : 28, gap = story ? 28 : 24;
+  const pieces = [[`${d.pct}%`, statSize, 800], [tr('hud.card.hits'), labSize, 600],
+    [String(d.maxCombo), statSize, 800], [tr('hud.card.streak'), labSize, 600]];
+  const widths = pieces.map(([text, size, weight]) => { c.font = `${weight} ${size}px ${CARD_FONT}`; return c.measureText(text).width; });
+  const total = 194 + gap * 3 + 3 + widths.reduce((a, b) => a + b, 0) + 16;
+  const rowScale = Math.min(1, (w - 96) / total);
+  c.save(); c.translate(540, rowY); c.scale(rowScale, rowScale);
+  let cursor = -total / 2;
+  cardBox(c, cursor, -levelH / 2, 194, levelH, levelH / 2, colors[diff] || colors[0]);
+  cardText(c, level, cursor + 97, 2, story ? 32 : 28, '#2a1a10');
+  cursor += 194 + gap;
+  pieces.forEach(([text, size, weight], i) => {
+    if (i === 2) { c.fillStyle = '#2a1a1030'; c.fillRect(cursor + gap / 2, -21, 3, 42); cursor += gap + 3; }
+    cardText(c, text, cursor + widths[i] / 2, weight === 600 ? 6 : 0, size, theme.ink, weight);
+    cursor += widths[i] + (i % 2 === 0 ? 8 : gap);
+  });
+  c.restore();
+  if (rank) {
+    const lineY = rowY + levelH / 2 + 18;
+    c.save(); c.setLineDash([7, 5]); c.lineWidth = 3; c.strokeStyle = theme.ink + '70';
+    c.beginPath(); c.moveTo(x + 64, lineY); c.lineTo(x + w - 64, lineY); c.stroke(); c.restore();
+    cardText(c, tr('hud.card.best', { pos: fmtNum(rank.pos), total: fmtNum(rank.total) }), 540, lineY + (story ? 42 : 35), story ? 38 : 32, theme.bg, 800, w - 100);
+  }
+}
+export function drawCard(c, format, d, hero) {
+  const theme = CARD_THEMES[d.figureId] || CARD_THEMES['mulassa-valls'];
+  if (format === 'og') {
+    c.canvas.width = 1200; c.canvas.height = 630; c.save();
+    cardRays(c, 1200, 630, 315, theme); cardPhoto(c, hero, 900, 315, 540, theme.ink);
+    c.translate(-230, 0); cardTitle(c, theme, 210, false);
+    cardText(c, SITE_LABEL, 540, 480, 48, PAPER); c.restore(); return c.canvas;
+  }
+  const L = cardLayout(format, d);
+  c.canvas.width = L.w; c.canvas.height = L.h; c.save();
+  cardRays(c, L.w, L.h, L.discY + L.disc / 2, theme);
+  cardPhoto(c, hero, 540, L.discY + L.disc / 2, L.disc, theme.ink);
+  cardTitle(c, theme, L.titleY, L.story);
+  cardTicket(c, d, L, theme); cardFooter(c, L.footY, L.story, theme.ink);
+  c.restore(); return c.canvas;
+}
+export const cardAlt = (format, d) => tr('hud.card.alt', { format: tr(format === 'story' ? 'hud.card.altStory' : 'hud.card.altPost'), figure: tr(traitsOf(d.figureId).cardAlt), score: d.score ?? '—', pct: d.pct, level: d.diffName, combo: d.maxCombo });
+// The JPEG is encoded in a worker where the browser can: on the main thread toBlob froze the share sheet's opening
+// (~100 ms on a Galaxy S10, 3 s into the results). Without OffscreenCanvas, or if the worker fails, toBlob as before.
+let jpegWorker = null, jpegSeq = 0;
+const offscreenJpeg = typeof Worker === 'function' && typeof OffscreenCanvas === 'function' && typeof createImageBitmap === 'function';
+const mainJpeg = (canvas, quality) => new Promise((resolve, reject) => canvas.toBlob(b => b ? resolve(b) : reject(new Error('card')), 'image/jpeg', quality));
+async function workerJpeg(canvas, quality) {
+  jpegWorker ??= new Worker(new URL('./card-jpeg-worker.js', import.meta.url), { type: 'module' });
+  const bitmap = await createImageBitmap(canvas), id = ++jpegSeq, worker = jpegWorker;
+  return new Promise((resolve, reject) => {
+    const done = () => { worker.removeEventListener('message', reply); worker.removeEventListener('error', failed); };
+    const reply = ({ data }) => { if (data.id !== id) return; done(); data.blob ? resolve(data.blob) : reject(new Error(data.error)); };
+    const failed = () => { done(); if (jpegWorker === worker) jpegWorker = null; reject(new Error('card-worker')); }; // (a worker that never loaded: the next card tries a new one)
+    worker.addEventListener('message', reply); worker.addEventListener('error', failed);
+    worker.postMessage({ id, bitmap, quality }, [bitmap]);
+  });
+}
+export function toJpeg(canvas, quality = 0.9, figureId = 'mulassa-valls') {
+  const name = traitsOf(figureId).cardFile ?? CARD_FILE;
+  const blob = offscreenJpeg ? workerJpeg(canvas, quality).catch(() => mainJpeg(canvas, quality)) : mainJpeg(canvas, quality);
+  return blob.then(b => new File([b], name, { type: 'image/jpeg' }));
 }

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Models voxel del bestiari"
+  short_description: "Model, poliment i verificació 3D d'una figura"
+  default_prompt: "Aplica $mulassacat-voxel per revisar el model i l'animació amb referències reals, proves geomètriques i vídeo abans/després."

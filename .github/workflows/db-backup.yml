@@ -1,8 +1,8 @@
 name: Database backup
 
-# Cloudflare's isolated scheduler (or Marc) dispatches this workflow on the default branch.
+# Cloudflare's isolated scheduler (or the owner) dispatches this workflow on the default branch.
 # BACKUP_ENABLED gates all exports. There is deliberately no GitHub schedule trigger.
-# Read docs/db-backup.md before activating. Production access stays in the protected environment.
+# Read docs/ops/db-backup.md before activating. Production access stays in the protected environment.
 on:
   workflow_dispatch:
 
@@ -49,7 +49,7 @@ jobs:
         run: |
           set -euo pipefail
           python3 -m venv "$RUNNER_TEMP/venv"
-          "$RUNNER_TEMP/venv/bin/pip" install --require-hashes --only-binary=:all: -r tools/db-backup-requirements.txt
+          "$RUNNER_TEMP/venv/bin/pip" install --require-hashes --only-binary=:all: -r tools/data/db-backup-requirements.txt
 
       - name: Prepare the private work area
         env:
@@ -82,4 +82,4 @@ jobs:
           BACKUP_SENTRY_CHECKIN_URL: ${{ secrets.BACKUP_SENTRY_CHECKIN_URL }}
         run: |
           set -euo pipefail
-          "$RUNNER_TEMP/venv/bin/python" -I tools/db_backup.py run-production
+          "$RUNNER_TEMP/venv/bin/python" -I tools/data/db_backup.py run-production

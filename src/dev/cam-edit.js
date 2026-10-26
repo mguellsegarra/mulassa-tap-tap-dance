@@ -5,7 +5,8 @@
 //   right-drag / shift-drag   where she stands on the screen (vertical)         overlay buttons: fov, auto, copy, hide
 // «Copia» puts one JSON line on the clipboard (the viewport, K, the stage, your values and the auto ones): that is what the
 // per-device camera is fitted from. (The clipboard API needs https; on a LAN http page it falls back to a selectable box.)
-const DEG = Math.PI / 180, clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+import { DEG } from '../core/math.js';
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const FOCUS_Y = 1.4; // the point of her the camera looks at (as framePlayCamera)
 
 function camPose(ce, mx, mz, out) { // camera position for az/el/dist round (mx, FOCUS_Y, mz)

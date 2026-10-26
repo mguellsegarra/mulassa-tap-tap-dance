@@ -1,20 +1,22 @@
 {
   "name": "mulassa-tap-tap-dance",
-  "version": "1.1.0",
+  "version": "1.3.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite --host --port 5178",
     "build": "vite build",
-    "release": "node tools/release.mjs",
-    "build:pages": "npm run check && npm run build && node tools/seo-pages.mjs && node tools/prepare-pages.mjs",
-    "cf:login": "node tools/cloudflare.mjs login",
-    "cf:whoami": "node tools/cloudflare.mjs whoami",
-    "cf:projects": "node tools/cloudflare.mjs projects",
-    "cf:deployments": "node tools/cloudflare.mjs deployments",
-    "deploy:pages": "node tools/cloudflare.mjs deploy",
-    "check": "node check.mjs && node tests/modules.mjs && node tests/render-quality.mjs && node tests/quality-boot.mjs && node tests/crowd-fx.mjs && node tests/audio.mjs && node tests/loader.mjs && node tests/sheet-bar.mjs && node tests/onboarding.mjs && node tests/energy.mjs && node tests/bubbles.mjs && node tests/framing.mjs && node tests/orbit.mjs && node tests/dance.mjs && node tests/layout.mjs && node tests/privacy-fonts.mjs && node tests/errors.mjs && node tests/pages.mjs && node tests/seo.mjs && node tests/cloudflare-config.mjs && node tests/leaderboard.mjs && node tests/leaderboard-db.mjs && node tests/leaderboard-delete.mjs && node tests/feedback.mjs && node tests/feedback-ui.mjs && node tests/alias-rules.mjs && node tests/leaderboard-all.mjs && node tests/seed-phaseout.mjs && node tests/score-ceiling.mjs && node tests/board-ui.mjs && node tests/profile-ui.mjs && node tests/captcha.mjs && node tests/share.mjs && node tests/final-test.mjs && node tests/version.mjs && node tests/short-ranking-db.mjs && node tests/record-by-score-db.mjs && node tests/score-scale.mjs && node tests/db-backup.mjs && node tests/backup-scheduler.mjs && node tests/release.mjs && node tests/update.mjs",
-    "check:leaderboard": "node tests/leaderboard.mjs && node tests/leaderboard-db.mjs && node tests/leaderboard-delete.mjs && node tests/alias-rules.mjs && node tests/leaderboard-all.mjs && node tests/seed-phaseout.mjs && node tests/score-ceiling.mjs && node tests/board-ui.mjs && node tests/profile-ui.mjs && node tests/captcha.mjs && node tests/short-ranking-db.mjs && node tests/record-by-score-db.mjs && node tests/score-scale.mjs"
+    "capture": "node tools/qa/capture.mjs",
+    "audit:bou": "node tools/qa/bou-audit.mjs",
+    "sweep:bou": "node tools/qa/bou-sweep.mjs",
+    "build:pages": "npm run check && npm run build && node tools/deploy/seo-pages.mjs && node tools/deploy/prepare-pages.mjs",
+    "cf:login": "node tools/deploy/cloudflare.mjs login",
+    "cf:whoami": "node tools/deploy/cloudflare.mjs whoami",
+    "cf:projects": "node tools/deploy/cloudflare.mjs projects",
+    "cf:deployments": "node tools/deploy/cloudflare.mjs deployments",
+    "deploy:pages": "node tools/deploy/cloudflare.mjs deploy",
+    "check": "node tests/run.mjs",
+    "check:leaderboard": "node tests/run.mjs --group=leaderboard"
   },
   "dependencies": {
     "@sentry/browser": "^11.0.0",

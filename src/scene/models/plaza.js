@@ -71,7 +71,26 @@ function escut(v, face, cx, cz, a, y, n, s) {
   fbox(v, face, cx, cz, a, y + s + 0.01, n, s * 0.5, s * 0.1, 0.03, FLAG.gold); // the crown's wall...
   for (const k of [-1, 0, 1]) fbox(v, face, cx, cz, a + k * s * 0.19, y + s + 0.01 + s * 0.1, n, s * 0.1, s * 0.08, 0.03, FLAG.gold); // ...and towers
 }
-function building(v, x, z, w, h, d, face, arcade, deco = v, spots = [], arms = false) {
+// The fronts cast no live shadows (shadow casters are an allow-list, and they lie outside the sun's tight shadow box), so
+// each balcony's shadow on a sunlit front is painted in: the slab's shadow is a parallelogram running down and away
+// from the sun (`sun`: the light's position, from stage.js), one sheared plate a shade darker than the wall (0.75: what
+// the live shadow measured on screen), merged into the buildings' mesh (no extra draw call).
+const SUN_K = 0.75;
+const shade = (hex, k) => '#' + [1, 3, 5].map(i => Math.round(parseInt(hex.slice(i, i + 2), 16) * k).toString(16).padStart(2, '0')).join('');
+function balconyShadow(v, sun, col, [fx, fz], bx, top, bz, depth, span) {
+  const len = Math.hypot(...sun), facing = (sun[0] * fx + sun[2] * fz) / len; // > 0: the sun lights this front
+  if (facing <= 0.05) return;
+  const drop = depth * sun[1] / len / facing, slide = -depth * (fx === 0 ? sun[0] : sun[2]) / len / facing;
+  const g = new THREE.PlaneGeometry(span, drop), pos = g.attributes.position;
+  for (let i = 0; i < pos.count; i++) pos.setX(i, pos.getX(i) + slide * (drop / 2 - pos.getY(i)) / drop); // the far edge slides
+  g.rotateY(Math.atan2(fx, fz)); // (its local x then runs along the front the way `slide` is measured)
+  g.translate(bx - fx * (depth / 2 + 0.005), top - drop / 2, bz - fz * (depth / 2 + 0.005)); // 1.5 cm off the wall, behind the windows
+  const c = new THREE.Color(shade(col, SUN_K)), rgb = new Float32Array(pos.count * 3);
+  for (let i = 0; i < rgb.length; i += 3) rgb.set([c.r, c.g, c.b], i);
+  g.setAttribute('color', new THREE.BufferAttribute(rgb, 3));
+  v.g.push(g); // (not Vox.add: its colour jitter draws on Math.random even at 0, and would reshuffle the plaça's random layout)
+}
+function building(v, x, z, w, h, d, face, arcade, deco = v, spots = [], arms = false, sun = null) {
   const col = pick(WALL);
   v.box(x, 0, z, w, h, d, col);
   v.box(x, h, z, w + 0.3, 0.25, d + 0.3, '#b5563a'); // teula
@@ -96,6 +115,7 @@ function building(v, x, z, w, h, d, face, arcade, deco = v, spots = [], arms = f
       if (fl > 0 && Math.random() < 0.6) { // balcony
         const bx = px + fx * 0.35, bz = pz + fz * 0.35;
         v.box(bx, y - 0.1, bz, fx === 0 ? 1.2 : 0.7, 0.1, fx === 0 ? 0.7 : 1.2, '#8a8580');
+        if (sun) balconyShadow(v, sun, col, face, bx, y - 0.1, bz, 0.7, 1.2);
         v.box(bx + fx * 0.33, y, bz + fz * 0.33, fx === 0 ? 1.2 : 0.05, 0.6, fx === 0 ? 0.05 : 1.2, '#2a2a2a');
         const hid = big && Math.abs(a) < 1.4 && y > h - 4.6; // behind the big estelada
         if (fl === 1 && !hid) spots.push({ x: px + fx * 0.3, z: pz + fz * 0.3, y, fx, fz }); // room for someone to look out
@@ -125,7 +145,7 @@ function lamp(v, x, z) {
   v.box(x, 3.9, z, 0.4, 0.5, 0.4, '#fff2b0', 0).box(x, 4.4, z, 0.5, 0.12, 0.5, '#222');
 }
 // One hanging flag on its own (kind as in hanging(); big: the one from the eaves), a mesh per layer, for the
-// z-fighting scan in tests/render-quality.mjs.
+// z-fighting scan in tests/render/render-quality.mjs.
 export function buildFlag(kind, big = false) {
   const v = new Vox(), g = new THREE.Group();
   hanging(v, [0, 1], 0, 0, big ? 2.6 : 1.0, 0, big ? 1.5 : 0.62, big ? 2.6 : 1.0, kind);
@@ -134,10 +154,14 @@ export function buildFlag(kind, big = false) {
 }
 // backdrop: how many simple figures stand along the façades; balconies: how many people look out of the first floors
 // (waving: skinnable people returned in `balcony` for the crowd mesh, else static boxes merged into the buildings).
-export function buildPlaza({ backdrop = 0, balconies = 0, waving = false } = {}) {
+// the paving: S m square of T m tiles, alternating light/dark (figures/bou/bou-show.js lights them for the Bou's disco)
+export const PAVING = { size: 34, tile: 2 };
+// Static scenery never moves (only its visibility toggles): its local matrix is computed once, not every frame.
+const freezeStatic = m => { m.matrixAutoUpdate = false; m.updateMatrix(); return m; };
+export function buildPlaza({ backdrop = 0, balconies = 0, waving = false, sun = null } = {}) {
   const group = new THREE.Group();
   const v = new Vox();
-  const S = 34, T = 2;
+  const S = PAVING.size, T = PAVING.tile;
   for (let x = -S / 2; x < S / 2; x += T) for (let z = -S / 2; z < S / 2; z += T) {
     const light = ((x + z) / T) % 2 === 0;
     v.box(x + T / 2, -0.1, z + T / 2, T - 0.06, 0.1, T - 0.06, light ? '#dccaa8' : '#cfb994', 0.03);
@@ -145,7 +169,7 @@ export function buildPlaza({ backdrop = 0, balconies = 0, waving = false } = {})
   v.box(0, -0.2, 0, S + 40, 0.12, S + 40, '#8a7a66', 0);
   const floor = v.mesh();
   floor.castShadow = false;
-  group.add(floor);
+  group.add(freezeStatic(floor));
 
   const b = new Vox(), deco = new Vox(); // deco: the flags, merged into the buildings' mesh (no extra draw call)
   const E = S / 2 + 3, spots = [];
@@ -154,14 +178,14 @@ export function buildPlaza({ backdrop = 0, balconies = 0, waving = false } = {})
   for (let a = -E + 1; a < E; a += 0) {
     const w = rnd(4, 6.5), here = arms && w > 5.2 && Math.abs(a + w / 2) < 8;
     if (here) arms = false;
-    building(b, a + w / 2, -E, w, rnd(8, 12), 5, [0, 1], true, deco, spots, here);
-    building(b, a + w / 2, E, w, rnd(7, 11), 5, [0, -1], false, deco, spots);
+    building(b, a + w / 2, -E, w, rnd(8, 12), 5, [0, 1], true, deco, spots, here, sun);
+    building(b, a + w / 2, E, w, rnd(7, 11), 5, [0, -1], false, deco, spots, false, sun);
     a += w;
   }
   for (let a = -E + 3; a < E - 3; a += 0) {
     const w = rnd(4, 6.5);
-    building(b, -E, a + w / 2, 5, rnd(7, 11), w, [1, 0], false, deco, spots);
-    building(b, E, a + w / 2, 5, rnd(8, 12), w, [-1, 0], false, deco, spots);
+    building(b, -E, a + w / 2, 5, rnd(7, 11), w, [1, 0], false, deco, spots, false, sun);
+    building(b, E, a + w / 2, 5, rnd(8, 12), w, [-1, 0], false, deco, spots, false, sun);
     a += w;
   }
   // campanar de Sant Joan behind the north side
@@ -171,10 +195,10 @@ export function buildPlaza({ backdrop = 0, balconies = 0, waving = false } = {})
   for (const [dx, dz, w, d] of [[0, 2.32, 1.4, 0.1], [0, -2.32, 1.4, 0.1], [2.32, 0, 0.1, 1.4], [-2.32, 0, 0.1, 1.4]]) b.box(cx + dx, 27.5, cz + dz, w, 2.6, d, '#2b2525', 0);
   b.box(cx, 31.5, cz, 3.4, 0.5, 3.4, '#b59c74').box(cx, 32, cz, 2, 2.5, 2, '#c9ae83').box(cx, 34.5, cz, 0.8, 1.5, 0.8, '#b59c74').box(cx, 36, cz, 0.12, 1.4, 0.12, '#333');
   b.box(cx, 18, cz + 3.02, 1.8, 1.8, 0.06, '#f5f0e0', 0).box(cx, 18.85, cz + 3.06, 0.8, 0.1, 0.02, '#222', 0);
-  // Trees and lamps: each its own mesh (main.js hides one that would stand between the camera and the mulassa or
+  // Trees and lamps: each its own mesh (ui/frame-camera.js hides one that would stand between the camera and the mulassa or
   // against the lens) and set back by the building fronts, out of the play camera's path (south of her, x within ~9).
   const props = [];
-  const prop = (make, x, z, r, h) => { const pv = new Vox(); make(pv, x, z); const m = pv.mesh(); group.add(m); props.push({ mesh: m, x, z, r, h }); };
+  const prop = (make, x, z, r, h) => { const pv = new Vox(); make(pv, x, z); const m = pv.mesh(); m.castShadow = false; group.add(freezeStatic(m)); props.push({ mesh: m, x, z, r, h }); };
   for (const [x, z] of [[-15.2, -15.2], [15.2, -15.2], [-15.2, 15.2], [15.2, 15.2], [-15.2, -3], [15.2, -3]]) prop(tree, x, z, 2.2, 5.5);
   for (const [x, z] of [[-9, -16.6], [9, -16.6], [-16.6, 7], [16.6, 7], [-6, 16.6], [6, 16.6]]) prop(lamp, x, z, 0.4, 4.6);
   // banderetes strung across the plaça
@@ -215,7 +239,9 @@ export function buildPlaza({ backdrop = 0, balconies = 0, waving = false } = {})
     p.g.updateMatrixWorld(true);
     p.g.traverse(o => o.isMesh && b.g.push(o.geometry.applyMatrix4(o.matrixWorld)));
   }
-  group.add(b.mesh());
+  const buildings = b.mesh();
+  buildings.castShadow = false; // static and mostly outside the played ground: it only receives (shadow casters are an allow-list)
+  group.add(freezeStatic(buildings));
 
   // the banda de música that plays the ball (buildMusician), all of them: main.js places them and thins them out (placeBand)
   const band = BAND.map(([kind, row]) => Object.assign(buildMusician(kind), { kind, row }));

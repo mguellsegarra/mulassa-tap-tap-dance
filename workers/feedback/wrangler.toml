@@ -1,4 +1,4 @@
-# «Bústia de la plaça» (src/services/feedback.js → VITE_FEEDBACK_URL): Turnstile, then one plain-text e-mail to Marc through
+# «Bústia de la plaça» (src/services/feedback.js → VITE_FEEDBACK_URL): Turnstile, then one plain-text e-mail to the owner through
 # Email Routing's send_email binding (free; only to verified destination addresses). Nothing is stored.
 # Deploy: cd workers/feedback && CLOUDFLARE_ACCOUNT_ID=<compte> npx wrangler deploy
 # Secrets (once each; wrangler prompts for the value):

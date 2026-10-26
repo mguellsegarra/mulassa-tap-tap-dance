@@ -1,0 +1,21 @@
+{
+  "revision": 20,
+  "cutBeats": 4,
+  "cutSeconds": 2.0,
+  "audio": "bou-tradicional-v14-mobile.mp3",
+  "audioSha256": "30985e3ac3b007770776b8b967cf59fe36e0e12e0bccf7ae9244f2ebb360dacf",
+  "duration": 152.334716553288,
+  "baseAudio": "bou-tradicional-v13.mp3",
+  "baseSha256": "798aed470cc580269fee005cceb7e3df2cb795fec9ae459222e2267293345918",
+  "change": "Mid-bass kick body; no drum on the first melody note; a full intro (louder hits, shaker, hats, tambourine, C/G bass) of 8 beats, its first bar cut; the score corrections (bar 12, Gralla I: B natural, the PDF misses the sign); other events, tempo, voices and master gain preserved",
+  "phoneSimulationHz": [
+    200,
+    5000
+  ],
+  "kickBandGainDb": 10.521685542879037,
+  "decodedPeak": 0.785369873046875,
+  "agentListeningVerified": false,
+  "physicalPhoneVerified": false,
+  "userListeningAccepted": false,
+  "activation": "Requested by the owner; physical-phone listening pending"
+}

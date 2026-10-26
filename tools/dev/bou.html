@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="ca"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Bou Tradicional · model</title>
+<style>html,body{margin:0;height:100%;overflow:hidden;background:#b8c7c9;font-family:system-ui}canvas{display:block;width:100%;height:100%;touch-action:none}
+#bar{position:fixed;left:8px;top:8px;display:flex;gap:6px}#views{position:fixed;left:8px;bottom:8px;right:8px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+#cam{position:fixed;right:8px;top:8px;font:12px ui-monospace,monospace;background:#fff8e8e0;padding:6px 8px;border-radius:8px;white-space:pre}
+#ref{position:fixed;right:8px;bottom:64px;width:38vw;max-height:60vh;border-radius:12px;background:#000}
+#sync{font:13px ui-monospace,monospace;padding:8px;border-radius:10px;border:1px solid #6b5a3c}
+#bar select,#bar button,#views button,#pick{font:15px system-ui;padding:8px 10px;border-radius:10px;border:1px solid #6b5a3c;background:#fff8e8}</style></head>
+<body><canvas id="c"></canvas><div id="bar"><select id="m"></select><button id="spin">Gira</button><button id="dance">Balla</button><button id="music">Música</button>
+<label id="pick">Vídeo…<input id="vidfile" type="file" accept="video/*" hidden></label><input id="sync" size="22" title="Segons del vídeo on sonen les 4 notes llargues (compassos 1, 2, 5 i 6)"><button id="ears">So: joc</button>
+</div><video id="ref" muted playsinline hidden></video>
+<div id="views"><button data-v="front">Davant</button><button data-v="side">Costat</button><button data-v="q">3/4</button><button data-v="top">Dalt</button><button data-v="head">Cap</button><button data-v="back">Darrere</button>
+<button id="anim">Atura l'animació</button><input id="time" type="range" min="0" max="15" step="0.02" value="0" disabled><span id="tlab"></span><button id="copy">Copia la vista</button></div>
+<div id="cam"></div>
+<script type="module">
+// Inspector: drag the tail, preset views, double-click to orbit round the clicked point, pause and scrub the
+// head's gag, and «Copia la vista» copies one line (head, time, camera, target) to give directions from.
+// Free 3D look at the Bou model, figures/bou/bou.js (dev only; «Balla» shakes it so the tail swings): drag to orbit, pinch or wheel to zoom, two fingers to pan.
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { buildBou } from '/src/figures/bou/bou.js';
+import { BOU_HEADS } from '/src/figures/bou/bou-heads.js';
+import { bouPose, newBouPose } from '/src/figures/bou/bou-dance.js';
+import { createBouMotion } from '/src/figures/bou/bou-motion.js';
+import bouSong from '/src/song-bou.json';
+const models = { bou: 'Bou Tradicional (p13)', ...Object.fromEntries(Object.entries(BOU_HEADS).map(([k, [n]]) => [k, `Cap ${k.toUpperCase()} · ${n}`])) };
+const sel = document.getElementById('m');
+for (const [k, n] of Object.entries(models)) sel.add(new Option(n, k));
+const q = new URLSearchParams(location.search); sel.value = models[q.get('cap')] ? q.get('cap') : 'a'; // the game's (buildBou's default cap)
+const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('c'), antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+const scene = new THREE.Scene(); scene.background = new THREE.Color('#b8c7c9');
+scene.add(new THREE.HemisphereLight('#fff4df', '#867253', 2.3));
+const sun = new THREE.DirectionalLight('#fff0cf', 2.2); sun.position.set(-4, 8, 4); scene.add(sun);
+const floor = new THREE.Mesh(new THREE.CircleGeometry(6, 48), new THREE.MeshLambertMaterial({ color: '#d5c69f' }));
+floor.rotation.x = -Math.PI / 2; floor.position.y = -.005; scene.add(floor);   // below the soles (they shimmered on it)
+const camera = new THREE.PerspectiveCamera(40, 1, .05, 60); camera.position.set(4.5, 2.4, 5.5);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 1.1, .2); controls.enableDamping = true; controls.minDistance = 1.2; controls.maxDistance = 14;
+controls.maxPolarAngle = Math.PI * .52;
+let rig = null, motion = null;
+// For automated sweeps (flicker checks): the camera and its controls.
+window.__orbit = { get rig() { return rig; }, camera, controls, render: () => { controls.update(); renderer.render(scene, camera); } };
+function load(key) {
+  if (rig) { scene.remove(rig.root, ...rig.feet, ...rig.legs, rig.limbs); rig.dispose?.(); }
+  rig = buildBou({ cap: key === 'bou' ? null : key });
+  scene.add(rig.root, ...rig.feet, ...rig.legs, rig.limbs);
+  [[-.12, -.66], [.12, -.66], [-.12, .66], [.12, .66]].forEach(([x, z], i) => rig.feet[i].position.set(x, 0, z));
+  rig.poseLegs(); rig.swingTail?.reset();
+  
+}
+sel.onchange = () => load(sel.value); load(sel.value);
+// «Balla»: a little test dance (steps back and forth, turns, a bow) so the tail's weight shows.
+const danceBtn = document.getElementById('dance'); let dancing = false, tDance = 0, last = performance.now();
+danceBtn.onclick = () => { dancing = !dancing; danceBtn.textContent = dancing ? 'Quiet' : 'Balla'; if (!dancing) load(sel.value); };
+const spin = document.getElementById('spin');
+spin.onclick = () => { controls.autoRotate = !controls.autoRotate; spin.textContent = controls.autoRotate ? 'Atura' : 'Gira'; };
+function frame() {
+  const w = innerWidth, h = innerHeight;
+  if (renderer.domElement.width !== Math.round(w * renderer.getPixelRatio())) {
+    renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
+    // Back off on narrow screens so the whole Bou (~3.6 m with the head) fits across.
+    const fit = 2.4 / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2) * Math.min(1, camera.aspect));
+    camera.position.sub(controls.target).setLength(Math.max(7.5, fit)).add(controls.target);
+  }
+  const now = performance.now(), dt = Math.min(.1, (now - last) / 1000); last = now;
+  if (dancing) {
+    tDance += dt; const k = tDance;
+    rig.root.position.z = .35 * Math.sin(k * 2.2); rig.root.position.y = .04 * Math.abs(Math.sin(k * 4.4));
+    rig.root.rotation.y = .5 * Math.sin(k * 1.1);
+    rig.body.rotation.x = .18 * Math.sin(k * 2.2 + 1) * (Math.sin(k * .5) > 0 ? 1 : .3); rig.body.rotation.z = .06 * Math.sin(k * 3.3);
+    // The carriers walk along with it.
+    const c = Math.cos(rig.root.rotation.y), sn = Math.sin(rig.root.rotation.y);
+    [[-.12, -.66], [.12, -.66], [-.12, .66], [.12, .66]].forEach(([x, z], i) => {
+      rig.feet[i].position.set(x * c + z * sn, 0, -x * sn + z * c + rig.root.position.z); rig.feet[i].rotation.y = rig.root.rotation.y; });
+    rig.poseLegs();
+  }
+  if (!paused) gagT = now / 1000;
+  let beat;
+  if (musicOn) { // the game's whole dance on the song (figures/bou/bou-motion.js: its path, turns, planned steps, tail); paused, it holds
+    if (!song.paused) shown = motion(song.currentTime, dt); beat = shown?.beat; syncRef();
+  } else {
+    if (!paused) rig.swingTail?.beat?.(gagT * 1.6);
+    rig.swingTail?.(dt);
+  }
+  rig.cap?.play(gagT, beat);
+  const f = x => x.toFixed(2), c = camera.position, g = controls.target;
+  camT.textContent = `t ${f(gagT % 15)} s\ncam ${f(c.x)} ${f(c.y)} ${f(c.z)}\nobj ${f(g.x)} ${f(g.y)} ${f(g.z)}`;
+  controls.update(); renderer.render(scene, camera); requestAnimationFrame(frame);
+}
+// Views: the Bou faces +z, its head round (0, 1.6, 1.6).
+const VIEWS = { front: [[0, 1.6, 6.5], [0, 1.3, 0]], side: [[7, 1.4, 0], [0, 1.2, 0]], q: [[4.5, 2.4, 5.5], [0, 1.1, .2]],
+  top: [[0, 8, .01], [0, 1, 0]], head: [[2, 2.1, 4.4], [0, 1.5, 1.7]], back: [[0, 1.8, -6.5], [0, 1.2, 0]] };
+document.querySelectorAll('[data-v]').forEach(b => b.onclick = () => { const [p, t] = VIEWS[b.dataset.v]; camera.position.set(...p); controls.target.set(...t); });
+let paused = false, gagT = 0;
+const camT = document.getElementById('cam'), time = document.getElementById('time'), tlab = document.getElementById('tlab');
+document.getElementById('anim').onclick = e => { paused = !paused; time.disabled = !paused; time.value = gagT % 15; e.target.textContent = paused ? 'Reprèn l\'animació' : 'Atura l\'animació'; };
+time.oninput = () => { gagT = +time.value; };
+document.getElementById('copy').onclick = e => {
+  const r = v => +v.toFixed(2), c = camera.position, g = controls.target;
+  navigator.clipboard.writeText(JSON.stringify({ cap: sel.value, t: r(gagT % 15), cam: [r(c.x), r(c.y), r(c.z)], obj: [r(g.x), r(g.y), r(g.z)] }));
+  e.target.textContent = 'Copiat!'; setTimeout(() => (e.target.textContent = 'Copia la vista'), 1200);
+};
+// Double-click a part: the orbit turns round that point.
+const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+renderer.domElement.addEventListener('dblclick', e => {
+  ndc.set(e.clientX / innerWidth * 2 - 1, -e.clientY / innerHeight * 2 + 1); ray.setFromCamera(ndc, camera);
+  const hit = ray.intersectObject(rig.root, true)[0]; if (hit) controls.target.copy(hit.point);
+});
+controls.minDistance = .4;
+// «Música»: the Bou's song, the Bou bouncing in place on it: knees, waddle and nod (the game's), head on the beat.
+// ?from=N (s) starts it there, ?rate=0.5 plays it slower (to see the steps)
+let musicOn = false, shown = null;
+const song = new Audio('/' + bouSong.audio);
+song.muted = q.has('mute'); song.loop = true; window.__song = song; window.__bouPose = t => bouPose(t, newBouPose());   // tools/qa/bou-sweep.mjs
+document.getElementById('music').onclick = e => {
+  musicOn = song.paused;
+  if (musicOn) { if (dancing) danceBtn.click(); motion = createBouMotion(rig); if (!song.currentTime) song.currentTime = +q.get('from') || 0; song.playbackRate = +q.get('rate') || 1; song.preservesPitch = false; song.play(); e.target.textContent = 'Para la música'; }
+  else { song.pause(); e.target.textContent = 'Música'; load(sel.value); }
+};
+// Grab the tail: drag it on a plane facing the camera, let go and it swings by its own weight (bou.js
+// makeTailSwing). Caught before OrbitControls sees the press.
+const grabPlane = new THREE.Plane(), grabAt = new THREE.Vector3(), camDir = new THREE.Vector3();
+const toRay = e => { ndc.set(e.clientX / innerWidth * 2 - 1, -e.clientY / innerHeight * 2 + 1); ray.setFromCamera(ndc, camera); };
+let holding = false;
+addEventListener('pointerdown', e => {
+  if (e.target !== renderer.domElement) return;
+  toRay(e); const hit = ray.intersectObject(rig.tail, true)[0]; if (!hit) return;
+  e.stopPropagation(); holding = true; renderer.domElement.setPointerCapture(e.pointerId);
+  grabPlane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(camDir), hit.point); rig.swingTail.grab = hit.point.clone();
+}, true);
+addEventListener('pointermove', e => {
+  if (holding) { e.stopPropagation(); toRay(e); if (ray.ray.intersectPlane(grabPlane, grabAt)) rig.swingTail.grab.copy(grabAt); return; }
+  if (e.target === renderer.domElement && !e.buttons) { toRay(e); renderer.domElement.style.cursor = ray.intersectObject(rig.tail, true).length ? 'grab' : ''; }
+}, true);
+addEventListener('pointerup', e => { if (!holding) return; e.stopPropagation(); holding = false; rig.swingTail.grab = null; }, true);
+// «Vídeo…»: a reference video beside the dance, kept on the song by the four long notes of its
+// opening (bars 1, 2, 5, 6): «sync» = the video's seconds where they sound (?sync=a,b,c,d, defaults: the owner's CleanShot
+// of 24/10, measured from its audio). Between them the video runs at the speed that keeps both on the same notes, and
+// beyond them at the nearest stretch's. «So» swaps which one you hear (the video's own sound shows if it matches).
+const ref = document.getElementById('ref'), syncIn = document.getElementById('sync'), ears = document.getElementById('ears');
+syncIn.value = q.get('sync') ?? '3.04,5.36,11.83,13.96';
+const songAt = [1, 2, 5, 6].map(n => bouSong.dance.bars.find(b => b[0] === n)[2]);
+const anchors = () => { const v = syncIn.value.split(',').map(Number); return v.length === 4 && v.every(Number.isFinite) ? v : null; };
+function toVideo(t) { // piecewise linear song -> video time, and its slope
+  const v = anchors(); if (!v) return null;
+  let i = 0; while (i < 2 && t > songAt[i + 1]) i++;
+  const k = (v[i + 1] - v[i]) / (songAt[i + 1] - songAt[i]);
+  return { at: v[i] + (t - songAt[i]) * k, rate: k };
+}
+function syncRef() {
+  if (ref.hidden || !ref.duration) return;
+  const m = toVideo(song.currentTime); if (!m || m.at < 0 || m.at > ref.duration) { ref.pause(); return; }
+  const rate = m.rate * song.playbackRate, drift = m.at - ref.currentTime; // a small drift is caught up by speed, not a seek
+  ref.playbackRate = Math.max(.25, Math.min(4, rate * (1 + Math.max(-.2, Math.min(.2, drift * 2)))));
+  if (song.paused) { ref.pause(); return; }
+  if (Math.abs(ref.currentTime - m.at) > .12 && !ref.seeking) ref.currentTime = m.at;
+  if (ref.paused) ref.play().catch(() => {});
+}
+document.getElementById('vidfile').onchange = e => {
+  const f = e.target.files[0]; if (!f) return;
+  ref.src = URL.createObjectURL(f); ref.hidden = false;
+  // from where the video starts, unless ?from says otherwise
+  const v = anchors(); if (v && !q.has('from') && song.paused) song.currentTime = Math.max(0, songAt[0] - v[0] * (songAt[1] - songAt[0]) / (v[1] - v[0]));
+};
+ears.textContent = song.muted ? 'So: cap' : 'So: joc';
+ears.onclick = () => { const vid = song.muted === false; song.muted = vid; ref.muted = !vid; ears.textContent = vid ? 'So: vídeo' : 'So: joc'; };
+song.addEventListener('pause', () => ref.pause());
+frame();
+</script></body></html>

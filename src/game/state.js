@@ -2,43 +2,76 @@
 import { parseChallenge, stripChallenge } from '../services/share.js';
 import { store } from '../platform/storage.js';
 import { Chip } from '../platform/audio.js';
-import song from '../song.json';
-import { Q, offsetMs, playFrom, LEAD, WIN } from '../core/env.js';
+import { song, menuSong, selectedFigure, setFigureSong } from './figure-song.js';
+import { clearLeaderboardResult } from '../services/leaderboard-result.js';
+import { Q, playFrom, LEAD, pageActive } from '../core/env.js';
+import { WINDOWS } from './progress.js';
+
+export let WIN = WINDOWS[0]; // the judge windows in use (flow.js sets the run's level)
+export const setWIN = v => (WIN = v);
+export let offsetMs = +(Q.get('offset') ?? store.get('offset') ?? 0); // calibration knob: the sync sheet, or [ and ] keys
+export const setOffsetMs = v => (offsetMs = v);
 
 // ------------------------------------------------------------------ game
 // G is the one shared record. Most fields appear on first write, so this is the map of who owns what:
-//   the run (game/flow.js starts and ends it; game/judge.js scores it)
+//   the run (game/flow.js starts and ends it; game/judge.js scores it; game/tick.js, once a frame, sets sec, finale,
+//     doublePoints and eeeh, and eases shown / shownE)
 //     chart, balloons, next (the next unjudged note), diff, counts {perfect, good, miss}, errors, score, combo, maxCombo, streak
 //     (misses in a row), guapo (the ENCERTS %), energy (l'ànim), energyWarn, hold, activePhrase / phraseCounts, doublePoints,
 //     sec ('A' | 'B'), go (the first note's time), finale / eeeh / collapseT (the coda, its shout, the fall), previous / newRecord /
-//     recordKey / stars / reason / challenge / shareRun / resT (the result), practice, resuming
-//   what the screens show (eased or stamped with `clock`, read by hud/* and the crowd; the rules never read them)
+//     recordKey / stars / reason / challenge / shareRun / resT (the result), practice, resuming, watch (the dance demo: the song
+//     plays itself, nothing is judged for the player, saved or shared)
+//   what the screens show (eased or stamped with `clock`, read by hud/* and the crowd; the rules never read them; the
+//     beat counters clapBeat, finBeat and lastBeat are game/tick.js's)
 //     shown, shownE (the smoothed guapo and energy), judge, praise, ring, pop, popT, pumpT, tapT, flash, holdDone, energyT,
 //     energyWarnT, doubleT, finaleT, chantT, offsetT, uiT, clapBeat, finBeat, lastBeat
 //   the app (which screen, what is open)
-//     state ('splash' | 'title' | 'play' | 'results'), sel (the highlighted level), paused, pendingAction, audioError
-export const G = { chart: [], balloons: [], state: 'splash', sel: 0, diff: 0, paused: false, guapo: 20, shown: 20, combo: 0, chantT: -99, collapseT: 0, sec: 'A', energy: 1, shownE: 1, energyWarn: [true, true], energyT: -9 };
-// A friend's challenge (?repte=94-2, share.js): its level comes preselected and the title shows it; the address bar
-// drops it (a reload doesn't bring it back). Only a % and a level: it never changes what the leaderboard accepts.
-export const CHALLENGE = parseChallenge(Q);
+//     state ('splash' | 'select' | 'play' | 'results'), sel (the level picked on «QUI BALLA?»), paused, pendingAction, audioError
+export const G = { activityEpoch: 0, chart: [], balloons: [], state: 'splash', figureId: selectedFigure.id, figureVersion: selectedFigure.version, sel: 0, diff: 0, paused: false, guapo: 20, shown: 20, combo: 0, chantT: -99, collapseT: 0, sec: 'A', energy: 1, shownE: 1, energyWarn: [true, true], energyT: -9 };
+// Deferred one-shot effects expire when the page loses activity, even if its timer fires after returning.
+export function afterActive(delay, effect) {
+  const epoch = G.activityEpoch;
+  setTimeout(() => { if (epoch === G.activityEpoch && !G.paused && pageActive()) effect(); }, delay);
+}
+// A friend's challenge (?repte=94-2, or 94-2-drac: share.js): the selector opens on its figure with its level preselected
+// on «QUI BALLA?»; the address bar drops it (a reload doesn't bring it back). Only a %, a level and a figure: it never
+// changes what the leaderboard accepts.
+export const CHALLENGE = parseChallenge(globalThis.location?.search ?? ''); // a real feature: read on every host, not through the dev-only Q
 if (CHALLENGE) {
   G.sel = CHALLENGE.diff;
   try { history.replaceState(history.state, '', stripChallenge(location.href)); } catch { /* no history API */ }
 }
 export let chip = null;
 export const setChip = v => (chip = v);
+// Automatic scene effects belong to the run; an explicit free-mode action may also sound.
+// Never enqueue a demo sound for unlock or focus; menu controls and music use their own existing paths.
+export function figureSfx(kind, i = 0, manual = false) {
+  if (!G.paused && pageActive()) {
+    if (manual && G.state === 'select') chip?.sfx(kind, i, true);
+    else if (G.state === 'play' || G.state === 'results') chip?.sfx(kind, i);
+  }
+}
 export let clock = 0;
 export const setClock = v => (clock = v);
 // at: a performance.now() time (a frame's, an input event's; default now): the de-stepped audio clock (audio.js audioClock)
 export const songTime = at => (chip?.t0 != null ? chip.now(at) - offsetMs / 1000 : playFrom - LEAD); // still loading the recording: hold at the count-in's start
-export const JUDGE_WORDS = { perfect: 'PERFECTE', good: 'BÉ', miss: 'ERROR' };
 // The audio engine is made (suspended) right after the first frame, so the menu loop and the song download and decode
 // while the splash waits for its tap; the tap only has to resume it. `chip` stays null until then.
 export let engine = null;
-// the title's speaker button: the menu loop on/off, remembered here ('menu-music': 'off'); off = never fetched nor started
+// the menu's speaker button: the menu loop on/off, remembered here ('menu-music': 'off'); off = never fetched nor started
 export let menuMusic = store.get('menu-music') !== 'off';
-export const setMenuMusic = v => (menuMusic = v);
-export const audioEngine = () => (engine ||= new Chip(song, { menuMusic }));
+export function setMenuSound(on) { // the speaker and the radio's «Silenci» are this one preference
+  menuMusic = on;
+  store.set('menu-music', on ? 'on' : 'off');
+  engine?.setMenuMusic(on);
+}
+export const setFreeSound = on => engine?.setFree(on); // free mode: the plaça's murmur stays with the menu music off
+export const audioEngine = () => (engine ||= new Chip(song, { menuMusic, menuLoop: menuSong }));
+// Called synchronously by entry/photo gestures, sharing the preloaded context and menu transport.
+export function startMenuAudio() {
+  if (!chip) setChip(audioEngine());
+  chip.menu(true); // menu owns unlock, pending decode and an already playing source
+}
 // GLOBUS: every tap in its window (any side) scores and pumps it, the more the better: each `need` taps it pops
 // and a fresh one starts. It hands over to the next note HANDOFF early and is judged once, at the end.
 export const HANDOFF = 0.06; // the balloon counts until 60 ms before its end, then taps go to the next note
@@ -52,3 +85,16 @@ export const isDown = side => [...down.keys].some(c => c === 'Space' || KEYS[c] 
 export const KEYS = { ArrowLeft: 'L', ArrowRight: 'R', ArrowUp: 'U', ArrowDown: 'D', KeyD: 'L', KeyF: 'D', KeyJ: 'U', KeyK: 'R' };
 export let drawT = 0; // the song time the last frame was drawn at (tests)
 export const setDrawT = v => (drawT = v);
+
+// Selector callback. Switching during a run would mix charts and clocks, so only menu screens accept it.
+export function setSelectedFigure(value) {
+  if (G.state === 'play') return false;
+  const id = typeof value === 'string' ? value : value?.id;
+  if (id === selectedFigure.id) return true;
+  if (!setFigureSong(value)) return false;
+  engine?.setSong(song); // chip, when unlocked, already refers to this same engine
+  G.figureId = selectedFigure.id; G.figureVersion = selectedFigure.version;
+  G.challenge = null; G.shareRun = null;
+  clearLeaderboardResult();
+  return true;
+}

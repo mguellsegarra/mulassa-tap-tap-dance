@@ -4,6 +4,7 @@ let result = null, debugUsed = false;
 const listeners = new Set();
 function notify() {
   for (const listener of listeners) {
+    // i18n-ok: developer console diagnostic
     try { listener(result); } catch { console.error('No s’ha pogut actualitzar la classificació.'); }
   }
 }

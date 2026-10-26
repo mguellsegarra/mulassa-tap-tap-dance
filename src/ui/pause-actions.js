@@ -1,10 +1,12 @@
 // Pause toggling, page visibility, a WebGL context that never comes back, and the restart and exit actions.
-import song from '../song.json';
+import { song, countInAt, countInDuration, BEATS } from '../game/figure-song.js';
 import { G, songTime, chip } from '../game/state.js';
-import { pageActive, BEATS, playFrom, BEAT } from '../core/env.js';
+import { pageActive, playFrom, COARSE } from '../core/env.js';
 import { pauseGame, closePauseMenu } from './pause.js';
 import { pauseMenu } from './handles.js';
+import { offerAudioResume } from './audio-resume.js';
 import { focusIn } from './focus.js';
+import { tr } from '../i18n/messages.js';
 import { glc, renderer } from '../scene/stage.js';
 import { errors } from '../services/errors.js';
 
@@ -21,25 +23,42 @@ export function togglePause() {
     chip.resume();
     if (tp < (G.practice ? BEATS[0] : BEATS.find(b => b >= playFrom) ?? playFrom)) return; // still in the start's own count-in: it carries on
     G.paused = true; G.resuming = tp;
-    const chart = G.chart, at = [3, 2, 1].map(k => tp - k * BEAT);
-    if (G.practice) { chip.startClock(3 * BEAT, tp); chip.countIn(at); return; }
-    chip.start(3 * BEAT, tp, song.tail).then(ok => { if (ok && G.chart === chart) chip.countIn(at); });
+    const chart = G.chart, at = countInAt(tp), lead = countInDuration(tp);
+    if (G.practice) { chip.startClock(lead, tp); chip.countIn(at); return; }
+    chip.start(lead, tp, song.tail).then(ok => { if (ok && G.chart === chart) chip.countIn(at); });
   }
 }
-function syncPageActivity() {
+// A run whose audio clock stands still is stuck at its count-in («PREPARATS…») or mid-song: suspended (iOS after an app
+// switch: resume() only works inside a tap) or `running` with a frozen currentTime (a stalled output device, seen on a
+// phone after several runs). Pause it after 1 s: the pause's suspend and Continua's resume() inside a tap wake it.
+let stallT = null, lastCt = NaN;
+export function watchAudio(now) {
+  const ct = chip?.ctx?.currentTime, moved = ct !== lastCt;
+  lastCt = ct;
+  if (G.state !== 'play' || G.paused || chip?.t0 == null || !pageActive() || (moved && chip.ctx.state === 'running')) { stallT = null; return; }
+  stallT ??= now;
+  if (now - stallT > 1000) { stallT = null; pauseGame(); }
+}
+function syncPageActivity(e) {
   if (!pageActive()) {
+    G.activityEpoch++;
     pauseGame();
-    chip?.ctx.suspend();
+    chip?.clearMenuSfx?.();
+    chip?.suspend();
+    if ((e?.type === 'visibilitychange' || e?.type === 'blur' && COARSE.matches) && !document.hidden && chip?.woke) offerAudioResume(); // iOS, back from another tab or the URL bar: shown, but no focus until a tap
   } else if (!G.paused || G.resuming != null) {
     chip?.wake();
-  }
+    if (chip?.woke) { chip.resume(); offerAudioResume(); } // back from another app there is no gesture (wake() skips it): an unlocked context may resume, else it stays mute until a tap (iOS), and the card says so
+  } else chip?.suspend(); // paused: a hidden page may never have run suspend()'s timer
 }
 document.addEventListener('visibilitychange', syncPageActivity);
 addEventListener('blur', syncPageActivity);
 addEventListener('focus', syncPageActivity);
 addEventListener('pagehide', () => {
+  G.activityEpoch++;
+  chip?.clearMenuSfx?.();
   pauseGame();
-  chip?.ctx.suspend();
+  chip?.suspend();
 });
 addEventListener('pageshow', syncPageActivity);
 // A lost WebGL context that is never restored (a browser that stops WebGL for the page after repeated GPU crashes) left
@@ -52,9 +71,9 @@ function restoreLate() {
   if (!pageActive()) { restoreTimer = setTimeout(restoreLate, NO_RESTORE_MS); return; } // hidden: the browser may restore it once back
   errors.report('webgl-not-restored');
   G.paused = true; // so the suspended music doesn't open the pause menu, a modal that would sit over the card
-  chip?.ctx.suspend();
+  chip?.suspend();
   document.querySelectorAll('dialog[open]').forEach(d => d.close());
-  window.__mulassaFail?.('Ups! El joc s’ha aturat', 'El mòbil ha deixat de mostrar el joc en 3D. Torna-ho a provar.', true);
+  window.__mulassaFail?.(tr('ui.webgl.lostTitle'), tr('ui.webgl.lostText'), true, 'webgl-not-restored'); // reported above, not as boot-failed
 }
 glc.addEventListener('webglcontextlost', () => { clearTimeout(restoreTimer); restoreTimer = setTimeout(restoreLate, NO_RESTORE_MS); });
 glc.addEventListener('webglcontextrestored', () => { clearTimeout(restoreTimer); restoreTimer = 0; });
@@ -63,8 +82,8 @@ export function requestPauseAction(action) {
   G.pendingAction = action;
   document.getElementById('pause-options').hidden = true;
   document.getElementById('pause-confirmation').hidden = false;
-  document.getElementById('confirm-title').textContent = action === 'restart' ? 'Reiniciar el ball?' : 'Tornar al menú?';
-  document.getElementById('confirm-action').textContent = action === 'restart' ? 'Sí, reinicia' : 'Sí, torna al menú';
+  document.getElementById('confirm-title').textContent = tr(action === 'restart' ? 'ui.pause.confirmRestartTitle' : 'ui.pause.confirmMenuTitle');
+  document.getElementById('confirm-action').textContent = tr(action === 'restart' ? 'ui.pause.confirmRestart' : 'ui.pause.confirmMenu');
   pauseMenu.setAttribute('aria-labelledby', 'confirm-title');
   focusIn(pauseMenu, 'cancel-action');
 }

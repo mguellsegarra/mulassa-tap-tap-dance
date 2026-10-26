@@ -1,4 +1,4 @@
--- Score ceiling per level + one "who may write" rule (Marc, 2026-09-28).
+-- Score ceiling per level + one "who may write" rule.
 --   * versions.max_score: until now 2147483647 (0001), so a crafted submit_result call could take #1 for good. Now the
 --     highest score a human can reach on each level of mulassa-v1, +5%, generated from the chart and the game's scoring
 --     by tools/score-ceiling.mjs (a perfect run, every GUAPA pair, every hold's trickle, the finale's x2, and the

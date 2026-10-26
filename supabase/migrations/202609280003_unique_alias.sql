@@ -1,5 +1,5 @@
 -- One player per nickname. Two nicknames are the same when they only differ in capitals, accents, spaces, hyphens or
--- apostrophes ("Marc", "marc", "MARC-", "Marc'" and "Marc " are one). A taken one fails with leaderboard_alias_taken
+-- apostrophes ("Jan", "jan", "JAN-", "Jan'" and "Jan " are one). A taken one fails with leaderboard_alias_taken
 -- (the client says "Aquest sobrenom ja es d'algu"); the unique index backs it up against two players racing.
 -- ASCII only on purpose (pasted into the SQL Editor): the accented letters are U&'' escapes.
 begin;

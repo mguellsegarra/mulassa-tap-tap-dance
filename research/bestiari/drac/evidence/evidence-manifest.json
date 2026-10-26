@@ -1,0 +1,27 @@
+{
+  "sourceVideo": "pm-lEViiPK0.mp4",
+  "sourceVideoSha256": "038f225b3f0ffeed6d8c36473f4ab9d6b9b561bfcc26d6d0d44ec0ae979651f9",
+  "frameSelection": "Source frames n=0,10,20... through104.8s at50fps",
+  "sampleStepSeconds": 0.2,
+  "count": 525,
+  "worktree": "~/.codex/worktrees/drac-reference-trial/mulassa-de-valls",
+  "render": {
+    "url": "http://localhost:5186/drac-lab.html?mute",
+    "programme": "proposal",
+    "variant": "austera",
+    "camera": "frontal",
+    "videoMode": "offset",
+    "offset": 0,
+    "songTimeMinusVideoTime": 5.491189
+  },
+  "sourceHashes": {
+    "src/dev/drac-lab/trial-dance.js": "ed1c2d08c6dca7e69e922aded225ef3283e9ae1926ba508ad513d5c7a62f6b9e",
+    "src/dev/drac-lab/trial-rig.js": "89880d8829fb95467f7110892083fb32ba5cc268d1274a5ebe8bfe635303928f",
+    "src/dev/drac-lab/programmes.js": "4df41e25e201e1e21f3b68a25e6180cae5c3ff26d629f79d8dbd1c8e3f6492ba",
+    "src/dev/drac-lab/stage.js": "8fe9b0daa0cf91378ebef25e060007c5dc181ab56eceac48c577f7e4190c96d3",
+    "src/figures/drac/dance-drac.js": "5fe0273c163d463e68a4498e96466af9877fad867fd29cfffe67363664efb3f7",
+    "src/figures/drac/drac-feet.js": "db585719c832574a628349024de4e261c715fe56349b58334b0d512cdb5001b4",
+    "src/figures/drac/drac-motion.js": "fd30446014561a4fd9742471a8456e134d88c620a059f6f1337e5df578dbc65b",
+    "src/figures/drac/drac.js": "dda41ccf810edccaa195d3b7a8ecedc3d9d99820b955ecef96f6fbdc0e71da08"
+  }
+}

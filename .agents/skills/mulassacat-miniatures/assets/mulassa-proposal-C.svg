@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" class="c fig" viewBox="0 0 200 160" role="img" aria-label="La Mulassa ballant">
+<ellipse cx="100" cy="147" rx="72" ry="4.5" fill="#000" opacity=".35"/>
+<g fill="#17171d"><g class="leg l1"><rect x="57" y="110" width="7" height="32"/><rect x="56" y="141" width="11" height="5" rx="2" fill="#141414"/></g><g class="leg l2"><rect x="69" y="110" width="7" height="32"/><rect x="68" y="141" width="11" height="5" rx="2" fill="#141414"/></g><g class="leg l1"><rect x="133" y="110" width="7" height="32"/><rect x="132" y="141" width="11" height="5" rx="2" fill="#141414"/></g><g class="leg l2"><rect x="145" y="110" width="7" height="32"/><rect x="144" y="141" width="11" height="5" rx="2" fill="#141414"/></g></g>
+<g fill="#26262e"><g class="leg l1"><rect x="51" y="110" width="7" height="32"/><rect x="50" y="141" width="11" height="5" rx="2" fill="#141414"/></g><g class="leg l2"><rect x="63" y="110" width="7" height="32"/><rect x="62" y="141" width="11" height="5" rx="2" fill="#141414"/></g><g class="leg l1"><rect x="127" y="110" width="7" height="32"/><rect x="126" y="141" width="11" height="5" rx="2" fill="#141414"/></g><g class="leg l2"><rect x="139" y="110" width="7" height="32"/><rect x="138" y="141" width="11" height="5" rx="2" fill="#141414"/></g></g>
+<g class="c-bob">
+ <g class="c-tail"><path d="M41 74q-9 12-7 36l7 1q-1-20 6-34z" fill="#4e2e1a"/><path d="M33 86h10M33 99h10" stroke="#f4efe4" stroke-width="3"/><path d="M33 92.5h10" stroke="#ffb3c7" stroke-width="3"/></g>
+ <g class="c-neck"><g class="c-nod">
+  <path d="M139 74 150 33q3-8 12-6l3 3-7 44z" fill="#7a4a2b"/><path d="M145 68 152 34" stroke="#4e2e1a" stroke-width="4" stroke-linecap="round"/>
+  <g class="c-head">
+   <g class="c-ear e2"><path d="M156 18q-1-12 5-17 3 6 0 17z" fill="#4e2e1a"/></g>
+   <path d="M159 38 187 42.5 160 43.5z" fill="#5a1010"/>
+   <g class="c-jaw"><path d="M158 37.5 186 42q2 5-3 6.5l-24-4z" fill="#7a4a2b"/><path d="M178 42.5l8 1.2q1 3.6-3 4.6l-5-.8z" fill="#5d3a24"/><path d="M178.5 42.6l7 1" stroke="#f4efe4" stroke-width="1.4"/></g>
+   <circle cx="158" cy="26" r="11" fill="#7a4a2b"/>
+   <path d="M152 19 183 28q7 2 6.5 9l-1 4-31-4z" fill="#7a4a2b"/><path d="M178 29.5q10 2 10.5 7.5l-1 4-9.5-1.5z" fill="#5d3a24"/>
+   <path d="M178 40.4l9 1.4" stroke="#f4efe4" stroke-width="1.4"/><circle cx="185" cy="33" r="1.3" fill="#2a1a10"/>
+   <circle cx="160" cy="24.5" r="3.6" fill="#f4efe4"/><circle cx="161" cy="25" r="2" fill="#2a1a10"/>
+   <path d="M152 18.5l12-3M156 21l2.5 16M169 30l1.5 10" stroke="#a3182f" stroke-width="2.8" stroke-linecap="round"/>
+   <circle cx="157.5" cy="30.5" r="2.4" fill="#f4efe4" stroke="#a3182f"/>
+   <circle cx="154" cy="13" r="4.2" fill="#a3182f"/><circle cx="154" cy="8.3" r="2.1" fill="#d9a521"/>
+   <g class="c-ear e1"><path d="M149 18q-8-10-5-17 6 3 9 15z" fill="#7a4a2b"/><path d="M148.5 14q-4-6-3-10 3 2 4.5 8z" fill="#b07a5a"/></g>
+   <g class="c-clac" stroke="#f5c518" stroke-width="2" stroke-linecap="round"><path d="M192 38l5-3M193 45h6M191 51l4 3"/></g>
+  </g>
+ </g></g>
+ <rect x="40" y="66" width="118" height="52" rx="7" fill="#a3182f"/><path d="M40 103h118v8q0 7-7 7H47q-7 0-7-7z" fill="#7c1024"/><path d="M46 68.5h106" stroke="#c43752" stroke-width="2" stroke-linecap="round"/>
+ <path d="M137 64h25v10q0 3-3 3h-19q-3 0-3-3z" fill="#a3182f"/><rect x="136" y="61" width="27" height="4" rx="1.5" fill="#d9a521"/>
+ <path d="M155 72q-10 26-24 2" fill="none" stroke="#d9a521" stroke-width="2.4" stroke-dasharray=".1 3.6" stroke-linecap="round"/>
+ <rect x="76" y="61" width="52" height="45" rx="3" fill="#1f5c33" stroke="#d9a521" stroke-width="2.5"/><path d="M83 97h38" stroke="#d9a521" stroke-width="1.5"/>
+ <path d="M96 70.5h16v3H96zM96 70.5v-3h3v3M102.5 70.5v-3h3v3M109 70.5v-3h3v3" fill="#d9a521" stroke="#d9a521" stroke-width=".6"/>
+ <path d="M104 75 113 83 104 91 95 83z" fill="#a3182f" stroke="#2a1a10" stroke-width=".8"/><path d="M97.3 81h13.4l2.2 2-2.2 2H97.3l-2.2-2z" fill="#f4efe4"/>
+ <rect x="38" y="116" width="122" height="5" rx="2" fill="#d9a521"/><path d="M41 123.5h117" stroke="#d9a521" stroke-width="5" stroke-dasharray="2 2.4"/>
+</g>
+<style>.c{width:150px;height:120px;overflow:visible}.c *{transform-box:view-box}
+.c .leg{animation:c-leg 1s infinite}.c .l2{animation-delay:-.5s}
+.c .l1:nth-child(1),.c .l2:nth-child(2){transform-origin:60px 110px}.c .l1:nth-child(3),.c .l2:nth-child(4){transform-origin:136px 110px}
+.c-bob{animation:c-bob .5s infinite}
+.c-tail{transform-origin:42px 74px;animation:c-tail 1s ease-in-out infinite;animation-delay:-.85s}
+.c-neck{transform-origin:148px 72px;animation:c-gest 2s infinite}
+.c-nod{transform-origin:148px 72px;animation:c-nod .5s ease-in-out infinite;animation-delay:-.44s}
+.c-head{transform-origin:156px 32px}
+.c-jaw{transform-origin:159px 38px;animation:c-jaw 2s infinite}
+.c-ear{transform-origin:151px 18px;animation:c-ear .5s ease-in-out infinite;animation-delay:-.38s}.c-ear.e2{transform-origin:158px 18px;animation-delay:-.32s}
+.c-clac{opacity:0;transform-origin:192px 44px;animation:c-clac 2s infinite}
+@keyframes c-leg{0%,10%{transform:none;animation-timing-function:ease-out}28%{transform:translate(1px,-9px) rotate(-6deg);animation-timing-function:ease-in}46%{transform:translate(0,-1px)}52%,100%{transform:none}}
+@keyframes c-bob{0%{transform:translateY(.5px)}8%{transform:translateY(2px)}22%{transform:none}62%{transform:translateY(-2px)}100%{transform:translateY(.5px)}}
+@keyframes c-tail{0%,100%{transform:rotate(9deg)}50%{transform:rotate(-9deg)}}
+@keyframes c-nod{0%,100%{transform:none}18%{transform:rotate(2.5deg)}70%{transform:rotate(-1.5deg)}}
+@keyframes c-gest{0%,56%{transform:none;animation-timing-function:ease-in-out}68%{transform:rotate(-10deg);animation-timing-function:cubic-bezier(.5,0,.2,1)}73%{transform:rotate(6deg)}80%{transform:rotate(-2.5deg)}88%{transform:rotate(1deg)}95%,100%{transform:none}}
+@keyframes c-jaw{0%,69%{transform:none;animation-timing-function:ease-out}73%{transform:rotate(17deg)}79%{transform:rotate(14deg);animation-timing-function:ease-in}83%{transform:none}86%{transform:rotate(3deg)}89%,100%{transform:none}}
+@keyframes c-ear{0%,100%{transform:none}25%{transform:rotate(-8deg)}60%{transform:rotate(5deg)}}
+@keyframes c-clac{0%,71%{opacity:0;transform:scale(.6)}74%{opacity:1;transform:none}82%,100%{opacity:0;transform:scale(1.15)}}@media (prefers-reduced-motion: reduce){.c *{animation:none!important}.c{animation:rm-pulse 2.4s ease-in-out infinite}}</style></svg>

@@ -1,8 +1,9 @@
 // Nickname rules for the public boards (pure, no DOM): normalise what the player typed and say, in Catalan, why a
 // nickname can't be used. The server has the final word (supabase normalized_alias); these rules are a strict subset
 // of what it accepts today, so a nickname passing here is never refused there for its shape.
-// supabase/migrations/202609280009_alias_hardening.sql (+ 0010, 0012) mirrors this module in SQL (tests/alias-rules.mjs checks parity).
-// No spaces (Marc, 2026-09-28; migration 0012): the ends are trimmed, any whitespace inside is refused, never removed.
+// supabase/migrations/202609280009_alias_hardening.sql (+ 0010, 0012) mirrors this module in SQL (tests/services/alias-rules.mjs checks parity).
+// No spaces (migration 0012): the ends are trimmed, any whitespace inside is refused, never removed.
+import { tr } from '../i18n/messages.js';
 const ALIAS_MIN = 3, ALIAS_MAX = 16;
 // "_" and the Catalan middle dot (Col·la): accepted since the server rules (0009) went live.
 export const SERVER_ACCEPTS_EXTRAS = true; // 202609280009_alias_hardening.sql is live (2026-09-28): _ and l·l accepted
@@ -10,22 +11,22 @@ export const SERVER_ACCEPTS_EXTRAS = true; // 202609280009_alias_hardening.sql i
 // Every refusal says what to do next. blocked/reserved name the piece that matched (termMessage); these generic ones
 // are the fallback (and the server's refusal when the lists drift: leaderboard.js 'blocked').
 export const ALIAS_MESSAGES = Object.freeze({
-  length: `Ha de tenir entre ${ALIAS_MIN} i ${ALIAS_MAX} caràcters. Escurça’l o allarga’l.`,
-  spaces: 'No pot tenir espais. Ajunta les paraules, per exemple DracDeValls.',
-  chars: 'Només lletres, números i guions. Treu els altres símbols.',
-  letters: 'Ha de tenir alguna lletra. Afegeix-n’hi alguna.',
-  repeat: 'Massa caràcters repetits seguits. Treu-ne alguns.',
-  blocked: 'Aquest sobrenom no es pot fer servir. Tria’n un altre.',
-  reserved: 'Aquest sobrenom està reservat. Tria’n un altre.',
+  length: tr('services.alias.length', { min: ALIAS_MIN, max: ALIAS_MAX }),
+  spaces: tr('services.alias.spaces'),
+  chars: tr('services.alias.chars'),
+  letters: tr('services.alias.letters'),
+  repeat: tr('services.alias.repeat'),
+  blocked: tr('services.alias.blocked'),
+  reserved: tr('services.alias.reserved'),
 });
 // «Aquest sobrenom conté «puta», que no es pot fer servir. Tria’n un altre.» / ««admin» està reservat. Tria’n un altre.»
 export const termMessage = (reason, piece) => !piece ? ALIAS_MESSAGES[reason]
-  : reason === 'reserved' ? `«${piece}» està reservat. Tria’n un altre.`
-  : `Aquest sobrenom conté «${piece}», que no es pot fer servir. Tria’n un altre.`;
+  : reason === 'reserved' ? tr('services.alias.reservedPiece', { piece })
+  : tr('services.alias.blockedPiece', { piece });
 
 // Blocklist, folded (lowercase, no accents) and matched on a "skeleton" (see skeletons()). Repeated letters in a term
 // are minimums: "polla" needs two l's (so "Pola" is fine), "puuuta" still matches "puta".
-//   severe: hate symbols, the worst slurs, sexual violence (Marc, 2026-09-28; migration 0013). Anywhere, even glued to
+//   severe: hate symbols, the worst slurs, sexual violence (migration 0013). Anywhere, even glued to
 //     digits or other words ("Nazi88", "xHitlerx", "SiegHeil", "Pau1488"): matched on the leetspeak skeletons and also on
 //     one that keeps the digits (so "1488" can be a term). A severe term found already blocks, so "88" right after one
 //     needs no term of its own; "88" alone and "sieg" alone ("Siegfried", "sosiego") stay allowed on purpose.
@@ -38,7 +39,7 @@ const BLOCKED_SUB = `puta puto merda mierda cabron malpari collon capullo gilipo
   retarded mongolo mongolic bollera panchito cataluf follar joder cojon polla pendejo fuck bitch cunt shit whore slut porn`;
 const BLOCKED_WORD = `cul culo cony caca pedo verga pene penis zorra guarra mamon hdp fdp dick
   cock fag fck fuk cabro cabrons`;
-// "mulassa" is not reserved (Marc, 2026-09-28): «Mulassa», «mulassafan», «LaMulassa» are fine (migration 0010).
+// "mulassa" is not reserved: «Mulassa», «mulassafan», «LaMulassa» are fine (migration 0010).
 const RESERVED_SUB = 'admin moderador moderator ajuntament ayuntamiento oficial official supabase organitzador';
 const RESERVED_WORD = 'staff suport support soporte sistema system root null undefined';
 // Scunthorpe guard: real words and names that contain a blocked piece. Second line (0013), for the severe terms:

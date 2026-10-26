@@ -53,7 +53,7 @@ comes back blank, with its default state (identity transform, default font), and
 
 ### Measured budgets (enforced by tests)
 
-- `tests/render/gl-budget.mjs` boots the game in software WebGL, cycles the Mulassa, the Drac and the Bou (it empties `UNRELEASED_IDS` for its own server only) through every quality level, and fails if `renderer.info.memory` geometries or textures differ between rounds or shader programs pass 90. It skips with a message without Playwright (`PLAYWRIGHT_DIR`, default `/tmp/ui-inv-pw`).
+- `tests/render/gl-budget.mjs` boots the game in real WebGL (the Metal GPU; `GL_BUDGET_SOFT=1`, or no Chrome, falls back to software GL), cycles the Mulassa, the Drac and the Bou (it empties `UNRELEASED_IDS` for its own server only) through every quality level, and fails if `renderer.info.memory` geometries or textures differ between rounds or shader programs pass 90. It skips with a message without Playwright (`PLAYWRIGHT_DIR`, default `/tmp/ui-inv-pw`).
 - GL draw calls a frame (shadow pass included; `renderer.info.render.calls` does not count it), worst figure, plus 4 of headroom in the test. Selector: minimal 21, low 22, medium 33, high 36. Play (the Mulassa alone: 20, 21, 32, 36; the Drac while its fire effects are out adds 15 calls): minimal 36, low 37, medium 59, high 62. The sun's shadow pass costs about 11 draws at medium and 14 at high.
 - At rest the scene holds about 59 geometries, 9-10 textures and 54 programs (software GL, `?perf`); `renderer.info.render` reads about 21 calls and 40k triangles (the plaza pass alone).
 - `tests/build/bundle-size.mjs` builds into a temp dir (a few seconds) and fails when the largest JS chunk passes 492,000 bytes gzip (measured 477,732). Raise it only for a deliberate addition.

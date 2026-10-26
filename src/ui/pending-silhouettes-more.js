@@ -70,12 +70,17 @@ export const moreDrawings = ({ oval, ring, carrierLeg }) => ({
     'M112 108L118 88Q138 80 158 88L164 108Z', 'M114 100h48v38h-48Z', 'M114 130h22v20h-22Z', 'M140 130h22v20h-22Z',
   ] },
 
-  // Vinaròs's Tio Gori (flat cap, black blouse, wide trousers, a castanet in each hand) and Tia Caballera (a flat basket on
-  // her head held with one arm, brown dress, apron).
+  // Vinaròs's Tio Gori (flat cap, a loose black blouse to the hips, wide trousers to the ground, a castanet in each hand)
+  // and Tia Caballera (the fish basket on her head, steadied with her bent right arm; the left hangs; a long dress).
   'gegants-vinaros': { vb: [20, 16], parts: 2, d: [
-    'M32 28Q32 14 56 14Q80 14 80 28L86 32H26Z', oval(56, 50, 16, 20), 'M26 84Q28 68 56 64Q84 68 86 84L96 150H16Z',
-    'M44 78L14 112L22 118L52 92Z', oval(14, 116, 7, 6), 'M80 82L98 110L90 116L72 92Z', oval(98, 114, 7, 6), // arms and castanets
-    oval(146, 24, 28, 7), 'M152 42L130 24L124 32L148 60Z', oval(146, 58, 14, 18), 'M122 150L130 82Q148 66 168 82L178 150Z', 'M160 84L182 114L174 120L152 96Z',
+    'M46 26Q44 16 57 15Q69 16 68 25Q68 28 64 28H49Q46 28 46 26Z', oval(56, 37, 8, 10.5), 'M51 43h10v6h-10Z', // cap, head, neck
+    'M34 54Q36 46 56 45Q76 46 78 54L77 92Q68 98 56 96Q44 98 35 92Z', 'M38 92H74L76 150H36Z', // blouse, trousers
+    'M38 49Q28 52 26 66L25 78L34 79L40 58Z', oval(29, 81, 4.5, 4), oval(27, 89, 3.5, 5), // arms, hands, castanets
+    'M74 49Q84 52 86 68L87 82L78 83L72 58Z', oval(83, 85, 4.5, 4), oval(85, 93, 3.5, 5),
+    'M124 19Q146 15 168 19L161 31H131Z', 'M157 20Q158 11 163 11Q168 11 168 20H165Q165 14 163 14Q160 14 160 20Z', // basket
+    oval(146, 39, 8, 10), 'M126 60Q127 50 146 49Q165 50 166 60L170 150H122Z', // head, dress
+    'M132 56L112 42Q109 37 113 33L126 23L132 27L121 38L136 50Z', // the raised arm
+    'M160 52Q170 54 170 64L171 94H163L162 64Z', oval(167, 97, 4, 5), // the hanging arm
   ] },
 
   // Castelló's Haca Traca Almalafa (2009): a brown horse in profile to the right, straight ears, a flowered bridle, a black

@@ -3,7 +3,7 @@
 import { PHOTO, setPhotoControl, clearPhotoKeys } from '../game/photo-control.js';
 import { MULASSA, DRAC, BOU, playable, portraitArt, portraitPalette } from '../game/figures.js';
 import { pixelSvg } from './select-ui.js';
-import { COARSE } from '../core/env.js';
+import { COARSE, isTablet } from '../core/env.js';
 import { hud } from '../hud/canvas.js';
 import { lookLocked } from './mouse-look.js';
 import { store } from '../platform/storage.js';
@@ -75,6 +75,9 @@ let pfShown = false, pfTipFor = null, pfTipT = 0, pfIntroT = 0, pfTipManual = fa
 let radioHint = () => {}; // free-music's once-only «Ara sona», told when the entry tip is over
 export const setRadioHint = f => (radioHint = f);
 export const photoHelpAvailable = () => pfShown;
+// a phone held upright in free play shows the «gira» cover (fullscreen.js): the first help waits for the turn
+const turnCover = () => COARSE.matches && !isTablet() && innerHeight > innerWidth;
+addEventListener('resize', () => { if (pfShown && pfTipFor === null && !turnCover()) syncAvatars(); });
 export function syncAvatars() {
   const active = PHOTO.on ? PHOTO.id : '';
   for (const b of pfButtons) {
@@ -96,6 +99,7 @@ export function syncAvatars() {
     }
     const family = COARSE.matches ? 'touch' : 'figure';
     if (!pfAutoShown.has(family) && store.get(photoHelpSeenKey(family)) !== '1') {
+      if (turnCover()) { pfTipFor = null; return; } // under the «gira» cover nobody reads it: told (and counted) once the phone is turned
       pfAutoShown.add(family);
       store.set(photoHelpSeenKey(family), '1');
       showPhotoHelp(false);

@@ -12,6 +12,7 @@ function checkOrientation() {
 }
 addEventListener('resize', checkOrientation);
 addEventListener('orientationchange', checkOrientation);
+matchMedia('(orientation: portrait)').addEventListener('change', checkOrientation); // iOS: resize can come with the old size
 setTimeout(checkOrientation);
 const wantOrient = () => !isTablet() && document.body.classList.contains('view-mode') ? 'landscape' : deviceOrient();
 const inFs = () => !!(document.fullscreenElement || document.webkitFullscreenElement);

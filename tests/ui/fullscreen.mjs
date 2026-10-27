@@ -11,7 +11,7 @@ const doc = { addEventListener: on, fullscreenElement: null, body: { classList: 
   documentElement: { requestFullscreen() { asked++; return Promise.resolve(); } }, exitFullscreen() { exited++; return Promise.resolve(); } };
 const ctx = { document: doc, G: { state: 'select', paused: false }, COARSE: { matches: true }, isTablet: () => false, deviceOrient: () => 'portrait', pauseGame() {}, resize() {},
   navigator: { userAgent: 'Linux; Android 14', maxTouchPoints: 5, userActivation: { isActive: true } }, screen: {}, innerWidth: 393, innerHeight: 852,
-  addEventListener() {}, setTimeout() {}, Promise };
+  addEventListener() {}, matchMedia: () => ({ addEventListener() {} }), setTimeout() {}, Promise };
 vm.runInNewContext(src + '\nthis.api = { photoOrient };', ctx);
 const { photoOrient } = ctx.api;
 const fire = (kind, target = { closest: () => null }, pointerType = 'touch') => { for (const f of handlers[kind] || []) f({ target, pointerType }); };

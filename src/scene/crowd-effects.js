@@ -7,7 +7,7 @@ import { MULA_CROWD } from '../figures/mulassa/mula-crowd.js';
 import { DRAC_CROWD } from '../figures/drac/drac-crowd.js';
 import { BOU_CROWD } from '../figures/bou/bou-crowd.js';
 
-export const CROWD_EFFECTS = [MULA_CROWD, DRAC_CROWD, BOU_CROWD];
+export const CROWD_EFFECTS = [MULA_CROWD, DRAC_CROWD, BOU_CROWD].filter(Boolean); // an unreleased figure's is null in a build
 // (plain loops: these run per person, every frame, with no allocation)
 export function crowdAnchored(p) { for (const e of CROWD_EFFECTS) if (e.anchored?.(p)) return true; return false; }
 export function crowdSteer(p, dt) { for (const e of CROWD_EFFECTS) if (e.steer?.(p, dt)) return true; return false; }

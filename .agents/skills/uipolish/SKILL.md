@@ -44,11 +44,11 @@ The measurement loop below is the self-check: list child left/right edges, gaps,
 
 ## QA matrix
 
-Phones 320×568, 375×667, 393×852; tablet 768×1024; desktop 1280×800, a wide-short window (e.g. 1440×600 or 1440×700) and a large one (1920×1080). Add a resize sweep across the component's breakpoints, the longest real copy and names, and reduced motion if the change touches animation. Check the neighbouring states that share the CSS (e.g. the single-item variant of the same card) so the fix doesn't break them.
+Phones 320×568, 375×667, 393×852, 430×932; tablet 1024×768 (landscape); desktop 1280×800, a wide-short window (e.g. 1440×600 or 1440×700) and a large one (1920×1080). Add a resize sweep across the component's breakpoints, the longest real copy and names, and reduced motion if the change touches animation. Check the neighbouring states that share the CSS (e.g. the single-item variant of the same card) so the fix doesn't break them.
 
 A desktop browser resized to phone sizes keeps `pointer: fine`; layouts that differ by pointer (touch docks, hidden desktop controls) need a note or a touch-emulating run. Say which you used.
 
-No landscape phone sizes: landscape phones are not supported and show the rotate cover (`docs/agents/testing.md`).
+No landscape phone or portrait tablet sizes (667×375, 852×393, 768×1024): they only show the rotate cover (`AGENTS.md`, Process); phone free play is the one landscape exception.
 
 ## Report
 

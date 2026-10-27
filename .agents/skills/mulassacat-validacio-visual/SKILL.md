@@ -42,7 +42,7 @@ Seed full data (a record, a board position, statistics) before judging a layout:
 
 ## Viewports
 
-Phones portrait 320×568, 375×667, 393×852; tablet 768×1024; desktop 1280×800, a wide-short window and a large display (the owner uses a Studio Display, where oversized UI shows). Landscape phone sizes only for the game itself (play, practice, results); menus there show the rotate cover. Include a resize sweep across breakpoints for layout changes.
+Phones portrait 320×568, 375×667, 393×852, 430×932; tablet 1024×768 (landscape); desktop 1280×800, a wide-short window and a large display (the owner uses a Studio Display, where oversized UI shows). Landscape phone sizes only for phone free play; menus, play and results there show the rotate cover, as does a portrait tablet. Include a resize sweep across breakpoints for layout changes.
 
 ## The owner's recordings
 

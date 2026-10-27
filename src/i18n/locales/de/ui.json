@@ -277,6 +277,7 @@
   "ui.standings.positionOf": "Platz {pos} von {total} · {season}",
   "ui.standings.records": "Deine Rekorde",
   "ui.standings.title": "Rangliste",
+  "ui.standings.count": "Rangliste ({n})",
   "ui.standings.toFirst": "{n} Punkte bis Platz eins",
   "ui.standings.toNext": "{n} Punkte bis Platz {pos}",
   "ui.stats.adjustSync": "Ton abgleichen",

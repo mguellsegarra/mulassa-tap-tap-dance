@@ -277,6 +277,7 @@
   "ui.standings.positionOf": "Position {pos} of {total} · {season}",
   "ui.standings.records": "Your personal bests",
   "ui.standings.title": "Leaderboard",
+  "ui.standings.count": "Leaderboard ({n})",
   "ui.standings.toFirst": "{n} points behind first place",
   "ui.standings.toNext": "{n} points behind number {pos}",
   "ui.stats.adjustSync": "Adjust sync",

@@ -277,6 +277,7 @@
   "ui.standings.positionOf": "Position {pos} sur {total} · {season}",
   "ui.standings.records": "Tes records",
   "ui.standings.title": "Classement",
+  "ui.standings.count": "Classement ({n})",
   "ui.standings.toFirst": "À {n} points de la première place",
   "ui.standings.toNext": "À {n} points du numéro {pos}",
   "ui.stats.adjustSync": "Règle la synchro",

@@ -13,6 +13,7 @@ class Node {
   removeAttribute(k) { delete this.attrs[k]; }
   addEventListener(k, f) { (this.listeners[k] ||= []).push(f); }
   getClientRects() { return this.hidden ? [] : [{}]; }
+  querySelectorAll() { return []; } // no layout here: phones' long names never overflow
 }
 const doc = { createElement: tag => new Node(tag) };
 const ids = ['select-meds', 'select-standings', 'select-standings-head', 'select-standings-pos', 'select-standings-rows', 'select-standings-foot', 'select-standings-body', 'select-standings-sk', 'select-standings-msg', 'select-info'];
@@ -81,7 +82,7 @@ assert($('select-standings').hidden, 'no board configured (offline): no card');
 const bodyEl = $('select-standings-body'), sk = $('select-standings-sk'), msgEl = $('select-standings-msg');
 const kinds = ol => ol.map(k => (k.className === 'dots' ? '·' : 'r')).join('');
 let calm = false; // prefers-reduced-motion
-globalThis.matchMedia = () => ({ matches: calm });
+globalThis.matchMedia = q => ({ matches: /reduce/.test(q) ? calm : true }); // the desktop column, not a phone
 bodyEl.getBoundingClientRect = () => ({ height: 34 * Math.max(bodyEl.dataset.state === 'loading' ? sk.rows.length : 0, list.kids.length) + 20 }); // in the flow: the skeleton only while loading
 facts.board(null, true, false, 'drac:Jo#1');
 const most = kinds(sk.rows);
@@ -151,6 +152,27 @@ console.log('selector standings: rows, gaps, verified check and fitting ok');
   calm = true; fadeFacts.board({ pos: 13, total: 63, rows }, true, false, 'mulassa:Jo#1');
   assert(fades.length === 8 && /13/.test(head()), 'reduced motion: swapped at once');
   calm = false; delete card.animate; }
+
+// Phones: the header and the first three, one fixed shape, so the card never fades out (that left a hole, then a flash of
+// skeleton): another figure swaps in place and its words fade in; the answer cross-fades with the skeleton (data-state).
+{ const card = $('select-standings'), body = $('select-standings-body'), pos = $('select-standings-pos'), anims = [];
+  const spy = who => frames => { anims.push([who, frames.opacity.join('→')]); return { cancel() {}, finished: Promise.resolve() }; };
+  card.animate = spy('card'); body.animate = spy('body'); pos.animate = spy('head');
+  const phoneFacts = setupStandings({ doc, win: { matchMedia: () => ({ matches: false }) }, $, onBoard() {} });
+  const real = () => list.kids.map(li => (li.textContent === '···' ? '·' : li.kids[0].textContent));
+  phoneFacts.board({ pos: 13, total: 63, rows }, true, false, 'mulassa:Jo#1');
+  assert.deepEqual(real(), ['1', '2', '3'], 'the first three alone: no ··· nor your row');
+  assert.deepEqual($('select-standings-sk').kids[0].kids.map(li => li.kids[0].className), ['pos p1', 'pos p2', 'pos p3'], 'the skeleton keeps the three medals');
+  assert.equal(anims.length, 0, 'the first board shows at once');
+  phoneFacts.board(null, true, false, 'drac:Jo#1');
+  assert(!card.hidden && pos.textContent === 'Classificació' && body.dataset.state === 'loading', 'another figure: its skeleton at once, in place');
+  assert.deepEqual(anims, [['body', '0→1'], ['head', '0→1']], 'the card stays; its new words fade in');
+  phoneFacts.board({ pos: 2, total: 9, rows: rows.slice(0, 9) }, true, false, 'drac:Jo#1');
+  assert(pos.textContent === 'Classificació (9)' && body.dataset.state === 'ready', 'the answer replaces the skeleton in place; the narrow header gives the board\'s size');
+  assert.equal($('select-standings-head').attrs['aria-label'], 'Classificació: Posició 2 de 9 · ' + rankText({ pos: 2, total: 9 }).split(' · ')[1], 'its accessible name keeps your place');
+  assert.deepEqual(anims.slice(2), [['head', '0→1']], 'no card fade: the rows cross-fade with the skeleton, the header fades its new words');
+  delete card.animate; delete body.animate; delete pos.animate; }
+console.log('phones: the card stays, boards swap in place ok');
 
 // Step 2 on a short laptop: the song's credit gives way first, then the board's foot goals, then the song row;
 // the level row (and the ranking line, outside it) stays.

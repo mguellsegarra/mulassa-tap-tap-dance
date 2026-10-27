@@ -281,6 +281,7 @@
   "ui.standings.positionOf": "Місце {pos} із {total} · {season}",
   "ui.standings.records": "Твої рекорди",
   "ui.standings.title": "Результати",
+  "ui.standings.count": "Результати ({n})",
   "ui.standings.toFirst": "До першого місця: {n} очок",
   "ui.standings.toNext": "До місця {pos}: {n} очок",
   "ui.stats.adjustSync": "Налаштуй синхронізацію",

@@ -277,6 +277,7 @@
   "ui.standings.positionOf": "Postua: {pos} / {total} · {season}",
   "ui.standings.records": "Zure errekorrak",
   "ui.standings.title": "Sailkapena",
+  "ui.standings.count": "Sailkapena ({n})",
   "ui.standings.toFirst": "Lehen postua {n} puntura",
   "ui.standings.toNext": "{pos} postua {n} puntura",
   "ui.stats.adjustSync": "Doitu sinkronia",

@@ -277,6 +277,7 @@
   "ui.standings.positionOf": "Posición {pos} de {total} · {season}",
   "ui.standings.records": "Os teus récords",
   "ui.standings.title": "Clasificación",
+  "ui.standings.count": "Clasificación ({n})",
   "ui.standings.toFirst": "A {n} puntos do primeiro posto",
   "ui.standings.toNext": "A {n} puntos do número {pos}",
   "ui.stats.adjustSync": "Axusta a sincronía",

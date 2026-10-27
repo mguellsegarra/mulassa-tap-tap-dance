@@ -275,6 +275,7 @@
   "ui.standings.positionOf": "{total}人中{pos}位 · {season}",
   "ui.standings.records": "自己ベスト",
   "ui.standings.title": "ランキング",
+  "ui.standings.count": "ランキング（{n}）",
   "ui.standings.toFirst": "1位まであと{n}点",
   "ui.standings.toNext": "{pos}位まであと{n}点",
   "ui.stats.adjustSync": "タイミング調整",

@@ -275,6 +275,7 @@
   "ui.standings.positionOf": "第{pos}名，共{total}人·{season}",
   "ui.standings.records": "你的纪录",
   "ui.standings.title": "排行榜",
+  "ui.standings.count": "排行榜（{n}）",
   "ui.standings.toFirst": "距第一名{n}分",
   "ui.standings.toNext": "距第{pos}名{n}分",
   "ui.stats.adjustSync": "调整同步",

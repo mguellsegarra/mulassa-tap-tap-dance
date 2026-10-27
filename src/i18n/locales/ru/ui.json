@@ -281,6 +281,7 @@
   "ui.standings.positionOf": "Место {pos} из {total} · {season}",
   "ui.standings.records": "Твои рекорды",
   "ui.standings.title": "Рейтинг",
+  "ui.standings.count": "Рейтинг ({n})",
   "ui.standings.toFirst": "До первого места очков: {n}",
   "ui.standings.toNext": "До №{pos} очков: {n}",
   "ui.stats.adjustSync": "Настроить синхронизацию",

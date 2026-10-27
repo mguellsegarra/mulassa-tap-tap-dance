@@ -277,6 +277,7 @@
   "ui.standings.positionOf": "Posicion {pos} de {total} · {season}",
   "ui.standings.records": "Es tòns recòrds",
   "ui.standings.title": "Classificacion",
+  "ui.standings.count": "Classificacion ({n})",
   "ui.standings.toFirst": "A {n} punts deth prumèr lòc",
   "ui.standings.toNext": "A {n} punts deth numèro {pos}",
   "ui.stats.adjustSync": "Ajusta era sincronia",

@@ -6,7 +6,7 @@
 // still shows each level's record), then your neighbours, the foot, the card.
 import { DIFFS } from '../game/chart.js';
 import { starsFor } from '../game/progress.js';
-import { num, trSplit } from './sheet-kit.js';
+import { num, trSplit, posDisc } from './sheet-kit.js';
 import { tr } from '../i18n/messages.js';
 import { appendName } from './profile-notes.js';
 import { starIcons } from './level-stats.js';
@@ -19,6 +19,8 @@ export function rankText(s, season = calendarSeason().name) {
   if (s.pos) return s.total ? tr('ui.standings.positionOf', { pos: num(s.pos), total: num(s.total), season }) : tr('ui.standings.position', { pos: num(s.pos), season });
   return s.total ? tr('ui.standings.players', { count: s.total, n: num(s.total) }) : tr('ui.standings.empty');
 }
+// phones' narrow card: the board's size alone («Classificació (46)»); the full line stays its accessible name
+const countText = s => (s?.total ? tr('ui.standings.count', { n: num(s.total) }) : tr('ui.standings.title'));
 export const rankLabel = text => (text.startsWith(tr('ui.standings.title')) ? text : tr('ui.standings.labelled', { text }));
 
 const CROWN = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 19h18M4 16.5 3 7l5 4 4-6 4 6 5-4-1 9.5z"/></svg>';
@@ -27,7 +29,9 @@ const FLAG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 21V4M5 4h1
 const TRIES = [[10, 2, true, 2], [10, 1, true, 2], [5, 2, true, 2], [5, 1, true, 2], [3, 1, true, 2], [1, 1, true, 2],
   [0, 1, true, 2], [0, 0, true, 2], [0, 0, false, 2], [0, 0, false, 0]];
 
-export function setupStandings({ doc, $, onBoard, onCard = null, busy = () => false, levels = () => false, onSwapped = () => {} }) { // levels(): step 2
+const DESKTOP = '(min-width: 900px) and (min-height: 600px)'; // select-sizes.css: the column that shows the medals, the rows and the foot
+const phone = (win = globalThis) => Boolean(win.matchMedia) && !win.matchMedia(DESKTOP).matches; // the phones' fixed card
+export function setupStandings({ doc, win = globalThis, $, onBoard, onCard = null, busy = () => false, levels = () => false, onSwapped = () => {} }) { // levels(): step 2
   const meds = $('select-meds'), card = $('select-standings');
   if (!meds || !card) return { medals() {}, board() {}, fit() {} }; // a page without them (the node tests' DOM)
   const head = $('select-standings-pos'), list = $('select-standings-rows'), foot = $('select-standings-foot'), info = $('select-info');
@@ -53,7 +57,7 @@ export function setupStandings({ doc, $, onBoard, onCard = null, busy = () => fa
   const el = (tag, cls, text) => { const e = doc.createElement(tag); e.className = cls; if (text != null) e.textContent = text; return e; };
   function row(r, blank = false) { // blank: the placeholder's, its names not buttons
     const li = el('li', r.is_self ? 'me' : '');
-    li.appendChild(el('span', 'n', num(Number(r.position))));
+    li.appendChild(Number(r.position) <= 3 ? posDisc(doc, Number(r.position)) : el('span', 'n', num(Number(r.position)))); // 1-2-3 as the board's medals
     const who = li.appendChild(el('span', 'who'));
     const p = { alias: r.alias, tag: r.tag ?? null, verified: r.verified === true }; // a guest's «nom#1234»; aliases are text, never HTML
     const from = { season: calendarSeason().name, position: Number(r.position), score: r.score, difficulty: r.difficulty };
@@ -93,7 +97,7 @@ export function setupStandings({ doc, $, onBoard, onCard = null, busy = () => fa
       if (withFoot) lines = gaps(last);
     } else {
       lis = Array.from({ length: top }, (_, i) => blank(i + 1));
-      if (top) lis.push(el('li', 'dots', '···')); // your row (and its neighbours) always shows, even with no top rows
+      if (top && near >= 0) lis.push(el('li', 'dots', '···')); // your row (and its neighbours) always shows, even with no top rows (phones: the first three alone)
       if (withRows) lis.push(...Array.from({ length: 2 * near + 1 }, (_, i) => blank(top + 2 + i)));
     }
     const ol = el('ol', 'sel-standings-rows');
@@ -112,6 +116,8 @@ export function setupStandings({ doc, $, onBoard, onCard = null, busy = () => fa
     msg.textContent = tr(state === 'error' ? 'ui.standings.loadFailed' : 'ui.standings.noResults');
     body.dataset.state = state === 'loading' ? 'loading' : 'ready';
   }
+  // phones' narrow card: a name too long even without its «#1234» (select-sizes.css) steps down to 12 px before its «…»
+  const shrinkNames = () => { for (const a of list.querySelectorAll('.alias')) for (let px = 13; px >= 12 && a.scrollWidth > a.clientWidth; px--) a.style.fontSize = `${px}px`; };
   function fit(least = false) { // what fits without scrolling the info block (only while laid out: desktops). least: the
     const scrolls = () => info.scrollHeight > info.clientHeight + 1; // header alone, so step 2's level row is fitted beside it first
     meds.toggleAttribute('data-gone', least);
@@ -119,6 +125,8 @@ export function setupStandings({ doc, $, onBoard, onCard = null, busy = () => fa
     body.hidden = least;
     if (least) return;
     if (levels()) { goals(true); if (card.getClientRects().length && scrolls()) body.hidden = true; return; } // step 2: level-stats.js refits it beside the level row
+    head.textContent = (phone(win) ? countText : rankText)(board); // the window crossed the breakpoint
+    if (phone(win)) { render(3, -1, false); meds.toggleAttribute('data-gone', true); shrinkNames(); return; } // phones: the header and the first three, nothing else
     // The biggest try that fits (each one is a forced layout of the selector): the last answer and the one above it first
     // (unchanged: two layouts), else a binary search (the tries only shrink).
     let drawn = -1;
@@ -147,7 +155,18 @@ export function setupStandings({ doc, $, onBoard, onCard = null, busy = () => fa
     onSwapped(); // the selector refits and measures the new card (step 2: its level row)
     fade.cancel(); fade = card.animate({ opacity: [0, 1] }, { duration: IN, easing: 'ease-out' });
   }
+  // Phones: one shape (the header and the first three), so the card never leaves: the new words fade in where the old ones
+  // were (the skeleton and the rows cross-fade by data-state, select-sizes.css). Hiding it left a hole, then a flash of skeleton.
+  function inPlace(next, set, refit) {
+    if (swap) { clearTimeout(timer); timer = 0; swap = null; fade?.cancel(); } // a desktop fade cut short (the window turned or shrank)
+    const was = head.textContent, first = shownKey === null, other = !first && next !== shownKey, calm = unseen();
+    set(); shownKey = next; refit();
+    if (calm || first) return; // the first board shows at once
+    if (other) body.animate({ opacity: [0, 1] }, { duration: IN, easing: 'ease-out' });
+    if (head.textContent !== was) head.animate({ opacity: [0, 1] }, { duration: IN, easing: 'ease-out' });
+  }
   function crossFade(next, answered, set, refit) { // next: the incoming board's key; answered: it ends the placeholder's wait
+    if (phone(win)) return inPlace(next, set, refit);
     if (swap) { swap = set; waiting = !answered; if (answered && timer) reveal(); return; } // still out: the newest answer comes in
     if (shownKey === null || (next === shownKey && !(answered && state === 'loading')) || unseen()) { set(); shownKey = next; return refit(); }
     swap = set; waiting = !answered;
@@ -175,8 +194,8 @@ export function setupStandings({ doc, $, onBoard, onCard = null, busy = () => fa
       crossFade(who, next !== 'loading', () => {
         board = s; on = shown; key = who; state = next;
         if (state === 'ready') { seen.set(key, s.rows); recent = [owner(key), s.rows]; }
-        head.textContent = rankText(s);
-        $('select-standings-head').setAttribute('aria-label', rankLabel(head.textContent));
+        head.textContent = (phone(win) ? countText : rankText)(s);
+        $('select-standings-head').setAttribute('aria-label', rankLabel(rankText(s)));
       }, () => refit());
     },
     get fading() { return Boolean(swap); }, // fading out: the old board stays put, no refit for that

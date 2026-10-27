@@ -5,12 +5,14 @@ import { G } from '../game/state.js';
 import { sun, hemi, LIGHT, renderProfile, scene } from './stage.js';
 import { dummy } from './confetti.js';
 
+let finaleDim = 0; // a figure's night (0-1) keeps the finale's lights low and hides the voxel fireworks (grey cubes in a dark fog; figures/drac/drac-show.js)
+export const setFinaleDim = v => { finaleDim = v; };
 export function animFinaleLights(beat) {
   if (G.finale) {
     const pulse1 = Math.max(0, 1 - (beat % 1) * 3);
     sun.color.setHSL((beat * 0.13) % 1, 0.55, 0.78); // (lighter than a full colour: at 0.62 the plaça read as night)
     hemi.color.setHSL((beat * 0.13 + 0.5) % 1, 0.5, 0.88);
-    hemi.intensity = 1.4 + pulse1 * 0.9;
+    hemi.intensity = (1.4 + pulse1 * 0.9) * (1 - 0.95 * finaleDim);
 
   } else if (hemi.intensity !== 1.6) {
     sun.color.set(LIGHT.sun); hemi.color.set(LIGHT.sky); hemi.intensity = 1.6;
@@ -50,7 +52,7 @@ export function animFireworks(dt) {
     fireworks.setColorAt(count++, s.color);
   }
   fireworks.count = count;
-  fireworks.visible = count > 0;
+  fireworks.visible = count > 0 && finaleDim < 0.5;
   if (count) {
     fireworks.instanceMatrix.needsUpdate = true;
     fireworks.instanceColor.needsUpdate = true;

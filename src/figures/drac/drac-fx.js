@@ -234,6 +234,7 @@ export function createDracFx(scene, opts = {}) {
       const go = (1 - Math.exp(-DRAG * p.age)) / DRAG; // closed form: the same at any frame rate
       V.set(p.x + p.vx * go + p.wx * p.age, p.y + p.vy * go + k[4] * p.age, p.z + p.vz * go + p.wz * p.age);
       S.setScalar(k[1] + (k[2] - k[1]) * Math.sqrt(u));
+      V.y = Math.max(V.y, 0.42 * S.x); // the floor never cuts a puff's disc where it still shows (a straight line through the red smoke)
       smoke.setMatrixAt(n, MAT.compose(V, Q, S));
       smoke.instanceColor.setXYZ(n, k[5], k[6], k[7]);
       alpha.setX(n++, k[3] * Math.min(1, p.age / 0.08) * (1 - u * u)); // in fast, out late

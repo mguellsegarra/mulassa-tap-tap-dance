@@ -6,7 +6,7 @@ import { readFileSync } from 'node:fs';
 import { Session } from 'node:inspector/promises';
 import * as THREE from 'three';
 import { createDracFx } from '../../../src/figures/drac/drac-fx.js';
-import { DRAC_FX, streakFire, flareLevel, tracaWindow } from '../../../src/figures/drac/drac-fx-rules.js';
+import { DRAC_FX, streakFire, flareLevel, tracaWindow, DRAC_NIGHTS, dracNightWindows, dracNightOn } from '../../../src/figures/drac/drac-fx-rules.js';
 import { FIRE, DRAC_MANUAL_FIRE } from '../../../src/figures/common/fire.js';
 import { PROFILES, MINIMAL } from '../../../src/platform/render-quality.js';
 import { buildDrac } from '../../../src/figures/drac/drac.js';
@@ -329,4 +329,13 @@ console.log('drac fx and sustained free-mode fire ok');
   assert.equal(+lw[6].toFixed(2), 1.8, 'the next dance burst restores the full tail');
   assert.equal(+lw[9].toFixed(2), 1.4, 'the next dance burst restores the full wing');
   m.fx.clear(); assert(m.fx.idle);
+}
+
+{ // the night proposals: each window inside the song, in order; A covers the mid GLOBUS, B the final hit, C misses the GLOBUS
+  for (const [k, n] of Object.entries(DRAC_NIGHTS)) for (const [a, b] of dracNightWindows(song, n)) assert(a >= 0 && a < b && (b <= song.end || b === Infinity), `night ${k} window ${a}-${b}`);
+  const globus = timeAtBeat(song.beats, 126), last = song.end + 2; // (the tail rings on past the end)
+  assert(dracNightOn(dracNightWindows(song, DRAC_NIGHTS.a), globus) && !dracNightOn(dracNightWindows(song, DRAC_NIGHTS.a), last));
+  assert(dracNightOn(dracNightWindows(song, DRAC_NIGHTS.b), last) && !dracNightOn(dracNightWindows(song, DRAC_NIGHTS.b), globus));
+  assert(!dracNightOn(dracNightWindows(song, DRAC_NIGHTS.c), globus) && dracNightOn(dracNightWindows(song, DRAC_NIGHTS.d), last));
+  assert.deepEqual(dracNightWindows(song, null), [], 'no night: day all through');
 }

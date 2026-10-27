@@ -6,19 +6,21 @@ import { newDracFeet } from './drac-feet.js';
 import { buildDrac, DRAC_SCALE } from './drac.js';
 import { createDracColla } from './drac-colla.js';
 import { danceYaw } from './drac-layout.js';
+import { glowMaterial } from '../common/night.js';
 
 export let drac = null;
 export let colla = null;
 // Keep the Drac's material separate for share captures; its body stays opaque.
 // Copied from its own meshes in initDracModel (no voxel.js import here: the tests' one-script bundle keeps its module order).
 export let dracMat = null;
+export const dracGlow = { value: 0 }; // its own light at night (drac-show.js sets it 0-1, common/night.js glowMaterial)
 export const DRAC_YAW = danceYaw(CAM_AZ); // the Drac's dance frame heading (drac-layout.js)
 export function initDracModel() {
   drac = buildDrac();
   drac.feet = newDracFeet();
   drac.root.traverse(o => { // the voxel parts (vertex colours); the flames keep their own opaque materials
     if (!o.material?.isMeshLambertMaterial || !o.material.vertexColors) return;
-    dracMat ??= o.material.clone();
+    dracMat ??= glowMaterial(o.material, dracGlow, 'drac-glow');
     o.material = dracMat;
   });
   drac.root.visible = false;

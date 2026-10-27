@@ -252,9 +252,9 @@ import { vm, THREE, chart, practice, energy, dance, errors, windowHandlers, docu
   run('toTitle(); dracFrame(1 / 60, 0);');
   // the last pass's red mist: the plaça's fog thickens and reddens while the dance is on, a menu clears it at once
   run(`G.state = 'play'; G.practice = null; G.collapseT = 0; var fog0 = [scene.fog.near, scene.fog.far, scene.fog.color.getHexString()];
-    for (let i = 0; i < 60 * 12; i++) dracFrame(1 / 60, 1e6); var fogIn = [scene.fog.near, scene.fog.far, scene.fog.color.r - scene.fog.color.b];
+    for (let i = 0; i < 60 * 12; i++) dracFrame(1 / 60, 1e6); var fogIn = [scene.fog.near, scene.fog.far, scene.fog.color.r / Math.max(1e-6, scene.fog.color.b)];
     G.state = 'select'; dracFrame(1 / 60, 0); var fogOut = [scene.fog.near, scene.fog.far, scene.fog.color.getHexString(), scene.background.getHexString(), dracFx.flare];`);
-  assert(run('fogIn[0] < 5 && fogIn[1] < 60 && fogIn[2] > 0.2'), `the dance's red mist closes in (${run('JSON.stringify(fogIn)')})`);
+  assert(run('fogIn[0] < 5 && fogIn[1] < 60 && fogIn[2] > 3'), `the dance's red mist closes in, red by day or dark red at night (${run('JSON.stringify(fogIn)')})`);
   assert(run('fogOut[0] === fog0[0] && fogOut[1] === fog0[1] && fogOut[2] === fog0[2] && fogOut[3] === fog0[2] && fogOut[4] === 0'), 'a menu clears it');
   // a pending figure on the selector hides both beasts, and the Drac's colla with them
   run(`G.state = 'select'; selectScreen.pending = true; frame(9e6); frame(9e6 + 17); var collaPending = colla.helpers.visible || colla.seated.visible; selectScreen.pending = false;`);

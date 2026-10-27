@@ -4,10 +4,10 @@
 // its banknotes carpet the plaça (bou-bills.js). main.js calls bouFrame once a frame, after dracFrame. Pools are made
 // once, nothing per frame.
 import * as THREE from 'three';
-import { scene, renderProfile, glc, sun, hemi, LIGHT, camera, camFocus } from '../../scene/stage.js';
+import { scene, renderProfile, glc, camera, camFocus } from '../../scene/stage.js';
 import { bou, bouGlow } from './bou-objects.js';
 import { PAVING } from '../../scene/models.js';
-import { SKY, skyTop } from '../../scene/sky.js';
+import { plazaNight } from '../common/night.js';
 import { createFire } from '../common/fire.js';
 import { setConfettiDivert, CONF_LOOK } from '../../scene/confetti.js';
 import { bouBillsStart, bouBillsEnd, bouBillsClear, bouBillsFrame, loadBouBill } from './bou-bills.js';
@@ -29,16 +29,6 @@ setConfettiDivert((sec, reason) => {
   if (!BOU_SHOW.hush && !G.collapseT) BOU_SHOW.burstAt = BOU_SHOW.song;
   return true;
 });
-
-// ---- Night: the sun dims, the sky and the fog go dark blue (the finale's lights own the hemisphere's intensity, fx.js)
-const BOU_DAY = { horizon: new THREE.Color(SKY.horizon), top: new THREE.Color(SKY.top), sky: new THREE.Color(LIGHT.sky), ground: new THREE.Color(LIGHT.ground), sun: sun.intensity };
-const BOU_DARK = { horizon: new THREE.Color('#0b0d1c'), top: new THREE.Color('#04050c'), sky: new THREE.Color('#1c2038'), ground: new THREE.Color('#2a2030') };
-function bouNight(n) {
-  sun.intensity = BOU_DAY.sun * (1 - 0.92 * n);
-  hemi.color.copy(BOU_DAY.sky).lerp(BOU_DARK.sky, n); hemi.groundColor.copy(BOU_DAY.ground).lerp(BOU_DARK.ground, n);
-  scene.fog.color.copy(BOU_DAY.horizon).lerp(BOU_DARK.horizon, n); scene.background.copy(scene.fog.color);
-  skyTop.copy(BOU_DAY.top).lerp(BOU_DARK.top, n); SKY.night = n; // (the clouds go dark with it: sky.js)
-}
 
 // ---- The disco floor: one lit quad over each of the plaça's tiles (plaza.js PAVING), added light, black = unlit
 const BOU_TILES = PAVING.size / PAVING.tile;
@@ -91,7 +81,7 @@ export function bouFrame(dt, t) {
   const was = BOU_SHOW.night;
   BOU_SHOW.night += ((techno ? 1 : 0) - was) * (1 - Math.exp(-dt / BOU_FX.night));
   if (!run && BOU_SHOW.night < 0.01) BOU_SHOW.night = 0;
-  if (BOU_SHOW.night || was) { bouNight(BOU_SHOW.night); bouLight(BOU_SHOW.night); }
+  if (BOU_SHOW.night || was) { plazaNight(BOU_SHOW.night); bouLight(BOU_SHOW.night); }
   bouFloor.visible = BOU_SHOW.night > 0.01;
   if (bouFloor.visible) bouDisco(beatAtTime(song.beats, t), BOU_SHOW.night);
   // the banknotes: from the final bombo, out through its results, gone with the next game (a song that starts again) or the menu

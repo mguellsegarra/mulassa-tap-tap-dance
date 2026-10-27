@@ -67,13 +67,15 @@ export function splashBand(out) {
 export function drawSplash() {
   H.fillStyle = 'rgba(42,26,16,0.35)'; H.fillRect(0, 0, W, HH);
   logo(HH * 0.2);
-  // White outlined words breathing (opacity 1 -> 0.35 -> 1 every 1.6 s; never gone, so they read at any moment), no button:
-  // a tap or key anywhere goes in (input.js). Reduced motion: still.
+  // The foot fades to the page edge's colour (theme-color), so it meets the phone's browser bar; over it, cream outlined
+  // words that swell a little every 1.6 s, no button: a tap or key anywhere goes in (input.js). Reduced motion: still.
+  const g = H.createLinearGradient(0, HH * 0.6, 0, HH);
+  g.addColorStop(0, 'rgba(20,12,7,0)'); g.addColorStop(0.5, 'rgba(20,12,7,0.65)'); g.addColorStop(1, '#140c07');
+  H.fillStyle = g; H.fillRect(0, HH * 0.6, W, HH * 0.4);
   const s = SPLASH_ENTER[COARSE.matches ? 0 : 1];
-  const fit = Math.min(1, (W - 24) / textWidth(s, 16)); // a longer language shrinks its words to the screen
-  H.save(); H.globalAlpha *= CALM.matches ? 1 : 1 - 0.65 * (1 - Math.cos(clock * Math.PI * 2 / 1.6)) / 2;
-  text(s, W / 2, HH * 0.82, 16, '#fff', 'center', C.dark, false, fit);
-  H.restore();
+  const swell = CALM.matches ? 1 : 1 + 0.05 * (1 - Math.cos(clock * Math.PI * 2 / 1.6)) / 2;
+  const fit = Math.min(1, (W - 40) / textWidth(s, 18 * 1.05)); // a longer language shrinks its words to the screen
+  text(s, W / 2, HH * 0.82, 18 * 1.05, C.cream, 'center', C.dark, false, fit * swell / 1.05); // (one sprite, drawn smaller)
 }
 export function sparkle(x, y, r, col) { // four-point star
   H.beginPath();

@@ -92,7 +92,10 @@ export function createSelectLayout({ win, $, root, towns, strip, pending, bar, l
     }
     root.style.setProperty('--nav-x', px(navX(win, towns, $('select-carousel'), z))); // the arrows stand at the screen's middle, whatever the info column or the dock does (clear of the pills)
     const info = r($('select-info')); // the camera's free rect (cameras.js frameMenuLens): hardTop = the pills' floor (she may rise behind the info's lower rows), a side panel takes the left
-    api.band = { top: side ? townsBottom : info.bottom, bottom: dockTop - nav, hardTop: townsBottom, left: side ? info.right : 0, right: win.innerWidth };
+    // Phones' narrow board card (select-sizes.css) ends near the dock: she stands in the column right of it, not behind it.
+    const card = side ? null : r($('select-standings')), beside = card?.width > 0 && card.right < win.innerWidth * 0.62;
+    api.band = beside ? { top: card.top, bottom: dockTop - nav, hardTop: townsBottom, left: card.right, right: win.innerWidth }
+      : { top: side ? townsBottom : info.bottom, bottom: dockTop - nav, hardTop: townsBottom, left: side ? info.right : 0, right: win.innerWidth };
     // Use the strip's final layout position, including its painted top gutter. CSS subtracts
     // --drop so touch reserves the lowered dock without reading its animated transform.
     const stripTop = dockTop + r(strip).top - r(dock).top;

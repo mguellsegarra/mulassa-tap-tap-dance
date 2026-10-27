@@ -73,6 +73,7 @@ dialog p, #results-actions .btn { overflow-wrap: break-word; }
 /* phones from 360 px: «Posició 48 de 119» and the link on one line */
 @media (max-width: 400px) { .board-place-row { column-gap: 6px; } .board-summary { font-size: 17px; } .board-jump { font-size: 13px; } }
 .board-jump.off { visibility: hidden; } /* at the very top with the own row in view: nothing to go to, the line keeps its place */
+@media (max-width: 359px) { .board-jump { display: none; } } /* 320 px: no room beside the place, and a line of its own would leave an empty band */
 .board-place-sub { margin: 0; padding-right: 8px; color: #e8d8b8; font-size: 13px; line-height: 1.35; }
 .board-place .btn-link:not(.board-jump) { min-height: 32px; padding: 0; font-size: 14px; }
 /* the gap between the top of the list and the own row's neighbours: its ranks load from here */

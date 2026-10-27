@@ -57,11 +57,11 @@ dialog p, #results-actions .btn { overflow-wrap: break-word; }
 .board-option .board-pic { width: 100%; height: auto; aspect-ratio: 7 / 5; padding: 8% 6% 4%; border-radius: 10px; }
 .board-option[aria-pressed="true"] { border-color: #fff3d6; background: #fff3d6; color: #2a1a10; }
 .board-main:not([hidden]) { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
-/* «Posició 48 de 119» and the one link (to the top / back to the own row, by where the list is): flat, a gold strip */
-/* it reserves the list's scrollbar gutter (as .board-head-wrap does: 0 with overlay scrollbars) and paints its strip and fill
+/* «Posició 48 de 119» and the one link (to the top / back to the own row, by where the list is): flat, a rounded outlined pill */
+/* it reserves the list's scrollbar gutter (as .board-head-wrap does: 0 with overlay scrollbars) and paints its outline and fill
    on ::before, whose box stops at that gutter, so its right edge meets the rows' instead of overhanging them by 11 px */
-.board-place { position: relative; isolation: isolate; flex: none; margin: 0 0 6px; padding: 6px 4px 8px 16px; overflow: hidden; scrollbar-gutter: stable; }
-.board-place::before { content: ""; position: absolute; inset: 0; z-index: -1; border-left: 4px solid #f5c518; border-radius: 0 10px 10px 0; background: #fff3d60d; }
+.board-place { position: relative; isolation: isolate; flex: none; margin: 0 0 6px; padding: 6px 14px 8px; overflow: hidden; scrollbar-gutter: stable; }
+.board-place::before { content: ""; position: absolute; inset: 0; z-index: -1; border: 1px solid #f5c51855; border-radius: 12px; background: #fff3d60d; }
 .board-place-row { display: flex; flex-wrap: wrap; align-items: center; column-gap: 8px; }
 .board-summary { flex: 1 0 auto; white-space: nowrap; margin: 0; color: #fff3d6; font-size: 18px; line-height: 1.3; font-variant-numeric: tabular-nums; }
 .board-jump { flex: none; display: inline-flex; align-items: center; gap: 4px; margin-left: auto; padding-inline: 4px; border-width: 0; white-space: nowrap; } /* no room beside the place (320 px): under it, right-aligned */

@@ -166,8 +166,7 @@ export function setupBoardList({ doc, $, service, store, focusIn, minLoad, now, 
     jump.setAttribute('aria-label', tr(jumpTo === 'top' ? 'ui.board.jumpTopAria' : 'ui.board.jumpMeAria'));
     jump.classList.toggle('down', jumpTo === 'me' && meRow.offsetTop >= box.scrollTop);
     const off = jumpTo === 'top' && box.scrollTop < 4;
-    jump.classList.toggle('off', off); // kept in place (visibility) for a player with a row, so the line never shifts
-    jump.hidden = off && !meRow; // no position: no empty band under «12 participants» (it may shift when the link comes)
+    jump.classList.toggle('off', off); // kept in place (visibility), with or without a row: the list never shifts when it comes
   }
   box.addEventListener('scroll', syncJump, { passive: true });
   jump.addEventListener('click', () => scrollList(jumpTo === 'top' ? 0 : meTop(), true));

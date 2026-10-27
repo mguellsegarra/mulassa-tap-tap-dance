@@ -19,7 +19,7 @@ export const nextPhotoId = id => PHOTO_IDS[(PHOTO_IDS.indexOf(id) + 1) % PHOTO_I
 export const photoBody = () => PHOTO[traitsOf(PHOTO.id).photoBody];
 export function clearPhotoKeys() {
   PHOTO.inputEpoch = (PHOTO.inputEpoch || 0) + 1;
-  PHOTO.keys.clear(); PHOTO.turn = 0; PHOTO.action = false; PHOTO.mouse = 0; PHOTO.stickX = PHOTO.stickY = PHOTO.lookDX = PHOTO.lookDY = 0; PHOTO.intentX = PHOTO.intentZ = 0;
+  PHOTO.keys.clear(); PHOTO.turn = 0; PHOTO.action = false; PHOTO.mouse = 0; PHOTO.stickX = PHOTO.stickY = PHOTO.lookDX = PHOTO.lookDY = PHOTO.stickTwist = 0; PHOTO.intentX = PHOTO.intentZ = 0;
   for (const p of [PHOTO.mula, PHOTO.drac, PHOTO.bou]) { p.vx = p.vz = 0; p.fire = 0; p.sprint = 0; p.spinLeft = 0; p.spinV = 0; }
   PHOTO.speed = 0; PHOTO.air = false; PHOTO.culada = 0; PHOTO.sparks = false;
 }
@@ -80,11 +80,15 @@ export function movePhoto(dt, safe, sideYaw = photoBody().yaw) {
   const reach = keyed ? 1 : Math.min(1, Math.hypot(side, forward)), length = Math.hypot(side, forward) || 1;
   side /= length; forward /= length;
   // A touch stick walks where it points from the camera (Genshin, Roblox) and she turns to face it; keys keep W = her nose.
-  const stick = !keyed && reach > 0, dirX = Math.sin(sideYaw) * forward - Math.cos(sideYaw) * side, dirZ = Math.cos(sideYaw) * forward + Math.sin(sideYaw) * side;
+  // A culada with the stick held turns the push with her, not the camera (that makes you dizzy): the same push walks
+  // where she now faces, and stays put in the world while the view recenters. A new push points from the camera again.
+  const stick = !keyed && reach > 0;
+  if (!stick) PHOTO.stickTwist = 0;
+  const pushYaw = sideYaw + (PHOTO.stickTwist || 0), dirX = Math.sin(pushYaw) * forward - Math.cos(pushYaw) * side, dirZ = Math.cos(pushYaw) * forward + Math.sin(pushYaw) * side;
   // Only RMB turns her towards the view, eased and capped at PHOTO_CAM.alignRate.
   // LMB never changes her heading, including while walking or running.
-  // During a culada the turn is hers alone: with mouse look or a held stick the camera turns with her (the view is still
-  // "where she faces" afterwards, nothing pulls her back); with keys alone it holds still and recenters only later.
+  // During a culada the turn is hers alone: with mouse look the camera turns with her (the view is still "where she
+  // faces" afterwards, nothing pulls her back); otherwise it holds still and recenters only later.
   const aligning = PHOTO.cameraYaw !== null && (PHOTO.mouse & 2);
   if (aligning && !p.spinLeft) {
     const delta = Math.atan2(Math.sin(PHOTO.cameraYaw - Math.PI - p.yaw), Math.cos(PHOTO.cameraYaw - Math.PI - p.yaw)), h = Math.min(dt, 0.05);
@@ -104,7 +108,8 @@ export function movePhoto(dt, safe, sideYaw = photoBody().yaw) {
   PHOTO.lookAge += dt;
   if (forward > 0 && !PHOTO.mouse && !p.spinLeft && PHOTO.cameraYaw !== null && PHOTO.lookAge > PHOTO_CAM.followWait) { // the player's view, kept a moment
     const behind = Math.atan2(Math.sin(p.yaw + Math.PI - PHOTO.cameraYaw), Math.cos(p.yaw + Math.PI - PHOTO.cameraYaw)), h = Math.min(dt, 0.05);
-    PHOTO.cameraYaw += Math.sign(behind) * Math.min(Math.abs(behind) * (1 - Math.exp(-h / PHOTO_CAM.follow)), PHOTO_CAM.followRate * h);
+    const swing = Math.sign(behind) * Math.min(Math.abs(behind) * (1 - Math.exp(-h / PHOTO_CAM.follow)), PHOTO_CAM.followRate * h);
+    PHOTO.cameraYaw += swing; if (PHOTO.stickTwist) PHOTO.stickTwist -= swing;
   }
   for (let left = Math.min(dt, 0.05); left > 1e-8;) {
     const h = Math.min(left, 1 / 120); // (the gallop builds per substep too: the same run at any frame rate)
@@ -112,7 +117,7 @@ export function movePhoto(dt, safe, sideYaw = photoBody().yaw) {
       p.spinV = Math.min(p.spinV + PHOTO_SPIN.accel * h, PHOTO_SPIN.rate, Math.sqrt(2 * PHOTO_SPIN.accel * Math.abs(p.spinLeft)));
       const step = Math.sign(p.spinLeft) * Math.min(Math.abs(p.spinLeft), p.spinV * h);
       p.yaw += step; p.spinLeft -= step;
-      if (aligning || stick) PHOTO.cameraYaw += step; // (the stick points from the camera: a still one would turn her back)
+      if (aligning) PHOTO.cameraYaw += step; else if (stick) PHOTO.stickTwist += step;
       if (Math.abs(p.spinLeft) < 1e-9) { p.spinLeft = p.spinV = 0; PHOTO.lookAge = 0; } // (a moment before any recentering)
     }
     // The model faces +Z (read per substep: a culada mid-run carries her round). Its right hand is -X seen from behind.

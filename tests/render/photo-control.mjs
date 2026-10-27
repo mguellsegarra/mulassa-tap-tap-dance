@@ -258,6 +258,8 @@ console.log('culada and Drac sparks input ok');
   assert(Math.abs(rmb.camAtEnd - rmb.cam0 - Math.PI) < 1e-6, 'and the mouse-look camera turned with her');
   const stick = turnWith(() => { PHOTO.stickY = 1; });
   assert(Math.abs(stick.yaw - Math.PI) < 1e-6, `touch stick held: the culada is not half undone (${stick.yaw.toFixed(3)})`);
+  assert(stick.camAtEnd === stick.cam0 && stick.cam === stick.cam0, `nor does the camera turn with her ${JSON.stringify(stick)}`);
+  assert(photoBody().vz < 0, 'the same push walks where she now faces');
   PHOTO.stickY = 0;
   const keysOnly = turnWith(() => { press('KeyW'); });
   assert(Math.abs(keysOnly.yaw - Math.PI) < 1e-6, 'W held: a clean half turn');

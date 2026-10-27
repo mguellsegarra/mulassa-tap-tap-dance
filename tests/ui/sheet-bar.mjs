@@ -9,6 +9,7 @@ globalThis.document = { createElement: el };
 globalThis.ResizeObserver = class { observe() {} };
 globalThis.addEventListener = () => {};
 globalThis.requestAnimationFrame = f => f();
+globalThis.getComputedStyle = () => ({ paddingTop: '0px' }); // the body's ring room (share.css); 0 keeps the numbers plain
 const { sheetFades } = await import('../../src/ui/sheet-fade.js');
 
 const dialog = el('dialog');

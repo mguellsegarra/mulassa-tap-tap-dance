@@ -266,7 +266,8 @@ body.reel-idle #select > * { pointer-events: none; }
 
 #select .sel-pill:focus-visible { outline-offset: -5px; }
 #select .sel-pill[aria-pressed="true"]:focus-visible { outline-color: #2a1a10; }
-#select-howto:focus-visible { outline-offset: 1px; }
+#select-howto:focus-visible, #select :is(.sel-tile, .sel-watch):focus-visible { outline-offset: 1px; } /* .sel-info scrolls with 4 px of room around them */
+#select .sel-standings-head:focus-visible { outline-offset: -5px; } /* the card clips round it: the ring goes inside, as on the pills */
 .sel-banner span { white-space: nowrap; width: max-content; }
 .sel-banner[data-long] span { font-size: 14px; letter-spacing: .02em; }
 @media (max-height: 600px) { .sel-banner span { font-size: 13px; } .sel-banner[data-long] span { font-size: 12px; } }

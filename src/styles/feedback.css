@@ -122,7 +122,7 @@ body.view-mode:has(#viewmode.idle) #howto.photo-help:not(:hover, :focus-visible)
 #feedback-menu { width: min(420px, calc(100vw - 32px - var(--sal) - var(--sar))); max-height: calc(100dvh - 32px - var(--sat) - var(--sab)); padding: 0; } /* the X on the corner (the shared .sheet-x): the frame doesn't clip, .feedback-scroll scrolls */
 #feedback-menu[open] { display: flex; flex-direction: column; }
 #feedback-form { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; }
-.feedback-scroll { flex: 1 1 auto; min-height: 0; overflow: auto; scrollbar-width: none; padding: 18px 20px 4px; text-align: center; }
+.feedback-scroll { flex: 1 1 auto; min-height: 0; overflow: auto; scrollbar-width: none; padding: 18px 20px 8px; margin-bottom: -4px; scroll-padding-block: 8px; text-align: center; } /* 8 px: the mail link's ring at the foot; the margin keeps the buttons where they were */
 .feedback-scroll p { max-width: 34em; margin-inline: auto; text-wrap: balance; }
 #feedback-menu .feedback-scroll::-webkit-scrollbar { display: none; } /* a native bar would run under the corner X; the fades say there is more */
 #feedback-menu::before, #feedback-menu::after, #board-menu::before, #board-menu::after { display: none; } /* these two scroll inside, not the frame */

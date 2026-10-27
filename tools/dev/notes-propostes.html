@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="ca">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Notes de la Mulassa · propostes</title>
+<!-- Dev only (npm run dev → /tools/dev/notes-propostes.html?mute is not needed: nothing plays until you press). Logic: tools/dev/notes-propostes/. -->
+<style>
+  @font-face { font-family: 'Baloo 2'; font-weight: 600; src: url(/fonts/baloo-2-latin.woff2) format('woff2'); }
+  @font-face { font-family: 'Baloo 2'; font-weight: 800; src: url(/fonts/baloo-2-latin.woff2) format('woff2'); }
+  @font-face { font-family: 'Baloo 2'; font-weight: 600; src: url(/fonts/baloo-2-latin-ext.woff2) format('woff2'); unicode-range: U+0100-02BA; }
+  :root { --gua: #ff7a1a; --pa: #14b8a6; --gold: #f5c518; --cream: #fff3d6; --dark: #2a1a10; --edge: #e8d8b880; --err: #ff8a7a; --add: #7ee081; --score: #c9a7ff; color-scheme: light only; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: #1a0f08; color: var(--cream); font: 600 15px/1.35 'Baloo 2', system-ui, sans-serif; }
+  main { max-width: 1180px; margin: 0 auto; padding: 16px 16px 40px; display: grid; gap: 16px; }
+  header h1 { margin: 0; font-weight: 800; font-size: 28px; color: var(--gold); letter-spacing: .5px; }
+  header p { margin: 2px 0 0; opacity: .85; }
+  .card { background: var(--dark); border: 2px solid var(--gold); border-radius: 18px; padding: 16px; display: grid; gap: 12px; }
+  .card h2 { margin: 0; font-size: 19px; font-weight: 800; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .seg { display: inline-flex; gap: 6px; flex-wrap: wrap; }
+  .btn { min-height: 44px; padding: 0 16px; border-radius: 999px; border: 2px solid var(--gold); background: transparent; color: var(--cream); font: inherit; font-weight: 800; cursor: pointer; }
+  .btn[aria-pressed="true"] { background: var(--cream); color: var(--dark); border-color: var(--cream); }
+  .btn-primary { background: var(--gold); color: var(--dark); }
+  .seg .btn:not([aria-pressed="true"]) { border-color: var(--edge); }
+  .btn:focus-visible { outline: 3px solid var(--cream); outline-offset: 2px; }
+  .note { border-left: 4px solid var(--gold); padding: 2px 0 2px 10px; opacity: .9; margin: 0; }
+  table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+  th, td { padding: 8px 8px; text-align: right; border-bottom: 1px solid #e8d8b833; white-space: nowrap; }
+  th:first-child, td:first-child { text-align: left; }
+  th { font-weight: 600; opacity: .75; font-size: 13px; }
+  tbody tr { cursor: pointer; }
+  tbody tr.on { background: #fff3d61a; }
+  tbody tr.on td:first-child { box-shadow: inset 4px 0 var(--cream); }
+  .plus { color: var(--add); } .minus { color: var(--err); } .same { opacity: .6; }
+  .bars { display: inline-flex; gap: 3px; align-items: flex-end; height: 34px; vertical-align: middle; }
+  .bars span { width: 14px; border-radius: 3px 3px 0 0; background: var(--gold); position: relative; }
+  .bars span i { position: absolute; left: -2px; right: -2px; border-top: 2px dashed var(--cream); }
+  .scroll { overflow-x: auto; border-radius: 12px; background: #1a0f08; }
+  #timeline { display: block; height: 150px; cursor: pointer; }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 13px; opacity: .9; }
+  .legend b { display: inline-block; width: 12px; height: 12px; border-radius: 50%; vertical-align: -1px; margin-right: 4px; }
+  .play { position: relative; display: grid; grid-template-rows: auto 1fr; border-radius: 14px; overflow: hidden; background: radial-gradient(120% 90% at 50% 0%, #4a2c18, #1a0f08 70%); }
+  #lane { display: block; width: 100%; height: 300px; touch-action: none; }
+  .pads { display: grid; grid-template-columns: 1fr 1fr; gap: 0; touch-action: none; user-select: none; -webkit-user-select: none; }
+  .pad { font-family: inherit; cursor: pointer; height: 110px; display: grid; place-items: center; font-weight: 800; font-size: 30px; letter-spacing: 1px; color: var(--cream); border: 0; }
+  .pad.gua { background: linear-gradient(#ff7a1a33, #ff7a1a66); box-shadow: inset 0 3px var(--gua); }
+  .pad.pa { background: linear-gradient(#14b8a633, #14b8a666); box-shadow: inset 0 3px var(--pa); }
+  .pad.down.gua { background: #ff7a1aaa; } .pad.down.pa { background: #14b8a6aa; }
+  .pad small { display: block; font-size: 13px; font-weight: 600; opacity: .8; text-align: center; letter-spacing: 0; }
+  .switch { display: inline-flex; gap: 8px; align-items: center; min-height: 44px; }
+  .switch input { width: 20px; height: 20px; accent-color: var(--gold); }
+  .dot { display: inline-block; width: 14px; height: 14px; border-radius: 50%; margin-right: 6px; vertical-align: -2px; box-shadow: 0 0 0 1.5px var(--cream); }
+  kbd { font: inherit; font-size: 12px; opacity: .6; margin-left: 6px; }
+  .editor { display: grid; grid-template-columns: 72px 1fr; background: #1a0f08; border-radius: 12px; overflow: hidden; }
+  .ed-labels { display: grid; grid-template-rows: repeat(3, 46px); align-content: start; padding-top: 36px; font-size: 12px; font-weight: 800; }
+  .ed-labels span { display: flex; align-items: center; padding-left: 10px; }
+  .ed-scroll { position: relative; border-radius: 0; }
+  #editor { display: block; cursor: crosshair; }
+  .ed-head { position: absolute; top: 0; bottom: 0; left: 0; width: 2px; background: var(--gold); pointer-events: none; }
+  #warn[data-ok="false"] { border-color: var(--err); color: var(--err); }
+  .file { display: inline-flex; align-items: center; }
+  @media (max-width: 640px) { main { padding: 12px; } th, td { padding: 8px 5px; } header h1 { font-size: 23px; } #lane { height: 240px; } .pad { height: 96px; } .hide-sm { display: none; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Notes de la Mulassa · 3 propostes</h1>
+    <p>La música actual del joc. Cada nota cau sobre un so que s’escolta, i el costat el decideix el so: GUA per al greu, PA per a l’agut.</p>
+  </header>
+
+  <section class="card" aria-labelledby="h-cmp">
+    <div class="row" style="justify-content: space-between">
+      <h2 id="h-cmp">Compara amb l’actual</h2>
+      <div class="seg" id="levels" role="group" aria-label="Nivell"></div>
+    </div>
+    <div id="about" class="note"></div>
+    <div class="scroll"><table>
+      <thead><tr><th>Versió</th><th>Notes</th><th>vs actual</th><th>Per 7 s</th><th>Pic 7 s</th><th class="hide-sm">PA</th><th class="hide-sm" title="GUA on sona un taiko greu, PA on sona un taiko agut">Taiko del seu costat</th><th class="hide-sm">Sobre la tonada</th><th class="hide-sm">Densitat A1 · A2 · B · C · Final</th></tr></thead>
+      <tbody id="table"></tbody>
+    </table></div>
+  </section>
+
+  <section class="card" aria-labelledby="h-tl">
+    <h2 id="h-tl">Què canvia, nota a nota</h2>
+    <div class="legend">
+      <span><b style="background: var(--gua)"></b>GUA</span><span><b style="background: var(--pa)"></b>PA</span>
+      <span><b style="background: linear-gradient(90deg, var(--gua) 50%, var(--pa) 50%)"></b>GUAPA</span>
+      <span><b style="background: transparent; box-shadow: inset 0 0 0 3px var(--add)"></b>nova (no és a l’actual)</span>
+      <span><b style="background: transparent; box-shadow: inset 0 0 0 2px var(--err)"></b>treta (era a l’actual)</span>
+      <span><b style="background: transparent; box-shadow: inset 0 0 0 3px var(--gold)"></b>canvia de costat</span>
+      <span>Toca la línia per començar a jugar en aquell punt.</span>
+    </div>
+    <div class="scroll" id="tl-scroll"><canvas id="timeline"></canvas></div>
+  </section>
+
+  <section class="card" aria-labelledby="h-play">
+    <div class="row" style="justify-content: space-between">
+      <h2 id="h-play">Prova-ho i edita</h2>
+      <div class="row"><div class="seg" id="versions" role="group" aria-label="Versió"></div><div class="seg" id="levels2" role="group" aria-label="Nivell"></div></div>
+    </div>
+    <div class="row">
+      <button class="btn btn-primary" id="go">Juga</button>
+      <button class="btn" id="watch">Mira-ho sol</button>
+      <button class="btn" id="stop">Reinicia</button>
+      <div class="seg" id="from" role="group" aria-label="Comença a"></div>
+      <label class="switch"><input type="checkbox" id="hits" checked> So dels cops</label>
+    </div>
+    <p class="note" id="keys">Tecles: D, F o ← per a GUA · J, K o → per a PA · les dues alhora per a GUAPA · espai per fer pausa i continuar. Al mòbil, toca les dues meitats. «Reinicia» esborra la puntuació.</p>
+    <div class="play">
+      <canvas id="lane"></canvas>
+      <div class="pads" id="pads">
+        <button class="pad gua" data-side="L" aria-label="GUA">GUA<small>greu</small></button>
+        <button class="pad pa" data-side="R" aria-label="PA">PA<small>agut</small></button>
+      </div>
+    </div>
+    <p class="note">A sota hi ha les notes de la versió i el nivell que tens triats (la fila daurada). Toca un buit per afegir-hi una nota, o una nota per canviar-la; si edites l’Actual o una proposta, se’n fa una còpia a «La meva». Amb «Allarga», toca la nota i després on acaba (2 temps com a mínim; les llargues només surten a NORMAL i DIFÍCIL). Toca els números de dalt per jugar des d’aquell punt. Aturada, la pista mostra el punt de l’editor; mentre sona, els canvis hi entren al moment. Es desa sola en aquest navegador.</p>
+    <div class="row">
+      <div class="seg" id="tools" role="group" aria-label="Eina">
+        <button class="btn" data-tool="don"><span class="dot" style="background: var(--gua)"></span>GUA <kbd>1</kbd></button>
+        <button class="btn" data-tool="ka"><span class="dot" style="background: var(--pa)"></span>PA <kbd>2</kbd></button>
+        <button class="btn" data-tool="big"><span class="dot" style="background: linear-gradient(90deg, var(--gua) 50%, var(--pa) 50%)"></span>GUAPA <kbd>3</kbd></button>
+        <button class="btn" data-tool="hold">Allarga <kbd>4</kbd></button>
+        <button class="btn" data-tool="del">Esborra <kbd>5</kbd></button>
+      </div>
+      <button class="btn" id="undo">Desfés</button>
+    </div>
+    <div class="editor">
+      <div class="ed-labels"><span>FÀCIL</span><span>NORMAL</span><span>DIFÍCIL</span></div>
+      <div class="scroll ed-scroll" id="ed-scroll"><canvas id="editor"></canvas><div class="ed-head" id="ed-head" hidden></div></div>
+    </div>
+    <p class="note" id="warn" aria-live="polite"></p>
+    <div class="row">
+      <button class="btn" id="copy">Copia el JSON</button>
+      <button class="btn" id="download">Descarrega el JSON</button>
+      <label class="btn file">Carrega un JSON<input type="file" id="load" accept="application/json,.json" hidden></label>
+      <span id="copied" aria-live="polite"></span>
+    </div>
+  </section>
+
+</main>
+<script type="module" src="/tools/dev/notes-propostes/main.js"></script>
+</body>
+</html>

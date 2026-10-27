@@ -18,6 +18,12 @@
 - **FINAL ESBOJARRAT** starts at the last coda phrase (`song.finale`): the festa (fireworks, lights, chant) for everyone; double points and the «x2 PUNTS» tag only while ENCERTS ≥ 70% (`G.finale` / `G.doublePoints`).
 - Density targets (notes per 7 s): FÀCIL 6–7 flat; NORMAL 8 → 12; DIFÍCIL 13–15 → 20–25, ~30 only in the finale.
   Harder charts contain the easier ones (`check.mjs` enforces this and much more).
+- **Hand-editing the Mulassa's levels**: `npm run dev` → `/tools/dev/notes-propostes.html`. It compares the game's chart
+  («Actual») with three proposals built on what the MP3 plays (`chart-proposals.js`), plays any of them on the real MP3
+  with the game's judge windows, and edits one row per level («La meva», kept in the browser, flags rule breaks). Export the
+  JSON and port it to the generator by hand: `build_taiko.py` still picks each note's level. The proposals read
+  `chart-events.json`, the hits the song plays; after the Mulassa's audio changes, `tests/game/chart-proposals.mjs` fails
+  until it is regenerated with `CHART_EVENTS=tools/dev/notes-propostes/chart-events.json` + the generator command (no audio written).
 - **Record** = most comparable points per level, device (`beatsRecord`; keys per version: the Mulassa's `record-points-mulassa-v3-<level>`, the Drac's `record-drac-valls-<level>`; the previous dance's keys are only read, as «Rècord del ball anterior» in Perfil, and never compared) and
   server (`submit_result`), as the board ranks; the % only breaks ties. Points: thousands dots, `C.score` lilac (points only). `?repte` stays on %.
 - **Ànim de la plaça** (energy/health): starts full, misses drain it, hits refill; empty = the mulassa collapses.

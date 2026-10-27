@@ -351,6 +351,15 @@ def main():
     hits['kick'].append((END, 1.0))
     bass.append((END, 4, 36))
     stabs.append((END, 'C'))
+    if os.environ.get('CHART_EVENTS'):  # CHART_EVENTS=<path>: what the audio plays, for tools/dev/notes-propostes; no audio
+        r = lambda v: round(v, 3)
+        json.dump({'note': 'Audible events of the Mulassa song, in beats: CHART_EVENTS=<this file> tools/music/build_taiko.py',
+                   'audio': json.load(open('src/song-mulassa.json'))['audio'], 'end': END, 'plan': plan, 'big': sorted(BIG),
+                   'holds': [[float(s), float(e), HOLD_KIND[s]] for s, e in sorted(HOLD.items())],
+                   'balloons': [list(w) for w in BALLOON_B], 'melody': [[r(s), r(d), m] for s, d, m in melody],
+                   'hits': {k: [[r(b), r(v)] for b, v in sorted(hits[k])] for k in ('don', 'ka', 'kick', 'snare', 'clap', 'crash', 'ohat')}},
+                  open(os.environ['CHART_EVENTS'], 'w'), separators=(',', ':'))
+        return
 
     # ------------------------------------------------------------------ synthesis
     N = int((sec(END) + 3.5) * SR)

@@ -232,13 +232,13 @@ const service = (o = {}) => ({ configured: true, asked: [], async seasons(f) { t
 // --- Perfil: this device's numbers at once, every device's when there is a profile (whichever knows more); the notice once
 {
   const f = fakeDoc(['account-menu', 'account-close', 'account-stats', 'account-status', 'account-since', 'account-empty', 'account-join',
-    'account-previous', 'account-previous-list', 'profile-row', 'stats-notice-menu', 'stats-notice-ok', 'stats-notice-close']);
+    'account-previous', 'account-previous-list', 'profile-row', 'stats-notice-menu', 'stats-notice-ok', 'stats-notice-close', 'stats-notice-guest', 'stats-notice-guest-name', 'stats-notice-last', 'stats-notice-confirm', 'stats-notice-hall']);
   const mem = new Map([['record-v2-duet-1', JSON.stringify({ quality: 91.5, score: 70000 })]]);
-  const store = { get: k => mem.get(k) ?? null, set: (k, v) => mem.set(k, v) };
+  const store = { get: k => mem.get(k) ?? null, set: (k, v) => mem.set(k, v), remove: k => mem.delete(k) };
   const server = { buckets: { 'mulassa-valls/mulassa-v3/1': bucket({ runs: 40, completed: 40, perfect: 4000, good: 100, miss: 100 }) }, days: ['2026-10-19', '2026-10-20'], daysPlayed: 2, currentStreak: 2, longestStreak: 2 };
-  let owner = 'u1', needed = true, accepted = 0, refreshed = 0, opened = [];
+  let owner = 'u1', needed = true, accepted = 0, refreshed = 0, opened = [], halls = [];
   const svc = service({ ownerId: async () => owner, myStats: async () => server });
-  const acc = setupAccount({ focusIn() {}, profile: { refresh() { refreshed++; }, open(a, back) { opened.push([a, back]); }, forget() {}, isOpen: false }, service: svc, store, doc: f.doc, now: () => NOW,
+  const acc = setupAccount({ focusIn() {}, onHall: (f, b) => halls.push([f, b]), profile: { refresh() { refreshed++; }, open(a, back) { opened.push([a, back]); }, forget() {}, isOpen: false }, service: svc, store, doc: f.doc, now: () => NOW,
     stats: { noticeNeeded: () => needed, acceptNotice() { accepted++; needed = false; } } });
   acc.open(); assert(f.$('account-menu').open && refreshed === 1, 'the profile block refreshes with it');
   assert(f.$('account-empty').hidden && f.$('account-stats').hidden && !f.$('account-status').hidden && /Carregant/.test(f.$('account-status').textContent), 'nothing played here yet and a service: loading inside the statistics\' room, no zero tiles');
@@ -267,8 +267,19 @@ const service = (o = {}) => ({ configured: true, asked: [], async seasons(f) { t
   f.$('account-close').click();
   // the stats notice, once: only while needed; closing it counts as seen
   assert.equal(acc.notice(), true); assert(f.$('stats-notice-menu').open);
+  assert(f.$('stats-notice-guest').hidden && f.$('stats-notice-confirm').hidden, 'no guest identity on this device: no tag line, no confirm button');
   f.$('stats-notice-ok').click(); assert(accepted === 1 && !f.$('stats-notice-menu').open);
   assert.equal(acc.notice(), false, 'seen: never again');
+  const backFn = () => {};
+  // a guest (its name carries a tag): told the new name and offered the confirmation, which counts the notice as seen
+  needed = true; mem.set('leaderboard-alias', 'Pep'); mem.set('leaderboard-tag', '4821');
+  assert.equal(acc.notice(backFn), true);
+  assert(!f.$('stats-notice-guest').hidden && /Pep#4821/.test(f.$('stats-notice-guest-name').textContent) && !f.$('stats-notice-confirm').hidden && f.$('stats-notice-confirm').textContent === 'Confirma el correu', 'the guest step and its button');
+  assert(f.$('stats-notice-last').textContent === '3' && /btn-primary/.test(f.$('stats-notice-confirm').className) && /btn-secondary/.test(f.$('stats-notice-ok').className), 'a guest: three steps, the confirmation leads');
+  f.$('stats-notice-confirm').click(); assert(accepted === 2 && opened.at(-1)[0] === 'link' && opened.at(-1)[1] === backFn && !f.$('stats-notice-menu').open, 'confirm: seen, then the profile steps, back to where the notice would go');
+  needed = true; mem.delete('leaderboard-tag');
+  assert.equal(acc.notice(backFn), true); assert(f.$('stats-notice-guest').hidden && f.$('stats-notice-last').textContent === '2' && /btn-primary/.test(f.$('stats-notice-ok').className), 'a named profile without a tag (confirmed): two steps, «D’acord» leads');
+  f.$('stats-notice-hall').click(); assert(accepted === 3 && halls.at(-1)[0] === 'mulassa-valls' && halls.at(-1)[1] === backFn && !f.$('stats-notice-menu').open, 'the season button: seen, then the Saló de la fama, back to where the notice would go (never back over it)');
 }
 // --- markup: the sheets exist, copy is Catalan, one primary each, «Dades enviades…» and «Convidat» words
 {
@@ -283,9 +294,10 @@ const service = (o = {}) => ({ configured: true, asked: [], async seasons(f) { t
   assert(!/card-source/.test(sheet('card-menu')) && /id="card-from" class="card-from" hidden/.test(sheet('card-menu')));
   // the statistics notice: a title and three short lines with a drawn icon each, then Privadesa and D’acord;
   // the details it no longer says stay in the Privadesa text
-  const facts = [...sheet('stats-notice-menu').matchAll(/<li><svg[^>]*aria-hidden="true"[^>]*>[^]*?<\/svg><span[^>]*>([^<]*)<\/span><\/li>/g)].map(m => m[1]);
-  assert.deepEqual(facts, ['Guardem les teves partides, el temps jugat i els encerts.', 'Tothom pot veure els totals si toca el teu nom.', 'Els dies que jugues només els veus tu.'], 'the notice: three short lines, each with its icon');
-  assert(/<h2 id="stats-notice-title"[^>]*>Les teves estadístiques<\/h2>/.test(sheet('stats-notice-menu')) && /data-privacy-open[^>]*>Privadesa<\/button>[^]*id="stats-notice-ok"[^>]*>D’acord</.test(sheet('stats-notice-menu')), 'title, then Privadesa and D’acord');
+  const notice = sheet('stats-notice-menu');
+  assert.equal((notice.match(/<li[ >]/g) || []).length, 3, 'the notice: three steps, each on its medal');
+  assert(/<header class="notice-ribbon"><svg[^>]*aria-hidden="true"/.test(notice) && /<h2 id="stats-notice-title"[^>]*>Nova temporada!<\/h2>/.test(notice), 'the title is real text inside the ribbon');
+  assert(/<h2 id="stats-notice-title"[^>]*>Nova temporada!<\/h2>[^]*class="pos p1"[^]*class="pos p2"[^]*class="pos p3"/.test(notice) && /data-privacy-open[^>]*>Privadesa<\/button>[^]*id="stats-notice-ok"[^>]*>D’acord</.test(notice), 'title, the three medals, then Privadesa and D’acord');
   const privacy = html.slice(html.indexOf('<section data-privacy="leaderboards"'), html.indexOf('</section>', html.indexOf('<section data-privacy="leaderboards"')));
   assert(/sumats entre (tots )?els teus dispositius/.test(privacy) && /Mai no s’hi envia l’hora en què jugues ni cap dada del dispositiu/.test(privacy) && /Tot s’esborra amb el perfil/.test(privacy), 'Privadesa keeps what the notice dropped');
   assert(/Crea un perfil per guardar-les i sortir a les classificacions\./.test(sheet('account-menu')));

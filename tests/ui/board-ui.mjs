@@ -646,6 +646,7 @@ const BOARD = page(0, 60, 22);
   assert(q.$('results-publish').hidden, 'while it goes up: no «Publica el resultat» to send it twice');
   q.T.publishes[0].resolve({ improved: true }); await wait();
   assert(q.$('results-publish').hidden && !q.$('publish-menu').open && !q.shares.length, 'done: nothing on screen, no Comparteix');
+  assert.equal(q.calls.accept, 0, 'nothing was shown: the statistics notice is not counted as seen');
   q.board.results(false); q.setRun(WEAK); q.board.results(true); await wait();
   assert(q.calls.publish.length === 1 && !q.$('results-publish').hidden, 'under 2 stars: not by itself, the button stays');
   // it fails (network, rate limit) or the profile is gone: the prompt, as for anyone

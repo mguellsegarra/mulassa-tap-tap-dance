@@ -8,9 +8,10 @@ import { forgetSeasons } from './seasons-ui.js';
 export const PERSIST_KEY = 'storage-persist'; // once, after the first publication: storage.persist() was asked
 
 export function setupLanding({ service, store, runs, canWrite, acceptStats, persist, declinesKey }) {
-  function landed(run, alias) {
+  // told: the sheet showed the statistics' note (its totals go with the profile); the quiet publication shows nothing, so the notice stays pending
+  function landed(run, alias, told = true) {
     store.set(ALIAS_KEY, alias);
-    acceptStats(); // the sheet's note said the statistics' totals go with the profile
+    if (told) acceptStats();
     forgetSeasons(service); // the podiums may have moved
     runs.published = run; // the results button goes even if the sheet was closed meanwhile
     store.remove(declinesKey); // they publish: the prompt may open by itself again
@@ -32,7 +33,7 @@ export function setupLanding({ service, store, runs, canWrite, acceptStats, pers
       const alias = store.get(ALIAS_KEY);
       if (!checkAlias(alias).ok) return fail();
       await service.publish(run, alias, {});
-      landed(run, alias);
+      landed(run, alias, false);
       return true;
     } catch (err) { boardIssue('leaderboard-publish-failed', err); return fail(); }
   }

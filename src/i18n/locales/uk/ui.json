@@ -1,5 +1,6 @@
 {
   "ui.account.previousLine": "{level}: {score} очок · {pct}%",
+  "ui.account.guestTagTitle": "Твоє ім’я — {name}",
   "ui.board.alias.1": "Timbaler",
   "ui.board.alias.2": "Portador",
   "ui.board.alias.3": "Gegant",

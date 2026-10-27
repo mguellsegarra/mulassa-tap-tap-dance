@@ -1,5 +1,6 @@
 {
   "ui.account.previousLine": "{level}: {score} puntu · %{pct}",
+  "ui.account.guestTagTitle": "Zure izena {name} da",
   "ui.board.alias.1": "Timbaler",
   "ui.board.alias.2": "Portador",
   "ui.board.alias.3": "Gegant",

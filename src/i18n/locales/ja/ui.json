@@ -1,5 +1,6 @@
 {
   "ui.account.previousLine": "{level}：{score}点 · {pct}%",
+  "ui.account.guestTagTitle": "あなたの名前は{name}です",
   "ui.board.alias.1": "Timbaler",
   "ui.board.alias.2": "Portador",
   "ui.board.alias.3": "Gegant",

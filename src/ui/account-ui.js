@@ -11,8 +11,10 @@ import { tr } from '../i18n/messages.js';
 import { mulaSpinner } from './loader.js';
 import { statsData, renderStats, sinceText, FIGURE_NAMES } from './stats-view.js';
 import { figureSeasons, boardName } from './seasons-ui.js';
+import { ALIAS_KEY, TAG_KEY, displayName } from '../services/leaderboard-identity.js';
 
-export function setupAccount({ focusIn, profile, service, store, stats, onSync = () => {}, doc = document, now = () => Date.now() }) {
+const HALL_FIGURE = 'mulassa-valls'; // the figure whose first season holds everything played before the seasons
+export function setupAccount({ focusIn, profile, service, store, stats, onSync = () => {}, onHall = () => {}, doc = document, now = () => Date.now() }) {
   const $ = byId(doc), menu = $('account-menu'), box = $('account-stats'), status = $('account-status'), notice = $('stats-notice-menu');
   let req = 0, back = null, shown = null, wins = [];
   const local = () => { const s = loadStats(), o = s.owners[getStatsOwner()]; return { since: s.since, buckets: { ...o?.counters, ...o && { practice: o.practice } }, days: o?.days ?? [] }; };
@@ -37,7 +39,10 @@ export function setupAccount({ focusIn, profile, service, store, stats, onSync =
     DIFFS.forEach((d, l) => {
       const r = readPreviousDanceRecord(store, l);
       if (!r) return;
-      const li = doc.createElement('li'); li.textContent = tr('ui.account.previousLine', { level: d.name, score: num(r.score), pct: Math.round(r.quality) });
+      // the level word wears its colour wherever the translation puts it (a marker splits the line around it)
+      const [before, after] = tr('ui.account.previousLine', { level: '\u0000', score: num(r.score), pct: Math.round(r.quality) }).split('\u0000');
+      const word = doc.createElement('span'); word.className = `lvt${l}`; word.textContent = d.name;
+      const li = doc.createElement('li'); li.append(before, word, after);
       ul.appendChild(li);
     });
     $('account-previous').hidden = !ul.children.length;
@@ -99,6 +104,10 @@ export function setupAccount({ focusIn, profile, service, store, stats, onSync =
   // --- the statistics notice, once per existing profile (statsSync.noticeNeeded); «D'acord» or closing it: seen
   let noticeBack = null;
   for (const id of ['stats-notice-ok', 'stats-notice-close']) $(id).addEventListener('click', () => notice.close());
+  // a guest's notice also offers the confirmation: it closes like «D'acord» (the notice is seen) and the profile steps open, back to where this one would
+  $('stats-notice-confirm').addEventListener('click', () => { const b = noticeBack; noticeBack = null; notice.close(); profile.open('link', b); });
+  // the season button counts like «D'acord» (the notice is seen, it never comes back over the hall or the board) and opens the Saló de la fama, back to where the notice would go
+  $('stats-notice-hall').addEventListener('click', () => { const b = noticeBack; noticeBack = null; notice.close(); onHall(HALL_FIGURE, b); });
   notice.addEventListener('close', () => { stats.acceptNotice(); const b = noticeBack; noticeBack = null; b?.(); });
   return {
     open,
@@ -107,7 +116,15 @@ export function setupAccount({ focusIn, profile, service, store, stats, onSync =
     notice(onBack = null) {
       if (!stats.noticeNeeded() || notice.open) return false;
       noticeBack = onBack;
+      // a guest (its name has a tag since the migration; the greeting has refreshed the identity by now): told, with the way out
+      const alias = store.get(ALIAS_KEY), tag = Number(store.get(TAG_KEY)), guest = Boolean(alias) && store.get(TAG_KEY) != null && Number.isInteger(tag);
+      $('stats-notice-guest').hidden = $('stats-notice-confirm').hidden = !guest;
+      $('stats-notice-last').textContent = guest ? '3' : '2'; $('stats-notice-last').className = `pos p${guest ? 3 : 2}`;
+      // a guest's first move is to confirm: that button leads and takes the primary look, «D'acord» the outline
+      $('stats-notice-confirm').className = `btn ${guest ? 'btn-primary' : 'btn-secondary'}`; $('stats-notice-ok').className = `btn ${guest ? 'btn-secondary' : 'btn-primary'}`;
+      if (guest) { $('stats-notice-guest-name').textContent = tr('ui.account.guestTagTitle', { name: displayName(alias, tag) }); $('stats-notice-confirm').textContent = tr('ui.profile.btn.link'); }
       notice.showModal(); focusIn(notice, 'stats-notice-ok');
+      notice.querySelector?.('.sheet-body')?.scrollTo?.(0, 0); // a small phone scrolls: it starts at the title, not at the focused button
       return true;
     },
   };

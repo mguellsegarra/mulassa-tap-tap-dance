@@ -35,19 +35,20 @@ export const WHEEL_PAL = [1, 0.78, 0.2, 0.9, 0.1, 0]; // the wheels' sparks, hot
 export const SP = { drag: 1.6, g: 7 }; // their air drag (1/s) and gravity (m/s²)
 export const FLASHES = 6; // one per fire point, and the TRO's
 // The plaça at night under the Drac (prototype, ?nit=a-d, ?nit=0 by day all through): its windows as [from, to] arrangement
-// labels or beats (to null: through its end and tail), the s the night takes to fall and lift, its look (drac-show.js) and the Drac's own glow.
+// labels or beats (to null: through its end and tail; a third key borrows that night's style for the window), the s the
+// night takes to fall and lift, its look (drac-show.js) and the Drac's own glow.
 export const DRAC_NIGHTS = {
   a: { windows: [[122, 'C3']], fall: 0.6, look: 'blue', glow: 0.9 }, // two beats before the mid-song GLOBUS (124) through its carretilles' last sparks and smoke
-  b: { windows: [['E3', null]], fall: 1.5, look: 'ember', glow: 0.75 }, // the last pass, its red smoke and the final in the dark
+  b: { windows: [[122, 'C3', 'a'], ['E3', null]], fall: 1.5, look: 'ember', glow: 0.75 }, // A's blue mid-song traca, then the last pass, its red smoke and the final
   c: { windows: [['D', 'E'], ['D3', 'E3']], fall: 0.4, look: 'blue', glow: 0.9 }, // both long D parts, the Bou's two discos
   d: { windows: [['A3', null]], fall: 8, look: 'dusk', glow: 0.8 }, // night falls slowly from the D.S. to the final
 };
-// a night's windows in song seconds
+// a night's windows as [from, to] song seconds and the style it falls in
 export function dracNightWindows(song, night) {
   const at = mark => song.beats[typeof mark === 'number' ? mark : song.arrangement.find(([, l]) => l === mark)[0]];
-  return night ? night.windows.map(([from, to]) => [at(from), to ? at(to) : Infinity]) : [];
+  return night ? night.windows.map(([from, to, like]) => [at(from), to ? at(to) : Infinity, like ? DRAC_NIGHTS[like] : night]) : [];
 }
-export function dracNightOn(windows, t) { // once a frame: no closure
-  for (let i = 0; i < windows.length; i++) if (t >= windows[i][0] && t < windows[i][1]) return true;
-  return false;
+export function dracNightAt(windows, t) { // the window song time t is in, or null; once a frame: no closure
+  for (let i = 0; i < windows.length; i++) if (t >= windows[i][0] && t < windows[i][1]) return windows[i];
+  return null;
 }

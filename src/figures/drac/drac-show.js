@@ -3,7 +3,7 @@
 // is a no-op, so she looks and sounds exactly as before. Its confetti (confetti.js burst / spawnConfetti) are rodes de foc.
 import * as THREE from 'three';
 import { createDracFx } from './drac-fx.js';
-import { streakFire, flareLevel, tracaWindow, DRAC_FX, DRAC_NIGHTS, dracNightWindows, dracNightOn } from './drac-fx-rules.js';
+import { streakFire, flareLevel, tracaWindow, DRAC_FX, DRAC_NIGHTS, dracNightWindows, dracNightAt } from './drac-fx-rules.js';
 import { dracTime } from './drac-time.js';
 import { scene, camera, renderProfile, glc, qualityLevel, plaza } from '../../scene/stage.js';
 import { drac, dracGlow } from './drac-objects.js';
@@ -57,16 +57,18 @@ export function dracEndTraca(n) {
 const DRAC_NIGHT_LOOKS = { blue: NIGHT_BLUE, ember: nightLook('#160807', '#060203', '#2a1416', '#301a12', 0.99), dusk: nightLook('#22142c', '#0a0618', '#2a2448', '#2c2030', 0.86) };
 const DRAC_NIGHT_SMOKE = new THREE.Color('#6a2a24');
 const DRAC_NIGHT = { n: 0, cfg: DRAC_NIGHTS[Q.get('nit') ?? 'b'] ?? null, song: null, windows: [] };
+DRAC_NIGHT.style = DRAC_NIGHT.cfg; // style: the window's night, kept while it lifts
 function dracNight(dt, t) {
   const ended = G.state === 'results'; // a night that reached the end stays over the results, under the red smoke thinning out
   const N = DRAC_NIGHT, run = !!N.cfg && isDracOn() && (G.state === 'play' || ended) && !G.practice && !!drac?.root.visible;
   if (run && song !== N.song) { N.song = song; N.windows = dracNightWindows(song, N.cfg); } // (another figure's song has none of its labels)
-  const was = N.n, on = run && (ended ? was > 0.5 : dracNightOn(N.windows, t));
-  N.n = run ? was + ((on ? 1 : 0) - was) * (1 - Math.exp(-Math.max(0, dt) / N.cfg.fall)) : 0; // a menu clears it at once, like the red smoke
+  const was = N.n, w = run && !ended ? dracNightAt(N.windows, t) : null, on = !!w || run && ended && was > 0.5;
+  if (w) N.style = w[2];
+  N.n = run ? was + ((on ? 1 : 0) - was) * (1 - Math.exp(-Math.max(0, dt) / N.style.fall)) : 0; // a menu clears it at once, like the red smoke
   if (!on && N.n < 0.01) N.n = 0;
   if (!N.n && !was) return;
-  plazaNight(N.n, DRAC_NIGHT_LOOKS[N.cfg.look]);
-  dracGlow.value = N.cfg.glow * N.n;
+  plazaNight(N.n, DRAC_NIGHT_LOOKS[N.style.look]);
+  dracGlow.value = N.style.glow * N.n;
   dracFx.objects.smoke?.material.color.setScalar(1).lerp(DRAC_NIGHT_SMOKE, N.n); // unlit smoke would glow in the dark (and go grey if only dimmed)
   setFinaleDim(N.n);
 }

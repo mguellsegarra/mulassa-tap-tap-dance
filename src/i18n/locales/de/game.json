@@ -26,7 +26,7 @@
   "game.pop.patapam": "PATAPAM!",
   "game.flow.musicLoading": "Musik lädt… {pct}%",
   "game.flow.musicPreparing": "Musik lädt…",
-  "game.flow.musicError": "Musik konnte nicht laden. Versuch’s noch mal.",
+  "game.flow.musicError": "Musik konnte nicht geladen werden. Versuch’s noch mal.",
   "game.flow.good1": "SEHR GUT!",
   "game.flow.good2": "SO!",
   "game.flow.good3": "GENIAL!",

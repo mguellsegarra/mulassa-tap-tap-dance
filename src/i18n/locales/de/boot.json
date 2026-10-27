@@ -22,5 +22,5 @@
   "boot.fail.title": "Ups! Laden fehlgeschlagen",
   "boot.fail.text": "Lade die Seite neu und versuch’s noch mal.",
   "boot.fail.retry": "Noch mal versuchen",
-  "boot.locale.failed": "Die Sprache konnte nicht laden. Das Spiel erscheint auf Katalanisch."
+  "boot.locale.failed": "Die Sprache konnte nicht geladen werden. Das Spiel erscheint auf Katalanisch."
 }

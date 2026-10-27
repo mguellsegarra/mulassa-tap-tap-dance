@@ -32,7 +32,7 @@
   "services.board.verification": "Bestätige die E-Mail, bevor du einen Namen ohne # wählst.",
   "services.captcha.clock": "Prüfe die Uhr deines Geräts.",
   "services.captcha.failed": "Die Prüfung ist fehlgeschlagen.",
-  "services.captcha.load": "Die Cloudflare-Prüfung konnte nicht laden. Prüfe die Verbindung oder ob ein Blocker sie aufhält.",
+  "services.captcha.load": "Die Cloudflare-Prüfung konnte nicht geladen werden. Prüfe die Verbindung oder ob ein Blocker sie aufhält.",
   "services.captcha.misconfigured": "Die Cloudflare-Prüfung ist falsch eingerichtet.",
   "services.captcha.notHuman": "Cloudflare konnte nicht bestätigen, dass du kein Roboter bist.",
   "services.captcha.retry": "{why} Versuch’s noch mal. (Code {code})",

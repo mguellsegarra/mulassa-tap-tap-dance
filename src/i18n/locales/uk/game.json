@@ -48,9 +48,6 @@
   "game.calibration.late": "Звук у навушниках запізнюється: врахуємо це.",
   "game.calibration.early": "Ти б’єш трохи раніше за звук: врахуємо це.",
   "game.diff.easy.name": "ЛЕГКО",
-  "game.diff.easy.sub": "Лише головні ноти",
   "game.diff.normal.name": "ЗВИЧАЙНО",
-  "game.diff.normal.sub": "Уся мелодія в ритмі",
-  "game.diff.hard.name": "СКЛАДНО",
-  "game.diff.hard.sub": "Усі ноти"
+  "game.diff.hard.name": "СКЛАДНО"
 }

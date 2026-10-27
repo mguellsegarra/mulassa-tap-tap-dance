@@ -44,9 +44,6 @@
   "game.calibration.late": "Els teus auriculars van amb retard: ho compensarem.",
   "game.calibration.early": "Marques una mica abans del so: ho compensarem.",
   "game.diff.easy.name": "FÀCIL",
-  "game.diff.easy.sub": "Només les notes principals",
   "game.diff.normal.name": "NORMAL",
-  "game.diff.normal.sub": "Tota la melodia, al temps",
-  "game.diff.hard.name": "DIFÍCIL",
-  "game.diff.hard.sub": "Totes les notes"
+  "game.diff.hard.name": "DIFÍCIL"
 }

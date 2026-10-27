@@ -10,7 +10,7 @@ import { beatAtTime } from '../core/beat-grid.js';
 // Each note carries the easiest difficulty that includes it.
 // GLOBUS (Taiko's balloon): over the arrangement's drumrolls you mash either side to pop it.
 // The mulassa's dance is not in the chart: it follows the song (dance.js), the same on every difficulty; hits only accent it.
-export const DIFFS = ['easy', 'normal', 'hard'].map(k => ({ name: tr(`game.diff.${k}.name`), sub: tr(`game.diff.${k}.sub`) }));
+export const DIFFS = ['easy', 'normal', 'hard'].map(k => ({ name: tr(`game.diff.${k}.name`) }));
 
 export const sectionAt = (song, t) => (song.sections.filter(([s]) => s <= t).pop() ?? song.sections[0])[1]; // before the first section: the first one
 

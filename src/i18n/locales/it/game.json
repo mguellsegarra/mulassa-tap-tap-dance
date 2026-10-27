@@ -44,9 +44,6 @@
   "game.calibration.late": "Le cuffie sono in ritardo: lo compenseremo.",
   "game.calibration.early": "Tocchi un po’ prima del suono: lo compenseremo.",
   "game.diff.easy.name": "FACILE",
-  "game.diff.easy.sub": "Solo le note principali",
   "game.diff.normal.name": "NORMALE",
-  "game.diff.normal.sub": "Tutta la melodia, a tempo",
-  "game.diff.hard.name": "DIFFICILE",
-  "game.diff.hard.sub": "Tutte le note"
+  "game.diff.hard.name": "DIFFICILE"
 }

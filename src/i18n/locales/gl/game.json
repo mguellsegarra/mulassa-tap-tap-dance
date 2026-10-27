@@ -44,9 +44,6 @@
   "game.calibration.late": "Os teus auriculares van con atraso: compensarémolo.",
   "game.calibration.early": "Marcas un pouco antes do son: compensarémolo.",
   "game.diff.easy.name": "FÁCIL",
-  "game.diff.easy.sub": "Só as notas principais",
   "game.diff.normal.name": "NORMAL",
-  "game.diff.normal.sub": "Toda a melodía, a tempo",
-  "game.diff.hard.name": "DIFÍCIL",
-  "game.diff.hard.sub": "Todas as notas"
+  "game.diff.hard.name": "DIFÍCIL"
 }

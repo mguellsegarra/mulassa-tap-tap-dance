@@ -42,9 +42,6 @@
   "game.calibration.late": "헤드폰 소리가 늦게 들려요. 맞춰줄게요.",
   "game.calibration.early": "소리보다 조금 먼저 누르네요. 맞춰줄게요.",
   "game.diff.easy.name": "쉬움",
-  "game.diff.easy.sub": "주요 음만 연주해요",
   "game.diff.normal.name": "보통",
-  "game.diff.normal.sub": "멜로디 전체를 박자에 맞춰요",
-  "game.diff.hard.name": "어려움",
-  "game.diff.hard.sub": "모든 음을 연주해요"
+  "game.diff.hard.name": "어려움"
 }

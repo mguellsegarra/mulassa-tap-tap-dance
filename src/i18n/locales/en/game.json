@@ -44,9 +44,6 @@
   "game.calibration.late": "Your headphones have a delay: we’ll offset it.",
   "game.calibration.early": "You tap a little before the sound: we’ll offset it.",
   "game.diff.easy.name": "EASY",
-  "game.diff.easy.sub": "Just the main notes",
   "game.diff.normal.name": "NORMAL",
-  "game.diff.normal.sub": "The whole tune, on the beat",
-  "game.diff.hard.name": "HARD",
-  "game.diff.hard.sub": "Every note"
+  "game.diff.hard.name": "HARD"
 }

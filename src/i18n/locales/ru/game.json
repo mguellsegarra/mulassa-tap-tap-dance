@@ -48,9 +48,6 @@
   "game.calibration.late": "Звук в наушниках запаздывает: учтём задержку.",
   "game.calibration.early": "Ты нажимаешь чуть раньше звука: учтём это.",
   "game.diff.easy.name": "ЛЕГКО",
-  "game.diff.easy.sub": "Только главные ноты",
   "game.diff.normal.name": "ОБЫЧНО",
-  "game.diff.normal.sub": "Вся мелодия, точно в ритм",
-  "game.diff.hard.name": "СЛОЖНО",
-  "game.diff.hard.sub": "Все ноты"
+  "game.diff.hard.name": "СЛОЖНО"
 }

@@ -44,9 +44,6 @@
   "game.calibration.late": "Ton casque a du retard : on va le compenser.",
   "game.calibration.early": "Tu joues un peu avant le son : on va le compenser.",
   "game.diff.easy.name": "FACILE",
-  "game.diff.easy.sub": "Les notes principales",
   "game.diff.normal.name": "NORMAL",
-  "game.diff.normal.sub": "Toute la mélodie, en rythme",
-  "game.diff.hard.name": "DIFFICILE",
-  "game.diff.hard.sub": "Toutes les notes"
+  "game.diff.hard.name": "DIFFICILE"
 }

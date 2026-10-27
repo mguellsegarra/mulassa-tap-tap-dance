@@ -44,9 +44,6 @@
   "game.calibration.late": "Deine Kopfhörer hinken nach. Das gleichen wir aus.",
   "game.calibration.early": "Du tippst vor dem Ton. Das gleichen wir aus.",
   "game.diff.easy.name": "LEICHT",
-  "game.diff.easy.sub": "Nur die Hauptnoten",
   "game.diff.normal.name": "NORMAL",
-  "game.diff.normal.sub": "Die ganze Melodie im Takt",
-  "game.diff.hard.name": "SCHWER",
-  "game.diff.hard.sub": "Alle Noten"
+  "game.diff.hard.name": "SCHWER"
 }

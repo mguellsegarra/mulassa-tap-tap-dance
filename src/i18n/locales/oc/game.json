@@ -44,9 +44,6 @@
   "game.calibration.late": "Es tòns auriculars van damb retard: ac compensaram.",
   "game.calibration.early": "Marques un shinhau abans deth son: ac compensaram.",
   "game.diff.easy.name": "FACIL",
-  "game.diff.easy.sub": "Sonque es nòtes principaus",
   "game.diff.normal.name": "NORMAU",
-  "game.diff.normal.sub": "Tota era melodia, ath temps",
-  "game.diff.hard.name": "DIFICIL",
-  "game.diff.hard.sub": "Totes es nòtes"
+  "game.diff.hard.name": "DIFICIL"
 }

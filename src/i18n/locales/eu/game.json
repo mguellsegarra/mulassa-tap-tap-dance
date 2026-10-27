@@ -44,9 +44,6 @@
   "game.calibration.late": "Zure entzungailuek atzerapena dute: konpentsatuko dugu.",
   "game.calibration.early": "Soinua baino lehen markatzen duzu: konpentsatuko dugu.",
   "game.diff.easy.name": "ERRAZA",
-  "game.diff.easy.sub": "Nota nagusiak bakarrik",
   "game.diff.normal.name": "NORMALA",
-  "game.diff.normal.sub": "Melodia osoa, erritmoan",
-  "game.diff.hard.name": "ZAILA",
-  "game.diff.hard.sub": "Nota guztiak"
+  "game.diff.hard.name": "ZAILA"
 }

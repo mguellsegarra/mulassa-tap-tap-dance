@@ -42,9 +42,6 @@
   "game.calibration.late": "イヤホンの音が遅れています。補正しますね。",
   "game.calibration.early": "音より少し早く叩いています。補正しますね。",
   "game.diff.easy.name": "かんたん",
-  "game.diff.easy.sub": "メインの音だけ",
   "game.diff.normal.name": "ふつう",
-  "game.diff.normal.sub": "メロディー全部をリズムよく",
-  "game.diff.hard.name": "むずかしい",
-  "game.diff.hard.sub": "すべての音"
+  "game.diff.hard.name": "むずかしい"
 }

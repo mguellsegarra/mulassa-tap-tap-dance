@@ -42,9 +42,6 @@
   "game.calibration.late": "你的耳机有延迟，会为你补偿。",
   "game.calibration.early": "你比声音稍早击打，会为你补偿。",
   "game.diff.easy.name": "简单",
-  "game.diff.easy.sub": "只打主要音符",
   "game.diff.normal.name": "普通",
-  "game.diff.normal.sub": "跟上完整旋律",
-  "game.diff.hard.name": "困难",
-  "game.diff.hard.sub": "打出所有音符"
+  "game.diff.hard.name": "困难"
 }

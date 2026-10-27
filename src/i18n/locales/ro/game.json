@@ -46,9 +46,6 @@
   "game.calibration.late": "Căștile tale au întârziere: o vom compensa.",
   "game.calibration.early": "Bați puțin înaintea sunetului: vom compensa.",
   "game.diff.easy.name": "UȘOR",
-  "game.diff.easy.sub": "Doar notele principale",
   "game.diff.normal.name": "NORMAL",
-  "game.diff.normal.sub": "Toată melodia, în ritm",
-  "game.diff.hard.name": "GREU",
-  "game.diff.hard.sub": "Toate notele"
+  "game.diff.hard.name": "GREU"
 }

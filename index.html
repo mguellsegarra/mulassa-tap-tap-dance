@@ -562,11 +562,15 @@
   <div class="sheet-body">
     <svg class="hint-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M8 7l4-4 4 4M6 11H5v10h14V11h-1"/></svg>
     <h2 id="free-fs-title" data-i18n="html.iosHintTitle">Juga a pantalla completa</h2>
-    <p class="board-text" data-i18n="html.freeFsWhy">A l’iPhone, Safari no permet la pantalla completa: les barres del navegador tapen part del joc.</p>
-    <p id="free-fs-text" class="board-text" data-i18n-rich="html.rich.iosHint">Toca <b>Compartir → Afegeix a la pantalla d’inici</b> i obre el joc des de la icona.</p>
-    <label class="switch-row" for="free-fs-off"><span data-i18n="html.freeHintOff">No m’ho tornis a recordar</span><input id="free-fs-off" type="checkbox" role="switch"></label>
+    <p id="free-fs-text" class="board-text" data-i18n="html.freeFsWhy">A l’iPhone, Safari no permet la pantalla completa: les barres del navegador tapen part del joc.</p>
+    <ol class="ios-steps"><!-- Safari's own glyphs (iOS 26, dark): the page menu in the address bar, Share, Add to Home Screen -->
+      <li><span class="ios-key"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7.5h14M5 12h13M5 16.5h9"/></svg></span><span data-i18n-rich="html.rich.iosStep1">Toca el <b>menú</b> de la barra de Safari, a baix</span></li>
+      <li><span class="ios-key"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5v11M8.5 7 12 3.5 15.5 7M8.5 10H7.5a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2h-1"/></svg></span><span data-i18n-rich="html.rich.iosStep2">Tria <b>Comparteix</b></span></li>
+      <li><span class="ios-key"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 8.5v7M8.5 12h7"/></svg></span><span data-i18n-rich="html.rich.iosStep3">Baixa i toca <b>Afegeix a la pantalla d’inici</b></span></li>
+    </ol>
     <div class="sheet-actions"><button id="free-fs-ok" type="button" class="btn btn-primary" data-i18n="html.freeFsGo">Ho entenc, continuo així</button></div>
   </div>
+  <p class="ios-bubble" aria-hidden="true"><span class="ios-key"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7.5h14M5 12h13M5 16.5h9"/></svg></span><span data-i18n="html.iosBubble">Comença aquí, a la barra de Safari</span></p><!-- points down at Safari's bar, under the page -->
 </dialog>
 <dialog id="free-hint-menu" class="sheet hint-menu" tabindex="-1" aria-labelledby="free-hint-title" aria-describedby="free-hint-text">
   <button id="free-hint-close" type="button" data-i18n-attr="aria-label:html.attr.close" class="sheet-x" aria-label="Tanca"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>

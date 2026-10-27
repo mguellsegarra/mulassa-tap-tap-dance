@@ -83,8 +83,8 @@ export function movePhoto(dt, safe, sideYaw = photoBody().yaw) {
   const stick = !keyed && reach > 0, dirX = Math.sin(sideYaw) * forward - Math.cos(sideYaw) * side, dirZ = Math.cos(sideYaw) * forward + Math.sin(sideYaw) * side;
   // Only RMB turns her towards the view, eased and capped at PHOTO_CAM.alignRate.
   // LMB never changes her heading, including while walking or running.
-  // During a culada the turn is hers alone: with mouse look the camera turns with her (the view is still "where she
-  // faces" afterwards, nothing pulls her back); without it the camera holds still and recenters only later.
+  // During a culada the turn is hers alone: with mouse look or a held stick the camera turns with her (the view is still
+  // "where she faces" afterwards, nothing pulls her back); with keys alone it holds still and recenters only later.
   const aligning = PHOTO.cameraYaw !== null && (PHOTO.mouse & 2);
   if (aligning && !p.spinLeft) {
     const delta = Math.atan2(Math.sin(PHOTO.cameraYaw - Math.PI - p.yaw), Math.cos(PHOTO.cameraYaw - Math.PI - p.yaw)), h = Math.min(dt, 0.05);
@@ -112,7 +112,7 @@ export function movePhoto(dt, safe, sideYaw = photoBody().yaw) {
       p.spinV = Math.min(p.spinV + PHOTO_SPIN.accel * h, PHOTO_SPIN.rate, Math.sqrt(2 * PHOTO_SPIN.accel * Math.abs(p.spinLeft)));
       const step = Math.sign(p.spinLeft) * Math.min(Math.abs(p.spinLeft), p.spinV * h);
       p.yaw += step; p.spinLeft -= step;
-      if (aligning) PHOTO.cameraYaw += step;
+      if (aligning || stick) PHOTO.cameraYaw += step; // (the stick points from the camera: a still one would turn her back)
       if (Math.abs(p.spinLeft) < 1e-9) { p.spinLeft = p.spinV = 0; PHOTO.lookAge = 0; } // (a moment before any recentering)
     }
     // The model faces +Z (read per substep: a culada mid-run carries her round). Its right hand is -X seen from behind.

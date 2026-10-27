@@ -245,16 +245,20 @@ console.log('culada and Drac sparks input ok');
   const turnWith = (setup) => {
     setPhotoControl(true,'mulassa-valls'); Object.assign(photoBody(),{x:0,z:0,yaw:0}); PHOTO.cameraYaw = Math.PI; PHOTO.lookAge = 9;
     setup(); press('KeyR'); const cam0 = PHOTO.cameraYaw;
-    for (let i = 0; i < 60; i++) movePhoto(1/60, () => 99); // the turn (~0.5 s)
+    const step = () => movePhoto(1/60, () => 99, PHOTO.cameraYaw - Math.PI); // the view's yaw, as photo-motion.js passes it
+    for (let i = 0; i < 60; i++) step(); // the turn (~0.5 s)
     const camAtEnd = PHOTO.cameraYaw;
-    for (let i = 0; i < 36; i++) movePhoto(1/60, () => 99); // a moment more (< followWait), keys/buttons still held
+    for (let i = 0; i < 36; i++) step(); // a moment more (< followWait), keys/buttons still held
     const cam = PHOTO.cameraYaw;
-    for (let i = 0; i < 240; i++) movePhoto(1/60, () => 99);
+    for (let i = 0; i < 240; i++) step();
     return { yaw: photoBody().yaw, cam0, camAtEnd, cam, later: PHOTO.cameraYaw };
   };
   const rmb = turnWith(() => { PHOTO.mouse = 2; press('KeyW'); });
   assert(Math.abs(rmb.yaw - Math.PI) < 1e-6, `right button held: she stays turned round (${rmb.yaw.toFixed(3)})`);
   assert(Math.abs(rmb.camAtEnd - rmb.cam0 - Math.PI) < 1e-6, 'and the mouse-look camera turned with her');
+  const stick = turnWith(() => { PHOTO.stickY = 1; });
+  assert(Math.abs(stick.yaw - Math.PI) < 1e-6, `touch stick held: the culada is not half undone (${stick.yaw.toFixed(3)})`);
+  PHOTO.stickY = 0;
   const keysOnly = turnWith(() => { press('KeyW'); });
   assert(Math.abs(keysOnly.yaw - Math.PI) < 1e-6, 'W held: a clean half turn');
   assert(keysOnly.camAtEnd === keysOnly.cam0 && keysOnly.cam === keysOnly.cam0, `the camera holds still through it and a moment after ${JSON.stringify(keysOnly)}`);

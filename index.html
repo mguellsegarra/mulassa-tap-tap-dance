@@ -260,7 +260,7 @@
 <canvas id="gl"></canvas>
 <canvas id="reel-fade" aria-hidden="true"></canvas>
 <canvas id="hud"></canvas>
-<div id="rotate" role="alert"><div class="cover-card"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg><b><span class="r-play" data-i18n="html.rotate.play">Gira el mòbil en vertical per jugar</span><span class="r-tablet" data-i18n="html.rotate.tablet">Gira la tauleta en horitzontal per jugar</span><span class="r-photo" data-i18n="html.rotate.photo">Gira el mòbil en horitzontal per moure la figura</span></b><button id="rotate-exit" type="button" class="btn btn-secondary" data-i18n="html.rotateExit">Torna al selector</button></div></div>
+<div id="rotate" role="alert"><div class="cover-card"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg><h2 class="r-pause" data-i18n="html.audioResumeTitle">Joc en pausa</h2><b><span class="r-play" data-i18n="html.rotate.play">Gira el mòbil en vertical per continuar</span><span class="r-tablet" data-i18n="html.rotate.tablet">Gira la tauleta en horitzontal per jugar</span><span class="r-photo" data-i18n="html.rotate.photo">Gira el mòbil en horitzontal per ballar per la plaça</span></b><button id="rotate-exit" type="button" class="btn btn-secondary" data-i18n="html.rotateExit">Torna al menú principal</button></div></div>
 <div id="pad">
   <button data-d="L" class="gua" aria-label="GUA, esquerra" data-fig-aria><span class="lbl"><span class="arr" aria-hidden="true">◀&#xFE0E;</span><span class="word" data-w="GUA" data-fig>GUA</span></span></button>
   <button data-d="R" class="pa" aria-label="PA, dreta" data-fig-aria><span class="lbl"><span class="arr" aria-hidden="true">▶&#xFE0E;</span><span class="word" data-w="PA" data-fig>PA</span></span></button>
@@ -554,13 +554,24 @@
     <div class="sheet-actions"><button id="gpu-hint-ok" type="button" class="btn btn-primary" data-i18n="ui.common.ok">D’acord</button></div>
   </div>
 </dialog>
-<dialog id="ios-hint-menu" class="sheet hint-menu" tabindex="-1" aria-labelledby="ios-hint-title" aria-describedby="ios-hint-text">
-  <button id="ios-hint-close" type="button" data-i18n-attr="aria-label:html.attr.close" class="sheet-x" aria-label="Tanca"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+<!-- «Joc lliure» on an iPhone held upright (src/ui/free-gate.js): Safari first recommends fullscreen (home screen), then both ask to turn it sideways -->
+<dialog id="free-fs-menu" class="sheet hint-menu" tabindex="-1" aria-labelledby="free-fs-title" aria-describedby="free-fs-text">
+  <button id="free-fs-close" type="button" data-i18n-attr="aria-label:html.attr.close" class="sheet-x" aria-label="Tanca"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
   <div class="sheet-body">
     <svg class="hint-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M8 7l4-4 4 4M6 11H5v10h14V11h-1"/></svg>
-    <h2 id="ios-hint-title" data-i18n="html.iosHintTitle">Juga a pantalla completa</h2>
-    <p id="ios-hint-text" class="board-text" data-i18n-rich="html.rich.iosHint">Toca <b>Compartir → Afegeix a la pantalla d’inici</b> i obre el joc des de la icona.</p>
-    <div class="sheet-actions"><button id="ios-hint-ok" type="button" class="btn btn-primary" data-i18n="ui.common.ok">D’acord</button></div>
+    <h2 id="free-fs-title" data-i18n="html.iosHintTitle">Juga a pantalla completa</h2>
+    <p class="board-text" data-i18n="html.freeFsWhy">A l’iPhone, Safari no permet la pantalla completa: les barres del navegador tapen part del joc.</p>
+    <p id="free-fs-text" class="board-text" data-i18n-rich="html.rich.iosHint">Toca <b>Compartir → Afegeix a la pantalla d’inici</b> i obre el joc des de la icona.</p>
+    <label class="switch-row" for="free-fs-off"><span data-i18n="html.freeHintOff">No m’ho tornis a recordar</span><input id="free-fs-off" type="checkbox" role="switch"></label>
+    <div class="sheet-actions"><button id="free-fs-ok" type="button" class="btn btn-primary" data-i18n="html.freeFsGo">Ho entenc, continuo així</button></div>
+  </div>
+</dialog>
+<dialog id="free-hint-menu" class="sheet hint-menu" tabindex="-1" aria-labelledby="free-hint-title" aria-describedby="free-hint-text">
+  <button id="free-hint-close" type="button" data-i18n-attr="aria-label:html.attr.close" class="sheet-x" aria-label="Tanca"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  <div class="sheet-body">
+    <svg class="hint-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg>
+    <h2 id="free-hint-title" data-i18n="html.viewmode.aria">Joc lliure</h2>
+    <p id="free-hint-text" class="board-text" data-i18n="html.rotate.photo">Gira el mòbil en horitzontal per ballar per la plaça</p>
   </div>
 </dialog>
 <!-- «Música en pausa» (src/ui/audio-resume.js): back from another app, iOS keeps the sound stopped until a tap; no X, any tap resumes -->

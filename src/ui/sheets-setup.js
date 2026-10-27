@@ -1,7 +1,7 @@
 import { leaderboard } from '../services/leaderboard.js';
 import { TAG_KEY, ALIAS_KEY, refreshIdentity } from '../services/leaderboard-identity.js';
 // Builds the sheets (settings, sync, board, share, profile, Perfil, seasons, cards, feedback, privacy), wires their buttons and registers them in `sheets`.
-import { showPhotoHelp } from './photo-avatars.js';
+import { showPhotoHelp, setRadioHint } from './photo-avatars.js';
 import { setupSelect } from './select-ui.js';
 import { sheetFades } from './sheet-fade.js';
 import { setupSync } from './sync-sheet.js';
@@ -17,6 +17,7 @@ import { setupBoard, QUIET_OFF_KEY } from './board-ui.js';
 import { DECLINES_KEY, OPTOUT_KEY, PERSIST_KEY } from './publish-ui.js';
 import { setupGreeting } from './greeting.js';
 import { setupDeviceHint } from './device-hint.js';
+import { setupFreeGate } from './free-gate.js';
 import { softwareGl } from '../scene/stage.js';
 import { makeDanceChart } from '../game/chart.js';
 import { song, FINALE_T } from '../game/figure-song.js';
@@ -36,7 +37,7 @@ import { setupLang } from './lang-ui.js';
 import { focusIn, keyboardNav } from './focus.js';
 import { Q, CALM, DEMO } from '../core/env.js';
 import { idOfKey } from '../figures/index.js';
-import { sheetUp, viewMode, viewBtn } from './controls.js';
+import { sheetUp, viewMode, viewBtn, enterFree } from './controls.js';
 import { loadPhoto } from '../hud/share-card.js';
 
 sheetFades();
@@ -174,6 +175,7 @@ const until = (test, ms = 20000) => new Promise((resolve, reject) => { const t0 
 let cardGreeted = false;
 const hint = setupDeviceHint({ focusIn, store, softwareGl }); // the device tips, last: after the profile's own news
 sheets.hint = hint;
+sheets.freeGate = setupFreeGate({ focusIn, store, onEnter: () => enterFree() }); // an upright iPhone is asked to turn before free play
 const greeting = setupGreeting({ stats: statsSync, seasonEnd, account, hint, identity: () => refreshIdentity(service, kv).finally(() => feedback.warm()), back: () => select.refocus(),
   free: () => G.state === 'select' && !sheetUp() && !viewMode && !document.hidden,
   extra: () => {
@@ -211,7 +213,7 @@ musicBtn.addEventListener('click', () => {
   setMenuSound(!menuMusic);
   showMusic();
 });
-sheets.music = setupFreeMusic({ eye: viewBtn, onSound: showMusic }); // free mode's radio: its «Silenci» is this speaker's preference
+sheets.music = setupFreeMusic({ eye: viewBtn, onSound: showMusic }); setRadioHint(() => sheets.music.discover()); // free mode's radio: its «Silenci» is this speaker's preference
 const privacyContent = document.getElementById('privacy-content');
 const privacyBody = privacyMenu.querySelector?.('.sheet-body');
 privacyMenu.addEventListener('close', () => {

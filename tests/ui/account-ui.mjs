@@ -431,32 +431,25 @@ const service = (o = {}) => ({ configured: true, asked: [], async seasons(f) { t
 // --- the device tips (src/ui/device-hint.js): last in the greeting's queue, once ever, only when their condition holds
 {
   const IPHONE = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Version/18.0 Mobile/15E148 Safari/604.1';
-  const ids = ['gpu-hint', 'ios-hint'].flatMap(k => ['menu', 'ok', 'close'].map(x => `${k}-${x}`));
+  const ids = ['gpu-hint'].flatMap(k => ['menu', 'ok', 'close'].map(x => `${k}-${x}`));
   const make = (o, mem = new Map()) => {
     const { doc, $ } = fakeDoc(ids), focused = [];
     const store = { get: k => mem.get(k) ?? null, set: (k, v) => mem.set(k, v) };
     return { $, mem, focused, hint: setupDeviceHint({ focusIn: (m, id) => focused.push(id), store, doc, ua: 'Mozilla/5.0 (Macintosh)', standalone: undefined, softwareGl: false, ...o }) };
   };
   assert.equal(make({}).hint.show(), false, 'hardware GL on a desktop: nothing to tell');
-  assert.equal(make({ ua: IPHONE, standalone: true }).hint.show(), false, 'the home-screen app: nothing to tell');
-  assert.equal(make({ ua: 'Mozilla/5.0 (iPad; CPU OS 18_0 like Mac OS X)', standalone: false }).hint.show(), false, 'iPhone and iPod only, as before');
-  // software GL takes precedence over the iPhone tip; «D’acord» stores its key, it never comes back
-  const both = make({ softwareGl: true, ua: IPHONE, standalone: false });
-  assert.equal(both.hint.show(), true);
-  assert.deepEqual([both.$('gpu-hint-menu').open, both.$('ios-hint-menu').open, both.focused[0]], [true, false, 'gpu-hint-ok']);
-  assert.equal(both.hint.show(), false, 'one sheet at a time'); assert.equal(both.hint.isOpen, true);
-  both.$('gpu-hint-ok').click();
-  assert.deepEqual([both.$('gpu-hint-menu').open, both.mem.get('gpu-hint'), both.mem.get('ios-hint')], [false, 'off', undefined]);
-  assert.equal(both.hint.show(), false, 'closed once: never again this session');
-  assert.equal(make({ softwareGl: true }, both.mem).hint.show(), false, 'nor at the next start');
-  const next = make({ softwareGl: true, ua: IPHONE, standalone: false }, both.mem);
-  assert.equal(next.hint.show(), true, 'the GPU tip told, a later start tells the iPhone one');
-  assert.equal(next.$('ios-hint-menu').open, true);
-  let backs = 0; next.$('ios-hint-menu').close(); next.hint.show(() => backs++);
-  assert.deepEqual([next.mem.get('ios-hint'), backs], ['off', 0], 'Escape (the dialog\'s own close) stores it too');
-  const x = make({ ua: IPHONE, standalone: false });
-  x.hint.show(() => backs++); x.$('ios-hint-close').click();
-  assert.deepEqual([x.mem.get('ios-hint'), backs], ['off', 1], 'the round × stores it and hands the focus back');
+  assert.equal(make({ ua: IPHONE, standalone: false }).hint.show(), false, 'iPhone Safari: its fullscreen tip belongs to free play (free-gate.js), not the greeting');
+  // «D’acord» stores its key, it never comes back
+  const gpu = make({ softwareGl: true });
+  assert.equal(gpu.hint.show(), true); assert.deepEqual([gpu.$('gpu-hint-menu').open, gpu.focused[0]], [true, 'gpu-hint-ok']);
+  assert.equal(gpu.hint.show(), false, 'one sheet at a time'); assert.equal(gpu.hint.isOpen, true);
+  gpu.$('gpu-hint-ok').click();
+  assert.deepEqual([gpu.$('gpu-hint-menu').open, gpu.mem.get('gpu-hint')], [false, 'off']);
+  assert.equal(gpu.hint.show(), false, 'closed once: never again this session');
+  assert.equal(make({ softwareGl: true }, gpu.mem).hint.show(), false, 'nor at the next start');
+  let backs = 0; const x = make({ softwareGl: true });
+  x.hint.show(() => backs++); x.$('gpu-hint-close').click();
+  assert.deepEqual([x.mem.get('gpu-hint'), backs], ['off', 1], 'the round × stores it and hands the focus back');
 
   // the queue: the season's end, then the statistics notice, then the tip; never while a sheet is up; offline it is still told
   const state = { free: true, news: 'S1', notice: true }, log = [];
@@ -477,15 +470,15 @@ const service = (o = {}) => ({ configured: true, asked: [], async seasons(f) { t
   await g3.greet(); assert.equal(off.$('gpu-hint-menu').open, true, 'offline: the tip needs no network');
   const busy = make({ softwareGl: true }), g4 = setupGreeting({ stats: { async init() {} }, hint: busy.hint, seasonEnd: { async news() { return null; } }, account: { notice: () => false }, free: () => false });
   await g4.greet(); assert.equal(busy.$('gpu-hint-menu').open, false, 'never over another sheet, a run or photo mode');
-  // both sheets: a dialog, the round ×, one primary «D’acord», described by their text
+  // the sheet: a dialog, the round ×, one primary «D’acord», described by their text
   const html = readPage();
-  for (const k of ['gpu-hint', 'ios-hint']) {
+  for (const k of ['gpu-hint']) {
     const m = new RegExp(`<dialog id="${k}-menu" class="sheet hint-menu"[^>]*aria-labelledby="${k}-title" aria-describedby="${k}-text">([\\s\\S]*?)</dialog>`).exec(html);
     assert(m, `${k}: a sheet`);
     assert(new RegExp(`id="${k}-close" type="button"[^>]*class="sheet-x" aria-label="Tanca"`).test(m[1]) && new RegExp(`id="${k}-ok" type="button" class="btn btn-primary"[^>]*>D’acord`).test(m[1]), `${k}: × and D’acord`);
     assert.equal((m[1].match(/btn-primary/g) || []).length, 1);
   }
-  assert(/acceleració per maquinari/.test(html) && /Compartir → Afegeix a la pantalla d’inici/.test(html), 'the same copy');
+  assert(/acceleració per maquinari/.test(html), 'the copy');
   assert(!/id="ios-hint"/.test(html), 'the inline banner is gone');
 }
 console.log('perfil, statistics, seasons and cards ok');

@@ -1,9 +1,8 @@
-// Device tips (#gpu-hint-menu, #ios-hint-menu): told once ever by the idle selector's greeting (greeting.js), after the profile's
-// news. WebGL in software (turn hardware acceleration on) comes first; else iPhone Safari outside the home-screen app.
-// Closing it either way stores its key ('gpu-hint' / 'ios-hint' = 'off'): it never comes back.
-export function setupDeviceHint({ focusIn, store, softwareGl, ua = navigator.userAgent ?? '', standalone = navigator.standalone, doc = document }) {
-  const key = softwareGl && store.get('gpu-hint') !== 'off' ? 'gpu-hint'
-    : /iPhone|iPod/.test(ua) && standalone === false && store.get('ios-hint') !== 'off' ? 'ios-hint' : null;
+// Device tip (#gpu-hint-menu): WebGL in software (turn hardware acceleration on), told once ever by the idle selector's greeting
+// (greeting.js), after the profile's news. Closing it either way stores 'gpu-hint' = 'off': it never comes back.
+// (The iPhone's fullscreen tip is free play's own: free-gate.js.)
+export function setupDeviceHint({ focusIn, store, softwareGl, doc = document }) {
+  const key = softwareGl && store.get('gpu-hint') !== 'off' ? 'gpu-hint' : null;
   const menu = key && doc.getElementById(`${key}-menu`);
   let back = null;
   if (menu) {

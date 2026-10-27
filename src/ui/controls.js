@@ -33,7 +33,7 @@ hud.addEventListener('pointermove', e => {
 hud.addEventListener('pointerleave', () => { hudMouse = false; updateHudCursor(); });
 
 export const sheetUp = () => howtoMenu.open || settingsMenu.open || sheets.sync.open || sheets.board.open || privacyMenu.open || sheets.share.open || pauseMenu.open || sheets.feedback.open || sheets.profile?.isOpen || sheets.select?.sheetOpen || sheets.watch?.open
-  || sheets.account?.isOpen || sheets.seasons?.isOpen || sheets.seasonEnd?.isOpen || sheets.card?.isOpen || sheets.hint?.isOpen;
+  || sheets.account?.isOpen || sheets.seasons?.isOpen || sheets.seasonEnd?.isOpen || sheets.card?.isOpen || sheets.hint?.isOpen || sheets.freeGate?.isOpen;
 export const menuState = () => G.state === 'splash' || G.state === 'select'; // the camera steers
 export const photoScreen = () => G.state === 'select'; // photo mode lives only on the selector
 export const steers = () => menuState() && !sheetUp();
@@ -86,7 +86,7 @@ export function freeDance(b) {
   if (on !== freeDancing) freeEl.toggleAttribute('data-dancing', (freeDancing = on));
   if (on) freeEl.style.setProperty('--b', (b % 2).toFixed(3));
 }
-export function enterFree() { setView(true); if (viewMode) sheets.music?.playFigure(G.figureId); } // the figure's own song (a pending selection: the last playable one, the one she drives)
+export function enterFree() { if (sheets.freeGate?.ask()) return; setView(true); if (viewMode) sheets.music?.playFigure(G.figureId); } // the figure's own song (a pending selection: the last playable one, the one she drives)
 freeEl.addEventListener('click', () => { G.state === 'select' && enterFree(); });
 document.getElementById('rotate-exit').addEventListener('click', () => setView(false));
 export function updateControls() {

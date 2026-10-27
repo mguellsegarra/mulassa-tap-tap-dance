@@ -112,7 +112,6 @@
   "ui.photo.description": "{figure}: {actions}. Press ? to see the controls again.",
   "ui.photo.group": "Move a figure",
   "ui.photo.hideHelp": "? hides help.",
-  "ui.photo.homeScreen": "For full-screen play, add the game to your home screen.",
   "ui.photo.hudMove": "Square: movement controls",
   "ui.photo.key.rightButton": "Right button",
   "ui.photo.key.space": "Space",

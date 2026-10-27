@@ -18,7 +18,7 @@ class Node {
   focus() {}
   getBoundingClientRect() { return { left: 0, width: 320, height: 300 }; }
 }
-const rows = [0, 1, 2, 3, 4].map(i => new Node(i));
+let rows = [0, 1, 2, 3, 4].map(i => new Node(i));
 const chip = Object.create(Chip.prototype), failures = [], requests = [];
 const gain = () => ({ connect: t => t, gain: { setValueAtTime() {}, linearRampToValueAtTime() {}, setTargetAtTime() {} } });
 Object.assign(chip, {
@@ -31,8 +31,8 @@ Object.assign(chip, {
 });
 let button, announcement;
 const figure = id => ({ id, song: id, composer: 'F. Bofarull', year: 1987 });
-const helpVars = {};
-const context = vm.createContext({ tr, chip, menuMusic: true, MULASSA: figure('mulassa'), DRAC: figure('drac'), BOU: figure('bou'), playable: () => true, // every figure on the radio: the release gate is tests/figures/common/traits.mjs's
+const helpVars = {}, seen = new Map();
+const context = vm.createContext({ tr, chip, store: { get: k => seen.get(k) ?? null, set: (k, v) => seen.set(k, v) }, menuMusic: true, MULASSA: figure('mulassa'), DRAC: figure('drac'), BOU: figure('bou'), playable: () => true, // every figure on the radio: the release gate is tests/figures/common/traits.mjs's
   figureSong: id => ({ audio: id, tail: 90, beats: [0, 1] }), portraitArt() {}, portraitPalette() {}, pixelSvg: () => '',
   mulaSpinner: () => ({}), PHOTO: { on: false }, clearPhotoKeys() {}, hud: {}, keyboardNav: false, beatAtTime() {},
   errors: { report: (...args) => failures.push(args) }, audioFailureTags: e => ({ name: e.name }),
@@ -94,7 +94,10 @@ assert(chip.menuSrc && !chip.radioSrc, 'leaving between natural ended and the ne
 { // the dock's «Ball lliure» starts the chosen figure's own song with its status; a speaker turned off stays off
   player.visible(true); const asked = requests.length;
   player.playFigure('drac'); await decode(asked);
-  assert(button.dataset.kind === 'drac' && chip.radioSrc && !announcement.hidden && announcement.innerHTML.includes('drac'), 'Ball lliure plays her song and says so');
+  assert(button.dataset.kind === 'drac' && chip.radioSrc, 'Ball lliure plays her song');
+  assert(announcement.hidden, 'entering says nothing: the controls\' intro has the screen');
+  player.discover(); assert(!announcement.hidden && announcement.innerHTML.includes('drac'), 'once the intro is gone the status says what sounds');
+  player.visible(false); player.visible(true); player.discover(); assert(announcement.hidden, 'told once ever, not on each entry');
   player.visible(false); context.setMenuSound(false); player.visible(true);
   player.playFigure('mulassa');
   assert(requests.length === asked + 1 && button.dataset.kind === 'off', 'with the menu music off, nothing starts');
@@ -116,5 +119,20 @@ assert(chip.menuSrc && !chip.radioSrc, 'leaving between natural ended and the ne
   assert(!timers.has(first) && [...timers.values()].filter(t => t.ms === 2600).length === 1, 'rapid choices replace the old announcement timer');
   player.visible(false);
   assert(announcement.hidden && timers.size === 0, 'leaving clears the status and its timer');
+}
+
+// The Bou not released: four rows, «Sense música» is the last one (index 3), not index 4 — and silence really silences.
+{
+  rows = rows.slice(0, 4); context.setMenuSound(true); // (the copy below reads the speaker as it is now)
+  const ctx2 = vm.createContext({ ...context, playable: f => f.id !== 'bou' });
+  vm.runInContext(readFileSync(new URL('../../src/ui/free-music.js', import.meta.url), 'utf8').replace(/^import .*;$/gm, '').replaceAll('export ', ''), ctx2);
+  assert.equal(vm.runInContext('nextTrack(2, 3)', ctx2), 0, 'with no Bou the Drac hands over to the menu loop, never to silence');
+  const p2 = ctx2.setupFreeMusic({ eye: { after() {}, getBoundingClientRect: () => ({ right: 60, top: 10, bottom: 60, width: 50, height: 50 }) }, onSound() {} });
+  p2.visible(true); const n = requests.length;
+  rows[1].listeners.click(); await decode(n);
+  assert(chip.radioSrc, 'a song plays');
+  rows[3].listeners.click(); await tick();
+  assert(context.menuMusic === false && !chip.radioSrc && !chip.menuSrc, 'Sense música stops the song and does not bring the menu loop back');
+  p2.visible(false);
 }
 console.log('free music: natural handover, manual/ended/decode races, repeated choice, silence, resume and exit ok');

@@ -12,13 +12,15 @@ import { hud } from '../hud/canvas.js';
 import { keyboardNav } from './focus.js';
 import { beatAtTime } from '../core/beat-grid.js';
 import { errors } from '../services/errors.js';
+import { store } from '../platform/storage.js';
 import { audioFailureTags } from '../platform/audio-load.js';
 import { tr } from '../i18n/messages.js';
 
 const FM_NOTE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V6l11-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/></svg>';
 const FM_NO_MUSIC = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V6l11-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/><path d="m3 3 18 18"/></svg>';
-const FM_OFF = 4, FM_NOW_MS = 2600, FM_PRELOAD = 15; // the next song starts loading FM_PRELOAD s before this one ends
-export const nextTrack = i => (i + 1) % FM_OFF; // Mulassa → Drac → Bou → the menu loop; no music is never next
+const RADIO_SEEN_KEY = 'radio-hint-seen'; // «Ara sona» on entering says the music can be changed: once ever
+const FM_NOW_MS = 2600, FM_PRELOAD = 15; // the next song starts loading FM_PRELOAD s before this one ends
+export const nextTrack = (i, off) => (i + 1) % off; // Mulassa → Drac → (Bou) → the menu loop; `off`, the last row, is never next
 
 // onSound: the speaker button shows the preference again (ui/sheets-setup.js).
 export function setupFreeMusic({ eye, onSound }) {
@@ -29,6 +31,7 @@ export function setupFreeMusic({ eye, onSound }) {
       return { title: f.song, sub: `${f.composer.replace(/^(\S)\S* (\S+).*/, '$1. $2')} · ${f.year} · ${mmss(song.tail)}`, song, art: pixelSvg(portraitArt(f), portraitPalette(f), '#2a1a10'), kind: f.id };
     }),
     { title: tr('ui.radio.off'), sub: tr('ui.radio.offSub'), art: FM_NO_MUSIC, kind: 'off' }];
+  const FM_OFF = tracks.length - 1; // the last row: an unreleased figure is not on the list, so it is not always 4
   const btn = document.createElement('button'), menu = document.createElement('div'), now = document.createElement('div');
   btn.id = 'radio'; btn.className = 'round-btn'; btn.type = 'button'; btn.hidden = true; btn.setAttribute('aria-haspopup', 'true'); btn.setAttribute('aria-controls', 'radio-menu');
   menu.id = 'radio-menu'; menu.hidden = true; menu.setAttribute('role', 'radiogroup'); menu.setAttribute('aria-labelledby', 'radio-title');
@@ -77,29 +80,29 @@ export function setupFreeMusic({ eye, onSound }) {
     now.dataset.kind = tracks[cur].kind; now.hidden = false; now.dataset.visible = 'true'; now.setAttribute('aria-hidden', 'false');
     clearTimeout(nowT); nowT = setTimeout(() => { now.dataset.visible = 'false'; now.setAttribute('aria-hidden', 'true'); }, FM_NOW_MS);
   }
-  function settle(i) { // the choice took: list, button, toast
+  function settle(i, quiet = false) { // the choice took: list, button, toast (entering free play is quiet: discover() tells it once)
     loading = -1; cur = i;
     setOpen(false); render();
-    if (shown) announce();
+    if (shown && !quiet) announce();
   }
-  function pick(i, auto = false) {
+  function pick(i, auto = false, quiet = false) {
     clearTimeout(preT); failed = -1; token++;
-    if (i === FM_OFF) { playing = -1; if (menuMusic) { setMenuSound(false); onSound(); } settle(i); return; } // (stops the radio too)
+    if (i === FM_OFF) { playing = -1; if (menuMusic) { setMenuSound(false); onSound(); } settle(i, quiet); return; } // (stops the radio too)
     const t = tracks[i];
     if (!chip?.radioLoad) return; // no engine yet (tests, a page without Web Audio)
-    if (!t.song) { playing = -1; chip?.radio(null); if (!menuMusic) { setMenuSound(true); onSound(); } settle(i); return; }
+    if (!t.song) { playing = -1; chip?.radio(null); if (!menuMusic) { setMenuSound(true); onSound(); } settle(i, quiet); return; }
     if (i === playing && !auto) { loading = -1; chip.wake(); setOpen(false); render(); return; } // resume the same source, never restart it
     const mine = token;
     loading = i; render();
     chip.radioLoad(t.song.audio).then(buf => {
       if (mine !== token || !shown) return;
-      chip.radio(buf, { end: t.song.tail, onEnd: () => { playing = -1; if (shown && loading < 0) pick(nextTrack(i), true); } });
+      chip.radio(buf, { end: t.song.tail, onEnd: () => { playing = -1; if (shown && loading < 0) pick(nextTrack(i, FM_OFF), true); } });
       playing = i;
       if (!menuMusic) { setMenuSound(true); onSound(); }
       chip.radioKeep([t.song.audio]);
-      const next = tracks[nextTrack(i)].song; // ready by the time this one ends, without two songs held all along
+      const next = tracks[nextTrack(i, FM_OFF)].song; // ready by the time this one ends, without two songs held all along
       if (next) preT = setTimeout(() => chip.radioLoad(next.audio).catch(() => {}), Math.max(0, t.song.tail - FM_PRELOAD) * 1000);
-      settle(i);
+      settle(i, quiet);
     }).catch(e => {
       if (mine !== token) return;
       errors.report('radio-load-failed', audioFailureTags(e));
@@ -137,7 +140,7 @@ export function setupFreeMusic({ eye, onSound }) {
     if (!open) return;
     const digit = /^Digit([1-5])$/.exec(e.code), step = { ArrowDown: 1, ArrowRight: 1, ArrowUp: -1, ArrowLeft: -1 }[e.code];
     if (e.code === 'Escape') { take(); setOpen(false); }
-    else if (digit) { take(); pick(+digit[1] - 1); }
+    else if (digit && +digit[1] <= tracks.length) { take(); pick(+digit[1] - 1); }
     else if (step) { take(); const i = rows.indexOf(document.activeElement); rows[((i < 0 ? cur : i) + step + rows.length) % rows.length].focus(); }
     else if (e.code === 'Home' || e.code === 'End') { take(); rows[e.code === 'Home' ? 0 : rows.length - 1].focus(); }
   }, true);
@@ -156,7 +159,11 @@ export function setupFreeMusic({ eye, onSound }) {
     },
     playFigure(id) { // entering free play: the driven figure's own song and its «Ara sona», unless the speaker is off
       const i = tracks.findIndex(t => t.kind === id);
-      if (shown && menuMusic && i > 0) pick(i);
+      if (shown && menuMusic && i > 0) pick(i, false, true);
+    },
+    discover() { // once ever, after the controls' intro has gone (ui/photo-avatars.js): what sounds, and that the button changes it
+      if (!shown || open || store.get(RADIO_SEEN_KEY) === '1') return;
+      store.set(RADIO_SEEN_KEY, '1'); announce();
     },
     beat() { // the plaça claps on the playing song's beats (main.js → animCrowd); null: the menu's own beat
       const t = playing >= 0 ? chip?.radioTime?.() : null;

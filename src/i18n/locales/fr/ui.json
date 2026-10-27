@@ -112,7 +112,6 @@
   "ui.photo.description": "{figure} : {actions}. Appuie sur ? pour revoir les commandes.",
   "ui.photo.group": "Déplace une figure",
   "ui.photo.hideHelp": "? masque l’aide.",
-  "ui.photo.homeScreen": "Pour jouer en plein écran, ajoute le jeu à l’écran d’accueil.",
   "ui.photo.hudMove": "Place : commandes de déplacement",
   "ui.photo.key.rightButton": "Bouton droit",
   "ui.photo.key.space": "Espace",

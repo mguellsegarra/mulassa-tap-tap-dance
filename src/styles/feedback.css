@@ -199,6 +199,7 @@ body:has(#viewmode.idle) #radio:not(:hover, :focus-visible, [aria-expanded="true
 #radio-menu[hidden] { display: none; }
 body:has(#radio-menu:not([hidden]), #radio-now:not([hidden])[data-visible="true"]) #photo-tip { opacity: 0; } /* one information layer while choosing or announcing music */
 @media (min-width: 520px) and (min-height: 520px) { #radio-menu { top: calc(88px + env(safe-area-inset-top)); } }
+@media (pointer: coarse) { #radio-menu { max-height: calc(100% - 84px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); overflow-y: auto; overscroll-behavior: contain; } } /* never past the screen: Safari's bars leave a landscape phone ~290 px; the list scrolls when it still does not fit */
 @media (pointer: fine) and (max-width: 639px) { #radio-menu { --radio-left: max(88px, calc(env(safe-area-inset-left) + 72px)); } }
 @media (pointer: fine) and (max-width: 359px) { #radio-menu .fm-art { display: none; } }
 @media (pointer: fine) and (min-width: 900px) {
@@ -224,6 +225,16 @@ body:has(#radio-menu:not([hidden]), #radio-now:not([hidden])[data-visible="true"
 .fm-bars i { width: 4px; height: 30%; border-radius: 1px; background: currentColor; animation: fm-bar .4s ease-in-out infinite alternate; }
 .fm-bars i:nth-child(2) { animation-delay: -.2s; } .fm-bars i:nth-child(3) { animation-delay: -.1s; }
 @keyframes fm-bar { to { height: 100%; } }
+/* short landscape phones (after the rows' own rules, which they override) */
+@media (pointer: coarse) and (max-height: 500px) {
+  #radio-menu { padding: 8px 10px 4px; } #radio-menu h2 { margin-bottom: 4px; font-size: 16px; }
+  .fm-row { min-height: 46px; margin-bottom: 4px; gap: 10px; } .fm-row[data-kind="off"] { min-height: 42px; } .fm-art { width: 36px; height: 36px; }
+}
+@media (pointer: coarse) and (max-height: 340px) { /* Safari's bars: all four rows in ~215 px (the title stays for screen readers, subtitles on one line) */
+  #radio-menu { padding-block: 6px 2px; top: calc(62px + env(safe-area-inset-top)); max-height: calc(100% - 74px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); }
+  #radio-menu h2 { position: absolute; width: 1px; height: 1px; margin: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .fm-row, .fm-row[data-kind="off"] { min-height: 40px; padding-block: 2px; } .fm-art { width: 32px; height: 32px; } .fm-t small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+} /* the corner row ends at 56 px */
 @media (max-height: 520px) { #radio-menu { padding-block: 8px; } .fm-row { min-height: 48px; margin-bottom: 4px; } .fm-art { width: 34px; height: 34px; } }
 #radio-now { position: fixed; z-index: 6; display: flex; align-items: center; gap: 10px; left: calc((100% + env(safe-area-inset-left) - env(safe-area-inset-right)) / 2); top: calc(72px + env(safe-area-inset-top)); translate: -50% 0; box-sizing: border-box; width: max-content; max-width: calc(100vw - 32px - env(safe-area-inset-left) - env(safe-area-inset-right)); padding: 6px 16px 6px 8px; border-radius: 999px; background: #000c; color: #fff3d6; font: 600 15px/1.25 'Baloo 2', system-ui, sans-serif; pointer-events: none; opacity: 0; transform: translateY(4px); transition: opacity .16s ease-out, transform .16s ease-out; }
 #radio-now[data-visible="true"] { opacity: 1; transform: none; }

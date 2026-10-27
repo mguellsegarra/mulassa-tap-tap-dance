@@ -7,7 +7,7 @@ let others change; the sheets (board, share, profile, Perfil `account`, seasons,
 by everyone below it as `sheets.board`… (`ui/sheets.js`), so no import cycle is needed.
 
 - `index.html` — the DOM: touch pad (GUA | PA), ⚙ `#settings` → "Configuració" sheet, "Com es juga" pill + sheet, "Ajusta la
-  sincronia" sheet, pause/confirm sheet, SALTA, the device tips (`#gpu-hint-menu`, `#ios-hint-menu`). Its CSS is in `src/styles/*.css` (`base.css`, the boards' `board.css`,
+  sincronia" sheet, pause/confirm sheet, SALTA, the device tips (`#gpu-hint-menu`; free play's `#free-hint-menu`). Its CSS is in `src/styles/*.css` (`base.css`, the boards' `board.css`,
   `share.css`, `feedback.css`, the selector's `select.css`, `select-cards.css`, `select-sizes.css`, `select-pending.css`, `select-chrome.css`, then `profile.css`, linked in order) except the fonts and the `#loader` rules, which stay inline: they paint before any file.
 - `src/main.js` — imports the systems in start order, the keyboard/pointer glue that needs several of them, `frame()` (the time step, then `game/tick.js`, the animations, `ui/frame-camera.js`, the render and the HUD),
   `window.__dbg` for tests.

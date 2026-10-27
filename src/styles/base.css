@@ -83,6 +83,8 @@ canvas { position: fixed; left: 0; top: 0; width: 100%; height: 100vh; height: 1
 body.wrong-orient #rotate { display: flex; } /* photo mode: phones want landscape (two thumbs, fullscreen.js), tablets either way */
 #rotate-exit { display: none; } body.view-mode #rotate-exit { display: flex; } /* (a locked rotation must not trap you in photo mode) */
 body.view-mode #rotate svg { animation-direction: reverse; }
+#rotate .r-pause { display: none; margin: 0; font: inherit; font-size: 28px; } body.view-mode #rotate .r-pause { display: block; } /* free play turned upright: «Joc en pausa» over the plaza, not a blank page */
+body.view-mode #rotate { background: #140c07b3; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); } body.view-mode #rotate::before { display: none; } /* (the loader's drifting mulassas are for the page cover, not over the plaza) */
 /* a modal sheet lives in the top layer, over the cover: hidden until upright, untouched (visibility: a sheet's own
    #id[open] display rule outranked display: none, iOS showed Classificació over the cover) */
 body.wrong-orient dialog[open] { visibility: hidden; } body.wrong-orient dialog::backdrop { display: none; }
@@ -267,6 +269,8 @@ kbd { display: inline-block; min-width: 14px; padding: 0 4px; border: 1px solid 
 .hint-icon { display: block; width: 44px; height: 44px; margin: 0 auto 8px; fill: none; stroke: #f5c518; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .hint-menu .board-text { margin-bottom: 4px; text-wrap: balance; }
 .hint-menu .board-text b { color: #fff3d6; font-weight: 800; }
+#free-fs-menu .switch-row { margin: 12px 0 14px; text-align: left; } /* its switch label reads from the left */
+#free-hint-menu .hint-icon { animation: rotate-hint 1.6s ease-in-out infinite reverse; } @media (prefers-reduced-motion: reduce) { #free-hint-menu .hint-icon { animation: none; } } /* the phone turns upright → sideways, as the photo cover's does */
 .captcha-text { margin: 0 0 16px; font-size: 16px; line-height: 1.35; color: #e8d8b8; text-wrap: balance; }
 .captcha-box { display: flex; justify-content: center; min-height: 65px; }
 .captcha-note { margin: 12px 0 0; color: #e8d8b899; font-size: 13px; }

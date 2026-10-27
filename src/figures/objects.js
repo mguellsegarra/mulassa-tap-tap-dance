@@ -12,12 +12,13 @@ export const COLLAS = [];
 export function initFigureObjects() {
   if (COLLAS.length) return;
   initDracModel(); initBouModel();
-  COLLAS.push(Object.assign(initDracColla(), { arena: 'arena' }), Object.assign(initMulaColla(), { arena: 'arenaMula' }),
-    Object.assign(initBouColla(), { arena: 'arenaMula' }));
+  COLLAS.push(Object.assign(initDracColla(), { arena: 'arena' }), Object.assign(initMulaColla(), { arena: 'arenaMula' }));
+  const bouColla = initBouColla(); // null in a build while the Bou is unreleased (unreleased-bou.js)
+  if (bouColla) COLLAS.push(Object.assign(bouColla, { arena: 'arenaMula' }));
 }
 const ROOTS = { 'drac-valls': () => drac?.root, 'bou-tradicional-valls': () => bou?.root };
 export const figureRoot = id => (ROOTS[id] ?? (() => mula.root))(); // the selector frames its outline
 export function hideFigures() { // a pending selection: no figure and no colla on the plaça
-  mula.root.visible = false; drac.root.visible = false; bou.frame.visible = false;
+  mula.root.visible = false; drac.root.visible = false; if (bou) bou.frame.visible = false;
   for (const c of COLLAS) c.helpers.visible = c.seated.visible = false;
 }

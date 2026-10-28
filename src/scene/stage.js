@@ -21,7 +21,11 @@ export const setQualityLevel = v => (qualityLevel = v);
 // boots too high finds its level), after it they only step down, one level behind it: sharpness, shadows and effects go first,
 // people only when those were not enough (a CPU-bound 2016 MacBook stayed at ~35 fps at minimal with high's 109 dancers)
 export let peopleLevel = qualityLevel;
-export const stepPeople = (level, splash) => (peopleLevel = splash ? level : Math.min(peopleLevel, level + 1));
+// free play's own drops cost no people after it (adaptive-quality.js scope): leaving it, its 'scope-end' puts back those it was entered with
+let freePeople = null;
+export const freePlayPeople = on => { freePeople = on ? freePeople ?? peopleLevel : null; };
+export const stepPeople = (level, splash, scopeEnd = false) => (peopleLevel = splash ? level
+  : scopeEnd && freePeople !== null ? Math.max(peopleLevel, freePeople) : Math.min(peopleLevel, level + 1));
 export let renderProfile = sessionProfile(qualityLevel, peopleLevel);
 export const setRenderProfile = v => (renderProfile = v);
 export const glc = document.getElementById('gl');

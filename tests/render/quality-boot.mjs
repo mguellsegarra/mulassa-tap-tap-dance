@@ -46,6 +46,13 @@ assert.equal(boot({ nav: { connection: { saveData: true } } }).level, rq.initial
   assert.equal(step(boot1 - 2, false), boot1 - 1, 'a second step: they follow, one level behind');
   assert.equal(step(boot1, false), boot1 - 1, 'a step back up never brings people back mid-session');
   assert.equal(step(-1, true), -1, 'on the splash they follow the level itself'); }
+// Free play's own drops cost no people after it: leaving it (adaptive-quality.js 'scope-end') puts back those it was entered with
+{ const c = boot().context, run = s => vm.runInContext(s, c), p0 = run('peopleLevel');
+  run('freePlayPeople(true)'); run(`stepPeople(${p0 - 2}, false)`); run('freePlayPeople(true)'); // two steps down inside it (the entry is kept)
+  assert.equal(run('peopleLevel'), p0 - 1, 'inside free play they still follow, one level behind');
+  assert.equal(run(`stepPeople(${p0}, false, true)`), p0, 'leaving it: the people it was entered with');
+  run('freePlayPeople(false)'); run(`stepPeople(${p0 - 2}, false)`);
+  assert.equal(run(`stepPeople(${p0}, false, true)`), p0 - 1, 'outside it, a trial up never brings people back'); }
 // Storage may be unavailable; choosing the renderer must not depend on it.
 assert.equal(boot({ blocked: true }).antialias, true, 'blocked storage still boots with MSAA');
 console.log('boot quality ok');

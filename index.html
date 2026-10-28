@@ -32,7 +32,6 @@
   }
   document.documentElement.lang = code;
   window.__mulassaBoot = has.call(O, code) ? O[code] : null;
-  window.__mulassaLocalePending = code !== 'ca' || /[?&]lang=pseudo(&|$)/.test(location.search); // another catalogue is fetched while the entry module evaluates
 })();
 </script>
 <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebSite","@id":"https://mulassa.cat/#site","name":"Mulassa Tap Tap Dance","url":"https://mulassa.cat/","inLanguage":"ca","publisher":{"@id":"https://mulassa.cat/#autor"}},{"@type":"Person","@id":"https://mulassa.cat/#autor","name":"Marc Güell Segarra","url":"https://ondori.dev","sameAs":["https://ondori.dev","https://github.com/mguellsegarra","https://github.com/mguellsegarra/mulassa-tap-tap-dance"],"contactPoint":{"@type":"ContactPoint","contactType":"general","email":"holi@mulassa.cat"}},{"@type":"VideoGame","name":"Mulassa Tap Tap Dance","url":"https://mulassa.cat/","description":"Joc de ritme en català: balla la Mulassa de Valls al ritme tocant GUA i PA.","inLanguage":"ca","genre":"Joc de ritme","applicationCategory":"GameApplication","operatingSystem":"Qualsevol navegador","isAccessibleForFree":true,"image":"https://mulassa.cat/og.jpg","author":{"@id":"https://mulassa.cat/#autor"},"isPartOf":{"@id":"https://mulassa.cat/#site"}}]}</script>
@@ -234,8 +233,9 @@
   };
   var ours = function (e) { var t = e.target; return t && t.tagName === 'SCRIPT' && entry.test(t.src || ''); };
   document.addEventListener('error', function (e) { if (ours(e)) fail('module-load'); }, true);
-  // another language's catalogue is fetched while the entry module evaluates (src/i18n/preload.js): `load` can come first, so wait for it; the 20 s deadline still covers a hang
-  document.addEventListener('load', function (e) { if (ours(e) && !window.__mulassaBooted && (!window.__mulassaLocalePending || window.__mulassaLocaleReady)) fail('module-init'); }, true);
+  // the entry graph has a top-level await (src/i18n/preload.js): `load` can come before it finishes, even for the bundled
+  // Catalan (iOS Safari), so judge only once the locale is ready; the 20 s deadline still covers a hang or an earlier throw
+  document.addEventListener('load', function (e) { if (ours(e) && !window.__mulassaBooted && window.__mulassaLocaleReady) fail('module-init'); }, true);
   var seen = 0, last = Date.now(), hidden = document.hidden, away = false;
   var elapsed = function () {
     var now = Date.now();

@@ -21,7 +21,7 @@
 .sel-pending h2 > span { display: block; width: 100%; }
 :is(.sel-pending, .sel-identity, .about-uaf) .sel-entity { --entity-holo: linear-gradient(105deg, #ffb3c7, #ffe29a, #b8f0c8, #a8dcff, #d7b8ff, #ffb3c7); max-width: 100%; box-sizing: border-box; font-size: 12px; line-height: 16px; min-height: 24px; row-gap: 0; background: var(--entity-holo) 0 0 / 300% 100%; color: #2a1a10; box-shadow: inset 0 0 0 1px #fff9, 0 0 4px #d7b8ff40; animation: sel-holo 6s linear infinite; }
 /* Each attribution keeps its own holo surface; the separator travels with the second one. */
-:is(.sel-pending, .sel-identity) .sel-entity:has(.sel-entity-unit) { width: max-content; padding: 0; gap: 4px 6px; justify-content: center; background: none; box-shadow: none; animation: none; }
+:is(.sel-pending, .sel-identity) .sel-entity:has(.sel-entity-unit) { width: max-content; padding: 0; gap: 4px 6px; justify-content: center; background: none; box-shadow: none; animation: none; overflow: visible; } /* a bare row: its pill radius must not clip the parts or the + */
 :is(.sel-pending, .sel-identity) .sel-entity[data-stacked] { flex-direction: column; }
 :is(.sel-pending, .sel-identity) .sel-entity[data-stacked] .sel-entity-unit { gap: 3px; }
 :is(.sel-pending, .sel-identity) .sel-entity-plus { color: #fff3d6; }

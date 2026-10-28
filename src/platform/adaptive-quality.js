@@ -19,7 +19,7 @@ export function adaptiveQuality({ ceiling, level, change, report = () => {} }) {
       if (trial) { failures++; retry = Math.min(300000, 30000 * 2 ** Math.min(4, failures - 1)); }
       trial = false;
     } else trial = true;
-    change(next); down.reset(); sinceChange = 0; cooldown = 2000; clear();
+    change(next, reason); down.reset(); sinceChange = 0; cooldown = 2000; clear();
     report({ time, reason, from, to: next, retry, ...context(), ...evidence });
   };
   // Some phones miss a share of refreshes with any canvas redrawn every frame (a Galaxy S10: ~17%, a tiny WebGL clear

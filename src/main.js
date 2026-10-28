@@ -11,7 +11,7 @@ import { markLeaderboardDebugUse } from './services/leaderboard-result.js';
 import { Q, pageActive, CALM, STARS } from './core/env.js';
 import { FINAL } from './dev/final-test.js';
 import { pace, RAWCLOCK, viewClock } from './core/timing.js';
-import { qualityLevel, renderProfile, softwareGl, stepPeople, GPU, renderer, camera, plaza, scene, setQualityLevel, renderScreen } from './scene/stage.js';
+import { qualityLevel, renderProfile, softwareGl, stepPeople, freePlayPeople, GPU, renderer, camera, plaza, scene, setQualityLevel, renderScreen } from './scene/stage.js';
 import { initFigureObjects, hideFigures } from './figures/objects.js';
 import { G, chip, clock, songTime, drawT, audioEngine, setClock, setDrawT, offsetMs } from './game/state.js';
 import { audioFailureTags } from './platform/audio-load.js';
@@ -63,7 +63,7 @@ window.__mulassaBootPhase = 'init';
 initFigureObjects(); // both rigs exist before shader warmup and the first frame
 
 const monitorFrames = adaptiveQuality({ ceiling: qualityLevel, level: () => qualityLevel, report: qualitySample,
-  change: level => { setQualityLevel(level); stepPeople(level, G.state === 'splash'); applyRenderQuality({ transition: !loader.covering }); resize(); precompile(); },
+  change: (level, reason) => { setQualityLevel(level); stepPeople(level, G.state === 'splash', reason === 'scope-end'); applyRenderQuality({ transition: !loader.covering }); resize(); precompile(); },
 });
 let glName; // crash reports' context, read only when one is sent
 errors.context(() => ({ state: G.state, diff: G.diff, practice: !!G.practice, paused: G.paused, quality: renderProfile.name, softwareGl,
@@ -97,7 +97,7 @@ function frame(now) {
   const f0 = performance.now();
   clearCameraImpact();
   // The previous draw's cost belongs to this interval. Apply profile/DPR changes before drawing: resize clears both canvases.
-  monitorFrames.scope(PHOTO.on); // free play's drops are its own: leaving it restores the level (a trial)
+  monitorFrames.scope(PHOTO.on); freePlayPeople(PHOTO.on); // free play's drops are its own: leaving it restores the level (a trial) and its people
   // the song's over during its closing chant (eeeh): nothing left to protect, and a step down there (a resize, every HUD
   // sprite repainted) cost a Galaxy S10 a 100 ms hitch on top of the chant's own new sprites
   monitorFrames(now - last, qualityCost, pace, G.state === 'play',

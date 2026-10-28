@@ -6,8 +6,8 @@ Current rules, moved out of AGENTS.md so they load only when the task needs them
 - Publish prompt («Publica el teu resultat!», `#publish-menu`, publish-ui.js): opens by itself once per eligible run; texts centred. A player with a
   nickname and a live profile here gets no prompt: the same runs (≥ 2 stars) go up by themselves, with nothing on screen (`publish-land.js`
   `publishQuietly`); if that fails (no session, profile gone, network) the prompt opens as for anyone. ⚙ Configuració «Publicació automàtica» (`#settings-quiet-row`, `QUIET_OFF_KEY`), shown only to a player with a nickname here, turns it off: the prompt asks again. On that
-  auto opening only, «Ara no» (a decline, ×`MAX_DECLINES` stops it) and quiet «No m’ho tornis a recordar» (`OPTOUT_KEY`, permanent) both
-  open Comparteix next. ⚙ Configuració «Proposta de publicar» (`#settings-prompt-row`) shows only while `promptsOn()` is false, with an «Activa» button that clears both.
+  auto opening only, «Ara no» (a decline, ×`MAX_DECLINES` stops it) and quiet «No m’ho tornis a recordar» (`OPTOUT_KEY`, permanent) just
+  close it. ⚙ Configuració «Proposta de publicar» (`#settings-prompt-row`) shows only while `promptsOn()` is false, with an «Activa» button that clears both.
 - Classificació (`#board-menu`, `ui/board-list.js`; docs/rankings/strategy.md §4): no view tabs (the owner removed «Tots · On soc», 2026-10-21). The title row is a
   button (`#board-figure`: the figure's pixel portrait, name, chevron) that opens «Tria figura» in place of the list (`#board-picker`, the shown figure cream;
   Escape and × come back to the board), then the season line, a flat «Posició 48 de 119» card (gold strip) with one link that reads «Al capdamunt» (an up arrow) while
@@ -17,7 +17,7 @@ Current rules, moved out of AGENTS.md so they load only when the task needs them
 - Cloudflare Turnstile (`src/services/captcha.js`): one silent check for every player after their first run (its results, or the title
   after leaving it; skipped under webdriver): never at startup, its iframe shares the main thread on iPhone Safari;
   its tick box only in the centred, non-dismissable `#captcha-menu`, never mid-song; failures never block the game.
-  Never render the widget anywhere else. After publishing, Comparteix opens by itself (`afterPublish`).
+  Never render the widget anywhere else. Comparteix never opens by itself: only its results button opens it.
 - Sheets whose content loads (Classificacions): fixed height from the first frame; loading/empty/error sit inside the
   list box, never change the sheet's height. An empty open board opened over the bare selector (not over results, Perfil or
   the Saló de la fama) offers «Juga amb el Drac / la Mulassa» (`#board-play`, the sheet's one primary; the hint then says «Publica el primer resultat i estrena la classificació.», not the button's words again): it closes the board

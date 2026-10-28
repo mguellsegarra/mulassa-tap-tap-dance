@@ -9,11 +9,10 @@
    invisible target padding so the visible gaps stay balanced. Short windows reduce the rhythm first.
    --ph = the preview's height: what the screen leaves after the rest (--share-rest), within 150–480 px. The rest is
    the sheet without the preview (plus a status line's room), + the nickname row and the «Publicat!» line when shown. */
-#share-menu { --share-gap: 20px; --rest-nick: 0px; --rest-note: 0px; --share-rest: calc(336px + 4 * var(--share-gap) + var(--rest-nick) + var(--rest-note)); --share-preview-w: calc(var(--ph) * .5625);
+#share-menu { --share-gap: 20px; --rest-nick: 0px; --share-rest: calc(336px + 4 * var(--share-gap) + var(--rest-nick)); --share-preview-w: calc(var(--ph) * .5625);
   --ph: clamp(150px, calc(100dvh - 48px - var(--sat) - var(--sab) - var(--share-rest)), 480px); width: min(480px, calc(100vw - 48px - var(--sal) - var(--sar))); max-width: none; max-height: calc(100dvh - 48px - var(--sat) - var(--sab)); padding: 16px 14px 6px;
   inset: var(--sat) var(--sar) var(--sab) var(--sal); margin: auto; } /* centre in the safe rect; leave room for the corner X and its touch slop */
 #share-menu:has(#share-nick-row:not([hidden])) { --rest-nick: 48px; }
-#share-menu:has(#share-note:not([hidden])) { --rest-note: 30px; }
 #share-menu[data-format="feed"] { --share-preview-w: calc(var(--ph) * .8); }
 /* it comes in (after Publica it takes the publish sheet's place): a short fade and rise, not a cut */
 #share-menu[open] { animation: share-in .2s ease-out; }
@@ -22,9 +21,8 @@
 .share-body { display: flex; flex-direction: column; gap: var(--share-gap); box-sizing: border-box; } #share-menu .share-body { padding-bottom: calc(10px + var(--ring-room)); } /* contain the footer's invisible target padding, and the ring under it */
 .share-side { display: contents; } /* one column: the title goes first, over the preview */
 .share-side > * { flex-shrink: 0; } /* wrapped labels keep their height when large text needs the existing body scroll */
-#share-menu h2, .share-note { order: -1; margin: 0; }
+#share-menu h2 { order: -1; margin: 0; }
 #share-menu h2 { font-size: 24px; margin-block: .25em -.1em; } /* compensate the title's visible baseline */
-.share-note { text-align: center; font-size: 17px; line-height: 1.25; color: #7ee081; text-wrap: balance; } /* «Ets el número 7 · top 40%!» */
 .share-figure { display: flex; justify-content: center; align-items: center; box-sizing: border-box; width: 100%; height: var(--ph); } /* a fixed box (the story's height): the feed card is centred in it, so switching formats moves nothing */
 /* the frame keeps the card's box from the first frame (a shimmer until the image is ready): nothing moves when it
    lands. A new card fades in over the old one (the frame's background) */

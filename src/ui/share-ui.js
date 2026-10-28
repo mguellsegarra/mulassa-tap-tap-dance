@@ -12,21 +12,16 @@ import { ALIAS_KEY, savedName, displayName } from '../services/leaderboard-ident
 import { errors } from '../services/errors.js';
 
 const FORMAT_KEY = 'share-format';
-// the sheet opening by itself (a record, after the publish prompt) is a nudge, not a toll: once a day at most; the button always works
-const NUDGE_KEY = 'share-nudge-at', NUDGE_GAP = 24 * 3600e3;
 // The photo is a synchronous GPU render and read-back: let the sheet paint and finish coming in (index.html share-in,
 // 0.2 s) first, so it never waits behind the publish sheet or freezes mid-way; the shimmer holds the card's place.
 const afterEntrance = () => new Promise(r => (globalThis.requestAnimationFrame ?? setTimeout)(() => setTimeout(r, 200)));
 
 export function setupShare({ focusIn, restore = () => {}, hero = () => null, standing = async () => null, sfx = () => {}, doc = document, nav = navigator,
-  store, fonts = doc.fonts, url = globalThis.URL, settle = afterEntrance,
-  // a run worth showing off (and ≥ 2 stars: a weak one is never pushed) opens Comparteix by itself `autoDelay` ms after its results: `auto()` says nobody else will (the publish
-  // prompt, when it opens, ends in Comparteix anyway), `ready()` that nothing is open over the screen by then
-  auto = () => false, ready = () => true, autoDelay = 1400, now = Date.now }) {
+  store, fonts = doc.fonts, url = globalThis.URL, settle = afterEntrance }) { // the sheet opens only from its button, never by itself
   const $ = byId(doc);
   const menu = $('share-menu'), row = $('results-actions'), btn = $('results-share'), tag = $('results-share-tag');
   const img = $('share-preview'), frame = $('share-frame'), status = $('share-status'), primary = $('share-image');
-  const note = $('share-note'), nick = $('share-nick'), nickRow = $('share-nick-row'), formats = { story: $('share-format-story'), feed: $('share-format-feed') };
+  const nick = $('share-nick'), nickRow = $('share-nick-row'), formats = { story: $('share-format-story'), feed: $('share-format-feed') };
   let rank = null, run = null, challenge = null, format = ['square', 'feed'].includes(store.get(FORMAT_KEY)) ? 'feed' : 'story';
   // file: the last card made; fresh: it matches what the sheet now shows (a redraw after the nickname / the format
   // makes it stale until the new one is ready); tapped: a tap on the primary waiting for that new card
@@ -95,22 +90,17 @@ export function setupShare({ focusIn, restore = () => {}, hero = () => null, sta
     menu.dataset.format = f;
     prepare();
   }
-  // place: after publishing (board-ui.js afterPublish), where they stand, a promise of «Ets el número 7 · top 40%!» (or
-  // null): the header says «Publicat!» until it comes
   let opens = 0;
-  let autoT = null;
-  function open({ published = false, place = null } = {}) {
+  function open() {
     if (!run || !shownKey || menu.open || run.reason === 'collapse') return;
-    tag.hidden = true; // the nudge has done its job
+    tag.hidden = true; // «Presumeix-ne!» has done its job
     say('');
-    note.hidden = !published; note.textContent = published ? tr('ui.share.published') : '';
     const o = ++opens, openedRun = run, aliasAtOpen = store.get(ALIAS_KEY);
     rank = null;
     if (aliasAtOpen) Promise.resolve().then(() => standing(run.figureId)).then(value => { // each figure has its own board
       if (o !== opens || run !== openedRun || !menu.open || store.get(ALIAS_KEY) !== aliasAtOpen) return;
       rank = value; prepare();
     }, () => {});
-    Promise.resolve(place).then(t => { if (t && menu.open && o === opens) note.textContent = t; }, () => {});
     nickRow.hidden = !store.get(ALIAS_KEY); // the switch only exists for a nickname already chosen (Classificacions)
     const cap = shareText(run, challenge), link = challengeUrl(run.pct, run.diff, undefined, run.figureId), links = shareLinks(cap, link);
     $('share-x').href = links.x; $('share-whatsapp').href = links.whatsapp;
@@ -119,13 +109,6 @@ export function setupShare({ focusIn, restore = () => {}, hero = () => null, sta
     menu.showModal();
     focusIn(menu, 'share-image');
     selectFormat(format);
-  }
-  function nudge(o) { // open() by itself, unless it already did within NUDGE_GAP (a clock set back counts as recent)
-    const ago = now() - (Number(store.get(NUDGE_KEY)) || 0);
-    if (ago >= 0 && ago < NUDGE_GAP) return false;
-    open(o);
-    if (menu.open) store.set(NUDGE_KEY, String(now()));
-    return true;
   }
   btn.addEventListener('click', () => { sfx('menu'); open(); });
   for (const [k, b] of Object.entries(formats)) b.addEventListener('click', () => { if (k !== format) { sfx('menu'); selectFormat(k); } });
@@ -174,11 +157,10 @@ export function setupShare({ focusIn, restore = () => {}, hero = () => null, sta
     try { nav.clipboard.writeText(full).then(copied, byHand); } catch { byHand(); }
   });
   $('share-close').addEventListener('click', () => menu.close());
-  menu.addEventListener('close', () => { req++; tapped = false; note.hidden = true; restore(); });
+  menu.addEventListener('close', () => { req++; tapped = false; restore(); });
 
   return {
     get open() { return menu.open; },
-    openAfterPublish: ({ place, published = true } = {}) => { if (!nudge({ published, place })) restore(); }, // skipped: focus back on the results
     // the profile's name or check changed under an open sheet (the server answered after the publication): redraw the card
     refreshName() { if (menu.open && run && named && JSON.stringify(nameNow()) !== named) prepare(); },
     // every frame from updateControls(): only real changes touch the DOM. r: the run on the results screen (null: none)
@@ -186,7 +168,7 @@ export function setupShare({ focusIn, restore = () => {}, hero = () => null, sta
       const key = show && r ? `${r.figureId}|${r.score}|${r.maxCombo}|${r.diff}|${r.pct}|${r.reason}|${r.t}` : '';
       if (key === shownKey) return;
       if (!key && row.contains(doc.activeElement)) doc.activeElement.blur?.();
-      if (key && key !== shownKey) { // a new results screen: its photo, its nudge
+      if (key && key !== shownKey) { // a new results screen: its photo
         req++; opens++; rank = null;
         if (menu.open) menu.close();
         run = r; challenge = ch; photo = null;
@@ -195,10 +177,7 @@ export function setupShare({ focusIn, restore = () => {}, hero = () => null, sta
         previewUrl = ''; img.classList.remove('ready'); frame.classList.remove('has-img'); frame.style.backgroundImage = '';
         btn.hidden = r.reason === 'collapse'; // she fell apart: nothing to show off (the row keeps Torna-ho a provar)
         tag.hidden = !bragWorthy(r, ch);
-        clearTimeout(autoT); autoT = null;
-        if (bragWorthy(r, ch) && r.stars >= 2 && auto()) autoT = setTimeout(() => { autoT = null; if (shownKey === key && ready()) nudge(); }, autoDelay);
       }
-      if (!key) { clearTimeout(autoT); autoT = null; }
       if (!key && menu.open) menu.close();
       shownKey = key;
       row.hidden = !key;

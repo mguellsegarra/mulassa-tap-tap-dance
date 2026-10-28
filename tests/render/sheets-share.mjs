@@ -88,8 +88,8 @@ run('chip = savedChip; G.state = savedState;');
 run(`G.state = 'play';`); assert(!boardSheet.opts.canVerify(), 'no tick box during a song or the practice');
 run(`G.state = 'results';`); assert(boardSheet.opts.canVerify(), 'on the results it may show');
 run(`G.state = 'select';`); assert(boardSheet.opts.canVerify(), 'on the title too');
-// after a publication Comparteix comes next (board-ui.js afterPublish → share-ui.js openAfterPublish)
-assert.equal(typeof boardSheet.opts.afterPublish, 'function', 'publishing hands over to Comparteix');
+// a publication refreshes the profile (board-ui.js afterPublish); Comparteix stays closed
+assert.equal(typeof boardSheet.opts.afterPublish, 'function', 'publishing refreshes the identity');
 // ⚙ Configuració: its «Sobrenom» row is refreshed on every opening
 const refreshed = boardSheet.settingsRefreshed;
 nodes.get('settings').listeners.click();
@@ -97,7 +97,7 @@ assert.equal(boardSheet.settingsRefreshed, refreshed + 1, 'opening Configuració
 settingsSheet.close();
 console.log('classificacions integration contracts ok');
 
-// Comparteix: the results row shows (even offline) with TOCA PER TORNAR; the nudge only for something to show off;
+// Comparteix: the results row shows (even offline) with TOCA PER TORNAR; «Presumeix-ne!» only for something to show off;
 // the sheet opens from its button, swallows the game keys while open and closes; the card makes room for the row.
 {
   const row = nodes.get('results-actions'), menu = nodes.get('share-menu');
@@ -107,28 +107,21 @@ console.log('classificacions integration contracts ok');
   run('G.resT = clock - 2; G.shareRun.t = G.resT; updateControls();');
   assert(row.hidden === false && nodes.get('results-share-tag').hidden === false, 'the row with Comparteix, and «Presumeix-ne!» for a record / S');
   nodes.get('results-share').listeners.click();
-  assert(menu.open && context.shareSheet.open && nodes.get('results-share-tag').hidden, 'Comparteix opens the sheet; the nudge has done its job');
+  assert(menu.open && context.shareSheet.open && nodes.get('results-share-tag').hidden, 'Comparteix opens the sheet; «Presumeix-ne!» has done its job');
   for (const code of ['Space', 'Enter', 'ArrowLeft', 'BracketRight']) keyHandlers.forEach(h => h({ code, target: { tagName: 'DIALOG' }, preventDefault() {} }));
   assert(run("G.state === 'results' && offsetMs === -20"), 'game keys do nothing behind Comparteix');
   nodes.get('share-close').listeners.click();
   assert(!menu.open, 'Tanca closes it');
-  // after a publication (board-ui.js afterPublish) Comparteix opens by itself for that run: «Publicat!», then the place
-  boardSheet.opts.afterPublish({ place: Promise.resolve('Ets el número 7 · top 40%!') });
-  assert(menu.open && nodes.get('share-note').hidden === false && nodes.get('share-note').textContent === 'Publicat! Ja surts a la classificació.', 'published: Comparteix opens by itself');
-  await Promise.resolve(); await Promise.resolve();
-  assert.equal(nodes.get('share-note').textContent, 'Ets el número 7 · top 40%!', '…its header then says where they stand');
-  nodes.get('share-close').listeners.click(); menu.listeners.close(); // (the mock's close() fires no event)
-  assert(!menu.open && nodes.get('share-note').hidden, 'Tanca closes it as usual; the line goes with it');
-  context.shareSheet.openAfterPublish({});
-  assert(menu.open && nodes.get('share-note').textContent === 'Publicat! Ja surts a la classificació.', 'without a place: just «Publicat!»');
-  nodes.get('share-close').listeners.click();
+  // a publication (board-ui.js afterPublish) never opens Comparteix by itself
+  boardSheet.opts.afterPublish();
+  assert(!menu.open, 'published: Comparteix stays closed');
   keyHandlers.forEach(h => h({ code: 'Space', target: { tagName: 'BODY' }, preventDefault() {} }));
   assert.equal(run('G.state'), 'select', 'closed: Space leaves the results again');
   run('updateControls();');
   assert(row.hidden === true, 'the row goes with the results');
   run(`G.state = 'results'; G.resT = clock - 2; G.stars = 1; G.newRecord = false;
     G.shareRun = { score: 100000, pct: 55, diff: 1, reason: 'fail', stars: 1, newRecord: false, maxCombo: 9, t: G.resT, practice: false }; updateControls();`);
-  assert(row.hidden === false && nodes.get('results-share-tag').hidden === true, 'no nudge for an ordinary run');
+  assert(row.hidden === false && nodes.get('results-share-tag').hidden === true, 'no «Presumeix-ne!» for an ordinary run');
   drawnText.length = 0;
   run(`G.challenge = challengeResult({ pct: 50, diff: 1 }, G.shareRun); G.counts = { perfect: 40, good: 20, miss: 30 }; drawHud(0);`);
   assert(drawnText.includes('REPTE SUPERAT!') && drawnText.includes(shareLogic.SITE_LABEL), 'the card says the challenge is beaten and where to play');
@@ -143,7 +136,7 @@ console.log('classificacions integration contracts ok');
   run(`G.reason = 'collapse'; G.stars = 0; G.diff = 2; G.resT = clock - 2;
     G.shareRun = { score: 100000, pct: 20, diff: 2, reason: 'collapse', stars: 0, newRecord: false, maxCombo: 3, t: G.resT, practice: false }; updateControls();`);
   assert(row.hidden === false && nodes.get('results-share').hidden === true && nodes.get('results-retry').hidden === false, 'collapse: no Comparteix, Torna-ho a provar instead');
-  context.shareSheet.openAfterPublish({});
+  nodes.get('results-share').listeners.click();
   assert(!menu.open, 'collapse: the share sheet never opens');
   nodes.get('results-retry').listeners.click();
   assert(run("G.state === 'play' && G.diff === 2 && !G.practice"), 'Torna-ho a provar: the same level again');
@@ -173,7 +166,7 @@ console.log('classificacions integration contracts ok');
   nodes.get('results-share').listeners.click(); await Promise.resolve(); await Promise.resolve();
   assert.deepEqual(boardSheet.standings, ['drac-valls'], 'the Drac\'s share image asks for the Drac\'s board, not the Mulassa\'s');
   const asked = (context.identityAsked || []).length;
-  boardSheet.opts.afterPublish({}); await Promise.resolve();
+  boardSheet.opts.afterPublish(); await Promise.resolve();
   assert.equal(context.identityAsked.length, asked + 1, 'a publication re-reads the profile for the card');
   nodes.get('share-close').listeners.click(); menu.listeners.close();
   context.localStorage = kept;

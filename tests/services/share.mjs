@@ -118,7 +118,7 @@ assert.equal((share.match(/btn-primary/g) || []).length, 1, 'one primary action'
 assert(/<button id="share-image"[^>]*class="btn btn-primary"[^>]*>(<svg[^>]*>.*?<\/svg>){2}<span id="share-image-label"[^>]*>/.test(share), 'primary: share / save icons first, then its label');
 assert(/class="share-seg" role="group"/.test(share) && /id="share-format-story"[^>]*aria-pressed="true"[^>]*>Història \(9:16\)</.test(share) && /id="share-format-feed"[^>]*>Publicació \(4:5\)</.test(share), 'Història (9:16) / Publicació (4:5): a segmented toggle');
 assert(!/>Story<|Instagram 4:5/.test(share), 'Catalan format names with the ratio, no «Story» / «Instagram 4:5»');
-assert(/<p id="share-note" class="share-note" role="status" hidden>/.test(share) && share.indexOf('id="share-note"') > share.indexOf('id="share-title"'), 'after publishing: the place line under the title');
+assert(!share.includes('id="share-note"'), 'no «Publicat!» line: the sheet never follows a publication');
 assert(/<div class="share-foot"><button id="share-privacy"/.test(share), 'Privadesa alone at the foot (Tanca is the X, top right)');
 assert(/<label id="share-nick-row" class="switch-row[^"]*" for="share-nick" hidden>.*<input id="share-nick" type="checkbox" role="switch" checked>/.test(share), 'the nickname: a .switch-row, hidden until there is an alias, on by default');
 const direct = share.match(/<a id="share-(?:whatsapp|x)" class="btn btn-link btn-compact"[^>]*target="_blank" rel="noopener noreferrer"><svg/g) || [];
@@ -246,43 +246,15 @@ console.log('share: challenge link, captions, fallbacks, eligibility, privacy an
   }
   console.log('share sheet: Més… / Copia ok');
   const wait = async () => { await new Promise(r => setTimeout(r, 0)); for (let i = 0; i < 20 && doc.getElementById('share-image').disabled; i++) await new Promise(r => setTimeout(r, 0)); };
-  // a run worth showing off opens Comparteix by itself (when no publish prompt does), once, if nothing else is open by then
+  // Comparteix never opens by itself, not even for a record: only its button opens it
   {
-    const mk = extra => { nodes.clear(); return setupShare({ focusIn() {}, doc, nav: phone, store: { get: () => null, set() {} }, fonts: null,
-      url: { createObjectURL: () => 'blob:card', revokeObjectURL() {} }, settle: () => Promise.resolve(), autoDelay: 0, ...extra }); };
-    const sheet = () => doc.getElementById('share-menu').open, tick = () => new Promise(r => setTimeout(r, 5));
-    let ui = mk({ auto: () => true });
-    ui.results(true, run({ diff: 0, pct: 95, newRecord: true, t: 20 }), null); await tick();
-    assert(sheet(), 'a record: Comparteix opens by itself');
-    ui = mk({ auto: () => true });
-    ui.results(true, run({ diff: 0, pct: 60, stars: 2, t: 21 }), null); await tick();
-    assert(!sheet(), 'nothing to show off: it stays closed');
-    ui = mk({ auto: () => false });
-    ui.results(true, run({ diff: 0, pct: 95, newRecord: true, t: 22 }), null); await tick();
-    assert(!sheet(), 'the publish prompt will do it: not twice');
-    ui = mk({ auto: () => true, ready: () => false });
-    ui.results(true, run({ diff: 0, pct: 95, newRecord: true, t: 23 }), null); await tick();
-    assert(!sheet(), 'another sheet is up: it does not open over it');
-    ui = mk({ auto: () => true, autoDelay: 30 });
-    ui.results(true, run({ diff: 0, pct: 95, newRecord: true, t: 24 }), null); ui.results(false, null, null); await new Promise(r => setTimeout(r, 60));
-    assert(!sheet(), 'leaving the results first: it never comes late');
-    // once a day at most, by either way in; the button still opens it
-    const mem = {}, store = { get: k => mem[k] ?? null, set: (k, v) => { mem[k] = v; } };
-    let t = 1e12, restored = 0;
-    const day = extra => mk({ auto: () => true, store, now: () => t, restore: () => restored++, ...extra });
-    ui = day();
-    ui.results(true, run({ diff: 0, pct: 95, newRecord: true, t: 30 }), null); await tick();
-    assert(sheet(), 'the first record of the day: it opens by itself');
-    t += 3600e3; ui = day();
-    ui.results(true, run({ diff: 0, pct: 97, newRecord: true, t: 31 }), null); await tick();
-    assert(!sheet(), 'another record an hour later: it stays closed');
-    ui.openAfterPublish({});
-    assert(!sheet() && restored === 1, 'after the publish prompt too: closed, focus back on the results');
+    nodes.clear();
+    const ui = setupShare({ focusIn() {}, doc, nav: phone, store: { get: () => null, set() {} }, fonts: null,
+      url: { createObjectURL: () => 'blob:card', revokeObjectURL() {} }, settle: () => Promise.resolve() });
+    ui.results(true, run({ diff: 0, pct: 95, newRecord: true, t: 20 }), null); await new Promise(r => setTimeout(r, 1500));
+    assert(!doc.getElementById('share-menu').open, 'a record: the sheet stays closed');
     doc.getElementById('results-share').listeners.click();
-    assert(sheet(), 'Comparteix itself always opens it');
-    t += 24 * 3600e3; ui = day();
-    ui.results(true, run({ diff: 0, pct: 98, newRecord: true, t: 32 }), null); ui.openAfterPublish({});
-    assert(sheet(), 'a day later: by itself again');
+    assert(doc.getElementById('share-menu').open, 'its button opens it');
   }
   // the nickname switch and the other format redraw the card behind a steady primary: no «Preparant…» flash, even for a
   // slow encode (the photo is already loaded); same label, icon (mode) and state; a tap during the redraw

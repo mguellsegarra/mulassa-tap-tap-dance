@@ -136,9 +136,9 @@ sheets.seasons = seasons;
 const board = setupBoard({ focusIn,
   canPrompt: () => FINAL?.review == null && G.state === 'results' && !sheetUp() && !document.hidden && !document.body.classList.contains('wrong-orient'),
   canVerify: () => G.state !== 'play' && !document.hidden, // Turnstile's tick box (src/services/captcha.js) never interrupts a song
-  afterPublish: o => { share.openAfterPublish(o); refreshIdentity(service, kv).then(() => share.refreshName()); }, // published: Comparteix next, for that run (its name's check follows the server's answer)
+  afterPublish: () => { refreshIdentity(service, kv).then(() => share.refreshName()); }, // the name's check follows the server's answer
   onRecover: () => profile.open('recover', () => board.openPublish()), // «Recupera’l» on the publish sheet: recover, then publish
-  onConfirm: o => profile.open('link', () => share.openAfterPublish(o)), // «Confirma el correu» after «Publicat!»: then Comparteix
+  onConfirm: () => profile.open('link'), // «Confirma el correu» after «Publicat!»
   onKeep: () => profile.open('link'), onCard: p => card.open(p), onSeasons: f => seasons.open(f), // over the board, which stays under them
   acceptStats, currentFigure: () => select?.figure?.id,
   // «Juga amb …» on an empty board: only with the selector right under it (not over results, Perfil or the Saló de la fama)
@@ -148,8 +148,7 @@ const board = setupBoard({ focusIn,
 sheets.board = board;
 // Comparteix (results only): the image and the challenge link, made on this device; closing gives the focus back to
 // the button only for keyboard players (Space would otherwise press it again instead of leaving the results)
-const share = setupShare({ focusIn, restore: () => focusIn({ focus: () => document.activeElement?.blur() }, 'results-share'), hero: loadPhoto, standing: f => board.standing(f), sfx: k => chip?.sfx(k), store: finalStore || store,
-  auto: () => !board.promptsItself, ready: () => !sheetUp() && !document.hidden && !document.body.classList.contains('wrong-orient') }); // a record / 3 stars / a beaten challenge: Comparteix by itself when no publish prompt does it
+const share = setupShare({ focusIn, restore: () => focusIn({ focus: () => document.activeElement?.blur() }, 'results-share'), hero: loadPhoto, standing: f => board.standing(f), sfx: k => chip?.sfx(k), store: finalStore || store }); // only from its button, never by itself
 sheets.share = share;
 if (mockBoard) markTestMode(); // «MODE PROVA»: synthetic rows remain clearly labelled
 // ?final&review=<state>: dev-only deep links into the profile flows over the mock (src/dev/account-review.js, its own chunk)

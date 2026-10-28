@@ -45,4 +45,8 @@ const c = make(); c.gate.ask(); c.fsX.h(); assert.deepEqual([c.fs.open, c.turn.o
 { const f = make(); f.gate.ask(); f.ok.h(); assert.equal(f.home.hidden, false, 'Safari: the bubble shows');
   f.homeGo.h(); assert.deepEqual([f.turn.open, f.fs.open], [false, true]); f.ok.h(); assert.deepEqual([f.fs.open, f.turn.open], [false, true]); }
 assert.equal(make({ standalone: true }).home.hidden, true, 'the home-screen app: no bubble');
+// Chrome on iOS is WebKit too, but Safari's steps would point at menus it does not have: only the turn sheet
+for (const app of ['CriOS/130.0', 'FxiOS/131.0', 'EdgiOS/130.0']) {
+  const g = make({ ua: IPHONE.replace('Version/18.0', app) }); g.gate.ask();
+  assert.deepEqual([g.fs.open, g.turn.open, g.home.hidden], [false, true, true], app); }
 console.log('free-gate ok');

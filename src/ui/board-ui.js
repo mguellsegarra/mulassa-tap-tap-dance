@@ -4,7 +4,7 @@
 // when a token is needed; Supabase is touched only when one of these sheets asks for it, never in the game loop, and the
 // guest profile is made only on publishing (or «Crea»). After an eligible run the publish sheet opens by itself (a prompt:
 // nothing is sent until Publica is pressed; «Ara no» ×3 stops it); a publication shows a Mulassa, then «Publicat!» + the
-// place with an «D'acord» that opens Comparteix (afterPublish).
+// place with a «D'acord» that closes it; Comparteix only opens from its own button.
 import { leaderboard, turnstileSiteKey, subscribeLeaderboardResult } from '../services/leaderboard.js';
 import { VERSION_RULES } from '../services/leaderboard-rules.js';
 import { FIGURES, hasBoard } from '../game/figures.js';
@@ -37,9 +37,9 @@ export function setupBoard({ focusIn, store = defaultStore, service = leaderboar
   // Turnstile's tick box only over the title / results (never mid-song); it runs only when a token is needed (Publica
   // for a new profile, a Bústia message), never ahead: a check after every first run showed the box to people who never publish
   canVerify = () => true, verifyOpts = {},
-  // after a publication: Comparteix, for that run (main.js → share-ui.js), from the success sheet's «D'acord»; `shareDelay` (ms, null = never)
-  // would also open it by itself. `settle`: the Mulassa shows at least this long (and waits for the place line) before «Publicat!»
-  afterPublish = null, shareDelay = null, settle = 1100,
+  // afterPublish: a publication landed (sheets-setup.js refreshes the identity). `settle`: the Mulassa shows at least this long
+  // (and waits for the place line) before «Publicat!»
+  afterPublish = null, settle = 1100,
   // the browser the profile lives in (deviceRisk) and the one-off storage.persist() request
   env = browserEnv, persist = askPersist,
   // the list's end coming into view (root: the list box) loads the next page
@@ -74,7 +74,7 @@ export function setupBoard({ focusIn, store = defaultStore, service = leaderboar
     canPublish: () => Boolean(canWrite && runs.snapshot && runs.published !== runs.snapshot), runFigure: () => VERSION_RULES[runs.snapshot?.version]?.figureId,
     openPublish: () => openPublish(), publishing: () => publishMenu.open });
   const { openPublish, publishQuietly } = setupPublish({ doc, $, service, store, focusIn, now, runs, canWrite, verify, deviceNote, openBoard,
-    onRecover, onConfirm, acceptStats, afterPublish, shareDelay, settle, persist });
+    onRecover, onConfirm, acceptStats, afterPublish, settle, persist });
 
   // --- ⚙ Configuració: the «Proposta de publicar» row
   const promptsOn = () => !store.get(OPTOUT_KEY) && declines(store) < MAX_DECLINES;
@@ -134,7 +134,6 @@ export function setupBoard({ focusIn, store = defaultStore, service = leaderboar
     // «Publica el resultat» may show on this results screen (narrow screens then need a second row, main.js
     // resultsReserve()): for the whole screen, so the card doesn't jump when the button goes after publishing
     // the publish prompt opens (or already did) by itself for this results screen: Comparteix follows that, not this
-    get promptsItself() { return shown === 2 && promptable(runs.snapshot) && !quietly(runs.snapshot); },
     get publishable() { return service.configured && canWrite && Boolean(runs.snapshot); },
   };
 }

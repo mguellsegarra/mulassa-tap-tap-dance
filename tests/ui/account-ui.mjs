@@ -277,9 +277,13 @@ const service = (o = {}) => ({ configured: true, asked: [], async seasons(f) { t
   assert(!f.$('stats-notice-guest').hidden && /Pep#4821/.test(f.$('stats-notice-guest-name').textContent) && !f.$('stats-notice-confirm').hidden && f.$('stats-notice-confirm').textContent === 'Confirma el correu', 'the guest step and its button');
   assert(f.$('stats-notice-last').textContent === '3' && /btn-primary/.test(f.$('stats-notice-confirm').className) && /btn-secondary/.test(f.$('stats-notice-ok').className), 'a guest: three steps, the confirmation leads');
   f.$('stats-notice-confirm').click(); assert(accepted === 2 && opened.at(-1)[0] === 'link' && opened.at(-1)[1] === backFn && !f.$('stats-notice-menu').open, 'confirm: seen, then the profile steps, back to where the notice would go');
+  // a confirmed e-mail whose name still has its tag: nothing to confirm
+  needed = true; mem.set('leaderboard-alias:identity', JSON.stringify({ hasSession: true, prof: { alias: 'Pep', tag: 4821, verified: true } }));
+  assert.equal(acc.notice(), true); assert(f.$('stats-notice-guest').hidden && f.$('stats-notice-confirm').hidden && f.$('stats-notice-last').textContent === '2', 'verified with a tag: no guest step');
+  f.$('stats-notice-ok').click(); mem.delete('leaderboard-alias:identity');
   needed = true; mem.delete('leaderboard-tag');
   assert.equal(acc.notice(backFn), true); assert(f.$('stats-notice-guest').hidden && f.$('stats-notice-last').textContent === '2' && /btn-primary/.test(f.$('stats-notice-ok').className), 'a named profile without a tag (confirmed): two steps, «D’acord» leads');
-  f.$('stats-notice-hall').click(); assert(accepted === 3 && halls.at(-1)[0] === 'mulassa-valls' && halls.at(-1)[1] === backFn && !f.$('stats-notice-menu').open, 'the season button: seen, then the Saló de la fama, back to where the notice would go (never back over it)');
+  f.$('stats-notice-hall').click(); assert(accepted === 4 && halls.at(-1)[0] === 'mulassa-valls' && halls.at(-1)[1] === backFn && !f.$('stats-notice-menu').open, 'the season button: seen, then the Saló de la fama, back to where the notice would go (never back over it)');
 }
 // --- markup: the sheets exist, copy is Catalan, one primary each, «Dades enviades…» and «Convidat» words
 {

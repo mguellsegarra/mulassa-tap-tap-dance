@@ -25,12 +25,12 @@ const topPct = (pos, total) => Math.max(1, Math.ceil(100 * pos / total)); // «t
 export const declines = store => Number(store.get(DECLINES_KEY)) || 0;
 
 export function setupPublish({ doc, $, service, store, focusIn, now, runs, canWrite, verify, deviceNote, openBoard,
-  onRecover, onConfirm, acceptStats, afterPublish, shareDelay, settle, persist }) {
+  onRecover, onConfirm, acceptStats, afterPublish, settle, persist }) {
   const publishMenu = $('publish-menu');
   const aliasInput = $('publish-alias'), publishStatus = $('publish-status'), fieldError = $('publish-error'), sendBtn = $('publish-send'), cancelBtn = $('publish-cancel'), neverBtn = $('publish-never');
   const { landed, publishQuietly } = setupLanding({ service, store, runs, canWrite, acceptStats, persist, declinesKey: DECLINES_KEY });
   const placeLine = $('publish-place'), asLine = $('publish-as'), field = $('publish-field');
-  let publishReq = 0, done = false, busy = false, shareTimer = null;
+  let publishReq = 0, done = false, busy = false;
   // auto: this sheet opened by itself (closing it unpublished is an «Ara no»); armedAt: a tap already on its way when it
   // appeared must not publish
   let auto = false, armedAt = 0;
@@ -121,10 +121,9 @@ export function setupPublish({ doc, $, service, store, focusIn, now, runs, canWr
   // meant for the results screen must never publish).
   function openPublish({ auto: byItself = false } = {}) {
     if (!canWrite || !runs.snapshot || runs.published === runs.snapshot) return;
-    done = false; busy = false; leaving = false;
+    done = false; busy = false;
     delete form.dataset.view;
     $('publish-recover').hidden = Boolean(store.get(ALIAS_KEY)) || !onRecover; // present from the first paint for new players
-    clearTimeout(shareTimer);
     auto = byItself;
     armedAt = auto ? now() + 600 : 0;
     const req = ++publishReq, run = runs.snapshot;
@@ -160,7 +159,6 @@ export function setupPublish({ doc, $, service, store, focusIn, now, runs, canWr
     if (aliasInput.getAttribute('aria-invalid') === 'true' && checkAlias(aliasInput.value).ok) setInvalid(false);
   });
   $('publish-form').addEventListener('submit', e => { e.preventDefault(); send(); });
-  let placeP = null; // the success's place line (a promise), for Comparteix
   const reduced = () => globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   const sleep = ms => new Promise(r => setTimeout(r, Math.max(0, ms)));
   const form = $('publish-form');
@@ -174,18 +172,8 @@ export function setupPublish({ doc, $, service, store, focusIn, now, runs, canWr
     const h1 = publishMenu.offsetHeight;
     if (h0 && h1 && h0 !== h1 && !reduced() && publishMenu.animate) publishMenu.animate([{ height: `${h0}px` }, { height: `${h1}px` }], { duration: 240, easing: 'cubic-bezier(.2, .7, .3, 1)' });
   }
-  let leaving = false;
-  function toShare() { // Comparteix next, for the run just published; its header keeps where they stand
-    if (leaving) return;
-    leaving = true;
-    clearTimeout(shareTimer); shareTimer = null;
-    const place = placeP;
-    const go = () => { fade?.cancel(); publishMenu.close(); afterPublish?.({ place }); };
-    const fade = reduced() ? null : publishMenu.animate?.([{ opacity: 1 }, { opacity: 0 }], { duration: 160, easing: 'ease-in', fill: 'forwards' });
-    if (fade) fade.finished.then(go, go); else go();
-  }
   async function send() {
-    if (done) { if (afterPublish) toShare(); else publishMenu.close(); return; }
+    if (done) { publishMenu.close(); return; }
     if (busy || sendBtn.disabled || now() < armedAt) return; // a double tap (or a tap from before it appeared) is harmless
     // src/services/alias-rules.js: shape, Unicode tricks, insults, reserved; the message names the part that is the problem
     const { alias, message } = checkAlias(aliasInput.value);
@@ -215,10 +203,11 @@ export function setupPublish({ doc, $, service, store, focusIn, now, runs, canWr
     try {
       await service.publish(run, alias, { captchaToken });
       landed(run, alias);
+      afterPublish?.();
       if (req !== publishReq) return;
       needsCaptcha = false; // the profile exists now
       auto = false;
-      placeP = showPlace(req, run.version);
+      const placeP = showPlace(req, run.version);
       // who published, as the boards will show it (a guest's «#1234» comes from the server)
       const profP = Promise.resolve(service.profile?.()).catch(() => null);
       // the Mulassa for a beat (never a flash), and until the place is known: «Publicat!» and both lines come together
@@ -232,11 +221,9 @@ export function setupPublish({ doc, $, service, store, focusIn, now, runs, canWr
       publishStatus.append(post);
       // a guest: a quiet way to keep the profile (the e-mail), under every «Publicat!»; never by itself
       $('publish-offer').hidden = !(onConfirm && prof && !prof.verified);
-      // Comparteix is «D'acord»; only with `shareDelay` does it also come by itself
-      if (afterPublish && shareDelay != null) shareTimer = setTimeout(() => { if (req === publishReq && publishMenu.open && done) toShare(); }, shareDelay);
       done = true;
       aliasInput.readOnly = true;
-      setSend(tr(afterPublish ? 'ui.common.ok' : 'ui.common.close'));
+      setSend(tr('ui.common.ok'));
       $('publish-board').hidden = true;
       cancelBtn.hidden = true; neverBtn.hidden = true;
       swap('done', tr('ui.board.published')); // last: the buttons are final, so the frame eases to its true height
@@ -269,27 +256,19 @@ export function setupPublish({ doc, $, service, store, focusIn, now, runs, canWr
     } finally { if (req === publishReq) busy = false; }
   }
   cancelBtn.addEventListener('click', () => publishMenu.close());
-  neverBtn.addEventListener('click', () => { // «No m’ho tornis a recordar»: a permanent opt-out, then Comparteix like «Ara no»
-    const share = auto && !done && afterPublish;
+  neverBtn.addEventListener('click', () => { // «No m’ho tornis a recordar»: a permanent opt-out
     store.set(OPTOUT_KEY, '1'); auto = false; // not one more decline: the flag already says it all
     publishMenu.close();
-    if (share) afterPublish({ place: null, published: false });
   });
   $('publish-board').addEventListener('click', () => { publishMenu.close(); openBoard(); });
-  $('publish-confirm').addEventListener('click', () => { // not Comparteix now: the profile sheet, then Comparteix from there
-    if (leaving) return;
-    leaving = true; clearTimeout(shareTimer); shareTimer = null;
-    const place = placeP;
-    publishMenu.close(); onConfirm?.({ place });
-  });
+  $('publish-confirm').addEventListener('click', () => { publishMenu.close(); onConfirm?.(); }); // the profile sheet
   publishMenu.addEventListener('close', () => {
     // «Ara no», Escape or a tap outside, on the prompt that opened by itself and wasn't published: one more decline
     const declined = auto && !done;
     if (declined) store.set(DECLINES_KEY, String(declines(store) + 1));
-    auto = false; clearTimeout(shareTimer); shareTimer = null;
+    auto = false;
     publishReq++; busy = false; verify?.cancel();
     cancelBtn.hidden = false; neverBtn.hidden = true; $('publish-board').hidden = true;
-    if (declined && afterPublish) afterPublish({ place: null, published: false }); // Comparteix next, without «Publicat!»
   });
   return { openPublish, publishQuietly };
 }

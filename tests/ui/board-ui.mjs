@@ -95,7 +95,7 @@ function make({ configured = true, publishingEnabled = true, captchaRequired = t
   const board = setupBoard({ focusIn: (sheet, id) => { focused.push(id); $(id).focus(); }, store, service, siteKey, captcha, doc, subscribe,
     canPrompt: () => env.canPrompt, online: () => env.online, promptDelay: 0, now: () => NOW + env.t, minLoad: 0,
     verifyOpts: { report: (k, t) => reports.push([k, t]), log: { warn() {} }, schedule() {} },
-    afterPublish: afterPublish && (o => { shares.push(o); afterPublish(o); }), shareDelay: 0, settle: 0, observe: (el, root, fn) => { io.el = el; io.fire = fn; },
+    afterPublish: afterPublish && (() => { shares.push(1); afterPublish(); }), settle: 0, observe: (el, root, fn) => { io.el = el; io.fire = fn; },
     onRecover, env: () => ({ ua, standalone, touch }), persist: async () => { calls.persist++; return true; },
     onConfirm, onCard, onSeasons, onKeep, canPlay, onPlay, acceptStats: () => { calls.accept++; } });
   const [figMula, figDrac] = $('board-figures').children; // «Tria figura»: built from the playable figures
@@ -394,54 +394,21 @@ const BOARD = page(0, 60, 22);
   assert($('results-publish').hidden, 'a published run is not offered again');
   assert($('publish-board').hidden && $('publish-form').dataset.view === 'done', 'the success view: the two lines and only D’acord');
 }
-// --- after a publication Comparteix comes next by itself (a moment after the success), with where they stand
+// --- after a publication the success stays until D’acord, which only closes it: Comparteix never follows by itself
 {
-  const opened = [];
-  const { board, $, T, setRun, shares } = make({ session: true, alias: 'Drac101', afterPublish: o => opened.push(o) });
+  const { board, $, T, setRun, shares } = make({ session: true, alias: 'Drac101', afterPublish: () => {} });
   setRun(RUN); board.openPublish(); await tick(); await tick();
-  submit($); T.publishes[0].resolve({ improved: true }); await tick();
+  submit($); await tick();
+  assert.equal($('publish-form').dataset.view, 'wait', 'publishing: the calçot view');
+  assert.equal($('publish-title').textContent, 'Publicant…');
+  T.publishes[0].resolve({ improved: true }); await tick();
   assert.equal($('publish-send').textContent, 'D’acord', 'the success: D’acord as the only button');
   assert($('publish-board').hidden && $('publish-cancel').hidden && $('publish-form').dataset.view === 'done');
-  T.alls[0].resolve([{ position: 7, alias: 'Drac101', difficulty: 1, quality: 90, score: 1, is_self: true, total: 20 }]);
+  assert.equal(shares.length, 1, 'afterPublish once, for the identity');
   await new Promise(r => setTimeout(r, 5));
-  assert(!$('publish-menu').open && shares.length === 1, 'Comparteix opens by itself');
-  assert.equal(await shares[0].place, 'Ets el número 7 · top 35%!', 'its header gets the place line');
-  const now = make({ session: true, alias: 'Drac101', afterPublish: () => {} });
-  now.setRun(RUN); now.board.openPublish(); await tick(); await tick();
-  submit(now.$); await tick();
-  assert.equal(now.$('publish-form').dataset.view, 'wait', 'publishing: the calçot view');
-  assert.equal(now.$('publish-title').textContent, 'Publicant…');
-  now.T.publishes[0].resolve({ improved: true }); await tick();
-  submit(now.$);
-  assert(!now.$('publish-menu').open && now.shares.length === 1, 'D’acord does it at once, once');
-  await new Promise(r => setTimeout(r, 5)); assert.equal(now.shares.length, 1);
-}
-{
-  const run = async (reduce, manual) => {
-    globalThis.matchMedia = () => ({ matches: reduce });
-    try {
-      const s = make({ session: true, alias: 'Drac101', afterPublish: () => {} });
-      const fades = [];
-      s.$('publish-menu').animate = (frames) => { const d = deferred(); const f = { frames, cancels: 0, finished: d.p, end: d, cancel() { this.cancels++; } }; fades.push(f); return f; };
-      s.setRun(RUN); s.board.openPublish(); await tick(); await tick();
-      submit(s.$); s.T.publishes[0].resolve({ improved: true }); await tick();
-      if (manual) submit(s.$);
-      else await new Promise(r => setTimeout(r, 5));
-      return { s, fades };
-    } finally { delete globalThis.matchMedia; }
-  };
-  for (const manual of [true, false]) {
-    const { s, fades } = await run(true, manual);
-    assert(!s.$('publish-menu').open && s.shares.length === 1 && !fades.length, `reduced motion (${manual ? 'D’acord' : 'automatic'}): no fade, Comparteix once`);
-    await new Promise(r => setTimeout(r, 5)); assert.equal(s.shares.length, 1);
-    const n = await run(false, manual);
-    assert(n.s.$('publish-menu').open && !n.s.shares.length && n.fades.length === 1 && n.fades[0].frames[1].opacity === 0, 'normal motion: the sheet fades first');
-    n.fades[0].end.resolve(); await tick();
-    assert(!n.s.$('publish-menu').open && n.s.shares.length === 1 && n.fades[0].cancels === 1, 'the fade ends: its hold is cancelled, Comparteix once');
-    const r = await run(false, manual);
-    r.fades[0].end.reject(new Error('cancelled')); await tick();
-    assert(!r.s.$('publish-menu').open && r.s.shares.length === 1, 'an interrupted fade still hands off');
-  }
+  assert($('publish-menu').open, 'the success stays');
+  submit($);
+  assert(!$('publish-menu').open && shares.length === 1, 'D’acord closes it, nothing else');
 }
 // --- Turnstile runs only when a token is needed (Publica for a new profile), never ahead; never a Supabase session before it
 {
@@ -588,8 +555,7 @@ const BOARD = page(0, 60, 22);
   a.$('publish-never').click();
   assert(!a.$('publish-menu').open && a.mem.get(OPTOUT_KEY) === '1', 'stores the opt-out');
   assert(!a.mem.has(DECLINES_KEY), 'and is not counted as a decline');
-  assert.equal(a.shares.length, 1, 'Comparteix opens next, like «Ara no»');
-  assert.equal(a.shares[0].published, false);
+  assert.equal(a.shares.length, 0, 'nothing opens next');
   a.board.results(false); a.setRun({ ...RUN, score: 5 }); a.board.results(true); await wait();
   assert(!a.$('publish-menu').open, 'never opens by itself again');
   a.$('results-publish').click(); await wait();
@@ -839,9 +805,9 @@ const find = (el, test) => (test(el) ? el : el.children.map(c => find(c, test)).
   assert(n.mem.get(ALIAS_KEY) === 'Drac101' && n.mem.get('leaderboard-tag') === '42', 'the name without its tag (an old tab reads it), the tag apart');
   assert.equal(n.calls.accept, 1, 'the statistics may be sent now');
   assert(!n.$('publish-offer').hidden && n.$('publish-send').textContent === 'D’acord', 'a guest: the offer, D’acord stays');
-  assert(n.$('publish-menu').open && !confirms.length && !n.shares.length, 'nothing opens by itself');
+  assert(n.$('publish-menu').open && !confirms.length, 'nothing opens by itself');
   n.$('publish-confirm').click();
-  assert(!n.$('publish-menu').open && confirms.length === 1 && 'place' in confirms[0], '«Confirma el correu»: the profile sheet next, the place along for Comparteix');
+  assert(!n.$('publish-menu').open && confirms.length === 1, '«Confirma el correu»: the profile sheet next');
   // a confirmed address: the check, no offer
   const v = make({ session: true, alias: 'Drac101', mail: 'jo@example.test', afterPublish: () => {}, onConfirm: () => {}, prof: { alias: 'Drac101', tag: null, verified: true, published: true } });
   v.setRun(RUN); v.board.openPublish(); await tick(); await tick();

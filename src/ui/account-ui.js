@@ -11,7 +11,7 @@ import { tr } from '../i18n/messages.js';
 import { mulaSpinner } from './loader.js';
 import { statsData, renderStats, sinceText, FIGURE_NAMES } from './stats-view.js';
 import { figureSeasons, boardName } from './seasons-ui.js';
-import { ALIAS_KEY, TAG_KEY, displayName } from '../services/leaderboard-identity.js';
+import { ALIAS_KEY, TAG_KEY, displayName, savedName } from '../services/leaderboard-identity.js';
 
 const HALL_FIGURE = 'mulassa-valls'; // the figure whose first season holds everything played before the seasons
 export function setupAccount({ focusIn, profile, service, store, stats, onSync = () => {}, onHall = () => {}, doc = document, now = () => Date.now() }) {
@@ -116,8 +116,9 @@ export function setupAccount({ focusIn, profile, service, store, stats, onSync =
     notice(onBack = null) {
       if (!stats.noticeNeeded() || notice.open) return false;
       noticeBack = onBack;
-      // a guest (its name has a tag since the migration; the greeting has refreshed the identity by now): told, with the way out
-      const alias = store.get(ALIAS_KEY), tag = Number(store.get(TAG_KEY)), guest = Boolean(alias) && store.get(TAG_KEY) != null && Number.isInteger(tag);
+      // a guest (its name has a tag since the migration; the greeting has refreshed the identity by now): told, with the way out.
+      // A confirmed e-mail that still carries the tag is no guest: nothing to confirm
+      const { alias, tag, verified } = savedName(store), guest = Boolean(alias) && tag != null && !verified;
       $('stats-notice-guest').hidden = $('stats-notice-confirm').hidden = !guest;
       $('stats-notice-last').textContent = guest ? '3' : '2'; $('stats-notice-last').className = `pos p${guest ? 3 : 2}`;
       // a guest's first move is to confirm: that button leads and takes the primary look, «D'acord» the outline

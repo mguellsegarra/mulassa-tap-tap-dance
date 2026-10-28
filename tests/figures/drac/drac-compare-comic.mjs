@@ -40,7 +40,7 @@ const posed = (t, g) => { poseAt(pose, t, g); poseCompare(rig, pose); units.upda
 {
   const base = JSON.parse(readFileSync(new URL('./drac-compare-base.json', import.meta.url), 'utf8'));
   const shoes = () => rig.legs.flatMap(({ shoe }) => [shoe.position.x, shoe.position.y, shoe.position.z, shoe.rotation.y]);
-  const same = (a, b, msg) => assert.ok(a.length === b.length && a.every((v, k) => v === b[k]), `${msg}: ${a} vs ${b}`); // exact (JSON keeps no -0)
+  const same = (a, b, msg) => assert.ok(a.length === b.length && a.every((v, k) => Math.abs(v - b[k]) <= 1e-12), `${msg}: ${a} vs ${b}`); // 1e-12: the last digit differs between Linux and macOS libm (JSON keeps no -0)
   for (const [t, x, z, yaw, roll, pitch, lift, ...soles] of base) {
     posed(t, 0);
     same([pose.x, pose.z, pose.yaw, pose.roll, pose.pitch, pose.lift], [x, z, yaw, roll, pitch, lift], `${t}: gain 0 is the base pose`);

@@ -15,7 +15,7 @@ const fixture = JSON.parse(gunzipSync(readFileSync(new URL('fixtures/dance-befor
 // The Drac's song now follows the score (a new choreography): its capture is retired, the factory must match today's default.
 fixture.drac = { arrangement: DRAC_ARR, end: DRAC_END, samples: fixture.drac.samples.map(([b]) => [b, { ...dracPose(newDracPose(), b) }]) };
 const same = (actual, expected, label) => {
-  for (const key of Object.keys(expected)) assert(actual[key] === expected[key], `${label}: ${key} ${actual[key]} !== ${expected[key]}`); // JSON normalises -0
+  for (const key of Object.keys(expected)) assert(Math.abs(actual[key] - expected[key]) <= 1e-12, `${label}: ${key} ${actual[key]} !== ${expected[key]}`); // not exact: the last digit differs between Linux and macOS libm; JSON normalises -0
 };
 let seed = 0x47a34;
 const random = () => ((seed = (1664525 * seed + 1013904223) >>> 0) / 2 ** 32);

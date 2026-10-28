@@ -214,15 +214,18 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
   $('select-rank-tile').addEventListener('click', () => { if (!busy()) onBoard(figure); });
   $('select-prev').addEventListener('click', () => moveStrip(-1));
   $('select-forward').addEventListener('click', () => moveStrip(1));
-  strip.addEventListener('wheel', e => {
-    if (e.ctrlKey || strip.scrollWidth <= strip.clientWidth) return;
-    e.preventDefault();
-    const delta = Math.abs(e.deltaX) >= Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
-    const distance = delta * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? strip.clientWidth : 1);
-    scrollBy(distance);
-  }, { passive: false });
+  function wheelRow(row, by) { // a vertical mouse wheel browses a horizontal row
+    row.addEventListener('wheel', e => {
+      if (e.ctrlKey || row.scrollWidth <= row.clientWidth) return;
+      e.preventDefault();
+      const delta = Math.abs(e.deltaX) >= Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+      by(delta * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? row.clientWidth : 1));
+    }, { passive: false });
+  }
+  wheelRow(strip, scrollBy);
+  wheelRow(towns, distance => townScrolling.to(townScrolling.target + distance)); // to() clamps to the row
   strip.addEventListener('pointerdown', () => scrolling.stop());
-  for (const type of ['pointerdown', 'wheel']) towns.addEventListener(type, () => townScrolling.stop(), { passive: true }); // a hand on the pills wins
+  towns.addEventListener('pointerdown', () => townScrolling.stop()); // a hand on the pills wins
   $('select-next').addEventListener('click', nextStep);
   $('select-figures-back').addEventListener('click', () => { setStep('figures'); api.refocus(); });
   $('select-play').addEventListener('click', play);

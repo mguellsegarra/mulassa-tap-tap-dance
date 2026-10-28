@@ -64,6 +64,8 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
   function panel() { // the centre shows what the cursor is on: the selected figure, or its pending panel (opening: it was hidden, nothing slides)
     flip.snap(shown && !opening); const ok = playable(figure);
     if (ok && !pending.hidden) freeze(); else if (!ok) thaw(); // read before the attributes below move the dock
+    // back from a pending figure the column's clip (select-layout.js) waits out the cards' slide: set at once, Valls's first cards slid out from under it
+    if (ok && !pending.hidden && shown && !reduced()) strip.animate?.({ clipPath: Array(2).fill(win.getComputedStyle(strip).clipPath) }, flip.ms);
     root.toggleAttribute('data-pending', !ok);
     pending.hidden = ok;
     $('select-info').inert = $('select-info').hidden = !ok;

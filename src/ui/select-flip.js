@@ -8,6 +8,7 @@ export function setupFlip({ win, root, els, reduced }) {
   let before = null, until = 0; const live = new Set(); // the slides under way: stopped while measure() reads, so its reads see the layout alone
   const place = el => { const b = el.getBoundingClientRect(); return b.width || b.height ? { x: b.left, y: b.top } : null; };
   return {
+    ms: MS,
     snap(shown, soft = false) { // panel(): just before its layout change (dropped if no measure() follows in the task); soft: measure()'s start, inside the window
       const now = win.performance?.now() ?? 0;
       if (soft && (before || now > until)) return;

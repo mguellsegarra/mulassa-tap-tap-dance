@@ -1,8 +1,4 @@
 {
-  "html.lowPowerHintTitle": "물라사가 절반의 힘으로 움직여요",
-  "html.lowPowerHintText": "절전 모드에서는 게임이 초당 30프레임으로 제한돼요. 플레이할 수는 있지만 음표가 끊겨 보여요. 절전 모드를 끄면 더 부드럽게 움직여요.",
-  "html.lowPowerHintContinue": "계속",
-  "html.lowPowerHintBack": "뒤로",
   "html.rotateExit": "메인 메뉴로 돌아가기",
   "html.rotate.photo": "휴대폰을 가로로 돌려서 광장을 누비며 춤춰요",
   "html.rotate.play": "휴대폰을 세로로 돌려서 계속해요",

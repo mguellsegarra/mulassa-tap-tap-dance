@@ -17,8 +17,6 @@ import { setupBoard, QUIET_OFF_KEY } from './board-ui.js';
 import { DECLINES_KEY, OPTOUT_KEY, PERSIST_KEY } from './publish-ui.js';
 import { setupGreeting } from './greeting.js';
 import { setupDeviceHint } from './device-hint.js';
-import { setupLowPowerHint } from './lowpower-hint.js';
-import { pace } from '../core/timing.js';
 import { setupFreeGate } from './free-gate.js';
 import { softwareGl } from '../scene/stage.js';
 import { makeDanceChart } from '../game/chart.js';
@@ -191,13 +189,11 @@ settingsMenu.addEventListener('close', () => { if (!sync.open && !board.open && 
 // Bústia de la plaça: opened from Configuració or a pending figure; one shared Turnstile.
 const feedback = setupFeedback({ focusIn, captcha: board.captcha, confirmedEmail: async () => (await service.identity()).email });
 sheets.feedback = feedback;
-const lowPowerHint = setupLowPowerHint({ focusIn, lowPower: () => pace.lowPower, restore: () => select.refocus() });
-sheets.lowPowerHint = lowPowerHint;
 const select = setupSelect({ store, keyboard: () => keyboardNav, busy: () => sheetUp() || viewMode, reduced: () => CALM.matches,
   firstLevel: CHALLENGE?.diff ?? null, firstFigure: idOfKey(Q.get('figura')) ?? CHALLENGE?.figure ?? null, // ?figura (debug), else a challenge's figure: the selector opens on it
   demo: DEMO, getError: () => G.audioError, standing: f => board.standing(f), levelPodium: (f, l) => board.levelPodium(f, l), ranked: board.configured, onBoard: f => board.openBoard(() => select.refocus(), { figure: f.id }), onCard: p => card.open(p, () => select.refocus()),
   sfx: k => chip?.sfx(k), onSelect: f => { setSelectedFigure(f); greeting.greet(); },
-  onPlay: (level, figure) => { const start = () => { setSelectedFigure(figure); choose(level); }; if (!lowPowerHint.ask(start)) start(); },
+  onPlay: (level, figure) => { setSelectedFigure(figure); choose(level); },
   onHowto: () => { howtoMenu.showModal(); focusIn(howtoMenu, 'howto-ok'); },
   onWrite: draft => feedback.show(() => select.refocus(), draft) });
 sheets.select = select;

@@ -1,8 +1,4 @@
 {
-  "html.lowPowerHintTitle": "ムラッサが半分の力で動いています",
-  "html.lowPowerHintText": "省電力モードではゲームが毎秒30フレームに制限されます。プレイはできますが、音符の動きがカクカクします。オフにすると、より滑らかに動きます。",
-  "html.lowPowerHintContinue": "続ける",
-  "html.lowPowerHintBack": "戻る",
   "html.rotateExit": "メインメニューに戻る",
   "html.rotate.photo": "スマホを横向きにして広場で踊ろう",
   "html.rotate.play": "スマホを縦向きにして続けよう",

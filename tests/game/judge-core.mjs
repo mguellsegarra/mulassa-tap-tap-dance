@@ -1,7 +1,7 @@
 // The judge's pure decisions (src/game/judge-core.js): window edges, ties, repeated presses, the GUAPA partner, holds, balloons, late taps.
 import assert from 'node:assert/strict';
 import { WINDOWS, eventAge } from '../../src/game/progress.js';
-import { gradeOf, pressTarget, pairWindow, isPartnerPress, pairClosed, HOLD_GRACE, holdVerdict, balloonVerdict, isOverdue } from '../../src/game/judge-core.js';
+import { gradeOf, pressTarget, noteOnTime, pairWindow, isPartnerPress, pairClosed, HOLD_GRACE, holdVerdict, balloonVerdict, isOverdue } from '../../src/game/judge-core.js';
 
 // The windows are data players feel: moving one is a deliberate act (change it here and in docs/agents/gameplay.md).
 assert.deepEqual(WINDOWS, [{ perfect: 0.06, good: 0.14, miss: 0.18 }, { perfect: 0.045, good: 0.11, miss: 0.15 }, { perfect: 0.035, good: 0.09, miss: 0.125 }]);
@@ -62,6 +62,13 @@ assert.equal(holdVerdict(hold, 12, 12).more, '');
 
 // GLOBUS at its end: the pop is perfect, half-inflated still good
 assert.deepEqual([[8, 8], [9, 8], [4, 8], [3, 8], [0, 8], [1, 1], [1, 2], [0, 1]].map(([c, n]) => balloonVerdict(c, n)), ['perfect', 'perfect', 'good', 'miss', 'miss', 'perfect', 'good', 'miss']);
+// a GUAPA on a drumroll's end (the Drac's last): a press on time for it is the note's, not a pump; a mash tap still too early,
+// or the wrong button for a plain note, stays the balloon's
+const roll = { t: 6, end: 10, balloon: true }, last = note(10, { big: true }), easy = WINDOWS[0];
+assert.equal(noteOnTime([roll, last], 0, 10 - 0.1, easy, null, 'R'), true, '100 ms early, inside the old HANDOFF gap');
+assert.equal(noteOnTime([roll, last], 0, 10 - easy.miss, easy, null, 'L'), false, 'only a miss away: keeps pumping');
+assert.equal(noteOnTime([roll, note(10)], 0, 9.95, easy, null, 'R'), false, 'wrong button for a plain note');
+assert.equal(noteOnTime([roll, last], 0, 9.95, easy, last, 'L'), false, 'its GUAPA already pending');
 
 // pause and resume: the song clock holds while paused, so a note is not overdue the moment the game resumes; a tap that
 // waited across the pause is rewound by at most 0.5 s, and a foreign or future stamp reads as "now"

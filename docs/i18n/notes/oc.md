@@ -150,10 +150,6 @@ Cada fila és una clau; els objectes plurals es compten una sola vegada.
 | `figures.input.right.drac` | `MA` | Token de joc protegit; es conserva també la puntuació. |
 | `figures.input.both.mulassa` | `GUAPA` | Token de joc protegit; es conserva també la puntuació. |
 | `figures.input.both.drac` | `CREMA` | Token de joc protegit; es conserva també la puntuació. |
-| `figures.hit.left.mulassa` | `GUA!` | Token de joc protegit; es conserva també la puntuació. |
-| `figures.hit.left.drac` | `CRE!` | Token de joc protegit; es conserva també la puntuació. |
-| `figures.hit.right.mulassa` | `PA!` | Token de joc protegit; es conserva també la puntuació. |
-| `figures.hit.right.drac` | `MA!` | Token de joc protegit; es conserva també la puntuació. |
 | `figures.hit.both.mulassa` | `GUAPA!` | Token de joc protegit; es conserva també la puntuació. |
 | `figures.hit.both.drac` | `CREMA!` | Token de joc protegit; es conserva també la puntuació. |
 | `figures.input.rightAria.mulassa` | `PA, dreta` | Lèxic i flexió compartits amb l'aranès; marcadors i noms propis intactes. |

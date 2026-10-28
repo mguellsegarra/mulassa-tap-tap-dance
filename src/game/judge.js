@@ -1,7 +1,7 @@
 // Judging: hits, GUAPA pairs, holds, balloons and the collapse, plus the autoplay and advance ticks.
 import { tr } from '../i18n/messages.js';
 import { quality, eventAge } from './progress.js';
-import { gradeOf, pressTarget, pairWindow, isPartnerPress, pairClosed, HOLD_GRACE, holdVerdict, balloonVerdict, isOverdue } from './judge-core.js';
+import { gradeOf, pressTarget, noteOnTime, pairWindow, isPartnerPress, pairClosed, HOLD_GRACE, holdVerdict, balloonVerdict, isOverdue } from './judge-core.js';
 import { pick } from '../scene/models.js';
 import { CELEBRATE } from './bubble-rules.js';
 import { drain, warnings } from './energy.js';
@@ -59,7 +59,7 @@ function tally(n, kind) {
 }
 function showJudgement(n, kind) {
   G.judge = G.collapseT ? null : { kind, t: clock, detail: n.detail, word: JUDGE_WORDS[kind] };
-  if (!G.collapseT) ringFx(kind, n.balloon ? C.gold : DIRC[n.input], kind === 'miss' || n.tailOf ? '' : trf({ L: 'hit.left', R: 'hit.right', B: 'hit.both' }[n.input])); // GUA-PA!
+  if (!G.collapseT) ringFx(kind, n.balloon ? C.gold : DIRC[n.input]);
 }
 function trackPhrase(n, kind) {
   if (G.activePhrase !== n.phrase) {
@@ -164,7 +164,7 @@ function guapaHit(n) {
   G.score += n.pts;
   chip.sfx('gran');
   sceneOf(selectedFigure.id)?.onBoth?.(); // the figure's own answer (the Drac's CREMA flames, the Bou's brama)
-  ringFx('gran', C.gold, trf('hit.both'));
+  ringFx('gran', C.gold);
   setTrauma(Math.min(1, trauma + 0.15));
 }
 function settleBig(t) { // the pairing window closed with one button only
@@ -208,9 +208,9 @@ export function press(dir, e) {
   if (G.state !== 'play' || G.collapseT || G.paused || G.watch) return; // the dance demo plays itself
   const t = songTime(eventAt(e)), bl = balloonAt(t);
   G.tapT = clock;
-  if (bl) { pump(bl); return; } // never a wrong move, never spills onto the next note
   settleBig(t);
   const bp = bigPending;
+  if (bl && !isPartnerPress(bp, dir) && !noteOnTime(G.chart, G.next, t, WIN, bp?.n, dir)) { pump(bl); return; } // never a wrong move
   if (isPartnerPress(bp, dir)) { // the partner press of a GUAPA pair
     setBigPending(null);
     if (!bp.done) { bp.n.detail = bp.detail; judge(bp.n, bp.kind); guapaHit(bp.n); }

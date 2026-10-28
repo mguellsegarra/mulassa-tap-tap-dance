@@ -14,7 +14,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const FIRST = ['check.mjs', 'tests/build/modules.mjs'];
-const SLOW = ['tests/figures/drac/drac-compare.mjs', 'tests/figures/drac/drac-compare-comic.mjs', 'tests/render/render-quality.mjs'];
+const SLOW = ['tests/figures/drac/drac-compare.mjs', 'tests/figures/drac/drac-compare-comic.mjs']; // (not render-quality.mjs: the whole-game contracts, 45-110 s; out of the plain check a break went unseen)
 const ALONE = t => t.startsWith('tests/render/') || t === 'tests/build/audio.mjs';
 // Python tests run through uv with these packages (the generators' own environment); tests/db/db_backup_test.py runs from db-backup.mjs.
 const PYTHON = [

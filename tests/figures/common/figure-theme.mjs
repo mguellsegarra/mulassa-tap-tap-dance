@@ -67,8 +67,6 @@ const originalMessages = {
   "input.left": "GUA",
   "input.right": "PA",
   "input.both": "GUAPA",
-  "hit.left": "GUA!",
-  "hit.right": "PA!",
   "hit.both": "GUAPA!",
   "input.leftAria": "GUA, esquerra",
   "input.rightAria": "PA, dreta",

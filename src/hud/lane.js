@@ -109,8 +109,8 @@ let sparkI = 0;
 export function ringSparks(n, col, v) { // downwards only (the HUD is above the lane), so they never hide the notes coming in on the right
   for (let i = 0; i < n; i++) Object.assign(SPARKS[sparkI = (sparkI + 1) % SPARKS.length], { t0: clock, a: Math.PI * (0.1 + Math.random() * 0.8), v: v * (0.6 + Math.random() * 0.6), col });
 }
-export function ringFx(kind, col, word = '') {
-  G.ring = { kind, t0: clock, col, word };
+export function ringFx(kind, col) { // no word inside: the judge word below already says how it went
+  G.ring = { kind, t0: clock, col };
   if (kind === 'perfect') ringSparks(6, col, 26);
   if (kind === 'good') ringSparks(3, C.cream, 16);
   if (kind === 'pop') { ringSparks(16, '#ff5a7a', 44); ringSparks(8, C.gold, 36); }
@@ -128,11 +128,6 @@ function drawRing(t, hx, cy) {
   if (on && (r.kind === 'perfect' || wide)) { // gold flash with a glow in the note's colour
     H.globalAlpha = e; glowDisc(x, cy, NOTE_R - 1, NOTE_R + 5, r.col);
     H.fillStyle = C.gold; H.beginPath(); H.arc(x, cy, NOTE_R, 0, 7); H.fill(); H.globalAlpha = 1;
-  }
-  const lit = r?.kind === 'perfect' || r?.kind === 'gran';
-  if (on && r.word) { // inside the ring: never over the words above, and shrunk to fit inside the thin inner ring (GUAPA!)
-    const s = 8 + 3 * e, w = textWidth(r.word, s), fit = 2 * NOTE_R - 5, sz = w > fit ? s * fit / w : s, top = Math.min(11, fit * s / w); // top: its size at e = 1 (widths scale with s)
-    text(r.word, x, cy, top, lit ? C.dark : C.cream, 'center', lit ? C.cream : C.dark, false, sz / top); // one sprite per word, shrunk
   }
   if (miss) { H.strokeStyle = `rgba(20,20,30,${e})`; H.lineWidth = 1.5; H.beginPath(); H.moveTo(x - 9, cy - 10); H.lineTo(x - 2, cy - 1); H.lineTo(x - 6, cy + 3); H.lineTo(x + 4, cy + 11); H.stroke(); } // crack
 }

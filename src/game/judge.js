@@ -59,7 +59,7 @@ function tally(n, kind) {
 }
 function showJudgement(n, kind) {
   G.judge = G.collapseT ? null : { kind, t: clock, detail: n.detail, word: JUDGE_WORDS[kind] };
-  if (!G.collapseT) ringFx(kind, n.balloon ? C.gold : DIRC[n.input], kind === 'miss' || n.tailOf ? '' : trf({ L: 'hit.left', R: 'hit.right', B: 'hit.both' }[n.input])); // GUA-PA!
+  if (!G.collapseT) ringFx(kind, n.balloon ? C.gold : DIRC[n.input]);
 }
 function trackPhrase(n, kind) {
   if (G.activePhrase !== n.phrase) {
@@ -164,7 +164,7 @@ function guapaHit(n) {
   G.score += n.pts;
   chip.sfx('gran');
   sceneOf(selectedFigure.id)?.onBoth?.(); // the figure's own answer (the Drac's CREMA flames, the Bou's brama)
-  ringFx('gran', C.gold, trf('hit.both'));
+  ringFx('gran', C.gold);
   setTrauma(Math.min(1, trauma + 0.15));
 }
 function settleBig(t) { // the pairing window closed with one button only

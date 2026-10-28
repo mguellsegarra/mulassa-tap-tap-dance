@@ -383,7 +383,7 @@ run(`startGame(2); G.state = 'play'; offsetMs = 0; bonks = 0; var misses = 0;
 assert.equal(run('pending'), null, 'one button on a GUAPA waits for the other');
 assert.equal(run('g1.hit'), 'good', 'a GUAPA is judged on the first press');
 assert.equal(run('pair'), run('g1.pts * 2'), 'both buttons together score double');
-assert(run('g1.gran && pairRing.kind === "gran" && pairRing.word === "GUAPA!"'), 'the pair lights the GUAPA! effect');
+assert(run('g1.gran && pairRing.kind === "gran"'), 'the pair lights the GUAPA! effect');
 assert.equal(run('after.hit'), null, 'the partner press does not eat the next note');
 assert.equal(run('lonePending'), null);
 assert(run('g2.hit === "miss" && g2.detail === "ELS DOS ALHORA!" && !g2.gran'), 'NORMAL+: one button alone is an error');

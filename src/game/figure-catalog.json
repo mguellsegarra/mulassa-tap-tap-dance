@@ -183,6 +183,7 @@
     {
       "id": "sant-joan",
       "name": "Sant Joan",
+      "pill": "Sant Joan (Mallorca)",
       "comarca": "Pla de Mallorca",
       "island": "Mallorca",
       "territory": "Illes Balears"
@@ -1149,7 +1150,7 @@
     {
       "id": "corb-sant-nofre-sant-joan",
       "name": "Es Corb de Sant Nofre",
-      "fullName": "Es Corb de Sant Nofre de Sant Joan",
+      "fullName": "Es Corb de Sant Joan",
       "town": "sant-joan",
       "entity": "Centre Cultural",
       "entityName": "Centre Cultural de Sant Joan",

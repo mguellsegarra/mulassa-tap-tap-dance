@@ -295,6 +295,9 @@ assert(!$('select-towns').innerHTML.includes('sel-soon'), 'no «Pròximament» p
   assert.match(escutSvg('sant-julia'), /stroke-linejoin="round"\/><g stroke="none"><g fill="#2e8b3e">/, 'Sant Julià: the laurel outside the oval');
   assert(!/stroke-linejoin="round"\/><g stroke="none">/.test(escutSvg('valls')), 'arms without an outside charge add nothing');
   assert(escutSvg('campos').includes('#8a2a8c'), 'Campos: the purple bordure');
+  assert.match($('select-towns').innerHTML, /data-town="sant-joan"[^>]*>.*?<\/svg>Sant Joan \(Mallorca\)<\/button>/, 'Sant Joan: its pill says which one');
+  assert.equal(locationOf({ town: 'sant-joan' }), 'Sant Joan · Mallorca', 'its location line keeps the plain name');
+  assert.equal(aviatDraft(FIGURES.find(f => f.id === 'corb-sant-nofre-sant-joan'), 'Sant Joan'), 'Sobre Es Corb de Sant Joan: ', 'the Corb\'s short full name already says its town');
   const shortOf = new Map(); // one association, one short name on every card (the Lleó and the Gegants del Pi share theirs)
   for (const f of sourceCatalog.figures) { assert.equal(shortOf.get(f.entityName) ?? f.entity, f.entity, `${f.id}: ${f.entityName} keeps one short name`); shortOf.set(f.entityName, f.entity); }
 }

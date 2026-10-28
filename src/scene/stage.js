@@ -22,6 +22,7 @@ export const setRenderProfile = v => (renderProfile = v);
 export const glc = document.getElementById('gl');
 export const renderer = (() => { // no WebGL 2 (disabled, blocklisted GPU, very old browser): say so instead of a calçot forever
   try { return new THREE.WebGLRenderer({ canvas: glc, antialias: qualityLevel > 0, powerPreference: 'high-performance' }); } catch (err) {
+    // after a GPU crash Chrome blocks WebGL for the site until it restarts: the card says to close it first
     const msg = tr('ui.webgl.unavailable');
     window.__mulassaBooted = 'no-webgl'; // index.html's boot watchdog: this card, not its generic one
     if (window.__mulassaFail) window.__mulassaFail(tr('ui.webgl.title'), msg); // no retry: it wouldn't help

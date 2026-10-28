@@ -365,7 +365,7 @@
   "ui.sync.tooFew": "Zu wenige Anschläge erkannt. Versuch’s noch mal und tippe genau bei jedem Schlag.",
   "ui.watch.text": "Du kennst jetzt {song}. Wähle eine Stufe und tanze mit deinen Knöpfen mit.",
   "ui.lang.title": "Sprache",
-  "ui.webgl.unavailable": "Dein Browser kann das Spiel nicht in 3D zeigen. Aktualisiere ihn oder öffne es in Chrome oder Safari.",
+  "ui.webgl.unavailable": "Dein Browser kann das Spiel nicht in 3D zeigen. Schließe ihn ganz und öffne ihn wieder; sonst aktualisiere ihn oder öffne es in Chrome oder Safari.",
   "ui.webgl.title": "Ups! Das Spiel kann nicht angezeigt werden",
   "ui.webgl.lostTitle": "Ups! Das Spiel wurde angehalten",
   "ui.webgl.lostText": "Dein Handy zeigt das Spiel nicht mehr in 3D. Versuch es noch einmal.",

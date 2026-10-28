@@ -356,7 +356,7 @@
   "ui.sync.tooFew": "タップが足りませんでした。もう一度、音が聞こえるたびにぴったり叩いてね。",
   "ui.watch.text": "{song}はもう覚えたね。難易度を選んで、今度は自分で踊ろう。",
   "ui.lang.title": "言語",
-  "ui.webgl.unavailable": "このブラウザーでは3Dゲームを表示できません。更新するか、ChromeかSafariで開いてね。",
+  "ui.webgl.unavailable": "このブラウザーでは3Dゲームを表示できません。ブラウザーを完全に閉じて開き直してね。だめなら、更新するか、ChromeかSafariで開いてね。",
   "ui.webgl.title": "あれっ、ゲームを表示できません",
   "ui.webgl.lostTitle": "あれっ、ゲームが止まりました",
   "ui.webgl.lostText": "スマホでゲームを3D表示できなくなりました。もう一度試してね。",

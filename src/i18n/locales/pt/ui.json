@@ -365,7 +365,7 @@
   "ui.sync.tooFew": "Não ouvi toques suficientes. Tenta outra vez e marca cada batida assim que a ouvires.",
   "ui.watch.text": "Já conheces {song}. Escolhe a dificuldade e dança com os teus botões.",
   "ui.lang.title": "Idioma",
-  "ui.webgl.unavailable": "O teu navegador não consegue mostrar o jogo em 3D. Atualiza-o ou abre-o no Chrome ou no Safari.",
+  "ui.webgl.unavailable": "O teu navegador não consegue mostrar o jogo em 3D. Fecha-o por completo e volta a abri-lo; se não resultar, atualiza-o ou abre-o no Chrome ou no Safari.",
   "ui.webgl.title": "Ups! Não é possível mostrar o jogo",
   "ui.webgl.lostTitle": "Ups! O jogo parou",
   "ui.webgl.lostText": "O telemóvel deixou de mostrar o jogo em 3D. Tenta outra vez.",

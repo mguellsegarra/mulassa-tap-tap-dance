@@ -374,7 +374,7 @@
   "ui.sync.tooFew": "Nu te-am auzit de destule ori. Încearcă din nou și bate exact când auzi fiecare sunet.",
   "ui.watch.text": "Acum știi {song}. Alege dificultatea și dansează cu butoanele tale.",
   "ui.lang.title": "Limbă",
-  "ui.webgl.unavailable": "Browserul tău nu poate afișa jocul în 3D. Actualizează-l sau deschide-l cu Chrome ori Safari.",
+  "ui.webgl.unavailable": "Browserul tău nu poate afișa jocul în 3D. Închide-l complet și deschide-l din nou; altfel, actualizează-l sau deschide-l cu Chrome ori Safari.",
   "ui.webgl.title": "Ups! Jocul nu poate fi afișat",
   "ui.webgl.lostTitle": "Ups! Jocul s-a oprit",
   "ui.webgl.lostText": "Telefonul nu mai afișează jocul în 3D. Încearcă din nou.",

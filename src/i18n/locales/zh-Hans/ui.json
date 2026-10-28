@@ -356,7 +356,7 @@
   "ui.sync.tooFew": "没有收到足够的击打。再试一次，每次听到节拍就击打。",
   "ui.watch.text": "你已经熟悉{song}了。选好难度，用你的按钮跳起来吧。",
   "ui.lang.title": "语言",
-  "ui.webgl.unavailable": "你的浏览器无法显示3D游戏，请更新浏览器或用Chrome、Safari打开。",
+  "ui.webgl.unavailable": "你的浏览器无法显示3D游戏。请完全关闭浏览器后重新打开；如果还不行，请更新浏览器或用Chrome、Safari打开。",
   "ui.webgl.title": "哎呀，游戏无法显示",
   "ui.webgl.lostTitle": "哎呀，游戏停止了",
   "ui.webgl.lostText": "手机无法再显示3D游戏了，请再试一次。",

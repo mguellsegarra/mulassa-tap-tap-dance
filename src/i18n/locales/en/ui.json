@@ -365,7 +365,7 @@
   "ui.sync.tooFew": "Not enough taps registered. Try again and tap each beat just as you hear it.",
   "ui.watch.text": "Now you know {song}. Choose a difficulty and dance along with your buttons.",
   "ui.lang.title": "Language",
-  "ui.webgl.unavailable": "Your browser can’t display the game in 3D. Update it or open it in Chrome or Safari.",
+  "ui.webgl.unavailable": "Your browser can’t display the game in 3D. Close it completely and open it again; if that doesn’t help, update it or open it in Chrome or Safari.",
   "ui.webgl.title": "Oops! Can’t display the game",
   "ui.webgl.lostTitle": "Oops! The game stopped",
   "ui.webgl.lostText": "Your phone stopped showing the game in 3D. Try again.",

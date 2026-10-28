@@ -365,7 +365,7 @@
   "ui.sync.tooFew": "No t’he sentit prou cops. Torna-hi i marca cada cop just quan el sentis.",
   "ui.watch.text": "Ja coneixes el {song}. Tria la dificultat i balla’l amb els teus botons.",
   "ui.lang.title": "Idioma",
-  "ui.webgl.unavailable": "El teu navegador no pot mostrar el joc en 3D. Actualitza’l o obre’l amb Chrome o Safari.",
+  "ui.webgl.unavailable": "El teu navegador no pot mostrar el joc en 3D. Tanca’l del tot i torna’l a obrir; si no, actualitza’l o obre’l amb Chrome o Safari.",
   "ui.webgl.title": "Ups! No es pot mostrar el joc",
   "ui.webgl.lostTitle": "Ups! El joc s’ha aturat",
   "ui.webgl.lostText": "El mòbil ha deixat de mostrar el joc en 3D. Torna-ho a provar.",

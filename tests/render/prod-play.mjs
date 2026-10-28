@@ -43,11 +43,15 @@ try {
   await step('prev'); await step('prev');
   assert.equal(await selected(), 'mulassa-valls');
   await page.waitForFunction(() => !document.getElementById('select-next').disabled, null, { timeout: 10000 });
-  // a tap while the strip still moves is ignored (nextStep's busy guard): tap again until the level step opens
-  for (let tries = 0; tries < 10 && !(await page.evaluate(() => document.getElementById('select-next').hidden)); tries++) {
-    await page.click('#select-next', { force: true }); await page.waitForTimeout(600);
-  }
-  assert.ok(await page.evaluate(() => document.getElementById('select-next').hidden), 'the level step never opened after 10 taps');
+  // back from the pending Bou the dock slides «Tria la dificultat» up from below the screen: tap it once it rests on screen
+  await page.waitForFunction(() => {
+    const r = document.getElementById('select-next').getBoundingClientRect(), y = Math.round(r.top);
+    const still = y === window.__nextY; window.__nextY = y;
+    return still && r.bottom <= innerHeight;
+  }, null, { timeout: 10000, polling: 100 });
+  await page.click('#select-next', { force: true }); // (force: the button pulses)
+  await page.waitForFunction(() => document.getElementById('select-next').hidden, null, { timeout: 2000 })
+    .catch(() => assert.fail('one tap on a resting «Tria la dificultat» did not open the level step'));
   await page.locator('#select-act button:visible').first().click({ force: true });
   await page.getByText('A BALLAR', { exact: false }).click({ force: true });
   await page.waitForFunction(() => window.__dbg.G.state === 'play', null, { timeout: 30000 });

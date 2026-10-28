@@ -26,9 +26,10 @@ const HEART = '<svg class="heart" viewBox="0 0 24 24" aria-hidden="true"><path d
 const inline = s => html(s).replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>').replace('{cor}', HEART).replace('{campanar}', '<img class="campanar" src="/campanar-valls.svg" alt="" width="29" height="65">')
   .replace(' {uaf}', '<a class="uaf" href="https://uaf.cat"><img src="/uaf-logo.jpg" alt="Unió Anelles de la Flama, Valls" width="640" height="327" loading="lazy"></a>');
 const toHtml = (p, code, c, langs) => { const { ui } = c; const canonical = projectPath(code); const alternate = `${canonical}index.md`; return `<!doctype html>
-<html lang="${c.lang}">
+<html lang="${c.lang}" translate="no">
 <head>
 <meta charset="utf-8">
+<meta name="google" content="notranslate">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(p.title)}</title>
 <meta name="description" content="${esc(p.lead)}">

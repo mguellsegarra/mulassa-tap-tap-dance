@@ -98,7 +98,7 @@ try {
   await rm(join(missing404, '404.html'));
   await assert.rejects(preparePages(missing404, song), /Missing deployment file: 404\.html/);
   const notFound = await readFile(new URL('../../public/404.html', import.meta.url), 'utf8');
-  assert.match(notFound, /<html lang="ca">/);
+  assert.match(notFound, /<html lang="ca" translate="no">/);
   assert.match(notFound, /<meta name="robots" content="noindex">/);
   assert.match(notFound, /href="\/"/);
   assert.match(notFound, /href="\/projecte\/"/);

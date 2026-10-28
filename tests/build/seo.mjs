@@ -70,7 +70,7 @@ try {
       assert(h.includes(`<link rel="canonical" href="${hrefs[l]}">`), `${l} canonical`);
       for (const [m, url] of Object.entries(hrefs)) assert(h.includes(`<link rel="alternate" hreflang="${m}" href="${url}">`), `${l} -> ${m} hreflang`);
       assert(h.includes(`hreflang="x-default" href="${hrefs.ca}"`), `${l} x-default is Catalan`);
-      assert(h.includes(`<html lang="${l === 'ca' ? 'ca' : 'xx'}">`) && h.includes(`"inLanguage":"${l === 'ca' ? 'ca' : 'xx'}"`), `${l} lang`);
+      assert(h.includes(`<html lang="${l === 'ca' ? 'ca' : 'xx'}" translate="no">`) && h.includes(`"inLanguage":"${l === 'ca' ? 'ca' : 'xx'}"`), `${l} lang`);
       assert(h.includes(`href="/projecte/index.md"`) === (l === 'ca'), `${l} md twin is its own`);
     }
     const xx = await readFile(join(multi, 'xx/projecte/index.html'), 'utf8');

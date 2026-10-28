@@ -1,4 +1,8 @@
 {
+  "html.lowPowerHintTitle": "Die Mulassa läuft auf halber Kraft",
+  "html.lowPowerHintText": "Der Energiesparmodus begrenzt das Spiel auf 30 Bilder pro Sekunde: Du kannst spielen, aber die Noten bewegen sich ruckartig. Schalte ihn aus, damit das Spiel flüssiger läuft.",
+  "html.lowPowerHintContinue": "Weiter",
+  "html.lowPowerHintBack": "Zurück",
   "html.rotateExit": "Zurück zum Hauptmenü",
   "html.rotate.photo": "Dreh das Handy ins Querformat, um über den Platz zu tanzen",
   "html.rotate.play": "Dreh das Handy ins Hochformat, um weiterzumachen",

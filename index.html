@@ -562,6 +562,19 @@
     <div class="sheet-actions"><button id="gpu-hint-ok" type="button" class="btn btn-primary" data-i18n="ui.common.ok">D’acord</button></div>
   </div>
 </dialog>
+<!-- A possible battery-saving cap: ask before starting, keeping the chosen difficulty behind the sheet. -->
+<dialog id="lowpower-hint-menu" class="sheet hint-menu" tabindex="-1" aria-labelledby="lowpower-hint-title" aria-describedby="lowpower-hint-text">
+  <button id="lowpower-hint-close" type="button" data-i18n-attr="aria-label:html.attr.close" class="sheet-x" aria-label="Tanca"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  <div class="sheet-body">
+    <svg class="hint-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h13v10H5zM18 10h2v4h-2M8 10v4M11 10v4"/></svg>
+    <h2 id="lowpower-hint-title" data-i18n="html.lowPowerHintTitle">La Mulassa va a mig gas</h2>
+    <p id="lowpower-hint-text" class="board-text" data-i18n="html.lowPowerHintText">L’estalvi d’energia limita el joc a 30 imatges per segon: es pot jugar, però les notes es mouran a salts. Si el desactives, anirà més fluid.</p>
+    <div class="sheet-actions">
+      <button id="lowpower-hint-ok" type="button" class="btn btn-primary" data-i18n="html.lowPowerHintContinue">Continua</button>
+      <button id="lowpower-hint-back" type="button" class="btn btn-secondary" data-i18n="html.lowPowerHintBack">Enrere</button>
+    </div>
+  </div>
+</dialog>
 <!-- «Joc lliure» on an iPhone held upright (src/ui/free-gate.js): Safari first recommends fullscreen (home screen), then both ask to turn it sideways -->
 <dialog id="free-fs-menu" class="sheet hint-menu" tabindex="-1" aria-labelledby="free-fs-title" aria-describedby="free-fs-text">
   <button id="free-fs-close" type="button" data-i18n-attr="aria-label:html.attr.close" class="sheet-x" aria-label="Tanca"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>

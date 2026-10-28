@@ -1,4 +1,8 @@
 {
+  "html.lowPowerHintTitle": "La Mulassa tourne au ralenti",
+  "html.lowPowerHintText": "Le mode économie d’énergie limite le jeu à 30 images par seconde : tu peux jouer, mais les notes avanceront par à-coups. Désactive-le pour un jeu plus fluide.",
+  "html.lowPowerHintContinue": "Continuer",
+  "html.lowPowerHintBack": "Retour",
   "html.rotateExit": "Retour au menu principal",
   "html.rotate.photo": "Tourne ton mobile à l’horizontale pour danser sur la place",
   "html.rotate.play": "Tourne ton mobile à la verticale pour continuer",

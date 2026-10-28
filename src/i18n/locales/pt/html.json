@@ -1,4 +1,8 @@
 {
+  "html.lowPowerHintTitle": "A Mulassa está a meio gás",
+  "html.lowPowerHintText": "A poupança de energia limita o jogo a 30 imagens por segundo: podes jogar, mas as notas vão mover-se aos saltos. Se a desativares, o jogo ficará mais fluido.",
+  "html.lowPowerHintContinue": "Continuar",
+  "html.lowPowerHintBack": "Voltar",
   "html.rotateExit": "Volta ao menu principal",
   "html.rotate.photo": "Roda o telemóvel para a horizontal para dançar pela praça",
   "html.rotate.play": "Roda o telemóvel para a vertical para continuar",

@@ -1,4 +1,8 @@
 {
+  "html.lowPowerHintTitle": "The Mulassa is running at half speed",
+  "html.lowPowerHintText": "Power saving limits the game to 30 frames per second: you can still play, but the notes will move in jumps. Turn it off for smoother gameplay.",
+  "html.lowPowerHintContinue": "Continue",
+  "html.lowPowerHintBack": "Back",
   "html.rotateExit": "Back to main menu",
   "html.rotate.photo": "Turn your phone sideways to dance around the square",
   "html.rotate.play": "Turn your phone upright to continue",

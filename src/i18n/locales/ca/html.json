@@ -1,4 +1,8 @@
 {
+  "html.lowPowerHintTitle": "La Mulassa va a mig gas",
+  "html.lowPowerHintText": "L’estalvi d’energia limita el joc a 30 imatges per segon: es pot jugar, però les notes es mouran a salts. Si el desactives, anirà més fluid.",
+  "html.lowPowerHintContinue": "Continua",
+  "html.lowPowerHintBack": "Enrere",
   "html.rotateExit": "Torna al menú principal",
   "html.rotate.photo": "Gira el mòbil en horitzontal per ballar per la plaça",
   "html.rotate.play": "Gira el mòbil en vertical per continuar",

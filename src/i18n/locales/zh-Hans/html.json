@@ -1,4 +1,8 @@
 {
+  "html.lowPowerHintTitle": "穆拉萨只使出了一半力气",
+  "html.lowPowerHintText": "省电模式会将游戏限制为每秒30帧：仍然可以玩，但音符的移动会不连贯。关闭省电模式后，游戏会更加流畅。",
+  "html.lowPowerHintContinue": "继续",
+  "html.lowPowerHintBack": "返回",
   "html.rotateExit": "返回主菜单",
   "html.rotate.photo": "将手机横过来，在广场上跳舞",
   "html.rotate.play": "将手机竖过来继续",

@@ -1,4 +1,8 @@
 {
+  "html.lowPowerHintTitle": "La Mulassa va a mezzo gas",
+  "html.lowPowerHintText": "Il risparmio energetico limita il gioco a 30 fotogrammi al secondo: puoi giocare, ma le note si muoveranno a scatti. Se lo disattivi, il gioco sarà più fluido.",
+  "html.lowPowerHintContinue": "Continua",
+  "html.lowPowerHintBack": "Indietro",
   "html.rotateExit": "Torna al menu principale",
   "html.rotate.photo": "Ruota il telefono in orizzontale per ballare per la piazza",
   "html.rotate.play": "Ruota il telefono in verticale per continuare",

@@ -1,4 +1,8 @@
 {
+  "html.lowPowerHintTitle": "Mulassa indar erdiz dabil",
+  "html.lowPowerHintText": "Energia aurrezteko moduak jokoa segundoko 30 irudira mugatzen du: jolastu daiteke, baina notak saltoka mugituko dira. Desaktibatzen baduzu, jokoa arinago ibiliko da.",
+  "html.lowPowerHintContinue": "Jarraitu",
+  "html.lowPowerHintBack": "Atzera",
   "html.rotateExit": "Itzuli menu nagusira",
   "html.rotate.photo": "Biratu mugikorra horizontalean plazan dantzatzeko",
   "html.rotate.play": "Biratu mugikorra bertikalean jarraitzeko",

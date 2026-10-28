@@ -81,8 +81,9 @@ canvas { position: fixed; left: 0; top: 0; width: 100%; height: 100vh; height: 1
 #rotate { display: none; position: fixed; inset: 0; z-index: 50; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 24px; background: var(--page-edge); color: #fff3d6; font: 800 22px/1.3 'Baloo 2', system-ui, sans-serif; text-align: center; }
 #rotate svg { width: 64px; height: 64px; fill: none; stroke: #f5c518; stroke-width: 1.6; stroke-linecap: round; animation: rotate-hint 1.6s ease-in-out infinite; }
 body.wrong-orient #rotate { display: flex; } /* photo mode: phones want landscape (two thumbs, fullscreen.js), tablets either way */
-/* the same rule from the first paint: turned while the bundle still loads (or a stale resize) the loader must not sit sideways */
-@media (pointer: coarse) and (orientation: landscape) and (max-height: 599px), (pointer: coarse) and (orientation: portrait) and (min-width: 600px) { body:not(.view-mode) #rotate { display: flex; } }
+/* the same rule from the first paint: turned while the bundle still loads (or a stale resize) the loader must not sit sideways.
+   Not on a tablet (fullscreen.js marks it): a 600 px screen's landscape page (~520 px) would read as a phone's */
+@media (pointer: coarse) and (orientation: landscape) and (max-height: 599px), (pointer: coarse) and (orientation: portrait) and (min-width: 600px) { body:not(.view-mode, .tablet) #rotate { display: flex; } }
 #rotate-exit { display: none; } body.view-mode #rotate-exit { display: flex; } /* (a locked rotation must not trap you in photo mode) */
 body.view-mode #rotate svg { animation-direction: reverse; }
 #rotate .r-pause { display: none; margin: 0; font: inherit; font-size: 28px; } body.view-mode #rotate .r-pause { display: block; } /* free play turned upright: «Joc en pausa» over the plaza, not a blank page */

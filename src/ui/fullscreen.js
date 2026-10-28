@@ -5,6 +5,7 @@ import { pauseGame } from './pause.js';
 import { resize } from '../hud/canvas.js';
 
 function checkOrientation() {
+  document.body.classList.toggle('tablet', isTablet()); // base.css's first-paint rule is a phone's: a small tablet's landscape page is as short
   if (!COARSE.matches) return;
   const wrong = document.body.classList.contains('view-mode') ? !isTablet() && innerHeight > innerWidth : isTablet() ? innerHeight > innerWidth : innerWidth > innerHeight;
   document.body.classList.toggle('wrong-orient', wrong);

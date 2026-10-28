@@ -6,14 +6,20 @@ import vm from 'node:vm';
 
 const src = readFileSync(new URL('../../src/ui/fullscreen.js', import.meta.url), 'utf8').replace(/^import .*;\n/gm, '').replace(/^export /gm, '');
 const handlers = {}, on = (k, f) => (handlers[k] ||= []).push(f), classes = new Set();
-let asked = 0, exited = 0;
-const doc = { addEventListener: on, fullscreenElement: null, body: { classList: { contains: c => classes.has(c), toggle() {} } },
+let asked = 0, exited = 0, firstCheck = null;
+const doc = { addEventListener: on, fullscreenElement: null, body: { classList: { contains: c => classes.has(c), toggle: (c, on) => on ? classes.add(c) : classes.delete(c) } },
   documentElement: { requestFullscreen() { asked++; return Promise.resolve(); } }, exitFullscreen() { exited++; return Promise.resolve(); } };
 const ctx = { document: doc, G: { state: 'select', paused: false }, COARSE: { matches: true }, isTablet: () => false, deviceOrient: () => 'portrait', pauseGame() {}, resize() {},
   navigator: { userAgent: 'Linux; Android 14', maxTouchPoints: 5, userActivation: { isActive: true } }, screen: {}, innerWidth: 393, innerHeight: 852,
-  addEventListener() {}, matchMedia: () => ({ addEventListener() {} }), setTimeout() {}, Promise };
+  addEventListener() {}, matchMedia: () => ({ addEventListener() {} }), setTimeout: f => (firstCheck = f), Promise };
 vm.runInNewContext(src + '\nthis.api = { photoOrient };', ctx);
 const { photoOrient } = ctx.api;
+// The first-paint cover (base.css, by viewport size) is a phone's rule: a tablet is marked so a short landscape page passes
+firstCheck(); assert(!classes.has('tablet'), 'a phone keeps the first-paint cover');
+ctx.isTablet = () => true; ctx.innerWidth = 1024; ctx.innerHeight = 520; firstCheck(); assert(classes.has('tablet') && !classes.has('wrong-orient'), 'a small tablet on its side: marked, no cover');
+ctx.isTablet = () => false; ctx.innerWidth = 393; ctx.innerHeight = 852; firstCheck(); classes.delete('wrong-orient');
+const css = readFileSync(new URL('../../src/styles/base.css', import.meta.url), 'utf8');
+assert(/\(orientation: landscape\) and \(max-height: 599px\)[^{]*\{ body:not\(\.view-mode, \.tablet\) #rotate/.test(css), 'the first-paint rule skips a marked tablet');
 const fire = (kind, target = { closest: () => null }, pointerType = 'touch') => { for (const f of handlers[kind] || []) f({ target, pointerType }); };
 const fsIn = () => { doc.fullscreenElement = {}; fire('fullscreenchange'); }, fsOut = () => { doc.fullscreenElement = null; fire('fullscreenchange'); };
 const free = v => { if (v) classes.add('view-mode'); else classes.delete('view-mode'); photoOrient(); };

@@ -24,6 +24,8 @@ export function stageFrame(out, top, bottom) {
 // among the people), as the backdrop's figures do (uLens): the share of its size at (x, z) for lens = the camera's position
 // (null: always 1). Gone within `near` m of the lens on the ground, back over `soft`; none above `high`.
 export const LENS_CLEAR = { near: 3.4, soft: 1.6, high: 7.5 };
+// A showreel dissolve's outgoing camera (ui/reel-fade.js): while its shot fades out, people by either lens shrink
+export const OUTGOING_LENS = { x: 0, y: 99, z: 0, on: false };
 export function lensShrink(lens, x, z) {
   if (!lens || lens.y >= LENS_CLEAR.high) return 1;
   const t = (Math.hypot(x - lens.x, z - lens.z) - LENS_CLEAR.near) / LENS_CLEAR.soft;
@@ -61,6 +63,14 @@ export function menuFit(out, r, vh, tan, w, h, fill = 0.86, least = 0.55, across
 // figure pushes the frame along instead of leaving it while the slow follow catches up. Wider than the room (a long figure side
 // on, on a narrow phone, until the dolly backs off): centred, cropped evenly on both sides rather than all on one.
 export const edgePush = (a, b, lo, hi) => b - a > hi - lo ? (lo + hi - a - b) / 2 : a < lo ? lo - a : b > hi ? hi - b : 0;
+// Applies it to the selector's lens shift (cameras.js frameMenuLens): her outline this frame (x0..x1 across, y0..y1 up, as view
+// tangents) kept inside the free rect r with a margin m (px), where she is now, not where the lagging springs have her. The lens
+// spring s takes the push too, so it never springs back out.
+export function keepInFrame(lens, s, x0, x1, y0, y1, ppm, vw, vh, r, m) {
+  const px = vw / 2 + lens.x, py = vh / 2 + lens.y;
+  lens.x = s.x[0] += edgePush(px + x0 * ppm, px + x1 * ppm, r.left + m, r.right - m);
+  lens.y = s.x[1] += edgePush(py - y1 * ppm, py - y0 * ppm, r.hardTop + m, r.bottom);
+}
 // Follows a size that jumps about (a figure turning side on and back) without chasing it: rises in about `up` s (the UI
 // must stay clear), falls in about `down` s (no pumping on every turn). Exact at any frame rate.
 export const envelope = (env, x, dt, up, down) => env + (x - env) * (1 - Math.exp(-dt / (x > env ? up : down)));

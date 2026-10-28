@@ -2,7 +2,7 @@
 // walls (insidePlaza); the play camera is play-camera.js.
 import * as THREE from 'three';
 import { createOrbit, orbitStep, orbitLimits, roomAlong, ORBIT, createLook } from './orbit.js';
-import { smoothDamp, menuFit, envelope, edgePush } from './framing.js';
+import { smoothDamp, menuFit, envelope, keepInFrame } from './framing.js';
 import { plaza, camFocus, FRONT, camShift, camShiftX, camera, CAM_AZ, cameraTarget } from './stage.js';
 import { drac } from '../figures/drac/drac-objects.js';
 import { M } from './figure-springs.js';
@@ -12,7 +12,7 @@ import { clock, G } from '../game/state.js';
 import { TAU } from '../core/math.js';
 import { HH, K, W, SAFE, baseFov } from '../hud/canvas.js';
 import { COLLAS, figureRoot } from '../figures/objects.js';
-import { SPLASH_HOST_ID } from '../figures/index.js';
+import { SPLASH_HOST_ID, traitsOf } from '../figures/index.js';
 
 // Remove the previous render's offset before any rig reads the camera. The short impact never enters framing springs.
 let impactCameraX = 0, impactCameraY = 0;
@@ -43,7 +43,7 @@ export const titleS = { x: new Float64Array(2), v: new Float64Array(2) }, TITLE_
 // the dock, right of a side panel), and a lens shift (view offset, both axes: never a tilt) puts her centre there. The splash
 // and the title keep their one shot for every figure, with the caller's `aim` (css px below the middle).
 export const lens = { x: 0, y: 0 }; // the menu's lens shift, css px (her centre right of / below the screen's middle), smoothed
-const MENU = { late: false, held: false, directed: false, soft: false, softT: -Infinity, lent: new Float64Array(2), x: new Float64Array(2), v: new Float64Array(2), w: 0, h: 0, ox: 0, oy: 0, mx: 0, mz: 0, tx: 0, ty: 0, root: null, away: true, fit: { dist: 11, cx: 0, cy: 0, floor: 0 } }; // shift spring; her extents' envelope (m); her outline's middle across / feet off the focus (tangents, slow)
+const MENU = { late: false, held: false, directed: false, soft: false, softT: -Infinity, lent: new Float64Array(2), x: new Float64Array(2), v: new Float64Array(2), w: 0, h: 0, long: false, ox: 0, oy: 0, mx: 0, mz: 0, tx: 0, ty: 0, root: null, away: true, fit: { dist: 11, cx: 0, cy: 0, floor: 0 } }; // shift spring; her extents' envelope (m); her outline's middle across / feet off the focus (tangents, slow)
 const MENU_T = { dolly: 0.35, reel: 0.7, soft: 1.1, wake: 0.45, softFor: 2.5, shift: 0.9, up: 0.35, down: 4, centre: 1.2, pair: 1.2 }; // s: dolly: the showreel's distance (0.6 let her outgrow a phone's frame as she came at the lens or turned side on; it only follows the size's envelope, which shrinks slowly, so it never pumps); the showreel's follow and shift (a little quicker than the menu's: she travels round the plaça); soft: into a `soft` band (the idle screen), wake: back out of it (the UI is back in 0.25 s: she must not linger under it), for softFor s; the lens shift's spring; her extents rise / fall (turning side on and back never pumps the shot); her centre's slow average (the focus already follows her: a turn must not swing the shot); pair: the splash's distance and height (the pair spreads apart quicker than one figure turns)
 const MENU_EDGE = 0.015; // the hard edge's margin (frameMenuLens), a share of the screen's width
 const OUTLINES = new Map(), V3 = new THREE.Vector3(), FREE = { top: 0, bottom: 0, left: 0, right: 0, hardTop: 0 };
@@ -100,6 +100,7 @@ export function frameMenuCamera(dt, mx, mz, root, rect, aim, reel = null) {
   // The showreel directs the camera: its shot's angle and size, cut at once (no spring across a cut). A drag keeps the
   // player's angle until the next cut.
   const shot = reel && root ? reel.shot : null;
+  MENU.long = !!shot && traitsOf(reel.id).frameLength; // (scene/cameras.js frameMenuLens: framed by her length)
   if (!!rect?.soft !== MENU.soft) { MENU.soft = !!rect?.soft; MENU.softT = now; } // into a `soft` band (the idle screen) slowly, ~2 s; out of it quickly
   const slow = now - MENU.softT < MENU_T.softFor ? (MENU.soft ? MENU_T.soft : MENU_T.wake) : 0; // (s: the spring's time, 0 = the usual)
   if (orbit.ptrs.size || now - orbit.last <= ORBIT.idle) MENU.held = true;
@@ -229,7 +230,7 @@ function frameMenuLens(dt, root, rect, aim, fill = 0.86, snap = false, quick = f
   if (root?.visible) {
     camera.updateMatrixWorld();
     const view = camera.matrixWorldInverse, D = camera.position.distanceTo(camFocus);
-    let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity, wx0 = Infinity, wx1 = -Infinity, wz0 = Infinity, wz1 = -Infinity, near = false;
+    let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity, wx0 = Infinity, wx1 = -Infinity, wz0 = Infinity, wz1 = -Infinity, wd0 = Infinity, wd1 = -Infinity, we0 = Infinity, we1 = -Infinity, near = false;
     const roots = root.roots ?? (ONE[0] = root, ONE);
     for (let r = 0; r < roots.length; r++) {
       const parts = part ? partOutline(roots[r], part) : outline(roots[r]);
@@ -239,6 +240,7 @@ function frameMenuLens(dt, root, rect, aim, fill = 0.86, snap = false, quick = f
         for (let i = 0; i < pts.length; i += 3) { // world middle, and the angular extents (tangents) this camera sees
           const p = V3.fromArray(pts, i).applyMatrix4(o.matrixWorld);
           if (p.x < wx0) wx0 = p.x; if (p.x > wx1) wx1 = p.x; if (p.z < wz0) wz0 = p.z; if (p.z > wz1) wz1 = p.z;
+          const d = p.x + p.z, e = p.x - p.z; if (d < wd0) wd0 = d; if (d > wd1) wd1 = d; if (e < we0) we0 = e; if (e > we1) we1 = e;
           p.applyMatrix4(view);
           if (-p.z < 0.5) near = true; // (part of her by or behind the lens, a photo camera handing over: no measure this frame)
           const z = Math.max(0.1, -p.z), ax = p.x / z, ay = p.y / z;
@@ -250,7 +252,9 @@ function frameMenuLens(dt, root, rect, aim, fill = 0.86, snap = false, quick = f
     if (x0 < Infinity && !near && inView) {
       bx0 = x0; bx1 = x1; by0 = y0; by1 = y1; // (this frame's outline, for the hard edge below)
       MENU.mx = (wx0 + wx1) / 2; MENU.mz = (wz0 + wz1) / 2;
-      const w = (x1 - x0) * D, h = (y1 - y0) * D, k = MENU.w ? 1 - Math.exp(-dt / MENU_T.centre) : 1; // metres at the orbit's distance: what that distance must fit (no feedback from it)
+      // framed by her length (traits.frameLength): her ground extent along four directions, one size whatever her heading
+      const len = MENU.long && (!part || part === '*') ? Math.max(wx1 - wx0, wz1 - wz0, (wd1 - wd0) * Math.SQRT1_2, (we1 - we0) * Math.SQRT1_2) : 0;
+      const w = Math.max((x1 - x0) * D, len), h = (y1 - y0) * D, k = MENU.w ? 1 - Math.exp(-dt / MENU_T.centre) : 1; // metres at the orbit's distance: what that distance must fit (no feedback from it)
       MENU.w = MENU.w ? envelope(MENU.w, w, dt, MENU_T.up, MENU_T.down) : w; MENU.h = MENU.h ? envelope(MENU.h, h, dt, MENU_T.up, MENU_T.down) : h;
       MENU.ox += ((x0 + x1) / 2 - MENU.ox) * k; MENU.oy += (y0 - MENU.oy) * k; // her middle across, her feet down
     }
@@ -266,11 +270,7 @@ function frameMenuLens(dt, root, rect, aim, fill = 0.86, snap = false, quick = f
   if (snap) { MENU.x[0] = cx; MENU.x[1] = cy; MENU.v.fill(0); }
   lens.x = smoothDamp(MENU, 0, cx, st, dt);
   lens.y = smoothDamp(MENU, 1, cy, st, dt);
-  if (bx0 === bx0 && !none) { // the hard edge: where she is this frame (the springs lag a figure on the move), kept inside the free rect; a close-up may crop its part
-    const m = part ? 0 : MENU_EDGE * vw, px = vw / 2 + lens.x, py = vh / 2 + lens.y;
-    const dx = edgePush(px + bx0 * ppm, px + bx1 * ppm, FREE.left + m, FREE.right - m), dy = edgePush(py - by1 * ppm, py - by0 * ppm, FREE.hardTop + m, FREE.bottom);
-    lens.x = MENU.x[0] += dx; lens.y = MENU.x[1] += dy;
-  }
+  if (bx0 === bx0 && !none) keepInFrame(lens, MENU, bx0, bx1, by0, by1, ppm, vw, vh, FREE, part ? 0 : MENU_EDGE * vw); // (a close-up may crop its part)
   return lens.y;
 }
 // Every frame another camera runs (a game, results, photo driving): the menu's sideways shift glides back to the middle (the play

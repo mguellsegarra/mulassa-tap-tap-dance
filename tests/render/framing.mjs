@@ -114,4 +114,10 @@ assert.equal(edgePush(20, 120, 0, 400), 0, 'inside: no push');
 assert.equal(edgePush(-30, 70, 0, 400), 30, 'out on the left: slid right by its overflow');
 assert.equal(edgePush(350, 430, 0, 400), -30, 'out on the right: slid left');
 assert.equal(edgePush(-60, 440, 0, 400), 10, 'wider than the room: centred, cropped evenly on both sides');
+// applied to the lens: her outline out on the left (view tangents at 1000 px a unit, a 400 x 400 screen) slides the lens and its
+// spring right by the overflow, so the spring does not pull it back out
+import { keepInFrame } from '../../src/scene/framing.js';
+{ const lens = { x: 0, y: 0 }, s = { x: new Float64Array(2) }, r = { left: 0, right: 400, hardTop: 0, bottom: 400 };
+  keepInFrame(lens, s, -0.25, -0.15, -0.05, 0.05, 1000, 400, 400, r, 10);
+  assert.ok(Math.abs(lens.x - 60) < 1e-9 && s.x[0] === lens.x && lens.y === 0, `the lens follows her back in (${lens.x}, ${lens.y})`); }
 console.log('hard edge ok');

@@ -130,6 +130,69 @@
       "name": "Fraga",
       "comarca": "Baix Cinca",
       "territory": "Franja"
+    },
+    {
+      "id": "campos",
+      "name": "Campos",
+      "comarca": "Migjorn",
+      "island": "Mallorca",
+      "territory": "Illes Balears"
+    },
+    {
+      "id": "bisbal-emporda",
+      "name": "la Bisbal d'Empordà",
+      "short": "la Bisbal",
+      "comarca": "Baix Empordà"
+    },
+    {
+      "id": "cardedeu",
+      "name": "Cardedeu",
+      "comarca": "Vallès Oriental"
+    },
+    {
+      "id": "artesa-lleida",
+      "name": "Artesa de Lleida",
+      "short": "Artesa",
+      "comarca": "Segrià"
+    },
+    {
+      "id": "valencia",
+      "name": "València",
+      "comarca": "València",
+      "territory": "País Valencià"
+    },
+    {
+      "id": "andratx",
+      "name": "Andratx",
+      "comarca": "Serra de Tramuntana",
+      "island": "Mallorca",
+      "territory": "Illes Balears"
+    },
+    {
+      "id": "prada",
+      "name": "Prada",
+      "comarca": "Conflent",
+      "territory": "Catalunya Nord"
+    },
+    {
+      "id": "denia",
+      "name": "Dénia",
+      "comarca": "Marina Alta",
+      "territory": "País Valencià"
+    },
+    {
+      "id": "sant-joan",
+      "name": "Sant Joan",
+      "comarca": "Pla de Mallorca",
+      "island": "Mallorca",
+      "territory": "Illes Balears"
+    },
+    {
+      "id": "sant-julia",
+      "name": "Sant Julià de Lòria",
+      "short": "Sant Julià",
+      "comarca": "Sant Julià de Lòria",
+      "territory": "Andorra"
     }
   ],
   "figures": [
@@ -824,6 +887,303 @@
       ],
       "visualSources": [
         "https://gegantcat.com/storage/img/elements/gegants-de-fraga-1613267683.jpg"
+      ]
+    },
+    {
+      "id": "freu-campos",
+      "name": "Es Freu",
+      "fullName": "Es Freu de Campos",
+      "town": "campos",
+      "entity": "Esquitxafoc",
+      "entityName": "Associació Dimonis Esquitxafoc",
+      "owner": "Ajuntament de Campos",
+      "manager": "Associació Dimonis Esquitxafoc",
+      "description": "Bèstia de foc en forma de peix de Campos, nascuda el 2003 i coneguda com la Bèstia de ses Covetes.",
+      "sources": [
+        "https://www.fdbib.com/es-freu/",
+        "https://www.fdbib.com/dimonis-esquitxafoc/",
+        "https://ajcampos.net/en/node/6387",
+        "https://www.vilaweb.cat/noticia/4226461/20150109/festes-sant-julia-campos.html",
+        "http://boib.caib.es/pdf/2001139/p17950.pdf",
+        "https://ca.wikipedia.org/wiki/Campos"
+      ],
+      "visualSources": [
+        "https://5b52a17fc3.clvaw-cdnwnd.com/0e135451760dcbcef4e4450d4eea627f/200004600-b8a8cb8a8d/_DSC7954.jpeg?ph=5b52a17fc3",
+        "https://5b52a17fc3.clvaw-cdnwnd.com/0e135451760dcbcef4e4450d4eea627f/200004602-915b6915b8/_DSC7964.jpeg?ph=5b52a17fc3",
+        "https://5b52a17fc3.clvaw-cdnwnd.com/0e135451760dcbcef4e4450d4eea627f/200000094-33b2334abc/P1099432.jpg?ph=5b52a17fc3",
+        "https://5b52a17fc3.clvaw-cdnwnd.com/0e135451760dcbcef4e4450d4eea627f/200004606-a00d6a00d9/_DSC7974.jpeg?ph=5b52a17fc3"
+      ]
+    },
+    {
+      "id": "voltor-bisbal",
+      "name": "Voltor",
+      "fullName": "Voltor de la Bisbal d'Empordà",
+      "town": "bisbal-emporda",
+      "entity": "Els Voltors",
+      "entityName": "Associació Juvenil i Cultural Els Voltors",
+      "description": "Bèstia festiva de l'associació Els Voltors de la Bisbal d'Empordà, dissenyada per Joan Abras i construïda el 2008 per Ramon Aumedes.",
+      "sources": [
+        "https://www.bestiari.cat/figura/voltor/",
+        "https://www.elsvoltors.cat/qui-som/",
+        "https://ca.wikipedia.org/wiki/Festa_Major_de_la_Bisbal_d'Empordà"
+      ],
+      "visualSources": [
+        "https://www.bestiari.cat/wp-content/uploads/2016/07/voltor-de-la-Bisbal-dEmpordà-2.jpg",
+        "https://www.bestiari.cat/wp-content/uploads/2016/07/voltor-de-la-Bisbal-dEmpordà.jpg",
+        "https://www.bestiari.cat/wp-content/uploads/2016/07/Voltor-de-la-Bisbal.jpg",
+        "https://upload.wikimedia.org/wikipedia/commons/5/59/Voltors_de_la_Bisbal_d%27Empord%C3%A0%2C_a_Barcelona%2C_2026.jpg"
+      ]
+    },
+    {
+      "id": "lleo-barcelona",
+      "name": "Lleó",
+      "fullName": "Lleó de Barcelona",
+      "town": "barcelona",
+      "entity": "Amics dels Gegants del Pi",
+      "entityName": "Associació Amics dels Gegants del Pi",
+      "manager": "Associació Amics dels Gegants del Pi",
+      "description": "Lleó coronat del Seguici Popular de Barcelona, documentat des del 1424 i refet el 1993 per Manel Casserras.",
+      "sources": [
+        "https://barcelona.cat/culturapopular/en/festivals/festival-imagery/bestiari/lleo-de-barcelona",
+        "https://www.gegantsdelpi.cat/les-figures/el-lleo-de-barcelona/",
+        "https://ca.wikipedia.org/wiki/Lleó_de_Barcelona",
+        "https://beteve.cat/cultura/merce-2018-toc-inici-seguici-popular/"
+      ],
+      "visualSources": [
+        "http://www.gegantsdelpi.cat/wp-content/uploads/lleo-de-barcelona.jpg",
+        "https://upload.wikimedia.org/wikipedia/commons/7/7c/Festes_de_Santa_Eul%C3%A0lia_-_Lle%C3%B3_de_Barcelona_01.jpg",
+        "https://upload.wikimedia.org/wikipedia/commons/9/93/Lle%C3%B3_de_Barcelona.jpg"
+      ]
+    },
+    {
+      "id": "verro-cardedeu",
+      "name": "Verro",
+      "fullName": "Verro de Cardedeu",
+      "town": "cardedeu",
+      "entity": "Diables de Cardedeu",
+      "entityName": "Colla de Diables de Cardedeu",
+      "description": "Senglar de foc dels Diables de Cardedeu, creat el 1996 amb disseny d'Agustí Ors i construït per Ramon Aumedes.",
+      "sources": [
+        "http://www.bitxoterrassa.com/2015/09/trobada-de-bestiari-del-valles-i-maresme-colles.html",
+        "https://diables.cat/node/4167",
+        "https://www.cardedeu.cat/el-municipi/entitats-i-associacions/diables-de-cardedeu.html",
+        "https://www.cardedeu.cat/actualitat/noticies/els-nous-jocs-infantils-de-placa-de-joan-alsina-representen-la-llegenda-del-verro.html",
+        "https://diablesdecardedeu.cat/activitat/crida-verro-2025/",
+        "https://www.bestiari.cat/esdeveniment/la-festa-del-foc-a-cardedeu/",
+        "https://www.jaumeolivet.cat/pagines_2015/bestiari/bestiari_050_190_verro.html"
+      ],
+      "visualSources": [
+        "https://www.jaumeolivet.cat/fotos_2015/bestiari/bestiari_050_190/bestiari_050_190_01.jpg",
+        "https://www.jaumeolivet.cat/fotos_2015/bestiari/bestiari_050_190/bestiari_050_190_03.jpg",
+        "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhBaWRW8sIiGv1lIerX0GBxWrw6XQ6vOWJYQAbI6zsP2rAWexhEcczrXudEx9Bbaz2FCi5rT-3FyFiAVp9ivj6z_sYOtx7NawlsONKe33Gwzz5hpaYIgK-Dq05M3PtuptcTODKe1DTi_nM/s1600/EL+VERRO+DE+CARDEDEU.jpg"
+      ]
+    },
+    {
+      "id": "griu-artesa-lleida",
+      "name": "Griu",
+      "fullName": "Griu d'Artesa de Lleida",
+      "town": "artesa-lleida",
+      "entity": "El Griu",
+      "entityName": "Associació el Griu d'Artesa de Lleida",
+      "owner": "Ajuntament d'Artesa de Lleida",
+      "manager": "Associació el Griu d'Artesa de Lleida",
+      "description": "Griu de foc d'Artesa de Lleida, obra de l'escultora Dolors Sans, batejat el 2006.",
+      "sources": [
+        "https://www.bestiari.cat/figura/el-griu-dartesa-de-lleida/",
+        "https://inventari.bestiari.cat/node/3903",
+        "https://ca.wikipedia.org/wiki/Griu_d'Artesa_de_Lleida",
+        "https://www.bestiari.cat/2026/07/el-festival-denceses-dartesa-de-lleida-celebra-la-17a-edicio-marcada-pel-20e-aniversari-del-griu/"
+      ],
+      "visualSources": [
+        "https://www.bestiari.cat/wp-content/uploads/2016/08/Griu_Artesa-de-Lleida.jpg",
+        "https://www.bestiari.cat/wp-content/uploads/2016/08/Artesa-de-LLeida-_Griu.jpg",
+        "https://upload.wikimedia.org/wikipedia/commons/7/78/El_Griu_d%27Artesa_de_Lleida_al_Bestiuari_del_2007.jpg",
+        "https://www.bestiari.cat/wp-content/uploads/2016/08/Griu-dArtesa-de-Lleida-002.jpg"
+      ]
+    },
+    {
+      "id": "mulassa-montblanc",
+      "name": "Mulassa",
+      "fullName": "Mulassa de Montblanc",
+      "town": "montblanc",
+      "entity": "Amics dels Gegants",
+      "entityName": "Amics dels Gegants de Montblanc",
+      "owner": "Ajuntament de Montblanc",
+      "manager": "Amics dels Gegants de Montblanc",
+      "description": "Mulassa de Montblanc, de propietat municipal, creada el 1981 i portada pels Amics dels Gegants des del 2005.",
+      "sources": [
+        "https://ca.wikipedia.org/wiki/Mulassa_de_Montblanc",
+        "https://commons.wikimedia.org/wiki/Category:Mulassa_de_Montblanc",
+        "https://www.novaconca.cat/documents/novaconca/revistes/n-122.pdf",
+        "https://www.diaridetarragona.com/camp/196468/els-gegants-veguers-de-montblanc-estan-de-cami-cap-a-costa-rica-ee16122798.html"
+      ],
+      "visualSources": [
+        "https://upload.wikimedia.org/wikipedia/commons/3/34/Mulassa_de_Montblanc_-_Sant_Francesc.JPG",
+        "https://upload.wikimedia.org/wikipedia/commons/2/2f/Mulassa_de_Montblanc_02.JPG",
+        "https://upload.wikimedia.org/wikipedia/commons/0/02/Mulassa_de_Montblanc_03.JPG",
+        "https://upload.wikimedia.org/wikipedia/commons/7/7d/Mulassa_de_Montblanc_01.JPG"
+      ]
+    },
+    {
+      "id": "basilisc-reus",
+      "name": "Basilisc",
+      "fullName": "Basilisc de Reus",
+      "town": "reus",
+      "entity": "Estol del Basilisc",
+      "entityName": "Estol del Basilisc de Reus",
+      "description": "Basilisc del Seguici Festiu de Reus, obra de l'escultor Manel Llauradó estrenada el 2007.",
+      "sources": [
+        "https://ca.wikipedia.org/wiki/Basilisc_de_Reus",
+        "https://www.bestiari.cat/figura/estol-del-basilisc-de-reus/",
+        "https://commons.wikimedia.org/wiki/Category:Basilisc_de_Reus"
+      ],
+      "visualSources": [
+        "https://www.bestiari.cat/wp-content/uploads/2025/02/basilisc-gran-3-768x499.jpg",
+        "https://www.bestiari.cat/wp-content/uploads/2025/02/basilisc-gran-4-768x432.jpg",
+        "https://www.bestiari.cat/wp-content/uploads/2025/02/basilisc-gran-1-768x1024.jpeg",
+        "https://upload.wikimedia.org/wikipedia/commons/5/54/Basilisc_de_Reus_-_cercavila_de_les_festes_del_Barri_G%C3%B2tic_P1520708.jpg"
+      ]
+    },
+    {
+      "id": "tarasca-valencia",
+      "name": "Tarasca",
+      "fullName": "Tarasca de València",
+      "town": "valencia",
+      "entity": "Ajuntament de València",
+      "entityName": "Ajuntament de València (Museu del Corpus)",
+      "description": "Tarasca de Santa Marta del Corpus de València, incorporada a la processó el 1993.",
+      "sources": [
+        "https://es.wikipedia.org/wiki/Fiesta_del_Corpus_Christi_de_Valencia",
+        "https://cucaferamontblanc.wordpress.com/2016/07/28/la-tarasca-i-la-cucafera-de-valencia/",
+        "http://www.amicscorpusvalencia.com/",
+        "https://www.lenciclopedia.org/wiki/La_Tarasca",
+        "https://commons.wikimedia.org/wiki/Category:Tarasca_de_la_Festa_del_Corpus_de_Val%C3%A8ncia"
+      ],
+      "visualSources": [
+        "https://upload.wikimedia.org/wikipedia/commons/5/5c/Tarasca_de_la_Festa_del_Corpus_de_Val%C3%A8ncia_01.jpg",
+        "https://upload.wikimedia.org/wikipedia/commons/1/11/Tarasca_en_la_Estaci%C3%B3n_del_Norte_de_Valencia_01.jpg",
+        "https://upload.wikimedia.org/wikipedia/commons/f/f3/Tarasca.jpg",
+        "https://upload.wikimedia.org/wikipedia/commons/f/f8/Tarasca_en_la_plaza_de_la_Virgen_2022_01.jpg"
+      ]
+    },
+    {
+      "id": "cucafera-valencia",
+      "name": "Cuca Fera",
+      "fullName": "Cuca Fera de València",
+      "town": "valencia",
+      "entity": "Amics del Corpus",
+      "entityName": "Associació d'Amics del Corpus de València",
+      "description": "Cuca Fera del Corpus de València, la tortuga gegant de santa Margalida, incorporada el 2005 per l'Associació d'Amics del Corpus.",
+      "sources": [
+        "https://www.avl.gva.es/documents/31987/243392/el_Corpus_AVL.pdf",
+        "https://cucaferamontblanc.wordpress.com/2016/07/28/la-tarasca-i-la-cucafera-de-valencia/",
+        "https://digitalhistory.unite.it/en/themes/festivals/the-corpus-christi-of-valencia/the-eve-of-corpus-christi-in-valencia/",
+        "https://commons.wikimedia.org/wiki/File:Cuca_Fera_en_la_Plaza_de_la_Virgen_2022_01.jpg"
+      ],
+      "visualSources": [
+        "https://upload.wikimedia.org/wikipedia/commons/5/55/Cuca_Fera_en_la_Plaza_de_la_Virgen_2022_03.jpg",
+        "https://upload.wikimedia.org/wikipedia/commons/1/1f/Cuca_Fera_en_la_Plaza_de_la_Virgen_2022_01.jpg",
+        "https://upload.wikimedia.org/wikipedia/commons/f/f1/Cuca_Fera_de_Santa_Margalida_02.jpg",
+        "https://upload.wikimedia.org/wikipedia/commons/0/06/Santa_Margalida_i_la_Cuca_Fera_01.jpg"
+      ]
+    },
+    {
+      "id": "na-popia-andratx",
+      "name": "Na Pòpia",
+      "fullName": "Na Pòpia d'Andratx",
+      "town": "andratx",
+      "entity": "Dragomonis",
+      "entityName": "Dragomonis d'Andratx",
+      "description": "Drac de foc dels Dragomonis d'Andratx, inspirat en les sargantanes de sa Dragonera.",
+      "sources": [
+        "https://www.fdbib.com/dragomonis-d%C2%B4andratx/",
+        "https://www.ultimahora.es/noticias/part-forana/2015/01/16/142287/colla-dimonis-andratx-anima-noche-santantoniera.html",
+        "https://www.youtube.com/watch?v=q7RaMhcWQP4"
+      ],
+      "visualSources": [
+        "https://5b52a17fc3.clvaw-cdnwnd.com/0e135451760dcbcef4e4450d4eea627f/200000531-13a8013a82/Captura-8.jpeg?ph=5b52a17fc3"
+      ]
+    },
+    {
+      "id": "drac-canigo-prada",
+      "name": "Drac del Canigó",
+      "fullName": "Drac del Canigó de Prada",
+      "town": "prada",
+      "entity": "Nyerros del Conflent",
+      "entityName": "Nyerros del Conflent (Casal del Conflent)",
+      "description": "Drac de foc dels Nyerros del Conflent de Prada, creat el 2018 per Àngel Rigall i Tavi Alguero.",
+      "sources": [
+        "https://www.bestiari.cat/figura/drac-del-canigo/",
+        "https://www.bestiari.cat/colla/casal-del-conflent-nyerros-del-conflent/",
+        "https://nyerrosdelconflent.wordpress.com/",
+        "https://www.wikidata.org/wiki/Q212450"
+      ],
+      "visualSources": [
+        "https://www.bestiari.cat/wp-content/uploads/2018/07/IMG_1782-e1530607400915-768x1024.jpg",
+        "https://www.bestiari.cat/wp-content/uploads/2018/07/IMG_1784-e1530607432333-768x1024.jpg",
+        "https://www.bestiari.cat/wp-content/uploads/2018/07/IMG_1785-e1530607460495-768x1024.jpg",
+        "https://www.bestiari.cat/wp-content/uploads/2018/07/Drac_Canigo-768x431.png"
+      ]
+    },
+    {
+      "id": "drac-denia",
+      "name": "Drac",
+      "fullName": "Drac de Dénia",
+      "town": "denia",
+      "entity": "Dianium Dansa",
+      "entityName": "Associació Cultural Dianium Dansa de Dénia",
+      "description": "Drac de foc del Corpus de Dénia de Dianium Dansa, creat el 2012 per Enric Ginestar.",
+      "sources": [
+        "https://www.bestiari.cat/figura/drac-de-denia/",
+        "https://en.denia.com/denia-celebra-los-bailes-del-corpus/",
+        "https://ca.denia.com/dianium-dansa-mantiene-viva-la-tradicion-los-bailes-del-corpus-denia/",
+        "https://www.denia.com/cuando-los-gigantes-tomaron-las-calles-y-las-bestias-encendieron-la-noche-el-encuentro-historico-de-denia/"
+      ],
+      "visualSources": [
+        "https://www.denia.com/wp-content/uploads/2017/06/01-bailes-del-corpus-denia-2017-dragon.jpg",
+        "https://www.denia.com/wp-content/uploads/2017/06/02-bailes-del-corpus-denia-2017-dragon.jpg",
+        "https://www.bestiari.cat/wp-content/uploads/2026/02/Foto-Drac-1-pdf.jpg",
+        "https://www.denia.com/wp-content/uploads/2012/05/Maqueta-del-drag%C3%B3n-de-las-fiestas-del-corpus.jpg"
+      ]
+    },
+    {
+      "id": "corb-sant-nofre-sant-joan",
+      "name": "Es Corb de Sant Nofre",
+      "fullName": "Es Corb de Sant Nofre de Sant Joan",
+      "town": "sant-joan",
+      "entity": "Centre Cultural",
+      "entityName": "Centre Cultural de Sant Joan",
+      "description": "Corb de foc de dos caps del Centre Cultural de Sant Joan, creat el 1998 per Kake Portas.",
+      "sources": [
+        "https://santjoanenfestes.es.tl/_CENTRE-CULTURAL-.htm",
+        "https://www.fdbib.com/diables-de-sant-joan/",
+        "https://ca.wikipedia.org/wiki/Sant_Joan_(Mallorca)",
+        "https://ca.wikipedia.org/wiki/Puig_de_Sant_Nofre"
+      ],
+      "visualSources": [
+        "https://img.webme.com/pic/s/santjoanenfestes/corbdesnfre.png",
+        "https://img.webme.com/pic/s/santjoanenfestes/corbcentrecultural.jpg",
+        "https://img.webme.com/pic/s/santjoanenfestes/corb...jpg",
+        "https://img.webme.com/pic/s/santjoanenfestes/corbsnfre..png"
+      ]
+    },
+    {
+      "id": "llop-senyoreta-sant-julia",
+      "name": "Llop de la Senyoreta",
+      "fullName": "Llop de la Senyoreta de Sant Julià de Lòria",
+      "town": "sant-julia",
+      "entity": "Geganters de Sant Julià",
+      "entityName": "Colla de Geganters de Sant Julià de Lòria",
+      "description": "Llop de foc de la Colla de Geganters de Sant Julià de Lòria, creat el 2024 per Roger Mas sobre un dibuix de Sergi Mas.",
+      "sources": [
+        "https://www.altaveu.com/reportatges/arrenca-festa-major-sant-julia-llop-senyoreta-traient-foc-queixals_59242_102.html",
+        "https://www.bondia.ad/cultura/el-llop-torna-a-sant-julia",
+        "https://comusantjulia.ad/ca/actualitat/noticies/una-mostra-sobre-els-gegants-i-gegantons-i-el-bateig-del-llop-de-la-senyoreta-aporten-un-valor-afegit-a-la-festa-major-2024/"
+      ],
+      "visualSources": [
+        "https://comusantjulia.ad/images/noticies/IMG_3121.jpg",
+        "https://www.altaveu.com/uploads/s1/17/77/68/1/bateig-del-llop-de-la-senyoreta.jpeg",
+        "https://www.altaveu.com/uploads/s1/17/77/66/6/roger-mas-posant-la-pirotecnica-a-la-boca-del-llop-de-la-senyoreta.jpeg"
       ]
     }
   ]

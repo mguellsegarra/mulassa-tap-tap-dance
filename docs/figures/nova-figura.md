@@ -63,7 +63,7 @@ Cada figura nova s'afegeix amb una línia a cada registre, i res més a `src/sce
 | --- | --- | --- |
 | Retrat vectorial | La targeta gran del selector | `src/figures/<carpeta>/<clau>-portrait.js`; l'SVG editable, a `.agents/skills/mulassacat-miniatures/assets/` |
 | Retrat de píxels | HUD, ajuda, mode foto, ràdio, temporades | `src/game/figure-portraits.js` (una graella i la paleta). No cal mentre la figura és pendent, perquè encara no surt enlloc: es dibuixa quan la figura passa a ser disponible |
-| Silueta | La figura mentre és pendent | dibuixada a mà a `src/ui/pending-silhouettes.js` (i `pending-silhouettes-more.js`), des de les fotos de la mateixa figura; si no, se'n calcula una dels píxels |
+| Silueta | La figura mentre és pendent | dibuixada a mà a `src/ui/pending-silhouettes.js` (i `pending-silhouettes-more.js`, `pending-silhouettes-third.js`), des de les fotos de la mateixa figura; si no, se'n calcula una dels píxels |
 | Icona de redoblament | La llegenda de "Com es juga" | `index.html` (`li.only-<clau>`) i `src/styles/base.css` |
 | Imatge de compartir | La foto de la targeta de compartir | `cardFile` a la fitxa i el tema a `src/hud/share-card.js` |
 | Icones del joc lliure | Les tecles Espai, Q, E i R | `src/ui/photo-icons.js` |

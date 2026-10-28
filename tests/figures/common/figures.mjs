@@ -283,6 +283,21 @@ assert(!$('select-towns').innerHTML.includes('sel-soon'), 'no «Pròximament» p
   assert.deepEqual(['berga', 'sineu', 'vinaros', 'bao', 'fraga'].map(id => locationOf({ town: id })), ['Berga · Berguedà', 'Sineu · Mallorca', 'Vinaròs · País Valencià', 'Baó · Catalunya Nord', 'Fraga · Franja'], 'the location line');
   assert.equal(FIGURES.find(f => f.id === 'drac-baluk-terrassa').sources[0], 'https://www.bestiari.cat/figura/drac-baluk-astharot-2/', 'the 2014 copy is the source');
 }
+{ // the third wave: fourteen pending figures, ten new towns (Andorra among them), arms that need a crest or laurel drawn outside
+  const WAVE = ['freu-campos', 'voltor-bisbal', 'lleo-barcelona', 'verro-cardedeu', 'griu-artesa-lleida', 'mulassa-montblanc', 'basilisc-reus', 'tarasca-valencia', 'cucafera-valencia', 'na-popia-andratx', 'drac-canigo-prada', 'drac-denia', 'corb-sant-nofre-sant-joan', 'llop-senyoreta-sant-julia'];
+  for (const id of WAVE) {
+    const f = FIGURES.find(g => g.id === id);
+    assert(f && !playable(f) && f.sources.length && f.entityName && DRAWN_SILHOUETTES[id] && STAND[id], `${id}: a pending, attributed, drawn figure with its own stand`);
+    assert(!JSON.stringify(f).includes('/Users/'), `${id}: no local path in the catalogue`);
+  }
+  assert.deepEqual(['campos', 'valencia', 'prada', 'denia', 'sant-julia'].map(id => locationOf({ town: id })), ['Campos · Mallorca', 'València · País Valencià', 'Prada · Catalunya Nord', 'Dénia · País Valencià', 'Sant Julià de Lòria · Andorra'], 'the location line, Andorra too');
+  assert.match(escutSvg('valencia'), /stroke-linejoin="round"\/><g stroke="none"><path d="M12 2\.6/, 'València: the bat over the lozenge, outside its clip');
+  assert.match(escutSvg('sant-julia'), /stroke-linejoin="round"\/><g stroke="none"><g fill="#2e8b3e">/, 'Sant Julià: the laurel outside the oval');
+  assert(!/stroke-linejoin="round"\/><g stroke="none">/.test(escutSvg('valls')), 'arms without an outside charge add nothing');
+  assert(escutSvg('campos').includes('#8a2a8c'), 'Campos: the purple bordure');
+  const shortOf = new Map(); // one association, one short name on every card (the Lleó and the Gegants del Pi share theirs)
+  for (const f of sourceCatalog.figures) { assert.equal(shortOf.get(f.entityName) ?? f.entity, f.entity, `${f.id}: ${f.entityName} keeps one short name`); shortOf.set(f.entityName, f.entity); }
+}
 { // order: Valls first, the others by Catalan name; each town keeps its catalogue order; the invitation stays last
   const names = TOWNS.slice(1).map(t => t.name);
   assert.equal(TOWNS[0].id, 'valls');
@@ -521,7 +536,8 @@ assert(!/showModal|aviat\.close|aviat-menu|aviat-close/.test(ui));
   // One accent per town: its banner's cloth and its cards'/avatars' tint at one fixed lightness (the owner chose the game's
   // own palette, 2026-10-19). The accents are the banners' agreed colours.
   const css = selectCss();
-  const accent = { valls: '#c8202f', solsona: '#0b8fa8', tarragona: '#8a3d9a', reus: '#8b5e3c', vilanova: '#10ade3', barcelona: '#b659a2', berga: '#16306b', olot: '#8e2a5c', vilafranca: '#00b09a', lleida: '#6d1a2d', terrassa: '#8d68c0', manresa: '#2a63b5', montblanc: '#5f9205', girona: '#3f86b5', molins: '#c55f12', 'sant-sadurni': '#c49a25', mataro: '#227702', tortosa: '#0e985b', sineu: '#696708', vinaros: '#5c52b4', castello: '#397f69', bao: '#00717a', fraga: '#76628f' };
+  const accent = { valls: '#c8202f', solsona: '#0b8fa8', tarragona: '#8a3d9a', reus: '#8b5e3c', vilanova: '#10ade3', barcelona: '#b659a2', berga: '#16306b', olot: '#8e2a5c', vilafranca: '#00b09a', lleida: '#6d1a2d', terrassa: '#8d68c0', manresa: '#2a63b5', montblanc: '#5f9205', girona: '#3f86b5', molins: '#c55f12', 'sant-sadurni': '#c49a25', mataro: '#227702', tortosa: '#0e985b', sineu: '#696708', vinaros: '#5c52b4', castello: '#397f69', bao: '#00717a', fraga: '#76628f',
+    campos: '#a52784', 'bisbal-emporda': '#bd5354', cardedeu: '#759cdd', 'artesa-lleida': '#b37f00', valencia: '#1d4f9c', andratx: '#4a6f95', prada: '#893c20', denia: '#2548c5', 'sant-joan': '#2b78d2', 'sant-julia': '#e8731c' };
   assert.deepEqual(Object.keys(accent).sort(), TOWNS.map(t => t.id).sort(), 'every town has an accent');
   for (const [town, colour] of Object.entries(accent)) {
     assert(css.includes(`:is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="${town}"] { --town: ${colour}; }`), `${town}: banner, cards and avatars share ${colour}`);

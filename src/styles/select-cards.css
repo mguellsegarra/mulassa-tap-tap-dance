@@ -29,6 +29,16 @@
 :is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="castello"] { --town: #397f69; }
 :is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="bao"] { --town: #00717a; }
 :is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="fraga"] { --town: #76628f; }
+:is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="campos"] { --town: #a52784; }
+:is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="bisbal-emporda"] { --town: #bd5354; }
+:is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="cardedeu"] { --town: #759cdd; }
+:is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="artesa-lleida"] { --town: #b37f00; }
+:is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="valencia"] { --town: #1d4f9c; }
+:is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="andratx"] { --town: #4a6f95; }
+:is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="prada"] { --town: #893c20; }
+:is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="denia"] { --town: #2548c5; }
+:is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="sant-joan"] { --town: #2b78d2; }
+:is(.sel-banner, .sel-card, #photo-figs .pf)[data-town="sant-julia"] { --town: #e8731c; }
 :is(.sel-card, #photo-figs .pf)[data-town]:not([data-town="el-teu-poble"]) { --t: color-mix(in srgb, var(--town) 45%, #22160e); } /* browsers without relative colours */
 @supports (color: oklch(from red l c h)) { :is(.sel-card, #photo-figs .pf)[data-town]:not([data-town="el-teu-poble"]) { --t: oklch(from var(--town) .42 min(c, .1) h); } }
 .sel-card { overflow: clip; } /* the panels' square corners stay inside the rounded card and its ring */

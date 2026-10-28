@@ -7,6 +7,7 @@
 // Every shape of a figure overlaps the next (parts: how many separate figures a card shows); tests/figures/common/silhouettes.mjs
 // rasterises them and fails on any gap, which would show the halo as a seam.
 import { moreDrawings } from './pending-silhouettes-more.js';
+import { thirdDrawings } from './pending-silhouettes-third.js';
 const oval = (cx, cy, rx, ry = rx) => `M${cx - rx} ${cy}a${rx} ${ry} 0 1 0 ${2 * rx} 0a${rx} ${ry} 0 1 0 ${-2 * rx} 0Z`;
 // a ring (a looped tail): the inner circle runs the other way, so it stays open under nonzero fill
 const ring = (cx, cy, R, r) => `M${cx - R} ${cy}a${R} ${R} 0 1 1 ${2 * R} 0a${R} ${R} 0 1 1 ${-2 * R} 0ZM${cx - r} ${cy}a${r} ${r} 0 1 0 ${2 * r} 0a${r} ${r} 0 1 0 ${-2 * r} 0Z`;
@@ -216,6 +217,7 @@ SILHOUETTE_DRAWINGS['vibria-manresa'] = { vb: [20, 16], d: [
   carrierLeg(100, 118), carrierLeg(80, 118),
 ] };
 Object.assign(SILHOUETTE_DRAWINGS, moreDrawings({ oval, ring, carrierLeg })); // the second wave of figures (pending-silhouettes-more.js)
+Object.assign(SILHOUETTE_DRAWINGS, thirdDrawings({ oval, ring, carrierLeg })); // the third wave (pending-silhouettes-third.js)
 const DRAWN_INK = '#120b07', DRAWN_HALO = '#f5e3b8';
 // One <path> per shape (overlaps never cancel into holes); the halo group, 2 screen px wide (1 px outside), sits under
 // the ink: the same line as the Bou's and the traced silhouettes'.

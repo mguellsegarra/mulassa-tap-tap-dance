@@ -77,7 +77,10 @@ export const STAND = {
   'gegants-ciutat-valls': 1, 'cavallets-valls': 0.55, 'basilisc-valls': 0.65, 'diables-valls': 0.8,
   'aliga-tarragona': 0.8, 'cucafera-tarragona': 0.65, 'gegants-mulassa-reus': 0.8, 'gegants-solsona': 1, 'drac-solsona': 0.8,
   'mulassa-solsona': 0.8, 'aliga-solsona': 0.8, 'gegants-bojos-solsona': 1, 'draca-solsona': 0.8, 'boja-vilanova': 0.8, 'drac-vilanova': 0.8, 'aliga-barcelona': 0.8,
-  'guites-berga': 1, 'aliga-berga': 0.8, 'gegants-olot': 1, 'drac-vilafranca': 0.8, 'marraco-lleida': 0.8, 'drac-baluk-terrassa': 0.8, 'vibria-manresa': 0.8, 'drac-montblanc': 0.8, 'beatusaure-girona': 1.05, 'camell-molins': 1.1, 'filloxera-sant-sadurni': 0.8, 'momerota-mataro': 0.8, 'cucafera-tortosa': 0.6, 'gegants-pi-barcelona': 1.05, 'much-muca-sineu': 0.65, 'gegants-vinaros': 1.0, 'haca-traca-castello': 0.8, 'hamlet-bao': 0.7, 'gegants-fraga': 0.9, 'la-teva-colla': 1,
+  'guites-berga': 1, 'aliga-berga': 0.8, 'gegants-olot': 1, 'drac-vilafranca': 0.8, 'marraco-lleida': 0.8, 'drac-baluk-terrassa': 0.8, 'vibria-manresa': 0.8, 'drac-montblanc': 0.8, 'beatusaure-girona': 1.05, 'camell-molins': 1.1, 'filloxera-sant-sadurni': 0.8, 'momerota-mataro': 0.8, 'cucafera-tortosa': 0.6, 'gegants-pi-barcelona': 1.05, 'much-muca-sineu': 0.65, 'gegants-vinaros': 1.0, 'haca-traca-castello': 0.8, 'hamlet-bao': 0.7, 'gegants-fraga': 0.9,
+  'freu-campos': 0.7, 'voltor-bisbal': 0.8, 'lleo-barcelona': 0.75, 'verro-cardedeu': 0.6, 'griu-artesa-lleida': 0.8, 'mulassa-montblanc': 0.8, 'basilisc-reus': 0.8,
+  'tarasca-valencia': 0.75, 'cucafera-valencia': 0.6, 'na-popia-andratx': 0.7, 'drac-canigo-prada': 0.7, 'drac-denia': 0.75, 'corb-sant-nofre-sant-joan': 0.7, 'llop-senyoreta-sant-julia': 0.75,
+  'la-teva-colla': 1,
 };
 export const portraitStand = figure => STAND[figure.id] ?? 0.8;
 // How heavily each figure lands in free mode (the Mulassa = 1): the one place that sets its «BUUUM» (audio.js thud),

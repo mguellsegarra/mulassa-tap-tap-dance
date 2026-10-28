@@ -4,9 +4,9 @@ Les dades editables són a `src/game/figure-catalog.json`. `figures.js` només a
 
 Selecció editorial, sense un rànquing objectiu de popularitat ni de seguidors. Les entitats indiquen qui gestiona o porta les figures; no impliquen necessàriament propietat jurídica, i quan la font distingeix propietari i gestor (Valls, Mataró, Vinaròs, Vilanova) el catàleg ho conserva als camps `owner` i `manager`. Les rèpliques petites i alguns conjunts comparteixen fitxa; les parelles (Much i Muca, Tio Gori i Tia Caballera, Mustafà i Elisenda, Lo Mangüel i la Pilara, els Gegants d'Olot) són una sola targeta amb dos subjectes.
 
-Estat actual: 41 entrades de catàleg, 35 visibles al selector i 23 poblacions; només Mulassa i Drac són jugables. Les poblacions es guarden amb tres camps separats: `comarca`, `island` (només Mallorca, per ara) i `territory` (Catalunya, Illes Balears, País Valencià, Catalunya Nord, Franja). El panell pendent mostra una línia discreta "Població · Comarca" (a Catalunya) o "Població · Illa/Territori" (Sineu: Mallorca; Vinaròs i Castelló: País Valencià; Baó: Catalunya Nord; Fraga: Franja).
+Estat actual: 55 entrades de catàleg, 49 visibles al selector i 33 poblacions; només Mulassa i Drac són jugables. Les poblacions es guarden amb tres camps separats: `comarca`, `island` (només Mallorca, per ara) i `territory` (Catalunya, Illes Balears, País Valencià, Catalunya Nord, Franja, Andorra); a Andorra, el camp `comarca` porta la parròquia. El panell pendent mostra una línia discreta "Població · Comarca" (a Catalunya) o "Població · Illa/Territori" (Sineu: Mallorca; Vinaròs i Castelló: País Valencià; Baó: Catalunya Nord; Fraga: Franja; Sant Julià de Lòria: Andorra).
 
-Les figures pendents només porten la silueta dibuixada a mà (`pending-silhouettes.js` i `pending-silhouettes-more.js`), traçada de les fotos de la mateixa figura. El retrat de píxels no cal fins que la figura sigui disponible, perquè no surt enlloc; els dos retrats originals de la Mulassa i el Drac en SVG es conserven. Les fotografies són referències d'estudi locals i no s'inclouen al joc; la recerca documenta fonts i no concedeix permisos d'imatge ni de música.
+Les figures pendents només porten la silueta dibuixada a mà (`pending-silhouettes.js`, `pending-silhouettes-more.js` i `pending-silhouettes-third.js`), traçada de les fotos de la mateixa figura. El retrat de píxels no cal fins que la figura sigui disponible, perquè no surt enlloc; els dos retrats originals de la Mulassa i el Drac en SVG es conserven. Les fotografies són referències d'estudi locals i no s'inclouen al joc; la recerca documenta fonts i no concedeix permisos d'imatge ni de música.
 
 Solsona distingeix les figures del Corpus i la Festa Major de les del Carnaval. Al selector només es veuen el Drac i els Gegants Bojos (selecció editorial, `selectorVisible: false` a les altres quatre: Gegants, Mulassa i Antonio Ricu, Àliga i Aligons, i la Draca, que és una figura real amb ball propi). Les fitxes ocultes conserven fonts, identificadors, traduccions i recursos. El Bou de Solsona no hi és: no té ball propi.
 
@@ -19,6 +19,8 @@ L'ordre és Valls primer i la resta de poblacions per ordre alfabètic català (
 Cada població té un accent editorial (`--town`, `select-cards.css`) per a l'estendard, la targeta i l'avatar de foto. No són colors oficials municipals ni la camisa d'una colla. Es repassen perquè dues poblacions veïnes no es confonguin: la distància OKLab entre accents queda per sobre de ~0,06 (Valls es manté vermell i cap altra població n'hi comparteix). Alguns van néixer d'una referència de l'àrea (Marrecs de Salt per a Girona, la Fil·loxera groga a Sant Sadurní, el faldó de l'Haca a Castelló, les faldetes de la Pilara a Fraga), però el criteri és la camisa de la colla castellera del poble quan n'hi ha i no xoca amb un altre accent (Reus, Berga, Lleida, Manresa), i si no, la distinció visual; Solsona i Girona (0,044) queden acceptades tan a prop; el motiu original de cada color és al dossier de recerca (`towns[].colorReason`).
 
 Els escuts (`src/ui/escuts.js`) són versions simplificades dels de Wikimedia Commons, que conserven les seves llicències. Molins de Rei porta la versió oficialitzada el 2025, amb la mola blanca i la nadilla negra.
+
+Les armes que no es reconeixen sense un element exterior el dibuixen a fora del contorn (`over`): el rat penat damunt el caironat de València i el llorer amb el llaç d'Andorra de Sant Julià de Lòria. Campos porta la bordura de porpra de l'escut aprovat (`ESC_T.porpra`).
 
 ## Segona tanda
 
@@ -38,7 +40,7 @@ Onze fitxes noves, totes "Aviat", amb les variants exactes que van quedar triade
 | Hamlet de Baó | Baó | Aire Nou de Bao | Hamlet, el drac verd (no el Berrugues) | [Font](https://www.bestiari.cat/figura/hamlet/) |
 | Lo Mangüel i la Pilara de Fraga | Fraga | Gigants de Fraga | Lo Mangüel i la Pilara, parella de 1998 | [Font](https://www.fraga.org/contexto/area-tematica/fiestas/gigants-de-fraga/) |
 
-La cobertura territorial investigada i no afegida encara (Andorra, Menorca i Eivissa) queda documentada al dossier de recerca per a una ampliació posterior; per a l'Alguer i Formentera no hi ha una figura local prou confirmada. Les dues correccions de provisionals: el Drac Baluk Astharot usa la rèplica de 2014 de Jordi Grau (font [bestiari.cat](https://www.bestiari.cat/figura/drac-baluk-astharot-2/)), i el Drac de Montblanc és el drac verd gros, no el Drac Petit ni l'articulat de la Setmana Medieval.
+La cobertura territorial investigada i no afegida encara (Menorca i Eivissa; Andorra ja hi és des de la tercera tanda) queda documentada al dossier de recerca per a una ampliació posterior; per a l'Alguer i Formentera no hi ha una figura local prou confirmada. Les dues correccions de provisionals: el Drac Baluk Astharot usa la rèplica de 2014 de Jordi Grau (font [bestiari.cat](https://www.bestiari.cat/figura/drac-baluk-astharot-2/)), i el Drac de Montblanc és el drac verd gros, no el Drac Petit ni l'articulat de la Setmana Medieval.
 
 | Figura | Població | Entitat | Font |
 |---|---|---|---|
@@ -73,6 +75,29 @@ La cobertura territorial investigada i no afegida encara (Andorra, Menorca i Eiv
 | Víbria de Manresa | Manresa | Xàldiga, Taller de Festes | [Font](https://www.bestiari.cat/figura/vibria-de-manresa/) |
 | Drac de Montblanc | Montblanc | Associació Colla Drac i L'Àliga de Montblanc | [Font](https://www.bestiari.cat/figura/drac-de-montblanc/) |
 
+
+## Tercera tanda
+
+Catorze fitxes noves, totes "Aviat", i deu poblacions noves. El Babau de Ribesaltes es va descartar: és un monstre de paper sobre una carrossa que es crema, no una bèstia portada.
+
+| Figura | Població | Entitat | Font |
+|---|---|---|---|
+| Es Freu de Campos | Campos (Mallorca) | Ajuntament de Campos (propietat) / Associació Dimonis Esquitxafoc | [Font](https://www.fdbib.com/es-freu/) |
+| Voltor de la Bisbal d'Empordà | la Bisbal d'Empordà | Associació Juvenil i Cultural Els Voltors | [Font](https://www.bestiari.cat/figura/voltor/) |
+| Lleó de Barcelona | Barcelona | Associació Amics dels Gegants del Pi (la mateixa entitat que els Gegants del Pi) | [Font](https://www.gegantsdelpi.cat/les-figures/el-lleo-de-barcelona/) |
+| Verro de Cardedeu | Cardedeu | Colla de Diables de Cardedeu | [Font](https://www.jaumeolivet.cat/pagines_2015/bestiari/bestiari_050_190_verro.html) |
+| Griu d'Artesa de Lleida | Artesa de Lleida | Ajuntament (propietat) / Associació el Griu d'Artesa de Lleida | [Font](https://www.bestiari.cat/figura/el-griu-dartesa-de-lleida/) |
+| Mulassa de Montblanc | Montblanc | Ajuntament (propietat) / Amics dels Gegants de Montblanc | [Font](https://ca.wikipedia.org/wiki/Mulassa_de_Montblanc) |
+| Basilisc de Reus | Reus | Estol del Basilisc de Reus | [Font](https://www.bestiari.cat/figura/estol-del-basilisc-de-reus/) |
+| Tarasca de València | València | Ajuntament de València (Museu del Corpus) | [Font](https://www.lenciclopedia.org/wiki/La_Tarasca) |
+| Cuca Fera de València | València | Associació d'Amics del Corpus de València | [Font](https://www.avl.gva.es/documents/31987/243392/el_Corpus_AVL.pdf) |
+| Na Pòpia d'Andratx | Andratx (Mallorca) | Dragomonis d'Andratx | [Font](https://www.fdbib.com/dragomonis-d%C2%B4andratx/) |
+| Drac del Canigó de Prada | Prada | Nyerros del Conflent (Casal del Conflent) | [Font](https://www.bestiari.cat/figura/drac-del-canigo/) |
+| Drac de Dénia | Dénia | Associació Cultural Dianium Dansa | [Font](https://www.bestiari.cat/figura/drac-de-denia/) |
+| Es Corb de Sant Nofre de Sant Joan | Sant Joan (Mallorca) | Centre Cultural de Sant Joan | [Font](https://www.fdbib.com/diables-de-sant-joan/) |
+| Llop de la Senyoreta de Sant Julià de Lòria | Sant Julià de Lòria (Andorra) | Colla de Geganters de Sant Julià de Lòria | [Font](https://comusantjulia.ad/ca/actualitat/noticies/una-mostra-sobre-els-gegants-i-gegantons-i-el-bateig-del-llop-de-la-senyoreta-aporten-un-valor-afegit-a-la-festa-major-2024/) |
+
+Dubtes que queden oberts: Na Pòpia només la confirmen la federació balear i un vídeo del correfoc del Port d'Andratx; el propietari del Basilisc de Reus (Ajuntament o Estol) i el del Lleó no queden clars a les fonts; l'escut de Prada segueix el dibuix de Commons (pals i sant Pere), que no lliga amb la descripció de la mateixa pàgina; Sant Julià de Lòria no té blasó oficial publicat.
 ## Vilanova: la Boja i el Drac
 
 Revisió de fonts del 19 d'octubre de 2026. Les dues fitxes substitueixen l'antiga entrada conjunta `mulasses-vilanova` ("Mulasses / ABP Vilanova"). Comparteixen poble, comarca (Garraf), escut, pill i un sol estendard; l'ordre és La Boja i Drac de Vilanova. Continuen com a pròximes: cap cançó, model 3D, dificultat ni rècord nou. Els recomptes del selector es deriven del registre. No s'esborra ni es migra cap dada persistent. L'esborrany de col·laboració compartit continua sent "Sobre Vilanova i la Geltrú: ". No s'ha enviat cap missatge.

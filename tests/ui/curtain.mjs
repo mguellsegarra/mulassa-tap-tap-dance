@@ -6,7 +6,8 @@ import vm from 'node:vm';
 const src = readFileSync(new URL('../../src/ui/curtain.js', import.meta.url), 'utf8').replace(/^export /gm, '');
 const classes = new Set(), el = { id: '', setAttribute() {}, classList: { add: (...c) => c.forEach(x => classes.add(x)), remove: (...c) => c.forEach(x => classes.delete(x)) } };
 let now = 0, timers = [], frames = [];
-const ctx = { document: { createElement: () => el, body: { append() {} } }, matchMedia: () => ({ matches: false }), performance: { now: () => now },
+const coarse = { matches: false };
+const ctx = { document: { createElement: () => el, body: { append() {} } }, matchMedia: q => q.includes('coarse') ? coarse : { matches: false }, performance: { now: () => now },
   setTimeout: (f, ms) => timers.push([now + ms, f]), requestAnimationFrame: f => frames.push(f) };
 vm.runInNewContext(src + '\nthis.api = { curtain, curtainCover };', ctx);
 const { curtain, curtainCover } = ctx.api;
@@ -26,4 +27,7 @@ for (let i = 0; i < 30; i++) frame(40); assert(!classes.has('down') && !classes.
 
 curtain(() => {}); wait(90); frame(16); curtainCover(); for (let i = 0; i < 12; i++) frame(16);
 assert(!classes.has('down'), 'a later change takes the curtain over and lifts it');
+coarse.matches = true; swapped = 0;
+curtain(() => swapped++); assert(swapped === 1 && !classes.has('down'), 'touch: the switch runs at once, no curtain');
+curtainCover(); assert(!classes.has('down'), 'touch: a fullscreen change does not cover');
 console.log('curtain ok');

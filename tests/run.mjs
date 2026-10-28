@@ -4,11 +4,12 @@
 // ends), FIRST first; ALONE ones (they time themselves or drive the GPU) run one by one afterwards. Every test runs even
 // after a failure, and the failures are listed at the end. Arguments filter by path: `node tests/run.mjs drac` (any path
 // containing "drac"), `node tests/run.mjs db/ ui/`; `--group=leaderboard` runs the leaderboard set; `--bail` stops at the
-// first failure. SLOW audits take minutes each: a plain run skips them, `--full` (npm run check:full) or a matching filter runs them.
+// first failure. SLOW audits take minutes each: a run skips them unless `--full` (npm run check:full) or a filter holds their name
+// (`node tests/run.mjs drac-compare`; plain `drac` skips them).
 import { spawn } from 'node:child_process';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { availableParallelism, loadavg } from 'node:os';
-import { dirname, join, relative, resolve } from 'node:path';
+import { basename, dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
@@ -36,8 +37,9 @@ const group = args.find(a => a.startsWith('--group='))?.slice(8);
 const filters = args.filter(a => !a.startsWith('--'));
 if (group && !GROUPS[group]) { console.error(`unknown group: ${group} (${Object.keys(GROUPS).join(', ')})`); process.exit(2); }
 const pathOf = t => typeof t === 'string' ? t : t.py;
-const chosen = TESTS.filter(t => (!group || GROUPS[group].includes(pathOf(t))) && (!filters.length || filters.some(f => pathOf(t).includes(f)))
-  && (full || filters.length || !SLOW.includes(pathOf(t))));
+const matches = t => (!group || GROUPS[group].includes(pathOf(t))) && (!filters.length || filters.some(f => pathOf(t).includes(f)));
+const named = t => filters.some(f => f.includes(basename(t, '.mjs')));
+const chosen = TESTS.filter(t => matches(t) && (full || !SLOW.includes(pathOf(t)) || named(pathOf(t))));
 if (!chosen.length) { console.error('no test matches'); process.exit(2); }
 
 const failed = [], running = new Set();
@@ -61,6 +63,6 @@ const run = t => new Promise(done => {
 const queue = chosen.filter(t => !ALONE(pathOf(t)));
 await Promise.all(Array.from({ length: Math.min(jobs, queue.length) }, async () => { while (queue.length && !stop) await run(queue.shift()); }));
 for (const t of chosen.filter(t => ALONE(pathOf(t)))) if (!stop) await run(t);
-const skipped = full || filters.length ? 0 : TESTS.filter(t => SLOW.includes(t) && (!group || GROUPS[group].includes(t))).length;
-console.log(`\n${ran - failed.length}/${chosen.length} tests passed${skipped ? ` (${skipped} slow audits skipped: npm run check:full)` : ''}${failed.length ? `; failed:\n  ${failed.join('\n  ')}` : ''}`);
+const skipped = TESTS.filter(t => matches(t) && !chosen.includes(t)).length;
+console.log(`\n${ran - failed.length}/${chosen.length} tests passed${skipped ? ` (${skipped} slow audits skipped: npm run check:full, or name them)` : ''}${failed.length ? `; failed:\n  ${failed.join('\n  ')}` : ''}`);
 process.exit(failed.length ? 1 : 0);

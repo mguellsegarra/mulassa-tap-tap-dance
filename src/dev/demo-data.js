@@ -123,7 +123,7 @@ function quarters(now, count) {
 }
 // The calendar of a world: [{ id, name, startsAt, endsAt (ms | null) }] and which season each version publishes to.
 function calendar(world, now) {
-  const base = [{ id: 0, name: 'Estrena 2026', startsAt: Date.parse('2026-09-27T00:00:00+02:00'), endsAt: null }];
+  const base = [{ id: 0, name: 'Estrena 2026', startsAt: Date.parse('2026-10-15T00:00:00+02:00'), endsAt: null }];
   if (world === 'many') { const list = quarters(now, 12); return { seasons: [...base, ...list], open: 12, retired: { [SHORT_SCORE_VERSION]: 0, [PREVIOUS_VERSION]: 7 } }; }
   if (world === 'later') return { seasons: [...base, { id: 1, name: 'Tardor 2026', startsAt: now - 80 * DAY, endsAt: now - 3 * DAY }, { id: 2, name: 'Hivern 2027', startsAt: now - 3 * DAY, endsAt: now + 87 * DAY }],
     open: 2, retired: { [SHORT_SCORE_VERSION]: 0, [PREVIOUS_VERSION]: 1 } };

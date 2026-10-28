@@ -184,7 +184,7 @@ await assert.rejects(absent.listAll(),{code:'disabled'});
   // seasons: camelCase, ms, the podium with composed names
   answer = [{ season_id: 1, name: 'Tardor 2026', starts_at: '2026-11-05T00:00:00Z', ends_at: '2027-01-01T00:00:00Z', version: 'mulassa-v3', previous_dance: false, players: 48, my_position: 12, my_score: 142310, my_difficulty: 1,
     podium: [{ position: 1, alias: 'Timbaler', tag: 3821, score: 182400, difficulty: 2, verified: false }, { position: 2, alias: 'Portadora', tag: null, score: 171050, difficulty: 1, verified: true }] },
-    { season_id: 0, name: 'Estrena 2026', starts_at: '2026-09-26T22:00:00Z', ends_at: null, version: 'mulassa-v2-short', previous_dance: true, players: 60, my_position: null, podium: [] }];
+    { season_id: 0, name: 'Estrena 2026', starts_at: '2026-10-14T22:00:00Z', ends_at: null, version: 'mulassa-v2-short', previous_dance: true, players: 60, my_position: null, podium: [] }];
   { const r = await svc.seasons('mulassa-valls'); assert.deepEqual(last(), ['get_seasons', { p_figure: 'mulassa-valls' }]);
     assert.deepEqual(r[0], { seasonId: 1, name: 'Tardor 2026', startsAt: Date.parse('2026-11-05T00:00:00Z'), endsAt: Date.parse('2027-01-01T00:00:00Z'), version: 'mulassa-v3', previousDance: false, players: 48, myPosition: 12, myScore: 142310, myDifficulty: 1,
       podium: [{ position: 1, alias: 'Timbaler', tag: 3821, score: 182400, difficulty: 2, verified: false, name: 'Timbaler#3821' }, { position: 2, alias: 'Portadora', tag: null, score: 171050, difficulty: 1, verified: true, name: 'Portadora' }] });

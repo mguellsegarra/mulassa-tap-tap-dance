@@ -93,9 +93,9 @@ const bucket = o => ({ runs: 0, completed: 0, collapsed: 0, seconds: 0, perfect:
   const tardor = { startsAt: Date.parse('2026-10-01T00:00:00+02:00'), until: Date.parse('2027-01-01T00:00:00+01:00') };
   assert.equal(seasonDates(tardor), '1 d’octubre – 31 de desembre de 2026');
   assert.equal(seasonDates(tardor, 'short'), '1 d’oct. – 31 de des. 2026');
-  const estrena = Date.parse('2026-09-27T00:00:00+02:00');
-  assert.equal(seasonDates({ startsAt: estrena, until: tardor.startsAt }), '27–30 de setembre de 2026');
-  assert.equal(seasonDates({ startsAt: estrena, until: Infinity }), 'des del 27 de setembre de 2026');
+  const estrena = Date.parse('2026-10-15T00:00:00+02:00');
+  assert.equal(seasonDates({ startsAt: estrena, until: Date.parse('2026-11-01T00:00:00+01:00') }), '15–31 d’octubre de 2026');
+  assert.equal(seasonDates({ startsAt: estrena, until: Infinity }), 'des del 15 d’octubre de 2026');
   const grouped = hallSeasons([{ seasonId: 1, name: 'Tardor 2026', startsAt: tardor.startsAt, endsAt: NOW - DAY, previousDance: true }, { seasonId: 1, name: 'Tardor 2026', startsAt: tardor.startsAt, endsAt: NOW - DAY, previousDance: false },
     { seasonId: 0, name: 'Estrena 2026', startsAt: estrena, endsAt: null }], NOW);
   assert.deepEqual(grouped.map(g => [g.id, g.boards.map(b => b.previousDance)]), [[1, [false, true]], [0, [undefined]]], 'one per season, the current dance first');

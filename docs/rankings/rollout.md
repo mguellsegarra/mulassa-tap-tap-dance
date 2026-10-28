@@ -169,8 +169,8 @@ rollback;
 
 Què ha de sortir:
 
-- `seasons`: `0:Estrena 2026:2026-09-26 22:00:00+00:-` i `1:Tardor 2026:<hora de la migració>:2026-12-31 23:00:00+00`
-  (el SQL Editor escriu en UTC: són les 00:00 del 27 de setembre i de l'1 de gener a Catalunya).
+- `seasons`: `0:Estrena 2026:2026-10-14 22:00:00+00:-` i `1:Tardor 2026:<hora de la migració>:2026-12-31 23:00:00+00`
+  (el SQL Editor escriu en UTC: són les 00:00 del 15 d'octubre i de l'1 de gener a Catalunya).
 - `entries_by_season`: tot a la `0`, amb el mateix nombre que `entries` al pas 2 més les publicacions noves.
 - `versions/mulassa-v1` i `versions/mulassa-v2-short` retirades cap a la `0`; `mulassa-v3` i `drac-v1` `open`.
 - `guests_without_tag` = 0 i `verified_with_tag` = 0.

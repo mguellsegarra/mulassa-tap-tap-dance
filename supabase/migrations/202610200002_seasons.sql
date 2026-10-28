@@ -9,7 +9,7 @@ create table if not exists leaderboard_private.seasons (
 alter table leaderboard_private.seasons enable row level security;
 revoke all on leaderboard_private.seasons from public, anon, authenticated;
 insert into leaderboard_private.seasons values
-  (0, 'Estrena 2026', '2026-09-27 00:00 Europe/Madrid', null) on conflict (id) do nothing;
+  (0, 'Estrena 2026', '2026-10-15 00:00 Europe/Madrid', null) on conflict (id) do nothing;
 insert into leaderboard_private.seasons
   select 1, 'Tardor 2026', now(), '2027-01-01 00:00 Europe/Madrid'::timestamptz
   where not exists(select 1 from leaderboard_private.seasons where id = 1);

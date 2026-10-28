@@ -91,7 +91,7 @@ const playerCount = n => tr('ui.seasons.players', { count: n, n: num(n) });
 const levelName = d => DIFFS[Number(d)]?.name ?? '';
 
 // «1 d’octubre – 31 de desembre de 2026» (narrow phones: «1 d’oct. – 31 de des. 2026»), in Catalan time; `until` is the next
-// season's first instant. With no end known («Estrena 2026» alone): «des del 27 de setembre de 2026».
+// season's first instant. With no end known («Estrena 2026» alone): «des del 15 d’octubre de 2026».
 const catDate = (o, t) => fmtDate(t, { timeZone: 'Europe/Madrid', day: 'numeric', ...o }).replace(/ del (\d{4})/g, ' de $1');
 export function seasonDates({ startsAt, until }, month = 'long') {
   if (!Number.isFinite(until)) return tr(/^1 /.test(catDate({ month }, startsAt)) ? 'ui.seasons.sinceElided' : 'ui.seasons.since', { date: catDate({ month, year: 'numeric' }, startsAt) });

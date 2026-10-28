@@ -533,7 +533,7 @@ revoke all on leaderboard_private.seasons from public, anon, authenticated;
 -- 0: tot el que hi ha (comença a la primera migracio). 1: des d'ara fins al 31/12/2026.
 -- Les seguents les crea ensure_season() quan cal: cap migracio anual.
 insert into leaderboard_private.seasons values
-  (0, 'Estrena 2026', '2026-09-27 00:00 Europe/Madrid', null),
+  (0, 'Estrena 2026', '2026-10-15 00:00 Europe/Madrid', null),
   (1, 'Tardor 2026', now(), '2027-01-01 00:00 Europe/Madrid')
 on conflict (id) do nothing;
 

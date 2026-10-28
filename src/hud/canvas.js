@@ -54,10 +54,13 @@ export function appHeight() {
   const portrait = innerHeight >= innerWidth, long = Math.max(screen.width, screen.height), short = Math.min(screen.width, screen.height);
   return Math.max(innerHeight, portrait ? long : short);
 }
-addEventListener('resize', resize);
+// window resize, visualViewport resize and fullscreenchange come together for one change (entering or leaving fullscreen):
+// only the first reallocates the canvases, each a full GPU buffer.
+export const resizeIfChanged = () => { if (innerWidth !== sizedW || appHeight() !== sizedH || devicePixelRatio !== sizedDpr) resize(); };
+addEventListener('resize', resizeIfChanged);
 // Safari (iPad especially) can come back from the share sheet / another tab with the page scrolled under its bars or the bars re-laid out
 // without a resize event: drop any scroll and re-measure when the size really changed.
-const settle = () => { if (globalThis.scrollX || globalThis.scrollY) scrollTo(0, 0); if (innerWidth !== sizedW || appHeight() !== sizedH) resize(); };
+const settle = () => { if (globalThis.scrollX || globalThis.scrollY) scrollTo(0, 0); resizeIfChanged(); };
 addEventListener('scroll', settle);
 addEventListener('focus', settle);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) settle(); });
@@ -65,7 +68,7 @@ addEventListener('orientationchange', resize);
 // a GPU process crash (Android Adreno) restores the 2D context with its default state: the identity transform drew the HUD at 1/3
 hud.addEventListener('contextrestored', resize);
 addEventListener('pageshow', () => requestAnimationFrame(resize)); // standalone launch: sizes can settle a frame late
-try { visualViewport.addEventListener('resize', resize); visualViewport.addEventListener('scroll', settle); } catch { /* none */ }
+try { visualViewport.addEventListener('resize', resizeIfChanged); visualViewport.addEventListener('scroll', settle); } catch { /* none */ }
 resize();
 requestAnimationFrame(() => requestAnimationFrame(resize));
 const proj = new THREE.Vector3();

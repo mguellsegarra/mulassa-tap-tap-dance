@@ -9,6 +9,7 @@ import { pageActive } from '../core/env.js';
 import { privacyMenu, pauseMenu } from './handles.js';
 import { togglePause } from './pause-actions.js';
 import { sheetUp, viewMode, setView, steers, menuState, photoScreen } from './controls.js';
+import { curtain } from './curtain.js';
 import { unlock, toTitle } from '../game/flow.js';
 import { press, settleHold, eventAt, releaseAll } from '../game/judge.js';
 import { padButtons, haptic, padFeedback, syncPad } from './pad.js';
@@ -27,7 +28,7 @@ addEventListener('keydown', e => {
     return;
   }
   if (!['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target?.tagName) && !e.target?.isContentEditable && photoScreen() && !sheetUp() && !e.ctrlKey && !e.metaKey && !e.altKey && viewMode && e.code === 'Escape') { // free play is entered from the dock only (no H)
-    e.preventDefault(); setView(false); return; // Escape leaves free play (the mouse look is freed first, above)
+    e.preventDefault(); curtain(() => setView(false)); return; // Escape leaves free play (the mouse look is freed first, above)
   }
   if (viewMode || G.state === 'select') return; // the selector owns its keys; photo walking has already handled its keys
   if (['INPUT', 'SELECT', 'BUTTON'].includes(e.target.tagName) && !e.target.closest?.('#pad')) return; // a pad with keyboard focus still plays

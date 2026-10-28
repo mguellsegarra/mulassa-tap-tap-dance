@@ -10,6 +10,7 @@ import { lookSync } from './mouse-look.js';
 import { PHOTO } from '../game/photo-control.js';
 import { COARSE } from '../core/env.js';
 import { photoOrient } from './fullscreen.js';
+import { curtain } from './curtain.js';
 import { tr } from '../i18n/messages.js';
 
 const practiceLabel = document.getElementById('skip-label'), practiceIcon = document.getElementById('skip-icon');
@@ -78,7 +79,7 @@ function viewWake() {
   clearTimeout(viewIdle); if (!COARSE.matches) viewIdle = setTimeout(() => viewBtn.classList.add('idle'), 3000); // touch has no Esc: its way back never fades
 }
 for (const ev of ['pointermove', 'pointerdown', 'keydown', 'wheel']) addEventListener(ev, viewWake, { passive: true });
-viewBtn.addEventListener('click', () => setView(!viewMode));
+viewBtn.addEventListener('click', () => curtain(() => setView(!viewMode)));
 // #free dances on what sounds on the menus (the radio's song or the menu loop; select-chrome.css): b = that beat, null = silence
 let freeDancing = false;
 export function freeDance(b) {
@@ -86,9 +87,9 @@ export function freeDance(b) {
   if (on !== freeDancing) freeEl.toggleAttribute('data-dancing', (freeDancing = on));
   if (on) freeEl.style.setProperty('--b', (b % 2).toFixed(3));
 }
-export function enterFree() { if (sheets.freeGate?.ask()) return; setView(true); if (viewMode) sheets.music?.playFigure(G.figureId); } // the figure's own song (a pending selection: the last playable one, the one she drives)
+export function enterFree() { if (sheets.freeGate?.ask()) return; curtain(() => { setView(true); if (viewMode) sheets.music?.playFigure(G.figureId); }); } // the figure's own song (a pending selection: the last playable one, the one she drives)
 freeEl.addEventListener('click', () => { G.state === 'select' && enterFree(); });
-document.getElementById('rotate-exit').addEventListener('click', () => setView(false));
+document.getElementById('rotate-exit').addEventListener('click', () => curtain(() => setView(false)));
 export function updateControls() {
   updateHudCursor();
   hide(viewBtn, !photoScreen() || !viewMode);

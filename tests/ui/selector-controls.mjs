@@ -50,7 +50,7 @@ const state = { state: 'splash', paused: false }, ctx = { tr, document: doc, nav
   orbitMove() {}, orbitZoom() {}, turnFor: () => 1, orbitDown(o, id) { o.ptrs.set(id, true); }, orbitUp(o, id) { o.ptrs.delete(id); },
   chip: null, down: { keys: new Set(), ptr: new Map() }, KEYS: {}, pageActive: () => true, releaseAll() {},
   store: { set() {} }, unlock() { state.state = 'select'; }, toTitle() { state.state = 'select'; },
-  startMenuAudio() {}, setFreeSound() {}, photoOrient() {}, photoHelpAvailable: () => false, showAvatars: () => run('setPhotoControl(false)'), syncAvatars() {} }; // src/ui/photo-avatars.js (its DOM: tests/render/render-quality.mjs)
+  startMenuAudio() {}, setFreeSound() {}, photoOrient() {}, curtain: swap => swap(), photoHelpAvailable: () => false, showAvatars: () => run('setPhotoControl(false)'), syncAvatars() {} }; // src/ui/photo-avatars.js (its DOM: tests/render/render-quality.mjs)
 let time = 1000;
 const photoSource = ['figures/index', 'game/photo-control'].map(name => readFileSync(new URL(`../../src/${name}.js`, import.meta.url), 'utf8').replace(/^import .*;\n/gm, '').replace(/^export /gm, '')).join('\n'); // the figures' traits first: photo-control reads them
 const code = photoSource + '\n' + ['mouse-look', 'controls', 'input'].map(name => readFileSync(new URL(`../../src/ui/${name}.js`, import.meta.url), 'utf8').replace(/^import .*;\n/gm, '').replace(/^export /gm, '')).join('\n');

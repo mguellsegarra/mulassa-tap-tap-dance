@@ -142,7 +142,7 @@ const service = (o = {}) => ({ configured: true, asked: [], async seasons(f) { t
   assert(view().find(e => e.id === 'seasons-current')?.textContent.startsWith('Tardor 2026') && focused.at(-1) === 'seasons-current', 'the shown one marked, focused');
   view().all(e => e.className === 'idx-row')[1].click();
   assert.deepEqual([text('hall-name')[0], text('hall-meta')[0]], ['Estrena 2026', '60 participants']);
-  assert(!view().find(e => e.className?.startsWith?.('hall-mine')) && view().find(e => e.className === 'me')?.find(e => e.className === 'me-tag'), 'on the podium: «TU» there, no band');
+  assert(!view().find(e => e.className?.startsWith?.('hall-mine')) && view().find(e => e.className?.split?.(' ').includes('me'))?.find(e => e.className === 'me-tag'), 'on the podium: «TU» there, no band');
   assert.deepEqual(view().all(e => /^pos p[123]$/.test(e.className)).map(e => e.textContent), ['1', '2'], 'the podium (two played): the boards\' solid discs');
   const held = () => $('seasons-menu').style.p['--hall-h'];
   assert.equal(held(), undefined, 'a season shown: the sheet hugs it (desktop)');

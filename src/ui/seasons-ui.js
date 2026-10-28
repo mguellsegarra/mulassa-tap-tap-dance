@@ -131,23 +131,18 @@ export function setupSeasons({ focusIn, service, onBoard = () => {}, onCard = ()
   menu.addEventListener('click', e => { if (e.target.closest('#seasons-figure')) hold(); }, true); // «Tria figura»: before the picker swaps the view
   const button = (cls, text, id, svg = '') => { const b = htmlEl(doc, 'button', cls, svg); b.type = 'button'; b.append(text); if (id) b.id = id; return b; };
   function estendard(empty = false) { const e = htmlEl(doc, 'span', `estendard${empty ? ' empty' : ''}`, ESTENDARD_SVG + figHtml(figure)); return e; }
+  // a three-step podium: read 1, 2, 3; drawn 2, 1, 3 (profile.css places each column by its step)
   function podium(b) {
-    const [first, ...rest] = b.podium, box = hallEl(doc, 'div', 'hall-podium-list');
-    const who = (p, into) => { appendName(doc, into, { alias: p.alias, tag: p.tag ?? null, verified: p.verified }, q => onCard(q)); if (p.position === b.myPosition) into.appendChild(hallEl(doc, 'span', 'me-tag', tr('ui.seasons.me'))); };
-    if (first) {
-      const top = hallEl(doc, 'div', `pod-first${first.position === b.myPosition ? ' me' : ''}`), text = hallEl(doc, 'div'), name = hallEl(doc, 'div', 'who');
-      who(first, name);
-      const pts = hallEl(doc, 'div', 'pts', tr('ui.seasons.points', { n: num(first.score) })); pts.appendChild(hallEl(doc, 'span', `lvl lvt${Number(first.difficulty)}`, levelName(first.difficulty)));
-      text.append(name, pts); top.append(posDisc(doc, 1), text); box.appendChild(top);
-    }
-    const ol = hallEl(doc, 'ol', 'pod-rest');
-    for (const p of rest) {
-      const li = hallEl(doc, 'li', p.position === b.myPosition ? 'me' : ''), name = hallEl(doc, 'span', 'who'), pts = hallEl(doc, 'span', 'pts', num(p.score));
-      who(p, name); pts.appendChild(hallEl(doc, 'span', `lvl lvt${Number(p.difficulty)}`, levelName(p.difficulty)));
-      li.append(posDisc(doc, p.position), name, pts); ol.appendChild(li);
-    }
-    box.appendChild(ol);
-    return box;
+    const ol = hallEl(doc, 'ol', 'hall-podium-list');
+    b.podium.slice(0, 3).forEach((p, i) => {
+      const li = hallEl(doc, 'li', `pd-${i + 1}${p.position === b.myPosition ? ' me' : ''}`), name = hallEl(doc, 'span', 'who'), pts = hallEl(doc, 'span', 'pts', num(p.score));
+      appendName(doc, name, { alias: p.alias, tag: p.tag ?? null, verified: p.verified }, q => onCard(q));
+      if (p.position === b.myPosition) name.appendChild(hallEl(doc, 'span', 'me-tag', tr('ui.seasons.me')));
+      pts.appendChild(hallEl(doc, 'span', `lvl lvt${Number(p.difficulty)}`, levelName(p.difficulty)));
+      const step = hallEl(doc, 'span', 'pd-step'); step.setAttribute('aria-hidden', 'true');
+      li.append(posDisc(doc, i ? p.position : 1), name, pts, step); ol.appendChild(li);
+    });
+    return ol;
   }
   // the player's place: its own band, unless the podium already says «TU»
   function mine(b) {

@@ -8,11 +8,12 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL, fileURLToPath } from 'node:url';
 import { build, preview } from 'vite';
-import { launchBrowser } from '../../tools/qa/capture-lib.mjs';
+import { launchBrowser, lock } from '../../tools/qa/capture-lib.mjs';
 
 const pw = process.env.PLAYWRIGHT_DIR ?? '/tmp/ui-inv-pw', entry = join(pw, 'node_modules/playwright/index.mjs');
 if (!existsSync(entry)) { console.log(`prod play: skipped (no Playwright at ${pw})`); process.exit(0); }
 const { chromium } = await import(pathToFileURL(entry).href);
+await lock(); // one real-GPU Chrome on the machine at a time: another agent's capture alongside is the likely reason a run was closed mid-way
 let browser;
 for (const soft of [false, true]) {
   try { browser = await launchBrowser(chromium, { soft }); break; }

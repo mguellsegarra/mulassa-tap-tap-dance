@@ -11,7 +11,7 @@ import { markLeaderboardDebugUse } from './services/leaderboard-result.js';
 import { Q, pageActive, CALM, STARS } from './core/env.js';
 import { FINAL } from './dev/final-test.js';
 import { pace, RAWCLOCK, viewClock } from './core/timing.js';
-import { qualityLevel, renderProfile, softwareGl, GPU, renderer, camera, plaza, scene, setQualityLevel, renderScreen } from './scene/stage.js';
+import { qualityLevel, renderProfile, softwareGl, stepPeople, GPU, renderer, camera, plaza, scene, setQualityLevel, renderScreen } from './scene/stage.js';
 import { initFigureObjects, hideFigures } from './figures/objects.js';
 import { G, chip, clock, songTime, drawT, audioEngine, setClock, setDrawT, offsetMs } from './game/state.js';
 import { audioFailureTags } from './platform/audio-load.js';
@@ -38,7 +38,7 @@ import './hud/banner.js';
 import './hud/results.js';
 import { clearCameraImpact } from './scene/cameras.js';
 import { BOU_FINALE } from './figures/bou/bou-bills.js';
-import { PERF, perfSample, perfReset, qualitySample, drawPerfLine } from './dev/perf.js';
+import { PERF, perfSample, perfReset, qualitySample, showPerfLine } from './dev/perf.js';
 import { renderHero } from './scene/share-capture.js';
 import { precompile } from './scene/precompile.js';
 import { autoplay, collapse, judge, press } from './game/judge.js';
@@ -56,14 +56,14 @@ import { reelDissolve, reelFadeLive } from './ui/reel-fade.js';
 import './ui/backdrop.js';
 import './ui/input.js';
 import './ui/sheets-setup.js';
-import { frameCamera } from './ui/frame-camera.js';
+import { frameCamera, propsFor } from './ui/frame-camera.js';
 import { tickGame } from './game/tick.js';
 
 window.__mulassaBootPhase = 'init';
 initFigureObjects(); // both rigs exist before shader warmup and the first frame
 
 const monitorFrames = adaptiveQuality({ ceiling: qualityLevel, level: () => qualityLevel, report: qualitySample,
-  change: level => { setQualityLevel(level); applyRenderQuality({ transition: !loader.covering }); resize(); precompile(); },
+  change: level => { setQualityLevel(level); stepPeople(level, G.state === 'splash'); applyRenderQuality({ transition: !loader.covering }); resize(); precompile(); },
 });
 let glName; // crash reports' context, read only when one is sent
 errors.context(() => ({ state: G.state, diff: G.diff, practice: !!G.practice, paused: G.paused, quality: renderProfile.name, softwareGl,
@@ -72,10 +72,12 @@ errors.context(() => ({ state: G.state, diff: G.diff, practice: !!G.practice, pa
 
 // ------------------------------------------------------------------ loop
 let last = performance.now(), qualityCost = NaN;
-const renderReelFade = cam => renderer.render(scene, cam); // (ui/reel-fade.js: the dissolve's outgoing shot)
+const renderReelFade = cam => { propsFor(cam); renderer.render(scene, cam); propsFor(camera); }; // (ui/reel-fade.js: the dissolve's outgoing shot, with its own props hidden)
 const resetFrameTime = () => { last = null; qualityCost = NaN; pace.reset(); monitorFrames.reset('activity'); perfReset(); clearCameraImpact(); resetMotionImpact(); };
 for (const event of ['blur', 'focus', 'pagehide', 'pageshow', 'resize', 'orientationchange']) addEventListener(event, resetFrameTime);
 document.addEventListener('visibilitychange', resetFrameTime);
+// a menu's own work after a tap or key (layout, sheets, scrolls) is no GPU overload: its slow frames dropped an old laptop's quality
+for (const event of ['pointerdown', 'keydown', 'wheel']) addEventListener(event, () => { if (G.state !== 'play' && !PHOTO.on) monitorFrames.reset('ui'); }, { passive: true });
 
 if (Q.has('sizes')) import('./dev/sizes-edit.js').then(m => m.setupSizesEdit()); // ?sizes: each selector figure's height beside the gegants, set by eye (src/dev/sizes-edit.js)
 if (Q.has('vp')) import('./dev/vp-label.js').then(m => m.setupVpLabel()); // ?vp: viewport, dpr, selector zoom and pointer in a corner label (src/dev/vp-label.js)
@@ -95,6 +97,7 @@ function frame(now) {
   const f0 = performance.now();
   clearCameraImpact();
   // The previous draw's cost belongs to this interval. Apply profile/DPR changes before drawing: resize clears both canvases.
+  monitorFrames.scope(PHOTO.on); // free play's drops are its own: leaving it restores the level (a trial)
   monitorFrames(now - last, qualityCost, pace, G.state === 'play',
     drawn && !coverUp && !loader.covering && !renderer.getContext().isContextLost(), G.state === 'play' && !G.paused);
   const frameS = (now - last) / 1000, dt = G.paused ? 0 : Math.min(0.05, frameS); // frameS: real seconds since the last drawn frame
@@ -164,7 +167,7 @@ function frame(now) {
   if (coverUp && fontsIn && (!warmups.length || now - (coverAt ??= now) > COVER_WARM)) { coverUp = false; loader.ready(); if (STARS >= 0) previewResults(STARS); } // ?stars: only once the page cover is gone, or the animation plays unseen
   qualityCost = performance.now() - f0;
   if (PERF) perfSample(f0, p0, p1, now);
-  if (PERF?.line) drawPerfLine(H, SAFE.t / K, W); // on screen too: a tablet has no console
+  if (PERF?.line) showPerfLine(); // on screen too: a tablet has no console
 }
 let hudError = '', drawn = false, fontsIn = false, coverUp = true, coverAt = null, COVER_WARM = 1500;
 // ?perf also logs the load: [load] <stage> <ms since navigation>.

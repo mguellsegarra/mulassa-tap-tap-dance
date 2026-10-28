@@ -184,7 +184,7 @@ import { vm, THREE, chart, practice, energy, dance, errors, windowHandlers, docu
   const writes = [];
   context.localStorage = { getItem: k => saved[k] ?? null, setItem: (k, v) => writes.push([k, v]), removeItem: k => writes.push([k]) };
   run(`G.state = 'select'; G.paused = false; chip = null;
-    qualityLevel = 1; applyRenderQuality(); devicePixelRatio = 3;
+    qualityLevel = peopleLevel = 1; applyRenderQuality(); devicePixelRatio = 3;
     var qualityCompiles = 0, qualityDpr = 0;
     renderer.compileAsync = () => { qualityCompiles++; return Promise.resolve(); };
     renderer.setPixelRatio = dpr => { qualityDpr = dpr; };

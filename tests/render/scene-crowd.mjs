@@ -38,7 +38,7 @@ import { THREE, energy, drawing, context, hostSeed, run, nodes, document, errors
   assert(!run(`sprites.has('restore-b')`), 'and never cached blank');
   document.createElement = made; run(`spriteOk = ${okBefore}; glyphsOk = ${glyphsBefore}; sprites.clear(); spare.length = 0; spritePx = 0;`);
 }
-run('qualityLevel = 0; applyRenderQuality();');
+run('qualityLevel = peopleLevel = 0; applyRenderQuality();');
 assert(run('crowd.some(p => !p.g.visible)'), 'downgrade hides some spectators');
 assert(run('crowd.every(p => p.g.scale.x === (p.g.visible ? p.scale : 0))'), 'hidden spectators shrink to nothing in the skinned crowd mesh');
 assert(run('[...crowd, ...plaza.band, ...plaza.balcony].every(p => { let n = 0; p.g.traverse(o => { if (o.isMesh) n++; }); return n === 0; }) && crowdMesh.isSkinnedMesh && crowdMesh.skeleton.bones.length === [...crowd, ...plaza.band, ...plaza.balcony].reduce((n, p) => n + 1 + p.legs.length + p.arms.length, 0)'),
@@ -48,66 +48,66 @@ assert(run('(() => { let plain = 0, shared = 0; scene.traverse(o => { if (o.isMe
 assert(run('plaza.balcony.length > 20 && plaza.balcony.length <= PROFILES[2].balconies && plaza.balcony.every((p, i) => p.g.scale.x === (i < PROFILES[0].balconies ? 1 : 0))'), 'fewer balcony people at low');
 assert(run('plaza.backdrop.mesh.count === PROFILES[0].backdrop && plaza.backdrop.n === PROFILES[2].backdrop'), 'the backdrop thins out at low');
 assert(run('midCrowd.mesh.count === PROFILES[0].mid && midCrowd.n >= PROFILES[1].mid'), 'the mid band thins out at low');
-run('qualityLevel = 2; applyRenderQuality();');
+run('qualityLevel = peopleLevel = 2; applyRenderQuality();');
 assert(run('crowd.every(p => p.g.visible && p.g.scale.x === p.scale && p.scale === (p.kid ? 0.72 : 1)) && crowdMesh.castShadow'), 'upgraded again: everyone back at full size (kids smaller), casting shadows');
 assert(run('plaza.balcony.every(p => p.g.scale.x === 1) && plaza.backdrop.mesh.count === PROFILES[2].backdrop'), 'balconies and the full backdrop come back');
 // A runtime downgrade keeps its first exposed frame and retires every kind of spectator smoothly.
-run(`qualityLevel = 2; applyRenderQuality();
-  var retiring = crowd.find(p => p.row === 2), kept = crowd.find(p => p.row === 0 && p.slot % 2 === 0);
+run(`qualityLevel = peopleLevel = 2; applyRenderQuality();
+  var retiring = crowd.find(p => p.slot % 2 === 1), kept = crowd.find(p => p.row === 0 && p.slot % 2 === 0);
   retiring.pres = 0.7; retiring.g.scale.setScalar(retiring.scale * retiring.pres);
   var crowdBefore = retiring.g.scale.x, bandBefore = plaza.band.at(-1).g.scale.x,
     backdropBefore = plaza.backdrop.mesh.count, midBefore = midCrowd.mesh.count;
-  qualityLevel = 0; applyRenderQuality({ transition: true });`);
+  qualityLevel = peopleLevel = 0; applyRenderQuality({ transition: true });`);
 assert(run('retiring.g.visible && retiring.g.scale.x === crowdBefore && retiring.pres === 0.7'), 'a downgrade preserves the exposed pose and gameplay presence');
 assert(run('plaza.backdrop.mesh.count === backdropBefore && midCrowd.mesh.count === midBefore && plaza.band.at(-1).g.scale.x === bandBefore'), 'static spectators and musicians do not disappear on the profile switch');
 run('animateRenderQuality(0);');
 assert(run('retiring.g.scale.x === crowdBefore'), 'paused time cannot advance the quality transition');
-run('animateRenderQuality(0.4);');
+run('animateRenderQuality(0.2);'); // the 0.4 s fade (quality.js QUALITY_FADE), halfway
 assert(run('Math.abs(retiring.g.scale.x - crowdBefore / 2) < 1e-6 && activeCrowd.includes(retiring) && kept.qualityScale === 1'), 'halfway: retiring spectators shrink smoothly, stay simulated, and retained people keep their size');
 assert(run('plaza.band.at(-1).g.scale.x > 0 && plaza.band.at(-1).g.scale.x < 1 && plaza.balcony.at(-1).g.scale.x > 0'), 'musicians and balconies also have intermediate sizes');
 assert(run(`(() => { const m = new THREE.Matrix4(); plaza.backdrop.mesh.getMatrixAt(PROFILES[0].backdrop, m); return m.elements[0] ** 2 + m.elements[2] ** 2 > 0; })()`), 'retiring instanced spectators still have geometry halfway through');
-run('animateRenderQuality(0.4);');
+run('animateRenderQuality(0.2);');
 assert(run('!retiring.g.visible && retiring.g.scale.x === 0 && !activeCrowd.includes(retiring) && retiring.pres === 0.7'), 'completed retirement releases simulation without changing gameplay presence');
 assert(run('plaza.backdrop.mesh.count === PROFILES[0].backdrop && midCrowd.mesh.count === Math.min(midCrowd.n, PROFILES[0].mid) && plaza.balcony.at(-1).g.scale.x === 0'), 'completed retirement restores the target drawing budgets');
-run(`qualityLevel = 2; applyRenderQuality({ transition: true }); animateRenderQuality(0.2);
-  var reversingScale = retiring.g.scale.x; qualityLevel = 0; applyRenderQuality({ transition: true });`);
+run(`qualityLevel = peopleLevel = 2; applyRenderQuality({ transition: true }); animateRenderQuality(0.1);
+  var reversingScale = retiring.g.scale.x; qualityLevel = peopleLevel = 0; applyRenderQuality({ transition: true });`);
 assert(run('retiring.g.scale.x === reversingScale'), 'a new profile continues from the currently visible size');
-run('animateRenderQuality(1);');
+run('animateRenderQuality(2);');
 for (const hz of [30, 60, 120]) {
-  run(`qualityLevel = 2; applyRenderQuality(); qualityLevel = 0; applyRenderQuality({ transition: true });
-    for (let i = 0; i < ${hz}; i++) animateRenderQuality(1 / ${hz});`);
+  run(`qualityLevel = peopleLevel = 2; applyRenderQuality(); qualityLevel = peopleLevel = 0; applyRenderQuality({ transition: true });
+    for (let i = 0; i <= 2 * ${hz}; i++) animateRenderQuality(1 / ${hz}); // (one frame over: summed 1/hz steps fall a hair short of 2 s)`);
   assert(run('!qualityTransition && !retiring.g.visible'), `quality retirement finishes at ${hz} fps`);
 }
-run('var calmBeforeQuality = CALM.matches; CALM.matches = true; qualityLevel = 2; applyRenderQuality({ transition: true });');
+run('var calmBeforeQuality = CALM.matches; CALM.matches = true; qualityLevel = peopleLevel = 2; applyRenderQuality({ transition: true });');
 assert(run('!qualityTransition && retiring.g.scale.x === retiring.scale'), 'reduced motion installs the final profile without scaling animation');
 run('CALM.matches = calmBeforeQuality;');
-run(`qualityLevel = 0; applyRenderQuality(); var emerging = crowd.find(p => !p.g.visible);
-  qualityLevel = 2; applyRenderQuality({ transition: true }); animateRenderQuality(0.1);`);
+run(`qualityLevel = peopleLevel = 0; applyRenderQuality(); var emerging = crowd.find(p => !p.g.visible);
+  qualityLevel = peopleLevel = 2; applyRenderQuality({ transition: true }); animateRenderQuality(0.05);`);
 assert(run('emerging.g.visible && emerging.qualityScale < 1 && activeCrowd.includes(emerging)'), 'a growing spectator is simulated before reaching full size');
-run('animateRenderQuality(1);');
-run(`qualityLevel = 2; applyRenderQuality(); var bandBeforeMove = plaza.band[0].g.position.clone();
-  qualityLevel = 0; applyRenderQuality({ transition: true });`);
+run('animateRenderQuality(2);');
+run(`qualityLevel = peopleLevel = 2; applyRenderQuality(); var bandBeforeMove = plaza.band[0].g.position.clone();
+  qualityLevel = peopleLevel = 0; applyRenderQuality({ transition: true });`);
 assert(run('plaza.band[0].g.position.distanceTo(bandBeforeMove) < 1e-9'), 'a quality change cannot teleport the visible band');
-run('animateRenderQuality(0.4); var bandMidMove = plaza.band[0].g.position.clone(); animateRenderQuality(0.4);');
+run('animateRenderQuality(0.2); var bandMidMove = plaza.band[0].g.position.clone(); animateRenderQuality(0.2);');
 assert(run('bandMidMove.distanceTo(bandBeforeMove) > 0.1 && plaza.band[0].g.position.distanceTo(bandMidMove) > 0.1'), 'the band travels through an intermediate position');
 
 console.log('quality transitions: continuous presence, bounded retirement, reversal, reduced motion and 30/60/120 Hz ok');
 // Changing shadow support needs new material programs, and a visible downgrade fades before releasing its map.
-run(`qualityLevel = 1; applyRenderQuality();
+run(`qualityLevel = peopleLevel = 1; applyRenderQuality();
   var shadowFloor = plaza.group.children.find(o => o.isMesh && o.receiveShadow), shadowVersion = shadowFloor.material.version;
   var shadowDisposals = 0, fadingShadowMap = { dispose() { shadowDisposals++; } }; sun.shadow.map = fadingShadowMap;
-  qualityLevel = 0; applyRenderQuality({ transition: true });`);
+  qualityLevel = peopleLevel = 0; applyRenderQuality({ transition: true });`);
 assert(run('renderer.shadowMap.enabled && sun.shadow.map === fadingShadowMap && sun.shadow.intensity === 1'), 'a visible shadow downgrade preserves the first frame and its live map');
-run('animateRenderQuality(0.4);');
+run('animateRenderQuality(0.2);');
 assert(run('sun.shadow.intensity > 0 && sun.shadow.intensity < 1 && shadowDisposals === 0'), 'the shadow fades while its map remains available');
-run('animateRenderQuality(0.4);');
+run('animateRenderQuality(0.2);');
 assert(run('!renderer.shadowMap.enabled && sun.shadow.intensity === 0 && sun.shadow.map === null && shadowDisposals === 1'), 'only the completed fade turns shadows off and releases their GPU map');
 assert(run('shadowFloor.material.version > shadowVersion'), 'receiving materials invalidate their shadow program when support turns off');
-run(`shadowVersion = shadowFloor.material.version; qualityLevel = 1; applyRenderQuality({ transition: true });`);
+run(`shadowVersion = shadowFloor.material.version; qualityLevel = peopleLevel = 1; applyRenderQuality({ transition: true });`);
 assert(run('renderer.shadowMap.enabled && sun.shadow.intensity === 0 && shadowFloor.material.version > shadowVersion'), 'returning shadows start at zero with the correct material programs');
-run('animateRenderQuality(0.3); var interruptedShadow = sun.shadow.intensity; qualityLevel = 0; applyRenderQuality({ transition: true });');
+run('animateRenderQuality(0.1); var interruptedShadow = sun.shadow.intensity; qualityLevel = peopleLevel = 0; applyRenderQuality({ transition: true });');
 assert(run('sun.shadow.intensity === interruptedShadow'), 'reversing a shadow fade preserves its current light level');
-run('animateRenderQuality(1); qualityLevel = 1; applyRenderQuality();');
+run('animateRenderQuality(2); qualityLevel = peopleLevel = 1; applyRenderQuality();');
 assert(run('renderer.shadowMap.enabled && sun.shadow.intensity === 1'), 'startup or an immediate profile restores full shadow intensity');
 console.log('quality shadows: continuous intensity, deferred disposal and material program invalidation ok');
 // The mid band stands on the far side from the play camera, nowhere near its line to her (she stays within 1 m of the
@@ -125,7 +125,7 @@ assert(run(`(() => { const m = new THREE.Matrix4(), v = new THREE.Vector3(), bad
 // The band: as many as the quality allows (a full line-up at every size), at the ring's edge across the plaça from the
 // play camera, facing the middle, never between the camera and her, with room in the ring; it plays on the song's beat.
 for (const q of [0, 1, 2]) {
-  run(`qualityLevel = ${q}; applyRenderQuality();`);
+  run(`qualityLevel = peopleLevel = ${q}; applyRenderQuality();`);
   const b = JSON.parse(run(`JSON.stringify(plaza.band.filter(p => p.g.scale.x > 0).map(p => ({ kind: p.kind, x: p.g.position.x, z: p.g.position.z, yaw: p.g.rotation.y })))`));
   assert.equal(b.length, run(`PROFILES[${q}].band`), `quality ${q}: ${b.length} musicians`);
   assert(['clarinet', 'trumpet', 'trombone', 'tuba', 'bombo'].every(k => b.some(m => m.kind === k)), `quality ${q}: woodwind, brass and a bombo`);
@@ -159,7 +159,7 @@ for (const q of [0, 1, 2]) {
 }
 run('G.finale = true; for (let i = 0; i < 60; i++) animCrowd(0.05, i / 10, 0); G.finale = false;');
 assert(run('plaza.backdrop.u.uWave.value > 0.9 && crowd.some(p => p.arms[0].rotation.x < -2.5)'), 'the finale sends a wave round the ring, backdrop included');
-run('qualityLevel = 0; applyRenderQuality();');
+run('qualityLevel = peopleLevel = 0; applyRenderQuality();');
 assert(run('!crowdMesh.castShadow && !crowdMesh.receiveShadow'), 'no spectator shadows below high');
 // Force candidate selection toward a hidden spectator if one is offered.
 context.pick = candidates => candidates.find(p => p?.g && !p.g.visible) ?? candidates[0];
@@ -323,7 +323,7 @@ console.log('crowd neighbour separation ok');
   hostSeed(7); run(`seedR = 7; var crowdNow = 60;
     chip = { suspend() { this.ctx.suspend(); }, resume() {}, t0: 0, ctx: { currentTime: 0, suspend() {} }, resume() {}, stop() {}, menu() {}, sfx() {}, noiseHit() {}, blip() {}, wake() {},
       now: () => crowdNow, start: () => Promise.resolve(false) };
-    qualityLevel = 2; applyRenderQuality(); offsetMs = 0; startGame(1); G.state = 'play'; G.guapo = 80;
+    qualityLevel = peopleLevel = 2; applyRenderQuality(); offsetMs = 0; startGame(1); G.state = 'play'; G.guapo = 80;
     var footprintLog = { overlaps: [], minD: 9, frames: 0, midD: 9 };
     var midSpots = Array.from({ length: midCrowd.mesh.count }, (_, i) => { const m = new THREE.Matrix4(); midCrowd.mesh.getMatrixAt(i, m); return [m.elements[12], m.elements[14]]; });
     function footprints() {

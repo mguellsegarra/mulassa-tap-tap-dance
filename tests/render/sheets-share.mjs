@@ -198,7 +198,7 @@ console.log('comparteix integration contracts ok');
     } });`);
   for (const level of [-1, 0, 1, 2]) for (const format of ['story', 'feed', 'og']) {
     const [w, h] = PHOTO[format];
-    run(`qualityLevel = ${level}; applyRenderQuality(); G.state = 'results'; G.reason = 'clear'; heroShots.length = 0;`);
+    run(`qualityLevel = peopleLevel = ${level}; applyRenderQuality(); G.state = 'results'; G.reason = 'clear'; heroShots.length = 0;`);
     const before = run('mula.root.position.toArray().join() + mula.root.quaternion.toArray().join()');
     const img = run(`renderHero(${w}, ${h})`), [s] = run('heroShots');
     const at = `${format} at ${profileAt(level).name}`;
@@ -269,7 +269,7 @@ console.log('comparteix integration contracts ok');
     console.warn = warn;
   }
   document.createElement = made; delete context.ImageData;
-  run('qualityLevel = 2; applyRenderQuality(); G.state = "select";');
+  run('qualityLevel = peopleLevel = 2; applyRenderQuality(); G.state = "select";');
 }
 console.log('share photo renders her with the crowd at every quality ok');
 

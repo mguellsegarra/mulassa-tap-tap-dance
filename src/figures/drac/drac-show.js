@@ -32,7 +32,7 @@ setConfettiDivert((sec, reason) => {
   if (reason === 'combo' && !G.practice && (G.combo === 50 || G.combo === 100)) dracFx.wheels(1.2);
   return true;
 });
-let flareSong = null, flareT = Infinity, tracaFor = null, hazed = false;
+let flareSong = null, flareT = Infinity, tracaFor = null, hazed = false, dracLastState = null;
 // The last pass's red mist: the plaça's own fog (stage.js) closes in and turns red with the crescendo, the sky with it (a
 // dense mist costs nothing more to draw: old phones). Only while the dance is on; a menu clears it at once.
 // The tint is a bengala's smoke: a smoky red, never a sky-red mix (blue and red went mauve). The fog takes that colour
@@ -78,6 +78,9 @@ function dracNight(dt, t, reel) {
 
 // once a frame, after animCrowd. t: the song time drawn
 export function dracFrame(dt, t) { // (the red smoke of the last pass rises round IN.x/z, her spot)
+  // back on the selector from a run or «Mira el ball»: its smoke, sparks and wheels gone at once (the selector's own CREMA starts clean)
+  if (G.state === 'select' && (dracLastState === 'play' || dracLastState === 'results')) { dracFx.clear(); tracaFor = null; }
+  dracLastState = G.state;
   const reel = isDracOn() && REEL.on && REEL.idle && G.state === 'select' && !PHOTO.on; // the showreel without its UI: the run's festa, on the reel's beat
   if (reel) t = timeAtBeat(song.beats, REEL.beat);
   dracNight(dt, t, reel);

@@ -226,7 +226,10 @@ assert.match(cardMarkup('mulassa-valls'), /aria-label="Mulassa, Unió Anelles de
 assert.match(cardMarkup('aliga-valls'), /aria-label="Àliga, Ajuntament de Valls \+ Unió Anelles de la Flama, Valls/);
 { // pending cards wear a hand-drawn vector silhouette, the Bou its colour drawing; the traced one is the fallback for new figures
   assert.deepEqual(Object.keys(DRAWN_SILHOUETTES).filter(id => !HIDDEN.includes(id)).sort(), cards.filter(c => c.cls.includes('aviat') && !['bou-tradicional-valls', INVITE.id, 'selector-fixture'].includes(c.dataset.id)).map(c => c.dataset.id).sort(), 'every pending card is hand-drawn (the Bou and the invitation have their own)');
-  const art = id => cardMarkup(id).match(/<span class="por">([^]*?)<\/span>/)[1];
+  const XMLNS = ' xmlns="http://www.w3.org/2000/svg"'; // the card's <img> carries the portrait as an svg data URI, which needs it
+  const art = id => { const por = cardMarkup(id).match(/<span class="por">([^]*?)<\/span>/)[1], src = por.match(/^<img[^>]* src="data:image\/svg\+xml,([^"]*)"/)?.[1];
+    return src ? decodeURIComponent(src).replace(XMLNS, '') : por; };
+  assert.match(cardMarkup('aliga-valls'), /<span class="por"><img class="" src="data:image\/svg\+xml,[^"]+" alt="" decoding="async"><\/span>/, 'a card portrait is one image, not an inline vector tree');
   for (const c of cards.filter(c => c.cls.includes('aviat') && c.dataset.id !== 'bou-tradicional-valls' && c.dataset.id !== INVITE.id)) {
     if (art(c.dataset.id).startsWith('<img')) { assert.equal(c.dataset.id, 'selector-fixture', 'only a figure with a photo keeps it'); continue; }
     const own = FIGURE_PORTRAITS[c.dataset.id]?.art, grid = own ?? portraitArt({ id: c.dataset.id }), svg = art(c.dataset.id), [bw, bh] = silhouetteBox(c.dataset.id);
@@ -235,7 +238,7 @@ assert.match(cardMarkup('aliga-valls'), /aria-label="Àliga, Ajuntament de Valls
     assert.match(cardMarkup(c.dataset.id), new RegExp(`--gw:${own ? grid[0].length + 2 : bw};--gh:${own ? grid.length + 2 : bh}`), `${c.dataset.id}: the card's cell box`);
     assert(!svg.includes('crispEdges') && svg.includes('#120b07'), `${c.dataset.id}: ink silhouette, no pixel cells`);
     assert.match(svg, /stroke-width="2"[^]*?vector-effect="non-scaling-stroke"/, `${c.dataset.id}: the halo is a fixed 2 px line, not a share of a cell`);
-    if (DRAWN_SILHOUETTES[c.dataset.id]) assert.equal(svg, DRAWN_SILHOUETTES[c.dataset.id], `${c.dataset.id}: its hand-drawn silhouette`);
+    if (DRAWN_SILHOUETTES[c.dataset.id]) assert.equal(svg, DRAWN_SILHOUETTES[c.dataset.id].replace(XMLNS, ''), `${c.dataset.id}: its hand-drawn silhouette`);
     else assert.match(svg, /<path d="M[^"]+Z" fill="#120b07" stroke="#f5e3b8"/, `${c.dataset.id}: one traced ink path with its halo`);
   }
   if (UNRELEASED_IDS.has('bou-tradicional-valls')) assert.deepEqual([...new Set(art('bou-tradicional-valls').match(/(?:fill|stroke)="#\w+"/g))].sort(), ['fill="#120b07"', 'stroke="#120b07"', 'stroke="#f5e3b8"'], 'until its release the Bou is its own drawing in ink with the pending halo');

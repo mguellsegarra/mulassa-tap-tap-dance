@@ -37,7 +37,15 @@
   }
 }
 @keyframes sel-holo { to { background-position: 300% 0; } }
-@media (prefers-reduced-motion: reduce) { :is(.sel-pending, .sel-identity, .about-uaf) :is(.sel-entity, .sel-entity-part) { animation: none; } }
+/* The selector's badges sweep their holo as a layer moved by transform (the GPU moves it, nothing repaints): an animated
+   background-position repainted every frame, and Linux Chrome paints on the CPU (~30 fps on a 2016 MacBook while the UI showed).
+   Its 300% surface, repeated, slides one surface left every 3 s: the old speed. */
+:is(.sel-pending, .sel-identity) :is(.sel-entity, .sel-entity-part) { position: relative; isolation: isolate; overflow: hidden; animation: none; }
+:is(.sel-pending, .sel-identity) :is(.sel-entity, .sel-entity-part)::before { content: ''; position: absolute; inset: 0 auto 0 0; z-index: -1; width: 600%; background: var(--entity-holo) 0 0 / 50% 100% repeat-x; animation: sel-holo-slide 3s linear infinite; pointer-events: none; }
+:is(.sel-pending, .sel-identity) .sel-entity:has(.sel-entity-unit)::before, :is(.sel-pending, .sel-identity) .sel-entity:has(.sel-entity-unit)::after { content: none; } /* (each part carries its own) */
+:is(.sel-pending, .sel-identity) :is(.sel-entity, .sel-entity-part)::after { content: ''; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1px #fff9; pointer-events: none; } /* the rim, over the layer */
+@keyframes sel-holo-slide { to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) { :is(.sel-pending, .sel-identity, .about-uaf) :is(.sel-entity, .sel-entity-part), :is(.sel-pending, .sel-identity) :is(.sel-entity, .sel-entity-part)::before { animation: none; } }
 .sel-pending .sel-where { display: block; width: 100%; text-align: center; font: 600 12px/16px 'Baloo 2', system-ui, sans-serif; color: #e8d8b8; } /* town · comarca, island or territory */
 .sel-pending .sel-where[hidden] { display: none; }
 .sel-pending p { margin: 0; padding-block: 3px; text-wrap: balance; }

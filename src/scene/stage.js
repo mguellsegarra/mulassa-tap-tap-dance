@@ -1,6 +1,6 @@
 // The 3D world: the renderer (with the no-WebGL card), scene, lights, the plaza and the play camera's fixed direction
 // (the figures are their own folders': figures/objects.js).
-import { initialQuality, probeRenderer, isSoftwareRenderer, profileAt } from '../platform/render-quality.js';
+import { initialQuality, probeRenderer, isSoftwareRenderer, sessionProfile } from '../platform/render-quality.js';
 import * as THREE from 'three';
 import { tr } from '../i18n/messages.js';
 import { errors, errorName } from '../services/errors.js';
@@ -11,13 +11,18 @@ import { buildSky } from './sky.js';
 // ------------------------------------------------------------------ 3D
 window.__mulassaBootPhase = 'graphics';
 // every page load starts from the hardware guess (adaptive drops last for the session only); -1 = minimal
-const qualityGuess = initialQuality({ mobile: COARSE.matches, cores: navigator.hardwareConcurrency,
-  memory: navigator.deviceMemory, saveData: navigator.connection?.saveData });
 // software WebGL (no GPU): minimal from the start
 export const GPU = probeRenderer(), softwareGl = isSoftwareRenderer(GPU);
+const qualityGuess = initialQuality({ mobile: COARSE.matches, cores: navigator.hardwareConcurrency,
+  memory: navigator.deviceMemory, saveData: navigator.connection?.saveData, renderer: GPU.renderer });
 export let qualityLevel = softwareGl ? -1 : qualityGuess;
 export const setQualityLevel = v => (qualityLevel = v);
-export let renderProfile = profileAt(qualityLevel);
+// the session's people: the boot level's; on the splash they follow adaptive quality (the title screen is where a device that
+// boots too high finds its level), after it they only step down, one level behind it: sharpness, shadows and effects go first,
+// people only when those were not enough (a CPU-bound 2016 MacBook stayed at ~35 fps at minimal with high's 109 dancers)
+export let peopleLevel = qualityLevel;
+export const stepPeople = (level, splash) => (peopleLevel = splash ? level : Math.min(peopleLevel, level + 1));
+export let renderProfile = sessionProfile(qualityLevel, peopleLevel);
 export const setRenderProfile = v => (renderProfile = v);
 export const glc = document.getElementById('gl');
 export const renderer = (() => { // no WebGL 2 (disabled, blocklisted GPU, very old browser): say so instead of a calçot forever

@@ -16,6 +16,14 @@ export const PROFILES = [
 // the 3D below 1× (~350k px), one crowd row, a thin backdrop. PROFILES[0..2] keep their indices.
 export const MINIMAL = { name: 'minimal', dpr: 1, pixels: 350_000, shadow: 0, rows: 1, stride: 2, confetti: 40, fireworks: 90, backdrop: 60, mid: 40, balconies: 0, near: 10, ripple: -1, band: 6, smoke: 0, jets: 140, wheels: 64 };
 export const profileAt = level => (level < 0 ? MINIMAL : PROFILES[Math.min(level, PROFILES.length - 1)]);
+// A session's near people (the skinned ring's rows, balconies, the band, a colla's seated) lag adaptive quality (stage.js
+// stepPeople): people leaving the plaça read as broken. The armless backdrop and mid band step with the level, along with
+// sharpness, shadows and effects: far off, the fewest notice them go.
+const PROFILE_PEOPLE = ['rows', 'stride', 'balconies', 'near', 'band'];
+export const sessionProfile = (level, people) => {
+  const p = profileAt(people);
+  return { ...profileAt(level), ...Object.fromEntries(PROFILE_PEOPLE.map(k => [k, p[k]])), people: p.name };
+};
 // The HUD canvas budget follows the quality: at low/minimal the fill rate is the problem, so text is a little softer.
 export const hudBudget = (level, touch) => (level <= 0 ? 900_000 : touch ? 2_500_000 : 4_200_000);
 // Software WebGL: no GPU (Chrome's SwiftShader on a blocklisted GPU or with acceleration off, Mesa's llvmpipe/softpipe,
@@ -45,11 +53,22 @@ export function probeRenderer(makeCanvas = () => document.createElement('canvas'
   try { gl.getExtension('WEBGL_lose_context')?.loseContext(); } catch { /* freed with the canvas anyway */ }
   return out;
 }
-export function initialQuality({ mobile = false, cores, memory, saveData = false } = {}) {
+// Phones whose GPU is known to be weak (Adreno 3xx–5xx, Mali-400/T/G31/G51/G52, PowerVR) start low; other phones medium.
+const LOW_MOBILE_GPU = /adreno[^0-9]*[3-5]\d\d\b|mali-(4\d\d|t\d+|g31|g51|g52)\b|powervr/i;
+// Laptops' older dedicated GPUs (Radeon Pro 4xx/5xx, Radeon R5–R9 M and HD …M, GeForce …M and MX: a 2016 MacBook Pro's
+// Radeon on Linux ran high at ~30 fps) start at medium too, like the old Intel ones below.
+const OLD_LAPTOP_GPU = /\bradeon(\(tm\))? (pro [45]\d\d|r[5-9] m\d+|hd \d{4}m)\b|\bgeforce (gtx? )?\d{3,4}m\b|\bgeforce mx ?\d{3}\b/i;
+// Intel's integrated GPUs before Iris Xe (HD, UHD, Iris/Iris Plus/Pro: a 2016 MacBook Pro, Linux or macOS) dropped
+// from high within the splash's first seconds, a visible hitch each step: they start at medium (antialiased, its shadows),
+// never high (also the session's ceiling, main.js: a trial of high on a 2016 MacBook was a hitch and a crowd gone each time);
+// the frame monitor still steps a slower one down.
+const OLD_INTEL_GPU = /\bintel\b.*\b(hd|uhd|iris)\b(?!.*\bxe\b)/i;
+export function initialQuality({ mobile = false, cores, memory, saveData = false, renderer = '' } = {}) {
   if (saveData || (memory && memory <= 2)) return 0;
+  if (OLD_INTEL_GPU.test(renderer) || OLD_LAPTOP_GPU.test(renderer)) return 1;
   // phones: the core count is no signal (iOS Safari reports a low, capped number even on an iPhone 16), so they
   // start at medium (antialiased, sharper) and the frame monitor steps down only if frames really are slow
-  if (mobile) return 1;
+  if (mobile) return LOW_MOBILE_GPU.test(renderer) ? 0 : 1;
   return (memory && memory <= 4) || (cores && cores <= 4) ? 1 : 2;
 }
 export function renderDpr(profile, width, height, dpr) {
@@ -64,6 +83,9 @@ export function renderDpr(profile, width, height, dpr) {
 // ~53 fps: a steady judder on the note lane although the fps counter never reads far under 60.
 export const SLOW_SHARE = 0.12;
 const SPIKE = { ms: 50, count: 5, within: 3000 };
+// The session's first seconds (monitor time: the loader's excluded): a clear overload (a third of the frames late) decides on a
+// 2 s window, not 4: a ThinkPad X230 that booted a level too high spent ~10 s at 30–40 fps before its two steps down.
+const EARLY = { until: 15000, window: 2000, share: 0.3 };
 // iOS Low Power Mode (and thermal throttling) caps Safari's rAF at 30 Hz (WebKit AnimationFrameRate.cpp): every frame is
 // 33 ms, all of them read as slow and medium fell straight to minimal. CAP.run frames in a row at a steady ~33 ms suggest
 // a cap: until a faster frame, frames are judged against 30 Hz (twice the times above) and the run's frames
@@ -94,7 +116,7 @@ export function frameMonitor(onSlow) {
     if (ms > 24 * k) slow++;
     if (!inCap) runSlow = 0; else if (!capped) runSlow++;
     if (capped && !was) { slow -= runSlow; runSlow = 0; } // the run that showed the cap was its pace, not misses
-    if (elapsed >= 4000) {
+    if (elapsed >= 4000 || clock < EARLY.until && elapsed >= EARLY.window && samples >= 8 && slow / samples > EARLY.share) {
       const share = samples >= 8 ? slow / samples : 0;
       if (share > SLOW_SHARE || spiky) { onSlow(share > 0.8 ? 2 : 1, { slowShare: share, spiky, window: elapsed, samples, capped }); warmup = 2000; n = 0; } // way too slow: two steps
       elapsed = samples = slow = runSlow = 0; spiky = false;

@@ -40,6 +40,12 @@ assert.equal(boot({ software: true, saved: { 'render-quality': JSON.stringify({ 
 assert.equal(Renderer.opts.antialias, false, 'minimal boots without MSAA');
 assert.equal(boot({ nav: { connection: { saveData: true } } }).level, rq.initialQuality({ mobile: true, cores: 8, memory: 8, saveData: true }), 'the saveData hint still lowers the guess');
 
+// The session's people lag adaptive quality by one level after the splash (stage.js stepPeople), follow it on the splash, and never climb
+{ const c = boot().context, step = (l, splash) => vm.runInContext(`stepPeople(${l}, ${splash})`, c), boot1 = vm.runInContext('peopleLevel', c);
+  assert.equal(step(boot1 - 1, false), boot1, 'one step down in the selector: the people stay');
+  assert.equal(step(boot1 - 2, false), boot1 - 1, 'a second step: they follow, one level behind');
+  assert.equal(step(boot1, false), boot1 - 1, 'a step back up never brings people back mid-session');
+  assert.equal(step(-1, true), -1, 'on the splash they follow the level itself'); }
 // Storage may be unavailable; choosing the renderer must not depend on it.
 assert.equal(boot({ blocked: true }).antialias, true, 'blocked storage still boots with MSAA');
 console.log('boot quality ok');

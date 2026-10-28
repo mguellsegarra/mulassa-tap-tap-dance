@@ -13,7 +13,7 @@ function harness(hz = 60, quantize = x => x) {
 }
 for (const hz of [60, 120]) {
   const h = harness(hz), { row, scroll, tick, settle } = h;
-  scroll.to(600); assert.equal(row.scrollLeft, 0, 'navigation never teleports to the destination');
+  scroll.to(600); assert.equal(row.scrollLeft, 400, 'a far target, asked at rest, is jumped to half a row (200 px) short of it');
   for (let i = 0; i < 6; i++) tick();
   assert(row.scrollLeft > 0 && row.scrollLeft < 600);
   const before = row.scrollLeft;
@@ -31,9 +31,9 @@ for (const hz of [60, 120]) {
   tick(); assert.equal(row.scrollLeft, stopped, 'direct manipulation cancels programmatic scrolling');
   scroll.to(10000); settle(); assert.equal(row.scrollLeft, 4600, 'the real right boundary clamps the destination');
   scroll.to(-100); settle(); assert.equal(row.scrollLeft, 0);
-  scroll.to(1000); tick(500);
-  assert(row.scrollLeft <= 250, 'a delayed frame does not turn into a half-second leap');
-  h.reduce(); tick(); assert.equal(row.scrollLeft, 1000); assert.equal(h.frames.size, 0, 'reduced motion cancels remaining animation');
+  scroll.to(200); tick(500);
+  assert(row.scrollLeft <= 60, 'a delayed frame does not turn into a half-second leap'); // one 70 ms step of a ~270 ms curve: ~28%
+  h.reduce(); tick(); assert.equal(row.scrollLeft, 200); assert.equal(h.frames.size, 0, 'reduced motion cancels remaining animation');
   scroll.to(10); assert.equal(row.scrollLeft, 10, 'reduced motion uses direct navigation');
 }
 // Every request lands within its bounded time, however far: the speed grows with the distance, the time barely does.
@@ -55,9 +55,9 @@ for (const hz of [30, 60, 120]) for (const distance of [150, 450, 1200, 4600]) f
 // A change of mind mid-way bends the motion from where it is: no stop, no queue, no restart from rest.
 for (const hz of [60, 120]) {
   const h = harness(hz);
-  h.scroll.to(3000); for (let i = 0; i < hz * 0.15; i++) h.tick();
+  h.scroll.to(150); h.tick(); h.scroll.to(3000); for (let i = 0; i < hz * 0.15; i++) h.tick(); // already moving: a long slide, no jump
   const a = h.row.scrollLeft, v = a - h.samples.at(-2);
-  h.scroll.to(200); h.tick();
+  h.scroll.to(200); h.tick(); // moving: retargeted from where it is, never jumped
   assert(h.row.scrollLeft - a > -0.5 && h.row.scrollLeft - a <= v + 0.5, 'reversing keeps the current speed for a frame, then turns');
   let frames = 1; while (h.frames.size && frames < hz) { h.tick(); frames++; }
   assert.equal(h.row.scrollLeft, 200);

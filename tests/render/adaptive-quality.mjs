@@ -22,6 +22,14 @@ const rig = (ceiling = 2) => {
   r.run(35); assert.equal(r.level, 2, 'sustained measured headroom restores the initial profile without reload');
   assert(r.events.some(e => e.reason === 'headroom-trial' && e.samples > 100 && e.cost < e.budget * .45));
 }
+{ // free play's own drops end with it: leaving restores the entry level as a trial, which the menu's load still judges
+  const r = rig(); r.run(3); r.sample.scope(true); r.run(10, { miss: 4 }); const dropped = r.level;
+  assert(dropped < 2, 'heavy free play steps quality down');
+  r.sample.scope(false); assert.equal(r.level, 2, 'leaving free play restores the level it was entered at');
+  assert(r.events.some(e => e.reason === 'scope-end'));
+  r.run(10, { miss: 4 }); assert(r.level < 2, 'a menu that cannot hold the restored level steps down again');
+  r.sample.scope(false); assert(r.level < 2, 'no scope open: nothing to restore');
+}
 {
   const r = rig(); r.run(10, { miss: 4 }); r.run(180, { cost: 12 });
   assert(r.level < 2 && !r.events.some(e => e.reason === 'headroom-trial'), '60 fps with a costly frame is not recovery evidence');

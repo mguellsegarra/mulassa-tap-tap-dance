@@ -139,7 +139,9 @@ body.reel-idle #select > * { pointer-events: none; }
 .sel-standings-sk { position: relative; overflow: hidden; pointer-events: none; opacity: 0; }
 .sel-standings-sk ol, .sel-standings-sk .sel-standings-foot { margin: 0; }
 /* pill bars where the words go, each sweeping a highlight (a wave down the rows); no animation on the way out, so a re-shown card never replays it */
-.sel-standings-sk :is(li, .sel-standings-foot) > :is(span:not(.pos), .bar) { color: transparent; border-radius: 999px; background: linear-gradient(100deg, #fff3d61f 30%, #fff3d64d 50%, #fff3d61f 70%) 100% center / 300% 13px no-repeat; animation: sel-sk-shimmer 1.4s ease-in-out infinite; }
+.sel-standings-sk :is(li, .sel-standings-foot) > :is(span:not(.pos), .bar) { color: transparent; border-radius: 999px; background: linear-gradient(100deg, #fff3d61f 30%, #fff3d64d 50%, #fff3d61f 70%) 100% center / 300% 13px no-repeat; animation: sel-sk-shimmer 1.4s ease-in-out infinite paused; }
+/* it sweeps only while it shows: hidden, its 22 bars still repainted every frame (Linux Chrome paints on the CPU: ~30 fps on a 2016 MacBook) */
+.sel-standings-body[data-state="loading"] .sel-standings-sk :is(li, .sel-standings-foot) > :is(span:not(.pos), .bar) { animation-play-state: running; }
 .sel-standings-sk li:nth-child(2) > span { animation-delay: .1s; } .sel-standings-sk li:nth-child(3) > span { animation-delay: .2s; } .sel-standings-sk li:nth-child(4) > span { animation-delay: .3s; } .sel-standings-sk li:nth-child(5) > span { animation-delay: .4s; } .sel-standings-sk li:nth-child(n+6) > span { animation-delay: .5s; }
 .sel-standings-sk .n { max-width: 14px; }
 .sel-standings-sk .who { max-width: 62%; } .sel-standings-sk li:nth-child(2n) .who { max-width: 46%; } .sel-standings-sk li:nth-child(3n) .who { max-width: 54%; }

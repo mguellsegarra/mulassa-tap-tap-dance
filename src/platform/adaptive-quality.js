@@ -57,7 +57,7 @@ export function adaptiveQuality({ ceiling, level, change, report = () => {} }) {
       report({ time, reason: 'cadence', level: level(), ...context() });
     }
     down(ms, play);
-    // Two seconds after a profile change: its 0.8 s presence fade, shadow-map/shader work and fresh cadence.
+    // Two seconds after a profile change: its 0.4 s presence fade, shadow-map/shader work and fresh cadence.
     // Perf telemetry still records these frames; they earn no recovery credit.
     if (cooldown > 0) { cooldown -= ms; return; }
     elapsed += ms; samples++; if (ms > budget * 1.5) late++;
@@ -78,5 +78,15 @@ export function adaptiveQuality({ ceiling, level, change, report = () => {} }) {
     elapsed = samples = late = costSum = costPeak = 0;
   };
   sample.reset = reset;
+  // A heavy scope (free play: fire, smoke, charred people) may step quality down; leaving it puts back the level it was
+  // entered at, as a trial (the menu's own load then decides): a 2016 MacBook at 60 fps never showed the menu's
+  // headroom margin, so it stayed low after free play for the rest of the session.
+  let scopeLevel = null;
+  sample.scope = on => {
+    if (on) { scopeLevel ??= level(); return; }
+    if (scopeLevel === null) return;
+    const to = Math.min(ceiling, scopeLevel); scopeLevel = null;
+    if (to > level() && currentPace) switchTo(to, 'scope-end', {});
+  };
   return sample;
 }

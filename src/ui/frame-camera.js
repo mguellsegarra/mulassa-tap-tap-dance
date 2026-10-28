@@ -33,6 +33,14 @@ let CAMED = null;
 if (Q.has('cam')) import('../dev/cam-edit.js').then(m => { CAMED = m.setupCamEdit({ hud, camera, active: () => G.state === 'play' && !G.paused, info: () => ({
   cw: innerWidth, ch: HH * K, dpr: devicePixelRatio, K, practice: !!G.practice, touch: COARSE.matches, laneBottom: lane().bottom * K, padTop: playBottom() * K }) }); });
 
+// A tree or lamp in this camera's way (or against its lens): gone; the backdrop's people by its lens shrink (uLens). Also run
+// for a dissolve's outgoing shot (main.js), which renders from its old camera: with the new one's, a tree hidden by its lens
+// filled the screen green while it faded.
+export function propsFor(cam) {
+  camXYZ[0] = cam.position.x; camXYZ[1] = cam.position.y; camXYZ[2] = cam.position.z;
+  for (const p of plaza.props) p.mesh.visible = !blocks(p, camXYZ, focusXYZ);
+  plaza.backdrop?.u.uLens.value.copy(cam.position);
+}
 export function frameCamera(dt, now, reelWide) { // reelWide: the idle selector's wide band (ui/reel-idle.js)
   // camera: during play the mulassa sits near the lane, in the free stage above the pad or
   // the bottom edge, with the crowd around her. A lens shift (view offset) puts her there without tilting the view.
@@ -78,9 +86,8 @@ export function frameCamera(dt, now, reelWide) { // reelWide: the idle selector'
   setCamShift(PHOTO.on || menuCam || G.state === 'play' && !VIEW ? shift : camShift + (shift - camShift) * Math.min(1, dt * 3), menuCam ? lens.x : easeLensX(dt) * !PHOTO.on); // play and menus: already smoothed (photo driving: no shift)
   if (Math.abs(camShift) > 0.5 || Math.abs(camShiftX) > 0.5) camera.setViewOffset(W * K, HH * K, -camShiftX, -camShift, W * K, HH * K);
   else if (camera.view?.enabled) camera.clearViewOffset();
-  camXYZ[0] = camera.position.x; camXYZ[1] = camera.position.y; camXYZ[2] = camera.position.z;
   focusXYZ[0] = mx; focusXYZ[1] = G.state === 'play' ? 1.4 : 1; focusXYZ[2] = mz;
-  for (const p of plaza.props) p.mesh.visible = !blocks(p, camXYZ, focusXYZ); // a tree or lamp in the way: gone
+  propsFor(camera);
   if (trauma > 0) { // shake decays; quadratic so small bumps barely move it. During play only a small accent
     setTrauma(Math.max(0, trauma - dt * 1.6)); // (GUAPA, the finale), added on top: it never feeds the camera's springs
   }

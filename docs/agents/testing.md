@@ -17,7 +17,10 @@
   their turn: a visible lane hitch), rAF frame ms + worst, JS ms split into `3d` render and `hud` draw,
   draw calls, triangles, WebGL/HUD Mpx, quality) to the console, `window.__perf` and a line at the top of the screen
   (tablets have no console). `?perf=sync` waits for the GPU after the 3D (real 3D cost); `?perf=nohud` / `?perf=no3d`
-  skip one part to A/B frame times. Tablet benchmark: Playwright 1366×1024 @ DPR 2, `isMobile`, CDP
+  skip one part to A/B frame times; `&hide=crowd,backdrop,mid,plaza` (`people` = the first three) hides scene parts on a
+  device to find which costs its frames. The line also shows the session's people level and the GPU's name (render-quality.js
+  tables). On a slow device, record a DevTools Performance trace: the main thread's style recalc and Layerize per frame
+  are DOM work (a style written every frame cost ~10 ms a frame on a 2016 MacBook). Tablet benchmark: Playwright 1366×1024 @ DPR 2, `isMobile`, CDP
   `Emulation.setCPUThrottlingRate` 4, `?mute&perf&autoplay&from=40`, then `__dbg.choose(1)`.
   `?perf` also logs the load stages: `[load] module|shaders|first frame|song decoded <ms since navigation>`.
 - The first game ever is the practice; SALTA or `__dbg.startPractice/endPractice` to control it.

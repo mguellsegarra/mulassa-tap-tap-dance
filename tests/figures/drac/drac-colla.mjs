@@ -173,7 +173,9 @@ for (const [i, list] of pts.entries()) for (const q of list) {
 
 // ---- count per quality; the hidden ones aren't drawn
 for (const p of [MINIMAL, ...PROFILES]) {
-  colla.setProfile(p);
+  seated.visible = false; colla.setProfile(p);
+  assert.equal(seated.visible, false, `${p.name}: a quality step never shows a colla that is not out`);
+  seated.visible = true; colla.setProfile(p); // out: tickColla shows it
   assert.equal(colla.count, SEATED_COUNT[p.name], p.name);
   const n = colla.count, ends = seatedMesh.geometry.drawRange.count;
   assert.equal(seated.visible, n > 0, `${p.name}: seated layer shown only when someone sits`);

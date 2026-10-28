@@ -1,9 +1,9 @@
 // Applies a render-quality level to the scene (crowd rows, shadows, band, backdrop) and builds the mid crowd.
 import { CALM } from '../core/env.js';
-import { profileAt } from '../platform/render-quality.js';
+import { sessionProfile } from '../platform/render-quality.js';
 import { placeBand, buildBackdrop } from './models.js';
 import * as THREE from 'three';
-import { renderProfile, qualityLevel, renderer, sun, scene, plaza, glc, CAM_DIR, setRenderProfile } from './stage.js';
+import { renderProfile, qualityLevel, peopleLevel, renderer, sun, scene, plaza, glc, CAM_DIR, setRenderProfile } from './stage.js';
 import { crowd, crowdMesh, BAND_AZ, RAD, BAND_ARC } from './crowd-build.js';
 import { COLLAS } from '../figures/objects.js';
 
@@ -14,7 +14,7 @@ export let bandSpots = [];
 // Keep presence separate from gameplay's p.pres; retiring people keep their pose and collision until gone.
 let qualityTransition = null;
 const qualityInstances = new WeakMap(), qualityMatrix = new THREE.Matrix4(), qualityVector = new THREE.Vector3();
-const QUALITY_FADE = 0.8;
+const QUALITY_FADE = 0.4; // s: short, so nobody is seen shrinking (2 s read as people slowly deflating; one skinned mesh: no per-person fade)
 // Shadow support is a shader variant in three.js. Mark receivers when switching it; otherwise a
 // cached shadow program can sample the released map and darken the whole plaza, not just its shadows.
 function qualityShadowMap(size) {
@@ -93,7 +93,7 @@ export function animateRenderQuality(dt) {
 }
 export function applyRenderQuality({ transition = false } = {}) {
   qualityTransition = transition && !CALM.matches ? { elapsed: 0, items: [] } : null;
-  setRenderProfile(profileAt(qualityLevel));
+  setRenderProfile(sessionProfile(qualityLevel, peopleLevel));
   qualityShadows();
   crowd.forEach(p => {
     const target = p.row < renderProfile.rows && p.slot % renderProfile.stride === 0 ? 1 : 0;
@@ -117,7 +117,7 @@ export function applyRenderQuality({ transition = false } = {}) {
   qualityStaticCrowd(plaza.backdrop, renderProfile.backdrop);
   qualityStaticCrowd(midCrowd, renderProfile.mid);
   for (const c of COLLAS) { // every figure's seated members (one colla is out at a time)
-    const target = c.seatedCount[renderProfile.name] ?? 0, previous = c.count;
+    const target = c.seatedCount[renderProfile.people] ?? 0, previous = c.count;
     c.setProfile(renderProfile, qualityTransition ? Math.max(previous, target) : target);
     c.members.forEach((p, i) => qualityScaleTo(i < previous ? p.g.scale.x : 0, i < target ? 1 : 0, value => p.g.scale.setScalar(value)));
   }

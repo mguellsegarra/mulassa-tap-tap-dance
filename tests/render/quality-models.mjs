@@ -1,18 +1,42 @@
 // Render quality (profiles, DPR, the frame monitor and pacer, HUD budget) and the voxel models (skinned crowd, band,
 // backdrop, z-fighting): no game needed.
 import assert from 'node:assert/strict';
-import { PROFILES, initialQuality, renderDpr, frameMonitor, hudScale, framePacer, profileAt, hudBudget, MINIMAL, isSoftwareRenderer, probeRenderer } from '../../src/platform/render-quality.js';
+import { PROFILES, sessionProfile, initialQuality, renderDpr, frameMonitor, hudScale, framePacer, profileAt, hudBudget, MINIMAL, isSoftwareRenderer, probeRenderer } from '../../src/platform/render-quality.js';
 import { buildPerson } from '../../src/scene/models.js';
 assert.equal(initialQuality({ mobile: true, cores: 8, memory: 8 }), 1);
 assert.equal(initialQuality({ mobile: true, cores: 4 }), 1); // iOS under-reports cores: phones start antialiased
 assert.equal(initialQuality({ cores: 16, memory: 16 }), 2);
 assert.equal(initialQuality({ saveData: true }), 0);
+{ // a session's near people lag the level (render-quality.js sessionProfile); the armless backdrop and mid band step with it
+  const p = sessionProfile(-1, 1);
+  assert(p.dpr === MINIMAL.dpr && p.shadow === 0 && p.smoke === MINIMAL.smoke && p.rows === PROFILES[1].rows && p.stride === PROFILES[1].stride && p.people === 'medium', 'minimal render, medium near people');
+  assert(p.backdrop === MINIMAL.backdrop && p.mid === MINIMAL.mid, 'the armless backdrop and mid band go first, with the level');
+  assert.deepEqual(sessionProfile(2, 2), { ...PROFILES[2], people: 'high' });
+}
+for (const renderer of ['Adreno (TM) 506', 'ANGLE (Qualcomm, Adreno (TM) 418, OpenGL ES 3.2)', 'Mali-G52', 'Mali-T880', 'Mali-400 MP', 'PowerVR Rogue GE8320'])
+  assert.equal(initialQuality({ mobile: true, cores: 8, memory: 8, renderer }), 0, `a weak phone GPU starts low: ${renderer}`);
+for (const renderer of ['Adreno (TM) 640', 'Mali-G78', 'Apple GPU', ''])
+  assert.equal(initialQuality({ mobile: true, cores: 8, memory: 8, renderer }), 1, `a phone GPU starts at medium: ${renderer || '(none)'}`);
+for (const renderer of ['ANGLE (Intel, Mesa Intel(R) Iris(R) Graphics 550 (SKL GT3), OpenGL 4.6)', 'ANGLE (Intel Inc., Intel(R) Iris(TM) Plus Graphics 655, OpenGL 4.1)',
+  'ANGLE (Intel, Intel(R) HD Graphics 530 Direct3D11 vs_5_0 ps_5_0, D3D11)', 'Mesa Intel(R) UHD Graphics 620 (KBL GT2)'])
+  assert.equal(initialQuality({ cores: 8, memory: 8, renderer }), 1, `an old Intel iGPU starts at medium, never high: ${renderer}`);
+for (const renderer of ['ANGLE (AMD, AMD Radeon Pro 450 OpenGL Engine, OpenGL 4.1)', 'AMD Radeon Pro 455 (polaris11, LLVM 15.0.7, DRM 3.54, 6.8.0-45-generic)', 'AMD Radeon R7 M260', 'ANGLE (NVIDIA, NVIDIA GeForce GTX 960M Direct3D11 vs_5_0 ps_5_0, D3D11)', 'NVIDIA GeForce MX150'])
+  assert.equal(initialQuality({ cores: 8, memory: 8, renderer }), 1, `an older laptop GPU starts at medium: ${renderer}`);
+for (const renderer of ['ANGLE (Intel, Intel(R) Iris(R) Xe Graphics Direct3D11 vs_5_0 ps_5_0, D3D11)', 'Apple M1', 'ANGLE (AMD, AMD Radeon RX 6700 XT)', 'ANGLE (NVIDIA, NVIDIA GeForce RTX 3060)', 'NVIDIA GeForce GTX 1080', ''])
+  assert.equal(initialQuality({ cores: 8, memory: 8, renderer }), 2, `not an old Intel iGPU: ${renderer || '(no string)'}`);
 for (const profile of PROFILES) {
   const dpr = renderDpr(profile, 3840, 2160, 3);
   assert(dpr <= profile.dpr);
   assert(3840 * 2160 * dpr ** 2 <= profile.pixels + 0.001);
 }
 let reductions = 0;
+{ // a clear overload in the session's first seconds steps down on a 2 s window; a mild one, or a later one, waits the 4 s
+  const run = (lateEvery, from = 0) => { let at = null, t = 0; const m = frameMonitor(() => { at ??= t; });
+    for (let i = 0; t < from + 9000; i++) { const ms = t < from ? 16.7 : (i % lateEvery ? 16.7 : 40); t += ms; m(ms); } return at ?? Infinity; };
+  assert(run(2) < 2000 + 2600, 'half the frames late at boot: down within ~2 s of the warm-up');
+  assert(run(6) >= 2000 + 3900 && run(6) < Infinity, 'a sixth late (a hitchy boot, not an overload): the usual 4 s window');
+  assert(run(2, 22000) >= 22000 + 3500, 'after the first 15 s: the usual 4 s window (an overload from 22 s, where one closes)');
+}
 const sample = frameMonitor(() => reductions++);
 for (let i = 0; i < 600; i++) sample(16.67);
 assert.equal(reductions, 0, 'smooth rendering keeps quality');
@@ -92,7 +116,7 @@ assert(hudBudget(-1, true) < hudBudget(1, true) && hudBudget(0, false) === hudBu
 }
 { // far too slow frames drop two steps at once, merely slow ones one
   const got = []; const m = frameMonitor(s => got.push(s));
-  for (let t = 0; t < 2000; t += 16) m(16); // warm-up
+  for (let t = 0; t < 18000; t += 16) m(16); // warm-up, past the early 2 s windows, to where a 4 s one closes
   for (let t = 0; t < 4200; t += 60) m(60); // every frame slow
   for (let t = 0; t < 2100; t += 16) m(16);
   for (let t = 0; t < 4200; t += 16) m(t % 32 ? 16 : 40); // ~50% slow

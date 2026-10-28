@@ -20,6 +20,7 @@
 
 ## Performance rules
 
+- DOM over the canvas: no style written every frame (a CSS variable, an inline transform) and no animated `background-position`, gradients or an animated `<svg>`: each restyles and re-layers the page every frame, CPU-painted on Linux Chrome (the menu's dancing gamepad cost ~10 ms a frame on a 2016 MacBook and a ThinkPad X230). Animate `transform`/`opacity` of an HTML box (CSS or `el.animate`) and correct it rarely.
 - Budget per quality profile: every new object type states its draw-call and triangle cost and which profiles show it; measure with `?perf` before and after (`?perf=sync` for the GPU side) and stay inside the profile's numbers.
 - One `InstancedMesh` or merged mesh per visual role; no skinned mesh per person or per prop. Record the new bone / skinned-people count in the `?perf` check: bone matrices are re-uploaded every frame.
 - Shadow casters are an allow-list: a new mesh is `castShadow = false`, and only gameplay-relevant ones turn it on, at medium/high. A change to lights or colour fx re-checks the shadow programs (`material.needsUpdate`).

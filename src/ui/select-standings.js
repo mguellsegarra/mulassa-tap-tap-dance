@@ -60,8 +60,9 @@ export function setupStandings({ doc, win = globalThis, $, onBoard, onCard = nul
     li.appendChild(Number(r.position) <= 3 ? posDisc(doc, Number(r.position)) : el('span', 'n', num(Number(r.position)))); // 1-2-3 as the board's medals
     const who = li.appendChild(el('span', 'who'));
     const p = { alias: r.alias, tag: r.tag ?? null, verified: r.verified === true }; // a guest's «nom#1234»; aliases are text, never HTML
-    const from = { season: calendarSeason().name, position: Number(r.position), score: r.score, difficulty: r.difficulty };
-    appendName(doc, who, p, blank || !onCard ? null : q => onCard({ ...q, from })); // a name opens the player's card, as on the board
+    // the season when the name is opened: a date formatter per row of every fitting try cost ~90 ms a figure change
+    const from = () => ({ season: calendarSeason().name, position: Number(r.position), score: r.score, difficulty: r.difficulty });
+    appendName(doc, who, p, blank || !onCard ? null : q => onCard({ ...q, from: from() })); // a name opens the player's card, as on the board
     if (r.is_self) who.appendChild(el('span', 'me-tag', 'TU'));
     const d = Number(r.difficulty);
     li.appendChild(el('span', `lvl lvl${d}`, DIFFS[d]?.name ?? ''));

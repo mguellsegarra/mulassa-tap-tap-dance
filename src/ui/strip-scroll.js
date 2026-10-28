@@ -1,6 +1,7 @@
 // One owner of a row's real scroll position: keys, buttons, pills and wheels retarget the same motion.
 // Each request runs a timed curve from where the row is, at the speed it has, to the new target: the time grows
-// a little with the distance and is capped (a far town no longer waits on a spring's tail, nor teleports).
+// a little with the distance and is capped (a far town no longer waits on a spring's tail). A target more than half a row
+// away, asked at rest, is jumped to that half row first: every card slid past was laid out and painted (a far town's pill stalled old laptops).
 export const scrollMs = distance => Math.min(450, 220 + 3.5 * Math.sqrt(distance));
 const STEP = 0.07; // a stalled frame advances the curve at most this much (s): a hitch delays it, never skips it
 export function stripScroll(row, win, reduced) {
@@ -31,7 +32,10 @@ export function stripScroll(row, win, reduced) {
     // Carry the current speed (px/s) into the new curve, so a change of mind mid-way bends instead of stopping.
     const t = frame && duration ? elapsed / duration : 1, speed = t < 1 ? span * slope(t) / duration : 0;
     from = frame && t < 1 ? from + span * curve(t) : row.scrollLeft;
-    target = clamp(left); span = target - from;
+    target = clamp(left);
+    const far = frame ? 0 : Math.abs(target - from) - row.clientWidth / 2; // from rest only: a moving row (a rapid wheel) keeps sliding
+    if (far > 0) { from += Math.sign(target - from) * far; write(from); }
+    span = target - from;
     duration = scrollMs(Math.abs(span)) / 1000; elapsed = 0;
     v0 = Math.abs(span) < 0.5 ? 0 : Math.max(-4, Math.min(4, speed * duration / span));
     if (!frame) { last = win.performance.now(); frame = win.requestAnimationFrame(tick); }

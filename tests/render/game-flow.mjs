@@ -15,7 +15,7 @@ import { dance, flushLoader, nodes, keyHandlers, windowHandlers, drawnText, docu
   hostSeed(11);
   const r = JSON.parse(run(`(() => {
     seedR = 11;
-    qualityLevel = 2; applyRenderQuality(); crowdNow = 20; startGame(1); G.state = 'play'; G.guapo = 90; // A1's last runs (N, S) into A2's circle: the ring's distance to her stays comparable across the windows (figures/mulassa/mula-figures.js; at 5 s the burst caught her running at the W-side ring); her runs out bring the crowd onto its feet (making way)
+    qualityLevel = peopleLevel = 2; applyRenderQuality(); crowdNow = 20; startGame(1); G.state = 'play'; G.guapo = 90; // A1's last runs (N, S) into A2's circle: the ring's distance to her stays comparable across the windows (figures/mulassa/mula-figures.js; at 5 s the burst caught her running at the W-side ring); her runs out bring the crowd onto its feet (making way)
     mood.kick = mood.gr1 = mood.gr2 = mood.gr3 = mood.gr4 = 0; G.combo = 0;
     const who = () => activeCrowd.filter(p => p.g.scale.x);
     const pose = p => [p.g.position.x, p.g.position.y, p.g.position.z, p.torso.rotation.x, p.torso.rotation.z, ...p.arms.flatMap(a => [a.rotation.x, a.rotation.z])];
@@ -81,7 +81,7 @@ import { dance, flushLoader, nodes, keyHandlers, windowHandlers, drawnText, docu
   const finRot = Math.max(fin.rot, fin.ring.rot, fin.way.rot), finY = Math.max(fin.y, fin.ring.y, fin.way.y);
   assert(finRot < 0.25 && finY < 0.1, `the festa eases in, no snap (per frame ${finRot.toFixed(3)} rad, ${mm(finY)} up)`);
   console.log('the crowd stays calm during the song and answers hits gently ok');
-  run(`qualityLevel = ${q0}; applyRenderQuality(); crowd.forEach(p => placeHome(p)); G.finale = false; mood.kick = mood.gr1 = mood.gr2 = mood.gr3 = mood.gr4 = 0; G.combo = 0;`);
+  run(`qualityLevel = peopleLevel = ${q0}; applyRenderQuality(); crowd.forEach(p => placeHome(p)); G.finale = false; mood.kick = mood.gr1 = mood.gr2 = mood.gr3 = mood.gr4 = 0; G.combo = 0;`);
 }
 
 // The plaça fills with how well it goes: with few hits right, some of the back rows aren't there (scale 0, eased);
@@ -89,7 +89,7 @@ import { dance, flushLoader, nodes, keyHandlers, windowHandlers, drawnText, docu
 {
   const q0 = run('qualityLevel');
   const r = JSON.parse(run(`(() => {
-    qualityLevel = 2; applyRenderQuality(); crowd.forEach(p => placeHome(p)); crowdNow = 0; startGame(1); G.state = 'play';
+    qualityLevel = peopleLevel = 2; applyRenderQuality(); crowd.forEach(p => placeHome(p)); crowdNow = 0; startGame(1); G.state = 'play';
     const run = (guapo, frames) => { G.counts = { perfect: guapo, good: 0, miss: 100 - guapo }; G.guapo = guapo;
       for (let f = 0; f < frames; f++) { crowdNow += 1 / 60; clock += 1 / 60; const t = songTime(), b = beatAt(t); G.sec = sectionAt(song, t); animStage(1 / 60, b, 1); framePlayCamera(1 / 60, M.pos.x, M.pos.y); animCrowd(1 / 60, b, t, 1); } };
     const gone = () => activeCrowd.filter(p => !p.g.scale.x), front = () => activeCrowd.filter(p => p.row === 0 && !p.g.scale.x).length;
@@ -104,7 +104,7 @@ import { dance, flushLoader, nodes, keyHandlers, windowHandlers, drawnText, docu
   assert(r.poorFront === 0, 'the front row is always there');
   assert(r.menu === 0, 'the results screen has the whole plaça');
   console.log('the plaça fills with how well it goes ok');
-  run(`qualityLevel = ${q0}; applyRenderQuality(); crowd.forEach(p => placeHome(p)); mood.presK = 1;`);
+  run(`qualityLevel = peopleLevel = ${q0}; applyRenderQuality(); crowd.forEach(p => placeHome(p)); mood.presK = 1;`);
 }
 
 // Making way (RING): a clear ring of open floor round her all song; when her body or swinging rear comes at someone
@@ -116,7 +116,7 @@ import { dance, flushLoader, nodes, keyHandlers, windowHandlers, drawnText, docu
   hostSeed(23);
   const r = JSON.parse(run(`(() => {
     seedR = 23;
-    qualityLevel = 2; applyRenderQuality(); crowdNow = 46; startGame(1); G.state = 'play'; G.guapo = 90; G.combo = 0;
+    qualityLevel = peopleLevel = 2; applyRenderQuality(); crowdNow = 46; startGame(1); G.state = 'play'; G.guapo = 90; G.combo = 0;
     const stop = mulaDance.time.songAtRef(138.6); // she stands, between the full turn and the first reversal
     const ppl = [...activeCrowd], prev = new Map(), out = { minClear: 99, step: 0, dv: 0, rot: 0, made: new Set(), back: 0, frames: 0, calmStep: 0, armRate: 0 };
     const clearOf = p => { const dx = p.pos.x - M.pos.x, dz = p.pos.y - M.pos.y, c = Math.cos(M.yaw), s = Math.sin(M.yaw);
@@ -158,7 +158,7 @@ import { dance, flushLoader, nodes, keyHandlers, windowHandlers, drawnText, docu
   assert(r.free >= 1 && r.back >= r.free / 2 && r.away <= r.free / 4, `once she has gone they walk back to their spots (${r.back} of ${r.free} free to, ${r.away} still away)`);
   assert(r.armRate <= 6 + 1e-9, `drawn arms keep the 6 rad/s limit (${r.armRate})`);
   console.log('the crowd makes way for her, smoothly, and comes back ok', { step: r.step, delta: r.dv, rotation: r.rot, armRate: r.armRate });
-  run(`qualityLevel = ${q0}; applyRenderQuality(); crowd.forEach(p => placeHome(p)); G.finale = false; G.combo = 0;`);
+  run(`qualityLevel = peopleLevel = ${q0}; applyRenderQuality(); crowd.forEach(p => placeHome(p)); G.finale = false; G.combo = 0;`);
 }
 
 // Leaving a paused game must resume the menu and allow the next game to run.

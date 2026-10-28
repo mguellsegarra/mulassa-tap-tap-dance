@@ -7,7 +7,7 @@ import { renderProfile, camera, plaza } from './stage.js';
 import { clock } from '../game/state.js';
 import { M } from './figure-springs.js';
 import { RING } from './crowd-build.js';
-import { lensShrink } from './framing.js';
+import { lensShrink, OUTGOING_LENS } from './framing.js';
 import { easeIn, smooth01, TAU } from '../core/math.js';
 import { crowdPose, crowdPace, crowdHop, crowdArms } from './crowd-effects.js';
 const ARMS = { tx: 0, tz: 0 }; // the arm targets a figure's effect bends (crowdArms), reused
@@ -55,7 +55,7 @@ export function pose(p, dt, beat, live) {
     ringUp = nk * (nv * NEAR.bob + ringBeat * NEAR.bounce * (0.5 + 0.5 * Math.cos(TAU * (beat - p.lag * 0.15)))); // up on the beat
     ringNod = nk * nv * NEAR.nod; ringArms = nk * nv * NEAR.arms;
   }
-  const lens = lensShrink(F.lens, p.pos.x, p.pos.y);
+  const lens = Math.min(lensShrink(F.lens, p.pos.x, p.pos.y), F.lens && OUTGOING_LENS.on ? lensShrink(OUTGOING_LENS, p.pos.x, p.pos.y) : 1);
   if (lens !== (p.lensK ?? 1)) { p.lensK = lens; p.g.scale.setScalar(p.scale * (p.pres ?? 1) * p.qualityScale * lens); }
   if (p.thr) { // one of those who come and go with how well it goes (PRES)
     const to = smooth01((presK - p.thr) / PRES.soft);

@@ -8,7 +8,7 @@ import { keyboardNav } from './focus.js';
 import { hud } from '../hud/canvas.js';
 import { lookSync } from './mouse-look.js';
 import { PHOTO } from '../game/photo-control.js';
-import { COARSE } from '../core/env.js';
+import { COARSE, CALM } from '../core/env.js';
 import { photoOrient } from './fullscreen.js';
 import { curtain } from './curtain.js';
 import { tr } from '../i18n/messages.js';
@@ -81,11 +81,28 @@ function viewWake() {
 for (const ev of ['pointermove', 'pointerdown', 'keydown', 'wheel']) addEventListener(ev, viewWake, { passive: true });
 viewBtn.addEventListener('click', () => curtain(() => setView(!viewMode)));
 // #free dances on what sounds on the menus (the radio's song or the menu loop; select-chrome.css): b = that beat, null = silence
-let freeDancing = false;
+// A pendulum the compositor runs (one beat = 1 s of its 2 s cycle, playbackRate = beats per second), nudged only when it
+// drifts or the tempo changes: writing its phase as a style every frame restyled and re-layered the page each frame
+// (~10 ms a frame on a 2016 MacBook and a ThinkPad X230, the selector's 30 fps).
+let freeDancing = false, freeStep = null, freeBeat = null, freeT = 0;
 export function freeDance(b) {
-  const on = b != null && !freeEl.hidden && !viewMode;
-  if (on !== freeDancing) freeEl.toggleAttribute('data-dancing', (freeDancing = on));
-  if (on) freeEl.style.setProperty('--b', (b % 2).toFixed(3));
+  const on = b != null && !freeEl.hidden && !viewMode && !CALM.matches;
+  if (on !== freeDancing) {
+    freeEl.toggleAttribute('data-dancing', (freeDancing = on));
+    freeStep?.cancel(); freeStep = null; freeBeat = null;
+    const ico = freeEl.querySelector?.('.free-ico'); // (an HTML box: the compositor moves it; an <svg> it redraws)
+    if (on && ico?.animate) freeStep = ico.animate([{ transform: 'rotate(-8deg)', easing: 'ease-in-out' }, { transform: 'rotate(8deg)', easing: 'ease-in-out' },
+      { transform: 'rotate(-8deg)' }], { duration: 2000, iterations: Infinity }); // each beat lands on one side
+  }
+  if (!freeStep) return;
+  const now = performance.now();
+  if (freeBeat != null && now - freeT >= 500) { // the tempo over half a second (a menu song changes it now and then)
+    const rate = (b - freeBeat) / ((now - freeT) / 1000);
+    if (rate > 0.2 && rate < 6 && Math.abs(rate - freeStep.playbackRate) > 0.03 * rate) freeStep.playbackRate = rate;
+    freeBeat = b; freeT = now;
+  } else if (freeBeat == null) { freeBeat = b; freeT = now; }
+  const want = (b % 2) * 1000, at = (freeStep.currentTime ?? 0) % 2000, drift = ((want - at + 3000) % 2000) - 1000;
+  if (Math.abs(drift) > 40) freeStep.currentTime = want; // a loop, a seek or a new song: back on the beat
 }
 export function enterFree() { if (sheets.freeGate?.ask()) return; curtain(() => { setView(true); if (viewMode) sheets.music?.playFigure(G.figureId); }); } // the figure's own song (a pending selection: the last playable one, the one she drives)
 freeEl.addEventListener('click', () => { G.state === 'select' && enterFree(); });

@@ -92,10 +92,10 @@ export function createColla({ profile, spots, seats = [], seatAt = null, helperL
       for (let i = 0; i < shown; i++) poseSeated(members[i], beat, energy, i % 3 === 2);
     },
     seatedCount,
-    setProfile(p, count = seatedCount[p.name] ?? 0) {
+    setProfile(p, count = seatedCount[p.people ?? p.name] ?? 0) {
       shown = Math.min(members.length, count);
       S?.mesh.geometry.setDrawRange(0, shown ? S.ends[shown - 1] : 0);
-      seated.visible = shown > 0;
+      seated.visible &&= shown > 0; // hides only: tickColla shows a colla that is out (a quality step flashed every figure's seated members for a frame)
       for (const k of S ? [H, S] : [H]) k.mesh.castShadow = p.name === 'high'; // like the crowd
     },
     setLabels(on) {

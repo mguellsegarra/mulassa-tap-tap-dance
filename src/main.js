@@ -79,6 +79,8 @@ for (const event of ['blur', 'focus', 'pagehide', 'pageshow', 'resize', 'orienta
 document.addEventListener('visibilitychange', resetFrameTime);
 
 if (Q.has('sizes')) import('./dev/sizes-edit.js').then(m => m.setupSizesEdit()); // ?sizes: each selector figure's height beside the gegants, set by eye (src/dev/sizes-edit.js)
+if (Q.has('vp')) import('./dev/vp-label.js').then(m => m.setupVpLabel()); // ?vp: viewport, dpr, selector zoom and pointer in a corner label (src/dev/vp-label.js)
+if (Q.has('escala')) import('./dev/escala.js').then(m => m.setupEscala(Q.get('escala'))); // ?escala=0.85: the selector's zoom set by hand (src/dev/escala.js)
 function frame(now) {
   if (window.__mulassaBootFailure) return; // an explicit retry owns recovery; no hidden game burning battery
   requestAnimationFrame(frame);

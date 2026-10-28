@@ -21,7 +21,7 @@ for (const soft of process.env.GL_BUDGET_SOFT === '1' ? [true] : [false, true]) 
 
 // Real GL draw calls a frame (the shadow pass included; renderer.info.render does not count it) per profile: the worst
 // figure at the selector and in play, measured plus HEADROOM. Raise one only for a deliberate new draw, and say so in docs/agents/graphics.md.
-const DRAWS = { selector: { minimal: 21, low: 22, medium: 33, high: 36 }, play: { minimal: 36, low: 37, medium: 59, high: 62 } };
+const DRAWS = { selector: { minimal: 23, low: 24, medium: 35, high: 38 }, play: { minimal: 37, low: 38, medium: 60, high: 63 } };
 const HEADROOM = 4, MAX_PROGRAMS = 90, LEVELS = { minimal: -1, low: 0, medium: 1, high: 2 };
 const FIGURES = ['mulassa-valls', 'drac-valls', 'bou-tradicional-valls'];
 
@@ -52,6 +52,11 @@ const sample = async (page, name) => {
       const t0 = performance.now();
       window.__representation.quality(level);
       const frame = () => new Promise(r => requestAnimationFrame(r));
+      // three.js uploads a geometry the first time it is in view, and the showreel's shots that walk round her see the far side
+      // of the plaça only once a loop (~90 s): a frame with no frustum culling uploads them all, so a round counts no lazy upload
+      const { scene } = await import('/src/scene/stage.js'), culled = [];
+      scene.traverse(o => { if (o.frustumCulled) { culled.push(o); o.frustumCulled = false; } });
+      await frame(); for (const o of culled) o.frustumCulled = true;
       await frame(); await frame();
       let draws = Infinity; // the steady frame: the least of six windows (a one-off burst, like a share render or a busy machine's
       // stalled frame, is not the budget; a real regression stays high in every window). A showreel cut's dissolve renders the

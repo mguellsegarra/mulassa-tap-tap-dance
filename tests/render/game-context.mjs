@@ -42,6 +42,7 @@ const document = {
   listeners: {},
   addEventListener(type, handler) { const previous = this.listeners[type]; this.listeners[type] = previous ? (...args) => { previous(...args); handler(...args); } : handler; },
   body: { appendChild() {}, classList: { contains: () => false, toggle() {} }, style: { setProperty() {}, removeProperty() {} } },
+  documentElement: { toggleAttribute() {} }, // (focus.js: <html data-keys>)
   createElement: () => ({ style: { setProperty() {} }, dataset: {}, after() {}, click() {}, setAttribute() {}, appendChild() {}, addEventListener() {}, contains: () => false, querySelectorAll: () => [], querySelector: () => ({ style: { setProperty() {} }, classList: { toggle() {} } }) }), // (ui/free-music.js listens on its own button; ui/photo-stick.js draws its stick)
   getElementById(id) {
     if (!nodes.has(id)) nodes.set(id, {

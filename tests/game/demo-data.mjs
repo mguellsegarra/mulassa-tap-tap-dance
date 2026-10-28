@@ -70,7 +70,7 @@ for (const account of ['guest', 'verified']) {
 { const s = mockLeaderboard(opts({ account: 'guest' }));
   const list = await s.seasons('mulassa-valls');
   assert.deepEqual(list.map(x => [x.seasonId, x.name, x.version, x.players]), [[1, 'Tardor 2026', 'mulassa-v3', 46], [0, 'Estrena 2026', 'mulassa-v2-short', 60]]);
-  assert.equal(list[0].endsAt - list[0].startsAt, 38 * 864e5); assert.equal(list[1].endsAt, null);
+  assert.equal(list[0].endsAt, Date.parse('2027-01-01T00:00:00+01:00'), 'the open season ends with the calendar quarter (the line\'s days left match)'); assert.equal(list[1].endsAt, null);
   assert.equal(list[0].myPosition, 18, 'the demo guest is #18'); assert.equal(list[1].myPosition, null);
   assert.equal(list[0].podium.length, 3); assert(list[0].podium.every((p, i) => p.position === i + 1 && p.name));
   assert.deepEqual((await s.seasons('drac-valls')).map(x => [x.seasonId, x.players]), [[1, 12]], 'Mulassa and Drac boards are never mixed');

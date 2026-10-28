@@ -334,7 +334,7 @@ body:has(:is(#board-menu, #seasons-menu, #account-menu)[open]) #card-menu { widt
 /* portrait phones: the % goes under the points (board-list.js .pct-sub), so the name gets its column's room: a 16-letter
    «nom#1234» with «TU» on one line from 375 px, a 16-letter verified name on one line at 320 */
 @media (max-width: 519px) {
-  /* the whole column goes, its <col> too: WebKit's fixed layout kept a width-0 column's share (iOS: the names squeezed) */
+  /* the whole column goes, its <col> too (board-list.js spans its full-width rows over 3 here): WebKit's fixed layout kept a width-0 column's share (iOS: the names squeezed) */
   :is(#board-table, .board-head) :is(.c-pct, :is(th, td):nth-child(3)) { display: none; }
   #board-table .pct-sub { display: block; margin-top: 2px; color: #e8d8b8b3; font-size: 11px; font-weight: 700; line-height: 15px; }
   #board-table tr.me .pct-sub { color: #f5c518cc; } /* 5.4:1 on the gold row (b3 was 4.5) */

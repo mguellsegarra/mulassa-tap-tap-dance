@@ -94,10 +94,15 @@ export function setupBoardList({ doc, $, service, store, focusIn, minLoad, now, 
     pts.appendChild(el('span', 'pct-sub', pct)); // portrait phones: the % under the points, its column's room goes to the name (CSS shows one)
     return trow;
   }
+  // a full-width row spans only the columns shown: portrait phones drop the % column (profile.css), and a span
+  // past the last column makes a phantom one that squeezes the rest (the own row's gold stopped short of the edge)
+  const narrow = globalThis.matchMedia?.('(max-width: 519px)');
+  const spanAll = td => { const n = narrow?.matches ? 3 : 4; td.colSpan = n; td.setAttribute?.('colspan', String(n)); };
+  narrow?.addEventListener?.('change', () => tbody.querySelectorAll?.('td[colspan]').forEach(spanAll));
   // under a guest's own row: a quiet way to keep the profile (the Perfil's e-mail step)
   function guestHint() {
     const trow = el('tr', 'me-hint'), td = trow.appendChild(doc.createElement('td'));
-    td.colSpan = 4; td.setAttribute?.('colspan', '4');
+    spanAll(td);
     const b = td.appendChild(el('button', 'btn btn-link btn-small', GUEST_ROW));
     b.type = 'button'; b.setAttribute('aria-haspopup', 'dialog');
     b.addEventListener('click', () => onKeep()); // over the board
@@ -106,7 +111,7 @@ export function setupBoardList({ doc, $, service, store, focusIn, minLoad, now, 
   // between the unbroken list and the own row's neighbours: the ranks not loaded yet, and a way to load them
   function gapRow() {
     const trow = el('tr', 'gap'), td = trow.appendChild(doc.createElement('td'));
-    td.colSpan = 4; td.setAttribute?.('colspan', '4');
+    spanAll(td);
     const btn = td.appendChild(el('button', 'btn btn-link btn-small', tr('ui.board.loadMore')));
     btn.type = 'button'; btn.addEventListener('click', () => loadMore());
     return { row: trow, btn };

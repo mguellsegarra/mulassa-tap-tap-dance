@@ -127,7 +127,8 @@ function calendar(world, now) {
   if (world === 'many') { const list = quarters(now, 12); return { seasons: [...base, ...list], open: 12, retired: { [SHORT_SCORE_VERSION]: 0, [PREVIOUS_VERSION]: 7 } }; }
   if (world === 'later') return { seasons: [...base, { id: 1, name: 'Tardor 2026', startsAt: now - 80 * DAY, endsAt: now - 3 * DAY }, { id: 2, name: 'Hivern 2027', startsAt: now - 3 * DAY, endsAt: now + 87 * DAY }],
     open: 2, retired: { [SHORT_SCORE_VERSION]: 0, [PREVIOUS_VERSION]: 1 } };
-  return { seasons: [...base, { id: 1, name: 'Tardor 2026', startsAt: now - 15 * DAY, endsAt: now + 23 * DAY }], open: 1, retired: { [SHORT_SCORE_VERSION]: 0 } };
+  // the open season is the real calendar quarter: the board's line first shows the calendar's days left, then this answer's
+  return { seasons: [...base, ...quarters(now, 1)], open: 1, retired: { [SHORT_SCORE_VERSION]: 0 } };
 }
 
 // board: null | 'empty' (the open season has no results yet) | 'me' (a long ladder with the signed-in profile at #48 of 119)

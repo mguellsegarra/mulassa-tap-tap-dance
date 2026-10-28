@@ -162,6 +162,11 @@ const guestProf = o => ({ alias: 'takeshi', tag: 3821, verified: false, publishe
   assert(c.mem.get('alias') === 'takeshi' && c.mem.get(TAG) === '3821' && c.$('profile-row').dataset.state === 'named', 'closed: still takeshi#3821');
   c.profile.open('choose'); assert(c.profile.choosing && c.$('profile-title').textContent === 'Tria el teu nom');
   c.$('profile-menu').close();
+  // an address typed on the publish sheet's offer: the steps open already sending it the code
+  { const t = make({ alias: 'takeshi', tag: 3821, session: true, prof: guestProf() }); await t.profile.refresh();
+    t.profile.open('link', null, { mail: ' Jugador@Example.com ' }); await tick(); await tick();
+    assert(t.calls.some(c => c[0] === 'send' && c[1] === 'Jugador@Example.com') && !t.$('profile-code-field').hidden, 'typed elsewhere: straight to the code');
+    t.$('profile-menu').close(); }
   // a code accepted but the server not (yet) confirming it: no claim, no step
   const n = make({ alias: 'takeshi', session: true, prof: guestProf() }); await n.profile.refresh();
   n.profile.open('link'); enter(n.$, 'profile-email', 'jugador@example.com'); n.$('profile-form').fire('submit'); await tick(); await tick();

@@ -30,6 +30,8 @@
   "ui.board.moreFailedRetry": "Не удалось загрузить ещё. Попробуй снова",
   "ui.board.nobody": "Никто не опубликовал результат.",
   "ui.board.place": "Ты №{pos} · топ {top}%!",
+  "ui.board.notNow": "Не сейчас",
+  "ui.board.placeOnly": "Ты №{pos}!",
   "ui.board.playWith": "Играть за {figure}",
   "ui.board.podiumOf": "Пьедестал: {season}",
   "ui.board.position": "Место {pos}",

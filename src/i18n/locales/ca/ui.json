@@ -30,6 +30,8 @@
   "ui.board.moreFailedRetry": "No s’han pogut carregar més. Torna-ho a provar",
   "ui.board.nobody": "Ningú no hi va publicar cap resultat.",
   "ui.board.place": "Ets el número {pos} · top {top}%!",
+  "ui.board.notNow": "Ara no",
+  "ui.board.placeOnly": "Ets el número {pos}!",
   "ui.board.playWith": "Juga amb {figure}",
   "ui.board.podiumOf": "Podi {season}",
   "ui.board.position": "Posició {pos}",

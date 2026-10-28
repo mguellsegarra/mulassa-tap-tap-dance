@@ -30,6 +30,8 @@
   "ui.board.moreFailedRetry": "Ezin izan dira gehiago kargatu. Saiatu berriro",
   "ui.board.nobody": "Inork ez zuen emaitzarik argitaratu.",
   "ui.board.place": "Zure postua: {pos} · lehen %{top} barruan!",
+  "ui.board.notNow": "Orain ez",
+  "ui.board.placeOnly": "Zure postua: {pos}!",
   "ui.board.playWith": "Jokatu: {figure}",
   "ui.board.podiumOf": "Podiuma: {season}",
   "ui.board.position": "Postua: {pos}",

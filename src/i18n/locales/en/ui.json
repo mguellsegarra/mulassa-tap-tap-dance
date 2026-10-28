@@ -30,6 +30,8 @@
   "ui.board.moreFailedRetry": "Couldn’t load more. Try again",
   "ui.board.nobody": "Nobody posted a score.",
   "ui.board.place": "You’re number {pos} · top {top}%!",
+  "ui.board.notNow": "Not now",
+  "ui.board.placeOnly": "You’re number {pos}!",
   "ui.board.playWith": "Play with {figure}",
   "ui.board.podiumOf": "{season} podium",
   "ui.board.position": "Position {pos}",

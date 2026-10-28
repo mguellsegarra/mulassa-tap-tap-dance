@@ -30,6 +30,8 @@
   "ui.board.moreFailedRetry": "Non s’an pogut cargar mès. Torna-ac a provar",
   "ui.board.nobody": "Arrés non i publiquèc cap resultat.",
   "ui.board.place": "Ès eth numèro {pos} · top {top}%!",
+  "ui.board.notNow": "Ara non",
+  "ui.board.placeOnly": "Ès eth numèro {pos}!",
   "ui.board.playWith": "Jòga damb {figure}",
   "ui.board.podiumOf": "Pòdi {season}",
   "ui.board.position": "Posicion {pos}",

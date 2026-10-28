@@ -30,6 +30,8 @@
   "ui.board.moreFailedRetry": "更多成绩加载失败，请重试",
   "ui.board.nobody": "没有人发布成绩。",
   "ui.board.place": "你排第{pos}名，前{top}%！",
+  "ui.board.notNow": "暂时不用",
+  "ui.board.placeOnly": "你排第{pos}名！",
   "ui.board.playWith": "选择{figure}开玩",
   "ui.board.podiumOf": "{season}领奖台",
   "ui.board.position": "第{pos}名",

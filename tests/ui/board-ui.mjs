@@ -42,7 +42,7 @@ const ids = ['board-menu', 'publish-menu', 'board-rows', 'board-table', 'board-s
   'results-actions', 'results-publish', 'results-board', 'publish-device', 'publish-recover',
   'board-figure', 'board-figure-pic', 'board-figure-name', 'board-picker', 'board-figures', 'board-main', 'board-place', 'board-jump', 'board-jump-t', 'board-place-sub',
   'board-publish-link', 'board-scroll', 'board-art', 'board-hint', 'board-more', 'board-more-status', 'board-more-btn', 'board-summary', 'board-publish', 'captcha-menu', 'captcha-box',
-  'publish-offer', 'publish-confirm', 'board-season', 'board-previous', 'board-seasons', 'board-play', 'board-play-name'];
+  'publish-offer', 'publish-confirm', 'publish-mail', 'board-season', 'board-previous', 'board-seasons', 'board-play', 'board-play-name'];
 const NOW = Date.parse('2026-10-20T10:00:00Z');
 let doc;
 const tick = () => new Promise(r => setTimeout(r, 0));
@@ -389,7 +389,7 @@ const BOARD = page(0, 60, 22);
   assert(![...mem.values()].some(v => /tok-/.test(v)), 'CAPTCHA tokens are never stored');
   assert.equal(calls.all, 1, 'then where they stand: the joint board');
   T.alls.at(-1).resolve([{ position: 1, alias: 'Marta', difficulty: 2, quality: 99, score: 9, is_self: false, total: 2 }, { position: 2, alias: 'Ànecd’Òdena', difficulty: 1, quality: 95, score: 5, is_self: true, total: 2 }]); await tick();
-  assert(!$('publish-place').hidden && $('publish-place').textContent === 'Ets el número 2 · top 100%!');
+  assert(!$('publish-place').hidden && $('publish-place').textContent === 'Ets el número 2!', 'two players: no «top 100%»');
   board.results(true);
   assert($('results-publish').hidden, 'a published run is not offered again');
   assert($('publish-board').hidden && $('publish-form').dataset.view === 'done', 'the success view: the two lines and only D’acord');
@@ -409,6 +409,15 @@ const BOARD = page(0, 60, 22);
   assert($('publish-menu').open, 'the success stays');
   submit($);
   assert(!$('publish-menu').open && shares.length === 1, 'D’acord closes it, nothing else');
+}
+// --- the place line: «top %» only once the board has enough players (day 0's first is not «top 100%»)
+for (const [total, line] of [[1, 'Ets el número 1!'], [20, 'Ets el número 7 · top 35%!']]) {
+  const { board, $, T, setRun } = make({ session: true, alias: 'Drac101', afterPublish: () => {} });
+  setRun(RUN); board.openPublish(); await tick(); await tick();
+  submit($); T.publishes[0].resolve({ improved: true }); await tick();
+  T.alls[0].resolve([{ position: total === 1 ? 1 : 7, alias: 'Drac101', difficulty: 1, quality: 90, score: 1, is_self: true, total }]);
+  await new Promise(r => setTimeout(r, 5));
+  assert.equal($('publish-place').textContent, line);
 }
 // --- Turnstile runs only when a token is needed (Publica for a new profile), never ahead; never a Supabase session before it
 {
@@ -804,10 +813,10 @@ const find = (el, test) => (test(el) ? el : el.children.map(c => find(c, test)).
   assert(!find(n.$('publish-status'), e => e.className?.includes?.('verified-check')), 'a guest: no check');
   assert(n.mem.get(ALIAS_KEY) === 'Drac101' && n.mem.get('leaderboard-tag') === '42', 'the name without its tag (an old tab reads it), the tag apart');
   assert.equal(n.calls.accept, 1, 'the statistics may be sent now');
-  assert(!n.$('publish-offer').hidden && n.$('publish-send').textContent === 'D’acord', 'a guest: the offer, D’acord stays');
+  assert(!n.$('publish-offer').hidden && n.$('publish-send').textContent === 'Ara no', 'a guest: the offer leads, «Ara no» closes');
   assert(n.$('publish-menu').open && !confirms.length, 'nothing opens by itself');
-  n.$('publish-confirm').click();
-  assert(!n.$('publish-menu').open && confirms.length === 1, '«Confirma el correu»: the profile sheet next');
+  n.$('publish-mail').value = ' jo@exemple.cat '; n.$('publish-confirm').click();
+  assert(!n.$('publish-menu').open && confirms.length === 1 && confirms[0].mail === 'jo@exemple.cat', '«Envia el codi»: the profile steps next, with the address');
   // a confirmed address: the check, no offer
   const v = make({ session: true, alias: 'Drac101', mail: 'jo@example.test', afterPublish: () => {}, onConfirm: () => {}, prof: { alias: 'Drac101', tag: null, verified: true, published: true } });
   v.setRun(RUN); v.board.openPublish(); await tick(); await tick();
@@ -957,7 +966,7 @@ const find = (el, test) => (test(el) ? el : el.children.map(c => find(c, test)).
   assert(/autocomplete="off"/.test(sheet('publish-menu')) && /maxlength="24"/.test(sheet('publish-menu')));
   // the offer is the done view's primary (D'acord steps down); no deadline anywhere
   assert(/id="publish-offer" class="publish-offer" hidden>[\s\S]*id="publish-confirm" type="button" class="btn btn-primary"/.test(sheet('publish-menu')), 'the offer: hidden, the primary, after the place line');
-  assert(/Ets convidat: si esborres les dades del navegador, perdràs el perfil\./.test(sheet('publish-menu')));
+  assert(/id="publish-mail"[^>]*type="email"[^>]*autocomplete="email"/.test(sheet('publish-menu')), 'the offer has its own address field');
   assert(/els totals de les teves estadístiques seran públics/.test(sheet('publish-menu')), 'publishing says the statistics\' totals go public with the profile (their notice)');
   assert(!/7 dies|caduca|temporal/.test(html.replace(/<script[\s\S]*?<\/script>/g, '')), 'no 7-day text anywhere');
   assert(/Tens un perfil amb el correu confirmat\? Recupera’l/.test(sheet('publish-menu')), 'recovery needs a confirmed address');

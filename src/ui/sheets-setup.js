@@ -138,7 +138,7 @@ const board = setupBoard({ focusIn,
   canVerify: () => G.state !== 'play' && !document.hidden, // Turnstile's tick box (src/services/captcha.js) never interrupts a song
   afterPublish: () => { refreshIdentity(service, kv).then(() => share.refreshName()); }, // the name's check follows the server's answer
   onRecover: () => profile.open('recover', () => board.openPublish()), // «Recupera’l» on the publish sheet: recover, then publish
-  onConfirm: () => profile.open('link'), // «Confirma el correu» after «Publicat!»
+  onConfirm: ({ mail } = {}) => profile.open('link', null, { mail }), // «Envia el codi» under «Publicat!»: the code goes out at once
   onKeep: () => profile.open('link'), onCard: p => card.open(p), onSeasons: f => seasons.open(f), // over the board, which stays under them
   acceptStats, currentFigure: () => select?.figure?.id,
   // «Juga amb …» on an empty board: only with the selector right under it (not over results, Perfil or the Saló de la fama)

@@ -182,7 +182,7 @@ html:not([lang="ca"]) .board-links { row-gap: 16px; } /* longer words wrap the t
 .publish-place { text-align: center; font-size: 22px; line-height: 1.25; color: #7ee081; text-wrap: balance; }
 /* the sheet's views (board-ui.js swap()): the calçot while publishing, then «Publicat!» + the place + D'acord */
 #publish-form[data-view] :is(#publish-summary, .publish-body) { display: none; }
-#publish-wait { display: none; }
+#publish-wait { display: none; overflow: hidden; } /* the legs' rotated layers reach past the spinner: no scrollbar while publishing */
 #publish-form[data-view="wait"] #publish-wait { display: block; animation: board-in .25s ease-out both; }
 #publish-form[data-view="wait"] .publish-end { display: none; }
 #publish-form[data-view="done"] :is(#publish-status, .publish-place, .sheet-actions) { animation: board-in .3s ease-out both; }
@@ -194,10 +194,13 @@ html:not([lang="ca"]) .board-links { row-gap: 16px; } /* longer words wrap the t
 #publish-form[data-view="done"] #publish-status:has(+ .publish-place:not([hidden])) { margin-bottom: 6px; }
 #publish-form[data-view="done"] .publish-place { margin: 0 0 24px; font-size: 26px; line-height: 1.2; }
 /* under a guest's «Publicat!»: why to confirm the e-mail, quietly (board-ui.js); «Confirma el correu» takes the primary and «D'acord» steps down */
-.publish-offer { margin: -12px 0 10px; text-align: center; }
-.publish-warning { margin: 0 0 18px; color: #e8d8b8; font-size: 15px; line-height: 1.35; text-wrap: balance; }
-.publish-offer > .btn > svg { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-.publish-offer:not([hidden]) + .sheet-actions > #publish-send { background: var(--button-bg); color: var(--button-text); }
+.publish-offer { display: flex; flex-direction: column; gap: 10px; margin: -4px 0 12px; padding: 14px; border: 1px solid #f5c51866; border-radius: 14px; background: #fff3d60d; text-align: left; } /* one card: the invitation and its field */
+.publish-offer-title { display: flex; align-items: center; gap: 10px; margin: 0; color: #fff3d6; font-size: 17px; }
+.publish-offer-title > svg { flex: none; width: 22px; height: 22px; fill: none; stroke: #f5c518; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.publish-warning { margin: 0; color: #e8d8b8cc; font-size: 14px; line-height: 1.35; text-wrap: pretty; }
+#publish-offer .board-label { margin-bottom: -6px; text-align: left; }
+.publish-offer > .btn-link { align-self: center; min-height: 0; padding: 2px; font-size: 13px; }
+.publish-offer:not([hidden]) + .sheet-actions > #publish-send { min-height: 44px; border-color: transparent; background: none; color: #fff3d6; text-decoration: underline; box-shadow: none; } /* «Ara no»: the card leads */
 #publish-form[data-view="done"] .publish-offer { animation: board-in .3s ease-out both; }
 @media (min-height: 501px) { #publish-menu:has(#publish-form[data-view]) { padding: 24px 24px 24px; } } /* even air all round (not the compact landscape sheet) */
 #publish-menu .sheet-actions { margin-top: 0; gap: 8px; }

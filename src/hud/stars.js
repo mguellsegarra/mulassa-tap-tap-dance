@@ -2,8 +2,10 @@
 // row centred on (x, y); `r` = the row's half-width (as big as they get without touching). `t` = seconds since the
 // results appeared: each earned star drops onto its slot, lands with a squash, a flash, a shockwave ring and sparks
 // (nothing earned: nothing moves); the third of three sets off a golden burst and the trio then twinkles.
-// Infinity = settled (the share image).
+// Infinity = settled (the share image). `twinkleOnly`: just the trio's twinkle, over a copy of the settled row.
 const DARK = '#2a1a10', START = 0.25, GAP = 0.4, FALL = 0.2;
+// From then on (s) the row is still but for the twinkle: every drop, squash, flash, ring, spark and the burst are over
+export const STARS_SETTLED = START + 2 * GAP + FALL + 1.3;
 const SPOTS = [[-0.67, 0, 0.29], [0, 0, 0.29], [0.67, 0, 0.29]]; // [dx, dy, size] in r: one row, r = its half-width
 function starPath(c, cx, cy, R) { // 5 points, the corners rounded
   const p = [];
@@ -13,8 +15,12 @@ function starPath(c, cx, cy, R) { // 5 points, the corners rounded
   p.forEach((v, j) => c.arcTo(v[0], v[1], ...mid(v, p[(j + 1) % 10]), R * 0.11));
   c.closePath();
 }
-export function drawStars(c, n, x, y, r, t = Infinity) {
+export function drawStars(c, n, x, y, r, t = Infinity, twinkleOnly = false) {
   const live = Number.isFinite(t), T = live ? t : 99, last = T - START - 2 * GAP - FALL; // last: since the 3rd star landed
+  if (twinkleOnly) {
+    if (live && n === 3 && last > 0.6) SPOTS.forEach(([dx, dy, k], i) => twinkleStar(c, x + dx * r, y + dy * r, r * k, T, i));
+    return;
+  }
   if (n === 3 && live && last > 0 && last < 1.3) { // the golden burst behind the trio
     const g = c.createRadialGradient(x, y, 0, x, y, r * (1 + last * 1.4));
     g.addColorStop(0, `rgba(255,224,110,${0.55 * (1 - last / 1.3)})`); g.addColorStop(1, 'rgba(255,224,110,0)');
@@ -54,9 +60,10 @@ export function drawStars(c, n, x, y, r, t = Infinity) {
       c.beginPath(); c.arc(cx + Math.cos(a) * d, cy + Math.sin(a) * d, R * (grand ? 0.13 : 0.1) * (1 - w), 0, 7); c.fill();
       c.globalAlpha = 1;
     }
-    if (live && n === 3 && last > 0.6) { // then the trio twinkles, one star at a time
-      const s = Math.sin(T * 2.4 - i * 2.1), tw = s > 0.75 ? (s - 0.75) * 4 : 0, sx = cx + R * 0.55, sy = cy - R * 0.55, z = R * 0.5 * tw;
-      if (tw) { c.fillStyle = `rgba(255,255,255,${tw})`; c.beginPath(); c.moveTo(sx, sy - z); c.lineTo(sx + z * 0.25, sy - z * 0.25); c.lineTo(sx + z, sy); c.lineTo(sx + z * 0.25, sy + z * 0.25); c.lineTo(sx, sy + z); c.lineTo(sx - z * 0.25, sy + z * 0.25); c.lineTo(sx - z, sy); c.lineTo(sx - z * 0.25, sy - z * 0.25); c.closePath(); c.fill(); }
-    }
+    if (live && n === 3 && last > 0.6) twinkleStar(c, cx, cy, R, T, i); // then the trio twinkles, one star at a time
   });
+}
+function twinkleStar(c, cx, cy, R, T, i) {
+  const s = Math.sin(T * 2.4 - i * 2.1), tw = s > 0.75 ? (s - 0.75) * 4 : 0, sx = cx + R * 0.55, sy = cy - R * 0.55, z = R * 0.5 * tw;
+  if (tw) { c.fillStyle = `rgba(255,255,255,${tw})`; c.beginPath(); c.moveTo(sx, sy - z); c.lineTo(sx + z * 0.25, sy - z * 0.25); c.lineTo(sx + z, sy); c.lineTo(sx + z * 0.25, sy + z * 0.25); c.lineTo(sx, sy + z); c.lineTo(sx - z * 0.25, sy + z * 0.25); c.lineTo(sx - z, sy); c.lineTo(sx - z * 0.25, sy - z * 0.25); c.closePath(); c.fill(); }
 }

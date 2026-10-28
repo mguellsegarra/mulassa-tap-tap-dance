@@ -98,8 +98,10 @@ function frame(now) {
   clearCameraImpact();
   // The previous draw's cost belongs to this interval. Apply profile/DPR changes before drawing: resize clears both canvases.
   monitorFrames.scope(PHOTO.on); // free play's drops are its own: leaving it restores the level (a trial)
+  // the song's over during its closing chant (eeeh): nothing left to protect, and a step down there (a resize, every HUD
+  // sprite repainted) cost a Galaxy S10 a 100 ms hitch on top of the chant's own new sprites
   monitorFrames(now - last, qualityCost, pace, G.state === 'play',
-    drawn && !coverUp && !loader.covering && !renderer.getContext().isContextLost(), G.state === 'play' && !G.paused);
+    drawn && !coverUp && !loader.covering && !renderer.getContext().isContextLost() && !(G.state === 'play' && G.eeeh), G.state === 'play' && !G.paused);
   const frameS = (now - last) / 1000, dt = G.paused ? 0 : Math.min(0.05, frameS); // frameS: real seconds since the last drawn frame
   const heard = chip?.t0 != null ? chip.now(RAWCLOCK ? undefined : now) : -1; // the song at this frame's time (de-stepped: smooth notes)
   last = now;

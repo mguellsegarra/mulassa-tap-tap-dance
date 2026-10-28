@@ -1,5 +1,5 @@
 // The results screen.
-import { drawStars } from './stars.js';
+import { drawStars, STARS_SETTLED } from './stars.js';
 import { qualityText } from '../game/progress.js';
 import { comparableScore } from '../game/score-scale.js';
 import { SITE_LABEL } from '../services/share.js';
@@ -7,7 +7,7 @@ import { sheets } from '../ui/sheets.js';
 import { G, clock } from '../game/state.js';
 import { H, W, HH, SAFE, K } from './canvas.js';
 import { panel, text, textWidth } from './primitives.js';
-import { C } from './sprites.js';
+import { C, devScale, sprite } from './sprites.js';
 import { trf } from '../game/figure-theme.js';
 import { elastic } from './praise.js';
 import { sparkle, tipChip } from './title.js';
@@ -44,6 +44,19 @@ function placeResultsRow(yCss) {
   const v = `${Math.round(yCss)}px`;
   if (v !== resultsTop) { resultsTop = v; resultsRow.style.top = v; resultsRow.style.bottom = 'auto'; }
 }
+// Settled, the stars' soft shadows (a Gaussian blur each, redrawn every frame: a Galaxy S10 fell to ~40 fps) are painted
+// once into a sprite at this device scale and copied 1:1 onto whole device pixels, painted with the row's sub-pixel
+// offset so its edges match a direct draw; only the twinkle is drawn live over it
+function resultStars(n, x, y, r, t) {
+  const k = t > STARS_SETTLED && devScale();
+  if (!k) return drawStars(H, n, x, y, r, t);
+  const m = H.getTransform(), ox = m.a * (x - r * 1.3) + m.e, oy = m.d * (y - r * 0.6) + m.f; // the sprite's corner, in device px
+  const fx = Math.round((ox - Math.floor(ox)) * 8) / 8, fy = Math.round((oy - Math.floor(oy)) * 8) / 8;
+  const sp = sprite(`stars|${n}|${r}|${k}|${fx}|${fy}`, k, () => ({ w: r * 2.6, h: r * 1.2 }), c => drawStars(c, n, r * 1.3 + fx / k, r * 0.6 + fy / k, r));
+  if (!sp) return drawStars(H, n, x, y, r, t);
+  H.save(); H.setTransform(1, 0, 0, 1, 0, 0); H.drawImage(sp.c, Math.floor(ox), Math.floor(oy)); H.restore();
+  drawStars(H, n, x, y, r, t, true);
+}
 export function drawResults() {
   H.fillStyle = 'rgba(42,26,16,0.4)'; H.fillRect(0, 0, W, HH);
   const lost = G.reason === 'collapse'; // a collapse is a defeat: no stars, no quality % (they would read as a pass)
@@ -71,7 +84,7 @@ export function drawResults() {
   const rule = y => { H.fillStyle = 'rgba(245,197,24,0.35)'; H.fillRect(x0 + 12, y, pw - 24, 1); };
   rule(y0 + 46);
   // the stars are the hero: centred under the title, then the stats in full-width rows (like a mobile game's win card)
-  if (!lost) { drawStars(H, G.stars, W / 2, y0 + 46 + STAR_H / 2, 84, clock - G.resT); /* the earned ones drop in one by one */ rule(y0 + 46 + STAR_H); }
+  if (!lost) { resultStars(G.stars, W / 2, y0 + 46 + STAR_H / 2, 84, clock - G.resT); /* the earned ones drop in one by one */ rule(y0 + 46 + STAR_H); }
   const by = y0 + 54 + STAR_H, bh = row * 5, sx = x0 + 26, ex = x0 + pw - 26;
   [[trf('hit.both'), G.counts.perfect, C.gold], [RES.good, G.counts.good, C.cream], [RES.miss, G.counts.miss, C.blue], [RES.streak, G.maxCombo, C.pink], [RES.points, comparableScore(G.score, G.diff, G.figureVersion), C.score]]
     .forEach(([s, v, c], i) => {

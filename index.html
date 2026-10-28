@@ -570,7 +570,7 @@
     </ol>
     <div class="sheet-actions"><button id="free-fs-ok" type="button" class="btn btn-primary" data-i18n="html.freeFsGo">Ho entenc, continuo així</button></div>
   </div>
-  <p class="ios-bubble" aria-hidden="true"><span class="ios-key"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7.5h14M5 12h13M5 16.5h9"/></svg></span><span data-i18n="html.iosBubble">Comença aquí, a la barra de Safari</span></p><!-- points down at Safari's bar, under the page -->
+  <p class="ios-bubble" aria-hidden="true" data-i18n-rich="html.rich.iosBubble">Toca <b><i></i></b> aquí baix → <b><i></i> Comparteix</b> → <b><i></i> Afegeix a la pantalla d’inici</b></p><!-- points down at Safari's bar, under the page -->
 </dialog>
 <dialog id="free-hint-menu" class="sheet hint-menu" tabindex="-1" aria-labelledby="free-hint-title" aria-describedby="free-hint-text">
   <button id="free-hint-close" type="button" data-i18n-attr="aria-label:html.attr.close" class="sheet-x" aria-label="Tanca"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
@@ -579,6 +579,7 @@
     <h2 id="free-hint-title" data-i18n="html.viewmode.aria">Joc lliure</h2>
     <p id="free-hint-text" class="board-text" data-i18n="html.rotate.photo">Gira el mòbil en horitzontal per ballar per la plaça</p>
   </div>
+  <div id="free-hint-home" class="ios-bubble" hidden><button type="button" id="free-hint-home-go" class="ios-bubble-go" data-i18n-rich="html.rich.iosBubble">Toca <b><i></i></b> aquí baix → <b><i></i> Comparteix</b> → <b><i></i> Afegeix a la pantalla d’inici</b></button></div><!-- Safari only: the steps, then back to the turn -->
 </dialog>
 <!-- «Música en pausa» (src/ui/audio-resume.js): back from another app, iOS keeps the sound stopped until a tap; no X, any tap resumes -->
 <dialog id="audio-resume-menu" class="sheet hint-menu" tabindex="-1" aria-labelledby="audio-resume-title" aria-describedby="audio-resume-text">

@@ -9,12 +9,12 @@ const button = () => ({ addEventListener(k, f) { this.h = f; } });
 function make(o = {}) {
   const on = {}, fire = k => on[k]?.forEach(f => f()), up = { v: true };
   const turn = dialog(), fs = dialog();
-  const ok = button(), fsX = button(), turnX = button();
-  const els = { 'free-hint-menu': turn, 'free-fs-menu': fs, 'free-fs-ok': ok, 'free-fs-close': fsX, 'free-hint-close': turnX };
+  const ok = button(), fsX = button(), turnX = button(), home = { hidden: false }, homeGo = button();
+  const els = { 'free-hint-menu': turn, 'free-fs-menu': fs, 'free-fs-ok': ok, 'free-fs-close': fsX, 'free-hint-close': turnX, 'free-hint-home': home, 'free-hint-home-go': homeGo };
   let entered = 0, focused = null;
   const gate = setupFreeGate({ focusIn: (m, id) => (focused = id), onEnter: () => entered++, ua: IPHONE, standalone: false, portrait: () => up.v,
     doc: { getElementById: id => els[id] }, listen: (k, f) => (on[k] ||= []).push(f), ...o });
-  return { gate, turn, fs, ok, fsX, turnX, up, fire, get entered() { return entered; }, get focused() { return focused; } };
+  return { gate, turn, fs, ok, fsX, turnX, home, homeGo, up, fire, get entered() { return entered; }, get focused() { return focused; } };
 }
 
 // not an iPhone, or already sideways: free play goes straight in
@@ -41,4 +41,8 @@ const c = make(); c.gate.ask(); c.fsX.h(); assert.deepEqual([c.fs.open, c.turn.o
 { const mem = new Map(), kv = { get: k => mem.get(k) ?? null, set: (k, v) => mem.set(k, v) };
   const d = make({ store: kv }); d.gate.ask(); assert(d.fs.open && !d.turn.open, 'first time: the recommendation'); d.fsX.h();
   const e = make({ store: kv }); e.gate.ask(); assert(!e.fs.open && e.turn.open, 'seen: straight to the turn sheet'); }
+// the turn sheet in Safari points back at the steps; «Ho entenc» there asks for the turn again
+{ const f = make(); f.gate.ask(); f.ok.h(); assert.equal(f.home.hidden, false, 'Safari: the bubble shows');
+  f.homeGo.h(); assert.deepEqual([f.turn.open, f.fs.open], [false, true]); f.ok.h(); assert.deepEqual([f.fs.open, f.turn.open], [false, true]); }
+assert.equal(make({ standalone: true }).home.hidden, true, 'the home-screen app: no bubble');
 console.log('free-gate ok');

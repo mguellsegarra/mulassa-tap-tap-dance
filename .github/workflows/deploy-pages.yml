@@ -77,6 +77,10 @@ jobs:
       - run: npm ci
       # checks + vite build + the Pages allowlist artifact in dist/
       - run: npm run build:pages
+      # beta link previews show beta's own page and og.jpg; canonical and JSON-LD keep naming production
+      - name: Point beta link previews at beta
+        if: env.CHANNEL == 'beta'
+        run: find dist -name '*.html' -exec sed -i -E 's#((property="og:(url|image)"|name="twitter:image") content=")https://mulassa\.cat#\1https://beta.mulassa.cat#' {} +
       - name: Deploy dist/
         run: npx --yes wrangler@4.142.0 pages deploy dist --project-name mulassa-tap-tap-dance --branch ${{ env.CHANNEL == 'production' && 'main' || 'beta' }} --commit-dirty=true
         env:

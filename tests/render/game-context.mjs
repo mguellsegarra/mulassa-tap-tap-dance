@@ -89,6 +89,7 @@ const context = vm.createContext({
   THREE: { ...THREE, WebGLRenderer: Renderer }, ...await import('../../src/scene/crowd-fx.js'), ...models, ...chart, ...progress, ...stars,
   PROFILES, initialQuality, renderDpr, frameMonitor, hudScale, framePacer, smoothClock, profileAt, hudBudget, isSoftwareRenderer, probeRenderer, Chip: class { constructor(song, opts) { context.chipOpts = opts; } menu() {} setMenuMusic(on) { (context.menuMusicCalls ||= []).push(on); } }, ...practice, ...energy, ...bubblesLogic, ...framing, ...dance, ...logoMotionLogic, ...orbitLogic, setupSync: hooks => { context.syncHooks = hooks; return context.syncSheet = { open: false, show() { this.open = true; } }; },
   pixelSvg: () => '<svg></svg>', // src/ui/select-ui.js (provided)
+  curtain: swap => swap(), curtainCover() {}, // src/ui/curtain.js (provided: its timing is tests/ui/curtain.mjs's; here free play's switch runs at once)
   setupSelect: opts => (context.selectScreen = { opts, sheetOpen: false, visible(on) { this.shown = on; }, refocus() {} }),
   setupBoard: opts => (context.boardSheet = { opts, open: false, configured: true, shown: [], opened: [], results(show) { this.shown.push(show); }, publishable: false,
     openBoard(back) { this.open = true; this.opened.push(back); this.back = back; }, verifyStarts: 0, verifyStart() { this.verifyStarts++; },

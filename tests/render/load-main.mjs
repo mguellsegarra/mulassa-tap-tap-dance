@@ -13,7 +13,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '../../src');
 const PROVIDED = new Set(`song-mulassa.json song-drac.json platform/polyfills.js platform/render-quality.js platform/audio.js platform/audio-load.js services/errors.js
   services/leaderboard-result.js services/leaderboard.js services/leaderboard-identity.js services/share.js game/chart.js game/progress.js game/practice.js game/energy.js game/dance.js
   game/bubble-rules.js figures/drac/dance-drac.js figures/drac/drac-feet.js figures/drac/drac-motion.js hud/stars.js hud/logo-motion.js scene/models.js figures/drac/drac.js scene/balloon3d.js scene/framing.js scene/orbit.js
-  hud/share-card.js scene/crowd-fx.js ui/select-ui.js ui/board-ui.js ui/publish-ui.js ui/profile-ui.js ui/share-ui.js ui/feedback-ui.js ui/sync-sheet.js ui/loader.js ui/sheet-fade.js
+  hud/share-card.js scene/crowd-fx.js ui/select-ui.js ui/board-ui.js ui/publish-ui.js ui/profile-ui.js ui/share-ui.js ui/feedback-ui.js ui/sync-sheet.js ui/loader.js ui/sheet-fade.js ui/curtain.js
   ui/account-ui.js ui/seasons-ui.js ui/season-end-ui.js ui/player-card.js services/stats-sync.js
   figures/bou/bou-dance.js figures/bou/bou-feet.js figures/bou/bou-rig.js figures/bou/bou-motion.js figures/bou/bou.js
   figures/drac/drac-path.js figures/drac/drac-steps.js figures/drac/drac-pose.js figures/drac/drac-time.js figures/drac/drac-layout.js figures/drac/drac-rig.js figures/drac/drac-groove.js figures/drac/drac-legs.js figures/drac/drac-colla.js figures/common/colla.js figures/mulassa/mula-colla.js figures/bou/bou-colla.js

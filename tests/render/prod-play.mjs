@@ -43,7 +43,10 @@ try {
   await step('prev'); await step('prev');
   assert.equal(await selected(), 'mulassa-valls');
   await page.waitForFunction(() => !document.getElementById('select-next').disabled, null, { timeout: 10000 });
-  await page.click('#select-next', { force: true });
+  // a tap while the strip still moves is ignored (nextStep's busy guard): tap again until the level step opens
+  for (let tries = 0; tries < 10 && !(await page.evaluate(() => document.getElementById('select-next').hidden)); tries++) {
+    await page.click('#select-next', { force: true }); await page.waitForTimeout(600);
+  }
   await page.locator('#select-act button:visible').first().click({ force: true });
   await page.getByText('A BALLAR', { exact: false }).click({ force: true });
   await page.waitForFunction(() => window.__dbg.G.state === 'play', null, { timeout: 30000 });

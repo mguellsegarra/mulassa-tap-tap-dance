@@ -74,7 +74,6 @@
   "ui.feedback.tooLong": "최대 {n}자",
   "ui.feedback.tooShort": "최소 {n}자",
   "ui.feedback.unavailable": "메시지함을 이용할 수 없어요. holi@mulassa.cat으로 보내주세요.",
-  "ui.fps.lowPower": "절전 모드?",
   "ui.level.accuracy": "정확도 {pct}%",
   "ui.level.bare": "{level} 기록 없음",
   "ui.level.first": "처음 완주한 춤이 내 기록이 돼요",

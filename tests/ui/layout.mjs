@@ -12,16 +12,6 @@ const out = [0, 0, 0], peak = [0, 0, 0, 0];
 for (let b = 0; b < 8; b += 0.01) { popsAt(b, out); assert(out.filter(Boolean).length <= 1, `one word at a time (${b})`); out.forEach((x, i) => { peak[i] = Math.max(peak[i], x); }); if (Math.floor(b) % 4 === 3) assert(out.every(x => x === 0), 'a rest on the fourth beat'); }
 assert(peak.slice(0, 3).every(x => x > 0.03 && x <= POP.max) && popsAt(0.9, out)[0] < 0.02, 'small pops that settle within the beat');
 assert(popsAt(NaN, out).every(x => x === 0), 'no beat (reduced motion): still');
-// «Mostra els FPS» (#fps, bottom-left): its widest state («30 FPS» + «mode d’estalvi?») stays left of the «Com es juga?»
-// pill on portrait phones from 360 px (the hint wraps under max-width: the box is at most 8 + max-width + 16 wide)
-{
-  const { readFileSync } = await import('node:fs');
-  const html = readPage();
-  const font = Number(html.match(/#fps \{[^}]*font: 700 (\d+)px/)?.[1]), maxEm = Number(html.match(/max-width: 519px\) \{ #fps \{ max-width: ([\d.]+)em/)?.[1]);
-  assert(font && maxEm, '#fps font size and phone max-width');
-  const right = 8 + maxEm * font + 7 + 6 + 3; // left + text + padding + border
-  for (const cw of [360, 375, 393, 412, 430]) assert(right + 4 <= cw / 2 - 170 / 2, `${cw} px: the FPS box (to ${right} px) clears the pill`);
-}
 // Every CSS comment closes before the next one opens: an unclosed `/*` silently swallowed the selector's fan rules.
 for (const [, css] of readPage().matchAll(/<style>([\s\S]*?)<\/style>/g)) {
   for (const after of css.split('/*').slice(1)) assert(after.includes('*/'), `unclosed CSS comment: /*${after.slice(0, 60)}`);
@@ -34,4 +24,4 @@ for (const [, css] of readPage().matchAll(/<style>([\s\S]*?)<\/style>/g)) {
   assert.match(html, /<meta name="apple-mobile-web-app-status-bar-style" content="black">/);
   assert(!/\bbody::(before|after)\b/.test(html), 'body::before/::after must not cover the safe areas');
 }
-console.log('splash logo motion, FPS and CSS layout contracts ok');
+console.log('splash logo motion and CSS layout contracts ok');

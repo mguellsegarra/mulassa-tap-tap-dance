@@ -52,7 +52,7 @@ export function setupLang({ store, state, location = globalThis.location, doc = 
     clearInterval(timer); timer = setInterval(flush, 500); flush();
   }
 
-  // --- ⚙ Configuració: a flat row beside «Mostra els FPS» (same .switch-row) with the native <select> transparent over all of it (iOS opens its own wheel); endonyms, `lang`/`dir` on each option
+  // --- ⚙ Configuració: a flat row (.switch-row) with the native <select> transparent over all of it (iOS opens its own wheel); endonyms, `lang`/`dir` on each option
   const pick = mk('div', { className: 'switch-row lang-pick', id: 'settings-lang' });
   const endo = mk('span', { className: 'endo' });
   const left = mk('span', { className: 'l' }, LANG_GLOBE), right = mk('span', { className: 'v' });

@@ -74,7 +74,6 @@
   "ui.feedback.tooLong": "Máximo de {n} caracteres",
   "ui.feedback.tooShort": "Mínimo de {n} caracteres",
   "ui.feedback.unavailable": "A caixa de mensagens está indisponível. Escreve para holi@mulassa.cat.",
-  "ui.fps.lowPower": "modo de poupança?",
   "ui.level.accuracy": "{pct}% de acertos",
   "ui.level.bare": "Sem recorde em {level}",
   "ui.level.first": "A primeira dança completa será o teu recorde",

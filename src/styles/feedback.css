@@ -20,9 +20,9 @@
 #viewmode { z-index: 3; transition: opacity .25s; }
 #viewmode[aria-pressed="true"].idle:not(:hover, :focus-visible) { opacity: .25; transition-duration: 1s; } /* the exit, the radio and the ? dim together */
 #viewmode[aria-pressed="false"] .off, #viewmode[aria-pressed="true"] .on { display: none; }
-:is(#hud, #settings, #free, #music, #howto, #fps) { transition: opacity .2s; }
-body.view-mode :is(#hud, #settings, #free, #music, #howto, #fps) { opacity: 0; }
-body.view-mode :is(#settings, #free, #music, #howto, #fps) { visibility: hidden; pointer-events: none; transition: opacity .2s, visibility 0s .2s; } /* (main.js also makes them inert) */
+:is(#hud, #settings, #free, #music, #howto) { transition: opacity .2s; }
+body.view-mode :is(#hud, #settings, #free, #music, #howto) { opacity: 0; }
+body.view-mode :is(#settings, #free, #music, #howto) { visibility: hidden; pointer-events: none; transition: opacity .2s, visibility 0s .2s; } /* (main.js also makes them inert) */
 #curtain { position: fixed; inset: 0; z-index: 45; background: #140c07; opacity: 0; pointer-events: none; transition: opacity .25s ease-out; } /* (ui/curtain.js: over free play's way in and out) */
 #curtain.down { opacity: 1; transition: opacity 90ms ease-in; } #curtain.now { transition: none; }
 /* Keep the painted column's centre at 40% of the game's safe height. */
@@ -118,7 +118,7 @@ body.view-mode:has(#viewmode.idle) #howto.photo-help:not(:hover, :focus-visible)
 @media (prefers-reduced-motion: reduce) { #photo-tip { transition: none; } }
 @media (max-width: 899px) { #photo-figs .pf-nb { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); } } /* a narrow window: portraits only, clear of the eye (the names stay for screen readers) */
 @media (prefers-reduced-motion: reduce) { #photo-figs { transition: none; } }
-@media (prefers-reduced-motion: reduce) { #curtain, #viewmode, :is(#hud, #settings, #free, #music, #howto, #fps), body.view-mode :is(#settings, #free, #music, #howto, #fps) { transition: none; } }
+@media (prefers-reduced-motion: reduce) { #curtain, #viewmode, :is(#hud, #settings, #free, #music, #howto), body.view-mode :is(#settings, #free, #music, #howto) { transition: none; } }
 /* the sheet: a scrolling body (title … rights note) over a footer that always shows (status, Envia, Ara no). Every text
    is centred on one column (max 34em, balanced lines); only the typing inside the fields is left-aligned */
 #feedback-menu { width: min(420px, calc(100vw - 32px - var(--sal) - var(--sar))); max-height: calc(100dvh - 32px - var(--sat) - var(--sab)); padding: 0; } /* the X on the corner (the shared .sheet-x): the frame doesn't clip, .feedback-scroll scrolls */

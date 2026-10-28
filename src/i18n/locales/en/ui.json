@@ -74,7 +74,6 @@
   "ui.feedback.tooLong": "Maximum {n} characters",
   "ui.feedback.tooShort": "Minimum {n} characters",
   "ui.feedback.unavailable": "The inbox is unavailable. You can email holi@mulassa.cat.",
-  "ui.fps.lowPower": "power saving?",
   "ui.level.accuracy": "{pct}% hits",
   "ui.level.bare": "No best on {level}",
   "ui.level.first": "Your first complete dance will be your personal best",

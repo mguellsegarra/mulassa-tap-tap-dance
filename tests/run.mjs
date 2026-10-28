@@ -1,5 +1,5 @@
 // The project's test suite (npm run check): every *.mjs under tests/ that no other test imports (an imported one is part of
-// its importer, e.g. render-quality.mjs's `import './fps.mjs'`), plus check.mjs and the Python tests below, so a new test
+// its importer, e.g. render-quality.mjs's `import './finale-effects.mjs'`), plus check.mjs and the Python tests below, so a new test
 // only needs its file. Tests run in parallel (`--jobs=N`, default half the idle cores; each test's output is printed whole when it
 // ends), FIRST first; ALONE ones (they time themselves or drive the GPU) run one by one afterwards. Every test runs even
 // after a failure, and the failures are listed at the end. Arguments filter by path: `node tests/run.mjs drac` (any path

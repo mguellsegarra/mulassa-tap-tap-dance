@@ -497,46 +497,7 @@ run(`var fwGap = (() => {
   return s0.reduce((m, s, i) => s[2] > 0.85 ? Math.max(m, a[i].distanceTo(b[i])) : m, 0);
 })()`);
 assert(run('fwGap') < 0.05, `fireworks fly the same at 60 and 120 fps (${run('fwGap').toFixed(3)} m apart)`);
-// «Mostra els FPS»: off by default; the ⚙ switch shows it and remembers it; just the number, ~4 updates a second,
-// on the title, selector and in play; a ~30 Hz display (iOS Low Power Mode) gets a short hint.
-{
-  const saved = {};
-  context.localStorage = { getItem: k => saved[k] ?? null, setItem: (k, v) => { saved[k] = String(v); } };
-  const fps = nodes.get('fps'), sw = nodes.get('settings-fps');
-  let raised = 0, lowered = 0;
-  fps.showPopover = () => raised++;
-  fps.hidePopover = () => lowered++;
-  run(`G.state = 'play'; fpsTick(0);`);
-  assert(fps.hidden && !sw.checked, 'FPS readout off by default');
-  sw.checked = true; sw.listeners.change();
-  assert.equal(saved.fps, 'on', 'the switch is remembered');
-  run('for (let i = 0; i <= 45; i++) fpsTick(1000 + i * 1000 / 60);');
-  assert(!fps.hidden && fps.textContent === '60 FPS' && fps.dataset.l === 'ok', `a plain number (${fps.textContent})`);
-  assert.equal(raised, 1, 'FPS enter the top layer once, not every frame');
-  for (const fn of windowHandlers.toggle || []) fn({ target: { tagName: 'DIALOG' } });
-  run('fpsTick(1760);');
-  assert.equal(raised, 2, 'opening a dialog raises FPS above its backdrop');
-  assert.equal(lowered, 1, 'reorder the existing readout instead of creating a duplicate');
-  run('for (let i = 46; i <= 60; i++) fpsTick(1000 + i * 1000 / 60);'); // an 8th of a second more: not redrawn yet
-  run(`G.state = 'play'; pace.lowPower = true; pace.fps = 30; for (let i = 1; i <= 30; i++) fpsTick(2000 + i * 1000 / 30);`); // (the hint is a run's: the selector keeps its rail clean)
-  assert.equal(fps.textContent, '30 FPS\nmode d’estalvi?', 'Low Power Mode hint at ~30 Hz');
-  run(`pace.lowPower = false; pace.fps = 120; for (let i = 1; i <= 60; i++) fpsTick(3000 + i * 1000 / 60);`);
-  assert(fps.textContent === '60 FPS' && fps.dataset.l === 'low', '60 of a 120 target reads red');
-  run(`G.state = 'select'; pace.fps = 60; for (let i = 1; i <= 60; i++) fpsTick(4000 + i * 1000 / 60);`);
-  assert(!fps.hidden && fps.textContent === '60 FPS', 'remembered FPS remain visible on the character selector');
-  assert.equal(fps.style.top, `${8 + run('SAFE.t')}px`, 'selector FPS own a fixed top rail');
-  assert.equal(fps.style.bottom, 'auto', 'selector FPS never anchor to the changing action row');
-  run(`G.state = 'play'; fpsTick(6200);`);
-  assert.equal(fps.style.top, 'auto', 'playing restores the original pad-relative placement');
-  assert(!fps.hidden, 'FPS remain visible during a run');
-  run(`G.state = 'results'; fpsTick(6500);`);
-  assert(fps.hidden, 'hidden on the results screen (its buttons own the bottom)');
-  assert.equal(lowered, 2, 'results also remove FPS from the top layer');
-  sw.checked = false; sw.listeners.change(); run(`G.state = 'select'; pace.fps = 60; fpsTick(6800);`);
-  assert(fps.hidden && saved.fps === 'off', 'switched off: gone and remembered');
-  delete fps.showPopover; delete fps.hidePopover;
-}
-console.log('frame-rate independence and FPS readout ok');
+console.log('frame-rate independence ok');
 
 // Selector input stays locked to its showreel; the splash accepts the entry gesture.
 {
@@ -589,7 +550,7 @@ console.log('selector camera lock and splash entry ok');
   btn.setAttribute = (a, v) => { attrs[a] = v; };
   btn.classList = { add: c => idle.add(c), remove: c => idle.delete(c), toggle() {} };
   let focused = null; btn.focus = () => { focused = btn; };
-  const HIDES = ['settings', 'music', 'howto', 'fps'];
+  const HIDES = ['settings', 'music', 'howto'];
   const keyDown = code => keyHandlers.forEach(h => h({ code, target: { tagName: 'BODY' }, preventDefault() {} }));
   const up = id => (windowHandlers.pointerup || []).forEach(h => h({ pointerId: id }));
   const ev = (id, x, y) => ({ pointerId: id, clientX: x * k, clientY: y * k, pointerType: 'touch', button: 0, preventDefault() {} });

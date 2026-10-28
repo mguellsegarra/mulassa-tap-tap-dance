@@ -47,7 +47,6 @@ import './ui/pad.js';
 import './ui/focus.js';
 import './ui/fullscreen.js';
 import { updateControls, viewMode, viewT, hudBlank, setHudBlank, steers, setView, freeDance } from './ui/controls.js';
-import { fpsTick } from './ui/fps.js';
 import { debugAction } from './dev/debug.js';
 import { drawHud } from './hud/draw.js';
 import { watchAudio } from './ui/pause-actions.js';
@@ -98,7 +97,6 @@ function frame(now) {
   // The previous draw's cost belongs to this interval. Apply profile/DPR changes before drawing: resize clears both canvases.
   monitorFrames(now - last, qualityCost, pace, G.state === 'play',
     drawn && !coverUp && !loader.covering && !renderer.getContext().isContextLost(), G.state === 'play' && !G.paused);
-  fpsTick(now);
   const frameS = (now - last) / 1000, dt = G.paused ? 0 : Math.min(0.05, frameS); // frameS: real seconds since the last drawn frame
   const heard = chip?.t0 != null ? chip.now(RAWCLOCK ? undefined : now) : -1; // the song at this frame's time (de-stepped: smooth notes)
   last = now;

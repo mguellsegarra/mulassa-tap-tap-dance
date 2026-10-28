@@ -204,7 +204,7 @@ function AUDIT({ lang, loader, catWords, shared }) {
   const add = (kind, severity, el, measure, text) => out.push({ kind, severity, selector: typeof el === 'string' ? el : el ? sel(el) : null, measure, text: text ? String(text).slice(0, 90) : undefined });
   const modal = [...document.querySelectorAll('dialog[open]')].filter(d => d.matches(':modal')).pop();
   const root = modal || document.body, vw = innerWidth, vh = innerHeight;
-  const skip = el => el.closest('#review-panel, #fps, script, style, template, noscript, .sr-only');
+  const skip = el => el.closest('#review-panel, script, style, template, noscript, .sr-only');
   const srOnly = el => { for (let p = el; p && p !== document.body; p = p.parentElement) { const r = p.getBoundingClientRect(); if (r.width <= 1 && r.height <= 1 && getComputedStyle(p).overflow !== 'visible' || getComputedStyle(p).clipPath === 'inset(50%)') return true; } return false; }; // visually hidden on purpose, read by screen readers
   const vis = el => el.checkVisibility?.({ checkOpacity: true, checkVisibilityCSS: true }) && !skip(el) && !srOnly(el);
   const scrollers = el => { const r = []; for (let p = el.parentElement; p && p !== root.parentElement; p = p.parentElement) { const o = getComputedStyle(p); if (/(auto|scroll)/.test(o.overflowX + o.overflowY)) r.push(p); } return r; };

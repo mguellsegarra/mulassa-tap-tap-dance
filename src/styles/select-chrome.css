@@ -1,4 +1,4 @@
-/* The selector's header (logo, corner row, FPS rail), the desktop strip and step 2's podium. */
+/* The selector's header (logo, corner row), the desktop strip and step 2's podium. */
 /* The selector's header: the title's lettering top-left (index.html .sel-logo, still and not a control), the four corner
    buttons in one row on the right, free play first (#free: the gamepad), sound (music), then ⚙ (Perfil and the Bústia live in it) (#viewmode shows only inside
    free play, as the exit at the row's right end, the radio and ? beside it; the
@@ -43,15 +43,6 @@ body:has(#select:not([hidden])) :is(#free, #music, #settings) { --cb-r: calc(var
 }
 
 .sel-card.later { content-visibility: auto; contain-intrinsic-size: auto 128px auto 200px; } /* the off-screen pending cards skip their layout and paint: opening the selector with 30-odd cards cost ~150 ms on an iPhone */
-
-/* FPS own a rail, independent of the selected figure, difficulty and footer actions. */
-body.fps-on:has(#select:not([hidden])) { --fps-rail: 24px; }
-body.fps-on:has(#select:not([hidden])) :is(#free, #music, #settings, #viewmode), body.fps-on #select > .sel-logo { translate: 0 var(--fps-rail); }
-body.fps-on #select:not([data-header-inline]) > :is(.sel-towns, .sel-info) { translate: 0 var(--fps-rail); }
-body.fps-on #select .sel-info { max-height: calc(100% - var(--info-top) - var(--info-dock, var(--dock-h)) - 6px - env(safe-area-inset-top) - env(safe-area-inset-bottom) - var(--fps-rail)); }
-@media (max-height: 500px) {
-  body.fps-on #select .sel-pending { top: calc((100% + 60px + env(safe-area-inset-top) + var(--fps-rail) - 8px - env(safe-area-inset-bottom)) / 2); --pending-max: calc(100% - 68px - env(safe-area-inset-top) - env(safe-area-inset-bottom) - var(--fps-rail)); max-height: var(--pending-max); }
-}
 
 /* Desktops: a bigger logo, its letters on the info's left edge, its top on the corner buttons' top */
 /* One line, 56 px: it ends above the towns' row (84 px), which keeps its own row on desktops (measure() skips the inline fit there). */

@@ -14,8 +14,6 @@
   "html.sync": "调整同步",
   "html.settingsOffset": "当前：0毫秒",
   "html.settingsFeedbackSub": "想法、意见或赞美",
-  "html.settingsFps": "显示帧率",
-  "html.settingsFpsSub": "在角落显示每秒帧数",
   "html.settingsPromptLabel": "成绩发布提醒",
   "html.settingsPromptSub": "关闭后，跳完不再提示",
   "html.settingsPrompt": "开启",

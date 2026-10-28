@@ -14,8 +14,6 @@
   "html.sync": "Règle la synchro",
   "html.settingsOffset": "Actuel : 0 ms",
   "html.settingsFeedbackSub": "Idées, plaintes ou félicitations",
-  "html.settingsFps": "Affiche les FPS",
-  "html.settingsFpsSub": "Images par seconde, dans un coin",
   "html.settingsPromptLabel": "Proposer de publier",
   "html.settingsPromptSub": "Désactivé : rien après la danse",
   "html.settingsPrompt": "Active",

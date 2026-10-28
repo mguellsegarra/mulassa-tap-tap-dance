@@ -113,8 +113,7 @@ export function createSelectLayout({ win, $, root, towns, strip, pending, bar, l
     const pendingEnd = nav ? dockTop + r($('select-nav')).top - r(dock).top : stripTop + Math.min(...base.map(el => el.offsetTop)) * z;
     pending.style.setProperty('--pending-rest-bottom', px(Math.max(0, r(root).height - pendingEnd) + 12 * z));
     if (!pending.hidden) { fitEntityLabel($('aviat-entity')); fitPendingTitle($('aviat-title'), win); }
-    // Cached action bounds for diagnostic overlays; no frame-loop layout reads.
-    api.fpsFooter = ['select-figures-back', 'select-next', 'select-play'].map($).filter(el => !el.hidden).map(r); flip.play();
+    flip.play();
     settle(); // what the observer would report for this layout, and what the next measure() compares
   }
   const sizes = () => [$('select-info'), root].map(el => `${el.offsetWidth}x${el.offsetHeight}`).join();

@@ -74,7 +74,6 @@
   "ui.feedback.tooLong": "Massimo {n} caratteri",
   "ui.feedback.tooShort": "Minimo {n} caratteri",
   "ui.feedback.unavailable": "La posta non è disponibile. Puoi scrivere a holi@mulassa.cat.",
-  "ui.fps.lowPower": "risparmio energetico?",
   "ui.level.accuracy": "{pct}% di centri",
   "ui.level.bare": "Nessun record a {level}",
   "ui.level.first": "Il primo ballo che finisci sarà il tuo record",

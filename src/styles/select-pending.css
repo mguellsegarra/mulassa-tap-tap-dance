@@ -3,7 +3,7 @@
 :root[data-keys] #select .sel-card[aria-selected="true"]:not(:focus)::after { box-shadow: inset 0 0 0 2px #fff3d640; } /* Keep selection quieter while the keyboard cursor is on another control (focus.js data-keys: a body:has(:focus-visible) restyled every card on each DOM change). */
 /* All pending identities occupy the same viewport-owned box.
    Only opacity changes on entry/exit; content never sizes or translates the box. */
-#select { bottom: var(--app-gap, 0px); --pending-top: calc(var(--town-row-top) + 44px + 12px + env(safe-area-inset-top) + var(--fps-rail, 0px)); }
+#select { bottom: var(--app-gap, 0px); --pending-top: calc(var(--town-row-top) + 44px + 12px + env(safe-area-inset-top)); }
 #select .sel-info { transition: opacity .22s var(--sel-ease), display .22s allow-discrete; }
 #select .sel-pending { transform: none; transition: opacity .26s var(--sel-ease), display .32s allow-discrete; }
 #select :is(.sel-pending, .sel-info)[hidden] { opacity: 0; pointer-events: none; }
@@ -66,7 +66,7 @@
 }
 @media (max-height: 500px) {
   #select[data-pending] .sel-towns { left: 43%; width: 57%; }
-  .sel-pending { --contact-top: calc(60px + env(safe-area-inset-top) + var(--fps-rail, 0px)); }
+  .sel-pending { --contact-top: calc(60px + env(safe-area-inset-top)); }
   .sel-pending { left: max(12px, env(safe-area-inset-left)); translate: 0 -50%; width: calc(43% - max(12px, env(safe-area-inset-left)) - 8px); top: calc((100% + 60px + env(safe-area-inset-top) - 8px - env(safe-area-inset-bottom)) / 2); height: calc(100% - 68px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); }
 }
 /* The narrow landscape column spends footer air on complete attribution names. */

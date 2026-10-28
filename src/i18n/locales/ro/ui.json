@@ -74,7 +74,6 @@
   "ui.feedback.tooLong": "Maximum {n} caractere",
   "ui.feedback.tooShort": "Minimum {n} caractere",
   "ui.feedback.unavailable": "Căsuța nu e disponibilă. Poți scrie la holi@mulassa.cat.",
-  "ui.fps.lowPower": "economisire energie?",
   "ui.level.accuracy": "{pct}% reușite",
   "ui.level.bare": "Fără record la {level}",
   "ui.level.first": "Primul dans încheiat va fi recordul tău",

@@ -14,8 +14,6 @@
   "html.sync": "싱크 조정",
   "html.settingsOffset": "현재: 0 ms",
   "html.settingsFeedbackSub": "아이디어, 불만, 응원",
-  "html.settingsFps": "FPS 표시",
-  "html.settingsFpsSub": "화면 구석에 초당 프레임 수 표시",
   "html.settingsPromptLabel": "결과 올리기 안내",
   "html.settingsPromptSub": "끄면 춤이 끝나도 나오지 않아요",
   "html.settingsPrompt": "켜기",

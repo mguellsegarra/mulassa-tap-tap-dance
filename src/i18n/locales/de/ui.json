@@ -74,7 +74,6 @@
   "ui.feedback.tooLong": "Höchstens {n} Zeichen",
   "ui.feedback.tooShort": "Mindestens {n} Zeichen",
   "ui.feedback.unavailable": "Das Postfach ist nicht erreichbar. Schreib an holi@mulassa.cat.",
-  "ui.fps.lowPower": "Energiesparmodus?",
   "ui.level.accuracy": "{pct}% Treffer",
   "ui.level.bare": "Kein Rekord auf {level}",
   "ui.level.first": "Dein erster fertiger Tanz wird dein Rekord",

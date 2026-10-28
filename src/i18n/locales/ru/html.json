@@ -14,8 +14,6 @@
   "html.sync": "Настроить синхронизацию",
   "html.settingsOffset": "Сейчас: 0 мс",
   "html.settingsFeedbackSub": "Идеи, жалобы или похвала",
-  "html.settingsFps": "Показывать FPS",
-  "html.settingsFpsSub": "Частота кадров в уголке экрана",
   "html.settingsPromptLabel": "Предлагать публикацию",
   "html.settingsPromptSub": "Выключено: без предложения после танца",
   "html.settingsPrompt": "Включить",

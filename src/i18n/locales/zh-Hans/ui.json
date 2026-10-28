@@ -74,7 +74,6 @@
   "ui.feedback.tooLong": "最多{n}个字符",
   "ui.feedback.tooShort": "至少{n}个字符",
   "ui.feedback.unavailable": "留言箱暂不可用，你可以写信到holi@mulassa.cat。",
-  "ui.fps.lowPower": "省电模式？",
   "ui.level.accuracy": "命中率{pct}%",
   "ui.level.bare": "{level}暂无纪录",
   "ui.level.first": "完成的第一支舞就是你的纪录",

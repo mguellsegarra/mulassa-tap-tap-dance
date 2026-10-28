@@ -74,7 +74,6 @@
   "ui.feedback.tooLong": "{n}文字まで",
   "ui.feedback.tooShort": "{n}文字以上",
   "ui.feedback.unavailable": "ポストを利用できません。holi@mulassa.cat にメールできます。",
-  "ui.fps.lowPower": "省電力モード？",
   "ui.level.accuracy": "ヒット率{pct}%",
   "ui.level.bare": "{level}の記録なし",
   "ui.level.first": "初めてクリアした踊りが自分の記録になります",

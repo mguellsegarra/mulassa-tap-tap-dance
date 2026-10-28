@@ -44,7 +44,7 @@ export const steers = () => menuState() && !sheetUp();
 // toggles it; Escape or the same button (dimmed after 3 idle seconds, back on any touch, move or key) brings it all back.
 // The hidden controls are inert (never focused or clicked); the focus goes to the button and back to where it was.
 export const viewBtn = document.getElementById('viewmode');
-const VIEW_HIDES = ['settings', 'free', 'music', 'howto', 'fps', 'select'].map(id => document.getElementById(id));
+const VIEW_HIDES = ['settings', 'free', 'music', 'howto', 'select'].map(id => document.getElementById(id));
 export let viewMode = false, viewT = 0, viewBack = null, viewIdle = 0, hudBlank = false;
 export const setHudBlank = v => (hudBlank = v);
 export function setView(on) {

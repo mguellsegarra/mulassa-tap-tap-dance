@@ -74,7 +74,6 @@
   "ui.feedback.tooLong": "Máximo {n} caracteres",
   "ui.feedback.tooShort": "Mínimo {n} caracteres",
   "ui.feedback.unavailable": "El buzón no está disponible. Puedes escribir a holi@mulassa.cat.",
-  "ui.fps.lowPower": "¿modo ahorro?",
   "ui.level.accuracy": "{pct}% de aciertos",
   "ui.level.bare": "Sin récord en {level}",
   "ui.level.first": "El primer baile que acabes será tu récord",

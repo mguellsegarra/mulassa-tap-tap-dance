@@ -1,4 +1,3 @@
-import './fps.mjs';
 import './finale-effects.mjs';
 import './adaptive-quality.mjs';
 import './photo-control.mjs';

@@ -74,7 +74,6 @@
   "ui.feedback.tooLong": "Gehienez {n} karaktere",
   "ui.feedback.tooShort": "Gutxienez {n} karaktere",
   "ui.feedback.unavailable": "Postontzia ez dago erabilgarri. Idatzi helbide honetara: holi@mulassa.cat.",
-  "ui.fps.lowPower": "aurrezte modua?",
   "ui.level.accuracy": "%{pct} asmatze",
   "ui.level.bare": "Errekorrik ez · {level}",
   "ui.level.first": "Amaitutako lehen dantza zure errekorra izango da",

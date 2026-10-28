@@ -74,7 +74,6 @@
   "ui.feedback.tooLong": "Максимум символов: {n}",
   "ui.feedback.tooShort": "Минимум символов: {n}",
   "ui.feedback.unavailable": "Почтовый ящик недоступен. Напиши на holi@mulassa.cat.",
-  "ui.fps.lowPower": "режим энергосбережения?",
   "ui.level.accuracy": "Точность {pct}%",
   "ui.level.bare": "Нет рекорда: {level}",
   "ui.level.first": "Первый законченный танец станет твоим рекордом",

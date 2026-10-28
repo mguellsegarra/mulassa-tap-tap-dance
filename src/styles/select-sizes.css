@@ -2,10 +2,10 @@
 /* The showreel's idle screen (ui/reel-idle.js): untouched for a while, the selector and its corner row fade out and the
    dance has the whole screen; any touch, move or key brings them back. Short and eased both ways (a 1.2 s fade drew
    the eye): out in .4 s, back in .25 s (body.reel-wake, for as long as that fade lasts) */
-body.reel-idle :is(#select, #settings, #free, #music, #howto, #fps) { opacity: 0; pointer-events: none; transition: opacity .4s cubic-bezier(.4, 0, .2, 1); }
-body.reel-wake :is(#select, #settings, #free, #music, #howto, #fps) { transition: opacity .25s cubic-bezier(0, 0, .2, 1); }
+body.reel-idle :is(#select, #settings, #free, #music, #howto) { opacity: 0; pointer-events: none; transition: opacity .4s cubic-bezier(.4, 0, .2, 1); }
+body.reel-wake :is(#select, #settings, #free, #music, #howto) { transition: opacity .25s cubic-bezier(0, 0, .2, 1); }
 body.reel-idle #select > * { pointer-events: none; }
-@media (prefers-reduced-motion: reduce) { :is(body.reel-idle, body.reel-wake) :is(#select, #settings, #free, #music, #howto, #fps) { transition: none; } }
+@media (prefers-reduced-motion: reduce) { :is(body.reel-idle, body.reel-wake) :is(#select, #settings, #free, #music, #howto) { transition: none; } }
 #select[hidden] { opacity: 0; }
 @starting-style { #select { opacity: 0; } }
 

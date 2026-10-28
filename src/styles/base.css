@@ -132,21 +132,13 @@ button svg { width: 22px; height: 22px; flex: none; fill: none; stroke: currentC
    (a setting, not a button: no outline); the label is the whole row, the switch sits on the right. */
 .switch-row { box-sizing: border-box; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; padding: 6px 12px 6px 16px; border-radius: var(--button-radius); background: #fff3d60d; font: 800 18px/1.2 'Baloo 2', system-ui, sans-serif; cursor: pointer; }
 .switch-row .sub { display: block; margin-top: 2px; font-size: 14px; font-weight: 700; color: #e8d8b8; }
-.switch-row.lang-pick { min-height: calc(12px + 1.2em + 2px + 1.2 * 14px); } /* the height of a row with a .sub (Mostra els FPS): padding + label + sub gap + sub line */
+.switch-row.lang-pick { min-height: calc(12px + 1.2em + 2px + 1.2 * 14px); } /* the height of a row with a .sub (the publish prompt row): padding + label + sub gap + sub line */
 .switch-row input { -webkit-appearance: none; appearance: none; flex: none; position: relative; width: 48px; height: 28px; margin: 0; border: 2px solid var(--button-border); border-radius: 999px; background: #140c07; cursor: pointer; transition: background-color .15s; }
 .switch-row input::before { content: ""; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%; background: #e8d8b8; transition: transform .15s; }
 .switch-row input:checked { background: var(--button-border); }
 .switch-row input:checked::before { transform: translateX(20px); background: #2a1a10; }
 .switch-row input:focus-visible { outline: var(--focus); outline-offset: var(--focus-off); }
 @media (prefers-reduced-motion: reduce) { .switch-row input, .switch-row input::before { transition: none; } }
-/* «Mostra els FPS»: a discreet readout, bottom-left, a flat label with a coloured strip (green / amber / red against
-   the target rate). main.js fpsTick() sets its bottom: above the pad (and the practice instruction) in play. */
-#fps { position: fixed; inset: auto; margin: 0; width: max-content; overflow: visible; border: 0; z-index: 3; left: calc(8px + var(--sal)); bottom: calc(8px + var(--sab)); padding: 1px 7px 1px 6px; border-left: 3px solid #7ee081; border-radius: 3px; background: #2a1a1099; color: #fff3d6d9; font: 700 12px/16px 'Baloo 2', system-ui, sans-serif; font-variant-numeric: tabular-nums; white-space: pre-line; pointer-events: none; }
-#fps::backdrop { background: transparent; pointer-events: none; }
-#fps[data-l="mid"] { border-left-color: #f5a623; } #fps[data-l="low"] { border-left-color: #ff6b5b; }
-/* phones: «mode d’estalvi?» wraps under «30 FPS» (mode / d’estalvi?) so the box stays left of «Com es juga?» (it ran
-   4 px into it on an iPhone SE, 12 on a 360 px Android); «120 FPS» still fits on one line */
-@media (max-width: 519px) { #fps { max-width: 5.5em; } }
 *, dialog { user-select: none; -webkit-user-select: none; } input, textarea { user-select: text; -webkit-user-select: text; } /* UI text is never selectable; fields are */
 .sheet { box-sizing: border-box; max-height: calc(100dvh - 32px); overflow: auto; border: 2px solid #f5c518; border-radius: 18px; background: #2a1a10; color: #fff3d6; font: 700 18px 'Baloo 2', system-ui, sans-serif; box-shadow: 0 16px 60px #0008; }
 /* scrollbars in the game's colours: thin gold thumb on the sheet's own dark background, inset from the rounded frame */

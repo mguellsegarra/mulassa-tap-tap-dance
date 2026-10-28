@@ -14,8 +14,6 @@
   "html.sync": "タイミング調整",
   "html.settingsOffset": "現在：0 ms",
   "html.settingsFeedbackSub": "アイデア、苦情、応援メッセージ",
-  "html.settingsFps": "FPSを表示",
-  "html.settingsFpsSub": "画面の隅に毎秒のフレーム数を表示",
   "html.settingsPromptLabel": "結果公開のお知らせ",
   "html.settingsPromptSub": "オフにすると踊りの終了時に表示しません",
   "html.settingsPrompt": "オン",

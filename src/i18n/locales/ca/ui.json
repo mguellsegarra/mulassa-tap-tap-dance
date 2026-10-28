@@ -74,7 +74,6 @@
   "ui.feedback.tooLong": "Màxim {n} caràcters",
   "ui.feedback.tooShort": "Mínim {n} caràcters",
   "ui.feedback.unavailable": "La bústia no està disponible. Pots escriure a holi@mulassa.cat.",
-  "ui.fps.lowPower": "mode d’estalvi?",
   "ui.level.accuracy": "{pct}% d’encerts",
   "ui.level.bare": "Sense rècord a {level}",
   "ui.level.first": "El primer ball que acabis serà el teu rècord",

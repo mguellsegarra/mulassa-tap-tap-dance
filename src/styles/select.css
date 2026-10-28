@@ -11,7 +11,6 @@
 #select::before { --shade: linear-gradient(90deg, #140c07f0 6%, #140c07ee 10.7%, #140c07e7 15.3%, #140c07d7 20%, #140c07bd 24.7%, #140c079d 29.3%, #140c0778 34%, #140c0753 38.7%, #140c0732 43.3%, #140c0719 48%, #140c0709 52.7%, #140c0701 57.3%, #140c0700 62%); top: 0; bottom: 0; background: var(--shade), linear-gradient(#140c0799, #140c0798 3.4%, #140c0790 6.8%, #140c0780 10.2%, #140c0768 13.6%, #140c074c 17%, #140c0731 20.4%, #140c0719 23.8%, #140c0709 27.2%, #140c0701 30.6%, #140c0700 34%); }
 #select::after { top: 0; bottom: 0; background: linear-gradient(#140c0700 42%, #140c0701 46.7%, #140c0709 51.3%, #140c0719 56%, #140c0733 60.7%, #140c0754 65.3%, #140c0779 70%, #140c079e 74.7%, #140c07bf 79.3%, #140c07d9 84%, #140c07ea 88.7%, #140c07f1 93.3%, #140c07f2 98%); }
 #settings, #music, #free, #viewmode { z-index: 5; }
-#fps { z-index: 5; } /* Keep the readout above the selector's gradients. */
 #viewmode { top: calc(16px + env(safe-area-inset-top)); left: calc(16px + env(safe-area-inset-left)); right: auto; bottom: auto; width: 56px; height: 56px; opacity: 1; }
 #viewmode svg { width: 30px; height: 30px; translate: -1px 0; } /* the exit glyph's frame weighs right: optical centring */
 /* Keep the eye available on the selector at every viewport size. */

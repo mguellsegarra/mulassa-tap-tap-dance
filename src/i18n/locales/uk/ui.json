@@ -74,7 +74,6 @@
   "ui.feedback.tooLong": "Не більш ніж {n} символів",
   "ui.feedback.tooShort": "Щонайменше {n} символів",
   "ui.feedback.unavailable": "Скринька недоступна. Можеш написати на holi@mulassa.cat.",
-  "ui.fps.lowPower": "режим енергозбереження?",
   "ui.level.accuracy": "{pct}% влучань",
   "ui.level.bare": "Без рекорду: {level}",
   "ui.level.first": "Перший завершений танець стане твоїм рекордом",

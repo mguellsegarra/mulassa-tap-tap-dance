@@ -44,7 +44,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
   let figure = live.find(f => f.id === firstFigure) ?? live[0], lastPlayable = figure; // catalog selection is independent of the host's last playable figure
   let opening = false, shown = false, level = 1, town = null, cur = 0, req = 0, step = 'figures';
   const smooth = () => (reduced() ? 'auto' : 'smooth');
-  const api = { band: null, fpsFooter: [], measure: () => { if (shown) measure(); }, onSelect, get figure() { return figure; }, get pending() { return !playable(figure); }, visible, toLevels: () => nextStep() };
+  const api = { band: null, measure: () => { if (shown) measure(); }, onSelect, get figure() { return figure; }, get pending() { return !playable(figure); }, visible, toLevels: () => nextStep() };
 
   const scrolling = stripScroll(strip, win, reduced);
   const townScrolling = stripScroll(towns, win, reduced);

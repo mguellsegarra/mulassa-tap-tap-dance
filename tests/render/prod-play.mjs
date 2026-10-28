@@ -47,6 +47,7 @@ try {
   for (let tries = 0; tries < 10 && !(await page.evaluate(() => document.getElementById('select-next').hidden)); tries++) {
     await page.click('#select-next', { force: true }); await page.waitForTimeout(600);
   }
+  assert.ok(await page.evaluate(() => document.getElementById('select-next').hidden), 'the level step never opened after 10 taps');
   await page.locator('#select-act button:visible').first().click({ force: true });
   await page.getByText('A BALLAR', { exact: false }).click({ force: true });
   await page.waitForFunction(() => window.__dbg.G.state === 'play', null, { timeout: 30000 });

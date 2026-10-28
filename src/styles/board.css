@@ -47,7 +47,8 @@ dialog p, #results-actions .btn { overflow-wrap: break-word; }
 .board-figure > .board-chev { flex: none; margin: 0; width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; transition: transform .2s; }
 .board-figure[aria-expanded="true"] .board-chev { transform: rotate(180deg); }
 @media (prefers-reduced-motion: reduce) { .board-chev { transition: none; } }
-.board-season { margin: 0; text-align: center; color: #e8d8b8; font-size: 15px; line-height: 1.35; }
+/* the season: a gold outlined pill, so it reads as the board's label rather than one more cream line */
+.board-season { margin: 4px 0 0; padding: 2px 12px; border: 1px solid #f5c518aa; border-radius: 999px; background: #f5c5181a; color: #f5c518; font-size: 15px; font-weight: 700; line-height: 1.35; text-align: center; }
 .board-season:empty::before { content: "\a0"; } /* its line from the first frame */
 /* «Tria figura»: the playable figures from the top, under its title (centred, the cards floated off the button), two to a row; the shown one cream, the others a neutral edge */
 .board-picker:not([hidden]) { flex: 1 1 auto; min-height: 0; overflow: auto; display: flex; flex-direction: column; justify-content: flex-start; gap: 10px; padding: 16px 0 12px; border-top: 1px solid #f5c51840; }

@@ -122,7 +122,7 @@ span.player-name { display: inline-flex; align-items: baseline; min-width: 0; }
 .hall-wait .estendard { width: 84px; height: 118px; } .hall-wait .estendard .fig-mask { width: 60px; height: 42px; }
 .hall-wait .empty-h { margin: 4px 0 0; font-size: 19px; line-height: 1.25; text-wrap: balance; }
 .hall-wait .empty-p { margin: -6px 0 0; color: #e8d8b8; font-size: 15px; text-wrap: balance; }
-.hall-open { font-size: 14px; line-height: 24px; }
+.hall-open { padding: 2px 12px; border-radius: 15px; border-color: #f5c518aa; background: #f5c5181a; color: #f5c518; font-size: 15px; font-weight: 700; line-height: 1.35; letter-spacing: 0; } /* the open season: the season-end sheet's gold pill (.se-now) */
 /* phones up to 700 px tall: a tighter rhythm before anything scrolls */
 @media (max-height: 700px) {
   #seasons-menu { padding: 12px 14px; } #seasons-menu h2 { margin-bottom: 8px; font-size: 24px; }

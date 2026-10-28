@@ -18,7 +18,8 @@ export const setRenderProfile = v => (renderProfile = v);
 export const glc = document.getElementById('gl');
 export const renderer = (() => { // no WebGL 2 (disabled, blocklisted GPU, very old browser): say so instead of a calçot forever
   try { return new THREE.WebGLRenderer({ canvas: glc, antialias: qualityLevel > 0, powerPreference: 'high-performance' }); } catch (err) {
-    const msg = 'El teu navegador no pot mostrar el joc en 3D. Actualitza’l o obre’l amb Chrome o Safari.';
+    // after a GPU crash Chrome blocks WebGL for the site until it restarts: closing it comes first
+    const msg = 'El teu navegador no pot mostrar el joc en 3D. Tanca’l del tot i torna’l a obrir; si no, actualitza’l o obre’l amb Chrome o Safari.';
     window.__mulassaBooted = 'no-webgl'; // index.html's boot watchdog: this card, not its generic one
     if (window.__mulassaFail) window.__mulassaFail('Ups! No es pot mostrar el joc', msg); // no retry: it wouldn't help
     else { const t = document.getElementById('loader-text'); if (t) t.textContent = msg; }

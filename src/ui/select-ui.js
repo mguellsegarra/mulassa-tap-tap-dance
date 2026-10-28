@@ -29,7 +29,7 @@ const TROPHY = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h10V9
 export function setupSelect({ doc = document, win = globalThis, store, keyboard = () => false, busy = () => false, reduced = () => false,
   firstLevel = null, firstFigure = null, demo = false, getError = () => null, standing = () => Promise.resolve(null), levelPodium = null, ranked = false, onBoard = () => {}, onCard = () => {}, sfx = () => {}, onPlay, onSelect = () => {}, onHowto, onWrite }) {
   const DEMO = demo && Boolean((import.meta.env ?? {}).DEV); // ?demo: made-up facts on show only, never stored or sent; gone from production builds
-  const $ = id => doc.getElementById(id), cardOf = p => onCard({ ...p, from: { ...p.from, figure: figure.id } }), facts = setupStandings({ doc, win, $, onBoard: () => onBoard(figure), onCard: cardOf, busy, levels: () => step === 'level', onSwapped: () => { if (shown) { levelStats(); measure(); } } }); // facts: desktops' medals and board card (select-standings.js)
+  const $ = id => doc.getElementById(id), cardOf = p => onCard({ ...p, from: { ...p.from, figure: figure.id } }), facts = setupStandings({ doc, win, $, onBoard: () => onBoard(figure), onCard: cardOf, busy, levels: () => step === 'level', onSwapped: () => { if (shown) { levelStats(); if (layout.stale()) measure(); } } }); // the new card resized nothing: no second measure // facts: desktops' medals and board card (select-standings.js)
   const podium = setupPodium({ doc, win, $, onBoard: () => { if (!busy()) onBoard(figure); }, onCard: cardOf, load: ranked && levelPodium, refit: () => levelStats() }); // step 2's podium (select-podium.js)
   let standingNow = null; // the board's last answer, for the podium
   const root = $('select'), towns = $('select-towns'), strip = $('select-strip'), levels = $('select-level'), pending = $('select-pending');
@@ -142,9 +142,10 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
   }
   // desktops, step 2: the info column may run down to the level card (12 px above it), not the dock's top
   function levelStats() { if (opening) return; // visible() fits once, after measure() has laid the column out (before it every try failed: ~60 ms of layouts)
+    if (!playable(figure)) return podium.fit({ on: false }); // a pending figure hides the column: its fitting tries were forced layouts of nothing shown
     const card = step === 'level' && win.innerWidth >= 900 && win.innerHeight >= 600 && $('select-act').getBoundingClientRect();
-    if (card?.height) root.style.setProperty('--info-dock', `${(root.getBoundingClientRect().bottom - card.top) / (parseFloat(win.getComputedStyle?.(root).zoom) || 1) + 6}px`);
-    else if (step === 'level') root.style.removeProperty?.('--info-dock'); // step 1's: measure()
+    if (card?.height) $('select-info').style.setProperty('--info-dock', `${(root.getBoundingClientRect().bottom - card.top) / (parseFloat(win.getComputedStyle?.(root).zoom) || 1) + 6}px`);
+    else if (step === 'level') $('select-info').style.removeProperty?.('--info-dock'); // step 1's: measure()
     const two = step === 'level' && playable(figure);
     facts.fit(true); showLevelStats($, { on: two, level, record: DEMO ? { score: DEMO_BEST[level], quality: DEMO_PCT[level] } : readFigureRecord(store, figure, level), goals: facts.goals });
     if (!two) facts.fit(); // step 1: the medals and the rows
@@ -169,7 +170,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     return pills.find(p => p.dataset.town === id);
   }
   function setTown(id) { // a pill jumps to its town's first figure and selects it; nothing is filtered
-    setStep('figures');
+    if (step === 'level') setStep('figures'); // step 1 already: pick() fits and measures once
     const first = cards.find(c => figureOf(c)?.town === id);
     pick(first, 'filter'); // the pill's tap already made the sound
     centre(strip, first, smooth());
@@ -194,7 +195,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
       figure = next; opening = true; info(); setLevel(rememberedLevel(store, figure.id), 'open'); opening = false; // one fit after one measure, as visible()
       mark(figure.town, how === 'arrow' ? 'instant' : smooth());
       if (playable(figure)) { lastPlayable = figure; api.onSelect(figure); } // pending figures never replace the song/model state
-      measure(); levelStats();
+      measure(); levelStats(); layout.settle();
     }
     if (how === 'enter') nextStep();
   }
@@ -224,7 +225,10 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
   }
   wheelRow(strip, scrollBy);
   wheelRow(towns, distance => townScrolling.to(townScrolling.target + distance)); // to() clamps to the row
-  strip.addEventListener('pointerdown', () => scrolling.stop());
+  let touchTap = false;
+  strip.addEventListener('pointerdown', e => { scrolling.stop(); touchTap = e.pointerType === 'touch'; });
+  // A finger leaves the card unfocused, as iOS does: on Android the focus beside the content-visibility cards cost ~300 ms of layouts a change (S10)
+  strip.addEventListener('mousedown', e => { if (touchTap) e.preventDefault(); });
   towns.addEventListener('pointerdown', () => townScrolling.stop()); // a hand on the pills wins
   $('select-next').addEventListener('click', nextStep);
   $('select-figures-back').addEventListener('click', () => { setStep('figures'); api.refocus(); });
@@ -260,7 +264,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     const i = cards.findIndex(c => c.dataset.id === figure.id);
     roveCard(i);
     const pill = press(figure.town);
-    measure(); levelStats();
+    measure(); levelStats(); layout.settle();
     centre(strip, cards[i], 'auto');
     if (pill) centre(towns, pill, 'auto');
     if (playable(figure)) api.onSelect(figure);

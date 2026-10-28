@@ -1,9 +1,9 @@
 /* The selector's pending figures: the pending identity and attributions, and their sizes. */
 .sel-info::-webkit-scrollbar { display: none; }
-body:has(:focus-visible) #select .sel-card[aria-selected="true"]:not(:focus-visible)::after { box-shadow: inset 0 0 0 2px #fff3d640; } /* Keep selection quieter while the keyboard cursor is on another control. */
+:root[data-keys] #select .sel-card[aria-selected="true"]:not(:focus)::after { box-shadow: inset 0 0 0 2px #fff3d640; } /* Keep selection quieter while the keyboard cursor is on another control (focus.js data-keys: a body:has(:focus-visible) restyled every card on each DOM change). */
 /* All pending identities occupy the same viewport-owned box.
    Only opacity changes on entry/exit; content never sizes or translates the box. */
-#select { bottom: var(--app-gap, 0px); --pending-top: calc(var(--town-row-top) + 44px + 12px + env(safe-area-inset-top) + var(--fps-rail, 0px)); --pending-bottom: calc(var(--pending-rest-bottom, 254px) - var(--drop)); }
+#select { bottom: var(--app-gap, 0px); --pending-top: calc(var(--town-row-top) + 44px + 12px + env(safe-area-inset-top) + var(--fps-rail, 0px)); }
 #select .sel-info { transition: opacity .22s var(--sel-ease), display .22s allow-discrete; }
 #select .sel-pending { transform: none; transition: opacity .26s var(--sel-ease), display .32s allow-discrete; }
 #select :is(.sel-pending, .sel-info)[hidden] { opacity: 0; pointer-events: none; }
@@ -14,7 +14,7 @@ body:has(:focus-visible) #select .sel-card[aria-selected="true"]:not(:focus-visi
 }
 @media (prefers-reduced-motion: reduce) { #select { transition: none; } }
 @media (prefers-reduced-motion: reduce) { #select :is(.sel-pending, .sel-info) { transition: none; } }
-.sel-pending { --contact-pad: 12px; --contact-gap: 10px; --pending-max: calc(100% - var(--pending-top) - var(--pending-bottom, 254px)); position: absolute; z-index: 1; top: calc((100% + var(--pending-top) - var(--pending-bottom, 254px)) / 2); left: 50%; translate: -50% -50%; width: min(480px, calc(100% - 28px)); height: min(360px, var(--pending-max)); box-sizing: border-box; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) 48px calc(44px + var(--contact-gap)); align-items: center; justify-items: center; gap: 0; padding: 3px 16px var(--contact-pad); border: 1px solid var(--sel-line); border-radius: var(--sel-r); text-align: center; background: #1a110bf5; box-shadow: 0 8px 24px #0005; font-size: 16px; font-weight: 500; line-height: 1.3; container-type: size; }
+.sel-pending { --pending-bottom: calc(var(--pending-rest-bottom, 254px) - var(--drop)); /* here, where select-layout.js sets its rest: on #select each write restyled the selector */ --contact-pad: 12px; --contact-gap: 10px; --pending-max: calc(100% - var(--pending-top) - var(--pending-bottom, 254px)); position: absolute; z-index: 1; top: calc((100% + var(--pending-top) - var(--pending-bottom, 254px)) / 2); left: 50%; translate: -50% -50%; width: min(480px, calc(100% - 28px)); height: min(360px, var(--pending-max)); box-sizing: border-box; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) 48px calc(44px + var(--contact-gap)); align-items: center; justify-items: center; gap: 0; padding: 3px 16px var(--contact-pad); border: 1px solid var(--sel-line); border-radius: var(--sel-r); text-align: center; background: #1a110bf5; box-shadow: 0 8px 24px #0005; font-size: 16px; font-weight: 500; line-height: 1.3; container-type: size; }
 .sel-pending-content { grid-row: 1; width: 100%; height: 100%; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: space-evenly; }
 .sel-pending-content > * { flex: none; }
 .sel-pending h2 { --title-size: 26px; color: #f5c518; margin: 0; padding: 6px 14px; width: 100%; box-sizing: border-box; display: flex; align-items: center; justify-content: center; font: 800 var(--title-size)/1.1 'Baloo 2', system-ui, sans-serif; text-wrap: balance; }

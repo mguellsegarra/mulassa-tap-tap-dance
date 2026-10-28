@@ -142,3 +142,9 @@
   #select #select-next:disabled::after { display: none; animation: none; }
 }
 .sel-strip { position: relative; display: flex; align-items: stretch; justify-content: flex-start; gap: 8px; min-height: 0; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; touch-action: pan-x; padding: 10px max(6px, var(--strip-r, 0px)) 6px max(6px, var(--strip-l, 0px)); margin-inline: 0; box-sizing: border-box; overflow-anchor: none; }
+/* select-layout.js's measures, read only where they are set: not inherited, so a write restyles the strip, not its ~50 cards */
+@property --strip-x { syntax: '<length>'; inherits: false; initial-value: 0px; }
+@property --strip-l { syntax: '<length>'; inherits: false; initial-value: 0px; }
+@property --strip-r { syntax: '<length>'; inherits: false; initial-value: 0px; }
+@property --strip-inset { syntax: '<length>'; inherits: false; initial-value: 0px; }
+@property --strip-clip { syntax: '<length>'; inherits: false; initial-value: 0px; }

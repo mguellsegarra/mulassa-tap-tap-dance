@@ -14,7 +14,7 @@ dialog p, #results-actions .btn { overflow-wrap: break-word; }
 @media (min-width: 640px) and (min-height: 520px) {
   #results-actions { width: min(calc(680px * var(--ui)), calc(100vw - 24px - var(--sal) - var(--sar))); gap: calc(12px * var(--ui)); }
   #results-actions .btn { max-width: none; min-height: calc(56px * var(--ui)); padding: calc(8px * var(--ui)) calc(12px * var(--ui)); font-size: calc(18px * var(--ui)); }
-  #results-actions:has(#results-publish:not([hidden])) .btn { flex-basis: calc(50% - 6px * var(--ui)); }
+  #results-actions:has(#results-publish:not([hidden])) > :is(#results-retry, #results-publish, #results-board, #results-share) { flex-basis: calc(50% - 6px * var(--ui)); } /* by id: a .btn subject made every DOM change restyle all the selector cards (also .btn) */
   #results-actions .btn > svg { width: calc(24px * var(--ui)); height: calc(24px * var(--ui)); margin-right: calc(8px * var(--ui)); }
 }
 /* narrow: «Publica» is exactly as wide as the pair under it (2 × 220 + the gap), never the whole screen */

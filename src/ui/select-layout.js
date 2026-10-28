@@ -18,8 +18,14 @@ export function createSelectLayout({ win, $, root, towns, strip, pending, bar, l
     }
   }
   function measure() { flip.snap(view.shown, true); // her free band (css px): under the info block, or (info at the side) under the pills; above the strip
+    // Nothing it reads has moved since the last one (a figure change of the same kind, at the same step and sizes): its writes
+    // stand. One layout instead of ~10 a change (an old laptop's ~0.5 s); a pending figure's own words still fit.
+    if (inputs() === measuredInputs) { if (!pending.hidden) { fitEntityLabel($('aviat-entity')); fitPendingTitle($('aviat-title'), win); } flip.play(); return; }
     const r = el => el.getBoundingClientRect(), side = win.innerWidth >= 900 || win.innerHeight <= 500;
     const z = parseFloat(win.getComputedStyle?.(root).zoom) || 1, px = v => `${v / z}px`; // big desktops zoom the layer: rects are screen px, its CSS isn't
+    // Each variable on its readers (the pills, the column, the carousel), never on #select: there each write between two reads
+    // restyled the whole selector (~1,400 elements, 4-9 ms each; ~90 ms in the splash's ENTRA frame on a Studio Display)
+    const infoEl = $('select-info');
     // header: logo left, corner buttons right; the towns fit between (asymmetric gutter: a symmetric one dropped them on an iPad) or get their own row
     const logo = [...root.querySelectorAll('.sel-logo')].map(r).filter(b => b.width > 0), right = corner.filter(el => !el.hidden).map(r).filter(b => b.width > 0);
     const oneLine = Boolean(root.querySelector('.sel-logo-line')?.getClientRects().length); // desktops: the one-line logo, the towns always on their own row below it
@@ -28,10 +34,10 @@ export function createSelectLayout({ win, $, root, towns, strip, pending, bar, l
     const inline = Boolean(!oneLine && right.length && win.innerWidth - gutterL - gutterR >= needed);
     root.toggleAttribute('data-header-inline', inline);
     if (inline) {
-      root.style.setProperty('--town-gutter-l', px(gutterL)); root.style.setProperty('--town-gutter-r', px(gutterR));
-      root.style.setProperty('--town-top', px(right[0].top + (right[0].height - r(towns).height) / 2));
-      root.style.setProperty('--info-top', px(Math.max(...logo.map(b => b.bottom), ...right.map(b => b.bottom)) + 16));
-    } else root.style.removeProperty?.('--info-top');
+      towns.style.setProperty('--town-gutter-l', px(gutterL)); towns.style.setProperty('--town-gutter-r', px(gutterR));
+      towns.style.setProperty('--town-top', px(right[0].top + (right[0].height - r(towns).height) / 2));
+      infoEl.style.setProperty('--info-top', px(Math.max(...logo.map(b => b.bottom), ...right.map(b => b.bottom)) + 16));
+    } else infoEl.style.removeProperty?.('--info-top');
     // The dock's layout box, not its rect: a pending figure drops it by a transform that may still be under way.
     const dock = $('select-bottom'), dockTop = (dock.offsetTop ?? r(dock).top / z) * z;
     // The pills' layout box, not their rect: a pending figure slides them to their new row by a transform that may still be under way.
@@ -43,7 +49,8 @@ export function createSelectLayout({ win, $, root, towns, strip, pending, bar, l
     // Fine-pointer desktops: the strip's box starts right of the info column (below), so its cards never scroll under the column
     // and its empty part never covers the ranking's names. Laid out full width first: the column's width comes from that rest place.
     const boxed = desk && Boolean(win.matchMedia?.('(pointer: fine)').matches);
-    root.style.setProperty('--strip-x', '0px'); strip.style.removeProperty?.('--strip-clip');
+    // --strip-x on the carousel, its one reader: on #select every write restyled the whole selector (~1,400 elements, twice a measure)
+    const carousel = $('select-carousel'); carousel.style.setProperty('--strip-x', '0px'); strip.style.removeProperty?.('--strip-clip');
     const shift = desk && flag?.offsetParent ? (($('select-info').hidden ? 0 : r($('select-info')).left) - r(strip).left) / z + narrowest + 12 - (flag.offsetLeft - (parseFloat(win.getComputedStyle?.(strip).paddingLeft) || 0)) : 0;
     strip.style.setProperty('--strip-l', `${shift}px`);
     peek();
@@ -66,31 +73,32 @@ export function createSelectLayout({ win, $, root, towns, strip, pending, bar, l
     const nav = stripLimit > 1 ? ($('select-nav').offsetHeight || 0) * z : 0;
     // Desktops: the info column ends 12 px before the strip's first banner, at its rest place (offsetLeft: the centring,
     // not the scroll), never under a 300 px panel; long names wrap. Step 2 hides the strip: the column keeps its width.
-    if (flag && desk) { if (flag.offsetParent) root.style.setProperty('--info-w', px(Math.max(narrowest * z, r(strip).left + flag.offsetLeft * z - 12 * z - r($('select-info')).left))); }
-    else root.style.removeProperty?.('--info-w');
-    if (desk) root.style.setProperty('--info-floor', `${narrowest}px`); else root.style.removeProperty?.('--info-floor');
+    if (flag && desk) { if (flag.offsetParent) infoEl.style.setProperty('--info-w', px(Math.max(narrowest * z, r(strip).left + flag.offsetLeft * z - 12 * z - r($('select-info')).left))); }
+    else infoEl.style.removeProperty?.('--info-w');
+    if (desk) infoEl.style.setProperty('--info-floor', `${narrowest}px`); else infoEl.style.removeProperty?.('--info-floor');
     // Step 1, fine-pointer desktops: no card sits under the column (boxed, below), only the action row may. The column ends 12 px
     // before its buttons when it stays as wide as `narrowest` and the card keeps its %
     // (not narrower) and then runs down to the foot; else down to 12 px above them.
     // select-standings.js fills what this gives (step 2: levelStats()).
     if (view.step !== 'level') {
-      const was = root.style.getPropertyValue?.('--info-dock') ?? '';
+      const was = infoEl.style.getPropertyValue?.('--info-dock') ?? '';
       if (boxed) {
         const drop = r(dock).top - dockTop, info = r($('select-info')); // drop: a pending figure's transform, the buttons at rest
         const btns = [r($('select-next'))].filter(b => b.width);
         const edge = Math.min(...btns.map(b => b.left)) - 12 * z;
-        if (edge < info.right && edge - info.left >= Math.max(narrowest, 410) * z) root.style.setProperty('--info-w', px(edge - info.left));
+        if (edge < info.right && edge - info.left >= Math.max(narrowest, 410) * z) infoEl.style.setProperty('--info-w', px(edge - info.left));
         const under = btns.filter(b => b.left - 12 * z < r($('select-info')).right).map(b => b.top - drop);
-        root.style.setProperty('--info-dock', under.length ? px(r(root).bottom - Math.min(...under) + 6 * z) : '50px');
-      } else root.style.removeProperty?.('--info-dock');
-      if ((root.style.getPropertyValue?.('--info-dock') ?? '') !== was) facts.fit();
+        // whole px: it crept ~0.2 px a measure, so every measure restyled the selector and refitted the board card
+        infoEl.style.setProperty('--info-dock', under.length ? px(Math.round(r(root).bottom - Math.min(...under) + 6 * z)) : '50px');
+      } else infoEl.style.removeProperty?.('--info-dock');
+      if ((infoEl.style.getPropertyValue?.('--info-dock') ?? '') !== was) facts.fit();
     }
     if (boxed && flag?.offsetParent) { // the same rest place inside a box from the column's edge + 12: its room (peek()'s gap) and stripLimit are unchanged
       // A hidden column (pending figure) keeps its old rect for its 220 ms display fade, and the observer may skip the refit: ignore it.
       const x = $('select-info').hidden ? 12 : Math.max(0, (r($('select-info')).right - r(strip).left) / z + 12);
-      const x0 = Math.min(x, 12); root.style.setProperty('--strip-x', `${x0}px`); strip.style.setProperty('--strip-clip', `${x - x0}px`); strip.style.setProperty('--strip-l', `${Math.max(0, left - x0)}px`);
+      const x0 = Math.min(x, 12); carousel.style.setProperty('--strip-x', `${x0}px`); strip.style.setProperty('--strip-clip', `${x - x0}px`); strip.style.setProperty('--strip-l', `${Math.max(0, left - x0)}px`);
     }
-    root.style.setProperty('--nav-x', px(navX(win, towns, $('select-carousel'), z))); // the arrows stand at the screen's middle, whatever the info column or the dock does (clear of the pills)
+    { const x = px(navX(win, towns, carousel, z)); for (const id of ['select-prev', 'select-forward', 'select-nav']) $(id).style.setProperty('--nav-x', x); } // the arrows stand at the screen's middle, whatever the info column or the dock does (clear of the pills)
     const info = r($('select-info')); // the camera's free rect (cameras.js frameMenuLens): hardTop = the pills' floor (she may rise behind the info's lower rows), a side panel takes the left
     // Phones' narrow board card (select-sizes.css): on a short phone it ends near the dock and she stands in the column right of
     // it, not behind it; on a tall one more room is left under it, the whole width (the column, ~165 px, cut a long figure side on).
@@ -103,13 +111,19 @@ export function createSelectLayout({ win, $, root, towns, strip, pending, bar, l
     // --drop so touch reserves the lowered dock without reading its animated transform.
     const stripTop = dockTop + r(strip).top - r(dock).top;
     const pendingEnd = nav ? dockTop + r($('select-nav')).top - r(dock).top : stripTop + Math.min(...base.map(el => el.offsetTop)) * z;
-    root.style.setProperty('--pending-rest-bottom', px(Math.max(0, r(root).height - pendingEnd) + 12 * z));
+    pending.style.setProperty('--pending-rest-bottom', px(Math.max(0, r(root).height - pendingEnd) + 12 * z));
     if (!pending.hidden) { fitEntityLabel($('aviat-entity')); fitPendingTitle($('aviat-title'), win); }
     // Cached action bounds for diagnostic overlays; no frame-loop layout reads.
     api.fpsFooter = ['select-figures-back', 'select-next', 'select-play'].map($).filter(el => !el.hidden).map(r); flip.play();
-    measured = sizes(); // what the observer would report for this layout
+    settle(); // what the observer would report for this layout, and what the next measure() compares
   }
   const sizes = () => [$('select-info'), root].map(el => `${el.offsetWidth}x${el.offsetHeight}`).join();
-  let measured = '';
-  return { measure, get stripLimit() { return stripLimit; }, stale: () => sizes() !== measured };
+  // what measure() reads, beyond the column's and the layer's sizes: the window, the step, a pending figure, the pills' and the
+  // cards' widths, the visible buttons and the error line
+  const inputs = () => [win.innerWidth, win.innerHeight, view.step, root.hasAttribute('data-pending'), towns.scrollWidth, towns.clientWidth, strip.scrollWidth, strip.clientWidth,
+    ...corner.map(el => el.hidden), $('select-error')?.hidden, $('select-next').hidden, sizes()].join('|');
+  let measured = '', measuredInputs = '';
+  // settle(): the caller's refit after measure() (levelStats) resized the column too: the observer has nothing left to redo
+  function settle() { measured = sizes(); measuredInputs = inputs(); }
+  return { measure, get stripLimit() { return stripLimit; }, stale: () => sizes() !== measured, settle };
 }

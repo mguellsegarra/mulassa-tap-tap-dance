@@ -73,7 +73,8 @@ export function startMenuAudio() {
   chip.menu(true); // menu owns unlock, pending decode and an already playing source
 }
 // GLOBUS: every tap in its window (any side) scores and pumps it, the more the better: each `need` taps it pops
-// and a fresh one starts. It hands over to the next note HANDOFF early and is judged once, at the end.
+// and a fresh one starts. It hands over to the next note HANDOFF early (sooner for a press on time for it: judge-core.js
+// noteOnTime) and is judged once, at the end.
 export const HANDOFF = 0.06; // the balloon counts until 60 ms before its end, then taps go to the next note
 export const balloonAt = t => G.balloons.find(n => t >= n.t - WIN.good && t < n.end - HANDOFF);
 export const balloonShown = t => { const bl = balloonAt(t); return bl && t >= bl.t ? bl : null; }; // hanging under the ring

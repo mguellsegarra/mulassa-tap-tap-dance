@@ -12,6 +12,12 @@ export function pressTarget(chart, from, t, win, skip) {
   }
   return null;
 }
+// A press inside a drumroll that is on time for a note with this button goes to the note, not the balloon: the Drac's
+// last GUAPA lands on its traca's end, and its early half (up to WIN.good - HANDOFF) used to feed the traca instead
+export function noteOnTime(chart, from, t, win, skip, dir) {
+  const hit = pressTarget(chart, from, t, win, skip);
+  return !!hit && hit.kind !== 'miss' && (hit.n.big || dir === 'P' || hit.n.input === dir);
+}
 export const pairWindow = diff => (diff === 0 ? 0.15 : 0.08); // GUAPA: the second button within this of the first
 export const isPartnerPress = (pending, dir) => !!pending && dir !== pending.dir && (dir === 'L' || dir === 'R'); // swallowed: it never reaches the next note
 export const pairClosed = (pending, t, diff) => !!pending && t - pending.t > pairWindow(diff);

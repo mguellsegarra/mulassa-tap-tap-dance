@@ -1,7 +1,7 @@
 // Judging: hits, GUAPA pairs, holds, balloons and the collapse, plus the autoplay and advance ticks.
 import { tr } from '../i18n/messages.js';
 import { quality, eventAge } from './progress.js';
-import { gradeOf, pressTarget, pairWindow, isPartnerPress, pairClosed, HOLD_GRACE, holdVerdict, balloonVerdict, isOverdue } from './judge-core.js';
+import { gradeOf, pressTarget, noteOnTime, pairWindow, isPartnerPress, pairClosed, HOLD_GRACE, holdVerdict, balloonVerdict, isOverdue } from './judge-core.js';
 import { pick } from '../scene/models.js';
 import { CELEBRATE } from './bubble-rules.js';
 import { drain, warnings } from './energy.js';
@@ -208,9 +208,9 @@ export function press(dir, e) {
   if (G.state !== 'play' || G.collapseT || G.paused || G.watch) return; // the dance demo plays itself
   const t = songTime(eventAt(e)), bl = balloonAt(t);
   G.tapT = clock;
-  if (bl) { pump(bl); return; } // never a wrong move, never spills onto the next note
   settleBig(t);
   const bp = bigPending;
+  if (bl && !isPartnerPress(bp, dir) && !noteOnTime(G.chart, G.next, t, WIN, bp?.n, dir)) { pump(bl); return; } // never a wrong move
   if (isPartnerPress(bp, dir)) { // the partner press of a GUAPA pair
     setBigPending(null);
     if (!bp.done) { bp.n.detail = bp.detail; judge(bp.n, bp.kind); guapaHit(bp.n); }

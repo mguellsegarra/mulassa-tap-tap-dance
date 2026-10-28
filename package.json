@@ -9,13 +9,14 @@
     "capture": "node tools/qa/capture.mjs",
     "audit:bou": "node tools/qa/bou-audit.mjs",
     "sweep:bou": "node tools/qa/bou-sweep.mjs",
-    "build:pages": "npm run check && npm run build && node tools/deploy/seo-pages.mjs && node tools/deploy/prepare-pages.mjs",
+    "build:pages": "npm run check:full && npm run build && node tools/deploy/seo-pages.mjs && node tools/deploy/prepare-pages.mjs",
     "cf:login": "node tools/deploy/cloudflare.mjs login",
     "cf:whoami": "node tools/deploy/cloudflare.mjs whoami",
     "cf:projects": "node tools/deploy/cloudflare.mjs projects",
     "cf:deployments": "node tools/deploy/cloudflare.mjs deployments",
     "deploy:pages": "node tools/deploy/cloudflare.mjs deploy",
     "check": "node tests/run.mjs",
+    "check:full": "node tests/run.mjs --full",
     "check:leaderboard": "node tests/run.mjs --group=leaderboard"
   },
   "dependencies": {

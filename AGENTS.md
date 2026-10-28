@@ -105,7 +105,7 @@ benchmarks and device sessions are unnecessary unless the task also changes runt
 ## Commands
 
 - `npm run dev` — Vite on port 5178 with `--host` (phones on the LAN).
-- `npm run check` — every test but the slow audits, in parallel (`node tests/run.mjs`; `node tests/run.mjs drac` or `db/` runs the matching ones, a slow audit only when named (`drac-compare`); `--bail` stops at the first failure; `--jobs=N`). Must be green before handing back code changes; for documentation-only work, validate the affected documents and references. While iterating, run the matching tests, and the whole check once at the end. `npm run check:full` adds the slow audits (`SLOW` in `tests/run.mjs`, minutes each): run it before merging a release branch into `main`, before a tag and when their area changes; `build:pages` (the deploy) runs it.
+- `npm run check` — every test, in parallel (`node tests/run.mjs`; `node tests/run.mjs drac` or `db/` runs the matching ones, `--bail` stops at the first failure, `--jobs=N`). About 3 minutes on a quiet machine; several full checks at once (other agents) make every one of them far slower. Must be green before handing back code changes; for documentation-only work, validate the affected documents and references. While iterating, run the matching tests, and the whole check once at the end.
 - Regenerate music + chart (only when the task is about music/chart):
   `uv run --python 3.11 --with numpy --with scipy --with soundfile --with mido tools/music/build_taiko.py`
 - Never hardcode the BPM (it has changed before): the Drac changes tempo phrase by phrase (the Mulassa keeps 152 since but may not stay so), so read the local grid (`song.beats`, `beatAtTime`/`timeAtBeat`); `song.bpm` is only the opening tempo.

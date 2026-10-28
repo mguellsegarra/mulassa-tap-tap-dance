@@ -91,6 +91,7 @@ export function buildMulassa() {
   neck.add(n.mesh());
 
   const head = new THREE.Group();
+  head.name = 'head'; // (the showreel's close-ups find their part by name: game/showreel.js SHOT_KINDS)
   head.position.set(0, 1.55, 0.05);
   head.scale.setScalar(1.3);
   neck.add(head);

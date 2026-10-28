@@ -47,7 +47,7 @@ export function smoothDamp(s, i, target, time, dt, max = Infinity) {
 // centre should sit (out.cx, out.cy, css px) and her lowest point (out.floor). A short band (a portrait phone under a long info block) still gets a readable
 // figure: at least `least` of the room under the hard top (the pills), standing on the band's floor (the dock) and rising
 // over the info block's lower rows, never into the header. vh: the viewport's css px tall; tan: tan(vertical fov / 2).
-export function menuFit(out, r, vh, tan, w, h, fill = 0.86, least = 0.55, across = 0.8) { // across: less of the width (her travel and the follow's lag show sideways)
+export function menuFit(out, r, vh, tan, w, h, fill = 0.86, least = 0.55, across = 0.7) { // across: less of the width (her travel and the dolly's lag as she turns side on show sideways: at 0.8 the Mulassa's side on outran a 393 px phone)
   const ppm = vh / (2 * tan), rw = Math.max(1, r.right - r.left), rh = Math.max(1, r.bottom - r.top), room = Math.max(rh, r.bottom - (r.hardTop ?? r.top));
   const ph = Math.min(Math.max(rh * fill, room * least), room * fill);
   out.dist = Math.max(h * ppm / ph, w * ppm / (rw * across));
@@ -57,6 +57,10 @@ export function menuFit(out, r, vh, tan, w, h, fill = 0.86, least = 0.55, across
   out.floor = out.cy + h * ppm / out.dist / 2; // where her lowest point goes (her feet: the ground never bobs as she rears up)
   return out;
 }
+// The shot's hard edge: how far to slide a figure spanning a..b (px) so it stays inside lo..hi; 0 while it is inside. A travelling
+// figure pushes the frame along instead of leaving it while the slow follow catches up. Wider than the room (a long figure side
+// on, on a narrow phone, until the dolly backs off): centred, cropped evenly on both sides rather than all on one.
+export const edgePush = (a, b, lo, hi) => b - a > hi - lo ? (lo + hi - a - b) / 2 : a < lo ? lo - a : b > hi ? hi - b : 0;
 // Follows a size that jumps about (a figure turning side on and back) without chasing it: rises in about `up` s (the UI
 // must stay clear), falls in about `down` s (no pumping on every turn). Exact at any frame rate.
 export const envelope = (env, x, dt, up, down) => env + (x - env) * (1 - Math.exp(-dt / (x > env ? up : down)));

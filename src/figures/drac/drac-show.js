@@ -20,6 +20,8 @@ import { activeCrowd } from '../../scene/quality.js';
 import { sootFrame } from './drac-soot.js';
 import { plazaNight, nightLook, NIGHT_BLUE, NIGHT_NOW } from '../common/night.js';
 import { photoExtras } from '../../scene/photo-obstacles.js';
+import { REEL } from '../../game/showreel.js';
+import { timeAtBeat } from '../../core/beat-grid.js';
 
 export const dracFx = createDracFx(scene, { smoke: renderProfile.smoke ?? 0, jets: renderProfile.jets ?? 0, wheels: renderProfile.wheels ?? 0, sound: figureSfx, calm: CALM, octaves: qualityLevel > 0 ? 2 : 1 });
 const isDracOn = () => selectedFigure.id === DRAC?.id;
@@ -58,13 +60,14 @@ const DRAC_NIGHT_LOOKS = { blue: NIGHT_BLUE, ember: nightLook('#160807', '#06020
 const DRAC_NIGHT_SMOKE = new THREE.Color('#6a2a24');
 const DRAC_NIGHT = { n: 0, cfg: DRAC_NIGHTS[Q.get('nit') ?? 'b'] ?? null, song: null, windows: [] };
 DRAC_NIGHT.style = DRAC_NIGHT.cfg; // style: the window's night, kept while it lifts
-function dracNight(dt, t) {
+// reel: the selector's showreel with its UI faded out (its night as in a run); the UI back, day again with it (0.25 s).
+function dracNight(dt, t, reel) {
   const ended = G.state === 'results'; // a night that reached the end stays over the results, under the red smoke thinning out
-  const N = DRAC_NIGHT, run = !!N.cfg && isDracOn() && (G.state === 'play' || ended) && !G.practice && !!drac?.root.visible;
+  const sel = REEL.on && G.state === 'select', N = DRAC_NIGHT, run = !!N.cfg && isDracOn() && ((G.state === 'play' || ended) && !G.practice || sel) && !!drac?.root.visible;
   if (run && song !== N.song) { N.song = song; N.windows = dracNightWindows(song, N.cfg); } // (another figure's song has none of its labels)
-  const was = N.n, w = run && !ended ? dracNightAt(N.windows, t) : null, on = !!w || run && ended && was > 0.5;
+  const was = N.n, w = run && !ended && (!sel || reel) ? dracNightAt(N.windows, t) : null, on = !!w || run && ended && was > 0.5;
   if (w) N.style = w[2];
-  N.n = run ? was + ((on ? 1 : 0) - was) * (1 - Math.exp(-Math.max(0, dt) / N.style.fall)) : 0; // a menu clears it at once, like the red smoke
+  N.n = run ? was + ((on ? 1 : 0) - was) * (1 - Math.exp(-Math.max(0, dt) / (sel && !reel ? 0.08 : N.style.fall))) : 0; // a menu clears it at once, like the red smoke
   if (!on && N.n < 0.01) N.n = 0;
   if (!N.n && !was) return;
   plazaNight(N.n, DRAC_NIGHT_LOOKS[N.style.look]);
@@ -75,7 +78,9 @@ function dracNight(dt, t) {
 
 // once a frame, after animCrowd. t: the song time drawn
 export function dracFrame(dt, t) { // (the red smoke of the last pass rises round IN.x/z, her spot)
-  dracNight(dt, t);
+  const reel = isDracOn() && REEL.on && REEL.idle && G.state === 'select' && !PHOTO.on; // the showreel without its UI: the run's festa, on the reel's beat
+  if (reel) t = timeAtBeat(song.beats, REEL.beat);
+  dracNight(dt, t, reel);
   if (!drac?.root.visible) {
     FOLK[0] = activeCrowd; sootFrame(dt, dracFx, FOLK, false, false); // anyone charred comes back
     SHOWCASE.crema = false;
@@ -94,13 +99,13 @@ export function dracFrame(dt, t) { // (the red smoke of the last pass rises roun
     if (IN.held) figureSfx('flama', 0, true); // explicit manual action; one onset, repeats never restart it
   }
   if (!on && !show && !hazed && dracFx.idle) { FOLK[0] = activeCrowd; sootFrame(dt, dracFx, FOLK, false, false); return; } // the Mulassa alone: nothing to do
-  const play = on && G.state === 'play' && !G.collapseT;
-  IN.on = (play && !G.practice) || show; IN.fire = on || show ? drac?.fire ?? null : null;
-  IN.streak = play && !G.practice && (streakFire(G.combo) || t >= song.finale); // the carretilles' jets: a long streak, the FINAL ESBOJARRAT
+  const play = on && G.state === 'play' && !G.collapseT, fest = play && !G.practice || reel;
+  IN.on = fest || show; IN.fire = on || show ? drac?.fire ?? null : null;
+  IN.streak = fest && (!reel && streakFire(G.combo) || t >= song.finale); // the carretilles' jets: a long streak, the FINAL ESBOJARRAT
   if (song !== flareSong) { flareSong = song; flareT = dracTime.songAtRef(DRAC_FX.flareRef); }
   // From the brake before the six reversed spins it builds up to the final hit; results let it thin out, menus clear it.
-  IN.flare = play && !G.practice ? flareLevel(t, flareT, song.end) : false;
-  if (G.state === 'splash' || G.state === 'select' || G.practice || !on) dracFx.clearHaze();
+  IN.flare = fest ? flareLevel(t, flareT, song.end) : false;
+  if (G.state === 'splash' || G.state === 'select' && !reel || G.practice || !on) dracFx.clearHaze(); // (the selector's UI up: none)
   IN.max = renderProfile.smoke ?? 0; IN.jmax = renderProfile.jets ?? 0; IN.wmax = renderProfile.wheels ?? 0; IN.viewH = glc.height; // (the canvas's pixel height: far sparks stay ~1.5 px wide) IN.x = M.pos.x; IN.z = M.pos.y; // a quality step down since the pools were made: fewer
   const bl = play ? tracaWindow(G.balloons, t) : null;
   if (bl !== tracaFor) { tracaFor = bl; if (bl) dracFx.begin(); else dracFx.end(); }

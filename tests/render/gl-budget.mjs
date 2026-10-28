@@ -54,8 +54,13 @@ const sample = async (page, name) => {
       const frame = () => new Promise(r => requestAnimationFrame(r));
       await frame(); await frame();
       let draws = Infinity; // the steady frame: the least of six windows (a one-off burst, like a share render or a busy machine's
-      // stalled frame, is not the budget; a real regression stays high in every window)
-      for (let w = 0; w < 6; w++) { const d0 = window.__draws; for (let i = 0; i < 3; i++) await frame(); draws = Math.min(draws, Math.ceil((window.__draws - d0) / 3)); }
+      // stalled frame, is not the budget; a real regression stays high in every window). A showreel cut's dissolve renders the
+      // outgoing shot too for 0.5 s (ui/reel-fade.js, a cut every ~3 s): its frames are not the steady one, so a window waits it out.
+      const fading = () => document.getElementById('reel-fade')?.getAnimations?.().some(a => a.playState === 'running');
+      for (let w = 0; w < 6; w++) {
+        for (let i = 0; i < 60 && fading(); i++) await frame();
+        const d0 = window.__draws; for (let i = 0; i < 3; i++) await frame(); draws = Math.min(draws, Math.ceil((window.__draws - d0) / 3));
+      }
       const switched = (window.__qualityTrace ?? []).some(e => e.at >= t0 && 'to' in e); // dev/perf.js's monitor log
       return { ...window.__perfLive(), draws, switched };
     }, [LEVELS[name], name]);
@@ -71,7 +76,10 @@ try {
     const page = await open('');
     await page.keyboard.press('Enter'); // the splash's tap
     await page.waitForFunction(() => window.__dbg.G.state === 'select', null, { timeout: 30000 });
-    for (let calm = 0, last = -1; calm < 8; await page.waitForTimeout(1000)) { // the idle selector's first showreel cuts build things lazily over ~10 s: wait them out
+    // The budget is the selector with its UI: a pointer move now and then keeps the idle screen (and the Drac's night and fire on
+    // it, built lazily as the reel reaches them) from coming in while it is measured
+    const awake = setInterval(() => page.mouse.move(5 + Math.random() * 20, 5).catch(() => {}), 2000);
+    for (let calm = 0, last = -1; calm < 8; await page.waitForTimeout(1000)) { // the selector's first showreel cuts build things lazily over ~10 s: wait them out
       const g = (await page.evaluate(() => window.__perfLive())).geos; calm = g === last ? calm + 1 : 0; last = g;
     }
     const pick = id => page.evaluate(i => document.querySelector(`[data-id="${i}"]`).click(), id);
@@ -93,6 +101,7 @@ try {
     }
     assert.equal(end.geos, first[`${FIGURES[0]} medium`].geos, 'geometries back at the start');
     assert.equal(end.texs, first[`${FIGURES[0]} medium`].texs, 'textures back at the start');
+    clearInterval(awake);
     assert.deepEqual(page.errors, []);
   }
   for (const [figura, id] of [['mulassa', FIGURES[0]], ['drac', FIGURES[1]]]) { // in play: the lane, the colla, the effects

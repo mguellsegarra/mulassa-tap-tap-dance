@@ -5,27 +5,27 @@ import { selectedFigure, figureScale } from '../game/figure-song.js';
 import { G } from '../game/state.js';
 import { Q, COARSE } from '../core/env.js';
 import { blocks } from '../scene/framing.js';
-import { orbitCancel } from '../scene/orbit.js';
+import { orbitCancel, resetLook } from '../scene/orbit.js';
 import { camera, plaza, cameraTarget, camFocus, camFocusTarget, camShift, camShiftX, camXYZ, focusXYZ, setCamShift } from '../scene/stage.js';
 import { figureRoot } from '../figures/objects.js';
 import { PHOTO } from '../game/photo-control.js';
 import { PAIR } from '../figures/drac/drac-play.js';
 import { M } from '../scene/figure-springs.js';
 import { trauma, setTrauma } from '../scene/manual-jump.js';
-import { orbit, insidePlaza, frameMenuCamera, lens, easeLensX, applyCameraImpact, pairShot } from '../scene/cameras.js';
-import { framePlayCamera, CAMS } from '../scene/play-camera.js';
+import { orbit, look, insidePlaza, frameMenuCamera, lens, easeLensX, applyCameraImpact, pairShot } from '../scene/cameras.js';
+import { framePlayCamera, applyWatchLook, CAMS } from '../scene/play-camera.js';
 import { framePhotoCamera, releasePhotoCamera } from '../scene/photo-camera.js';
 import { FIGURE_SCENES } from '../scene/figure-scenes.js';
 import { BOU_FINALE } from '../figures/bou/bou-bills.js';
 import { hud, HH, K, W, SAFE, baseFov } from '../hud/canvas.js';
-import { lane, playBottom } from '../hud/layout.js';
+import { lane, playBottom, playStage } from '../hud/layout.js';
 import { splashS, splashBand } from '../hud/title.js';
 import { viewMode, menuState } from './controls.js';
 import { sheets } from './sheets.js';
 import { idleBand } from './reel-idle.js';
 import { REEL } from '../game/showreel.js';
 
-const SPLASH_BAND = {}; // the splash's free band, refilled each frame
+const SPLASH_BAND = {}, WATCH_BAND = { top: 0, bottom: 0, left: 0, right: 0 }; // the splash's and the dance demo's free bands, refilled each frame
 
 // ?cam: the camera editor over the game (src/dev/cam-edit.js): choose a view by eye, copy its numbers, the per-device camera is fitted from them
 // The dev editors load only when asked for (their own chunks): the published game never downloads them
@@ -40,6 +40,7 @@ export function frameCamera(dt, now, reelWide) { // reelWide: the idle selector'
   const mx = G.state === 'play' ? M.pos.x : (M.pivot.x * 0.5 + M.pos.x * 0.5) * (1 - pk) + PAIR.x * pk, mz = G.state === 'play' ? M.pos.y : (M.pivot.y * 0.5 + M.pos.y * 0.5) * (1 - pk) + PAIR.z * pk, far = camera.aspect < 1 ? 1.4 : 1; // play follows the body; the menu follows her pivot
   const VIEW = { side: [9, 2.2, 0], front: [0, 2.5, 8], back: [-3, 3, -8], top: [4, 9, 6] }[Q.get('view')];
   if (!PHOTO.on) releasePhotoCamera();
+  const watchReel = G.state === 'play' && G.watch && REEL.on && !PHOTO.on && !VIEW;
   let shift = 0; // where her centre should sit, in css px below the middle of the screen
   if (PHOTO.on && !VIEW) { framePhotoCamera(dt); } else if (VIEW) {
     camera.position.set(mx + VIEW[0], VIEW[1], mz + VIEW[2]);
@@ -53,6 +54,11 @@ export function frameCamera(dt, now, reelWide) { // reelWide: the idle selector'
     const splash = G.state === 'splash'; // the pair, framed whole between the logo and the prompt (cameras.js pairShot)
     const sel = G.state === 'select', root = splash ? pairShot() : sel && !PAIR.k ? figureRoot(selectedFigure.id) : null; // «QUI BALLA?» frames its figure in the free rect it measured (css px, when it opens or resizes); «mode foto» hides the selector: the whole screen
     shift = frameMenuCamera(dt, mx, mz, root, splash ? splashBand(SPLASH_BAND) : sel && !viewMode ? (reelWide ? idleBand(sheets.select?.band, W * K, HH * K, SAFE) : sheets.select?.band) : null, aim, REEL.on ? REEL : null);
+  } else if (watchReel) { // «Mira el ball»: the showreel's shots on the song's beat, in the demo's free stage; a drag still turns them round her
+    const area = playStage(); WATCH_BAND.top = area.top * K; WATCH_BAND.bottom = area.bottom * K; WATCH_BAND.right = W * K;
+    if (REEL.fresh) resetLook(look);
+    shift = frameMenuCamera(dt, mx, mz, figureRoot(selectedFigure.id), WATCH_BAND, 0, REEL);
+    applyWatchLook(dt, camFocus.x, camFocus.y, camFocus.z); camera.lookAt(camFocus);
   } else if (G.state === 'play') {
     CAMED?.restoreFov();
     shift = framePlayCamera(dt, mx, mz);
@@ -68,7 +74,7 @@ export function frameCamera(dt, now, reelWide) { // reelWide: the idle selector'
     if (camera.fov !== baseFov()) { camera.fov = baseFov(); camera.updateProjectionMatrix(); }
   }
   if (!VIEW && !PHOTO.on) for (const f of FIGURE_SCENES) if (f.endShot) shift = f.endShot(dt, shift); // a figure's end shot (the Bou: down to its banknotes, over play and results)
-  const menuCam = menuState() && !PHOTO.on && !VIEW;
+  const menuCam = (menuState() || watchReel) && !PHOTO.on && !VIEW;
   setCamShift(PHOTO.on || menuCam || G.state === 'play' && !VIEW ? shift : camShift + (shift - camShift) * Math.min(1, dt * 3), menuCam ? lens.x : easeLensX(dt) * !PHOTO.on); // play and menus: already smoothed (photo driving: no shift)
   if (Math.abs(camShift) > 0.5 || Math.abs(camShiftX) > 0.5) camera.setViewOffset(W * K, HH * K, -camShiftX, -camShift, W * K, HH * K);
   else if (camera.view?.enabled) camera.clearViewOffset();

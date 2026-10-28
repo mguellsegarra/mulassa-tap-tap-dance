@@ -39,10 +39,10 @@ export function roomAlong(x, z, dx, dz, lim) {
 
 // The limits right now: the far one from the square's edge behind the camera (`room`, horizontal m), the low pitch
 // from the eye height at this distance.
-export function orbitLimits(out, dist, pitch, room) {
+export function orbitLimits(out, dist, pitch, room, eye = ORBIT.eye) { // eye: a lower lens for one showreel shot (game/showreel.js SHOT_KINDS.low)
   out.distMin = ORBIT.distMin;
   out.distMax = Math.max(ORBIT.distMin, Math.min(ORBIT.distMax, room / Math.cos(pitch)));
-  out.pitchMin = Math.max(ORBIT.pitchMin, Math.asin(Math.min(1, (ORBIT.eye - ORBIT.focusY) / Math.max(1e-3, dist))));
+  out.pitchMin = Math.max(ORBIT.pitchMin, Math.asin(Math.min(1, (eye - ORBIT.focusY) / Math.max(1e-3, dist))));
   out.pitchMax = ORBIT.pitchMax;
   return out;
 }

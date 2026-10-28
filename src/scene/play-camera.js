@@ -81,17 +81,19 @@ export function framePlayCamera(dt, mx, mz, snap = false) { // snap: jump straig
   insidePlaza(cameraTarget.set(fx + d * ce * Math.sin(az), focusY + d * Math.sin(el), fz + d * ce * Math.cos(az)), fx, focusY, fz);
   if (snap) { s.x[5] = cameraTarget.x; s.x[6] = cameraTarget.y; s.x[7] = cameraTarget.z; }
   camera.position.set(smoothDamp(s, 5, cameraTarget.x, CAM_T.pos, t), smoothDamp(s, 6, cameraTarget.y, CAM_T.pos, t), smoothDamp(s, 7, cameraTarget.z, CAM_T.pos, t));
-  if (G.watch && !snap) { // «Mira el ball»: the player's offsets turn and scale the shot round her, after the springs (a drag never lags)
-    lookStep(look, dt, pnow());
-    if (Math.abs(look.yaw) + Math.abs(look.x[0]) + Math.abs(look.x[1] - 1) > 1e-4) {
-      const ox = camera.position.x - fx, oy = camera.position.y - focusY, oz = camera.position.z - fz, hd = Math.hypot(ox, oz);
-      const r = Math.hypot(hd, oy) * look.x[1], a = Math.atan2(ox, oz) + look.yaw, e = Math.max(0.12, Math.min(1.1, Math.atan2(oy, hd) + look.x[0]));
-      camera.position.copy(insidePlaza(cameraTarget.set(fx + r * Math.cos(e) * Math.sin(a), focusY + r * Math.sin(e), fz + r * Math.cos(e) * Math.cos(a)), fx, focusY, fz));
-    }
-  }
+  if (G.watch && !snap) applyWatchLook(dt, fx, focusY, fz);
   camera.lookAt(camFocus.set(fx, focusY, fz));
   // the lens shift puts her focus point CAMV.stage of the way down the stage (css px: the focus is at the middle of the screen without it)
   const shift = (area.top + (G.collapseT ? 0.6 : CAMV.stage) * (area.bottom - area.top)) * K - HH * K / 2; // (collapsed: lower, her legs kick up)
   if (snap) s.x[4] = shift;
   return smoothDamp(s, 4, shift, CAM_T.shift, t);
+}
+// «Mira el ball»: the player's offsets turn and scale the shot round the focus (fx, fy, fz), after the springs (a drag never lags);
+// the caller aims the camera at the focus afterwards
+export function applyWatchLook(dt, fx, fy, fz) {
+  lookStep(look, dt, pnow());
+  if (Math.abs(look.yaw) + Math.abs(look.x[0]) + Math.abs(look.x[1] - 1) <= 1e-4) return;
+  const ox = camera.position.x - fx, oy = camera.position.y - fy, oz = camera.position.z - fz, hd = Math.hypot(ox, oz);
+  const r = Math.hypot(hd, oy) * look.x[1], a = Math.atan2(ox, oz) + look.yaw, e = Math.max(0.12, Math.min(1.1, Math.atan2(oy, hd) + look.x[0]));
+  camera.position.copy(insidePlaza(cameraTarget.set(fx + r * Math.cos(e) * Math.sin(a), fy + r * Math.sin(e), fz + r * Math.cos(e) * Math.cos(a)), fx, fy, fz));
 }

@@ -2,6 +2,7 @@
 
 ## Measure, then look
 
+- Showreel framing across sizes: `/tools/dev/reel-review.html` on the dev server (live, side by side, pick the figure, mode and shot), and `node tools/qa/reel-review.mjs` (clipping: a whole loop on the idle screen, 4 samples a second, the share of her outline outside the screen per shot; `--figs`, `--props`, `--vps`; at most 3 pages at once, 4 crashed Chrome).
 - Measure her projected screen box against the free band every ~100 ms with a temporary probe (overlap %, px over the header or dock, time under the dock after a wake). Remove the probe afterwards.
 - Measure angular speed of the view (rad/s) over a whole loop or song, at the largest screen you care about (2560×1440 for the Studio Display). Duration alone does not show dizziness.
 - Real GPU (Chrome + Metal) for anything about motion; SwiftShader fakes hitches. One capture at a time (`/tmp/mulassa-capture.lock`).

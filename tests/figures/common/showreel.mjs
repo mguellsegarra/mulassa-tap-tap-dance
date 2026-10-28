@@ -1,7 +1,7 @@
-// The selector's showreel (src/game/showreel.js), filmed as a dance film: long shots (no shot under 16 beats, ~6 s), cuts and
-// glides on bars, a hard cut only where the list says so (a glide eases across without a jump), never the same shot twice in
-// a row (across the loop too), every angle on the camera's side of the action, her whole body with air round her, and the
-// dance clock locked to the menu loop's beat.
+// The selector's showreel (src/game/showreel.js), cut like a music video: a change every two bars or so (8-40 beats; close-ups
+// 8-12, cut in and out), on bars, a cut only where the list says so (a glide eases across without a jump), never the same shot
+// twice in a row (across the loop too), every angle on the camera's side of the action, every shot held or moving slowly
+// (the dizziness was the camera turning, not the cut), and the dance clock locked to the menu loop's beat.
 import assert from 'node:assert/strict';
 import { SHOWREELS, SHOT_KINDS, REEL_GLIDE, REEL_GLIDE_AZ, REEL, followBeat, shotAt, tickReel } from '../../../src/game/showreel.js';
 import menuSong from '../../../src/song-mulassa.json' with { type: 'json' };
@@ -14,18 +14,19 @@ import { dracTime } from '../../../src/figures/drac/drac-time.js';
 import { DRAC_SCALE } from '../../../src/figures/drac/drac.js';
 
 const songs = { [MULASSA.id]: menuSong, [DRAC.id]: dracSong, [BOU.id]: bouSong };
+const closeUp = kind => SHOT_KINDS[kind].part && SHOT_KINDS[kind].part !== '*'; // ('*': her whole body through the long lens, not a part)
 for (const [id, reel] of Object.entries(SHOWREELS)) {
   const { shots, loop, start } = reel, end = beatAtTime(songs[id].beats, songs[id].end);
   assert.deepEqual(shots[0].slice(0, 1).concat(shots[0][2]), [0, 'cut'], `${id}: the list covers the loop from its first beat, on a cut (the wrap)`);
   assert.ok(loop >= end && loop - end <= 8 && loop % 4 === 0, `${id}: the loop starts again on a bar shortly after the final hit (${end})`);
   assert.ok(start % 4 === 0 && start < loop, `${id}: a fresh selection starts on a bar`);
-  assert.ok(shots.filter(s => s[2] === 'cut').length <= 5, `${id}: hard cuts only at the big changes`);
   shots.forEach(([b, kind, how], i) => {
     const next = shots[i + 1]?.[0] ?? loop, prev = shots.at(i - 1)[1];
     assert.ok(SHOT_KINDS[kind] && (how === 'cut' || how === 'glide'), `${id}: ${kind} ${how} is a shot`);
-    assert.equal(b % 4, 0, `${id}: the change at ${b} is on a bar`);
-    if (SHOT_KINDS[kind].part) assert.ok(next - b >= 8 && next - b <= 12 && how === 'cut' && (shots[i + 1]?.[2] ?? 'cut') === 'cut', `${id}: the close-up at ${b} is short (${next - b} beats), cut in and out`);
-    else assert.ok(next - b >= 16 && next - b <= 40 && (how !== 'glide' || next - b > REEL_GLIDE), `${id}: the shot at ${b} lasts ${next - b} beats (a glide's, longer than the glide)`);
+    assert.equal(b % 2, 0, `${id}: the change at ${b} is on a bar (the Drac's 2/4 bar is 2 beats)`);
+    if (closeUp(kind)) assert.ok(next - b >= 8 && next - b <= 12 && how === 'cut' && (shots[i + 1]?.[2] ?? 'cut') === 'cut', `${id}: the close-up at ${b} is short (${next - b} beats), cut in and out`);
+    else assert.ok(next - b >= 8 && next - b <= 40 && (how !== 'glide' || next - b > REEL_GLIDE), `${id}: the shot at ${b} lasts ${next - b} beats (a glide's, longer than the glide)`);
+    const k = SHOT_KINDS[kind]; assert.ok(Math.abs(k.az[1] - k.az[0]) / (next - b) <= 0.05, `${id}: the shot at ${b} turns round her slowly (≤ 0.05 rad a beat: ~0.13 rad/s)`);
     assert.notEqual(kind, prev, `${id}: no change into the same shot at ${b}`);
     if (how === 'glide') assert.ok(Math.abs(SHOT_KINDS[kind].az[0] - SHOT_KINDS[prev].az[1]) <= REEL_GLIDE_AZ, `${id}: the glide at ${b} turns round her calmly`);
   });
@@ -43,7 +44,7 @@ for (const [id, reel] of Object.entries(SHOWREELS)) {
 { const out = {}, B = dracSong.beats, songAt = b => { const i = Math.min(B.length - 2, Math.floor(b)); return B[i] + (B[i + 1] - B[i]) * (b - i); };
   const { shots, loop } = SHOWREELS[DRAC.id];
   shots.forEach(([b, kind], i) => {
-    if (!SHOT_KINDS[kind].part) return;
+    if (!closeUp(kind)) return;
     let worst = 0, turn = 0, last = null;
     for (let x = b; x <= (shots[i + 1]?.[0] ?? loop); x += 0.25) {
       rootAt(out, dracTime.refAt(songAt(x))); const p = [out.x * DRAC_SCALE, out.z * DRAC_SCALE, out.yaw];
@@ -53,9 +54,9 @@ for (const [id, reel] of Object.entries(SHOWREELS)) {
     assert.ok(worst < 0.8 && turn < 0.35, `drac: the close-up at ${b} holds a still moment (${worst.toFixed(2)} m, ${turn.toFixed(2)} rad a beat)`);
   }); }
 for (const [name, k] of Object.entries(SHOT_KINDS)) {
-  for (const az of k.az) assert.ok(Math.abs(az) <= 0.8, `${name}: stays on the camera's side of the action (180° rule)`);
-  for (const f of k.fill) assert.ok(f >= 0.55 && f <= 0.82, `${name}: her whole body (a close-up: its part) with air round it`);
-  assert.ok(Math.abs(k.az[1] - k.az[0]) <= 0.12, `${name}: nearly held (a slight drift, no swing)`);
+  for (const az of k.az) assert.ok(Math.abs(az) <= 1.2, `${name}: stays on the camera's side of the action (180° rule)`);
+  for (const f of k.fill) assert.ok(f >= 0.35 && f <= 0.96, `${name}: her whole body (a close-up: its part) inside the band`);
+  assert.ok(!k.eye || k.eye >= 2 && k.el <= 0.2, `${name}: a lower lens only for a low shot, still over a crouching head`);
 }
 
 // reduced motion: one still shot
@@ -95,4 +96,11 @@ for (let i = 0; i < 4 * 232 * 10; i++) { const mb = (1.5 + (i + 1) * 0.1) % 64; 
 assert.ok(wraps >= 3 && cuts === wraps * mula.shots.filter(s => s[2] === 'cut').length, `every cut and the wrap, nothing else (${cuts} for ${wraps} loops)`);
 r = tickReel(true, DRAC.id, 0, 0.04); assert.ok(r.cut && r.beat >= 8 && r.beat < 12, 'another figure starts its own reel (the Drac on the wide shot, not its close-up)');
 r = tickReel(false, DRAC.id, 0.1, 0.04); assert.ok(!r.on && !r.cut);
+// «Mira el ball»: the same shots on the song's own beat, from its first beat, fresh after the selector's reel; once through, no wrap
+r = tickReel(false, DRAC.id, 0.2, 0.04, false, 0); assert.ok(r.on && r.fresh && r.beat === 0, 'the demo opens on its first shot, fresh');
+r = tickReel(false, DRAC.id, 0.3, 0.04, false, 10); assert.ok(r.cut && !r.fresh, 'a cut of the list cuts (and dissolves) in the demo too');
+r = tickReel(false, DRAC.id, 0.3, 0.04, false, 14); assert.ok(r.beat === 14 && !r.cut, 'the song beat itself; inside a shot, no cut');
+r = tickReel(false, DRAC.id, 0.4, 0.04, false, 97); assert.ok(r.cut, 'the stare\'s close-up cuts in');
+r = tickReel(false, DRAC.id, 0.5, 0.04, false, 400); assert.ok(r.beat === 400, 'past the loop it holds the last shot (no wrap)');
+r = tickReel(true, DRAC.id, 0.6, 0.04); assert.ok(r.fresh && r.beat >= 8, 'back on the selector: its own reel afresh');
 console.log('showreel ok');

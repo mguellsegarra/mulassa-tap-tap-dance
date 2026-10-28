@@ -62,10 +62,10 @@ import { menuFit, envelope } from '../../src/scene/framing.js';
   const band = { top: 260, bottom: 612, hardTop: 114, left: 0, right: 393 };
   menuFit(out, band, vh, tan, 2, 4); // a tall figure: its height decides
   const tall = 4 * ppm / out.dist;
-  assert(Math.abs(tall - 0.86 * 352) < 1e-6 && 2 * ppm / out.dist < 0.8 * 393, 'tall: fills 86% of the band, narrower than it');
+  assert(Math.abs(tall - 0.86 * 352) < 1e-6 && 2 * ppm / out.dist < 0.7 * 393, 'tall: fills 86% of the band, narrower than it');
   assert.equal(out.cy, 436); assert.equal(out.cx, 196.5);
   menuFit(out, band, vh, tan, 6, 2); // a long one: its width decides
-  assert(Math.abs(6 * ppm / out.dist - 0.8 * 393) < 1e-6 && 2 * ppm / out.dist < 0.86 * 352, 'long: fills 80% of the width (room for her travel)');
+  assert(Math.abs(6 * ppm / out.dist - 0.7 * 393) < 1e-6 && 2 * ppm / out.dist < 0.86 * 352, 'long: fills 70% of the width (room for her travel and the dolly\'s lag)');
   const short = { top: 324, bottom: 408, hardTop: 114, left: 0, right: 320 }; // 320x568 under a long info block: an 84 px band
   menuFit(out, short, 568, tan, 2, 4);
   const h = 4 * (568 / (2 * tan)) / out.dist, top = out.cy - h / 2, bottom = out.cy + h / 2;
@@ -107,3 +107,11 @@ console.log('lens clearance ok');
   assert.ok(Math.abs(a.cy - 400) < 1 && Math.abs(g.floor - (650 - 500 * 0.07)) < 1 && g.dist === a.dist, `ground: on the floor (${a.floor.toFixed(0)} -> ${g.floor.toFixed(0)}), same size`);
   console.log('splash band on the floor ok');
 }
+
+// The shot's hard edge: a figure leaving the frame slides it back by its overflow; one wider than the room is centred.
+import { edgePush } from '../../src/scene/framing.js';
+assert.equal(edgePush(20, 120, 0, 400), 0, 'inside: no push');
+assert.equal(edgePush(-30, 70, 0, 400), 30, 'out on the left: slid right by its overflow');
+assert.equal(edgePush(350, 430, 0, 400), -30, 'out on the right: slid left');
+assert.equal(edgePush(-60, 440, 0, 400), 10, 'wider than the room: centred, cropped evenly on both sides');
+console.log('hard edge ok');

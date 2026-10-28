@@ -210,6 +210,8 @@ assert.equal(sounds.length, soundBefore + 2, 'unavailable scroll actions make no
   strip.fire('wheel', { deltaY: 100, deltaX: 0, deltaMode: 0, preventDefault() { prevented = true; } });
   assert(prevented && strip.scrollLeft === 100 && api.figure === MULASSA, 'the wheel browses without selecting');
   assert($('select-prev').disabled, 'scrolling never enables the arrow before the first figure');
+  const focusKept = type => { let kept = false; strip.fire('pointerdown', { pointerType: type }); strip.fire('mousedown', { preventDefault() { kept = true; } }); return !kept; };
+  assert(!focusKept('touch') && focusKept('mouse'), 'a finger leaves the card unfocused (Android: ~300 ms of layouts a change); a mouse focuses it');
   click($('select-forward')); assert.equal(api.figure, DRAC, 'the next arrow goes on from the selection, not from what the wheel shows');
   strip.scrollLeft = 900; click($('select-next')); click($('select-figures-back'));
   assert.equal(strip.scrollLeft, 87, 'back from difficulty, the selected figure is centred again');

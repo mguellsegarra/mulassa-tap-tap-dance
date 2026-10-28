@@ -7,6 +7,7 @@ import { drac } from './drac-objects.js';
 import { newDracPose } from './dance-drac.js';
 import { poseDrac } from './drac-motion.js';
 import { dressCarrier } from './drac-rig.js';
+import { dogDrac } from './drac-groove.js';
 import { danceDrac } from './drac-dance.js';
 import { DRAC_SCALE } from './drac.js';
 import { newWalker, resetWalker, demoStep, turn, manualDracStep, resumeWalker } from './drac-demo.js';
@@ -16,6 +17,7 @@ import { smooth, easeIn } from '../../core/math.js';
 import { PIVOT, S, M, CAP, stepSprings, capSpring, holdGesture } from '../../scene/figure-springs.js';
 import { stepManualJump, beginManualFlight, manualContact } from '../../scene/manual-jump.js';
 
+const DOG_TAME = 0.75; // the walkers' happy dog (drac-groove.js), as tame as their dance (drac-demo.js SHOW.tame)
 const DRAC_POSE = newDracPose(), DRAC_ACC = { roll: 0, pitch: 0, lift: 0, col: 0, vigor: 1 };
 // The splash: the Drac wanders and dances beside her (drac-demo.js), round a spot across the shot from the camera; each
 // slows down short of the other, and a last push keeps her head, centre and rear out of its footprint.
@@ -59,7 +61,7 @@ export function animPair(dt, beat, pair) {
   if (w.manual > 0) resumeWalker(w, beat);
   demoStep(w, DRAC_POSE, dt, beat, M.pos, DRAC_SCALE); PAIR.x = w.x; PAIR.z = w.z;
   placeLife(w.x, w.z, w.face, DRAC_JUMP.air = 0);
-  poseDrac(drac, DRAC_POSE, 0, w.feetAt); dressCarrier(drac);
+  poseDrac(drac, DRAC_POSE, 0, w.feetAt); dogDrac(drac, beat, DOG_TAME); dressCarrier(drac);
 }
 
 export function animPlayableDrac(dt, beat, live, reel) {
@@ -69,7 +71,7 @@ export function animPlayableDrac(dt, beat, live, reel) {
     if (PHOTO.on) manualDracStep(SOLO, DRAC_POSE, dt, beat, PHOTO.drac, DRAC_SCALE, CALM.matches);
     else demoStep(SOLO, DRAC_POSE, dt, beat, null, DRAC_SCALE);
     placeLife(SOLO.x, SOLO.z, SOLO.face, PHOTO.on && PHOTO.id === 'drac-valls' ? dracJump(dt) : (DRAC_JUMP.air = 0));
-    poseDrac(drac, DRAC_POSE, 0, SOLO.feetAt); dressCarrier(drac);
+    poseDrac(drac, DRAC_POSE, 0, SOLO.feetAt); dogDrac(drac, beat, DOG_TAME); dressCarrier(drac);
     const prev = M.yaw;
     M.yaw = SOLO.face; M.yawVel = dt > 0 ? turn(M.yaw, prev) / dt : 0;
     M.pos.set(SOLO.x, SOLO.z); M.pivot.copy(M.pos); M.dancing = false;

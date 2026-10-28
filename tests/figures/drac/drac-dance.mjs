@@ -1,6 +1,6 @@
 // The Drac's dance as the game draws it (figures/drac/drac-dance.js): song seconds -> the one time map (figures/drac/drac-time.js) ->
-// reference seconds -> pose (figures/drac/drac-pose.js) -> carrier rig (figures/drac/drac-rig.js) inside the dance frame placed in the
-// plaça (figures/drac/drac-layout.js placeDance), measured in the plaça's metres:
+// reference seconds -> pose (figures/drac/drac-pose.js) and its groove (figures/drac/drac-groove.js) -> carrier rig
+// (figures/drac/drac-rig.js) inside the dance frame placed in the plaça (figures/drac/drac-layout.js placeDance), measured in the plaça's metres:
 // (1) at 30 / 60 / 120 fps of song time, a planted shoe never slides in the world, and the root never jumps;
 // (2) pure: any seek order (a pause, a retry, a jump) gives the very pose a fresh frame gives;
 // (3) the four helpers stand clear of the posed Drac (every mesh vertex: wings, tail, heads) through the whole song.
@@ -11,7 +11,7 @@ import { dracTime } from '../../../src/figures/drac/drac-time.js';
 import { poseAt } from '../../../src/figures/drac/drac-pose.js';
 import { feetAt } from '../../../src/figures/drac/drac-steps.js';
 import { newDracPose } from '../../../src/figures/drac/dance-drac.js';
-import { poseCarrier } from '../../../src/figures/drac/drac-rig.js';
+import { grooveDrac, poseDracDance } from '../../../src/figures/drac/drac-groove.js';
 import { placeDance, danceYaw, HELPERS } from '../../../src/figures/drac/drac-layout.js';
 import song from '../../../src/song-drac.json' with { type: 'json' };
 
@@ -20,7 +20,8 @@ const rig = buildDrac(), life = new THREE.Group(), pose = newDracPose();
 life.add(rig.root); placeDance(life, FRONT); life.scale.setScalar(DRAC_SCALE);
 const t0 = dracTime.pickup - 1, t1 = song.end + 1; // the count-in's last second to past the final hit
 function draw(t) {
-  poseCarrier(rig, poseAt(pose, dracTime.refAt(t), dracTime.beatAt(t)), feetAt);
+  const ref = dracTime.refAt(t), beat = dracTime.beatAt(t), P = poseAt(pose, ref, beat);
+  grooveDrac(P, beat, ref, 1); poseDracDance(rig, P, beat, ref, 1, feetAt);
   life.updateMatrixWorld(true);
 }
 const shoeW = i => rig.legs[i].shoe.getWorldPosition(new THREE.Vector3());
@@ -48,7 +49,8 @@ for (const fps of [30, 60, 120]) {
 const snap = () => [rig.body.matrixWorld.elements, ...rig.legs.map(l => l.shoe.matrixWorld.elements), rig.legs[0].pants.children[0].geometry.attributes.position.array.slice(0, 60)].flatMap(a => [...a]);
 const times = Array.from({ length: 300 }, (_, k) => t0 + (t1 - t0) * ((k * 7919) % 300) / 300); // a shuffled order
 const fresh = times.map(t => { const r = buildDrac(), g = new THREE.Group(); g.add(r.root); placeDance(g, FRONT); g.scale.setScalar(DRAC_SCALE);
-  poseCarrier(r, poseAt(newDracPose(), dracTime.refAt(t), dracTime.beatAt(t)), feetAt); g.updateMatrixWorld(true);
+  const ref = dracTime.refAt(t), beat = dracTime.beatAt(t), P = poseAt(newDracPose(), ref, beat);
+  grooveDrac(P, beat, ref, 1); poseDracDance(r, P, beat, ref, 1, feetAt); g.updateMatrixWorld(true);
   return [r.body.matrixWorld.elements, ...r.legs.map(l => l.shoe.matrixWorld.elements), r.legs[0].pants.children[0].geometry.attributes.position.array.slice(0, 60)].flatMap(a => [...a]); });
 times.forEach((t, k) => { draw(t); assert.deepEqual(snap(), fresh[k], `the pose at song ${t.toFixed(3)} s depends on nothing but the time`); });
 

@@ -1,7 +1,8 @@
 // The Drac's revised dance in the game (play, practice, results): the song time goes through the one time map
 // (figures/drac/drac-time.js) to reference seconds, which pose the shell (figures/drac/drac-pose.js) and its carrier's feet
-// (figures/drac/drac-steps.js) inside the dance frame (figures/drac/drac-layout.js). scene/stage-motion.js only dispatches here and hands over
-// its bounded accent springs; the selector / photo walkers stay in drac-demo.js.
+// (figures/drac/drac-steps.js) inside the dance frame (figures/drac/drac-layout.js), with its comic groove on the music beat
+// (figures/drac/drac-groove.js). scene/stage-motion.js only dispatches here and hands over its bounded accent springs;
+// the selector / photo walkers stay in drac-demo.js.
 import { drac, colla, DRAC_YAW } from './drac-objects.js';
 import { LETTERS } from '../../core/env.js';
 import { G } from '../../game/state.js';
@@ -16,7 +17,7 @@ import { dracTime } from './drac-time.js';
 import { placeDance, danceToWorld } from './drac-layout.js';
 import { tickColla } from '../common/colla.js';
 import { collaRun } from '../common/colla-run.js';
-import { poseCarrier } from './drac-rig.js';
+import { grooveDrac, poseDracDance } from './drac-groove.js';
 import { DRAC_SCALE } from './drac.js';
 
 // beat: the music beat drawn; ref: the reference second shown. The practice holds the first stance, the results keep
@@ -33,13 +34,14 @@ export function danceDrac(beat, acc, pos) {
   if (G.practice) DANCE.ref = 0;
   else if (reel || dancing && !G.collapseT && !G.paused) DANCE.ref = dracTime.refAt(songTimeAtBeat(DANCE.beat));
   const P = poseAt(DRAC_DANCE_POSE, DANCE.ref, DANCE.beat);
+  grooveDrac(P, DANCE.beat, DANCE.ref, acc.vigor);
   P.roll = P.roll * acc.vigor + acc.roll + acc.col * 0.6;
   P.pitch = P.pitch * acc.vigor + acc.pitch + acc.col * 0.5;
   P.lift += acc.lift * (1 - acc.col); // lift the body, while the shoes stay on their plan
   P.crouch = Math.max(P.crouch, acc.col * 0.8);
   const life = placeDance(drac.root.parent, DRAC_YAW); // one frame for the path, the feet and the helpers
   life.scale.setScalar(DRAC_SCALE);
-  poseCarrier(drac, P, feetAt);
+  poseDracDance(drac, P, DANCE.beat, DANCE.ref, acc.vigor, feetAt);
   danceToWorld(DANCE_AT, P.x * DRAC_SCALE, P.z * DRAC_SCALE, DRAC_YAW);
   pos.set(DANCE_AT.x, DANCE_AT.z);
   return DRAC_YAW + P.yaw;

@@ -23,15 +23,19 @@ Current rules, moved out of AGENTS.md so they load only when the task needs them
   audited foot plan: 188 placements, only 40 observed + 4 probable + 4 support, the rest adaptations), `figures/drac/drac-pose.js`
   (`poseAt(out, refSec, musicBeat, gain)`: rigid shell + a comic knee dip / waddle on the SONG's beat), `figures/drac/drac-rig.js`
   (`poseCarrier`: rigid shell, pelvis off the shell, cloth trousers `figures/drac/drac-legs.js`; call `dressCarrier` after any
-  other `poseDrac`), `figures/drac/drac-dance.js` (the game's frame: scene/stage-motion.js only dispatches to it, through `drac-scene.js`). ONE time map,
+  other `poseDrac`), `figures/drac/drac-dance.js` (the game's frame: scene/stage-motion.js only dispatches to it, through `drac-scene.js`),
+  `figures/drac/drac-groove.js` (the comic groove on the MUSIC beat, artistic: the splash's neck wave, tail whip, jaws, wings
+  and part of its lean, a wagging tail, and heads, wings and tail drooping as the player misses; the game draws the dance
+  through its `poseDracDance`, `tests/figures/drac/drac-groove.mjs` checks trousers, necks, wings and helpers). ONE time map,
   `figures/drac/drac-time.js` (song seconds <-> reference seconds, from `song-drac.json` `ref`, written by `tools/music/build_drac.py`
   from `music/drac/drac-form.json`'s `reference` block): never connect a music beat to `pose.beat` (it carries reference
-  seconds to the feet). One dance frame, `placeDance(obj, FRONT)` (`figures/drac/drac-layout.js`): the Drac's parent, the helpers
+  seconds to the feet), except through `poseDracDance`, which hands the feet the reference second itself. One dance frame, `placeDance(obj, FRONT)` (`figures/drac/drac-layout.js`): the Drac's parent, the helpers
   and any debug layer; path in model units, helpers in metres, `DRAC_SCALE` once. The colla (`figures/drac/drac-colla.js`,
   `models/colla.js`): four helpers at 5.1 m in the colla's camouflage suit clapping on integer beats, a few members sitting
   spread round their ring (~6 m, not the camera's gap; the crowd keeps beyond `RING.arena` 7.2 m), shown only with
   the Drac and not in photo mode; `?lletres` shows the W/N/S/E debug letters. `figures/drac/dance-drac.js` (the old beat dance)
-  now only drives the selector / splash walker and the music editor's preview. `/tools/dev/drac-compare.html?mute` (dev, never built)
+  now only drives the selector / splash walker (with the same wagging tail) and the music editor's preview, and lends
+  the play dance its groove. `/tools/dev/drac-compare.html?mute` (dev, never built)
   draws the same modules against the video (served by the dev media alias `/drac-reference/`, research/bestiari/README.md;
   never in `public/`).
 - **Drac fire** (`figures/drac/drac-fx-rules.js` says when, `figures/drac/drac-fx.js` and `figures/common/fire.js` draw): a kraft carretilla tube on each of the five fire

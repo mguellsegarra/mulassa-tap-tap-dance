@@ -11,7 +11,7 @@ const COARSE = { matches: false };
 const ctx = vm.createContext({ G, COARSE, pageActive: () => active,
   chip: { suspend() { this.ctx.suspend(); }, clearMenuSfx() { cleared++; }, ctx: { state: 'running', currentTime: 0, suspend() { suspended++; } }, wake() { woke++; } },
   pauseGame() { if (G.state === 'play') G.paused = true; },
-  offerAudioResume() { ctx.offers = (ctx.offers || 0) + 1; }, // its card: tests/ui/audio-resume.mjs
+  checkAudioBack() { ctx.offers = (ctx.offers || 0) + 1; }, // tests/ui/audio-resume.mjs
   document: { addEventListener(k, f) { handlers[k] = f; } },
   addEventListener(k, f) { handlers[k] = f; }, setTimeout(f, ms) { timers.push({ f, ms }); },
   glc: { addEventListener() {} }, // the WebGL watchdog's listeners (tests/render/scene-crowd.mjs)
@@ -39,18 +39,18 @@ assert(cleared > 0 && suspended > 0 && woke > 0);
   let resumes = 0; const chip = ctx.chip; chip.woke = true; chip.resume = () => { resumes++; };
   Object.assign(G, { state: 'select', paused: false }); active = true; handlers.focus();
   assert.equal(resumes, 1, 'the selector comes back with its sound');
-  assert.equal(ctx.offers, 1, 'and offers the «Música en pausa» card in case iOS keeps it stopped');
+  assert.equal(ctx.offers, 1, 'and checks whether iOS keeps it stopped');
   const before = suspended; Object.assign(G, { state: 'play', paused: true, resuming: null }); handlers.focus();
   assert.equal(resumes, 1, 'a paused run is not resumed');
   assert.equal(suspended, before + 1, 'and stays suspended');
   // Back from another Safari tab, iOS shows the page without focus until a tap: inactive, but the card may still tell
   Object.assign(G, { state: 'select', paused: false }); active = false;
   handlers.visibilitychange({ type: 'visibilitychange' });
-  assert.equal(ctx.offers, 2, 'visible without focus: the «Música en pausa» card is offered');
+  assert.equal(ctx.offers, 2, 'visible without focus: the sound is checked');
   handlers.blur({ type: 'blur' });
-  assert.equal(ctx.offers, 2, 'a window that only loses focus (desktop) gets no card');
+  assert.equal(ctx.offers, 2, 'a window that only loses focus (desktop) is not checked');
   COARSE.matches = true; handlers.blur({ type: 'blur' });
-  assert.equal(ctx.offers, 3, 'a touch screen (Safari URL bar) loses focus while visible: the card is offered');
+  assert.equal(ctx.offers, 3, 'a touch screen (Safari URL bar) loses focus while visible: the sound is checked');
   COARSE.matches = false;
   active = true; delete chip.woke; delete chip.resume; G.resuming = undefined;
 }

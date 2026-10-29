@@ -4,7 +4,7 @@ import { G, songTime, chip } from '../game/state.js';
 import { pageActive, playFrom, COARSE } from '../core/env.js';
 import { pauseGame, closePauseMenu } from './pause.js';
 import { pauseMenu } from './handles.js';
-import { offerAudioResume } from './audio-resume.js';
+import { checkAudioBack } from './audio-resume.js';
 import { focusIn } from './focus.js';
 import { tr } from '../i18n/messages.js';
 import { glc, renderer } from '../scene/stage.js';
@@ -45,10 +45,10 @@ function syncPageActivity(e) {
     pauseGame();
     chip?.clearMenuSfx?.();
     chip?.suspend();
-    if ((e?.type === 'visibilitychange' || e?.type === 'blur' && COARSE.matches) && !document.hidden && chip?.woke) offerAudioResume(); // iOS, back from another tab or the URL bar: shown, but no focus until a tap
+    if ((e?.type === 'visibilitychange' || e?.type === 'blur' && COARSE.matches) && !document.hidden && chip?.woke) checkAudioBack(); // iOS, back from another tab or the URL bar: shown, but no focus until a tap
   } else if (!G.paused || G.resuming != null) {
     chip?.wake();
-    if (chip?.woke) { chip.resume(); offerAudioResume(); } // back from another app there is no gesture (wake() skips it): an unlocked context may resume, else it stays mute until a tap (iOS), and the card says so
+    if (chip?.woke) { chip.resume(); checkAudioBack(); } // back from another app there is no gesture (wake() skips it): an unlocked context may resume, else it stays mute until a tap (iOS), and the next tap wakes it
   } else chip?.suspend(); // paused: a hidden page may never have run suspend()'s timer
 }
 document.addEventListener('visibilitychange', syncPageActivity);

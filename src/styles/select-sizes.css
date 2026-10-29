@@ -143,6 +143,7 @@ body.reel-idle #select > * { pointer-events: none; }
 /* it sweeps only while it shows: hidden, its 22 bars still repainted every frame (Linux Chrome paints on the CPU: ~30 fps on a 2016 MacBook) */
 .sel-standings-body[data-state="loading"] .sel-standings-sk :is(li, .sel-standings-foot) > :is(span:not(.pos), .bar) { animation-play-state: running; }
 .sel-standings-sk li:nth-child(2) > span { animation-delay: .1s; } .sel-standings-sk li:nth-child(3) > span { animation-delay: .2s; } .sel-standings-sk li:nth-child(4) > span { animation-delay: .3s; } .sel-standings-sk li:nth-child(5) > span { animation-delay: .4s; } .sel-standings-sk li:nth-child(n+6) > span { animation-delay: .5s; }
+.sel-standings-sk .player-name.guest { color: inherit; } /* the placeholder's «Jugador» is a guest's name: its own colour outranked the bar's transparent */
 .sel-standings-sk .n { max-width: 14px; }
 .sel-standings-sk .who { max-width: 62%; } .sel-standings-sk li:nth-child(2n) .who { max-width: 46%; } .sel-standings-sk li:nth-child(3n) .who { max-width: 54%; }
 .sel-standings-sk .bar { flex: none; width: 55%; height: 20px; }

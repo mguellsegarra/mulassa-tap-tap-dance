@@ -8,7 +8,7 @@ import { curtainCover } from './curtain.js';
 function checkOrientation() {
   document.body.classList.toggle('tablet', isTablet()); // base.css's first-paint rule is a phone's: a small tablet's landscape page is as short
   if (!COARSE.matches) return;
-  const wrong = document.body.classList.contains('view-mode') ? !isTablet() && innerHeight > innerWidth : isTablet() ? innerHeight > innerWidth : innerWidth > innerHeight;
+  const wrong = document.body.classList.contains('view-mode') || isTablet() ? innerHeight > innerWidth : innerWidth > innerHeight; // free play: landscape on every device
   document.body.classList.toggle('wrong-orient', wrong);
   if (wrong && G.state === 'play') pauseGame();
 }

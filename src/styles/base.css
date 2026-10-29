@@ -148,6 +148,7 @@ button svg { width: 22px; height: 22px; flex: none; fill: none; stroke: currentC
 .sheet::-webkit-scrollbar-thumb, .sheet *::-webkit-scrollbar-thumb { background: #f5c51880; border-radius: 999px; border: 3px solid #2a1a10; }
 .sheet::-webkit-scrollbar-thumb:hover, .sheet *::-webkit-scrollbar-thumb:hover { background: #f5c518c0; }
 .sheet::-webkit-scrollbar-corner { background: transparent; }
+:root[data-kb] dialog.sheet[open]:focus-within { inset-block: var(--kb-top) var(--kb-bottom); max-height: calc(var(--kb-h) - 16px) !important; } /* keyboard-room.js: above the on-screen keyboard (!important: each sheet's #id max-height) */
 .sheet { scrollbar-width: none; } .sheet::-webkit-scrollbar { display: none; } /* the frame's own bar never fits its rounded corners (Privadesa); inner lists keep theirs */
 .sheet:focus { outline: none; } /* opened by touch or mouse the sheet itself takes focus: no ring on its first button */
 .sheet::backdrop { background: #120d09b3; }

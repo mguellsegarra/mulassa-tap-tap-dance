@@ -25,6 +25,7 @@ import { setupShare } from './share-ui.js';
 import { setupProfile } from './profile-ui.js';
 import { setupFeedback } from './feedback-ui.js';
 import { sheets } from './sheets.js';
+import './keyboard-room.js';
 import { tr } from '../i18n/messages.js';
 import { pauseMenu, howtoMenu, settingsMenu, privacyMenu, retryEl } from './handles.js';
 import { G, chip, menuMusic, clock, setMenuSound, setSelectedFigure, CHALLENGE, offsetMs, setOffsetMs } from '../game/state.js';

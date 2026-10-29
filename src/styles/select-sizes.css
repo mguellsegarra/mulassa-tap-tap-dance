@@ -180,9 +180,10 @@ body.reel-idle #select > * { pointer-events: none; }
 }
 
 /* Phones, step 1: the same card with its header and the first three (select-standings.js), in place of the position chip;
-   phones under 700 px keep the chip (at 375×667 the card covered the figure). Step 2 keeps the chip, and the podium on tablets. */
+   phones under 640 px keep the chip (an iPhone 15 Pro's Safari leaves 659: the top 3 there is worth the figure sometimes
+   dancing behind the card). Step 2 keeps the chip, and the podium on tablets. */
 @media not ((min-width: 900px) and (min-height: 600px)) {
-  @media (min-height: 700px) {
+  @media (min-height: 640px) {
     #select[data-step="figures"] .sel-standings:not([hidden]) { display: block; }
     #select[data-step="figures"] .sel-panel:has(> .sel-standings:not([hidden])) > .sel-tiles.sel-tiles { display: none !important; }
   }

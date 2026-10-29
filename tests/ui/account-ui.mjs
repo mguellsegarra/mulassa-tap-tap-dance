@@ -281,11 +281,13 @@ const service = (o = {}) => ({ configured: true, asked: [], async seasons(f) { t
   needed = true; mem.set('leaderboard-alias', 'Pep');
   assert.equal(acc.notice(backFn), true);
   assert(!f.$('stats-notice-guest').hidden && !f.$('stats-notice-confirm').hidden && f.$('stats-notice-confirm').textContent === 'Confirma el correu', 'the guest step and its button');
-  assert(f.$('stats-notice-last').textContent === '3' && /btn-primary/.test(f.$('stats-notice-confirm').className) && /btn-secondary/.test(f.$('stats-notice-ok').className), 'a guest: three steps, the confirmation leads');
+  assert(f.$('stats-notice-last').textContent === '3', 'a guest: three steps');
+  { const html = (await import('node:fs')).readFileSync(new URL('../../index.html', import.meta.url), 'utf8'); // «D'acord» leads for everyone: a tap without reading closes the news, not into the e-mail steps
+    assert(/id="stats-notice-confirm"[^>]*class="btn btn-secondary"/.test(html) && /id="stats-notice-ok"[^>]*class="btn btn-primary"/.test(html), 'the notice: «D’acord» primary, the confirmation secondary'); }
   f.$('stats-notice-confirm').click(); assert(accepted === 2 && opened.at(-1)[0] === 'link' && opened.at(-1)[1] === backFn && !f.$('stats-notice-menu').open, 'confirm: seen, then the profile steps, back to where the notice would go');
   // a confirmed e-mail: the name is kept already, nothing to confirm
   needed = true; mem.set('leaderboard-alias:identity', JSON.stringify({ hasSession: true, prof: { alias: 'Pep', verified: true } }));
-  assert.equal(acc.notice(backFn), true); assert(f.$('stats-notice-guest').hidden && f.$('stats-notice-confirm').hidden && f.$('stats-notice-last').textContent === '2' && /btn-primary/.test(f.$('stats-notice-ok').className), 'confirmed: two steps, «D’acord» leads');
+  assert.equal(acc.notice(backFn), true); assert(f.$('stats-notice-guest').hidden && f.$('stats-notice-confirm').hidden && f.$('stats-notice-last').textContent === '2', 'confirmed: two steps');
   f.$('stats-notice-hall').click(); assert(accepted === 3 && halls.at(-1)[0] === 'mulassa-valls' && halls.at(-1)[1] === backFn && !f.$('stats-notice-menu').open, 'the season button: seen, then the Saló de la fama, back to where the notice would go (never back over it)');
 }
 // --- markup: the sheets exist, copy is Catalan, one primary each, «Dades enviades…» and «Convidat» words

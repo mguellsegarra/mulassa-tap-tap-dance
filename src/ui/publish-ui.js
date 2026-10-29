@@ -201,7 +201,9 @@ export function setupPublish({ doc, $, service, store, focusIn, now, runs, canWr
     setSend(tr('ui.board.publishing'), true, true);
     setPublishStatus('');
     const t0 = Date.now();
-    swap('wait', tr('ui.board.publishing')); publishMenu.focus();
+    // sent from the keyboard: no calçot view (it hides the field), so a refused name returns to a field that kept iOS's keyboard;
+    // the button's ring shows the wait
+    if (doc.activeElement !== aliasInput) { swap('wait', tr('ui.board.publishing')); publishMenu.focus(); }
     try {
       await service.publish(run, alias, { captchaToken });
       landed(run, alias);

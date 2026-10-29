@@ -51,7 +51,7 @@ function make({ configured = true, publishingEnabled = true, session = false, em
   const profile = setupProfile({ focusIn: (m, id) => focused.push(id), captcha, store, aliasKey: 'alias', deviceNote: p => (p ? '' : 'NOTE'), service, doc,
     report: (k, d) => reports.push([k, d]), acceptStats: () => { T.accepted++; } });
   const find = (el, test) => (test(el) ? el : (el.kids || []).filter(k => typeof k !== 'string').map(k => find(k, test)).find(Boolean) ?? null);
-  return { profile, $, mem, calls, reports, T, focused, find,
+  return { profile, $, mem, calls, reports, T, focused, find, doc,
     badge: () => find($('profile-name'), k => k.className === 'verified-check'),
     buttons: () => [$('profile-main'), $('profile-alt'), $('profile-more')].filter(b => !b.hidden).map(b => `${b.dataset.act}:${b.textContent}`) };
 }
@@ -137,6 +137,15 @@ const guestProf = o => ({ alias: 'takeshi', verified: false, published: true, re
   assert.deepEqual(s.calls[0], ['send', 'jugador@example.com', undefined], 'an address on this session: no Turnstile wait');
   assert(!s.$('profile-code-field').hidden && s.$('profile-mail-field').hidden && /jugador@example\.com/.test(s.$('profile-lead').textContent) && s.focused.at(-1) === 'profile-code');
   enter(s.$, 'profile-code', '12a34-56'); assert.equal(s.$('profile-code').value, '123456', 'digits only, six');
+  { // the keyboard's «send» while typing the address: the code field takes the focus while the address field still shows (iOS keeps its keyboard)
+    const t = make({ alias: 'takeshi', session: true, prof: guestProf() }); await t.profile.refresh(); t.profile.open('link');
+    const mailIn = t.$('profile-email'), codeIn = t.$('profile-code'), { doc } = t;
+    doc.activeElement = mailIn; let seen = null;
+    codeIn.focus = () => { seen = { mail: !t.$('profile-mail-field').hidden, code: !t.$('profile-code-field').hidden, writable: !codeIn.readOnly }; };
+    enter(t.$, 'profile-email', 'jugador@example.com'); t.$('profile-form').fire('submit'); await tick(); await tick();
+    assert.deepEqual(seen, { mail: true, code: true, writable: true }, 'focus moves input to input, never through a hidden field');
+    assert(t.$('profile-mail-field').hidden && !t.$('profile-code-field').hidden);
+  }
   s.T.email = 'jugador@example.com'; s.T.prof = guestProf({ verified: true });
   s.$('profile-form').fire('submit'); await tick(); await tick(); await tick();
   assert.deepEqual(s.calls[1], ['verify', 'jugador@example.com', '123456', 'email_change']);

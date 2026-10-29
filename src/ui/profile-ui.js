@@ -200,7 +200,12 @@ export function setupProfile({ focusIn, captcha, store, aliasKey, deviceNote = (
         const other = kind === 'link' && type === 'email', mine = store.get(aliasKey);
         lead.textContent = other ? tr('ui.profile.lead.codeOther', { mail, mine: mine || tr('ui.profile.thisBrowser') })
           : tr('ui.profile.lead.codeSent', { mail });
-        codeIn.value = ''; show('code'); idle(); focusIn(menu, 'profile-code');
+        // still typing (the keyboard's «send»): the code field takes the focus before the address hides, so iOS keeps its keyboard up
+        const typing = doc.activeElement === mailIn;
+        codeIn.value = ''; idle();
+        if (typing) { $('profile-code-field').hidden = false; codeIn.focus(); }
+        show('code');
+        if (!typing) focusIn(menu, 'profile-code');
       } else if (step === 'code') {
         await service.verifyCode(mail, codeIn.value, type);
         if (r !== req) return;

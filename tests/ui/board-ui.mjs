@@ -515,6 +515,12 @@ for (const [total, line] of [[1, 'Ets el número 1!'], [20, 'Ets el número 7!']
   assert(!$('publish-error').hidden && $('publish-error').textContent === 'Aquest sobrenom ja és d’algú. Prova’n un altre.', 'the error right under the field');
   assert($('publish-rule').hidden && $('publish-status').textContent === '', 'in the hint’s place, not in the status line');
   assert.equal(doc.activeElement, $('publish-alias'));
+  { // the keyboard's «send»: the field stays shown and focused while publishing, so iOS keeps its keyboard for a refused name
+    $('publish-alias').value = 'Drac303'; $('publish-alias').focus(); submit($);
+    assert(!$('publish-form').dataset.view && doc.activeElement === $('publish-alias'), 'no calçot view over the field');
+    T.publishes[1].reject(Object.assign(new Error('Aquest sobrenom ja és d’algú. Prova’n un altre.'), { code: 'taken' })); await tick();
+    assert(doc.activeElement === $('publish-alias') && !$('publish-send').disabled);
+  }
   $('publish-alias').value = 'Drac202'; $('publish-alias').fire('input');
   assert($('publish-error').hidden && !$('publish-rule').hidden, 'typing a valid one clears it');
 }

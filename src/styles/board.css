@@ -145,6 +145,9 @@ dialog p, #results-actions .btn { overflow-wrap: break-word; }
 .lvt0 { color: var(--lvl0); } .lvt1 { color: var(--lvl1); } .lvt2 { color: var(--lvl2); }
 #board-table tr.me td { background: #f5c51824; color: #f5c518; }
 #board-table tr.me td:first-child { box-shadow: inset 3px 0 #f5c518; } /* the player's own row: a gold strip */
+#board-table tbody tr:not(.gap, .me-hint) { cursor: pointer; } /* a row opens its player's card (board-list.js); a tint over its own colour on the tap */
+#board-table tbody tr:not(.gap, .me-hint):active td { background-image: linear-gradient(#fff3d614, #fff3d614); }
+@media (hover: hover) { #board-table tbody tr:not(.gap, .me-hint):hover td { background-image: linear-gradient(#fff3d60d, #fff3d60d); } }
 .me-tag { flex: none; display: inline-block; padding: 0 5px; border-radius: 4px; background: #f5c518; color: #2a1a10; font-size: 11px; line-height: 16px; letter-spacing: .06em; }
 /* «Correu confirmat» (src/ui/profile-notes.js checkBadge): a blue check after the nickname, meaning only that; a mark, no tip */
 .verified-check { position: relative; flex: none; display: inline-grid; place-items: center; width: 16px; height: 16px; margin: 0; }

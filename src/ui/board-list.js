@@ -77,7 +77,9 @@ export function setupBoardList({ doc, $, service, store, focusIn, minLoad, now, 
     const name = td(), who = name.appendChild(el('div', 'who'));
     const at = figure; // the card shows this row (the season's name read on the tap: the header may answer after the rows)
     const from = () => ({ figure: at, season: season?.name ?? openName ?? calendarSeason(now()).name, position: pos, score: r.score, difficulty: r.difficulty });
-    appendName(doc, who, playerOf(r), p => onCard({ ...p, from: from() })); // a confirmed address: the check (nothing more); a released profile: faded
+    const nameBtn = appendName(doc, who, playerOf(r), p => onCard({ ...p, from: from() })); // a confirmed address: the check (nothing more); a released profile: faded
+    // the row's one action: a tap anywhere on it is the name's (the button stays the keyboard's and the reader's; its own tap stops here)
+    trow.addEventListener('click', () => { if (!doc.getSelection?.()?.toString()) nameBtn.click(); });
     if (r.is_self) { trow.className = 'me'; meRow = trow; who.appendChild(el('span', 'me-tag', tr('ui.board.me'))); }
     const level = DIFFS[Number(r.difficulty)]?.name; // the level played (a coloured pill) and the longest streak, on a small line under the name
     if (level) {

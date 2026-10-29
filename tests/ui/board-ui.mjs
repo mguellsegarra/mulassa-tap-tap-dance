@@ -891,6 +891,7 @@ const find = (el, test) => (test(el) ? el : el.children.map(c => find(c, test)).
   assert(!JSON.stringify(rows.map(r => r.textContent)).includes('#'), 'no «#» in any row');
   guest.click(); assert.deepEqual(cards.at(-1), { alias: 'Baldufa', verified: false, released: true, publicId: 'id-baldufa',
     from: { figure: 'mulassa-valls', season: 'Tardor 2026', position: 1, score: 9, difficulty: 2 } }, 'a tap opens that player\'s card, with the row it came from');
+  rows[1].click(); assert.equal(cards.length, 2); assert.equal(cards.at(-1).from.position, 2, 'a tap anywhere on the row (off the name) opens the same card');
   b.$('board-seasons').click(); assert.deepEqual(halls, ['mulassa-valls'], '«Temporades anteriors» for this figure');
   assert(b.$('board-menu').open, 'over the board');
   // «Tria figura»: the button over the list opens it in the same sheet, the shown figure cream; Escape and × come back

@@ -49,6 +49,9 @@ try {
     const still = y === window.__nextY; window.__nextY = y;
     return still && r.bottom <= innerHeight;
   }, null, { timeout: 10000, polling: 100 });
+  // a slow machine can spend the selector's 10 s untouched in the waits above: its idle screen (reel-idle.js) then takes the tap
+  await page.mouse.move(5, 5);
+  await page.waitForFunction(() => !document.body.classList.contains('reel-idle'), null, { timeout: 5000 });
   await page.click('#select-next', { force: true }); // (force: the button pulses)
   await page.waitForFunction(() => document.getElementById('select-next').hidden, null, { timeout: 2000 })
     .catch(() => assert.fail('one tap on a resting «Tria la dificultat» did not open the level step'));

@@ -1,0 +1,113 @@
+{
+  "lang": "zh-Hans",
+  "ogLocale": "zh_CN",
+  "ui": {
+    "play": "现在开玩",
+    "videos": "视频",
+    "download": "下载（MP4，{size}）",
+    "downloadMd": "{title}，下载（MP4，{size}）",
+    "footerGame": "游戏",
+    "footerProject": "关于项目",
+    "footerCode": "代码",
+    "ogImageAlt": "Mulassa de Valls和Drac de Valls，以及Mulassa Tap Tap Dance标志。",
+    "videoDescription": "Mulassa Tap Tap Dance宣传视频。",
+    "genre": "节奏游戏",
+    "os": "任何浏览器"
+  },
+  "home": {
+    "title": "Mulassa Tap Tap Dance",
+    "lead": "Joc de ritme en català: fes ballar la Mulassa i el Drac de Valls al compàs de la música tocant dos botons.",
+    "sections": [
+      [
+        "Com es juga",
+        [
+          "Toca **GUA** (esquerra) i **PA** (dreta) quan les notes arribin al cercle. Si en surt una de dues colors, toca els dos botons alhora: és una **GUAPA!** i puntua el doble. Mantén premut a les notes llargues (**MANTÉN**) i pica sense parar als redobles (**GLOBUS**). Cada error desanima la plaça, i si es buida la Mulassa cau i el Drac s’apaga.",
+          "Hi ha tres nivells (fàcil, normal i difícil), una pràctica inicial, classificacions i targetes per compartir el resultat. Es juga des del navegador, al mòbil, a la tauleta o a l’ordinador."
+        ]
+      ],
+      [
+        "Més informació",
+        [
+          "[Sobre el projecte](https://mulassa.cat/projecte/): què és, d’on surt i qui l’ha fet.",
+          "El [codi és obert a GitHub](https://github.com/mguellsegarra/mulassa-tap-tap-dance): la idea és que s’hi vagin afegint figures del bestiari festiu d’arreu dels Països Catalans.",
+          "Per jugar, obre [mulassa.cat](https://mulassa.cat/)."
+        ]
+      ]
+    ]
+  },
+  "projecte": {
+    "title": "关于Mulassa Tap Tap Dance",
+    "captures": [
+      [
+        "/captures/titol.jpg",
+        "标题界面：广场上的Mulassa de Valls，以及Mulassa Tap Tap Dance标志。"
+      ],
+      [
+        "/captures/joc.jpg",
+        "游戏中：轨道上的音符、GUA和PA按钮，以及在人群前跳舞的Mulassa。"
+      ],
+      [
+        "/captures/resultats.jpg",
+        "可分享的成绩卡：三颗星，命中率92%。"
+      ]
+    ],
+    "videos": [
+      [
+        "/videos/promo-16x9.mp4",
+        "/videos/promo-16x9.jpg",
+        "宣传视频（横屏，16:9）",
+        1920,
+        1080,
+        "20 MB"
+      ],
+      [
+        "/videos/promo-9x16.mp4",
+        "/videos/promo-9x16.jpg",
+        "宣传视频（竖屏，9:16）",
+        1080,
+        1920,
+        "17 MB"
+      ]
+    ],
+    "lead": "Mulassa Tap Tap Dance是一款诞生于加泰罗尼亚语的免费节奏游戏，让加泰罗尼亚语地区节庆中的bestiari（节庆兽偶）跳起舞来。",
+    "sections": [
+      [
+        "这是什么游戏",
+        [
+          "一款节奏游戏。音符沿轨道前进，你要用两个按钮准确击打，同时兽偶在热闹的广场中央跳舞。用手机、平板或电脑的浏览器就能玩，不用安装，也不用注册。游戏支持包括加泰罗尼亚语在内的16种语言。",
+          "我让兽偶们更疯一点，也把它们的旋律带进了电子游戏的世界，风格更轻松：方块风格的画面，每支舞里都藏着一个惊喜。"
+        ]
+      ],
+      [
+        "怎么玩",
+        [
+          "**GUA**和**PA**：音符到达圆环时，轻触左侧或右侧按钮（键盘用←和→，或D和K）。每个兽偶都有自己的词：Drac是**CRE**和**MA**。",
+          "**GUAPA!**同时按两个按钮（Drac是**CREMA!**），得分翻倍；只按一个算失误。",
+          "**按住**：一直按到长音结束（普通和困难难度）。",
+          "**气球**：鼓点连响时尽量快速连击，直到击破。",
+          "**气氛**：每次失误都会降低广场气氛；耗尽时，Mulassa就会倒下，Drac就会熄火。",
+          "**疯狂终曲**：歌曲的最后一段，命中率达到70%时得分翻倍。",
+          "第一支舞有练习引导。之后可以选择简单、普通或困难，用昵称把成绩发布到排行榜，也可以分享成绩卡。"
+        ]
+      ],
+      [
+        "作者与制作名单",
+        [
+          "创意、设计与开发：Marc Güell Segarra·[ondori.dev](https://ondori.dev)。",
+          "感谢[Unió Anelles de la Flama](https://uaf.cat)的合作，允许我把他们的兽偶带进游戏。我做的一切，都源自协会里照料这些兽偶、带它们上广场的人们的付出。{uaf}",
+          "旋律：Francesc Bofarull i Figuerola。编曲和音效由游戏代码生成。",
+          "字体Baloo 2和Jersey 10，采用SIL Open Font License许可。",
+          "在Valls{campanar}用心{cor}制作，还有大量AI帮忙"
+        ]
+      ],
+      [
+        "开源与合作",
+        [
+          "[代码在GitHub开源](https://github.com/mguellsegarra/mulassa-tap-tap-dance)，有时间、有热情、有能力的人都可以参与。想看看你家乡的兽偶跳舞吗？可以把它连同它的音乐、舞蹈和节庆一起加入游戏。",
+          "如果让你笑了，可以[请我喝杯咖啡](https://buymeacoffee.com/mguellsegarra)。最新消息请看Instagram：[@mulassa_cat](https://www.instagram.com/mulassa_cat/)。",
+          "游戏不使用追踪Cookie。处理哪些数据、你有哪些权利，都可以在“设置”里的“隐私”查看。关于图片或任何疑问，请联系[holi@mulassa.cat](mailto:holi@mulassa.cat)。"
+        ]
+      ]
+    ]
+  }
+}

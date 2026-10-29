@@ -1,4 +1,4 @@
--- A profile can be created before the first published result (Marc, 2026-09-30): the settings block offers
+-- A profile can be created before the first published result: the settings block offers
 -- "Crea" next to "Recupera" (src/profile-ui.js). Until now only submit_result created the profiles row and update_alias
 -- refused a player without one (leaderboard_auth_profile_missing). update_alias now creates the row when it is missing,
 -- the same way submit_result does; everything else as in 202609280015 (require_player, the 10 s write limit,

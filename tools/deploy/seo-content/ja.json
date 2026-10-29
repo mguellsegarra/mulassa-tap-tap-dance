@@ -1,0 +1,113 @@
+{
+  "lang": "ja",
+  "ogLocale": "ja_JP",
+  "ui": {
+    "play": "今すぐ遊ぶ",
+    "videos": "動画",
+    "download": "ダウンロード（MP4、{size}）",
+    "downloadMd": "{title}、ダウンロード（MP4、{size}）",
+    "footerGame": "ゲーム",
+    "footerProject": "プロジェクトについて",
+    "footerCode": "コード",
+    "ogImageAlt": "Mulassa Tap Tap DanceのロゴとMulassa、Drac de Valls。",
+    "videoDescription": "Mulassa Tap Tap Danceの紹介動画。",
+    "genre": "リズムゲーム",
+    "os": "どのブラウザーでも"
+  },
+  "home": {
+    "title": "Mulassa Tap Tap Dance",
+    "lead": "Joc de ritme en català: fes ballar la Mulassa i el Drac de Valls al compàs de la música tocant dos botons.",
+    "sections": [
+      [
+        "Com es juga",
+        [
+          "Toca **GUA** (esquerra) i **PA** (dreta) quan les notes arribin al cercle. Si en surt una de dues colors, toca els dos botons alhora: és una **GUAPA!** i puntua el doble. Mantén premut a les notes llargues (**MANTÉN**) i pica sense parar als redobles (**GLOBUS**). Cada error desanima la plaça, i si es buida la Mulassa cau i el Drac s’apaga.",
+          "Hi ha tres nivells (fàcil, normal i difícil), una pràctica inicial, classificacions i targetes per compartir el resultat. Es juga des del navegador, al mòbil, a la tauleta o a l’ordinador."
+        ]
+      ],
+      [
+        "Més informació",
+        [
+          "[Sobre el projecte](https://mulassa.cat/projecte/): què és, d’on surt i qui l’ha fet.",
+          "El [codi és obert a GitHub](https://github.com/mguellsegarra/mulassa-tap-tap-dance): la idea és que s’hi vagin afegint figures del bestiari festiu d’arreu dels Països Catalans.",
+          "Per jugar, obre [mulassa.cat](https://mulassa.cat/)."
+        ]
+      ]
+    ]
+  },
+  "projecte": {
+    "title": "Mulassa Tap Tap Danceについて",
+    "captures": [
+      [
+        "/captures/titol.jpg",
+        "タイトル画面：広場のMulassa de VallsとMulassa Tap Tap Danceのロゴ。"
+      ],
+      [
+        "/captures/joc.jpg",
+        "プレイ画面：レーンのノーツ、GUAとPAのボタン、人々の前で踊るMulassa。"
+      ],
+      [
+        "/captures/resultats.jpg",
+        "シェア用の結果カード：星3個、ヒット率92%。"
+      ]
+    ],
+    "videos": [
+      [
+        "/videos/promo-16x9.mp4",
+        "/videos/promo-16x9.jpg",
+        "紹介動画（横、16:9）",
+        1920,
+        1080,
+        "20 MB"
+      ],
+      [
+        "/videos/promo-9x16.mp4",
+        "/videos/promo-9x16.jpg",
+        "紹介動画（縦、9:16）",
+        1080,
+        1920,
+        "17 MB"
+      ]
+    ],
+    "lead": "Mulassa Tap Tap Danceは、カタルーニャ語圏の祭りのbestiari（祭りの獣たち）を踊らせる、カタルーニャ語生まれの無料リズムゲームです。",
+    "sections": [
+      [
+        "どんなゲーム？",
+        [
+          "リズムゲームです。レーンを進むノーツに合わせて2つのボタンを叩くと、人でいっぱいの広場の真ん中でフィギュアが踊ります。スマホ、タブレット、パソコンのブラウザーで遊べて、インストールも登録も不要です。カタルーニャ語を含む16言語で遊べます。",
+          "フィギュアを少しはじけた感じにして、メロディーもゲーム寄りに、もっと気楽な雰囲気でアレンジしました。ブロック風の見た目で、どの踊りにもサプライズを隠しています。"
+        ]
+      ],
+      [
+        "遊び方",
+        [
+          "**GUA**と**PA**：ノーツが輪に来たら、左か右のボタンをタップ（キーボードは←と→、またはDとK）。フィギュアごとに言葉があり、Dracでは**CRE**と**MA**です。",
+          "**GUAPA!** 両方のボタンを同時に（Dracでは**CREMA!**）。スコアは2倍。片方だけだとミスです。",
+          "**ホールド**：長いノーツの最後まで押し続けよう（ふつう・むずかしい）。",
+          "**風船**：連打パートでは、割れるまでできるだけたくさん叩こう。",
+          "**元気**：ミスすると広場の元気が減ります。空っぽになるとMulassaが倒れ、Dracの火が消えます。",
+          "**大騒ぎのフィナーレ**：曲の最後のフレーズです。ヒット率が70%以上ならスコアが2倍になります。",
+          "初めての踊りはガイドつきの練習です。そのあとは、かんたん・ふつう・むずかしいから選べます。ニックネームで結果をランキングに公開したり、結果カードをシェアしたりできます。"
+        ]
+      ],
+      [
+        "制作とクレジット",
+        [
+          "企画・デザイン・開発：Marc Güell Segarra · [ondori.dev](https://ondori.dev)。",
+          "自分たちのフィギュアをゲームに登場させることを認めてくれた[Unió Anelles de la Flama](https://uaf.cat)の協力で実現しました。このゲームは、フィギュアを手入れし、広場で踊らせている団体の人たちの活動から生まれたものです。 {uaf}",
+          "メロディー：Francesc Bofarull i Figuerola。編曲と音はゲームのコードで生成しています。",
+          "フォントはBaloo 2とJersey 10。SIL Open Font Licenseで使用しています。",
+          "愛情 {cor} とたくさんのAIで、Valls {campanar} にて制作"
+        ]
+      ],
+      [
+        "オープンソースと協力",
+        [
+          "[コードはGitHubで公開しています](https://github.com/mguellsegarra/mulassa-tap-tap-dance)。時間とやる気と知識があれば、誰でも協力できます。自分の町のフィギュアが踊るのを見たいなら、その音楽や踊り、祭りと一緒にゲームに加えられます。",
+          "笑顔になれたら、[コーヒーをおごってね](https://buymeacoffee.com/mguellsegarra)。最新情報はInstagramで：[@mulassa_cat](https://www.instagram.com/mulassa_cat/)。",
+          "このゲームは追跡用Cookieを使いません。扱うデータとあなたの権利については、設定内の「プライバシー」で確認できます。画像についての連絡や質問は、[holi@mulassa.cat](mailto:holi@mulassa.cat)へ。"
+        ]
+      ]
+    ]
+  }
+}

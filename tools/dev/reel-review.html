@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="ca"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Showreel a diverses mides</title>
+<style>
+body{margin:0;font:14px system-ui;background:#141414;color:#ddd}
+header{position:sticky;top:0;z-index:2;display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;padding:12px 16px;background:#1d1d1d;border-bottom:1px solid #333}
+h1{font-size:16px;margin:0 8px 0 0}
+label{display:flex;gap:6px;align-items:center}
+select,button,input[type=range]{font:inherit}
+button{padding:6px 12px;border-radius:8px;border:1px solid #555;background:#2a2a2a;color:#eee;cursor:pointer}
+button.primary{background:#e8b400;color:#111;border-color:#e8b400;font-weight:600}
+#vps{display:flex;flex-wrap:wrap;gap:4px 10px}
+#status{color:#9c9;font-variant-numeric:tabular-nums}
+main{display:flex;flex-wrap:wrap;gap:16px;padding:16px;align-items:flex-start}
+figure{margin:0}
+figcaption{font-size:12px;color:#aaa;margin-bottom:4px}
+.box{overflow:hidden;border:1px solid #333;border-radius:6px;background:#000}
+.box iframe{border:0;transform-origin:0 0;display:block}
+p.note{margin:0 16px;color:#888;font-size:12px}
+#plan{margin:12px 16px 0;padding:12px;background:#1b1b1b;border:1px solid #333;border-radius:8px}
+#plan summary{cursor:pointer;font-weight:600}
+.lane{position:relative;height:26px;margin:6px 0 0 70px;border-radius:4px;background:#222}
+.lane span{position:absolute;top:0;bottom:0;display:flex;align-items:center;padding-left:4px;font-size:11px;color:#111;overflow:hidden;white-space:nowrap;border-right:1px solid #111;box-sizing:border-box;cursor:pointer}
+.lane .sec{background:#556;color:#ddd;cursor:default}
+.lane .cut{border-left:3px solid #fff}
+.lane i{position:absolute;top:-4px;bottom:-4px;width:2px;background:#f33}
+.lab{position:absolute;margin-left:-70px;width:64px;font-size:11px;color:#999;line-height:26px}
+#plan table{border-collapse:collapse;margin-top:10px;font-size:12px;width:100%}
+#plan td,#plan th{padding:3px 8px;border-bottom:1px solid #2a2a2a;text-align:left;vertical-align:top}
+#plan tr.now{background:#3a3210}
+#plan tbody tr{cursor:pointer}
+#plan .k{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+#plan .legend{font-size:12px;color:#aaa;margin-top:8px}
+</style></head>
+<body>
+<header>
+  <h1>Showreel a diverses mides</h1>
+  <label>Figura <select id="fig"><option value="drac">Drac</option><option value="mulassa">Mulassa</option><option value="bou">Bou</option></select></label>
+  <label>Proposta <select id="prop"></select></label>
+  <label>Mode <select id="mode"><option value="idle">Showreel sense UI</option><option value="ui">Selector amb UI</option><option value="watch">«Mira el ball»</option></select></label>
+  <label>Alçada <input id="size" type="range" min="200" max="700" step="20" value="360"></label>
+  <button id="load" class="primary">Torna a començar</button>
+  <span id="status"></span>
+  <div id="vps"></div>
+</header>
+<p class="note">Cada mida és el joc sencer en un iframe a la mida real, reduït a la vista. Totes van al temps de la primera; un clic a l’esquema les fa saltar alhora a aquell pla. A «Mira el ball» la cançó sona a la primera.</p><p class="note"> Un iframe té el punter del Mac (fi): la maquetació tàctil dels mòbils no hi surt.</p>
+<details id="plan" open><summary>Esquema del videoclip</summary><p id="idea" class="legend"></p><div id="lanes"></div><div class="legend" id="legend"></div><table><thead><tr><th>ref</th><th>entra</th><th>temps</th><th>segons</th><th>dura</th><th>pla</th><th>part del ball</th><th>nota del codi (showreel.js)</th></tr></thead><tbody id="rows"></tbody></table></details>
+<main id="grid"></main>
+<script type="module">
+import { PROPOSALS, KINDS, applyProposal } from '/tools/dev/reel-review/proposals.js';
+// The project's menu viewports (AGENTS.md): phones portrait, tablet landscape, desktops
+const VPS = [[320, 568], [375, 667], [393, 852], [430, 932], [1024, 768], [1280, 800], [1440, 700], [1920, 1080]];
+const ON = new Set(['375x667', '393x852', '1024x768', '1440x700', '1920x1080']);
+const $ = id => document.getElementById(id);
+for (const [w, h] of VPS) $('vps').insertAdjacentHTML('beforeend', `<label><input type="checkbox" value="${w}x${h}"${ON.has(`${w}x${h}`) ? ' checked' : ''}>${w}×${h}</label>`);
+for (const k of ['gpu-hint', 'ios-hint']) localStorage.setItem(k, 'off'); // (same origin: the frames read it)
+let frames = [], waker = 0, poll = 0, run = 0;
+
+// In a frame: the game's own module instances (the dev server serves each once)
+const mod = (f, path) => f.contentWindow.eval(`import(${JSON.stringify(path)})`);
+const ready = f => new Promise(res => { const t = setInterval(() => { if (f.contentWindow?.__dbg?.G?.state) { clearInterval(t); res(); } }, 200); });
+
+async function start(f, mode) { // to the selector, its UI hidden at once in `idle` (no wait, and the mouse never wakes it: the frame takes no pointer)
+  await ready(f);
+  const w = f.contentWindow;
+  w.document.hasFocus = () => true; // the game runs only in the focused window (core/env.js pageActive): here every frame is
+  if (mode === 'idle') (await mod(f, '/src/ui/reel-idle.js')).REEL_IDLE.after = 0;
+  await applyProposal($('fig').value, $('prop').value, u => mod(f, u));
+  if (w.__dbg.G.state === 'splash') (await mod(f, '/src/game/flow.js')).unlock();
+  await new Promise(r => setTimeout(r, 1200));
+  w.document.querySelectorAll('dialog[open]').forEach(d => d.close());
+  return mod(f, '/src/game/showreel.js');
+}
+function wake() { for (const f of frames) f.contentWindow?.dispatchEvent(new PointerEvent('pointermove')); } // keeps the selector's UI up
+
+async function load() {
+  clearInterval(waker); clearInterval(poll);
+  const me = ++run, fig = $('fig').value, mode = $('mode').value, H = +$('size').value;
+  const vps = [...$('vps').querySelectorAll('input:checked')].map(i => i.value.split('x').map(Number));
+  $('grid').innerHTML = ''; frames = [];
+  vps.forEach(([w, h], i) => {
+    const k = H / h, fg = document.createElement('figure');
+    fg.innerHTML = `<figcaption>${w}×${h}</figcaption><div class="box" style="width:${w * k}px;height:${H}px"><iframe width="${w}" height="${h}" allow="autoplay" style="width:${w}px;height:${h}px;transform:scale(${k});pointer-events:${mode === 'idle' ? 'none' : 'auto'}"></iframe></div>`;
+    $('grid').append(fg);
+    const f = fg.querySelector('iframe');
+    f.src = `/?${i ? 'mute&' : ''}mock&figura=${fig}`; // (the first one keeps the sound)
+    frames.push(f);
+  });
+  $('status').textContent = 'carregant…';
+  const reels = (await Promise.all(frames.map(f => start(f, mode)))).map(m => m.REEL);
+  if (me !== run || !frames.length) return; // (another load since)
+  if (mode === 'watch') for (const f of frames) f.contentWindow.document.getElementById('select-watch')?.click(); // all in the same moment
+  if (mode === 'ui') waker = setInterval(wake, 2000);
+  const { SHOWREELS, REEL } = await mod(frames[0], '/src/game/showreel.js');
+  const reel = SHOWREELS[REEL.id];
+  poll = setInterval(() => { // what the first frame shows now; on the selector every other frame kept on its beat
+    if (REEL.on && !REEL.song && reel) for (const R of reels.slice(1)) {
+      if (!R.on || R.song) continue;
+      const d = ((R.beat - REEL.beat) % reel.loop + reel.loop * 1.5) % reel.loop - reel.loop / 2;
+      if (Math.abs(d) > 0.1) R.anchor += d;
+    }
+    const i = reel?.shots.findLastIndex(s => s[0] <= REEL.beat);
+    $('status').textContent = REEL.on ? `temps ${REEL.beat.toFixed(1)} · pla ${reel.shots[i]?.[0]} ${reel.shots[i]?.[1]}` : frames[0].contentWindow.__dbg?.G?.state ?? '';
+  }, 250);
+}
+$('size').addEventListener('input', () => { // rescale in place, no reload
+  const H = +$('size').value;
+  for (const f of frames) { const h = +f.height, w = +f.width, k = H / h; f.style.transform = `scale(${k})`; Object.assign(f.parentElement.style, { width: `${w * k}px`, height: `${H}px` }); }
+});
+// The plan of the selected figure's reel: its dance's parts and its shots on one beat line, then a row per shot (a reference
+// to point at: M3, D5…). From the game's own data: SHOWREELS, the dance's ARRANGEMENT, the song's beat grid, and each shot
+// line's comment in showreel.js.
+const KIND = { wide: ['#8ec5ff', 'obert: la plaça al voltant'], left: ['#b5e48c', 'tres quarts, per l’esquerra'], right: ['#99d98c', 'tres quarts, per la dreta'],
+  front: ['#ffd166', 'de cara, baix i a prop'], high: ['#cdb4db', 'una mica més alt: el cercle, els girs'], close: ['#ff8fa3', 'primer pla d’un cap (teleobjectiu)'],
+  vast: ['#4ea8de', 'tota la plaça, des d’amunt'], tight: ['#f4a261', 'tot el cos, de prop amb teleobjectiu'], side: ['#90be6d', 'de perfil'],
+  low: ['#e76f51', 'des de baix, contrapicat'], tail: ['#ffafcc', 'primer pla de la cua'], arcL: ['#43aa8b', 'la càmera l’envolta (esquerra)'], arcR: ['#4d908e', 'la càmera l’envolta (dreta)'],
+  push: ['#f9c74f', 's’hi acosta a poc a poc'], pull: ['#577590', 'se n’allunya fins a la plaça'] };
+const SRC = { mulassa: ['/src/game/dance.js', 'MULASSA', 'M'], drac: ['/src/figures/drac/dance-drac.js', 'DRAC', 'D'], bou: [null, 'BOU', 'B'] };
+let plan = null;
+async function drawPlan(fig) {
+  const [src, name, letter] = SRC[fig];
+  const [{ SHOWREELS, SHOT_KINDS, REEL_GLIDE }, figs, dance, songJson, code] = await Promise.all([import('/src/game/showreel.js'), import('/src/game/figures.js'),
+    src ? import(src) : {}, fetch(`/src/song-${fig}.json`).then(r => r.json()), fetch('/src/game/showreel.js').then(r => r.text())]);
+  const pk = $('prop').value, prop = PROPOSALS[fig]?.[pk], reel = SHOWREELS[figs[name].id], { loop, start } = reel, beats = songJson.beats;
+  const shots = prop ? prop.shots : reel.shots, kinds = { ...SHOT_KINDS, ...KINDS }, tag = prop ? `${pk}-` : letter;
+  $('idea').innerHTML = prop ? `<b>Proposta ${pk} · ${prop.name}.</b> ${prop.idea} Els talls fan el mateix fos de 0,5 s que ara.` : '<b>Actual</b>, el que hi ha al joc.';
+  const sec = b => { const i = Math.min(beats.length - 2, Math.max(0, Math.floor(b))); return beats[i] + (beats[i + 1] - beats[i]) * (b - i); };
+  const notes = {}; // shot beat -> the comment on its line in SHOWREELS and the shots that line holds
+  let cur = null;
+  for (const line of code.split('\n')) {
+    const f = line.match(/\[(\w+)\.id\]:/); if (f) cur = f[1];
+    const hits = [...line.matchAll(/\[(\d+), '(\w+)', '(cut|glide)'\]/g)];
+    if (cur === name && hits.length) for (const h of hits) notes[h[1]] = { text: line.split('//')[1]?.trim() ?? '', of: hits.map(x => +x[1]) };
+  }
+  if (prop) for (const [b, , , n] of shots) notes[b] = { text: n, of: [b] };
+  const parts = dance.ARRANGEMENT ?? [], partAt = b => [...parts].reverse().find(p => p[0] <= b)?.[1] ?? 'intro';
+  const partsIn = (b, e) => [partAt(b), ...parts.filter(p => p[0] > b && p[0] < e).map(p => p[1])].join(' → ');
+  const ref = b => `${tag}${shots.findIndex(x => x[0] === b) + 1}`;
+  const pct = b => `${b / loop * 100}%`;
+  $('lanes').innerHTML = `<div class="lane"><b class="lab">parts</b>${[[0, 'intro'], ...parts].map(([b, n], i, a) => `<span class="sec" style="left:${pct(b)};width:${pct((a[i + 1]?.[0] ?? loop) - b)}">${n}</span>`).join('')}</div>`
+    + `<div class="lane" id="shotlane"><b class="lab">plans</b>${shots.map(([b, k, how], i) => `<span data-b="${b}" class="${how}" title="${tag}${i + 1}: ${k}" style="left:${pct(b)};width:${pct((shots[i + 1]?.[0] ?? loop) - b)};background:${KIND[k][0]}">${tag}${i + 1} ${k}</span>`).join('')}<i id="playhead"></i></div>`;
+  $('legend').innerHTML = Object.entries(KIND).filter(([k]) => shots.some(x => x[1] === k)).map(([k, [c, d]]) => `<span class="k" style="background:${c}"></span><b>${k}</b> ${d} (az ${kinds[k].az.join('→')}, alt ${kinds[k].el}, ocupa ${kinds[k].fill.join('→')})`).join(' · ')
+    + `<br>Entra en <b>tall</b>: fos de 0,5 s (línia blanca). En <b>lliscament</b>: la càmera gira cap al pla nou en ${REEL_GLIDE} temps. El selector comença al temps ${start} i torna a començar al ${loop}; «Mira el ball» el fa una vegada des del 0.`;
+  $('rows').innerHTML = shots.map(([b, k, how], i) => { const e = shots[i + 1]?.[0] ?? loop;
+    return `<tr data-b="${b}"><td><b>${tag}${i + 1}</b></td><td>${how === 'cut' ? 'tall' : 'lliscament'}</td><td>${b}–${e}</td><td>${sec(b).toFixed(1)}–${sec(e).toFixed(1)} s</td><td>${(sec(e) - sec(b)).toFixed(1)} s</td>`
+      + `<td><span class="k" style="background:${KIND[k][0]}"></span>${k}</td><td>${partsIn(b, e)}</td><td>${!notes[b] ? '' : (notes[b].of.length > 1 ? `<i>(${notes[b].of.map(ref).join(', ')})</i> ` : '') + notes[b].text}</td></tr>`; }).join('');
+  plan = { shots, loop };
+}
+const jumpTo = async b => { for (const f of frames) { const { REEL, SHOWREELS } = await mod(f, '/src/game/showreel.js'); if (REEL.on && !REEL.song) REEL.anchor = SHOWREELS[REEL.id].start + REEL.acc - b; } };
+$('plan').addEventListener('click', e => { const t = e.target.closest('[data-b]'); if (t) jumpTo(+t.dataset.b + 2); }); // (a bar's breath in: past the cut's dissolve)
+setInterval(async () => { // the playhead and the current row, from the first frame
+  if (!plan || !frames[0]?.contentWindow?.__dbg) return;
+  const { REEL } = await mod(frames[0], '/src/game/showreel.js'); if (!REEL.on) return;
+  $('playhead').style.left = `${Math.min(REEL.beat, plan.loop) / plan.loop * 100}%`;
+  const i = plan.shots.findLastIndex(s => s[0] <= REEL.beat);
+  [...$('rows').children].forEach((r, j) => r.classList.toggle('now', j === i));
+}, 200);
+const props = () => { // the picked figure's proposals (the Bou has none)
+  const keep = $('prop').value;
+  $('prop').innerHTML = '<option value="">Actual</option>' + Object.entries(PROPOSALS[$('fig').value] ?? {}).map(([k, p]) => `<option value="${k}">${k} · ${p.name}</option>`).join('');
+  if (PROPOSALS[$('fig').value]?.[keep]) $('prop').value = keep;
+};
+props();
+$('fig').addEventListener('change', () => { props(); drawPlan($('fig').value); });
+$('prop').addEventListener('change', () => { drawPlan($('fig').value); load(); });
+drawPlan($('fig').value);
+$('load').addEventListener('click', load);
+for (const id of ['fig', 'mode']) $(id).addEventListener('change', load);
+$('vps').addEventListener('change', load);
+load(); // (the selector needs no sound; «Mira el ball» does, and a pick in this page lets it play)
+</script>
+</body></html>

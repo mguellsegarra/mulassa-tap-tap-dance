@@ -1,4 +1,4 @@
--- No weekly board after all (Marc, 2026-09-28): one all-time board. Drops weekly_entries and current_week();
+-- No weekly board after all: one all-time board. Drops weekly_entries and current_week();
 -- submit_result goes back to writing entries only (with 202609280003's unique-nickname check); get_leaderboard_all keeps
 -- its (p_version, p_period default 'all') signature so no client breaks, and 'week' is now an invalid period.
 -- ASCII only on purpose (pasted into the SQL Editor).

@@ -1,0 +1,113 @@
+{
+  "lang": "ko",
+  "ogLocale": "ko_KR",
+  "ui": {
+    "play": "지금 플레이",
+    "videos": "영상",
+    "download": "다운로드 (MP4, {size})",
+    "downloadMd": "{title}, 다운로드 (MP4, {size})",
+    "footerGame": "게임",
+    "footerProject": "프로젝트 소개",
+    "footerCode": "코드",
+    "ogImageAlt": "Mulassa Tap Tap Dance 로고와 Mulassa, Drac de Valls.",
+    "videoDescription": "Mulassa Tap Tap Dance 홍보 영상.",
+    "genre": "리듬 게임",
+    "os": "모든 브라우저"
+  },
+  "home": {
+    "title": "Mulassa Tap Tap Dance",
+    "lead": "Joc de ritme en català: fes ballar la Mulassa i el Drac de Valls al compàs de la música tocant dos botons.",
+    "sections": [
+      [
+        "Com es juga",
+        [
+          "Toca **GUA** (esquerra) i **PA** (dreta) quan les notes arribin al cercle. Si en surt una de dues colors, toca els dos botons alhora: és una **GUAPA!** i puntua el doble. Mantén premut a les notes llargues (**MANTÉN**) i pica sense parar als redobles (**GLOBUS**). Cada error desanima la plaça, i si es buida la Mulassa cau i el Drac s’apaga.",
+          "Hi ha tres nivells (fàcil, normal i difícil), una pràctica inicial, classificacions i targetes per compartir el resultat. Es juga des del navegador, al mòbil, a la tauleta o a l’ordinador."
+        ]
+      ],
+      [
+        "Més informació",
+        [
+          "[Sobre el projecte](https://mulassa.cat/projecte/): què és, d’on surt i qui l’ha fet.",
+          "El [codi és obert a GitHub](https://github.com/mguellsegarra/mulassa-tap-tap-dance): la idea és que s’hi vagin afegint figures del bestiari festiu d’arreu dels Països Catalans.",
+          "Per jugar, obre [mulassa.cat](https://mulassa.cat/)."
+        ]
+      ]
+    ]
+  },
+  "projecte": {
+    "title": "Mulassa Tap Tap Dance 소개",
+    "captures": [
+      [
+        "/captures/titol.jpg",
+        "타이틀 화면: Mulassa Tap Tap Dance 로고와 광장의 Mulassa de Valls."
+      ],
+      [
+        "/captures/joc.jpg",
+        "플레이 화면: 노트 레인, GUA와 PA 버튼, 사람들 앞에서 춤추는 Mulassa."
+      ],
+      [
+        "/captures/resultats.jpg",
+        "공유용 결과 카드: 별 세 개와 정확도 92 %."
+      ]
+    ],
+    "videos": [
+      [
+        "/videos/promo-16x9.mp4",
+        "/videos/promo-16x9.jpg",
+        "홍보 영상 (가로, 16:9)",
+        1920,
+        1080,
+        "20 MB"
+      ],
+      [
+        "/videos/promo-9x16.mp4",
+        "/videos/promo-9x16.jpg",
+        "홍보 영상 (세로, 9:16)",
+        1080,
+        1920,
+        "17 MB"
+      ]
+    ],
+    "lead": "Mulassa Tap Tap Dance는 카탈루냐어권 축제의 bestiari(축제용 동물 조형물)를 춤추게 하는, 카탈루냐어로 만든 무료 리듬 게임이에요.",
+    "sections": [
+      [
+        "어떤 게임인가요",
+        [
+          "리듬 게임이에요. 레인을 따라 오는 노트에 맞춰 두 버튼을 누르면, 사람들로 가득한 광장 한가운데서 조형물이 춤춰요. 휴대폰, 태블릿, 컴퓨터의 브라우저에서 설치나 가입 없이 즐겨요. 카탈루냐어를 포함해 16개 언어로 즐길 수 있어요.",
+          "조형물을 조금 더 엉뚱하게 만들고, 멜로디도 더 가볍고 게임답게 바꿨어요. 블록 스타일에, 춤마다 깜짝 장면을 숨겨뒀어요."
+        ]
+      ],
+      [
+        "게임 방법",
+        [
+          "**GUA**와 **PA**: 노트가 원에 오면 왼쪽 또는 오른쪽 버튼을 터치해요(키보드는 ←와 → 또는 D와 K). 조형물마다 고유한 단어가 있어서, Drac에서는 **CRE**와 **MA**예요.",
+          "**GUAPA!** 두 버튼을 동시에 눌러요(Drac에서는 **CREMA!**). 점수가 두 배예요. 하나만 누르면 실수예요.",
+          "**꾹 누르기**: 긴 노트가 끝날 때까지 눌러요(보통과 어려움).",
+          "**풍선**: 북이 빠르게 울리면 터질 때까지 최대한 많이 두드려요.",
+          "**기운**: 실수할 때마다 광장의 기운이 줄어요. 다 떨어지면 Mulassa가 쓰러지고 Drac 불이 꺼져요.",
+          "**신나는 피날레**: 곡의 마지막 구절이에요. 정확도가 70 % 이상이면 점수가 두 배예요.",
+          "첫 춤은 안내에 따라 연습해요. 그다음 쉬움, 보통, 어려움 중 골라요. 별명으로 순위표에 결과를 올리거나 결과 카드를 공유할 수 있어요."
+        ]
+      ],
+      [
+        "만든 사람과 크레딧",
+        [
+          "기획, 디자인, 개발: Marc Güell Segarra · [ondori.dev](https://ondori.dev).",
+          "자신들의 조형물을 게임에 데려올 수 있게 허락해준 [Unió Anelles de la Flama](https://uaf.cat)와 함께했어요. 제가 만든 것은 조형물을 돌보고 광장에 내보내는 단체 사람들의 노력에서 나왔어요. {uaf}",
+          "멜로디: Francesc Bofarull i Figuerola. 편곡과 소리는 게임 코드가 만들어요.",
+          "Baloo 2와 Jersey 10 글꼴은 SIL Open Font License로 사용해요.",
+          "Valls에서 {campanar} 애정 {cor}과 많은 AI의 도움으로 만들었어요"
+        ]
+      ],
+      [
+        "오픈 소스와 함께 만들기",
+        [
+          "[GitHub에 코드가 공개되어 있어요](https://github.com/mguellsegarra/mulassa-tap-tap-dance). 시간과 의지, 지식이 있다면 누구나 함께할 수 있어요. 우리 동네 조형물이 춤추는 걸 보고 싶다면 그 음악과 춤, 축제와 함께 게임에 넣을 수 있어요.",
+          "미소가 났다면 [커피 한 잔 사주세요](https://buymeacoffee.com/mguellsegarra). 새 소식은 Instagram에서 전해요: [@mulassa_cat](https://www.instagram.com/mulassa_cat/).",
+          "게임은 추적용 쿠키를 쓰지 않아요. 처리하는 데이터와 권리는 설정의 ‘개인정보’에서 확인할 수 있어요. 이미지 관련 문의나 궁금한 점은 [holi@mulassa.cat](mailto:holi@mulassa.cat)으로 보내요."
+        ]
+      ]
+    ]
+  }
+}

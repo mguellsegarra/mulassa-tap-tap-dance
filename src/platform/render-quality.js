@@ -5,15 +5,25 @@
 // frame) filling the ground beyond the moving ring, on the far side the play camera looks across
 // (main.js midCrowd). near: how many of the skinned ring (the nearest her that the camera sees) answer hits more (NEAR).
 // ripple: rows (from the front) that also see each hit travel round the ring (crowd-fx.js); the first ring always does; -1 = nobody.
+// smoke: the Drac's smoke puffs (drac-fx.js pool; 0 = none); jets: the sparks of its carretilles' jets (common/fire.js);
+// wheels: the sparks of its rodes de foc (its confetti: a wheel on each of its 5 fire points; minimal: the 2 mouths).
 export const PROFILES = [
-  { name: 'low', dpr: 1, pixels: 850_000, shadow: 0, rows: 2, stride: 2, confetti: 80, fireworks: 180, backdrop: 160, mid: 130, balconies: 16, near: 12, ripple: 0, band: 6 },
-  { name: 'medium', dpr: 1.5, pixels: 1_600_000, shadow: 1024, rows: 3, stride: 2, confetti: 150, fireworks: 350, backdrop: 280, mid: 240, balconies: 36, near: 18, ripple: 1, band: 8 },
-  { name: 'high', dpr: 2, pixels: 3_000_000, shadow: 2048, rows: 3, stride: 1, confetti: 260, fireworks: 700, backdrop: 380, mid: 340, balconies: 40, near: 26, ripple: 9, band: 10 },
+  { name: 'low', dpr: 1, pixels: 850_000, shadow: 0, rows: 2, stride: 2, confetti: 80, fireworks: 180, backdrop: 160, mid: 130, balconies: 16, near: 12, ripple: 0, band: 6, smoke: 48, jets: 260, wheels: 160 },
+  { name: 'medium', dpr: 1.5, pixels: 1_600_000, shadow: 1024, rows: 3, stride: 2, confetti: 150, fireworks: 350, backdrop: 280, mid: 240, balconies: 36, near: 18, ripple: 1, band: 8, smoke: 96, jets: 420, wheels: 320 },
+  { name: 'high', dpr: 2, pixels: 3_000_000, shadow: 2048, rows: 3, stride: 1, confetti: 260, fireworks: 700, backdrop: 380, mid: 340, balconies: 40, near: 26, ripple: 9, band: 10, smoke: 160, jets: 640, wheels: 400 },
 ];
 // Level -1: for GPUs that can't keep up even at 'low' (the frame monitor steps down to it) and software WebGL (below):
 // the 3D below 1× (~350k px), one crowd row, a thin backdrop. PROFILES[0..2] keep their indices.
-export const MINIMAL = { name: 'minimal', dpr: 1, pixels: 350_000, shadow: 0, rows: 1, stride: 2, confetti: 40, fireworks: 90, backdrop: 60, mid: 40, balconies: 0, near: 10, ripple: -1, band: 6 };
+export const MINIMAL = { name: 'minimal', dpr: 1, pixels: 350_000, shadow: 0, rows: 1, stride: 2, confetti: 40, fireworks: 90, backdrop: 60, mid: 40, balconies: 0, near: 10, ripple: -1, band: 6, smoke: 0, jets: 140, wheels: 64 };
 export const profileAt = level => (level < 0 ? MINIMAL : PROFILES[Math.min(level, PROFILES.length - 1)]);
+// A session's near people (the skinned ring's rows, balconies, the band, a colla's seated) lag adaptive quality (stage.js
+// stepPeople): people leaving the plaça read as broken. The armless backdrop and mid band step with the level, along with
+// sharpness, shadows and effects: far off, the fewest notice them go.
+const PROFILE_PEOPLE = ['rows', 'stride', 'balconies', 'near', 'band'];
+export const sessionProfile = (level, people) => {
+  const p = profileAt(people);
+  return { ...profileAt(level), ...Object.fromEntries(PROFILE_PEOPLE.map(k => [k, p[k]])), people: p.name };
+};
 // The HUD canvas budget follows the quality: at low/minimal the fill rate is the problem, so text is a little softer.
 export const hudBudget = (level, touch) => (level <= 0 ? 900_000 : touch ? 2_500_000 : 4_200_000);
 // Software WebGL: no GPU (Chrome's SwiftShader on a blocklisted GPU or with acceleration off, Mesa's llvmpipe/softpipe,
@@ -43,44 +53,77 @@ export function probeRenderer(makeCanvas = () => document.createElement('canvas'
   try { gl.getExtension('WEBGL_lose_context')?.loseContext(); } catch { /* freed with the canvas anyway */ }
   return out;
 }
-export function initialQuality({ mobile = false, cores, memory, saveData = false } = {}) {
+// Phones whose GPU is known to be weak (Adreno 3xx–5xx, Mali-400/T/G31/G51/G52, PowerVR) start low; other phones medium.
+const LOW_MOBILE_GPU = /adreno[^0-9]*[3-5]\d\d\b|mali-(4\d\d|t\d+|g31|g51|g52)\b|powervr/i;
+// Laptops' older dedicated GPUs (Radeon Pro 4xx/5xx, Radeon R5–R9 M and HD …M, GeForce …M and MX: a 2016 MacBook Pro's
+// Radeon on Linux ran high at ~30 fps) start at medium too, like the old Intel ones below.
+const OLD_LAPTOP_GPU = /\bradeon(\(tm\))? (pro [45]\d\d|r[5-9] m\d+|hd \d{4}m)\b|\bgeforce (gtx? )?\d{3,4}m\b|\bgeforce mx ?\d{3}\b/i;
+// Intel's integrated GPUs before Iris Xe (HD, UHD, Iris/Iris Plus/Pro: a 2016 MacBook Pro, Linux or macOS) dropped
+// from high within the splash's first seconds, a visible hitch each step: they start at medium (antialiased, its shadows),
+// never high (also the session's ceiling, main.js: a trial of high on a 2016 MacBook was a hitch and a crowd gone each time);
+// the frame monitor still steps a slower one down.
+const OLD_INTEL_GPU = /\bintel\b.*\b(hd|uhd|iris)\b(?!.*\bxe\b)/i;
+export function initialQuality({ mobile = false, cores, memory, saveData = false, renderer = '' } = {}) {
   if (saveData || (memory && memory <= 2)) return 0;
+  if (OLD_INTEL_GPU.test(renderer) || OLD_LAPTOP_GPU.test(renderer)) return 1;
   // phones: the core count is no signal (iOS Safari reports a low, capped number even on an iPhone 16), so they
   // start at medium (antialiased, sharper) and the frame monitor steps down only if frames really are slow
-  if (mobile) return 1;
+  if (mobile) return LOW_MOBILE_GPU.test(renderer) ? 0 : 1;
   return (memory && memory <= 4) || (cores && cores <= 4) ? 1 : 2;
 }
 export function renderDpr(profile, width, height, dpr) {
   return Math.min(dpr || 1, profile.dpr, Math.sqrt(profile.pixels / Math.max(1, width * height)));
 }
-// Quality steps judge the drawn frames against 60 fps whatever the pacer aims for: a 120 Hz screen that misses its
-// 8.3 ms halves its rate first (framePacer), so quality only drops when even an even 60 is out of reach.
+// Quality steps normally judge the drawn frames against 60 fps: a 120 Hz screen that misses its 8.3 ms halves its
+// rate first (framePacer). A sustained 30 Hz cadence uses the capped budget below instead.
 // Spikes: a device that keeps hitching during play (SPIKE.count frames over SPIKE.ms within SPIKE.within ms) steps
 // down one level at the end of that window even when most frames are fine; a one-off hitch (a first use, a GC) never
 // does. `play` = false (menus, the pause sheet) counts no spikes; a gap over 1 s (hidden tab, a stall) resets it all.
 // SLOW_SHARE: over a 4 s window, the share of frames that missed a 60 Hz vsync (> 24 ms) that steps quality down. 12% is
 // ~53 fps: a steady judder on the note lane although the fps counter never reads far under 60.
-const SLOW_SHARE = 0.12;
+export const SLOW_SHARE = 0.12;
 const SPIKE = { ms: 50, count: 5, within: 3000 };
+// The session's first seconds (monitor time: the loader's excluded): a clear overload (a third of the frames late) decides on a
+// 2 s window, not 4: a ThinkPad X230 that booted a level too high spent ~10 s at 30–40 fps before its two steps down.
+const EARLY = { until: 15000, window: 2000, share: 0.3 };
+// iOS Low Power Mode (and thermal throttling) caps Safari's rAF at 30 Hz (WebKit AnimationFrameRate.cpp): every frame is
+// 33 ms, all of them read as slow and medium fell straight to minimal. CAP.run frames in a row at a steady ~33 ms suggest
+// a cap: until a faster frame, frames are judged against 30 Hz (twice the times above) and the run's frames
+// don't count as slow. Cadence alone cannot distinguish a power cap from a busy GPU; only missed refreshes
+// or repeated hitches justify removing detail, never an otherwise steady 30 Hz.
+const CAP = { lo: 29, hi: 38, run: 12 };
 export function frameMonitor(onSlow) {
   let elapsed = 0, samples = 0, slow = 0, warmup = 2000, clock = 0, n = 0, spiky = false;
+  let run = 0, runSlow = 0, capped = false; // runSlow: this window's slow frames of the current run
   const spikes = new Float64Array(SPIKE.count); // when the last few spikes happened (monitor time, ring buffer)
-  return (ms, play = true) => {
-    if (ms <= 0 || ms > 1000) { elapsed = samples = slow = n = 0; spiky = false; return; }
+  const reset = (settle = true) => {
+    elapsed = samples = slow = n = run = runSlow = 0; spiky = capped = false;
+    if (settle) warmup = 2000;
+  };
+  const monitor = (ms, play = true) => {
+    if (ms <= 0 || ms > 1000) { reset(false); return; }
     clock += ms;
+    const inCap = ms >= CAP.lo && ms <= CAP.hi, was = capped;
+    run = inCap ? run + 1 : 0;
+    if (ms < 24) capped = false; else if (run >= CAP.run) capped = true;
     if (warmup > 0) { warmup = Math.max(0, warmup - ms); return; }
-    if (play && ms > SPIKE.ms) {
+    const k = capped ? 2 : 1;
+    if (play && ms > SPIKE.ms * k) {
       spikes[n++ % SPIKE.count] = clock;
       if (n >= SPIKE.count && clock - spikes[n % SPIKE.count] <= SPIKE.within) spiky = true; // the oldest of the last few
     }
     elapsed += ms; samples++;
-    if (ms > 24) slow++;
-    if (elapsed >= 4000) {
+    if (ms > 24 * k) slow++;
+    if (!inCap) runSlow = 0; else if (!capped) runSlow++;
+    if (capped && !was) { slow -= runSlow; runSlow = 0; } // the run that showed the cap was its pace, not misses
+    if (elapsed >= 4000 || clock < EARLY.until && elapsed >= EARLY.window && samples >= 8 && slow / samples > EARLY.share) {
       const share = samples >= 8 ? slow / samples : 0;
-      if (share > SLOW_SHARE || spiky) { onSlow(share > 0.8 ? 2 : 1); warmup = 2000; n = 0; } // way too slow: two steps
-      elapsed = samples = slow = 0; spiky = false;
+      if (share > SLOW_SHARE || spiky) { onSlow(share > 0.8 ? 2 : 1, { slowShare: share, spiky, window: elapsed, samples, capped }); warmup = 2000; n = 0; } // way too slow: two steps
+      elapsed = samples = slow = runSlow = 0; spiky = false;
     }
   };
+  monitor.reset = reset;
+  return monitor;
 }
 // The HUD canvas is cleared and redrawn every frame: its backing store is capped by a pixel budget (an iPad Pro at
 // DPR 2 would be 5.6 Mpx; at 2.5 Mpx it is drawn at ~1.35x, still crisp) instead of always at the screen's DPR.
@@ -140,6 +183,9 @@ export function framePacer(opts) {
     return true;
   };
   Object.assign(pace, { hz: 60, fps: 60, half: false, lowPower: false });
+  pace.reset = () => {
+    d.fill(Infinity); i = n = prev = good = winN = winSlow = 0; start = -1; lastDraw = -1e9;
+  }; // no hidden/resize time or old refresh samples in the next cadence window; retain anti-oscillation history
   return pace;
 }
 // The song clock the frames are drawn on. The Web Audio clock (ctx.currentTime, so Chip.now()) only moves when the

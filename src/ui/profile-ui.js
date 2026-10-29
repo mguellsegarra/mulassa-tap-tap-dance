@@ -1,82 +1,122 @@
-// The player's profile, in one place (⚙ Configuració «Perfil» block + #profile-menu, index.html). A guest profile lives in one
-// browser's storage; like any guest account it can be protected by linking an e-mail (a 6-digit code sent there brings it
-// back on any device: no password, no Google), left with «Tanca la sessió» once it has an e-mail, or deleted. The block
-// shows the nickname, the state, and only the buttons that fit it:
-//   none    no profile                  → Crea · Recupera
-//   stale   a name, but no profile here → Recupera · Oblida el nom (local only)
-//   guest   profile, no e-mail          → Enllaça un correu · Esborra el perfil
-//   linked  profile + e-mail            → Tanca la sessió · Esborra el perfil
-// The sheet's steps: alias (create), mail → code (link / recover), confirm (delete / sign out), done. «Crea» makes the
-// guest profile with just a nickname, before any result (service.createProfile). src/services/leaderboard.js does the
-// work (sendCode: an address that already owns a profile signs in to it instead); Turnstile is board-ui.js's (one widget).
+// The player's profile (docs/rankings/strategy.md §6): the block at the top of the Perfil sheet (#account-menu,
+// src/ui/account-ui.js) and the steps sheet (#profile-menu). A guest («Convidat», no confirmed e-mail) keeps its plain name in
+// this browser; confirming an e-mail (a 6-digit code sent there) earns the «Correu confirmat» check, keeps the name for good
+// and brings the profile back on any device (no password, no Google). A guest idle for 30 days can lose its name to somebody
+// else (released): it keeps its results and is asked for another name. The block shows the name, the state, and only the
+// buttons that fit it:
+//   none     no profile                     → Crea · Recupera
+//   stale    a name, but no profile here    → Recupera · Oblida el nom (local only)
+//   guest    profile, not confirmed         → Confirma el correu · Esborra el perfil
+//   released its name is somebody else's    → Tria un altre nom · Esborra el perfil
+//   linked   confirmed                      → Tanca la sessió · Esborra el perfil
+// The sheet's steps: alias (create, or the new name of a released profile), mail → code (link / recover), confirm (delete /
+// sign out), done. «Crea» makes the guest profile with just a nickname, before any result (service.createProfile).
+// src/services/leaderboard.js does the work; Turnstile is board-ui.js's (one widget).
 import { leaderboard as defaultService } from '../services/leaderboard.js';
+import { rememberIdentity } from '../services/leaderboard-identity.js';
 import { cleanEmail } from '../services/feedback.js';
 import { checkAlias } from '../services/alias-rules.js';
 import { turnstileMessage } from '../services/captcha.js';
 import { errors } from '../services/errors.js';
 import { byId, statusLine, setButton } from './sheet-kit.js';
+import { GUEST, GUEST_TEXT, appendName } from './profile-notes.js';
+import { tr } from '../i18n/messages.js';
 
 const maskEmail = m => { const [u = '', d = ''] = m.split('@'); return `${u.slice(0, 1)}***@${d}`; };
 const CONFIRM = {
-  delete: { title: 'Esborrar el perfil?', yes: 'Sí, esborra-ho tot', done: 'Perfil esborrat. Els rècords d’aquest dispositiu es mantenen.',
-    lead: () => 'S’esborraran el sobrenom, els resultats publicats i el correu, a tots els nivells. No es pot desfer. Els rècords d’aquest dispositiu es mantenen.' },
-  signout: { title: 'Tancar la sessió?', yes: 'Sí, tanca la sessió', done: 'Sessió tancada.',
-    lead: mail => `Aquest navegador oblidarà el perfil. El recuperaràs amb un codi enviat a ${mail}.` },
+  delete: { title: tr('ui.profile.delete.title'), yes: tr('ui.profile.delete.yes'), done: tr('ui.profile.delete.done'),
+    lead: () => tr('ui.profile.delete.lead') },
+  signout: { title: tr('ui.profile.signout.title'), yes: tr('ui.profile.signout.yes'), done: tr('ui.profile.signout.done'),
+    lead: mail => tr('ui.profile.signout.lead', { mail }) },
 };
 
-export function setupProfile({ focusIn, captcha, store, aliasKey, deviceNote = () => '', service = defaultService, doc = document, report = errors.report }) {
+// acceptStats(): creating a profile here showed the statistics notice (src/services/stats-sync.js may send them now)
+export function setupProfile({ focusIn, captcha, store, aliasKey, deviceNote = () => '', service = defaultService, doc = document, report = errors.report,
+  acceptStats = () => {} }) {
   const $ = byId(doc);
   const menu = $('profile-menu'), form = $('profile-form'), mailIn = $('profile-email'), aliasIn = $('profile-alias'), codeIn = $('profile-code');
-  const status = $('profile-status'), sendBtn = $('profile-send'), cancelBtn = $('profile-cancel'), lead = $('profile-lead');
-  const row = $('settings-profile-row'), nameEl = $('settings-profile-name'), sub = $('settings-profile-sub');
-  const mainBtn = $('settings-profile-main'), altBtn = $('settings-profile-alt');
+  const status = $('profile-status'), sendBtn = $('profile-send'), cancelBtn = $('profile-cancel'), keepBtn = $('profile-keep'), lead = $('profile-lead');
+  const row = $('profile-row'), nameEl = $('profile-name'), kindEl = $('profile-kind'), sub = $('profile-sub');
+  const btns = [$('profile-main'), $('profile-alt'), $('profile-more')];
   const online = Boolean(service.configured), canLink = online && service.publishingEnabled; // deleting stays possible with publishing off
   let step = 'mail', kind = '', type = '', mail = '', busy = false, req = 0, back = null, settingsReq = 0, closeTimer = null;
   let email = ''; // the address on the profile shown in the block (for «Tanca la sessió»)
 
   const setStatus = statusLine(status);
-  const label = () => (step === 'alias' ? 'Crea el perfil' : step === 'mail' ? 'Envia el codi' : step === 'code' ? 'Comprova el codi' : step === 'confirm' ? CONFIRM[kind].yes : 'Tanca');
+  const label = () => ({ alias: tr(kind === 'rename' ? 'ui.profile.btn.saveName' : 'ui.profile.btn.createProfile'), mail: tr('ui.profile.btn.sendCode'), code: tr('ui.profile.btn.checkCode'), confirm: CONFIRM[kind]?.yes }[step] ?? tr('ui.profile.btn.close'));
   // disabled = working: a plain ring spins in the button (index.html .btn-spin, as in feedback-ui.js)
   const setSend = (text, disabled = false) => setButton(doc, sendBtn, text, disabled);
   const show = s => {
     step = s;
     $('profile-alias-field').hidden = s !== 'alias'; $('profile-mail-field').hidden = s !== 'mail'; $('profile-code-field').hidden = s !== 'code';
-    $('profile-note').hidden = s !== 'mail' && s !== 'code';
+    $('profile-note').hidden = s !== 'mail' && s !== 'code'; $('profile-stats-note').hidden = s !== 'alias' || kind === 'rename'; // a rename is no new profile: no statistics notice
+    $('profile-alias-label').textContent = tr(kind === 'rename' ? 'ui.profile.field.name' : 'ui.profile.field.alias');
+    keepBtn.hidden = s !== 'confirm'; sendBtn.classList.toggle('btn-primary', s !== 'confirm'); sendBtn.classList.toggle('btn-secondary', s === 'confirm'); // delete / sign out: «Cancel·la» leads
     setSend(label());
   };
   const idle = () => { busy = false; mailIn.readOnly = codeIn.readOnly = aliasIn.readOnly = false; setSend(label()); };
+  // the server's name for this profile, under aliasKey
+  const remember = prof => { if (prof?.alias) rememberIdentity(store, aliasKey, prof); };
 
-  // --- the block in ⚙ Configuració
-  // the last answer of service.identity(): the next open paints from it, so nothing jumps. Kept in the store too: after a while
-  // away the session needs a network round-trip to refresh, and the block must not sit blank until it comes back.
+  // --- the block (Perfil sheet)
+  // the last answer of service.identity() / profile(): the next open paints from it, so nothing jumps. Kept in the store
+  // too: after a while away the session needs a network round-trip to refresh, and the block must not sit blank meanwhile.
   const knownKey = `${aliasKey}:identity`;
   let known = null;
-  try { const k = JSON.parse(store.get(knownKey) || 'null'); if (k && typeof k.hasSession === 'boolean') known = { hasSession: k.hasSession, mailOn: String(k.mailOn || ''), persistent: k.persistent !== false }; } catch {}
-  function paint({ alias, hasSession, mailOn, persistent }) {
+  try {
+    const k = JSON.parse(store.get(knownKey) || 'null');
+    if (k && typeof k.hasSession === 'boolean') known = { hasSession: k.hasSession, mailOn: String(k.mailOn || ''), persistent: k.persistent !== false, prof: k.prof || null };
+  } catch {}
+  function paint({ alias, hasSession, mailOn, persistent, prof = null }) {
     delete row.dataset.pending;
-    const state = hasSession ? (mailOn ? 'linked' : 'guest') : alias ? 'stale' : 'none';
+    // confirmed is the server's answer; without one (offline, an older server) a confirmed address on the session
+    const confirmed = prof ? prof.verified : Boolean(mailOn);
+    const state = hasSession ? (confirmed ? 'linked' : prof?.released ? 'released' : 'guest') : alias ? 'stale' : 'none';
     email = mailOn;
-    const set = (btn, act, text, on = true) => { btn.hidden = !on; btn.dataset.act = act; btn.textContent = text; };
-    nameEl.textContent = alias;
-    if (state === 'none') { sub.textContent = 'Encara no en tens cap.'; set(mainBtn, 'create', 'Crea', canLink); set(altBtn, 'recover', 'Recupera', canLink); }
-    else if (state === 'stale') { sub.textContent = 'Aquest navegador ja no té el perfil.'; set(mainBtn, 'recover', 'Recupera', canLink); set(altBtn, 'forget', 'Oblida el nom'); }
-    else if (state === 'guest') { sub.textContent = deviceNote(persistent) || 'Només viu en aquest navegador.'; set(mainBtn, 'link', 'Enllaça un correu', canLink); set(altBtn, 'delete', 'Esborra el perfil'); }
-    else { sub.textContent = `Protegit amb ${maskEmail(mailOn)}`; set(mainBtn, 'signout', 'Tanca la sessió'); set(altBtn, 'delete', 'Esborra el perfil'); }
-    row.hidden = mainBtn.hidden && altBtn.hidden;
+    const set = (i, act, text, on = true) => { const b = btns[i]; b.hidden = !on; b.dataset.act = act; b.textContent = text; };
+    nameEl.replaceChildren(); // as the boards show it: the check for a confirmed address, a released name faded
+    if (state !== 'none') appendName(doc, nameEl, { alias, verified: confirmed && hasSession, released: state === 'released' });
+    kindEl.hidden = state !== 'guest'; kindEl.textContent = GUEST;
+    btns[2].hidden = true;
+    if (state === 'none') { sub.textContent = tr('ui.profile.sub.none'); set(0, 'create', tr('ui.profile.btn.create'), canLink); set(1, 'recover', tr('ui.profile.btn.recover'), canLink); }
+    else if (state === 'stale') { sub.textContent = tr('ui.profile.sub.stale'); set(0, 'recover', tr('ui.profile.btn.recover'), canLink); set(1, 'forget', tr('ui.profile.btn.forget')); }
+    else if (state === 'guest') {
+      sub.textContent = [GUEST_TEXT, deviceNote(persistent)].filter(Boolean).join(' ');
+      set(0, 'link', tr('ui.profile.btn.link'), canLink); set(1, 'delete', tr('ui.profile.btn.delete'));
+    } else if (state === 'released') {
+      sub.textContent = tr('ui.profile.lead.released');
+      set(0, 'rename', tr('ui.profile.btn.rename'), canLink); set(1, 'delete', tr('ui.profile.btn.delete'));
+    } else {
+      sub.textContent = tr(`ui.profile.sub.${mailOn ? 'mail' : 'nomail'}`, { mail: mailOn && maskEmail(mailOn) });
+      set(0, 'signout', tr('ui.profile.btn.signout')); set(1, 'delete', tr('ui.profile.btn.delete'));
+    }
+    row.dataset.state = state;
   }
   async function refresh() {
     if (!online) { row.hidden = true; return; }
+    row.hidden = false;
     const r = ++settingsReq, alias = store.get(aliasKey) || '';
-    // the first frame: the last answer; with a name but no answer yet, a blank row of the same size (guessing «stale» and then
-    // repainting «Protegit amb…» moved the buttons and the line under the name); no name: «Encara no en tens cap.»
+    // the first frame: the last answer; with a name but no answer yet, a guest's block in no colour (the commonest answer: the same
+    // size, so repainting moves nothing; guessing «stale» moved the buttons and the line under the name); no name: «Encara no en tens cap.»
     if (known && alias) paint({ alias, ...known });
-    else if (alias) { row.hidden = false; row.dataset.pending = '1'; nameEl.textContent = alias; sub.textContent = '\u00a0'; for (const b of [mainBtn, altBtn]) { b.hidden = false; b.textContent = '\u00a0'; } }
+    else if (alias) { row.dataset.pending = '1'; nameEl.replaceChildren(); appendName(doc, nameEl, { alias, verified: false }); kindEl.hidden = false; kindEl.textContent = GUEST; sub.textContent = [GUEST_TEXT, deviceNote(true)].filter(Boolean).join(' '); [tr('ui.profile.btn.link'), tr('ui.profile.btn.delete')].forEach((t, i) => { btns[i].hidden = false; btns[i].textContent = t; delete btns[i].dataset.act; }); btns[2].hidden = true; }
     else paint({ alias, hasSession: false, mailOn: '', persistent: true });
-    let id;
-    try { id = await service.identity(); } catch { if (r === settingsReq && row.dataset.pending) paint({ alias, hasSession: false, mailOn: '', persistent: true }); return; } // offline: what the memory says stands
-    known = { hasSession: id.hasSession, mailOn: id.email || '', persistent: id.persistent !== false };
+    let id, prof = null, gone = false;
+    try {
+      id = await service.identity();
+    } catch { if (r === settingsReq && row.dataset.pending) paint({ alias, hasSession: false, mailOn: '', persistent: true }); return; } // offline: what the memory says stands
+    // no answer from my_profile (offline, an older server): the last one stands
+    if (id.hasSession && service.profile) try { prof = await service.profile(); gone = prof === null; } catch { prof = known?.prof ?? null; }
+    if (r !== settingsReq) return;
+    // the row of a remembered guest is gone (deleted elsewhere): the session left here is
+    // useless (as on the publish sheet), so this browser leaves it; the next profile starts from scratch
+    if (gone && alias && !id.email) { try { await service.signOut(); } catch { /* the next publication starts over anyway */ } id = { ...id, hasSession: false }; prof = null; }
+    if (r !== settingsReq) return;
+    if (prof) remember(prof);
+    const name = prof?.alias || alias;
+    known = { hasSession: id.hasSession, mailOn: id.email || '', persistent: id.persistent !== false, prof };
     store.set(knownKey, JSON.stringify(known));
-    if (r === settingsReq) paint({ alias, hasSession: id.hasSession, mailOn: id.email || '', persistent: id.persistent !== false });
+    paint({ alias: name, ...known });
   }
   function forget() { store.remove(aliasKey); refresh(); }
 
@@ -88,29 +128,32 @@ export function setupProfile({ focusIn, captcha, store, aliasKey, deviceNote = (
     mailIn.readOnly = codeIn.readOnly = aliasIn.readOnly = false;
     cancelBtn.hidden = false;
     if (what === 'create') {
-      $('profile-title').textContent = 'Crea el perfil';
-      lead.textContent = 'Tria un sobrenom: és el nom que sortirà a la classificació. 3–16 caràcters, sense espais.';
+      $('profile-title').textContent = tr('ui.profile.title.create');
+      lead.textContent = tr('ui.profile.lead.create');
+      show('alias');
+    } else if (what === 'rename') { // a released profile: its name is somebody else's now; the same field, update_alias
+      $('profile-title').textContent = tr('ui.profile.btn.rename'); lead.textContent = tr('ui.profile.lead.released');
       show('alias');
     } else if (what === 'link' || what === 'recover') {
-      $('profile-title').textContent = what === 'link' ? 'Enllaça un correu' : 'Recupera el perfil';
-      lead.textContent = what === 'link' ? 'Enllaça un correu per protegir el teu compte: si perds el perfil, el recuperaràs amb un codi. Sense contrasenya.'
-        : 'Escriu el correu del perfil i t’enviarem un codi per entrar-hi. Sense contrasenya.';
+      $('profile-title').textContent = tr(`ui.profile.title.${what}`);
+      lead.textContent = tr(`ui.profile.lead.${what}`);
       show('mail');
     } else {
       $('profile-title').textContent = CONFIRM[what].title; lead.textContent = CONFIRM[what].lead(email);
       show('confirm');
     }
     menu.showModal();
-    focusIn(menu, step === 'alias' ? 'profile-alias' : step === 'mail' ? 'profile-email' : 'profile-cancel'); // a confirmation starts on the safe button
+    focusIn(menu, step === 'alias' ? 'profile-alias' : step === 'mail' ? 'profile-email' : 'profile-keep'); // a confirmation starts on the safe button
   }
 
   mailIn.addEventListener('input', () => { const c = cleanEmail(mailIn.value); if (c !== mailIn.value) mailIn.value = c; });
   codeIn.addEventListener('input', () => { codeIn.value = codeIn.value.replace(/\D/g, '').slice(0, 6); });
   form.addEventListener('submit', e => { e.preventDefault(); send(); });
   function finish(text) { // the result for a beat, then back
-    step = 'done'; busy = false; cancelBtn.hidden = true;
-    $('profile-alias-field').hidden = $('profile-mail-field').hidden = $('profile-code-field').hidden = $('profile-note').hidden = true;
-    lead.textContent = ''; setSend('Tanca'); setStatus(text, true);
+    step = 'done'; busy = false; cancelBtn.hidden = keepBtn.hidden = true;
+    sendBtn.classList.replace('btn-secondary', 'btn-primary');
+    for (const id of ['profile-alias-field', 'profile-mail-field', 'profile-code-field', 'profile-note', 'profile-stats-note']) $(id).hidden = true;
+    lead.textContent = ''; setSend(tr('ui.profile.btn.close')); setStatus(text, true);
     closeTimer = setTimeout(() => { if (menu.open) menu.close(); }, 2000);
     refresh();
   }
@@ -118,58 +161,90 @@ export function setupProfile({ focusIn, captcha, store, aliasKey, deviceNote = (
     if (step === 'done') { menu.close(); return; }
     if (busy) return;
     const r = ++req;
-    if (step === 'alias') { const a = checkAlias(aliasIn.value); if (!a.ok) { setStatus(a.message); return; } } // nothing sent
+    if (step === 'alias') { const a = checkAlias(aliasIn.value); if (!a.ok) { setStatus(a.message); aliasIn.focus(); return; } } // nothing sent
     busy = true; setStatus('');
-    setSend('Un moment…', true); mailIn.readOnly = codeIn.readOnly = aliasIn.readOnly = true;
+    setSend(tr('ui.profile.btn.working'), true); mailIn.readOnly = codeIn.readOnly = aliasIn.readOnly = true;
     try {
-      let captchaToken;
-      if ((step === 'alias' || step === 'mail') && service.captchaRequired && captcha) {
-        try { captchaToken = await captcha.token(); } catch (e) {
+      const askToken = async () => { // null: Turnstile failed or the sheet went away (already said)
+        try { const t = await captcha.token(); return r === req ? t : null; } catch (e) {
           if (r === req) { setStatus(e?.code === 'cancel' ? '' : turnstileMessage(e?.code)); idle(); }
-          return;
+          return null;
         }
-        if (r !== req) return;
+      };
+      let captchaToken;
+      if (step === 'alias' && kind !== 'rename' && service.captchaRequired && captcha) { // a rename has its session already
+        captchaToken = await askToken();
+        if (captchaToken == null) return;
       }
       if (step === 'alias') {
         const alias = await service.createProfile(aliasIn.value, { captchaToken });
         if (r !== req) return;
         store.set(aliasKey, alias);
-        finish('Perfil creat!');
+        try { remember(await service.profile?.()); } catch { /* the block asks again */ }
+        if (kind !== 'rename') acceptStats(); // the notice was on this step
+        if (r !== req) return;
+        finish(tr(kind === 'rename' ? 'ui.profile.done.nameSaved' : 'ui.profile.done.created'));
       } else if (step === 'mail') {
-        const out = await service.sendCode(mailIn.value, { captchaToken });
+        // a token only when sendCode asks for one (a sign-in by code): adding the address to this browser's session needs
+        // none, and waiting for Turnstile first made «Envia el codi» slow for nothing
+        let out;
+        try { out = await service.sendCode(mailIn.value); } catch (e) {
+          if (e?.code !== 'captcha' || !captcha || r !== req) throw e;
+          captchaToken = await askToken();
+          if (captchaToken == null) return;
+          out = await service.sendCode(mailIn.value, { captchaToken });
+        }
         if (r !== req) return;
         mail = mailIn.value; type = out.type;
-        lead.textContent = `T’hem enviat un codi de 6 xifres a ${mail}. Mira també la carpeta de correu brossa.`;
-        codeIn.value = ''; show('code'); idle(); focusIn(menu, 'profile-code');
+        // the address already confirmed another profile: the code switches to that one, nothing is merged
+        const other = kind === 'link' && type === 'email', mine = store.get(aliasKey);
+        lead.textContent = other ? tr('ui.profile.lead.codeOther', { mail, mine: mine || tr('ui.profile.thisBrowser') })
+          : tr('ui.profile.lead.codeSent', { mail });
+        // still typing (the keyboard's «send»): the code field takes the focus before the address hides, so iOS keeps its keyboard up
+        const typing = doc.activeElement === mailIn;
+        codeIn.value = ''; idle();
+        if (typing) { $('profile-code-field').hidden = false; codeIn.focus(); }
+        show('code');
+        if (!typing) focusIn(menu, 'profile-code');
       } else if (step === 'code') {
         await service.verifyCode(mail, codeIn.value, type);
         if (r !== req) return;
-        if (type === 'email') { // signed in to an existing profile: bring its nickname back to this browser
-          try { const alias = await service.myAlias(); if (alias) store.set(aliasKey, alias); } catch { /* asked again on the next publication */ }
+        // the server decides who this browser is now and whether it is confirmed (a code for a pending change alone proves nothing)
+        let prof = null;
+        try { prof = await service.profile?.(); } catch { /* the block asks again */ }
+        if (r !== req) return;
+        if (type === 'email') { // signed in to an existing profile: bring its name back to this browser
+          if (prof) remember(prof); else try { const alias = await service.myAlias(); if (alias) store.set(aliasKey, alias); } catch { /* asked again on the next publication */ }
           if (r !== req) return;
+          finish(tr(kind === 'link' ? 'ui.profile.done.switched' : 'ui.profile.done.recovered'));
+          return;
         }
-        finish(type === 'email' ? 'Perfil recuperat!' : 'Compte protegit!');
+        if (prof) remember(prof);
+        finish(tr(prof?.verified ? 'ui.profile.done.mailConfirmed' : 'ui.profile.done.codeChecked'));
       } else { // confirm
         try { await (kind === 'delete' ? service.deleteProfile() : service.signOut()); } catch (e) {
           if (kind === 'delete') report('leaderboard-delete-failed', { code: e?.code || e?.name || 'Error', ...(e?.detail && { server: String(e.detail).slice(0, 64) }) });
           throw e;
         }
         if (r !== req) return;
-        store.remove(aliasKey); // the nickname goes with the profile (or the session); local records and settings stay
+        store.remove(aliasKey); // the name goes with the profile (or the session); local records and settings stay
         finish(CONFIRM[kind].done);
       }
     } catch (e) {
       if (r !== req) return;
-      setStatus(e?.message || 'Ara mateix no s’ha pogut. Torna-ho a provar.');
+      setStatus(e?.message || tr('ui.profile.failed'));
       if (e?.code === 'noprofile') show('mail');
       idle();
+      if (step === 'alias') aliasIn.focus(); // a name somebody has: another try, right there
     }
   }
   cancelBtn.addEventListener('click', () => { if (!busy) menu.close(); });
+  keepBtn.addEventListener('click', () => { if (!busy) menu.close(); });
   menu.addEventListener('cancel', e => { if (busy) e.preventDefault(); });
   menu.addEventListener('close', () => {
     req++; busy = false; clearTimeout(closeTimer); captcha?.cancel(); cancelBtn.hidden = false;
     const b = back; back = null; b?.();
   });
-  return { open, refresh, forget, get isOpen() { return menu.open; } };
+  return { open, refresh, forget, get isOpen() { return menu.open; }, get renaming() { return menu.open && kind === 'rename' && step === 'alias'; },
+    get state() { return row.dataset.state; } };
 }

@@ -1,6 +1,7 @@
 // The touch pad: haptics and press feedback.
 import { down } from '../game/state.js';
 import { padEl } from '../hud/layout.js';
+import './figure-theme-dom.js';
 
 // Haptics: Android vibrates; iPhone (iOS 18+) gives a system tick when a native switch is toggled,
 // so a hidden one is flicked from inside the tap. Only works during a real touch.

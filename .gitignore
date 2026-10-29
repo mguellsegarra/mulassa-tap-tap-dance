@@ -1,5 +1,6 @@
 # Dependencies and Vite build output
 node_modules
+.bestiari-media.json
 dist/
 .vite/
 
@@ -49,12 +50,15 @@ __pycache__/
 # Supabase CLI cache
 supabase/.temp/
 
-# Generator output kept out of the repo (tools/build_taiko.py)
+# Generator output kept out of the repo (tools/build_taiko.py); the .mid scores are versioned (not deployed: prepare-pages OMIT)
 public/music/*.wav
-public/music/*.mid
+
+# Screenshot/video inventory (tools/ui-inventory.mjs, tools/ui-video.mjs): hundreds of MB, regenerated on demand
+docs/i18n-ui-inventory/
 
 # Database backups: ciphertext or plaintext dumps never belong in the repo (tools/db_backup.py)
 *.age
 *.dump
 *.pgdump
 db-backup-*/
+

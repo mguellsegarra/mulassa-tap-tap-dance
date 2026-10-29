@@ -1,4 +1,5 @@
--- Run as postgres in the SQL editor. All fixtures are rolled back, never real players.
+-- Run as postgres after all migrations, including seasons, guests and points-first records.
+-- All fixtures are synthetic and rolled back. Exercises production clients with eight arguments.
 begin;
 insert into auth.users(id, is_anonymous) values
  ('fca4d0d0-0000-4000-8000-000000000001', true),

@@ -1,14 +1,19 @@
 // The lane: notes, holds, balloons, the hit ring and the streak badge.
+import { tr } from '../i18n/messages.js';
+import { figTheme } from '../game/figure-theme.js';
 import { lane, LH } from './layout.js';
 import { W, H, PXU, SAFE, K } from './canvas.js';
-import { BEATS, beatAt, CALM } from '../core/env.js';
+import { CALM } from '../core/env.js';
+import { BEATS, beatAt } from '../game/figure-song.js';
 import { RING_R, holdTail, holdHalo, noteDisc, holdCharge, text, textWidth, NOTE_R, glowDisc, glowPath } from './primitives.js';
 import { G, balloonShown, clock } from '../game/state.js';
 import { pulse } from '../core/anim.js';
 import { balloonFx, balloonHead, balloonShape, setBalloonView } from './balloon.js';
 import { C, DIRC, setSpriteBudget } from './sprites.js';
 import { topLayout } from './top.js';
-import { M } from '../scene/mula-motion.js';
+import { M } from '../scene/figure-springs.js';
+import { traitsByKey } from '../figures/index.js';
+const LANE_TXT = { hold: tr('hud.lane.hold'), taps: tr('hud.lane.taps'), balloon: tr('hud.lane.balloon'), pop: tr('hud.lane.pop'), mash1: tr('hud.lane.mash1'), mash2: tr('hud.lane.mash2'), mash: tr('hud.lane.mash'), streak: tr('hud.lane.streak') };
 
 export function drawLane(t) {
   const { cy, hx, s, sb, speed } = lane(), LB = LH * sb / s, top = cy - LB / 2, bottom = cy + LB / 2; // in lane units, scaled by s around the ring
@@ -44,9 +49,10 @@ export function drawLane(t) {
       const xe = hx + (n.end - t) * speed - 14, xh = Math.max(hx, x); // tail stops short of the next note
       if (x > W1 + 20 || xe < hx) continue;
       const live = balloonShown(t) === n, k = live ? (n.count % n.need) / n.need : 0, pp = pulse(G.popT ?? -9, 0.35), hit = live ? Math.max(pulse(G.pumpT, 0.14), pp * 2) : 0, w = balloonFx?.wobble() ?? { sq: 0, rot: 0 };
-      H.fillStyle = C.dark; H.beginPath(); H.roundRect(xh, cy - 10 - hit * 2, Math.max(0, xe - xh) + 10, 20 + hit * 4, 10); H.fill(); // the roll's bar swells on every tap
-      H.fillStyle = pp > 0.3 ? C.cream : hit > 0.05 ? '#ffd166' : '#ff9f1c'; H.beginPath(); H.roundRect(xh, cy - 8 - hit * 1.5, Math.max(0, xe - xh) + 8, 16 + hit * 3, 8); H.fill();
-      const bob = live ? 0 : Math.sin(clock * 6 + n.t) * 1.6, shake = Math.sin(clock * 80) * hit * 2; // waiting: a restless bob; tapped: a jolt
+      const br = 8 + hit * 1.5, bw = Math.max(0, xe - xh) + 8; // the roll's bar swells on every tap; a pill at any height, its 2 px rim even all round (the carretilla leaves the left end in view)
+      H.fillStyle = C.dark; H.beginPath(); H.roundRect(xh - 2, cy - br - 2, bw + 4, 2 * br + 4, br + 2); H.fill();
+      H.fillStyle = pp > 0.3 ? C.cream : hit > 0.05 ? '#ffd166' : '#ff9f1c'; H.beginPath(); H.roundRect(xh, cy - br, bw, 2 * br, br); H.fill();
+      const bob = live ? 0 : Math.sin(clock * 6 + n.t) * 1.6, shake = CALM.matches ? 0 : Math.sin(clock * 80) * hit * 2; // waiting: a restless bob; tapped: a jolt
       balloonHead(xh + shake, cy - 3 + bob, 14 * (1 + 0.22 * k + pp * 0.35), k, w.sq, w.rot);
       continue;
     }
@@ -56,26 +62,32 @@ export function drawLane(t) {
   drawRingTop(t, hx, cy, !!held);
   if (held) {
     holdCharge(held.input, hx, cy, (G.hold.got - held.t) / (held.end - held.t));
-    text('MANTÉN!', hx + 30, bottom + 8, 9 * 1.06, C.gold, 'left', C.dark, false, (1 + 0.06 * Math.sin(clock * 8)) / 1.06); // small label beside the ring, clear of the judge word
+    text(LANE_TXT.hold, hx + 30, bottom + 8, 9 * 1.06, C.gold, 'left', C.dark, false, (1 + 0.06 * Math.sin(clock * 8)) / 1.06); // small label beside the ring, clear of the judge word
   }
   const bl = balloonShown(t);
   if (bl) { // the balloon hangs from the ring, under the lane, and inflates with every tap; the counter keeps going after each pop
-    const k = (bl.count % bl.need) / bl.need, r = 9 + 17 * k + pulse(G.pumpT, 0.15) * 3, by = bottom + 8 + r;
+    const k = (bl.count % bl.need) / bl.need, carretilles = traitsByKey(figTheme.id).drumroll !== 'balloon'; // the Drac's carretilles and the Bou's esquellot: a fixed icon and a tap total
+    const r = carretilles ? 24 : 9 + 17 * k + pulse(G.pumpT, 0.15) * 3, by = carretilles ? bottom + 24 : bottom + 8 + r;
     const m = balloonFx && H.getTransform?.(); // the 3D balloon (balloon3d.js) is drawn under the HUD: say where it hangs, the counter below sits on top
     if (m) {
       const px = (x, y) => [(m.a * x + m.c * y + m.e) / PXU, (m.b * x + m.d * y + m.f) / PXU], [bx, byy] = px(hx, by), [ax, ay] = px(hx, cy + 17), sc = Math.hypot(m.a, m.b) / PXU;
       setBalloonView({ x: bx, y: byy, r: r * sc, k, ax, ay });
     } else {
-      H.strokeStyle = C.cream; H.lineWidth = 1; H.beginPath(); H.moveTo(hx, cy + 17); H.lineTo(hx, by - r); H.stroke();
+      if (!carretilles) { H.strokeStyle = C.cream; H.lineWidth = 1; H.beginPath(); H.moveTo(hx, cy + 17); H.lineTo(hx, by - r); H.stroke(); }
       balloonShape(hx, by, r, `hsl(${350 - k * 30},90%,${62 - k * 8}%)`);
     }
-    text(String(bl.count), hx, by, 28, C.cream, 'center', C.dark, false, (9 + r * 0.55 + pulse(G.pumpT, 0.12) * 3) / 28); // the total only ever goes up; grows from one sprite per number (r < 29)
-    const pops = Math.floor(bl.count / bl.need);
-    text(pops ? `x${pops}` : `${bl.need - bl.count}`, hx + 34, bottom + 12, 20, C.gold, 'left', C.dark, false, 0.8 * (1 + pulse(G.pumpT, 0.12) * 0.25));
-    text(pops ? 'GLOBUS' : 'PER PETAR', hx + 34, bottom + 26, 8, C.cream, 'left');
+    if (carretilles) { // keep tapping through the whole roll: only the cumulative tap total, not the tro's threshold
+      text(String(bl.count), hx + 34, bottom + 12, 20, C.cream, 'left', C.dark, false, 0.8 * (1 + pulse(G.pumpT, 0.12) * 0.25));
+      text(LANE_TXT.taps, hx + 34, bottom + 26, 8, C.cream, 'left');
+    } else {
+      text(String(bl.count), hx, by, 28, C.cream, 'center', C.dark, false, (9 + r * 0.55 + pulse(G.pumpT, 0.12) * 3) / 28); // the total only ever goes up; grows from one sprite per number (r < 29)
+      const pops = Math.floor(bl.count / bl.need);
+      text(pops ? `x${pops}` : `${bl.need - bl.count}`, hx + 34, bottom + 12, 20, C.gold, 'left', C.dark, false, 0.8 * (1 + pulse(G.pumpT, 0.12) * 0.25));
+      text(pops ? LANE_TXT.balloon : LANE_TXT.pop, hx + 34, bottom + 26, 8, C.cream, 'left');
+    }
     const urge = (1 + 0.08 * Math.sin(clock * 12)) / 1.08, U = 9 * 1.08; // mirrors the counter on the other side of the balloon
-    if (hx - 34 - W0 > textWidth('RÀPID!', 9) + 2) { text('PICA', hx - 34, bottom + 12, U, C.gold, 'right', C.dark, false, urge); text('RÀPID!', hx - 34, bottom + 25, U, C.gold, 'right', C.dark, false, urge); }
-    else text('PICA RÀPID!', hx + 34, bottom + 40, U, C.gold, 'left', C.dark, false, urge); // no room left of the ring (phones): under the counter
+    if (hx - 34 - W0 > textWidth(LANE_TXT.mash2, 9) + 2) { text(LANE_TXT.mash1, hx - 34, bottom + 12, U, C.gold, 'right', C.dark, false, urge); text(LANE_TXT.mash2, hx - 34, bottom + 25, U, C.gold, 'right', C.dark, false, urge); }
+    else text(LANE_TXT.mash, hx + 34, bottom + 40, U, C.gold, 'left', C.dark, false, urge); // no room left of the ring (phones): under the counter
   }
   const hd = G.holdDone, hk = hd ? (clock - hd.t0) / 0.7 : 1;
   if (hk < 1) { // A finished hold sends a flat shockwave along the lane; practice also names it
@@ -97,8 +109,8 @@ let sparkI = 0;
 export function ringSparks(n, col, v) { // downwards only (the HUD is above the lane), so they never hide the notes coming in on the right
   for (let i = 0; i < n; i++) Object.assign(SPARKS[sparkI = (sparkI + 1) % SPARKS.length], { t0: clock, a: Math.PI * (0.1 + Math.random() * 0.8), v: v * (0.6 + Math.random() * 0.6), col });
 }
-export function ringFx(kind, col, word = '') {
-  G.ring = { kind, t0: clock, col, word };
+export function ringFx(kind, col) { // no word inside: the judge word below already says how it went
+  G.ring = { kind, t0: clock, col };
   if (kind === 'perfect') ringSparks(6, col, 26);
   if (kind === 'good') ringSparks(3, C.cream, 16);
   if (kind === 'pop') { ringSparks(16, '#ff5a7a', 44); ringSparks(8, C.gold, 36); }
@@ -109,7 +121,7 @@ function ringAnim(t) {
   return { r, wide, on, e, miss: on && r.kind === 'miss' };
 }
 function drawRing(t, hx, cy) {
-  const { r, wide, on, e, miss } = ringAnim(t), fl = pulse(G.flash, 0.2), x = hx + (miss ? Math.sin(clock * 90) * 3 * e : 0);
+  const { r, wide, on, e, miss } = ringAnim(t), fl = pulse(G.flash, 0.2), x = hx + (miss && !CALM.matches ? Math.sin(clock * 90) * 3 * e : 0);
   H.fillStyle = 'rgba(20,12,6,0.16)'; H.beginPath(); H.arc(x, cy, RING_R, 0, 7); H.fill();
   H.fillStyle = miss ? `rgba(40,55,95,${0.3 + 0.4 * e})` : 'rgba(20,12,6,0.32)'; H.beginPath(); H.arc(x, cy, NOTE_R, 0, 7); H.fill(); // the socket
   if (fl > 0) { H.fillStyle = `rgba(255,243,214,${fl * 0.35})`; H.beginPath(); H.arc(x, cy, NOTE_R, 0, 7); H.fill(); }
@@ -117,15 +129,10 @@ function drawRing(t, hx, cy) {
     H.globalAlpha = e; glowDisc(x, cy, NOTE_R - 1, NOTE_R + 5, r.col);
     H.fillStyle = C.gold; H.beginPath(); H.arc(x, cy, NOTE_R, 0, 7); H.fill(); H.globalAlpha = 1;
   }
-  const lit = r?.kind === 'perfect' || r?.kind === 'gran';
-  if (on && r.word) { // inside the ring: never over the words above, and shrunk to fit inside the thin inner ring (GUAPA!)
-    const s = 8 + 3 * e, w = textWidth(r.word, s), fit = 2 * NOTE_R - 5, sz = w > fit ? s * fit / w : s, top = Math.min(11, fit * s / w); // top: its size at e = 1 (widths scale with s)
-    text(r.word, x, cy, top, lit ? C.dark : C.cream, 'center', lit ? C.cream : C.dark, false, sz / top); // one sprite per word, shrunk
-  }
   if (miss) { H.strokeStyle = `rgba(20,20,30,${e})`; H.lineWidth = 1.5; H.beginPath(); H.moveTo(x - 9, cy - 10); H.lineTo(x - 2, cy - 1); H.lineTo(x - 6, cy + 3); H.lineTo(x + 4, cy + 11); H.stroke(); } // crack
 }
 function drawRingTop(t, hx, cy, holding) {
-  const { r, wide, on, e, miss } = ringAnim(t), x = hx + (miss ? Math.sin(clock * 90) * 3 * e : 0);
+  const { r, wide, on, e, miss } = ringAnim(t), x = hx + (miss && !CALM.matches ? Math.sin(clock * 90) * 3 * e : 0);
   const fl = pulse(G.flash, 0.2), bt = beatAt(Math.max(0, t)), beatPulse = Math.max(0, 1 - (bt % 1) * 4), squash = pulse(G.tapT ?? -9, 0.12), pp = pulse(G.popT ?? -9, 0.35);
   const barPulse = t > 0 && Math.floor(bt) % 4 === 0 ? beatPulse : 0; // the ring beats with the music, gold and bigger on each bar
   H.strokeStyle = miss ? '#8aa0c8' : 'rgba(255,243,214,0.6)'; H.lineWidth = 1; // thin inner ring: where the note's edge lands
@@ -169,7 +176,7 @@ function digitAdv(size) { // the widest digit at this size: a fixed advance, so 
 }
 function streakBox() { // the badge's centre (cx, cy), size at scale 1 (w × h) and its biggest pop (M); tests check it clears the rest
   const L = lane(), z = W < 420 ? 1 : Math.max(1, Math.min(1.35, L.sb / 1.4)), h = 30 * z, adv = digitAdv(STREAK.num * z);
-  const w = Math.max(3 * adv, textWidth('RATXA', STREAK.lab * z)) + 7 * z, left = SAFE.l / K + 3;
+  const w = Math.max(3 * adv, textWidth(LANE_TXT.streak, STREAK.lab * z)) + 7 * z, left = SAFE.l / K + 3;
   const ringR = (RING_R + 12.5) * L.s + 2; // the ring at its biggest flash, beat and squash, with its stroke
   const right = L.hx - Math.max(ringR, 47 * L.s) - 4; // and past a missed GUAPA's reach (it scrolls on to hx - 20, glow and all)
   let P = Math.min(STREAK.maxPop, (L.bottom - L.top - 4) / h); // the biggest pop that stays inside the band
@@ -203,7 +210,7 @@ function drawStreak(t) {
   if (gm + heat > 0) glowPath(rim, (7 + 9 * gm) * z, Math.min(1, gm + heat));
   H.fillStyle = 'rgba(42,26,16,0.82)'; H.fill();
   H.strokeStyle = rim; H.lineWidth = (1.25 + 1.5 * gm) * z; H.stroke();
-  text('RATXA', cx, cy - 8 * z * sc, STREAK.lab * z * B.M, col, 'center', C.dark, false, g);
+  text(LANE_TXT.streak, cx, cy - 8 * z * sc, STREAK.lab * z * B.M, col, 'center', C.dark, false, g);
   const s = String(n), adv = digitAdv(STREAK.num * z) * sc, ny = cy + 3.5 * z * sc;
   for (let i = 0; i < s.length; i++) text(s[i], cx + (i - (s.length - 1) / 2) * adv, ny, STREAK.num * z * B.M, col, 'center', C.dark, false, g);
   H.globalAlpha = 1;
@@ -214,6 +221,6 @@ export function streakWarmups() { // every tier's digits and label at this scree
     if (!B) return;
     setSpriteBudget(6);
     for (let d = d0; d < d0 + 5; d++) text(String(d), 0, 0, STREAK.num * B.z * B.M, col, 'center', C.dark, false, 1 / B.M);
-    if (d0) text('RATXA', 0, 0, STREAK.lab * B.z * B.M, col, 'center', C.dark, false, 1 / B.M);
+    if (d0) text(LANE_TXT.streak, 0, 0, STREAK.lab * B.z * B.M, col, 'center', C.dark, false, 1 / B.M);
   }));
 }

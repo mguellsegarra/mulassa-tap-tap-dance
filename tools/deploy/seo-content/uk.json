@@ -1,0 +1,113 @@
+{
+  "lang": "uk",
+  "ogLocale": "uk_UA",
+  "ui": {
+    "play": "Грати зараз",
+    "videos": "Відео",
+    "download": "Завантажити (MP4, {size})",
+    "downloadMd": "{title}, завантажити (MP4, {size})",
+    "footerGame": "Гра",
+    "footerProject": "Про проєкт",
+    "footerCode": "Код",
+    "ogImageAlt": "Mulassa та Drac de Valls із логотипом Mulassa Tap Tap Dance.",
+    "videoDescription": "Промовідео Mulassa Tap Tap Dance.",
+    "genre": "Ритмічна гра",
+    "os": "Будь-який браузер"
+  },
+  "home": {
+    "title": "Mulassa Tap Tap Dance",
+    "lead": "Joc de ritme en català: fes ballar la Mulassa i el Drac de Valls al compàs de la música tocant dos botons.",
+    "sections": [
+      [
+        "Com es juga",
+        [
+          "Toca **GUA** (esquerra) i **PA** (dreta) quan les notes arribin al cercle. Si en surt una de dues colors, toca els dos botons alhora: és una **GUAPA!** i puntua el doble. Mantén premut a les notes llargues (**MANTÉN**) i pica sense parar als redobles (**GLOBUS**). Cada error desanima la plaça, i si es buida la Mulassa cau i el Drac s’apaga.",
+          "Hi ha tres nivells (fàcil, normal i difícil), una pràctica inicial, classificacions i targetes per compartir el resultat. Es juga des del navegador, al mòbil, a la tauleta o a l’ordinador."
+        ]
+      ],
+      [
+        "Més informació",
+        [
+          "[Sobre el projecte](https://mulassa.cat/projecte/): què és, d’on surt i qui l’ha fet.",
+          "El [codi és obert a GitHub](https://github.com/mguellsegarra/mulassa-tap-tap-dance): la idea és que s’hi vagin afegint figures del bestiari festiu d’arreu dels Països Catalans.",
+          "Per jugar, obre [mulassa.cat](https://mulassa.cat/)."
+        ]
+      ]
+    ]
+  },
+  "projecte": {
+    "title": "Про Mulassa Tap Tap Dance",
+    "captures": [
+      [
+        "/captures/titol.jpg",
+        "Титульний екран: Mulassa de Valls на площі з логотипом Mulassa Tap Tap Dance."
+      ],
+      [
+        "/captures/joc.jpg",
+        "Під час гри: ноти на доріжці, кнопки GUA й PA та Mulassa, що танцює перед глядачами."
+      ],
+      [
+        "/captures/resultats.jpg",
+        "Картка результатів для поширення: три зірки й 92 % влучань."
+      ]
+    ],
+    "videos": [
+      [
+        "/videos/promo-16x9.mp4",
+        "/videos/promo-16x9.jpg",
+        "Промовідео (горизонтальне, 16:9)",
+        1920,
+        1080,
+        "20 MB"
+      ],
+      [
+        "/videos/promo-9x16.mp4",
+        "/videos/promo-9x16.jpg",
+        "Промовідео (вертикальне, 9:16)",
+        1080,
+        1920,
+        "17 MB"
+      ]
+    ],
+    "lead": "Mulassa Tap Tap Dance — безкоштовна ритмічна гра, створена каталонською, у якій ти змушуєш танцювати фігури святкового bestiari (фігур звірів) каталономовних земель.",
+    "sections": [
+      [
+        "Що це",
+        [
+          "Ритмічна гра. Ноти рухаються доріжкою, а ти маєш вчасно натискати дві кнопки, поки фігура танцює посеред людної площі. Грати можна в браузері на телефоні, планшеті чи комп’ютері, без встановлення чи реєстрації. Гра доступна 16 мовами, зокрема каталонською.",
+          "Я дозволив собі зробити фігури трохи шаленішими й перенести їхні мелодії у світ відеоігор: з безтурботнішим настроєм, блоковою графікою та сюрпризом, захованим у кожному танці."
+        ]
+      ],
+      [
+        "Як грати",
+        [
+          "**GUA** і **PA**: торкайся лівої або правої кнопки, коли нота сягне кола (на клавіатурі ← і → або D і K). Кожна фігура має свої слова: у Drac це **CRE** і **MA**.",
+          "**GUAPA!** Обидві кнопки разом (**CREMA!** у Drac). Подвійні очки; одна кнопка — помилка.",
+          "**ТРИМАЙ**: тримай до кінця довгої ноти (на звичайному та складному рівнях).",
+          "**КУЛЬКА**: під час барабанного дробу бий якнайчастіше, доки вона не лусне.",
+          "**ЗАПАЛ**: кожна помилка гасить запал площі; коли він згасне, Mulassa впаде, а Drac згасне.",
+          "**ШАЛЕНИЙ ФІНАЛ**: остання музична фраза. Очки подвоюються, якщо маєш щонайменше 70 % влучань.",
+          "Перший танець — практика з підказками. Потім обираєш легкий, звичайний або складний рівень і можеш опублікувати результат під псевдонімом чи поділитися карткою."
+        ]
+      ],
+      [
+        "Авторство й подяки",
+        [
+          "Ідея, дизайн і розробка: Marc Güell Segarra · [ondori.dev](https://ondori.dev).",
+          "За участі [Unió Anelles de la Flama](https://uaf.cat), що дозволила мені перенести свої фігури в гру. Усе, що я зробив, виросло з праці людей товариства, які доглядають ці фігури й виводять їх на площу. {uaf}",
+          "Мелодії: Francesc Bofarull i Figuerola. Аранжування та звуки генерує код гри.",
+          "Шрифти Baloo 2 і Jersey 10 за ліцензією SIL Open Font License.",
+          "Зроблено з любов’ю {cor} та чималою допомогою ШІ у Valls {campanar}"
+        ]
+      ],
+      [
+        "Відкритий код і співпраця",
+        [
+          "[Код відкритий на GitHub](https://github.com/mguellsegarra/mulassa-tap-tap-dance), і кожен, хто має час, бажання та знання, може долучитися. Якщо хочеш побачити, як танцює фігура з твого міста, можеш додати її в гру з її музикою, танцем і святом.",
+          "Якщо гра тебе усміхнула, можеш [пригостити мене кавою](https://buymeacoffee.com/mguellsegarra). Новини — в Instagram: [@mulassa_cat](https://www.instagram.com/mulassa_cat/).",
+          "Гра не використовує файлів cookie для стеження. Про обробку даних і свої права можна прочитати в розділі «Приватність» у налаштуваннях. З питань зображень чи будь-яких інших звертайся на [holi@mulassa.cat](mailto:holi@mulassa.cat)."
+        ]
+      ]
+    ]
+  }
+}

@@ -1,0 +1,47 @@
+  .mula-spinner { display: inline-block; flex: none; width: 1em; height: 1em; }
+  .mula-load{display:block;width:100%;height:100%;overflow:visible}.mula-load *{transform-box:view-box}
+  /* One stride is .48 s: opposing legs, bent knees, heels up; the ground travels left under the planted feet. */
+  .mula-load .ml-leg{transform-origin:0 0;animation:ml-stride .48s linear infinite;animation-delay:var(--step,0s)}
+  .mula-load .ml-shin{transform-origin:0 0;animation:ml-knee .48s linear infinite;animation-delay:var(--step,0s)}
+  .ml-bob{transform-origin:100px 118px;animation:ml-bob .24s ease-in-out infinite}
+  .ml-tail{transform-origin:42px 74px;animation:ml-tail .48s ease-in-out infinite}
+  .ml-neck{transform-origin:148px 72px;animation:ml-neck .48s ease-in-out infinite}
+  .ml-nod{transform-origin:148px 72px;animation:ml-nod .24s ease-in-out infinite;animation-delay:-.06s}
+  .ml-jaw{transform-origin:159px 38px;animation:ml-jaw .48s ease-in-out infinite}
+  .ml-ear{transform-origin:151px 18px;animation:ml-ear .48s ease-in-out infinite;animation-delay:-.08s}.ml-ear.ml-e2{transform-origin:158px 18px;animation-delay:-.16s}
+  .ml-clac{opacity:0;animation:ml-clac 1.92s linear infinite}
+  .mula-load .ml-ground{overflow:hidden}
+  .ml-road{animation:ml-road .32s linear infinite}
+  .ml-dust{opacity:0;transform-origin:0 0;animation:ml-dust .48s linear infinite}
+  .ml-sweat{opacity:0;animation:ml-sweat .96s ease-out infinite}
+  .mula-load.mini .ml-neck{animation-duration:.96s}
+  .mula-load.mini .ml-nod{animation:none}
+  .mula-load.mini .ml-sweat{display:none}
+  @keyframes ml-stride{0%,100%{transform:translateY(1px) rotate(-30deg)}12%{transform:translateY(-2px) rotate(-4deg)}25%{transform:translateY(-1px) rotate(25deg)}45%{transform:rotate(50deg)}60%{transform:translateY(-2px) rotate(10deg)}78%{transform:translateY(-3px) rotate(-45deg)}90%{transform:rotate(-48deg)}}
+  @keyframes ml-knee{0%,100%{transform:rotate(35deg)}12%{transform:rotate(23deg)}25%{transform:rotate(10deg)}45%{transform:rotate(85deg)}60%{transform:rotate(110deg)}78%{transform:rotate(95deg)}90%{transform:rotate(50deg)}}
+  @keyframes ml-bob{0%,100%{transform:translateY(1px) rotate(6deg)}25%{transform:translateY(-3px) rotate(8deg)}50%{transform:translateY(-6px) rotate(7deg)}75%{transform:translateY(-2px) rotate(5deg)}}
+  @keyframes ml-tail{0%,100%{transform:rotate(66deg)}45%{transform:rotate(87deg)}75%{transform:rotate(58deg)}}
+  @keyframes ml-neck{0%,100%{transform:rotate(6deg)}45%{transform:rotate(13deg)}75%{transform:rotate(3deg)}}
+  @keyframes ml-nod{0%,100%{transform:none}50%{transform:rotate(-4deg)}}
+  @keyframes ml-jaw{0%,100%{transform:rotate(6deg)}35%{transform:rotate(19deg)}65%{transform:rotate(3deg)}}
+  @keyframes ml-ear{0%,100%{transform:rotate(-32deg)}40%{transform:rotate(-54deg)}75%{transform:rotate(-22deg)}}
+  @keyframes ml-clac{0%,86%,100%{opacity:0}90%{opacity:.75}95%{opacity:0}}
+  @keyframes ml-road{to{transform:translateX(-64px)}}
+  @keyframes ml-dust{0%{opacity:0;transform:translate(3px,0) scale(.22,.35)}16%{opacity:.5;transform:translate(-2px,-1px) scale(.55,.7)}45%{opacity:.4;transform:translate(-12px,-4px) scale(.9,1)}75%{opacity:.15;transform:translate(-23px,-7px) scale(1.16,1.08)}100%{opacity:0;transform:translate(-32px,-9px) scale(1.3,1.12)}}
+  @keyframes ml-sweat{0%,45%,100%{opacity:0;transform:none}55%{opacity:.85;transform:none}90%{opacity:0;transform:translate(-10px,6px)}}
+  .mula-load .ml-sad{display:none}
+  .mula-load.sad,.mula-load.sad *{animation:none}
+  .mula-load.sad .ml-sad{display:inline}
+  .mula-load.sad .ml-neck{transform:rotate(12deg)}
+  .mula-load.sad .ml-ear{transform:rotate(-30deg)}
+  .mula-load.sad .ml-e2{transform:rotate(25deg)}
+  /* Same character at rest: planted feet, a slow breath and drops from the visible eye. */
+  .mula-load.sad .ml-bob{animation:ml-sad-breathe 3.2s ease-in-out infinite}
+  .mula-load.sad .ml-neck{animation:ml-sad-sigh 3.2s ease-in-out infinite;animation-delay:-.25s}
+  .mula-load.sad .ml-tear{transform-origin:161px 28.5px;animation:ml-tear 2.8s linear infinite}
+  .mula-load.sad .ml-tear-late{opacity:0;animation-delay:-1.4s}
+  @keyframes ml-sad-breathe{0%,100%{transform:translateY(0) rotate(1deg)}42%{transform:translateY(-1.8px) rotate(.4deg)}65%{transform:translateY(-.5px) rotate(1deg)}}
+  @keyframes ml-sad-sigh{0%,100%{transform:rotate(12deg)}42%{transform:rotate(9deg)}65%{transform:rotate(13deg)}}
+  @keyframes ml-tear{0%{opacity:0;transform:translate(0,0) scale(.45)}10%{opacity:1;transform:translate(0,1px) scale(.85)}26%{opacity:1;transform:translate(2px,7px) scale(1)}48%{opacity:1;transform:translate(5px,19px) scale(.95,1.08)}60%{opacity:.8;transform:translate(7px,28px) scale(.9,1.12)}72%,100%{opacity:0;transform:translate(9px,37px) scale(.8,1.15)}}
+  @media (prefers-reduced-motion: reduce){.mula-load *{animation:none!important}}
+

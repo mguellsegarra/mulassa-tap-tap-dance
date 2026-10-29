@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="ca"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Bou · propostes (discoteca, bitllets, foc)</title>
+<style>html,body{margin:0;height:100%;overflow:hidden;background:#111;font-family:system-ui}canvas{display:block;width:100%;height:100%;touch-action:none}
+#ui{position:fixed;left:8px;top:8px;right:8px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+#ui select,#ui button,#ui label{font:14px system-ui;padding:7px 9px;border-radius:10px;border:1px solid #6b5a3c;background:#fff8e8;color:#2a1a10}
+#ui label{display:flex;gap:4px;align-items:center}#t{position:fixed;right:8px;bottom:8px;font:12px ui-monospace,monospace;background:#fff8e8e0;padding:4px 8px;border-radius:8px}</style></head>
+<body><canvas id="c"></canvas>
+<div id="ui">
+  <select id="frag"><option value="55.3">Tros techno</option><option value="143.5">Final</option><option value="6">Inici</option></select>
+  <button id="play">Pausa</button><button id="music">Música</button><button id="throw">Llança bitllets</button>
+  <select id="light"><option value="day">Dia</option><option value="night">Nit</option><option value="techno">Dia → nit al techno</option></select>
+  <select id="disco"><option value="off">Terra normal</option><option value="alt">Discoteca: una sí, una no</option><option value="wave">Discoteca + ona</option></select>
+  <select id="pal"><option value="neo">Colors neó</option><option value="joc">Colors del joc</option><option value="disco">Disco 70</option><option value="multi" selected>Disco 70 multicolor</option><option value="senyera">Groc i vermell</option></select>
+  <label><input type="checkbox" id="money">Bitllets</label>
+  <label><input type="checkbox" id="rack">Carretilles a l'esquena</label>
+  <label><input type="checkbox" id="horns">Banyes</label>
+  <label><input type="checkbox" id="mouth">Boca</label>
+  <select id="view"><option value="game">Càmera del joc</option><option value="close">De prop</option><option value="side">Costat</option><option value="front">Davant</option><option value="top">Dalt</option></select>
+</div><div id="t"></div>
+<script type="module">
+// Visual proposals for the Bou (Marc, 2026-10-24), dev only: a disco floor in the techno part, banknotes for confetti
+// and its carretilles with sparks. Reference: 3lJvmqcp7r4 (Santa Úrsula 2021) and FkOKangAXv4 (2024): the fire comes
+// from a wooden rack of tubes on its back, jets out of both flanks and some straight up, and one on a horn tip.
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { buildBou } from '/src/figures/bou/bou.js';
+import { buildPlaza } from '/src/scene/models/plaza.js';
+import { createBouMotion } from '/src/figures/bou/bou-motion.js';
+import bouSong from '/src/song-bou.json';
+
+const q = new URLSearchParams(location.search), $ = id => document.getElementById(id);
+for (const [k, v] of q) { const el = $(k); if (!el) continue; if (el.type === 'checkbox') el.checked = v !== '0'; else el.value = v; }
+const renderer = new THREE.WebGLRenderer({ canvas: $('c'), antialias: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(Math.min(2, devicePixelRatio));
+const scene = new THREE.Scene();
+const hemi = new THREE.HemisphereLight('#fff4df', '#867253', 2.3), sun = new THREE.DirectionalLight('#fff0cf', 2.2);
+sun.position.set(-6, 10, 5); scene.add(hemi, sun);
+{ const pl = buildPlaza({}); scene.add(pl.group, ...pl.props.map(p => p.mesh)); }
+const camera = new THREE.PerspectiveCamera(50, 1, .05, 120);
+const controls = new OrbitControls(camera, renderer.domElement); controls.enableDamping = true;
+const VIEWS = { game: [[9.5, 5.2, 3.2], [0, 1.2, 0]], rtop: [[.01, 6.5, .2], [0, 1.6, .2]], rside: [[4.2, 2.3, .2], [0, 1.7, .2]], rback: [[1.2, 2.6, -4.2], [0, 1.7, 0]], rq: [[3, 3.2, -2.4], [0, 1.7, .1]], dtop: [[.01, 26, 3], [0, 0, 0]], close: [[5.2, 2.6, 3.4], [0, 1.6, .2]], side: [[9, 2.2, 0], [0, 1.3, 0]], front: [[0, 2.2, 9], [0, 1.3, 0]], top: [[.1, 16, 6], [0, 0, 0]] };
+// a portrait phone widens the lens and backs off a little (further would put the lens inside a façade)
+const setView = () => { const [p, t] = VIEWS[$('view').value] ?? VIEWS[q.get('view')]; controls.target.set(...t);
+  camera.position.set(...p).sub(controls.target).multiplyScalar(camera.aspect < 1 ? 1.25 : 1).add(controls.target); };
+$('view').onchange = setView; setView();
+
+const rig = buildBou();
+scene.add(rig.root, ...rig.feet, ...rig.legs);
+const motion = createBouMotion(rig);
+
+// ---- Disco floor: the plaça's own 2 m tiles (plaza.js: 34 m, light where (x+z)/2 is even) light up a parity a beat.
+const S = 34, T = 2, N = S / T, tiles = [];
+for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) tiles.push({ x: -S / 2 + T * i + 1, z: -S / 2 + T * j + 1, par: (i + j) % 2 });
+const glow = new THREE.InstancedMesh(new THREE.PlaneGeometry(T - .06, T - .06).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false }), tiles.length);
+const m4 = new THREE.Matrix4(), col = new THREE.Color(), BASE = [new THREE.Color('#dccaa8'), new THREE.Color('#cfb994')];
+tiles.forEach((t, i) => glow.setMatrixAt(i, m4.makeTranslation(t.x, .004, t.z))); glow.setColorAt(0, col);
+scene.add(glow);
+// palettes to compare (Marc: are these the best?): one colour a bar, or 'multi': every lit tile its own, moving on a beat
+const PALS = { neo: ['#ff2bd6', '#1ee3ff', '#b6ff2b', '#ffd21e'], joc: ['#ff7a1a', '#14b8a6', '#f5c518', '#b48cff'],
+  disco: ['#ff3b30', '#ffcc00', '#34c759', '#0a84ff'], multi: ['#ff3b30', '#ffcc00', '#34c759', '#0a84ff', '#ff2bd6'], senyera: ['#f5c518', '#d62828'] };
+for (const k in PALS) PALS[k] = PALS[k].map(c => new THREE.Color(c));
+function disco(beat, night, mode) {
+  glow.visible = mode !== 'off'; if (!glow.visible) return;
+  // night: added light over a dark floor; day: the tile's own colour turned towards the neon (added light washes out)
+  glow.material.blending = night ? THREE.AdditiveBlending : THREE.NormalBlending;
+  const pk = $('pal').value, P = PALS[pk], b = Math.floor(beat), f = beat - b, pulse = .35 + .65 * Math.exp(-3 * f);
+  const bx = rig.root.position.x, bz = rig.root.position.z;
+  tiles.forEach((t, i) => {
+    const neon = pk === 'multi' ? P[(i * 7 + (i / N | 0) * 3 + b) % P.length] : P[Math.floor(b / 4) % P.length];
+    let k = t.par === b % 2 ? pulse : 0;
+    if (mode === 'wave') { const d = Math.hypot(t.x - bx, t.z - bz), ring = Math.exp(-((d - 9 * f) ** 2) / 3); k = Math.max(k, ring) * Math.max(.15, 1 - d / 16); }
+    if (night) col.copy(neon).multiplyScalar(k); else col.copy(BASE[t.par ? 0 : 1]).lerp(neon, k * .85);
+    glow.setColorAt(i, col);
+  });
+  glow.instanceColor.needsUpdate = true;
+}
+
+// ---- Banknotes instead of confetti: «busquem un bon sou».
+// The 💵 emoji's note (Marc): green, a dark edge, a round seal in the middle and a small one in two corners; no text.
+// Smaller (14 x 7 cm) and finer than the first take: a fine guilloche, a little bou in the seal, a slight fold.
+function note(bg, ink, seal) {
+  const c = document.createElement('canvas'); c.width = 256; c.height = 128; const g = c.getContext('2d');
+  g.fillStyle = ink; g.fillRect(0, 0, 256, 128); g.fillStyle = bg; g.fillRect(6, 6, 244, 116);
+  g.strokeStyle = ink; g.globalAlpha = .18; g.lineWidth = 2;
+  for (let x = -128; x < 256; x += 10) { g.beginPath(); g.moveTo(x, 6); g.lineTo(x + 116, 122); g.stroke(); }   // guilloche
+  g.globalAlpha = 1; g.lineWidth = 3; g.strokeRect(16, 16, 224, 96);
+  const disc = (x, y, r) => { g.fillStyle = ink; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill(); g.fillStyle = seal; g.beginPath(); g.arc(x, y, r - 5, 0, 7); g.fill(); };
+  disc(128, 64, 36); disc(42, 40, 14); disc(214, 88, 14);
+  g.fillStyle = ink;   // the bou: a square head, two horns, a muzzle
+  g.fillRect(114, 52, 28, 28); g.fillRect(98, 46, 16, 7); g.fillRect(142, 46, 16, 7); g.fillRect(94, 38, 7, 12); g.fillRect(155, 38, 7, 12);
+  g.fillStyle = seal; g.fillRect(118, 70, 20, 7); g.fillRect(119, 58, 5, 5); g.fillRect(132, 58, 5, 5);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t;
+}
+// three greens so the heap isn't one flat colour
+const KINDS = [['#7cc576', '#2f7a34', '#b9e3a8'], ['#8fd07f', '#357f3a', '#cdebbd'], ['#6db86a', '#28682d', '#a8d89a']], PER = 120;
+const noteGeo = new THREE.PlaneGeometry(.14, .07, 2, 1); noteGeo.attributes.position.setZ(1, .005).setZ(4, .005); noteGeo.computeVertexNormals();   // folded down the middle
+const notes = KINDS.map(k => {
+  const mesh = new THREE.InstancedMesh(noteGeo, new THREE.MeshLambertMaterial({ map: note(...k), side: THREE.DoubleSide }), PER);
+  mesh.frustumCulled = false; scene.add(mesh);
+  return { mesh, list: Array.from({ length: PER }, () => ({ p: new THREE.Vector3(0, -9, 0), v: new THREE.Vector3(), age: 9, ph: 0, w: 0, yaw: 0, land: -1 })) };
+});
+const e3 = new THREE.Euler(), qn = new THREE.Quaternion(), one = new THREE.Vector3(1, 1, 1), sc = new THREE.Vector3();
+// As the confetti's burst (scene/confetti.js throwUp): up from above its back in a wide fountain, then they flutter down.
+function throwNotes(n) {
+  const x = rig.root.position.x, z = rig.root.position.z;
+  for (const { list } of notes) for (const q of list) {
+    if (n <= 0) return; if (q.age < 8) continue; n--;
+    const a = Math.random() * 7, sp = 2.5 + Math.random() * 4.5;
+    q.p.set(x + Math.random() - .5, 2.2 + Math.random() * .6, z + Math.random() - .5); q.v.set(Math.cos(a) * sp, 5 + Math.random() * 3, Math.sin(a) * sp);
+    q.age = 0; q.ph = Math.random() * 7; q.w = 2.5 + Math.random() * 2.5; q.yaw = Math.random() * 7; q.land = -1;
+  }
+}
+// when the game throws confetti (a combo milestone, the finale): here a few moments of the song, the finale every 2 s
+const THROWS = [12, 30, 75, 100, 125], FINALE = 143.5;
+function money(dt, on, prev, song) {
+  if (on && song >= prev) {
+    for (const t of THROWS) if (prev < t && song >= t) throwNotes(110);
+    if (song >= FINALE && Math.floor((song - FINALE) / 2) !== Math.floor((prev - FINALE) / 2)) throwNotes(prev < FINALE ? 300 : 90);
+  }
+  const drag = Math.exp(-3.6 * dt), side = Math.exp(-1.8 * dt);   // paper: falls at ~1.4 m/s, drifts out 2-4 m
+  for (const { mesh, list } of notes) {
+    list.forEach((n, i) => {
+      n.age += dt;
+      if (n.land < 0 && n.age < 8) {
+        n.v.x *= side; n.v.z *= side; n.v.y = n.v.y * drag - 5 * dt;
+        n.p.addScaledVector(n.v, dt); n.p.x += dt * .5 * Math.cos(n.age * n.w + n.ph); n.yaw += dt * 1.2;
+        if (n.p.y <= .01) { n.p.y = .01; n.land = n.age; }
+      }
+      // rocks like a leaf as it falls, lies flat on landing, then shrinks away
+      const rock = n.land < 0 ? .7 * Math.sin(n.age * n.w + n.ph) : 0, s = n.land < 0 ? Math.min(1, n.age / .12) : Math.max(0, 1 - (n.age - n.land - 3) / .6);
+      if (n.land >= 0 && s === 0) n.age = 9;
+      e3.set(-Math.PI / 2 + rock, n.yaw, 0, 'YXZ'); qn.setFromEuler(e3);
+      mesh.setMatrixAt(i, m4.compose(n.p, qn, sc.copy(one).multiplyScalar(n.age > 8 ? 0 : s)));
+    });
+    mesh.instanceMatrix.needsUpdate = true;
+  }
+}
+
+// ---- Carretilles (Marc, 2026-10-24: no rack): small tubes along the back's two edges, where the real rack's comb
+// would be, that grow in before they fire and shrink away once burnt; white and red smoke; long, flat jets (R4, 2024).
+const tubeGeo = new THREE.BoxGeometry(.05, .05, .18).translate(0, 0, .09), capGeo = new THREE.BoxGeometry(.056, .056, .025).translate(0, 0, .17);
+const KRAFT = new THREE.MeshLambertMaterial({ color: '#c9a66b' }), CAP = new THREE.MeshLambertMaterial({ color: '#b02a36' });
+const tubes = [], NOZ = .19;
+function tube(parent, pos, dir, group) {
+  const g = new THREE.Group(); g.position.copy(pos); g.lookAt(pos.clone().add(dir)); g.add(new THREE.Mesh(tubeGeo, KRAFT), new THREE.Mesh(capGeo, CAP));
+  g.scale.setScalar(0); parent.add(g); tubes.push({ g, group, on: false, k: 0 }); return g;
+}
+// the shell (bou.js: the group 0.85 m down in the body; the tail group comes first): its box at rest, root at the origin = body space + 0.85 m
+rig.root.updateMatrixWorld(true); const bodyBox = new THREE.Box3().setFromObject(rig.body.children.find(c => c.isGroup && c.position.y < -.8)).translate(new THREE.Vector3(0, -rig.body.position.y, 0));
+const top = bodyBox.max.y, zc = (bodyBox.min.z + bodyBox.max.z) / 2, edge = bodyBox.max.x - .12;
+// six pairs along the edges, out of both flanks and nearly flat; three straight up down the middle (the finale)
+for (let k = 0; k < 6; k++) for (const s of [-1, 1]) tube(rig.body, new THREE.Vector3(s * edge, top - .02, zc - .8 + k * .32), new THREE.Vector3(s, .06, 0), 'rack' + k);
+for (let k = 0; k < 3; k++) tube(rig.body, new THREE.Vector3(0, top, zc - .45 + k * .45), new THREE.Vector3(0, 1, -.1), 'up' + k);
+// Licence: on the Bonàs' horn tips (bou-heads.js: ±.97, .42, .16 in the head) and in its mouth
+for (const s of [-1, 1]) tube(rig.head, new THREE.Vector3(s * .99, .44, .2), new THREE.Vector3(s * .5, .25, 1), 'horns');
+tube(rig.head, new THREE.Vector3(0, -.3, .5), new THREE.Vector3(0, -.12, 1), 'mouth');
+
+// sparks: one additive points cloud, white-gold, a light drag so the jets run long and flat before they fall
+const MAXS = 16000, sp = { p: new Float32Array(MAXS * 3), v: new Float32Array(MAXS * 3), c: new Float32Array(MAXS * 3), life: new Float32Array(MAXS), age: new Float32Array(MAXS).fill(9) };
+const sgeo = new THREE.BufferGeometry(); sgeo.setAttribute('position', new THREE.BufferAttribute(sp.p, 3)); sgeo.setAttribute('color', new THREE.BufferAttribute(sp.c, 3));
+const sparks = new THREE.Points(sgeo, new THREE.PointsMaterial({ size: .07, vertexColors: true, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false }));
+sparks.frustumCulled = false; scene.add(sparks);
+const soft = stops => { const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'), r = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+  stops.forEach(([o, col]) => r.addColorStop(o, col)); g.fillStyle = r; g.fillRect(0, 0, 64, 64); return new THREE.CanvasTexture(c); };
+const flareTex = soft([[0, '#ffffff'], [.25, '#ffe9a8'], [1, '#ff8a0000']]), puffTex = soft([[0, '#ffffffff'], [.5, '#ffffff80'], [1, '#ffffff00']]);
+sparks.material.map = flareTex;   // round, soft sparks instead of squares
+tubes.forEach(t => { t.flare = new THREE.Sprite(new THREE.SpriteMaterial({ map: flareTex, blending: THREE.AdditiveBlending, depthWrite: false })); t.flare.position.z = NOZ; t.g.add(t.flare); });
+// smoke: soft puffs that rise, swell and thin out; white from the tubes, red from the colla's bengales round it
+const PUFFS = Array.from({ length: 320 }, () => { const m = new THREE.Sprite(new THREE.SpriteMaterial({ map: puffTex, transparent: true, depthWrite: false }));
+  m.visible = false; scene.add(m); return { m, v: new THREE.Vector3(), age: 9, life: 1, r0: 0, r1: 0, a: 0 }; });
+let nextPuff = 0;
+function puff(pos, vel, col, life, r0, r1, a) {
+  const P = PUFFS[nextPuff]; nextPuff = (nextPuff + 1) % PUFFS.length;
+  P.m.position.copy(pos); P.v.copy(vel); P.m.material.color.set(col); Object.assign(P, { age: 0, life, r0, r1, a }); P.m.visible = true;
+}
+let next = 0, smokeAcc = 0, redAcc = 0; const wp = new THREE.Vector3(), wd = new THREE.Vector3(), wq = new THREE.Quaternion(), pv = new THREE.Vector3(), pp = new THREE.Vector3();
+function fire(dt, song) {
+  const want = { rack: $('rack').checked, horns: $('horns').checked, mouth: $('mouth').checked };
+  // pairs burn 2.5 s each, one after another (two at a time); the up tubes take turns and all go in the finale
+  const pair = Math.floor(song / 1.25) % 6, fin = song > 143.5, grow = 1 - Math.exp(-dt / .12);
+  let burning = 0;
+  smokeAcc += dt * 4;
+  for (const t of tubes) {
+    const kind = t.group.replace(/\d/, '');
+    const on = !hush && want[kind === 'up' ? 'rack' : kind] && q.get('fire') !== '0' &&
+      (kind === 'rack' ? fin || t.group === 'rack' + pair || t.group === 'rack' + (pair + 5) % 6 : kind === 'up' ? fin || Math.floor(song / 3.75) % 3 === +t.group.at(-1) : true);
+    t.k += ((on || q.get('fire') === '0' && want[kind === 'up' ? 'rack' : kind] ? 1 : 0) - t.k) * grow;   // grows in, shrinks away
+    t.g.visible = t.k > .01; t.g.scale.setScalar(t.k);
+    t.on = on && t.k > .9; t.flare.visible = t.on; if (t.on) t.flare.scale.setScalar((.3 + .1 * Math.random()) / t.k);
+    if (!t.on) continue;
+    burning++;
+    t.g.getWorldPosition(wp); t.g.getWorldQuaternion(wq); wd.set(0, 0, 1).applyQuaternion(wq); wp.addScaledVector(wd, NOZ);
+    for (let n = Math.round(dt * 900); n > 0; n--) {
+      const i = next; next = (next + 1) % MAXS; const v = 10 + Math.random() * 4, j = .14;
+      sp.p.set([wp.x, wp.y, wp.z], i * 3);
+      sp.v.set([(wd.x + (Math.random() - .5) * j) * v, (wd.y + (Math.random() - .5) * j) * v, (wd.z + (Math.random() - .5) * j) * v], i * 3);
+      sp.age[i] = Math.random() * dt; sp.life[i] = .7 + Math.random() * .7;
+    }
+    if (q.has('fum') && smokeAcc >= 1) puff(pp.copy(wp).addScaledVector(wd, .4 + Math.random() * 1.2), pv.copy(wd).multiplyScalar(1.4).setY(.5), '#e8e4df', 3.5, .4, 2.6, .55);
+  }
+  if (smokeAcc >= 1) smokeAcc = 0;
+  // red bengala smoke round the Bou while it burns
+  if (burning && q.has('fum')) redAcc += dt * 7;   // smoke: off for now (Marc), ?fum shows it
+  for (; redAcc >= 1; redAcc--) { const a = Math.random() * 7, r = 2 + Math.random() * 1.5;
+    puff(pp.set(rig.root.position.x + Math.cos(a) * r, .8, rig.root.position.z + Math.sin(a) * r), pv.set(0, .45, 0), '#ff3d5e', 4.5, .6, 3.4, .6); }
+  const dim = 1 - .3 * nightK;
+  for (const P of PUFFS) {
+    if (!P.m.visible) continue;
+    const k = (P.age += dt) / P.life; if (k >= 1) { P.m.visible = false; continue; }
+    P.v.multiplyScalar(Math.exp(-1.2 * dt)); P.m.position.addScaledVector(P.v, dt); P.m.position.y += .25 * dt;
+    P.m.scale.setScalar(P.r0 + (P.r1 - P.r0) * Math.sqrt(k)); P.m.material.opacity = P.a * Math.min(1, k * 6) * (1 - k) * dim;
+  }
+  const drag = Math.exp(-1.3 * dt);
+  for (let i = 0; i < MAXS; i++) {
+    const a = sp.age[i] += dt, k = a / sp.life[i], o = i * 3;
+    if (k >= 1) { sp.c[o] = sp.c[o + 1] = sp.c[o + 2] = 0; sp.p[o + 1] = -9; continue; }
+    sp.v[o] *= drag; sp.v[o + 1] = sp.v[o + 1] * drag - 4 * dt; sp.v[o + 2] *= drag;
+    sp.p[o] += sp.v[o] * dt; sp.p[o + 1] += sp.v[o + 1] * dt; sp.p[o + 2] += sp.v[o + 2] * dt;
+    if (sp.p[o + 1] < .02) { sp.p[o + 1] = .02; sp.v[o + 1] *= -.3; }
+    const fade = (1 - k) * (Math.random() < .15 ? .3 : 1);   // a crackle: some sparks wink
+    sp.c[o] = fade; sp.c[o + 1] = fade * (.95 - .4 * k); sp.c[o + 2] = fade * (.8 - .7 * k);
+  }
+  sgeo.attributes.position.needsUpdate = sgeo.attributes.color.needsUpdate = true;
+}
+
+// ---- Clock, light and loop
+let song = q.has('t') ? +q.get('t') : +$('frag').value, playing = !q.has('freeze'), last = performance.now();
+const audio = new Audio('/' + bouSong.audio);
+$('frag').onchange = () => { song = +$('frag').value; audio.currentTime = song; };
+$('play').onclick = () => { playing = !playing; $('play').textContent = playing ? 'Pausa' : 'Reprèn'; if (!playing) audio.pause(); };
+$('throw').onclick = () => throwNotes(110);
+$('music').onclick = () => { if (audio.paused) { audio.currentTime = song; audio.play(); } else audio.pause(); };
+const DAY = new THREE.Color('#b8d4e6'), NIGHT = new THREE.Color('#0b0d1c'), bg = new THREE.Color();
+const technoEnd = bouSong.dance.bars.find(b => b[0] === 35)[2], technoStart = bouSong.dance.technoStart;
+let hush = false, nightK = $('light').value === 'night' ? 1 : 0, prevSong = song;
+function frame(now) {
+  const dt = Math.min(.05, (now - last) / 1000); last = now;
+  if (playing) song = audio.paused ? song + dt : audio.currentTime;
+  if (song > bouSong.duration) song = +$('frag').value;
+  const pose = motion(song, playing ? dt : 0), mode = $('light').value;
+  const wantNight = mode === 'night' || (mode === 'techno' && song > technoStart - .5 && song < technoEnd + .5);
+  nightK += ((wantNight ? 1 : 0) - nightK) * (1 - Math.exp(-dt / .35));
+  hemi.intensity = 2.3 - 1.95 * nightK; sun.intensity = 2.2 - 2.1 * nightK;
+  scene.background = bg.copy(DAY).lerp(NIGHT, nightK);
+  const inTechno = mode !== 'techno' || (song > technoStart && song < technoEnd);
+  const floor = inTechno ? $('disco').value : 'off';
+  disco(pose.beat, nightK > .5, floor);
+  // while the tiles dance nothing else does (Marc): no fire, no notes thrown
+  hush = floor !== 'off';
+  money(dt, $('money').checked && !hush, prevSong, song); fire(dt, song); prevSong = song;
+  const w = innerWidth, h = innerHeight;
+  if (renderer.domElement.width !== Math.round(w * renderer.getPixelRatio())) { renderer.setSize(w, h, false); camera.aspect = w / h;
+    camera.fov = w < h ? Math.min(85, 2 * THREE.MathUtils.radToDeg(Math.atan(Math.tan(THREE.MathUtils.degToRad(33)) / camera.aspect))) : 50;
+    camera.updateProjectionMatrix(); setView(); }
+  controls.update(); renderer.render(scene, camera);
+  $('t').textContent = `${song.toFixed(1)} s · temps ${pose.beat.toFixed(1)}`;
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+window.__seek = t => { song = t; };
+</script>
+</body></html>

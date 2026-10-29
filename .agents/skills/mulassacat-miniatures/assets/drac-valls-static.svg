@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 112" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Drac de Valls, dos caps i un portador, en repòs">
+  <g stroke-linecap="round" stroke-linejoin="round">
+    <ellipse cx="76" cy="104" rx="35" ry="2.2" fill="#000" opacity=".25"/>
+    <!-- One carrier: two planted legs, cream trousers with green marks. -->
+    <g fill="#b9b68c">
+      <path d="M66 84h8l-1 17h-7z"/>
+      <path d="M80 84h8l2 17h-8z"/>
+    </g>
+    <path d="m67 90 3 2-2 3m13-7 4 2-2 3m-13 4-2 2m18-3-2 3" fill="none" stroke="#3c6845" stroke-width="2"/>
+    <path d="M65 100h8l3 2v2H63v-2zm17 0h8l4 2v2H81z" fill="#241b1c"/>
+    <path d="M64 103h11m7 0h11" stroke="#f4efe4" stroke-width="1"/>
+    <!-- Far wing and neck precede the nearer body and head. -->
+    <path d="M76 68 62 27q11 3 19-5 0 12 9 17-3 9 3 15l-11 18z" fill="#794634"/>
+    <path d="m66 31 14-6-4 25m-9-17 18 8m-16-4 19 17" fill="none" stroke="#ba9459" stroke-width="2"/>
+    <path d="M82 78q8-15 1-39l-6-17 15-4q17 16 18 35-2 19-6 32z" fill="#24533d"/>
+    <path d="m85 36 18-2m-16 10 20-1m-18 11 19-1m-18 11 16-1" fill="none" stroke="#55724b" stroke-width="2.5"/>
+    <g data-part="far-head" transform="translate(-12 -4)">
+      <path d="m96 20-5-8 9 5 7-9 3 10 10 4-1 16-18 1z" fill="#315f43"/>
+      <path d="M107 19q11-3 22 2l17 8q5 4 2 9l-35-1-10-9z" fill="#315f43"/>
+      <path d="m111 33 32 4-6 8-26-5-6-5z" fill="#a43132"/>
+      <path d="m113 34 29 3-7 4-22-3z" fill="#321d21"/>
+      <path d="m115 34 4 1-2 4zm9 1 4 .5-2 4zm9 1 4 .5-2 4z" fill="#f4efe4"/>
+      <path d="m137 26 7 2 1 4-8-1z" fill="#203f31"/>
+      <path d="m112 26 11 3m2-1 7 4" fill="none" stroke="#54774e" stroke-width="1.4"/>
+      <circle cx="111" cy="23" r="3.8" fill="#f4efe4"/><circle cx="112" cy="23" r="2.4" fill="#b94732"/><circle cx="112.5" cy="23" r="1.3" fill="#2a1a10"/>
+      <path d="m106 19 10 1" stroke="#173d2e" stroke-width="2"/>
+      <path d="m96 28-7-6 1 9 8 3" fill="#416b47"/>
+    </g>
+    <!-- Tail curls up behind the wings, with alternating red and gold dorsal marks. -->
+    <path d="M55 66Q35 75 22 63 6 49 12 28l7-12 3 1q-8 17-3 28 7 15 28 9z" fill="#386843"/>
+    <path d="M49 65Q19 66 16 43" fill="none" stroke="#20452f" stroke-width="4"/>
+    <path d="m11 30-3-5 7-1m-5 17-5-4 6-2m2 17-6-2 5-4m8 15-6 1 3-6" fill="#bd6539"/>
+    <path d="m12 29 3-4m-4 14 2-4m2 14 2-4m5 13 1-4" stroke="#c6a368" stroke-width="1.5"/>
+    <path d="M47 55q15-9 29-5l26 12q13 11 7 24-8 9-39 7-29 0-34-12-3-11 11-26z" fill="#386843"/>
+    <path d="M38 75q19 16 41 10l28-7q7 10-3 13-13 5-34 2-26 0-32-12z" fill="#285238"/>
+    <path d="m43 72 11 1m-12 7 13 1m-10 6 13 1" stroke="#547d4e" stroke-width="2"/>
+    <g fill="#b9a05c" stroke="#274b34" stroke-width="1.2">
+      <circle cx="46" cy="62" r="3.3"/><circle cx="42" cy="71" r="3.3"/><circle cx="44" cy="80" r="3.3"/>
+    </g>
+    <g fill="#a83832"><circle cx="46" cy="62" r="1.6"/><circle cx="42" cy="71" r="1.6"/><circle cx="44" cy="80" r="1.6"/></g>
+    <!-- Near wing: rust membrane, warm curved ribs, scalloped trailing edge. -->
+    <path d="M62 73 39 31q8 1 15-12 0 15 11 19-1 10 10 15-2 10 6 14z" fill="#a4513d"/>
+    <path d="M62 73 54 21M61 68Q48 53 41 34m20 29q-5-18 3-23m-2 25q5-11 12-11" fill="none" stroke="#d1b77c" stroke-width="2.1"/>
+    <path d="M47 35q5 2 9-2m-5 11 7-3m-2 12 5-4m6 12 5 1" fill="none" stroke="#d1b77c" stroke-width="1.5"/>
+    <!-- Near ringed neck; the two necks remain separate above the chest. -->
+    <path d="M78 88q-5-13 1-26 8-16 8-26l-3-8 15-3q13 13 9 33l-6 24q-3 10-24 6z" fill="#3d7149"/>
+    <path d="m88 40 19 1m-20 7 20 2m-23 7 21 2m-25 8 23 2m-26 7 24 3m-23 5 21 3" fill="none" stroke="#244f36" stroke-width="2.8"/>
+    <path d="m89 38 13 2m-15 6 16 2m-20 7 17 2m-21 7 18 2m-21 7 18 2" fill="none" stroke="#668450" stroke-width="1"/>
+    <path d="m82 68 7-6 8 6-2 13-5 5-7-5z" fill="#a44d35"/>
+    <path d="m84 69 5-4 6 4-5 4z" fill="#563b2c" stroke="#be9859" stroke-width=".9"/>
+    <path d="m86 75 2 6m3-7 1 7" stroke="#c39350" stroke-width="1.1"/>
+    <g data-part="near-head" transform="translate(4 9)">
+      <path d="m88 32-9-9 10 2 6-12 5 11 13 6-4 17-20-1z" fill="#44774e"/>
+      <path d="M98 29q11-5 24 0l22 9q7 4 7 10l-5 3-41-6-14-6z" fill="#44774e"/>
+      <path d="M102 43q17 8 44 6l-4 8-20 7-16-8-8-9z" fill="#a43132"/>
+      <path d="m107 46 36 5-20 9-15-7z" fill="#321d21"/>
+      <path d="m109 47 5 1-2 5zm10 1 5 1-2 5zm11 2 5 .5-3 5zm-13 9 3-4 3 4zm10-2 4-4 2 2z" fill="#f4efe4"/>
+      <path d="m124 59 12-6-3 5-10 4z" fill="#c75d50"/>
+      <path d="m138 36 7 3 2 5-9-1z" fill="#294f36"/>
+      <path d="m114 36 12 5m-4-7 12 7m-26-2 9 4" fill="none" stroke="#6b9058" stroke-width="1.5"/>
+      <ellipse cx="105" cy="33" rx="4.7" ry="4.2" fill="#f4efe4"/>
+      <circle cx="107" cy="33" r="2.8" fill="#b94732"/><circle cx="107.5" cy="33" r="1.6" fill="#2a1a10"/>
+      <path d="m100 28 11 1" stroke="#244f36" stroke-width="2.7"/>
+      <path d="m91 37-12-9 3 12 10 5z" fill="#315c3e"/>
+      <path d="m84 34 5 6" stroke="#668450" stroke-width="1.2"/>
+      <path d="m94 45 4 4-5 4-4-5z" fill="#8a9a62"/>
+    </g>
+  </g>
+</svg>

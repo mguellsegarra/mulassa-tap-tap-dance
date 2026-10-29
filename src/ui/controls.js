@@ -1,56 +1,140 @@
 // Which DOM controls show in each state, and the photo (view) mode.
+import { showAvatars, photoHelpAvailable } from './photo-avatars.js';
 import { sheets } from './sheets.js';
-import { howtoMenu, settingsMenu, privacyMenu, pauseMenu, hide, howtoEl, settingsEl, leadersEl, feedbackEl, musicEl, iosHint, hintOff, pauseEl, skipEl, retryEl } from './handles.js';
-import { G, clock, CHALLENGE } from '../game/state.js';
+import { howtoMenu, settingsMenu, privacyMenu, pauseMenu, hide, howtoEl, settingsEl, freeEl, musicEl, pauseEl, skipEl, retryEl } from './handles.js';
+import { G, clock, CHALLENGE, setFreeSound } from '../game/state.js';
+import { selectedFigure } from '../game/figure-song.js';
 import { keyboardNav } from './focus.js';
+import { hud } from '../hud/canvas.js';
+import { lookSync } from './mouse-look.js';
+import { PHOTO } from '../game/photo-control.js';
+import { COARSE, CALM } from '../core/env.js';
+import { photoOrient } from './fullscreen.js';
+import { curtain } from './curtain.js';
+import { tr } from '../i18n/messages.js';
 
-export const sheetUp = () => howtoMenu.open || settingsMenu.open || sheets.sync.open || sheets.board.open || privacyMenu.open || sheets.share.open || pauseMenu.open || sheets.feedback.open || sheets.profile?.isOpen;
-export const steers = () => G.state === 'title' && !sheetUp();
-// «Mode foto» (#viewmode, title only): every control, tip and the HUD fade out (index.html body.view-mode) and the plaça
-// is all there is: the camera steers as on the title, the menu loop plays on, a tap picks nothing, no sheet opens. H
+const practiceLabel = document.getElementById('skip-label'), practiceIcon = document.getElementById('skip-icon');
+const CTL = { photoExit: tr('ui.controls.photoExit'), photo: tr('ui.controls.photo'), plaza: tr('ui.controls.plaza'), photoHelp: tr('ui.controls.photoHelp'), howto: tr('ui.controls.howto'), // resolved once: updateControls runs per frame
+  exit: tr('ui.controls.exitLabel'), skip: tr('ui.controls.skipLabel'), exitPractice: tr('ui.controls.exitPractice'), skipPractice: tr('ui.controls.skipPractice') };
+
+// The splash and ready results accept a tap anywhere. Recheck on state/layout
+// changes too, even when the mouse stays still (photo mode, resize, entering play).
+let hudMouse = false;
+function updateHudCursor() {
+  const active = hudMouse && !sheetUp();
+  const clickable = active && (G.state === 'splash'
+    || G.state === 'results' && !G.watch && clock - G.resT > 1);
+  const cursor = clickable ? 'pointer' : '';
+  if (hud.style.cursor !== cursor) hud.style.cursor = cursor;
+}
+hud.addEventListener('pointermove', e => {
+  hudMouse = e.pointerType === 'mouse';
+  updateHudCursor();
+});
+hud.addEventListener('pointerleave', () => { hudMouse = false; updateHudCursor(); });
+
+export const sheetUp = () => howtoMenu.open || settingsMenu.open || sheets.sync.open || sheets.board.open || privacyMenu.open || sheets.share.open || pauseMenu.open || sheets.feedback.open || sheets.profile?.isOpen || sheets.select?.sheetOpen || sheets.watch?.open
+  || sheets.account?.isOpen || sheets.seasons?.isOpen || sheets.seasonEnd?.isOpen || sheets.card?.isOpen || sheets.hint?.isOpen || sheets.freeGate?.isOpen;
+export const menuState = () => G.state === 'splash' || G.state === 'select'; // the camera steers
+export const photoScreen = () => G.state === 'select'; // photo mode lives only on the selector
+export const steers = () => menuState() && !sheetUp();
+// «Mode foto» (free play: entered through the selector's round gamepad button #free; #viewmode shows only inside
+// it, as the way back): every control, tip and the HUD fade out (index.html body.view-mode) and the plaça
+// is all there is: the camera steers as on the selector, the menu loop plays on, a tap picks nothing, no sheet opens. H
 // toggles it; Escape or the same button (dimmed after 3 idle seconds, back on any touch, move or key) brings it all back.
 // The hidden controls are inert (never focused or clicked); the focus goes to the button and back to where it was.
 export const viewBtn = document.getElementById('viewmode');
-const VIEW_HIDES = ['leaders', 'settings', 'feedback', 'music', 'howto', 'ios-hint', 'fps', 'feedback-nudge'].map(id => document.getElementById(id));
+const VIEW_HIDES = ['settings', 'free', 'music', 'howto', 'select'].map(id => document.getElementById(id));
 export let viewMode = false, viewT = 0, viewBack = null, viewIdle = 0, hudBlank = false;
 export const setHudBlank = v => (hudBlank = v);
 export function setView(on) {
-  if (on === viewMode || on && (G.state !== 'title' || sheetUp())) return;
-  viewMode = on; viewT = performance.now();
+  if (on === viewMode || on && (!photoScreen() || sheetUp())) return;
+  const entryFocus = on ? document.activeElement : null; // making the selector inert can already blur its card
+  const entryFigure = on && G.state === 'select' && !sheets.select?.pending && sheets.select?.figure;
+  viewMode = on; setFreeSound(on); showAvatars(on, (entryFigure || selectedFigure).id); hide(viewBtn, !on); sheets.music?.visible(on); viewT = performance.now(); // (a pending selection drives the last playable figure; the button first: the radio and ? are placed from it)
+  if (!on) hide(howtoEl, true);
   document.body.classList.toggle('view-mode', on);
+  photoOrient();
   for (const el of VIEW_HIDES) el.inert = on;
-  viewBtn.setAttribute('aria-pressed', String(on)); // (one name, «Amaga els botons», pressed or not; the tooltip says what a press does)
-  viewBtn.title = on ? 'Mostra els botons (H)' : 'Amaga els botons (H)';
+  viewBtn.setAttribute('aria-pressed', String(on)); // (one name, «Joc lliure», pressed or not; pressed it shows the practice's «surt» door, the tooltip says what a press does)
+  viewBtn.title = on ? CTL.photoExit : CTL.photo;
   clearTimeout(viewIdle); viewBtn.classList.remove('idle');
+  hud.setAttribute('role', on ? 'region' : 'img');
+  if (!on) hud.setAttribute('aria-label', CTL.plaza);
   if (on) {
-    viewBack = document.activeElement;
-    viewBtn.focus({ preventScroll: true });
+    viewBack = entryFocus;
+    (PHOTO.on ? hud : viewBtn).focus({ preventScroll: true });
     viewWake();
   } else {
     const back = viewBack; viewBack = null;
-    if (keyboardNav && back && back !== document.body && back.isConnected && !back.hidden) back.focus({ preventScroll: true });
+    if (keyboardNav && back && back !== document.body && back.isConnected && !back.hidden && !back.closest?.('[hidden], [inert]')) back.focus({ preventScroll: true });
+    else if (keyboardNav && G.state === 'select') sheets.select?.refocus?.();
     else document.activeElement?.blur(); // touch/mouse: Space picks a difficulty again
   }
+  updateHudCursor();
 }
 function viewWake() {
   if (!viewMode) return;
   viewBtn.classList.remove('idle');
-  clearTimeout(viewIdle); viewIdle = setTimeout(() => viewBtn.classList.add('idle'), 3000);
+  clearTimeout(viewIdle); if (!COARSE.matches) viewIdle = setTimeout(() => viewBtn.classList.add('idle'), 3000); // touch has no Esc: its way back never fades
 }
 for (const ev of ['pointermove', 'pointerdown', 'keydown', 'wheel']) addEventListener(ev, viewWake, { passive: true });
-viewBtn.addEventListener('click', () => setView(!viewMode));
+viewBtn.addEventListener('click', () => curtain(() => setView(!viewMode)));
+// #free dances on what sounds on the menus (the radio's song or the menu loop; select-chrome.css): b = that beat, null = silence
+// A pendulum the compositor runs (one beat = 1 s of its 2 s cycle, playbackRate = beats per second), nudged only when it
+// drifts or the tempo changes: writing its phase as a style every frame restyled and re-layered the page each frame
+// (~10 ms a frame on a 2016 MacBook and a ThinkPad X230, the selector's 30 fps).
+let freeDancing = false, freeStep = null, freeBeat = null, freeT = 0;
+export function freeDance(b) {
+  const on = b != null && !freeEl.hidden && !viewMode && !CALM.matches;
+  if (on !== freeDancing) {
+    freeEl.toggleAttribute('data-dancing', (freeDancing = on));
+    freeStep?.cancel(); freeStep = null; freeBeat = null;
+    const ico = freeEl.querySelector?.('.free-ico'); // (an HTML box: the compositor moves it; an <svg> it redraws)
+    if (on && ico?.animate) freeStep = ico.animate([{ transform: 'rotate(-8deg)', easing: 'ease-in-out' }, { transform: 'rotate(8deg)', easing: 'ease-in-out' },
+      { transform: 'rotate(-8deg)' }], { duration: 2000, iterations: Infinity }); // each beat lands on one side
+  }
+  if (!freeStep) return;
+  const now = performance.now();
+  if (freeBeat != null && now - freeT >= 500) { // the tempo over half a second (a menu song changes it now and then)
+    const rate = (b - freeBeat) / ((now - freeT) / 1000);
+    if (rate > 0.2 && rate < 6 && Math.abs(rate - freeStep.playbackRate) > 0.03 * rate) freeStep.playbackRate = rate;
+    freeBeat = b; freeT = now;
+  } else if (freeBeat == null) { freeBeat = b; freeT = now; }
+  const want = (b % 2) * 1000, at = (freeStep.currentTime ?? 0) % 2000, drift = ((want - at + 3000) % 2000) - 1000;
+  if (Math.abs(drift) > 40) freeStep.currentTime = want; // a loop, a seek or a new song: back on the beat
+}
+export function enterFree() { if (sheets.freeGate?.ask()) return; curtain(() => { setView(true); if (viewMode) sheets.music?.playFigure(G.figureId); }); } // the figure's own song (a pending selection: the last playable one, the one she drives)
+freeEl.addEventListener('click', () => { G.state === 'select' && enterFree(); });
+document.getElementById('rotate-exit').addEventListener('click', () => curtain(() => setView(false)));
 export function updateControls() {
-  hide(howtoEl, G.state !== 'title');
-  hide(viewBtn, G.state !== 'title');
-  if (viewMode && (G.state !== 'title' || sheetUp())) setView(false); // title only, never under a sheet
-  hide(settingsEl, G.state !== 'title');
-  hide(leadersEl, G.state !== 'title' || !sheets.board.configured);
-  hide(feedbackEl, G.state !== 'title' || !sheets.feedback.configured);
-  hide(musicEl, G.state !== 'title');
-  hide(iosHint, hintOff || G.state !== 'title' || howtoMenu.open || settingsMenu.open || sheets.sync.open);
+  updateHudCursor();
+  hide(viewBtn, !photoScreen() || !viewMode);
+  if (viewMode && (!photoScreen() || sheetUp())) setView(false); // the selector only, never under a sheet
+  lookSync(); // (after it: a sheet or a state change has just dropped control)
+  const photoHelp = photoHelpAvailable();
+  howtoEl.inert = viewMode && !photoHelp;
+  hide(howtoEl, !photoHelp); // the same ? opens and closes non-modal help, including on touch
+  howtoEl.classList.toggle('photo-help', photoHelp);
+  howtoEl.setAttribute('aria-label', photoHelp ? CTL.photoHelp : CTL.howto);
+  howtoEl.setAttribute('aria-haspopup', photoHelp ? 'false' : 'dialog');
+  hide(settingsEl, G.state !== 'select');
+  hide(freeEl, G.state !== 'select');
+  hide(musicEl, G.state !== 'select');
+  sheets.select?.visible(G.state === 'select'); // measure after the header controls have their final layout
   hide(pauseEl, G.state !== 'play' || G.paused || Boolean(G.collapseT));
   hide(skipEl, G.state !== 'play' || !G.practice || G.paused);
-  sheets.board.results(G.state === 'results' && clock - G.resT > 1); // with TOCA PER TORNAR: no stray tap from the last notes
-  sheets.share.results(G.state === 'results' && clock - G.resT > 1, G.shareRun, CHALLENGE); // the row itself (#results-actions)
-  hide(retryEl, !(G.state === 'results' && clock - G.resT > 1 && G.reason === 'collapse'));
+  if (G.practice) {
+    const exit = G.practice.then == null, label = exit ? CTL.exit : CTL.skip;
+    if (practiceLabel.textContent !== label) {
+      practiceLabel.textContent = label;
+      skipEl.setAttribute('aria-label', exit ? CTL.exitPractice : CTL.skipPractice);
+      practiceIcon.setAttribute('d', exit ? 'M10 8v-2a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-7a2 2 0 0 1-2-2v-2M15 12H3l3-3M6 15l-3-3' : 'm5 5 7 7-7 7M13 5l7 7-7 7');
+    }
+  }
+  const result = G.state === 'results' && !G.watch && clock - G.resT > 1; // (the dance demo ends on its own sheet)
+  sheets.board.results(result); // with TOCA PER TORNAR: no stray tap from the last notes
+  sheets.share.results(result, G.shareRun, CHALLENGE); // the row itself (#results-actions)
+  hide(retryEl, !result);
+  sheets.watch?.frame();
 }

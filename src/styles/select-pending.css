@@ -1,0 +1,181 @@
+/* The selector's pending figures: the pending identity and attributions, and their sizes. */
+.sel-info::-webkit-scrollbar { display: none; }
+:root[data-keys] #select .sel-card[aria-selected="true"]:not(:focus)::after { box-shadow: inset 0 0 0 2px #fff3d640; } /* Keep selection quieter while the keyboard cursor is on another control (focus.js data-keys: a body:has(:focus-visible) restyled every card on each DOM change). */
+/* All pending identities occupy the same viewport-owned box.
+   Only opacity changes on entry/exit; content never sizes or translates the box. */
+#select { bottom: var(--app-gap, 0px); --pending-top: calc(var(--town-row-top) + 44px + 12px + env(safe-area-inset-top)); }
+#select .sel-info { transition: opacity .22s var(--sel-ease), display .22s allow-discrete; }
+#select .sel-pending { transform: none; transition: opacity .26s var(--sel-ease), display .32s allow-discrete; }
+#select :is(.sel-pending, .sel-info)[hidden] { opacity: 0; pointer-events: none; }
+#select .sel-pending[data-leaving][hidden] { transition-duration: .24s, .32s; }
+@starting-style {
+  #select .sel-info { opacity: 0; }
+  #select[data-shown] .sel-pending { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) { #select { transition: none; } }
+@media (prefers-reduced-motion: reduce) { #select :is(.sel-pending, .sel-info) { transition: none; } }
+.sel-pending { --pending-bottom: calc(var(--pending-rest-bottom, 254px) - var(--drop)); /* here, where select-layout.js sets its rest: on #select each write restyled the selector */ --contact-pad: 12px; --contact-gap: 10px; --pending-max: calc(100% - var(--pending-top) - var(--pending-bottom, 254px)); position: absolute; z-index: 1; top: calc((100% + var(--pending-top) - var(--pending-bottom, 254px)) / 2); left: 50%; translate: -50% -50%; width: min(480px, calc(100% - 28px)); height: min(360px, var(--pending-max)); box-sizing: border-box; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) 48px calc(44px + var(--contact-gap)); align-items: center; justify-items: center; gap: 0; padding: 3px 16px var(--contact-pad); border: 1px solid var(--sel-line); border-radius: var(--sel-r); text-align: center; background: #1a110bf5; box-shadow: 0 8px 24px #0005; font-size: 16px; font-weight: 500; line-height: 1.3; container-type: size; }
+.sel-pending-content { grid-row: 1; width: 100%; height: 100%; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: space-evenly; }
+.sel-pending-content > * { flex: none; }
+.sel-pending h2 { --title-size: 26px; color: #f5c518; margin: 0; padding: 6px 14px; width: 100%; box-sizing: border-box; display: flex; align-items: center; justify-content: center; font: 800 var(--title-size)/1.1 'Baloo 2', system-ui, sans-serif; text-wrap: balance; }
+.sel-pending h2 > span { display: block; width: 100%; }
+:is(.sel-pending, .sel-identity, .about-uaf) .sel-entity { --entity-holo: linear-gradient(105deg, #ffb3c7, #ffe29a, #b8f0c8, #a8dcff, #d7b8ff, #ffb3c7); max-width: 100%; box-sizing: border-box; font-size: 12px; line-height: 16px; min-height: 24px; row-gap: 0; background: var(--entity-holo) 0 0 / 300% 100%; color: #2a1a10; box-shadow: inset 0 0 0 1px #fff9, 0 0 4px #d7b8ff40; animation: sel-holo 6s linear infinite; }
+/* Each attribution keeps its own holo surface; the separator travels with the second one. */
+:is(.sel-pending, .sel-identity) .sel-entity:has(.sel-entity-unit) { width: max-content; padding: 0; gap: 4px 6px; justify-content: center; background: none; box-shadow: none; animation: none; overflow: visible; } /* a bare row: its pill radius must not clip the parts or the + */
+:is(.sel-pending, .sel-identity) .sel-entity[data-stacked] { flex-direction: column; }
+:is(.sel-pending, .sel-identity) .sel-entity[data-stacked] .sel-entity-unit { gap: 3px; }
+:is(.sel-pending, .sel-identity) .sel-entity-plus { color: #fff3d6; }
+:is(.sel-pending, .sel-identity) .sel-entity-part { box-sizing: border-box; padding: 4px 10px; border-radius: 999px; min-height: 24px; background: var(--entity-holo) 0 0 / 300% 100%; box-shadow: inset 0 0 0 1px #fff9, 0 0 4px #d7b8ff40; animation: sel-holo 6s linear infinite; }
+#select :is(.sel-pending, .sel-identity) .sel-entity svg, .about-uaf .sel-entity svg { width: auto; height: 16px; }
+/* Compact cards give up label and paragraph padding before type or contact targets. */
+@container (max-height: 300px) {
+  :is(.sel-pending, .sel-identity) .sel-entity-part { min-height: 20px; padding-block: 2px; }
+  .sel-pending:has(.sel-entity-unit) .sel-pending-copy p { padding-block: 1px; }
+  :is(.sel-pending, .sel-identity) .sel-entity:has(.sel-entity-unit) { row-gap: 2px; }
+  @media (max-width: 519px) and (min-height: 501px) {
+    .sel-pending:has(.sel-entity-unit) h2 { padding-block: 4px; }
+  }
+}
+@keyframes sel-holo { to { background-position: 300% 0; } }
+/* The selector's badges sweep their holo as a layer moved by transform (the GPU moves it, nothing repaints): an animated
+   background-position repainted every frame, and Linux Chrome paints on the CPU (~30 fps on a 2016 MacBook while the UI showed).
+   Its 300% surface, repeated, slides one surface left every 3 s: the old speed. */
+:is(.sel-pending, .sel-identity) :is(.sel-entity, .sel-entity-part) { position: relative; isolation: isolate; overflow: hidden; animation: none; }
+:is(.sel-pending, .sel-identity) :is(.sel-entity, .sel-entity-part)::before { content: ''; position: absolute; inset: 0 auto 0 0; z-index: -1; width: 600%; background: var(--entity-holo) 0 0 / 50% 100% repeat-x; animation: sel-holo-slide 3s linear infinite; pointer-events: none; }
+:is(.sel-pending, .sel-identity) .sel-entity:has(.sel-entity-unit)::before, :is(.sel-pending, .sel-identity) .sel-entity:has(.sel-entity-unit)::after { content: none; } /* (each part carries its own) */
+:is(.sel-pending, .sel-identity) :is(.sel-entity, .sel-entity-part)::after { content: ''; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1px #fff9; pointer-events: none; } /* the rim, over the layer */
+@keyframes sel-holo-slide { to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) { :is(.sel-pending, .sel-identity, .about-uaf) :is(.sel-entity, .sel-entity-part), :is(.sel-pending, .sel-identity) :is(.sel-entity, .sel-entity-part)::before { animation: none; } }
+.sel-pending .sel-where { display: block; width: 100%; text-align: center; font: 600 12px/16px 'Baloo 2', system-ui, sans-serif; color: #e8d8b8; } /* town · comarca, island or territory */
+.sel-pending .sel-where[hidden] { display: none; }
+.sel-pending p { margin: 0; padding-block: 3px; text-wrap: balance; }
+.sel-pending .sel-pending-copy { display: contents; }
+.sel-pending-copy p + p { font-size: 14px; color: #b9a98c; } /* the side note steps back from the call */
+.sel-pending > .btn-primary { grid-row: 2; width: 100%; height: 100%; min-height: 44px; padding-block: 4px; font-size: 16px; }
+/* One contact action across every pending variant; phones keep their full reading column. */
+@media (min-width: 520px) { .sel-pending > .btn-primary { max-inline-size: 360px; } }
+#select .sel-pending > .btn-primary { animation: none; scale: none; rotate: none; } /* Keep the contact target still while identities change. */
+.sel-pending-links { grid-row: 3; height: 44px; align-self: end; display: grid; grid-template-columns: repeat(2, auto); justify-content: space-evenly; align-items: center; width: 100%; min-height: 44px; }
+.sel-pending-links .btn { min-height: 44px; padding: 4px 0; font-size: 14px; white-space: normal; display: flex; justify-content: center; align-items: center; gap: 6px; }
+.sel-pending-links .btn > svg { flex: none; width: 18px; height: 18px; margin: 0; }
+.sel-pending-links .btn > span { min-width: 0; overflow-wrap: normal; }
+/* Compact bands keep the same five rows. Optional copy yields before readable names and 44px targets. */
+@container (max-height: 300px) {
+  .sel-pending-copy p + p { display: none; }
+}
+@media (max-width: 519px), (max-height: 740px) {
+  .sel-pending { --contact-pad: 6px; --contact-gap: 6px; padding-inline: 10px; grid-template-rows: minmax(0, 1fr) 44px calc(44px + var(--contact-gap)); font-size: 14px; line-height: 1.25; }
+  .sel-pending h2 { --title-size: 22px; }
+  .sel-pending-links .btn { font-size: 13px; min-width: min-content; }
+}
+/* A tall phone has the full reading band: match its outer margins to the links' target slack. */
+@media (max-width: 519px) and (min-height: 780px) {
+  .sel-pending { --contact-pad: 12px; --contact-gap: 10px; }
+}
+@media (max-height: 500px) {
+  #select[data-pending] .sel-towns { left: 43%; width: 57%; }
+  .sel-pending { --contact-top: calc(60px + env(safe-area-inset-top)); }
+  .sel-pending { left: max(12px, env(safe-area-inset-left)); translate: 0 -50%; width: calc(43% - max(12px, env(safe-area-inset-left)) - 8px); top: calc((100% + 60px + env(safe-area-inset-top) - 8px - env(safe-area-inset-bottom)) / 2); height: calc(100% - 68px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); }
+}
+/* The narrow landscape column spends footer air on complete attribution names. */
+@media (min-width: 520px) and (max-width: 667px) and (max-height: 400px) {
+  .sel-pending { --contact-pad: 2px; --contact-gap: 2px; }
+}
+
+@media (max-width: 479px) and (max-height: 600px),
+       (max-width: 519px) and (max-height: 400px) {
+  /* Short phones spend 4px of each outer gap on reading room; keep the same band centre and targets. */
+  .sel-pending { --contact-pad: 0px; --contact-gap: 0px; --pending-max: calc(100% - var(--pending-top) - var(--pending-bottom, 254px) + 8px); padding-top: 0; }
+}
+
+/* A 640 px reading card can share its identity row from 668 px; the dock must leave room on both sides of 900 px. */
+@media (min-width: 668px) and (min-height: 501px) and (max-height: 799px) {
+  /* Pay for extra wrapping with footer air, before fitPendingTitle has to reduce the type. */
+  .sel-pending { --contact-pad: 6px; --contact-gap: 6px; padding-top: 0; width: min(640px, calc(100% - 28px)); }
+  /* Title on its own row; the place and the attribution share the next one, centred as a pair (a stacked attribution stays: it is never dropped). */
+  .sel-pending-content { display: grid; grid-template-columns: minmax(0, 1fr) auto auto minmax(0, 1fr); align-content: space-evenly; align-items: center; justify-items: center; column-gap: 10px; }
+  .sel-pending h2 { grid-row: 1; grid-column: 1 / -1; }
+  .sel-pending .sel-where { grid-row: 2; grid-column: 2; width: auto; }
+  .sel-pending .sel-entity { grid-row: 2; grid-column: 3; }
+  .sel-pending-copy > * { grid-column: 1 / -1; }
+  .sel-pending-content:has(.sel-where[hidden]) .sel-entity { grid-column: 1 / -1; }
+}
+
+/* Before the desktop dock breakpoint, pending content needs the same compact footer to keep its reading band. */
+@media (min-width: 668px) and (max-width: 899px) and (min-height: 501px) and (max-height: 660px) {
+  #select[data-pending] { --dock-h: 224px; --action-h: 44px; --card-label-h: 68px; }
+}
+
+/* Short portrait phones: the clamped dock leaves the level card ~86 px (320×568). Its gaps and padding give first, then the
+   levels take the landscape phones' compact size (44 px targets); heading and records stay. From ~620 px the full card fits. */
+@media (max-width: 519px) and (min-height: 501px) and (max-height: 620px) {
+  .sel-act { gap: 4px; padding: 6px 12px; }
+  .sel-act h2 { font-size: 18px; line-height: 22px; }
+  .sel-seg .btn { padding: 4px; font-size: 14px; min-height: 44px; }
+  .sel-seg .sub { margin-top: 0; font-size: 11px; line-height: 13px; }
+}
+/* Narrow, short portrait windows: the full identity and 44 px contact targets take the room before optional art.
+   The wider reading column keeps long names on one line where possible; the compact dock stays fixed for every figure.
+   Its portrait slot over the caption would be a sliver, so a short card (320×568) puts the portrait beside the caption,
+   full height: the drawings stay. */
+@media (max-width: 519px) and (min-height: 501px) and (max-height: 700px) {
+  #select { --dock-h: clamp(160px, calc(100dvh - 408px), 240px); }
+  .sel-pending { width: calc(100% - 16px); padding-inline: 8px; }
+  .sel-card { container-type: size; }
+  @container (max-height: 100px) {
+    .sel-card .por { --floor: 9px; grid-area: 1 / 1 / -1 / -1; justify-self: start; width: 46%; }
+    .sel-card .nb { grid-area: 1 / 1 / -1 / -1; justify-self: end; width: 54%; padding-inline: 4px; box-shadow: inset 1px 0 #fff3d61a; }
+    /* a three-line name leaves the entity one line (Tio Gori i Tia Caballera); the town is on the banner beside it */
+    .sel-card .nb small:not(.sel-entity-icons) { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 1; overflow: hidden; }
+  }
+}
+
+/* Below the stacked band's minimum reading height, use the existing contact/dock split.
+   Apply after portrait sizing: a near-square short window also needs the narrow reading column. */
+@media (min-width: 520px) and (max-height: 599px),
+       (min-width: 480px) and (max-width: 667px) and (min-height: 401px) and (max-height: 660px) {
+  #select[data-pending] .sel-bottom { left: auto; right: 0; translate: none; width: 57%; }
+  .sel-pending { left: 21.5%; translate: -50% -50%; width: min(480px, calc(43% - 24px)); top: calc((100% + var(--contact-top, var(--pending-top)) - 12px) / 2); height: min(360px, calc(100% - var(--contact-top, var(--pending-top)) - 12px)); }
+  .sel-pending-content { display: flex; }
+}
+
+/* The shortest landscape phones need a wider reading column; the strip still shows one whole card. */
+@media (max-width: 899px) and (max-height: 350px) {
+  #select[data-pending] .sel-towns { left: 60%; width: 40%; }
+  #select[data-pending] .sel-bottom { width: 40%; }
+  .sel-pending { width: calc(60% - max(12px, env(safe-area-inset-left)) - 8px); }
+}
+
+/* Portrait phones: the identity, the song on a plate sized to itself, and a fixed row of record chips under it (bare text
+   on the plaça was unreadable, a long column hid her). The labels the chips drop stay for screen readers. */
+@media (max-width: 519px) and (min-height: 501px) {
+  .sel-info { gap: 14px; } /* the group step again when the iOS hint sits above the name */
+  .sel-panel { gap: 8px; justify-items: start; } /* chip to chip: entity → song → records */
+  .sel-identity { row-gap: 12px; } /* the name to its first chip */
+  .sel-name { font-size: clamp(30px, 9.6vw, 40px); } /* «Mulassa de Valls» on one line beside the ? from 375 px */
+  .sel-song { box-sizing: border-box; max-width: 100%; padding: 4px 10px; border-radius: var(--sel-chip-r); background: var(--sel-chip-bg); } /* the facts' chip */
+  .sel-song { gap: 8px; padding-left: 4px; font-size: 14px; line-height: 18px; }
+  .sel-song svg { width: 30px; height: 30px; padding: 7px; }
+  .sel-song-copy { gap: 0; }
+  .sel-song-copy > span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .sel-song-credit { font-size: 11px; line-height: 14px; }
+  .sel-level-stats .sel-song-copy { min-height: 32px; }
+  #select-song { padding: 0; border: 0; border-radius: 0; background: none; } /* the chip is the song's own (its plate); «Mira el ball» stands beside it, outside (inside it read oddly) */
+  #select-song .sel-song-plate { box-sizing: border-box; padding: 4px 10px 4px 4px; border-radius: var(--sel-chip-r); background: var(--sel-chip-bg); } /* (no hairline on phones: the desktop's row separator, across the row here it read as a stray bar) */
+  .sel-song .sel-watch { min-height: 38px; margin-inline-start: 0; padding: 0 14px 0 10px; font-size: 14px; } /* the chip's height; the slop keeps a 44 px target */
+  .sel-song .sel-watch::after { content: ''; position: absolute; inset: -3px -2px; }
+  .sel-tiles { gap: 6px; padding-top: 0; border-top: 0; }
+  .sel-tiles { font-size: 14px; line-height: 24px; }
+  }
+
+/* Under 375 px no room beside the chip for the label: the play alone (its name stays for screen readers, aria-label) */
+@media (max-width: 374px) and (min-height: 501px) { .sel-song .sel-watch { width: 38px; padding: 0; } .sel-song .sel-watch > span { display: none; } }
+
+/* Big desktops: only a nudge (zoom keeps cards, type, pills, dock and button in proportion). A desktop's css px are
+   already as big as a laptop's or bigger: x1.45 made the selector giant on a 27" 5K. measure() divides by it. */
+@media (min-width: 2200px) and (min-height: 1200px) { #select { zoom: 1.1; } }
+/* Laptops and 1080p screens up to a 16" MacBook (a 13"'s ~1440×790 window): the desktop dock and type crowded the plaça; read better
+   at 90%, the corner row too (select-chrome.css), as the browser's own zoom would. A mouse only: touch targets keep their size. */
+@media (min-width: 1100px) and (min-height: 600px) and (max-height: 1010px) and (pointer: fine) { #select { zoom: 0.9; } }
+/* A narrow, short window (1197×624 on a 2016 MacBook with Linux): the short layouts at the browser's own 75%. Not past 1279 px: a 13" Mac's ~1440×790 stays at 90%. */
+@media (min-width: 1100px) and (max-width: 1279px) and (min-height: 600px) and (max-height: 799px) and (pointer: fine) { #select { zoom: 0.75; } }

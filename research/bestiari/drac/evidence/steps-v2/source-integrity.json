@@ -1,0 +1,13 @@
+{
+  "referenceManifest": "../evidence-manifest.json",
+  "unchanged": {
+    "src/dev/drac-lab/trial-dance.js": true,
+    "src/dev/drac-lab/trial-rig.js": true,
+    "src/dev/drac-lab/programmes.js": true,
+    "src/dev/drac-lab/stage.js": true,
+    "src/figures/drac/dance-drac.js": true,
+    "src/figures/drac/drac-feet.js": true,
+    "src/figures/drac/drac-motion.js": true,
+    "src/figures/drac/drac.js": true
+  }
+}

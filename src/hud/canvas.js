@@ -1,4 +1,4 @@
-// The HUD canvas: its size and scale (K), the safe areas, resize, and the title buttons' hit rects.
+// The HUD canvas: its size and scale (K), the safe areas, resize.
 import { hudBudget, hudScale, renderDpr } from '../platform/render-quality.js';
 import * as THREE from 'three';
 import { qualityLevel, renderer, renderProfile, camera } from '../scene/stage.js';
@@ -30,7 +30,6 @@ export function resize() {
     document.documentElement.style.setProperty('--app-h', `${ch}px`);
     document.documentElement.style.setProperty('--app-gap', `${innerHeight - ch}px`);
   } catch { /* no DOM styles (tests) */ }
-  const small = Math.min(cw, ch) < 520;
   const DPR = hudScale(cw, ch, devicePixelRatio, HUD_BUDGET()); // crisp text, within a pixel budget (render-quality.js)
   sizedW = cw; sizedH = ch; sizedDpr = devicePixelRatio; padTop = null;
   K = uiScale(Math.min(cw, ch), COARSE.matches); // the HUD's scale (css px per HUD unit)
@@ -45,19 +44,23 @@ export function resize() {
   W = cw / K; HH = ch / K;
   camera.fov = baseFov(); camera.updateProjectionMatrix(); // (after HH: the lens depends on it; framePlayCamera sets its own each frame)
 }
-// iOS home-screen app with a translucent status bar: innerHeight (and 100vh/dvh) can come out one status bar
-// short, leaving an empty band at the bottom. There is no browser chrome there, so the screen height is exact.
+// iOS home-screen app with a translucent status bar (icons added before the bar went opaque): innerHeight (and 100vh/dvh) can come
+// out one status bar short, leaving an empty band at the bottom. There is no browser chrome there, so the screen height is exact.
+// With the opaque bar the page starts below it (no top inset) and innerHeight already is the visible height: never taller.
 const IOS = /iPhone|iPod|iPad/.test(navigator.userAgent ?? '') || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 const STANDALONE = navigator.standalone === true;
 export function appHeight() {
-  if (!(IOS && STANDALONE) || !screen?.height) return innerHeight;
+  if (!(IOS && STANDALONE) || !screen?.height || !SAFE.t) return innerHeight;
   const portrait = innerHeight >= innerWidth, long = Math.max(screen.width, screen.height), short = Math.min(screen.width, screen.height);
   return Math.max(innerHeight, portrait ? long : short);
 }
-addEventListener('resize', resize);
+// window resize, visualViewport resize and fullscreenchange come together for one change (entering or leaving fullscreen):
+// only the first reallocates the canvases, each a full GPU buffer.
+export const resizeIfChanged = () => { if (innerWidth !== sizedW || appHeight() !== sizedH || devicePixelRatio !== sizedDpr) resize(); };
+addEventListener('resize', resizeIfChanged);
 // Safari (iPad especially) can come back from the share sheet / another tab with the page scrolled under its bars or the bars re-laid out
 // without a resize event: drop any scroll and re-measure when the size really changed.
-const settle = () => { if (globalThis.scrollX || globalThis.scrollY) scrollTo(0, 0); if (innerWidth !== sizedW || appHeight() !== sizedH) resize(); };
+const settle = () => { if (globalThis.scrollX || globalThis.scrollY) scrollTo(0, 0); resizeIfChanged(); };
 addEventListener('scroll', settle);
 addEventListener('focus', settle);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) settle(); });
@@ -65,7 +68,7 @@ addEventListener('orientationchange', resize);
 // a GPU process crash (Android Adreno) restores the 2D context with its default state: the identity transform drew the HUD at 1/3
 hud.addEventListener('contextrestored', resize);
 addEventListener('pageshow', () => requestAnimationFrame(resize)); // standalone launch: sizes can settle a frame late
-try { visualViewport.addEventListener('resize', resize); visualViewport.addEventListener('scroll', settle); } catch { /* none */ }
+try { visualViewport.addEventListener('resize', resizeIfChanged); visualViewport.addEventListener('scroll', settle); } catch { /* none */ }
 resize();
 requestAnimationFrame(() => requestAnimationFrame(resize));
 const proj = new THREE.Vector3();
@@ -74,7 +77,4 @@ export function toScreen(v) { // world -> HUD units, null when behind the camera
   if (proj.z > 1) return null;
   return [(proj.x * 0.5 + 0.5) * W, (-proj.y * 0.5 + 0.5) * HH];
 }
-export let buttons = []; // title hit rects, in HUD units
-export const setButtons = v => (buttons = v);
-export const buttonAt = e => buttons.find(b => e.clientX / K >= b.x && e.clientX / K <= b.x + b.w && e.clientY / K >= b.y && e.clientY / K <= b.y + b.h);
 export function baseFov() { return camera.aspect < 1 || HH < 280 ? 50 : 38; } // the title's lens (short windows need room without lifting the camera over the roofs)

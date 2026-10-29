@@ -2,12 +2,13 @@
 // refills a bit (perfect more, a finished GUAPA / MANTÉN / GLOBUS a bit more). Empty: the mulassa falls apart.
 // Per difficulty: `miss` drains (1/miss = misses from full to empty), `perfect`/`good` refill, `bonus` on top
 // for a finished special. Alternating PERFECTE/ERROR slowly gains on FÀCIL, slowly loses on DIFÍCIL.
+import { tr } from '../i18n/messages.js';
 export const ENERGY = [
   { miss: 1 / 13, perfect: 0.1, good: 0.08, bonus: 0.06 }, // FÀCIL: 13 misses in a row
   { miss: 1 / 10, perfect: 0.09, good: 0.06, bonus: 0.06 }, // NORMAL: 10
   { miss: 1 / 8, perfect: 0.08, good: 0.05, bonus: 0.05 }, // DIFÍCIL: 8
 ];
-export const WARN = [[0.35, 0.5, 'AGUANTEU, QUE CAIEM!'], [0.15, 0.25, 'NO PODEM MÉS!!']]; // [below, re-arm above, shout]
+export const WARN = [[0.35, 0.5, tr('game.energy.hold')], [0.15, 0.25, tr('game.energy.low')]]; // [below, re-arm above, shout]
 
 // One judgement: the new energy (0..1). `special`: a finished GUAPA pair, a MANTÉN held to the end, a popped GLOBUS.
 export function drain(e, diff, kind, special = false) {

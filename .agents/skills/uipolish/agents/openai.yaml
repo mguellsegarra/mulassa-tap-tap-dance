@@ -1,0 +1,4 @@
+interface:
+  display_name: "UI Polish"
+  short_description: "Distribució equilibrada i QA multi-resolució"
+  default_prompt: "Aplica $uipolish per repartir l’espai de la targeta i validar-la a totes les famílies de viewport."

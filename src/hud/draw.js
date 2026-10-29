@@ -1,69 +1,90 @@
 // drawHud: which HUD screen is drawn this frame.
+import { tr } from '../i18n/messages.js';
 import { STEPS } from '../game/practice.js';
-import { G, clock, chip } from '../game/state.js';
+import { G, clock, chip, offsetMs } from '../game/state.js';
 import { HUD_CY, PRACTICE_Y } from './layout.js';
-import { W, H, HH } from './canvas.js';
+import { W, H, HH, SAFE, K } from './canvas.js';
 import { text, textWidth, panel } from './primitives.js';
 import { C, spriteBudget, SPRITES_NEW, warmups, warmT, setSpriteBudget, setWarmT } from './sprites.js';
-import { COARSE, offsetMs } from '../core/env.js';
-import { drawSplash, drawTitle } from './title.js';
+import { COARSE } from '../core/env.js';
+import { trf, practiceText } from '../game/figure-theme.js';
+import { drawSplash } from './title.js';
 import { drawBubbles } from './bubbles.js';
 import { drawJudge, drawBanner, drawResume } from './banner.js';
 import { drawPraise } from './praise.js';
-import { drawTop } from './top.js';
+import { drawTop, drawProgressRing } from './top.js';
 import { drawLane } from './lane.js';
 import { drawResults } from './results.js';
 import { loader } from '../ui/handles.js';
+import { BOU_FINALE, bouWaiting } from '../figures/bou/bou-bills.js';
 
+const DRAW_TXT = { goOn: [tr('hud.title.enterTouch'), tr('hud.title.enterClick')], practice: tr('hud.practice.title'), tap: tr('hud.audio.tap'), tapSub: tr('hud.audio.tapSub'), syncHint: tr('hud.sync.hint') };
+let offKey, offLine; // the offset toast's line, built once per value
 // Practice: progress at the top and the step's instruction above the pad.
 function drawPractice() {
   const P = G.practice, i = Math.min(Math.max(0, P.step | 0), STEPS.length - 1), step = STEPS[i];
   const y = HUD_CY(), n = STEPS.length, gap = 12, x0 = W / 2 - (n - 1) * gap / 2;
-  text('PRÀCTICA', W / 2, y - 9, 8, C.gold);
+  text(DRAW_TXT.practice, W / 2, y - 9, 8, C.gold);
   for (let k = 0; k < n; k++) {
     H.beginPath(); H.arc(x0 + k * gap, y + 6, k === i && !P.doneT ? 4 : 3, 0, 7);
     H.fillStyle = k < P.step ? C.gold : k === i && !P.doneT ? C.cream : 'rgba(255,243,214,0.25)'; H.fill();
     H.strokeStyle = C.dark; H.lineWidth = 1; H.stroke();
   }
   if (P.doneT) return;
-  const s = COARSE.matches ? step.touch : step.keys, ww = textWidth(step.word, 10) + 8, room = W - 20 - ww - 24;
+  const s = practiceText(i, COARSE.matches ? 'touch' : 'keys'), ww = textWidth(practiceText(i, 'word'), 10) + 8, room = W - 20 - ww - 24;
   const size = Math.min(10, 10 * room / textWidth(s, 10)), w = ww + textWidth(s, size) + 24, x = W / 2 - w / 2, cy = PRACTICE_Y();
   H.beginPath(); H.roundRect(x, cy - 11, w, 22, 3); // an instruction, not a button: flat, a gold strip, no outline
   H.fillStyle = 'rgba(42,26,16,0.9)'; H.fill(); H.fillStyle = C.gold; H.fillRect(x, cy - 11, 3, 22);
-  text(step.word, x + 12, cy, 10, { GUA: C.guaLt, PA: C.paLt }[step.word] ?? C.gold, 'left');
+  text(practiceText(i, 'word'), x + 12, cy, 10, { GUA: C.guaLt, PA: C.paLt }[step.word] ?? C.gold, 'left');
   text(s, x + 12 + ww, cy, size, C.cream, 'left');
 }
 function drawCollapse() {
   if (clock - G.collapseT < 0.7 - 1e-9) return;
   // the moment itself: big, in the middle of the screen (two lines, so it stays big on a phone), with a short pop-in
   const size = Math.min(34, W / 11) * Math.min(1, 0.6 + 0.4 * Math.min(1, (clock - G.collapseT - 0.7) / 0.18)), y = HH * 0.42;
-  text('LA MULASSA', W / 2, y - size * 0.62, size, C.red, 'center', C.cream);
-  text('S’HA DESMUNTAT!', W / 2, y + size * 0.62, size, C.red, 'center', C.cream);
+  text(trf('collapse.line1'), W / 2, y - size * 0.62, size, C.red, 'center', C.cream);
+  text(trf('collapse.line2'), W / 2, y + size * 0.62, size, C.red, 'center', C.cream);
+}
+// The Bou's close-up waits for a tap: the results' own «go on» pill (results.js), low on the screen, fading in
+let goOnT = -1;
+function drawGoOn() {
+  if (goOnT < 0) goOnT = clock;
+  const s = DRAW_TXT.goOn[COARSE.matches ? 0 : 1], b = Math.sin(clock * 3), h = 30, w = textWidth(s, 10.5) + 40, cy = HH - SAFE.b / K - 30;
+  H.globalAlpha = Math.min(1, (clock - goOnT) * 2);
+  H.beginPath(); H.roundRect(W / 2 - w / 2, cy - h / 2, w, h, h / 2);
+  H.fillStyle = 'rgba(42,26,16,0.92)'; H.fill();
+  H.strokeStyle = C.gold; H.lineWidth = 2 + 0.6 * (b + 1); H.stroke();
+  text(s, W / 2, cy + 1, 10.5, C.gold);
+  H.globalAlpha = 1;
 }
 export function drawHud(t) {
   setSpriteBudget(SPRITES_NEW);
   if (G.state === 'splash') drawSplash();
-  if (G.state === 'title') drawTitle();
   if (G.state === 'play') {
     if (G.collapseT) { drawCollapse(); return; }
+    if (BOU_FINALE.k > 0.3) { drawPraise(); if (bouWaiting()) drawGoOn(); else goOnT = -1; return; } // the Bou's banknotes' close-up: the plaça's chant, and how to go on, nothing of the game over it
     drawBubbles();
-    drawJudge();
-    drawPraise();
-    if (G.practice) drawPractice(); else drawTop(t);
-    drawLane(t);
-    if (!G.practice) drawBanner(t);
+    if (!G.watch) drawJudge();
+    drawPraise(); // (the chant after the song: the plaça's, not a score)
+    if (G.watch) drawProgressRing(t); // the dance demo: no lane, score or count-in, only how far the song has gone
+    else {
+      if (G.practice) drawPractice(); else drawTop(t);
+      drawLane(t);
+      if (!G.practice) drawBanner(t);
+    }
     if (G.resuming != null) drawResume();
     if (!chip.running && !G.paused) { // audio blocked (iOS): the song clock can't move, so say how to fix it instead of hanging
       panel(W / 2 - 130, HH * 0.55, 260, 44);
-      text('TOCA LA PANTALLA', W / 2, HH * 0.55 + 15, 14, C.gold);
-      text('per activar el so i començar', W / 2, HH * 0.55 + 32, 10, C.cream);
+      text(DRAW_TXT.tap, W / 2, HH * 0.55 + 15, 14, C.gold);
+      text(DRAW_TXT.tapSub, W / 2, HH * 0.55 + 32, 10, C.cream);
     }
   }
-  if (G.state === 'results') { drawBubbles(); drawResults(); }
+  if (G.state === 'results') { drawBubbles(); if (!G.watch) drawResults(); } // after the dance demo: its own end sheet (ui/watch-ui.js)
   if (clock - (G.offsetT ?? -9) < 1.5) {
     panel(W / 2 - 110, HH / 2 - 20, 220, 40);
-    text(`Sincronia de l’àudio: ${offsetMs > 0 ? '+' : ''}${offsetMs} ms`, W / 2, HH / 2 - 5, 11, C.cream);
-    text('[ avança · ] endarrereix', W / 2, HH / 2 + 11, 8, C.gold);
+    if (offKey !== offsetMs) offLine = tr('hud.sync.audio', { value: `${offsetMs > 0 ? '+' : ''}${offsetMs}` }), offKey = offsetMs;
+    text(offLine, W / 2, HH / 2 - 5, 11, C.cream);
+    text(DRAW_TXT.syncHint, W / 2, HH / 2 + 11, 8, C.gold);
   }
   if (warmups.length && spriteBudget === SPRITES_NEW && (loader.covering || clock - warmT > 0.25)) { // nothing new this frame: paint one queued
     setWarmT(clock); H.save(); H.globalAlpha = 0; warmups.shift()(); H.restore(); // word ahead, unseen (spaced: never a run of heavy frames; under the page cover one a frame)

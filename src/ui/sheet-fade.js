@@ -8,7 +8,8 @@ const bar = e => {
   const over = e.scrollHeight - e.clientHeight;
   b.hidden = over <= SLACK;
   if (b.hidden) return;
-  const top = Math.max(e.offsetTop + 6, 32), track = e.offsetTop + e.clientHeight - 6 - top; // clear of the corner X
+  const pad = parseFloat(getComputedStyle(e).paddingTop); // the ring's room: the bar spans the content, not it
+  const top = Math.max(e.offsetTop + pad + 6, 32), track = e.offsetTop + e.clientHeight - pad - 6 - top; // clear of the corner X
   const h = Math.max(28, track * e.clientHeight / e.scrollHeight);
   b.style.top = `${top}px`; b.style.height = `${track}px`;
   b.firstChild.style.height = `${h}px`;

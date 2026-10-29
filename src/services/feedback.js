@@ -1,6 +1,8 @@
 // «Bústia de la plaça»: a message (and an optional e-mail for the answer) to the mulassa-feedback Worker (workers/feedback,
 // VITE_FEEDBACK_URL), which checks the Turnstile token and e-mails it to the project (nothing stored). The same limits as the
 // server; its error codes in Catalan. The sheet is src/ui/feedback-ui.js.
+import { tr } from '../i18n/messages.js';
+import { fmtNum } from '../i18n/format.js';
 export const MESSAGE_MIN = 5, MESSAGE_MAX = 1000, EMAIL_MAX = 254;
 // A practical address: the usual local-part characters, one @, a domain of dot-separated labels (letters, digits,
 // inner hyphens) ending in a 2+ letter TLD. The Worker checks the same (and no spaces or line breaks can ever
@@ -14,12 +16,12 @@ export class FeedbackError extends Error {
   constructor(code, message) { super(message); this.name = 'FeedbackError'; this.code = code; }
 }
 const messages = {
-  invalid_message: `El missatge ha de tenir entre ${MESSAGE_MIN} i ${MESSAGE_MAX.toLocaleString('ca-ES')} caràcters.`,
-  invalid_email: 'Cal un correu vàlid (ex.: nom@domini.cat) per poder contestar-te.',
-  captcha: 'No hem pogut comprovar que no ets un robot. Torna-ho a provar.',
-  rate_limit: 'Has enviat molts missatges seguits. Espera una estona i torna-ho a provar.',
-  offline: 'Sense connexió. Revisa-la i torna-ho a provar.',
-  unavailable: 'Ara mateix no s’ha pogut enviar. Torna-ho a provar més tard.',
+  invalid_message: tr('services.feedback.invalid_message', { min: MESSAGE_MIN, max: fmtNum(MESSAGE_MAX) }),
+  invalid_email: tr('services.feedback.invalid_email'),
+  captcha: tr('services.feedback.captcha'),
+  rate_limit: tr('services.feedback.rate_limit'),
+  offline: tr('services.feedback.offline'),
+  unavailable: tr('ui.feedback.sendFailed'),
 };
 const fail = code => new FeedbackError(code, messages[code] ?? messages.unavailable);
 

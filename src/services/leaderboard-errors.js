@@ -25,9 +25,6 @@ const messages = {
   email: tr('services.board.email'),
   code: tr('services.board.code'),
   noprofile: tr('services.board.noprofile'),
-  // 202610200001: «Tria el teu nom» (choose_verified_alias) needs the confirmed address; the clean name may be someone's
-  verification: tr('services.board.verification'),
-  name_taken: tr('services.board.name_taken'),
   season: tr('services.board.season'),
   board: tr('services.board.board'),
   // merge_stats: nothing here is the player's to fix; the sync stays silent and tries again with the next run
@@ -58,10 +55,9 @@ export function translated(error) {
   if (error instanceof LeaderboardError) return error;
   const text = String(error?.message ?? ''), code = String(error?.code ?? ''), detail = detailOf(error);
   const f = c => fail(c, detail);
-  if (text.includes('leaderboard_alias_taken') || code === '23505') return f('taken'); // one player per nickname (per tag, for guests)
+  if (text.includes('leaderboard_alias_taken') || code === '23505') return f('taken'); // one active profile per nickname
   if (text.includes('leaderboard_rate_limit') || error?.status === 429 || /^over_.*rate_limit$/.test(code)) return f('rate_limit');
   if (text.includes('leaderboard_score_ceiling')) return f('ceiling');
-  if (text.includes('leaderboard_verification_required')) return f('verification');
   if (text.includes('leaderboard_season_closed')) return f('season');
   if (text.includes('leaderboard_device_limit')) return f('device');
   if (text.includes('leaderboard_stats_time_limit')) return f('stats_time'); // not bad data: retried once the clock has caught up

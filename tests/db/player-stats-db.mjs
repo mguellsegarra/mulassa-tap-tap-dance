@@ -155,16 +155,15 @@ try {
   await q("select * from public.submit_result('mulassa-v3',2,232,0,8,100000,200,'StatsGuest')");
   const profile=(await q('select * from public.my_profile()'))[0];
   await as(null,'anon');
-  const card=(await q('select * from public.get_player_card($1,$2::smallint)',[profile.alias,profile.tag]))[0];
+  const card=(await q('select * from public.get_player_card($1::uuid)',[profile.public_id]))[0];
   assert.equal(card.totals[bucket].runs,10003);assert.equal(card.totals[bucket].errors,undefined);
   for(const k of ['perfect','good','miss','collapsed'])assert.equal(typeof card.totals[bucket][k],'number',`the card shows ${k} (decision 18, 2026-10-21)`);
   assert.equal(card.totals.practice,undefined);
   assert(!/user_id|device_id|first_at|updated_at|days|early|silent|example.invalid/.test(JSON.stringify(card)));
-  // Retention cascades stats/devices/days and published entries; confirmed accounts never qualify.
+  // Nothing deletes a profile for inactivity (202610280002); deleting the account still cascades stats/devices/days and entries.
   await db.exec('reset role');
-  await q("update auth.users set created_at='2024-01-01',last_sign_in_at='2024-01-01' where id=$1",[a]);
-  await q("update leaderboard_private.profiles set last_active_at='2024-01-01' where user_id=$1",[a]);
-  assert.equal((await q('select leaderboard_private.purge_inactive_guests() n'))[0].n,1);
+  assert.equal((await q("select count(*)::int n from pg_proc where proname in ('purge_inactive_guests','leaderboard_expired_players')"))[0].n,0);
+  await q('delete from auth.users where id=$1',[a]);
   for(const table of ['entries','player_stats','player_devices','player_days','profiles'])
     assert.equal((await q(`select count(*)::int n from leaderboard_private.${table} where user_id=$1`,[a]))[0].n,0);
   await as(a);await fail(()=>merge(device,{[bucket]:imported}),'leaderboard_auth_required');

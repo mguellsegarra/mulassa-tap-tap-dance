@@ -1,13 +1,12 @@
 // The Classificació sheet (#board-menu, docs/rankings/strategy.md §4): one board per figure and season, every level mixed
 // by points, the player's own row. Publishing the run is src/ui/board-ui.js's; it builds this and hands it the run.
 import { PAGE } from '../services/leaderboard.js';
-import { baseName } from '../services/leaderboard-identity.js';
 import { DIFFS } from '../game/chart.js';
 import { boardIssue } from '../services/leaderboard-errors.js';
 import { num, trSplit, posDisc } from './sheet-kit.js';
 import { tr } from '../i18n/messages.js';
 import { mulaSpinner } from './loader.js';
-import { appendName, GUEST_ROW } from './profile-notes.js';
+import { appendName, playerOf, GUEST_ROW } from './profile-notes.js';
 import { figureSeasons, seasonLine, calendarSeason, closedSeasons, podiumList, ofSeason } from './seasons-ui.js';
 import { MULASSA } from '../game/figures.js';
 import { setupFigurePicker, PICKER_FIGURES, figurePortrait } from './figure-picker.js';
@@ -71,8 +70,6 @@ export function setupBoardList({ doc, $, service, store, focusIn, minLoad, now, 
     b.loaded = n;
     b.done = !page || (b.total ? n >= b.total : page < PAGE);
   }
-  // a row's player: the name without its «#1234» (get_leaderboard_all composes it for old clients), the tag, the check
-  const playerOf = r => ({ alias: baseName(r.alias, r.tag ?? null), tag: r.tag ?? null, verified: r.verified === true });
   function row(r) {
     const trow = doc.createElement('tr'), td = () => trow.appendChild(doc.createElement('td'));
     const pos = Number(r.position);
@@ -80,7 +77,7 @@ export function setupBoardList({ doc, $, service, store, focusIn, minLoad, now, 
     const name = td(), who = name.appendChild(el('div', 'who'));
     const at = figure; // the card shows this row (the season's name read on the tap: the header may answer after the rows)
     const from = () => ({ figure: at, season: season?.name ?? openName ?? calendarSeason(now()).name, position: pos, score: r.score, difficulty: r.difficulty });
-    appendName(doc, who, playerOf(r), p => onCard({ ...p, from: from() })); // a confirmed address: the check (nothing more); a guest: «#1234», quieter
+    appendName(doc, who, playerOf(r), p => onCard({ ...p, from: from() })); // a confirmed address: the check (nothing more); a released profile: faded
     if (r.is_self) { trow.className = 'me'; meRow = trow; who.appendChild(el('span', 'me-tag', tr('ui.board.me'))); }
     const level = DIFFS[Number(r.difficulty)]?.name; // the level played (a coloured pill) and the longest streak, on a small line under the name
     if (level) {
@@ -116,7 +113,7 @@ export function setupBoardList({ doc, $, service, store, focusIn, minLoad, now, 
     btn.type = 'button'; btn.addEventListener('click', () => loadMore());
     return { row: trow, btn };
   }
-  const rowsOf = r => (r.is_self && r.tag != null && !season && onKeep ? [row(r), guestHint()] : [row(r)]);
+  const rowsOf = r => (r.is_self && r.verified !== true && !season && onKeep ? [row(r), guestHint()] : [row(r)]);
   const shownRanks = b => Math.min(b.loaded, BOARD_CAP);
   // ranks from..to into the list: before the gap while there is one, never twice (the neighbours are already there)
   function appendRanks(b, from, to) {

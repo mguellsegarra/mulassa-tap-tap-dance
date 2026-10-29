@@ -1,26 +1,23 @@
 /* Names, the Perfil sheet, statistics, seasons and players' cards (src/ui/profile-notes.js, account-ui.js, stats-view.js,
    seasons-ui.js, player-card.js); the board's own rows are in board.css. */
 
-/* A player's name (appendName): a button to their card where it is tappable. A guest («Timbaler#3821») is quieter:
-   muted cream (11.9:1 on the sheet), its «#1234» a step more (6.8:1; 6.1:1 on the gold own row), never a check. */
+/* A player's name (appendName): a button to their card where it is tappable. A released profile (its name is somebody else's
+   now) is faded: muted cream (6.8:1 on the sheet), never a check. */
 button.player-name { position: relative; display: inline-flex; align-items: baseline; gap: 0; min-width: 0; min-height: 0; margin: 0; padding: 0; border: 0; border-radius: 4px; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
 @media (pointer: coarse) { button.player-name::after { content: ""; position: absolute; left: -6px; right: -6px; top: 50%; height: max(100%, 44px); translate: 0 -50%; } } /* a 44 px invisible target on touch; a mouse: the hand only over the name; rows keep their height and look, every list steps >= 44 px */
-@media (hover: hover) { button.player-name:hover { filter: none; } button.player-name:hover :is(.alias, .tag) { text-decoration: underline; text-decoration-color: #e8d8b899; text-underline-offset: 3px; } }
+@media (hover: hover) { button.player-name:hover { filter: none; } button.player-name:hover .alias { text-decoration: underline; text-decoration-color: #e8d8b899; text-underline-offset: 3px; } }
 span.player-name { display: inline-flex; align-items: baseline; min-width: 0; }
 .player-name .alias { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.player-name .tag { flex: none; color: #b5a385; font-size: .87em; font-weight: 700; }
-/* in a list (board rows, podiums) a name is never cut: a long one wraps, its «#1234» whole on the next line; the check or «TU»
-   follows it, on the next line only when they cannot share one */
+/* in a list (board rows, podiums) a name is never cut: a long one wraps; the check or «TU» follows it, on the next line only
+   when they cannot share one */
 .who { flex-wrap: wrap; column-gap: 5px; }
 .who .player-name { flex-wrap: wrap; justify-content: flex-start; }
 .who .player-name .alias { white-space: normal; overflow-wrap: anywhere; }
-/* in a sentence («Publicat com a Timbaler#3821.»): inline, so the full stop never wraps alone */
+/* in a sentence («Publicat com a Timbaler.»): inline, so the full stop never wraps alone */
 .board-status .player-name { display: inline; } .board-status .player-name .alias { white-space: normal; }
 .board-status .verified-check { margin-left: 4px; vertical-align: -3px; }
-.player-name.guest { color: #b5a385; } /* a guest: the whole name as quiet as its tag (a confirmed name stands out) */
-.player-name.guest .tag { color: inherit; }
-#board-table tr.me .player-name.guest { color: inherit; }
-#board-table tr.me .player-name .tag { color: #d7b43a; }
+.player-name.released { color: #b5a385; }
+#board-table tr.me .player-name.released { color: inherit; }
 /* «Convidat»: an information chip (dark, cream text), never a button or a cream fill */
 .kind-chip { flex: none; display: inline-block; padding: 1px 9px; border: 1px solid #e8d8b866; border-radius: 999px; background: #140c07; color: #e8d8b8; font-size: 13px; font-weight: 800; line-height: 20px; letter-spacing: .04em; }
 
@@ -83,7 +80,7 @@ span.player-name { display: inline-flex; align-items: baseline; min-width: 0; }
 .hall-podium-list .pd-1 { grid-column: 2; } .hall-podium-list .pd-2 { grid-column: 1; } .hall-podium-list .pd-3 { grid-column: 3; }
 .hall-podium-list .pos { --pos-size: 30px; } .hall-podium-list .pd-1 .pos { --pos-size: 42px; }
 .hall-podium-list .who { max-width: 100%; font-size: 14px; line-height: 1.15; } .hall-podium-list .pd-1 .who { font-size: 16px; }
-.hall-podium-list .player-name { flex-direction: column; align-items: center; } .hall-podium-list .player-name .tag { font-size: 12px; } /* the tag under the alias: a third of the sheet */
+.hall-podium-list .player-name { flex-direction: column; align-items: center; }
 .hall-podium-list .me-tag { margin-top: 2px; }
 .hall-podium-list .pts { color: #fff3d6; font-size: 15px; font-weight: 800; font-variant-numeric: tabular-nums; }
 .hall-podium .lvl { display: block; font-size: 10.5px; letter-spacing: .05em; } /* its level's colour (.lvt*) */
@@ -116,7 +113,7 @@ span.player-name { display: inline-flex; align-items: baseline; min-width: 0; }
 .r-sub .pos { flex: none; --pos-size: 18px; }
 .r-side { display: grid; justify-items: end; line-height: 1.1; font-variant-numeric: tabular-nums; }
 .r-side b { font-size: 19px; } .r-side .dash { color: #e8d8b8; } .r-side small { color: #e8d8b8; font-size: 13px; }
-.idx-row[aria-current] :is(.r-sub, .r-two, .r-side small, .r-side .dash, .player-name.guest, .player-name .tag) { color: #4a3420; }
+.idx-row[aria-current] :is(.r-sub, .r-two, .r-side small, .r-side .dash, .player-name.released) { color: #4a3420; }
 /* no closed season yet: the empty estendard, the open season, its board */
 .hall-wait { flex: 1 1 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center; }
 .hall-wait .estendard { width: 84px; height: 118px; } .hall-wait .estendard .fig-mask { width: 60px; height: 42px; }
@@ -223,7 +220,7 @@ span.player-name { display: inline-flex; align-items: baseline; min-width: 0; }
 .profile-block[data-state="none"] .profile-sub, .profile-block[data-pending] .profile-sub { margin-top: 0; }
 /* waiting for the identity: the room is kept and shows as a quiet skeleton (the name is already known), so it reads as loading, not dead */
 .profile-block[data-pending] .btn { color: transparent; border-color: transparent; background: #fff3d614; pointer-events: none; animation: profile-pulse 1.2s ease-in-out infinite; }
-.profile-block[data-pending] .profile-sub { color: transparent; border-radius: 6px; background: #fff3d614; animation: profile-pulse 1.2s ease-in-out infinite; } .profile-block[data-pending] .profile-head { display: flex; } .profile-block[data-pending] :is(.tag, .kind-chip) { visibility: hidden; } /* the guest's words, #tag and chip in no colour: its final size from the first frame */
+.profile-block[data-pending] .profile-sub { color: transparent; border-radius: 6px; background: #fff3d614; animation: profile-pulse 1.2s ease-in-out infinite; } .profile-block[data-pending] .profile-head { display: flex; } .profile-block[data-pending] .kind-chip { visibility: hidden; } /* the guest's words and chip in no colour: its final size from the first frame */
 @keyframes profile-pulse { 50% { opacity: .45; } }
 @media (prefers-reduced-motion: reduce) { .profile-block[data-pending] :is(.btn, .profile-sub) { animation: none; } }
 .profile-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 10px; }
@@ -316,8 +313,10 @@ span.player-name { display: inline-flex; align-items: baseline; min-width: 0; }
 body:has(:is(#board-menu, #seasons-menu, #account-menu)[open]) #card-menu { width: min(436px, calc(100vw - 66px - var(--sal) - var(--sar))); max-height: min(736px, calc(100dvh - 56px - var(--sat) - var(--sab))); }
 .card-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 4px 10px; margin: 0 28px 12px; }
 .card-name { display: inline-flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0 6px; min-width: 0; max-width: 100%; margin: 0; }
-#card-menu .card-name { font-size: clamp(18px, 5.6vw, 30px); } /* (over .sheet h2) 16 letters and the check on one line from 320 px; a «#1234» goes under the name whole */
+#card-menu .card-name { font-size: clamp(18px, 5.6vw, 30px); } /* (over .sheet h2) 16 letters and the check on one line from 320 px */
 .card-name .alias { white-space: normal; overflow-wrap: anywhere; }
+.card-note { flex: 0 0 100%; margin: 0; color: #e8d8b8; font-size: 14px; line-height: 1.3; text-align: center; text-wrap: balance; } /* a released profile: its name is somebody else's now */
+.card-note[hidden] { display: none; }
 .card-name .player-name { justify-content: center; } /* the whole name, wrapped if it must: it is the sheet's title */
 /* the row it was tapped on: information, so flat with a strip, never a button */
 .card-from { display: grid; grid-template-columns: 52px minmax(0, 1fr); align-items: center; gap: 10px; margin: 0 0 12px; padding: 6px 10px 6px 8px; border-left: 3px solid #f5c518; border-radius: 4px; background: #fff3d60d; }
@@ -335,7 +334,7 @@ body:has(:is(#board-menu, #seasons-menu, #account-menu)[open]) #card-menu { widt
 /* The detailed labels need whole words on phones; the four headline facts stay paired. */
 @media (max-width: 519px) { .stat-lines { grid-template-columns: 1fr; } }
 /* portrait phones: the % goes under the points (board-list.js .pct-sub), so the name gets its column's room: a 16-letter
-   «nom#1234» with «TU» on one line from 375 px, a 16-letter verified name on one line at 320 */
+   name with «TU» on one line from 375 px, a 16-letter verified name on one line at 320 */
 @media (max-width: 519px) {
   /* the whole column goes, its <col> too (board-list.js spans its full-width rows over 3 here): WebKit's fixed layout kept a width-0 column's share (iOS: the names squeezed) */
   :is(#board-table, .board-head) :is(.c-pct, :is(th, td):nth-child(3)) { display: none; }

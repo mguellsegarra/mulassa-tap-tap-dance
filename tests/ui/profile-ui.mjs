@@ -1,8 +1,8 @@
 // The Perfil's profile block and its steps sheet (src/ui/profile-ui.js) in a small fake DOM with a mocked service: the states
-// and the buttons that fit each (no profile, a stale name, a guest «nom#1234», a confirmed address still with its #, a clean
-// confirmed name), creating one (a nickname; the statistics' notice is on that step), confirming an e-mail (mail → code →
-// «Tria el teu nom»), recovering (the name and tag come back), sign out and delete (confirmed, once, failures reported),
-// forgetting a stale name, a row gone, publishing off, offline, switching profiles. No deadlines (docs/rankings/strategy.md §6).
+// and the buttons that fit each (no profile, a stale name, a guest, a released guest, a confirmed profile), creating one (a
+// nickname; the statistics' notice is on that step), confirming an e-mail (mail → code), choosing another name when the
+// old one was released, recovering (the name comes back), sign out and delete (confirmed, once, failures reported), forgetting
+// a stale name, a row gone, publishing off, offline, switching profiles. Names never carry a «#» (docs/rankings/strategy.md §6).
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { setupProfile } from '../../src/ui/profile-ui.js';
@@ -23,21 +23,18 @@ const ids = ['profile-menu', 'profile-form', 'profile-email', 'profile-code', 'p
   'profile-alias', 'profile-alias-label', 'profile-alias-field', 'profile-mail-field', 'profile-code-field', 'profile-note', 'profile-stats-note',
   'profile-row', 'profile-name', 'profile-kind', 'profile-sub', 'profile-main', 'profile-alt', 'profile-more'];
 const tick = () => new Promise(r => setTimeout(r, 0));
-const TAG = 'leaderboard-tag';
 
-function make({ configured = true, publishingEnabled = true, session = false, email = '', alias = '', tag = null, persistent = true, captchaRequired = false,
+function make({ configured = true, publishingEnabled = true, session = false, email = '', alias = '', persistent = true, captchaRequired = false,
   prof, known = null } = {}) { // prof: my_profile's answer (undefined: an older server, no my_profile); known: the stored last answer
   const els = new Map(ids.map(id => [id, new El(id)]));
   const doc = { getElementById: id => els.get(id), createElement: tag => Object.assign(new El(''), { tag }) }, $ = id => els.get(id);
   const mem = new Map(alias ? [['alias', alias]] : []);
-  if (tag != null) mem.set(TAG, String(tag));
   if (known) mem.set('alias:identity', JSON.stringify(known));
   const store = { get: k => mem.get(k) ?? null, set: (k, v) => mem.set(k, String(v)), remove: k => mem.delete(k) };
   const calls = [], reports = [], T = { session, email, alias: null, fail: null, prof, profiles: 0, sendType: null, accepted: 0 };
   const service = {
     configured, publishingEnabled, captchaRequired,
-    createProfile: async (a, o) => { calls.push(['create', a, o]); if (T.fail) throw T.fail; T.session = true; return a.trim(); },
-    chooseVerifiedAlias: async a => { calls.push(['choose', a]); if (T.fail) throw T.fail; T.prof = { ...T.prof, alias: a, tag: null }; return a; },
+    createProfile: async (a, o) => { calls.push(['create', a, o]); if (T.fail) throw T.fail; T.session = true; if (T.prof) T.prof = { ...T.prof, alias: a.trim(), released: false }; return a.trim(); },
     identity: async () => ({ hasSession: T.session, email: T.email, persistent }),
     sendCode: async (m, o) => { calls.push(['send', m, o]); return { type: T.sendType ?? (T.session ? 'email_change' : 'email') }; },
     profile: async () => { T.profiles++; if (T.prof === undefined) throw new Error('rpc:PGRST202:404'); return T.prof; },
@@ -52,39 +49,40 @@ function make({ configured = true, publishingEnabled = true, session = false, em
     report: (k, d) => reports.push([k, d]), acceptStats: () => { T.accepted++; } });
   const find = (el, test) => (test(el) ? el : (el.kids || []).filter(k => typeof k !== 'string').map(k => find(k, test)).find(Boolean) ?? null);
   return { profile, $, mem, calls, reports, T, focused, find,
-    badge: () => find($('profile-name'), k => k.className === 'verified-check'), tagOf: () => find($('profile-name'), k => k.className === 'tag')?.textContent ?? null,
+    badge: () => find($('profile-name'), k => k.className === 'verified-check'),
     buttons: () => [$('profile-main'), $('profile-alt'), $('profile-more')].filter(b => !b.hidden).map(b => `${b.dataset.act}:${b.textContent}`) };
 }
 const enter = ($, id, v) => { $(id).value = v; $(id).fire('input'); };
-const guestProf = o => ({ alias: 'takeshi', tag: 3821, verified: false, published: true, ...o });
+const guestProf = o => ({ alias: 'takeshi', verified: false, published: true, released: false, publicId: 'p-1', ...o });
 
 { // the states
   const none = make(); await none.profile.refresh();
   assert(!none.$('profile-row').hidden && none.$('profile-name').textContent === '' && none.buttons().join() === 'create:Crea,recover:Recupera', 'no profile: create one or recover yours');
   assert(none.$('profile-kind').hidden, 'no «Convidat» without a profile');
-  const stale = make({ alias: 'takeshi', tag: 3821 }); await stale.profile.refresh();
+  const stale = make({ alias: 'takeshi' }); await stale.profile.refresh();
   assert.equal(stale.$('profile-name').textContent, 'takeshi', 'a name and no session: the name alone');
   assert.equal(stale.buttons().join(), 'recover:Recupera,forget:Oblida el nom', 'a name, no profile: recover or forget it');
   stale.profile.forget(); await tick();
-  assert(!stale.mem.has('alias') && !stale.mem.has(TAG) && stale.$('profile-name').textContent === '', 'forgetting is local only, the tag goes with the name');
+  assert(!stale.mem.has('alias') && stale.$('profile-name').textContent === '', 'forgetting is local only');
   const guest = make({ alias: 'takeshi', session: true, prof: guestProf() }); await guest.profile.refresh();
-  assert.equal(guest.$('profile-name').textContent, 'takeshi#3821', 'a guest: its name and four digits');
-  assert(guest.find(guest.$('profile-name'), k => k.className?.includes?.('guest')) && guest.tagOf() === '#3821', 'quieter, the tag apart');
+  assert.equal(guest.$('profile-name').textContent, 'takeshi', 'a guest: its plain name, never a «#»');
+  assert(!guest.find(guest.$('profile-name'), k => k.className?.includes?.('released')), 'an active guest is not faded');
   assert(!guest.$('profile-kind').hidden && guest.$('profile-kind').textContent === GUEST, '«Convidat» said in words here');
   assert.equal(guest.buttons().join(), 'link:Confirma el correu,delete:Esborra el perfil');
   assert.equal(guest.$('profile-sub').textContent, GUEST_TEXT, 'what a guest risks, and the way out');
-  assert.equal(guest.mem.get(TAG), '3821', 'the server\'s tag remembered apart from the name');
   assert(!guest.badge(), 'not confirmed: no check');
   const priv = make({ alias: 'takeshi', session: true, persistent: false, prof: guestProf() }); await priv.profile.refresh();
   assert.equal(priv.$('profile-sub').textContent, `${GUEST_TEXT} NOTE`, 'and the browser note when it may lose the profile');
-  const named = make({ alias: 'takeshi', session: true, email: 'jugador@example.com', prof: guestProf({ verified: true }) }); await named.profile.refresh();
-  assert.equal(named.$('profile-row').dataset.state, 'named');
-  assert(named.badge() && named.$('profile-name').textContent === 'takeshi#3821' && named.$('profile-kind').hidden, 'confirmed, still with its #: the check, no «Convidat»');
-  assert.equal(named.buttons().join(), 'choose:Tria el teu nom,signout:Tanca la sessió,delete:Esborra el perfil', 'the Perfil asks for the clean name again');
-  const linked = make({ alias: 'takeshi', session: true, email: 'jugador@example.com', prof: guestProf({ verified: true, tag: null }) }); await linked.profile.refresh();
+  // a released guest (its name is somebody else's now): the name faded, the one sentence, the way to choose another
+  const rel = make({ alias: 'takeshi', session: true, prof: guestProf({ released: true }) }); await rel.profile.refresh();
+  assert.equal(rel.$('profile-row').dataset.state, 'released');
+  assert(rel.find(rel.$('profile-name'), k => k.className?.includes?.('released')) && rel.$('profile-kind').hidden, 'faded, no «Convidat» chip');
+  assert.equal(rel.$('profile-sub').textContent, 'Has estat un temps sense jugar i el teu nom ara és d’una altra persona. Tria’n un altre.');
+  assert.equal(rel.buttons().join(), 'rename:Tria un altre nom,delete:Esborra el perfil');
+  const linked = make({ alias: 'takeshi', session: true, email: 'jugador@example.com', prof: guestProf({ verified: true }) }); await linked.profile.refresh();
   assert.equal(linked.buttons().join(), 'signout:Tanca la sessió,delete:Esborra el perfil', 'signing out only with an e-mail on it');
   assert.equal(linked.$('profile-sub').textContent, `${VERIFIED}: j***@example.com.`, 'the address masked, never in full');
-  assert(linked.badge()?.attrs['aria-label'] === VERIFIED && linked.tagOf() === null, 'a clean name and the check');
+  assert(linked.badge()?.attrs['aria-label'] === VERIFIED && linked.$('profile-name').textContent === 'takeshi', 'the check, nothing else');
   const off = make({ alias: 'takeshi', session: true, publishingEnabled: false, prof: guestProf() }); await off.profile.refresh();
   assert.equal(off.buttons().join(), 'delete:Esborra el perfil', 'publishing off: nothing to link, deleting stays');
   const gone = make({ configured: false }); await gone.profile.refresh(); assert(gone.$('profile-row').hidden, 'offline game: no block');
@@ -95,8 +93,8 @@ const guestProf = o => ({ alias: 'takeshi', tag: 3821, verified: false, publishe
   const old = make({ alias: 'takeshi', session: true, email: 'jugador@example.com' }); await old.profile.refresh();
   assert(old.badge() && old.$('profile-row').dataset.state === 'linked');
 }
-{ // the row is gone (deleted elsewhere, or a guest 12 months away): this browser leaves the useless session; the name stays until forgotten
-  const s = make({ alias: 'takeshi', tag: 3821, session: true, prof: null });
+{ // the row is gone (deleted elsewhere): this browser leaves the useless session; the name stays until forgotten
+  const s = make({ alias: 'takeshi', session: true, prof: null });
   s.mem.set('record-v2-duet-1', '{"quality":90}');
   await s.profile.refresh(); await tick();
   assert.deepEqual(s.calls, [['signout']], 'the old session goes');
@@ -110,7 +108,7 @@ const guestProf = o => ({ alias: 'takeshi', tag: 3821, verified: false, publishe
   s.profile.open('create'); assert(s.$('profile-title').textContent === 'Crea el perfil' && s.$('profile-send').textContent === 'Crea el perfil' && s.focused.at(-1) === 'profile-alias');
   assert(!s.$('profile-alias-field').hidden && s.$('profile-mail-field').hidden && s.$('profile-code-field').hidden && s.$('profile-note').hidden);
   assert(!s.$('profile-stats-note').hidden, 'creating a profile tells what it keeps of the statistics');
-  assert(/#1234/.test(s.$('profile-lead').textContent), 'the four digits are said before');
+  assert(!/#/.test(s.$('profile-lead').textContent), 'no «#» to explain');
   enter(s.$, 'profile-alias', 'a b c'); s.$('profile-form').fire('submit'); await tick();
   assert(/espais/.test(s.$('profile-status').textContent) && s.calls.length === 0, 'a bad nickname: said why, nothing sent');
   s.T.fail = Object.assign(new Error('Aquest sobrenom ja és d’algú. Prova’n un altre.'), { code: 'taken' });
@@ -120,17 +118,17 @@ const guestProf = o => ({ alias: 'takeshi', tag: 3821, verified: false, publishe
   assert(s.$('profile-send').disabled && s.$('profile-send').first?.className === 'btn-spin', 'working: the ring in the button');
   await tick(); await tick(); await tick(); assert(!s.$('profile-send').first, 'done: no ring');
   assert.deepEqual(s.calls.at(-1), ['create', 'takeshi', { captchaToken: 'tok' }]);
-  assert(s.mem.get('alias') === 'takeshi' && s.mem.get(TAG) === '3821', 'the name, and the tag the server gave it');
+  assert(s.mem.get('alias') === 'takeshi', 'the name');
   assert.equal(s.T.accepted, 1, 'the statistics may be sent now (the notice was on this step)');
   assert.equal(s.$('profile-status').textContent, 'Perfil creat!');
   await tick(); await tick();
-  assert.equal(s.buttons().join(), 'link:Confirma el correu,delete:Esborra el perfil'); assert.equal(s.$('profile-name').textContent, 'takeshi#3821');
+  assert.equal(s.buttons().join(), 'link:Confirma el correu,delete:Esborra el perfil'); assert.equal(s.$('profile-name').textContent, 'takeshi');
   s.$('profile-menu').close();
 }
-{ // confirm an e-mail: mail → code → «Tria el teu nom» (empty); a taken name, another try; closing keeps «nom#1234»
-  const s = make({ alias: 'takeshi', tag: 3821, session: true, captchaRequired: true, prof: guestProf() }); await s.profile.refresh();
+{ // confirm an e-mail: mail → code; the tick, the same name; an address typed elsewhere; a code the server does not confirm
+  const s = make({ alias: 'takeshi', session: true, captchaRequired: true, prof: guestProf() }); await s.profile.refresh();
   s.profile.open('link'); assert(s.$('profile-menu').open && s.$('profile-title').textContent === 'Confirma el correu' && s.focused.at(-1) === 'profile-email');
-  assert(/no es perd/.test(s.$('profile-lead').textContent) && /sense el #/.test(s.$('profile-lead').textContent) && !/caduc|7 dies|torneig/.test(s.$('profile-lead').textContent), 'what confirming does: keeps it, a clean name');
+  assert(/no es perd/.test(s.$('profile-lead').textContent) && !/#|caduc|7 dies|torneig/.test(s.$('profile-lead').textContent), 'what confirming does: keeps it, no «#» talk');
   enter(s.$, 'profile-email', 'jugador@example.com'); s.$('profile-form').fire('submit'); await tick(); await tick();
   assert.deepEqual(s.calls[0], ['send', 'jugador@example.com', { captchaToken: 'tok' }]);
   assert(!s.$('profile-code-field').hidden && s.$('profile-mail-field').hidden && /jugador@example\.com/.test(s.$('profile-lead').textContent) && s.focused.at(-1) === 'profile-code');
@@ -139,40 +137,36 @@ const guestProf = o => ({ alias: 'takeshi', tag: 3821, verified: false, publishe
   s.$('profile-form').fire('submit'); await tick(); await tick(); await tick();
   assert.deepEqual(s.calls[1], ['verify', 'jugador@example.com', '123456', 'email_change']);
   assert.equal(s.$('profile-status').textContent, 'Correu confirmat!');
-  assert(s.profile.choosing && s.$('profile-title').textContent === 'Tria el teu nom' && s.$('profile-alias').value === '' && !s.$('profile-alias-field').hidden, 'right after the code: an empty name field');
-  assert(s.$('profile-alias-label').textContent === 'Nom' && s.$('profile-send').textContent === 'Desa el nom' && s.focused.at(-1) === 'profile-alias');
-  enter(s.$, 'profile-alias', 'x'); s.$('profile-form').fire('submit'); await tick();
-  assert(s.calls.length === 2 && s.$('profile-status').textContent, 'the name rules first, nothing sent');
-  s.T.fail = Object.assign(new Error('Aquest nom ja és d’algú. Prova’n un altre.'), { code: 'name_taken' });
-  enter(s.$, 'profile-alias', 'Timbaler'); s.$('profile-form').fire('submit'); await tick(); await tick();
-  assert(s.$('profile-status').textContent === 'Aquest nom ja és d’algú. Prova’n un altre.' && s.profile.choosing && !s.$('profile-send').disabled, 'taken: the Catalan error, another try');
-  s.T.fail = null; enter(s.$, 'profile-alias', 'Takeshi'); s.$('profile-form').fire('submit'); await tick(); await tick(); await tick();
-  assert.deepEqual(s.calls.at(-1), ['choose', 'Takeshi']);
-  assert(s.mem.get('alias') === 'Takeshi' && !s.mem.has(TAG), 'a clean name: no tag kept');
-  assert.equal(s.$('profile-status').textContent, 'Nom desat!');
+  assert(!s.profile.renaming && s.$('profile-alias-field').hidden, 'the tick is all: no «Tria el teu nom» step any more');
   await tick(); await tick();
-  assert(s.badge() && s.$('profile-name').textContent === 'Takeshi' && s.buttons()[0] === 'signout:Tanca la sessió', 'the block: the clean name and the check');
+  assert(s.badge() && s.$('profile-name').textContent === 'takeshi' && s.buttons()[0] === 'signout:Tanca la sessió', 'the block: the same name and the check');
   s.$('profile-menu').close();
-  // closing «Tria el teu nom» keeps «nom#1234»; the block asks again, and its button opens the same step
-  const c = make({ alias: 'takeshi', tag: 3821, session: true, prof: guestProf() }); await c.profile.refresh();
-  c.profile.open('link'); enter(c.$, 'profile-email', 'jugador@example.com'); c.$('profile-form').fire('submit'); await tick(); await tick();
-  c.T.email = 'jugador@example.com'; c.T.prof = guestProf({ verified: true });
-  enter(c.$, 'profile-code', '123456'); c.$('profile-form').fire('submit'); await tick(); await tick(); await tick();
-  assert(c.profile.choosing); c.$('profile-cancel').click(); await tick(); await tick();
-  assert(c.mem.get('alias') === 'takeshi' && c.mem.get(TAG) === '3821' && c.$('profile-row').dataset.state === 'named', 'closed: still takeshi#3821');
-  c.profile.open('choose'); assert(c.profile.choosing && c.$('profile-title').textContent === 'Tria el teu nom');
-  c.$('profile-menu').close();
   // an address typed on the publish sheet's offer: the steps open already sending it the code
-  { const t = make({ alias: 'takeshi', tag: 3821, session: true, prof: guestProf() }); await t.profile.refresh();
+  { const t = make({ alias: 'takeshi', session: true, prof: guestProf() }); await t.profile.refresh();
     t.profile.open('link', null, { mail: ' Jugador@Example.com ' }); await tick(); await tick();
     assert(t.calls.some(c => c[0] === 'send' && c[1] === 'Jugador@Example.com') && !t.$('profile-code-field').hidden, 'typed elsewhere: straight to the code');
     t.$('profile-menu').close(); }
-  // a code accepted but the server not (yet) confirming it: no claim, no step
+  // a code accepted but the server not (yet) confirming it: no claim
   const n = make({ alias: 'takeshi', session: true, prof: guestProf() }); await n.profile.refresh();
   n.profile.open('link'); enter(n.$, 'profile-email', 'jugador@example.com'); n.$('profile-form').fire('submit'); await tick(); await tick();
   enter(n.$, 'profile-code', '123456'); n.$('profile-form').fire('submit'); await tick(); await tick(); await tick();
-  assert(n.$('profile-status').textContent === 'Codi comprovat.' && !n.profile.choosing, 'not «Correu confirmat!» without the server');
+  assert(n.$('profile-status').textContent === 'Codi comprovat.', 'not «Correu confirmat!» without the server');
   n.$('profile-menu').close();
+}
+{ // a released guest chooses another name: the existing name sheet with the one sentence, update_alias (createProfile), no captcha, no statistics notice
+  const s = make({ alias: 'takeshi', session: true, captchaRequired: true, prof: guestProf({ released: true }) }); await s.profile.refresh();
+  s.profile.open('rename'); assert(s.profile.renaming && s.$('profile-title').textContent === 'Tria un altre nom' && s.focused.at(-1) === 'profile-alias');
+  assert.equal(s.$('profile-lead').textContent, 'Has estat un temps sense jugar i el teu nom ara és d’una altra persona. Tria’n un altre.');
+  assert(s.$('profile-alias').value === '' && !s.$('profile-alias-field').hidden && s.$('profile-stats-note').hidden && s.$('profile-send').textContent === 'Desa el nom', 'an empty field; no new profile, no notice');
+  s.T.fail = Object.assign(new Error('Aquest sobrenom ja és d’algú. Prova’n un altre.'), { code: 'taken' });
+  enter(s.$, 'profile-alias', 'Timbaler'); s.$('profile-form').fire('submit'); await tick(); await tick();
+  assert(/ja és d’algú/.test(s.$('profile-status').textContent) && s.profile.renaming && !s.$('profile-send').disabled && s.calls.at(-1)[2].captchaToken === undefined, 'taken: the usual error, another try, no captcha');
+  s.T.fail = null; enter(s.$, 'profile-alias', 'Takeshi'); s.$('profile-form').fire('submit'); await tick(); await tick(); await tick();
+  assert.deepEqual(s.calls.at(-1).slice(0, 2), ['create', 'Takeshi']); assert.equal(s.T.accepted, 0, 'a rename is no new profile');
+  assert.equal(s.mem.get('alias'), 'Takeshi'); assert.equal(s.$('profile-status').textContent, 'Nom desat!');
+  await tick(); await tick();
+  assert.equal(s.$('profile-row').dataset.state, 'guest', 'the server freed the profile: a plain guest again'); assert.equal(s.$('profile-name').textContent, 'Takeshi');
+  s.$('profile-menu').close();
 }
 { // recover: the nickname comes back; a wrong code stays on the code step
   const s = make(); await s.profile.refresh(); let backs = 0;
@@ -212,15 +206,15 @@ const guestProf = o => ({ alias: 'takeshi', tag: 3821, verified: false, publishe
   s.$('profile-menu').close();
 }
 { // an address that already confirmed another profile: the code switches to that one, said before, nothing merged
-  const s = make({ alias: 'takeshi', tag: 3821, session: true, prof: guestProf() }); await s.profile.refresh();
+  const s = make({ alias: 'takeshi', session: true, prof: guestProf() }); await s.profile.refresh();
   s.T.sendType = 'email'; s.profile.open('link');
   enter(s.$, 'profile-email', 'altre@example.com'); s.$('profile-form').fire('submit'); await tick(); await tick();
   assert.equal(s.$('profile-lead').textContent, 'Aquest correu ja és d’un altre perfil. Amb el codi que t’hem enviat a altre@example.com entraràs en aquell perfil: takeshi i els seus resultats no s’hi afegeixen.');
-  s.T.prof = guestProf({ alias: 'Castellera777', tag: null, verified: true }); s.T.email = 'altre@example.com';
+  s.T.prof = guestProf({ alias: 'Castellera777', verified: true }); s.T.email = 'altre@example.com';
   enter(s.$, 'profile-code', '123456'); s.$('profile-form').fire('submit'); await tick(); await tick();
   assert.deepEqual(s.calls.at(-1), ['verify', 'altre@example.com', '123456', 'email']);
   assert.equal(s.$('profile-status').textContent, 'Ara fas servir aquell perfil.');
-  assert(s.mem.get('alias') === 'Castellera777' && !s.mem.has(TAG), 'that profile’s name (and no tag) on this browser now');
+  assert(s.mem.get('alias') === 'Castellera777', 'that profile’s name on this browser now');
   s.$('profile-menu').close();
   // recovering says it needs the confirmed address
   const r = make(); await r.profile.refresh(); r.profile.open('recover');

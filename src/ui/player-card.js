@@ -1,12 +1,12 @@
 // A player's public card (#card-menu, decision 18; the owner's «Fitxa breu»): opened by tapping a name on a board or a podium.
-// The name with its check or «Convidat», the row it was tapped on (when the opener passes it), then the public statistics
+// The name with its check (or, for a released profile, a short note that the name is somebody else's now), the row it was tapped on (when the opener passes it), then the public statistics
 // (src/ui/stats-view.js: four facts, the podiums as achievements, «Més estadístiques» unfolding the rest; never days,
 // streaks, errors per kind or dates) and a quiet line saying where the numbers come from. Loading, «no data» and errors
 // sit inside the sheet's fixed box.
 import { byId, num, posDisc } from './sheet-kit.js';
 import { tr } from '../i18n/messages.js';
 import { mulaSpinner } from './loader.js';
-import { appendName, GUEST } from './profile-notes.js';
+import { appendName, playerOf } from './profile-notes.js';
 import { statsData, renderStats, icon, FIGURE_NAMES } from './stats-view.js';
 import { figureSeasons, boardName } from './seasons-ui.js';
 import { pixelSvg } from './select-strip.js';
@@ -15,7 +15,7 @@ import { DIFFS } from '../game/chart.js';
 import { figureOfVersion } from '../figures/index.js';
 
 export function setupCard({ focusIn, service, doc = document, now = () => Date.now(), minLoad = 600 }) {
-  const $ = byId(doc), menu = $('card-menu'), head = $('card-name'), kind = $('card-kind'), from = $('card-from'), box = $('card-stats'), status = $('card-status');
+  const $ = byId(doc), menu = $('card-menu'), head = $('card-name'), note = $('card-note'), from = $('card-from'), box = $('card-stats'), status = $('card-status');
   const retry = $('card-retry');
   let req = 0, back = null, who = null;
   function say(text, { spin = false, again = false, empty = false } = {}) {
@@ -40,7 +40,7 @@ export function setupCard({ focusIn, service, doc = document, now = () => Date.n
     const shown = minLoad > 0 ? new Promise(res => setTimeout(res, minLoad)) : null;
     let card, podiums = [];
     try {
-      card = await service.playerCard(who.alias, who.tag ?? null);
+      card = await service.playerCard(who.publicId);
       if (card?.podiums.length) podiums = await podiumLines(card.podiums);
     } catch (e) {
       await shown; if (r !== req || !menu.open) return;
@@ -57,8 +57,7 @@ export function setupCard({ focusIn, service, doc = document, now = () => Date.n
   function paintName(p) {
     head.replaceChildren();
     appendName(doc, head, p);
-    const guest = Number.isInteger(p.tag);
-    kind.hidden = !guest; kind.textContent = guest ? GUEST : '';
+    note.hidden = p.released !== true;
   }
   // the board row it came from: the figure, the season, the place, the points and the level (information: flat, a strip)
   function paintFrom(f) {
@@ -78,11 +77,11 @@ export function setupCard({ focusIn, service, doc = document, now = () => Date.n
   $('card-close').addEventListener('click', () => menu.close());
   menu.addEventListener('close', () => { req++; const b = back; back = null; b?.(); });
   return {
-    // p: { alias (without the tag), tag (null: a clean name), verified, from? }. from: the row tapped, as the board has it
+    // p: { alias, verified, released, publicId (the card's key: no id, no card), from? }. from: the row tapped, as the board has it
     // ({ figure, season (its name), position, score, difficulty }); no from (a podium, a link): no row.
     open(p, onBack = null) {
-      if (!service.configured || !p?.alias) return;
-      who = { alias: String(p.alias), tag: Number.isInteger(p.tag) ? p.tag : null, verified: p.verified === true };
+      if (!service.configured || !p?.alias || !p.publicId) return;
+      who = playerOf(p);
       back = onBack;
       paintName(who);
       paintFrom(Number.isInteger(Number(p.from?.position)) && p.from.position > 0 ? p.from : null);

@@ -7,15 +7,18 @@ el desplegament ni cap altre llegeix secrets, es connecta a la base de dades rem
 Decisions i disseny: [`docs/rankings/strategy.md`](strategy.md) (secció 8, migració). Còpies:
 [`docs/ops/db-backup.md`](../ops/db-backup.md).
 
-Què es desplega: les cinc migracions noves i el client que les fa servir.
+Què es desplega: les set migracions noves i el client que les fa servir. Beta ja té les sis primeres; només hi
+falta `202610280002`.
 
 | Fitxer | Què fa |
 | --- | --- |
-| `202610200001_guests.sql` | `tag` als convidats (nom#1234), índexs únics parcials, `verified`, `my_profile`, "Tria el teu nom". |
+| `202610200001_guests.sql` | `tag` als convidats, `verified`, `my_profile`. Conserva l'índex de nom únic (`profiles_alias_key`) fins a `202610280002`. |
 | `202610200002_seasons.sql` | `seasons` (0 "Estrena 2026", 1 "Tardor 2026"), `season_id` a `entries`, `mulassa-v3` i `drac-v1`, RPC per temporada. |
 | `202610200003_player_stats.sql` | `player_devices`, `player_stats`, `player_days`, `merge_stats`, `my_stats`. |
-| `202610200004_history_retention.sql` | `get_seasons`, `get_player_card`, `purge_inactive_guests` (sense programar). |
+| `202610200004_history_retention.sql` | `get_seasons`, `get_player_card`. |
 | `202610210001_level_podium.sql` | `get_level_podium`: els tres millors d'un sol nivell (el podi del pas 2 del selector). |
+| `202610280001_estrena_start.sql` | "Estrena 2026" comença el 15 d'octubre. |
+| `202610280002_reusable_guest_names.sql` | Fora el `tag`: un nom per perfil actiu. Un convidat 30 dies inactiu perd el nom si algú el demana (`released_at`), sense perdre res més. Fitxa per `public_id`. Fora la neteja d'inactius. A beta, els noms repetits es queden amb un sol titular. |
 
 ## 0. Assaig local (fet, es pot repetir)
 
@@ -26,18 +29,20 @@ hi posa dades sintètiques semblants a les de producció i després aplica les n
 el contenidor que crea (`mulassa-rehearsal-<data>`) i l'esborra en acabar (`--keep` el deixa per inspeccionar-lo).
 No necessita cap credencial.
 
-Resultat del 2026-10-21 (33 de 33 comprovacions):
+Resultat del 2026-10-28 (39 de 39 comprovacions):
 
 - Dades: 529 usuaris d'Auth, 467 perfils (16 seeds), 1.045 resultats de `mulassa-v1` i `mulassa-v2-short`.
   Abans i després, els mateixos recomptes i les mateixes sumes MD5 de `entries` i `profiles`.
 - Totes les files existents van a la temporada 0. La v1 i la v2 queden retirades cap a la 0. La v3 i el Drac, actius.
-- 436 convidats amb `tag`, cap sense; 31 verificats amb el nom net.
-- El client antic: `get_leaderboard_all` amb 4 paràmetres per nom torna la mateixa classificació (només hi afegeix
-  el `#1234`), `submit_result` de 8 paràmetres publica a la 0, `my_alias` torna el nom sense `#`, `update_alias`
-  conserva el `tag`. També funciona després de cada migració per separat (vegeu el pas 4).
+- Cap perfil alliberat i un `public_id` per perfil (467). Cap nom porta `#`.
+- El client antic: `get_leaderboard_all` amb 4 paràmetres per nom torna exactament la mateixa classificació,
+  `submit_result` de 8 paràmetres publica a la 0 i, amb un nom desat vell, no reanomena res. `my_alias` torna el
+  nom. També funciona després de cada migració per separat (vegeu el pas 4).
 - Concurrència amb connexions separades: vuit `submit_result` alhora del mateix perfil (en passa una, set
-  `leaderboard_rate_limit`), 24 perfils publicant alhora al mateix tauler, vuit convidats nous amb el mateix nom (vuit
-  `tag` diferents), tres verificats demanant el mateix nom net (un el té), `merge_stats` paral·leles del mateix perfil i
+  `leaderboard_rate_limit`), 24 perfils publicant alhora al mateix tauler, vuit convidats nous amb el mateix nom (un el té),
+  sis jugadors demanant el nom d'un convidat inactiu (un el té; l'antic titular conserva els resultats), A demanant
+  el nom de B mentre B demana el d'A (cap bloqueig mutu), el titular inactiu publicant mentre algú li demana el nom
+  (només un dels dos el té), tres verificats demanant el mateix nom net (un el té), `merge_stats` paral·leles del mateix perfil i
   dispositiu (una per ronda, sense pèrdues ni valors que baixin), el límit de 8 dispositius, `merge_stats` contra
   l'esborrat del compte en tots dos ordres, i dotze `ensure_season` al límit del 31/12 al 1/1 (una sola "Hivern 2027").
   Cap bloqueig mutu.
@@ -45,8 +50,8 @@ Resultat del 2026-10-21 (33 de 33 comprovacions):
   executar `get_leaderboard_all`, `get_level_podium`, `get_seasons` i `get_player_card`. `authenticated` hi afegeix les seves pròpies RPC,
   i cap funció privada. Ningú no llegeix les taules privades. Un jugador no pot enviar estadístiques a un altre perfil
   (`leaderboard_owner_mismatch`). La fitxa pública i el Saló de la fama no porten ids, dies ni adreces.
-- La neteja de convidats inactius: el recompte de `supabase/ops/guest-retention-cron.sql` coincideix amb el que
-  esborraria (dins una transacció desfeta) i no toca cap verificat.
+- Ja no hi ha neteja de convidats inactius: ni `purge_inactive_guests` ni `leaderboard_expired_players`, i els
+  comptes de fa 13 mesos hi continuen.
 
 Defecte trobat i corregit a l'assaig: `ensure_season` agafava un bloqueig global a cada crida, i el bloqueig dura
 tota la transacció. Una lectura oberta de la classificació (també d'`anon`) feia esperar totes les publicacions i
@@ -115,7 +120,7 @@ Sense producció, a la branca que es fusionarà:
 
 - `npm run check` en verd, i `node supabase/tests/rehearsal.mjs` en verd. L'assaig també executa els dos blocs SQL
   d'aquest document (passos 2 i 5) tal com són, abans i després de les migracions.
-- `git diff main -- supabase/migrations/` només hi afegeix els cinc fitxers nous. Les migracions dels 7 dies
+- `git diff main -- supabase/migrations/` només hi afegeix els set fitxers nous. Les migracions dels 7 dies
   (`202610180001`, `202610190001`) no hi són (decisió 32).
 - `shasum public/music/*` igual que a `main`, si el canvi no és de música.
 - Una prova manual del client nou i del de `main` contra un Supabase local, amb `?mute` (la secció 8, pas 2, de
@@ -152,10 +157,11 @@ union all select 'entries_by_season', string_agg(season_id || '=' || n, ',' orde
   from (select season_id, count(*) n from leaderboard_private.entries group by 1) t
 union all (select 'versions/' || version, string_agg(difficulty || ':' || figure_id || ':' || active || ':' ||
   coalesce(retired_season_id::text, 'open'), ',' order by difficulty) from leaderboard_private.versions group by version order by 1)
-union all select 'guests_without_tag', count(*)::text from leaderboard_private.profiles
-  where tag is null and not leaderboard_private.verified(user_id)
-union all select 'verified_with_tag', count(*)::text from leaderboard_private.profiles
-  where tag is not null and leaderboard_private.verified(user_id)
+union all select 'active_name_duplicates', count(*)::text from (select leaderboard_private.alias_key(alias)
+  from leaderboard_private.profiles where released_at is null group by 1 having count(*) > 1) d
+union all select 'profiles_released', count(*)::text from leaderboard_private.profiles where released_at is not null
+union all select 'profiles_tag_column', count(*)::text from information_schema.columns
+  where table_schema = 'leaderboard_private' and table_name = 'profiles' and column_name = 'tag'
 union all select 'entries_after_T0', count(*)::text from leaderboard_private.entries where achieved_at > '<T0>'
 union all select 'entries_unique_constraint', string_agg(conname, ',')
   from pg_constraint where conrelid = 'leaderboard_private.entries'::regclass and contype = 'u'
@@ -173,14 +179,14 @@ Què ha de sortir:
   (el SQL Editor escriu en UTC: són les 00:00 del 15 d'octubre i de l'1 de gener a Catalunya).
 - `entries_by_season`: tot a la `0`, amb el mateix nombre que `entries` al pas 2 més les publicacions noves.
 - `versions/mulassa-v1` i `versions/mulassa-v2-short` retirades cap a la `0`; `mulassa-v3` i `drac-v1` `open`.
-- `guests_without_tag` = 0 i `verified_with_tag` = 0.
+- `active_name_duplicates` = 0, `profiles_released` = 0 (cap convidat ha perdut el nom encara) i `profiles_tag_column` = 0.
 - `entries_unique_constraint` = `entries_user_season_version_difficulty_key`, sola.
 - `functions_without_search_path` = 0. `anon_functions` = `get_leaderboard_all,get_level_podium,get_player_card,get_seasons`.
 - Els recomptes d'`auth_users`, `profiles` i `profiles_seed` com al pas 2, o més. Si `entries_after_T0` és 0, també
   la mateixa `entries_md5`. Si és més de 0, la suma canvia per les publicacions noves i no és cap error.
 
 Verificació al joc (sense escriure): la classificació de la Mulassa i la del Drac s'obren buides a "Tardor 2026", el
-Saló de la fama mostra "Estrena 2026" amb el podi d'abans, i els noms dels convidats porten el `#1234`.
+Saló de la fama mostra "Estrena 2026" amb el podi d'abans, i cap nom porta `#`.
 
 **[prod] Opcional**: una publicació amb un perfil sintètic per comprovar la v3 i el Drac, esborrat després amb
 "Esborra el perfil". És una escriptura a producció i necessita la confirmació del propietari.
@@ -213,15 +219,9 @@ d'inici d'iOS). Lectura amb el CLI i el token de només lectura, com diu AGENTS.
 
 ## 8. El que queda manual
 
-- **La neteja de convidats inactius**. S'ha decidit que sigui només manual: cap migració instal·la `pg_cron` ni
-  programa res. Com que producció va començar el setembre de 2026, fins al setembre de 2027 no hi pot haver cap
-  candidat. Quan toqui:
-  1. **[prod]** El recompte en lectura, el pas 1 de `supabase/ops/guest-retention-cron.sql`, dins
-     `begin read only; ... rollback;`.
-  2. **[prod]** Si el propietari ho aprova després de veure el recompte: `select leaderboard_private.purge_inactive_guests(500);`
-     com a `postgres`. Esborra els comptes d'Auth i, en cascada, els perfils, resultats i estadístiques. No es pot
-     desfer sense la còpia.
-  3. Activar-la amb `pg_cron` (els passos 2 i 3 del mateix fitxer) és una decisió a part, que ara no es pren.
+- **Convidats inactius**: res. No s'esborra cap perfil per inactivitat. Un convidat que passa 30 dies sense jugar
+  conserva el compte i els resultats; només perd el nom si algú altre el demana (`write_alias`, en el moment). No hi
+  ha cap tasca programada.
 - **Cada trimestre**: res. `ensure_season` crea la temporada amb la primera publicació o lectura del trimestre.
 - **Un ball nou a mig trimestre**: una migració nova que retiri la versió vella (`retired_at`, `retired_season_id`),
   amb el seu propi assaig.

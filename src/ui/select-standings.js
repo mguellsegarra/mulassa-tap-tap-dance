@@ -8,7 +8,7 @@ import { DIFFS } from '../game/chart.js';
 import { starsFor } from '../game/progress.js';
 import { num, trSplit, posDisc } from './sheet-kit.js';
 import { tr } from '../i18n/messages.js';
-import { appendName } from './profile-notes.js';
+import { appendName, playerOf } from './profile-notes.js';
 import { starIcons } from './level-stats.js';
 import { calendarSeason } from './seasons-ui.js';
 
@@ -59,7 +59,7 @@ export function setupStandings({ doc, win = globalThis, $, onBoard, onCard = nul
     const li = el('li', r.is_self ? 'me' : '');
     li.appendChild(Number(r.position) <= 3 ? posDisc(doc, Number(r.position)) : el('span', 'n', num(Number(r.position)))); // 1-2-3 as the board's medals
     const who = li.appendChild(el('span', 'who'));
-    const p = { alias: r.alias, tag: r.tag ?? null, verified: r.verified === true }; // a guest's «nom#1234»; aliases are text, never HTML
+    const p = playerOf(r); // aliases are text, never HTML
     // the season when the name is opened: a date formatter per row of every fitting try cost ~90 ms a figure change
     const from = () => ({ season: calendarSeason().name, position: Number(r.position), score: r.score, difficulty: r.difficulty });
     appendName(doc, who, p, blank || !onCard ? null : q => onCard({ ...q, from: from() })); // a name opens the player's card, as on the board
@@ -117,7 +117,7 @@ export function setupStandings({ doc, win = globalThis, $, onBoard, onCard = nul
     msg.textContent = tr(state === 'error' ? 'ui.standings.loadFailed' : 'ui.standings.noResults');
     body.dataset.state = state === 'loading' ? 'loading' : 'ready';
   }
-  // phones' narrow card: a name too long even without its «#1234» (select-sizes.css) steps down to 12 px before its «…»
+  // phones' narrow card: a name too long for its line (select-sizes.css) steps down to 12 px before its «…»
   const shrinkNames = () => { for (const a of list.querySelectorAll('.alias')) for (let px = 13; px >= 12 && a.scrollWidth > a.clientWidth; px--) a.style.fontSize = `${px}px`; };
   function fit(least = false) { // what fits without scrolling the info block (only while laid out: desktops). least: the
     const scrolls = () => info.scrollHeight > info.clientHeight + 1; // header alone, so step 2's level row is fitted beside it first

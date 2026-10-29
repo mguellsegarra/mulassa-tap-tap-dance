@@ -1,6 +1,6 @@
 // How a player's name is shown, and what a guest profile is told (docs/rankings/strategy.md §6). A confirmed address earns
-// the check (it means only that) and a clean name; a guest («Convidat», no confirmed address) keeps the name it chose plus
-// four digits («Timbaler#3821»), drawn quieter and without the check. Guests don't expire: they live in this browser.
+// the check (it means only that); a guest («Convidat», no confirmed address) shows the same plain name without it. A guest
+// idle for 30 days can lose the name to somebody else: its rows are then faded («released»), with their results kept.
 import { tr } from '../i18n/messages.js';
 export const VERIFIED = tr('ui.profile.verified');
 export const GUEST = tr('ui.profile.guest');
@@ -17,16 +17,16 @@ export function checkBadge(doc) {
   b.innerHTML = CHECK_SVG;
   return b;
 }
-// A player's name into `into` (a .who row): the name, its «#1234» for a guest (index.html .guest: quieter), the check for a
-// confirmed address. `p`: { alias (never with the tag), tag (null: a clean name), verified }. With `onOpen` the name is a
-// button that opens the public card (src/ui/player-card.js); the check stays its own button beside it.
+// A board, podium or hall item as the name helpers take it: public_id (the card's key) as publicId, released as a flag
+export const playerOf = r => ({ alias: String(r.alias ?? ''), verified: r.verified === true, released: r.released === true, publicId: r.publicId ?? r.public_id ?? null });
+// A player's name into `into` (a .who row): the name, faded when its profile was released (its name is somebody else's now), the
+// check for a confirmed address. `p`: { alias, verified, released, publicId }. With `onOpen` the name is a button that opens the
+// public card (src/ui/player-card.js); the check stays its own button beside it.
 export function appendName(doc, into, p, onOpen = null) {
-  const guest = Number.isInteger(p.tag);
   const name = doc.createElement(onOpen ? 'button' : 'span');
-  name.className = `player-name${guest ? ' guest' : ''}`;
+  name.className = `player-name${p.released === true ? ' released' : ''}`;
   const alias = doc.createElement('span'); alias.className = 'alias'; alias.textContent = String(p.alias ?? ''); // text, never HTML
   name.appendChild(alias);
-  if (guest) { const t = doc.createElement('span'); t.className = 'tag'; t.textContent = `#${String(p.tag).padStart(4, '0')}`; name.appendChild(t); }
   if (onOpen) {
     name.type = 'button';
     name.setAttribute('aria-haspopup', 'dialog');

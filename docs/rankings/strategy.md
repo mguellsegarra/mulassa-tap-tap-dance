@@ -127,7 +127,7 @@ s'ha verificat, així que abans d'una migració cal una còpia manual.
 | 8 | Nom | El perfil sense correu confirmat es diu "Convidat". |
 | 9 | Drac | Classificació pròpia a la mateixa actualització. Mulassa i Drac no es barregen mai. |
 | 10 | Tick | El perfil amb correu confirmat porta el tick a tot arreu on surt el sobrenom. |
-| 11 | Convidats | Es veuen menys (nom#1234, apagat, sense tick) però conserven la posició. |
+| 11 | Convidats | Sense tick, amb la posició que toca. Substituïda en part per la 36: no porten `#1234`. |
 | 12 | Llançament | Abans de mitjan novembre de 2026. |
 | 13 | Nivells | Una sola classificació per figura que barreja els tres nivells per punts, com ara. |
 | 14 | Sense perfil | Estadístiques només locals. Quan crea un perfil o publica, el dispositiu hi envia els totals acumulats. Cap compte automàtic. |
@@ -142,9 +142,9 @@ s'ha verificat, així que abans d'una migració cal una còpia manual.
 | 23 | Nom dels convidats | Estil Discord: el nom que trien i 4 xifres a l'atzar ("Timbaler#3821"). El nom net queda per als verificats (vegeu la 33). |
 | 24 | Convidats que ja existeixen | Se'ls afegeix el #. A producció no tenen cap data de caducitat. Si confirmen el correu, trien un nom nou. |
 | 25 | Dies jugats | Al servidor, amb les dates (només el dia), privats: només al Perfil propi. |
-| 26 | Retenció | Els convidats inactius 12 mesos (sense jugar ni publicar) s'esborren automàticament. Els verificats, mai. |
+| 26 | Retenció | Substituïda per la 37: no s'esborra cap perfil per inactivitat. |
 | 27 | Temps importat | El primer enviament importa tal qual el temps jugat sense perfil, amb la regla de coherència (temps ≤ partides × durada de la cançó). Sense límit d'hores. |
-| 28 | Convidats a les llistes | Només `nom#1234`, apagat i sense tick. La paraula "convidat" surt al Perfil, a la fitxa i en tocar el nom. |
+| 28 | Convidats a les llistes | Substituïda per la 36: el nom sol, sense `#`. Només els perfils alliberats surten apagats. |
 | 29 | Ball anterior | La classificació del ball vell dins una temporada es diu "Mulassa (ball anterior)". |
 | 30 | Partides sense perfil | Sempre van al proper perfil que es creï o s'obri en aquell dispositiu, no només al primer. |
 | 31 | Perfil esborrat | Les seves estadístiques s'esborren també del dispositiu. Un perfil nou comença de zero. |
@@ -152,6 +152,9 @@ s'ha verificat, així que abans d'una migració cal una còpia manual.
 | 33 | Nom en verificar | Just després de posar el codi del correu surt "Tria el teu nom", buit: un nom net i lliure. És el mateix perfil, amb els seus resultats. Si es tanca sense triar, continua amb el `#` i el Perfil ho torna a demanar. No hi ha "Treu el #". |
 | 34 | Noms de les temporades | Hivern, Primavera, Estiu i Tardor, amb l'any. Substitueix la 16 anterior. |
 | 35 | Temporada 0 | Es diu "Estrena 2026" a la interfície. És el que hi ha avui a producció: només la Mulassa, amb el ball d'ara. |
+| 36 | Noms sense `#` | Cada nom és d'un sol perfil actiu, com abans dels convidats. Ningú no porta `#1234`. Confirmar el correu només dona el tick: "Tria el teu nom" desapareix (substitueix la 33). |
+| 37 | Noms abandonats | El perfil d'un convidat només viu al navegador i molts s'abandonen. Si un convidat passa 30 dies sense jugar, qui demani el seu nom se'l queda; el convidat queda "alliberat": conserva el compte, els resultats i el text del nom, i surt apagat a les llistes. Un verificat o un convidat actiu no perd mai el nom. No s'esborra cap perfil per inactivitat (substitueix la 26). |
+| 38 | Fitxa per identificador | Una fila, un podi o el Saló obren la fitxa pel `public_id` del perfil, mai pel nom: una fila antiga no pot obrir el nou titular. |
 
 ## 4. Model de rànquing i temporades
 
@@ -233,11 +236,11 @@ que faci que `season_for` torni null per a les versions retirades.
   Saló de la fama, que és el que promet el text de Privadesa.
 - Mostra una temporada tancada cada cop (la més recent primer; "Tria temporada" obre la llista per any dins el mateix full,
   amb el guanyador i la teva posició). Per a cada temporada: l'estendard de la figura, les dates, els participants i el podi
-  (sobrenom, punts, nivell, tick o `#1234`); si dos balls la comparteixen, una línia discreta "Hi ha dos balls · Mira el
+  (sobrenom, punts, nivell i tick); si dos balls la comparteixen, una línia discreta "Hi ha dos balls · Mira el
   ball anterior" (s'obre al ball on vas jugar). La figura es tria amb el mateix desplegable que la classificació. La teva
   posició ("12 de 48", sense ordinal amb gènere) va en una franja pròpia amb els punts i el nivell (`my_score`,
   `my_difficulty`), o "TU" al podi. La classificació sencera es pot obrir. Una figura sense cap temporada tancada mostra l'estendard buit i la temporada en joc.
-- Els convidats hi surten amb el seu `#1234`, igual que a la classificació.
+- Els perfils alliberats hi surten apagats, igual que a la classificació (decisió 37); la fitxa s'obre pel `public_id`.
 
 ### Avís de final de temporada
 
@@ -257,78 +260,60 @@ que faci que `season_for` torni null per a les versions retirades.
 | | Verificat | Convidat |
 | --- | --- | --- |
 | Què és | Perfil amb el correu confirmat (`auth.users.email_confirmed_at`). | Perfil sense correu, només a aquest navegador. |
-| Nom | Net i únic: "Timbaler". | El nom que tria i 4 xifres a l'atzar: "Timbaler#3821". Molts convidats poden tenir el mateix nom amb xifres diferents. |
-| Com es veu | Crema `#fff3d6` i el tick (`checkBadge`), que en tocar-lo diu "Correu confirmat". | Crema apagat (`#e8d8b8`, contrast de 4.5:1 o més sobre el fons), el `#1234` una mica més apagat encara, sense tick. |
-| Caducitat | Cap. Es recupera en un altre dispositiu amb un codi al correu. | Cap data fixa (decisió 22). S'esborra després de 12 mesos sense activitat (decisió 26). Si s'esborren les dades del navegador, es perd i cal fer-ne un altre. |
+| Nom | Únic entre els perfils actius. No el perd mai. | Únic entre els perfils actius. El perd si passa 30 dies sense jugar i algú altre el demana (decisió 37). |
+| Com es veu | El tick (`checkBadge`), que en tocar-lo diu "Correu confirmat". | Sense tick. Si ha estat alliberat, apagat. |
+| Caducitat | Cap. Es recupera en un altre dispositiu amb un codi al correu. | Cap. No s'esborra per inactivitat. Si s'esborren les dades del navegador, es perd i cal fer-ne un altre. |
 | Posició | La que toca pels punts. | La que toca pels punts. |
 
-La branca proposava que els convidats caduquessin als 7 dies, per alliberar el sobrenom i no guardar comptes oblidats.
-Amb el `#1234`, un convidat ja no ocupa cap nom net, així que el primer motiu desapareix. El segon queda pendent
-i es resol amb la neteja d'inactius de 12 mesos (decisió 26, secció 11).
+### Regles del nom (`202610280002`)
 
-### Regles del nom
+- `profiles.alias` guarda el nom. `profiles.released_at` marca el perfil alliberat; `profiles.public_id` (uuid) és
+  l'identificador públic de la fitxa. No hi ha `tag`.
+- Unicitat: `alias_key(alias)` és únic entre els perfils amb `released_at` nul (índex únic parcial
+  `profiles_active_alias_key`). Un perfil alliberat conserva el seu nom, que pot coincidir amb el d'un altre.
+- `write_alias` és l'únic camí que escriu un nom (`update_alias`, `submit_result`, `choose_verified_alias`):
+  - Si el perfil ja té aquest nom i no està alliberat, només bloqueja el seu perfil (és el cas de cada publicació).
+  - Si no, pren primer un bloqueig únic per a tots els canvis de nom (advisory 18102), després el del perfil (advisory,
+    Auth, perfil) i, si el nom és d'un altre perfil actiu, el d'aquest. Amb els bloquejos, torna a mirar si el titular
+    és un convidat sense activitat en 30 dies (`greatest(created_at, last_sign_in_at, last_active_at)`). Si ho és, el
+    marca alliberat i dona el nom; si no, `leaderboard_alias_taken`. Un sol ordre de bloqueig evita que A esperi B
+    mentre B espera A.
+  - El perfil que escriu un nom deixa d'estar alliberat.
+- `submit_result` ignora `p_alias` si el perfil ja té un nom actiu: una pestanya antiga envia el nom que tenia desat,
+  i no ha de reanomenar ni recuperar res. Només el fa servir per al primer resultat o per a un perfil alliberat.
+  Canviar el nom és `update_alias`.
+- Llegir (taulers, `my_profile`, estadístiques) registra l'activitat però mai no recupera el nom: una col·lisió no ha
+  de fer fallar una lectura.
+- Un convidat alliberat que torna: `my_profile` diu `released`. El client li demana un nom nou amb el full de sempre.
+  Si publica amb el seu nom i encara és lliure, el recupera.
+- El `#` no és un caràcter permès al sobrenom (`normalized_alias`).
+- `get_player_card(p_public_id uuid)`; les files de `get_leaderboard_all`, `get_level_podium` i el podi de
+  `get_seasons` porten `public_id` i `released`. `my_profile` torna `alias`, `verified`, `published`, `released` i
+  `public_id`.
 
-- Columna nova `profiles.tag smallint` (0-9999), només per als convidats. Es mostra sempre amb quatre xifres.
-  `profiles.alias` continua guardant el nom **sense** `#`.
-- Unicitat: el nom net (`alias_key(alias)`) és únic entre els perfils sense `tag`; entre els convidats, és únic el parell
-  (`alias_key(alias)`, `tag`). Dos índexs únics parcials, que **substitueixen** l'índex global `profiles_alias_key`
-  (`202609280011`) en la mateixa transacció.
-- `check_alias_free(alias, uid, tag)` es reescriu. L'espai on es comprova el nom depèn del `tag` que tindrà el perfil
-  després de l'operació, no de si té el correu confirmat: amb `tag`, només el parell (nom, `tag`); sense `tag`, el nom
-  net contra els altres perfils sense `tag`. Confirmar el correu només dona permís per fer servir `choose_verified_alias`.
-  Un verificat que encara porta `#1234` (ha tancat "Tria el teu nom" sense triar-ne) publica i canvia de nom com un
-  convidat, fins que en tria un. Ja no esborra
-  cap titular caducat (no n'hi ha).
-- Tres camins escriuen el nom i tots tres apliquen les mateixes regles, amb el perfil bloquejat:
-  - **Crear** (`update_alias` d'un perfil nou, `submit_result` del primer cop): un convidat rep un `tag` a l'atzar entre
-    els lliures per a aquell nom. Si dos el trien alhora, el segon topa amb l'índex únic i el servidor en tria un altre
-    (fins a 5 intents). Si no en queda cap (10.000 convidats amb el mateix nom), respon `leaderboard_alias_taken`.
-  - **Canviar el nom** (`update_alias`, `submit_result` amb un nom diferent): un convidat conserva el seu `tag` si el
-    parell nou està lliure; si no, en rep un altre. Un perfil sense `tag` necessita el nom net lliure.
-  - **Triar el nom en verificar** (RPC nova `choose_verified_alias(p_alias)`, només amb el correu confirmat): posa el
-    nom nou i `tag = null` si el nom net és lliure; si no, `leaderboard_alias_taken` i el jugador en prova un altre.
-- `leaderboard_alias_taken` només vol dir "el nom que has demanat no és possible". Una col·lisió de `tag` mai arriba
-  al client: es resol al servidor.
-- El `#` no és un caràcter permès al sobrenom (`normalized_alias`), així que ningú no se'l pot escriure a mà.
-- En confirmar el correu (`verifyCode`), el full Perfil passa al pas "Tria el teu nom", buit. El nom ha de ser net i
-  lliure. Els resultats, les estadístiques i el `user_id` no canvien: és el mateix perfil amb un altre nom.
-- **Nom guardat i nom mostrat són dues coses.** Al dispositiu, `leaderboard-alias` (`ALIAS_KEY`) continua guardant
-  el nom **sense** `#`, que és el que un client antic llegeix, valida (`alias-rules.js`, que no accepta `#`) i torna a
-  enviar. El `tag` va a una clau nova (`leaderboard-tag`). Cap camí del client nou, ni la recuperació per correu, no
-  escriu mai `nom#1234` a `ALIAS_KEY`: si ho fes, una pestanya antica deixaria de poder publicar.
-- Lectures: `get_leaderboard_all` torna a la columna `alias` el nom ja muntat ("Timbaler#3821"), perquè un client
-  antic el mostri bé, i `tag` en una columna nova. `my_alias()` torna el nom sense `#`. `my_profile` torna `alias` i
-  `tag` per separat.
-- Qui és el jugador ho diu sempre `is_self` (el full ja no guarda cap preferència de vista: `ROW_KEY` ha desaparegut).
-- Un client antic que publica envia el nom sense `#`. El servidor manté el `tag` que ja tenia el perfil.
+### Convidats que ja existeixen
 
-### Convidats que ja existeixen (decisió 24)
-
-La migració de convidats:
-
-1. Dona un `tag` a l'atzar a cada perfil sense correu confirmat, també als que es van crear amb "Crea" sense publicar.
-2. Deixa els que tenen el correu confirmat sense `tag`, amb el seu nom de sempre.
-
-A producció no hi ha cap data de caducitat ni cap cron dels 7 dies (decisió 32), així que no cal treure res. Els
-convidats d'ara veuran el seu nom amb `#1234` i, si confirmen el correu, triaran un nom nou (decisió 33).
+`202610200001` (que a producció s'aplica en el mateix desplegament) conserva l'índex global de nom únic, i
+`202610280002` el substitueix per l'índex parcial. Així un client antic no pot crear cap nom repetit entre totes dues.
+A beta, que ja va aplicar els `tag`, els noms repetits es queden amb un sol titular (primer el verificat, després el
+més actiu) i els altres queden alliberats, amb tots els resultats.
 
 ### On es veu
 
 | Lloc | Font |
 | --- | --- |
-| Classificacions de cada temporada i figura | `get_leaderboard_all`: `verified`, `alias` muntat i `tag` |
-| Saló de la fama | `get_seasons`: cada fila de `podium` porta `verified` i `tag` |
+| Classificacions de cada temporada i figura | `get_leaderboard_all`: `alias`, `verified`, `public_id`, `released` |
+| Saló de la fama | `get_seasons`: cada fila de `podium` porta `verified`, `public_id` i `released` |
 | Fitxa pública | `get_player_card` |
-| Capçalera del Perfil | `my_profile` (amb `tag`) |
-| Full de publicar | `my_profile`: "Publicat com a Nom ✓" o "Publicat com a Nom#3821" |
+| Capçalera del Perfil | `my_profile` |
+| Full de publicar | `my_profile`: "Publicat com a Nom ✓" o "Publicat com a Nom" |
 | Fitxes de rànquing i líder del selector | les mateixes files del rànquing |
 | Imatge de Comparteix (`hud/share-card.js`) | l'últim `my_profile` conegut, desat al dispositiu. El tick es dibuixa al canvas amb la mateixa forma que el SVG. |
 
 Les dades sempre surten d'una resposta del servidor. Cap resposta porta l'adreça ni el `user_id`. A la imatge de
 Comparteix el tick no demostra res: és una imatge, i repeteix el que el joc sabia en fer-la.
 
-A les llistes, el `#1234` substitueix la paraula "convidat", per no allargar les files. La paraula surt al Perfil, a la
-fitxa pública i en tocar el nom. A la teva pròpia fila, si ets convidat, hi ha a sota "Confirma el correu per no perdre
+A les llistes no hi ha cap marca de convidat; només els perfils alliberats surten apagats. A la teva pròpia fila, si ets convidat, hi ha a sota "Confirma el correu per no perdre
 el perfil", amb l'enllaç al pas del correu del Perfil.
 
 El text de la interfície passa a dir "Convidat" en lloc de les expressions de perfil temporal d'ara, i desapareixen els
@@ -409,8 +394,7 @@ Una clau, `localStorage['stats-v1']`, a través de `src/platform/storage.js`:
   Passa un sol cop per cada tros: el que es juga sense perfil després torna a acumular-se a `none` i va al perfil
   següent.
 - Si es torna a un perfil anterior (A → B → A), es continua des dels comptadors d'A: no es perd res.
-- **Esborrar el perfil** ("Esborra el perfil", o quan el servidor diu que ja no existeix perquè la neteja de 12 mesos
-  l'ha esborrat): s'esborra també la seva entrada `owners['<user_id>']` del dispositiu (decisió 31). No passa a `none`
+- **Esborrar el perfil** ("Esborra el perfil", o quan el servidor diu que ja no existeix): s'esborra també la seva entrada `owners['<user_id>']` del dispositiu (decisió 31). No passa a `none`
   ni a cap altre perfil. `none` i els rècords del dispositiu es mantenen, com ara.
 - **Tancar la sessió** no esborra res: l'entrada es queda per si s'hi torna.
 - El Perfil mostra la suma del servidor si hi ha perfil (tots els dispositius), o la local si no n'hi ha.
@@ -441,8 +425,7 @@ create table leaderboard_private.player_days (
 --   Per a cada bucket: greatest() per als comptadors de suma i els maxims; "best" es substitueix sencer si es millor.
 --   Valida l'estat resultant, no nomes el que arriba (vegeu sota). Dies: insert ... on conflict do nothing.
 -- my_stats(): suma per bucket de tots els dispositius, dies jugats i dies seguits. Privat.
--- get_player_card(p_alias text, p_tag smallint default null): totals publics del perfil amb aquest nom (i tag),
---   si te resultats publicats. Lectura per a anon i authenticated. Mai user_id, device_id, dates ni dies.
+-- get_player_card(p_public_id uuid): totals publics d'aquest perfil (202610280002), si te resultats publicats. Lectura per a anon i authenticated. Mai user_id, device_id, dates ni dies.
 ```
 
 Cada dispositiu envia els seus totals acumulats per a aquell perfil. El servidor guarda el màxim per dispositiu i
@@ -488,8 +471,8 @@ pública no ho anota (la nota sobrava). No hi ha cap rànquing d'estadístiques.
 - `data-privacy="leaderboards"`: si tens perfil, les estadístiques totals i els dies que has jugat (només la data)
   s'envien al servidor. Els totals són públics en tocar el teu nom. Els dies no: només els veus tu, al Perfil.
   Mai horaris ni el dispositiu. Tot s'esborra amb el perfil (`cascade`).
-- Els textos dels 7 dies desapareixen i se substitueixen per la regla nova dels convidats (decisió 22) i la neteja
-  dels convidats inactius 12 mesos (decisió 26).
+- Els textos dels 7 dies desapareixen i se substitueixen per la regla nova dels convidats (decisió 22) i la regla
+  dels noms abandonats (decisió 37).
 - Abans del **primer enviament d'estadístiques** de cada perfil, el joc ho explica: en crear el perfil, i per als
   perfils que ja existeixen, un avís un sol cop abans de la primera sincronització.
   Fins que el jugador l'ha vist, no s'envia res. La primera publicació també ho explica.
@@ -768,19 +751,9 @@ per als assajos amb Supabase local, els tests de concurrència i la integració 
 
 ## 11. Riscos oberts i punts a validar
 
-- **Retenció dels convidats** (decisió 26). Una tasca de `pg_cron` esborra els convidats inactius 12 mesos. Cal:
-  1. que l'enviament d'estadístiques i el Perfil actualitzin `last_active_at`, perquè jugar sense publicar compti com a
-     activitat;
-  2. reutilitzar la consulta de `leaderboard_expired_players` limitada als convidats, en una funció que esborri
-     `auth.users` per lots (com `purge_expired_profiles`). Abans d'esborrar cada compte, l'ha de bloquejar
-     (`lock_profile`) i tornar a comprovar que segueix inactiu i sense correu confirmat: si ha jugat o ha confirmat el
-     correu mentrestant, no s'esborra;
-  3. un fitxer a `supabase/ops/` per activar-la a mà **[prod]**, amb una prova en sec (recompte) abans, com
-     l'antic `temporary-profiles-cron.sql`;
-  4. dir-ho a Privadesa i al Perfil del convidat ("si no jugues en 12 mesos, s'esborra").
-- **Convidats que perden el perfil.** Esborrar les dades del navegador, o el mode privat, fa perdre el perfil i els
-  resultats publicats continuen a la classificació amb un `#1234` que ningú pot fer servir. És el que s'ha acceptat.
-  Si la retenció es programa, s'acaben esborrant.
+- **Convidats que perden el perfil.** Esborrar les dades del navegador, o el mode privat, fa perdre el perfil. Els
+  seus resultats continuen a les classificacions amb el seu nom; als 30 dies el nom queda lliure per a un altre i les
+  files antigues surten apagades (decisió 37). No s'esborra res.
 - **Dues classificacions d'una figura a la mateixa temporada** (decisió 21). Al Saló de la fama i a la classificació
   s'ha de veure clar quina és la del ball anterior. El nom "ball anterior" s'ha de provar amb gent.
 - **Calendari automàtic.** `ensure_season` ha de calcular bé els límits a `Europe/Madrid` els dies de canvi d'hora,

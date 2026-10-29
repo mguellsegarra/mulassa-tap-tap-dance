@@ -28,7 +28,7 @@ export function setupLanding({ service, store, runs, canWrite, acceptStats, pers
     try {
       if (!(await service.identity()).hasSession) return fail();
       const prof = service.profile ? await service.profile().catch(() => undefined) : undefined; // undefined: unknown, the name stands
-      if (prof === null) return fail(); // its row is gone: the sheet starts a new one (publish-ui.js prepare())
+      if (prof === null || prof?.released) return fail(); // its row is gone, or its name taken: the sheet starts a new one (publish-ui.js prepare())
       if (prof) rememberIdentity(store, ALIAS_KEY, prof);
       const alias = store.get(ALIAS_KEY);
       if (!checkAlias(alias).ok) return fail();

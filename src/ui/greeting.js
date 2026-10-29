@@ -1,6 +1,6 @@
 // What the selector tells a profile once, when nothing else is up (docs/rankings/strategy.md §4, decision 17): an ended season's
 // news, else the statistics' notice for a profile made before them, else a device tip (device-hint.js: no network needed, so
-// offline it is still told), else (?mock&card=Nom#1234) a player's card. One of those sheets per visit (page load):
+// offline it is still told), else (?mock&card=Nom) a player's card. One of those sheets per visit (page load):
 // what else is pending waits for the next visit, in the same order, a new owner's after an account change too
 // (its statistics stay on the device until it has seen the notice, stats-sync.js). The seen-marks
 // are per profile (seasonSeenKey, the stats notice), so what is pending belongs to whoever owns the session NOW. Nothing is

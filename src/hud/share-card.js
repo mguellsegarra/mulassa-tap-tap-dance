@@ -151,7 +151,7 @@ function cardTicket(c, d, L, theme) {
   const w = story ? 850 : 790, x = (1080 - w) / 2;
   cardBox(c, x, y + 12, w, h, 34, theme.ink);
   cardBox(c, x, y, w, h, 34, PAPER);
-  if (aliasH) { // the name as the boards show it: a guest's «nom#1234», or the confirmed address's check after it
+  if (aliasH) { // the name as the boards show it: the plain name, with the confirmed address's check after it
     const size = story ? 40 : 34, tick = d.verified ? Math.round(size * 0.8) : 0, gap = tick ? Math.round(size * 0.25) : 0;
     c.font = `600 ${size}px ${CARD_FONT}`;
     let alias = String(d.alias), max = w - 128 - tick - gap;

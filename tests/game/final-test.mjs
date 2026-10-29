@@ -6,7 +6,6 @@ import { EXPECTED_JUDGMENTS, snapshotResult, validResult } from '../../src/servi
 import { ENERGY } from '../../src/game/energy.js';
 import { quality } from '../../src/game/progress.js';
 import { leaderboardPreviewMode, finalMode, demoOptions, fabricateRun, judgments, walk, mockLeaderboard, memoryKeys, REVIEWS, ACCOUNTS, OTHER_MAIL, MOCK_CODE, DEMO_SELF } from '../../src/dev/final-test.js';
-import { TAG_KEY } from '../../src/services/leaderboard-identity.js';
 
 import { comparableScore } from '../../src/game/score-scale.js';
 const song = JSON.parse(readFileSync(new URL('../../src/song-mulassa.json', import.meta.url)));
@@ -80,24 +79,23 @@ const first = await svc.listAll();
 assert(first.length === 45 && first[0].position === 1 && first[0].total === 45 && !first.some(r => r.is_self), 'the open season: Mulassa, 45 players');
 assert.equal((await svc.listAll({ offset: 50 })).length, 0);
 assert.deepEqual(await svc.identity(), { hasSession: false, persistent: true, email: '' });
-const clean = first.find(r => r.tag === null && r.verified);
+const clean = first.find(r => r.verified);
 await assert.rejects(svc.publish(run, 'x'), { code: 'invalid' });
 await assert.rejects(svc.publish({ ...run, counts: { ...run.counts, miss: run.counts.miss + 1 } }, 'ProvaMulassa'), { code: 'invalid' });
 assert.equal((await svc.publish(run, 'ProvaMulassa')).improved, true, 'no notice: a first publication simply goes');
 assert.equal((await svc.identity()).hasSession, true);
 const mine = await svc.profile();
-assert(mine.alias === 'ProvaMulassa' && Number.isInteger(mine.tag) && mine.verified === false && mine.published === true, 'a guest gets a tag');
+assert(mine.alias === 'ProvaMulassa' && !('tag' in mine) && mine.verified === false && mine.published === true && mine.released === false && mine.publicId, 'a guest has a plain name and a public id');
 const after = await svc.listAll(), me = after.find(r => r.is_self);
-assert(me && me.alias === `ProvaMulassa#${String(mine.tag).padStart(4, '0')}` && me.tag === mine.tag && me.verified === false && me.total === 46 && Math.round(me.quality) === 95);
+assert(me && me.alias === 'ProvaMulassa' && me.public_id === mine.publicId && me.released === false && me.verified === false && me.total === 46 && Math.round(me.quality) === 95);
 assert.equal(after.filter(r => r.position === me.position).length, 1);
 assert.equal((await svc.publish({ ...run, score: run.score - 1 }, 'ProvaMulassa')).improved, false);
 assert.equal(me.score, comparableScore(run.score, run.difficulty), 'mock board converts raw points exactly once');
-// a guest may share a clean name that a verified player has; a verified player cannot take it
-assert((await mockLeaderboard({ delay: 0 }).publish(run, clean.alias)).improved);
-{ const v = mockLeaderboard({ delay: 0, account: 'verified-unnamed' });
-  await assert.rejects(v.chooseVerifiedAlias(clean.alias.toLowerCase()), { code: 'name_taken' });
-  assert.equal(await v.chooseVerifiedAlias('Provera'), 'Provera'); assert.deepEqual(await v.profile(), { alias: 'Provera', tag: null, verified: true, published: true });
-  await assert.rejects(mockLeaderboard({ delay: 0, account: 'guest' }).chooseVerifiedAlias('Provera'), { code: 'verification' }); }
+// one active profile per name: nobody takes a verified player's name, a rename frees the old one
+await assert.rejects(mockLeaderboard({ delay: 0 }).publish(run, clean.alias), { code: 'taken' });
+{ const g = mockLeaderboard({ delay: 0, account: 'guest' });
+  await assert.rejects(g.createProfile(clean.alias.toLowerCase()), { code: 'taken' });
+  assert.equal(await g.createProfile('Provera'), 'Provera'); assert.deepEqual(await g.profile(), { alias: 'Provera', verified: false, published: true, released: false, publicId: (await g.profile()).publicId }); }
 { // A newly accepted version result need not replace the user's stronger historical board row (it is another season's)
   const mixed = mockLeaderboard({ delay: 0 });
   await mixed.publish({ version: 'mulassa-v1', difficulty: 0, counts: { perfect: 150, good: 0, miss: 0 }, score: 60000, maxCombo: 150 }, 'Versions');
@@ -120,13 +118,13 @@ assert.equal((await svc.identity()).hasSession, false);
   assert.equal(finalMode({ hostname: 'localhost', search: '?final&review' }).review, '', 'the list of states');
   assert.equal(finalMode({ hostname: 'localhost', search: '?final&review=nope' }).review, '');
   assert.equal(finalMode({ hostname: 'localhost', search: '?final&review=recover' }).taken, true);
-  assert.equal(finalMode({ hostname: 'localhost', search: '?final&review=board&account=verified-unnamed' }).account, 'verified-unnamed', 'the URL overrides the state');
+  assert.equal(finalMode({ hostname: 'localhost', search: '?final&review=board&account=released' }).account, 'released', 'the URL overrides the state');
   assert.equal(finalMode({ hostname: 'mulassa.cat', search: '?final&review=published' }), null);
   assert.deepEqual(finalMode({ hostname: 'localhost', search: '?final&review=season-end' }), { pct: 95, diff: 0, outcome: 'record', taken: false, review: 'season-end', account: 'guest', seasons: 'later' });
-  assert.deepEqual(demoOptions('?mock&seasons=later&board=empty&drac=empty&account=verified&card=Estrella%230007&x=1'), { account: 'verified', board: 'empty', seasons: 'later', drac: 'empty', card: 'Estrella#0007' });
+  assert.deepEqual(demoOptions('?mock&seasons=later&board=empty&drac=empty&account=verified&card=Estrella&x=1'), { account: 'verified', board: 'empty', seasons: 'later', drac: 'empty', card: 'Estrella' });
   assert.deepEqual(demoOptions('?mock&seasons=nope&account=old&board=x'), {}, 'unknown values are ignored: the removed 7-day accounts among them');
   assert(Object.values(REVIEWS).every(r => !r.account || ACCOUNTS.includes(r.account)));
-  assert.deepEqual(ACCOUNTS, ['new', 'reserved', 'guest', 'verified-unnamed', 'verified']);
+  assert.deepEqual(ACCOUNTS, ['new', 'reserved', 'guest', 'released', 'verified']);
   for (const gone of ['pending', 'expired', 'legacy']) assert(!ACCOUNTS.includes(gone));
   for (const k of Object.keys(REVIEWS)) assert(!/legacy|pending|expired/.test(k), k);
   assert.equal(DEMO_SELF.alias, 'Prova123');
@@ -134,34 +132,35 @@ assert.equal((await svc.identity()).hasSession, false);
 { // the mock accounts: who is signed in, with what name
   const who = async account => { const s = mockLeaderboard({ delay: 0, account }); return [await s.profile(), (await s.listAll()).find(r => r.is_self)]; };
   assert.deepEqual((await who('new')), [null, undefined]);
-  assert.deepEqual((await who('reserved'))[0], { alias: 'Prova123', tag: DEMO_SELF.tag, verified: false, published: false });
-  const [g, gRow] = await who('guest'); assert.deepEqual(g, { alias: 'Prova123', tag: 4821, verified: false, published: true }); assert.equal(gRow.alias, 'Prova123#4821'); assert.equal(gRow.verified, false);
-  const [u, uRow] = await who('verified-unnamed'); assert(u.verified && u.tag === 4821); assert(uRow.verified && uRow.alias === 'Prova123#4821');
-  const [v, vRow] = await who('verified'); assert(v.verified && v.tag === null); assert(vRow.verified && vRow.alias === 'Prova123' && vRow.tag === null);
+  const pid = x => x.publicId;
+  const [r] = await who('reserved'); assert.deepEqual(r, { alias: 'Prova123', verified: false, published: false, released: false, publicId: pid(r) });
+  const [g, gRow] = await who('guest'); assert.deepEqual(g, { alias: 'Prova123', verified: false, published: true, released: false, publicId: pid(g) }); assert.equal(gRow.alias, 'Prova123'); assert.equal(gRow.verified, false);
+  const [u, uRow] = await who('released'); assert(u.released && !u.verified && u.alias === 'Prova123' && uRow.released === true && uRow.alias === 'Prova123', 'a released guest keeps its row, flagged');
+  const [v, vRow] = await who('verified'); assert(v.verified && !v.released); assert(vRow.verified && vRow.alias === 'Prova123');
+  assert(new Set([pid(g), pid(u), pid(v)]).size === 1, 'the demo account keeps one public id');
   assert.equal((await mockLeaderboard({ delay: 0, account: 'verified' }).identity()).email, 'prova@exemple.cat');
 }
-{ // the e-mail flow: a pending address counts for nothing; confirming keeps the tag until a clean name is chosen
+{ // the e-mail flow: a pending address counts for nothing; confirming earns the check and nothing else
   const fresh = mockLeaderboard({ charts, finaleT: song.finale, delay: 0 });
   await fresh.publish(run, 'ProvaNova');
   assert.deepEqual(await fresh.sendCode('jo@exemple.cat'), { type: 'email_change' });
   await assert.rejects(fresh.verifyCode('jo@exemple.cat', '000000', 'email_change'), { code: 'code' });
   assert.equal((await fresh.profile()).verified, false, 'sent, not confirmed: no check');
   assert.equal((await fresh.identity()).email, '', 'nor an address on the profile');
-  const tag = (await fresh.profile()).tag;
+  const before = await fresh.profile();
   await fresh.verifyCode('jo@exemple.cat', MOCK_CODE, 'email_change');
-  const p = await fresh.profile(); assert(p.verified && p.tag === tag, 'confirmed, still «nom#tag»');
+  const p = await fresh.profile(); assert(p.verified && p.alias === before.alias && p.publicId === before.publicId, 'confirmed: the tick, same name, same profile');
   assert.equal((await fresh.listAll()).find(r => r.is_self).verified, true);
-  await fresh.chooseVerifiedAlias('ProvaNet'); assert.deepEqual(await fresh.profile(), { alias: 'ProvaNet', tag: null, verified: true, published: true });
-  assert.equal(await fresh.myAlias(), 'ProvaNet');
+  assert.equal(await fresh.myAlias(), 'ProvaNova');
   const sw = mockLeaderboard({ charts, finaleT: song.finale, delay: 0, account: 'guest' });
   assert.deepEqual(await sw.sendCode(OTHER_MAIL), { type: 'email' }, 'an address with a profile: switch, not merge');
   await sw.verifyCode(OTHER_MAIL, MOCK_CODE, 'email'); assert.equal(await sw.myAlias(), 'Castellera777');
   await assert.rejects(mockLeaderboard({ charts, finaleT: song.finale, delay: 0 }).sendCode('ningu@exemple.cat'), { code: 'noprofile' }, 'recovery needs a confirmed address');
 }
-{ // the nickname, its tag and «Ara no» count live in memory; everything else goes to the device's store
-  const base = new Map(), s = memoryKeys({ get: k => base.get(k) ?? null, set: (k, v) => base.set(k, v) }, ['leaderboard-alias', TAG_KEY]);
-  s.set('leaderboard-alias', 'A'); s.set(TAG_KEY, '4821'); s.set('share-format', 'square');
-  assert.equal(s.get('leaderboard-alias'), 'A'); assert(!base.has('leaderboard-alias') && !base.has(TAG_KEY)); assert.equal(base.get('share-format'), 'square');
+{ // the nickname and «Ara no» count live in memory; everything else goes to the device's store
+  const base = new Map(), s = memoryKeys({ get: k => base.get(k) ?? null, set: (k, v) => base.set(k, v) }, ['leaderboard-alias']);
+  s.set('leaderboard-alias', 'A'); s.set('share-format', 'square');
+  assert.equal(s.get('leaderboard-alias'), 'A'); assert(!base.has('leaderboard-alias')); assert.equal(base.get('share-format'), 'square');
   s.remove('leaderboard-alias'); assert.equal(s.get('leaderboard-alias'), null);
 }
 console.log('final-test: ok');

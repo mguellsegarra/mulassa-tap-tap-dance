@@ -400,8 +400,8 @@ console.log('share: challenge link, captions, fallbacks, eligibility, privacy an
     assert.equal(text.some(s => s.includes('#12')), Boolean(rank));
   }
   for (const rank of [{ pos: 0, total: 20 }, { pos: 21, total: 20 }, { pos: '2', total: 20 }, { pos: 1, total: NaN }]) assert.equal(cardRank({ rank }), null);
-  // the name as the boards show it: a confirmed address's check drawn after it (the same shape), a guest's «#1234», no check
-  for (const [alias, verified] of [['Timbaler', true], ['Timbaler#0042', false]]) {
+  // the name as the boards show it: a confirmed address's check drawn after it (the same shape), a guest's plain name alone
+  for (const [alias, verified] of [['Timbaler', true], ['Baldufa', false]]) {
     const text = [], discs = [], c = new Proxy({ canvas: {} }, { get: (t, k) => k in t ? t[k] : k === 'measureText' ? s => ({ width: String(s).length * 20 }) : k === 'fillText' ? (s, x) => text.push([String(s), x]) : k === 'arc' ? (x, y, r) => discs.push(r) : k.startsWith('create') ? () => ({ addColorStop() {} }) : () => {}, set: (t, k, v) => (t[k] = v, true) });
     drawCard(c, 'story', { figureId: 'mulassa-valls', alias, verified, rank: null, score: 12345, diff: 2, diffName: 'DIFÍCIL', pct: 92, maxCombo: 100 }, null);
     const name = text.find(([s]) => s === alias);

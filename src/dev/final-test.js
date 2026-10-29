@@ -8,8 +8,8 @@
 // The leaderboard is an in-memory mock behind the real service (src/dev/mock-leaderboard.js, seeded data in demo-data.js):
 // same validation and messages, no network, no Turnstile, nothing kept after a reload. Its demo URL parameters (read by
 // `demoOptions`, so `?mock` alone takes them too; every one is dev-hosts-only because the mock is):
-//   &account=new|reserved|guest|verified-unnamed|verified  who is signed in: nobody | a guest with no result | a guest «Prova123#4821»
-//       with results | a confirmed address that still has its tag (asks «Tria el teu nom») | a confirmed profile with a clean name
+//   &account=new|reserved|guest|released|verified  who is signed in: nobody | a guest with no result | a guest «Prova123» with
+//       results | a released guest (its name is somebody else's: asks for another) | a confirmed profile
 //   &seasons=launch|later   launch (default): «Estrena 2026» (history) + «Tardor 2026» open, Mulassa 45 players, Drac 12.
 //       later: Tardor closed (two Mulassa boards: «ball anterior» + the new dance, Drac) and «Hivern 2027» open: the end-of-season sheet
 //       with a podium (the Drac's 3r); many: the eleven quarters before today closed (Mulassa only, one with both dances), the
@@ -17,7 +17,7 @@
 //   &board=empty            the open season has no result (Mulassa and Drac); &drac=empty only the Drac's
 //   &board=me               a 119-player ladder with the signed-in profile (ProvaRetall) at #48, for responsive scroll checks
 //   &board=fail             every board read fails (offline): the Classificació's error state
-//   &card=<Name>[#tag]      (UI) open that player's public card; names in the data: Timbaler, Estrella#0007, PortadoraDeValls (16 letters)
+//   &card=<Name>            (UI) open that player's public card; names in the data: Timbaler, Estrella (released), PortadoraDeValls (16 letters)
 //   &taken, &fail           the first nickname tried is taken / the first publication gets no answer (offline)
 // `&review=<state>` (src/dev/account-review.js, REVIEWS below): the profile, e-mail and ranking flows over the same mock, each state
 // reached by pressing the real sheets' buttons; `&review` alone lists them. The mock's account follows the state (`&account=`
@@ -27,7 +27,7 @@ import { DEV_HOST } from '../core/flags.js';
 import { quality } from '../game/progress.js';
 import { drain, ENERGY } from '../game/energy.js';
 import { ACCOUNTS } from './mock-leaderboard.js';
-export { mockLeaderboard, ACCOUNTS, OTHER_MAIL, MOCK_CODE, DEMO_SELF } from './mock-leaderboard.js';
+export { mockLeaderboard, ACCOUNTS, OTHER_MAIL, MOCK_CODE, DEMO_SELF, demoPublicId } from './mock-leaderboard.js';
 // Preview the existing mock board without fabricating a completed run. Never active on public hosts. ?demo (the selector's
 // made-up facts) brings the board with it, so the rank tile and the sheet's own row agree.
 export const leaderboardPreviewMode = ({ hostname = '', search = '', configured = true } = {}) =>
@@ -38,14 +38,14 @@ const OUTCOMES = ['record', 'clear', 'collapse'];
 export const REVIEWS = Object.freeze({
   'share-drac': { account: 'verified' },
   publish: { account: 'new' }, published: { account: 'new' }, share: { account: 'new' }, email: { account: 'new' }, code: { account: 'new' },
-  verified: { account: 'new' }, 'choose-name': { account: 'new' }, switch: { account: 'guest' },
+  verified: { account: 'new' }, 'released-name': { account: 'released' }, switch: { account: 'guest' },
   'profile-new': { account: 'new' }, 'profile-reserved': { account: 'reserved' }, 'profile-guest': { account: 'guest' },
-  'profile-verified-unnamed': { account: 'verified-unnamed' }, 'profile-verified': { account: 'verified' },
+  'profile-released': { account: 'released' }, 'profile-verified': { account: 'verified' },
   board: { account: 'verified' }, 'board-tip': { account: 'verified' }, 'board-guest': { account: 'guest' }, 'board-empty': { account: 'guest', board: 'empty' },
   'board-drac': { account: 'verified' }, 'board-drac-empty': { account: 'verified', drac: 'empty' },
   seasons: { account: 'guest' }, 'seasons-later': { account: 'guest', seasons: 'later' }, 'season-end': { account: 'guest', seasons: 'later' },
   'seasons-many': { account: 'guest', seasons: 'many' }, 'season-end-plain': { account: 'guest', seasons: 'many' }, 'seasons-drac': { account: 'guest' },
-  card: { account: 'guest' }, 'card-guest': { account: 'new' }, 'card-long': { account: 'new' }, 'card-empty': { account: 'new' },
+  card: { account: 'guest' }, 'card-guest': { account: 'new' }, 'card-released': { account: 'new' }, 'card-long': { account: 'new' }, 'card-empty': { account: 'new' },
   taken: { account: 'new', taken: true }, recover: { account: 'new', taken: true }, retry: { account: 'new', fail: true },
 });
 // The mock's options from a query string; no host check, the caller already knows it is on the mock (finalMode, leaderboardPreviewMode).

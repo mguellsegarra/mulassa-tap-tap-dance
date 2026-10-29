@@ -102,7 +102,7 @@ const rolloutSql = i => Object.fromEntries(sql([...ROLLOUT.matchAll(/```sql\n([\
   .replace('<T0>', '2026-01-01 00:00+00')).split('\n').filter(l => l.includes('|')).map(l => [l.slice(0, l.indexOf('|')), l.slice(l.indexOf('|') + 1)]));
 
 // Production-like synthetic data: anonymous guests, confirmed e-mail players, pending e-mails, Auth-only sign-ins,
-// the real seed fixture, and (marked) 13-month-old accounts for the purge dry count. Rows only on v1/v2:
+// the real seed fixture, and (marked) 13-month-old accounts that nothing may delete any more. Rows only on v1/v2:
 // mulassa-v3 and drac-v1 do not exist in production before the migration (versions FK).
 const SEED = `
 insert into auth.users(instance_id,id,aud,role,is_anonymous,email,email_confirmed_at,email_change,created_at,updated_at,last_sign_in_at)
@@ -162,7 +162,6 @@ const COUNTS = `json_build_object(
 )`;
 const legacyBoard = version => json(`select json_agg(r) from (select position,alias,difficulty,quality,score,max_combo,is_self,total
   from public.get_leaderboard_all(p_version => '${version}', p_period => 'all', p_offset => 0, p_limit => 50)) r`);
-const strip = rows => rows.map(r => ({ ...r, alias: r.alias.replace(/#[0-9]{4}$/, '') }));
 const v2 = { 0: 108, 1: 133, 2: 240 }, v3 = v2, drac = { 0: 106, 1: 200, 2: 277 };
 const submit = (version, d, perfect, score, alias, j) =>
   `select * from public.submit_result('${version}',${d},${perfect},${j[d] - perfect},0,${score},${perfect},'${alias}')`;
@@ -208,8 +207,8 @@ async function main() {
       const again = rolloutSql(0), post = rolloutSql(1);
       for (const k of Object.keys(preRead).filter(k => k.startsWith('entries') && k !== 'entries_unique_constraint' || k.startsWith('profiles') || k.startsWith('auth')))
         assert.equal(again[k], preRead[k], k);
-      assert.equal(again.last_migration, '202610210001');
-      assert.deepEqual([post.guests_without_tag, post.verified_with_tag, post.functions_without_search_path], ['0', '0', '0']);
+      assert.equal(again.last_migration, '202610280002');
+      assert.deepEqual([post.active_name_duplicates, post.profiles_released, post.profiles_tag_column, post.functions_without_search_path], ['0', '0', '0', '0']);
       assert.equal(post.anon_functions, 'get_leaderboard_all,get_level_podium,get_player_card,get_seasons');
       assert.equal(post.entries_unique_constraint, 'entries_user_season_version_difficulty_key');
       assert.equal(post.entries_by_season, `0=${c0.entries}`);
@@ -219,10 +218,8 @@ async function main() {
       'seasons', (select json_agg(json_build_object('id',id,'name',name,'starts',starts_at,'ends',ends_at) order by id) from leaderboard_private.seasons),
       'entries_by_season', (select json_object_agg(season_id,n) from (select season_id,count(*) n from leaderboard_private.entries group by 1) t),
       'versions', (select json_agg(json_build_object('v',version,'d',difficulty,'figure',figure_id,'retired',retired_at is not null,'season',retired_season_id) order by version,difficulty) from leaderboard_private.versions),
-      'tags', (select json_build_object('guests_tagged', count(*) filter (where tag is not null),
-        'guests_untagged', count(*) filter (where tag is null and not leaderboard_private.verified(user_id)),
-        'verified_tagged', count(*) filter (where tag is not null and leaderboard_private.verified(user_id)),
-        'verified_clean', count(*) filter (where tag is null and leaderboard_private.verified(user_id))) from leaderboard_private.profiles),
+      'names', (select json_build_object('released', count(*) filter (where released_at is not null),
+        'public_ids', count(distinct public_id), 'profiles', count(*)) from leaderboard_private.profiles),
       'unique_key', (select string_agg(conname,',') from pg_constraint where conrelid='leaderboard_private.entries'::regclass and contype='u'))`);
     console.log('AFTER', JSON.stringify(c1));
     console.log('AFTER (new state)', JSON.stringify(after));
@@ -241,36 +238,33 @@ async function main() {
       }
       assert.equal(after.versions.length, 12);
     });
-    await check('tags: every existing guest tagged, verified clean', () => {
-      assert.equal(after.tags.guests_untagged, 0); assert.equal(after.tags.verified_tagged, 0);
-      return JSON.stringify(after.tags);
+    await check('names: nobody released, one public id each', () => {
+      assert.equal(after.names.released, 0); assert.equal(after.names.public_ids, after.names.profiles);
+      return JSON.stringify(after.names);
     });
     await check('unique key includes season', () => assert.equal(after.unique_key, 'entries_user_season_version_difficulty_key'));
-    await check('old client board (4 named args) unchanged apart from #tag', () => {
+    await check('old client board (4 named args) unchanged, no #tag', () => {
       const v2a = legacyBoard('mulassa-v2-short'), v1a = legacyBoard('mulassa-v1');
-      assert.deepEqual(strip(v2a), board0.v2); assert.deepEqual(strip(v1a), board0.v1);
-      assert(v2a.some(r => /#[0-9]{4}$/.test(r.alias)));
+      assert.deepEqual(v2a, board0.v2); assert.deepEqual(v1a, board0.v1);
       return `${v2a.length} rows, total ${v2a[0]?.total}`;
     });
     await check('one signature per RPC (no PGRST203)', () => {
       const sigs = json(`select json_object_agg(proname, n) from (select proname, count(*) n from pg_proc
         where pronamespace='public'::regnamespace and proname in ('submit_result','get_leaderboard_all','update_alias','my_alias',
-        'my_profile','choose_verified_alias','merge_stats','my_stats','get_seasons','get_player_card','leaderboard_expired_players','get_level_podium') group by 1) t`);
-      assert(Object.values(sigs).every(n => n === 1), JSON.stringify(sigs)); assert.equal(Object.keys(sigs).length, 12);
+        'my_profile','choose_verified_alias','merge_stats','my_stats','get_seasons','get_player_card','get_level_podium') group by 1) t`);
+      assert(Object.values(sigs).every(n => n === 1), JSON.stringify(sigs)); assert.equal(Object.keys(sigs).length, 11);
     });
 
     // Old client (master) and new client against the migrated database.
     const guest = uid('0a', 7), guestAlias = sql(`select alias from leaderboard_private.profiles where user_id='${guest}'`);
-    await check('old client: my_alias raw, 8-arg submit to season 0, update_alias keeps tag', () => {
+    await check('old client: my_alias raw, 8-arg submit to season 0, a stale stored name never renames', () => {
       unlock(guest);
-      const tag = sql(`select tag from leaderboard_private.profiles where user_id='${guest}'`);
       assert.equal(sql(asUser(guest, 'select public.my_alias()')).split('\n').at(-1), guestAlias);
       const r = sql(asUser(guest, submit('mulassa-v2-short', 2, 239, 190000, guestAlias, v2))).split('\n').at(-1);
       assert.match(r, /^t\|/);
       assert.equal(sql(`select string_agg(distinct season_id::text,',') from leaderboard_private.entries where user_id='${guest}' and version='mulassa-v2-short'`), '0');
-      unlock(guest);
-      sql(asUser(guest, `select public.update_alias('${guestAlias}')`));
-      assert.equal(sql(`select tag from leaderboard_private.profiles where user_id='${guest}'`), tag);
+      unlock(guest); sql(asUser(guest, submit('mulassa-v2-short', 2, 239, 190000, 'NomVell', v2)));
+      assert.equal(sql(asUser(guest, 'select public.my_alias()')).split('\n').at(-1), guestAlias);
     });
     await check('new client: v3 and drac-v1 go to season 1, never mixed', () => {
       unlock(guest); sql(asUser(guest, submit('mulassa-v3', 1, 133, 100000, guestAlias, v3)));
@@ -300,11 +294,40 @@ async function main() {
       assert.deepEqual([tally(rs).ok, n], [24, '24'], JSON.stringify(tally(rs)));
       return `slowest call ${Math.max(...rs.map(msOf))} ms in the database`;
     });
-    await check('parallel new guests choosing the same name get distinct tags', async () => {
+    await check('parallel new guests choosing the same name: one wins', async () => {
       const ids = Array.from({ length: 8 }, (_, i) => uid('0d', 1 + i));
       const rs = await race(ids.map(id => asUser(id, "select public.update_alias('Bessona')")));
-      const tags = sql("select count(distinct tag) from leaderboard_private.profiles where alias='Bessona'");
-      assert.deepEqual([tally(rs).ok, tags], [8, '8'], JSON.stringify(tally(rs)));
+      assert.deepEqual(tally(rs), { ok: 1, leaderboard_alias_taken: 7 });
+    });
+    // A guest idle for 30 days loses its name to whoever asks first; nobody else loses anything.
+    const idle = id => sql(`update auth.users set created_at = now()-interval '40 days', last_sign_in_at = now()-interval '40 days' where id = '${id}';
+      update leaderboard_private.profiles set last_active_at = now()-interval '40 days' where user_id = '${id}'`);
+    const aliasOf = id => sql(`select alias from leaderboard_private.profiles where user_id='${id}'`);
+    await check('parallel claims of one idle guest\'s name: one wins, the holder keeps its results', async () => {
+      const holder = uid('0a', 30), name = aliasOf(holder), ids = [31, 32, 33, 34, 35, 36].map(n => uid('0a', n));
+      const results = sql(`select count(*) from leaderboard_private.entries where user_id='${holder}'`);
+      idle(holder); ids.forEach(unlock);
+      const rs = await race(ids.map(id => asUser(id, `select public.update_alias('${name}')`)));
+      assert.deepEqual(tally(rs), { ok: 1, leaderboard_alias_taken: 5 });
+      assert.equal(sql(`select released_at is not null from leaderboard_private.profiles where user_id='${holder}'`), 't');
+      assert.equal(sql(`select count(*) from leaderboard_private.entries where user_id='${holder}'`), results);
+      assert.equal(sql(`select count(*) from leaderboard_private.profiles where alias='${name}' and released_at is null`), '1');
+    });
+    await check('A takes B\'s name while B takes A\'s: no deadlock', async () => {
+      const a = uid('0a', 40), b = uid('0a', 41), na = aliasOf(a), nb = aliasOf(b);
+      idle(a); idle(b); unlock(a); unlock(b);
+      const rs = await race([asUser(a, `select public.update_alias('${nb}')`), asUser(b, `select public.update_alias('${na}')`)]);
+      assert(!rs.some(r => /deadlock/.test(r.err)), rs.map(r => r.err).join(' '));
+      return JSON.stringify(tally(rs));
+    });
+    await check('the idle holder publishing while somebody claims its name: exactly one of them gets it', async () => {
+      const holder = uid('0a', 42), claimer = uid('0a', 43), name = aliasOf(holder);
+      idle(holder); unlock(holder); unlock(claimer);
+      const rs = await race([asUser(holder, submit('mulassa-v3', 0, 100, 40000, name, v3)), asUser(claimer, `select public.update_alias('${name}')`)]);
+      const released = sql(`select released_at is not null from leaderboard_private.profiles where user_id='${holder}'`);
+      assert.deepEqual([tally(rs).ok, tally(rs).leaderboard_alias_taken, released === 't'], [1, 1, rs[1].code === 0], JSON.stringify(tally(rs)));
+      assert.equal(sql(`select count(*) from leaderboard_private.profiles where alias='${name}' and released_at is null`), '1');
+      return rs[0].code === 0 ? 'the holder published first' : 'the claim came first';
     });
     await check('parallel verified players claiming one clean name: one wins', async () => {
       const ids = [uid('0b', 21), uid('0b', 22), uid('0b', 23)]; ids.forEach(unlock);
@@ -398,10 +421,10 @@ async function main() {
     }
     await check('anon/authenticated cannot read private tables or call private functions', async () => {
       const tables = ['seasons', 'player_stats', 'player_days', 'player_devices', 'entries', 'profiles'].map(t => `select * from leaderboard_private.${t}`);
-      const anon = [...tables, 'select leaderboard_private.purge_inactive_guests(1)', "select * from public.leaderboard_expired_players(1)",
+      const anon = [...tables, 'select leaderboard_private.write_alias(gen_random_uuid(), \'Anon\')',
         `select public.merge_stats('${uid('de', 1)}','{}'::jsonb,null,'${guest}')`, `select * from public.my_stats()`,
         submit('mulassa-v3', 0, 108, 1000, 'Anon', v3)];
-      const user = [...tables, 'select leaderboard_private.purge_inactive_guests(1)', "select * from public.leaderboard_expired_players(1)",
+      const user = [...tables, `select leaderboard_private.write_alias('${uid('0a', 50)}', 'Robat')`,
         `select leaderboard_private.stats_totals('${guest}')`, 'select leaderboard_private.ensure_season(now())'];
       for (const body of anon) assert.equal(errorOf(await session(asAnon(body))), 'permission', `anon: ${body}`);
       for (const body of user) assert.equal(errorOf(await session(asUser(guest, body))), 'permission', `authenticated: ${body}`);
@@ -414,23 +437,16 @@ async function main() {
       assert.equal(sql(`select count(*) from leaderboard_private.player_stats where user_id in ('${me}','${other}')`), '0');
     });
     await check('public card and seasons never expose ids, days or e-mail', () => {
-      const tag = sql(`select tag from leaderboard_private.profiles where user_id='${guest}'`);
-      const card = sql(asAnon(`select row_to_json(c)::text from public.get_player_card('${guestAlias}',${tag}::smallint) c`)).split('\n').at(-1);
+      const id = sql(`select public_id from leaderboard_private.profiles where user_id='${guest}'`);
+      const card = sql(asAnon(`select row_to_json(c)::text from public.get_player_card('${id}'::uuid) c`)).split('\n').at(-1);
       const seasons = sql(asAnon(`select json_agg(s)::text from public.get_seasons('mulassa-valls') s`)).split('\n').at(-1);
       for (const text of [card, seasons]) assert.doesNotMatch(text, /user_id|device|@example|0a000000|"days"/);
       assert.match(card, new RegExp(guestAlias));
     });
 
-    // Retention: dry count (supabase/ops/guest-retention-cron.sql step 1) vs. what the purge would delete, rolled back.
-    await check('purge_inactive_guests: dry count matches, verified kept, rolled back', () => {
-      const ops = readFileSync(new URL('../ops/guest-retention-cron.sql', import.meta.url), 'utf8');
-      const dry = sql(ops.split('\n').filter(l => !l.startsWith('--')).join('\n'));
-      const out = sql(`begin; select leaderboard_private.purge_inactive_guests(500);
-        select count(*) from auth.users where id::text like '0e%'; select count(*) from auth.users where id::text like '0f%';
-        select count(*) from auth.sessions s where s.user_id::text like '0e%'; rollback;`).split('\n');
-      assert.deepEqual(out, [dry, '0', '1', '0'], `dry ${dry}, purge ${out}`);
+    await check('nothing deletes idle guests: no purge, no enumerator, 13-month-old accounts kept', () => {
+      assert.equal(sql("select count(*) from pg_proc where proname in ('purge_inactive_guests','leaderboard_expired_players')"), '0');
       assert.equal(sql("select count(*) from auth.users where id::text like '0e%'"), '7');
-      return `dry count ${dry} = purged ${out[0]} (7 old guests incl. 2 without profile; old verified kept)`;
     });
   } finally {
     stop();

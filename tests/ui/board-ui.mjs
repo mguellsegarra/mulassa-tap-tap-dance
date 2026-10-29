@@ -624,6 +624,15 @@ for (const [total, line] of [[1, 'Ets el número 1!'], [20, 'Ets el número 7 ·
   assert.equal(q.calls.accept, 0, 'nothing was shown: the statistics notice is not counted as seen');
   q.board.results(false); q.setRun(WEAK); q.board.results(true); await wait();
   assert(q.calls.publish.length === 1 && !q.$('results-publish').hidden, 'under 2 stars: not by itself, the button stays');
+  // a released profile (its name is somebody else's now) never goes up by itself: the sheet opens empty, says why, and sends the new name
+  const rel = make({ session: true, alias: 'Drac101', afterPublish: () => {}, prof: { alias: 'Drac101', verified: false, published: true, released: true, publicId: 'id-1' } });
+  rel.setRun(RUN); rel.board.results(true); await wait();
+  assert(rel.calls.publish.length === 0 && rel.$('publish-menu').open, 'not quietly: the prompt opens');
+  rel.$('publish-menu').close(); rel.board.openPublish(); await wait(); // (the prompt that opens by itself ignores a tap for a moment)
+  assert(!rel.$('publish-field').hidden && rel.$('publish-as').hidden && rel.$('publish-alias').value === '', 'the name field, empty');
+  assert.equal(rel.$('publish-status').textContent, 'Has estat un temps sense jugar i el teu nom ara és d’una altra persona. Tria’n un altre.');
+  rel.$('publish-alias').value = 'Nou101'; submit(rel.$); await wait();
+  assert.equal(rel.calls.publish[0].alias, 'Nou101', 'the chosen name goes with the publication');
   // it fails (network, rate limit) or the profile is gone: the prompt, as for anyone
   const f = make({ session: true, alias: 'Drac101' });
   f.setRun(RUN); f.board.results(true); await wait();
@@ -795,30 +804,30 @@ for (const [total, line] of [[1, 'Ets el número 1!'], [20, 'Ets el número 7 ·
   n.T.publishes[0].reject(Object.assign(new Error('Aquest sobrenom ja és d’algú. Prova’n un altre.'), { code: 'taken' })); await tick();
   assert.equal(n.$('publish-error').textContent, 'Aquest sobrenom ja és d’algú. Si és teu i hi vas confirmar el correu, recupera el perfil.', 'recovery needs a confirmed address: said so');
 }
-// --- profiles without a deadline (docs/rankings/strategy.md §6): «Publicat com a» the name as the boards show it (a guest's
-// «#1234» from the server, a confirmed address's check); a guest's «Publicat!» offers «Confirma el correu» (never by
-// itself); the statistics' note goes with the publication (acceptStats); nothing about days or deadlines
+// --- profiles (docs/rankings/strategy.md §6): «Publicat com a» the plain name as the boards show it (a confirmed address's
+// check; never a «#1234»); a released profile publishes under a new name; a guest's «Publicat!» offers «Confirma el correu» (never by
+// itself); the statistics' note goes with the publication (acceptStats)
 const find = (el, test) => (test(el) ? el : el.children.map(c => find(c, test)).find(Boolean) ?? null);
-{ // a new player: the guest profile the server made, its tag remembered apart from the name, the offer under Publicat!
+{ // a new player: the guest profile the server made, its name remembered, the offer under Publicat!
   const confirms = [];
   const n = make({ captchaRequired: false, afterPublish: () => {}, onConfirm: o => confirms.push(o), prof: null });
   n.setRun(RUN); n.board.openPublish(); await tick(); await tick();
   assert(n.$('publish-offer').hidden, 'no offer before publishing');
   n.$('publish-alias').value = 'Drac101'; submit(n.$); await tick();
   assert.deepEqual(Object.keys(n.calls.publish[0].opts), ['captchaToken'], 'no notice flag any more');
-  n.T.session = true; n.T.prof = { alias: 'Drac101', tag: 42, verified: false, published: true };
+  n.T.session = true; n.T.prof = { alias: 'Drac101', verified: false, published: true, released: false, publicId: 'id-1' };
   n.T.publishes[0].resolve({ improved: true, quality: 90, score: 1 }); await tick();
   assert.equal(n.$('publish-form').dataset.view, 'done');
-  assert.equal(n.$('publish-status').textContent, 'Publicat com a Drac101#0042. La classificació mostra el teu millor resultat.', 'the name as the boards show it');
+  assert.equal(n.$('publish-status').textContent, 'Publicat com a Drac101. La classificació mostra el teu millor resultat.', 'the plain name, never a «#»');
   assert(!find(n.$('publish-status'), e => e.className?.includes?.('verified-check')), 'a guest: no check');
-  assert(n.mem.get(ALIAS_KEY) === 'Drac101' && n.mem.get('leaderboard-tag') === '42', 'the name without its tag (an old tab reads it), the tag apart');
+  assert(n.mem.get(ALIAS_KEY) === 'Drac101' && !n.mem.has('leaderboard-tag'), 'the name remembered, no tag key');
   assert.equal(n.calls.accept, 1, 'the statistics may be sent now');
   assert(!n.$('publish-offer').hidden && n.$('publish-send').textContent === 'Ara no', 'a guest: the offer leads, «Ara no» closes');
   assert(n.$('publish-menu').open && !confirms.length, 'nothing opens by itself');
   n.$('publish-mail').value = ' jo@exemple.cat '; n.$('publish-confirm').click();
   assert(!n.$('publish-menu').open && confirms.length === 1 && confirms[0].mail === 'jo@exemple.cat', '«Envia el codi»: the profile steps next, with the address');
   // a confirmed address: the check, no offer
-  const v = make({ session: true, alias: 'Drac101', mail: 'jo@example.test', afterPublish: () => {}, onConfirm: () => {}, prof: { alias: 'Drac101', tag: null, verified: true, published: true } });
+  const v = make({ session: true, alias: 'Drac101', mail: 'jo@example.test', afterPublish: () => {}, onConfirm: () => {}, prof: { alias: 'Drac101', verified: true, published: true } });
   v.setRun(RUN); v.board.openPublish(); await tick(); await tick();
   assert(find(v.$('publish-as-name'), e => e.className?.includes?.('verified-check')), 'the one-tap row shows the check');
   submit(v.$); await tick(); v.T.publishes[0].resolve({ improved: true }); await tick(); await tick();
@@ -827,16 +836,16 @@ const find = (el, test) => (test(el) ? el : el.children.map(c => find(c, test)).
   const q = make({ captchaRequired: false, afterPublish: () => {}, prof: null });
   q.setRun(RUN); q.board.openPublish(); await tick(); await tick();
   q.$('publish-alias').value = 'Drac101'; submit(q.$); await tick();
-  q.T.session = true; q.T.prof = { alias: 'Drac101', tag: 7, verified: false }; q.T.publishes[0].resolve({ improved: true }); await tick(); await tick();
+  q.T.session = true; q.T.prof = { alias: 'Drac101', verified: false }; q.T.publishes[0].resolve({ improved: true }); await tick(); await tick();
   assert(q.$('publish-offer').hidden);
   // the account behind the session was purged: the publication left it, the retry asks for a new profile's token
-  const purged = make({ session: true, alias: 'Drac101', afterPublish: () => {}, prof: { alias: 'Drac101', tag: 3, verified: false } });
+  const purged = make({ session: true, alias: 'Drac101', afterPublish: () => {}, prof: { alias: 'Drac101', verified: false } });
   purged.setRun(RUN); purged.board.openPublish(); await tick(); await tick();
   submit(purged.$); await tick();
   purged.T.session = false; purged.T.publishes[0].reject(Object.assign(new Error('La sessió ha caducat. Torna-ho a provar.'), { code: 'session' })); await tick(); await tick();
   assert(!purged.$('publish-field').hidden, 'a new profile: the field');
 }
-{ // a remembered name whose profile row is gone (deleted, or 12 months away): this browser leaves the old session, picks a name again
+{ // a remembered name whose profile row is gone (deleted): this browser leaves the old session, picks a name again
   const g = make({ session: true, alias: 'Drac101', prof: null });
   g.setRun(RUN); g.board.openPublish(); await tick(); await tick(); await tick();
   assert.equal(g.calls.signout, 1, 'the old session goes');
@@ -864,12 +873,12 @@ const find = (el, test) => (test(el) ? el : el.children.map(c => find(c, test)).
   const b = make({ onCard: p => cards.push(p), onSeasons: f => halls.push(f), onKeep: () => keeps.push(1), alias: 'Gegant300' });
   b.T.seasons = [{ seasonId: 1, name: 'Tardor 2026', startsAt: NOW - 15 * 864e5, endsAt: NOW + 23 * 864e5, version: 'mulassa-v3', previousDance: false, players: 3, podium: [], myPosition: 2 },
     { seasonId: 0, name: 'Estrena 2026', startsAt: 0, endsAt: null, version: 'mulassa-v2-short', previousDance: false, players: 60, myPosition: null,
-      podium: [{ position: 1, alias: 'Portadora', tag: null, verified: true, score: 172795, difficulty: 2 }, { position: 2, alias: 'Baldufa', tag: 1103, verified: false, score: 171996, difficulty: 2 }] }];
+      podium: [{ position: 1, alias: 'Portadora', publicId: 'id-portadora', released: false, verified: true, score: 172795, difficulty: 2 }, { position: 2, alias: 'Baldufa', publicId: 'id-baldufa', released: true, verified: false, score: 171996, difficulty: 2 }] }];
   b.board.openBoard(); await tick();
   assert.deepEqual(b.calls.lists.at(-1), { figure: 'mulassa-valls' }, 'the selector\'s figure, the open season');
   assert.equal(b.$('board-season').textContent.split(' · ')[0], 'Tardor 2026', 'the calendar names the season from the first frame');
-  b.T.alls[0].resolve([{ position: 1, alias: 'Baldufa#1103', tag: 1103, verified: false, difficulty: 2, quality: 98, score: 9, total: 3, season_id: 1 },
-    { position: 2, alias: 'Gegant300#0042', tag: 42, verified: false, is_self: true, difficulty: 1, quality: 90, score: 8, total: 3, season_id: 1 }]); await tick(); await tick(); await tick();
+  b.T.alls[0].resolve([{ position: 1, alias: 'Baldufa', public_id: 'id-baldufa', released: true, verified: false, difficulty: 2, quality: 98, score: 9, total: 3, season_id: 1 },
+    { position: 2, alias: 'Gegant300', public_id: 'id-me', released: false, verified: false, is_self: true, difficulty: 1, quality: 90, score: 8, total: 3, season_id: 1 }]); await tick(); await tick(); await tick();
   assert.equal(b.$('board-season').textContent, 'Tardor 2026 · queden 23 dies', 'the server\'s season: its name and the days left');
   const rows = b.$('board-rows').children;
   assert.equal(rows.length, 3, 'a guest\'s own row has its quiet line under it');
@@ -877,8 +886,10 @@ const find = (el, test) => (test(el) ? el : el.children.map(c => find(c, test)).
   assert.equal(rows[2].textContent, 'Confirma el correu per no perdre el perfil');
   find(rows[2], e => e.tag === 'button').click(); assert.equal(keeps.length, 1, 'it opens the e-mail step');
   const guest = find(rows[0], e => e.className?.includes?.('player-name'));
-  assert(guest.className.includes('guest') && find(guest, e => e.className === 'tag').textContent === '#1103' && find(guest, e => e.className === 'alias').textContent === 'Baldufa', 'a guest: the name, its tag apart (quieter)');
-  guest.click(); assert.deepEqual(cards.at(-1), { alias: 'Baldufa', tag: 1103, verified: false,
+  assert(guest.className.includes('released') && !find(guest, e => e.className === 'tag') && find(guest, e => e.className === 'alias').textContent === 'Baldufa', 'a released profile: the plain name, faded');
+  assert(!find(rows[1], e => e.className?.includes?.('player-name')).className.includes('released'), 'an active guest is not faded');
+  assert(!JSON.stringify(rows.map(r => r.textContent)).includes('#'), 'no «#» in any row');
+  guest.click(); assert.deepEqual(cards.at(-1), { alias: 'Baldufa', verified: false, released: true, publicId: 'id-baldufa',
     from: { figure: 'mulassa-valls', season: 'Tardor 2026', position: 1, score: 9, difficulty: 2 } }, 'a tap opens that player\'s card, with the row it came from');
   b.$('board-seasons').click(); assert.deepEqual(halls, ['mulassa-valls'], '«Temporades anteriors» for this figure');
   assert(b.$('board-menu').open, 'over the board');
@@ -907,12 +918,12 @@ const find = (el, test) => (test(el) ? el : el.children.map(c => find(c, test)).
   assert.equal(b.$('board-hint').textContent, 'Juga amb el Drac i publica el resultat per estrenar la classificació.');
   assert(!b.$('board-art').hidden && b.$('board-place').hidden && !b.$('board-seasons').hidden, 'its portrait; a history: «Temporades anteriors» stays');
   assert(!b.$('board-previous').hidden && b.$('board-previous').textContent.startsWith('Podi d’Estrena 2026'), 'the last season\'s podium, «d’» before a vowel');
-  assert(b.$('board-previous').textContent.includes('Baldufa#1103'));
+  assert(b.$('board-previous').textContent.includes('Baldufa') && !b.$('board-previous').textContent.includes('#'));
   // a closed season from the Saló de la fama: that board, its name alone, no guest line, no publish offer
   b.board.openBoard(null, { figure: 'mulassa-valls', seasonId: 0, version: 'mulassa-v2-short', name: 'Estrena 2026' }); await tick();
   assert.deepEqual(b.calls.lists.at(-1), { version: 'mulassa-v2-short', season: 0 });
   assert.equal(b.$('board-season').textContent, 'Estrena 2026');
-  b.T.alls.at(-1).resolve([{ position: 1, alias: 'Gegant300#0042', tag: 42, is_self: true, difficulty: 1, quality: 90, score: 8, total: 1, season_id: 0 }]); await tick(); await tick();
+  b.T.alls.at(-1).resolve([{ position: 1, alias: 'Gegant300', public_id: 'id-me', is_self: true, difficulty: 1, quality: 90, score: 8, total: 1, season_id: 0 }]); await tick(); await tick();
   assert(b.$('board-rows').children.every(tr => tr.className !== 'me-hint'), 'history: no «Confirma el correu» line');
   assert.equal(b.$('board-summary').textContent, 'Posició 1 de 1');
   b.$('board-figure').click(); b.figMula.click(); await tick();
@@ -970,7 +981,7 @@ const find = (el, test) => (test(el) ? el : el.children.map(c => find(c, test)).
   assert(/els totals de les teves estadístiques seran públics/.test(sheet('publish-menu')), 'publishing says the statistics\' totals go public with the profile (their notice)');
   assert(!/7 dies|caduca|temporal/.test(html.replace(/<script[\s\S]*?<\/script>/g, '')), 'no 7-day text anywhere');
   assert(/Tens un perfil amb el correu confirmat\? Recupera’l/.test(sheet('publish-menu')), 'recovery needs a confirmed address');
-  assert(/<b>convidat<\/b>/.test(privacy) && /Timbaler#3821/.test(privacy) && /<b>12 mesos<\/b> sense jugar ni publicar/.test(privacy) && /rècords del dispositiu es mantenen/.test(privacy), 'Privadesa: guests, their #1234, the 12 months, local records');
+  assert(/<b>convidat<\/b>/.test(privacy) && !/#\d{4}|Timbaler#|12 mesos|s’esborra sol/.test(privacy) && /sobrenom és únic/.test(privacy) && /<b>30 dies<\/b> sense jugar, una altra persona pot agafar-ne el sobrenom; els resultats es mantenen/.test(privacy) && /Amb el correu confirmat, el sobrenom és teu/.test(privacy), 'Privadesa: the name is unique, 30 idle days free it for somebody else (the results stay), a confirmed e-mail keeps it');
   assert(/totals[^.]*són <b>públics<\/b>[^.]*tocant?[^.]*sobrenom|Els totals són <b>públics<\/b>/.test(privacy) && /Els dies són <b>privats<\/b>/.test(privacy) && /Mai no s’hi envia l’hora/.test(privacy) && /Tot s’esborra amb el perfil/.test(privacy), 'Privadesa: public totals, private days, never times or the device, all deleted with the profile');
   assert(/<b>estadístiques<\/b>/.test(privacy.slice(privacy.indexOf('data-privacy="device"'), privacy.indexOf('data-privacy="leaderboards"'))), 'Privadesa: the statistics are kept on the device');
   assert(/marca de «Correu confirmat»/.test(privacy) && /no confirmat no compta/.test(privacy) && !/El perfil i els resultats es conserven fins que els esborres: ho/.test(privacy.replace('Amb el correu confirmat, el perfil i els resultats es conserven fins que els esborres', '')), 'Privadesa: the check, a pending address, and no longer «kept until you delete it» for everyone');

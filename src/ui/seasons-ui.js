@@ -7,7 +7,7 @@ import { byId, num, posDisc } from './sheet-kit.js';
 import { tr } from '../i18n/messages.js';
 import { fmtDate, fmtDateRange } from '../i18n/format.js';
 import { mulaSpinner } from './loader.js';
-import { appendName } from './profile-notes.js';
+import { appendName, playerOf } from './profile-notes.js';
 import { FIGURE_NAMES } from './stats-view.js';
 import { FIGURES, MULASSA, portraitArt, portraitPalette } from '../game/figures.js';
 import { pixelSvg } from './select-strip.js';
@@ -62,7 +62,7 @@ export function podiumList(doc, podium, onName) {
     const li = doc.createElement('li');
     const pos = posDisc(doc, p.position);
     const who = doc.createElement('span'); who.className = 'who';
-    appendName(doc, who, { alias: p.alias, tag: p.tag ?? null, verified: p.verified }, onName);
+    appendName(doc, who, playerOf(p), onName);
     const lvl = doc.createElement('span'); lvl.className = `lvl lvl${Number(p.difficulty)}`; lvl.textContent = DIFFS[Number(p.difficulty)]?.name ?? '';
     const pts = doc.createElement('span'); pts.className = 'pts'; pts.textContent = num(p.score);
     li.append(pos, who, lvl, pts);
@@ -136,7 +136,7 @@ export function setupSeasons({ focusIn, service, onBoard = () => {}, onCard = ()
     const ol = hallEl(doc, 'ol', 'hall-podium-list');
     b.podium.slice(0, 3).forEach((p, i) => {
       const li = hallEl(doc, 'li', `pd-${i + 1}${p.position === b.myPosition ? ' me' : ''}`), name = hallEl(doc, 'span', 'who'), pts = hallEl(doc, 'span', 'pts', num(p.score));
-      appendName(doc, name, { alias: p.alias, tag: p.tag ?? null, verified: p.verified }, q => onCard(q));
+      appendName(doc, name, playerOf(p), q => onCard(q));
       if (p.position === b.myPosition) name.appendChild(hallEl(doc, 'span', 'me-tag', tr('ui.seasons.me')));
       pts.appendChild(hallEl(doc, 'span', `lvl lvt${Number(p.difficulty)}`, levelName(p.difficulty)));
       const step = hallEl(doc, 'span', 'pd-step'); step.setAttribute('aria-hidden', 'true');
@@ -202,7 +202,7 @@ export function setupSeasons({ focusIn, service, onBoard = () => {}, onCard = ()
       row.type = 'button'; if (i === pick) { row.setAttribute('aria-current', 'true'); row.id = 'seasons-current'; }
       const main = hallEl(doc, 'span', 'r-main'), name = hallEl(doc, 'span', 'r-name', s.name), sub = hallEl(doc, 'span', 'r-sub');
       if (s.boards.length > 1) name.appendChild(hallEl(doc, 'span', 'r-two', tr('ui.seasons.twoBalls', { n: s.boards.length })));
-      if (win) { sub.appendChild(posDisc(doc, 1)); appendName(doc, sub, { alias: win.alias, tag: win.tag ?? null, verified: win.verified }); } // a row is one button: no card from here
+      if (win) { sub.appendChild(posDisc(doc, 1)); appendName(doc, sub, playerOf(win)); } // a row is one button: no card from here
       main.append(name, sub);
       const side = hallEl(doc, 'span', 'r-side');
       if (me) side.append(hallEl(doc, 'b', '', num(me.myPosition)), hallEl(doc, 'small', '', tr('ui.seasons.ofTotal', { n: num(me.players) })));

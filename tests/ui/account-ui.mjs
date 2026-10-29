@@ -101,8 +101,8 @@ const bucket = o => ({ runs: 0, completed: 0, collapsed: 0, seconds: 0, perfect:
   assert.deepEqual(grouped.map(g => [g.id, g.boards.map(b => b.previousDance)]), [[1, [false, true]], [0, [undefined]]], 'one per season, the current dance first');
   assert.equal(grouped[1].until, tardor.startsAt);
 }
-const pod = [{ position: 1, alias: 'Portadora', tag: null, verified: true, score: 172795, difficulty: 2 }, { position: 2, alias: 'Baldufa', tag: 1103, verified: false, score: 171996, difficulty: 1 }];
-const pod3 = [...pod, { position: 3, alias: 'Prova123', tag: 4821, verified: false, score: 169186, difficulty: 2 }];
+const pod = [{ position: 1, alias: 'Portadora', publicId: 'id-portadora', released: false, verified: true, score: 172795, difficulty: 2 }, { position: 2, alias: 'Baldufa', publicId: 'id-baldufa', released: true, verified: false, score: 171996, difficulty: 1 }];
+const pod3 = [...pod, { position: 3, alias: 'Prova123', publicId: 'id-prova', released: false, verified: false, score: 169186, difficulty: 2 }];
 const SEASONS = {
   'mulassa-valls': [
     { seasonId: 2, name: 'Hivern 2027', startsAt: NOW - 3 * DAY, endsAt: NOW + 87 * DAY, version: 'mulassa-v3', previousDance: false, players: 15, podium: pod, myPosition: 6 },
@@ -127,7 +127,8 @@ const service = (o = {}) => ({ configured: true, asked: [], async seasons(f) { t
   assert.equal(text('hall-mine')[0], 'La teva posició12 de 48142.310 puntsNORMAL', 'its own band: place (no gendered ordinal), points, level');
   const figs = $('seasons-figures').children; // «Tria figura»: the board's dropdown
   assert($('seasons-figure-name').textContent === 'Mulassa de Valls' && /<svg/.test($('seasons-figure-pic').innerHTML) && figs[0].attrs['aria-pressed'] === 'true' && figs[1].attrs['aria-pressed'] === 'false');
-  view().find(e => e.className?.includes?.('player-name') && e.tag === 'button').click(); assert.deepEqual(cards[0], { alias: 'Portadora', tag: null, verified: true });
+  view().find(e => e.className?.includes?.('player-name') && e.tag === 'button').click(); assert.deepEqual(cards[0], { alias: 'Portadora', verified: true, released: false, publicId: 'id-portadora' });
+  { const faded = view().all(e => e.className?.includes?.('player-name')); assert(!faded[0].className.includes('released') && faded[1].className.includes('released') && !view().textContent.includes('#'), 'a released podium name is faded; no «#» anywhere'); }
   byId('seasons-dance').click();
   assert(text('hall-meta')[0] === '20 participants' && byId('seasons-dance').textContent === 'Mira el ball anterior' && focused.at(-1) === 'seasons-dance', 'the current dance, its link back');
   assert.equal(text('hall-mine none')[0], 'La teva posicióNo hi ha cap resultat teu publicat.', 'the other dance: no place');
@@ -203,36 +204,38 @@ const service = (o = {}) => ({ configured: true, asked: [], async seasons(f) { t
   const cheer = plain.$('season-end-boards').find(e => e.className?.startsWith?.('se-cheer'));
   assert(cheer.textContent === 'Gràcies per fer plaça!' && cheer.className === 'se-cheer' && /garland/.test(plain.$('season-end-boards').children[0].innerHTML), 'no podium: the garland, the thanks');
 }
-// --- a player's card: the name (a guest says «Convidat»), the public totals, podiums, the source line
+// --- a player's card: opened by public id; the name with its check, a released profile's one-line note, the public totals, podiums, the source line
 {
   const totals = { 'mulassa-valls/mulassa-v3/2': bucket({ runs: 30, completed: 25, collapsed: 2, seconds: 11520, perfect: 5000, good: 600, miss: 400, bestStars: 3, bestCombo: 210, guapa: 200, guapaTotal: 260 }) };
-  let card = { alias: 'Baldufa', tag: 1103, name: 'Baldufa#1103', verified: false, totals, podiums: [{ seasonId: 1, version: 'mulassa-v2b', position: 1 }] };
+  let card = { alias: 'Baldufa', verified: false, released: true, totals, podiums: [{ seasonId: 1, version: 'mulassa-v2b', position: 1 }] };
   const asked = [];
-  const svc = service({ async playerCard(a, t) { asked.push([a, t]); if (card instanceof Error) throw card; return card; } });
-  const f = fakeDoc(['card-menu', 'card-name', 'card-kind', 'card-from', 'card-stats', 'card-status', 'card-retry', 'card-close']);
+  const svc = service({ async playerCard(id) { asked.push(id); if (card instanceof Error) throw card; return card; } });
+  const ids = ['card-menu', 'card-name', 'card-note', 'card-from', 'card-stats', 'card-status', 'card-retry', 'card-close'];
+  const f = fakeDoc(ids);
   const c = setupCard({ focusIn() {}, service: svc, doc: f.doc, now: () => NOW, minLoad: 0 });
-  c.open({ alias: 'Baldufa', tag: 1103, verified: false, from: { figure: 'mulassa-valls', season: 'Tardor 2026', position: 3, score: 84210, difficulty: 2 } });
-  assert(f.$('card-menu').open && f.$('card-name').textContent === 'Baldufa#1103' && f.$('card-kind').textContent === 'Convidat' && !f.$('card-kind').hidden, 'the name from the first frame');
+  c.open({ alias: 'Baldufa', verified: false, released: true, publicId: 'id-baldufa', from: { figure: 'mulassa-valls', season: 'Tardor 2026', position: 3, score: 84210, difficulty: 2 } });
+  assert(f.$('card-menu').open && f.$('card-name').textContent === 'Baldufa' && !f.$('card-note').hidden && f.$('card-name').find(e => e.className?.includes?.('released')), 'the name, faded, with its note, from the first frame');
   assert(!f.$('card-from').hidden && f.$('card-from').textContent === 'Mulassa de Valls · Tardor 2026384.210 puntsDIFÍCIL', 'the board row it came from (its place a plain number in the disc)');
   await tick(); await tick(); await tick();
-  assert.deepEqual(asked[0], ['Baldufa', 1103], 'asked by name and tag');
+  assert.deepEqual(asked, ['id-baldufa'], 'asked by public id, never by name');
   assert(/3 h 12 mina la plaça/.test(f.$('card-stats').textContent) && !/Has jugat|dies/.test(f.$('card-stats').textContent), 'the totals, never the days');
   assert(/1Podi a Tardor 2026 · Mulassa de Valls \(ball anterior\)/.test(f.$('card-stats').textContent), 'its podiums, with the season\'s name');
-  card = { ...card, alias: 'Portadora', tag: null, verified: true, totals: {}, podiums: [] };
-  c.open({ alias: 'Portadora', tag: null, verified: true }); await tick(); await tick(); // over itself: a new card
+  card = { ...card, alias: 'Portadora', verified: true, released: false, totals: {}, podiums: [] };
+  c.open({ alias: 'Portadora', verified: true, publicId: 'id-portadora' }); await tick(); await tick(); // over itself: a new card
   assert(f.$('card-from').hidden, 'no row passed (a podium): no row shown');
-  assert(f.$('card-kind').hidden && f.$('card-name').find(e => e.className === 'verified-check'), 'confirmed: the check, no «Convidat»');
+  assert(f.$('card-note').hidden && f.$('card-name').find(e => e.className === 'verified-check'), 'confirmed and active: the check, no note');
+  c.open({ alias: 'Cap' }); assert.equal(asked.length, 2, 'no public id, no card');
   f.$('card-close').click();
-  const g = fakeDoc(['card-menu', 'card-name', 'card-kind', 'card-from', 'card-stats', 'card-status', 'card-retry', 'card-close']);
-  card = null; const none = setupCard({ focusIn() {}, service: svc, doc: g.doc, minLoad: 0 }); none.open({ alias: 'Tabal', tag: 4571 }); await tick(); await tick();
+  const g = fakeDoc(ids);
+  card = null; const none = setupCard({ focusIn() {}, service: svc, doc: g.doc, minLoad: 0 }); none.open({ alias: 'Tabal', publicId: 'id-tabal' }); await tick(); await tick();
   assert(g.$('card-status').textContent === 'Encara no hi ha estadístiques per mostrar.');
-  card = Object.assign(new Error('No s’ha pogut connectar amb la classificació.'), { code: 'unavailable' }); none.open({ alias: 'Tabal', tag: 4571 }); g.$('card-close').click(); none.open({ alias: 'Tabal', tag: 4571 }); await tick(); await tick();
+  card = Object.assign(new Error('No s’ha pogut connectar amb la classificació.'), { code: 'unavailable' }); none.open({ alias: 'Tabal', publicId: 'id-tabal' }); g.$('card-close').click(); none.open({ alias: 'Tabal', publicId: 'id-tabal' }); await tick(); await tick();
   assert(!g.$('card-retry').hidden, 'a failure: retry inside the box');
 }
 // --- Perfil: this device's numbers at once, every device's when there is a profile (whichever knows more); the notice once
 {
   const f = fakeDoc(['account-menu', 'account-close', 'account-stats', 'account-status', 'account-since', 'account-empty', 'account-join',
-    'account-previous', 'account-previous-list', 'profile-row', 'stats-notice-menu', 'stats-notice-ok', 'stats-notice-close', 'stats-notice-guest', 'stats-notice-guest-name', 'stats-notice-last', 'stats-notice-confirm', 'stats-notice-hall']);
+    'account-previous', 'account-previous-list', 'profile-row', 'stats-notice-menu', 'stats-notice-ok', 'stats-notice-close', 'stats-notice-guest', 'stats-notice-last', 'stats-notice-confirm', 'stats-notice-hall']);
   const mem = new Map([['record-v2-duet-1', JSON.stringify({ quality: 91.5, score: 70000 })]]);
   const store = { get: k => mem.get(k) ?? null, set: (k, v) => mem.set(k, v), remove: k => mem.delete(k) };
   const server = { buckets: { 'mulassa-valls/mulassa-v3/1': bucket({ runs: 40, completed: 40, perfect: 4000, good: 100, miss: 100 }) }, days: ['2026-10-19', '2026-10-20'], daysPlayed: 2, currentStreak: 2, longestStreak: 2 };
@@ -267,23 +270,20 @@ const service = (o = {}) => ({ configured: true, asked: [], async seasons(f) { t
   f.$('account-close').click();
   // the stats notice, once: only while needed; closing it counts as seen
   assert.equal(acc.notice(), true); assert(f.$('stats-notice-menu').open);
-  assert(f.$('stats-notice-guest').hidden && f.$('stats-notice-confirm').hidden, 'no guest identity on this device: no tag line, no confirm button');
+  assert(f.$('stats-notice-guest').hidden && f.$('stats-notice-confirm').hidden, 'no guest identity on this device: no keep-your-name step, no confirm button');
   f.$('stats-notice-ok').click(); assert(accepted === 1 && !f.$('stats-notice-menu').open);
   assert.equal(acc.notice(), false, 'seen: never again');
   const backFn = () => {};
-  // a guest (its name carries a tag): told the new name and offered the confirmation, which counts the notice as seen
-  needed = true; mem.set('leaderboard-alias', 'Pep'); mem.set('leaderboard-tag', '4821');
+  // a guest: told that confirming the e-mail keeps its name, and offered it, which counts the notice as seen
+  needed = true; mem.set('leaderboard-alias', 'Pep');
   assert.equal(acc.notice(backFn), true);
-  assert(!f.$('stats-notice-guest').hidden && /Pep#4821/.test(f.$('stats-notice-guest-name').textContent) && !f.$('stats-notice-confirm').hidden && f.$('stats-notice-confirm').textContent === 'Confirma el correu', 'the guest step and its button');
+  assert(!f.$('stats-notice-guest').hidden && !f.$('stats-notice-confirm').hidden && f.$('stats-notice-confirm').textContent === 'Confirma el correu', 'the guest step and its button');
   assert(f.$('stats-notice-last').textContent === '3' && /btn-primary/.test(f.$('stats-notice-confirm').className) && /btn-secondary/.test(f.$('stats-notice-ok').className), 'a guest: three steps, the confirmation leads');
   f.$('stats-notice-confirm').click(); assert(accepted === 2 && opened.at(-1)[0] === 'link' && opened.at(-1)[1] === backFn && !f.$('stats-notice-menu').open, 'confirm: seen, then the profile steps, back to where the notice would go');
-  // a confirmed e-mail whose name still has its tag: nothing to confirm
-  needed = true; mem.set('leaderboard-alias:identity', JSON.stringify({ hasSession: true, prof: { alias: 'Pep', tag: 4821, verified: true } }));
-  assert.equal(acc.notice(), true); assert(f.$('stats-notice-guest').hidden && f.$('stats-notice-confirm').hidden && f.$('stats-notice-last').textContent === '2', 'verified with a tag: no guest step');
-  f.$('stats-notice-ok').click(); mem.delete('leaderboard-alias:identity');
-  needed = true; mem.delete('leaderboard-tag');
-  assert.equal(acc.notice(backFn), true); assert(f.$('stats-notice-guest').hidden && f.$('stats-notice-last').textContent === '2' && /btn-primary/.test(f.$('stats-notice-ok').className), 'a named profile without a tag (confirmed): two steps, «D’acord» leads');
-  f.$('stats-notice-hall').click(); assert(accepted === 4 && halls.at(-1)[0] === 'mulassa-valls' && halls.at(-1)[1] === backFn && !f.$('stats-notice-menu').open, 'the season button: seen, then the Saló de la fama, back to where the notice would go (never back over it)');
+  // a confirmed e-mail: the name is kept already, nothing to confirm
+  needed = true; mem.set('leaderboard-alias:identity', JSON.stringify({ hasSession: true, prof: { alias: 'Pep', verified: true } }));
+  assert.equal(acc.notice(backFn), true); assert(f.$('stats-notice-guest').hidden && f.$('stats-notice-confirm').hidden && f.$('stats-notice-last').textContent === '2' && /btn-primary/.test(f.$('stats-notice-ok').className), 'confirmed: two steps, «D’acord» leads');
+  f.$('stats-notice-hall').click(); assert(accepted === 3 && halls.at(-1)[0] === 'mulassa-valls' && halls.at(-1)[1] === backFn && !f.$('stats-notice-menu').open, 'the season button: seen, then the Saló de la fama, back to where the notice would go (never back over it)');
 }
 // --- markup: the sheets exist, copy is Catalan, one primary each, «Dades enviades…» and «Convidat» words
 {
@@ -307,7 +307,7 @@ const service = (o = {}) => ({ configured: true, asked: [], async seasons(f) { t
   assert(/Crea un perfil per guardar-les i sortir a les classificacions\./.test(sheet('account-menu')));
   assert(/<button id="settings-profile" type="button" class="btn btn-secondary" hidden aria-haspopup="dialog"[^>]*>[^]*?Perfil<span class="sub"/.test(html), 'Perfil opens from ⚙ Configuració');
   // layout rules (docs: names never cut; a lone season card not stranded at the top of the fixed-height hall; stat tiles read from the top)
-  assert(/\.who \.player-name \.alias \{ white-space: normal; overflow-wrap: anywhere; \}/.test(html) && /\.who \.player-name \{ flex-wrap: wrap;/.test(html), 'list names wrap, never an ellipsis; a «#1234» goes under the name whole');
+  assert(/\.who \.player-name \.alias \{ white-space: normal; overflow-wrap: anywhere; \}/.test(html) && /\.who \.player-name \{ flex-wrap: wrap;/.test(html), 'list names wrap, never an ellipsis; no «#» is drawn');
   assert(/#seasons-menu \{[^}]*height: var\(--hall-h, fit-content\); max-height:/.test(html) && /\.hall-detail \{[^}]*align-content: start;/.test(html), 'the hall on every screen: the sheet hugs its season, no free band above or under it');
   assert(/\.pos\.p1, \.pos\.p2, \.pos\.p3 \{[^}]*width: var\(--pos-size, 24px\)/.test(html) && !/class="medal|\.medal\b|pod-medal/.test(html), 'one podium medal: the sized disc, no ribbon medal left');
   assert(/\.hall-main \{[^}]*gap: 16px;/.test(html) && !/\.hall-main \{[^}]*space-evenly/.test(html) && /grid-template-areas: "season season" "pod me" "pod act"/.test(html), 'the hall: one 16 px gap between its blocks (no shared free space); desktop: podium left, context right');
@@ -414,17 +414,17 @@ const service = (o = {}) => ({ configured: true, asked: [], async seasons(f) { t
 // --- the share image's name: this browser's profile as the server last said it, kept from the first answer
 {
   const mem = new Map(), store = { get: k => mem.get(k) ?? null, set: (k, v) => mem.set(k, v), remove: k => mem.delete(k) };
-  let prof = { alias: 'Portadora', tag: null, verified: true, published: true }, calls = 0, release;
+  let prof = { alias: 'Portadora', verified: true, published: true, released: false, publicId: 'id-1' }, calls = 0, release;
   const svc = { configured: true, async profile() { calls++; await new Promise(r => { release = r; }); if (prof instanceof Error) throw prof; return prof; } };
   assert.equal(savedName(store).verified, false, 'Perfil never opened here: no check');
   const answer = async p => { release(); await p; };
   const a = refreshIdentity(svc, store), b = refreshIdentity(svc, store); await tick();
   assert.equal(calls, 1, 'one request at a time'); await answer(Promise.all([a, b]));
-  assert.deepEqual(savedName(store), { alias: 'Portadora', tag: null, verified: true }, 'a confirmed profile shows its check');
-  prof = { alias: 'Timbaler', tag: 3821, verified: false, published: false }; const c = refreshIdentity(svc, store); await tick(); await answer(c);
-  assert.deepEqual(savedName(store), { alias: 'Timbaler', tag: 3821, verified: false }, 'a guest: «nom#1234», no check');
+  assert.deepEqual(savedName(store), { alias: 'Portadora', verified: true, released: false, publicId: 'id-1' }, 'a confirmed profile shows its check');
+  prof = { alias: 'Timbaler', verified: false, published: false, released: true, publicId: 'id-2' }; const c = refreshIdentity(svc, store); await tick(); await answer(c);
+  assert.deepEqual(savedName(store), { alias: 'Timbaler', verified: false, released: true, publicId: 'id-2' }, 'a released guest: the plain name, no check, flagged');
   mem.set('leaderboard-alias:identity', JSON.stringify({ hasSession: true, mailOn: 'a@b.cat', persistent: false, prof }));
-  prof = { alias: 'Timbaler', tag: null, verified: true, published: true }; const d = refreshIdentity(svc, store); await tick(); await answer(d);
+  prof = { alias: 'Timbaler', verified: true, published: true, released: false, publicId: 'id-2' }; const d = refreshIdentity(svc, store); await tick(); await answer(d);
   const kept = JSON.parse(mem.get('leaderboard-alias:identity'));
   assert(kept.mailOn === 'a@b.cat' && kept.persistent === false && kept.prof.verified, 'the Perfil block\'s own fields are kept');
   prof = new Error('offline'); const e = refreshIdentity(svc, store); await tick(); await answer(e);
@@ -438,9 +438,9 @@ const service = (o = {}) => ({ configured: true, asked: [], async seasons(f) { t
     const a = refreshIdentity(svc2, store); await tick(); assert.equal(asked.length, 1);
     assert.equal(refreshIdentity(svc2, store), a, 'no account change: the read in flight is shared');
     const b = refreshIdentity(svc2, store, { fresh: true }); await tick(); assert.equal(asked.length, 2, 'an account change asks again');
-    asked[1]({ alias: 'Nova', tag: null, verified: true, published: true }); await b;
-    asked[0]({ alias: 'Vella', tag: 1234, verified: false, published: false }); await a;
-    assert.deepEqual(savedName(store), { alias: 'Nova', tag: null, verified: true }, 'the stale answer is dropped');
+    asked[1]({ alias: 'Nova', verified: true, published: true, publicId: 'id-n' }); await b;
+    asked[0]({ alias: 'Vella', verified: false, published: false, publicId: 'id-v' }); await a;
+    assert.deepEqual(savedName(store), { alias: 'Nova', verified: true, released: false, publicId: 'id-n' }, 'the stale answer is dropped');
     const c = refreshIdentity(svc2, store); await tick(); assert.equal(asked.length, 3, 'the stale read does not hold the next one up'); asked[2](null); await c; }
   assert.equal(await refreshIdentity({ configured: false, profile() { throw new Error('never'); } }, store), undefined, 'no service: nothing asked');
 }

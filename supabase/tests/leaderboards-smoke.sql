@@ -46,7 +46,7 @@ end $$;
 select set_config('request.jwt.claim.sub','fca4d0d0-0000-4000-8000-000000000002',true);
 select * from public.submit_result('mulassa-v1',0,121,19,10,1,50,'ProvaPortador');
 do $$ begin
-  if (select alias from public.get_leaderboard_all('mulassa-v1') where is_self) !~ '^ProvaPortador#[0-9]{4}$' then raise exception 'FAIL: self marker'; end if;
+  if (select alias from public.get_leaderboard_all('mulassa-v1') where is_self) <> 'ProvaPortador' then raise exception 'FAIL: self marker'; end if;
   begin
     delete from leaderboard_private.entries;
     raise exception 'FAIL: private delete allowed';

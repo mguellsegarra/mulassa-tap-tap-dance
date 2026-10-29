@@ -35,13 +35,12 @@ try {
   await as(old);
   let legacy=await q("select * from public.get_leaderboard_all('mulassa-v2-short','all',0,50)");
   assert.equal(legacy[0].season_id,0);
-  assert.deepEqual(Object.keys(legacy[0]),['position','alias','difficulty','quality','score','max_combo','is_self','total','verified','tag','season_id']);
-  assert.match(legacy[0].alias,/^Historic#[0-9]{4}$/);
+  assert.deepEqual(Object.keys(legacy[0]),['position','alias','difficulty','quality','score','max_combo','is_self','total','verified','season_id','public_id','released']);
+  assert.equal(legacy[0].alias,'Historic','no tag, ever');
   const raw=(await q('select public.my_alias() alias'))[0].alias;
   assert.equal(raw,'Historic');
-  const tag=(await q('select * from public.my_profile()'))[0].tag;
   assert.equal((await submit('mulassa-v2-short',raw,1100)).length,1);
-  assert.equal((await q('select * from public.my_profile()'))[0].tag,tag);
+  assert.equal((await q('select * from public.my_profile()'))[0].released,false);
   await unlock();await as(old);
   assert.equal((await submit('mulassa-v3',raw,3000))[0].improved,true);
   await unlock();await as(old);
@@ -57,12 +56,12 @@ try {
   await as(third); await submit('mulassa-v3','Tercer',5000,1);
   await unlock(); await as(third); await submit('mulassa-v3','Tercer',2500,0);
   await as(old);
-  assert.deepEqual((await board('mulassa-v3')).map(r=>[r.alias.split('#')[0],r.difficulty]),[['Tercer',1],['Historic',0]]);
+  assert.deepEqual((await board('mulassa-v3')).map(r=>[r.alias,r.difficulty]),[['Tercer',1],['Historic',0]]);
   const podium=d=>q('select * from public.get_level_podium($1,$2)',['mulassa-v3',d]);
   const easy=await podium(0);
-  assert.deepEqual(easy.map(r=>[Number(r.position),r.alias.split('#')[0],r.is_self,Number(r.total)]),[[1,'Historic',true,2],[2,'Tercer',false,2]]);
+  assert.deepEqual(easy.map(r=>[Number(r.position),r.alias,r.is_self,Number(r.total)]),[[1,'Historic',true,2],[2,'Tercer',false,2]]);
   assert.equal(easy[0].score,3000);
-  assert.deepEqual((await podium(1)).map(r=>r.alias.split('#')[0]),['Tercer']);
+  assert.deepEqual((await podium(1)).map(r=>r.alias),['Tercer']);
   assert.equal((await podium(2)).length,0,'nobody on DIFICIL');
   await checkReject(()=>podium(7),'leaderboard_invalid_version');
   await db.exec('reset role'); // Tercer leaves: the checks below count the boards as they were
@@ -109,7 +108,9 @@ try {
   await q("update leaderboard_private.versions set retired_at='2027-01-01 00:00 Europe/Madrid',retired_season_id=1 where version='mulassa-v3'");
   assert.equal((await q("select leaderboard_private.season_for('mulassa-v3') id"))[0].id,1);
   await q("update leaderboard_private.versions set retired_at=null,retired_season_id=null where version='mulassa-v3'");
-  await db.exec(sql('202610200002_seasons.sql')); // Rerun after the first season has ended.
+  // Rerun after the first season has ended; 202610280002 changed the board's columns, so it goes first and again after.
+  await db.exec('drop function public.get_leaderboard_all(text,text,integer,integer,smallint)');
+  await db.exec(sql('202610200002_seasons.sql'));await db.exec(sql('202610280002_reusable_guest_names.sql'));
   await at('2026-11-15 12:00 Europe/Madrid');
   // Seed phase-out is scoped to both family and season, and counts users rather than rows.
   const seedA=await player('SeasonSeedA',{seed:true}),seedB=await player('SeasonSeedB',{seed:true});
@@ -156,29 +157,47 @@ try {
   await as(null,'anon');
   assert((await q("select * from public.get_seasons('mulassa-valls')")).every(h=>h.my_position==null&&h.my_score==null&&h.my_difficulty==null),'nobody signed in: no place, no points');
   await as(old);
-  // Guest names coexist with each other and with the clean verified name.
-  const a=await player(null),b=await player(null);
-  await as(a);await q("select public.update_alias('Clean')");
-  const aTag=(await q('select * from public.my_profile()'))[0].tag;
-  await as(b);await q("select public.update_alias('Clean')");
-  const bTag=(await q('select * from public.my_profile()'))[0].tag;
-  assert.notEqual(aTag,bTag);assert.equal(typeof aTag,'number');
-  await checkReject(()=>q("select public.choose_verified_alias('FreeName')"),'leaderboard_verification_required');
-  await db.exec('reset role');await q('update auth.users set email_confirmed_at=now(),is_anonymous=false where id=$1',[a]);
-  await unlock();await as(a);await submit('mulassa-v2-short','Clean',5000);
-  assert.equal((await q('select * from public.my_profile()'))[0].tag,aTag,'confirmed guest keeps tag until choosing');
-  await unlock();await as(a);await q("select public.update_alias('Clean')");
-  await unlock();await as(a);await checkReject(()=>q("select public.choose_verified_alias('Clean')"),'leaderboard_alias_taken');
-  await q("select public.choose_verified_alias('FreeName')");
-  assert.deepEqual((await q('select * from public.my_profile()'))[0],{alias:'FreeName',tag:null,verified:true,published:true});
-  await unlock();await as(a);await checkReject(()=>submit('mulassa-v3','Name#1234'),'leaderboard_invalid_alias');
-  // Force a rename collision: retain the tag when free, allocate another when occupied.
-  await db.exec('reset role');await q('update leaderboard_private.profiles set tag=$1 where user_id=$2',[bTag,old]);
-  await unlock();await as(old);await q("select public.update_alias('Clean')");
-  assert.notEqual((await q('select * from public.my_profile()'))[0].tag,bTag);
+  // One name per ACTIVE profile (202610280002): a guest 30 days idle loses its name to whoever asks; nobody else does.
+  const a=await player(null),b=await player(null),c=await player(null);
+  await as(a);await submit('mulassa-v3','Shared',2222);
+  await as(b);await checkReject(()=>q("select public.update_alias('Shared')"),'leaderboard_alias_taken');
+  await checkReject(()=>q("select public.update_alias('Shàred')"),'leaderboard_alias_taken');
+  await checkReject(()=>q("select public.update_alias('Clean')"),'leaderboard_alias_taken');
+  const idle=async(id,days)=>{await db.exec('reset role');
+    await q(`update auth.users set created_at=now()-make_interval(days=>$2),last_sign_in_at=null where id=$1`,[id,days]);
+    await q(`update leaderboard_private.profiles set last_active_at=now()-make_interval(days=>$2) where user_id=$1`,[id,days]);};
+  await idle(a,29);await as(b);await checkReject(()=>q("select public.update_alias('Shared')"),'leaderboard_alias_taken');
+  await idle(verified,900);await as(b);await checkReject(()=>q("select public.update_alias('Clean')"),'leaderboard_alias_taken');
+  await idle(a,31);await as(b);assert.equal((await q("select public.update_alias('Shared') a"))[0].a,'Shared');
+  await as(a);let mine=(await q('select * from public.my_profile()'))[0];
+  assert.deepEqual([mine.alias,mine.released],['Shared',true],'the old holder keeps its text, released');
+  assert.equal((await q('select * from public.my_profile()'))[0].released,true,'reading never takes the name back');
+  let rows=(await board('mulassa-v3')).filter(r=>r.alias==='Shared');
+  assert.deepEqual(rows.map(r=>r.released),[true],'its result stays, marked released');
+  await unlock();await as(a);await checkReject(()=>submit('mulassa-v3','Shared',2300),'leaderboard_alias_taken');
+  assert.equal((await submit('mulassa-v3','Tornat',2300))[0].score,2300,'a released profile publishes under a new name');
+  mine=(await q('select * from public.my_profile()'))[0];assert.deepEqual([mine.alias,mine.released],['Tornat',false]);
+  // An old tab sends the name it stored: never a rename, never a claim.
+  await unlock();await as(b);await submit('mulassa-v3','Tornat',1000);
+  assert.equal((await q('select public.my_alias() a'))[0].a,'Shared');
+  // A released profile whose name is still free gets it back by publishing.
+  await idle(b,40);await as(c);await q("select public.update_alias('Shared2')");
+  await db.exec('reset role');await q('update leaderboard_private.profiles set released_at=now() where user_id=$1',[b]);
+  await unlock();await as(b);await submit('mulassa-v3','Shared',1100);
+  assert.equal((await q('select * from public.my_profile()'))[0].released,false);
+  await unlock();await as(a);await checkReject(()=>q("select public.update_alias('Name#1234')"),'leaderboard_invalid_alias');
+  await as(verified);await q("select public.choose_verified_alias('FreeName')");
+  assert.deepEqual((await q('select alias,verified,released from public.my_profile()'))[0],{alias:'FreeName',verified:true,released:false});
+  await unlock();await as(verified);await submit('mulassa-v2-short','FreeName',1000);
+  const ids=new Set((await board('mulassa-v3')).map(r=>r.public_id));assert.equal(ids.size,(await board('mulassa-v3')).length);
   // Public cards need a publication and expose no private identifiers/addresses/days/error breakdowns.
-  await as(null,'anon');assert.deepEqual(await q("select * from public.get_player_card('Clean')"),[],'unpublished profile is private');
-  const card=await q("select * from public.get_player_card('FreeName')");assert.equal(card.length,1);
+  await db.exec('reset role');
+  const pid=async id=>(await q('select public_id from leaderboard_private.profiles where user_id=$1',[id]))[0].public_id;
+  const [aId,cId,vId]=[await pid(a),await pid(c),await pid(verified)];
+  await as(null,'anon');assert.deepEqual(await q('select * from public.get_player_card($1::uuid)',[cId]),[],'unpublished profile is private');
+  const card=await q('select * from public.get_player_card($1::uuid)',[vId]);assert.equal(card.length,1);
+  assert.deepEqual([card[0].alias,card[0].released],['FreeName',false]);
+  assert.equal((await q('select * from public.get_player_card($1::uuid)',[aId]))[0].alias,'Tornat','by id, never by name');
   const publicJson=JSON.stringify([...card,...await board(),...await q("select * from public.get_seasons('mulassa-valls')")]);
   assert(!/user_id|device_id|email|example.invalid|errors|first_at|updated_at/.test(publicJson));
   for(const table of ['seasons','profiles','entries','player_stats','player_devices','player_days'])
@@ -186,23 +205,16 @@ try {
   await checkReject(()=>submit('mulassa-v3','Denied'),'permission denied');
   await checkReject(()=>q("select public.merge_stats('00000000-0000-4000-8000-000000000001','{}','{}',null)"),'permission denied');
   await checkReject(()=>q('select * from public.my_stats()'),'permission denied');
-  await checkReject(()=>q('select * from public.leaderboard_expired_players()'),'permission denied');
   await db.exec('reset role');
   const privateFns=await q(`select proname,proconfig,has_function_privilege('anon',oid,'execute') a,
     has_function_privilege('authenticated',oid,'execute') b from pg_proc where pronamespace='leaderboard_private'::regnamespace`);
   assert(privateFns.every(f=>!f.a&&!f.b&&String(f.proconfig).includes('search_path=""')));
   const publicFns=await q(`select proname,prosecdef,proconfig from pg_proc where pronamespace='public'::regnamespace`);
   assert(publicFns.every(f=>f.prosecdef&&String(f.proconfig).includes('search_path=""')));
-  // Current activity and confirmed accounts survive retention; deleting a guest cascades every season.
-  await q("update auth.users set created_at='2024-01-01',last_sign_in_at='2024-01-01'");
-  await q("update leaderboard_private.profiles set last_active_at='2024-01-01'");
-  await as(b);await q('select * from public.my_profile()');
-  await db.exec('reset role');
-  assert.equal((await q('select leaderboard_private.purge_inactive_guests(1) n'))[0].n,1);
-  assert.equal((await q('select count(*)::int n from auth.users where id=$1',[old]))[0].n,0);
-  assert.equal((await q('select count(*)::int n from leaderboard_private.entries where user_id=$1',[old]))[0].n,0);
-  for(const id of [verified,a,b]) assert.equal((await q('select count(*)::int n from auth.users where id=$1',[id]))[0].n,1);
+  // Nothing deletes an idle profile any more: its results stay in every season.
+  assert.equal((await q("select count(*)::int n from pg_proc where proname in ('purge_inactive_guests','leaderboard_expired_players','check_alias_free')"))[0].n,0);
+  assert.equal((await q("select count(*)::int n from information_schema.columns where table_schema='leaderboard_private' and table_name='profiles' and column_name='tag'"))[0].n,0);
   history=await q("select * from public.get_seasons('mulassa-valls')");
-  assert(history.every(h=>h.version!=='mulassa-v3'&&h.version!=='mulassa-test-next'),'history recalculates after deletion');
-  console.log('seasons/guests: migration preservation, old RPCs, calendar/DST/gaps, retirement, families, names, privacy, retention OK');
+  assert(history.every(h=>h.podium.every(p=>p.public_id&&typeof p.released==='boolean'&&!('tag' in p))));
+  console.log('seasons/names: migration preservation, old RPCs, calendar/DST/gaps, retirement, families, reusable names, cards by id, privacy, no idle deletion OK');
 } finally { await db.close(); }

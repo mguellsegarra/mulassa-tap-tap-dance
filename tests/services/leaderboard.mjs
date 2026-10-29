@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { makeDanceChart } from '../../src/game/chart.js';
 import { LEADERBOARD_VERSION, EXPECTED_JUDGMENTS, VERSION_RULES, normalizeAlias, snapshotResult, validResult } from '../../src/services/leaderboard-rules.js';
 import { createLeaderboardService, FIGURE_VERSIONS } from '../../src/services/leaderboard.js';
-import { displayName, baseName, rememberIdentity, TAG_KEY } from '../../src/services/leaderboard-identity.js';
+import { rememberIdentity, dropLegacyIdentity, ownerKey, savedName, LEGACY_TAG_KEY, ALIAS_KEY } from '../../src/services/leaderboard-identity.js';
 import { captureLeaderboardResult, clearLeaderboardResult, getLeaderboardResult, subscribeLeaderboardResult, markLeaderboardDebugUse } from '../../src/services/leaderboard-result.js';
 import { v1Song } from '../game/v1-song.mjs';
 const song = JSON.parse(readFileSync(new URL('../../src/song-mulassa.json', import.meta.url)));
@@ -158,44 +158,40 @@ await assert.rejects(absent.listAll(),{code:'disabled'});
   const svc = createLeaderboardService({ configured: true, publishingEnabled: true, captchaRequired: false, getClient: async () => c });
   const events = []; svc.onAccount(e => events.push(e));
   const last = () => log.at(-1);
-  // names: the stored alias never carries the tag
-  assert.equal(displayName('Timbaler', 3821), 'Timbaler#3821'); assert.equal(displayName('Timbaler', 7), 'Timbaler#0007'); assert.equal(displayName('Timbaler', null), 'Timbaler');
-  assert.equal(displayName('Timbaler', undefined), 'Timbaler'); assert.equal(displayName('Timbaler', 10000), 'Timbaler');
-  assert.equal(baseName('Timbaler#0007', 7), 'Timbaler'); assert.equal(baseName('Timbaler', null), 'Timbaler'); assert.equal(baseName('Timbaler#0007', null), 'Timbaler#0007');
-  { const kv = new Map(), store = { set: (k, v) => kv.set(k, v), remove: k => kv.delete(k) };
-    rememberIdentity(store, 'leaderboard-alias', { alias: 'Timbaler#3821', tag: 3821 }); assert.equal(kv.get('leaderboard-alias'), 'Timbaler'); assert.equal(kv.get(TAG_KEY), '3821');
-    rememberIdentity(store, 'leaderboard-alias', { alias: 'Timbaler', tag: null }); assert.equal(kv.get('leaderboard-alias'), 'Timbaler'); assert(!kv.has(TAG_KEY), 'a clean name has no tag'); }
+  // names: plain text with no guest tag; the legacy tag key and a cached identity that carries one are dropped, the owner key is the public id
+  { const kv = new Map(), store = { get: k => kv.get(k) ?? null, set: (k, v) => kv.set(k, v), remove: k => kv.delete(k) };
+    rememberIdentity(store, ALIAS_KEY, { alias: 'Timbaler' }); assert.equal(kv.get(ALIAS_KEY), 'Timbaler');
+    kv.set(LEGACY_TAG_KEY, '3821'); kv.set(`${ALIAS_KEY}:identity`, JSON.stringify({ hasSession: true, prof: { alias: 'Timbaler', tag: 3821, verified: false } }));
+    dropLegacyIdentity(store); assert(!kv.has(LEGACY_TAG_KEY) && !kv.has(`${ALIAS_KEY}:identity`), 'the legacy tag and the identity that carries one go');
+    kv.set(`${ALIAS_KEY}:identity`, JSON.stringify({ hasSession: true, prof: { alias: 'Timbaler', verified: true, released: false, publicId: '11111111-2222-4333-8444-555555555555' } }));
+    dropLegacyIdentity(store); assert(kv.has(`${ALIAS_KEY}:identity`), 'a current identity stays');
+    assert.equal(ownerKey(store), '11111111-2222-4333-8444-555555555555'); assert.deepEqual(savedName(store), { alias: 'Timbaler', verified: true, released: false, publicId: '11111111-2222-4333-8444-555555555555' });
+    kv.delete(`${ALIAS_KEY}:identity`); assert.equal(ownerKey(store), '', 'no identity: no owner'); }
   // boards: a version or a figure, a season only when asked
   await svc.listAll({ figure: 'drac-valls' }); assert.deepEqual(last(), ['get_leaderboard_all', { p_version: FIGURE_VERSIONS['drac-valls'], p_period: 'all', p_offset: 0, p_limit: 50 }]);
   await svc.listAll({ version: 'mulassa-v2-short', season: 0, offset: 50 }); assert.deepEqual(last()[1], { p_version: 'mulassa-v2-short', p_period: 'all', p_offset: 50, p_limit: 50, p_season: 0 });
   // the signed-in profile
-  answer = [{ alias: 'Timbaler', tag: 3821, verified: false, published: true }];
-  assert.deepEqual(await svc.profile(), { alias: 'Timbaler', tag: 3821, verified: false, published: true });
-  answer = [{ alias: 'Timbaler', tag: null, verified: true, published: false }]; assert.deepEqual(await svc.profile(), { alias: 'Timbaler', tag: null, verified: true, published: false });
+  answer = [{ alias: 'Timbaler', verified: false, published: true, released: false, public_id: 'p-1' }];
+  assert.deepEqual(await svc.profile(), { alias: 'Timbaler', verified: false, published: true, released: false, publicId: 'p-1' });
+  answer = [{ alias: 'Timbaler', verified: false, published: true, released: true, public_id: 'p-1' }]; assert.equal((await svc.profile()).released, true, 'a released profile says so');
   answer = []; assert.equal(await svc.profile(), null, 'no row: no profile');
-  // choosing the clean name; a taken one has its own message, a not yet confirmed address its own
-  answer = 'Timbaler'; assert.equal(await svc.chooseVerifiedAlias(' Timbaler '), 'Timbaler'); assert.deepEqual(last(), ['choose_verified_alias', { p_alias: 'Timbaler' }]);
-  failWith = { message: 'leaderboard_alias_taken', code: '23505' };
-  await assert.rejects(svc.chooseVerifiedAlias('Timbaler'), { code: 'name_taken', message: 'Aquest nom ja és d’algú. Prova’n un altre.' });
-  failWith = { message: 'leaderboard_verification_required', code: '28000' };
-  await assert.rejects(svc.chooseVerifiedAlias('Timbaler'), { code: 'verification', message: 'Confirma el correu abans de triar un nom net.' });
-  failWith = null;
-  await assert.rejects(svc.chooseVerifiedAlias('a b'), { code: 'invalid' });
-  // seasons: camelCase, ms, the podium with composed names
+  // the 1.2.0 betas' «Tria el teu nom» is gone: a rename is update_alias (createProfile), a taken name its usual error
+  assert.equal(svc.chooseVerifiedAlias, undefined);
+  // seasons: camelCase, ms, the podium with the public id and the released flag
   answer = [{ season_id: 1, name: 'Tardor 2026', starts_at: '2026-11-05T00:00:00Z', ends_at: '2027-01-01T00:00:00Z', version: 'mulassa-v3', previous_dance: false, players: 48, my_position: 12, my_score: 142310, my_difficulty: 1,
-    podium: [{ position: 1, alias: 'Timbaler', tag: 3821, score: 182400, difficulty: 2, verified: false }, { position: 2, alias: 'Portadora', tag: null, score: 171050, difficulty: 1, verified: true }] },
+    podium: [{ position: 1, alias: 'Timbaler', public_id: 'p-1', released: true, score: 182400, difficulty: 2, verified: false }, { position: 2, alias: 'Portadora', public_id: 'p-2', released: false, score: 171050, difficulty: 1, verified: true }] },
     { season_id: 0, name: 'Estrena 2026', starts_at: '2026-10-14T22:00:00Z', ends_at: null, version: 'mulassa-v2-short', previous_dance: true, players: 60, my_position: null, podium: [] }];
   { const r = await svc.seasons('mulassa-valls'); assert.deepEqual(last(), ['get_seasons', { p_figure: 'mulassa-valls' }]);
     assert.deepEqual(r[0], { seasonId: 1, name: 'Tardor 2026', startsAt: Date.parse('2026-11-05T00:00:00Z'), endsAt: Date.parse('2027-01-01T00:00:00Z'), version: 'mulassa-v3', previousDance: false, players: 48, myPosition: 12, myScore: 142310, myDifficulty: 1,
-      podium: [{ position: 1, alias: 'Timbaler', tag: 3821, score: 182400, difficulty: 2, verified: false, name: 'Timbaler#3821' }, { position: 2, alias: 'Portadora', tag: null, score: 171050, difficulty: 1, verified: true, name: 'Portadora' }] });
+      podium: [{ position: 1, alias: 'Timbaler', publicId: 'p-1', released: true, score: 182400, difficulty: 2, verified: false }, { position: 2, alias: 'Portadora', publicId: 'p-2', released: false, score: 171050, difficulty: 1, verified: true }] });
     assert(r[1].endsAt === null && r[1].previousDance && r[1].myPosition === null && r[1].myScore === null && r[1].myDifficulty === null); }
-  // the public card: a guest needs its tag
-  answer = [{ alias: 'Timbaler', tag: 3821, verified: false, totals: { 'mulassa-valls/mulassa-v3/1': { runs: 3 } }, podiums: [{ season_id: 1, version: 'mulassa-v3', position: 2 }] }];
-  assert.deepEqual(await svc.playerCard('Timbaler', 3821), { alias: 'Timbaler', tag: 3821, name: 'Timbaler#3821', verified: false, totals: { 'mulassa-valls/mulassa-v3/1': { runs: 3 } }, podiums: [{ seasonId: 1, version: 'mulassa-v3', position: 2 }] });
-  assert.deepEqual(last(), ['get_player_card', { p_alias: 'Timbaler', p_tag: 3821 }]);
-  await svc.playerCard('Portadora'); assert.deepEqual(last()[1], { p_alias: 'Portadora', p_tag: null });
-  await assert.rejects(svc.playerCard('Timbaler', 12345), { code: 'invalid' }); await assert.rejects(svc.playerCard('', null), { code: 'invalid' });
-  answer = []; assert.equal(await svc.playerCard('Ningu'), null);
+  // the public card opens by the opaque public_id, never by name
+  const PID = '0f9c6a52-8d1e-4b7a-9c3d-2a5e7b1f4c60';
+  answer = [{ alias: 'Timbaler', verified: false, released: true, totals: { 'mulassa-valls/mulassa-v3/1': { runs: 3 } }, podiums: [{ season_id: 1, version: 'mulassa-v3', position: 2 }] }];
+  assert.deepEqual(await svc.playerCard(PID), { alias: 'Timbaler', verified: false, released: true, totals: { 'mulassa-valls/mulassa-v3/1': { runs: 3 } }, podiums: [{ seasonId: 1, version: 'mulassa-v3', position: 2 }] });
+  assert.deepEqual(last(), ['get_player_card', { p_public_id: PID }]);
+  for (const bad of ['Timbaler', '', null, 'Timbaler#3821', '0f9c6a52-8d1e-4b7a-9c3d']) await assert.rejects(svc.playerCard(bad), { code: 'invalid' }, 'a name is no key');
+  answer = []; assert.equal(await svc.playerCard(PID), null);
   // statistics
   answer = null; assert.deepEqual(await svc.syncStats({ owner: 'u-1', device: 'd-1', buckets: { practice: { runs: 1, seconds: 30 } }, days: ['2026-11-06'] }), { synced: true });
   assert.deepEqual(last(), ['merge_stats', { p_device: 'd-1', p_buckets: { practice: { runs: 1, seconds: 30 } }, p_days: ['2026-11-06'], p_owner: 'u-1' }]);

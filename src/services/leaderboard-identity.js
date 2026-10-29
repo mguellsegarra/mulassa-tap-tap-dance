@@ -1,28 +1,25 @@
-// A profile's name: the alias and its guest tag, shown as «nom#1234», stored apart on this browser.
-export const TAG_KEY = 'leaderboard-tag'; // beside 'leaderboard-alias', which keeps the name WITHOUT the tag (an old tab reads and sends it)
-const pad4 = n => String(n).padStart(4, '0');
-// «Timbaler#3821» for a guest (a tag), «Timbaler» for a verified profile (no tag); never what is stored under the alias key.
-export const displayName = (alias, tag) => (Number.isInteger(tag) && tag >= 0 && tag <= 9999 ? `${alias}#${pad4(tag)}` : String(alias ?? ''));
-// The name of a board row without its «#1234» (get_leaderboard_all composes it for old clients; `tag` is the extra column).
-export const baseName = (composed, tag) => (Number.isInteger(tag) && String(composed).endsWith(`#${pad4(tag)}`) ? String(composed).slice(0, -5) : String(composed ?? ''));
-// This browser's own profile name: the raw alias under ALIAS_KEY ('leaderboard-alias'), the tag under TAG_KEY. Never «name#1234» in the alias.
-export function rememberIdentity(kv, aliasKey, { alias, tag = null }) {
-  kv.set(aliasKey, baseName(alias, tag));
-  if (Number.isInteger(tag)) kv.set(TAG_KEY, String(tag)); else kv.remove?.(TAG_KEY);
+// A profile's name as this browser remembers it. Names are plain text, one per active profile, with no guest tag: the check
+// is the only mark. A released profile (a guest idle for 30 days whose name somebody else took) keeps its text, faded in lists.
+export const ALIAS_KEY = 'leaderboard-alias';
+export const LEGACY_TAG_KEY = 'leaderboard-tag'; // the guest tag of the first 1.2.0 betas; only ever removed
+export const rememberIdentity = (kv, aliasKey, { alias }) => kv.set(aliasKey, String(alias ?? ''));
+// the old betas stored a tag beside the name and keyed the owner by name#tag: forget both once, the next profile() read refills the cache
+export function dropLegacyIdentity(store) {
+  store.remove(LEGACY_TAG_KEY);
+  let prof = null; try { prof = JSON.parse(store.get(`${ALIAS_KEY}:identity`) || 'null')?.prof; } catch { prof = {}; }
+  if (prof && 'tag' in prof) store.remove(`${ALIAS_KEY}:identity`);
 }
 
-export const ALIAS_KEY = 'leaderboard-alias';
-// this browser's profile as last known: the remembered name and tag, and the Perfil block's last answer (src/ui/profile-ui.js)
+// this browser's profile as last known: the remembered name, and the Perfil block's last answer (src/ui/profile-ui.js)
 // for the check, so a name shows as the boards show it from the first frame (the publish sheet, the share image)
 export function savedName(store) {
-  let verified = false;
-  try { verified = JSON.parse(store.get(`${ALIAS_KEY}:identity`) || 'null')?.prof?.verified === true; } catch { /* unknown: no check */ }
-  const t = store.get(TAG_KEY), n = Number(t);
-  return { alias: store.get(ALIAS_KEY) || '', tag: t != null && Number.isInteger(n) ? n : null, verified };
+  let prof = null;
+  try { prof = JSON.parse(store.get(`${ALIAS_KEY}:identity`) || 'null')?.prof; } catch { /* unknown: no check */ }
+  return { alias: store.get(ALIAS_KEY) || '', verified: prof?.verified === true, released: prof?.released === true, publicId: prof?.publicId ?? null };
 }
-// whose board answers the selector may show again (select-ui.js, select-standings.js): the remembered name, only while this browser
-// still has that profile. A sign-out, here or in another tab, drops the identity (refreshIdentity); the name and tag stay
-export const ownerKey = store => (store.get(`${ALIAS_KEY}:identity`) == null ? '' : (me => `${me.alias}#${me.tag}`)(savedName(store)));
+// whose board answers the selector may show again (select-ui.js, select-standings.js): the profile's stable public id, only while
+// this browser still has that profile. A sign-out, here or in another tab, drops the identity (refreshIdentity); the name stays
+export const ownerKey = store => (store.get(`${ALIAS_KEY}:identity`) == null ? '' : (me => me.publicId || me.alias)(savedName(store)));
 // savedName's source, kept fresh from the server's answer (profile(): null = no profile or session, which clears it): the share
 // image and the publish sheet then show the check for a confirmed profile without Perfil ever having been opened. The Perfil
 // block (src/ui/profile-ui.js) writes the same key with its own fields, which this keeps. One request at a time; an offline

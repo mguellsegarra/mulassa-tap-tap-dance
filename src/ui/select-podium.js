@@ -6,7 +6,7 @@
 import { DIFFS } from '../game/chart.js';
 import { tr } from '../i18n/messages.js';
 import { num, posDisc } from './sheet-kit.js';
-import { appendName } from './profile-notes.js';
+import { appendName, playerOf } from './profile-notes.js';
 import { calendarSeason } from './seasons-ui.js';
 
 const PODIUM_TTL = 60e3;
@@ -22,7 +22,7 @@ export function setupPodium({ doc, win, $, onBoard, onCard, load, refit, now = (
   function place(r, level) {
     const li = el('li', r.is_self ? 'me' : ''), at = Number(r.position);
     li.appendChild(posDisc(doc, at));
-    const who = li.appendChild(el('span', 'who')), p = { alias: r.alias, tag: r.tag ?? null, verified: r.verified === true };
+    const who = li.appendChild(el('span', 'who')), p = playerOf(r);
     appendName(doc, who, p, q => onCard({ ...q, from: { season: calendarSeason().name, position: at, score: r.score, difficulty: level } })); // aliases are text, never HTML
     if (r.is_self) who.appendChild(el('span', 'me-tag', tr('ui.board.me')));
     li.appendChild(el('span', 'pts', num(r.score))); // lilac = points, as on the standings card

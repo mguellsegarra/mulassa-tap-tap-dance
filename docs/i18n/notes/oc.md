@@ -174,7 +174,6 @@ Cada fila és una clau; els objectes plurals es compten una sola vegada.
 | `html.accountTitle` | `Perfil` | Lèxic i flexió compartits amb l'aranès; marcadors i noms propis intactes. |
 | `html.profileKind` | `Convidat` | Lèxic i flexió compartits amb l'aranès; marcadors i noms propis intactes. |
 | `html.seasonsFigures.aria` | `Figura` | Lèxic i flexió compartits amb l'aranès; marcadors i noms propis intactes. |
-| `html.cardKind` | `Convidat` | Lèxic i flexió compartits amb l'aranès; marcadors i noms propis intactes. |
 | `html.feedbackSend` | `Envia` | Lèxic i flexió compartits amb l'aranès; marcadors i noms propis intactes. |
 | `html.selectPrev.aria` | `Personatge anterior` | Lèxic i flexió compartits amb l'aranès; marcadors i noms propis intactes. |
 | `html.selectStrip.aria` | `Figures` | Lèxic i flexió compartits amb l'aranès; marcadors i noms propis intactes. |

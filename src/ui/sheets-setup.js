@@ -1,5 +1,5 @@
 import { leaderboard } from '../services/leaderboard.js';
-import { TAG_KEY, ALIAS_KEY, refreshIdentity } from '../services/leaderboard-identity.js';
+import { ALIAS_KEY, refreshIdentity, dropLegacyIdentity } from '../services/leaderboard-identity.js';
 // Builds the sheets (settings, sync, board, share, profile, Perfil, seasons, cards, feedback, privacy), wires their buttons and registers them in `sheets`.
 import { showPhotoHelp, setRadioHint } from './photo-avatars.js';
 import { setupSelect } from './select-ui.js';
@@ -7,7 +7,7 @@ import { sheetFades } from './sheet-fade.js';
 import { setupSync } from './sync-sheet.js';
 import { store } from '../platform/storage.js';
 import { APP_BUILD } from '../core/version.js';
-import { memoryKeys, mockLeaderboard, markTestMode, leaderboardPreviewMode, demoOptions, DEMO_SELF, FINAL } from '../dev/final-test.js';
+import { memoryKeys, mockLeaderboard, markTestMode, leaderboardPreviewMode, demoOptions, DEMO_SELF, demoPublicId, FINAL } from '../dev/final-test.js';
 import { statsSync, markStatsNoticeSeen } from '../services/stats-sync.js';
 import { setupAccount } from './account-ui.js';
 import { setupSeasons } from './seasons-ui.js';
@@ -107,16 +107,16 @@ document.getElementById('settings-feedback').addEventListener('click', () => { s
 // Classificacions (optional, online): from the selector or the results screen.
 // After an eligible run its publish sheet opens by itself, only over a bare, visible, upright results screen.
 const mockBoard = Boolean(FINAL) || leaderboardPreviewMode({ hostname: location.hostname, search: location.search, configured: leaderboard.configured });
-// mocked board: nickname (and its tag), the profile's last answer and prompt choices live in memory, forgotten on reload.
+// mocked board: nickname, the profile's last answer and prompt choices live in memory, forgotten on reload.
 // The demo world comes from the URL (src/dev/final-test.js demoOptions: &account, &seasons, &board, &drac, &card).
 const mockOpts = mockBoard && { ...demoOptions(location.search), ...FINAL };
 const demoAccount = mockBoard && DEMO && !FINAL && !mockOpts.account; // ?demo: a player with a row, so the board's own row and the rank exist
 if (demoAccount) mockOpts.account = 'verified';
-const finalStore = mockBoard && memoryKeys(store, [ALIAS_KEY, TAG_KEY, DECLINES_KEY, OPTOUT_KEY, QUIET_OFF_KEY, PERSIST_KEY, `${ALIAS_KEY}:identity`]);
+dropLegacyIdentity(store);
+const finalStore = mockBoard && memoryKeys(store, [ALIAS_KEY, DECLINES_KEY, OPTOUT_KEY, QUIET_OFF_KEY, PERSIST_KEY, `${ALIAS_KEY}:identity`]);
 if (mockOpts?.board === 'me') finalStore.set(ALIAS_KEY, 'ProvaRetall');
 else if (mockOpts?.account && mockOpts.account !== 'new') { // the mock account's profile is this browser's
   finalStore.set(ALIAS_KEY, DEMO_SELF.alias);
-  if (mockOpts.account !== 'verified') finalStore.set(TAG_KEY, String(DEMO_SELF.tag));
 }
 const mockService = mockBoard && mockLeaderboard({ charts: [0, 1, 2].map(d => makeDanceChart(song, d)), finaleT: FINALE_T, ...mockOpts,
   ...(FINAL?.review != null && { calls: (globalThis.__reviewCalls = []) }) }); // ?final&review: the mock's calls, for QA
@@ -155,8 +155,8 @@ if (mockBoard) markTestMode(); // «MODE PROVA»: synthetic rows remain clearly 
 if (FINAL?.review != null) import('../dev/account-review.js').then(m => m.startReview({ state: FINAL.review, board: () => board,
   openProfile: () => account.open(), openBoard: (o = {}) => board.openBoard(null, o), openSeasons: f => seasons.open(f),
   showSeasonEnd: async () => { const n = await seasonEnd.news(); if (!n) throw new Error('no ended season to tell'); seasonEnd.show(n); },
-  openCard: (alias, tag, from) => card.open({ alias, tag, from }), chooseNameReady: () => until(() => profile.choosing) }));
-// The player's profile (src/ui/profile-ui.js): recover / link an e-mail / choose a clean name / sign out / delete, from the block
+  openCard: p => card.open(p), renameReady: () => until(() => profile.renaming) }));
+// The player's profile (src/ui/profile-ui.js): recover / link an e-mail / choose another name (released) / sign out / delete, from the block
 // at the top of «Perfil» (src/ui/account-ui.js, the corner row's person); closing a step goes back to Perfil. «Recupera’l» on the
 // publish sheet recovers, then the publication opens again. ?final / ?mock: the same sheets over the mock service and the
 // in-memory keys (src/dev/final-test.js), nothing real.
@@ -178,9 +178,9 @@ sheets.freeGate = setupFreeGate({ focusIn, store, onEnter: () => enterFree() });
 const greeting = setupGreeting({ stats: statsSync, seasonEnd, account, hint, identity: () => refreshIdentity(service, kv).finally(() => feedback.warm()), back: () => select.refocus(),
   free: () => G.state === 'select' && !sheetUp() && !viewMode && !document.hidden,
   extra: () => {
-    const c = !cardGreeted && mockOpts?.card && /^([^#]+)(?:#(\d{1,4}))?$/.exec(mockOpts.card);
-    if (!c) return false;
-    cardGreeted = true; card.open({ alias: c[1], tag: c[2] ? Number(c[2]) : null }, () => select.refocus());
+    if (cardGreeted || !mockOpts?.card) return false;
+    cardGreeted = true; card.open({ alias: mockOpts.card, publicId: demoPublicId(mockOpts.card) }, () => select.refocus()); // the card says whether it is released
+
     return true;
   } });
 service.onAccount?.(() => { refreshIdentity(service, kv, { fresh: true }).then(() => { share.refreshName(); feedback.warm(); }); greeting.accountChanged(); });

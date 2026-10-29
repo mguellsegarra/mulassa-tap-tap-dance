@@ -21,7 +21,8 @@ do $$ begin
       where tag is null and not leaderboard_private.verified(user_id);
   end if;
 end $$;
-drop index if exists leaderboard_private.profiles_alias_key;
+-- profiles_alias_key stays until 202610280002: production applies both in one deploy, and an old client must not
+-- create a duplicate name in between. Beta applied this file before, when it still dropped it.
 create unique index if not exists profiles_clean_alias_key on leaderboard_private.profiles
   (leaderboard_private.alias_key(alias)) where tag is null;
 create unique index if not exists profiles_guest_alias_key on leaderboard_private.profiles

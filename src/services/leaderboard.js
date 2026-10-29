@@ -2,13 +2,13 @@ import { LEADERBOARD_VERSION, normalizeAlias, validResult } from './leaderboard-
 import { DRAC_SCORE_VERSION, BOU_SCORE_VERSION } from '../game/score-scale.js';
 import { MOCK_BOARD } from '../core/mock-board.js';
 import { fail, translated } from './leaderboard-errors.js';
-import { displayName } from './leaderboard-identity.js';
 import { getClient } from './supabase-client.js';
 import { cleanEmail } from './feedback.js';
 export { LEADERBOARD_VERSION, normalizeAlias } from './leaderboard-rules.js';
 export { getLeaderboardResult, subscribeLeaderboardResult } from './leaderboard-result.js';
 
 const env = import.meta.env ?? {};
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i; // a player's public_id
 export const PAGE = 50; // rows per page of the joint board (the server's cap too)
 // The version each figure publishes to now (the board of its current dance); get_seasons takes the figure itself.
 export const FIGURE_VERSIONS = Object.freeze({ 'mulassa-valls': LEADERBOARD_VERSION, 'drac-valls': DRAC_SCORE_VERSION, ...(MOCK_BOARD && { 'bou-tradicional-valls': BOU_SCORE_VERSION }) });
@@ -83,8 +83,8 @@ export function createLeaderboardService({ configured, publishingEnabled, captch
     // offset+1 .. offset+limit (at most 50 a call, so a crowded board never loads at once), plus on the first page the caller's
     // row with 5 neighbours each side. `version` (or `figure`: 'mulassa-valls' | 'drac-valls', its current dance) picks the
     // board; `season` a season id (null = the open one; a closed one for the Saló de la fama, the version from seasons()).
-    // Rows: { position, alias (guests already «nom#1234»), difficulty (0-2), quality, score, max_combo, is_self, total,
-    // verified, tag (null for verified), season_id }. No weekly board (202609280004): p_period is always 'all'.
+    // Rows: { position, alias, difficulty (0-2), quality, score, max_combo, is_self, total,
+    // verified, season_id, public_id (the card's key), released (a faded row) }. No weekly board (202609280004): p_period is always 'all'.
     async listAll({ version, figure, season: seasonId = null, offset = 0, limit = PAGE } = {}) {
       offset = Math.max(0, Math.floor(Number(offset) || 0)); limit = Math.min(PAGE, Math.max(1, Math.floor(Number(limit) || PAGE)));
       const v = version ?? (figure ? FIGURE_VERSIONS[figure] : LEADERBOARD_VERSION);
@@ -95,7 +95,7 @@ export function createLeaderboardService({ configured, publishingEnabled, captch
       } catch (error) { throw translated(error); }
     },
     // One level's best three on a figure's open board (get_level_podium, 202610210001; the selector's step 2): [{ position
-    // (within the level), alias (guests already «nom#1234»), score, quality, is_self, total (players on that level), verified, tag }].
+    // (within the level), alias, score, quality, is_self, total (players on that level), verified, public_id, released }].
     async levelPodium({ figure, level }) {
       const v = figure ? FIGURE_VERSIONS[figure] : LEADERBOARD_VERSION;
       if (!v) return [];
@@ -106,7 +106,7 @@ export function createLeaderboardService({ configured, publishingEnabled, captch
     // The Saló de la fama of a figure (get_seasons): one entry per (season, dance) with results, newest first, season 0 included.
     // { seasonId, name, startsAt (ms), endsAt (ms | null: the open-ended season 0), version (open its board with
     // listAll({ version, season: seasonId })), previousDance (a newer dance of this figure shares the season: «ball anterior»),
-    // players, podium: [{ position, alias, tag, name (displayName), score, difficulty, verified }], myPosition, myScore, myDifficulty
+    // players, podium: [{ position, alias, publicId, released, score, difficulty, verified }], myPosition, myScore, myDifficulty
     // (the caller's place, points and level there; null if not on it) }.
     async seasons(figure = 'mulassa-valls') {
       try {
@@ -114,18 +114,18 @@ export function createLeaderboardService({ configured, publishingEnabled, captch
         return rows.map(r => ({ seasonId: r.season_id, name: r.name, startsAt: Date.parse(r.starts_at), endsAt: r.ends_at ? Date.parse(r.ends_at) : null,
           version: r.version, previousDance: r.previous_dance === true, players: Number(r.players), myPosition: r.my_position == null ? null : Number(r.my_position),
           myScore: r.my_score == null ? null : Number(r.my_score), myDifficulty: r.my_difficulty == null ? null : Number(r.my_difficulty),
-          podium: (r.podium ?? []).map(p => ({ ...p, name: displayName(p.alias, p.tag ?? null) })) }));
+          podium: (r.podium ?? []).map(({ public_id: publicId, ...p }) => ({ ...p, publicId, released: p.released === true })) }));
       } catch (error) { throw translated(error); }
     },
-    // The public card of a player (get_player_card; also for guests: pass the tag). null = no such player with results.
-    // { alias, tag, name, verified, totals: { '<figure>/<version>/<level>': { runs, completed, collapsed, seconds, perfect,
-    // good, miss, guapa, guapaTotal, balloons, holds, bestCombo, bestStars, best } }, podiums: [{ seasonId, version, position }] }.
-    async playerCard(alias, tag = null) {
-      const raw = String(alias ?? '');
-      if (!raw || (tag != null && !(Number.isInteger(tag) && tag >= 0 && tag <= 9999))) throw fail('invalid');
+    // The public card of a player (get_player_card), opened by the opaque public_id a board row, podium or hall carries; never by
+    // name. null = no such player with results. { alias, verified, released, totals: { '<figure>/<version>/<level>': { runs,
+    // completed, collapsed, seconds, perfect, good, miss, guapa, guapaTotal, balloons, holds, bestCombo, bestStars, best } },
+    // podiums: [{ seasonId, version, position }] }.
+    async playerCard(publicId) {
+      if (!UUID.test(String(publicId ?? ''))) throw fail('invalid');
       try {
-        const r = (await rpc(await client(), 'get_player_card', { p_alias: raw, p_tag: tag }))?.[0];
-        return r ? { alias: r.alias, tag: r.tag ?? null, name: displayName(r.alias, r.tag ?? null), verified: r.verified === true, totals: r.totals ?? {},
+        const r = (await rpc(await client(), 'get_player_card', { p_public_id: publicId }))?.[0];
+        return r ? { alias: r.alias, verified: r.verified === true, released: r.released === true, totals: r.totals ?? {},
           podiums: (r.podiums ?? []).map(p => ({ seasonId: p.season_id, version: p.version, position: p.position })) } : null;
       } catch (error) { throw translated(error); }
     },
@@ -142,8 +142,9 @@ export function createLeaderboardService({ configured, publishingEnabled, captch
     async ownerId() {
       try { return (await signedIn(await client()))?.user?.id ?? null; } catch (error) { throw translated(error); }
     },
-    // Publish a result. No notice any more (the 7-day profiles never shipped). The nickname is the raw alias; a guest's tag
-    // stays the one the server gave it. Resolves { improved, quality, score } of the season the result went to.
+    // Publish a result. The server publishes under the stored name and ignores the alias of an existing profile that is not
+    // released: renaming is createProfile's (update_alias). The alias counts for a first publication or a released profile.
+    // Resolves { improved, quality, score } of the season the result went to.
     async publish(result, alias, { captchaToken } = {}) {
       const normalized = normalizeAlias(alias);
       if (!normalized || !validResult(result)) throw fail('invalid');
@@ -158,7 +159,8 @@ export function createLeaderboardService({ configured, publishingEnabled, captch
       return row;
     },
     // A profile before the first result («Crea», src/ui/profile-ui.js): the guest session and its nickname, on no board yet
-    // (update_alias creates the row). Resolves the nickname as the server stored it, WITHOUT the tag: read profile() for it.
+    // (update_alias creates the row). Also the rename of an existing profile, and the new name a released one chooses
+    // (the server frees the profile then). Resolves the nickname as the server stored it.
     async createProfile(alias, { captchaToken } = {}) {
       const normalized = normalizeAlias(alias);
       if (!normalized) throw fail('invalid');
@@ -166,31 +168,19 @@ export function createLeaderboardService({ configured, publishingEnabled, captch
       emit({ type: 'changed' });
       return stored;
     },
-    // «Tria el teu nom» (decision 33): a verified profile takes a clean name, no tag. Resolves the stored name. Errors:
-    // verification (address not confirmed), name_taken (somebody has that clean name), plus the nickname ones.
-    async chooseVerifiedAlias(alias) {
-      const normalized = normalizeAlias(alias);
-      if (!normalized) throw fail('invalid');
-      try {
-        return await write(async c => {
-          if (!(await signedIn(c))) throw fail('session');
-          return player(c, 'choose_verified_alias', { p_alias: normalized });
-        });
-      } catch (error) { throw error.code === 'taken' ? fail('name_taken', error.detail) : error; }
-    },
-    // The signed-in profile's own nickname WITHOUT its tag, or null (my_alias): on the board or not.
+    // The signed-in profile's own nickname, or null (my_alias): on the board or not.
     async myAlias() {
       try { return (await rpc(await client(), 'my_alias')) || null; } catch (error) { throw translated(error); }
     },
     // The signed-in profile as the server sees it (my_profile), or null (no session or no profile row).
-    // { alias (no tag), tag (guests, 0-9999; null for a clean name), verified (an address Supabase Auth confirmed), published }.
-    // Show it with displayName(alias, tag); store the alias and tag apart (rememberIdentity).
+    // { alias, verified (an address Supabase Auth confirmed), published, released (its name was taken after 30 idle days: choose
+    // another), publicId (opaque and stable: the owner key) }. Store the alias with rememberIdentity.
     async profile() {
       try {
         const c = await client();
         if (!(await signedIn(c))) return null;
         const p = (await rpc(c, 'my_profile'))?.[0];
-        return p ? { alias: p.alias, tag: p.tag ?? null, verified: p.verified === true, published: p.published === true } : null;
+        return p ? { alias: p.alias, verified: p.verified === true, published: p.published === true, released: p.released === true, publicId: p.public_id ?? null } : null;
       } catch (error) { throw translated(error); }
     },
     // Statistics (docs/rankings/strategy.md §7), through src/services/stats-sync.js. syncStats({ device, buckets, days }) is
@@ -220,7 +210,6 @@ export function createLeaderboardService({ configured, publishingEnabled, captch
     // Profile recovery, no password: an e-mail address on the guest profile, then a 6-digit code sent to it. sendCode()
     // attaches the address to this browser's profile (or, if that address already owns one, signs in to it instead) and
     // returns the `type` verifyCode() needs; verifyCode() finishes it. The address stays in Supabase Auth, never on the board.
-    // After a verifyCode that confirmed THIS profile, ask for «Tria el teu nom» (profile().tag is still set until chooseVerifiedAlias).
     async sendCode(email, { captchaToken } = {}) {
       const mail = cleanEmail(email);
       if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(mail)) throw fail('email');

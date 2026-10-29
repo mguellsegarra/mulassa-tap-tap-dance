@@ -1,27 +1,26 @@
 // The fake Supabase client behind the in-memory leaderboard (src/dev/mock-leaderboard.js): it answers like
 // supabase/migrations/202610200001..4 do, from the seeded world of src/dev/demo-data.js. No network, nothing kept after a
 // reload. Loaded on the mock service's first call, in its own chunk.
-import { displayName } from '../services/leaderboard-identity.js';
-import { OTHER_MAIL, MOCK_CODE } from './mock-leaderboard.js';
+import { OTHER_MAIL, MOCK_CODE, demoPublicId } from './mock-leaderboard.js';
 import { quality } from '../game/progress.js';
 import { comparableScore } from '../game/score-scale.js';
 import { VERSION_RULES } from '../services/leaderboard-rules.js';
 import { buildWorld, family, aliasKey, bucketProblem, sumBuckets, streaks, dayString, selfStats, DEMO_SELF, PREVIOUS_VERSION } from './demo-data.js';
 
-const MAIL = 'prova@exemple.cat', DAY = 864e5;
+const MAIL = 'prova@exemple.cat', DAY = 864e5, SELF_ID = demoPublicId('\u0000self'); // the signed-in account's public id survives its renames
 const order = (a, b) => b.score - a.score || b.quality - a.quality;
 const KNOWN = new Set([...Object.keys(VERSION_RULES), PREVIOUS_VERSION]);
 
 // fail: the first publication gets no answer (offline), the retry works; every call is logged in `calls` (QA reads it)
 function mockClient({ world, taken, delay, account, now, fail, calls }) {
   let session = null, self = null, pending = '', lastStats = -Infinity, baseline = { buckets: {}, days: [] };
-  const entries = new Map(), devices = new Map(), days = new Set(), refused = new Set(), rnd = world.r;
+  const entries = new Map(), devices = new Map(), days = new Set(), refused = new Set();
   const entryOf = (season, version, run) => entries.set(`${season}|${version}|${run.difficulty}`, { ...run, season, version, units: 5 * run.perfect + 4 * run.good });
   const defOf = (season, fam) => world.boards.find(b => b.seasonId === season && family(b.version) === fam);
   const seasonFor = version => world.retired[family(version)] ?? world.open;
   const mineRow = (season, fam) => {
     const e = [...entries.values()].filter(x => self && x.season === season && family(x.version) === fam).sort(order)[0];
-    return e && { pid: -2, alias: self.alias, tag: self.tag, verified: self.verified, difficulty: e.difficulty, quality: e.quality, score: e.score, max_combo: e.max_combo };
+    return e && { pid: -2, alias: self.alias, publicId: self.publicId, released: self.released, verified: self.verified, difficulty: e.difficulty, quality: e.quality, score: e.score, max_combo: e.max_combo };
   };
   // a board as the server ranks it: every player's best, by points, the signed-in one merged in
   function ranked(season, fam) {
@@ -39,10 +38,10 @@ function mockClient({ world, taken, delay, account, now, fail, calls }) {
     const verified = kind.startsWith('verified');
     session = { user: { id: 'prova', ...(verified && { email: MAIL, email_confirmed_at: '2026-10-01T10:00:00Z' }) } };
     if (world.me) {
-      self = { alias: 'ProvaRetall', tag: null, verified: true };
+      self = { alias: 'ProvaRetall', publicId: SELF_ID, released: false, verified: true };
       entryOf(world.open, 'mulassa-v3', world.me);
     } else {
-      self = { alias: DEMO_SELF.alias, tag: kind === 'verified' ? null : DEMO_SELF.tag, verified };
+      self = { alias: DEMO_SELF.alias, publicId: SELF_ID, released: kind === 'released', verified };
       if (kind === 'reserved') return;
       // 'many': on a podium twice (3r, 1r), the newest closed season 7th (no podium: the end-of-season thanks), absent from one
       if (world.open === 12) { [[1, 9], [2, 15], [3, 3], [5, 21], [6, 4], [7, 12], [8, 1], [10, 9], [11, 7]].forEach(([id, n]) => place(id, id < 7 ? PREVIOUS_VERSION : 'mulassa-v3', n)); place(12, 'mulassa-v3', 6); }
@@ -59,21 +58,17 @@ function mockClient({ world, taken, delay, account, now, fail, calls }) {
   const iso = ms => (ms == null ? null : new Date(ms).toISOString());
   const visible = s => s.startsAt <= now();
   const flagged = name => { const k = aliasKey(name); if (taken && !refused.size) refused.add(k); return refused.has(k); }; // ?taken: the first nickname tried
-  const cleanNames = new Set([...world.people.filter(p => p.verified).map(p => aliasKey(p.alias)), 'castellera777']);
+  const held = new Set([...world.people.filter(p => !p.released).map(p => aliasKey(p.alias)), 'castellera777']); // one active profile per name
 
-  // write_alias: guests get a tag and share names with each other and with verified players; clean names are one per player
-  function writeAlias(name, clean) {
-    if (clean && !self?.verified) return no('leaderboard_verification_required', 401);
-    const k = aliasKey(name);
-    if (clean ? flagged(name) || (k !== aliasKey(self.alias) && cleanNames.has(k)) : self?.alias !== name && flagged(name)) return no('leaderboard_alias_taken', 409);
-    let tag = self?.tag ?? null;
-    if (clean) tag = null;
-    else if (!self) { do tag = Math.floor(rnd() * 10000); while (world.people.some(p => aliasKey(p.alias) === k && p.tag === tag)); }
-    self = { verified: false, ...self, alias: name, tag };
+  // write_alias: a name is one active profile's; a released profile's name is somebody else's already, and a rename frees it
+  function writeAlias(name) {
+    const keeps = self && !self.released && self.alias === name;
+    if (!keeps && (flagged(name) || held.has(aliasKey(name)))) return no('leaderboard_alias_taken', 409);
+    self = { verified: false, publicId: SELF_ID, ...self, alias: name, released: false };
     return null;
   }
-  const row = (r, season) => ({ position: r.position, alias: displayName(r.alias, r.tag), difficulty: r.difficulty, quality: r.quality, score: r.score,
-    max_combo: r.max_combo, is_self: r.is_self, total: r.total, verified: r.verified, tag: r.tag, season_id: season });
+  const row = (r, season) => ({ position: r.position, alias: r.alias, difficulty: r.difficulty, quality: r.quality, score: r.score,
+    max_combo: r.max_combo, is_self: r.is_self, total: r.total, verified: r.verified, season_id: season, public_id: r.publicId, released: r.released === true });
   const totalsOf = r => (r.pid === -2 ? (({ practice, ...rest }) => rest)(sumBuckets([baseline.buckets, ...devices.values()])) : r.pid >= 0 ? world.stats.get(r.pid) ?? {} : {});
 
   const reads = {
@@ -92,10 +87,10 @@ function mockClient({ world, taken, delay, account, now, fail, calls }) {
       if (!KNOWN.has(a.p_version)) return no('leaderboard_invalid_version');
       const season = a.p_season ?? seasonFor(a.p_version), fam = family(a.p_version), d = a.p_difficulty;
       const e = [...entries.values()].filter(x => self && x.season === season && family(x.version) === fam && x.difficulty === d).sort(order)[0];
-      const mine = e && { pid: -2, alias: self.alias, tag: self.tag, verified: self.verified, difficulty: d, quality: e.quality, score: e.score };
+      const mine = e && { pid: -2, alias: self.alias, publicId: self.publicId, released: self.released, verified: self.verified, difficulty: d, quality: e.quality, score: e.score };
       const all = [...(defOf(season, fam)?.rows ?? []).filter(r => r.difficulty === d), ...(mine ? [mine] : [])].sort(order);
-      return ok(all.slice(0, 3).map((r, i) => ({ position: i + 1, alias: displayName(r.alias, r.tag), score: r.score, quality: r.quality,
-        is_self: r === mine, total: all.length, verified: r.verified, tag: r.tag })));
+      return ok(all.slice(0, 3).map((r, i) => ({ position: i + 1, alias: r.alias, score: r.score, quality: r.quality,
+        is_self: r === mine, total: all.length, verified: r.verified, public_id: r.publicId, released: r.released === true })));
     },
     get_seasons(a) {
       const out = [];
@@ -104,30 +99,29 @@ function mockClient({ world, taken, delay, account, now, fail, calls }) {
         if (!visible(s) || !rows.length) continue;
         const mine = rows.find(r => r.is_self);
         out.push({ season_id: s.id, name: s.name, starts_at: iso(s.startsAt), ends_at: iso(s.endsAt), version: d.version, previous_dance: d.previousDance, players: rows.length,
-          podium: rows.slice(0, 3).map(r => ({ position: r.position, alias: r.alias, tag: r.tag, score: r.score, difficulty: r.difficulty, verified: r.verified })),
+          podium: rows.slice(0, 3).map(r => ({ position: r.position, alias: r.alias, public_id: r.publicId, released: r.released === true, score: r.score, difficulty: r.difficulty, verified: r.verified })),
           my_position: mine?.position ?? null, my_score: mine?.score ?? null, my_difficulty: mine?.difficulty ?? null, _order: d.order });
       }
       return ok(out.sort((x, y) => y.season_id - x.season_id || y._order - x._order).map(({ _order, ...r }) => r));
     },
     get_player_card(a) {
       const hits = [];
-      for (const d of world.boards) for (const r of ranked(d.seasonId, family(d.version))) if (aliasKey(r.alias) === aliasKey(a.p_alias) && r.tag === (a.p_tag ?? null)) hits.push({ d, r });
-      for (const e of entries.values()) if (self && !hits.length && aliasKey(self.alias) === aliasKey(a.p_alias) && self.tag === (a.p_tag ?? null)) hits.push({ d: { seasonId: e.season, version: e.version }, r: mineRow(e.season, family(e.version)) });
+      for (const d of world.boards) for (const r of ranked(d.seasonId, family(d.version))) if (r.publicId === a.p_public_id) hits.push({ d, r });
+      for (const e of entries.values()) if (self && !hits.length && self.publicId === a.p_public_id) hits.push({ d: { seasonId: e.season, version: e.version }, r: mineRow(e.season, family(e.version)) });
       if (!hits.length) return ok([]);
       const who = hits[0].r, podiums = hits.filter(h => h.r.position <= 3).sort((x, y) => y.d.seasonId - x.d.seasonId)
         .map(h => ({ season_id: h.d.seasonId, version: h.d.version, position: h.r.position }));
-      return ok([{ alias: who.alias, tag: who.tag, verified: who.verified, totals: totalsOf(who), podiums }]);
+      return ok([{ alias: who.alias, verified: who.verified, released: who.released === true, totals: totalsOf(who), podiums }]);
     },
   };
 
   const writes = {
-    my_profile: () => ok(self ? [{ alias: self.alias, tag: self.tag, verified: self.verified, published: entries.size > 0 }] : []),
+    my_profile: () => ok(self ? [{ alias: self.alias, verified: self.verified, published: entries.size > 0, released: self.released === true, public_id: self.publicId }] : []),
     my_alias: () => ok(self?.alias ?? null),
-    update_alias: a => writeAlias(a.p_alias, false) ?? ok(a.p_alias),
-    choose_verified_alias: a => writeAlias(a.p_alias, true) ?? ok(a.p_alias),
+    update_alias: a => writeAlias(a.p_alias) ?? ok(a.p_alias),
     submit_result(a) {
       if (fail) { fail = false; return { data: null, error: Object.assign(new TypeError('Failed to fetch'), { name: 'TypeError' }), status: 0 }; }
-      const refusal = writeAlias(a.p_alias, false);
+      const refusal = !self || self.released ? writeAlias(a.p_alias) : null; // an active profile publishes under its stored name
       if (refusal) return refusal;
       const season = seasonFor(a.p_version), q = quality({ perfect: a.p_perfect, good: a.p_good, miss: a.p_miss }), units = 5 * a.p_perfect + 4 * a.p_good;
       const points = comparableScore(a.p_score, a.p_difficulty, a.p_version), key = `${season}|${a.p_version}|${a.p_difficulty}`, previous = entries.get(key);
@@ -178,7 +172,7 @@ function mockClient({ world, taken, delay, account, now, fail, calls }) {
       async verifyOtp({ email, token, type }) {
         await wait();
         if (token !== MOCK_CODE) return authNo('otp_expired', 403);
-        if (type === 'email_change' && session && email === pending) { // the code confirms the pending address: now it counts (the tag stays until a clean name is chosen)
+        if (type === 'email_change' && session && email === pending) { // the code confirms the pending address: now it counts
           pending = ''; session = { user: { id: session.user.id, email, email_confirmed_at: new Date(now()).toISOString() } };
           if (self) self.verified = true;
           return { data: {}, error: null };
@@ -186,7 +180,7 @@ function mockClient({ world, taken, delay, account, now, fail, calls }) {
         if (type !== 'email' || email !== OTHER_MAIL) return authNo('otp_expired', 403);
         // another profile: this browser switches to it (nothing of the one before is merged)
         session = { user: { id: 'altre', email, email_confirmed_at: '2026-09-30T09:00:00Z' } };
-        forget(); self = { alias: 'Castellera777', tag: null, verified: true };
+        forget(); self = { alias: 'Castellera777', publicId: SELF_ID, released: false, verified: true };
         entryOf(world.open, 'mulassa-v3', { difficulty: 2, quality: 94, score: 150000, max_combo: 210, perfect: 0, good: 0, miss: 0 });
         return { data: {}, error: null };
       },

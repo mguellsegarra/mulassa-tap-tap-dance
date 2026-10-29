@@ -2,14 +2,14 @@
 // (columns read from supabase/migrations), consistent with its rules, deterministic, and never on a public host.
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
-import { mockLeaderboard } from '../../src/dev/mock-leaderboard.js';
+import { mockLeaderboard, demoPublicId } from '../../src/dev/mock-leaderboard.js';
 import { mockLeaderboardClient } from '../../src/dev/mock-client.js';
 import { finalMode, demoOptions, leaderboardPreviewMode } from '../../src/dev/final-test.js';
 import { buildWorld, demoCards, bucketProblem, STAT_RULES, PREVIOUS_VERSION } from '../../src/dev/demo-data.js';
 import { normalizeAlias, VERSION_RULES } from '../../src/services/leaderboard-rules.js';
 
 const dir = new URL('../../supabase/migrations/', import.meta.url);
-const migrations = readdirSync(dir).filter(f => /^(20261020000[1-4]|202610210001)_/.test(f)).sort().map(f => readFileSync(new URL(f, dir), 'utf8')).join('\n');
+const migrations = readdirSync(dir).filter(f => /^(20261020000[1-4]|202610210001|202610280002)_/.test(f)).sort().map(f => readFileSync(new URL(f, dir), 'utf8')).join('\n');
 // the columns of the LAST definition of a public function, in order
 const columns = fn => {
   const defs = [...migrations.matchAll(new RegExp(`function public\\.${fn}\\([^)]*\\)\\s*returns table\\(([^)]*)\\)`, 'g'))];
@@ -20,18 +20,17 @@ const rpc = async (c, name, args) => { const r = await c.rpc(name, args); assert
 const NOW = Date.parse('2026-11-10T10:00:00Z'), now = () => NOW;
 const opts = o => ({ delay: 0, now, ...o });
 
-// the cast: every name passes the game's own nickname rules; guests share names (their tags differ); 20-letter names and #0007 are there
-{ const w = buildWorld({ now: NOW }), seen = new Set();
+// the cast: every name passes the game's own nickname rules and is one player's (no tags, no repeats); 16-letter names, guests and
+// released players are there, each with its own public id
+{ const w = buildWorld({ now: NOW }), seen = new Set(), ids = new Set();
   for (const p of w.people) {
     assert.equal(normalizeAlias(p.alias), p.alias, `${p.alias} is a valid nickname`);
-    assert(p.verified === (p.tag === null) && (p.tag === null || (p.tag >= 0 && p.tag <= 9999)));
-    const k = `${p.alias.toLowerCase()}#${p.tag}`; assert(!seen.has(k), `unique ${k}`); seen.add(k);
+    assert(!('tag' in p) && !(p.verified && p.released), 'verified players are never released');
+    const k = p.alias.toLowerCase(); assert(!seen.has(k), `unique ${k}`); seen.add(k);
+    assert(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-8[0-9a-f]{3}-[0-9a-f]{12}$/.test(p.publicId) && !ids.has(p.publicId), `${p.alias} has its own uuid`); ids.add(p.publicId);
   }
-  assert(w.people.some(p => [...p.alias].length === 16 && p.verified) && w.people.some(p => [...p.alias].length === 16 && !p.verified), 'long names, clean and tagged');
-  const shared = w.people.filter(p => !p.verified && w.people.filter(q => q.alias === p.alias).length > 2);
-  assert(shared.length >= 3, 'several guests with the same name');
-  assert(w.people.some(p => !p.verified && w.people.some(q => q.verified && q.alias === p.alias)), 'a guest named like a verified player');
-  assert(w.people.some(p => p.tag === 7), '#0007');
+  assert(w.people.some(p => [...p.alias].length === 16 && p.verified) && w.people.some(p => [...p.alias].length === 16 && !p.verified), 'long names, verified and guest');
+  assert(w.people.filter(p => p.released).length >= 3 && w.people.some(p => !p.verified && !p.released), 'released and active guests');
 }
 
 // the seasons
@@ -46,9 +45,8 @@ for (const account of ['guest', 'verified']) {
   const c = mockLeaderboardClient(opts({ account, seasons: 'later' }));
   const board = await rpc(c, 'get_leaderboard_all', { p_version: PREVIOUS_VERSION, p_period: 'all', p_offset: 0, p_limit: 50, p_season: 1 });
   assert(board.length >= 40 && board.every(r => JSON.stringify(Object.keys(r)) === JSON.stringify(columns('get_leaderboard_all'))), 'get_leaderboard_all');
-  const row = board.find(r => r.tag !== null && !r.verified);
-  assert(row.alias.endsWith(`#${String(row.tag).padStart(4, '0')}`) && row.is_self !== undefined, 'guests are composed «nom#0000»; verified ones are clean');
-  assert(board.filter(r => r.verified).every(r => !r.alias.includes('#')));
+  assert(board.every(r => !r.alias.includes('#') && /^[0-9a-f-]{36}$/.test(r.public_id)), 'plain names, never «#1234»; every row has its public id');
+  assert(board.some(r => r.released) && board.some(r => !r.released && !r.verified), 'released rows are marked');
   for (const d of [0, 1, 2]) { // one level's own ranking: 1, 2, 3 of the players with a result on it
     const lvl = await rpc(c, 'get_level_podium', { p_version: 'mulassa-v3', p_difficulty: d });
     assert(lvl.length === 3 && lvl.every((r, i) => JSON.stringify(Object.keys(r)) === JSON.stringify(columns('get_level_podium')) && r.position === i + 1), `get_level_podium ${d}`);
@@ -56,11 +54,10 @@ for (const account of ['guest', 'verified']) {
   }
   const seasons = await rpc(c, 'get_seasons', { p_figure: 'mulassa-valls' });
   assert(seasons.length && seasons.every(r => JSON.stringify(Object.keys(r)) === JSON.stringify(columns('get_seasons'))), 'get_seasons');
-  const podium = seasons[0].podium[0]; assert.deepEqual(Object.keys(podium), ['position', 'alias', 'tag', 'score', 'difficulty', 'verified']);
-  assert(!podium.alias.includes('#'), 'the podium carries the raw name and its tag');
+  const podium = seasons[0].podium[0]; assert.deepEqual(Object.keys(podium), ['position', 'alias', 'public_id', 'released', 'score', 'difficulty', 'verified']);
   const mine = (await rpc(c, 'my_profile', {}))[0]; assert.deepEqual(Object.keys(mine), columns('my_profile'));
   const st = (await rpc(c, 'my_stats', {}))[0]; assert.deepEqual(Object.keys(st), columns('my_stats'));
-  const who = demoCards().plain, card = (await rpc(c, 'get_player_card', { p_alias: who.alias, p_tag: who.tag }))[0];
+  const who = demoCards().plain, card = (await rpc(c, 'get_player_card', { p_public_id: who.publicId }))[0];
   assert.deepEqual(Object.keys(card), columns('get_player_card')); assert.deepEqual(Object.keys(card.podiums[0] ?? { season_id: 1, version: 1, position: 1 }), ['season_id', 'version', 'position']);
   const sub = await rpc(c, 'submit_result', { p_version: 'mulassa-v3', p_difficulty: 1, p_perfect: 100, p_good: 20, p_miss: 13, p_score: 60000, p_max_combo: 80, p_alias: 'Prova123' });
   assert.deepEqual(Object.keys(sub[0]), columns('submit_result'));
@@ -72,7 +69,7 @@ for (const account of ['guest', 'verified']) {
   assert.deepEqual(list.map(x => [x.seasonId, x.name, x.version, x.players]), [[1, 'Tardor 2026', 'mulassa-v3', 46], [0, 'Estrena 2026', 'mulassa-v2-short', 60]]);
   assert.equal(list[0].endsAt, Date.parse('2027-01-01T00:00:00+01:00'), 'the open season ends with the calendar quarter (the line\'s days left match)'); assert.equal(list[1].endsAt, null);
   assert.equal(list[0].myPosition, 18, 'the demo guest is #18'); assert.equal(list[1].myPosition, null);
-  assert.equal(list[0].podium.length, 3); assert(list[0].podium.every((p, i) => p.position === i + 1 && p.name));
+  assert.equal(list[0].podium.length, 3); assert(list[0].podium.every((p, i) => p.position === i + 1 && p.alias && p.publicId && typeof p.released === 'boolean'));
   assert.deepEqual((await s.seasons('drac-valls')).map(x => [x.seasonId, x.players]), [[1, 12]], 'Mulassa and Drac boards are never mixed');
   const old = await s.listAll({ version: list[1].version, season: 0, limit: 5 }); assert.equal(old.length, 5); assert(old.every(r => r.season_id === 0));
   assert.equal((await s.listAll({ version: 'mulassa-v2-short' })).at(0).season_id, 0, 'an old dance still reads season 0');
@@ -85,7 +82,17 @@ for (const account of ['guest', 'verified']) {
   const drac = await s.seasons('drac-valls'); assert.deepEqual(drac.map(x => [x.seasonId, x.players, x.myPosition]), [[2, 6, null], [1, 15, 3]], 'a podium for the demo account');
   assert((await s.listAll()).every(r => r.season_id === 2), 'the open season is Hivern 2027');
   assert(Date.now() > 0 && mulassa[0].startsAt < NOW && mulassa[0].endsAt > NOW && mulassa[1].endsAt < NOW, 'Hivern open, Tardor closed');
-  const card = await s.playerCard('Prova123', 4821); assert.deepEqual(card.podiums, [{ seasonId: 1, version: 'drac-v1', position: 3 }]);
+  const card = await s.playerCard((await s.profile()).publicId); assert.deepEqual(card.podiums, [{ seasonId: 1, version: 'drac-v1', position: 3 }]);
+}
+// a released account (its name went to somebody else): my_profile says so, a taken name stays refused, a new one frees the profile;
+// a released profile publishes under the name it sends, an active one under its stored name whatever alias the call carries
+{ const s = mockLeaderboard(opts({ account: 'released' })), c = mockLeaderboardClient(opts({ account: 'released' }));
+  const submit = alias => rpc(c, 'submit_result', { p_version: 'mulassa-v3', p_difficulty: 1, p_perfect: 100, p_good: 20, p_miss: 13, p_score: 60000, p_max_combo: 80, p_alias: alias });
+  assert.equal((await s.profile()).released, true);
+  await assert.rejects(s.createProfile('Timbaler'), { code: 'taken' });
+  await s.createProfile('NouNom77'); { const p = await s.profile(); assert(p.released === false && p.alias === 'NouNom77', 'the new name frees the profile'); }
+  await submit('NouNom78'); assert.equal((await rpc(c, 'my_profile', {}))[0].alias, 'NouNom78', 'a released profile publishes under the name it sends');
+  await submit('AltreNom88'); assert.equal((await rpc(c, 'my_profile', {}))[0].alias, 'NouNom78', 'an active profile keeps its stored name');
 }
 // empty boards
 { const s = mockLeaderboard(opts({ board: 'empty', account: 'guest' }));
@@ -95,21 +102,22 @@ for (const account of ['guest', 'verified']) {
 }
 { const s = mockLeaderboard(opts({ board: 'me' })); const rows = await s.listAll(); assert.equal(rows.find(r => r.is_self).position, 48); assert.equal(rows[0].total, 119); }
 
-// cards: totals, podiums, a guest with a shared name, the 20-letter names, a player with no statistics
+// cards (opened by public id): totals, podiums, a guest, a released player, the 16-letter names, a player with no statistics
 { const s = mockLeaderboard(opts({ account: 'guest' })), cards = demoCards();
-  const plain = await s.playerCard(cards.plain.alias);
-  assert(plain.verified && plain.tag === null && plain.name === plain.alias && Object.keys(plain.totals).length);
+  const plain = await s.playerCard(cards.plain.publicId);
+  assert(plain.verified && !plain.released && plain.alias === cards.plain.alias && Object.keys(plain.totals).length);
   const total = Object.values(plain.totals)[0];
   assert.deepEqual(Object.keys(total).sort(), ['balloons', 'best', 'bestCombo', 'bestStars', 'collapsed', 'completed', 'errors', 'good', 'guapa', 'guapaTotal', 'holds', 'miss', 'perfect', 'runs', 'seconds'].sort());
   assert(!('practice' in plain.totals), 'the public card never has the practice');
-  const guest = await s.playerCard(cards.guest.alias, cards.guest.tag); assert(!guest.verified && guest.name === `${guest.alias}#${String(guest.tag).padStart(4, '0')}`);
-  assert.notEqual((await s.playerCard(cards.guest.alias, null))?.tag ?? null, cards.guest.tag, 'the clean name and the tagged one are different players');
-  for (const k of ['long', 'longGuest', 'padded']) assert((await s.playerCard(cards[k].alias, cards[k].tag)).podiums, k);
-  assert.equal([...cards.long.alias].length, 16); assert.equal(cards.padded.tag, 7);
-  const bare = await s.playerCard(cards.empty.alias, cards.empty.tag); assert.deepEqual(bare.totals, {}, 'a history-only player has no statistics');
-  assert.equal(await s.playerCard('NoExisteix', null), null);
-  assert(Object.keys((await s.playerCard('Prova123', 4821)).totals).some(k => k.startsWith('mulassa-valls/mulassa-v3/')), 'the demo account has a card too');
-  assert.deepEqual(await mockLeaderboard(opts({ account: 'reserved' })).playerCard('Prova123', 4821), null, 'a profile with no result has no card');
+  const guest = await s.playerCard(cards.guest.publicId); assert(!guest.verified && !guest.released && guest.alias === cards.guest.alias);
+  const released = await s.playerCard(cards.released.publicId); assert(released.released && !released.verified && released.alias === cards.released.alias, 'a released player says so on its card');
+  for (const k of ['long', 'longGuest']) assert((await s.playerCard(cards[k].publicId)).podiums, k);
+  assert.equal([...cards.long.alias].length, 16);
+  const bare = await s.playerCard(cards.empty.publicId); assert.deepEqual(bare.totals, {}, 'a history-only player has no statistics');
+  assert.equal(await s.playerCard(demoPublicId('NoExisteix')), null);
+  await assert.rejects(s.playerCard(cards.plain.alias), { code: 'invalid' }, 'a name opens nothing');
+  const mePid = (await s.profile()).publicId; assert(Object.keys((await s.playerCard(mePid)).totals).some(k => k.startsWith('mulassa-valls/mulassa-v3/')), 'the demo account has a card too');
+  { const r = mockLeaderboard(opts({ account: 'reserved' })); assert.deepEqual(await r.playerCard((await r.profile()).publicId), null, 'a profile with no result has no card'); }
 }
 
 // no demo result is above what a perfect run scores (for its counts), on any board

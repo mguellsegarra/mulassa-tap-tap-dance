@@ -35,7 +35,7 @@ assert.match(rankText({ pos: 3, total: 1200 }), /^Posició 3 de 1\.200 · (Hiver
 
 const rows = Array.from({ length: 20 }, (_, i) => ({ position: i + 1, alias: `Jugador${i + 1}`, difficulty: i % 3, quality: 90, score: 100000 - i * 1000, verified: i === 2 }));
 rows[12] = { ...rows[12], alias: '<b>Jo</b>', is_self: true };
-rows[1] = { ...rows[1], tag: 7 }; // a guest
+rows[1] = { ...rows[1], released: true, public_id: 'id-2' }; // a released profile
 facts.board({ pos: 13, total: 63, rows }, true);
 assert.match($('select-standings-pos').textContent, /^Posició 13 de 63 · /);
 assert.equal($('select-standings-head').attrs['aria-label'], `Classificació: ${$('select-standings-pos').textContent}`);
@@ -46,7 +46,8 @@ const name = li => li.kids[1].kids[0]; // .who > .player-name (profile-notes.js 
 assert.equal(name(me).kids[0].textContent, '<b>Jo</b>', 'a nickname is text, never HTML');
 assert(list.kids[2].kids[1].kids.some(k => k.className === 'verified-check'), 'a confirmed address gets the check');
 assert(!list.kids[0].kids[1].kids.some(k => k.className === 'verified-check'), 'an unconfirmed one does not');
-assert.equal(name(list.kids[1]).kids[1].textContent, '#0007', 'a guest shows its tag, as on the boards');
+assert(name(list.kids[1]).className.includes('released') && name(list.kids[1]).kids.length === 1 && !name(list.kids[0]).className.includes('released'), 'a released profile is faded, with no tag next to it');
+assert(!JSON.stringify(list.kids.map(k => k.kids.map(c => c.textContent))).includes('#'), 'no «#» in the column');
 assert.match(foot.innerHTML, /A <b>12\.000<\/b> punts del primer lloc/);
 assert.match(foot.innerHTML, /A <b>1\.000<\/b> punts del número 12/);
 

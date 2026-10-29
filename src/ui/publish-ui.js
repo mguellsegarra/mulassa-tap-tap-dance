@@ -44,13 +44,16 @@ export function setupPublish({ doc, $, service, store, focusIn, now, runs, canWr
     try { id = await service.identity(); } catch { /* the publish call reports it */ }
     if (id.hasSession && service.profile) try { prof = await service.profile(); } catch { /* unknown: the remembered name stands */ }
     if (req !== publishReq || !publishMenu.open) return;
-    // a remembered name whose profile row is gone (deleted elsewhere, or a guest 12 months away): this browser starts a new one
+    // a remembered name whose profile row is gone (deleted elsewhere): this browser starts a new one
     if (prof === null && !id.email && store.get(ALIAS_KEY)) {
       try { await service.signOut(); } catch { /* the publication reports it */ }
       if (req !== publishReq || !publishMenu.open) return;
       id = { ...id, hasSession: false };
     }
-    if (prof) { rememberIdentity(store, ALIAS_KEY, prof); if (asLine.hidden === false) { aliasInput.value = prof.alias; showField(false, prof); } }
+    if (prof) rememberIdentity(store, ALIAS_KEY, prof);
+    // released: its name is somebody else's now, so this publication carries a new one (the server renames it then); says why
+    if (prof?.released) { aliasInput.value = ''; showField(true); setPublishStatus(tr('ui.profile.lead.released')); }
+    else if (prof && asLine.hidden === false) { aliasInput.value = prof.alias; showField(false, prof); }
     $('publish-temp').hidden = id.persistent !== false;
     // published before (the remembered alias or a session) in a browser that loses its storage; the blocked-storage case
     // already has publish-temp
@@ -64,7 +67,7 @@ export function setupPublish({ doc, $, service, store, focusIn, now, runs, canWr
     if (!verify) { setPublishStatus(tr('ui.board.publishNoService')); sendBtn.disabled = true; return; }
     needsCaptcha = true;
   }
-  // the one-tap view (the remembered name, its tag and check) or the editable field
+  // the one-tap view (the remembered name and its check) or the editable field
   function showField(on, who = savedName(store)) {
     field.hidden = !on;
     asLine.hidden = on;
@@ -210,7 +213,7 @@ export function setupPublish({ doc, $, service, store, focusIn, now, runs, canWr
       needsCaptcha = false; // the profile exists now
       auto = false;
       const placeP = showPlace(req, run.version);
-      // who published, as the boards will show it (a guest's «#1234» comes from the server)
+      // who published, as the boards will show it (the server publishes under the stored name)
       const profP = Promise.resolve(service.profile?.()).catch(() => null);
       // the Mulassa for a beat (never a flash), and until the place is known: «Publicat!» and both lines come together
       if (settle) await Promise.race([Promise.all([placeP, profP, sleep(settle - (Date.now() - t0))]), sleep(2500)]);
@@ -221,7 +224,7 @@ export function setupPublish({ doc, $, service, store, focusIn, now, runs, canWr
       const [pre, post] = trSplit('ui.board.publishedAs', 'name'); setPublishStatus(pre, true);
       appendName(doc, publishStatus, prof ?? savedName(store));
       publishStatus.append(post);
-      // a guest: a quiet way to keep the profile (the e-mail), under every «Publicat!»; never by itself
+      // a guest: a quiet way to keep the profile and its name (the e-mail), under every «Publicat!»; never by itself
       const offer = Boolean(onConfirm && prof && !prof.verified);
       $('publish-offer').hidden = !offer; mailIn.value = '';
       done = true;

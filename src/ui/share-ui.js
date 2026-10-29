@@ -8,7 +8,7 @@ import { lang } from '../i18n/locale.js';
 import { DIFFS } from '../game/chart.js';
 import { shareText, challengeUrl, challengeResult, bragWorthy, shareMode, linkMode, shareLinks, isCancel } from '../services/share.js';
 import { drawCard, cardAlt, toJpeg, loadCardFonts } from '../hud/share-card.js';
-import { ALIAS_KEY, savedName, displayName } from '../services/leaderboard-identity.js';
+import { ALIAS_KEY, savedName } from '../services/leaderboard-identity.js';
 import { errors } from '../services/errors.js';
 
 const FORMAT_KEY = 'share-format';
@@ -27,10 +27,10 @@ export function setupShare({ focusIn, restore = () => {}, hero = () => null, sta
   // makes it stale until the new one is ready); tapped: a tap on the primary waiting for that new card
   let file = null, fresh = false, tapped = false, previewUrl = '', photo = null, req = 0, shownKey = '';
   let named = ''; // the name the card being drawn took ('' until drawn)
-  const nameNow = () => (nick.checked && !nickRow.hidden ? savedName(store) : null); // as the boards show it: «nom#1234», or the check
+  const nameNow = () => (nick.checked && !nickRow.hidden ? savedName(store) : null); // as the boards show it: the name, with the check for a confirmed address
   const data = () => {
     const who = nameNow();
-    const alias = who?.alias ? displayName(who.alias, who.tag) : null;
+    const alias = who?.alias || null;
     return { figureId: run.figureId, score: run.score, diff: run.diff, rank, stars: run.stars, pct: run.pct, maxCombo: run.maxCombo, diffName: DIFFS[run.diff].name, reason: run.reason,
       newRecord: run.newRecord, beaten: Boolean(challengeResult(challenge, run)?.beaten), alias, verified: Boolean(alias && who.verified) };
   };

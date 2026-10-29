@@ -9,6 +9,7 @@ import { VERSION_RULES } from '../services/leaderboard-rules.js';
 import { DRAC_SCORE_VERSION, SHORT_SCORE_VERSION, BOU_SCORE_VERSION } from '../game/score-scale.js';
 import { fold } from '../services/alias-rules.js';
 
+import { demoPublicId } from './mock-leaderboard.js';
 export { DEMO_SELF } from './mock-leaderboard.js'; // the signed-in demo account, defined with the mock's other constants
 export const PREVIOUS_VERSION = 'mulassa-v2b'; // the dance mulassa-v3 replaced mid-Tardor, world 'later' only
 const DAY = 864e5;
@@ -23,26 +24,30 @@ const rng = seed => () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
 const VERIFIED = ['Timbaler', 'Portadora', 'Capgròs', 'Castellera', 'Balladora', 'Mulasser', 'Gegantó', 'Calçot', 'Anxaneta', 'Grallera', 'Trabucaire',
   'Bastoner', 'Cavallot', 'Xirivia', 'Dracaire', 'Fumera', 'Esclat', 'Tabalet', 'Pelegrina', 'Ximeneia', 'Mulatera', 'Brandal', 'Ventall', 'Sargantana',
   'Rabassuda', 'Cucafera', 'Tronada', 'Garrofer', 'Cercavila', 'Fadrina', 'Vallenc', 'Santaursula', 'Mace_Gran', 'Pilar-Valls', 'Ànec', 'PortadoraDeValls'];
-// several guests share a name with a verified player, and with each other (their tags differ); one name is the 16 letters' limit
+// guest names (a number is added where a base repeats: one active profile per name); one name is the 16 letters' limit
 const GUEST_BASES = ['Timbaler', 'Timbaler', 'Timbaler', 'Portadora', 'Portadora', 'Capgròs', 'Xiquet', 'Xiquet', 'Mulassaire', 'Valls', 'Valls', 'Baldufa',
   'Cantaire', 'Tonyina', 'Fira', 'Fira', 'Gralla', 'Pelut', 'Rumba', 'Bombolla', 'Tarat', 'Cargol', 'Pessic', 'DracDeValls_2026', 'Mulassa', 'Mulassa',
   'Sargantana', 'Esquerrà', 'Tabal', 'Faroner', 'Arlequí', 'Quimera', 'Gatzara', 'Bruixot', 'Flabiol', 'Xaloc', 'Cobla', 'Cobla', 'Tamborer', 'Roda'];
 
-// A seeded cast: verified players (clean name) and guests (name + tag), each with a skill 0-1.
+// A seeded cast: verified players and guests, each with a skill 0-1 and its public id. Every 7th guest (and Estrella) is
+// released: its name went to somebody else after 30 idle days, so its rows are faded.
 function cast(seed) {
   const r = rng(seed), used = new Set(), people = [];
-  const add = (name, tag) => {
-    const k = `${aliasKey(name)}#${tag ?? ''}`;
-    if (used.has(k)) return;
-    used.add(k);
-    people.push({ id: people.length, alias: name, tag, verified: tag === null, skill: Math.min(1, r() ** 0.8) });
+  const add = (name, verified, released = false) => {
+    if (used.has(aliasKey(name))) return;
+    used.add(aliasKey(name));
+    people.push({ id: people.length, alias: name, verified, released, publicId: demoPublicId(name), skill: Math.min(1, r() ** 0.8) });
   };
-  VERIFIED.forEach(n => add(n, null));
-  for (let i = 0; people.length < VERIFIED.length + 64; i++) add(GUEST_BASES[i % GUEST_BASES.length], i % 9 === 0 ? Math.floor(r() * 50) : Math.floor(r() * 10000));
-  add('Estrella', 7); add('Estrella', 1234); // low tags: zero padding («#0007»)
+  VERIFIED.forEach(n => add(n, true));
+  for (let i = 0, guests = 0; guests < 64 && i < 400; i++) {
+    const before = people.length, base = GUEST_BASES[i % GUEST_BASES.length];
+    add(i < GUEST_BASES.length ? base : `${base}${i}`.slice(0, 16), false, people.length % 7 === 0);
+    guests += people.length - before;
+  }
+  add('Estrella', false, true);
   return people;
 }
-// always on the boards, so the long-name and zero-padded-tag layouts can be found without searching
+// always on the boards, so the long-name and faded layouts can be found without searching
 const MUST = new Set(['PortadoraDeValls', 'DracDeValls_2026', 'Estrella', 'Timbaler']);
 const shuffled = (list, r) => { const a = [...list]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 
@@ -55,7 +60,7 @@ export function makeRun(version, difficulty, skill, r) {
   const cap = (rule.ceilings[difficulty] - rule.extras[difficulty]) * (perfect + good) / J + rule.extras[difficulty];
   return { difficulty, perfect, good, miss, max_combo: maxCombo, quality: Math.round(100 * 10 * (perfect + 0.8 * good) / J) / 10, score: Math.floor(cap * (0.5 + 0.45 * skill * (0.9 + 0.1 * r()))) };
 }
-const level = (skill, r) => { const x = r() * (0.6 + skill); return x < 0.5 ? 0 : x < 1.0 ? 1 : 2; };
+const level = (skill, r) => { const x = r() * (0.6 + skill); return x < 0.5 ? 0 : x < 0.8 ? 1 : 2; };
 
 // A bucket of statistics (the counters merge_stats takes) consistent with the player's best run in it.
 export function makeBucket(version, best, skill, r) {
@@ -138,7 +143,7 @@ export function buildWorld({ world = 'launch', board = null, drac = null, now = 
   const fill = (seasonId, version, count, order, previousDance = false) => {
     const rows = [...people.filter(p => MUST.has(p.alias)), ...shuffled(people.filter(p => !MUST.has(p.alias)), r)].slice(0, count).map(p => {
       const run = makeRun(version, level(p.skill, r), p.skill, r);
-      return { pid: p.id, alias: p.alias, tag: p.tag, verified: p.verified, ...run };
+      return { pid: p.id, alias: p.alias, publicId: p.publicId, released: p.released, verified: p.verified, ...run };
     });
     boards.push({ seasonId, version, figure: figureOf(version), order, previousDance, rows });
   };
@@ -160,7 +165,7 @@ export function buildWorld({ world = 'launch', board = null, drac = null, now = 
   if (board === 'me') { // a ladder for responsive scroll checks: «Prova1…», the signed-in profile (ProvaRetall) at #48 of 119
     const counts = d => { const J = VERSION_RULES[openMulassa.version].judgments[d], miss = Math.round(J * 0.06), good = Math.round(J * 0.3), perfect = J - miss - good; // ~88%, from its own counts
       return { perfect, good, miss, quality: Math.round(1000 * (perfect + 0.8 * good) / J) / 10 }; };
-    const ladder = Array.from({ length: 119 }, (_, i) => ({ pid: -1, alias: `Prova${i + 1}`, tag: 1000 + i, verified: false, difficulty: i % 3, ...counts(i % 3), max_combo: 50, score: 69286 + (47 - i) * 600 }));
+    const ladder = Array.from({ length: 119 }, (_, i) => ({ pid: -1, alias: `Prova${i + 1}`, publicId: demoPublicId(`Prova${i + 1}`), released: false, verified: false, difficulty: i % 3, ...counts(i % 3), max_combo: 50, score: 69286 + (47 - i) * 600 }));
     me = ladder.splice(47, 1)[0];
     openMulassa.rows = ladder;
   }
@@ -188,14 +193,14 @@ export function selfStats(entries, now) {
   return { buckets, days: [...new Set(days)].sort() };
 }
 
-// Who to look at: a verified player, a guest sharing a name, the 20-letter names, a tag below 10 and a player with no statistics.
+// Who to look at: a verified player, a guest, a released one, the 16-letter names and a player with no statistics.
 export function demoCards(options = {}) {
   const w = buildWorld(options), open = w.boards.filter(b => b.seasonId === w.open && b.figure === 'mulassa-valls').at(-1).rows;
   const name = cal => cal.seasons.find(x => x.id === cal.open).name, ranked = [...open].sort((a, b) => b.score - a.score);
   // a row of the open Mulassa board: the card shows where it was tapped (player-card.js `from`)
-  const ref = p => ({ alias: p.alias, tag: p.tag, ...(ranked.includes(p) && { from: { figure: 'mulassa-valls', season: name(w), position: ranked.indexOf(p) + 1, score: p.score, difficulty: p.difficulty } }) });
-  const guest = open.find(p => p.tag !== null && w.people.some(q => q.id !== p.id && aliasKey(q.alias) === aliasKey(p.alias)));
+  const ref = p => ({ alias: p.alias, verified: p.verified, released: p.released, publicId: p.publicId, ...(ranked.includes(p) && { from: { figure: 'mulassa-valls', season: name(w), position: ranked.indexOf(p) + 1, score: p.score, difficulty: p.difficulty } }) });
+  const guest = open.find(p => !p.verified && !p.released), released = open.find(p => p.released);
   const bare = w.boards[0].rows.find(p => p.pid >= 0 && !w.stats.has(p.pid));
-  return { plain: ref(open.find(p => p.verified && w.stats.has(p.pid))), guest: ref(guest ?? open.find(p => p.tag !== null)), long: ref(w.people.find(p => p.alias === 'PortadoraDeValls')),
-    longGuest: ref(w.people.find(p => p.alias === 'DracDeValls_2026')), padded: { alias: 'Estrella', tag: 7 }, empty: bare ? ref(bare) : null };
+  return { plain: ref(open.find(p => p.verified && w.stats.has(p.pid))), guest: ref(guest), released: ref(released), long: ref(w.people.find(p => p.alias === 'PortadoraDeValls')),
+    longGuest: ref(w.people.find(p => p.alias === 'DracDeValls_2026')), empty: bare ? ref(bare) : null };
 }

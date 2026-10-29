@@ -3,7 +3,7 @@
 // buttons and fields, as a player would, so their animations and focus run for real; a reload starts it again.
 // `&review` alone: the list of states (links), over the results screen. Loaded as its own chunk, only in that mode.
 // The profile, ranking and season states need the UI's own openers (`ctx.openProfile`, `openBoard({ figure })`, `openSeasons`,
-// `showSeasonEnd`, `openCard(name, tag, from)`, `chooseNameReady`): a state whose opener is missing stops with a clear error.
+// `showSeasonEnd`, `openCard(player)`, `renameReady`): a state whose opener is missing stops with a clear error.
 import { REVIEWS, OTHER_MAIL, MOCK_CODE } from './final-test.js';
 import { demoCards } from './demo-data.js';
 import { G } from '../game/state.js';
@@ -11,14 +11,14 @@ import { G } from '../game/state.js';
 const LABELS = {
   'share-drac': 'Comparteix el Drac',
   publish: 'Abans de publicar (s’obre sol)', published: 'Publicat! + Confirma el correu', email: 'Correu: escriu l’adreça', code: 'Correu: el codi',
-  verified: 'Correu confirmat!', 'choose-name': 'Correu confirmat → Tria el teu nom', switch: 'Correu d’un altre perfil (canvi)',
-  'profile-new': 'Perfil: cap', 'profile-reserved': 'Perfil: convidat sense resultat', 'profile-guest': 'Perfil: convidat (nom#1234)',
-  'profile-verified-unnamed': 'Perfil: correu confirmat, encara amb #', 'profile-verified': 'Perfil: correu confirmat i nom net',
+  verified: 'Correu confirmat!', 'released-name': 'Perfil d’un convidat alliberat → Tria un altre nom', switch: 'Correu d’un altre perfil (canvi)',
+  'profile-new': 'Perfil: cap', 'profile-reserved': 'Perfil: convidat sense resultat', 'profile-guest': 'Perfil: convidat',
+  'profile-released': 'Perfil: nom alliberat (en tria un altre)', 'profile-verified': 'Perfil: correu confirmat',
   board: 'Classificació amb marques', 'board-tip': 'Marca: explicació', 'board-guest': 'Classificació: convidats i verificats',
   'board-empty': 'Classificació: temporada buida', 'board-drac': 'Classificació del Drac', 'board-drac-empty': 'Classificació del Drac: buida',
   seasons: 'Temporades anteriors (Saló de la fama)', 'seasons-later': 'Saló de la fama: ball anterior', 'season-end': 'Final de temporada (full d’un sol cop)',
   'seasons-many': 'Saló de la fama: 11 temporades', 'seasons-drac': 'Saló de la fama: Drac sense temporades', 'season-end-plain': 'Final de temporada sense podi',
-  card: 'Fitxa d’un verificat', 'card-guest': 'Fitxa d’un convidat (nom repetit)', 'card-long': 'Fitxa: nom de 16 lletres', 'card-empty': 'Fitxa sense estadístiques',
+  card: 'Fitxa d’un verificat', 'card-guest': 'Fitxa d’un convidat', 'card-released': 'Fitxa d’un nom alliberat', 'card-long': 'Fitxa: nom de 16 lletres', 'card-empty': 'Fitxa sense estadístiques',
   taken: 'Sobrenom agafat', recover: 'Sobrenom agafat → Recupera', retry: 'Publicar sense connexió → Torna-ho a provar',
 };
 const $ = id => document.getElementById(id);
@@ -102,23 +102,23 @@ async function reach(ctx) {
   switch (state) {
     case 'publish': board().openPublish({ auto: true }); return;
     case 'published': return published();
-    case 'verified': case 'choose-name': case 'code': case 'email':
+    case 'verified': case 'code': case 'email':
       await published(); press('publish-confirm');
       if (state === 'email') return;
       await mail(); if (state === 'code') return;
       type('profile-code', MOCK_CODE); press('profile-send');
       await until(() => $('profile-status').textContent === 'Correu confirmat!', 'Correu confirmat!');
-      if (state === 'choose-name') await need('chooseNameReady')();
       return;
+    case 'released-name': await settings(); press('profile-main'); await need('renameReady')(); return; // the released guest's block, then its name sheet
     case 'switch': await settings(); press('profile-main'); return mail(OTHER_MAIL);
     case 'board-empty': case 'board-drac': case 'board-drac-empty':
       return need('openBoard')(state === 'board-empty' ? {} : { figure: 'drac-valls' });
     case 'seasons': case 'seasons-later': case 'seasons-many': return need('openSeasons')();
     case 'seasons-drac': return need('openSeasons')('drac-valls');
     case 'season-end': case 'season-end-plain': return need('showSeasonEnd')();
-    case 'card': case 'card-guest': case 'card-long': case 'card-empty': { // who to open comes from the seeded cast (demo-data.js demoCards)
-      const c = demoCards({ world: REVIEWS[state].seasons }), who = { card: c.plain, 'card-guest': c.guest, 'card-long': c.long, 'card-empty': c.empty }[state];
-      return need('openCard')(who.alias, who.tag, who.from);
+    case 'card': case 'card-guest': case 'card-released': case 'card-long': case 'card-empty': { // who to open comes from the seeded cast (demo-data.js demoCards)
+      const c = demoCards({ world: REVIEWS[state].seasons }), who = { card: c.plain, 'card-guest': c.guest, 'card-released': c.released, 'card-long': c.long, 'card-empty': c.empty }[state];
+      return need('openCard')(who);
     }
     case 'board': case 'board-tip': case 'board-guest':
       board().openBoard();

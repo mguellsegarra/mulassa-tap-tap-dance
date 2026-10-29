@@ -5,7 +5,6 @@
 // sit inside the sheet's fixed box.
 import { byId, num, posDisc } from './sheet-kit.js';
 import { tr } from '../i18n/messages.js';
-import { mulaSpinner } from './loader.js';
 import { appendName, playerOf } from './profile-notes.js';
 import { statsData, renderStats, icon, FIGURE_NAMES } from './stats-view.js';
 import { figureSeasons, boardName } from './seasons-ui.js';
@@ -14,13 +13,15 @@ import { FIGURES, portraitArt, portraitPalette } from '../game/figures.js';
 import { DIFFS } from '../game/chart.js';
 import { figureOfVersion } from '../figures/index.js';
 
+// The skeleton's numbers: never shown (transparent, profile.css), they only give the tiles their loaded size
+const SKELETON = statsData({ 'mulassa-valls/-/1': { runs: 12, seconds: 3600, bestCombo: 120, perfect: 90, good: 6, miss: 4 } });
+
 export function setupCard({ focusIn, service, doc = document, now = () => Date.now(), minLoad = 600 }) {
   const $ = byId(doc), menu = $('card-menu'), head = $('card-name'), note = $('card-note'), from = $('card-from'), box = $('card-stats'), status = $('card-status');
   const retry = $('card-retry');
   let req = 0, back = null, who = null;
-  function say(text, { spin = false, again = false, empty = false } = {}) {
+  function say(text, { again = false, empty = false } = {}) {
     status.textContent = text; retry.hidden = !again; status.parentElement.hidden = !text;
-    if (spin) status.prepend(mulaSpinner(doc));
     if (empty) status.prepend(icon(doc, 'bars')); // dotted bars: nothing counted yet
   }
   // «a Tardor 2026 · Mulassa»: the season's name from the hall (get_seasons) of each figure the podiums are on
@@ -35,8 +36,8 @@ export function setupCard({ focusIn, service, doc = document, now = () => Date.n
   }
   async function load() {
     const r = ++req;
-    box.replaceChildren();
-    say(tr('ui.card.loading'), { spin: true });
+    renderStats(doc, box, SKELETON); box.inert = true; box.dataset.pending = ''; // the loaded layout from the first frame: nothing moves when it answers; inert: no reader, no Tab onto its fake «Més estadístiques»
+    say(tr('ui.card.loading'));
     const shown = minLoad > 0 ? new Promise(res => setTimeout(res, minLoad)) : null;
     let card, podiums = [];
     try {
@@ -44,15 +45,17 @@ export function setupCard({ focusIn, service, doc = document, now = () => Date.n
       if (card?.podiums.length) podiums = await podiumLines(card.podiums);
     } catch (e) {
       await shown; if (r !== req || !menu.open) return;
-      say(e?.message || tr('ui.card.loadFailed'), { again: true }); return;
+      unpend(); say(e?.message || tr('ui.card.loadFailed'), { again: true }); return;
     }
     await shown; if (r !== req || !menu.open) return;
+    unpend();
     if (card) paintName(card);
     const d = card && statsData(card.totals);
     if (!d?.runs) { say(tr('ui.card.noStats'), { empty: true }); return; }
     say('');
     renderStats(doc, box, d, { podiums });
   }
+  function unpend() { box.replaceChildren(); box.inert = false; delete box.dataset.pending; }
   // the name from the first frame (what was tapped), the server's answer after
   function paintName(p) {
     head.replaceChildren();
@@ -81,6 +84,7 @@ export function setupCard({ focusIn, service, doc = document, now = () => Date.n
     // ({ figure, season (its name), position, score, difficulty }); no from (a podium, a link): no row.
     open(p, onBack = null) {
       if (!service.configured || !p?.alias || !p.publicId) return;
+      if (menu.open && who?.publicId === p.publicId) return; // a second tap while it opens (a busy phone queues them): the same card, its load untouched
       who = playerOf(p);
       back = onBack;
       paintName(who);

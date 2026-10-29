@@ -216,8 +216,11 @@ const service = (o = {}) => ({ configured: true, asked: [], async seasons(f) { t
   c.open({ alias: 'Baldufa', verified: false, released: true, publicId: 'id-baldufa', from: { figure: 'mulassa-valls', season: 'Tardor 2026', position: 3, score: 84210, difficulty: 2 } });
   assert(f.$('card-menu').open && f.$('card-name').textContent === 'Baldufa' && !f.$('card-note').hidden && f.$('card-name').find(e => e.className?.includes?.('released')), 'the name, faded, with its note, from the first frame');
   assert(!f.$('card-from').hidden && f.$('card-from').textContent === 'Mulassa de Valls · Tardor 2026384.210 puntsDIFÍCIL', 'the board row it came from (its place a plain number in the disc)');
+  assert(f.$('card-stats').find(e => e.className?.includes?.('stat-fact')) && f.$('card-stats').inert === true, 'loading: the loaded tiles as a skeleton, inert');
+  c.open({ alias: 'Baldufa', publicId: 'id-baldufa' }); c.open({ alias: 'Baldufa', publicId: 'id-baldufa' }); // queued taps on a busy phone
   await tick(); await tick(); await tick();
-  assert.deepEqual(asked, ['id-baldufa'], 'asked by public id, never by name');
+  assert.deepEqual(asked, ['id-baldufa'], 'asked by public id, never by name; the repeated taps ask nothing more');
+  assert(!f.$('card-stats').inert && !('pending' in f.$('card-stats').dataset), 'loaded: the skeleton gone');
   assert(/3 h 12 mina la plaça/.test(f.$('card-stats').textContent) && !/Has jugat|dies/.test(f.$('card-stats').textContent), 'the totals, never the days');
   assert(/1Podi a Tardor 2026 · Mulassa de Valls \(ball anterior\)/.test(f.$('card-stats').textContent), 'its podiums, with the season\'s name');
   card = { ...card, alias: 'Portadora', verified: true, released: false, totals: {}, podiums: [] };

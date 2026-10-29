@@ -329,6 +329,11 @@ body:has(:is(#board-menu, #seasons-menu, #account-menu)[open]) #card-menu { widt
 .card-from .lvl { padding: 0 6px; border-radius: 999px; color: #2a1a10; font-size: 10px; font-weight: 800; line-height: 16px; letter-spacing: .05em; }
 .card-box { position: relative; min-height: 196px; }
 .card-box .board-state { position: absolute; inset: 0; }
+/* loading (player-card.js): the loaded tiles with their words and icons gone, pulsing; «Carregant…» for readers only */
+.card-box [data-pending] :is(.stat-fact, .stat-toggle) { color: transparent; pointer-events: none; animation: profile-pulse 1.2s ease-in-out infinite; }
+.card-box [data-pending] :is(.stat-fact, .stat-toggle) * { visibility: hidden; }
+.card-box:has([data-pending]) .board-state { clip-path: inset(50%); } /* over the box as ever (no overflow), read but not seen */
+@media (prefers-reduced-motion: reduce) { .card-box [data-pending] :is(.stat-fact, .stat-toggle) { animation: none; } }
 .card-box .board-status .stat-ico { display: block; width: 40px; height: 40px; margin: 0 auto 8px; color: #b5a385; } .card-box .board-status .stat-ico svg { stroke-width: 1.6; }
 @media (max-width: 359px) { #card-menu, #account-menu { padding-inline: 14px; } .stat-fact { padding: 8px; column-gap: 6px; } .stat-fact b { font-size: 19px; } .stat-fact .stat-ico { width: 22px; height: 22px; }
   .stat-lines li { grid-template-columns: 22px minmax(0, 1fr); column-gap: 6px; padding: 8px; } .stat-lines .stat-ico { width: 22px; height: 22px; } } /* the lines keep the tiles' compact inset */

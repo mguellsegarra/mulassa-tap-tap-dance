@@ -122,6 +122,19 @@ $('select-standings-head').listeners.click[0]();
 assert.equal(boards, 1, 'the header opens Classificacions');
 console.log('selector standings: rows, gaps, verified check and fitting ok');
 
+{ // touch tablets: the desktop column, but the first three (as on phones) go last, after your neighbours and the medals
+  const tabFacts = setupStandings({ doc, win: { matchMedia: q => ({ matches: !/reduce/.test(q) }) }, $, onBoard() {} });
+  tabFacts.board({ pos: 13, total: 63, rows }, true);
+  room = 5; tabFacts.fit();
+  assert.deepEqual(shown(), [1, 2, 3], 'a tablet\'s short column: the first three beside the medals, not your neighbours');
+  assert(!('data-gone' in $('select-meds').attrs));
+  room = 3; tabFacts.fit();
+  assert.deepEqual(shown(), [1, 2, 3], 'shorter: the medals go, the three stay');
+  assert('data-gone' in $('select-meds').attrs);
+  room = Infinity;
+}
+console.log('tablets: the first three before your neighbours ok');
+
 // Another board, or the first answer after a placeholder (a fade, not a height ease): the card fades out
 // with the old board, swaps to the newest answer while unseen, then fades in; a refresh rewrites in place, reduced motion at once.
 { const card = $('select-standings'), fades = []; let swapped = 0;

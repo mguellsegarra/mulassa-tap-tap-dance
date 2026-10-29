@@ -39,7 +39,8 @@ export function resize() {
   camera.aspect = cw / ch;
   hud.width = Math.ceil(cw * DPR);
   hud.height = Math.ceil(ch * DPR);
-  H.setTransform(K * DPR, 0, 0, K * DPR, 0, 0);
+  // Scale to the rounded-up backing size, not DPR: a fractional DPR (tablets) left its last pixel row unpainted, a line under the foot
+  H.setTransform(K * hud.width / cw, 0, 0, K * hud.height / ch, 0, 0);
   PXU = K * DPR;
   W = cw / K; HH = ch / K;
   camera.fov = baseFov(); camera.updateProjectionMatrix(); // (after HH: the lens depends on it; framePlayCamera sets its own each frame)

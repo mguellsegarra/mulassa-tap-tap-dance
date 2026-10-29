@@ -1,6 +1,6 @@
 // How a player's name is shown, and what a guest profile is told (docs/rankings/strategy.md §6). A confirmed address earns
-// the check (it means only that); a guest («Convidat», no confirmed address) shows the same plain name without it. A guest
-// idle for 30 days can lose the name to somebody else: its rows are then faded («released»), with their results kept.
+// the check (it means only that); a guest («Convidat», no confirmed address) shows the same plain name, quieter and without it.
+// A guest idle for 30 days can lose the name to somebody else: its rows are then fainter still («released»), results kept.
 import { tr } from '../i18n/messages.js';
 export const VERIFIED = tr('ui.profile.verified');
 export const GUEST = tr('ui.profile.guest');
@@ -19,12 +19,12 @@ export function checkBadge(doc) {
 }
 // A board, podium or hall item as the name helpers take it: public_id (the card's key) as publicId, released as a flag
 export const playerOf = r => ({ alias: String(r.alias ?? ''), verified: r.verified === true, released: r.released === true, publicId: r.publicId ?? r.public_id ?? null });
-// A player's name into `into` (a .who row): the name, faded when its profile was released (its name is somebody else's now), the
+// A player's name into `into` (a .who row): the name, quieter for a guest and fainter when its profile was released (its name is somebody else's now), the
 // check for a confirmed address. `p`: { alias, verified, released, publicId }. With `onOpen` the name is a button that opens the
 // public card (src/ui/player-card.js); the check stays its own button beside it.
 export function appendName(doc, into, p, onOpen = null) {
   const name = doc.createElement(onOpen ? 'button' : 'span');
-  name.className = `player-name${p.released === true ? ' released' : ''}`;
+  name.className = `player-name${p.verified === true ? '' : ' guest'}${p.released === true ? ' released' : ''}`;
   const alias = doc.createElement('span'); alias.className = 'alias'; alias.textContent = String(p.alias ?? ''); // text, never HTML
   name.appendChild(alias);
   if (onOpen) {

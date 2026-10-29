@@ -1,8 +1,8 @@
 /* Names, the Perfil sheet, statistics, seasons and players' cards (src/ui/profile-notes.js, account-ui.js, stats-view.js,
    seasons-ui.js, player-card.js); the board's own rows are in board.css. */
 
-/* A player's name (appendName): a button to their card where it is tappable. A released profile (its name is somebody else's
-   now) is faded: muted cream (6.8:1 on the sheet), never a check. */
+/* A player's name (appendName): a button to their card where it is tappable. A guest is quieter: muted cream (6.8:1 on the
+   sheet), never a check (a confirmed name stands out); a released one (its name is somebody else's now) fainter still. */
 button.player-name { position: relative; display: inline-flex; align-items: baseline; gap: 0; min-width: 0; min-height: 0; margin: 0; padding: 0; border: 0; border-radius: 4px; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
 @media (pointer: coarse) { button.player-name::after { content: ""; position: absolute; left: -6px; right: -6px; top: 50%; height: max(100%, 44px); translate: 0 -50%; } } /* a 44 px invisible target on touch; a mouse: the hand only over the name; rows keep their height and look, every list steps >= 44 px */
 @media (hover: hover) { button.player-name:hover { filter: none; } button.player-name:hover .alias { text-decoration: underline; text-decoration-color: #e8d8b899; text-underline-offset: 3px; } }
@@ -16,8 +16,9 @@ span.player-name { display: inline-flex; align-items: baseline; min-width: 0; }
 /* in a sentence («Publicat com a Timbaler.»): inline, so the full stop never wraps alone */
 .board-status .player-name { display: inline; } .board-status .player-name .alias { white-space: normal; }
 .board-status .verified-check { margin-left: 4px; vertical-align: -3px; }
-.player-name.released { color: #b5a385; }
-#board-table tr.me .player-name.released { color: inherit; }
+.player-name.guest { color: #b5a385; }
+.player-name.released { opacity: .8; } /* 4.9:1 on the sheet */
+#board-table tr.me .player-name.guest { color: inherit; }
 /* «Convidat»: an information chip (dark, cream text), never a button or a cream fill */
 .kind-chip { flex: none; display: inline-block; padding: 1px 9px; border: 1px solid #e8d8b866; border-radius: 999px; background: #140c07; color: #e8d8b8; font-size: 13px; font-weight: 800; line-height: 20px; letter-spacing: .04em; }
 
@@ -113,7 +114,7 @@ span.player-name { display: inline-flex; align-items: baseline; min-width: 0; }
 .r-sub .pos { flex: none; --pos-size: 18px; }
 .r-side { display: grid; justify-items: end; line-height: 1.1; font-variant-numeric: tabular-nums; }
 .r-side b { font-size: 19px; } .r-side .dash { color: #e8d8b8; } .r-side small { color: #e8d8b8; font-size: 13px; }
-.idx-row[aria-current] :is(.r-sub, .r-two, .r-side small, .r-side .dash, .player-name.released) { color: #4a3420; }
+.idx-row[aria-current] :is(.r-sub, .r-two, .r-side small, .r-side .dash, .player-name.guest) { color: #4a3420; }
 /* no closed season yet: the empty estendard, the open season, its board */
 .hall-wait { flex: 1 1 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center; }
 .hall-wait .estendard { width: 84px; height: 118px; } .hall-wait .estendard .fig-mask { width: 60px; height: 42px; }

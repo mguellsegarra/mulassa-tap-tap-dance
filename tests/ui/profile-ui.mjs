@@ -67,6 +67,7 @@ const guestProf = o => ({ alias: 'takeshi', verified: false, published: true, re
   const guest = make({ alias: 'takeshi', session: true, prof: guestProf() }); await guest.profile.refresh();
   assert.equal(guest.$('profile-name').textContent, 'takeshi', 'a guest: its plain name, never a «#»');
   assert(!guest.find(guest.$('profile-name'), k => k.className?.includes?.('released')), 'an active guest is not faded');
+  assert(guest.find(guest.$('profile-name'), k => k.className?.includes?.('guest')), 'an active guest: the quieter name');
   assert(!guest.$('profile-kind').hidden && guest.$('profile-kind').textContent === GUEST, '«Convidat» said in words here');
   assert.equal(guest.buttons().join(), 'link:Confirma el correu,delete:Esborra el perfil');
   assert.equal(guest.$('profile-sub').textContent, GUEST_TEXT, 'what a guest risks, and the way out');

@@ -255,10 +255,9 @@ async function run(dev) {
     });
 
     if (published && MAIL) await step('correu, codi i nom', async () => {
-      await page.fill('#publish-mail', MAIL);
       await tap('#publish-confirm');
       await waitVisible('#profile-menu[open]', 30000);
-      if (await visible('#profile-mail-field')) { await page.waitForFunction(() => !document.getElementById('profile-send').disabled, null, { timeout: 20000 }); await tap('#profile-send'); await turnstile(); }
+      if (await visible('#profile-mail-field')) { await page.fill('#profile-email', MAIL); await page.waitForFunction(() => !document.getElementById('profile-send').disabled, null, { timeout: 20000 }); await tap('#profile-send'); await turnstile(); }
       await page.waitForFunction(() => !document.getElementById('profile-code-field').hidden || /\S/.test(document.getElementById('profile-status').textContent) && !document.getElementById('profile-send').disabled, null, { timeout: 90000 });
       if (!await visible('#profile-code-field')) throw new Error(`no envia el codi: ${await page.evaluate(() => document.getElementById('profile-status').textContent.trim())}`);
       const asked = Date.now();

@@ -142,11 +142,6 @@ const guestProf = o => ({ alias: 'takeshi', verified: false, published: true, re
   await tick(); await tick();
   assert(s.badge() && s.$('profile-name').textContent === 'takeshi' && s.buttons()[0] === 'signout:Tanca la sessió', 'the block: the same name and the check');
   s.$('profile-menu').close();
-  // an address typed on the publish sheet's offer: the steps open already sending it the code
-  { const t = make({ alias: 'takeshi', session: true, prof: guestProf() }); await t.profile.refresh();
-    t.profile.open('link', null, { mail: ' Jugador@Example.com ' }); await tick(); await tick();
-    assert(t.calls.some(c => c[0] === 'send' && c[1] === 'Jugador@Example.com') && !t.$('profile-code-field').hidden, 'typed elsewhere: straight to the code');
-    t.$('profile-menu').close(); }
   // a code accepted but the server not (yet) confirming it: no claim
   const n = make({ alias: 'takeshi', session: true, prof: guestProf() }); await n.profile.refresh();
   n.profile.open('link'); enter(n.$, 'profile-email', 'jugador@example.com'); n.$('profile-form').fire('submit'); await tick(); await tick();

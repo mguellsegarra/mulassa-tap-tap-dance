@@ -30,7 +30,7 @@ export function setupPublish({ doc, $, service, store, focusIn, now, runs, canWr
   const publishMenu = $('publish-menu');
   const aliasInput = $('publish-alias'), publishStatus = $('publish-status'), fieldError = $('publish-error'), sendBtn = $('publish-send'), cancelBtn = $('publish-cancel'), neverBtn = $('publish-never');
   const { landed, publishQuietly } = setupLanding({ service, store, runs, canWrite, acceptStats, persist, declinesKey: DECLINES_KEY });
-  const placeLine = $('publish-place'), asLine = $('publish-as'), field = $('publish-field'), mailIn = $('publish-mail');
+  const placeLine = $('publish-place'), asLine = $('publish-as'), field = $('publish-field');
   let publishReq = 0, done = false, busy = false;
   // auto: this sheet opened by itself (closing it unpublished is an «Ara no»); armedAt: a tap already on its way when it
   // appeared must not publish
@@ -226,7 +226,7 @@ export function setupPublish({ doc, $, service, store, focusIn, now, runs, canWr
       publishStatus.append(post);
       // a guest: a quiet way to keep the profile and its name (the e-mail), under every «Publicat!»; never by itself
       const offer = Boolean(onConfirm && prof && !prof.verified);
-      $('publish-offer').hidden = !offer; mailIn.value = '';
+      $('publish-offer').hidden = !offer;
       done = true;
       aliasInput.readOnly = true;
       setSend(tr(offer ? 'ui.board.notNow' : 'ui.common.ok'));
@@ -267,8 +267,7 @@ export function setupPublish({ doc, $, service, store, focusIn, now, runs, canWr
     publishMenu.close();
   });
   $('publish-board').addEventListener('click', () => { publishMenu.close(); openBoard(); });
-  $('publish-confirm').addEventListener('click', () => { const mail = mailIn.value.trim(); publishMenu.close(); onConfirm?.({ mail }); }); // the profile steps, sending to it
-  mailIn.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $('publish-confirm').click(); } }); // not the form's submit (D'acord)
+  $('publish-confirm').addEventListener('click', () => { publishMenu.close(); onConfirm?.(); }); // the profile steps: the address and its code
   publishMenu.addEventListener('close', () => {
     // «Ara no», Escape or a tap outside, on the prompt that opened by itself and wasn't published: one more decline
     const declined = auto && !done;

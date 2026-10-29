@@ -195,11 +195,10 @@ html:not([lang="ca"]) .board-links { row-gap: 16px; } /* longer words wrap the t
 #publish-form[data-view="done"] #publish-status:has(+ .publish-place:not([hidden])) { margin-bottom: 6px; }
 #publish-form[data-view="done"] .publish-place { margin: 0 0 24px; font-size: 26px; line-height: 1.2; }
 /* under a guest's «Publicat!»: why to confirm the e-mail, quietly (board-ui.js); «Confirma el correu» takes the primary and «D'acord» steps down */
-.publish-offer { display: flex; flex-direction: column; gap: 10px; margin: -4px 0 12px; padding: 14px; border: 1px solid #f5c51866; border-radius: 14px; background: #fff3d60d; text-align: left; } /* one card: the invitation and its field */
+.publish-offer { display: flex; flex-direction: column; gap: 10px; margin: -4px 0 12px; padding: 14px; border: 1px solid #f5c51866; border-radius: 14px; background: #fff3d60d; text-align: left; } /* one card: the invitation and its button */
 .publish-offer-title { display: flex; align-items: center; gap: 10px; margin: 0; color: #fff3d6; font-size: 17px; }
 .publish-offer-title > svg { flex: none; width: 22px; height: 22px; fill: none; stroke: #f5c518; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .publish-warning { margin: 0; color: #e8d8b8cc; font-size: 14px; line-height: 1.35; text-wrap: pretty; }
-#publish-offer .board-label { margin-bottom: -6px; text-align: left; }
 .publish-offer > .btn-link { align-self: center; min-height: 0; padding: 2px; font-size: 13px; }
 .publish-offer:not([hidden]) + .sheet-actions > #publish-send { min-height: 44px; border-color: transparent; background: none; color: #fff3d6; text-decoration: underline; box-shadow: none; } /* «Ara no»: the card leads */
 #publish-form[data-view="done"] .publish-offer { animation: board-in .3s ease-out both; }
@@ -231,7 +230,7 @@ html:not([lang="ca"]) .board-links { row-gap: 16px; } /* longer words wrap the t
 @media (max-height: 500px), (min-width: 700px) and (max-height: 700px) { /* landscape / short windows: the run and the field | status and actions */
   #publish-menu { width: min(660px, calc(100vw - 32px - var(--sal) - var(--sar))); }
   #publish-form { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 20px; align-items: start; }
-  #publish-form > h2 { grid-column: 1 / -1; }
+  #publish-form > :is(h2, #publish-wait) { grid-column: 1 / -1; } /* the Mulassa while publishing: centred on the sheet, not in the left half */
   #publish-form > .publish-run { grid-column: 1 / -1; }
   /* the form's own view, two columns split by a hairline: LEFT the nickname, its hint, «Publica» under it;
      RIGHT the consent note, «No m'ho tornis a recordar», «Ja tens un perfil?». Every box joins the grid (display: contents), so the rows

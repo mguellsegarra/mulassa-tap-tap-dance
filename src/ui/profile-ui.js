@@ -121,8 +121,7 @@ export function setupProfile({ focusIn, captcha, store, aliasKey, deviceNote = (
   function forget() { store.remove(aliasKey); refresh(); }
 
   // --- the sheet
-  // mail: an address typed elsewhere (the publish sheet's offer): the link starts by sending it the code
-  function open(what, onBack = null, { mail: typed = '' } = {}) {
+  function open(what, onBack = null) {
     if (!online || menu.open) return;
     kind = what; back = onBack; req++; busy = false; mail = ''; type = '';
     mailIn.value = codeIn.value = aliasIn.value = ''; setStatus('');
@@ -144,7 +143,6 @@ export function setupProfile({ focusIn, captcha, store, aliasKey, deviceNote = (
       show('confirm');
     }
     menu.showModal();
-    if (step === 'mail' && typed) { mailIn.value = cleanEmail(typed); send(); return; }
     focusIn(menu, step === 'alias' ? 'profile-alias' : step === 'mail' ? 'profile-email' : 'profile-keep'); // a confirmation starts on the safe button
   }
 

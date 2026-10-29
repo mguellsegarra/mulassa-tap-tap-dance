@@ -96,6 +96,8 @@
   #loader { position: fixed; z-index: 40; inset: 0; display: flex; align-items: center; justify-content: center; box-sizing: border-box; padding: 0 env(safe-area-inset-right) 0 env(safe-area-inset-left); pointer-events: none; color: #fff3d6; font: 800 18px/1.2 'Baloo 2', system-ui, sans-serif; transition: opacity .25s ease-out; }
   /* No vertical padding: a home-screen app first reports no safe-area insets and then them, so padding by them moved the centred card while the page started. */
   #loader.page { background: var(--page-edge, #140c07); animation: loader-give-up .3s 30s forwards; } /* no JS at all: never a cover for good */
+  /* base.css says it too, but a page kept from before a deploy asks for a CSS that is gone (404): unstyled until #build-check reloads, with no scrollbars */
+  html, body { margin: 0; overflow: hidden; }
   #loader.out { opacity: 0; }
   .loader-box { font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: 12px; padding: 10px 18px 10px 14px; border-left: 3px solid #f5c518; border-radius: 4px; background: #2a1a10e8; animation: loader-in .15s ease-out both; }
   #loader.page .loader-box { flex-direction: column; gap: 14px; box-sizing: border-box; max-width: min(360px, 100vw - 32px); padding: 24px; border: 0; border-radius: 20px; background: #0000008c; -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px); font-size: 20px; animation-duration: .3s; animation-delay: 0s; } /* a card over the drifting pattern */ /* the character paints immediately */

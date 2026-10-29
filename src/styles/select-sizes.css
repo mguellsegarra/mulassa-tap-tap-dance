@@ -123,6 +123,7 @@ body.reel-idle #select > * { pointer-events: none; }
 .sel-standings-rows li + li { border-top: 1px solid var(--sel-line); }
 /* rows step 35 px: a 44 px slop would reach the next row's name, so the name's target is its whole row instead */
 .sel-standings-rows li { position: relative; } .sel-standings-rows button.player-name { position: static; } .sel-standings-rows button.player-name::after { inset: 0; height: auto; translate: none; }
+.sel-standings-rows li:has(button.player-name) { pointer-events: auto; cursor: pointer; } /* the row is a tap target of its own (.sel-info lets only buttons take taps): an iPhone sent a tap there to the page */
 .sel-standings-rows .n { color: var(--sel-muted); }
 .sel-standings-rows .lvl { padding: 0 6px; border-radius: 999px; font-size: 10px; font-weight: 800; line-height: 16px; letter-spacing: .05em; color: #2a1a10; }
 .sel-standings-rows .pc { text-align: right; color: var(--sel-muted); }

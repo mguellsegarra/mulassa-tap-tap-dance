@@ -94,6 +94,7 @@ body:has(#select:not([hidden])) :is(#free, #music, #settings) { --cb-r: calc(var
 }
 .sel-podium-list li { display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; column-gap: 10px; align-items: center; min-height: 44px; }
 .sel-podium-list li + li { border-top: 1px solid var(--sel-line); }
+.sel-podium-list li:has(button.player-name) { pointer-events: auto; cursor: pointer; } /* the whole row opens the card (select-podium.js), as the standings card's */
 @media (pointer: fine) { .sel-podium-list li { min-height: 30px; } } /* a mouse: a little under the standings card's rows (34), so three fit a 1280×800 column; touch keeps 44 */
 /* rows step 31 px with a mouse: a 44 px slop would reach the next name, so the name's target is its whole row (as the standings card's) */
 @media (pointer: fine) { .sel-podium-list li { position: relative; } .sel-podium-list button.player-name { position: static; } .sel-podium-list button.player-name::after { inset: 0; height: auto; translate: none; } }

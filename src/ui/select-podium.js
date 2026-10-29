@@ -23,7 +23,8 @@ export function setupPodium({ doc, win, $, onBoard, onCard, load, refit, now = (
     const li = el('li', r.is_self ? 'me' : ''), at = Number(r.position);
     li.appendChild(posDisc(doc, at));
     const who = li.appendChild(el('span', 'who')), p = playerOf(r);
-    appendName(doc, who, p, q => onCard({ ...q, from: { season: calendarSeason().name, position: at, score: r.score, difficulty: level } })); // aliases are text, never HTML
+    const name = appendName(doc, who, p, q => onCard({ ...q, from: { season: calendarSeason().name, position: at, score: r.score, difficulty: level } })); // aliases are text, never HTML
+    li.addEventListener('click', () => name.click()); // the whole row is the name's (as the standings card's)
     if (r.is_self) who.appendChild(el('span', 'me-tag', tr('ui.board.me')));
     li.appendChild(el('span', 'pts', num(r.score))); // lilac = points, as on the standings card
     return li;

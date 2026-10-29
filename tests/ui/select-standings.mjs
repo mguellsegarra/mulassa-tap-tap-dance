@@ -12,6 +12,7 @@ class Node {
   toggleAttribute(k, on) { if (on) this.attrs[k] = ''; else delete this.attrs[k]; }
   removeAttribute(k) { delete this.attrs[k]; }
   addEventListener(k, f) { (this.listeners[k] ||= []).push(f); }
+  click() { for (const f of this.listeners.click ?? []) f({ stopPropagation() {} }); }
   getClientRects() { return this.hidden ? [] : [{}]; }
   querySelectorAll() { return []; } // no layout here: phones' long names never overflow
 }
@@ -194,3 +195,13 @@ assert.deepEqual(fitAt(1), ['credit', false, true], 'then the foot goals');
 assert.deepEqual(fitAt(0), ['song', false, true], 'then the song row; the level row stays');
 console.log('step 2 give-way order: credit, goals, song ok');
 
+
+// a tap anywhere on a row opens that player's card, once (an iPhone sent a tap off the name to the page: the row takes it)
+{
+  const opened = [];
+  const tapFacts = setupStandings({ doc, $, onBoard() {}, onCard: p => opened.push(p.alias) });
+  tapFacts.board({ pos: null, total: 3, rows: rows.slice(0, 3).map(r => ({ ...r, public_id: `id-${r.position}` })) }, true);
+  const li = list.kids.find(k => k.tag === 'li');
+  for (const f of li.listeners.click ?? []) f({});
+  assert.deepEqual(opened, ['Jugador1'], 'the row opens its own player\'s card');
+}

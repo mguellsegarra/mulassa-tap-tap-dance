@@ -62,7 +62,9 @@ export function setupStandings({ doc, win = globalThis, $, onBoard, onCard = nul
     const p = playerOf(r); // aliases are text, never HTML
     // the season when the name is opened: a date formatter per row of every fitting try cost ~90 ms a figure change
     const from = () => ({ season: calendarSeason().name, position: Number(r.position), score: r.score, difficulty: r.difficulty });
-    appendName(doc, who, p, blank || !onCard ? null : q => onCard({ ...q, from: from() })); // a name opens the player's card, as on the board
+    const name = appendName(doc, who, p, blank || !onCard ? null : q => onCard({ ...q, from: from() })); // a name opens the player's card, as on the board
+    // the whole row is the name's, as on the board (board-list.js): an iPhone's tap on the row, off the name, opened nothing
+    if (!blank && onCard) li.addEventListener('click', () => name.click());
     if (r.is_self) who.appendChild(el('span', 'me-tag', 'TU'));
     const d = Number(r.difficulty);
     li.appendChild(el('span', `lvl lvl${d}`, DIFFS[d]?.name ?? ''));

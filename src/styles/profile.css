@@ -219,9 +219,9 @@ span.player-name { display: inline-flex; align-items: baseline; min-width: 0; }
 .profile-name .verified-check, .card-name .verified-check { width: 20px; height: 20px; }
 .profile-sub { margin: 4px 0 0; color: #e8d8b8; font-size: 14px; line-height: 1.35; text-wrap: pretty; }
 .profile-block[data-state="none"] .profile-sub, .profile-block[data-pending] .profile-sub { margin-top: 0; }
-/* waiting for the identity: the room is kept and shows as a quiet skeleton (the name is already known), so it reads as loading, not dead */
+/* waiting for the identity: the room is kept and shows as a quiet skeleton, so it reads as loading, not dead; the name waits with the rest */
 .profile-block[data-pending] .btn { color: transparent; border-color: transparent; background: #fff3d614; pointer-events: none; animation: profile-pulse 1.2s ease-in-out infinite; }
-.profile-block[data-pending] .profile-sub { color: transparent; border-radius: 6px; background: #fff3d614; animation: profile-pulse 1.2s ease-in-out infinite; } .profile-block[data-pending] .profile-head { display: flex; } .profile-block[data-pending] .kind-chip { visibility: hidden; } /* the guest's words and chip in no colour: its final size from the first frame */
+.profile-block[data-pending] .profile-sub { color: transparent; border-radius: 6px; background: #fff3d614; animation: profile-pulse 1.2s ease-in-out infinite; } .profile-block[data-pending] .profile-head { display: flex; } .profile-block[data-pending] :is(.kind-chip, .profile-name) { visibility: hidden; } /* the guest's words, name and chip in no colour: its final size from the first frame */
 @keyframes profile-pulse { 50% { opacity: .45; } }
 @media (prefers-reduced-motion: reduce) { .profile-block[data-pending] :is(.btn, .profile-sub) { animation: none; } }
 .profile-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 10px; }

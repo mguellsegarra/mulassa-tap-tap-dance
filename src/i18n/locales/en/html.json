@@ -20,8 +20,6 @@
   "html.settingsPromptLabel": "Prompt to post",
   "html.settingsPromptSub": "Off: no prompt after the dance",
   "html.settingsPrompt": "Enable",
-  "html.settingsQuiet": "Automatic posting",
-  "html.settingsQuietSub": "From 2 stars, under your nickname",
   "html.settingsAbout.github": "Code on GitHub",
   "html.settingsAbout.credits": "Credits",
   "html.common.privacy": "Privacy",

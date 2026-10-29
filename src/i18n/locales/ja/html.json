@@ -20,8 +20,6 @@
   "html.settingsPromptLabel": "結果公開のお知らせ",
   "html.settingsPromptSub": "オフにすると踊りの終了時に表示しません",
   "html.settingsPrompt": "オン",
-  "html.settingsQuiet": "自動公開",
-  "html.settingsQuietSub": "星2つ以上を、ニックネームで",
   "html.settingsAbout.github": "GitHubのコード",
   "html.settingsAbout.credits": "クレジット",
   "html.common.privacy": "プライバシー",

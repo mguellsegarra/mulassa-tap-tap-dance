@@ -20,8 +20,6 @@
   "html.settingsPromptLabel": "成绩发布提醒",
   "html.settingsPromptSub": "关闭后，跳完不再提示",
   "html.settingsPrompt": "开启",
-  "html.settingsQuiet": "自动发布",
-  "html.settingsQuietSub": "两星及以上，用你的昵称",
   "html.settingsAbout.github": "GitHub代码",
   "html.settingsAbout.credits": "制作名单",
   "html.common.privacy": "隐私",

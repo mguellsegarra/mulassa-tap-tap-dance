@@ -1,5 +1,5 @@
 // «Publica el resultat»: the publish sheet (the nickname is chosen once, here; there is no renaming), its Turnstile token for
-// a new profile, «Publicat!» with the place, and the prompt's memory (declines, opt-out). setupBoard (board-ui.js) owns the
+// a new profile, «Publicat!» with the place, and the prompt's opt-out. setupBoard (board-ui.js) owns the
 // results screen's run (`runs`) and when the prompt opens by itself.
 import { rememberIdentity, ALIAS_KEY, savedName } from '../services/leaderboard-identity.js';
 import { boardIssue } from '../services/leaderboard-errors.js';
@@ -13,26 +13,20 @@ import { turnstileMessage } from '../services/captcha.js';
 import { appendName } from './profile-notes.js';
 import { setupLanding } from './publish-land.js';
 
-// «Ara no» to the prompt that opens by itself after a run, in a row: at MAX_DECLINES it stops opening by itself (the
-// results row's «Publica el resultat» stays); any publication starts the count again. Only this number is kept.
-export const DECLINES_KEY = 'publish-declines', MAX_DECLINES = 3;
 export const OPTOUT_KEY = 'publish-optout'; // «No m’ho tornis a recordar»: the prompt never opens by itself again (⚙ Configuració turns it back on)
 const NAMES = Array.from({ length: 8 }, (_, i) => tr(`ui.board.alias.${i + 1}`));
 // A fictional, editable suggestion: nobody should feel asked for their real name.
 export const suggestAlias = (rand = Math.random) => `${NAMES[Math.floor(rand() * NAMES.length)]}${100 + Math.floor(rand() * 900)}`; // no spaces
 export { PERSIST_KEY } from './publish-land.js';
-export const declines = store => Number(store.get(DECLINES_KEY)) || 0;
 
 export function setupPublish({ doc, $, service, store, focusIn, now, runs, canWrite, verify, deviceNote, openBoard,
   onRecover, onConfirm, acceptStats, afterPublish, settle, persist }) {
   const publishMenu = $('publish-menu');
   const aliasInput = $('publish-alias'), publishStatus = $('publish-status'), fieldError = $('publish-error'), sendBtn = $('publish-send'), cancelBtn = $('publish-cancel'), neverBtn = $('publish-never');
-  const { landed, publishQuietly } = setupLanding({ service, store, runs, canWrite, acceptStats, persist, declinesKey: DECLINES_KEY });
+  const { landed, publishQuietly } = setupLanding({ service, store, runs, canWrite, acceptStats, persist });
   const placeLine = $('publish-place'), asLine = $('publish-as'), field = $('publish-field');
   let publishReq = 0, done = false, busy = false;
-  // auto: this sheet opened by itself (closing it unpublished is an «Ara no»); armedAt: a tap already on its way when it
-  // appeared must not publish
-  let auto = false, armedAt = 0;
+  let armedAt = 0; // the sheet opened by itself: a tap already on its way when it appeared must not publish
   let needsCaptcha = false, hadSession = true; // hadSession: a profile here when the publish sheet opened
   // An existing profile publishes with one tap (its alias shown); a new one needs a Turnstile token,
   // asked for only once Publica is pressed (the startup check's, if still fresh): opening the sheet sends nothing.
@@ -121,12 +115,11 @@ export function setupPublish({ doc, $, service, store, focusIn, now, runs, canWr
   }
   // auto: opened by itself after the run (the sheet takes focus, not a button: a Space or tap
   // meant for the results screen must never publish).
-  function openPublish({ auto: byItself = false } = {}) {
+  function openPublish({ auto = false } = {}) {
     if (!canWrite || !runs.snapshot || runs.published === runs.snapshot) return;
     done = false; busy = false;
     delete form.dataset.view;
     $('publish-recover').hidden = Boolean(store.get(ALIAS_KEY)) || !onRecover; // present from the first paint for new players
-    auto = byItself;
     armedAt = auto ? now() + 600 : 0;
     const req = ++publishReq, run = runs.snapshot;
     setPublishStatus(''); setInvalid(false);
@@ -153,7 +146,6 @@ export function setupPublish({ doc, $, service, store, focusIn, now, runs, canWr
     prepare(req);
   }
   $('publish-recover').addEventListener('click', () => {
-    auto = false; // leaving for the profile sheet is not an «Ara no»
     publishMenu.close();
     onRecover?.();
   });
@@ -210,7 +202,6 @@ export function setupPublish({ doc, $, service, store, focusIn, now, runs, canWr
       afterPublish?.();
       if (req !== publishReq) return;
       needsCaptcha = false; // the profile exists now
-      auto = false;
       const placeP = showPlace(req, run.version);
       // who published, as the boards will show it (the server publishes under the stored name)
       const profP = Promise.resolve(service.profile?.()).catch(() => null);
@@ -262,16 +253,13 @@ export function setupPublish({ doc, $, service, store, focusIn, now, runs, canWr
   }
   cancelBtn.addEventListener('click', () => publishMenu.close());
   neverBtn.addEventListener('click', () => { // «No m’ho tornis a recordar»: a permanent opt-out
-    store.set(OPTOUT_KEY, '1'); auto = false; // not one more decline: the flag already says it all
+    store.set(OPTOUT_KEY, '1');
     publishMenu.close();
   });
   $('publish-board').addEventListener('click', () => { publishMenu.close(); openBoard(); });
   $('publish-confirm').addEventListener('click', () => { publishMenu.close(); onConfirm?.(); }); // the profile steps: the address and its code
   publishMenu.addEventListener('close', () => {
-    // «Ara no», Escape or a tap outside, on the prompt that opened by itself and wasn't published: one more decline
-    const declined = auto && !done;
-    if (declined) store.set(DECLINES_KEY, String(declines(store) + 1));
-    auto = false;
+    // «Ara no», Escape or a tap outside only close it: the next run asks again
     publishReq++; busy = false; verify?.cancel();
     cancelBtn.hidden = false; neverBtn.hidden = true; $('publish-board').hidden = true;
   });

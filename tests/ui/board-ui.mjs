@@ -6,8 +6,8 @@ import assert from 'node:assert/strict';
 import { readPage } from './page.mjs';
 import { readFileSync } from 'node:fs';
 import { ALIAS_KEY } from '../../src/services/leaderboard-identity.js';
-import { setupBoard, QUIET_OFF_KEY } from '../../src/ui/board-ui.js';
-import { suggestAlias, DECLINES_KEY, OPTOUT_KEY, MAX_DECLINES, PERSIST_KEY } from '../../src/ui/publish-ui.js';
+import { setupBoard } from '../../src/ui/board-ui.js';
+import { suggestAlias, OPTOUT_KEY, PERSIST_KEY } from '../../src/ui/publish-ui.js';
 import { deviceRisk, DEVICE_NOTES } from '../../src/ui/profile-notes.js';
 import { normalizeAlias } from '../../src/services/leaderboard-rules.js';
 import { checkAlias, ALIAS_MESSAGES } from '../../src/services/alias-rules.js';
@@ -38,7 +38,7 @@ class El {
 const ids = ['board-menu', 'publish-menu', 'board-rows', 'board-table', 'board-status', 'board-retry', 'board-list-view',
   'board-close',
   'publish-form', 'publish-title', 'publish-summary', 'publish-about', 'publish-temp', 'publish-alias', 'publish-status', 'publish-send',
-  'publish-cancel', 'publish-never', 'settings-prompt-row', 'settings-prompt', 'settings-quiet-row', 'settings-quiet', 'publish-place', 'publish-as', 'publish-as-name', 'publish-field', 'publish-rule', 'publish-error', 'publish-board',
+  'publish-cancel', 'publish-never', 'settings-prompt-row', 'settings-prompt', 'publish-place', 'publish-as', 'publish-as-name', 'publish-field', 'publish-rule', 'publish-error', 'publish-board',
   'results-actions', 'results-publish', 'results-board', 'publish-device', 'publish-recover',
   'board-figure', 'board-figure-pic', 'board-figure-name', 'board-picker', 'board-figures', 'board-main', 'board-place', 'board-jump', 'board-jump-t', 'board-place-sub',
   'board-publish-link', 'board-scroll', 'board-art', 'board-hint', 'board-more', 'board-more-status', 'board-more-btn', 'board-summary', 'board-publish', 'captcha-menu', 'captcha-box',
@@ -48,11 +48,11 @@ let doc;
 const tick = () => new Promise(r => setTimeout(r, 0));
 const deferred = () => { let resolve, reject; const p = new Promise((a, b) => { resolve = a; reject = b; }); return { p, resolve, reject }; };
 const RUN = Object.freeze({ version: 'mulassa-v1', difficulty: 1, counts: Object.freeze({ perfect: 150, good: 20, miss: 11 }), score: 43210, maxCombo: 60 });
-// under 2 stars: a named player's run that never goes up by itself (publishQuietly), so only the sheet publishes it
+// under 2 stars: asked and published like any other run
 const WEAK = Object.freeze({ ...RUN, counts: Object.freeze({ perfect: 60, good: 20, miss: 101 }) });
 
 function make({ configured = true, publishingEnabled = true, captchaRequired = true, siteKey = 'site', session = false, persistent = true, email = 'contacte@example.test',
-  detachedPrivacy = false, alias = null, declined = 0, afterPublish = null, onRecover = null, automated = false, ua = '', standalone = false, touch = 0,
+  detachedPrivacy = false, alias = null, afterPublish = null, onRecover = null, automated = false, ua = '', standalone = false, touch = 0,
   prof, onConfirm = null, mail = '', onCard, onSeasons, onKeep = null, canPlay, onPlay } = {}) { // prof: what service.profile() answers (undefined: a service without it)
   doc = { activeElement: null, els: new Map(), getElementById(id) { return this.els.get(id); }, createElement: tag => new El(tag) };
   for (const id of ids) doc.els.set(id, new El('x', id));
@@ -85,7 +85,6 @@ function make({ configured = true, publishingEnabled = true, captchaRequired = t
   const captcha = async () => { calls.captcha++; if (T.captchaFails) throw new Error('offline'); return turnstile; };
   const mem = new Map([['record-v2-duet-1', '{"quality":90}']]);
   if (alias) mem.set(ALIAS_KEY, alias);
-  if (declined) mem.set(DECLINES_KEY, String(declined));
   const env = { canPrompt: true, online: true, t: 0 }; // the prompt's world: main.js's screen check, navigator.onLine, the clock
   const store = { get: k => mem.get(k) ?? null, set: (k, v) => mem.set(k, String(v)), remove: k => mem.delete(k) };
   let listener = null;
@@ -312,11 +311,14 @@ const BOARD = page(0, 60, 22);
 }
 // --- results row: publish only for an eligible, unpublished run with publishing on; the board button whenever configured
 {
-  const { board, $, setRun } = make();
+  const { board, $, setRun, mem, env } = make();
   board.results(true);
   assert(!$('results-board').hidden && $('results-publish').hidden && !board.publishable, 'no eligible run: only Classificacions');
   setRun(RUN); board.results(true);
   assert(!$('results-publish').hidden && board.publishable, 'eligible run: Publica el resultat');
+  mem.set(ALIAS_KEY, 'Drac101');
+  assert(board.publishable, 'a nickname arriving mid-screen keeps the row: the card does not jump');
+  mem.delete(ALIAS_KEY);
   board.results(false);
   assert($('results-board').hidden && $('results-publish').hidden, 'leaving the results hides its buttons (the row is share-ui.js\'s)');
   const off = make({ publishingEnabled: false }); off.setRun(RUN); off.board.results(true);
@@ -436,7 +438,7 @@ for (const [total, line] of [[1, 'Ets el número 1!'], [20, 'Ets el número 7!']
 }
 // --- closing mid-request: a late token or success changes nothing on screen, but a sent run is marked published
 {
-  const { board, $, calls, T, widgets, setRun } = make();
+  const { board, $, calls, T, widgets, setRun, mem } = make();
   setRun(RUN); board.results(true); board.openPublish(); $('publish-alias').value = 'Drac101'; await tick();
   submit($); await tick(); await tick();
   $('publish-cancel').click();
@@ -450,8 +452,8 @@ for (const [total, line] of [[1, 'Ets el número 1!'], [20, 'Ets el número 7!']
   assert.equal($('publish-status').textContent, '', 'no late message on a closed sheet');
   board.results(true);
   assert($('results-publish').hidden);
-  // a new run replaces the snapshot: it can be published again
-  setRun({ ...WEAK, score: 1 }); board.results(true);
+  // a new run replaces the snapshot: it can be published again (by hand: with the nickname forgotten it doesn't go up by itself)
+  mem.delete(ALIAS_KEY); setRun({ ...WEAK, score: 1 }); board.results(true);
   assert(!$('results-publish').hidden);
   // a late error after reopening belongs to the old request
   board.openPublish(); $('publish-alias').value ||= 'Drac101'; await tick(); await tick();
@@ -481,26 +483,30 @@ for (const [total, line] of [[1, 'Ets el número 1!'], [20, 'Ets el número 7!']
 }
 {
   const { board, $, calls, T, setRun } = make({ session: true, alias: 'Drac101' });
-  setRun(WEAK); board.results(true); board.openPublish(); await tick(); await tick();
+  setRun(WEAK); board.results(true); await tick(); await tick(); // it goes up by itself first; that one is lost too
+  assert($('results-publish').hidden && !board.publishable, 'on its way by itself: no button, no row kept for it');
+  T.publishes[0].reject(Object.assign(new Error('x'), { code: 'unavailable' })); await tick(); await tick(); board.results(true);
+  assert(!$('results-publish').hidden && $('publish-menu').open, 'a weak run whose quiet publish failed: the prompt and the button');
+  board.openPublish(); await tick(); await tick();
   submit($);
-  T.publishes[0].reject(Object.assign(new Error('No s’ha pogut connectar. Torna-ho a provar.'), { code: 'unavailable', detail: 'rpc:Error:0' }));
+  T.publishes[1].reject(Object.assign(new Error('No s’ha pogut connectar. Torna-ho a provar.'), { code: 'unavailable', detail: 'rpc:Error:0' }));
   await tick(); await tick();
-  assert.equal(calls.publish.length, 1, 'a lost response never triggers an automatic publish retry');
+  assert.equal(calls.publish.length, 2, 'a lost response never triggers an automatic publish retry');
   assert.equal($('publish-send').textContent, 'Torna-ho a provar');
   assert(!$('publish-send').disabled, 'the player can retry after a transport failure');
   board.results(true);
   assert(!$('results-publish').hidden, 'the pending result survives the failed request');
   submit($);
-  T.publishes[1].reject(Object.assign(new Error('Espera uns segons i torna-ho a provar.'), { code: 'rate_limit' }));
+  T.publishes[2].reject(Object.assign(new Error('Espera uns segons i torna-ho a provar.'), { code: 'rate_limit' }));
   await tick();
   assert(!$('publish-send').disabled, 'a rate limit after a lost response also permits a later retry');
   submit($);
-  assert.equal(calls.publish.length, 3);
+  assert.equal(calls.publish.length, 4);
   for (const call of calls.publish) {
-    assert.strictEqual(call.result, WEAK, 'manual retries send the same pending result');
+    assert.strictEqual(call.result, WEAK, 'the quiet try and the manual retries send the same pending result');
     assert.equal(call.alias, 'Drac101');
   }
-  T.publishes[2].resolve({ improved: false, quality: 90, score: RUN.score }); await tick();
+  T.publishes[3].resolve({ improved: false, quality: 90, score: RUN.score }); await tick();
   assert.match($('publish-status').textContent, /^Publicat com a .+\. La classificació mostra el teu millor resultat\.$/);
   board.results(true);
   assert($('results-publish').hidden, 'a confirmed non-improving retry completes publication');
@@ -542,13 +548,11 @@ for (const [total, line] of [[1, 'Ets el número 1!'], [20, 'Ets el número 7!']
   a.env.t = 100; submit(a.$);
   assert.equal(a.calls.captcha, 0, 'a tap already on its way when it appeared does nothing');
   a.$('publish-cancel').click();
-  assert.equal(a.mem.get(DECLINES_KEY), '1', '«Ara no» counts');
   a.board.results(true); a.board.results(false); a.board.results(true); await wait();
   assert(!a.$('publish-menu').open, 'once per run');
   assert(!a.$('results-publish').hidden, 'the results row keeps «Publica el resultat»');
   a.$('results-publish').click(); await wait();
   a.$('publish-cancel').click();
-  assert.equal(a.mem.get(DECLINES_KEY), '1', 'closing a sheet they opened themselves is not a decline');
   // never over another sheet, off the results, hidden/rotated (main.js canPrompt), offline, or for a run with 0 hits
   for (const [why, set, run] of [['another sheet up', e => { e.canPrompt = false; }], ['offline', e => { e.online = false; }],
     ['0 hits (a fail with nothing hit)', () => {}, { ...RUN, counts: { perfect: 0, good: 0, miss: 181 } }]]) {
@@ -569,51 +573,37 @@ for (const [total, line] of [[1, 'Ets el número 1!'], [20, 'Ets el número 7!']
   assert(a.$('publish-menu').open && !a.$('publish-never').hidden, 'the auto prompt offers it');
   a.$('publish-never').click();
   assert(!a.$('publish-menu').open && a.mem.get(OPTOUT_KEY) === '1', 'stores the opt-out');
-  assert(!a.mem.has(DECLINES_KEY), 'and is not counted as a decline');
   assert.equal(a.shares.length, 0, 'nothing opens next');
   a.board.results(false); a.setRun({ ...RUN, score: 5 }); a.board.results(true); await wait();
   assert(!a.$('publish-menu').open, 'never opens by itself again');
   a.$('results-publish').click(); await wait();
   assert(a.$('publish-menu').open && a.$('publish-never').hidden, 'opened on purpose: no such button');
   a.$('publish-cancel').click();
-  // ⚙ Configuració: the row only while the prompt is off; «Activa» clears the opt-out and the decline count
+  // ⚙ Configuració: the row only while the prompt is off; «Activa» clears the opt-out
   a.board.refreshSettings();
   assert.equal(a.$('settings-prompt-row').hidden, false, 'opted out: the row shows');
   a.$('settings-prompt').fire('click');
-  assert(!a.mem.has(OPTOUT_KEY) && !a.mem.has(DECLINES_KEY) && a.$('settings-prompt-row').hidden, 'Activa: both cleared, the row goes');
+  assert(!a.mem.has(OPTOUT_KEY) && a.$('settings-prompt-row').hidden, 'Activa: cleared, the row goes');
+  a.board.results(false); a.setRun({ ...RUN, score: 6 }); a.board.results(true); await wait();
+  assert(a.$('publish-menu').open, 'and it prompts again');
   { const on = make(); on.board.refreshSettings(); assert.equal(on.$('settings-prompt-row').hidden, true, 'prompt on: no row'); }
-  const t = make({ declined: MAX_DECLINES }); t.board.refreshSettings();
-  assert.equal(t.$('settings-prompt-row').hidden, false, 'three declines also show it');
-  t.$('settings-prompt').fire('click');
-  assert(!t.mem.has(DECLINES_KEY), 'Activa resets the decline count');
-  t.setRun(RUN); t.board.results(true); await wait();
-  assert(t.$('publish-menu').open, 'and it prompts again');
   assert(make({ configured: false }).$('settings-prompt-row').hidden, 'offline game: no row');
 }
-// --- «Ara no» three times in a row: it stops opening by itself; Escape / a tap outside count too; a publication resets
+// --- «Ara no» (the button, Escape, a tap outside) only closes it: every finished run asks again, whatever its stars
 {
   const wait = async () => { await tick(); await tick(); };
   const m = make();
-  for (let i = 0; i < MAX_DECLINES; i++) {
+  for (let i = 0; i < 5; i++) {
     m.setRun({ ...RUN, score: i }); m.board.results(true); await wait();
     assert(m.$('publish-menu').open, `prompt ${i + 1}`);
     if (i === 1) m.$('publish-menu').close(); else m.$('publish-cancel').click(); // Escape / light dismiss close the dialog too
     m.board.results(false);
   }
-  assert.equal(m.mem.get(DECLINES_KEY), String(MAX_DECLINES));
-  m.setRun({ ...RUN, score: 9 }); m.board.results(true); await wait();
-  assert(!m.$('publish-menu').open, 'after three «Ara no» in a row it stays closed');
-  assert(!m.$('results-publish').hidden, '…and «Publica el resultat» is still on the results row');
-  m.$('results-publish').click(); await wait(); m.$('publish-alias').value = 'Drac101';
-  submit(m.$); await wait(); m.widgets[0].callback('tok'); await wait(); m.T.publishes[0].resolve({ improved: true }); await wait();
-  assert(!m.mem.has(DECLINES_KEY), 'a publication starts the count again');
-  m.board.results(false); m.$('publish-menu').close();
-  m.setRun({ ...RUN, score: 10 }); m.board.results(true); await wait();
-  assert(m.$('publish-menu').open, 'so it opens by itself again');
-  const tired = make({ declined: MAX_DECLINES }); tired.setRun(RUN); tired.board.results(true); await wait();
-  assert(!tired.$('publish-menu').open, 'remembered across visits');
+  assert(!m.mem.has('publish-declines'), 'nothing counted');
   const weak = make(); weak.setRun({ ...RUN, counts: { perfect: 20, good: 30, miss: 130 } }); weak.board.results(true); await wait();
-  assert(!weak.$('publish-menu').open && !weak.$('results-publish').hidden, 'under 2 stars: never asked by itself, the button stays');
+  assert(weak.$('publish-menu').open, 'under 2 stars: asked too');
+  const old = make(); old.mem.set('publish-declines', '3'); old.setRun(RUN); old.board.results(true); await wait();
+  assert(old.$('publish-menu').open, 'an old decline count stored by a previous version is ignored');
 }
 // --- a returning player (profile + remembered alias): ONE tap, as that alias; «Canvia el sobrenom» opens the field
 {
@@ -625,11 +615,15 @@ for (const [total, line] of [[1, 'Ets el número 1!'], [20, 'Ets el número 7!']
   assert.deepEqual([q.calls.publish[0].result, q.calls.publish[0].alias, q.calls.publish[0].opts.captchaToken, q.calls.captcha], [RUN, 'Drac101', undefined, 0]);
   q.board.results(true); q.board.results(false); q.board.results(true);
   assert(q.$('results-publish').hidden, 'while it goes up: no «Publica el resultat» to send it twice');
+  assert(!q.board.publishable, 'no row kept for it'); // results.js asks every frame from the first
+  q.env.online = false;
+  assert(!q.board.publishable, 'going offline mid-screen: still none (the card does not jump)');
+  q.env.online = true;
   q.T.publishes[0].resolve({ improved: true }); await wait();
   assert(q.$('results-publish').hidden && !q.$('publish-menu').open && !q.shares.length, 'done: nothing on screen, no Comparteix');
   assert.equal(q.calls.accept, 0, 'nothing was shown: the statistics notice is not counted as seen');
-  q.board.results(false); q.setRun(WEAK); q.board.results(true); await wait();
-  assert(q.calls.publish.length === 1 && !q.$('results-publish').hidden, 'under 2 stars: not by itself, the button stays');
+  q.board.results(false); q.setRun(WEAK); q.board.results(true); await wait(); q.board.results(true); // every frame in the game
+  assert(q.calls.publish.length === 2 && q.$('results-publish').hidden && !q.$('publish-menu').open, 'under 2 stars: it goes up by itself too');
   // a released profile (its name is somebody else's now) never goes up by itself: the sheet opens empty, says why, and sends the new name
   const rel = make({ session: true, alias: 'Drac101', afterPublish: () => {}, prof: { alias: 'Drac101', verified: false, published: true, released: true, publicId: 'id-1' } });
   rel.setRun(RUN); rel.board.results(true); await wait();
@@ -642,25 +636,17 @@ for (const [total, line] of [[1, 'Ets el número 1!'], [20, 'Ets el número 7!']
   // it fails (network, rate limit) or the profile is gone: the prompt, as for anyone
   const f = make({ session: true, alias: 'Drac101' });
   f.setRun(RUN); f.board.results(true); await wait();
+  f.board.results(true); // a frame while it goes up: the button stays hidden
   f.T.publishes[0].reject(Object.assign(new Error('x'), { code: 'unavailable' })); await wait();
-  assert(f.$('publish-menu').open && !f.$('results-publish').hidden, 'a failed quiet publish falls back to the prompt');
+  assert(f.$('publish-menu').open, 'a failed quiet publish falls back to the prompt, even after frames went by');
+  f.board.results(true);
+  assert(!f.$('results-publish').hidden, 'a failed quiet publish falls back to the prompt');
   const gone = make({ session: true, alias: 'Drac101', prof: null });
   gone.setRun(RUN); gone.board.results(true); await wait(); await wait();
   assert(gone.calls.publish.length === 0 && gone.$('publish-menu').open, 'a profile gone: never quietly, the sheet makes a new one');
-  // ⚙ «Publicació automàtica»: shown only to a named player, on by default; off, the prompt asks as it does anyone
-  { const anon = make(); anon.board.refreshSettings(); assert(anon.$('settings-quiet-row').hidden, 'no nickname here: no switch'); }
-  const off = make({ session: true, alias: 'Drac101' });
-  off.board.refreshSettings();
-  assert(!off.$('settings-quiet-row').hidden && off.$('settings-quiet').checked, 'a nickname here: the switch, on');
-  off.$('settings-quiet').checked = false; off.$('settings-quiet').fire('change');
-  assert.equal(off.mem.get(QUIET_OFF_KEY), '1');
-  off.setRun(RUN); off.board.results(true); await wait(); await wait();
-  assert(off.calls.publish.length === 0 && off.$('publish-menu').open, 'switched off: nothing goes up by itself, the prompt asks');
-  off.$('settings-quiet').checked = true; off.$('settings-quiet').fire('change');
-  assert(!off.mem.has(QUIET_OFF_KEY), 'switched back on');
-  // opened by hand (or a weak run): ONE tap, as that alias
+  // opened by hand: ONE tap, as that alias
   const r = make({ session: true, alias: 'Drac101' });
-  r.setRun(WEAK); r.board.results(true); r.board.openPublish(); await wait();
+  r.setRun(WEAK); r.board.openPublish(); await wait();
   assert(r.$('publish-menu').open && !r.$('publish-as').hidden && r.$('publish-field').hidden, 'one-tap view');
   assert.equal(r.$('publish-as-name').textContent, 'Drac101');
   assert.equal(r.calls.publish.length + r.calls.captcha, 0, 'nothing before the tap');
@@ -736,7 +722,6 @@ for (const [total, line] of [[1, 'Ets el número 1!'], [20, 'Ets el número 7!']
   assert(!n.$('publish-recover').hidden, 'no profile here: the link shows');
   n.$('publish-recover').click();
   assert.equal(recovers, 1); assert(!n.$('publish-menu').open, 'the publish sheet gives way');
-  assert.equal(n.mem.get(DECLINES_KEY) ?? null, null, 'leaving for the profile sheet is not a decline');
   const off = make({}); off.setRun(RUN); off.board.openPublish(); await tick(); await tick();
   assert(off.$('publish-recover').hidden, 'no handler: no link');
 }

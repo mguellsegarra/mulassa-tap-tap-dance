@@ -3,12 +3,11 @@
 // an e-mail, recover, sign out, delete) is src/ui/profile-ui.js. Turnstile (src/services/captcha.js) checks a player only
 // when a token is needed; Supabase is touched only when one of these sheets asks for it, never in the game loop, and the
 // guest profile is made only on publishing (or «Crea»). After an eligible run the publish sheet opens by itself (a prompt:
-// nothing is sent until Publica is pressed; «Ara no» ×3 stops it); a publication shows a Mulassa, then «Publicat!» + the
+// nothing is sent until Publica is pressed; only «No m’ho tornis a recordar» stops it); a publication shows a Mulassa, then «Publicat!» + the
 // place with a «D'acord» that closes it; Comparteix only opens from its own button.
 import { leaderboard, turnstileSiteKey, subscribeLeaderboardResult } from '../services/leaderboard.js';
 import { VERSION_RULES } from '../services/leaderboard-rules.js';
 import { FIGURES, hasBoard } from '../game/figures.js';
-import { quality, starsFor } from '../game/progress.js';
 import { store as defaultStore } from '../platform/storage.js';
 import { byId } from './sheet-kit.js';
 import { setupVerify, loadTurnstile } from '../services/captcha.js';
@@ -16,10 +15,8 @@ import { deviceRisk, DEVICE_NOTES, browserEnv } from './profile-notes.js';
 import { setupBoardList } from './board-list.js';
 import { ALIAS_KEY } from '../services/leaderboard-identity.js';
 import { standingOf, podiumOf } from './board-reads.js';
-import { setupPublish, declines, DECLINES_KEY, MAX_DECLINES, OPTOUT_KEY } from './publish-ui.js';
+import { setupPublish, OPTOUT_KEY } from './publish-ui.js';
 
-const PROMPT_STARS = 2; // the publish prompt opens by itself only from this many stars
-export const QUIET_OFF_KEY = 'publish-quiet-off'; // ⚙ «Publicació automàtica» off: a named player gets the prompt instead
 // once, after the first publication: ask the browser to keep this site's storage (Chrome decides quietly)
 const askPersist = () => globalThis.navigator?.storage?.persist?.();
 
@@ -77,34 +74,29 @@ export function setupBoard({ focusIn, store = defaultStore, service = leaderboar
     onRecover, onConfirm, acceptStats, afterPublish, settle, persist });
 
   // --- ⚙ Configuració: the «Proposta de publicar» row
-  const promptsOn = () => !store.get(OPTOUT_KEY) && declines(store) < MAX_DECLINES;
+  const promptsOn = () => !store.get(OPTOUT_KEY);
   function syncPromptRow() { const row = $('settings-prompt-row'); if (row) row.hidden = promptsOn(); } // the row exists only while the prompt is off
-  // ⚙ «Proposta de publicar» → «Activa»: clears the opt-out and the decline count, and the row goes away
-  $('settings-prompt')?.addEventListener('click', () => { store.remove(OPTOUT_KEY); store.remove(DECLINES_KEY); syncPromptRow(); });
-  // ⚙ «Publicació automàtica»: only for a player with a nickname here (the only one it applies to); on unless switched off
-  function syncQuietRow() {
-    const row = $('settings-quiet-row'), sw = $('settings-quiet');
-    if (row) row.hidden = !canWrite || !store.get(ALIAS_KEY);
-    if (sw) sw.checked = !store.get(QUIET_OFF_KEY);
-  }
-  $('settings-quiet')?.addEventListener('change', () => { if ($('settings-quiet').checked) store.remove(QUIET_OFF_KEY); else store.set(QUIET_OFF_KEY, '1'); });
-  function refreshSettings() { if (service.configured) { syncPromptRow(); syncQuietRow(); } } // the «Perfil» block is src/ui/profile-ui.js's
+  // ⚙ «Proposta de publicar» → «Activa»: clears the opt-out, and the row goes away
+  $('settings-prompt')?.addEventListener('click', () => { store.remove(OPTOUT_KEY); syncPromptRow(); });
+  function refreshSettings() { if (service.configured) { syncPromptRow(); } } // the «Perfil» block is src/ui/profile-ui.js's
 
   // --- results screen: two DOM buttons under the canvas card
   resultsPublish.addEventListener('click', () => openPublish());
   resultsBoard.addEventListener('click', () => openBoard());
   let shown = -1;
+  let reserveFor = null, reserve = false; // publishable's answer, fixed for the run it was first asked about
 
   // --- the prompt that opens by itself: once per eligible run, a moment after the row appears, never to nag
-  // eligible (not practice/autoplay/?from: no snapshot), ≥ 2 stars, online, not declined MAX_DECLINES times in a row
-  // ≥ 2 stars: a weak run never gets asked (its «Publica el resultat» button stays for whoever wants it)
-  const worthIt = run => Boolean(canWrite && run && starsFor(quality(run.counts)) >= PROMPT_STARS && online());
-  const promptable = run => worthIt(run) && promptsOn();
-  // a nickname already chosen: the same runs go up by themselves instead (publish-land.js publishQuietly), no prompt, unless ⚙ says not to
-  const quietly = run => worthIt(run) && Boolean(store.get(ALIAS_KEY)) && !store.get(QUIET_OFF_KEY);
+  // eligible (a finished run: a collapse, practice, autoplay or ?from leaves no snapshot), whatever its stars, online, with
+  // at least one hit, not opted out («Ara no» only closes it for this run)
+  const sendable = run => Boolean(canWrite && run && online());
+  const promptable = run => sendable(run) && run.counts.perfect + run.counts.good > 0 && promptsOn();
+  // a nickname already chosen: every run goes up by itself instead, whatever its stars (publish-land.js publishQuietly; the
+  // server keeps the best), no prompt
+  const quietly = run => sendable(run) && Boolean(store.get(ALIAS_KEY));
   function firePrompt() {
     promptTimer = null;
-    if (shown !== 2 || runs.published === runs.snapshot || publishMenu.open || boardMenu.open || !canPrompt() || !promptable(runs.snapshot)) return;
+    if (!shown || runs.published === runs.snapshot || publishMenu.open || boardMenu.open || !canPrompt() || !promptable(runs.snapshot)) return;
     openPublish({ auto: true });
   }
   return {
@@ -127,13 +119,22 @@ export function setupBoard({ focusIn, store = defaultStore, service = leaderboar
       else if (prompted !== runs.snapshot) { // this run's one chance
         prompted = runs.snapshot;
         const run = runs.snapshot;
-        if (quietly(run)) publishQuietly().then(ok => { if (!ok && runs.snapshot === run && promptable(run)) firePrompt(); });
+        if (quietly(run)) {
+          publishQuietly().then(ok => { if (!ok && runs.snapshot === run && promptable(run)) firePrompt(); });
+          if (runs.published === run) { shown = 1; resultsPublish.hidden = true; } // already on its way: not even one frame of the button
+        }
         else if (promptable(run)) promptTimer = setTimeout(firePrompt, promptDelay);
       }
     },
     // «Publica el resultat» may show on this results screen (narrow screens then need a second row, main.js
     // resultsReserve()): for the whole screen, so the card doesn't jump when the button goes after publishing
-    // the publish prompt opens (or already did) by itself for this results screen: Comparteix follows that, not this
-    get publishable() { return service.configured && canWrite && Boolean(runs.snapshot); },
+    // the publish prompt opens (or already did) by itself for this results screen: Comparteix follows that, not this.
+    // A named player's run goes up by itself: no button, no row kept for it. Decided once per run: a first publication (a
+    // nickname now) or going offline mid-screen must not move the card
+    get publishable() {
+      const run = service.configured && canWrite ? runs.snapshot : null;
+      if (run !== reserveFor) { reserveFor = run; reserve = Boolean(run) && !quietly(run); }
+      return reserve;
+    },
   };
 }

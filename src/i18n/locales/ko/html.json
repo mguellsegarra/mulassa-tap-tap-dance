@@ -20,8 +20,6 @@
   "html.settingsPromptLabel": "결과 올리기 안내",
   "html.settingsPromptSub": "끄면 춤이 끝나도 나오지 않아요",
   "html.settingsPrompt": "켜기",
-  "html.settingsQuiet": "자동 올리기",
-  "html.settingsQuietSub": "별 2개 이상, 별명으로",
   "html.settingsAbout.github": "GitHub 코드",
   "html.settingsAbout.credits": "크레딧",
   "html.common.privacy": "개인정보",

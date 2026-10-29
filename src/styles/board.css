@@ -165,7 +165,7 @@ html:not([lang="ca"]) .board-links { row-gap: 16px; } /* longer words wrap the t
 .publish-body { display: flex; flex-direction: column; gap: 12px; text-align: left; }
 .board-label { display: block; margin: 0 0 4px; color: #e8d8b8; font-size: 14px; letter-spacing: .08em; }
 .publish-as-row { box-sizing: border-box; display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 48px; padding: 0 4px 0 12px; border-radius: 10px; background: #fff3d60d; }
-.publish-as-row b { min-width: 0; overflow-wrap: anywhere; color: #fff3d6; font-size: 18px; }
+.publish-as-row b { display: inline-flex; align-items: center; gap: 4px; min-width: 0; overflow-wrap: anywhere; color: #fff3d6; font-size: 18px; } /* the check centred on the name, not on its baseline */
 #publish-alias { box-sizing: border-box; width: 100%; min-height: 48px; padding: 8px 12px; border: 2px solid #f5c51899; border-radius: 10px; background: #140c07; color: #fff3d6; font: 700 18px 'Baloo 2', system-ui, sans-serif; user-select: text; -webkit-user-select: text; touch-action: manipulation; } /* 18 px: iOS doesn't zoom; body's user-select: none must not reach the caret */
 #publish-alias { text-align: center; } #publish-menu .board-label { display: block; text-align: center; } /* label, field and placeholder on the sheet's axis */
 #publish-alias:focus { outline: none; border-color: #f5c518; box-shadow: 0 0 0 3px #f5c51840; }

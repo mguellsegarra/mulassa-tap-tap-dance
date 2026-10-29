@@ -20,8 +20,6 @@
   "html.settingsPromptLabel": "Пропонувати публікацію",
   "html.settingsPromptSub": "Вимкнено: не з’являється після танцю",
   "html.settingsPrompt": "Увімкнути",
-  "html.settingsQuiet": "Автопублікація",
-  "html.settingsQuietSub": "Від 2 зірок, під твоїм псевдонімом",
   "html.settingsAbout.github": "Код на GitHub",
   "html.settingsAbout.credits": "Автори",
   "html.common.privacy": "Приватність",

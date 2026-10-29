@@ -83,7 +83,7 @@ async function reach(ctx) {
     await until(() => $('share-menu').open && !$('share-image').disabled, 'the Drac share image');
     return;
   }
-  await until(() => G.state === 'results' && board().publishable, 'the results screen');
+  await until(() => G.state === 'results' && !$('results-actions').hidden, 'the results screen');
   await sleep(1200); // the results card settles (its buttons take taps after a second)
   const ready = () => $('publish-menu').open && !$('publish-send').disabled && !$('publish-form').dataset.view;
   const publish = async (alias = 'Prova123') => {

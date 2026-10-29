@@ -20,8 +20,6 @@
   "html.settingsPromptLabel": "Предлагать публикацию",
   "html.settingsPromptSub": "Выключено: без предложения после танца",
   "html.settingsPrompt": "Включить",
-  "html.settingsQuiet": "Автопубликация",
-  "html.settingsQuietSub": "От 2 звёзд, под твоим ником",
   "html.settingsAbout.github": "Код на GitHub",
   "html.settingsAbout.credits": "Авторы",
   "html.common.privacy": "Конфиденциальность",

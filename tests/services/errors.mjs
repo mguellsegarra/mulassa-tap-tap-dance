@@ -144,4 +144,14 @@ console.log('crash reports: gating, scrubbing, early buffer ok');
   runInNewContext(bridge, { w: win, errors: { report: (kind, tags) => sent.push([kind, tags]), start() {} } });
   win.__mulassaBootFailure = { phase: 'frame', reason: 'webgl-not-restored' }; win.__mulassaReportBoot();
   assert.deepEqual(sent, [], 'a WebGL context that never came back is not reported again as boot-failed');
+  for (const [input, expected] of [
+    [{ visibleMs: 25000.4, phaseMs: 20000 }, { visibleMs: 25000, phaseMs: 20000 }],
+    [{ visibleMs: 999999, phaseMs: 0 }, { visibleMs: 300000, phaseMs: 0 }],
+    [{ visibleMs: 'private text', phaseMs: Infinity }, {}],
+    [{ visibleMs: -1, phaseMs: NaN }, {}],
+  ]) {
+    const events = [], w = { __mulassaBootFailure: { phase: 'init', reason: 'deadline', ...input } };
+    runInNewContext(bridge, { w, errors: { report: (kind, tags) => events.push([kind, { ...tags }]), start() {} } });
+    assert.deepEqual(events, [['boot-failed', { phase: 'init', reason: 'deadline', ...expected }]], 'boot timings are finite, bounded technical fields only');
+  }
 }

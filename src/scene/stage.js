@@ -9,7 +9,7 @@ import { COARSE } from '../core/env.js';
 import { buildSky } from './sky.js';
 
 // ------------------------------------------------------------------ 3D
-window.__mulassaBootPhase = 'graphics';
+window.__mulassaSetBootPhase?.('graphics');
 // every page load starts from the hardware guess (adaptive drops last for the session only); -1 = minimal
 // software WebGL (no GPU): minimal from the start
 export const GPU = probeRenderer(), softwareGl = isSoftwareRenderer(GPU);

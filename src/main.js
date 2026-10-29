@@ -59,7 +59,7 @@ import './ui/sheets-setup.js';
 import { frameCamera, propsFor } from './ui/frame-camera.js';
 import { tickGame } from './game/tick.js';
 
-window.__mulassaBootPhase = 'init';
+window.__mulassaSetBootPhase?.('init');
 initFigureObjects(); // both rigs exist before shader warmup and the first frame
 
 const monitorFrames = adaptiveQuality({ ceiling: qualityLevel, level: () => qualityLevel, report: qualitySample,
@@ -155,7 +155,7 @@ function frame(now) {
   if (songWait) loader.status(musicLine());
   if (!drawn) { // the first frame is on screen: lift the page cover, then start on the audio (outside the first paint)
     drawn = true;
-    window.__mulassaBootPhase = 'ready';
+    window.__mulassaSetBootPhase?.('ready');
     window.__mulassaBooted = true; // index.html's boot watchdog stands down
     fontsReady.then(() => { fontsIn = true; });
     loadMark('first frame');
@@ -179,10 +179,10 @@ loader.jokes(); // funny lines under the calçot until the plaça is ready
 requestAnimationFrame(() => setTimeout(() => { // one paint first: that line shows while a compile holds the thread
   if (window.__mulassaBootFailure) return;
   startAudio(); // the song downloads and decodes (off the main thread) while the shaders compile, all under the cover
-  window.__mulassaBootPhase = 'shaders';
+  window.__mulassaSetBootPhase?.('shaders');
   waitForWarmup(() => localPeopleReady.then(() => precompile(true)).then(() => linkPrograms(renderer.info.programs))).then(result => {
     if (window.__mulassaBootFailure) return;
-    window.__mulassaBootPhase = 'frame';
+    window.__mulassaSetBootPhase?.('frame');
     loadMark(result === 'ready' ? 'shaders' : 'shaders fallback');
     requestAnimationFrame(frame);
   });

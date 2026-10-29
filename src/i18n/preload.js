@@ -3,4 +3,3 @@
 import { ensureLocale } from './load-locale.js';
 
 await ensureLocale();
-if (typeof window !== 'undefined') window.__mulassaLocaleReady = true; // index.html's module-init watchdog may judge from here

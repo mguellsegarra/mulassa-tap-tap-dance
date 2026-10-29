@@ -10,7 +10,7 @@ function clock() {
   const timers = clock();
   let settle;
   const pending = waitForWarmup(() => new Promise(resolve => { settle = resolve; }), { timers });
-  assert.equal([...timers.queued.values()][0].ms, 1500, 'warmup leaves time for real rendering inside the 20s page deadline');
+  assert.equal([...timers.queued.values()][0].ms, 1500, 'warmup leaves time for real rendering inside the 20s phase deadline');
   timers.expire();
   assert.equal(await pending, 'timeout', 'a shader driver that never completes cannot block the first render forever');
   settle(); await Promise.resolve();

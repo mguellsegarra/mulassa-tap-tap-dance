@@ -205,8 +205,8 @@
 })();</script>
 <script id="boot-watchdog">
 /* Boot watchdog (classic script, before the bundle). main.js sets __mulassaBooted = 'module' when it has run to the end
-   and true on its first frame. Fatal only: the entry module failing to load (its 'error') or throwing while it runs (its
-   'load' without the flag), or no first frame after 20 s of visible time (a hidden tab has no frames and doesn't count).
+   and true on its first frame. A cold entry/locale download has 120 s; each real initialization milestone has 20 s
+   without progress. Hidden time never counts. Script load is not graph readiness with top-level await.
    The loader's deadline uses the same check: never reveal a game that has not drawn. main.js reuses the error card (no WebGL). */
 (function () {
   var shown = false, entry = /\/(src\/main|assets\/index-[\w-]+)\.js(\?|$)/;
@@ -218,7 +218,8 @@
     var el = document.getElementById('loader');
     if (shown || !el) return;
     shown = true;
-    window.__mulassaBootFailure = { phase: window.__mulassaBootPhase, reason: reason || 'startup' };
+    elapsed();
+    window.__mulassaBootFailure = { phase: window.__mulassaBootPhase, reason: reason || 'startup', visibleMs: seen, phaseMs: seen - phaseAt };
     if (window.__mulassaReportBoot) window.__mulassaReportBoot();
     el.hidden = false; el.className = 'page fail'; el.setAttribute('aria-busy', 'false'); document.body.removeAttribute('aria-busy');
     el.innerHTML = '<div class="boot-fail" role="alert">' + SAD + '<h1></h1><p></p>' + (retry ? '<button type="button" class="btn btn-primary">' + T.retry + '</button>' : '') + '</div>';
@@ -230,23 +231,29 @@
   window.__mulassaCheckBoot = function () {
     if (window.__mulassaBooted === true) return true;
     elapsed();
-    if (!hidden && seen >= 20000) fail();
+    if (!hidden && seen - phaseAt >= (window.__mulassaBootPhase === 'download' ? 120000 : 20000)) fail();
     return false; // the watchdog resumes its visible-time budget in the foreground
   };
   var ours = function (e) { var t = e.target; return t && t.tagName === 'SCRIPT' && entry.test(t.src || ''); };
   document.addEventListener('error', function (e) { if (ours(e)) fail('module-load'); }, true);
-  // the entry graph has a top-level await (src/i18n/preload.js): `load` can come before it finishes, even for the bundled
-  // Catalan (iOS Safari), so judge only once the locale is ready; the 20 s deadline still covers a hang or an earlier throw
-  document.addEventListener('load', function (e) { if (ours(e) && !window.__mulassaBooted && window.__mulassaLocaleReady) fail('module-init'); }, true);
-  var seen = 0, last = Date.now(), hidden = document.hidden, away = false;
+  var seen = 0, phaseAt = 0, last = Date.now(), hidden = document.hidden, away = false;
   var elapsed = function () {
     var now = Date.now();
     if (!hidden) seen += Math.max(0, now - last);
     last = now; hidden = document.hidden || away;
   };
+  // Only owners crossing actual milestones renew the stall budget; repeated labels cannot keep a hang alive.
+  window.__mulassaSetBootPhase = function (phase) {
+    if (shown || window.__mulassaBootPhase === phase) return;
+    elapsed();
+    window.__mulassaBootPhase = phase; phaseAt = seen;
+  };
   document.addEventListener('visibilitychange', elapsed);
   // A BFCache/page suspension can precede visibilitychange on iOS. Its wall time is not loading time.
   if (window.addEventListener) {
+    window.addEventListener('error', function (e) {
+      if (!window.__mulassaBooted && e.error && /\/(src\/|assets\/)[^?#]+\.js(\?|$)/.test(e.filename || '')) fail('module-init');
+    });
     window.addEventListener('pagehide', function () { elapsed(); away = true; hidden = true; });
     window.addEventListener('pageshow', function (e) {
       if (away || (e && e.persisted)) { away = false; last = Date.now(); hidden = document.hidden; }
@@ -255,8 +262,8 @@
   }
   setTimeout(function tick() {
     if (window.__mulassaBooted === true || shown) return;
-    elapsed(); // count elapsed time, including a slow init that delayed this callback
-    if (!hidden && seen >= 20000) fail(); else setTimeout(tick, 1000);
+    window.__mulassaCheckBoot();
+    if (!shown) setTimeout(tick, 1000);
   }, 1000);
 })();
 </script>

@@ -126,7 +126,7 @@ export function createErrors({ mode, win, load, idle }) {
       });
     },
   };
-  win.setTimeout?.(() => api.start(), 20000); // the first frame never came by the boot deadline (a crash while starting): send anyway
+  win.setTimeout?.(() => api.start(), 20000); // a startup crash may prevent the first frame: send early reports anyway
   return api;
 }
 
@@ -151,7 +151,9 @@ if (w) {
     bootReported = true;
     const phase = ['download', 'graphics', 'init', 'shaders', 'frame'].includes(failure.phase) ? failure.phase : 'unknown';
     const reason = ['deadline', 'module-load', 'module-init', 'startup'].includes(failure.reason) ? failure.reason : 'unknown';
-    errors.report('boot-failed', { phase, reason });
+    const timing = {};
+    for (const key of ['visibleMs', 'phaseMs']) if (Number.isFinite(failure[key]) && failure[key] >= 0) timing[key] = Math.min(300000, Math.round(failure[key]));
+    errors.report('boot-failed', { phase, reason, ...timing });
     errors.start();
   };
   w.__mulassaReportBoot();

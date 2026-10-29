@@ -14,7 +14,7 @@ const pedestrianStep = new THREE.Vector2();
 const pedestrianTurns = [Math.PI / 4, -Math.PI / 4, Math.PI / 2, -Math.PI / 2];
 export function photoPersonClearance(p, x, z) {
   let clear = Math.min(plaza.inner - p.rad - 0.2 - Math.abs(x), plaza.inner - p.rad - 0.2 - Math.abs(z));
-  for (const q of plaza.props) clear = Math.min(clear, Math.hypot(x-q.x,z-q.z)-p.rad-q.r);
+  for (const q of plaza.props) clear = Math.min(clear, Math.hypot(x-q.x,z-q.z)-p.rad-q.hit);
   if (PHOTO.on) {
     const b = photoBody();
     clear = Math.min(clear, photoClearance(b.x,b.z,b.yaw,x,z,p.rad,traitsOf(PHOTO.id).wideClearance));
@@ -39,7 +39,7 @@ export function photoFixedClearance(x, z, yaw, dragon) {
   const c = Math.abs(Math.cos(yaw)), s = Math.abs(Math.sin(yaw));
   const w = dragon ? 1.25 : 0.8, l = dragon ? 1.55 : 2.35;
   let clear = Math.min(plaza.inner - 0.3 - w*c-l*s-Math.abs(x), plaza.inner - 0.3-w*s-l*c-Math.abs(z));
-  for (const p of plaza.props) clear = Math.min(clear, photoClearance(x,z,yaw,p.x,p.z,p.r,dragon));
+  for (const p of plaza.props) clear = Math.min(clear, photoClearance(x,z,yaw,p.x,p.z,p.hit,dragon));
   return clear;
 }
 // Step sideways out of the intended corridor, including when the mover has braked for a person.

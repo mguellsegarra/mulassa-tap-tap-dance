@@ -486,8 +486,9 @@ import { THREE, models, framing, dance, nodes, keyHandlers, windowHandlers, docu
   assert(run('extrasMoved>.1'), 'the instanced spectators also yield');
   assert(run('M.pos.length()>7'), `walk through the old fence towards the dense audience: ${run('M.pos.length()')}`);
   assert(run('travelClear>-.08'), `passage keeps visible collision clearance: ${run('travelClear')}`);
+  // 15 s: since the trees block only by their trunk her path into the crowd differs, and the last ones need ~10-15 s home
   run(`setView(false);animStage(1/60,clock/BEAT);
-    for(let i=0;i<600;i++){clock+=1/60;animStage(1/60,clock/BEAT);animCrowd(1/60,clock/BEAT,0,1);}
+    for(let i=0;i<900;i++){clock+=1/60;animStage(1/60,clock/BEAT);animCrowd(1/60,clock/BEAT,0,1);}
     var extrasAway=photoExtras.filter(p=>Math.hypot(p.pos.x-p.homeX,p.pos.y-p.homeZ)>.01||Math.abs(p.vx)+Math.abs(p.vz)>=.001).length;`);
   assert.equal(run('extrasAway'), 0, 'after free play every instanced spectator is home and still (no per-frame collision search left running)');
   console.log('dense crowd passage and yielding floor spectators ok');
@@ -500,7 +501,7 @@ import { THREE, models, framing, dance, nodes, keyHandlers, windowHandlers, docu
     passageBackdropCount=plaza.backdrop.mesh.count, passageMidCount=midCrowd.mesh.count;
     var trappedPerson=activeCrowd[0], trappedRadius=trappedPerson.rad, trappedSootT=trappedPerson.sootT, trappedSootW=trappedPerson.sootW;
     activeCrowd=[trappedPerson];bandSpots=[];photoBandSource=bandSpots;photoExtras.length=0;
-    plaza.backdrop.mesh.count=midCrowd.mesh.count=0;plaza.props=[{x:15.2,z:-3,r:2.2,h:4}];trappedPerson.rad=.52;`);
+    plaza.backdrop.mesh.count=midCrowd.mesh.count=0;plaza.props=[{x:15.2,z:-3,r:2.2,h:4,hit:2.2}];trappedPerson.rad=.52;`);
   for (const id of ['mulassa-valls', 'drac-valls']) for (const floor of [false, true]) for (const charred of [false, true]) {
     const scenario = `${id}, ${floor ? 'floor' : 'live'}, ${charred ? 'charred' : 'normal'}`;
     run(`G.state='select';setView(false);setFigureSong(MULASSA);setView(true);takeFigure('${id}');setPhotoControl(true, '${id}');

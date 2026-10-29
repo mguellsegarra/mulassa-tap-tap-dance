@@ -198,8 +198,9 @@ export function buildPlaza({ backdrop = 0, balconies = 0, waving = false, sun = 
   // Trees and lamps: each its own mesh (ui/frame-camera.js hides one that would stand between the camera and the mulassa or
   // against the lens) and set back by the building fronts, out of the play camera's path (south of her, x within ~9).
   const props = [];
-  const prop = (make, x, z, r, h) => { const pv = new Vox(); make(pv, x, z); const m = pv.mesh(); m.castShadow = false; group.add(freezeStatic(m)); props.push({ mesh: m, x, z, r, h }); };
-  for (const [x, z] of [[-15.2, -15.2], [15.2, -15.2], [-15.2, 15.2], [15.2, 15.2], [-15.2, -3], [15.2, -3]]) prop(tree, x, z, 2.2, 5.5);
+  // r, h: what blocks the camera (a tree's canopy); hit: what blocks a body on the ground (its trunk, not the leaves 3 m up)
+  const prop = (make, x, z, r, h, hit = r) => { const pv = new Vox(); make(pv, x, z); const m = pv.mesh(); m.castShadow = false; group.add(freezeStatic(m)); props.push({ mesh: m, x, z, r, h, hit }); };
+  for (const [x, z] of [[-15.2, -15.2], [15.2, -15.2], [-15.2, 15.2], [15.2, 15.2], [-15.2, -3], [15.2, -3]]) prop(tree, x, z, 2.2, 5.5, 0.6);
   for (const [x, z] of [[-9, -16.6], [9, -16.6], [-16.6, 7], [16.6, 7], [-6, 16.6], [6, 16.6]]) prop(lamp, x, z, 0.4, 4.6);
   // banderetes strung across the plaça
   const COLS = ['#d62828', '#f5c518', '#2f62d6', '#3a9d4b', '#ffffff', '#f07a1a'];

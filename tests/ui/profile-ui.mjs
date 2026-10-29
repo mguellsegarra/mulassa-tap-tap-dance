@@ -36,7 +36,10 @@ function make({ configured = true, publishingEnabled = true, session = false, em
     configured, publishingEnabled, captchaRequired,
     createProfile: async (a, o) => { calls.push(['create', a, o]); if (T.fail) throw T.fail; T.session = true; if (T.prof) T.prof = { ...T.prof, alias: a.trim(), released: false }; return a.trim(); },
     identity: async () => ({ hasSession: T.session, email: T.email, persistent }),
-    sendCode: async (m, o) => { calls.push(['send', m, o]); return { type: T.sendType ?? (T.session ? 'email_change' : 'email') }; },
+    sendCode: async (m, o) => { // as leaderboard.js: a sign-in by code (no session, or the address is another profile's) needs a token
+      calls.push(['send', m, o]); const type = T.sendType ?? (T.session ? 'email_change' : 'email');
+      if (captchaRequired && type === 'email' && !o?.captchaToken) throw Object.assign(new Error('captcha'), { code: 'captcha' });
+      return { type }; },
     profile: async () => { T.profiles++; if (T.prof === undefined) throw new Error('rpc:PGRST202:404'); return T.prof; },
     verifyCode: async (m, c, t) => { calls.push(['verify', m, c, t]); if (T.fail) throw T.fail; return { email: m }; },
     myAlias: async () => T.alias ?? null,
@@ -131,7 +134,7 @@ const guestProf = o => ({ alias: 'takeshi', verified: false, published: true, re
   s.profile.open('link'); assert(s.$('profile-menu').open && s.$('profile-title').textContent === 'Confirma el correu' && s.focused.at(-1) === 'profile-email');
   assert(/no es perd/.test(s.$('profile-lead').textContent) && !/#|caduc|7 dies|torneig/.test(s.$('profile-lead').textContent), 'what confirming does: keeps it, no «#» talk');
   enter(s.$, 'profile-email', 'jugador@example.com'); s.$('profile-form').fire('submit'); await tick(); await tick();
-  assert.deepEqual(s.calls[0], ['send', 'jugador@example.com', { captchaToken: 'tok' }]);
+  assert.deepEqual(s.calls[0], ['send', 'jugador@example.com', undefined], 'an address on this session: no Turnstile wait');
   assert(!s.$('profile-code-field').hidden && s.$('profile-mail-field').hidden && /jugador@example\.com/.test(s.$('profile-lead').textContent) && s.focused.at(-1) === 'profile-code');
   enter(s.$, 'profile-code', '12a34-56'); assert.equal(s.$('profile-code').value, '123456', 'digits only, six');
   s.T.email = 'jugador@example.com'; s.T.prof = guestProf({ verified: true });
@@ -165,9 +168,11 @@ const guestProf = o => ({ alias: 'takeshi', verified: false, published: true, re
   s.$('profile-menu').close();
 }
 { // recover: the nickname comes back; a wrong code stays on the code step
-  const s = make(); await s.profile.refresh(); let backs = 0;
+  const s = make({ captchaRequired: true }); await s.profile.refresh(); let backs = 0;
   s.profile.open('recover', () => backs++); assert.equal(s.$('profile-title').textContent, 'Recupera el perfil');
-  enter(s.$, 'profile-email', 'jugador@example.com'); s.$('profile-form').fire('submit'); await tick(); await tick();
+  enter(s.$, 'profile-email', 'jugador@example.com'); s.$('profile-form').fire('submit'); await tick(); await tick(); await tick();
+  assert.deepEqual(s.calls.slice(0, 2), [['send', 'jugador@example.com', undefined], ['send', 'jugador@example.com', { captchaToken: 'tok' }]], 'a sign-in by code: the token when asked');
+  assert(!s.$('profile-code-field').hidden, 'then the code step');
   s.T.fail = Object.assign(new Error('El codi no és correcte o ha caducat. Demana’n un de nou.'), { code: 'code' });
   enter(s.$, 'profile-code', '000000'); s.$('profile-form').fire('submit'); await tick(); await tick();
   assert(/no és correcte/.test(s.$('profile-status').textContent) && !s.$('profile-code-field').hidden && !s.$('profile-send').disabled, 'a wrong code: try again');

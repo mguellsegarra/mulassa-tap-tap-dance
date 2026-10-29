@@ -14,7 +14,7 @@ Current rules, moved out of AGENTS.md so they load only when the task needs them
   the own row is in view, else «A la meva fila» (the arrow towards the row; accessible names «Ves al capdamunt de la classificació» / «Ves a la teva fila»; both labels share the longer one's width, on the place's line from 320 px), and the list opened at the own row (past the first page: a gap row whose «Carrega’n més» fills it).
   With a row the link keeps its place while it has nothing to do (no shift); with no position («12 participants») it collapses until there is somewhere to go.
   An empty open season: the portrait, «Encara no hi ha resultats», what to do, the last season's podium; no history: no «Temporades anteriors» either.
-- Cloudflare Turnstile (`src/services/captcha.js`): only when a token is needed (Publica for a new profile, an e-mail code, a Bústia message),
+- Cloudflare Turnstile (`src/services/captcha.js`): only when a token is needed (Publica for a new profile, an e-mail code that signs in to a profile, a Bústia message),
   never ahead of it, so a player who doesn't publish never sees a tick box; never at startup, its iframe shares the main thread on iPhone Safari;
   its tick box only in the centred, non-dismissable `#captcha-menu`, never mid-song; failures never block the game.
   Never render the widget anywhere else. Comparteix never opens by itself: only its results button opens it.

@@ -165,13 +165,16 @@ export function setupProfile({ focusIn, captcha, store, aliasKey, deviceNote = (
     busy = true; setStatus('');
     setSend(tr('ui.profile.btn.working'), true); mailIn.readOnly = codeIn.readOnly = aliasIn.readOnly = true;
     try {
-      let captchaToken;
-      if ((step === 'alias' && kind !== 'rename' || step === 'mail') && service.captchaRequired && captcha) { // a rename has its session already
-        try { captchaToken = await captcha.token(); } catch (e) {
+      const askToken = async () => { // null: Turnstile failed or the sheet went away (already said)
+        try { const t = await captcha.token(); return r === req ? t : null; } catch (e) {
           if (r === req) { setStatus(e?.code === 'cancel' ? '' : turnstileMessage(e?.code)); idle(); }
-          return;
+          return null;
         }
-        if (r !== req) return;
+      };
+      let captchaToken;
+      if (step === 'alias' && kind !== 'rename' && service.captchaRequired && captcha) { // a rename has its session already
+        captchaToken = await askToken();
+        if (captchaToken == null) return;
       }
       if (step === 'alias') {
         const alias = await service.createProfile(aliasIn.value, { captchaToken });
@@ -182,7 +185,15 @@ export function setupProfile({ focusIn, captcha, store, aliasKey, deviceNote = (
         if (r !== req) return;
         finish(tr(kind === 'rename' ? 'ui.profile.done.nameSaved' : 'ui.profile.done.created'));
       } else if (step === 'mail') {
-        const out = await service.sendCode(mailIn.value, { captchaToken });
+        // a token only when sendCode asks for one (a sign-in by code): adding the address to this browser's session needs
+        // none, and waiting for Turnstile first made «Envia el codi» slow for nothing
+        let out;
+        try { out = await service.sendCode(mailIn.value); } catch (e) {
+          if (e?.code !== 'captcha' || !captcha || r !== req) throw e;
+          captchaToken = await askToken();
+          if (captchaToken == null) return;
+          out = await service.sendCode(mailIn.value, { captchaToken });
+        }
         if (r !== req) return;
         mail = mailIn.value; type = out.type;
         // the address already confirmed another profile: the code switches to that one, nothing is merged

@@ -966,7 +966,7 @@ const find = (el, test) => (test(el) ? el : el.children.map(c => find(c, test)).
   assert(/data-privacy-open/.test(sheet('publish-menu')) && /data-privacy-open/.test(sheet('board-menu')), 'privacy reachable before publishing');
   const privacy = sheet('privacy-menu');
   assert(/data-privacy="leaderboards"/.test(privacy) && /Supabase/.test(privacy) && /Turnstile/.test(privacy), 'Privadesa: a Supabase section of its own');
-  assert(/després de la teva primera partida <b>Cloudflare Turnstile<\/b>/.test(privacy) && /a tothom, publiquis o no/.test(privacy) && !/Només es carrega quan prems/.test(privacy), 'Turnstile runs for everyone after their first game: said plainly');
+  assert(/quan crees el teu perfil \(en publicar per primer cop\) o demanes un codi per correu, <b>Cloudflare Turnstile<\/b>/.test(privacy) && !/a tothom, publiquis o no/.test(privacy), 'Turnstile only when a profile is made or a code is asked for: said plainly');
   assert(!/RGPD|GDPR|compleix/i.test(privacy), 'no compliance claims');
   const owner = privacy.slice(privacy.lastIndexOf('</section>'));
   assert(/Responsable: <b>Marc Güell Segarra<\/b>, de <b>Mulassa Tap Tap Dance<\/b> \(projecte de codi obert, Valls\)/.test(owner) && /aepd\.es/.test(owner), 'the controller (a person), once, for the whole sheet (after every section), and where to complain');

@@ -28,7 +28,6 @@
   "ui.board.moreFailed": "Não foi possível carregar mais.",
   "ui.board.moreFailedRetry": "Não foi possível carregar mais. Tenta outra vez",
   "ui.board.nobody": "Ninguém publicou resultados.",
-  "ui.board.place": "És o número {pos} · top {top}%!",
   "ui.board.notNow": "Agora não",
   "ui.board.placeOnly": "És o número {pos}!",
   "ui.board.playWith": "Jogar com {figure}",

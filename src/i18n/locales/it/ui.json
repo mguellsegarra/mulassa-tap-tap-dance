@@ -28,7 +28,6 @@
   "ui.board.moreFailed": "Impossibile caricarne altri.",
   "ui.board.moreFailedRetry": "Impossibile caricarne altri. Riprova",
   "ui.board.nobody": "Nessuno ha pubblicato risultati.",
-  "ui.board.place": "Sei al numero {pos} · top {top}%!",
   "ui.board.notNow": "Ora no",
   "ui.board.placeOnly": "Sei al numero {pos}!",
   "ui.board.playWith": "Gioca con {figure}",

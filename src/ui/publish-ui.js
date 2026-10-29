@@ -21,8 +21,6 @@ const NAMES = Array.from({ length: 8 }, (_, i) => tr(`ui.board.alias.${i + 1}`))
 // A fictional, editable suggestion: nobody should feel asked for their real name.
 export const suggestAlias = (rand = Math.random) => `${NAMES[Math.floor(rand() * NAMES.length)]}${100 + Math.floor(rand() * 900)}`; // no spaces
 export { PERSIST_KEY } from './publish-land.js';
-const PCT_MIN = 10; // players on the board before a place gets its «top %»
-const topPct = (pos, total) => Math.max(1, Math.ceil(100 * pos / total)); // «top 17%»; never «top 0%»
 export const declines = store => Number(store.get(DECLINES_KEY)) || 0;
 
 export function setupPublish({ doc, $, service, store, focusIn, now, runs, canWrite, verify, deviceNote, openBoard,
@@ -77,7 +75,7 @@ export function setupPublish({ doc, $, service, store, focusIn, now, runs, canWr
   const starText = value => (starsFor(value) ? ` · ${'★'.repeat(starsFor(value))}` : ''); // nothing for 0 stars
   const runLine = run => { const lvl = doc.createElement('span'); lvl.className = `lvt${run.difficulty}`; lvl.textContent = DIFFS[run.difficulty].name; // the level in its colour
     const [pre, post] = trSplit('ui.board.runLine', 'level', { pct: Math.round(quality(run.counts)) }); return [pre, lvl, post + starText(quality(run.counts))]; };
-  // «Ets el número 347 · top 17%!»: the own row of the joint board. Resolves to the line (or null) for Comparteix's
+  // «Ets el número 347!»: the own row of the joint board. Resolves to the line (or null) for Comparteix's
   // header too.
   async function showPlace(req, version) {
     let self = null, total = 0;
@@ -86,8 +84,7 @@ export function setupPublish({ doc, $, service, store, focusIn, now, runs, canWr
       self = rows.find(r => r.is_self); total = Number(self?.total) || 0;
     } catch { /* the success stays */ }
     if (!self || !total) return null;
-    // a «top %» on a near-empty board says nothing (day 0: «número 1 · top 100%»)
-    const pos = Number(self.position), text = total < PCT_MIN ? tr('ui.board.placeOnly', { pos: num(pos) }) : tr('ui.board.place', { pos: num(pos), top: topPct(pos, total) });
+    const text = tr('ui.board.placeOnly', { pos: num(Number(self.position)) }); // no «top %»: the sheet's room goes to the e-mail card
     if (req === publishReq) { placeLine.textContent = text; placeLine.hidden = false; }
     return text;
   }

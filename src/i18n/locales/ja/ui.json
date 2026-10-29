@@ -28,7 +28,6 @@
   "ui.board.moreFailed": "追加分を読み込めませんでした。",
   "ui.board.moreFailedRetry": "追加分を読み込めませんでした。もう一度試してね",
   "ui.board.nobody": "結果の公開はありませんでした。",
-  "ui.board.place": "{pos}位 · 上位{top}%！",
   "ui.board.notNow": "今はしない",
   "ui.board.placeOnly": "{pos}位！",
   "ui.board.playWith": "{figure}で遊ぶ",

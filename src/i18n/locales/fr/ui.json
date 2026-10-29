@@ -28,7 +28,6 @@
   "ui.board.moreFailed": "Impossible de charger la suite.",
   "ui.board.moreFailedRetry": "Impossible de charger la suite. Réessaie",
   "ui.board.nobody": "Personne n’a publié de résultat.",
-  "ui.board.place": "Tu es numéro {pos} · top {top}% !",
   "ui.board.notNow": "Pas maintenant",
   "ui.board.placeOnly": "Tu es numéro {pos} !",
   "ui.board.playWith": "Joue avec {figure}",

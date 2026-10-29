@@ -28,7 +28,6 @@
   "ui.board.moreFailed": "Nu s-au încărcat mai multe.",
   "ui.board.moreFailedRetry": "Nu s-au încărcat mai multe. Încearcă din nou",
   "ui.board.nobody": "Nimeni nu a publicat vreun rezultat.",
-  "ui.board.place": "Ești pe locul {pos} · top {top}%!",
   "ui.board.notNow": "Nu acum",
   "ui.board.placeOnly": "Ești pe locul {pos}!",
   "ui.board.playWith": "Joacă cu {figure}",

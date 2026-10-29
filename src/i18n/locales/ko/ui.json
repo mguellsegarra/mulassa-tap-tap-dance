@@ -28,7 +28,6 @@
   "ui.board.moreFailed": "더 불러오지 못했어요.",
   "ui.board.moreFailedRetry": "더 불러오지 못했어요. 다시 해봐요",
   "ui.board.nobody": "아무도 결과를 올리지 않았어요.",
-  "ui.board.place": "{pos}위 · 상위 {top}%예요!",
   "ui.board.notNow": "지금은 안 해요",
   "ui.board.placeOnly": "{pos}위예요!",
   "ui.board.playWith": "{figure} 플레이",

@@ -196,11 +196,14 @@ html:not([lang="ca"]) .board-links { row-gap: 16px; } /* longer words wrap the t
 #publish-wait .mula-spinner { display: block; width: 88px; height: 88px; margin: 4px auto 8px; }
 #publish-form[data-view="done"] #publish-status { margin: 0 0 20px; font-size: 16px; line-height: 1.35; color: #e8d8b8; }
 #publish-form[data-view="done"] #publish-status:has(+ .publish-place:not([hidden])) { margin-bottom: 6px; }
-#publish-form[data-view="done"] .publish-place { margin: 0 0 24px; font-size: 26px; line-height: 1.2; }
+#publish-form[data-view="done"] .publish-place { margin: 0 0 24px; font-size: 22px; line-height: 1.2; }
+#publish-form[data-view="done"] .publish-place:has(+ .publish-offer:not([hidden])) { margin-bottom: 12px; } /* its ink as far from the card as from the line above */
+@media (max-width: 359px) { #publish-form[data-view="done"] #publish-status { font-size: 14px; } #publish-offer { gap: 8px; } #publish-offer .publish-warning { font-size: 13px; } #publish-confirm { padding-inline: 8px; } #publish-offer .publish-offer-title { font-size: 16px; } } /* 320 px: «Ara no» in view under the e-mail card, its title on one line */
 /* under a guest's «Publicat!»: why to confirm the e-mail, quietly (board-ui.js); «Confirma el correu» takes the primary and «D'acord» steps down */
 .publish-offer { display: flex; flex-direction: column; gap: 10px; margin: -4px 0 12px; padding: 14px; border: 1px solid #f5c51866; border-radius: 14px; background: #fff3d60d; text-align: left; } /* one card: the invitation and its button */
 .publish-offer-title { display: flex; align-items: center; gap: 10px; margin: 0; color: #fff3d6; font-size: 17px; }
 .publish-offer-title > svg { flex: none; width: 22px; height: 22px; fill: none; stroke: #f5c518; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.publish-risk { margin: 0; padding-left: 8px; border-left: 3px solid #ff8a7a; color: #ffb4a8; font-size: 14px; font-weight: 700; line-height: 1.35; text-wrap: pretty; } /* what a guest loses, in the error red */
 .publish-warning { margin: 0; color: #e8d8b8cc; font-size: 14px; line-height: 1.35; text-wrap: pretty; }
 .publish-offer > .btn-link { align-self: center; min-height: 0; padding: 2px; font-size: 13px; }
 .publish-offer:not([hidden]) + .sheet-actions > #publish-send { min-height: 44px; border-color: transparent; background: none; color: #fff3d6; text-decoration: underline; box-shadow: none; } /* «Ara no»: the card leads */

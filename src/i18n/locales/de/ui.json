@@ -28,7 +28,6 @@
   "ui.board.moreFailed": "Weitere Einträge konnten nicht geladen werden.",
   "ui.board.moreFailedRetry": "Weitere Einträge konnten nicht geladen werden. Versuch’s noch mal",
   "ui.board.nobody": "Niemand hat ein Ergebnis eingetragen.",
-  "ui.board.place": "Du bist auf Platz {pos} · Top {top}%!",
   "ui.board.notNow": "Jetzt nicht",
   "ui.board.placeOnly": "Du bist auf Platz {pos}!",
   "ui.board.playWith": "Spiel mit {figure}",

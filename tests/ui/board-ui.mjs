@@ -410,8 +410,8 @@ const BOARD = page(0, 60, 22);
   submit($);
   assert(!$('publish-menu').open && shares.length === 1, 'D’acord closes it, nothing else');
 }
-// --- the place line: «top %» only once the board has enough players (day 0's first is not «top 100%»)
-for (const [total, line] of [[1, 'Ets el número 1!'], [20, 'Ets el número 7 · top 35%!']]) {
+// --- the place line: the number only, never a «top %»
+for (const [total, line] of [[1, 'Ets el número 1!'], [20, 'Ets el número 7!']]) {
   const { board, $, T, setRun } = make({ session: true, alias: 'Drac101', afterPublish: () => {} });
   setRun(RUN); board.openPublish(); await tick(); await tick();
   submit($); T.publishes[0].resolve({ improved: true }); await tick();
@@ -663,7 +663,7 @@ for (const [total, line] of [[1, 'Ets el número 1!'], [20, 'Ets el número 7 ·
   assert.deepEqual([r.calls.publish[0].alias, r.calls.publish[0].opts.captchaToken, r.calls.captcha], ['Drac101', null, 0], 'as the remembered alias, no Turnstile');
   r.T.publishes[0].resolve({ improved: true }); await wait();
   r.T.alls[0].resolve([{ position: 7, alias: 'Drac101', difficulty: 1, quality: 90, score: 40000, is_self: true, total: 60 }]); await wait();
-  assert.equal(r.$('publish-place').textContent, 'Ets el número 7 · top 12%!', 'the place on the joint board');
+  assert.equal(r.$('publish-place').textContent, 'Ets el número 7!', 'the place on the joint board');
   { // not on the first page (nor its neighbours): no line
     const x = make({ session: true, alias: 'Drac101' });
     x.setRun(RUN); x.board.openPublish(); await wait(); x.env.t = 1000; submit(x.$);

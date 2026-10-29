@@ -492,15 +492,15 @@
     <div class="publish-body">
       <div id="profile-alias-field" hidden>
         <label for="profile-alias" id="profile-alias-label" class="board-label" data-i18n="html.profileAliasLabel">Sobrenom</label>
-        <input id="profile-alias" class="feedback-field" type="text" maxlength="24" autocomplete="off" autocapitalize="words" autocorrect="off" spellcheck="false" enterkeyhint="send">
+        <input id="profile-alias" class="feedback-field" type="text" placeholder="P. ex. Gralla123" data-i18n-attr="placeholder:html.profileAliasPlaceholder" maxlength="24" autocomplete="off" autocapitalize="words" autocorrect="off" spellcheck="false" enterkeyhint="send">
       </div>
       <div id="profile-mail-field">
         <label for="profile-email" class="board-label" data-i18n="html.profileMailLabel">Correu</label>
-        <input id="profile-email" class="feedback-field" type="email" name="email" maxlength="254" autocomplete="email" inputmode="email" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="send">
+        <input id="profile-email" class="feedback-field" type="email" placeholder="nom@exemple.cat" data-i18n-attr="placeholder:html.common.emailPlaceholder" name="email" maxlength="254" autocomplete="email" inputmode="email" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="send">
       </div>
       <div id="profile-code-field" hidden>
         <label for="profile-code" class="board-label" data-i18n="html.profileCodeLabel">Codi de 6 xifres</label>
-        <input id="profile-code" class="feedback-field" type="text" name="code" maxlength="6" autocomplete="one-time-code" inputmode="numeric" pattern="[0-9]*" spellcheck="false" enterkeyhint="done">
+        <input id="profile-code" class="feedback-field" type="text" placeholder="123456" data-i18n-attr="placeholder:html.profileCodePlaceholder" name="code" maxlength="6" autocomplete="one-time-code" inputmode="numeric" pattern="[0-9]*" spellcheck="false" enterkeyhint="done">
       </div>
       <!-- the statistics notice's three lines (#stats-notice-menu): creating a profile is its first upload -->
       <div id="profile-stats-note" class="publish-note" hidden>
@@ -644,7 +644,7 @@
         </div>
         <div class="feedback-mail">
           <label for="feedback-email" class="board-label" data-i18n="html.feedbackMailLabel">Correu (per poder contestar)</label>
-          <input id="feedback-email" class="feedback-field" type="email" name="email" required maxlength="254" autocomplete="email" inputmode="email" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="send" aria-describedby="feedback-status">
+          <input id="feedback-email" class="feedback-field" type="email" placeholder="nom@exemple.cat" data-i18n-attr="placeholder:html.common.emailPlaceholder" name="email" required maxlength="254" autocomplete="email" inputmode="email" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="send" aria-describedby="feedback-status">
           <p class="feedback-small" data-i18n="html.rich.feedbackSmall1">Rebem el missatge i el correu a la bústia del projecte només per llegir i contestar. <button id="feedback-privacy" type="button" class="btn btn-link btn-small" data-privacy-open aria-haspopup="dialog" data-i18n="html.common.privacy">Privadesa</button></p>
           <p class="feedback-small" data-i18n="html.rich.feedbackSmall2">També pots escriure a <a id="feedback-mailto" href="mailto:holi@mulassa.cat">holi@mulassa.cat</a></p>
           <p class="feedback-rights" data-i18n="html.feedbackRights">Mulassa Tap Tap Dance és un projecte per fer córrer la cultura popular. Si ets titular d’algun dret sobre el contingut i vols que el canviem, diga’ns-ho.</p>

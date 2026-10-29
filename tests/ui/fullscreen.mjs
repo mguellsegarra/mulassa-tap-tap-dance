@@ -17,6 +17,8 @@ const { photoOrient } = ctx.api;
 // The first-paint cover (base.css, by viewport size) is a phone's rule: a tablet is marked so a short landscape page passes
 firstCheck(); assert(!classes.has('tablet'), 'a phone keeps the first-paint cover');
 ctx.isTablet = () => true; ctx.innerWidth = 1024; ctx.innerHeight = 520; firstCheck(); assert(classes.has('tablet') && !classes.has('wrong-orient'), 'a small tablet on its side: marked, no cover');
+classes.add('view-mode'); ctx.innerWidth = 768; ctx.innerHeight = 1024; firstCheck(); assert(classes.has('wrong-orient'), 'tablet free play upright: the cover asks to turn it');
+ctx.innerWidth = 1024; ctx.innerHeight = 768; firstCheck(); assert(!classes.has('wrong-orient'), 'tablet free play on its side: no cover'); classes.delete('view-mode');
 ctx.isTablet = () => false; ctx.innerWidth = 393; ctx.innerHeight = 852; firstCheck(); classes.delete('wrong-orient');
 const css = readFileSync(new URL('../../src/styles/base.css', import.meta.url), 'utf8');
 assert(/\(orientation: landscape\) and \(max-height: 599px\)[^{]*\{ body:not\(\.view-mode, \.tablet\) #rotate/.test(css), 'the first-paint rule skips a marked tablet');

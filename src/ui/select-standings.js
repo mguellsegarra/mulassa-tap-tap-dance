@@ -31,6 +31,9 @@ const TRIES = [[10, 2, true, 2], [10, 1, true, 2], [5, 2, true, 2], [5, 1, true,
 
 const DESKTOP = '(min-width: 900px) and (min-height: 600px)'; // select-sizes.css: the column that shows the medals, the rows and the foot
 const phone = (win = globalThis) => Boolean(win.matchMedia) && !win.matchMedia(DESKTOP).matches; // the phones' fixed card
+// Touch tablets: the board's first three (as on phones) before your neighbours; then they drop the medals, not the three
+const tabletTouch = (win = globalThis) => Boolean(win.matchMedia?.(`${DESKTOP} and (pointer: coarse)`).matches);
+const TABLET_TRIES = [...TRIES.slice(0, 5), [3, -1, true, 2], [3, -1, false, 2], [3, -1, false, 0], [0, 0, false, 0]];
 export function setupStandings({ doc, win = globalThis, $, onBoard, onCard = null, busy = () => false, levels = () => false, onSwapped = () => {} }) { // levels(): step 2
   const meds = $('select-meds'), card = $('select-standings');
   if (!meds || !card) return { medals() {}, board() {}, fit() {} }; // a page without them (the node tests' DOM)
@@ -133,16 +136,17 @@ export function setupStandings({ doc, win = globalThis, $, onBoard, onCard = nul
     // The biggest try that fits (each one is a forced layout of the selector): the last answer and the one above it first
     // (unchanged: two layouts), else a binary search (the tries only shrink).
     let drawn = -1;
-    const at = i => { const [top, near, withFoot, withMeds] = TRIES[i]; render(top, near, withFoot); meds.toggleAttribute('data-gone', !withMeds); drawn = i; };
+    const tries = tabletTouch(win) ? TABLET_TRIES : TRIES;
+    const at = i => { const [top, near, withFoot, withMeds] = tries[i]; render(top, near, withFoot); meds.toggleAttribute('data-gone', !withMeds); drawn = i; };
     const fits = i => (at(i), !scrolls());
-    at(fitAt);
+    at(Math.min(fitAt, tries.length - 1));
     if (!card.getClientRects().length && !meds.getClientRects().length) return; // not shown here: nothing to measure
-    let lo = 0, hi = TRIES.length; // hi: the biggest known to fit (TRIES.length: none)
+    let lo = 0, hi = tries.length; // hi: the biggest known to fit (tries.length: none)
     if (!scrolls()) { hi = fitAt; if (fitAt) { if (fits(fitAt - 1)) hi = fitAt - 1; else lo = fitAt; } } else lo = fitAt + 1;
     while (lo < hi) { const m = (lo + hi) >> 1; if (fits(m)) hi = m; else lo = m + 1; }
-    fitAt = Math.min(hi, TRIES.length - 1);
+    fitAt = Math.min(hi, tries.length - 1);
     if (drawn !== fitAt) at(fitAt);
-    if (hi === TRIES.length) body.hidden = true; // the header stays: the line is the home's way to the board
+    if (hi === tries.length) body.hidden = true; // the header stays: the line is the home's way to the board
   }
   // Another board (a figure or owner change) or the first answer after the placeholder fades the card out, swaps it while unseen
   // (its new size included) and fades it in

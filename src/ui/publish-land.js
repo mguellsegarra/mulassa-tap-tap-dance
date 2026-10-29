@@ -7,14 +7,13 @@ import { forgetSeasons } from './seasons-ui.js';
 
 export const PERSIST_KEY = 'storage-persist'; // once, after the first publication: storage.persist() was asked
 
-export function setupLanding({ service, store, runs, canWrite, acceptStats, persist, declinesKey }) {
+export function setupLanding({ service, store, runs, canWrite, acceptStats, persist }) {
   // told: the sheet showed the statistics' note (its totals go with the profile); the quiet publication shows nothing, so the notice stays pending
   function landed(run, alias, told = true) {
     store.set(ALIAS_KEY, alias);
     if (told) acceptStats();
     forgetSeasons(service); // the podiums may have moved
     runs.published = run; // the results button goes even if the sheet was closed meanwhile
-    store.remove(declinesKey); // they publish: the prompt may open by itself again
     if (!store.get(PERSIST_KEY)) { store.set(PERSIST_KEY, '1'); try { Promise.resolve(persist()).catch(() => {}); } catch { /* no Storage API */ } }
   }
   // a nickname chosen before and its profile still here: the run goes up with nothing on screen (the server keeps the best).

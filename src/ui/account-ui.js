@@ -120,8 +120,6 @@ export function setupAccount({ focusIn, profile, service, store, stats, onSync =
       const { alias, verified } = savedName(store), guest = Boolean(alias) && !verified;
       $('stats-notice-guest').hidden = $('stats-notice-confirm').hidden = !guest;
       $('stats-notice-last').textContent = guest ? '3' : '2'; $('stats-notice-last').className = `pos p${guest ? 3 : 2}`;
-      // a guest's first move is to confirm: that button leads and takes the primary look, «D'acord» the outline
-      $('stats-notice-confirm').className = `btn ${guest ? 'btn-primary' : 'btn-secondary'}`; $('stats-notice-ok').className = `btn ${guest ? 'btn-secondary' : 'btn-primary'}`;
       if (guest) $('stats-notice-confirm').textContent = tr('ui.profile.btn.link');
       notice.showModal(); focusIn(notice, 'stats-notice-ok');
       notice.querySelector?.('.sheet-body')?.scrollTo?.(0, 0); // a small phone scrolls: it starts at the title, not at the focused button

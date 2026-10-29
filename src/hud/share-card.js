@@ -159,7 +159,9 @@ function cardTicket(c, d, L, theme) {
     if (alias !== String(d.alias)) alias = alias.slice(0, -1) + '…';
     const x = 540 - (tick + gap) / 2, tw = Math.min(max, c.measureText(alias).width);
     cardText(c, alias, x, y + 26, size, theme.ink, 600, max);
-    if (tick) cardCheck(c, x + tw / 2 + gap + tick / 2, y + 26, tick / 2);
+    // Baloo's 'middle' baseline leaves the letters above y + 26: centre the check on the capitals' ink instead
+    const caps = c.measureText('H');
+    if (tick) cardCheck(c, x + tw / 2 + gap + tick / 2, y + 26 + (caps.actualBoundingBoxDescent - caps.actualBoundingBoxAscent) / 2, tick / 2);
   }
   const points = Number.isFinite(d.score) ? fmtNum(Math.round(d.score)) : '—';
   cardText(c, points, 540, y + aliasH + (story ? 88 : 72), story ? 150 : 118, theme.ink, 800, w - 100);

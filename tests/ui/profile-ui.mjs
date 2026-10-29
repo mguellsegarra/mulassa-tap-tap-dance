@@ -132,7 +132,7 @@ const guestProf = o => ({ alias: 'takeshi', verified: false, published: true, re
 { // confirm an e-mail: mail → code; the tick, the same name; an address typed elsewhere; a code the server does not confirm
   const s = make({ alias: 'takeshi', session: true, captchaRequired: true, prof: guestProf() }); await s.profile.refresh();
   s.profile.open('link'); assert(s.$('profile-menu').open && s.$('profile-title').textContent === 'Confirma el correu' && s.focused.at(-1) === 'profile-email');
-  assert(/no es perd/.test(s.$('profile-lead').textContent) && !/#|caduc|7 dies|torneig/.test(s.$('profile-lead').textContent), 'what confirming does: keeps it, no «#» talk');
+  assert(/conserves el nom/.test(s.$('profile-lead').textContent) && /marca/.test(s.$('profile-lead').textContent) && !/#|caduc|7 dies|torneig/.test(s.$('profile-lead').textContent), 'what confirming does: keeps it, sells the mark, no «#» talk');
   enter(s.$, 'profile-email', 'jugador@example.com'); s.$('profile-form').fire('submit'); await tick(); await tick();
   assert.deepEqual(s.calls[0], ['send', 'jugador@example.com', undefined], 'an address on this session: no Turnstile wait');
   assert(!s.$('profile-code-field').hidden && s.$('profile-mail-field').hidden && /jugador@example\.com/.test(s.$('profile-lead').textContent) && s.focused.at(-1) === 'profile-code');

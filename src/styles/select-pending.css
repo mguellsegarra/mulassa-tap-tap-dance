@@ -177,5 +177,7 @@
 /* Laptops and 1080p screens up to a 16" MacBook (a 13"'s ~1440×790 window): the desktop dock and type crowded the plaça; read better
    at 90%, the corner row too (select-chrome.css), as the browser's own zoom would. A mouse only: touch targets keep their size. */
 @media (min-width: 1100px) and (min-height: 600px) and (max-height: 1010px) and (pointer: fine) { #select { zoom: 0.9; } }
+/* Landscape tablets: the same 90% (the board's first three fit beside the strip); targets ~40 px, an approved trade */
+@media (min-width: 900px) and (min-height: 600px) and (pointer: coarse) { #select { zoom: 0.9; } }
 /* A narrow, short window (1197×624 on a 2016 MacBook with Linux): the short layouts at the browser's own 75%. Not past 1279 px: a 13" Mac's ~1440×790 stays at 90%. */
 @media (min-width: 1100px) and (max-width: 1279px) and (min-height: 600px) and (max-height: 799px) and (pointer: fine) { #select { zoom: 0.75; } }

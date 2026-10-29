@@ -14,7 +14,7 @@ Object.defineProperty(chip, 'running', { get: () => chip.ctx.state === 'running'
 const ctx = { G: { state: 'select', activityEpoch: 0 }, chip, setTimeout: (f, ms) => { assert.equal(ms, 700); later.push(f); },
   errors: { report: (kind, tags) => reports.push([kind, tags.state]) }, document: { hidden: false },
   addEventListener: (ev, f, o) => { assert.equal(o.capture, true); on[ev] = f; } };
-vm.runInNewContext(src + '\nthis.check = checkAudioBack;', ctx);
+vm.runInNewContext(src + '\nthis.check = checkAudioBack; this.stalled = audioStalled;', ctx);
 assert.deepEqual(Object.keys(on), ['touchend', 'click', 'keydown'], 'taps and keys are heard from the import on, ahead of the sheets\' handlers');
 const back = (played = 0) => { ctx.check(); chip.ctx.currentTime += played; later.splice(0).forEach(f => f()); }; // returning, then 700 ms
 const tap = (ev = 'touchend') => on[ev]();
@@ -44,4 +44,7 @@ ctx.check(); ctx.G.activityEpoch++; later.splice(0).forEach(f => f()); tap(); ta
 assert.equal(wakes, 3, 'left again before the check: nothing waits');
 ctx.check(); ctx.document.hidden = true; later.splice(0).forEach(f => f()); tap(); tap();
 assert.equal(wakes, 3, 'hidden at the check: nothing waits');
+chip.ctx.state = 'running'; tap(); ctx.stalled(); // on the menu, the loop's clock froze without leaving (AirPods)
+assert.deepEqual([reports.at(-1), chip.ctx.state], [['menu-audio-stalled', 'running'], 'suspended'], 'reported and suspended');
+tap(); assert.equal(chip.running, true, 'the next tap wakes it');
 console.log('Sound back from another app: no card, the next tap anywhere wakes it when it stayed stopped or frozen');

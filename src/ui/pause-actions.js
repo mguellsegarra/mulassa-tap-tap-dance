@@ -4,7 +4,7 @@ import { G, songTime, chip } from '../game/state.js';
 import { pageActive, playFrom, COARSE } from '../core/env.js';
 import { pauseGame, closePauseMenu } from './pause.js';
 import { pauseMenu } from './handles.js';
-import { checkAudioBack } from './audio-resume.js';
+import { checkAudioBack, audioStalled } from './audio-resume.js';
 import { focusIn } from './focus.js';
 import { tr } from '../i18n/messages.js';
 import { glc, renderer } from '../scene/stage.js';
@@ -31,13 +31,15 @@ export function togglePause() {
 // A run whose audio clock stands still is stuck at its count-in («PREPARATS…») or mid-song: suspended (iOS after an app
 // switch: resume() only works inside a tap) or `running` with a frozen currentTime (a stalled output device, seen on a
 // phone after several runs). Pause it after 1 s: the pause's suspend and Continua's resume() inside a tap wake it.
+// The menu's loop or radio stalls the same way (AirPods dropping out): suspended, the next tap anywhere wakes it.
 let stallT = null, lastCt = NaN;
 export function watchAudio(now) {
-  const ct = chip?.ctx?.currentTime, moved = ct !== lastCt;
+  const ct = chip?.ctx?.currentTime, moved = ct !== lastCt, run = G.state === 'play';
   lastCt = ct;
-  if (G.state !== 'play' || G.paused || chip?.t0 == null || !pageActive() || (moved && chip.ctx.state === 'running')) { stallT = null; return; }
+  const hearing = run ? !G.paused && chip?.t0 != null : !!(chip?.menuSrc || chip?.radioSrc);
+  if (!hearing || !pageActive() || (moved && chip.ctx.state === 'running')) { stallT = null; return; }
   stallT ??= now;
-  if (now - stallT > 1000) { stallT = null; pauseGame(); }
+  if (now - stallT > 1000) { stallT = null; if (run) pauseGame(); else audioStalled(); }
 }
 function syncPageActivity(e) {
   if (!pageActive()) {

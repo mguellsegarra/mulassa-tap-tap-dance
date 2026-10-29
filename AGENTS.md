@@ -122,7 +122,7 @@ Read-only issue inspection (organization `ondori`, project `mulassa-tap-tap-danc
 
 ## Process
 
-- Every UI change is validated with a real screenshot (at least 375×667 and 320×568, plus desktop when it applies) before it is reported done; apply `.agents/skills/uipolish/SKILL.md` (a must, not optional) inside that evaluation loop (measure, look at the capture, fix, repeat). Unit tests alone never prove a layout.
+- Every UI change is validated with a real screenshot (at least 375×667 and 320×568, plus desktop when it applies) before it is reported done; apply `.agents/skills/uipolish/SKILL.md` (a must, not optional) inside that evaluation loop (measure, look at the capture, fix, repeat). Unit tests alone never prove a layout. Take those captures (with a subagent when asked) before running `npm run check`, never after it: a layout fix found late reruns the whole check.
 - Orientation (`src/ui/fullscreen.js`): phones are portrait only and tablets landscape only; the other orientation shows the rotate cover («Gira el mòbil…»), so it is never a layout to capture, measure or put in a review or PDF. The one exception is phone free play, which is landscape. Viewport set for menus and sheets: phones 320×568, 375×667, 393×852, 430×932; tablet 1024×768; desktop 1280×800, a wide-short window (1440×700) and a large one (1920×1080). This overrides the matrix of any generic skill (e.g. a global `uipolish` listing 667×375, 852×393 or 768×1024).
 - Small, targeted edits; keep the existing style and comment voice (short "why" comments).
 - Add a test for new logic (a new file in the right `tests/<area>/` folder, which `tests/run.mjs` finds, or `check.mjs`); keep `npm run check` green.

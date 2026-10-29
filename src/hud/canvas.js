@@ -39,7 +39,8 @@ export function resize() {
   camera.aspect = cw / ch;
   hud.width = Math.ceil(cw * DPR);
   hud.height = Math.ceil(ch * DPR);
-  H.setTransform(K * DPR, 0, 0, K * DPR, 0, 0);
+  // Scale to the rounded-up backing size, not DPR: a fractional DPR (tablets) left its last pixel row unpainted, a line under the foot
+  H.setTransform(K * hud.width / cw, 0, 0, K * hud.height / ch, 0, 0);
   PXU = K * DPR;
   W = cw / K; HH = ch / K;
   camera.fov = baseFov(); camera.updateProjectionMatrix(); // (after HH: the lens depends on it; framePlayCamera sets its own each frame)
@@ -64,7 +65,11 @@ const settle = () => { if (globalThis.scrollX || globalThis.scrollY) scrollTo(0,
 addEventListener('scroll', settle);
 addEventListener('focus', settle);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) settle(); });
-addEventListener('orientationchange', resize);
+// iPad Safari turning: orientationchange and even resize can carry the old size, and the final one lands with no event at all,
+// leaving the 3D stretched and a dark band under a short page. Measure now, two frames later and once Safari's bars have settled.
+const afterTurn = () => { resize(); requestAnimationFrame(() => requestAnimationFrame(settle)); setTimeout(settle, 500); };
+addEventListener('orientationchange', afterTurn);
+try { matchMedia('(orientation: portrait)').addEventListener('change', afterTurn); } catch { /* no matchMedia (tests) */ }
 // a GPU process crash (Android Adreno) restores the 2D context with its default state: the identity transform drew the HUD at 1/3
 hud.addEventListener('contextrestored', resize);
 addEventListener('pageshow', () => requestAnimationFrame(resize)); // standalone launch: sizes can settle a frame late

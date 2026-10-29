@@ -45,12 +45,12 @@
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<title>Mulassa Tap Tap Dance · Joc de ritme de la Mulassa de Valls</title>
+<title>mulassa.cat - El joc de ritme del bestiari festiu català</title>
 <meta name="description" content="Joc de ritme gratuït en català: balla la Mulassa de Valls al ritme, toca GUA i PA, supera el repte i comparteix el teu ball.">
 <!-- Link previews (static, absolute URLs): public/og.jpg, 1200×630, made once from the game -->
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="Mulassa Tap Tap Dance">
-<meta property="og:title" content="Mulassa Tap Tap Dance">
+<meta property="og:site_name" content="mulassa.cat">
+<meta property="og:title" content="mulassa.cat">
 <meta property="og:description" content="Joc de ritme gratuït en català: balla la Mulassa de Valls al ritme, toca GUA i PA, supera el repte i comparteix el teu ball.">
 <meta property="og:url" content="https://mulassa.cat/">
 <meta property="og:image" content="https://mulassa.cat/og.jpg">
@@ -60,7 +60,7 @@
 <meta property="og:image:alt" content="La Mulassa i el Drac de Valls amb el logotip de Mulassa Tap Tap Dance.">
 <meta property="og:locale" content="ca_ES">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Mulassa Tap Tap Dance">
+<meta name="twitter:title" content="mulassa.cat">
 <meta name="twitter:description" content="Joc de ritme gratuït en català: balla la Mulassa de Valls al ritme, toca GUA i PA, supera el repte i comparteix el teu ball.">
 <meta name="twitter:image" content="https://mulassa.cat/og.jpg">
 <meta name="twitter:image:alt" content="La Mulassa i el Drac de Valls amb el logotip de Mulassa Tap Tap Dance.">
@@ -288,10 +288,8 @@
     <button id="settings-sync" type="button" class="btn btn-secondary" data-i18n="html.sync"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 21h8l-3-17h-2zM12 14l6-7"/></svg>Ajusta la sincronia<span class="sub" id="settings-offset" data-i18n="html.settingsOffset">Ara: 0 ms</span></button>
     <button id="settings-feedback" type="button" class="btn btn-secondary" aria-haspopup="dialog" data-i18n="html.feedbackTitle"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a8.5 8 0 0 1-12.3 7.2L3.5 20l1.4-4.3A8.5 8 0 1 1 21 11.5z"/><path d="M8.5 11.5h.01M12.5 11.5h.01M16.5 11.5h.01" stroke-width="2.6"/></svg>Bústia de la plaça<span class="sub" data-i18n="html.settingsFeedbackSub">Idees, queixes o felicitacions</span></button>
     <!-- the prompt after a run (src/ui/board-ui.js): on = it opens by itself; off = «No m’ho tornis a recordar» -->
-    <!-- only once the prompt is off («No m’ho tornis a recordar», or «Ara no» ×3): a way back (src/ui/board-ui.js syncPromptRow) -->
+    <!-- only once the prompt is off («No m’ho tornis a recordar»): a way back (src/ui/board-ui.js syncPromptRow) -->
     <div id="settings-prompt-row" class="switch-row setting-row" hidden><span data-i18n="html.settingsPromptLabel">Proposta de publicar<span class="sub" data-i18n="html.settingsPromptSub">Desactivada: no surt en acabar el ball</span></span><button id="settings-prompt" type="button" class="btn btn-secondary btn-small" data-i18n="html.settingsPrompt">Activa</button></div>
-    <!-- with a nickname here: runs of ≥ 2 stars go up by themselves (src/ui/board-ui.js); off = the publish prompt instead -->
-    <label id="settings-quiet-row" class="switch-row" for="settings-quiet" hidden><span data-i18n="html.settingsQuiet">Publicació automàtica<span class="sub" data-i18n="html.settingsQuietSub">Des de 2 estrelles, amb el teu sobrenom</span></span><input id="settings-quiet" type="checkbox" role="switch" checked></label>
     <!-- «Sobre el joc»: the repo (public soon) and Buy Me a Coffee; plain links, new tab -->
     <div id="settings-about" class="settings-about">
       <p data-i18n="html.rich.aboutMade">Fet amb carinyo <svg class="about-heart" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.2 3.6 13A5.2 5.2 0 0 1 12 6.6a5.2 5.2 0 0 1 8.4 6.4z"/></svg> <span data-i18n="html.rich.aboutAi">i molta IA</span> <span class="about-place" data-i18n="html.rich.aboutPlace">a Valls <img class="about-campanar" src="/campanar-valls.svg" alt="" width="29" height="65"></span><span class="sub" data-i18n="html.rich.aboutSmile">Si t’ha fet somriure, <a class="about-coffee" href="https://buymeacoffee.com/mguellsegarra" target="_blank" rel="noopener" data-i18n="html.rich.aboutCoffee"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h13v5a6 6 0 0 1-6 6h-1a6 6 0 0 1-6-6zM17 10h1.5a2.5 2.5 0 0 1 0 5H17M8 2.5v2.5M12 2.5v2.5"/></svg>convida’m a un cafè</a></span></p>
@@ -473,7 +471,7 @@
       <div id="publish-offer" class="publish-offer" hidden>
         <h3 class="publish-offer-title"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 3 4.5 6v5.5c0 4.6 3.2 8.3 7.5 9.5 4.3-1.2 7.5-4.9 7.5-9.5V6z"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg><span data-i18n="html.publishKeepTitle">Conserva el teu nom</span></h3>
         <p class="publish-risk" data-i18n="html.publishRisk">Si passes 30 dies sense jugar, algú altre pot agafar el teu nom.</p>
-        <p class="publish-warning" data-i18n="html.publishWarning">Confirma el correu per conservar el nom i recuperar el perfil en qualsevol dispositiu.</p>
+        <p class="publish-warning" data-i18n="html.publishWarning">Confirma el correu per conservar el nom, recuperar el perfil en qualsevol dispositiu i lluir la marca de confirmat a la classificació.</p>
         <button id="publish-confirm" type="button" class="btn btn-primary" aria-haspopup="dialog" data-i18n="ui.profile.btn.link">Confirma el correu</button>
         <button type="button" class="btn btn-link btn-small" data-privacy-open aria-haspopup="dialog" data-i18n="html.common.privacy">Privadesa</button><!-- what the address is for, before it is sent -->
       </div>
@@ -494,15 +492,15 @@
     <div class="publish-body">
       <div id="profile-alias-field" hidden>
         <label for="profile-alias" id="profile-alias-label" class="board-label" data-i18n="html.profileAliasLabel">Sobrenom</label>
-        <input id="profile-alias" class="feedback-field" type="text" maxlength="24" autocomplete="off" autocapitalize="words" autocorrect="off" spellcheck="false" enterkeyhint="send">
+        <input id="profile-alias" class="feedback-field" type="text" placeholder="P. ex. Gralla123" data-i18n-attr="placeholder:html.profileAliasPlaceholder" maxlength="24" autocomplete="off" autocapitalize="words" autocorrect="off" spellcheck="false" enterkeyhint="send">
       </div>
       <div id="profile-mail-field">
         <label for="profile-email" class="board-label" data-i18n="html.profileMailLabel">Correu</label>
-        <input id="profile-email" class="feedback-field" type="email" name="email" maxlength="254" autocomplete="email" inputmode="email" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="send">
+        <input id="profile-email" class="feedback-field" type="email" placeholder="nom@exemple.cat" data-i18n-attr="placeholder:html.common.emailPlaceholder" name="email" maxlength="254" autocomplete="email" inputmode="email" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="send">
       </div>
       <div id="profile-code-field" hidden>
         <label for="profile-code" class="board-label" data-i18n="html.profileCodeLabel">Codi de 6 xifres</label>
-        <input id="profile-code" class="feedback-field" type="text" name="code" maxlength="6" autocomplete="one-time-code" inputmode="numeric" pattern="[0-9]*" spellcheck="false" enterkeyhint="done">
+        <input id="profile-code" class="feedback-field" type="text" placeholder="123456" data-i18n-attr="placeholder:html.profileCodePlaceholder" name="code" maxlength="6" autocomplete="one-time-code" inputmode="numeric" pattern="[0-9]*" spellcheck="false" enterkeyhint="done">
       </div>
       <!-- the statistics notice's three lines (#stats-notice-menu): creating a profile is its first upload -->
       <div id="profile-stats-note" class="publish-note" hidden>
@@ -646,7 +644,7 @@
         </div>
         <div class="feedback-mail">
           <label for="feedback-email" class="board-label" data-i18n="html.feedbackMailLabel">Correu (per poder contestar)</label>
-          <input id="feedback-email" class="feedback-field" type="email" name="email" required maxlength="254" autocomplete="email" inputmode="email" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="send" aria-describedby="feedback-status">
+          <input id="feedback-email" class="feedback-field" type="email" placeholder="nom@exemple.cat" data-i18n-attr="placeholder:html.common.emailPlaceholder" name="email" required maxlength="254" autocomplete="email" inputmode="email" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="send" aria-describedby="feedback-status">
           <p class="feedback-small" data-i18n="html.rich.feedbackSmall1">Rebem el missatge i el correu a la bústia del projecte només per llegir i contestar. <button id="feedback-privacy" type="button" class="btn btn-link btn-small" data-privacy-open aria-haspopup="dialog" data-i18n="html.common.privacy">Privadesa</button></p>
           <p class="feedback-small" data-i18n="html.rich.feedbackSmall2">També pots escriure a <a id="feedback-mailto" href="mailto:holi@mulassa.cat">holi@mulassa.cat</a></p>
           <p class="feedback-rights" data-i18n="html.feedbackRights">Mulassa Tap Tap Dance és un projecte per fer córrer la cultura popular. Si ets titular d’algun dret sobre el contingut i vols que el canviem, diga’ns-ho.</p>

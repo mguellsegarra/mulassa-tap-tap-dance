@@ -3,11 +3,11 @@
 Current rules, moved out of AGENTS.md so they load only when the task needs them. The decisions behind these screens are in `docs/rankings/strategy.md`. Read before changing `ui/board-*.js`, `ui/account-ui.js`, `ui/profile-ui.js`, `ui/seasons-ui.js`, `ui/player-card.js` or `services/captcha.js`.
 
 - The Saló de la fama's estendard (`seasons-ui.js`: a red cloth with the figure's silhouette, hung from a gold rod) and its season name in gold are an approved decorative exception to the colour roles, used nowhere else.
-- Publish prompt («Publica el teu resultat!», `#publish-menu`, publish-ui.js): opens by itself once per eligible run; texts centred. A player with a
-  nickname and a live profile here gets no prompt: the same runs (≥ 2 stars) go up by themselves, with nothing on screen (`publish-land.js`
-  `publishQuietly`); if that fails (no session, profile gone, network) the prompt opens as for anyone. ⚙ Configuració «Publicació automàtica» (`#settings-quiet-row`, `QUIET_OFF_KEY`), shown only to a player with a nickname here, turns it off: the prompt asks again. On that
-  auto opening only, «Ara no» (a decline, ×`MAX_DECLINES` stops it) and quiet «No m’ho tornis a recordar» (`OPTOUT_KEY`, permanent) just
-  close it. ⚙ Configuració «Proposta de publicar» (`#settings-prompt-row`) shows only while `promptsOn()` is false, with an «Activa» button that clears both.
+- Publish prompt («Publica el teu resultat!», `#publish-menu`, publish-ui.js): opens by itself once per finished run, whatever its stars (a collapse leaves no run to publish), unless nothing was hit; texts centred. A player with a
+  nickname and a live profile here gets no prompt: every run, whatever its stars, goes up by itself (the server keeps the best), with nothing on screen (`publish-land.js`
+  `publishQuietly`); if that fails (no session, profile gone, network) the prompt opens as for anyone. On that
+  auto opening only, «Ara no» (this run only) and quiet «No m’ho tornis a recordar» (`OPTOUT_KEY`, permanent) just
+  close it. ⚙ Configuració «Proposta de publicar» (`#settings-prompt-row`) shows only while `promptsOn()` is false, with an «Activa» button that clears it.
 - Classificació (`#board-menu`, `ui/board-list.js`; docs/rankings/strategy.md §4): no view tabs (the owner removed «Tots · On soc», 2026-10-21). The title row is a
   button (`#board-figure`: the figure's pixel portrait, name, chevron) that opens «Tria figura» in place of the list (`#board-picker`, the shown figure cream;
   Escape and × come back to the board), then the season line, a flat «Posició 48 de 119» card (gold strip) with one link that reads «Al capdamunt» (an up arrow) while

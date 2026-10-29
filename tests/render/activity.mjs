@@ -12,6 +12,7 @@ const ctx = vm.createContext({ G, COARSE, pageActive: () => active,
   chip: { suspend() { this.ctx.suspend(); }, clearMenuSfx() { cleared++; }, ctx: { state: 'running', currentTime: 0, suspend() { suspended++; } }, wake() { woke++; } },
   pauseGame() { if (G.state === 'play') G.paused = true; },
   checkAudioBack() { ctx.offers = (ctx.offers || 0) + 1; }, // tests/ui/audio-resume.mjs
+  audioStalled() { ctx.stalls = (ctx.stalls || 0) + 1; },
   document: { addEventListener(k, f) { handlers[k] = f; } },
   addEventListener(k, f) { handlers[k] = f; }, setTimeout(f, ms) { timers.push({ f, ms }); },
   glc: { addEventListener() {} }, // the WebGL watchdog's listeners (tests/render/scene-crowd.mjs)
@@ -64,4 +65,10 @@ watch(2000, 0); assert.equal(G.paused, true, 'running but frozen (stuck at PREPA
 G.paused = false; audio.state = 'suspended'; watch(4000, 0); assert.equal(G.paused, true, 'suspended mid-run: paused');
 G.paused = false; audio.state = 'running'; watch(6000, 0, 50); assert.equal(G.paused, false, 'under a second: no pause');
 G.paused = false; ctx.chip.t0 = null; watch(8000, 0); assert.equal(G.paused, false, 'still loading the song (no clock yet): no pause');
+// The menu's loop frozen in place (AirPods dropping out): no pause menu there, the sound waits for the next tap instead
+G.state = 'select'; G.paused = false; audio.state = 'running';
+watch(10000, 0); assert.equal(ctx.stalls, undefined, 'a silent menu has nothing to stall');
+ctx.chip.menuSrc = {}; watch(12000, 0.016); assert.equal(ctx.stalls, undefined, 'the loop plays on');
+watch(14000, 0); assert.deepEqual([ctx.stalls, G.paused], [1, false], 'frozen under the loop: the tap is awaited, no pause');
+delete ctx.chip.menuSrc; watch(16000, 0, 0); ctx.chip.radioSrc = {}; watch(16100, 0); assert.equal(ctx.stalls, 2, 'the radio too');
 console.log('deferred effects expire on blur, visibility and page exit; fresh effects and explicit pause preserved');

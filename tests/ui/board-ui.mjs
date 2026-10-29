@@ -874,7 +874,7 @@ const find = (el, test) => (test(el) ? el : el.children.map(c => find(c, test)).
   const rows = b.$('board-rows').children;
   assert.equal(rows.length, 3, 'a guest\'s own row has its quiet line under it');
   assert.equal(rows[2].className, 'me-hint');
-  assert.equal(rows[2].textContent, 'Confirma el correu per no perdre el perfil');
+  assert.equal(rows[2].textContent, 'Confirma el correu i tindràs la marca ✓');
   find(rows[2], e => e.tag === 'button').click(); assert.equal(keeps.length, 1, 'it opens the e-mail step');
   const guest = find(rows[0], e => e.className?.includes?.('player-name'));
   assert(guest.className.includes('released') && !find(guest, e => e.className === 'tag') && find(guest, e => e.className === 'alias').textContent === 'Baldufa', 'a released profile: the plain name, faded');

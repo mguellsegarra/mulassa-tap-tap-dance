@@ -59,7 +59,7 @@
   "html.publishRule": "本名でなくて大丈夫 · 3–16文字、スペースなし",
   "html.publishTemp": "このブラウザーはデータを保存できません。プロフィールはページを開いている間だけ有効です。",
   "html.publishRisk": "30日間遊ばないと、ほかの人があなたの名前を使えるようになります。",
-  "html.publishWarning": "メールを認証すると名前を守れて、どの端末でもプロフィールを復元できます。",
+  "html.publishWarning": "メールを認証すると名前を守れて、どの端末でもプロフィールを復元でき、ランキングに認証済みマークが付きます。",
   "html.publishKeepTitle": "名前を守ろう",
   "html.publishSend": "公開",
   "html.publishBoard": "ランキングを見る",

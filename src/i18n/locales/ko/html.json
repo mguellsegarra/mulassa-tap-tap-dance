@@ -59,7 +59,7 @@
   "html.publishRule": "실명이 아니어도 돼요 · 공백 없이 3–16자",
   "html.publishTemp": "이 브라우저는 데이터를 저장하지 않아요. 페이지를 열어둔 동안만 프로필이 유지돼요.",
   "html.publishRisk": "30일 동안 플레이하지 않으면 다른 사람이 내 이름을 가져갈 수 있어요.",
-  "html.publishWarning": "이메일을 인증하면 이름을 지키고 어느 기기에서든 프로필을 복구할 수 있어요.",
+  "html.publishWarning": "이메일을 인증하면 이름을 지키고, 어느 기기에서든 프로필을 복구하고, 순위표에 인증 표시가 붙어요.",
   "html.publishKeepTitle": "이름 지키기",
   "html.publishSend": "올리기",
   "html.publishBoard": "순위표 보기",

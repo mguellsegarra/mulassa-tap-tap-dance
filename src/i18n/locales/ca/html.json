@@ -59,7 +59,7 @@
   "html.publishRule": "No cal que sigui el teu nom real · 3–16 caràcters, sense espais",
   "html.publishTemp": "Aquest navegador no deixa desar dades: el perfil només durarà mentre tinguis la pàgina oberta.",
   "html.publishRisk": "Si passes 30 dies sense jugar, algú altre pot agafar el teu nom.",
-  "html.publishWarning": "Confirma el correu per conservar el nom i recuperar el perfil en qualsevol dispositiu.",
+  "html.publishWarning": "Confirma el correu per conservar el nom, recuperar el perfil en qualsevol dispositiu i lluir la marca de confirmat a la classificació.",
   "html.publishKeepTitle": "Conserva el teu nom",
   "html.publishSend": "Publica",
   "html.publishBoard": "Mira la classificació",

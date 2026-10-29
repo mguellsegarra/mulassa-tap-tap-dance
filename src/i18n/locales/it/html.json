@@ -59,7 +59,7 @@
   "html.publishRule": "Non serve il tuo vero nome · 3–16 caratteri, senza spazi",
   "html.publishTemp": "Questo browser non permette di salvare dati: il profilo durerà solo finché tieni aperta la pagina.",
   "html.publishRisk": "Se stai 30 giorni senza giocare, un’altra persona può prendere il tuo nome.",
-  "html.publishWarning": "Conferma l’email per conservare il nome e recuperare il profilo su qualsiasi dispositivo.",
+  "html.publishWarning": "Conferma l’email per conservare il nome, recuperare il profilo su qualsiasi dispositivo e mostrare il segno di conferma in classifica.",
   "html.publishKeepTitle": "Conserva il tuo nome",
   "html.publishSend": "Pubblica",
   "html.publishBoard": "Guarda la classifica",

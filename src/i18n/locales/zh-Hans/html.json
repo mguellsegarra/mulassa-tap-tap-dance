@@ -59,7 +59,7 @@
   "html.publishRule": "不必使用真名·3–16个字符，不含空格",
   "html.publishTemp": "这个浏览器无法保存数据，档案仅在页面打开期间有效。",
   "html.publishRisk": "如果你30天没有游玩，别人就可以使用你的名字。",
-  "html.publishWarning": "验证邮箱即可保住名字，并在任何设备上找回档案。",
+  "html.publishWarning": "验证邮箱即可保住名字、在任何设备上找回档案，并在排行榜上显示已验证标记。",
   "html.publishKeepTitle": "保住你的名字",
   "html.publishSend": "发布",
   "html.publishBoard": "查看排行榜",

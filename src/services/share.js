@@ -70,8 +70,10 @@ export function shareText(run, challenge = null) { // the caption (the link goes
 export const bragWorthy = (run, challenge = null) => !run.practice && run.reason !== 'collapse'
   && (Boolean(run.newRecord) || run.stars === 3 || Boolean(challengeResult(challenge, run)?.beaten));
 
-// --- how this platform shares: the system sheet with the image alone, else save it (WhatsApp / X / Més… send the text + link)
-export function shareMode(nav, file) {
+// --- how this platform shares: the system sheet with the image alone, else save it (WhatsApp / X / Més… send the text + link).
+// A mouse (desk) always saves: desktop Chrome's sheet can share files but has no «save to Downloads».
+export function shareMode(nav, file, desk = false) {
+  if (desk) return 'download';
   try { if (file && typeof nav?.share === 'function' && nav.canShare?.({ files: [file] })) return 'share'; } catch { /* no files */ }
   return 'download';
 }

@@ -80,6 +80,7 @@ assert.equal(shareMode({ share() {} }, file), 'download', 'no canShare: assume n
 assert.equal(shareMode({}, file), 'download');
 assert.equal(shareMode({ share() {}, canShare() { throw new Error('x'); } }, file), 'download');
 assert.equal(shareMode({ share() {}, canShare: () => true }, null), 'download', 'no image yet');
+assert.equal(shareMode({ share() {}, canShare: () => true }, file, true), 'download', 'a mouse saves (desktop Chrome can share files)');
 // Més… (the link only): the system sheet with text + url where there is one, else copy
 const linkData = { text: 'a', url: SITE };
 assert.equal(linkMode({ share() {}, canShare: d => !d.files }, linkData), 'share');

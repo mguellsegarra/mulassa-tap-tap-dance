@@ -74,7 +74,7 @@ export function setupShare({ focusIn, restore = () => {}, hero = () => null, sta
       if (r !== req || !menu.open) return;
       file = out; fresh = true;
       show(url.createObjectURL(out));
-      setPrimary(shareMode(nav, out));
+      setPrimary(shareMode(nav, out, Boolean(globalThis.matchMedia?.('(pointer: fine)').matches)));
       if (tapped) { tapped = false; use(); } // the tap made during the redraw: with the card it asked for
     } catch (e) {
       errors.report('share-image-failed', { name: e?.name || 'Error' });

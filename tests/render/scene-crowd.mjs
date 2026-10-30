@@ -133,6 +133,13 @@ for (const q of [0, 1, 2]) {
   assert.equal(run(`plaza.band.filter(p => p.lineup === 'cobla' && p.g.scale.x > 0).length`), 0, `quality ${q}: the cobla leaves with its figure`);
   assert.equal(run('bandSpots.length'), run(`PROFILES[${q}].band`), `quality ${q}: the band is back`);
 }
+// The hidden line-up costs nothing: out of the scene, and no triangle of its people in the crowd's index.
+run(`var coblaBones = new Set(plaza.band.filter(p => p.lineup === 'cobla').flatMap(p => [p.torso, ...p.legs, ...p.arms]).map(b => crowdMesh.skeleton.bones.indexOf(b)));
+  var drawsCobla = () => { const { index, attributes: { skinIndex } } = crowdMesh.geometry; for (let i = 0; i < index.count; i++) if (coblaBones.has(skinIndex.getX(index.getX(i)))) return true; return false; };`);
+assert(!run('drawsCobla()') && run(`plaza.band.every(p => (p.g.parent !== null) === (p.lineup === 'banda'))`), 'the banda on show: the cobla is neither drawn nor in the scene');
+run(`setBandLineup('cobla');`);
+assert(run('drawsCobla()') && run(`plaza.band.every(p => (p.g.parent !== null) === (p.lineup === 'cobla'))`), 'the cobla on show: drawn, and the banda out of the scene');
+run(`setBandLineup('banda');`);
 // Free play: no musicians at all, and nobody keeps clear of them.
 run(`setBandLineup(null);`);
 assert.equal(run('plaza.band.filter(p => p.g.scale.x > 0).length + bandSpots.length'), 0, 'free play has no band');

@@ -1,7 +1,7 @@
 // Applies a render-quality level to the scene (crowd rows, shadows, band, backdrop) and builds the mid crowd.
 import { CALM } from '../core/env.js';
 import { sessionProfile } from '../platform/render-quality.js';
-import { placeBand, buildBackdrop } from './models.js';
+import { placeBand, lineupIndexes, buildBackdrop } from './models.js';
 import * as THREE from 'three';
 import { renderProfile, qualityLevel, peopleLevel, renderer, sun, scene, plaza, glc, CAM_DIR, setRenderProfile } from './stage.js';
 import { crowd, crowdMesh, BAND_AZ, RAD, BAND_ARC } from './crowd-build.js';
@@ -12,7 +12,7 @@ export let activeCrowd = [];
 export let bandSpots = [];
 export let crowdStamp = 0; // each change of who's in the crowd: photo-obstacles.js rebuilds its list (not a line-up's: its people aren't in it)
 let bandEpoch = 0; // each setBandLineup: a fade started before it no longer writes the band
-let bandLineup = 'banda'; // who plays: the figure on show's, null in free play (setBandLineup, stage-motion.js)
+export let bandLineup = 'banda'; // who plays: the figure on show's, null in free play (setBandLineup, stage-motion.js)
 // Only a live quality change animates. Startup installs its final profile under the cover.
 // Keep presence separate from gameplay's p.pres; retiring people keep their pose and collision until gone.
 let qualityTransition = null;
@@ -134,12 +134,29 @@ export function applyRenderQuality({ transition = false } = {}) {
   glc.dataset.quality = renderProfile.name;
 }
 applyRenderQuality();
-// The figure on show's players take the band's place at once. Everybody is always in the crowd's mesh, so this costs
-// no rebuild or hitch: only scales and positions change. Called every frame, it acts on a change.
+// Only the figure on show's players exist for the frame: the others leave the scene (no matrix walk, no pose) and the
+// crowd's index (no vertex work). Their bones stay in its skeleton, whose slots must not move.
+export const crowdFullIndex = crowdMesh.geometry.index;
+let crowdIndexes = null;
+function showBandLineup() {
+  for (const p of plaza.band) if (p.lineup === bandLineup) plaza.group.add(p.g); else p.g.removeFromParent();
+  crowdMesh.geometry.setIndex(crowdIndexes.get(bandLineup));
+}
+// (representation.js: it draws some of these people itself, so it changes what the crowd's mesh has left)
+export function setCrowdIndexBase(index) {
+  crowdMesh.geometry.setIndex(index);
+  crowdIndexes = lineupIndexes(crowdMesh, plaza.band);
+  crowdMesh.geometry.setIndex(crowdIndexes.get(bandLineup));
+}
+setCrowdIndexBase(crowdFullIndex);
+showBandLineup();
+// The figure on show's players take the band's place at once: the indexes are ready, so no rebuild and no hitch.
+// Called every frame, it acts on a change.
 export function setBandLineup(lineup) {
   if (lineup === bandLineup) return;
   bandLineup = lineup; bandEpoch++;
   placeBand(plaza.band, renderProfile.band, BAND_AZ, lineup);
+  showBandLineup();
   refreshBandSpots();
 }
 // The mid band: the backdrop's instanced figures (no bones, no CPU a frame, its material: no new shader program, one

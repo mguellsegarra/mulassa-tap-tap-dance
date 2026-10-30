@@ -30,7 +30,8 @@ modularize code that should have been structured during implementation.
 6. Apply verified in-scope corrections at their owner. Inspect the final diff,
    including additions and deletions. Preserve concurrent edits and review why
    each hunk is needed. Check dynamic uses before declaring code dead.
-7. Run applicable project checks for code changes; preserve audio identity when
+7. Run applicable project checks for code changes, after the owner's OK when the
+   change is visible (AGENTS.md, Process); preserve audio identity when
    music is outside scope. For documentation-only work, validate documents and
    links. Report unavailable checks and pre-existing failures separately. Repeat
    only when a new correction or unresolved finding warrants it.

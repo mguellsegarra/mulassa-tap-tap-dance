@@ -1,7 +1,7 @@
 // Applies a render-quality level to the scene (crowd rows, shadows, band, backdrop) and builds the mid crowd.
 import { CALM } from '../core/env.js';
 import { sessionProfile } from '../platform/render-quality.js';
-import { placeBand, buildBackdrop } from './models.js';
+import { placeBand, lineupIndexes, buildBackdrop } from './models.js';
 import * as THREE from 'three';
 import { renderProfile, qualityLevel, peopleLevel, renderer, sun, scene, plaza, glc, CAM_DIR, setRenderProfile } from './stage.js';
 import { crowd, crowdMesh, BAND_AZ, RAD, BAND_ARC } from './crowd-build.js';
@@ -10,6 +10,9 @@ import { COLLAS } from '../figures/objects.js';
 export let midCrowd = null; // the mid band (built once the play camera's direction exists, below CAM_DIR)
 export let activeCrowd = [];
 export let bandSpots = [];
+export let crowdStamp = 0; // each change of who's in the crowd: photo-obstacles.js rebuilds its list (not a line-up's: its people aren't in it)
+let bandEpoch = 0; // each setBandLineup: a fade started before it no longer writes the band
+export let bandLineup = 'banda'; // who plays: the figure on show's, null in free play (setBandLineup, stage-motion.js)
 // Only a live quality change animates. Startup installs its final profile under the cover.
 // Keep presence separate from gameplay's p.pres; retiring people keep their pose and collision until gone.
 let qualityTransition = null;
@@ -42,12 +45,16 @@ function qualityShadows() {
     qualityShadowMap(target);
   }
 }
-function refreshQualityCrowd() {
-  activeCrowd = crowd.filter(p => p.g.visible);
+function refreshBandSpots() {
   bandSpots = plaza.band.filter(p => p.g.scale.x).map(({ g: { position: b } }) => {
     const r = Math.hypot(b.x, b.z);
     return { pos: new THREE.Vector2(b.x * (1 - 0.25 / r), b.z * (1 - 0.25 / r)), rad: RAD.band, fixed: true, band: true };
   });
+}
+function refreshQualityCrowd() {
+  activeCrowd = crowd.filter(p => p.g.visible);
+  refreshBandSpots();
+  crowdStamp++;
 }
 function qualityScaleTo(from, to, write) {
   if (qualityTransition && from !== to) {
@@ -107,12 +114,14 @@ export function applyRenderQuality({ transition = false } = {}) {
   plaza.balcony.forEach((p, i) => qualityScaleTo(p.g.scale.x, i < renderProfile.balconies ? 1 : 0, value => p.g.scale.setScalar(value)));
   const bandScales = plaza.band.map(p => p.g.scale.x);
   const bandPositions = plaza.band.map(p => ({ position: p.g.position.clone(), yaw: p.g.rotation.y }));
-  placeBand(plaza.band, renderProfile.band, BAND_AZ);
+  placeBand(plaza.band, renderProfile.band, BAND_AZ, bandLineup);
   plaza.band.forEach((p, i) => {
-    const previous = bandPositions[i], target = p.g.position.clone();
+    const previous = bandPositions[i], target = p.g.position.clone(), scale = p.g.scale.x;
     const turn = Math.atan2(Math.sin(p.g.rotation.y - previous.yaw), Math.cos(p.g.rotation.y - previous.yaw));
-    qualityScaleTo(0, 1, k => { p.g.position.lerpVectors(previous.position, target, k); p.g.rotation.y = previous.yaw + turn * k; });
-    qualityScaleTo(bandScales[i], i < renderProfile.band ? 1 : 0, value => p.g.scale.setScalar(value));
+    // (a figure change mid-fade has placed its players itself: setBandLineup)
+    const epoch = bandEpoch;
+    qualityScaleTo(0, 1, k => { if (epoch === bandEpoch) { p.g.position.lerpVectors(previous.position, target, k); p.g.rotation.y = previous.yaw + turn * k; } });
+    qualityScaleTo(bandScales[i], scale, value => { if (epoch === bandEpoch) p.g.scale.setScalar(value); });
   });
   qualityStaticCrowd(plaza.backdrop, renderProfile.backdrop);
   qualityStaticCrowd(midCrowd, renderProfile.mid);
@@ -125,6 +134,31 @@ export function applyRenderQuality({ transition = false } = {}) {
   glc.dataset.quality = renderProfile.name;
 }
 applyRenderQuality();
+// Only the figure on show's players exist for the frame: the others leave the scene (no matrix walk, no pose) and the
+// crowd's index (no vertex work). Their bones stay in its skeleton, whose slots must not move.
+export const crowdFullIndex = crowdMesh.geometry.index;
+let crowdIndexes = null;
+function showBandLineup() {
+  for (const p of plaza.band) if (p.lineup === bandLineup) plaza.group.add(p.g); else p.g.removeFromParent();
+  crowdMesh.geometry.setIndex(crowdIndexes.get(bandLineup));
+}
+// (representation.js: it draws some of these people itself, so it changes what the crowd's mesh has left)
+export function setCrowdIndexBase(index) {
+  crowdMesh.geometry.setIndex(index);
+  crowdIndexes = lineupIndexes(crowdMesh, plaza.band);
+  crowdMesh.geometry.setIndex(crowdIndexes.get(bandLineup));
+}
+setCrowdIndexBase(crowdFullIndex);
+showBandLineup();
+// The figure on show's players take the band's place at once: the indexes are ready, so no rebuild and no hitch.
+// Called every frame, it acts on a change.
+export function setBandLineup(lineup) {
+  if (lineup === bandLineup) return;
+  bandLineup = lineup; bandEpoch++;
+  placeBand(plaza.band, renderProfile.band, BAND_AZ, lineup);
+  showBandLineup();
+  refreshBandSpots();
+}
 // The mid band: the backdrop's instanced figures (no bones, no CPU a frame, its material: no new shader program, one
 // more draw call) filling the open ground beyond the moving ring on the far side, what every play
 // shot looks across. r0..r1: beyond the ring (the moving crowd stops at `edge` there, animCrowd) and short of the

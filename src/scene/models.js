@@ -3,6 +3,7 @@
 export { rnd, pick } from './models/voxel.js';
 export { buildMulassa } from '../figures/mulassa/mulassa.js';
 export { HATS, buildPerson, skinCrowd } from './models/people.js';
-export { BAND, buildMusician, placeBand, poseBand } from './models/band.js';
+export { lineupIndexes } from './models/people.js';
+export { BAND, COBLA, BAND_LOOKS, buildMusician, placeBand, poseBand } from './models/band.js';
 export { buildFlag, buildPlaza, PAVING } from './models/plaza.js';
 export { buildBackdrop } from './models/backdrop.js';

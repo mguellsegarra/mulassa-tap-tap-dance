@@ -3,7 +3,8 @@ import { buildPerson } from '../models/people.js';
 import { buildMusician } from '../models/band.js';
 import { buildHelper } from '../models/colla.js';
 import { MULA_HELPER_LOOKS } from '../../figures/mulassa/mula-suit.js';
-import { buildFigure, disposeFigure } from './models.js';
+import { catalogueSpec, buildFigure, disposeFigure } from './models.js';
+import { SKIN } from './kit.js';
 
 function prototypeBody(spec, headOnly = false) {
   const figure = buildFigure(spec), mesh = figure.body;
@@ -21,14 +22,17 @@ function prototypeBody(spec, headOnly = false) {
   disposeFigure(figure);
   return mesh;
 }
-export function reviewMusician(spec, kind) {
-  const shirt = '#f5f5ef', pants = '#1f2230';
+// Who plays each line-up's first places. The cobla's flabiol is a fair woman with long light-brown blonde hair: a look of her own,
+// so the public and the banda keep p01's.
+export const MUSICIANS = { banda: ['p01', 'p03', 'p07'].map(catalogueSpec), cobla: [{ ...catalogueSpec('p01'), skin: SKIN[4], hair: { style: 'llarg', colour: '#a67c45' } }, catalogueSpec('p03')] };
+export function reviewMusician(spec, kind, look) {
+  const { shirt, pants } = look;
   const p = buildPerson({ shirt, pants, skin: spec.skin, hair: spec.hair.colour });
   p.torso.remove(p.body); p.body.geometry.dispose();
   p.body = prototypeBody({ ...spec, age: 'adult', height: 1, build: 'mitja', mobility: null,
     top: { kind: 'camisa', colour: shirt }, bottom: { kind: 'pantalons', colour: pants } });
   p.torso.add(p.body);
-  return Object.assign(buildMusician(kind, p), { meta: spec.meta, kind });
+  return Object.assign(buildMusician(kind, look, p), { meta: spec.meta, kind });
 }
 export function reviewAttendant(spec, index) {
   const p = buildHelper({ ...MULA_HELPER_LOOKS[index], skin: spec.skin }, index + 1);

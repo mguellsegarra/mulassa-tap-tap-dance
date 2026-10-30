@@ -13,7 +13,9 @@ The owner's recurring question is "does this look finished to you?". Before repo
 
 1. Look at the result yourself, in motion, at every size it affects, and fix what you see. Do not hand over something you would reject.
 2. Compare with the version before the change (same viewport, figure, time, quality) to catch regressions, not only to show the fix.
-3. Say exactly what was checked by eye, by numbers and by tests, and what was not (no physical phone, no listening).
+3. Say exactly what was checked by eye and by numbers, and what was not (no physical phone, no listening, tests not run yet).
+
+Do not run tests or `npm run check` before showing the result: they come after the owner's OK (AGENTS.md, Process).
 
 Numeric checks and green tests do not prove a layout, a model or a motion.
 
@@ -55,7 +57,9 @@ The owner sends screen recordings (CleanShot `.mp4`, `.gif`, phone `.MOV`, usual
 
 ## Handing over a link
 
-Before giving a URL, check that the server is running from the intended worktree and serves the change (a distinctive value in the loaded page, not only HTTP 200). For the phone give the LAN address (`http://<lan-ip>:<port>/?mute…`), not `localhost`, as a clickable link, and leave that server running. If the change is in another worktree or port, say which.
+Give the links first: once the edit is in and before your own captures, write both URLs in the chat, then carry on without waiting. The owner may try it on their own while you check. Later reports repeat them.
+
+Before giving a URL, check that the server is running from the intended worktree and serves the change (a distinctive value in the loaded page, not only HTTP 200). Give `http://localhost:<port>/?mute…` for the computer and the LAN address (`http://<lan-ip>:<port>/?mute…`) for the phone, both as clickable links with the state parameters that reach the change, and leave that server running. If the change is in another worktree or port, say which.
 
 ## UI states and transitions
 
@@ -83,7 +87,7 @@ matrix that covers the change; do not exercise the entire application for a loca
   A separate worktree can still share dependency caches. Inspect the relevant topology
   before assuming isolation; do not reconfigure another running session.
 
-Use a regression test at the owning boundary when it catches a credible failure; confirm
+After the owner's OK, use a regression test at the owning boundary when it catches a credible failure; confirm
 the old behavior fails when practical. Report which interactions and layouts were actually
 checked, remaining defects and any physical-device gap. Follow the host's browser/resource
 policy; this skill does not itself authorize starting services or accessing private accounts.

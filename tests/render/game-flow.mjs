@@ -55,7 +55,8 @@ import { dance, flushLoader, nodes, keyHandlers, windowHandlers, drawnText, docu
     return JSON.stringify({ quiet, burst, groove, streak, party, fin, calm: mood.calmK, fest: mood.festK });
   })()`));
   const { quiet, burst, groove, streak, party, fin } = r, mm = v => `${(v * 1000).toFixed(1)} mm`;
-  assert(quiet.pos < 2e-3 && quiet.y < 1e-3 && quiet.top < 5e-3 && quiet.rot < 8e-3,
+  // (rot: the crowd's random draws decide it: 0.001-0.009 across eight seeds)
+  assert(quiet.pos < 2e-3 && quiet.y < 1e-3 && quiet.top < 5e-3 && quiet.rot < 0.01,
     `no hits: the plaça stands near-still (per frame ${mm(quiet.pos)} across, ${mm(quiet.y)} up, ${quiet.rot.toFixed(4)} rad; highest ${mm(quiet.top)})`);
   assert(burst.pos < 9e-3 && burst.y < 0.022 && burst.rot < 0.09, // (the ripple: a hit is seen hopping round the ring, still eased)
     `a burst of hits (GUAPA and a miss among them) never jolts anyone: per frame ${mm(burst.pos)} across, ${mm(burst.y)} up, ${burst.rot.toFixed(3)} rad`);

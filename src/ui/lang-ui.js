@@ -79,12 +79,13 @@ export function setupLang({ store, state, location = globalThis.location, doc = 
   const code = suggestion({ languages: navigator.languages, saved: store.get(LANG_KEY), url: new URLSearchParams(location.search).get('lang'), seen: store.get(SUGGESTED_KEY), released });
   if (code && state() === 'splash') {
     const words = SUGGEST[code], tip = mk('div', { id: 'lang-tip', lang: code, role: 'status' });
-    const done = () => { store.set(SUGGESTED_KEY, '1'); clearInterval(gone); tip.remove(); };
+    const done = () => { store.set(SUGGESTED_KEY, '1'); cancelAnimationFrame(gone); tip.remove(); };
     const yes = mk('button', { type: 'button', className: 'btn btn-primary', textContent: words.yes }), no = mk('button', { type: 'button', className: 'btn btn-secondary', textContent: words.no });
     yes.addEventListener('click', () => { done(); switchTo(code); }); no.addEventListener('click', done);
     const actions = mk('div', { className: 'row' });
     actions.append(yes, no); tip.append(mk('p', { textContent: words.text }), actions); doc.body.appendChild(tip);
-    const gone = setInterval(() => { if (state() !== 'splash') done(); }, 500); // the splash ended unanswered: it was shown once, that is enough
+    // The splash ended unanswered: it was shown once, that is enough. Gone by the next frame, or it sits over the selector's dock and takes the tap.
+    let gone = requestAnimationFrame(function watch() { if (state() !== 'splash') done(); else gone = requestAnimationFrame(watch); });
   }
   return {};
 }

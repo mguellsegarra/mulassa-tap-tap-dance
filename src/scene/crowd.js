@@ -149,7 +149,6 @@ export function animCrowd(dt, beat, t, live = 1) {
   for (const p of activeCrowd) pose(p, dt, beat, live);
   settleDrawnCrowd(activeCrowd, bandSpots, 2.5 * dt, backgroundContacts); // (as fast as a brisk walk; the shrunk-away are skipped)
   poseScenery(beat, live);
-  for (const p of plaza.band) crowdPose(p); // the figures' marks (the Drac's soot): the band and the balconies too
-  for (const p of plaza.balcony) crowdPose(p);
+  for (const p of plaza.balcony) crowdPose(p); // the figures' marks (the Drac's soot): the balconies too
   animateRenderQuality(dt); // apply quality presence after the gameplay presence, without changing its state
 }

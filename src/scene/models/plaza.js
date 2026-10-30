@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import { pick, rnd, Vox, MAT } from './voxel.js';
 import { buildPerson, HATS } from './people.js';
-import { BAND, buildMusician } from './band.js';
+import { BAND, COBLA, BAND_LOOKS, buildMusician } from './band.js';
 import { buildBackdrop } from './backdrop.js';
 
 // ---------------------------------------------------------------- Plaça
@@ -244,8 +244,9 @@ export function buildPlaza({ backdrop = 0, balconies = 0, waving = false, sun = 
   buildings.castShadow = false; // static and mostly outside the played ground: it only receives (shadow casters are an allow-list)
   group.add(freezeStatic(buildings));
 
-  // the banda de música that plays the ball (buildMusician), all of them: main.js places them and thins them out (placeBand)
-  const band = BAND.map(([kind, row]) => Object.assign(buildMusician(kind), { kind, row }));
+  // every line-up that can play the ball (buildMusician), all of them: quality.js places the figure's and thins it out (placeBand)
+  const band = [['banda', BAND], ['cobla', COBLA]].flatMap(([lineup, players]) =>
+    players.map(([kind, row]) => Object.assign(buildMusician(kind, BAND_LOOKS[lineup]), { kind, row, lineup })));
   band.forEach(p => group.add(p.g));
   const back = backdrop ? buildBackdrop(backdrop, E - 3, props) : null;
   if (back) group.add(back.mesh);

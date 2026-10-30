@@ -28,7 +28,7 @@ export function checkAudioBack() {
 // Also on the menu without leaving the page (pause-actions.js watchAudio): AirPods that drop out and back left the loop's
 // clock frozen while `running`, and taps only unhushed it until a run's own stall pause suspended and resumed it.
 export function audioStalled(kind = 'menu-audio-stalled') {
-  if (!audioWaiting) errors.report(kind, { state: chip.ctx.state });
+  if (!audioWaiting) errors.report(kind, { audioState: chip.ctx.state }); // not `state`: the report's context tags use it for the screen
   if (chip.running) chip.suspend(); // frozen while `running`: wake() only resumes a stopped context, so the tap can restart it
   audioWaiting = true; // input.js wakes on taps too, but only with focus, which the Safari-tab case gets after the tap
 }

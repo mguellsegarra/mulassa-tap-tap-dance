@@ -2,12 +2,12 @@
 import * as THREE from 'three';
 import { PHOTO, photoBody } from '../game/photo-control.js';
 import { plaza } from './stage.js';
-import { activeCrowd, bandSpots, midCrowd } from './quality.js';
+import { activeCrowd, crowdStamp, midCrowd } from './quality.js';
 import { photoClearance } from './photo-collision.js';
 import { crowdAnchored } from './crowd-effects.js';
 import { traitsOf } from '../figures/index.js';
 export const photoExtras = [];
-let photoBandSource = null;
+let photoExtrasStamp = -1;
 const photoMatrix = new THREE.Matrix4(), photoAway = new THREE.Vector2();
 const pedestrianStep = new THREE.Vector2();
 // Try a shallow detour before a full sideways step. The same bounded slide serves the live and instanced crowd.
@@ -54,8 +54,8 @@ export function photoEscape(x, z, out) {
   return out;
 }
 function preparePhotoExtras() {
-  if (photoBandSource === bandSpots) return;
-  photoBandSource = bandSpots; photoExtras.length=0;
+  if (photoExtrasStamp === crowdStamp) return; // (a rebuild takes where they stand as home: only when the crowd changes)
+  photoExtrasStamp = crowdStamp; photoExtras.length=0;
   for (const group of [plaza.backdrop,midCrowd]) {
     if(!group) continue;
     for(let i=0;i<group.mesh.count;i++) {
@@ -63,12 +63,6 @@ function preparePhotoExtras() {
       const matrix=photoMatrix.clone(), x=matrix.elements[12], z=matrix.elements[14];
       photoExtras.push({pos:new THREE.Vector2(x,z), homeX:x,homeZ:z,rad:0.21,fixed:true,mesh:group.mesh,index:i,matrix,vx:0,vz:0});
     }
-  }
-  let i=0;
-  for(const b of plaza.band) if(b.g.scale.x) {
-    const p=bandSpots[i++];
-    photoExtras.push({pos:p.pos,homeX:p.pos.x,homeZ:p.pos.y,rad:p.rad,fixed:true,band:b,
-      offsetX:b.g.position.x-p.pos.x,offsetZ:b.g.position.z-p.pos.y,vx:0,vz:0});
   }
 }
 function extraClear(p,x,z) {
@@ -83,7 +77,7 @@ export function updatePhotoExtras(dt) {
   if(!photoExtras.length) return;
   const h=Math.min(dt,0.05), ease=1-Math.exp(-h/0.18);
   for(const p of photoExtras) {
-    if(crowdAnchored(p.band??p)){p.vx=p.vz=0;continue;} // charred stiff (drac-soot.js): rooted to the spot
+    if(crowdAnchored(p)){p.vx=p.vz=0;continue;} // charred stiff (drac-soot.js): rooted to the spot
     let tx=0,tz=0;
     if(PHOTO.on) {
       photoEscape(p.pos.x,p.pos.y,photoAway);
@@ -99,10 +93,7 @@ export function updatePhotoExtras(dt) {
     // home again, straight: a short walk back in the background. Blocked by a neighbour still out of place or the plaza
     // edge, a colliding return never arrived and retried against every spectator each frame (~11 ms) all session.
     else p.pos.set(p.pos.x+p.vx*h,p.pos.y+p.vz*h);
-    if(p.band){p.band.g.position.x=p.pos.x+p.offsetX;p.band.g.position.z=p.pos.y+p.offsetZ;}
-    else {
-      p.matrix.elements[12]=p.pos.x;p.matrix.elements[14]=p.pos.y;
-      p.mesh.setMatrixAt(p.index,p.matrix);p.mesh.instanceMatrix.needsUpdate=true;
-    }
+    p.matrix.elements[12]=p.pos.x;p.matrix.elements[14]=p.pos.y;
+    p.mesh.setMatrixAt(p.index,p.matrix);p.mesh.instanceMatrix.needsUpdate=true;
   }
 }

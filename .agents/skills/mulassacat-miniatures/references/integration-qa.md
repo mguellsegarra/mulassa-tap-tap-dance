@@ -41,7 +41,7 @@ At each size:
 4. Verify selected ring, keyboard focus, changing to Mulassa, opening difficulty, Escape back, and a pending card after unfolding. Names/logos/state should be unchanged.
 5. Inspect screenshots, including 100% scale. A zoomed SVG may look fine while the in-card heads merge. Check horizontal crop, clipped teeth/ears/tail/soles and full text.
 6. Confirm no animations run within Drac's SVG and no console exceptions or failed artwork requests. Reduced motion requires no special treatment for an already static image.
-7. Run `npm run check` once when no other full battery is active. Focused checks may precede it; do not duplicate the full suite without a new failure/change. Compare music hashes before/after. Inspect final diffs against the starting snapshot to separate your edits from concurrent ones.
+7. Run `npm run check` once when no other full battery is active. Like any focused check it comes after the owner's OK (AGENTS.md, Process); do not duplicate the full suite without a new failure/change. Compare music hashes before/after. Inspect final diffs against the starting snapshot to separate your edits from concurrent ones.
 
 ## Evidence and acceptance
 

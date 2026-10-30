@@ -107,6 +107,21 @@ export function skinCrowd(people, mat = SKIN_MAT) {
   mesh.frustumCulled = false; // people walk about: bounds from the bones would be stale (and they ring the camera anyway)
   return mesh;
 }
+// One index per line-up (and null: nobody plays) of what the mesh draws now, without the other line-ups' people: a
+// vertex no index names costs the GPU nothing, so a figure pays only for its own musicians. Same mesh, same draw call.
+export function lineupIndexes(mesh, people) {
+  const owner = new Map(), { index, attributes: { skinIndex } } = mesh.geometry;
+  for (const p of people) for (const bone of p.bones ?? [p.torso, ...p.legs, ...p.arms]) owner.set(mesh.skeleton.bones.indexOf(bone), p.lineup);
+  const variant = lineup => {
+    const kept = [];
+    for (let i = 0; i < index.count; i += 3) {
+      const a = index.getX(i), who = owner.get(skinIndex.getX(a));
+      if (who === undefined || who === lineup) kept.push(a, index.getX(i + 1), index.getX(i + 2));
+    }
+    return new THREE.BufferAttribute(new index.array.constructor(kept), 1);
+  };
+  return new Map([...new Set(people.map(p => p.lineup)), null].map(lineup => [lineup, variant(lineup)]));
+}
 // ---- The backdrop: a dense band of simple figures (legs, torso, head, eyes: 56 vertices) standing along the façades,
 // out beyond the play camera's square (it keeps inside inner - 1.5), so never between it and her. ONE instanced
 // mesh; shirt/skin/hair per instance, and the hop to the beat, sway and wave run in the vertex shader from a few

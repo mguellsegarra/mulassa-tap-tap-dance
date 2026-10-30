@@ -4,20 +4,18 @@ import { Q } from '../core/flags.js';
 import { scene, renderer, camera, plaza, renderProfile, setQualityLevel } from './stage.js';
 import { mulaColla } from '../figures/mulassa/mula-objects.js';
 import { crowd, crowdMesh, RING } from './crowd-build.js';
-import { applyRenderQuality } from './quality.js';
+import { applyRenderQuality, bandLineup, crowdFullIndex, setCrowdIndexBase } from './quality.js';
 import { clock, G, drawT } from '../game/state.js';
 import { mood } from './crowd-mood.js';
-import { skinCrowd } from './models.js';
-import { CATALOGUE, buildFigure } from './representation/models.js';
+import { skinCrowd, lineupIndexes, BAND_LOOKS } from './models.js';
+import { CATALOGUE, catalogueSpec, buildFigure } from './representation/models.js';
 import { MAT, EYE_COLOURS } from './representation/kit.js';
 import { crowdMotion, animatePerson } from './representation/live-pose.js';
-import { reviewMusician, reviewAttendant, linkRolePose, followRolePose } from './representation/role-models.js';
+import { MUSICIANS, reviewMusician, reviewAttendant, linkRolePose, followRolePose } from './representation/role-models.js';
 import { buildPublicSpecs, PUBLIC_GENDER_WEIGHTS, PUBLIC_AGE_WEIGHTS } from './representation/population.js';
 import { sootLink, sootHold, sootHoldApply } from '../figures/drac/drac-soot.js';
 
 const PUBLIC_IDS = ['p04', 'p05', 'p08', 'p02', 'p09', 'p12', 'p06', 'p10'];
-const BAND_IDS = ['p01', 'p03', 'p07'];
-const byId = id => CATALOGUE.find(p => p.id === id);
 // Remove only the triangles owned by a replaced person's bones, preserving all the other geometry and rigs.
 function omitPeople(mesh, people) {
   const original = mesh.geometry.index, index = [], ids = new Set();
@@ -57,7 +55,7 @@ export function setupRepresentation() {
   if (!Number.isInteger(seed) || seed < 0 || seed > 0xffffffff) throw new RangeError('Invalid representationSeed');
   const eligible = crowd.filter(p => population || (p.row === 0 && p.slot % 2 === 0 && !p.rider))
     .sort((a, b) => Math.abs(Math.atan2(Math.sin(a.ang), Math.cos(a.ang))) - Math.abs(Math.atan2(Math.sin(b.ang), Math.cos(b.ang))));
-  const specs = population ? buildPublicSpecs(eligible, CATALOGUE, seed) : PUBLIC_IDS.slice(0, eligible.length).map(byId);
+  const specs = population ? buildPublicSpecs(eligible, CATALOGUE, seed) : PUBLIC_IDS.slice(0, eligible.length).map(catalogueSpec);
   specs.forEach((spec, i) => {
     const source = eligible[i], id = spec.id, p = buildFigure(spec), oldRad = source.rad, oldKid = source.kid, oldComfort = source.comfort;
     source.rad = Math.max(p.rad, 0.46) * p.g.scale.x;
@@ -68,31 +66,39 @@ export function setupRepresentation() {
     entries.push({ role: 'public', id, spec, source, p, size: p.g.scale.x, oldSize: source.scale, oldRad, oldKid, oldComfort, oldAvoidKnock,
       motion: crowdMotion(p, source) });
   });
-  BAND_IDS.forEach((id, i) => {
-    const source = plaza.band[i], p = reviewMusician(byId(id), source.kind);
-    entries.push({ role: 'music', id, source, p, size: 1, oldSize: 1, poseLinks: linkRolePose(p, source) });
+  for (const lineup of Object.keys(BAND_LOOKS)) plaza.band.filter(m => m.lineup === lineup).slice(0, MUSICIANS[lineup].length).forEach((source, i) => {
+    const spec = MUSICIANS[lineup][i], p = reviewMusician(spec, source.kind, BAND_LOOKS[lineup]);
+    p.lineup = lineup;
+    entries.push({ role: 'music', id: lineup === 'banda' ? spec.id : `${lineup}-${spec.id}`, spec, source, p, size: 1, oldSize: 1, poseLinks: linkRolePose(p, source) });
   });
   if (mulaColla) ['p11', 'p03'].forEach((id, i) => {
-    const source = mulaColla.crew[i], p = reviewAttendant(byId(id), i);
+    const source = mulaColla.crew[i], p = reviewAttendant(catalogueSpec(id), i);
     entries.push({ role: 'acompanyant', id, source, p, size: 1, oldSize: 1, poseLinks: linkRolePose(p, source) });
   });
+  crowdMesh.geometry.setIndex(crowdFullIndex);
   restore.push(omitPeople(crowdMesh, entries.filter(e => e.role !== 'acompanyant').map(e => e.source)));
+  setCrowdIndexBase(crowdMesh.geometry.index);
   restore.push(quietLimbs(entries.filter(e => e.role === 'public').map(e => e.source)));
   if (mulaColla) {
     const mesh = mulaColla.helpers.children.find(o => o.isSkinnedMesh);
     restore.push(omitPeople(mesh, entries.filter(e => e.role === 'acompanyant').map(e => e.source)));
   }
-  for (const e of entries) e.source.g.parent.add(e.p.g);
+  for (const e of entries) (e.source.g.parent ?? plaza.group).add(e.p.g);
   const mesh = skinCrowd(entries.map(e => e.p), MAT);
   mesh.material = sootLink(mesh, entries.map(e => [e.p, e.source]), EYE_COLOURS); // free mode's fire chars them with the person they draw
   scene.add(mesh);
-  let enabled = true, lastTime = clock;
+  const musicians = entries.filter(e => e.role === 'music').map(e => e.p), musicianIndexes = lineupIndexes(mesh, musicians);
+  restore.push(() => setCrowdIndexBase(crowdMesh.geometry.index)); // (after omitPeople's own restore, above)
+  let enabled = true, lastTime = clock, drawnLineup;
   function update() {
     if (!enabled) return;
     const t = clock;
     const dt = Math.max(0, t - lastTime); lastTime = t;
+    if (drawnLineup !== bandLineup) mesh.geometry.setIndex(musicianIndexes.get(drawnLineup = bandLineup));
     for (const e of entries) {
       const { source: s, p } = e;
+      if (e.role === 'music' && p.lineup !== bandLineup) { p.g.scale.setScalar(0); p.g.removeFromParent(); continue; } // another figure's: nothing to follow
+      if (!p.g.parent) plaza.group.add(p.g);
       const scale = shown(s.g) ? s.g.scale.x / e.oldSize * e.size : 0, held = sootHold(p, s);
       p.g.scale.setScalar(scale || e.size); // contact solvers must never divide by a hidden figure's zero scale
       if (e.role === 'public') {
@@ -134,7 +140,7 @@ export function setupRepresentation() {
           return { id: e.id, role: e.role, active: e.p.g.scale.x > 0, row: e.source.row ?? null, slot: e.source.slot ?? null,
             inFrame: Math.abs(pt.x) < 1 && Math.abs(pt.y) < 1 && pt.z >= -1 && pt.z <= 1,
             staticOccluder: hit && hit.distance < distance - 0.3 ? hit.object.name || hit.object.type : null,
-            x: e.p.g.position.x, z: e.p.g.position.z, meta: e.p.meta, skin: (e.spec ?? byId(e.id)).skin };
+            x: e.p.g.position.x, z: e.p.g.position.z, meta: e.p.meta, skin: (e.spec ?? catalogueSpec(e.id)).skin };
         }) };
     },
     dispose() {

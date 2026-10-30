@@ -202,6 +202,7 @@ function hash(s) { let h = 2166136261; for (const ch of String(s)) h = Math.imul
 // in the game). Each look is a free choice per dimension; validate.mjs checks no look belongs to one declared group.
 // gender: 'dona' | 'home' | 'no binaria' | 'no declarat'; age as AGES.
 const S = SKIN, H = HAIR;
+export const catalogueSpec = id => CATALOGUE.find(p => p.id === id);
 export const CATALOGUE = [
   { id: 'p01', meta: { gender: 'dona' }, age: 'adult', skin: S[3], hair: { style: 'afro', colour: H[1] }, top: { kind: 'samarreta', colour: '#f2c230' }, bottom: { kind: 'pantalons', colour: '#2a2a2a' } },
   { id: 'p02', meta: { gender: 'dona' }, age: 'gran', build: 'ample', height: 0.97, skin: S[0], hair: { style: 'curt', colour: H[2] }, glasses: '#3a2a20', top: { kind: 'jaqueta', colour: '#8e44ad', inner: '#eeeeee' }, bottom: { kind: 'faldilla', colour: '#33456e', legs: '#5b4a42' } },

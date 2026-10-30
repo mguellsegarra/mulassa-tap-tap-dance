@@ -244,7 +244,7 @@ export function buildPlaza({ backdrop = 0, balconies = 0, waving = false, sun = 
   buildings.castShadow = false; // static and mostly outside the played ground: it only receives (shadow casters are an allow-list)
   group.add(freezeStatic(buildings));
 
-  // the banda de música that plays the ball (buildMusician), all of them: main.js places them and thins them out (placeBand)
+  // every line-up that can play the ball (buildMusician), all of them: quality.js places the figure's and thins it out (placeBand)
   const band = [['banda', BAND], ['cobla', COBLA]].flatMap(([lineup, players]) =>
     players.map(([kind, row]) => Object.assign(buildMusician(kind, BAND_LOOKS[lineup]), { kind, row, lineup })));
   band.forEach(p => group.add(p.g));

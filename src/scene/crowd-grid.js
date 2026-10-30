@@ -84,7 +84,7 @@ export function fillCells() {
   for (const p of activeCrowd) { p.cell = crowdCell(p); cellPush(p.cell, p); }
   for (const b of bandSpots) cellPush(crowdCell(b), b); // the band: fixed, never in anyone's way
   for (const f of FIGURE_SCENES) if (f.colla()?.helpers.visible) for (const b of f.collaSpots) cellPush(crowdCell(b), b); // the shown figure's colla
-  for (const p of photoExtras) if (!p.band) cellPush(crowdCell(p), p);
+  for (const p of photoExtras) cellPush(crowdCell(p), p);
   const backgroundContacts = backdropContacts([plaza.backdrop, midCrowd]);
   for (const b of backgroundContacts) cellPush(crowdCell(b), b);
   return backgroundContacts;

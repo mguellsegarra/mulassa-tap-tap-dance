@@ -8,7 +8,7 @@ import { applyRenderQuality } from './quality.js';
 import { clock, G, drawT } from '../game/state.js';
 import { mood } from './crowd-mood.js';
 import { skinCrowd, BAND_LOOKS } from './models.js';
-import { CATALOGUE, buildFigure } from './representation/models.js';
+import { CATALOGUE, catalogueSpec, buildFigure } from './representation/models.js';
 import { MAT, EYE_COLOURS } from './representation/kit.js';
 import { crowdMotion, animatePerson } from './representation/live-pose.js';
 import { MUSICIANS, reviewMusician, reviewAttendant, linkRolePose, followRolePose } from './representation/role-models.js';
@@ -16,7 +16,6 @@ import { buildPublicSpecs, PUBLIC_GENDER_WEIGHTS, PUBLIC_AGE_WEIGHTS } from './r
 import { sootLink, sootHold, sootHoldApply } from '../figures/drac/drac-soot.js';
 
 const PUBLIC_IDS = ['p04', 'p05', 'p08', 'p02', 'p09', 'p12', 'p06', 'p10'];
-const byId = id => CATALOGUE.find(p => p.id === id);
 // Remove only the triangles owned by a replaced person's bones, preserving all the other geometry and rigs.
 function omitPeople(mesh, people) {
   const original = mesh.geometry.index, index = [], ids = new Set();
@@ -56,7 +55,7 @@ export function setupRepresentation() {
   if (!Number.isInteger(seed) || seed < 0 || seed > 0xffffffff) throw new RangeError('Invalid representationSeed');
   const eligible = crowd.filter(p => population || (p.row === 0 && p.slot % 2 === 0 && !p.rider))
     .sort((a, b) => Math.abs(Math.atan2(Math.sin(a.ang), Math.cos(a.ang))) - Math.abs(Math.atan2(Math.sin(b.ang), Math.cos(b.ang))));
-  const specs = population ? buildPublicSpecs(eligible, CATALOGUE, seed) : PUBLIC_IDS.slice(0, eligible.length).map(byId);
+  const specs = population ? buildPublicSpecs(eligible, CATALOGUE, seed) : PUBLIC_IDS.slice(0, eligible.length).map(catalogueSpec);
   specs.forEach((spec, i) => {
     const source = eligible[i], id = spec.id, p = buildFigure(spec), oldRad = source.rad, oldKid = source.kid, oldComfort = source.comfort;
     source.rad = Math.max(p.rad, 0.46) * p.g.scale.x;
@@ -72,7 +71,7 @@ export function setupRepresentation() {
     entries.push({ role: 'music', id: lineup === 'banda' ? spec.id : `${lineup}-${spec.id}`, spec, source, p, size: 1, oldSize: 1, poseLinks: linkRolePose(p, source) });
   });
   if (mulaColla) ['p11', 'p03'].forEach((id, i) => {
-    const source = mulaColla.crew[i], p = reviewAttendant(byId(id), i);
+    const source = mulaColla.crew[i], p = reviewAttendant(catalogueSpec(id), i);
     entries.push({ role: 'acompanyant', id, source, p, size: 1, oldSize: 1, poseLinks: linkRolePose(p, source) });
   });
   restore.push(omitPeople(crowdMesh, entries.filter(e => e.role !== 'acompanyant').map(e => e.source)));
@@ -133,7 +132,7 @@ export function setupRepresentation() {
           return { id: e.id, role: e.role, active: e.p.g.scale.x > 0, row: e.source.row ?? null, slot: e.source.slot ?? null,
             inFrame: Math.abs(pt.x) < 1 && Math.abs(pt.y) < 1 && pt.z >= -1 && pt.z <= 1,
             staticOccluder: hit && hit.distance < distance - 0.3 ? hit.object.name || hit.object.type : null,
-            x: e.p.g.position.x, z: e.p.g.position.z, meta: e.p.meta, skin: (e.spec ?? byId(e.id)).skin };
+            x: e.p.g.position.x, z: e.p.g.position.z, meta: e.p.meta, skin: (e.spec ?? catalogueSpec(e.id)).skin };
         }) };
     },
     dispose() {

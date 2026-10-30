@@ -10,6 +10,7 @@ import { COLLAS } from '../figures/objects.js';
 export let midCrowd = null; // the mid band (built once the play camera's direction exists, below CAM_DIR)
 export let activeCrowd = [];
 export let bandSpots = [];
+export let crowdStamp = 0; // each change of who's in the crowd: photo-obstacles.js rebuilds its list (not a line-up's: its people aren't in it)
 let bandEpoch = 0; // each setBandLineup: a fade started before it no longer writes the band
 let bandLineup = 'banda'; // who plays: the figure on show's, null in free play (setBandLineup, stage-motion.js)
 // Only a live quality change animates. Startup installs its final profile under the cover.
@@ -44,12 +45,16 @@ function qualityShadows() {
     qualityShadowMap(target);
   }
 }
-function refreshQualityCrowd() {
-  activeCrowd = crowd.filter(p => p.g.visible);
+function refreshBandSpots() {
   bandSpots = plaza.band.filter(p => p.g.scale.x).map(({ g: { position: b } }) => {
     const r = Math.hypot(b.x, b.z);
     return { pos: new THREE.Vector2(b.x * (1 - 0.25 / r), b.z * (1 - 0.25 / r)), rad: RAD.band, fixed: true, band: true };
   });
+}
+function refreshQualityCrowd() {
+  activeCrowd = crowd.filter(p => p.g.visible);
+  refreshBandSpots();
+  crowdStamp++;
 }
 function qualityScaleTo(from, to, write) {
   if (qualityTransition && from !== to) {
@@ -135,7 +140,7 @@ export function setBandLineup(lineup) {
   if (lineup === bandLineup) return;
   bandLineup = lineup; bandEpoch++;
   placeBand(plaza.band, renderProfile.band, BAND_AZ, lineup);
-  refreshQualityCrowd();
+  refreshBandSpots();
 }
 // The mid band: the backdrop's instanced figures (no bones, no CPU a frame, its material: no new shader program, one
 // more draw call) filling the open ground beyond the moving ring on the far side, what every play

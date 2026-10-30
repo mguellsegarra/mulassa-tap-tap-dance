@@ -25,7 +25,7 @@ import { timeAtBeat } from '../../core/beat-grid.js';
 
 export const dracFx = createDracFx(scene, { smoke: renderProfile.smoke ?? 0, jets: renderProfile.jets ?? 0, wheels: renderProfile.wheels ?? 0, sound: figureSfx, calm: CALM, octaves: qualityLevel > 0 ? 2 : 1 });
 const isDracOn = () => selectedFigure.id === DRAC?.id;
-const FOLK = [activeCrowd, plaza.band, plaza.balcony, photoExtras]; // who the free mode's fire can char (drac-soot.js); [0] refreshed a frame (a quality step makes a new list)
+const FOLK = [activeCrowd, plaza.balcony, photoExtras]; // who the free mode's fire can char (drac-soot.js); [0] refreshed a frame (a quality step makes a new list)
 const IN = { on: false, cam: camera, fire: null, streak: false, flare: false, max: 0, jmax: 0, wmax: 0, held: false, manual: false, viewH: 800, x: 0, z: 0 };
 setConfettiDivert((sec, reason) => {
   if (!isDracOn()) return false;

@@ -491,22 +491,33 @@ import { THREE, models, framing, dance, nodes, keyHandlers, windowHandlers, docu
     for(let i=0;i<900;i++){clock+=1/60;animStage(1/60,clock/BEAT);animCrowd(1/60,clock/BEAT,0,1);}
     var extrasAway=photoExtras.filter(p=>Math.hypot(p.pos.x-p.homeX,p.pos.y-p.homeZ)>.01||Math.abs(p.vx)+Math.abs(p.vz)>=.001).length;`);
   assert.equal(run('extrasAway'), 0, 'after free play every instanced spectator is home and still (no per-frame collision search left running)');
+  // Back in free play before they're home (a line-up change on the way): the walk home keeps its home.
+  run(`var extraPushed=photoExtras[0], extraHome=extraPushed.homeX;
+    extraPushed.pos.x+=3;extraPushed.matrix.elements[12]=extraPushed.pos.x;extraPushed.mesh.setMatrixAt(extraPushed.index,extraPushed.matrix);
+    for(let i=0;i<30;i++){clock+=1/60;animStage(1/60,clock/BEAT);animCrowd(1/60,clock/BEAT,0,1);}
+    setView(true);takeFigure(selectedFigure.id);
+    for(let i=0;i<3;i++){clock+=1/60;animStage(1/60,clock/BEAT);animCrowd(1/60,clock/BEAT,0,1);}
+    var extraKept=photoExtras[0]===extraPushed&&extraPushed.homeX===extraHome;
+    setView(false);for(let i=0;i<900;i++){clock+=1/60;animStage(1/60,clock/BEAT);animCrowd(1/60,clock/BEAT,0,1);}`);
+  assert(run('extraKept'), 'coming back to free play does not move an instanced spectator\'s home');
+  assert.equal(run('Math.abs(extraPushed.pos.x-extraHome)<.01'), true, 'and it still walks back there');
   console.log('dense crowd passage and yielding floor spectators ok');
 }
 
 // A spectator pressed against a tree must slide away while either figure keeps asking to walk.
 {
   run(`var passageSavedCrowd=activeCrowd, passageSavedProps=plaza.props, passageSavedBand=bandSpots,
-    passageSavedExtras=photoExtras.slice(), passageSavedSource=photoBandSource,
-    passageBackdropCount=plaza.backdrop.mesh.count, passageMidCount=midCrowd.mesh.count;
+    passageSavedExtras=photoExtras.slice(), passageSavedStamp=photoExtrasStamp,
+    passageBackdropCount=plaza.backdrop.mesh.count, passageMidCount=midCrowd.mesh.count, passageMatrix=new THREE.Matrix4();
+    plaza.backdrop.mesh.getMatrixAt(0,passageMatrix);
     var trappedPerson=activeCrowd[0], trappedRadius=trappedPerson.rad, trappedSootT=trappedPerson.sootT, trappedSootW=trappedPerson.sootW;
-    activeCrowd=[trappedPerson];bandSpots=[];photoBandSource=bandSpots;photoExtras.length=0;
+    activeCrowd=[trappedPerson];bandSpots=[];photoExtrasStamp=crowdStamp;photoExtras.length=0;
     plaza.backdrop.mesh.count=midCrowd.mesh.count=0;plaza.props=[{x:15.2,z:-3,r:2.2,h:4,hit:2.2}];trappedPerson.rad=.52;`);
   for (const id of ['mulassa-valls', 'drac-valls']) for (const floor of [false, true]) for (const charred of [false, true]) {
     const scenario = `${id}, ${floor ? 'floor' : 'live'}, ${charred ? 'charred' : 'normal'}`;
     run(`G.state='select';setView(false);setFigureSong(MULASSA);setView(true);takeFigure('${id}');setPhotoControl(true, '${id}');
       activeCrowd=${floor ? '[]' : '[trappedPerson]'};photoExtras.length=0;
-      if(${floor})photoExtras.push({pos:trappedPerson.pos,rad:trappedPerson.rad,vx:0,vz:0,band:trappedPerson,offsetX:0,offsetZ:0});
+      if(${floor})photoExtras.push({pos:trappedPerson.pos,rad:trappedPerson.rad,vx:0,vz:0,mesh:plaza.backdrop.mesh,index:0,matrix:new THREE.Matrix4(),sootT:${charred ? 4 : 0},sootW:${charred ? 1 : 0}});
       PHOTO.ready=true;PHOTO.cameraYaw=Math.atan2(MID.fx,MID.fz)+Math.PI;
       Object.assign(photoBody(),{x:9.4,z:-1.52,yaw:Math.atan2(MID.fx,MID.fz),vx:0,vz:0});
       trappedPerson.pos.set(12.5273,-2.4943);trappedPerson.gx=12.5273;trappedPerson.gz=-2.4943;trappedPerson.vel.set(0,0);trappedPerson.g.position.set(12.5273,0,-2.4943);trappedPerson.sootT=${charred ? 4 : 0};trappedPerson.sootW=${charred ? 1 : 0};
@@ -515,7 +526,7 @@ import { THREE, models, framing, dance, nodes, keyHandlers, windowHandlers, docu
       for(let i=0;i<180;i++){var oldX=photoBody().x,oldZ=photoBody().z;clock+=1/60;
         animStage(1/60,clock/BEAT);animCrowd(1/60,clock/BEAT,0,1);
         trappedMoved=Math.max(trappedMoved,Math.hypot(trappedPerson.pos.x-12.5273,trappedPerson.pos.y+2.4943));
-        trappedMin=Math.min(trappedMin,photoClearance(photoBody().x,photoBody().z,photoBody().yaw,${floor ? 'trappedPerson.g.position.x' : 'trappedPerson.gx'},${floor ? 'trappedPerson.g.position.z' : 'trappedPerson.gz'},trappedPerson.rad,PHOTO.id==='drac-valls'));
+        trappedMin=Math.min(trappedMin,photoClearance(photoBody().x,photoBody().z,photoBody().yaw,${floor ? 'trappedPerson.pos.x' : 'trappedPerson.gx'},${floor ? 'trappedPerson.pos.y' : 'trappedPerson.gz'},trappedPerson.rad,PHOTO.id==='drac-valls'));
         trappedTreeMin=Math.min(trappedTreeMin,Math.hypot(trappedPerson.pos.x-15.2,trappedPerson.pos.y+3)-2.72);
         trappedMaxStep=Math.max(trappedMaxStep,Math.hypot(photoBody().x-oldX,photoBody().z-oldZ));}`);
     assert(run('photoBody().x-trappedStart>.4'), `${scenario}: held W advances after the spectator clears the tree (${run('photoBody().x-trappedStart')})`);
@@ -538,8 +549,8 @@ import { THREE, models, framing, dance, nodes, keyHandlers, windowHandlers, docu
   assert(run('trappedPerson.pos.distanceTo(crowdNeighbour.pos)>=1.08-1e-6'), 'the outside spectator makes the remaining room');
   run(`setPhotoControl(false);crowdNeighbour.rad=neighbourRadius;
     trappedPerson.rad=trappedRadius;trappedPerson.sootT=trappedSootT;trappedPerson.sootW=trappedSootW;activeCrowd=passageSavedCrowd;plaza.props=passageSavedProps;bandSpots=passageSavedBand;
-    photoBandSource=passageSavedSource;photoExtras.length=0;photoExtras.push(...passageSavedExtras);
-    plaza.backdrop.mesh.count=passageBackdropCount;midCrowd.mesh.count=passageMidCount;`);
+    photoExtrasStamp=passageSavedStamp;photoExtras.length=0;photoExtras.push(...passageSavedExtras);
+    plaza.backdrop.mesh.setMatrixAt(0,passageMatrix);plaza.backdrop.mesh.count=passageBackdropCount;midCrowd.mesh.count=passageMidCount;`);
   console.log('held WASD clears a spectator trapped against scenery for both figures');
 }
 

@@ -3,7 +3,7 @@ import { buildPerson } from '../models/people.js';
 import { buildMusician } from '../models/band.js';
 import { buildHelper } from '../models/colla.js';
 import { MULA_HELPER_LOOKS } from '../../figures/mulassa/mula-suit.js';
-import { CATALOGUE, buildFigure, disposeFigure } from './models.js';
+import { catalogueSpec, buildFigure, disposeFigure } from './models.js';
 import { SKIN } from './kit.js';
 
 function prototypeBody(spec, headOnly = false) {
@@ -24,8 +24,7 @@ function prototypeBody(spec, headOnly = false) {
 }
 // Who plays each line-up's first places. The cobla's flabiol is a fair woman with long light-brown blonde hair: a look of her own,
 // so the public and the banda keep p01's.
-const musicianSpec = id => CATALOGUE.find(p => p.id === id);
-export const MUSICIANS = { banda: ['p01', 'p03', 'p07'].map(musicianSpec), cobla: [{ ...musicianSpec('p01'), skin: SKIN[4], hair: { style: 'llarg', colour: '#a67c45' } }, musicianSpec('p03')] };
+export const MUSICIANS = { banda: ['p01', 'p03', 'p07'].map(catalogueSpec), cobla: [{ ...catalogueSpec('p01'), skin: SKIN[4], hair: { style: 'llarg', colour: '#a67c45' } }, catalogueSpec('p03')] };
 export function reviewMusician(spec, kind, look) {
   const { shirt, pants } = look;
   const p = buildPerson({ shirt, pants, skin: spec.skin, hair: spec.hair.colour });

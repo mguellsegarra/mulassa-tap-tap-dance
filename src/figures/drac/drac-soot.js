@@ -162,7 +162,7 @@ function sootGap(c, x, z, y0, y1) {
 }
 
 // Once a frame (drac-show.js, after the crowd is posed and the fire updated). fx: the Drac's fire (nozzles, soot puff);
-// folk: lists of people (skinned or instanced; the band's photoExtras twins are skipped: its people are in a list);
+// folk: lists of people (skinned or instanced);
 // on: free mode's Drac is out (anything else releases everyone); held: E is down.
 const SOOT_BOX = new Float32Array(4);
 export function sootFrame(dt, fx, folk, on, held) {
@@ -183,7 +183,6 @@ export function sootFrame(dt, fx, folk, on, held) {
       B[2] = Math.max(B[2], SOOT_CAP[c] + r, SOOT_CAP[c + 3] + r); B[3] = Math.max(B[3], SOOT_CAP[c + 2] + r, SOOT_CAP[c + 5] + r);
     }
     for (const people of folk) for (const p of people) {
-      if (p.band) continue;
       const w = sootWhere(p), x = w[0], z = w[2];
       if (!w[3] || x < B[0] || x > B[2] || z < B[1] || z > B[3]) continue; // hidden (scale 0) or nowhere near
       const al = (x - K[0]) * K[2] + (z - K[1]) * K[3], sd = Math.abs((x - K[0]) * K[3] - (z - K[1]) * K[2]);

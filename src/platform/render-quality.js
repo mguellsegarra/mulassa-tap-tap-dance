@@ -38,6 +38,9 @@ export const isSoftwareRenderer = ({ renderer = '', vendor = '', caveat = false 
 // The probe behind it, before the real renderer (whose antialias depends on the level): a throwaway WebGL 2 context,
 // no depth/stencil/MSAA, released at once (WEBGL_lose_context). Only a refused caveat context costs a second one.
 // Chrome/Safari report "WebKit WebGL" as RENDERER: only then the debug extension (Firefox warns it is deprecated).
+// Experiment, unproven: PowerVR BXM phones lose the game's own context a few seconds into loading. Chromium lists driver bugs
+// around Imagination's context switches, so these GPUs skip the deliberate loss and the probe's canvas goes with the GC.
+const IMAGINATION_GPU = /imagination|powervr/i;
 export function probeRenderer(makeCanvas = () => document.createElement('canvas')) {
   const out = { renderer: '', vendor: '', caveat: false, probe: 'none' };
   const open = caveat => { try { return makeCanvas().getContext('webgl2', { failIfMajorPerformanceCaveat: caveat, antialias: false,
@@ -51,6 +54,7 @@ export function probeRenderer(makeCanvas = () => document.createElement('canvas'
     out.renderer = String((x ? gl.getParameter(x.UNMASKED_RENDERER_WEBGL) : plain) ?? '');
     out.vendor = String((x ? gl.getParameter(x.UNMASKED_VENDOR_WEBGL) : gl.getParameter(gl.VENDOR)) ?? '');
   } catch { /* strings unavailable: the caveat alone decides */ }
+  if (IMAGINATION_GPU.test(out.renderer)) return out;
   try { gl.getExtension('WEBGL_lose_context')?.loseContext(); } catch { /* freed with the canvas anyway */ }
   return out;
 }

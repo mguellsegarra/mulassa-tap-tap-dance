@@ -83,7 +83,8 @@ function reportLoss() {
   const now = performance.now(), sinceLastS = lossN ? Math.round((now - lastLoss) / 1000) : undefined;
   lossN++; lastLoss = now;
   // The SDK's Dedupe drops a message identical to the one before it: a repeat needs its own text (same fingerprint, same issue)
-  errors.report('webgl-context-lost', { hidden: String(document.hidden), screen: G.state, uptimeS: Math.round(now / 1000), lossN, sinceLastS },
+  const song = G.state === 'play' ? { figure: G.figureId, songS: Math.round(songTime()) } : {};
+  errors.report('webgl-context-lost', { hidden: String(document.hidden), screen: G.state, bootPhase: window.__mulassaBootPhase, uptimeS: Math.round(now / 1000), lossN, sinceLastS, ...song },
     lossN > 1 ? `webgl-context-lost #${lossN}` : undefined);
 }
 glc.addEventListener('webglcontextlost', () => { reportLoss(); clearTimeout(restoreTimer); restoreTimer = setTimeout(restoreLate, NO_RESTORE_MS); });

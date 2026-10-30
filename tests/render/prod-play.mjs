@@ -31,6 +31,8 @@ try {
   await page.waitForFunction(() => document.getElementById('loader')?.hidden ?? true, null, { timeout: 120000 });
   await page.mouse.click(187, 400); // the splash's tap
   await page.waitForFunction(() => window.__dbg.G.state === 'select', null, { timeout: 30000 });
+  // an unanswered language tip must not outlive the splash: it covers the dock's button and takes its tap
+  assert(await page.evaluate(() => new Promise(done => requestAnimationFrame(() => requestAnimationFrame(() => done(!document.getElementById('lang-tip')))))), 'the language tip is gone with the splash');
   const selected = () => page.evaluate(() => document.querySelector('.sel-card[aria-selected="true"]')?.dataset.id);
   const step = async dir => { // (force: the buttons pulse)
     const was = await selected(); await page.click(`#select-${dir}`, { force: true });

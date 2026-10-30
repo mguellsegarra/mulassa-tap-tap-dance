@@ -88,7 +88,7 @@ export class Chip {
   resume() {
     this.session(); // back from a hidden page's 'auto'
     this.unhush();
-    const failed = e => { errors.report('audio-resume-failed', audioFailureTags(e)); return false; };
+    const failed = e => { errors.report('audio-resume-failed', { ...audioFailureTags(e), audioState: this.ctx.state }); return false; };
     try { return Promise.resolve(this.ctx.resume?.()).then(() => this.running, failed); } catch (e) { return Promise.resolve(failed(e)); }
   } // a rejected wake stays paused; the next real gesture can resume the same transport
 

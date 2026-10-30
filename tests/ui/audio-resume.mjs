@@ -12,7 +12,7 @@ const chip = { menuMusic: true, suspend() { suspends++; chip.ctx.state = 'suspen
   wake() { if (!focus) return; wakes++; if (chip.ctx.state !== 'running') chip.ctx.state = 'running'; }, ctx: { state: 'suspended', currentTime: 5 } };
 Object.defineProperty(chip, 'running', { get: () => chip.ctx.state === 'running' });
 const ctx = { G: { state: 'select', activityEpoch: 0 }, chip, setTimeout: (f, ms) => { assert.equal(ms, 700); later.push(f); },
-  errors: { report: (kind, tags) => reports.push([kind, tags.state]) }, document: { hidden: false },
+  errors: { report: (kind, tags) => reports.push([kind, tags.audioState]) }, document: { hidden: false },
   addEventListener: (ev, f, o) => { assert.equal(o.capture, true); on[ev] = f; } };
 vm.runInNewContext(src + '\nthis.check = checkAudioBack; this.stalled = audioStalled;', ctx);
 assert.deepEqual(Object.keys(on), ['touchend', 'click', 'keydown'], 'taps and keys are heard from the import on, ahead of the sheets\' handlers');

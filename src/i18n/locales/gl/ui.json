@@ -273,6 +273,11 @@
   "ui.standings.records": "Os teus récords",
   "ui.standings.title": "Clasificación",
   "ui.standings.count": "Clasificación ({n})",
+  "ui.standings.top": {
+    "one": "Top {top} · {n} participante",
+    "other": "Top {top} · {n} participantes"
+  },
+  "ui.standings.topCount": "Top {top} ({n})",
   "ui.standings.toFirst": "A {n} puntos do primeiro posto",
   "ui.standings.toNext": "A {n} puntos do número {pos}",
   "ui.stats.adjustSync": "Axusta a sincronía",

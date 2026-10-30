@@ -1,17 +1,19 @@
 // The top band: the song progress ring, ENCERTS and the ànim (energy) meter.
 import { tr } from '../i18n/messages.js';
+import { fmtNum } from '../i18n/format.js';
 import { song } from '../game/figure-song.js';
 import { judgedCount } from '../game/progress.js';
+import { comparableScore } from '../game/score-scale.js';
 import { K, PXU, H, SAFE, W } from './canvas.js';
 import { glowPath, textWidth, text } from './primitives.js';
-import { C, devScale, sprite } from './sprites.js';
+import { C, devScale, sprite, setSpriteBudget } from './sprites.js';
 import { HUD_H, ENC_H, HUD_CY, ENC_GAP } from './layout.js';
 import { songTime, G, clock } from '../game/state.js';
 import { elastic } from './praise.js';
 import { CALM } from '../core/env.js';
 import { portraitArt, portraitPalette } from '../game/figures.js';
 import { selectedFigure } from '../game/figure-song.js';
-const TOP_TXT = { hits: tr('hud.top.hits'), double: tr('hud.top.double') };
+const TOP_TXT = { double: tr('hud.top.double') };
 
 // Top bar: ONE compact row centred at the top, like FNF / osu! / Guitar Hero: L'ÀNIM DE LA PLAÇA is the one bar
 // (the mulassa as its portrait, then the bar: empty, she falls apart) and ENCERTS (the quality: the hit rate) is just a
@@ -46,15 +48,38 @@ function muleGlyph(x, bottom) { // x: centre; blitted from a sprite (painted onc
   if (sp) { H.drawImage(sp.c, x0, y, sp.w, sp.h); return; }
   H.save(); H.translate(x0, y); paintMule(H); H.restore();
 }
+// The pill's text. PUNTS go digit by digit: one cached sprite per digit (a sprite per score would paint one on every hit).
+// A fixed width, for six digits and 100%, so nothing moves as they count; the digits not reached yet stay dim, like an old arcade cabinet's LEDs.
+const ENC_SIZE = 11, ENC_PAD = 9, ENC_SP = 4, PTS_GHOST = fmtNum(100000).replace(/\d/g, '0'), PTS_GHOST_COL = '#54436e', PTS_TRACK = 1, DASH = '-';
+const isDigit = ch => ch >= '0' && ch <= '9';
+const glyphWidth = ch => textWidth(isDigit(ch) ? '0' : ch, ENC_SIZE, true) + PTS_TRACK; // (the pixel font's digits are all as wide; the outline eats the gap between them)
+function pointsWidth() {
+  let sum = 0;
+  for (const ch of PTS_GHOST) sum += glyphWidth(ch);
+  return sum;
+}
+let ptsFor = -1, ptsStr = '';
+function pointsText() { // bare digits, for the fixed slots: some languages group only from 10.000
+  // shortcut: stops at 999.999, no chart comes near it; widen PTS_GHOST if one does
+  if (G.score !== ptsFor) { ptsFor = G.score; ptsStr = String(Math.min(999999, comparableScore(G.score, G.diff, G.figureVersion))); }
+  return ptsStr;
+}
+const ptsGlyph = (ch, col) => text(ch, 0, 0, ENC_SIZE, col, 'center', C.dark, true);
+export const pillWarmups = () => [[0, 1, 2, 3, 4], [5, 6, 7, 8, 9]].map(ds => () => { // painted ahead: the pill appears right on the first note
+  setSpriteBudget(8);
+  ds.forEach(d => ptsGlyph(String(d), C.score));
+  for (const ch of new Set(PTS_GHOST)) { ptsGlyph(ch, PTS_GHOST_COL); ptsGlyph(ch, C.score); }
+  text(DASH, 0, 0, ENC_SIZE, C.cream, 'left', C.dark, true);
+});
 const TOP = { x: 0, y: 0, w: 0, h: HUD_H, cy: 0, pad: 9, enc: { x: 0, y: 0, w: 0, h: ENC_H }, bar: { x: 0, y: 0, w: 0, h: 10 }, tag: { x: 0, y: 0, w: 50, h: 9 } };
 export function topLayout() { // drawTop()'s geometry, filled in place; tests check it clears the rest
   const T = TOP, ph = HUD_H, reserve = (10 + PAUSE_PX() + 6 + Math.max(SAFE.r, SAFE.l)) / K; // clear of the pause button on both sides, so it stays centred
   T.y = snap(HUD_CY() - ph / 2); T.cy = T.y + ph / 2;
   T.w = snap(Math.min(250, W - 2 * reserve)); T.x = snap(W / 2 - T.w / 2);
-  // one row: pad | mulassa | gap | ÀNIM bar | pad; ENCERTS is its own small label + % pill under it, centred
+  // one row: pad | mulassa | gap | ÀNIM bar | pad; PUNTS - ENCERTS share a pill under it, centred, of a fixed width
   const b = T.bar, g = T.tag, e = T.enc;
   b.x = snap(T.x + T.pad + MULE_W + 6); b.w = snap(T.x + T.w - T.pad - b.x); b.y = snap(T.cy - b.h / 2);
-  e.w = snap(Math.min(T.w, textWidth(TOP_TXT.hits, 6.5) + textWidth('100%', 11) * 0.8 + 28)); e.x = snap(W / 2 - e.w / 2); e.y = snap(T.y + ph + 0.75 + ENC_GAP);
+  e.w = snap(Math.min(T.w, 2 * (ENC_PAD + ENC_SP) + pointsWidth() + textWidth(DASH, ENC_SIZE, true) + textWidth('100%', ENC_SIZE, true))); e.x = snap(W / 2 - e.w / 2); e.y = snap(T.y + ph + 0.75 + ENC_GAP);
   g.x = W / 2 - g.w / 2; g.y = T.y - 3 - g.h / 2; // the x2 tag: a badge on the panel's top edge, over the ÀNIM bar's gap, inside the safe area
   return T;
 }
@@ -65,15 +90,22 @@ export function drawProgressRing(t) { // a halo round #pause (the canvas sits un
   H.strokeStyle = 'rgba(42,26,16,0.86)'; H.beginPath(); H.arc(cx, cy, R, 0, 2 * Math.PI); H.stroke();
   if (k > 0) { H.strokeStyle = C.gold; H.beginPath(); H.arc(cx, cy, R, a0, at(k)); H.stroke(); }
 }
-// ENCERTS, the hit rate: a small pill under the panel with just the label and the number, in its tier's colour; it appears with the first judged note.
+// The pill under the panel: PUNTS in lilac, a dash, then ENCERTS, the hit rate, in its tier's colour. It appears with the first judged note.
 function drawEncerts(T, v, n, up, pk) {
   if (!n) return; // nothing judged yet: no pill (no '—' placeholder)
-  const { x, y, w, h } = T.enc, col = v >= 90 ? C.green : up ? C.gold : v >= 35 ? C.blue : C.pink;
+  const { x, y, w, h } = T.enc, cy = y + h / 2 + 0.3 /* the pixel font's ink sits a little high */, col = v >= 90 ? C.green : up ? C.gold : v >= 35 ? C.blue : C.pink;
   H.beginPath(); H.roundRect(x, y, w, h, h / 2);
   if (pk > 0) glowPath(C.gold, 8 * pk);
   H.fillStyle = 'rgba(42,26,16,0.86)'; H.fill(); H.strokeStyle = C.gold; H.lineWidth = 1; H.stroke();
-  text(TOP_TXT.hits, x + 9, y + h / 2, 6.5, C.cream, 'left', C.dark);
-  text(`${Math.round(v)}%`, x + w - 9, y + h / 2 - 0.5, 11 + 1.5 * pk, col, 'right', C.dark, true);
+  const pts = pointsText(), first = 6 - pts.length; // the first lit slot
+  let cx = x + ENC_PAD, slot = 0;
+  for (const ch of PTS_GHOST) {
+    const digit = isDigit(ch), lit = digit ? slot >= first : slot > first, g = glyphWidth(ch); // a separator lights once a digit before it has
+    text(digit && lit ? pts[slot - first] : ch, cx + g / 2, cy, ENC_SIZE, lit ? C.score : PTS_GHOST_COL, 'center', C.dark, true); // opaque: an alpha would thin the outline too
+    cx += g; if (digit) slot++;
+  }
+  text(DASH, x + ENC_PAD + pointsWidth() + ENC_SP, cy, ENC_SIZE, C.cream, 'left', C.dark, true);
+  text(`${Math.round(v)}%`, x + w - ENC_PAD, cy, ENC_SIZE, col, 'right', C.dark, true);
 }
 export function drawTop(t = songTime()) { // t: drawHud's smooth draw clock (the notes' time)
   const T = topLayout(), ph = T.h, y = T.y, cy = T.cy, pw = T.w, x = T.x;

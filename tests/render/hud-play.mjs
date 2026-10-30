@@ -7,10 +7,16 @@ import { THREE, chart, progress, practice, energy, framing, dance, errors, nodes
 // ENCERTS before any note is judged: no pill in the top bar (never "0%"), an em dash on the results card.
 drawnText.length = 0;
 run(`startGame(1); G.state = 'play'; drawTop();`);
-assert(!drawnText.includes('ENCERTS') && !drawnText.includes('—') && !drawnText.includes('0%'), 'the ENCERTS pill stays hidden until the first judged note');
+assert(!drawnText.includes('-') && !drawnText.includes('—') && !drawnText.includes('0%'), 'the points and hit-rate pill stays hidden until the first judged note');
 drawnText.length = 0;
 run(`judge(G.chart.find(n => !n.big && !n.balloon && !n.end), 'perfect'); drawTop();`);
-assert(drawnText.includes('ENCERTS') && drawnText.some(s => /^\d+%$/.test(s)), 'the ENCERTS pill appears with the first judged note');
+assert(drawnText.includes('-') && drawnText.some(s => /^\d+%$/.test(s)), 'the pill appears with the first judged note');
+// The points: six fixed slots, in the same glyphs whatever the language groups; what the digits spell is the score, unreached ones zero.
+const pillPoints = score => { drawnText.length = 0; run(`G.score = ${score}; drawTop();`); return drawnText.slice(0, drawnText.indexOf('-')).join('').replace(/\D/g, ''); };
+assert.equal(pillPoints(1050), '001050', 'the points pad to six digits');
+assert.equal(pillPoints(182972), '182972', 'six digits fill every slot');
+assert.equal(pillPoints(1234567), '999999', 'a score past the slots stops at the top');
+run('G.score = 0;');
 run(`judge(G.chart.find(n => !n.big && !n.balloon && !n.end), 'perfect'); G.shown = G.guapo;`);
 drawnText.length = 0;
 run('drawTop();');

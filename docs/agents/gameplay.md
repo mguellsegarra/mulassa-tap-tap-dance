@@ -28,8 +28,7 @@
   server (`submit_result`), as the board ranks; the % only breaks ties. Points: thousands dots, `C.score` lilac (points only). `?repte` stays on %.
 - **Ànim de la plaça** (energy/health): starts full, misses drain it, hits refill; empty = the mulassa collapses.
   Tuning lives in `src/game/energy.js` (misses from full to empty: FÀCIL 13, NORMAL 10, DIFÍCIL 8). The practice never drains.
-- In-game top HUD (`drawTop`): one row, the pixel mulassa (`mulaPortrait`: leans back and throbs below 35%, hops on a refill) + the ÀNIM bar (health) + the ENCERTS %
-  number, no caption (the quality: perfect = 1, good = 0.8; "—" until a note is judged); the 70% goal is only on the results screen.
+- In-game top HUD (`drawTop`): one row, the pixel mulassa (`mulaPortrait`: leans back and throbs below 35%, hops on a refill) + the ÀNIM bar (health); under it, a centred pill of a fixed width with no captions, in the pixel font, hidden until a note is judged: the PUNTS (six digits, one sprite per digit, `C.score`, those not reached yet dimmed like LEDs, the same value as the results), a dash and the ENCERTS % (the quality: perfect = 1, good = 0.8); the 70% goal is only on the results screen.
   Song progress: a ring round the pause button (`drawProgressRing`, hud/top.js; `PROG_T0`/`PROG_T1` bound it, first note → `song.end` on `songTime()`); the «x2 PUNTS» tag sits on the panel's top edge.
 - Lane (`lane()`): the band scales with the screen (1.4x phones, up to 2x big desktops); notes scale only as far as the
   chart's closest two notes keep half a diameter clear with >= 0.9 s look-ahead (`NOTE_GAP`, `MIN_LOOK`). Nothing

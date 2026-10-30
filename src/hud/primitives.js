@@ -140,8 +140,8 @@ export function holdCharge(dir, hx, cy, frac) { // over the head: a gold arc cha
 // on-time note visibly fits, and a thick outer ring (RING_R, about a GUAPA's size). The socket is drawn under
 // the notes (drawRing), the rings, shockwaves and sparks over them (drawRingTop), so the target never disappears.
 export const NOTE_R = 16, RING_R = 21; // NOTE_R: a normal note's outer edge (14 + its dark rim)
-export function textWidth(s, size) { // width in HUD units of text(s, ..., size); the lane, top panel and banners ask every frame
-  const font = `800 ${Math.round(size * 11.5) / 10}px ${FONT}`, key = `${font}|${s}`;
+export function textWidth(s, size, pixel = false) { // width in HUD units of text(s, ..., size, ..., pixel); the lane, top panel and banners ask every frame
+  const font = pixel ? `${Math.round(size * 14) / 10}px ${PIXEL}` : `800 ${Math.round(size * 11.5) / 10}px ${FONT}`, key = `${font}|${s}`;
   let w = textWidths.get(key);
   if (w === undefined) {
     if (textWidths.size > 2000) textWidths.clear(); // popping sizes sweep many fonts: keep it bounded

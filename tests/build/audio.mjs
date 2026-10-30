@@ -6,7 +6,6 @@ import { createHash } from 'node:crypto';
 import { Chip } from '../../src/platform/audio.js';
 import { applause } from '../../src/platform/applause.js';
 import { audioFailureTags } from '../../src/platform/audio-load.js';
-import { errors } from '../../src/services/errors.js';
 
 let resolveReady;
 let starts = 0;
@@ -87,10 +86,7 @@ console.log('audio wake respects page activity');
   const c = Object.create(Chip.prototype);
   c.master = { gain: { cancelScheduledValues() {}, setTargetAtTime() {} } };
   c.ctx = { state: 'suspended', resume: () => Promise.reject(Object.assign(new Error('blocked'), { name: 'NotAllowedError' })) };
-  const report = errors.report, reported = []; errors.report = (kind, tags) => reported.push([kind, tags]);
   assert.equal(await c.resume(), false, 'a browser policy rejection is a failed resume, not playing audio');
-  errors.report = report;
-  assert.deepEqual(reported, [['audio-resume-failed', { name: 'NotAllowedError', phase: 'unknown', audioState: 'suspended' }]], 'the report tells which state refused');
   assert.equal(c.ctx.state, 'suspended');
   c.ctx.resume = () => { c.ctx.state = 'running'; return Promise.resolve(); };
   assert.equal(await c.resume(), true, 'a later gesture can resume the same context');

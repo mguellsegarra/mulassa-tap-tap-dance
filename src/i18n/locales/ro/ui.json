@@ -275,6 +275,12 @@
   "ui.standings.records": "Recordurile tale",
   "ui.standings.title": "Clasament",
   "ui.standings.count": "Clasament ({n})",
+  "ui.standings.top": {
+    "one": "Top {top} · {n} participant",
+    "few": "Top {top} · {n} participanți",
+    "other": "Top {top} · {n} de participanți"
+  },
+  "ui.standings.topCount": "Top {top} ({n})",
   "ui.standings.toFirst": "La {n} puncte de primul loc",
   "ui.standings.toNext": "La {n} puncte de locul {pos}",
   "ui.stats.adjustSync": "Reglează sincronizarea",

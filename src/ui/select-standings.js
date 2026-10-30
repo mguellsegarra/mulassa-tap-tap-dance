@@ -46,6 +46,13 @@ export function setupStandings({ doc, win = globalThis, $, onBoard, onCard = nul
   const seen = new Map(); // figure + owner → the last answer's rows (memory only): the placeholder's shape
   let key = '', recent = null; // recent: [owner, rows] of the last answer shown, any figure
   const owner = k => k.slice(k.indexOf(':') + 1);
+  // rows: what the card shows. With no place of yours and more players than rows, it says they are the top ones;
+  // with your row in sight, your place is already there, so it says how many play
+  const heading = (s, rows = []) => {
+    if (s && !s.pos && rows.length && rows.length < s.total) return tr(phone(win) ? 'ui.standings.topCount' : 'ui.standings.top', { count: s.total, top: num(rows.length), n: num(s.total) });
+    if (s?.total && !phone(win) && rows.some(r => r.is_self)) return tr('ui.standings.players', { count: s.total, n: num(s.total) });
+    return (phone(win) ? countText : rankText)(s);
+  };
 
   function medals(records) { // [{ score, quality } | null] per level, or null: none at all
     meds.hidden = !records;
@@ -116,6 +123,7 @@ export function setupStandings({ doc, win = globalThis, $, onBoard, onCard = nul
     const rows = board?.rows ?? [], lines = gaps(rows), shown = pick(rows, top, near, withRows);
     list.replaceChildren(...shown.map(r => (r === '···' ? el('li', 'dots', '···') : row(r))));
     list.hidden = !shown.length;
+    head.textContent = heading(board, shown);
     foot.innerHTML = lines.join('<i></i>');
     foot.hidden = !withFoot || !lines.length;
     msg.hidden = state === 'loading' || !!rows.length || !withRows; // an empty or failed answer says so in the room the rows would take
@@ -129,9 +137,8 @@ export function setupStandings({ doc, win = globalThis, $, onBoard, onCard = nul
     meds.toggleAttribute('data-gone', least);
     card.hidden = !on;
     body.hidden = least;
-    if (least) return;
+    if (least) { head.textContent = heading(board); return; }
     if (levels()) { goals(true); if (card.getClientRects().length && scrolls()) body.hidden = true; return; } // step 2: level-stats.js refits it beside the level row
-    head.textContent = (phone(win) ? countText : rankText)(board); // the window crossed the breakpoint
     if (phone(win)) { render(3, -1, false); meds.toggleAttribute('data-gone', true); shrinkNames(); return; } // phones: the header and the first three, nothing else
     // The biggest try that fits (each one is a forced layout of the selector): the last answer and the one above it first
     // (unchanged: two layouts), else a binary search (the tries only shrink).
@@ -146,7 +153,7 @@ export function setupStandings({ doc, win = globalThis, $, onBoard, onCard = nul
     while (lo < hi) { const m = (lo + hi) >> 1; if (fits(m)) hi = m; else lo = m + 1; }
     fitAt = Math.min(hi, tries.length - 1);
     if (drawn !== fitAt) at(fitAt);
-    if (hi === tries.length) body.hidden = true; // the header stays: the line is the home's way to the board
+    if (hi === tries.length) { body.hidden = true; head.textContent = heading(board); } // the header stays: the line is the home's way to the board
   }
   // Another board (a figure or owner change) or the first answer after the placeholder fades the card out, swaps it while unseen
   // (its new size included) and fades it in
@@ -201,7 +208,7 @@ export function setupStandings({ doc, win = globalThis, $, onBoard, onCard = nul
       crossFade(who, next !== 'loading', () => {
         board = s; on = shown; key = who; state = next;
         if (state === 'ready') { seen.set(key, s.rows); recent = [owner(key), s.rows]; }
-        head.textContent = (phone(win) ? countText : rankText)(s);
+        head.textContent = heading(s);
         $('select-standings-head').setAttribute('aria-label', rankLabel(rankText(s)));
       }, () => refit());
     },

@@ -57,7 +57,9 @@ The owner sends screen recordings (CleanShot `.mp4`, `.gif`, phone `.MOV`, usual
 
 ## Handing over a link
 
-Before giving a URL, check that the server is running from the intended worktree and serves the change (a distinctive value in the loaded page, not only HTTP 200). For the phone give the LAN address (`http://<lan-ip>:<port>/?mute…`), not `localhost`, as a clickable link, and leave that server running. If the change is in another worktree or port, say which.
+Give the links first: once the edit is in and before your own captures, write both URLs in the chat, then carry on without waiting. The owner may try it on their own while you check. Later reports repeat them.
+
+Before giving a URL, check that the server is running from the intended worktree and serves the change (a distinctive value in the loaded page, not only HTTP 200). Give `http://localhost:<port>/?mute…` for the computer and the LAN address (`http://<lan-ip>:<port>/?mute…`) for the phone, both as clickable links with the state parameters that reach the change, and leave that server running. If the change is in another worktree or port, say which.
 
 ## UI states and transitions
 

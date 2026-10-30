@@ -330,11 +330,16 @@ console.log('screen render after a restore ok');
 {
   const sent = [], or = errors.report;
   errors.report = (k, d, m) => sent.push({ k, d, m });
-  run(`var lwHidden = document.hidden, lwState = G.state; document.hidden = true; G.state = 'title';`);
+  run(`var lwHidden = document.hidden, lwState = G.state; document.hidden = true; G.state = 'title'; window.__mulassaBootPhase = 'shaders';`);
   try {
     const lost = nodes.get('gl').listeners.webglcontextlost;
     lost(); run(`G.state = 'select';`); lost();
-    const [a, b] = sent;
+    run(`G.state = 'play';`); lost();
+    const [a, b, c] = sent;
+    assert.equal(a.d.bootPhase, 'shaders', 'the boot phase of the loss');
+    assert.equal(a.d.songS, undefined, 'no song point outside a run');
+    assert.equal(c.d.figure, run('G.figureId'));
+    assert.ok(Number.isInteger(c.d.songS), 'the song point of a loss in a run');
     assert.equal(a.k, 'webgl-context-lost');
     assert.equal(a.d.hidden, 'true');
     assert.equal(a.d.screen, 'title', 'the screen of the loss, not of the send');

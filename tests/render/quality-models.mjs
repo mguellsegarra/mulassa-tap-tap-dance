@@ -110,6 +110,10 @@ assert(hudBudget(-1, true) < hudBudget(1, true) && hudBudget(0, false) === hudBu
   assert(p.caveat && p.probe === 'caveat' && isSoftwareRenderer(p) && f.log.made === 2 && f.log.lost === 1, 'SwiftShader: the caveat context is refused, the plain one read and lost');
   f = fake({ renderer: 'ANGLE (Intel, Intel(R) HD Graphics 400 Direct3D11 vs_5_0 ps_5_0), or similar' });
   assert(probeRenderer(f.make).renderer.startsWith('ANGLE (Intel') && !f.log.ext.includes('WEBGL_debug_renderer_info'), 'Firefox: RENDERER as is (no deprecated extension)');
+  for (const unmasked of ['PowerVR B-Series BXM-8-256', 'ANGLE (Imagination Technologies, PowerVR B-Series BXM-8-256, OpenGL ES 3.2)']) {
+    f = fake({ unmasked });
+    assert(probeRenderer(f.make).probe === 'ok' && f.log.lost === 0, 'PowerVR: the probe skips the deliberate loss');
+  }
   f = fake({ caveatOk: false, plainOk: false });
   assert.deepEqual(probeRenderer(f.make), { renderer: '', vendor: '', caveat: false, probe: 'none' }, 'no WebGL 2 at all is not "software"');
   assert.deepEqual(probeRenderer(() => { throw new Error('no canvas'); }), { renderer: '', vendor: '', caveat: false, probe: 'none' }, 'a failing probe never throws');

@@ -7,16 +7,15 @@ import { crowd, crowdMesh, RING } from './crowd-build.js';
 import { applyRenderQuality } from './quality.js';
 import { clock, G, drawT } from '../game/state.js';
 import { mood } from './crowd-mood.js';
-import { skinCrowd } from './models.js';
+import { skinCrowd, BAND_LOOKS } from './models.js';
 import { CATALOGUE, buildFigure } from './representation/models.js';
 import { MAT, EYE_COLOURS } from './representation/kit.js';
 import { crowdMotion, animatePerson } from './representation/live-pose.js';
-import { reviewMusician, reviewAttendant, linkRolePose, followRolePose } from './representation/role-models.js';
+import { MUSICIANS, reviewMusician, reviewAttendant, linkRolePose, followRolePose } from './representation/role-models.js';
 import { buildPublicSpecs, PUBLIC_GENDER_WEIGHTS, PUBLIC_AGE_WEIGHTS } from './representation/population.js';
 import { sootLink, sootHold, sootHoldApply } from '../figures/drac/drac-soot.js';
 
 const PUBLIC_IDS = ['p04', 'p05', 'p08', 'p02', 'p09', 'p12', 'p06', 'p10'];
-const BAND_IDS = ['p01', 'p03', 'p07'];
 const byId = id => CATALOGUE.find(p => p.id === id);
 // Remove only the triangles owned by a replaced person's bones, preserving all the other geometry and rigs.
 function omitPeople(mesh, people) {
@@ -68,9 +67,9 @@ export function setupRepresentation() {
     entries.push({ role: 'public', id, spec, source, p, size: p.g.scale.x, oldSize: source.scale, oldRad, oldKid, oldComfort, oldAvoidKnock,
       motion: crowdMotion(p, source) });
   });
-  BAND_IDS.forEach((id, i) => {
-    const source = plaza.band[i], p = reviewMusician(byId(id), source.kind);
-    entries.push({ role: 'music', id, source, p, size: 1, oldSize: 1, poseLinks: linkRolePose(p, source) });
+  for (const lineup of Object.keys(BAND_LOOKS)) plaza.band.filter(m => m.lineup === lineup).slice(0, MUSICIANS[lineup].length).forEach((source, i) => {
+    const spec = MUSICIANS[lineup][i], p = reviewMusician(spec, source.kind, BAND_LOOKS[lineup]);
+    entries.push({ role: 'music', id: lineup === 'banda' ? spec.id : `${lineup}-${spec.id}`, spec, source, p, size: 1, oldSize: 1, poseLinks: linkRolePose(p, source) });
   });
   if (mulaColla) ['p11', 'p03'].forEach((id, i) => {
     const source = mulaColla.crew[i], p = reviewAttendant(byId(id), i);

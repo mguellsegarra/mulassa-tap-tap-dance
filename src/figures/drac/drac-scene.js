@@ -15,6 +15,7 @@ let shareOpacity = 1;
 export const DRAC_SCENE = {
   id: 'drac-valls',
   root: () => drac.root,
+  band: 'cobla',
   show(on) { drac.root.visible = on; },
   collaTick: dracColla, collaSpots: COLLA_SPOTS, colla: () => colla,
   animate: animPlayableDrac, leave: leaveSolo, onBoth: dracCrema,

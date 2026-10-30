@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="ca"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Músics · models en moviment</title>
+<style>html,body{margin:0;height:100%;overflow:hidden;background:#d9c7a3;font-family:system-ui}canvas{display:block;width:100%;height:100%;touch-action:none}
+#ui{position:fixed;left:8px;top:8px;right:8px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+#ui select,#ui button,#ui label{font:14px system-ui;padding:7px 9px;border-radius:10px;border:1px solid #6b5a3c;background:#fff8e8;color:#2a2118}
+#ui label{display:flex;gap:6px;align-items:center}#ui input{width:90px}
+#t{position:fixed;left:8px;bottom:8px;font:12px system-ui;background:#fff8e8;color:#2a2118;padding:5px 8px;border-radius:8px}</style></head>
+<body><canvas id="c"></canvas>
+<div id="ui">
+  <select id="lineup"></select>
+  <select id="focus"></select>
+  <button id="play">Pausa</button>
+  <label>Velocitat <input id="speed" type="range" min="0.25" max="3" step="0.25" value="2"></label>
+</div><div id="t">Arrossega: girar · roda o pessic: zoom · botó dret o dos dits: moure</div>
+<script type="module">
+// Dev only: the musicians as the game poses them, to look at from anywhere while they play.
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { BAND, COBLA, BAND_LOOKS, buildMusician, placeBand, poseBand } from '/src/scene/models/band.js';
+import { MUSICIANS, reviewMusician } from '/src/scene/representation/role-models.js';
+
+const $ = id => document.getElementById(id), AZ = Math.PI / 2;
+const LINEUPS = { cobla: ['Mitja cobla (Drac)', COBLA], banda: ['Banda (Mulassa, Bou)', BAND] };
+const renderer = new THREE.WebGLRenderer({ canvas: $('c'), antialias: true });
+renderer.setPixelRatio(Math.min(2, devicePixelRatio));
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#d9c7a3');
+const sun = new THREE.DirectionalLight('#fff0cf', 2.2);
+sun.position.set(-6, 10, 2);
+scene.add(new THREE.HemisphereLight('#fff4df', '#867253', 2.3), sun, new THREE.GridHelper(40, 40, '#9a8660', '#b8a680'));
+const camera = new THREE.PerspectiveCamera(35, 1, 0.05, 120);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.minDistance = 0.4; controls.maxDistance = 30;
+
+let band = [], beat = 0, playing = true, last = performance.now();
+const build = (kind, row, lineup, i) => {
+  const look = BAND_LOOKS[lineup], spec = MUSICIANS[lineup][i];
+  const p = spec ? reviewMusician(spec, kind, look) : buildMusician(kind, look); // the game's cast
+  return Object.assign(p, { kind, row, lineup });
+};
+function frame(p) {
+  const box = new THREE.Box3();
+  for (const m of p) box.expandByObject(m.g);
+  const c = box.getCenter(new THREE.Vector3()), far = Math.max(2.4, box.getSize(new THREE.Vector3()).length() * 1.3);
+  controls.target.copy(c);
+  camera.position.set(c.x + far * 0.35, c.y + far * 0.15, c.z - far);
+}
+function focus() { frame($('focus').value === 'all' ? band : [band[+$('focus').value]]); }
+function show(lineup) {
+  for (const p of band) { scene.remove(p.g); p.g.traverse(o => o.geometry?.dispose()); }
+  band = LINEUPS[lineup][1].map(([kind, row], i) => build(kind, row, lineup, i));
+  band.forEach(p => scene.add(p.g));
+  placeBand(band, band.length, AZ, lineup);
+  scene.updateMatrixWorld(true);
+  $('focus').innerHTML = '<option value="all">Tots</option>' + band.map((p, i) => `<option value="${i}">${p.kind}</option>`).join('');
+  focus();
+}
+$('lineup').innerHTML = Object.entries(LINEUPS).map(([k, [name]]) => `<option value="${k}">${name}</option>`).join('');
+$('lineup').onchange = e => show(e.target.value);
+$('focus').onchange = focus;
+$('play').onclick = () => { playing = !playing; $('play').textContent = playing ? 'Pausa' : 'Reprèn'; };
+function size() { renderer.setSize(innerWidth, innerHeight, false); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); }
+addEventListener('resize', size); size();
+show('cobla');
+renderer.setAnimationLoop(now => {
+  if (playing) beat += (now - last) / 1000 * +$('speed').value;
+  last = now;
+  poseBand(band, beat);
+  controls.update();
+  renderer.render(scene, camera);
+});
+</script></body></html>

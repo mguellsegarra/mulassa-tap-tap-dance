@@ -1,4 +1,4 @@
-// The band (gralla, tabal, bombo...): the musicians, where they stand and how they play.
+// The band and the cobla: the musicians, where they stand and how they play.
 import * as THREE from 'three';
 import { buildPerson } from './people.js';
 import { Vox } from './voxel.js';
@@ -11,7 +11,11 @@ import { Vox } from './voxel.js';
 // row 0 the front row (woodwinds, trumpets), 1 behind it (low brass, percussion).
 export const BAND = [['clarinet', 0], ['trumpet', 0], ['trombone', 1], ['tuba', 1], ['clarinet', 0], ['bombo', 1],
   ['sax', 0], ['caixa', 1], ['trumpet', 0], ['plats', 1]];
-const BRASS = '#e2b13c', BRASS_D = '#b8872a', WOOD = '#1d1b1f', KEYS = '#c9ccd2', HEAD = '#f1ead8', TIE = '#e8b830';
+// A figure can bring its own players instead (its scene's `band`, figure-scenes.js). The Drac dances to a mitja cobla:
+// two players and three instruments, the xeremies and the flabiol with its tamborí, in white shirts and dark trousers.
+export const COBLA = [['flabiol', 0], ['xeremies', 0]];
+export const BAND_LOOKS = { banda: { shirt: '#f5f5ef', pants: '#1f2230', tie: '#e8b830' }, cobla: { shirt: '#f5f5ef', pants: '#1f2230' } };
+const BRASS = '#e2b13c', BRASS_D = '#b8872a', WOOD = '#1d1b1f', KEYS = '#c9ccd2', HEAD = '#f1ead8', REED = '#3a2015', BAG = '#7a5636';
 const HIP = 0.78, REACH = 0.49, _o = new THREE.Object3D(), _m = new THREE.Matrix4(), _v = new THREE.Vector3();
 const at = (a, b, t) => a.map((x, i) => x + (b[i] - x) * t);
 // a square tube from a to b (person space), w thick: instruments aren't axis-aligned
@@ -40,10 +44,10 @@ function onArm(arm, v) {
   m.geometry.applyMatrix4(_m.makeTranslation(0, HIP, 0).multiply(arm.matrix).invert());
   arm.add(m);
 }
-export function buildMusician(kind, p = buildPerson({ shirt: '#f5f5ef', pants: '#1f2230' })) {
+export function buildMusician(kind, look = BAND_LOOKS.banda, p = buildPerson(look)) {
   const [L, R] = p.arms; // arms[0] is at +x: their left (they face +z)
   const t = new Vox(), l = new Vox(), r = new Vox();
-  t.box(0, 1.0, 0.135, 0.07, 0.32, 0.02, TIE, 0).box(0, 1.27, 0.14, 0.1, 0.07, 0.03, TIE, 0); // tie and knot
+  if (look.tie) t.box(0, 1.0, 0.135, 0.07, 0.32, 0.02, look.tie, 0).box(0, 1.27, 0.14, 0.1, 0.07, 0.03, look.tie, 0); // tie and knot
   const lips = [0, 1.46, 0.17];
   if (kind === 'clarinet') { // black, straight down-forward from the lips, silver rings, a small flared bell
     const b = [0, 0.98, 0.5];
@@ -52,6 +56,26 @@ export function buildMusician(kind, p = buildPerson({ shirt: '#f5f5ef', pants: '
     rod(t, at(lips, b, 0.86), at(lips, b, 0.97), 0.08, WOOD);
     rod(t, at(lips, b, 0.93), at(lips, b, 1.02), 0.11, WOOD);
     grip(L, ...at(lips, b, 0.28)); grip(R, ...at(lips, b, 0.52));
+  } else if (kind === 'xeremies') { // Mallorcan bagpipes: a round bag held out at the left side below the arm, drones over that shoulder, chanter across both hands
+    const x = 0.37, y = 1.01, z = 0.32; // three crossed boxes read as round; each one's faces clear the others'
+    t.box(x, y - 0.2, z, 0.3, 0.4, 0.28, BAG, 0).box(x, y - 0.15, z, 0.36, 0.3, 0.2, BAG, 0).box(x, y - 0.14, z, 0.2, 0.28, 0.34, BAG, 0);
+    rod(t, lips, [0.3, 1.19, 0.4], 0.03, REED); // the blowpipe, down into the bag
+    for (const [bx, tx, ty, tz] of [[0.34, 0.5, 1.92, -0.2], [0.42, 0.66, 1.72, -0.12]]) { // two drones, each with a tip
+      const a = [bx, 1.18, 0.24], b = [tx, ty, tz];
+      rod(t, a, at(a, b, 0.93), 0.035, REED); // stops inside the tip: flush ends flickered
+      rod(t, at(a, b, 0.86), b, 0.065, KEYS);
+    }
+    const top = [0.22, 1.19, 0.3], end = [-0.18, 0.87, 0.38]; // the chanter, out of the bag's inner side
+    rod(t, top, end, 0.04, REED);
+    rod(t, at(top, end, 0.93), at(top, end, 1.03), 0.075, REED);
+    grip(L, ...at(top, end, 0.35)); grip(R, ...at(top, end, 0.62));
+  } else if (kind === 'flabiol') { // the short pipe up in the left hand, the tamborí under that forearm, its skin outwards, the stick in the right
+    const b = [0.03, 1.3, 0.62];
+    rod(t, lips, b, 0.03, REED);
+    grip(L, ...at(lips, b, 0.55));
+    t.box(0.2, 1.0, 0.36, 0.3, 0.3, 0.14, '#8a5a2c');
+    t.box(0.2, 1.02, 0.428, 0.26, 0.26, 0.03, HEAD, 0);
+    rod(r, grip(R, -0.1, 1.08, 0.46), [0.14, 1.03, 0.47], 0.022, '#d8c39a');
   } else if (kind === 'sax') { // alto: neck from the lips, body down the chest, the bow and the bell turned up
     const top = [0.03, 1.34, 0.29], bot = [0.05, 0.9, 0.33];
     rod(t, lips, [0.02, 1.41, 0.26], 0.03, BRASS);
@@ -120,10 +144,11 @@ export function buildMusician(kind, p = buildPerson({ shirt: '#f5f5ef', pants: '
   return p;
 }
 // Two rows at the ring's edge (front r 9.7 m, back 10.6, staggered so the back row plays between shoulders), centred
-// on azimuth az (x = cos, z = sin), facing the middle. Only the first n play: the rest are hidden (scale 0, skinCrowd).
-export function placeBand(band, n, az) {
-  const rows = [band.filter((p, i) => i < n && !p.row), band.filter((p, i) => i < n && p.row)];
-  band.forEach((p, i) => p.g.scale.setScalar(i < n ? 1 : 0));
+// on azimuth az (x = cos, z = sin), facing the middle. Only the first n of the line-up play: everyone else is hidden
+// (scale 0, skinCrowd).
+export function placeBand(band, n, az, lineup = 'banda') {
+  const on = band.filter(p => p.lineup === lineup).slice(0, n), rows = [on.filter(p => !p.row), on.filter(p => p.row)];
+  band.forEach(p => p.g.scale.setScalar(on.includes(p) ? 1 : 0));
   rows.forEach((row, k) => row.forEach((p, j) => {
     const r = 9.7 + k * 0.9, a = az + (j - (row.length - 1) / 2 + k * 0.5) * 0.85 / r;
     p.g.position.set(Math.cos(a) * r, 0, Math.sin(a) * r);
@@ -145,6 +170,8 @@ export function poseBand(band, beat, live = 1) {
     if (p.kind === 'bombo') {
       const s = stroke(frac(beat)) * live;
       R.rotation.x = rx - 0.25 * s; R.rotation.z = rz - 0.5 * s;
+    } else if (p.kind === 'flabiol') {
+      R.rotation.x = rx - 0.35 * stroke(frac(beat)) * live;
     } else if (p.kind === 'caixa') {
       R.rotation.x = rx - 0.45 * stroke(frac(beat)) * live;
       L.rotation.x = lx - 0.45 * stroke(frac(beat + 0.5)) * live;

@@ -260,8 +260,8 @@ console.log('skinned crowd matches the per-part meshes ok');
 // Musicians: every instrument is baked into the body and arm parts (no loose meshes), sticks and cymbals ride the arm
 // that swings them, and the bombo's mallet rests on the drum's right head.
 {
-  const T = await import('three'), { buildMusician, BAND } = await import('../../src/scene/models.js'), box = new T.Box3();
-  for (const [kind] of BAND) {
+  const T = await import('three'), { buildMusician, BAND, COBLA } = await import('../../src/scene/models.js'), box = new T.Box3();
+  for (const [kind] of [...BAND, ...COBLA]) {
     const p = buildMusician(kind);
     p.g.updateMatrixWorld(true);
     assert(p.g.children.every(o => !o.isMesh) && [p.torso, ...p.legs, ...p.arms].every(b => b.children.filter(o => o.isMesh).every(m => !m.geometry.attributes.position.array.some(Number.isNaN))), `${kind}: parts only, no NaN`);
@@ -326,7 +326,7 @@ console.log('backdrop, balconies and crowd variety ok');
 // different colours: the depth test can't pick one and they strobe as the model moves (hair on the heads, a hat's
 // crown, a trumpet's bell did). Jittered boxes count as different colours.
 {
-  const T = await import('three'), { buildMusician, buildMulassa, buildFlag, BAND } = await import('../../src/scene/models.js');
+  const T = await import('three'), { buildMusician, buildMulassa, buildFlag, BAND, COBLA } = await import('../../src/scene/models.js');
   const V = () => new T.Vector3();
   function zFights(root) {
     root.updateMatrixWorld(true);
@@ -363,7 +363,7 @@ console.log('backdrop, balconies and crowd variety ok');
   const models = [
     ...[{}, { kid: true }, { hat: '#b3122a' }, { rider: true, hat: '#26262e' }, { fan: '#f5c518' }, { faixa: '#d62828' }, { seated: true }]
       .map(o => [`person ${JSON.stringify(o)}`, buildPerson(o).g]),
-    ...[...new Set(BAND.map(([kind]) => kind))].map(k => [`musician ${k}`, buildMusician(k).g]),
+    ...[...new Set([...BAND, ...COBLA].map(([kind]) => kind))].map(k => [`musician ${k}`, buildMusician(k).g]),
     ['mulassa', buildMulassa().root],
     // the façade flags (one plate per layer): estelada blava, estelada vermella, bandera de Valls; balcony and eaves sizes
     ...[1, 2, 3].flatMap(k => [false, true].map(big => [`flag ${k}${big ? ' (eaves)' : ''}`, buildFlag(k, big)])),

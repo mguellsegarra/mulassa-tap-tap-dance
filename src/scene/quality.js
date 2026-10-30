@@ -10,6 +10,8 @@ import { COLLAS } from '../figures/objects.js';
 export let midCrowd = null; // the mid band (built once the play camera's direction exists, below CAM_DIR)
 export let activeCrowd = [];
 export let bandSpots = [];
+let bandEpoch = 0; // each setBandLineup: a fade started before it no longer writes the band
+let bandLineup = 'banda'; // who plays: the figure on show's, null in free play (setBandLineup, stage-motion.js)
 // Only a live quality change animates. Startup installs its final profile under the cover.
 // Keep presence separate from gameplay's p.pres; retiring people keep their pose and collision until gone.
 let qualityTransition = null;
@@ -107,12 +109,14 @@ export function applyRenderQuality({ transition = false } = {}) {
   plaza.balcony.forEach((p, i) => qualityScaleTo(p.g.scale.x, i < renderProfile.balconies ? 1 : 0, value => p.g.scale.setScalar(value)));
   const bandScales = plaza.band.map(p => p.g.scale.x);
   const bandPositions = plaza.band.map(p => ({ position: p.g.position.clone(), yaw: p.g.rotation.y }));
-  placeBand(plaza.band, renderProfile.band, BAND_AZ);
+  placeBand(plaza.band, renderProfile.band, BAND_AZ, bandLineup);
   plaza.band.forEach((p, i) => {
-    const previous = bandPositions[i], target = p.g.position.clone();
+    const previous = bandPositions[i], target = p.g.position.clone(), scale = p.g.scale.x;
     const turn = Math.atan2(Math.sin(p.g.rotation.y - previous.yaw), Math.cos(p.g.rotation.y - previous.yaw));
-    qualityScaleTo(0, 1, k => { p.g.position.lerpVectors(previous.position, target, k); p.g.rotation.y = previous.yaw + turn * k; });
-    qualityScaleTo(bandScales[i], i < renderProfile.band ? 1 : 0, value => p.g.scale.setScalar(value));
+    // (a figure change mid-fade has placed its players itself: setBandLineup)
+    const epoch = bandEpoch;
+    qualityScaleTo(0, 1, k => { if (epoch === bandEpoch) { p.g.position.lerpVectors(previous.position, target, k); p.g.rotation.y = previous.yaw + turn * k; } });
+    qualityScaleTo(bandScales[i], scale, value => { if (epoch === bandEpoch) p.g.scale.setScalar(value); });
   });
   qualityStaticCrowd(plaza.backdrop, renderProfile.backdrop);
   qualityStaticCrowd(midCrowd, renderProfile.mid);
@@ -125,6 +129,14 @@ export function applyRenderQuality({ transition = false } = {}) {
   glc.dataset.quality = renderProfile.name;
 }
 applyRenderQuality();
+// The figure on show's players take the band's place at once. Everybody is always in the crowd's mesh, so this costs
+// no rebuild or hitch: only scales and positions change. Called every frame, it acts on a change.
+export function setBandLineup(lineup) {
+  if (lineup === bandLineup) return;
+  bandLineup = lineup; bandEpoch++;
+  placeBand(plaza.band, renderProfile.band, BAND_AZ, lineup);
+  refreshQualityCrowd();
+}
 // The mid band: the backdrop's instanced figures (no bones, no CPU a frame, its material: no new shader program, one
 // more draw call) filling the open ground beyond the moving ring on the far side, what every play
 // shot looks across. r0..r1: beyond the ring (the moving crowd stops at `edge` there, animCrowd) and short of the

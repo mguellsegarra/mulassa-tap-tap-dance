@@ -10,6 +10,7 @@ import { plaza, renderer, CAM_AZ, scene } from './stage.js';
 import { M } from './figure-springs.js';
 import { insidePlaza } from './cameras.js';
 import { FIGURE_SCENES, sceneOf } from './figure-scenes.js';
+import { setBandLineup } from './quality.js';
 
 // The share card's photo (share-card.js): her from the crowd's gap (the play camera's side)
 // with a camera of its own, rendered into a render target and read back, so the screen's buffer is never touched
@@ -56,6 +57,7 @@ export function renderHero(w, h, figureId = selectedFigure.id) {
     effects.forEach(o => { o.visible = false; });
     for (const f of FIGURE_SCENES) f.root().visible = f === own;
     hero.pose();
+    setBandLineup(own.band ?? 'banda'); // (the next frame's figure on show puts its own back)
     const fy = 1.8 * scale, need = 5.6 * scale, t = Math.tan(heroCam.fov * Math.PI / 360);
     heroCam.aspect = w / h;
     const d = Math.max(need / 2 / t, 6 * scale / 2 / t / heroCam.aspect), el = 12 * Math.PI / 180;

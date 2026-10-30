@@ -55,16 +55,16 @@ assert(run('plaza.balcony.every(p => p.g.scale.x === 1) && plaza.backdrop.mesh.c
 run(`qualityLevel = peopleLevel = 2; applyRenderQuality();
   var retiring = crowd.find(p => p.slot % 2 === 1), kept = crowd.find(p => p.row === 0 && p.slot % 2 === 0);
   retiring.pres = 0.7; retiring.g.scale.setScalar(retiring.scale * retiring.pres);
-  var crowdBefore = retiring.g.scale.x, bandBefore = plaza.band.at(-1).g.scale.x,
+  var crowdBefore = retiring.g.scale.x, bandBefore = plaza.band[9].g.scale.x,
     backdropBefore = plaza.backdrop.mesh.count, midBefore = midCrowd.mesh.count;
   qualityLevel = peopleLevel = 0; applyRenderQuality({ transition: true });`);
 assert(run('retiring.g.visible && retiring.g.scale.x === crowdBefore && retiring.pres === 0.7'), 'a downgrade preserves the exposed pose and gameplay presence');
-assert(run('plaza.backdrop.mesh.count === backdropBefore && midCrowd.mesh.count === midBefore && plaza.band.at(-1).g.scale.x === bandBefore'), 'static spectators and musicians do not disappear on the profile switch');
+assert(run('plaza.backdrop.mesh.count === backdropBefore && midCrowd.mesh.count === midBefore && plaza.band[9].g.scale.x === bandBefore'), 'static spectators and musicians do not disappear on the profile switch');
 run('animateRenderQuality(0);');
 assert(run('retiring.g.scale.x === crowdBefore'), 'paused time cannot advance the quality transition');
 run('animateRenderQuality(0.2);'); // the 0.4 s fade (quality.js QUALITY_FADE), halfway
 assert(run('Math.abs(retiring.g.scale.x - crowdBefore / 2) < 1e-6 && activeCrowd.includes(retiring) && kept.qualityScale === 1'), 'halfway: retiring spectators shrink smoothly, stay simulated, and retained people keep their size');
-assert(run('plaza.band.at(-1).g.scale.x > 0 && plaza.band.at(-1).g.scale.x < 1 && plaza.balcony.at(-1).g.scale.x > 0'), 'musicians and balconies also have intermediate sizes');
+assert(run('plaza.band[9].g.scale.x > 0 && plaza.band[9].g.scale.x < 1 && plaza.balcony.at(-1).g.scale.x > 0'), 'musicians and balconies also have intermediate sizes');
 assert(run(`(() => { const m = new THREE.Matrix4(); plaza.backdrop.mesh.getMatrixAt(PROFILES[0].backdrop, m); return m.elements[0] ** 2 + m.elements[2] ** 2 > 0; })()`), 'retiring instanced spectators still have geometry halfway through');
 run('animateRenderQuality(0.2);');
 assert(run('!retiring.g.visible && retiring.g.scale.x === 0 && !activeCrowd.includes(retiring) && retiring.pres === 0.7'), 'completed retirement releases simulation without changing gameplay presence');
@@ -122,6 +122,28 @@ assert(run(`(() => { const m = new THREE.Matrix4(), v = new THREE.Vector3(), bad
     }
   }
   return bad.length === 0 || JSON.stringify(bad.slice(0, 3)); })()`) === true, 'the mid band is never between the play camera and her');
+// The figure on show's line-up replaces the band in the same spot, whole at every quality; the others are hidden.
+for (const q of [0, 1, 2]) {
+  run(`qualityLevel = peopleLevel = ${q}; applyRenderQuality(); setBandLineup('cobla');`);
+  const on = JSON.parse(run(`JSON.stringify(plaza.band.filter(p => p.g.scale.x > 0).map(p => ({ kind: p.kind, lineup: p.lineup, r: Math.hypot(p.g.position.x, p.g.position.z) })))`));
+  assert.deepEqual(on.map(m => m.kind).sort(), ['flabiol', 'xeremies'], `quality ${q}: the whole mitja cobla`);
+  assert(on.every(m => m.lineup === 'cobla' && m.r > 9.5 && m.r < 11), `quality ${q}: only the cobla, at the ring's edge`);
+  assert.equal(run('bandSpots.length'), 2, `quality ${q}: the crowd keeps clear of the cobla, not of the band`);
+  run(`setBandLineup('banda');`);
+  assert.equal(run(`plaza.band.filter(p => p.lineup === 'cobla' && p.g.scale.x > 0).length`), 0, `quality ${q}: the cobla leaves with its figure`);
+  assert.equal(run('bandSpots.length'), run(`PROFILES[${q}].band`), `quality ${q}: the band is back`);
+}
+// Free play: no musicians at all, and nobody keeps clear of them.
+run(`setBandLineup(null);`);
+assert.equal(run('plaza.band.filter(p => p.g.scale.x > 0).length + bandSpots.length'), 0, 'free play has no band');
+run(`setBandLineup('banda');`);
+// A quality fade cannot bring a line-up back once another has taken over.
+run(`qualityLevel = peopleLevel = 2; applyRenderQuality(); qualityLevel = peopleLevel = 0; applyRenderQuality({ transition: true }); setBandLineup('cobla'); animateRenderQuality(1);`);
+assert.equal(run(`plaza.band.filter(p => p.lineup === 'banda' && p.g.scale.x > 0).length`), 0, 'a fade under way leaves the band hidden');
+assert.equal(run(`plaza.band.filter(p => p.lineup === 'cobla' && p.g.scale.x === 1).length`), 2, 'a fade under way leaves the cobla whole');
+run(`setBandLineup('banda'); qualityLevel = peopleLevel = 2; applyRenderQuality(); qualityLevel = peopleLevel = 0; applyRenderQuality({ transition: true }); setBandLineup(null); setBandLineup('banda'); animateRenderQuality(0.1);`);
+assert.equal(run(`plaza.band.filter(p => p.g.scale.x > 0).length`), run('PROFILES[0].band'), 'a fade from before free play cannot bring back the retired musicians');
+run(`animateRenderQuality(1); setBandLineup('banda'); qualityLevel = peopleLevel = 2; applyRenderQuality();`);
 // The band: as many as the quality allows (a full line-up at every size), at the ring's edge across the plaça from the
 // play camera, facing the middle, never between the camera and her, with room in the ring; it plays on the song's beat.
 for (const q of [0, 1, 2]) {

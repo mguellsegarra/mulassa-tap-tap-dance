@@ -1,5 +1,6 @@
 // Boot quality (src/scene/stage.js): every page load starts from the hardware guess (software WebGL: minimal), whatever an
-// older version left in localStorage; the adaptive drops (main.js) stay this session's and are never written back.
+// older version left in localStorage; the adaptive drops (main.js) stay this session's and are never written back. The one
+// exception: a recent context loss on screen (render-quality.js) lowers the boot for a few hours.
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import * as THREE from 'three';
@@ -56,3 +57,14 @@ assert.equal(boot({ nav: { connection: { saveData: true } } }).level, rq.initial
 // Storage may be unavailable; choosing the renderer must not depend on it.
 assert.equal(boot({ blocked: true }).antialias, true, 'blocked storage still boots with MSAA');
 console.log('boot quality ok');
+
+{ // a remembered context loss lowers the boot, and antialias with it; it never raises it
+  const mem = { 'gpu-loss': JSON.stringify({ level: -1, until: Date.now() + 60000 }) };
+  globalThis.localStorage = { getItem: k => mem[k] ?? null, setItem() {}, removeItem() {} };
+  try {
+    const low = boot();
+    assert.equal(low.level, -1); assert.equal(low.antialias, false);
+    mem['gpu-loss'] = JSON.stringify({ level: 2, until: Date.now() + 60000 });
+    assert.equal(boot().level, low.guess, 'never above the guess');
+  } finally { delete globalThis.localStorage; }
+}

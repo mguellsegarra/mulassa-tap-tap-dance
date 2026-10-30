@@ -100,8 +100,8 @@ export function createErrors({ mode, win, load, idle }) {
     },
     context(fn) { getTags = fn; },
     // known failures shown to the player (not crashes): one warning each, no personal data, `data` = small tags
-    report(kind, data = {}) {
-      run(S => S.captureMessage(kind, { level: 'warning', fingerprint: ['mulassa', kind], tags: { issue: kind, ...data } }));
+    report(kind, data = {}, message = kind) {
+      run(S => S.captureMessage(message, { level: 'warning', fingerprint: ['mulassa', kind], tags: { issue: kind, ...data } }));
     },
     breadcrumb(kind, data = {}) {
       const timestamp = Date.now() / 1000;

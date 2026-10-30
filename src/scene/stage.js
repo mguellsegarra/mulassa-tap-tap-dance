@@ -1,6 +1,6 @@
 // The 3D world: the renderer (with the no-WebGL card), scene, lights, the plaza and the play camera's fixed direction
 // (the figures are their own folders': figures/objects.js).
-import { initialQuality, probeRenderer, isSoftwareRenderer, sessionProfile } from '../platform/render-quality.js';
+import { initialQuality, probeRenderer, isSoftwareRenderer, sessionProfile, gpuLossLevel } from '../platform/render-quality.js';
 import * as THREE from 'three';
 import { tr } from '../i18n/messages.js';
 import { errors, errorName } from '../services/errors.js';
@@ -10,12 +10,13 @@ import { buildSky } from './sky.js';
 
 // ------------------------------------------------------------------ 3D
 window.__mulassaSetBootPhase?.('graphics');
-// every page load starts from the hardware guess (adaptive drops last for the session only); -1 = minimal
+// every page load starts from the hardware guess (adaptive drops last for the session only), or lower after a recent
+// context loss on screen (render-quality.js); -1 = minimal
 // software WebGL (no GPU): minimal from the start
 export const GPU = probeRenderer(), softwareGl = isSoftwareRenderer(GPU);
 const qualityGuess = initialQuality({ mobile: COARSE.matches, cores: navigator.hardwareConcurrency,
   memory: navigator.deviceMemory, saveData: navigator.connection?.saveData, renderer: GPU.renderer });
-export let qualityLevel = softwareGl ? -1 : qualityGuess;
+export let qualityLevel = softwareGl ? -1 : Math.min(qualityGuess, gpuLossLevel());
 export const setQualityLevel = v => (qualityLevel = v);
 // the session's people: the boot level's; on the splash they follow adaptive quality (the title screen is where a device that
 // boots too high finds its level), after it they only step down, one level behind it: sharpness, shadows and effects go first,
@@ -43,7 +44,7 @@ export const renderer = (() => { // no WebGL 2 (disabled, blocklisted GPU, very 
   }
 })();
 let restorePending = false; // a restore fired and no screen render has been submitted since
-glc.addEventListener('webglcontextlost', () => { restorePending = false; errors.report('webgl-context-lost'); }); // three.js handles the restore itself
+glc.addEventListener('webglcontextlost', () => { restorePending = false; }); // reported in pause-actions.js; three.js handles the restore itself
 glc.addEventListener('webglcontextrestored', () => { restorePending = true; errors.breadcrumb('webgl-context-restored'); }); // it fired; nothing says the scene is whole again
 renderer.shadowMap.enabled = renderProfile.shadow > 0;
 renderer.shadowMap.type = THREE.PCFShadowMap;

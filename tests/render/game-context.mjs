@@ -1,7 +1,7 @@
 // The game's systems running together in a mocked DOM (main.js and every module it reaches, as ONE script: load-main.mjs),
 // shared by the contract files render-quality.mjs runs in order (one module instance: one game for all of them).
 import { loadMainSource } from './load-main.mjs';
-import { PROFILES, sessionProfile, initialQuality, renderDpr, frameMonitor, hudScale, framePacer, profileAt, hudBudget, smoothClock, isSoftwareRenderer, probeRenderer } from '../../src/platform/render-quality.js';
+import { PROFILES, sessionProfile, initialQuality, renderDpr, frameMonitor, hudScale, framePacer, profileAt, hudBudget, smoothClock, isSoftwareRenderer, probeRenderer, gpuLossLevel, rememberGpuLoss } from '../../src/platform/render-quality.js';
 import { buildPerson } from '../../src/scene/models.js';
 
 // Execute the actual scene/simulation with Three.js geometry and a CPU renderer stub.
@@ -88,7 +88,7 @@ const context = vm.createContext({
   ...await import('../../src/dev/final-test.js'), MOCK_BOARD: false, ALIAS_KEY: 'leaderboard-alias', // ?final: off here (no hostname)
   errors, errorName, audioFailureTags: (await import('../../src/platform/audio-load.js')).audioFailureTags,
   THREE: { ...THREE, WebGLRenderer: Renderer }, ...await import('../../src/scene/crowd-fx.js'), ...models, ...chart, ...progress, ...stars,
-  PROFILES, sessionProfile, initialQuality, renderDpr, frameMonitor, hudScale, framePacer, smoothClock, profileAt, hudBudget, isSoftwareRenderer, probeRenderer, Chip: class { constructor(song, opts) { context.chipOpts = opts; } menu() {} setMenuMusic(on) { (context.menuMusicCalls ||= []).push(on); } }, ...practice, ...energy, ...bubblesLogic, ...framing, ...dance, ...logoMotionLogic, ...orbitLogic, setupSync: hooks => { context.syncHooks = hooks; return context.syncSheet = { open: false, show() { this.open = true; } }; },
+  PROFILES, sessionProfile, initialQuality, renderDpr, frameMonitor, hudScale, framePacer, smoothClock, profileAt, hudBudget, isSoftwareRenderer, probeRenderer, gpuLossLevel, rememberGpuLoss, Chip: class { constructor(song, opts) { context.chipOpts = opts; } menu() {} setMenuMusic(on) { (context.menuMusicCalls ||= []).push(on); } }, ...practice, ...energy, ...bubblesLogic, ...framing, ...dance, ...logoMotionLogic, ...orbitLogic, setupSync: hooks => { context.syncHooks = hooks; return context.syncSheet = { open: false, show() { this.open = true; } }; },
   pixelSvg: () => '<svg></svg>', // src/ui/select-ui.js (provided)
   curtain: swap => swap(), curtainCover() {}, // src/ui/curtain.js (provided: its timing is tests/ui/curtain.mjs's; here free play's switch runs at once)
   setupSelect: opts => (context.selectScreen = { opts, sheetOpen: false, visible(on) { this.shown = on; }, refocus() {} }),

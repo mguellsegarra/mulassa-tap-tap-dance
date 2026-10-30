@@ -47,4 +47,17 @@ assert.equal(wakes, 3, 'hidden at the check: nothing waits');
 chip.ctx.state = 'running'; tap(); ctx.stalled(); // on the menu, the loop's clock froze without leaving (AirPods)
 assert.deepEqual([reports.at(-1), chip.ctx.state], [['menu-audio-stalled', 'running'], 'suspended'], 'reported and suspended');
 tap(); assert.equal(chip.running, true, 'the next tap wakes it');
+// A blur with the page on screen (Android's address bar): our own suspend, no report, but a tap still wakes it
+{
+  const before = reports.length;
+  ctx.document.hidden = false; tap(); // the case above left the page hidden, and still waiting
+  const woke = wakes;
+  chip.ctx.state = 'suspended'; ctx.check(true); later.splice(0).forEach(f => f());
+  assert.equal(reports.length, before, 'the blur is not reported as sound that failed to come back');
+  tap(); assert.deepEqual([wakes, chip.running], [woke + 1, true], 'the next tap wakes it');
+  tap();
+  chip.ctx.state = 'suspended'; ctx.check(true); later.splice(0).forEach(f => f());
+  back(); assert.deepEqual(reports.at(-1), ['audio-not-back', 'suspended'], 'a real return that stays silent after it is still reported');
+  assert.equal(reports.length, before + 1);
+}
 console.log('Sound back from another app: no card, the next tap anywhere wakes it when it stayed stopped or frozen');

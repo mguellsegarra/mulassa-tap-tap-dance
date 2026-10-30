@@ -325,6 +325,31 @@ console.log('share capture targets ok');
 }
 console.log('screen render after a restore ok');
 
+// A context-lost report says where it happened at the loss (the SDK may send it much later, from another screen), and a repeat
+// reaches Sentry: Dedupe drops a message identical to the previous one.
+{
+  const sent = [], or = errors.report;
+  errors.report = (k, d, m) => sent.push({ k, d, m });
+  run(`var lwHidden = document.hidden, lwState = G.state; document.hidden = true; G.state = 'title';`);
+  try {
+    const lost = nodes.get('gl').listeners.webglcontextlost;
+    lost(); run(`G.state = 'select';`); lost();
+    const [a, b] = sent;
+    assert.equal(a.k, 'webgl-context-lost');
+    assert.equal(a.d.hidden, 'true');
+    assert.equal(a.d.screen, 'title', 'the screen of the loss, not of the send');
+    assert.ok(Number.isInteger(a.d.uptimeS) && a.d.uptimeS >= 0);
+    assert.equal(b.k, 'webgl-context-lost', 'same issue');
+    assert.equal(b.d.lossN, a.d.lossN + 1);
+    assert.ok(Number.isInteger(b.d.sinceLastS) && b.d.sinceLastS >= 0);
+    assert.notEqual(b.m, a.m, 'a different message, or Dedupe drops it');
+  } finally {
+    run(`document.hidden = lwHidden; G.state = lwState;`);
+    errors.report = or;
+  }
+}
+console.log('context-lost report tags ok');
+
 
 // L'ÀNIM DE LA PLAÇA: standing idle drains it note by note until the mulassa falls apart, on every difficulty;
 // the count-in and the intro before the first note never drain; each warning threshold pulses once on the way down.

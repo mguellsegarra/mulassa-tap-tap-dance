@@ -362,7 +362,7 @@
   "ui.webgl.unavailable": "O teu navegador não consegue mostrar o jogo em 3D. Fecha-o por completo e volta a abri-lo; se não resultar, atualiza-o ou abre-o no Chrome ou no Safari.",
   "ui.webgl.title": "Ups! Não é possível mostrar o jogo",
   "ui.webgl.lostTitle": "Ups! O jogo parou",
-  "ui.webgl.lostText": "O telemóvel deixou de mostrar o jogo em 3D. Tenta outra vez.",
+  "ui.webgl.lostText": "O telemóvel deixou de mostrar o jogo em 3D. Fecha o navegador por completo e volta a abri-lo.",
   "ui.board.jumpTopShort": "Ao topo",
   "ui.board.jumpMeShort": "A minha linha",
   "ui.board.jumpTopAria": "Ir para o topo da classificação",

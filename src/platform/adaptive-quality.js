@@ -1,9 +1,9 @@
 // Quality recovery owns its evidence windows, not the scene. The caller supplies drawn-frame CPU cost and cadence.
-import { frameMonitor, SLOW_SHARE } from './render-quality.js';
+import { frameMonitor, SLOW_SHARE, rememberGpuLoss } from './render-quality.js';
 
 // A stable cadence is necessary but not proof of GPU headroom. A menu-only one-level trial, followed by the existing
 // overload monitor, tests actual restored work. Failed trials back off (30 s → 5 min); never probe during a song.
-export function adaptiveQuality({ ceiling, level, change, report = () => {} }) {
+export function adaptiveQuality({ ceiling, level, change, report = () => {}, canvas }) {
   let time = 0, elapsed = 0, samples = 0, late = 0, costSum = 0, costPeak = 0, good = 0;
   let cooldown = 2000, retry = 12000, sinceChange = 0, trial = false, failures = 0, cadence = 0;
   let lastHold = null, lastPlay = null, lastHalf = null, lastLowPower = null, suspended = false;
@@ -11,6 +11,17 @@ export function adaptiveQuality({ ceiling, level, change, report = () => {} }) {
   // Allocate diagnostic objects only at a decision/window boundary, never in the per-frame sample path.
   const context = () => ({ hz: currentPace.hz, fps: currentPace.fps, half: currentPace.half, lowPower: currentPace.lowPower,
     hold: held, play: playing, budget: 1000 / currentPace.fps, frame: frameMs, cpu: frameCost });
+  // A context lost on screen: one level down once it is back, for good this session (no trial above it) and for the next
+  // loads, remembered at the loss since it may never come back. Mitigation, the cause is unknown. A hidden page's loss proves nothing.
+  let lostTo = null, restored = false;
+  canvas?.addEventListener('webglcontextlost', () => {
+    restored = false;
+    if (document.hidden) return;
+    lostTo = Math.max(-1, Math.min(lostTo ?? Infinity, level() - 1));
+    ceiling = Math.min(ceiling, lostTo); drops = null;
+    rememberGpuLoss(lostTo);
+  });
+  canvas?.addEventListener('webglcontextrestored', () => { restored = true; });
   const clear = () => { elapsed = samples = late = costSum = costPeak = good = 0; };
   const switchTo = (next, reason, evidence) => {
     const from = level();
@@ -46,6 +57,10 @@ export function adaptiveQuality({ ceiling, level, change, report = () => {} }) {
     if (!(ms > 0 && ms <= 1000)) { reset('gap'); return; }
     time += ms; sinceChange += ms;
     frameMs = ms; frameCost = cost; currentPace = pace; held = hold; playing = play;
+    if (restored && lostTo !== null) { // on a drawn frame: the profile's precompile needs a live context and a finished boot
+      const to = lostTo; lostTo = null; restored = false;
+      switchTo(to, 'context-lost', {}); trial = false;
+    }
     const { hz, fps, half, lowPower } = pace;
     // pace.half can be retained while a slower display is detected; only >95 Hz actually skips alternate callbacks.
     const pacedHalf = half && hz > 95, budget = 1000 / fps;

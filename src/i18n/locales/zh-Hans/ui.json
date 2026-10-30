@@ -353,7 +353,7 @@
   "ui.webgl.unavailable": "你的浏览器无法显示3D游戏。请完全关闭浏览器后重新打开；如果还不行，请更新浏览器或用Chrome、Safari打开。",
   "ui.webgl.title": "哎呀，游戏无法显示",
   "ui.webgl.lostTitle": "哎呀，游戏停止了",
-  "ui.webgl.lostText": "手机无法再显示3D游戏了，请再试一次。",
+  "ui.webgl.lostText": "手机无法再显示3D游戏了。请完全关闭浏览器后重新打开。",
   "ui.board.jumpTopShort": "回到榜首",
   "ui.board.jumpMeShort": "我的排名",
   "ui.board.jumpTopAria": "回到排行榜顶部",

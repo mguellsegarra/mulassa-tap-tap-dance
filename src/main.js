@@ -11,7 +11,7 @@ import { markLeaderboardDebugUse } from './services/leaderboard-result.js';
 import { Q, pageActive, CALM, STARS } from './core/env.js';
 import { FINAL } from './dev/final-test.js';
 import { pace, RAWCLOCK, viewClock } from './core/timing.js';
-import { qualityLevel, renderProfile, softwareGl, stepPeople, freePlayPeople, GPU, renderer, camera, plaza, scene, setQualityLevel, renderScreen } from './scene/stage.js';
+import { glc, qualityLevel, renderProfile, softwareGl, stepPeople, freePlayPeople, GPU, renderer, camera, plaza, scene, setQualityLevel, renderScreen } from './scene/stage.js';
 import { initFigureObjects, hideFigures } from './figures/objects.js';
 import { G, chip, clock, songTime, drawT, audioEngine, setClock, setDrawT, offsetMs } from './game/state.js';
 import { audioFailureTags } from './platform/audio-load.js';
@@ -62,7 +62,7 @@ import { tickGame } from './game/tick.js';
 window.__mulassaSetBootPhase?.('init');
 initFigureObjects(); // both rigs exist before shader warmup and the first frame
 
-const monitorFrames = adaptiveQuality({ ceiling: qualityLevel, level: () => qualityLevel, report: qualitySample,
+const monitorFrames = adaptiveQuality({ ceiling: qualityLevel, level: () => qualityLevel, report: qualitySample, canvas: glc,
   change: (level, reason) => { setQualityLevel(level); stepPeople(level, G.state === 'splash', reason === 'scope-end'); applyRenderQuality({ transition: !loader.covering }); resize(); precompile(); },
 });
 let glName; // crash reports' context, read only when one is sent

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { adaptiveQuality } from '../../src/platform/adaptive-quality.js';
-import { framePacer } from '../../src/platform/render-quality.js';
+import { framePacer, gpuLossLevel, rememberGpuLoss } from '../../src/platform/render-quality.js';
 
 const rig = (ceiling = 2) => {
   let level = ceiling, t = 0; const events = [], changes = [];
@@ -111,3 +111,35 @@ for (const ceiling of [0, 1]) {
   assert(hitchRun(true) < 2, 'the same repeated hitches still lower quality during active play');
 }
 console.log('adaptive quality: overload, measured recovery, failed-trial backoff, caps, background and 120 Hz ok');
+
+// A context lost on screen: one level down after the restore, no way back this session, and remembered for the next loads.
+{
+  const mem = new Map();
+  globalThis.localStorage = { getItem: k => mem.get(k) ?? null, setItem: (k, v) => mem.set(k, v), removeItem: k => mem.delete(k) };
+  globalThis.document = { hidden: false };
+  const on = {}, canvas = { addEventListener: (k, f) => { on[k] = f; } };
+  let level = 0, changes = [];
+  const sample = adaptiveQuality({ ceiling: 0, level: () => level, change: (q, why) => { changes.push([q, why]); level = q; }, canvas });
+  const pace = { hz: 60, fps: 60, half: false, lowPower: false }, run = s => { for (let i = 0; i < s * 60; i++) sample(1000 / 60, 3, pace); };
+  run(1);
+  document.hidden = true; on.webglcontextlost(); on.webglcontextrestored(); run(1);
+  assert.equal(level, 0, 'a hidden page losing its context costs nothing');
+  assert.equal(gpuLossLevel(), Infinity);
+  document.hidden = false; on.webglcontextlost();
+  assert.equal(gpuLossLevel(), -1, 'remembered at the loss: it may never come back');
+  run(1); assert.equal(level, 0, 'nothing changes on a lost context');
+  on.webglcontextrestored(); run(1);
+  assert.deepEqual(changes, [[-1, 'context-lost']]);
+  run(60); assert.equal(level, -1, 'no headroom trial back above it');
+  on.webglcontextlost(); on.webglcontextrestored(); run(1);
+  assert.equal(level, -1, 'minimal is the floor');
+  const until = JSON.parse(mem.get('gpu-loss')).until;
+  assert.ok(Math.abs(until - Date.now() - 12 * 3600 * 1000) < 60000, 'remembered for 12 hours');
+  assert.equal(gpuLossLevel(until - 1), -1); assert.equal(gpuLossLevel(until), Infinity, 'forgotten after 12 hours');
+  mem.set('gpu-loss', '{broken'); assert.equal(gpuLossLevel(), Infinity);
+  mem.set('gpu-loss', JSON.stringify({ level: -7, until: Date.now() + 1000 })); assert.equal(gpuLossLevel(), Infinity);
+  mem.set('gpu-loss', JSON.stringify({ level: 0, until: 'Infinity' })); assert.equal(gpuLossLevel(), Infinity, 'a deadline that never expires is ignored');
+  rememberGpuLoss(0); assert.equal(gpuLossLevel(), 0);
+  delete globalThis.localStorage; delete globalThis.document;
+}
+console.log('context-lost quality step ok');

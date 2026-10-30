@@ -1,4 +1,5 @@
 // Hardware hints choose a conservative starting point; frame times handle unknown GPUs.
+import { store } from './storage.js';
 // backdrop: simple instanced figures along the façades (one draw call); balconies: people up on the first floors
 // (medium: static, merged into the buildings; high: skinned with the crowd, waving on the beat); band: the musicians
 // playing the ball (models.js BAND, in that order). mid: the same instanced figures as the backdrop (no bones, no CPU a
@@ -70,6 +71,16 @@ export function initialQuality({ mobile = false, cores, memory, saveData = false
   // start at medium (antialiased, sharper) and the frame monitor steps down only if frames really are slow
   if (mobile) return LOW_MOBILE_GPU.test(renderer) ? 0 : 1;
   return (memory && memory <= 4) || (cores && cores <= 4) ? 1 : 2;
+}
+// A context lost on screen (adaptive-quality.js) keeps the next loads a level lighter on this device for 12 hours: reloading
+// at the same level is what ended in a browser that refuses WebGL altogether. Infinity: nothing remembered, the guess stands.
+const GPU_LOSS_KEY = 'gpu-loss', GPU_LOSS_MS = 12 * 3600 * 1000;
+export const rememberGpuLoss = (level, now = Date.now()) => store.set(GPU_LOSS_KEY, JSON.stringify({ level, until: now + GPU_LOSS_MS }));
+export function gpuLossLevel(now = Date.now()) {
+  try {
+    const { level, until } = JSON.parse(store.get(GPU_LOSS_KEY));
+    return Number.isFinite(until) && until > now && Number.isInteger(level) && level >= -1 ? level : Infinity;
+  } catch { return Infinity; }
 }
 export function renderDpr(profile, width, height, dpr) {
   return Math.min(dpr || 1, profile.dpr, Math.sqrt(profile.pixels / Math.max(1, width * height)));

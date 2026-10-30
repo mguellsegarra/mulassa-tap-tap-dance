@@ -6,7 +6,7 @@ import { errors } from '../services/errors.js';
 
 const AUDIO_BACK_MS = 700; // the unprompted resume() takes a moment even when iOS allows it
 const AUDIO_MOVED = 0.1; // seconds of audio clock that prove the sound came back
-let audioWaiting = false;
+let audioWaiting = false; // true: reported; 'quiet': only our own suspend on a blur, a real stall after it still gets its report
 
 // Registered at import, before sheets-setup.js's window capture handlers, which can stop a key before later listeners see it
 for (const ev of ['touchend', 'click', 'keydown']) addEventListener(ev, () => {
@@ -16,19 +16,20 @@ for (const ev of ['touchend', 'click', 'keydown']) addEventListener(ev, () => {
 }, { capture: true, passive: true });
 
 // Not afterActive(): back from another Safari tab the page is visible but has no focus until a tap, so pageActive() is false
-export function checkAudioBack() {
+// `left`: a blur with the page still on screen (Android's address bar): it stopped because we suspended it, nothing failed to come back
+export function checkAudioBack(left = false) {
   const from = chip?.ctx?.currentTime, epoch = G.activityEpoch;
   setTimeout(() => {
     if (epoch !== G.activityEpoch || document.hidden) return; // left again meanwhile
     if (G.state === 'play' || !chip || (chip.menuMusic === false && !chip.free)) return; // nothing to hear
     if (chip.running && chip.ctx.currentTime - from >= AUDIO_MOVED) return; // it plays
-    audioStalled('audio-not-back');
+    audioStalled(left ? null : 'audio-not-back');
   }, AUDIO_BACK_MS);
 }
 // Also on the menu without leaving the page (pause-actions.js watchAudio): AirPods that drop out and back left the loop's
 // clock frozen while `running`, and taps only unhushed it until a run's own stall pause suspended and resumed it.
 export function audioStalled(kind = 'menu-audio-stalled') {
-  if (!audioWaiting) errors.report(kind, { audioState: chip.ctx.state }); // not `state`: the report's context tags use it for the screen
+  if (kind && audioWaiting !== true) errors.report(kind, { audioState: chip.ctx.state }); // not `state`: the report's context tags use it for the screen
   if (chip.running) chip.suspend(); // frozen while `running`: wake() only resumes a stopped context, so the tap can restart it
-  audioWaiting = true; // input.js wakes on taps too, but only with focus, which the Safari-tab case gets after the tap
+  audioWaiting = kind ? true : audioWaiting || 'quiet'; // input.js wakes on taps too, but only with focus, which the Safari-tab case gets after the tap
 }

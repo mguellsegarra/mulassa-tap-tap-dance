@@ -362,7 +362,7 @@
   "ui.webgl.unavailable": "El teu navegador no pot mostrar el joc en 3D. Tanca’l del tot i torna’l a obrir; si no, actualitza’l o obre’l amb Chrome o Safari.",
   "ui.webgl.title": "Ups! No es pot mostrar el joc",
   "ui.webgl.lostTitle": "Ups! El joc s’ha aturat",
-  "ui.webgl.lostText": "El mòbil ha deixat de mostrar el joc en 3D. Torna-ho a provar.",
+  "ui.webgl.lostText": "El mòbil ha deixat de mostrar el joc en 3D. Tanca el navegador del tot i torna’l a obrir.",
   "ui.board.jumpTopShort": "Al capdamunt",
   "ui.board.jumpMeShort": "A la meva fila",
   "ui.board.jumpTopAria": "Ves al capdamunt de la classificació",

@@ -45,7 +45,12 @@ comes back blank, with its default state (identity transform, default font), and
   blank). A `CanvasTexture` repaints its canvas and sets `needsUpdate` (three.js re-uploads it from the blank canvas).
 - No heavy off-screen GPU work on a player's path (render targets plus a read back of a big image): the share photo is
   a fixed file per figure (`public/share/`, made with `__dbg.hero`), never rendered on the device.
-- A lost context that never comes back shows the reload card after 5 s on screen (`src/ui/pause-actions.js`); a
+- A context lost on screen drops quality one level once it is back, with no trial above it that session, and the next
+  loads on that device start at that level for 12 hours (`src/platform/adaptive-quality.js`, `render-quality.js`). A
+  hidden page's loss costs nothing. This is a mitigation: the cause of these losses is unknown.
+- A lost context that never comes back shows the reload card after 5 s on screen (`src/ui/pause-actions.js`). Its text
+  asks to close the browser and reopen it, since Chrome can block WebGL for the site until it restarts; its retry
+  button stays, as a reload may still work elsewhere; a
   failure card shown after boot passes its own reason so `errors.js` doesn't report it again as `boot-failed`.
 - Test with a real crash, not only `WEBGL_lose_context` (it never touches 2D canvases): Playwright's CDP
   `Browser.crashGpuProcess` (`chrome://gpucrash` is blocked headless) on each screen you touch, then check the HUD's

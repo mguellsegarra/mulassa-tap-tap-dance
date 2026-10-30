@@ -362,7 +362,7 @@
   "ui.webgl.unavailable": "Tu navegador no puede mostrar el juego en 3D. Ciérralo del todo y vuelve a abrirlo; si no, actualízalo o ábrelo con Chrome o Safari.",
   "ui.webgl.title": "¡Ups! No se puede mostrar el juego",
   "ui.webgl.lostTitle": "¡Ups! El juego se ha detenido",
-  "ui.webgl.lostText": "El móvil ha dejado de mostrar el juego en 3D. Vuelve a intentarlo.",
+  "ui.webgl.lostText": "El móvil ha dejado de mostrar el juego en 3D. Cierra el navegador del todo y vuelve a abrirlo.",
   "ui.board.jumpTopShort": "Al principio",
   "ui.board.jumpMeShort": "A mi fila",
   "ui.board.jumpTopAria": "Ve al principio de la clasificación",

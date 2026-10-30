@@ -47,7 +47,7 @@ function syncPageActivity(e) {
     pauseGame();
     chip?.clearMenuSfx?.();
     chip?.suspend();
-    if ((e?.type === 'visibilitychange' || e?.type === 'blur' && COARSE.matches) && !document.hidden && chip?.woke) checkAudioBack(); // iOS, back from another tab or the URL bar: shown, but no focus until a tap
+    if ((e?.type === 'visibilitychange' || e?.type === 'blur' && COARSE.matches) && !document.hidden && chip?.woke) checkAudioBack(e.type === 'blur'); // iOS, back from another tab or the URL bar: shown, but no focus until a tap
   } else if (!G.paused || G.resuming != null) {
     chip?.wake();
     if (chip?.woke) { chip.resume(); checkAudioBack(); } // back from another app there is no gesture (wake() skips it): an unlocked context may resume, else it stays mute until a tap (iOS), and the next tap wakes it
@@ -77,7 +77,16 @@ function restoreLate() {
   document.querySelectorAll('dialog[open]').forEach(d => d.close());
   window.__mulassaFail?.(tr('ui.webgl.lostTitle'), tr('ui.webgl.lostText'), true, 'webgl-not-restored'); // reported above, not as boot-failed
 }
-glc.addEventListener('webglcontextlost', () => { clearTimeout(restoreTimer); restoreTimer = setTimeout(restoreLate, NO_RESTORE_MS); });
+// `screen`, not `state`: a report can wait for the SDK to load (errors.js), and the context's tags are read when it is sent
+let lossN = 0, lastLoss = 0;
+function reportLoss() {
+  const now = performance.now(), sinceLastS = lossN ? Math.round((now - lastLoss) / 1000) : undefined;
+  lossN++; lastLoss = now;
+  // The SDK's Dedupe drops a message identical to the one before it: a repeat needs its own text (same fingerprint, same issue)
+  errors.report('webgl-context-lost', { hidden: String(document.hidden), screen: G.state, uptimeS: Math.round(now / 1000), lossN, sinceLastS },
+    lossN > 1 ? `webgl-context-lost #${lossN}` : undefined);
+}
+glc.addEventListener('webglcontextlost', () => { reportLoss(); clearTimeout(restoreTimer); restoreTimer = setTimeout(restoreLate, NO_RESTORE_MS); });
 glc.addEventListener('webglcontextrestored', () => { clearTimeout(restoreTimer); restoreTimer = 0; });
 export function requestPauseAction(action) {
   if (!G.paused) return;

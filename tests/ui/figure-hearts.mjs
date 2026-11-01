@@ -24,4 +24,14 @@ assert.equal(hearts.count('bou'), 2); assert.deepEqual(writes, [], "the old acco
   h.reload(); assert.equal(notes.length, 0, 'another account does not inherit it');
   await h.load(); h.tap({ id: 'bou' }, button); await tick(); await tick(); assert.equal(notes.length, 1);
   on = true; h.tap({ id: 'bou' }, button); await tick(); await tick(); assert.equal(notes.length, 0, 'a retry that saves clears it'); assert.equal(h.mine('bou'), true); }
+// on a pending card the note keeps to its button's width, centred in the room above the next button
+{ const notes = [];
+  const doc = { defaultView: { innerWidth: 668, matchMedia: () => ({ matches: true }) }, createElement: () => ({ style: {}, offsetWidth: 200, offsetHeight: 30, setAttribute() {}, remove() {} }), body: { append: n => notes.push(n) } };
+  const card = { querySelector: () => ({ getBoundingClientRect: () => ({ top: 100, height: 44 }) }) };
+  const button = { ownerDocument: doc, getBoundingClientRect: () => ({ left: 29, width: 229, bottom: 50 }), closest: s => (s === '.sel-pending' ? card : null), querySelector: () => ({ classList: { add() {}, remove() {} }, getBoundingClientRect: () => ({}) }), classList: { add() {}, remove() {} } };
+  const h = setupHearts({ service: { figureHearts: async () => [], setFigureHeart: async () => { throw new Error('down'); } }, needConfirmed: (r, run) => run() });
+  h.tap({ id: 'os' }, button); await tick(); await tick();
+  assert.equal(notes[0].style.maxWidth, '229px', 'no wider than the button');
+  assert.equal(notes[0].style.top, '60px', 'the same room above and below');
+  h.reload(); }
 console.log('figure hearts ok');

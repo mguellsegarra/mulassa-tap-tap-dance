@@ -28,8 +28,10 @@ function heartFailed(button) {
   const note = doc.createElement('div');
   note.className = 'sel-heart-fail'; note.setAttribute('role', 'alert'); note.textContent = tr('ui.hearts.failed');
   (button.closest('dialog') ?? doc.body).append(note);
+  const next = button.closest('.sel-pending')?.querySelector('.sel-pending-actions')?.getBoundingClientRect();
+  if (next) note.style.maxWidth = `${r.width}px`; // on a pending card: as wide as its button, centred in the room above the next one
   note.style.left = `${Math.max(12, Math.min(r.left + r.width / 2 - note.offsetWidth / 2, win.innerWidth - note.offsetWidth - 12))}px`;
-  note.style.top = `${r.bottom + 10}px`;
+  note.style.top = `${r.bottom + (next?.height ? Math.max(4, (next.top - r.bottom - note.offsetHeight) / 2) : 10)}px`;
   setTimeout(() => note.remove(), FAILED_MS);
   return note;
 }

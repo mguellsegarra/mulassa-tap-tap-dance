@@ -86,7 +86,7 @@ body.reel-idle #select > * { pointer-events: none; }
   @media (min-width: 1500px) { .sel-info { width: min(560px, 40%, var(--info-w, 560px)); } } /* big screens (a Studio Display, a 1920 window): the table at 640 left a wide empty band */
   .sel-identity { column-gap: 16px; }
   .sel-panel { gap: 18px; }
-  .sel-identity .sel-entity { translate: 0 5px; } /* the chip centred between the name and the song's hairline (its gaps are 10 above, 18 below) */
+  .sel-identity-row { translate: 0 5px; } /* the chip centred between the name and the song's hairline (its gaps are 10 above, 18 below) */
   .sel-panel[data-tight] .sel-entity { translate: 0 2px; }
   .sel-info { container-type: inline-size; } /* its width is set (--info-w): the name scales to it */
   .sel-name { font-size: clamp(30px, min(4.2vw, 6.4vh, 10cqi), 72px); } /* «Mulassa de Valls» on one line beside the ? in the column held left of the strip */
@@ -250,7 +250,7 @@ body.reel-idle #select > * { pointer-events: none; }
   .sel-song { font-size: clamp(16px, 5.6cqi, 24px); padding-top: 20px; }
   .sel-tiles { padding-top: 20px; }
   .sel-panel { gap: 20px; }
-  .sel-identity .sel-entity { translate: 0 6px; }
+  .sel-identity-row { translate: 0 6px; }
   .sel-card { flex-basis: 248px; --floor: 25px; }
   .sel-card-name { font-size: 19px; line-height: 23px; }
   .sel-card .nb small { font-size: 14px; }

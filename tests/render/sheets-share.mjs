@@ -39,6 +39,7 @@ settingsSheet.close();
   assert.equal(fb.opts.captcha, boardSheet.captcha, 'one shared Turnstile');
   nodes.get('settings').listeners.click();
   nodes.get('settings-feedback').listeners.click();
+  await new Promise(r => setImmediate(r)); // writing needs a confirmed e-mail (confirm-gate.js): the answer comes first
   assert.equal(fb.shown, 1);
   for (const code of ['Space', 'Enter', 'ArrowRight', 'KeyD']) keyHandlers.forEach(h => h({ code, target: { tagName: 'TEXTAREA' }, preventDefault() { throw new Error('typing stays in the form'); } }));
   assert(run("G.state === 'select' && G.sel === 2"));

@@ -18,6 +18,7 @@ FEEDBACK_FROM = "holi@mulassa.cat"
 # about this many e-mails a day in total (counted in DAILY; KV has no atomic increment, so concurrent requests from
 # several locations can overshoot by a few: keep the real budget above this); then 429 until midnight UTC
 DAILY_MAX = "150"
+# SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY (both public) say which project's accounts may write: one Worker per project.
 
 # no destination_address: it may send to any verified Email Routing destination of the account; FEEDBACK_TO picks it
 [[send_email]]

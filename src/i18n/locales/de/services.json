@@ -38,7 +38,6 @@
   "services.captcha.unauthorized": "Diese Website ist nicht für die Cloudflare-Prüfung zugelassen.",
   "services.captcha.unsupported": "Dieser Browser unterstützt die Prüfung nicht. Versuch einen anderen.",
   "services.feedback.captcha": "Wir konnten nicht prüfen, ob du kein Roboter bist. Versuch’s noch mal.",
-  "services.feedback.invalid_email": "Für eine Antwort brauchen wir eine gültige E-Mail (z. B. nom@domini.cat).",
   "services.feedback.invalid_message": "Die Nachricht muss {min} bis {max} Zeichen haben.",
   "services.feedback.offline": "Keine Verbindung. Prüfe sie und versuch’s noch mal.",
   "services.feedback.rate_limit": "Du hast viele Nachrichten auf einmal geschickt. Warte kurz und versuch’s noch mal.",
@@ -53,5 +52,6 @@
   "services.share.drac.record": "{mula}🔥 Neuer Rekord: {score} Punkte auf {diff} ({pct} Treffer) beim Tanz des Drac de Valls! 🎉",
   "services.share.bou": "Ich habe den Bou Tradicional de Valls tanzen lassen: {pct} Treffer auf {diff}. #Valls",
   "services.share.fail": "{mula} {pct} Treffer auf {diff}… Die Mulassa will Revanche. Wie würdest du abschneiden? 💃",
-  "services.share.record": "{mula}🔥 Neuer Rekord: {score} Punkte auf {diff} ({pct} Treffer) beim Tanz der Mulassa de Valls! 🎉"
+  "services.share.record": "{mula}🔥 Neuer Rekord: {score} Punkte auf {diff} ({pct} Treffer) beim Tanz der Mulassa de Valls! 🎉",
+  "services.feedback.daily_limit": "Du hast heute schon 3 Einsendungen gemacht. Ab {time} kannst du wieder schreiben."
 }

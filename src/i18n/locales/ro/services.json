@@ -38,7 +38,6 @@
   "services.captcha.unauthorized": "Acest site nu este autorizat pentru verificarea Cloudflare.",
   "services.captcha.unsupported": "Acest browser nu acceptă verificarea. Încearcă altul.",
   "services.feedback.captcha": "Nu am putut verifica dacă ești robot. Încearcă din nou.",
-  "services.feedback.invalid_email": "Ai nevoie de un e-mail valid (ex.: nom@domini.cat) ca să îți putem răspunde.",
   "services.feedback.invalid_message": "Mesajul trebuie să aibă între {min} și {max} caractere.",
   "services.feedback.offline": "Fără conexiune. Verific-o și încearcă din nou.",
   "services.feedback.rate_limit": "Ai trimis multe mesaje la rând. Așteaptă puțin și încearcă din nou.",
@@ -53,5 +52,6 @@
   "services.share.drac.record": "{mula}🔥 Record nou de puncte: {score} la {diff} ({pct} reușite), făcând Drac de Valls să danseze! 🎉",
   "services.share.bou": "Am făcut Bou Tradicional de Valls să danseze cu {pct} reușite la {diff}. #Valls",
   "services.share.fail": "{mula} {pct} reușite la {diff}… Mulassa cere revanșa. Tu cum te-ai descurca? 💃",
-  "services.share.record": "{mula}🔥 Record nou de puncte: {score} la {diff} ({pct} reușite), făcând Mulassa de Valls să danseze! 🎉"
+  "services.share.record": "{mula}🔥 Record nou de puncte: {score} la {diff} ({pct} reușite), făcând Mulassa de Valls să danseze! 🎉",
+  "services.feedback.daily_limit": "Ai trimis deja 3 mesaje azi. Vei putea scrie din nou de la {time}."
 }

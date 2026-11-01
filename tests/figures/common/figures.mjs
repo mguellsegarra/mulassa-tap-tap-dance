@@ -2,14 +2,13 @@ import { UNRELEASED_IDS } from '../../../src/figures/index.js';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { selectCss } from '../../ui/page.mjs';
-import { FIGURES, TOWNS, MULASSA, DRAC, BOU, portraitArt, portraitPalette, portraitStand, STAND, playable, upFront, townOf, rememberedLevel, rememberLevel, recordKey, locationOf, aviatText, aviatDraft, inviteText, INVITE, INVITE_TOWN, INVITE_DRAFT } from '../../../src/game/figures.js';
+import { FIGURES, TOWNS, MULASSA, DRAC, BOU, portraitArt, portraitPalette, portraitStand, STAND, playable, upFront, townOf, rememberedLevel, rememberLevel, recordKey, locationOf, heartCall, inviteText, INVITE, INVITE_TOWN } from '../../../src/game/figures.js';
 import { FIGURE_PORTRAITS } from '../../../src/game/figure-portraits.js';
 import { setupSelect, peekGap, pixelSvg } from '../../../src/ui/select-ui.js';
 import { cellOutline } from '../../../src/ui/selector-portraits.js';
 import { DRAWN_SILHOUETTES, SILHOUETTE_DRAWINGS, silhouetteBox } from '../../../src/ui/pending-silhouettes.js';
 import { escutSvg } from '../../../src/ui/escuts.js';
 import { clampStand } from '../../../src/dev/sizes-edit.js';
-import { fitPendingNote } from '../../../src/ui/pending-title.js';
 import '../../ui/strip-scroll.mjs';
 const MULE_ART = FIGURE_PORTRAITS['mulassa-valls'].art, DRAC_ART = FIGURE_PORTRAITS['drac-valls'].art;
 assert.equal(new Set(FIGURES.map(f => f.id)).size, FIGURES.length);
@@ -78,9 +77,8 @@ assert.equal(sourceCatalog.figures.find(f => f.id === 'nans-valls').music, 'Fran
 const pendingName = id => sourceCatalog.figures.find(f => f.id === id);
 for (const [id, verb] of [['gegants-ciutat-valls', 'surtin'], ['nans-valls', 'surtin'], ['mulassa-solsona', 'surtin'], ['aliga-solsona', 'surtin'], ['boja-vilanova', 'surti'], ['drac-vilanova', 'surti'], ['guites-berga', 'surtin'],
   ['os-trabucaires-valls', 'surti'], ['diables-valls', 'surti'], ['cavallets-valls', 'surti'], ['gegants-mulassa-reus', 'surti'], ['gegants-bojos-solsona', 'surtin'], ['basilisc-valls', 'surti'], ['aliga-valls', 'surti'], ['cucafera-tarragona', 'surti']]) {
-  assert.match(aviatText(pendingName(id)), new RegExp(`^Volem que ${verb} a la plaça`), `${id}: the verb agrees with its name`);
+  assert.match(heartCall(pendingName(id)).title, new RegExp(`^Vols que ${verb} a la plaça`), `${id}: the verb agrees with its name`);
 }
-assert.equal(aviatText(pendingName('aliga-valls')).split('\n\n').length, 2, 'pending cards: how to help, then the open code');
 
 // A named asset-backed fixture exercises future catalog entries without prescribing the research roster.
 const catalogFixture = { id: 'selector-fixture', town: TOWNS.at(-1).id, status: 'aviat', name: 'Figura de prova amb nom llarg', entity: 'Entitat de prova amb nom llarg', thumbnail: '/figures/selector-fixture.webp' };
@@ -116,7 +114,7 @@ class Node {
   scrollTo({ left, behavior }) { this.scrollLeft = left; this.behavior = behavior; }
   getBoundingClientRect() { return { top: 100, right: 200, bottom: 300 }; }
 }
-for (const id of ['free', 'viewmode', 'feedback', 'music', 'settings', 'select-carousel', 'select-prev', 'select-forward', 'select-nav', 'select', 'select-towns', 'select-strip', 'select-level', 'select-song', 'select-entity', 'select-act', 'select-name', 'select-song-name', 'select-song-credit', 'select-play', 'select-next', 'select-next-label', 'select-figures-back', 'select-board', 'select-howto', 'aviat-write', 'aviat-text', 'select-info', 'select-bottom', 'select-pos', 'select-tiles', 'select-rank-tile', 'select-pending', 'aviat-entity', 'aviat-where', 'aviat-title', 'select-level-stats', 'select-level-title', 'select-level-sub']) nodes.set(id, new Node(id));
+for (const id of ['aviat-code', 'aviat-material', 'aviat-propose', 'aviat-heart', 'select-heart', 'aviat-lower', 'aviat-love-title', 'aviat-love-sub', 'aviat-status', 'aviat-missing', 'free', 'viewmode', 'feedback', 'music', 'settings', 'select-carousel', 'select-prev', 'select-forward', 'select-nav', 'select', 'select-towns', 'select-strip', 'select-level', 'select-song', 'select-entity', 'select-act', 'select-name', 'select-song-name', 'select-song-credit', 'select-play', 'select-next', 'select-next-label', 'select-figures-back', 'select-board', 'select-howto', 'aviat-write', 'aviat-text', 'select-info', 'select-bottom', 'select-pos', 'select-tiles', 'select-rank-tile', 'select-pending', 'aviat-entity', 'aviat-where', 'aviat-title', 'select-level-stats', 'select-level-title', 'select-level-sub']) nodes.set(id, new Node(id));
 // The level row's title reports an overflow while it carries what a narrow screen can't hold (the points).
 Object.defineProperties(nodes.get('select-level-title'), { clientWidth: { value: 200 }, scrollWidth: { get() { return narrow && /punts/.test(this.textContent) ? 999 : 100; } },
   textContent: { get() { return (this.html ?? '').replace(/<[^>]*>/g, ''); }, set(v) { this.html = v; } } }); // its level word is a coloured span
@@ -128,7 +126,7 @@ let boards = [], sounds = [], played = [], how = 0, drafts = [], busy = false, s
 let standingOf = async f => (f === DRAC.id ? { pos: 3, total: 12 } : { pos: 7, total: 1350 });
 const api = setupSelect({ doc, win, store, keyboard: () => true, reduced: () => true, busy: () => busy,
   sfx: k => sounds.push(k), firstLevel: 0, standing: f => standingOf(f), onBoard: f => boards.push(f.id), ranked: true, demo: true, // ?demo stays off outside a dev build
-  onPlay: (d, f) => played.push([d, f.id]), onSelect: f => selected.push(f.id), onHowto: () => how++, onWrite: draft => drafts.push(draft) });
+  onPlay: (d, f) => played.push([d, f.id]), onSelect: f => selected.push(f.id), onHowto: () => how++, onWrite: draft => drafts.push(draft), hearts: { count: () => 0, mine: () => false, paint() {}, tap() {} } });
 const key = (key, options = {}) => { const e = { key, ...options, defaultPrevented: false, preventDefault() { this.defaultPrevented = true; } }; for (const f of handlers.keydown) f(e); return e; };
 const click = (root, target = root) => root.fire('click', { target });
 api.visible(true); await Promise.resolve();
@@ -280,7 +278,7 @@ assert(!$('select-towns').innerHTML.includes('sel-soon'), 'no «Pròximament» p
   for (const id of ['gegants-pi-barcelona', 'much-muca-sineu', 'gegants-vinaros', 'gegants-fraga']) {
     assert.equal(FIGURES.find(g => g.id === id).includes.length, 2, `${id}: two subjects in one card`);
     assert.equal(SILHOUETTE_DRAWINGS[id].parts, 2, `${id}: drawn as two`);
-    assert.match(aviatText(FIGURES.find(g => g.id === id)), /^Volem que surtin a la plaça/, `${id}: plural invitation`);
+    assert.match(heartCall(FIGURES.find(g => g.id === id)).title, /^Vols que surtin a la plaça/, `${id}: plural invitation`);
   }
   assert(TOWNS.every(t => escutSvg(t.id)), 'every town has arms');
   const sineu = sourceCatalog.towns.find(t => t.id === 'sineu');
@@ -302,7 +300,6 @@ assert(!$('select-towns').innerHTML.includes('sel-soon'), 'no «Pròximament» p
   assert(escutSvg('campos').includes('#8a2a8c'), 'Campos: the purple bordure');
   assert.match($('select-towns').innerHTML, /data-town="sant-joan"[^>]*>.*?<\/svg>Sant Joan \(Mallorca\)<\/button>/, 'Sant Joan: its pill says which one');
   assert.equal(locationOf({ town: 'sant-joan' }), 'Sant Joan · Mallorca', 'its location line keeps the plain name');
-  assert.equal(aviatDraft(FIGURES.find(f => f.id === 'corb-sant-nofre-sant-joan'), 'Sant Joan'), 'Sobre Es Corb de Sant Joan: ', 'the Corb\'s short full name already says its town');
   const shortOf = new Map(); // one association, one short name on every card (the Lleó and the Gegants del Pi share theirs)
   for (const f of sourceCatalog.figures) { assert.equal(shortOf.get(f.entityName) ?? f.entity, f.entity, `${f.id}: ${f.entityName} keeps one short name`); shortOf.set(f.entityName, f.entity); }
 }
@@ -395,14 +392,14 @@ assert.equal(api.figure, soon[0], 'the arrows go on into the pending figures');
 assert(!$('select-pending').hidden && $('select-info').hidden, 'a pending figure shows its own panel');
 assert.equal($('aviat-title').textContent, soon[0].fullName || soon[0].name);
 assert.equal(soon[0].id, UNRELEASED_IDS.has('bou-tradicional-valls') ? 'bou-tradicional-valls' : 'os-trabucaires-valls', 'the agreed order: (the Bou, until its release) Ós, Cavallets, Basilisc, Àliga, Gegants'); assert.match($('aviat-entity').innerHTML, /viewBox="0 0 525 829".*Unió Anelles de la Flama/, 'a pending figure shows its entity\'s mark, as its card does'); assert.doesNotMatch($('aviat-entity').innerHTML, /class="escut"/);
-assert.equal(($('aviat-text').innerHTML.match(/<p>/g) || []).length, 2); assert.match($('aviat-text').innerHTML, /Volem que surti a la plaça/);
+assert.equal($('aviat-love-title').textContent, 'Vols que surti a la plaça?'); assert.match($('aviat-status').textContent, /Pròximament|Encara no té data/);
 assert($('select-next').disabled && !$('select-next').hidden, 'pending keeps a disabled action for the desktop placeholder');
-assert.equal($('select-next-label').textContent, 'Pròximament?');
+assert.equal($('select-next-label').textContent, 'Encara no es pot jugar');
 assert($('select').attrs['data-pending'], 'pending selection hides the action');
 assert.equal($('select-name').textContent, LAST.fullName || LAST.name, 'the playable panel fades out as it was');
 assert.equal(selected.at(-1), LAST.id, 'nor does it change the song or the model');
 click($('select-next')); key('Enter'); assert($('select-act').hidden, 'it cannot be played');
-click($('aviat-write')); assert.deepEqual(drafts, [aviatDraft(soon[0], townOf(soon[0]).name)]);
+click($('aviat-material')); assert.deepEqual(drafts, [{ kind: 'material', figure: { id: soon[0].id, name: soon[0].fullName || soon[0].name }, choose: true }]);
 click($('select-strip'), cards[1]); assert(api.figure === DRAC && $('select-pending').hidden && !$('select-info').hidden && !$('select-next').disabled, 'a playable figure brings its records and action back');
 assert.equal($('select-next-label').textContent, 'Tria la dificultat', 'returning to a playable figure restores its action label');
 click($('select-next')); click($('select-figures-back'));
@@ -426,7 +423,7 @@ assert.equal(tarragona.attrs['aria-pressed'], 'true');
   key('Enter'); click($('select-next'));
   assert($('select-act').hidden && $('select-info').hidden && !$('select-pending').hidden, 'no game, levels or records for Vilanova');
   const vilanovaBoja = api.figure;
-  click($('aviat-write')); assert.equal(drafts.at(-1), aviatDraft(vilanovaBoja, 'Vilanova i la Geltrú'), 'the collaboration draft names the figure and the shared town');
+  click($('aviat-material')); assert.equal(drafts.at(-1).figure.id, vilanovaBoja.id, 'the sheet knows which figure');
   click($('select-strip'), cards.find(c => c.dataset.id === 'boja-vilanova'));
   assert.equal(api.figure.id, 'boja-vilanova');
   assert.equal($('aviat-title').textContent, 'Mulassa La Boja de Vilanova i la Geltrú');
@@ -444,11 +441,10 @@ assert.equal(tarragona.attrs['aria-pressed'], 'true');
   click($('select-towns'), invite);
   assert.equal(api.figure, INVITE); assert.equal(invite.attrs['aria-pressed'], 'true');
   assert(!$('select-pending').hidden && $('select-info').hidden && $('select-next').disabled, 'the pending panel: no difficulty, no records');
-  assert.equal($('aviat-title').textContent, 'La teva colla'); assert.match($('aviat-text').innerHTML, /el teu poble surti al joc/);
-  assert.match($('aviat-text').innerHTML.split('</p>')[0], /envia’ns fotos, vídeos o la música del ball/, 'the material request stays in the always-visible paragraph on compact screens');
+  assert.equal($('aviat-title').textContent, 'La teva colla'); assert.match($('aviat-text').innerHTML, /Vols proposar una figura/);
   assert.equal(selected.length, notified, 'the stage keeps the last playable figure');
   click($('select-next')); assert($('select-act').hidden, 'it cannot be played');
-  click($('aviat-write')); assert.equal(drafts.at(-1), INVITE_DRAFT, 'the Bústia opens with a proposal draft');
+  click($('aviat-propose')); assert.deepEqual(drafts.at(-1), { kind: 'entity', figure: null }, 'the proposal sheet, about no figure yet');
   click($('select-towns'), tarragona);
 }
 assert.match($('select-strip').innerHTML, /<img src="\/figures\/selector-fixture\.webp" alt="" width="96" height="96" loading="lazy"/);
@@ -606,28 +602,8 @@ console.log('catalog selection, pending panel, town pills, town arms, touch stri
   assert.equal(peekGap([60, 60], 400, 7), 7);
 }
 
-// The open-code note gives way only when the card would scroll, and comes back when there is room again.
-{
-  const note = { hidden: false }; let room = 100;
-  const card = { querySelector: () => note, get clientHeight() { return room; }, get scrollHeight() { return note.hidden ? 90 : 112; } };
-  fitPendingNote(card); assert(note.hidden, 'a card that would scroll drops the note');
-  room = 120; fitPendingNote(card); assert(!note.hidden, 'room again: the note is back');
-  note.closest = () => ({ getBoundingClientRect: () => ({ bottom: 95 }) });
-  note.getBoundingClientRect = () => ({ bottom: 112 });
-  fitPendingNote(card); assert(note.hidden, 'fixed footer tracks still require the note to fit inside the content row');
-  fitPendingNote({ querySelector: () => null }); // a card without a note (the invitation): nothing to do
-  console.log('pending note: shown only when it fits ok');
-}
 
-// Literal oracle from git show HEAD:src/game/figures.js.
+// The catalogue's `plural` flag agrees with what the names read as.
 const wasPlural = figure => / i /.test(figure.name) || /^\S{3,}s(?=\s|$)/.test(figure.fullName || figure.name);
-const oldAviatText = figure => `Volem que ${wasPlural(figure) ? 'surtin' : 'surti'} a la plaça. Tens fotos, vídeos, partitures o coneixes el ball? Dona’ns un cop de mà!\n\nEl joc és de codi obert: també pots ajudar a programar-lo a GitHub.`;
-
-for (const figure of sourceCatalog.figures) assert.equal(aviatText(figure), oldAviatText(figure), figure.id);
-
-assert.equal(aviatDraft({ name: 'Nans' }, 'Valls'), 'Sobre Nans (Valls): ');
-assert.equal(aviatDraft({ name: 'Nans de Valls' }, 'Valls'), 'Sobre Nans de Valls: ', 'a name that says the town is not repeated');
-assert.equal(aviatDraft({ name: 'A {town} <B>' }, 'Valls'), 'Sobre A {town} <B> (Valls): ', 'the name is opaque user data');
-assert.equal(inviteText(), 'Tens una colla gegantera o de bestiari? Vols que el teu poble surti al joc? Explica’ns quina figura és i d’on és. Si en tens, envia’ns fotos, vídeos o la música del ball.\n\nEl joc és de codi obert: també pots ajudar a programar-lo a GitHub.');
-assert.equal(INVITE_DRAFT, 'Proposo una figura. Poble i colla: ');
-for (const figure of sourceCatalog.figures) assert.equal(aviatText({ ...figure, name: 'Noms canviats', fullName: 'Altres noms' }), oldAviatText(figure), 'grammar is keyed by ID, never inferred from names');
+for (const figure of sourceCatalog.figures) assert.equal(heartCall(figure).title, `Vols que ${wasPlural(figure) ? 'surtin' : 'surti'} a la plaça?`, figure.id);
+for (const figure of sourceCatalog.figures) assert.equal(heartCall({ ...figure, name: 'Noms canviats', fullName: 'Altres noms' }).title, heartCall(figure).title, 'grammar is keyed by ID, never inferred from names');

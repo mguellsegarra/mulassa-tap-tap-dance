@@ -59,12 +59,12 @@ export function saveFigureRecord(store, figure, level, quality, rawScore, combo)
   else store.set(recordKey(figure, level), JSON.stringify({ quality, score: rawScore, combo }));
 }
 
-// One message per grammatical number: the catalogue's `plural` flag picks it (gegants, guites), anything else is singular.
-export const aviatText = figure => tr(figure.plural ? 'figures.pending.plural' : 'figures.pending.default');
-// The Bústia's first words, from an «Aviat» card: the figure and its town (most full names already say the town).
-export const aviatDraft = (figure, town) => { const name = figure.fullName || figure.name; return name.includes(town) ? tr('figures.pending.draftName', { name }) : tr('figures.pending.draftTown', { name, town }); };
+// The heart's call, one per grammatical number: the catalogue's `plural` flag picks it (gegants, guites), anything else is singular.
+const pendingNumber = figure => figure.plural ? 'plural' : 'singular';
+export const heartCall = figure => ({ title: tr(`figures.pending.heart.${pendingNumber(figure)}`), sub: tr(`figures.pending.heartSub.${pendingNumber(figure)}`) });
+export const heartThanks = (figure, n) => ({ title: tr(`ui.hearts.thanks.${pendingNumber(figure)}`), sub: tr(`ui.hearts.count.${pendingNumber(figure)}.${n === 1 ? 'one' : 'other'}`) });
+export const pendingStatus = (figure, status) => tr(status === 'waiting' ? `figures.pending.date.${pendingNumber(figure)}` : `figures.pending.${status}.${pendingNumber(figure)}`);
 export const inviteText = () => tr('figures.invite.text');
-export const INVITE_DRAFT = tr('figures.invite.draft');
 
 export const portraitArt = figure => FIGURE_PORTRAITS[figure.id]?.art ?? AVIAT_ART;
 const UNKNOWN_PALETTE = { x: '#120b07' };

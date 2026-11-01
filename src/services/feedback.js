@@ -3,7 +3,7 @@
 // server; its error codes in Catalan. The sheet is src/ui/feedback-ui.js.
 import { tr } from '../i18n/messages.js';
 import { fmtNum } from '../i18n/format.js';
-export const MESSAGE_MIN = 5, MESSAGE_MAX = 1000, EMAIL_MAX = 254;
+export const MESSAGE_MIN = 5, FIGURE_MESSAGE_MIN = 20, MESSAGE_MAX = 1000, EMAIL_MAX = 254, ENTITY_MAX = 80;
 // A practical address: the usual local-part characters, one @, a domain of dot-separated labels (letters, digits,
 // inner hyphens) ending in a 2+ letter TLD. The Worker checks the same (and no spaces or line breaks can ever
 // reach an e-mail header).
@@ -17,20 +17,19 @@ export class FeedbackError extends Error {
 }
 const messages = {
   invalid_message: tr('services.feedback.invalid_message', { min: MESSAGE_MIN, max: fmtNum(MESSAGE_MAX) }),
-  invalid_email: tr('services.feedback.invalid_email'),
   captcha: tr('services.feedback.captcha'),
   rate_limit: tr('services.feedback.rate_limit'),
+  auth_required: tr('ui.confirm.expired'),
   offline: tr('services.feedback.offline'),
   unavailable: tr('ui.feedback.sendFailed'),
 };
 const fail = code => new FeedbackError(code, messages[code] ?? messages.unavailable);
 
 // { ok } or { field: 'message' | 'email', message }; trims both
-export function checkFeedback(message, email) {
-  const m = String(message ?? '').trim(), e = String(email ?? '').trim();
-  if (chars(m) < MESSAGE_MIN || chars(m) > MESSAGE_MAX) return { field: 'message', message: messages.invalid_message };
-  if (!e || e.length > EMAIL_MAX || !EMAIL.test(e)) return { field: 'email', message: messages.invalid_email };
-  return { ok: true, message: m, email: e };
+export function checkFeedback(message, min = MESSAGE_MIN) {
+  const m = String(message ?? '').trim();
+  if (chars(m) < min || chars(m) > MESSAGE_MAX) return { field: 'message', message: messages.invalid_message };
+  return { ok: true, message: m };
 }
 
 import { APP_BUILD } from '../core/version.js';
@@ -42,23 +41,23 @@ export function createFeedback({ url = env.VITE_FEEDBACK_URL, enabled = env.VITE
   fetchFn = (...a) => fetch(...a), online = () => globalThis.navigator?.onLine !== false, version = APP_BUILD } = {}) {
   return Object.freeze({
     configured: Boolean(url && enabled),
-    async send({ message, email, token }) {
-      const ok = checkFeedback(message, email);
-      if (!ok.ok) throw fail(ok.field === 'email' ? 'invalid_email' : 'invalid_message');
+    async send({ kind = 'general', figure = null, options = [], entity = '', message, token, accessToken }) {
+      const ok = checkFeedback(message, kind === 'general' ? MESSAGE_MIN : FIGURE_MESSAGE_MIN);
+      if (!ok.ok) throw fail('invalid_message');
       if (!online()) throw fail('offline');
       let res;
       try {
-        // no key, no session: the Worker trusts only Turnstile (nobody needs a profile to write)
+        // the Worker asks Supabase Auth who this is: the reply address comes from there, never from the client
         res = await fetchFn(url, {
-          method: 'POST', headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ message: ok.message, ...(ok.email ? { email: ok.email } : {}), turnstileToken: token, version }),
+          method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${accessToken}` },
+          body: JSON.stringify({ kind, figure, options, entity, message: ok.message, turnstileToken: token, version }),
         });
       } catch { throw fail('offline'); } // no answer at all: the connection (or a blocker)
       if (res.ok) return true;
       let code = null;
       try { code = (await res.json())?.error; } catch { /* not JSON: a gateway page */ }
       if (code === 'invalid') code = 'invalid_message';
-      throw fail(messages[code] ? code : res.status === 429 ? 'rate_limit' : 'unavailable');
+      throw fail(messages[code] || code === 'daily_limit' ? code : res.status === 429 ? 'rate_limit' : 'unavailable');
     },
   });
 }

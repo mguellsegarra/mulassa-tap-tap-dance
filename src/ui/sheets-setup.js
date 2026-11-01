@@ -23,6 +23,9 @@ import { makeDanceChart } from '../game/chart.js';
 import { song, FINALE_T } from '../game/figure-song.js';
 import { setupShare } from './share-ui.js';
 import { setupProfile } from './profile-ui.js';
+import { setupConfirmGate } from './confirm-gate.js';
+import { setupHearts } from './figure-hearts.js';
+import { setupHeartTip } from './heart-tip.js';
 import { setupFeedback } from './feedback-ui.js';
 import { sheets } from './sheets.js';
 import './keyboard-room.js';
@@ -104,7 +107,7 @@ const versionEl = document.getElementById('settings-version');
 versionEl.textContent = `v${APP_BUILD.replace('+', ' · ')}`; // v1.0.54 · d40502a: a phone has no hover, so the sha is plain text
 document.getElementById('settings').addEventListener('click', openSettings);
 document.getElementById('settings-sync').addEventListener('click', () => { settingsMenu.close(); syncBack = openSettings; sync.show(); });
-document.getElementById('settings-feedback').addEventListener('click', () => { settingsMenu.close(); feedback.show(openSettings); }); // the selector's Bústia (its corner slot went to free play); closing it comes back here
+document.getElementById('settings-feedback').addEventListener('click', () => { settingsMenu.close(); writeToBox({ kind: 'general' }, openSettings); }); // the selector's Bústia (its corner slot went to free play); closing it comes back here
 // Classificacions (optional, online): from the selector or the results screen.
 // After an eligible run its publish sheet opens by itself, only over a bare, visible, upright results screen.
 const mockBoard = Boolean(FINAL) || leaderboardPreviewMode({ hostname: location.hostname, search: location.search, configured: leaderboard.configured });
@@ -176,7 +179,7 @@ let cardGreeted = false;
 const hint = setupDeviceHint({ focusIn, store, softwareGl }); // the device tips, last: after the profile's own news
 sheets.hint = hint;
 sheets.freeGate = setupFreeGate({ focusIn, store, onEnter: () => enterFree() }); // an upright iPhone is asked to turn before free play
-const greeting = setupGreeting({ stats: statsSync, seasonEnd, account, hint, identity: () => refreshIdentity(service, kv).finally(() => feedback.warm()), back: () => select.refocus(),
+const greeting = setupGreeting({ stats: statsSync, seasonEnd, account, hint, identity: () => refreshIdentity(service, kv), back: () => select.refocus(),
   free: () => G.state === 'select' && !sheetUp() && !viewMode && !document.hidden,
   extra: () => {
     if (cardGreeted || !mockOpts?.card) return false;
@@ -184,11 +187,15 @@ const greeting = setupGreeting({ stats: statsSync, seasonEnd, account, hint, ide
 
     return true;
   } });
-service.onAccount?.(() => { refreshIdentity(service, kv, { fresh: true }).then(() => { share.refreshName(); feedback.warm(); }); greeting.accountChanged(); });
-document.addEventListener('close', () => greeting.poke(), true); // dialogs' close does not bubble
+service.onAccount?.(() => { refreshIdentity(service, kv, { fresh: true }).then(() => { share.refreshName(); hearts.reload(); }); greeting.accountChanged(); });
+document.addEventListener('close', () => { greeting.poke(); heartTip.update(); }, true); // dialogs' close does not bubble
 settingsMenu.addEventListener('close', () => { if (!sync.open && !board.open && (G.state === 'select')) document.activeElement?.blur(); });
 // Bústia de la plaça: opened from Configuració or a pending figure; one shared Turnstile.
-const feedback = setupFeedback({ focusIn, captcha: board.captcha, confirmedEmail: async () => (await service.identity()).email });
+const feedback = setupFeedback({ focusIn, captcha: board.captcha, accessToken: () => service.accessToken() });
+const needConfirmed = setupConfirmGate({ focusIn, identity: () => service.identity(), hasProfile: async () => !!(await service.profile?.())?.alias, openProfile: (what, back) => profile.open(what, back) });
+const hearts = setupHearts({ service, needConfirmed, onChange: () => { select.paintHearts(); heartTip.update(); } });
+const heartTip = setupHeartTip({ store, hearts, figure: () => (select.pending ? null : select.figure), busy: () => sheetUp() || viewMode });
+const writeToBox = (request, back) => needConfirmed(request.kind === 'general' ? 'feedback' : request.kind, () => feedback.show(back, request));
 sheets.feedback = feedback;
 const select = setupSelect({ store, keyboard: () => keyboardNav, busy: () => sheetUp() || viewMode, reduced: () => CALM.matches,
   firstLevel: CHALLENGE?.diff ?? null, firstFigure: idOfKey(Q.get('figura')) ?? CHALLENGE?.figure ?? null, // ?figura (debug), else a challenge's figure: the selector opens on it
@@ -196,7 +203,8 @@ const select = setupSelect({ store, keyboard: () => keyboardNav, busy: () => she
   sfx: k => chip?.sfx(k), onSelect: f => { setSelectedFigure(f); greeting.greet(); },
   onPlay: (level, figure) => { setSelectedFigure(figure); choose(level); },
   onHowto: () => { howtoMenu.showModal(); focusIn(howtoMenu, 'howto-ok'); },
-  onWrite: draft => feedback.show(() => select.refocus(), draft) });
+  onWrite: request => writeToBox(request, () => select.refocus()), hearts, onPanel: () => heartTip.update() });
+hearts.load();
 sheets.select = select;
 sheets.lang = setupLang({ store, state: () => G.state }); // the language dropdown and the one-time suggestion
 sheets.watch = setupWatch({ select, busy: () => sheetUp() || viewMode });

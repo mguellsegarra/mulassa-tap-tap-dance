@@ -1,0 +1,60 @@
+// The heart of a figure: the totals come once from the server and each tap updates only after the server saved it.
+import { tr } from '../i18n/messages.js';
+
+const BIT_COLORS = ['#e0364c', '#ff6b7f', '#f5c518', '#c0283c'], BITS = 30;
+// A big burst of hearts out of the button, all around and mostly upwards; nothing under reduced motion. Each one removes itself.
+function heartBurst(button) {
+  const doc = button.ownerDocument, win = doc.defaultView;
+  const icon = button.querySelector('svg');
+  icon.classList.remove('sel-heart-pop'); void icon.getBoundingClientRect(); icon.classList.add('sel-heart-pop');
+  if (win.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+  const i = icon.getBoundingClientRect(), r = button.getBoundingClientRect(), host = button.closest('dialog') ?? doc.body;
+  for (let n = 0; n < BITS; n++) {
+    const bit = doc.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    bit.setAttribute('viewBox', '0 0 24 24'); bit.setAttribute('aria-hidden', 'true'); bit.classList.add('sel-heart-bit');
+    bit.innerHTML = `<path fill="${BIT_COLORS[n % BIT_COLORS.length]}" d="M12 20.5 4.2 12.9a4.8 4.8 0 0 1 6.8-6.8l1 1 1-1a4.8 4.8 0 0 1 6.8 6.8z"/>`;
+    const a = -Math.PI * (-.15 + 1.3 * Math.random()), d = 110 + Math.random() * 170, big = n % 5 === 0;
+    const x = r.left + r.width * (.2 + .6 * Math.random());
+    bit.style.cssText = `left:${x}px;top:${i.top + i.height / 2}px;--s:${big ? 36 + Math.random() * 18 : 16 + Math.random() * 16}px;--dx:${Math.cos(a) * d}px;--dy:${Math.sin(a) * d}px;--r:${(Math.random() - .5) * 100}deg;animation-delay:${Math.random() * .12}s`;
+    bit.addEventListener('animationend', () => bit.remove());
+    host.append(bit);
+  }
+}
+
+export function setupHearts({ service, needConfirmed, onChange = () => {} }) {
+  let totals = null, loading = null, session = 0; const mine = new Set(), saving = new Set();
+  // an answer from before a change of account never lands on the new one
+  function load() {
+    const asked = session;
+    loading ??= Promise.resolve().then(() => service.figureHearts()).then(rows => { // a board without hearts (the dev mock): no counts, no crash
+      if (asked !== session) return;
+      totals = new Map(); mine.clear();
+      for (const r of rows) { totals.set(r.figure, r.hearts); if (r.mine) mine.add(r.figure); }
+      onChange();
+    }).catch(() => { if (asked === session) loading = null; });
+    return loading;
+  }
+  const save = async (figure, button) => {
+    if (saving.has(figure.id)) return;
+    saving.add(figure.id); const on = !mine.has(figure.id), asked = session;
+    try {
+      const total = await service.setFigureHeart(figure.id, on);
+      if (asked !== session) return;
+      (totals ??= new Map()).set(figure.id, total);
+      if (on) { mine.add(figure.id); heartBurst(button); } else mine.delete(figure.id); // only once the server saved it
+    } catch { /* nothing changed: the count and the state stay as the server has them */ } finally { saving.delete(figure.id); onChange(); }
+  };
+  return {
+    load,
+    reload() { session++; loading = null; totals = null; mine.clear(); onChange(); return load(); },
+    count: id => totals ? (totals.get(id) ?? 0) : null,
+    mine: id => mine.has(id),
+    tap(figure, button) { needConfirmed('heart', () => { const asked = session; load().then(() => { if (asked === session) save(figure, button); }); }); },
+    paint(button, figure) {
+      const n = totals ? (totals.get(figure.id) ?? 0) : null, on = mine.has(figure.id);
+      button.setAttribute('aria-pressed', String(on));
+      button.setAttribute('aria-label', tr(on ? 'ui.hearts.saved' : 'ui.hearts.action', { name: figure.fullName || figure.name }));
+      button.querySelector('span').textContent = n || ''; // no zero: nobody yet is not a number worth showing
+    },
+  };
+}

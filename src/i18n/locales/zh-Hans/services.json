@@ -38,7 +38,6 @@
   "services.captcha.unauthorized": "这个网站未获授权使用Cloudflare验证。",
   "services.captcha.unsupported": "这个浏览器不支持验证，请换一个试试。",
   "services.feedback.captcha": "无法确认你不是机器人，请重试。",
-  "services.feedback.invalid_email": "请填写有效邮箱（例如nom@domini.cat），方便回复你。",
   "services.feedback.invalid_message": "留言须为{min}至{max}个字符。",
   "services.feedback.offline": "网络未连接，请检查后重试。",
   "services.feedback.rate_limit": "你连续发了太多留言，等一会儿再试吧。",
@@ -53,5 +52,6 @@
   "services.share.drac.record": "{mula}🔥刷新得分纪录！Drac de Valls，{diff}难度{score}分（命中率{pct}）！🎉",
   "services.share.bou": "我让Bou Tradicional de Valls跳起来了！{diff}难度命中率{pct}。#Valls",
   "services.share.fail": "{mula}{diff}难度命中率{pct}…Mulassa喊我再战一局。换你来会怎样？💃",
-  "services.share.record": "{mula}🔥刷新得分纪录！Mulassa de Valls，{diff}难度{score}分（命中率{pct}）！🎉"
+  "services.share.record": "{mula}🔥刷新得分纪录！Mulassa de Valls，{diff}难度{score}分（命中率{pct}）！🎉",
+  "services.feedback.daily_limit": "你今天已发送3次。{time}起可以再次发送。"
 }

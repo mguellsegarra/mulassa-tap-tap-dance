@@ -344,8 +344,8 @@
   </section>
   <section data-privacy="feedback" aria-labelledby="privacy-feedback">
     <h3 id="privacy-feedback" data-i18n="html.privacyFeedback">Missatges</h3>
-    <p data-i18n-rich="html.rich.privacy.feedback.1">Si escrius a la <b>Bústia de la plaça</b> (a Configuració), un petit servei de <b>Cloudflare</b> envia a la bústia de correu del projecte el <b>missatge</b>, la teva <b>adreça electrònica</b>, la versió del joc i el tipus de navegador. Només serveixen per llegir-te i, si vols, contestar-te.</p>
-    <p data-i18n-rich="html.rich.privacy.feedback.2">Aquest servei <b>no desa els missatges</b>: abans d’enviar, Cloudflare Turnstile comprova que no ets un robot, i l’adreça IP només serveix per frenar els enviaments massius. El missatge es queda a la bústia del projecte; si vols que l’esborrem, escriu a <a href="mailto:holi@mulassa.cat">holi@mulassa.cat</a>.</p>
+    <p data-i18n-rich="html.rich.privacy.feedback.1">Per escriure des del joc cal un perfil amb el correu confirmat. Si escrius a la <b>Bústia de la plaça</b>, ofereixes material o contactes com a colla o entitat, un petit servei de <b>Cloudflare</b> envia a la bústia de correu del projecte el <b>missatge</b>, el teu <b>correu confirmat</b>, les opcions que has marcat i, si l’has escrit, el nom de l’entitat, amb la versió del joc i el tipus de navegador. Ho fem servir per llegir-te i contestar-te.</p>
+    <p data-i18n-rich="html.rich.privacy.feedback.2">Aquest servei <b>no desa el contingut dels missatges</b>: Cloudflare Turnstile comprova que no ets un robot, l’adreça IP serveix per frenar els enviaments massius i, per limitar-los a tres al dia, es desa un recompte amb l’identificador del teu compte que s’esborra al cap de dos dies. Si poses un cor a una figura, es desa a <b>Supabase</b> la relació entre el teu compte i aquella figura; només es mostra el total, i s’esborra amb el perfil. Els missatges enviats es queden a la bústia del projecte; si vols que els esborrem, escriu a <a href="mailto:holi@mulassa.cat">holi@mulassa.cat</a>.</p>
   </section>
   <section data-privacy="rights" aria-labelledby="privacy-rights">
     <h3 id="privacy-rights" data-i18n="html.privacyRights">Drets i continguts</h3>
@@ -636,18 +636,37 @@
     <div class="feedback-scroll">
       <h2 id="feedback-title" data-i18n="html.feedbackTitle">Bústia de la plaça</h2>
       <p id="feedback-lead" class="feedback-lead" data-i18n="html.feedbackLead">Queixes, felicitacions o idees boges: abans que acabem a la presó, deixa el missatge aquí i el llegirem.</p>
-      <div class="feedback-form-col">
+      <div id="feedback-kind" class="feedback-kind" role="radiogroup" aria-labelledby="feedback-title" hidden>
+        <label><input type="radio" name="feedback-kind" value="material"><span data-i18n="html.material.title">Tinc material</span></label>
+        <label><input type="radio" name="feedback-kind" value="entity"><span data-i18n="html.entity.title">Colla o entitat</span></label>
+        <label><input type="radio" name="feedback-kind" value="code"><span data-i18n="html.code.tab">Programar</span></label>
+      </div>
+      <p id="feedback-code" class="feedback-lead" data-i18n="html.code.text" hidden>Si saps programar, pots ajudar a portar aquesta figura al joc. El codi és obert i és a GitHub.</p>
+      <div id="feedback-material" class="feedback-choices" role="group" aria-labelledby="feedback-material-label" hidden>
+        <p id="feedback-material-label" class="board-label" data-i18n="html.material.optionsLabel">Què tens?</p>
+        <label><input type="checkbox" name="material" value="photos"><svg class="feedback-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3.5L9 5.5h6L16.5 8H20a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></svg><span data-i18n="html.material.photos">Fotos o vídeos</span></label>
+        <label><input type="checkbox" name="material" value="music"><svg class="feedback-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/></svg><span data-i18n="html.material.music">Partitura</span></label>
+        <label><input type="checkbox" name="material" value="dance"><svg class="feedback-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="13" cy="4.5" r="2"/><path d="M6 10l5-2.5 3 2.5 4 1M11 7.5 10 14l-4 6M10 14l5 2 1 5"/></svg><span data-i18n="html.material.dance">Sé com és el ball</span></label>
+        <p class="feedback-small" data-i18n="html.material.note">Aquí no pots adjuntar fitxers: t'escriurem perquè ens els facis arribar.</p>
+      </div>
+      <div id="feedback-entity" class="feedback-choices" role="radiogroup" aria-labelledby="feedback-entity-label" hidden>
+        <p id="feedback-entity-label" class="board-label" data-i18n="html.entity.typeLabel">Tria una opció</p>
+        <label><input type="radio" name="entity" value="colla"><span data-i18n="html.entity.colla">Soc de la colla</span></label>
+        <label><input type="radio" name="entity" value="institution"><span data-i18n="html.entity.institution">Ajuntament o entitat</span></label>
+        <label><input type="radio" name="entity" value="business"><span data-i18n="html.entity.business">Empresa o comerç</span></label>
+        <label class="board-label" for="feedback-entity-name" data-i18n="html.entity.nameLabel">Nom de la colla o entitat</label>
+        <input id="feedback-entity-name" class="feedback-field" type="text" maxlength="80" autocomplete="organization" placeholder="Com es diu?" data-i18n-attr="placeholder:html.entity.namePlaceholder">
+      </div>
+      <div id="feedback-fields" class="feedback-form-col">
         <div class="feedback-msg">
           <label for="feedback-message" class="board-label" data-i18n="html.feedbackMessageLabel">Missatge</label>
-          <textarea id="feedback-message" class="feedback-field" rows="4" maxlength="1000" required placeholder="Escriu aquí…" autocomplete="off" aria-describedby="feedback-error" data-i18n-attr="placeholder:html.feedbackMessage.placeholder"></textarea>
+          <textarea id="feedback-message" class="feedback-field" rows="4" maxlength="1000" required placeholder="Explica'ns què ens vols dir…" autocomplete="off" aria-describedby="feedback-error" data-i18n-attr="placeholder:html.feedbackMessage.placeholder"></textarea>
           <p class="feedback-meta"><span id="feedback-error" role="alert"></span><span id="feedback-count" aria-hidden="true">0/1000</span></p>
         </div>
         <div class="feedback-mail">
-          <label for="feedback-email" class="board-label" data-i18n="html.feedbackMailLabel">Correu (per poder contestar)</label>
-          <input id="feedback-email" class="feedback-field" type="email" placeholder="nom@exemple.cat" data-i18n-attr="placeholder:html.common.emailPlaceholder" name="email" required maxlength="254" autocomplete="email" inputmode="email" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="send" aria-describedby="feedback-status">
-          <p class="feedback-small" data-i18n="html.rich.feedbackSmall1">Rebem el missatge i el correu a la bústia del projecte només per llegir i contestar. <button id="feedback-privacy" type="button" class="btn btn-link btn-small" data-privacy-open aria-haspopup="dialog" data-i18n="html.common.privacy">Privadesa</button></p>
-          <p class="feedback-small" data-i18n="html.rich.feedbackSmall2">També pots escriure a <a id="feedback-mailto" href="mailto:holi@mulassa.cat">holi@mulassa.cat</a></p>
-          <p class="feedback-rights" data-i18n="html.feedbackRights">Mulassa Tap Tap Dance és un projecte per fer córrer la cultura popular. Si ets titular d’algun dret sobre el contingut i vols que el canviem, diga’ns-ho.</p>
+<p class="feedback-small" data-i18n="html.rich.feedbackSmall1">Et contestarem al correu del teu perfil. <button id="feedback-privacy" type="button" class="btn btn-link btn-small" data-privacy-open aria-haspopup="dialog" data-i18n="html.common.privacy">Privadesa</button></p>
+          <p id="feedback-direct" class="feedback-small" data-i18n="html.rich.feedbackSmall2">Per drets sobre continguts o dades personals, també pots escriure a <a id="feedback-mailto" href="mailto:holi@mulassa.cat">holi@mulassa.cat</a></p>
+          <p id="feedback-rights" class="feedback-rights" data-i18n="html.feedbackRights">Si tens drets sobre algun contingut del joc i vols que el canviem o el retirem, escriu-nos.</p>
         </div>
       </div>
     </div>
@@ -659,12 +678,23 @@
     </div>
   </form>
 </dialog>
+<!-- hearts and the Bústia need a confirmed e-mail (src/ui/confirm-gate.js); the Perfil sheets do the confirming -->
+<dialog id="gate-menu" class="sheet" tabindex="-1" aria-labelledby="gate-title" aria-describedby="gate-text">
+  <div class="sheet-body">
+    <h2 id="gate-title"></h2>
+    <p id="gate-text"></p>
+    <div class="sheet-actions">
+      <button id="gate-go" type="button" class="btn btn-primary"></button>
+      <button id="gate-later" type="button" class="btn btn-secondary" data-i18n="ui.feedback.cancel">Ara no</button>
+    </div>
+  </div>
+</dialog>
 <!-- after a message is sent: a small thank-you (src/ui/feedback-ui.js), it closes by itself -->
 <dialog id="feedback-thanks" class="sheet" tabindex="-1" aria-labelledby="feedback-thanks-title" aria-describedby="feedback-thanks-text">
   <button id="feedback-thanks-close" type="button" data-i18n-attr="aria-label:html.attr.close" class="sheet-x" aria-label="Tanca"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
   <div class="sheet-body">
   <h2 id="feedback-thanks-title" data-i18n="html.feedbackThanksTitle">Rebut! Gràcies 🧡</h2>
-  <p id="feedback-thanks-text" class="feedback-thanks-text" data-i18n="html.feedbackThanksText">El missatge ja és a la bústia. El llegirem ben aviat.</p>
+  <p id="feedback-thanks-text" class="feedback-thanks-text" data-i18n="html.feedbackThanksText">El missatge ja és a la bústia.</p>
   </div>
 </dialog>
 <!-- Cloudflare Turnstile (src/services/captcha.js): opens only when Cloudflare asks for a tick; not dismissable, closes by itself -->
@@ -696,7 +726,7 @@
       <div class="sel-identity">
         <h2 id="select-name" class="sel-name"></h2>
         <button id="select-howto" type="button" class="sel-howto" aria-haspopup="dialog" aria-label="Com es juga" title="Com es juga" data-i18n-attr="aria-label:html.selectHowto.aria;title:html.selectHowto.aria"><span aria-hidden="true">?</span></button>
-        <span id="select-entity" class="sel-entity"></span>
+        <div class="sel-identity-row"><span id="select-entity" class="sel-entity"></span><button id="select-heart" type="button" class="sel-heart" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5 4.2 12.9a4.8 4.8 0 0 1 6.8-6.8l1 1 1-1a4.8 4.8 0 0 1 6.8 6.8z"/></svg><span></span></button></div>
       </div>
       <span id="select-song" class="sel-song"><span class="sel-song-plate"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 2.5 14 1v9.6a2.4 2 0 1 1-1.6-1.9V4.4L7.6 5.3v7.3a2.4 2 0 1 1-1.6-1.9z"/></svg><span class="sel-song-copy"><span id="select-song-name"></span><span id="select-song-credit" class="sel-song-credit"></span></span></span><button id="select-watch" type="button" class="btn btn-secondary sel-watch" aria-label="Mira el ball" data-i18n-attr="aria-label:html.selectWatch"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 10 7-10 7Z"/></svg><span data-i18n="html.selectWatch">Mira el ball</span></button></span><!-- (the button: the selected figure's whole dance, played by itself, nothing scored; src/ui/watch-ui.js) -->
       <!-- Step 2 only: the chosen level's record on this device, shaped like the song's row (level-stats.js). -->
@@ -726,15 +756,27 @@
   </div>
   <section id="select-pending" class="sel-pending" hidden aria-labelledby="aviat-title">
     <div class="sel-pending-content">
+      <div class="sel-pending-id">
       <h2 id="aviat-title"></h2>
       <span id="aviat-entity" class="sel-entity"></span>
       <span id="aviat-where" class="sel-where"></span>
+      </div>
       <div id="aviat-text" class="sel-pending-copy" aria-live="polite"></div>
+      <div id="aviat-lower" class="sel-lower">
+        <div class="sel-call">
+          <p id="aviat-love-title" class="sel-call-line"></p>
+          <button id="aviat-heart" type="button" class="sel-heart sel-heart-wide" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5 4.2 12.9a4.8 4.8 0 0 1 6.8-6.8l1 1 1-1a4.8 4.8 0 0 1 6.8 6.8z"/></svg><b id="aviat-love-sub"></b><span></span></button>
+        </div>
+        <div class="sel-state">
+          <div class="sel-state-words"><p id="aviat-status" class="sel-status"></p>
+          <p id="aviat-missing" class="sel-missing"></p></div>
+        </div>
+      </div>
     </div>
-    <button id="aviat-write" type="button" class="btn btn-primary" aria-haspopup="dialog" data-i18n="html.aviatWrite">Escriu a la bústia</button>
-    <div class="sel-pending-links">
+    <div id="aviat-actions" class="sel-pending-actions">
+      <button id="aviat-material" type="button" class="btn btn-secondary" aria-haspopup="dialog" data-i18n="figures.pending.materialAction">Vull ajudar a fer-ho</button>
+      <button id="aviat-propose" type="button" class="btn btn-primary" aria-haspopup="dialog" data-i18n="figures.invite.action">Proposa una figura</button>
       <a id="aviat-code" class="btn btn-link btn-compact sel-code-link" href="https://github.com/mguellsegarra/mulassa-tap-tap-dance" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" stroke="none" d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 0-.8.4-1.3.7-1.6-2.7-.3-5.5-1.3-5.5-6 0-1.2.5-2.3 1.3-3.1-.2-.4-.6-1.6 0-3.2 0 0 1-.3 3.4 1.2a11.5 11.5 0 0 1 6 0c2.3-1.5 3.3-1.2 3.3-1.2.6 1.6.2 2.8.1 3.2.8.8 1.3 1.9 1.3 3.1 0 4.6-2.8 5.6-5.5 5.9.5.4.9 1.1.9 2.2v3.3c0 .3.1.7.8.6A12 12 0 0 0 12 .3"/></svg><span data-i18n="html.aviatCode">Col·labora a GitHub</span></a>
-      <a class="btn btn-link btn-compact sel-mail" href="mailto:holi@mulassa.cat"><svg class="line" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linejoin="round" d="M3.5 6h17v12h-17zM3.5 6.5l8.5 7 8.5-7"/></svg><span>holi@<wbr>mulassa.cat</span></a>
     </div>
   </section>
   <div id="select-bottom" class="sel-bottom">

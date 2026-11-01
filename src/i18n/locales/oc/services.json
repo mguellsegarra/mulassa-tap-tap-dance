@@ -38,7 +38,6 @@
   "services.captcha.unauthorized": "Aguest lòc web non ei autorizat tara verificacion de Cloudflare.",
   "services.captcha.unsupported": "Aguest navegador non ei compatible damb era verificacion. Pròva-ac damb un aute.",
   "services.feedback.captcha": "Non auem pogut verificar que non ès un robòt. Torna-ac a provar.",
-  "services.feedback.invalid_email": "Cau un corrèu valid (ex.: nom@domini.cat) tà poder respóner-te.",
   "services.feedback.invalid_message": "Eth messatge a de tier entre {min} e {max} caractèrs.",
   "services.feedback.offline": "Sense connexion. Revisa-la e torna-ac a provar.",
   "services.feedback.rate_limit": "As enviat fòrça messatges seguits. Demora ua estona e torna-ac a provar.",
@@ -53,5 +52,6 @@
   "services.share.drac.record": "{mula}🔥 Nau recòrd de punts: {score} en {diff} ({pct} d’encèrts) hènt a balhar eth Drac de Valls! 🎉",
   "services.share.bou": "È hèt a balhar eth Bou Tradicional de Valls damb un {pct} d’encèrts en {diff}. #Valls",
   "services.share.fail": "{mula} {pct} d’encèrts en {diff}… Era Mulassa me demane era revenja. E tu, com ac haries? 💃",
-  "services.share.record": "{mula}🔥 Nau recòrd de punts: {score} en {diff} ({pct} d’encèrts) hènt a balhar era Mulassa de Valls! 🎉"
+  "services.share.record": "{mula}🔥 Nau recòrd de punts: {score} en {diff} ({pct} d’encèrts) hènt a balhar era Mulassa de Valls! 🎉",
+  "services.feedback.daily_limit": "Aué ja as hèt 3 enviaments. Poderàs tornar a escríuer a compdar des {time}."
 }

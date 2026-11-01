@@ -38,7 +38,6 @@
   "services.captcha.unauthorized": "Цей сайт не має дозволу на перевірку Cloudflare.",
   "services.captcha.unsupported": "Цей браузер не підтримує перевірку. Спробуй інший.",
   "services.feedback.captcha": "Не вдалося перевірити, що ти не робот. Спробуй ще раз.",
-  "services.feedback.invalid_email": "Потрібна дійсна адреса пошти (наприклад nom@domini.cat), щоб відповісти тобі.",
   "services.feedback.invalid_message": "Повідомлення має містити від {min} до {max} символів.",
   "services.feedback.offline": "Немає з’єднання. Перевір його і спробуй ще раз.",
   "services.feedback.rate_limit": "Ти надсилаєш забагато повідомлень поспіль. Зачекай трохи і спробуй ще раз.",
@@ -53,5 +52,6 @@
   "services.share.drac.record": "{mula}🔥 Новий рекорд: {score} очок на рівні {diff} ({pct} влучань) у танці Drac de Valls! 🎉",
   "services.share.bou": "Мій танець Bou Tradicional de Valls: {pct} влучань на рівні {diff}. #Valls",
   "services.share.fail": "{mula} {pct} влучань на рівні {diff}… Mulassa вимагає реваншу. А як зіграєш ти? 💃",
-  "services.share.record": "{mula}🔥 Новий рекорд: {score} очок на рівні {diff} ({pct} влучань) у танці Mulassa de Valls! 🎉"
+  "services.share.record": "{mula}🔥 Новий рекорд: {score} очок на рівні {diff} ({pct} влучань) у танці Mulassa de Valls! 🎉",
+  "services.feedback.daily_limit": "Сьогодні ти вже надіслав 3 повідомлення. Знову написати можна буде з {time}."
 }

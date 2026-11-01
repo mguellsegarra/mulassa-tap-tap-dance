@@ -2,7 +2,7 @@
 // A pending figure shows its own panel instead of the records.
 // Arrows rove cards; Enter confirms a figure. On the next step arrows choose difficulty; Escape returns. The keys
 // and the layout's measure are select-keys.js and select-layout.js.
-import { FIGURES, TOWNS, townOf, playable, hasBoard, upFront, rememberedLevel, rememberLevel, readFigureRecord, aviatDraft, INVITE, INVITE_TOWN, INVITE_DRAFT } from '../game/figures.js';
+import { FIGURES, TOWNS, townOf, playable, hasBoard, upFront, rememberedLevel, rememberLevel, readFigureRecord, INVITE, INVITE_TOWN } from '../game/figures.js';
 import { DIFFS } from '../game/chart.js';
 import { num } from './sheet-kit.js';
 import { showLevelStats } from './level-stats.js';
@@ -27,7 +27,7 @@ const TROPHY = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h10V9
 // onCard(p): a name on the desktop card opens that player's card (player-card.js)
 
 export function setupSelect({ doc = document, win = globalThis, store, keyboard = () => false, busy = () => false, reduced = () => false,
-  firstLevel = null, firstFigure = null, demo = false, getError = () => null, standing = () => Promise.resolve(null), levelPodium = null, ranked = false, onBoard = () => {}, onCard = () => {}, sfx = () => {}, onPlay, onSelect = () => {}, onHowto, onWrite }) {
+  firstLevel = null, firstFigure = null, demo = false, getError = () => null, standing = () => Promise.resolve(null), levelPodium = null, ranked = false, onBoard = () => {}, onCard = () => {}, sfx = () => {}, onPlay, onSelect = () => {}, onHowto, onWrite, hearts, onPanel = () => {} }) {
   const DEMO = demo && Boolean((import.meta.env ?? {}).DEV); // ?demo: made-up facts on show only, never stored or sent; gone from production builds
   const $ = id => doc.getElementById(id), cardOf = p => onCard({ ...p, from: { ...p.from, figure: figure.id } }), facts = setupStandings({ doc, win, $, onBoard: () => onBoard(figure), onCard: cardOf, busy, levels: () => step === 'level', onSwapped: () => { if (shown) { levelStats(); if (layout.stale()) measure(); } } }); // the new card resized nothing: no second measure // facts: desktops' medals and board card (select-standings.js)
   const podium = setupPodium({ doc, win, $, onBoard: () => { if (!busy()) onBoard(figure); }, onCard: cardOf, load: ranked && levelPodium, refit: () => levelStats() }); // step 2's podium (select-podium.js)
@@ -60,18 +60,21 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     if (row === strip) scrolling.to(left, behavior !== 'smooth');
     else townScrolling.to(left, behavior !== 'smooth');
   };
-  const { fill: pendingFill, freeze, thaw } = setupPendingPanel({ $, win, pending }), flip = setupFlip({ win, root, els: () => [towns, ...towns.children, $('select-prev'), $('select-forward'), $('select-nav'), ...strip.children], reduced: () => reduced() }); // flip: the pending layout slides instead of jumping; never the strip or its carousel: their box clips the cards, and a sliding clip swept the row (only their contents move)
+  const { fill: pendingFill, paintHeart, freeze, thaw } = setupPendingPanel({ $, win, pending, hearts }), flip = setupFlip({ win, root, els: () => [towns, ...towns.children, $('select-prev'), $('select-forward'), $('select-nav'), ...strip.children], reduced: () => reduced() }); // flip: the pending layout slides instead of jumping; never the strip or its carousel: their box clips the cards, and a sliding clip swept the row (only their contents move)
   function panel() { // the centre shows what the cursor is on: the selected figure, or its pending panel (opening: it was hidden, nothing slides)
     flip.snap(shown && !opening); const ok = playable(figure);
     if (ok && !pending.hidden) freeze(); else if (!ok) thaw(); // read before the attributes below move the dock
     // back from a pending figure the column's clip (select-layout.js) waits out the cards' slide: set at once, Valls's first cards slid out from under it
     if (ok && !pending.hidden && shown && !reduced()) strip.animate?.({ clipPath: Array(2).fill(win.getComputedStyle(strip).clipPath) }, flip.ms);
     root.toggleAttribute('data-pending', !ok);
+    root.toggleAttribute('data-invite', !!figure.invite);
     pending.hidden = ok;
     $('select-info').inert = $('select-info').hidden = !ok;
     $('select-next').disabled = !ok; // desktop keeps a disabled placeholder; touch hides it
     $('select-next-label').textContent = tr(ok ? 'ui.select.pickLevel' : 'ui.select.soonQ');
     if (!ok) pendingFill(figure);
+    else hearts.paint($('select-heart'), figure);
+    onPanel(); // the first-time ribbon on the heart (heart-tip.js) follows what is on show
   }
   function info() {
     const ok = playable(figure);
@@ -236,7 +239,11 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
   $('select-figures-back').addEventListener('click', () => { setStep('figures'); api.refocus(); });
   $('select-play').addEventListener('click', play);
   $('select-howto').addEventListener('click', () => { if (playable(figure)) onHowto(); });
-  $('aviat-write').addEventListener('click', () => { if (!playable(figure)) onWrite(figure.invite ? INVITE_DRAFT : aviatDraft(figure, townOf(figure).name)); });
+  const figureRef = () => ({ id: figure.id, name: figure.fullName || figure.name });
+  $('aviat-material').addEventListener('click', () => { if (!playable(figure)) onWrite({ kind: 'material', figure: figureRef(), choose: true }); });
+  $('aviat-propose').addEventListener('click', () => { if (figure.invite) onWrite({ kind: 'entity', figure: null }); });
+  $('aviat-heart').addEventListener('click', () => { if (!figure.invite) hearts.tap(figure, $('aviat-heart')); });
+  $('select-heart').addEventListener('click', () => { if (playable(figure)) hearts.tap(figure, $('select-heart')); });
 
   const view = { get figure() { return figure; }, get lastPlayable() { return lastPlayable; }, get shown() { return shown; }, get cur() { return cur; },
     get step() { return step; }, get level() { return level; }, get town() { return town; } }; // what the keys and the layout read
@@ -283,5 +290,6 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     const target = step === 'level' ? levels.children[level] : cards[cur];
     target?.focus({ preventScroll: true });
   };
+  api.paintHearts = () => { if (playable(figure)) hearts.paint($('select-heart'), figure); else paintHeart(figure); };
   return api;
 }

@@ -138,6 +138,16 @@ export function createLeaderboardService({ configured, publishingEnabled, captch
         return { hasSession: !!data.session, persistent: c.mulassaPersistentStorage !== false, email: (user?.email_confirmed_at && user.email) || '' };
       } catch (error) { throw translated(error); }
     },
+    // The token the Bústia's Worker checks with Supabase Auth; an existing session only.
+    async accessToken() { try { return (await signedIn(await client()))?.access_token ?? ''; } catch { return ''; } },
+    async figureHearts() {
+      try { return ((await rpc(await client(), 'get_figure_hearts')) ?? []).map(r => ({ figure: r.figure_id, hearts: Number(r.hearts), mine: r.mine === true })); }
+      catch (error) { throw translated(error); }
+    },
+    async setFigureHeart(figure, on) {
+      try { return Number(await rpc(await client(), 'set_figure_heart', { p_figure: figure, p_on: on })); }
+      catch (error) { throw translated(error); }
+    },
     // The session's user id: the owner of this device's stats (src/services/stats-sync.js). Never shown, never sent anywhere else.
     async ownerId() {
       try { return (await signedIn(await client()))?.user?.id ?? null; } catch (error) { throw translated(error); }

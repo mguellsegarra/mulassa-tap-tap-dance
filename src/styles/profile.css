@@ -228,8 +228,7 @@ span.player-name { display: inline-flex; align-items: baseline; min-width: 0; }
 #badge-menu[open] { display: flex; flex-direction: column; overflow: visible; } /* the X straddles the frame: only the choices scroll */
 #badge-menu::before, #badge-menu::after { display: none; }
 #badge-menu .sheet-body { flex: 1 1 auto; }
-/* the sheets' own scroll bar takes 10 px from the choices' right: the same on the left and under «Desa», so everything stays on the frame's axis */
-#badge-menu:has(> .sheet-bar:not([hidden])) .sheet-body { padding-left: calc(var(--ring-room) + 10px); }
+/* the sheets' own scroll bar insets the choices by 10 px on both sides (share.css): «Desa» too */
 #badge-menu:has(> .sheet-bar:not([hidden])) .badge-foot { padding-inline: 10px; }
 @media (max-width: 359px) { #badge-title { font-size: 22px; } #badge-menu { padding-inline: 10px; } }
 #badge-title { margin: 0 0 12px; text-align: center; }
@@ -369,7 +368,8 @@ body:has(:is(#board-menu, #seasons-menu, #account-menu)[open]) #card-menu { widt
 .card-box:has([data-pending]) .board-state { clip-path: inset(50%); } /* over the box as ever (no overflow), read but not seen */
 @media (prefers-reduced-motion: reduce) { .card-box [data-pending] :is(.stat-fact, .stat-toggle) { animation: none; } }
 .card-box .board-status .stat-ico { display: block; width: 40px; height: 40px; margin: 0 auto 8px; color: #b5a385; } .card-box .board-status .stat-ico svg { stroke-width: 1.6; }
-@media (max-width: 359px) { #card-menu, #account-menu { padding-inline: 14px; } .stat-fact { padding: 8px; column-gap: 6px; } .stat-fact b { font-size: 19px; } .stat-fact .stat-ico { width: 22px; height: 22px; }
+@media (max-width: 400px) { .stat-fact { padding: 10px; column-gap: 8px; } }
+@media (max-width: 359px) { #card-menu, #account-menu { padding-inline: 14px; } :is(#card-menu, #account-menu):has(> .sheet-bar:not([hidden])) { padding-inline: 6px; } /* the scroll bar's inset (share.css) already keeps the margins */ .stat-fact { padding: 8px; column-gap: 6px; } .stat-fact span:not(.stat-ico) { font-size: 12px; } .stat-fact b { font-size: 19px; } .stat-fact .stat-ico { width: 22px; height: 22px; }
   .stat-lines li { grid-template-columns: 22px minmax(0, 1fr); column-gap: 6px; padding: 8px; } .stat-lines .stat-ico { width: 22px; height: 22px; } } /* the lines keep the tiles' compact inset */
 /* The detailed labels need whole words on phones; the four headline facts stay paired. */
 @media (max-width: 519px) { .stat-lines { grid-template-columns: 1fr; } }

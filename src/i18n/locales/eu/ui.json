@@ -178,7 +178,7 @@
   "ui.profile.lead.codeOther": "Posta hori beste profil bati dagokio. Helbide honetara bidalitako kodearekin profil hartan sartuko zara: {mail}. Zure profila ({mine}) eta haren emaitzak ez zaizkio gehituko.",
   "ui.profile.lead.codeSent": "6 zifrako kodea bidali dizugu helbide honetara: {mail}. Begiratu spam karpeta ere.",
   "ui.profile.lead.create": "Aukeratu goitizena: sailkapenean agertuko den izena da. 3–16 karaktere, zuriunerik gabe.",
-  "ui.profile.lead.link": "Posta baieztatuta, izena gordeko duzu eta profila kode batekin berreskura dezakezu edozein gailutan, pasahitzik gabe, nabigatzaileko datuak ezabatuta ere. Sailkapenean, posta baieztatuaren marka izango duzu goitizenaren ondoan.",
+  "ui.profile.lead.link": "Gorde izena, berreskuratu profila edozein gailutan eta erakutsi marka urdina. Pasahitzik gabe.",
   "ui.profile.lead.recover": "Idatzi profilean baieztatu zenuen posta eta sartzeko kodea bidaliko dizugu. Pasahitzik gabe.",
   "ui.profile.signout.done": "Saioa itxita.",
   "ui.profile.signout.lead": "Nabigatzaile honek profila ahaztuko du. Berreskuratzeko kodea helbide honetara bidaliko da: {mail}.",

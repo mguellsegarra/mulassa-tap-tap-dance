@@ -178,7 +178,7 @@
   "ui.profile.lead.codeOther": "Esse e-mail já pertence a outro perfil. Com o código enviado para {mail}, entrarás nesse perfil: {mine} e os respetivos resultados não serão acrescentados a ele.",
   "ui.profile.lead.codeSent": "Enviámos um código de 6 dígitos para {mail}. Verifica também a pasta de spam.",
   "ui.profile.lead.create": "Escolhe uma alcunha para a classificação. 3–16 caracteres, sem espaços.",
-  "ui.profile.lead.link": "Com o e-mail confirmado, manténs o nome e podes recuperar o perfil com um código em qualquer dispositivo, sem palavra-passe, mesmo que apagues os dados do navegador. Na classificação, a tua alcunha terá a marca de e-mail confirmado.",
+  "ui.profile.lead.link": "Mantém o nome, recupera o perfil em qualquer dispositivo e mostra a marca azul. Sem palavra-passe.",
   "ui.profile.lead.recover": "Escreve o e-mail que confirmaste no perfil e enviamos-te um código para entrares. Sem palavra-passe.",
   "ui.profile.signout.done": "Terminaste a sessão.",
   "ui.profile.signout.lead": "Este navegador esquecerá o perfil. Podes recuperá-lo com um código enviado para {mail}.",

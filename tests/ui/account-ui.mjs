@@ -238,7 +238,7 @@ const service = (o = {}) => ({ configured: true, asked: [], async seasons(f) { t
 // --- Perfil: this device's numbers at once, every device's when there is a profile (whichever knows more); the notice once
 {
   const f = fakeDoc(['account-menu', 'account-close', 'account-stats', 'account-status', 'account-since', 'account-empty', 'account-join',
-    'account-previous', 'account-previous-list', 'profile-row', 'stats-notice-menu', 'stats-notice-ok', 'stats-notice-close', 'stats-notice-guest', 'stats-notice-last', 'stats-notice-confirm', 'stats-notice-hall']);
+    'account-previous', 'account-previous-list', 'profile-row', 'stats-notice-menu', 'stats-notice-ok', 'stats-notice-close', 'stats-notice-hall']);
   const mem = new Map([['record-v2-duet-1', JSON.stringify({ quality: 91.5, score: 70000 })]]);
   const store = { get: k => mem.get(k) ?? null, set: (k, v) => mem.set(k, v), remove: k => mem.delete(k) };
   const server = { buckets: { 'mulassa-valls/mulassa-v3/1': bucket({ runs: 40, completed: 40, perfect: 4000, good: 100, miss: 100 }) }, days: ['2026-10-19', '2026-10-20'], daysPlayed: 2, currentStreak: 2, longestStreak: 2 };
@@ -273,22 +273,15 @@ const service = (o = {}) => ({ configured: true, asked: [], async seasons(f) { t
   f.$('account-close').click();
   // the stats notice, once: only while needed; closing it counts as seen
   assert.equal(acc.notice(), true); assert(f.$('stats-notice-menu').open);
-  assert(f.$('stats-notice-guest').hidden && f.$('stats-notice-confirm').hidden, 'no guest identity on this device: no keep-your-name step, no confirm button');
   f.$('stats-notice-ok').click(); assert(accepted === 1 && !f.$('stats-notice-menu').open);
   assert.equal(acc.notice(), false, 'seen: never again');
   const backFn = () => {};
-  // a guest: told that confirming the e-mail keeps its name, and offered it, which counts the notice as seen
+  // the notice asks nobody to confirm an e-mail, a guest included: the offer lives on the publish sheet
   needed = true; mem.set('leaderboard-alias', 'Pep');
   assert.equal(acc.notice(backFn), true);
-  assert(!f.$('stats-notice-guest').hidden && !f.$('stats-notice-confirm').hidden && f.$('stats-notice-confirm').textContent === 'Confirma el correu', 'the guest step and its button');
-  assert(f.$('stats-notice-last').textContent === '3', 'a guest: three steps');
-  { const html = (await import('node:fs')).readFileSync(new URL('../../index.html', import.meta.url), 'utf8'); // «D'acord» leads for everyone: a tap without reading closes the news, not into the e-mail steps
-    assert(/id="stats-notice-confirm"[^>]*class="btn btn-secondary"/.test(html) && /id="stats-notice-ok"[^>]*class="btn btn-primary"/.test(html), 'the notice: «D’acord» primary, the confirmation secondary'); }
-  f.$('stats-notice-confirm').click(); assert(accepted === 2 && opened.at(-1)[0] === 'link' && opened.at(-1)[1] === backFn && !f.$('stats-notice-menu').open, 'confirm: seen, then the profile steps, back to where the notice would go');
-  // a confirmed e-mail: the name is kept already, nothing to confirm
-  needed = true; mem.set('leaderboard-alias:identity', JSON.stringify({ hasSession: true, prof: { alias: 'Pep', verified: true } }));
-  assert.equal(acc.notice(backFn), true); assert(f.$('stats-notice-guest').hidden && f.$('stats-notice-confirm').hidden && f.$('stats-notice-last').textContent === '2', 'confirmed: two steps');
-  f.$('stats-notice-hall').click(); assert(accepted === 3 && halls.at(-1)[0] === 'mulassa-valls' && halls.at(-1)[1] === backFn && !f.$('stats-notice-menu').open, 'the season button: seen, then the Saló de la fama, back to where the notice would go (never back over it)');
+  { const html = (await import('node:fs')).readFileSync(new URL('../../index.html', import.meta.url), 'utf8');
+    assert(!/stats-notice-(confirm|guest)/.test(html) && /id="stats-notice-ok"[^>]*class="btn btn-primary"/.test(html), 'the notice: only «D’acord», no confirmation'); }
+  f.$('stats-notice-hall').click(); assert(accepted === 2 && halls.at(-1)[0] === 'mulassa-valls' && halls.at(-1)[1] === backFn && !f.$('stats-notice-menu').open, 'the season button: seen, then the Saló de la fama, back to where the notice would go (never back over it)');
 }
 // --- markup: the sheets exist, copy is Catalan, one primary each, «Dades enviades…» and «Convidat» words
 {
@@ -304,9 +297,9 @@ const service = (o = {}) => ({ configured: true, asked: [], async seasons(f) { t
   // the statistics notice: a title and three short lines with a drawn icon each, then Privadesa and D’acord;
   // the details it no longer says stay in the Privadesa text
   const notice = sheet('stats-notice-menu');
-  assert.equal((notice.match(/<li[ >]/g) || []).length, 3, 'the notice: three steps, each on its medal');
+  assert.equal((notice.match(/<li[ >]/g) || []).length, 2, 'the notice: two steps, each on its medal');
   assert(/<header class="notice-ribbon"><svg[^>]*aria-hidden="true"/.test(notice) && /<h2 id="stats-notice-title"[^>]*>Nova temporada!<\/h2>/.test(notice), 'the title is real text inside the ribbon');
-  assert(/<h2 id="stats-notice-title"[^>]*>Nova temporada!<\/h2>[^]*class="pos p1"[^]*class="pos p2"[^]*class="pos p3"/.test(notice) && /data-privacy-open[^>]*>Privadesa<\/button>[^]*id="stats-notice-ok"[^>]*>D’acord</.test(notice), 'title, the three medals, then Privadesa and D’acord');
+  assert(/<h2 id="stats-notice-title"[^>]*>Nova temporada!<\/h2>[^]*class="pos p1"[^]*class="pos p2"/.test(notice) && /data-privacy-open[^>]*>Privadesa<\/button>[^]*id="stats-notice-ok"[^>]*>D’acord</.test(notice), 'title, the two medals, then Privadesa and D’acord');
   const privacy = html.slice(html.indexOf('<section data-privacy="leaderboards"'), html.indexOf('</section>', html.indexOf('<section data-privacy="leaderboards"')));
   assert(/sumats entre (tots )?els teus dispositius/.test(privacy) && /Mai no s’hi envia l’hora en què jugues ni cap dada del dispositiu/.test(privacy) && /Tot s’esborra amb el perfil/.test(privacy), 'Privadesa keeps what the notice dropped');
   assert(/Crea un perfil per guardar-les i sortir a les classificacions\./.test(sheet('account-menu')));

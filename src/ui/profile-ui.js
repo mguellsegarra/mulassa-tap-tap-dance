@@ -19,10 +19,19 @@ import { checkAlias } from '../services/alias-rules.js';
 import { turnstileMessage } from '../services/captcha.js';
 import { errors } from '../services/errors.js';
 import { byId, statusLine, setButton } from './sheet-kit.js';
-import { GUEST, GUEST_TEXT, appendName } from './profile-notes.js';
+import { GUEST, GUEST_TEXT, CHECK_SVG, appendName } from './profile-notes.js';
 import { tr } from '../i18n/messages.js';
 
 const BADGE_PENCIL = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16zM13.5 6.5l4 4"/></svg>';
+const svg = d => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${d}"/></svg>`;
+// the block's buttons: what each one does, at a glance (static markup, the label stays text)
+const BTN_ICON = {
+  link: `<span class="verified-check" aria-hidden="true">${CHECK_SVG}</span>`,
+  delete: svg('M4 7h16M9 7V4h6v3M6.5 7l1 13h9l1-13M10 11v5M14 11v5'),
+  rename: svg('M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16zM13.5 6.5l4 4'),
+  signout: svg('M10 8V6a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-7a2 2 0 0 1-2-2v-2M15 12H3l3-3M6 15l-3-3'),
+};
+const labelBtn = (b, act, text) => { b.textContent = text; if (BTN_ICON[act]) b.insertAdjacentHTML('afterbegin', BTN_ICON[act]); };
 const CONFIRM = {
   delete: { title: tr('ui.profile.delete.title'), yes: tr('ui.profile.delete.yes'), done: tr('ui.profile.delete.done'),
     lead: () => tr('ui.profile.delete.lead') },
@@ -84,7 +93,7 @@ export function setupProfile({ focusIn, captcha, store, aliasKey, deviceNote = (
     const confirmed = prof ? prof.verified : Boolean(mailOn);
     const state = hasSession ? (confirmed ? 'linked' : prof?.released ? 'released' : 'guest') : alias ? 'stale' : 'none';
     email = mailOn;
-    const set = (i, act, text, on = true) => { const b = btns[i]; b.hidden = !on; b.dataset.act = act; b.textContent = text; };
+    const set = (i, act, text, on = true) => { const b = btns[i]; b.hidden = !on; b.dataset.act = act; labelBtn(b, act, text); };
     nameEl.replaceChildren(); // as the boards show it: the check for a confirmed address, a released name faded
     if (state !== 'none') appendName(doc, nameEl, { alias, verified: confirmed && hasSession, released: state === 'released', badgeId: prof?.badgeId });
     kindEl.hidden = state !== 'guest'; kindEl.textContent = GUEST;
@@ -112,7 +121,7 @@ export function setupProfile({ focusIn, captcha, store, aliasKey, deviceNote = (
     // confirmed profile lands on the same size, a guest's line appears under the name); no name: «Encara no en tens cap.»
     if (!known) readKnown();
     if (known && alias) paint({ alias, ...known });
-    else if (alias) { row.dataset.pending = '1'; nameEl.replaceChildren(); appendName(doc, nameEl, { alias, verified: false }); kindEl.hidden = true; sub.textContent = ''; [tr('ui.profile.btn.link'), tr('ui.profile.btn.delete')].forEach((t, i) => { btns[i].hidden = false; btns[i].textContent = t; delete btns[i].dataset.act; }); btns[2].hidden = true; }
+    else if (alias) { row.dataset.pending = '1'; nameEl.replaceChildren(); appendName(doc, nameEl, { alias, verified: false }); kindEl.hidden = true; sub.textContent = ''; [['link', tr('ui.profile.btn.link')], ['delete', tr('ui.profile.btn.delete')]].forEach(([act, t], i) => { btns[i].hidden = false; labelBtn(btns[i], act, t); delete btns[i].dataset.act; }); btns[2].hidden = true; }
     else paint({ alias, hasSession: false, mailOn: '', persistent: true });
     let id, prof = null, gone = false;
     try {

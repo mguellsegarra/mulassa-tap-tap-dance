@@ -11,7 +11,7 @@ import { tr } from '../i18n/messages.js';
 import { mulaSpinner } from './loader.js';
 import { statsData, renderStats, sinceText, FIGURE_NAMES } from './stats-view.js';
 import { figureSeasons, boardName } from './seasons-ui.js';
-import { ALIAS_KEY, savedName } from '../services/leaderboard-identity.js';
+import { ALIAS_KEY } from '../services/leaderboard-identity.js';
 
 const HALL_FIGURE = 'mulassa-valls'; // the figure whose first season holds everything played before the seasons
 export function setupAccount({ focusIn, profile, badges, service, store, stats, onSync = () => {}, onHall = () => {}, doc = document, now = () => Date.now() }) {
@@ -106,7 +106,6 @@ export function setupAccount({ focusIn, profile, badges, service, store, stats, 
   let noticeBack = null;
   for (const id of ['stats-notice-ok', 'stats-notice-close']) $(id).addEventListener('click', () => notice.close());
   // a guest's notice also offers the confirmation: it closes like «D'acord» (the notice is seen) and the profile steps open, back to where this one would
-  $('stats-notice-confirm').addEventListener('click', () => { const b = noticeBack; noticeBack = null; notice.close(); profile.open('link', b); });
   // the season button counts like «D'acord» (the notice is seen, it never comes back over the hall or the board) and opens the Saló de la fama, back to where the notice would go
   $('stats-notice-hall').addEventListener('click', () => { const b = noticeBack; noticeBack = null; notice.close(); onHall(HALL_FIGURE, b); });
   notice.addEventListener('close', () => { stats.acceptNotice(); const b = noticeBack; noticeBack = null; b?.(); });
@@ -117,11 +116,6 @@ export function setupAccount({ focusIn, profile, badges, service, store, stats, 
     notice(onBack = null) {
       if (!stats.noticeNeeded() || notice.open) return false;
       noticeBack = onBack;
-      // a guest (the greeting has refreshed the identity by now): told that confirming the e-mail keeps its name, with the way out
-      const { alias, verified } = savedName(store), guest = Boolean(alias) && !verified;
-      $('stats-notice-guest').hidden = $('stats-notice-confirm').hidden = !guest;
-      $('stats-notice-last').textContent = guest ? '3' : '2'; $('stats-notice-last').className = `pos p${guest ? 3 : 2}`;
-      if (guest) $('stats-notice-confirm').textContent = tr('ui.profile.btn.link');
       notice.showModal(); focusIn(notice, 'stats-notice-ok');
       notice.querySelector?.('.sheet-body')?.scrollTo?.(0, 0); // a small phone scrolls: it starts at the title, not at the focused button
       return true;

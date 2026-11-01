@@ -178,7 +178,7 @@
   "ui.profile.lead.codeOther": "Aguest corrèu ja ei d’un aute perfil. Damb eth còdi que t’auem enviat a {mail} entraràs en aqueth perfil: {mine} e es sòns resultats non s’i ahigen.",
   "ui.profile.lead.codeSent": "T’auem enviat un còdi de 6 chifres a {mail}. Guarda tanben era carpeta de corrèu lord.",
   "ui.profile.lead.create": "Triga un subernòm: ei eth nòm que gesserà ena classificacion. 3–16 caractèrs, sense espacis.",
-  "ui.profile.lead.link": "Damb eth corrèu confirmat, conserves eth nòm e pòs recuperar eth perfil damb un còdi en quinsevolh dispositiu, sense contrasenha, encara que escafes es donades deth navegador. Ena classificacion, auràs era marca de corrèu confirmat ath costat deth subernòm.",
+  "ui.profile.lead.link": "Consèrva eth tòn nòm, recupèra eth perfil en quinsevolh dispositiu e mostra era marca blava. Sense contrasenha.",
   "ui.profile.lead.recover": "Escriu eth corrèu que confirmères en perfil e t’enviaram un còdi tà entrar-i. Sense contrasenha.",
   "ui.profile.signout.done": "Session barrada.",
   "ui.profile.signout.lead": "Aguest navegador desbrembarà eth perfil. Lo recuperaràs damb un còdi enviat a {mail}.",

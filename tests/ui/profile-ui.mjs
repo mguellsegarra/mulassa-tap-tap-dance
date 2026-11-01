@@ -10,6 +10,7 @@ import { VERIFIED, GUEST, GUEST_TEXT } from '../../src/ui/profile-notes.js';
 
 class El {
   constructor(id) { Object.assign(this, { id, hidden: false, disabled: false, value: '', readOnly: false, dataset: {}, on: {}, open: false, text: '', attrs: {}, className: '' }); }
+  insertAdjacentHTML(_, html) { this.icon = html; }
   get textContent() { return this.text + (this.kids || []).map(k => (typeof k === 'string' ? k : k.textContent)).join(''); }
   set textContent(v) { this.text = String(v); this.first = null; this.kids = []; }
   get classList() { const c = (this.cls ||= new Set()); return { toggle: (k, on = !c.has(k)) => { if (on) c.add(k); else c.delete(k); }, replace: (a, b) => { if (c.delete(a)) c.add(b); }, contains: k => c.has(k) }; }
@@ -74,6 +75,7 @@ const guestProf = o => ({ alias: 'takeshi', verified: false, published: true, re
   assert(!guest.$('profile-kind').hidden && guest.$('profile-kind').textContent === GUEST, '«Convidat» said in words here');
   assert.equal(guest.buttons().join(), 'link:Confirma el correu,delete:Esborra el perfil');
   assert.equal(guest.$('profile-sub').textContent, GUEST_TEXT, 'what a guest risks, and the way out');
+  assert(guest.$('profile-main').icon.includes('verified-check') && guest.$('profile-alt').icon.includes('<svg'), 'a guest: the blue check on «Confirma el correu», an icon on «Esborra»');
   assert(!guest.badge(), 'not confirmed: no check');
   const priv = make({ alias: 'takeshi', session: true, persistent: false, prof: guestProf() }); await priv.profile.refresh();
   assert.equal(priv.$('profile-sub').textContent, `${GUEST_TEXT} NOTE`, 'and the browser note when it may lose the profile');
@@ -132,7 +134,7 @@ const guestProf = o => ({ alias: 'takeshi', verified: false, published: true, re
 { // confirm an e-mail: mail → code; the tick, the same name; an address typed elsewhere; a code the server does not confirm
   const s = make({ alias: 'takeshi', session: true, captchaRequired: true, prof: guestProf() }); await s.profile.refresh();
   s.profile.open('link'); assert(s.$('profile-menu').open && s.$('profile-title').textContent === 'Confirma el correu' && s.focused.at(-1) === 'profile-email');
-  assert(/conserves el nom/.test(s.$('profile-lead').textContent) && /marca/.test(s.$('profile-lead').textContent) && !/#|caduc|7 dies|torneig/.test(s.$('profile-lead').textContent), 'what confirming does: keeps it, sells the mark, no «#» talk');
+  assert(/Conserva el nom/.test(s.$('profile-lead').textContent) && /marca/.test(s.$('profile-lead').textContent) && !/#|caduc|7 dies|torneig/.test(s.$('profile-lead').textContent), 'what confirming does: keeps it, sells the mark, no «#» talk');
   enter(s.$, 'profile-email', 'jugador@example.com'); s.$('profile-form').fire('submit'); await tick(); await tick();
   assert.deepEqual(s.calls[0], ['send', 'jugador@example.com', undefined], 'an address on this session: no Turnstile wait');
   assert(!s.$('profile-code-field').hidden && s.$('profile-mail-field').hidden && /jugador@example\.com/.test(s.$('profile-lead').textContent) && s.focused.at(-1) === 'profile-code');

@@ -273,6 +273,11 @@
   "ui.standings.records": "Zure errekorrak",
   "ui.standings.title": "Sailkapena",
   "ui.standings.count": "Sailkapena ({n})",
+  "ui.standings.top": {
+    "one": "Top {top} · {n} parte-hartzaile",
+    "other": "Top {top} · {n} parte-hartzaile"
+  },
+  "ui.standings.topCount": "Top {top} ({n})",
   "ui.standings.toFirst": "Lehen postua {n} puntura",
   "ui.standings.toNext": "{pos} postua {n} puntura",
   "ui.stats.adjustSync": "Doitu sinkronia",

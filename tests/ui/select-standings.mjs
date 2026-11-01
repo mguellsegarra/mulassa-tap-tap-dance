@@ -38,8 +38,8 @@ const rows = Array.from({ length: 20 }, (_, i) => ({ position: i + 1, alias: `Ju
 rows[12] = { ...rows[12], alias: '<b>Jo</b>', is_self: true };
 rows[1] = { ...rows[1], released: true, public_id: 'id-2' }; // a released profile
 facts.board({ pos: 13, total: 63, rows }, true);
-assert.match($('select-standings-pos').textContent, /^Posició 13 de 63 · /);
-assert.equal($('select-standings-head').attrs['aria-label'], `Classificació: ${$('select-standings-pos').textContent}`);
+assert.equal($('select-standings-pos').textContent, 'Classificació · 63 participants', 'your row in sight: the place is in it, the header says how many play');
+assert.equal($('select-standings-head').attrs['aria-label'], `Classificació: ${rankText({ pos: 13, total: 63 })}`, 'its accessible name keeps your place');
 const shown = () => list.kids.map(k => (k.className === 'dots' ? '·' : Number(k.kids[0].textContent)));
 assert.deepEqual(shown(), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], 'a tall column: the top 10 and two rows each side of yours');
 const me = list.kids.find(k => k.className === 'me');
@@ -66,6 +66,7 @@ assert.deepEqual(shown(), [12, 13, 14], 'then the top rows: your neighbours stay
 assert(!('data-gone' in $('select-meds').attrs), 'the medals stay while any row fits');
 room = -1; facts.fit();
 assert(!$('select-standings').hidden && $('select-standings-body').hidden, 'no room at all: the rows go, the header (the way to the board) stays');
+assert.match($('select-standings-pos').textContent, /^Posició 13 de 63 · /, 'no row in sight: the header tells your place');
 room = Infinity;
 
 facts.fit(true);
@@ -73,8 +74,18 @@ assert(!$('select-standings').hidden && $('select-standings-body').hidden, 'step
 room = Infinity;
 facts.board({ pos: 1, total: 63, rows: rows.map((r, i) => ({ ...r, is_self: i === 0 })) }, true);
 assert(foot.hidden, 'the first has no gap to show');
-facts.board({ pos: null, total: 63, rows }, true);
-assert.equal($('select-standings-pos').textContent, 'Classificació · 63 participants', 'no row of yours: the board still shows');
+const others = rows.map(({ is_self, ...r }) => r);
+facts.board({ pos: null, total: 63, rows: others }, true);
+assert.equal($('select-standings-pos').textContent, 'Top 10 · 63 participants', 'no row of yours: the rows it shows are the top ones');
+room = 7; facts.fit();
+assert.equal($('select-standings-pos').textContent, 'Top 5 · 63 participants', 'fewer rows fit: the header follows them');
+room = Infinity; facts.fit();
+facts.board({ pos: null, total: 3, rows: others.slice(0, 3) }, true);
+assert.equal($('select-standings-pos').textContent, 'Classificació · 3 participants', 'every player in sight: no top to speak of');
+facts.fit(true);
+facts.board({ pos: null, total: 63, rows: others }, true);
+facts.fit(true);
+assert.equal($('select-standings-pos').textContent, 'Classificació · 63 participants', 'step 2 hides the rows: no top in the header');
 facts.board(null, true);
 assert(!$('select-standings').hidden && $('select-standings-pos').textContent === 'Classificació', 'before the answer: the header and the placeholder');
 facts.board(null, false);
@@ -165,7 +176,7 @@ console.log('tablets: the first three before your neighbours ok');
   fades.at(-1).done(); await tick();
   assert(/5/.test(head()) && fades.length === 8, 'and the answer in');
   calm = true; fadeFacts.board({ pos: 13, total: 63, rows }, true, false, 'mulassa:Jo#1');
-  assert(fades.length === 8 && /13/.test(head()), 'reduced motion: swapped at once');
+  assert(fades.length === 8 && /63/.test(head()), 'reduced motion: swapped at once');
   calm = false; delete card.animate; }
 
 // Phones: the header and the first three, one fixed shape, so the card never fades out (that left a hole, then a flash of
@@ -186,6 +197,8 @@ console.log('tablets: the first three before your neighbours ok');
   assert(pos.textContent === 'Classificació (9)' && body.dataset.state === 'ready', 'the answer replaces the skeleton in place; the narrow header gives the board\'s size');
   assert.equal($('select-standings-head').attrs['aria-label'], 'Classificació: Posició 2 de 9 · ' + rankText({ pos: 2, total: 9 }).split(' · ')[1], 'its accessible name keeps your place');
   assert.deepEqual(anims.slice(2), [['head', '0→1']], 'no card fade: the rows cross-fade with the skeleton, the header fades its new words');
+  phoneFacts.board({ pos: null, total: 9, rows: others.slice(0, 9) }, true, false, 'drac:Jo#1');
+  assert.equal(pos.textContent, 'Top 3 (9)', 'no row of yours: the narrow header names the first three');
   delete card.animate; delete body.animate; delete pos.animate; }
 console.log('phones: the card stays, boards swap in place ok');
 

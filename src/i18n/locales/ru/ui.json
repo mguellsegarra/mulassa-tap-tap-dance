@@ -277,6 +277,13 @@
   "ui.standings.records": "Твои рекорды",
   "ui.standings.title": "Рейтинг",
   "ui.standings.count": "Рейтинг ({n})",
+  "ui.standings.top": {
+    "one": "Топ-{top} · {n} участник",
+    "few": "Топ-{top} · {n} участника",
+    "many": "Топ-{top} · {n} участников",
+    "other": "Топ-{top} · {n} участника"
+  },
+  "ui.standings.topCount": "Топ-{top} ({n})",
   "ui.standings.toFirst": "До первого места очков: {n}",
   "ui.standings.toNext": "До №{pos} очков: {n}",
   "ui.stats.adjustSync": "Настроить синхронизацию",

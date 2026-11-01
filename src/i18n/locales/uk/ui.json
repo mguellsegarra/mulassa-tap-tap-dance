@@ -277,6 +277,13 @@
   "ui.standings.records": "Твої рекорди",
   "ui.standings.title": "Результати",
   "ui.standings.count": "Результати ({n})",
+  "ui.standings.top": {
+    "one": "Топ-{top} · {n} учасник",
+    "few": "Топ-{top} · {n} учасники",
+    "many": "Топ-{top} · {n} учасників",
+    "other": "Топ-{top} · {n} учасника"
+  },
+  "ui.standings.topCount": "Топ-{top} ({n})",
   "ui.standings.toFirst": "До першого місця: {n} очок",
   "ui.standings.toNext": "До місця {pos}: {n} очок",
   "ui.stats.adjustSync": "Налаштуй синхронізацію",

@@ -271,6 +271,10 @@
   "ui.standings.records": "내 기록",
   "ui.standings.title": "순위표",
   "ui.standings.count": "순위표 ({n})",
+  "ui.standings.top": {
+    "other": "상위 {top}명 · 참가자 {n}명"
+  },
+  "ui.standings.topCount": "상위 {top}명 ({n})",
   "ui.standings.toFirst": "1위까지 {n}점",
   "ui.standings.toNext": "{pos}위까지 {n}점",
   "ui.stats.adjustSync": "싱크 조정",

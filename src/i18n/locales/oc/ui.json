@@ -273,6 +273,11 @@
   "ui.standings.records": "Es tòns recòrds",
   "ui.standings.title": "Classificacion",
   "ui.standings.count": "Classificacion ({n})",
+  "ui.standings.top": {
+    "one": "Top {top} · {n} participant",
+    "other": "Top {top} · {n} participants"
+  },
+  "ui.standings.topCount": "Top {top} ({n})",
   "ui.standings.toFirst": "A {n} punts deth prumèr lòc",
   "ui.standings.toNext": "A {n} punts deth numèro {pos}",
   "ui.stats.adjustSync": "Ajusta era sincronia",

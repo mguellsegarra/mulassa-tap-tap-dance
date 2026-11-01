@@ -273,6 +273,11 @@
   "ui.standings.records": "Tes records",
   "ui.standings.title": "Classement",
   "ui.standings.count": "Classement ({n})",
+  "ui.standings.top": {
+    "one": "Top {top} · {n} participant",
+    "other": "Top {top} · {n} participants"
+  },
+  "ui.standings.topCount": "Top {top} ({n})",
   "ui.standings.toFirst": "À {n} points de la première place",
   "ui.standings.toNext": "À {n} points du numéro {pos}",
   "ui.stats.adjustSync": "Règle la synchro",

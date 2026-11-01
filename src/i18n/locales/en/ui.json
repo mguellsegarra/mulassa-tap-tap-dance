@@ -273,6 +273,11 @@
   "ui.standings.records": "Your personal bests",
   "ui.standings.title": "Leaderboard",
   "ui.standings.count": "Leaderboard ({n})",
+  "ui.standings.top": {
+    "one": "Top {top} · {n} participant",
+    "other": "Top {top} · {n} participants"
+  },
+  "ui.standings.topCount": "Top {top} ({n})",
   "ui.standings.toFirst": "{n} points behind first place",
   "ui.standings.toNext": "{n} points behind number {pos}",
   "ui.stats.adjustSync": "Adjust sync",

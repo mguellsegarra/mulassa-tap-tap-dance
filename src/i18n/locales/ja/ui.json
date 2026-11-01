@@ -271,6 +271,10 @@
   "ui.standings.records": "自己ベスト",
   "ui.standings.title": "ランキング",
   "ui.standings.count": "ランキング（{n}）",
+  "ui.standings.top": {
+    "other": "トップ{top}·参加者{n}人"
+  },
+  "ui.standings.topCount": "トップ{top}（{n}）",
   "ui.standings.toFirst": "1位まであと{n}点",
   "ui.standings.toNext": "{pos}位まであと{n}点",
   "ui.stats.adjustSync": "タイミング調整",

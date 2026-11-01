@@ -273,6 +273,11 @@
   "ui.standings.records": "Deine Rekorde",
   "ui.standings.title": "Rangliste",
   "ui.standings.count": "Rangliste ({n})",
+  "ui.standings.top": {
+    "one": "Top {top} · {n} Teilnehmender",
+    "other": "Top {top} · {n} Teilnehmende"
+  },
+  "ui.standings.topCount": "Top {top} ({n})",
   "ui.standings.toFirst": "{n} Punkte bis Platz eins",
   "ui.standings.toNext": "{n} Punkte bis Platz {pos}",
   "ui.stats.adjustSync": "Ton abgleichen",

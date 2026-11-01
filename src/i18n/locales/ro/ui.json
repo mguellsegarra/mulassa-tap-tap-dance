@@ -173,7 +173,6 @@
   "ui.profile.field.alias": "Poreclă",
   "ui.profile.field.name": "Nume",
   "ui.profile.guest": "Oaspete",
-  "ui.profile.guestRow": "Confirmă e-mailul și primești semnul ✓",
   "ui.profile.guestText": "Ești oaspete. Dacă ștergi datele browserului, pierzi profilul. Confirmă e-mailul ca să-l păstrezi.",
   "ui.profile.lead.codeOther": "Acest e-mail aparține deja altui profil. Cu codul trimis la {mail} vei intra în acel profil: {mine} și rezultatele sale nu se adaugă.",
   "ui.profile.lead.codeSent": "Ți-am trimis un cod de 6 cifre la {mail}. Verifică și dosarul spam.",

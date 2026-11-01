@@ -173,7 +173,6 @@
   "ui.profile.field.alias": "Alcunha",
   "ui.profile.field.name": "Nome",
   "ui.profile.guest": "Convidado",
-  "ui.profile.guestRow": "Confirma o e-mail e terás a marca ✓",
   "ui.profile.guestText": "És convidado. Se apagares os dados do navegador, perdes o perfil. Confirma o e-mail para o guardares.",
   "ui.profile.lead.codeOther": "Esse e-mail já pertence a outro perfil. Com o código enviado para {mail}, entrarás nesse perfil: {mine} e os respetivos resultados não serão acrescentados a ele.",
   "ui.profile.lead.codeSent": "Enviámos um código de 6 dígitos para {mail}. Verifica também a pasta de spam.",

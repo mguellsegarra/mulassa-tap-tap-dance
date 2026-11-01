@@ -5,9 +5,11 @@
 //
 // El build amb VITE_FEEDBACK_URL=https://exemple.invalid VITE_FEEDBACK_ENABLED=true VITE_TURNSTILE_SITE_KEY=x perquè la Bústia no surti com a no disponible.
 //   node tools/qa/ui-review.mjs [--no-build] [--only=P03,R01] [--vps=320,393] [--list]   captura i escriu la pàgina
+//   node tools/qa/ui-review.mjs --base[=origin/main] [--force]                           captura la referència (una altra branca) a revisio/base/: el toggle «Només canviades»
 //   node tools/qa/ui-review.mjs --serve[=5179]                                           serveix la pàgina (també al mòbil) i desa els comentaris
 // Surt a docs/i18n-ui-inventory/revisio/ (git-ignored): index.html, shots/, screens.json i comentaris.json.
 // Cada pantalla parteix d'una càrrega neta i prem els botons reals; `expect` ha de ser visible o la captura consta com a fallida.
+import { execSync, spawnSync } from 'node:child_process';
 import { createServer } from 'node:http';
 import { availableParallelism } from 'node:os';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -16,9 +18,9 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { VPS, bootPage, build, serve } from './ui-inventory.mjs';
 import { lock } from './capture-lib.mjs';
 
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../..'), OUT = join(ROOT, 'docs/i18n-ui-inventory/revisio'), SHOTS = join(OUT, 'shots');
 const args = Object.fromEntries(process.argv.slice(2).map(a => { const [k, v = '1'] = a.replace(/^--/, '').split('='); return [k, v]; }));
-const WORKERS = +(args.jobs ?? Math.min(12, availableParallelism() >> 1)); // captures aren't timing measurements: they can share the GPU
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../..'), REVIEW = join(ROOT, 'docs/i18n-ui-inventory/revisio'), OUT = args.baseline ? join(REVIEW, 'base') : REVIEW, SHOTS = join(OUT, 'shots');
+const WORKERS = +(args.jobs ?? Math.min(24, availableParallelism() + 6)); // most of a capture is waiting (boot 6 s whatever the load), so more than one per core fits
 
 // La matriu d'AGENTS.md. Mode foto al mòbil és l'única pantalla de telèfon en horitzontal.
 const PHONES = ['320x568', '375x667', '393x852', '430x932'], BIG = ['1024x768', '1280x800', '1440x700', '1920x1080'], ALL = [...PHONES, ...BIG];
@@ -28,10 +30,11 @@ const touchVp = vp => family(vp) !== 'escriptori';
 for (const vp of [...ALL, ...LANDSCAPE]) { const [w, h] = vp.split('x').map(Number); VPS[vp] = [w, h, vp]; }
 
 // ---------------------------------------------------------------- passos
-const wait = (h, ms = 900) => h.page.waitForTimeout(ms);
+// Short waits are for a sheet's CSS to settle: done as soon as nothing finite is animating. Long ones (a run, canvas animation) stay fixed.
+const wait = (h, ms = 900) => (ms > 1800 ? h.page.waitForTimeout(ms) : h.page.waitForFunction(() => !document.getAnimations().some(a => a.playState === 'running' && a.effect?.getComputedTiming().iterations !== Infinity), null, { timeout: ms, polling: 100 }).catch(() => {}).then(() => h.page.waitForTimeout(120)));
 const until = (h, fn, arg, ms = 30000) => h.page.waitForFunction(fn, arg, { timeout: ms });
 const click = (h, sel) => h.page.evaluate(s => { const e = document.querySelector(s); if (!e) throw new Error(`no ${s}`); e.click(); }, sel);
-const open = (h, id) => until(h, i => document.getElementById(i)?.open, id, 40000);
+const open = (h, id) => until(h, i => document.getElementById(i)?.open, id, args.baseline ? 10000 : 40000); // the other branch may not have this sheet at all
 const type = (h, sel, v) => h.page.evaluate(([s, x]) => { const e = document.querySelector(s); e.value = x; e.dispatchEvent(new Event('input', { bubbles: true })); }, [sel, v]);
 const dbg = (h, m, ...a) => h.page.evaluate(([k, x]) => window.__dbg[k](...x), [m, a]);
 async function toSelect(h) {
@@ -70,7 +73,7 @@ const rev = st => `final&review=${st}`;
 const ACC = { new: 'sense perfil', reserved: 'convidat sense resultat', guest: 'convidat', released: 'convidat, nom alliberat', verified: 'registrat' };
 
 const F1 = '1 · Entrada', F2 = '2 · Selector', F3 = '3 · Configuració i submenús', F4 = '4 · Perfil i compte', F5 = '5 · Joc i pausa', F6 = '6 · Resultats i publicar', F7 = '7 · Classificació, fitxes i temporades', F8 = '8 · Mode foto';
-const blank = h => wait(h, 0);
+const blank = async () => {};
 export const SCREENS = [
   S(F1, 'E01', 'tots', 'Carregador', 'mock', blank, '#loader', { boot: 'loader' }),
   S(F1, 'E02', 'tots', 'Targeta d\'error de càrrega', 'mock', h => until(h, () => document.getElementById('loader')?.classList.contains('fail'), null, 90000).then(() => wait(h, 1200)), '#loader.fail', { boot: 'blocked' }),
@@ -171,11 +174,29 @@ const planUnits = () => {
   const only = args.only?.split(','), vps = args.vps?.split(',');
   return SCREENS.filter(s => !only || only.includes(s.id)).flatMap(s => s.vps.filter(v => !vps || vps.some(x => v.startsWith(x))).map(vp => ({ s, vp })));
 };
+// A screen's fingerprint: what it shows (text, boxes, colours, type, icons), not its pixels, so the 3D behind a sheet and the animations don't count as a change.
+// shortcut: canvas-drawn UI (HUD, results card) and the 3D aren't compared; extend it if those need a diff.
+const FINGERPRINT = () => {
+  const top = [...document.querySelectorAll('dialog[open]')].pop();
+  const roots = top ? [top] : ['#select', '#results-actions', '#rotate', '#pause', '#loader', '#lang-tip'].map(q => document.querySelector(q)).filter(e => e?.checkVisibility());
+  const skip = '#settings-version, #review-panel, .test-mode, .mula-spinner', out = { text: [], box: [], paint: [], title: [] };
+  for (const root of roots) for (const el of [root, ...root.querySelectorAll('*')]) {
+    if (el.closest(skip) || !el.checkVisibility() || el.tagName === 'CANVAS') continue;
+    let moving = false; for (let e = el; e && !moving; e = e === root ? null : e.parentElement) moving = e.getAnimations().some(x => x.playState === 'running'); // a pulsing button has no fixed box
+    const r = moving ? { left: 0, top: 0, width: 0, height: 0 } : el.getBoundingClientRect(), c = getComputedStyle(el), round = n => Math.round(n / 2) * 2;
+    const text = el.closest('#loader') ? '' : [...el.childNodes].filter(n => n.nodeType === 3).map(n => n.textContent.trim()).join(' ');
+    out.text.push(text, el.getAttribute('d') ?? '');
+    out.box.push(el.tagName, el.id, round(r.left), round(r.top), round(r.width), round(r.height), c.fontSize, c.fontWeight);
+    (el.matches('h2') ? out.title : out.paint).push(c.color, c.backgroundColor, c.borderTopWidth, c.borderTopColor, c.borderTopLeftRadius);
+  }
+  const hash = list => { let h = 0x811c9dc5; for (const ch of list.join('\n')) h = Math.imul(h ^ ch.codePointAt(0), 16777619); return (h >>> 0).toString(16); };
+  return Object.fromEntries(Object.entries(out).map(([k, v]) => [k, hash(v)]));
+};
 async function capture(browser, { s, vp }, port, h = { ctxOpts: {} }) {
   const code = codeOf(s, vp), touch = touchVp(vp);
   const u = { vp, lang: 'ca', g: { group: s.id, scenes: [s], query: s.query, storage: s.storage, boot: s.boot, noLang: s.noLang, locale: s.locale, ua: s.ua, pointer: touch ? 'touch' : 'fine' } };
   let err = null;
-  for (let attempt = 0; attempt < 2; attempt++) {
+  for (let attempt = 0; attempt < (args.baseline ? 1 : 2); attempt++) { // what the other branch lacks would only fail again
     try {
       err = null;
       if (h.reused = Boolean(h.page && attempt === 0)) await closeSheets(h);
@@ -184,12 +205,13 @@ async function capture(browser, { s, vp }, port, h = { ctxOpts: {} }) {
       if (!await h.page.evaluate(sel => document.querySelector(sel)?.checkVisibility?.() ?? false, s.expect)) throw new Error(`no es veu ${s.expect}`);
       const showing = await h.page.evaluate(() => [...document.querySelectorAll('dialog[open]')].map(d => d.id).join(','));
       if (/stats-notice|season-end|gpu-hint/.test(showing) && !s.greeting) throw new Error(`fulla inesperada: ${showing}`); // would otherwise hide the screen and still pass `expect`
+      const fp = await h.page.evaluate(FINGERPRINT);
       await h.page.screenshot({ path: join(SHOTS, `${code}.png`), timeout: 90000 });
       // una fulla amb scroll amaga el que té a sota: també el final
       const scrolled = await h.page.evaluate(() => { const top = [...document.querySelectorAll('dialog[open]')].pop(); if (!top) return false;
         const box = [top, ...top.querySelectorAll('*')].find(e => e.scrollHeight > e.clientHeight + 8 && /auto|scroll/.test(getComputedStyle(e).overflowY) && e.checkVisibility()); if (!box) return false;
         box.scrollTop = box.scrollHeight; return true; });
-      const recs = [{ code, id: s.id, vp, ok: true, showing }];
+      const recs = [{ code, id: s.id, vp, ok: true, showing, fp }];
       if (scrolled) { await wait(h, 500); await h.page.screenshot({ path: join(SHOTS, `${code}-fi.png`), timeout: 90000 }); recs.push({ code: `${code}-fi`, id: s.id, vp, ok: true, showing, end: true }); }
       if (!h.keep) await h.ctx.close().catch(() => {});
       return recs;
@@ -200,7 +222,20 @@ async function capture(browser, { s, vp }, port, h = { ctxOpts: {} }) {
 
 // ---------------------------------------------------------------- pàgina
 const MIME = { '.html': 'text/html; charset=utf-8', '.json': 'application/json', '.png': 'image/png' };
+const WHY = { text: 'text', box: 'posició o mida', paint: 'color', title: 'títol' };
+// same | added (main can't reach it: new, or a flow that changed) | changed, with what changed
+function statusOf(c, base) {
+  if (!base) return { st: 'same', why: [] };
+  const was = base.find(b => b.code === c.code);
+  if (!was?.ok) return { st: 'added', why: [] };
+  const why = Object.keys(WHY).filter(k => c.fp?.[k] !== was.fp?.[k]);
+  return { st: why.length ? 'changed' : 'same', why: why.map(k => WHY[k]) };
+}
 function page(db) {
+  const baseFile = join(REVIEW, 'base/screens.json'), base = !args.baseline && existsSync(baseFile) ? JSON.parse(readFileSync(baseFile, 'utf8')) : null;
+  const baseRef = base && existsSync(join(REVIEW, 'base/ref.txt')) ? readFileSync(join(REVIEW, 'base/ref.txt'), 'utf8').trim() : '';
+  const main = c => db.find(x => x.code === c.code.replace(/-fi$/, ''));
+  db = db.map(c => { const r = statusOf(c.end ? main(c) ?? c : c, base); return { ...c, ...r, was: r.st === 'changed' }; });
   const screens = SCREENS.map(s => ({ flow: s.flow, id: s.id, account: s.account, name: s.name, how: `?${s.query}`, shots: s.vps.flatMap(v => db.filter(c => c.id === s.id && c.vp === v).sort((a, b) => a.code.length - b.code.length)) })).filter(s => s.shots.length);
   return `<!doctype html><html lang="ca"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Revisió UI · Mulassa</title>
 <style>
@@ -212,7 +247,7 @@ main{padding:12px;max-width:1800px;margin:auto}h2{margin:28px 0 8px;color:#f5c51
 .scr{border:1px solid #e8d8b840;border-radius:12px;padding:12px;margin-bottom:14px;background:#20150e}.scr h3{margin:0;font-size:16px}.meta{opacity:.75;font-size:13px;margin:2px 0 8px}.chip{display:inline-block;padding:0 8px;border-radius:99px;background:#fff3d6;color:#17100b;font-size:12px;font-weight:700;margin-left:6px}
 .all{width:100%;min-height:44px;margin-bottom:10px}
 .row{display:flex;gap:12px;overflow-x:auto;padding-bottom:6px;align-items:flex-start}
-figure{margin:0;flex:none;width:208px}figure.wide{width:330px}figure img{display:block;width:100%;height:auto;border-radius:6px;cursor:zoom-in;background:#000}figcaption{font-size:12px;font-weight:700;margin:4px 0}
+figure{margin:0;flex:none;width:208px}figure.wide{width:330px}figure img{display:block;width:100%;height:auto;border-radius:6px;cursor:zoom-in;background:#000}figcaption{font-size:12px;font-weight:700;margin:4px 0}.st{margin-left:6px;padding:0 6px;border-radius:99px;background:#5cb2ff;color:#17100b}.st.added{background:#7ee081}.was{width:100%;min-height:36px;margin:4px 0;font-size:13px}
 .mk{display:flex;gap:4px;margin-bottom:4px}.mk button{flex:1;min-height:36px;padding:0;font-size:13px}.mk button[aria-pressed=true][data-m=ok]{background:#2e7d32}.mk button[aria-pressed=true][data-m=refer]{background:#c62828}
 figure textarea,.all{resize:vertical}figure textarea{width:100%;min-height:58px;font-size:14px}.noted{outline:2px solid #f5c518;outline-offset:2px;border-radius:6px}
 .fail{border:1px dashed #ff8a7a;color:#ff8a7a;padding:8px;font-size:12px;border-radius:6px}
@@ -224,7 +259,7 @@ dialog{width:min(1500px,96vw);max-height:96vh;background:#20150e;color:inherit;b
 <select id="f-flow" aria-label="Flux"><option value="">Tots els fluxos</option>${[...new Set(screens.map(s => s.flow))].map(f => `<option>${f}</option>`).join('')}</select>
 <select id="f-acc" aria-label="Compte"><option value="">Tots els comptes</option>${[...new Set(screens.map(s => s.account))].map(f => `<option>${f}</option>`).join('')}</select>
 <select id="f-fam" aria-label="Dispositiu"><option value="">Totes les mides</option><option>mòbil</option><option>tauleta</option><option>escriptori</option></select>
-<label class="tg"><input type="checkbox" id="f-todo"> Només amb comentari</label>
+${base ? `<label class="tg"><input type="checkbox" id="f-diff"> Només canviades respecte a ${baseRef} (<span id="n-diff"></span>)</label><label class="tg"><input type="checkbox" id="f-title"> Inclou les que només canvien el títol</label>` : ''}<label class="tg"><input type="checkbox" id="f-todo"> Només amb comentari</label>
 <button id="copy">Copia els comentaris</button></header>
 <main id="m"></main>
 <dialog id="d"><div class="lb"><div class="im"><img id="d-img" alt=""></div><div class="side"><h3 id="d-t"></h3><div class="mk" id="d-mk"></div><textarea id="d-note" placeholder="Què no t'agrada?"></textarea><div class="mk" style="margin-top:8px"><button id="d-prev">← Anterior</button><button id="d-next">Següent →</button></div><button id="d-x" style="width:100%;margin-top:8px">Tanca</button></div></div></dialog>
@@ -237,17 +272,20 @@ function set(k,p){notes[k]={...notes[k],...p};if(!notes[k].mark&&!notes[k].note)
 function count(){const v=Object.values(notes);$('n').textContent=SCREENS.length+' pantalles · '+v.filter(x=>x.mark==='refer').length+' a refer · '+v.filter(x=>x.mark==='ok').length+' ok · '+v.filter(x=>x.note).length+' comentaris'}
 const marks=(k,box)=>{box.replaceChildren();for(const[m,t]of[['ok','OK'],['refer','Refer']]){const b=document.createElement('button');b.dataset.m=m;b.textContent=t;b.setAttribute('aria-pressed',notes[k]?.mark===m);b.onclick=()=>{set(k,{mark:notes[k]?.mark===m?'':m});render()};box.append(b)}};
 function area(k,ph){const t=document.createElement('textarea');t.placeholder=ph;t.value=notes[k]?.note||'';t.oninput=()=>set(k,{note:t.value});return t}
+const visibleDiff=c=>c.st==='added'||(c.st==='changed'&&($('f-title')?.checked||c.why.join()!=='títol'));
+const diffCount=()=>SCREENS.flatMap(s=>s.shots).filter(c=>!c.end&&visibleDiff(c)).length;
 let visible=[],cur=0;
-function render(){const y=scrollY,flow=$('f-flow').value,acc=$('f-acc').value,fam=$('f-fam').value,todo=$('f-todo').checked,m=$('m');m.replaceChildren();visible=[];let last='';
+function render(){const y=scrollY,flow=$('f-flow').value,acc=$('f-acc').value,fam=$('f-fam').value,todo=$('f-todo').checked,diff=$('f-diff')?.checked,m=$('m');m.replaceChildren();visible=[];let last='';
  for(const s of SCREENS){if(flow&&s.flow!==flow||acc&&s.account!==acc)continue;
-  const shots=s.shots.filter(c=>(!fam||FAM[c.vp]===fam)&&(!todo||notes[c.code]||notes[s.id]));if(!shots.length)continue;
+  const shots=s.shots.filter(c=>(!fam||FAM[c.vp]===fam)&&(!diff||visibleDiff(c))&&(!todo||notes[c.code]||notes[s.id]));if(!shots.length)continue;
   if(s.flow!==last){const h=document.createElement('h2');h.textContent=s.flow;m.append(h);last=s.flow}
   const box=document.createElement('section');box.className='scr';box.innerHTML='<h3></h3><div class="meta"></div>';box.querySelector('h3').textContent=s.id+' · '+s.name;
   const c=document.createElement('span');c.className='chip';c.textContent=s.account;box.querySelector('h3').append(c);box.querySelector('.meta').textContent=s.how;
   const all=area(s.id,'Comentari per a tota la pantalla, a totes les mides');all.className='all';box.append(all);
   const row=document.createElement('div');row.className='row';
-  for(const sh of shots){const f=document.createElement('figure');const[w,h]=sh.vp.split('x').map(Number);if(w>h)f.className='wide';const cap=document.createElement('figcaption');cap.textContent=sh.vp+' · '+(sh.end?'final del scroll':FAM[sh.vp]);f.append(cap);
+  for(const sh of shots){const f=document.createElement('figure');const[w,h]=sh.vp.split('x').map(Number);if(w>h)f.className='wide';const cap=document.createElement('figcaption');cap.textContent=sh.vp+' · '+(sh.end?'final del scroll':FAM[sh.vp]);if(sh.st!=='same'){const t=document.createElement('span');t.className='st '+sh.st;t.textContent=sh.st==='added'?'nova':sh.why.join(', ');cap.append(t)}f.append(cap);
    if(sh.ok){const i=new Image();i.loading='lazy';i.src='shots/'+sh.code+'.png';i.alt=s.name+' '+sh.vp;i.width=w;i.height=h;if(notes[sh.code]?.mark||notes[sh.code]?.note)i.className='noted';const idx=visible.push({s,sh})-1;i.onclick=()=>show(idx);f.append(i);
+    if(sh.was&&!sh.end){const w=document.createElement('button');w.className='was';w.textContent='Mira com era';let old=false;w.onclick=()=>{old=!old;i.src=(old?'base/':'')+'shots/'+sh.code+'.png';w.textContent=old?'Mira com és ara':'Mira com era'};f.append(w)}
     const mk=document.createElement('div');mk.className='mk';mk.style.marginTop='6px';marks(sh.code,mk);f.append(mk,area(sh.code,'Comentari a '+sh.vp+(sh.end?' (final)':'')));}
    else{const e=document.createElement('div');e.className='fail';e.textContent='Sense captura: '+sh.err;f.append(e)}
    row.append(f)}
@@ -255,6 +293,7 @@ function render(){const y=scrollY,flow=$('f-flow').value,acc=$('f-acc').value,fa
  scrollTo(0,y)}
 function show(i){cur=(i+visible.length)%visible.length;const{s,sh}=visible[cur];$('d-img').src='shots/'+sh.code+'.png';$('d-t').textContent=s.id+' · '+s.name+' · '+sh.vp+' · '+s.account;marks(sh.code,$('d-mk'));$('d-note').value=notes[sh.code]?.note||'';$('d-note').oninput=e=>set(sh.code,{note:e.target.value});if(!$('d').open)$('d').showModal()}
 $('d-prev').onclick=()=>show(cur-1);$('d-next').onclick=()=>show(cur+1);$('d-x').onclick=()=>$('d').close();$('d').onclose=render;
+if($('f-diff')){$('n-diff').textContent=diffCount();$('f-title').onchange=()=>{$('n-diff').textContent=diffCount();render()};$('f-diff').checked=localStorage.getItem(KEY+'-diff')!=='0';$('f-diff').onchange=e=>{localStorage.setItem(KEY+'-diff',e.target.checked?'1':'0');render()}}
 for(const i of['f-flow','f-acc','f-fam','f-todo'])$(i).onchange=render;
 $('copy').onclick=async e=>{const t=Object.keys(notes).sort().map(k=>k+(notes[k].mark?' ['+notes[k].mark+']':'')+': '+(notes[k].note||'')).join('\\n');try{await navigator.clipboard.writeText(t);e.target.textContent='Copiat!'}catch{const a=document.createElement('textarea');a.value=t;e.target.after(a)}};
 (live?fetch('comentaris').then(r=>r.json()).then(j=>{notes={...notes,...j}}).catch(()=>{}):Promise.resolve()).then(()=>{count();render()});
@@ -280,6 +319,17 @@ function serveReview(port) {
 async function main() {
   mkdirSync(SHOTS, { recursive: true });
   if (args.serve) return serveReview(args.serve === '1' ? 5179 : +args.serve);
+  if (args.base) { // the other branch, built from its own files with this tool's screens; a screen it can't reach counts as new
+    const ref = args.base === '1' ? 'origin/main' : args.base, sha = execSync(`git rev-parse ${ref}`, { cwd: ROOT }).toString().trim(), dir = `/tmp/ui-review-base-${sha.slice(0, 10)}`;
+    mkdirSync(join(REVIEW, 'base'), { recursive: true });
+    if (!existsSync(join(dir, 'package.json'))) { mkdirSync(dir, { recursive: true }); execSync(`git archive ${sha} | tar -x -C ${dir}`, { cwd: ROOT, shell: '/bin/bash' }); execSync(`ln -sf ${join(ROOT, 'node_modules')} ${dir}/node_modules`); }
+    const pass = process.argv.slice(2).filter(a => !a.startsWith('--base'));
+    const r = spawnSync(process.execPath, [fileURLToPath(import.meta.url), '--baseline', `--src=${dir}`, `--dist=/tmp/ui-review-dist-${sha.slice(0, 10)}`, ...pass], { stdio: 'inherit' });
+    if (r.status) throw new Error('la captura de la referència ha fallat');
+    writeFileSync(join(REVIEW, 'base/ref.txt'), `${ref.replace('origin/', '')} (${sha.slice(0, 7)})\n`);
+    if (existsSync(join(REVIEW, 'screens.json'))) writeFileSync(join(REVIEW, 'index.html'), page(JSON.parse(readFileSync(join(REVIEW, 'screens.json'), 'utf8'))));
+    return;
+  }
   const units = planUnits(), dbFile = join(OUT, 'screens.json');
   if (args.list) { units.forEach(u => console.log(codeOf(u.s, u.vp))); console.log(`${SCREENS.length} pantalles, ${units.length} captures`); return; }
   const { chromium } = await import(pathToFileURL(join(args.pw ?? '/tmp/ui-inv-pw', 'node_modules/playwright/index.mjs')).href);
@@ -308,6 +358,9 @@ async function main() {
   };
   try { await Promise.all(Array.from({ length: WORKERS }, worker)); }
   finally { await real.close().catch(() => {}); await soft?.close().catch(() => {}); srv.closeAllConnections?.(); srv.close(); }
+  const covered = new Set(db.flatMap(c => (c.showing ?? '').split(',')));
+  const missing = [...readFileSync(join(ROOT, 'index.html'), 'utf8').matchAll(/<dialog[^>]*id="([^"]+)"/g)].map(m => m[1]).filter(id => !covered.has(id));
+  if (missing.length && !args.only && !args.vps) console.log(`fulles sense cap pantalla a SCREENS: ${missing.join(', ')}`);
   console.log(`fet: ${db.filter(c => c.ok).length} captures, ${db.filter(c => !c.ok).length} fallides → ${join(OUT, 'index.html')}`);
 }
 main().then(() => { if (!args.serve) process.exit(0); }).catch(e => { console.error(e); process.exit(1); }); // a closed browser can leave a handle open: without the exit the run ends but never returns

@@ -173,7 +173,6 @@
   "ui.profile.field.alias": "Soprannome",
   "ui.profile.field.name": "Nome",
   "ui.profile.guest": "Ospite",
-  "ui.profile.guestRow": "Conferma l’email e avrai il segno ✓",
   "ui.profile.guestText": "Sei ospite. Se cancelli i dati del browser, perderai il profilo. Conferma l’email per conservarlo.",
   "ui.profile.lead.codeOther": "Questa email appartiene già a un altro profilo. Con il codice inviato a {mail} entrerai in quel profilo: {mine} e i suoi risultati non saranno aggiunti.",
   "ui.profile.lead.codeSent": "Ti abbiamo inviato un codice di 6 cifre a {mail}. Controlla anche lo spam.",

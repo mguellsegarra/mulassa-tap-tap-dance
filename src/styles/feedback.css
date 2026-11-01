@@ -144,7 +144,6 @@ textarea.feedback-field { height: calc(4 * 1.35em + 20px); max-height: calc(8 * 
 .feedback-small { margin-top: 10px; margin-bottom: 0; color: #e8d8b8b3; font-size: 14px; line-height: 1.35; }
 .feedback-small + .feedback-small { margin-top: 4px; }
 .feedback-small .btn-link { display: inline; min-height: 0; padding: 0 2px; font-size: 14px; }
-.feedback-rights { margin-top: 12px; margin-bottom: 0; padding-top: 10px; border-top: 1px solid #f5c51833; color: #e8d8b899; font-size: 13px; line-height: 1.35; }
 .feedback-end { padding: 8px 20px 12px; }
 #feedback-status { margin: 0 0 8px; }
 @media (max-width: 359px) { #feedback-menu #feedback-title { font-size: 22px; } } /* the longest title («Proposa una figura») clears the corner X */
@@ -159,7 +158,6 @@ textarea.feedback-field { height: calc(4 * 1.35em + 20px); max-height: calc(8 * 
   textarea.feedback-field { height: calc(3 * 1.35em + 20px); }
   .feedback-meta { margin-bottom: 6px; }
   .feedback-small { margin-top: 8px; }
-  .feedback-rights { margin-top: 8px; padding-top: 8px; }
   .feedback-end { padding-top: 6px; }
 }
 @media (max-height: 500px) { /* landscape phones: the intro and the message | the e-mail and the notes; the footer across */
@@ -268,7 +266,8 @@ body:has(#radio-menu:not([hidden]), #radio-now:not([hidden])[data-visible="true"
 .feedback-kind input { position: absolute; opacity: 0; pointer-events: none; }
 .feedback-kind label:has(input:checked) { background: var(--button-gold-bg); color: #2a1a10; }
 .feedback-kind label:has(input:focus-visible) { outline: 3px solid #fff3d6; outline-offset: 2px; }
-.feedback-small[hidden], .feedback-rights[hidden] { display: none; }
+.feedback-small[hidden] { display: none; }
+#feedback-material .feedback-small { text-align: center; }
 #feedback-menu:focus { outline: none; }
 #feedback-menu:has(.feedback-choices:not([hidden])) .feedback-field::placeholder { color: #e8d8b899; }
 #feedback-menu:has(.feedback-choices:not([hidden])) .feedback-scroll { padding-bottom: 14px; }
@@ -290,6 +289,7 @@ body:has(#radio-menu:not([hidden]), #radio-now:not([hidden])[data-visible="true"
 /* The e-mail gate belongs with the short sheets: same width, one centred axis. */
 #gate-menu { width: min(400px, calc(100vw - 32px)); padding: 20px 20px 18px; text-align: center; }
 #gate-menu h2 { text-wrap: balance; }
+#gate-seal { display: flex; justify-content: center; margin-bottom: 8px; } #gate-perks { display: flex; justify-content: center; margin-bottom: 16px; }
 #gate-menu p { margin: 0 0 16px; font-size: 16px; font-weight: 600; line-height: 1.35; color: #e8d8b8; text-wrap: balance; }
 #gate-menu .sheet-actions { display: grid; gap: 12px; }
 /* Short phones, the sheet with the two ways to help: the labels the choices already explain give way first, then the title (the figure's name stays). */

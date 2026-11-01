@@ -173,7 +173,6 @@
   "ui.profile.field.alias": "昵称",
   "ui.profile.field.name": "名字",
   "ui.profile.guest": "访客",
-  "ui.profile.guestRow": "验证邮箱，获得 ✓ 标记",
   "ui.profile.guestText": "你是访客。清除浏览器数据就会丢失档案，验证邮箱就能保住它。",
   "ui.profile.lead.codeOther": "这个邮箱已属于另一个档案。输入发到{mail}的验证码，会登录那个档案；{mine}及其成绩不会合并进去。",
   "ui.profile.lead.codeSent": "6位验证码已发到{mail}，也看看垃圾邮件文件夹。",

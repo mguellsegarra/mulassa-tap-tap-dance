@@ -173,7 +173,6 @@
   "ui.profile.field.alias": "별명",
   "ui.profile.field.name": "이름",
   "ui.profile.guest": "게스트",
-  "ui.profile.guestRow": "이메일을 인증하고 ✓ 표시를 받아요",
   "ui.profile.guestText": "게스트예요. 브라우저 데이터를 지우면 프로필을 잃어요. 이메일을 인증해서 보관해요.",
   "ui.profile.lead.codeOther": "다른 프로필이 쓰는 이메일이에요. {mail}로 보낸 코드로 그 프로필에 접속해요. {mine} 프로필과 그 결과는 합쳐지지 않아요.",
   "ui.profile.lead.codeSent": "{mail}로 6자리 코드를 보냈어요. 스팸함도 확인해요.",

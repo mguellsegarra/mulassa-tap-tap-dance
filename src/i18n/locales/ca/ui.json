@@ -173,7 +173,6 @@
   "ui.profile.field.alias": "Sobrenom",
   "ui.profile.field.name": "Nom",
   "ui.profile.guest": "Convidat",
-  "ui.profile.guestRow": "Confirma el correu i tindràs la marca ✓",
   "ui.profile.guestText": "Ets convidat. Si esborres les dades del navegador, perdràs el perfil. Confirma el correu per guardar-lo.",
   "ui.profile.lead.codeOther": "Aquest correu ja és d’un altre perfil. Amb el codi que t’hem enviat a {mail} entraràs en aquell perfil: {mine} i els seus resultats no s’hi afegeixen.",
   "ui.profile.lead.codeSent": "T’hem enviat un codi de 6 xifres a {mail}. Mira també la carpeta de correu brossa.",

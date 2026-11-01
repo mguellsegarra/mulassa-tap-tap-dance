@@ -110,7 +110,7 @@ button svg { width: 22px; height: 22px; flex: none; fill: none; stroke: currentC
 .watch-tag b { font-weight: 800; letter-spacing: .08em; }
 @media (min-width: 900px) and (min-height: 600px) { .watch-tag { padding: 8px 18px 9px 14px; font-size: 15px; } }
 #watch-menu { width: min(360px, calc(100vw - 48px)); padding: 24px; text-align: center; }
-#watch-menu h2 { margin-bottom: 6px; color: #f5c518; } /* a celebration: gold as text */
+#watch-menu h2 { margin-bottom: 6px; }
 #watch-menu p { margin: 0 0 18px; color: #e8d8b8; font-size: 16px; text-wrap: balance; }
 #watch-menu .sheet-actions { margin-top: 0; }
 /* Shared how-to pill; the selector owns its inline placement. */
@@ -153,7 +153,8 @@ button svg { width: 22px; height: 22px; flex: none; fill: none; stroke: currentC
 .sheet { scrollbar-width: none; } .sheet::-webkit-scrollbar { display: none; } /* the frame's own bar never fits its rounded corners (Privadesa); inner lists keep theirs */
 .sheet:focus { outline: none; } /* opened by touch or mouse the sheet itself takes focus: no ring on its first button */
 .sheet::backdrop { background: #120d09b3; }
-.sheet h2 { margin: 0 0 8px; text-align: center; font-size: 30px; line-height: 1.1; }
+.sheet h2 + p { color: #fff3d6 !important; } /* what a sheet says under its title reads first: white, the small print stays muted */
+.sheet h2 { margin: 0 0 8px; color: #f5c518; text-align: center; font-size: 30px; line-height: 1.1; }
 /* a sheet (or the Bústia's text) that scrolls fades out under its frame instead of cutting text at the border, and the
    fade hints there is more. Sticky ghosts at both ends; src/ui/sheet-fade.js sets data-more-up / data-more-down. */
 :is(.sheet, .sheet-body.fade, .feedback-scroll)::before, :is(.sheet, .sheet-body.fade, .feedback-scroll)::after { content: ""; display: block; position: sticky; z-index: 3; height: 30px; pointer-events: none; flex: none; opacity: 0; transition: opacity .15s; }

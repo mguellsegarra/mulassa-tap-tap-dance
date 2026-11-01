@@ -173,7 +173,6 @@
   "ui.profile.field.alias": "Goitizena",
   "ui.profile.field.name": "Izena",
   "ui.profile.guest": "Gonbidatua",
-  "ui.profile.guestRow": "Baieztatu posta eta ✓ marka izango duzu",
   "ui.profile.guestText": "Gonbidatua zara. Nabigatzaileko datuak ezabatuz gero, profila galduko duzu. Baieztatu posta gordetzeko.",
   "ui.profile.lead.codeOther": "Posta hori beste profil bati dagokio. Helbide honetara bidalitako kodearekin profil hartan sartuko zara: {mail}. Zure profila ({mine}) eta haren emaitzak ez zaizkio gehituko.",
   "ui.profile.lead.codeSent": "6 zifrako kodea bidali dizugu helbide honetara: {mail}. Begiratu spam karpeta ere.",

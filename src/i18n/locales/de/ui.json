@@ -173,7 +173,6 @@
   "ui.profile.field.alias": "Spitzname",
   "ui.profile.field.name": "Name",
   "ui.profile.guest": "Gast",
-  "ui.profile.guestRow": "Bestätige die E-Mail für das ✓-Zeichen",
   "ui.profile.guestText": "Du bist Gast. Löschst du die Browserdaten, verlierst du dein Profil. Bestätige die E-Mail, um es zu sichern.",
   "ui.profile.lead.codeOther": "Diese E-Mail gehört zu einem anderen Profil. Mit dem Code an {mail} meldest du dich dort an: {mine} und dessen Ergebnisse werden nicht übernommen.",
   "ui.profile.lead.codeSent": "Ein Code mit 6 Ziffern ist unterwegs an {mail}. Schau auch im Spam nach.",

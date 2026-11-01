@@ -7,6 +7,13 @@ export function setupConfirmGate({ focusIn, identity, hasProfile, openProfile, d
   const $ = byId(doc);
   const menu = $('gate-menu'), text = $('gate-text'), go = $('gate-go');
   let pending = null, profiled = false;
+  // what confirming earns, as the publish sheet sells it: one copy of its seal and list, translated already
+  const sellMark = () => {
+    for (const [slot, from] of [['gate-seal', '.publish-seal'], ['gate-perks', '.publish-perks']]) {
+      const box = $(slot), part = doc.querySelector?.(from);
+      if (box && part && !box.firstChild) box.append(part.cloneNode(true));
+    }
+  };
   const confirmed = async () => { try { return await identity(); } catch { return { email: '' }; } };
   const profileThere = async () => { try { return !!(await hasProfile()); } catch { return false; } };
   // Perfil closed: confirmed runs the action; a profile really created still needs its address; anything else was a cancel.
@@ -31,6 +38,7 @@ export function setupConfirmGate({ focusIn, identity, hasProfile, openProfile, d
     $('gate-title').textContent = tr(profiled ? 'ui.confirm.title' : 'ui.confirm.createAction');
     text.textContent = tr(`ui.confirm.${reason}`);
     go.textContent = tr(profiled ? 'ui.confirm.action' : 'ui.confirm.createAction');
+    sellMark();
     menu.showModal(); focusIn(menu, 'gate-go');
   };
 }

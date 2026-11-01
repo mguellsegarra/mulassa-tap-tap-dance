@@ -7,6 +7,7 @@
     "dev": "vite --host --port 5178",
     "build": "vite build",
     "capture": "node tools/qa/capture.mjs",
+    "ui-review": "node tools/qa/ui-review.mjs",
     "audit:bou": "node tools/qa/bou-audit.mjs",
     "sweep:bou": "node tools/qa/bou-sweep.mjs",
     "build:pages": "npm run check && npm run build && node tools/deploy/seo-pages.mjs && node tools/deploy/prepare-pages.mjs",

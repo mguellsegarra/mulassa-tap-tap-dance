@@ -23,8 +23,6 @@ span.player-name { display: inline-flex; align-items: baseline; min-width: 0; }
 .kind-chip { flex: none; display: inline-block; padding: 1px 9px; border: 1px solid #e8d8b866; border-radius: 999px; background: #140c07; color: #e8d8b8; font-size: 13px; font-weight: 800; line-height: 20px; letter-spacing: .04em; }
 
 /* Classificació: a guest's hint under its own row */
-#board-table tr.me-hint td { height: auto; padding: 0 4px 6px; border-top: 0; background: #f5c51824; text-align: center; }
-#board-table tr.me-hint .btn-link { min-height: 32px; padding: 0 6px; color: #f5c518; font-size: 13px; text-decoration-color: #f5c51899; white-space: normal; }
 .board-previous { width: min(100%, 340px); margin-top: 6px; }
 .board-previous h3, .account-section h3 { margin: 0 0 6px; color: #f5c518; font-size: 16px; line-height: 1.25; }
 .board-previous h3 { text-align: center; }

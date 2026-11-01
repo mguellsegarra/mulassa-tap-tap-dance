@@ -146,9 +146,9 @@ dialog p, #results-actions .btn { overflow-wrap: break-word; }
 .lvt0 { color: var(--lvl0); } .lvt1 { color: var(--lvl1); } .lvt2 { color: var(--lvl2); }
 #board-table tr.me td { background: #f5c51824; color: #f5c518; }
 #board-table tr.me td:first-child { box-shadow: inset 3px 0 #f5c518; } /* the player's own row: a gold strip */
-#board-table tbody tr:not(.gap, .me-hint) { cursor: pointer; } /* a row opens its player's card (board-list.js); a tint over its own colour on the tap */
-#board-table tbody tr:not(.gap, .me-hint):active td { background-image: linear-gradient(#fff3d614, #fff3d614); }
-@media (hover: hover) { #board-table tbody tr:not(.gap, .me-hint):hover td { background-image: linear-gradient(#fff3d60d, #fff3d60d); } }
+#board-table tbody tr:not(.gap) { cursor: pointer; } /* a row opens its player's card (board-list.js); a tint over its own colour on the tap */
+#board-table tbody tr:not(.gap):active td { background-image: linear-gradient(#fff3d614, #fff3d614); }
+@media (hover: hover) { #board-table tbody tr:not(.gap):hover td { background-image: linear-gradient(#fff3d60d, #fff3d60d); } }
 .me-tag { flex: none; display: inline-block; padding: 0 5px; border-radius: 4px; background: #f5c518; color: #2a1a10; font-size: 11px; line-height: 16px; letter-spacing: .06em; }
 /* «Correu confirmat» (src/ui/profile-notes.js checkBadge): a blue check after the nickname, meaning only that; a mark, no tip */
 .verified-check { position: relative; flex: none; display: inline-grid; place-items: center; width: 16px; height: 16px; margin: 0; }
@@ -213,13 +213,14 @@ html:not([lang="ca"]) .board-links { row-gap: 16px; } /* longer words wrap the t
 .publish-offer { display: flex; flex-direction: column; gap: 16px; margin: -4px 0 4px; } /* one card: the invitation and its button */
 #publish-offer .publish-offer-title { margin: 0; color: #f5c518; font-size: 24px; line-height: 1.1; text-align: center; text-wrap: balance; }
 .publish-seal { align-self: center; width: 64px; height: 64px; filter: drop-shadow(0 0 16px #3b9cffaa); }
-.publish-perks { display: flex; flex-direction: column; gap: 12px; margin: 0; padding: 0; list-style: none; color: #fff3d6; font-size: 15px; font-weight: 700; line-height: 1.2; }
+.publish-perks { align-self: center; width: fit-content; display: flex; flex-direction: column; gap: 12px; margin: 0; padding: 0; list-style: none; color: #fff3d6; font-size: 15px; font-weight: 700; line-height: 1.2; }
 .publish-perks li { display: flex; align-items: center; gap: 10px; }
 .perk-ic { flex: none; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: color-mix(in srgb, var(--perk) 18%, transparent); color: var(--perk); }
 .perk-ic svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .perk-name { --perk: #5cb2ff; } .perk-code { --perk: #f5c518; } .perk-heart { --perk: #ff6b81; } .perk-arms { --perk: #7ee081; }
 .perk-heart svg { fill: currentColor; stroke: none; }
 @media (max-width: 359px) { .publish-seal { width: 48px; height: 48px; } .publish-offer { gap: 12px; } .publish-perks { gap: 10px; } .perk-ic { width: 30px; height: 30px; } } /* four perks fit the smallest phone without a scroll */
+#publish-form[data-view="done"]:has(.publish-offer:not([hidden])) #publish-title { color: #fff3d6; } /* the offer's headline is the gold one here */
 #publish-form[data-view="done"]:has(.publish-offer:not([hidden])) #publish-status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); } /* the offer takes the room; screen readers still hear it */
 .publish-offer > .btn-link { align-self: center; min-height: 0; padding: 2px; font-size: 13px; color: #e8d8b88c; }
 .publish-offer:not([hidden]) + .sheet-actions > #publish-send { min-height: 44px; border-color: transparent; background: none; color: #fff3d6; text-decoration: underline; box-shadow: none; } /* «Ara no»: the card leads */

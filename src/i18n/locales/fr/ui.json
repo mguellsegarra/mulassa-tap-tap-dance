@@ -173,7 +173,6 @@
   "ui.profile.field.alias": "Pseudo",
   "ui.profile.field.name": "Nom",
   "ui.profile.guest": "Invité",
-  "ui.profile.guestRow": "Confirme ton e-mail pour avoir la marque ✓",
   "ui.profile.guestText": "Tu es invité. Si tu effaces les données du navigateur, tu perdras ton profil. Confirme ton e-mail pour le garder.",
   "ui.profile.lead.codeOther": "Cet e-mail appartient déjà à un autre profil. Le code envoyé à {mail} te connectera à cet autre profil : {mine} et ses résultats n’y seront pas ajoutés.",
   "ui.profile.lead.codeSent": "Un code à 6 chiffres a été envoyé à {mail}. Regarde aussi dans les spams.",

@@ -173,7 +173,6 @@
   "ui.profile.field.alias": "Nickname",
   "ui.profile.field.name": "Name",
   "ui.profile.guest": "Guest",
-  "ui.profile.guestRow": "Confirm your email to get the ✓ mark",
   "ui.profile.guestText": "You’re a guest. Clearing your browser data will lose your profile. Confirm your email to keep it.",
   "ui.profile.lead.codeOther": "That email belongs to another profile. The code sent to {mail} will sign you into that profile: {mine} and its scores won’t be added.",
   "ui.profile.lead.codeSent": "We’ve sent a 6-digit code to {mail}. Check your spam folder too.",

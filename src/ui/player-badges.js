@@ -15,7 +15,9 @@ export const ASSOCIATION_BADGES = [ // i18n-ok: entity names are proper names
 const drawnBadge = (id, name) => ({ id, name, art: () => BADGE_ART[id] });
 export const VALLS_BADGES = [drawnBadge('colla-vella', 'Colla Vella'), drawnBadge('colla-joves', 'Colla Joves'), { id: 'campanar-valls', name: tr('ui.badge.name.campanar'), art: campanarArt }]; // i18n-ok: the colles' names are proper names
 export const FLAG_BADGES = [drawnBadge('senyera', tr('ui.badge.name.senyera')), drawnBadge('estelada-groga', tr('ui.badge.name.esteladaGroga')),
-  drawnBadge('estelada-blava', tr('ui.badge.name.esteladaBlava')), drawnBadge('occitana', tr('ui.badge.name.occitana'))];
+  drawnBadge('estelada-blava', tr('ui.badge.name.esteladaBlava')), drawnBadge('occitana', tr('ui.badge.name.occitana')),
+  ...[['andorra', 'Andorra'], ['balears', 'Illes Balears'], ['mallorca', 'Mallorca'], ['menorca', 'Menorca'], ['eivissa', 'Eivissa'], // i18n-ok: proper names, as the towns
+    ['formentera', 'Formentera'], ['alguer', 'L’Alguer']].map(([id, name]) => drawnBadge(id, name))]; // i18n-ok: proper names
 export const TOWN_BADGES = TOWNS.map(t => ({ id: `town:${t.id}`, name: t.name, art: () => escutSvg(t.id) }));
 const BADGE_BY_ID = new Map([...ASSOCIATION_BADGES, ...VALLS_BADGES, ...FLAG_BADGES, ...TOWN_BADGES].map(b => [b.id, b]));
 export const badgeOf = id => BADGE_BY_ID.get(id) ?? null;

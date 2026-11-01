@@ -11,7 +11,7 @@ try {
   // every town of the game can be chosen, and the list has nothing else
   const towns = JSON.parse(readFileSync(new URL('../../src/game/figure-catalog.json', import.meta.url))).towns.map(t => `town:${t.id}`);
   const allowed = sql('202611010001_player_badges.sql').match(/check \(badge_id in \(([^)]*)\)/)[1].match(/'[^']+'/g).map(s => s.slice(1, -1));
-  assert.deepEqual([...allowed].sort(), ['uaf', 'pessigolla', 'colla-vella', 'colla-joves', 'campanar-valls', 'senyera', 'estelada-groga', 'estelada-blava', 'occitana', ...towns].sort(), 'the server list is the catalogue');
+  assert.deepEqual([...allowed].sort(), ['uaf', 'pessigolla', 'colla-vella', 'colla-joves', 'campanar-valls', 'senyera', 'estelada-groga', 'estelada-blava', 'occitana', 'andorra', 'balears', 'mallorca', 'menorca', 'eivissa', 'formentera', 'alguer', ...towns].sort(), 'the server list is the catalogue');
 
   const me = await player('Amb', { verified: true }), other = await player('Altre', { verified: true }), guest = await player('Convidat');
   const mine = await publicId(me), theirs = await publicId(other), guestId = await publicId(guest);

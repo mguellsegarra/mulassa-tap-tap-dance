@@ -6,6 +6,7 @@ alter table leaderboard_private.profiles add column if not exists badge_id text;
 alter table leaderboard_private.profiles drop constraint if exists profiles_badge_id_check;
 alter table leaderboard_private.profiles add constraint profiles_badge_id_check check (badge_id in (
     'colla-vella', 'colla-joves', 'campanar-valls', 'senyera', 'estelada-groga', 'estelada-blava', 'occitana',
+    'andorra', 'balears', 'mallorca', 'menorca', 'eivissa', 'formentera', 'alguer',
     'uaf', 'pessigolla', 'town:valls', 'town:tarragona', 'town:reus', 'town:solsona',
     'town:vilanova', 'town:barcelona', 'town:berga', 'town:olot', 'town:vilafranca', 'town:lleida',
     'town:terrassa', 'town:manresa', 'town:montblanc', 'town:girona', 'town:molins', 'town:sant-sadurni',

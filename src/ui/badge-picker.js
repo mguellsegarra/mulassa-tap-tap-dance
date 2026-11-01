@@ -27,7 +27,7 @@ export function setupBadges({ focusIn, store, service = defaultService, onSaved 
   }
   function group(title, badges) {
     const h = doc.createElement('h3'), grid = doc.createElement('div');
-    h.className = 'badge-group'; h.textContent = title; grid.className = `badge-grid${badges.length % 3 ? ' pair' : ''}`; // two by two when three by three would leave a hole
+    h.className = 'badge-group'; h.textContent = title; grid.className = `badge-grid${badges.length % 3 && badges.length % 2 === 0 ? ' pair' : ''}`; // two by two when three by three would leave a hole
     grid.append(...badges.map(b => cell(b.id, b.name, b.art())));
     return [h, grid];
   }

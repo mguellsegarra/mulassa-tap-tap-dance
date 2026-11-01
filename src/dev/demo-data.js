@@ -30,7 +30,7 @@ const GUEST_BASES = ['Timbaler', 'Timbaler', 'Timbaler', 'Portadora', 'Portadora
   'Sargantana', 'Esquerrà', 'Tabal', 'Faroner', 'Arlequí', 'Quimera', 'Gatzara', 'Bruixot', 'Flabiol', 'Xaloc', 'Cobla', 'Cobla', 'Tamborer', 'Roda'];
 
 // most confirmed players show a badge; null and an unknown id draw the check
-const DEMO_BADGES = ['town:valls', 'uaf', 'colla-vella', 'estelada-groga', 'pessigolla', null, 'colla-joves', 'senyera', 'town:reus', 'estelada-blava', 'campanar-valls', 'town:from-the-future', 'occitana', 'town:barcelona', 'town:tarragona'];
+const DEMO_BADGES = ['town:valls', 'uaf', 'colla-vella', 'estelada-groga', 'pessigolla', null, 'colla-joves', 'senyera', 'town:reus', 'estelada-blava', 'campanar-valls', 'town:from-the-future', 'occitana', 'andorra', 'mallorca', 'alguer', 'town:barcelona', 'town:tarragona'];
 // A seeded cast: verified players and guests, each with a skill 0-1 and its public id. Every 7th guest (and Estrella) is
 // released: its name went to somebody else after 30 idle days, so its rows are faded.
 function cast(seed) {

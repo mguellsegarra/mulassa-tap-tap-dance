@@ -55,7 +55,7 @@
     linear-gradient(#0000 0 calc(64% - 3px), #120b07 calc(64% - 3px) 64%, #0000 64%),
     radial-gradient(ellipse 70% 60% at 50% 70%, color-mix(in srgb, var(--town, var(--t)) 50%, #6b4a32), var(--t) 70%, #1a110b); }
 .sel-card .por img { width: 78%; height: 78%; min-height: 0; object-fit: contain; } /* vector images, drawn at their laid-out size: no pixelated scaling */
-@supports (width: round(down, 5.5px, 1px)) {
+@supports (width: round(down, 5.5px, 1px)) and (width: 1cqw) {
   /* each figure at its real relative size (--s, the gegants = 1, portraitStand). The selector's portraits are all vectors
      now, so no whole-pixel rounding, and the grid's one-cell rim margin is left out of the fit: --ref is the cell of the
      biggest grid (18 × 14) at --reach, the tallest figures are held at --sky (top and sides) and the rim hangs outside, so
@@ -79,7 +79,7 @@
 .sel-card .por .sel-bou-illustration { --portrait-scale: calc(2 / 2.95); }
 /* Fictional adults ~1.75/1.65 m: tallest person is 79.076 SVG units, excluding the standard. */
 .sel-card .por .sel-invite-illustration { --portrait-scale: calc(1.75 / 2.95 * 100 / 79.076); }
-@supports (width: round(down, 5.5px, 1px)) {
+@supports (width: round(down, 5.5px, 1px)) and (width: 1cqw) {
   .sel-card .por :is(.sel-mulassa-illustration, .sel-drac-illustration, .sel-bou-illustration, .sel-invite-illustration) {
     --mula-cell: max(2px, min(.8 * 14 * min(var(--reach) * 100cqh / 14, var(--sky) * 100cqw / 18) / 11.02, 100cqh / 12, 100cqw / 14)); /* her 100-unit body = STAND .8 of the grids' --ref */
   }

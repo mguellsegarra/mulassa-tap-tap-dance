@@ -423,6 +423,7 @@ console.log('practice/game input routing: keyboard, mouse/touch pad and bubbling
   assert.equal(navX(win, { children: [box(12, 72, 100, 116), box(110, 72, 390, 116)] }, carousel, 1), 458, 'a pill under the middle: just right of it');
   assert.equal(navX(win, { children: [box(110, 4, 390, 48)] }, carousel, 1), 333.5, 'pills in the header, far above: the middle');
   assert.equal(navX(win, { children: [box(300, 72, 660, 116)] }, carousel, 1), 603, 'never past the screen edge');
+  assert.equal(navX({ innerWidth: 668 }, { children: [] }, box(287, 352, 668, 502), 1), 190.5, 'a pending card takes the left: the middle of the strip\'s room, not the screen\'s, which falls on the card');
 }
 { // the FLIP (pending → playable): the primary slides; Ball lliure, hidden before, waits for the slide and fades in instead of popping over it
   const { setupFlip } = await import('../../src/ui/select-flip.js');

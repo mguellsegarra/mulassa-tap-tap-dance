@@ -111,6 +111,8 @@
 #select { --ga: 8px; --drop-h: calc(var(--action-h) + var(--ga)); --drop: 0px; --sel-ease: cubic-bezier(.35, 0, .15, 1); }
 #select[data-pending] { --drop: var(--drop-h); }
 @media (pointer: fine) { #select[data-pending] { --drop: 0px; } }
+/* ...but a phone-sized desktop window has no row to spare: the card takes it, as on a phone. */
+@media (pointer: fine) and (max-width: 519px) and (min-height: 501px) and (max-height: 700px) { #select[data-pending] { --drop: var(--drop-h); } }
 /* The action fades with the drop; it comes back once the dock is on its way up. */
 #select #select-next { transition: transform .12s, filter .12s, box-shadow .12s, opacity .3s var(--sel-ease) .1s, translate .3s var(--sel-ease) .1s, visibility 0s; } /* + .btn-primary's */
 #select #select-next:disabled { opacity: 0; pointer-events: none; translate: 0 8px; transition: opacity .2s var(--sel-ease), translate .2s var(--sel-ease), visibility 0s .2s; } /* touch hides unavailable actions; folding already commits a playable selection */
@@ -140,6 +142,7 @@
   #select #select-next:disabled { visibility: visible; opacity: 1; translate: none; background: transparent; border-color: #746957; color: #c7bca7; box-shadow: none; animation: none; scale: none; rotate: none; filter: none; cursor: default; }
   #select #select-next:disabled::after { display: none; animation: none; }
 }
+@media (pointer: fine) and (max-width: 519px) and (min-height: 501px) and (max-height: 700px) { #select[data-pending] #select-next:disabled { visibility: hidden; } }
 .sel-strip { position: relative; display: flex; align-items: stretch; justify-content: flex-start; gap: 8px; min-height: 0; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; touch-action: pan-x; padding: 10px max(6px, var(--strip-r, 0px)) 6px max(6px, var(--strip-l, 0px)); margin-inline: 0; box-sizing: border-box; overflow-anchor: none; }
 /* select-layout.js's measures, read only where they are set: not inherited, so a write restyles the strip, not its ~50 cards */
 @property --strip-x { syntax: '<length>'; inherits: false; initial-value: 0px; }

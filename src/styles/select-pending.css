@@ -390,11 +390,21 @@
 }
 /* The split layout's narrow card: the stamp's two columns would crush each other, so one column, without the list. */
 @media (min-width: 668px) and (max-width: 1079px) and (min-height: 501px) and (max-height: 599px) {
-  #select .sel-pending[data-soon] .sel-lower:not([hidden]) { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto; gap: 6px; margin-top: 8px; }
+  #select .sel-pending[data-soon] .sel-lower:not([hidden]) { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto; gap: 12px; margin-top: 8px; }
   #select .sel-pending[data-soon] .sel-lower .sel-call { grid-area: 1 / 1; }
   #select .sel-pending[data-soon] .sel-lower .sel-state { grid-area: 2 / 1; }
-  .sel-pending[data-soon] .sel-state-words { gap: 4px; }
+  .sel-pending[data-soon] .sel-state-words { gap: 8px; }
   .sel-pending[data-soon] p.sel-missing span { display: none; }
+}
+/* 320 px, figures asking for help: 4 px of the top margin go under the heart, whose foot touched the words below. */
+@media (max-width: 340px) { .sel-pending:not([data-invite]):not([data-no-actions]) { padding-top: 12px; } }
+/* The split layout, figures asking for help: one column (the card is too narrow or too low for two), the action on the card's own last row. */
+@media (min-width: 668px) and (min-height: 501px) and (max-height: 599px) {
+  #select .sel-pending:not([data-no-actions]):not(:has(.sel-lower[hidden])) { grid-template-rows: auto 44px !important; row-gap: 8px; }
+  #select .sel-pending:not([data-no-actions]) .sel-lower:not([hidden]) { flex: none; grid-template-columns: minmax(0, 1fr); grid-template-rows: none; justify-items: center; row-gap: 6px; margin-top: 8px; } /* flex: none, or the column shrinks it to nothing and the rows spill over the name */
+  #select .sel-pending:not([data-no-actions]) :is(.sel-call-line, .sel-heart-wide, .sel-state-words) { grid-area: auto; }
+  #select .sel-pending:not([data-no-actions]) .sel-state-words { margin-top: 4px; } /* the heart's foot eats the gap above */
+  #select .sel-pending:not([data-no-actions]):not(:has(.sel-lower[hidden])) .sel-pending-actions { width: 100%; margin-top: 0; }
 }
 @media (max-width: 519px) and (max-height: 500px) {
   .sel-pending[data-soon] .sel-state-words { flex-direction: column; gap: 4px; }
@@ -404,3 +414,5 @@
 @media (max-width: 340px) { .sel-pending[data-soon]:not([data-invite]) { padding-top: 16px; } }
 @media (min-width: 668px) and (min-height: 501px) and (max-height: 799px) { .sel-pending[data-soon] { padding-block: 18px 20px; } }
 .sel-heart-fail { position: fixed; z-index: 30; box-sizing: border-box; width: max-content; max-width: calc(100vw - 24px); padding: 8px 12px; border: 2px solid #e0364c; border-radius: 10px; background: #1a110b; box-shadow: 0 6px 14px #0008; color: #fff3d6; font: 700 14px/1.2 'Baloo 2', system-ui, sans-serif; pointer-events: none; }
+/* The note sits over these two lines: hidden while it shows, so no half-covered words below its edge; nothing moves. */
+body:has(.sel-heart-fail) .sel-pending .sel-state-words { visibility: hidden; }

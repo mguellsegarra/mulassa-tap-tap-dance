@@ -1,4 +1,5 @@
 import { LEADERBOARD_VERSION, normalizeAlias, validResult } from './leaderboard-rules.js';
+import { badgeReads } from './leaderboard-badges.js';
 import { DRAC_SCORE_VERSION, BOU_SCORE_VERSION } from '../game/score-scale.js';
 import { MOCK_BOARD } from '../core/mock-board.js';
 import { fail, translated } from './leaderboard-errors.js';
@@ -59,6 +60,7 @@ export function createLeaderboardService({ configured, publishingEnabled, captch
     if (error) { if (error.status === undefined) try { error.status = status; } catch { /* frozen: no status */ } throw error; }
     return data;
   }
+  const withBadges = badgeReads(rpc);
   // A call as the signed-in player. «No such player» (the account is gone: purged as inactive, or deleted elsewhere) while its
   // token still reads valid for up to an hour: this browser leaves it, so the next try signs in to a new profile.
   async function player(c, name, args) {
@@ -90,7 +92,7 @@ export function createLeaderboardService({ configured, publishingEnabled, captch
       const v = version ?? (figure ? FIGURE_VERSIONS[figure] : LEADERBOARD_VERSION);
       if (!v) return []; // a figure with no board (the Bou): never another figure's
       try {
-        return await rpc(await client(), 'get_leaderboard_all', { p_version: v,
+        return await withBadges(await client(), 'get_leaderboard_all', { p_version: v,
           p_period: 'all', p_offset: offset, p_limit: limit, ...season(seasonId) });
       } catch (error) { throw translated(error); }
     },
@@ -100,7 +102,7 @@ export function createLeaderboardService({ configured, publishingEnabled, captch
       const v = figure ? FIGURE_VERSIONS[figure] : LEADERBOARD_VERSION;
       if (!v) return [];
       try {
-        return (await rpc(await client(), 'get_level_podium', { p_version: v, p_difficulty: level })) ?? [];
+        return (await withBadges(await client(), 'get_level_podium', { p_version: v, p_difficulty: level })) ?? [];
       } catch (error) { throw translated(error); }
     },
     // The Saló de la fama of a figure (get_seasons): one entry per (season, dance) with results, newest first, season 0 included.
@@ -124,8 +126,8 @@ export function createLeaderboardService({ configured, publishingEnabled, captch
     async playerCard(publicId) {
       if (!UUID.test(String(publicId ?? ''))) throw fail('invalid');
       try {
-        const r = (await rpc(await client(), 'get_player_card', { p_public_id: publicId }))?.[0];
-        return r ? { alias: r.alias, verified: r.verified === true, released: r.released === true, totals: r.totals ?? {},
+        const r = (await withBadges(await client(), 'get_player_card', { p_public_id: publicId }))?.[0];
+        return r ? { alias: r.alias, verified: r.verified === true, released: r.released === true, badgeId: r.badge_id ?? null, totals: r.totals ?? {},
           podiums: (r.podiums ?? []).map(p => ({ seasonId: p.season_id, version: p.version, position: p.position })) } : null;
       } catch (error) { throw translated(error); }
     },
@@ -184,14 +186,20 @@ export function createLeaderboardService({ configured, publishingEnabled, captch
     },
     // The signed-in profile as the server sees it (my_profile), or null (no session or no profile row).
     // { alias, verified (an address Supabase Auth confirmed), published, released (its name was taken after 30 idle days: choose
-    // another), publicId (opaque and stable: the owner key) }. Store the alias with rememberIdentity.
+    // another), publicId (opaque and stable: the owner key), badgeId (null: the check), canBadge (this server can save one) }. Store the alias with rememberIdentity.
     async profile() {
       try {
         const c = await client();
         if (!(await signedIn(c))) return null;
-        const p = (await rpc(c, 'my_profile'))?.[0];
-        return p ? { alias: p.alias, verified: p.verified === true, published: p.published === true, released: p.released === true, publicId: p.public_id ?? null } : null;
+        const p = (await withBadges(c, 'my_profile'))?.[0];
+        return p ? { alias: p.alias, verified: p.verified === true, published: p.published === true, released: p.released === true, publicId: p.public_id ?? null, badgeId: p.badge_id ?? null, canBadge: 'badge_id' in p } : null;
       } catch (error) { throw translated(error); }
+    },
+    // The badge a confirmed profile shows instead of the check (null: the check). owner: the publicId the sheet showed.
+    async setBadge(badgeId, owner) {
+      if (!publishingEnabled) throw fail('disabled');
+      try { return await player(await client(), 'set_profile_badge', { p_badge_id: badgeId, p_owner: owner }); }
+      catch (error) { throw translated(error); }
     },
     // Statistics (docs/rankings/strategy.md §7), through src/services/stats-sync.js. syncStats({ device, buckets, days }) is
     // merge_stats: cumulative counters of this device per bucket, and the played days (YYYY-MM-DD); at most once a minute

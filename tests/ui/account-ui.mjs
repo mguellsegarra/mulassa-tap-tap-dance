@@ -127,7 +127,7 @@ const service = (o = {}) => ({ configured: true, asked: [], async seasons(f) { t
   assert.equal(text('hall-mine')[0], 'La teva posició12 de 48142.310 puntsNORMAL', 'its own band: place (no gendered ordinal), points, level');
   const figs = $('seasons-figures').children; // «Tria figura»: the board's dropdown
   assert($('seasons-figure-name').textContent === 'Mulassa de Valls' && /<svg/.test($('seasons-figure-pic').innerHTML) && figs[0].attrs['aria-pressed'] === 'true' && figs[1].attrs['aria-pressed'] === 'false');
-  view().find(e => e.className?.includes?.('player-name') && e.tag === 'button').click(); assert.deepEqual(cards[0], { alias: 'Portadora', verified: true, released: false, publicId: 'id-portadora' });
+  view().find(e => e.className?.includes?.('player-name') && e.tag === 'button').click(); assert.deepEqual(cards[0], { alias: 'Portadora', verified: true, released: false, publicId: 'id-portadora', badgeId: null });
   { const faded = view().all(e => e.className?.includes?.('player-name')); assert(!faded[0].className.includes('released') && faded[1].className.includes('released') && !view().textContent.includes('#'), 'a released podium name is faded; no «#» anywhere'); }
   byId('seasons-dance').click();
   assert(text('hall-meta')[0] === '20 participants' && byId('seasons-dance').textContent === 'Mira el ball anterior' && focused.at(-1) === 'seasons-dance', 'the current dance, its link back');
@@ -425,9 +425,9 @@ const service = (o = {}) => ({ configured: true, asked: [], async seasons(f) { t
   const answer = async p => { release(); await p; };
   const a = refreshIdentity(svc, store), b = refreshIdentity(svc, store); await tick();
   assert.equal(calls, 1, 'one request at a time'); await answer(Promise.all([a, b]));
-  assert.deepEqual(savedName(store), { alias: 'Portadora', verified: true, released: false, publicId: 'id-1' }, 'a confirmed profile shows its check');
+  assert.deepEqual(savedName(store), { alias: 'Portadora', verified: true, released: false, publicId: 'id-1', badgeId: null }, 'a confirmed profile shows its check');
   prof = { alias: 'Timbaler', verified: false, published: false, released: true, publicId: 'id-2' }; const c = refreshIdentity(svc, store); await tick(); await answer(c);
-  assert.deepEqual(savedName(store), { alias: 'Timbaler', verified: false, released: true, publicId: 'id-2' }, 'a released guest: the plain name, no check, flagged');
+  assert.deepEqual(savedName(store), { alias: 'Timbaler', verified: false, released: true, publicId: 'id-2', badgeId: null }, 'a released guest: the plain name, no check, flagged');
   mem.set('leaderboard-alias:identity', JSON.stringify({ hasSession: true, mailOn: 'a@b.cat', persistent: false, prof }));
   prof = { alias: 'Timbaler', verified: true, published: true, released: false, publicId: 'id-2' }; const d = refreshIdentity(svc, store); await tick(); await answer(d);
   const kept = JSON.parse(mem.get('leaderboard-alias:identity'));
@@ -445,7 +445,7 @@ const service = (o = {}) => ({ configured: true, asked: [], async seasons(f) { t
     const b = refreshIdentity(svc2, store, { fresh: true }); await tick(); assert.equal(asked.length, 2, 'an account change asks again');
     asked[1]({ alias: 'Nova', verified: true, published: true, publicId: 'id-n' }); await b;
     asked[0]({ alias: 'Vella', verified: false, published: false, publicId: 'id-v' }); await a;
-    assert.deepEqual(savedName(store), { alias: 'Nova', verified: true, released: false, publicId: 'id-n' }, 'the stale answer is dropped');
+    assert.deepEqual(savedName(store), { alias: 'Nova', verified: true, released: false, publicId: 'id-n', badgeId: null }, 'the stale answer is dropped');
     const c = refreshIdentity(svc2, store); await tick(); assert.equal(asked.length, 3, 'the stale read does not hold the next one up'); asked[2](null); await c; }
   assert.equal(await refreshIdentity({ configured: false, profile() { throw new Error('never'); } }, store), undefined, 'no service: nothing asked');
 }

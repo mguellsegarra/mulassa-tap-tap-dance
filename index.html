@@ -511,7 +511,7 @@
         </ul>
         <button type="button" class="btn btn-link btn-small" data-privacy-open aria-haspopup="dialog" data-i18n="html.common.privacy">Privadesa</button>
       </div>
-      <p id="profile-note" class="publish-note" data-i18n="html.rich.profileNote">El correu només serveix per confirmar el perfil i enviar-te el codi que el recupera. No surt mai a la classificació (només s’hi veu la marca de confirmat) i s’esborra amb el perfil. Si tens menys de 14 anys, demana-ho a una persona adulta. <button type="button" class="btn btn-link btn-small" data-privacy-open aria-haspopup="dialog" data-i18n="html.common.privacy">Privadesa</button></p>
+      <p id="profile-note" class="publish-note" data-i18n="html.rich.profileNote">El correu només serveix per confirmar el perfil i enviar-te el codi que el recupera. No surt mai a la classificació (s’hi veu la marca de confirmació o la insígnia que triïs) i s’esborra amb el perfil. Si tens menys de 14 anys, demana-ho a una persona adulta. <button type="button" class="btn btn-link btn-small" data-privacy-open aria-haspopup="dialog" data-i18n="html.common.privacy">Privadesa</button></p>
     </div>
     <p id="profile-status" class="board-status" role="status" aria-live="polite"></p>
     <div class="sheet-actions">
@@ -519,6 +519,18 @@
       <button id="profile-send" type="submit" class="btn btn-primary" data-i18n="html.profileSend">Envia el codi</button>
     </div>
   </form>
+</dialog>
+<dialog id="badge-menu" class="sheet" tabindex="-1" aria-labelledby="badge-title">
+  <button id="badge-close" type="button" data-i18n-attr="aria-label:html.attr.close" class="sheet-x" aria-label="Tanca"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  <div class="sheet-body fade">
+    <h2 id="badge-title"></h2>
+    <p id="badge-preview" class="badge-preview who"></p>
+    <div id="badge-choices" role="radiogroup" aria-labelledby="badge-title"></div>
+  </div>
+  <div class="badge-foot">
+    <p id="badge-status" class="board-status" role="status" aria-live="polite"></p>
+    <div class="sheet-actions"><button id="badge-save" type="button" class="btn btn-primary"></button></div>
+  </div>
 </dialog>
 <!-- «Perfil» (src/ui/account-ui.js): the profile block (src/ui/profile-ui.js), the statistics (private: the days played) -->
 <dialog id="account-menu" class="sheet" tabindex="-1" aria-labelledby="account-title">

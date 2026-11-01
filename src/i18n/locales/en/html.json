@@ -189,7 +189,7 @@
   "html.rich.boardPublish": "Post your score",
   "html.rich.publishAbout": "Your nickname, score and total stats will be public.",
   "html.rich.publishRecover": "Have a profile with a confirmed email? Recover it",
-  "html.rich.profileNote": "Your email is only used to confirm your profile and send you a recovery code. It never appears on the leaderboard (only a confirmation badge does) and is deleted with your profile. If you’re under 14, ask an adult first.",
+  "html.rich.profileNote": "Your email is only used to confirm your profile and send you a recovery code. It never appears on the leaderboard (only the confirmation tick or your chosen badge does) and is deleted with your profile. If you’re under 14, ask an adult first.",
   "html.rich.seasonEndOk": "Back to the square",
   "html.rich.feedbackSmall1": "We'll reply to your profile's email address.",
   "html.rich.feedbackSmall2": "For content rights or personal data, you can also write to",

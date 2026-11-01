@@ -23,6 +23,7 @@ import { makeDanceChart } from '../game/chart.js';
 import { song, FINALE_T } from '../game/figure-song.js';
 import { setupShare } from './share-ui.js';
 import { setupProfile } from './profile-ui.js';
+import { setupBadges } from './badge-picker.js';
 import { setupConfirmGate } from './confirm-gate.js';
 import { setupHearts } from './figure-hearts.js';
 import { setupHeartTip } from './heart-tip.js';
@@ -166,7 +167,8 @@ if (FINAL?.review != null) import('../dev/account-review.js').then(m => m.startR
 // in-memory keys (src/dev/final-test.js), nothing real.
 const profile = setupProfile({ focusIn, captcha: board.captcha, store: kv, aliasKey: ALIAS_KEY, deviceNote: board.deviceNote, acceptStats, ...(mockBoard && { service: mockService }) });
 sheets.profile = profile;
-const account = setupAccount({ focusIn, profile, service, store: kv, stats: statsSync, onSync: back => { syncBack = back; sync.show(); }, onHall: (f, back) => seasons.open(f, back) });
+sheets.badges = setupBadges({ focusIn, service, store: kv, onSaved: id => { profile.badgeSaved(id); refreshIdentity(service, kv, { fresh: true }).then(() => share.refreshName()); } });
+const account = setupAccount({ focusIn, profile, badges: sheets.badges, service, store: kv, stats: statsSync, onSync: back => { syncBack = back; sync.show(); }, onHall: (f, back) => seasons.open(f, back) });
 sheets.account = account;
 document.getElementById('settings-profile').addEventListener('click', () => { settingsMenu.close(); account.open(openSettings); }); // Perfil lives in ⚙ Configuració (no corner button); closing it comes back here
 // «Tardor 2026 s’ha acabat»: once per profile and season (in memory over the mock, so each review shows it)

@@ -216,10 +216,37 @@ span.player-name { display: inline-flex; align-items: baseline; min-width: 0; }
 .profile-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px 10px; min-height: 28px; }
 .profile-name { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; color: #fff3d6; font-size: 22px; font-weight: 800; line-height: 1.2; }
 .profile-head:not(:has(.player-name, .kind-chip:not([hidden]))) { display: none; } /* no profile: no empty name line */
-.profile-name .verified-check, .card-name .verified-check { width: 20px; height: 20px; }
+.profile-name :is(.verified-check, .player-badge), .card-name :is(.verified-check, .player-badge) { width: 20px; height: 20px; }
+/* the mark and a pencil, tap to change: a 44 px target around them that does not move the name */
+.badge-edit { all: unset; position: relative; display: inline-flex; align-items: center; gap: 3px; cursor: pointer; }
+.badge-edit::after { content: ""; position: absolute; inset: -10px -6px; }
+.badge-edit > svg { flex: none; width: 13px; height: 13px; fill: none; stroke: #e8d8b8; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.badge-edit:focus-visible { outline: 3px solid #f5c518; outline-offset: 2px; border-radius: 6px; }
+.profile-sub:empty { display: none; }
+/* «Tria insígnia» (src/ui/badge-picker.js) */
+#badge-menu { width: min(460px, calc(100vw - 32px - var(--sal) - var(--sar))); max-height: min(760px, calc(100dvh - 32px - var(--sat) - var(--sab))); padding: 18px 20px 16px; }
+#badge-menu[open] { display: flex; flex-direction: column; overflow: visible; } /* the X straddles the frame: only the choices scroll */
+#badge-menu::before, #badge-menu::after { display: none; }
+#badge-menu .sheet-body { flex: 1 1 auto; }
+#badge-menu:has(> .sheet-bar:not([hidden])) .badge-foot { padding-right: 10px; } /* the sheets' own scroll bar takes this from the choices: «Desa» ends where they do */
+@media (max-width: 359px) { #badge-title { font-size: 22px; } }
+#badge-title { margin: 0 0 12px; text-align: center; }
+.badge-preview { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 4px 12px; border-radius: 10px; background: #f5c5181f; font-size: 15px; }
+.badge-group { margin: 16px 0 8px; color: #e8d8b8; font-size: 14px; text-align: center; }
+.badge-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.badge-grid.pair { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.badge-cell { all: unset; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: 76px; padding: 8px 4px; border: 2px solid #e8d8b880; border-radius: 12px; color: #fff3d6; font-size: 13px; line-height: 1.1; text-align: center; cursor: pointer; --jester: #fff3d6; }
+.badge-cell svg { flex: none; width: 28px; height: 28px; }
+.badge-cell.wide { grid-column: 1 / -1; flex-direction: row; gap: 8px; min-height: 48px; }
+.badge-cell .verified-check { width: 28px; height: 28px; }
+.badge-cell[aria-checked="true"] { border-color: #fff3d6; background: #fff3d61a; }
+.badge-cell:focus-visible { outline: 3px solid #f5c518; outline-offset: 1px; }
+.badge-foot { flex: none; padding-top: 8px; }
+.badge-foot .board-status:empty { display: none; }
 .profile-sub { margin: 4px 0 0; color: #e8d8b8; font-size: 14px; line-height: 1.35; text-wrap: pretty; }
 .profile-block[data-state="none"] .profile-sub { margin-top: 0; }
 /* waiting for the identity: the room is kept and shows as a quiet skeleton, so it reads as loading, not dead; the name waits with the rest */
+.profile-block[data-pending] .btn > :is(svg, .verified-check) { visibility: hidden; } /* a skeleton promises no state: no check on it */
 .profile-block[data-pending] .btn { color: transparent; border-color: transparent; background: #fff3d614; pointer-events: none; animation: profile-pulse 1.2s ease-in-out infinite; }
 .profile-block[data-pending] .profile-sub { color: transparent; border-radius: 6px; background: #fff3d614; animation: profile-pulse 1.2s ease-in-out infinite; } .profile-block[data-pending] .profile-head { display: flex; } .profile-block[data-pending] :is(.kind-chip, .profile-name) { visibility: hidden; } /* the guest's words, name and chip in no colour: its final size from the first frame */
 @keyframes profile-pulse { 50% { opacity: .45; } }

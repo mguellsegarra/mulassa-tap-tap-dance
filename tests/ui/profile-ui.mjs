@@ -85,7 +85,7 @@ const guestProf = o => ({ alias: 'takeshi', verified: false, published: true, re
   assert.equal(rel.buttons().join(), 'rename:Tria un altre nom,delete:Esborra el perfil');
   const linked = make({ alias: 'takeshi', session: true, email: 'jugador@example.com', prof: guestProf({ verified: true }) }); await linked.profile.refresh();
   assert.equal(linked.buttons().join(), 'signout:Tanca la sessió,delete:Esborra el perfil', 'signing out only with an e-mail on it');
-  assert.equal(linked.$('profile-sub').textContent, `${VERIFIED}: j***@example.com.`, 'the address masked, never in full');
+  assert.equal(linked.$('profile-sub').textContent, '', 'no line about the address: the mark says it');
   assert(linked.badge()?.attrs['aria-label'] === VERIFIED && linked.$('profile-name').textContent === 'takeshi', 'the check, nothing else');
   const off = make({ alias: 'takeshi', session: true, publishingEnabled: false, prof: guestProf() }); await off.profile.refresh();
   assert.equal(off.buttons().join(), 'delete:Esborra el perfil', 'publishing off: nothing to link, deleting stays');

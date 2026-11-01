@@ -189,7 +189,7 @@
   "html.rich.boardPublish": "Publie ton résultat",
   "html.rich.publishAbout": "Ton pseudo, ton résultat et les totaux de tes statistiques seront publics.",
   "html.rich.publishRecover": "Tu as un profil avec un e-mail confirmé ? Récupère-le",
-  "html.rich.profileNote": "L’e-mail sert uniquement à confirmer ton profil et à envoyer le code pour le récupérer. Il n’apparaît jamais au classement (seule la mention de confirmation y figure) et il est supprimé avec le profil. Si tu as moins de 14 ans, demande à un adulte.",
+  "html.rich.profileNote": "L’e-mail sert uniquement à confirmer ton profil et à envoyer le code pour le récupérer. Il n’apparaît jamais au classement (seule la coche de confirmation ou l’insigne de ton choix y figure) et il est supprimé avec le profil. Si tu as moins de 14 ans, demande à un adulte.",
   "html.rich.seasonEndOk": "Retour à la place",
   "html.rich.feedbackSmall1": "On te répondra à l'adresse e-mail de ton profil.",
   "html.rich.feedbackSmall2": "Pour les droits sur les contenus ou les données personnelles, tu peux aussi écrire à",

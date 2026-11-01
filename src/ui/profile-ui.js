@@ -22,7 +22,7 @@ import { byId, statusLine, setButton } from './sheet-kit.js';
 import { GUEST, GUEST_TEXT, appendName } from './profile-notes.js';
 import { tr } from '../i18n/messages.js';
 
-const maskEmail = m => { const [u = '', d = ''] = m.split('@'); return `${u.slice(0, 1)}***@${d}`; };
+const BADGE_PENCIL = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16zM13.5 6.5l4 4"/></svg>';
 const CONFIRM = {
   delete: { title: tr('ui.profile.delete.title'), yes: tr('ui.profile.delete.yes'), done: tr('ui.profile.delete.done'),
     lead: () => tr('ui.profile.delete.lead') },
@@ -63,10 +63,21 @@ export function setupProfile({ focusIn, captcha, store, aliasKey, deviceNote = (
   // too: after a while away the session needs a network round-trip to refresh, and the block must not sit blank meanwhile.
   const knownKey = `${aliasKey}:identity`;
   let known = null;
-  try {
-    const k = JSON.parse(store.get(knownKey) || 'null');
-    if (k && typeof k.hasSession === 'boolean') known = { hasSession: k.hasSession, mailOn: String(k.mailOn || ''), persistent: k.persistent !== false, prof: k.prof || null };
-  } catch {}
+  // read when the block opens: refreshIdentity (the start) writes this key after this sheet was set up
+  function readKnown() {
+    try {
+      const k = JSON.parse(store.get(knownKey) || 'null');
+      if (k && typeof k.hasSession === 'boolean') known = { hasSession: k.hasSession, mailOn: String(k.mailOn || ''), persistent: k.persistent !== false, prof: k.prof || null };
+    } catch {}
+  }
+  readKnown();
+  // the mark beside the name is what you tap to change it (src/ui/badge-picker.js), with a pencil saying so
+  function badgeEntry() {
+    const mark = nameEl.querySelector('.verified-check, .player-badge'), b = doc.createElement('button');
+    if (!mark) return;
+    b.type = 'button'; b.className = 'badge-edit'; b.dataset.act = 'badge'; b.setAttribute('aria-haspopup', 'dialog'); b.setAttribute('aria-label', tr('ui.badge.entry'));
+    mark.replaceWith(b); b.append(mark); b.insertAdjacentHTML('beforeend', BADGE_PENCIL);
+  }
   function paint({ alias, hasSession, mailOn, persistent, prof = null }) {
     delete row.dataset.pending;
     // confirmed is the server's answer; without one (offline, an older server) a confirmed address on the session
@@ -75,7 +86,7 @@ export function setupProfile({ focusIn, captcha, store, aliasKey, deviceNote = (
     email = mailOn;
     const set = (i, act, text, on = true) => { const b = btns[i]; b.hidden = !on; b.dataset.act = act; b.textContent = text; };
     nameEl.replaceChildren(); // as the boards show it: the check for a confirmed address, a released name faded
-    if (state !== 'none') appendName(doc, nameEl, { alias, verified: confirmed && hasSession, released: state === 'released' });
+    if (state !== 'none') appendName(doc, nameEl, { alias, verified: confirmed && hasSession, released: state === 'released', badgeId: prof?.badgeId });
     kindEl.hidden = state !== 'guest'; kindEl.textContent = GUEST;
     btns[2].hidden = true;
     if (state === 'none') { sub.textContent = tr('ui.profile.sub.none'); set(0, 'create', tr('ui.profile.btn.create'), canLink); set(1, 'recover', tr('ui.profile.btn.recover'), canLink); }
@@ -87,7 +98,8 @@ export function setupProfile({ focusIn, captcha, store, aliasKey, deviceNote = (
       sub.textContent = tr('ui.profile.lead.released');
       set(0, 'rename', tr('ui.profile.btn.rename'), canLink); set(1, 'delete', tr('ui.profile.btn.delete'));
     } else {
-      sub.textContent = tr(`ui.profile.sub.${mailOn ? 'mail' : 'nomail'}`, { mail: mailOn && maskEmail(mailOn) });
+      sub.textContent = '';
+      if (canLink && prof?.canBadge === true) badgeEntry();
       set(0, 'signout', tr('ui.profile.btn.signout')); set(1, 'delete', tr('ui.profile.btn.delete'));
     }
     row.dataset.state = state;
@@ -96,10 +108,11 @@ export function setupProfile({ focusIn, captcha, store, aliasKey, deviceNote = (
     if (!online) { row.hidden = true; return; }
     row.hidden = false;
     const r = ++settingsReq, alias = store.get(aliasKey) || '';
-    // the first frame: the last answer; with a name but no answer yet, a guest's block in no colour (the commonest answer: the same
-    // size, so repainting moves nothing; guessing «stale» moved the buttons and the line under the name); no name: «Encara no en tens cap.»
+    // the first frame: the last answer; with a name but no answer yet, a name and two buttons in no colour (promises no state; a
+    // confirmed profile lands on the same size, a guest's line appears under the name); no name: «Encara no en tens cap.»
+    if (!known) readKnown();
     if (known && alias) paint({ alias, ...known });
-    else if (alias) { row.dataset.pending = '1'; nameEl.replaceChildren(); appendName(doc, nameEl, { alias, verified: false }); kindEl.hidden = false; kindEl.textContent = GUEST; sub.textContent = [GUEST_TEXT, deviceNote(true)].filter(Boolean).join(' '); [tr('ui.profile.btn.link'), tr('ui.profile.btn.delete')].forEach((t, i) => { btns[i].hidden = false; btns[i].textContent = t; delete btns[i].dataset.act; }); btns[2].hidden = true; }
+    else if (alias) { row.dataset.pending = '1'; nameEl.replaceChildren(); appendName(doc, nameEl, { alias, verified: false }); kindEl.hidden = true; sub.textContent = ''; [tr('ui.profile.btn.link'), tr('ui.profile.btn.delete')].forEach((t, i) => { btns[i].hidden = false; btns[i].textContent = t; delete btns[i].dataset.act; }); btns[2].hidden = true; }
     else paint({ alias, hasSession: false, mailOn: '', persistent: true });
     let id, prof = null, gone = false;
     try {
@@ -245,6 +258,12 @@ export function setupProfile({ focusIn, captcha, store, aliasKey, deviceNote = (
     req++; busy = false; clearTimeout(closeTimer); captcha?.cancel(); cancelBtn.hidden = false;
     const b = back; back = null; b?.();
   });
-  return { open, refresh, forget, get isOpen() { return menu.open; }, get renaming() { return menu.open && kind === 'rename' && step === 'alias'; },
+  // a badge just saved (src/ui/badge-picker.js): the block's next first frame already draws it
+  function badgeSaved(badgeId) {
+    if (!known?.prof) return;
+    known = { ...known, prof: { ...known.prof, badgeId } };
+    store.set(knownKey, JSON.stringify(known));
+  }
+  return { open, refresh, forget, badgeSaved, get isOpen() { return menu.open; }, get renaming() { return menu.open && kind === 'rename' && step === 'alias'; },
     get state() { return row.dataset.state; } };
 }

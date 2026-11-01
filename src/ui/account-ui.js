@@ -14,7 +14,7 @@ import { figureSeasons, boardName } from './seasons-ui.js';
 import { ALIAS_KEY, savedName } from '../services/leaderboard-identity.js';
 
 const HALL_FIGURE = 'mulassa-valls'; // the figure whose first season holds everything played before the seasons
-export function setupAccount({ focusIn, profile, service, store, stats, onSync = () => {}, onHall = () => {}, doc = document, now = () => Date.now() }) {
+export function setupAccount({ focusIn, profile, badges, service, store, stats, onSync = () => {}, onHall = () => {}, doc = document, now = () => Date.now() }) {
   const $ = byId(doc), menu = $('account-menu'), box = $('account-stats'), status = $('account-status'), notice = $('stats-notice-menu');
   let req = 0, back = null, shown = null, wins = [];
   const local = () => { const s = loadStats(), o = s.owners[getStatsOwner()]; return { since: s.since, buckets: { ...o?.counters, ...o && { practice: o.practice } }, days: o?.days ?? [] }; };
@@ -96,7 +96,8 @@ export function setupAccount({ focusIn, profile, service, store, stats, onSync =
     const act = e.target.closest?.('button')?.dataset.act;
     if (!act) return;
     if (act === 'forget') { profile.forget(); return; }
-    const b = leave(); profile.open(act, () => open(b));
+    const b = leave();
+    if (act === 'badge') badges.open(() => open(b)); else profile.open(act, () => open(b));
   });
   $('account-close').addEventListener('click', () => menu.close());
   menu.addEventListener('close', () => { req++; const b = back; back = null; b?.(); });

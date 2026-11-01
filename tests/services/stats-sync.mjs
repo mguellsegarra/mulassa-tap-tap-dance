@@ -87,7 +87,7 @@ assert.equal(sync.noticeNeeded(), true, 'a new profile shows the notice again');
 // another tab switches the account A -> B: A's counters never upload as B, and the new owner is picked up by itself
 { let session = { user: { id: 'A' } }, onAuth, merges = [];
   const client = { auth: { getSession: async () => ({ data: { session }, error: null }), onAuthStateChange: f => { onAuth = f; return { data: { subscription: { unsubscribe() {} } } }; } },
-    rpc: async (name, args) => { if (name === 'my_profile') return { data: [{ alias: 'Jo' }], error: null }; if (name === 'merge_stats') merges.push({ as: session.user.id, buckets: Object.keys(args.p_buckets) }); return { data: null, error: null }; } };
+    rpc: async (name, args) => { if (name === 'my_profile_v2') return { data: [{ alias: 'Jo' }], error: null }; if (name === 'merge_stats') merges.push({ as: session.user.id, buckets: Object.keys(args.p_buckets) }); return { data: null, error: null }; } };
   const real = createLeaderboardService({ configured: true, publishingEnabled: true, captchaRequired: false, getClient: async () => client });
   let d3 = newStats(); endRun(d3, 'A', run()); endRun(d3, 'B', run({ figureId: 'drac-valls', version: 'drac-v1' }));
   const kv3 = new Map(), mem3 = { get: k => kv3.get(k) ?? null, set: (k, v) => kv3.set(k, v), remove: k => kv3.delete(k) };
@@ -167,7 +167,7 @@ assert.equal(sync.noticeNeeded(), true, 'a new profile shows the notice again');
 { let session = { user: { id: 'A' } }, flip = false, credited = [];
   const client = { auth: { getSession: async () => ({ data: { session }, error: null }) },
     rpc: async (name, args) => { // like supabase-js + merge_stats: the request is authenticated as whoever the session is NOW
-      if (name === 'my_profile') return { data: [{ alias: 'Jo' }], error: null };
+      if (name === 'my_profile_v2') return { data: [{ alias: 'Jo' }], error: null };
       if (flip) { flip = false; session = { user: { id: 'B' } }; } // the other tab's switch lands after our check
       if (args.p_owner !== undefined && args.p_owner !== session.user.id) return { data: null, error: { message: 'leaderboard_owner_mismatch', code: '28000', status: 401 } };
       credited.push({ as: session.user.id, buckets: Object.keys(args.p_buckets) }); return { data: null, error: null }; } };

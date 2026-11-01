@@ -20,7 +20,7 @@ function mockClient({ world, taken, delay, account, now, fail, calls }) {
   const seasonFor = version => world.retired[family(version)] ?? world.open;
   const mineRow = (season, fam) => {
     const e = [...entries.values()].filter(x => self && x.season === season && family(x.version) === fam).sort(order)[0];
-    return e && { pid: -2, alias: self.alias, publicId: self.publicId, released: self.released, verified: self.verified, difficulty: e.difficulty, quality: e.quality, score: e.score, max_combo: e.max_combo };
+    return e && { pid: -2, alias: self.alias, publicId: self.publicId, released: self.released, verified: self.verified, badgeId: self.badgeId, difficulty: e.difficulty, quality: e.quality, score: e.score, max_combo: e.max_combo };
   };
   // a board as the server ranks it: every player's best, by points, the signed-in one merged in
   function ranked(season, fam) {
@@ -68,7 +68,7 @@ function mockClient({ world, taken, delay, account, now, fail, calls }) {
     return null;
   }
   const row = (r, season) => ({ position: r.position, alias: r.alias, difficulty: r.difficulty, quality: r.quality, score: r.score,
-    max_combo: r.max_combo, is_self: r.is_self, total: r.total, verified: r.verified, season_id: season, public_id: r.publicId, released: r.released === true });
+    max_combo: r.max_combo, is_self: r.is_self, total: r.total, verified: r.verified, season_id: season, public_id: r.publicId, released: r.released === true, badge_id: r.badgeId ?? null });
   const totalsOf = r => (r.pid === -2 ? (({ practice, ...rest }) => rest)(sumBuckets([baseline.buckets, ...devices.values()])) : r.pid >= 0 ? world.stats.get(r.pid) ?? {} : {});
 
   const reads = {
@@ -87,10 +87,10 @@ function mockClient({ world, taken, delay, account, now, fail, calls }) {
       if (!KNOWN.has(a.p_version)) return no('leaderboard_invalid_version');
       const season = a.p_season ?? seasonFor(a.p_version), fam = family(a.p_version), d = a.p_difficulty;
       const e = [...entries.values()].filter(x => self && x.season === season && family(x.version) === fam && x.difficulty === d).sort(order)[0];
-      const mine = e && { pid: -2, alias: self.alias, publicId: self.publicId, released: self.released, verified: self.verified, difficulty: d, quality: e.quality, score: e.score };
+      const mine = e && { pid: -2, alias: self.alias, publicId: self.publicId, released: self.released, verified: self.verified, badgeId: self.badgeId, difficulty: d, quality: e.quality, score: e.score };
       const all = [...(defOf(season, fam)?.rows ?? []).filter(r => r.difficulty === d), ...(mine ? [mine] : [])].sort(order);
       return ok(all.slice(0, 3).map((r, i) => ({ position: i + 1, alias: r.alias, score: r.score, quality: r.quality,
-        is_self: r === mine, total: all.length, verified: r.verified, public_id: r.publicId, released: r.released === true })));
+        is_self: r === mine, total: all.length, verified: r.verified, public_id: r.publicId, released: r.released === true, badge_id: r.badgeId ?? null })));
     },
     get_seasons(a) {
       const out = [];
@@ -99,7 +99,7 @@ function mockClient({ world, taken, delay, account, now, fail, calls }) {
         if (!visible(s) || !rows.length) continue;
         const mine = rows.find(r => r.is_self);
         out.push({ season_id: s.id, name: s.name, starts_at: iso(s.startsAt), ends_at: iso(s.endsAt), version: d.version, previous_dance: d.previousDance, players: rows.length,
-          podium: rows.slice(0, 3).map(r => ({ position: r.position, alias: r.alias, public_id: r.publicId, released: r.released === true, score: r.score, difficulty: r.difficulty, verified: r.verified })),
+          podium: rows.slice(0, 3).map(r => ({ position: r.position, alias: r.alias, public_id: r.publicId, released: r.released === true, score: r.score, difficulty: r.difficulty, verified: r.verified, badge_id: r.badgeId ?? null })),
           my_position: mine?.position ?? null, my_score: mine?.score ?? null, my_difficulty: mine?.difficulty ?? null, _order: d.order });
       }
       return ok(out.sort((x, y) => y.season_id - x.season_id || y._order - x._order).map(({ _order, ...r }) => r));
@@ -111,12 +111,25 @@ function mockClient({ world, taken, delay, account, now, fail, calls }) {
       if (!hits.length) return ok([]);
       const who = hits[0].r, podiums = hits.filter(h => h.r.position <= 3).sort((x, y) => y.d.seasonId - x.d.seasonId)
         .map(h => ({ season_id: h.d.seasonId, version: h.d.version, position: h.r.position }));
-      return ok([{ alias: who.alias, verified: who.verified, released: who.released === true, totals: totalsOf(who), podiums }]);
+      return ok([{ alias: who.alias, verified: who.verified, released: who.released === true, badge_id: who.badgeId ?? null, totals: totalsOf(who), podiums }]);
     },
   };
 
+  // the v2 reads carry the badge; the old ones keep the shape cached clients know
+  for (const name of ['get_leaderboard_all', 'get_level_podium', 'get_player_card']) {
+    const full = reads[name];
+    reads[`${name}_v2`] = full;
+    reads[name] = a => { const out = full(a); return out.data ? { ...out, data: out.data.map(({ badge_id, ...r }) => r) } : out; };
+  }
   const writes = {
     my_profile: () => ok(self ? [{ alias: self.alias, verified: self.verified, published: entries.size > 0, released: self.released === true, public_id: self.publicId }] : []),
+    my_profile_v2: () => ok(self ? [{ alias: self.alias, verified: self.verified, published: entries.size > 0, released: self.released === true, public_id: self.publicId, badge_id: self.verified ? self.badgeId ?? null : null }] : []),
+    set_profile_badge(a) {
+      if (!self?.verified || self.released) return no('leaderboard_not_confirmed', 403);
+      if (a.p_owner !== self.publicId) return no('leaderboard_owner_mismatch', 401);
+      self.badgeId = a.p_badge_id;
+      return ok(a.p_badge_id);
+    },
     my_alias: () => ok(self?.alias ?? null),
     update_alias: a => writeAlias(a.p_alias) ?? ok(a.p_alias),
     submit_result(a) {

@@ -55,10 +55,10 @@ const client = {
   functions:{invoke:async(name,args)=>{log.push([name,args]);return {data:{deleted:true}};}},
 };
 const service=createLeaderboardService({configured:true,publishingEnabled:true,captchaRequired:true,getClient:async()=>client});
-await service.listAll(); assert.equal(auth,null,'public reading does not create a player'); assert.deepEqual(log.at(-1),['get_leaderboard_all',{p_version:LEADERBOARD_VERSION,p_period:'all',p_offset:0,p_limit:50}],'the joint board: every level, all time, the first page');
-await service.listAll({offset:100,limit:500}); assert.deepEqual(log.at(-1),['get_leaderboard_all',{p_version:LEADERBOARD_VERSION,p_period:'all',p_offset:100,p_limit:50}],'a later page; at most 50 a call');
+await service.listAll(); assert.equal(auth,null,'public reading does not create a player'); assert.deepEqual(log.at(-1),['get_leaderboard_all_v2',{p_version:LEADERBOARD_VERSION,p_period:'all',p_offset:0,p_limit:50}],'the joint board: every level, all time, the first page');
+await service.listAll({offset:100,limit:500}); assert.deepEqual(log.at(-1),['get_leaderboard_all_v2',{p_version:LEADERBOARD_VERSION,p_period:'all',p_offset:100,p_limit:50}],'a later page; at most 50 a call');
 await service.listAll({offset:-3,limit:0}); assert.deepEqual(log.at(-1)[1].p_offset,0);
-await service.levelPodium({figure:'drac-valls',level:2}); assert.deepEqual(log.at(-1),['get_level_podium',{p_version:FIGURE_VERSIONS['drac-valls'],p_difficulty:2}],'one level of the figure\'s own board');
+await service.levelPodium({figure:'drac-valls',level:2}); assert.deepEqual(log.at(-1),['get_level_podium_v2',{p_version:FIGURE_VERSIONS['drac-valls'],p_difficulty:2}],'one level of the figure\'s own board');
 { const c3={...client,rpc:async()=>({data:null,error:{message:'boom'},status:500})};
   await assert.rejects(createLeaderboardService({configured:true,publishingEnabled:false,captchaRequired:true,getClient:async()=>c3}).listAll(),{code:'server',detail:'rpc:Error:500'},'the server answered with an error: not «connectar»');
   const c4={...client,rpc:async()=>({data:null,error:{message:'TypeError: Failed to fetch',details:'',hint:'',code:''},status:0})};
@@ -163,16 +163,16 @@ await assert.rejects(absent.listAll(),{code:'disabled'});
     rememberIdentity(store, ALIAS_KEY, { alias: 'Timbaler' }); assert.equal(kv.get(ALIAS_KEY), 'Timbaler');
     kv.set(LEGACY_TAG_KEY, '3821'); kv.set(`${ALIAS_KEY}:identity`, JSON.stringify({ hasSession: true, prof: { alias: 'Timbaler', tag: 3821, verified: false } }));
     dropLegacyIdentity(store); assert(!kv.has(LEGACY_TAG_KEY) && !kv.has(`${ALIAS_KEY}:identity`), 'the legacy tag and the identity that carries one go');
-    kv.set(`${ALIAS_KEY}:identity`, JSON.stringify({ hasSession: true, prof: { alias: 'Timbaler', verified: true, released: false, publicId: '11111111-2222-4333-8444-555555555555' } }));
+    kv.set(`${ALIAS_KEY}:identity`, JSON.stringify({ hasSession: true, prof: { alias: 'Timbaler', verified: true, released: false, publicId: '11111111-2222-4333-8444-555555555555', badgeId: null } }));
     dropLegacyIdentity(store); assert(kv.has(`${ALIAS_KEY}:identity`), 'a current identity stays');
-    assert.equal(ownerKey(store), '11111111-2222-4333-8444-555555555555'); assert.deepEqual(savedName(store), { alias: 'Timbaler', verified: true, released: false, publicId: '11111111-2222-4333-8444-555555555555' });
+    assert.equal(ownerKey(store), '11111111-2222-4333-8444-555555555555'); assert.deepEqual(savedName(store), { alias: 'Timbaler', verified: true, released: false, publicId: '11111111-2222-4333-8444-555555555555', badgeId: null });
     kv.delete(`${ALIAS_KEY}:identity`); assert.equal(ownerKey(store), '', 'no identity: no owner'); }
   // boards: a version or a figure, a season only when asked
-  await svc.listAll({ figure: 'drac-valls' }); assert.deepEqual(last(), ['get_leaderboard_all', { p_version: FIGURE_VERSIONS['drac-valls'], p_period: 'all', p_offset: 0, p_limit: 50 }]);
+  await svc.listAll({ figure: 'drac-valls' }); assert.deepEqual(last(), ['get_leaderboard_all_v2', { p_version: FIGURE_VERSIONS['drac-valls'], p_period: 'all', p_offset: 0, p_limit: 50 }]);
   await svc.listAll({ version: 'mulassa-v2-short', season: 0, offset: 50 }); assert.deepEqual(last()[1], { p_version: 'mulassa-v2-short', p_period: 'all', p_offset: 50, p_limit: 50, p_season: 0 });
   // the signed-in profile
   answer = [{ alias: 'Timbaler', verified: false, published: true, released: false, public_id: 'p-1' }];
-  assert.deepEqual(await svc.profile(), { alias: 'Timbaler', verified: false, published: true, released: false, publicId: 'p-1' });
+  assert.deepEqual(await svc.profile(), { alias: 'Timbaler', verified: false, published: true, released: false, publicId: 'p-1', badgeId: null, canBadge: false });
   answer = [{ alias: 'Timbaler', verified: false, published: true, released: true, public_id: 'p-1' }]; assert.equal((await svc.profile()).released, true, 'a released profile says so');
   answer = []; assert.equal(await svc.profile(), null, 'no row: no profile');
   // the 1.2.0 betas' «Tria el teu nom» is gone: a rename is update_alias (createProfile), a taken name its usual error
@@ -188,8 +188,8 @@ await assert.rejects(absent.listAll(),{code:'disabled'});
   // the public card opens by the opaque public_id, never by name
   const PID = '0f9c6a52-8d1e-4b7a-9c3d-2a5e7b1f4c60';
   answer = [{ alias: 'Timbaler', verified: false, released: true, totals: { 'mulassa-valls/mulassa-v3/1': { runs: 3 } }, podiums: [{ season_id: 1, version: 'mulassa-v3', position: 2 }] }];
-  assert.deepEqual(await svc.playerCard(PID), { alias: 'Timbaler', verified: false, released: true, totals: { 'mulassa-valls/mulassa-v3/1': { runs: 3 } }, podiums: [{ seasonId: 1, version: 'mulassa-v3', position: 2 }] });
-  assert.deepEqual(last(), ['get_player_card', { p_public_id: PID }]);
+  assert.deepEqual(await svc.playerCard(PID), { alias: 'Timbaler', verified: false, released: true, badgeId: null, totals: { 'mulassa-valls/mulassa-v3/1': { runs: 3 } }, podiums: [{ seasonId: 1, version: 'mulassa-v3', position: 2 }] });
+  assert.deepEqual(last(), ['get_player_card_v2', { p_public_id: PID }]);
   for (const bad of ['Timbaler', '', null, 'Timbaler#3821', '0f9c6a52-8d1e-4b7a-9c3d']) await assert.rejects(svc.playerCard(bad), { code: 'invalid' }, 'a name is no key');
   answer = []; assert.equal(await svc.playerCard(PID), null);
   // statistics

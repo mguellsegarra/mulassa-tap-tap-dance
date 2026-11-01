@@ -154,6 +154,13 @@ dialog p, #results-actions .btn { overflow-wrap: break-word; }
 .verified-check { position: relative; flex: none; display: inline-grid; place-items: center; width: 16px; height: 16px; margin: 0; }
 .verified-check svg { width: 100%; height: 100%; fill: #3b9cff; stroke: #fff; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
 .verified-check svg .seal { stroke: none; }
+/* the badge a confirmed player chose (src/ui/player-badges.js), in the check's slot; its own class: the check's rule would repaint the art */
+.player-badge { flex: none; display: inline-grid; place-items: center; width: 16px; height: 16px; --jester: #fff3d6; }
+.player-badge svg { display: block; width: 100%; height: 100%; }
+.player-badge svg, .badge-cell > svg { stroke: none; } /* a button's svg inherits the icons' line */
+svg.badge-flame { fill: #e73449; }
+/* Baloo's capitals sit above its line box's middle: the mark follows the letters' ink, not the box (a share of the font size, so at every size) */
+.who > :is(.verified-check, .player-badge), .badge-edit > :is(.verified-check, .player-badge), .badge-cell.wide .verified-check { translate: 0 -.05em; }
 .board-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 0 16px; }
 html:not([lang="ca"]) .board-links { row-gap: 16px; } /* longer words wrap the two 32 px links onto two rows: each keeps its own 44 px slop (Catalan fits one row, or stacks 44 px links) */
 .board-text { margin: 0 0 10px; text-align: center; font-size: 16px; line-height: 1.35; color: #e8d8b8; text-wrap: pretty; }

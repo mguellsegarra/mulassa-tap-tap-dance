@@ -189,7 +189,7 @@
   "html.rich.boardPublish": "내 결과 올리기",
   "html.rich.publishAbout": "별명, 결과와 통계 합계가 공개돼요.",
   "html.rich.publishRecover": "이메일을 인증한 프로필이 있나요? 복구해요",
-  "html.rich.profileNote": "이메일은 프로필 인증과 복구 코드 전송에만 써요. 순위표에는 주소 대신 인증 표시만 나오고, 프로필과 함께 삭제돼요. 14세 미만이면 어른에게 물어봐요.",
+  "html.rich.profileNote": "이메일은 프로필 인증과 복구 코드 전송에만 써요. 순위표에는 주소 대신 인증 표시나 선택한 배지만 나오고, 프로필과 함께 삭제돼요. 14세 미만이면 어른에게 물어봐요.",
   "html.rich.seasonEndOk": "광장으로",
   "html.rich.feedbackSmall1": "프로필의 이메일 주소로 답장할게요.",
   "html.rich.feedbackSmall2": "콘텐츠 권리나 개인정보에 관해서는 다음 주소로도 연락할 수 있어요",

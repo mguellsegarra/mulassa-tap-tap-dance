@@ -880,7 +880,7 @@ const find = (el, test) => (test(el) ? el : el.children.map(c => find(c, test)).
   assert(guest.className.includes('released') && !find(guest, e => e.className === 'tag') && find(guest, e => e.className === 'alias').textContent === 'Baldufa', 'a released profile: the plain name, faded');
   assert(!find(rows[1], e => e.className?.includes?.('player-name')).className.includes('released'), 'an active guest is not faded');
   assert(!JSON.stringify(rows.map(r => r.textContent)).includes('#'), 'no «#» in any row');
-  guest.click(); assert.deepEqual(cards.at(-1), { alias: 'Baldufa', verified: false, released: true, publicId: 'id-baldufa',
+  guest.click(); assert.deepEqual(cards.at(-1), { alias: 'Baldufa', verified: false, released: true, publicId: 'id-baldufa', badgeId: null,
     from: { figure: 'mulassa-valls', season: 'Tardor 2026', position: 1, score: 9, difficulty: 2 } }, 'a tap opens that player\'s card, with the row it came from');
   rows[1].click(); assert.equal(cards.length, 2); assert.equal(cards.at(-1).from.position, 2, 'a tap anywhere on the row (off the name) opens the same card');
   b.$('board-seasons').click(); assert.deepEqual(halls, ['mulassa-valls'], '«Temporades anteriors» for this figure');

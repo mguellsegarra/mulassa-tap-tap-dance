@@ -189,7 +189,7 @@
   "html.rich.boardPublish": "Dein Ergebnis eintragen",
   "html.rich.publishAbout": "Spitzname, Ergebnis und Gesamtwerte deiner Statistik werden öffentlich.",
   "html.rich.publishRecover": "Profil mit bestätigter E-Mail? Hol es zurück",
-  "html.rich.profileNote": "Die E-Mail dient nur dazu, dein Profil zu bestätigen und dir den Code zum Wiederherstellen zu schicken. Sie erscheint nie in der Rangliste (nur die Bestätigungsmarkierung) und wird mit dem Profil gelöscht. Bist du unter 14, frag eine erwachsene Person.",
+  "html.rich.profileNote": "Die E-Mail dient nur dazu, dein Profil zu bestätigen und dir den Code zum Wiederherstellen zu schicken. Sie erscheint nie in der Rangliste (nur das Bestätigungshäkchen oder dein gewähltes Abzeichen) und wird mit dem Profil gelöscht. Bist du unter 14, frag eine erwachsene Person.",
   "html.rich.seasonEndOk": "Zurück zum Platz",
   "html.rich.feedbackSmall1": "Wir antworten an die E-Mail-Adresse deines Profils.",
   "html.rich.feedbackSmall2": "Bei Fragen zu Inhaltsrechten oder personenbezogenen Daten kannst du auch schreiben an",

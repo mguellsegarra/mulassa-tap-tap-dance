@@ -189,7 +189,7 @@
   "html.rich.boardPublish": "Publica el teu resultat",
   "html.rich.publishAbout": "El sobrenom, el resultat i els totals de les teves estadístiques seran públics.",
   "html.rich.publishRecover": "Tens un perfil amb el correu confirmat? Recupera’l",
-  "html.rich.profileNote": "El correu només serveix per confirmar el perfil i enviar-te el codi que el recupera. No surt mai a la classificació (només s’hi veu la marca de confirmat) i s’esborra amb el perfil. Si tens menys de 14 anys, demana-ho a una persona adulta.",
+  "html.rich.profileNote": "El correu només serveix per confirmar el perfil i enviar-te el codi que el recupera. No surt mai a la classificació (s’hi veu la marca de confirmació o la insígnia que triïs) i s’esborra amb el perfil. Si tens menys de 14 anys, demana-ho a una persona adulta.",
   "html.rich.seasonEndOk": "Torna a la plaça",
   "html.rich.feedbackSmall1": "Et contestarem al correu del teu perfil.",
   "html.rich.feedbackSmall2": "Per drets sobre continguts o dades personals, també pots escriure a",

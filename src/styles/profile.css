@@ -220,7 +220,7 @@ span.player-name { display: inline-flex; align-items: baseline; min-width: 0; }
 /* the mark and a pencil, tap to change: a 44 px target around them that does not move the name */
 .badge-edit { all: unset; position: relative; display: inline-flex; align-items: center; gap: 3px; cursor: pointer; }
 .badge-edit::after { content: ""; position: absolute; inset: -10px -6px; }
-.badge-edit > svg { flex: none; width: 13px; height: 13px; fill: none; stroke: #e8d8b8; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.badge-edit > svg { flex: none; width: 16px; height: 16px; fill: none; stroke: #fff3d6; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .badge-edit:focus-visible { outline: 3px solid #f5c518; outline-offset: 2px; border-radius: 6px; }
 .profile-sub:empty { display: none; }
 /* «Tria insígnia» (src/ui/badge-picker.js) */
@@ -228,19 +228,21 @@ span.player-name { display: inline-flex; align-items: baseline; min-width: 0; }
 #badge-menu[open] { display: flex; flex-direction: column; overflow: visible; } /* the X straddles the frame: only the choices scroll */
 #badge-menu::before, #badge-menu::after { display: none; }
 #badge-menu .sheet-body { flex: 1 1 auto; }
-#badge-menu:has(> .sheet-bar:not([hidden])) .badge-foot { padding-right: 10px; } /* the sheets' own scroll bar takes this from the choices: «Desa» ends where they do */
-@media (max-width: 359px) { #badge-title { font-size: 22px; } }
+/* the sheets' own scroll bar takes 10 px from the choices' right: the same on the left and under «Desa», so everything stays on the frame's axis */
+#badge-menu:has(> .sheet-bar:not([hidden])) .sheet-body { padding-left: calc(var(--ring-room) + 10px); }
+#badge-menu:has(> .sheet-bar:not([hidden])) .badge-foot { padding-inline: 10px; }
+@media (max-width: 359px) { #badge-title { font-size: 22px; } #badge-menu { padding-inline: 10px; } }
 #badge-title { margin: 0 0 12px; text-align: center; }
 .badge-preview { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 4px 12px; border-radius: 10px; background: #f5c5181f; font-size: 15px; }
 .badge-group { margin: 16px 0 8px; color: #e8d8b8; font-size: 14px; text-align: center; }
-.badge-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
+.badge-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; } /* each row as tall as its longest name; the cells start at the top, so a row's marks line up */
 .badge-grid > .badge-cell { grid-column: span 2; }
-.badge-grid > .badge-cell:nth-last-child(2):nth-child(3n + 1) { grid-column: 2 / span 2; } /* a last row of two sits centred */
+.badge-grid:not(.pair) > .badge-cell:nth-last-child(2):nth-child(3n + 1) { grid-column: 2 / span 2; } /* a last row of two sits centred */
 .badge-grid.pair { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .badge-grid.pair > .badge-cell { grid-column: auto; }
-.badge-cell { all: unset; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: 76px; padding: 8px 4px; border: 2px solid #e8d8b880; border-radius: 12px; color: #fff3d6; font-size: 13px; line-height: 1.1; text-align: center; cursor: pointer; --jester: #fff3d6; }
+.badge-cell { all: unset; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 4px; min-height: 76px; padding: 8px 4px; border: 2px solid #e8d8b880; border-radius: 12px; color: #fff3d6; font-size: 13px; line-height: 1.1; text-align: center; cursor: pointer; --jester: #fff3d6; }
 .badge-cell svg { flex: none; width: 28px; height: 28px; }
-.badge-grid > .badge-cell.wide { grid-column: 1 / -1; flex-direction: row; gap: 8px; min-height: 48px; }
+.badge-grid > .badge-cell.wide { grid-column: 1 / -1; flex-direction: row; justify-content: center; align-items: center; gap: 8px; min-height: 48px; }
 .badge-cell .verified-check { width: 28px; height: 28px; }
 .badge-cell[aria-checked="true"] { border-color: #fff3d6; background: #fff3d61a; }
 .badge-cell:focus-visible { outline: 3px solid #f5c518; outline-offset: 1px; }

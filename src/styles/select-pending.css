@@ -237,7 +237,7 @@
 .sel-heart-wide span { min-width: 28px; margin-inline-start: 4px; padding: 0 8px; border-radius: 999px; background: #2a1a10; color: #ffdc55; font-size: 14px; line-height: 24px; }
 .sel-heart[aria-pressed="true"] .sel-heart-pop, .sel-heart-pop { animation: sel-heart-pop .45s cubic-bezier(.3, 1.6, .5, 1); }
 @keyframes sel-heart-pop { 0% { scale: .5; } 50% { scale: 1.8; } 100% { scale: 1; } }
-.sel-heart-bit { position: fixed; z-index: 30; width: var(--s); height: var(--s); pointer-events: none; filter: drop-shadow(0 2px 2px #0006); animation: sel-heart-fly 1.15s cubic-bezier(.15, .7, .3, 1) both; }
+.sel-heart-bit { position: fixed; z-index: 30; width: var(--s); height: var(--s); pointer-events: none; animation: sel-heart-fly 1.15s cubic-bezier(.15, .7, .3, 1) both; }
 @keyframes sel-heart-fly { 0% { translate: -50% -50%; scale: .2; opacity: 1; } 25% { scale: 1.2; } 65% { opacity: 1; } 100% { translate: calc(-50% + var(--dx)) calc(-50% + var(--dy)); rotate: var(--r); scale: 1; opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .sel-heart-pop { animation: none; } }
 .sel-identity-row { grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; min-width: 0; }
@@ -319,20 +319,19 @@
 .sel-pending p.sel-status[data-ready] { color: #f5c518; }
 .sel-pending[data-no-actions] p.sel-status { margin-bottom: 2px; }
 /* The ribbon pointing at a playable figure's heart, the first time. */
-.sel-heart-tip { position: fixed; z-index: 20; display: flex; align-items: center; gap: 8px; box-sizing: border-box; min-height: 40px; padding: 4px 6px 4px 12px; border-radius: 10px; background: linear-gradient(#ffdc55, #e8b512); box-shadow: 0 3px 0 #9c7408, 0 6px 14px #0008; color: #2a1a10; font: 800 14px/1.15 'Baloo 2', system-ui, sans-serif; animation: sel-tip-in .25s ease-out; }
-.sel-heart-tip::before { content: ""; position: absolute; top: -9px; left: var(--tail); width: 20px; height: 10px; margin-left: -10px; background: #ffdc55; clip-path: polygon(50% 0, 100% 100%, 0 100%); }
-.sel-heart-tip button { position: relative; flex: none; width: 32px; min-width: 32px; height: 32px; min-height: 0; padding: 0; border: 0; border-radius: 50%; background: #2a1a1022; color: #2a1a10; font: 800 16px/1 'Baloo 2', system-ui, sans-serif; cursor: pointer; }
-.sel-heart-tip button::after { content: ""; position: absolute; inset: -6px; }
-.sel-heart-tip button:focus-visible { outline: 3px solid #2a1a10; outline-offset: 1px; }
+.sel-heart-tip { position: fixed; z-index: 20; display: flex; align-items: center; gap: 8px; box-sizing: border-box; min-height: 40px; padding: 4px 12px; border-radius: 10px; background: linear-gradient(#d93148, #ad1f33); box-shadow: 0 3px 0 #6d1220, 0 6px 14px #0008; color: #fff; font: 800 14px/1.15 'Baloo 2', system-ui, sans-serif; transform-origin: 50% 0; animation: sel-tip-in .35s cubic-bezier(.3, 1.5, .5, 1), sel-tip-bob 1.4s ease-in-out .35s infinite; }
+.sel-heart-tip::before { content: ""; position: absolute; top: -9px; left: var(--tail); width: 20px; height: 10px; margin-left: -10px; background: #d93148; clip-path: polygon(50% 0, 100% 100%, 0 100%); }
 .sel-heart-called { animation: sel-heart-call 1.2s ease-in-out 3; }
-@keyframes sel-tip-in { from { opacity: 0; translate: 0 6px; } }
+@keyframes sel-tip-in { from { opacity: 0; scale: .6; } }
+@keyframes sel-tip-out { to { opacity: 0; scale: .8; } }
+@keyframes sel-tip-bob { 50% { translate: 0 -5px; } } /* towards the heart above it */
+@keyframes sel-tip-bob-side { 50% { translate: -5px 0; } } /* towards the heart beside it */
 @keyframes sel-heart-call { 50% { scale: 1.12; } }
-@media (prefers-reduced-motion: reduce) { .sel-heart-tip, .sel-heart-called { animation: none; } }
 @media (min-width: 668px) and (min-height: 501px) and (max-height: 799px) {
   .sel-pending[data-no-actions] .sel-state { grid-template-rows: auto auto; gap: 6px; align-items: start; }
 }
 /* Flags and rope as wide as the heart above; every word on one line under the lowest flag. */
-.sel-heart-tip-side::before { top: 50%; left: -9px; width: 10px; height: 20px; margin: -10px 0 0; background: #f2cc3c; clip-path: polygon(0 50%, 100% 0, 100% 100%); }
+.sel-heart-tip-side::before { top: 50%; left: -9px; width: 10px; height: 20px; margin: -10px 0 0; background: #c3283e; clip-path: polygon(0 50%, 100% 0, 100% 100%); }
 /* The number's gradient paints only inside its own box: a tall box, pulled back by margins so it still takes the 20 px line (else its top and bottom are cut). */
 .sel-call-n { display: inline-block; padding-inline: 1px; line-height: 40px; margin-block: -10px; }
 /* The count beats like a heart: two quick pulses, a rest. Transform only, nothing moves around it. */
@@ -362,21 +361,45 @@
   .sel-pending[data-no-actions] { padding-block: 14px 22px; }
 }
 /* Phones: the ribbon lands on the song's row. Rather than leave pieces of it sticking out, that row waits until the ribbon goes (it keeps its place). */
-@media (max-width: 899px) { body:has(.sel-heart-tip) :is(#select-song, .sel-watch) { visibility: hidden; } }
-.sel-heart-tip-side { min-height: 34px; padding-block: 1px; }
-.sel-heart-tip-side button { width: 26px; min-width: 26px; height: 26px; font-size: 14px; }
+@media (max-width: 899px) { body:has(.sel-heart-tip:not(.sel-tip-out)) :is(#select-song, .sel-watch) { visibility: hidden; } }
+.sel-heart-tip-side { min-height: 34px; padding-block: 1px; transform-origin: 0 50%; animation-name: sel-tip-in, sel-tip-bob-side; }
+.sel-heart-tip.sel-tip-out { pointer-events: none; animation: sel-tip-out .26s ease-in forwards, sel-tip-bob 1.4s ease-in-out infinite; }
+.sel-heart-tip-side.sel-tip-out { animation-name: sel-tip-out, sel-tip-bob-side; }
+@media (prefers-reduced-motion: reduce) { .sel-heart-tip, .sel-heart-tip-side, .sel-heart-tip.sel-tip-out, .sel-heart-tip-side.sel-tip-out, .sel-heart-called { animation: none; } }
 .sel-pending-actions .btn-secondary { border-width: 2px; }
 @media (max-width: 519px) { .sel-pending[data-no-actions]:not([data-invite]) { padding-top: 12px; padding-bottom: 22px; } }
-/* On its way: a rubber stamp and, beside it, what we already have. */
+/* On its way: a rubber stamp and, beside it, what we already have. Its line is a nine-slice: whole corners, and sides that fit a whole number of dashes, which a CSS dashed border cannot space. */
 .sel-pending[data-soon] .sel-state-words { display: flex; align-items: center; justify-content: center; gap: 14px; width: 100%; }
-.sel-pending[data-soon] p.sel-status { flex: none; rotate: -5deg; margin: 0; padding: 7px 12px 5px; border: 3px solid #f5c518; border-radius: 8px; box-shadow: inset 0 0 0 1.5px #1a110b, inset 0 0 0 3px #f5c518; color: #f5c518; font-size: 18px; font-weight: 800; line-height: 1; }
+.sel-pending[data-soon] p.sel-status { flex: none; rotate: -5deg; margin: 0; padding: 7px 12px 5px; border: 3px solid transparent; border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 41 41'%3E%3Cpath d='M1.5 10V9.5A8 8 0 0 1 9.5 1.5H10M31 1.5h.5A8 8 0 0 1 39.5 9.5V10M39.5 31v.5A8 8 0 0 1 31.5 39.5H31M10 39.5h-.5A8 8 0 0 1 1.5 31.5V31M14.5 1.5h12M14.5 39.5h12M1.5 14.5v12M39.5 14.5v12' fill='none' stroke='%23f5c518' stroke-width='3'/%3E%3C/svg%3E") 10 / 10px round; color: #f5c518; font-size: 18px; font-weight: 800; line-height: 1; }
 .sel-pending[data-soon] p.sel-missing { min-width: 0; color: #e8d8b8; font-size: 13px; line-height: 17px; text-align: start; }
 .sel-pending[data-soon] .sel-missing b { display: block; color: #fff3d6; font-size: 15px; font-weight: 800; }
 /* The stamp is shorter than what it replaced: the spare room is shared with the card's margins, so no gap reads as a hole. */
-.sel-pending[data-soon] .sel-lower { grid-template-rows: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, .3fr); }
+.sel-pending[data-soon] .sel-lower { grid-template-rows: minmax(0, .8fr) auto minmax(0, 1fr) auto minmax(0, .3fr); }
 @media (min-width: 341px) and (max-width: 519px), (min-width: 900px) and (min-height: 800px) { .sel-pending[data-soon]:not([data-invite]) { padding-top: 26px; } }
 @media (min-width: 668px) and (min-height: 501px) and (max-height: 799px) { .sel-pending[data-soon] .sel-lower { grid-template-rows: auto; } }
 /* The stamp centred, what we have under it: one axis, like the rest of the card. */
 .sel-pending[data-soon] .sel-state-words { flex-direction: column; gap: 8px; }
 .sel-pending[data-soon] p.sel-missing { text-align: center; text-wrap: balance; }
 .sel-pending[data-soon] p.sel-status { rotate: none; }
+/* Cards too short for the stamp over its words (a narrow desktop window, whose strip is taller than a phone's): one row, and the list stays for the taller ones. */
+.sel-pending[data-soon] p.sel-missing span { display: block; }
+@container (max-height: 260px) {
+  .sel-pending[data-soon] .sel-state-words { flex-direction: row; }
+  .sel-pending[data-soon] p.sel-missing span { display: none; }
+  .sel-pending[data-soon] .sel-lower { grid-template-rows: 0 auto 6px auto 0; }
+}
+/* The split layout's narrow card: the stamp's two columns would crush each other, so one column, without the list. */
+@media (min-width: 668px) and (max-width: 1079px) and (min-height: 501px) and (max-height: 599px) {
+  #select .sel-pending[data-soon] .sel-lower:not([hidden]) { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto; gap: 6px; margin-top: 8px; }
+  #select .sel-pending[data-soon] .sel-lower .sel-call { grid-area: 1 / 1; }
+  #select .sel-pending[data-soon] .sel-lower .sel-state { grid-area: 2 / 1; }
+  .sel-pending[data-soon] .sel-state-words { gap: 4px; }
+  .sel-pending[data-soon] p.sel-missing span { display: none; }
+}
+@media (max-width: 519px) and (max-height: 500px) {
+  .sel-pending[data-soon] .sel-state-words { flex-direction: column; gap: 4px; }
+  .sel-pending[data-soon] p.sel-missing span { display: none; }
+}
+/* The stamp's card in painted pixels: top and bottom margins alike. */
+@media (max-width: 340px) { .sel-pending[data-soon]:not([data-invite]) { padding-top: 16px; } }
+@media (min-width: 668px) and (min-height: 501px) and (max-height: 799px) { .sel-pending[data-soon] { padding-block: 18px 20px; } }

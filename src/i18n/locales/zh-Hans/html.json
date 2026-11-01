@@ -223,7 +223,7 @@
   "html.entity.business": "企业或商店",
   "html.entity.nameLabel": "colla或机构名称",
   "html.entity.namePlaceholder": "叫什么名字？",
-  "html.material.note": "这里不能添加附件：我们会发邮件联系你，请你把文件发给我们。",
+  "html.rich.material.note": "照片和文件请发到 <a href=\"mailto:holi@mulassa.cat\">holi@mulassa.cat</a>，并告诉我们是哪个角色的。",
   "html.code.tab": "写代码",
   "html.code.text": "如果你会编程，可以帮忙把这个角色加入游戏。代码开源，放在GitHub上。"
 }

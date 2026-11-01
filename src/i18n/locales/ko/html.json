@@ -223,7 +223,7 @@
   "html.entity.business": "기업이나 상점",
   "html.entity.nameLabel": "colla 또는 단체 이름",
   "html.entity.namePlaceholder": "이름이 뭔가요?",
-  "html.material.note": "여기서는 파일을 첨부할 수 없어요. 자료를 보내줄 수 있도록 이메일로 연락할게요.",
+  "html.rich.material.note": "사진과 파일은 <a href=\"mailto:holi@mulassa.cat\">holi@mulassa.cat</a>(으)로 보내고 어떤 인형인지 알려 주세요.",
   "html.code.tab": "개발",
   "html.code.text": "개발할 수 있다면 이 캐릭터를 게임에 넣는 일을 도와줄 수 있어요. 코드는 GitHub에 공개되어 있어요."
 }

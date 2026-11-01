@@ -179,7 +179,7 @@ let cardGreeted = false;
 const hint = setupDeviceHint({ focusIn, store, softwareGl }); // the device tips, last: after the profile's own news
 sheets.hint = hint;
 sheets.freeGate = setupFreeGate({ focusIn, store, onEnter: () => enterFree() }); // an upright iPhone is asked to turn before free play
-const greeting = setupGreeting({ stats: statsSync, seasonEnd, account, hint, identity: () => refreshIdentity(service, kv), back: () => select.refocus(),
+const greeting = setupGreeting({ asked: () => heartTip.update(), stats: statsSync, seasonEnd, account, hint, identity: () => refreshIdentity(service, kv), back: () => select.refocus(),
   free: () => G.state === 'select' && !sheetUp() && !viewMode && !document.hidden,
   extra: () => {
     if (cardGreeted || !mockOpts?.card) return false;
@@ -189,12 +189,13 @@ const greeting = setupGreeting({ stats: statsSync, seasonEnd, account, hint, ide
   } });
 service.onAccount?.(() => { refreshIdentity(service, kv, { fresh: true }).then(() => { share.refreshName(); hearts.reload(); }); greeting.accountChanged(); });
 document.addEventListener('close', () => { greeting.poke(); heartTip.update(); }, true); // dialogs' close does not bubble
+document.addEventListener('visibilitychange', () => { if (!document.hidden) greeting.poke(); }); // an answer that landed in a hidden tab was dropped: ask again
 settingsMenu.addEventListener('close', () => { if (!sync.open && !board.open && (G.state === 'select')) document.activeElement?.blur(); });
 // Bústia de la plaça: opened from Configuració or a pending figure; one shared Turnstile.
 const feedback = setupFeedback({ focusIn, captcha: board.captcha, accessToken: () => service.accessToken() });
 const needConfirmed = setupConfirmGate({ focusIn, identity: () => service.identity(), hasProfile: async () => !!(await service.profile?.())?.alias, openProfile: (what, back) => profile.open(what, back) });
 const hearts = setupHearts({ service, needConfirmed, onChange: () => { select.paintHearts(); heartTip.update(); } });
-const heartTip = setupHeartTip({ store, hearts, figure: () => (select.pending ? null : select.figure), busy: () => sheetUp() || viewMode });
+const heartTip = setupHeartTip({ store, hearts, figure: () => (select.pending ? null : select.figure), busy: () => sheetUp() || viewMode || !greeting.answered });
 const writeToBox = (request, back) => needConfirmed(request.kind === 'general' ? 'feedback' : request.kind, () => feedback.show(back, request));
 sheets.feedback = feedback;
 const select = setupSelect({ store, keyboard: () => keyboardNav, busy: () => sheetUp() || viewMode, reduced: () => CALM.matches,

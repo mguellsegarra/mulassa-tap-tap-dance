@@ -1,5 +1,5 @@
 // «Bústia de la plaça» sheet (src/ui/feedback-ui.js) on a tiny mocked DOM: nothing sent on open, field checks, one token per
-// message from the shared Turnstile, success closes by itself, errors in Catalan, a draft survives an accidental close, a figure's sheet starts and ends empty.
+// message from the shared Turnstile, success closes by itself, errors in Catalan, a draft survives an accidental close, each way of helping keeps its own draft for its figure.
 import assert from 'node:assert/strict';
 import { setupFeedback } from '../../src/ui/feedback-ui.js';
 import { FeedbackError } from '../../src/services/feedback.js';
@@ -7,7 +7,7 @@ import { FeedbackError } from '../../src/services/feedback.js';
 const nodes = new Map();
 const el = id => {
   if (!nodes.has(id)) nodes.set(id, {
-    id, value: '', textContent: '', style: {}, dataset: {}, scrollHeight: 100, clientHeight: 100, hidden: false, disabled: false, readOnly: false, open: false, attrs: {}, listeners: {}, cls: new Set(),
+    id, value: '', textContent: '', style: {}, getBoundingClientRect: () => ({ top: 40 }), dataset: {}, scrollHeight: 100, clientHeight: 100, hidden: false, disabled: false, readOnly: false, open: false, attrs: {}, listeners: {}, cls: new Set(),
     addEventListener(t, f) { (this.listeners[t] ||= []).push(f); }, fire(t, e = {}) { for (const f of this.listeners[t] || []) f({ preventDefault() {}, ...e }); },
     setAttribute(k, v) { this.attrs[k] = v; }, getAttribute(k) { return this.attrs[k] ?? null; },
     classList: { toggle(c, on) { const s = nodes.get(id).cls; (on ?? !s.has(c)) ? s.add(c) : s.delete(c); } },
@@ -25,11 +25,12 @@ const realTimeout = globalThis.setTimeout;
 globalThis.setTimeout = (f, ms) => { timers.push(f); return timers.length; };
 globalThis.clearTimeout = () => {};
 let opened = 0; globalThis.open = () => {}; // the harness's other sheets share these nodes
+assert.equal(setupFeedback({ focusIn() {}, captcha: null, service, doc }).configured, false, 'no Turnstile here: no button');
+for (const n of nodes.values()) n.listeners = {}; // that sheet is gone: only one owns these nodes
 const fb = setupFeedback({ focusIn: (menu, id) => el(id).focus(), captcha, service, doc, report: (k, t) => reports.push([k, t]), accessToken: async () => 'jwt', openCode: () => opened++ });
 const menu = el('feedback-menu'), text = el('feedback-message'), status = el('feedback-status'), send = el('feedback-send');
 const submit = async () => { el('feedback-form').fire('submit'); await tick(); await tick(); };
 
-assert.equal(setupFeedback({ focusIn() {}, captcha: null, service, doc }).configured, false, 'no Turnstile here: no button');
 assert.equal(fb.configured, true);
 let backs = 0;
 fb.show(() => backs++);
@@ -84,10 +85,18 @@ assert.equal(el('feedback-error').textContent, 'Escriu com a mínim 20 caràcter
 text.value = 'Tinc la partitura original del ball'; await submit();
 assert.deepEqual([sent[0].kind, sent[0].figure, sent[0].options], ['material', figure, ['music']]);
 timers.at(-1)(); material.choices = [];
-// the other tab keeps what was written, and asks its own questions
-fb.show(null, help); text.value = 'Som la colla i en volem parlar';
+// each tab has its own draft and asks its own questions; the sheet's top holds so the tabs stay under the finger
+fb.show(null, help); assert.equal(text.value, '', 'sent: that draft is gone'); text.value = 'Un esborrany de material';
 kinds.fire('change', { target: { value: 'entity' } });
-assert(material.hidden && !entity.hidden); assert.equal(text.value, 'Som la colla i en volem parlar');
+assert(material.hidden && !entity.hidden); assert.equal(text.value, '', 'not the other tab\'s words');
+assert.equal(menu.style.marginBlock, '40px auto', 'held where it was');
+text.value = 'Som la colla i en volem parlar'; kinds.fire('change', { target: { value: 'material' } });
+assert.equal(text.value, 'Un esborrany de material', 'back on a tab: its own words'); kinds.fire('change', { target: { value: 'entity' } });
+assert.equal(text.value, 'Som la colla i en volem parlar');
+menu.close(); assert.equal(menu.style.marginBlock, '', 'centred again on the next opening');
+fb.show(null, { ...help, kind: 'entity' }); assert.equal(text.value, 'Som la colla i en volem parlar', 'an accidental close keeps it for this figure');
+menu.close(); fb.show(null, { kind: 'entity', figure: { id: 'drac', name: 'Drac' }, choose: true }); assert.equal(text.value, '', 'another figure: nothing of the last one');
+menu.close(); fb.show(null, { ...help, kind: 'entity' }); assert.equal(text.value, '', 'and it does not come back'); text.value = 'Som la colla i en volem parlar';
 sent.length = 0; await submit(); assert.equal(status.textContent, 'Tria des d’on ens escrius.'.replace('’', "'"));
 entity.choices = [{ value: 'colla' }]; await submit(); assert.equal(status.textContent, 'Escriu el nom de la colla o entitat.'); assert.equal(sent.length, 0);
 name.value = 'Colla de Prova'; await submit();

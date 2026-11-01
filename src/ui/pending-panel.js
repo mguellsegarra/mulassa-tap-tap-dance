@@ -35,7 +35,7 @@ export function setupPendingPanel({ $, win, pending, hearts }) {
     $('aviat-missing').hidden = status === 'waiting' ? !missing.length : !list;
     $('aviat-missing').innerHTML = status === 'waiting'
       ? (missing.length ? tr('figures.pending.missingLine', { list: `<b>${escapeHtml(and(missing))}</b>` }) : '')
-      : `<b>${escapeHtml(tr('figures.pending.allIn'))}</b>${escapeHtml(list.charAt(0).toUpperCase() + list.slice(1))}`;
+      : `<b>${escapeHtml(tr('figures.pending.allIn'))}</b><span>${escapeHtml(list.charAt(0).toUpperCase() + list.slice(1))}</span>`;
     paintHeart(f);
   }
   function paintHeart(f) {

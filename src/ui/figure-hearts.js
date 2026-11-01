@@ -9,7 +9,8 @@ function heartBurst(button) {
   icon.classList.remove('sel-heart-pop'); void icon.getBoundingClientRect(); icon.classList.add('sel-heart-pop');
   if (win.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
   const i = icon.getBoundingClientRect(), r = button.getBoundingClientRect(), host = button.closest('dialog') ?? doc.body;
-  for (let n = 0; n < BITS; n++) {
+  const nav = win.navigator, bits = nav?.hardwareConcurrency <= 4 || nav?.deviceMemory <= 4 ? 12 : BITS; // old machines: the same gesture, fewer layers
+  for (let n = 0; n < bits; n++) {
     const bit = doc.createElementNS('http://www.w3.org/2000/svg', 'svg');
     bit.setAttribute('viewBox', '0 0 24 24'); bit.setAttribute('aria-hidden', 'true'); bit.classList.add('sel-heart-bit');
     bit.innerHTML = `<path fill="${BIT_COLORS[n % BIT_COLORS.length]}" d="M12 20.5 4.2 12.9a4.8 4.8 0 0 1 6.8-6.8l1 1 1-1a4.8 4.8 0 0 1 6.8 6.8z"/>`;

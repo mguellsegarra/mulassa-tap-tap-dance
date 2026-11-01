@@ -223,7 +223,7 @@
   "html.entity.business": "企業・お店",
   "html.entity.nameLabel": "colla・団体の名前",
   "html.entity.namePlaceholder": "名前は？",
-  "html.material.note": "ここではファイルを添付できないよ。送ってもらえるよう、メールで連絡するね。",
+  "html.rich.material.note": "写真やファイルは <a href=\"mailto:holi@mulassa.cat\">holi@mulassa.cat</a> に送って、どのフィギュアのものか教えてね。",
   "html.code.tab": "開発",
   "html.code.text": "プログラミングができるなら、このキャラクターをゲームに加える手伝いができます。コードはGitHubで公開しています。"
 }

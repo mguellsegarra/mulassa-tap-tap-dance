@@ -223,7 +223,7 @@
   "html.entity.business": "Enpresa edo saltokia",
   "html.entity.nameLabel": "Collaren edo erakundearen izena",
   "html.entity.namePlaceholder": "Nola du izena?",
-  "html.material.note": "Hemen ezin duzu fitxategirik erantsi: idatziko dizugu guri bidaltzeko.",
+  "html.rich.material.note": "Argazkiak eta fitxategiak <a href=\"mailto:holi@mulassa.cat\">holi@mulassa.cat</a> helbidera bidali, eta esan zein irudirenak diren.",
   "html.code.tab": "Programatu",
   "html.code.text": "Programatzen badakizu, irudi hau jokora ekartzen lagun dezakezu. Kodea irekia da eta GitHub-en dago."
 }

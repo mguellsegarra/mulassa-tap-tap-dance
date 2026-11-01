@@ -1,7 +1,7 @@
 // «Bústia de la plaça» (#feedback-menu, index.html): one sheet for the three ways to write (general, material, colla or entity),
 // reached only with a confirmed e-mail (confirm-gate.js), which the Worker takes from the session. The message's own problem shows
-// beside its counter, the rest (Turnstile, network, «Rebut!») in the footer's status line. Opening sends nothing. A general draft
-// survives an accidental close until it is sent; a figure's sheet starts and ends empty. After «Rebut!» the sheet closes by itself.
+// beside its counter, the rest (Turnstile, network, «Rebut!») in the footer's status line. Opening sends nothing. Each kind keeps its
+// own draft until it is sent, in memory only; a figure's go when another figure's sheet opens. After «Rebut!» the sheet closes by itself.
 import { feedback as defaultService, checkFeedback, chars, MESSAGE_MIN, FIGURE_MESSAGE_MIN, MESSAGE_MAX } from '../services/feedback.js';
 import { turnstileMessage } from '../services/captcha.js';
 import { errors } from '../services/errors.js';
@@ -16,6 +16,7 @@ export function setupFeedback({ focusIn, captcha, service = defaultService, doc 
   const fields = { message: text, entity: entityName };
   const configured = Boolean(service.configured && captcha);
   let req = 0, busy = false, done = false, back = null, closeTimer = null, request = { kind: 'general' };
+  let drafts = {}, draftsFor; // by kind, one textarea; draftsFor: the figure the non-general ones belong to
 
   const setStatus = statusLine(status);
   // while it sends: a plain ring spins in the button, and the form is locked (no edits, no «Ara no», no closing)
@@ -35,7 +36,7 @@ export function setupFeedback({ focusIn, captcha, service = defaultService, doc 
     setStatus('');
   }
   const picked = group => [...group.querySelectorAll('input:checked')].map(i => i.value);
-  function clearChoices() { for (const i of form.querySelectorAll('.feedback-choices input')) { if (i.type === 'text') i.value = ''; else i.checked = false; } }
+  function clearChoices(within = form) { for (const i of within.querySelectorAll('input')) { if (within === form && !i.closest('.feedback-choices')) continue; if (i.type === 'text') i.value = ''; else i.checked = false; } }
   function counter() { count.textContent = `${chars(text.value.trim())}/${MESSAGE_MAX}`; }
   // 4 rows, growing with the text up to 8 (index.html max-height), then it scrolls: read only on input, never per frame
   function grow() {
@@ -43,7 +44,7 @@ export function setupFeedback({ focusIn, captcha, service = defaultService, doc 
     const h = text.scrollHeight, min = text.clientHeight;
     if (h > min) text.style.height = `${h + 4}px`; // + the borders
   }
-  // One sheet, two ways to help: the choice at the top swaps the fields and keeps what was written.
+  // One sheet, several ways to help: the choice at the top swaps the fields and each way's draft.
   function paintKind() {
     const k = request.kind, propose = k === 'entity' && !request.figure;
     kindRow.hidden = !request.choose;
@@ -56,14 +57,23 @@ export function setupFeedback({ focusIn, captcha, service = defaultService, doc 
     lead.textContent = k === 'general' ? tr('html.feedbackLead') : propose ? tr('figures.invite.text') : request.figure?.name ?? ''; // which figure this is about
     text.placeholder = tr(k === 'general' ? 'html.feedbackMessage.placeholder' : propose ? 'figures.invite.placeholder' : `ui.${k === 'code' ? 'material' : k}.placeholder`);
   }
-  kindRow.addEventListener('change', e => { if (busy) { paintKind(); return; } request = { ...request, kind: e.target.value }; setInvalid(null); paintKind(); setSend(sendLabel()); });
+  kindRow.addEventListener('change', e => {
+    if (busy) { paintKind(); return; }
+    drafts[request.kind] = text.value;
+    // the sheet is centred and each way has its own height: hold its top, or the tabs leave the finger
+    const top = menu.getBoundingClientRect().top;
+    menu.style.marginBlock = `${top}px auto`; menu.style.maxHeight = `calc(100dvh - ${top + 8}px)`;
+    request = { ...request, kind: e.target.value };
+    text.value = drafts[request.kind] ?? '';
+    setInvalid(null); paintKind(); setSend(sendLabel()); counter(); grow();
+  });
   function show(onBack = null, wanted = { kind: 'general' }) {
     if (menu.open) return;
     back = onBack; clearTimeout(closeTimer);
     request = wanted;
-    const k = request.kind, propose = k === 'entity' && !request.figure;
-    if (done || k !== 'general') text.value = ''; // a figure's sheet starts empty; sent: a fresh sheet
-    clearChoices();
+    const k = request.kind, about = request.figure?.id ?? null;
+    if (k !== 'general' && about !== draftsFor) { drafts = { general: drafts.general }; draftsFor = about; clearChoices(); }
+    text.value = drafts[k] ?? '';
     paintKind();
     done = false; busy = false; req++;
     setInvalid(null); setSend(sendLabel());
@@ -109,7 +119,8 @@ export function setupFeedback({ focusIn, captcha, service = defaultService, doc 
       busy = false;
       setSend(tr('ui.feedback.send'));
       menu.close(); // the box closes; a small «Rebut! Gràcies» sheet says it arrived (it closes by itself too)
-      text.value = ''; done = false; setStatus(''); counter();
+      text.value = ''; drafts[sending.kind] = ''; if (sending.kind === 'material') clearChoices(material); else if (sending.kind === 'entity') clearChoices(entity);
+      done = false; setStatus(''); counter();
       if (thanks && !thanks.open) {
         thanks.showModal(); focusIn(thanks, 'feedback-thanks-close');
         closeTimer = setTimeout(() => { if (thanks.open) thanks.close(); }, closeDelay);
@@ -133,7 +144,8 @@ export function setupFeedback({ focusIn, captcha, service = defaultService, doc 
     req++; busy = false; clearTimeout(closeTimer);
     captcha?.cancel(); // nobody waits for a token any more
     cancelBtn.hidden = false;
-    if (request.kind !== 'general') { text.value = ''; clearChoices(); counter(); }
+    drafts[request.kind] = text.value;
+    menu.style.marginBlock = menu.style.maxHeight = '';
     const b = back; back = null;
     b?.();
   });

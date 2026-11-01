@@ -223,7 +223,7 @@
   "html.entity.business": "Компания или магазин",
   "html.entity.nameLabel": "Название colla или организации",
   "html.entity.namePlaceholder": "Как называется?",
-  "html.material.note": "Здесь нельзя прикрепить файлы: мы напишем тебе, чтобы ты их прислал.",
+  "html.rich.material.note": "Фото и файлы присылай на <a href=\"mailto:holi@mulassa.cat\">holi@mulassa.cat</a> и напиши, к какой фигуре они относятся.",
   "html.code.tab": "Код",
   "html.code.text": "Если ты умеешь программировать, помоги добавить эту фигуру в игру. Код открыт и лежит на GitHub."
 }

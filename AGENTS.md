@@ -129,5 +129,6 @@ Read-only issue inspection (organization `ondori`, project `mulassa-tap-tap-danc
 - Small, targeted edits; keep the existing style and comment voice (short "why" comments).
 - Add a test for new logic (a new file in the right `tests/<area>/` folder, which `tests/run.mjs` finds, or `check.mjs`), after the owner's OK when the change is visible; keep `npm run check` green.
 - Don't commit unless asked.
+- A commit holds only that task's changes, never another agent's. `git commit -- <paths>` is not enough: it takes every edit in those files, and another agent may have touched them since you last looked. Right before committing, re-read `git diff` for each path and check the index with `git diff --cached --stat`; if a file mixes work, stage only your hunks (`git apply --cached`) and commit the index. Before any push, check that `git show --stat` matches what the owner confirmed.
 - Several agents may edit the same files at once: use targeted edits (no whole-file rewrites), re-read right before editing,
   and stay out of areas another agent owns. Put new code in the module that owns the concern (see `docs/agents/structure.md`) — `main.js` does not grow.

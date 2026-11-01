@@ -393,5 +393,6 @@
   "ui.help.title": "手伝いたい",
   "ui.hearts.tip.singular": "ハートを贈ろう！",
   "ui.hearts.tip.plural": "ハートを贈ろう！",
+  "ui.hearts.failed": "保存できませんでした。もう一度試してね。",
   "ui.code.open": "GitHubを開く"
 }

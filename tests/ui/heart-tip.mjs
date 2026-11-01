@@ -14,7 +14,8 @@ const tip = setupHeartTip({ store: { get: k => memory.get(k), set: (k, v) => mem
 tip.update(); assert.equal(made.length, 0, 'the totals not in yet: nothing');
 count = 3; busy = true; tip.update(); assert.equal(made.length, 0, 'not over a sheet');
 busy = false; sheet = {}; tip.update(); assert.equal(made.length, 0, 'not under any open dialog, even one busy() does not list');
-sheet = null; tip.update(); assert.equal(made.length, 1, 'the first time');
+sheet = null; doc.hidden = true; tip.update(); assert.equal(made.length, 0, 'not in a hidden tab: its one showing would go unseen');
+doc.hidden = false; tip.update(); assert.equal(made.length, 1, 'the first time');
 tip.update(); assert.equal(made.length, 1, 'once');
 f = { id: 'drac' }; tip.update(); settle(); assert.equal(made.length, 1, 'moving on: this one is seen, the next figure gets its own');
 made[0].click(); settle(); assert.equal(made.length, 0, 'a tap clears it');

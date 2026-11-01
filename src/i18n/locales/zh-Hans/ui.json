@@ -391,7 +391,8 @@
   "ui.material.placeholder": "告诉我们你有什么资料，以及在哪里可以找到…",
   "ui.entity.placeholder": "告诉我们你想做些什么…",
   "ui.help.title": "我想帮忙",
-  "ui.hearts.tip.singular": "把你的心送给它！",
-  "ui.hearts.tip.plural": "把你的心送给它们！",
+  "ui.hearts.tip.singular": "给它送颗心！",
+  "ui.hearts.tip.plural": "给它们送颗心！",
+  "ui.hearts.failed": "保存失败，请再试一次。",
   "ui.code.open": "打开GitHub"
 }

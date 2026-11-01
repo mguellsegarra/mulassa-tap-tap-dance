@@ -379,10 +379,10 @@
     "other": "{n} parte-hartzaile"
   },
   "ui.podium.aria": "Sailkapena: podiuma {level} mailan, {size}",
-  "ui.hearts.count.singular.one": "lagunek nahi dute plazan",
-  "ui.hearts.count.singular.other": "lagunek nahi dute plazan",
-  "ui.hearts.count.plural.one": "lagunek nahi dituzte plazan",
-  "ui.hearts.count.plural.other": "lagunek nahi dituzte plazan",
+  "ui.hearts.count.singular.one": "bihotz plazarako",
+  "ui.hearts.count.singular.other": "bihotz plazarako",
+  "ui.hearts.count.plural.one": "bihotz plazarako",
+  "ui.hearts.count.plural.other": "bihotz plazarako",
   "ui.hearts.action": "Eman bihotza honi: {name}",
   "ui.hearts.saved": "Bihotza eman diozu jada: {name}",
   "ui.material.optionsRequired": "Markatu zer material daukazun.",
@@ -402,7 +402,8 @@
   "ui.material.placeholder": "Esaguzu zer daukazun eta non aurki dezakegun…",
   "ui.entity.placeholder": "Esaguzu zer egin nahiko zenukeen…",
   "ui.help.title": "Lagundu nahi dut",
-  "ui.hearts.tip.singular": "Eman iezaiozu bihotza!",
-  "ui.hearts.tip.plural": "Eman iezaiezu bihotza!",
+  "ui.hearts.tip.singular": "Eman iezaiozu bihotz bat!",
+  "ui.hearts.tip.plural": "Eman iezaiezu bihotz bat!",
+  "ui.hearts.failed": "Ezin izan da gorde. Saiatu berriro.",
   "ui.code.open": "Ireki GitHub"
 }

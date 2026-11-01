@@ -370,7 +370,7 @@
 @media (max-width: 519px) { .sel-pending[data-no-actions]:not([data-invite]) { padding-top: 12px; padding-bottom: 22px; } }
 /* On its way: a rubber stamp and, beside it, what we already have. Its line is a nine-slice: whole corners, and sides that fit a whole number of dashes, which a CSS dashed border cannot space. */
 .sel-pending[data-soon] .sel-state-words { display: flex; align-items: center; justify-content: center; gap: 14px; width: 100%; }
-.sel-pending[data-soon] p.sel-status { flex: none; rotate: -5deg; margin: 0; padding: 7px 12px 5px; border: 3px solid transparent; border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 41 41'%3E%3Cpath d='M1.5 10V9.5A8 8 0 0 1 9.5 1.5H10M31 1.5h.5A8 8 0 0 1 39.5 9.5V10M39.5 31v.5A8 8 0 0 1 31.5 39.5H31M10 39.5h-.5A8 8 0 0 1 1.5 31.5V31M14.5 1.5h12M14.5 39.5h12M1.5 14.5v12M39.5 14.5v12' fill='none' stroke='%23f5c518' stroke-width='3'/%3E%3C/svg%3E") 10 / 10px round; color: #f5c518; font-size: 18px; font-weight: 800; line-height: 1; }
+.sel-pending[data-soon] p.sel-status { flex: none; rotate: -5deg; margin: 0; padding: 7px 12px 5px; border: 3px solid transparent; border-radius: 8px; box-shadow: inset 0 0 0 1.5px #1a110b, inset 0 0 0 3px #f5c518; border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 41 41'%3E%3Cpath d='M1.5 10V9.5A8 8 0 0 1 9.5 1.5H10M31 1.5h.5A8 8 0 0 1 39.5 9.5V10M39.5 31v.5A8 8 0 0 1 31.5 39.5H31M10 39.5h-.5A8 8 0 0 1 1.5 31.5V31M14.5 1.5h12M14.5 39.5h12M1.5 14.5v12M39.5 14.5v12' fill='none' stroke='%23f5c518' stroke-width='3'/%3E%3C/svg%3E") 10 / 10px round; color: #f5c518; font-size: 18px; font-weight: 800; line-height: 1; }
 .sel-pending[data-soon] p.sel-missing { min-width: 0; color: #e8d8b8; font-size: 13px; line-height: 17px; text-align: start; }
 .sel-pending[data-soon] .sel-missing b { display: block; color: #fff3d6; font-size: 15px; font-weight: 800; }
 /* The stamp is shorter than what it replaced: the spare room is shared with the card's margins, so no gap reads as a hole. */
@@ -403,3 +403,4 @@
 /* The stamp's card in painted pixels: top and bottom margins alike. */
 @media (max-width: 340px) { .sel-pending[data-soon]:not([data-invite]) { padding-top: 16px; } }
 @media (min-width: 668px) and (min-height: 501px) and (max-height: 799px) { .sel-pending[data-soon] { padding-block: 18px 20px; } }
+.sel-heart-fail { position: fixed; z-index: 30; box-sizing: border-box; width: max-content; max-width: calc(100vw - 24px); padding: 8px 12px; border: 2px solid #e0364c; border-radius: 10px; background: #1a110b; box-shadow: 0 6px 14px #0008; color: #fff3d6; font: 700 14px/1.2 'Baloo 2', system-ui, sans-serif; pointer-events: none; }

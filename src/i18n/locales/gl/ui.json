@@ -402,7 +402,8 @@
   "ui.material.placeholder": "Cóntanos que tes e onde o podemos atopar…",
   "ui.entity.placeholder": "Cóntanos que che gustaría facer…",
   "ui.help.title": "Quero axudar",
-  "ui.hearts.tip.singular": "Dálle o teu corazón!",
-  "ui.hearts.tip.plural": "Dálles o teu corazón!",
+  "ui.hearts.tip.singular": "Ponlle un corazón!",
+  "ui.hearts.tip.plural": "Ponlles un corazón!",
+  "ui.hearts.failed": "Non se puido gardar. Téntao de novo.",
   "ui.code.open": "Abrir GitHub"
 }

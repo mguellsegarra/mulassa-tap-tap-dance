@@ -42,7 +42,7 @@ export function setupHeartTip({ store, hearts, figure, busy = () => false, doc =
     win.requestAnimationFrame?.(follow);
   }
   function update() {
-    const f = figure(), heart = doc.getElementById('select-heart'), covered = busy() || doc.querySelector('dialog[open]');
+    const f = figure(), heart = doc.getElementById('select-heart'), covered = busy() || doc.hidden || doc.querySelector('dialog[open]');
     if (tip && (f?.id !== shownFor || covered || !heart?.checkVisibility?.() || hearts.mine(shownFor))) hide();
     if (f && hearts.mine(f.id)) store.set(seenKey(f.id), '1'); // a heart given knows the way: taking it back must not bring the ribbon
     if (tip || !f || covered || !heart?.checkVisibility?.()) return;

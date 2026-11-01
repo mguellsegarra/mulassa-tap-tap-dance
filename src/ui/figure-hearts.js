@@ -1,7 +1,7 @@
 // The heart of a figure: the totals come once from the server and each tap updates only after the server saved it.
 import { tr } from '../i18n/messages.js';
 
-const BIT_COLORS = ['#e0364c', '#ff6b7f', '#f5c518', '#c0283c'], BITS = 30;
+const BIT_COLORS = ['#e0364c', '#ff6b7f', '#f5c518', '#c0283c'], BITS = 30, FAILED_MS = 3500;
 // A big burst of hearts out of the button, all around and mostly upwards; nothing under reduced motion. Each one removes itself.
 function heartBurst(button) {
   const doc = button.ownerDocument, win = doc.defaultView;
@@ -22,8 +22,19 @@ function heartBurst(button) {
   }
 }
 
+// A tap the server did not save: say so beside the button, which stays as it was. In screen pixels, like the burst.
+function heartFailed(button) {
+  const doc = button.ownerDocument, win = doc.defaultView, r = button.getBoundingClientRect();
+  const note = doc.createElement('div');
+  note.className = 'sel-heart-fail'; note.setAttribute('role', 'alert'); note.textContent = tr('ui.hearts.failed');
+  (button.closest('dialog') ?? doc.body).append(note);
+  note.style.left = `${Math.max(12, Math.min(r.left + r.width / 2 - note.offsetWidth / 2, win.innerWidth - note.offsetWidth - 12))}px`;
+  note.style.top = `${r.bottom + 10}px`;
+  setTimeout(() => note.remove(), FAILED_MS);
+  return note;
+}
 export function setupHearts({ service, needConfirmed, onChange = () => {} }) {
-  let totals = null, loading = null, session = 0; const mine = new Set(), saving = new Set();
+  let totals = null, loading = null, session = 0, failed = null; const mine = new Set(), saving = new Set();
   // an answer from before a change of account never lands on the new one
   function load() {
     const asked = session;
@@ -37,17 +48,18 @@ export function setupHearts({ service, needConfirmed, onChange = () => {} }) {
   }
   const save = async (figure, button) => {
     if (saving.has(figure.id)) return;
+    failed?.remove(); // a new try: the old failure no longer holds
     saving.add(figure.id); const on = !mine.has(figure.id), asked = session;
     try {
       const total = await service.setFigureHeart(figure.id, on);
       if (asked !== session) return;
       (totals ??= new Map()).set(figure.id, total);
       if (on) { mine.add(figure.id); heartBurst(button); } else mine.delete(figure.id); // only once the server saved it
-    } catch { /* nothing changed: the count and the state stay as the server has them */ } finally { saving.delete(figure.id); onChange(); }
+    } catch { if (asked === session && button) { failed?.remove(); failed = heartFailed(button); } /* nothing else changed: the count and the state stay as the server has them */ } finally { saving.delete(figure.id); onChange(); }
   };
   return {
     load,
-    reload() { session++; loading = null; totals = null; mine.clear(); onChange(); return load(); },
+    reload() { failed?.remove(); session++; loading = null; totals = null; mine.clear(); onChange(); return load(); },
     count: id => totals ? (totals.get(id) ?? 0) : null,
     mine: id => mine.has(id),
     tap(figure, button) { needConfirmed('heart', () => { const asked = session; load().then(() => { if (asked === session) save(figure, button); }); }); },

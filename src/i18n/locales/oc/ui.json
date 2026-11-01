@@ -402,7 +402,8 @@
   "ui.material.placeholder": "Explica-mos qué as e a on ac podem trobar…",
   "ui.entity.placeholder": "Explica-mos qué t'agradarie hèr…",
   "ui.help.title": "Voi ajudar",
-  "ui.hearts.tip.singular": "Da-li eth tòn còr!",
-  "ui.hearts.tip.plural": "Da-les eth tòn còr!",
+  "ui.hearts.tip.singular": "Mete-li un còr!",
+  "ui.hearts.tip.plural": "Mete-les un còr!",
+  "ui.hearts.failed": "Non s'a pogut sauvar. Torna-i a provar.",
   "ui.code.open": "Daurís GitHub"
 }

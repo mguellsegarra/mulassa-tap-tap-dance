@@ -402,7 +402,8 @@
   "ui.material.placeholder": "Sag uns, was du hast und wo wir es finden…",
   "ui.entity.placeholder": "Sag uns, was du gerne machen möchtest…",
   "ui.help.title": "Ich möchte helfen",
-  "ui.hearts.tip.singular": "Schenk ihr dein Herz!",
-  "ui.hearts.tip.plural": "Schenk ihnen dein Herz!",
+  "ui.hearts.tip.singular": "Schenk ihr ein Herz!",
+  "ui.hearts.tip.plural": "Schenk ihnen ein Herz!",
+  "ui.hearts.failed": "Konnte nicht gespeichert werden. Versuch es noch einmal.",
   "ui.code.open": "GitHub öffnen"
 }

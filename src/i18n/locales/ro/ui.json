@@ -413,7 +413,8 @@
   "ui.material.placeholder": "Spune-ne ce ai și unde putem găsi materialele…",
   "ui.entity.placeholder": "Spune-ne ce ai vrea să faci…",
   "ui.help.title": "Vreau să ajut",
-  "ui.hearts.tip.singular": "Dăruiește-i inima ta!",
-  "ui.hearts.tip.plural": "Dăruiește-le inima ta!",
+  "ui.hearts.tip.singular": "Dă-i o inimă!",
+  "ui.hearts.tip.plural": "Dă-le o inimă!",
+  "ui.hearts.failed": "Nu s-a putut salva. Încearcă din nou.",
   "ui.code.open": "Deschide GitHub"
 }

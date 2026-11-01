@@ -424,7 +424,8 @@
   "ui.material.placeholder": "Розкажи, що маєш і де це знайти…",
   "ui.entity.placeholder": "Розкажи, що хотілося б зробити…",
   "ui.help.title": "Хочу допомогти",
-  "ui.hearts.tip.singular": "Подаруй їй своє серце!",
-  "ui.hearts.tip.plural": "Подаруй їм своє серце!",
+  "ui.hearts.tip.singular": "Подаруй їй сердечко!",
+  "ui.hearts.tip.plural": "Подаруй їм сердечко!",
+  "ui.hearts.failed": "Не вдалося зберегти. Спробуй ще раз.",
   "ui.code.open": "Відкрити GitHub"
 }

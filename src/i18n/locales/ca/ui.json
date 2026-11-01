@@ -402,7 +402,8 @@
   "ui.material.placeholder": "Explica'ns què tens i on ho podem trobar…",
   "ui.entity.placeholder": "Explica'ns què t'agradaria fer…",
   "ui.help.title": "Vull ajudar",
-  "ui.hearts.tip.singular": "Dona-li el teu cor!",
-  "ui.hearts.tip.plural": "Dona'ls el teu cor!",
+  "ui.hearts.tip.singular": "Posa-li un cor!",
+  "ui.hearts.tip.plural": "Posa'ls un cor!",
+  "ui.hearts.failed": "No s'ha pogut desar. Torna-ho a provar.",
   "ui.code.open": "Obre GitHub"
 }

@@ -1,7 +1,7 @@
 # Mini-games plan (release 1.3.0)
 
 Status: Seguici Crush is at `/jocs/crush/` (branch `jocs/crush`; its art masters, notes and difficulty research stay in the `mulassa-minijocs` project). Memory is in this repo at `/jocs/memory/` (reachable only by its URL; card sources in `memory-sources.md`, its provisional texts in `memory-textos.md`, card masters still in the `bestiari-memory` project). The selector's gamepad opens the games sheet; no architecture step tested on a device. The other games live outside the repo:
-`/Volumes/development/projects/mulassa-minijocs`. Pica la Mulassa is at `/jocs/pica/`, also reachable only by its URL; its source project is `pica-la-mulassa`. Mulassa Drop, a Suika-style merge game, is at `/jocs/suika/` (physics by `planck`, its working notes in the `mulassa-minijocs` project).
+`/Volumes/development/projects/mulassa-minijocs`. Pica la Mulassa is at `/jocs/pica/`, also reachable only by its URL; its source project is `pica-la-mulassa`. Mulassa Drop, a Suika-style merge game, is at `/jocs/suika/` (physics by `planck`, its working notes in the `mulassa-minijocs` project). Mulassa City, a SubaraCity-style merge game, is at `/jocs/subara/` (rules and sources in `subara-referent.md`).
 
 Research, in Catalan, copied from `mulassa-minijocs/notes/` on 2026-11-01 (that project may have moved on since):
 - `research/cataleg-jocs.md`: the catalogue of game ideas.

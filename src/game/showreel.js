@@ -95,8 +95,8 @@ export function followBeat(s, menuBeat, dt) {
   }
   if (s.alone && menuBeat === s.still) { s.acc += tempo; return; }
   let j = reelMod(menuBeat, 4) - reelMod(s.acc + tempo, 4); if (j > 2) j -= 4; else if (j < -2) j += 4;
-  if (!s.locked) { s.acc += tempo + j; s.err = 0; } // the very first lock: nothing shown yet, straight onto it
-  else { s.acc += tempo; s.err = j; } // later ones (the speaker back on, back from a tab): caught up gradually
+  if (!s.locked && !s.on) { s.acc += tempo + j; s.err = 0; } // the very first lock with nothing shown yet: straight onto it
+  else { s.acc += tempo; s.err = j; } // later ones (the splash's tap: she is already dancing when its loop starts; the speaker back on, back from a tab): caught up gradually
   s.prev = menuBeat; s.alone = false; s.locked = true;
 }
 

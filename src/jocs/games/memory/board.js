@@ -1,4 +1,4 @@
-// The three.js side: a plaça floor, the cards and their moves. Knows nothing about the rules.
+// The three.js side: a green table, the cards and their moves. Knows nothing about the rules.
 import * as THREE from 'three';
 import { bestGrid, CARD } from './game.js';
 import { frontCanvas, backCanvas } from './card-art.js';
@@ -25,12 +25,9 @@ function faceGeometry(shape) {
   return g;
 }
 
-function tileTexture() {
-  const c = document.createElement('canvas'); c.width = c.height = 256;
-  const g = c.getContext('2d');
-  for (const [x, y, fill] of [[0, 0, '#4f3322'], [128, 0, '#452b1c'], [0, 128, '#452b1c'], [128, 128, '#4f3322']]) { g.fillStyle = fill; g.fillRect(x, y, 128, 128); }
-  g.strokeStyle = '#2a1a10'; g.lineWidth = 5; g.strokeRect(0, 0, 128, 128); g.strokeRect(128, 128, 128, 128); g.strokeRect(128, 0, 128, 128); g.strokeRect(0, 128, 128, 128);
-  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(26, 26); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
+function floorTexture(renderer, onLoad) {
+  const t = new THREE.TextureLoader().load('/jocs/memory/cards/table.jpg', onLoad);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(10, 10); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = renderer.capabilities.getMaxAnisotropy();
   return t;
 }
 
@@ -45,7 +42,7 @@ export async function createBoard(canvas) {
   sun.position.set(-8, 30, 12); sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048);
   Object.assign(sun.shadow.camera, { left: -30, right: 30, top: 30, bottom: -30, near: 1, far: 70 });
   sun.shadow.radius = 4; scene.add(sun);
-  const floor = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), new THREE.MeshLambertMaterial({ map: tileTexture() }));
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), new THREE.MeshLambertMaterial({ map: floorTexture(renderer, () => draw()) }));
   floor.rotation.x = -Math.PI / 2; floor.position.y = -THICK / 2 - .01; floor.receiveShadow = true; scene.add(floor);
 
   // Loop: draws only while something moves. Clearing `active` abandons every running move for good (a restart):

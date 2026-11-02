@@ -16,13 +16,13 @@ export function frontCanvas({ name }, picture) {
   return c;
 }
 
-// The same back for all: its SVG plus the game's pill, in the pill's own type (Baloo 2 Extra Bold, gold edge on brown).
+// The same back for all: its SVG plus the game's pill, in the pill's own type (Baloo 2 Extra Bold, red edge on brown).
 export function backCanvas(picture) {
   const [c, g] = canvasOf(), s = W / 480;
   g.drawImage(picture, 0, 0, W, H);
   g.beginPath(); g.roundRect(70 * s, 492 * s, 340 * s, 72 * s, 36 * s);
   g.fillStyle = '#2a1a10'; g.fill();
-  g.strokeStyle = '#f5c518'; g.lineWidth = 6 * s; g.stroke();
+  g.strokeStyle = '#c0283c'; g.lineWidth = 6 * s; g.stroke();
   g.fillStyle = '#fff3d6'; g.font = `800 ${50 * s}px 'Baloo 2', system-ui, sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle';
   g.fillText('mulassa.cat', 240 * s, 531 * s);
   return c;

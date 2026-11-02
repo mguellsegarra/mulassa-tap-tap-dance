@@ -17,6 +17,28 @@ Research, in Catalan, copied from `mulassa-minijocs/notes/` on 2026-11-01 (that 
 - Free play is that sheet's last entry. A mini-game is still its own page, so opening one and coming back reloads the main game.
 - The URL must not say `minijocs`.
 
+## Names and rollout
+
+The owner's choices. A game takes its name when it enters this branch; folders, URLs and branches keep their working ids, players never see them.
+
+| Name | Now | Id, where it lives | Release |
+| --- | --- | --- | --- |
+| Mulassa Pop | applied | `pica` | 1.3.0 |
+| Mulassa Memory | applied | `memory` | 1.3.0 |
+| Mulassa Crush | applied | `crush` | 1.3.0 |
+| Ball lliure | applied | free play, last card of the sheet | 1.3.0 |
+| Mulassoku | to apply | `murdoku`, branch `jocs/murdoku`; players must never read «Murdoku» | one a week after 1.3.0 |
+| Mulassa Mix | to apply | Alquímia, `mulassa-minijocs`, `minijoc/alquimia` | one a week |
+| Mulassa Drop | to apply | Del Nan al Gegant, `suika`, branch `jocs/suika` | one a week |
+| Mulassa Run | to apply | Corre i suma colla, branch `jocs/corre` | one a week |
+| Mulassa City | to apply | Vila del Seguici, `subara`, branch `jocs/subara` | one a week |
+
+Each new game gets a colour for its card and logo, a line in `NEWS` (`src/ui/news-sheet.js`) and a card above Ball lliure, which stays last.
+
+Discarded: Snake, La Cercavila, Talla calçots, Bantumi, Pinta per números, Endreça el Seguici, De nan a gegant (2048), Fes el castell. The code of those that had any, without a commit here, is in `mulassa-minijocs/descartats/`.
+
+Before publishing, the owner checks the marks: «memory» and «Crush». No registry search was made for any name.
+
 ## Architecture
 
 Separate pages on the same domain, in the same tab. Only a full page navigation reliably frees memory: a loaded JS module

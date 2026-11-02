@@ -1,7 +1,7 @@
 # Mini-games plan (release 1.3.0)
 
-Status: a plan, nothing built in this repo yet and no architecture step tested on a device. The games so far live outside it:
-`/Volumes/development/projects/mulassa-minijocs` (Pinta per números, Endreça el Seguici, Seguici Crush), `bestiari-memory` and `pica-la-mulassa`.
+Status: Memory is in this repo at `/jocs/memory/` (reachable only by its URL; card sources in `memory-sources.md`, its provisional texts in `memory-textos.md`, card masters still in the `bestiari-memory` project). No menu or selector button yet and no architecture step tested on a device. The other games live outside the repo:
+`/Volumes/development/projects/mulassa-minijocs` (Pinta per números, Endreça el Seguici, Seguici Crush) and `pica-la-mulassa`.
 
 Research, in Catalan, copied from `mulassa-minijocs/notes/` on 2026-11-01 (that project may have moved on since):
 - `research/cataleg-jocs.md`: the catalogue of game ideas.

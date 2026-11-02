@@ -3,6 +3,7 @@
 import assert from 'node:assert/strict';
 import { setupBadgeNews } from '../../src/ui/badge-news.js';
 import { setupConfirmGate } from '../../src/ui/confirm-gate.js';
+import { savedName, ownerKey } from '../../src/services/leaderboard-identity.js';
 import { setupGreeting } from '../../src/ui/greeting.js';
 
 class El {
@@ -67,6 +68,11 @@ for (const [why, o] of [['no profile', { prof: null }], ['a released name', { pr
   assert.equal(g.answered, false, 'the ribbon must not be spent behind a sheet about to open');
   release(); await run; assert.equal(g.answered, true); assert.deepEqual(seen, ['asked']); }
 
+// a device from 1.2.6: its cached identity has no badge fields and still reads as the same confirmed profile
+{ const old = JSON.stringify({ hasSession: true, mailOn: 'a@b.cat', persistent: true, prof: { alias: 'Vell', verified: true, published: true, released: false, publicId: 'p9' } });
+  const kv = { get: k => ({ 'leaderboard-alias': 'Vell', 'leaderboard-alias:identity': old })[k] ?? null };
+  const me = savedName(kv);
+  assert.deepEqual([me.alias, me.verified, me.publicId, me.badgeId], ['Vell', true, 'p9', null]); assert.equal(ownerKey(kv), 'p9', 'the selector\'s cached answers stay'); }
 // the gate: a failed read is never «no account», which would offer Crea to a real profile and rename it
 { const doc = fakeDoc(), log = []; let done = 0;
   const need = setupConfirmGate({ focusIn() {}, identity: async () => { throw new Error('offline'); }, hasProfile: async () => false, openProfile: (...a) => log.push(a), doc });

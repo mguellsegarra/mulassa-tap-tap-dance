@@ -51,14 +51,14 @@ namespace_id = "1004"
 binding = "DAILY"
 id = "0e06fa6535f54ab981047d3750d17c09"
 
-# Beta, on the test Supabase. wrangler does not inherit vars or bindings into an environment. Its e-mails share the daily count.
+# Beta, on the test Supabase. wrangler does not inherit vars or bindings into an environment. Its own daily count and a lower cap: abuse here never spends production's.
 [env.beta]
 name = "mulassa-feedback-beta"
 
 [env.beta.vars]
 ALLOWED_ORIGINS = "https://beta.mulassa.cat"
 FEEDBACK_FROM = "holi@mulassa.cat"
-DAILY_MAX = "150"
+DAILY_MAX = "20"
 SUPABASE_URL = "https://qgsvfgwjfunudjlmpdry.supabase.co"
 SUPABASE_PUBLISHABLE_KEY = "sb_publishable_R5-cJyn-uH3MbNiHupxImA_-q_AFEFS"
 
@@ -81,4 +81,4 @@ namespace_id = "1006"
 
 [[env.beta.kv_namespaces]]
 binding = "DAILY"
-id = "0e06fa6535f54ab981047d3750d17c09"
+id = "4ae02f29f0b244aea9460c5d9cd7f852"

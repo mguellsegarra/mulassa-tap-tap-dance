@@ -1,0 +1,76 @@
+@font-face { font-family: 'Baloo 2'; font-weight: 600 800; font-display: swap; src: url(/fonts/baloo-2-latin.woff2) format('woff2'); unicode-range: U+0000-00FF, U+2000-206F; }
+@font-face { font-family: 'Baloo 2'; font-weight: 600 800; font-display: swap; src: url(/fonts/baloo-2-latin-ext.woff2) format('woff2'); unicode-range: U+0100-02BA; }
+@font-face { font-family: 'Jersey 10'; font-display: swap; src: url(/fonts/jersey-10-latin.woff2) format('woff2'); unicode-range: U+0000-00FF, U+2000-206F; }
+@font-face { font-family: 'Jersey 10'; font-display: swap; src: url(/fonts/jersey-10-latin-ext.woff2) format('woff2'); unicode-range: U+0100-02BA; }
+
+:root { --bg: #1b1420; --card: #2c2233; --ink: #fff2d5; --dim: #b9a9b0; --gold: #f5c518; --red: #c0283c; --radius: 16px; --gap: 16px; }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); font: 600 16px/1.25 'Baloo 2', system-ui, sans-serif; overscroll-behavior: none; }
+body { user-select: none; -webkit-user-select: none; }
+button { font: inherit; color: inherit; border: 0; cursor: pointer; }
+#app { min-height: 100dvh; display: flex; flex-direction: column; }
+
+/* The menu */
+.hub { width: min(100%, 720px); margin: auto; padding: max(var(--gap), env(safe-area-inset-top)) var(--gap) max(var(--gap), env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: var(--gap); }
+.hub h1 { margin: 0; font: 400 clamp(34px, 11vw, 64px)/.9 'Jersey 10', monospace; color: var(--gold); text-align: center; }
+.hub-grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); }
+.game-card { display: grid; grid-template-columns: 72px 1fr; align-items: center; gap: var(--gap); padding: 12px var(--gap); border-radius: var(--radius); background: var(--card); text-align: left; }
+.game-card img { width: 72px; height: 72px; }
+.game-card strong { display: block; font-size: 20px; font-weight: 800; }
+.game-card span { display: block; color: var(--dim); font-size: 14px; }
+.game-card:disabled { cursor: default; opacity: .55; }
+.game-card:not(:disabled):active { transform: scale(.98); }
+
+/* A game's full-screen layer */
+.stage { position: fixed; inset: 0; touch-action: none; overflow: hidden; }
+.stage canvas { display: block; width: 100%; height: 100%; }
+.overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: var(--gap); background: rgba(20, 14, 24, .72); }
+.panel { width: min(100%, 360px); display: flex; flex-direction: column; gap: var(--gap); padding: 24px; border-radius: var(--radius); background: var(--card); text-align: center; }
+.panel h2 { margin: 0; font: 400 40px/1 'Jersey 10', monospace; color: var(--gold); }
+.panel p { margin: 0; color: var(--dim); }
+.btn { min-height: 48px; padding: 8px 16px; border-radius: 12px; background: var(--red); font-weight: 800; font-size: 18px; }
+.btn.alt { background: #453850; }
+.back { position: absolute; top: max(8px, env(safe-area-inset-top)); left: 8px; width: 44px; height: 44px; border-radius: 12px; background: rgba(44, 34, 51, .85); font-size: 22px; line-height: 1; }
+@media (prefers-reduced-motion: reduce) { .game-card:active { transform: none; } }
+/* Read by game.js: env() is only available to CSS. */
+.crush { --crush-safe-top: env(safe-area-inset-top, 0px); --crush-safe-bottom: env(safe-area-inset-bottom, 0px); }
+
+/* Sits above the canvas; game.js sets its top and matches its width to the board. Everything scales with --hud so tall phones get a bigger one. */
+.crush-hud { --hud: clamp(64px, 13dvh, 116px); position: absolute; left: 0; right: 0; margin: auto; height: var(--hud); display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; padding: 0 8px; color: var(--ink); text-shadow: 0 1px 0 #1b1420, 0 0 6px rgba(27, 20, 32, .8); }
+.crush-hud small { display: block; font-size: 12px; line-height: 1.1; white-space: nowrap; }
+.crush-hud b { display: block; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.crush-side { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.crush-hud .back { position: static; flex: none; border-radius: 50%; background: rgba(27, 20, 32, .6); }
+.crush-sound.off { opacity: .55; text-decoration: line-through; }
+/* The moves left are what the player keeps checking, so they get the medal in the middle. */
+.crush-moves { width: var(--hud); height: var(--hud); display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 50%; border: 3px solid var(--gold); background: #5b2340; box-shadow: 0 2px 8px rgba(27, 20, 32, .5); transition: background .2s; }
+.crush-moves b { font: 400 calc(var(--hud) * .56)/.8 'Jersey 10', monospace; color: var(--gold); }
+.crush-moves small { font-size: clamp(10px, calc(var(--hud) * .15), 14px); }
+.crush-moves.low { background: var(--red); }
+.crush-moves.low b { color: var(--ink); }
+.crush-goal { display: flex; align-items: center; justify-content: flex-end; gap: 4px; min-width: 0; }
+.stage.crush .crush-goal canvas { width: calc(var(--hud) * .72); height: calc(var(--hud) * .72); flex: none; filter: drop-shadow(0 2px 3px rgba(27, 20, 32, .6)); }
+.crush-goal b { font-size: 20px; }
+.crush-track { display: block; height: 5px; margin-top: 3px; border-radius: 3px; background: rgba(27, 20, 32, .6); overflow: hidden; }
+.crush-bar { display: block; height: 100%; background: var(--gold); transform-origin: left; transform: scaleX(0); transition: transform .25s ease-out; }
+
+/* The panels stay clear of the notch and the home bar. */
+.crush .overlay { padding: max(var(--gap), var(--crush-safe-top)) var(--gap) max(var(--gap), var(--crush-safe-bottom)); }
+.crush .panel { width: min(100%, 400px); max-height: 100%; overflow: auto; }
+.crush .panel.compact { padding: 16px; gap: 12px; }
+.crush-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.crush-level { min-height: 48px; padding: 2px 0; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 12px; background: #453850; font-weight: 800; font-size: 17px; line-height: 1.1; }
+.crush-level i { font-style: normal; font-size: 10px; letter-spacing: 1px; color: var(--gold); line-height: 1.1; }
+.crush-level i:empty { display: none; }
+.crush-level:disabled { opacity: .35; cursor: default; }
+.crush-level.now { background: var(--red); }
+.crush-stars { display: flex; justify-content: center; gap: 8px; font-size: 44px; line-height: 1; }
+.crush-stars span { color: #453850; }
+.crush-stars span.on { color: var(--gold); animation: crush-star .4s cubic-bezier(.3, 1.6, .5, 1) backwards; }
+.crush-stars span:nth-child(2) { animation-delay: .15s; }
+.crush-stars span:nth-child(3) { animation-delay: .3s; }
+@keyframes crush-star { from { transform: scale(0) rotate(-40deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .crush-stars span.on { animation: none; }
+  .crush-bar, .crush-moves { transition: none; }
+}

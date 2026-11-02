@@ -205,6 +205,7 @@
   "ui.radio.playing": "Entzuten",
   "ui.radio.stopped": "Musika geldituta",
   "ui.radio.tapResume": "Ukitu jarraitzeko",
+  "ui.radio.tip": "Hemen musika alda dezakezu!",
   "ui.radio.title": "Plazako musika",
   "ui.seasons.backTo": "Itzuli: {name}",
   "ui.seasons.boardPrevious": "{figure} (aurreko dantza)",

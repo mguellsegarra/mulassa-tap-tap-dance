@@ -205,6 +205,7 @@
   "ui.radio.playing": "재생 중",
   "ui.radio.stopped": "음악 정지",
   "ui.radio.tapResume": "터치해서 이어 들어요",
+  "ui.radio.tip": "여기서 음악을 바꿀 수 있어요!",
   "ui.radio.title": "광장 음악",
   "ui.seasons.backTo": "{name} 돌아가기",
   "ui.seasons.boardPrevious": "{figure} (이전 춤)",

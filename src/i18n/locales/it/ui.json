@@ -205,6 +205,7 @@
   "ui.radio.playing": "Ora suona",
   "ui.radio.stopped": "Musica ferma",
   "ui.radio.tapResume": "Tocca per riprendere",
+  "ui.radio.tip": "Qui puoi cambiare la musica!",
   "ui.radio.title": "Musica della piazza",
   "ui.seasons.backTo": "Torna a {name}",
   "ui.seasons.boardPrevious": "{figure} (ballo precedente)",

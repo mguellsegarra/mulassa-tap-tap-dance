@@ -205,6 +205,7 @@
   "ui.radio.playing": "Ara sona",
   "ui.radio.stopped": "Música aturada",
   "ui.radio.tapResume": "Toca per reprendre",
+  "ui.radio.tip": "Aquí pots canviar la música!",
   "ui.radio.title": "Música de la plaça",
   "ui.seasons.backTo": "Torna a {name}",
   "ui.seasons.boardPrevious": "{figure} (ball anterior)",

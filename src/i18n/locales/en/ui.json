@@ -205,6 +205,7 @@
   "ui.radio.playing": "Now playing",
   "ui.radio.stopped": "Music stopped",
   "ui.radio.tapResume": "Tap to resume",
+  "ui.radio.tip": "Change the music here!",
   "ui.radio.title": "Music in the square",
   "ui.seasons.backTo": "Back to {name}",
   "ui.seasons.boardPrevious": "{figure} (previous dance)",

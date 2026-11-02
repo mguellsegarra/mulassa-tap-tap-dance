@@ -205,6 +205,7 @@
   "ui.radio.playing": "A tocar",
   "ui.radio.stopped": "Música parada",
   "ui.radio.tapResume": "Toca para retomar",
+  "ui.radio.tip": "Aqui podes mudar a música!",
   "ui.radio.title": "Música da praça",
   "ui.seasons.backTo": "Voltar a {name}",
   "ui.seasons.boardPrevious": "{figure} (dança anterior)",

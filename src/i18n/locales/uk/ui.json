@@ -205,6 +205,7 @@
   "ui.radio.playing": "Зараз звучить",
   "ui.radio.stopped": "Музику зупинено",
   "ui.radio.tapResume": "Торкнись, щоб продовжити",
+  "ui.radio.tip": "Тут можна змінити музику!",
   "ui.radio.title": "Музика площі",
   "ui.seasons.backTo": "Назад до {name}",
   "ui.seasons.boardPrevious": "{figure} (попередній танець)",

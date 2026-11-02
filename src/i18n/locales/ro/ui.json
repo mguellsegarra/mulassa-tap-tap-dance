@@ -205,6 +205,7 @@
   "ui.radio.playing": "Acum se aude",
   "ui.radio.stopped": "Muzică oprită",
   "ui.radio.tapResume": "Atinge ca să reiei",
+  "ui.radio.tip": "Aici poți schimba muzica!",
   "ui.radio.title": "Muzica pieței",
   "ui.seasons.backTo": "Înapoi la {name}",
   "ui.seasons.boardPrevious": "{figure} (dans anterior)",

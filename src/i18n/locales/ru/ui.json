@@ -205,6 +205,7 @@
   "ui.radio.playing": "Звучит",
   "ui.radio.stopped": "Музыка остановлена",
   "ui.radio.tapResume": "Коснись для продолжения",
+  "ui.radio.tip": "Здесь можно сменить музыку!",
   "ui.radio.title": "Музыка площади",
   "ui.seasons.backTo": "Назад к {name}",
   "ui.seasons.boardPrevious": "{figure} (прежний танец)",

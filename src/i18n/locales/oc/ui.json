@@ -205,6 +205,7 @@
   "ui.radio.playing": "Ara sone",
   "ui.radio.stopped": "Musica arturada",
   "ui.radio.tapResume": "Toca tà repréner",
+  "ui.radio.tip": "Aquí pòs cambiar era musica!",
   "ui.radio.title": "Musica dera plaça",
   "ui.seasons.backTo": "Torna a {name}",
   "ui.seasons.boardPrevious": "{figure} (balh anterior)",

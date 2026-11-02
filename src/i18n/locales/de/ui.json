@@ -205,6 +205,7 @@
   "ui.radio.playing": "Jetzt läuft",
   "ui.radio.stopped": "Musik gestoppt",
   "ui.radio.tapResume": "Tippen zum Fortsetzen",
+  "ui.radio.tip": "Hier wechselst du die Musik!",
   "ui.radio.title": "Musik auf dem Platz",
   "ui.seasons.backTo": "Zurück zu {name}",
   "ui.seasons.boardPrevious": "{figure} (alter Tanz)",

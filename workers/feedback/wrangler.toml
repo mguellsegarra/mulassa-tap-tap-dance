@@ -1,10 +1,14 @@
 # «Bústia de la plaça» (src/services/feedback.js → VITE_FEEDBACK_URL): Turnstile, then one plain-text e-mail to the owner through
 # Email Routing's send_email binding (free; only to verified destination addresses). Nothing is stored.
-# Deploy: cd workers/feedback && CLOUDFLARE_ACCOUNT_ID=<compte> npx wrangler deploy
-# Secrets (once each; wrangler prompts for the value):
-#   CLOUDFLARE_ACCOUNT_ID=<compte> npx wrangler secret put TURNSTILE_SECRET_KEY
-#   CLOUDFLARE_ACCOUNT_ID=<compte> npx wrangler secret put FEEDBACK_TO   (the verified destination address)
-name = "mulassa-feedback"
+# One Worker per Supabase project, as tokens only validate against their own: production here, beta under [env.beta].
+# The older «mulassa-feedback» stays deployed and untouched: 1.2.6 clients send an address and no session, and tabs stay cached.
+# Order: secrets, then deploy, check a real message, and only then point VITE_FEEDBACK_URL at it on that GitHub environment.
+# Deploy:   cd workers/feedback && CLOUDFLARE_ACCOUNT_ID=<compte> npx wrangler deploy [--env beta]
+# Secrets (once each per Worker; wrangler prompts for the value):
+#   CLOUDFLARE_ACCOUNT_ID=<compte> npx wrangler secret put TURNSTILE_SECRET_KEY [--env beta]
+#   CLOUDFLARE_ACCOUNT_ID=<compte> npx wrangler secret put FEEDBACK_TO [--env beta]   (the verified destination address)
+# Going back to 1.2.6 is a Pages rollback (not a re-run on its tag: its migrations folder lacks the newer ones); it reads the old Worker.
+name = "mulassa-feedback-v2"
 main = "src/index.js"
 compatibility_date = "2026-09-01"
 workers_dev = true
@@ -12,13 +16,15 @@ workers_dev = true
 [vars]
 # production origins only; for `wrangler dev` put your local ones in .dev.vars (not in the repo), e.g.
 # ALLOWED_ORIGINS="http://localhost:5178,http://<your LAN IP>:5178"
-ALLOWED_ORIGINS = "https://mulassa-tap-tap-dance.pages.dev,https://mulassa.cat,https://www.mulassa.cat,https://beta.mulassa.cat"
+ALLOWED_ORIGINS = "https://mulassa-tap-tap-dance.pages.dev,https://mulassa.cat,https://www.mulassa.cat"
 # the sender: an address on mulassa.cat, the zone with Email Routing
 FEEDBACK_FROM = "holi@mulassa.cat"
 # about this many e-mails a day in total (counted in DAILY; KV has no atomic increment, so concurrent requests from
 # several locations can overshoot by a few: keep the real budget above this); then 429 until midnight UTC
 DAILY_MAX = "150"
-# SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY (both public) say which project's accounts may write: one Worker per project.
+# SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY (both public) say which project's accounts may write.
+SUPABASE_URL = "https://oajlkitufibpfvhgtqwr.supabase.co"
+SUPABASE_PUBLISHABLE_KEY = "sb_publishable_-pjXCr0l3GleGgniSUMEkw_K5dtYM1S"
 
 # no destination_address: it may send to any verified Email Routing destination of the account; FEEDBACK_TO picks it
 [[send_email]]
@@ -28,19 +34,51 @@ name = "MAIL"
 # PER_IP: 3 messages a minute per CF-Connecting-IP. ALL: 10 a minute in total, so a burst can't outrun the daily count.
 [[ratelimits]]
 name = "PER_IP"
-namespace_id = "1001"
+namespace_id = "1003"
   [ratelimits.simple]
   limit = 3
   period = 60
 
 [[ratelimits]]
 name = "ALL"
-namespace_id = "1002"
+namespace_id = "1004"
   [ratelimits.simple]
   limit = 10
   period = 60
 
 # the daily e-mail count (one key per UTC day, expires after two days); <= DAILY_MAX writes a day, inside KV's free 1000
 [[kv_namespaces]]
+binding = "DAILY"
+id = "0e06fa6535f54ab981047d3750d17c09"
+
+# Beta, on the test Supabase. wrangler does not inherit vars or bindings into an environment. Its e-mails share the daily count.
+[env.beta]
+name = "mulassa-feedback-beta"
+
+[env.beta.vars]
+ALLOWED_ORIGINS = "https://beta.mulassa.cat"
+FEEDBACK_FROM = "holi@mulassa.cat"
+DAILY_MAX = "150"
+SUPABASE_URL = "https://qgsvfgwjfunudjlmpdry.supabase.co"
+SUPABASE_PUBLISHABLE_KEY = "sb_publishable_R5-cJyn-uH3MbNiHupxImA_-q_AFEFS"
+
+[[env.beta.send_email]]
+name = "MAIL"
+
+[[env.beta.ratelimits]]
+name = "PER_IP"
+namespace_id = "1005"
+  [env.beta.ratelimits.simple]
+  limit = 3
+  period = 60
+
+[[env.beta.ratelimits]]
+name = "ALL"
+namespace_id = "1006"
+  [env.beta.ratelimits.simple]
+  limit = 10
+  period = 60
+
+[[env.beta.kv_namespaces]]
 binding = "DAILY"
 id = "0e06fa6535f54ab981047d3750d17c09"

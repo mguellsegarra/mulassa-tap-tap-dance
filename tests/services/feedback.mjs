@@ -16,7 +16,9 @@ assert.equal((raw.match(/^export /gm) || []).length, 1, 'only the default handle
 const source = raw.replace(/^import .*;\n/, '').replace(/^export default /m, '__exports.default = ');
 assert.equal(/const EMAIL = (\/.*\/);/.exec(source)?.[1], String(EMAIL), 'the Worker checks e-mails with the same pattern as the client');
 const toml = readFileSync(new URL('../../workers/feedback/wrangler.toml', import.meta.url), 'utf8');
-assert.match(toml, /^name = "mulassa-feedback"$/m);
+assert.match(toml, /^name = "mulassa-feedback-v2"$/m, 'never the old Worker\'s name: cached 1.2.6 clients still need it');
+assert.match(toml, /^\[env\.beta\]\nname = "mulassa-feedback-beta"$/m);
+assert.equal((toml.match(/^SUPABASE_URL = /gm) || []).length, 2, 'each Worker names its own project: a deploy without it answers 503');
 assert.match(toml, /^\[\[send_email\]\]\nname = "MAIL"\n/m, 'the send_email binding');
 assert.match(toml, /^FEEDBACK_FROM = "holi@mulassa\.cat"$/m);
 assert.doesNotMatch(toml, /^(destination_address|FEEDBACK_TO|TURNSTILE_SECRET_KEY) *=/m, 'the recipient and the Turnstile key are secrets, not in the repo');
@@ -126,7 +128,8 @@ sent.length = 0; calls = [];
 
 // who writes: a confirmed account, and the address comes from Auth, never from the client
 const authed = (bearer, body = good) => handler(new Request('https://w.test/', { method: 'POST', headers: { 'content-type': 'application/json', 'cf-connecting-ip': freshIp(), origin: 'http://localhost:5178', ...(bearer ? { authorization: `Bearer ${bearer}` } : {}) }, body: JSON.stringify(body) }));
-assert.deepEqual(await codeOf(await authed(null)), [401, 'auth_required'], 'an old client, without a session');
+assert.deepEqual(await codeOf(await authed(null)), [401, 'auth_required'], 'a client without a session');
+assert.deepEqual(await codeOf(await handler(new Request('https://w.test/', { method: 'POST', headers: { 'content-type': 'application/json', 'cf-connecting-ip': freshIp(), origin: 'http://localhost:5178' }, body: JSON.stringify({ email: 'a@b.cat', message: 'Un missatge de 1.2.6', turnstileToken: 'good-token', version: '1.2.6' }) }))), [400, 'invalid'], 'a real 1.2.6 payload is refused here: that client keeps the old Worker');
 assert.deepEqual(await codeOf(await authed('expired')), [401, 'auth_required']);
 assert.deepEqual(await codeOf(await authed('guest')), [401, 'auth_required'], 'a guest session is valid, but has no confirmed address');
 assert.deepEqual(await codeOf(await authed('unconfirmed')), [401, 'auth_required']);

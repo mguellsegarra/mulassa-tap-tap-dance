@@ -67,6 +67,14 @@ for (const [why, o] of [['no profile', { prof: null }], ['a released name', { pr
   assert.equal(g.answered, false, 'the ribbon must not be spent behind a sheet about to open');
   release(); await run; assert.equal(g.answered, true); assert.deepEqual(seen, ['asked']); }
 
+// the gate: a failed read is never «no account», which would offer Crea to a real profile and rename it
+{ const doc = fakeDoc(), log = []; let done = 0;
+  const need = setupConfirmGate({ focusIn() {}, identity: async () => { throw new Error('offline'); }, hasProfile: async () => false, openProfile: (...a) => log.push(a), doc });
+  await need('heart', () => done++);
+  assert(doc.getElementById('gate-menu').open && doc.getElementById('gate-go').hidden, 'identity failed: it says so, with no way on');
+  assert.equal(done, 0); assert.equal(log.length, 0);
+  const again = setupConfirmGate({ focusIn() {}, identity: async () => ({ hasSession: true, email: '' }), hasProfile: async () => { throw new Error('offline'); }, openProfile() {}, doc: fakeDoc() });
+  await again('heart', () => done++); assert.equal(done, 0, 'a failed profile read neither'); }
 // the gate
 function gate({ email = '', hasSession = true, profiled = false } = {}) {
   const doc = fakeDoc(), log = [], T = { email }; let done = 0, reads = 0;

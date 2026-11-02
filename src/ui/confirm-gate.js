@@ -15,7 +15,6 @@ export function setupConfirmGate({ focusIn, identity, hasProfile, openProfile, d
     }
   };
   const confirmed = async () => { try { return await identity(); } catch { return { email: '' }; } };
-  const profileThere = async () => { try { return !!(await hasProfile()); } catch { return false; } };
   // Perfil closed: confirmed runs the action; anything else was a cancel.
   async function resume() {
     const run = pending;
@@ -29,17 +28,22 @@ export function setupConfirmGate({ focusIn, identity, hasProfile, openProfile, d
   $('gate-later').addEventListener('click', () => { pending = null; menu.close(); });
   menu.addEventListener('cancel', () => { pending = null; });
   return async function needConfirmed(reason, action) {
-    const me = await confirmed();
+    // A failed read is not «no account»: offering Crea to a real profile would rename it. It only says to try again.
+    let unknown = false;
+    const me = await identity().catch(() => { unknown = true; return {}; });
     if (me.email) { action(); return; }
     if (menu.open) return;
-    profiled = !!me.hasSession && await profileThere(); // no session reads as no profile without asking; a remembered one needs no network either
+    if (!unknown) profiled = !!me.hasSession && !!(await Promise.resolve().then(hasProfile).catch(() => { unknown = true; })); // no session reads as no profile without asking; a remembered one needs no network either
     if (menu.open) return;
-    pending = action;
-    $('gate-title').textContent = tr(profiled ? 'ui.confirm.title' : 'ui.confirm.createAction');
-    text.textContent = tr(`ui.confirm.${reason}`);
-    go.textContent = tr(profiled ? 'ui.confirm.action' : 'ui.confirm.createAction');
-    $('gate-perks-lead').textContent = tr('ui.confirm.perksLead');
-    sellMark();
-    menu.showModal(); focusIn(menu, 'gate-go');
+    pending = unknown ? null : action;
+    $('gate-title').textContent = tr(profiled || unknown ? 'ui.confirm.title' : 'ui.confirm.createAction');
+    text.textContent = unknown ? tr('ui.board.checkConnection') : tr(`ui.confirm.${reason}`);
+    go.hidden = unknown; $('gate-panel').hidden = unknown; $('gate-seal').hidden = unknown;
+    if (!unknown) {
+      go.textContent = tr(profiled ? 'ui.confirm.action' : 'ui.confirm.createAction');
+      $('gate-perks-lead').textContent = tr('ui.confirm.perksLead');
+      sellMark();
+    }
+    menu.showModal(); focusIn(menu, unknown ? 'gate-later' : 'gate-go');
   };
 }

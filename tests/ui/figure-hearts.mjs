@@ -35,3 +35,19 @@ assert.equal(hearts.count('bou'), 2); assert.deepEqual(writes, [], "the old acco
   assert.equal(notes[0].style.top, '60px', 'the same room above and below');
   h.reload(); }
 console.log('figure hearts ok');
+// the account changed: until the new identity is read, nothing of the last one shows or can be inverted
+{
+  const writes = [], h = setupHearts({ service: { figureHearts: async () => [{ figure: 'bou', hearts: 4, mine: true }], setFigureHeart: async (id, on) => { writes.push(on); return 1; } }, needConfirmed: (_, run) => run() });
+  await h.load();
+  assert(h.mine('bou'));
+  h.forget();
+  assert(!h.mine('bou') && h.count('bou') === null, 'at once, not after the identity read');
+  // a tap right after, with the identity read still going: its save is the new account's and must land
+  let saved; const slow = new Promise(r => { saved = r; }), done = [];
+  const g = setupHearts({ service: { figureHearts: async () => [], setFigureHeart: async (id, on) => { done.push(on); await slow; return 1; } }, needConfirmed: (_, run) => run() });
+  await g.load(); g.forget();
+  const btn = { ownerDocument: { defaultView: { matchMedia: () => ({ matches: true }) } }, querySelector: () => ({ classList: { remove() {}, add() {} }, getBoundingClientRect: () => ({}) }), getBoundingClientRect: () => ({}), closest: () => null };
+  g.tap({ id: 'bou' }, btn); await tick(); await tick();
+  await g.load(); saved(); await tick(); await tick();
+  assert.deepEqual(done, [true]); assert(g.mine('bou'), 'what the identity read ends with is only a load: the saved heart stays on');
+}

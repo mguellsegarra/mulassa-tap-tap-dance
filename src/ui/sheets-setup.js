@@ -195,7 +195,7 @@ const greeting = setupGreeting({ asked: () => heartTip.update(), stats: statsSyn
 
     return true;
   } });
-service.onAccount?.(() => { refreshIdentity(service, kv, { fresh: true }).then(() => { share.refreshName(); hearts.reload(); }); greeting.accountChanged(); });
+service.onAccount?.(() => { hearts.forget(); refreshIdentity(service, kv, { fresh: true }).then(() => { share.refreshName(); hearts.load(); }); greeting.accountChanged(); });
 document.addEventListener('close', () => { greeting.poke(); heartTip.update(); }, true); // dialogs' close does not bubble
 document.addEventListener('visibilitychange', () => { if (!document.hidden) { greeting.poke(); heartTip.update(); } }); // an answer that landed in a hidden tab was dropped: ask again
 settingsMenu.addEventListener('close', () => { if (!sync.open && !board.open && (G.state === 'select')) document.activeElement?.blur(); });

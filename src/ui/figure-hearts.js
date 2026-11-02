@@ -59,9 +59,11 @@ export function setupHearts({ service, needConfirmed, onChange = () => {} }) {
       if (on) { mine.add(figure.id); heartBurst(button); } else mine.delete(figure.id); // only once the server saved it
     } catch { if (asked === session && button) { failed?.remove(); failed = heartFailed(button); } /* nothing else changed: the count and the state stay as the server has them */ } finally { saving.delete(figure.id); onChange(); }
   };
+  const forget = () => { failed?.remove(); session++; loading = null; totals = null; mine.clear(); onChange(); };
   return {
     load,
-    reload() { failed?.remove(); session++; loading = null; totals = null; mine.clear(); onChange(); return load(); },
+    forget, // the account changed: nothing of the last one may be shown or inverted while the new identity is read
+    reload() { forget(); return load(); },
     count: id => totals ? (totals.get(id) ?? 0) : null,
     mine: id => mine.has(id),
     tap(figure, button) { needConfirmed('heart', () => { const asked = session; load().then(() => { if (asked === session) save(figure, button); }); }); },

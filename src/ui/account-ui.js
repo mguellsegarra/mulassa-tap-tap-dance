@@ -95,7 +95,7 @@ export function setupAccount({ focusIn, profile, badges, service, store, stats, 
   // The heart's red ribbon under the name's pencil, once ever: the mark is what changes the badge, and nothing says so.
   function pointAtBadge() {
     const edit = menu.open && $('profile-row').querySelector('.badge-edit');
-    if (!edit || !edit.checkVisibility() || store.get(BADGE_TIP_KEY) === '1') return;
+    if (!edit || edit.checkVisibility?.() === false || store.get(BADGE_TIP_KEY) === '1') return;
     store.set(BADGE_TIP_KEY, '1');
     const tip = doc.createElement('div'), r = edit.lastElementChild.getBoundingClientRect(), box = menu.getBoundingClientRect(); // the pencil: the button's last child
     tip.className = 'sel-heart-tip account-badge-tip'; tip.setAttribute('role', 'status'); tip.textContent = tr('ui.badge.editTip');

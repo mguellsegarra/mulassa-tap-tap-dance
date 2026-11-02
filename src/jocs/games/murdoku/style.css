@@ -1,0 +1,96 @@
+/* Tokens, sheet, buttons and focus copied from Mulassa's src/styles/base.css, like the other games. */
+@font-face { font-family: 'Baloo 2'; font-weight: 600 800; font-display: swap; src: url(/fonts/baloo-2-latin.woff2) format('woff2'); }
+@font-face { font-family: 'Jersey 10'; font-display: swap; src: url(/fonts/jersey-10-latin.woff2) format('woff2'); }
+:root {
+  color-scheme: light only;
+  --button-radius: 12px; --button-border: #f5c518; --button-text: #fff3d6; --button-bg: #2a1a10e8;
+  --button-gold-bg: linear-gradient(180deg, #ffe066 0%, #f5c518 55%, #dfad13 100%);
+  --focus: 3px solid var(--button-text); --focus-off: 3px;
+  --gap: 12px; --ink: #2a1a10;
+}
+html, body { margin: 0; height: 100%; overflow: hidden; overscroll-behavior: none; background: #140c07; color: var(--button-text); font: 700 16px 'Baloo 2', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+button { appearance: none; font: inherit; cursor: pointer; touch-action: manipulation; color: inherit; }
+button:focus-visible, a:focus-visible { outline: var(--focus); outline-offset: var(--focus-off); }
+svg, img { display: block; width: 100%; height: 100%; }
+img { object-fit: contain; -webkit-user-drag: none; user-select: none; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+
+#page { position: fixed; inset: 0; display: flex; flex-direction: column; gap: var(--gap); box-sizing: border-box;
+  padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)); }
+#hud { display: flex; gap: 8px; width: 100%; max-width: 560px; margin: 0 auto; flex: none; }
+.stat { flex: 1 1 0; min-width: 0; display: flex; align-items: center; justify-content: center; gap: 8px; box-sizing: border-box; height: 44px; padding: 0 12px; border: 2px solid var(--button-border); border-radius: var(--button-radius); background: var(--button-bg); font-size: 14px; }
+.stat b { font: 800 15px/1.1 'Baloo 2', sans-serif; color: #f5c518; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.round-btn:disabled { opacity: .4; cursor: default; }
+.round-btn { flex: none; display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 2px solid var(--button-border); border-radius: 50%; background: var(--button-bg); color: var(--button-text); }
+.round-btn svg { width: 24px; height: 24px; }
+
+#play { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; gap: var(--gap); }
+#board { --n: 5; flex: none; box-sizing: border-box; width: min(100%, 52dvh, 560px); aspect-ratio: 1; display: grid; grid-template: repeat(var(--n), 1fr) / repeat(var(--n), 1fr); border: 3px solid var(--ink); border-radius: var(--button-radius); overflow: hidden; background: var(--ink); }
+.cell { position: relative; min-width: 0; min-height: 0; padding: 0; border: 1px solid #2a1a1040; background: var(--floor) center / 100% 100%; color: var(--ink); }
+/* A thick line where two zones meet: the map's walls. */
+.e-t { border-top: 3px solid var(--ink); } .e-r { border-right: 3px solid var(--ink); } .e-b { border-bottom: 3px solid var(--ink); } .e-l { border-left: 3px solid var(--ink); }
+.cell:focus-visible { outline-offset: -3px; outline-color: var(--ink); z-index: 1; }
+.thing, .piece { position: absolute; display: block; pointer-events: none; }
+.thing { inset: 6%; }
+.piece { inset: 6%; z-index: 1; }
+.piece:empty { display: none; }
+.thing:has(+ .piece:not(:empty)), .thing:has(+ .zlabel + .piece:not(:empty)) { opacity: .35; }
+.zlabel { position: absolute; z-index: 2; top: 2px; left: 2px; padding: 1px 5px; border: 1.5px solid var(--ink); border-radius: 9px; background: #fffaf0; font-size: 10px; line-height: 1.1; font-weight: 800; white-space: nowrap; pointer-events: none; }
+.marked::after { content: '✕'; position: absolute; inset: 0; display: grid; place-items: center; font-size: 26px; color: var(--ink); text-shadow: 0 0 3px #fffaf0, 0 0 3px #fffaf0; }
+.blocked-line { cursor: not-allowed; }
+.blocked-line::before { content: ''; position: absolute; inset: 0; background: #2a1a108c; }
+
+#side { flex: 1; min-height: 0; width: min(100%, 560px); display: flex; flex-direction: column; gap: 8px; }
+#tray { flex: none; display: flex; gap: 4px; }
+.chip { flex: 1 1 0; min-width: 0; height: 48px; padding: 1px; box-sizing: border-box; border: 2px solid var(--button-border); border-radius: var(--button-radius); background: #fff3d6; color: var(--ink); }
+.chip[aria-pressed="true"] { background: var(--button-gold-bg); box-shadow: 0 0 0 2px var(--button-text); }
+.chip.used { background: var(--button-bg); opacity: .55; }
+.chip.mark { font-size: 20px; font-weight: 800; }
+#hint { flex: none; margin: 0; color: #ffe39a; font-size: 14px; line-height: 1.3; text-align: center; }
+#hint .who img { width: 18px; height: 18px; display: inline-block; }
+#accuse { flex: none; min-height: 44px; padding: 4px 12px; font-size: 16px; }
+#accuse:disabled { background: var(--button-bg); color: var(--button-text); font-size: 13px; font-weight: 700; }
+#accuse[hidden] { display: none; }
+.glow { animation: glow 1s ease-in-out infinite; z-index: 3; }
+@keyframes glow { 50% { box-shadow: inset 0 0 0 4px #fff, 0 0 0 3px #f5c518; } }
+@media (prefers-reduced-motion: reduce) { .glow { animation: none; box-shadow: inset 0 0 0 4px #fff; } }
+#clues { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; }
+#clues li { flex: none; display: flex; align-items: center; gap: 8px; padding: 2px 8px; border-radius: 8px; background: #fff3d612; font-size: 14px; line-height: 1.25; }
+#clues li.on { background: #f5c5183d; }
+.face { flex: none; width: 30px; height: 30px; }
+.face img { border-radius: 4px; }
+.say { min-width: 0; }
+.say b { color: #f5c518; font-weight: 800; }
+.who { display: inline-flex; align-items: center; gap: 2px; white-space: nowrap; vertical-align: bottom; }
+.who img { display: inline-block; width: 20px; height: 20px; border-radius: 3px; }
+.pill { display: inline-flex; align-items: center; gap: 4px; padding: 0 6px 0 3px; border-radius: 9px; background: #fffaf0; color: var(--ink); line-height: 1.3; white-space: nowrap; vertical-align: bottom; }
+.pill i { width: 14px; height: 14px; border-radius: 50%; border: 1px solid var(--ink); background: var(--floor) center / cover; }
+
+.sheet { box-sizing: border-box; width: min(360px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); overflow: auto; padding: 24px; border: 2px solid #f5c518; border-radius: 18px; background: #2a1a10; color: var(--button-text); }
+.sheet::backdrop { background: #0a0503a6; }
+.sheet[open] { display: grid; gap: 16px; }
+.sheet:focus { outline: none; }
+#title { margin: 0; font: 400 44px/.95 'Jersey 10', monospace; color: #f5c518; text-align: center; }
+#hero { display: flex; justify-content: center; align-items: center; gap: 12px; height: 104px; }
+#hero img { width: 96px; height: 96px; border-radius: 8px; }
+#rule { margin: 0; font-size: 14px; font-weight: 600; line-height: 1.3; text-align: center; opacity: .85; }
+#rule[hidden], #levels[hidden], #back[hidden] { display: none; }
+#hero[hidden] { display: none; }
+#msg { margin: 0; line-height: 1.3; text-align: center; font-size: 15px; }
+.btn { box-sizing: border-box; display: block; width: 100%; min-height: 48px; padding: 8px 20px; border: 2px solid var(--button-border); border-radius: var(--button-radius); font-weight: 800; font-size: 18px; text-align: center; }
+.btn[hidden] { display: none; }
+.btn-primary { background: var(--button-gold-bg); color: var(--ink); }
+#levels { display: grid; gap: 8px; }
+.lvl { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 8px 16px; background: var(--button-bg); color: var(--button-text); font-size: 17px; }
+.lvl small { font-size: 13px; font-weight: 700; opacity: .75; }
+.lvl.done { background: var(--button-gold-bg); color: var(--ink); }
+#back { background: var(--button-bg); color: var(--button-text); text-decoration: none; line-height: 28px; }
+.btn:active, .round-btn:active, .chip:active { transform: translateY(1px); }
+
+/* Wide windows: board on the left, tray and clues on the right. */
+@media (min-aspect-ratio: 1/1) {
+  #play { flex-direction: row; justify-content: center; align-items: stretch; max-width: 1100px; margin: 0 auto; width: 100%; }
+  #board { width: auto; height: min(100%, 50vw, 720px); max-width: 50vw; align-self: flex-start; }
+  #side { width: auto; flex: 1 1 320px; max-width: 480px; }
+  #hud { max-width: 1100px; }
+}

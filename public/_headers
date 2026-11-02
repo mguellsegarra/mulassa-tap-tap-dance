@@ -33,6 +33,10 @@ https://beta.mulassa.cat/*
   Cache-Control: no-cache
 /jocs/pica/index.html
   Cache-Control: no-cache
+/jocs/murdoku/
+  Cache-Control: no-cache
+/jocs/murdoku/index.html
+  Cache-Control: no-cache
 
 /index.md
   Content-Type: text/markdown; charset=utf-8

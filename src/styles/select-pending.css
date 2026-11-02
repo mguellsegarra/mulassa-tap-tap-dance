@@ -362,7 +362,7 @@
   .sel-pending[data-no-actions] { padding-block: 14px 22px; }
 }
 /* Phones: the ribbon lands on the song's row. Rather than leave pieces of it sticking out, that row waits until the ribbon goes (it keeps its place). */
-@media (max-width: 899px) { body:has(.sel-heart-tip:not(.sel-tip-out)) :is(#select-song, .sel-watch) { visibility: hidden; } }
+@media (max-width: 899px) { body:has(.sel-heart-tip:not(.sel-tip-out, .news-tip)) :is(#select-song, .sel-watch) { visibility: hidden; } }
 .sel-heart-tip-side { min-height: 34px; padding-block: 1px; transform-origin: 0 50%; animation-name: sel-tip-in, sel-tip-bob-side; }
 .sel-heart-tip.sel-tip-out { pointer-events: none; animation: sel-tip-out .26s ease-in forwards, sel-tip-bob 1.4s ease-in-out infinite; }
 .sel-heart-tip-side.sel-tip-out { animation-name: sel-tip-out, sel-tip-bob-side; }

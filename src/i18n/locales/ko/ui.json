@@ -405,5 +405,7 @@
   "ui.hearts.tip.singular": "하트를 보내 줘요!",
   "ui.hearts.tip.plural": "하트를 보내 줘요!",
   "ui.hearts.failed": "저장하지 못했어요. 다시 시도해 주세요.",
-  "ui.code.open": "GitHub 열기"
+  "ui.code.open": "GitHub 열기",
+  "ui.news.title": "미니게임 등장!",
+  "ui.news.text": "위쪽 버튼에 새 미니게임 3개가 있어요."
 }

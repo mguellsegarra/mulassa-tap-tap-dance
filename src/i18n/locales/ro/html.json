@@ -117,7 +117,7 @@
   "html.selectLevel.aria": "Nivel",
   "html.selectFiguresBack": "Schimbă figura",
   "html.selectNextLabel": "Alege dificultatea",
-  "html.selectFree.title": "Dans liber",
+  "html.selectFree.title": "Jocuri",
   "html.selectPlay": "LA DANS!",
   "html.howto": "Cum se joacă?",
   "html.howtoTitle": "Cum se joacă",
@@ -224,5 +224,12 @@
   "html.entity.namePlaceholder": "Cum se numește?",
   "html.rich.material.note": "Fotografiile și fișierele trimite-le la <a href=\"mailto:holi@mulassa.cat\">holi@mulassa.cat</a> și spune-ne despre ce figură e vorba.",
   "html.code.tab": "Programare",
-  "html.code.text": "Dacă știi să programezi, poți ajuta să aduci această figură în joc. Codul este deschis, pe GitHub."
+  "html.code.text": "Dacă știi să programezi, poți ajuta să aduci această figură în joc. Codul este deschis, pe GitHub.",
+  "html.games.title": "Jocuri",
+  "html.games.free": "Dans liber",
+  "html.news.go": "Vezi jocurile",
+  "html.news.tip": "Sunt aici!",
+  "html.games.pica": "Lovește Mulassa",
+  "html.games.memory": "Memory",
+  "html.games.crush": "Seguici Crush"
 }

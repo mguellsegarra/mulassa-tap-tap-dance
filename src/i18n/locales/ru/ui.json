@@ -438,5 +438,7 @@
   "ui.hearts.tip.singular": "Подари ей сердечко!",
   "ui.hearts.tip.plural": "Подари им сердечко!",
   "ui.hearts.failed": "Не удалось сохранить. Попробуй ещё раз.",
-  "ui.code.open": "Открыть GitHub"
+  "ui.code.open": "Открыть GitHub",
+  "ui.news.title": "Мини-игры!",
+  "ui.news.text": "Три новые мини-игры в кнопке сверху."
 }

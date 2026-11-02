@@ -10,7 +10,7 @@
 //   identity()  the share image's cached name, refreshed once the account is known (never rejects)
 //   extra()     a dev-only last item; true when it showed something
 //   asked()     a whole pass ended: whatever this visit tells is up by now (the first-time hints wait for it)
-export function setupGreeting({ stats, seasonEnd, account, hint = { show: () => false }, free, back = () => {}, identity = async () => {}, extra = () => false, asked = () => {} }) {
+export function setupGreeting({ stats, seasonEnd, account, hint = { show: () => false }, newGame = { show: () => false }, free, back = () => {}, identity = async () => {}, extra = () => false, asked = () => {} }) {
   let answered = false, init = null, settled = false, running = false, rerun = false, owner = 0, told = false; // owner: counts the account changes seen
   async function pass() {
     if (settled || !free()) return;
@@ -20,11 +20,11 @@ export function setupGreeting({ stats, seasonEnd, account, hint = { show: () => 
     await init;
     if (!free() || mine !== owner) return;
     let news;
-    try { news = await seasonEnd.news(); } catch { if (free()) told = hint.show(back); answered = true; return; } // offline: the next visit asks again
+    try { news = await seasonEnd.news(); } catch { if (free()) told = newGame.show(back) || hint.show(back); answered = true; return; } // offline: the next visit asks again
     if (!free() || mine !== owner) return;
     answered = true;
     if (news) { seasonEnd.show(news, back); told = true; return; }
-    if ((told = account.notice(back) || hint.show(back)) || extra()) return;
+    if ((told = account.notice(back) || newGame.show(back) || hint.show(back)) || extra()) return;
     settled = true;
   }
   async function greet() {

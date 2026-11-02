@@ -117,7 +117,7 @@
   "html.selectLevel.aria": "Nivell",
   "html.selectFiguresBack": "Canvia de figura",
   "html.selectNextLabel": "Tria la dificultat",
-  "html.selectFree.title": "Ball lliure",
+  "html.selectFree.title": "Jocs",
   "html.selectPlay": "A BALLAR!",
   "html.howto": "Com es juga?",
   "html.howtoTitle": "Com es juga",
@@ -224,5 +224,12 @@
   "html.entity.namePlaceholder": "Com es diu?",
   "html.rich.material.note": "Les fotos i els fitxers, envia'ls a <a href=\"mailto:holi@mulassa.cat\">holi@mulassa.cat</a> i digue'ns de quina figura són.",
   "html.code.tab": "Programar",
-  "html.code.text": "Si saps programar, pots ajudar a portar aquesta figura al joc. El codi és obert i és a GitHub."
+  "html.code.text": "Si saps programar, pots ajudar a portar aquesta figura al joc. El codi és obert i és a GitHub.",
+  "html.games.title": "Jocs",
+  "html.games.free": "Ball lliure",
+  "html.news.go": "Mira els jocs",
+  "html.news.tip": "Són aquí!",
+  "html.games.pica": "Pica la Mulassa",
+  "html.games.memory": "Memory",
+  "html.games.crush": "Seguici Crush"
 }

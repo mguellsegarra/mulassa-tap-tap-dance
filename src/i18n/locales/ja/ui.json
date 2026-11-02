@@ -405,5 +405,7 @@
   "ui.hearts.tip.singular": "ハートを贈ろう！",
   "ui.hearts.tip.plural": "ハートを贈ろう！",
   "ui.hearts.failed": "保存できませんでした。もう一度試してね。",
-  "ui.code.open": "GitHubを開く"
+  "ui.code.open": "GitHubを開く",
+  "ui.news.title": "ミニゲーム！",
+  "ui.news.text": "上のボタンから、新しいミニゲーム3つで遊べます。"
 }

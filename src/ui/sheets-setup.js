@@ -19,6 +19,8 @@ import { setupGreeting } from './greeting.js';
 import { setupDeviceHint } from './device-hint.js';
 import { setupFreeGate } from './free-gate.js';
 import { setupGamesMenu } from './games-menu.js';
+import { setupNews } from './news-sheet.js';
+import { hasPlayed } from '../game/records.js';
 import { softwareGl } from '../scene/stage.js';
 import { makeDanceChart } from '../game/chart.js';
 import { song, FINALE_T } from '../game/figure-song.js';
@@ -183,7 +185,9 @@ const hint = setupDeviceHint({ focusIn, store, softwareGl }); // the device tips
 sheets.hint = hint;
 sheets.freeGate = setupFreeGate({ focusIn, store, onEnter: () => enterFree() }); // an upright iPhone is asked to turn before free play
 sheets.games = setupGamesMenu({ focusIn, enterFree });
-const greeting = setupGreeting({ asked: () => heartTip.update(), stats: statsSync, seasonEnd, account, hint, identity: () => refreshIdentity(service, kv), back: () => select.refocus(),
+const news = setupNews({ focusIn, store, played: () => hasPlayed(store), onGames: () => sheets.games.open(), force: Q.has('novetats') }); // ?novetats on a dev host shows it again
+sheets.news = news;
+const greeting = setupGreeting({ asked: () => heartTip.update(), stats: statsSync, seasonEnd, account, hint, newGame: news, identity: () => refreshIdentity(service, kv), back: () => select.refocus(),
   free: () => G.state === 'select' && !sheetUp() && !viewMode && !document.hidden,
   extra: () => {
     if (cardGreeted || !mockOpts?.card) return false;

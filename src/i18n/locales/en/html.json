@@ -117,7 +117,7 @@
   "html.selectLevel.aria": "Level",
   "html.selectFiguresBack": "Change figure",
   "html.selectNextLabel": "Choose difficulty",
-  "html.selectFree.title": "Free dance",
+  "html.selectFree.title": "Games",
   "html.selectPlay": "LET’S DANCE!",
   "html.howto": "How to play?",
   "html.howtoTitle": "How to play",
@@ -224,5 +224,12 @@
   "html.entity.namePlaceholder": "What's it called?",
   "html.rich.material.note": "Send photos and files to <a href=\"mailto:holi@mulassa.cat\">holi@mulassa.cat</a> and tell us which figure they're for.",
   "html.code.tab": "Code",
-  "html.code.text": "If you can code, you can help bring this figure into the game. The code is open and on GitHub."
+  "html.code.text": "If you can code, you can help bring this figure into the game. The code is open and on GitHub.",
+  "html.games.title": "Games",
+  "html.games.free": "Free dance",
+  "html.news.go": "See the games",
+  "html.news.tip": "Right here!",
+  "html.games.pica": "Whack the Mulassa",
+  "html.games.memory": "Memory",
+  "html.games.crush": "Seguici Crush"
 }

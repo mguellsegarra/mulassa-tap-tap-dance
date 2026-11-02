@@ -117,7 +117,7 @@
   "html.selectLevel.aria": "难度",
   "html.selectFiguresBack": "切换角色",
   "html.selectNextLabel": "选择难度",
-  "html.selectFree.title": "自由舞蹈",
+  "html.selectFree.title": "游戏",
   "html.selectPlay": "跳起来！",
   "html.howto": "怎么玩？",
   "html.howtoTitle": "怎么玩",
@@ -224,5 +224,12 @@
   "html.entity.namePlaceholder": "叫什么名字？",
   "html.rich.material.note": "照片和文件请发到 <a href=\"mailto:holi@mulassa.cat\">holi@mulassa.cat</a>，并告诉我们是哪个角色的。",
   "html.code.tab": "写代码",
-  "html.code.text": "如果你会编程，可以帮忙把这个角色加入游戏。代码开源，放在GitHub上。"
+  "html.code.text": "如果你会编程，可以帮忙把这个角色加入游戏。代码开源，放在GitHub上。",
+  "html.games.title": "游戏",
+  "html.games.free": "自由舞蹈",
+  "html.news.go": "查看游戏",
+  "html.news.tip": "就在这里！",
+  "html.games.pica": "敲打Mulassa",
+  "html.games.memory": "Memory",
+  "html.games.crush": "Seguici Crush"
 }

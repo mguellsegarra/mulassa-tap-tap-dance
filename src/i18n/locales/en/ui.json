@@ -416,5 +416,7 @@
   "ui.hearts.tip.singular": "Give it a heart!",
   "ui.hearts.tip.plural": "Give them a heart!",
   "ui.hearts.failed": "Couldn't save it. Try again.",
-  "ui.code.open": "Open GitHub"
+  "ui.code.open": "Open GitHub",
+  "ui.news.title": "Mini-games!",
+  "ui.news.text": "Three new mini-games via the top button."
 }

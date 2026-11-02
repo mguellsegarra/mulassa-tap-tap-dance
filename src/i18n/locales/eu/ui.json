@@ -416,5 +416,7 @@
   "ui.hearts.tip.singular": "Eman iezaiozu bihotz bat!",
   "ui.hearts.tip.plural": "Eman iezaiezu bihotz bat!",
   "ui.hearts.failed": "Ezin izan da gorde. Saiatu berriro.",
-  "ui.code.open": "Ireki GitHub"
+  "ui.code.open": "Ireki GitHub",
+  "ui.news.title": "Minijokoak!",
+  "ui.news.text": "Hiru minijoko berri goiko botoian."
 }

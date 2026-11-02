@@ -520,7 +520,7 @@ assert.match($('select-pos').textContent, /^Posició 7 de 1\.350 · /, 'returnin
   await swap(); assert(!/^Posició 2 /.test($('select-pos').textContent), 'signed out: never the previous profile\'s place');
   standingOf = answer; await swap(); }
 const html = readFileSync(new URL('../../../index.html', import.meta.url), 'utf8');
-assert(!html.includes('id="select-free"') && /<button id="free" class="round-btn"[^>]*aria-label="Ball lliure"/.test(html), 'free play is the corner gamepad «Ball lliure», not a dock button');
+assert(!html.includes('id="select-free"') && /<button id="free" class="round-btn"[^>]*aria-label="Jocs"/.test(html), 'the games are the corner button «Jocs», not a dock button');
 assert.match(html, /<section id="select-pending"/); assert(!html.includes('id="soon-menu"'), 'no sheet: a pending figure shows in place');
 assert.match(html, /href="mailto:holi@mulassa.cat"/);
 assert(html.indexOf('id="select-name"') < html.indexOf('id="select-howto"') && html.indexOf('id="select-howto"') < html.indexOf('id="select-rank-tile"'), 'the ? sits by the name');

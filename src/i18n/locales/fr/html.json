@@ -117,7 +117,7 @@
   "html.selectLevel.aria": "Niveau",
   "html.selectFiguresBack": "Change de figure",
   "html.selectNextLabel": "Choisis la difficulté",
-  "html.selectFree.title": "Danse libre",
+  "html.selectFree.title": "Jeux",
   "html.selectPlay": "ON DANSE !",
   "html.howto": "Comment jouer ?",
   "html.howtoTitle": "Comment jouer",
@@ -224,5 +224,12 @@
   "html.entity.namePlaceholder": "Comment s'appelle-t-il ?",
   "html.rich.material.note": "Envoie les photos et les fichiers à <a href=\"mailto:holi@mulassa.cat\">holi@mulassa.cat</a> en précisant de quelle figure il s'agit.",
   "html.code.tab": "Coder",
-  "html.code.text": "Si tu sais coder, tu peux aider à faire entrer cette figure dans le jeu. Le code est ouvert et sur GitHub."
+  "html.code.text": "Si tu sais coder, tu peux aider à faire entrer cette figure dans le jeu. Le code est ouvert et sur GitHub.",
+  "html.games.title": "Jeux",
+  "html.games.free": "Danse libre",
+  "html.news.go": "Voir les jeux",
+  "html.news.tip": "Ils sont ici !",
+  "html.games.pica": "Tape la Mulassa",
+  "html.games.memory": "Memory",
+  "html.games.crush": "Seguici Crush"
 }

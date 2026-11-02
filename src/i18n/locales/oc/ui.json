@@ -416,5 +416,7 @@
   "ui.hearts.tip.singular": "Mete-li un còr!",
   "ui.hearts.tip.plural": "Mete-les un còr!",
   "ui.hearts.failed": "Non s'a pogut sauvar. Torna-i a provar.",
-  "ui.code.open": "Daurís GitHub"
+  "ui.code.open": "Daurís GitHub",
+  "ui.news.title": "Ara, minijòcs!",
+  "ui.news.text": "Tres minijòcs naui en boton de naut."
 }

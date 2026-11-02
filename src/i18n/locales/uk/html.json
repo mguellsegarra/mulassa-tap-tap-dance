@@ -117,7 +117,7 @@
   "html.selectLevel.aria": "Рівень",
   "html.selectFiguresBack": "Змінити фігуру",
   "html.selectNextLabel": "Обери складність",
-  "html.selectFree.title": "Вільний танець",
+  "html.selectFree.title": "Ігри",
   "html.selectPlay": "ДО ТАНЦЮ!",
   "html.howto": "Як грати?",
   "html.howtoTitle": "Як грати",
@@ -224,5 +224,12 @@
   "html.entity.namePlaceholder": "Як називається?",
   "html.rich.material.note": "Фото й файли надсилай на <a href=\"mailto:holi@mulassa.cat\">holi@mulassa.cat</a> і напиши, до якої фігури вони стосуються.",
   "html.code.tab": "Код",
-  "html.code.text": "Якщо вмієш програмувати, допоможи додати цю фігуру в гру. Код відкритий і є на GitHub."
+  "html.code.text": "Якщо вмієш програмувати, допоможи додати цю фігуру в гру. Код відкритий і є на GitHub.",
+  "html.games.title": "Ігри",
+  "html.games.free": "Вільний танець",
+  "html.news.go": "Переглянути ігри",
+  "html.news.tip": "Вони тут!",
+  "html.games.pica": "Бий Mulassa",
+  "html.games.memory": "Memory",
+  "html.games.crush": "Seguici Crush"
 }

@@ -416,5 +416,7 @@
   "ui.hearts.tip.singular": "Schenk ihr ein Herz!",
   "ui.hearts.tip.plural": "Schenk ihnen ein Herz!",
   "ui.hearts.failed": "Konnte nicht gespeichert werden. Versuch es noch einmal.",
-  "ui.code.open": "GitHub öffnen"
+  "ui.code.open": "GitHub öffnen",
+  "ui.news.title": "Jetzt Minispiele!",
+  "ui.news.text": "Drei neue Minispiele über den Knopf oben."
 }

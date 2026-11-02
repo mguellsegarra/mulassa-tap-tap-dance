@@ -117,7 +117,7 @@
   "html.selectLevel.aria": "Livello",
   "html.selectFiguresBack": "Cambia figura",
   "html.selectNextLabel": "Scegli la difficoltà",
-  "html.selectFree.title": "Ballo libero",
+  "html.selectFree.title": "Giochi",
   "html.selectPlay": "SI BALLA!",
   "html.howto": "Come si gioca?",
   "html.howtoTitle": "Come si gioca",
@@ -224,5 +224,12 @@
   "html.entity.namePlaceholder": "Come si chiama?",
   "html.rich.material.note": "Foto e file mandali a <a href=\"mailto:holi@mulassa.cat\">holi@mulassa.cat</a> e dicci di quale figura si tratta.",
   "html.code.tab": "Programma",
-  "html.code.text": "Se sai programmare, puoi aiutare a portare questa figura nel gioco. Il codice è aperto e su GitHub."
+  "html.code.text": "Se sai programmare, puoi aiutare a portare questa figura nel gioco. Il codice è aperto e su GitHub.",
+  "html.games.title": "Giochi",
+  "html.games.free": "Ballo libero",
+  "html.news.go": "Vedi i giochi",
+  "html.news.tip": "Sono qui!",
+  "html.games.pica": "Colpisci la Mulassa",
+  "html.games.memory": "Memory",
+  "html.games.crush": "Seguici Crush"
 }

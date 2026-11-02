@@ -416,5 +416,7 @@
   "ui.hearts.tip.singular": "¡Ponle un corazón!",
   "ui.hearts.tip.plural": "¡Ponles un corazón!",
   "ui.hearts.failed": "No se ha podido guardar. Vuelve a intentarlo.",
-  "ui.code.open": "Abrir GitHub"
+  "ui.code.open": "Abrir GitHub",
+  "ui.news.title": "¡Minijuegos!",
+  "ui.news.text": "Tres minijuegos nuevos en el botón de arriba."
 }

@@ -20,6 +20,13 @@ const within = (promise, ms) => Promise.race([promise, new Promise(r => setTimeo
 
 const a = taker();
 assert.equal(await within(a.held, 10000), true, 'reentrant: its holder takes it again at once');
+{ // a holder that stays alive: the waiter gives up, names it, and leaves it running
+  const late = spawn(process.execPath, ['--input-type=module', '-e', `const { lock } = await import(${lib}); await lock().catch(e => { console.log(e.code, e.message); process.exit(3); });`], { env: { ...env, CAPTURE_LOCK_WAIT_S: '1' }, stdio: ['ignore', 'pipe', 'inherit'] });
+  let said = ''; late.stdout.on('data', d => { said += d; });
+  assert.equal(await within(new Promise(r => late.on('close', r)), 10000), 3, 'a waiter gives up after its limit');
+  assert(said.includes('GPU_LOCK_BUSY') && said.includes(`pid ${a.pid}`), `it says who holds the lock: ${said}`);
+  assert.equal(a.exitCode, null, 'and the holder keeps running');
+}
 const b = taker();
 assert.equal(await within(b.held, 2500), false, 'held by another live process: the next one queues');
 a.stdin.write('x'); await a.exited;

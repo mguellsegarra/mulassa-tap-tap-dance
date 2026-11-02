@@ -16,7 +16,7 @@ const { chromium } = await import(pathToFileURL(entry).href);
 let browser;
 for (const soft of process.env.GL_BUDGET_SOFT === '1' ? [true] : [false, true]) {
   try { browser = await launchBrowser(chromium, { soft }); console.log(`gl budget: ${soft ? 'software' : 'real GPU'} WebGL`); break; }
-  catch (err) { if (soft) { console.log(`gl budget: skipped (no Chromium: ${String(err.message).split('\n')[0]})`); process.exit(0); } }
+  catch (err) { if (err.code === 'GPU_LOCK_BUSY') throw err; if (soft) { console.log(`gl budget: skipped (no Chromium: ${String(err.message).split('\n')[0]})`); process.exit(0); } }
 }
 
 // Real GL draw calls a frame (the shadow pass included; renderer.info.render does not count it) per profile: the worst

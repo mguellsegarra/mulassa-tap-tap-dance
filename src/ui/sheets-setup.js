@@ -145,7 +145,7 @@ const board = setupBoard({ focusIn,
   afterPublish: () => { refreshIdentity(service, kv).then(() => share.refreshName()); }, // the name's check follows the server's answer
   onRecover: () => profile.open('recover', () => board.openPublish()), // «Recupera’l» on the publish sheet: recover, then publish
   onConfirm: () => profile.open('link'), // «Confirma el correu» under «Publicat!»
-  onKeep: () => profile.open('link'), onCard: p => card.open(p), onSeasons: f => seasons.open(f), // over the board, which stays under them
+  onCard: p => card.open(p), onSeasons: f => seasons.open(f), // over the board, which stays under them
   acceptStats, currentFigure: () => select?.figure?.id,
   // «Juga amb …» on an empty board: only with the selector right under it (not over results, Perfil or the Saló de la fama)
   canPlay: () => G.state === 'select' && !viewMode && [...document.querySelectorAll('dialog[open]')].every(d => d.id === 'board-menu'),

@@ -16,7 +16,7 @@ const { chromium } = await import(pathToFileURL(entry).href);
 let browser;
 for (const soft of [false, true]) {
   try { browser = await launchBrowser(chromium, { soft }); break; }
-  catch (err) { if (soft) { console.log(`prod play: skipped (no Chromium: ${String(err.message).split('\n')[0]})`); process.exit(0); } }
+  catch (err) { if (err.code === 'GPU_LOCK_BUSY') throw err; if (soft) { console.log(`prod play: skipped (no Chromium: ${String(err.message).split('\n')[0]})`); process.exit(0); } }
 }
 
 const root = fileURLToPath(new URL('../..', import.meta.url)), outDir = mkdtempSync(join(tmpdir(), 'prod-play-'));

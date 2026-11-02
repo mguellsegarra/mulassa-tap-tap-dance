@@ -9,8 +9,7 @@
   `COARSE`) or use a neutral verb («Marca»). Links in running text (mailtos): cream `#fff3d6`, underlined (never GUA orange).
 - **Colour roles** (one job each): solid gold `#f5c518` = the one primary action of a view; gold outline = every other button,
   round icon buttons and the sheets' frame; solid cream `#fff3d6` with dark text = what is selected (town pills, level and
-  view segments; a cream ring on the selected card), unselected choices get a neutral `#e8d8b880` edge; information chips on a card (a pending figure's entity) are dark with cream text, never a cream fill; the one exception is the entity chip (pending card and the playable info block share the same pastel holo pill with dark text, `.sel-entity` in select-pending.css); gold as text only for
-  brand and celebration (titles, GUAPA); GUA orange / PA turquoise only for the two drums and what literally means left/right;
+  view segments; a cream ring on the selected card), unselected choices get a neutral `#e8d8b880` edge; information chips on a card (a pending figure's entity) are dark with cream text, never a cream fill; the one exception is the entity chip (pending card and the playable info block share the same pastel holo pill with dark text, `.sel-entity` in select-pending.css); gold as text only for brand, celebration (GUAPA) and titles: every sheet's big `h2` is gold (`.sheet h2`), except the small labels of Classificació and the end of a season, the notice's ribbon and «Publicat!» above the offer's own gold headline; GUA orange / PA turquoise only for the two drums and what literally means left/right;
   errors `#ff8a7a`. Round icon buttons: 44 or 56 px, 2 px gold edge, dark fill, cream glyph (`.sheet-x` too); #pause stays
   bigger on purpose (a game control), and free play's touch moves are arcade buttons on purpose, one colour per move
   (red Q, green E, blue R, gold jump; `#photo-touch .ps-btn`). Every target is >= 44 px (`.btn-link` gets an invisible slop).

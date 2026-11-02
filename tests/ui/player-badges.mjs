@@ -31,6 +31,10 @@ class El {
 }
 const els = new Map(), doc = { createElement: t => new El(t), getElementById: id => els.get(id) ?? els.set(id, new El('div', id)).get(id), activeElement: null };
 
+// a group of two shares one row: the rule centring a last row of two in the 3-column groups must not reach it (it pushed UAF aside)
+for (const rule of read('src/styles/profile.css').match(/[^}]*:nth-last-child\(2\)[^{]*\{/g)?.filter(r => r.includes('.badge-')) ?? []) assert(rule.includes(':not(.pair)'), rule);
+assert(/:not\(\.pair\) > \.badge-cell:nth-last-child\(2\)/.test(read('src/styles/profile.css')), 'the last row of two stays centred');
+
 // the mark
 const mark = checkBadge(doc, 'town:valls');
 assert.equal(mark.className, 'player-badge'); assert.equal(mark.title, 'Valls', 'its name, on a hover');

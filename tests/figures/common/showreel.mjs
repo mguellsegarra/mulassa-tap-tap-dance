@@ -86,6 +86,10 @@ followBeat(s, 2.25, 0.01); assert.ok(Math.abs(s.err) > 0, 'music again: the phas
   assert.ok(worst <= 0.15 + 1e-9, `caught up at most 15% off the tempo (${worst.toFixed(3)})`);
   const err = Math.abs(ph(f.acc) - ph(mb)); assert.ok(Math.min(err, 4 - err) < 1e-6, 'and back onto the loop\'s bar'); }
 
+// the splash's tap: she is already dancing (on) when the loop first sounds: no jump, caught up at most 15% off the tempo
+{ const f = { acc: 10.5, prev: null, on: true }, a0 = f.acc;
+  followBeat(f, 0.5, 0.02); assert.ok(f.acc - a0 < 0.1 && f.locked && Math.abs(f.err) > 1, 'the first lock under a dance on show: nothing jumps'); }
+
 // tickReel: a fresh selection starts on its first move, on the current bar; every shot change is a cut, the wrap too
 Object.assign(REEL, { on: false, id: null, acc: 0, prev: null, alone: false, err: 0, locked: false });
 let r = tickReel(true, MULASSA.id, 1, 0);

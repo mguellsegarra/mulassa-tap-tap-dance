@@ -695,7 +695,6 @@
         <div class="feedback-mail">
 <p class="feedback-small" data-i18n="html.rich.feedbackSmall1">Et contestarem al correu del teu perfil. <button id="feedback-privacy" type="button" class="btn btn-link btn-small" data-privacy-open aria-haspopup="dialog" data-i18n="html.common.privacy">Privadesa</button></p>
           <p id="feedback-direct" class="feedback-small" data-i18n="html.rich.feedbackSmall2">Per drets sobre continguts o dades personals, també pots escriure a <a id="feedback-mailto" href="mailto:holi@mulassa.cat">holi@mulassa.cat</a></p>
-          <p id="feedback-rights" class="feedback-rights" data-i18n="html.feedbackRights">Si tens drets sobre algun contingut del joc i vols que el canviem o el retirem, escriu-nos.</p>
         </div>
       </div>
     </div>
@@ -710,8 +709,10 @@
 <!-- hearts and the Bústia need a confirmed e-mail (src/ui/confirm-gate.js); the Perfil sheets do the confirming -->
 <dialog id="gate-menu" class="sheet" tabindex="-1" aria-labelledby="gate-title" aria-describedby="gate-text">
   <div class="sheet-body">
+    <div id="gate-seal"></div>
     <h2 id="gate-title"></h2>
     <p id="gate-text"></p>
+    <div id="gate-perks"></div>
     <div class="sheet-actions">
       <button id="gate-go" type="button" class="btn btn-primary"></button>
       <button id="gate-later" type="button" class="btn btn-secondary" data-i18n="ui.feedback.cancel">Ara no</button>

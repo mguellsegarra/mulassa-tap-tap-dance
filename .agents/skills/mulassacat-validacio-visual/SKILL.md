@@ -25,7 +25,7 @@ Numeric checks and green tests do not prove a layout, a model or a motion.
 | --- | --- |
 | Frame pacing, hitches, a recorded video of play | `npm run capture -- --url='http://localhost:5178/?mute&autoplay&from=40' --seconds=20 --vp=393x852 --dpr=2 --touch` (`tools/qa/capture.mjs`): real GPU (Chrome + Metal), `frames.csv`, `summary.json`, `video.mp4`, `spike-N.jpg` contact sheets. Read the numbers first, the video second. |
 | Every screen × viewport × language as stills | `node tools/qa/ui-inventory.mjs` (scene codes `S<nn>-V<n>-<lang>`); `tools/qa/ui-inventory-pdf.mjs` builds a PDF the owner can answer by code (A5, B8…). Output goes to the git-ignored `docs/i18n-ui-inventory/`. |
-| Every modal, menu and submenu by flow × account × resolution, in a page the owner comments per capture | `node tools/qa/ui-review.mjs`, then `node tools/qa/ui-review.mjs --serve` (`tools/qa/ui-review.mjs`'s header); comments land in `docs/i18n-ui-inventory/revisio/comentaris.json`. |
+| Every modal, menu and submenu by flow × account × resolution, in a page the owner comments per capture, with a toggle for what changed against `main` | `npm run ui-review -- --base` (captures `origin/main`), `npm run ui-review` (the current code), `npm run ui-review -- --serve` (port 5179, LAN too). Comments land in `docs/i18n-ui-inventory/revisio/comentaris.json`. A new sheet needs its line in `SCREENS` (`tools/qa/ui-review.mjs`); the run names any dialog left out. Canvas UI and the 3D don't count as a change. |
 | The same as motion (layout shifts, blinks, blanks) | `node tools/qa/ui-video.mjs` (clip codes `M<nn>-…`), `tools/qa/ui-video-pdf.mjs`, `tools/qa/ui-video-readme.mjs`. |
 | Frames from a recording | the global `video-frames` skill (ffmpeg). |
 | iOS behaviour (Safari, home-screen app, Low Power) | the iOS Simulator only. |
@@ -58,9 +58,9 @@ The owner sends screen recordings (CleanShot `.mp4`, `.gif`, phone `.MOV`, usual
 
 ## Handing over a link
 
-Give the links first: once the edit is in and before your own captures, write both URLs in the chat, then carry on without waiting. The owner may try it on their own while you check. Later reports repeat them.
+Give the link first: once the edit is in and before your own captures, write the LAN URL in the chat, then carry on without waiting. The owner may try it on their own while you check. Later reports repeat it.
 
-Before giving a URL, check that the server is running from the intended worktree and serves the change (a distinctive value in the loaded page, not only HTTP 200). Give `http://localhost:<port>/?mute…` for the computer and the LAN address (`http://<lan-ip>:<port>/?mute…`) for the phone, both as clickable links with the state parameters that reach the change, and leave that server running. If the change is in another worktree or port, say which.
+Before giving a URL, check that the server is running from the intended worktree and serves the change (a distinctive value in the loaded page, not only HTTP 200). Give only the LAN address (`http://<lan-ip>:<port>/?mute…`, IP from `ipconfig getifaddr en0`), never `localhost`, as a clickable link with the state parameters that reach the change, and leave that server running. If the change is in another worktree or port, say which.
 
 ## UI states and transitions
 

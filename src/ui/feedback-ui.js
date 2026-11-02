@@ -26,6 +26,8 @@ export function setupFeedback({ focusIn, captcha, service = defaultService, doc 
     form.setAttribute('aria-busy', String(disabled));
   }
   const thanks = $('feedback-thanks'), thanksClose = $('feedback-thanks-close');
+  let afterThanks = null; // where the box was opened from waits for the thank-you, or it would open over it
+  thanks?.addEventListener('close', () => { clearTimeout(closeTimer); const b = afterThanks; afterThanks = null; b?.(); });
   thanksClose?.addEventListener('click', () => thanks.close());
   const sendLabel = () => tr(request.kind === 'code' ? 'ui.code.open' : 'ui.feedback.send');
   const minChars = () => request.kind === 'general' ? MESSAGE_MIN : FIGURE_MESSAGE_MIN;
@@ -117,6 +119,7 @@ export function setupFeedback({ focusIn, captcha, service = defaultService, doc 
       done = true;
       busy = false;
       setSend(tr('ui.feedback.send'));
+      if (thanks && !thanks.open) { afterThanks = back; back = null; }
       menu.close(); // the box closes; a small «Rebut! Gràcies» sheet says it arrived (it closes by itself too)
       text.value = ''; drafts[sending.kind] = ''; if (sending.kind === 'material') clearChoices(material); else if (sending.kind === 'entity') clearChoices(entity);
       done = false; setStatus(''); counter();
@@ -140,7 +143,7 @@ export function setupFeedback({ focusIn, captcha, service = defaultService, doc 
   cancelBtn.addEventListener('click', () => { if (!busy) menu.close(); });
   menu.addEventListener('cancel', e => { if (busy) e.preventDefault(); }); // Escape or a tap outside: not while it sends
   menu.addEventListener('close', () => {
-    req++; busy = false; clearTimeout(closeTimer);
+    req++; busy = false;
     captcha?.cancel(); // nobody waits for a token any more
     cancelBtn.hidden = false;
     drafts[request.kind] = text.value;

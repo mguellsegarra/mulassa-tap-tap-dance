@@ -177,7 +177,7 @@
   "ui.profile.lead.codeOther": "That email belongs to another profile. The code sent to {mail} will sign you into that profile: {mine} and its scores won’t be added.",
   "ui.profile.lead.codeSent": "We’ve sent a 6-digit code to {mail}. Check your spam folder too.",
   "ui.profile.lead.create": "Choose a nickname for the leaderboard. 3–16 characters, no spaces.",
-  "ui.profile.lead.link": "Keep your name, recover your profile on any device and show the blue check. No password.",
+  "ui.profile.lead.link": "Your name, forever and with a blue check.",
   "ui.profile.lead.recover": "Enter the email you confirmed on your profile and we’ll send you a sign-in code. No password needed.",
   "ui.profile.signout.done": "Signed out.",
   "ui.profile.signout.lead": "This browser will forget your profile. Recover it with a code sent to {mail}.",

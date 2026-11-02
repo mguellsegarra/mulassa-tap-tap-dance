@@ -177,7 +177,7 @@
   "ui.profile.lead.codeOther": "このメールは別のプロフィールに登録済みです。{mail}に送ったコードでそのプロフィールに入ります。{mine}とその結果は統合されません。",
   "ui.profile.lead.codeSent": "{mail}に6桁のコードを送りました。迷惑メールフォルダーも確認してね。",
   "ui.profile.lead.create": "ニックネームを選ぼう。ランキングに表示される名前です。3–16文字、スペースなし。",
-  "ui.profile.lead.link": "名前を守り、どの端末でもプロフィールを復元でき、青いマークも付きます。パスワードは不要です。",
+  "ui.profile.lead.link": "あなたの名前を、青いマークとともにずっと。",
   "ui.profile.lead.recover": "プロフィールで認証したメールを入力すると、ログイン用コードを送ります。パスワードは不要です。",
   "ui.profile.signout.done": "ログアウトしました。",
   "ui.profile.signout.lead": "このブラウザーからプロフィールを外します。{mail}に送るコードで復元できます。",

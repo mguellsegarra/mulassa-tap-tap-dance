@@ -177,7 +177,7 @@
   "ui.profile.lead.codeOther": "Diese E-Mail gehört zu einem anderen Profil. Mit dem Code an {mail} meldest du dich dort an: {mine} und dessen Ergebnisse werden nicht übernommen.",
   "ui.profile.lead.codeSent": "Ein Code mit 6 Ziffern ist unterwegs an {mail}. Schau auch im Spam nach.",
   "ui.profile.lead.create": "Wähle einen Spitznamen für die Rangliste. 3–16 Zeichen, ohne Leerzeichen.",
-  "ui.profile.lead.link": "Behalte deinen Namen, stelle dein Profil auf jedem Gerät wieder her und zeig das blaue Häkchen. Ohne Passwort.",
+  "ui.profile.lead.link": "Dein Name, für immer und mit blauem Häkchen.",
   "ui.profile.lead.recover": "Gib die im Profil bestätigte E-Mail ein. Du bekommst einen Code zum Anmelden. Ohne Passwort.",
   "ui.profile.signout.done": "Abgemeldet.",
   "ui.profile.signout.lead": "Dieser Browser vergisst dein Profil. Ein Code an {mail} holt es zurück.",

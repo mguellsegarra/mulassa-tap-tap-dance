@@ -177,7 +177,7 @@
   "ui.profile.lead.codeOther": "Questa email appartiene già a un altro profilo. Con il codice inviato a {mail} entrerai in quel profilo: {mine} e i suoi risultati non saranno aggiunti.",
   "ui.profile.lead.codeSent": "Ti abbiamo inviato un codice di 6 cifre a {mail}. Controlla anche lo spam.",
   "ui.profile.lead.create": "Scegli un soprannome: apparirà in classifica. 3–16 caratteri, senza spazi.",
-  "ui.profile.lead.link": "Conserva il nome, recupera il profilo su qualsiasi dispositivo e mostra la spunta blu. Senza password.",
+  "ui.profile.lead.link": "Il tuo nome, per sempre e con la spunta blu.",
   "ui.profile.lead.recover": "Scrivi l’email che hai confermato nel profilo e ti invieremo un codice per accedere. Senza password.",
   "ui.profile.signout.done": "Sessione chiusa.",
   "ui.profile.signout.lead": "Questo browser dimenticherà il profilo. Lo recupererai con un codice inviato a {mail}.",

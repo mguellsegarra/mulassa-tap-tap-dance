@@ -177,7 +177,7 @@
   "ui.profile.lead.codeOther": "Cet e-mail appartient déjà à un autre profil. Le code envoyé à {mail} te connectera à cet autre profil : {mine} et ses résultats n’y seront pas ajoutés.",
   "ui.profile.lead.codeSent": "Un code à 6 chiffres a été envoyé à {mail}. Regarde aussi dans les spams.",
   "ui.profile.lead.create": "Choisis un pseudo pour le classement. 3–16 caractères, sans espaces.",
-  "ui.profile.lead.link": "Garde ton nom, récupère ton profil sur tout appareil et affiche la coche bleue. Sans mot de passe.",
+  "ui.profile.lead.link": "Ton pseudo, pour toujours et avec la coche bleue.",
   "ui.profile.lead.recover": "Saisis l’e-mail confirmé sur ton profil pour recevoir un code de connexion. Sans mot de passe.",
   "ui.profile.signout.done": "Déconnexion réussie.",
   "ui.profile.signout.lead": "Ce navigateur oubliera le profil. Tu pourras le récupérer avec un code envoyé à {mail}.",

@@ -1,28 +1,23 @@
 import { blip, isMuted, setMuted } from './sound.js';
 import { startAudio, stopAudio, setProgress } from './audio.js';
-import { newGame, swap, adjacent, findMoves, starsFor, assistFor } from './rules.js';
+import { newGame, swap, adjacent, findMoves, starsFor, helpFor } from './rules.js';
 import { LEVELS, levelFor, MIN_ROWS, MAX_ROWS } from './levels.js';
 import { createView, paintIcon } from './view.js';
 import { T } from './copy.js';
+import { createScreens, figureImg } from './screens.js';
+import { createPanels } from './panels.js';
+import { loadStars, loadLosses, saveStars, saveLosses } from './progress.js';
 
-const LOSSES_KEY = 'minijocs.crush.losses'; // times each level was lost since last won: stays on this device
-const STARS_KEY = 'minijocs.crush.stars'; // best stars per level; a level opens once the previous has any
 const HINT_AFTER = 3; // seconds idle
+const GOAL_READ = 2; // seconds the goal stays on screen, before the gift can take its place
 const COLS = 7, INSET = 4; // the board's frame around its cells, as view.js draws it
 const HUD_TOP = 6, MIN_GAP = 8, MAX_CELL = 88;
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-function loadStars() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(STARS_KEY));
-    return Array.isArray(saved) ? saved : [];
-  } catch { return []; }
-}
-
 export function start(root, leave) {
   root.innerHTML = `<div class="stage crush"><canvas></canvas>
     <div class="crush-hud">
-      <div class="crush-side"><button class="back" aria-label="${T.back}">‹</button><button class="back crush-sound" aria-label="${T.sound}">♪</button></div>
+      <div class="crush-side"><button class="back" aria-label="${T.back}">‹</button><button class="back crush-sound">♪</button></div>
       <div class="crush-moves" data-movechip><b data-moves></b><small>${T.moves}</small></div>
       <div class="crush-goal"><canvas width="240" height="240"></canvas><div><small>${T.level} <span data-level></span></small><b data-count></b><span class="crush-track"><span class="crush-bar"></span></span></div></div>
     </div>
@@ -35,9 +30,9 @@ export function start(root, leave) {
   const field = name => hud.querySelector(`[data-${name}]`);
   const bar = hud.querySelector('.crush-bar');
 
-  const losses = JSON.parse(localStorage.getItem(LOSSES_KEY) ?? '{}');
-  let stars = loadStars(), game = null, levelIdx = 0, ended = false, raf = 0, last = 0, armTimer = 0, W = 0, H = 0;
-  let rows = MIN_ROWS, selected = null, press = null, idle = 0, hint = null, iconVersion = -1;
+  const losses = loadLosses();
+  let stars = loadStars(), game = null, levelIdx = 0, ended = false, raf = 0, last = 0, W = 0, H = 0;
+  let giftId = null, goalToSay = false, rows = MIN_ROWS, selected = null, press = null, idle = 0, hint = null, iconVersion = -1;
 
   const view = createView(canvas, e => {
     if (e.moves !== undefined) showMoves(e.moves);
@@ -87,44 +82,40 @@ export function start(root, leave) {
   function deal(i) {
     rows = chooseRows();
     place();
-    return newGame(levelFor(i, rows), Math.random, COLS, rows, assistFor(losses[i] ?? 0));
-  }
-
-  function panel(title, body, buttons, compact) {
-    overlay.style.display = '';
-    // a player still tapping must not hit a button that has just appeared
-    overlay.style.pointerEvents = 'none';
-    clearTimeout(armTimer);
-    armTimer = setTimeout(() => { overlay.style.pointerEvents = ''; }, 500);
-    overlay.innerHTML = `<div class="panel${compact ? ' compact' : ''}"><h2>${title}</h2>${body}</div>`;
-    for (const [name, fn, alt] of buttons) {
-      const b = document.createElement('button');
-      b.className = alt ? 'btn alt' : 'btn';
-      b.textContent = name;
-      b.onclick = fn;
-      overlay.firstChild.append(b);
-    }
+    return newGame(levelFor(i, rows), Math.random, COLS, rows, helpFor(losses[i] ?? 0));
   }
 
   const nextIndex = () => Math.min(stars.filter(Boolean).length, LEVELS.length - 1);
   const isOpen = i => i === 0 || stars[i - 1] > 0;
 
-  function home() {
+  const { panel, closePanel, dispose: disposePanels } = createPanels(overlay);
+  const screens = createScreens(stage, {
+    leave,
+    settings: showSettings,
+    pick: preLevel,
+    isOpen,
+    nextIndex,
+    starsOf: i => stars[i] ?? 0,
+  });
+
+  function showScreen(open) {
     game = null;
     ended = true;
     hud.style.visibility = 'hidden';
-    const next = nextIndex();
-    view.reset(deal(next).board, false);
-    panel(T.title, `<p>${T.how}</p><div class="crush-grid"></div>`, [[T.play(next + 1), () => play(next)], [T.menu, leave, true]], true);
-    const grid = overlay.querySelector('.crush-grid');
-    LEVELS.forEach((_, i) => {
-      const b = document.createElement('button');
-      b.className = `crush-level${i === next ? ' now' : ''}`;
-      b.disabled = !isOpen(i);
-      b.innerHTML = `${i + 1}<i>${'★'.repeat(stars[i] ?? 0)}</i>`;
-      b.onclick = () => play(i);
-      grid.append(b);
-    });
+    closePanel();
+    open();
+  }
+
+  function preLevel(i) {
+    const { goal, n, moves } = levelFor(i, chooseRows());
+    const row = [1, 2, 3].map(k => `<span class="${k <= (stars[i] ?? 0) ? 'on' : ''}">★</span>`).join('');
+    panel(T.goal(n, T.names[goal]), `<small>${T.level} ${i + 1}</small>${figureImg(goal)}<p>${T.movesCount(moves)}</p>
+      ${stars[i] ? `<div class="crush-stars small" role="img" aria-label="${stars[i]}/3">${row}</div><small>${T.best}</small>` : ''}`, [[T.play, () => play(i)], [T.notNow, closePanel, true]], { label: T.close, fn: closePanel });
+  }
+
+  function showSettings() {
+    const label = () => (isMuted() ? T.soundOn : T.soundOff);
+    panel(T.settingsLabel, `<p>${T.how} ${T.help}</p>`, [[label(), e => { setMuted(!isMuted()); e.target.textContent = label(); showSound(); }, true], [T.close, closePanel]]);
   }
 
   function play(i) {
@@ -133,38 +124,40 @@ export function start(root, leave) {
     ended = false;
     selected = press = hint = null;
     idle = 0;
-    overlay.style.display = 'none';
+    closePanel();
+    screens.hide();
     hud.style.visibility = '';
     field('level').textContent = i + 1;
     showMoves(game.moves);
     showCount(0);
     iconVersion = -1;
     view.reset(game.board, true);
-    view.text(T.goal(game.level.n, T.names[game.level.goal]));
+    goalToSay = true;
+    giftId = game.gift ? game.board.flat().find(p => p.special).id : null;
   }
 
   function finish() {
     const { status, level } = game;
     losses[levelIdx] = status === 'won' ? 0 : (losses[levelIdx] ?? 0) + 1;
-    localStorage.setItem(LOSSES_KEY, JSON.stringify(losses));
+    saveLosses(losses);
     if (status === 'won') {
       const got = starsFor(game);
       stars[levelIdx] = Math.max(stars[levelIdx] ?? 0, got);
-      localStorage.setItem(STARS_KEY, JSON.stringify(stars));
+      saveStars(stars);
       [523, 659, 784, 1047].forEach((n, i) => view.later(i * .11, () => blip(n, 180), true));
       const row = [1, 2, 3].map(n => `<span class="${n <= got ? 'on' : ''}">★</span>`).join('');
       const last = levelIdx === LEVELS.length - 1;
-      panel(T.won, `<div class="crush-stars" role="img" aria-label="${got}/3">${row}</div><p>${last ? T.done : T.movesLeft(game.moves)}</p>`, [
-        ...(last ? [] : [[T.next, () => play(levelIdx + 1)]]),
-        [T.retry, () => play(levelIdx), !last],
-        [T.levels, home, true],
-      ]);
+      panel(T.won, `<small>${T.level} ${levelIdx + 1}</small><div class="crush-burst">${figureImg(level.goal)}</div><div class="crush-stars" role="img" aria-label="${got}/3">${row}</div><p>${last ? T.done : T.nextOpen(levelIdx + 2)}</p>`, [
+        ...(last ? [] : [[T.next, () => { showScreen(screens.map); preLevel(levelIdx + 1); }]]),
+        [T.replay, () => play(levelIdx), !last],
+        [T.map, () => showScreen(screens.map), true],
+      ], { label: T.close, fn: () => showScreen(screens.map) });
     } else {
       blip(196, 400, 'sine');
-      panel(T.lost, `<p>${T.progress(game.collected, level.n, T.names[level.goal])}</p>`, [
+      panel(T.lost, `<small>${T.level} ${levelIdx + 1}</small>${figureImg(level.goal)}<p>${T.progress(game.collected, level.n, T.names[level.goal])}</p>`, [
         [T.retry, () => play(levelIdx)],
-        [T.levels, home, true],
-      ]);
+        [T.map, () => showScreen(screens.map), true],
+      ], { label: T.close, fn: () => showScreen(screens.map) });
     }
   }
 
@@ -227,6 +220,8 @@ export function start(root, leave) {
   function marks(time) {
     const m = new Map();
     if (!game) return m;
+    // lit until the first move, or the player would never notice a present that is one small badge among the pieces
+    if (giftId && game.moves === game.level.moves) m.set(giftId, { ring: 1, pulse: reduced ? .6 : Math.sin(time * 3) ** 2 });
     if (selected) m.set(game.board[selected.r][selected.c].id, { ring: 1 });
     if (hint) {
       const a = game.board[hint.a.r][hint.a.c], b = game.board[hint.b.r][hint.b.c];
@@ -250,6 +245,11 @@ export function start(root, leave) {
       paintIcon(icon, game.level.goal);
     }
     if (game && !ended && !view.busy) {
+      if (goalToSay) { // said once the pieces have landed: over a falling board it could not be read
+        goalToSay = false;
+        view.text(T.goal(game.level.n, T.names[game.level.goal]), true);
+        if (game.gift) view.later(GOAL_READ, () => view.text(T.gift, true), true);
+      }
       if (game.status !== 'playing') {
         ended = true;
         view.later(.45, finish, true); // let the last pieces land before the panel covers them
@@ -266,23 +266,23 @@ export function start(root, leave) {
 
   const listeners = new AbortController();
   const { signal } = listeners;
-  stage.querySelector('.back').onclick = home;
+  stage.querySelector('.back').onclick = () => showScreen(screens.map);
   addEventListener('resize', size, { signal });
   canvas.addEventListener('pointerdown', onDown, { signal });
   stage.addEventListener('pointerdown', startAudio, { signal, once: true });
   const soundBtn = stage.querySelector('.crush-sound');
-  const showSound = () => { soundBtn.classList.toggle('off', isMuted()); soundBtn.setAttribute('aria-pressed', String(!isMuted())); };
+  const showSound = () => { soundBtn.classList.toggle('off', isMuted()); soundBtn.setAttribute('aria-label', isMuted() ? T.soundOn : T.soundOff); };
   soundBtn.onclick = () => { setMuted(!isMuted()); showSound(); };
   showSound();
   canvas.addEventListener('pointermove', onMove, { signal });
   canvas.addEventListener('pointerup', onUp, { signal });
   canvas.addEventListener('pointercancel', onCancel, { signal });
   size();
-  home();
+  showScreen(screens.title);
   raf = requestAnimationFrame(frame);
   return () => {
     cancelAnimationFrame(raf);
-    clearTimeout(armTimer);
+    disposePanels();
     listeners.abort();
     stopAudio();
   };

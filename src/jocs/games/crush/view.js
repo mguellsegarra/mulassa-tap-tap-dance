@@ -3,7 +3,7 @@ import { blip } from './sound.js';
 import { CARRETILLA, TRONADA } from './rules.js';
 import { T } from './copy.js';
 import { COLOURS, artVersion, paintPiece, paintBackground } from './art.js';
-import { drawBadge, drawBeams, zigzag } from './draw.js';
+import { drawBadge, drawBeams, drawFlash, zigzag } from './draw.js';
 
 export { paintIcon } from './art.js';
 
@@ -128,7 +128,8 @@ export function createView(canvas, onEvent) {
     }
   }
 
-  function showText(text) { flash = { text, age: 0, dur: reduced ? 1 : .75 }; }
+  // A phrase celebrates and goes; a banner tells the player something and stays long enough to read, over a band of its own.
+  function showText(text, banner = false) { flash = { text, banner, age: 0, dur: banner ? 2 : reduced ? 1 : .75 }; }
 
   function advance(dt) {
     for (const tw of tweens) {
@@ -278,21 +279,7 @@ export function createView(canvas, onEvent) {
         ctx.fill();
       }
       ctx.globalAlpha = 1;
-      if (flash) {
-        const t = flash.age / flash.dur;
-        const zoom = reduced ? 1 : EASE.back(Math.min(1, flash.age / .15));
-        ctx.globalAlpha = t > .7 ? (1 - t) / .3 : 1;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.font = `400 ${Math.round(cell * .95 * zoom)}px 'Jersey 10', monospace`;
-        ctx.lineWidth = Math.max(4, cell * .14);
-        ctx.lineJoin = 'round';
-        ctx.strokeStyle = '#1b1420';
-        ctx.fillStyle = '#f5c518';
-        ctx.strokeText(flash.text, bx + bw / 2, by + bh / 2);
-        ctx.fillText(flash.text, bx + bw / 2, by + bh / 2);
-        ctx.globalAlpha = 1;
-      }
+      if (flash) drawFlash(ctx, flash, bx, by, bw, bh, cell, reduced ? 1 : EASE.back(Math.min(1, flash.age / .15)));
       ctx.restore();
     },
   };

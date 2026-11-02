@@ -88,10 +88,30 @@ function freshBoard(g) {
   return board;
 }
 
-// level: { goal, n, moves, kinds, stars }
-export function newGame(level, rng, cols, rows, assist = 0) {
-  const g = { level, rng, cols, rows, assist, kinds: level.kinds, nextId: 1, board: null, moves: level.moves, collected: 0, status: 'playing' };
-  do g.board = freshBoard(g); while (!findMoves(g.board).length);
+// More moves and goal pieces to start from mean an easier level with nothing on screen to give it away.
+const boardValue = (g, board, moves) => moves + board.flat().filter(p => p.kind === g.level.goal).length;
+
+function dealBoard(g, boards) {
+  let best = null, top = -1;
+  for (let dealt = 0; dealt < boards; ) {
+    const board = freshBoard(g), moves = findMoves(board).length;
+    if (!moves) continue;
+    dealt++;
+    const value = boardValue(g, board, moves);
+    if (value > top) { best = board; top = value; }
+  }
+  return best;
+}
+
+// level: { goal, n, moves, kinds, stars }; help: see helpFor
+export function newGame(level, rng, cols, rows, { assist = 0, boards = 1, gift = false } = {}) {
+  const g = { level, rng, cols, rows, assist, gift, kinds: level.kinds, nextId: 1, board: null, moves: level.moves, collected: 0, status: 'playing' };
+  g.board = dealBoard(g, boards);
+  if (gift) {
+    const p = g.board[Math.floor(rng() * rows)][Math.floor(rng() * cols)];
+    p.special = CARRETILLA;
+    p.dir = rng() < .5 ? 'row' : 'col';
+  }
   return g;
 }
 
@@ -227,13 +247,19 @@ function swapSeeds(board, a, b) {
   return seeds;
 }
 
-// Plays one player swap to the end. An invalid swap costs nothing and only yields 'swap' + 'back'.
-// One phrase at the end of a chain, stronger the longer it was, as Candy Crush does (notes/estudi-joc-referents.md).
 // Help grows gently with the times this level has been lost, up to a cap, and goes away when it is won.
 export const assistFor = losses => Math.min(.3, .1 * Math.log1p(losses));
+const BOARDS_AFTER = 2, GIFT_AFTER = 3, MAX_BOARDS = 5;
+export const helpFor = losses => ({
+  assist: assistFor(losses),
+  boards: losses >= BOARDS_AFTER ? Math.min(MAX_BOARDS, losses + 1) : 1,
+  gift: losses >= GIFT_AFTER, // the one help the player sees: they should know the game is on their side
+});
 
+// One phrase at the end of a chain, stronger the longer it was, as Candy Crush does (notes/estudi-joc-referents.md).
 export const praiseTier = steps => (steps < 3 ? 0 : steps <= 4 ? 2 : steps <= 6 ? 3 : 4);
 
+// Plays one player swap to the end. An invalid swap costs nothing and only yields 'swap' + 'back'.
 export function swap(g, a, b) {
   if (g.status !== 'playing' || !adjacent(a, b)) return [];
   const ids = { aId: g.board[a.r][a.c].id, bId: g.board[b.r][b.c].id };

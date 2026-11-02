@@ -36,11 +36,12 @@ function heartFailed(button) {
   return note;
 }
 export function setupHearts({ service, needConfirmed, onChange = () => {} }) {
-  let totals = null, loading = null, session = 0, failed = null; const mine = new Set(), saving = new Set();
+  let totals = null, loading = null, session = 0, failed = null, owner, checking = null; const mine = new Set(), saving = new Set();
+  const whose = async () => { try { return await service.ownerId?.(); } catch { return undefined; } };
   // an answer from before a change of account never lands on the new one
   function load() {
     const asked = session;
-    loading ??= Promise.resolve().then(() => service.figureHearts()).then(rows => { // a board without hearts (the dev mock): no counts, no crash
+    loading ??= Promise.resolve().then(whose).then(id => { if (asked === session) owner = id; return service.figureHearts(); }).then(rows => { // a board without hearts (the dev mock): no counts, no crash
       if (asked !== session) return;
       totals = new Map(); mine.clear();
       for (const r of rows) { totals.set(r.figure, r.hearts); if (r.mine) mine.add(r.figure); }
@@ -73,11 +74,22 @@ export function setupHearts({ service, needConfirmed, onChange = () => {} }) {
   const forget = () => { failed?.remove(); session++; loading = null; totals = null; mine.clear(); onChange(); };
   return {
     load,
-    forget, // the account changed: nothing of the last one may be shown or inverted while the new identity is read
+    forget,
+    // The session changed. Confirming an e-mail is the same account: its hearts, and a save under way, stay. Another one
+    // starts clean, and a tap waits for this answer so that nothing of the last account can be inverted.
+    accountChanged() {
+      const asked = session;
+      checking = whose().then(id => {
+        checking = null;
+        if (asked === session && (id === undefined || id !== owner)) forget();
+        return load();
+      });
+      return checking;
+    },
     reload() { forget(); return load(); },
     count: id => totals ? (totals.get(id) ?? 0) : null,
     mine: id => mine.has(id),
-    tap(figure, button) { needConfirmed('heart', () => { const asked = session; load().then(() => { if (asked === session) save(figure, button); }); }); },
+    tap(figure, button) { needConfirmed('heart', async () => { await checking; const asked = session; await load(); if (asked === session) save(figure, button); }); },
     paint(button, figure) {
       const n = totals ? (totals.get(figure.id) ?? 0) : null, on = mine.has(figure.id);
       button.setAttribute('aria-pressed', String(on));

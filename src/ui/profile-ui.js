@@ -48,7 +48,7 @@ export function setupProfile({ focusIn, captcha, store, aliasKey, deviceNote = (
   const row = $('profile-row'), nameEl = $('profile-name'), kindEl = $('profile-kind'), sub = $('profile-sub');
   const btns = [$('profile-main'), $('profile-alt'), $('profile-more')];
   const online = Boolean(service.configured), canLink = online && service.publishingEnabled; // deleting stays possible with publishing off
-  let step = 'mail', kind = '', type = '', mail = '', busy = false, req = 0, back = null, settingsReq = 0, closeTimer = null;
+  let step = 'mail', kind = '', type = '', mail = '', busy = false, req = 0, back = null, settingsReq = 0, closeTimer = null, linkNext = false;
   let email = ''; // the address on the profile shown in the block (for «Tanca la sessió»)
 
   const setStatus = statusLine(status);
@@ -143,9 +143,10 @@ export function setupProfile({ focusIn, captcha, store, aliasKey, deviceNote = (
   function forget() { store.remove(aliasKey); refresh(); }
 
   // --- the sheet
-  function open(what, onBack = null) {
+  // thenLink: a profile created for something that needs the address goes straight on to it, in this same sheet
+  function open(what, onBack = null, { thenLink = false } = {}) {
     if (!online || menu.open) return;
-    kind = what; back = onBack; req++; busy = false; mail = ''; type = '';
+    kind = what; back = onBack; linkNext = thenLink; req++; busy = false; mail = ''; type = '';
     mailIn.value = codeIn.value = aliasIn.value = ''; setStatus('');
     mailIn.readOnly = codeIn.readOnly = aliasIn.readOnly = false;
     cancelBtn.hidden = false;
@@ -205,6 +206,15 @@ export function setupProfile({ focusIn, captcha, store, aliasKey, deviceNote = (
         try { remember(await service.profile?.()); } catch { /* the block asks again */ }
         if (kind !== 'rename') acceptStats(); // the notice was on this step
         if (r !== req) return;
+        if (linkNext && kind === 'create') {
+          linkNext = false; kind = 'link'; idle(); refresh();
+          $('profile-title').textContent = tr('ui.profile.title.link'); lead.textContent = tr('ui.profile.lead.link');
+          const typing = doc.activeElement === aliasIn; // still typing: field to field, so iOS keeps its keyboard up
+          if (typing) { $('profile-mail-field').hidden = false; mailIn.focus(); }
+          show('mail'); setStatus(tr('ui.profile.done.created'), true);
+          if (!typing) focusIn(menu, 'profile-email');
+          return;
+        }
         finish(tr(kind === 'rename' ? 'ui.profile.done.nameSaved' : 'ui.profile.done.created'));
       } else if (step === 'mail') {
         // a token only when sendCode asks for one (a sign-in by code): adding the address to this browser's session needs

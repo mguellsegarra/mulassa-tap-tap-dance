@@ -336,6 +336,7 @@ span.player-name { display: inline-flex; align-items: baseline; min-width: 0; }
 .stats-facts li { display: grid; grid-template-columns: 28px minmax(0, 1fr); align-items: center; gap: 12px; color: #e8d8b8; font-size: 16px; line-height: 1.3; }
 .stats-facts svg { width: 28px; height: 28px; margin: 0; fill: none; stroke: #f5c518; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 #profile-stats-note .stats-facts { gap: 8px; margin: 0; } #profile-stats-note .stats-facts li { grid-template-columns: 22px minmax(0, 1fr); gap: 10px; font-size: 13px; } #profile-stats-note .stats-facts svg { width: 22px; height: 22px; } /* the Crea step: the same three lines, quieter */
+.profile-stats-privacy { align-self: center; min-height: 0; font-size: 13px; } #profile-stats-note[hidden] + .profile-stats-privacy { display: none; } /* follows the note, outside its box */
 
 /* a player's card: the name, «Convidat», the board row it came from, the public statistics (one box: loading, empty, error
    inside it), the source */
@@ -388,3 +389,20 @@ body:has(:is(#board-menu, #seasons-menu, #account-menu)[open]) #card-menu { widt
   #board-menu .board-state { gap: 6px; padding-inline: 0; } /* a new season: its line in two lines, the last podium clear of the links */
   #board-menu .board-previous { margin-top: 0; }
 }
+
+/* the badges' news (src/ui/badge-news.js): the gate's frame, the name wearing them or the whole shelf passing by */
+#badge-news-menu { width: min(400px, calc(100vw - 32px - var(--sal) - var(--sar))); padding: 20px 20px 18px; text-align: center; }
+#badge-news-menu h2 { text-wrap: balance; }
+#badge-news-menu p { margin: 0 0 16px; font-size: 16px; font-weight: 600; line-height: 1.35; color: #e8d8b8; text-wrap: balance; }
+#badge-news-menu .sheet-actions { display: grid; gap: 12px; }
+#badge-news-name { display: flex; justify-content: center; align-items: center; gap: 8px; min-height: 64px; margin-bottom: 16px; padding: 12px; border-radius: 14px; background: #ffffff0d; font-size: 22px; font-weight: 800; }
+#badge-news-name[hidden], #badge-news-shelf[hidden] { display: none; }
+#badge-news-name .verified-check, #badge-news-name .player-badge { width: 30px; height: 30px; }
+#badge-news-shelf { display: grid; gap: 8px; margin-bottom: 16px; padding: 12px 0; border-radius: 14px; background: #ffffff0d; overflow: hidden; }
+.badge-news-row { overflow: hidden; }
+.badge-news-line { display: flex; gap: 8px; width: max-content; animation: badge-news-pass 38s linear infinite; }
+.badge-news-row:nth-child(2) .badge-news-line { animation-direction: reverse; }
+.badge-news-chip { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: #ffffff0d; }
+.badge-news-chip svg { width: 30px; height: 30px; }
+@keyframes badge-news-pass { to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) { .badge-news-line { animation: none; } }

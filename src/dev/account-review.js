@@ -14,6 +14,7 @@ const LABELS = {
   verified: 'Correu confirmat!', 'released-name': 'Perfil d’un convidat alliberat → Tria un altre nom', switch: 'Correu d’un altre perfil (canvi)',
   'profile-new': 'Perfil: cap', 'profile-reserved': 'Perfil: convidat sense resultat', 'profile-guest': 'Perfil: convidat',
   'profile-released': 'Perfil: nom alliberat (en tria un altre)', 'profile-verified': 'Perfil: correu confirmat',
+  'badge-news-confirmed': 'Insígnies: avís amb correu confirmat', 'badge-news-guest': 'Insígnies: avís sense correu confirmat',
   board: 'Classificació amb marques', 'board-tip': 'Marca: explicació', 'board-guest': 'Classificació: convidats i verificats',
   'board-empty': 'Classificació: temporada buida', 'board-drac': 'Classificació del Drac', 'board-drac-empty': 'Classificació del Drac: buida',
   seasons: 'Temporades anteriors (Saló de la fama)', 'seasons-later': 'Saló de la fama: ball anterior', 'season-end': 'Final de temporada (full d’un sol cop)',
@@ -133,6 +134,7 @@ async function reach(ctx) {
     case 'retry': // the first publication gets no answer: the sheet says so and offers «Torna-ho a provar»
       await publish();
       return until(() => $('publish-status').textContent && !$('publish-send').disabled && !$('publish-form').dataset.view, 'the failed publication');
+    case 'badge-news-confirmed': case 'badge-news-guest': return need('openBadgeNews')();
     default: return settings(); // profile-*
   }
 }

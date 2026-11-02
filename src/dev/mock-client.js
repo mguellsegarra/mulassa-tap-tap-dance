@@ -176,7 +176,7 @@ function mockClient({ world, taken, delay, account, now, fail, calls }) {
   return {
     mulassaPersistentStorage: true,
     auth: {
-      async getSession() { await wait(); return { data: { session }, error: null }; },
+      async getSession() { return { data: { session }, error: null }; },
       async signInAnonymously() { await wait(); session = { user: { id: 'prova' } }; return { data: { session }, error: null }; },
       async signOut() { session = null; forget(); return { error: null }; },
       // the e-mail flow (src/services/leaderboard.js sendCode / verifyCode): Supabase Auth's answers, no mail

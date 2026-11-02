@@ -289,9 +289,19 @@ body:has(#radio-menu:not([hidden]), #radio-now:not([hidden])[data-visible="true"
 /* The e-mail gate belongs with the short sheets: same width, one centred axis. */
 #gate-menu { width: min(400px, calc(100vw - 32px)); padding: 20px 20px 18px; text-align: center; }
 #gate-menu h2 { text-wrap: balance; }
-#gate-seal { display: flex; justify-content: center; margin-bottom: 8px; } #gate-perks { display: flex; justify-content: center; margin-bottom: 16px; }
+#gate-seal { display: flex; justify-content: center; margin-bottom: 8px; } #gate-perks { display: flex; justify-content: center; }
 #gate-menu p { margin: 0 0 16px; font-size: 16px; font-weight: 600; line-height: 1.35; color: #e8d8b8; text-wrap: balance; }
+/* what confirming earns: a warm panel, its label a tab on the edge */
+#gate-panel { margin: 24px 0 18px; padding: 14px 12px; border: 2px solid #f5c51866; border-radius: 14px; background: linear-gradient(180deg, #f5c5181f, #f5c51808); }
+/* in the flow, so a longer translation that wraps pushes the list down instead of covering it */
+#gate-perks-lead { display: block; width: fit-content; margin: -27px auto 12px; padding: 3px 12px; border-radius: 14px; background: #f5c518; color: #2a1a10; font-size: 13px; font-weight: 800; line-height: 1.25; text-wrap: balance; }
+@media (max-width: 359px) { #gate-perks-lead { font-size: 12px; padding-inline: 8px; } }
+#gate-perks li { text-align: left; } /* a perk that wraps stays beside its icon */
 #gate-menu .sheet-actions { display: grid; gap: 12px; }
+@media (max-height: 600px) { /* the smallest phones: the list and both buttons fit whole, in the longest languages too */
+  #gate-seal { display: none; } #gate-menu h2 { font-size: 26px; } #gate-menu p { margin-bottom: 10px; font-size: 15px; }
+  #gate-panel { margin: 22px 0 12px; padding-block: 10px; } #gate-perks-lead { margin-top: -23px; margin-bottom: 8px; } #gate-menu .publish-perks { gap: 6px; } #gate-menu .sheet-actions { gap: 8px; }
+}
 /* Short phones, the sheet with the two ways to help: the labels the choices already explain give way first, then the title (the figure's name stays). */
 @media (max-height: 700px) {
   #feedback-menu:has(.feedback-kind:not([hidden])) :is(#feedback-entity-label, #feedback-material-label) { display: none; }

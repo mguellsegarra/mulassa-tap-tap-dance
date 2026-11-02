@@ -514,8 +514,8 @@
         <li><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.2" r="3.9"/><path d="M4.6 20.4a7.4 7.4 0 0 1 14.8 0"/></svg><span data-i18n="html.common.statsPublic">Tothom pot veure els totals si toca el teu nom.</span></li>
         <li><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M11 15h2v2h-2z" fill="currentColor"/></svg><span data-i18n="html.common.statsDays">Els dies que jugues només els veus tu.</span></li>
         </ul>
-        <button type="button" class="btn btn-link btn-small" data-privacy-open aria-haspopup="dialog" data-i18n="html.common.privacy">Privadesa</button>
       </div>
+      <button type="button" class="btn btn-link btn-small profile-stats-privacy" data-privacy-open aria-haspopup="dialog" data-i18n="html.common.privacy">Privadesa</button>
       <p id="profile-note" class="publish-note" data-i18n="html.rich.profileNote">El teu correu no és públic. Si tens menys de 14 anys, demana-ho a una persona adulta. <button type="button" class="btn btn-link btn-small" data-privacy-open aria-haspopup="dialog" data-i18n="html.common.privacy">Privadesa</button></p>
     </div>
     <p id="profile-status" class="board-status" role="status" aria-live="polite"></p>
@@ -699,10 +699,23 @@
     <div id="gate-seal"></div>
     <h2 id="gate-title"></h2>
     <p id="gate-text"></p>
-    <div id="gate-perks"></div>
+    <div id="gate-panel"><span id="gate-perks-lead"></span><div id="gate-perks"></div></div>
     <div class="sheet-actions">
       <button id="gate-go" type="button" class="btn btn-primary"></button>
       <button id="gate-later" type="button" class="btn btn-secondary" data-i18n="ui.feedback.cancel">Ara no</button>
+    </div>
+  </div>
+</dialog>
+<!-- once per profile: badges are here, or what confirming the e-mail would earn (src/ui/badge-news.js) -->
+<dialog id="badge-news-menu" class="sheet" tabindex="-1" aria-labelledby="badge-news-title" aria-describedby="badge-news-text">
+  <div class="sheet-body">
+    <h2 id="badge-news-title"></h2>
+    <p id="badge-news-text"></p>
+    <div id="badge-news-name" class="who"></div>
+    <div id="badge-news-shelf" aria-hidden="true"></div>
+    <div class="sheet-actions">
+      <button id="badge-news-go" type="button" class="btn btn-primary"></button>
+      <button id="badge-news-later" type="button" class="btn btn-secondary" data-i18n="ui.feedback.cancel">Ara no</button>
     </div>
   </div>
 </dialog>

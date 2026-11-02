@@ -1,16 +1,17 @@
 import LEVELS_DATA from './levels.json';
 import { PLANS } from './plans.js';
-import { OBJECT, boardOf, culpritOf, deduce, hintFor, isSolution, lineFree, peopleOf } from './rules.js';
+import { OBJECT, boardOf, culpritOf, deduce, caseStamp, hintFor, isSolution, lineFree, peopleOf, restore } from './rules.js';
 import { figureArt, floorUrl, objectArt, thingArt } from './art.js';
-import { CASES, CLUES, FIGURE_NAMES, OBJECT_NAMES, OBJECT_SHORT, PART_NAMES, THING_NAMES, UI } from './text.js';
+import { CASES, CLUES, FIGURE_NAMES, OBJECT_NAMES, OBJECT_SHORT, PART_NAMES, THING_NAMES, THING_ONE, UI } from './text.js';
 import { store } from '../../../platform/storage.js';
 
-const KEY = 'murdoku-cases';
+const KEY = 'murdoku-progress-2';
 const MARK = 'mark';
 const LEVELS = LEVELS_DATA.map(l => ({ ...PLANS.find(p => p.id === l.id), ...l }));
 const $ = id => document.getElementById(id);
-const progress = (() => { try { return { done: [], cases: {}, ...JSON.parse(store.get(KEY)) }; } catch { return { done: [], cases: {} }; } })();
+const progress = (() => { try { return { done: {}, cases: {}, ...JSON.parse(store.get(KEY)) }; } catch { return { done: {}, cases: {} }; } })();
 const save = () => store.set(KEY, JSON.stringify(progress));
+const isDone = l => progress.done[l.id] === caseStamp(l); // solved this exact version of the case
 
 let level, board, at, marks, tool = null, history = [], glow = null;
 const partOf = z => level.parts[z];
@@ -20,7 +21,8 @@ const zonePill = z => `<span class="pill"><i style="${floorStyle(z)}"></i>${zone
 const nameOf = who => who === OBJECT ? OBJECT_SHORT[level.object] : FIGURE_NAMES[who];
 const artOf = who => who === OBJECT ? objectArt(level.object) : figureArt(who);
 const person = who => `<span class="who">${artOf(who)}${nameOf(who)}</span>`;
-const thing = id => `<span class="who">${thingArt(id)}${THING_NAMES[id]}</span>`;
+// With several of a thing on the map a clue means any of them, so it says "una cadira", never "la cadira".
+const thing = id => `<span class="who">${thingArt(id)}${Object.values(level.things).filter(t => t === id).length > 1 ? THING_ONE[id] : THING_NAMES[id]}</span>`;
 const cluePhrase = cl => CLUES[cl.t]({ zone: cl.zone && zonePill(cl.zone), thing: cl.thing && thing(cl.thing), other: cl.other && person(cl.other) });
 const cardOf = who => level.clues.filter(c => c.who === who).map(cluePhrase).join(' i ');
 const allPlaced = () => peopleOf(level).every(p => at[p] != null);
@@ -28,7 +30,7 @@ const answer = () => deduce(level);
 
 // The guided case always asks for the next piece the clues settle, so it needs no state of its own.
 const guideStep = () => {
-  if (!level.guided || progress.done.includes(level.id)) return null;
+  if (!level.guided || isDone(level)) return null;
   const { order, at: right } = answer();
   const who = order.find(p => at[p] !== right[p]);
   return who ? { who, cell: right[who] } : null;
@@ -63,10 +65,10 @@ function paint() {
   $('accuse').hidden = !done;
   $('accuse').textContent = culprit ? UI.accuse(FIGURE_NAMES[culprit]) : UI.noCulprit;
   $('accuse').disabled = !culprit;
-  const note = step ? UI.guide(nameOf(step.who), cardOf(step.who) || UI.guideLine) : done && level.guided && !progress.done.includes(level.id) ? UI.guideCulprit : '';
+  const note = step ? UI.guide(nameOf(step.who), cardOf(step.who) || UI.guideLine) : done && level.guided && !isDone(level) ? UI.guideCulprit : '';
   $('hint').innerHTML = note;
   $('hint').hidden = !note;
-  progress.cases[level.id] = { at, marks };
+  progress.cases[level.id] = { stamp: caseStamp(level), at, marks };
   save();
 }
 
@@ -99,7 +101,7 @@ function tap(i) {
 
 function accuse() {
   if (!isSolution(level, at)) { $('hint').textContent = $('live').textContent = UI.wrong; $('hint').hidden = false; return; }
-  if (!progress.done.includes(level.id)) progress.done.push(level.id);
+  progress.done[level.id] = caseStamp(level);
   save();
   const who = culpritOf(level, at), next = LEVELS[LEVELS.indexOf(level) + 1];
   showSheet({ title: CASES[level.id].title, art: figureArt(who) + objectArt(level.object), msg: UI.solved(FIGURE_NAMES[who], OBJECT_NAMES[level.object]),
@@ -129,9 +131,7 @@ function undo() {
 function start(next) {
   level = next;
   board = boardOf(level);
-  const saved = progress.cases[level.id];
-  at = { ...saved?.at };
-  marks = [...(saved?.marks ?? [])];
+  ({ at, marks } = restore(level, progress.cases[level.id]));
   tool = null; history = []; glow = null;
   $('case').textContent = `${LEVELS.indexOf(level) + 1}. ${CASES[level.id].title}`;
   $('board').style.setProperty('--n', board.n);
@@ -166,7 +166,7 @@ function showSheet({ title = '', msg = '', art = '', note = '', action = null, c
   if (action) { $('next').textContent = action.label; $('next').onclick = () => { $('sheet').close(); action.run(); }; }
   $('levels').hidden = !cases;
   $('back').hidden = !cases;
-  if (cases) $('levels').innerHTML = LEVELS.map((l, i) => `<button type="button" class="btn lvl${progress.done.includes(l.id) ? ' done' : ''}" data-id="${l.id}"><span>${i + 1}. ${CASES[l.id].title}</span><small>${l.zones.length}×${l.zones.length}</small></button>`).join('');
+  if (cases) $('levels').innerHTML = LEVELS.map((l, i) => `<button type="button" class="btn lvl${isDone(l) ? ' done' : ''}" data-id="${l.id}"><span>${i + 1}. ${CASES[l.id].title}</span><small>${l.zones.length}×${l.zones.length}</small></button>`).join('');
   $('sheet').showModal();
   $('sheet').focus();
 }
@@ -192,7 +192,7 @@ $('levels').addEventListener('click', e => {
 $('undo').addEventListener('click', undo);
 $('hintbtn').addEventListener('click', hint);
 $('accuse').addEventListener('click', accuse);
-const showMenu = () => showSheet({ title: 'Murdoku del Seguici', msg: UI.menu, cases: true });
+const showMenu = () => showSheet({ title: 'Murdoku del Seguici', msg: UI.menu, note: UI.rule, cases: true });
 $('menu').addEventListener('click', showMenu);
 $('sheet').addEventListener('cancel', e => { if (!level || !$('next').hidden) e.preventDefault(); }); // Esc can't skip a case's opening or the reveal
 

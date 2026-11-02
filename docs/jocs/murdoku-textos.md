@@ -8,11 +8,11 @@ Murdoku és de Manuel Garand. No he trobat el reglament oficial a la web: les re
 
 - Tauler N×N dividit en zones, amb N-1 figures i l'objecte robat, que fa el paper de la víctima.
 - Una sola peça per fila i per columna, objecte inclòs.
-- La font, l'arbre, la parada i el campanar ocupen la casella. El banc es pot ocupar.
+- Cap peça pot ser damunt d'un objecte del plànol.
 - El culpable és l'única figura a la zona de l'objecte.
-- "Tocant" vol dir la casella del costat, sense diagonals. Com que són places i carrers, a diferència de l'original no hi ha parets que ho impedeixin.
+- "Tocant" vol dir la casella del costat, sense diagonals i dins de la mateixa zona, com a l'original. Si un objecte surt repetit al plànol, la pista diu "una cadira" i val qualsevol.
 
-`tools/jocs/murdoku-levels.mjs` genera `levels.json` a partir de `plans.js`. Cada cas ha de tenir una sola solució (cerca exhaustiva) i s'ha de poder resoldre només deduint (`deduce`), sense provar i desfer. A més, els 10 casos actuals necessiten la regla del culpable.
+`tools/jocs/murdoku-levels.mjs` genera `levels.json` a partir de `plans.js`. Cada cas ha de tenir una sola solució (cerca exhaustiva), també si es llegeix "tocant" amb diagonals o a través de parets, i s'ha de poder resoldre només deduint al nivell de raonament (`tier`) del cas. Del cas 2 endavant també cal la regla del culpable.
 
 ## Escenaris
 

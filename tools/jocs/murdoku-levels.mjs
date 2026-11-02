@@ -27,8 +27,7 @@ function cluePool(level, at, relative) {
     const a = cells[at[who]];
     pool.push({ t: 'in', who, zone: a.zone });
     for (const zone of zones) if (zone !== a.zone) pool.push({ t: 'notIn', who, zone });
-    if (a.thing) pool.push({ t: 'on', who, thing: a.thing });
-    for (const b of cells) if (b.thing && Math.abs(a.r - b.r) + Math.abs(a.c - b.c) === 1) pool.push({ t: 'beside', who, thing: b.thing });
+    for (const b of cells) if (b.thing && b.zone === a.zone && Math.abs(a.r - b.r) + Math.abs(a.c - b.c) === 1) pool.push({ t: 'beside', who, thing: b.thing });
     if (relative) for (const other of peopleOf(level)) {
       if (other === who || other === OBJECT) continue;
       const o = cells[at[other]];
@@ -39,45 +38,43 @@ function cluePool(level, at, relative) {
   return pool.filter((cl, i) => pool.findIndex(x => JSON.stringify(x) === JSON.stringify(cl)) === i);
 }
 
-// Drop clues in random order while the case still solves, down to a card per person with one or two facts, like the books.
-function trim(level, pool, rng) {
+// Sound: solved at this case's tier, and one answer even if "tocant" is read with diagonals and across walls.
+const sound = (level, clues, tier) => deduce({ ...level, clues }, { tier }).solved && solutions({ ...level, clues }, 2, { loose: true }).length === 1;
+
+// Drop clues in random order while the case stays sound, down to a card per person with one or two facts, like the books.
+function trim(level, pool, tier, rng) {
   let clues = shuffle(pool, rng);
-  if (!deduce({ ...level, clues }).solved) return null;
+  if (!sound(level, clues, tier)) return null;
   for (const cl of shuffle(pool, rng)) {
     const rest = clues.filter(x => x !== cl);
-    if (rest.some(x => x.who === cl.who) && deduce({ ...level, clues: rest }).solved) clues = rest;
+    if (rest.some(x => x.who === cl.who) && sound(level, rest, tier)) clues = rest;
   }
   const most = Math.max(...peopleOf(level).map(p => clues.filter(c => c.who === p).length));
   return most <= 2 ? clues : null;
 }
 
-// The scene is the point: reward clues about its things, then the culprit rule mattering.
-const scoreOf = (level, clues) => {
-  const full = { ...level, clues };
-  const things = clues.filter(c => c.t === 'on' || c.t === 'beside').length;
-  const peers = clues.filter(c => c.t === 'above' || c.t === 'leftOf').length;
-  const usesCulprit = !deduce(full, { culprit: false }).solved;
-  return things * 4 - peers * 3 + (usesCulprit ? 12 : 0) + deduce(full).passes - clues.length;
-};
+// The scene is the point: reward clues about its things.
+const scoreOf = clues => clues.filter(c => c.t === 'beside').length * 4 - clues.filter(c => c.t === 'above' || c.t === 'leftOf').length * 3 - clues.length;
 
 const levels = PLANS.map((plan, index) => {
   const n = plan.zones.length;
-  let best = null;
-  for (let seed = 1; seed < 2500; seed++) {
+  let best = null, kept = 0;
+  for (let seed = 1; seed < 3000 && kept < 12; seed++) { // the best of a dozen: a full search takes too long on 6×6
     const rng = random((index + 1) * 7919 + seed * 104729);
     const level = { ...plan, suspects: shuffle(FIGURES, rng).slice(0, n - 1), clues: [] };
     const at = place(level, rng);
     if (!at) continue;
-    const clues = trim(level, cluePool(level, at, !plan.guided), rng);
+    const clues = trim(level, cluePool(level, at, plan.tier >= 2), plan.tier, rng);
     if (!clues) continue;
-    if (!deduce({ ...level, clues }, { culprit: true }).solved) continue;
-    const score = scoreOf(level, clues);
+    if (plan.tier >= 2 && deduce({ ...level, clues }, { culprit: false }).solved) continue;
+    kept++;
+    const score = scoreOf(clues);
     if (!best || score > best.score) best = { score, level: { ...level, clues } };
   }
   if (!best) throw new Error(`${plan.id}: no case found`);
   if (solutions(best.level).length !== 1) throw new Error(`${plan.id}: not unique`);
   const { level } = best;
-  console.log(plan.id, `${n}x${n}`, 'clues', level.clues.length, JSON.stringify(level.clues.map(c => c.t)), 'culprit rule', !deduce(level, { culprit: false }).solved);
+  console.log(plan.id, `${n}x${n}`, 'tier', plan.tier, 'clues', level.clues.length, JSON.stringify(level.clues.map(c => c.t)));
   return { id: level.id, suspects: level.suspects, clues: level.clues };
 });
 writeFileSync(new URL('../../src/jocs/games/murdoku/levels.json', import.meta.url), `${JSON.stringify(levels, null, 1)}\n`);

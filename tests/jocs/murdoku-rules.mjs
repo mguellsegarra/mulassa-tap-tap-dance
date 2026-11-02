@@ -2,8 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import { PLANS } from '../../src/jocs/games/murdoku/plans.js';
-import { CASES, CLUES, FIGURE_NAMES, OBJECT_NAMES, OBJECT_SHORT, PART_NAMES, THING_NAMES } from '../../src/jocs/games/murdoku/text.js';
-import { OBJECT, boardOf, culpritOf, deduce, hintFor, isSolution, peopleOf, solutions } from '../../src/jocs/games/murdoku/rules.js';
+import { CASES, CLUES, FIGURE_NAMES, OBJECT_NAMES, OBJECT_SHORT, PART_NAMES, THING_NAMES, THING_ONE } from '../../src/jocs/games/murdoku/text.js';
+import { OBJECT, boardOf, caseStamp, culpritOf, deduce, hintFor, isSolution, peopleOf, restore, solutions } from '../../src/jocs/games/murdoku/rules.js';
 
 const root = new URL('../../', import.meta.url);
 const data = JSON.parse(readFileSync(new URL('src/jocs/games/murdoku/levels.json', root)));
@@ -81,7 +81,7 @@ test('every name and picture a case asks for exists', () => {
     assert.ok(OBJECT_NAMES[level.object] && OBJECT_SHORT[level.object] && picture(`obj-${level.object}.png`), `object ${level.object}`);
     for (const s of level.suspects) assert.ok(FIGURE_NAMES[s] && picture(`fig-${s}.jpg`), s);
     for (const { key, floor } of Object.values(level.parts)) assert.ok(PART_NAMES[key] && picture(`floor-${floor}.jpg`), `${key} ${floor}`);
-    for (const t of Object.values(level.things)) assert.ok(THING_NAMES[t] && picture(`thing-${t}.png`), t);
+    for (const t of Object.values(level.things)) assert.ok(THING_NAMES[t] && THING_ONE[t] && picture(`thing-${t}.png`), t);
     for (const c of level.clues) assert.ok(CLUES[c.t], c.t);
   }
 });
@@ -92,4 +92,36 @@ test('one guided case comes first, and the page is reachable but linked from now
   const headers = readFileSync(new URL('public/_headers', root), 'utf8');
   assert.match(headers, /\/jocs\/murdoku\/\n\s+Cache-Control: no-cache/);
   assert.ok(!readFileSync(new URL('index.html', root), 'utf8').includes('murdoku'));
+});
+
+test('every case reads the same however "tocant" is taken, at the reasoning its tier allows', () => {
+  for (const level of LEVELS) {
+    assert.equal(solutions(level, 2, { loose: true }).length, 1, `${level.id}: diagonals or walls change the answer`);
+    assert.ok(deduce(level, { tier: level.tier }).solved, `${level.id} needs more than tier ${level.tier}`);
+  }
+  assert.ok(LEVELS.every((l, i) => i === 0 || l.tier >= LEVELS[i - 1].tier), 'difficulty only goes up');
+});
+
+test('nobody stands on a thing, and "tocant" stops at a wall', () => {
+  const level = { zones: ['AB', 'AB'], parts: {}, things: { '0,0': 'banc', '0,1': 'cadira' }, suspects: ['drac'], clues: [{ t: 'beside', who: 'drac', thing: 'cadira' }] };
+  assert.equal(boardOf(level).cells.filter(c => c.free).length, 2);
+  assert.ok(solutions(level, 2).every(at => boardOf(level).cells[at.drac].zone === 'B'), 'the chair across the wall counts for nobody');
+});
+
+test('each zone is one connected piece', () => {
+  for (const level of LEVELS) for (const z of Object.keys(level.parts)) {
+    const cells = boardOf(level).cells.filter(c => c.zone === z);
+    const seen = new Set([cells[0]]);
+    for (const c of seen) for (const d of cells) if (Math.abs(c.r - d.r) + Math.abs(c.c - d.c) === 1) seen.add(d);
+    assert.equal(seen.size, cells.length, `${level.id}: ${z} is split`);
+  }
+});
+
+test('a save from another version of the case is ignored', () => {
+  const level = LEVELS[0];
+  const at = { [level.suspects[0]]: 1 };
+  assert.deepEqual(restore(level, { stamp: caseStamp(level), at, marks: [2] }), { at, marks: [2] });
+  assert.deepEqual(restore(level, { stamp: 'old', at, marks: [2] }), { at: {}, marks: [] });
+  assert.deepEqual(restore(level, { at, marks: [] }), { at: {}, marks: [] });
+  assert.deepEqual(restore(level, undefined), { at: {}, marks: [] });
 });

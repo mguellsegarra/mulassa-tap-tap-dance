@@ -2,29 +2,34 @@
  {
   "id": "blat",
   "suspects": [
-   "diables",
-   "mulassa",
-   "nans"
+   "cavallets",
+   "gegants",
+   "bou"
   ],
   "clues": [
    {
-    "t": "beside",
-    "who": "nans",
-    "thing": "barril"
-   },
-   {
-    "t": "beside",
-    "who": "mulassa",
-    "thing": "banc"
-   },
-   {
     "t": "in",
-    "who": "objecte",
+    "who": "gegants",
     "zone": "G"
    },
    {
+    "t": "notIn",
+    "who": "objecte",
+    "zone": "A"
+   },
+   {
+    "t": "leftOf",
+    "who": "bou",
+    "other": "cavallets"
+   },
+   {
     "t": "beside",
-    "who": "diables",
+    "who": "objecte",
+    "thing": "cadira"
+   },
+   {
+    "t": "beside",
+    "who": "cavallets",
     "thing": "cadira"
    }
   ]
@@ -32,31 +37,21 @@
  {
   "id": "cort",
   "suspects": [
-   "gegants",
    "basilisc",
-   "os",
-   "aliga"
+   "aliga",
+   "drac",
+   "diables"
   ],
   "clues": [
    {
-    "t": "beside",
-    "who": "basilisc",
-    "thing": "cadira"
+    "t": "notIn",
+    "who": "objecte",
+    "zone": "F"
    },
    {
     "t": "beside",
-    "who": "gegants",
-    "thing": "cadira"
-   },
-   {
-    "t": "beside",
-    "who": "os",
-    "thing": "caixa"
-   },
-   {
-    "t": "beside",
-    "who": "aliga",
-    "thing": "ciri"
+    "who": "drac",
+    "thing": "morter"
    },
    {
     "t": "beside",
@@ -65,126 +60,126 @@
    },
    {
     "t": "notIn",
-    "who": "objecte",
+    "who": "aliga",
     "zone": "K"
+   },
+   {
+    "t": "above",
+    "who": "objecte",
+    "other": "basilisc"
+   },
+   {
+    "t": "notIn",
+    "who": "aliga",
+    "zone": "C"
+   },
+   {
+    "t": "in",
+    "who": "diables",
+    "zone": "S"
    }
   ]
  },
  {
   "id": "santjoan",
   "suspects": [
+   "cavallets",
    "basilisc",
-   "mulassa",
-   "nans",
+   "gegants",
    "os"
   ],
   "clues": [
    {
-    "t": "notIn",
-    "who": "nans",
+    "t": "beside",
+    "who": "cavallets",
+    "thing": "cadira"
+   },
+   {
+    "t": "in",
+    "who": "basilisc",
     "zone": "P"
    },
    {
-    "t": "beside",
+    "t": "leftOf",
     "who": "basilisc",
-    "thing": "font"
-   },
-   {
-    "t": "beside",
-    "who": "os",
-    "thing": "reclinatori"
-   },
-   {
-    "t": "beside",
-    "who": "mulassa",
-    "thing": "ciri"
+    "other": "gegants"
    },
    {
     "t": "leftOf",
-    "who": "os",
-    "other": "nans"
-   },
-   {
-    "t": "beside",
     "who": "objecte",
-    "thing": "banc"
+    "other": "cavallets"
    },
    {
     "t": "beside",
-    "who": "basilisc",
+    "who": "gegants",
     "thing": "banc"
+   },
+   {
+    "t": "notIn",
+    "who": "gegants",
+    "zone": "E"
+   },
+   {
+    "t": "beside",
+    "who": "os",
+    "thing": "font"
    }
   ]
  },
  {
   "id": "pati",
   "suspects": [
-   "os",
-   "drac",
-   "bou",
-   "mulassa"
+   "gegants",
+   "diables",
+   "aliga",
+   "bou"
   ],
   "clues": [
    {
-    "t": "beside",
-    "who": "mulassa",
-    "thing": "escultura"
+    "t": "notIn",
+    "who": "gegants",
+    "zone": "J"
+   },
+   {
+    "t": "above",
+    "who": "objecte",
+    "other": "aliga"
+   },
+   {
+    "t": "above",
+    "who": "aliga",
+    "other": "diables"
    },
    {
     "t": "beside",
     "who": "objecte",
-    "thing": "banc"
-   },
-   {
-    "t": "notIn",
-    "who": "drac",
-    "zone": "B"
+    "thing": "tabal"
    },
    {
     "t": "beside",
     "who": "bou",
-    "thing": "font"
+    "thing": "arbre"
    },
    {
-    "t": "beside",
-    "who": "os",
-    "thing": "banc"
-   },
-   {
-    "t": "beside",
-    "who": "bou",
-    "thing": "banc"
+    "t": "leftOf",
+    "who": "diables",
+    "other": "bou"
    }
   ]
  },
  {
   "id": "museu",
   "suspects": [
-   "aliga",
-   "basilisc",
-   "os",
-   "bou"
+   "drac",
+   "mulassa",
+   "cavallets",
+   "aliga"
   ],
   "clues": [
    {
-    "t": "above",
-    "who": "basilisc",
-    "other": "bou"
-   },
-   {
-    "t": "beside",
-    "who": "os",
-    "thing": "pantalla"
-   },
-   {
-    "t": "beside",
-    "who": "aliga",
-    "thing": "cadira"
-   },
-   {
     "t": "in",
-    "who": "aliga",
-    "zone": "C"
+    "who": "mulassa",
+    "zone": "T"
    },
    {
     "t": "beside",
@@ -192,19 +187,24 @@
     "thing": "camises"
    },
    {
-    "t": "beside",
-    "who": "os",
-    "thing": "vitrina"
+    "t": "above",
+    "who": "aliga",
+    "other": "drac"
+   },
+   {
+    "t": "notIn",
+    "who": "drac",
+    "zone": "T"
    },
    {
     "t": "beside",
-    "who": "bou",
-    "thing": "vitrina"
-   },
-   {
-    "t": "beside",
-    "who": "basilisc",
+    "who": "drac",
     "thing": "pantalla"
+   },
+   {
+    "t": "beside",
+    "who": "cavallets",
+    "thing": "vitrina"
    }
   ]
  },
@@ -212,41 +212,41 @@
   "id": "oli",
   "suspects": [
    "os",
-   "diables",
-   "drac",
-   "nans",
-   "cavallets"
+   "bou",
+   "cavallets",
+   "aliga",
+   "gegants"
   ],
   "clues": [
    {
     "t": "beside",
-    "who": "os",
+    "who": "bou",
     "thing": "parada"
-   },
-   {
-    "t": "beside",
-    "who": "drac",
-    "thing": "balanca"
    },
    {
     "t": "notIn",
     "who": "objecte",
-    "zone": "P"
+    "zone": "V"
    },
    {
     "t": "beside",
-    "who": "nans",
-    "thing": "font"
+    "who": "aliga",
+    "thing": "parada"
+   },
+   {
+    "t": "leftOf",
+    "who": "os",
+    "other": "aliga"
    },
    {
     "t": "beside",
-    "who": "diables",
-    "thing": "cadira"
+    "who": "aliga",
+    "thing": "caixa"
    },
    {
     "t": "in",
-    "who": "diables",
-    "zone": "C"
+    "who": "gegants",
+    "zone": "P"
    },
    {
     "t": "beside",
@@ -258,69 +258,84 @@
  {
   "id": "mas",
   "suspects": [
-   "gegants",
-   "cavallets",
-   "bou",
+   "drac",
    "basilisc",
-   "mulassa"
+   "cavallets",
+   "diables",
+   "os"
   ],
   "clues": [
    {
+    "t": "in",
+    "who": "diables",
+    "zone": "P"
+   },
+   {
+    "t": "in",
+    "who": "basilisc",
+    "zone": "E"
+   },
+   {
+    "t": "notIn",
+    "who": "drac",
+    "zone": "S"
+   },
+   {
     "t": "beside",
     "who": "cavallets",
-    "thing": "teranyina"
-   },
-   {
-    "t": "leftOf",
-    "who": "objecte",
-    "other": "bou"
-   },
-   {
-    "t": "on",
-    "who": "bou",
-    "thing": "palla"
-   },
-   {
-    "t": "beside",
-    "who": "mulassa",
     "thing": "biga"
    },
    {
+    "t": "beside",
+    "who": "objecte",
+    "thing": "pou"
+   },
+   {
+    "t": "leftOf",
+    "who": "os",
+    "other": "drac"
+   },
+   {
     "t": "above",
-    "who": "bou",
-    "other": "basilisc"
-   },
-   {
-    "t": "beside",
-    "who": "basilisc",
-    "thing": "armari"
-   },
-   {
-    "t": "beside",
-    "who": "gegants",
-    "thing": "armari"
-   },
-   {
-    "t": "beside",
-    "who": "gegants",
-    "thing": "teranyina"
+    "who": "os",
+    "other": "diables"
    }
   ]
  },
  {
   "id": "vigilia",
   "suspects": [
-   "cavallets",
+   "mulassa",
+   "aliga",
    "nans",
-   "basilisc",
    "os",
-   "gegants"
+   "bou"
   ],
   "clues": [
    {
+    "t": "notIn",
+    "who": "bou",
+    "zone": "P"
+   },
+   {
+    "t": "in",
+    "who": "nans",
+    "zone": "M"
+   },
+   {
+    "t": "notIn",
+    "who": "mulassa",
+    "zone": "A"
+   },
+   {
+    "t": "leftOf",
+    "who": "nans",
+    "other": "os"
+   },
+   {
     "t": "beside",
-    "who": "basilisc",
-    "thing": "faixes"
+    "who": "os",
+    "thing": "tabal"
    },
    {
     "t": "beside",
@@ -329,27 +344,17 @@
    },
    {
     "t": "beside",
-    "who": "nans",
-    "thing": "tabal"
+    "who": "bou",
+    "thing": "cadira"
    },
    {
-    "t": "in",
-    "who": "gegants",
-    "zone": "A"
-   },
-   {
-    "t": "beside",
-    "who": "os",
-    "thing": "vitrina"
+    "t": "above",
+    "who": "aliga",
+    "other": "bou"
    },
    {
     "t": "beside",
-    "who": "nans",
-    "thing": "banc"
-   },
-   {
-    "t": "beside",
-    "who": "cavallets",
+    "who": "objecte",
     "thing": "banc"
    }
   ]
@@ -357,109 +362,89 @@
  {
   "id": "festa",
   "suspects": [
+   "aliga",
    "nans",
-   "basilisc",
-   "diables",
-   "gegants",
-   "mulassa"
+   "bou",
+   "mulassa",
+   "gegants"
   ],
   "clues": [
    {
+    "t": "in",
+    "who": "aliga",
+    "zone": "E"
+   },
+   {
     "t": "beside",
-    "who": "basilisc",
+    "who": "gegants",
     "thing": "cistella"
    },
    {
     "t": "beside",
-    "who": "gegants",
-    "thing": "cadira"
-   },
-   {
-    "t": "beside",
     "who": "objecte",
-    "thing": "barril"
-   },
-   {
-    "t": "beside",
-    "who": "mulassa",
-    "thing": "cadira"
+    "thing": "caixa"
    },
    {
     "t": "in",
     "who": "mulassa",
-    "zone": "G"
-   },
-   {
-    "t": "beside",
-    "who": "gegants",
-    "thing": "font"
-   },
-   {
-    "t": "beside",
-    "who": "nans",
-    "thing": "campana"
-   },
-   {
-    "t": "in",
-    "who": "diables",
     "zone": "N"
+   },
+   {
+    "t": "notIn",
+    "who": "nans",
+    "zone": "N"
+   },
+   {
+    "t": "beside",
+    "who": "bou",
+    "thing": "tabal"
    }
   ]
  },
  {
   "id": "nit",
   "suspects": [
-   "aliga",
-   "cavallets",
-   "nans",
+   "bou",
+   "gegants",
    "basilisc",
-   "bou"
+   "diables",
+   "mulassa"
   ],
   "clues": [
    {
-    "t": "beside",
+    "t": "above",
     "who": "bou",
-    "thing": "pou"
+    "other": "gegants"
+   },
+   {
+    "t": "leftOf",
+    "who": "gegants",
+    "other": "basilisc"
+   },
+   {
+    "t": "leftOf",
+    "who": "mulassa",
+    "other": "diables"
    },
    {
     "t": "beside",
-    "who": "nans",
-    "thing": "palla"
+    "who": "mulassa",
+    "thing": "barril"
    },
    {
     "t": "beside",
-    "who": "objecte",
-    "thing": "palla"
-   },
-   {
-    "t": "beside",
-    "who": "aliga",
+    "who": "basilisc",
     "thing": "teranyina"
    },
    {
-    "t": "above",
-    "who": "basilisc",
-    "other": "aliga"
-   },
-   {
     "t": "beside",
-    "who": "bou",
-    "thing": "palla"
-   },
-   {
-    "t": "beside",
-    "who": "basilisc",
-    "thing": "biga"
+    "who": "diables",
+    "thing": "barril"
    },
    {
     "t": "above",
-    "who": "cavallets",
-    "other": "bou"
-   },
-   {
-    "t": "beside",
-    "who": "nans",
-    "thing": "biga"
+    "who": "objecte",
+    "other": "basilisc"
    }
   ]
  }

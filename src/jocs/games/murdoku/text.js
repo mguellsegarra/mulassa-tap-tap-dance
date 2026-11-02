@@ -4,6 +4,7 @@ export const OBJECT_NAMES = { arracades: "les arracades de l'alcaldessa", gralla
 export const OBJECT_SHORT = { arracades: 'Arracades', gralla: 'Gralla', ram: 'Ram', baquetes: 'Baquetes', maqueta: 'Maqueta', safata: 'Safata', clau: 'Clau', faixa: 'Faixa', cistell: 'Cistell', llanterna: 'Llanterna' }; // i18n-ok: provisional
 export const PART_NAMES = { ajuntament: 'Ajuntament', pinya: 'Pinya', gent: 'Públic', porxos: 'Porxos', fruita: 'Fruita', verdura: 'Verdura', carrer: 'Carrer', mesures: 'Oli', capella: 'Capella', farmacia: 'Farmàcia', sabater: 'Sabater', forn: 'Forn', nau: 'Nau', campanar: 'Campanar', placaesglesia: 'Plaça', escolans: 'Escolans', costa: 'Costa', jardi: 'Jardí', castell: 'Castell', escultura: 'Escultura', bar: 'Terrassa', rebuda: 'Rebuda', camises: 'Camises', historia: 'Història', temporal: 'Temporal', cuina: 'Cuina', paller: 'Paller', sala: 'Sala', era: 'Era', celler: 'Celler', vella: 'Vella', joves: 'Joves', museu: 'Museu' }; // i18n-ok: provisional
 export const THING_NAMES = { font: 'la font', arbre: "l'arbre", banc: 'el banc', parada: 'la parada', cadira: 'la cadira', tabal: 'el tabal', faixes: 'les faixes', caixa: 'la caixa', cistella: 'la cistella', barril: 'el barril', balanca: 'la balança', ciri: 'el ciri', campana: 'la campana', reclinatori: 'el reclinatori', pessebre: 'el pessebre', morter: 'el morter', escultura: "l'escultura", camises: 'les camises', vitrina: 'la vitrina', pantalla: 'la pantalla', pou: 'el pou', palla: 'la palla', biga: 'la biga', armari: "l'armari", teranyina: 'la teranyina' }; // i18n-ok: provisional
+export const THING_ONE = { font: 'una font', arbre: 'un arbre', banc: 'un banc', parada: 'una parada', cadira: 'una cadira', tabal: 'un tabal', faixes: 'unes faixes', caixa: 'una caixa', cistella: 'una cistella', barril: 'un barril', balanca: 'una balança', ciri: 'un ciri', campana: 'una campana', reclinatori: 'un reclinatori', pessebre: 'un pessebre', morter: 'un morter', escultura: 'una escultura', camises: 'unes camises', vitrina: 'una vitrina', pantalla: 'una pantalla', pou: 'un pou', palla: 'una bala de palla', biga: 'una biga', armari: 'un armari', teranyina: 'una teranyina' }; // i18n-ok: provisional
 export const CASES = {
   blat: { title: 'Dia de castells', place: 'Plaça del Blat', story: obj => `Just abans de la primera pinya, ningú troba ${obj}. Hi havia figures per tota la plaça...` }, // i18n-ok: provisional
   cort: { title: 'Compres a la Cort', place: 'Carrer de la Cort', story: obj => `Tothom passa per la Cort, i ara ningú troba ${obj}. Qui s'ha entretingut on no tocava?` }, // i18n-ok: provisional
@@ -17,7 +18,7 @@ export const CASES = {
   nit: { title: 'Nit al mas', place: 'Mas Miquel', story: obj => `De nit el mas fa més respecte. L'últim rastre de ${obj} porta aquí.` }, // i18n-ok: provisional
 };
 export const UI = {
-  rule: 'Una figura per fila i per columna, i l\'objecte també. El culpable és l\'única figura a la zona on és l\'objecte.', // i18n-ok: provisional
+  rule: "Una peça per fila i per columna, mai damunt d'un objecte del plànol. 'Tocant' vol dir a la casella del costat, sense diagonals i dins de la mateixa zona. El culpable és l'única figura a la zona de l'objecte robat.", // i18n-ok: provisional
   menu: 'Tria un cas.', // i18n-ok: provisional
   investigate: 'Investiga', // i18n-ok: provisional
   accuse: who => `Acusa ${who}`, // i18n-ok: provisional
@@ -38,7 +39,6 @@ export const UI = {
 export const CLUES = {
   in: ({ zone }) => `era a ${zone}`, // i18n-ok: provisional
   notIn: ({ zone }) => `no era a ${zone}`, // i18n-ok: provisional
-  on: ({ thing }) => `era damunt de ${thing}`, // i18n-ok: provisional
   beside: ({ thing }) => `era tocant ${thing}`, // i18n-ok: provisional
   above: ({ other }) => `era més amunt que ${other}`, // i18n-ok: provisional
   leftOf: ({ other }) => `era més a l'esquerra que ${other}`, // i18n-ok: provisional

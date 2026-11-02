@@ -1,7 +1,7 @@
 # Mini-games plan (release 1.3.0)
 
-Status: Seguici Crush is at `/jocs/crush/` (branch `jocs/crush`; its art masters, notes and difficulty research stay in the `mulassa-minijocs` project). Memory is in this repo at `/jocs/memory/` (reachable only by its URL; card sources in `memory-sources.md`, its provisional texts in `memory-textos.md`, card masters still in the `bestiari-memory` project). No menu or selector button yet and no architecture step tested on a device. The other games live outside the repo:
-`/Volumes/development/projects/mulassa-minijocs` (Pinta per números, Endreça el Seguici, Seguici Crush) and `pica-la-mulassa`.
+Status: Seguici Crush is at `/jocs/crush/` (branch `jocs/crush`; its art masters, notes and difficulty research stay in the `mulassa-minijocs` project). Memory is in this repo at `/jocs/memory/` (reachable only by its URL; card sources in `memory-sources.md`, its provisional texts in `memory-textos.md`, card masters still in the `bestiari-memory` project). The selector's gamepad opens the games sheet; no architecture step tested on a device. The other games live outside the repo:
+`/Volumes/development/projects/mulassa-minijocs`. Pica la Mulassa is at `/jocs/pica/`, also reachable only by its URL; its source project is `pica-la-mulassa`.
 
 Research, in Catalan, copied from `mulassa-minijocs/notes/` on 2026-11-01 (that project may have moved on since):
 - `research/cataleg-jocs.md`: the catalogue of game ideas.
@@ -13,8 +13,8 @@ Research, in Catalan, copied from `mulassa-minijocs/notes/` on 2026-11-01 (that 
 
 - 1.3.0 is the release that brings the mini-games into mulassa.cat.
 - Fes el castell is out of the plan. It still appears in the research notes, which are left as written.
-- The selector's gamepad button (`#free`, `index.html`) stops being the way into free play and opens the games instead.
-- Free play also becomes an entry in the games menu, though it stays part of the main game.
+- The selector's gamepad button (`#free`) opens «Jocs», a sheet inside the main game (`src/ui/games-menu.js`), not a page: the owner rejected a separate `/jocs/` menu, so free play starts and returns to the sheet with no reload.
+- Free play is that sheet's first entry. A mini-game is still its own page, so opening one and coming back reloads the main game.
 - The URL must not say `minijocs`.
 
 ## Architecture

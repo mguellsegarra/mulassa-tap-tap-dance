@@ -575,6 +575,19 @@
   </div>
 </dialog>
 <!-- Device tips (src/ui/device-hint.js): once ever, at an idle selector after the profile's news; WebGL in software first -->
+<!-- The corner gamepad (src/ui/games-menu.js). The texts are provisional. -->
+<dialog id="games-menu" class="sheet" tabindex="-1" aria-labelledby="games-title">
+  <button id="games-x" type="button" data-i18n-attr="aria-label:html.attr.close" class="sheet-x" aria-label="Tanca"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  <div class="sheet-body fade">
+    <h2 id="games-title">Jocs</h2>
+    <div id="games-grid" class="games-grid">
+      <button type="button" class="btn btn-secondary sel-card game-card" data-game="lliure"><span class="por"><img src="/jocs/menu/cards/lliure.jpg" alt="" loading="lazy" width="600" height="750"></span><span class="nb"><span class="sel-card-name">Mode lliure</span></span></button>
+      <button type="button" class="btn btn-secondary sel-card game-card" data-game="pica"><span class="por"><img src="/jocs/menu/cards/pica.jpg" alt="" loading="lazy" width="600" height="750"></span><span class="nb"><span class="sel-card-name">Pica la Mulassa</span></span></button>
+      <button type="button" class="btn btn-secondary sel-card game-card" data-game="memory"><span class="por"><img src="/jocs/menu/cards/memory.jpg" alt="" loading="lazy" width="600" height="750"></span><span class="nb"><span class="sel-card-name">Memory</span></span></button>
+      <button type="button" class="btn btn-secondary sel-card game-card" data-game="crush"><span class="por"><img src="/jocs/menu/cards/crush.jpg" alt="" loading="lazy" width="600" height="750"></span><span class="nb"><span class="sel-card-name">Seguici Crush</span></span></button>
+    </div>
+  </div>
+</dialog>
 <dialog id="gpu-hint-menu" class="sheet hint-menu" tabindex="-1" aria-labelledby="gpu-hint-title" aria-describedby="gpu-hint-text">
   <button id="gpu-hint-close" type="button" data-i18n-attr="aria-label:html.attr.close" class="sheet-x" aria-label="Tanca"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
   <div class="sheet-body">

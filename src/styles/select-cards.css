@@ -185,3 +185,9 @@ html:not([lang="ca"]) .sel-footer :is(#select-next, #select-play, #select-figure
 
 body.view-mode #select { opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .2s, visibility 0s .2s, display .2s allow-discrete; }
 #select { transition: opacity .2s, visibility 0s, display .2s allow-discrete; } /* return visibility immediately so the saved card can take focus */
+/* «Jocs» (ui/games-menu.js): the selector's own card, a game's picture filling its panel. */
+#games-menu { width: min(440px, calc(100vw - 24px)); }
+.games-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 12px; }
+.game-card { --card-label-h: 48px; --sel-r: 14px; width: auto; aspect-ratio: 4 / 6.2; border: 0; }
+.sel-card.game-card .por { position: relative; background: #1a110b; }
+.sel-card.game-card .por img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }

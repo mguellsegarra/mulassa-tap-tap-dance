@@ -92,7 +92,7 @@ assert($('viewmode').hidden, 'the eye shows only inside free play');
 // free play opens the corner row: free play, music, ⚙
 assert.match(css, /body:has\(#select:not\(\[hidden\]\)\) #free \{ --cb-i: 0; \}/, 'free play comes first');
 state.figureId = 'drac-valls'; state.sel = 2;
-key('KeyH'); assert(!run('viewMode'), 'H no longer enters free play'); $('free').fire('click'); run('updateControls()'); assert(run('viewMode') && $('select').inert && classes.has('view-mode') && sheets.select.shown, 'photo mode hides without closing/reinitializing the selector');
+key('KeyH'); assert(!run('viewMode'), 'H no longer enters free play'); run('setView(true)'); run('updateControls()'); assert(run('viewMode') && $('select').inert && classes.has('view-mode') && sheets.select.shown, 'photo mode hides without closing/reinitializing the selector');
 assert(!$('viewmode').hidden, 'inside free play the button is the way back');
 key('Escape'); assert(!run('viewMode') && !$('select').inert && state.state === 'select' && state.figureId === 'drac-valls' && state.sel === 2, 'photo exit keeps the figure and level');
 run('setView(true)'); key('KeyH'); assert(run('viewMode'), 'nor leaves it'); $('viewmode').fire('click'); assert(!run('viewMode'), 'the button leaves free play'); run('updateControls()'); assert($('viewmode').hidden);

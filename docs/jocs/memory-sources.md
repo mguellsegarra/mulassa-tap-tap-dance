@@ -106,7 +106,7 @@ Technical fidelity limitation: backgrounds are visually flat saturated colors, b
 - https://uaf.cat/seguici-ceremonial/nans-de-la-ciutat/
 - Photograph inspected and supplied to imagegen: https://uaf.cat/wp-content/uploads/2019/10/Sant-Joan-2019-Nans-de-Valls-UAF.jpeg
 - https://www.laxarxa.cat/actualitat/cultura-i-xarxes/noticia/valls-fa-un-lifting-als-seus-nans
-- Fidelity: Green hat with yellow band, brown jacket and red neckwear retained.
+- Fidelity: Green hat with yellow band, brown jacket and red neckwear retained. No moustache, as confirmed by the owner.
 
 ## nan-sabater
 - https://uaf.cat/seguici-ceremonial/nans-de-la-ciutat/

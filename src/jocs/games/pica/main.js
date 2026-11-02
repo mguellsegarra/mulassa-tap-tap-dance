@@ -6,7 +6,9 @@ import { setupOrientation } from './orientation.js';
 import { t, applyWords } from './i18n.js';
 import { store } from '../../../platform/storage.js';
 import { dueNotes, startMusic, stopMusic, pauseMusic, resumeMusic, setMusicLevel, setMusicOn, musicOn, SFX } from './audio.js';
+import { BOT_FROM, botTap } from './autoplay.js';
 
+const BOT = import.meta.env.DEV && new URLSearchParams(location.search).has('autoplay');
 const $ = id => document.getElementById(id);
 const board = createBoard($('game'));
 const BEST = 'pica-best';
@@ -56,17 +58,17 @@ function on(event, cell, kind) {
 
 function gameOver(cell) {
   SFX.wrong();
+  SFX.boom();
+  board.explodeAll(cell.i);
   stopMusic();
   mode = 'ending';
   $('pause').style.visibility = 'hidden'; // hidden would close its grid column and move the score
-  setTimeout(() => SFX.boom(), 500);
-  setTimeout(() => board.explodeAll(cell.i), 500);
-  endTimer = setTimeout(showEnd, 1900);
+  endTimer = setTimeout(showEnd, 1400);
 }
 
 function showEnd() {
   const best = +store.get(BEST) || 0, record = game.score > best;
-  if (record) store.set(BEST, game.score);
+  if (record && !BOT) store.set(BEST, game.score);
   $('end-title').textContent = t(record ? 'end.record' : 'end.over');
   $('end-score').textContent = game.score;
   $('end-best').textContent = record ? t('end.recordSub') : t('end.best', { best });
@@ -80,9 +82,12 @@ function showEnd() {
 function start() {
   clearTimeout(endTimer);
   game = newGame({ ...layout(), on });
+  if (BOT) game.score = BOT_FROM;
   board.setGame(game);
   for (const id of ['menu', 'end-menu', 'pause-menu']) $(id).hidden = true;
   $('hud').hidden = false;
+  $('hud-best').textContent = +store.get(BEST) || '';
+  $('hud-best').hidden = !(+store.get(BEST));
   $('pause').style.visibility = '';
   mode = 'play';
   startMusic();
@@ -98,6 +103,9 @@ function showMenu() {
   board.setGame(game);
   for (const id of ['end-menu', 'pause-menu', 'hud']) $(id).hidden = true;
   $('menu').hidden = false;
+  const best = +store.get(BEST) || 0;
+  $('menu-best').hidden = !best;
+  $('menu-best').textContent = t('end.best', { best });
   mode = 'menu';
 }
 
@@ -153,6 +161,7 @@ function frame(now) {
     tick(game, dt);
     // .1: a new figure takes that long to pop up, so it lands on the note
     for (let n = dueNotes(.1); n > 0; n--) noteSounded(game);
+    if (BOT && game.state === 'play') { const i = botTap(game); if (i >= 0) tap(game, i); }
     if (game.state === 'play') setMusicLevel(game.score, game.slow > 0);
     syncHud();
   } else if (mode === 'ending') tick(game, dt);

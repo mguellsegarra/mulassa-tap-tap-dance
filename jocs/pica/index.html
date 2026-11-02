@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-  <meta name="theme-color" content="#140c07">
+  <meta name="theme-color" content="#11152c">
   <meta name="robots" content="noindex">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
@@ -21,6 +21,7 @@
     <button id="pause" class="round-btn" data-t-aria="pause" aria-label="Pausa"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg></button>
     <div id="hud-mid">
       <div id="score" role="status">0</div>
+      <div id="hud-best" aria-hidden="true"></div>
       <div id="chips"></div>
     </div>
     <button id="music" class="round-btn" data-t-aria="music" aria-label="Música" aria-pressed="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 18V6l10-2v12" fill="none" stroke="currentColor" stroke-width="2.2"/><circle cx="6.5" cy="18" r="2.8"/><circle cx="16.5" cy="16" r="2.8"/><path id="music-off" d="M4 4l16 16" stroke="#ff8a7a" stroke-width="2.6" stroke-linecap="round" hidden/></svg></button>
@@ -33,6 +34,7 @@
     </svg>
     <div class="art" id="menu-art"></div>
     <div class="sheet">
+      <p class="result-sub" id="menu-best" hidden></p>
       <ul class="how" id="how-rules"></ul>
       <ul class="how goodies" id="how-goodies"></ul>
       <div class="sheet-actions"><button id="play" class="btn btn-primary" data-t="play">Juga</button>

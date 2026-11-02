@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="ca">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Crush: estudi de figures per nivell</title>
+<style>
+  :root { --bg: #1b1420; --card: #2b2233; --line: #453850; --text: #f6efe6; --dim: #bdb0c2; --gold: #f5c518; --red: #c8283c; --green: #2a9d5c; --gap: 16px; --radius: 16px; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.45 system-ui, sans-serif; }
+  main { max-width: 1040px; margin: auto; padding: var(--gap); display: grid; gap: var(--gap); padding-bottom: 96px; }
+  h1 { margin: 0; color: var(--gold); font-size: 28px; line-height: 1.2; }
+  h2 { margin: 0 0 12px; font-size: 20px; }
+  h3 { margin: 0; font-size: 18px; }
+  p { margin: 0 0 8px; } p:last-child { margin-bottom: 0; }
+  .dim { color: var(--dim); }
+  .card { background: var(--card); border-radius: var(--radius); padding: var(--gap); min-width: 0; }
+  .scroll { overflow-x: auto; }
+  table { border-collapse: collapse; margin: auto; }
+  th, td { padding: 4px; text-align: center; font-weight: 600; font-variant-numeric: tabular-nums; }
+  th img, th canvas { width: 40px; height: 40px; display: block; margin: auto; }
+  td.cell { width: 48px; height: 40px; border-radius: 8px; }
+  .figures { display: grid; grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)); gap: 12px; }
+  .figure { background: #352a3e; border-radius: 12px; padding: 12px; text-align: center; display: grid; gap: 8px; align-content: start; }
+  .figure canvas { width: 72px; height: 72px; margin: auto; }
+  .choice { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+  button { font: inherit; font-weight: 600; color: var(--text); background: var(--line); border: 0; border-radius: 10px; min-height: 44px; padding: 8px 12px; cursor: pointer; }
+  button.on { background: var(--gold); color: #241a10; }
+  .level { display: grid; gap: 12px; }
+  .level header { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; justify-content: space-between; }
+  .boards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .board { display: grid; gap: 8px; align-content: start; min-width: 0; }
+  .board canvas { width: 100%; aspect-ratio: 1; border-radius: 10px; display: block; }
+  .chips { display: flex; flex-wrap: wrap; gap: 4px; }
+  .chip { font-size: 13px; padding: 2px 8px; border-radius: 99px; background: #453850; }
+  .chip.goal { background: var(--gold); color: #241a10; font-weight: 700; }
+  .worst { font-weight: 700; }
+  .bad { color: #ff8f9c; } .mid { color: #ffd479; } .good { color: #7fe0a6; }
+  .marks { display: flex; gap: 8px; flex-wrap: wrap; }
+  textarea { width: 100%; min-height: 72px; font: inherit; color: var(--text); background: #1f1826; border: 1px solid var(--line); border-radius: 10px; padding: 10px; resize: vertical; }
+  .bar { position: fixed; inset: auto 0 0; background: #120d16f0; padding: 8px var(--gap) calc(8px + env(safe-area-inset-bottom)); display: flex; gap: 8px; justify-content: center; align-items: center; flex-wrap: wrap; }
+  #out { width: min(100%, 1040px); min-height: 120px; }
+  @media (max-width: 559px) { .boards { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<main>
+  <section class="card">
+    <h1>Crush: figures per nivell</h1>
+    <p class="dim">A cada nivell veus el tauler d'ara i la meva proposta, amb les figures reals. Posa-hi la nota que vulguis i, al final, prem «Copia les notes» i enganxa-les al xat. Es guarden en aquest navegador.</p>
+    <div id="summary"></div>
+  </section>
+
+  <section class="card">
+    <h2>Colors a provar</h2>
+    <p class="dim">Afecten la columna «Proposta» i les recomanacions. La columna «Ara» sempre és el joc d'avui. Són filtres de prova sobre el dibuix.</p>
+    <div class="figures" id="figures"></div>
+  </section>
+
+  <section class="card">
+    <h2>Quines figures s'assemblen</h2>
+    <p class="dim">Percentatge del dibuix que comparteix color amb l'altra figura. Com més alt, més costa distingir-les. Compara colors, no formes.</p>
+    <div class="scroll" id="matrix"></div>
+  </section>
+
+  <section class="card">
+    <h2>Quines figures surten a cada nivell</h2>
+    <p class="dim">● és l'objectiu, ○ és una figura més del tauler, a la combinació d'avui.</p>
+    <div class="scroll" id="grid"></div>
+  </section>
+
+  <div id="levels" style="display:grid;gap:var(--gap)"></div>
+  <textarea id="out" hidden readonly aria-label="Notes per copiar"></textarea>
+</main>
+<div class="bar"><button id="copy" class="on">Copia les notes</button><span id="done" class="dim" role="status"></span></div>
+
+<script type="module">
+import { LEVELS, SEGUICI } from '/src/jocs/games/crush/levels.js';
+import { newGame } from '/src/jocs/games/crush/rules.js';
+
+const NAMES = { drac: 'Drac', basilisc: 'Basilisc', bou: 'Bou', lleo: 'Lleó', mulassa: 'Mulassa', nans: 'Nans', aliga: 'Àliga' };
+const HIGH = 30, MID = 22; // from these figures' own numbers: below MID they read apart on a phone
+const NOTES_KEY = 'crush-nivells-notes', VARIANTS_KEY = 'crush-nivells-variants';
+const load = (key, fallback) => { try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; } };
+const notes = load(NOTES_KEY, {});
+const saveNotes = () => localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
+
+const image = src => new Promise((ok, no) => Object.assign(new Image(), { src, onload(e) { ok(e.target); }, onerror: no }));
+const canvasOf = (img, size) => {
+  const c = Object.assign(document.createElement('canvas'), { width: size, height: size });
+  c.getContext('2d', { willReadFrequently: true }).drawImage(img, 0, 0, size, size);
+  return c;
+};
+
+function rgbToHsv(r, g, b) {
+  const max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min;
+  const h = !d ? 0 : max === r ? ((g - b) / d + 6) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  return [h * 60, max ? d / max : 0, max / 255];
+}
+function hsvToRgb(h, s, v) {
+  const f = n => { const k = (n + h / 60) % 6; return 255 * v * (1 - s * Math.max(0, Math.min(k, 4 - k, 1))); };
+  return [f(5), f(3), f(1)];
+}
+// Moves only the body's green-blue, so the comb, the beak and the wing keep their colours.
+function towardsBlue(img, hue, gain) {
+  const c = canvasOf(img, 512), g = c.getContext('2d'), px = g.getImageData(0, 0, 512, 512), d = px.data;
+  for (let i = 0; i < d.length; i += 4) {
+    const [h, s, v] = rgbToHsv(d[i], d[i + 1], d[i + 2]);
+    if (h > 130 && h < 215 && s > .12) [d[i], d[i + 1], d[i + 2]] = hsvToRgb(hue, Math.min(1, s * gain), v);
+  }
+  g.putImageData(px, 0, 0);
+  return c;
+}
+
+// Calms the yellow lion: only its yellows move, so the eyes, nose and crown jewel stay as drawn.
+function softerYellow(img, shift, sat, value) {
+  const c = canvasOf(img, 512), g = c.getContext('2d'), px = g.getImageData(0, 0, 512, 512), d = px.data;
+  for (let i = 0; i < d.length; i += 4) {
+    const [h, s, v] = rgbToHsv(d[i], d[i + 1], d[i + 2]);
+    if (h > 25 && h < 70 && s > .1) [d[i], d[i + 1], d[i + 2]] = hsvToRgb(h + shift, s * sat, v * value);
+  }
+  g.putImageData(px, 0, 0);
+  return c;
+}
+
+// The same treatment as art.js paintPiece, on any source, so a variant looks as it would in the game.
+function sheet(src, size = 256) {
+  const art = canvasOf(src, size), a = art.getContext('2d'), px = a.getImageData(0, 0, size, size);
+  for (let i = 0; i < px.data.length; i += 4) {
+    const grey = (px.data[i] + px.data[i + 1] + px.data[i + 2]) / 3;
+    for (let k = 0; k < 3; k++) px.data[i + k] = Math.min(255, grey + (px.data[i + k] - grey) * 1.25);
+  }
+  a.putImageData(px, 0, 0);
+  a.globalCompositeOperation = 'source-atop';
+  const light = a.createLinearGradient(0, 0, 0, size);
+  light.addColorStop(0, 'rgba(255,255,255,.22)'); light.addColorStop(.45, 'rgba(255,255,255,0)');
+  light.addColorStop(.7, 'rgba(0,0,0,0)'); light.addColorStop(1, 'rgba(30,0,40,.3)');
+  a.fillStyle = light; a.fillRect(0, 0, size, size);
+  return art;
+}
+
+function labOf(r, g, b) {
+  const lin = v => { v /= 255; return v > .04045 ? ((v + .055) / 1.055) ** 2.4 : v / 12.92; };
+  const [R, G, B] = [lin(r), lin(g), lin(b)];
+  const f = t => (t > .008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116);
+  const x = f((.4124 * R + .3576 * G + .1805 * B) / .95047), y = f(.2126 * R + .7152 * G + .0722 * B), z = f((.0193 * R + .1192 * G + .9505 * B) / 1.08883);
+  return [116 * y - 16, 500 * (x - y), 200 * (y - z)];
+}
+// Share of the drawing in each coarse colour box; two figures overlap where their boxes fill alike.
+// The middle counts most: at a glance a piece is its body, not the tip of its comb or horns.
+function histogram(c) {
+  const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data, h = new Map(), size = c.width;
+  let n = 0;
+  for (let i = 0; i < d.length; i += 4) {
+    if (d[i + 3] < 128) continue;
+    const x = (i / 4) % size / size - .5, y = Math.floor(i / 4 / size) / size - .5, weight = Math.exp(-(x * x + y * y) / (2 * .28 * .28));
+    const [L, A, B] = labOf(d[i], d[i + 1], d[i + 2]);
+    const k = `${Math.round(L / 22)},${Math.round(A / 22)},${Math.round(B / 22)}`;
+    h.set(k, (h.get(k) ?? 0) + weight);
+    n += weight;
+  }
+  for (const [k, v] of h) h.set(k, v / n);
+  return h;
+}
+const overlap = (a, b) => { let s = 0; for (const [k, v] of a) s += Math.min(v, b.get(k) ?? 0); return Math.round(s * 100); };
+
+const base = Object.fromEntries(await Promise.all(SEGUICI.map(async k => [k, await image(`/jocs/crush/cards/${k}.png`)])));
+const greenBasilisc = await image('/tools/dev/crush-nivells/basilisc-verd.png');
+const yellowLion = await image('/tools/dev/crush-nivells/lleo-groc.png');
+const VARIANTS = {
+  basilisc: [['ara', 'El d\'ara', base.basilisc], ['verd', 'Verd blavós', greenBasilisc], ['blau', 'Més blau', towardsBlue(greenBasilisc, 200, 1.15)], ['viu', 'Blau viu', towardsBlue(greenBasilisc, 212, 1.5)]],
+  lleo: [['ara', 'El d\'ara', base.lleo], ['groc', 'Groc', yellowLion], ['mel', 'Mel', softerYellow(yellowLion, -9, .95, .96)], ['daurat', 'Daurat', softerYellow(yellowLion, -5, .72, .9)], ['mostassa', 'Mostassa', softerYellow(yellowLion, -11, .78, .78)]],
+};
+const chosen = { basilisc: 'blau', lleo: 'mel', ...load(VARIANTS_KEY, {}) };
+const today = Object.fromEntries(SEGUICI.map(k => [k, sheet(base[k])]));
+const todayHist = Object.fromEntries(SEGUICI.map(k => [k, histogram(sheet(base[k], 64))]));
+let sheets = {}, hists = {};
+function refreshArt() {
+  for (const k of SEGUICI) {
+    const v = VARIANTS[k]?.find(x => x[0] === chosen[k])?.[2] ?? base[k];
+    sheets[k] = sheet(v);
+    hists[k] = histogram(sheet(v, 64));
+  }
+}
+
+const sim = (h, a, b) => overlap(h[a], h[b]);
+const worstPair = (h, kinds) => {
+  let top = null;
+  kinds.forEach((a, i) => kinds.slice(i + 1).forEach(b => { const v = sim(h, a, b); if (!top || v > top.v) top = { a, b, v }; }));
+  return top;
+};
+const tone = v => (v >= HIGH ? 'bad' : v >= MID ? 'mid' : 'good');
+
+// Keeps the level's goal and number of figures, and picks the set whose closest pair is furthest apart. The game is named
+// after the Mulassa, so she gets in unless that costs a clearly worse pair.
+const MULASSA_BONUS = 8;
+function proposal(level) {
+  const others = SEGUICI.filter(k => k !== level.goal), need = level.kinds.length - 1;
+  let best = null;
+  const walk = (from, set) => {
+    if (set.length === need) {
+      const kinds = [level.goal, ...set], w = worstPair(hists, kinds);
+      const score = w.v - (kinds.includes('mulassa') ? MULASSA_BONUS : 0);
+      if (!best || score < best.score) best = { kinds, w, score };
+      return;
+    }
+    for (let i = from; i < others.length; i++) walk(i + 1, [...set, others[i]]);
+  };
+  walk(0, []);
+  return best;
+}
+
+function drawBoard(canvas, kinds, goal, art, seed) {
+  const SIZE = 7, cell = 72;
+  canvas.width = canvas.height = SIZE * cell;
+  let s = seed;
+  const rng = () => { s = (s * 16807) % 2147483647; return s / 2147483647; };
+  const { board } = newGame({ goal, n: 1, moves: 1, kinds, stars: [0, 0] }, rng, SIZE, SIZE);
+  const g = canvas.getContext('2d');
+  board.forEach((row, r) => row.forEach((p, c) => {
+    g.fillStyle = (r + c) % 2 ? '#3a241b' : '#4a3026';
+    g.fillRect(c * cell, r * cell, cell, cell);
+    g.drawImage(art[p.kind], c * cell + 2, r * cell + 2, cell - 4, cell - 4);
+  }));
+}
+
+const chips = (kinds, goal) => `<div class="chips">${kinds.map(k => `<span class="chip${k === goal ? ' goal' : ''}">${NAMES[k]}</span>`).join('')}</div>`;
+const pairText = w => `<span class="worst ${tone(w.v)}">${NAMES[w.a]} i ${NAMES[w.b]}: ${w.v} %</span>`;
+
+function opinion(i, level, now, next) {
+  const missing = next.kinds.filter(k => !level.kinds.includes(k)), gone = level.kinds.filter(k => !next.kinds.includes(k));
+  const was = level.kinds.includes('mulassa'), is = next.kinds.includes('mulassa');
+  const mulassa = was && is ? '' : is ? ' Així també hi surt la Mulassa, que ara no hi és.' : was ? ' Això sí, hi perds la Mulassa, perquè s\'acosta massa a una figura que es queda.' : ' La Mulassa no hi surt: s\'acostaria massa a l\'objectiu o a una altra figura.';
+  const swap = gone.length ? `Trauria ${gone.map(k => NAMES[k]).join(', ')} i posaria ${missing.map(k => NAMES[k]).join(', ')}.` : 'Mantindria aquestes figures i només canviaria els colors.';
+  const verdict = now.v >= HIGH ? `Ara es confon: ${NAMES[now.a]} i ${NAMES[now.b]} comparteixen el ${now.v} % del color.`
+    : now.v >= MID ? `Es pot jugar, però ${NAMES[now.a]} i ${NAMES[now.b]} s'acosten massa (${now.v} %).`
+      : `Ara ja es distingeix bé (com a màxim ${now.v} %).`;
+  const after = `Amb la proposta, la parella més semblant queda en ${next.w.v} %.`;
+  return `${verdict} ${swap} ${after}${mulassa}`;
+}
+
+function renderFigures() {
+  const box = document.querySelector('#figures');
+  box.replaceChildren(...SEGUICI.map(k => {
+    const el = document.createElement('div');
+    el.className = 'figure';
+    const preview = Object.assign(document.createElement('canvas'), { width: 144, height: 144 });
+    preview.getContext('2d').drawImage(sheets[k], 0, 0, 144, 144);
+    el.append(preview, Object.assign(document.createElement('strong'), { textContent: NAMES[k] }));
+    if (VARIANTS[k]) {
+      const row = document.createElement('div');
+      row.className = 'choice';
+      for (const [id, label] of VARIANTS[k]) {
+        const b = Object.assign(document.createElement('button'), { textContent: label, className: chosen[k] === id ? 'on' : '' });
+        b.onclick = () => { chosen[k] = id; localStorage.setItem(VARIANTS_KEY, JSON.stringify(chosen)); renderAll(); };
+        row.append(b);
+      }
+      el.append(row);
+    }
+    return el;
+  }));
+}
+
+const iconCell = (art, k) => {
+  const c = Object.assign(document.createElement('canvas'), { width: 80, height: 80, title: NAMES[k] });
+  c.getContext('2d').drawImage(art[k], 0, 0, 80, 80);
+  c.setAttribute('role', 'img');
+  c.setAttribute('aria-label', NAMES[k]);
+  return c;
+};
+
+function renderMatrix() {
+  const t = document.createElement('table'), head = t.insertRow();
+  head.append(document.createElement('th'));
+  for (const k of SEGUICI) { const th = document.createElement('th'); th.append(iconCell(sheets, k)); head.append(th); }
+  for (const a of SEGUICI) {
+    const r = t.insertRow(), th = document.createElement('th');
+    th.append(iconCell(sheets, a));
+    r.append(th);
+    for (const b of SEGUICI) {
+      const td = r.insertCell();
+      td.className = 'cell';
+      if (a === b) continue;
+      const v = sim(hists, a, b);
+      td.textContent = v;
+      td.style.background = `rgba(200, 40, 60, ${Math.min(.85, v / 60)})`;
+    }
+  }
+  document.querySelector('#matrix').replaceChildren(t);
+}
+
+function renderGrid() {
+  const t = document.createElement('table'), head = t.insertRow();
+  head.append(Object.assign(document.createElement('th'), { textContent: 'Nivell' }));
+  for (const k of SEGUICI) { const th = document.createElement('th'); th.append(iconCell(today, k)); head.append(th); }
+  LEVELS.forEach((l, i) => {
+    const r = t.insertRow();
+    r.insertCell().textContent = i + 1;
+    for (const k of SEGUICI) r.insertCell().textContent = k === l.goal ? '●' : l.kinds.includes(k) ? '○' : '';
+  });
+  const foot = t.insertRow();
+  foot.insertCell().textContent = 'Total';
+  for (const k of SEGUICI) foot.insertCell().textContent = LEVELS.filter(l => l.kinds.includes(k)).length;
+  document.querySelector('#grid').replaceChildren(t);
+}
+
+function renderSummary() {
+  const count = k => LEVELS.filter(l => l.kinds.includes(k)).length;
+  const trio = LEVELS.filter(l => ['lleo', 'bou', 'basilisc'].every(k => l.kinds.includes(k))).length;
+  const bad = LEVELS.filter(l => worstPair(todayHist, l.kinds).v >= HIGH).length;
+  document.querySelector('#summary').innerHTML = `
+    <p><strong>Lleó, Bou i Basilisc surten junts a ${trio} dels 20 nivells.</strong> ${bad} nivells tenen avui alguna parella que es confon.</p>
+    <p><strong>Per què encara passa:</strong> el canvi de colors que vas aprovar (Lleó groc, Basilisc verd blavós, Bou i Lleó mai junts) només és a la branca <code>jocs/crush</code> i no va arribar a la 1.3.0.</p>
+    <p><strong>Mulassa:</strong> sí que la tenim, però només surt a ${count('mulassa')} nivells. La tria agafa les figures per l'ordre del Seguici, i els nivells de 4 figures s'omplen amb Drac, Basilisc, Bou i Lleó abans d'arribar-hi.</p>`;
+}
+
+function renderLevels() {
+  const box = document.querySelector('#levels');
+  box.replaceChildren(...LEVELS.map((level, i) => {
+    const code = `N${String(i + 1).padStart(2, '0')}`, now = worstPair(todayHist, level.kinds), next = proposal(level);
+    const el = document.createElement('section');
+    el.className = 'card level';
+    el.id = code;
+    el.innerHTML = `
+      <header><h3>${code} · Nivell ${i + 1}</h3><span class="dim">Objectiu: ${NAMES[level.goal]} · ${level.kinds.length} figures</span></header>
+      <div class="boards">
+        <div class="board"><strong>Ara</strong><canvas data-now role="img" aria-label="Tauler d'ara del nivell ${i + 1}"></canvas>${chips(level.kinds, level.goal)}<div>${pairText(now)}</div></div>
+        <div class="board"><strong>Proposta</strong><canvas data-next role="img" aria-label="Tauler proposat del nivell ${i + 1}"></canvas>${chips(next.kinds, level.goal)}<div>${pairText(next.w)}</div></div>
+      </div>
+      <p><strong>Què en penso:</strong> ${opinion(i, level, now, next)}</p>
+      <div class="marks"></div>
+      <textarea aria-label="Notes del nivell ${i + 1}" placeholder="La teva nota…"></textarea>`;
+    drawBoard(el.querySelector('[data-now]'), level.kinds, level.goal, today, 1000 + i * 77);
+    drawBoard(el.querySelector('[data-next]'), next.kinds, level.goal, sheets, 1000 + i * 77);
+    const entry = () => (notes[code] ??= { mark: '', text: '' });
+    const marks = el.querySelector('.marks');
+    const paint = () => [...marks.children].forEach(b => b.classList.toggle('on', notes[code]?.mark === b.dataset.mark));
+    for (const [mark, label] of [['proposta', 'M\'agrada la proposta'], ['ara', 'Deixa\'l com ara'], ['altre', 'Vull una altra cosa']]) {
+      const b = Object.assign(document.createElement('button'), { textContent: label });
+      b.dataset.mark = mark;
+      b.onclick = () => { const e = entry(); e.mark = e.mark === mark ? '' : mark; saveNotes(); paint(); };
+      marks.append(b);
+    }
+    paint();
+    const area = el.querySelector('textarea');
+    area.value = notes[code]?.text ?? '';
+    area.oninput = () => { entry().text = area.value; saveNotes(); };
+    return el;
+  }));
+}
+
+function renderAll() {
+  refreshArt();
+  renderFigures();
+  renderMatrix();
+  renderLevels();
+}
+
+document.querySelector('#copy').onclick = async () => {
+  const lines = [`Colors: Basilisc ${chosen.basilisc}, Lleó ${chosen.lleo}`];
+  for (const [code, n] of Object.entries(notes).sort()) if (n.mark || n.text) lines.push(`${code}${n.mark ? ` [${n.mark}]` : ''}: ${n.text}`);
+  const out = document.querySelector('#out'), done = document.querySelector('#done');
+  out.value = lines.join('\n');
+  try {
+    await navigator.clipboard.writeText(out.value);
+    done.textContent = 'Copiades. Enganxa-les al xat.';
+  } catch { // a LAN address is not a secure context, so the clipboard may refuse
+    out.hidden = false;
+    out.select();
+    done.textContent = document.execCommand('copy') ? 'Copiades. Enganxa-les al xat.' : 'Copia el text que ha aparegut a sota.';
+  }
+};
+
+renderGrid();
+renderSummary();
+renderAll();
+</script>
+</body>
+</html>

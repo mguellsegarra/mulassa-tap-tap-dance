@@ -9,6 +9,8 @@ Research, in Catalan, copied from `mulassa-minijocs/notes/` on 2026-11-01 (that 
 - `research/jocs-fisics.md`: physical games about the Seguici and similar festes.
 - `research/actius-reutilitzables.md`: assets the game can lend.
 
+Seguici Crush's level table comes from `tools/dev/crush-curve.mjs`, a casual-player bot, and `tests/jocs/crush-curve.mjs` guards the curve. Help after losses is `helpFor` in its `rules.js`, only ever towards easier; no stats leave the device, by the owner's decision.
+
 ## Decisions from the owner
 
 - 1.3.0 is the release that brings the mini-games into mulassa.cat.
@@ -28,7 +30,7 @@ The owner's choices. A game takes its name when it enters this branch; folders, 
 | Mulassa Crush | applied | `crush` | 1.3.0 |
 | Ball lliure | applied | free play, last card of the sheet | 1.3.0 |
 | Mulassoku | to apply | `murdoku`, branch `jocs/murdoku`; players must never read «Murdoku» | one a week after 1.3.0 |
-| Mulassa Mix | to apply | Alquímia, `mulassa-minijocs`, `minijoc/alquimia` | one a week |
+| Mulassa Craft | to apply | Alquímia, `mulassa-minijocs`, `minijoc/alquimia` | one a week |
 | Mulassa Drop | to apply | Del Nan al Gegant, `suika`, branch `jocs/suika` | one a week |
 | Mulassa Run | to apply | Corre i suma colla, branch `jocs/corre` | one a week |
 | Mulassa City | to apply | Vila del Seguici, `subara`, branch `jocs/subara` | one a week |

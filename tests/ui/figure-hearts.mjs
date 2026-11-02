@@ -51,3 +51,17 @@ console.log('figure hearts ok');
   await g.load(); saved(); await tick(); await tick();
   assert.deepEqual(done, [true]); assert(g.mine('bou'), 'what the identity read ends with is only a load: the saved heart stays on');
 }
+// a tap shows at once, before the server answers; a refusal undoes it
+{
+  let answer; const seen = [], icon = { classList: { add: c => seen.push(c), remove() {} }, getBoundingClientRect: () => ({}) };
+  const doc = { defaultView: { innerWidth: 400, matchMedia: () => ({ matches: true }) }, createElement: () => ({ style: {}, offsetWidth: 100, setAttribute() {}, remove() {} }), body: { append() {} } };
+  const button = { ownerDocument: doc, getBoundingClientRect: () => ({ left: 10, width: 40, bottom: 50 }), closest: () => null, querySelector: () => icon };
+  const h = setupHearts({ service: { figureHearts: async () => [{ figure: 'bou', hearts: 4, mine: false }], setFigureHeart: () => new Promise((ok, no) => { answer = { ok, no }; }) }, needConfirmed: (_, run) => run() });
+  await h.load(); h.tap({ id: 'bou' }, button); await tick();
+  assert(h.mine('bou')); assert.equal(h.count('bou'), 5, 'counted before the answer'); assert(seen.includes('sel-heart-pop'), 'the burst too');
+  answer.ok(5); await tick(); assert(h.mine('bou')); assert.equal(h.count('bou'), 5);
+  seen.length = 0; h.tap({ id: 'bou' }, button); await tick();
+  assert(!h.mine('bou')); assert.equal(h.count('bou'), 4); assert.equal(seen.length, 0, 'taking it back: no burst');
+  answer.no(new Error('down')); await tick(); assert(h.mine('bou'), 'refused: it was never taken back'); assert.equal(h.count('bou'), 5);
+  h.reload();
+}

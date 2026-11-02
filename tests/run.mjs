@@ -1,10 +1,11 @@
 // The project's test suite (npm run check): every *.mjs under tests/ that no other test imports (an imported one is part of
 // its importer, e.g. render-quality.mjs's `import './finale-effects.mjs'`), plus check.mjs and the Python tests below, so a new test
 // only needs its file. Tests run in parallel (`--jobs=N`, default half the idle cores; each test's output is printed whole when it
-// ends), FIRST first; ALONE ones (a real browser, or they time themselves) run one by one afterwards. Every test runs even
-// after a failure, and the failures are listed at the end. Arguments filter by path: `node tests/run.mjs drac` (any path
-// containing "drac"), `node tests/run.mjs db/ ui/`; `--group=leaderboard` runs the leaderboard set; `--bail` stops at the
-// first failure.
+// ends), FIRST first; ALONE ones (they time themselves) run one by one afterwards. Every test runs even after a failure, and
+// the failures are listed at the end. Arguments filter by path: `node tests/run.mjs drac` (any path containing "drac"),
+// `node tests/run.mjs db/ ui/`; `--group=leaderboard` runs the leaderboard set; `--bail` stops at the first failure.
+// The GPU tests queue on one machine-wide lock (tools/qa/capture-lib.mjs), behind any capture: the plain run leaves them out.
+// `--gpu` runs only them; `--full` runs everything with CHECK_FULL=1, which also turns on the Drac's exhaustive sweeps. Naming one by path runs it.
 import { spawn } from 'node:child_process';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { availableParallelism, loadavg } from 'node:os';
@@ -14,8 +15,9 @@ import { fileURLToPath } from 'node:url';
 const root = fileURLToPath(new URL('..', import.meta.url));
 // Quick and broad, then the longest, so they don't start last and leave the run waiting on them.
 const FIRST = ['check.mjs', 'tests/build/modules.mjs', 'tests/render/render-quality.mjs', 'tests/figures/drac/drac-compare-comic.mjs', 'tests/db/short-ranking-db.mjs', 'tests/figures/drac/drac-compare.mjs'];
+const GPU = ['tests/render/gl-budget.mjs', 'tests/render/prod-play.mjs'];
 // The mocked-DOM render tests fake performance.now, so they share the machine; these drive a real browser or time themselves.
-const ALONE = t => ['tests/render/gl-budget.mjs', 'tests/render/prod-play.mjs', 'tests/build/audio.mjs'].includes(t);
+const ALONE = t => [...GPU, 'tests/build/audio.mjs'].includes(t);
 // Python tests run through uv with these packages (the generators' own environment); tests/db/db_backup_test.py runs from db-backup.mjs.
 const PYTHON = [
   { py: 'tests/figures/drac/drac-audio.py', uv: '--python 3.11 --with numpy --with scipy --with soundfile --with mido' },
@@ -29,7 +31,7 @@ const found = files.filter(f => !imported.has(f)).map(f => relative(root, f)).fi
 const TESTS = [...FIRST, ...found, ...PYTHON];
 const GROUPS = { leaderboard: ["tests/services/leaderboard.mjs", "tests/db/leaderboard-db.mjs", "tests/services/leaderboard-delete.mjs", "tests/services/alias-rules.mjs", "tests/services/leaderboard-all.mjs", "tests/services/seed-phaseout.mjs", "tests/game/score-ceiling.mjs", "tests/ui/board-ui.mjs", "tests/ui/profile-ui.mjs", "tests/services/captcha.mjs", "tests/db/short-ranking-db.mjs", "tests/db/record-by-score-db.mjs", "tests/game/score-scale.mjs", "tests/db/seasons-db.mjs", "tests/db/player-stats-db.mjs"] };
 
-const args = process.argv.slice(2), bail = args.includes('--bail');
+const args = process.argv.slice(2), bail = args.includes('--bail'), gpu = args.includes('--gpu'), full = args.includes('--full');
 // Default: half the cores, fewer when other work (another agent's check, browsers) already loads the machine.
 const cores = availableParallelism(), idle = Math.floor(cores - loadavg()[0]);
 const jobs = Math.max(1, Number(args.find(a => a.startsWith('--jobs='))?.slice(7)) || Math.min(Math.floor(cores / 2), idle));
@@ -37,14 +39,15 @@ const group = args.find(a => a.startsWith('--group='))?.slice(8);
 const filters = args.filter(a => !a.startsWith('--'));
 if (group && !GROUPS[group]) { console.error(`unknown group: ${group} (${Object.keys(GROUPS).join(', ')})`); process.exit(2); }
 const pathOf = t => typeof t === 'string' ? t : t.py;
-const chosen = TESTS.filter(t => (!group || GROUPS[group].includes(pathOf(t))) && (!filters.length || filters.some(f => pathOf(t).includes(f))));
+const wanted = t => filters.length ? filters.some(f => pathOf(t).includes(f)) : gpu ? GPU.includes(pathOf(t)) : full || !GPU.includes(pathOf(t));
+const chosen = TESTS.filter(t => (!group || GROUPS[group].includes(pathOf(t))) && wanted(t));
 if (!chosen.length) { console.error('no test matches'); process.exit(2); }
 
 const failed = [], running = new Set();
 let ran = 0, stop = false;
 const run = t => new Promise(done => {
   const [cmd, argv] = typeof t === 'string' ? [process.execPath, [t]] : ['uv', ['run', ...t.uv.split(/\s+/), 'python', t.py]];
-  const start = Date.now(), out = [], child = spawn(cmd, argv, { cwd: root, stdio: ['ignore', 'pipe', 'pipe'] });
+  const start = Date.now(), out = [], child = spawn(cmd, argv, { cwd: root, stdio: ['ignore', 'pipe', 'pipe'], env: full ? { ...process.env, CHECK_FULL: '1' } : process.env });
   running.add(child);
   child.stdout.on('data', d => out.push(d));
   child.stderr.on('data', d => out.push(d));

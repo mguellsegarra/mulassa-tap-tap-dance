@@ -293,7 +293,7 @@ const partsOf = () => [...rig.necks.flatMap(n => [n.root, ...n.segs, n.head, n.j
 { // second differences of the moving points at 30 / 60 / 120 fps and three frame phases: a step in velocity shows as an
   // acceleration growing with the frame rate; the heavy shell and heads stay under a bound too
   const peak = {};
-  for (const fps of [30, 60, 120]) for (const ph of [0, 1 / 3, 2 / 3]) {
+  for (const fps of process.env.CHECK_FULL ? [30, 60, 120] : [60, 120]) for (const ph of process.env.CHECK_FULL ? [0, 1 / 3, 2 / 3] : [0]) {
     let a = [], b = [], c = [];
     const h = 1 / fps;
     let sole = 0, body = 0, at_ = 0;

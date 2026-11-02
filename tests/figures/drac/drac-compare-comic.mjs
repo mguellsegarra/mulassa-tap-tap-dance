@@ -87,7 +87,7 @@ const outside = (p, m) => Math.min(...m.userData.boxes.map(b => { const a = lo(b
 posed(0, 1); // the preview prepares the continuous cloth on first pose
 const CLOTH = rig.legs.map(makeClothProbe), SHOE_PROBES = rig.legs.map(makeShoeProbe), SHOE_TOP = SHOES.map(top);
 const M = new THREE.Matrix4(), P = new THREE.Vector3();
-for (const g of [0, 0.5, 1]) {
+for (const g of process.env.CHECK_FULL ? [0, 0.5, 1] : [1]) { // the full gain moves furthest; the others in check:full
   let crossing = null, shoeIn = null, open = 0, openAt = '', cuff = Infinity;
   for (let f = 0, n = Math.round(END * 60); f <= n; f++) {
     const t = f / 60;
@@ -138,7 +138,7 @@ for (const g of [0, 0.5, 1]) {
     return out;
   };
   const peak = {};
-  for (const fps of [30, 60, 120]) for (const ph of [0, 1 / 3, 2 / 3]) {
+  for (const fps of process.env.CHECK_FULL ? [30, 60, 120] : [60, 120]) for (const ph of process.env.CHECK_FULL ? [0, 1 / 3, 2 / 3] : [0]) {
     let a = [], b = [], best = 0;
     const h = 1 / fps;
     for (let f = 0; (f + ph) * h <= END; f++) {
@@ -153,7 +153,7 @@ for (const g of [0, 0.5, 1]) {
 }
 
 // ---- (5) the comic pulse is the song's own beat at each reference second (the video's estimated pulse it replaced was
-// a measurement, never the game's grid): rising, within the music's tempo range, deterministic
+// a measurement, never the game's grid): rising, within the music's tempo range
 {
   let prev = -Infinity, slow = Infinity, fast = 0;
   for (let t = 0.01; t <= END; t += 0.01) {
@@ -162,6 +162,5 @@ for (const g of [0, 0.5, 1]) {
     slow = Math.min(slow, bpm); fast = Math.max(fast, bpm);
   }
   assert.ok(slow > 100 && fast < 160, `the beat per reference second within 100-160 BPM (the map runs at most ~10% fast into the first anchor) (${slow.toFixed(1)}-${fast.toFixed(1)})`);
-  assert.equal(dracTime.beatAtRef(37.3), dracTime.beatAtRef(37.3), 'deterministic');
 }
 console.log('drac-compare-comic: ok');

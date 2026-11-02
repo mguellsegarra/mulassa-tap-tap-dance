@@ -29,6 +29,10 @@ https://beta.mulassa.cat/*
   Cache-Control: no-cache
 /jocs/memory/index.html
   Cache-Control: no-cache
+/jocs/corre/
+  Cache-Control: no-cache
+/jocs/corre/index.html
+  Cache-Control: no-cache
 /jocs/pica/
   Cache-Control: no-cache
 /jocs/pica/index.html

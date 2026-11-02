@@ -43,7 +43,8 @@ async function toSelect(h) {
   await wait(h, h.reused ? 300 : 2200); // a reused page is already settled on the selector
 }
 // una fulla que s'obre sola (avís d'estadístiques, final de temporada) no deixa prémer res al darrere; les de la pantalla que es vol capturar no passen per aquí
-const clearGreeting = async h => { await h.page.waitForFunction(() => document.querySelector('dialog[open]'), null, { timeout: /account=(guest|reserved|released|verified)/.test(h.page.url()) ? 5000 : 700 }).catch(() => {}); await h.page.evaluate(() => document.querySelectorAll('dialog[open]').forEach(d => d.close())); await wait(h, 200); };
+const clearGreeting = async h => { await h.page.waitForFunction(() => document.querySelector('dialog[open]'), null, { timeout: /account=(guest|reserved|released|verified)/.test(h.page.url()) ? 5000 : 700 }).catch(() => {}); await h.page.evaluate(() => document.querySelectorAll('dialog[open]').forEach(d => d.close())); await wait(h, 200);
+  await h.page.waitForFunction(() => document.getElementById('badge-news-menu')?.open, null, { timeout: 600 }).then(() => h.page.evaluate(() => document.getElementById('badge-news-menu').close())).catch(() => {}); }; // the mock never remembers the news, and it follows the other sheets
 const select = async h => { await toSelect(h); await clearGreeting(h); };
 const settings = async h => { await select(h); await click(h, '#settings'); await open(h, 'settings-menu'); await wait(h); };
 const fromSettings = (btn, id) => async h => { await settings(h); await click(h, btn); await open(h, id); await wait(h); };
@@ -83,6 +84,10 @@ export const SCREENS = [
   S(F1, 'E06', 'convidat', 'Final de temporada (s\'obre sol)', rev('season-end'), review, '#season-end-menu', { greeting: true }),
   S(F1, 'E07', 'tots', 'Consell d\'acceleració per maquinari', 'mock', async h => { await toSelect(h); await open(h, 'gpu-hint-menu'); await wait(h); }, '#gpu-hint-menu', { greeting: true, storage: { 'free-hint': '1' }, soft: true, vps: ['320x568', '393x852', '1280x800'] }),
 
+  S(F1, 'E08', ACC.verified, 'Avís d\'insígnies: correu confirmat (s\'obre sol)', rev('badge-news-confirmed'), review, '#badge-news-menu', { greeting: true }),
+  S(F1, 'E09', ACC.guest, 'Avís d\'insígnies: sense correu confirmat (s\'obre sol)', rev('badge-news-guest'), review, '#badge-news-menu', { greeting: true }),
+  S(F1, 'E10', ACC.verified, 'Avís d\'insígnies → tria la insígnia', rev('badge-news-confirmed'), async h => { await review(h); await click(h, '#badge-news-go'); await open(h, 'badge-menu'); await wait(h); }, '#badge-menu', { greeting: true }),
+
   ...Object.entries({ new: 'S01', guest: 'S02', verified: 'S03' }).map(([a, id]) => S(F2, id, ACC[a], 'Selector, pas 1 (figura)', acc(a), select, '#select-next', { storage: { ...OFF, 'stats-notice': '1' } })),
   S(F2, 'S04', ACC.new, 'Selector, pas 2 (nivells), sense resultats', acc('new'), level2, '#select-play'),
   S(F2, 'S05', ACC.verified, 'Selector, pas 2 amb rècord i posició', 'demo&account=verified&board=me', level2, '#select-play'),
@@ -91,6 +96,8 @@ export const SCREENS = [
   S(F2, 'S09', ACC.verified, 'Figura pendent: ofereix material', acc('verified'), async h => { await select(h); await click(h, '.sel-pill[data-town="tarragona"]'); await wait(h, 1500); await click(h, '#aviat-material'); await open(h, 'feedback-menu'); await wait(h); }, '#feedback-menu'),
   S(F2, 'S10', ACC.verified, 'Figura pendent: proposa una figura', acc('verified'), async h => { await select(h); await click(h, '.sel-card:last-child'); await wait(h, 1500); await click(h, '#aviat-propose'); await open(h, 'feedback-menu'); await wait(h); }, '#feedback-menu'),
   S(F2, 'S11', ACC.guest, 'Posar un cor sense correu confirmat', acc('guest'), async h => { await select(h); await click(h, '.sel-pill[data-town="tarragona"]'); await wait(h, 1500); await click(h, '#aviat-heart'); await open(h, 'gate-menu'); await wait(h); }, '#gate-menu'),
+  S(F2, 'S12', ACC.new, 'Posar un cor sense perfil', acc('new'), async h => { await select(h); await click(h, '.sel-pill[data-town="tarragona"]'); await wait(h, 1500); await click(h, '#aviat-heart'); await open(h, 'gate-menu'); await wait(h); }, '#gate-menu'),
+  S(F2, 'S13', ACC.new, 'Cor sense perfil: crea el perfil i segueix al correu', acc('new'), async h => { await select(h); await click(h, '.sel-pill[data-town="tarragona"]'); await wait(h, 1500); await click(h, '#aviat-heart'); await open(h, 'gate-menu'); await click(h, '#gate-go'); await open(h, 'profile-menu'); await type(h, '#profile-alias', 'Timbaler321'); await click(h, '#profile-send'); await until(h, () => document.getElementById('profile-email')?.checkVisibility()); await wait(h); }, '#profile-email'),
   S(F2, 'S08', 'tots', 'Com es juga', 'mock', async h => { await select(h); await click(h, '#select-howto'); await open(h, 'howto-menu'); await wait(h); }, '#howto-menu'),
 
   ...Object.entries({ new: 'C01', verified: 'C02' }).map(([a, id]) => S(F3, id, ACC[a], 'Configuració', acc(a), settings, '#settings-menu')),
@@ -162,6 +169,7 @@ export const SCREENS = [
   S(F8, 'F01', 'tots', 'iPhone a Safari: passos per a la pantalla completa', 'mock', async h => { await select(h); await click(h, '#free'); await open(h, 'free-fs-menu'); await wait(h); }, '#free-fs-menu', { storage: { 'gpu-hint': 'off' }, ua: IPHONE, vps: PHONES }),
   S(F8, 'F02', 'tots', 'iPhone: gira el mòbil', 'mock', async h => { await select(h); await click(h, '#free'); await open(h, 'free-hint-menu'); await wait(h); }, '#free-hint-menu', { ua: IPHONE, vps: PHONES }),
   S(F8, 'F03', 'tots', 'Mode foto (mòbil en horitzontal, tauleta, escriptori)', 'mock', freePlay, 'canvas', { vps: [...LANDSCAPE, ...BIG] }),
+  S(F8, 'F05', 'tots', 'Mode foto: consell del botó de música (una vegada)', 'mock', async h => { await freePlay(h); await until(h, () => document.querySelector('.sel-heart-tip')); await h.page.waitForTimeout(500); }, '.sel-heart-tip', { vps: [...LANDSCAPE, ...BIG] }),
   S(F8, 'F04', 'tots', 'Coberta «gira el mòbil» (menús amb el telèfon de costat)', 'mock', async h => { await wait(h, 1500); }, '#rotate', { vps: LANDSCAPE }),
 ];
 
@@ -204,7 +212,7 @@ async function capture(browser, { s, vp }, port, h = { ctxOpts: {} }) {
       await s.run(h);
       if (!await h.page.evaluate(sel => document.querySelector(sel)?.checkVisibility?.() ?? false, s.expect)) throw new Error(`no es veu ${s.expect}`);
       const showing = await h.page.evaluate(() => [...document.querySelectorAll('dialog[open]')].map(d => d.id).join(','));
-      if (/stats-notice|season-end|gpu-hint/.test(showing) && !s.greeting) throw new Error(`fulla inesperada: ${showing}`); // would otherwise hide the screen and still pass `expect`
+      if (/stats-notice|season-end|gpu-hint|badge-news/.test(showing) && !s.greeting) throw new Error(`fulla inesperada: ${showing}`); // would otherwise hide the screen and still pass `expect`
       const fp = await h.page.evaluate(FINGERPRINT);
       await h.page.screenshot({ path: join(SHOTS, `${code}.png`), timeout: 90000 });
       // una fulla amb scroll amaga el que té a sota: també el final

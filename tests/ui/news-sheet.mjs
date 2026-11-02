@@ -9,7 +9,7 @@ const kv = init => { const m = new Map(init); return { get: k => m.get(k) ?? nul
 const NEWS = [{ id: 'a', title: 'test.a.title', text: 'test.a.text', games: ['pica'] }, { id: 'b', title: 'test.b.title', text: 'test.b.text', games: ['memory', 'crush'] }];
 function make({ played = true, store = kv(), news = NEWS, force = false } = {}) {
   const on = {}, els = {};
-  const el = id => (els[id] ??= { id, style: { setProperty: (k, v) => { el(id).style[k] = v; } }, offsetWidth: 80, getBoundingClientRect: () => ({ left: 200, top: 10, width: 44, height: 44, bottom: 54 }), addEventListener: (k, f) => { on[`${id}:${k}`] = f; } });
+  const el = id => (els[id] ??= { id, style: { setProperty: (k, v) => { el(id).style[k] = v; } }, offsetWidth: 80, getBoundingClientRect: () => ({ left: 200, right: 244, top: 10, width: 44, height: 44, bottom: 54 }), addEventListener: (k, f) => { on[`${id}:${k}`] = f; } });
   const menu = el('news-menu'); menu.open = false;
   let pics = []; el('news-pics').replaceChildren = (...k) => { pics = k; };
   menu.showModal = () => { menu.open = true; }; menu.close = () => { menu.open = false; on['news-menu:close']?.(); };
@@ -36,6 +36,20 @@ assert.equal(told.sheet.show(told.back), false, 'told once');
 const go = make();
 go.sheet.show(go.back); go.on['news-go:click']();
 assert.equal(go.games, 1); assert.equal(go.backs, 0, 'the button opens the games instead of going back');
+
+const through = make();
+through.sheet.show(through.back);
+through.on['news-menu:pointerdown']({ target: through.menu, clientX: 220, clientY: 30 });
+through.on['news-menu:cancel'](); through.menu.close();
+assert.equal(through.games, 1, 'a tap on the button seen through the backdrop opens the games');
+const margin = make();
+margin.sheet.show(margin.back);
+margin.on['news-menu:pointerdown']({ target: margin.menu, clientX: 20, clientY: 400 });
+margin.on['news-menu:cancel'](); margin.menu.close();
+assert.equal(margin.games, 0); assert.equal(margin.backs, 1, 'any other tap outside only closes');
+const ribbon = make();
+ribbon.sheet.show(ribbon.back); ribbon.on['news-tip:click']();
+assert.equal(ribbon.games, 1, 'the ribbon goes there too');
 
 const later = make({ store: kv([['news-seen', '["a"]']]) });
 assert.equal(later.sheet.show(), true, 'a new game is told to who saw the last one');

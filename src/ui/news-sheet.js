@@ -8,7 +8,7 @@ export const NEWS = [
 
 export function setupNews({ focusIn, store, played, onGames, force = false, doc = document, win = globalThis, news = NEWS }) {
   const by = id => doc.getElementById(id), menu = by('news-menu');
-  let back = null, toGames = false;
+  let back = null, toGames = false, onButton = false;
   const seen = () => { try { const v = JSON.parse(store.get(SEEN_KEY)); return Array.isArray(v) ? v : []; } catch { return []; } };
   const markAll = () => store.set(SEEN_KEY, JSON.stringify(news.map(n => n.id)));
   // the ribbon under the corner button, seen through a hole in the backdrop: the sheet's text says «the button up there»
@@ -22,7 +22,15 @@ export function setupNews({ focusIn, store, played, onGames, force = false, doc 
   };
   win.addEventListener?.('resize', place);
   by('news-x').addEventListener('click', () => menu.close());
-  by('news-go').addEventListener('click', () => { toGames = true; menu.close(); });
+  const goToGames = () => { toGames = true; menu.close(); };
+  by('news-go').addEventListener('click', goToGames);
+  by('news-tip').addEventListener('click', goToGames);
+  // the button shows through the backdrop, so a tap on it is the backdrop's: it closes the sheet (backdrop.js) and must still do what the button does
+  menu.addEventListener('pointerdown', e => {
+    const r = by('free').getBoundingClientRect();
+    onButton = e.target === menu && e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
+  });
+  menu.addEventListener('cancel', () => { if (onButton) toGames = true; onButton = false; });
   menu.addEventListener('close', () => {
     const b = back, go = toGames; back = null; toGames = false;
     if (go) onGames(); else b?.();

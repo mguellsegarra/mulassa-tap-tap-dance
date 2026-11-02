@@ -14,6 +14,7 @@
   "ui.badge.default": "Just the tick",
   "ui.badge.entry": "Change badge",
   "ui.badge.title": "Choose a badge",
+  "ui.badge.editTip": "Change your badge here!",
   "ui.badgeNews.confirmed.title": "You can now choose a badge",
   "ui.badgeNews.confirmed.text": "Wear it next to your name, on leaderboards and on player cards.",
   "ui.badgeNews.confirmed.go": "Try it",

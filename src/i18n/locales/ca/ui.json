@@ -13,6 +13,7 @@
   "ui.badge.label": "{status}: {name}",
   "ui.badge.save": "Desa",
   "ui.badge.title": "Tria una insígnia",
+  "ui.badge.editTip": "Aquí pots canviar la insígnia!",
   "ui.badge.towns": "Poblacions",
   "ui.badgeNews.confirmed.title": "Ja pots triar una insígnia",
   "ui.badgeNews.confirmed.text": "Porta-la al costat del teu nom, a les classificacions i a les targetes.",

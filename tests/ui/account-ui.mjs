@@ -32,6 +32,7 @@ class El {
   showModal() { this.open = true; }
   close() { if (!this.open) return; this.open = false; this.fire('close'); }
   find(test) { if (test(this)) return this; for (const c of this.children) { const f = c.find(test); if (f) return f; } return null; }
+  querySelector(q) { return q.startsWith('.') ? this.find(e => e.className === q.slice(1)) : null; }
   all(test, out = []) { if (test(this)) out.push(this); for (const c of this.children) c.all(test, out); return out; }
 }
 function fakeDoc(ids, figures = []) {
@@ -509,3 +510,30 @@ console.log('perfil, statistics, seasons and cards ok');
   assert.deepEqual([1, 2, 3, 4].map(n => posDisc(d, n)).map(e => [e.className, e.textContent]), [['pos p1', '1'], ['pos p2', '2'], ['pos p3', '3'], ['pos', '4']]);
 }
 console.log('podium discs ok');
+
+// the red ribbon over the name's pencil: only with a pencil, once ever, gone with its sheet, its tail on the pencil
+{
+  const f = fakeDoc(['account-menu', 'account-close', 'account-stats', 'account-status', 'account-since', 'account-empty', 'account-join', 'account-previous', 'account-previous-list', 'profile-row', 'stats-notice-menu', 'stats-notice-ok', 'stats-notice-close', 'stats-notice-hall']);
+  const mem = new Map(), store = { get: k => mem.get(k) ?? null, set: (k, v) => mem.set(k, v), remove: k => mem.delete(k) }, menu = f.$('account-menu'), make = f.doc.createElement;
+  const tips = () => menu.children.filter(c => c.className.includes('account-badge-tip'));
+  f.doc.createElement = tag => Object.assign(make(tag), { offsetWidth: 100, offsetHeight: 30, vars: {}, style: { setProperty(k, v) { this.vars ??= {}; this.vars[k] = v; } }, remove() { const on = this.parent.children; on.splice(on.indexOf(this), 1); } });
+  Object.assign(menu, { clientLeft: 2, clientTop: 2, getBoundingClientRect: () => ({ left: 20, top: 10, width: 300 }) });
+  const acc = setupAccount({ focusIn() {}, profile: { refresh: async () => {}, open() {}, forget() {}, isOpen: false }, service: service({ ownerId: async () => 'u1', myStats: async () => null }), store, doc: f.doc, now: () => NOW, stats: { noticeNeeded: () => false, acceptNotice() {} } });
+  acc.open(); await tick(); await tick();
+  assert.equal(tips().length, 0, 'no pencil (no badge to change): no ribbon');
+  assert.equal(store.get('badge-edit-tip-seen'), null, 'and its one showing is not spent');
+  menu.close();
+  const edit = Object.assign(new El('button'), { className: 'badge-edit', checkVisibility: () => true, lastElementChild: { getBoundingClientRect: () => ({ left: 100, top: 50, width: 10 }) } });
+  f.$('profile-row').appendChild(edit);
+  acc.open(); await tick(); await tick();
+  const [tip] = tips();
+  assert(tip, 'a pencil: the ribbon, inside the sheet\'s top layer');
+  assert.equal(tip.style.left, '33px'); assert.equal(tip.style.vars['--tail'], '50px', 'the tail on the pencil\'s centre, not the button\'s');
+  assert.equal(tip.style.top, '-5px', 'above the name, not over the sheet\'s buttons');
+  menu.close();
+  assert.equal(tips().length, 0, 'it leaves with its sheet');
+  acc.open(); await tick(); await tick();
+  assert.equal(tips().length, 0, 'once ever');
+  menu.close();
+}
+console.log('badge pencil ribbon ok');

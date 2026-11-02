@@ -14,6 +14,7 @@
   "ui.badge.default": "Só a marca",
   "ui.badge.entry": "Mudar emblema",
   "ui.badge.title": "Escolhe um emblema",
+  "ui.badge.editTip": "Muda aqui o teu emblema!",
   "ui.badgeNews.confirmed.title": "Escolhe já o teu emblema",
   "ui.badgeNews.confirmed.text": "Mostra-o junto ao teu nome, nas classificações e nos cartões.",
   "ui.badgeNews.confirmed.go": "Experimenta",

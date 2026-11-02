@@ -14,6 +14,7 @@
   "ui.badge.default": "Лише позначка",
   "ui.badge.entry": "Змінити значок",
   "ui.badge.title": "Обери значок",
+  "ui.badge.editTip": "Тут можна змінити значок!",
   "ui.badgeNews.confirmed.title": "Тепер можна обрати значок",
   "ui.badgeNews.confirmed.text": "Показуй його поруч з іменем, у рейтингах і картках гравців.",
   "ui.badgeNews.confirmed.go": "Спробувати",

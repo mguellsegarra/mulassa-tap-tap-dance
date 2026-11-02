@@ -213,6 +213,7 @@ async function capture(browser, { s, vp }, port, h = { ctxOpts: {} }) {
       if (!await h.page.evaluate(sel => document.querySelector(sel)?.checkVisibility?.() ?? false, s.expect)) throw new Error(`no es veu ${s.expect}`);
       const showing = await h.page.evaluate(() => [...document.querySelectorAll('dialog[open]')].map(d => d.id).join(','));
       if (/stats-notice|season-end|gpu-hint|badge-news/.test(showing) && !s.greeting) throw new Error(`fulla inesperada: ${showing}`); // would otherwise hide the screen and still pass `expect`
+      await h.page.evaluate(() => { const st = document.getElementById('feedback-status'); if (st) st.textContent = ''; }); // the mock has no captcha: «no disponible» is never what a player reads
       const fp = await h.page.evaluate(FINGERPRINT);
       await h.page.screenshot({ path: join(SHOTS, `${code}.png`), timeout: 90000 });
       // una fulla amb scroll amaga el que té a sota: també el final

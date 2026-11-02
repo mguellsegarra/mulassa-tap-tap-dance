@@ -14,6 +14,7 @@
   "ui.badge.default": "Doar bifa",
   "ui.badge.entry": "Schimbă insigna",
   "ui.badge.title": "Alege o insignă",
+  "ui.badge.editTip": "Schimbă insigna aici!",
   "ui.badgeNews.confirmed.title": "Acum poți alege o insignă",
   "ui.badgeNews.confirmed.text": "Arat-o lângă numele tău, în clasamente și pe fișele de jucător.",
   "ui.badgeNews.confirmed.go": "Încearcă",

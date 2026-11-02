@@ -14,6 +14,7 @@
   "ui.badge.default": "Juste la coche",
   "ui.badge.entry": "Changer d’insigne",
   "ui.badge.title": "Choisis un insigne",
+  "ui.badge.editTip": "Change ton insigne ici !",
   "ui.badgeNews.confirmed.title": "Choisis enfin ton insigne",
   "ui.badgeNews.confirmed.text": "Affiche-le près de ton nom, dans les classements et sur les fiches.",
   "ui.badgeNews.confirmed.go": "Essayer",

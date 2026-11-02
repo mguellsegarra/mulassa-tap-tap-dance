@@ -14,6 +14,7 @@
   "ui.badge.default": "Только галочка",
   "ui.badge.entry": "Изменить значок",
   "ui.badge.title": "Выбери значок",
+  "ui.badge.editTip": "Здесь можно сменить значок!",
   "ui.badgeNews.confirmed.title": "Выбери свой значок",
   "ui.badgeNews.confirmed.text": "Он будет рядом с именем, в рейтингах и карточках игроков.",
   "ui.badgeNews.confirmed.go": "Попробовать",

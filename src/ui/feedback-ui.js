@@ -52,7 +52,6 @@ export function setupFeedback({ focusIn, captcha, service = defaultService, doc 
     $('feedback-code').hidden = !coding; $('feedback-fields').hidden = coding;
     for (const i of kindRow.querySelectorAll('input')) i.checked = i.value === k;
     material.hidden = k !== 'material'; entity.hidden = k !== 'entity';
-    $('feedback-direct').hidden = k !== 'general'; // the sheets for a figure stay short; rights and data stay on the general box and in Privadesa
     title.textContent = tr(request.choose || k === 'code' ? 'ui.help.title' : k === 'general' ? 'html.feedbackTitle' : propose ? 'figures.invite.action' : `html.${k}.title`);
     lead.textContent = k === 'general' ? tr('html.feedbackLead') : propose ? tr('figures.invite.text') : request.figure?.name ?? ''; // which figure this is about
     text.placeholder = tr(k === 'general' ? 'html.feedbackMessage.placeholder' : propose ? 'figures.invite.placeholder' : `ui.${k === 'code' ? 'material' : k}.placeholder`);

@@ -14,6 +14,7 @@
   "ui.badge.default": "Nur das Häkchen",
   "ui.badge.entry": "Abzeichen ändern",
   "ui.badge.title": "Abzeichen wählen",
+  "ui.badge.editTip": "Hier änderst du dein Abzeichen!",
   "ui.badgeNews.confirmed.title": "Wähle jetzt dein Abzeichen",
   "ui.badgeNews.confirmed.text": "Zeig es neben deinem Namen, in Ranglisten und auf Karten.",
   "ui.badgeNews.confirmed.go": "Ausprobieren",

@@ -14,6 +14,7 @@
   "ui.badge.default": "Marka soilik",
   "ui.badge.entry": "Aldatu bereizgarria",
   "ui.badge.title": "Aukeratu bereizgarria",
+  "ui.badge.editTip": "Aldatu bereizgarria hemen!",
   "ui.badgeNews.confirmed.title": "Aukeratu zure bereizgarria",
   "ui.badgeNews.confirmed.text": "Erakutsi zure izenaren ondoan, sailkapenetan eta jokalari-txarteletan.",
   "ui.badgeNews.confirmed.go": "Probatu",

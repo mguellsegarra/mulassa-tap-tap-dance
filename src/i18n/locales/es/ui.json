@@ -14,6 +14,7 @@
   "ui.badge.default": "Solo la marca",
   "ui.badge.entry": "Cambia la insignia",
   "ui.badge.title": "Elige una insignia",
+  "ui.badge.editTip": "¡Cambia aquí tu insignia!",
   "ui.badgeNews.confirmed.title": "Ya puedes elegir una insignia",
   "ui.badgeNews.confirmed.text": "Llévala junto a tu nombre, en las clasificaciones y en las tarjetas.",
   "ui.badgeNews.confirmed.go": "Pruébalo",

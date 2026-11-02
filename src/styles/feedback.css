@@ -268,7 +268,7 @@ body:has(#radio-menu:not([hidden]), #radio-now:not([hidden])[data-visible="true"
 .feedback-kind label:has(input:checked) { background: var(--button-gold-bg); color: #2a1a10; }
 .feedback-kind label:has(input:focus-visible) { outline: 3px solid #fff3d6; outline-offset: 2px; }
 .feedback-small[hidden] { display: none; }
-#feedback-material .feedback-small { text-align: center; }
+#feedback-material .feedback-small { text-align: right; }
 #feedback-menu:focus { outline: none; }
 #feedback-menu:has(.feedback-choices:not([hidden])) .feedback-field::placeholder { color: #e8d8b899; }
 #feedback-menu:has(.feedback-choices:not([hidden])) .feedback-scroll { padding-bottom: 14px; }

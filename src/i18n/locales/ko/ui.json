@@ -14,6 +14,7 @@
   "ui.badge.default": "인증 표시만",
   "ui.badge.entry": "배지 바꾸기",
   "ui.badge.title": "배지 선택",
+  "ui.badge.editTip": "여기서 배지를 바꿀 수 있어요!",
   "ui.badgeNews.confirmed.title": "이제 배지를 고를 수 있어요",
   "ui.badgeNews.confirmed.text": "이름 옆에 달아 순위표와 플레이어 카드에 표시해 보세요.",
   "ui.badgeNews.confirmed.go": "골라 보기",

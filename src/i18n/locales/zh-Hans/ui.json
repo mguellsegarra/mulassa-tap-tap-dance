@@ -14,6 +14,7 @@
   "ui.badge.default": "仅验证标记",
   "ui.badge.entry": "更换徽章",
   "ui.badge.title": "选择徽章",
+  "ui.badge.editTip": "在这里换徽章！",
   "ui.badgeNews.confirmed.title": "现在可以选择徽章了",
   "ui.badgeNews.confirmed.text": "把徽章戴在名字旁，在排行榜和玩家卡片上展示。",
   "ui.badgeNews.confirmed.go": "试试看",

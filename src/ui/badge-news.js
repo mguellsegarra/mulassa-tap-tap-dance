@@ -7,7 +7,7 @@ import { byId } from './sheet-kit.js';
 import { tr } from '../i18n/messages.js';
 
 const newsSeenKey = publicId => `badge-news-seen:${publicId}`;
-const NEWS_TURN = ['senyera', 'colla-vella', 'colla-joves', 'estelada-groga', 'town:valls', 'uaf'];
+const NEWS_TURN = ['senyera', 'estelada-groga', 'town:valls', 'uaf'];
 const NEWS_ROWS = 3;
 
 export function setupBadgeNews({ focusIn, service, store, badges, profile, refresh, idle = () => true, reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches, doc = document }) {

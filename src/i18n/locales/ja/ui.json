@@ -14,6 +14,7 @@
   "ui.badge.default": "認証マークのみ",
   "ui.badge.entry": "バッジを変更",
   "ui.badge.title": "バッジを選ぶ",
+  "ui.badge.editTip": "ここでバッジを変えられるよ！",
   "ui.badgeNews.confirmed.title": "バッジを選べます",
   "ui.badgeNews.confirmed.text": "名前の横にバッジを付けて、ランキングやプレイヤーカードに表示できます。",
   "ui.badgeNews.confirmed.go": "試してみる",

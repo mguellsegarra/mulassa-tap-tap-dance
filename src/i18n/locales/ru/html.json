@@ -229,11 +229,12 @@
   "html.games.free": "Свободный танец",
   "html.news.go": "Смотреть игры",
   "html.news.tip": "Они здесь!",
-  "html.games.pica": "Бей Mulassa",
-  "html.games.memory": "Memory",
-  "html.games.crush": "Seguici Crush",
-  "html.games.picaDesc": "Лови Mulassa. Берегись Drac.",
-  "html.games.memoryDesc": "Найди пары фигур из шествия.",
-  "html.games.crushDesc": "Собери три фигуры в ряд.",
-  "html.games.lliureDesc": "Гуляй и танцуй со своей фигурой."
+  "html.games.pica": "Mulassa Pop",
+  "html.games.memory": "Mulassa Memory",
+  "html.games.crush": "Mulassa Crush",
+  "html.games.play": "Играть",
+  "html.games.picaDesc": "Лови Mulassa, избегай Drac.",
+  "html.games.memoryDesc": "Найди пары в шествии.",
+  "html.games.crushDesc": "Собери три одинаковых.",
+  "html.games.lliureDesc": "Гуляй и танцуй."
 }

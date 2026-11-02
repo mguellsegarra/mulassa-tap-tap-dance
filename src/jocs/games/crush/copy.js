@@ -11,7 +11,7 @@ const figureForms = {
 const countedFigure = (n, name) => figureForms[name][n === 1 ? 0 : 1];
 
 export const T = {
-  title: 'Seguici Crush',
+  title: 'Mulassa Crush',
   how: 'Canvia dues peces de costat i ajunta\'n tres d\'iguals en una fila o columna.',
   play: n => `Juga el nivell ${n}`, // i18n-ok: Catalan only until the game is translated
   menu: 'Menú', // i18n-ok: Catalan only until the game is translated

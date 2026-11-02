@@ -189,13 +189,16 @@ body.view-mode #select { opacity: 0; visibility: hidden; pointer-events: none; t
 #games-menu { width: min(440px, calc(100vw - 24px)); }
 .games-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 12px; }
 #games-grid { grid-template-columns: minmax(0, 1fr); gap: 10px; }
-#games-grid .game-card { width: auto; flex: none; grid-template-columns: 104px minmax(0, 1fr) 52px; grid-template-rows: 104px; border: 0; --sel-r: 14px; background: linear-gradient(90deg, #3a2616, #24170e); box-shadow: 0 0 0 1.5px #f5c51866, 0 6px 16px #0006; }
-#games-grid .game-card .por { position: relative; grid-area: 1 / 1; justify-self: stretch; width: 104px; height: 104px; background: #1a110b; }
+/* each game its own world: the picture fades into the game's colour, the text stands on that colour */
+#games-grid .game-card { position: relative; display: block; width: auto; flex: none; height: 140px; border: 0; --sel-r: 16px; background: linear-gradient(90deg, color-mix(in srgb, var(--game) 30%, #24170e), color-mix(in srgb, var(--game) 16%, #24170e)); box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--game) 75%, transparent), 0 6px 16px #0006; }
+#games-grid .game-card .por { position: absolute; inset: 0 0 0 auto; width: 46%; height: 100%; background: none; -webkit-mask-image: linear-gradient(90deg, #0000, #000 30%); mask-image: linear-gradient(90deg, #0000, #000 30%); }
 #games-grid .game-card .por img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-#games-grid .game-card .nb { grid-area: 1 / 2; justify-self: stretch; width: 100%; min-width: 0; margin: 0; align-items: flex-start; gap: 3px; padding: 6px 4px 6px 12px; background: none; box-shadow: none; text-align: left; }
-#games-grid .sel-card-name { font-size: 19px; line-height: 22px; color: #fff3d6; }
-#games-grid .nb .game-desc { flex: none; display: block; overflow: visible; max-width: none; white-space: normal; text-overflow: clip; color: #fff3d6; font-size: 14px; font-weight: 600; line-height: 17px; text-wrap: balance; }
-/* every row is a game to start: the gold disc says so (an approved exception to one gold action per view) */
-#games-grid .game-play { grid-area: 1 / 3; align-self: center; justify-self: center; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: var(--button-gold-bg); color: #2a1a10; box-shadow: 0 3px 0 #9c7a0c; }
-#games-grid .game-play svg { width: 20px; height: 20px; fill: currentColor; stroke: none; }
-@media (max-width: 359px) { #games-grid .game-card { grid-template-columns: 76px minmax(0, 1fr) 48px; } #games-grid .game-card .por { width: 76px; } #games-grid .sel-card-name { font-size: 17px; line-height: 20px; } #games-grid .nb .game-desc { font-size: 13px; line-height: 16px; } }
+#games-grid .game-card .nb { position: absolute; inset: 0 auto 0 0; transform: none; width: 54%; height: 100%; min-width: 0; margin: 0; align-items: flex-start; justify-content: center; gap: 2px; padding: 8px 8px 8px 14px; background: none; box-shadow: none; text-align: left; }
+#games-grid .sel-card-name { font-size: 18px; line-height: 22px; color: var(--game); text-shadow: 0 1px 2px #0008; }
+#games-grid .nb .game-desc { flex: none; display: block; overflow: visible; max-width: none; white-space: normal; text-overflow: clip; color: #fff3d6; font-size: 14px; font-weight: 600; line-height: 17px; text-wrap: balance; text-shadow: 0 1px 2px #0008; }
+#games-grid .game-play { flex: none; display: grid; place-items: center; min-width: 76px; height: 44px; margin-top: 6px; padding: 0 16px; box-sizing: border-box; border-radius: 22px; background: #fff3d6; color: #2a1a10; font: 800 16px/1 'Baloo 2', system-ui, sans-serif; box-shadow: 0 3px 0 color-mix(in srgb, var(--game) 55%, #120b07); }
+/* each game's own colour, the same as the second word of its logo */
+.game-card[data-game="pica"] { --game: #ff7ac6; } .game-card[data-game="memory"] { --game: #6ec8ff; } .game-card[data-game="crush"] { --game: #8be04e; } .game-card[data-game="lliure"] { --game: #c9a0ff; }
+/* short screens: all four still in view (the whole card is the target, so the pill may be smaller) */
+@media (max-height: 760px) { #games-grid .game-card { height: 126px; } #games-grid .game-card .nb { padding-block: 4px; } #games-grid .sel-card-name { font-size: 17px; line-height: 20px; } #games-grid .game-play { height: 34px; margin-top: 4px; } }
+@media (max-height: 640px) { #games-grid { gap: 8px; } #games-grid .game-card { height: 98px; } #games-grid .game-card .por { width: 40%; } #games-grid .game-card .nb { width: 60%; } #games-grid .sel-card-name { font-size: 15px; line-height: 18px; } #games-grid .nb .game-desc { font-size: 13px; line-height: 15px; } #games-grid .game-play { height: 28px; margin-top: 3px; font-size: 14px; } }

@@ -42,3 +42,7 @@ for (const id of ids) {
   readFileSync(`public/jocs/menu/cards/${id}.jpg`);
   if (id !== 'lliure') readFileSync(`jocs/${id}/index.html`);
 }
+
+// the card's «Juga» is a label inside the card, which is the one real button; its name is the game's
+assert.match(html, /<span class="game-play" aria-hidden="true" data-i18n="html\.games\.play">/, 'the pill is decoration for assistive tech');
+assert.equal((html.match(/class="game-play"/g) ?? []).length, ids.length, 'one pill per game');

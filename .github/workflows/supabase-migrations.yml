@@ -61,4 +61,4 @@ jobs:
         run: supabase migration list --db-url "$DB_URL"
       - name: Apply pending migrations
         if: '!inputs.baseline'
-        run: supabase db push --db-url "$DB_URL"
+        run: supabase db push --yes --db-url "$DB_URL"

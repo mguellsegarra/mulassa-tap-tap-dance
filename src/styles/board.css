@@ -146,14 +146,21 @@ dialog p, #results-actions .btn { overflow-wrap: break-word; }
 .lvt0 { color: var(--lvl0); } .lvt1 { color: var(--lvl1); } .lvt2 { color: var(--lvl2); }
 #board-table tr.me td { background: #f5c51824; color: #f5c518; }
 #board-table tr.me td:first-child { box-shadow: inset 3px 0 #f5c518; } /* the player's own row: a gold strip */
-#board-table tbody tr:not(.gap, .me-hint) { cursor: pointer; } /* a row opens its player's card (board-list.js); a tint over its own colour on the tap */
-#board-table tbody tr:not(.gap, .me-hint):active td { background-image: linear-gradient(#fff3d614, #fff3d614); }
-@media (hover: hover) { #board-table tbody tr:not(.gap, .me-hint):hover td { background-image: linear-gradient(#fff3d60d, #fff3d60d); } }
+#board-table tbody tr:not(.gap) { cursor: pointer; } /* a row opens its player's card (board-list.js); a tint over its own colour on the tap */
+#board-table tbody tr:not(.gap):active td { background-image: linear-gradient(#fff3d614, #fff3d614); }
+@media (hover: hover) { #board-table tbody tr:not(.gap):hover td { background-image: linear-gradient(#fff3d60d, #fff3d60d); } }
 .me-tag { flex: none; display: inline-block; padding: 0 5px; border-radius: 4px; background: #f5c518; color: #2a1a10; font-size: 11px; line-height: 16px; letter-spacing: .06em; }
 /* «Correu confirmat» (src/ui/profile-notes.js checkBadge): a blue check after the nickname, meaning only that; a mark, no tip */
 .verified-check { position: relative; flex: none; display: inline-grid; place-items: center; width: 16px; height: 16px; margin: 0; }
 .verified-check svg { width: 100%; height: 100%; fill: #3b9cff; stroke: #fff; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
 .verified-check svg .seal { stroke: none; }
+/* the badge a confirmed player chose (src/ui/player-badges.js), in the check's slot; its own class: the check's rule would repaint the art */
+.player-badge { flex: none; display: inline-grid; place-items: center; width: 16px; height: 16px; --jester: #fff3d6; }
+.player-badge svg { display: block; width: 100%; height: 100%; }
+.player-badge svg, .badge-cell > svg { stroke: none; } /* a button's svg inherits the icons' line */
+svg.badge-flame { fill: #e73449; }
+/* Baloo's capitals sit above its line box's middle: the mark follows the letters' ink, not the box (a share of the font size, so at every size) */
+.who > :is(.verified-check, .player-badge), .badge-edit > :is(.verified-check, .player-badge), .badge-cell.wide .verified-check { translate: 0 -.05em; }
 .board-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 0 16px; }
 html:not([lang="ca"]) .board-links { row-gap: 16px; } /* longer words wrap the two 32 px links onto two rows: each keeps its own 44 px slop (Catalan fits one row, or stacks 44 px links) */
 .board-text { margin: 0 0 10px; text-align: center; font-size: 16px; line-height: 1.35; color: #e8d8b8; text-wrap: pretty; }
@@ -178,6 +185,8 @@ html:not([lang="ca"]) .board-links { row-gap: 16px; } /* longer words wrap the t
 .publish-error .btn-link { display: inline; min-height: 0; padding: 0; border: 0; font: inherit; font-weight: 700; color: inherit; text-wrap: wrap; text-decoration-color: currentColor; } /* «recupera el perfil» runs on in the sentence */ /* the field's own error, where the hint was */
 .publish-note { margin: 0; padding: 8px 12px; border: 1px solid #f5c51833; border-radius: 8px; background: #fff3d60a; text-align: center; color: #e8d8b8cc; font-size: 13px; line-height: 1.35; text-wrap: pretty; } /* consent: a flat note + Privadesa */
 .publish-note .btn-link { display: inline; min-height: 0; padding: 0 2px; font-size: 13px; }
+#profile-note { padding: 0 4px; border: 0; background: none; color: #e8d8b899; font-size: 11px; } /* small print: quieter than the lead above it */
+#profile-note .btn-link { font-size: 11px; }
 .publish-end { margin-top: 16px; }
 /* Publica → «Publicat!» → «Ets el número…»: no room kept blank before publishing (it read as a hole); board-ui.js eases
    the end's height (0.2 s) when a line comes, the buttons stay at its bottom and the new line slides in over them */
@@ -199,14 +208,21 @@ html:not([lang="ca"]) .board-links { row-gap: 16px; } /* longer words wrap the t
 #publish-form[data-view="done"] #publish-status:has(+ .publish-place:not([hidden])) { margin-bottom: 6px; }
 #publish-form[data-view="done"] .publish-place { margin: 0 0 24px; font-size: 22px; line-height: 1.2; }
 #publish-form[data-view="done"] .publish-place:has(+ .publish-offer:not([hidden])) { margin-bottom: 12px; } /* its ink as far from the card as from the line above */
-@media (max-width: 359px) { #publish-form[data-view="done"] #publish-status { font-size: 14px; } #publish-offer { gap: 8px; } #publish-offer .publish-warning { font-size: 13px; } #publish-confirm { padding-inline: 8px; } #publish-offer .publish-offer-title { font-size: 16px; } } /* 320 px: «Ara no» in view under the e-mail card, its title on one line */
+@media (max-width: 359px) { #publish-form[data-view="done"] #publish-status { font-size: 14px; } #publish-confirm { padding-inline: 8px; } #publish-offer .publish-offer-title { font-size: 16px; } } /* 320 px: «Ara no» in view under the e-mail card, its title on one line */
 /* under a guest's «Publicat!»: why to confirm the e-mail, quietly (board-ui.js); «Confirma el correu» takes the primary and «D'acord» steps down */
-.publish-offer { display: flex; flex-direction: column; gap: 10px; margin: -4px 0 12px; padding: 14px; border: 1px solid #f5c51866; border-radius: 14px; background: #fff3d60d; text-align: left; } /* one card: the invitation and its button */
-.publish-offer-title { display: flex; align-items: center; gap: 10px; margin: 0; color: #fff3d6; font-size: 17px; }
-.publish-offer-title > svg { flex: none; width: 22px; height: 22px; fill: none; stroke: #f5c518; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-.publish-risk { margin: 0; padding-left: 8px; border-left: 3px solid #ff8a7a; color: #ffb4a8; font-size: 14px; font-weight: 700; line-height: 1.35; text-wrap: pretty; } /* what a guest loses, in the error red */
-.publish-warning { margin: 0; color: #e8d8b8cc; font-size: 14px; line-height: 1.35; text-wrap: pretty; }
-.publish-offer > .btn-link { align-self: center; min-height: 0; padding: 2px; font-size: 13px; }
+.publish-offer { display: flex; flex-direction: column; gap: 16px; margin: -4px 0 4px; } /* one card: the invitation and its button */
+#publish-offer .publish-offer-title { margin: 0; color: #f5c518; font-size: 24px; line-height: 1.1; text-align: center; text-wrap: balance; }
+.publish-seal { align-self: center; width: 64px; height: 64px; filter: drop-shadow(0 0 16px #3b9cffaa); }
+.publish-perks { align-self: center; width: fit-content; display: flex; flex-direction: column; gap: 12px; margin: 0; padding: 0; list-style: none; color: #fff3d6; font-size: 15px; font-weight: 700; line-height: 1.2; }
+.publish-perks li { display: flex; align-items: center; gap: 10px; }
+.perk-ic { flex: none; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: color-mix(in srgb, var(--perk) 18%, transparent); color: var(--perk); }
+.perk-ic svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.perk-name { --perk: #5cb2ff; } .perk-code { --perk: #f5c518; } .perk-heart { --perk: #ff6b81; } .perk-arms { --perk: #7ee081; }
+.perk-heart svg { fill: currentColor; stroke: none; }
+@media (max-width: 359px) { .publish-seal { width: 48px; height: 48px; } .publish-offer { gap: 12px; } .publish-perks { gap: 10px; } .perk-ic { width: 30px; height: 30px; } } /* four perks fit the smallest phone without a scroll */
+#publish-form[data-view="done"]:has(.publish-offer:not([hidden])) #publish-title { color: #fff3d6; } /* the offer's headline is the gold one here */
+#publish-form[data-view="done"]:has(.publish-offer:not([hidden])) #publish-status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); } /* the offer takes the room; screen readers still hear it */
+.publish-offer > .btn-link { align-self: center; min-height: 0; padding: 2px; font-size: 13px; color: #e8d8b88c; }
 .publish-offer:not([hidden]) + .sheet-actions > #publish-send { min-height: 44px; border-color: transparent; background: none; color: #fff3d6; text-decoration: underline; box-shadow: none; } /* «Ara no»: the card leads */
 #publish-form[data-view="done"] .publish-offer { animation: board-in .3s ease-out both; }
 @media (min-height: 501px) { #publish-menu:has(#publish-form[data-view]) { padding: 24px 24px 24px; } } /* even air all round (not the compact landscape sheet) */

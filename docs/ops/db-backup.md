@@ -328,7 +328,7 @@ runbook is unverified, and the backup should not be called complete.
 
 ## Local checks
 
-`npm run check` runs `tests/db/db_backup_test.py`. It uses fake `pg_dump`/`age` programs and a fake bucket client; it
+`npm run check` runs `tests/db/db_backup_test.py` on Python 3.11 through `uv`. It uses fake `pg_dump`/`age` programs and a fake bucket client; it
 never connects anywhere. When real `age` and `age-keygen` are on `PATH`, it also encrypts and decrypts a synthetic
 payload with a throwaway identity.
 

@@ -9,7 +9,7 @@ import { buildWorld, demoCards, bucketProblem, STAT_RULES, PREVIOUS_VERSION } fr
 import { normalizeAlias, VERSION_RULES } from '../../src/services/leaderboard-rules.js';
 
 const dir = new URL('../../supabase/migrations/', import.meta.url);
-const migrations = readdirSync(dir).filter(f => /^(20261020000[1-4]|202610210001|202610280002)_/.test(f)).sort().map(f => readFileSync(new URL(f, dir), 'utf8')).join('\n');
+const migrations = readdirSync(dir).filter(f => /^(20261020000[1-4]|202610210001|202610280002|202611010001)_/.test(f)).sort().map(f => readFileSync(new URL(f, dir), 'utf8')).join('\n');
 // the columns of the LAST definition of a public function, in order
 const columns = fn => {
   const defs = [...migrations.matchAll(new RegExp(`function public\\.${fn}\\([^)]*\\)\\s*returns table\\(([^)]*)\\)`, 'g'))];
@@ -54,7 +54,9 @@ for (const account of ['guest', 'verified']) {
   }
   const seasons = await rpc(c, 'get_seasons', { p_figure: 'mulassa-valls' });
   assert(seasons.length && seasons.every(r => JSON.stringify(Object.keys(r)) === JSON.stringify(columns('get_seasons'))), 'get_seasons');
-  const podium = seasons[0].podium[0]; assert.deepEqual(Object.keys(podium), ['position', 'alias', 'public_id', 'released', 'score', 'difficulty', 'verified']);
+  const podium = seasons[0].podium[0]; assert.deepEqual(Object.keys(podium), ['position', 'alias', 'public_id', 'released', 'score', 'difficulty', 'verified', 'badge_id']);
+  for (const [fn, args] of [['get_leaderboard_all', { p_version: PREVIOUS_VERSION, p_period: 'all', p_offset: 0, p_limit: 50, p_season: 1 }], ['get_level_podium', { p_version: 'mulassa-v3', p_difficulty: 0 }]])
+    assert.deepEqual(Object.keys((await rpc(c, `${fn}_v2`, args))[0]), columns(`${fn}_v2`), `${fn}_v2`);
   const mine = (await rpc(c, 'my_profile', {}))[0]; assert.deepEqual(Object.keys(mine), columns('my_profile'));
   const st = (await rpc(c, 'my_stats', {}))[0]; assert.deepEqual(Object.keys(st), columns('my_stats'));
   const who = demoCards().plain, card = (await rpc(c, 'get_player_card', { p_public_id: who.publicId }))[0];

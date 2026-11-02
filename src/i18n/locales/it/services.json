@@ -38,7 +38,6 @@
   "services.captcha.unauthorized": "Questo sito non è autorizzato alla verifica di Cloudflare.",
   "services.captcha.unsupported": "Questo browser non supporta la verifica. Provane un altro.",
   "services.feedback.captcha": "Non siamo riusciti a verificare che non sei un robot. Riprova.",
-  "services.feedback.invalid_email": "Serve un’email valida (es.: nom@domini.cat) per poterti rispondere.",
   "services.feedback.invalid_message": "Il messaggio deve avere da {min} a {max} caratteri.",
   "services.feedback.offline": "Nessuna connessione. Controllala e riprova.",
   "services.feedback.rate_limit": "Hai inviato molti messaggi di fila. Aspetta un po’ e riprova.",
@@ -53,5 +52,6 @@
   "services.share.drac.record": "{mula}🔥 Nuovo record di punti: {score} a {diff} ({pct} di centri) facendo ballare il Drac de Valls! 🎉",
   "services.share.bou": "Ho fatto ballare il Bou Tradicional de Valls con un {pct} di centri a {diff}. #Valls",
   "services.share.fail": "{mula} {pct} di centri a {diff}… La Mulassa vuole la rivincita. E tu, come te la caveresti? 💃",
-  "services.share.record": "{mula}🔥 Nuovo record di punti: {score} a {diff} ({pct} di centri) facendo ballare la Mulassa de Valls! 🎉"
+  "services.share.record": "{mula}🔥 Nuovo record di punti: {score} a {diff} ({pct} di centri) facendo ballare la Mulassa de Valls! 🎉",
+  "services.feedback.daily_limit": "Oggi hai già effettuato 3 invii. Potrai scrivere di nuovo dalle {time}."
 }

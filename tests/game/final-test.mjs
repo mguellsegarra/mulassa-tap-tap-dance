@@ -95,7 +95,7 @@ assert.equal(me.score, comparableScore(run.score, run.difficulty), 'mock board c
 await assert.rejects(mockLeaderboard({ delay: 0 }).publish(run, clean.alias), { code: 'taken' });
 { const g = mockLeaderboard({ delay: 0, account: 'guest' });
   await assert.rejects(g.createProfile(clean.alias.toLowerCase()), { code: 'taken' });
-  assert.equal(await g.createProfile('Provera'), 'Provera'); assert.deepEqual(await g.profile(), { alias: 'Provera', verified: false, published: true, released: false, publicId: (await g.profile()).publicId }); }
+  assert.equal(await g.createProfile('Provera'), 'Provera'); assert.deepEqual(await g.profile(), { alias: 'Provera', verified: false, published: true, released: false, publicId: (await g.profile()).publicId, badgeId: null, canBadge: true }); }
 { // A newly accepted version result need not replace the user's stronger historical board row (it is another season's)
   const mixed = mockLeaderboard({ delay: 0 });
   await mixed.publish({ version: 'mulassa-v1', difficulty: 0, counts: { perfect: 150, good: 0, miss: 0 }, score: 60000, maxCombo: 150 }, 'Versions');
@@ -133,8 +133,8 @@ assert.equal((await svc.identity()).hasSession, false);
   const who = async account => { const s = mockLeaderboard({ delay: 0, account }); return [await s.profile(), (await s.listAll()).find(r => r.is_self)]; };
   assert.deepEqual((await who('new')), [null, undefined]);
   const pid = x => x.publicId;
-  const [r] = await who('reserved'); assert.deepEqual(r, { alias: 'Prova123', verified: false, published: false, released: false, publicId: pid(r) });
-  const [g, gRow] = await who('guest'); assert.deepEqual(g, { alias: 'Prova123', verified: false, published: true, released: false, publicId: pid(g) }); assert.equal(gRow.alias, 'Prova123'); assert.equal(gRow.verified, false);
+  const [r] = await who('reserved'); assert.deepEqual(r, { alias: 'Prova123', verified: false, published: false, released: false, publicId: pid(r), badgeId: null, canBadge: true });
+  const [g, gRow] = await who('guest'); assert.deepEqual(g, { alias: 'Prova123', verified: false, published: true, released: false, publicId: pid(g), badgeId: null, canBadge: true }); assert.equal(gRow.alias, 'Prova123'); assert.equal(gRow.verified, false);
   const [u, uRow] = await who('released'); assert(u.released && !u.verified && u.alias === 'Prova123' && uRow.released === true && uRow.alias === 'Prova123', 'a released guest keeps its row, flagged');
   const [v, vRow] = await who('verified'); assert(v.verified && !v.released); assert(vRow.verified && vRow.alias === 'Prova123');
   assert(new Set([pid(g), pid(u), pid(v)]).size === 1, 'the demo account keeps one public id');

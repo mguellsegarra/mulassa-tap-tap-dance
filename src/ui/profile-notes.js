@@ -2,23 +2,25 @@
 // the check (it means only that); a guest («Convidat», no confirmed address) shows the same plain name, quieter and without it.
 // A guest idle for 30 days can lose the name to somebody else: its rows are then fainter still («released»), results kept.
 import { tr } from '../i18n/messages.js';
+import { badgeOf } from './player-badges.js';
 export const VERIFIED = tr('ui.profile.verified');
 export const GUEST = tr('ui.profile.guest');
 export const GUEST_TEXT = tr('ui.profile.guestText');
-export const GUEST_ROW = tr('ui.profile.guestRow'); // under a guest's own row on the board
 
 // a scalloped seal, the shape people read as «verified»
-const CHECK_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path class="seal" d="M12 2.7Q17.1-.2 18.6 5.4Q24.2 6.9 21.3 12Q24.2 17.1 18.6 18.6Q17.1 24.2 12 21.3Q6.9 24.2 5.4 18.6Q-.2 17.1 2.7 12Q-.2 6.9 5.4 5.4Q6.9-.2 12 2.7z"/><path d="m7.8 12.2 2.9 2.9 5.6-5.9"/></svg>';
+export const CHECK_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path class="seal" d="M12 2.7Q17.1-.2 18.6 5.4Q24.2 6.9 21.3 12Q24.2 17.1 18.6 18.6Q17.1 24.2 12 21.3Q6.9 24.2 5.4 18.6Q-.2 17.1 2.7 12Q-.2 6.9 5.4 5.4Q6.9-.2 12 2.7z"/><path d="m7.8 12.2 2.9 2.9 5.6-5.9"/></svg>';
 // A plain mark (no tip, no help cursor; it sits inside the name's button, a tap opens the card);
 // screen readers still hear «Correu confirmat»
-export function checkBadge(doc) {
-  const b = doc.createElement('span');
-  b.className = 'verified-check'; b.setAttribute('role', 'img'); b.setAttribute('aria-label', VERIFIED);
-  b.innerHTML = CHECK_SVG;
+export function checkBadge(doc, badgeId = null) {
+  const b = doc.createElement('span'), badge = badgeOf(badgeId); // a chosen badge takes the check's place and keeps its meaning
+  b.className = badge ? 'player-badge' : 'verified-check'; b.setAttribute('role', 'img');
+  b.setAttribute('aria-label', badge ? tr('ui.badge.label', { status: VERIFIED, name: badge.name }) : VERIFIED);
+  if (badge) b.title = badge.name; // what it is, on a hover
+  b.innerHTML = badge ? badge.art() : CHECK_SVG;
   return b;
 }
 // A board, podium or hall item as the name helpers take it: public_id (the card's key) as publicId, released as a flag
-export const playerOf = r => ({ alias: String(r.alias ?? ''), verified: r.verified === true, released: r.released === true, publicId: r.publicId ?? r.public_id ?? null });
+export const playerOf = r => ({ alias: String(r.alias ?? ''), verified: r.verified === true, released: r.released === true, publicId: r.publicId ?? r.public_id ?? null, badgeId: r.badgeId ?? r.badge_id ?? null });
 // A player's name into `into` (a .who row): the name, quieter for a guest and fainter when its profile was released (its name is somebody else's now), the
 // check for a confirmed address. `p`: { alias, verified, released, publicId }. With `onOpen` the name is a button that opens the
 // public card (src/ui/player-card.js); the check stays its own button beside it.
@@ -33,7 +35,7 @@ export function appendName(doc, into, p, onOpen = null) {
     name.addEventListener('click', e => { e.stopPropagation?.(); onOpen(p); });
   }
   into.appendChild(name);
-  if (p.verified === true) into.appendChild(checkBadge(doc));
+  if (p.verified === true) into.appendChild(checkBadge(doc, p.badgeId));
   return name;
 }
 

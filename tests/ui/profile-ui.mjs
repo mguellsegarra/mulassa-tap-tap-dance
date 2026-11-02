@@ -10,6 +10,7 @@ import { VERIFIED, GUEST, GUEST_TEXT } from '../../src/ui/profile-notes.js';
 
 class El {
   constructor(id) { Object.assign(this, { id, hidden: false, disabled: false, value: '', readOnly: false, dataset: {}, on: {}, open: false, text: '', attrs: {}, className: '' }); }
+  insertAdjacentHTML(_, html) { this.icon = html; }
   get textContent() { return this.text + (this.kids || []).map(k => (typeof k === 'string' ? k : k.textContent)).join(''); }
   set textContent(v) { this.text = String(v); this.first = null; this.kids = []; }
   get classList() { const c = (this.cls ||= new Set()); return { toggle: (k, on = !c.has(k)) => { if (on) c.add(k); else c.delete(k); }, replace: (a, b) => { if (c.delete(a)) c.add(b); }, contains: k => c.has(k) }; }
@@ -74,6 +75,7 @@ const guestProf = o => ({ alias: 'takeshi', verified: false, published: true, re
   assert(!guest.$('profile-kind').hidden && guest.$('profile-kind').textContent === GUEST, '«Convidat» said in words here');
   assert.equal(guest.buttons().join(), 'link:Confirma el correu,delete:Esborra el perfil');
   assert.equal(guest.$('profile-sub').textContent, GUEST_TEXT, 'what a guest risks, and the way out');
+  assert(guest.$('profile-main').icon.includes('verified-check') && guest.$('profile-alt').icon.includes('<svg'), 'a guest: the blue check on «Confirma el correu», an icon on «Esborra»');
   assert(!guest.badge(), 'not confirmed: no check');
   const priv = make({ alias: 'takeshi', session: true, persistent: false, prof: guestProf() }); await priv.profile.refresh();
   assert.equal(priv.$('profile-sub').textContent, `${GUEST_TEXT} NOTE`, 'and the browser note when it may lose the profile');
@@ -85,7 +87,7 @@ const guestProf = o => ({ alias: 'takeshi', verified: false, published: true, re
   assert.equal(rel.buttons().join(), 'rename:Tria un altre nom,delete:Esborra el perfil');
   const linked = make({ alias: 'takeshi', session: true, email: 'jugador@example.com', prof: guestProf({ verified: true }) }); await linked.profile.refresh();
   assert.equal(linked.buttons().join(), 'signout:Tanca la sessió,delete:Esborra el perfil', 'signing out only with an e-mail on it');
-  assert.equal(linked.$('profile-sub').textContent, `${VERIFIED}: j***@example.com.`, 'the address masked, never in full');
+  assert.equal(linked.$('profile-sub').textContent, '', 'no line about the address: the mark says it');
   assert(linked.badge()?.attrs['aria-label'] === VERIFIED && linked.$('profile-name').textContent === 'takeshi', 'the check, nothing else');
   const off = make({ alias: 'takeshi', session: true, publishingEnabled: false, prof: guestProf() }); await off.profile.refresh();
   assert.equal(off.buttons().join(), 'delete:Esborra el perfil', 'publishing off: nothing to link, deleting stays');
@@ -132,7 +134,7 @@ const guestProf = o => ({ alias: 'takeshi', verified: false, published: true, re
 { // confirm an e-mail: mail → code; the tick, the same name; an address typed elsewhere; a code the server does not confirm
   const s = make({ alias: 'takeshi', session: true, captchaRequired: true, prof: guestProf() }); await s.profile.refresh();
   s.profile.open('link'); assert(s.$('profile-menu').open && s.$('profile-title').textContent === 'Confirma el correu' && s.focused.at(-1) === 'profile-email');
-  assert(/conserves el nom/.test(s.$('profile-lead').textContent) && /marca/.test(s.$('profile-lead').textContent) && !/#|caduc|7 dies|torneig/.test(s.$('profile-lead').textContent), 'what confirming does: keeps it, sells the mark, no «#» talk');
+  assert(/El teu nom/.test(s.$('profile-lead').textContent) && /marca/.test(s.$('profile-lead').textContent) && !/#|caduc|7 dies|torneig/.test(s.$('profile-lead').textContent), 'what confirming does: keeps it, sells the mark, no «#» talk');
   enter(s.$, 'profile-email', 'jugador@example.com'); s.$('profile-form').fire('submit'); await tick(); await tick();
   assert.deepEqual(s.calls[0], ['send', 'jugador@example.com', undefined], 'an address on this session: no Turnstile wait');
   assert(!s.$('profile-code-field').hidden && s.$('profile-mail-field').hidden && /jugador@example\.com/.test(s.$('profile-lead').textContent) && s.focused.at(-1) === 'profile-code');
@@ -234,4 +236,14 @@ const guestProf = o => ({ alias: 'takeshi', verified: false, published: true, re
   const src = readFileSync(new URL('../../src/ui/profile-ui.js', import.meta.url), 'utf8') + readFileSync(new URL('../../src/ui/profile-notes.js', import.meta.url), 'utf8');
   assert(!/7 dies|caduca|temporal|expiresAt|ackNotice|noticeNeeded/.test(src), 'no 7-day copy or API');
 }
+// from the gate: the new profile goes straight on to its address, in the same sheet, and the phone's keyboard stays up
+{ const g = make(); let backs = 0, active = null; g.doc.activeElement = null;
+  Object.defineProperty(g.doc, 'activeElement', { get: () => active });
+  g.$('profile-email').focus = () => { active = g.$('profile-email'); assert.equal(g.$('profile-mail-field').hidden, false, 'shown before it takes the focus'); };
+  g.profile.open('create', () => backs++, { thenLink: true }); enter(g.$, 'profile-alias', 'Provera'); active = g.$('profile-alias');
+  g.$('profile-form').fire('submit'); await tick(); await tick(); await tick();
+  assert(!g.$('profile-mail-field').hidden && g.$('profile-alias-field').hidden && g.$('profile-menu').open, 'the e-mail step, sheet still open');
+  assert.equal(active, g.$('profile-email'), 'typing: the focus moves field to field'); assert.equal(g.$('profile-title').textContent, 'Confirma el correu');
+  assert.equal(g.T.accepted, 1); assert.equal(backs, 0);
+  g.$('profile-menu').close(); assert.equal(backs, 1, 'closing it is the way back'); }
 console.log('profile block and sheet ok');

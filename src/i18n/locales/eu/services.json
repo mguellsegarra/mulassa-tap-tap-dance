@@ -38,7 +38,6 @@
   "services.captcha.unauthorized": "Webgune honek ez du Cloudflare egiaztapena erabiltzeko baimenik.",
   "services.captcha.unsupported": "Nabigatzailea ez da egiaztapenarekin bateragarria. Probatu beste bat.",
   "services.feedback.captcha": "Ezin izan dugu egiaztatu ez zarela robota. Saiatu berriro.",
-  "services.feedback.invalid_email": "Baliozko helbide elektronikoa behar da (adib.: nom@domini.cat) erantzun ahal izateko.",
   "services.feedback.invalid_message": "Mezuak {min} eta {max} karaktere artean izan behar ditu.",
   "services.feedback.offline": "Konexiorik ez. Begiratu eta saiatu berriro.",
   "services.feedback.rate_limit": "Mezu asko bidali dituzu jarraian. Itxaron pixka bat eta saiatu berriro.",
@@ -53,5 +52,6 @@
   "services.share.drac.record": "{mula}🔥 Puntu-errekor berria: {score}, maila: {diff} ({pct} asmatze), Drac de Valls dantzan! 🎉",
   "services.share.bou": "Bou Tradicional de Valls dantzan jarri dut: {pct} asmatze. Maila: {diff}. #Valls",
   "services.share.fail": "{mula} {pct} asmatze, maila: {diff}… Mulassa errebantxa eske daukat. Eta zuk, zer moduz? 💃",
-  "services.share.record": "{mula}🔥 Puntu-errekor berria: {score}, maila: {diff} ({pct} asmatze), Mulassa de Valls dantzan! 🎉"
+  "services.share.record": "{mula}🔥 Puntu-errekor berria: {score}, maila: {diff} ({pct} asmatze), Mulassa de Valls dantzan! 🎉",
+  "services.feedback.daily_limit": "Gaur 3 bidalketa egin dituzu jada. Berriro idatzi ahal izango duzu ordu honetatik aurrera: {time}."
 }

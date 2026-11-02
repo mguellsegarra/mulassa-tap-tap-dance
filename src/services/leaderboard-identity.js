@@ -15,7 +15,7 @@ export function dropLegacyIdentity(store) {
 export function savedName(store) {
   let prof = null;
   try { prof = JSON.parse(store.get(`${ALIAS_KEY}:identity`) || 'null')?.prof; } catch { /* unknown: no check */ }
-  return { alias: store.get(ALIAS_KEY) || '', verified: prof?.verified === true, released: prof?.released === true, publicId: prof?.publicId ?? null };
+  return { alias: store.get(ALIAS_KEY) || '', verified: prof?.verified === true, released: prof?.released === true, publicId: prof?.publicId ?? null, badgeId: prof?.badgeId ?? null };
 }
 // whose board answers the selector may show again (select-ui.js, select-standings.js): the profile's stable public id, only while
 // this browser still has that profile. A sign-out, here or in another tab, drops the identity (refreshIdentity); the name stays

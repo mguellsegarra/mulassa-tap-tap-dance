@@ -46,10 +46,10 @@ export function peekGap(widths, room, base) {
   }
   return best;
 }
-// The arrows' capsule stands at the screen's middle, but never on a town pill sharing its band (a 667×375 window: the pills'
+// The arrows' capsule stands at the middle of the strip's room (the screen, or the half a pending card leaves it), but never on a town pill sharing its band (a 667×375 window: the pills'
 // own row sits just above the strip): then it moves right of them, as far as the screen allows. Screen px in, carousel px out.
 export function navX(win, towns, carousel, z) {
-  const c = carousel.getBoundingClientRect(), mid = win.innerWidth / 2, half = 60 * z, top = c.top - 48 * z;
+  const c = carousel.getBoundingClientRect(), mid = c.left > 0 ? c.left + c.width / 2 : win.innerWidth / 2, half = 60 * z, top = c.top - 48 * z;
   const under = [...towns.children].map(p => p.getBoundingClientRect()).filter(b => b.width && b.bottom > top && b.top < c.top && b.left < mid + half && b.right > mid - half);
   return Math.min(under.length ? Math.max(...under.map(b => b.right)) + 8 * z + half : mid, win.innerWidth - half - 4 * z) - c.left;
 }

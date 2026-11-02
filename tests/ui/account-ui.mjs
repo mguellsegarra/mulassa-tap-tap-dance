@@ -32,6 +32,7 @@ class El {
   showModal() { this.open = true; }
   close() { if (!this.open) return; this.open = false; this.fire('close'); }
   find(test) { if (test(this)) return this; for (const c of this.children) { const f = c.find(test); if (f) return f; } return null; }
+  querySelector(q) { return q.startsWith('.') ? this.find(e => e.className === q.slice(1)) : null; }
   all(test, out = []) { if (test(this)) out.push(this); for (const c of this.children) c.all(test, out); return out; }
 }
 function fakeDoc(ids, figures = []) {
@@ -127,7 +128,7 @@ const service = (o = {}) => ({ configured: true, asked: [], async seasons(f) { t
   assert.equal(text('hall-mine')[0], 'La teva posició12 de 48142.310 puntsNORMAL', 'its own band: place (no gendered ordinal), points, level');
   const figs = $('seasons-figures').children; // «Tria figura»: the board's dropdown
   assert($('seasons-figure-name').textContent === 'Mulassa de Valls' && /<svg/.test($('seasons-figure-pic').innerHTML) && figs[0].attrs['aria-pressed'] === 'true' && figs[1].attrs['aria-pressed'] === 'false');
-  view().find(e => e.className?.includes?.('player-name') && e.tag === 'button').click(); assert.deepEqual(cards[0], { alias: 'Portadora', verified: true, released: false, publicId: 'id-portadora' });
+  view().find(e => e.className?.includes?.('player-name') && e.tag === 'button').click(); assert.deepEqual(cards[0], { alias: 'Portadora', verified: true, released: false, publicId: 'id-portadora', badgeId: null });
   { const faded = view().all(e => e.className?.includes?.('player-name')); assert(!faded[0].className.includes('released') && faded[1].className.includes('released') && !view().textContent.includes('#'), 'a released podium name is faded; no «#» anywhere'); }
   byId('seasons-dance').click();
   assert(text('hall-meta')[0] === '20 participants' && byId('seasons-dance').textContent === 'Mira el ball anterior' && focused.at(-1) === 'seasons-dance', 'the current dance, its link back');
@@ -238,7 +239,7 @@ const service = (o = {}) => ({ configured: true, asked: [], async seasons(f) { t
 // --- Perfil: this device's numbers at once, every device's when there is a profile (whichever knows more); the notice once
 {
   const f = fakeDoc(['account-menu', 'account-close', 'account-stats', 'account-status', 'account-since', 'account-empty', 'account-join',
-    'account-previous', 'account-previous-list', 'profile-row', 'stats-notice-menu', 'stats-notice-ok', 'stats-notice-close', 'stats-notice-guest', 'stats-notice-last', 'stats-notice-confirm', 'stats-notice-hall']);
+    'account-previous', 'account-previous-list', 'profile-row', 'stats-notice-menu', 'stats-notice-ok', 'stats-notice-close', 'stats-notice-hall']);
   const mem = new Map([['record-v2-duet-1', JSON.stringify({ quality: 91.5, score: 70000 })]]);
   const store = { get: k => mem.get(k) ?? null, set: (k, v) => mem.set(k, v), remove: k => mem.delete(k) };
   const server = { buckets: { 'mulassa-valls/mulassa-v3/1': bucket({ runs: 40, completed: 40, perfect: 4000, good: 100, miss: 100 }) }, days: ['2026-10-19', '2026-10-20'], daysPlayed: 2, currentStreak: 2, longestStreak: 2 };
@@ -273,22 +274,15 @@ const service = (o = {}) => ({ configured: true, asked: [], async seasons(f) { t
   f.$('account-close').click();
   // the stats notice, once: only while needed; closing it counts as seen
   assert.equal(acc.notice(), true); assert(f.$('stats-notice-menu').open);
-  assert(f.$('stats-notice-guest').hidden && f.$('stats-notice-confirm').hidden, 'no guest identity on this device: no keep-your-name step, no confirm button');
   f.$('stats-notice-ok').click(); assert(accepted === 1 && !f.$('stats-notice-menu').open);
   assert.equal(acc.notice(), false, 'seen: never again');
   const backFn = () => {};
-  // a guest: told that confirming the e-mail keeps its name, and offered it, which counts the notice as seen
+  // the notice asks nobody to confirm an e-mail, a guest included: the offer lives on the publish sheet
   needed = true; mem.set('leaderboard-alias', 'Pep');
   assert.equal(acc.notice(backFn), true);
-  assert(!f.$('stats-notice-guest').hidden && !f.$('stats-notice-confirm').hidden && f.$('stats-notice-confirm').textContent === 'Confirma el correu', 'the guest step and its button');
-  assert(f.$('stats-notice-last').textContent === '3', 'a guest: three steps');
-  { const html = (await import('node:fs')).readFileSync(new URL('../../index.html', import.meta.url), 'utf8'); // «D'acord» leads for everyone: a tap without reading closes the news, not into the e-mail steps
-    assert(/id="stats-notice-confirm"[^>]*class="btn btn-secondary"/.test(html) && /id="stats-notice-ok"[^>]*class="btn btn-primary"/.test(html), 'the notice: «D’acord» primary, the confirmation secondary'); }
-  f.$('stats-notice-confirm').click(); assert(accepted === 2 && opened.at(-1)[0] === 'link' && opened.at(-1)[1] === backFn && !f.$('stats-notice-menu').open, 'confirm: seen, then the profile steps, back to where the notice would go');
-  // a confirmed e-mail: the name is kept already, nothing to confirm
-  needed = true; mem.set('leaderboard-alias:identity', JSON.stringify({ hasSession: true, prof: { alias: 'Pep', verified: true } }));
-  assert.equal(acc.notice(backFn), true); assert(f.$('stats-notice-guest').hidden && f.$('stats-notice-confirm').hidden && f.$('stats-notice-last').textContent === '2', 'confirmed: two steps');
-  f.$('stats-notice-hall').click(); assert(accepted === 3 && halls.at(-1)[0] === 'mulassa-valls' && halls.at(-1)[1] === backFn && !f.$('stats-notice-menu').open, 'the season button: seen, then the Saló de la fama, back to where the notice would go (never back over it)');
+  { const html = (await import('node:fs')).readFileSync(new URL('../../index.html', import.meta.url), 'utf8');
+    assert(!/stats-notice-(confirm|guest)/.test(html) && /id="stats-notice-ok"[^>]*class="btn btn-primary"/.test(html), 'the notice: only «D’acord», no confirmation'); }
+  f.$('stats-notice-hall').click(); assert(accepted === 2 && halls.at(-1)[0] === 'mulassa-valls' && halls.at(-1)[1] === backFn && !f.$('stats-notice-menu').open, 'the season button: seen, then the Saló de la fama, back to where the notice would go (never back over it)');
 }
 // --- markup: the sheets exist, copy is Catalan, one primary each, «Dades enviades…» and «Convidat» words
 {
@@ -304,9 +298,9 @@ const service = (o = {}) => ({ configured: true, asked: [], async seasons(f) { t
   // the statistics notice: a title and three short lines with a drawn icon each, then Privadesa and D’acord;
   // the details it no longer says stay in the Privadesa text
   const notice = sheet('stats-notice-menu');
-  assert.equal((notice.match(/<li[ >]/g) || []).length, 3, 'the notice: three steps, each on its medal');
+  assert.equal((notice.match(/<li[ >]/g) || []).length, 2, 'the notice: two steps, each on its medal');
   assert(/<header class="notice-ribbon"><svg[^>]*aria-hidden="true"/.test(notice) && /<h2 id="stats-notice-title"[^>]*>Nova temporada!<\/h2>/.test(notice), 'the title is real text inside the ribbon');
-  assert(/<h2 id="stats-notice-title"[^>]*>Nova temporada!<\/h2>[^]*class="pos p1"[^]*class="pos p2"[^]*class="pos p3"/.test(notice) && /data-privacy-open[^>]*>Privadesa<\/button>[^]*id="stats-notice-ok"[^>]*>D’acord</.test(notice), 'title, the three medals, then Privadesa and D’acord');
+  assert(/<h2 id="stats-notice-title"[^>]*>Nova temporada!<\/h2>[^]*class="pos p1"[^]*class="pos p2"/.test(notice) && /data-privacy-open[^>]*>Privadesa<\/button>[^]*id="stats-notice-ok"[^>]*>D’acord</.test(notice), 'title, the two medals, then Privadesa and D’acord');
   const privacy = html.slice(html.indexOf('<section data-privacy="leaderboards"'), html.indexOf('</section>', html.indexOf('<section data-privacy="leaderboards"')));
   assert(/sumats entre (tots )?els teus dispositius/.test(privacy) && /Mai no s’hi envia l’hora en què jugues ni cap dada del dispositiu/.test(privacy) && /Tot s’esborra amb el perfil/.test(privacy), 'Privadesa keeps what the notice dropped');
   assert(/Crea un perfil per guardar-les i sortir a les classificacions\./.test(sheet('account-menu')));
@@ -425,9 +419,9 @@ const service = (o = {}) => ({ configured: true, asked: [], async seasons(f) { t
   const answer = async p => { release(); await p; };
   const a = refreshIdentity(svc, store), b = refreshIdentity(svc, store); await tick();
   assert.equal(calls, 1, 'one request at a time'); await answer(Promise.all([a, b]));
-  assert.deepEqual(savedName(store), { alias: 'Portadora', verified: true, released: false, publicId: 'id-1' }, 'a confirmed profile shows its check');
+  assert.deepEqual(savedName(store), { alias: 'Portadora', verified: true, released: false, publicId: 'id-1', badgeId: null }, 'a confirmed profile shows its check');
   prof = { alias: 'Timbaler', verified: false, published: false, released: true, publicId: 'id-2' }; const c = refreshIdentity(svc, store); await tick(); await answer(c);
-  assert.deepEqual(savedName(store), { alias: 'Timbaler', verified: false, released: true, publicId: 'id-2' }, 'a released guest: the plain name, no check, flagged');
+  assert.deepEqual(savedName(store), { alias: 'Timbaler', verified: false, released: true, publicId: 'id-2', badgeId: null }, 'a released guest: the plain name, no check, flagged');
   mem.set('leaderboard-alias:identity', JSON.stringify({ hasSession: true, mailOn: 'a@b.cat', persistent: false, prof }));
   prof = { alias: 'Timbaler', verified: true, published: true, released: false, publicId: 'id-2' }; const d = refreshIdentity(svc, store); await tick(); await answer(d);
   const kept = JSON.parse(mem.get('leaderboard-alias:identity'));
@@ -445,7 +439,7 @@ const service = (o = {}) => ({ configured: true, asked: [], async seasons(f) { t
     const b = refreshIdentity(svc2, store, { fresh: true }); await tick(); assert.equal(asked.length, 2, 'an account change asks again');
     asked[1]({ alias: 'Nova', verified: true, published: true, publicId: 'id-n' }); await b;
     asked[0]({ alias: 'Vella', verified: false, published: false, publicId: 'id-v' }); await a;
-    assert.deepEqual(savedName(store), { alias: 'Nova', verified: true, released: false, publicId: 'id-n' }, 'the stale answer is dropped');
+    assert.deepEqual(savedName(store), { alias: 'Nova', verified: true, released: false, publicId: 'id-n', badgeId: null }, 'the stale answer is dropped');
     const c = refreshIdentity(svc2, store); await tick(); assert.equal(asked.length, 3, 'the stale read does not hold the next one up'); asked[2](null); await c; }
   assert.equal(await refreshIdentity({ configured: false, profile() { throw new Error('never'); } }, store), undefined, 'no service: nothing asked');
 }
@@ -516,3 +510,30 @@ console.log('perfil, statistics, seasons and cards ok');
   assert.deepEqual([1, 2, 3, 4].map(n => posDisc(d, n)).map(e => [e.className, e.textContent]), [['pos p1', '1'], ['pos p2', '2'], ['pos p3', '3'], ['pos', '4']]);
 }
 console.log('podium discs ok');
+
+// the red ribbon over the name's pencil: only with a pencil, once ever, gone with its sheet, its tail on the pencil
+{
+  const f = fakeDoc(['account-menu', 'account-close', 'account-stats', 'account-status', 'account-since', 'account-empty', 'account-join', 'account-previous', 'account-previous-list', 'profile-row', 'stats-notice-menu', 'stats-notice-ok', 'stats-notice-close', 'stats-notice-hall']);
+  const mem = new Map(), store = { get: k => mem.get(k) ?? null, set: (k, v) => mem.set(k, v), remove: k => mem.delete(k) }, menu = f.$('account-menu'), make = f.doc.createElement;
+  const tips = () => menu.children.filter(c => c.className.includes('account-badge-tip'));
+  f.doc.createElement = tag => Object.assign(make(tag), { offsetWidth: 100, offsetHeight: 30, vars: {}, style: { setProperty(k, v) { this.vars ??= {}; this.vars[k] = v; } }, remove() { const on = this.parent.children; on.splice(on.indexOf(this), 1); } });
+  Object.assign(menu, { clientLeft: 2, clientTop: 2, getBoundingClientRect: () => ({ left: 20, top: 10, width: 300 }) });
+  const acc = setupAccount({ focusIn() {}, profile: { refresh: async () => {}, open() {}, forget() {}, isOpen: false }, service: service({ ownerId: async () => 'u1', myStats: async () => null }), store, doc: f.doc, now: () => NOW, stats: { noticeNeeded: () => false, acceptNotice() {} } });
+  acc.open(); await tick(); await tick();
+  assert.equal(tips().length, 0, 'no pencil (no badge to change): no ribbon');
+  assert.equal(store.get('badge-edit-tip-seen'), null, 'and its one showing is not spent');
+  menu.close();
+  const edit = Object.assign(new El('button'), { className: 'badge-edit', checkVisibility: () => true, lastElementChild: { getBoundingClientRect: () => ({ left: 100, top: 50, width: 10 }) } });
+  f.$('profile-row').appendChild(edit);
+  acc.open(); await tick(); await tick();
+  const [tip] = tips();
+  assert(tip, 'a pencil: the ribbon, inside the sheet\'s top layer');
+  assert.equal(tip.style.left, '33px'); assert.equal(tip.style.vars['--tail'], '50px', 'the tail on the pencil\'s centre, not the button\'s');
+  assert.equal(tip.style.top, '-5px', 'above the name, not over the sheet\'s buttons');
+  menu.close();
+  assert.equal(tips().length, 0, 'it leaves with its sheet');
+  acc.open(); await tick(); await tick();
+  assert.equal(tips().length, 0, 'once ever');
+  menu.close();
+}
+console.log('badge pencil ribbon ok');

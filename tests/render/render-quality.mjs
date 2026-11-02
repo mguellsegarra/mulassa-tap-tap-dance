@@ -12,3 +12,4 @@ await import('./sheets-share.mjs');
 await import('./hud-play.mjs');
 await import('./clock-theme.mjs');
 await import('./photo-showreel.mjs');
+await import('./scoring-model.mjs');

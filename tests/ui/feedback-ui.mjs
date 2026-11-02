@@ -1,5 +1,5 @@
 // «Bústia de la plaça» sheet (src/ui/feedback-ui.js) on a tiny mocked DOM: nothing sent on open, field checks, one token per
-// message from the shared Turnstile, success closes by itself, errors in Catalan, a draft survives an accidental close unless an Aviat card seeded it.
+// message from the shared Turnstile, success closes by itself, errors in Catalan, a draft survives an accidental close, each way of helping keeps its own draft for its figure.
 import assert from 'node:assert/strict';
 import { setupFeedback } from '../../src/ui/feedback-ui.js';
 import { FeedbackError } from '../../src/services/feedback.js';
@@ -7,11 +7,11 @@ import { FeedbackError } from '../../src/services/feedback.js';
 const nodes = new Map();
 const el = id => {
   if (!nodes.has(id)) nodes.set(id, {
-    id, value: '', textContent: '', style: {}, dataset: {}, scrollHeight: 100, clientHeight: 100, hidden: false, disabled: false, readOnly: false, open: false, attrs: {}, listeners: {}, cls: new Set(),
+    id, value: '', textContent: '', style: {}, getBoundingClientRect: () => ({ top: 40 }), dataset: {}, scrollHeight: 100, clientHeight: 100, hidden: false, disabled: false, readOnly: false, open: false, attrs: {}, listeners: {}, cls: new Set(),
     addEventListener(t, f) { (this.listeners[t] ||= []).push(f); }, fire(t, e = {}) { for (const f of this.listeners[t] || []) f({ preventDefault() {}, ...e }); },
     setAttribute(k, v) { this.attrs[k] = v; }, getAttribute(k) { return this.attrs[k] ?? null; },
     classList: { toggle(c, on) { const s = nodes.get(id).cls; (on ?? !s.has(c)) ? s.add(c) : s.delete(c); } },
-    prepend(c) { this.first = c; }, showModal() { this.open = true; }, close() { if (!this.open) return; this.open = false; this.fire('close'); }, focus() { focused = id; },
+    querySelectorAll() { return this.choices ?? []; }, prepend(c) { this.first = c; }, showModal() { this.open = true; }, close() { if (!this.open) return; this.open = false; this.fire('close'); }, focus() { focused = id; },
   });
   return nodes.get(id);
 };
@@ -24,11 +24,13 @@ const service = { configured: true, send: async m => { if (sendFail) throw sendF
 const realTimeout = globalThis.setTimeout;
 globalThis.setTimeout = (f, ms) => { timers.push(f); return timers.length; };
 globalThis.clearTimeout = () => {};
-const fb = setupFeedback({ focusIn: (menu, id) => el(id).focus(), captcha, service, doc, report: (k, t) => reports.push([k, t]) });
-const menu = el('feedback-menu'), text = el('feedback-message'), email = el('feedback-email'), status = el('feedback-status'), send = el('feedback-send');
+let opened = 0; globalThis.open = () => {}; // the harness's other sheets share these nodes
+assert.equal(setupFeedback({ focusIn() {}, captcha: null, service, doc }).configured, false, 'no Turnstile here: no button');
+for (const n of nodes.values()) n.listeners = {}; // that sheet is gone: only one owns these nodes
+const fb = setupFeedback({ focusIn: (menu, id) => el(id).focus(), captcha, service, doc, report: (k, t) => reports.push([k, t]), accessToken: async () => 'jwt', openCode: () => opened++ });
+const menu = el('feedback-menu'), text = el('feedback-message'), status = el('feedback-status'), send = el('feedback-send');
 const submit = async () => { el('feedback-form').fire('submit'); await tick(); await tick(); };
 
-assert.equal(setupFeedback({ focusIn() {}, captcha: null, service, doc }).configured, false, 'no Turnstile here: no button');
 assert.equal(fb.configured, true);
 let backs = 0;
 fb.show(() => backs++);
@@ -39,30 +41,11 @@ assert.equal(el('feedback-count').textContent, '0/1000');
 text.value = 'hey'; text.fire('input');
 assert.equal(el('feedback-count').textContent, '3/1000'); assert.equal(el('feedback-error').textContent, '', '«Mínim» only once they try');
 await submit();
-assert.equal(text.attrs['aria-invalid'], 'true'); assert.equal(el('feedback-error').textContent, 'Mínim 5 caràcters'); assert.equal(status.textContent, ''); assert.equal(tokens, 0);
+assert.equal(text.attrs['aria-invalid'], 'true'); assert.equal(el('feedback-error').textContent, 'Escriu com a mínim 5 caràcters'); assert.equal(status.textContent, ''); assert.equal(tokens, 0);
 text.scrollHeight = 180; text.fire('input'); assert.equal(text.style.height, '184px', 'the box grows with the text'); text.scrollHeight = 100;
 text.value = 'Molt bon joc, però el DIFÍCIL em mata'; text.fire('input');
 assert.equal(text.attrs['aria-invalid'], 'false'); assert.equal(el('feedback-error').textContent, '', 'typing a valid message clears the complaint');
-email.value = 'no-arroba'; await submit();
-assert.equal(email.attrs['aria-invalid'], 'true'); assert.match(status.textContent, /correu/); assert.equal(focused, 'feedback-email');
-
-// the e-mail field: what an address can't hold goes as it is typed; the check runs on leaving the field
-email.value = ''; email.fire('input'); email.fire('blur');
-assert.equal(email.attrs['aria-invalid'], 'false', 'an empty e-mail waits for Envia: no complaint on leaving the field');
-email.value = ' “àlex” @domini.cat'; email.fire('input');
-assert.equal(email.value, 'lex@domini.cat', 'spaces, accents and quotes dropped while typing');
-email.value = 'jo@exemple'; email.fire('input');
-assert.equal(email.attrs['aria-invalid'], 'false', 'no complaint while typing');
-email.fire('blur');
-assert.equal(email.attrs['aria-invalid'], 'true'); assert.match(status.textContent, /correu/, 'on blur: why, over Envia');
-assert.equal(sent.length + tokens, 0, 'blur sends nothing');
-email.value = 'jo@exemple.cat'; email.fire('input');
-assert.equal(email.attrs['aria-invalid'], 'false'); assert.equal(status.textContent, '', 'fixed: the complaint goes as they type');
-email.fire('blur'); assert.equal(email.attrs['aria-invalid'], 'false', 'a valid one stays quiet');
-
 // Turnstile fails: its reason, a retry label; nothing sent
-email.value = ' jo@exemple.cat '; email.fire('input');
-assert.equal(email.value, 'jo@exemple.cat');
 tokenFail = { code: '300010' }; await submit();
 assert.match(status.textContent, /robot/); assert.equal(send.textContent, 'Torna-ho a provar'); assert.equal(sent.length, 0);
 tokenFail = null;
@@ -83,21 +66,59 @@ fb.show(); assert.equal(text.value, 'Molt bon joc, però el DIFÍCIL em mata'); 
 const before = tokens;
 el('feedback-form').fire('submit'); await submit(); // a double tap sends once
 assert.equal(sent.length, 1); assert.equal(tokens, before + 1);
-assert.deepEqual(sent[0], { message: 'Molt bon joc, però el DIFÍCIL em mata', email: 'jo@exemple.cat', token: `tok${tokens}` });
+assert.deepEqual(sent[0], { kind: 'general', figure: null, options: [], entity: '', message: 'Molt bon joc, però el DIFÍCIL em mata', token: `tok${tokens}`, accessToken: 'jwt' }, 'the address never comes from the client');
 assert.equal(menu.open, false, 'sent: the box closes');
 assert(el('feedback-thanks').open && focused === 'feedback-thanks-close', 'and «Rebut! Gràcies» opens');
 timers.at(-1)(); assert.equal(el('feedback-thanks').open, false, 'the thank-you closes by itself');
-fb.show(); assert.equal(text.value, ''); assert.equal(email.value, 'jo@exemple.cat', 'the e-mail stays for the next message'); assert(!text.readOnly && !email.readOnly && !el('feedback-cancel').disabled, 'the next one starts empty and open');
-menu.close(); fb.show(null, 'Sobre Tarragona: ');
-assert.equal(text.value, 'Sobre Tarragona: ', 'Aviat can seed an empty draft');
-text.value = 'Un esborrany meu'; email.value = 'jo@exemple.cat'; menu.close(); fb.show(null, 'Sobre Reus: ');
-assert.equal(text.value, 'Sobre Reus: ', 'a figure draft replaces an unsent message'); assert.equal(email.value, 'jo@exemple.cat', 'the typed e-mail stays');
-text.value = 'Sobre Reus: i més'; menu.close(); fb.show();
-assert.equal(text.value, '', 'closing a seeded sheet empties it, so the next plain opening is blank'); assert.equal(email.value, 'jo@exemple.cat');
+fb.show(); assert.equal(text.value, ''); assert(!text.readOnly && !el('feedback-cancel').disabled);
+
+// the sheet for a figure: starts empty over an unsent message, asks what you have, needs 20 characters
+text.value = 'Un esborrany meu'; menu.close();
+const figure = { id: 'bou', name: 'Bou de Valls' }, material = el('feedback-material'), entity = el('feedback-entity'), kinds = el('feedback-kind'), name = el('feedback-entity-name');
+const help = { kind: 'material', figure, choose: true };
+fb.show(null, help);
+assert.equal(text.value, ''); assert(!material.hidden && entity.hidden && !kinds.hidden); assert.equal(el('feedback-title').textContent, 'Vull ajudar'); assert.equal(el('feedback-lead').textContent, 'Bou de Valls');
+sent.length = 0; text.value = 'Tinc la partitura original del ball'; await submit();
+assert.equal(status.textContent, 'Marca quin material tens.'); assert.equal(sent.length, 0);
+material.choices = [{ value: 'music' }]; text.value = 'Tinc fotos'; await submit();
+assert.equal(el('feedback-error').textContent, 'Escriu com a mínim 20 caràcters'); assert.equal(sent.length, 0);
+text.value = 'Tinc la partitura original del ball'; await submit();
+assert.deepEqual([sent[0].kind, sent[0].figure, sent[0].options], ['material', figure, ['music']]);
+timers.at(-1)(); material.choices = [];
+// each tab has its own draft and asks its own questions; the sheet's top holds so the tabs stay under the finger
+fb.show(null, help); assert.equal(text.value, '', 'sent: that draft is gone'); text.value = 'Un esborrany de material';
+kinds.fire('change', { target: { value: 'entity' } });
+assert(material.hidden && !entity.hidden); assert.equal(text.value, '', 'not the other tab\'s words');
+assert.equal(menu.style.marginBlock, '40px auto', 'held where it was');
+text.value = 'Som la colla i en volem parlar'; kinds.fire('change', { target: { value: 'material' } });
+assert.equal(text.value, 'Un esborrany de material', 'back on a tab: its own words'); kinds.fire('change', { target: { value: 'entity' } });
+assert.equal(text.value, 'Som la colla i en volem parlar');
+menu.close(); assert.equal(menu.style.marginBlock, '', 'centred again on the next opening');
+fb.show(null, { ...help, kind: 'entity' }); assert.equal(text.value, 'Som la colla i en volem parlar', 'an accidental close keeps it for this figure');
+menu.close(); fb.show(null, { kind: 'entity', figure: { id: 'drac', name: 'Drac' }, choose: true }); assert.equal(text.value, '', 'another figure: nothing of the last one');
+menu.close(); fb.show(null, { ...help, kind: 'entity' }); assert.equal(text.value, '', 'and it does not come back'); text.value = 'Som la colla i en volem parlar';
+sent.length = 0; await submit(); assert.equal(status.textContent, 'Tria des d’on ens escrius.'.replace('’', "'"));
+entity.choices = [{ value: 'colla' }]; await submit(); assert.equal(status.textContent, 'Escriu el nom de la colla o entitat.'); assert.equal(sent.length, 0);
+name.value = 'Colla de Prova'; await submit();
+assert.deepEqual([sent[0].kind, sent[0].options, sent[0].entity], ['entity', ['colla'], 'Colla de Prova']);
+timers.at(-1)(); entity.choices = [];
+// the code tab: no fields, no message; its button opens GitHub
+fb.show(null, help); text.value = ''; sent.length = 0;
+kinds.fire('change', { target: { value: 'code' } }); assert(el('feedback-fields').hidden && !el('feedback-code').hidden);
+assert.equal(send.textContent, 'Obre GitHub'); await submit(); assert.equal(opened, 1); assert.equal(sent.length, 0, 'nothing sent');
+menu.close();
+// a proposal: no figure, no tabs
+fb.show(null, { kind: 'entity', figure: null }); assert(kinds.hidden); assert.equal(el('feedback-title').textContent, 'Proposa una figura');
+name.value = ''; menu.close();
+// the daily limit: its own words with the hour, the draft kept, not reported as a crash
+fb.show(); text.value = 'Un missatge qualsevol'; reports.length = 0;
+sendFail = new FeedbackError('daily_limit', 'x'); await submit();
+assert.match(status.textContent, /^Avui ja has fet 3 enviaments/); assert.equal(text.value, 'Un missatge qualsevol'); assert.equal(reports.length, 0);
+sendFail = null; menu.close();
 { // while it sends: the calçot in the button, the form locked, no closing
   let release; service.send = () => new Promise(r => { release = r; });
-  text.value = 'Un altre missatge'; email.value = 'jo@exemple.cat'; el('feedback-form').fire('submit'); await tick(); await tick();
-  assert(send.disabled && send.first?.className === 'btn-spin' && text.readOnly && email.readOnly && el('feedback-cancel').disabled, 'spinner + locked');
+  fb.show(); text.value = 'Un altre missatge'; el('feedback-form').fire('submit'); await tick(); await tick();
+  assert(send.disabled && send.first?.className === 'btn-spin' && text.readOnly && el('feedback-cancel').disabled, 'spinner + locked');
   let prevented = false; menu.fire('cancel', { preventDefault() { prevented = true; } });
   assert(prevented, 'Escape / a tap outside do nothing while it sends');
   assert(menu.open && el('feedback-cancel').disabled, '«Ara no» is disabled (a disabled button gets no clicks)');
@@ -106,17 +127,4 @@ assert.equal(text.value, '', 'closing a seeded sheet empties it, so the next pla
 }
 globalThis.setTimeout = realTimeout;
 
-{ // a profile's confirmed address: filled in and not editable; a sign-out frees the field again
-  let mail = 'conf@exemple.cat', fail = false;
-  const f = setupFeedback({ focusIn() {}, captcha, service, doc, confirmedEmail: async () => { if (fail) throw new Error('offline'); return mail; } });
-  menu.close(); email.value = 'altre@exemple.cat'; f.show(); await tick();
-  assert.equal(email.value, 'conf@exemple.cat', 'the confirmed address replaces a typed one'); assert(email.readOnly, 'and cannot be changed');
-  let got = null; service.send = async m => { got = m; return true; };
-  text.value = 'Un missatge prou llarg'; await submit(); assert.equal(got?.email, 'conf@exemple.cat', 'it is the one sent'); assert(!menu.open);
-  mail = ''; f.show(); await tick();
-  assert.equal(email.value, '', 'signed out: the locked address goes'); assert(!email.readOnly, 'and the field is free');
-  menu.close(); mail = 'conf@exemple.cat'; fail = true; email.value = 'meu@exemple.cat'; f.show(); await tick();
-  assert.equal(email.value, 'meu@exemple.cat'); assert(!email.readOnly, 'no answer from the server: the field stays as it was');
-  menu.close();
-}
 console.log('feedback sheet ok');

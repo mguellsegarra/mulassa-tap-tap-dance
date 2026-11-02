@@ -53,7 +53,7 @@ const WEAK = Object.freeze({ ...RUN, counts: Object.freeze({ perfect: 60, good: 
 
 function make({ configured = true, publishingEnabled = true, captchaRequired = true, siteKey = 'site', session = false, persistent = true, email = 'contacte@example.test',
   detachedPrivacy = false, alias = null, afterPublish = null, onRecover = null, automated = false, ua = '', standalone = false, touch = 0,
-  prof, onConfirm = null, mail = '', onCard, onSeasons, onKeep = null, canPlay, onPlay } = {}) { // prof: what service.profile() answers (undefined: a service without it)
+  prof, onConfirm = null, mail = '', onCard, onSeasons, canPlay, onPlay } = {}) { // prof: what service.profile() answers (undefined: a service without it)
   doc = { activeElement: null, els: new Map(), getElementById(id) { return this.els.get(id); }, createElement: tag => new El(tag) };
   for (const id of ids) doc.els.set(id, new El('x', id));
   doc.els.set('privacy-contact', Object.assign(new El('p', 'privacy-contact'), { hidden: true, dataset: { email } }));
@@ -96,7 +96,7 @@ function make({ configured = true, publishingEnabled = true, captchaRequired = t
     verifyOpts: { report: (k, t) => reports.push([k, t]), log: { warn() {} }, schedule() {} },
     afterPublish: afterPublish && (() => { shares.push(1); afterPublish(); }), settle: 0, observe: (el, root, fn) => { io.el = el; io.fire = fn; },
     onRecover, env: () => ({ ua, standalone, touch }), persist: async () => { calls.persist++; return true; },
-    onConfirm, onCard, onSeasons, onKeep, canPlay, onPlay, acceptStats: () => { calls.accept++; } });
+    onConfirm, onCard, onSeasons, canPlay, onPlay, acceptStats: () => { calls.accept++; } });
   const [figMula, figDrac] = $('board-figures').children; // «Tria figura»: built from the playable figures
   for (const b of $('board-figures').children) doc.els.set(b.id, b);
   return { board, $, calls, T, widgets, mem, focused, env, shares, reports, io, figMula, figDrac, setRun: r => listener(r), rows: () => $('board-rows').children.map(tr => tr.children.map(td => td.textContent)) };
@@ -860,8 +860,8 @@ const find = (el, test) => (test(el) ? el : el.children.map(c => find(c, test)).
 }
 // --- one board per figure and season: «Tria figura», the season's name and days left, guests, cards, an empty season, history
 {
-  const cards = [], halls = [], keeps = [];
-  const b = make({ onCard: p => cards.push(p), onSeasons: f => halls.push(f), onKeep: () => keeps.push(1), alias: 'Gegant300' });
+  const cards = [], halls = [];
+  const b = make({ onCard: p => cards.push(p), onSeasons: f => halls.push(f), alias: 'Gegant300' });
   b.T.seasons = [{ seasonId: 1, name: 'Tardor 2026', startsAt: NOW - 15 * 864e5, endsAt: NOW + 23 * 864e5, version: 'mulassa-v3', previousDance: false, players: 3, podium: [], myPosition: 2 },
     { seasonId: 0, name: 'Estrena 2026', startsAt: 0, endsAt: null, version: 'mulassa-v2-short', previousDance: false, players: 60, myPosition: null,
       podium: [{ position: 1, alias: 'Portadora', publicId: 'id-portadora', released: false, verified: true, score: 172795, difficulty: 2 }, { position: 2, alias: 'Baldufa', publicId: 'id-baldufa', released: true, verified: false, score: 171996, difficulty: 2 }] }];
@@ -872,15 +872,12 @@ const find = (el, test) => (test(el) ? el : el.children.map(c => find(c, test)).
     { position: 2, alias: 'Gegant300', public_id: 'id-me', released: false, verified: false, is_self: true, difficulty: 1, quality: 90, score: 8, total: 3, season_id: 1 }]); await tick(); await tick(); await tick();
   assert.equal(b.$('board-season').textContent, 'Tardor 2026 · queden 23 dies', 'the server\'s season: its name and the days left');
   const rows = b.$('board-rows').children;
-  assert.equal(rows.length, 3, 'a guest\'s own row has its quiet line under it');
-  assert.equal(rows[2].className, 'me-hint');
-  assert.equal(rows[2].textContent, 'Confirma el correu i tindràs la marca ✓');
-  find(rows[2], e => e.tag === 'button').click(); assert.equal(keeps.length, 1, 'it opens the e-mail step');
+  assert.equal(rows.length, 2, 'a guest\'s own row has no line under it: the offer lives on the publish sheet');
   const guest = find(rows[0], e => e.className?.includes?.('player-name'));
   assert(guest.className.includes('released') && !find(guest, e => e.className === 'tag') && find(guest, e => e.className === 'alias').textContent === 'Baldufa', 'a released profile: the plain name, faded');
   assert(!find(rows[1], e => e.className?.includes?.('player-name')).className.includes('released'), 'an active guest is not faded');
   assert(!JSON.stringify(rows.map(r => r.textContent)).includes('#'), 'no «#» in any row');
-  guest.click(); assert.deepEqual(cards.at(-1), { alias: 'Baldufa', verified: false, released: true, publicId: 'id-baldufa',
+  guest.click(); assert.deepEqual(cards.at(-1), { alias: 'Baldufa', verified: false, released: true, publicId: 'id-baldufa', badgeId: null,
     from: { figure: 'mulassa-valls', season: 'Tardor 2026', position: 1, score: 9, difficulty: 2 } }, 'a tap opens that player\'s card, with the row it came from');
   rows[1].click(); assert.equal(cards.length, 2); assert.equal(cards.at(-1).from.position, 2, 'a tap anywhere on the row (off the name) opens the same card');
   b.$('board-seasons').click(); assert.deepEqual(halls, ['mulassa-valls'], '«Temporades anteriors» for this figure');
@@ -916,7 +913,6 @@ const find = (el, test) => (test(el) ? el : el.children.map(c => find(c, test)).
   assert.deepEqual(b.calls.lists.at(-1), { version: 'mulassa-v2-short', season: 0 });
   assert.equal(b.$('board-season').textContent, 'Estrena 2026');
   b.T.alls.at(-1).resolve([{ position: 1, alias: 'Gegant300', public_id: 'id-me', is_self: true, difficulty: 1, quality: 90, score: 8, total: 1, season_id: 0 }]); await tick(); await tick();
-  assert(b.$('board-rows').children.every(tr => tr.className !== 'me-hint'), 'history: no «Confirma el correu» line');
   assert.equal(b.$('board-summary').textContent, 'Posició 1 de 1');
   b.$('board-figure').click(); b.figMula.click(); await tick();
   assert.deepEqual(b.calls.lists.at(-1), { figure: 'mulassa-valls' }, 'the pressed figure again: back to the current season');

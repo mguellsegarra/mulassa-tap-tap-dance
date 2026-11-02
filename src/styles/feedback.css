@@ -144,9 +144,9 @@ textarea.feedback-field { height: calc(4 * 1.35em + 20px); max-height: calc(8 * 
 .feedback-small { margin-top: 10px; margin-bottom: 0; color: #e8d8b8b3; font-size: 14px; line-height: 1.35; }
 .feedback-small + .feedback-small { margin-top: 4px; }
 .feedback-small .btn-link { display: inline; min-height: 0; padding: 0 2px; font-size: 14px; }
-.feedback-rights { margin-top: 12px; margin-bottom: 0; padding-top: 10px; border-top: 1px solid #f5c51833; color: #e8d8b899; font-size: 13px; line-height: 1.35; }
 .feedback-end { padding: 8px 20px 12px; }
 #feedback-status { margin: 0 0 8px; }
+@media (max-width: 359px) { #feedback-menu #feedback-title { font-size: 22px; } } /* the longest title («Proposa una figura») clears the corner X */
 #feedback-status:not(.ok) { color: #ffb4a8; }
 #feedback-status.ok { display: flex; align-items: center; justify-content: center; font-size: 20px; }
 #feedback-status.ok::after { content: ""; flex: none; width: 20px; height: 20px; margin-left: 6px; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23f5c518' d='M12 21s-8-5.1-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.9-8 11-8 11z'/%3E%3C/svg%3E") center / contain no-repeat; } /* a drawn heart, no emoji */
@@ -158,7 +158,6 @@ textarea.feedback-field { height: calc(4 * 1.35em + 20px); max-height: calc(8 * 
   textarea.feedback-field { height: calc(3 * 1.35em + 20px); }
   .feedback-meta { margin-bottom: 6px; }
   .feedback-small { margin-top: 8px; }
-  .feedback-rights { margin-top: 8px; padding-top: 8px; }
   .feedback-end { padding-top: 6px; }
 }
 @media (max-height: 500px) { /* landscape phones: the intro and the message | the e-mail and the notes; the footer across */
@@ -197,6 +196,7 @@ textarea.feedback-field { height: calc(4 * 1.35em + 20px); max-height: calc(8 * 
 #radio[data-kind="drac-valls"] .fm-dot { background: #2f8a3c; }
 #radio[data-kind="off"] .fm-dot { display: none; }
 body:has(#viewmode.idle) #radio:not(:hover, :focus-visible, [aria-expanded="true"]) { opacity: .25; transition-duration: 1s; }
+body.view-mode:has(.sel-heart-tip:not(.sel-tip-out)) :is(#viewmode, #radio, #howto.photo-help) { opacity: 1 !important; transition-duration: .25s; } /* the row stays lit while the red tip points at it; !important: over the three idle rules */
 #radio-menu { --radio-left: max(16px, env(safe-area-inset-left)); --radio-right: max(16px, env(safe-area-inset-right)); --radio-width: min(320px, calc(100% - var(--radio-left) - var(--radio-right))); position: fixed; z-index: 7; left: max(calc((100% + env(safe-area-inset-left) - env(safe-area-inset-right)) / 2), calc(var(--radio-left) + var(--radio-width) / 2)); top: calc(72px + env(safe-area-inset-top)); translate: -50% 0; box-sizing: border-box; width: var(--radio-width); padding: 12px 10px 8px; border: 2px solid #f5c518; border-radius: 20px; background: #000c; color: #fff3d6; font: 600 16px/1.3 'Baloo 2', system-ui, sans-serif; }
 #radio-menu[hidden] { display: none; }
 body:has(#radio-menu:not([hidden]), #radio-now:not([hidden])[data-visible="true"]) #photo-tip { opacity: 0; } /* one information layer while choosing or announcing music */
@@ -247,3 +247,85 @@ body:has(#radio-menu:not([hidden]), #radio-now:not([hidden])[data-visible="true"
 #radio-now .fm-art svg { width: 26px; height: 26px; }
 #radio-now b { display: block; font-weight: 800; } #radio-now small { display: block; color: #e8d8b8; font-size: 13px; }
 @media (prefers-reduced-motion: reduce) { #radio, #radio-now { transition: none; animation: none; } .fm-bars i { animation: none; height: 60%; } .fm-bars i:nth-child(2) { height: 100%; } .fm-bars i:nth-child(3) { height: 40%; } }
+
+/* The ways to write: what the message is about, above the text. Flat rows in the game's own marks; only the text fields keep a frame. */
+.feedback-choices { display: grid; gap: 2px; margin-bottom: 10px; text-align: start; }
+.feedback-choices[hidden] { display: none; }
+.feedback-choices .board-label { margin: 0 0 4px; text-align: center; }
+.feedback-choices label.board-label { margin-top: 8px; }
+.feedback-choices label:not(.board-label) { display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0; border-radius: 10px; color: #fff3d6; font-size: 16px; font-weight: 700; cursor: pointer; }
+.feedback-choices input[type="checkbox"], .feedback-choices input[type="radio"] { appearance: none; flex: none; display: grid; place-items: center; width: 22px; height: 22px; margin: 0; border: 2px solid #f5c518; border-radius: 6px; background: none; cursor: pointer; }
+.feedback-choices input[type="radio"] { border-radius: 50%; }
+.feedback-choices input:checked { background: #f5c518; }
+.feedback-choices input[type="checkbox"]:checked::after { content: ""; width: 10px; height: 5px; margin-top: -3px; border: solid #2a1a10; border-width: 0 0 2.5px 2.5px; rotate: -45deg; }
+.feedback-choices input[type="radio"]:checked::after { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #2a1a10; }
+.feedback-choices input:focus-visible { outline: 3px solid #fff3d6; outline-offset: 2px; }
+.feedback-icon { flex: none; width: 24px; height: 24px; margin-inline-end: -2px; fill: none; stroke: #f5c518; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.feedback-kind { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; margin-bottom: 10px; padding: 3px; border-radius: 12px; background: #140c07; }
+.feedback-kind[hidden] { display: none; }
+.feedback-kind label { display: grid; place-items: center; min-height: 44px; padding: 2px 6px; border-radius: 9px; color: #e8d8b8; font-size: 14px; font-weight: 700; line-height: 1.15; text-align: center; cursor: pointer; }
+.feedback-kind input { position: absolute; opacity: 0; pointer-events: none; }
+.feedback-kind label:has(input:checked) { background: var(--button-gold-bg); color: #2a1a10; }
+.feedback-kind label:has(input:focus-visible) { outline: 3px solid #fff3d6; outline-offset: 2px; }
+.feedback-small[hidden] { display: none; }
+#feedback-material .feedback-small { text-align: right; }
+#feedback-menu:focus { outline: none; }
+#feedback-menu:has(.feedback-choices:not([hidden])) .feedback-field::placeholder { color: #e8d8b899; }
+#feedback-menu:has(.feedback-choices:not([hidden])) .feedback-scroll { padding-bottom: 14px; }
+#feedback-menu:has(.feedback-choices:not([hidden])) .board-label { text-align: start; } /* the choices read from one left edge, with their fields */
+.feedback-choices .feedback-small { margin: 2px 0 0; max-width: none; text-align: start; }
+.feedback-meta { gap: 0; }
+#feedback-error:not(:empty) { margin-inline-end: 6px; }
+@media (max-height: 600px) {
+  #feedback-menu:has(.feedback-choices:not([hidden])) .feedback-lead { margin-bottom: 6px; font-size: 14px; }
+  #feedback-menu:has(.feedback-choices:not([hidden])) textarea.feedback-field { height: calc(2 * 1.35em + 20px); }
+  #feedback-menu:has(#feedback-entity:not([hidden])) textarea.feedback-field { height: 54px; }
+  #feedback-entity-label, #feedback-material-label { display: none; } /* the title already asks: the room goes to the air above Envia */
+  #feedback-menu:has(.feedback-choices:not([hidden])) .feedback-scroll { padding-top: 10px; }
+  #feedback-menu:has(.feedback-choices:not([hidden])) .feedback-meta { margin-bottom: 4px; }
+  .feedback-choices { margin-bottom: 4px; }
+  .feedback-choices label.board-label { margin-top: 2px; }
+  .feedback-choices label:not(.board-label) { font-size: 15px; }
+}
+/* The e-mail gate belongs with the short sheets: same width, one centred axis. */
+#gate-menu { width: min(400px, calc(100vw - 32px)); padding: 20px 20px 18px; text-align: center; }
+#gate-menu h2 { text-wrap: balance; }
+#gate-seal { display: flex; justify-content: center; margin-bottom: 8px; } #gate-perks { display: flex; justify-content: center; }
+#gate-menu p { margin: 0 0 16px; font-size: 16px; font-weight: 600; line-height: 1.35; color: #e8d8b8; text-wrap: balance; }
+/* what confirming earns: a warm panel, its label a tab on the edge */
+#gate-panel { margin: 24px 0 18px; padding: 14px 12px; border: 2px solid #f5c51866; border-radius: 14px; background: linear-gradient(180deg, #f5c5181f, #f5c51808); }
+/* in the flow, so a longer translation that wraps pushes the list down instead of covering it */
+#gate-perks-lead { display: block; width: fit-content; margin: -27px auto 12px; padding: 3px 12px; border-radius: 14px; background: #f5c518; color: #2a1a10; font-size: 13px; font-weight: 800; line-height: 1.25; text-wrap: balance; }
+@media (max-width: 359px) { #gate-perks-lead { font-size: 12px; padding-inline: 8px; } }
+#gate-perks li { text-align: left; } /* a perk that wraps stays beside its icon */
+#gate-menu .sheet-actions { display: grid; gap: 12px; }
+@media (max-height: 600px) { /* the smallest phones: the list and both buttons fit whole, in the longest languages too */
+  #gate-seal { display: none; } #gate-menu h2 { font-size: 26px; } #gate-menu p { margin-bottom: 10px; font-size: 15px; }
+  #gate-panel { margin: 22px 0 12px; padding-block: 10px; } #gate-perks-lead { margin-top: -23px; margin-bottom: 8px; } #gate-menu .publish-perks { gap: 6px; } #gate-menu .sheet-actions { gap: 8px; }
+}
+/* Short phones, the sheet with the two ways to help: the labels the choices already explain give way first, then the title (the figure's name stays). */
+@media (max-height: 700px) {
+  #feedback-menu:has(.feedback-kind:not([hidden])) :is(#feedback-entity-label, #feedback-material-label) { display: none; }
+  #feedback-menu:has(.feedback-kind:not([hidden])) textarea.feedback-field { height: calc(2 * 1.35em + 20px); }
+  #feedback-menu:has(.feedback-kind:not([hidden])) .feedback-choices label:not(.board-label) { min-height: 38px; }
+}
+@media (max-height: 600px) {
+  #feedback-menu:has(.feedback-kind:not([hidden])) #feedback-title { display: none; }
+  #feedback-menu:has(.feedback-kind:not([hidden])) .feedback-lead { margin: 0 32px 6px; font-weight: 800; }
+  #feedback-menu:has(#feedback-entity:not([hidden])) textarea.feedback-field { height: 46px; }
+}
+/* The longest languages on the shortest phones: the message's label stays for screen readers, the field's own hint says it. */
+@media (max-height: 600px) {
+  #feedback-menu:has(.feedback-kind:not([hidden])) .feedback-msg > .board-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  #feedback-menu:has(.feedback-kind:not([hidden])) .feedback-small { font-size: 12px; line-height: 15px; }
+}
+@media (max-height: 700px) { #feedback-menu:has(.feedback-kind:not([hidden])) .feedback-meta { margin-bottom: 4px; } }
+/* Short screens, colla or entity: the name's own hint says what it asks, so its label gives its room to the air above Envia. */
+@media (max-height: 700px) {
+  #feedback-menu:has(.feedback-kind:not([hidden])) #feedback-entity label.board-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+}
+/* Three ways to help: the tabs share the row; the code tab replaces the fields with its one sentence. */
+.feedback-kind { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.feedback-kind label { font-size: 13px; }
+#feedback-code { margin: 4px 0 10px; }
+#feedback-code[hidden], #feedback-fields[hidden] { display: none; }

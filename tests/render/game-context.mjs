@@ -79,7 +79,7 @@ class Renderer {
   render() {}
 }
 const context = vm.createContext({
-  ...leaderboardResult, leaderboard: { configured: true },
+  ...leaderboardResult, leaderboard: { configured: true, identity: async () => ({ hasSession: true, email: 'jo@exemple.cat' }) },
   ...await import('../../src/figures/drac/dance-drac.js'), ...await import('../../src/figures/drac/drac-feet.js'), ...await import('../../src/figures/drac/drac-motion.js'), ...await import('../../src/figures/drac/drac.js'),
   // the Drac's revised dance (pure modules, provided like the old one): only the names the inlined scene code uses
   poseAt: (await import('../../src/figures/drac/drac-pose.js')).poseAt, REF_END: (await import('../../src/figures/drac/drac-pose.js')).REF_END, feetAt: (await import('../../src/figures/drac/drac-steps.js')).feetAt,

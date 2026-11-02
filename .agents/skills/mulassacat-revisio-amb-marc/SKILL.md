@@ -12,6 +12,7 @@ Apply only to Mulassa and its checkouts. The global CLAUDE/AGENTS instructions (
 - When a design is open (a button, a card, a banner, an icon, a model's head, a festa effect, a banknote), show **3–5 visibly different proposals** side by side, labelled with letters, in one HTML page or a preview the owner can open. They answer "the B, with…".
 - Proposals use the game's real assets: render the real 3D models, the real note lane and buttons, the real palette. Generated images are for exploration only, and never for art that ends up in the game unless asked.
 - Check each proposal yourself before showing it; leave out the ones you would reject.
+- Before showing any UI, run the jury in `uipolish` («Judging before showing»): your own look at the whole screen first, then fresh jurors who see no past findings or scores.
 - Show it before running any test or `npm run check`; those run once the owner gives the OK (AGENTS.md, Process).
 
 ## Review pages the owner can annotate

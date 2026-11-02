@@ -7,7 +7,7 @@ import { tr } from '../../src/i18n/messages.js';
 // Exercise the actual picker with deferred decodes and Chip's real menu/radio transitions.
 const tick = () => new Promise(resolve => setImmediate(resolve));
 class Node {
-  constructor(i) { this.dataset = { i }; this.style = { setProperty() {} }; this.listeners = {}; this.attrs = {}; this.parts = {}; }
+  constructor(i) { this.dataset = { i }; this.style = { setProperty() {} }; this.listeners = {}; this.attrs = {}; this.parts = {}; this.classes = new Set(); this.classList = { add: k => this.classes.add(k) }; this.offsetWidth = 200; }
   setAttribute(k, v) { this.attrs[k] = v; }
   addEventListener(k, f) { this.listeners[k] = f; }
   querySelector(k) { return this.parts[k] ??= new Node(); }
@@ -31,13 +31,14 @@ Object.assign(chip, {
 });
 let button, announcement;
 const figure = id => ({ id, song: id, composer: 'F. Bofarull', year: 1987 });
-const helpVars = {}, seen = new Map();
+const helpVars = {}, seen = new Map(), tips = [];
+let helpOnScreen = null;
 const context = vm.createContext({ tr, chip, store: { get: k => seen.get(k) ?? null, set: (k, v) => seen.set(k, v) }, menuMusic: true, MULASSA: figure('mulassa'), DRAC: figure('drac'), BOU: figure('bou'), playable: () => true, // every figure on the radio: the release gate is tests/figures/common/traits.mjs's
   figureSong: id => ({ audio: id, tail: 90, beats: [0, 1] }), portraitArt() {}, portraitPalette() {}, pixelSvg: () => '',
   mulaSpinner: () => ({}), PHOTO: { on: false }, clearPhotoKeys() {}, hud: {}, keyboardNav: false, beatAtTime() {},
   errors: { report: (...args) => failures.push(args) }, audioFailureTags: e => ({ name: e.name }),
   setMenuSound(on) { context.menuMusic = on; chip.setMenuMusic(on); },
-  document: { createElement: () => new Node(), activeElement: null, body: { style: { setProperty: (k, v) => { helpVars[k] = v; } } } },
+  document: { createElement: () => new Node(), activeElement: null, hidden: false, querySelector: () => helpOnScreen, body: { style: { setProperty: (k, v) => { helpVars[k] = v; } }, classList: { contains: () => false }, append: t => tips.push(t) } },
   addEventListener() {}, innerWidth: 1280, setTimeout: () => 0, clearTimeout() {},
 });
 vm.runInContext(readFileSync(new URL('../../src/ui/free-music.js', import.meta.url), 'utf8')
@@ -96,8 +97,17 @@ assert(chip.menuSrc && !chip.radioSrc, 'leaving between natural ended and the ne
   player.playFigure('drac'); await decode(asked);
   assert(button.dataset.kind === 'drac' && chip.radioSrc, 'Ball lliure plays her song');
   assert(announcement.hidden, 'entering says nothing: the controls\' intro has the screen');
-  player.discover(); assert(!announcement.hidden && announcement.innerHTML.includes('drac'), 'once the intro is gone the status says what sounds');
-  player.visible(false); player.visible(true); player.discover(); assert(announcement.hidden, 'told once ever, not on each entry');
+  const later = []; context.setTimeout = fn => later.push(fn);
+  button.getBoundingClientRect = () => ({ left: 100, width: 50, bottom: 60 });
+  helpOnScreen = {}; player.discover();
+  assert(tips.length === 0 && !seen.has('radio-tip-seen'), 'a help on screen: the tip waits, its one showing unspent');
+  helpOnScreen = null; later.pop()();
+  assert(tips.length === 1 && tips[0].textContent === tr('ui.radio.tip') && seen.get('radio-tip-seen') === '1', 'the help gone, the waiting tip shows by itself');
+  assert(parseFloat(tips[0].style.top) - 9 - 5 > 60 + 2, 'the tail (9 px) at the top of its bob (5 px) clears the button and its dot (2 px)');
+  context.setTimeout = () => 0;
+  player.visible(false); assert(tips[0].classes.has('sel-tip-out'), 'leaving free play takes it away');
+  seen.delete('radio-tip-seen'); // storage that keeps nothing
+  player.visible(true); player.discover(); assert(tips.length === 1 && announcement.hidden, 'told once, not on each entry, even with storage blocked');
   player.visible(false); context.setMenuSound(false); player.visible(true);
   player.playFigure('mulassa');
   assert(requests.length === asked + 1 && button.dataset.kind === 'off', 'with the menu music off, nothing starts');
@@ -134,5 +144,11 @@ assert(chip.menuSrc && !chip.radioSrc, 'leaving between natural ended and the ne
   rows[3].listeners.click(); await tick();
   assert(context.menuMusic === false && !chip.radioSrc && !chip.menuSrc, 'Sense música stops the song and does not bring the menu loop back');
   p2.visible(false);
+  // a new device whose player found the list alone needs no tip
+  seen.delete('radio-tip-seen'); const shown = tips.length; let b3;
+  const p3 = ctx2.setupFreeMusic({ eye: { after(b) { b3 = b; }, getBoundingClientRect: () => ({ right: 60, top: 10, bottom: 60, width: 50, height: 50 }) }, onSound() {} });
+  p3.visible(true); b3.listeners.click(); b3.listeners.click(); p3.discover();
+  assert(tips.length === shown && seen.get('radio-tip-seen') === '1', 'opening the list spends the tip');
+  p3.visible(false);
 }
 console.log('free music: natural handover, manual/ended/decode races, repeated choice, silence, resume and exit ok');

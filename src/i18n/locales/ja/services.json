@@ -38,7 +38,6 @@
   "services.captcha.unauthorized": "このサイトはCloudflareの確認を利用する許可がありません。",
   "services.captcha.unsupported": "このブラウザーは確認機能に対応していません。別のブラウザーを試してね。",
   "services.feedback.captcha": "ロボットでないことを確認できませんでした。もう一度試してね。",
-  "services.feedback.invalid_email": "返信できるよう、有効なメールを入力してね（例：nom@domini.cat）。",
   "services.feedback.invalid_message": "メッセージは{min}～{max}文字にしてね。",
   "services.feedback.offline": "接続がありません。確認してもう一度試してね。",
   "services.feedback.rate_limit": "続けてたくさん送信しています。少し待ってからもう一度試してね。",
@@ -53,5 +52,6 @@
   "services.share.drac.record": "{mula}🔥 スコア新記録！Drac de Vallsを踊らせて、{diff}で{score}点（ヒット率{pct}）！ 🎉",
   "services.share.bou": "Bou Tradicional de Vallsを踊らせて、{diff}でヒット率{pct}でした。 #Valls",
   "services.share.fail": "{mula} {diff}でヒット率{pct}… Mulassaがリベンジを待ってます。あなたならどう？ 💃",
-  "services.share.record": "{mula}🔥 スコア新記録！Mulassa de Vallsを踊らせて、{diff}で{score}点（ヒット率{pct}）！ 🎉"
+  "services.share.record": "{mula}🔥 スコア新記録！Mulassa de Vallsを踊らせて、{diff}で{score}点（ヒット率{pct}）！ 🎉",
+  "services.feedback.daily_limit": "今日はもう3回送信したよ。{time}からまた送れるよ。"
 }

@@ -26,7 +26,6 @@ export function setupBoard({ focusIn, store = defaultStore, service = leaderboar
   canPrompt = () => true, onRecover = null, // onRecover: «Recupera’l» on the publish sheet (main.js → src/ui/profile-ui.js)
   onConfirm = null, // «Confirma el correu» under a guest's «Publicat!» ({ place }: Comparteix after it)
   onCard = () => {}, onSeasons = () => {}, // a name tapped (src/ui/player-card.js); «Temporades anteriors» (src/ui/seasons-ui.js) for a figure
-  onKeep = null, // «Confirma el correu per no perdre el perfil» under a guest's own row (the Perfil's e-mail step)
   currentFigure = () => null, // the selector's figure: the board opens on it when no run is on the results screen
   canPlay = () => false, onPlay = () => {}, // an empty open board over the bare selector: «Juga amb …» leaves that figure selected there
   acceptStats = () => {}, // a publication showed the statistics note (src/services/stats-sync.js may send them now)
@@ -67,7 +66,7 @@ export function setupBoard({ focusIn, store = defaultStore, service = leaderboar
     ? setupVerify({ doc, siteKey, load: captcha, canShow: canVerify, ...verifyOpts }) : null;
   subscribe(r => { runs.snapshot = r; }); // the frozen run of the results screen; cleared by the title or a new run
 
-  const { openBoard } = setupBoardList({ doc, $, service, store, focusIn, minLoad, now, observe, onCard, onSeasons, onKeep, currentFigure, canPlay, onPlay,
+  const { openBoard } = setupBoardList({ doc, $, service, store, focusIn, minLoad, now, observe, onCard, onSeasons, currentFigure, canPlay, onPlay,
     canPublish: () => Boolean(canWrite && runs.snapshot && runs.published !== runs.snapshot), runFigure: () => VERSION_RULES[runs.snapshot?.version]?.figureId,
     openPublish: () => openPublish(), publishing: () => publishMenu.open });
   const { openPublish, publishQuietly } = setupPublish({ doc, $, service, store, focusIn, now, runs, canWrite, verify, deviceNote, openBoard,

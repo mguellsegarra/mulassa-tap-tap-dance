@@ -10,6 +10,7 @@ import { shareText, challengeUrl, challengeResult, bragWorthy, shareMode, linkMo
 import { drawCard, cardAlt, toJpeg, loadCardFonts } from '../hud/share-card.js';
 import { ALIAS_KEY, savedName } from '../services/leaderboard-identity.js';
 import { errors } from '../services/errors.js';
+import { badgeImage } from './player-badges.js';
 
 const FORMAT_KEY = 'share-format';
 // The photo is a synchronous GPU render and read-back: let the sheet paint and finish coming in (index.html share-in,
@@ -69,7 +70,12 @@ export function setupShare({ focusIn, restore = () => {}, hero = () => null, sta
       if (r !== req || !menu.open) return;
       if (!photo) { photo = await hero(d.figureId); if (r !== req || !menu.open) return; } // the figure's fixed photo, every format (share-card.js loadPhoto)
       named = JSON.stringify(nameNow()); // read now: the profile's answer may have come while the photo loaded
-      const canvas = drawCard(doc.createElement('canvas').getContext('2d'), f, data(), photo);
+      const drawn = data();
+      if (drawn.verified) { // the picture first, while nothing is on the canvas: drawCard stays synchronous, and no picture draws the check
+        drawn.badge = await badgeImage(nameNow()?.badgeId);
+        if (r !== req || !menu.open) return;
+      }
+      const canvas = drawCard(doc.createElement('canvas').getContext('2d'), f, drawn, photo);
       const out = await toJpeg(canvas, 0.9, d.figureId);
       if (r !== req || !menu.open) return;
       file = out; fresh = true;

@@ -42,6 +42,21 @@ The measurement loop below is the self-check: list child left/right edges, gaps,
 5. **Validate** the matrix: measured numbers before and after, plus captures you actually look at. Emulate HEAD with an override `<style>` in the same page when you need a fair "before" at every size, and check that the override reproduces one real HEAD measurement.
 6. **Ask, don't guess, on real design forks** (spread vs compact group, full-width vs compact primary, reviving dead styles): show a small A/B of captures and ask.
 
+## Judging before showing
+
+A passed checklist is not an approval: equal margins can be met by a big hole in the middle of a card.
+
+1. **Look first, measure after.** Look at the whole screen and say what a person sees first: holes, weight, balance, what clashes. Numbers confirm the look and never replace it.
+2. **Record the transitions** and trace element positions frame by frame while changing item or state. Anything that moves under the finger is a defect.
+3. **Fresh jurors.** Several models judge the captures knowing only the purpose: no past findings, no earlier scores, no proposed fixes. They start by saying what looks wrong at a glance.
+4. **A juror's fix is a proposal.** After applying it, look at the whole card again: it may have moved the defect.
+5. **"Was X fixed" is a separate, short pass.** It does not replace the fresh look, and its result is not a verdict.
+6. **A gap table is mandatory, and it is what "spaced well" means.** For every state of the card (each data case: nothing, some, all; before and after an action) at every viewport, list the distance in painted pixels between consecutive rows, plus top, bottom and side margins. Measure the pixels of the capture: a `Range` around text still returns the font's line box, which here adds up to 12 px and can even give negative gaps. In a multi-column layout also measure across columns (button to button): a list of consecutive rows misses them. Pass: same-level gaps within 4 px of each other, top and bottom within 4 px, gaps inside a group smaller than gaps between groups. "Nothing overflows" and "the rows do not move" say nothing about spacing. Put the table in the report; a claim of good spacing without it is not allowed.
+7. **The verdict belongs to the exact state shown.** Any change after the last look, even one line or one text, voids the verdict for the screens it touches. Before handing over, re-measure and look again at the final state of each of them, including the pressed state. Name the date of the jury's images against the last edit; say "not judged" when they do not match. Never let an earlier score stand for the current screen.
+8. **Jurors measure too.** Give them the gap table and the captures of every state, and ask them to name the largest and smallest gap in each. A juror who opened only some images has judged only those.
+9. **Keep it proportional.** Few jurors and few images; no round for a small retouch; stop when a fresh look finds nothing. Report what you saw yourself, not a juror's score.
+10. **Tests click the real control.** Check that ids are unique before trusting a flow: a duplicate id lets a test pass on the wrong element.
+
 ## QA matrix
 
 Phones 320×568, 375×667, 393×852, 430×932; tablet 1024×768 (landscape); desktop 1280×800, a wide-short window (e.g. 1440×600 or 1440×700) and a large one (1920×1080). Add a resize sweep across the component's breakpoints, the longest real copy and names, and reduced motion if the change touches animation. Check the neighbouring states that share the CSS (e.g. the single-item variant of the same card) so the fix doesn't break them.

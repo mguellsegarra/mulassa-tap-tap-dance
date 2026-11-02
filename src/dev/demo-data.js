@@ -29,6 +29,8 @@ const GUEST_BASES = ['Timbaler', 'Timbaler', 'Timbaler', 'Portadora', 'Portadora
   'Cantaire', 'Tonyina', 'Fira', 'Fira', 'Gralla', 'Pelut', 'Rumba', 'Bombolla', 'Tarat', 'Cargol', 'Pessic', 'DracDeValls_2026', 'Mulassa', 'Mulassa',
   'Sargantana', 'Esquerrà', 'Tabal', 'Faroner', 'Arlequí', 'Quimera', 'Gatzara', 'Bruixot', 'Flabiol', 'Xaloc', 'Cobla', 'Cobla', 'Tamborer', 'Roda'];
 
+// most confirmed players show a badge; null and an unknown id draw the check
+const DEMO_BADGES = ['town:valls', 'uaf', 'colla-vella', 'estelada-groga', 'pessigolla', null, 'colla-joves', 'senyera', 'town:reus', 'estelada-blava', 'campanar-valls', 'town:from-the-future', 'occitana', 'andorra', 'mallorca', 'alguer', 'town:barcelona', 'town:tarragona'];
 // A seeded cast: verified players and guests, each with a skill 0-1 and its public id. Every 7th guest (and Estrella) is
 // released: its name went to somebody else after 30 idle days, so its rows are faded.
 function cast(seed) {
@@ -36,7 +38,7 @@ function cast(seed) {
   const add = (name, verified, released = false) => {
     if (used.has(aliasKey(name))) return;
     used.add(aliasKey(name));
-    people.push({ id: people.length, alias: name, verified, released, publicId: demoPublicId(name), skill: Math.min(1, r() ** 0.8) });
+    people.push({ id: people.length, alias: name, verified, released, publicId: demoPublicId(name), badgeId: verified ? DEMO_BADGES[people.length % DEMO_BADGES.length] : null, skill: Math.min(1, r() ** 0.8) });
   };
   VERIFIED.forEach(n => add(n, true));
   for (let i = 0, guests = 0; guests < 64 && i < 400; i++) {
@@ -143,7 +145,7 @@ export function buildWorld({ world = 'launch', board = null, drac = null, now = 
   const fill = (seasonId, version, count, order, previousDance = false) => {
     const rows = [...people.filter(p => MUST.has(p.alias)), ...shuffled(people.filter(p => !MUST.has(p.alias)), r)].slice(0, count).map(p => {
       const run = makeRun(version, level(p.skill, r), p.skill, r);
-      return { pid: p.id, alias: p.alias, publicId: p.publicId, released: p.released, verified: p.verified, ...run };
+      return { pid: p.id, alias: p.alias, publicId: p.publicId, released: p.released, verified: p.verified, badgeId: p.badgeId, ...run };
     });
     boards.push({ seasonId, version, figure: figureOf(version), order, previousDance, rows });
   };

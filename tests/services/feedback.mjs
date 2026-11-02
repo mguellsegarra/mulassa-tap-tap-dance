@@ -16,7 +16,9 @@ assert.equal((raw.match(/^export /gm) || []).length, 1, 'only the default handle
 const source = raw.replace(/^import .*;\n/, '').replace(/^export default /m, '__exports.default = ');
 assert.equal(/const EMAIL = (\/.*\/);/.exec(source)?.[1], String(EMAIL), 'the Worker checks e-mails with the same pattern as the client');
 const toml = readFileSync(new URL('../../workers/feedback/wrangler.toml', import.meta.url), 'utf8');
-assert.match(toml, /^name = "mulassa-feedback"$/m);
+assert.match(toml, /^name = "mulassa-feedback-v2"$/m, 'never the old Worker\'s name: cached 1.2.6 clients still need it');
+assert.match(toml, /^\[env\.beta\]\nname = "mulassa-feedback-beta"$/m);
+assert.equal((toml.match(/^SUPABASE_URL = /gm) || []).length, 2, 'each Worker names its own project: a deploy without it answers 503');
 assert.match(toml, /^\[\[send_email\]\]\nname = "MAIL"\n/m, 'the send_email binding');
 assert.match(toml, /^FEEDBACK_FROM = "holi@mulassa\.cat"$/m);
 assert.doesNotMatch(toml, /^(destination_address|FEEDBACK_TO|TURNSTILE_SECRET_KEY) *=/m, 'the recipient and the Turnstile key are secrets, not in the repo');
@@ -43,10 +45,18 @@ const sent = []; // every EmailMessage handed to env.MAIL.send
 class EmailMessage { constructor(from, to, raw) { this.from = from; this.to = to; this.raw = raw; } }
 const MAIL = { async send(m) { if (sendFail) throw sendFail; assert(m instanceof EmailMessage); sent.push(m); } };
 const env = { ALLOWED_ORIGINS: 'http://localhost:5178, https://mulassa.cat', TURNSTILE_SECRET_KEY: 'ts-secret',
-  FEEDBACK_FROM: 'holi@mulassa.cat', FEEDBACK_TO: 'dest@example.test', MAIL, PER_IP, ALL, DAILY, DAILY_MAX: '200' };
+  FEEDBACK_FROM: 'holi@mulassa.cat', FEEDBACK_TO: 'dest@example.test', MAIL, PER_IP, ALL, DAILY, DAILY_MAX: '200',
+  SUPABASE_URL: 'https://auth.test', SUPABASE_PUBLISHABLE_KEY: 'pub' };
+let authDown = false;
+const authUser = bearer => bearer === 'guest' ? { id: 'g', is_anonymous: true, email: '' } : bearer === 'unconfirmed' ? { id: 'n', email: 'n@exemple.cat', email_confirmed_at: null } : { id: bearer, email: 'jo@exemple.cat', email_confirmed_at: '2026-01-01' };
 const fetchMock = async (url, init) => {
+  if (String(url) === 'https://auth.test/auth/v1/user') {
+    if (authDown) return new Response('down', { status: 500 });
+    const bearer = init.headers.authorization.replace('Bearer ', '');
+    return bearer === 'expired' ? new Response('{}', { status: 401 }) : Response.json(authUser(bearer));
+  }
   calls.push(String(url));
-  assert.equal(String(url), 'https://challenges.cloudflare.com/turnstile/v0/siteverify', 'Turnstile is the only fetch');
+  assert.equal(String(url), 'https://challenges.cloudflare.com/turnstile/v0/siteverify', 'Turnstile and Auth are the only fetches');
   assert.equal(init.method, 'POST');
   assert.equal(init.headers['content-type'], 'application/x-www-form-urlencoded');
   assert(init.body instanceof URLSearchParams, 'a urlencoded form, as Cloudflare documents it');
@@ -66,13 +76,13 @@ vm.runInNewContext(source, {
 });
 const worker = __exports.default;
 const handler = req => worker.fetch(req, env);
-let ipN = 0;
+let ipN = 0, userN = 0; // every case its own account too, so the daily limit only bites where it is tested
 const freshIp = () => `203.0.113.${++ipN}`; // every case its own IP, so the rate limit only bites where it is tested
 const post = (body, { origin = 'http://localhost:5178', ip = freshIp(), headers = {} } = {}) => handler(new Request('https://mulassa-feedback.test.workers.dev/', {
-  method: 'POST', headers: { 'content-type': 'application/json', 'cf-connecting-ip': ip, 'user-agent': 'UA'.repeat(200),
+  method: 'POST', headers: { 'content-type': 'application/json', 'cf-connecting-ip': ip, 'user-agent': 'UA'.repeat(200), authorization: `Bearer u${++userN}`,
     ...(origin ? { origin } : {}), ...headers },
   body: typeof body === 'string' ? body : JSON.stringify(body) }));
-const good = { message: '  Molt bon joc!  ', email: 'jo@exemple.cat', turnstileToken: 'good-token', version: '1.0.0+abc' };
+const good = { kind: 'general', message: '  Molt bon joc!  ', turnstileToken: 'good-token', version: '1.0.0+abc' };
 const codeOf = async r => [r.status, (await r.json()).error];
 const nothingSent = (label, n = 0) => { assert.equal(calls.length, n, `${label}: Turnstile calls`); assert.equal(sent.length, 0, `${label}: no mail`); };
 // a raw message → { headers: Map(lowercase name → value), text } (base64 body decoded as UTF-8)
@@ -90,7 +100,7 @@ const decodeWord = v => v.replace(/\?=\r\n =\?/g, '?==?').replace(/=\?UTF-8\?B\?
 const pre = await handler(new Request('https://w.test', { method: 'OPTIONS', headers: { origin: 'https://mulassa.cat' } }));
 assert.equal(pre.status, 204); assert.equal(pre.headers.get('access-control-allow-origin'), 'https://mulassa.cat');
 assert.match(pre.headers.get('access-control-allow-methods'), /POST/); assert.equal(pre.headers.get('vary'), 'Origin');
-assert.match(pre.headers.get('access-control-allow-headers'), /content-type/);
+assert.match(pre.headers.get('access-control-allow-headers'), /content-type/); assert.match(pre.headers.get('access-control-allow-headers'), /authorization/);
 const preBad = await handler(new Request('https://w.test', { method: 'OPTIONS', headers: { origin: 'https://evil.invalid' } }));
 assert.equal(preBad.status, 403); assert.equal(preBad.headers.get('access-control-allow-origin'), null);
 const denied = await post(good, { origin: 'https://evil.invalid' });
@@ -99,7 +109,7 @@ assert.deepEqual(await codeOf(await handler(new Request('https://w.test', { meth
 nothingSent('CORS / method');
 
 // not configured: the Turnstile secret, the sender, the recipient or the binding missing
-for (const k of ['TURNSTILE_SECRET_KEY', 'FEEDBACK_FROM', 'FEEDBACK_TO', 'MAIL', 'PER_IP', 'ALL', 'DAILY', 'DAILY_MAX']) {
+for (const k of ['TURNSTILE_SECRET_KEY', 'FEEDBACK_FROM', 'FEEDBACK_TO', 'MAIL', 'PER_IP', 'ALL', 'DAILY', 'DAILY_MAX', 'SUPABASE_URL', 'SUPABASE_PUBLISHABLE_KEY']) {
   const v = env[k]; delete env[k];
   assert.deepEqual(await codeOf(await post(good)), [503, 'not_configured'], `no ${k}`);
   env[k] = v;
@@ -116,11 +126,44 @@ assert.equal((await post({ ...good, message: '😀'.repeat(1000) })).status, 200
 assert.ok(parse(sent[0].raw).text.startsWith('😀'.repeat(1000) + '\r\n'), 'emoji survive the base64 round trip');
 sent.length = 0; calls = [];
 
-// e-mails: the strict pattern; nothing that could break a mail header gets through
-for (const email of ['a@b.cat\r\nBcc: x@y.cat', 'a@b.cat\nBcc: x@y.cat', 'a@b.cat\rBcc: x@y.cat', 'a b@c.cat', 'jo@exemple .cat', 'a@@b.cat', 'a@b@c.cat',
-  'àlex@domini.cat', 'jo@dòmini.cat', 'a@b', 'a@b.c', 'x@-b.cat', 'x@b-.cat', 'no-arroba', '"jo"@exemple.cat', `${'a'.repeat(250)}@b.cat`])
-  assert.deepEqual(await codeOf(await post({ ...good, email })), [400, 'invalid_email'], `email ${JSON.stringify(email)}`);
-nothingSent('invalid e-mails');
+// who writes: a confirmed account, and the address comes from Auth, never from the client
+const authed = (bearer, body = good) => handler(new Request('https://w.test/', { method: 'POST', headers: { 'content-type': 'application/json', 'cf-connecting-ip': freshIp(), origin: 'http://localhost:5178', ...(bearer ? { authorization: `Bearer ${bearer}` } : {}) }, body: JSON.stringify(body) }));
+assert.deepEqual(await codeOf(await authed(null)), [401, 'auth_required'], 'a client without a session');
+assert.deepEqual(await codeOf(await handler(new Request('https://w.test/', { method: 'POST', headers: { 'content-type': 'application/json', 'cf-connecting-ip': freshIp(), origin: 'http://localhost:5178' }, body: JSON.stringify({ email: 'a@b.cat', message: 'Un missatge de 1.2.6', turnstileToken: 'good-token', version: '1.2.6' }) }))), [400, 'invalid'], 'a real 1.2.6 payload is refused here: that client keeps the old Worker');
+assert.deepEqual(await codeOf(await authed('expired')), [401, 'auth_required']);
+assert.deepEqual(await codeOf(await authed('guest')), [401, 'auth_required'], 'a guest session is valid, but has no confirmed address');
+assert.deepEqual(await codeOf(await authed('unconfirmed')), [401, 'auth_required']);
+authDown = true; errors.length = 0; assert.deepEqual(await codeOf(await authed('u0')), [503, 'unavailable']); assert.equal(errors.length, 1); authDown = false;
+nothingSent('no confirmed account');
+
+// what each kind may carry
+const material = { ...good, kind: 'material', figure: { name: 'Bou de Valls' }, options: ['music'], message: 'Tinc la partitura original' };
+const entity = { ...good, kind: 'entity', figure: { name: 'Bou de Valls' }, options: ['colla'], entity: 'Colla\r\nBcc: x', message: 'Som la colla i en volem parlar' };
+for (const [body, why] of [[{ ...good, kind: 'nope' }, 'unknown kind'], [{ ...good, kind: 'constructor' }, 'not an own kind'], [{ ...good, kind: undefined }, 'no kind'],
+  [{ ...material, options: [] }, 'material with nothing marked'], [{ ...material, options: ['x'] }, 'an option from nowhere'], [{ ...material, options: ['toString'] }, 'not an own option'], [{ ...material, figure: null }, 'material about no figure'],
+  [{ ...entity, options: [] }, 'entity without a type'], [{ ...entity, options: ['colla', 'business'] }, 'two types'], [{ ...entity, entity: '  ' }, 'entity without a name'], [{ ...good, options: ['music'] }, 'a general message carries no options']])
+  assert.deepEqual(await codeOf(await post(body)), [400, 'invalid'], why);
+assert.deepEqual(await codeOf(await post({ ...material, message: 'Tinc fotos' })), [400, 'invalid_message'], 'a figure message needs 20 characters');
+nothingSent('invalid kinds');
+{ // the subject is built here, from our own words; the entity's line breaks reach no header
+  assert.equal((await post(material)).status, 200);
+  assert.equal(decodeWord(parse(sent.at(-1).raw).headers.get('subject')), '[MATERIAL] Bou de Valls · partitura · 28/9 12:00 · Tinc la partitura original');
+  assert.equal((await post(entity)).status, 200);
+  const m = parse(sent.at(-1).raw);
+  assert.match(decodeWord(m.headers.get('subject')), /^\[COLLA\] Bou de Valls · colla · /); assert(!m.headers.has('bcc'));
+  assert.match(m.text, /Entitat: Colla Bcc: x/); assert.match(m.text, /Correu confirmat: jo@exemple\.cat/);
+  assert.equal((await post({ ...entity, figure: null })).status, 200, 'a new figure has no name yet');
+  sent.length = 0; calls = [];
+}
+{ // three messages a day per account, the same across kinds; a mail that failed does not count
+  const body = { ...material };
+  for (let i = 0; i < 3; i++) assert.equal((await authed('tres', body)).status, 200, `message ${i + 1}`);
+  assert.deepEqual(await codeOf(await authed('tres', good)), [429, 'daily_limit'], 'the fourth, whatever its kind');
+  assert.equal(sent.length, 3);
+  sendFail = new Error('smtp'); assert.equal((await authed('falla', body)).status, 503); sendFail = null;
+  assert.equal(kv.get('user:falla:2026-09-28'), '0', 'not delivered: not counted');
+  sent.length = 0; calls = [];
+}
 
 // Turnstile: missing, forged, refused, or unreachable
 assert.deepEqual(await codeOf(await post({ ...good, turnstileToken: '' })), [403, 'captcha']);
@@ -158,12 +201,12 @@ assert.equal(h.get('from'), 'Mulassa Tap Tap Dance <holi@mulassa.cat>');
 assert.equal(h.get('to'), 'holi@mulassa.cat', 'To header = the shared address, so Gmail replies from it (the envelope still goes to FEEDBACK_TO)');
 assert.equal(h.get('reply-to'), 'jo@exemple.cat', 'Reply-To: the player');
 assert(h.get('subject').split('\r\n ').every(w => /^=\?UTF-8\?B\?[A-Za-z0-9+/=]+\?=$/.test(w) && w.length <= 75), 'RFC 2047 encoded-words of at most 75 characters, folded');
-assert.equal(decodeWord(h.get('subject')), 'Bústia · 28/9 12:00 · Molt bon joc!', 'one subject per message: the time and the first words (Gmail threads equal subjects)');
+assert.equal(decodeWord(h.get('subject')), '[BÚSTIA] 28/9 12:00 · Molt bon joc!', 'one subject per message: the time and the first words (Gmail threads equal subjects)');
 { // a long message: its first 40 characters and «…»; line breaks in it never reach the header
   const long = await post({ ...good, message: 'Primera línia\r\nBcc: x@y.cat i molt més text que no hi cap gens' });
   assert.equal(long.status, 200);
   const hs = parse(sent.at(-1).raw).headers;
-  assert.equal(decodeWord(hs.get('subject')), 'Bústia · 28/9 12:00 · Primera línia Bcc: x@y.cat i molt més te…');
+  assert.equal(decodeWord(hs.get('subject')), '[BÚSTIA] 28/9 12:00 · Primera línia Bcc: x@y.cat i molt més te…');
   assert(!hs.has('bcc'), 'no header injection through the message');
   sent.pop();
 }
@@ -175,14 +218,12 @@ assert.equal(h.get('content-transfer-encoding'), 'base64');
 assert(/^[\x20-\x7e\r\n]*$/.test(mail.head), 'headers are pure ASCII');
 assert.equal(h.size, 9);
 assert(mail.text.startsWith('Molt bon joc!\r\n'), 'the trimmed message first');
-assert(mail.text.includes('Correu per contestar: jo@exemple.cat') && mail.text.includes('Versió: 1.0.0+abc'));
+assert(mail.text.includes('Correu confirmat: jo@exemple.cat') && mail.text.includes('Versió: 1.0.0+abc'));
 assert(mail.text.includes('Quan: 28/9/2026') || /Quan: .*2026.*12:00:00/.test(mail.text), `the time in Europe/Madrid: ${mail.text}`);
 assert(mail.text.endsWith(`Navegador: ${'UA'.repeat(80)}`), 'user agent cut at 160');
 assert(!mail.text.includes('203.0.113.'), 'no IP in the mail');
 
 sent.length = 0;
-assert.deepEqual(await codeOf(await post({ ...good, email: '  ' })), [400, 'invalid_email'], 'the e-mail is required');
-assert.deepEqual(await codeOf(await post({ ...good, email: undefined })), [400, 'invalid_email']);
 assert.equal(sent.length, 0, 'nothing mailed without one');
 sent.length = 0;
 await post({ ...good, message: 'Línia 1\nLínia 2\r\nLínia 3' + 'ç'.repeat(300) });
@@ -277,34 +318,30 @@ assert.equal(cleanEmail('"jo"@exemple.cat'), 'jo@exemple.cat', 'double quotes go
 assert.equal(cleanEmail('“jo”@exemple.cat’'), 'jo@exemple.cat', 'typographic quotes go');
 assert.equal(cleanEmail('a@b.cat\r\nBcc: x@y.cat'), 'a@b.catBccx@y.cat', 'line breaks and colons go');
 assert.equal(cleanEmail(null), ''); assert.equal(cleanEmail('a'.repeat(300)).length, 254);
-assert.equal(checkFeedback('hola', '').field, 'message');
-assert.equal(checkFeedback('Hola!', 'x@y').field, 'email');
-assert.equal(checkFeedback('Hola!', 'a@b.c').field, 'email');
-assert.ok(checkFeedback(' Hola! ', ' jo@exemple.cat ').ok);
-assert.equal(checkFeedback('😀😀😀😀😀', 'a@b.cat').ok, true, 'code points, like the server');
-assert.equal(checkFeedback('Hola!', '').field, 'email', 'required');
+assert.equal(checkFeedback('hola').field, 'message');
+assert.ok(checkFeedback(' Hola! ').ok);
+assert.equal(checkFeedback('😀😀😀😀😀').ok, true, 'code points, like the server');
+assert.equal(checkFeedback('Hola, bon dia', 20).field, 'message', 'a figure message asks for more');
 let last = null, answer = () => Response.json({ ok: true });
 const svc = createFeedback({ url: 'https://mulassa-feedback.x.workers.dev', enabled: true, fetchFn: async (u, init) => { last = { u, init }; return answer(); }, online: () => true, version: 'v1' });
 assert.ok(svc.configured);
-await svc.send({ message: 'Hola!', email: 'jo@exemple.cat', token: 't' });
+await svc.send({ message: ' Hola! ', token: 't', accessToken: 'jwt' });
 assert.equal(last.u, 'https://mulassa-feedback.x.workers.dev', 'straight to VITE_FEEDBACK_URL');
-assert.deepEqual(last.init.headers, { 'content-type': 'application/json' }, 'no apikey, no session');
-assert.deepEqual(JSON.parse(last.init.body), { message: 'Hola!', email: 'jo@exemple.cat', turnstileToken: 't', version: 'v1' });
-await svc.send({ message: ' Hola! ', email: ' jo@exemple.cat ', token: 't' });
-assert.deepEqual(JSON.parse(last.init.body), { message: 'Hola!', email: 'jo@exemple.cat', turnstileToken: 't', version: 'v1' });
+assert.deepEqual(last.init.headers, { 'content-type': 'application/json', authorization: 'Bearer jwt' }, 'the session says who writes');
+assert.deepEqual(JSON.parse(last.init.body), { kind: 'general', figure: null, options: [], entity: '', message: 'Hola!', turnstileToken: 't', version: 'v1' }, 'no address from the client');
 last = null;
-await assert.rejects(svc.send({ message: 'Hola!', email: 'àlex@domini.cat', token: 't' }), e => e.code === 'invalid_email');
-assert.equal(last, null, 'a bad e-mail never leaves the device');
-for (const [status, error, code] of [[429, 'rate_limit', 'rate_limit'], [429, undefined, 'rate_limit'], [403, 'captcha', 'captcha'], [400, 'invalid_email', 'invalid_email'],
+await assert.rejects(svc.send({ kind: 'material', message: 'Tinc fotos', token: 't' }), e => e.code === 'invalid_message');
+assert.equal(last, null, 'a short figure message never leaves the device');
+for (const [status, error, code] of [[429, 'rate_limit', 'rate_limit'], [429, undefined, 'rate_limit'], [403, 'captcha', 'captcha'], [429, 'daily_limit', 'daily_limit'], [401, 'auth_required', 'auth_required'], 
   [400, 'invalid', 'invalid_message'], [503, 'unavailable', 'unavailable'], [503, 'not_configured', 'unavailable'], [500, undefined, 'unavailable']]) {
   answer = () => Response.json({ error }, { status });
-  await assert.rejects(svc.send({ message: 'Hola!', email: 'jo@exemple.cat', token: 't' }), e => e.code === code && /[a-zà-ú]/.test(e.message), `${status} ${error}`);
+  await assert.rejects(svc.send({ message: 'Hola!', token: 't' }), e => e.code === code && /[a-zà-ú]/.test(e.message), `${status} ${error}`);
 }
 answer = () => new Response('<html>gateway</html>', { status: 502 });
-await assert.rejects(svc.send({ message: 'Hola!', email: 'jo@exemple.cat', token: 't' }), e => e.code === 'unavailable');
+await assert.rejects(svc.send({ message: 'Hola!', token: 't' }), e => e.code === 'unavailable');
 answer = () => { throw new TypeError('Failed to fetch'); };
-await assert.rejects(svc.send({ message: 'Hola!', email: 'jo@exemple.cat', token: 't' }), e => e.code === 'offline');
-await assert.rejects(createFeedback({ url: 'u', online: () => false }).send({ message: 'Hola!', email: 'jo@exemple.cat', token: 't' }), e => e.code === 'offline');
+await assert.rejects(svc.send({ message: 'Hola!', token: 't' }), e => e.code === 'offline');
+await assert.rejects(createFeedback({ url: 'u', online: () => false }).send({ message: 'Hola!', token: 't' }), e => e.code === 'offline');
 assert.equal(createFeedback({ url: '', enabled: true }).configured, false, 'no VITE_FEEDBACK_URL: off');
 assert.equal(createFeedback({ url: 'https://x.invalid', enabled: false }).configured, false, 'off until VITE_FEEDBACK_ENABLED=true');
 console.log('feedback: Worker (CORS, config, validation, Turnstile + hostname, rate limits, daily cap, MIME mail), drop migration, client ok');

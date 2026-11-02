@@ -267,3 +267,116 @@ Technical fidelity limitation: backgrounds are visually flat saturated colors, b
 - https://lapessigolla.cat/wp-content/uploads/2026/02/lapessigolla-gegants-calcot1.jpg
 - Fidelity: Blue dress, white bib apron, ivory shoulder shawl, black hairnet and mittens, mortar and pestle visible. Shawl embroidery and facial likeness simplified; decorative floral motifs are approximate.
 - Rendering limitation: reviewed and regenerated for flat fills; subtle tonal variation remains, so exact uniform RGB backgrounds and strict 2–3-tone fills are not achieved. No drawn frame or lettering; torso reaches the bottom edge.
+
+
+# Giants added from the Bestiari de Valls dossiers (mbp-m1)
+
+## gegant-calcot
+- Dossier 15-gegant-calcot, confidence high
+- https://uaf.cat/elements-festius-de-nova-tradicio/gegant-del-calcot/
+- https://gegantcat.com/fitxa/gegant-calcot-de-valls
+
+## gegant-campanar
+- Dossier 16-gegant-campanar, confidence low
+- https://uaf.cat/les-obres-del-campanar-de-sant-joan-protagonitzaran-el-carnaval-de-la-unio-anelles-de-la-flama/
+- https://www.youtube.com/watch?v=eyG4xriOfsE
+
+## elionor
+- Dossier 18-gegants-reis, confidence high
+- https://lapessigolla.cat/som/entremesos/gegants/els-gegants-reis/
+- https://gegantcat.com/fitxa/gegants-de-la-colla-gegantera-la-pessigolla-de-valls
+
+## pere-lusignan
+- Dossier 18-gegants-reis, confidence high
+- https://lapessigolla.cat/som/entremesos/gegants/els-gegants-reis/
+- https://gegantcat.com/fitxa/gegants-de-la-colla-gegantera-la-pessigolla-de-valls
+
+## pau-galceran
+- Dossier 19-pau-isabel, confidence high
+- https://uaf.cat/elements-festius-de-nova-tradicio/gegants-pau-i-isabel-de-galceran/
+- https://gegantcat.com/fitxa/gegants-de-la-unio-anelles-de-la-flama-valls
+
+## isabel-galceran
+- Dossier 19-pau-isabel, confidence high
+- https://uaf.cat/elements-festius-de-nova-tradicio/gegants-pau-i-isabel-de-galceran/
+- https://gegantcat.com/fitxa/gegants-de-la-unio-anelles-de-la-flama-valls
+
+## manotes-arlequi
+- Dossier 22-arlequi-ursula, confidence high
+- https://lapessigolla.cat/som/entremesos/gegants/els-gegantons-manotes/
+- https://gegantcat.com/fitxa/gegantons-de-la-colla-gegantera-la-pessigolla-de-valls
+
+## bruixa-ursula
+- Dossier 22-arlequi-ursula, confidence high
+- https://lapessigolla.cat/som/entremesos/gegants/els-gegantons-manotes/
+- https://gegantcat.com/fitxa/gegantons-de-la-colla-gegantera-la-pessigolla-de-valls
+
+## ogre-grifoll
+- Dossier 23-ogres, confidence high
+- https://lapessigolla.cat/som/entremesos/gegants/els-ogres/
+- https://gegantcat.com/fitxa/gegantons-ogres-de-la-colla-gegantera-la-pessigolla-de-valls
+
+## ogre-gironella
+- Dossier 23-ogres, confidence high
+- https://lapessigolla.cat/som/entremesos/gegants/els-ogres/
+- https://gegantcat.com/fitxa/gegantons-ogres-de-la-colla-gegantera-la-pessigolla-de-valls
+
+## ogre-pauetet
+- Dossier 23-ogres, confidence medium
+- https://lapessigolla.cat/som/entremesos/gegants/els-ogres/
+- https://gegantcat.com/fitxa/gegantons-ogres-de-la-colla-gegantera-la-pessigolla-de-valls
+
+## carmen-bombera
+- Dossier 24-carmen-bombera, confidence high
+- https://lapessigolla.cat/som/entremesos/gegants/els-gegantons-manotes/
+- https://gegantcat.com/fitxa/gegantons-de-la-colla-gegantera-la-pessigolla-de-valls
+- https://gegantcat.com/fitxa/gegantona-carmen-la-bombera-de-la-colla-gegantera-la-pessigolla-de-valls
+
+## avia-carme
+- Dossier 25-avia-carme, confidence high
+- https://lapessigolla.cat/som/entremesos/gegants/lavia-carme/
+- https://gegantcat.com/fitxa/geganta-lavia-carme-de-la-colla-gegantera-la-pessigolla-de-valls
+
+## bandoler-pera
+- Dossier 34-bandoler-pera, confidence high
+- https://lapessigolla.cat/som/entremesos/gegants/el-bandoler-la-pera/
+
+## pere-gros
+- Dossier 35-gegantons-nobles, confidence medium
+- https://lapessigolla.cat/som/entremesos/gegants/els-gegantons-nobles/
+
+## margarida-lusignan
+- Dossier 35-gegantons-nobles, confidence high
+- https://lapessigolla.cat/som/entremesos/gegants/els-gegantons-nobles/
+
+## astaroth
+- Dossier 36-astaroth, confidence medium
+- https://botigadelafestamajor.cat/llibres/178-100-gegants-volum-7.html
+- https://www.youtube.com/watch?v=_JrNuLqyCZo
+
+## manotes-milionari
+- Dossier 20-manotes-central, confidence medium
+- https://www.youtube.com/watch?v=ItFLkVfTUdM
+
+## manotes-bruixot
+- Dossier 20-manotes-central, confidence medium
+- https://www.youtube.com/watch?v=ItFLkVfTUdM
+
+## home-nassos
+- Dossier 31-home-nassos, confidence high
+- https://lapessigolla.cat/som/entremesos/capgrossos/lhome-dels-nassos/
+
+## vella-quaresma
+- Dossier 26-vella-quaresma, confidence high
+- https://uaf.cat/carnaval/geganta-de-la-vella-quaresma/
+- https://gegantcat.com/fitxa/geganta-vella-quarsema-de-valls
+
+## carnaval-porra
+- Dossier 28-gegants-carnaval, confidence high
+- https://uaf.cat/gegants-de-carnaval/
+- https://uaf.cat/carnaval/
+
+## carnaval-geganta
+- Dossier 28-gegants-carnaval, confidence high
+- https://uaf.cat/gegants-de-carnaval/
+- https://uaf.cat/carnaval/

@@ -231,5 +231,9 @@
   "html.news.tip": "Они здесь!",
   "html.games.pica": "Бей Mulassa",
   "html.games.memory": "Memory",
-  "html.games.crush": "Seguici Crush"
+  "html.games.crush": "Seguici Crush",
+  "html.games.picaDesc": "Лови Mulassa. Берегись Drac.",
+  "html.games.memoryDesc": "Найди пары фигур из шествия.",
+  "html.games.crushDesc": "Собери три фигуры в ряд.",
+  "html.games.lliureDesc": "Гуляй и танцуй со своей фигурой."
 }

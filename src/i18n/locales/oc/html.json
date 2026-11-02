@@ -231,5 +231,9 @@
   "html.news.tip": "Son ací!",
   "html.games.pica": "Pica era Mulassa",
   "html.games.memory": "Memory",
-  "html.games.crush": "Seguici Crush"
+  "html.games.crush": "Seguici Crush",
+  "html.games.picaDesc": "Atrapa era Mulassa. Evita es Dracs.",
+  "html.games.memoryDesc": "Tròba es parelhs deth Seguici.",
+  "html.games.crushDesc": "Amassa tres figures iguales.",
+  "html.games.lliureDesc": "Passeja e balha damb era tua figura."
 }

@@ -231,5 +231,9 @@
   "html.news.tip": "Hier sind sie!",
   "html.games.pica": "Triff die Mulassa",
   "html.games.memory": "Memory",
-  "html.games.crush": "Seguici Crush"
+  "html.games.crush": "Seguici Crush",
+  "html.games.picaDesc": "Fang die Mulassa. Meide Dracs.",
+  "html.games.memoryDesc": "Finde die Paare der Festfiguren.",
+  "html.games.crushDesc": "Kombiniere drei gleiche Figuren.",
+  "html.games.lliureDesc": "Lauf und tanze mit deiner Figur."
 }

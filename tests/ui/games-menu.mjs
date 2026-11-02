@@ -37,7 +37,7 @@ assert(!b.menu.open, 'the × closes');
 // every card has its picture and its page
 const html = readFileSync('index.html', 'utf8');
 const ids = [...html.matchAll(/data-game="([\w-]+)"/g)].map(m => m[1]);
-assert.equal(ids[0], 'lliure', 'free play comes first');
+assert.equal(ids.at(-1), 'lliure', 'free play comes last, after the games');
 for (const id of ids) {
   readFileSync(`public/jocs/menu/cards/${id}.jpg`);
   if (id !== 'lliure') readFileSync(`jocs/${id}/index.html`);

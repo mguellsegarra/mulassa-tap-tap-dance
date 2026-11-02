@@ -14,7 +14,7 @@ Research, in Catalan, copied from `mulassa-minijocs/notes/` on 2026-11-01 (that 
 - 1.3.0 is the release that brings the mini-games into mulassa.cat.
 - Fes el castell is out of the plan. It still appears in the research notes, which are left as written.
 - The selector's gamepad button (`#free`) opens «Jocs», a sheet inside the main game (`src/ui/games-menu.js`), not a page: the owner rejected a separate `/jocs/` menu, so free play starts and returns to the sheet with no reload.
-- Free play is that sheet's first entry. A mini-game is still its own page, so opening one and coming back reloads the main game.
+- Free play is that sheet's last entry. A mini-game is still its own page, so opening one and coming back reloads the main game.
 - The URL must not say `minijocs`.
 
 ## Architecture

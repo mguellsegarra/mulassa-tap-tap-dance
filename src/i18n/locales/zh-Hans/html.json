@@ -231,5 +231,9 @@
   "html.news.tip": "就在这里！",
   "html.games.pica": "敲打Mulassa",
   "html.games.memory": "Memory",
-  "html.games.crush": "Seguici Crush"
+  "html.games.crush": "Seguici Crush",
+  "html.games.picaDesc": "抓住Mulassa，避开Drac！",
+  "html.games.memoryDesc": "找出节庆角色的配对。",
+  "html.games.crushDesc": "将三个相同角色连成一线。",
+  "html.games.lliureDesc": "带着角色漫游广场，自由起舞。"
 }

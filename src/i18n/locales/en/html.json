@@ -231,5 +231,9 @@
   "html.news.tip": "Right here!",
   "html.games.pica": "Whack the Mulassa",
   "html.games.memory": "Memory",
-  "html.games.crush": "Seguici Crush"
+  "html.games.crush": "Seguici Crush",
+  "html.games.picaDesc": "Catch the Mulassa. Avoid Dracs.",
+  "html.games.memoryDesc": "Find pairs of festive figures.",
+  "html.games.crushDesc": "Match three identical figures.",
+  "html.games.lliureDesc": "Roam and dance with your figure."
 }

@@ -231,5 +231,9 @@
   "html.news.tip": "Sunt aici!",
   "html.games.pica": "Lovește Mulassa",
   "html.games.memory": "Memory",
-  "html.games.crush": "Seguici Crush"
+  "html.games.crush": "Seguici Crush",
+  "html.games.picaDesc": "Prinde Mulassa. Evită Drac.",
+  "html.games.memoryDesc": "Găsește perechile de figuri.",
+  "html.games.crushDesc": "Unește trei figuri identice.",
+  "html.games.lliureDesc": "Plimbă-te și dansează liber."
 }

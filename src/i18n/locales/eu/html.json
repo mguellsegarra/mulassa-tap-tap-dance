@@ -231,5 +231,9 @@
   "html.news.tip": "Hemen daude!",
   "html.games.pica": "Jo Mulassa",
   "html.games.memory": "Memory",
-  "html.games.crush": "Seguici Crush"
+  "html.games.crush": "Seguici Crush",
+  "html.games.picaDesc": "Harrapatu Mulassa. Saihestu Dracak.",
+  "html.games.memoryDesc": "Aurkitu jaietako figuren bikoteak.",
+  "html.games.crushDesc": "Elkartu hiru figura berdin.",
+  "html.games.lliureDesc": "Ibili eta dantzatu zure figurarekin."
 }

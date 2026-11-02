@@ -231,5 +231,9 @@
   "html.news.tip": "ここだよ！",
   "html.games.pica": "Mulassaをたたけ",
   "html.games.memory": "Memory",
-  "html.games.crush": "Seguici Crush"
+  "html.games.crush": "Seguici Crush",
+  "html.games.picaDesc": "Mulassaをつかまえよう。Dracに注意！",
+  "html.games.memoryDesc": "お祭りの仲間のペアを探そう。",
+  "html.games.crushDesc": "同じ仲間を3つ並べよう。",
+  "html.games.lliureDesc": "好きな仲間と広場を歩いて踊ろう。"
 }

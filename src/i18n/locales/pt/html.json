@@ -231,5 +231,9 @@
   "html.news.tip": "Estão aqui!",
   "html.games.pica": "Acerta na Mulassa",
   "html.games.memory": "Memory",
-  "html.games.crush": "Seguici Crush"
+  "html.games.crush": "Seguici Crush",
+  "html.games.picaDesc": "Apanha a Mulassa. Evita os Dracs.",
+  "html.games.memoryDesc": "Encontra os pares do Seguici.",
+  "html.games.crushDesc": "Junta três figuras iguais.",
+  "html.games.lliureDesc": "Passeia e dança com a tua figura."
 }

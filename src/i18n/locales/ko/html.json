@@ -231,5 +231,9 @@
   "html.news.tip": "여기 있어요!",
   "html.games.pica": "Mulassa를 쳐라",
   "html.games.memory": "Memory",
-  "html.games.crush": "Seguici Crush"
+  "html.games.crush": "Seguici Crush",
+  "html.games.picaDesc": "Mulassa를 잡고 Drac은 피해요!",
+  "html.games.memoryDesc": "축제 캐릭터의 짝을 찾아요.",
+  "html.games.crushDesc": "같은 캐릭터 셋을 맞춰요.",
+  "html.games.lliureDesc": "내 캐릭터와 광장을 걷고 춤춰요."
 }

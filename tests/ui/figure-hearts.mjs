@@ -65,3 +65,17 @@ console.log('figure hearts ok');
   answer.no(new Error('down')); await tick(); assert(h.mine('bou'), 'refused: it was never taken back'); assert.equal(h.count('bou'), 5);
   h.reload();
 }
+// confirming an e-mail fires an account event for the same account: a save under way and its burst stay, nothing flickers back
+{
+  let answer, who = 'u1', lists = 0; const doc = { defaultView: { innerWidth: 400, matchMedia: () => ({ matches: true }) }, createElement: () => ({ style: {}, setAttribute() {}, remove() {} }), body: { append() {} } };
+  const button = { ownerDocument: doc, getBoundingClientRect: () => ({}), closest: () => null, querySelector: () => ({ classList: { add() {}, remove() {} }, getBoundingClientRect: () => ({}) }) };
+  const h = setupHearts({ service: { ownerId: async () => who, figureHearts: async () => { lists++; return [{ figure: 'bou', hearts: 4, mine: who === 'u2' }]; }, setFigureHeart: () => new Promise(ok => { answer = ok; }) }, needConfirmed: (_, run) => run() });
+  await h.load(); h.tap({ id: 'bou' }, button); await tick(); await tick(); await tick();
+  assert(h.mine('bou'));
+  await h.accountChanged(); await tick();
+  assert(h.mine('bou'), 'same account: the heart stays red'); assert.equal(h.count('bou'), 5); assert.equal(lists, 1, 'and nothing is read over the save');
+  answer(5); await tick(); await tick(); assert(h.mine('bou')); assert.equal(h.count('bou'), 5, 'the answer lands');
+  who = 'u2'; const change = h.accountChanged(); let wrote = 0; const before = answer; h.tap({ id: 'bou' }, button); await change; await tick(); await tick(); await tick();
+  assert.equal(lists, 2, 'another account reads its own'); assert.notEqual(answer, before); wrote = 1;
+  assert.equal(wrote, 1); assert(!h.mine('bou'), 'the tap waited, then took back u2\'s own heart, not u1\'s');
+}

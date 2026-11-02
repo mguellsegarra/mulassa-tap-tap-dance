@@ -67,7 +67,7 @@ try {
   assert.match(migrationWorkflow, /environment: \$\{\{ inputs\.environment \}\}/);
   assert.match(migrationWorkflow, /"\$PROJECT_REF" = oajlkitufibpfvhgtqwr \]; then echo "beta must not migrate production"; exit 1/);
   assert(!/  push:/.test(migrationWorkflow), 'one migration run per deployment, rather than a parallel push trigger');
-  assert.match(migrationWorkflow, /supabase db push --db-url/);
+  assert.match(migrationWorkflow, /supabase db push --yes --db-url/);
   const valid = await fixture('valid');
   const result = await preparePages(valid, song);
   assert(result.includes('404.html'), 'ship the root 404 to disable the SPA fallback');

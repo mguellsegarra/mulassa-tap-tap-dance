@@ -71,7 +71,9 @@ function mockClient({ world, taken, delay, account, now, fail, calls }) {
     max_combo: r.max_combo, is_self: r.is_self, total: r.total, verified: r.verified, season_id: season, public_id: r.publicId, released: r.released === true, badge_id: r.badgeId ?? null });
   const totalsOf = r => (r.pid === -2 ? (({ practice, ...rest }) => rest)(sumBuckets([baseline.buckets, ...devices.values()])) : r.pid >= 0 ? world.stats.get(r.pid) ?? {} : {});
 
+  const hearts = new Map([['aliga-tarragona', { n: 12, mine: false }]]);
   const reads = {
+    get_figure_hearts: () => ok([...hearts].map(([figure_id, r]) => ({ figure_id, hearts: r.n, mine: r.mine }))),
     get_leaderboard_all(a) {
       if (world.listFail) return { data: null, error: Object.assign(new TypeError('Failed to fetch'), { name: 'TypeError' }), status: 0 }; // &board=fail: the boards' error state
       if ((a.p_period ?? 'all') !== 'all') return no('leaderboard_invalid_period');
@@ -122,6 +124,13 @@ function mockClient({ world, taken, delay, account, now, fail, calls }) {
     reads[name] = a => { const out = full(a); return out.data ? { ...out, data: out.data.map(({ badge_id, ...r }) => r) } : out; };
   }
   const writes = {
+    // the server's pace (&heartfail: it refuses), for trying a heart that shows before the answer
+    set_figure_heart: ({ p_figure, p_on }) => new Promise(done => setTimeout(() => {
+      if (/[?&]heartfail\b/.test(location.search)) { done(no('figure_heart_limit', 400)); return; }
+      const r = hearts.get(p_figure) ?? { n: 0, mine: false };
+      if (r.mine !== p_on) { r.mine = p_on; r.n += p_on ? 1 : -1; }
+      hearts.set(p_figure, r); done(ok(r.n));
+    }, 900)),
     my_profile: () => ok(self ? [{ alias: self.alias, verified: self.verified, published: entries.size > 0, released: self.released === true, public_id: self.publicId }] : []),
     my_profile_v2: () => ok(self ? [{ alias: self.alias, verified: self.verified, published: entries.size > 0, released: self.released === true, public_id: self.publicId, badge_id: self.verified ? self.badgeId ?? null : null }] : []),
     set_profile_badge(a) {

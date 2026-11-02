@@ -47,7 +47,7 @@ export async function preparePages(directory, song) {
       || /^photo-icons\/[\w-]+\.webp$/.test(name) // free play's drawn move buttons (src/ui/photo-icons.js)
       || /^jocs\/[\w-]+\/index\.html$/.test(name) // docs/jocs/README.md: one page per mini-game
       || /^jocs\/corre\/world\/[\w.-]+\.bin$/.test(name) // Corre i suma colla's plaça (docs/jocs/corre.md)
-      || /^jocs\/[\w-]+\/cards\/[\w-]+\.(jpg|svg|png)$/.test(name) // a mini-game's own pictures
+      || /^jocs\/[\w-]+\/cards\/[\w-]+\.(jpg|svg|png|webp)$/.test(name) // a mini-game's own pictures
       || name === 'campanar-valls.svg' // Configuració «Sobre el joc»
       || name === 'version.json' // vite.config.js buildStamp: the woken app's update check
       || name === 'uaf-logo.jpg' // /projecte/'s credits: the Unió Anelles de la Flama logo

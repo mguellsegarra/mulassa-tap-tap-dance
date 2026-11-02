@@ -71,6 +71,7 @@ test('every level can be played: its goal is on the board and goals grow with th
     assert.ok(l.kinds.includes(l.goal), `level ${i + 1}`);
     assert.equal(new Set(l.kinds).size, l.kinds.length);
     assert.ok(l.kinds.every(k => SEGUICI.includes(k)));
+    assert.ok(!(l.kinds.includes('bou') && l.kinds.includes('lleo')), `level ${i + 1} mixes the Bou and the Lleó`);
     assert.ok(l.stars[0] < l.stars[1] && l.stars[1] < l.moves);
     assert.ok(levelFor(i, MAX_ROWS).n >= levelFor(i, MIN_ROWS).n);
   }

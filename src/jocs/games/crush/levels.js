@@ -27,7 +27,9 @@ const TABLE = [
   [27,  20,  6,  4,  6],
 ];
 
-const kindsFor = (goal, count) => [goal, ...SEGUICI.filter(k => k !== goal).slice(0, count - 1)];
+// The owner finds the Bou and the Lleó hard to tell apart, so a board never holds both.
+const RIVAL = { bou: 'lleo', lleo: 'bou' };
+const kindsFor = (goal, count) => [goal, ...SEGUICI.filter(k => k !== goal && k !== (RIVAL[goal] ?? 'bou')).slice(0, count - 1)];
 
 export const LEVELS = TABLE.map(([n, moves, kinds, two, three], i) => {
   const goal = SEGUICI[i % SEGUICI.length];

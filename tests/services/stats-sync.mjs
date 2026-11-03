@@ -3,9 +3,11 @@
 import assert from 'node:assert/strict';
 import { createLeaderboardService } from '../../src/services/leaderboard.js';
 import { createStatsSync, statsNoticeSeen, markStatsNoticeSeen } from '../../src/services/stats-sync.js';
+import { createSeenNotices } from '../../src/services/seen-notices.js';
 import { mockLeaderboard } from '../../src/dev/final-test.js';
 import { newStats, endRun, getStatsOwner, setStatsOwner, payload } from '../../src/game/stats.js';
 
+const notes = kv => createSeenNotices({ kv }); // this device's marks (kv); the server's come from the service a sync uses
 const kv = new Map(), mem = { get: k => kv.get(k) ?? null, set: (k, v) => kv.set(k, v), remove: k => kv.delete(k) };
 let doc = newStats();
 const io = { load: () => doc, save: s => { doc = s; } };
@@ -17,7 +19,7 @@ const run = (over = {}) => ({ kind: 'end', date: '2026-11-10', figureId: 'mulass
   guapa: 5, guapaTotal: 8, balloons: 1, holds: 2, maxCombo: 60, stars: 2, score: 60000, quality: 90, ...over });
 const calls = [], svc = mockLeaderboard({ delay: 0, account: 'guest', now, calls });
 const sent = () => calls.filter(c => c === 'merge_stats').length;
-const sync = createStatsSync({ service: svc, kv: mem, io, now, timer, clear });
+const sync = createStatsSync({ service: svc, notices: notes(mem), io, now, timer, clear });
 
 // played before any profile: it goes to the profile that is opened, once
 endRun(doc, 'none', run());
@@ -29,9 +31,9 @@ endRun(doc, 'none', run({ date: '2026-11-11' }));
 await sync.init(); assert(!doc.owners.none, 'a second opening takes what was played since');
 
 // nothing leaves the device before the privacy notice has been seen
-assert.equal(sync.noticeNeeded(), true); assert.equal(statsNoticeSeen('prova', mem), false);
+assert.equal(sync.noticeNeeded(), true); assert.equal(statsNoticeSeen('prova', notes(mem)), false);
 sync.afterRun(); await fire(2000); assert.equal(sent(), 0, 'no upload before the notice');
-sync.acceptNotice(); assert(statsNoticeSeen('prova', mem)); assert.equal(sync.noticeNeeded(), false);
+sync.acceptNotice(); assert(statsNoticeSeen('prova', notes(mem))); assert.equal(sync.noticeNeeded(), false);
 await fire(2000); assert.equal(sent(), 1, 'the notice seen: what was waiting goes');
 assert(doc.owners.prova.sent && doc.owners.prova.imported, 'remembered, so an unchanged document is not sent again');
 const mine = await svc.myStats();
@@ -67,7 +69,7 @@ playing = false; await fire(4000); assert.equal(sent(), before + 1);
 // a deleted profile takes its statistics, the notice and the owner with it; later play starts again from nothing
 setStatsOwner('prova'); endRun(doc, 'none', run({ date: '2026-11-11' }));
 await svc.deleteProfile();
-assert.equal(doc.owners.prova, undefined, 'forgotten'); assert.equal(statsNoticeSeen('prova', mem), false); assert.equal(sync.owner, null); assert.equal(getStatsOwner(), 'none');
+assert.equal(doc.owners.prova, undefined, 'forgotten'); assert.equal(statsNoticeSeen('prova', notes(mem)), false); assert.equal(sync.owner, null); assert.equal(getStatsOwner(), 'none');
 assert(doc.owners.none, 'what was played without a profile stays under none');
 await svc.createProfile('Novell'); await new Promise(r => setTimeout(r, 100)); // the account event also asks the mock server whether the profile exists
 assert.equal(sync.owner, 'prova'); assert.equal(Object.keys(doc.owners.prova.counters).length, 1, 'a new profile starts from zero plus what was played unowned');
@@ -78,11 +80,11 @@ assert.equal(sync.noticeNeeded(), true, 'a new profile shows the notice again');
   const stub = { ownerId: async () => 'u-1', profile: async () => ({}), onAccount: f => { listeners.add(f); return () => listeners.delete(f); },
     syncStats: async () => { throw Object.assign(new Error('x'), { code: fail }); } };
   let d2 = newStats(); endRun(d2, 'u-1', run());
-  const s2 = createStatsSync({ service: stub, kv: mem, io: { load: () => d2, save: s => { d2 = s; } }, now, timer, clear });
-  markStatsNoticeSeen('u-1', mem); await s2.init();
+  const s2 = createStatsSync({ service: stub, notices: notes(mem), io: { load: () => d2, save: s => { d2 = s; } }, now, timer, clear });
+  markStatsNoticeSeen('u-1', notes(mem)); await s2.init();
   assert.equal(await s2.send(), 'gone'); assert.equal(d2.owners['u-1'], undefined);
   endRun(d2, 'u-2', run()); [...listeners].forEach(f => f({ type: 'gone', userId: 'u-2' })); assert.equal(d2.owners['u-2'], undefined);
-  assert(!(await createStatsSync({ service: { ...stub, ownerId: async () => null, onAccount: () => () => {} }, kv: mem, io, now, timer, clear }).init()), 'no session: no owner, no network');
+  assert(!(await createStatsSync({ service: { ...stub, ownerId: async () => null, onAccount: () => () => {} }, notices: notes(mem), io, now, timer, clear }).init()), 'no session: no owner, no network');
   assert.equal(getStatsOwner(), 'none'); }
 // another tab switches the account A -> B: A's counters never upload as B, and the new owner is picked up by itself
 { let session = { user: { id: 'A' } }, onAuth, merges = [];
@@ -91,8 +93,8 @@ assert.equal(sync.noticeNeeded(), true, 'a new profile shows the notice again');
   const real = createLeaderboardService({ configured: true, publishingEnabled: true, captchaRequired: false, getClient: async () => client });
   let d3 = newStats(); endRun(d3, 'A', run()); endRun(d3, 'B', run({ figureId: 'drac-valls', version: 'drac-v1' }));
   const kv3 = new Map(), mem3 = { get: k => kv3.get(k) ?? null, set: (k, v) => kv3.set(k, v), remove: k => kv3.delete(k) };
-  markStatsNoticeSeen('A', mem3); markStatsNoticeSeen('B', mem3);
-  const s3 = createStatsSync({ service: real, kv: mem3, io: { load: () => d3, save: s => { d3 = s; } }, now, timer, clear });
+  markStatsNoticeSeen('A', notes(mem3)); markStatsNoticeSeen('B', notes(mem3));
+  const s3 = createStatsSync({ service: real, notices: notes(mem3), io: { load: () => d3, save: s => { d3 = s; } }, now, timer, clear });
   await s3.init(); assert.equal(s3.owner, 'A'); assert(onAuth, 'the service watches Supabase Auth once its client exists');
   session = { user: { id: 'B' } }; // the other tab; this one has not heard yet
   assert.equal(await s3.send(), 'session', 'the session is not the owner of the counters'); assert.deepEqual(merges, [], 'nothing was sent');
@@ -108,8 +110,8 @@ assert.equal(sync.noticeNeeded(), true, 'a new profile shows the notice again');
   const stub = { ownerId: async () => 'u-3', profile: async () => ({}), onAccount: () => () => {},
     syncStats: async p => { calls3.push(Object.keys(p.buckets)); if (badKey in p.buckets) throw Object.assign(new Error('x'), { code: 'stats' }); } };
   let d4 = newStats(); endRun(d4, 'u-3', run()); endRun(d4, 'u-3', run({ figureId: 'drac-valls', version: 'drac-v1' })); endRun(d4, 'u-3', run({ kind: 'practice', seconds: 20 }));
-  markStatsNoticeSeen('u-3', mem);
-  const s4 = createStatsSync({ service: stub, kv: mem, io: { load: () => d4, save: s => { d4 = s; } }, now, timer, clear });
+  markStatsNoticeSeen('u-3', notes(mem));
+  const s4 = createStatsSync({ service: stub, notices: notes(mem), io: { load: () => d4, save: s => { d4 = s; } }, now, timer, clear });
   await s4.init(); s4.cancel(); queue = [];
   assert.equal(await s4.send(), 'partial');
   assert.deepEqual(calls3, [['drac-valls/drac-v1/1', 'mulassa-valls/mulassa-v3/1', 'practice'], ['drac-valls/drac-v1/1'], ['mulassa-valls/mulassa-v3/1']], 'whole, then one by one until one is accepted');
@@ -128,8 +130,8 @@ assert.equal(sync.noticeNeeded(), true, 'a new profile shows the notice again');
       last = t;
     } };
   let d5 = newStats(); endRun(d5, 'u-5', run()); endRun(d5, 'u-5', run({ figureId: 'drac-valls', version: 'drac-v1' })); endRun(d5, 'u-5', run({ kind: 'practice', seconds: 20 }));
-  markStatsNoticeSeen('u-5', mem); t += 61000;
-  const s5 = createStatsSync({ service: stub, kv: mem, io: { load: () => d5, save: s => { d5 = s; } }, now, timer, clear });
+  markStatsNoticeSeen('u-5', notes(mem)); t += 61000;
+  const s5 = createStatsSync({ service: stub, notices: notes(mem), io: { load: () => d5, save: s => { d5 = s; } }, now, timer, clear });
   await s5.init(); s5.cancel(); queue = [];
   const drac = 'drac-valls/drac-v1/1';
   assert.equal(await s5.send(), 'partial'); assert.equal(calls5.at(-1).buckets.join(), drac, 'the first valid one goes alone');
@@ -145,8 +147,8 @@ assert.equal(sync.noticeNeeded(), true, 'a new profile shows the notice again');
   const stub = { ownerId: async () => 'u-7', profile: async () => ({}), onAccount: () => () => {},
     syncStats: async p => { calls7.push(Object.keys(p.buckets)); if ('practice' in p.buckets && early) throw Object.assign(new Error('x'), { code: 'stats_time' }); } };
   let d7 = newStats(); endRun(d7, 'u-7', run({ kind: 'practice', seconds: 400 }));
-  markStatsNoticeSeen('u-7', mem);
-  const s7 = createStatsSync({ service: stub, kv: mem, io: { load: () => d7, save: s => { d7 = s; } }, now, timer, clear });
+  markStatsNoticeSeen('u-7', notes(mem));
+  const s7 = createStatsSync({ service: stub, notices: notes(mem), io: { load: () => d7, save: s => { d7 = s; } }, now, timer, clear });
   await s7.init(); s7.cancel(); queue = [];
   assert.equal(await s7.send(), 'later'); assert.equal(queue.length, 1, 'tried again later'); s7.cancel();
   early = false; t += 61000;
@@ -156,8 +158,8 @@ assert.equal(sync.noticeNeeded(), true, 'a new profile shows the notice again');
 { let owner = 'A', listener; const calls6 = [];
   const stub = { ownerId: async () => owner, profile: async () => ({}), onAccount: f => { listener = f; return () => {}; },
     syncStats: async p => { calls6.push([p.owner, ...Object.keys(p.buckets)]); if (p.owner === 'A' && 'drac-valls/drac-v1/1' in p.buckets) throw Object.assign(new Error('x'), { code: 'stats' }); } };
-  let d6 = newStats(); for (const id of ['A', 'B']) { endRun(d6, id, run()); endRun(d6, id, run({ figureId: 'drac-valls', version: 'drac-v1' })); markStatsNoticeSeen(id, mem); }
-  const s6 = createStatsSync({ service: stub, kv: mem, io: { load: () => d6, save: s => { d6 = s; } }, now, timer, clear });
+  let d6 = newStats(); for (const id of ['A', 'B']) { endRun(d6, id, run()); endRun(d6, id, run({ figureId: 'drac-valls', version: 'drac-v1' })); markStatsNoticeSeen(id, notes(mem)); }
+  const s6 = createStatsSync({ service: stub, notices: notes(mem), io: { load: () => d6, save: s => { d6 = s; } }, now, timer, clear });
   await s6.init(); s6.cancel(); queue = [];
   assert.equal(await s6.send(), 'partial'); assert(calls6.some(c => c.join() === 'A,drac-valls/drac-v1/1'), 'A: Drac refused alone');
   owner = 'B'; listener({ type: 'changed' }); await new Promise(r => setTimeout(r, 20)); s6.cancel(); queue = [];
@@ -172,8 +174,8 @@ assert.equal(sync.noticeNeeded(), true, 'a new profile shows the notice again');
       if (args.p_owner !== undefined && args.p_owner !== session.user.id) return { data: null, error: { message: 'leaderboard_owner_mismatch', code: '28000', status: 401 } };
       credited.push({ as: session.user.id, buckets: Object.keys(args.p_buckets) }); return { data: null, error: null }; } };
   const real = createLeaderboardService({ configured: true, publishingEnabled: true, captchaRequired: false, getClient: async () => client });
-  let d7 = newStats(); endRun(d7, 'A', run()); endRun(d7, 'B', run({ figureId: 'drac-valls', version: 'drac-v1' })); markStatsNoticeSeen('A', mem); markStatsNoticeSeen('B', mem);
-  const s7 = createStatsSync({ service: real, kv: mem, io: { load: () => d7, save: s => { d7 = s; } }, now, timer, clear });
+  let d7 = newStats(); endRun(d7, 'A', run()); endRun(d7, 'B', run({ figureId: 'drac-valls', version: 'drac-v1' })); markStatsNoticeSeen('A', notes(mem)); markStatsNoticeSeen('B', notes(mem));
+  const s7 = createStatsSync({ service: real, notices: notes(mem), io: { load: () => d7, save: s => { d7 = s; } }, now, timer, clear });
   await s7.init(); s7.cancel(); queue = []; flip = true;
   assert.equal(await s7.send(), 'session'); assert.deepEqual(credited, [], 'A\'s counters were not credited to B'); assert.equal(d7.owners.A.sent, undefined);
   assert.equal(s7.owner, 'B', 'the live owner is adopted'); t += 61000; assert.equal(await s7.send(), 'sent'); assert.deepEqual(credited, [{ as: 'B', buckets: ['drac-valls/drac-v1/1'] }]); s7.cancel(); }
@@ -182,10 +184,31 @@ assert.equal(sync.noticeNeeded(), true, 'a new profile shows the notice again');
 { let owner = 'anon', profile = null, listener;
   const stub = { ownerId: async () => owner, profile: async () => profile, onAccount: f => { listener = f; return () => {}; }, syncStats: async () => {} };
   let d8 = newStats(); endRun(d8, 'none', run());
-  const s8 = createStatsSync({ service: stub, kv: mem, io: { load: () => d8, save: s => { d8 = s; } }, now, timer, clear });
+  const s8 = createStatsSync({ service: stub, notices: notes(mem), io: { load: () => d8, save: s => { d8 = s; } }, now, timer, clear });
   await s8.init(); assert.equal(s8.owner, null);
   listener({ type: 'changed' }); await new Promise(r => setTimeout(r, 20)); s8.cancel(); queue = [];
   assert.equal(s8.owner, null, 'a session without a profile owns nothing'); assert(d8.owners.none && !d8.owners.anon, 'the unowned numbers wait');
   owner = 'P'; profile = { alias: 'Recuperat' }; listener({ type: 'changed' }); await new Promise(r => setTimeout(r, 20)); s8.cancel(); queue = [];
   assert.equal(s8.owner, 'P'); assert(!d8.owners.none && d8.owners.P.counters['mulassa-valls/mulassa-v3/1'].runs === 1, 'they join the profile recovered'); }
 console.log('stats-sync: ok');
+
+
+// seen on another device: the server's list counts here, and a mark here reaches the server
+{ const kv2 = new Map(), mem2 = { get: k => kv2.get(k) ?? null, set: (k, v) => kv2.set(k, v), remove: k => kv2.delete(k) }, marked = [];
+  const stub = list => ({ ownerId: async () => 'u-9', profile: async () => ({}), seenNotices: async () => list, markNoticeSeen: async (id, owner) => { marked.push([id, owner]); } });
+  const fresh = createStatsSync({ service: stub([]), notices: notes(mem2), io: { load: newStats, save() {} }, now, timer, clear });
+  await fresh.init(); assert.equal(fresh.noticeNeeded(), true, 'not on the server: the notice is owed');
+  fresh.acceptNotice(); await new Promise(r => setTimeout(r, 0)); assert.deepEqual(marked, [['stats', 'u-9']], 'accepted: the server is told');
+  kv2.clear();
+  const other = createStatsSync({ service: stub(['stats']), notices: notes(mem2), io: { load: newStats, save() {} }, now, timer, clear });
+  await other.init(); assert.equal(other.noticeNeeded(), false, 'on the server: seen on another device');
+  kv2.set('stats-notice-u-9', '1'); marked.length = 0;
+  const old = createStatsSync({ service: stub([]), notices: notes(mem2), io: { load: newStats, save() {} }, now, timer, clear });
+  await old.init(); assert.equal(old.noticeNeeded(), false, 'the older device-only mark still counts'); await new Promise(r => setTimeout(r, 0));
+  assert.deepEqual(marked, [['stats', 'u-9']], 'and is handed to the server once'); }
+
+// a read the server refuses (another session signs the request now) is not kept for this owner: asked again next time
+{ let calls = 0, refuse = true;
+  const reg = createSeenNotices({ kv: { get: () => null, set() {} }, service: { seenNotices: async () => { calls++; if (refuse) throw Object.assign(new Error('x'), { code: 'session' }); return ['stats']; } } });
+  await reg.load('A'); assert.equal(reg.seen('A', 'stats'), false, 'refused: nothing taken as seen');
+  refuse = false; await reg.load('A'); assert.equal(calls, 2, 'asked again'); assert.equal(reg.seen('A', 'stats'), true); }

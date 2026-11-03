@@ -23,7 +23,7 @@ const guest = { alias: 'Prova', verified: false, released: false, publicId: 'p1'
 
 function news({ prof = guest, publishingEnabled = true, idle = () => true, after = prof, store = memStore() } = {}) {
   const doc = fakeDoc(), log = []; let reads = 0;
-  const service = { publishingEnabled, profile: async () => { if (prof instanceof Error) throw prof; return reads++ ? after : prof; } };
+  const service = { publishingEnabled, ownerId: async () => 'u1', profile: async () => { if (prof instanceof Error) throw prof; return reads++ ? after : prof; } };
   const badges = { open: b => log.push(['picker', b]) }, profile = { open: (what, b) => log.push([what, b]) };
   const n = setupBadgeNews({ focusIn() {}, service, store, badges, profile, refresh: async () => {}, idle, reduced: () => true, doc });
   return { n, doc, log, store, $: id => doc.getElementById(id) };
@@ -35,7 +35,7 @@ for (const [why, o] of [['no profile', { prof: null }], ['a released name', { pr
   assert.equal(await x.n.show(), false, why); assert.equal(x.$('badge-news-menu').open, false, why); assert.equal(x.store.m.size, 0, `${why}: nothing marked`);
 }
 { const x = news({ prof: { ...guest, verified: true, badgeId: 'senyera' } });
-  assert.equal(await x.n.show(), false, 'a badge already chosen: nothing to tell'); assert.equal(x.store.get('badge-news-seen:p1'), '1'); }
+  assert.equal(await x.n.show(), false, 'a badge already chosen: nothing to tell'); assert.equal(x.store.get('seen:u1:badge-news'), '1'); }
 { const x = news();
   assert.equal(await x.n.show(null, () => false), false, 'the selector moved on during the read'); assert.equal(x.store.m.size, 0); }
 { const x = news(); x.n.holdVisit();
@@ -44,7 +44,7 @@ for (const [why, o] of [['no profile', { prof: null }], ['a released name', { pr
 { const x = news({ prof: { ...guest, verified: true } }); let backs = 0;
   assert.equal(await x.n.show(() => backs++), true); assert.equal(x.$('badge-news-name').hidden, false); assert.equal(x.$('badge-news-shelf').hidden, true);
   x.$('badge-news-later').click();
-  assert.deepEqual([x.log.length, backs, x.store.get('badge-news-seen:p1')], [0, 1, '1']);
+  assert.deepEqual([x.log.length, backs, x.store.get('seen:u1:badge-news')], [0, 1, '1']);
   assert.equal(await x.n.show(), false, 'once');
   const y = news({ prof: { ...guest, verified: true } }); await y.n.show(); y.$('badge-news-go').click();
   assert.equal(y.log[0][0], 'picker'); }

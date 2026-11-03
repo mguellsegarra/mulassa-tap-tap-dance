@@ -123,6 +123,10 @@ for (const [typed, term, message] of MESSAGES) {
 assert.equal(termMessage('blocked'), 'Aquest sobrenom no es pot fer servir. Tria’n un altre.', 'no piece: the generic message');
 for (const m of Object.values(ALIAS_MESSAGES)) assert.match(m, /\. [A-ZÀ-Ú][^.]*\.$/u, `«${m}» ends with what to do next`);
 assert.equal(checkAlias('Col·la').alias, 'Col·la', 'l·l accepted now that the server rules are live');
+// Safari before 16.4 throws on a lookbehind, and Node can't: only the source shows it. checkAlias runs before every publish.
+assert(!/\(\?<[=!]/.test(sql('src/services/alias-rules.js')), 'no lookbehind in the nickname rules');
+assert.equal(checkAlias('l.l.l', { extras: true }).alias, 'l·l·l', 'every l.l in a run becomes l·l');
+assert.equal(checkAlias('l·b', { extras: true }).reason, 'chars', 'the dot only between two l');
 // Accepted by default ⇒ accepted by the live client/server contract, unchanged
 for (const [typed] of [...OK, ...BAD]) {
   const got = checkAlias(typed);

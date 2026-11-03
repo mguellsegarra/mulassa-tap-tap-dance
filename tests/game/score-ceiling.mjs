@@ -2,8 +2,8 @@
 // numbers in the client (MAX_SCORES) and on the server (202609280015_score_ceiling.sql), above any perfect run and above
 // everything ?final makes up. If the chart or the scoring changes, this fails until the ceilings are regenerated (and a
 // new migration carries them; a scoring change also needs a LEADERBOARD_VERSION bump).
+// tests/render/scoring-model.mjs plays the same SCORING against the real judge.
 import assert from 'node:assert/strict';
-import { loadMainSource } from '../render/load-main.mjs';
 import { readFileSync } from 'node:fs';
 import { makeDanceChart } from '../../src/game/chart.js';
 import { MAX_SCORES, EXTRAS_MAX, EXPECTED_JUDGMENTS, validResult, LEADERBOARD_VERSION, VERSION_RULES } from '../../src/services/leaderboard-rules.js';
@@ -80,15 +80,4 @@ for (const d of [0, 1, 2]) {
 }
 assert(!validResult({ version: 'mulassa-v3', difficulty: 0, counts: { perfect: 108, good: 0, miss: 0 }, score: 1, maxCombo: 1, figureId: 'drac-valls' }), 'a Mulassa version never takes the Drac');
 
-// the scoring the model assumes is still the game's (src/main.js judge / pump / settleHold / guapaHit, the x2 finale)
-const main = loadMainSource();
-for (const [what, re] of [
-  ['a hit: 300/100 + 2 x combo up to 100, x2 in the finale', new RegExp(`\\(\\(kind === 'perfect' \\? ${SCORING.perfect} : 100\\) \\+ Math\\.min\\(G\\.combo, ${SCORING.comboCap}\\) \\* ${SCORING.comboStep}\\) \\* \\(G\\.doublePoints \\? 2 : 1\\)`)],
-  ['a GUAPA pair adds the note\'s points again', /function guapaHit\(n\) \{[^}]*G\.score \+= n\.pts;/],
-  ['a balloon tap', new RegExp(`G\\.score \\+= ${SCORING.pump} \\* \\(G\\.doublePoints \\? 2 : 1\\);`)],
-  ['a balloon pop', new RegExp(`G\\.score \\+= ${SCORING.pop} \\* n\\.need \\* \\(G\\.doublePoints \\? 2 : 1\\);`)],
-  ['a hold\'s trickle', new RegExp(`\\/ len \\* ${SCORING.hold} \\* \\(G\\.doublePoints \\? 2 : 1\\)`)],
-  ['the finale doubles from song.finale at >= 70%', /const fin = t >= FINALE_T[^,]*, dbl = fin && G\.guapo >= 70;/],
-  ['the balloon window', /const HANDOFF = 0\.06;[\s\S]*const balloonAt = t => G\.balloons\.find\(n => t >= n\.t - WIN\.good && t < n\.end - HANDOFF\);/],
-]) assert(re.test(main), `main.js scoring changed (${what}): update tools/data/score-ceiling.mjs, the ceilings and LEADERBOARD_VERSION`);
 console.log(`score ceilings ok: ${want.join(' / ')} (perfect run +${Math.round((MARGIN - 1) * 100)}%, balloons at ${TAP_RATE} taps/s)`);

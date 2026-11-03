@@ -74,3 +74,89 @@ button { font: inherit; color: inherit; border: 0; cursor: pointer; }
   .crush-stars span.on { animation: none; }
   .crush-bar, .crush-moves { transition: none; }
 }
+
+/* The title and the route: the Seguici's portraits in the dark, as on a festa's night. */
+.crush { --wood: #2a1712; --wine: #4a1626; --cream: #fff2d5; }
+.crush-screen { position: absolute; inset: 0; z-index: 2; display: flex; flex-direction: column; gap: 12px; padding: max(12px, var(--crush-safe-top)) var(--gap) max(16px, var(--crush-safe-bottom)); background: var(--wood); }
+.crush-screen[hidden] { display: none; }
+.crush-screen > * { width: min(100%, 480px); margin-inline: auto; flex: none; }
+.crush .overlay { z-index: 3; }
+.crush-title { justify-content: space-between; background:
+  repeating-conic-gradient(from 0deg at 50% 46%, rgba(255, 170, 170, .09) 0 9deg, transparent 9deg 18deg),
+  radial-gradient(circle at 50% 46%, #a12a42, #6a1c2f 42%, #34121a 85%); }
+.crush-bar-top { display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; justify-items: center; color: var(--cream); font-size: 26px; font-weight: 800; text-shadow: 0 3px 0 rgba(0, 0, 0, .4); }
+.crush-icon { width: 44px; height: 44px; border-radius: 50%; background: rgba(42, 23, 18, .75); border: 2px solid var(--gold); font-size: 20px; color: var(--cream); }
+.crush-pill { margin: 0; padding: 8px 20px; border-radius: 99px; background: rgba(42, 23, 18, .75); border: 2px solid var(--cream); color: var(--cream); font-weight: 800; text-align: center; }
+.crush-actions { display: grid; gap: 12px; }
+.crush-actions .btn, .crush .panel .btn { min-height: 56px; border-radius: 14px; }
+.crush-actions .btn:not(.alt), .crush .panel .btn:not(.alt) { background: linear-gradient(#ffdc4a, #f2b90c); color: var(--wood); box-shadow: 0 4px 0 #a97c06; margin-bottom: 4px; }
+.crush-actions .btn.alt, .crush .panel .btn.alt { background: var(--wood); color: var(--cream); border: 2px solid var(--gold); }
+
+.crush-hero { flex: 1 1 auto !important; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: space-evenly; text-align: center; }
+.crush-logo { margin: 0; font: 800 clamp(44px, 8.4dvh, 72px)/1 'Baloo 2', system-ui, sans-serif; color: var(--cream); text-shadow: 0 2px 0 #e7c79a, 0 5px 0 #6b1420, 0 8px 10px rgba(0, 0, 0, .45); }
+.crush-hero-art { height: clamp(96px, 28dvh, 300px); min-height: 0; aspect-ratio: 1; filter: drop-shadow(0 10px 14px rgba(0, 0, 0, .5)); }
+.crush-row { display: flex; justify-content: center; gap: 4px; width: 100%; }
+.crush-row img { width: min(13%, 52px); aspect-ratio: 1; }
+.crush-hero p { margin: 0; }
+
+/* The route: a plan of Valls behind a thick gold thread that swings from side to side. */
+.crush-map { padding-inline: 0; padding-bottom: 0; background: #241410; }
+.crush-map > .crush-bar-top { padding-inline: var(--gap); }
+.crush-screen.crush-map > .crush-route { width: 100%; }
+.crush-route { flex: 1 1 auto !important; min-height: 0; overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y; }
+.crush-road { position: relative; width: 100%; background: url(/jocs/crush/plano-valls.svg) center / cover no-repeat; }
+.crush-lane { position: relative; width: min(100%, 1040px); height: 100%; margin-inline: auto; }
+.crush-road svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.crush-road path { fill: none; vector-effect: non-scaling-stroke; stroke-linecap: round; }
+.crush-road .lane { stroke: var(--gold); stroke-width: 7px; }
+.crush-stop { position: absolute; width: 0; height: 0; }
+.crush-portrait { position: absolute; left: 14px; top: -46px; width: 92px; height: 92px; padding: 6px; border-radius: 14px; background: #33201a; border: 3px solid var(--cream); box-shadow: 0 4px 8px rgba(0, 0, 0, .5); }
+.crush-portrait img { display: block; width: 100%; height: 100%; }
+.crush-portrait b { position: absolute; left: -33px; top: 26px; width: 38px; height: 38px; display: grid; place-items: center; border-radius: 50%; background: var(--cream); color: var(--wood); border: 3px solid var(--gold); font-size: 17px; font-weight: 800; }
+.crush-stop.later .crush-portrait { border-color: #8d7a6e; cursor: default; }
+.crush-stop.later img { opacity: .5; }
+.crush-stop.later b { background: #cdbba9; border-color: #8d7a6e; }
+.crush-stop i { position: absolute; left: 14px; top: 48px; width: 92px; font-style: normal; font-size: 14px; line-height: 16px; text-align: center; color: var(--gold); }
+.crush-stop.now .crush-portrait { border-color: var(--gold); box-shadow: 0 0 22px 8px rgba(245, 197, 24, .6); }
+
+.crush-osm { position: absolute; left: 0; right: 0; bottom: 8px; text-align: center; font-size: 12px; color: #a8917f; }
+
+/* Panels: the Seguici's silhouettes behind the figure. */
+.crush .panel { position: relative; background: #2d1a14; color: var(--cream); border: 3px solid var(--gold); border-radius: 22px; text-align: center; align-items: stretch; }
+.crush .panel::before { content: ''; position: absolute; inset: 0; pointer-events: none; filter: brightness(0); opacity: .28; background:
+  url(/jocs/crush/cards/bou.png) 6% 6% / 50px no-repeat, url(/jocs/crush/cards/mulassa.png) 40% 3% / 50px no-repeat, url(/jocs/crush/cards/lleo.png) 74% 7% / 50px no-repeat,
+  url(/jocs/crush/cards/drac.png) 5% 38% / 50px no-repeat, url(/jocs/crush/cards/calcot.png) 95% 34% / 50px no-repeat,
+  url(/jocs/crush/cards/aliga.png) 7% 68% / 50px no-repeat, url(/jocs/crush/cards/basilisc.png) 94% 66% / 50px no-repeat,
+  url(/jocs/crush/cards/lleo.png) 10% 96% / 50px no-repeat, url(/jocs/crush/cards/bou.png) 90% 96% / 50px no-repeat; }
+.crush .panel > * { position: relative; }
+.crush .panel h2 { padding-inline: 28px; font: 800 clamp(28px, 9vw, 38px)/1.1 'Baloo 2', system-ui, sans-serif; color: var(--cream); text-shadow: 0 3px 0 rgba(0, 0, 0, .35); }
+.crush .panel p, .crush .panel small { color: var(--cream); }
+.crush .panel img { width: clamp(96px, 22dvh, 170px); aspect-ratio: 1; margin: auto; filter: drop-shadow(0 4px 6px rgba(0, 0, 0, .5)); }
+.crush .panel .crush-icon.crush-close { position: absolute; top: 8px; right: 8px; width: 44px; height: 44px; }
+.crush .panel .crush-stars span { color: #57423a; }
+.crush .panel .crush-stars span.on { color: var(--gold); }
+.crush-stars.small { font-size: 34px; }
+.crush-text { min-height: 44px; background: none; color: var(--cream); font-weight: 800; text-decoration: underline; }
+/* Sparks at both sides of a winner. */
+.crush-burst { position: relative; display: grid; }
+.crush-burst::before, .crush-burst::after { content: ''; position: absolute; top: 8%; width: 44px; height: 44px; background: linear-gradient(var(--gold), var(--gold)) 50% 0 / 6px 18px no-repeat, linear-gradient(var(--gold), var(--gold)) 0 60% / 18px 6px no-repeat; }
+.crush-burst::before { left: 12%; transform: rotate(-20deg); }
+.crush-burst::after { right: 12%; transform: scaleX(-1) rotate(-20deg); }
+
+/* A wide screen is not a stretched phone: the portrait sits beside the words, and the route sweeps across the town. */
+@media (min-width: 800px) {
+  .crush-title { display: grid; grid-template-columns: minmax(0, min(46vw, 560px)) minmax(0, min(46vw, 560px)); justify-content: center; align-content: center; justify-items: center; align-items: center; gap: 3dvh 32px;
+    background: repeating-conic-gradient(from 0deg at calc(50% - min(23vw, 280px)) 50%, rgba(255, 170, 170, .09) 0 9deg, transparent 9deg 18deg), radial-gradient(circle at calc(50% - min(23vw, 280px)) 50%, #a12a42, #6a1c2f 42%, #34121a 85%); }
+  .crush-title > .crush-bar-top, .crush-map > .crush-bar-top { width: 100%; }
+  .crush-title > .crush-bar-top { position: absolute; top: max(12px, var(--crush-safe-top)); left: 0; padding-inline: var(--gap); }
+  .crush-hero { display: contents; }
+  .crush-hero-art { grid-column: 1; grid-row: 1 / 5; height: min(66dvh, 520px); }
+  .crush-logo { font-size: clamp(64px, 13dvh, 112px); }
+  .crush-hero p, .crush-row, .crush-logo, .crush-title .crush-actions { grid-column: 2; }
+  .crush-title .crush-actions { width: 100%; margin: 0; grid-template-columns: 1fr 1fr; }
+  .crush-row img { width: min(13%, 64px); }
+  .crush-route { width: 100%; }
+  .crush-portrait { left: 18px; top: -60px; width: 120px; height: 120px; padding: 8px; }
+  .crush-portrait b { left: -37px; top: 41px; }
+  .crush-stop i { left: 18px; top: 62px; width: 120px; }
+}

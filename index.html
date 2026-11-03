@@ -6,6 +6,9 @@
 <!-- One address: the old Pages host (exactly it, not previews or dev) goes to mulassa.cat, keeping path, ?repte=… and hash.
      Pages _redirects can't match a hostname, so this runs first; tests/build/pages.mjs checks it. -->
 <script>if (location.hostname === 'mulassa-tap-tap-dance.pages.dev') location.replace('https://mulassa.cat' + location.pathname + location.search + location.hash);</script>
+<!-- Straight to the games (mulassa.cat/jocs, a mini-game's back): no rhythm-game loader; the sheet opens as soon as the bundle runs
+     (ui/sheets-setup.js), and closing it before the plaça is ready brings the loader back. -->
+<script>if (location.hash === '#jocs' || /^\/jocs\/?$/.test(location.pathname)) document.documentElement.classList.add('to-jocs');</script>
 <link rel="canonical" href="https://mulassa.cat/">
 <link rel="alternate" type="text/markdown" href="/index.md">
 <!-- A copy of this page kept from before a deploy (a tab woken from memory, iOS's cold start from an old copy) would boot the
@@ -186,6 +189,7 @@
 <link rel="stylesheet" href="/src/styles/feedback.css">
 <link rel="stylesheet" href="/src/styles/select.css">
 <link rel="stylesheet" href="/src/styles/select-cards.css">
+<link rel="stylesheet" href="/src/styles/games-sheet.css">
 <link rel="stylesheet" href="/src/styles/select-sizes.css">
 <link rel="stylesheet" href="/src/styles/select-pending.css">
 <link rel="stylesheet" href="/src/styles/select-chrome.css">
@@ -277,7 +281,7 @@
 </div>
 <button id="viewmode" class="round-btn" hidden aria-pressed="false" aria-label="Joc lliure" title="Joc lliure" data-i18n-attr="aria-label:html.viewmode.aria;title:html.viewmode.aria"><svg class="on" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><svg class="off" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 8v-2a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-7a2 2 0 0 1-2-2v-2M15 12H3l3-3M6 15l-3-3"/></svg></button>
 <button id="music" class="round-btn" hidden data-state="on" aria-label="Silencia el so del menú" title="Silencia el so del menú" data-i18n-attr="aria-label:html.music.aria;title:html.music.aria"><svg class="on" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 9.5h4l5-4.5v14l-5-4.5h-4z"/><path d="M16 9a4.5 4.5 0 0 1 0 6M18.8 6.2a8.5 8.5 0 0 1 0 11.6"/></svg><svg class="off" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 9.5h4l5-4.5v14l-5-4.5h-4z"/><path d="m16.5 9.5 5 5M21.5 9.5l-5 5"/></svg></button>
-<button id="free" class="round-btn" hidden aria-label="Ball lliure" title="Ball lliure" data-i18n-attr="aria-label:html.selectFree.title;title:html.selectFree.title"><!-- Lucide gamepad-2, ISC licence (lucide.dev) --><span class="free-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 11h4M8 9v4M15 12h.01M18 10h.01"/><path d="M17.32 5H6.68a4 4 0 0 0-3.978 3.59c-.006.052-.01.101-.017.152C2.604 9.416 2 14.456 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.414-1.414A2 2 0 0 1 9.828 16h4.344a2 2 0 0 1 1.414.586L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.545-.604-6.584-.685-7.258-.007-.05-.011-.1-.017-.151A4 4 0 0 0 17.32 5z"/></svg></span></button>
+<button id="free" class="round-btn" hidden aria-label="Mulassa Games" title="Mulassa Games" data-i18n-attr="aria-label:html.selectFree.title;title:html.selectFree.title"><span class="free-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="7.5" height="7.5" rx="1.6"/><rect x="13.6" y="2.8" width="7.5" height="7.5" rx="1.6" transform="rotate(14 17.35 6.55)"/><rect x="3.5" y="13" width="7.5" height="7.5" rx="1.6"/><rect x="13" y="13" width="7.5" height="7.5" rx="1.6"/></svg></span></button>
 <button id="settings" class="round-btn" hidden aria-haspopup="dialog" aria-label="Configuració" title="Configuració" data-i18n-attr="aria-label:html.settings.aria;title:html.settings.aria"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
 <dialog id="settings-menu" class="sheet" tabindex="-1" aria-labelledby="settings-title">
   <button id="settings-ok" type="submit" form="settings-form" data-i18n-attr="aria-label:html.attr.close" class="sheet-x" aria-label="Tanca"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
@@ -510,13 +514,13 @@
       <!-- the statistics notice's three lines (#stats-notice-menu): creating a profile is its first upload -->
       <div id="profile-stats-note" class="publish-note" hidden>
         <ul class="stats-facts">
-        <li><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M8 9.5v5M11 9.5l1.5-.8v5.8M15.5 9.5h2.5l-2 2.2a1.6 1.6 0 1 1-.8 2.6"/></svg><span data-i18n="html.common.statsGames">Guardem les teves partides, el temps jugat i els encerts.</span></li>
+        <li><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="14" rx="3.5"/><path d="M10 9l5 3-5 3z" fill="currentColor"/></svg><span data-i18n="html.common.statsGames">Guardem les teves partides, el temps jugat i els encerts.</span></li>
         <li><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.2" r="3.9"/><path d="M4.6 20.4a7.4 7.4 0 0 1 14.8 0"/></svg><span data-i18n="html.common.statsPublic">Tothom pot veure els totals si toca el teu nom.</span></li>
         <li><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M11 15h2v2h-2z" fill="currentColor"/></svg><span data-i18n="html.common.statsDays">Els dies que jugues només els veus tu.</span></li>
         </ul>
-        <button type="button" class="btn btn-link btn-small" data-privacy-open aria-haspopup="dialog" data-i18n="html.common.privacy">Privadesa</button>
       </div>
-      <p id="profile-note" class="publish-note" data-i18n="html.rich.profileNote">El teu correu no és públic. Si tens menys de 14 anys, demana-ho a una persona adulta. <button type="button" class="btn btn-link btn-small" data-privacy-open aria-haspopup="dialog" data-i18n="html.common.privacy">Privadesa</button></p>
+      <button type="button" class="btn btn-link btn-small profile-stats-privacy" data-privacy-open aria-haspopup="dialog" data-i18n="html.common.privacy">Privadesa</button>
+      <p id="profile-note" class="publish-note" data-i18n="html.rich.profileNote">El correu és privat. Menys de 14 anys? Demana-ho a un adult. <button type="button" class="btn btn-link btn-small" data-privacy-open aria-haspopup="dialog" data-i18n="html.common.privacy">Privadesa</button></p>
     </div>
     <p id="profile-status" class="board-status" role="status" aria-live="polite"></p>
     <div class="sheet-actions">
@@ -575,6 +579,35 @@
   </div>
 </dialog>
 <!-- Device tips (src/ui/device-hint.js): once ever, at an idle selector after the profile's news; WebGL in software first -->
+<!-- A new game, told once (src/ui/news-sheet.js fills it). -->
+<dialog id="news-menu" class="sheet hint-menu" tabindex="-1" aria-labelledby="news-title" aria-describedby="news-text">
+  <div id="news-tip" class="sel-heart-tip news-tip" aria-hidden="true" data-i18n="html.news.tip">Són aquí!</div>
+  <button id="news-x" type="button" data-i18n-attr="aria-label:html.attr.close" class="sheet-x" aria-label="Tanca"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  <div class="sheet-body">
+    <h2 id="news-title"></h2>
+    <div id="news-pics" class="news-pics"></div>
+    <p id="news-text" class="board-text"></p>
+    <div class="sheet-actions"><button id="news-go" type="button" class="btn btn-primary" data-i18n="html.news.go">Mira els jocs</button></div>
+  </div>
+</dialog>
+<!-- The corner gamepad (src/ui/games-menu.js). -->
+<dialog id="games-menu" class="sheet" data-arrows="row" tabindex="-1" aria-labelledby="games-title">
+  <button id="games-x" type="button" data-i18n-attr="aria-label:html.attr.close" class="sheet-x" aria-label="Tanca"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  <!-- the title's MULASSA lettering (as .sel-logo) with its glint sweeping across (hud/title.js glint()); GAMES under it, as TAP TAP DANCE:
+       «Mulassa Games» is a name, not translated -->
+  <h2 id="games-title"><svg class="games-logo" aria-hidden="true" focusable="false" viewBox="0 -4 308.6 80" text-anchor="middle" stroke-linejoin="round" paint-order="stroke">
+    <defs><linearGradient id="games-glint" gradientUnits="userSpaceOnUse" x1="-150" y1="0" x2="-60" y2="40"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".75"/><stop offset="1" stop-color="#fff" stop-opacity="0"/><animateTransform attributeName="gradientTransform" type="translate" values="0;560;560" keyTimes="0;.3;1" dur="4.5s" repeatCount="indefinite"/></linearGradient></defs>
+    <g font-family="'Jersey 10'" font-size="100" stroke-width="12"><text x="154.3" y="66.6" textLength="300" lengthAdjust="spacingAndGlyphs" fill="#5e1514" stroke="#5e1514">MULASSA</text><text x="154.3" y="60.6" textLength="300" lengthAdjust="spacingAndGlyphs" fill="#c0283c" stroke="#fff3d6">MULASSA</text><text x="154.3" y="60.6" textLength="300" lengthAdjust="spacingAndGlyphs" fill="url(#games-glint)" stroke="none">MULASSA</text></g>
+  </svg><span class="sr-only">Mulassa Games</span><span class="games-word" aria-hidden="true"><i style="--i:0">G</i><i style="--i:1">A</i><i style="--i:2">M</i><i style="--i:3">E</i><i style="--i:4">S</i></span></h2>
+  <div id="games-hero"><img id="games-hero-back" alt=""><img id="games-hero-art" alt=""><div id="games-hero-text"><span id="games-hero-name"></span><span id="games-hero-desc"></span><button id="games-hero-play" type="button" class="game-play"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15a1 1 0 0 0 1.5.86l12-7.5a1 1 0 0 0 0-1.72l-12-7.5A1 1 0 0 0 7 4.5z"/></svg><span data-i18n="html.games.play">Juga</span></button></div></div>
+  <div id="games-grid" class="games-grid">
+      <button type="button" class="btn btn-secondary sel-card game-card" data-game="tap"><span class="por"><img src="/jocs/menu/cards/tap.jpg" alt="" width="600" height="750"></span><span class="nb"><span class="sel-card-name">Mulassa Tap Tap Dance</span><small class="game-desc">Balla amb les figures al ritme de la música.</small></span></button>
+      <button type="button" class="btn btn-secondary sel-card game-card" data-game="pica"><span class="por"><img src="/jocs/menu/cards/pica.jpg" alt="" width="600" height="750"></span><span class="nb"><span class="sel-card-name" data-i18n="html.games.pica">Mulassa Pop</span><small class="game-desc" data-i18n="html.games.picaDesc">Atrapa la Mulassa. Evita els Dracs.</small></span></button>
+      <button type="button" class="btn btn-secondary sel-card game-card" data-game="memory"><span class="por"><img src="/jocs/menu/cards/memory.jpg" alt="" width="600" height="750"></span><span class="nb"><span class="sel-card-name" data-i18n="html.games.memory">Mulassa Memory</span><small class="game-desc" data-i18n="html.games.memoryDesc">Troba les parelles del Seguici.</small></span></button>
+      <button type="button" class="btn btn-secondary sel-card game-card" data-game="crush"><span class="por"><img src="/jocs/menu/cards/crush.jpg" alt="" width="600" height="750"></span><span class="nb"><span class="sel-card-name" data-i18n="html.games.crush">Mulassa Crush</span><small class="game-desc" data-i18n="html.games.crushDesc">Ajunta tres figures iguals.</small></span></button>
+      <button type="button" class="btn btn-secondary sel-card game-card" data-game="lliure"><span class="por"><img src="/jocs/menu/cards/lliure.jpg" alt="" width="600" height="750"></span><span class="nb"><span class="sel-card-name" data-i18n="html.games.free">Ball lliure</span><small class="game-desc" data-i18n="html.games.lliureDesc">Passeja i balla amb la teva figura.</small></span></button>
+  </div>
+</dialog>
 <dialog id="gpu-hint-menu" class="sheet hint-menu" tabindex="-1" aria-labelledby="gpu-hint-title" aria-describedby="gpu-hint-text">
   <button id="gpu-hint-close" type="button" data-i18n-attr="aria-label:html.attr.close" class="sheet-x" aria-label="Tanca"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
   <div class="sheet-body">
@@ -681,8 +714,6 @@
         </div>
         <div class="feedback-mail">
 <p class="feedback-small" data-i18n="html.rich.feedbackSmall1">Et contestarem al correu del teu perfil. <button id="feedback-privacy" type="button" class="btn btn-link btn-small" data-privacy-open aria-haspopup="dialog" data-i18n="html.common.privacy">Privadesa</button></p>
-          <p id="feedback-direct" class="feedback-small" data-i18n="html.rich.feedbackSmall2">Per drets sobre continguts o dades personals, també pots escriure a <a id="feedback-mailto" href="mailto:holi@mulassa.cat">holi@mulassa.cat</a></p>
-          <p id="feedback-rights" class="feedback-rights" data-i18n="html.feedbackRights">Si tens drets sobre algun contingut del joc i vols que el canviem o el retirem, escriu-nos.</p>
         </div>
       </div>
     </div>
@@ -697,11 +728,26 @@
 <!-- hearts and the Bústia need a confirmed e-mail (src/ui/confirm-gate.js); the Perfil sheets do the confirming -->
 <dialog id="gate-menu" class="sheet" tabindex="-1" aria-labelledby="gate-title" aria-describedby="gate-text">
   <div class="sheet-body">
+    <div id="gate-seal"></div>
     <h2 id="gate-title"></h2>
     <p id="gate-text"></p>
+    <div id="gate-panel"><span id="gate-perks-lead"></span><div id="gate-perks"></div></div>
     <div class="sheet-actions">
       <button id="gate-go" type="button" class="btn btn-primary"></button>
       <button id="gate-later" type="button" class="btn btn-secondary" data-i18n="ui.feedback.cancel">Ara no</button>
+    </div>
+  </div>
+</dialog>
+<!-- once per profile: badges are here, or what confirming the e-mail would earn (src/ui/badge-news.js) -->
+<dialog id="badge-news-menu" class="sheet" tabindex="-1" aria-labelledby="badge-news-title" aria-describedby="badge-news-text">
+  <div class="sheet-body">
+    <h2 id="badge-news-title"></h2>
+    <p id="badge-news-text"></p>
+    <div id="badge-news-name" class="who"></div>
+    <div id="badge-news-shelf" aria-hidden="true"></div>
+    <div class="sheet-actions">
+      <button id="badge-news-go" type="button" class="btn btn-primary"></button>
+      <button id="badge-news-later" type="button" class="btn btn-secondary" data-i18n="ui.feedback.cancel">Ara no</button>
     </div>
   </div>
 </dialog>
@@ -771,28 +817,26 @@
     </div>
   </div>
   <section id="select-pending" class="sel-pending" hidden aria-labelledby="aviat-title">
-    <div class="sel-pending-content">
-      <div class="sel-pending-id">
+    <div class="sel-pending-id">
       <h2 id="aviat-title"></h2>
       <span id="aviat-entity" class="sel-entity"></span>
       <span id="aviat-where" class="sel-where"></span>
-      </div>
       <div id="aviat-text" class="sel-pending-copy" aria-live="polite"></div>
-      <div id="aviat-lower" class="sel-lower">
-        <div class="sel-call">
-          <p id="aviat-love-title" class="sel-call-line"></p>
-          <button id="aviat-heart" type="button" class="sel-heart sel-heart-wide" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5 4.2 12.9a4.8 4.8 0 0 1 6.8-6.8l1 1 1-1a4.8 4.8 0 0 1 6.8 6.8z"/></svg><b id="aviat-love-sub"></b><span></span></button>
-        </div>
-        <div class="sel-state">
-          <div class="sel-state-words"><p id="aviat-status" class="sel-status"></p>
-          <p id="aviat-missing" class="sel-missing"></p></div>
+      <button id="aviat-propose" type="button" class="btn btn-primary" aria-haspopup="dialog" data-i18n="figures.invite.action">Proposa una figura</button>
+    </div>
+    <div id="aviat-lower" class="sel-lower">
+      <div class="sel-state">
+        <div class="sel-state-words"><p id="aviat-status" class="sel-status"></p>
+        <p id="aviat-missing" class="sel-missing"></p></div>
+        <div id="aviat-actions" class="sel-pending-actions">
+          <button id="aviat-material" type="button" class="btn btn-secondary" aria-haspopup="dialog" data-i18n="figures.pending.materialAction">Vull ajudar a fer-ho</button>
+          <a id="aviat-code" class="btn btn-link btn-compact sel-code-link" href="https://github.com/mguellsegarra/mulassa-tap-tap-dance" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" stroke="none" d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 0-.8.4-1.3.7-1.6-2.7-.3-5.5-1.3-5.5-6 0-1.2.5-2.3 1.3-3.1-.2-.4-.6-1.6 0-3.2 0 0 1-.3 3.4 1.2a11.5 11.5 0 0 1 6 0c2.3-1.5 3.3-1.2 3.3-1.2.6 1.6.2 2.8.1 3.2.8.8 1.3 1.9 1.3 3.1 0 4.6-2.8 5.6-5.5 5.9.5.4.9 1.1.9 2.2v3.3c0 .3.1.7.8.6A12 12 0 0 0 12 .3"/></svg><span data-i18n="html.aviatCode">Col·labora a GitHub</span></a>
         </div>
       </div>
-    </div>
-    <div id="aviat-actions" class="sel-pending-actions">
-      <button id="aviat-material" type="button" class="btn btn-secondary" aria-haspopup="dialog" data-i18n="figures.pending.materialAction">Vull ajudar a fer-ho</button>
-      <button id="aviat-propose" type="button" class="btn btn-primary" aria-haspopup="dialog" data-i18n="figures.invite.action">Proposa una figura</button>
-      <a id="aviat-code" class="btn btn-link btn-compact sel-code-link" href="https://github.com/mguellsegarra/mulassa-tap-tap-dance" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" stroke="none" d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 0-.8.4-1.3.7-1.6-2.7-.3-5.5-1.3-5.5-6 0-1.2.5-2.3 1.3-3.1-.2-.4-.6-1.6 0-3.2 0 0 1-.3 3.4 1.2a11.5 11.5 0 0 1 6 0c2.3-1.5 3.3-1.2 3.3-1.2.6 1.6.2 2.8.1 3.2.8.8 1.3 1.9 1.3 3.1 0 4.6-2.8 5.6-5.5 5.9.5.4.9 1.1.9 2.2v3.3c0 .3.1.7.8.6A12 12 0 0 0 12 .3"/></svg><span data-i18n="html.aviatCode">Col·labora a GitHub</span></a>
+      <div class="sel-call">
+        <p id="aviat-love-title" class="sel-call-line"></p>
+        <button id="aviat-heart" type="button" class="sel-heart sel-heart-wide" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5 4.2 12.9a4.8 4.8 0 0 1 6.8-6.8l1 1 1-1a4.8 4.8 0 0 1 6.8 6.8z"/></svg><b id="aviat-love-sub"></b><span></span></button>
+      </div>
     </div>
   </section>
   <div id="select-bottom" class="sel-bottom">

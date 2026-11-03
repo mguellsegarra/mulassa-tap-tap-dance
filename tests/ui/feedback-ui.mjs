@@ -125,6 +125,24 @@ sendFail = null; menu.close();
   release(true); await tick(); await tick();
   assert(!menu.open && el('feedback-thanks').open);
 }
+// a real dialog queues its close event: the thank-you opened meanwhile must keep its timer, and Configuració waits under it
+{
+  const menu = el('feedback-menu'), thanks = el('feedback-thanks'), fire = menu.close, cleared = [];
+  globalThis.clearTimeout = id => cleared.push(id);
+  let back = 0, queued = null;
+  thanks.close(); // the block above left it up
+  service.send = async () => true;
+  menu.close = function () { this.open = false; queued = () => this.fire('close'); };
+  fb.show(() => back++); text.value = 'Un missatge des de Configuració'; el('feedback-form').fire('submit'); for (let i = 0; i < 12 && !queued; i++) await tick();
+  assert(thanks.open, 'sent: the thank-you is up');
+  const timer = timers.length;
+  queued();
+  assert.equal(back, 0, 'the sheet it came from does not open over the thank-you');
+  assert(!cleared.includes(timer), 'its timer survives the box\'s late close event');
+  timers.at(-1)();
+  assert(!thanks.open); assert.equal(back, 1, 'and comes back when it closes');
+  menu.close = fire; globalThis.clearTimeout = () => {};
+}
 globalThis.setTimeout = realTimeout;
 
 console.log('feedback sheet ok');

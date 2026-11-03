@@ -16,7 +16,7 @@ const deps = new Map();
 for (const f of files) {
   const list = [];
   for (const m of readFileSync(f, 'utf8').matchAll(IMPORT)) {
-    const spec = m[1] ?? m[2], target = resolve(dirname(f), spec);
+    const spec = m[1] ?? m[2], target = resolve(dirname(f), spec.split('?')[0]); // Vite's ?raw names the same file
     assert(existsSync(target), `${relative(root, f)} imports ${spec}, which does not exist`);
     if (target.endsWith('.js')) list.push(target);
   }

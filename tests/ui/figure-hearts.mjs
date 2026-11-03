@@ -24,4 +24,58 @@ assert.equal(hearts.count('bou'), 2); assert.deepEqual(writes, [], "the old acco
   h.reload(); assert.equal(notes.length, 0, 'another account does not inherit it');
   await h.load(); h.tap({ id: 'bou' }, button); await tick(); await tick(); assert.equal(notes.length, 1);
   on = true; h.tap({ id: 'bou' }, button); await tick(); await tick(); assert.equal(notes.length, 0, 'a retry that saves clears it'); assert.equal(h.mine('bou'), true); }
+// on a pending card the note keeps to its button's width, centred in the room above the next button
+{ const notes = [];
+  const doc = { defaultView: { innerWidth: 668, matchMedia: () => ({ matches: true }) }, createElement: () => ({ style: {}, offsetWidth: 200, offsetHeight: 30, setAttribute() {}, remove() {} }), body: { append: n => notes.push(n) } };
+  const card = { querySelector: () => ({ getBoundingClientRect: () => ({ top: 100, height: 44 }) }) };
+  const button = { ownerDocument: doc, getBoundingClientRect: () => ({ left: 29, width: 229, bottom: 50 }), closest: s => (s === '.sel-pending' ? card : null), querySelector: () => ({ classList: { add() {}, remove() {} }, getBoundingClientRect: () => ({}) }), classList: { add() {}, remove() {} } };
+  const h = setupHearts({ service: { figureHearts: async () => [], setFigureHeart: async () => { throw new Error('down'); } }, needConfirmed: (r, run) => run() });
+  h.tap({ id: 'os' }, button); await tick(); await tick();
+  assert.equal(notes[0].style.maxWidth, '229px', 'no wider than the button');
+  assert.equal(notes[0].style.top, '60px', 'the same room above and below');
+  h.reload(); }
 console.log('figure hearts ok');
+// the account changed: until the new identity is read, nothing of the last one shows or can be inverted
+{
+  const writes = [], h = setupHearts({ service: { figureHearts: async () => [{ figure: 'bou', hearts: 4, mine: true }], setFigureHeart: async (id, on) => { writes.push(on); return 1; } }, needConfirmed: (_, run) => run() });
+  await h.load();
+  assert(h.mine('bou'));
+  h.forget();
+  assert(!h.mine('bou') && h.count('bou') === null, 'at once, not after the identity read');
+  // a tap right after, with the identity read still going: its save is the new account's and must land
+  let saved; const slow = new Promise(r => { saved = r; }), done = [];
+  const g = setupHearts({ service: { figureHearts: async () => [], setFigureHeart: async (id, on) => { done.push(on); await slow; return 1; } }, needConfirmed: (_, run) => run() });
+  await g.load(); g.forget();
+  const btn = { ownerDocument: { defaultView: { matchMedia: () => ({ matches: true }) } }, querySelector: () => ({ classList: { remove() {}, add() {} }, getBoundingClientRect: () => ({}) }), getBoundingClientRect: () => ({}), closest: () => null };
+  g.tap({ id: 'bou' }, btn); await tick(); await tick();
+  await g.load(); saved(); await tick(); await tick();
+  assert.deepEqual(done, [true]); assert(g.mine('bou'), 'what the identity read ends with is only a load: the saved heart stays on');
+}
+// a tap shows at once, before the server answers; a refusal undoes it
+{
+  let answer; const seen = [], icon = { classList: { add: c => seen.push(c), remove() {} }, getBoundingClientRect: () => ({}) };
+  const doc = { defaultView: { innerWidth: 400, matchMedia: () => ({ matches: true }) }, createElement: () => ({ style: {}, offsetWidth: 100, setAttribute() {}, remove() {} }), body: { append() {} } };
+  const button = { ownerDocument: doc, getBoundingClientRect: () => ({ left: 10, width: 40, bottom: 50 }), closest: () => null, querySelector: () => icon };
+  const h = setupHearts({ service: { figureHearts: async () => [{ figure: 'bou', hearts: 4, mine: false }], setFigureHeart: () => new Promise((ok, no) => { answer = { ok, no }; }) }, needConfirmed: (_, run) => run() });
+  await h.load(); h.tap({ id: 'bou' }, button); await tick();
+  assert(h.mine('bou')); assert.equal(h.count('bou'), 5, 'counted before the answer'); assert(seen.includes('sel-heart-pop'), 'the burst too');
+  answer.ok(5); await tick(); assert(h.mine('bou')); assert.equal(h.count('bou'), 5);
+  seen.length = 0; h.tap({ id: 'bou' }, button); await tick();
+  assert(!h.mine('bou')); assert.equal(h.count('bou'), 4); assert.equal(seen.length, 0, 'taking it back: no burst');
+  answer.no(new Error('down')); await tick(); assert(h.mine('bou'), 'refused: it was never taken back'); assert.equal(h.count('bou'), 5);
+  h.reload();
+}
+// confirming an e-mail fires an account event for the same account: a save under way and its burst stay, nothing flickers back
+{
+  let answer, who = 'u1', lists = 0; const doc = { defaultView: { innerWidth: 400, matchMedia: () => ({ matches: true }) }, createElement: () => ({ style: {}, setAttribute() {}, remove() {} }), body: { append() {} } };
+  const button = { ownerDocument: doc, getBoundingClientRect: () => ({}), closest: () => null, querySelector: () => ({ classList: { add() {}, remove() {} }, getBoundingClientRect: () => ({}) }) };
+  const h = setupHearts({ service: { ownerId: async () => who, figureHearts: async () => { lists++; return [{ figure: 'bou', hearts: 4, mine: who === 'u2' }]; }, setFigureHeart: () => new Promise(ok => { answer = ok; }) }, needConfirmed: (_, run) => run() });
+  await h.load(); h.tap({ id: 'bou' }, button); await tick(); await tick(); await tick();
+  assert(h.mine('bou'));
+  await h.accountChanged(); await tick();
+  assert(h.mine('bou'), 'same account: the heart stays red'); assert.equal(h.count('bou'), 5); assert.equal(lists, 1, 'and nothing is read over the save');
+  answer(5); await tick(); await tick(); assert(h.mine('bou')); assert.equal(h.count('bou'), 5, 'the answer lands');
+  who = 'u2'; const change = h.accountChanged(); let wrote = 0; const before = answer; h.tap({ id: 'bou' }, button); await change; await tick(); await tick(); await tick();
+  assert.equal(lists, 2, 'another account reads its own'); assert.notEqual(answer, before); wrote = 1;
+  assert.equal(wrote, 1); assert(!h.mine('bou'), 'the tap waited, then took back u2\'s own heart, not u1\'s');
+}

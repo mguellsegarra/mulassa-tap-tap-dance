@@ -6,7 +6,7 @@ import { boardIssue } from '../services/leaderboard-errors.js';
 import { num, trSplit, posDisc } from './sheet-kit.js';
 import { tr } from '../i18n/messages.js';
 import { mulaSpinner } from './loader.js';
-import { appendName, playerOf, GUEST_ROW } from './profile-notes.js';
+import { appendName, playerOf } from './profile-notes.js';
 import { figureSeasons, seasonLine, calendarSeason, closedSeasons, podiumList, ofSeason } from './seasons-ui.js';
 import { MULASSA } from '../game/figures.js';
 import { setupFigurePicker, PICKER_FIGURES, figurePortrait } from './figure-picker.js';
@@ -19,7 +19,7 @@ const CLOUD_OFF = '<svg viewBox="0 0 24 24"><path d="M8 18h9.5a3.5 3.5 0 0 0 .4-
 
 // canPublish(): a run on the results screen not yet published (with runFigure() its figure) for «Publica el teu resultat»;
 // openPublish(): that sheet; publishing(): it is open (closing this one then goes nowhere)
-export function setupBoardList({ doc, $, service, store, focusIn, minLoad, now, observe, onCard, onSeasons, onKeep, currentFigure,
+export function setupBoardList({ doc, $, service, store, focusIn, minLoad, now, observe, onCard, onSeasons, currentFigure,
   canPlay = () => false, onPlay = () => {}, canPublish, runFigure, openPublish, publishing }) {
   const boardMenu = $('board-menu'), tbody = $('board-rows'), table = $('board-table'), box = $('board-scroll');
   const place = $('board-place'), jump = $('board-jump'), jumpLabel = $('board-jump-t');
@@ -98,15 +98,6 @@ export function setupBoardList({ doc, $, service, store, focusIn, minLoad, now, 
   const narrow = globalThis.matchMedia?.('(max-width: 519px)');
   const spanAll = td => { const n = narrow?.matches ? 3 : 4; td.colSpan = n; td.setAttribute?.('colspan', String(n)); };
   narrow?.addEventListener?.('change', () => tbody.querySelectorAll?.('td[colspan]').forEach(spanAll));
-  // under a guest's own row: a quiet way to keep the profile (the Perfil's e-mail step)
-  function guestHint() {
-    const trow = el('tr', 'me-hint'), td = trow.appendChild(doc.createElement('td'));
-    spanAll(td);
-    const b = td.appendChild(el('button', 'btn btn-link btn-small', GUEST_ROW));
-    b.type = 'button'; b.setAttribute('aria-haspopup', 'dialog');
-    b.addEventListener('click', () => onKeep()); // over the board
-    return trow;
-  }
   // between the unbroken list and the own row's neighbours: the ranks not loaded yet, and a way to load them
   function gapRow() {
     const trow = el('tr', 'gap'), td = trow.appendChild(doc.createElement('td'));
@@ -115,7 +106,7 @@ export function setupBoardList({ doc, $, service, store, focusIn, minLoad, now, 
     btn.type = 'button'; btn.addEventListener('click', () => loadMore());
     return { row: trow, btn };
   }
-  const rowsOf = r => (r.is_self && r.verified !== true && !season && onKeep ? [row(r), guestHint()] : [row(r)]);
+  const rowsOf = r => [row(r)];
   const shownRanks = b => Math.min(b.loaded, BOARD_CAP);
   // ranks from..to into the list: before the gap while there is one, never twice (the neighbours are already there)
   function appendRanks(b, from, to) {

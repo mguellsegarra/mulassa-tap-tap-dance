@@ -4,6 +4,9 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { Vox } from '../../../scene/models/voxel.js';
 import { buildMulassa, C } from '../../../figures/mulassa/mulassa.js';
 import { buildDrac, DRAC_SCALE } from '../../../figures/drac/drac.js';
+import { buildSimpleMulassa, buildSimpleDrac } from './simple-figures.js';
+
+export const SIMPLE = import.meta.env.DEV && new URLSearchParams(location.search).has('simple'); // the chunky-voxel prototype
 
 // A rig's voxel parts, in their rest pose, as one geometry (position, normal, colour).
 export function bake(root, { scale = 1, yaw = 0 } = {}) {
@@ -21,9 +24,18 @@ export function bake(root, { scale = 1, yaw = 0 } = {}) {
   return merged;
 }
 
-export const MULA_SCALE = .72, MULA_YAW = 1.2;
+export const MULA_SCALE = SIMPLE ? .64 : .72, MULA_YAW = SIMPLE ? .65 : 1.2;
 // Every figure strikes one of these, a new one each time it appears. Angles in radians; yaw is on top of the figure's facing.
-export const MULA_POSES = [
+// Raised heads and three-quarter faces: the chunky head is a blob from behind.
+const SIMPLE_MULA_POSES = [
+  { neck: -.12, head: -.45, yaw: .25 },
+  { neck: .06, head: -.55, yaw: -1.55, jaw: .3 },
+  { neck: -.18, head: -.5, body: -.06, yaw: .45, jaw: .45 },
+  { neck: -.06, head: -.4, turn: -.18, yaw: -1.75 },
+  { neck: .08, head: -.55, body: .04, yaw: .15, jaw: .2 },
+  { neck: -.1, head: -.5, turn: .2, roll: .05, yaw: -1.45 },
+];
+export const MULA_POSES = SIMPLE ? SIMPLE_MULA_POSES : [
   { neck: .15, head: .2, yaw: 0 }, // proud
   { neck: .95, head: .45, yaw: 0, jaw: .3 }, // head down, grazing
   { neck: -.2, head: -.5, body: -.2, yaw: 0, jaw: .45 }, // rearing, braying
@@ -31,7 +43,16 @@ export const MULA_POSES = [
   { neck: .55, head: .1, body: .16, yaw: -2.4, jaw: .2 }, // rump up
   { neck: .05, head: -.15, turn: -.6, roll: .14, yaw: .5 }, // leaning, towards the camera
 ];
-export const DRAC_POSES = [
+// Each head keeps to its own side: splayed necks, and never turned towards the other (they would merge).
+const SIMPLE_DRAC_POSES = [
+  { necks: [.3, .3], heads: [[-.85, .1], [-.85, -.1]], jaws: [.25, .25], splay: .2, wing: .1 },
+  { necks: [.05, .6], heads: [[-1.15, .25], [-.6, -.2]], jaws: [.7, .1], splay: .2, wing: .5 },
+  { necks: [.3, .3], heads: [[-.8, .6], [-.8, -.6]], jaws: [.2, .2], splay: .3, wing: .2 },
+  { necks: [.1, .1], heads: [[-1.05, .15], [-1.05, -.15]], jaws: [.55, .55], splay: .25, wing: 1, lean: -.08 },
+  { necks: [.45, .15], heads: [[-.75, .3], [-1, -.3]], jaws: [.15, .4], splay: .25, wing: .3 },
+  { necks: [.2, .45], heads: [[-1, .4], [-.8, -.1]], jaws: [.45, .2], splay: .2, yaw: .5, wing: .6, lean: .05 },
+];
+export const DRAC_POSES = SIMPLE ? SIMPLE_DRAC_POSES : [
   { necks: [.3, .3], heads: [[-.85, 0], [-.85, 0]], jaws: [.25, .25], wing: .1 }, // watching you
   { necks: [.05, .6], heads: [[-1.15, .2], [-.60, -.2]], jaws: [.7, .1], wing: .5 }, // one roars, one looks on
   { necks: [.3, .3], heads: [[-.80, .6], [-.80, -.6]], jaws: [.2, .2], splay: .2, wing: .2 }, // each its own way
@@ -60,8 +81,9 @@ export function poseDrac(d, P, t = 0, ph = 0, fire = 0) {
   d.body.rotation.x = P.lean ?? 0;
 }
 export function mulaRig() {
-  const m = buildMulassa();
+  const m = SIMPLE ? buildSimpleMulassa() : buildMulassa();
   m.peek.removeFromParent(); // her portador's face, for when things go wrong in the other game
+  if (SIMPLE) { m.root.rotation.order = 'YXZ'; poseMula(m, MULA_POSES[0]); return m; }
   const legs = new Vox();
   for (const [x, z] of [[-.3, 1.1], [.3, 1.1], [-.3, -1.1], [.3, -1.1]]) legs.box(x, .05, z, .2, .5, .22, C.pants, 0).box(x, 0, z + .04, .22, .1, .32, C.shoe, 0);
   m.root.add(legs.mesh());
@@ -85,7 +107,7 @@ export function rigParts(root) {
   return parts;
 }
 export function dracRig() {
-  const d = buildDrac({ wideEyes: true });
+  const d = SIMPLE ? buildSimpleDrac() : buildDrac({ wideEyes: true });
   for (const f of d.fire) f.removeFromParent(); // the board's fire is its particles
   // the rig leaves its legs to the dance: at rest, the carrier stands under the body
   d.legs.forEach(({ shoe, pants }, i) => { const s = i ? 1 : -1; shoe.position.set(s * .36, 0, .05); pants.position.set(s * .36, 0, .05); });
@@ -93,12 +115,16 @@ export function dracRig() {
   poseDrac(d, DRAC_POSES[0]);
   return d;
 }
-export const DRAC_YAW = .3, DRAC_K = DRAC_SCALE * 1.02;
+export const DRAC_YAW = .3, DRAC_K = DRAC_SCALE * (SIMPLE ? .94 : 1.02);
 export const bakeDrac = () => bake(dracRig().root, { scale: DRAC_K, yaw: DRAC_YAW });
 // The traps' trick: the same figure in the other figure's colour.
-export function swapRedGreen(geo) {
-  const g = geo.clone(), c = g.attributes.color;
-  for (let i = 0; i < c.count; i++) { const r = c.getX(i); c.setX(i, c.getY(i)); c.setY(i, r); }
+// The fake Drac: only its green scales turn red, keeping their shading; swapping the channels gave a dull plum.
+export function redScales(geo) {
+  const g = geo.clone(), c = g.attributes.color, red = new THREE.Color('#c42a2a');
+  for (let i = 0; i < c.count; i++) {
+    const k = c.getY(i) / .147; // the Drac's main green, in linear colour
+    if (c.getY(i) > c.getX(i) && c.getY(i) > c.getZ(i)) c.setXYZ(i, red.r * k, red.g * k, red.b * k);
+  }
   return g;
 }
 

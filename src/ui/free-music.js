@@ -18,7 +18,8 @@ import { tr } from '../i18n/messages.js';
 
 const FM_NOTE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V6l11-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/></svg>';
 const FM_NO_MUSIC = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V6l11-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/><path d="m3 3 18 18"/></svg>';
-const RADIO_SEEN_KEY = 'radio-hint-seen'; // «Ara sona» on entering says the music can be changed: once ever
+const RADIO_TIP_KEY = 'radio-tip-seen', RADIO_TIP_MS = 6000, RADIO_TIP_LEAVE_MS = 260, RADIO_TIP_RETRY_MS = 800; // LEAVE: sel-tip-out's length
+const RADIO_TIP_GAP = 22; // the tail (9 px) and the bob (5 px) stay clear of the button and its dot (2 px past its edge)
 const FM_NOW_MS = 2600, FM_PRELOAD = 15; // the next song starts loading FM_PRELOAD s before this one ends
 export const nextTrack = (i, off) => (i + 1) % off; // Mulassa → Drac → (Bou) → the menu loop; `off`, the last row, is never next
 
@@ -39,7 +40,7 @@ export function setupFreeMusic({ eye, onSound }) {
   now.id = 'radio-now'; now.hidden = true; now.setAttribute('role', 'status');
   eye.after(btn, menu, now);
   const rows = [...menu.querySelectorAll('.fm-row')];
-  let shown = false, open = false, cur = 0, playing = -1, loading = -1, failed = -1, token = 0, preT = 0, nowT = 0;
+  let shown = false, open = false, cur = 0, playing = -1, loading = -1, failed = -1, token = 0, preT = 0, nowT = 0, tip = null, tipT = 0, askT = 0, tipSpent = false;
   const contextChanged = () => { if (shown) render(); };
 
   function render() {
@@ -74,13 +75,38 @@ export function setupFreeMusic({ eye, onSound }) {
       menu.style.setProperty('--radio-bubble', `url("data:image/svg+xml,${encodeURIComponent(svg)}")`);
     }
   }
+  // The heart's red ribbon (select-pending.css) under the button, once ever: nobody finds the radio by its icon alone.
+  const spendTip = () => { tipSpent = true; store.set(RADIO_TIP_KEY, '1'); }; // the flag: storage may be blocked
+  function placeTip() {
+    if (!tip) return;
+    const r = btn.getBoundingClientRect(), centre = r.left + r.width / 2, x = Math.max(12, Math.min(centre - tip.offsetWidth / 2, innerWidth - tip.offsetWidth - 12));
+    tip.style.left = `${x}px`; tip.style.top = `${r.bottom + RADIO_TIP_GAP}px`; tip.style.setProperty('--tail', `${centre - x}px`);
+  }
+  function hideTip() {
+    clearTimeout(tipT); clearTimeout(askT);
+    if (!tip) return;
+    const leaving = tip; tip = null;
+    leaving.classList.add('sel-tip-out'); setTimeout(() => leaving.remove(), RADIO_TIP_LEAVE_MS);
+  }
+  // any help, sheet, status pill or the «gira» cover on screen: it waits its turn, its one showing unspent
+  const tipCovered = () => document.hidden || document.body.classList.contains('wrong-orient') || document.querySelector('dialog[open], #photo-tip[data-visible="true"], #radio-now:not([hidden])[data-visible="true"]');
+  function discover() { // after the controls' intro has gone (ui/photo-avatars.js)
+    clearTimeout(askT);
+    if (!shown || open || tip || tipSpent || store.get(RADIO_TIP_KEY) === '1') return;
+    if (tipCovered()) { askT = setTimeout(discover, RADIO_TIP_RETRY_MS); return; }
+    spendTip();
+    tip = document.createElement('div'); tip.className = 'sel-heart-tip'; tip.setAttribute('role', 'status'); tip.textContent = tr('ui.radio.tip');
+    tip.addEventListener('click', hideTip);
+    document.body.append(tip); placeTip();
+    tipT = setTimeout(hideTip, RADIO_TIP_MS);
+  }
   function announce() {
     const status = tr(cur === FM_OFF ? 'ui.radio.stopped' : chip?.running ? 'ui.radio.playing' : 'ui.radio.tapResume');
     now.innerHTML = `<span class="fm-art">${tracks[cur].art}</span><span><small>${status}</small><b>${tracks[cur].title}</b></span>`;
     now.dataset.kind = tracks[cur].kind; now.hidden = false; now.dataset.visible = 'true'; now.setAttribute('aria-hidden', 'false');
     clearTimeout(nowT); nowT = setTimeout(() => { now.dataset.visible = 'false'; now.setAttribute('aria-hidden', 'true'); }, FM_NOW_MS);
   }
-  function settle(i, quiet = false) { // the choice took: list, button, toast (entering free play is quiet: discover() tells it once)
+  function settle(i, quiet = false) { // the choice took: list, button, toast (entering free play is quiet)
     loading = -1; cur = i;
     setOpen(false); render();
     if (shown && !quiet) announce();
@@ -114,6 +140,7 @@ export function setupFreeMusic({ eye, onSound }) {
     if (on === open || on && !shown) return;
     open = on; menu.hidden = !on; btn.setAttribute('aria-expanded', String(on));
     if (on) {
+      spendTip(); hideTip(); // found it alone: no need to point at it
       clearPhotoKeys(); // stops her and drops the mouse look (its pointer lock goes with it: ui/mouse-look.js)
       clearTimeout(nowT); now.hidden = true; now.dataset.visible = 'false'; now.setAttribute('aria-hidden', 'true'); render(); place();
       rows[cur].focus({ preventScroll: true });
@@ -144,7 +171,7 @@ export function setupFreeMusic({ eye, onSound }) {
     else if (step) { take(); const i = rows.indexOf(document.activeElement); rows[((i < 0 ? cur : i) + step + rows.length) % rows.length].focus(); }
     else if (e.code === 'Home' || e.code === 'End') { take(); rows[e.code === 'Home' ? 0 : rows.length - 1].focus(); }
   }, true);
-  addEventListener('resize', () => { if (shown) place(); });
+  addEventListener('resize', () => { if (shown) { place(); placeTip(); } });
 
   return {
     get open() { return open; },
@@ -153,7 +180,7 @@ export function setupFreeMusic({ eye, onSound }) {
       shown = on; btn.hidden = !on;
       if (on) { chip?.ctx?.addEventListener?.('statechange', contextChanged); cur = menuMusic ? 0 : FM_OFF; failed = -1; place(); render(); return; }
       chip?.ctx?.removeEventListener?.('statechange', contextChanged);
-      setOpen(false); token++; clearTimeout(preT); clearTimeout(nowT); now.hidden = true; loading = -1;
+      hideTip(); setOpen(false); token++; clearTimeout(preT); clearTimeout(nowT); now.hidden = true; loading = -1;
       playing = -1; chip?.radio?.(null); // ended may have cleared the source while the next track is still decoding
       chip?.radioKeep?.([]);
     },
@@ -161,10 +188,7 @@ export function setupFreeMusic({ eye, onSound }) {
       const i = tracks.findIndex(t => t.kind === id);
       if (shown && menuMusic && i > 0) pick(i, false, true);
     },
-    discover() { // once ever, after the controls' intro has gone (ui/photo-avatars.js): what sounds, and that the button changes it
-      if (!shown || open || store.get(RADIO_SEEN_KEY) === '1') return;
-      store.set(RADIO_SEEN_KEY, '1'); announce();
-    },
+    discover,
     beat() { // the plaça claps on the playing song's beats (main.js → animCrowd); null: the menu's own beat
       const t = playing >= 0 ? chip?.radioTime?.() : null;
       return t == null ? null : beatAtTime(tracks[playing].song.beats, t);

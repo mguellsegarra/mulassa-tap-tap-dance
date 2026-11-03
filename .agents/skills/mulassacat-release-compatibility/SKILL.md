@@ -8,7 +8,7 @@ Apply only to Mulassa and its checkouts. Read the current repository AGENTS.md a
 # Release compatibility
 
 Identify the exact candidate revision, current contracts and intended release surfaces.
-Read the current pipeline and project commands. Select checks from the actual changes:
+Read the current pipeline and project commands. Run `npm run check:full` locally before a release: CI has no Playwright, so it skips the GPU tests. Select further checks from the actual changes:
 UI-only releases do not need database rehearsals, and a read-only review performs no writes.
 
 ## Compatibility and delivery

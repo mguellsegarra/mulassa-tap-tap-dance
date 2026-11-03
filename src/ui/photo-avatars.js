@@ -36,6 +36,7 @@ avatarsEl.after(pfTip);
 
 function clearPhotoTip() {
   clearTimeout(pfTipT); clearTimeout(pfIntroT);
+  if (pfShown) pfIntroT = setTimeout(radioHint, 600); // a help dismissed early (a key, a blur) must not lose the radio's tip: it waits for what comes next
   pfTip.hidden = true;
   pfTip.dataset.visible = 'false';
   pfTip.setAttribute('aria-hidden', 'true');
@@ -72,7 +73,7 @@ export function showPhotoHelp(manual = true) {
 const pfAutoShown = new Set(); // session fallback when browser storage is blocked
 const photoHelpSeenKey = family => `photo-help-seen-${family}`; // Mulassa and Drac share the figure controls introduction
 let pfShown = false, pfTipFor = null, pfTipT = 0, pfIntroT = 0, pfTipManual = false;
-let radioHint = () => {}; // free-music's once-only «Ara sona», told when the entry tip is over
+let radioHint = () => {}; // free-music's once-only red tip, told when the entry tip is over
 export const setRadioHint = f => (radioHint = f);
 export const photoHelpAvailable = () => pfShown;
 // a phone held upright in free play shows the «gira» cover (fullscreen.js): the first help waits for the turn

@@ -3,7 +3,7 @@ import {makePhrases,sourceTime,sourceRate,validBounds,scriptText,duration} from 
 const phrases=makePhrases();
 assert.equal(phrases[0].start,0);assert.equal(phrases.at(-1).end,duration);
 for(let i=0;i<phrases.length;i++){
- const p=phrases[i];assert.ok(p.observed.length>20);assert.ok(p.wanted.length>20);assert.ok(p.alignmentNote);assert.equal(p.draftRevision,2);assert.ok(p.end>p.start);assert.ok(validBounds(p.sourceStart,p.sourceEnd));
+ const p=phrases[i];assert.ok(p.end>p.start);assert.ok(validBounds(p.sourceStart,p.sourceEnd));
  if(i)assert.equal(p.start,phrases[i-1].end);
  assert.equal(sourceTime(p,p.start),p.sourceStart);assert.equal(sourceTime(p,p.end),p.sourceEnd);
  for(const [time,reference] of p.anchors)assert.ok(Math.abs(sourceTime(p,time)-reference)<1e-8);

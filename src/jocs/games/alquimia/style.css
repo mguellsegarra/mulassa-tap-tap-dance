@@ -1,0 +1,167 @@
+@font-face { font-family: 'Baloo 2'; font-weight: 600 800; font-display: swap; src: url(/fonts/baloo-2-latin.woff2) format('woff2'); unicode-range: U+0000-00FF, U+2000-206F; }
+@font-face { font-family: 'Baloo 2'; font-weight: 600 800; font-display: swap; src: url(/fonts/baloo-2-latin-ext.woff2) format('woff2'); unicode-range: U+0100-02BA; }
+@font-face { font-family: 'Jersey 10'; font-display: swap; src: url(/fonts/jersey-10-latin.woff2) format('woff2'); unicode-range: U+0000-00FF, U+2000-206F; }
+@font-face { font-family: 'Jersey 10'; font-display: swap; src: url(/fonts/jersey-10-latin-ext.woff2) format('woff2'); unicode-range: U+0100-02BA; }
+
+:root { --bg: #1b1420; --card: #2c2233; --ink: #fff2d5; --dim: #b9a9b0; --gold: #f5c518; --red: #c0283c; --radius: 16px; --gap: 16px; }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); font: 600 16px/1.25 'Baloo 2', system-ui, sans-serif; overscroll-behavior: none; }
+body { user-select: none; -webkit-user-select: none; }
+button { font: inherit; color: inherit; border: 0; cursor: pointer; }
+#app { min-height: 100dvh; display: flex; flex-direction: column; }
+
+/* An alchemist's bench at night: cauldron above, a wooden shelf of medallions below. Centred on wide screens. */
+.alq { --gold: #f5c518; --brass: #e3bf62; --wood: #3a2416; --parch: #efdcb0; --ink: #33210f; position: fixed; inset: 0 0 auto; height: 100dvh; display: flex; justify-content: center; overflow: hidden; touch-action: manipulation;
+  background: radial-gradient(ellipse 70% 42% at 50% 30%, #6b3a5e 0%, transparent 70%), linear-gradient(#1a1636, #2a1a3a 45%, #1b1420); }
+.alq-col { position: relative; width: min(100%, 480px); height: 100%; display: flex; flex-direction: column; padding-top: max(8px, env(safe-area-inset-top)); }
+.alq-fx { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; }
+
+.alq-top, .alq-scene, .alq-msg { touch-action: none; }
+.alq-top { display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; gap: 8px; padding: 0 12px; }
+.alq-round { width: 44px; height: 44px; padding: 0; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #5a4569, #241b2c 75%); box-shadow: 0 0 0 2px var(--brass), 0 3px 6px #0009; font-size: 22px; line-height: 1; color: #fff2d5; }
+.alq-book svg { display: block; width: 26px; height: 26px; margin: auto; }
+.alq-round:active { transform: scale(.94); }
+.alq-title h1 { margin: 0; text-align: center; font: 800 clamp(20px, 6vw, 26px)/1.1 'Baloo 2', sans-serif; color: var(--gold); text-shadow: 0 2px 0 #7a4a10, 0 3px 6px #000a; }
+.alq-bar { position: relative; height: 18px; margin-top: 4px; border-radius: 9px; background: #120d18; box-shadow: inset 0 1px 3px #000, 0 0 0 1.5px #8a6a2c; overflow: hidden; }
+.alq-bar i { position: absolute; inset: 0 auto 0 0; background: linear-gradient(#ffd76a, #d98a1f); transition: width .4s; }
+.alq-bar span { position: relative; display: block; text-align: center; font-size: 13px; line-height: 18px; font-weight: 800; color: #fff; text-shadow: 0 1px 2px #000; }
+
+.orb { --orb: 56px; width: var(--orb); height: var(--orb); flex: none; display: flex; align-items: center; justify-content: center; padding: calc(var(--orb) * .08); border-radius: 50%;
+  background: radial-gradient(circle at 35% 28%, #5d4a70, #241b2c 72%); box-shadow: 0 0 0 2px #8a6a2c, 0 0 0 3.5px var(--brass), 0 4px 7px #000a; }
+.orb img { width: 100%; height: 100%; display: block; object-fit: contain; pointer-events: none; -webkit-touch-callout: none; }
+.orb.empty { background: rgba(20, 14, 24, .45); box-shadow: inset 0 0 0 2px rgba(227, 191, 98, .45); color: rgba(227, 191, 98, .6); font: 800 calc(var(--orb) * .4)/1 'Baloo 2', sans-serif; }
+
+.alq-scene { position: relative; flex: none; height: clamp(160px, 25dvh, 230px); display: grid; grid-template-columns: 1fr auto 1fr; grid-template-rows: minmax(0, 1fr); align-items: center; padding: 0 12px; }
+.alq-scene::before { content: ''; position: absolute; right: 10px; bottom: 6px; width: 34%; height: 62%; background: url(/campanar-valls.svg) no-repeat 100% 100% / contain; opacity: .1; pointer-events: none; }
+.alq-slot { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 0; background: none; align-self: start; margin-top: clamp(12px, 3dvh, 28px); }
+.alq-slot .orb, .alq-result .orb { --orb: clamp(62px, 19vw, 84px); }
+.alq-slot b, .alq-result b { font-size: 14px; line-height: 1.1; font-weight: 800; color: #fff2d5; text-align: center; text-shadow: 0 1px 3px #000; }
+.alq-slot.into .orb { transform: translate(var(--dx), var(--dy)) scale(.3); opacity: 0; transition: transform .36s ease-in, opacity .36s ease-in .1s; }
+.alq-slot.into b { opacity: 0; transition: opacity .15s; }
+
+.alq-pot { position: relative; isolation: isolate; align-self: end; width: clamp(108px, 31vw, 150px); margin-bottom: 14px; }
+.alq-pot svg { display: block; width: 100%; height: auto; position: relative; }
+.alq-flames { position: absolute; left: 12%; right: 12%; bottom: -12px; height: 26px; border-radius: 50% 50% 40% 40%; background: radial-gradient(ellipse at 50% 100%, #ffd76a 0%, #ff7a1f 45%, transparent 72%); filter: blur(2px); z-index: -1; animation: alq-flicker .28s ease-in-out infinite alternate; }
+.alq-pot .bub { animation: alq-bub 1.4s ease-in-out infinite; }
+.alq-pot .b2 { animation-delay: .4s; } .alq-pot .b3 { animation-delay: .9s; }
+.alq-pot.boil { animation: alq-wobble .12s linear infinite alternate; }
+.alq-pot.burp { animation: alq-burp .4s; }
+.alq-result { position: absolute; left: 50%; top: 10px; display: flex; flex-direction: column; align-items: center; gap: 2px; transform: translateX(-50%); pointer-events: none; }
+.alq-result .orb.empty, .alq-result b:empty { display: none; }
+.alq-result.up { animation: alq-rise .4s cubic-bezier(.2, 1.5, .5, 1); }
+.alq-result.up .orb { box-shadow: 0 0 0 2px #8a6a2c, 0 0 0 3.5px var(--brass), 0 0 26px 8px rgba(255, 215, 106, .75); }
+
+.alq-msg { margin: 0 12px 8px; min-height: 26px; padding: 2px 12px; border-radius: 13px; text-align: center; font-size: 15px; line-height: 22px; font-weight: 700; color: #fff2d5; background: rgba(18, 13, 24, .55); }
+
+.alq-shelf { flex: 1; min-height: 0; display: flex; flex-direction: column; border-radius: 18px 18px 0 0; box-shadow: 0 -3px 0 #8a6a2c, 0 -6px 14px #0008; background: repeating-linear-gradient(92deg, rgba(0, 0, 0, .1) 0 3px, transparent 3px 11px), linear-gradient(#4a2e1b, var(--wood)); }
+.alq-grid { flex: 1; min-height: 0; overflow-y: auto; touch-action: pan-y; -webkit-overflow-scrolling: touch; display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); grid-auto-rows: min-content; align-content: start; gap: 12px 6px; padding: 14px 12px max(16px, env(safe-area-inset-bottom)); scrollbar-width: none; -webkit-mask-image: linear-gradient(transparent, #000 12px); mask-image: linear-gradient(transparent, #000 12px); }
+.alq-grid::-webkit-scrollbar { display: none; }
+.alq-item { display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 3px 0; background: none; border-radius: 12px; }
+.alq-item b { font-size: 13px; line-height: 1.1; font-weight: 700; color: #fff2d5; text-align: center; text-shadow: 0 1px 2px #000; }
+.alq-item .orb { transition: transform .1s; }
+.alq-item:active .orb { transform: scale(.92); }
+@media (hover: hover) { .alq-item:hover .orb { transform: scale(1.06); } }
+.alq-item.on .orb { box-shadow: 0 0 0 2px #8a6a2c, 0 0 0 3.5px var(--gold), 0 0 16px 4px rgba(255, 215, 106, .7); }
+.alq-item.hint .orb { animation: alq-pulse 1s ease-in-out infinite; }
+@media (max-width: 340px) { .alq-grid { grid-template-columns: repeat(auto-fill, minmax(66px, 1fr)); } .alq-item b { font-size: 12px; } }
+.alq-ghost { position: fixed; z-index: 4; margin: 0; pointer-events: none; }
+
+.alq-overlay { z-index: 4; background: rgba(12, 8, 18, .93); overflow: hidden; }
+.alq-rays { position: absolute; left: 50%; top: 38%; width: 240vmax; height: 240vmax; margin: -120vmax 0 0 -120vmax; background: repeating-conic-gradient(rgba(255, 215, 106, .13) 0 12deg, transparent 12deg 24deg); animation: alq-spin 24s linear infinite; will-change: transform; }
+.alq-found { position: relative; width: min(100%, 360px); max-height: 100%; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; animation: alq-rise .4s cubic-bezier(.2, 1.5, .5, 1); }
+.alq-found h2 { margin: 0; font: 800 clamp(32px, 10vw, 44px)/1.1 'Baloo 2', sans-serif; color: var(--gold); text-shadow: 0 3px 0 #7a4a10, 0 4px 10px #000; }
+.alq-found .orb { --orb: clamp(120px, 26dvh, 168px); box-shadow: 0 0 0 3px #8a6a2c, 0 0 0 5px var(--brass), 0 0 40px 12px rgba(255, 215, 106, .55); }
+.alq-recipe { margin: 4px 0 0; font-size: 16px; font-weight: 700; color: #fff2d5; }
+.alq-parch { width: 100%; padding: 12px 16px; border-radius: 10px; color: var(--ink); background: var(--parch); box-shadow: inset 0 0 18px rgba(122, 74, 16, .35), 0 3px 8px #0009; }
+.alq-parch p { margin: 0; font-size: 16px; line-height: 1.3; }
+.alq-parch p + p { margin-top: 6px; }
+.alq-btn { width: 100%; min-height: 50px; padding: 6px 16px; border-radius: 14px; font-size: 19px; font-weight: 800; color: #3a2008; background: linear-gradient(#ffe07a, #e9a92c); box-shadow: 0 4px 0 #94610f, 0 6px 10px #0008; }
+.alq-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #94610f; }
+.alq-btn.alt { color: #fff2d5; background: linear-gradient(#6d5580, #4c3a5a); box-shadow: 0 4px 0 #2c2036, 0 6px 10px #0008; font-size: 16px; line-height: 1.1; }
+
+.alq-sheet { position: relative; width: min(100%, 448px); max-height: 100%; display: flex; flex-direction: column; gap: 12px; padding: 16px; border-radius: 14px; color: var(--ink); background: var(--parch); box-shadow: inset 0 0 30px rgba(122, 74, 16, .4), 0 0 0 3px #5a371c, 0 8px 24px #000a; }
+.alq-sheet h2 { margin: 0; text-align: center; font: 800 26px/1.1 'Baloo 2', sans-serif; color: #7a2a18; }
+.alq-list { flex: 1; min-height: 0; overflow-y: auto; touch-action: pan-y; display: flex; flex-direction: column; }
+.alq-entry { display: grid; grid-template-columns: 52px 1fr; align-items: center; gap: 12px; padding: 8px 4px; border-bottom: 1px solid rgba(90, 55, 28, .3); }
+.alq-entry .orb { --orb: 48px; margin: 2px; }
+.alq-entry strong { display: block; font-size: 17px; font-weight: 800; }
+.alq-entry small { display: block; font-size: 14px; color: #6a4a26; }
+.alq-entry p { margin: 2px 0 0; font-size: 14px; line-height: 1.25; }
+.alq-missing { margin: 0; text-align: center; color: #6a4a26; }
+.alq-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding-bottom: 4px; }
+
+@keyframes alq-pulse { 50% { box-shadow: 0 0 0 2px #8a6a2c, 0 0 0 4px var(--gold), 0 0 20px 7px rgba(255, 215, 106, .9); transform: scale(1.08); } }
+@keyframes alq-flicker { to { transform: scale(1.08, 1.4); opacity: .72; } }
+@keyframes alq-bub { 50% { transform: translateY(-3px); opacity: .4; } }
+@keyframes alq-wobble { from { transform: rotate(-2.5deg); } to { transform: rotate(2.500deg); } }
+@keyframes alq-burp { 40% { transform: scale(1.1, .9); } 70% { transform: scale(.96, 1.05); } }
+@keyframes alq-rise { from { transform: translate(var(--tx, -50%), 40px) scale(.4); opacity: 0; } }
+@keyframes alq-spin { to { transform: rotate(360deg); } }
+.alq-found { --tx: 0; }
+@media (prefers-reduced-motion: reduce) { .alq-flames, .alq-pot .bub, .alq-pot.boil, .alq-pot.burp, .alq-rays, .alq-result.up, .alq-found { animation: none; } .alq-slot.into .orb { transition: none; } .alq-item.hint .orb { animation: none; box-shadow: 0 0 0 2px #8a6a2c, 0 0 0 4px var(--gold), 0 0 20px 7px rgba(255, 215, 106, .9); } }
+
+/* Start menu and collection picker */
+.alq-menu { isolation: isolate; flex-direction: column; align-items: center; justify-content: space-between; padding: max(56px, env(safe-area-inset-top)) 24px max(32px, env(safe-area-inset-bottom)); background: url(/jocs/alquimia/cards/menu-mobil.jpg) center / cover, #2e1519; text-align: center; }
+.alq-menu .alq-back { position: absolute; top: max(8px, env(safe-area-inset-top)); left: 12px; }
+.alq-menu-title h1 { margin: 0; font: 400 clamp(64px, 21vw, 96px)/.85 'Jersey 10', monospace; color: var(--gold); text-shadow: 0 4px 0 #7a4a10, 0 6px 16px #000c; }
+.alq-menu-title p { margin: 12px 0 0; font-size: 16px; font-weight: 700; color: #fff2d5; text-shadow: 0 1px 4px #000; }
+.alq-menu-actions { width: min(100%, 360px); display: grid; gap: 8px; }
+.alq-play { min-height: 56px; font-size: 24px; }
+.alq-to-colls { min-height: 44px; }
+.alq-help { margin: 8px 12px 16px; text-align: center; color: #d9cdbf; font-size: 15px; }
+.alq-picker .alq-col { padding-bottom: env(safe-area-inset-bottom); }
+.alq-colls { flex: 1; min-height: 0; overflow-y: auto; touch-action: pan-y; display: flex; flex-direction: column; gap: 16px; padding: 0 16px 16px; }
+.alq-coll { flex: none; display: block; width: 100%; padding: 0; overflow: hidden; border-radius: 16px; background: linear-gradient(#513120, #3a2416); box-shadow: 0 0 0 2px var(--brass), 0 6px 14px #0009; text-align: left; color: #fff2d5; }
+.alq-coll:active { transform: scale(.98); }
+.alq-coll img { display: block; width: 100%; aspect-ratio: 2.6; object-fit: cover; pointer-events: none; }
+.alq-coll-body { display: grid; grid-template-columns: 1fr auto; gap: 8px 12px; align-items: center; padding: 12px 16px 16px; }
+.alq-coll b { font-size: 18px; line-height: 1.15; font-weight: 800; }
+.alq-coll-count { font-size: 15px; font-weight: 800; color: var(--gold); white-space: nowrap; }
+.alq-meter { grid-column: 1 / -1; height: 8px; border-radius: 4px; background: #1a1020; overflow: hidden; }
+.alq-meter i { display: block; height: 100%; background: linear-gradient(#ffd76a, #d98a1f); }
+
+/* Chapters */
+.alq-tabs { flex: none; display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; padding: 10px 12px 4px; }
+.alq-tab { min-height: 44px; padding: 3px 2px; border-radius: 10px; background: rgba(18, 13, 24, .55); color: #fff2d5; line-height: 1.1; }
+.alq-tab b { display: block; font-size: 13px; font-weight: 800; }
+.alq-tab small { display: block; font-size: 11px; font-weight: 700; color: #d9cdbf; }
+.alq-tab.on { background: linear-gradient(#ffe07a, #e9a92c); color: #3a2008; }
+.alq-tab.on small { color: #5a3a10; }
+.alq-tab:disabled { opacity: .45; cursor: default; }
+.alq-tab.hint { animation: alq-tab-pulse 1s ease-in-out infinite; }
+.alq-item[hidden] { display: none; }
+@keyframes alq-tab-pulse { 50% { box-shadow: 0 0 0 2px var(--gold), 0 0 12px 3px rgba(255, 215, 106, .8); } }
+@media (prefers-reduced-motion: reduce) { .alq-tab.hint { animation: none; box-shadow: 0 0 0 2px var(--gold); } }
+.alq-empty { margin: 16px 24px; text-align: center; font-size: 16px; color: #fff2d5; text-shadow: 0 1px 2px #000; }
+.alq-empty[hidden] { display: none; }
+
+/* The room breathes: the fire flickers and the picked elements float */
+.alq-pot svg { animation: alq-simmer 2.6s ease-in-out infinite; transform-origin: 50% 100%; }
+.alq-slot .orb:not(.empty) { animation: alq-float 2.4s ease-in-out infinite; }
+.alq-slot[data-slot="1"] .orb:not(.empty) { animation-delay: -1.2s; }
+.alq-slot.into .orb { animation: none; }
+.alq-pot.boil svg { animation: none; }
+@keyframes alq-simmer { 50% { transform: scale(1.012, .99); } }
+@keyframes alq-float { 50% { translate: 0 -4px; } }
+@media (prefers-reduced-motion: reduce) { .alq-pot svg, .alq-slot .orb:not(.empty) { animation: none; } }
+
+/* Portrait: no tagline, the scene needs the room. Landscape: everything sits on the empty wall, top right. */
+@media (orientation: portrait) {
+  .alq-menu-title p { display: none; }
+}
+@media (orientation: portrait) and (max-height: 700px) { /* the button must not hide the fire */
+  .alq-btn.alt.alq-to-colls { background: none; box-shadow: none; font-size: 15px; text-decoration: underline; text-shadow: 0 1px 3px #000; }
+  .alq-menu-actions { gap: 0; }
+  .alq-menu { padding-bottom: 8px; }
+  .alq-play { min-height: 50px; }
+}
+@media (orientation: landscape) {
+  .alq-menu { background: url(/jocs/alquimia/cards/menu-escriptori.jpg) 85% center / cover, #2e1519; align-items: flex-end; justify-content: flex-start; gap: 1.5vh; padding: 3vh 3vw; }
+  .alq-menu-title { width: 36vw; }
+  .alq-menu-title h1 { font-size: min(10vh, 6.2vw); white-space: nowrap; }
+  .alq-menu-title p { font-size: max(15px, 2.2vh); margin-top: 1vh; }
+  .alq-menu-actions { width: min(36vw, 48vh); margin-right: calc((36vw - min(36vw, 48vh)) / 2); }
+  .alq-play { min-height: max(50px, 6.5vh); font-size: max(20px, 3vh); }
+  .alq-to-colls { min-height: max(44px, 5vh); font-size: max(16px, 2.2vh); }
+  .alq:not(.alq-menu) { background: linear-gradient(rgba(20, 10, 16, .78), rgba(20, 10, 16, .78)), url(/jocs/alquimia/cards/menu-escriptori.jpg) center / cover; }
+}

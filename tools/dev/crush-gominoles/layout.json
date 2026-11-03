@@ -1,0 +1,501 @@
+[
+  {
+    "width": 320,
+    "scroll": 320,
+    "cards": [
+      {
+        "left": 8,
+        "right": 312,
+        "padding": 16,
+        "gap": "16px",
+        "pairGap": "16px",
+        "radius": "16px"
+      },
+      {
+        "left": 8,
+        "right": 312,
+        "padding": 16,
+        "gap": "16px",
+        "pairGap": "16px",
+        "radius": "16px"
+      },
+      {
+        "left": 8,
+        "right": 312,
+        "padding": 16,
+        "gap": "16px",
+        "pairGap": "16px",
+        "radius": "16px"
+      },
+      {
+        "left": 8,
+        "right": 312,
+        "padding": 16,
+        "gap": "16px",
+        "pairGap": "16px",
+        "radius": "16px"
+      },
+      {
+        "left": 8,
+        "right": 312,
+        "padding": 16,
+        "gap": "16px",
+        "pairGap": "16px",
+        "radius": "16px"
+      },
+      {
+        "left": 8,
+        "right": 312,
+        "padding": 16,
+        "gap": "16px",
+        "pairGap": "16px",
+        "radius": "16px"
+      },
+      {
+        "left": 8,
+        "right": 312,
+        "padding": 16,
+        "gap": "16px",
+        "pairGap": "16px",
+        "radius": "16px"
+      }
+    ]
+  },
+  {
+    "width": 375,
+    "scroll": 375,
+    "cards": [
+      {
+        "left": 8,
+        "right": 367,
+        "padding": 16,
+        "gap": "16px",
+        "pairGap": "16px",
+        "radius": "16px"
+      },
+      {
+        "left": 8,
+        "right": 367,
+        "padding": 16,
+        "gap": "16px",
+        "pairGap": "16px",
+        "radius": "16px"
+      },
+      {
+        "left": 8,
+        "right": 367,
+        "padding": 16,
+        "gap": "16px",
+        "pairGap": "16px",
+        "radius": "16px"
+      },
+      {
+        "left": 8,
+        "right": 367,
+        "padding": 16,
+        "gap": "16px",
+        "pairGap": "16px",
+        "radius": "16px"
+      },
+      {
+        "left": 8,
+        "right": 367,
+        "padding": 16,
+        "gap": "16px",
+        "pairGap": "16px",
+        "radius": "16px"
+      },
+      {
+        "left": 8,
+        "right": 367,
+        "padding": 16,
+        "gap": "16px",
+        "pairGap": "16px",
+        "radius": "16px"
+      },
+      {
+        "left": 8,
+        "right": 367,
+        "padding": 16,
+        "gap": "16px",
+        "pairGap": "16px",
+        "radius": "16px"
+      }
+    ]
+  },
+  {
+    "width": 393,
+    "scroll": 393,
+    "cards": [
+      {
+        "left": 8,
+        "right": 385,
+        "padding": 16,
+        "gap": "16px",
+        "pairGap": "16px",
+        "radius": "16px"
+      },
+      {
+        "left": 8,
+        "right": 385,
+        "padding": 16,
+        "gap": "16px",
+        "pairGap": "16px",
+        "radius": "16px"
+      },
+      {
+        "left": 8,
+        "right": 385,
+        "padding": 16,
+        "gap": "16px",
+        "pairGap": "16px",
+        "radius": "16px"
+      },
+      {
+        "left": 8,
+        "right": 385,
+        "padding": 16,
+        "gap": "16px",
+        "pairGap": "16px",
+        "radius": "16px"
+      },
+      {
+        "left": 8,
+        "right": 385,
+        "padding": 16,
+        "gap": "16px",
+        "pairGap": "16px",
+        "radius": "16px"
+      },
+      {
+        "left": 8,
+        "right": 385,
+        "padding": 16,
+        "gap": "16px",
+        "pairGap": "16px",
+        "radius": "16px"
+      },
+      {
+        "left": 8,
+        "right": 385,
+        "padding": 16,
+        "gap": "16px",
+        "pairGap": "16px",
+        "radius": "16px"
+      }
+    ]
+  },
+  {
+    "copy": "MULASSA CRUSH · SEGONA RONDA\n\nDrac: Prova de notes\n\nBasilisc: (sense notes)\n\nBou: (sense notes)\n\nLleó: (sense notes)\n\nMulassa: (sense notes)\n\nNans: (sense notes)\n\nÀliga: (sense notes)"
+  },
+  {
+    "width": 430,
+    "scroll": 430,
+    "cards": [
+      {
+        "left": 8,
+        "right": 422,
+        "padding": 16,
+        "gap": "16px",
+        "pairGap": "16px",
+        "radius": "16px"
+      },
+      {
+        "left": 8,
+        "right": 422,
+        "padding": 16,
+        "gap": "16px",
+        "pairGap": "16px",
+        "radius": "16px"
+      },
+      {
+        "left": 8,
+        "right": 422,
+        "padding": 16,
+        "gap": "16px",
+        "pairGap": "16px",
+        "radius": "16px"
+      },
+      {
+        "left": 8,
+        "right": 422,
+        "padding": 16,
+        "gap": "16px",
+        "pairGap": "16px",
+        "radius": "16px"
+      },
+      {
+        "left": 8,
+        "right": 422,
+        "padding": 16,
+        "gap": "16px",
+        "pairGap": "16px",
+        "radius": "16px"
+      },
+      {
+        "left": 8,
+        "right": 422,
+        "padding": 16,
+        "gap": "16px",
+        "pairGap": "16px",
+        "radius": "16px"
+      },
+      {
+        "left": 8,
+        "right": 422,
+        "padding": 16,
+        "gap": "16px",
+        "pairGap": "16px",
+        "radius": "16px"
+      }
+    ]
+  },
+  {
+    "width": 1024,
+    "scroll": 1024,
+    "cards": [
+      {
+        "left": 24,
+        "right": 338.65625,
+        "padding": 16,
+        "gap": "16px",
+        "pairGap": "16px",
+        "radius": "16px"
+      },
+      {
+        "left": 354.65625,
+        "right": 669.328125,
+        "padding": 16,
+        "gap": "16px",
+        "pairGap": "16px",
+        "radius": "16px"
+      },
+      {
+        "left": 685.328125,
+        "right": 999.984375,
+        "padding": 16,
+        "gap": "16px",
+        "pairGap": "16px",
+        "radius": "16px"
+      },
+      {
+        "left": 24,
+        "right": 338.65625,
+        "padding": 16,
+        "gap": "16px",
+        "pairGap": "16px",
+        "radius": "16px"
+      },
+      {
+        "left": 354.65625,
+        "right": 669.328125,
+        "padding": 16,
+        "gap": "16px",
+        "pairGap": "16px",
+        "radius": "16px"
+      },
+      {
+        "left": 685.328125,
+        "right": 999.984375,
+        "padding": 16,
+        "gap": "16px",
+        "pairGap": "16px",
+        "radius": "16px"
+      },
+      {
+        "left": 24,
+        "right": 338.65625,
+        "padding": 16,
+        "gap": "16px",
+        "pairGap": "16px",
+        "radius": "16px"
+      }
+    ]
+  },
+  {
+    "width": 1280,
+    "scroll": 1280,
+    "cards": [
+      {
+        "left": 84,
+        "right": 350,
+        "padding": 16,
+        "gap": "16px",
+        "pairGap": "16px",
+        "radius": "16px"
+      },
+      {
+        "left": 366,
+        "right": 632,
+        "padding": 16,
+        "gap": "16px",
+        "pairGap": "16px",
+        "radius": "16px"
+      },
+      {
+        "left": 648,
+        "right": 914,
+        "padding": 16,
+        "gap": "16px",
+        "pairGap": "16px",
+        "radius": "16px"
+      },
+      {
+        "left": 930,
+        "right": 1196,
+        "padding": 16,
+        "gap": "16px",
+        "pairGap": "16px",
+        "radius": "16px"
+      },
+      {
+        "left": 84,
+        "right": 350,
+        "padding": 16,
+        "gap": "16px",
+        "pairGap": "16px",
+        "radius": "16px"
+      },
+      {
+        "left": 366,
+        "right": 632,
+        "padding": 16,
+        "gap": "16px",
+        "pairGap": "16px",
+        "radius": "16px"
+      },
+      {
+        "left": 648,
+        "right": 914,
+        "padding": 16,
+        "gap": "16px",
+        "pairGap": "16px",
+        "radius": "16px"
+      }
+    ]
+  },
+  {
+    "width": 1440,
+    "scroll": 1440,
+    "cards": [
+      {
+        "left": 164,
+        "right": 430,
+        "padding": 16,
+        "gap": "16px",
+        "pairGap": "16px",
+        "radius": "16px"
+      },
+      {
+        "left": 446,
+        "right": 712,
+        "padding": 16,
+        "gap": "16px",
+        "pairGap": "16px",
+        "radius": "16px"
+      },
+      {
+        "left": 728,
+        "right": 994,
+        "padding": 16,
+        "gap": "16px",
+        "pairGap": "16px",
+        "radius": "16px"
+      },
+      {
+        "left": 1010,
+        "right": 1276,
+        "padding": 16,
+        "gap": "16px",
+        "pairGap": "16px",
+        "radius": "16px"
+      },
+      {
+        "left": 164,
+        "right": 430,
+        "padding": 16,
+        "gap": "16px",
+        "pairGap": "16px",
+        "radius": "16px"
+      },
+      {
+        "left": 446,
+        "right": 712,
+        "padding": 16,
+        "gap": "16px",
+        "pairGap": "16px",
+        "radius": "16px"
+      },
+      {
+        "left": 728,
+        "right": 994,
+        "padding": 16,
+        "gap": "16px",
+        "pairGap": "16px",
+        "radius": "16px"
+      }
+    ]
+  },
+  {
+    "width": 1920,
+    "scroll": 1920,
+    "cards": [
+      {
+        "left": 404,
+        "right": 670,
+        "padding": 16,
+        "gap": "16px",
+        "pairGap": "16px",
+        "radius": "16px"
+      },
+      {
+        "left": 686,
+        "right": 952,
+        "padding": 16,
+        "gap": "16px",
+        "pairGap": "16px",
+        "radius": "16px"
+      },
+      {
+        "left": 968,
+        "right": 1234,
+        "padding": 16,
+        "gap": "16px",
+        "pairGap": "16px",
+        "radius": "16px"
+      },
+      {
+        "left": 1250,
+        "right": 1516,
+        "padding": 16,
+        "gap": "16px",
+        "pairGap": "16px",
+        "radius": "16px"
+      },
+      {
+        "left": 404,
+        "right": 670,
+        "padding": 16,
+        "gap": "16px",
+        "pairGap": "16px",
+        "radius": "16px"
+      },
+      {
+        "left": 686,
+        "right": 952,
+        "padding": 16,
+        "gap": "16px",
+        "pairGap": "16px",
+        "radius": "16px"
+      },
+      {
+        "left": 968,
+        "right": 1234,
+        "padding": 16,
+        "gap": "16px",
+        "pairGap": "16px",
+        "radius": "16px"
+      }
+    ]
+  }
+]

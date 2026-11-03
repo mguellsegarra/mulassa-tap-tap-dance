@@ -1,5 +1,5 @@
 import { leaderboard } from '../services/leaderboard.js';
-import { ALIAS_KEY, refreshIdentity, dropLegacyIdentity } from '../services/leaderboard-identity.js';
+import { ALIAS_KEY, ownerKey, refreshIdentity, dropLegacyIdentity } from '../services/leaderboard-identity.js';
 // Builds the sheets (settings, sync, board, share, profile, Perfil, seasons, cards, feedback, privacy), wires their buttons and registers them in `sheets`.
 import { showPhotoHelp, setRadioHint } from './photo-avatars.js';
 import { setupSelect } from './select-ui.js';
@@ -18,12 +18,17 @@ import { OPTOUT_KEY, PERSIST_KEY } from './publish-ui.js';
 import { setupGreeting } from './greeting.js';
 import { setupDeviceHint } from './device-hint.js';
 import { setupFreeGate } from './free-gate.js';
+import { setupGamesMenu } from './games-menu.js';
+import { setupGamesCarousel } from './games-carousel.js';
+import { setupNews } from './news-sheet.js';
+import { hasPlayed } from '../game/records.js';
 import { softwareGl } from '../scene/stage.js';
 import { makeDanceChart } from '../game/chart.js';
 import { song, FINALE_T } from '../game/figure-song.js';
 import { setupShare } from './share-ui.js';
 import { setupProfile } from './profile-ui.js';
 import { setupBadges } from './badge-picker.js';
+import { setupBadgeNews } from './badge-news.js';
 import { setupConfirmGate } from './confirm-gate.js';
 import { setupHearts } from './figure-hearts.js';
 import { setupHeartTip } from './heart-tip.js';
@@ -46,17 +51,18 @@ import { sheetUp, viewMode, viewBtn, enterFree } from './controls.js';
 import { loadPhoto } from '../hud/share-card.js';
 
 sheetFades();
-// The keyboard works in every sheet: ↑↓ (and ←→ outside text fields) move between its controls, and Enter/Space act on
+// The keyboard works in every sheet: ↑↓ (and ←→ outside text fields and a sheet's own row, data-arrows) move between its controls, and Enter/Space act on
 // the focused one (native). If the focus fell outside the open sheet (a click on its padding), the first key brings it
 // back to the sheet's first control instead of doing nothing.
 addEventListener('keydown', e => {
   const dlg = [...document.querySelectorAll('dialog.sheet[open]')].pop(); // the topmost
   if (!dlg || e.altKey || e.ctrlKey || e.metaKey) return;
+  if (dlg.id === 'sync-menu' && dlg.dataset.state === 'run') return; // the running metronome: every key is a tap, arrows too (sync-sheet.js)
   const items = [...dlg.querySelectorAll('button, a[href], input, select, textarea, [tabindex]:not([tabindex="-1"])')]
     .filter(el => !el.disabled && !el.closest('[hidden]') && el.offsetParent !== null);
   if (!items.length) return;
   const at = items.indexOf(document.activeElement), typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName);
-  const step = { ArrowDown: 1, ArrowUp: -1, ...(typing ? {} : { ArrowRight: 1, ArrowLeft: -1 }) }[e.key];
+  const step = { ArrowDown: 1, ArrowUp: -1, ...(typing || dlg.dataset.arrows === 'row' ? {} : { ArrowRight: 1, ArrowLeft: -1 }) }[e.key];
   if (at < 0 && (step || e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); e.stopImmediatePropagation(); items[0].focus(); if (step && document.activeElement === items[0]) chip?.sfx('menu'); return; }
   if (!step || (typing && document.activeElement.tagName !== 'INPUT')) return; // a textarea/select keeps its own arrows
   e.preventDefault(); e.stopImmediatePropagation(); // not a game key while a sheet is up
@@ -132,7 +138,7 @@ const service = mockService || leaderboard, kv = finalStore || store;
 if (mockService) statsSync.use(mockService);
 statsSync.holdWhile(() => G.state === 'play');
 // the statistics' notice was on the sheet that created this profile (Crea, the first publication): it may send now
-const acceptStats = () => Promise.resolve(service.ownerId()).then(id => { if (id) markStatsNoticeSeen(id); statsSync.acceptNotice(); }, () => {});
+const acceptStats = () => (sheets.badgeNews?.holdVisit(), Promise.resolve(service.ownerId())).then(id => { if (id) markStatsNoticeSeen(id); statsSync.acceptNotice(); }, () => {});
 const card = setupCard({ focusIn, service });
 sheets.card = card;
 const seasons = setupSeasons({ focusIn, service, onCard: p => card.open(p),
@@ -144,7 +150,7 @@ const board = setupBoard({ focusIn,
   afterPublish: () => { refreshIdentity(service, kv).then(() => share.refreshName()); }, // the name's check follows the server's answer
   onRecover: () => profile.open('recover', () => board.openPublish()), // «Recupera’l» on the publish sheet: recover, then publish
   onConfirm: () => profile.open('link'), // «Confirma el correu» under «Publicat!»
-  onKeep: () => profile.open('link'), onCard: p => card.open(p), onSeasons: f => seasons.open(f), // over the board, which stays under them
+  onCard: p => card.open(p), onSeasons: f => seasons.open(f), // over the board, which stays under them
   acceptStats, currentFigure: () => select?.figure?.id,
   // «Juga amb …» on an empty board: only with the selector right under it (not over results, Perfil or the Saló de la fama)
   canPlay: () => G.state === 'select' && !viewMode && [...document.querySelectorAll('dialog[open]')].every(d => d.id === 'board-menu'),
@@ -160,7 +166,7 @@ if (mockBoard) markTestMode(); // «MODE PROVA»: synthetic rows remain clearly 
 if (FINAL?.review != null) import('../dev/account-review.js').then(m => m.startReview({ state: FINAL.review, board: () => board,
   openProfile: () => account.open(), openBoard: (o = {}) => board.openBoard(null, o), openSeasons: f => seasons.open(f),
   showSeasonEnd: async () => { const n = await seasonEnd.news(); if (!n) throw new Error('no ended season to tell'); seasonEnd.show(n); },
-  openCard: p => card.open(p), renameReady: () => until(() => profile.renaming) }));
+  openCard: p => card.open(p), openBadgeNews: () => refreshIdentity(service, kv).then(() => sheets.badgeNews.show(() => select.refocus())), renameReady: () => until(() => profile.renaming) }));
 // The player's profile (src/ui/profile-ui.js): recover / link an e-mail / choose another name (released) / sign out / delete, from the block
 // at the top of «Perfil» (src/ui/account-ui.js, the corner row's person); closing a step goes back to Perfil. «Recupera’l» on the
 // publish sheet recovers, then the publication opens again. ?final / ?mock: the same sheets over the mock service and the
@@ -178,24 +184,43 @@ const until = (test, ms = 20000) => new Promise((resolve, reject) => { const t0 
 // The first selector after the start, and every idle one after it until the profile has nothing left to hear (src/ui/greeting.js).
 // An account change (a recovery, a sign-out, another tab) re-asks, and refreshes the name the share image shows.
 let cardGreeted = false;
+// a bare selector: also no sheet outside sheetUp (the gate, the pending card's), so nothing the greeting tells lands on one
+const selectorFree = () => G.state === 'select' && !sheetUp() && !viewMode && !document.hidden && !document.querySelector('dialog[open]');
+const badgeNews = setupBadgeNews({ focusIn, service, store: mockBoard ? { get: () => null, set() {} } : kv, badges: sheets.badges, profile, idle: selectorFree, refresh: () => refreshIdentity(service, kv, { fresh: true }) }); // the mock: every load can show it again
+sheets.badgeNews = badgeNews;
 const hint = setupDeviceHint({ focusIn, store, softwareGl }); // the device tips, last: after the profile's own news
 sheets.hint = hint;
 sheets.freeGate = setupFreeGate({ focusIn, store, onEnter: () => enterFree() }); // an upright iPhone is asked to turn before free play
-const greeting = setupGreeting({ asked: () => heartTip.update(), stats: statsSync, seasonEnd, account, hint, identity: () => refreshIdentity(service, kv), back: () => select.refocus(),
-  free: () => G.state === 'select' && !sheetUp() && !viewMode && !document.hidden,
+sheets.games = setupGamesMenu({ focusIn, enterFree, carousel: setupGamesCarousel() });
+// back from a mini-game (/#jocs) or the short link mulassa.cat/jocs (public/jocs/index.html; the dev server answers /jocs/
+// with this page): the sheet comes up at once, over the loader, while the plaça loads behind it
+if (globalThis.location?.hash === '#jocs' || /^\/jocs\/?$/.test(globalThis.location?.pathname)) { history.replaceState(null, '', '/' + location.search); sheets.games.open();
+  document.getElementById('games-menu').addEventListener('close', () => document.documentElement.classList.remove('to-jocs'), { once: true }); }
+const news = setupNews({ focusIn, store, played: () => hasPlayed(store), onGames: () => sheets.games.open(), force: Q.has('novetats') }); // ?novetats on a dev host shows it again
+sheets.news = news;
+// The greeting waits for calm: a playable figure (Mulassa, Drac) on screen and no touch or key for a while, so its sheet never
+// lands on what a tap has just opened. Every touch restarts the wait; the timer asks again once it is calm.
+const GREET_CALM_MS = 2500;
+let lastTouchAt = 0, greetCalmT = 0;
+for (const type of ['pointerdown', 'keydown', 'wheel']) document.addEventListener(type, () => {
+  lastTouchAt = performance.now(); clearTimeout(greetCalmT); greetCalmT = setTimeout(() => greeting.greet(), GREET_CALM_MS + 50);
+}, { capture: true, passive: true });
+const greetCalm = () => selectorFree() && !select.pending && performance.now() - lastTouchAt >= GREET_CALM_MS;
+const greeting = setupGreeting({ asked: () => heartTip.update(), stats: statsSync, seasonEnd, account, badgeNews, hint, newGame: news, identity: () => refreshIdentity(service, kv), back: () => select.refocus(),
+  free: greetCalm,
   extra: () => {
     if (cardGreeted || !mockOpts?.card) return false;
     cardGreeted = true; card.open({ alias: mockOpts.card, publicId: demoPublicId(mockOpts.card) }, () => select.refocus()); // the card says whether it is released
 
     return true;
   } });
-service.onAccount?.(() => { refreshIdentity(service, kv, { fresh: true }).then(() => { share.refreshName(); hearts.reload(); }); greeting.accountChanged(); });
+service.onAccount?.(() => { hearts.accountChanged(); refreshIdentity(service, kv, { fresh: true }).then(() => share.refreshName()); greeting.accountChanged(); });
 document.addEventListener('close', () => { greeting.poke(); heartTip.update(); }, true); // dialogs' close does not bubble
 document.addEventListener('visibilitychange', () => { if (!document.hidden) { greeting.poke(); heartTip.update(); } }); // an answer that landed in a hidden tab was dropped: ask again
 settingsMenu.addEventListener('close', () => { if (!sync.open && !board.open && (G.state === 'select')) document.activeElement?.blur(); });
 // Bústia de la plaça: opened from Configuració or a pending figure; one shared Turnstile.
 const feedback = setupFeedback({ focusIn, captcha: board.captcha, accessToken: () => service.accessToken() });
-const needConfirmed = setupConfirmGate({ focusIn, identity: () => service.identity(), hasProfile: async () => !!(await service.profile?.())?.alias, openProfile: (what, back) => profile.open(what, back) });
+const needConfirmed = setupConfirmGate({ focusIn, identity: () => service.identity(), hasProfile: async () => !!ownerKey(kv) || !!(await service.profile?.())?.alias, openProfile: (what, back, opts) => profile.open(what, back, opts) });
 const hearts = setupHearts({ service, needConfirmed, onChange: () => { select.paintHearts(); heartTip.update(); } });
 const heartTip = setupHeartTip({ store, hearts, figure: () => (select.pending ? null : select.figure), busy: () => sheetUp() || viewMode || !greeting.answered });
 const writeToBox = (request, back) => needConfirmed(request.kind === 'general' ? 'feedback' : request.kind, () => feedback.show(back, request));

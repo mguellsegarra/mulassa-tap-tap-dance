@@ -134,7 +134,7 @@ const guestProf = o => ({ alias: 'takeshi', verified: false, published: true, re
 { // confirm an e-mail: mail → code; the tick, the same name; an address typed elsewhere; a code the server does not confirm
   const s = make({ alias: 'takeshi', session: true, captchaRequired: true, prof: guestProf() }); await s.profile.refresh();
   s.profile.open('link'); assert(s.$('profile-menu').open && s.$('profile-title').textContent === 'Confirma el correu' && s.focused.at(-1) === 'profile-email');
-  assert(/Conserva el nom/.test(s.$('profile-lead').textContent) && /marca/.test(s.$('profile-lead').textContent) && !/#|caduc|7 dies|torneig/.test(s.$('profile-lead').textContent), 'what confirming does: keeps it, sells the mark, no «#» talk');
+  assert(/El teu nom/.test(s.$('profile-lead').textContent) && /marca/.test(s.$('profile-lead').textContent) && !/#|caduc|7 dies|torneig/.test(s.$('profile-lead').textContent), 'what confirming does: keeps it, sells the mark, no «#» talk');
   enter(s.$, 'profile-email', 'jugador@example.com'); s.$('profile-form').fire('submit'); await tick(); await tick();
   assert.deepEqual(s.calls[0], ['send', 'jugador@example.com', undefined], 'an address on this session: no Turnstile wait');
   assert(!s.$('profile-code-field').hidden && s.$('profile-mail-field').hidden && /jugador@example\.com/.test(s.$('profile-lead').textContent) && s.focused.at(-1) === 'profile-code');
@@ -236,4 +236,14 @@ const guestProf = o => ({ alias: 'takeshi', verified: false, published: true, re
   const src = readFileSync(new URL('../../src/ui/profile-ui.js', import.meta.url), 'utf8') + readFileSync(new URL('../../src/ui/profile-notes.js', import.meta.url), 'utf8');
   assert(!/7 dies|caduca|temporal|expiresAt|ackNotice|noticeNeeded/.test(src), 'no 7-day copy or API');
 }
+// from the gate: the new profile goes straight on to its address, in the same sheet, and the phone's keyboard stays up
+{ const g = make(); let backs = 0, active = null; g.doc.activeElement = null;
+  Object.defineProperty(g.doc, 'activeElement', { get: () => active });
+  g.$('profile-email').focus = () => { active = g.$('profile-email'); assert.equal(g.$('profile-mail-field').hidden, false, 'shown before it takes the focus'); };
+  g.profile.open('create', () => backs++, { thenLink: true }); enter(g.$, 'profile-alias', 'Provera'); active = g.$('profile-alias');
+  g.$('profile-form').fire('submit'); await tick(); await tick(); await tick();
+  assert(!g.$('profile-mail-field').hidden && g.$('profile-alias-field').hidden && g.$('profile-menu').open, 'the e-mail step, sheet still open');
+  assert.equal(active, g.$('profile-email'), 'typing: the focus moves field to field'); assert.equal(g.$('profile-title').textContent, 'Confirma el correu');
+  assert.equal(g.T.accepted, 1); assert.equal(backs, 0);
+  g.$('profile-menu').close(); assert.equal(backs, 1, 'closing it is the way back'); }
 console.log('profile block and sheet ok');

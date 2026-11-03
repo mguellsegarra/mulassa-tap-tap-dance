@@ -2,8 +2,8 @@
 @font-face { font-family: 'Baloo 2'; font-weight: 600 800; font-display: swap; src: url(/fonts/baloo-2-latin.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+2000-206F; }
 @font-face { font-family: 'Baloo 2'; font-weight: 600 800; font-display: swap; src: url(/fonts/baloo-2-latin-ext.woff2) format('woff2'); unicode-range: U+0100-02BA, U+1E00-1E9F; }
 @font-face { font-family: 'Jersey 10'; font-weight: 400; font-display: swap; src: url(/fonts/jersey-10-latin.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+2000-206F; }
-:root { color-scheme: light only; --sat: env(safe-area-inset-top, 0px); --sab: env(safe-area-inset-bottom, 0px); --button-radius: 12px; --button-border: #f5c518; --button-gold-bg: linear-gradient(180deg, #ffe066 0%, #f5c518 55%, #dfad13 100%); --button-bg: #2a1a10e8; --button-text: #fff3d6; --focus: 3px solid var(--button-text); --focus-off: 3px; --page-edge: #140c07; }
-html, body { margin: 0; height: 100%; overflow: hidden; overscroll-behavior: none; background: var(--page-edge); touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+:root { color-scheme: light only; --sat: env(safe-area-inset-top, 0px); --sab: env(safe-area-inset-bottom, 0px); --button-radius: 12px; --button-border: #ff7ac6; --button-gold-bg: linear-gradient(180deg, #ff9ed6 0%, #ff7ac6 55%, #e85aae 100%); --button-bg: #24223fe8; --button-text: #fff3d6; --focus: 3px solid var(--button-text); --focus-off: 3px; --page-edge: #11152c; }
+html, body { margin: 0; height: 100%; overflow: hidden; overscroll-behavior: none; background: radial-gradient(ellipse at 50% 0, #53436b, #11152c 70%) var(--page-edge); touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
 body { position: fixed; top: 0; left: 0; width: 100%; color: #fff3d6; font: 700 18px 'Baloo 2', system-ui, sans-serif; }
 canvas#game { position: fixed; left: 0; top: 0; width: 100%; height: 100dvh; touch-action: none; }
 [hidden] { display: none !important; }
@@ -16,30 +16,33 @@ button:focus-visible { outline: var(--focus); outline-offset: var(--focus-off); 
 .round-btn svg { width: 24px; height: 24px; }
 .btn { position: relative; box-sizing: border-box; display: block; width: 100%; min-height: 48px; padding: 8px 20px; font: 800 18px/1.2 'Baloo 2', system-ui, sans-serif; text-align: center; }
 a.btn { text-align: center; text-decoration: none; color: #fff3d6; }
-.btn-primary { background: var(--button-gold-bg); color: #2a1a10; }
+.btn-primary { background: var(--button-gold-bg); color: #24112e; }
 .sheet-actions { display: grid; gap: 12px; margin-top: 16px; }
-.sheet { box-sizing: border-box; max-height: calc(100dvh - 32px); overflow: auto; border: 2px solid #f5c518; border-radius: 18px; background: #2a1a10; color: #fff3d6; box-shadow: 0 16px 60px #0008; scrollbar-width: thin; scrollbar-color: #f5c51899 transparent; }
+.sheet { box-sizing: border-box; max-height: calc(100dvh - 32px); overflow: auto; border: 2px solid #ff7ac6; border-radius: 24px; background: linear-gradient(#3a2b4c, #24223f); color: #fff3d6; box-shadow: 0 16px 60px #0008; scrollbar-width: thin; scrollbar-color: #ff7ac699 transparent; }
 
 /* HUD */
 #hud { position: fixed; z-index: 2; top: calc(var(--sat) + 8px); left: 16px; right: 16px; display: grid; grid-template-columns: 44px 1fr 44px; align-items: start; pointer-events: none; }
 #hud button { pointer-events: auto; }
 #hud-mid { text-align: center; line-height: 1; }
-#score { font: 400 60px/.82 'Jersey 10', system-ui, sans-serif; color: #c0283c; -webkit-text-stroke: 6px #fff3d6; paint-order: stroke fill; text-shadow: 0 3px 0 #5e1514; }
+#hud-mid { justify-self: center; display: flex; align-items: center; gap: 12px; padding: 4px 20px; border-radius: 40px; background: #24223f; }
+#score { font: 400 44px/1 'Jersey 10', system-ui, sans-serif; color: #ff7ac6; min-width: 40px; }
+#hud-best { font: 400 26px/1 'Jersey 10', system-ui, sans-serif; color: #fff2e4; padding-left: 12px; border-left: 1px solid #ff7ac666; }
 #best { margin-top: 4px; font-size: 14px; color: #2a1a10; font-weight: 800; }
-#chips { display: flex; justify-content: center; gap: 8px; height: 24px; margin-top: 2px; }
-.chip { display: inline-flex; align-items: center; padding: 0 10px 0 8px; border-left: 3px solid #f5c518; border-radius: 4px; background: #2a1a10e8; color: #fff3d6; font-size: 14px; }
-.float { position: fixed; z-index: 2; translate: -50% -50%; font: 400 44px/1 'Jersey 10', system-ui, sans-serif; color: #f5c518; -webkit-text-stroke: 5px #2a1a10; paint-order: stroke fill; pointer-events: none; animation: float-up .7s ease-out forwards; }
+#chips { position: absolute; top: 56px; left: 0; right: 0; display: flex; justify-content: center; gap: 8px; }
+.chip { display: inline-flex; align-items: center; padding: 0 10px 0 8px; border-left: 3px solid #ff7ac6; border-radius: 4px; background: #24223fe8; color: #fff3d6; font-size: 14px; }
+.float { position: fixed; z-index: 2; translate: -50% -50%; font: 400 44px/1 'Jersey 10', system-ui, sans-serif; color: #ff7ac6; -webkit-text-stroke: 5px #24112e; paint-order: stroke fill; pointer-events: none; animation: float-up .7s ease-out forwards; }
 @keyframes float-up { from { transform: translateY(0) scale(.7); opacity: 1; } 25% { transform: translateY(-16px) scale(1.15); } to { transform: translateY(-64px) scale(1); opacity: 0; } }
 
 /* Overlays */
-.cover { position: fixed; z-index: 3; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; box-sizing: border-box; padding: calc(var(--sat) + 16px) 16px calc(var(--sab) + 16px); background: #140c07a6; }
+.cover { position: fixed; z-index: 3; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; box-sizing: border-box; padding: calc(var(--sat) + 16px) 16px calc(var(--sab) + 16px); background: #11152c8c; -webkit-backdrop-filter: blur(14px) saturate(1.3); backdrop-filter: blur(14px) saturate(1.3); }
 .cover .sheet { width: min(360px, 100%); padding: 16px; flex: 0 1 auto; }
 .logo { display: block; flex: none; width: min(300px, 80vw); height: auto; overflow: visible; }
 .art { flex: 0 1 120px; min-height: 60px; width: 180px; }
-h2 { margin: 0; text-align: center; font: 800 24px/1.1 'Baloo 2', system-ui, sans-serif; color: #f5c518; }
+h2 { margin: 0; text-align: center; font: 800 24px/1.1 'Baloo 2', system-ui, sans-serif; color: #ff7ac6; }
 .result { margin: 4px 0 0; text-align: center; font: 400 72px/.9 'Jersey 10', system-ui, sans-serif; color: #fff3d6; }
 .result-sub { margin: 2px 0 0; text-align: center; font-size: 16px; color: #e8d8b8; }
-.result-sub.record { color: #f5c518; }
+.result-sub.record { color: #ff7ac6; }
+#menu-best { margin: 0 0 12px; }
 .how { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 0; padding: 0; list-style: none; }
 .how li { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 15px; line-height: 1.1; }
 .how img { flex: none; width: 48px; height: 48px; }
@@ -51,7 +54,7 @@ h2 { margin: 0; text-align: center; font: 800 24px/1.1 'Baloo 2', system-ui, san
 /* The turn-the-device cover (orientation.js), from the other game's base.css */
 #rotate { display: none; position: fixed; inset: 0; z-index: 50; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 24px; background: var(--page-edge); color: #fff3d6; font: 800 22px/1.3 'Baloo 2', system-ui, sans-serif; text-align: center; }
 body.wrong-orient #rotate { display: flex; }
-#rotate svg { width: 96px; height: 96px; overflow: visible; fill: none; stroke: #f5c518; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+#rotate svg { width: 96px; height: 96px; overflow: visible; fill: none; stroke: #ff7ac6; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
 #rotate .ph { transform-box: view-box; transform-origin: 24px 24px; animation: rotate-hint 1.6s ease-in-out infinite; }
 #rotate .arr { opacity: .7; transform-box: view-box; transform-origin: 24px 24px; }
 #rotate h2 { margin: 0; color: inherit; font: inherit; font-size: 32px; line-height: 1.15; }

@@ -34,7 +34,8 @@ hud.addEventListener('pointermove', e => {
 hud.addEventListener('pointerleave', () => { hudMouse = false; updateHudCursor(); });
 
 export const sheetUp = () => howtoMenu.open || settingsMenu.open || sheets.sync.open || sheets.board.open || privacyMenu.open || sheets.share.open || pauseMenu.open || sheets.feedback.open || sheets.profile?.isOpen || sheets.select?.sheetOpen || sheets.watch?.open
-  || sheets.account?.isOpen || sheets.seasons?.isOpen || sheets.seasonEnd?.isOpen || sheets.card?.isOpen || sheets.hint?.isOpen || sheets.freeGate?.isOpen;
+  || sheets.account?.isOpen || sheets.seasons?.isOpen || sheets.seasonEnd?.isOpen || sheets.card?.isOpen || sheets.hint?.isOpen || sheets.badges?.isOpen || sheets.badgeNews?.isOpen || sheets.freeGate?.isOpen
+  || sheets.games?.isOpen || sheets.news?.isOpen;
 export const menuState = () => G.state === 'splash' || G.state === 'select'; // the camera steers
 export const photoScreen = () => G.state === 'select'; // photo mode lives only on the selector
 export const steers = () => menuState() && !sheetUp();
@@ -70,6 +71,7 @@ export function setView(on) {
     if (keyboardNav && back && back !== document.body && back.isConnected && !back.hidden && !back.closest?.('[hidden], [inert]')) back.focus({ preventScroll: true });
     else if (keyboardNav && G.state === 'select') sheets.select?.refocus?.();
     else document.activeElement?.blur(); // touch/mouse: Space picks a difficulty again
+    sheets.games?.afterFree(photoScreen());
   }
   updateHudCursor();
 }
@@ -105,7 +107,7 @@ export function freeDance(b) {
   if (Math.abs(drift) > 40) freeStep.currentTime = want; // a loop, a seek or a new song: back on the beat
 }
 export function enterFree() { if (sheets.freeGate?.ask()) return; curtain(() => { setView(true); if (viewMode) sheets.music?.playFigure(G.figureId); }); } // the figure's own song (a pending selection: the last playable one, the one she drives)
-freeEl.addEventListener('click', () => { G.state === 'select' && enterFree(); });
+freeEl.addEventListener('click', () => { if (G.state === 'select') sheets.games?.open(); });
 document.getElementById('rotate-exit').addEventListener('click', () => curtain(() => setView(false)));
 export function updateControls() {
   updateHudCursor();

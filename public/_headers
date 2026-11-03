@@ -25,9 +25,19 @@ https://beta.mulassa.cat/*
   Cache-Control: no-cache
 /version.json
   Cache-Control: no-cache
+/jocs/
+  Cache-Control: no-cache
+
+/jocs/index.html
+  Cache-Control: no-cache
+
 /jocs/memory/
   Cache-Control: no-cache
 /jocs/memory/index.html
+  Cache-Control: no-cache
+/jocs/corre/
+  Cache-Control: no-cache
+/jocs/corre/index.html
   Cache-Control: no-cache
 /jocs/pica/
   Cache-Control: no-cache
@@ -36,6 +46,22 @@ https://beta.mulassa.cat/*
 /jocs/crush/
   Cache-Control: no-cache
 /jocs/crush/index.html
+  Cache-Control: no-cache
+/jocs/murdoku/
+  Cache-Control: no-cache
+/jocs/murdoku/index.html
+  Cache-Control: no-cache
+/jocs/suika/
+  Cache-Control: no-cache
+/jocs/suika/index.html
+  Cache-Control: no-cache
+/jocs/subara/
+  Cache-Control: no-cache
+/jocs/subara/index.html
+  Cache-Control: no-cache
+/jocs/alquimia/
+  Cache-Control: no-cache
+/jocs/alquimia/index.html
   Cache-Control: no-cache
 
 /index.md

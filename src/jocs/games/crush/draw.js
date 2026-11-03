@@ -65,3 +65,28 @@ export function zigzag(from, to) {
   pts.push([to.c + .5, to.r + .5]);
   return pts;
 }
+
+// A phrase or a banner, over the middle of the board (showText in view.js).
+export function drawFlash(ctx, flash, bx, by, bw, bh, cell, zoom) {
+  const t = flash.age / flash.dur;
+  ctx.globalAlpha = t > .7 ? (1 - t) / .3 : 1;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  const fontAt = px => `800 ${px}px 'Baloo 2', system-ui, sans-serif`;
+  ctx.font = fontAt(100);
+  // the longest phrase still has to fit the narrowest board
+  const size = Math.min(cell * (flash.banner ? .62 : .8), bw * .88 / ctx.measureText(flash.text).width * 100);
+  if (flash.banner) {
+    const band = size * 1.9;
+    ctx.fillStyle = 'rgba(27, 20, 32, .86)';
+    ctx.fillRect(bx, by + bh / 2 - band / 2, bw, band);
+  }
+  ctx.font = fontAt(Math.round(size * zoom));
+  ctx.lineWidth = Math.max(4, size * .18);
+  ctx.lineJoin = 'round';
+  ctx.strokeStyle = '#1b1420';
+  ctx.fillStyle = '#f5c518';
+  ctx.strokeText(flash.text, bx + bw / 2, by + bh / 2);
+  ctx.fillText(flash.text, bx + bw / 2, by + bh / 2);
+  ctx.globalAlpha = 1;
+}

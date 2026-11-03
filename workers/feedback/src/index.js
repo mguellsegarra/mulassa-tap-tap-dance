@@ -1,7 +1,7 @@
 import { EmailMessage } from 'cloudflare:email';
 
 // «Bústia de la plaça» (src/services/feedback.js): POST { kind, figure?, options?, entity?, message, turnstileToken, version } with a Supabase bearer → 200 { ok: true } or 4xx/5xx
-// { error: code } (src/services/feedback.js maps the codes to Catalan). Turnstile first, then the message goes straight to the owner's
+// { error: code } (src/services/feedback.js maps the codes to Catalan). The session, Turnstile, then the message goes straight to the owner's
 // inbox as one plain-text e-mail through Email Routing's send_email binding (env.MAIL, wrangler.toml). Nothing is stored
 //: if sending fails, the player sees «Torna-ho a provar».
 // Vars: ALLOWED_ORIGINS, FEEDBACK_FROM, DAILY_MAX, SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY. Secrets: TURNSTILE_SECRET_KEY, FEEDBACK_TO (a verified Email Routing
@@ -117,7 +117,7 @@ export default {
     const figure = kind === 'general' ? '' : oneLine(body.figure?.name, 80);
     if (kind === 'material' && !figure) return reply(400, { error: 'invalid' });
 
-    // --- who writes: no session, no message (an old client without one gets here too). The address is the confirmed one.
+    // --- who writes: no session, no message (a 1.2.6 client never gets here: without `kind` it stopped above, so it keeps its own Worker, wrangler.toml). The address is the confirmed one.
     const bearer = (req.headers.get('authorization') || '').replace(/^Bearer /, '');
     if (!bearer || bearer.length > 4096) return reply(401, { error: 'auth_required' });
     let user;

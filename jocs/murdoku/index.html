@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ca">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#140c07">
+  <title>Mulassoku</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="Mulassa">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="stylesheet" href="/src/jocs/games/murdoku/style.css">
+</head>
+<body>
+  <main id="page">
+    <header id="hud">
+      <div class="stat"><b id="case">-</b></div>
+      <button id="undo" class="round-btn" type="button" aria-label="Desfés" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 7 4 12l5 5M4 12h10a5 5 0 0 1 0 10h-2"/></svg></button>
+      <button id="hintbtn" class="round-btn" type="button" aria-label="Pista"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V16h8v-1.3A7 7 0 0 0 12 2z"/></svg></button>
+      <button id="menu" class="round-btn" type="button" aria-label="Casos">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h14"/></svg>
+      </button>
+    </header>
+    <section id="play">
+      <div id="board"></div>
+      <div id="side">
+        <div id="tray"></div>
+        <p id="hint" hidden></p>
+        <button id="accuse" class="btn btn-primary" type="button" hidden></button>
+        <ul id="clues"></ul>
+      </div>
+    </section>
+  </main>
+  <div id="live" class="sr" role="status"></div>
+  <dialog id="sheet" class="sheet" tabindex="-1">
+    <h1 id="title">Mulassoku</h1>
+    <div id="hero" hidden></div>
+    <p id="msg"></p>
+    <p id="rule" hidden></p>
+    <button id="next" class="btn btn-primary" type="button" hidden>Cas següent</button>
+    <div id="levels"></div>
+    <a id="back" class="btn" href="/#jocs">Torna a Mulassa</a>
+  </dialog>
+  <script type="module" src="/src/jocs/games/murdoku/main.js"></script>
+</body>
+</html>

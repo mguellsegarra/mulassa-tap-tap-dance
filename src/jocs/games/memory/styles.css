@@ -37,10 +37,10 @@ button:focus-visible { outline: var(--focus); outline-offset: var(--focus-off); 
 #msg { margin: 0; line-height: 1.3; }
 .btn { box-sizing: border-box; display: block; width: 100%; min-height: 48px; padding: 8px 20px; border: 2px solid var(--button-border); border-radius: var(--button-radius); font-weight: 800; font-size: 20px; }
 .btn-primary { background: var(--button-gold-bg); color: #2a1a10; }
-#levels { display: grid; gap: 8px; }
-#levels .btn { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 8px 16px; font-size: 18px; white-space: nowrap; }
-#levels small { font-size: 14px; font-weight: 700; opacity: .75; }
-#back { background: var(--button-bg); color: var(--button-text); text-decoration: none; line-height: 28px; font-size: 18px; }
+#levels { display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: 1fr; gap: 8px; }
+#levels .btn { display: flex; flex-direction: column; justify-content: center; align-items: center; min-width: 0; padding: 6px 4px; font-size: 16px; line-height: 1.15; }
+#levels small { font-size: 13px; font-weight: 700; opacity: .75; }
+#back { display: flex; justify-content: center; align-items: center; background: var(--button-bg); color: var(--button-text); text-decoration: none; font-size: 18px; }
 .btn:disabled { opacity: .5; cursor: progress; }
 .btn:active, .round-btn:active { transform: translateY(1px); }
 .sheet:focus { outline: none; }

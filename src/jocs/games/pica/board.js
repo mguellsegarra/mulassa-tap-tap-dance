@@ -1,45 +1,40 @@
 // The 3D board: every cell's figure as instances (one per rig pivot), its tile, the camera that fits the board on any screen, and the tap-to-cell picking.
 import * as THREE from 'three';
-import { Vox } from '../../../scene/models/voxel.js';
 import { buildPetard, buildCalcot, buildCampanar, buildCarretilla } from './goodies.js';
 import { FUSE } from './rules.js';
-import { MULA_POSES, DRAC_POSES, MULA_SCALE, MULA_YAW, DRAC_K, DRAC_YAW, poseMula, poseDrac, mulaRig, dracRig, bake, bakeMulassa, bakeDrac, rigParts, swapRedGreen, greenVelvet, thumbs } from './board-figures.js';
+import { MULA_POSES, DRAC_POSES, MULA_SCALE, MULA_YAW, DRAC_K, DRAC_YAW, poseMula, poseDrac, mulaRig, dracRig, bake, bakeMulassa, bakeDrac, rigParts, redScales, greenVelvet, thumbs, SIMPLE } from './board-figures.js';
+import { buildSimplePetard, buildSimpleCalcot, buildSimpleCampanar, buildSimpleCarretilla } from './simple-figures.js';
 import { createSparks } from './board-sparks.js';
 
 const PITCH = 3.2, PITCH_Z = 4.2, JOINT = .06, TILT = 50 * Math.PI / 180;
 const FIG_H = 3.6; // the camera's fit keeps the figures' tops on screen
 
 export function createBoard(canvas) {
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color('#8a7a66');
-  scene.add(new THREE.HemisphereLight('#fff3d6', '#8a6a4a', 2.1));
-  const sun = new THREE.DirectionalLight('#ffe8c0', 2.4);
+  scene.add(new THREE.HemisphereLight('#ffffff', '#76849a', 2.2));
+  const sun = new THREE.DirectionalLight('#fff7e8', 2.7);
   sun.position.set(-9, 26, 12);
   sun.castShadow = true;
   sun.shadow.mapSize.set(2048, 2048);
   Object.assign(sun.shadow.camera, { left: -22, right: 22, top: 22, bottom: -22, near: 1, far: 70 });
   scene.add(sun);
-  const camera = new THREE.PerspectiveCamera(20, 1, 1, 800);
+  const camera = new THREE.PerspectiveCamera(10, 1, 1, 1600)  // long lens: the board stays square on screen;
 
-  // the plaça's paving (scene/models/plaza.js)
-  const floor = new Vox();
-  // on the board's own grid (an even number of cells each way, so a joint runs through the centre): every game tile sits exactly on a paving stone
-  for (let ix = -14; ix < 14; ix++) for (let iz = -11; iz < 11; iz++) {
-    floor.box((ix + .5) * PITCH, -.12, (iz + .5) * PITCH_Z, PITCH - JOINT, .1, PITCH_Z - JOINT, (ix + iz) % 2 === 0 ? '#dccaa8' : '#cfb994', .03);
-  }
-  const floorMesh = floor.mesh();
-  floorMesh.castShadow = false;
-  scene.add(floorMesh);
+  // the dark base under the tiles: their joints read as shadow, not lines; the night around it is the page's (style.css)
+  const slab = new THREE.Mesh(new THREE.BoxGeometry(1, .4, 1), new THREE.MeshLambertMaterial({ color: '#23233d' }));
+  slab.position.y = -.32;
+  slab.receiveShadow = true;
+  scene.add(slab);
 
   const mula = bakeMulassa(), drac = bakeDrac();
   const GEOS = {
-    drac, mula, dracFals: swapRedGreen(drac), mulaFalsa: greenVelvet(mula),
-    petard: bake(buildPetard(), { scale: .85 }), calcot: bake(buildCalcot()), campanar: bake(buildCampanar()), carretilla: bake(buildCarretilla()),
+    drac, mula, dracFals: redScales(drac), mulaFalsa: greenVelvet(mula),
+    petard: bake((SIMPLE ? buildSimplePetard : buildPetard)(), { scale: SIMPLE ? .7 : .85 }), calcot: bake((SIMPLE ? buildSimpleCalcot : buildCalcot)(), { scale: SIMPLE ? .82 : 1 }), campanar: bake((SIMPLE ? buildSimpleCampanar : buildCampanar)(), { scale: SIMPLE ? .62 : 1 }), carretilla: bake((SIMPLE ? buildSimpleCarretilla : buildCarretilla)(), { scale: SIMPLE ? .72 : 1 }),
   };
   const mat = new THREE.MeshLambertMaterial({ vertexColors: true });
   const CELLS = 24;
@@ -55,7 +50,7 @@ export function createBoard(canvas) {
   const meshes = Object.fromEntries(['petard', 'calcot', 'campanar', 'carretilla'].map(kind => [kind, newInstanced(GEOS[kind])]));
   // The figures are live: one rig per kind poses each cell's copy in turn; one instanced part per pivot, so any number of them cost the same few draw calls.
   const live = (rig, paint = g => g) => ({ rig, parts: rigParts(rig.root).map(p => ({ node: p.node, mesh: newInstanced(paint(p.geo)) })) });
-  const FIGS = { drac: live(dracRig()), dracFals: live(dracRig(), swapRedGreen), mula: live(mulaRig()), mulaFalsa: live(mulaRig(), greenVelvet) };
+  const FIGS = { drac: live(dracRig()), dracFals: live(dracRig(), redScales), mula: live(mulaRig()), mulaFalsa: live(mulaRig(), greenVelvet) };
   const allMeshes = [...Object.values(meshes), ...Object.values(FIGS).flatMap(f => f.parts.map(p => p.mesh))];
   const put = (m, matrix, color) => { m.setMatrixAt(m.count, matrix); m.setColorAt(m.count, color); m.count += 1; };
   const tiles = new THREE.InstancedMesh(new THREE.BoxGeometry(PITCH - JOINT, .16, PITCH_Z - JOINT), new THREE.MeshLambertMaterial(), CELLS);
@@ -68,7 +63,7 @@ export function createBoard(canvas) {
   const dummy = new THREE.Object3D(), col = new THREE.Color(), hot = new THREE.Color();
   let game = null, centres = [], screen = [], W = 1, H = 1, time = 0, trauma = 0, booms = [], poses = [], seen = [], fireUntil = 0, burning = new Map();
   const camBase = new THREE.Vector3();
-  const insets = { top: 0, bottom: 0 };
+  const insets = { top: 68, bottom: 8 };
 
   const cellPos = i => ({ x: (i % game.cols - (game.cols - 1) / 2) * PITCH, z: (Math.floor(i / game.cols) - (game.rows - 1) / 2) * PITCH_Z });
 
@@ -81,6 +76,7 @@ export function createBoard(canvas) {
     fireUntil = 0;
     burning = new Map();
     tiles.count = g.cells.length;
+    slab.scale.set(g.cols * PITCH + .5, 1, g.rows * PITCH_Z + .5);
     centres.forEach((c, i) => {
       dummy.position.set(c.x, -.04, c.z);
       dummy.rotation.set(0, 0, 0);
@@ -113,7 +109,7 @@ export function createBoard(canvas) {
       }
       return { a, b, c, d };
     };
-    const margin = 10, safeH = (H - insets.top - insets.bottom - 2 * margin) / H * 2, safeW = (W - 2 * margin) / W * 2;
+    const margin = 16, safeH = (H - insets.top - insets.bottom - 2 * margin) / H * 2, safeW = (W - 2 * margin) / W * 2;
     let lo = 10, hi = 600;
     for (let i = 0; i < 24; i++) {
       const dist = (lo + hi) / 2;
@@ -278,11 +274,11 @@ export function createBoard(canvas) {
       if (booms[i] <= time && booms[i] > time - dt - 1e-6) {
         burst(i, ['#ff8a1e', '#ffe066', '#c0283c', '#3a2c22'], i === game.culprit ? 40 : 14, i === game.culprit ? 1.4 : 1);
       }
-      col.set((i + Math.floor(i / game.cols)) % 2 ? '#b89a6c' : '#a78a5e');
+      col.set((i + Math.floor(i / game.cols)) % 2 ? '#4c4d71' : '#424363');
       if (c.kind === 'mula') {
         const u = 1 - c.left / FUSE;
         col.set('#f5c518').lerp(hot.set('#ff3b2e'), u);
-      } else if (c.kind !== 'drac') col.set('#fff3d6');
+      } else if (c.kind !== 'drac') col.set('#8d90b8');
       tiles.setColorAt(i, col);
     });
     tiles.instanceColor.needsUpdate = true;

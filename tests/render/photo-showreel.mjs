@@ -671,3 +671,12 @@ run("setSelectedFigure('mulassa-valls');"); for (let i = 0; i < 3; i++) run(`fra
 const sh = JSON.parse(run('JSON.stringify(shoulder)'));
 assert(sh.seen > 0 && sh.worst > 0.3, `showreel: no attendant over the lens's shoulder (closest ${sh.worst.toFixed(2)} rad off the line of sight)`);
 run('sheets.select = idleSel;'); console.log('showreel clear of the attendants ok'); }
+
+// The splash's tap: the selector's first cut must already have its band, or it frames the whole screen and springs back out
+{ run(`var firstSel = sheets.select; G.state = 'select'; sheets.select = { pending: false, figure: MULASSA, band: null, sheetOpen: false, visible() { this.band ??= { top: 100, bottom: 500, hardTop: 60, left: 500, right: 1280 }; } }; frameCamera(1 / 60, 0, false);`);
+  assert(run('!!sheets.select.band'), 'selector: the band is measured before the first frame is framed');
+  // Play to results: the play camera's wide lens eases back, no one-frame zoom
+  run(`sheets.select = firstSel; G.state = 'results'; G.resT = clock; CAMS.live = true; camera.fov = baseFov() + 16; camera.updateProjectionMatrix(); frameCamera(1 / 60, 0, false); var resFov0 = camera.fov - baseFov(); for (let i = 0; i < 300; i++) { clock += 1 / 60; frameCamera(1 / 60, 0, false); }`);
+  assert(run('resFov0') > 15.9, `results: the lens does not snap (${run('resFov0')})`);
+  assert(Math.abs(run('camera.fov - baseFov()')) < 0.1, 'results: the lens is back within seconds');
+  run(`G.state = 'select';`); console.log('selector entry and results lens ok'); }

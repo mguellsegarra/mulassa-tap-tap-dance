@@ -1,0 +1,1823 @@
+{
+  "C": {
+    "colors": [
+      "#049401",
+      "#03cac9",
+      "#e94502",
+      "#f9c802",
+      "#f82f04",
+      "#f7465d",
+      "#bfb8dc"
+    ],
+    "modes": {
+      "normal": {
+        "pitjor": {
+          "parella": "bou / mulassa",
+          "fons": 0,
+          "de00": 3.87
+        },
+        "parelles": [
+          {
+            "parella": "drac / basilisc",
+            "fons": 0,
+            "de00": 34.27
+          },
+          {
+            "parella": "drac / bou",
+            "fons": 0,
+            "de00": 65.97
+          },
+          {
+            "parella": "drac / lleo",
+            "fons": 0,
+            "de00": 39.01
+          },
+          {
+            "parella": "drac / mulassa",
+            "fons": 0,
+            "de00": 70.84
+          },
+          {
+            "parella": "drac / nans",
+            "fons": 0,
+            "de00": 76.86
+          },
+          {
+            "parella": "drac / aliga",
+            "fons": 0,
+            "de00": 46.98
+          },
+          {
+            "parella": "basilisc / bou",
+            "fons": 0,
+            "de00": 60.07
+          },
+          {
+            "parella": "basilisc / lleo",
+            "fons": 0,
+            "de00": 43.45
+          },
+          {
+            "parella": "basilisc / mulassa",
+            "fons": 0,
+            "de00": 62.6
+          },
+          {
+            "parella": "basilisc / nans",
+            "fons": 0,
+            "de00": 65.46
+          },
+          {
+            "parella": "basilisc / aliga",
+            "fons": 0,
+            "de00": 32.32
+          },
+          {
+            "parella": "bou / lleo",
+            "fons": 0,
+            "de00": 41.38
+          },
+          {
+            "parella": "bou / mulassa",
+            "fons": 0,
+            "de00": 3.87
+          },
+          {
+            "parella": "bou / nans",
+            "fons": 0,
+            "de00": 18.32
+          },
+          {
+            "parella": "bou / aliga",
+            "fons": 0,
+            "de00": 41.62
+          },
+          {
+            "parella": "lleo / mulassa",
+            "fons": 0,
+            "de00": 44.75
+          },
+          {
+            "parella": "lleo / nans",
+            "fons": 0,
+            "de00": 52.64
+          },
+          {
+            "parella": "lleo / aliga",
+            "fons": 0,
+            "de00": 46.84
+          },
+          {
+            "parella": "mulassa / nans",
+            "fons": 0,
+            "de00": 15.92
+          },
+          {
+            "parella": "mulassa / aliga",
+            "fons": 0,
+            "de00": 41.45
+          },
+          {
+            "parella": "nans / aliga",
+            "fons": 0,
+            "de00": 34.27
+          },
+          {
+            "parella": "drac / basilisc",
+            "fons": 1,
+            "de00": 34.26
+          },
+          {
+            "parella": "drac / bou",
+            "fons": 1,
+            "de00": 65.96
+          },
+          {
+            "parella": "drac / lleo",
+            "fons": 1,
+            "de00": 39.01
+          },
+          {
+            "parella": "drac / mulassa",
+            "fons": 1,
+            "de00": 70.87
+          },
+          {
+            "parella": "drac / nans",
+            "fons": 1,
+            "de00": 76.87
+          },
+          {
+            "parella": "drac / aliga",
+            "fons": 1,
+            "de00": 46.97
+          },
+          {
+            "parella": "basilisc / bou",
+            "fons": 1,
+            "de00": 60.06
+          },
+          {
+            "parella": "basilisc / lleo",
+            "fons": 1,
+            "de00": 43.45
+          },
+          {
+            "parella": "basilisc / mulassa",
+            "fons": 1,
+            "de00": 62.61
+          },
+          {
+            "parella": "basilisc / nans",
+            "fons": 1,
+            "de00": 65.47
+          },
+          {
+            "parella": "basilisc / aliga",
+            "fons": 1,
+            "de00": 32.33
+          },
+          {
+            "parella": "bou / lleo",
+            "fons": 1,
+            "de00": 41.37
+          },
+          {
+            "parella": "bou / mulassa",
+            "fons": 1,
+            "de00": 3.9
+          },
+          {
+            "parella": "bou / nans",
+            "fons": 1,
+            "de00": 18.33
+          },
+          {
+            "parella": "bou / aliga",
+            "fons": 1,
+            "de00": 41.62
+          },
+          {
+            "parella": "lleo / mulassa",
+            "fons": 1,
+            "de00": 44.74
+          },
+          {
+            "parella": "lleo / nans",
+            "fons": 1,
+            "de00": 52.64
+          },
+          {
+            "parella": "lleo / aliga",
+            "fons": 1,
+            "de00": 46.84
+          },
+          {
+            "parella": "mulassa / nans",
+            "fons": 1,
+            "de00": 15.92
+          },
+          {
+            "parella": "mulassa / aliga",
+            "fons": 1,
+            "de00": 41.44
+          },
+          {
+            "parella": "nans / aliga",
+            "fons": 1,
+            "de00": 34.27
+          }
+        ]
+      },
+      "grisos": {
+        "pitjor": {
+          "parella": "bou / mulassa",
+          "fons": 0,
+          "de00": 0.36
+        },
+        "parelles": [
+          {
+            "parella": "drac / basilisc",
+            "fons": 0,
+            "de00": 17.46
+          },
+          {
+            "parella": "drac / bou",
+            "fons": 0,
+            "de00": 0.54
+          },
+          {
+            "parella": "drac / lleo",
+            "fons": 0,
+            "de00": 23.47
+          },
+          {
+            "parella": "drac / mulassa",
+            "fons": 0,
+            "de00": 0.9
+          },
+          {
+            "parella": "drac / nans",
+            "fons": 0,
+            "de00": 3.77
+          },
+          {
+            "parella": "drac / aliga",
+            "fons": 0,
+            "de00": 19.32
+          },
+          {
+            "parella": "basilisc / bou",
+            "fons": 0,
+            "de00": 16.93
+          },
+          {
+            "parella": "basilisc / lleo",
+            "fons": 0,
+            "de00": 6.17
+          },
+          {
+            "parella": "basilisc / mulassa",
+            "fons": 0,
+            "de00": 16.58
+          },
+          {
+            "parella": "basilisc / nans",
+            "fons": 0,
+            "de00": 13.76
+          },
+          {
+            "parella": "basilisc / aliga",
+            "fons": 0,
+            "de00": 1.9
+          },
+          {
+            "parella": "bou / lleo",
+            "fons": 0,
+            "de00": 22.94
+          },
+          {
+            "parella": "bou / mulassa",
+            "fons": 0,
+            "de00": 0.36
+          },
+          {
+            "parella": "bou / nans",
+            "fons": 0,
+            "de00": 3.23
+          },
+          {
+            "parella": "bou / aliga",
+            "fons": 0,
+            "de00": 18.79
+          },
+          {
+            "parella": "lleo / mulassa",
+            "fons": 0,
+            "de00": 22.6
+          },
+          {
+            "parella": "lleo / nans",
+            "fons": 0,
+            "de00": 19.82
+          },
+          {
+            "parella": "lleo / aliga",
+            "fons": 0,
+            "de00": 4.27
+          },
+          {
+            "parella": "mulassa / nans",
+            "fons": 0,
+            "de00": 2.87
+          },
+          {
+            "parella": "mulassa / aliga",
+            "fons": 0,
+            "de00": 18.44
+          },
+          {
+            "parella": "nans / aliga",
+            "fons": 0,
+            "de00": 15.63
+          },
+          {
+            "parella": "drac / basilisc",
+            "fons": 1,
+            "de00": 17.45
+          },
+          {
+            "parella": "drac / bou",
+            "fons": 1,
+            "de00": 0.55
+          },
+          {
+            "parella": "drac / lleo",
+            "fons": 1,
+            "de00": 23.45
+          },
+          {
+            "parella": "drac / mulassa",
+            "fons": 1,
+            "de00": 0.93
+          },
+          {
+            "parella": "drac / nans",
+            "fons": 1,
+            "de00": 3.76
+          },
+          {
+            "parella": "drac / aliga",
+            "fons": 1,
+            "de00": 19.31
+          },
+          {
+            "parella": "basilisc / bou",
+            "fons": 1,
+            "de00": 16.92
+          },
+          {
+            "parella": "basilisc / lleo",
+            "fons": 1,
+            "de00": 6.16
+          },
+          {
+            "parella": "basilisc / mulassa",
+            "fons": 1,
+            "de00": 16.54
+          },
+          {
+            "parella": "basilisc / nans",
+            "fons": 1,
+            "de00": 13.76
+          },
+          {
+            "parella": "basilisc / aliga",
+            "fons": 1,
+            "de00": 1.9
+          },
+          {
+            "parella": "bou / lleo",
+            "fons": 1,
+            "de00": 22.93
+          },
+          {
+            "parella": "bou / mulassa",
+            "fons": 1,
+            "de00": 0.38
+          },
+          {
+            "parella": "bou / nans",
+            "fons": 1,
+            "de00": 3.22
+          },
+          {
+            "parella": "bou / aliga",
+            "fons": 1,
+            "de00": 18.78
+          },
+          {
+            "parella": "lleo / mulassa",
+            "fons": 1,
+            "de00": 22.56
+          },
+          {
+            "parella": "lleo / nans",
+            "fons": 1,
+            "de00": 19.81
+          },
+          {
+            "parella": "lleo / aliga",
+            "fons": 1,
+            "de00": 4.27
+          },
+          {
+            "parella": "mulassa / nans",
+            "fons": 1,
+            "de00": 2.83
+          },
+          {
+            "parella": "mulassa / aliga",
+            "fons": 1,
+            "de00": 18.4
+          },
+          {
+            "parella": "nans / aliga",
+            "fons": 1,
+            "de00": 15.63
+          }
+        ]
+      },
+      "protanopia": {
+        "pitjor": {
+          "parella": "bou / mulassa",
+          "fons": 1,
+          "de00": 1.48
+        },
+        "parelles": [
+          {
+            "parella": "drac / basilisc",
+            "fons": 0,
+            "de00": 36.46
+          },
+          {
+            "parella": "drac / bou",
+            "fons": 0,
+            "de00": 11.31
+          },
+          {
+            "parella": "drac / lleo",
+            "fons": 0,
+            "de00": 20.15
+          },
+          {
+            "parella": "drac / mulassa",
+            "fons": 0,
+            "de00": 12.89
+          },
+          {
+            "parella": "drac / nans",
+            "fons": 0,
+            "de00": 19.75
+          },
+          {
+            "parella": "drac / aliga",
+            "fons": 0,
+            "de00": 44.87
+          },
+          {
+            "parella": "basilisc / bou",
+            "fons": 0,
+            "de00": 41.52
+          },
+          {
+            "parella": "basilisc / lleo",
+            "fons": 0,
+            "de00": 34.87
+          },
+          {
+            "parella": "basilisc / mulassa",
+            "fons": 0,
+            "de00": 42.5
+          },
+          {
+            "parella": "basilisc / nans",
+            "fons": 0,
+            "de00": 29.47
+          },
+          {
+            "parella": "basilisc / aliga",
+            "fons": 0,
+            "de00": 8.19
+          },
+          {
+            "parella": "bou / lleo",
+            "fons": 0,
+            "de00": 31.27
+          },
+          {
+            "parella": "bou / mulassa",
+            "fons": 0,
+            "de00": 1.49
+          },
+          {
+            "parella": "bou / nans",
+            "fons": 0,
+            "de00": 16.35
+          },
+          {
+            "parella": "bou / aliga",
+            "fons": 0,
+            "de00": 48.5
+          },
+          {
+            "parella": "lleo / mulassa",
+            "fons": 0,
+            "de00": 32.98
+          },
+          {
+            "parella": "lleo / nans",
+            "fons": 0,
+            "de00": 34.8
+          },
+          {
+            "parella": "lleo / aliga",
+            "fons": 0,
+            "de00": 44.66
+          },
+          {
+            "parella": "mulassa / nans",
+            "fons": 0,
+            "de00": 16.37
+          },
+          {
+            "parella": "mulassa / aliga",
+            "fons": 0,
+            "de00": 49.25
+          },
+          {
+            "parella": "nans / aliga",
+            "fons": 0,
+            "de00": 34.45
+          },
+          {
+            "parella": "drac / basilisc",
+            "fons": 1,
+            "de00": 36.45
+          },
+          {
+            "parella": "drac / bou",
+            "fons": 1,
+            "de00": 11.3
+          },
+          {
+            "parella": "drac / lleo",
+            "fons": 1,
+            "de00": 20.14
+          },
+          {
+            "parella": "drac / mulassa",
+            "fons": 1,
+            "de00": 12.87
+          },
+          {
+            "parella": "drac / nans",
+            "fons": 1,
+            "de00": 19.75
+          },
+          {
+            "parella": "drac / aliga",
+            "fons": 1,
+            "de00": 44.86
+          },
+          {
+            "parella": "basilisc / bou",
+            "fons": 1,
+            "de00": 41.5
+          },
+          {
+            "parella": "basilisc / lleo",
+            "fons": 1,
+            "de00": 34.86
+          },
+          {
+            "parella": "basilisc / mulassa",
+            "fons": 1,
+            "de00": 42.47
+          },
+          {
+            "parella": "basilisc / nans",
+            "fons": 1,
+            "de00": 29.46
+          },
+          {
+            "parella": "basilisc / aliga",
+            "fons": 1,
+            "de00": 8.19
+          },
+          {
+            "parella": "bou / lleo",
+            "fons": 1,
+            "de00": 31.24
+          },
+          {
+            "parella": "bou / mulassa",
+            "fons": 1,
+            "de00": 1.48
+          },
+          {
+            "parella": "bou / nans",
+            "fons": 1,
+            "de00": 16.36
+          },
+          {
+            "parella": "bou / aliga",
+            "fons": 1,
+            "de00": 48.48
+          },
+          {
+            "parella": "lleo / mulassa",
+            "fons": 1,
+            "de00": 32.93
+          },
+          {
+            "parella": "lleo / nans",
+            "fons": 1,
+            "de00": 34.79
+          },
+          {
+            "parella": "lleo / aliga",
+            "fons": 1,
+            "de00": 44.66
+          },
+          {
+            "parella": "mulassa / nans",
+            "fons": 1,
+            "de00": 16.38
+          },
+          {
+            "parella": "mulassa / aliga",
+            "fons": 1,
+            "de00": 49.23
+          },
+          {
+            "parella": "nans / aliga",
+            "fons": 1,
+            "de00": 34.44
+          }
+        ]
+      },
+      "deuteranopia": {
+        "pitjor": {
+          "parella": "bou / mulassa",
+          "fons": 0,
+          "de00": 1.09
+        },
+        "parelles": [
+          {
+            "parella": "drac / basilisc",
+            "fons": 0,
+            "de00": 41.4
+          },
+          {
+            "parella": "drac / bou",
+            "fons": 0,
+            "de00": 7.81
+          },
+          {
+            "parella": "drac / lleo",
+            "fons": 0,
+            "de00": 27.28
+          },
+          {
+            "parella": "drac / mulassa",
+            "fons": 0,
+            "de00": 8.86
+          },
+          {
+            "parella": "drac / nans",
+            "fons": 0,
+            "de00": 11.06
+          },
+          {
+            "parella": "drac / aliga",
+            "fons": 0,
+            "de00": 43.84
+          },
+          {
+            "parella": "basilisc / bou",
+            "fons": 0,
+            "de00": 41.81
+          },
+          {
+            "parella": "basilisc / lleo",
+            "fons": 0,
+            "de00": 44.19
+          },
+          {
+            "parella": "basilisc / mulassa",
+            "fons": 0,
+            "de00": 41.73
+          },
+          {
+            "parella": "basilisc / nans",
+            "fons": 0,
+            "de00": 34.36
+          },
+          {
+            "parella": "basilisc / aliga",
+            "fons": 0,
+            "de00": 3.83
+          },
+          {
+            "parella": "bou / lleo",
+            "fons": 0,
+            "de00": 19.99
+          },
+          {
+            "parella": "bou / mulassa",
+            "fons": 0,
+            "de00": 1.09
+          },
+          {
+            "parella": "bou / nans",
+            "fons": 0,
+            "de00": 9.44
+          },
+          {
+            "parella": "bou / aliga",
+            "fons": 0,
+            "de00": 43.75
+          },
+          {
+            "parella": "lleo / mulassa",
+            "fons": 0,
+            "de00": 18.93
+          },
+          {
+            "parella": "lleo / nans",
+            "fons": 0,
+            "de00": 21.01
+          },
+          {
+            "parella": "lleo / aliga",
+            "fons": 0,
+            "de00": 44.49
+          },
+          {
+            "parella": "mulassa / nans",
+            "fons": 0,
+            "de00": 9.4
+          },
+          {
+            "parella": "mulassa / aliga",
+            "fons": 0,
+            "de00": 43.59
+          },
+          {
+            "parella": "nans / aliga",
+            "fons": 0,
+            "de00": 36.18
+          },
+          {
+            "parella": "drac / basilisc",
+            "fons": 1,
+            "de00": 41.39
+          },
+          {
+            "parella": "drac / bou",
+            "fons": 1,
+            "de00": 7.81
+          },
+          {
+            "parella": "drac / lleo",
+            "fons": 1,
+            "de00": 27.27
+          },
+          {
+            "parella": "drac / mulassa",
+            "fons": 1,
+            "de00": 8.89
+          },
+          {
+            "parella": "drac / nans",
+            "fons": 1,
+            "de00": 11.05
+          },
+          {
+            "parella": "drac / aliga",
+            "fons": 1,
+            "de00": 43.82
+          },
+          {
+            "parella": "basilisc / bou",
+            "fons": 1,
+            "de00": 41.81
+          },
+          {
+            "parella": "basilisc / lleo",
+            "fons": 1,
+            "de00": 44.18
+          },
+          {
+            "parella": "basilisc / mulassa",
+            "fons": 1,
+            "de00": 41.73
+          },
+          {
+            "parella": "basilisc / nans",
+            "fons": 1,
+            "de00": 34.36
+          },
+          {
+            "parella": "basilisc / aliga",
+            "fons": 1,
+            "de00": 3.83
+          },
+          {
+            "parella": "bou / lleo",
+            "fons": 1,
+            "de00": 19.98
+          },
+          {
+            "parella": "bou / mulassa",
+            "fons": 1,
+            "de00": 1.12
+          },
+          {
+            "parella": "bou / nans",
+            "fons": 1,
+            "de00": 9.45
+          },
+          {
+            "parella": "bou / aliga",
+            "fons": 1,
+            "de00": 43.75
+          },
+          {
+            "parella": "lleo / mulassa",
+            "fons": 1,
+            "de00": 18.89
+          },
+          {
+            "parella": "lleo / nans",
+            "fons": 1,
+            "de00": 21.01
+          },
+          {
+            "parella": "lleo / aliga",
+            "fons": 1,
+            "de00": 44.48
+          },
+          {
+            "parella": "mulassa / nans",
+            "fons": 1,
+            "de00": 9.41
+          },
+          {
+            "parella": "mulassa / aliga",
+            "fons": 1,
+            "de00": 43.59
+          },
+          {
+            "parella": "nans / aliga",
+            "fons": 1,
+            "de00": 36.17
+          }
+        ]
+      }
+    }
+  },
+  "nova": {
+    "colors": [
+      "#239702",
+      "#0578c9",
+      "#db4b02",
+      "#f2bd03",
+      "#b40214",
+      "#e83d55",
+      "#887b74"
+    ],
+    "modes": {
+      "normal": {
+        "pitjor": {
+          "parella": "bou / mulassa",
+          "fons": 1,
+          "de00": 17.24
+        },
+        "parelles": [
+          {
+            "parella": "drac / basilisc",
+            "fons": 0,
+            "de00": 57.92
+          },
+          {
+            "parella": "drac / bou",
+            "fons": 0,
+            "de00": 61.95
+          },
+          {
+            "parella": "drac / lleo",
+            "fons": 0,
+            "de00": 37.39
+          },
+          {
+            "parella": "drac / mulassa",
+            "fons": 0,
+            "de00": 71.53
+          },
+          {
+            "parella": "drac / nans",
+            "fons": 0,
+            "de00": 75.19
+          },
+          {
+            "parella": "drac / aliga",
+            "fons": 0,
+            "de00": 32.27
+          },
+          {
+            "parella": "basilisc / bou",
+            "fons": 0,
+            "de00": 49.84
+          },
+          {
+            "parella": "basilisc / lleo",
+            "fons": 0,
+            "de00": 61.08
+          },
+          {
+            "parella": "basilisc / mulassa",
+            "fons": 0,
+            "de00": 48.95
+          },
+          {
+            "parella": "basilisc / nans",
+            "fons": 0,
+            "de00": 46.52
+          },
+          {
+            "parella": "basilisc / aliga",
+            "fons": 0,
+            "de00": 28.82
+          },
+          {
+            "parella": "bou / lleo",
+            "fons": 0,
+            "de00": 37.34
+          },
+          {
+            "parella": "bou / mulassa",
+            "fons": 0,
+            "de00": 17.26
+          },
+          {
+            "parella": "bou / nans",
+            "fons": 0,
+            "de00": 19.36
+          },
+          {
+            "parella": "bou / aliga",
+            "fons": 0,
+            "de00": 25.3
+          },
+          {
+            "parella": "lleo / mulassa",
+            "fons": 0,
+            "de00": 54.16
+          },
+          {
+            "parella": "lleo / nans",
+            "fons": 0,
+            "de00": 51.15
+          },
+          {
+            "parella": "lleo / aliga",
+            "fons": 0,
+            "de00": 34.33
+          },
+          {
+            "parella": "mulassa / nans",
+            "fons": 0,
+            "de00": 17.45
+          },
+          {
+            "parella": "mulassa / aliga",
+            "fons": 0,
+            "de00": 28.69
+          },
+          {
+            "parella": "nans / aliga",
+            "fons": 0,
+            "de00": 25.06
+          },
+          {
+            "parella": "drac / basilisc",
+            "fons": 1,
+            "de00": 57.92
+          },
+          {
+            "parella": "drac / bou",
+            "fons": 1,
+            "de00": 61.91
+          },
+          {
+            "parella": "drac / lleo",
+            "fons": 1,
+            "de00": 37.38
+          },
+          {
+            "parella": "drac / mulassa",
+            "fons": 1,
+            "de00": 71.56
+          },
+          {
+            "parella": "drac / nans",
+            "fons": 1,
+            "de00": 75.2
+          },
+          {
+            "parella": "drac / aliga",
+            "fons": 1,
+            "de00": 31.72
+          },
+          {
+            "parella": "basilisc / bou",
+            "fons": 1,
+            "de00": 49.85
+          },
+          {
+            "parella": "basilisc / lleo",
+            "fons": 1,
+            "de00": 61.07
+          },
+          {
+            "parella": "basilisc / mulassa",
+            "fons": 1,
+            "de00": 48.96
+          },
+          {
+            "parella": "basilisc / nans",
+            "fons": 1,
+            "de00": 46.53
+          },
+          {
+            "parella": "basilisc / aliga",
+            "fons": 1,
+            "de00": 29.79
+          },
+          {
+            "parella": "bou / lleo",
+            "fons": 1,
+            "de00": 37.29
+          },
+          {
+            "parella": "bou / mulassa",
+            "fons": 1,
+            "de00": 17.24
+          },
+          {
+            "parella": "bou / nans",
+            "fons": 1,
+            "de00": 19.39
+          },
+          {
+            "parella": "bou / aliga",
+            "fons": 1,
+            "de00": 25.34
+          },
+          {
+            "parella": "lleo / mulassa",
+            "fons": 1,
+            "de00": 54.08
+          },
+          {
+            "parella": "lleo / nans",
+            "fons": 1,
+            "de00": 51.16
+          },
+          {
+            "parella": "lleo / aliga",
+            "fons": 1,
+            "de00": 32.32
+          },
+          {
+            "parella": "mulassa / nans",
+            "fons": 1,
+            "de00": 17.4
+          },
+          {
+            "parella": "mulassa / aliga",
+            "fons": 1,
+            "de00": 30.32
+          },
+          {
+            "parella": "nans / aliga",
+            "fons": 1,
+            "de00": 25.44
+          }
+        ]
+      },
+      "grisos": {
+        "pitjor": {
+          "parella": "bou / aliga",
+          "fons": 0,
+          "de00": 0.56
+        },
+        "parelles": [
+          {
+            "parella": "drac / basilisc",
+            "fons": 0,
+            "de00": 5.28
+          },
+          {
+            "parella": "drac / bou",
+            "fons": 0,
+            "de00": 2.35
+          },
+          {
+            "parella": "drac / lleo",
+            "fons": 0,
+            "de00": 19.95
+          },
+          {
+            "parella": "drac / mulassa",
+            "fons": 0,
+            "de00": 16.34
+          },
+          {
+            "parella": "drac / nans",
+            "fons": 0,
+            "de00": 1.2
+          },
+          {
+            "parella": "drac / aliga",
+            "fons": 0,
+            "de00": 1.79
+          },
+          {
+            "parella": "basilisc / bou",
+            "fons": 0,
+            "de00": 2.91
+          },
+          {
+            "parella": "basilisc / lleo",
+            "fons": 0,
+            "de00": 25.06
+          },
+          {
+            "parella": "basilisc / mulassa",
+            "fons": 0,
+            "de00": 10.76
+          },
+          {
+            "parella": "basilisc / nans",
+            "fons": 0,
+            "de00": 4.07
+          },
+          {
+            "parella": "basilisc / aliga",
+            "fons": 0,
+            "de00": 3.48
+          },
+          {
+            "parella": "bou / lleo",
+            "fons": 0,
+            "de00": 22.23
+          },
+          {
+            "parella": "bou / mulassa",
+            "fons": 0,
+            "de00": 13.75
+          },
+          {
+            "parella": "bou / nans",
+            "fons": 0,
+            "de00": 1.15
+          },
+          {
+            "parella": "bou / aliga",
+            "fons": 0,
+            "de00": 0.56
+          },
+          {
+            "parella": "lleo / mulassa",
+            "fons": 0,
+            "de00": 37.58
+          },
+          {
+            "parella": "lleo / nans",
+            "fons": 0,
+            "de00": 21.11
+          },
+          {
+            "parella": "lleo / aliga",
+            "fons": 0,
+            "de00": 21.68
+          },
+          {
+            "parella": "mulassa / nans",
+            "fons": 0,
+            "de00": 14.99
+          },
+          {
+            "parella": "mulassa / aliga",
+            "fons": 0,
+            "de00": 14.36
+          },
+          {
+            "parella": "nans / aliga",
+            "fons": 0,
+            "de00": 0.58
+          },
+          {
+            "parella": "drac / basilisc",
+            "fons": 1,
+            "de00": 5.28
+          },
+          {
+            "parella": "drac / bou",
+            "fons": 1,
+            "de00": 2.33
+          },
+          {
+            "parella": "drac / lleo",
+            "fons": 1,
+            "de00": 19.94
+          },
+          {
+            "parella": "drac / mulassa",
+            "fons": 1,
+            "de00": 16.27
+          },
+          {
+            "parella": "drac / nans",
+            "fons": 1,
+            "de00": 1.21
+          },
+          {
+            "parella": "drac / aliga",
+            "fons": 1,
+            "de00": 0.82
+          },
+          {
+            "parella": "basilisc / bou",
+            "fons": 1,
+            "de00": 2.93
+          },
+          {
+            "parella": "basilisc / lleo",
+            "fons": 1,
+            "de00": 25.05
+          },
+          {
+            "parella": "basilisc / mulassa",
+            "fons": 1,
+            "de00": 10.68
+          },
+          {
+            "parella": "basilisc / nans",
+            "fons": 1,
+            "de00": 4.06
+          },
+          {
+            "parella": "basilisc / aliga",
+            "fons": 1,
+            "de00": 6.11
+          },
+          {
+            "parella": "bou / lleo",
+            "fons": 1,
+            "de00": 22.19
+          },
+          {
+            "parella": "bou / mulassa",
+            "fons": 1,
+            "de00": 13.7
+          },
+          {
+            "parella": "bou / nans",
+            "fons": 1,
+            "de00": 1.12
+          },
+          {
+            "parella": "bou / aliga",
+            "fons": 1,
+            "de00": 3.15
+          },
+          {
+            "parella": "lleo / mulassa",
+            "fons": 1,
+            "de00": 37.45
+          },
+          {
+            "parella": "lleo / nans",
+            "fons": 1,
+            "de00": 21.11
+          },
+          {
+            "parella": "lleo / aliga",
+            "fons": 1,
+            "de00": 19.13
+          },
+          {
+            "parella": "mulassa / nans",
+            "fons": 1,
+            "de00": 14.92
+          },
+          {
+            "parella": "mulassa / aliga",
+            "fons": 1,
+            "de00": 17.22
+          },
+          {
+            "parella": "nans / aliga",
+            "fons": 1,
+            "de00": 2.03
+          }
+        ]
+      },
+      "protanopia": {
+        "pitjor": {
+          "parella": "nans / aliga",
+          "fons": 0,
+          "de00": 9.38
+        },
+        "parelles": [
+          {
+            "parella": "drac / basilisc",
+            "fons": 0,
+            "de00": 54.73
+          },
+          {
+            "parella": "drac / bou",
+            "fons": 0,
+            "de00": 13.1
+          },
+          {
+            "parella": "drac / lleo",
+            "fons": 0,
+            "de00": 16.47
+          },
+          {
+            "parella": "drac / mulassa",
+            "fons": 0,
+            "de00": 28.2
+          },
+          {
+            "parella": "drac / nans",
+            "fons": 0,
+            "de00": 22.58
+          },
+          {
+            "parella": "drac / aliga",
+            "fons": 0,
+            "de00": 23.2
+          },
+          {
+            "parella": "basilisc / bou",
+            "fons": 0,
+            "de00": 52.78
+          },
+          {
+            "parella": "basilisc / lleo",
+            "fons": 0,
+            "de00": 60.89
+          },
+          {
+            "parella": "basilisc / mulassa",
+            "fons": 0,
+            "de00": 50.05
+          },
+          {
+            "parella": "basilisc / nans",
+            "fons": 0,
+            "de00": 35.62
+          },
+          {
+            "parella": "basilisc / aliga",
+            "fons": 0,
+            "de00": 28.44
+          },
+          {
+            "parella": "bou / lleo",
+            "fons": 0,
+            "de00": 29.4
+          },
+          {
+            "parella": "bou / mulassa",
+            "fons": 0,
+            "de00": 15.35
+          },
+          {
+            "parella": "bou / nans",
+            "fons": 0,
+            "de00": 16.24
+          },
+          {
+            "parella": "bou / aliga",
+            "fons": 0,
+            "de00": 22.01
+          },
+          {
+            "parella": "lleo / mulassa",
+            "fons": 0,
+            "de00": 50.06
+          },
+          {
+            "parella": "lleo / nans",
+            "fons": 0,
+            "de00": 35.82
+          },
+          {
+            "parella": "lleo / aliga",
+            "fons": 0,
+            "de00": 32.63
+          },
+          {
+            "parella": "mulassa / nans",
+            "fons": 0,
+            "de00": 16.58
+          },
+          {
+            "parella": "mulassa / aliga",
+            "fons": 0,
+            "de00": 25.65
+          },
+          {
+            "parella": "nans / aliga",
+            "fons": 0,
+            "de00": 9.38
+          },
+          {
+            "parella": "drac / basilisc",
+            "fons": 1,
+            "de00": 54.74
+          },
+          {
+            "parella": "drac / bou",
+            "fons": 1,
+            "de00": 13.06
+          },
+          {
+            "parella": "drac / lleo",
+            "fons": 1,
+            "de00": 16.46
+          },
+          {
+            "parella": "drac / mulassa",
+            "fons": 1,
+            "de00": 28.16
+          },
+          {
+            "parella": "drac / nans",
+            "fons": 1,
+            "de00": 22.59
+          },
+          {
+            "parella": "drac / aliga",
+            "fons": 1,
+            "de00": 22.41
+          },
+          {
+            "parella": "basilisc / bou",
+            "fons": 1,
+            "de00": 52.78
+          },
+          {
+            "parella": "basilisc / lleo",
+            "fons": 1,
+            "de00": 60.89
+          },
+          {
+            "parella": "basilisc / mulassa",
+            "fons": 1,
+            "de00": 50.07
+          },
+          {
+            "parella": "basilisc / nans",
+            "fons": 1,
+            "de00": 35.62
+          },
+          {
+            "parella": "basilisc / aliga",
+            "fons": 1,
+            "de00": 29.26
+          },
+          {
+            "parella": "bou / lleo",
+            "fons": 1,
+            "de00": 29.35
+          },
+          {
+            "parella": "bou / mulassa",
+            "fons": 1,
+            "de00": 15.32
+          },
+          {
+            "parella": "bou / nans",
+            "fons": 1,
+            "de00": 16.25
+          },
+          {
+            "parella": "bou / aliga",
+            "fons": 1,
+            "de00": 22.75
+          },
+          {
+            "parella": "lleo / mulassa",
+            "fons": 1,
+            "de00": 49.95
+          },
+          {
+            "parella": "lleo / nans",
+            "fons": 1,
+            "de00": 35.81
+          },
+          {
+            "parella": "lleo / aliga",
+            "fons": 1,
+            "de00": 30.78
+          },
+          {
+            "parella": "mulassa / nans",
+            "fons": 1,
+            "de00": 16.56
+          },
+          {
+            "parella": "mulassa / aliga",
+            "fons": 1,
+            "de00": 27.77
+          },
+          {
+            "parella": "nans / aliga",
+            "fons": 1,
+            "de00": 11.56
+          }
+        ]
+      },
+      "deuteranopia": {
+        "pitjor": {
+          "parella": "drac / bou",
+          "fons": 0,
+          "de00": 4.55
+        },
+        "parelles": [
+          {
+            "parella": "drac / basilisc",
+            "fons": 0,
+            "de00": 55.12
+          },
+          {
+            "parella": "drac / bou",
+            "fons": 0,
+            "de00": 4.55
+          },
+          {
+            "parella": "drac / lleo",
+            "fons": 0,
+            "de00": 23.65
+          },
+          {
+            "parella": "drac / mulassa",
+            "fons": 0,
+            "de00": 10.46
+          },
+          {
+            "parella": "drac / nans",
+            "fons": 0,
+            "de00": 7.66
+          },
+          {
+            "parella": "drac / aliga",
+            "fons": 0,
+            "de00": 19.73
+          },
+          {
+            "parella": "basilisc / bou",
+            "fons": 0,
+            "de00": 58.15
+          },
+          {
+            "parella": "basilisc / lleo",
+            "fons": 0,
+            "de00": 67.12
+          },
+          {
+            "parella": "basilisc / mulassa",
+            "fons": 0,
+            "de00": 54.1
+          },
+          {
+            "parella": "basilisc / nans",
+            "fons": 0,
+            "de00": 50.3
+          },
+          {
+            "parella": "basilisc / aliga",
+            "fons": 0,
+            "de00": 32.06
+          },
+          {
+            "parella": "bou / lleo",
+            "fons": 0,
+            "de00": 19.71
+          },
+          {
+            "parella": "bou / mulassa",
+            "fons": 0,
+            "de00": 14.66
+          },
+          {
+            "parella": "bou / nans",
+            "fons": 0,
+            "de00": 9.0
+          },
+          {
+            "parella": "bou / aliga",
+            "fons": 0,
+            "de00": 22.33
+          },
+          {
+            "parella": "lleo / mulassa",
+            "fons": 0,
+            "de00": 34.14
+          },
+          {
+            "parella": "lleo / nans",
+            "fons": 0,
+            "de00": 21.96
+          },
+          {
+            "parella": "lleo / aliga",
+            "fons": 0,
+            "de00": 33.7
+          },
+          {
+            "parella": "mulassa / nans",
+            "fons": 0,
+            "de00": 16.56
+          },
+          {
+            "parella": "mulassa / aliga",
+            "fons": 0,
+            "de00": 21.76
+          },
+          {
+            "parella": "nans / aliga",
+            "fons": 0,
+            "de00": 15.46
+          },
+          {
+            "parella": "drac / basilisc",
+            "fons": 1,
+            "de00": 55.12
+          },
+          {
+            "parella": "drac / bou",
+            "fons": 1,
+            "de00": 4.57
+          },
+          {
+            "parella": "drac / lleo",
+            "fons": 1,
+            "de00": 23.64
+          },
+          {
+            "parella": "drac / mulassa",
+            "fons": 1,
+            "de00": 10.37
+          },
+          {
+            "parella": "drac / nans",
+            "fons": 1,
+            "de00": 7.66
+          },
+          {
+            "parella": "drac / aliga",
+            "fons": 1,
+            "de00": 19.44
+          },
+          {
+            "parella": "basilisc / bou",
+            "fons": 1,
+            "de00": 58.16
+          },
+          {
+            "parella": "basilisc / lleo",
+            "fons": 1,
+            "de00": 67.11
+          },
+          {
+            "parella": "basilisc / mulassa",
+            "fons": 1,
+            "de00": 54.13
+          },
+          {
+            "parella": "basilisc / nans",
+            "fons": 1,
+            "de00": 50.29
+          },
+          {
+            "parella": "basilisc / aliga",
+            "fons": 1,
+            "de00": 33.39
+          },
+          {
+            "parella": "bou / lleo",
+            "fons": 1,
+            "de00": 19.68
+          },
+          {
+            "parella": "bou / mulassa",
+            "fons": 1,
+            "de00": 14.57
+          },
+          {
+            "parella": "bou / nans",
+            "fons": 1,
+            "de00": 9.01
+          },
+          {
+            "parella": "bou / aliga",
+            "fons": 1,
+            "de00": 21.66
+          },
+          {
+            "parella": "lleo / mulassa",
+            "fons": 1,
+            "de00": 34.0
+          },
+          {
+            "parella": "lleo / nans",
+            "fons": 1,
+            "de00": 21.96
+          },
+          {
+            "parella": "lleo / aliga",
+            "fons": 1,
+            "de00": 31.75
+          },
+          {
+            "parella": "mulassa / nans",
+            "fons": 1,
+            "de00": 16.47
+          },
+          {
+            "parella": "mulassa / aliga",
+            "fons": 1,
+            "de00": 22.85
+          },
+          {
+            "parella": "nans / aliga",
+            "fons": 1,
+            "de00": 14.33
+          }
+        ]
+      }
+    }
+  },
+  "alpha": [
+    {
+      "figura": "drac",
+      "pixels_eliminats": 44658
+    },
+    {
+      "figura": "basilisc",
+      "pixels_eliminats": 36601
+    },
+    {
+      "figura": "bou",
+      "pixels_eliminats": 39665
+    },
+    {
+      "figura": "lleo",
+      "pixels_eliminats": 20332
+    },
+    {
+      "figura": "mulassa",
+      "pixels_eliminats": 19111
+    },
+    {
+      "figura": "nans",
+      "pixels_eliminats": 42362
+    },
+    {
+      "figura": "aliga",
+      "pixels_eliminats": 255863
+    }
+  ],
+  "fons": [
+    [
+      0.23921568627450981,
+      0.1411764705882353,
+      0.09019607843137255
+    ],
+    [
+      0.30196078431372547,
+      0.2,
+      0.13725490196078433
+    ]
+  ],
+  "conclusio": "La C no era una bona separaci\u00f3: bou i Mulassa nom\u00e9s tenien \u0394E00 3,87. Ara la Mulassa \u00e9s vermell gerd m\u00e9s fosc i el bou es mant\u00e9 taronja caramel: la pitjor parella en color continua sent aquesta, per\u00f2 puja a 17,24. El basilisc passa de cian a blau i l'\u00e0liga perd el lila i deixa passar el fons. La nova paleta millora el m\u00ednim en totes quatre visions, per\u00f2 no \u00e9s \u00f2ptima: drac/bou encara baixen a 4,55 en deuteranopia i bou/\u00e0liga a 0,56 en grisos. Cal conservar les siluetes i provar-les jugant; el color sol no resol les set peces."
+}

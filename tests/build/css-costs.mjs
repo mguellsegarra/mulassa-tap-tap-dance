@@ -20,7 +20,7 @@ assert(!/\dcq[hwib]\b/.test(read('src/styles/select-cards.css').replace(/\/\*[^]
 
 // :has() re-runs on DOM changes it may depend on ([hidden], classes), even with its subject shut: 18 of them cost ~55 ms
 // a figure change. A ratchet: lower it when one goes; raising it needs the new rule's cost measured on the device.
-const HAS = 62;
+const HAS = 63; // 63: #install-steps-menu:has(> .ios-bubble…) (1.2.11), a direct child of one sheet: no cost on the S10 (2026-11-03)
 const has = (css.match(/:has\(/g) ?? []).length;
 assert(has <= HAS, `${has} :has() selectors (was ${HAS}): measure the new one's cost on the device first (docs/agents/graphics.md), or set the owner's own attribute instead`);
 assert(!/:has\([^)]*:not\(\[hidden\]\)\)[^{]*\{/.test(read('src/styles/feedback.css').replace(/\/\*[^]*?\*\//g, '')), 'the feedback sheet reads its own flags, not :has() over [hidden]');

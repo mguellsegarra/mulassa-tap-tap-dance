@@ -74,6 +74,18 @@ try {
   assert(result.includes('music/main.mp3'));
   assert(!result.includes('music/mulassa-taiko.wav'));
   await assert.rejects(access(join(valid, 'music/mulassa-taiko.wav')));
+  // the games sheet's pictures and clips ship; a clip anywhere else does not
+  const games = await fixture('games');
+  for (const name of ['jocs/menu/cards/pop.jpg', 'jocs/menu/hero/pop.jpg', 'jocs/menu/video/pop.mp4', 'jocs/menu/video/pop-tall.mp4']) {
+    await mkdir(join(games, name, '..'), { recursive: true });
+    await writeFile(join(games, name), name);
+  }
+  const gamesResult = await preparePages(games, song);
+  for (const name of ['jocs/menu/hero/pop.jpg', 'jocs/menu/video/pop.mp4', 'jocs/menu/video/pop-tall.mp4']) assert(gamesResult.includes(name), name);
+  const strayClip = await fixture('stray-clip');
+  await mkdir(join(strayClip, 'jocs/menu/cards'), { recursive: true });
+  await writeFile(join(strayClip, 'jocs/menu/cards/pop.mp4'), 'clip');
+  await assert.rejects(preparePages(strayClip, song), /Unexpected deployment file/);
   const multi = await fixture('multi');
   const dracSong = { audio: 'music/drac-taiko.mp3?v=abc123', ambient: 'music/drac-taiko-ambient.mp3?v=def456' };
   for (const name of ['music/drac-taiko.mp3', 'music/drac-taiko-ambient.mp3', 'music/drac-taiko.mid']) await writeFile(join(multi, name), name);

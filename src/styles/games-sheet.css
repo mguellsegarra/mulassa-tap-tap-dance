@@ -17,11 +17,13 @@ html.to-jocs #games-menu::backdrop { background: #000; }
 
 #games-hero { position: absolute; inset: 0 0 var(--row) 0; overflow: hidden; }
 #games-hero-back { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: blur(30px) saturate(1.2) brightness(.5); transform: scale(1.15); animation: games-drift 9s ease-in-out infinite alternate; }
+/* the wide screen's sharp picture: a gentler drift that keeps its right edge on the screen's */
+@keyframes games-art-drift { from { translate: 0 0; scale: 1; } to { translate: 1.5% 1%; scale: 1.08; } }
 /* slow drift so the blurred backdrop feels alive; translate/scale stack on top of each layout's transform */
 @keyframes games-drift { from { translate: -4% -3%; scale: 1.12; } to { translate: 4% 3%; scale: 1.3; } }
 /* a card's picture is small: it stays sharp at its own size instead of being stretched across the screen */
 #games-hero-art { position: absolute; right: max(24px, 8vw); top: 7%; bottom: 7%; height: 86%; width: auto; aspect-ratio: 4 / 5; object-fit: cover; border-radius: 24px; box-shadow: 0 16px 40px #000a; }
-/* the chosen game's clip after a few calm seconds (ui/games-hero-video.js): where the still is, fading over it */
+/* the chosen game's clip as soon as it can play (ui/games-hero-video.js): where the still is, fading over it */
 #games-hero-video { display: none; }
 #games-hero::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, #120b07cc, #0000 60%), linear-gradient(#0000 70%, #120b07); pointer-events: none; }
 #games-hero-text { position: absolute; z-index: 1; left: max(24px, 6vw); right: 24px; bottom: 28px; display: grid; justify-items: start; gap: 8px; max-width: min(46vw, 760px); }
@@ -52,7 +54,8 @@ html.to-jocs #games-menu::backdrop { background: #000; }
 /* a phone's hero is narrow: the picture becomes its background, the text stands on it */
 @media (max-width: 700px) {
   #games-hero-art { display: none; }
-  #games-hero-back { filter: saturate(1.1) brightness(.7); transform: none; animation: none; } /* still, at the clip's own size: the clip fades in over it with no jump */
+  #games-hero-back { filter: saturate(1.1) brightness(.7); transform: none; transition: opacity .3s ease; } /* it drifts like a wide screen's picture; a clip hides it */
+  #games-hero:has(#games-hero-video:is(.due, .on)) #games-hero-back { opacity: 0; transition: none; }
   #games-hero-video { display: block; position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: saturate(1.1) brightness(.7); opacity: 0; transition: opacity .3s ease; }
   #games-hero-video.on { opacity: 1; }
   #games-hero-text { max-width: none; }
@@ -95,4 +98,7 @@ html.to-jocs #games-menu::backdrop { background: #000; }
   #games-menu #games-hero-video { display: block; position: absolute; top: 0; right: 0; height: 100%; width: auto; max-width: 100%; aspect-ratio: 8 / 3; object-fit: cover; opacity: 0; transition: opacity .3s ease;
     -webkit-mask-image: linear-gradient(90deg, #0000, #000 40%), linear-gradient(#000 75%, #0000); -webkit-mask-composite: source-in; mask-image: linear-gradient(90deg, #0000, #000 40%), linear-gradient(#000 75%, #0000); mask-composite: intersect; }
   #games-menu #games-hero-video.on { opacity: 1; }
+  /* both fade out on the left with the same mask, so the still would show through the clip's faded edge */
+  #games-menu #games-hero-art { transition: opacity .3s ease; transform-origin: right center; animation: games-art-drift 12s ease-in-out infinite alternate; }
+  #games-menu #games-hero:has(#games-hero-video:is(.due, .on)) #games-hero-art { opacity: 0; transition: none; }
 }

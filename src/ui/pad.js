@@ -1,23 +1,8 @@
-// The touch pad: haptics and press feedback.
+// The touch pad: press feedback (its haptics are platform/haptics.js).
 import { down } from '../game/state.js';
 import { padEl } from '../hud/layout.js';
 import './figure-theme-dom.js';
 
-// Haptics: Android vibrates; iPhone (iOS 18+) gives a system tick when a native switch is toggled,
-// so a hidden one is flicked from inside the tap. Only works during a real touch.
-const hapticSwitch = (() => {
-  const l = document.createElement('label'), i = document.createElement('input');
-  i.type = 'checkbox'; i.setAttribute('switch', '');
-  i.tabIndex = -1; i.setAttribute('aria-hidden', 'true');
-  l.style.cssText = 'position:fixed;left:-100px;top:0;opacity:0;pointer-events:none';
-  l.appendChild(i); document.body.appendChild(l);
-  return l;
-})();
-export function haptic(kind) {
-  if (navigator.vibrate) { navigator.vibrate({ tap: 8, hit: 15, miss: [45, 60, 45], big: [20, 40, 20, 40, 70] }[kind]); return; }
-  hapticSwitch.click();
-  if (kind === 'miss' || kind === 'big') setTimeout(() => hapticSwitch.click(), 100);
-}
 export const padButtons = [...document.querySelectorAll('#pad button')];
 // Pad look: pressed while a finger holds it, a ripple from the touch point, both together = GUAPA flash
 // Cheap presses: no nodes created, no layout forced; every change is a class or `translate` that the compositor animates.

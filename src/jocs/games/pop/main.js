@@ -9,6 +9,7 @@ import { t, applyWords } from './i18n.js';
 import { store } from '../../../platform/storage.js';
 import { startMusic, stopMusic, pauseMusic, resumeMusic, setMusicOn, musicOn, SFX } from './audio.js';
 import { BOT_FROM, botTap } from './autoplay.js';
+import { haptic } from '../../../platform/haptics.js';
 
 const BOT = import.meta.env.DEV && new URLSearchParams(location.search).has('autoplay');
 const $ = id => document.getElementById(id);
@@ -41,6 +42,7 @@ const word = kind => (kind === 'calcot' ? '+5' : t(`word.${kind}`));
 function on(event, cell, kind) {
   if (event === 'hit') {
     SFX.hit();
+    haptic('hit');
     board.burst(cell.i, COLORS.hit);
     floatText(cell.i, '+1');
     board.shake(.12);
@@ -49,11 +51,13 @@ function on(event, cell, kind) {
     floatText(cell.i, '+1');
   } else if (event === 'goodie') {
     SFX.goodie();
+    haptic('big');
     board.burst(cell.i, COLORS.goodie, 40, 1.2);
     floatText(cell.i, word(kind));
     if (kind === 'carretilla') { board.dragonFire(); SFX.fire(); }
   } else if (event === 'defuse') {
     SFX.goodie();
+    haptic('hit');
     board.burst(cell.i, COLORS.goodie, 30);
   } else if (event === 'over') {
     gameOver(cell);
@@ -63,11 +67,12 @@ function on(event, cell, kind) {
 function gameOver(cell) {
   SFX.wrong();
   SFX.boom();
+  haptic('boom'); // a tapped Drac's inside the tap (iPhone too); a fuse running out vibrates on Android only
   board.explodeAll(cell.i);
   stopMusic();
   mode = 'ending';
   $('pause').style.visibility = 'hidden'; // hidden would close its grid column and move the score
-  endTimer = setTimeout(showEnd, 1400);
+  endTimer = setTimeout(showEnd, 1200);
 }
 
 

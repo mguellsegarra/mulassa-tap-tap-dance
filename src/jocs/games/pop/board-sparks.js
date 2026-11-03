@@ -21,6 +21,17 @@ export function createSparks(scene) {
     sparks.instanceColor.needsUpdate = true;
   }
 
+  // the blast's shock wave: a flat ring of embers racing out over the tiles from the culprit
+  function ring(c, colors, n, speed) {
+    for (let k = 0; k < n; k++) {
+      const p = P[next], a = k / n * Math.PI * 2, v = speed * (.85 + Math.random() * .3);
+      Object.assign(p, { life: .55 + Math.random() * .25, x: c.x, y: .35, z: c.z, vx: Math.cos(a) * v, vz: Math.sin(a) * v, vy: 1.5 + Math.random() * 2, s: 1 + Math.random() * .8, g: 4 });
+      sparks.setColorAt(next, col.set(colors[k % colors.length]));
+      next = (next + 1) % SPARKS;
+    }
+    sparks.instanceColor.needsUpdate = true;
+  }
+
   function flame(x, y, z, vx, vy, vz, life = .4) {
     const p = P[next];
     Object.assign(p, { life: life * (.7 + Math.random() * .6), x, y, z, vx, vy, vz, s: .7 + Math.random() * 1.1, g: -3 });
@@ -49,5 +60,5 @@ export function createSparks(scene) {
     });
     sparks.instanceMatrix.needsUpdate = any || sparks.instanceMatrix.version === 0;
   }
-  return { burst, flame, step };
+  return { burst, ring, flame, step };
 }

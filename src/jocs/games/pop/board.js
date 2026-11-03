@@ -4,6 +4,7 @@ import { FUSE, BOMB_FUSE, BURN, SPECIAL_LIFE } from './rules.js';
 import { MULA_POSES, DRAC_POSES, MULA_SCALE, MULA_YAW, DRAC_K, DRAC_YAW, poseMula, poseDrac, mulaRig, dracRig, bake, bakeMulassa, bakeDrac, rigParts, redScales, greenVelvet } from './rigs.js';
 import { buildPopPetard, buildPopCalcot, buildPopCampanar, buildPopCarretilla, buildFuseBit, buildSpark, PETARD_FUSE, PETARD_SPARK } from './models.js';
 import { createSparks } from './board-sparks.js';
+import { createBlast } from './board-blast.js';
 import { drawPortraits } from './portraits.js';
 import { frameBoard, PITCH, PITCH_Z, FIG_H } from './board-framing.js';
 import { waitForWarmup, linkPrograms } from '../../../platform/boot.js';
@@ -21,7 +22,8 @@ export function createBoard(canvas) {
   const pixelRatio = () => Math.min(devicePixelRatio, matchMedia('(pointer: coarse)').matches ? 1.5 : 2);
 
   const scene = new THREE.Scene();
-  scene.add(new THREE.HemisphereLight('#ffffff', '#76849a', 2.2));
+  const sky = new THREE.HemisphereLight('#ffffff', '#76849a', 2.2);
+  scene.add(sky);
   const sun = new THREE.DirectionalLight('#fff7e8', 2.7);
   sun.position.set(-9, 26, 12);
   sun.castShadow = true;
@@ -65,10 +67,11 @@ export function createBoard(canvas) {
   tiles.frustumCulled = false;
   scene.add(tiles);
 
-  const { burst: sparkBurst, flame, step: stepSparks } = createSparks(scene);
+  const sparks = createSparks(scene), { burst: sparkBurst, flame, step: stepSparks } = sparks;
+  const blast = createBlast(canvas, sparks, sky);
 
   const dummy = new THREE.Object3D(), col = new THREE.Color(), hot = new THREE.Color(), bit = new THREE.Matrix4(), at = new THREE.Matrix4(), flick = new THREE.Vector3();
-  let game = null, centres = [], screen = [], W = 1, H = 1, time = 0, trauma = 0, booms = [], poses = [], seen = [], fireUntil = 0, burning = new Map();
+  let game = null, centres = [], screen = [], W = 1, H = 1, time = 0, trauma = 0, poses = [], seen = [], fireUntil = 0, burning = new Map();
   const camBase = new THREE.Vector3();
   const insets = { top: 68, bottom: 8 };
 
@@ -76,7 +79,7 @@ export function createBoard(canvas) {
 
   function setGame(g) {
     game = g;
-    booms = g.cells.map(() => Infinity);
+    blast.reset(g.cells.length);
     centres = g.cells.map(c => cellPos(c.i));
     seen = g.cells.map(() => '');
     poses = g.cells.map(() => 0);
@@ -143,17 +146,16 @@ export function createBoard(canvas) {
     return best;
   };
 
-  // Everything goes up, the culprit first and then outwards (Ringo Tap's chain).
+  // Everything goes up, the culprit first and then on (Ringo Tap's chain); the mix is board-blast.js's
   function explodeAll(culprit) {
-    const o = centres[culprit];
-    booms = centres.map(c => time + (Math.hypot(c.x - o.x, c.z - o.z) / PITCH) * .13);
+    blast.start(centres, culprit, screen[culprit], game.cols, PITCH, PITCH_Z, time);
     trauma = 1;
   }
 
   const back = t => { const s = 2.2, u = t - 1; return u * u * ((s + 1) * u + s) + 1; }; // overshoots a little
 
   const headTip = new THREE.Vector3(), headDir = new THREE.Vector3();
-  function placeFigure(i, kind, cell, s, charred) {
+  function placeFigure(i, kind, cell, s, charred, blasted = 0) {
     if (s <= .001) return;
     const { x, z } = centres[i], ph = i * 1.73, t = time;
     let y = 0, ry = 0, rz = 0, sx = 1, sy = 1, jx = 0, jz = 0, urgent = 0;
@@ -189,6 +191,10 @@ export function createBoard(canvas) {
       jx = Math.sin(t * 47 + ph) * .05;
       if (cell.age < 0 && Math.random() < .7) flame(x + (Math.random() - .5) * 1.8, .4 + Math.random() * 1.6, z + (Math.random() - .5) * 1.8, 0, 3 + Math.random() * 3, 0, .5);
     }
+    if (blasted) { // on its way out (board-blast.js), blackening
+      const f = blast.place(i, blasted, col);
+      jx += f.x; y += f.y; jz += f.z; ry += f.ry; rz += f.rz; sx *= f.sx; sy *= f.sy;
+    }
     const fig = FIGS[kind];
     if (!fig) {
       dummy.position.set(x + jx, y, z + jz);
@@ -202,7 +208,7 @@ export function createBoard(canvas) {
     const { rig, parts } = fig, isDrac = kind === 'drac' || kind === 'dracFals';
     const list = isDrac ? DRAC_POSES : MULA_POSES, P = list[poses[i] % list.length];
     const firing = isDrac && kind === 'drac' ? Math.max(0, Math.min(1, Math.min(fireUntil - t, FIRE_TIME - (fireUntil - t)) * 6)) : 0;
-    let yaw = (isDrac ? DRAC_YAW : MULA_YAW) + (P.yaw ?? 0);
+    let yaw = (isDrac ? DRAC_YAW : MULA_YAW) + (P.yaw ?? 0) + ry;
     const target = firing > 0 ? nearestBurning(x, z) : null;
     if (target) { // turn on her; the shorter way round
       const want = Math.atan2(target.x - x, target.z - z), d = Math.atan2(Math.sin(want - yaw), Math.cos(want - yaw));
@@ -245,7 +251,9 @@ export function createBoard(canvas) {
         seen[c.i] = c.kind;
         poses[c.i] = Math.floor(Math.random() * DRAC_POSES.length);
       }
-      if (booms[c.i] <= time) continue;
+      const k = blast.progress(c.i, time); // < 0 until the wave gets here, gone at 1
+      if (k >= 1) continue;
+      if (k >= 0) { placeFigure(c.i, c.kind, c, 1, false, Math.max(k, .001)); continue; }
       const wasBurning = burning.has(c.i);
       if (wasBurning && c.age >= pop) burning.delete(c.i);
       if (wasBurning && c.kind === 'drac' && c.age < pop) { // her old posture until she goes: the frame loop's new one is for the Drac
@@ -264,18 +272,18 @@ export function createBoard(canvas) {
       if (m.instanceColor) m.instanceColor.needsUpdate = true;
     }
     game.cells.forEach((c, i) => {
-      if (booms[i] <= time && booms[i] > time - dt - 1e-6) {
-        burst(i, ['#ff8a1e', '#ffe066', '#c0283c', '#3a2c22'], i === game.culprit ? 40 : 14, i === game.culprit ? 1.4 : 1);
-      }
       col.set((i + Math.floor(i / game.cols)) % 2 ? '#4c4d71' : '#424363');
       const life = LIT[c.kind];
       if (life) col.set('#f5c518').lerp(hot.set('#ff3b2e'), 1 - c.left / life);
+      const k = blast.progress(i, time);
+      if (k >= 0) col.set('#fff1c4').lerp(hot.set('#2b2233'), Math.min(1, k)); // white-hot as the wave passes, then scorched
       tiles.setColorAt(i, col);
     });
     tiles.instanceColor.needsUpdate = true;
 
     stepSparks(dt);
 
+    trauma = Math.min(1, trauma + blast.step(time, dt));
     trauma = Math.max(0, trauma - dt * 1.6);
     const sh = trauma * trauma * .9;
     camera.position.set(camBase.x + Math.sin(time * 71) * sh, camBase.y + Math.sin(time * 83) * sh, camBase.z + Math.cos(time * 67) * sh);

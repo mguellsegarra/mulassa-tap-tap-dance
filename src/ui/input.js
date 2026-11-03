@@ -12,7 +12,8 @@ import { sheetUp, viewMode, setView, steers, menuState, photoScreen } from './co
 import { curtain } from './curtain.js';
 import { unlock, toTitle } from '../game/flow.js';
 import { press, settleHold, eventAt, releaseAll } from '../game/judge.js';
-import { padButtons, haptic, padFeedback, syncPad } from './pad.js';
+import { padButtons, padFeedback, syncPad } from './pad.js';
+import { haptic } from '../platform/haptics.js';
 import { hud, W, K } from '../hud/canvas.js';
 import { orbit, look, pnow } from '../scene/cameras.js';
 import { lookDown, lookUp, lookSkip, lookEscape, lookLocked } from './mouse-look.js';

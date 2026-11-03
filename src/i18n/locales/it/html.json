@@ -133,6 +133,7 @@
   "html.legend.esquellotName": "CAMPANACCIO",
   "html.legend.esquellotText": "Batti tante volte: fai suonare il campanaccio fino alla fine!",
   "html.legend.animName": "MORALE",
+  "html.howtoWalk": "Fai un giro",
   "html.howtoPractice": "Fai pratica",
   "html.selectWatch": "Guarda il ballo",
   "html.skip.aria": "Salta la pratica",
@@ -224,15 +225,11 @@
   "html.rich.material.note": "Foto e file mandali a <a href=\"mailto:holi@mulassa.cat\">holi@mulassa.cat</a> e dicci di quale figura si tratta.",
   "html.code.tab": "Programma",
   "html.code.text": "Se sai programmare, puoi aiutare a portare questa figura nel gioco. Il codice è aperto e su GitHub.",
-  "html.games.free": "Ballo libero",
   "html.news.go": "Vedi i giochi",
   "html.news.tip": "Sono qui!",
-  "html.games.pica": "Mulassa Pop",
-  "html.games.memory": "Mulassa Memory",
-  "html.games.crush": "Mulassa Crush",
+  "html.games.pop": "Mulassa Pop",
   "html.games.play": "Gioca",
-  "html.games.picaDesc": "Cattura la Mulassa. Evita i Drac.",
-  "html.games.memoryDesc": "Trova le coppie del Seguici.",
-  "html.games.crushDesc": "Unisci tre figure uguali.",
-  "html.games.lliureDesc": "Passeggia e balla con la tua figura."
+  "html.games.popDesc": "Cattura la Mulassa. Evita i Drac.",
+  "html.games.soon": "Sorpresa",
+  "html.games.soonDesc": "Un nuovo gioco è in arrivo."
 }

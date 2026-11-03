@@ -133,6 +133,7 @@
   "html.legend.esquellotName": "ESQUÈRA",
   "html.legend.esquellotText": "Pica fòrça còps: hè sonar era esquèra enquia era fin!",
   "html.legend.animName": "ÀNIM",
+  "html.howtoWalk": "Hè un torn",
   "html.howtoPractice": "Hè era practica",
   "html.selectWatch": "Veir eth balh",
   "html.skip.aria": "Sauta era practica",
@@ -224,15 +225,11 @@
   "html.rich.material.note": "Es fòtos e es fichèrs, manda-les a <a href=\"mailto:holi@mulassa.cat\">holi@mulassa.cat</a> e digue-mos de quina figura son.",
   "html.code.tab": "Programar",
   "html.code.text": "Se sabes programar, pòdes ajudar a portar aguesta figura en jòc. Eth còdi ei dubèrt e ei en GitHub.",
-  "html.games.free": "Balh liure",
   "html.news.go": "Veir es jòcs",
   "html.news.tip": "Son ací!",
-  "html.games.pica": "Mulassa Pop",
-  "html.games.memory": "Mulassa Memory",
-  "html.games.crush": "Mulassa Crush",
+  "html.games.pop": "Mulassa Pop",
   "html.games.play": "Jòga",
-  "html.games.picaDesc": "Atrapa era Mulassa. Evita es Dracs.",
-  "html.games.memoryDesc": "Tròba es parelhs deth Seguici.",
-  "html.games.crushDesc": "Amassa tres figures iguales.",
-  "html.games.lliureDesc": "Passeja e balha damb era tua figura."
+  "html.games.popDesc": "Atrapa era Mulassa. Evita es Dracs.",
+  "html.games.soon": "Sorpresa",
+  "html.games.soonDesc": "Un jòc nau ei en camin."
 }

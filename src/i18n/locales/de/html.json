@@ -133,6 +133,7 @@
   "html.legend.esquellotName": "KUHGLOCKE",
   "html.legend.esquellotText": "Tippe ganz oft: Lass die Kuhglocke bis zum Schluss läuten!",
   "html.legend.animName": "STIMMUNG",
+  "html.howtoWalk": "Spaziergang",
   "html.howtoPractice": "Übung starten",
   "html.selectWatch": "Tanz ansehen",
   "html.skip.aria": "Übung überspringen",
@@ -224,15 +225,11 @@
   "html.rich.material.note": "Fotos und Dateien schick bitte an <a href=\"mailto:holi@mulassa.cat\">holi@mulassa.cat</a> und sag uns, um welche Figur es geht.",
   "html.code.tab": "Programmieren",
   "html.code.text": "Wenn du programmieren kannst, hilf mit, diese Figur ins Spiel zu bringen. Der Code ist offen und liegt auf GitHub.",
-  "html.games.free": "Freier Tanz",
   "html.news.go": "Spiele ansehen",
   "html.news.tip": "Hier sind sie!",
-  "html.games.pica": "Mulassa Pop",
-  "html.games.memory": "Mulassa Memory",
-  "html.games.crush": "Mulassa Crush",
+  "html.games.pop": "Mulassa Pop",
   "html.games.play": "Spielen",
-  "html.games.picaDesc": "Fang die Mulassa. Meide Dracs.",
-  "html.games.memoryDesc": "Finde die Paare der Festfiguren.",
-  "html.games.crushDesc": "Kombiniere drei gleiche Figuren.",
-  "html.games.lliureDesc": "Lauf und tanze mit deiner Figur."
+  "html.games.popDesc": "Fang die Mulassa. Meide Dracs.",
+  "html.games.soon": "Überraschung",
+  "html.games.soonDesc": "Ein neues Spiel ist unterwegs."
 }

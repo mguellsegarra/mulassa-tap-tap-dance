@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="ca" translate="no">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="robots" content="noindex">
+  <title>Mulassa Pop · inici (maqueta)</title>
+  <!-- A mock-up of the home screen: the real board, models and tokens; texts provisional (strings.md). -->
+  <link rel="stylesheet" href="/src/jocs/games/pop/style.css">
+  <link rel="stylesheet" href="./home.css">
+</head>
+<body>
+  <canvas id="game" aria-hidden="true"></canvas>
+
+  <template id="logo"><svg class="logo" role="img" aria-label="Mulassa Pop" viewBox="0 0 308.6 113.1" text-anchor="middle" stroke-linejoin="round" paint-order="stroke">
+      <g font-family="'Jersey 10'" font-size="100" stroke-width="12"><text x="154.3" y="66.6" textLength="300" lengthAdjust="spacingAndGlyphs" fill="#5e1514" stroke="#5e1514">MULASSA</text><text x="154.3" y="60.6" textLength="300" lengthAdjust="spacingAndGlyphs" fill="#c0283c" stroke="#fff3d6">MULASSA</text></g>
+      <text x="154.3" y="105.8" font-family="'Baloo 2'" font-weight="800" font-size="46" letter-spacing="6" stroke-width="7.1" fill="#ff7ac6" stroke="#2a1a10">POP</text>
+    </svg></template>
+  <template id="i-music"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 18V6l10-2v12" fill="none" stroke="currentColor" stroke-width="2.2"/><circle cx="6.5" cy="18" r="2.8"/><circle cx="16.5" cy="16" r="2.8"/><path class="music-off" d="M4 4l16 16" stroke="#ff8a7a" stroke-width="2.6" stroke-linecap="round"/></svg></template>
+  <template id="i-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></template>
+  <template id="i-play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15a1 1 0 0 0 1.5.9l12-7.5a1 1 0 0 0 0-1.8l-12-7.5A1 1 0 0 0 7 4.5z"/></svg></template>
+  <template id="i-help"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="9.5"/><path d="M9.3 9.4a2.8 2.8 0 1 1 3.9 2.6c-.8.4-1.2 1-1.2 1.8v.6"/><circle cx="12" cy="17.4" r=".6" fill="currentColor"/></svg></template>
+  <template id="i-cup"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 3h10v3h3v2a4 4 0 0 1-4 4h-.4A5 5 0 0 1 13 14.8V17h3v3H8v-3h3v-2.2A5 5 0 0 1 8.4 12H8a4 4 0 0 1-4-4V6h3zm-1 5c0 1 .8 2 2 2V8zm12 2c1.2 0 2-1 2-2h-2z"/></svg></template>
+
+  <!-- A · the main game's sheet: record, Juga, Com es juga; the rules in their own sheet -->
+  <section class="home" data-p="A" hidden>
+    <button class="round-btn music corner-r" data-icon="i-music" aria-label="Música" aria-pressed="true"></button>
+    <div class="a-col">
+      <div data-logo></div>
+      <div class="sheet a-card">
+        <div class="stat" data-best>
+          <span class="stat-label"><span data-icon="i-cup"></span>El teu rècord</span>
+          <b class="stat-num" data-best-num>57</b>
+          <span class="stat-none">Encara cap rècord: estrena’l!</span>
+        </div>
+        <div class="sheet-actions">
+          <button class="btn btn-primary btn-icon play" data-icon="i-play">Juga</button>
+          <button class="btn btn-icon" data-open-how data-icon="i-help">Com es juga</button>
+          <a class="btn btn-link back" href="/#jocs">Torna al joc principal</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- B · the pieces at a glance: tap / don't tap / extras as tiles, Juga in a dock -->
+  <section class="home" data-p="B" hidden>
+    <a class="round-btn back corner-l" href="/#jocs" data-icon="i-back" aria-label="Torna al joc principal"></a>
+    <button class="round-btn music corner-r" data-icon="i-music" aria-label="Música" aria-pressed="true"></button>
+    <div class="b-head" data-logo></div>
+    <div class="sheet b-card">
+      <div class="b-group" data-tone="yes"><h3>Toca</h3><div class="b-tiles" data-kinds="mula petard"></div></div>
+      <div class="b-group" data-tone="no"><h3>No toquis</h3><div class="b-tiles" data-kinds="drac dracFals mulaFalsa"></div></div>
+      <div class="b-group" data-tone="extra"><h3>Extres</h3><div class="b-tiles" data-kinds="calcot campanar carretilla"></div></div>
+      <p class="b-info" aria-live="polite">Toca una figura per saber què fa</p>
+    </div>
+    <div class="b-dock">
+      <div class="b-best" data-best><span class="stat-label">Rècord</span><b class="stat-num" data-best-num>57</b><span class="stat-none">Primera partida</span></div>
+      <button class="btn btn-primary btn-icon play" data-icon="i-play">Juga</button>
+    </div>
+  </section>
+
+  <!-- C · the Mulassa Games hero: the red Mulassa big, a cream «Juga», a row of cards with the rules -->
+  <section class="home" data-p="C" hidden>
+    <a class="round-btn back corner-l" href="/#jocs" data-icon="i-back" aria-label="Torna al joc principal"></a>
+    <button class="round-btn music corner-r" data-icon="i-music" aria-label="Música" aria-pressed="true"></button>
+    <div class="c-hero">
+      <div class="c-text">
+        <div data-logo></div>
+        <p class="c-pitch">Toca les Mulasses abans que s’acabi la metxa. Una errada i s’acaba.</p>
+        <div class="c-play-row">
+          <button class="game-play play" data-icon="i-play">Juga</button>
+          <span class="c-best" data-best><span data-icon="i-cup"></span><span class="stat-label">Rècord</span> <b data-best-num>57</b><span class="stat-none">Sense rècord</span></span>
+        </div>
+      </div>
+      <div class="c-art"><img data-k="mula" data-size="512" alt=""></div>
+    </div>
+    <div class="c-row" role="list" aria-label="Com es juga">
+      <div class="c-card" data-tone="yes" data-kind="mula" role="listitem"></div>
+      <div class="c-card" data-tone="yes" data-kind="petard" role="listitem"></div>
+      <div class="c-card" data-tone="no" data-kind="drac" role="listitem"></div>
+      <div class="c-card" data-tone="no" data-kind="dracFals" role="listitem"></div>
+      <div class="c-card" data-tone="no" data-kind="mulaFalsa" role="listitem"></div>
+      <div class="c-card" data-tone="extra" data-kind="calcot" role="listitem"></div>
+      <div class="c-card" data-tone="extra" data-kind="campanar" role="listitem"></div>
+      <div class="c-card" data-tone="extra" data-kind="carretilla" role="listitem"></div>
+    </div>
+  </section>
+
+  <!-- D · a scoreboard: Rècords and Com es juga as two tabs of one card (side by side on wide screens); online ranking as an idea -->
+  <section class="home" data-p="D" hidden>
+    <div class="d-left">
+      <div data-logo></div>
+      <button class="btn btn-primary btn-icon play d-play-wide" data-icon="i-play">Juga</button>
+    </div>
+    <div class="sheet d-card">
+      <div class="d-seg" role="tablist">
+        <button class="btn btn-secondary" role="tab" aria-pressed="true" data-tab="rec">Rècords</button>
+        <button class="btn btn-secondary" role="tab" aria-pressed="false" data-tab="how">Com es juga</button>
+      </div>
+      <div class="d-panes">
+        <div class="d-pane" data-pane="rec">
+          <h3 class="d-title">Rècords</h3>
+          <div class="d-score" data-best>
+            <span class="stat-label">El teu rècord</span>
+            <b class="stat-num" data-best-num>57</b>
+            <span class="stat-none">Encara cap: juga per fer el primer</span>
+          </div>
+          <div class="d-rank">
+            <span class="d-soon">Idea · encara no existeix</span>
+            <ol>
+              <li><i>1</i><span>Gegantó</span><b>214</b></li>
+              <li><i>2</i><span>Mulassaire</span><b>188</b></li>
+              <li class="me"><i>3</i><span>Tu</span><b data-best-num>57</b></li>
+            </ol>
+          </div>
+        </div>
+        <div class="d-pane" data-pane="how">
+          <h3 class="d-title">Com es juga</h3>
+          <ul class="d-how" data-kinds="mula petard drac dracFals mulaFalsa calcot campanar carretilla"></ul>
+        </div>
+      </div>
+    </div>
+    <div class="d-foot">
+      <button class="btn btn-primary btn-icon play d-play-narrow" data-icon="i-play">Juga</button>
+      <div class="d-links">
+        <a class="btn btn-link btn-compact back" href="/#jocs"><span data-icon="i-back"></span>Joc principal</a>
+        <button class="btn btn-link btn-compact music" data-icon="i-music" aria-pressed="true"><span class="m-on">Música</span></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- the «Com es juga» sheet (A) -->
+  <div class="cover how-sheet" hidden>
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="how-h">
+      <button class="sheet-x round-btn" aria-label="Tanca"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+      <div class="how-scroll">
+      <h2 id="how-h">Com es juga</h2>
+      <h3 class="how-h" data-tone="yes">Toca</h3>
+      <ul class="how-list" data-kinds="mula petard"></ul>
+      <h3 class="how-h" data-tone="no">No toquis</h3>
+      <ul class="how-list" data-kinds="drac dracFals mulaFalsa"></ul>
+      <h3 class="how-h" data-tone="extra">Extres</h3>
+      <ul class="how-list" data-kinds="calcot campanar carretilla"></ul>
+      </div>
+      <div class="sheet-actions"><button class="btn btn-primary btn-icon play" data-icon="i-play">Juga</button></div>
+    </div>
+  </div>
+
+  <!-- what the mock-up does instead of starting a game or leaving -->
+  <div class="mock-toast" hidden><span></span><button class="btn btn-link">Torna a l’inici</button></div>
+
+  <script type="module" src="./home.js"></script>
+</body>
+</html>

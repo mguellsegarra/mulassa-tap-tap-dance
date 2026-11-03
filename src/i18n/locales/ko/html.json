@@ -133,6 +133,7 @@
   "html.legend.esquellotName": "카우벨",
   "html.legend.esquellotText": "끝까지 카우벨을 마구 두드려요!",
   "html.legend.animName": "기운",
+  "html.howtoWalk": "광장 산책",
   "html.howtoPractice": "연습하기",
   "html.selectWatch": "춤 보기",
   "html.skip.aria": "연습 건너뛰기",
@@ -224,15 +225,11 @@
   "html.rich.material.note": "사진과 파일은 <a href=\"mailto:holi@mulassa.cat\">holi@mulassa.cat</a>(으)로 보내고 어떤 인형인지 알려 주세요.",
   "html.code.tab": "개발",
   "html.code.text": "개발할 수 있다면 이 캐릭터를 게임에 넣는 일을 도와줄 수 있어요. 코드는 GitHub에 공개되어 있어요.",
-  "html.games.free": "자유 춤",
   "html.news.go": "게임 보기",
   "html.news.tip": "여기 있어요!",
-  "html.games.pica": "Mulassa Pop",
-  "html.games.memory": "Mulassa Memory",
-  "html.games.crush": "Mulassa Crush",
+  "html.games.pop": "Mulassa Pop",
   "html.games.play": "시작",
-  "html.games.picaDesc": "Mulassa를 잡고 Drac은 피해요!",
-  "html.games.memoryDesc": "축제 캐릭터의 짝을 찾아요.",
-  "html.games.crushDesc": "같은 캐릭터 셋을 맞춰요.",
-  "html.games.lliureDesc": "내 캐릭터와 광장을 걷고 춤춰요."
+  "html.games.popDesc": "Mulassa를 잡고 Drac은 피해요!",
+  "html.games.soon": "깜짝 선물",
+  "html.games.soonDesc": "새 게임을 준비하고 있어요."
 }

@@ -1,7 +1,0 @@
-<!doctype html><html lang="ca"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Crush: fons generats</title>
-<style>body{margin:0;background:#1b1420;color:#f6efe6;font:16px/1.4 system-ui,sans-serif}main{max-width:1280px;margin:auto;padding:16px;display:grid;gap:16px}h1{margin:0;color:#f5c518;font-size:26px}p{margin:0}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,280px),1fr));gap:16px}figure{margin:0;background:#2b2233;border-radius:16px;padding:12px;display:grid;gap:8px;align-content:start}img{width:100%;border-radius:8px;display:block}figcaption{font-weight:700}</style></head><body><main>
-<h1>Tots els fons i maquetes que tenim generats</h1><p>M: rondes de les propostes de menús. F: rondes dels fons que ara són al joc. Digue'm el codi del que t'agrada.</p><div class="grid" id="g"></div></main>
-<script>
-const counts=[['M',5],['F',6]];const g=document.querySelector('#g');
-for(const [t,n] of counts)for(let i=1;i<=n;i++){const c=t+String(i).padStart(2,'0');const f=document.createElement('figure');f.innerHTML=`<figcaption>${c}</figcaption><a href="/tools/dev/crush-fons/${c}.jpg"><img loading="lazy" src="/tools/dev/crush-fons/${c}.jpg" alt="Imatge ${c}"></a>`;g.append(f);}
-</script></body></html>

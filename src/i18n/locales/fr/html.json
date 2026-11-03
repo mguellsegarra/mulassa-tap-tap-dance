@@ -133,6 +133,7 @@
   "html.legend.esquellotName": "SONNAILLE",
   "html.legend.esquellotText": "Tape plein de fois : fais sonner la sonnaille jusqu’au bout !",
   "html.legend.animName": "ÉNERGIE",
+  "html.howtoWalk": "Fais un tour",
   "html.howtoPractice": "Fais un essai",
   "html.selectWatch": "Voir la danse",
   "html.skip.aria": "Passe l’essai",
@@ -224,15 +225,11 @@
   "html.rich.material.note": "Envoie les photos et les fichiers à <a href=\"mailto:holi@mulassa.cat\">holi@mulassa.cat</a> en précisant de quelle figure il s'agit.",
   "html.code.tab": "Coder",
   "html.code.text": "Si tu sais coder, tu peux aider à faire entrer cette figure dans le jeu. Le code est ouvert et sur GitHub.",
-  "html.games.free": "Danse libre",
   "html.news.go": "Voir les jeux",
   "html.news.tip": "Ils sont ici !",
-  "html.games.pica": "Mulassa Pop",
-  "html.games.memory": "Mulassa Memory",
-  "html.games.crush": "Mulassa Crush",
+  "html.games.pop": "Mulassa Pop",
   "html.games.play": "Joue",
-  "html.games.picaDesc": "Attrape la Mulassa. Évite les Dracs.",
-  "html.games.memoryDesc": "Trouve les paires du Seguici.",
-  "html.games.crushDesc": "Aligne trois figures identiques.",
-  "html.games.lliureDesc": "Promène ta figure et fais-la danser."
+  "html.games.popDesc": "Attrape la Mulassa. Évite les Dracs.",
+  "html.games.soon": "Surprise",
+  "html.games.soonDesc": "Un nouveau jeu est en route."
 }

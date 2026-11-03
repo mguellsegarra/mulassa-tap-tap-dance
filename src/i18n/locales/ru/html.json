@@ -133,6 +133,7 @@
   "html.legend.esquellotName": "БОТАЛО",
   "html.legend.esquellotText": "Бей много раз: звени боталом до самого конца!",
   "html.legend.animName": "ЗАДОР",
+  "html.howtoWalk": "Прогуляйся",
   "html.howtoPractice": "Пройти обучение",
   "html.selectWatch": "Смотреть танец",
   "html.skip.aria": "Пропустить обучение",
@@ -224,15 +225,11 @@
   "html.rich.material.note": "Фото и файлы присылай на <a href=\"mailto:holi@mulassa.cat\">holi@mulassa.cat</a> и напиши, к какой фигуре они относятся.",
   "html.code.tab": "Код",
   "html.code.text": "Если ты умеешь программировать, помоги добавить эту фигуру в игру. Код открыт и лежит на GitHub.",
-  "html.games.free": "Свободный танец",
   "html.news.go": "Смотреть игры",
   "html.news.tip": "Они здесь!",
-  "html.games.pica": "Mulassa Pop",
-  "html.games.memory": "Mulassa Memory",
-  "html.games.crush": "Mulassa Crush",
+  "html.games.pop": "Mulassa Pop",
   "html.games.play": "Играть",
-  "html.games.picaDesc": "Лови Mulassa, избегай Drac.",
-  "html.games.memoryDesc": "Найди пары в шествии.",
-  "html.games.crushDesc": "Собери три одинаковых.",
-  "html.games.lliureDesc": "Гуляй и танцуй."
+  "html.games.popDesc": "Лови Mulassa, избегай Drac.",
+  "html.games.soon": "Сюрприз",
+  "html.games.soonDesc": "Новая игра уже в пути."
 }

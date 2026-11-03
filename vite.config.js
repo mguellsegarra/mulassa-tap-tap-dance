@@ -1,5 +1,5 @@
 import { defineConfig } from 'vite';
-import { readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 import musicEditor from './tools/music/music-editor/vite-plugin.mjs';
 import bestiariMedia from './tools/bestiari/media-plugin.mjs';
@@ -20,6 +20,7 @@ const https = process.env.DEV_HTTPS ? { key: readFileSync('.cert/dev.key'), cert
 const buildStamp = { name: 'build-stamp', generateBundle() { this.emitFile({ type: 'asset', fileName: 'version.json', source: JSON.stringify({ build }) }); },
   transformIndexHtml: html => html.replace("'__MULASSA_BUILD__'", JSON.stringify(build)) };
 // One page per mini-game (docs/jocs/README.md): a full navigation is what frees the main game's memory.
-const pages = ['index.html', ...readdirSync('jocs').map(game => `jocs/${game}/index.html`)];
+// Mulassa Pop lives at mulassa.cat/pop/; games still on their branches come back under jocs/<id>/.
+const pages = ['index.html', 'pop/index.html', ...(existsSync('jocs') ? readdirSync('jocs').map(game => `jocs/${game}/index.html`) : [])];
 // Keep playtests intact until a manual reload; file watching still invalidates cached modules.
 export default defineConfig({ define: { __APP_VERSION__: JSON.stringify(version), __APP_BUILD__: JSON.stringify(build) }, build: { rollupOptions: { input: pages } }, server: { https, hmr: false }, plugins: [musicEditor(), bestiariMedia(), unreleasedFigure(UNRELEASED_IDS), buildStamp] }); // dev-only backends; buildStamp: the build's /version.json

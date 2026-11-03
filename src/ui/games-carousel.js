@@ -6,13 +6,19 @@ export function setupGamesCarousel(doc = document) {
   const heroName = by('games-hero-name'), heroDesc = by('games-hero-desc');
   let on = -1, wheelAt = 0, drag = null, dragged = false;
 
+  // the wide hero picture only where it shows (a big screen, games-sheet.css): a phone never downloads the 3600 px files
+  const wide = matchMedia('(min-width: 701px)'), art = by('games-hero-art');
+  const showArt = () => { const card = cards[on]; if (card && wide.matches) art.src = card.dataset.hero ?? card.querySelector('img').getAttribute('src'); };
+  wide.addEventListener?.('change', showArt);
   const choose = i => {
     if (i === on) return;
     on = i;
     cards.forEach((card, k) => card.classList.toggle('on', k === on));
     const card = cards[on], src = card.querySelector('img').getAttribute('src');
     hero.style.setProperty('--game', getComputedStyle(card).getPropertyValue('--game'));
-    by('games-hero-back').src = by('games-hero-art').src = src;
+    hero.classList.toggle('soon', 'soon' in card.dataset); // nothing to play yet: no «Juga»
+    by('games-hero-back').src = src; // a phone's upright hero: the card's own picture
+    showArt();
     heroName.textContent = card.querySelector('.sel-card-name').textContent;
     heroDesc.textContent = card.querySelector('.game-desc').textContent;
   };

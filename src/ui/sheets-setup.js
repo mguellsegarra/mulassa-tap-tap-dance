@@ -191,11 +191,15 @@ sheets.badgeNews = badgeNews;
 const hint = setupDeviceHint({ focusIn, store, softwareGl }); // the device tips, last: after the profile's own news
 sheets.hint = hint;
 sheets.freeGate = setupFreeGate({ focusIn, store, onEnter: () => enterFree() }); // an upright iPhone is asked to turn before free play
-sheets.games = setupGamesMenu({ focusIn, enterFree, carousel: setupGamesCarousel() });
+sheets.games = setupGamesMenu({ focusIn, carousel: setupGamesCarousel() });
 // back from a mini-game (/#jocs) or the short link mulassa.cat/jocs (public/jocs/index.html; the dev server answers /jocs/
 // with this page): the sheet comes up at once, over the loader, while the plaça loads behind it
 if (globalThis.location?.hash === '#jocs' || /^\/jocs\/?$/.test(globalThis.location?.pathname)) { history.replaceState(null, '', '/' + location.search); sheets.games.open();
   document.getElementById('games-menu').addEventListener('close', () => document.documentElement.classList.remove('to-jocs'), { once: true }); }
+// a mini-game sends a player who has no name for its board here (Mulassa Pop: /#nom-pop, or /#nom-pop-canvi for a released
+// one): the name sheet at once, and back to the game once it closes, made or not (docs/jocs/pop-ranking.md)
+const nameFor = globalThis.location?.hash?.match(/^#nom-pop(-canvi)?$/);
+if (nameFor) { history.replaceState(null, '', '/' + location.search); profile.open(nameFor[1] ? 'rename' : 'create', () => location.replace('/pop/')); }
 const news = setupNews({ focusIn, store, played: () => hasPlayed(store), onGames: () => sheets.games.open(), force: Q.has('novetats') }); // ?novetats on a dev host shows it again
 sheets.news = news;
 // The greeting waits for calm: a playable figure (Mulassa, Drac) on screen and no touch or key for a while, so its sheet never
@@ -266,6 +270,7 @@ function openPrivacy() {
 document.addEventListener('click', e => { if (e.target.closest?.('[data-privacy-open]')) openPrivacy(); });
 document.getElementById('pause-sync').addEventListener('click', () => sync.show());
 document.getElementById('howto-practice').addEventListener('click', () => { howtoMenu.close(); startPractice(null); });
+document.getElementById('howto-walk').addEventListener('click', () => { howtoMenu.close(); enterFree(); });
 document.getElementById('howto-ok').addEventListener('click', () => howtoMenu.close());
 document.getElementById('privacy-ok').addEventListener('click', () => privacyMenu.close());
 document.getElementById('skip').addEventListener('click', () => { if (G.practice && !G.paused) { chip.sfx('menu'); endPractice(); } });

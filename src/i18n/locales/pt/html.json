@@ -133,6 +133,7 @@
   "html.legend.esquellotName": "CHOCALHO",
   "html.legend.esquellotText": "Bate muitas vezes: faz soar o chocalho até ao fim!",
   "html.legend.animName": "ÂNIMO",
+  "html.howtoWalk": "Dá um passeio",
   "html.howtoPractice": "Fazer o treino",
   "html.selectWatch": "Vê a dança",
   "html.skip.aria": "Saltar o treino",
@@ -224,15 +225,11 @@
   "html.rich.material.note": "As fotos e os ficheiros, envia-os para <a href=\"mailto:holi@mulassa.cat\">holi@mulassa.cat</a> e diz-nos de que figura são.",
   "html.code.tab": "Programar",
   "html.code.text": "Se sabes programar, podes ajudar a trazer esta figura para o jogo. O código é aberto e está no GitHub.",
-  "html.games.free": "Dança livre",
   "html.news.go": "Ver os jogos",
   "html.news.tip": "Estão aqui!",
-  "html.games.pica": "Mulassa Pop",
-  "html.games.memory": "Mulassa Memory",
-  "html.games.crush": "Mulassa Crush",
+  "html.games.pop": "Mulassa Pop",
   "html.games.play": "Joga",
-  "html.games.picaDesc": "Apanha a Mulassa. Evita os Dracs.",
-  "html.games.memoryDesc": "Encontra os pares do Seguici.",
-  "html.games.crushDesc": "Junta três figuras iguais.",
-  "html.games.lliureDesc": "Passeia e dança com a tua figura."
+  "html.games.popDesc": "Apanha a Mulassa. Evita os Dracs.",
+  "html.games.soon": "Surpresa",
+  "html.games.soonDesc": "Um novo jogo está a caminho."
 }

@@ -133,6 +133,7 @@
   "html.legend.esquellotName": "ZINTZARRIA",
   "html.legend.esquellotText": "Jo behin eta berriz: jo zintzarria amaiera arte!",
   "html.legend.animName": "GOGOA",
+  "html.howtoWalk": "Paseatu",
   "html.howtoPractice": "Egin praktika",
   "html.selectWatch": "Ikusi dantza",
   "html.skip.aria": "Saltatu praktika",
@@ -224,15 +225,11 @@
   "html.rich.material.note": "Argazkiak eta fitxategiak <a href=\"mailto:holi@mulassa.cat\">holi@mulassa.cat</a> helbidera bidali, eta esan zein irudirenak diren.",
   "html.code.tab": "Programatu",
   "html.code.text": "Programatzen badakizu, irudi hau jokora ekartzen lagun dezakezu. Kodea irekia da eta GitHub-en dago.",
-  "html.games.free": "Dantza librea",
   "html.news.go": "Ikusi jokoak",
   "html.news.tip": "Hemen daude!",
-  "html.games.pica": "Mulassa Pop",
-  "html.games.memory": "Mulassa Memory",
-  "html.games.crush": "Mulassa Crush",
+  "html.games.pop": "Mulassa Pop",
   "html.games.play": "Jolastu",
-  "html.games.picaDesc": "Harrapatu Mulassa. Saihestu Dracak.",
-  "html.games.memoryDesc": "Aurkitu jaietako figuren bikoteak.",
-  "html.games.crushDesc": "Elkartu hiru figura berdin.",
-  "html.games.lliureDesc": "Ibili eta dantzatu zure figurarekin."
+  "html.games.popDesc": "Harrapatu Mulassa. Saihestu Dracak.",
+  "html.games.soon": "Ezustekoa",
+  "html.games.soonDesc": "Joko berri bat bidean da."
 }

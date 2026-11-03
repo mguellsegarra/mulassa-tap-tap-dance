@@ -133,6 +133,7 @@
   "html.legend.esquellotName": "CENCERRO",
   "html.legend.esquellotText": "¡Dale muchas veces: haz sonar el cencerro hasta el final!",
   "html.legend.animName": "ÁNIMO",
+  "html.howtoWalk": "Da un paseo",
   "html.howtoPractice": "Haz la práctica",
   "html.selectWatch": "Mira el baile",
   "html.skip.aria": "Salta la práctica",
@@ -224,15 +225,11 @@
   "html.rich.material.note": "Las fotos y los archivos, envíalos a <a href=\"mailto:holi@mulassa.cat\">holi@mulassa.cat</a> y dinos de qué figura son.",
   "html.code.tab": "Programar",
   "html.code.text": "Si sabes programar, puedes ayudar a traer esta figura al juego. El código es abierto y está en GitHub.",
-  "html.games.free": "Baile libre",
   "html.news.go": "Ver los juegos",
   "html.news.tip": "¡Aquí están!",
-  "html.games.pica": "Mulassa Pop",
-  "html.games.memory": "Mulassa Memory",
-  "html.games.crush": "Mulassa Crush",
+  "html.games.pop": "Mulassa Pop",
   "html.games.play": "Juega",
-  "html.games.picaDesc": "Atrapa a la Mulassa. Evita Dracs.",
-  "html.games.memoryDesc": "Busca las parejas del Seguici.",
-  "html.games.crushDesc": "Junta tres figuras iguales.",
-  "html.games.lliureDesc": "Pasea y baila con tu figura."
+  "html.games.popDesc": "Atrapa a la Mulassa. Evita Dracs.",
+  "html.games.soon": "Sorpresa",
+  "html.games.soonDesc": "Un juego nuevo está en camino."
 }

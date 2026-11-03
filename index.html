@@ -594,7 +594,6 @@
 </dialog>
 <!-- The corner gamepad (src/ui/games-menu.js). -->
 <dialog id="games-menu" class="sheet" data-arrows="row" tabindex="-1" aria-labelledby="games-title">
-  <button id="games-x" type="button" data-i18n-attr="aria-label:html.attr.close" class="sheet-x" aria-label="Tanca"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
   <!-- the title's MULASSA lettering (as .sel-logo) with its glint sweeping across (hud/title.js glint()); GAMES under it, as TAP TAP DANCE:
        «Mulassa Games» is a name, not translated -->
   <h2 id="games-title"><svg class="games-logo" aria-hidden="true" focusable="false" viewBox="0 -4 308.6 80" text-anchor="middle" stroke-linejoin="round" paint-order="stroke">
@@ -603,11 +602,11 @@
   </svg><span class="sr-only">Mulassa Games</span><span class="games-word" aria-hidden="true"><i style="--i:0">G</i><i style="--i:1">A</i><i style="--i:2">M</i><i style="--i:3">E</i><i style="--i:4">S</i></span></h2>
   <div id="games-hero"><img id="games-hero-back" alt=""><img id="games-hero-art" alt=""><div id="games-hero-text"><span id="games-hero-name"></span><span id="games-hero-desc"></span><button id="games-hero-play" type="button" class="game-play"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15a1 1 0 0 0 1.5.86l12-7.5a1 1 0 0 0 0-1.72l-12-7.5A1 1 0 0 0 7 4.5z"/></svg><span data-i18n="html.games.play">Juga</span></button></div></div>
   <div id="games-grid" class="games-grid">
-      <button type="button" class="btn btn-secondary sel-card game-card" data-game="tap"><span class="por"><img src="/jocs/menu/cards/tap.jpg" alt="" width="600" height="750"></span><span class="nb"><span class="sel-card-name">Mulassa Tap Tap Dance</span><small class="game-desc">Balla amb les figures al ritme de la música.</small></span></button>
-      <button type="button" class="btn btn-secondary sel-card game-card" data-game="pica"><span class="por"><img src="/jocs/menu/cards/pica.jpg" alt="" width="600" height="750"></span><span class="nb"><span class="sel-card-name" data-i18n="html.games.pica">Mulassa Pop</span><small class="game-desc" data-i18n="html.games.picaDesc">Atrapa la Mulassa. Evita els Dracs.</small></span></button>
-      <button type="button" class="btn btn-secondary sel-card game-card" data-game="memory"><span class="por"><img src="/jocs/menu/cards/memory.jpg" alt="" width="600" height="750"></span><span class="nb"><span class="sel-card-name" data-i18n="html.games.memory">Mulassa Memory</span><small class="game-desc" data-i18n="html.games.memoryDesc">Troba les parelles del Seguici.</small></span></button>
-      <button type="button" class="btn btn-secondary sel-card game-card" data-game="crush"><span class="por"><img src="/jocs/menu/cards/crush.jpg" alt="" width="600" height="750"></span><span class="nb"><span class="sel-card-name" data-i18n="html.games.crush">Mulassa Crush</span><small class="game-desc" data-i18n="html.games.crushDesc">Ajunta tres figures iguals.</small></span></button>
-      <button type="button" class="btn btn-secondary sel-card game-card" data-game="lliure"><span class="por"><img src="/jocs/menu/cards/lliure.jpg" alt="" width="600" height="750"></span><span class="nb"><span class="sel-card-name" data-i18n="html.games.free">Ball lliure</span><small class="game-desc" data-i18n="html.games.lliureDesc">Passeja i balla amb la teva figura.</small></span></button>
+      <button type="button" class="btn btn-secondary sel-card game-card" data-game="tap" data-hero="/jocs/menu/hero/tap.jpg"><span class="por"><img src="/jocs/menu/cards/tap.jpg" alt="" width="600" height="750"></span><span class="nb"><span class="sel-card-name">Mulassa Tap Tap Dance</span><small class="game-desc">Balla amb les figures al ritme de la música.</small></span></button>
+      <button type="button" class="btn btn-secondary sel-card game-card" data-game="pop" data-hero="/jocs/menu/hero/pop.jpg"><span class="por"><img src="/jocs/menu/cards/pop.jpg" alt="" width="600" height="750"></span><span class="nb"><span class="sel-card-name" data-i18n="html.games.pop">Mulassa Pop</span><small class="game-desc" data-i18n="html.games.popDesc">Atrapa la Mulassa. Evita els Dracs.</small></span></button>
+      <button type="button" class="btn btn-secondary sel-card game-card" data-game="aviat-1" data-soon data-hero="/jocs/menu/hero/aviat-1.jpg"><span class="por"><img src="/jocs/menu/cards/aviat-1.jpg" alt="" width="600" height="750"></span><span class="nb"><span class="sel-card-name" data-i18n="html.games.soon">Sorpresa</span><small class="game-desc" data-i18n="html.games.soonDesc">Un joc nou està de camí.</small></span></button>
+      <button type="button" class="btn btn-secondary sel-card game-card" data-game="aviat-2" data-soon data-hero="/jocs/menu/hero/aviat-2.jpg"><span class="por"><img src="/jocs/menu/cards/aviat-2.jpg" alt="" width="600" height="750"></span><span class="nb"><span class="sel-card-name" data-i18n="html.games.soon">Sorpresa</span><small class="game-desc" data-i18n="html.games.soonDesc">Un joc nou està de camí.</small></span></button>
+      <button type="button" class="btn btn-secondary sel-card game-card" data-game="aviat-3" data-soon data-hero="/jocs/menu/hero/aviat-3.jpg"><span class="por"><img src="/jocs/menu/cards/aviat-3.jpg" alt="" width="600" height="750"></span><span class="nb"><span class="sel-card-name" data-i18n="html.games.soon">Sorpresa</span><small class="game-desc" data-i18n="html.games.soonDesc">Un joc nou està de camí.</small></span></button>
   </div>
 </dialog>
 <dialog id="gpu-hint-menu" class="sheet hint-menu" tabindex="-1" aria-labelledby="gpu-hint-title" aria-describedby="gpu-hint-text">
@@ -895,6 +894,8 @@
   </ul>
   <form method="dialog" class="sheet-actions">
     <button id="howto-practice" type="button" class="btn btn-secondary" data-i18n="html.howtoPractice"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 10 7-10 7Z"/></svg>Fes la pràctica</button>
+    <!-- free play's door: tucked in the help, for who wants more than the dance (its card left the games sheet) -->
+    <button id="howto-walk" type="button" class="btn walk-btn"><span class="walk-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3c1.7 0 2.6 1.9 2.4 4.1-.2 2-1.1 3.6-2.6 3.6S5.4 9.4 5.5 7.2C5.6 5 6.4 3 8 3Zm-.6 9.4c1.3 0 2.2.7 2.1 1.9 0 1.3-1 2-2.3 2s-2.1-.8-2-2c0-1.2 1-1.9 2.2-1.9ZM16 7c1.6 0 2.5 1.9 2.4 4.1-.1 2.1-1.1 3.6-2.6 3.6s-2.3-1.4-2.3-3.5C13.6 9 14.4 7 16 7Zm-.6 9.4c1.3 0 2.2.7 2.1 1.9 0 1.3-1 2-2.3 2s-2.1-.8-2-2c0-1.2 1-1.9 2.2-1.9Z"/></svg></span><span data-i18n="html.howtoWalk">Fes un tomb</span></button>
   </form>
   </div>
 </dialog>

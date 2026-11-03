@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ca">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Mulassa Pop · quatre inicis</title>
+  <link rel="stylesheet" href="./review.css">
+</head>
+<body>
+<main>
+  <header>
+    <p class="eyebrow">ESTUDI DE DISSENY · MULASSA POP · PANTALLA D’INICI</p>
+    <h1>Quatre maneres d’obrir Mulassa Pop</h1>
+    <p>Totes porten el logo, «Juga», com es juga, el rècord local, la tornada al joc principal i la música. Figures i tauler són els models reals del joc, quiets. <b class="warn">Textos provisionals</b> (els escriurà Codex): <a href="./strings.md">llista de claus</a>.</p>
+  </header>
+
+  <nav id="tabs" aria-label="Proposta"></nav>
+  <section id="why"><h2 id="name"></h2><p id="desc"></p><p id="change"></p></section>
+
+  <div class="controls">
+    <label>Mòbil <select id="phone"><option>393x852</option><option>375x667</option><option>320x568</option><option>430x932</option></select></label>
+    <label>Gran <select id="big"><option>1280x800</option><option>1024x768</option><option>1440x700</option><option>1920x1080</option></select></label>
+    <label>Rècord <select id="best"><option value="57">57</option><option value="0">Primera vegada (sense rècord)</option></select></label>
+  </div>
+
+  <div id="frames">
+    <figure class="phone"><div class="scaler"><iframe title="Mòbil"></iframe></div><figcaption><span></span> <a target="_blank" rel="noopener">Obre a mida real ↗</a></figcaption></figure>
+    <figure class="big"><div class="scaler"><iframe title="Pantalla gran"></iframe></div><figcaption><span></span> <a target="_blank" rel="noopener">Obre a mida real ↗</a></figcaption></figure>
+  </div>
+  <p class="hint">Les maquetes es poden tocar: «Com es juga», les fitxes de la B, les pestanyes de la D, la música. «Juga» i «Torna» només mostren un avís.</p>
+
+  <section id="notes">
+    <h2>Notes de la proposta <span id="note-p"></span></h2>
+    <div id="marks"><button data-mark="">Sense marcar</button><button data-mark="ok">M’agrada · ok</button><button data-mark="refer">Cal refer · refer</button></div>
+    <textarea id="note" rows="3" placeholder="Què conservaries o canviaries?"></textarea>
+    <button id="copy">Copia totes les notes</button> <span id="status" role="status"></span>
+    <textarea id="out" aria-label="Notes per copiar" hidden></textarea>
+  </section>
+</main>
+<script type="module" src="./review.js"></script>
+</body>
+</html>

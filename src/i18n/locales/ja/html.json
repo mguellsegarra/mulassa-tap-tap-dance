@@ -133,6 +133,7 @@
   "html.legend.esquellotName": "カウベル",
   "html.legend.esquellotText": "最後までカウベルを連打！",
   "html.legend.animName": "元気",
+  "html.howtoWalk": "広場を散歩",
   "html.howtoPractice": "練習する",
   "html.selectWatch": "踊りを見る",
   "html.skip.aria": "練習をスキップ",
@@ -224,15 +225,11 @@
   "html.rich.material.note": "写真やファイルは <a href=\"mailto:holi@mulassa.cat\">holi@mulassa.cat</a> に送って、どのフィギュアのものか教えてね。",
   "html.code.tab": "開発",
   "html.code.text": "プログラミングができるなら、このキャラクターをゲームに加える手伝いができます。コードはGitHubで公開しています。",
-  "html.games.free": "自由に踊る",
   "html.news.go": "ゲームを見る",
   "html.news.tip": "ここだよ！",
-  "html.games.pica": "Mulassa Pop",
-  "html.games.memory": "Mulassa Memory",
-  "html.games.crush": "Mulassa Crush",
+  "html.games.pop": "Mulassa Pop",
   "html.games.play": "あそぶ",
-  "html.games.picaDesc": "Mulassaをつかまえよう。Dracに注意！",
-  "html.games.memoryDesc": "お祭りの仲間のペアを探そう。",
-  "html.games.crushDesc": "同じ仲間を3つ並べよう。",
-  "html.games.lliureDesc": "好きな仲間と広場を歩いて踊ろう。"
+  "html.games.popDesc": "Mulassaをつかまえよう。Dracに注意！",
+  "html.games.soon": "お楽しみ",
+  "html.games.soonDesc": "新しいゲームを準備中！"
 }

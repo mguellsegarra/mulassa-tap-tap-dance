@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="ca">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Mulassa Pop · el títol de la portada</title>
+  <style>
+    @font-face { font-family: 'Baloo 2'; font-weight: 600 800; src: url(/fonts/baloo-2-latin.woff2) format('woff2'); }
+    body { margin: 0; padding: 16px 24px 48px; background: #11152c; color: #fff3d6; font: 600 16px/1.4 'Baloo 2', system-ui, sans-serif; }
+    h1 { margin: 0 0 4px; font-size: 26px; color: #ff7ac6; }
+    .bar { position: sticky; top: 0; z-index: 2; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 12px 0; background: #11152c; }
+    button, a.btn { height: 40px; padding: 0 16px; border: 2px solid #ff7ac6; border-radius: 12px; background: #24223f; color: #fff3d6; font: inherit; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; }
+    button[aria-pressed="true"] { background: #ff7ac6; color: #2a1a10; }
+    .sep { width: 12px; }
+    .why { max-width: 72ch; margin: 8px 0 12px; }
+    .why b { color: #ff7ac6; }
+    textarea { box-sizing: border-box; width: min(100%, 72ch); min-height: 72px; padding: 8px 12px; border: 2px solid #ff7ac655; border-radius: 12px; background: #24223f; color: #fff3d6; font: inherit; }
+    .stage { margin-top: 16px; display: flex; flex-direction: column; gap: 6px; }
+    .stage span { color: #e8d8b8; font-size: 14px; }
+    .frame { overflow: hidden; border: 2px solid #ffffff22; border-radius: 16px; background: #000; }
+    .frame iframe { display: block; border: 0; transform-origin: 0 0; }
+    .toast { position: fixed; right: 24px; bottom: 24px; padding: 8px 16px; border-radius: 12px; background: #ff7ac6; color: #2a1a10; }
+  </style>
+</head>
+<body>
+  <h1>Mulassa Pop · el títol de la portada en pantalla ampla</h1>
+  <p class="why">Quatre maneres d’ordenar el logo, la frase, Juga i el rècord al costat de la Mulassa gran, sobre la portada real de /pop/ (tauler, targetes i animacions de veritat; només canvia el CSS de dalt). «Ara» és com està avui. Al mòbil totes queden igual que ara. L’escriptori es veu reduït (el percentatge surt a sota); «Obre» la mostra a pantalla sencera.</p>
+  <div class="bar">
+    <button data-p="ara">Ara</button><button data-p="A">A · Eix central</button><button data-p="B">B · Tot a l’esquerra</button><button data-p="C">C · Portada</button><button data-p="D">D · Tríptic</button>
+    <span class="sep"></span>
+    <button data-v="1024x768">1024×768</button><button data-v="1280x800">1280×800</button><button data-v="1440x700">1440×700</button><button data-v="1920x1080">1920×1080</button><button data-v="393x852">393×852</button><button data-v="320x568">320×568</button>
+    <span class="sep"></span>
+    <a class="btn" id="open" target="_blank">Obre</a>
+    <button id="copy">Copia totes les notes</button>
+  </div>
+  <p class="why" id="why"></p>
+  <textarea id="note" placeholder="Notes sobre aquesta proposta…"></textarea>
+  <div class="stage"><div class="frame" id="f1"></div><span id="l1"></span></div>
+  <div class="toast" hidden></div>
+  <script type="module">
+    const WHY = {
+      ara: '<b>Ara.</b> El logo centra POP a sota de MULASSA, però la frase, Juga i el rècord van alineats a l’esquerra: dos eixos en un mateix bloc, que és el que es veu estrany.',
+      A: '<b>A · Eix central.</b> El logo ja és centrat (POP a sota del mig de MULASSA), així que tota la columna el segueix: frase centrada i Juga amb el rècord al costat, en una fila centrada. Un sol eix vertical, com un cartell. La Mulassa, a la dreta, creix amb la pantalla en lloc de quedar-se a 360 px.',
+      B: '<b>B · Tot a l’esquerra.</b> Es manté l’alineació a l’esquerra de mulassa.cat (com el full de Mulassa Games), però POP deixa el centre i s’arrenglera sota la M. Una sola vora esquerra per a MULASSA, POP, la frase i Juga, que coincideix amb la primera targeta de sota. Juga i el rècord comparteixen fila; el logo és una mica més gran.',
+      C: '<b>C · Portada.</b> El títol corona la Mulassa: tots dos, centrats, fan una portada de joc a l’esquerra. A la dreta, la frase més grossa i Juga amb el rècord, alineats a l’esquerra i centrats en alçada. Cada columna té el seu eix, i la Mulassa mira cap a Juga.',
+      D: '<b>D · Tríptic.</b> Tres terços simètrics: el títol a l’esquerra, la Mulassa gran al mig de la pantalla i la frase amb Juga i el rècord a la dreta, tot centrat en el seu terç i a la mateixa alçada. La Mulassa és el centre de tot, com a les targetes de sota.',
+    };
+    const KEY = 'pop-hero-notes', PS = ['ara', 'A', 'B', 'C', 'D'];
+    const notes = JSON.parse(localStorage.getItem(KEY) || '{}');
+    const q = new URLSearchParams(location.search);
+    let P = PS.includes(q.get('p')) ? q.get('p') : 'A', V = q.get('v') || '1280x800';
+    const $ = s => document.querySelector(s);
+    const show = () => {
+      for (const b of document.querySelectorAll('[data-p]')) b.setAttribute('aria-pressed', b.dataset.p === P);
+      for (const b of document.querySelectorAll('[data-v]')) b.setAttribute('aria-pressed', b.dataset.v === V);
+      $('#why').innerHTML = WHY[P];
+      $('#note').value = notes[P] || '';
+      $('#open').href = `view.html?p=${P}`;
+      const [w, h] = V.split('x').map(Number), k = Math.min(1, (innerWidth - 52) / w, 0.9 * innerHeight / h);
+      $('#f1').style.cssText = `width:${Math.round(w * k)}px;height:${Math.round(h * k)}px`;
+      $('#f1').innerHTML = `<iframe src="view.html?p=${P}" width="${w}" height="${h}" style="transform:scale(${k})"></iframe>`;
+      $('#l1').textContent = `${V}${k < 1 ? ` · reduït al ${Math.round(k * 100)} %` : ' · mida real'}`;
+      history.replaceState(null, '', `?p=${P}&v=${V}`);
+    };
+    for (const b of document.querySelectorAll('[data-p]')) b.onclick = () => { P = b.dataset.p; show(); };
+    for (const b of document.querySelectorAll('[data-v]')) b.onclick = () => { V = b.dataset.v; show(); };
+    $('#note').oninput = e => { notes[P] = e.target.value; localStorage.setItem(KEY, JSON.stringify(notes)); };
+    $('#copy').onclick = async () => {
+      const text = 'Mulassa Pop · títol de la portada (tools/dev/pop-hero)\n' + PS.map(p => `${p}: ${(notes[p] || '').trim() || '—'}`).join('\n');
+      const t = $('.toast');
+      try { await navigator.clipboard.writeText(text); t.textContent = 'Notes copiades'; }
+      catch { prompt('Copia les notes:', text); return; } // http on the LAN may lack the clipboard
+      t.hidden = false; setTimeout(() => { t.hidden = true; }, 1800);
+    };
+    show();
+  </script>
+</body>
+</html>

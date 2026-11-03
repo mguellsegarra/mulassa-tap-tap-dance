@@ -133,6 +133,7 @@
   "html.legend.esquellotName": "ESQUELLOT",
   "html.legend.esquellotText": "Pica molts cops: fes sonar l’esquellot fins al final!",
   "html.legend.animName": "ÀNIM",
+  "html.howtoWalk": "Fes un tomb",
   "html.howtoPractice": "Fes la pràctica",
   "html.selectWatch": "Mira el ball",
   "html.skip.aria": "Salta la pràctica",
@@ -224,15 +225,11 @@
   "html.rich.material.note": "Les fotos i els fitxers, envia'ls a <a href=\"mailto:holi@mulassa.cat\">holi@mulassa.cat</a> i digue'ns de quina figura són.",
   "html.code.tab": "Programar",
   "html.code.text": "Si saps programar, pots ajudar a portar aquesta figura al joc. El codi és obert i és a GitHub.",
-  "html.games.free": "Ball lliure",
   "html.news.go": "Mira els jocs",
   "html.news.tip": "Són aquí!",
-  "html.games.pica": "Mulassa Pop",
-  "html.games.memory": "Mulassa Memory",
-  "html.games.crush": "Mulassa Crush",
+  "html.games.pop": "Mulassa Pop",
   "html.games.play": "Juga",
-  "html.games.picaDesc": "Atrapa la Mulassa. Evita els Dracs.",
-  "html.games.memoryDesc": "Troba les parelles del Seguici.",
-  "html.games.crushDesc": "Ajunta tres figures iguals.",
-  "html.games.lliureDesc": "Passeja i balla amb la teva figura."
+  "html.games.popDesc": "Atrapa la Mulassa. Evita els Dracs.",
+  "html.games.soon": "Sorpresa",
+  "html.games.soonDesc": "Un joc nou està de camí."
 }

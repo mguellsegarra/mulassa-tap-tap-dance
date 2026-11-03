@@ -71,7 +71,6 @@ export function setView(on) {
     if (keyboardNav && back && back !== document.body && back.isConnected && !back.hidden && !back.closest?.('[hidden], [inert]')) back.focus({ preventScroll: true });
     else if (keyboardNav && G.state === 'select') sheets.select?.refocus?.();
     else document.activeElement?.blur(); // touch/mouse: Space picks a difficulty again
-    sheets.games?.afterFree(photoScreen());
   }
   updateHudCursor();
 }

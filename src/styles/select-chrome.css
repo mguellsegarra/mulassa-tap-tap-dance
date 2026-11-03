@@ -12,16 +12,16 @@ body:has(#select:not([hidden])) #music { --cb-i: calc(1 - var(--cb-b)); }
 body:has(#select:not([hidden])) #settings { --cb-i: calc(2 - var(--cb-b)); }
 /* free play stands out: a dark lilac disc, the row's gold edge; the gamepad dances on what sounds (controls.js
    freeDance runs its sway on the compositor, on the menu beat): left and right, each beat landing on one side (no ring, it distracted) */
-#free { background: #24122c; overflow: hidden; isolation: isolate; } /* two lilac and plum glows drifting slowly over the dark disc */
+:is(#free, #howto-walk) { background: #24122c; overflow: hidden; isolation: isolate; } /* two lilac and plum glows drifting slowly over the dark disc (and the help's free-play button: the games look) */
 /* each glow its own layer, twice the disc, moved by transform (the GPU moves it): their animated background-position
    repainted the button every frame, and Linux Chrome paints on the CPU (~30 fps on a 2016 MacBook while the UI showed) */
-#free::before, #free::after { content: ''; position: absolute; left: 0; top: 0; width: 200%; height: 200%; z-index: -1; pointer-events: none; animation: 7s ease-in-out infinite alternate; }
-#free::before { background: radial-gradient(circle at 50% 50%, #9a52b0, #9a52b000 45%); animation-name: free-glow-a; }
-#free::after { background: radial-gradient(circle at 50% 50%, #c2477e99, #c2477e00 40%); animation-name: free-glow-b; }
+:is(#free, #howto-walk)::before, :is(#free, #howto-walk)::after { content: ''; position: absolute; left: 0; top: 0; width: 200%; height: 200%; z-index: -1; pointer-events: none; animation: 7s ease-in-out infinite alternate; }
+:is(#free, #howto-walk)::before { background: radial-gradient(circle at 50% 50%, #9a52b0, #9a52b000 45%); animation-name: free-glow-a; }
+:is(#free, #howto-walk)::after { background: radial-gradient(circle at 50% 50%, #c2477e99, #c2477e00 40%); animation-name: free-glow-b; }
 @keyframes free-glow-a { from { transform: translate(-7.5%, -5%); } 50% { transform: translate(-42.5%, -17.5%); } to { transform: translate(-20%, -45%); } } /* background-position p% = translate(-p/2 %) */
 @keyframes free-glow-b { from { transform: translate(-45%, -47.5%); } 50% { transform: translate(-10%, -35%); } to { transform: translate(-37.5%, -7.5%); } }
 #free .free-ico { display: block; line-height: 0; transform-origin: 50% 80%; } /* the sway's own HTML box: an animated <svg> is never moved by the compositor (redrawn every frame) */
-@media (prefers-reduced-motion: reduce) { #free::before, #free::after { animation: none; } }
+@media (prefers-reduced-motion: reduce) { :is(#free, #howto-walk)::before, :is(#free, #howto-walk)::after { animation: none; } }
 body:has(#select:not([hidden])) #viewmode { --cb-r: 2; --cb-i: calc(var(--cb-n) - 3); } /* shown only in free play: the exit, then the radio and the ? (free-music.js places both from it) end the row */
 body:has(#select:not([hidden])) :is(#free, #music, #settings) { --cb-r: calc(var(--cb-n) - 1 - var(--cb-i)); }
 #select > .sel-logo { position: absolute; z-index: 2; overflow: visible; /* the outline's edge */ left: max(16px, env(safe-area-inset-left)); top: calc(16px + env(safe-area-inset-top)); width: auto; height: 56px; pointer-events: none; }
@@ -99,3 +99,7 @@ body:has(#select:not([hidden])) :is(#free, #music, #settings) { --cb-r: calc(var
 @media (pointer: fine) { .sel-podium-list li { min-height: 30px; } } /* a mouse: a little under the standings card's rows (34), so three fit a 1280×800 column; touch keeps 44 */
 /* rows step 31 px with a mouse: a 44 px slop would reach the next name, so the name's target is its whole row (as the standings card's) */
 @media (pointer: fine) { .sel-podium-list li { position: relative; } .sel-podium-list button.player-name { position: static; } .sel-podium-list button.player-name::after { inset: 0; height: auto; translate: none; } }
+
+/* the help's free-play button wears #free's look above; its glows run only while the help is open (a closed dialog draws nothing) */
+#howto-walk { position: relative; display: flex; align-items: center; justify-content: center; gap: .5em; color: #fff3d6; border: 2px solid #f5c518; text-shadow: 0 1px 2px #0008; }
+#howto-walk .walk-ico { display: block; line-height: 0; } #howto-walk svg { width: 1.15em; height: 1.15em; fill: currentColor; }

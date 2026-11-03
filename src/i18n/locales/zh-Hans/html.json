@@ -133,6 +133,7 @@
   "html.legend.esquellotName": "牛铃",
   "html.legend.esquellotText": "不停连击，让牛铃一直响到最后！",
   "html.legend.animName": "气氛",
+  "html.howtoWalk": "逛逛广场",
   "html.howtoPractice": "开始练习",
   "html.selectWatch": "观看舞蹈",
   "html.skip.aria": "跳过练习",
@@ -224,15 +225,11 @@
   "html.rich.material.note": "照片和文件请发到 <a href=\"mailto:holi@mulassa.cat\">holi@mulassa.cat</a>，并告诉我们是哪个角色的。",
   "html.code.tab": "写代码",
   "html.code.text": "如果你会编程，可以帮忙把这个角色加入游戏。代码开源，放在GitHub上。",
-  "html.games.free": "自由舞蹈",
   "html.news.go": "查看游戏",
   "html.news.tip": "就在这里！",
-  "html.games.pica": "Mulassa Pop",
-  "html.games.memory": "Mulassa Memory",
-  "html.games.crush": "Mulassa Crush",
+  "html.games.pop": "Mulassa Pop",
   "html.games.play": "开始",
-  "html.games.picaDesc": "抓住Mulassa，避开Drac！",
-  "html.games.memoryDesc": "找出节庆角色的配对。",
-  "html.games.crushDesc": "将三个相同角色连成一线。",
-  "html.games.lliureDesc": "带着角色漫游广场，自由起舞。"
+  "html.games.popDesc": "抓住Mulassa，避开Drac！",
+  "html.games.soon": "惊喜",
+  "html.games.soonDesc": "新游戏正在准备中！"
 }

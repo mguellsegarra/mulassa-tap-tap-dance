@@ -1,15 +1,12 @@
 # Mini-games plan (release 1.3.0)
 
-Status: Seguici Crush is at `/jocs/crush/` (branch `jocs/crush`; its art masters, notes and difficulty research stay in the `mulassa-minijocs` project). Memory is in this repo at `/jocs/memory/` (reachable only by its URL; card sources in `memory-sources.md`, its provisional texts in `memory-textos.md`, card masters still in the `bestiari-memory` project). The selector's gamepad opens the games sheet; no architecture step tested on a device. The other games live outside the repo:
-`/Volumes/development/projects/mulassa-minijocs`. Pica la Mulassa is at `/jocs/pica/`, also reachable only by its URL; its source project is `pica-la-mulassa`. Mulassa Drop, a Suika-style merge game, is at `/jocs/suika/` (physics by `planck`, its working notes in the `mulassa-minijocs` project). Mulassa City, a SubaraCity-style merge game, is at `/jocs/subara/` (rules and sources in `subara-referent.md`).
+Status: 1.3.0 ships only Mulassa Pop (mulassa.cat/pop: page `pop/index.html`, code in `src/jocs/games/pop/`, source project `pica-la-mulassa`). The other games were taken out of this branch before release; each one waits on its own `jocs/<id>` branch, at the state it had here (7e0e749), until its release (table below). The selector's gamepad opens the games sheet.
 
 Research, in Catalan, copied from `mulassa-minijocs/notes/` on 2026-11-01 (that project may have moved on since):
 - `research/cataleg-jocs.md`: the catalogue of game ideas.
 - `research/recerca-mercat.md`: market research and the owner's references (SubaraCity, merge games, Doodle God).
 - `research/jocs-fisics.md`: physical games about the Seguici and similar festes.
 - `research/actius-reutilitzables.md`: assets the game can lend.
-
-Seguici Crush's level table comes from `tools/dev/crush-curve.mjs`, a casual-player bot, and `tests/jocs/crush-curve.mjs` guards the curve. Help after losses is `helpFor` in its `rules.js`, only ever towards easier; no stats leave the device, by the owner's decision.
 
 ## Decisions from the owner
 
@@ -23,19 +20,24 @@ Seguici Crush's level table comes from `tools/dev/crush-curve.mjs`, a casual-pla
 
 The owner's choices. A game takes its name when it enters this branch; folders, URLs and branches keep their working ids, players never see them.
 
-| Name | Now | Id, where it lives | Release |
+| Name | Id | Branch | Release |
 | --- | --- | --- | --- |
-| Mulassa Pop | applied | `pica` | 1.3.0 |
-| Mulassa Memory | applied | `memory` | 1.3.0 |
-| Mulassa Crush | applied | `crush` | 1.3.0 |
-| Ball lliure | applied | free play, last card of the sheet | 1.3.0 |
-| Mulassoku | to apply | `murdoku`, branch `jocs/murdoku`; players must never read «Murdoku» | one a week after 1.3.0 |
-| Mulassa Craft | to apply | Alquímia, `mulassa-minijocs`, `minijoc/alquimia` | one a week |
-| Mulassa Drop | to apply | Del Nan al Gegant, `suika`, branch `jocs/suika` | one a week |
-| Mulassa Run | to apply | Corre i suma colla, branch `jocs/corre` | one a week |
-| Mulassa City | to apply | Vila del Seguici, `subara`, branch `jocs/subara` | one a week |
+| Mulassa Pop | `pop` | here | 1.3.0, 12 Nov 2026 |
+| Ball lliure | free play: not a card; a button in the help sheet («?», `#howto-walk`), too expert for the sheet | here | 1.3.0 |
+| Mulassa Memory | `memory` | `jocs/memory` | 1.4.0, 19 Nov |
+| Mulassa Crush | `crush` | `jocs/crush` | 1.6.0, 3 Dec |
+| Mulassa Drop | `suika` | `jocs/suika` | 1.7.0, 10 Dec |
+| Mulassa Alchemy | `alquimia` | `jocs/alquimia` | 1.8.0, 17 Dec |
+| Mulassa City | `subara` | `jocs/subara` | 1.9.0, 14 Jan 2027 |
+| Mulassoku | `murdoku`; players must never read «Murdoku» | `jocs/murdoku` | 1.12.0, 4 Feb |
+| Mulassa Run | `corre` | `jocs/corre` | 1.13.0, 11 Feb |
 
-Each new game gets a colour for its card and logo, a line in `NEWS` (`src/ui/news-sheet.js`) and a card above Ball lliure, which stays last.
+One novelty per release, on Thursdays; 1.5.0 (Bou), 1.10.0 (Gegant del Calçot) and 1.11.0 (Àliga) are figures. A game's branch
+holds its pages, code, pictures, tests and `_headers` lines as they were in 1.3.0 before the removal (Memory and Crush also their card). A merge of that branch does not
+bring them back (the removal is newer), so take its files with `git checkout jocs/<id> -- jocs/<id> src/jocs/games/<id> public/jocs/<id>`
+plus its tests and docs, then add its card in `index.html`, its colour, its `html.games.<id>` strings and its `_headers` lines.
+
+Each new game gets a colour for its card and logo, a line in `NEWS` (`src/ui/news-sheet.js`) and a card after the last game. The «Aviat» surprise cards (`data-soon`, nothing to play, each in the colour of the game it stands for) fill the row; a new game takes the place of the first one.
 
 Discarded: Snake, La Cercavila, Talla calçots, Bantumi, Pinta per números, Endreça el Seguici, De nan a gegant (2048), Fes el castell. The code of those that had any, without a commit here, is in `mulassa-minijocs/descartats/`.
 

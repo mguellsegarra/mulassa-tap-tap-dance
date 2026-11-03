@@ -8,7 +8,6 @@ html.to-jocs #games-menu[open] { animation: games-in 1.2s ease-in-out both; }
 html.to-jocs #games-menu::backdrop { background: #000; }
 @keyframes games-in { from { opacity: 0; } }
 #games-menu::before, #games-menu::after { display: none; }
-#games-menu .sheet-x { top: calc(12px + var(--sat, 0px)); right: calc(12px + var(--sar, 0px)); z-index: 3; }
 #games-title { position: absolute; z-index: 3; top: calc(12px + var(--sat, 0px)); left: max(24px, 6vw); margin: 0; display: grid; justify-items: center; pointer-events: none; }
 #games-title .games-logo { display: block; width: clamp(150px, 20vw, 280px); height: auto; overflow: visible; /* the outline's edge */ }
 #games-title .games-word { margin-top: -.15em; font: 800 clamp(18px, 2.6vw, 34px)/1 'Baloo 2', system-ui, sans-serif; letter-spacing: .04em; text-transform: uppercase; color: #f5c518; -webkit-text-stroke: .2em #2a1a10; paint-order: stroke fill; }
@@ -43,7 +42,9 @@ html.to-jocs #games-menu::backdrop { background: #000; }
 #games-grid .sel-card-name { display: block; font-size: clamp(15px, calc(var(--row) * .075), 28px); line-height: 1.05; color: var(--game); text-shadow: 0 1px 2px #0008; white-space: normal; }
 #games-grid .game-desc { display: none; }
 /* each game's own colour, the same as the second word of its logo; the new ones are provisional */
-.game-card[data-game="tap"] { --game: #ffd23f; } .game-card[data-game="pica"] { --game: #ff7ac6; } .game-card[data-game="memory"] { --game: #6ec8ff; } .game-card[data-game="crush"] { --game: #8be04e; } .game-card[data-game="murdoku"] { --game: #ff9f45; } .game-card[data-game="alquimia"] { --game: #e58bff; } .game-card[data-game="suika"] { --game: #f7b267; } .game-card[data-game="corre"] { --game: #ff6b5e; } .game-card[data-game="subara"] { --game: #3fe0c5; } .game-card[data-game="lliure"] { --game: #c9a0ff; }
+.game-card[data-game="tap"] { --game: #ffd23f; } .game-card[data-game="pop"] { --game: #ff7ac6; } .game-card[data-game="aviat-1"] { --game: #6ec8ff; } .game-card[data-game="aviat-2"] { --game: #8be04e; } .game-card[data-game="aviat-3"] { --game: #f7b267; } /* the next games' own colours: Memory, Crush, Drop */
+#games-hero.soon .game-play { visibility: hidden; }
+#games-grid .game-card[data-soon] .por img { object-position: top; } /* its «?» floats at the top of the picture */
 
 /* a phone's hero is narrow: the picture becomes its background, the text stands on it */
 @media (max-width: 700px) {
@@ -55,10 +56,9 @@ html.to-jocs #games-menu::backdrop { background: #000; }
 
 /* a big screen: one grid of margins for the logo, the ×, the hero's two columns and the row; every card shows at once */
 @media (min-width: 701px) {
-  #games-menu { --m: max(32px, 5vw); --gap: 16px; --top: 128px; --logo: 220px; --bottom: 16px; }
-  #games-menu #games-title { top: 28px; left: var(--m); }
+  #games-menu { --m: max(32px, 5vw); --gap: 16px; --top: 128px; --logo: clamp(240px, 21vw, 380px); --bottom: 16px; }
+  #games-menu #games-title { top: clamp(28px, 7dvh, 72px); left: var(--m); }
   #games-menu #games-title .games-logo { width: var(--logo); }
-  #games-menu .sheet-x { top: 36px; right: var(--m); }
   /* the row ends on the same margins as everything else: five cards share its width, the ring has room above and below */
   #games-menu #games-hero { bottom: calc(var(--row) + var(--bottom)); }
   #games-menu #games-grid { bottom: var(--bottom); padding: 0 var(--m); gap: var(--gap); scroll-snap-type: x mandatory; scroll-padding-inline: var(--m); }
@@ -68,8 +68,8 @@ html.to-jocs #games-menu::backdrop { background: #000; }
   #games-menu #games-grid .game-card .nb { padding: 60px 16px 20px; background: linear-gradient(#0000, color-mix(in srgb, var(--game) 26%, #120b07) calc(60px - 20px)); }
   /* the text column runs up to the picture; the name keeps one line and «Juga» follows it, read as one; the block is anchored
      at the bottom, so «Juga» keeps its height whatever the game */
-  #games-menu { --art-w: calc((100dvh - var(--row) - var(--bottom) - var(--top) - 32px) * .8); }
-  #games-menu #games-hero-text { left: var(--m); right: calc(var(--m) + var(--art-w) + 48px); top: var(--top); bottom: 32px; max-width: none;
+  #games-menu { --art-w: calc((100dvh - var(--row) - var(--bottom)) * .8); }
+  #games-menu #games-hero-text { left: var(--m); right: calc(var(--art-w) * .6); top: var(--top); bottom: 32px; max-width: none;
     grid-template-columns: auto auto; justify-content: start; align-content: end; align-items: center; column-gap: 32px; row-gap: 12px; }
   /* the longest name («Mulassa Tap Tap Dance», ~10.6 em) and «Juga» share the column: one size for every game that fits it;
      a short window (9dvh) keeps the title clear of the logo */
@@ -81,6 +81,10 @@ html.to-jocs #games-menu::backdrop { background: #000; }
   #games-menu { --play-w: clamp(170px, 14vw, 240px); }
   #games-menu .game-play { min-width: var(--play-w); height: clamp(60px, 5vw, 84px); margin-top: 16px; padding: 0 1.45em 0 1.15em; gap: .45em; border-radius: 42px; font-size: clamp(24px, 2.1vw, 36px); box-shadow: 0 6px 0 color-mix(in srgb, var(--game) 55%, #120b07); }
 
-  /* the text centred against the picture */
-  #games-menu #games-hero-art { top: var(--top); bottom: 32px; right: var(--m); height: calc(100% - var(--top) - 32px); }
+  /* no blurred copy of the picture: a plain wash of the game's colour, so the eye rests on the sharp picture */
+  #games-menu #games-hero-back { display: none; }
+  #games-menu #games-hero { background: radial-gradient(120% 140% at 85% 30%, color-mix(in srgb, var(--game) 22%, #120b07), #120b07 70%); }
+  /* the picture stands at the right at the hero's full height, no frame: it melts into the backdrop on its left and at the bottom */
+  #games-menu #games-hero-art { top: 0; bottom: auto; right: 0; height: 100%; width: auto; max-width: 100%; aspect-ratio: auto; object-fit: cover; object-position: center; border-radius: 0; box-shadow: none;
+    -webkit-mask-image: linear-gradient(90deg, #0000, #000 40%), linear-gradient(#000 75%, #0000); -webkit-mask-composite: source-in; mask-image: linear-gradient(90deg, #0000, #000 40%), linear-gradient(#000 75%, #0000); mask-composite: intersect; }
 }

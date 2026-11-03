@@ -31,37 +31,9 @@ https://beta.mulassa.cat/*
 /jocs/index.html
   Cache-Control: no-cache
 
-/jocs/memory/
+/pop/
   Cache-Control: no-cache
-/jocs/memory/index.html
-  Cache-Control: no-cache
-/jocs/corre/
-  Cache-Control: no-cache
-/jocs/corre/index.html
-  Cache-Control: no-cache
-/jocs/pica/
-  Cache-Control: no-cache
-/jocs/pica/index.html
-  Cache-Control: no-cache
-/jocs/crush/
-  Cache-Control: no-cache
-/jocs/crush/index.html
-  Cache-Control: no-cache
-/jocs/murdoku/
-  Cache-Control: no-cache
-/jocs/murdoku/index.html
-  Cache-Control: no-cache
-/jocs/suika/
-  Cache-Control: no-cache
-/jocs/suika/index.html
-  Cache-Control: no-cache
-/jocs/subara/
-  Cache-Control: no-cache
-/jocs/subara/index.html
-  Cache-Control: no-cache
-/jocs/alquimia/
-  Cache-Control: no-cache
-/jocs/alquimia/index.html
+/pop/index.html
   Cache-Control: no-cache
 
 /index.md

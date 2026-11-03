@@ -537,3 +537,28 @@ console.log('podium discs ok');
   menu.close();
 }
 console.log('badge pencil ribbon ok');
+
+// back from the badge sheet: the sheet as it was (no statistics reload: the spinner and the bar would shift it), unless they never arrived
+{
+  const f = fakeDoc(['account-menu', 'account-close', 'account-stats', 'account-status', 'account-since', 'account-empty', 'account-join', 'account-previous', 'account-previous-list', 'profile-row', 'stats-notice-menu', 'stats-notice-ok', 'stats-notice-close', 'stats-notice-hall']);
+  const mem = new Map(), store = { get: k => mem.get(k) ?? null, set: (k, v) => mem.set(k, v), remove: k => mem.delete(k) };
+  const server = { buckets: { 'mulassa-valls/mulassa-v3/1': bucket({ runs: 40, completed: 40, perfect: 4000, good: 100, miss: 100 }) }, days: ['2026-10-19'], daysPlayed: 1, currentStreak: 1, longestStreak: 1 };
+  let asked = 0, refreshed = 0, badgeBack = null;
+  const svc = service({ ownerId: async () => 'u1', myStats: async () => { asked++; return server; } });
+  const acc = setupAccount({ focusIn() {}, profile: { refresh() { refreshed++; }, open() {}, forget() {}, isOpen: false }, badges: { open(back) { badgeBack = back; } }, service: svc, store, doc: f.doc, now: () => NOW, stats: { noticeNeeded: () => false, acceptNotice() {} } });
+  const toBadge = () => f.$('profile-row').fire('click', { target: { closest: () => ({ dataset: { act: 'badge' } }) } });
+  setStatsOwner('u1');
+  acc.open(); for (let i = 0; i < 6; i++) await tick();
+  assert(asked === 1 && /40 balls/.test(f.$('account-stats').textContent));
+  toBadge(); assert(!f.$('account-menu').open && badgeBack, 'the badge sheet takes its place');
+  badgeBack(); for (let i = 0; i < 6; i++) await tick();
+  assert(f.$('account-menu').open && refreshed === 2, 'back: the profile block (its new badge) refreshes');
+  assert(asked === 1 && f.$('account-status').hidden && /40 balls/.test(f.$('account-stats').textContent), 'but the statistics stay, no loading line');
+  f.$('account-close').click();
+  // left before the answer: closing dropped it (before it reached the server), so the return asks again
+  acc.open(); toBadge(); badgeBack(); for (let i = 0; i < 6; i++) await tick();
+  assert(asked === 2 && f.$('account-status').hidden && /40 balls/.test(f.$('account-stats').textContent), 'still loading when it left: loaded on the way back');
+  setStatsOwner(null);
+  f.$('account-close').click();
+}
+console.log('badge return keeps the statistics ok');

@@ -83,14 +83,15 @@ export function setupAccount({ focusIn, profile, badges, service, store, stats, 
     if (all.runs < d.runs) return; // not sent yet (the notice, offline): this device knows more
     paint({ ...all, daysPlayed: server.daysPlayed, streak: server.currentStreak ?? all.streak, bestStreak: server.longestStreak ?? all.bestStreak }, mine.since);
   }
-  function open(onBack = null) {
+  // resume: back from the badge sheet, which changes no statistic; reloading them would blink the spinner and shift the sheet
+  function open(onBack = null, { resume = false } = {}) {
     if (menu.open) return;
     back = onBack;
     menu.showModal();
     focusIn(menu, 'account-close');
-    menu.querySelector?.('.sheet-body')?.scrollTo?.(0, 0);
+    if (!resume) menu.querySelector?.('.sheet-body')?.scrollTo?.(0, 0);
     Promise.resolve(profile.refresh()).then(pointAtBadge);
-    load();
+    if (!resume || shown?.[2]) load(); // still loading (or failed) when it left: closing dropped that answer
   }
   // The heart's red ribbon under the name's pencil, once ever: the mark is what changes the badge, and nothing says so.
   function pointAtBadge() {
@@ -113,7 +114,7 @@ export function setupAccount({ focusIn, profile, badges, service, store, stats, 
     if (!act) return;
     if (act === 'forget') { profile.forget(); return; }
     const b = leave();
-    if (act === 'badge') badges.open(() => open(b)); else profile.open(act, () => open(b));
+    if (act === 'badge') badges.open(() => open(b, { resume: true })); else profile.open(act, () => open(b));
   });
   $('account-close').addEventListener('click', () => menu.close());
   menu.addEventListener('close', () => { req++; const b = back; back = null; b?.(); });

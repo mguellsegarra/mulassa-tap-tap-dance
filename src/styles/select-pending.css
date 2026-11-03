@@ -189,7 +189,8 @@
 /* The 75% zoom below: the buttons still reach 44 px on screen. */
 @media (min-width: 1100px) and (max-width: 1279px) and (min-height: 600px) and (max-height: 799px) and (pointer: fine) { .sel-pending { --island-btn: 59px; } }
 @media (max-width: 340px), (max-width: 519px) and (max-height: 759px) {
-  .sel-pending { --island-pad: 8px 12px; --island-r: 12px; --island-gap: 8px; --island-btn: 44px; --pending-max: calc(100% - var(--pending-top) - var(--pending-bottom, 254px) + 8px); } /* short phones spend 4 px of each outer gap on reading room */
+  .sel-pending { --island-pad: clamp(8px, (100dvh - 600px) / 8, 16px) 12px; --island-r: 12px; --island-gap: 8px; --island-btn: 44px; --pending-max: calc(100% - var(--pending-top) - var(--pending-bottom, 254px) + 8px); } /* short phones spend 4 px of each outer gap on reading room */
+  /* the padding grows with the height: 8 px where the card barely fits (≤ 664 px), the tall phones' 16 px from 728 px, so a 740 px iPhone isn't tight in a half-empty plaça */
   .sel-pending { --title-size: 21px; --entity-reserve: 44px; }
   .sel-pending .sel-entity { font-size: 11px; line-height: 14px; }
   .sel-pending .sel-entity-part { min-height: 20px; padding: 2px 6px; }

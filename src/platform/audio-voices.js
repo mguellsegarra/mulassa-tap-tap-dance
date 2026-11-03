@@ -79,7 +79,7 @@ export const VOICES = {
   },
 
   sfx(kind, i = 0, manual = false, weight = 1) { // manual: explicit free-mode action, independent of the music choice; i: a petard's index, a landing's speed
-    if (this.menuToken && this.menuMusic === false && !manual) return; // discard muted demo/UI events; never replay on enable / play
+    if (this.menuToken && this.menuMusic === false && !manual && kind !== 'menu') return; // discard muted demo events (UI clicks still sound, over the other app's audio); never replay on enable / play
     if (this.ctx.state && this.ctx.state !== 'running') return; // an immediate effect cannot be queued for a future wake
     if (typeof document !== 'undefined' && (document.hidden || !document.hasFocus())) return;
     const t = this.ctx.currentTime;

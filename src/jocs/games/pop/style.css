@@ -209,10 +209,6 @@ body.tablet #rotate .r-tablet { display: inline; }
 body.tablet #rotate .r-phone { display: none; }
 body.tablet #rotate .ph { animation-direction: reverse; }
 body.tablet #rotate .arr { transform: scaleX(-1); }
-@keyframes rotate-hint { 0%, 30% { transform: rotate(-90deg); } 60%, 100% { transform: rotate(0); } }
-@media (prefers-reduced-motion: reduce) { #rotate .ph { animation: none; } }
-
-/* The running Mulassa, from the other game's index.html */
 /* the same rule from the first paint, before orientation.js runs: a sideways phone, or an upright tablet (only a tablet is 600 px wide upright) */
 @media (pointer: coarse) and (orientation: landscape) and (max-height: 599px) { body:not(.tablet) #rotate { display: flex; } }
 @media (pointer: coarse) and (orientation: portrait) and (min-width: 600px) {
@@ -222,6 +218,10 @@ body.tablet #rotate .arr { transform: scaleX(-1); }
   body:not(.tablet) #rotate .ph { animation-direction: reverse; }
   body:not(.tablet) #rotate .arr { transform: scaleX(-1); }
 }
+@keyframes rotate-hint { 0%, 30% { transform: rotate(-90deg); } 60%, 100% { transform: rotate(0); } }
+@media (prefers-reduced-motion: reduce) { #rotate .ph { animation: none; } }
+
+/* The running Mulassa, from the other game's index.html */
 .mula-load{display:block;width:100%;height:100%;overflow:visible}.mula-load *{transform-box:view-box}
 /* The full figure: HTML layers, each the whole 220×168 box (origins and moves in % of it); the mini head stays one SVG. */
 div.mula-load{display:flex;align-items:center;justify-content:center;container-type:size}

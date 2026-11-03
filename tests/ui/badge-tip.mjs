@@ -7,7 +7,7 @@ import { setupBadgeTip } from '../../src/ui/badge-tip.js';
 const listeners = {}, rect = (left, top, w, h) => ({ left, top, right: left + w, bottom: top + h, width: w, height: h });
 function el(cls, r, parent = null, tag = 'span') {
   const e = { cls, tag, r, parentElement: parent, dataset: {}, style: { setProperty() {} }, classList: { remove() {}, toggle() {} }, setAttribute() {},
-    getBoundingClientRect: () => e.r, matches: s => s.split(',').some(x => x.trim() === `.${cls}`),
+    getBoundingClientRect: () => e.r, querySelector: () => null, matches: s => s.split(',').some(x => x.trim() === `.${cls}`),
     closest(s) { for (let n = e; n; n = n.parentElement) if (s.split(',').some(x => { x = x.trim(); return x === n.tag || x === `.${n.cls}` || (x === '.player-badge[data-tip]' && n.cls === 'player-badge' && n.dataset.tip); })) return n; return null; },
     contains: o => { for (let n = o; n; n = n.parentElement) if (n === e) return true; return false; } };
   return e;

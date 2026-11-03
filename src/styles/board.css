@@ -155,12 +155,13 @@ dialog p, #results-actions .btn { overflow-wrap: break-word; }
 .verified-check svg { width: 100%; height: 100%; fill: #3b9cff; stroke: #fff; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
 .verified-check svg .seal { stroke: none; }
 /* the badge a confirmed player chose (src/ui/player-badges.js), in the check's slot; its own class: the check's rule would repaint the art */
-.player-badge { flex: none; display: inline-grid; place-items: center; width: 16px; height: 16px; --jester: #fff3d6; }
+/* a tall mark (the UAF's flame, the campanar) starts at the box's left, as close to the name as the square ones; the box stays 16 px (badge-tip.js measures it) */
+.player-badge { flex: none; display: inline-grid; place-items: center start; width: 16px; height: 16px; --jester: #fff3d6; }
 /* over the name's invisible tap pad (profile.css; the whole row in the selector's standings): a tap there is the badge's (badge-tip.js) */
 .player-badge[data-tip] { position: relative; z-index: 1; cursor: pointer; }
 /* a finger's target of its own, ~40 px, so iOS aims its tap (and its click) at the badge, not at the name or the row */
 @media (pointer: coarse) { .player-badge[data-tip]::after { content: ""; position: absolute; inset: -12px -12px -12px -6px; } }
-.player-badge svg { display: block; width: 100%; height: 100%; }
+.player-badge svg { display: block; width: auto; max-width: 100%; height: 100%; }
 /* the badge's name over it (src/ui/badge-tip.js): a manual popover, so the UA's centred box is undone */
 .badge-tip { position: fixed; inset: auto; margin: 0; overflow: visible; box-sizing: border-box; max-width: calc(100vw - 16px); padding: 4px 10px; border: 1.5px solid #9b7b11; border-radius: 8px; background: #140c07; box-shadow: 0 4px 12px #0009; color: #fff3d6; font: 800 13px/1.2 'Baloo 2', system-ui, sans-serif; white-space: nowrap; pointer-events: none; animation: badge-tip-in .14s ease-out; }
 /* the tail: a turned square of the label's own fill and border (opaque: #f5c518 at 60% on the fill), its top half over the label's edge */
@@ -169,7 +170,8 @@ dialog p, #results-actions .btn { overflow-wrap: break-word; }
 @keyframes badge-tip-in { from { opacity: 0; translate: 0 3px; } }
 @media (prefers-reduced-motion: reduce) { .badge-tip { animation: none; } }
 .player-badge svg, .badge-cell > svg { stroke: none; } /* a button's svg inherits the icons' line */
-svg.badge-flame { fill: #e73449; }
+svg.badge-flame { fill: #e73449; } /* .player-badge svg.badge-flame below: the flame's full 16 px ran past the capitals' ink, the other marks' height */
+.player-badge svg.badge-flame { height: 80%; }
 /* Baloo's capitals sit above its line box's middle: the mark follows the letters' ink, not the box (a share of the font size, so at every size) */
 .who > :is(.verified-check, .player-badge), .badge-edit > :is(.verified-check, .player-badge), .badge-cell.wide .verified-check { translate: 0 -.05em; }
 .board-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 0 16px; }

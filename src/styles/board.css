@@ -156,6 +156,10 @@ dialog p, #results-actions .btn { overflow-wrap: break-word; }
 .verified-check svg .seal { stroke: none; }
 /* the badge a confirmed player chose (src/ui/player-badges.js), in the check's slot; its own class: the check's rule would repaint the art */
 .player-badge { flex: none; display: inline-grid; place-items: center; width: 16px; height: 16px; --jester: #fff3d6; }
+/* over the name's invisible tap pad (profile.css; the whole row in the selector's standings): a tap there is the badge's (badge-tip.js) */
+.player-badge[data-tip] { position: relative; z-index: 1; cursor: pointer; }
+/* a finger's target of its own, ~40 px, so iOS aims its tap (and its click) at the badge, not at the name or the row */
+@media (pointer: coarse) { .player-badge[data-tip]::after { content: ""; position: absolute; inset: -12px -12px -12px -6px; } }
 .player-badge svg { display: block; width: 100%; height: 100%; }
 /* the badge's name over it (src/ui/badge-tip.js): a manual popover, so the UA's centred box is undone */
 .badge-tip { position: fixed; inset: auto; margin: 0; overflow: visible; box-sizing: border-box; max-width: calc(100vw - 16px); padding: 4px 10px; border: 1.5px solid #9b7b11; border-radius: 8px; background: #140c07; box-shadow: 0 4px 12px #0009; color: #fff3d6; font: 800 13px/1.2 'Baloo 2', system-ui, sans-serif; white-space: nowrap; pointer-events: none; animation: badge-tip-in .14s ease-out; }

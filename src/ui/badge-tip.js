@@ -50,7 +50,8 @@ export function setupBadgeTip({ doc = document, win = globalThis } = {}) {
   doc.addEventListener('pointerout', e => { if (e.pointerType === 'mouse' && on && !on.contains(e.relatedTarget)) hide(); });
   doc.addEventListener('pointerdown', e => { pressed = e.pointerType; }, true);
   doc.addEventListener('click', e => {
-    const finger = /^(touch|pen)$/.test(e.pointerType || pressed); // unknown: a mouse, so a near miss never takes a click
+    // the press first: WebKit's click after a tap says 'mouse'; nothing known: a mouse, so a near miss never takes a click
+    const finger = /^(touch|pen)$/.test(pressed || e.pointerType);
     const m = markOf(e.target) ?? (finger && e.detail ? nearMark(e) : null); // detail 0: a key, not a finger
     if (!m || m.closest('button')) { if (on) hide(); return; }
     e.preventDefault(); e.stopPropagation(); // capture: the row's own click (open the card) never hears it

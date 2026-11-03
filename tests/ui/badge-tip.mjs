@@ -73,6 +73,7 @@ assert.deepEqual(tap(row, 100, 35, { pointerType: 'mouse' }), { tip: null, heard
 const press = pointerType => { for (const f of listeners.pointerdown ?? []) f({ pointerType }); };
 press('mouse'); assert.deepEqual(tap(row, 100, 35, { pointerType: '' }), { tip: null, heard: true }, 'a mouse near the mark: the row\'s click (the card opens)');
 press('touch'); assert.deepEqual(tap(row, 100, 35, { pointerType: '' }), { tip: 'Valls', heard: false }, 'a finger near it: the mark\'s'); reset();
+press('touch'); assert.deepEqual(tap(row, 100, 35, { pointerType: 'mouse' }), { tip: 'Valls', heard: false }, 'WebKit\'s click after a tap says mouse: the press counts'); reset();
 const canvas = el('hud', rect(0, 0, 400, 400), null, 'canvas');
 assert.deepEqual(tap(canvas, 100, 35), { tip: null, heard: true }, 'a tap on the game canvas looks for no mark');
 console.log('badge tip ok');

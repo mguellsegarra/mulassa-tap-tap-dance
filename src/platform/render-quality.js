@@ -107,6 +107,8 @@ const EARLY = { until: 15000, window: 2000, share: 0.3 };
 // don't count as slow. Cadence alone cannot distinguish a power cap from a busy GPU; only missed refreshes
 // or repeated hitches justify removing detail, never an otherwise steady 30 Hz. A 120 Hz iPhone in Low Power Mode also
 // spends seconds at 24 Hz (41.7 ms, its CPU at ~10 ms a frame): the same cap, and a 60 Hz screen never misses into it (33, 50 ms).
+// shortcut: a 120/144 Hz screen whose GPU steadily manages only ~24 fps reads the same and keeps its level; tell them apart
+// (e.g. by the screen's refresh) if such a device shows up in reports.
 const CAP = { lo: 29, hi: 44, run: 12 };
 export function frameMonitor(onSlow) {
   let elapsed = 0, samples = 0, slow = 0, late = 0, warmup = 2000, clock = 0, n = 0, spiky = false; // late: capped frames a refresh past their slot

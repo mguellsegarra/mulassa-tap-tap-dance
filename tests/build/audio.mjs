@@ -606,6 +606,16 @@ console.log('leaving a run silences everything it queued ok');
     assert.equal(calls.length, 2, 'staying on playback never restarts the context');
     c.endRun(); await Promise.resolve();
     assert.equal(calls.length, 2, 'back to ambient: no restart');
+    // the restart is two steps: a mute while the suspend is pending must not bring the context back
+    let done;
+    c.ctx.suspend = () => { calls.push('suspend'); return new Promise(r => { done = r; }); };
+    c.beginRun(); c.endRun(); done(); await new Promise(r => setTimeout(r));
+    assert.deepEqual(calls.slice(2), ['suspend'], 'back to ambient before the suspend resolved: no resume');
+    c.ctx.suspend = () => { calls.push('suspend'); return Promise.reject(new Error('refused')); };
+    c.beginRun(); await new Promise(r => setTimeout(r));
+    assert.equal(calls.at(-1), 'resume', 'a refused suspend still resumes, without an unhandled rejection');
+    c.endRun(); calls.length = 2;
+    c.ctx.suspend = () => { calls.push('suspend'); return Promise.resolve(); };
     // an iPhone paused the podcast under 'ambient' too, as soon as the context ran: a silent menu keeps it stopped
     c.ctx.state = 'suspended';
     assert.equal(await c.resume(), false, 'a silent menu refuses to resume');

@@ -10,8 +10,10 @@ export const AUDIO_SESSION = {
     if (!as || as.type === type) return;
     try { as.type = type; } catch { return; } // older iOS
     // iOS: a running context keeps its 'ambient' route until it restarts (unlocked, no gesture needed): else the ringer
-    // switch still mutes it while the other app pauses
-    if (type === 'playback' && this.ctx?.state === 'running') this.ctx.suspend().then(() => this.ctx.resume());
+    // switch still mutes it while the other app pauses. Back only if nothing gave up playback meanwhile (a mute, a hidden
+    // page); a refused suspend still goes through resume(), which reports its own failure
+    const back = () => as.type === 'playback' && this.resume();
+    if (type === 'playback' && this.ctx?.state === 'running') this.ctx.suspend().then(back, back);
   },
   // iOS pauses the other app's audio while a context runs, even as 'ambient' (an iPhone, 1.2.10): a silent menu stays stopped
   silentMenu() { return !!globalThis.navigator?.audioSession && this.menuMusic === false && !this.bus && !this.free; },

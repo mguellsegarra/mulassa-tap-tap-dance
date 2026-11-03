@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ca">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Llibre de descobertes · propostes A–D</title>
+<!-- Review page, outside the game UI. Each panel is a real iframe of book.html at a phone viewport. -->
+<style>
+  body { margin: 0; padding: 16px; background: #1b1420; color: #fff2d5; font: 600 15px/1.35 system-ui, sans-serif; }
+  h1 { margin: 0 0 4px; font-size: 20px; }
+  .bar { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 16px; }
+  .bar button { padding: 6px 14px; border: 0; border-radius: 999px; font: inherit; color: #fff2d5; background: #4c3a5a; cursor: pointer; }
+  .bar button.on { color: #3a2008; background: #f5c518; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(var(--w), 1fr)); gap: 24px 16px; justify-items: center; }
+  figure { margin: 0; display: flex; flex-direction: column; gap: 8px; width: var(--w); }
+  figcaption b { display: block; font-size: 17px; color: #f5c518; }
+  figcaption a { color: #e3bf62; font-size: 13px; }
+  iframe { width: var(--w); height: var(--h); border: 0; border-radius: 12px; background: #0c0812; box-shadow: 0 0 0 2px #4c3a5a; }
+</style>
+</head>
+<body>
+<h1>Llibre de descobertes — propostes A–D</h1>
+<p>Prototip; no és el joc. Mateix contingut a cada panell: Foc i Aigua (sortida), Vapor, Carbó (sense curiositat) i Muntanya.</p>
+<div class="bar"><button data-s="320x568">320 × 568</button><button data-s="375x667" class="on">375 × 667</button><button data-s="393x852">393 × 852</button><button data-s="1280x800">1280 × 800</button></div>
+<div class="grid"></div>
+<script>
+const P = [
+  ['0', 'Actual', 'El que hi ha ara al joc, com a referència.'],
+  ['A', 'A · Metadada discreta', 'Recepta al costat del nom, més petita i clara; el nom en vermell; la curiositat és el text principal.'],
+  ['B', 'B · Curiositat en requadre', 'Nom i recepta al costat de la icona; la curiositat a sota, en una targeta més clara a tota l’amplada.'],
+  ['C', 'C · Bloc editorial', 'Filet vermell al marge i etiqueta «Sabies que...» davant la curiositat, a tota l’amplada.'],
+  ['D', 'D · Recepta en xip', 'La recepta passa a ser un xip amb les mini icones reals; la curiositat, prosa a tota l’amplada.'],
+];
+const grid = document.querySelector('.grid');
+const show = s => {
+  const [w, h] = s.split('x').map(Number), k = w > 500 ? .5 : 1;
+  document.querySelectorAll('.bar button').forEach(b => b.classList.toggle('on', b.dataset.s === s));
+  grid.style.setProperty('--w', `${w * k}px`); grid.style.setProperty('--h', `${h * k}px`);
+  grid.innerHTML = P.map(([v, t, d]) => `<figure><figcaption><b>${t}</b>${d} <a href="book.html?v=${v}" target="_blank">obre sol</a></figcaption>
+    <iframe src="book.html?v=${v}" style="${k < 1 ? `width:${w}px;height:${h}px;transform:scale(${k});transform-origin:0 0;margin:0 ${-w * k}px ${-h * k}px 0` : ''}"></iframe></figure>`).join('');
+};
+document.querySelector('.bar').onclick = e => e.target.dataset.s && show(e.target.dataset.s);
+show(new URLSearchParams(location.search).get('s') || '375x667');
+</script>
+</body>
+</html>

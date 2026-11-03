@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="ca">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Prototip llibre · Alchemy</title>
+<!-- PROTOTYPE ONLY: the live book is src/jocs/games/alquimia/game.js showBook. Real stylesheet, real COPY, real icons. -->
+<link rel="stylesheet" href="/src/jocs/games/alquimia/style.css">
+<link rel="stylesheet" href="./proposals.css">
+</head>
+<body>
+<div class="alq"><div class="overlay alq-overlay"></div></div>
+<script type="module">
+import { COPY } from '/src/jocs/games/alquimia/copy.js';
+import { BASE, RECIPES } from '/src/jocs/games/alquimia/recipes.js';
+import { iconHtml } from '/src/jocs/games/alquimia/icons.js';
+
+const T = COPY.alquimia, v = new URLSearchParams(location.search).get('v') || '0';
+const nameOf = id => T.items[id].name, factOf = id => T.items[id].fact;
+const orb = id => `<span class="orb">${iconHtml(id)}</span>`;
+const pair = id => RECIPES.find(r => r[2] === id)?.slice(0, 2) ?? null; // same rule as rules.js ingredientsOf
+const recipeText = id => { const r = pair(id); return r ? `${nameOf(r[0])} + ${nameOf(r[1])}` : T.base; };
+const ALL = new Set([...BASE, ...RECIPES.map(r => r[2])]);
+const found = ['foc', 'aigua', 'vapor', 'carbo', 'muntanya']; // same content in every proposal; Carbó has no fact
+
+// Label text: EXACT Codex-provided option only. // i18n-ok: Catalan-only game
+const SABIES = 'Sabies que...'; // i18n-ok: Catalan-only game
+
+const chips = id => {
+  const r = pair(id);
+  return r ? `<span class="chip">${r.map(i => `<span class="mini">${iconHtml(i)}</span>${nameOf(i)}`).join('<em>+</em>')}</span>`
+    : `<span class="chip base">${T.base}</span>`;
+};
+
+const entry = {
+  // Current live markup.
+  0: id => `<div class="alq-entry">${orb(id)}<div><strong>${nameOf(id)}</strong><small>${recipeText(id)}</small>${factOf(id) ? `<p>${factOf(id)}</p>` : ''}</div></div>`,
+  // A: name and recipe share one quiet header line; the fact is the body text.
+  A: id => `<div class="alq-entry">${orb(id)}<div><div class="head"><strong>${nameOf(id)}</strong><small>${recipeText(id)}</small></div>${factOf(id) ? `<p>${factOf(id)}</p>` : ''}</div></div>`,
+  // B: header beside the icon; the fact in its own lighter inset card across the full width.
+  B: id => `<div class="alq-entry">${orb(id)}<div><strong>${nameOf(id)}</strong><small>${recipeText(id)}</small></div>${factOf(id) ? `<p class="fact">${factOf(id)}</p>` : ''}</div>`,
+  // C: editorial block: red label and margin rule in front of the fact.
+  C: id => `<div class="alq-entry">${orb(id)}<div><strong>${nameOf(id)}</strong><small>${recipeText(id)}</small></div>${factOf(id) ? `<div class="fact"><b>${SABIES}</b><p>${factOf(id)}</p></div>` : ''}</div>`,
+  // D: recipe as a chip with the real mini icons; the fact as plain prose under the header.
+  D: id => `<div class="alq-entry">${orb(id)}<div><strong>${nameOf(id)}</strong>${chips(id)}</div>${factOf(id) ? `<p class="fact">${factOf(id)}</p>` : ''}</div>`,
+}[v];
+
+document.querySelector('.alq-overlay').innerHTML = `<div class="alq-sheet" data-v="${v}"><h2>${T.book}</h2><div class="alq-list">${found.map(entry).join('')}</div>
+  <p class="alq-missing">${T.missing(ALL.size - found.length)}</p>
+  <div class="alq-actions"><button class="alq-btn alt">${T.reset}</button><button class="alq-btn">${T.go}</button></div></div>`;
+</script>
+</body>
+</html>

@@ -1,0 +1,32 @@
+/* PROTOTYPE ONLY. Each proposal is scoped by data-v; the live rules in style.css stay underneath. */
+
+/* A — quieter metadata: recipe beside the name, lighter and smaller; the fact gets air and a softer weight-free contrast via size + line height. */
+[data-v="A"] .alq-entry { align-items: start; }
+[data-v="A"] .head { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 8px; }
+[data-v="A"] .alq-entry strong { font-size: 18px; color: #7a2a18; }
+[data-v="A"] .alq-entry small { font-size: 14px; color: #8a6a46; }
+[data-v="A"] .alq-entry p { margin-top: 4px; font-size: 15px; line-height: 1.35; color: #33210f; }
+
+/* B — inset: name + recipe beside the icon, the fact below in a lighter card across the whole entry. */
+[data-v="B"] .alq-entry { row-gap: 8px; padding: 10px 4px 12px; }
+[data-v="B"] .alq-entry strong { font-size: 18px; }
+[data-v="B"] .alq-entry small { color: #8a6a46; }
+[data-v="B"] .fact { grid-column: 1 / -1; margin: 0; padding: 8px 12px; border-radius: 10px; font-size: 15px; line-height: 1.35; background: #f8ecd0; box-shadow: inset 0 0 0 1px rgba(138, 106, 44, .35), inset 0 1px 4px rgba(122, 74, 16, .18); }
+
+/* C — editorial: a red margin rule and the "Sabies que..." label start the fact, full width under the header. */
+[data-v="C"] .alq-entry { row-gap: 8px; padding: 10px 4px 12px; }
+[data-v="C"] .alq-entry strong { font-size: 18px; }
+[data-v="C"] .alq-entry small { color: #8a6a46; }
+[data-v="C"] .fact { grid-column: 1 / -1; padding: 0 0 0 12px; border-left: 3px solid #b0482c; }
+[data-v="C"] .fact b { display: block; font-size: 14px; font-weight: 800; color: #9a3a1e; }
+[data-v="C"] .fact p { margin: 0; font-size: 15px; line-height: 1.35; }
+
+/* D — compact header: the recipe becomes a chip with the ingredients' own mini icons; the fact reads as prose below. */
+[data-v="D"] .alq-entry { row-gap: 8px; padding: 10px 4px 12px; }
+[data-v="D"] .alq-entry strong { font-size: 18px; line-height: 1.15; }
+[data-v="D"] .chip { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 2px 4px; margin-top: 4px; padding: 2px 10px 2px 4px; border-radius: 999px; font-size: 14px; color: #5a3a1c; background: rgba(90, 55, 28, .12); }
+[data-v="D"] .chip.base { padding: 2px 10px; }
+[data-v="D"] .chip em { font-style: normal; color: #8a6a46; }
+[data-v="D"] .mini { width: 22px; height: 22px; padding: 2px; border-radius: 50%; background: radial-gradient(circle at 35% 28%, #5d4a70, #241b2c 72%); }
+[data-v="D"] .mini img { width: 100%; height: 100%; display: block; object-fit: contain; }
+[data-v="D"] .fact { grid-column: 1 / -1; margin: 0; font-size: 15px; line-height: 1.35; }

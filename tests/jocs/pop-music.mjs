@@ -88,3 +88,19 @@ test('the tempo follows the level it is given, gliding, and the bell slows it', 
   tune.advance(40);
   assert.ok(Math.abs(60 / tune.take().at(-1).spb - bpmFor(200, true)) < 1e-9);
 });
+
+test('the bell drops the tempo at once and gives it back at once, then rises glide as before', () => {
+  const tune = createConductor(), bpms = () => tune.take().map(s => 60 / s.spb);
+  tune.setLevel(200, false);
+  tune.advance(20);
+  tune.take();
+  tune.setLevel(200, true);
+  tune.advance(20.5);
+  assert.ok(Math.abs(bpms().at(-1) - bpmFor(200, true)) < 1e-9, 'slow within half a second');
+  tune.setLevel(200, false);
+  tune.advance(21);
+  assert.ok(Math.abs(bpms().at(-1) - bpmFor(200)) < 1e-9, 'back up within half a second');
+  tune.setLevel(400, false); // a score rise, no bell: the slow glide again
+  tune.advance(21.5);
+  assert.ok(bpms().at(-1) < bpmFor(400) - 1, 'no jump on a score rise');
+});

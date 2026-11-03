@@ -25,6 +25,7 @@ export function createSequencer(ctx, out = ctx.destination) {
   const chordLog = [], noteLog = [];
   let lastChord = '';
   const levels = { bass: 0, kick: 0, shaker: 0, octave: 0 };
+  let half = false; // the bell's slow time: the beat goes half-time, so it sounds slower though the tempo only glides
 
   function voice(freq, t, dur, vol, type = 'sine', attack = .01) {
     const o = ctx.createOscillator(), g = ctx.createGain();
@@ -78,11 +79,11 @@ export function createSequencer(ctx, out = ctx.destination) {
       // gone before the next chord (the margin: the tempo may rise meanwhile), or two harmonies ring together and it sounds out of tune
       for (const pc of tones.slice(0, 3)) voice(hz(48 + pc), t, beats * spb * .9 - .02, .035, 'sine', Math.min(.12, beats * spb * .3)).pad = true;
     }
-    const onBeat = pos % 1 === 0, on2 = pos % 2 === 0;
-    if (on2 && levels.bass > 0) voice(hz(36 + tones[0]), t, spb * 1.4, .2 * levels.bass);
-    if (!on2 && onBeat && levels.bass > 0) voice(hz(48 + tones[1]), t, spb * .6, .05 * levels.bass); // the polka's "pah"
-    if (on2 && levels.kick > 0) kick(t, .22 * levels.kick);
-    if (!onBeat && levels.shaker > 0) shaker(t, .03 * levels.shaker);
+    const onBeat = pos % 1 === 0, on2 = pos % (half ? 4 : 2) === 0;
+    if (on2 && levels.bass > 0) voice(hz(36 + tones[0]), t, spb * (half ? 2.8 : 1.4), .2 * levels.bass);
+    if (!half && !on2 && onBeat && levels.bass > 0) voice(hz(48 + tones[1]), t, spb * .6, .05 * levels.bass); // the polka's "pah"
+    if (half ? pos % 4 === 0 : on2) kick(t, .22 * (half ? 1 : levels.kick)); // half-time keeps a slow kick even before the kick layer
+    if (!half && !onBeat && levels.shaker > 0) shaker(t, .03 * levels.shaker);
   }
 
   return {
@@ -92,6 +93,12 @@ export function createSequencer(ctx, out = ctx.destination) {
       for (const k in levels) levels[k] = 0;
     },
     gain(v) { master.gain.setTargetAtTime(v, ctx.currentTime, .05); },
+    // the bell's slow time: the music goes muffled and roomy at once (the tempo itself only glides, see conductor.js)
+    slow(on) {
+      half = on;
+      tone.frequency.setTargetAtTime(on ? 650 : 2600, ctx.currentTime, on ? .08 : .25);
+      wet.gain.setTargetAtTime(on ? .35 : .14, ctx.currentTime, .1);
+    },
     // Queue the conductor's steps; `at` turns a step's game time into audio time.
     play(steps, at) {
       for (const { t, spb, pos, score } of steps) {

@@ -1,18 +1,16 @@
 // The 3D board: every cell's figure as instances (one per rig pivot), its tile, the camera that fits the board on any screen, and the tap-to-cell picking.
 import * as THREE from 'three';
-import { FUSE, BOMB_FUSE, BURN, SPECIAL_LIFE } from './rules.js';
+import { FUSE, BOMB_FUSE, BURN } from './rules.js';
 import { MULA_POSES, DRAC_POSES, MULA_SCALE, MULA_YAW, DRAC_K, DRAC_YAW, poseMula, poseDrac, mulaRig, dracRig, bake, bakeMulassa, bakeDrac, rigParts, redScales, greenVelvet } from './rigs.js';
 import { buildPopPetard, buildPopCalcot, buildPopCampanar, buildPopCarretilla, buildFuseBit, buildSpark, PETARD_FUSE, PETARD_SPARK } from './models.js';
 import { createSparks } from './board-sparks.js';
+import { createTiles } from './board-tiles.js';
 import { createBlast } from './board-blast.js';
 import { drawPortraits } from './portraits.js';
 import { frameBoard, PITCH, PITCH_Z, FIG_H } from './board-framing.js';
 import { waitForWarmup, linkPrograms } from '../../../platform/boot.js';
 
-const JOINT = .06;
 const BOMB_K = .7; // the petard's size on its cell
-// The cells that light up, yellow to red as their time runs out: the traps too, so a lit cell is never a sure tap; the goodies stay on the board's own tiles.
-const LIT = { mula: FUSE, petard: BOMB_FUSE, mulaFalsa: SPECIAL_LIFE, dracFals: SPECIAL_LIFE };
 
 export function createBoard(canvas) {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
@@ -62,15 +60,12 @@ export function createBoard(canvas) {
   const FIGS = { drac: live(dracRig()), dracFals: live(dracRig(), redScales), mula: live(mulaRig()), mulaFalsa: live(mulaRig(), greenVelvet) };
   const allMeshes = [...Object.values(meshes), ...Object.values(FIGS).flatMap(f => f.parts.map(p => p.mesh))];
   const put = (m, matrix, color) => { m.setMatrixAt(m.count, matrix); m.setColorAt(m.count, color); m.count += 1; };
-  const tiles = new THREE.InstancedMesh(new THREE.BoxGeometry(PITCH - JOINT, .16, PITCH_Z - JOINT), new THREE.MeshLambertMaterial(), CELLS);
-  tiles.receiveShadow = true;
-  tiles.frustumCulled = false;
-  scene.add(tiles);
+  const { mesh: tiles, paint: paintTiles } = createTiles(scene, CELLS);
 
   const sparks = createSparks(scene), { burst: sparkBurst, flame, step: stepSparks } = sparks;
   const blast = createBlast(canvas, sparks, sky);
 
-  const dummy = new THREE.Object3D(), col = new THREE.Color(), hot = new THREE.Color(), bit = new THREE.Matrix4(), at = new THREE.Matrix4(), flick = new THREE.Vector3();
+  const dummy = new THREE.Object3D(), col = new THREE.Color(), bit = new THREE.Matrix4(), at = new THREE.Matrix4(), flick = new THREE.Vector3();
   let game = null, centres = [], screen = [], W = 1, H = 1, time = 0, trauma = 0, poses = [], seen = [], fireUntil = 0, burning = new Map();
   const camBase = new THREE.Vector3();
   const insets = { top: 68, bottom: 8 };
@@ -271,15 +266,7 @@ export function createBoard(canvas) {
       m.instanceMatrix.needsUpdate = true;
       if (m.instanceColor) m.instanceColor.needsUpdate = true;
     }
-    game.cells.forEach((c, i) => {
-      col.set((i + Math.floor(i / game.cols)) % 2 ? '#4c4d71' : '#424363');
-      const life = LIT[c.kind];
-      if (life) col.set('#f5c518').lerp(hot.set('#ff3b2e'), 1 - c.left / life);
-      const k = blast.progress(i, time);
-      if (k >= 0) col.set('#fff1c4').lerp(hot.set('#2b2233'), Math.min(1, k)); // white-hot as the wave passes, then scorched
-      tiles.setColorAt(i, col);
-    });
-    tiles.instanceColor.needsUpdate = true;
+    paintTiles(game, dt, i => blast.progress(i, time));
 
     stepSparks(dt);
 

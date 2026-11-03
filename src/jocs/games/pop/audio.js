@@ -35,6 +35,7 @@ export function startMusic(conductor) {
   tune = conductor;
   offset = ctx.currentTime - (ctx.outputLatency || 0); // game time 0 is heard now; at() keeps every note a little ahead of the clock
   seq.start();
+  seq.slow(false);
   seq.gain(on ? .9 : 0);
   run();
 }
@@ -43,6 +44,7 @@ export function stopMusic() {
   clearInterval(timer);
   seq.gain(0); // what is queued fades out instead of cutting
 }
+export const slowMusic = v => seq?.slow(v);
 export function pauseMusic() {
   clearInterval(timer);
   ctx?.suspend();
@@ -86,6 +88,9 @@ export const SFX = {
   // a figure springs up out of the board: a plop rising onto one of the chord's notes, under the tap's (it comes with every note)
   sprout: () => { const t = seq.tonesNow(), f = hz(72 + t[Math.floor(Math.random() * t.length)]); tone(f * .5, .14, 'sine', .12, f); tone(f, .08, 'triangle', .06, f * 1.5, .07); },
   goodie: () => { const [a, b, c] = seq.tonesNow(); [a, b, c, a + 12].forEach((pc, i) => { const f = hz(72 + pc); tone(f, .14, 'triangle', .12, f, i * .06); }); },
+  // the campanar: a low bell in the chord's key, its inharmonic partials ringing long; and a lift when the slow time ends
+  bell: () => { const f = hz(48 + seq.tonesNow()[0]); [[1, .3, 2.6], [2, .14, 1.8], [2.4, .1, 1.4], [3, .07, 1], [4.2, .04, .7]].forEach(([k, v, d]) => tone(f * k, d, 'sine', v)); },
+  unbell: () => { const [a, b, c] = seq.tonesNow(); [c, b, a + 12].forEach((pc, i) => tone(hz(72 + pc) * .5, .16, 'triangle', .1, hz(72 + pc), i * .05)); },
   wrong: () => tone(180, .35, 'triangle', .2, 70),
   fire: () => { tone(120, 1.1, 'triangle', .22, 50); tone(70, 1.1, 'sine', .2, 140); },
   // the blast: one of four, never the last one, like the board's (board-blast.js)

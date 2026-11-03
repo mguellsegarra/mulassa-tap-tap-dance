@@ -8,6 +8,10 @@ html, body { margin: 0; height: 100%; overflow: hidden; overscroll-behavior: non
 body { position: fixed; top: 0; left: 0; width: 100%; color: #fff3d6; font: 700 18px 'Baloo 2', system-ui, sans-serif; }
 canvas#game { position: fixed; left: 0; top: 0; width: 100%; height: 100dvh; touch-action: none; }
 .board-flash { position: fixed; inset: 0; z-index: 1; opacity: 0; pointer-events: none; }
+/* the bell's slow time (main.js setSlow): a cold frost closing in from the edges, under the HUD */
+body::after { content: ''; position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: 0; transition: opacity .6s; background: radial-gradient(ellipse at 50% 50%, #7ec4ff22 20%, #3d8fe08c 70%, #1f58b8e0); }
+body.slow::after { opacity: 1; transition-duration: .15s; animation: chill-in .5s ease-out; } /* a white-blue flash as the bell strikes */
+@keyframes chill-in { from { background-color: #e8f6ffb3; } to { background-color: #e8f6ff00; } }
 [hidden] { display: none !important; }
 
 button, a.btn { -webkit-appearance: none; appearance: none; display: inline-flex; align-items: center; justify-content: center; gap: 12px; min-height: 44px; border: 2px solid var(--button-border); border-radius: var(--button-radius); background: var(--button-bg); color: var(--button-text); font: 800 18px 'Baloo 2', system-ui, sans-serif; cursor: pointer; -webkit-tap-highlight-color: transparent; }
@@ -33,7 +37,9 @@ a.btn { text-align: center; text-decoration: none; color: #fff3d6; }
 #hud-best small { font: 700 10px/1 'Baloo 2', system-ui, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: #ff7ac6; } /* a bare second number read as a fraction */
 #best { margin-top: 4px; font-size: 14px; color: #2a1a10; font-weight: 800; }
 #chips { position: absolute; top: 56px; left: 0; right: 0; display: flex; justify-content: center; gap: 8px; }
-.chip { display: inline-flex; align-items: center; padding: 0 10px 0 8px; border-left: 3px solid #ff7ac6; border-radius: 4px; background: #24223fe8; color: #fff3d6; font-size: 14px; }
+.chip { display: inline-flex; align-items: center; gap: 8px; padding: 4px 6px 4px 4px; border-radius: 40px; background: #24223f; box-shadow: 0 0 0 2px #7ec4ff, 0 0 18px #7ec4ff88; color: #fff3d6; font: 800 17px/1 'Baloo 2', system-ui, sans-serif; white-space: nowrap; }
+.chip img { width: 30px; height: 30px; object-fit: contain; }
+.chip b { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: #7ec4ff; color: #16243f; font-size: 16px; }
 .float { position: fixed; z-index: 2; translate: -50% -50%; font: 800 34px/1 'Baloo 2', system-ui, sans-serif; color: #ff7ac6; -webkit-text-stroke: 5px #24112e; paint-order: stroke fill; pointer-events: none; animation: float-up .7s ease-out forwards; }
 @keyframes float-up { from { transform: translateY(0) scale(.7); opacity: 1; } 25% { transform: translateY(-16px) scale(1.15); } to { transform: translateY(-64px) scale(1); opacity: 0; } }
 

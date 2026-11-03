@@ -4,7 +4,7 @@
 import { newGame, tick, tap, noteSounded, seeded } from './rules.js';
 import { createConductor, AHEAD, LEAD } from './conductor.js';
 
-export const RUN_VERSION = 1; // bump whenever a change here, in rules.js or in conductor.js changes what a log scores
+export const RUN_VERSION = 2; // bump whenever a change here, in rules.js or in conductor.js changes what a log scores
 export const TICKS_PER_S = 120;
 const DT = 1 / TICKS_PER_S;
 

@@ -7,11 +7,16 @@ import { setupRankingUI, RANKING } from './ranking-ui.js';
 import { setupOrientation } from './orientation.js';
 import { t, applyWords } from './i18n.js';
 import { store } from '../../../platform/storage.js';
-import { startMusic, stopMusic, pauseMusic, resumeMusic, setMusicOn, musicOn, SFX } from './audio.js';
+import { startMusic, stopMusic, pauseMusic, resumeMusic, setMusicOn, musicOn, slowMusic, SFX } from './audio.js';
 import { BOT_FROM, botTap } from './autoplay.js';
 import { haptic } from '../../../platform/haptics.js';
 
 const BOT = import.meta.env.DEV && new URLSearchParams(location.search).has('autoplay');
+// dev only (?campanar or ?campanar=points): the run starts that far on (150 by default, the tune at full speed after its
+// glide), and a campanar pops up out of the blue 8 s in, then 3 to 6 s after each slow time ends
+const BELL = import.meta.env.DEV && new URLSearchParams(location.search).has('campanar');
+const BELL_FROM = +(new URLSearchParams(location.search).get('campanar') || 150);
+let bellAt = 0;
 const $ = id => document.getElementById(id);
 const board = createBoard($('game'));
 const hero = createHero($('menu-hero'));
@@ -61,6 +66,7 @@ function on(event, cell, kind) {
     board.burst(cell.i, COLORS.goodie, 40, 1.2);
     floatText(cell.i, word(kind));
     if (kind === 'carretilla') { board.dragonFire(); SFX.fire(); }
+    if (kind === 'campanar') SFX.bell();
   } else if (event === 'defuse') {
     SFX.goodie();
     haptic('hit');
@@ -82,6 +88,7 @@ function gameOver(cell) {
   board.explodeAll(cell.i);
   stopMusic();
   mode = 'ending';
+  setSlow(false);
   $('pause').style.visibility = 'hidden'; // hidden would close its grid column and move the score
   endTimer = setTimeout(showEnd, 1200);
 }
@@ -89,13 +96,13 @@ function gameOver(cell) {
 
 function showEnd() {
   const best = +store.get(BEST) || 0, record = game.score > best;
-  if (record && !BOT) store.set(BEST, game.score);
+  if (record && !BOT && !BELL) store.set(BEST, game.score);
   $('end-title').textContent = t(record ? 'end.record' : 'end.over');
   $('end-score').textContent = game.score;
   $('end-best').textContent = record ? t('end.recordSub') : t('end.best', { best });
   $('end-best').classList.toggle('record', record);
   rankingUI.endScreen();
-  if (RANKING && !BOT && game.score > 0) rankingUI.publish(run);
+  if (RANKING && !BOT && !BELL && game.score > 0) rankingUI.publish(run);
   $('end-menu').hidden = false;
   $('hud').hidden = true;
   mode = 'over';
@@ -108,6 +115,7 @@ function start() {
   clock = 0;
   game = run.game;
   if (BOT) game.score = BOT_FROM; // dev only: such a run is never published
+  if (BELL) { game.score = BELL_FROM; bellAt = 8; }
   board.setGame(game);
   for (const id of ['menu', 'end-menu', 'pause-menu']) $(id).hidden = true;
   $('hud').hidden = false;
@@ -125,6 +133,7 @@ function showMenu() {
   stopMusic();
   game = newGame({ ...layout(), on });
   game.state = 'menu';
+  setSlow(false);
   board.setGame(game);
   for (const id of ['end-menu', 'pause-menu', 'hud']) $(id).hidden = true;
   $('menu').hidden = false;
@@ -150,12 +159,22 @@ function resume() {
   $('pause-menu').hidden = true;
 }
 
-let shownScore = -1, shownChips = '';
+let shownScore = -1, shownChips = '', shownSlow = false;
+// the bell's slow time, seen and heard: a cold tint over the board, the music muffled; its end lifts back
+function setSlow(v) {
+  if (v === shownSlow) return;
+  shownSlow = v;
+  document.body.classList.toggle('slow', v);
+  slowMusic(v);
+  if (!v && mode === 'play') SFX.unbell();
+}
 function syncHud(force) {
   board.insets.top = $('hud').hidden ? 0 : $('hud').getBoundingClientRect().bottom;
   if (force || game.score !== shownScore) $('score').textContent = shownScore = game.score;
-  const chips = (game.slow > 0 ? `<span class="chip">${t('chip.slow', { s: Math.ceil(game.slow) })}</span>` : '');
+  // the campanar's own portrait (the home's card, drawn at boot), its name for the effect, and the seconds left
+  const chips = (game.slow > 0 ? `<span class="chip"><img src="${document.querySelector('.c-card[data-kind="campanar"] img').src}" alt=""><span>${t('chip.slow')}</span><b>${Math.ceil(game.slow)}</b></span>` : '');
   if (chips !== shownChips) $('chips').innerHTML = shownChips = chips;
+  setSlow(game.slow > 0);
 }
 
 $('game').addEventListener('pointerdown', e => {
@@ -190,6 +209,13 @@ function frame(now) {
     clock += dt;
     run.until(Math.floor(clock * TICKS_PER_S)); // the rules' fixed steps this frame has reached
     if (BOT && game.state === 'play') { const i = botTap(game); if (i >= 0) run.tap(i); }
+    if (BELL && game.state === 'play') {
+      if (game.slow > 0 || game.cells.some(c => c.kind === 'campanar')) bellAt = Math.max(bellAt, clock + 3 + Math.random() * 3);
+      else if (clock >= bellAt) {
+        const free = game.cells.filter(c => c.kind === 'drac' && c.age >= 0), c = free[Math.floor(Math.random() * free.length)];
+        if (c) Object.assign(c, { prev: c.kind, kind: 'campanar', age: 0, left: 99 });
+      }
+    }
     syncHud();
   } else if (mode === 'ending') tick(game, dt);
   if (mode !== 'paused' && booted) board.frame(dt);

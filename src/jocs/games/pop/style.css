@@ -70,10 +70,22 @@ h2 { margin: 0; text-align: center; font: 800 24px/1.1 'Baloo 2', system-ui, san
 .corner-l { left: var(--m); } .corner-r { right: var(--m); }
 a.round-btn { box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; border: 2px solid var(--button-border); background: var(--button-bg); color: #fff3d6; }
 .c-hero { position: relative; min-height: 0; display: flex; flex-direction: column; align-items: center; padding: calc(44px + 12px) var(--m) 0; } /* under the corner buttons' row */
-/* «Torna als jocs», as Alchemy's start menu (release 1.4.0: .alq-exit): the way back to mulassa.cat's games sheet, in words */
-a.exit { box-sizing: border-box; display: inline-flex; align-items: center; gap: 4px; height: 44px; padding: 0 16px 0 8px; border: 2px solid var(--button-border); border-radius: 22px; background: var(--button-bg); color: #fff3d6; font: 800 16px/1 'Baloo 2', system-ui, sans-serif; text-decoration: none; }
+/* The way back to mulassa.cat's games sheet: the site's games icon, round as the music button, and a bubble that pops in
+   once the home is up and comes back every few seconds (hover holds it). Without the games sheet behind (main.js: .more)
+   the bubble invites, «Més jocs!», and a pink dot beats on the button */
+a.exit { position: absolute; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: 2px solid var(--button-border); border-radius: 50%; background: var(--button-bg); color: #fff3d6; font: 800 16px/1 'Baloo 2', system-ui, sans-serif; text-decoration: none; }
 a.exit svg { flex: none; width: 24px; height: 24px; }
 a.exit:active { transform: scale(.96); }
+.exit-dot { display: none; }
+a.exit.more .exit-dot { display: block; position: absolute; top: -3px; right: -3px; width: 12px; height: 12px; border-radius: 50%; background: #ff7ac6; box-shadow: 0 0 0 2px #11152c; }
+a.exit.more .exit-dot::after { content: ""; position: absolute; inset: 0; border-radius: 50%; background: #ff7ac6; animation: exit-ping 1.8s ease-out infinite; }
+@keyframes exit-ping { 0% { scale: 1; opacity: .8; } 80%, 100% { scale: 2.6; opacity: 0; } }
+.exit-tip { position: absolute; left: calc(100% + 12px); top: 50%; translate: 0 -50%; padding: 8px 14px; border-radius: 14px; background: #fff3d6; color: #2a1a10; white-space: nowrap; filter: drop-shadow(0 3px 4px #0008); opacity: 0; pointer-events: none; }
+.exit-tip::before { content: ""; position: absolute; left: -5px; top: 50%; width: 14px; height: 14px; border-radius: 3px; background: inherit; translate: 0 -50%; rotate: 45deg; } /* one shape with the bubble: its shadow is the bubble's drop-shadow */
+.ready .exit-tip { animation: exit-tip 10s ease 1.5s infinite both; } /* 6 s up, 4 s away, while the home is up */
+a.exit:hover .exit-tip, a.exit:focus-visible .exit-tip { animation: none; opacity: 1; }
+@keyframes exit-tip { 0% { opacity: 0; translate: -8px -50%; scale: .9; } 3% { opacity: 1; translate: 0 -50%; scale: 1.08; } 5%, 58% { opacity: 1; translate: 0 -50%; scale: 1; } 60%, 100% { opacity: 0; translate: 0 -50%; scale: 1; } }
+@media (prefers-reduced-motion: reduce) { a.exit.more .exit-dot::after { animation: none; } @keyframes exit-tip { 0% { opacity: 0; } 3%, 58% { opacity: 1; } 60%, 100% { opacity: 0; } } }
 .c-text { display: contents; }
 .pop-title { order: 0; flex: none; display: grid; justify-items: center; width: min(300px, 100vw - 2 * var(--m) - 40px, 40dvh); margin: 0; container-type: inline-size; }
 .pop-title .logo { width: 100%; }
@@ -156,8 +168,8 @@ li.me .alias.guest { color: inherit; }
 @media (orientation: landscape) {
   .home { --row: clamp(150px, 26dvh, 260px); }
   .c-hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; padding: calc(52px + 12px) max(32px, 5vw) 0; } /* under the corner buttons' row */
-  a.exit { height: 52px; padding: 0 20px 0 10px; border-radius: 26px; font-size: 20px; }
-  #menu-music { width: 52px; height: 52px; } /* the same height as «Torna als jocs» beside it */
+  a.exit { width: 52px; height: 52px; font-size: 20px; } a.exit svg { width: 28px; height: 28px; }
+  #menu-music { width: 52px; height: 52px; } /* the same size as the games button across */
   /* one axis (tools/dev/pop-hero, A): the title is centred by nature, so the pitch and the actions follow it */
   .c-text { display: flex; flex-direction: column; align-items: center; gap: 20px; }
   .pop-title { width: clamp(260px, 26vw, 420px); }

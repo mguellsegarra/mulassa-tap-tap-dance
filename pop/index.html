@@ -33,7 +33,9 @@
 
   <!-- The home: the Mulassa Games hero (logo, pitch, Juga, record, the red Mulassa big) over a row of cards, one per figure. -->
   <div id="menu" class="home">
-    <a id="back" class="exit corner-l" href="/#jocs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg><span data-t="back">Torna als jocs</span></a>
+    <!-- the site's games icon, round as the music button; its bubble says «Torna als jocs», or «Més jocs!» with a pink dot
+         when the player did not come from the games sheet (main.js) -->
+    <a id="back" class="exit corner-l" href="/#jocs"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="3.5" y="3.5" width="7.5" height="7.5" rx="1.6"/><rect x="13.6" y="2.8" width="7.5" height="7.5" rx="1.6" transform="rotate(14 17.35 6.55)"/><rect x="3.5" y="13" width="7.5" height="7.5" rx="1.6"/><rect x="13" y="13" width="7.5" height="7.5" rx="1.6"/></svg><span class="exit-tip" data-t="back">Torna als jocs</span><i class="exit-dot" aria-hidden="true"></i></a>
     <button id="menu-music" class="round-btn corner-r music-btn" data-t-aria="music" aria-label="Música" aria-pressed="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 18V6l10-2v12" fill="none" stroke="currentColor" stroke-width="2.2"/><circle cx="6.5" cy="18" r="2.8"/><circle cx="16.5" cy="16" r="2.8"/><path class="music-off" d="M4 4l16 16" stroke="#ff8a7a" stroke-width="2.6" stroke-linecap="round" hidden/></svg></button>
     <div class="c-hero">
       <div class="c-text">

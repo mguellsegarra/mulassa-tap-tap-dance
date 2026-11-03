@@ -21,6 +21,12 @@ let booted = false; // the boot screen is up: nothing is drawn under it (see the
 const rankingUI = setupRankingUI({ t, focusBack: () => $('menu-best').focus({ focusVisible: false }) });
 
 applyWords();
+// From the games sheet (mulassa.cat, location.replace keeps the referrer) the corner's bubble says «Torna als jocs»; a shared
+// link or a typed address gets an invitation instead (style.css)
+if (!document.referrer.startsWith(`${location.origin}/`)) {
+  $('back').classList.add('more');
+  $('back').querySelector('.exit-tip').textContent = t('more');
+}
 $('end-art').innerHTML = $('boot-art').innerHTML.replace('class="mula-load"', 'class="mula-load sad"');
 
 let run = null, game = null, mode = 'menu', endTimer = 0, clock = 0; // clock: the run's play time, in seconds // game: the run's, or the menu's backdrop board

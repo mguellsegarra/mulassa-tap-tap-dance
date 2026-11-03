@@ -13,7 +13,7 @@ import { entityHtml } from './figure-entities.js';
 import { setupPendingPanel } from './pending-panel.js';
 import { stripScroll } from './strip-scroll.js';
 import { setupFlip } from './select-flip.js';
-import { pixelSvg, pillHtml, stripHtml, peekGap } from './select-strip.js';
+import { pixelSvg, pillHtml, stripHtml, peekGap, paintCardHearts } from './select-strip.js';
 import { setupSelectKeys } from './select-keys.js';
 import { createSelectLayout } from './select-layout.js';
 import { tr } from '../i18n/messages.js';
@@ -290,6 +290,6 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     const target = step === 'level' ? levels.children[level] : cards[cur];
     target?.focus({ preventScroll: true });
   };
-  api.paintHearts = () => { if (playable(figure)) hearts.paint($('select-heart'), figure); else paintHeart(figure); };
+  api.paintHearts = () => { paintCardHearts(cards, hearts); if (playable(figure)) hearts.paint($('select-heart'), figure); else paintHeart(figure); };
   return api;
 }

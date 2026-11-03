@@ -2,15 +2,10 @@ import { Q } from '../../../core/flags.js';
 import { start, stored } from './game.js';
 import { rulesFor } from './rules.js';
 import { warmIcons } from './icons.js';
+import { newPlayer } from './lesson.js';
 
-// ?nou (dev and LAN hosts only, like every flag): wipe this game's saved state on each load and play as a new player:
-// tutorial, the four elements, free hints. ?nou=pista starts that tutorial at the hint step (Vapor already found).
-// Before start(), which reads the progress.
-if (Q.has('nou')) {
-  Object.keys(localStorage).filter(k => k.startsWith('minijocs.alquimia.')).forEach(k => localStorage.removeItem(k));
-  if (Q.get('nou') === 'pista') localStorage.setItem('minijocs.alquimia.found', JSON.stringify(['vapor']));
-}
-// ?valls (same hosts): a played-in game with a dozen Valls elements; ?valls=primer: none yet, with Camisa castellera and Flor
+newPlayer(Q, localStorage); // ?nou, ?nou=pista (lesson.js); before start(), which reads the progress
+// ?valls (through Q too: dev and LAN hosts only): a played-in game with a dozen Valls elements; ?valls=primer: none yet, with Camisa castellera and Flor
 // ready, to see the first one arrive. Replaces this browser's progress.
 if (Q.has('valls')) {
   const { general, valls } = rulesFor(), first = Q.get('valls') === 'primer';

@@ -25,6 +25,8 @@ export function restoreHints(raw, now, foundCount) {
 
 // The free start ends for good once you own enough, even if you start again.
 export const seen = (s, foundCount) => (s.introDone || foundCount < FREE_UNTIL ? s : { ...s, introDone: true });
+// This discovery is the one that ends the free start: the game explains the store once, right then.
+export const endsFreeStart = (s, foundCount) => !s.introDone && seen(s, foundCount).introDone;
 
 // Refills, never above MAX. A clock set back gives nothing and keeps the wait that was left.
 export function refreshHints(s, now) {

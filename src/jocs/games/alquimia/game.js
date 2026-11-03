@@ -5,7 +5,8 @@ import { orbHtml as orb, ESCUT } from './icons.js';
 import { createAlchemyOverlays } from './overlays.js';
 import { startFx } from './fx.js';
 import { coach } from './coach.js';
-import { restoreHints, refreshHints, requestHint, hintView, seen, MAX, EVERY } from './hints.js';
+import { LESSON, lessonStart, acceptsPick, acceptsHint, afterHint, afterDiscovery, coachTarget } from './lesson.js';
+import { restoreHints, refreshHints, requestHint, hintView, seen, endsFreeStart, MAX, EVERY } from './hints.js';
 
 const T = COPY.alquimia;
 const NUDGE_AFTER = 4, NUDGE_AFTER_LATE = 8; // tries in a row without a discovery before the hint button glows
@@ -31,7 +32,6 @@ const CAULDRON = `<svg viewBox="0 0 120 92" aria-hidden="true">
 const KEY = 'minijocs.alquimia.found';
 const HINTS_KEY = 'minijocs.alquimia.hints';
 const LESSON_KEY = 'minijocs.alquimia.lesson';
-const LESSON = ['foc', 'aigua']; // the first game walks you through Vapor, then a hint, then the book
 const OLD_CATALANA_KEY = 'minijocs.alquimia.catalana'; // progress from when there were two collections
 export const stored = () => {
   const read = k => { try { const v = JSON.parse(localStorage.getItem(k)); return Array.isArray(v) ? v : []; } catch { return []; } };
@@ -99,11 +99,9 @@ function play(root, leave) {
   const fx = startFx($('.alq-fx'), () => { const r = pot.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height * .25, w: r.width * .6, fireY: r.bottom + 2 }; });
   let found = load(), picked = [], fails = 0, timer = 0, locked = false, hints = restoreHints(localStorage.getItem(HINTS_KEY), Date.now(), found.length);
   const { showOverlay, closeOverlay, showFound, showBook } = createAlchemyOverlays(overlay, fx, rules, () => found);
-  // The guided start, for a new player only: mix → hint → follow (the hint) → book; 'done' shows the send-off once.
-  // Meanwhile only what the hand points at answers: a stray tap can't lose the thread.
-  let lesson = !localStorage.getItem(LESSON_KEY) && found.length <= rules.restore([]).length + 1 ? (mix(found, ...LESSON).isNew ? 'mix' : 'hint') : null;
+  // The guided start (lesson.js): this keeps the stage, lesson.js says what each stage allows.
+  let lesson = lessonStart({ done: !!localStorage.getItem(LESSON_KEY), found: found.length, starters: rules.restore([]).length, vaporNew: mix(found, ...LESSON).isNew });
   const endLesson = () => { lesson = 'done'; localStorage.setItem(LESSON_KEY, '1'); };
-  const expected = () => (lesson === 'mix' ? LESSON : lesson === 'follow' ? hints.pair ?? [] : [])[picked.length];
   const lessonText = () => ({ mix: T.lesson[0](nameOf(LESSON[0])), hint: T.lessonHint, book: T.lessonBook, done: T.lessonDone })[lesson];
   const hand = coach($('.alq'));
   // What the bubble says at each step: what the thing is, not only what to tap.
@@ -132,9 +130,8 @@ function play(root, leave) {
       b.classList.toggle('hint', pulse.includes(id));
       b.classList.toggle('twice', pulse[0] === id && pulse[1] === id); // one pulse can't say "use it twice"
     }
-    const next = picked.length < 2 && expected();
-    // Nothing while a mix plays out: the next step waits until the discovery has been seen and closed.
-    hand.point(locked ? null : lesson === 'hint' ? hintButton : lesson === 'book' ? $('.alq-book') : next ? grid.querySelector(`[data-id="${next}"] .orb`) : null, tipText());
+    const aim = coachTarget(lesson, { locked, picked: picked.length, pair: hints.pair });
+    hand.point(aim === 'hint' ? hintButton : aim === 'book' ? $('.alq-book') : aim && grid.querySelector(`[data-id="${aim}"] .orb`), tipText());
     const got = rules.progress(found), chip = $('.alq-valls');
     $('.alq-bar span').textContent = T.count(got.general, rules.general.length);
     $('.alq-bar i').style.width = `${got.general / rules.general.length * 100}%`;
@@ -172,11 +169,11 @@ function play(root, leave) {
   }
   let hintsEnded = false; // the free start just ended: say so once the discovery is closed
   function askHint() {
-    if (locked || lesson === 'mix' || lesson === 'book') return;
+    if (locked || !acceptsHint(lesson)) return;
     const r = requestHint(hints, hint(found), Date.now(), found.length);
     hints = r.state;
     saveHints();
-    if (r.pair && lesson === 'hint') lesson = 'follow';
+    if (r.pair) lesson = afterHint(lesson);
     if (r.pair) { fails = 0; clearMix(); return; }
     if (r.status === 'empty') { showHintsCard(false); return; }
     msg.textContent = T.hintNone;
@@ -197,7 +194,7 @@ function play(root, leave) {
   }
 
   function pick(id, el) {
-    if (locked || (lesson && lesson !== 'done' && id !== expected())) return;
+    if (locked || !acceptsPick(lesson, id, picked.length, hints.pair)) return;
     if (picked.length === 2) clearMix();
     const slot = slots[picked.length];
     fly(el?.querySelector('.orb'), slot.querySelector('.orb'));
@@ -253,11 +250,11 @@ function play(root, leave) {
     }
     fails = 0;
     msg.textContent = T.fresh;
-    if (lesson === 'mix' || lesson === 'follow') lesson = lesson === 'mix' ? 'hint' : 'book';
+    lesson = afterDiscovery(lesson);
     const pair = picked.slice();
     found.push(result);
     localStorage.setItem(KEY, JSON.stringify(found));
-    hintsEnded = !hints.introDone && seen(hints, found.length).introDone;
+    hintsEnded = endsFreeStart(hints, found.length);
     hints = seen(hints, found.length);
     saveHints();
     localStorage.removeItem(OLD_CATALANA_KEY);

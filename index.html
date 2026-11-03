@@ -8,6 +8,8 @@
 <script>if (location.hostname === 'mulassa-tap-tap-dance.pages.dev') location.replace('https://mulassa.cat' + location.pathname + location.search + location.hash);</script>
 <!-- Straight to the games (mulassa.cat/jocs, a mini-game's back): no rhythm-game loader; the sheet opens as soon as the bundle runs
      (ui/sheets-setup.js), and closing it before the plaça is ready brings the loader back. -->
+<!-- nothing in the game is dragged: the browser's own drag of a picture, logo or text (a ghost of it) would steal the pointer -->
+<script>addEventListener('dragstart', e => e.preventDefault());</script>
 <script>if (location.hash === '#jocs' || /^\/jocs\/?$/.test(location.pathname)) document.documentElement.classList.add('to-jocs');</script>
 <link rel="canonical" href="https://mulassa.cat/">
 <link rel="alternate" type="text/markdown" href="/index.md">

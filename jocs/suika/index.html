@@ -2,6 +2,8 @@
 <html lang="ca">
 <head>
   <meta charset="utf-8">
+  <!-- nothing in the game is dragged: the browser's own drag of a picture, logo or text (a ghost of it) would steal the pointer -->
+  <script>addEventListener('dragstart', e => e.preventDefault());</script>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#1b1420">
   <title>Mulassa Drop</title>

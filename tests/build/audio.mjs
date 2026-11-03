@@ -612,8 +612,17 @@ console.log('leaving a run silences everything it queued ok');
     c.beginRun(); c.endRun(); done(); await new Promise(r => setTimeout(r));
     assert.deepEqual(calls.slice(2), ['suspend'], 'back to ambient before the suspend resolved: no resume');
     c.ctx.suspend = () => { calls.push('suspend'); return Promise.reject(new Error('refused')); };
-    c.beginRun(); await new Promise(r => setTimeout(r));
+    const report = errors.report, reported = []; errors.report = kind => reported.push(kind);
+    try { c.beginRun(); await new Promise(r => setTimeout(r)); } finally { errors.report = report; }
     assert.equal(calls.at(-1), 'resume', 'a refused suspend still resumes, without an unhandled rejection');
+    assert.deepEqual(reported, ['audio-route-restart-failed'], 'and the refusal is reported');
+    // an iPhone paused mid-run in another app (hidden: 'auto', iOS froze the 40 ms suspend), back still paused: the pause
+    // menu's suspend takes 'playback' back but must not restart the route, whose resume played the song under the pause
+    c.ctx.suspend = () => { calls.push('suspend'); return Promise.resolve(); };
+    audioSession.type = 'auto'; calls.length = 0;
+    c.suspend(); clearTimeout(c.hushT); await new Promise(r => setTimeout(r));
+    assert.equal(audioSession.type, 'playback', 'the paused run keeps its session');
+    assert.deepEqual(calls, [], 'a pause never resumes the context');
     c.endRun(); calls.length = 2;
     c.ctx.suspend = () => { calls.push('suspend'); return Promise.resolve(); };
     // an iPhone paused the podcast under 'ambient' too, as soon as the context ran: a silent menu keeps it stopped

@@ -79,7 +79,7 @@ export class Chip {
     const g = this.master.gain, t = this.ctx.currentTime;
     g.cancelScheduledValues(t); g.setTargetAtTime(0, t, 0.006);
     clearTimeout(this.hushT);
-    this.session(); // hidden: 'auto', in case iOS freezes the timer below
+    this.session(false); // hidden: 'auto', in case iOS freezes the timer below; never the route restart, which resumes
     this.hushT = setTimeout(() => this.ctx.suspend(), 40);
   }
   unhush() {

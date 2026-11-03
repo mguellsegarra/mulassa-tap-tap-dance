@@ -41,7 +41,6 @@
   "rank.open": "Classement",
   "rank.title": "Classement",
   "rank.close": "Fermer",
-  "rank.sending": "Envoi du score…",
   "rank.place": "Tu es au rang {n}",
   "rank.newBest": "Nouveau record ! Rang {n}",
   "rank.noName": "Choisis un nom pour le classement",

@@ -19,7 +19,7 @@ export function setupRankingUI({ t, focusBack }) {
     const line = $('end-rank'), name = $('end-name'), mine = ++sent;
     const body = { v: RUN_VERSION, seed: run.seed, cols: run.game.cols, rows: run.game.rows, ticks: run.ticks, taps: run.log, score: run.game.score };
     line.hidden = false; name.hidden = true; line.classList.remove('good');
-    line.textContent = t('rank.sending');
+    line.textContent = '\u00a0'; // the line's height is kept from the start: the answer fades in, nothing moves (no «sending…» swapped out)
     const m = await service();
     try {
       const res = await m.publish(body);
@@ -28,12 +28,14 @@ export function setupRankingUI({ t, focusBack }) {
       if (mine !== sent) return;
       line.textContent = t(res.improved ? 'rank.newBest' : 'rank.place', { n: res.position });
       line.classList.toggle('good', res.improved);
+      line.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 250, easing: 'ease-out' });
     } catch (e) {
-      if (e.code === 'pop_seed_used') { if (mine === sent) line.hidden = true; return; }
+      if (e.code === 'pop_seed_used') return; // already on the board: the line stays blank, its height kept
       m.keep(body);
       if (mine !== sent) return;
       const nameless = e.code === 'noname' || e.code === 'released';
       line.textContent = t(nameless ? 'rank.noName' : 'rank.error');
+      line.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 250, easing: 'ease-out' });
       name.hidden = !nameless;
       name.href = e.code === 'released' ? '/#nom-pop-canvi' : '/#nom-pop';
     }

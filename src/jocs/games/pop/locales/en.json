@@ -41,7 +41,6 @@
   "rank.open": "Leaderboard",
   "rank.title": "Leaderboard",
   "rank.close": "Close",
-  "rank.sending": "Posting score…",
   "rank.place": "You’re number {n}",
   "rank.newBest": "New best! Number {n}",
   "rank.noName": "Choose a name to join the leaderboard",

@@ -41,7 +41,6 @@
   "rank.open": "순위표",
   "rank.title": "순위표",
   "rank.close": "닫기",
-  "rank.sending": "점수 전송 중…",
   "rank.place": "현재 {n}위",
   "rank.newBest": "신기록! 현재 {n}위",
   "rank.noName": "순위표에 올릴 이름을 정해 줘",

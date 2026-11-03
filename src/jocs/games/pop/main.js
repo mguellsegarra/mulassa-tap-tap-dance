@@ -22,8 +22,8 @@ const rankingUI = setupRankingUI({ t, focusBack: () => $('menu-best').focus({ fo
 
 applyWords();
 // From the games sheet (mulassa.cat, location.replace keeps the referrer) the corner's bubble says «Torna als jocs»; a shared
-// link or a typed address gets an invitation instead (style.css)
-if (!document.referrer.startsWith(`${location.origin}/`)) {
+// link, a typed address or a reload (which keeps the first referrer, the games sheet no longer behind) gets an invitation (style.css)
+if (!document.referrer.startsWith(`${location.origin}/`) || performance.getEntriesByType('navigation')[0]?.type === 'reload') {
   $('back').classList.add('more');
   $('back').querySelector('.exit-tip').textContent = t('more');
 }
@@ -65,6 +65,8 @@ function on(event, cell, kind) {
     SFX.goodie();
     haptic('hit');
     board.burst(cell.i, COLORS.goodie, 30);
+  } else if (event === 'spawn') {
+    SFX.sprout();
   } else if (event === 'over') {
     gameOver(cell);
   }

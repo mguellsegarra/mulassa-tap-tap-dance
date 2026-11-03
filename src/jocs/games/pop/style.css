@@ -144,7 +144,10 @@ li.me .alias.guest { color: inherit; }
 .card-stats div { display: grid; justify-items: center; gap: 2px; padding: 12px 8px; border-radius: 14px; background: #11152c66; }
 .card-stats dt { font-size: 14px; color: #e8d8b8; }
 .card-stats dd { margin: 0; font-size: 28px; line-height: 1; color: #ff7ac6; }
+.rank-line { line-height: 1.5; } /* a set height: a fallback font (Japanese) is a pixel taller and would nudge the sheet */
 .rank-line.good { color: #ff7ac6; }
+/* a narrow phone wraps the longer answers (Posa't un nom…, the error, a new record) to two lines: keep them from the start, so the place fades in without moving the sheet */
+@media (max-width: 374px) { .rank-line { display: grid; align-content: center; min-height: 2.6em; line-height: 1.3; text-wrap: balance; } }
 #end-name { margin-top: 4px; text-decoration: none; } /* a link to mulassa.cat's name sheet, drawn as the sheet's buttons */
 .c-row { display: flex; align-items: center; gap: 12px; height: var(--row); padding: 0 var(--m); overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: var(--m); scrollbar-width: none; }
 .c-row::-webkit-scrollbar { display: none; }

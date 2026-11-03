@@ -15,7 +15,7 @@ export function checkBadge(doc, badgeId = null) {
   const b = doc.createElement('span'), badge = badgeOf(badgeId); // a chosen badge takes the check's place and keeps its meaning
   b.className = badge ? 'player-badge' : 'verified-check'; b.setAttribute('role', 'img');
   b.setAttribute('aria-label', badge ? tr('ui.badge.label', { status: VERIFIED, name: badge.name }) : VERIFIED);
-  if (badge) b.title = badge.name; // what it is, on a hover
+  if (badge) b.dataset.tip = badge.name; // what it is, on a hover or a tap (src/ui/badge-tip.js)
   b.innerHTML = badge ? badge.art() : CHECK_SVG;
   return b;
 }

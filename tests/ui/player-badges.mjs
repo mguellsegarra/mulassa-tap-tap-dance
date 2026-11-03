@@ -37,7 +37,7 @@ assert(/:not\(\.pair\) > \.badge-cell:nth-last-child\(2\)/.test(read('src/styles
 
 // the mark
 const mark = checkBadge(doc, 'town:valls');
-assert.equal(mark.className, 'player-badge'); assert.equal(mark.title, 'Valls', 'its name, on a hover');
+assert.equal(mark.className, 'player-badge'); assert.equal(mark.dataset.tip, 'Valls', 'its name, on a hover or a tap (badge-tip.js)'); assert.equal(mark.title, undefined, 'no native tip as well');
 assert.equal(mark.attrs['aria-label'], `${VERIFIED}: Valls`, 'it still says the address is confirmed');
 for (const id of [null, undefined, 'town:from-the-future']) {
   const c = checkBadge(doc, id);

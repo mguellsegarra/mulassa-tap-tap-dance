@@ -28,6 +28,7 @@ import { setupBadgeNews } from './badge-news.js';
 import { setupConfirmGate } from './confirm-gate.js';
 import { setupHearts } from './figure-hearts.js';
 import { setupHeartTip } from './heart-tip.js';
+import { setupBadgeTip } from './badge-tip.js';
 import { setupFeedback } from './feedback-ui.js';
 import { sheets } from './sheets.js';
 import './keyboard-room.js';
@@ -211,6 +212,7 @@ settingsMenu.addEventListener('close', () => { if (!sync.open && !board.open && 
 const feedback = setupFeedback({ focusIn, captcha: board.captcha, accessToken: () => service.accessToken() });
 const needConfirmed = setupConfirmGate({ focusIn, identity: () => service.identity(), hasProfile: async () => !!ownerKey(kv) || !!(await service.profile?.())?.alias, openProfile: (what, back, opts) => profile.open(what, back, opts) });
 const hearts = setupHearts({ service, needConfirmed, onChange: () => { select.paintHearts(); heartTip.update(); } });
+setupBadgeTip();
 const heartTip = setupHeartTip({ store, hearts, figure: () => (select.pending ? null : select.figure), busy: () => sheetUp() || viewMode || !greeting.answered });
 const writeToBox = (request, back) => needConfirmed(request.kind === 'general' ? 'feedback' : request.kind, () => feedback.show(back, request));
 sheets.feedback = feedback;

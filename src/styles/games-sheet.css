@@ -57,7 +57,7 @@ html.to-jocs #games-menu::backdrop { background: #000; }
   #games-hero-back { filter: saturate(1.1) brightness(.7); transform: none; transition: opacity .3s ease; } /* it drifts like a wide screen's picture; a clip hides it */
   #games-hero:has(#games-hero-video:is(.due, .on)) #games-hero-back { opacity: 0; transition: none; }
   #games-hero-video { display: block; position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: saturate(1.1) brightness(.7); opacity: 0; transition: opacity .3s ease; }
-  #games-hero-video.on { opacity: 1; }
+  #games-hero-video:is(.due, .on) { opacity: 1; }
   #games-hero-text { max-width: none; }
 }
 @media (prefers-reduced-motion: reduce) { #games-grid .game-card { transition: none; } }
@@ -97,7 +97,7 @@ html.to-jocs #games-menu::backdrop { background: #000; }
     -webkit-mask-image: linear-gradient(90deg, #0000, #000 40%), linear-gradient(#000 75%, #0000); -webkit-mask-composite: source-in; mask-image: linear-gradient(90deg, #0000, #000 40%), linear-gradient(#000 75%, #0000); mask-composite: intersect; }
   #games-menu #games-hero-video { display: block; position: absolute; top: 0; right: 0; height: 100%; width: auto; max-width: 100%; aspect-ratio: 8 / 3; object-fit: cover; opacity: 0; transition: opacity .3s ease;
     -webkit-mask-image: linear-gradient(90deg, #0000, #000 40%), linear-gradient(#000 75%, #0000); -webkit-mask-composite: source-in; mask-image: linear-gradient(90deg, #0000, #000 40%), linear-gradient(#000 75%, #0000); mask-composite: intersect; }
-  #games-menu #games-hero-video.on { opacity: 1; }
+  #games-menu #games-hero-video:is(.due, .on) { opacity: 1; }
   /* both fade out on the left with the same mask, so the still would show through the clip's faded edge */
   #games-menu #games-hero-art { transition: opacity .3s ease; transform-origin: right center; animation: games-art-drift 12s ease-in-out infinite alternate; }
   #games-menu #games-hero:has(#games-hero-video:is(.due, .on)) #games-hero-art { opacity: 0; transition: none; }

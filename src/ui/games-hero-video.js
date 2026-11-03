@@ -12,8 +12,9 @@ export function setupHeroVideo({ menu, video, wide, win = globalThis }) {
     const clip = wide.matches ? card?.dataset.video : card?.dataset.videoTall;
     if (!menu.open || !clip || !calm()) return;
     const mine = ++turn;
-    video.classList.add('due'); // the card's picture is not the clip's first frame: it stays hidden while the clip loads
-    if (video.getAttribute('src') !== clip) video.src = clip;
+    // the card's picture is not the clip's first frame: the clip shows its own (beside it, .jpg) as a poster while it loads
+    video.classList.add('due');
+    if (video.getAttribute('src') !== clip) { video.poster = clip.replace(/\.mp4$/, '.jpg'); video.src = clip; }
     // shown once its first frame is on screen (iOS can resolve play() before it paints); a refused play keeps the still
     const show = () => { if (!video.paused && mine === turn) video.classList.add('on'); };
     video.play().then(() => (video.requestVideoFrameCallback ? video.requestVideoFrameCallback(show) : show()),

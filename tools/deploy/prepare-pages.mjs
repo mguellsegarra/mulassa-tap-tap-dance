@@ -49,7 +49,7 @@ export async function preparePages(directory, song) {
       || name === 'pop/index.html' // mulassa.cat/pop: Mulassa Pop
       || name === 'jocs/index.html' // mulassa.cat/jocs: a short link to the games picker
       || /^jocs\/[\w-]+\/(cards|hero)\/[\w-]+\.(jpg|svg|png|webp)$/.test(name) // a mini-game's own pictures; the games sheet's cards and wide heroes
-      || /^jocs\/menu\/video\/[\w-]+\.mp4$/.test(name) // the games sheet's hero clips (src/ui/games-hero-video.js)
+      || /^jocs\/menu\/video\/[\w-]+\.(mp4|jpg)$/.test(name) // the games sheet's hero clips and their first frames (src/ui/games-hero-video.js)
       || name === 'campanar-valls.svg' // Configuració «Sobre el joc»
       || name === 'version.json' // vite.config.js buildStamp: the woken app's update check
       || name === 'uaf-logo.jpg' // /projecte/'s credits: the Unió Anelles de la Flama logo

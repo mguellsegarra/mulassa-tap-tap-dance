@@ -76,12 +76,12 @@ try {
   await assert.rejects(access(join(valid, 'music/mulassa-taiko.wav')));
   // the games sheet's pictures and clips ship; a clip anywhere else does not
   const games = await fixture('games');
-  for (const name of ['jocs/menu/cards/pop.jpg', 'jocs/menu/hero/pop.jpg', 'jocs/menu/video/pop.mp4', 'jocs/menu/video/pop-tall.mp4']) {
+  for (const name of ['jocs/menu/cards/pop.jpg', 'jocs/menu/hero/pop.jpg', 'jocs/menu/video/pop.mp4', 'jocs/menu/video/pop-tall.mp4', 'jocs/menu/video/pop.jpg']) {
     await mkdir(join(games, name, '..'), { recursive: true });
     await writeFile(join(games, name), name);
   }
   const gamesResult = await preparePages(games, song);
-  for (const name of ['jocs/menu/hero/pop.jpg', 'jocs/menu/video/pop.mp4', 'jocs/menu/video/pop-tall.mp4']) assert(gamesResult.includes(name), name);
+  for (const name of ['jocs/menu/hero/pop.jpg', 'jocs/menu/video/pop.mp4', 'jocs/menu/video/pop-tall.mp4', 'jocs/menu/video/pop.jpg']) assert(gamesResult.includes(name), name);
   const strayClip = await fixture('stray-clip');
   await mkdir(join(strayClip, 'jocs/menu/cards'), { recursive: true });
   await writeFile(join(strayClip, 'jocs/menu/cards/pop.mp4'), 'clip');

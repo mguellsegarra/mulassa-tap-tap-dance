@@ -25,6 +25,7 @@ const a = make();
 a.clip.show(card('tap', true));
 assert(a.video.src === '/v/tap.mp4' && a.video.playing, 'a live game\'s clip loads and plays at once');
 assert(a.video.has('due') && !a.shown, 'its card picture hides while the clip loads');
+assert.equal(a.video.poster, '/v/tap.jpg', '…and the clip shows its own first frame meanwhile');
 await null;
 assert(a.shown, 'then the wide clip shows over the still');
 for (const kind of ['pointermove', 'pointerdown', 'keydown', 'wheel']) assert(!a.on[kind], `a ${kind} never stops it`);
@@ -47,6 +48,7 @@ assert(b.video.src === null && !b.video.has('due'), 'a surprise card has no clip
 const c = make({ wide: false });
 c.clip.show(card('pop', true));
 assert.equal(c.video.src, '/v/pop-tall.mp4', 'a phone plays the upright clip');
+assert.equal(c.video.poster, '/v/pop-tall.jpg', 'with the upright first frame');
 c.mq.matches = true; c.mq.change();
 assert.equal(c.video.src, '/v/pop.mp4', 'turning a tablet swaps to the wide one');
 

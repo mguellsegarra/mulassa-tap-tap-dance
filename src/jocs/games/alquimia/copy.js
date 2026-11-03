@@ -57,27 +57,27 @@ export const COPY = {
       ceba: { name: 'Ceba', fact: 'Quan talles una ceba, s\'allibera una substància que arriba als ulls i els irrita. Per això et surten llàgrimes.' }, vida: { name: 'Vida', fact: 'Tots els éssers vius estan formats per cèl·lules. N\'hi ha que només en tenen una, i d\'altres que en tenen moltíssimes.' }, animal: { name: 'Animal', fact: 'Els insectes són animals i formen més de la meitat de les espècies animals conegudes. Encara en queden moltes per descobrir.' }, ocell: { name: 'Ocell', fact: 'Les plomes retenen aire i ajuden els ocells a conservar l\'escalfor del cos. També els serveixen per a moltes altres coses, com volar.' }, // i18n-ok: Catalan-only game
       calcot: { name: 'Calçot', fact: 'Es diu així perquè es calça: se li tira terra al voltant perquè quedi blanc.' }, // i18n-ok: Catalan-only game
       calcotada: { name: 'Calçotada', fact: 'Diuen que la va inventar en Xat de Benaiges, però segurament és una llegenda.' }, // i18n-ok: Catalan-only game
-      casa: { name: 'Casa' }, coto: { name: 'Cotó' }, persona: { name: 'Persona' }, colla: { name: 'Colla' }, roba: { name: 'Roba' }, // i18n-ok: Catalan-only game
+      casa: { name: 'Casa', fact: 'Hi ha cases fetes amb maons de terra, aigua i palla assecats al sol. Aquesta manera de construir té milers d\'anys.' }, coto: { name: 'Cotó', fact: 'Les fibres de cotó creixen al voltant de les llavors del cotoner. A la natura, ajuden les llavors a escampar-se amb el vent.' }, persona: { name: 'Persona', fact: 'Totes les persones que viuen avui pertanyen a la mateixa espècie, Homo sapiens, sigui quin sigui el seu lloc de naixement.' }, colla: { name: 'Colla', fact: 'Les colles castelleres es poden reconèixer pel color de la camisa. La faixa ajuda a protegir l\'esquena i a enfilar-se.' }, roba: { name: 'Roba', fact: 'Molts teixits es fan entrecreuant dos grups de fils: l\'ordit i la trama. És la feina que fa un teler.' }, // i18n-ok: Catalan-only game
       pinya: { name: 'Pinya', fact: 'És la base del castell. Si algú cau, fa de coixí.' }, // i18n-ok: Catalan-only game
       castell: { name: 'Castell', fact: 'La tradició dels castells va néixer a Valls a principis del segle XIX.' }, // i18n-ok: Catalan-only game
       enxaneta: { name: 'Enxaneta', fact: 'Puja per un costat, fa l\'aleta i baixa per l\'altre. L\'aleta vol dir que el castell ja és carregat.' }, // i18n-ok: Catalan-only game
       faixa: { name: 'Faixa', fact: 'S\'enrotlla a la cintura per protegir l\'esquena.' }, // i18n-ok: Catalan-only game
       gralla: { name: 'Gralla', fact: 'La gralla i el timbal acompanyen la construcció dels castells.' }, // i18n-ok: Catalan-only game
       timbal: { name: 'Timbal', fact: 'La música dels castells marca els moments clau quan es carreguen i es descarreguen.' }, // i18n-ok: Catalan-only game
-      musica: { name: 'Música' }, ball: { name: 'Ball' }, polvora: { name: 'Pólvora' }, // i18n-ok: Catalan-only game
+      musica: { name: 'Música', fact: 'El toc de castells explica amb música com avança la construcció. Així, qui no pot mirar amunt també sap en quin moment es troba.' }, ball: { name: 'Ball', fact: 'Alguns balls de festa també expliquen històries amb paraules. A Valls, els Diables representen el seu ball parlat per Santa Úrsula.' }, polvora: { name: 'Pólvora', fact: 'La pólvora es va descobrir a la Xina. Els alquimistes que la van descobrir buscaven un elixir per allargar la vida.' }, // i18n-ok: Catalan-only game
       carretilla: { name: 'Carretilla', fact: 'És un coet que corre escopint espurnes i acaba amb un petit pet.' }, // i18n-ok: Catalan-only game
-      tronada: { name: 'Tronada' }, mullat: { name: 'Petard mullat' }, // i18n-ok: Catalan-only game
+      tronada: { name: 'Tronada', fact: 'A Valls, la Tronada inaugural de Sant Joan es fa al Pati. Després, les colles tornen a la plaça del Blat i alcen pilars.' }, mullat: { name: 'Petard mullat', fact: 'Un petard que no ha esclatat encara pot ser perillós. No l\'agafis ni intentis tornar-lo a encendre.' }, // i18n-ok: Catalan-only game
       diables: { name: 'Diables', fact: 'Van de vermell amb dues banyetes. La Diablessa reparteix el foc.' }, // i18n-ok: Catalan-only game
       correfoc: { name: 'Correfoc', fact: 'El Drac tanca la Festa Major de Sant Joan amb el correfoc.' }, // i18n-ok: Catalan-only game
-      bestia: { name: 'Bèstia' }, // i18n-ok: Catalan-only game
-      drac: { name: 'Drac', fact: 'El Drac de Valls té dos caps i disset punts de foc.' }, // i18n-ok: Catalan-only game
-      mulassa: { name: 'Mulassa', fact: 'La Mulassa de Valls fa 4,60 metres de llarg i la porten quatre persones.' }, // i18n-ok: Catalan-only game
-      aliga: { name: 'Àliga', fact: 'L\'Àliga de Valls porta un colom viu a la boca.' }, // i18n-ok: Catalan-only game
-      bou: { name: 'Bou Tradicional', fact: 'El Bou Tradicional de Valls porta foc als correfocs.' }, // i18n-ok: Catalan-only game
-      cavall: { name: 'Cavall' }, // i18n-ok: Catalan-only game
-      cavallets: { name: 'Cavallets', fact: 'Hi ballen deu persones, cinc a cada bàndol.' }, // i18n-ok: Catalan-only game
-      gegants: { name: 'Gegants', fact: 'Valls en té quatre: el Gegant de la Porra, la Geganta, el Lladrefaves i la Gegantona.' }, // i18n-ok: Catalan-only game
-      nans: { name: 'Nans', fact: 'No tenen nom: es diuen segons el que fan, com l\'Alcalde o el Sabater.' }, // i18n-ok: Catalan-only game
+      bestia: { name: 'Bèstia', fact: 'El bestiari festiu inclou figures d\'animals reals i imaginaris. Formen part de la festa i poden tenir funcions de joc o de cerimònia.' }, // i18n-ok: Catalan-only game
+      drac: { name: 'Drac', fact: 'El Drac de Valls té dos caps i disset punts de foc, repartits entre les boques, les ales i la cua.' }, // i18n-ok: Catalan-only game
+      mulassa: { name: 'Mulassa', fact: 'Per fer ballar la Mulassa de Valls calen quatre persones: dues al davant i dues al darrere.' }, // i18n-ok: Catalan-only game
+      aliga: { name: 'Àliga', fact: 'La nit de Completes, l\'Àliga de Valls balla dins de l\'església de Sant Joan, davant la relíquia del patró.' }, // i18n-ok: Catalan-only game
+      bou: { name: 'Bou Tradicional', fact: 'El Bou Tradicional de Valls es va recuperar el 2012. Participa en el seguici i porta foc als correfocs.' }, // i18n-ok: Catalan-only game
+      cavall: { name: 'Cavall', fact: 'Els cavalls poden dormir drets, però també necessiten estirar-se. Algunes fases del son només les poden fer ajaguts.' }, // i18n-ok: Catalan-only game
+      cavallets: { name: 'Cavallets', fact: 'Al Ball de Cavallets de Valls hi participen deu balladors, dividits en dos bàndols. Amb la dansa representen un enfrontament.' }, // i18n-ok: Catalan-only game
+      gegants: { name: 'Gegants', fact: 'Els quatre gegants municipals de Valls són el Gegant de la Porra, la Geganta, el Lladrefaves i la Gegantona.' }, // i18n-ok: Catalan-only game
+      nans: { name: 'Nans', fact: 'Els Nans de Valls es coneixen pels personatges que representen. Entre ells hi ha l\'Alcalde, el Sabater i l\'Arlequí.' }, // i18n-ok: Catalan-only game
       seguici: { name: 'Seguici', fact: 'A la Festa Major de Sant Joan de Valls, el Drac encapçala les sortides del Seguici.' }, // i18n-ok: Catalan-only game
       espelma: { name: 'Espelma' }, // i18n-ok: Catalan-only game
       maredeu: { name: 'Mare de Déu de la Candela', fact: 'Valls celebra les Festes Decennals en el seu honor.' }, // i18n-ok: Catalan-only game
@@ -95,11 +95,11 @@ export const COPY = {
       cercolets: { name: 'Ball de Cercolets', fact: 'Va néixer a les festes de la verema.' }, // i18n-ok: Catalan-only game
       ferro: { name: 'Ferro' }, // i18n-ok: Catalan-only game
       campana: { name: 'Campana' }, // i18n-ok: Catalan-only game
-      os: { name: 'Ós', fact: 'A la Festa Major, els nens li donen els xumets.' }, // i18n-ok: Catalan-only game
+      os: { name: 'Ós', fact: 'El primer dia de la Festa Major de Sant Joan, els xiquets de Valls poden donar els seus xumets a l\'Ós.' }, // i18n-ok: Catalan-only game
       ou: { name: 'Ou' }, // i18n-ok: Catalan-only game
       serp: { name: 'Serp' }, // i18n-ok: Catalan-only game
       basilisc: { name: 'Basilisc', fact: 'Segons una llegenda, neix d\'un ou de gall amb l\'ajuda d\'una serp i un gripau.' }, // i18n-ok: Catalan-only game
-      aligons: { name: 'Aligons', fact: 'Són tres infants que ballen al voltant de l\'Àliga.' }, // i18n-ok: Catalan-only game
+      aligons: { name: 'Aligons', fact: 'Els aligons són tres infants que acompanyen l\'Àliga de Valls i ballen al seu voltant. Es van recuperar el 1991.' }, // i18n-ok: Catalan-only game
       bastons: { name: 'Ball de Bastons', fact: 'A Valls ja surt el 1712, en una processó.' }, // i18n-ok: Catalan-only game
       pastor: { name: 'Pastor' }, // i18n-ok: Catalan-only game
       pastorets: { name: 'Ball de Pastorets', fact: 'És un ball on també es diuen versos.' }, // i18n-ok: Catalan-only game
@@ -153,9 +153,9 @@ export const COPY = {
       santaursula: { name: 'Santa Úrsula', fact: 'És la copatrona de Valls. La seva fira és a l\'octubre, amb una gran diada castellera.' }, // i18n-ok: Catalan-only game
       santjoan: { name: 'Sant Joan', fact: 'La Festa Major de Valls és la de Sant Joan.' }, // i18n-ok: Catalan-only game
       roser: { name: 'Capella del Roser', fact: 'Té rajoles que mostren la batalla de Lepant.' }, // i18n-ok: Catalan-only game
-      lleo: { name: 'Lleó', fact: 'Es va incorporar al Seguici per a les Decennals del 2011.' }, // i18n-ok: Catalan-only game
-      gitanes: { name: 'Ball de Gitanes', fact: 'Es va recuperar el 1985.' }, // i18n-ok: Catalan-only game
-      primera: { name: 'Ball de la Primera', fact: 'És l\'única dansa exclusiva de Valls.' }, // i18n-ok: Catalan-only game
+      lleo: { name: 'Lleó', fact: 'El Lleó de Valls es va estrenar per les Decennals del 2011. És de llautó i el porten dues persones.' }, // i18n-ok: Catalan-only game
+      gitanes: { name: 'Ball de Gitanes', fact: 'Al Ball de Gitanes de Valls, les balladores trenen cintes al voltant d\'un pal. Les cintes tenen els colors de la bandera de Valls.' }, // i18n-ok: Catalan-only game
+      primera: { name: 'Ball de la Primera', fact: 'El Ball de la Primera de Valls és una dansa per a xiquets. A les cercaviles hi participen dotze balladors, acompanyats de gralles i timbal.' }, // i18n-ok: Catalan-only game
       bouvalls: { name: 'Bou de Valls', fact: 'No porta foc. El van recuperar el 2012 el Calçot i La Turba.' }, // i18n-ok: Catalan-only game
       perles: { name: 'Perles' }, // i18n-ok: Catalan-only game
       alcaldessa: { name: 'Alcaldessa' }, // i18n-ok: Catalan-only game

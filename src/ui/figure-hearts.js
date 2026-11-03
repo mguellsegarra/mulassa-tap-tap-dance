@@ -1,4 +1,4 @@
-// The heart of a figure: the totals come once from the server and each tap updates only after the server saved it.
+// The heart of a figure: the totals come once from the server; a tap shows at once and is undone if the server refuses it.
 import { tr } from '../i18n/messages.js';
 
 const BIT_COLORS = ['#e0364c', '#ff6b7f', '#f5c518', '#c0283c'], BITS = 30, FAILED_MS = 3500;
@@ -29,18 +29,19 @@ function heartFailed(button) {
   note.className = 'sel-heart-fail'; note.setAttribute('role', 'alert'); note.textContent = tr('ui.hearts.failed');
   (button.closest('dialog') ?? doc.body).append(note);
   const next = button.closest('.sel-pending')?.querySelector('.sel-pending-actions')?.getBoundingClientRect();
-  if (next) note.style.maxWidth = `${r.width}px`; // on a pending card: as wide as its button, centred in the room above the next one
+  if (next) note.style.maxWidth = `${r.width}px`; // on a pending card: as wide as its button, just under it (the next one sits above or beside it)
   note.style.left = `${Math.max(12, Math.min(r.left + r.width / 2 - note.offsetWidth / 2, win.innerWidth - note.offsetWidth - 12))}px`;
   note.style.top = `${r.bottom + (next?.height ? Math.max(4, (next.top - r.bottom - note.offsetHeight) / 2) : 10)}px`;
   setTimeout(() => note.remove(), FAILED_MS);
   return note;
 }
 export function setupHearts({ service, needConfirmed, onChange = () => {} }) {
-  let totals = null, loading = null, session = 0, failed = null; const mine = new Set(), saving = new Set();
+  let totals = null, loading = null, session = 0, failed = null, owner, checking = null; const mine = new Set(), saving = new Set();
+  const whose = async () => { try { return await service.ownerId?.(); } catch { return undefined; } };
   // an answer from before a change of account never lands on the new one
   function load() {
     const asked = session;
-    loading ??= Promise.resolve().then(() => service.figureHearts()).then(rows => { // a board without hearts (the dev mock): no counts, no crash
+    loading ??= Promise.resolve().then(whose).then(id => { if (asked === session) owner = id; return service.figureHearts(); }).then(rows => { // a board without hearts (the dev mock): no counts, no crash
       if (asked !== session) return;
       totals = new Map(); mine.clear();
       for (const r of rows) { totals.set(r.figure, r.hearts); if (r.mine) mine.add(r.figure); }
@@ -51,20 +52,44 @@ export function setupHearts({ service, needConfirmed, onChange = () => {} }) {
   const save = async (figure, button) => {
     if (saving.has(figure.id)) return;
     failed?.remove(); // a new try: the old failure no longer holds
-    saving.add(figure.id); const on = !mine.has(figure.id), asked = session;
+    saving.add(figure.id);
+    const on = !mine.has(figure.id), asked = session, known = totals, before = totals?.get(figure.id) ?? 0;
+    const mark = yes => { if (yes) mine.add(figure.id); else mine.delete(figure.id); };
+    // the answer shows at the tap, burst included; a refusal undoes it and says so
+    mark(on);
+    if (known) known.set(figure.id, Math.max(0, before + (on ? 1 : -1)));
+    onChange();
+    if (on && button) heartBurst(button);
     try {
       const total = await service.setFigureHeart(figure.id, on);
       if (asked !== session) return;
       (totals ??= new Map()).set(figure.id, total);
-      if (on) { mine.add(figure.id); heartBurst(button); } else mine.delete(figure.id); // only once the server saved it
-    } catch { if (asked === session && button) { failed?.remove(); failed = heartFailed(button); } /* nothing else changed: the count and the state stay as the server has them */ } finally { saving.delete(figure.id); onChange(); }
+    } catch {
+      if (asked !== session) return;
+      mark(!on);
+      known?.set(figure.id, before);
+      if (button) { failed?.remove(); failed = heartFailed(button); }
+    } finally { saving.delete(figure.id); if (asked === session) onChange(); }
   };
+  const forget = () => { failed?.remove(); session++; loading = null; totals = null; mine.clear(); onChange(); };
   return {
     load,
-    reload() { failed?.remove(); session++; loading = null; totals = null; mine.clear(); onChange(); return load(); },
+    forget,
+    // The session changed. Confirming an e-mail is the same account: its hearts, and a save under way, stay. Another one
+    // starts clean, and a tap waits for this answer so that nothing of the last account can be inverted.
+    accountChanged() {
+      const asked = session;
+      checking = whose().then(id => {
+        checking = null;
+        if (asked === session && (id === undefined || id !== owner)) forget();
+        return load();
+      });
+      return checking;
+    },
+    reload() { forget(); return load(); },
     count: id => totals ? (totals.get(id) ?? 0) : null,
     mine: id => mine.has(id),
-    tap(figure, button) { needConfirmed('heart', () => { const asked = session; load().then(() => { if (asked === session) save(figure, button); }); }); },
+    tap(figure, button) { needConfirmed('heart', async () => { await checking; const asked = session; await load(); if (asked === session) save(figure, button); }); },
     paint(button, figure) {
       const n = totals ? (totals.get(figure.id) ?? 0) : null, on = mine.has(figure.id);
       button.setAttribute('aria-pressed', String(on));

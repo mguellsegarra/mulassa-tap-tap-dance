@@ -185,8 +185,8 @@ html:not([lang="ca"]) .board-links { row-gap: 16px; } /* longer words wrap the t
 .publish-error .btn-link { display: inline; min-height: 0; padding: 0; border: 0; font: inherit; font-weight: 700; color: inherit; text-wrap: wrap; text-decoration-color: currentColor; } /* «recupera el perfil» runs on in the sentence */ /* the field's own error, where the hint was */
 .publish-note { margin: 0; padding: 8px 12px; border: 1px solid #f5c51833; border-radius: 8px; background: #fff3d60a; text-align: center; color: #e8d8b8cc; font-size: 13px; line-height: 1.35; text-wrap: pretty; } /* consent: a flat note + Privadesa */
 .publish-note .btn-link { display: inline; min-height: 0; padding: 0 2px; font-size: 13px; }
-#profile-note { padding: 0 4px; border: 0; background: none; color: #e8d8b899; font-size: 12px; } /* small print: quieter than the lead above it */
-#profile-note .btn-link { font-size: 12px; }
+#profile-note { padding: 0 4px; border: 0; background: none; color: #e8d8b899; font-size: 11px; } /* small print: quieter than the lead above it */
+#profile-note .btn-link { font-size: 11px; }
 .publish-end { margin-top: 16px; }
 /* Publica → «Publicat!» → «Ets el número…»: no room kept blank before publishing (it read as a hole); board-ui.js eases
    the end's height (0.2 s) when a line comes, the buttons stay at its bottom and the new line slides in over them */

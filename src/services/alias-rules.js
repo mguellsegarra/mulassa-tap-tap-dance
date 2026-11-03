@@ -75,13 +75,13 @@ export function checkAlias(raw, { extras = SERVER_ACCEPTS_EXTRAS } = {}) {
     .replace(/[ŀĿ]/gu, m => (m === 'ŀ' ? 'l\u00B7' : 'L\u00B7'))
     .replace(/[\u2010-\u2015\u2212]/gu, '-') // dashes typed by phones
     .replace(/[\u2018\u02BC\u00B4`]/gu, '’')
-    .replace(/(?<=[lL])[.\u2022\u2027\u22C5\u00B7]+(?=[lL])/gu, '\u00B7') // l.l, l•l → l·l
+    .replace(/([lL])[.\u2022\u2027\u22C5\u00B7]+(?=[lL])/gu, '$1\u00B7') // l.l, l•l → l·l; no lookbehind: Safari before 16.4 throws on it
     .replace(new RegExp(`^[ ${SEP}\u00B7]+|[ ${SEP}\u00B7]+$`, 'gu'), ''); // the ends: spaces and separators
   const allowed = extras ? `${LETTERS}0-9\\-'’_\u00B7` : `${LETTERS}0-9\\-'’`;
   if (!new RegExp(`^[ ${allowed}]*$`, 'u').test(a)) return fail('chars'); // symbols first, then the spaces
   if (a.includes(' ')) return fail('spaces'); // "Drac De Valls", "a - b": the player joins the words, we don't
   a = a.replace(new RegExp(`[${SEP}]+`, 'gu'), run => run[0]); // "a__b" → "a_b", "a-'b" → "a-b"
-  if (a.replace(/(?<=[lL])\u00B7(?=[lL])/gu, '').includes('\u00B7')) return fail('chars'); // the dot only in l·l
+  if (a.replace(/([lL])\u00B7(?=[lL])/gu, '$1').includes('\u00B7')) return fail('chars'); // the dot only in l·l
   const n = [...a].length;
   if (n < ALIAS_MIN || n > ALIAS_MAX) return fail('length');
   if (!new RegExp(`[${LETTERS}]`, 'u').test(a)) return fail('letters');

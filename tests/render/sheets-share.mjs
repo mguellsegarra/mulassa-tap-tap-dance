@@ -10,6 +10,20 @@ const boardSheet = context.boardSheet;
 run(`G.state = 'select'; G.sel = 2;`);
 nodes.get('settings').listeners.click();
 settingsSheet.close();
+// the sheets' arrow keys move the focus, except in the sync sheet's run: there the metronome hears every key as a tap (sync-sheet.js)
+{
+  let focused = 0;
+  const item = { disabled: false, closest: () => null, offsetParent: {}, focus() { focused++; } };
+  const dlg = { id: 'sync-menu', dataset: { state: 'intro' }, querySelectorAll: () => [item] }, all = document.querySelectorAll;
+  const arrow = () => { focused = 0; keyHandlers.forEach(h => h({ key: 'ArrowRight', target: { tagName: 'DIALOG' }, preventDefault() {}, stopImmediatePropagation() {} })); return focused; };
+  document.querySelectorAll = q => (q === 'dialog.sheet[open]' ? [dlg] : all(q));
+  assert.equal(arrow(), 1, 'the sync sheet\'s first step: an arrow moves the focus');
+  dlg.dataset.state = 'run';
+  assert.equal(arrow(), 0, 'the running metronome: an arrow is left for the tap, the focus stays');
+  document.querySelectorAll = all;
+}
+// a profile made here has just been offered the badges: the news waits for the next visit
+assert(run(`(() => { const news = sheets.badgeNews, hold = news.holdVisit; let held = 0; news.holdVisit = () => { held++; }; service.ownerId = () => null; acceptStats(); delete service.ownerId; news.holdVisit = hold; return held === 1; })()`), 'accepting the statistics on a new profile holds the badges\' news');
 // the menu music's speaker (#music): title only; a click switches the loop, remembers it and says what the next click does
 {
   const stored = [], btn = nodes.get('music');

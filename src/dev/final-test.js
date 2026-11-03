@@ -41,6 +41,7 @@ export const REVIEWS = Object.freeze({
   verified: { account: 'new' }, 'released-name': { account: 'released' }, switch: { account: 'guest' },
   'profile-new': { account: 'new' }, 'profile-reserved': { account: 'reserved' }, 'profile-guest': { account: 'guest' },
   'profile-released': { account: 'released' }, 'profile-verified': { account: 'verified' },
+  'badge-news-confirmed': { account: 'verified' }, 'badge-news-guest': { account: 'guest' },
   board: { account: 'verified' }, 'board-tip': { account: 'verified' }, 'board-guest': { account: 'guest' }, 'board-empty': { account: 'guest', board: 'empty' },
   'board-drac': { account: 'verified' }, 'board-drac-empty': { account: 'verified', drac: 'empty' },
   seasons: { account: 'guest' }, 'seasons-later': { account: 'guest', seasons: 'later' }, 'season-end': { account: 'guest', seasons: 'later' },

@@ -20,6 +20,10 @@ try {
   assert.deepEqual(Object.keys((await rows())[0]).sort(), ['figure_id', 'hearts', 'mine'], 'never who gave them');
   await assert.rejects(q('select * from leaderboard_private.figure_hearts'), /permission denied/);
   await as(confirmed); await assert.rejects(set('Not A Figure!', true), /check constraint/);
+  for (let i = 0; i < 299; i++) await set(`figura-${i}`, true); // with «bou»: 300
+  await assert.rejects(set('figura-299', true), /figure_heart_limit/, 'the 301st is refused');
+  assert.equal(await set('figura-0', true), 1, 'at the limit, a heart already given still reads as saved');
+  assert.equal(await set('figura-0', false), 0); assert.equal(await set('figura-299', true), 1, 'one taken back makes room');
   await db.exec('reset role'); await q('delete from auth.users where id=$1', [confirmed]);
   assert.deepEqual(await rows(), [], 'deleting the account deletes its hearts');
   console.log('figure hearts ok');

@@ -1,8 +1,11 @@
 /* The selector's pending figures: the pending identity and attributions, and their sizes. */
 .sel-info::-webkit-scrollbar { display: none; }
 :root[data-keys] #select .sel-card[aria-selected="true"]:not(:focus)::after { box-shadow: inset 0 0 0 2px #fff3d640; } /* Keep selection quieter while the keyboard cursor is on another control (focus.js data-keys: a body:has(:focus-visible) restyled every card on each DOM change). */
-/* All pending identities occupy the same viewport-owned box.
-   Only opacity changes on entry/exit; content never sizes or translates the box. */
+/* The pending card has no card of its own: three dark islands on the plaça (identity; progress; support), as tall as their words and
+   centred in the band between the pills and the strip. Only opacity changes on entry/exit. */
+.sel-pending { --pending-bottom: calc(var(--pending-rest-bottom, 254px) - var(--drop)); /* here, where select-layout.js sets its rest: on #select each write restyled the selector */ --pending-max: calc(100% - var(--pending-top) - var(--pending-bottom, 254px)); --island-pad: 16px; --island-r: 18px; --island-gap: 12px; --island-btn: 50px; --title-size: 26px; --entity-reserve: 52px; position: absolute; z-index: 1; top: calc((100% + var(--pending-top) - var(--pending-bottom, 254px)) / 2); left: 50%; translate: -50% -50%; width: min(480px, calc(100% - 28px)); max-height: var(--pending-max); box-sizing: border-box; display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--island-gap); text-align: center; font-size: 16px; font-weight: 500; line-height: 1.3; container-type: inline-size; }
+/* Wide, short windows have height for one row less: a wider card keeps the title and the pills on one line each. A landscape tablet at 768 px has the room for the narrower one (its 90% zoom), so only a mouse keeps it up to 799 px. */
+@media (min-width: 668px) and (min-height: 501px) and (max-height: 767px), (min-width: 668px) and (min-height: 768px) and (max-height: 799px) and (pointer: fine) { .sel-pending { width: min(640px, calc(100% - 28px)); } }
 #select { bottom: var(--app-gap, 0px); --pending-top: calc(var(--town-row-top) + 44px + 12px + env(safe-area-inset-top)); }
 #select .sel-info { transition: opacity .22s var(--sel-ease), display .22s allow-discrete; }
 #select .sel-pending { transform: none; transition: opacity .26s var(--sel-ease), display .32s allow-discrete; }
@@ -14,10 +17,7 @@
 }
 @media (prefers-reduced-motion: reduce) { #select { transition: none; } }
 @media (prefers-reduced-motion: reduce) { #select :is(.sel-pending, .sel-info) { transition: none; } }
-.sel-pending { --pending-bottom: calc(var(--pending-rest-bottom, 254px) - var(--drop)); /* here, where select-layout.js sets its rest: on #select each write restyled the selector */ --contact-pad: 12px; --contact-gap: 10px; --pending-max: calc(100% - var(--pending-top) - var(--pending-bottom, 254px)); position: absolute; z-index: 1; top: calc((100% + var(--pending-top) - var(--pending-bottom, 254px)) / 2); left: 50%; translate: -50% -50%; width: min(480px, calc(100% - 28px)); height: min(360px, var(--pending-max)); box-sizing: border-box; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) 48px calc(44px + var(--contact-gap)); align-items: center; justify-items: center; gap: 0; padding: 3px 16px var(--contact-pad); border: 1px solid var(--sel-line); border-radius: var(--sel-r); text-align: center; background: #1a110bf5; box-shadow: 0 8px 24px #0005; font-size: 16px; font-weight: 500; line-height: 1.3; container-type: size; }
-.sel-pending-content { grid-row: 1; width: 100%; height: 100%; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: space-evenly; }
-.sel-pending-content > * { flex: none; }
-.sel-pending h2 { --title-size: 26px; color: #f5c518; margin: 0; padding: 6px 14px; width: 100%; box-sizing: border-box; display: flex; align-items: center; justify-content: center; font: 800 var(--title-size)/1.1 'Baloo 2', system-ui, sans-serif; text-wrap: balance; }
+.sel-pending h2 { color: #f5c518; margin: 0; width: 100%; box-sizing: border-box; display: flex; align-items: center; justify-content: center; font: 800 var(--title-size)/1.1 'Baloo 2', system-ui, sans-serif; text-wrap: balance; }
 .sel-pending h2 > span { display: block; width: 100%; }
 :is(.sel-pending, .sel-identity, .about-uaf) .sel-entity { --entity-holo: linear-gradient(105deg, #ffb3c7, #ffe29a, #b8f0c8, #a8dcff, #d7b8ff, #ffb3c7); max-width: 100%; box-sizing: border-box; font-size: 12px; line-height: 16px; min-height: 24px; row-gap: 0; background: var(--entity-holo) 0 0 / 300% 100%; color: #2a1a10; box-shadow: inset 0 0 0 1px #fff9, 0 0 4px #d7b8ff40; animation: sel-holo 6s linear infinite; }
 /* Each attribution keeps its own holo surface; the separator travels with the second one. */
@@ -27,15 +27,6 @@
 :is(.sel-pending, .sel-identity) .sel-entity-plus { color: #fff3d6; }
 :is(.sel-pending, .sel-identity) .sel-entity-part { box-sizing: border-box; padding: 4px 10px; border-radius: 999px; min-height: 24px; background: var(--entity-holo) 0 0 / 300% 100%; box-shadow: inset 0 0 0 1px #fff9, 0 0 4px #d7b8ff40; animation: sel-holo 6s linear infinite; }
 #select :is(.sel-pending, .sel-identity) .sel-entity svg, .about-uaf .sel-entity svg { width: auto; height: 16px; }
-/* Compact cards give up label and paragraph padding before type or contact targets. */
-@container (max-height: 300px) {
-  :is(.sel-pending, .sel-identity) .sel-entity-part { min-height: 20px; padding-block: 2px; }
-  .sel-pending:has(.sel-entity-unit) .sel-pending-copy p { padding-block: 1px; }
-  :is(.sel-pending, .sel-identity) .sel-entity:has(.sel-entity-unit) { row-gap: 2px; }
-  @media (max-width: 519px) and (min-height: 501px) {
-    .sel-pending:has(.sel-entity-unit) h2 { padding-block: 4px; }
-  }
-}
 @keyframes sel-holo { to { background-position: 300% 0; } }
 :is(.sel-pending, .sel-identity) :is(.sel-entity, .sel-entity-part) { position: relative; isolation: isolate; overflow: hidden; animation: none; }
 /* The selector's badges fade between two still gradients the size of the pill: only opacity moves, so nothing repaints and no wide
@@ -47,59 +38,14 @@
 @media (prefers-reduced-motion: reduce) { :is(.sel-pending, .sel-identity, .about-uaf) :is(.sel-entity, .sel-entity-part), :is(.sel-pending, .sel-identity) :is(.sel-entity, .sel-entity-part)::before { animation: none; } }
 .sel-pending .sel-where { display: block; width: 100%; text-align: center; font: 600 12px/16px 'Baloo 2', system-ui, sans-serif; color: #e8d8b8; } /* town · comarca, island or territory */
 .sel-pending .sel-where[hidden] { display: none; }
-.sel-pending p { margin: 0; padding-block: 3px; text-wrap: balance; }
+.sel-pending p { margin: 0; text-wrap: balance; }
 .sel-pending .sel-pending-copy { display: contents; }
-.sel-pending-copy p + p { font-size: 14px; color: #b9a98c; } /* the side note steps back from the call */
-.sel-pending > .btn-primary { grid-row: 2; width: 100%; height: 100%; min-height: 44px; padding-block: 4px; font-size: 16px; }
-/* One contact action across every pending variant; phones keep their full reading column. */
-@media (min-width: 520px) { .sel-pending > .btn-primary { max-inline-size: 360px; } }
-#select .sel-pending > .btn-primary { animation: none; scale: none; rotate: none; } /* Keep the contact target still while identities change. */
-.sel-pending-links { grid-row: 3; height: 44px; align-self: end; display: grid; grid-template-columns: repeat(2, auto); justify-content: space-evenly; align-items: center; width: 100%; min-height: 44px; }
-.sel-pending-links .btn { min-height: 44px; padding: 4px 0; font-size: 14px; white-space: normal; display: flex; justify-content: center; align-items: center; gap: 6px; }
-.sel-pending-links .btn > svg { flex: none; width: 18px; height: 18px; margin: 0; }
-.sel-pending-links .btn > span { min-width: 0; overflow-wrap: normal; }
-/* Compact bands keep the same five rows. Optional copy yields before readable names and 44px targets. */
-@container (max-height: 300px) {
-  .sel-pending-copy p + p { display: none; }
-}
-@media (max-width: 519px), (max-height: 740px) {
-  .sel-pending { --contact-pad: 6px; --contact-gap: 6px; padding-inline: 10px; grid-template-rows: minmax(0, 1fr) 44px calc(44px + var(--contact-gap)); font-size: 14px; line-height: 1.25; }
-  .sel-pending h2 { --title-size: 22px; }
-  .sel-pending-links .btn { font-size: 13px; min-width: min-content; }
-}
-/* A tall phone has the full reading band: match its outer margins to the links' target slack. */
-@media (max-width: 519px) and (min-height: 780px) {
-  .sel-pending { --contact-pad: 12px; --contact-gap: 10px; }
-}
 @media (max-height: 500px) {
   #select[data-pending] .sel-towns { left: 43%; width: 57%; }
   .sel-pending { --contact-top: calc(60px + env(safe-area-inset-top)); }
-  .sel-pending { left: max(12px, env(safe-area-inset-left)); translate: 0 -50%; width: calc(43% - max(12px, env(safe-area-inset-left)) - 8px); top: calc((100% + 60px + env(safe-area-inset-top) - 8px - env(safe-area-inset-bottom)) / 2); height: calc(100% - 68px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); }
+  .sel-pending { left: max(12px, env(safe-area-inset-left)); translate: 0 -50%; width: calc(43% - max(12px, env(safe-area-inset-left)) - 8px); top: calc((100% + 60px + env(safe-area-inset-top) - 8px - env(safe-area-inset-bottom)) / 2); max-height: calc(100% - 68px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); overflow-y: auto; scrollbar-width: none; /* a tiny window (phones get the rotate cover): scrolled rather than a target off screen */ }
 }
 /* The narrow landscape column spends footer air on complete attribution names. */
-@media (min-width: 520px) and (max-width: 667px) and (max-height: 400px) {
-  .sel-pending { --contact-pad: 2px; --contact-gap: 2px; }
-}
-
-@media (max-width: 479px) and (max-height: 600px),
-       (max-width: 519px) and (max-height: 400px) {
-  /* Short phones spend 4px of each outer gap on reading room; keep the same band centre and targets. */
-  .sel-pending { --contact-pad: 0px; --contact-gap: 0px; --pending-max: calc(100% - var(--pending-top) - var(--pending-bottom, 254px) + 8px); padding-top: 0; }
-}
-
-/* A 640 px reading card can share its identity row from 668 px; the dock must leave room on both sides of 900 px. */
-/* Wide, short windows split the card in two columns. A landscape tablet at 768 px has the room for the one-column card (its 90% zoom), so only a mouse keeps the split up to 799 px. */
-@media (min-width: 668px) and (min-height: 501px) and (max-height: 767px), (min-width: 668px) and (min-height: 768px) and (max-height: 799px) and (pointer: fine) {
-  /* Pay for extra wrapping with footer air, before fitPendingTitle has to reduce the type. */
-  .sel-pending { --contact-pad: 6px; --contact-gap: 6px; padding-top: 0; width: min(640px, calc(100% - 28px)); }
-  /* Title on its own row; the place and the attribution share the next one, centred as a pair (a stacked attribution stays: it is never dropped). */
-  .sel-pending-content { display: grid; grid-template-columns: minmax(0, 1fr) auto auto minmax(0, 1fr); align-content: space-evenly; align-items: center; justify-items: center; column-gap: 10px; }
-  .sel-pending h2 { grid-row: 1; grid-column: 1 / -1; }
-  .sel-pending .sel-where { grid-row: 2; grid-column: 2; width: auto; }
-  .sel-pending .sel-entity { grid-row: 2; grid-column: 3; }
-  .sel-pending-copy > *, .sel-lower { grid-column: 1 / -1; }
-  .sel-pending-content:has(.sel-where[hidden]) .sel-entity { grid-column: 1 / -1; }
-}
 
 /* Before the desktop dock breakpoint, pending content needs the same compact footer to keep its reading band. */
 @media (min-width: 668px) and (max-width: 899px) and (min-height: 501px) and (max-height: 660px) {
@@ -120,7 +66,7 @@
    full height: the drawings stay. */
 @media (max-width: 519px) and (min-height: 501px) and (max-height: 700px) {
   #select { --dock-h: clamp(160px, calc(100dvh - 408px), 240px); }
-  .sel-pending { width: calc(100% - 16px); padding-inline: 8px; }
+  .sel-pending { width: calc(100% - 16px); }
   .sel-card { container-type: size; }
   @container (max-height: 100px) {
     .sel-card .por { --floor: 9px; grid-area: 1 / 1 / -1 / -1; justify-self: start; width: 46%; }
@@ -135,8 +81,7 @@
 @media (min-width: 520px) and (max-height: 599px),
        (min-width: 480px) and (max-width: 667px) and (min-height: 401px) and (max-height: 660px) {
   #select[data-pending] .sel-bottom { left: auto; right: 0; translate: none; width: 57%; }
-  .sel-pending { left: 21.5%; translate: -50% -50%; width: min(480px, calc(43% - 24px)); top: calc((100% + var(--contact-top, var(--pending-top)) - 12px) / 2); height: min(360px, calc(100% - var(--contact-top, var(--pending-top)) - 12px)); }
-  .sel-pending-content { display: flex; }
+  .sel-pending { left: 21.5%; translate: -50% -50%; width: min(480px, calc(43% - 24px)); top: calc((100% + var(--contact-top, var(--pending-top)) - 12px) / 2); max-height: calc(100% - var(--contact-top, var(--pending-top)) - 12px); }
 }
 
 /* The shortest landscape phones need a wider reading column; the strip still shows one whole card. */
@@ -182,47 +127,39 @@
 /* A narrow, short window (1197×624 on a 2016 MacBook with Linux): the short layouts at the browser's own 75%. Not past 1279 px: a 13" Mac's ~1440×790 stays at 90%. */
 @media (min-width: 1100px) and (max-width: 1279px) and (min-height: 600px) and (max-height: 799px) and (pointer: fine) { #select { zoom: 0.75; } }
 
-/* The pending card: the identity takes the free room and may change with the name; the call, the state and the actions stay
-   pinned to the foot, so changing figure moves nothing under the finger. Grouped by proximity, one centred axis, no inner boxes. */
-.sel-pending { grid-template-rows: minmax(0, 1fr) 44px !important; padding: 4px 12px 12px; }
-.sel-pending[data-no-actions] { grid-template-rows: minmax(0, 1fr) 0 !important; }
-.sel-pending-content { justify-content: flex-start; gap: 4px; }
-/* The identity has one fixed zone, tall enough for the longest name and attribution, with its words centred in it; the rest of the card is shared evenly between the call, the state and the actions. So there is no hole and changing figure moves nothing below the name. */
-.sel-pending { --id-zone: 92px; padding-top: 10px; }
-@media (max-width: 519px) { .sel-pending { --id-zone: 88px; padding-top: 12px; padding-bottom: 16px; } } /* sized for the usual name: a longer one spills evenly into the air around it, moving nothing */
-@media (max-width: 340px) { .sel-pending-id { height: auto !important; min-height: var(--id-zone); } } /* the narrowest phones have no air to spill into: only the longest names push the rest */
-.sel-pending-id { flex: none !important; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; width: 100%; height: var(--id-zone); }
-.sel-pending-id > * { flex: none; }
-.sel-pending-content:has(.sel-lower[hidden]) { justify-content: center; }
-.sel-pending-content:has(.sel-lower[hidden]) .sel-pending-id { height: auto; }
-.sel-lower { flex: 1 1 0; display: grid; grid-template-rows: minmax(0, .55fr) auto minmax(0, 1fr) auto minmax(0, 1fr); width: 100%; min-height: 0; } /* the free room in equal shares between the identity, the call, the state and the action */
-.sel-call { grid-row: 2; }
-.sel-state { grid-row: 4; }
-.sel-pending-content:has(.sel-lower[hidden]) .sel-pending-copy { display: block; }
-.sel-pending-content:has(.sel-lower[hidden]) .sel-pending-copy p { margin-top: 8px; font-size: 16px; line-height: 1.3; }
-.sel-lower[hidden] { display: none; }
-.sel-call { display: grid; justify-items: center; gap: 8px; }
-.sel-pending p.sel-call-line { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 20px; padding: 0; font-size: 15px; font-weight: 600; line-height: 20px; color: #fff3d6; } /* one height with and without the count: the heart never moves when pressed */
+/* The islands: one ground, one radius, one padding, one gap. */
+.sel-pending-id, .sel-state, .sel-call { box-sizing: border-box; min-width: 0; display: flex; flex-direction: column; align-items: center; padding: var(--island-pad); border-radius: var(--island-r); background: #21170ff2; }
+.sel-pending-id { gap: 4px; }
+.sel-pending-id :is(.sel-entity-unit, .sel-entity-part) { max-width: 100%; min-width: 0; }
+.sel-pending-id .sel-entity { flex-wrap: wrap; justify-content: center; }
+.sel-pending-id .sel-entity-part { white-space: normal; text-align: center; }
+.sel-pending-id .sel-entity[data-stacked] .sel-entity-plus { display: none; } /* stacked badges need no plus */
+.sel-state, .sel-call { gap: var(--island-gap); }
+.sel-lower { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--island-gap); }
+/* Side by side only from 668 px and where the card has the room: a split layout's narrow column keeps the stack. Beside each other the islands share one height: the buttons on one line at the foot, each island's words centred above. */
+@media (min-width: 668px) { @container (min-width: 440px) { .sel-lower { grid-template-columns: repeat(2, minmax(0, 1fr)); } } }
+.sel-state-words { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.sel-pending p.sel-call-line { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0 6px; min-height: 20px; font-size: 16px; font-weight: 600; line-height: 20px; color: #fff3d6; } /* one height with and without the count: the heart never moves when pressed */
+/* The narrower pair: the count takes two lines, so the question keeps them too and pressing moves nothing. */
+@media (min-width: 668px) { @container (min-width: 440px) and (max-width: 560px) { .sel-pending p.sel-call-line { min-height: 38px; } } }
 .sel-call-n { font-size: 32px; font-weight: 800; line-height: 20px; background: var(--entity-holo, linear-gradient(105deg, #ffb3c7, #ffe29a, #b8f0c8, #a8dcff, #d7b8ff, #ffb3c7)) 0 0 / 300% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: sel-holo 6s linear 2; } /* text can't use the moving layer: a couple of sweeps, not a repaint every frame for ever */
 .sel-call-n.sel-heart-pop { display: inline-block; animation: sel-heart-pop .55s cubic-bezier(.3, 1.7, .5, 1), sel-holo 6s linear 2; }
-.sel-call-line small { font-size: 14px; font-weight: 700; line-height: 17px; white-space: nowrap; }
-@media (max-width: 340px) { .sel-call-line small { font-size: 12.5px; } }
+.sel-call-line small { font-size: 14px; font-weight: 700; line-height: 18px; }
 @media (prefers-reduced-motion: reduce) { .sel-call-n, .sel-call-n.sel-heart-pop { animation: none; } }
-.sel-state { display: grid; justify-items: center; gap: 2px; }
-.sel-pending p.sel-status { padding: 0; font-size: 14px; font-weight: 700; line-height: 18px; color: #e8d8b8; }
-.sel-pending p.sel-status[data-ready] { color: #a6e3a1; }
-.sel-pending p.sel-missing { padding: 0; font-size: 14px; font-weight: 600; line-height: 19px; color: #e8d8b8; text-wrap: balance; }
-.sel-pending p.sel-missing[hidden] { display: none; }
-.sel-missing b { font-weight: 700; color: #f5c518; }
-/* No actions (on its way): the freed row goes to a louder state and taller tiles, not to a hole. */
-.sel-pending[data-no-actions] p.sel-status { font-size: 20px; line-height: 24px; font-weight: 800; }
-.sel-pending[data-no-actions] .sel-state { gap: 6px; }
-.sel-pending-actions { grid-row: 2; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 290px); justify-content: center; gap: 8px; width: 100%; height: 44px; }
-.sel-pending-actions .btn { min-width: 0; min-height: 44px; padding: 4px 8px; font-size: 15px; line-height: 1.1; }
-#select .sel-pending-actions .btn { animation: none; scale: none; rotate: none; } /* Keep the contact targets still while identities change. */
+.sel-pending p.sel-status { font-size: 17px; font-weight: 800; line-height: 22px; color: #f5c518; }
+.sel-pending p.sel-missing { max-width: 100%; font-size: 14px; font-weight: 600; line-height: 18px; color: #e8d8b8; }
+.sel-missing b { font-weight: inherit; }
+.sel-missing span { display: block; }
+.sel-pending-actions { display: flex; justify-content: center; width: 100%; }
+.sel-pending[data-no-actions] .sel-pending-actions { display: none; }
+#select .sel-pending .btn { box-sizing: border-box; width: fit-content; max-width: 100%; min-width: 0; min-height: var(--island-btn); padding: 4px 24px; border-radius: 12px; font-size: 16px; line-height: 1.1; animation: none; scale: none; rotate: none; } /* Keep the targets still while identities change. */
+.sel-pending-actions .btn-secondary { border-width: 2px; }
 .sel-pending-actions .sel-code-link { display: flex; align-items: center; justify-content: center; gap: 6px; }
 .sel-pending-actions .sel-code-link > svg { width: 18px; height: 18px; flex: none; }
-.sel-pending-actions [hidden] { display: none; }
+.sel-pending-copy:empty { display: none; }
+.sel-pending-copy p { font-size: 16px; line-height: 1.3; }
+.sel-pending[data-invite] .sel-pending-id { gap: var(--island-gap); }
+.sel-pending [hidden] { display: none; }
 /* The heart: gold before, red after, in both sizes. The wide one is the card's main action; the small one sits with the badge on a playable figure. */
 .sel-heart { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 0 12px; border: 0; border-radius: 999px; background: linear-gradient(#ffdc55, #e8b512); box-shadow: 0 2px 0 #9c7408; color: #2a1a10; font: 800 14px/1 'Baloo 2', system-ui, sans-serif; font-variant-numeric: tabular-nums; cursor: pointer; transition: translate .08s, box-shadow .08s; }
 .sel-heart:active { translate: 0 2px; box-shadow: none; }
@@ -231,7 +168,7 @@
 .sel-heart svg { flex: none; width: 16px; height: 16px; fill: currentColor; }
 .sel-heart[aria-pressed="true"] { background: linear-gradient(#e0364c, #ad1f33); box-shadow: 0 2px 0 #6d1220; color: #fff3d6; }
 .sel-heart:focus-visible { outline: 3px solid #fff3d6; outline-offset: 2px; }
-.sel-heart-wide { width: min(100%, 290px); padding: 0 20px; min-height: 44px; border-radius: 12px; box-shadow: 0 3px 0 #9c7408; font-size: 16px; }
+.sel-heart-wide { width: fit-content; max-width: 100%; padding: 0 24px; min-height: var(--island-btn, 44px); border-radius: 12px; box-shadow: 0 3px 0 #9c7408; font-size: 16px; }
 .sel-heart-wide[aria-pressed="true"] { box-shadow: 0 3px 0 #6d1220; }
 .sel-heart-wide:active { translate: 0 3px; }
 .sel-heart-wide svg { width: 20px; height: 20px; }
@@ -245,80 +182,42 @@
 #select .sel-identity-row .sel-heart { flex: none; height: 28px; min-height: 28px; min-width: 52px; padding: 0 9px; font-size: 13px; }
 #select .sel-identity-row .sel-heart svg { width: 16px; height: 16px; }
 #select .sel-identity-row .sel-heart::after { content: ""; position: absolute; inset: -8px 0; } /* a 44 px target around the smaller pill */
-/* Wide, short cards: the call and the state side by side on the actions' two columns, under the identity. */
-@media (min-width: 668px) and (min-height: 501px) and (max-height: 767px), (min-width: 668px) and (min-height: 768px) and (max-height: 799px) and (pointer: fine) {
-  .sel-pending { padding-inline: 16px; }
-  .sel-pending-content { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto minmax(0, 1fr); row-gap: 2px; }
-  .sel-pending-id { display: grid; grid-template-columns: minmax(0, 1fr) auto auto minmax(0, 1fr); justify-items: center; align-content: center; column-gap: 10px; height: 88px; grid-row: 1; }
-  .sel-pending-content:has(.sel-lower[hidden]) { grid-template-rows: minmax(0, 1fr) auto auto minmax(0, 1fr); }
-  .sel-pending-content:has(.sel-lower[hidden]) .sel-pending-id { grid-row: 2; }
-  .sel-pending h2 { grid-row: 1; grid-column: 1 / -1; margin: 0; }
-  .sel-pending .sel-where, .sel-pending .sel-entity { grid-row: 2; }
-  .sel-pending .sel-entity { grid-column: 2; } /* the badge first, as on phones and on a playable figure */
-  .sel-pending .sel-where { grid-column: 3; margin-inline-start: 6px; }
-  .sel-pending-content:has(.sel-lower[hidden]) .sel-pending-copy { grid-row: 3; grid-column: 1 / -1; }
-  .sel-lower { grid-row: 3; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: auto; align-items: center; align-content: center; gap: 16px; padding: 0; }
-  .sel-call, .sel-state { grid-row: 1; }
-  .sel-state { grid-template-rows: 20px 44px; gap: 4px; align-items: center; }
-}
-/* A desktop panel runs small: the secondary lines keep to the settings sheet's sizes. */
-@media (min-width: 900px) and (pointer: fine) {
-  .sel-pending p.sel-call-line, .sel-pending p.sel-status { font-size: 16px; }
-    .sel-pending .sel-where { font-size: 14px; }
-  .sel-pending-actions .btn, .sel-heart-wide { font-size: 17px; }
-}
-/* The invite is a short card: its words and its button together, its height from its content. */
-#select .sel-pending[data-invite] { container-type: normal; height: auto; grid-template-rows: auto 44px !important; row-gap: 16px; padding: 22px 16px 24px; } /* a size container can't take its height from its content */
-#select .sel-pending[data-invite] .sel-pending-id { min-height: 0; } /* the figures' name zone would leave a hole around the title */
-#select .sel-pending[data-invite] h2 { padding-block: 0; }
-#select .sel-pending[data-invite] .sel-pending-content { height: auto; }
 #select[data-invite] #select-next { visibility: hidden; } /* nothing to play here: the card's own button is the action */
-/* Wide, short cards have no spare height: the on-its-way state keeps the normal tiles. */
-@media (min-width: 668px) and (min-height: 501px) and (max-height: 767px), (min-width: 668px) and (min-height: 768px) and (max-height: 799px) and (pointer: fine) {
-  .sel-pending[data-no-actions] p.sel-status { font-size: 16px; line-height: 20px; }
-  .sel-pending[data-no-actions] .sel-state { gap: 8px; }
+/* Sizes per room: phones, then the windows and phones whose band can't take the full stack. Gaps and padding give first; never copy or a 44 px target. */
+@media (max-width: 519px) { .sel-pending { --title-size: 24px; } }
+@media (min-width: 900px) and (pointer: fine) { .sel-pending .sel-where { font-size: 14px; } }
+/* The 75% zoom below: the buttons still reach 44 px on screen. */
+@media (min-width: 1100px) and (max-width: 1279px) and (min-height: 600px) and (max-height: 799px) and (pointer: fine) { .sel-pending { --island-btn: 59px; } }
+@media (max-width: 340px), (max-width: 519px) and (max-height: 759px) {
+  .sel-pending { --island-pad: 8px 12px; --island-r: 12px; --island-gap: 8px; --island-btn: 44px; --pending-max: calc(100% - var(--pending-top) - var(--pending-bottom, 254px) + 8px); } /* short phones spend 4 px of each outer gap on reading room */
+  .sel-pending { --title-size: 21px; --entity-reserve: 44px; }
+  .sel-pending .sel-entity { font-size: 11px; line-height: 14px; }
+  .sel-pending .sel-entity-part { min-height: 20px; padding: 2px 6px; }
+  .sel-pending .sel-where { font-size: 12px; line-height: 16px; }
+  .sel-pending p.sel-status { font-size: 15px; line-height: 18px; }
+  .sel-pending p.sel-missing { font-size: 13px; line-height: 16px; }
+  .sel-pending p.sel-call-line { font-size: 14px; }
+  .sel-call-line small { font-size: 12.5px; line-height: 16px; }
+  .sel-state, .sel-call { gap: 4px; }
 }
-/* The longest identities (two attributions) on phones: the place gives way and the card keeps its top margin; stacked badges need no plus. */
-.sel-pending-id .sel-entity[data-stacked] .sel-entity-plus { display: none; }
-@media (max-width: 519px) {
-  .sel-pending-id:has(.sel-entity[data-stacked]) .sel-where { display: none; }
-  .sel-pending-id { height: auto; min-height: var(--id-zone); }
+/* Wide, low bands under the full dock (900×600, 700×640, 1280×610): the attribution beside the place, tighter islands; the pair stays. */
+@media (min-width: 668px) and (max-width: 1099px) and (min-height: 600px) and (max-height: 700px), (min-width: 1280px) and (min-height: 600px) and (max-height: 640px) {
+  .sel-pending { --island-pad: 6px 16px; --island-r: 14px; --island-gap: 6px; --island-btn: 44px; }
+  .sel-pending { --title-size: 22px; }
+  .sel-pending h2 { flex: 100%; }
+  .sel-pending-id { flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 2px 10px; }
+  .sel-pending .sel-where { width: auto; }
+  .sel-pending p.sel-status { font-size: 15px; line-height: 18px; }
+  .sel-pending p.sel-missing { font-size: 13px; line-height: 16px; }
+  .sel-state, .sel-call { gap: 4px; }
 }
-/* What we have, on a figure that needs nothing more: plain, not a button look-alike. */
-/* The question and the count share one 20 px line: the big number overhangs it, so pressing moves nothing and the gaps stay the same. */
-/* Nothing below the state: the last share goes, and the card's own margin closes it. */
-.sel-pending[data-no-actions] .sel-lower { grid-template-rows: minmax(0, 1fr) auto minmax(0, 1fr) auto 0; }
-@media (min-width: 668px) and (min-height: 501px) and (max-height: 767px), (min-width: 668px) and (min-height: 768px) and (max-height: 799px) and (pointer: fine) {
-  .sel-pending[data-no-actions] { height: auto; container-type: normal; grid-template-rows: auto 0 !important; padding-block: 12px 16px; } /* no action row to fill: the card closes on its content */
-  .sel-pending[data-no-actions] .sel-pending-content { height: auto; }
-  .sel-pending[data-no-actions] .sel-lower { flex: none; margin-top: 14px; grid-template-rows: auto; }
+@media (min-width: 1280px) and (min-height: 600px) and (max-height: 640px) { .sel-pending { --island-btn: 50px; } } /* its 90% zoom */
+@media (min-width: 520px) and (max-height: 599px), (min-width: 480px) and (max-width: 667px) and (min-height: 401px) and (max-height: 660px) {
+  .sel-pending { --island-pad: 10px 12px; --island-r: 14px; --island-gap: 8px; --island-btn: 44px; }
+  .sel-pending { --title-size: 22px; }
+  .sel-state, .sel-call { gap: 6px; }
 }
-@media (min-width: 668px) and (min-height: 501px) and (max-height: 767px), (min-width: 668px) and (min-height: 768px) and (max-height: 799px) and (pointer: fine) { .sel-pending { padding-bottom: 16px; } }
-/* On its way, nothing below the state: more of the spare room goes to the card's margins, so they read like the gaps inside. */
-@media (max-width: 519px), (min-width: 900px) and (min-height: 800px) { .sel-pending[data-no-actions] { padding-block: 20px 28px; } }
-/* Wide, short cards: two rows on two columns, the words above and the buttons side by side, so no third row is squeezed in. */
-@media (min-width: 668px) and (min-height: 501px) and (max-height: 767px), (min-width: 668px) and (min-height: 768px) and (max-height: 799px) and (pointer: fine) {
-  .sel-pending-id { height: auto; padding-top: 2px; }
-  .sel-pending:not([data-no-actions]):not(:has(.sel-lower[hidden])) { grid-template-rows: minmax(0, 1fr) 0 !important; }
-  .sel-pending:not([data-no-actions]) .sel-lower:not([hidden]) { grid-template-rows: auto 44px; column-gap: 16px; row-gap: 8px; }
-  .sel-pending:not([data-no-actions]) .sel-lower .sel-call, .sel-pending:not([data-no-actions]) .sel-lower .sel-state { display: contents; }
-  .sel-pending:not([data-no-actions]) .sel-call-line { grid-area: 1 / 1; align-self: end; }
-  .sel-pending:not([data-no-actions]) .sel-heart-wide { grid-area: 2 / 1; justify-self: center; }
-  .sel-pending:not([data-no-actions]) .sel-lower > .sel-state { grid-area: 1 / 2; }
-  .sel-pending:not([data-no-actions]) .sel-state-words { grid-area: 1 / 2; }
-  .sel-pending:not([data-no-actions]):not(:has(.sel-lower[hidden])) .sel-pending-actions { width: calc(50% - 8px); justify-self: end; justify-content: center; align-self: end; height: 44px; margin-top: -44px; }
-  .sel-pending[data-no-actions] { padding-block: 8px 22px; }
-}
-.sel-state-words { display: grid; justify-items: center; gap: 2px; }
-/* The words and buttons sit on the card's foot, so the two buttons share a line; the identity centres in what is left above. */
-@media (min-width: 668px) and (min-height: 501px) and (max-height: 767px), (min-width: 668px) and (min-height: 768px) and (max-height: 799px) and (pointer: fine) {
-  .sel-pending:not([data-no-actions]):not(:has(.sel-lower[hidden])) .sel-pending-content { grid-template-rows: minmax(0, 1fr) auto; }
-  .sel-pending:not([data-no-actions]) .sel-lower:not([hidden]) { grid-row: 2; align-content: end; }
-  .sel-pending:not([data-no-actions]):not(:has(.sel-lower[hidden])) .sel-pending-id { align-self: center; }
-}
-/* Everything in hand: green flags hung on a line, like the plaça's bunting. Each flag starts exactly on the rope. */
-.sel-pending p.sel-status[data-ready] { color: #f5c518; }
-.sel-pending[data-no-actions] p.sel-status { margin-bottom: 2px; }
+
 /* The ribbon pointing at a playable figure's heart, the first time. */
 .sel-heart-tip { position: fixed; z-index: 20; display: flex; align-items: center; gap: 8px; box-sizing: border-box; min-height: 40px; padding: 4px 12px; border-radius: 10px; background: linear-gradient(#d93148, #ad1f33); box-shadow: 0 3px 0 #6d1220, 0 6px 14px #0008; color: #fff; font: 800 14px/1.15 'Baloo 2', system-ui, sans-serif; transform-origin: 50% 0; animation: sel-tip-in .35s cubic-bezier(.3, 1.5, .5, 1), sel-tip-bob 1.4s ease-in-out .35s infinite; }
 .sel-heart-tip::before { content: ""; position: absolute; top: -9px; left: var(--tail); width: 20px; height: 10px; margin-left: -10px; background: #d93148; clip-path: polygon(50% 0, 100% 100%, 0 100%); }
@@ -328,10 +227,6 @@
 @keyframes sel-tip-bob { 50% { translate: 0 -5px; } } /* towards the heart above it */
 @keyframes sel-tip-bob-side { 50% { translate: -5px 0; } } /* towards the heart beside it */
 @keyframes sel-heart-call { 50% { scale: 1.12; } }
-@media (min-width: 668px) and (min-height: 501px) and (max-height: 767px), (min-width: 668px) and (min-height: 768px) and (max-height: 799px) and (pointer: fine) {
-  .sel-pending[data-no-actions] .sel-state { grid-template-rows: auto auto; gap: 6px; align-items: start; }
-}
-/* Flags and rope as wide as the heart above; every word on one line under the lowest flag. */
 .sel-heart-tip-side::before { top: 50%; left: -9px; width: 10px; height: 20px; margin: -10px 0 0; background: #c3283e; clip-path: polygon(0 50%, 100% 0, 100% 100%); }
 /* The number's gradient paints only inside its own box: a tall box, pulled back by margins so it still takes the 20 px line (else its top and bottom are cut). */
 .sel-call-n { display: inline-block; padding-inline: 1px; line-height: 40px; margin-block: -10px; }
@@ -341,80 +236,40 @@
 @media (prefers-reduced-motion: reduce) { .sel-pending p.sel-call-line[data-count] { animation: none; } }
 .sel-heart-tip { cursor: pointer; }
 @media (min-width: 1600px) { .sel-heart-tip { font-size: 17px; } }
-/* Phones: the outer margins read like the gaps inside. */
-@media (max-width: 519px) { .sel-pending:not([data-invite]) { padding-top: 16px; padding-bottom: 20px; } }
-@media (max-width: 340px) { .sel-pending { padding-top: 12px; padding-bottom: 16px; } }
-/* Wide, short cards close on their content: no spare height to leave as holes. */
-@media (min-width: 668px) and (min-height: 501px) and (max-height: 767px), (min-width: 668px) and (min-height: 768px) and (max-height: 799px) and (pointer: fine) {
-  .sel-pending:not([data-no-actions]):not(:has(.sel-lower[hidden])) { height: auto; container-type: normal; grid-template-rows: auto 0 !important; padding-block: 18px; }
-  .sel-pending:not([data-no-actions]):not(:has(.sel-lower[hidden])) .sel-pending-content { height: auto; grid-template-rows: auto auto; }
-  .sel-pending:not([data-no-actions]) .sel-lower:not([hidden]) { margin-top: 18px; }
-  .sel-pending[data-no-actions] .sel-lower { margin-top: 18px; }
-  .sel-pending[data-no-actions] { padding-block: 18px; }
-  .sel-pending:not([data-no-actions]):not(:has(.sel-lower[hidden])) .sel-pending-actions { margin-top: -44px; }
-}
-/* Outer margins measured in painted pixels: the title's line box adds about 8 above, so the top padding is the smaller one. */
-@media (min-width: 668px) and (min-height: 501px) and (max-height: 767px), (min-width: 668px) and (min-height: 768px) and (max-height: 799px) and (pointer: fine) {
-  .sel-pending:not([data-no-actions]):not(:has(.sel-lower[hidden])), .sel-pending[data-no-actions] { padding-block: 14px 24px; }
-}
-@media (min-width: 900px) and (min-height: 800px) {
-  .sel-pending:not([data-no-actions]):not(:has(.sel-lower[hidden])) { padding-block: 20px 26px; }
-  .sel-pending[data-no-actions] { padding-block: 14px 22px; }
-}
 /* Phones: the ribbon lands on the song's row. Rather than leave pieces of it sticking out, that row waits until the ribbon goes (it keeps its place). */
 @media (max-width: 899px) { body:has(.sel-heart-tip:not(.sel-tip-out, .news-tip)) :is(#select-song, .sel-watch) { visibility: hidden; } }
 .sel-heart-tip-side { min-height: 34px; padding-block: 1px; transform-origin: 0 50%; animation-name: sel-tip-in, sel-tip-bob-side; }
 .sel-heart-tip.sel-tip-out { pointer-events: none; animation: sel-tip-out .26s ease-in forwards, sel-tip-bob 1.4s ease-in-out infinite; }
 .sel-heart-tip-side.sel-tip-out { animation-name: sel-tip-out, sel-tip-bob-side; }
 @media (prefers-reduced-motion: reduce) { .sel-heart-tip, .sel-heart-tip-side, .sel-heart-tip.sel-tip-out, .sel-heart-tip-side.sel-tip-out, .sel-heart-called { animation: none; } }
-.sel-pending-actions .btn-secondary { border-width: 2px; }
-@media (max-width: 519px) { .sel-pending[data-no-actions]:not([data-invite]) { padding-top: 12px; padding-bottom: 22px; } }
-/* On its way: a rubber stamp and, beside it, what we already have. Its line is a nine-slice: whole corners, and sides that fit a whole number of dashes, which a CSS dashed border cannot space. */
-.sel-pending[data-soon] .sel-state-words { display: flex; align-items: center; justify-content: center; gap: 14px; width: 100%; }
-.sel-pending[data-soon] p.sel-status { flex: none; rotate: -5deg; margin: 0; padding: 7px 12px 5px; border: 3px solid transparent; border-radius: 8px; box-shadow: inset 0 0 0 1.5px #1a110b, inset 0 0 0 3px #f5c518; border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 41 41'%3E%3Cpath d='M1.5 10V9.5A8 8 0 0 1 9.5 1.5H10M31 1.5h.5A8 8 0 0 1 39.5 9.5V10M39.5 31v.5A8 8 0 0 1 31.5 39.5H31M10 39.5h-.5A8 8 0 0 1 1.5 31.5V31M14.5 1.5h12M14.5 39.5h12M1.5 14.5v12M39.5 14.5v12' fill='none' stroke='%23f5c518' stroke-width='3'/%3E%3C/svg%3E") 10 / 10px round; color: #f5c518; font-size: 18px; font-weight: 800; line-height: 1; }
-.sel-pending[data-soon] p.sel-missing { min-width: 0; color: #e8d8b8; font-size: 13px; line-height: 17px; text-align: start; }
-.sel-pending[data-soon] .sel-missing b { display: block; color: #fff3d6; font-size: 15px; font-weight: 800; }
-/* The stamp is shorter than what it replaced: the spare room is shared with the card's margins, so no gap reads as a hole. */
-.sel-pending[data-soon] .sel-lower { grid-template-rows: minmax(0, .8fr) auto minmax(0, 1fr) auto minmax(0, .3fr); }
-@media (min-width: 341px) and (max-width: 519px), (min-width: 900px) and (min-height: 800px) { .sel-pending[data-soon]:not([data-invite]) { padding-top: 26px; } }
-@media (min-width: 668px) and (min-height: 501px) and (max-height: 767px), (min-width: 668px) and (min-height: 768px) and (max-height: 799px) and (pointer: fine) { .sel-pending[data-soon] .sel-lower { grid-template-rows: auto; } }
-/* The stamp centred, what we have under it: one axis, like the rest of the card. */
-.sel-pending[data-soon] .sel-state-words { flex-direction: column; gap: 8px; }
-.sel-pending[data-soon] p.sel-missing { text-align: center; text-wrap: balance; }
-.sel-pending[data-soon] p.sel-status { rotate: none; }
-/* Cards too short for the stamp over its words (a narrow desktop window, whose strip is taller than a phone's): one row, and the list stays for the taller ones. */
-.sel-pending[data-soon] p.sel-missing span { display: block; }
-@container (max-height: 260px) {
-  .sel-pending[data-soon] .sel-state-words { flex-direction: row; }
-  .sel-pending[data-soon] p.sel-missing span { display: none; }
-  .sel-pending[data-soon] .sel-lower { grid-template-rows: 0 auto 6px auto 0; }
-}
-/* The split layout's narrow card: the stamp's two columns would crush each other, so one column, without the list. */
-@media (min-width: 668px) and (max-width: 1079px) and (min-height: 501px) and (max-height: 599px) {
-  #select .sel-pending[data-soon] .sel-lower:not([hidden]) { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto; gap: 12px; margin-top: 8px; }
-  #select .sel-pending[data-soon] .sel-lower .sel-call { grid-area: 1 / 1; }
-  #select .sel-pending[data-soon] .sel-lower .sel-state { grid-area: 2 / 1; }
-  .sel-pending[data-soon] .sel-state-words { gap: 8px; }
-  .sel-pending[data-soon] p.sel-missing span { display: none; }
-}
-/* 320 px, figures asking for help: 4 px of the top margin go under the heart, whose foot touched the words below. */
-@media (max-width: 340px) { .sel-pending:not([data-invite]):not([data-no-actions]) { padding-top: 12px; } }
-/* The split layout, figures asking for help: one column (the card is too narrow or too low for two), the action on the card's own last row. */
-@media (min-width: 668px) and (min-height: 501px) and (max-height: 599px) {
-  #select .sel-pending:not([data-no-actions]):not(:has(.sel-lower[hidden])) { grid-template-rows: auto 44px !important; row-gap: 8px; }
-  #select .sel-pending:not([data-no-actions]) .sel-lower:not([hidden]) { flex: none; grid-template-columns: minmax(0, 1fr); grid-template-rows: none; justify-items: center; row-gap: 6px; margin-top: 8px; } /* flex: none, or the column shrinks it to nothing and the rows spill over the name */
-  #select .sel-pending:not([data-no-actions]) :is(.sel-call-line, .sel-heart-wide, .sel-state-words) { grid-area: auto; }
-  #select .sel-pending:not([data-no-actions]) .sel-state-words { margin-top: 4px; } /* the heart's foot eats the gap above */
-  #select .sel-pending:not([data-no-actions]):not(:has(.sel-lower[hidden])) .sel-pending-actions { width: 100%; margin-top: 0; }
-}
-@media (max-width: 519px) and (max-height: 500px) {
-  .sel-pending[data-soon] .sel-state-words { flex-direction: column; gap: 4px; }
-  .sel-pending[data-soon] p.sel-missing span { display: none; }
-}
-/* The stamp's card in painted pixels: top and bottom margins alike. */
-@media (max-width: 340px) { .sel-pending[data-soon]:not([data-invite]) { padding-top: 16px; } }
-@media (min-width: 668px) and (min-height: 501px) and (max-height: 767px), (min-width: 668px) and (min-height: 768px) and (max-height: 799px) and (pointer: fine) { .sel-pending[data-soon] { padding-block: 18px 20px; } }
 .sel-heart-fail { position: fixed; z-index: 30; box-sizing: border-box; width: max-content; max-width: calc(100vw - 24px); padding: 4px 8px; text-align: center; text-wrap: balance; border: 2px solid #e0364c; border-radius: 10px; background: #1a110b; box-shadow: 0 6px 14px #0008; color: #fff3d6; font: 700 14px/1.2 'Baloo 2', system-ui, sans-serif; pointer-events: none; }
-/* The note sits over these two lines: hidden while it shows, so no half-covered words below its edge; nothing moves. */
-body:has(.sel-heart-fail) .sel-pending .sel-state-words { visibility: hidden; }
 @media (max-width: 340px) { .sel-heart-fail { padding-block: 2px; font-size: 13px; line-height: 1.1; } } /* two lines fit between the two buttons in the longer languages */
+
+#select .sel-pending { overflow-y: auto; scrollbar-width: none; } /* what can't fit scrolls inside: a button never spills over the strip */
+/* One size whatever the figure: room for a two-line title, two rows of pills and the longest «Ens falta», so moving along the strip never resizes the card. */
+#select .sel-pending-id { box-sizing: content-box; justify-content: center; min-height: calc(var(--title-size) * 2.2 + var(--entity-reserve) + 1lh + 8px); } /* two title lines, two rows of pills, the place; the words stay together in the middle */
+.sel-pending[data-invite] .sel-pending-id { min-height: 0; }
+/* Below it, the same: room for a status, three lines of «Ens falta» and a button. Each island centres its words and button as one group, the spare room shared above and below. */
+.sel-state, .sel-call { justify-content: center; }
+#select .sel-state { box-sizing: content-box; min-height: calc(22px + 4px + 3 * 18px + var(--island-gap) + var(--island-btn)); }
+/* Big windows (an external display): the same card a fifth larger instead of a small island in an empty plaça. */
+@media (min-width: 1400px) and (min-height: 860px) and (pointer: fine) {
+  .sel-pending { width: min(576px, calc(100% - 28px)); }
+  .sel-pending > * { zoom: 1.2; }
+  .sel-pending p.sel-call-line { min-height: 38px; } /* the two-line reserve of the 440–560 px container: zoomed, it measures 576 but lays out 480 */
+}
+/* Too short for the reserve (the wide, short windows; a 320 px phone): there the card still fits rather than scroll. */
+@media (min-width: 668px) and (min-height: 501px) and (max-height: 767px), (min-width: 668px) and (min-height: 768px) and (max-height: 799px) and (pointer: fine), (max-width: 340px) { #select .sel-pending-id { min-height: 0; } }
+@media (max-width: 340px) { #select .sel-state { min-height: 0; } }
+@media (max-width: 340px) { .sel-pending-id:has(.sel-entity[data-stacked]) .sel-where { display: none; } } /* the longest identities: the pill's own town stands in for the place */
+/* Phones: a reserved size left the islands half empty; each takes its own height and the stack stays centred (it moves a little between figures, the owner's choice). */
+@media (max-width: 519px) {
+  #select :is(.sel-pending-id, .sel-state) { min-height: 0; }
+  /* As narrow as the widest island needs, the three alike (one column). Its container queries only act from 668 px, so no containment here: it would size the card to nothing. */
+  .sel-pending { width: fit-content; min-width: min(280px, calc(100% - 28px)); max-width: calc(100% - 28px); container-type: normal; }
+  /* One card holding all three parts, a hairline between them. */
+  #select .sel-pending { gap: 0; background: #21170ff2; border-radius: var(--island-r); }
+  .sel-pending .sel-lower { gap: 0; }
+  #select :is(.sel-pending-id, .sel-state, .sel-call) { background: none; border-radius: 0; padding-inline: 18px; } /* the narrow card keeps air at its sides */
+  #select :is(.sel-state, .sel-call) { border-top: 1px solid #fff3d626; }
+}

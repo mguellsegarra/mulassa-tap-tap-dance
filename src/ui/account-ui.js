@@ -14,6 +14,8 @@ import { figureSeasons, boardName } from './seasons-ui.js';
 import { ALIAS_KEY } from '../services/leaderboard-identity.js';
 
 const HALL_FIGURE = 'mulassa-valls'; // the figure whose first season holds everything played before the seasons
+const BADGE_TIP_KEY = 'badge-edit-tip-seen', BADGE_TIP_MS = 6000, BADGE_TIP_LEAVE_MS = 260; // LEAVE: sel-tip-out's length
+
 export function setupAccount({ focusIn, profile, badges, service, store, stats, onSync = () => {}, onHall = () => {}, doc = document, now = () => Date.now() }) {
   const $ = byId(doc), menu = $('account-menu'), box = $('account-stats'), status = $('account-status'), notice = $('stats-notice-menu');
   let req = 0, back = null, shown = null, wins = [];
@@ -87,8 +89,22 @@ export function setupAccount({ focusIn, profile, badges, service, store, stats, 
     menu.showModal();
     focusIn(menu, 'account-close');
     menu.querySelector?.('.sheet-body')?.scrollTo?.(0, 0);
-    profile.refresh();
+    Promise.resolve(profile.refresh()).then(pointAtBadge);
     load();
+  }
+  // The heart's red ribbon under the name's pencil, once ever: the mark is what changes the badge, and nothing says so.
+  function pointAtBadge() {
+    const edit = menu.open && $('profile-row').querySelector('.badge-edit');
+    if (!edit || edit.checkVisibility?.() === false || store.get(BADGE_TIP_KEY) === '1') return;
+    store.set(BADGE_TIP_KEY, '1');
+    const tip = doc.createElement('div'), r = edit.lastElementChild.getBoundingClientRect(), box = menu.getBoundingClientRect(); // the pencil: the button's last child
+    tip.className = 'sel-heart-tip account-badge-tip'; tip.setAttribute('role', 'status'); tip.textContent = tr('ui.badge.editTip');
+    menu.append(tip);
+    const centre = r.left + r.width / 2 - box.left - menu.clientLeft, x = Math.max(8, Math.min(centre - tip.offsetWidth / 2, box.width - tip.offsetWidth - 8));
+    tip.style.left = `${x}px`; tip.style.top = `${r.top - box.top - menu.clientTop - tip.offsetHeight - 13}px`; tip.style.setProperty('--tail', `${centre - x}px`); // above the name: under it, it would cover the sheet's buttons
+    const hide = () => { tip.classList.add('sel-tip-out'); setTimeout(() => tip.remove(), BADGE_TIP_LEAVE_MS); }, timer = setTimeout(hide, BADGE_TIP_MS);
+    tip.addEventListener('click', hide);
+    menu.addEventListener('close', () => { clearTimeout(timer); tip.remove(); }, { once: true }); // leaves with its sheet
   }
   // another sheet takes this one's place (the profile's steps, the sync), then comes back here: it keeps where to return
   const leave = () => { const b = back; back = null; menu.close(); return b; };

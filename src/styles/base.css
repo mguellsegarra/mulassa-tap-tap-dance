@@ -220,6 +220,7 @@ kbd { display: inline-block; min-width: 14px; padding: 0 4px; border: 1px solid 
 #sync-dots i:nth-child(-n+2).on { background: #e8d8b8; } /* the first two clicks only set the pulse: not measured */
 #sync-menu #sync-live { min-height: 1.3em; margin-bottom: 12px; font-size: 20px; color: #fff3d6; }
 #sync-pad { display: flex; margin: 0 0 6px; border: 2px solid #f5c518; border-radius: 14px; overflow: hidden; }
+@media not (pointer: coarse) { #sync-pad { display: none; } } /* a keyboard or a mouse taps anywhere: GUA and PA are the touch pad's */
 #sync-pad span { flex: 1; display: grid; place-items: center; min-height: 64px; color: #fff; font-size: 24px; letter-spacing: .04em; text-shadow: -2px 0 #2a1a10, 2px 0 #2a1a10, 0 -2px #2a1a10, 0 2px #2a1a10; }
 #sync-pad .gua { background: var(--gua, #ff7a1a); border-right: 2px solid #2a1a10; } #sync-pad .pa { background: var(--pa, #14b8a6); }
 #sync-menu .sync-kicker { margin: 4px 0 0; font-size: 13px; letter-spacing: .12em; }

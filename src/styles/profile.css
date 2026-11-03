@@ -52,7 +52,7 @@ span.player-name { display: inline-flex; align-items: baseline; min-width: 0; }
 .seasons-list { position: relative; flex: 0 1 auto; min-height: 0; display: flex; flex-direction: column; }
 .seasons-box .board-state { z-index: 1; }
 .hall-view { flex: 0 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 16px; }
-.hall-main { flex: 0 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 16px; overflow: auto; overscroll-behavior: contain; }
+.hall-main { flex: 0 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 16px; overflow: auto; overscroll-behavior: contain; margin-top: -14px; padding-top: 14px; -webkit-mask: linear-gradient(#0000, #000 14px); mask: linear-gradient(#0000, #000 14px); } /* scrolled text fades under the picker above, in this padding: at rest nothing is touched */
 .hall-main > * { flex: none; }
 .hall-season { display: flex; justify-content: center; align-items: center; gap: 14px; }
 .estendard { position: relative; flex: none; width: 56px; height: 79px; color: #fff3d6; }
@@ -165,7 +165,7 @@ span.player-name { display: inline-flex; align-items: baseline; min-width: 0; }
 .season-end-boards { display: flex; flex-direction: column; }
 .se-art-box { line-height: 0; }
 .se-art { display: block; width: min(220px, 76%); height: auto; margin: 6px auto; } .se-art.garland { width: min(200px, 70%); }
-.se-cheer { margin: 0; color: #fff3d6; font-size: 30px; line-height: 1.1; text-align: center; text-wrap: balance; } .se-cheer.gold { color: #f5c518; }
+.se-cheer { margin: 0; color: #f5c518; font-size: 30px; line-height: 1.1; text-align: center; text-wrap: balance; } .se-cheer.gold { color: #f5c518; }
 .se-ledger { width: 100%; margin-top: 12px; border-collapse: collapse; font-variant-numeric: tabular-nums; }
 .se-ledger caption { margin-bottom: 8px; color: #fff3d6; font-size: 15px; font-weight: 800; letter-spacing: .08em; line-height: 1.2; text-align: center; text-transform: uppercase; } /* a section heading: the hall's uppercase label, in cream, over the quieter column heads */
 .se-ledger thead th { padding: 0 0 4px; border-bottom: 1px solid #e8d8b82e; color: #e8d8b8b3; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-align: left; text-transform: uppercase; }
@@ -237,7 +237,7 @@ span.player-name { display: inline-flex; align-items: baseline; min-width: 0; }
 .badge-grid:not(.pair) > .badge-cell:nth-last-child(2):nth-child(3n + 1) { grid-column: 2 / span 2; } /* a last row of two sits centred */
 .badge-grid.pair { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .badge-grid.pair > .badge-cell { grid-column: auto; }
-.badge-cell { all: unset; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 4px; min-height: 76px; padding: 8px 4px; border: 2px solid #e8d8b880; border-radius: 12px; color: #fff3d6; font-size: 13px; line-height: 1.1; text-align: center; cursor: pointer; --jester: #fff3d6; }
+.badge-cell { all: unset; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: 76px; padding: 8px 4px; border: 2px solid #e8d8b880; border-radius: 12px; color: #fff3d6; font-size: 13px; line-height: 1.1; text-align: center; cursor: pointer; --jester: #fff3d6; }
 .badge-cell svg { flex: none; width: 28px; height: 28px; }
 .badge-grid > .badge-cell.wide { grid-column: 1 / -1; flex-direction: row; justify-content: center; align-items: center; gap: 8px; min-height: 48px; }
 .badge-cell .verified-check { width: 28px; height: 28px; }
@@ -335,7 +335,12 @@ span.player-name { display: inline-flex; align-items: baseline; min-width: 0; }
 .stats-facts { display: grid; gap: 14px; margin: 6px 0 4px; padding: 0; list-style: none; text-align: left; }
 .stats-facts li { display: grid; grid-template-columns: 28px minmax(0, 1fr); align-items: center; gap: 12px; color: #e8d8b8; font-size: 16px; line-height: 1.3; }
 .stats-facts svg { width: 28px; height: 28px; margin: 0; fill: none; stroke: #f5c518; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.account-badge-tip { position: absolute; transform-origin: var(--tail) 100%; } @keyframes account-tip-bob { 50% { translate: 0 5px; } } /* towards the pencil below it */
+.sel-heart-tip.account-badge-tip { animation-name: sel-tip-in, account-tip-bob; } .sel-heart-tip.account-badge-tip.sel-tip-out { animation-name: sel-tip-out, account-tip-bob; }
+@media (prefers-reduced-motion: reduce) { .sel-heart-tip.account-badge-tip, .sel-heart-tip.account-badge-tip.sel-tip-out { animation: none; } } .account-badge-tip::before { top: auto; bottom: -12px; height: 13px; background: #ad1f33; clip-path: polygon(0 0, 100% 0, 50% 100%); } /* over the ribbon's dark edge: one shape with its body */
+#profile-stats-note li:nth-child(1) svg { color: #5cb2ff; stroke: #5cb2ff; } #profile-stats-note li:nth-child(2) svg { stroke: #7ee081; } #profile-stats-note li:nth-child(3) svg { color: #ff6b81; stroke: #ff6b81; }
 #profile-stats-note .stats-facts { gap: 8px; margin: 0; } #profile-stats-note .stats-facts li { grid-template-columns: 22px minmax(0, 1fr); gap: 10px; font-size: 13px; } #profile-stats-note .stats-facts svg { width: 22px; height: 22px; } /* the Crea step: the same three lines, quieter */
+.profile-stats-privacy { align-self: center; min-height: 0; font-size: 13px; } #profile-stats-note[hidden] + .profile-stats-privacy { display: none; } /* follows the note, outside its box */
 
 /* a player's card: the name, «Convidat», the board row it came from, the public statistics (one box: loading, empty, error
    inside it), the source */
@@ -388,3 +393,20 @@ body:has(:is(#board-menu, #seasons-menu, #account-menu)[open]) #card-menu { widt
   #board-menu .board-state { gap: 6px; padding-inline: 0; } /* a new season: its line in two lines, the last podium clear of the links */
   #board-menu .board-previous { margin-top: 0; }
 }
+
+/* the badges' news (src/ui/badge-news.js): the gate's frame, the name wearing them or the whole shelf passing by */
+#badge-news-menu { width: min(400px, calc(100vw - 32px - var(--sal) - var(--sar))); padding: 20px 20px 18px; text-align: center; }
+#badge-news-menu h2 { text-wrap: balance; }
+#badge-news-menu p { margin: 0 0 16px; font-size: 16px; font-weight: 600; line-height: 1.35; color: #e8d8b8; text-wrap: balance; }
+#badge-news-menu .sheet-actions { display: grid; gap: 12px; }
+#badge-news-name { display: flex; justify-content: center; align-items: center; gap: 8px; min-height: 64px; margin-bottom: 16px; padding: 12px; border-radius: 14px; background: #ffffff0d; font-size: 22px; font-weight: 800; }
+#badge-news-name[hidden], #badge-news-shelf[hidden] { display: none; }
+#badge-news-name .verified-check, #badge-news-name .player-badge { width: 30px; height: 30px; }
+#badge-news-shelf { display: grid; gap: 8px; margin-bottom: 16px; padding: 12px 0; border-radius: 14px; background: #ffffff0d; overflow: hidden; }
+.badge-news-row { overflow: hidden; }
+.badge-news-line { display: flex; gap: 8px; width: max-content; animation: badge-news-pass 38s linear infinite; }
+.badge-news-row:nth-child(2) .badge-news-line { animation-direction: reverse; }
+.badge-news-chip { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: #ffffff0d; }
+.badge-news-chip svg { width: 30px; height: 30px; }
+@keyframes badge-news-pass { to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) { .badge-news-line { animation: none; } }

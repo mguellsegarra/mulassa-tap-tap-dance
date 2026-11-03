@@ -2,6 +2,8 @@
 <html lang="ca" translate="no">
 <head>
   <meta charset="utf-8">
+  <!-- nothing in the game is dragged: the browser's own drag of a picture, logo or text (a ghost of it) would steal the pointer -->
+  <script>addEventListener('dragstart', e => e.preventDefault());</script>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
   <meta name="theme-color" content="#11152c">
   <meta name="robots" content="noindex">

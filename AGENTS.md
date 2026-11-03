@@ -12,10 +12,11 @@ This file holds the rules that apply to every task. Read the page for the area y
 | Module layout, `src/`, `tools/`, generated files | `docs/agents/structure.md` |
 | Layers, dependency directions, conflict hotspots, lanes for parallel agents | `docs/architecture.md` |
 | Browser testing, URL params, `?cam`, `?perf`, mock leaderboard | `docs/agents/testing.md` |
+| Measuring on the real phones (S10 over adb, iPhone Safari), blocking-cost reviews and their pitfalls | `docs/agents/device-profiling.md` |
 | Public pages, SEO, `llms.txt` | `docs/agents/seo.md` |
 | Chart, judging, scoring, energy, HUD lane | `docs/agents/gameplay.md` |
 | UI conventions, selector, sheets, loading, safe areas | `docs/agents/ui.md` |
-| Dances, cameras, crowd, frame pacing, mobile GPUs, GPU context loss and canvas caches | `docs/agents/graphics.md` |
+| Dances, cameras, crowd, frame pacing, mobile GPUs, DOM blocking costs, GPU context loss and canvas caches | `docs/agents/graphics.md` |
 | Music style and audio rules | `docs/agents/audio.md` |
 
 ## T3 conversations: no automatic messages between agents
@@ -106,7 +107,7 @@ benchmarks and device sessions are unnecessary unless the task also changes runt
 
 - `npm run dev` — Vite on port 5178 with `--host` (phones on the LAN).
 - `npm run check` — every test, in parallel (`node tests/run.mjs`; `node tests/run.mjs drac` or `db/` runs the matching ones, `--bail` stops at the first failure, `--jobs=N`). Leaves out the real-GPU tests and the Drac's exhaustive sweeps, and several can run at once.
-- `npm run check:gpu` — only `gl-budget` and `prod-play`, which queue on the machine-wide GPU lock behind any capture (agents' checks and captures can run together; captures keep their frame timing). A wait fails after 15 minutes (`CAPTURE_LOCK_WAIT_S`) naming the holder: report it, do not kill another agent's process. Run it after changing rendering, GPU resources, the build or the boot, and before a release. `npm run check:full` runs everything plus the exhaustive sweeps (`build:pages` uses it, so every deploy runs the sweeps; CI has no Playwright, so the GPU tests skip themselves there).
+- `npm run check:gpu` — only `gl-budget`, `prod-play` and `alloc-budget` (garbage per frame, no per-frame program re-evaluation), which queue on the machine-wide GPU lock behind any capture (agents' checks and captures can run together; captures keep their frame timing). A wait fails after 15 minutes (`CAPTURE_LOCK_WAIT_S`) naming the holder: report it, do not kill another agent's process. Run it after changing rendering, GPU resources, the build or the boot, and before a release. `npm run check:full` runs everything plus the exhaustive sweeps (`build:pages` uses it, so every deploy runs the sweeps; CI has no Playwright, so the GPU tests skip themselves there).
 - `npm run check` must be green before a change is finished or committed, but after the owner's visual OK when the change has a visible result (see Process); for documentation-only work, validate the affected documents and references. Once approved, run the matching tests, and the whole check once at the end.
 - Regenerate music + chart (only when the task is about music/chart):
   `uv run --python 3.11 --with numpy --with scipy --with soundfile --with mido tools/music/build_taiko.py`
@@ -126,6 +127,14 @@ Read-only issue inspection (organization `ondori`, project `mulassa-tap-tap-danc
 
 - **The owner validates first, tests come after.** For anything with a visible result (UI, model, dance, camera, effect), the order is: edit, look at it yourself, give the owner the captures and URLs, wait for their OK, and only then write the tests and run them with `npm run check`. Before that OK, run no render tests, no other test files and no `npm run check`: a change the owner rejects or adjusts would waste them. Say in that report that the tests have not run yet, and do not call the work finished or commit it until the check is green, even when the owner asks for a commit: run the check first. Changes with nothing to see (logic, data, security, build) keep testing as they work. This order overrides any skill or reference that puts tests earlier.
 - **Give the links before you start looking.** With anything visible, as soon as the edit is in and before your own captures, say in the chat where to try it: the LAN URL (`http://<lan-ip>:<port>/…`), never `localhost`, from the server of this worktree, so the owner can try it while you check. Every server link given to the owner is a LAN link. Carry on without waiting for an answer. How: `.agents/skills/mulassacat-validacio-visual/SKILL.md`, «Handing over a link».
+- **Blocking cost in ms, before anything is called done.** Every new or changed screen, sheet, transition, interaction,
+  CSS rule, DOM structure, SVG or 3D object states what it blocks, measured on the reference Android (Galaxy S10 over adb,
+  Chrome DevTools Protocol) before and after: the longest main-thread task and frame of the interaction, and the GPU raster
+  when a screen first shows. Budget: no task or frame over 50 ms for an interaction (a tap, a sheet opening, a figure change,
+  the UI hiding); a screen's first show says its total. Report the numbers with the device and state; over budget, find the
+  owner (`docs/agents/graphics.md`, «DOM blocking costs») or ask the owner before shipping it. A sheet opening once cost
+  440 ms of layout because of an unrelated CSS rule: nothing is assumed cheap. How, with the tools and the traps met:
+  `docs/agents/device-profiling.md`.
 - Every UI change is validated with a real screenshot (at least 375×667 and 320×568, plus desktop when it applies) before it is shown to the owner; apply `.agents/skills/uipolish/SKILL.md` (a must, not optional) inside that evaluation loop (measure, look at the capture, fix, repeat). Unit tests alone never prove a layout.
 - Orientation (`src/ui/fullscreen.js`): phones are portrait only and tablets landscape only; the other orientation shows the rotate cover («Gira el mòbil…»), so it is never a layout to capture, measure or put in a review or PDF. The one exception is phone free play, which is landscape. Viewport set for menus and sheets: phones 320×568, 375×667, 393×852, 430×932; tablet 1024×768; desktop 1280×800, a wide-short window (1440×700) and a large one (1920×1080). This overrides the matrix of any generic skill (e.g. a global `uipolish` listing 667×375, 852×393 or 768×1024).
 - **Player-facing text is written by Codex.** Other agents do not write final UI copy in any language: use clearly provisional text only in proposals, and hand the owner the list of strings needed (key, screen, context, length limit) so a Codex agent writes them and their translations.

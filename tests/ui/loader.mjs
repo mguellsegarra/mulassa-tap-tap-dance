@@ -5,7 +5,6 @@ import { readPage } from './page.mjs';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { MULASSA_SVG, MULASSA_MINI_SVG, mulaSpinner, setupLoader, LOADING_JOKES } from '../../src/ui/loader.js';
-import { applause } from '../../src/platform/applause.js';
 import { renderBoot, INDEX } from '../../tools/deploy/gen-boot.mjs';
 
 const html = readPage();
@@ -156,18 +155,6 @@ function dom() {
   assert.equal(mini.innerHTML, MULASSA_MINI_SVG, 'small status lines use the head');
   assert.equal(mini['aria-hidden'], 'true', 'the adjacent status text describes the decorative animation');
 }
-{ // the applause is built in idle slices (it was the freeze after the tap); finish() completes it on demand
-  const slices = [];
-  const ch = [new Float32Array(48000 * 5), new Float32Array(48000 * 5)];
-  const ctx = { sampleRate: 48000, createBuffer: () => ({ getChannelData: i => ch[i] }) };
-  const job = applause(ctx, f => slices.push(f));
-  assert(!job.done && slices.length === 1, 'nothing synthesised up front');
-  slices.shift()();
-  assert(!job.done && slices.length === 1, 'a slice does a few people, then waits for the next idle moment');
-  const buf = job.finish();
-  assert(job.done && ch.every(c => c.some(v => v !== 0)) && buf.getChannelData(1) === ch[1], 'finish() completes both channels');
-}
-
 { // loading jokes: a new visit opens with lines not seen yet; never the same line twice in a row
   const mem = {}, storage = { getItem: k => mem[k] ?? null, setItem: (k, v) => { mem[k] = v; } };
   const lines = ['a', 'b', 'c', 'd', 'e'];

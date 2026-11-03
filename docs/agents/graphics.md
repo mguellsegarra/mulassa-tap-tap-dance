@@ -30,6 +30,75 @@
 - Real-device checks play a full song, not a short burst, and report device, thermal state, refresh rate and the `?perf` summary.
 - No WebGPU, `BatchedMesh` or KTX2 without a measured need; list the `onBeforeCompile` / `ShaderMaterial` patches that would have to be rewritten first.
 
+## DOM blocking costs (measured lessons)
+
+The page's own DOM, not the 3D, made the selector «choke» on phones (2026-11-03, Galaxy S10 Chrome 156, DPR 3.5,
+medium quality). Chrome rasterizes the DOM on the same GPU thread as WebGL, so a slow DOM frame or raster stalls the
+dance behind it. Each was found by A/B on the device (hide or drop one thing, measure again), not by reading code;
+the method and its tools: `docs/agents/device-profiling.md`.
+
+- **Size containers on repeated items.** `container-type: size` (for `cqw`/`cqh`) on the 50 card portraits made every
+  document-wide restyle lay each container out on its own: `showModal()` of any sheet took ~300 ms (the stats notice at
+  entry: 440 ms, 357 ms of layout), and a figure change and the UI hiding into the idle dance paid it too. Fixed by measuring
+  the box once (`ResizeObserver` → `--por-w`/`--por-h`, select-layout.js) and plain `contain`: sheets ~45 ms (all these: the
+  synchronous `showModal()` plus its forced layout, `tools/qa/device/android-cost.mjs`). A container
+  query only on single elements, never on a list.
+- **`:has()` over toggled state.** `#feedback-menu:has(.x:not([hidden]))` (18 rules) re-ran on every `[hidden]` toggle
+  anywhere in the page, the sheet shut: ~55 ms of style on each figure change. The owner sets an attribute instead
+  (`data-choose`, `data-choices`, `data-entity`); figure change 122 → 65 ms (→ 36 ms with the containers gone).
+- **Inline SVG on a screen's first paint.** The 33 town arms (832 SVG nodes) cost ~300 ms of GPU raster when the
+  selector first showed; drawn once to bitmaps (`escutBitmaps`, escuts.js): 750 → 475 ms. The same arms as an SVG `<img>`
+  saved nothing, and the card portraits as PNGs did not change the sheet cost: the format is not the cause until measured.
+- **What did not matter here**, so do not «fix» it without numbers: network requests (a guest's are two small RPCs; a
+  `fetch` never blocks), the idle dissolve's WebGL→2D copy on Android, steady-state CSS animations (no repaint measured).
+- **The same, only on small phones.** Short phones (375×667, 320×568: iPhone SE/8) made each of the 84 cards a size
+  container for the squat layout: every sheet opening ~500 ms there (S10 emulating 375×667: notice 537, board 538,
+  profile 497 ms). A `ResizeObserver` on one card sets `data-squat` on the strip instead: 28 / 53 / 46 ms. Measure at
+  the small viewports too: a media query can hide a cost from the phone you hold.
+- Audited and left (S10, 2026-11-03): the remaining 62 `:has()` together cost ~10-15 ms a sheet opening; the board opens
+  in ~50 ms (757 SVG nodes, no raster cost found); the seasons sheet's first raster varied 0-258 ms with or without its
+  SVGs (noise, no owner found).
+- **Invisible UI is not free.** The idle reel faded the selector and its corner buttons to `opacity: 0`; on an iPhone in
+  Low Power Mode Safari kept compositing those layers (and the CSS animations inside them) under the dance: 96/42 ms frames
+  for seconds, 12-32% of the frames over 80 ms, with the JavaScript at 8-10 ms. A/B on the phone, 30 s each: the UI left
+  visible 0%, `display: none` 0-0.5%, `visibility: hidden` 17-27% (no help), `content-visibility: hidden` 0%. Fixed with
+  `data-reel-gone` once the fade is over (`ui/reel-idle.js`, `select-sizes.css`: `content-visibility: hidden`, and
+  `contain-intrinsic-size: auto none` so the boxes keep their size and the selector's observers see no change).
+- **Low Power Mode is a cadence, not overload.** An iPhone's Safari alternated 30 and 24 Hz (41.7 ms frames, five
+  refreshes of its 120 Hz screen) with the CPU at ~10 ms; the quality monitor read 24 Hz as overload and fell from medium
+  to minimal mid-song. `render-quality.js` CAP now covers 24 Hz, a frame one refresh late keeps the run, and a capped frame
+  is slow only past 1.4× the cap's own interval; frames a refresh late count as slow once they are over 30% of a window
+  (a busy 120 Hz GPU alternating 41.7/50 ms is overload, not a cap: found by review; `tests/render/low-power.mjs`).
+- Ruled out on the way, by measurement: the idle reel's dissolve (frames after a cut were no slower), any one camera shot,
+  the WebGL→2D copy, the heap collector (cutting the garbage 25-43% left the bursts as they were; the cut stays, guarded).
+- Still open: ~475 ms of GPU raster on the selector's first show (text, gradients and shadows at DPR 3.5), and on the
+  iPhone a 1.5-3.6 s freeze after the first frame with no JavaScript running. Keeping the loader up until frames settle was tried
+  and did not help (the warm-up outlasts any reasonable cover).
+
+**Never again** (`tests/build/css-costs.mjs` enforces the first two):
+
+- No `container-type` on a list's items (cards, rows, cells): a query container is laid out on its own on every
+  restyle. Single elements only, listed in the test; a list's sizes come from one `ResizeObserver` as CSS variables or
+  an attribute (select-layout.js).
+- No new `:has()` without its cost measured on the device: the count is a ratchet. Never `:has()` over toggled state
+  (`[hidden]`, a class, `:checked`) on a broad subject (`body`, a sheet): the owner that toggles it sets an attribute.
+- No repeated or detailed inline SVG on a screen's first paint (arms, icons in lists, big pixel art): measure its GPU
+  raster; draw it once to a bitmap when it costs. A vector in an `<img>` is not a fix by itself.
+- No garbage per frame (`tests/render/alloc-budget.mjs`, in `npm run check:gpu`, holds the splash and the idle reel to a
+  MB/s budget and fails on any material re-evaluated every frame). Found on 2026-11-03, 12.8 → 7.3 MB/s on the splash:
+  `Math.hypot(a, b, c)` in a per-vertex loop boxes its numbers every call (use `Math.sqrt(a * a + …)`); an array reused
+  every frame and emptied with `length = 0` is freed and grown again (keep a count beside it, `crowd-grid.js`); three.js's
+  one shadow depth material shared by plain, instanced and skinned casters re-evaluates its program at every switch
+  (give each kind its `customDepthMaterial`: `models/people.js`, `mula-carriers.js`). Measure with `tools/qa/alloc-profile.mjs`.
+- No UI hidden only by `opacity: 0` or `visibility: hidden` over the 3D for longer than its fade: once faded, stop rendering
+  it (`content-visibility: hidden` with `contain-intrinsic-size: auto none`, or `display: none` when nothing measures it).
+  Safari composites invisible layers every frame.
+- No heavy generation on the main thread while the page loads or the splash runs: the applause synthesised a few people
+  per timer slice was 15% of an iPhone's splash JavaScript. Build it once into a file (`tools/music/build_applause.mjs`,
+  decoded by the browser off the main thread) or move it to a Worker.
+- No fix without the before/after numbers on the device (AGENTS.md, Process): two measured «obvious» causes here
+  (the portraits as PNGs, the dissolve) changed nothing.
+
 ## GPU context loss (mobile GPUs)
 
 Android Chrome can crash its GPU process mid-game (an Adreno 618 did it on every results screen, from an off-screen

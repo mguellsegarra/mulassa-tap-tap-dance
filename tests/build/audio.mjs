@@ -4,7 +4,7 @@ import '../ui/free-music.mjs';
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { Chip } from '../../src/platform/audio.js';
-import { applause } from '../../src/platform/applause.js';
+import { synthApplause, seeded, APPLAUSE } from '../../tools/music/build_applause.mjs';
 import { audioFailureTags } from '../../src/platform/audio-load.js';
 import { errors } from '../../src/services/errors.js';
 
@@ -153,7 +153,8 @@ console.log('audio wake respects page activity');
     await slow.ready;
     slow.menu(true);
     await new Promise(r => setTimeout(r, 5));
-    assert.deepEqual(log, ['song', 'menu'], 'a 3G / Save-Data connection still downloads the menu loop');
+    assert.deepEqual(log.filter(u => u !== 'sfx/applause.mp3'), ['song', 'menu'], 'a 3G / Save-Data connection still downloads the menu loop');
+    assert.deepEqual(log.filter(u => u === 'sfx/applause.mp3'), ['sfx/applause.mp3'], 'the applause once, after the song (never before the music)');
     assert.deepEqual(menuStarts, [normal, slow], 'and starts it');
     slow.menu(false);
     if (navDesc) Object.defineProperty(globalThis, 'navigator', navDesc); else delete globalThis.navigator;
@@ -167,14 +168,14 @@ console.log('audio wake respects page activity');
     await quiet.ready;
     quiet.menu(true);
     await new Promise(r => setTimeout(r, 5));
-    assert.deepEqual(log, ['song'], 'menu music off: the loop is never downloaded');
+    assert.deepEqual(log.filter(u => u !== 'sfx/applause.mp3'), ['song'], 'menu music off: the loop is never downloaded');
     assert.equal(menuStarts.length, 0, 'nor started');
     const ramps = [];
     quiet.ctx.createGain = () => ({ connect: t => t, disconnect() {}, gain: { setValueAtTime() {}, linearRampToValueAtTime: (v, t) => ramps.push(t), setTargetAtTime(v) { ramps.push(`to ${v}`); } } });
     quiet.ctx.createBufferSource = () => ({ connect: t => t, start() { menuStarts.push(quiet); }, stop() { ramps.push('stop'); } });
     quiet.setMenuMusic(true);
     await new Promise(r => setTimeout(r, 5));
-    assert.deepEqual(log, ['song', 'menu'], 'switched on: fetched now');
+    assert.deepEqual(log.filter(u => u !== 'sfx/applause.mp3'), ['song', 'menu'], 'switched on: fetched now');
     assert(menuStarts.at(-1) === quiet && Math.abs(ramps[0] - 0.32) < 1e-9, 'and faded in within 0.2 s (after the 0.12 s lead)');
     quiet.setMenuMusic(false);
     assert.deepEqual(ramps.slice(1), ['to 0', 'stop'], 'off: a short fade out');
@@ -292,7 +293,7 @@ console.log('menu entrance, loop points, version and tempo ok');
     const source = () => { const s = node({ frequency: param(), playbackRate: param(), start(at = 0) { this.at = at; }, stop(at = 0) { this.end = Math.min(this.end ?? Infinity, at); } }); ctx.sources.push(s); return s; };
     Object.assign(ctx, { createOscillator: source, createBufferSource: source, createGain: () => node({ gain: param() }),
       createBiquadFilter: () => node({ frequency: param(), Q: param() }), createBuffer: () => ({ duration: 200, getChannelData: () => new Float32Array(1) }) });
-    const c = Object.assign(Object.create(Chip.prototype), { ctx, noise: {}, applause: { finish: () => ({}) }, buf: { duration: 200 }, ready: Promise.resolve() });
+    const c = Object.assign(Object.create(Chip.prototype), { ctx, noise: {}, applause: { duration: 5 }, buf: { duration: 200 }, ready: Promise.resolve() });
     c.out = ctx.createGain(); c.music = ctx.createGain(); c.unlock = () => {};
     // reaches the speakers: still connected, through whatever gains, to `out` or `music`
     c.audible = s => { const walk = n => n === c.out || n === c.music || n.outs.some(walk); return walk(s); };
@@ -424,25 +425,27 @@ console.log('menu entrance, loop points, version and tempo ok');
 }
 console.log('leaving a run silences everything it queued ok');
 
-// The applause (Chip's 'ovation'): built in small idle slices from the first frame on, so each slice must stay cheap
-// (a phone paid ~10 ms of every frame for it after TOCA LA PANTALLA), and it must still sound like a crowd.
+// The applause (Chip's 'ovation', section B's claps) is a recorded file now (public/sfx/applause.mp3, built by
+// tools/music/build_applause.mjs): synthesised on the phone it was 15% of an iPhone's splash JavaScript. The generator
+// is seeded (the file only changes with the script) and still sounds like a crowd; the game only downloads and decodes it.
 {
-  const bufCtx = { sampleRate: 48000, createBuffer: (n, len) => { const ch = Array.from({ length: n }, () => new Float32Array(len)); return { ch, getChannelData: i => ch[i] }; } };
-  const slices = [], job = applause(bufCtx, f => slices.push(f));
-  let n = 0, worst = 0;
-  while (slices.length) { const t = performance.now(); slices.shift()(); worst = Math.max(worst, performance.now() - t); n++; }
-  assert(job.done && n >= 30, `built over many slices (${n})`);
-  // Guard the synthesis cost without charging time spent waiting for CPU on a busy host.
-  const cpuStart = process.cpuUsage(), t = performance.now(), whole = applause(bufCtx, () => {}).finish(), ms = performance.now() - t;
-  const cpu = process.cpuUsage(cpuStart), cpuMs = (cpu.user + cpu.system) / 1000;
-  assert(cpuMs < 110, `the whole applause stays cheap (${cpuMs.toFixed(0)} ms CPU, ${ms.toFixed(0)} ms elapsed)`);
-  for (const d of whole.ch) {
+  const [l, r] = synthApplause(seeded(APPLAUSE.seed)), [l2] = synthApplause(seeded(APPLAUSE.seed));
+  assert(l.every((v, i) => v === l2[i]), 'seeded: the same crowd every build');
+  for (const d of [l, r]) {
     let peak = 0, sum = 0, bad = 0;
     for (const v of d) { if (!Number.isFinite(v)) bad++; peak = Math.max(peak, Math.abs(v)); sum += v * v; }
     const rms = Math.sqrt(sum / d.length);
     assert(!bad && peak < 0.6 && rms > 0.025 && rms < 0.08, `a crowd's level on both channels (peak ${peak.toFixed(2)}, rms ${rms.toFixed(3)})`);
   }
-  console.log(`applause: ${n} slices, worst ${worst.toFixed(1)} ms elapsed, whole ${cpuMs.toFixed(0)} ms CPU / ${ms.toFixed(0)} ms elapsed ok`);
+  const file = readFileSync(new URL('../../public/sfx/applause.mp3', import.meta.url));
+  assert(file.length > 20_000 && file.length < 150_000, `the applause file is small (${file.length} bytes)`);
+  const src = ['audio.js', 'audio-voices.js'].map(f => readFileSync(new URL(`../../src/platform/${f}`, import.meta.url), 'utf8')).join('\n');
+  assert(/fetch\('sfx\/applause\.mp3'\)[^]*decodeAudioData/.test(src) && !/applause\.js/.test(src), 'the engine decodes the file, it synthesises nothing');
+  const early = Object.assign(Object.create(Chip.prototype), { applause: null, ctx: { createBufferSource() { throw new Error('played'); } } });
+  let asked = 0; early.loadApplause = () => { asked++; };
+  early.clap(0.5, 3); early.clapBurst(0.05);
+  assert.equal(asked, 1, 'not downloaded yet: the ovation is silent and asks for it; the beat claps just wait');
+  console.log(`applause: a ${(file.length / 1024).toFixed(0)} KB file, seeded generator at a crowd's level, silent until loaded ok`);
 }
 
 { // a device that won't start rejects ctx.resume(): swallowed, not an unhandled rejection

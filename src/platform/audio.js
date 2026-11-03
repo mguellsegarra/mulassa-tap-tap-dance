@@ -4,7 +4,6 @@ import { errors } from '../services/errors.js';
 import { Q } from '../core/flags.js';
 import { latency, RAW, audioClock } from './audio-clock.js';
 import { AudioFailure, audioFailureTags, readAll } from './audio-load.js';
-import { applause } from './applause.js';
 import { VOICES } from './audio-voices.js';
 import { RADIO } from './audio-radio.js';
 import { AUDIO_SESSION } from './audio-session.js';
@@ -34,7 +33,7 @@ export class Chip {
     const md = this.murmur.getChannelData(0);
     let b = 0;
     for (let i = 0; i < md.length; i++) { b = (b + 0.02 * (Math.random() * 2 - 1)) / 1.02; md[i] = b * 3.5; }
-    this.applause = applause(ctx); // built a few people at a time when the page is idle (see applause())
+    this.applause = null; // the recorded applause (public/sfx/applause.mp3): loadApplause(), audio-voices.js
     this.preload();
   }
 
@@ -51,6 +50,7 @@ export class Chip {
 
   preload() {
     this.ready = this.loadRecording();
+    this.ready.then(() => this.loadApplause(), () => this.loadApplause()); // after the song: the ovation is at a run's end
     if (this.menuMusic === false) return; // switched off: menu() fetches it if it is switched back on
     const amb = this.ambient = this.loadAmbient();
     amb.catch(() => { if (this.ambient === amb) this.ambient = null; }); // menu() retries

@@ -5,6 +5,10 @@
 body.reel-idle :is(#select, #settings, #free, #music, #howto) { opacity: 0; pointer-events: none; transition: opacity .4s cubic-bezier(.4, 0, .2, 1); }
 body.reel-wake :is(#select, #settings, #free, #music, #howto) { transition: opacity .25s cubic-bezier(0, 0, .2, 1); }
 body.reel-idle #select > * { pointer-events: none; }
+/* after the fade (ui/reel-idle.js data-reel-gone): not painted nor animated at all, an iPhone's idle dance hitched under the
+   invisible layers; the auto size keeps each box as it was, so the selector's observers see nothing change */
+:is(#select, #settings, #free, #music, #howto) { contain-intrinsic-size: auto none; }
+:is(#select, #settings, #free, #music, #howto)[data-reel-gone] { content-visibility: hidden; }
 @media (prefers-reduced-motion: reduce) { :is(body.reel-idle, body.reel-wake) :is(#select, #settings, #free, #music, #howto) { transition: none; } }
 #select[hidden] { opacity: 0; }
 @starting-style { #select { opacity: 0; } }

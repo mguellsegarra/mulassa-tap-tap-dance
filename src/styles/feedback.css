@@ -270,19 +270,19 @@ body:has(#radio-menu:not([hidden]), #radio-now:not([hidden])[data-visible="true"
 .feedback-small[hidden] { display: none; }
 #feedback-material .feedback-small { margin: 10px 0 8px; padding: 10px 12px; border: 2px solid #f5c51866; border-radius: 14px; background: linear-gradient(180deg, #f5c5181f, #f5c51808); color: #e8d8b8; text-align: center; } /* the confirm gate's gold panel: the one thing to do with files */
 #feedback-menu:focus { outline: none; }
-#feedback-menu:has(.feedback-choices:not([hidden])) .feedback-field::placeholder { color: #e8d8b899; }
-#feedback-menu:has(.feedback-choices:not([hidden])) .feedback-scroll { padding-bottom: 14px; }
-#feedback-menu:has(.feedback-choices:not([hidden])) .board-label { text-align: start; } /* the choices read from one left edge, with their fields */
+#feedback-menu[data-choices] .feedback-field::placeholder { color: #e8d8b899; }
+#feedback-menu[data-choices] .feedback-scroll { padding-bottom: 14px; }
+#feedback-menu[data-choices] .board-label { text-align: start; } /* the choices read from one left edge, with their fields */
 .feedback-choices .feedback-small { margin: 2px 0 0; max-width: none; text-align: start; }
 .feedback-meta { gap: 0; }
 #feedback-error:not(:empty) { margin-inline-end: 6px; }
 @media (max-height: 600px) {
-  #feedback-menu:has(.feedback-choices:not([hidden])) .feedback-lead { margin-bottom: 6px; font-size: 14px; }
-  #feedback-menu:has(.feedback-choices:not([hidden])) textarea.feedback-field { height: calc(2 * 1.35em + 20px); }
-  #feedback-menu:has(#feedback-entity:not([hidden])) textarea.feedback-field { height: 54px; }
+  #feedback-menu[data-choices] .feedback-lead { margin-bottom: 6px; font-size: 14px; }
+  #feedback-menu[data-choices] textarea.feedback-field { height: calc(2 * 1.35em + 20px); }
+  #feedback-menu[data-entity] textarea.feedback-field { height: 54px; }
   #feedback-entity-label, #feedback-material-label { display: none; } /* the title already asks: the room goes to the air above Envia */
-  #feedback-menu:has(.feedback-choices:not([hidden])) .feedback-scroll { padding-top: 10px; }
-  #feedback-menu:has(.feedback-choices:not([hidden])) .feedback-meta { margin-bottom: 4px; }
+  #feedback-menu[data-choices] .feedback-scroll { padding-top: 10px; }
+  #feedback-menu[data-choices] .feedback-meta { margin-bottom: 4px; }
   .feedback-choices { margin-bottom: 4px; }
   .feedback-choices label.board-label { margin-top: 2px; }
   .feedback-choices label:not(.board-label) { font-size: 15px; }
@@ -305,24 +305,24 @@ body:has(#radio-menu:not([hidden]), #radio-now:not([hidden])[data-visible="true"
 }
 /* Short phones, the sheet with the two ways to help: the labels the choices already explain give way first, then the title (the figure's name stays). */
 @media (max-height: 700px) {
-  #feedback-menu:has(.feedback-kind:not([hidden])) :is(#feedback-entity-label, #feedback-material-label) { display: none; }
-  #feedback-menu:has(.feedback-kind:not([hidden])) textarea.feedback-field { height: calc(2 * 1.35em + 20px); }
-  #feedback-menu:has(.feedback-kind:not([hidden])) .feedback-choices label:not(.board-label) { min-height: 38px; }
+  #feedback-menu[data-choose] :is(#feedback-entity-label, #feedback-material-label) { display: none; }
+  #feedback-menu[data-choose] textarea.feedback-field { height: calc(2 * 1.35em + 20px); }
+  #feedback-menu[data-choose] .feedback-choices label:not(.board-label) { min-height: 38px; }
 }
 @media (max-height: 600px) {
-  #feedback-menu:has(.feedback-kind:not([hidden])) #feedback-title { display: none; }
-  #feedback-menu:has(.feedback-kind:not([hidden])) .feedback-lead { margin: 0 32px 6px; font-weight: 800; }
-  #feedback-menu:has(#feedback-entity:not([hidden])) textarea.feedback-field { height: 46px; }
+  #feedback-menu[data-choose] #feedback-title { display: none; }
+  #feedback-menu[data-choose] .feedback-lead { margin: 0 32px 6px; font-weight: 800; }
+  #feedback-menu[data-entity] textarea.feedback-field { height: 46px; }
 }
 /* The longest languages on the shortest phones: the message's label stays for screen readers, the field's own hint says it. */
 @media (max-height: 600px) {
-  #feedback-menu:has(.feedback-kind:not([hidden])) .feedback-msg > .board-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
-  #feedback-menu:has(.feedback-kind:not([hidden])) .feedback-small { font-size: 12px; line-height: 15px; }
+  #feedback-menu[data-choose] .feedback-msg > .board-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  #feedback-menu[data-choose] .feedback-small { font-size: 12px; line-height: 15px; }
 }
-@media (max-height: 700px) { #feedback-menu:has(.feedback-kind:not([hidden])) .feedback-meta { margin-bottom: 4px; } }
+@media (max-height: 700px) { #feedback-menu[data-choose] .feedback-meta { margin-bottom: 4px; } }
 /* Short screens, colla or entity: the name's own hint says what it asks, so its label gives its room to the air above Envia. */
 @media (max-height: 700px) {
-  #feedback-menu:has(.feedback-kind:not([hidden])) #feedback-entity label.board-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  #feedback-menu[data-choose] #feedback-entity label.board-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 }
 /* Three ways to help: the tabs share the row; the code tab replaces the fields with its one sentence. */
 .feedback-kind { grid-template-columns: repeat(3, minmax(0, 1fr)); }

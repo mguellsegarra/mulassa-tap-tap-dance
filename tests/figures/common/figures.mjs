@@ -570,14 +570,15 @@ assert(!/showModal|aviat\.close|aviat-menu|aviat-close/.test(ui));
   assert.match(strip, /sel-card[^`]*data-town="\$\{t\.id\}"/, 'cards carry their town');
   // one surface, no divider; each portrait (all vectors now) at its real relative size, never more than its box holds
   assert(!/\.sel-card \.por \{[^}]*border-bottom/.test(css), 'no line between portrait and caption');
-  assert.match(css, /--ref: min\(var\(--reach\) \* 100cqh \/ 14, var\(--sky\) \* 100cqw \/ 18\)/, 'one reference cell: the biggest grid without its rim, at the panel\'s reach');
+  assert(!/\.sel-card \.por \{[^}]*container-type/.test(css) && !/\dcq[hw]\b/.test(css), 'the portrait boxes are no size containers: 50 of them made every restyle (a sheet opening) lay each out on its own');
+  assert.match(css, /--ref: min\(var\(--reach\) \* var\(--por-h\) \/ 14, var\(--sky\) \* var\(--por-w\) \/ 18\)/, 'one reference cell: the biggest grid without its rim, at the panel\'s reach');
   const [, sky, reach] = css.match(/\.sel-card \.por \{ --sky: (\.\d+); --reach: ([\d.]+);/) ?? [];
   assert(sky < 1 && reach > sky && portraitStand(MULASSA) * reach < sky && sky / (portraitStand(MULASSA) * reach) >= 1.15, 'the tallest figures leave air above them; the rest grow, still clearly under the gegants');
-  assert.match(css, /min\(var\(--s, 1\) \* 14 \* var\(--ref\) \/ \(var\(--gh\) - 2\), var\(--sky\) \* 100cqh \/ \(var\(--gh\) - 2\), var\(--sky\) \* 100cqw \/ \(var\(--gw\) - 2\)\)/, 'the cell at the figure\'s share, clamped to fit');
+  assert.match(css, /min\(var\(--s, 1\) \* 14 \* var\(--ref\) \/ \(var\(--gh\) - 2\), var\(--sky\) \* var\(--por-h\) \/ \(var\(--gh\) - 2\), var\(--sky\) \* var\(--por-w\) \/ \(var\(--gw\) - 2\)\)/, 'the cell at the figure\'s share, clamped to fit');
   const cells = f => { const b = !playable(f) && silhouetteBox(f.id); return b ? [b[0] - 2, b[1] - 2] : [portraitArt(f)[0].length, portraitArt(f).length]; }; // a pending card's grid is its silhouette's box
   assert(Math.max(...FIGURES.map(f => cells(f)[0])) === 18 && Math.max(...FIGURES.map(f => cells(f)[1])) === 14, 'the reference divisors match the biggest portrait');
   assert.match(css, /width: calc\(var\(--gw\) \* var\(--cell\)\); height: calc\(var\(--gh\) \* var\(--cell\)\); margin: calc\(-1 \* var\(--cell\)\);/, 'the rim hangs outside the box: the drawing stands on the floor');
-  assert.match(css, /--mula-cell: max\(2px, min\(\.8 \* 14 \* min\(var\(--reach\) \* 100cqh \/ 14, var\(--sky\) \* 100cqw \/ 18\) \/ 11\.02/, 'the Mulassa\'s body on the same reference, at her stand');
+  assert.match(css, /--mula-cell: max\(2px, min\(\.8 \* 14 \* min\(var\(--reach\) \* var\(--por-h\) \/ 14, var\(--sky\) \* var\(--por-w\) \/ 18\) \/ 11\.02/, 'the Mulassa\'s body on the same reference, at her stand');
   assert.match(strip, /--gw:\$\{box\[0\]\};--gh:\$\{box\[1\]\};--s:\$\{portraitStand\(f\)\}/, 'the svg grid, rim included, and its stand');
   assert.match(strip, /\[art\[0\]\.length \+ 2, art\.length \+ 2\]/, 'the rim: the grid plus one cell each side');
   for (const f of [...FIGURES, INVITE]) assert(STAND[f.id] > 0 && STAND[f.id] <= 1.2 && portraitStand(f) === STAND[f.id], `${f.id}: its own stand beside the gegants (?sizes output pastes over STAND)`);

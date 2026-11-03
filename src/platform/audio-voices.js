@@ -54,9 +54,18 @@ export const VOICES = {
     return o;
   },
 
+  // The applause (tools/music/build_applause.mjs), decoded off the main thread (synthesised on the phone it was 15% of an iPhone's splash JavaScript). Until it is in, the
+  // claps are silent and ask again: a failed download costs a sound, never the run.
+  loadApplause() {
+    if (this.applause || this.applauseLoad) return;
+    this.applauseLoad = fetch('sfx/applause.mp3').then(r => r.arrayBuffer()).then(a => this.ctx.decodeAudioData(a))
+      .then(b => { this.applause = b; }, () => {}).finally(() => { this.applauseLoad = null; });
+  },
+
   clap(amp = 0.5, len = 3) { // real-sounding applause: thousands of individual claps
+    if (!this.applause) { this.loadApplause?.(); return; } // (not downloaded yet: silent this time)
     const s = this.ctx.createBufferSource(), g = this.ctx.createGain(), t = this.ctx.currentTime;
-    s.buffer = this.applause.finish(); s.playbackRate.value = 0.95 + Math.random() * 0.1;
+    s.buffer = this.applause; s.playbackRate.value = 0.95 + Math.random() * 0.1;
     g.gain.setValueAtTime(amp, t);
     g.gain.setValueAtTime(amp, t + len - 0.8);
     g.gain.linearRampToValueAtTime(0, t + len);
@@ -71,8 +80,9 @@ export const VOICES = {
   },
   // A few hands on one beat: a short slice from the middle of the applause, with its own fade in and out.
   clapBurst(amp = 0.06) {
+    if (!this.applause) return;
     const s = this.ctx.createBufferSource(), g = this.ctx.createGain(), t = this.ctx.currentTime;
-    s.buffer = this.applause.finish(); s.playbackRate.value = 0.95 + Math.random() * 0.1;
+    s.buffer = this.applause; s.playbackRate.value = 0.95 + Math.random() * 0.1;
     g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(amp, t + 0.015); g.gain.linearRampToValueAtTime(0, t + 0.26);
     s.connect(g).connect(this.bus || this.out);
     this.voice(s).start(t, 0.5 + Math.random() * 3.5); s.stop(t + 0.3);

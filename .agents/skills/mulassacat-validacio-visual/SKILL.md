@@ -14,6 +14,9 @@ The owner's recurring question is "does this look finished to you?". Before repo
 1. Look at the result yourself, in motion, at every size it affects, and fix what you see. Do not hand over something you would reject.
 2. Compare with the version before the change (same viewport, figure, time, quality) to catch regressions, not only to show the fix.
 3. Say exactly what was checked by eye and by numbers, and what was not (no physical phone, no listening, tests not run yet).
+4. State the blocking cost in ms, before and after, on the reference Android (AGENTS.md, Process; method, tools and
+   traps in `docs/agents/device-profiling.md`): the longest task and frame of each affected interaction, and the GPU
+   raster of a screen's first show. Over 50 ms is not finished; a missing measurement is reported as missing, never assumed.
 
 Do not run tests or `npm run check` before showing the result: they come after the owner's OK (AGENTS.md, Process).
 

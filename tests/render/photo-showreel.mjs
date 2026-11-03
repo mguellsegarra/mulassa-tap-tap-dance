@@ -624,8 +624,9 @@ verifyManualSway(run, assert);
   assert(run('REEL.on && !reelIdleOn'), 'showreel: the selector stays while it was just touched');
   idleFrames(Math.ceil(run('REEL_IDLE.after') * 60) + 30);
   assert(run('reelIdleOn'), 'showreel idle: untouched, the UI fades and the dance has the screen');
+  assert(run('reelGone'), 'showreel idle: once faded, the UI is not rendered at all (an iPhone hitched under the invisible layers)');
   windowHandlers.pointermove.forEach(h => h({})); idleFrames(1);
-  assert(run('!reelIdleOn'), 'showreel idle: a move brings the selector back at once');
+  assert(run('!reelIdleOn && !reelGone'), 'showreel idle: a move brings the selector back at once, rendered again');
   idleFrames(Math.ceil(run('REEL_IDLE.after') * 60) + 30); // the press that wakes it only wakes it: it, its up and its click never reach the game
   const ptr = type => { const e = { type, pointerId: 7, cancelable: true, stopped: false, stopImmediatePropagation() { this.stopped = true; }, preventDefault() {} }; windowHandlers[type].forEach(h => h(e)); return e.stopped; };
   assert(ptr('pointerdown') && run('!reelIdleOn') && ptr('pointerup') && ptr('click'), 'showreel idle: the waking tap is swallowed whole');

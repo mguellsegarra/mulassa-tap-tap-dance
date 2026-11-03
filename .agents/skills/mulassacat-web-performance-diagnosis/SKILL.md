@@ -38,5 +38,6 @@ separately; simulator success does not close a physical-device symptom. A mitiga
 be useful while the root cause remains unknown. Stop after relevant checks pass unless
 new evidence warrants more work; do not optimize unrelated paths or hardcode old thresholds.
 
-Read [historical evidence](references/mulassa-evidence.md) for HUD isolation, clock judder,
+On the real phones (the S10 over adb, an iPhone's Safari with or without a cable), follow `docs/agents/device-profiling.md`:
+its tools, the review's flows and sizes, and the traps already met. Read [historical evidence](references/mulassa-evidence.md) for HUD isolation, clock judder,
 warmups, power caps and rejected measurements. Adapt commands to the current project.

@@ -25,7 +25,15 @@
   are DOM work (a style written every frame cost ~10 ms a frame on a 2016 MacBook). Tablet benchmark: Playwright 1366×1024 @ DPR 2, `isMobile`, CDP
   `Emulation.setCPUThrottlingRate` 4, `?mute&perf&autoplay&from=40`, then `__dbg.choose(1)`.
   `?perf` also logs the load stages: `[load] module|shaders|first frame|song decoded <ms since navigation>`.
-- Real iPhone Safari from the Mac (planned, not tried on this project yet): `safaridriver` drives Safari over USB, so an agent can open a build with `?perf` and read `window.__perf` through WebDriver to compare builds. Setup once: `safaridriver --enable` on the Mac (admin), and Web Inspector and Remote Automation on the iPhone (Settings → Safari → Advanced). Safari runs in an automation window with the other tabs hidden, and WebDriver input is not a finger, so it says nothing about touch latency or game feel. CPU, GPU and thermal data come from Xcode Instruments. A real-device check still follows the rule in `docs/agents/graphics.md`: a full song, reporting device, thermal state, refresh rate and the `?perf` summary.
+- Test harness traps (2026-11-03): `tests/render/game-flow.mjs`, `photo-showreel.mjs` and the other modules loaded by
+  `tests/render/render-quality.mjs` only run through `node tests/run.mjs render/render-quality` (alone they fail with
+  `chip.unlock is not a function`, and naming them to the runner says «No test matches»). `tests/render/load-main.mjs`
+  concatenates `src/` in dependency order, so a new `import` changes when every module's top level runs, and the seeded
+  crowd tests can move (a near-still check went from under 0.01 rad to 0.0105 with no change in the game): prefer no new
+  module edge in a hot path, and compare with the untouched `HEAD` in a separate worktree before loosening any threshold.
+- **Blocking cost on the real phones** (AGENTS.md, Process): `docs/agents/device-profiling.md` (the S10 over adb, the
+  iPhone through the LAN probe proxy or `ios_webkit_debug_proxy`, the review's flows and sizes, the traps met).
+- Real iPhone Safari over WebDriver (not tried; `docs/agents/device-profiling.md` covers the inspector bridge used instead): `safaridriver` drives Safari over USB, so an agent can open a build with `?perf` and read `window.__perf` through WebDriver to compare builds. Setup once: `safaridriver --enable` on the Mac (admin), and Web Inspector and Remote Automation on the iPhone (Settings → Safari → Advanced). Safari runs in an automation window with the other tabs hidden, and WebDriver input is not a finger, so it says nothing about touch latency or game feel. CPU, GPU and thermal data come from Xcode Instruments. A real-device check still follows the rule in `docs/agents/graphics.md`: a full song, reporting device, thermal state, refresh rate and the `?perf` summary.
 - The first game ever is the practice; SALTA or `__dbg.startPractice/endPractice` to control it.
 - Judge and clock logic is tested without the scene (pure modules); render tests cover drawing only. `node tests/run.mjs game/judge game/chart-playable game/calm-trauma` runs the judge core (window edges, ties, GUAPA partner, holds, balloons), the jittered-autoplay grade mix over the three songs, chart gaps/balloon reachability and the reduced-motion shake.
 - Reduced motion: test it with Playwright `reducedMotion: 'reduce'`.

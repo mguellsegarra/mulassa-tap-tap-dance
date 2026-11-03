@@ -190,7 +190,7 @@ const service = (o = {}) => ({ configured: true, asked: [], async seasons(f) { t
   assert(part('se-cheer').textContent === 'Has fet podi!' && /blk me/.test(part('se-art-box').innerHTML) && (part('se-art-box').innerHTML.match(/blk me/g) || []).length === 1, 'the podium, its step');
   assert.equal(part('se-now').textContent, 'Ara: Hivern 2027\u00a0· queden 87 dies', 'the «·» kept with the name (a no-break space): a wrap falls after it');
   assert(!body.find(e => e.className === 'podium') && body.all(e => /^pos p/.test(e.className)).map(e => e.className).join() === 'pos p3', 'no full podium here; a podium place on its disc');
-  assert.equal(mem.get(seasonSeenKey('u1', 1)), '1', 'seen: per profile and season');
+  assert.equal(mem.get('seen:u1:season:1'), '1', 'seen: per profile and season');
   $('season-end-hall').click();
   assert(!$('season-end-menu').open && backs === 0 && halls[0][0] === 'drac-valls', 'the Saló de la fama of the podium\'s figure, with this sheet\'s way back');
   halls[0][1](); assert.equal(backs, 1);
@@ -198,6 +198,8 @@ const service = (o = {}) => ({ configured: true, asked: [], async seasons(f) { t
   assert.equal(await end.check(), false, 'once');
   const other = setupSeasonEnd({ focusIn() {}, service: service({ ownerId: async () => 'u2' }), store, doc: fakeDoc(['season-end-menu', 'season-end-boards', 'season-end-title', 'season-end-ok', 'season-end-close', 'season-end-hall']).doc, now: () => NOW });
   assert.equal(await other.check(), true, 'another profile on this device sees its own');
+  const elsewhere = setupSeasonEnd({ focusIn() {}, service: service({ ownerId: async () => 'u4', seenNotices: async () => ['season:1'] }), store, doc: fakeDoc(['season-end-menu', 'season-end-boards', 'season-end-title', 'season-end-ok', 'season-end-close', 'season-end-hall']).doc, now: () => NOW });
+  assert.equal(await elsewhere.check(), false, 'seen on another device (the server\'s list): not here');
   const anon = setupSeasonEnd({ focusIn() {}, service: service({ ownerId: async () => null }), store, doc: fakeDoc(['season-end-menu', 'season-end-boards', 'season-end-title', 'season-end-ok', 'season-end-close', 'season-end-hall']).doc, now: () => NOW });
   assert.equal(await anon.check(), false, 'no profile: nothing to tell');
   const plain = fakeDoc(['season-end-menu', 'season-end-boards', 'season-end-title', 'season-end-ok', 'season-end-close', 'season-end-hall']);
@@ -350,7 +352,7 @@ const service = (o = {}) => ({ configured: true, asked: [], async seasons(f) { t
     if (shown) { told.push($('season-end-title').textContent); $('season-end-ok').click(); }
   }
   assert.deepEqual(told, ['Temporada 3 s’ha acabat', 'Temporada 2 s’ha acabat', 'Temporada 1 s’ha acabat'], 'one at a time, newest first, none lost');
-  assert.deepEqual([1, 2, 3].map(id => mem.get(seasonSeenKey('u1', id))), ['1', '1', '1']);
+  assert.deepEqual([1, 2, 3].map(id => mem.get(`seen:u1:season:${id}`)), ['1', '1', '1']);
 }
 // --- the greeting: what a profile has pending, told when the selector is idle; one sheet per visit (page load)
 {

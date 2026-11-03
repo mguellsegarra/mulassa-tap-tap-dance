@@ -31,7 +31,7 @@ p .btn-link::after { display: none; } /* a link inside a sentence: its slop woul
 .sheet-actions { display: grid; gap: 12px; margin-top: 14px; } /* a sheet's stack of .btn */
 
 :root { --page-edge: #140c07; } /* Match theme-color and the manifest; Safari also samples the document background. */
-html, body { margin: 0; height: 100%; height: var(--app-h, 100%); overflow: hidden; overscroll-behavior: none; background: var(--page-edge); touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+html, body { margin: 0; height: 100%; height: var(--app-h, 100%); overflow: hidden; overscroll-behavior: none; background: var(--page-edge); touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
 body { position: fixed; top: 0; left: 0; width: 100%; } /* Safari (iPad, after the share sheet) could still scroll the page under its bars: nothing to scroll now (see settle() in main.js) */
 /* No overlay on the safe areas: the scene runs edge to edge (viewport-fit=cover); only controls keep clear of the insets. */
 canvas { position: fixed; left: 0; top: 0; width: 100%; height: 100vh; height: 100dvh; height: var(--app-h, 100dvh); } /* --app-h: the real screen height, set by resize() (iOS home-screen app fix); dvh follows Safari's toolbars */

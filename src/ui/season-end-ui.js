@@ -1,6 +1,7 @@
 // The end-of-season sheet (#season-end-menu), its art drawn with the Saló de la fama's pieces (seasons-ui.js).
 import { byId, num, trSplit, posDisc } from './sheet-kit.js';
 import { tr } from '../i18n/messages.js';
+import { createSeenNotices } from '../services/seen-notices.js';
 import { FIGURE_NAMES } from './stats-view.js';
 import { calendarSeason, seasonLine, figureSeasons, openSeason, hallEl, htmlEl, nestSvg, pixelOf, CAL_SVG } from './seasons-ui.js';
 
@@ -8,7 +9,8 @@ import { calendarSeason, seasonLine, figureSeasons, openSeason, hallEl, htmlEl, 
 // season ended where this profile published. A podium on any board: that figure on its step, «Has fet podi!» (or «Primer
 // lloc!»); none: a garland and «Gràcies per fer plaça!». Then every board it was on with its place, and the season now open.
 // The whole podium lives in the Saló de la fama («Saló de la fama» opens it: onHall(figure, back)). Season 0 never ends.
-export const seasonSeenKey = (userId, seasonId) => `season-seen-${userId}-${seasonId}`;
+export const seasonSeenKey = (userId, seasonId) => `season-seen-${userId}-${seasonId}`; // the older device-only mark
+const seasonNotice = seasonId => `season:${seasonId}`; // in the seen-notices registry: seen on any device
 const CONFETTI = [[18, 22, '#f5c518', 20], [44, 8, '#fff3d6', -30], [70, 26, '#d9955a', 40], [150, 10, '#f5c518', -15], [176, 28, '#fff3d6', 25], [202, 14, '#d6dbe2', -40], [110, 4, '#d9955a', 10], [32, 44, '#d6dbe2', 60], [190, 46, '#f5c518', -55]];
 const PODIUM_FILL = ['#f5c518', '#d6dbe2', '#d9955a']; // the boards' podium discs
 function podiumArt(figure, pos) {
@@ -28,7 +30,7 @@ function garlandArt(figure) {
     return `<path class="flag" style="--i:${i}" d="M${x - 8} ${y - 1}L${x + 8} ${y - 1}L${x} ${y + 14}Z" fill="${f}"/>`;
   }).join('')}<g class="who">${nestSvg(pixelOf(figure), 80, 44, 60, 46)}</g></svg>`;
 }
-export function setupSeasonEnd({ focusIn, service, store, onHall = () => {}, doc = document, now = () => Date.now() }) {
+export function setupSeasonEnd({ focusIn, service, store, notices = createSeenNotices({ service, kv: store }), onHall = () => {}, doc = document, now = () => Date.now() }) {
   const $ = byId(doc), menu = $('season-end-menu'), body = $('season-end-boards');
   let back = null, hallFigure = null;
   // what to tell: { userId, season: { id, name }, boards: [{ figure, entry }], open: { name, endsAt } } for the newest unseen season,
@@ -37,11 +39,12 @@ export function setupSeasonEnd({ focusIn, service, store, onHall = () => {}, doc
     if (!service.configured) return null;
     const userId = await service.ownerId();
     if (!userId) return null;
+    await notices.load(userId);
     const t = now(), found = new Map(), lists = [];
     for (const figure of Object.keys(FIGURE_NAMES)) {
       const list = await figureSeasons(service, figure, t); lists.push(list);
       for (const e of list) {
-        if (e.endsAt == null || e.endsAt > t || !e.myPosition || store.get(seasonSeenKey(userId, e.seasonId))) continue;
+        if (e.endsAt == null || e.endsAt > t || !e.myPosition || notices.seen(userId, seasonNotice(e.seasonId), seasonSeenKey(userId, e.seasonId))) continue;
         if (!found.has(e.seasonId)) found.set(e.seasonId, { id: e.seasonId, name: e.name, boards: [] });
         found.get(e.seasonId).boards.push({ figure, entry: e });
       }
@@ -50,7 +53,7 @@ export function setupSeasonEnd({ focusIn, service, store, onHall = () => {}, doc
     return newest ? { userId, season: newest, boards: newest.boards, open: openSeason(lists, t) } : null; // only a season shown is marked seen: the older ones wait their turn
   }
   function show({ userId, season, boards, open = calendarSeason(now()) }, onBack = null) {
-    store.set(seasonSeenKey(userId, season.id), '1'); // once, even if closed at once
+    notices.mark(userId, seasonNotice(season.id)); // once, even if closed at once
     $('season-end-title').textContent = tr('ui.seasons.ended', { name: season.name });
     const top = boards.filter(b => b.entry.myPosition <= 3).sort((a, b) => a.entry.myPosition - b.entry.myPosition)[0];
     hallFigure = (top ?? boards[0]).figure;

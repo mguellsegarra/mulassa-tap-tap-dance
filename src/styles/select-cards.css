@@ -186,17 +186,16 @@ html:not([lang="ca"]) .sel-footer :is(#select-next, #select-play, #select-figure
 body.view-mode #select { opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .2s, visibility 0s .2s, display .2s allow-discrete; }
 #select { transition: opacity .2s, visibility 0s, display .2s allow-discrete; } /* return visibility immediately so the saved card can take focus */
 /* The figure's heart count on its card: a dark pill high on the wall, top left (the heads face right). Filled heart: this player gave one. */
-.sel-card-hearts { position: absolute; z-index: 1; top: 7px; left: 7px; display: inline-flex; align-items: center; gap: 3px; padding: 4px 8px 3px 6px; border-radius: 999px; background: #1a110bd9; box-shadow: 0 0 0 1px #fff3d624; font: 700 12px/1 'Baloo 2', system-ui, sans-serif; color: #fff3d6; font-variant-numeric: tabular-nums; pointer-events: none; }
+.sel-card-hearts { position: absolute; z-index: 1; top: 7px; left: 7px; display: inline-flex; align-items: center; gap: .25em; padding: .34em .67em .25em .5em; border-radius: 999px; background: #1a110bd9; box-shadow: 0 0 0 1px #fff3d624; font: 700 12px/1 'Baloo 2', system-ui, sans-serif; color: #fff3d6; font-variant-numeric: tabular-nums; pointer-events: none; }
 /* Out of the layout (absolute), so its arrival moves nothing: it only fades in when the totals come, and out at zero. */
 .sel-card-hearts:not([data-on]) { opacity: 0; visibility: hidden; transition: opacity .25s, visibility 0s .25s; }
 .sel-card-hearts[data-on] { transition: opacity .25s; }
 @media (prefers-reduced-motion: reduce) { .sel-card-hearts { transition: none !important; } }
-.sel-card-hearts svg { flex: none; width: 12px; height: 12px; margin: 0; fill: #e73449; stroke: none; }
+.sel-card-hearts svg { flex: none; width: 1em; height: 1em; margin: 0; fill: #e73449; stroke: none; }
 .sel-card-hearts:not([data-mine]) svg { fill: none; stroke: #e73449; stroke-width: 2.6; }
 /* Squat phone cards (select-pending.css: portrait left, caption right): smaller, in the portrait's corner. */
 @media (max-width: 519px) and (min-height: 501px) and (max-height: 700px) {
   @container (max-height: 100px) {
     .sel-card-hearts { top: 4px; left: 4px; padding: 2px 6px 1px 4px; font-size: 11px; }
-    .sel-card-hearts svg { width: 10px; height: 10px; }
   }
 }

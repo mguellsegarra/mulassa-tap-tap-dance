@@ -7,19 +7,19 @@
 //   statsSync.acceptNotice()  the notice was shown and read: marks it and sends what is waiting
 // Profile changes (create, open, confirm, sign out, delete) arrive by themselves through service.onAccount.
 import { leaderboard } from './leaderboard.js';
-import { store } from '../platform/storage.js';
+import { seenNotices } from './seen-notices.js';
 import { loadStats, saveStats, payload, markSent, transferNone, forgetOwner, setStatsOwner } from '../game/stats.js';
 
-const NOTICE = id => `stats-notice-${id}`;
-export const statsNoticeSeen = (owner, kv = store) => kv.get(NOTICE(owner)) === '1';
-export const markStatsNoticeSeen = (owner, kv = store) => kv.set(NOTICE(owner), '1');
+// the notice is 'stats' in the seen-notices registry (shown once per profile on any device); its older device-only key still counts
+export const statsNoticeSeen = (owner, notices = seenNotices) => notices.seen(owner, 'stats', `stats-notice-${owner}`);
+export const markStatsNoticeSeen = (owner, notices = seenNotices) => notices.mark(owner, 'stats');
 
 // merge_stats takes a profile once a minute (leaderboard_rate_limit); the first try after a run waits a moment so it never
 // competes with the results screen.
 const GAP = 61000, SETTLE = 2000;
 const sign = p => { let h = 5381; const t = JSON.stringify([p.buckets, p.days]); for (let i = 0; i < t.length; i++) h = ((h << 5) + h + t.charCodeAt(i)) | 0; return `${t.length}:${h >>> 0}`; };
 
-export function createStatsSync({ service, kv = store, io = { load: loadStats, save: saveStats }, now = Date.now, timer = setTimeout, clear = clearTimeout } = {}) {
+export function createStatsSync({ service, notices = seenNotices, io = { load: loadStats, save: saveStats }, now = Date.now, timer = setTimeout, clear = clearTimeout } = {}) {
   // Per owner (an id is never reused) and service (use() starts over): the rest of this is answered by one server for one profile.
   const refused = new Set(), accepted = new Map(); // refused: buckets the server rejects even alone, left out until the page reloads (their counters stay untouched here); accepted: bucket → its JSON the server took alone
   const mark = (id, key) => `${id}|${key}`;
@@ -37,7 +37,7 @@ export function createStatsSync({ service, kv = store, io = { load: loadStats, s
   // Decision 31: a deleted profile takes its numbers with it; they never pass to anyone else.
   function forget(userId) {
     io.save(forgetOwner(io.load(), userId));
-    kv.remove?.(NOTICE(userId));
+    notices.forget(userId, 'stats');
     if (owner === userId) adopt(null);
   }
   // The session's user, only once it has a profile: an anonymous sign-in (Crea with a taken name) owns nothing yet
@@ -47,11 +47,11 @@ export function createStatsSync({ service, kv = store, io = { load: loadStats, s
     try { return (await svc.profile()) ? id : null; } catch { return id; } // offline: trust the session
   }
   async function refresh() {
-    try { adopt(await current()); } catch { /* offline: the owner stays as it was */ }
+    try { adopt(await current()); await notices.load(owner); } catch { /* offline: the owner stays as it was */ }
   }
   async function send() {
     if (!owner) return 'no-profile';
-    if (!statsNoticeSeen(owner, kv)) return 'notice';
+    if (!statsNoticeSeen(owner, notices)) return 'notice';
     const id = owner, stats = io.load(), p = payload(stats, id);
     for (const key of Object.keys(p.buckets)) if (refused.has(mark(id, key))) delete p.buckets[key];
     if (!Object.keys(p.buckets).length && !p.days.length) return 'empty';
@@ -103,7 +103,7 @@ export function createStatsSync({ service, kv = store, io = { load: loadStats, s
   }
   const events = e => { if (e.type === 'gone') forget(e.userId); else refresh().then(request); };
   function use(next) {
-    unsubscribe?.(); svc = next; refused.clear(); accepted.clear(); unsubscribe = svc.onAccount?.(events) ?? null;
+    unsubscribe?.(); svc = next; notices.use?.(next); refused.clear(); accepted.clear(); unsubscribe = svc.onAccount?.(events) ?? null;
   }
   use(svc);
 
@@ -111,12 +111,13 @@ export function createStatsSync({ service, kv = store, io = { load: loadStats, s
     use,
     async init() {
       try { adopt(await current()); } catch { return adopt(null); }
+      await notices.load(owner); // seen on another device: not shown here
       if (owner) request();
     },
     afterRun: request,
     holdWhile(fn) { hold = fn; },
-    noticeNeeded: () => !!owner && !statsNoticeSeen(owner, kv),
-    acceptNotice() { if (owner) { markStatsNoticeSeen(owner, kv); request(); } },
+    noticeNeeded: () => !!owner && !statsNoticeSeen(owner, notices),
+    acceptNotice() { if (owner) { markStatsNoticeSeen(owner, notices); request(); } },
     forget,
     send, // the upload itself, for tests and for a «Sincronitza» button if one ever exists
     get owner() { return owner; },

@@ -366,6 +366,7 @@ body:has(:is(#board-menu, #seasons-menu, #account-menu)[open]) #card-menu { widt
 .card-from .lvl { padding: 0 6px; border-radius: 999px; color: #2a1a10; font-size: 10px; font-weight: 800; line-height: 16px; letter-spacing: .05em; }
 .card-box { position: relative; min-height: 196px; }
 .card-box .board-state { position: absolute; inset: 0; }
+#card-stats { display: flex; flex-direction: column; justify-content: center; } /* a shorter answer than the skeleton's reserve (player-card.js): the spare room shared above and below */
 /* loading (player-card.js): the loaded tiles with their words and icons gone, pulsing; «Carregant…» for readers only */
 .card-box [data-pending] :is(.stat-fact, .stat-toggle) { color: transparent; pointer-events: none; animation: profile-pulse 1.2s ease-in-out infinite; }
 .card-box [data-pending] :is(.stat-fact, .stat-toggle) * { visibility: hidden; }

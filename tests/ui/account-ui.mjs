@@ -222,6 +222,7 @@ const service = (o = {}) => ({ configured: true, asked: [], async seasons(f) { t
   await tick(); await tick(); await tick();
   assert.deepEqual(asked, ['id-baldufa'], 'asked by public id, never by name; the repeated taps ask nothing more');
   assert(!f.$('card-stats').inert && !('pending' in f.$('card-stats').dataset), 'loaded: the skeleton gone');
+  assert.equal(f.$('card-stats').style.minHeight, `${f.$('card-stats').offsetHeight}px`, 'but its height stays: a shorter answer never shrinks the card, a longer one is the skeleton\'s worst case');
   assert(/3 h 12 mina la plaça/.test(f.$('card-stats').textContent) && !/Has jugat|dies/.test(f.$('card-stats').textContent), 'the totals, never the days');
   assert(/1Podi a Tardor 2026 · Mulassa de Valls \(ball anterior\)/.test(f.$('card-stats').textContent), 'its podiums, with the season\'s name');
   card = { ...card, alias: 'Portadora', verified: true, released: false, totals: {}, podiums: [] };
@@ -233,6 +234,7 @@ const service = (o = {}) => ({ configured: true, asked: [], async seasons(f) { t
   const g = fakeDoc(ids);
   card = null; const none = setupCard({ focusIn() {}, service: svc, doc: g.doc, minLoad: 0 }); none.open({ alias: 'Tabal', publicId: 'id-tabal' }); await tick(); await tick();
   assert(g.$('card-status').textContent === 'Encara no hi ha estadístiques per mostrar.');
+  assert.equal(g.$('card-stats').style.minHeight, '', 'no statistics: no reserved room under the line');
   card = Object.assign(new Error('No s’ha pogut connectar amb la classificació.'), { code: 'unavailable' }); none.open({ alias: 'Tabal', publicId: 'id-tabal' }); g.$('card-close').click(); none.open({ alias: 'Tabal', publicId: 'id-tabal' }); await tick(); await tick();
   assert(!g.$('card-retry').hidden, 'a failure: retry inside the box');
 }

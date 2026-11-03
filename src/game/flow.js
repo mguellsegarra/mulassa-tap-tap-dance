@@ -10,7 +10,7 @@ import { store } from '../platform/storage.js';
 import { errors } from '../services/errors.js';
 import { WINDOWS, quality, starsFor } from './progress.js';
 import { restTimeline } from './bubble-rules.js';
-import { stepAt, buildStep, stepBeats, stepDone, stepPassed, STEPS } from './practice.js';
+import { stepAt, buildStep, stepBeats, stepDone, stepPassed, STEPS, practiceSeen } from './practice.js';
 import { pick } from '../scene/models.js';
 import { challengeResult } from '../services/share.js';
 import { fabricateRun, FINAL } from '../dev/final-test.js';
@@ -31,6 +31,7 @@ import { headline } from '../hud/praise.js';
 import { debugAction, debugUsed } from '../dev/debug.js';
 import { armRun, closeRun, chartTallies, localDate } from './stats.js';
 import { statsSync } from '../services/stats-sync.js';
+import { seenNotices } from '../services/seen-notices.js';
 
 export function unlock() {
   startMenuAudio();
@@ -143,7 +144,7 @@ function beginRun(diff, chart) { // shared by the song and the practice: a clean
 // Five short steps (practice.js) on the real lane with the real judge and FX, over a click track on the song's
 // beat grid, scheduled on the audio clock. Pass a step (or try it three times) to move on; nothing is recorded.
 const TUTORIAL = 'tutorial';
-const tutorialDone = () => AUTOPLAY || FROM || store.get(TUTORIAL) === 'done';
+const tutorialDone = () => AUTOPLAY || FROM || practiceSeen(store.get(TUTORIAL) === 'done', statsSync.owner, seenNotices); // the server's list as last read: never waited for
 export function choose(diff) { // a level picked on the selector (A BALLAR!): the very first time, the practice comes first
   if (tutorialDone()) startGame(diff); else startPractice(diff);
 }
@@ -215,6 +216,7 @@ export function endPractice() { // finished or skipped (SALTA): either way it wo
   leaveRun('practice');
   const then = G.practice.then;
   store.set(TUTORIAL, 'done');
+  seenNotices.mark(statsSync.owner, TUTORIAL); // no profile yet: practiceSeen sends it once there is one
   G.practice = null;
   if (then != null) startGame(then); else toTitle();
 }

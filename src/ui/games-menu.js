@@ -7,7 +7,7 @@ export function setupGamesMenu({ focusIn, enterFree, carousel, doc = document, g
   doc.getElementById('games-x').addEventListener('click', () => menu.close());
   doc.getElementById('games-grid').addEventListener('click', e => {
     const card = e.target.closest?.('[data-game]');
-    if (!card || carousel?.take(card) === false) return;
+    if (!card || carousel?.take(card, e) === false) return;
     if (card.dataset.game === 'tap') { menu.close(); return; } // the rhythm game is the selector behind this sheet
     if (card.dataset.game !== 'lliure') { go(`/jocs/${card.dataset.game}/`); return; }
     menu.close(); backToMenu = true; enterFree();

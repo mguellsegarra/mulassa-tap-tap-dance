@@ -1,9 +1,20 @@
 /* «Jocs» (ui/games-menu.js, ui/games-carousel.js): the whole screen, the chosen game in the hero, the row of cards under it. */
 #games-menu { --row: min(33dvh, 66vw); --card-w: calc(var(--row) * .8); position: fixed; inset: 0; width: 100vw; max-width: none; height: 100dvh; max-height: none; margin: 0; padding: 0; overflow: hidden; border: 0; border-radius: 0; background: #120b07; }
 #games-menu[open] { display: block; }
+/* straight to the games (index.html adds .to-jocs): black, not the rhythm game's loader, and the sheet fades in from it */
+html.to-jocs, html.to-jocs body { background: #000; }
+html.to-jocs #loader { visibility: hidden; }
+html.to-jocs #games-menu[open] { animation: games-in 1.2s ease-in-out both; }
+html.to-jocs #games-menu::backdrop { background: #000; }
+@keyframes games-in { from { opacity: 0; } }
 #games-menu::before, #games-menu::after { display: none; }
 #games-menu .sheet-x { top: calc(12px + var(--sat, 0px)); right: calc(12px + var(--sar, 0px)); z-index: 3; }
-#games-title { position: absolute; z-index: 3; top: calc(12px + var(--sat, 0px)); left: max(24px, 6vw); margin: 0; font-size: 28px; line-height: 44px; color: #fff3d6; text-shadow: 0 2px 6px #0009; }
+#games-title { position: absolute; z-index: 3; top: calc(12px + var(--sat, 0px)); left: max(24px, 6vw); margin: 0; display: grid; justify-items: center; pointer-events: none; }
+#games-title .games-logo { display: block; width: clamp(150px, 20vw, 280px); height: auto; overflow: visible; /* the outline's edge */ }
+#games-title .games-word { margin-top: -.15em; font: 800 clamp(18px, 2.6vw, 34px)/1 'Baloo 2', system-ui, sans-serif; letter-spacing: .04em; text-transform: uppercase; color: #f5c518; -webkit-text-stroke: .2em #2a1a10; paint-order: stroke fill; }
+/* GAMES pops letter by letter now and then, as TAP TAP DANCE pops on the title's beat (hud/title.js); after «Juga»'s hop */
+#games-title .games-word i { display: inline-block; font-style: normal; animation: games-pop 2.4s ease-in-out infinite; animation-delay: calc(var(--i) * .07s); }
+@keyframes games-pop { 0%, 20%, 100% { translate: 0 0; scale: 1; } 8% { translate: 0 -.28em; scale: 1.18; } 14% { translate: 0 .04em; scale: .97; } }
 
 #games-hero { position: absolute; inset: 0 0 var(--row) 0; overflow: hidden; }
 #games-hero-back { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: blur(30px) saturate(1.2) brightness(.5); transform: scale(1.15); animation: games-drift 9s ease-in-out infinite alternate; }
@@ -15,7 +26,12 @@
 #games-hero-text { position: absolute; z-index: 1; left: max(24px, 6vw); right: 24px; bottom: 28px; display: grid; justify-items: start; gap: 8px; max-width: min(46vw, 760px); }
 #games-hero-name { font-size: clamp(40px, 9dvh, 104px); font-weight: 800; line-height: .95; color: var(--game); text-shadow: 0 3px 0 #0008; text-wrap: balance; }
 #games-hero-desc { font-size: clamp(16px, 2.6dvh, 26px); font-weight: 600; line-height: 1.2; color: #fff3d6; text-shadow: 0 1px 3px #000; text-wrap: balance; }
-.game-play { display: grid; place-items: center; min-width: 96px; height: 44px; margin-top: 8px; padding: 0 22px; border: 0; border-radius: 22px; background: #fff3d6; color: #2a1a10; font: 800 18px/1 'Baloo 2', system-ui, sans-serif; cursor: pointer; box-shadow: 0 3px 0 color-mix(in srgb, var(--game) 55%, #120b07); }
+.game-play { display: inline-flex; align-items: center; justify-content: center; gap: 12px; min-width: 160px; height: 60px; margin-top: 8px; padding: 0 34px 0 28px; border: 0; border-radius: 30px; background: #fff3d6; color: #2a1a10; font: 800 24px/1 'Baloo 2', system-ui, sans-serif; cursor: pointer; box-shadow: 0 4px 0 color-mix(in srgb, var(--game) 55%, #120b07); }
+.game-play svg { width: 1em; height: 1em; fill: currentColor; flex: none; }
+/* a soft hop now and then says «press here»; it ignores reduced motion on purpose (the owner's call), like the backdrop */
+.game-play { animation: game-play-hop 2.4s ease-in-out infinite; }
+.game-play:hover, .game-play:focus-visible { animation-play-state: paused; }
+@keyframes game-play-hop { 0%, 60%, 100% { translate: 0 0; } 70% { translate: 0 -8px; } 80% { translate: 0 0; } 87% { translate: 0 -3px; } 94% { translate: 0 0; } }
 
 #games-grid { position: absolute; inset: auto 0 0 0; height: var(--row); display: flex; align-items: center; gap: 14px; margin: 0; padding: 0 calc(50vw - var(--card-w) / 2); overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; scrollbar-width: none; }
 #games-grid::-webkit-scrollbar { display: none; }
@@ -23,7 +39,7 @@
 #games-grid .game-card.on { transform: none; box-shadow: 0 0 0 3px #120b07, 0 0 0 6px var(--game); }
 #games-grid .game-card .por { position: absolute; inset: 0; width: auto; height: auto; background: none; }
 #games-grid .game-card .por img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-#games-grid .game-card .nb { position: absolute; inset: auto 0 0 0; transform: none; width: auto; height: auto; min-width: 0; margin: 0; padding: 32px 12px 10px; background: linear-gradient(#0000, color-mix(in srgb, var(--game) 26%, #120b07) 44%); box-shadow: none; text-align: left; }
+#games-grid .game-card .nb { position: absolute; inset: auto 0 0 0; transform: none; width: auto; height: auto; min-width: 0; margin: 0; padding: 44px 12px 14px; background: linear-gradient(#0000, color-mix(in srgb, var(--game) 26%, #120b07) 50%); box-shadow: none; text-align: left; }
 #games-grid .sel-card-name { display: block; font-size: clamp(15px, calc(var(--row) * .075), 28px); line-height: 1.05; color: var(--game); text-shadow: 0 1px 2px #0008; white-space: normal; }
 #games-grid .game-desc { display: none; }
 /* each game's own colour, the same as the second word of its logo; the new ones are provisional */
@@ -36,3 +52,35 @@
   #games-hero-text { max-width: none; }
 }
 @media (prefers-reduced-motion: reduce) { #games-grid .game-card { transition: none; } }
+
+/* a big screen: one grid of margins for the logo, the ×, the hero's two columns and the row; every card shows at once */
+@media (min-width: 701px) {
+  #games-menu { --m: max(32px, 5vw); --gap: 16px; --top: 128px; --logo: 220px; --bottom: 16px; }
+  #games-menu #games-title { top: 28px; left: var(--m); }
+  #games-menu #games-title .games-logo { width: var(--logo); }
+  #games-menu .sheet-x { top: 36px; right: var(--m); }
+  /* the row ends on the same margins as everything else: five cards share its width, the ring has room above and below */
+  #games-menu #games-hero { bottom: calc(var(--row) + var(--bottom)); }
+  #games-menu #games-grid { bottom: var(--bottom); padding: 0 var(--m); gap: var(--gap); scroll-snap-type: x mandatory; scroll-padding-inline: var(--m); }
+  #games-menu #games-grid .game-card { --card-w: max(140px, (100vw - 2 * var(--m) - 4 * var(--gap)) / 5); width: var(--card-w); height: calc(var(--row) - 24px); transform: none; scroll-snap-align: start; }
+  #games-menu #games-grid .game-card:not(.on) { filter: brightness(.78); }
+  #games-menu #games-grid .sel-card-name { font-size: clamp(16px, 1.5vw, 26px); }
+  #games-menu #games-grid .game-card .nb { padding: 60px 16px 20px; }
+  /* the text column runs up to the picture; the name keeps one line and «Juga» follows it, read as one; the block is anchored
+     at the bottom, so «Juga» keeps its height whatever the game */
+  #games-menu { --art-w: calc((100dvh - var(--row) - var(--bottom) - var(--top) - 32px) * .8); }
+  #games-menu #games-hero-text { left: var(--m); right: calc(var(--m) + var(--art-w) + 48px); top: var(--top); bottom: 32px; max-width: none;
+    grid-template-columns: auto auto; justify-content: start; align-content: end; align-items: center; column-gap: 32px; row-gap: 12px; }
+  /* the longest name («Mulassa Tap Tap Dance», ~10.6 em) and «Juga» share the column: one size for every game that fits it;
+     a short window (9dvh) keeps the title clear of the logo */
+  #games-menu #games-hero-text { container-type: inline-size; }
+  #games-menu #games-hero-name { grid-column: 1; grid-row: 1; text-wrap: nowrap; font-size: min(clamp(44px, min(5vw, 9dvh), 96px), (100cqw - var(--play-w) - 32px) / 10.6); }
+  #games-menu #games-hero-desc { grid-column: 1 / -1; grid-row: 2; }
+  #games-menu #games-hero-play { grid-column: 2; grid-row: 1; margin: 0; }
+  #games-menu #games-hero-desc { font-size: clamp(18px, 1.5vw, 26px); }
+  #games-menu { --play-w: clamp(170px, 14vw, 240px); }
+  #games-menu .game-play { min-width: var(--play-w); height: clamp(60px, 5vw, 84px); margin-top: 16px; padding: 0 1.45em 0 1.15em; gap: .45em; border-radius: 42px; font-size: clamp(24px, 2.1vw, 36px); box-shadow: 0 6px 0 color-mix(in srgb, var(--game) 55%, #120b07); }
+
+  /* the text centred against the picture */
+  #games-menu #games-hero-art { top: var(--top); bottom: 32px; right: var(--m); height: calc(100% - var(--top) - 32px); }
+}

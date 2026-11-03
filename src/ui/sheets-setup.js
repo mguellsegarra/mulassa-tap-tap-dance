@@ -192,6 +192,10 @@ const hint = setupDeviceHint({ focusIn, store, softwareGl }); // the device tips
 sheets.hint = hint;
 sheets.freeGate = setupFreeGate({ focusIn, store, onEnter: () => enterFree() }); // an upright iPhone is asked to turn before free play
 sheets.games = setupGamesMenu({ focusIn, enterFree, carousel: setupGamesCarousel() });
+// back from a mini-game (/#jocs) or the short link mulassa.cat/jocs (public/jocs/index.html; the dev server answers /jocs/
+// with this page): the sheet comes up at once, over the loader, while the plaça loads behind it
+if (globalThis.location?.hash === '#jocs' || /^\/jocs\/?$/.test(globalThis.location?.pathname)) { history.replaceState(null, '', '/' + location.search); sheets.games.open();
+  document.getElementById('games-menu').addEventListener('close', () => document.documentElement.classList.remove('to-jocs'), { once: true }); }
 const news = setupNews({ focusIn, store, played: () => hasPlayed(store), onGames: () => sheets.games.open(), force: Q.has('novetats') }); // ?novetats on a dev host shows it again
 sheets.news = news;
 // The greeting waits for calm: a playable figure (Mulassa, Drac) on screen and no touch or key for a while, so its sheet never

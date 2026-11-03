@@ -6,6 +6,9 @@
 <!-- One address: the old Pages host (exactly it, not previews or dev) goes to mulassa.cat, keeping path, ?repte=… and hash.
      Pages _redirects can't match a hostname, so this runs first; tests/build/pages.mjs checks it. -->
 <script>if (location.hostname === 'mulassa-tap-tap-dance.pages.dev') location.replace('https://mulassa.cat' + location.pathname + location.search + location.hash);</script>
+<!-- Straight to the games (mulassa.cat/jocs, a mini-game's back): no rhythm-game loader; the sheet opens as soon as the bundle runs
+     (ui/sheets-setup.js), and closing it before the plaça is ready brings the loader back. -->
+<script>if (location.hash === '#jocs' || /^\/jocs\/?$/.test(location.pathname)) document.documentElement.classList.add('to-jocs');</script>
 <link rel="canonical" href="https://mulassa.cat/">
 <link rel="alternate" type="text/markdown" href="/index.md">
 <!-- A copy of this page kept from before a deploy (a tab woken from memory, iOS's cold start from an old copy) would boot the
@@ -590,8 +593,13 @@
 <!-- The corner gamepad (src/ui/games-menu.js). -->
 <dialog id="games-menu" class="sheet" data-arrows="row" tabindex="-1" aria-labelledby="games-title">
   <button id="games-x" type="button" data-i18n-attr="aria-label:html.attr.close" class="sheet-x" aria-label="Tanca"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
-  <h2 id="games-title" data-i18n="html.games.title">Jocs</h2>
-  <div id="games-hero"><img id="games-hero-back" alt=""><img id="games-hero-art" alt=""><div id="games-hero-text"><span id="games-hero-name"></span><span id="games-hero-desc"></span><button id="games-hero-play" type="button" class="game-play" data-i18n="html.games.play">Juga</button></div></div>
+  <!-- the title's MULASSA lettering (as .sel-logo) with its glint sweeping across (hud/title.js glint()); GAMES under it, as TAP TAP DANCE:
+       «Mulassa Games» is a name, not translated -->
+  <h2 id="games-title"><svg class="games-logo" aria-hidden="true" focusable="false" viewBox="0 -4 308.6 80" text-anchor="middle" stroke-linejoin="round" paint-order="stroke">
+    <defs><linearGradient id="games-glint" gradientUnits="userSpaceOnUse" x1="-150" y1="0" x2="-60" y2="40"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".75"/><stop offset="1" stop-color="#fff" stop-opacity="0"/><animateTransform attributeName="gradientTransform" type="translate" values="0;560;560" keyTimes="0;.3;1" dur="4.5s" repeatCount="indefinite"/></linearGradient></defs>
+    <g font-family="'Jersey 10'" font-size="100" stroke-width="12"><text x="154.3" y="66.6" textLength="300" lengthAdjust="spacingAndGlyphs" fill="#5e1514" stroke="#5e1514">MULASSA</text><text x="154.3" y="60.6" textLength="300" lengthAdjust="spacingAndGlyphs" fill="#c0283c" stroke="#fff3d6">MULASSA</text><text x="154.3" y="60.6" textLength="300" lengthAdjust="spacingAndGlyphs" fill="url(#games-glint)" stroke="none">MULASSA</text></g>
+  </svg><span class="sr-only">Mulassa Games</span><span class="games-word" aria-hidden="true"><i style="--i:0">G</i><i style="--i:1">A</i><i style="--i:2">M</i><i style="--i:3">E</i><i style="--i:4">S</i></span></h2>
+  <div id="games-hero"><img id="games-hero-back" alt=""><img id="games-hero-art" alt=""><div id="games-hero-text"><span id="games-hero-name"></span><span id="games-hero-desc"></span><button id="games-hero-play" type="button" class="game-play"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15a1 1 0 0 0 1.5.86l12-7.5a1 1 0 0 0 0-1.72l-12-7.5A1 1 0 0 0 7 4.5z"/></svg><span data-i18n="html.games.play">Juga</span></button></div></div>
   <div id="games-grid" class="games-grid">
       <button type="button" class="btn btn-secondary sel-card game-card" data-game="tap"><span class="por"><img src="/jocs/menu/cards/tap.jpg" alt="" width="600" height="750"></span><span class="nb"><span class="sel-card-name">Mulassa Tap Tap Dance</span><small class="game-desc">Balla amb les figures al ritme de la música.</small></span></button>
       <button type="button" class="btn btn-secondary sel-card game-card" data-game="pica"><span class="por"><img src="/jocs/menu/cards/pica.jpg" alt="" width="600" height="750"></span><span class="nb"><span class="sel-card-name" data-i18n="html.games.pica">Mulassa Pop</span><small class="game-desc" data-i18n="html.games.picaDesc">Atrapa la Mulassa. Evita els Dracs.</small></span></button>

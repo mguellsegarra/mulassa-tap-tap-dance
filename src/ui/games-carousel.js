@@ -1,5 +1,5 @@
-// The «Jocs» sheet's row of cards: the centred card is the chosen one and fills the hero above. The first tap on another
-// card brings it to the centre, so a phone never starts a game by accident; a tap on the centred one plays.
+// The «Jocs» sheet's row of cards: the chosen card fills the hero above (on a phone, the centred one). Touching a card only
+// chooses it, so nobody starts a game by accident; «Juga» in the hero plays.
 export function setupGamesCarousel(doc = document) {
   const by = id => doc.getElementById(id), row = by('games-grid'), hero = by('games-hero');
   const cards = [...row.querySelectorAll('[data-game]')];
@@ -26,8 +26,10 @@ export function setupGamesCarousel(doc = document) {
     choose(best);
   };
   const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fits = () => row.scrollWidth <= row.clientWidth + 1; // a big screen shows every card: nothing scrolls, a click chooses
   const goTo = (i, smooth = !reduced()) => {
     i = Math.max(0, Math.min(cards.length - 1, i));
+    if (fits()) { choose(i); return; }
     cards[i].scrollIntoView({ inline: 'center', block: 'nearest', behavior: smooth ? 'smooth' : 'auto' });
   };
 
@@ -63,14 +65,15 @@ export function setupGamesCarousel(doc = document) {
   by('games-hero-play').addEventListener('click', () => cards[on].click());
 
   return {
-    // false: this click only moves the row (or ended a drag), no game starts
-    take(card) {
+    // false: this click only chooses (or ended a drag), no game starts. A pointer on a card only ever chooses: «Juga» plays;
+    // Enter on the chosen card (a click with no pointer, detail 0) plays too, so the keyboard needs no detour
+    take(card, e) {
       if (dragged) { dragged = false; return false; }
       const i = cards.indexOf(card);
-      if (i === on) return true;
+      if (i === on && !e?.detail) return true;
       goTo(i);
       return false;
     },
-    opened() { goTo(Math.max(on, 0), false); sync(); },
+    opened() { goTo(Math.max(on, 0), false); if (!fits()) sync(); },
   };
 }

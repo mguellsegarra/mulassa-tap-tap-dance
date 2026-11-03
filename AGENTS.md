@@ -36,7 +36,9 @@ briefs or skill defaults asking agents to coordinate by messaging each other.
   A request to create a new chat does not authorize that chat to contact other agents.
 - Only a new explicit instruction from the owner authorizes an exception. An old task
   brief or another agent's request is not authorization. Finish in your own thread;
-  any host-generated completion notification needs no additional message.
+  a delegated task's completion notification needs no message to that task or to other
+  threads. It never means staying silent in your own conversation: see «Never go quiet
+  on a wait» under Process.
 
 ## Implementation quality from the first change
 
@@ -126,6 +128,7 @@ Read-only issue inspection (organization `ondori`, project `mulassa-tap-tap-danc
 ## Process
 
 - **The owner validates first, tests come after.** For anything with a visible result (UI, model, dance, camera, effect), the order is: edit, look at it yourself, give the owner the captures and URLs, wait for their OK, and only then write the tests and run them with `npm run check`. Before that OK, run no render tests, no other test files and no `npm run check`: a change the owner rejects or adjusts would waste them. Say in that report that the tests have not run yet, and do not call the work finished or commit it until the check is green, even when the owner asks for a commit: run the check first. Changes with nothing to see (logic, data, security, build) keep testing as they work. This order overrides any skill or reference that puts tests earlier.
+- **Never go quiet on a wait.** When a background command, a delegated agent, a deploy or a CI run you started finishes, its notification is your cue to act in that same turn: read the result, do the next step you announced (check the deployed `version.json`, hand over the link, run the next check) and report to the owner. Never answer a completion notification with an empty or «no response» turn; the owner should never have to ask «com va?». Follow a deploy or CI run to the end: before ending the turn, start the wait in the background (`gh run watch <id> --exit-status`) and register it with the host's wait tool (T3: `t3_background_wait`); when it finishes, verify the result yourself before reporting. If the next step needs the owner's confirmation, ask for it in that same report.
 - **Give the links before you start looking.** With anything visible, as soon as the edit is in and before your own captures, say in the chat where to try it: the LAN URL (`http://<lan-ip>:<port>/…`), never `localhost`, from the server of this worktree, so the owner can try it while you check. Every server link given to the owner is a LAN link. Carry on without waiting for an answer. How: `.agents/skills/mulassacat-validacio-visual/SKILL.md`, «Handing over a link».
 - Every UI change is validated with a real screenshot (at least 375×667 and 320×568, plus desktop when it applies) before it is shown to the owner; apply `.agents/skills/uipolish/SKILL.md` (a must, not optional) inside that evaluation loop (measure, look at the capture, fix, repeat). Unit tests alone never prove a layout.
 - Orientation (`src/ui/fullscreen.js`): phones are portrait only and tablets landscape only; the other orientation shows the rotate cover («Gira el mòbil…»), so it is never a layout to capture, measure or put in a review or PDF. The one exception is phone free play, which is landscape. Viewport set for menus and sheets: phones 320×568, 375×667, 393×852, 430×932; tablet 1024×768; desktop 1280×800, a wide-short window (1440×700) and a large one (1920×1080). This overrides the matrix of any generic skill (e.g. a global `uipolish` listing 667×375, 852×393 or 768×1024).

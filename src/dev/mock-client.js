@@ -71,7 +71,7 @@ function mockClient({ world, taken, delay, account, now, fail, calls }) {
     max_combo: r.max_combo, is_self: r.is_self, total: r.total, verified: r.verified, season_id: season, public_id: r.publicId, released: r.released === true, badge_id: r.badgeId ?? null });
   const totalsOf = r => (r.pid === -2 ? (({ practice, ...rest }) => rest)(sumBuckets([baseline.buckets, ...devices.values()])) : r.pid >= 0 ? world.stats.get(r.pid) ?? {} : {});
 
-  const hearts = new Map([['aliga-tarragona', { n: 12, mine: false }]]);
+  const hearts = new Map([['mulassa-valls', { n: 248, mine: true }], ['drac-valls', { n: 1204, mine: false }], ['bou-tradicional-valls', { n: 37, mine: false }], ['aliga-tarragona', { n: 12, mine: false }], ['os-trabucaires-valls', { n: 86, mine: false }], ['cavallets-valls', { n: 3, mine: false }]]);
   const reads = {
     get_figure_hearts: () => ok([...hearts].map(([figure_id, r]) => ({ figure_id, hearts: r.n, mine: r.mine }))),
     get_leaderboard_all(a) {

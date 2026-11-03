@@ -1,178 +1,175 @@
-// Showreel proposals to compare on reel-review.html: each one replaces a figure's shot list in the page's frames only
-// (game/showreel.js SHOWREELS stays as it is). Shots are [song beat, kind, 'cut' | 'glide', note]; the dance's parts are the
-// ARRANGEMENT rows (Mulassa: game/dance.js; Drac: figures/drac/dance-drac.js). The view never turns faster than ~0.12 rad/s
-// (the dizziness limit measured on the Studio Display); cuts still dissolve.
+// Showreel proposals to compare on reel-review.html, or in the game itself with ?reel=A|B|C (src/dev/reel-proposal.js): each one
+// replaces a figure's shot list in that page only (game/showreel.js SHOWREELS stays as it is). Shots are [song beat, kind,
+// 'cut' | 'glide', note]; the dance's parts are the ARRANGEMENT rows (Mulassa: game/dance.js; Drac: figures/drac/dance-drac.js).
+// Round 2 (2026-11-03, «canvis de plans sense sentit»): every cut is placed on her movement, sampled from the running game
+// (root path and facing per beat): on the beat a run starts after a turn, or where she stops, never in the middle of a run.
+// The angle is picked from where she runs next: towards the lens (she grows in it) or across it (she crosses the frame).
+// Her two running axes, seen from the play camera: the A1 runs, the A2 crossings and the Drac's A2/E go along one diagonal (seen
+// head on from az ≈ -0.75, in profile from az ≈ +0.8); the Mulassa's third and fourth runs and her charges go along the other
+// (head on from +0.8, in profile from -0.75). So two ground cameras either side cover every run.
 
-// Extra shot kinds, added to the frames' SHOT_KINDS. `part: '*'` names no node, so the close-up machinery frames her whole
-// body with the long lens (a tighter shot without moving the camera in among the crowd).
+// Extra shot kinds, added to SHOT_KINDS. el may be [from, to] (a crane); fixed: the camera stays where the cut put it and pans
+// after her (scene/cameras.js fixedLens), a TV camera on its stand; enter it on a cut. `part: '*'`: her whole body through the
+// long lens. label/color: for reel-review.html's legend.
+const SIDE_L = -0.75, SIDE_R = 0.8;
 export const KINDS = {
-  vast: { az: [-0.05, 0.05], el: 0.55, fill: [0.38, 0.4] }, // the whole plaça, the crowd round her
-  tight: { az: [0.2, 0.15], el: 0.3, fill: [0.82, 0.85], part: '*' }, // her whole body, long lens: flat, close
-  side: { az: [-1.15, -1.05], el: 0.3, fill: [0.75, 0.75] }, // her profile (still on the camera's side of the action)
-  low: { az: [0.3, 0.25], el: 0.12, fill: [0.85, 0.85] }, // from low down, looking up: heroic (needs EYE)
-  tail: { az: [0.6, 0.55], el: 0.4, fill: [0.55, 0.55], part: 'tail' }, // the Mulassa's tail, close
-  arcL: { az: [-0.9, -0.1], el: 0.3, fill: [0.72, 0.72] }, // the camera walks round her, from her left
-  arcR: { az: [0.9, 0.1], el: 0.3, fill: [0.72, 0.72] }, // and from her right
-  push: { az: [0.1, 0.1], el: 0.28, fill: [0.5, 0.88] }, // slowly in
-  pull: { az: [0, 0], el: 0.45, fill: [0.9, 0.45] }, // slowly out, to the plaça
+  // A · TV: fixed cameras round the plaça
+  camWide: { az: [0, 0], el: 0.5, fill: [0.45, 0.45], fixed: true, color: '#4ea8de', label: 'càmera 1, balcó: tota la plaça (fixa)' },
+  camL: { az: [SIDE_L, SIDE_L], el: 0.25, fill: [0.45, 0.45], fixed: true, color: '#b5e48c', label: 'càmera 2, a terra a l’esquerra (fixa, panoràmica)' },
+  camR: { az: [SIDE_R, SIDE_R], el: 0.25, fill: [0.45, 0.45], fixed: true, color: '#99d98c', label: 'càmera 3, a terra a la dreta (fixa, panoràmica)' },
+  camFront: { az: [0.05, 0.05], el: 0.22, fill: [0.4, 0.4], fixed: true, color: '#ffd166', label: 'càmera 4, de cara (fixa): la càrrega hi creix' },
+  camLow: { az: [0.3, 0.3], el: 0.12, fill: [0.75, 0.75], eye: 2.1, fixed: true, color: '#e76f51', label: 'càmera baixa (fixa)' },
+  camTight: { az: [0.15, 0.15], el: 0.28, fill: [0.72, 0.72], part: '*', fixed: true, color: '#f4a261', label: 'teleobjectiu fix: on balla quieta' },
+  jibUp: { az: [-0.25, 0.05], el: [0.22, 0.5], fill: [0.72, 0.5], color: '#cdb4db', label: 'grua: puja i s’allunya a poc a poc' },
+  jibOut: { az: [0, 0], el: [0.25, 0.55], fill: [0.8, 0.42], color: '#577590', label: 'grua final: amunt i enrere' },
+  // B · musical: one long take per part, the camera rolling slowly with her
+  trackL: { az: [-0.6, -0.25], el: 0.26, fill: [0.72, 0.72], color: '#43aa8b', label: 'travelling lent, per l’esquerra' },
+  trackR: { az: [0.25, 0.6], el: 0.26, fill: [0.72, 0.72], color: '#4d908e', label: 'travelling lent, per la dreta' },
+  pushLow: { az: [0.25, 0.2], el: 0.14, fill: [0.6, 0.86], eye: 2.1, color: '#f9c74f', label: 'des de baix, s’hi acosta (el redoble)' },
+  spinLow: { az: [0.3, 0.3], el: 0.14, fill: [0.8, 0.8], eye: 2.1, color: '#e76f51', label: 'des de baix, quiet: els girs' },
+  // C · music video: the cut answers each run
+  tightL: { az: [-0.72, -0.7], el: 0.26, fill: [0.84, 0.84], part: '*', color: '#f4a261', label: 'teleobjectiu: ve cap a nosaltres (esquerra)' },
+  tightR: { az: [0.78, 0.76], el: 0.26, fill: [0.84, 0.84], part: '*', color: '#f8961e', label: 'teleobjectiu: ve cap a nosaltres (dreta)' },
+  profL: { az: [-0.78, -0.74], el: 0.3, fill: [0.75, 0.75], color: '#90be6d', label: 'de perfil: travessa (esquerra)' },
+  profR: { az: [0.82, 0.78], el: 0.3, fill: [0.75, 0.75], color: '#99d98c', label: 'de perfil: travessa (dreta)' },
+  lowL: { az: [-0.6, -0.55], el: 0.12, fill: [0.85, 0.85], eye: 2.1, color: '#e76f51', label: 'des de baix, ve cap a nosaltres' },
 };
-export const EYE = 2.1; // m: the lens may come this low for `low` (the game keeps it at 4, above the crowd's heads)
+
+const IDEA = {
+  A: 'Retransmissió de TV: cinc càmeres fixes al voltant de la plaça que panoramitzen. Quan corre cap a una càmera hi creix; quan passa per davant, travessa el pla. El realitzador talla a la càmera cap on anirà just quan gira. Una grua per al cercle i el final.',
+  B: 'Musical: un pla llarg per part del ball, com a les pel·lícules de ball clàssiques. La càmera roda a poc a poc amb ella, puja amb la grua al cercle i s’acosta al redoble. Talla només quan canvia la música.',
+  C: 'Videoclip amb motiu: més talls, però cadascun respon a un moviment. Si ve cap a nosaltres, teleobjectiu de cara; quan gira, tall a perfil; si s’atura, primer pla. Als girs, des de baix. La mida va de més obert a més tancat dins de cada part.',
+};
 
 export const PROPOSALS = {
   mulassa: {
-    A: { name: 'Frases', idea: 'Un tall a cada frase de 4 compassos (~6 s), alternant mida i costat: obert, tres quarts, teleobjectiu, de perfil, des de baix. Els talls cauen on ella està més quieta.', shots: [
-      [0, 'vast', 'cut', 'la plaça sencera mentre espera'],
-      [16, 'left', 'cut', 'A1: primera carrera, tres quarts'],
-      [32, 'tight', 'cut', 'segona carrera, de prop amb teleobjectiu'],
-      [48, 'right', 'cut', 'tercera, per l’altre costat'],
-      [64, 'front', 'cut', 'quarta, de cara i baixa'],
-      [84, 'arcR', 'cut', 'A2: el cercle, la càmera l’envolta'],
-      [100, 'side', 'cut', 'la passada, de perfil'],
-      [116, 'wide', 'cut', 'el redoble, obert'],
-      [140, 'low', 'cut', 'B: les culades des de baix'],
-      [160, 'right', 'cut', 'les culades, tres quarts'],
-      [180, 'front', 'cut', 'C: les envestides cap a la càmera'],
-      [196, 'tight', 'cut', 'les envestides, de prop'],
-      [204, 'low', 'cut', 'X: els girs des de baix'],
-      [220, 'tight', 'cut', 'el cop final, de prop'],
+    A: { name: 'Retransmissió', idea: IDEA.A, shots: [
+      [0, 'camWide', 'cut', 'la plaça, esperant (balcó)'],
+      [16, 'camL', 'cut', 'A1: la primera carrera ve cap a la càmera esquerra i hi creix'],
+      [26, 'camR', 'cut', 'gira: travessa la plaça davant la dreta, anar i tornar'],
+      [48, 'camWide', 'cut', 'canvia d’eix: el balcó ensenya el dibuix nou'],
+      [58, 'camR', 'cut', 'carrera directa cap a la càmera dreta'],
+      [74, 'camL', 'cut', 'gira: passa de perfil davant l’esquerra i hi torna'],
+      [86, 'jibUp', 'cut', 'A2: el cercle; la grua puja per dibuixar-lo'],
+      [110, 'camR', 'cut', 's’atura i travessa dues vegades'],
+      [136, 'camLow', 'cut', 'la passada i el redoble, des de baix'],
+      [144, 'camL', 'cut', 'B: les culades, mig pla'],
+      [160, 'camTight', 'cut', 'les culades, teleobjectiu'],
+      [176, 'camR', 'cut', 'C: l’envestida cap a la càmera dreta'],
+      [188, 'camL', 'cut', 'gira i se’n va: la segueix l’esquerra'],
+      [200, 'camFront', 'cut', 'travessa davant la càmera de cara'],
+      [208, 'camLow', 'cut', 'X: els girs des de baix, sense tallar'],
+      [224, 'jibOut', 'cut', 'el redoble i el cop final: la grua obre'],
     ] },
-    B: { name: 'Insercions', idea: 'Plans base llargs i, als accents, insercions curtes (3-4 s) de detall: el cap, la cua, des de baix. Com un concert filmat.', shots: [
-      [0, 'wide', 'cut', 'la plaça'],
-      [12, 'close', 'cut', 'inserció: el cap, a la represa'],
-      [16, 'left', 'cut', 'A1, obert, tres quarts'],
-      [44, 'tail', 'cut', 'inserció: la cua volant'],
-      [52, 'front', 'cut', 'les carreres, de cara'],
-      [84, 'high', 'cut', 'A2: el cercle'],
-      [112, 'right', 'glide', 'la passada i el redoble'],
-      [132, 'close', 'cut', 'inserció: el cap abans del gir'],
-      [140, 'left', 'cut', 'B: les culades'],
-      [164, 'tail', 'cut', 'inserció: la cua a les culades'],
-      [172, 'wide', 'cut', 'C: les envestides'],
-      [196, 'low', 'cut', 'inserció des de baix'],
-      [204, 'right', 'cut', 'X: els girs'],
-      [224, 'tight', 'cut', 'el cop final, de prop'],
+    B: { name: 'Musical', idea: IDEA.B, shots: [
+      [0, 'vast', 'cut', 'la plaça'],
+      [16, 'trackL', 'cut', 'A1: un sol pla per les dues primeres carreres; roda cap on corre'],
+      [48, 'trackR', 'glide', 'canvia d’eix: la càmera llisca a l’altre costat amb ella'],
+      [86, 'jibUp', 'cut', 'A2: el cercle des de la grua'],
+      [110, 'trackR', 'cut', 'les dues travessades'],
+      [136, 'pushLow', 'cut', 'el redoble: s’hi acosta des de baix'],
+      [144, 'trackL', 'cut', 'B: les culades, roda lentíssim'],
+      [176, 'front', 'cut', 'C: les envestides, de cara'],
+      [208, 'spinLow', 'cut', 'X: els girs des de baix, quiet'],
+      [224, 'jibOut', 'cut', 'el cop final: grua amunt i enrere'],
     ] },
-    C: { name: 'Càmera que balla', idea: 'Pocs talls; cada pla es mou a poc a poc: la càmera l’envolta, s’hi acosta o se n’allunya (≤ 0,08 rad/s).', shots: [
-      [0, 'pull', 'cut', 'de prop, s’obre a la plaça'],
-      [16, 'arcL', 'cut', 'A1: l’envolta per l’esquerra mentre corre'],
-      [48, 'arcR', 'cut', 'l’envolta per la dreta'],
-      [84, 'tight', 'cut', 'A2: el cercle, de prop'],
-      [104, 'wide', 'cut', 'obert'],
-      [140, 'low', 'cut', 'B: les culades des de baix'],
-      [172, 'push', 'glide', 'C: s’hi acosta amb les envestides'],
-      [204, 'side', 'cut', 'X: els girs de perfil'],
-      [220, 'tight', 'cut', 'el cop final, de prop'],
-    ] },
-    D: { name: 'Videoclip', idea: 'Un canvi cada 2 compassos (~3 s), alternant extrems: tota la plaça, teleobjectiu, des de baix, de perfil, insercions del cap i la cua, i algun pla que l’envolta. Plans quiets o molt lents: el que marejava era la càmera girant, no el tall.', shots: [
-      [0, 'vast', 'cut', 'la plaça sencera'],
-      [16, 'left', 'cut', 'A1: la primera carrera'],
-      [24, 'tight', 'cut', 'de prop'],
-      [32, 'right', 'cut', 'la segona, per l’altre costat'],
-      [40, 'low', 'cut', 'des de baix'],
-      [48, 'vast', 'cut', 'la tercera, tota la plaça'],
-      [56, 'front', 'cut', 'de cara'],
-      [64, 'high', 'cut', 'la quarta, una mica des d’amunt'],
-      [84, 'wide', 'cut', 'A2: el cercle, obert'],
-      [100, 'side', 'cut', 'de perfil'],
-      [108, 'right', 'cut', 'la passada'],
-      [116, 'low', 'cut', 'el redoble, des de baix'],
-      [124, 'wide', 'cut', 'obert'],
-      [132, 'close', 'cut', 'inserció: el cap'],
-      [140, 'left', 'cut', 'B: les culades'],
-      [148, 'side', 'cut', 'les culades, de perfil'],
-      [156, 'front', 'cut', 'de cara'],
-      [164, 'tight', 'cut', 'de prop'],
-      [172, 'high', 'cut', 'des d’amunt'],
-      [180, 'low', 'cut', 'C: les envestides des de baix'],
-      [188, 'right', 'cut', 'tres quarts'],
-      [204, 'low', 'cut', 'X: els girs des de baix'],
-      [212, 'tight', 'cut', 'de prop'],
-      [220, 'front', 'cut', 'el cop final, de cara'],
+    C: { name: 'Videoclip amb motiu', idea: IDEA.C, shots: [
+      [0, 'vast', 'cut', 'la plaça'],
+      [16, 'tightL', 'cut', 'A1: ve cap a nosaltres, teleobjectiu'],
+      [26, 'profR', 'cut', 'gira: de perfil, travessa'],
+      [42, 'lowL', 'cut', 'torna cap a la càmera, des de baix'],
+      [50, 'vast', 'cut', 'canvi d’eix: tota la plaça'],
+      [58, 'tightR', 'cut', 'carrera directa cap a la càmera'],
+      [74, 'profL', 'cut', 'gira: de perfil'],
+      [86, 'high', 'cut', 'A2: el cercle, una mica des d’amunt'],
+      [112, 'profR', 'cut', 'travessa'],
+      [130, 'tightL', 'cut', 'torna cap a la càmera'],
+      [136, 'low', 'cut', 'la passada, des de baix'],
+      [140, 'close', 'cut', 'quieta al redoble: el cap'],
+      [144, 'side', 'cut', 'B: culades de perfil'],
+      [152, 'tight', 'cut', 'de prop'],
+      [160, 'high', 'cut', 'des d’amunt'],
+      [168, 'low', 'cut', 'des de baix'],
+      [176, 'tightR', 'cut', 'C: l’envestida cap a la càmera'],
+      [188, 'profL', 'cut', 'gira i se’n va, de perfil'],
+      [200, 'front', 'cut', 'travessa'],
+      [208, 'low', 'cut', 'X: els girs des de baix'],
+      [216, 'wide', 'cut', 'els girs, oberts'],
+      [224, 'front', 'cut', 'el redoble i el cop final, de cara'],
     ] },
   },
   drac: {
-    A: { name: 'Frases', idea: 'Un tall a cada part de la música, alternant mida i costat. Primers plans només on està quiet (0-10, 96-104).', shots: [
-      [0, 'close', 'cut', 'les cares abans de començar'],
-      [8, 'vast', 'cut', 'surt: la plaça sencera'],
-      [24, 'left', 'cut', 'A2, tres quarts'],
-      [42, 'tight', 'cut', 'B: les torsions, de prop amb teleobjectiu'],
-      [56, 'right', 'cut', 'C'],
-      [72, 'low', 'cut', 'D: l’arc i la càrrega, des de baix'],
+    A: { name: 'Retransmissió', idea: IDEA.A, shots: [
+      [0, 'close', 'cut', 'les cares, abans de començar'],
+      [8, 'camWide', 'cut', 'surt: el balcó'],
+      [16, 'camR', 'cut', 'A2: va i torna travessant davant la càmera dreta'],
+      [28, 'camL', 'cut', 'canvia d’eix: passa de perfil davant l’esquerra'],
+      [42, 'camTight', 'cut', 'B: les torsions, teleobjectiu quiet'],
+      [56, 'camLow', 'cut', 'C: els cops de cap, des de baix'],
+      [70, 'camFront', 'cut', 'D: la càrrega cap a la càmera de cara (hi creix) i l’arc'],
       [96, 'close', 'cut', 'la mirada'],
-      [104, 'side', 'cut', 'E: de perfil'],
-      [116, 'wide', 'cut', 'E, obert'],
-      [132, 'high', 'cut', 'B3 des de dalt'],
-      [146, 'tight', 'cut', 'C3, de prop'],
-      [162, 'left', 'cut', 'D3: el segon arc'],
-      [178, 'front', 'cut', 'la segona càrrega, de cara'],
-      [194, 'low', 'cut', 'E3: els girs des de baix, sense tallar'],
-      [218, 'tight', 'cut', 'coda i el cop final'],
+      [102, 'camR', 'cut', 'E: va i torna davant la dreta'],
+      [132, 'jibUp', 'cut', 'B3: les voltes, la grua puja'],
+      [146, 'camTight', 'cut', 'C3: els cops, de prop'],
+      [162, 'camFront', 'cut', 'D3: la segona càrrega, la mateixa càmera que la primera'],
+      [186, 'camLow', 'cut', 'E3: les voltes des de baix'],
+      [214, 'jibOut', 'cut', 'frena, la coda i el cop final: la grua obre'],
     ] },
-    B: { name: 'Insercions', idea: 'Plans base llargs i insercions curtes als accents: des de baix, de prop. Els primers plans del cap, només quan està quiet.', shots: [
+    B: { name: 'Musical', idea: IDEA.B, shots: [
       [0, 'close', 'cut', 'les cares'],
-      [8, 'wide', 'cut', 'surt'],
-      [36, 'left', 'glide', 'camina i es torça'],
-      [56, 'tight', 'cut', 'inserció de prop: C'],
-      [64, 'front', 'cut', 'D: la càrrega cap a la càmera'],
+      [8, 'vast', 'cut', 'surt: la plaça'],
+      [16, 'trackR', 'glide', 'A2: la càmera baixa i s’hi acosta mentre va i ve'],
+      [42, 'tight', 'cut', 'B: les torsions, quiet i de prop'],
+      [56, 'trackL', 'cut', 'C: els cops, mig pla que roda'],
+      [70, 'jibUp', 'cut', 'D: la càrrega i l’arc des de la grua'],
       [96, 'close', 'cut', 'la mirada'],
-      [104, 'right', 'cut', 'E'],
-      [128, 'tight', 'cut', 'inserció: A3 de prop'],
-      [136, 'wide', 'cut', 'B3'],
-      [164, 'left', 'glide', 'el segon arc'],
-      [188, 'high', 'cut', 'els girs'],
-      [212, 'low', 'cut', 'inserció des de baix: frena i s’assenta'],
-      [220, 'front', 'cut', 'el cop final, de cara'],
+      [102, 'trackR', 'cut', 'E: va i torna'],
+      [132, 'pushLow', 'cut', 'B3: les voltes; s’hi acosta des de baix'],
+      [146, 'trackL', 'cut', 'C3: els cops'],
+      [162, 'jibUp', 'cut', 'D3: el segon arc, grua'],
+      [186, 'spinLow', 'cut', 'E3: les voltes des de baix, quiet'],
+      [214, 'jibOut', 'cut', 'la coda i el cop final'],
     ] },
-    C: { name: 'Càmera que balla', idea: 'Pocs talls; la càmera l’envolta o s’hi acosta mentre balla. Els girs des de baix.', shots: [
+    C: { name: 'Videoclip amb motiu', idea: IDEA.C, shots: [
       [0, 'close', 'cut', 'les cares'],
-      [8, 'pull', 'cut', 'de prop, s’obre mentre surt'],
-      [36, 'arcL', 'cut', 'l’envolta mentre camina i es torça'],
-      [72, 'low', 'cut', 'D: la càrrega, des de baix'],
+      [8, 'vast', 'cut', 'surt'],
+      [16, 'profR', 'cut', 'A2: travessa'],
+      [24, 'tightL', 'cut', 'gira i ve cap a nosaltres'],
+      [28, 'profL', 'cut', 'canvi d’eix, de perfil'],
+      [32, 'tightR', 'cut', 've cap a nosaltres'],
+      [42, 'tight', 'cut', 'B: les torsions de prop'],
+      [50, 'low', 'cut', 'des de baix'],
+      [56, 'side', 'cut', 'C: els cops de cap, de perfil'],
+      [66, 'close', 'cut', 'quiet: els caps'],
+      [70, 'low', 'cut', 'D: la càrrega, des de baix'],
+      [84, 'high', 'cut', 'l’arc de tornada, des d’amunt'],
       [96, 'close', 'cut', 'la mirada'],
-      [104, 'arcR', 'cut', 'E: l’envolta per l’altre costat'],
-      [132, 'tight', 'cut', 'B3 de prop'],
-      [150, 'wide', 'cut', 'obert'],
-      [176, 'push', 'cut', 'D3: s’hi acosta'],
-      [194, 'low', 'cut', 'els girs des de baix'],
-      [214, 'front', 'glide', 'baixa a de cara per l’assentada'],
-    ] },
-    D: { name: 'Videoclip', idea: 'Un canvi cada 2 compassos (~3 s), alternant extrems: tota la plaça, teleobjectiu, des de baix, de perfil, i algun pla que l’envolta. Primers plans del cap només quan està quiet.', shots: [
-      [0, 'close', 'cut', 'les cares'],
-      [8, 'vast', 'cut', 'surt: tota la plaça'],
-      [16, 'left', 'cut', 'A2'],
-      [24, 'tight', 'cut', 'de prop'],
-      [32, 'right', 'cut', 'per l’altre costat'],
-      [42, 'side', 'cut', 'B: les torsions de perfil'],
-      [56, 'front', 'cut', 'C de cara'],
-      [64, 'high', 'cut', 'l’arc, una mica des d’amunt'],
-      [80, 'low', 'cut', 'D: la càrrega cap a la càmera, des de baix'],
-      [96, 'close', 'cut', 'la mirada'],
-      [104, 'right', 'cut', 'E'],
-      [112, 'tight', 'cut', 'de prop'],
-      [120, 'wide', 'cut', 'obert'],
-      [128, 'side', 'cut', 'A3 de perfil'],
-      [136, 'left', 'cut', 'B3'],
-      [146, 'tight', 'cut', 'C3 de prop'],
-      [154, 'front', 'cut', 'de cara'],
-      [162, 'wide', 'cut', 'D3: el segon arc, obert'],
-      [178, 'low', 'cut', 'la segona càrrega, des de baix'],
-      [186, 'side', 'cut', 'de perfil'],
-      [194, 'low', 'cut', 'E3: els girs des de baix'],
-      [214, 'tight', 'cut', 'frena, de prop'],
-      [222, 'front', 'cut', 'el cop final, de cara'],
+      [102, 'profR', 'cut', 'E: travessa'],
+      [114, 'tightL', 'cut', 'torna cap a la càmera'],
+      [120, 'right', 'cut', 'camina'],
+      [128, 'side', 'cut', 'A3'],
+      [132, 'low', 'cut', 'B3: les voltes des de baix'],
+      [140, 'high', 'cut', 'des d’amunt'],
+      [146, 'tight', 'cut', 'C3: els cops de prop'],
+      [154, 'side', 'cut', 'de perfil'],
+      [162, 'low', 'cut', 'D3: la càrrega des de baix'],
+      [176, 'high', 'cut', 'l’arc des d’amunt'],
+      [186, 'low', 'cut', 'E3: les voltes des de baix'],
+      [198, 'wide', 'cut', 'obert'],
+      [208, 'side', 'cut', 'frena, de perfil'],
+      [218, 'front', 'cut', 'la coda i el cop final, de cara'],
     ] },
   },
 };
 
-// Puts proposal `key` of figure `fig` into one game window, before its reel starts: the extra kinds, its shot list in place of
-// the figure's, a lower lens for `low`, the Mulassa's head and tail named for close-ups. imp(path): that window's own import().
+// Puts proposal `key` of figure `fig` into one game window: the extra kinds, its shot list in place of the figure's, the
+// Mulassa's head named for close-ups. imp(path): that window's own import().
 export async function applyProposal(fig, key, imp) {
   const prop = PROPOSALS[fig]?.[key];
   if (!prop) return;
-  const [sr, { ORBIT }, figs, { mula }] = await Promise.all(['/src/game/showreel.js', '/src/scene/orbit.js', '/src/game/figures.js', '/src/figures/mulassa/mula-objects.js'].map(imp));
+  const [sr, figs, { mula }] = await Promise.all(['/src/game/showreel.js', '/src/game/figures.js', '/src/figures/mulassa/mula-objects.js'].map(imp));
   Object.assign(sr.SHOT_KINDS, KINDS);
   const id = figs[{ mulassa: 'MULASSA', drac: 'DRAC' }[fig]].id;
   sr.SHOWREELS[id] = { ...sr.SHOWREELS[id], shots: prop.shots.map(x => x.slice(0, 3)) };
-  if (prop.shots.some(x => x[1] === 'low')) ORBIT.eye = EYE;
-  mula.head.name = 'head'; mula.tail.name = 'tail';
+  mula.head.name = 'head';
 }

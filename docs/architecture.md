@@ -43,7 +43,7 @@ Scene objects are built once and toggled (shown, hidden, posed), not rebuilt per
 1. `game/flow.js` and `game/judge.js` import 12 modules each from `hud/`, `scene/` and `ui/`: they are orchestrators,
    and `docs/agents/structure.md` says so.
 2. Each figure builds and owns its scene objects (`figures/<id>/<id>-objects.js`: its model and colla), listed in
-   `figures/objects.js` (`COLLAS`, `figureRoot`), which `quality.js`, `crowd-build.js` and `cameras.js` go round;
+   `figures/objects.js` (`COLLAS`, `figureRoot`), which `quality.js`, `crowd-build.js` and `colla-dodge.js` go round;
    the motion, the collas' obstacles, the share photo and the end shot go through each figure's hooks
    (`figures/<key>/<key>-scene.js`, listed in `scene/figure-scenes.js`), and what a figure does to the people round it
    (the Drac's soot, the Bou's conga and festa) through `figures/<key>/<key>-crowd.js`, listed in `scene/crowd-effects.js`.

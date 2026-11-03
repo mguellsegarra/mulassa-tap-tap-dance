@@ -1,7 +1,8 @@
 // The selector's showreel: the selected figure dances its whole song dance behind the cards, on the MENU LOOP's beat (the menu music stays; the dance follows it, a song beat per menu beat: the Mulassa at 93-100% of her speed,
-// the Drac at ~1.3x); «Mira el ball» plays the same shots on the song's own beat. Cut like a music video, a change every two
-// bars (~3 s) between very different shots: the whole plaça, a long lens, from low down, in profile, inserts of a head. Shots
-// that walked round her passed behind an attendant (the colla dodge turns only so fast). History: the first pop-video edit (a cut every 2.7 s, shots that swung and pushed in) hurt
+// the Drac at ~1.3x); «Mira el ball» plays the same shots on the song's own beat. Each cut answers a move (where a run sets
+// off after a turn, or where she stops), the angle picked by where she runs next: the Mulassa as a music video, the Drac as a TV
+// broadcast from fixed cameras. Shots that walked round her passed behind an attendant (the colla dodge turns only so fast).
+// History: a cut every two bars whatever she did fell in the middle of her runs («canvis de plans sense sentit»); the first pop-video edit (a cut every 2.7 s, shots that swung and pushed in) hurt
 // the eyes; the dance film after it (4-5 cuts a loop, near-identical shots) was too dull. What hurt was the camera turning, not
 // the cut: every shot is held or moves slowly (≤ 0.05 rad a beat), every cut dissolves (ui/reel-fade.js), every angle is on the
 // camera's side of the action (180° rule). Pure: main.js feeds it the menu beat, the figures pose the dance at REEL.beat,
@@ -31,6 +32,20 @@ export const SHOT_KINDS = {
   // body through that long lens (flat, close), without the camera going any nearer.
   close: { az: [0.1, 0.06], el: 0.3, fill: [0.55, 0.56], part: 'head' },
   tight: { az: [0.2, 0.15], el: 0.3, fill: [0.82, 0.85], part: '*' }, // (0.95 left no air: a charge outgrew a phone's frame)
+  // Answering her runs (2026-11-03): seen from the play camera her runs go along two diagonals, head on from one side
+  // (az ≈ -0.75 / +0.8) and in profile from the other, so a run towards the lens is a long lens from where she heads, and a
+  // run across is a profile from the other side
+  tightL: { az: [-0.72, -0.7], el: 0.26, fill: [0.84, 0.84], part: '*' }, tightR: { az: [0.78, 0.76], el: 0.26, fill: [0.84, 0.84], part: '*' },
+  profL: { az: [-0.78, -0.74], el: 0.3, fill: [0.75, 0.75] }, profR: { az: [0.82, 0.78], el: 0.3, fill: [0.75, 0.75] },
+  lowL: { az: [-0.6, -0.55], el: 0.12, fill: [0.85, 0.85], eye: 2.1 },
+  // A TV broadcast's cameras: `fixed` stays where its cut put it and pans after her (scene/cameras.js fixedLens), so she grows as
+  // she charges at it; enter one on a cut. el [from, to]: a crane rising through the shot.
+  camWide: { az: [0, 0], el: 0.5, fill: [0.45, 0.45], fixed: true }, // the balcony
+  camL: { az: [-0.75, -0.75], el: 0.25, fill: [0.45, 0.45], fixed: true }, camR: { az: [0.8, 0.8], el: 0.25, fill: [0.45, 0.45], fixed: true },
+  camFront: { az: [0.05, 0.05], el: 0.22, fill: [0.4, 0.4], fixed: true }, // (small: the Drac's charge comes 4 m nearer)
+  camLow: { az: [0.3, 0.3], el: 0.12, fill: [0.75, 0.75], eye: 2.1, fixed: true },
+  camTight: { az: [0.15, 0.15], el: 0.28, fill: [0.72, 0.72], part: '*', fixed: true }, // only where it dances on the spot
+  jibUp: { az: [-0.25, 0.05], el: [0.22, 0.5], fill: [0.72, 0.5] }, jibOut: { az: [0, 0], el: [0.25, 0.55], fill: [0.8, 0.42] },
 };
 const REEL_CALM_SHOT = { az: [0, 0], el: 0.5, fill: [0.75, 0.75] }; // reduced motion: one still shot, no cuts
 // beats a glide to the next angle takes (~7 s), eased in and out; never more than REEL_GLIDE_AZ rad round her (on a
@@ -42,23 +57,25 @@ export const REEL_GLIDE = 18, REEL_GLIDE_AZ = 0.6;
 // selection begins (on her first move, not the intro's stance)
 export const SHOWREELS = {
   // on the arrangement's parts (game/dance.js): A1 her four runs, A2 the circle, the passada and the drumroll, B the culades,
-  // C the charges, X the spins and the final hit
+  // C the charges, X the spins and the final hit. A music-video cut where each cut answers a move (2026-11-03: the cut every two
+  // bars fell in the middle of her runs): on the beat a run sets off after a turn, towards the lens or across it.
   [MULASSA.id]: { start: 16, loop: 232, shots: [
-    [0, 'vast', 'cut'], [16, 'left', 'cut'], [24, 'tight', 'cut'], [32, 'right', 'cut'], [40, 'low', 'cut'], // the plaça; A1: the runs
-    [48, 'vast', 'cut'], [56, 'front', 'cut'], [64, 'high', 'cut'], // the third run, the fourth from a little higher
-    [84, 'wide', 'cut'], [100, 'side', 'cut'], [108, 'right', 'cut'], [116, 'low', 'cut'], [124, 'wide', 'cut'], // A2: the circle, the passada, the drumroll
-    [132, 'close', 'cut'], [140, 'left', 'cut'], [148, 'side', 'cut'], [156, 'front', 'cut'], [164, 'tight', 'cut'], [172, 'high', 'cut'], // her head; B: the culades (a tail insert there lost the tail: it swings)
-    [180, 'low', 'cut'], [188, 'right', 'cut'], [204, 'low', 'cut'], [212, 'tight', 'cut'], [220, 'front', 'cut'], // C: the charges; X: the spins, the final hit
+    [0, 'vast', 'cut'], [16, 'tightL', 'cut'], [26, 'profR', 'cut'], [42, 'lowL', 'cut'], // the plaça; A1: at us, turns and crosses, back at us from low
+    [50, 'vast', 'cut'], [58, 'tightR', 'cut'], [74, 'profL', 'cut'], // the runs change diagonal: the whole plaça, then straight at us, across
+    [86, 'high', 'cut'], [112, 'profR', 'cut'], [130, 'tightL', 'cut'], // A2: the circle from a little higher, the crossings, at us into the drumroll
+    [144, 'side', 'cut'], [152, 'tight', 'cut'], [160, 'high', 'cut'], [168, 'low', 'cut'], // B: the culades
+    [176, 'tightR', 'cut'], [188, 'profL', 'cut'], [200, 'front', 'cut'], // C: the charge at us, away across, across in front
+    [208, 'low', 'cut'], [216, 'wide', 'cut'], [224, 'front', 'cut'], // X: the spins, the final hit
   ] },
-  // On its parts (figures/drac/dance-drac.js, 2/4: a bar is 2 beats). Close-ups of a head only where its root stands still
-  // (beats 0-10 before the dance, 96-100 after the charge; tools: drac-path.js through drac-time.js). A fresh selection opens on
-  // the plaça as it sets off (a close-up first read as a framing bug); the opening close-up plays from the second loop on.
+  // On its parts (figures/drac/dance-drac.js, 2/4: a bar is 2 beats). A TV broadcast (2026-11-03): fixed cameras round the
+  // plaça, cut to the one it runs across or charges at; a crane over the spins and the end. Close-ups of a head only where its
+  // root stands still (beats 0-10 before the dance, 96-104 after the charge). A fresh selection opens on the plaça as it sets
+  // off (a close-up first read as a framing bug); the opening close-up plays from the second loop on.
   [DRAC.id]: { start: 8, loop: 236, shots: [
-    [0, 'close', 'cut'], [8, 'vast', 'cut'], [16, 'left', 'cut'], [24, 'tight', 'cut'], [32, 'right', 'cut'], // its faces; it sets off; A2
-    [42, 'side', 'cut'], [56, 'front', 'cut'], [64, 'high', 'cut'], [80, 'low', 'cut'], // B: its torsions in profile; C; D: the arc from a little higher, the charge at the lens
-    [96, 'close', 'cut'], [104, 'right', 'cut'], [112, 'tight', 'cut'], [120, 'wide', 'cut'], // the stare; E
-    [128, 'side', 'cut'], [136, 'left', 'cut'], [146, 'tight', 'cut'], [154, 'front', 'cut'], [162, 'wide', 'cut'], // A3, B3, C3; D3: the second arc
-    [178, 'low', 'cut'], [186, 'side', 'cut'], [194, 'low', 'cut'], [214, 'tight', 'cut'], [222, 'front', 'cut'], // the second charge; E3: the spins; the brake, the final hit
+    [0, 'close', 'cut'], [8, 'camWide', 'cut'], [16, 'camR', 'cut'], [28, 'camL', 'cut'], // its faces; it sets off; A2 to and fro across one camera, then the other
+    [42, 'camTight', 'cut'], [56, 'camLow', 'cut'], [70, 'camFront', 'cut'], // B: the torsions; C: its snaps from low; D: the charge grows in the front camera, the arc
+    [96, 'close', 'cut'], [104, 'camR', 'cut'], [132, 'jibUp', 'cut'], [146, 'camTight', 'cut'], // the stare; E; B3 under the crane; C3
+    [162, 'camFront', 'cut'], [186, 'camLow', 'cut'], [214, 'jibOut', 'cut'], // D3: the second charge, same camera; E3: the spins; the brake, the final hit
   ] },
   // on its source bars (figures/bou/bou-dance.js): 1 the first steps, 9 the changes of facing, 19 the lateral pass, 27 the
   // drums and turns, 64 the start, 72 the festive turns, 88 the ending
@@ -72,7 +89,7 @@ export const SHOWREELS = {
 };
 
 // Live state (owned here; main.js runs tickReel each frame). acc: menu beats counted since the page began (unwrapped).
-export const REEL = { on: false, id: null, beat: 0, cut: false, fresh: false, shot: { az: 0, el: 0.5, fill: 0.75, part: null, eye: null }, acc: 0, prev: null, alone: false, still: 0, err: 0, locked: false, anchor: 0, idx: -1, song: false, idle: false };
+export const REEL = { on: false, id: null, beat: 0, cut: false, fresh: false, shot: { az: 0, el: 0.5, fill: 0.75, part: null, eye: null, fixed: false }, acc: 0, prev: null, alone: false, still: 0, err: 0, locked: false, anchor: 0, idx: -1, song: false, idle: false };
 // idle: the selector's UI faded out (ui/reel-idle.js, through main.js); the Drac's night and fire play only then (drac-show.js)
 export const setReelIdle = on => { REEL.idle = on; };
 
@@ -100,7 +117,7 @@ export function followBeat(s, menuBeat, dt) {
   s.prev = menuBeat; s.alone = false; s.locked = true;
 }
 
-const kindAt = (k, u, out) => { out.az = k.az[0] + (k.az[1] - k.az[0]) * u; out.el = k.el; out.fill = k.fill[0] + (k.fill[1] - k.fill[0]) * u; out.part = k.part ?? null; out.eye = k.eye ?? null; };
+const kindAt = (k, u, out) => { out.az = k.az[0] + (k.az[1] - k.az[0]) * u; out.el = k.el[1] == null ? k.el : k.el[0] + (k.el[1] - k.el[0]) * u; out.fixed = !!k.fixed; out.fill = k.fill[0] + (k.fill[1] - k.fill[0]) * u; out.part = k.part ?? null; out.eye = k.eye ?? null; };
 const GLIDE_FROM = { az: 0, el: 0, fill: 0 };
 // The shot at song beat b (fills out: az, el, fill); returns the index of the cut it belongs to (a glide is no cut)
 export function shotAt(reel, b, out, calm = false) {

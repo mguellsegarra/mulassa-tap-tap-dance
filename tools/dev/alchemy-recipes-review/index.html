@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="ca">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Alchemy: revisió de receptes i art</title>
+  <link rel="stylesheet" href="./review.css">
+</head>
+<body><main>
+  <header><h1>Alchemy: receptes i art</h1>
+    <p id="summary"></p>
+    <p>Escriu els canvis de combinació i d'art per separat. Les notes es desen automàticament en aquest worktree; no modifiquen el joc.</p>
+    <details open><summary>Resultat de la revisió completa</summary><p id="audit"></p></details>
+    <p id="save-state" role="status">Carregant les notes...</p>
+    <div class="actions"><button id="export">Exporta les notes</button><button id="retry">Torna a desar</button></div>
+    <label>Cerca un element o una recepta<input id="search" type="search" placeholder="Calçot, Mulassa, R025..."></label>
+    <label>Mostra<select id="filter"><option value="new">Noves: per validar de nou</option><option value="codex-change">Codex: correccions prioritàries</option><option value="codex-discuss">Codex: associacions a valorar</option><option value="codex-keep">Codex: conservables</option><option value="all">Totes les receptes</option><option value="pending">Pendents</option><option value="change">Amb canvis demanats</option><option value="ok">Revisades: bé</option></select></label>
+    <p id="count"></p>
+  </header>
+  <section class="r"><label>Errors del joc<textarea data-key="joc.errors" rows="2" disabled></textarea></label></section>
+  <section><h2>Elements de sortida</h2><div id="base"></div></section>
+  <section><h2>Combinacions</h2><div id="recipes"></div><p id="empty" hidden>No hi ha receptes amb aquest filtre.</p></section>
+  <noscript>Cal activar JavaScript per veure les receptes i desar les notes.</noscript>
+</main><script type="module" src="./review.js"></script></body>
+</html>

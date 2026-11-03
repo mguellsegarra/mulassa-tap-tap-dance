@@ -1,0 +1,3131 @@
+{
+  "date": "2026-11-03",
+  "scope": "Revisió semàntica de totes les receptes. Propostes de Codex; cap recepta modificada ni decisió de Marc inferida. No és una auditoria gràfica dels 178 dibuixos.",
+  "counts": {
+    "keep": 158,
+    "discuss": 45,
+    "change": 10
+  },
+  "audit": {
+    "recipes": 213,
+    "elements": 178,
+    "duplicatePairs": 0,
+    "unreachable": [],
+    "missingNames": [],
+    "missingFacts": [],
+    "missingSources": [],
+    "maxDepth": 13,
+    "depthMeaning": "Nivell mínim de dependències: els inicials són 0; cada resultat suma 1 al màxim dels seus dos ingredients. No és el nombre total de barreges ni el temps d’una partida.",
+    "terminal": [
+      "faixa",
+      "mullat",
+      "correfoc",
+      "mulassa",
+      "cavallets",
+      "gegants",
+      "nans",
+      "arc",
+      "abella",
+      "cercolets",
+      "os",
+      "basilisc",
+      "aligons",
+      "bastons",
+      "pastorets",
+      "galeres",
+      "moixiganga",
+      "manilles",
+      "vella",
+      "joves",
+      "descarregat",
+      "patomaquet",
+      "salsa",
+      "castanyada",
+      "montserrat",
+      "rosa",
+      "sagrada",
+      "sardana",
+      "tio",
+      "caca",
+      "panerola",
+      "refineria",
+      "sequera",
+      "mosquit",
+      "llenya",
+      "concurs",
+      "santaursula",
+      "santjoan",
+      "roser",
+      "lleo",
+      "gitanes",
+      "primera",
+      "bouvalls",
+      "alcaldessa",
+      "crema",
+      "coca",
+      "xato",
+      "barretina",
+      "espardenyes",
+      "mocador",
+      "flabiol",
+      "sacgemecs",
+      "fiscorn",
+      "bengala",
+      "torxa",
+      "traca",
+      "auca",
+      "rondalla",
+      "forjat",
+      "porro",
+      "margarida",
+      "vinya",
+      "torrent",
+      "trestombs",
+      "caramel",
+      "firagost",
+      "placablat",
+      "francoli",
+      "muralla",
+      "lledo",
+      "aiguardent",
+      "pell",
+      "museucasteller",
+      "teatre",
+      "oller",
+      "huguet",
+      "figaflawas",
+      "calcofest"
+    ],
+    "deepest": [
+      {
+        "id": "decennals",
+        "name": "Decennals",
+        "depth": 11
+      },
+      {
+        "id": "maredeu",
+        "name": "Mare de Déu de la Candela",
+        "depth": 12
+      },
+      {
+        "id": "lledo",
+        "name": "Mare de Déu del Lledó",
+        "depth": 13
+      }
+    ]
+  },
+  "rows": [
+    {
+      "key": "recipe.aigua.foc.vapor",
+      "code": "R001",
+      "recipe": [
+        "foc",
+        "aigua",
+        "vapor"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Escalfar aigua evoca vapor; és una entrada clara.",
+      "proposal": "Conservar.",
+      "sources": []
+    },
+    {
+      "key": "recipe.aigua.terra.fang",
+      "code": "R002",
+      "recipe": [
+        "terra",
+        "aigua",
+        "fang"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "L'aigua barrejada amb terra dona fang.",
+      "proposal": "Conservar.",
+      "sources": []
+    },
+    {
+      "key": "recipe.terra.vent.pols",
+      "code": "R003",
+      "recipe": [
+        "terra",
+        "vent",
+        "pols"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "El vent aixeca partícules de terra.",
+      "proposal": "Conservar.",
+      "sources": []
+    },
+    {
+      "key": "recipe.aigua.vent.nuvol",
+      "code": "R004",
+      "recipe": [
+        "aigua",
+        "vent",
+        "nuvol"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "L'aigua a l'aire evoca un núvol, però falta la condensació.",
+      "proposal": "Conservar com a simplificació; la curiositat ja explica les gotetes.",
+      "sources": []
+    },
+    {
+      "key": "recipe.terra.terra.pedra",
+      "code": "R005",
+      "recipe": [
+        "terra",
+        "terra",
+        "pedra"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Acumular terra fins a obtenir pedra és una convenció d'alquímia, no una transformació immediata.",
+      "proposal": "Conservar com a primer joc d'acumulació.",
+      "sources": []
+    },
+    {
+      "key": "recipe.aigua.aigua.mar",
+      "code": "R006",
+      "recipe": [
+        "aigua",
+        "aigua",
+        "mar"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Molta aigua evoca el mar; el resultat no pretén explicar-ne la sal.",
+      "proposal": "Conservar.",
+      "sources": []
+    },
+    {
+      "key": "recipe.vent.vent.ventada",
+      "code": "R007",
+      "recipe": [
+        "vent",
+        "vent",
+        "ventada"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Repetir vent expressa intensitat.",
+      "proposal": "Conservar.",
+      "sources": []
+    },
+    {
+      "key": "recipe.pedra.pedra.muntanya",
+      "code": "R008",
+      "recipe": [
+        "pedra",
+        "pedra",
+        "muntanya"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Acumular pedra evoca una muntanya.",
+      "proposal": "Conservar.",
+      "sources": []
+    },
+    {
+      "key": "recipe.aigua.nuvol.pluja",
+      "code": "R009",
+      "recipe": [
+        "nuvol",
+        "aigua",
+        "pluja"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Un núvol carregat d'aigua evoca pluja.",
+      "proposal": "Conservar.",
+      "sources": []
+    },
+    {
+      "key": "recipe.pluja.terra.planta",
+      "code": "R010",
+      "recipe": [
+        "pluja",
+        "terra",
+        "planta"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "L'aigua ajuda les plantes a créixer a terra.",
+      "proposal": "Conservar.",
+      "sources": []
+    },
+    {
+      "key": "recipe.planta.planta.arbre",
+      "code": "R011",
+      "recipe": [
+        "planta",
+        "planta",
+        "arbre"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Dues plantes evoquen una planta més gran; no explica com creix un arbre.",
+      "proposal": "Conservar com a llicència visual inicial.",
+      "sources": []
+    },
+    {
+      "key": "recipe.aigua.planta.canya",
+      "code": "R012",
+      "recipe": [
+        "planta",
+        "aigua",
+        "canya"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "La canya s'associa als indrets humits, però no és l'única planta possible.",
+      "proposal": "Prioritzar planta + riu, que ja existeix, al llibre i a les pistes.",
+      "sources": []
+    },
+    {
+      "key": "recipe.arbre.pedra.fusta",
+      "code": "R013",
+      "recipe": [
+        "arbre",
+        "pedra",
+        "fusta"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "La pedra pot representar una eina que talla l'arbre.",
+      "proposal": "Conservar; arbre + ventada ja ofereix un segon camí.",
+      "sources": []
+    },
+    {
+      "key": "recipe.arbre.foc.carbo",
+      "code": "R014",
+      "recipe": [
+        "arbre",
+        "foc",
+        "carbo"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "La fusta pot convertir-se en carbó vegetal amb poc oxigen; foc és una simplificació.",
+      "proposal": "Conservar, amb el matís de la curiositat actual.",
+      "sources": []
+    },
+    {
+      "key": "recipe.carbo.foc.brasa",
+      "code": "R015",
+      "recipe": [
+        "carbo",
+        "foc",
+        "brasa"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "El carbó encès fa brases.",
+      "proposal": "Conservar.",
+      "sources": []
+    },
+    {
+      "key": "recipe.aigua.brasa.vapor",
+      "code": "R016",
+      "recipe": [
+        "brasa",
+        "aigua",
+        "vapor"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "L'aigua sobre brases calentes pot evaporar-se.",
+      "proposal": "Conservar el canvi R1 ja aprovat.",
+      "sources": []
+    },
+    {
+      "key": "recipe.mar.terra.vida",
+      "code": "R017",
+      "recipe": [
+        "mar",
+        "terra",
+        "vida"
+      ],
+      "verdict": "discuss",
+      "priority": 2,
+      "reason": "Mar i terra evoquen l'origen de la vida, però no són una explicació científica suficient.",
+      "proposal": "Conservar només com a convenció d'alquímia; no presentar aquesta recepta com una dada demostrada.",
+      "sources": []
+    },
+    {
+      "key": "recipe.peix.terra.animal",
+      "code": "R018",
+      "recipe": [
+        "peix",
+        "terra",
+        "animal"
+      ],
+      "verdict": "discuss",
+      "priority": 2,
+      "reason": "Un peix ja és un animal; sortir a terra no crea la categoria animal.",
+      "proposal": "Valorar vida + terra → animal. És més general, encara que continua sent una convenció de joc.",
+      "sources": []
+    },
+    {
+      "key": "recipe.animal.vent.ocell",
+      "code": "R019",
+      "recipe": [
+        "animal",
+        "vent",
+        "ocell"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "L'animal que es mou per l'aire evoca un ocell.",
+      "proposal": "Conservar com a associació visual.",
+      "sources": []
+    },
+    {
+      "key": "recipe.planta.terra.ceba",
+      "code": "R020",
+      "recipe": [
+        "planta",
+        "terra",
+        "ceba"
+      ],
+      "verdict": "discuss",
+      "priority": 2,
+      "reason": "Planta i terra poden donar gairebé qualsevol hortalissa.",
+      "proposal": "Conservar per preparar el calçot, amb una pista que parli d'un bulb; no hi ha una substitució inequívoca amb els elements actuals.",
+      "sources": []
+    },
+    {
+      "key": "recipe.ceba.terra.calcot",
+      "code": "R021",
+      "recipe": [
+        "ceba",
+        "terra",
+        "calcot"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Afegir terra a una ceba evoca calçar-la.",
+      "proposal": "Conservar com a primera recepta, tal com ja has aprovat.",
+      "sources": [
+        "https://www.valls.cat/la-ciutat/la-calcotada"
+      ]
+    },
+    {
+      "key": "recipe.calcot.foc.calcotada",
+      "code": "R022",
+      "recipe": [
+        "calcot",
+        "foc",
+        "calcotada"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "El foc viu és característic de la cocció tradicional dels calçots.",
+      "proposal": "Conservar com a primera recepta, tal com ja has aprovat.",
+      "sources": [
+        "https://www.valls.cat/la-ciutat/la-calcotada"
+      ]
+    },
+    {
+      "key": "recipe.fang.pedra.casa",
+      "code": "R023",
+      "recipe": [
+        "pedra",
+        "fang",
+        "casa"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Pedra i fang són materials de construcció.",
+      "proposal": "Conservar.",
+      "sources": []
+    },
+    {
+      "key": "recipe.casa.foc.persona",
+      "code": "R024",
+      "recipe": [
+        "casa",
+        "foc",
+        "persona"
+      ],
+      "verdict": "change",
+      "priority": 1,
+      "reason": "Una casa en flames pot suggerir un incendi, no una persona; tampoc explica l'origen humà.",
+      "proposal": "Retirar aquesta alternativa i prioritzar fang + vida → persona, que ja existeix. És mitologia d'alquímia, no biologia.",
+      "sources": []
+    },
+    {
+      "key": "recipe.persona.persona.colla",
+      "code": "R025",
+      "recipe": [
+        "persona",
+        "persona",
+        "colla"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Reunir persones evoca una colla.",
+      "proposal": "Conservar.",
+      "sources": []
+    },
+    {
+      "key": "recipe.colla.persona.pinya",
+      "code": "R026",
+      "recipe": [
+        "colla",
+        "persona",
+        "pinya"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Una colla amb més gent evoca la base humana del castell.",
+      "proposal": "Conservar.",
+      "sources": []
+    },
+    {
+      "key": "recipe.persona.pinya.castell",
+      "code": "R027",
+      "recipe": [
+        "pinya",
+        "persona",
+        "castell"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Afegir persones damunt la pinya evoca un castell.",
+      "proposal": "Conservar.",
+      "sources": []
+    },
+    {
+      "key": "recipe.castell.persona.enxaneta",
+      "code": "R028",
+      "recipe": [
+        "castell",
+        "persona",
+        "enxaneta"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "La persona que culmina el castell evoca l'enxaneta.",
+      "proposal": "Conservar.",
+      "sources": []
+    },
+    {
+      "key": "recipe.nuvol.planta.coto",
+      "code": "R029",
+      "recipe": [
+        "planta",
+        "nuvol",
+        "coto"
+      ],
+      "verdict": "discuss",
+      "priority": 2,
+      "reason": "La semblança blanca i flonja del cotó amb un núvol és visual; no explica la planta.",
+      "proposal": "Conservar si l'art ho fa recognoscible, amb una pista sobre fibres blanques. No dir que els núvols produeixen cotó.",
+      "sources": []
+    },
+    {
+      "key": "recipe.coto.persona.roba",
+      "code": "R030",
+      "recipe": [
+        "coto",
+        "persona",
+        "roba"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Les persones transformen les fibres de cotó en teixits.",
+      "proposal": "Conservar.",
+      "sources": []
+    },
+    {
+      "key": "recipe.pinya.roba.faixa",
+      "code": "R031",
+      "recipe": [
+        "roba",
+        "pinya",
+        "faixa"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "La faixa forma part de la roba castellera.",
+      "proposal": "Conservar.",
+      "sources": []
+    },
+    {
+      "key": "recipe.canya.vent.gralla",
+      "code": "R032",
+      "recipe": [
+        "canya",
+        "vent",
+        "gralla"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Bufar una inxa de canya és una pista per a la gralla, encara que falta el cos de fusta.",
+      "proposal": "Conservar com a simplificació musical.",
+      "sources": []
+    },
+    {
+      "key": "recipe.fusta.roba.timbal",
+      "code": "R033",
+      "recipe": [
+        "fusta",
+        "roba",
+        "timbal"
+      ],
+      "verdict": "discuss",
+      "priority": 2,
+      "reason": "Un timbal tradicional porta una membrana, habitualment de pell; roba és una pista material poc precisa.",
+      "proposal": "Proposo fusta + pell → timbal. Cal considerar que pell arriba més tard.",
+      "sources": []
+    },
+    {
+      "key": "recipe.gralla.timbal.musica",
+      "code": "R034",
+      "recipe": [
+        "gralla",
+        "timbal",
+        "musica"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Gralla i timbal formen una parella musical recognoscible.",
+      "proposal": "Conservar.",
+      "sources": []
+    },
+    {
+      "key": "recipe.musica.persona.ball",
+      "code": "R035",
+      "recipe": [
+        "musica",
+        "persona",
+        "ball"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Una persona amb música pot ballar.",
+      "proposal": "Conservar.",
+      "sources": []
+    },
+    {
+      "key": "recipe.carbo.pols.polvora",
+      "code": "R036",
+      "recipe": [
+        "carbo",
+        "pols",
+        "polvora"
+      ],
+      "verdict": "discuss",
+      "priority": 2,
+      "reason": "El carbó és un component de la pólvora negra, però pols és massa genèric i no n'explica la composició.",
+      "proposal": "Conservar només com a llicència del joc, sense presentar-la com una fórmula real.",
+      "sources": []
+    },
+    {
+      "key": "recipe.foc.polvora.carretilla",
+      "code": "R037",
+      "recipe": [
+        "foc",
+        "polvora",
+        "carretilla"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Pólvora i foc evoquen pirotècnia; la carretilla és una tria temàtica.",
+      "proposal": "Conservar com a abstracció, no com a instrucció de fabricació.",
+      "sources": []
+    },
+    {
+      "key": "recipe.carretilla.carretilla.tronada",
+      "code": "R038",
+      "recipe": [
+        "carretilla",
+        "carretilla",
+        "tronada"
+      ],
+      "verdict": "discuss",
+      "priority": 2,
+      "reason": "Una tronada no és simplement un grup de carretilles de diables.",
+      "proposal": "Valorar traca + plaça → tronada; abans cal canviar també la recepta de traca per evitar un cicle.",
+      "sources": []
+    },
+    {
+      "key": "recipe.aigua.carretilla.mullat",
+      "code": "R039",
+      "recipe": [
+        "aigua",
+        "carretilla",
+        "mullat"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Mullar un petard explica l'expressió i el nom del resultat.",
+      "proposal": "Conservar amb el consell de seguretat ja aprovat.",
+      "sources": []
+    },
+    {
+      "key": "recipe.foc.persona.diables",
+      "code": "R040",
+      "recipe": [
+        "foc",
+        "persona",
+        "diables"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Persona amb foc evoca un diable de festa dins del tema del joc.",
+      "proposal": "Conservar; persona + carretilla és una pista encara més concreta.",
+      "sources": []
+    },
+    {
+      "key": "recipe.carretilla.diables.correfoc",
+      "code": "R041",
+      "recipe": [
+        "carretilla",
+        "diables",
+        "correfoc"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Diables i carretilles identifiquen un correfoc.",
+      "proposal": "Conservar.",
+      "sources": []
+    },
+    {
+      "key": "recipe.animal.fusta.bestia",
+      "code": "R042",
+      "recipe": [
+        "animal",
+        "fusta",
+        "bestia"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Un animal construït amb materials evoca una figura de bestiari.",
+      "proposal": "Conservar com a representació artesanal, no com a animal viu.",
+      "sources": []
+    },
+    {
+      "key": "recipe.bestia.carretilla.drac",
+      "code": "R043",
+      "recipe": [
+        "bestia",
+        "carretilla",
+        "drac"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Una bèstia festiva amb pirotècnia pot ser un drac, però també un bou de foc.",
+      "proposal": "Conservar al costat de serp + foc, que n'explica millor la forma.",
+      "sources": []
+    },
+    {
+      "key": "recipe.animal.planta.cavall",
+      "code": "R044",
+      "recipe": [
+        "animal",
+        "planta",
+        "cavall"
+      ],
+      "verdict": "discuss",
+      "priority": 2,
+      "reason": "Animal i planta descriuen molts herbívors, no només el cavall.",
+      "proposal": "Conservar amb una pista de crinera o peülles; no substituir-la per una altra parella igualment ambigua.",
+      "sources": []
+    },
+    {
+      "key": "recipe.bestia.cavall.mulassa",
+      "code": "R045",
+      "recipe": [
+        "bestia",
+        "cavall",
+        "mulassa"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "La Mulassa és una figura del bestiari de forma equina.",
+      "proposal": "Conservar.",
+      "sources": []
+    },
+    {
+      "key": "recipe.bestia.ocell.aliga",
+      "code": "R046",
+      "recipe": [
+        "bestia",
+        "ocell",
+        "aliga"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Una figura de bestiari amb forma d'ocell evoca l'Àliga.",
+      "proposal": "Conservar.",
+      "sources": []
+    },
+    {
+      "key": "recipe.bestia.foc.bou",
+      "code": "R047",
+      "recipe": [
+        "bestia",
+        "foc",
+        "bou"
+      ],
+      "verdict": "discuss",
+      "priority": 2,
+      "reason": "Bèstia i foc també podrien donar el Drac; no identifica el Bou Tradicional.",
+      "proposal": "Conservar amb pista sobre banyes i foc, diferenciant-lo del Bou de Valls.",
+      "sources": []
+    },
+    {
+      "key": "recipe.ball.cavall.cavallets",
+      "code": "R048",
+      "recipe": [
+        "ball",
+        "cavall",
+        "cavallets"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Un cavall representat dins d'un ball evoca els Cavallets.",
+      "proposal": "Conservar.",
+      "sources": []
+    },
+    {
+      "key": "recipe.arbre.persona.gegants",
+      "code": "R049",
+      "recipe": [
+        "persona",
+        "arbre",
+        "gegants"
+      ],
+      "verdict": "discuss",
+      "priority": 2,
+      "reason": "Arbre indica alçada però no és una pista clara d'una figura humana gegant.",
+      "proposal": "Prioritzar persona + muntanya → gegants, ja existent, si es vol reforçar la idea de grandària.",
+      "sources": []
+    },
+    {
+      "key": "recipe.bestia.persona.nans",
+      "code": "R050",
+      "recipe": [
+        "bestia",
+        "persona",
+        "nans"
+      ],
+      "verdict": "discuss",
+      "priority": 2,
+      "reason": "Bèstia i persona no expliquen una figura amb el cap gros.",
+      "proposal": "Caldria un element cap o màscara per fer-la directa. Amb el catàleg actual, conservar amb una pista visual explícita.",
+      "sources": []
+    },
+    {
+      "key": "recipe.ball.colla.seguici",
+      "code": "R051",
+      "recipe": [
+        "ball",
+        "colla",
+        "seguici"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Una colla de balls evoca el seguici, tot i que també inclou figures i altres grups.",
+      "proposal": "Conservar com a porta d'entrada al tema.",
+      "sources": []
+    },
+    {
+      "key": "recipe.foc.fusta.espelma",
+      "code": "R052",
+      "recipe": [
+        "foc",
+        "fusta",
+        "espelma"
+      ],
+      "verdict": "change",
+      "priority": 1,
+      "reason": "Encendre fusta produeix foc o una torxa, no una espelma de cera.",
+      "proposal": "Proposo abella + foc → espelma, per la cera d'abella. És una simplificació i allarga l'accés a l'espelma.",
+      "sources": []
+    },
+    {
+      "key": "recipe.festamajor.lluminaries.decennals",
+      "code": "R053",
+      "recipe": [
+        "lluminaries",
+        "festamajor",
+        "decennals"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Festa Major i lluminàries evoquen les Decennals en el context vallenc.",
+      "proposal": "Conservar; la curiositat explica el vot i la periodicitat.",
+      "sources": []
+    },
+    {
+      "key": "recipe.decennals.seguici.maredeu",
+      "code": "R054",
+      "recipe": [
+        "decennals",
+        "seguici",
+        "maredeu"
+      ],
+      "verdict": "discuss",
+      "priority": 2,
+      "reason": "La Candela és coherent amb les Decennals, però arriba al nivell 12 i només obre el Lledó.",
+      "proposal": "Afegir església + espelma → Mare de Déu de la Candela com a drecera local; conservar la recepta actual.",
+      "sources": []
+    },
+    {
+      "key": "recipe.foc.nuvol.sol",
+      "code": "R055",
+      "recipe": [
+        "foc",
+        "nuvol",
+        "sol"
+      ],
+      "verdict": "discuss",
+      "priority": 2,
+      "reason": "Foc i núvol evoquen un astre brillant al cel, però també podrien suggerir un llamp.",
+      "proposal": "Valorar foc + foc → sol, una convenció visual més directa que no ocupa cap parella actual.",
+      "sources": []
+    },
+    {
+      "key": "recipe.pluja.sol.arc",
+      "code": "R056",
+      "recipe": [
+        "sol",
+        "pluja",
+        "arc"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Sol i pluja són una associació clara per a l'arc de Sant Martí.",
+      "proposal": "Conservar.",
+      "sources": []
+    },
+    {
+      "key": "recipe.mar.pedra.sorra",
+      "code": "R057",
+      "recipe": [
+        "mar",
+        "pedra",
+        "sorra"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "El desgast de les roques per l'aigua pot generar sorra.",
+      "proposal": "Conservar.",
+      "sources": []
+    },
+    {
+      "key": "recipe.muntanya.pluja.riu",
+      "code": "R058",
+      "recipe": [
+        "muntanya",
+        "pluja",
+        "riu"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "La pluja que baixa de muntanya alimenta cursos d'aigua.",
+      "proposal": "Conservar.",
+      "sources": []
+    },
+    {
+      "key": "recipe.muntanya.pedra.cova",
+      "code": "R059",
+      "recipe": [
+        "muntanya",
+        "pedra",
+        "cova"
+      ],
+      "verdict": "discuss",
+      "priority": 2,
+      "reason": "Muntanya i pedra no indiquen un buit; la cova és una elecció poc deduïble.",
+      "proposal": "Conservar amb una pista sobre un forat a la muntanya; no hi ha un ingredient buit al catàleg.",
+      "sources": []
+    },
+    {
+      "key": "recipe.planta.pluja.flor",
+      "code": "R060",
+      "recipe": [
+        "planta",
+        "pluja",
+        "flor"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "La pluja ajuda una planta a créixer i florir, sense ser l'únic factor.",
+      "proposal": "Conservar com a procés resumit.",
+      "sources": []
+    },
+    {
+      "key": "recipe.animal.flor.abella",
+      "code": "R061",
+      "recipe": [
+        "animal",
+        "flor",
+        "abella"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Un animal que visita flors evoca una abella.",
+      "proposal": "Conservar.",
+      "sources": []
+    },
+    {
+      "key": "recipe.arbre.flor.fruita",
+      "code": "R062",
+      "recipe": [
+        "arbre",
+        "flor",
+        "fruita"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Molts fruits es desenvolupen a partir de flors.",
+      "proposal": "Conservar.",
+      "sources": []
+    },
+    {
+      "key": "recipe.fruita.terra.tomaquet",
+      "code": "R063",
+      "recipe": [
+        "fruita",
+        "terra",
+        "tomaquet"
+      ],
+      "verdict": "discuss",
+      "priority": 2,
+      "reason": "Fruita i terra no identifiquen el tomàquet entre totes les fruites.",
+      "proposal": "Conservar amb pista d'hort i color vermell; evitar presentar una alternativa igualment genèrica com a solució.",
+      "sources": []
+    },
+    {
+      "key": "recipe.brasa.tomaquet.escalivada",
+      "code": "R064",
+      "recipe": [
+        "tomaquet",
+        "brasa",
+        "escalivada"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "El tomàquet es pot escalivar, encara que l'escalivada també porta altres hortalisses.",
+      "proposal": "Conservar com a simplificació culinària.",
+      "sources": []
+    },
+    {
+      "key": "recipe.fruita.sol.raim",
+      "code": "R065",
+      "recipe": [
+        "fruita",
+        "sol",
+        "raim"
+      ],
+      "verdict": "discuss",
+      "priority": 2,
+      "reason": "El sol madura molts fruits; no selecciona el raïm.",
+      "proposal": "Conservar amb una pista sobre un fruit en gotims. No posar vinya com a ingredient mentre depengui del mateix raïm.",
+      "sources": []
+    },
+    {
+      "key": "recipe.ball.raim.cercolets",
+      "code": "R066",
+      "recipe": [
+        "ball",
+        "raim",
+        "cercolets"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "El raïm remet al context de la verema dels Cercolets; exigeix coneixement cultural.",
+      "proposal": "Conservar com a descoberta cultural amb una pista sobre bótes i verema.",
+      "sources": []
+    },
+    {
+      "key": "recipe.foc.pedra.ferro",
+      "code": "R067",
+      "recipe": [
+        "pedra",
+        "foc",
+        "ferro"
+      ],
+      "verdict": "discuss",
+      "priority": 2,
+      "reason": "No qualsevol pedra escalfada dona ferro: cal mineral i un procés de reducció.",
+      "proposal": "Conservar com a abstracció de metal·lúrgia; la curiositat ha d'evitar una lectura literal.",
+      "sources": []
+    },
+    {
+      "key": "recipe.ferro.musica.campana",
+      "code": "R068",
+      "recipe": [
+        "ferro",
+        "musica",
+        "campana"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Un objecte metàl·lic que sona evoca una campana, tot i que moltes són de bronze.",
+      "proposal": "Conservar com a associació de material i so, sense afirmar que totes són de ferro.",
+      "sources": []
+    },
+    {
+      "key": "recipe.bestia.cova.os",
+      "code": "R069",
+      "recipe": [
+        "bestia",
+        "cova",
+        "os"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Una bèstia en una cova evoca l'Ós del seguici.",
+      "proposal": "Conservar com a associació cultural, sense dir que tots els ossos viuen en coves.",
+      "sources": []
+    },
+    {
+      "key": "recipe.ocell.ocell.ou",
+      "code": "R070",
+      "recipe": [
+        "ocell",
+        "ocell",
+        "ou"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Dos ocells evoquen reproducció i ous.",
+      "proposal": "Conservar com a simplificació.",
+      "sources": []
+    },
+    {
+      "key": "recipe.animal.terra.serp",
+      "code": "R071",
+      "recipe": [
+        "animal",
+        "terra",
+        "serp"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Un animal arran de terra evoca una serp, tot i que no és l'únic.",
+      "proposal": "Conservar amb suport de l'art.",
+      "sources": []
+    },
+    {
+      "key": "recipe.ou.serp.basilisc",
+      "code": "R072",
+      "recipe": [
+        "ou",
+        "serp",
+        "basilisc"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "L'ou i la serp remeten a la llegenda del basilisc, no a biologia real.",
+      "proposal": "Conservar, distingint sempre llegenda i animal real.",
+      "sources": []
+    },
+    {
+      "key": "recipe.aliga.persona.aligons",
+      "code": "R073",
+      "recipe": [
+        "aliga",
+        "persona",
+        "aligons"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Les persones que acompanyen l'Àliga evoquen els aligons.",
+      "proposal": "Conservar; és una descoberta local que necessita aprendre el nom.",
+      "sources": []
+    },
+    {
+      "key": "recipe.ball.fusta.bastons",
+      "code": "R074",
+      "recipe": [
+        "ball",
+        "fusta",
+        "bastons"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "La fusta representa els bastons del ball.",
+      "proposal": "Conservar.",
+      "sources": []
+    },
+    {
+      "key": "recipe.animal.persona.pastor",
+      "code": "R075",
+      "recipe": [
+        "animal",
+        "persona",
+        "pastor"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Una persona que té cura d'animals evoca un pastor.",
+      "proposal": "Conservar.",
+      "sources": []
+    },
+    {
+      "key": "recipe.ball.pastor.pastorets",
+      "code": "R076",
+      "recipe": [
+        "ball",
+        "pastor",
+        "pastorets"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "El nom Pastorets enllaça directament amb pastor i ball.",
+      "proposal": "Conservar.",
+      "sources": []
+    },
+    {
+      "key": "recipe.fusta.mar.vaixell",
+      "code": "R077",
+      "recipe": [
+        "fusta",
+        "mar",
+        "vaixell"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "La fusta flotant al mar evoca un vaixell.",
+      "proposal": "Conservar.",
+      "sources": []
+    },
+    {
+      "key": "recipe.ball.vaixell.galeres",
+      "code": "R078",
+      "recipe": [
+        "ball",
+        "vaixell",
+        "galeres"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Els petits vaixells identifiquen el Ball de Galeres.",
+      "proposal": "Conservar.",
+      "sources": []
+    },
+    {
+      "key": "recipe.ball.esglesia.moixiganga",
+      "code": "R079",
+      "recipe": [
+        "ball",
+        "esglesia",
+        "moixiganga"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "La Moixiganga té contingut de representació religiosa.",
+      "proposal": "Conservar com a associació cultural, no com qualsevol ball d'església.",
+      "sources": []
+    },
+    {
+      "key": "recipe.pinya.pinya.folre",
+      "code": "R080",
+      "recipe": [
+        "pinya",
+        "pinya",
+        "folre"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Una segona base damunt de la pinya evoca el folre.",
+      "proposal": "Conservar com a esquema visual de suport casteller.",
+      "sources": []
+    },
+    {
+      "key": "recipe.folre.pinya.manilles",
+      "code": "R081",
+      "recipe": [
+        "folre",
+        "pinya",
+        "manilles"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Afegir un altre nivell de suport evoca les manilles.",
+      "proposal": "Conservar com a continuació de folre i pinya.",
+      "sources": []
+    },
+    {
+      "key": "recipe.colla.roba.camisa",
+      "code": "R082",
+      "recipe": [
+        "colla",
+        "roba",
+        "camisa"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "La roba que identifica una colla evoca la camisa castellera.",
+      "proposal": "Conservar.",
+      "sources": []
+    },
+    {
+      "key": "recipe.camisa.flor.vella",
+      "code": "R083",
+      "recipe": [
+        "camisa",
+        "flor",
+        "vella"
+      ],
+      "verdict": "discuss",
+      "priority": 2,
+      "reason": "Flor no identifica necessàriament el rosa de la Colla Vella.",
+      "proposal": "Proposo camisa + rosa → Colla Vella, amb una pista explícita de color rosat. La rosa com a flor continua sent una llicència.",
+      "sources": []
+    },
+    {
+      "key": "recipe.camisa.foc.joves",
+      "code": "R084",
+      "recipe": [
+        "camisa",
+        "foc",
+        "joves"
+      ],
+      "verdict": "discuss",
+      "priority": 2,
+      "reason": "El foc no és sempre vermell i no identifica per si sol la Colla Joves.",
+      "proposal": "Conservar amb pista explícita de camisa vermella; no canviar-la per tomàquet només pel color.",
+      "sources": []
+    },
+    {
+      "key": "recipe.castell.enxaneta.aleta",
+      "code": "R085",
+      "recipe": [
+        "castell",
+        "enxaneta",
+        "aleta"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "L'enxaneta fa l'aleta quan culmina el castell.",
+      "proposal": "Conservar.",
+      "sources": []
+    },
+    {
+      "key": "recipe.aleta.castell.carregat",
+      "code": "R086",
+      "recipe": [
+        "aleta",
+        "castell",
+        "carregat"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Fer l'aleta correspon al castell carregat.",
+      "proposal": "Conservar.",
+      "sources": []
+    },
+    {
+      "key": "recipe.carregat.terra.descarregat",
+      "code": "R087",
+      "recipe": [
+        "carregat",
+        "terra",
+        "descarregat"
+      ],
+      "verdict": "discuss",
+      "priority": 2,
+      "reason": "Tornar a terra pot voler dir desmuntar bé o caure; la distinció és important.",
+      "proposal": "Conservar només amb una pista que digui baixar sense caure. No fer servir terra com a sinònim de caiguda.",
+      "sources": []
+    },
+    {
+      "key": "recipe.casa.casa.poble",
+      "code": "R088",
+      "recipe": [
+        "casa",
+        "casa",
+        "poble"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Agrupar cases evoca un poble.",
+      "proposal": "Conservar.",
+      "sources": []
+    },
+    {
+      "key": "recipe.casa.espelma.esglesia",
+      "code": "R089",
+      "recipe": [
+        "casa",
+        "espelma",
+        "esglesia"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Una casa amb espelmes evoca un espai religiós dins del tema del joc.",
+      "proposal": "Conservar com a associació, no com a definició d'església.",
+      "sources": []
+    },
+    {
+      "key": "recipe.campana.casa.campanar",
+      "code": "R090",
+      "recipe": [
+        "campana",
+        "casa",
+        "campanar"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Una construcció per a una campana evoca un campanar.",
+      "proposal": "Conservar.",
+      "sources": []
+    },
+    {
+      "key": "recipe.colla.poble.placa",
+      "code": "R091",
+      "recipe": [
+        "colla",
+        "poble",
+        "placa"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "El lloc on es reuneix la gent del poble evoca la plaça.",
+      "proposal": "Conservar.",
+      "sources": []
+    },
+    {
+      "key": "recipe.castell.placa.diada",
+      "code": "R092",
+      "recipe": [
+        "castell",
+        "placa",
+        "diada"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Castells a la plaça evoquen una diada castellera.",
+      "proposal": "Conservar.",
+      "sources": []
+    },
+    {
+      "key": "recipe.campanar.diada.valls",
+      "code": "R093",
+      "recipe": [
+        "campanar",
+        "diada",
+        "valls"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Campanar i diada són dos referents vallencs recognoscibles en aquest joc.",
+      "proposal": "Conservar com a identitat local; no afirmar que siguin exclusius de Valls.",
+      "sources": []
+    },
+    {
+      "key": "recipe.poble.seguici.festamajor",
+      "code": "R094",
+      "recipe": [
+        "seguici",
+        "poble",
+        "festamajor"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "El seguici al poble és una pista clara de Festa Major.",
+      "proposal": "Conservar com a via general, sense exigir Valls.",
+      "sources": []
+    },
+    {
+      "key": "recipe.seguici.valls.festamajor",
+      "code": "R095",
+      "recipe": [
+        "seguici",
+        "valls",
+        "festamajor"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "El seguici a Valls evoca la festa local.",
+      "proposal": "Conservar com a alternativa; no ha de substituir la via general.",
+      "sources": []
+    },
+    {
+      "key": "recipe.espelma.espelma.llum",
+      "code": "R096",
+      "recipe": [
+        "espelma",
+        "espelma",
+        "llum"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Les espelmes fan llum.",
+      "proposal": "Conservar.",
+      "sources": []
+    },
+    {
+      "key": "recipe.llum.valls.lluminaries",
+      "code": "R097",
+      "recipe": [
+        "llum",
+        "valls",
+        "lluminaries"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "La llum ornamental a Valls evoca les lluminàries.",
+      "proposal": "Conservar com a descoberta local.",
+      "sources": []
+    },
+    {
+      "key": "recipe.planta.sol.blat",
+      "code": "R098",
+      "recipe": [
+        "planta",
+        "sol",
+        "blat"
+      ],
+      "verdict": "discuss",
+      "priority": 2,
+      "reason": "Sol i planta fan créixer moltes espècies, no només blat.",
+      "proposal": "Conservar amb pista d'espigues; afegir un cereal nou només per resoldre aquesta parella faria créixer el catàleg.",
+      "sources": []
+    },
+    {
+      "key": "recipe.blat.foc.pa",
+      "code": "R099",
+      "recipe": [
+        "blat",
+        "foc",
+        "pa"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "El blat és l'origen de la farina del pa, però falten la mòlta i la massa.",
+      "proposal": "Conservar com a procés culinari resumit, no com una recepta de cuina completa.",
+      "sources": []
+    },
+    {
+      "key": "recipe.pa.tomaquet.patomaquet",
+      "code": "R100",
+      "recipe": [
+        "pa",
+        "tomaquet",
+        "patomaquet"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Els dos ingredients identifiquen el pa amb tomàquet.",
+      "proposal": "Conservar.",
+      "sources": []
+    },
+    {
+      "key": "recipe.calcot.escalivada.salsa",
+      "code": "R101",
+      "recipe": [
+        "escalivada",
+        "calcot",
+        "salsa"
+      ],
+      "verdict": "discuss",
+      "priority": 2,
+      "reason": "La salsa acompanya el calçot; no es fabrica barrejant-lo amb escalivada.",
+      "proposal": "Proposo tomàquet + calçot → salsa de calçots: és ingredient més plat de destinació, encara no una recepta completa.",
+      "sources": [
+        "https://www.valls.cat/la-ciutat/la-calcotada"
+      ]
+    },
+    {
+      "key": "recipe.arbre.terra.castanya",
+      "code": "R102",
+      "recipe": [
+        "arbre",
+        "terra",
+        "castanya"
+      ],
+      "verdict": "discuss",
+      "priority": 2,
+      "reason": "Arbre i terra no diferencien el castanyer d'altres arbres.",
+      "proposal": "Conservar amb una pista de tardor i pell punxeguda.",
+      "sources": []
+    },
+    {
+      "key": "recipe.castanya.foc.castanyada",
+      "code": "R103",
+      "recipe": [
+        "castanya",
+        "foc",
+        "castanyada"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Les castanyes torrades evoquen la Castanyada.",
+      "proposal": "Conservar.",
+      "sources": []
+    },
+    {
+      "key": "recipe.esglesia.muntanya.montserrat",
+      "code": "R104",
+      "recipe": [
+        "esglesia",
+        "muntanya",
+        "montserrat"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Monestir i muntanya són dos trets molt recognoscibles de Montserrat.",
+      "proposal": "Conservar com a associació cultural.",
+      "sources": []
+    },
+    {
+      "key": "recipe.cavall.drac.santjordi",
+      "code": "R105",
+      "recipe": [
+        "cavall",
+        "drac",
+        "santjordi"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Cavall i drac identifiquen l'escena tradicional de Sant Jordi.",
+      "proposal": "Conservar com a llegenda.",
+      "sources": []
+    },
+    {
+      "key": "recipe.flor.santjordi.rosa",
+      "code": "R106",
+      "recipe": [
+        "flor",
+        "santjordi",
+        "rosa"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "La rosa és el símbol floral de Sant Jordi.",
+      "proposal": "Conservar.",
+      "sources": []
+    },
+    {
+      "key": "recipe.aigua.fusta.paper",
+      "code": "R107",
+      "recipe": [
+        "fusta",
+        "aigua",
+        "paper"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "L'aigua participa en la preparació de la pasta de fibres per fer paper.",
+      "proposal": "Conservar com a procés resumit.",
+      "sources": []
+    },
+    {
+      "key": "recipe.paper.persona.llibre",
+      "code": "R108",
+      "recipe": [
+        "paper",
+        "persona",
+        "llibre"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Una persona que escriu en paper evoca un llibre.",
+      "proposal": "Conservar.",
+      "sources": []
+    },
+    {
+      "key": "recipe.campanar.campanar.sagrada",
+      "code": "R109",
+      "recipe": [
+        "campanar",
+        "campanar",
+        "sagrada"
+      ],
+      "verdict": "discuss",
+      "priority": 2,
+      "reason": "Dos campanars evoquen moltes torres, però no identifiquen inequívocament la Sagrada Família.",
+      "proposal": "Conservar amb pista sobre Barcelona i Gaudí; no confondre-la amb qualsevol església de dues torres.",
+      "sources": []
+    },
+    {
+      "key": "recipe.colla.musica.cobla",
+      "code": "R110",
+      "recipe": [
+        "musica",
+        "colla",
+        "cobla"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Un grup de músics evoca una cobla dins del context català.",
+      "proposal": "Conservar, amb la sardana com a continuació.",
+      "sources": []
+    },
+    {
+      "key": "recipe.ball.cobla.sardana",
+      "code": "R111",
+      "recipe": [
+        "ball",
+        "cobla",
+        "sardana"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "La cobla acompanya la sardana.",
+      "proposal": "Conservar.",
+      "sources": []
+    },
+    {
+      "key": "recipe.fusta.persona.tio",
+      "code": "R112",
+      "recipe": [
+        "fusta",
+        "persona",
+        "tio"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "El Tió és un tronc personificat.",
+      "proposal": "Conservar com a associació cultural.",
+      "sources": []
+    },
+    {
+      "key": "recipe.fang.persona.caganer",
+      "code": "R113",
+      "recipe": [
+        "fang",
+        "persona",
+        "caganer"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Una figureta de fang amb forma de persona evoca el caganer en aquest context.",
+      "proposal": "Prioritzar ceràmica + persona, ja existent, si es vol destacar que és una figura.",
+      "sources": []
+    },
+    {
+      "key": "recipe.aigua.vida.celula",
+      "code": "R114",
+      "recipe": [
+        "vida",
+        "aigua",
+        "celula"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Vida i aigua evoquen la cèl·lula; és una porta d'alquímia, no una explicació del seu origen.",
+      "proposal": "Conservar amb la curiositat biològica actual.",
+      "sources": []
+    },
+    {
+      "key": "recipe.celula.mar.peix",
+      "code": "R115",
+      "recipe": [
+        "celula",
+        "mar",
+        "peix"
+      ],
+      "verdict": "discuss",
+      "priority": 2,
+      "reason": "Una cèl·lula al mar no es converteix directament en peix.",
+      "proposal": "Valorar vida + mar → peix: elimina el salt explícit de cèl·lula a vertebrat, però continua sent una simplificació.",
+      "sources": []
+    },
+    {
+      "key": "recipe.animal.casa.gos",
+      "code": "R116",
+      "recipe": [
+        "animal",
+        "casa",
+        "gos"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Un animal de casa evoca un gos.",
+      "proposal": "Conservar, tot i que també podria ser un gat.",
+      "sources": []
+    },
+    {
+      "key": "recipe.gos.poble.caca",
+      "code": "R117",
+      "recipe": [
+        "gos",
+        "poble",
+        "caca"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "El gos al carrer evoca un residu quotidià; és humor recognoscible.",
+      "proposal": "Conservar, amb gos + botifarra com a alternativa.",
+      "sources": []
+    },
+    {
+      "key": "recipe.animal.fang.panerola",
+      "code": "R118",
+      "recipe": [
+        "animal",
+        "fang",
+        "panerola"
+      ],
+      "verdict": "discuss",
+      "priority": 2,
+      "reason": "El fang no és un tret distintiu de la panerola.",
+      "proposal": "Conservar amb una pista sobre un insecte que corre i té antenes llargues. No hi ha una substitució clara amb el catàleg actual; evitar una altra parella igualment arbitrària.",
+      "sources": []
+    },
+    {
+      "key": "recipe.ferro.fum.fabrica",
+      "code": "R119",
+      "recipe": [
+        "fum",
+        "ferro",
+        "fabrica"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Metall i fum evoquen una fàbrica històrica.",
+      "proposal": "Conservar com a imatge industrial, sense afirmar que totes les fàbriques fumen.",
+      "sources": []
+    },
+    {
+      "key": "recipe.fabrica.mar.refineria",
+      "code": "R120",
+      "recipe": [
+        "fabrica",
+        "mar",
+        "refineria"
+      ],
+      "verdict": "discuss",
+      "priority": 2,
+      "reason": "Una fàbrica al mar no identifica necessàriament el complex petroquímic de Tarragona.",
+      "proposal": "Conservar com a referència del Camp amb una pista de torres i canonades; no presentar-la com a geografia de Valls.",
+      "sources": []
+    },
+    {
+      "key": "recipe.riu.sol.sequera",
+      "code": "R121",
+      "recipe": [
+        "sol",
+        "riu",
+        "sequera"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "La calor del sol i un riu evoquen que es pot assecar, però la sequera depèn de falta de precipitació.",
+      "proposal": "Conservar com a associació; la curiositat ja situa la manca de pluja.",
+      "sources": []
+    },
+    {
+      "key": "recipe.aigua.animal.mosquit",
+      "code": "R122",
+      "recipe": [
+        "animal",
+        "aigua",
+        "mosquit"
+      ],
+      "verdict": "discuss",
+      "priority": 2,
+      "reason": "L'aigua i un animal evoquen mosquits, però no distingeixen el mosquit tigre.",
+      "proposal": "Conservar amb pista d'aigua acumulada i ratlles. No presentar-lo com l'únic animal aquàtic.",
+      "sources": []
+    },
+    {
+      "key": "recipe.castell.vent.llenya",
+      "code": "R123",
+      "recipe": [
+        "castell",
+        "vent",
+        "llenya"
+      ],
+      "verdict": "discuss",
+      "priority": 2,
+      "reason": "Fer llenya és una expressió castellera, però el vent no implica necessàriament una caiguda.",
+      "proposal": "Conservar com a humor casteller amb pista de l'expressió; evitar que sembli una causa automàtica.",
+      "sources": []
+    },
+    {
+      "key": "recipe.diada.diada.concurs",
+      "code": "R124",
+      "recipe": [
+        "diada",
+        "diada",
+        "concurs"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Diverses actuacions castelleres evoquen un concurs.",
+      "proposal": "Conservar, amb la curiositat que el situa a Tarragona.",
+      "sources": []
+    },
+    {
+      "key": "recipe.castanya.diada.santaursula",
+      "code": "R125",
+      "recipe": [
+        "castanya",
+        "diada",
+        "santaursula"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Castanyes de tardor i diada evoquen Santa Úrsula dins del calendari de Valls.",
+      "proposal": "Conservar com a pista estacional, sense confondre Santa Úrsula amb la Castanyada.",
+      "sources": []
+    },
+    {
+      "key": "recipe.festamajor.foc.santjoan",
+      "code": "R126",
+      "recipe": [
+        "foc",
+        "festamajor",
+        "santjoan"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Foc i festa evoquen Sant Joan.",
+      "proposal": "Conservar, amb el context de la Festa Major vallenca.",
+      "sources": []
+    },
+    {
+      "key": "recipe.esglesia.vaixell.roser",
+      "code": "R127",
+      "recipe": [
+        "esglesia",
+        "vaixell",
+        "roser"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "L'església i els vaixells remeten a les rajoles de Lepant de la capella del Roser.",
+      "proposal": "Conservar com a descoberta cultural amb pista sobre les rajoles.",
+      "sources": []
+    },
+    {
+      "key": "recipe.bestia.sol.lleo",
+      "code": "R128",
+      "recipe": [
+        "bestia",
+        "sol",
+        "lleo"
+      ],
+      "verdict": "discuss",
+      "priority": 2,
+      "reason": "El sol només suggereix una crinera o el color daurat; no és una pista directa del Lleó.",
+      "proposal": "Conservar amb una pista de crinera i bestiari. No substituir sol per ferro: la figura de Valls és de llautó.",
+      "sources": [
+        "https://uaf.cat/seguici-ceremonial/lleo/"
+      ]
+    },
+    {
+      "key": "recipe.ball.roba.gitanes",
+      "code": "R129",
+      "recipe": [
+        "ball",
+        "roba",
+        "gitanes"
+      ],
+      "verdict": "discuss",
+      "priority": 2,
+      "reason": "Roba és massa genèric per identificar les cintes del Ball de Gitanes.",
+      "proposal": "Proposo ball + mocador → Gitanes com a pista tèxtil més concreta; explicar que al ball real són cintes, no mocadors.",
+      "sources": [
+        "https://uaf.cat/seguici-ceremonial/ball-de-gitanes/"
+      ]
+    },
+    {
+      "key": "recipe.ball.ball.primera",
+      "code": "R130",
+      "recipe": [
+        "ball",
+        "ball",
+        "primera"
+      ],
+      "verdict": "discuss",
+      "priority": 2,
+      "reason": "Repetir ball no dona cap pista de la Primera ni dels infants.",
+      "proposal": "No hi ha substitució clara amb els 178 elements. Conservar amb pista de dansa infantil o acordar un element infant.",
+      "sources": []
+    },
+    {
+      "key": "recipe.bestia.planta.bouvalls",
+      "code": "R131",
+      "recipe": [
+        "bestia",
+        "planta",
+        "bouvalls"
+      ],
+      "verdict": "discuss",
+      "priority": 2,
+      "reason": "Planta no explica per què surt el Bou de Valls; és una associació amb els impulsors poc visible.",
+      "proposal": "Valorar bèstia + calçot → Bou de Valls, com a referència local al Calçot, amb pista que n'expliqui la recuperació.",
+      "sources": []
+    },
+    {
+      "key": "recipe.mar.sorra.perles",
+      "code": "R132",
+      "recipe": [
+        "mar",
+        "sorra",
+        "perles"
+      ],
+      "verdict": "discuss",
+      "priority": 2,
+      "reason": "La parella pot reforçar la idea equivocada que una perla és simplement sorra transformada.",
+      "proposal": "Proposo mar + animal → perles, perquè les produeixen mol·luscs. Continua sent una tria entre molts animals marins.",
+      "sources": [
+        "https://www.nhm.ac.uk/discover/quick-questions/how-do-oysters-make-pearls.html"
+      ]
+    },
+    {
+      "key": "recipe.perles.persona.alcaldessa",
+      "code": "R133",
+      "recipe": [
+        "perles",
+        "persona",
+        "alcaldessa"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Associació humorística local que Marc ha demanat conservar expressament.",
+      "proposal": "Conservar perles + persona → alcaldessa. No tornar a proposar poble + persona.",
+      "sources": []
+    },
+    {
+      "key": "recipe.animal.foc.botifarra",
+      "code": "R134",
+      "recipe": [
+        "animal",
+        "foc",
+        "botifarra"
+      ],
+      "verdict": "discuss",
+      "priority": 2,
+      "reason": "Cuinar un animal no produeix directament una botifarra; falta l'elaboració de l'embotit.",
+      "proposal": "Conservar com a simplificació culinària o acordar un element carn si es vol més precisió.",
+      "sources": []
+    },
+    {
+      "key": "recipe.foc.ou.crema",
+      "code": "R135",
+      "recipe": [
+        "ou",
+        "foc",
+        "crema"
+      ],
+      "verdict": "change",
+      "priority": 1,
+      "reason": "Ou amb foc suggereix un ou cuit o una truita, no crema catalana.",
+      "proposal": "Proposo ou + sucre → crema catalana. Encara resumeix la recepta i omet la llet, però identifica unes postres.",
+      "sources": []
+    },
+    {
+      "key": "recipe.escalivada.pa.coca",
+      "code": "R136",
+      "recipe": [
+        "pa",
+        "escalivada",
+        "coca"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Base de pa i hortalisses escalivades evoquen una coca de recapte.",
+      "proposal": "Conservar com a aproximació culinària.",
+      "sources": []
+    },
+    {
+      "key": "recipe.escalivada.peix.xato",
+      "code": "R137",
+      "recipe": [
+        "escalivada",
+        "peix",
+        "xato"
+      ],
+      "verdict": "change",
+      "priority": 1,
+      "reason": "El xató és una amanida amb escarola i altres ingredients, no escalivada amb peix.",
+      "proposal": "Cal acordar escarola o amanida com a nou element per fer una via clara. No recomano substituir-ho per peix + salsa de calçots: també confondria els plats.",
+      "sources": [
+        "https://patrimonicultural.diba.cat/print/pdf/node/66935"
+      ]
+    },
+    {
+      "key": "recipe.caganer.roba.barretina",
+      "code": "R138",
+      "recipe": [
+        "roba",
+        "caganer",
+        "barretina"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "La barretina forma part de la imatge tradicional del caganer.",
+      "proposal": "Conservar.",
+      "sources": []
+    },
+    {
+      "key": "recipe.roba.terra.espardenyes",
+      "code": "R139",
+      "recipe": [
+        "roba",
+        "terra",
+        "espardenyes"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Roba per als peus i contacte amb terra evoquen espardenyes.",
+      "proposal": "Conservar com a associació visual, sense reduir-ne els materials a roba.",
+      "sources": []
+    },
+    {
+      "key": "recipe.roba.vent.mocador",
+      "code": "R140",
+      "recipe": [
+        "roba",
+        "vent",
+        "mocador"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Una peça de roba que voleia evoca un mocador.",
+      "proposal": "Conservar.",
+      "sources": []
+    },
+    {
+      "key": "recipe.canya.fusta.flabiol",
+      "code": "R141",
+      "recipe": [
+        "canya",
+        "fusta",
+        "flabiol"
+      ],
+      "verdict": "discuss",
+      "priority": 2,
+      "reason": "Fusta i canya evoquen instruments de vent, però no distingeixen el flabiol.",
+      "proposal": "Conservar amb pista de flauta petita tocada amb una mà.",
+      "sources": []
+    },
+    {
+      "key": "recipe.animal.musica.sacgemecs",
+      "code": "R142",
+      "recipe": [
+        "animal",
+        "musica",
+        "sacgemecs"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "L'animal remet al sac de pell de l'instrument.",
+      "proposal": "Conservar com a descoberta cultural amb pista del sac.",
+      "sources": []
+    },
+    {
+      "key": "recipe.ferro.vent.fiscorn",
+      "code": "R143",
+      "recipe": [
+        "ferro",
+        "vent",
+        "fiscorn"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Metall i aire evoquen un instrument de vent; ferro representa metall de manera genèrica.",
+      "proposal": "Conservar amb pista de la cobla. No afirmar que el fiscorn sigui de ferro.",
+      "sources": []
+    },
+    {
+      "key": "recipe.ferro.foc.bengala",
+      "code": "R144",
+      "recipe": [
+        "ferro",
+        "foc",
+        "bengala"
+      ],
+      "verdict": "discuss",
+      "priority": 2,
+      "reason": "Metall i foc poden suggerir espurnes, però no són una recepta de bengala.",
+      "proposal": "Conservar només com a associació visual; no donar instruccions de fabricació.",
+      "sources": []
+    },
+    {
+      "key": "recipe.brasa.fusta.torxa",
+      "code": "R145",
+      "recipe": [
+        "fusta",
+        "brasa",
+        "torxa"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Un suport de fusta encès evoca una torxa.",
+      "proposal": "Conservar.",
+      "sources": []
+    },
+    {
+      "key": "recipe.carretilla.tronada.traca",
+      "code": "R146",
+      "recipe": [
+        "tronada",
+        "carretilla",
+        "traca"
+      ],
+      "verdict": "discuss",
+      "priority": 2,
+      "reason": "La traca no és la suma d'una tronada i una carretilla; s'inverteix la relació entre els elements.",
+      "proposal": "Si es canvia R038, proposo carretilla + carretilla → traca i traca + plaça → tronada com a parella conjunta de canvis.",
+      "sources": []
+    },
+    {
+      "key": "recipe.colla.paper.auca",
+      "code": "R147",
+      "recipe": [
+        "paper",
+        "colla",
+        "auca"
+      ],
+      "verdict": "discuss",
+      "priority": 2,
+      "reason": "Paper i colla no expliquen les vinyetes d'una auca.",
+      "proposal": "Proposo paper + pintura → auca, amb una pista sobre vinyetes i rodolins. És més visual, encara que no tota il·lustració és una auca.",
+      "sources": []
+    },
+    {
+      "key": "recipe.foc.llibre.rondalla",
+      "code": "R148",
+      "recipe": [
+        "llibre",
+        "foc",
+        "rondalla"
+      ],
+      "verdict": "discuss",
+      "priority": 2,
+      "reason": "Un llibre al foc suggereix cremar-lo; la referència a explicar rondalles vora el foc és indirecta.",
+      "proposal": "Conservar només amb pista de narració vora el foc, o valorar llibre + veu si algun dia s'afegeix veu.",
+      "sources": []
+    },
+    {
+      "key": "recipe.fang.foc.ceramica",
+      "code": "R149",
+      "recipe": [
+        "fang",
+        "foc",
+        "ceramica"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Coure argila dona ceràmica; fang és una aproximació al material.",
+      "proposal": "Conservar.",
+      "sources": []
+    },
+    {
+      "key": "recipe.brasa.ferro.forjat",
+      "code": "R150",
+      "recipe": [
+        "ferro",
+        "brasa",
+        "forjat"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "La calor facilita treballar el ferro, tot i que també cal donar-li forma.",
+      "proposal": "Conservar com a procés resumit.",
+      "sources": []
+    },
+    {
+      "key": "recipe.foc.sorra.vidre",
+      "code": "R151",
+      "recipe": [
+        "foc",
+        "sorra",
+        "vidre"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "La sílice de la sorra participa en la fabricació de vidre amb molta calor i altres components.",
+      "proposal": "Conservar com a procés resumit.",
+      "sources": []
+    },
+    {
+      "key": "recipe.persona.vidre.porro",
+      "code": "R152",
+      "recipe": [
+        "vidre",
+        "persona",
+        "porro"
+      ],
+      "verdict": "discuss",
+      "priority": 2,
+      "reason": "Vidre i persona poden donar molts recipients; no identifiquen el porró.",
+      "proposal": "Proposo vidre + vi → porró. El contingut orienta millor el recipient i dona una continuació útil al vi.",
+      "sources": []
+    },
+    {
+      "key": "recipe.flor.sol.margarida",
+      "code": "R153",
+      "recipe": [
+        "flor",
+        "sol",
+        "margarida"
+      ],
+      "verdict": "discuss",
+      "priority": 2,
+      "reason": "El sol i una flor només suggereixen una margarida per la forma o el color.",
+      "proposal": "Conservar com a associació visual, amb pista dels pètals; no és botànica literal.",
+      "sources": []
+    },
+    {
+      "key": "recipe.cavall.fusta.carro",
+      "code": "R154",
+      "recipe": [
+        "fusta",
+        "cavall",
+        "carro"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Fusta i cavall evoquen el carro de tracció animal.",
+      "proposal": "Conservar.",
+      "sources": []
+    },
+    {
+      "key": "recipe.canya.foc.sucre",
+      "code": "R155",
+      "recipe": [
+        "canya",
+        "foc",
+        "sucre"
+      ],
+      "verdict": "change",
+      "priority": 1,
+      "reason": "La canya del joc és la de gralles i rieres; cremar-la no produeix sucre. Es confon amb la canya de sucre.",
+      "proposal": "Per corregir-ho bé cal afegir canya de sucre o remolatxa, amb art propi, i representar-ne l'extracció. Amb els elements actuals no proposo una substitució igualment enganyosa.",
+      "sources": [
+        "https://herbarivirtual.uib.cat/ca/illes-balears/234/especie/arundo-donax-l-",
+        "https://powo.science.kew.org/taxon/urn%3Alsid%3Aipni.org%3Anames%3A419977-1/general-information"
+      ]
+    },
+    {
+      "key": "recipe.persona.roba.carnaval",
+      "code": "R156",
+      "recipe": [
+        "roba",
+        "persona",
+        "carnaval"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Una persona amb vestit especial evoca Carnaval, tot i que roba no distingeix una disfressa.",
+      "proposal": "Conservar amb pista sobre disfresses.",
+      "sources": []
+    },
+    {
+      "key": "recipe.aigua.flor.pintura",
+      "code": "R157",
+      "recipe": [
+        "flor",
+        "aigua",
+        "pintura"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Alguns pigments vegetals es poden obtenir de flors, però no qualsevol flor amb aigua dona pintura estable.",
+      "proposal": "Conservar com a activitat artística simplificada.",
+      "sources": []
+    },
+    {
+      "key": "recipe.raim.terra.vinya",
+      "code": "R158",
+      "recipe": [
+        "raim",
+        "terra",
+        "vinya"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "El raïm plantat a terra evoca la vinya com a conreu.",
+      "proposal": "Conservar com a associació agrícola.",
+      "sources": []
+    },
+    {
+      "key": "recipe.aigua.raim.vi",
+      "code": "R159",
+      "recipe": [
+        "raim",
+        "aigua",
+        "vi"
+      ],
+      "verdict": "change",
+      "priority": 1,
+      "reason": "Afegir aigua al raïm no explica la fermentació del vi.",
+      "proposal": "Proposo raïm + cèl·lula → vi: la cèl·lula representa el llevat. Cal una pista de fermentació; no és una recepta literal.",
+      "sources": [
+        "https://www.gencat.cat/mediamb/publicacions/monografies/MTD12_vi_i_cava.pdf"
+      ]
+    },
+    {
+      "key": "recipe.pluja.pluja.torrent",
+      "code": "R160",
+      "recipe": [
+        "pluja",
+        "pluja",
+        "torrent"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Pluja intensa o acumulada evoca un torrent.",
+      "proposal": "Conservar.",
+      "sources": []
+    },
+    {
+      "key": "recipe.carro.cavall.trestombs",
+      "code": "R161",
+      "recipe": [
+        "cavall",
+        "carro",
+        "trestombs"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Cavalls i carros són protagonistes dels Tres Tombs.",
+      "proposal": "Conservar.",
+      "sources": []
+    },
+    {
+      "key": "recipe.carnaval.sucre.caramel",
+      "code": "R162",
+      "recipe": [
+        "sucre",
+        "carnaval",
+        "caramel"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Sucre i Carnaval remeten al caramel vermell de Dijous Gras a Valls.",
+      "proposal": "Conservar com a tradició local, sense afirmar que tot caramel sigui vermell.",
+      "sources": []
+    },
+    {
+      "key": "recipe.fruita.placa.firagost",
+      "code": "R163",
+      "recipe": [
+        "placa",
+        "fruita",
+        "firagost"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Una plaça amb fruita evoca la fira agrícola de Firagost.",
+      "proposal": "Conservar com a associació local.",
+      "sources": []
+    },
+    {
+      "key": "recipe.blat.placa.placablat",
+      "code": "R164",
+      "recipe": [
+        "placa",
+        "blat",
+        "placablat"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "La parella reprodueix el topònim Plaça del Blat.",
+      "proposal": "Conservar: és una pista verbal molt clara.",
+      "sources": []
+    },
+    {
+      "key": "recipe.riu.valls.francoli",
+      "code": "R165",
+      "recipe": [
+        "riu",
+        "valls",
+        "francoli"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Riu i Valls evoquen el Francolí del terme.",
+      "proposal": "Conservar com a descoberta geogràfica, sense suggerir que travessi el centre urbà.",
+      "sources": []
+    },
+    {
+      "key": "recipe.pedra.poble.muralla",
+      "code": "R166",
+      "recipe": [
+        "pedra",
+        "poble",
+        "muralla"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Una barrera de pedra al voltant del poble evoca la muralla.",
+      "proposal": "Conservar.",
+      "sources": []
+    },
+    {
+      "key": "recipe.maredeu.pedra.lledo",
+      "code": "R167",
+      "recipe": [
+        "pedra",
+        "maredeu",
+        "lledo"
+      ],
+      "verdict": "change",
+      "priority": 1,
+      "reason": "La pedra descriu un material de la imatge, però la tradició del Lledó parla d'un lledoner; també és el final de la cadena més profunda.",
+      "proposal": "Proposo arbre + església → Lledó: remet al santuari i a la tradició del lledoner, escurça la cadena i evita confondre les dues advocacions.",
+      "sources": [
+        "https://www.visitavalls.cat/ca/descobreix-valls/patrimoni-i-espais-visitables/"
+      ]
+    },
+    {
+      "key": "recipe.foc.vi.aiguardent",
+      "code": "R168",
+      "recipe": [
+        "vi",
+        "foc",
+        "aiguardent"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Escalfar vi remet a la destil·lació, però foc tot sol no fa aiguardent.",
+      "proposal": "Conservar com a referència històrica resumida, no com a instrucció de producció.",
+      "sources": []
+    },
+    {
+      "key": "recipe.animal.roba.pell",
+      "code": "R169",
+      "recipe": [
+        "animal",
+        "roba",
+        "pell"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "La pell animal pot ser un material per a roba.",
+      "proposal": "Conservar la via general que evita dependre d'un element de Valls.",
+      "sources": []
+    },
+    {
+      "key": "recipe.aigua.bou.pell",
+      "code": "R170",
+      "recipe": [
+        "bou",
+        "aigua",
+        "pell"
+      ],
+      "verdict": "change",
+      "priority": 1,
+      "reason": "Bou és la figura festiva Bou Tradicional, no un animal real; l'aigua no la transforma en pell.",
+      "proposal": "Retirar aquesta alternativa. Animal + roba → pell ja manté l'element accessible.",
+      "sources": []
+    },
+    {
+      "key": "recipe.casa.castell.museucasteller",
+      "code": "R171",
+      "recipe": [
+        "castell",
+        "casa",
+        "museucasteller"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Una casa dedicada als castells evoca el Museu Casteller.",
+      "proposal": "Conservar com a descoberta local.",
+      "sources": []
+    },
+    {
+      "key": "recipe.casa.musica.teatre",
+      "code": "R172",
+      "recipe": [
+        "casa",
+        "musica",
+        "teatre"
+      ],
+      "verdict": "discuss",
+      "priority": 2,
+      "reason": "Casa i música evoquen un teatre, però no identifiquen el Teatre Principal de Valls.",
+      "proposal": "Conservar amb una pista del teatre de la ciutat; distingir el nom local del concepte genèric.",
+      "sources": []
+    },
+    {
+      "key": "recipe.llibre.valls.oller",
+      "code": "R173",
+      "recipe": [
+        "llibre",
+        "valls",
+        "oller"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Llibre i Valls orienten a l'escriptor Narcís Oller, però cal conèixer-lo.",
+      "proposal": "Conservar amb pista sobre novel·les i autor vallenc.",
+      "sources": []
+    },
+    {
+      "key": "recipe.pintura.valls.huguet",
+      "code": "R174",
+      "recipe": [
+        "pintura",
+        "valls",
+        "huguet"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Pintura i Valls orienten al pintor Jaume Huguet, però cal conèixer-lo.",
+      "proposal": "Conservar amb pista sobre pintura gòtica.",
+      "sources": []
+    },
+    {
+      "key": "recipe.musica.valls.figaflawas",
+      "code": "R175",
+      "recipe": [
+        "musica",
+        "valls",
+        "figaflawas"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Música i Valls remeten al grup Figa Flawas dins del catàleg del joc.",
+      "proposal": "Conservar amb pista de duet musical; no suggerir que sigui l'única música vallenca.",
+      "sources": []
+    },
+    {
+      "key": "recipe.calcotada.musica.calcofest",
+      "code": "R176",
+      "recipe": [
+        "calcotada",
+        "musica",
+        "calcofest"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Calçotada i música descriuen la proposta del Calçofest.",
+      "proposal": "Conservar.",
+      "sources": []
+    },
+    {
+      "key": "recipe.foc.vent.fum",
+      "code": "R177",
+      "recipe": [
+        "foc",
+        "vent",
+        "fum"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Foc i aire evoquen fum, tot i que una combustió no sempre fa fum visible.",
+      "proposal": "Conservar; manté fum accessible després del canvi R1.",
+      "sources": []
+    },
+    {
+      "key": "recipe.foc.terra.pedra",
+      "code": "R178",
+      "recipe": [
+        "foc",
+        "terra",
+        "pedra"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "La calor i la terra evoquen roca en una convenció d'alquímia.",
+      "proposal": "Conservar com a alternativa inicial, no com a procés geològic immediat.",
+      "sources": []
+    },
+    {
+      "key": "recipe.aigua.pols.fang",
+      "code": "R179",
+      "recipe": [
+        "pols",
+        "aigua",
+        "fang"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "La pols amb aigua pot formar fang.",
+      "proposal": "Conservar.",
+      "sources": []
+    },
+    {
+      "key": "recipe.vapor.vent.nuvol",
+      "code": "R180",
+      "recipe": [
+        "vapor",
+        "vent",
+        "nuvol"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "El vapor transportat per l'aire evoca núvols, però cal condensació.",
+      "proposal": "Conservar com a simplificació; la curiositat ja explica gotetes i cristalls.",
+      "sources": []
+    },
+    {
+      "key": "recipe.nuvol.nuvol.pluja",
+      "code": "R181",
+      "recipe": [
+        "nuvol",
+        "nuvol",
+        "pluja"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Acumular núvols evoca pluja, tot i que no tots precipiten.",
+      "proposal": "Conservar com a convenció visual.",
+      "sources": []
+    },
+    {
+      "key": "recipe.pedra.terra.muntanya",
+      "code": "R182",
+      "recipe": [
+        "pedra",
+        "terra",
+        "muntanya"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Pedra i terra evoquen un relleu de muntanya.",
+      "proposal": "Conservar com a alternativa.",
+      "sources": []
+    },
+    {
+      "key": "recipe.aigua.pedra.sorra",
+      "code": "R183",
+      "recipe": [
+        "pedra",
+        "aigua",
+        "sorra"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "L'aigua pot erosionar les roques i produir sediments.",
+      "proposal": "Conservar com a procés resumit.",
+      "sources": []
+    },
+    {
+      "key": "recipe.pedra.vent.sorra",
+      "code": "R184",
+      "recipe": [
+        "pedra",
+        "vent",
+        "sorra"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "El vent amb partícules pot contribuir al desgast de les roques.",
+      "proposal": "Conservar com a procés resumit.",
+      "sources": []
+    },
+    {
+      "key": "recipe.aigua.muntanya.riu",
+      "code": "R185",
+      "recipe": [
+        "muntanya",
+        "aigua",
+        "riu"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "L'aigua que baixa de muntanya evoca un riu.",
+      "proposal": "Conservar.",
+      "sources": []
+    },
+    {
+      "key": "recipe.aigua.riu.mar",
+      "code": "R186",
+      "recipe": [
+        "riu",
+        "aigua",
+        "mar"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Els rius porten aigua cap al mar, encara que no tots hi desemboquen.",
+      "proposal": "Conservar com a associació geogràfica habitual.",
+      "sources": []
+    },
+    {
+      "key": "recipe.aigua.sol.arc",
+      "code": "R187",
+      "recipe": [
+        "sol",
+        "aigua",
+        "arc"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "La llum del sol en gotes d'aigua pot produir un arc de Sant Martí.",
+      "proposal": "Conservar com a alternativa a sol + pluja.",
+      "sources": []
+    },
+    {
+      "key": "recipe.planta.riu.canya",
+      "code": "R188",
+      "recipe": [
+        "planta",
+        "riu",
+        "canya"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Una planta de ribera evoca millor la canya que l'aigua tota sola.",
+      "proposal": "Prioritzar-la al llibre si Marc aprova el retoc R012.",
+      "sources": []
+    },
+    {
+      "key": "recipe.arbre.ventada.fusta",
+      "code": "R189",
+      "recipe": [
+        "arbre",
+        "ventada",
+        "fusta"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Una ventada pot trencar branques i deixar fusta.",
+      "proposal": "Conservar.",
+      "sources": []
+    },
+    {
+      "key": "recipe.brasa.pedra.ferro",
+      "code": "R190",
+      "recipe": [
+        "pedra",
+        "brasa",
+        "ferro"
+      ],
+      "verdict": "discuss",
+      "priority": 2,
+      "reason": "Les brases no converteixen qualsevol pedra en ferro; es repeteix la simplificació de R067.",
+      "proposal": "Conservar només com a alternativa de metal·lúrgia, amb el mateix matís que R067.",
+      "sources": []
+    },
+    {
+      "key": "recipe.arbre.ocell.ou",
+      "code": "R191",
+      "recipe": [
+        "ocell",
+        "arbre",
+        "ou"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Un ocell a l'arbre evoca un niu amb ous, encara que falta el niu.",
+      "proposal": "Conservar com a associació de l'hàbitat.",
+      "sources": []
+    },
+    {
+      "key": "recipe.animal.arbre.ocell",
+      "code": "R192",
+      "recipe": [
+        "animal",
+        "arbre",
+        "ocell"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Un animal d'arbre pot ser un ocell, encara que també un esquirol.",
+      "proposal": "Conservar com a alternativa exploratòria.",
+      "sources": []
+    },
+    {
+      "key": "recipe.animal.sorra.serp",
+      "code": "R193",
+      "recipe": [
+        "animal",
+        "sorra",
+        "serp"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Una serp es pot associar a terreny sorrenc, però no és l'únic animal possible.",
+      "proposal": "Conservar com a alternativa, sense afirmar que totes les serps viuen a la sorra.",
+      "sources": []
+    },
+    {
+      "key": "recipe.ceba.fang.calcot",
+      "code": "R194",
+      "recipe": [
+        "ceba",
+        "fang",
+        "calcot"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "El fang conté terra i permet recordar la idea de calçar la ceba.",
+      "proposal": "Conservar com a alternativa; ceba + terra continua primera.",
+      "sources": []
+    },
+    {
+      "key": "recipe.calcot.calcot.calcotada",
+      "code": "R195",
+      "recipe": [
+        "calcot",
+        "calcot",
+        "calcotada"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Reunir calçots evoca una calçotada com a àpat col·lectiu.",
+      "proposal": "Conservar com a associació de festa; calçot + foc continua primera.",
+      "sources": []
+    },
+    {
+      "key": "recipe.brasa.calcot.calcotada",
+      "code": "R196",
+      "recipe": [
+        "calcot",
+        "brasa",
+        "calcotada"
+      ],
+      "verdict": "change",
+      "priority": 1,
+      "reason": "Els calçots tradicionals es couen a la flama viva; les brases evoquen millor la carn de després.",
+      "proposal": "Retirar aquesta alternativa si es vol ensenyar la cocció tradicional. Calçot + foc i calçot + calçot mantenen l'accés.",
+      "sources": [
+        "https://www.valls.cat/la-ciutat/la-calcotada"
+      ]
+    },
+    {
+      "key": "recipe.brasa.castanya.castanyada",
+      "code": "R197",
+      "recipe": [
+        "castanya",
+        "brasa",
+        "castanyada"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Les castanyes es poden torrar amb calor de les brases.",
+      "proposal": "Conservar com a alternativa.",
+      "sources": []
+    },
+    {
+      "key": "recipe.foc.tomaquet.escalivada",
+      "code": "R198",
+      "recipe": [
+        "tomaquet",
+        "foc",
+        "escalivada"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "El foc permet escalivar tomàquets.",
+      "proposal": "Conservar com a alternativa culinària resumida.",
+      "sources": []
+    },
+    {
+      "key": "recipe.animal.brasa.botifarra",
+      "code": "R199",
+      "recipe": [
+        "animal",
+        "brasa",
+        "botifarra"
+      ],
+      "verdict": "discuss",
+      "priority": 2,
+      "reason": "La brasa cuina una botifarra, però un animal encara no és un embotit.",
+      "proposal": "Mateix criteri que R134: simplificació assumida o nou element carn, sense canviar una de les dues vies tota sola.",
+      "sources": []
+    },
+    {
+      "key": "recipe.ceba.pa.coca",
+      "code": "R200",
+      "recipe": [
+        "pa",
+        "ceba",
+        "coca"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "La ceba és una de les hortalisses habituals de la coca de recapte.",
+      "proposal": "Conservar com a alternativa resumida.",
+      "sources": []
+    },
+    {
+      "key": "recipe.fang.vida.persona",
+      "code": "R201",
+      "recipe": [
+        "fang",
+        "vida",
+        "persona"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Fang i vida són una convenció mitològica típica d'alquímia, no una explicació científica humana.",
+      "proposal": "Prioritzar aquesta via si es retira casa + foc → persona.",
+      "sources": []
+    },
+    {
+      "key": "recipe.casa.colla.poble",
+      "code": "R202",
+      "recipe": [
+        "casa",
+        "colla",
+        "poble"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Cases i persones reunides evoquen un poble.",
+      "proposal": "Conservar.",
+      "sources": []
+    },
+    {
+      "key": "recipe.paper.paper.llibre",
+      "code": "R203",
+      "recipe": [
+        "paper",
+        "paper",
+        "llibre"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Agrupar fulls evoca un llibre.",
+      "proposal": "Conservar com a alternativa.",
+      "sources": []
+    },
+    {
+      "key": "recipe.gralla.gralla.musica",
+      "code": "R204",
+      "recipe": [
+        "gralla",
+        "gralla",
+        "musica"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Dues gralles tocant evoquen música.",
+      "proposal": "Conservar.",
+      "sources": []
+    },
+    {
+      "key": "recipe.brasa.pols.polvora",
+      "code": "R205",
+      "recipe": [
+        "brasa",
+        "pols",
+        "polvora"
+      ],
+      "verdict": "change",
+      "priority": 1,
+      "reason": "Les brases amb pols no produeixen pólvora; la parella suggereix afegir calor quan no explica el material.",
+      "proposal": "Retirar aquesta alternativa i conservar R036 només com a abstracció, sense donar fórmules de fabricació.",
+      "sources": []
+    },
+    {
+      "key": "recipe.carretilla.persona.diables",
+      "code": "R206",
+      "recipe": [
+        "persona",
+        "carretilla",
+        "diables"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "La persona amb una carretilla evoca un diable amb més precisió que persona + foc.",
+      "proposal": "Valorar prioritzar-la al llibre; conservar totes dues vies si es manté l'accessibilitat inicial.",
+      "sources": []
+    },
+    {
+      "key": "recipe.diables.drac.correfoc",
+      "code": "R207",
+      "recipe": [
+        "diables",
+        "drac",
+        "correfoc"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Diables i Drac participen en correfocs.",
+      "proposal": "Conservar.",
+      "sources": []
+    },
+    {
+      "key": "recipe.foc.serp.drac",
+      "code": "R208",
+      "recipe": [
+        "serp",
+        "foc",
+        "drac"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Serp i foc evoquen un drac imaginari.",
+      "proposal": "Prioritzar-la si es vol una pista visual més concreta que bèstia + carretilla.",
+      "sources": []
+    },
+    {
+      "key": "recipe.muntanya.persona.gegants",
+      "code": "R209",
+      "recipe": [
+        "persona",
+        "muntanya",
+        "gegants"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Una persona molt alta com una muntanya evoca un gegant.",
+      "proposal": "Conservar com a metàfora de grandària.",
+      "sources": []
+    },
+    {
+      "key": "recipe.drac.persona.santjordi",
+      "code": "R210",
+      "recipe": [
+        "persona",
+        "drac",
+        "santjordi"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "La persona que s'enfronta al drac evoca Sant Jordi.",
+      "proposal": "Conservar com a llegenda.",
+      "sources": []
+    },
+    {
+      "key": "recipe.flor.llibre.rosa",
+      "code": "R211",
+      "recipe": [
+        "flor",
+        "llibre",
+        "rosa"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Llibre i flor evoquen la rosa de Sant Jordi.",
+      "proposal": "Conservar com a associació cultural.",
+      "sources": []
+    },
+    {
+      "key": "recipe.ceramica.persona.caganer",
+      "code": "R212",
+      "recipe": [
+        "ceramica",
+        "persona",
+        "caganer"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Una figura humana de ceràmica evoca el caganer dins del context de Nadal.",
+      "proposal": "Conservar com a alternativa més material que fang + persona.",
+      "sources": []
+    },
+    {
+      "key": "recipe.botifarra.gos.caca",
+      "code": "R213",
+      "recipe": [
+        "gos",
+        "botifarra",
+        "caca"
+      ],
+      "verdict": "keep",
+      "priority": 3,
+      "reason": "Un gos que menja deixa excrements; l'associació és humorística i recognoscible.",
+      "proposal": "Conservar com a humor, sense convertir la recepta en consell d'alimentació animal.",
+      "sources": []
+    }
+  ],
+  "proposalSimulation": {
+    "scope": "Les vuit correccions prioritàries que no demanen elements nous; xató i sucre queden fora de la simulació. No aplicat al joc.",
+    "recipes": 209,
+    "reachable": 178,
+    "duplicatePairs": 0,
+    "unreachable": []
+  }
+}

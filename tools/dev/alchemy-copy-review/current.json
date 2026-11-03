@@ -1,0 +1,1179 @@
+[
+  {
+    "id": "foc",
+    "name": "Foc",
+    "fact": "Perquè la llenya cremi calen calor i oxigen de l'aire. Si falta una d'aquestes coses, el foc s'apaga.",
+    "local": false,
+    "source": "https://www.usgs.gov/educational-resources/wildland-fire-science-school-part-1-fire-basics"
+  },
+  {
+    "id": "terra",
+    "name": "Terra",
+    "fact": "Sota els peus hi ha un món viu: a la terra hi viuen cucs, fongs i organismes tan petits que no els veiem.",
+    "local": false,
+    "source": "https://www.fao.org/soils-portal/soil-biodiversity/facts-and-figures/en/"
+  },
+  {
+    "id": "aigua",
+    "name": "Aigua",
+    "fact": "Quan es congela, l'aigua ocupa més espai. Per això el gel sura damunt de l'aigua líquida.",
+    "local": false,
+    "source": "https://www.usgs.gov/water-science-school/science/water-density"
+  },
+  {
+    "id": "vent",
+    "name": "Vent",
+    "fact": "El vent és aire que es mou. Les diferències de pressió entre uns llocs i uns altres el posen en moviment.",
+    "local": false,
+    "source": "https://weather.metoffice.gov.uk/learn-about/weather/types-of-weather/wind"
+  },
+  {
+    "id": "vapor",
+    "name": "Vapor",
+    "fact": "El vapor d'aigua és invisible. El núvol blanc que veus damunt d'una olla són gotetes d'aigua.",
+    "local": false,
+    "source": "https://weather.metoffice.gov.uk/learn-about/weather/types-of-weather/clouds"
+  },
+  {
+    "id": "fang",
+    "name": "Fang",
+    "fact": "De vegades plou fang: les gotes de pluja arrosseguen pols de l'aire i deixen una capa de brutícia quan s'assequen.",
+    "local": false,
+    "source": "https://www.meteo.cat/wpweb/divulgacio/equipaments-meteorologics/observadors-meteorologics/manual-de-lobservador/meteors-relacionats-amb-la-precipitacio/pluja-de-fang/"
+  },
+  {
+    "id": "pols",
+    "name": "Pols",
+    "fact": "La pols pot viatjar molt lluny amb el vent. La del desert del Sàhara arriba a travessar l'oceà Atlàntic.",
+    "local": false,
+    "source": "https://www.weather.gov/media/zhu/Saharan_Dust_Plume.pdf"
+  },
+  {
+    "id": "nuvol",
+    "name": "Núvol",
+    "fact": "Els núvols estan formats per gotetes d'aigua o cristallets de gel que queden suspesos a l'aire.",
+    "local": false,
+    "source": "https://weather.metoffice.gov.uk/learn-about/weather/types-of-weather/clouds"
+  },
+  {
+    "id": "pedra",
+    "name": "Pedra",
+    "fact": "L'aigua i el vent desgasten les roques. Amb el temps, en poden sortir fragments tan petits com grans de sorra.",
+    "local": false,
+    "source": "https://www.bgs.ac.uk/discovering-geology/geological-processes/erosion/"
+  },
+  {
+    "id": "mar",
+    "name": "Mar",
+    "fact": "Una part de la sal del mar ve de les roques de terra ferma. Els rius la transporten fins al mar.",
+    "local": false,
+    "source": "https://www.usgs.gov/water-science-school/science/why-ocean-salty"
+  },
+  {
+    "id": "ventada",
+    "name": "Ventada",
+    "fact": "La velocitat del vent es mesura amb un aparell anomenat anemòmetre. Alguns tenen unes cassoletes que giren quan bufa.",
+    "local": false,
+    "source": "https://weather.metoffice.gov.uk/learn-about/met-office-for-schools/other-content/other-resources/how-to-measure-the-weather"
+  },
+  {
+    "id": "muntanya",
+    "name": "Muntanya",
+    "fact": "Algunes muntanyes neixen quan dues grans plaques de la Terra xoquen i aixequen el terreny. Així es va formar l'Himàlaia.",
+    "local": false,
+    "source": "https://pubs.usgs.gov/gip/dynamic/himalaya.html?dom=prime&src=syn"
+  },
+  {
+    "id": "pluja",
+    "name": "Pluja",
+    "fact": "Les gotes petites de pluja són gairebé rodones. Les més grosses s'aplanen per sota mentre cauen.",
+    "local": false,
+    "source": "https://www.usgs.gov/water-science-school/science/are-raindrops-shaped-teardrops"
+  },
+  {
+    "id": "planta",
+    "name": "Planta",
+    "fact": "Les plantes fan servir la llum del sol per fabricar sucres a partir d'aigua i diòxid de carboni de l'aire.",
+    "local": false,
+    "source": "https://endeavour.kew.org/sites/endeavour/files/documents/2022-06/Kew-KS3-Time-to-grow-Photosynthesis-infographic.pdf"
+  },
+  {
+    "id": "arbre",
+    "name": "Arbre",
+    "fact": "En molts arbres, cada anell del tronc correspon a un any de creixement. Els anells també donen pistes sobre el clima del passat.",
+    "local": false,
+    "source": "https://www.nist.gov/how-do-you-measure-it/how-do-you-measure-age-tree"
+  },
+  {
+    "id": "canya",
+    "name": "Canya",
+    "fact": "La gralla sona gràcies a dues làmines fines de canya que vibren quan hi bufes. Aquesta peça s'anomena inxa.",
+    "local": false,
+    "source": "https://www.enciclopedia.cat/tradicionari/els-instruments"
+  },
+  {
+    "id": "fusta",
+    "name": "Fusta",
+    "fact": "De la fusta se'n poden separar fibres per fabricar paper. Aquestes fibres contenen cel·lulosa, un material que forma part de les plantes.",
+    "local": false,
+    "source": "https://extension.okstate.edu/fact-sheets/basics-of-paper-manufacturing"
+  },
+  {
+    "id": "carbo",
+    "name": "Carbó",
+    "fact": "El carbó vegetal s'obté escalfant fusta amb molt poc aire. Així la fusta es transforma sense cremar-se del tot fins a fer-se cendra.",
+    "local": false,
+    "source": "https://www.fao.org/4/X5328e/x5328e02.htm"
+  },
+  {
+    "id": "brasa",
+    "name": "Brasa",
+    "fact": "Les brases poden continuar molt calentes encara que ja no hi hagi flames. Cobrir-les de terra pot conservar-ne l'escalfor.",
+    "local": false,
+    "source": "https://www.nps.gov/articles/campfires.htm"
+  },
+  {
+    "id": "vida",
+    "name": "Vida",
+    "fact": "Tots els éssers vius estan formats per cèl·lules. N'hi ha que només en tenen una, i d'altres que en tenen moltíssimes.",
+    "local": false,
+    "source": "https://science.nasa.gov/astrobiology/learning-resources/alp/characteristics-of-life/"
+  },
+  {
+    "id": "animal",
+    "name": "Animal",
+    "fact": "Els insectes són animals i formen més de la meitat de les espècies animals conegudes. Encara en queden moltes per descobrir.",
+    "local": false,
+    "source": "https://australian.museum/learn/animals/insects/"
+  },
+  {
+    "id": "ocell",
+    "name": "Ocell",
+    "fact": "Les plomes retenen aire i ajuden els ocells a conservar l'escalfor del cos. També els serveixen per a moltes altres coses, com volar.",
+    "local": false,
+    "source": "https://animals.sandiegozoo.org/animals/birds"
+  },
+  {
+    "id": "ceba",
+    "name": "Ceba",
+    "fact": "Quan talles una ceba, s'allibera una substància que arriba als ulls i els irrita. Per això et surten llàgrimes.",
+    "local": false,
+    "source": "https://food.unl.edu/article/cooking-onions-without-crying/"
+  },
+  {
+    "id": "calcot",
+    "name": "Calçot",
+    "fact": "Es diu així perquè es calça: se li tira terra al voltant perquè quedi blanc.",
+    "local": false,
+    "source": "https://en.wikipedia.org/wiki/Cal%C3%A7ot"
+  },
+  {
+    "id": "calcotada",
+    "name": "Calçotada",
+    "fact": "Diuen que la va inventar en Xat de Benaiges, però segurament és una llegenda.",
+    "local": false,
+    "source": "https://www.3cat.cat/3catinfo/lorigen-de-la-calcotada-com-va-neixer-una-de-les-festes-que-mes-ens-identifica/noticia-amp/3395814/"
+  },
+  {
+    "id": "casa",
+    "name": "Casa",
+    "fact": "Hi ha cases fetes amb maons de terra, aigua i palla assecats al sol. Aquesta manera de construir té milers d'anys.",
+    "local": false,
+    "source": "https://home.nps.gov/tuma/learn/historyculture/adobe-bricks.htm"
+  },
+  {
+    "id": "persona",
+    "name": "Persona",
+    "fact": "Totes les persones que viuen avui pertanyen a la mateixa espècie, Homo sapiens, sigui quin sigui el seu lloc de naixement.",
+    "local": false,
+    "source": "https://humanorigins.si.edu/evidence/genetics/one-species-living-worldwide"
+  },
+  {
+    "id": "colla",
+    "name": "Colla",
+    "fact": "Les colles castelleres es poden reconèixer pel color de la camisa. La faixa ajuda a protegir l'esquena i a enfilar-se.",
+    "local": false,
+    "source": "https://ich.unesco.org/en/RL/human-towers-castells-00364"
+  },
+  {
+    "id": "pinya",
+    "name": "Pinya",
+    "fact": "És la base del castell. Si algú cau, fa de coixí.",
+    "local": false,
+    "source": "https://www.enciclopedia.cat/gran-enciclopedia-catalana/castell-0"
+  },
+  {
+    "id": "castell",
+    "name": "Castell",
+    "fact": "La tradició dels castells va néixer a Valls a principis del segle XIX.",
+    "local": false,
+    "source": "https://www.enciclopedia.cat/gran-enciclopedia-catalana/castell-0"
+  },
+  {
+    "id": "enxaneta",
+    "name": "Enxaneta",
+    "fact": "Puja per un costat, fa l'aleta i baixa per l'altre. L'aleta vol dir que el castell ja és carregat.",
+    "local": false,
+    "source": "https://www.enciclopedia.cat/gran-enciclopedia-catalana/castell-0"
+  },
+  {
+    "id": "coto",
+    "name": "Cotó",
+    "fact": "Les fibres de cotó creixen al voltant de les llavors del cotoner. A la natura, ajuden les llavors a escampar-se amb el vent.",
+    "local": false,
+    "source": "https://www.kew.org/plants/cotton"
+  },
+  {
+    "id": "roba",
+    "name": "Roba",
+    "fact": "Molts teixits es fan entrecreuant dos grups de fils: l'ordit i la trama. És la feina que fa un teler.",
+    "local": false,
+    "source": "https://www.vam.ac.uk/articles/a-z-opus-anglicanum"
+  },
+  {
+    "id": "faixa",
+    "name": "Faixa",
+    "fact": "S'enrotlla a la cintura per protegir l'esquena.",
+    "local": false,
+    "source": "https://www.enciclopedia.cat/gran-enciclopedia-catalana/castell-0"
+  },
+  {
+    "id": "gralla",
+    "name": "Gralla",
+    "fact": "La gralla i el timbal acompanyen la construcció dels castells.",
+    "local": false,
+    "source": "https://www.enciclopedia.cat/gran-enciclopedia-catalana/castell-0"
+  },
+  {
+    "id": "timbal",
+    "name": "Timbal",
+    "fact": "La música dels castells marca els moments clau quan es carreguen i es descarreguen.",
+    "local": false,
+    "source": "https://www.enciclopedia.cat/gran-enciclopedia-catalana/castell-0"
+  },
+  {
+    "id": "musica",
+    "name": "Música",
+    "fact": "El toc de castells explica amb música com avança la construcció. Així, qui no pot mirar amunt també sap en quin moment es troba.",
+    "local": false,
+    "source": "https://castellscat.cat/es/descargar/activitats/130"
+  },
+  {
+    "id": "ball",
+    "name": "Ball",
+    "fact": "Alguns balls de festa també expliquen històries amb paraules. A Valls, els Diables representen el seu ball parlat per Santa Úrsula.",
+    "local": false,
+    "source": "https://uaf.cat/seguici-ceremonial/ball-de-diables/"
+  },
+  {
+    "id": "polvora",
+    "name": "Pólvora",
+    "fact": "La pólvora es va descobrir a la Xina. Els alquimistes que la van descobrir buscaven un elixir per allargar la vida.",
+    "local": false,
+    "source": "https://airandspace.si.edu/stories/editorial/first-fireworks-origins-rocket"
+  },
+  {
+    "id": "carretilla",
+    "name": "Carretilla",
+    "fact": "És un coet que corre escopint espurnes i acaba amb un petit pet.",
+    "local": false,
+    "source": "https://es-academic.com/dic.nsf/eswiki/279190"
+  },
+  {
+    "id": "tronada",
+    "name": "Tronada",
+    "fact": "A Valls, la Tronada inaugural de Sant Joan es fa al Pati. Després, les colles tornen a la plaça del Blat i alcen pilars.",
+    "local": false,
+    "source": "https://www.valls.cat/festa-major-sant-joan"
+  },
+  {
+    "id": "mullat",
+    "name": "Petard mullat",
+    "fact": "Un petard que no ha esclatat encara pot ser perillós. No l'agafis ni intentis tornar-lo a encendre.",
+    "local": false,
+    "source": "https://www.cpsc.gov/Newsroom/News-Releases/2024/CPSC-Urges-Caution-while-Celebrating-as-Fireworks-Related-Injuries-Trend-Upward"
+  },
+  {
+    "id": "diables",
+    "name": "Diables",
+    "fact": "Van de vermell amb dues banyetes. La Diablessa reparteix el foc.",
+    "local": false,
+    "source": "https://uaf.cat/seguici-ceremonial/ball-de-diables/"
+  },
+  {
+    "id": "correfoc",
+    "name": "Correfoc",
+    "fact": "El Drac tanca la Festa Major de Sant Joan amb el correfoc.",
+    "local": false,
+    "source": "https://uaf.cat/seguici-ceremonial/drac/"
+  },
+  {
+    "id": "bestia",
+    "name": "Bèstia",
+    "fact": "El bestiari festiu inclou figures d'animals reals i imaginaris. Formen part de la festa i poden tenir funcions de joc o de cerimònia.",
+    "local": false,
+    "source": "https://www.enciclopedia.cat/gran-enciclopedia-catalana/bestiari-festiu"
+  },
+  {
+    "id": "drac",
+    "name": "Drac",
+    "fact": "El Drac de Valls té dos caps i disset punts de foc, repartits entre les boques, les ales i la cua.",
+    "local": false,
+    "source": "https://uaf.cat/seguici-ceremonial/drac/"
+  },
+  {
+    "id": "cavall",
+    "name": "Cavall",
+    "fact": "Els cavalls poden dormir drets, però també necessiten estirar-se. Algunes fases del son només les poden fer ajaguts.",
+    "local": false,
+    "source": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8614510/"
+  },
+  {
+    "id": "mulassa",
+    "name": "Mulassa",
+    "fact": "Per fer ballar la Mulassa de Valls calen quatre persones: dues al davant i dues al darrere.",
+    "local": false,
+    "source": "https://uaf.cat/seguici-ceremonial/mulassa/"
+  },
+  {
+    "id": "aliga",
+    "name": "Àliga",
+    "fact": "La nit de Completes, l'Àliga de Valls balla dins de l'església de Sant Joan, davant la relíquia del patró.",
+    "local": false,
+    "source": "https://uaf.cat/seguici-ceremonial/aliga-de-la-ciutat/"
+  },
+  {
+    "id": "bou",
+    "name": "Bou Tradicional",
+    "fact": "El Bou Tradicional de Valls es va recuperar el 2012. Participa en el seguici i porta foc als correfocs.",
+    "local": true,
+    "source": "https://uaf.cat/seguici-ceremonial/bou-tradicional/"
+  },
+  {
+    "id": "cavallets",
+    "name": "Cavallets",
+    "fact": "Al Ball de Cavallets de Valls hi participen deu balladors, dividits en dos bàndols. Amb la dansa representen un enfrontament.",
+    "local": false,
+    "source": "https://uaf.cat/seguici-ceremonial/ball-de-cavallets/"
+  },
+  {
+    "id": "gegants",
+    "name": "Gegants",
+    "fact": "Els quatre gegants municipals de Valls són el Gegant de la Porra, la Geganta, el Lladrefaves i la Gegantona.",
+    "local": false,
+    "source": "https://uaf.cat/seguici-ceremonial/gegants-de-la-ciutat/"
+  },
+  {
+    "id": "nans",
+    "name": "Nans",
+    "fact": "Els Nans de Valls es coneixen pels personatges que representen. Entre ells hi ha l'Alcalde, el Sabater i l'Arlequí.",
+    "local": false,
+    "source": "https://uaf.cat/seguici-ceremonial/nans-de-la-ciutat/"
+  },
+  {
+    "id": "seguici",
+    "name": "Seguici",
+    "fact": "A la Festa Major de Sant Joan de Valls, el Drac encapçala les sortides del Seguici.",
+    "local": false,
+    "source": "https://uaf.cat/seguici-ceremonial/drac/"
+  },
+  {
+    "id": "espelma",
+    "name": "Espelma",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "decennals",
+    "name": "Decennals",
+    "fact": "Valls les celebra cada deu anys des del 1791, en honor de la Mare de Déu de la Candela.",
+    "local": true,
+    "source": "https://patrimonifestiu.cultura.gencat.cat/layout/set/print/content/download/1447/5300/file/Memòria de catalogació de les festes Decennals de la Candela de Valls.pdf"
+  },
+  {
+    "id": "maredeu",
+    "name": "Mare de Déu de la Candela",
+    "fact": "Valls celebra les Festes Decennals en el seu honor.",
+    "local": true,
+    "source": "https://patrimonifestiu.cultura.gencat.cat/layout/set/print/content/download/1447/5300/file/Memòria de catalogació de les festes Decennals de la Candela de Valls.pdf"
+  },
+  {
+    "id": "sol",
+    "name": "Sol",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "arc",
+    "name": "Arc de Sant Martí",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "sorra",
+    "name": "Sorra",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "riu",
+    "name": "Riu",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "cova",
+    "name": "Cova",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "flor",
+    "name": "Flor",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "abella",
+    "name": "Abella",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "fruita",
+    "name": "Fruita",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "tomaquet",
+    "name": "Tomàquet",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "escalivada",
+    "name": "Escalivada",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "raim",
+    "name": "Raïm",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "cercolets",
+    "name": "Ball de Cercolets",
+    "fact": "Va néixer a les festes de la verema.",
+    "local": false,
+    "source": "https://www.visitavalls.cat/ca/descobreix-valls/seguici-popular/"
+  },
+  {
+    "id": "ferro",
+    "name": "Ferro",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "campana",
+    "name": "Campana",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "os",
+    "name": "Ós",
+    "fact": "El primer dia de la Festa Major de Sant Joan, els xiquets de Valls poden donar els seus xumets a l'Ós.",
+    "local": false,
+    "source": "https://uaf.cat/seguici-ceremonial/os-i-trabucaires/"
+  },
+  {
+    "id": "ou",
+    "name": "Ou",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "serp",
+    "name": "Serp",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "basilisc",
+    "name": "Basilisc",
+    "fact": "Segons una llegenda, neix d'un ou de gall amb l'ajuda d'una serp i un gripau.",
+    "local": false,
+    "source": "https://www.bestiari.cat/figura/basilisc-de-valls/"
+  },
+  {
+    "id": "aligons",
+    "name": "Aligons",
+    "fact": "Els aligons són tres infants que acompanyen l'Àliga de Valls i ballen al seu voltant. Es van recuperar el 1991.",
+    "local": false,
+    "source": "https://uaf.cat/seguici-ceremonial/aliga-de-la-ciutat/"
+  },
+  {
+    "id": "bastons",
+    "name": "Ball de Bastons",
+    "fact": "A Valls ja surt el 1712, en una processó.",
+    "local": false,
+    "source": "https://www.visitavalls.cat/ca/descobreix-valls/seguici-popular/"
+  },
+  {
+    "id": "pastor",
+    "name": "Pastor",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "pastorets",
+    "name": "Ball de Pastorets",
+    "fact": "És un ball on també es diuen versos.",
+    "local": false,
+    "source": "https://www.visitavalls.cat/ca/descobreix-valls/seguici-popular/"
+  },
+  {
+    "id": "vaixell",
+    "name": "Vaixell",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "galeres",
+    "name": "Ball de Galeres",
+    "fact": "És un ball amb petits vaixells que recorda una batalla antiga.",
+    "local": false,
+    "source": "https://www.visitavalls.cat/ca/descobreix-valls/seguici-popular/"
+  },
+  {
+    "id": "moixiganga",
+    "name": "Moixiganga",
+    "fact": "Representa escenes de la història de Jesús.",
+    "local": false,
+    "source": "https://www.visitavalls.cat/ca/descobreix-valls/seguici-popular/"
+  },
+  {
+    "id": "folre",
+    "name": "Folre",
+    "fact": "És una segona pinya, a sobre de la primera.",
+    "local": false,
+    "source": "https://www.enciclopedia.cat/gran-enciclopedia-catalana/castell-0"
+  },
+  {
+    "id": "manilles",
+    "name": "Manilles",
+    "fact": "Són una tercera pinya, a sobre del folre.",
+    "local": false,
+    "source": "https://www.enciclopedia.cat/gran-enciclopedia-catalana/castell-0"
+  },
+  {
+    "id": "camisa",
+    "name": "Camisa castellera",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "vella",
+    "name": "Colla Vella",
+    "fact": "És la colla de Valls de la camisa rosada.",
+    "local": true,
+    "source": "https://surtdecasa.cat/camp/fires-i-festes/sant-isidre-partida-doble"
+  },
+  {
+    "id": "joves",
+    "name": "Colla Joves",
+    "fact": "És la colla de Valls de la camisa vermella.",
+    "local": true,
+    "source": "https://www.visitavalls.cat/ca/descobreix-valls/seguici-popular/"
+  },
+  {
+    "id": "aleta",
+    "name": "Aleta",
+    "fact": "L'enxaneta aixeca la mà quan arriba a dalt.",
+    "local": false,
+    "source": "https://www.enciclopedia.cat/gran-enciclopedia-catalana/castell-0"
+  },
+  {
+    "id": "carregat",
+    "name": "Castell carregat",
+    "fact": "Quan l'enxaneta fa l'aleta, el castell ja està carregat. Encara falta baixar!",
+    "local": false,
+    "source": "https://www.enciclopedia.cat/gran-enciclopedia-catalana/castell-0"
+  },
+  {
+    "id": "descarregat",
+    "name": "Castell descarregat",
+    "fact": "Vol dir que tothom ha baixat sense caure.",
+    "local": false,
+    "source": "https://www.enciclopedia.cat/gran-enciclopedia-catalana/castell-0"
+  },
+  {
+    "id": "poble",
+    "name": "Poble",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "esglesia",
+    "name": "Església",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "campanar",
+    "name": "Campanar",
+    "fact": "El de Sant Joan de Valls fa 74 metres.",
+    "local": false,
+    "source": "https://femturisme.cat/ca/pobles/valls"
+  },
+  {
+    "id": "placa",
+    "name": "Plaça",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "diada",
+    "name": "Diada castellera",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "valls",
+    "name": "Valls",
+    "local": true,
+    "source": null
+  },
+  {
+    "id": "festamajor",
+    "name": "Festa Major",
+    "fact": "L'Àliga l'obre des del balcó de la Casa de la Vila.",
+    "local": false,
+    "source": "https://uaf.cat/seguici-ceremonial/aliga-de-la-ciutat/"
+  },
+  {
+    "id": "llum",
+    "name": "Llum",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "lluminaries",
+    "name": "Lluminàries",
+    "fact": "Les Decennals també es coneixen com les Festes de la Llum.",
+    "local": true,
+    "source": "https://surtdecasa.cat/camp/agenda/2022/festes-decennals-de-la-mare-de-deu-de-la-candela-valls/179281"
+  },
+  {
+    "id": "blat",
+    "name": "Blat",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "pa",
+    "name": "Pa",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "patomaquet",
+    "name": "Pa amb tomàquet",
+    "fact": "Es fa sucant una llesca de pa amb mig tomàquet madur, amb oli d'oliva i sal.",
+    "local": false,
+    "source": "https://ca.wikipedia.org/wiki/Pa_amb_tom%C3%A0quet"
+  },
+  {
+    "id": "salsa",
+    "name": "Salsa de calçots",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "castanya",
+    "name": "Castanya",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "castanyada",
+    "name": "Castanyada",
+    "fact": "Es menjen castanyes, panellets i moniatos.",
+    "local": false,
+    "source": "https://ca.wikipedia.org/wiki/Castanyada"
+  },
+  {
+    "id": "montserrat",
+    "name": "Montserrat",
+    "fact": "És una muntanya de Catalunya plena de roques punxegudes, amb un monestir.",
+    "local": false,
+    "source": "https://ca.wikipedia.org/wiki/Montserrat"
+  },
+  {
+    "id": "santjordi",
+    "name": "Sant Jordi",
+    "fact": "Diu la llegenda que el cavaller va vèncer el drac. La festa és el 23 d'abril.",
+    "local": false,
+    "source": "https://ca.wikipedia.org/wiki/Diada_de_Sant_Jordi"
+  },
+  {
+    "id": "rosa",
+    "name": "Rosa",
+    "fact": "Per Sant Jordi és costum regalar una rosa vermella.",
+    "local": false,
+    "source": "https://ca.wikipedia.org/wiki/Diada_de_Sant_Jordi"
+  },
+  {
+    "id": "paper",
+    "name": "Paper",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "llibre",
+    "name": "Llibre",
+    "fact": "Per Sant Jordi és costum regalar un llibre.",
+    "local": false,
+    "source": "https://ca.wikipedia.org/wiki/Diada_de_Sant_Jordi"
+  },
+  {
+    "id": "sagrada",
+    "name": "Sagrada Família",
+    "fact": "És a Barcelona. Gaudí hi va treballar fins al 1926, i encara s'està construint.",
+    "local": false,
+    "source": "https://ca.wikipedia.org/wiki/Temple_Expiatori_de_la_Sagrada_Fam%C3%ADlia"
+  },
+  {
+    "id": "cobla",
+    "name": "Cobla",
+    "fact": "És la formació que toca les sardanes: 12 instruments tocats per 11 músics.",
+    "local": false,
+    "source": "https://ca.wikipedia.org/wiki/Sardana"
+  },
+  {
+    "id": "sardana",
+    "name": "Sardana",
+    "fact": "Es balla agafats de les mans, formant una rotllana.",
+    "local": false,
+    "source": "https://ca.wikipedia.org/wiki/Sardana"
+  },
+  {
+    "id": "tio",
+    "name": "Tió",
+    "fact": "Se'l tapa amb una manta i se l'alimenta cada dia fins que caga regals.",
+    "local": false,
+    "source": "https://ca.wikipedia.org/wiki/Ti%C3%B3_de_Nadal"
+  },
+  {
+    "id": "caganer",
+    "name": "Caganer",
+    "fact": "És una figureta del pessebre, sovint amagada en un racó.",
+    "local": false,
+    "source": "https://ca.wikipedia.org/wiki/Caganer"
+  },
+  {
+    "id": "celula",
+    "name": "Cèl·lula",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "peix",
+    "name": "Peix",
+    "fact": "Els peixos també necessiten oxigen. Les brànquies els permeten agafar el que hi ha dissolt a l'aigua.",
+    "local": false,
+    "source": "https://www.fisheries.noaa.gov/national/outreach-and-education/fun-facts-about-fascinating-fish"
+  },
+  {
+    "id": "gos",
+    "name": "Gos",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "caca",
+    "name": "Caca de gos",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "panerola",
+    "name": "Panerola",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "fabrica",
+    "name": "Fàbrica",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "refineria",
+    "name": "Complex petroquímic",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "sequera",
+    "name": "Sequera",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "mosquit",
+    "name": "Mosquit tigre",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "llenya",
+    "name": "Llenya",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "concurs",
+    "name": "Concurs de castells",
+    "fact": "Se celebra cada dos anys a Tarragona.",
+    "local": false,
+    "source": "https://www.catalannews.com/sports/item/catalonias-biggest-human-tower-competition-returns-this-weekend"
+  },
+  {
+    "id": "santaursula",
+    "name": "Santa Úrsula",
+    "fact": "És la copatrona de Valls. La seva fira és a l'octubre, amb una gran diada castellera.",
+    "local": true,
+    "source": "https://femturisme.cat/agenda/fira-de-santa-ursula-a-valls"
+  },
+  {
+    "id": "santjoan",
+    "name": "Sant Joan",
+    "fact": "La Festa Major de Valls és la de Sant Joan.",
+    "local": true,
+    "source": "https://uaf.cat/seguici-ceremonial/drac/"
+  },
+  {
+    "id": "roser",
+    "name": "Capella del Roser",
+    "fact": "Té rajoles que mostren la batalla de Lepant.",
+    "local": true,
+    "source": "https://www.spain.info/es/lugares-interes/capilla-roser/"
+  },
+  {
+    "id": "lleo",
+    "name": "Lleó",
+    "fact": "El Lleó de Valls es va estrenar per les Decennals del 2011. És de llautó i el porten dues persones.",
+    "local": true,
+    "source": "https://uaf.cat/seguici-ceremonial/lleo/"
+  },
+  {
+    "id": "gitanes",
+    "name": "Ball de Gitanes",
+    "fact": "Al Ball de Gitanes de Valls, les balladores trenen cintes al voltant d'un pal. Les cintes tenen els colors de la bandera de Valls.",
+    "local": false,
+    "source": "https://uaf.cat/seguici-ceremonial/ball-de-gitanes/"
+  },
+  {
+    "id": "primera",
+    "name": "Ball de la Primera",
+    "fact": "El Ball de la Primera de Valls és una dansa per a xiquets. A les cercaviles hi participen dotze balladors, acompanyats de gralles i timbal.",
+    "local": true,
+    "source": "https://uaf.cat/seguici-ceremonial/ball-de-la-primera/"
+  },
+  {
+    "id": "bouvalls",
+    "name": "Bou de Valls",
+    "fact": "No porta foc. El van recuperar el 2012 el Calçot i La Turba.",
+    "local": true,
+    "source": "https://www.visitavalls.cat/ca/descobreix-valls/seguici-popular/"
+  },
+  {
+    "id": "perles",
+    "name": "Perles",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "alcaldessa",
+    "name": "Alcaldessa",
+    "local": true,
+    "source": null
+  },
+  {
+    "id": "botifarra",
+    "name": "Botifarra",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "crema",
+    "name": "Crema catalana",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "coca",
+    "name": "Coca de recapte",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "xato",
+    "name": "Xató",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "barretina",
+    "name": "Barretina",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "espardenyes",
+    "name": "Espardenyes",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "mocador",
+    "name": "Mocador",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "flabiol",
+    "name": "Flabiol",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "sacgemecs",
+    "name": "Sac de gemecs",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "fiscorn",
+    "name": "Fiscorn",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "bengala",
+    "name": "Bengala",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "torxa",
+    "name": "Torxa",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "traca",
+    "name": "Traca",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "auca",
+    "name": "Auca",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "rondalla",
+    "name": "Rondalla",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "ceramica",
+    "name": "Ceràmica",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "forjat",
+    "name": "Ferro forjat",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "vidre",
+    "name": "Vidre",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "porro",
+    "name": "Porró",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "margarida",
+    "name": "Margarida",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "carro",
+    "name": "Carro",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "sucre",
+    "name": "Sucre",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "carnaval",
+    "name": "Carnaval",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "pintura",
+    "name": "Pintura",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "vinya",
+    "name": "Vinya",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "vi",
+    "name": "Vi",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "torrent",
+    "name": "Torrent",
+    "local": false,
+    "source": null
+  },
+  {
+    "id": "trestombs",
+    "name": "Tres Tombs",
+    "fact": "Al gener, els carros de feina recorren el barri antic de Valls. És Festa Tradicional d'Interès Nacional.",
+    "local": true,
+    "source": "https://ca.wikipedia.org/wiki/Valls"
+  },
+  {
+    "id": "caramel",
+    "name": "Caramel vermell",
+    "fact": "El caramel vermell de Dijous Gras només es troba a Valls.",
+    "local": true,
+    "source": "https://ca.wikipedia.org/wiki/Valls"
+  },
+  {
+    "id": "firagost",
+    "name": "Firagost",
+    "fact": "A l'agost, uns tendals cobreixen la plaça del Blat per la Firagost.",
+    "local": true,
+    "source": "https://ca.wikipedia.org/wiki/Valls"
+  },
+  {
+    "id": "placablat",
+    "name": "Plaça del Blat",
+    "fact": "Al terra de la plaça del Blat hi ha la placa del quilòmetre zero dels castells.",
+    "local": true,
+    "source": "https://ca.wikipedia.org/wiki/Valls"
+  },
+  {
+    "id": "francoli",
+    "name": "Francolí",
+    "fact": "El riu Francolí passa pel municipi de Valls.",
+    "local": true,
+    "source": "https://ca.wikipedia.org/wiki/Valls"
+  },
+  {
+    "id": "muralla",
+    "name": "Muralla",
+    "fact": "Les muralles de Valls són del segle XIV.",
+    "local": true,
+    "source": "https://ca.wikipedia.org/wiki/Valls"
+  },
+  {
+    "id": "lledo",
+    "name": "Mare de Déu del Lledó",
+    "fact": "La imatge es va trobar el 1366.",
+    "local": true,
+    "source": "https://ca.wikipedia.org/wiki/Valls"
+  },
+  {
+    "id": "aiguardent",
+    "name": "Aiguardent",
+    "fact": "Fer aiguardent era una feina tradicional de Valls.",
+    "local": false,
+    "source": "https://ca.wikipedia.org/wiki/Valls"
+  },
+  {
+    "id": "pell",
+    "name": "Pell",
+    "fact": "Adobar pells era una feina tradicional de Valls.",
+    "local": false,
+    "source": "https://ca.wikipedia.org/wiki/Valls"
+  },
+  {
+    "id": "museucasteller",
+    "name": "Museu Casteller",
+    "fact": "És a Valls i explica la història dels castells.",
+    "local": true,
+    "source": "https://www.catalannews.com/discover-catalonia/item/museu-casteller-de-catalunya-human-tower-museum-opens-in-southern-catalonia"
+  },
+  {
+    "id": "teatre",
+    "name": "Teatre Principal",
+    "fact": "El Teatre Principal de Valls es va inaugurar el 1850.",
+    "local": true,
+    "source": "https://ca.wikipedia.org/wiki/Valls"
+  },
+  {
+    "id": "oller",
+    "name": "Narcís Oller",
+    "fact": "Va néixer a Valls. En algunes novel·les, la ciutat es diu Vilaniu.",
+    "local": true,
+    "source": "https://ca.wikipedia.org/wiki/Valls"
+  },
+  {
+    "id": "huguet",
+    "name": "Jaume Huguet",
+    "fact": "Era pintor i va néixer a Valls.",
+    "local": true,
+    "source": "https://ca.wikipedia.org/wiki/Valls"
+  },
+  {
+    "id": "figaflawas",
+    "name": "Figa Flawas",
+    "fact": "Figa Flawas són dos músics de Valls. Un dels seus discos es diu La Calçotada.",
+    "local": true,
+    "source": "https://www.diaridetarragona.com/cultura/214405/figa-flawas-marxen-de-calcotada-oj18332792.html"
+  },
+  {
+    "id": "calcofest",
+    "name": "Calçofest",
+    "fact": "Va néixer a Valls per encetar la temporada de calçotades amb música.",
+    "local": true,
+    "source": "https://www.diaridetarragona.com/camp/245634/valls-arrenca-temporada-calcotades-amb-festival-calcofest-i-entrades-exhaurides.html"
+  },
+  {
+    "id": "fum",
+    "name": "Fum",
+    "local": false,
+    "source": null
+  }
+]

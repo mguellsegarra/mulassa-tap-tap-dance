@@ -1,0 +1,43 @@
+* { box-sizing: border-box; }
+body { margin: 0; color: var(--foreground, #252525); font-family: var(--font-sans, system-ui, sans-serif); font-size: 16px; line-height: 1.5; }
+main { max-width: 1100px; margin: 0 auto; }
+p { margin: 0 0 16px; }
+.intro { margin-top: 8px; }
+.intro strong { font-size: 22px; }
+.small, .meta { font-size: 14px; }
+.guide { margin-bottom: 24px; }
+summary { cursor: pointer; padding: 8px 0; min-height: 44px; }
+.filters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-bottom: 16px; }
+label { display: flex; flex-direction: column; gap: 8px; font-size: 14px; font-weight: 600; min-width: 0; }
+input, select, textarea, button { font: inherit; color: inherit; border: 1px solid var(--border, #b7b7b7); background: var(--card, #fff); border-radius: 8px; }
+input, select, button { min-height: 44px; padding: 8px 12px; }
+input, select, textarea { width: 100%; min-width: 0; }
+textarea { padding: 12px; resize: vertical; font-size: 16px; line-height: 1.5; }
+button { cursor: pointer; font-weight: 600; }
+button:hover { background: var(--secondary, #ececec); }
+button:disabled { opacity: .45; cursor: default; }
+:focus-visible { outline: 3px solid var(--ring, #546bca); outline-offset: 3px; }
+a { color: var(--primary, #28549f); overflow-wrap: anywhere; }
+.actions { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+.pager { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 16px 0; }
+#page { text-align: center; font-size: 14px; }
+#cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 16px; }
+.card { display: flex; flex-direction: column; gap: 16px; padding: 16px; border: 1px solid var(--border, #ccc); background: var(--card, #fff); border-radius: var(--radius, 12px); min-width: 0; }
+.card h2 { font-size: 20px; line-height: 1.3; margin: 4px 0 0; overflow-wrap: anywhere; }
+.card p, .card details { margin: 0; }
+.meta { color: var(--muted-foreground, #606060); }
+.fact { font-size: 17px; line-height: 1.5; }
+.sources { display: flex; flex-direction: column; gap: 8px; font-size: 14px; }
+.sources a { min-height: 24px; }
+.card details { border-top: 1px solid var(--border, #ddd); }
+.card details p { margin: 8px 0 16px; }
+.card .edit { margin-bottom: 16px; }
+.decision { display: grid; grid-template-columns: 1fr; gap: 12px; }
+.card[data-state="ok"] { border-left: 4px solid var(--success, #347c4b); padding-left: 13px; }
+.card[data-state="canvia"] { border-left: 4px solid var(--warning, #a06c12); padding-left: 13px; }
+#export-panel { margin-top: 24px; }
+#export-panel h2 { font-size: 20px; }
+#export-panel textarea { margin-bottom: 16px; }
+@media (max-width: 620px) { #cards { grid-template-columns: 1fr; } }
+@media (max-width: 380px) { .filters { grid-template-columns: 1fr; gap: 12px; } .pager button { padding-inline: 8px; } }
+@media print { .filters, .actions, .pager, .decision, .guide, #storage, #export-panel, .card details { display: none; } #cards { display: block; } .card { break-inside: avoid; margin-bottom: 16px; } }

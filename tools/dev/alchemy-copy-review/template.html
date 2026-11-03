@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="ca">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mulassa Alchemy · Revisió de curiositats</title><style>/* REVIEW_CSS */</style></head>
+<body><main>
+<p class="intro"><strong>178 curiositats aprovades</strong> · Valls primer<br>69 noves · 61 antigues revisades · 48 ja aprovades</p>
+<p>Aprovades per Marc i integrades al joc. Aquí pots consultar els textos, les fonts i la comparació amb la versió anterior.</p>
+<details class="guide"><summary>Què he revisat i com desar les respostes</summary>
+<p>He prioritzat dades locals, frases curtes i fonts identificables. Les llegendes s'indiquen com a llegendes. Cada fitxa inclou el text actual, la proposta i el motiu del canvi.</p>
+<p>Els 48 textos aprovats anteriorment es conserven. Els altres 130 també estan aprovats i integrats. Aquesta revisió no canvia les receptes.</p>
+<p>Les anotacions es desen en aquest navegador quan és possible. Prem «Exporta la revisió» i envia'm el text o el JSON: marcar una fitxa aquí no modifica el joc ni m'envia cap missatge.</p>
+</details>
+<div class="filters">
+<label>Cerca un element<input id="query" type="search" placeholder="Nom, codi o paraula…"></label>
+<label>Tema<select id="topic"><option value="">Tots els temes</option><option>Valls</option><option>Castells</option><option>Festa i cultura</option><option>Aliments i conreu</option><option>Materials i oficis</option><option>Natura i ciència</option></select></label>
+<label>Text<select id="kind"><option value="">Tots els textos</option><option value="nova">69 curiositats noves</option><option value="revisada">61 antigues revisades</option><option value="aprovada">48 ja aprovades</option></select></label>
+<label>La teva revisió<select id="status"><option value="">Tots els estats</option><option value="pendent">Per revisar</option><option value="ok">Em va bé</option><option value="canvia">Vull canvis</option></select></label>
+</div>
+<div class="actions"><button id="export">Exporta la revisió</button><button id="print">Imprimeix les 178</button></div>
+<p id="storage" class="small" role="status"></p>
+<p id="progress" class="small" aria-live="polite"></p>
+<nav class="pager" aria-label="Tandes"><button id="prev">Anterior</button><span id="page"></span><button id="next">Següent</button></nav>
+<div id="cards"></div>
+<div id="export-panel" hidden><h2>La teva revisió</h2><p>Copia aquest text i enganxa'l a la conversa, o descarrega el JSON.</p><textarea id="export-text" rows="12" aria-label="Revisió per copiar" readonly></textarea><div class="actions"><button id="download">Descarrega JSON</button><button id="close-export">Tanca</button></div></div>
+<noscript>Activa JavaScript per veure i anotar les 178 curiositats.</noscript>
+</main><script>/* REVIEW_DATA */
+/* REVIEW_JS */</script></body></html>

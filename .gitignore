@@ -62,3 +62,6 @@ docs/i18n-ui-inventory/
 *.pgdump
 db-backup-*/
 
+
+# Local annotations for the development-only Alchemy review tool
+tools/dev/alchemy-recipes-review/local/

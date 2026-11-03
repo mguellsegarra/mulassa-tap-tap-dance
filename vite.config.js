@@ -3,6 +3,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 import musicEditor from './tools/music/music-editor/vite-plugin.mjs';
 import bestiariMedia from './tools/bestiari/media-plugin.mjs';
+import alchemyReview from './tools/dev/alchemy-recipes-review/vite-plugin.mjs';
 import { unreleasedFigure } from './tools/deploy/unreleased-figure.mjs';
 import { UNRELEASED_IDS } from './src/figures/index.js';
 
@@ -23,4 +24,4 @@ const buildStamp = { name: 'build-stamp', generateBundle() { this.emitFile({ typ
 // Mulassa Alchemy lives at the root, /alchemy/ (src/ui/games-menu.js AT_ROOT, tools/deploy/prepare-pages.mjs).
 const pages = ['index.html', 'alchemy/index.html', ...readdirSync('jocs').map(game => `jocs/${game}/index.html`)];
 // Keep playtests intact until a manual reload; file watching still invalidates cached modules.
-export default defineConfig({ define: { __APP_VERSION__: JSON.stringify(version), __APP_BUILD__: JSON.stringify(build) }, build: { rollupOptions: { input: pages } }, server: { https, hmr: false }, plugins: [musicEditor(), bestiariMedia(), unreleasedFigure(UNRELEASED_IDS), buildStamp] }); // dev-only backends; buildStamp: the build's /version.json
+export default defineConfig({ define: { __APP_VERSION__: JSON.stringify(version), __APP_BUILD__: JSON.stringify(build) }, build: { rollupOptions: { input: pages } }, server: { https, hmr: false }, plugins: [musicEditor(), bestiariMedia(), alchemyReview(), unreleasedFigure(UNRELEASED_IDS), buildStamp] }); // dev-only backends; buildStamp: the build's /version.json

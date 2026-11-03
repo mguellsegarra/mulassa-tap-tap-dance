@@ -19,6 +19,12 @@ Apply only to Mulassa and its checkouts. The global CLAUDE/AGENTS instructions (
 
 For anything with many items (screens, thumbnails, posts, a song's phrases, a dance's sections) build a small HTML page that shows each item with a stable code and lets the owner give feedback per item: a notes field, a mark (`refer`, `ok`), editable text, or drawing on a capture. It exports one block (JSON or text) to paste back. Examples already made: the UI inventory PDF with scene codes, the thumbnail review with `{mark, note}`, `tools/dev/bou-review.html` (what the figure does per section of the song), the shortened-versions page for a song, `tools/dev/notes.html` (point at a note in the score).
 
+For Alchemy recipes and art, reuse `tools/dev/alchemy-recipes-review/index.html`
+([tool documentation](../../../tools/dev/alchemy-recipes-review/README.md)). It
+reads the current game data and saves separate recipe and art notes in the
+worktree. Do not create a second recipe inventory. Export its local annotations
+before removing the worktree; the notes are not committed automatically.
+
 ## Prototypes and integration
 
 - Try open ideas in a separate worktree based on the main game worktree (uncommitted changes included when needed), behind a dev URL parameter when possible, with the previous version still reachable.

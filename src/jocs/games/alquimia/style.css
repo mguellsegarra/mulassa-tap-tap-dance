@@ -22,7 +22,12 @@ button { font: inherit; color: inherit; border: 0; cursor: pointer; }
 .alq-top .alq-back { grid-area: 1 / 1; } .alq-top .alq-book { grid-area: 1 / 3; } .alq-top .alq-hint { grid-area: 2 / 3; }
 .alq-title, .alq-tools { display: contents; }
 .alq-title .alq-logo { grid-area: 1 / 2; }
-.alq-top .alq-bar { grid-area: 2 / 2; justify-self: center; width: min(100%, 480px); margin: 0; } /* on a wide screen it would run far from the logo */
+.alq-top .alq-progress { grid-area: 2 / 2; justify-self: center; width: min(100%, 480px); display: flex; flex-direction: column; align-items: center; gap: 6px; } /* on a wide screen it would run far from the logo */
+.alq-top .alq-bar { align-self: stretch; margin: 0; }
+.alq-top .alq-progress, .alq-top .alq-hint { align-self: start; } .alq-top .alq-progress { padding-top: 9px; } /* the bar centred on the bulb; the Valls chip hangs under it */
+.alq-valls { flex: none; display: flex; align-items: center; gap: 5px; height: 22px; padding: 0 10px 0 6px; border-radius: 11px; background: #120d18; box-shadow: inset 0 1px 3px #000, 0 0 0 1.5px #8a6a2c; font: 800 13px/1 'Baloo 2', sans-serif; color: #fff; text-shadow: 0 1px 2px #000; }
+.alq-valls[hidden] { display: none; }
+.alq-valls svg { width: 14px; height: 15px; display: block; }
 .alq-round { display: flex; align-items: center; justify-content: center; width: 56px; height: 44px; padding: 0; border-radius: 22px; background: radial-gradient(circle at 35% 30%, #5a4569, #241b2c 75%); box-shadow: 0 0 0 2px var(--brass), 0 3px 6px #0009; font-size: 22px; line-height: 1; color: #fff2d5; }
 .alq-title .alq-logo { --s: 34px; filter: drop-shadow(0 2px 3px #0009); }
 .alq-title .alq-logo-sub { margin-top: 1px; }
@@ -33,7 +38,6 @@ button { font: inherit; color: inherit; border: 0; cursor: pointer; }
 .alq-hint.nudge { animation: alq-nudge 1s ease-in-out infinite; }
 @keyframes alq-nudge { 50% { box-shadow: 0 0 0 2px var(--gold), 0 0 14px 4px rgba(255, 215, 106, .85); } }
 @media (prefers-reduced-motion: reduce) { .alq-hint.nudge { animation: none; box-shadow: 0 0 0 2px var(--gold), 0 0 14px 4px rgba(255, 215, 106, .85); } }
-.alq-item.done { opacity: .5; filter: saturate(.4); } /* nothing new comes out of it any more */
 .alq-book svg { display: block; width: 26px; height: 26px; }
 .alq-back svg { display: block; width: 24px; height: 24px; }
 .alq-round:active { transform: scale(.94); }
@@ -43,13 +47,16 @@ button { font: inherit; color: inherit; border: 0; cursor: pointer; }
 
 .orb { --orb: 56px; width: var(--orb); height: var(--orb); flex: none; display: flex; align-items: center; justify-content: center; padding: calc(var(--orb) * .08); border-radius: 50%;
   background: radial-gradient(circle at 35% 28%, #5d4a70, #241b2c 72%); box-shadow: 0 0 0 2px #8a6a2c, 0 0 0 3.5px var(--brass), 0 4px 7px #000a; }
+.orb:has(.alq-seal) { position: relative; }
+.alq-seal { position: absolute; top: 0; right: -6%; width: 30%; height: 32%; filter: drop-shadow(0 1px 2px #000); pointer-events: none; }
+.alq-seal svg { width: 100%; height: 100%; display: block; }
 .orb img { width: 100%; height: 100%; display: block; object-fit: contain; pointer-events: none; -webkit-touch-callout: none; }
 .orb.empty { /* an empty place to fill: a dashed ring, even all round (SVG, not border-style: dashed) */ background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='47.5' fill='none' stroke='%23e3bf62' stroke-opacity='.6' stroke-width='3' stroke-linecap='round' stroke-dasharray='10.4 8.25' pathLength='298.4'/%3E%3C/svg%3E") center / 100% no-repeat, rgba(20, 14, 24, .45); box-shadow: none; color: rgba(227, 191, 98, .6); font: 800 calc(var(--orb) * .4)/1 'Baloo 2', sans-serif; }
 
 .alq-scene { position: relative; flex: none; height: clamp(160px, 25dvh, 230px); display: grid; grid-template-columns: 1fr auto 1fr; grid-template-rows: minmax(0, 1fr); align-items: center; padding: 0 12px; }
 .alq-slot { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 0; background: none; }
 .alq-slot .orb, .alq-result .orb { --orb: clamp(70px, 21vw, 96px); }
-.alq-slot b { position: absolute; top: calc(100% + 4px); white-space: nowrap; } /* the name hangs under: the circle stays centred */
+.alq-slot b { position: absolute; top: calc(100% + 4px); left: 0; right: 0; } /* the name hangs under: the circle stays centred; a long one wraps inside its column */
 .alq-slot { position: relative; }
 .alq-slot b, .alq-result b { font-size: 14px; line-height: 1.1; font-weight: 800; color: #fff2d5; text-align: center; text-shadow: 0 1px 3px #000; }
 .alq-slot.into .orb { transform: translate(var(--dx), var(--dy)) scale(.3); opacity: 0; transition: transform .36s ease-in, opacity .36s ease-in .1s; }
@@ -72,14 +79,28 @@ button { font: inherit; color: inherit; border: 0; cursor: pointer; }
 .alq-shelf { flex: 1; min-height: 0; display: flex; flex-direction: column; border-radius: 18px 18px 0 0; box-shadow: 0 -3px 0 #8a6a2c, 0 -6px 14px #0008; background: repeating-linear-gradient(92deg, rgba(0, 0, 0, .1) 0 3px, transparent 3px 11px), linear-gradient(#4a2e1b, var(--wood)); }
 .alq-grid { flex: 1; min-height: 0; overflow-y: auto; touch-action: pan-y; -webkit-overflow-scrolling: touch; display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); grid-auto-rows: min-content; align-content: start; gap: 12px 6px; padding: 14px 12px max(16px, env(safe-area-inset-bottom)); scrollbar-width: none; -webkit-mask-image: linear-gradient(transparent, #000 12px); mask-image: linear-gradient(transparent, #000 12px); }
 .alq-grid::-webkit-scrollbar { display: none; }
-.alq-item { display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 3px 0; background: none; border-radius: 12px; }
+.alq-item { position: relative; display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 3px 0; background: none; border-radius: 12px; }
 .alq-item b { font-size: 13px; line-height: 1.1; font-weight: 700; color: #fff2d5; text-align: center; text-shadow: 0 1px 2px #000; }
 .alq-item .orb { transition: transform .1s; }
 .alq-item:active .orb { transform: scale(.92); }
 @media (hover: hover) { .alq-item:hover .orb { transform: scale(1.06); } }
 .alq-item.on .orb { box-shadow: 0 0 0 2px #8a6a2c, 0 0 0 3.5px var(--gold), 0 0 16px 4px rgba(255, 215, 106, .7); }
 .alq-item.hint .orb { animation: alq-pulse 1s ease-in-out infinite; }
+.alq-item.twice::after { content: '×2'; position: absolute; top: -4px; right: calc(50% - var(--orb, 56px) / 2 - 10px); min-width: 30px; padding: 0 6px; border-radius: 12px; font: 800 15px/24px 'Baloo 2', sans-serif; color: #3a2008; background: linear-gradient(#ffe07a, #e9a92c); box-shadow: 0 2px 0 #94610f, 0 3px 6px #0009; pointer-events: none; }
 @media (max-width: 340px) { .alq-grid { grid-template-columns: repeat(auto-fill, minmax(66px, 1fr)); } .alq-item b { font-size: 12px; } }
+/* The tutorial's coach (coach.js), under the overlays: a glove tapping, a ring where it lands, a parchment bubble */
+.alq-hand, .alq-ring, .alq-tip { position: fixed; left: 0; top: 0; z-index: 3; pointer-events: none; }
+.alq-hand span { display: block; width: 48px; margin-left: -17px; filter: drop-shadow(0 4px 5px #000b); transform-origin: 40% 0; animation: alq-tap 1.2s ease-in-out infinite; }
+.alq-hand svg { display: block; width: 100%; height: auto; }
+.alq-ring::before { content: ''; position: absolute; width: 64px; height: 64px; margin: -32px; border-radius: 50%; box-shadow: 0 0 0 3px var(--gold), 0 0 14px 4px rgba(255, 215, 106, .6); opacity: 0; animation: alq-ring 1.2s ease-out infinite; }
+@keyframes alq-tap { 0%, 100% { transform: translate(6px, 18px) rotate(-8deg); } 40% { transform: translate(0, 0) rotate(0deg) scale(.94); } 55% { transform: translate(0, 0) rotate(0deg) scale(.94); } }
+@keyframes alq-ring { 0%, 38% { opacity: 0; transform: scale(.5); } 45% { opacity: 1; } 100% { opacity: 0; transform: scale(1.35); } }
+.alq-tip { width: max-content; max-width: min(280px, 100vw - 24px); padding: 10px 14px; border-radius: 12px; color: var(--ink); background: var(--parch); box-shadow: inset 0 0 14px rgba(122, 74, 16, .3), 0 0 0 2px #8a6a2c, 0 6px 14px #000a; animation: alq-tip-in .25s ease-out; }
+.alq-tip p { margin: 0; font: 700 17px/1.3 'Baloo 2', sans-serif; text-align: center; text-wrap: balance; }
+.alq-tip i { position: absolute; left: var(--notch, 50%); bottom: -8px; width: 16px; height: 16px; margin-left: -8px; background: var(--parch); box-shadow: 2px 2px 0 #8a6a2c; rotate: 45deg; }
+.alq-tip.below i { bottom: auto; top: -8px; box-shadow: -2px -2px 0 #8a6a2c; }
+@keyframes alq-tip-in { from { opacity: 0; scale: .9; } }
+@media (prefers-reduced-motion: reduce) { .alq-hand span, .alq-ring::before, .alq-tip { animation: none; } .alq-ring::before { opacity: 1; } }
 .alq-ghost { position: fixed; z-index: 4; margin: 0; pointer-events: none; }
 
 .alq-overlay { --tint: #ffd76a; z-index: 4; background: #0c0812; overflow: hidden; }
@@ -93,18 +114,36 @@ button { font: inherit; color: inherit; border: 0; cursor: pointer; }
 .alq-parch p + p { margin-top: 6px; }
 .alq-btn { width: 100%; min-height: 50px; padding: 6px 16px; border-radius: 14px; font-size: 19px; font-weight: 800; color: #3a2008; background: linear-gradient(#ffe07a, #e9a92c); box-shadow: 0 4px 0 #94610f, 0 6px 10px #0008; }
 .alq-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #94610f; }
-.alq-btn.alt { color: #fff2d5; background: linear-gradient(#6d5580, #4c3a5a); box-shadow: 0 4px 0 #2c2036, 0 6px 10px #0008; font-size: 16px; line-height: 1.1; }
 
 .alq-sheet { position: relative; width: min(100%, 448px); max-height: 100%; display: flex; flex-direction: column; gap: 12px; padding: 16px; border-radius: 14px; color: var(--ink); background: var(--parch); box-shadow: inset 0 0 30px rgba(122, 74, 16, .4), 0 0 0 3px #5a371c, 0 8px 24px #000a; }
 .alq-sheet h2 { margin: 0; text-align: center; font: 800 26px/1.1 'Baloo 2', sans-serif; color: #7a2a18; }
-.alq-list { flex: 1; min-height: 0; overflow-y: auto; touch-action: pan-y; display: flex; flex-direction: column; }
-.alq-entry { display: grid; grid-template-columns: 52px 1fr; align-items: center; gap: 12px; padding: 8px 4px; border-bottom: 1px solid rgba(90, 55, 28, .3); }
+.alq-list { flex: 1; min-height: 0; overflow-y: auto; touch-action: pan-y; display: flex; flex-direction: column; scrollbar-width: none; -webkit-mask-image: linear-gradient(#000 calc(100% - 16px), transparent); mask-image: linear-gradient(#000 calc(100% - 16px), transparent); } /* no bar; the fading last row says there is more */
+.alq-list::-webkit-scrollbar { display: none; }
+.alq-entry { display: grid; grid-template-columns: 52px minmax(0, 1fr); align-items: center; gap: 8px 12px; padding: 10px 4px 12px; border-bottom: 1px solid rgba(90, 55, 28, .3); }
 .alq-entry .orb { --orb: 48px; margin: 2px; }
-.alq-entry strong { display: block; font-size: 17px; font-weight: 800; }
-.alq-entry small { display: block; font-size: 14px; color: #6a4a26; }
-.alq-entry p { margin: 2px 0 0; font-size: 14px; line-height: 1.25; }
+.alq-entry strong { display: block; font-size: 18px; font-weight: 800; line-height: 1.15; }
+.alq-recipe-chip { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px; max-width: 100%; margin-top: 4px; padding: 6px 8px; border-radius: 8px; font-size: 14px; color: #5a3a1c; background: rgba(90, 55, 28, .12); }
+.alq-ingredient { display: inline-flex; align-items: center; gap: 4px; min-width: 0; }
+.alq-plus { color: #8a6a46; }
+.alq-mini { flex: none; width: 22px; height: 22px; padding: 2px; border-radius: 50%; background: radial-gradient(circle at 35% 28%, #5d4a70, #241b2c 72%); }
+.alq-mini img { width: 100%; height: 100%; display: block; object-fit: contain; }
+.alq-entry p { grid-column: 1 / -1; margin: 0; font-size: 15px; line-height: 1.35; }
 .alq-missing { margin: 0; text-align: center; color: #6a4a26; }
+.alq-hints { width: min(100%, 360px); text-align: center; } /* the card about hints: short, one button */
+.alq-hints p { margin: 0; font-size: 17px; line-height: 1.35; }
+/* None left: the bulb alone, dimmed, and the time to the next one on a small tag centred under it */
+.alq-hint { position: relative; } .alq-hint.waiting { padding: 0; } .alq-hint.waiting svg { opacity: .45; } .alq-hint span:empty { display: none; }
+.alq-wait { position: absolute; left: 50%; top: calc(100% + 2px); translate: -50% 0; padding: 1px 7px; border-radius: 9px; background: #120d18; box-shadow: 0 0 0 1.5px #8a6a2c; font: 800 11px/15px 'Baloo 2', sans-serif; font-style: normal; color: #e9dcc0; white-space: nowrap; pointer-events: none; }
+.alq-wait:empty { display: none; }
 .alq-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding-bottom: 4px; }
+.alq-actions.one { grid-template-columns: 1fr; }
+/* Starting over: quiet, in the book's corner, the parchment's own tint rather than a button colour */
+.alq-corner { position: absolute; top: 12px; left: 12px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; padding: 0; border-radius: 50%; color: #5a3a1c; background: rgba(90, 55, 28, .12); opacity: .7; }
+.alq-corner svg { width: 20px; height: 20px; }
+.alq-corner + h2 { padding: 0 40px; } /* both sides, so the title stays centred clear of the button */
+.alq-corner:active { opacity: 1; }
+.alq-wipe { color: #7a2a18; background: rgba(90, 55, 28, .14); box-shadow: inset 0 0 0 1.5px rgba(122, 42, 24, .35); }
+.alq-wipe:active { box-shadow: inset 0 0 0 1.5px rgba(122, 42, 24, .35); }
 
 @keyframes alq-pulse { 50% { box-shadow: 0 0 0 2px #8a6a2c, 0 0 0 4px var(--gold), 0 0 20px 7px rgba(255, 215, 106, .9); transform: scale(1.08); } }
 @keyframes alq-flicker { to { transform: scale(1.08, 1.4); opacity: .72; } }
@@ -117,8 +156,11 @@ button { font: inherit; color: inherit; border: 0; cursor: pointer; }
 @media (prefers-reduced-motion: reduce) { .alq-flames, .alq-pot .bub, .alq-pot.boil, .alq-pot.burp, .alq-rays, .alq-result.up, .alq-found { animation: none; } .alq-slot.into .orb { transition: none; } .alq-item.hint .orb { animation: none; box-shadow: 0 0 0 2px #8a6a2c, 0 0 0 4px var(--gold), 0 0 20px 7px rgba(255, 215, 106, .9); } }
 
 /* Start menu */
-.alq-menu { isolation: isolate; flex-direction: column; align-items: center; justify-content: space-between; padding: max(56px, env(safe-area-inset-top)) 24px max(32px, env(safe-area-inset-bottom)); background: url(/jocs/alquimia/cards/menu-mobil.jpg) center / cover, #2e1519; text-align: center; }
-.alq-menu .alq-back { position: absolute; top: max(8px, env(safe-area-inset-top)); left: 12px; }
+.alq-menu { isolation: isolate; flex-direction: column; align-items: center; justify-content: space-between; padding: calc(max(16px, env(safe-area-inset-top)) + 64px) 24px max(32px, env(safe-area-inset-bottom)); background: url(/alchemy/cards/menu-mobil.jpg) center / cover, #2e1519; text-align: center; }
+/* The way out to the games sheet: a pill that says where it goes, not a bare arrow */
+.alq-exit { position: absolute; top: max(16px, env(safe-area-inset-top)); left: max(16px, env(safe-area-inset-left)); display: flex; align-items: center; gap: 6px; height: 48px; padding: 0 20px 0 12px; border-radius: 24px; background: radial-gradient(circle at 35% 30%, #5a4569, #241b2c 75%); box-shadow: 0 0 0 2px var(--brass), 0 3px 6px #0009; font: 800 18px/1 'Baloo 2', sans-serif; color: #fff2d5; }
+.alq-exit:active { transform: scale(.96); }
+@media (orientation: landscape) { .alq-exit { top: max(24px, env(safe-area-inset-top)); left: max(24px, env(safe-area-inset-left)); height: 52px; font-size: 20px; } }
 /* The logo, from Mulassa Tap Tap Dance (src/hud/title.js): red pixel letters, a round cream outline, a dark red extrusion under them, a glint every 5 s; MULASSA stays still. The word under it: gold Baloo, dark outline,
    one syllable rising gently per beat (152 bpm) and a rest, like TAP, TAP, DANCE but eased (src/hud/logo-motion.js). */
 .alq-logo { --s: clamp(64px, 21vw, 104px); position: relative; margin: 0; display: flex; flex-direction: column; align-items: center; filter: drop-shadow(0 6px 10px #0009); text-transform: uppercase; }
@@ -131,9 +173,13 @@ button { font: inherit; color: inherit; border: 0; cursor: pointer; }
 @keyframes alq-glint { 0%, 84% { background-position: -200% 0; opacity: 0; } 92% { opacity: 1; } 100% { background-position: 300% 0; opacity: 0; } }
 @keyframes alq-spark { 0%, 62%, 100% { opacity: 0; scale: .2; rotate: 0deg; } 74% { opacity: .9; scale: 1; } 88% { opacity: 0; scale: .4; rotate: 45deg; } }
 @media (prefers-reduced-motion: reduce) { .alq-logo-main::after, .alq-logo-sub i { animation: none; } }
-.alq-menu-title p { margin: 12px 0 0; font-size: 16px; font-weight: 700; color: #fff2d5; text-shadow: 0 1px 4px #000; }
 .alq-menu-actions { width: min(100%, 360px); display: grid; gap: 8px; }
 .alq-play { min-height: 56px; font-size: 24px; }
+/* Narrow, and a streak of light crosses it every 3 s, like the logo's glint */
+.alq-play { position: relative; overflow: hidden; justify-self: center; width: auto; min-width: 200px; padding: 6px 48px; }
+.alq-play::after { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; background: linear-gradient(105deg, transparent 35%, #fff9 48%, #fff9 52%, transparent 65%) no-repeat -150% 0 / 60% 100%; animation: alq-play-shine 3s ease-in-out infinite; }
+@keyframes alq-play-shine { 0%, 55% { background-position: -150% 0; } 100% { background-position: 250% 0; } }
+@media (prefers-reduced-motion: reduce) { .alq-play::after { animation: none; } }
 
 /* The room breathes: the fire flickers and the picked elements float */
 .alq-pot svg { animation: alq-simmer 2.6s ease-in-out infinite; transform-origin: 50% 100%; }
@@ -145,28 +191,32 @@ button { font: inherit; color: inherit; border: 0; cursor: pointer; }
 @keyframes alq-float { 50% { translate: 0 -4px; } }
 @media (prefers-reduced-motion: reduce) { .alq-pot svg, .alq-slot .orb:not(.empty) { animation: none; } }
 
-/* Portrait: no tagline, the scene needs the room. Landscape: everything sits on the empty wall, top right. */
-@media (orientation: portrait) {
-  .alq-menu-title p { display: none; }
-}
+/* Landscape: everything sits on the empty wall, top right. */
 @media (orientation: portrait) and (max-height: 700px) { /* the button must not hide the fire */
   .alq-menu-actions { gap: 0; }
   .alq-menu { padding-bottom: 8px; }
   .alq-play { min-height: 50px; }
 }
 @media (orientation: landscape) {
-  .alq-menu { background: url(/jocs/alquimia/cards/menu-escriptori.jpg) 85% center / cover, #2e1519; align-items: flex-end; justify-content: flex-start; gap: 1.5vh; padding: 3vh 3vw; }
+  .alq-menu { background: url(/alchemy/cards/menu-escriptori.jpg) 85% center / cover, #2e1519; align-items: flex-end; justify-content: flex-start; gap: 1.5vh; padding: 3vh 3vw; }
   .alq-menu-title { width: 36vw; }
   .alq-logo { --s: min(15vh, 8.5vw); }
-  .alq-menu-title p { font-size: max(15px, 2.2vh); margin-top: 1vh; }
   .alq-menu-actions { width: min(36vw, 48vh); margin-right: calc((36vw - min(36vw, 48vh)) / 2); }
   .alq-play { min-height: max(50px, 6.5vh); font-size: max(20px, 3vh); }
-  .alq-col { width: min(100% - 48px, 1040px); }
-  .alq-scene { height: clamp(200px, 30dvh, 300px); }
+  .alq-col { width: min(100% - 48px, 1040px); padding-top: max(24px, env(safe-area-inset-top)); }
+  /* The cauldron stands on the message bar; the slots float level with its belly (~.35 of its width above the foot). */
+  .alq-scene { --pot: clamp(150px, 26vh, 260px); --orb: clamp(90px, 14vh, 136px); height: calc(var(--pot) * .77 + var(--orb) * .5 + 24px); /* what comes out rises over the cauldron's mouth, as on phones */ align-items: end; padding-bottom: 14px; }
   .alq-title .alq-logo { --s: 44px; }
-  .alq-slot .orb, .alq-result .orb { --orb: clamp(84px, 12vh, 112px); }
-  .alq-pot { width: clamp(140px, 20vh, 190px); }
+  .alq-slot .orb, .alq-result .orb { --orb: inherit; }
+  .alq-slot { margin-bottom: calc(var(--pot) * .35 - var(--orb) / 2); }
+  .alq-pot { width: var(--pot); }
+  .alq-msg { min-height: 40px; padding: 4px 16px; border-radius: 20px; font-size: 21px; line-height: 32px; }
+  .alq-slot b { font-size: 17px; }
   .alq-grid { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); padding: 16px 20px max(16px, env(safe-area-inset-bottom)); }
-  .alq-item .orb { --orb: 68px; }
-  .alq:not(.alq-menu) { background: linear-gradient(rgba(20, 10, 16, .78), rgba(20, 10, 16, .78)), url(/jocs/alquimia/cards/menu-escriptori.jpg) center / cover; }
+  .alq-item, .alq-item .orb { --orb: 68px; } /* the item too: its ×2 badge sits on the orb's edge */
+  /* The book: wide and low, two columns of entries */
+  .alq-sheet { width: min(100%, 860px); max-height: min(100%, 640px); padding: 20px 24px; }
+  .alq-list { display: grid; grid-template-columns: 1fr 1fr; column-gap: 32px; align-content: start; }
+  .alq-actions { width: min(100%, 448px); margin: 0 auto; }
+  .alq:not(.alq-menu) { background: linear-gradient(rgba(20, 10, 16, .78), rgba(20, 10, 16, .78)), url(/alchemy/cards/menu-escriptori.jpg) center / cover; }
 }

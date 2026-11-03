@@ -1,6 +1,11 @@
 // Player-facing names and facts live in COPY.alquimia.items. Everything else about the content is here.
 export const BASE = ['foc', 'terra', 'aigua', 'vent'];
 
+// Only known in Valls: counted apart, so a player from elsewhere can finish the rest. No other element may need one of them.
+export const VALLS = new Set(['valls', 'vella', 'joves', 'bou', 'bouvalls', 'primera', 'lleo', 'alcaldessa', 'santjoan', 'santaursula', 'decennals', 'maredeu',
+  'lluminaries', 'lledo', 'roser', 'oller', 'huguet', 'figaflawas', 'calcofest', 'muralla', 'teatre', 'museucasteller', 'francoli',
+  'caramel', 'trestombs', 'firagost', 'placablat']);
+
 // [ingredient, ingredient, result]
 export const RECIPES = [
   // The first tries: the base elements with each other
@@ -20,14 +25,14 @@ export const RECIPES = [
   ['arbre', 'pedra', 'fusta'],
   ['arbre', 'foc', 'carbo'],
   ['carbo', 'foc', 'brasa'],
-  ['brasa', 'aigua', 'fum'],
+  ['brasa', 'aigua', 'vapor'],
   ['mar', 'terra', 'vida'],
   ['peix', 'terra', 'animal'],
   ['animal', 'vent', 'ocell'],
   // Calçots
   ['planta', 'terra', 'ceba'],
-  ['ceba', 'fang', 'calcot'],
-  ['calcot', 'calcot', 'calcotada'],
+  ['ceba', 'terra', 'calcot'],
+  ['calcot', 'foc', 'calcotada'],
   // People and castells
   ['pedra', 'fang', 'casa'],
   ['casa', 'foc', 'persona'],
@@ -105,6 +110,7 @@ export const RECIPES = [
   ['colla', 'poble', 'placa'],
   ['castell', 'placa', 'diada'],
   ['campanar', 'diada', 'valls'],
+  ['seguici', 'poble', 'festamajor'],
   ['seguici', 'valls', 'festamajor'],
   ['espelma', 'espelma', 'llum'],
   ['llum', 'valls', 'lluminaries'],
@@ -183,6 +189,7 @@ export const RECIPES = [
   ['pedra', 'poble', 'muralla'],
   ['pedra', 'maredeu', 'lledo'],
   ['vi', 'foc', 'aiguardent'],
+  ['animal', 'roba', 'pell'],
   ['bou', 'aigua', 'pell'],
   ['castell', 'casa', 'museucasteller'],
   ['casa', 'musica', 'teatre'],
@@ -208,8 +215,8 @@ export const RECIPES = [
   ['ocell', 'arbre', 'ou'],
   ['animal', 'arbre', 'ocell'],
   ['animal', 'sorra', 'serp'],
-  ['ceba', 'terra', 'calcot'],
-  ['calcot', 'foc', 'calcotada'],
+  ['ceba', 'fang', 'calcot'],
+  ['calcot', 'calcot', 'calcotada'],
   ['calcot', 'brasa', 'calcotada'],
   ['castanya', 'brasa', 'castanyada'],
   ['tomaquet', 'foc', 'escalivada'],

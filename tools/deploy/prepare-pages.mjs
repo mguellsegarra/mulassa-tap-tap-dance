@@ -47,6 +47,7 @@ export async function preparePages(directory, song) {
       || /^photo-icons\/[\w-]+\.webp$/.test(name) // free play's drawn move buttons (src/ui/photo-icons.js)
       || /^jocs\/[\w-]+\/index\.html$/.test(name) // docs/jocs/README.md: one page per mini-game
       || name === 'jocs/index.html' // mulassa.cat/jocs: a short link to the games picker
+      || name === 'alchemy/index.html' || /^alchemy\/cards\/[\w-]+\.(jpg|png)$/.test(name) // Mulassa Alchemy, at the root (vite.config.js)
       || /^jocs\/corre\/world\/[\w.-]+\.bin$/.test(name) // Corre i suma colla's plaça (docs/jocs/corre.md)
       || /^jocs\/[\w-]+\/cards\/[\w-]+\.(jpg|svg|png|webp)$/.test(name) // a mini-game's own pictures
       || name === 'campanar-valls.svg' // Configuració «Sobre el joc»

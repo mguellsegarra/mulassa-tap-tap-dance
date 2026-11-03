@@ -1,9 +1,11 @@
 import { COPY } from './copy.js';
 import { blip } from './sound.js';
 import { rulesFor } from './rules.js';
-import { iconHtml, tintOf } from './icons.js';
+import { orbHtml as orb, ESCUT } from './icons.js';
+import { createAlchemyOverlays } from './overlays.js';
 import { startFx } from './fx.js';
-import { restoreHints, refreshHints, requestHint, hintView, seen } from './hints.js';
+import { coach } from './coach.js';
+import { restoreHints, refreshHints, requestHint, hintView, seen, MAX, EVERY } from './hints.js';
 
 const T = COPY.alquimia;
 const NUDGE_AFTER = 4, NUDGE_AFTER_LATE = 8; // tries in a row without a discovery before the hint button glows
@@ -28,13 +30,14 @@ const CAULDRON = `<svg viewBox="0 0 120 92" aria-hidden="true">
 
 const KEY = 'minijocs.alquimia.found';
 const HINTS_KEY = 'minijocs.alquimia.hints';
+const LESSON_KEY = 'minijocs.alquimia.lesson';
+const LESSON = ['foc', 'aigua']; // the first game walks you through Vapor, then a hint, then the book
 const OLD_CATALANA_KEY = 'minijocs.alquimia.catalana'; // progress from when there were two collections
-const stored = () => {
+export const stored = () => {
   const read = k => { try { const v = JSON.parse(localStorage.getItem(k)); return Array.isArray(v) ? v : []; } catch { return []; } };
   return [...new Set([...read(KEY), ...read(OLD_CATALANA_KEY)])];
 };
 const nameOf = id => T.items[id].name;
-const orb = id => `<span class="orb">${iconHtml(id)}</span>`;
 const center = el => { const r = el.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; };
 
 // The Mulassa logo, as in Tap Tap Dance: MULASSA in pixels on a dark extrusion, and the game's word under it, a piece per beat.
@@ -50,33 +53,36 @@ function menuCauldron() {
 }
 
 // The start menu.
-export function start(root, leave) {
+// beforePlay: what the board needs first (the player's icons); the menu waits for it after the tap.
+export function start(root, leave, beforePlay = () => {}) {
   let stopGame = null, stopMenu = null;
   const showMenu = () => {
     stopGame?.();
     stopGame = null;
-    root.innerHTML = `<div class="alq alq-menu"><button class="alq-round alq-back" aria-label="${T.menu}">${BACK}</button>
-      <div class="alq-menu-title">${logo(COPY.games.alquimia.name)}<p>${T.tagline}</p></div>
-      <div class="alq-menu-actions"><button class="alq-btn alq-play">${stored().length ? T.continue : T.play}</button></div><canvas class="alq-fx"></canvas></div>`;
+    root.innerHTML = `<div class="alq alq-menu"><button class="alq-back alq-exit">${BACK}<span>${T.allGames}</span></button>
+      <div class="alq-menu-title">${logo(COPY.games.alquimia.name)}</div>
+      <div class="alq-menu-actions"><button class="alq-btn alq-play">${T.play}</button></div><canvas class="alq-fx"></canvas></div>`;
     stopMenu = startFx(root.querySelector('.alq-fx'), menuCauldron).stop;
     root.querySelector('.alq-back').onclick = () => { stopMenu(); leave(); };
-    root.querySelector('.alq-play').onclick = () => { stopMenu(); stopGame = play(root, showMenu); };
+    root.querySelector('.alq-play').onclick = async ({ currentTarget: button }) => {
+      button.disabled = true;
+      await beforePlay();
+      stopMenu(); stopGame = play(root, showMenu);
+    };
   };
   showMenu();
   return () => { stopMenu?.(); stopGame?.(); };
 }
 
 function play(root, leave) {
-  const rules = rulesFor(), { all: ALL, hint, ingredientsOf, isFinished, mix } = rules;
+  const rules = rulesFor(), { all: ALL, hint, mix } = rules;
   const stillNew = pair => !!pair && mix(found, pair[0], pair[1]).isNew; // a hint is done once its result is found
   const load = () => rules.restore(stored());
-  const factOf = id => T.items[id].fact;
-  const recipeText = (id, r = ingredientsOf(id)) => (r ? `${nameOf(r[0])} + ${nameOf(r[1])}` : T.base);
   root.innerHTML = `<div class="alq"><div class="alq-col">
     <header class="alq-top">
       <button class="alq-round alq-back" aria-label="${T.menu}">${BACK}</button>
-      <div class="alq-title">${logo(COPY.games.alquimia.name)}<div class="alq-bar"><i></i><span></span></div></div>
-      <div class="alq-tools"><button class="alq-hint"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a6 6 0 0 0-3.6 10.8c.7.6 1.1 1.3 1.1 2.2h5c0-.9.4-1.6 1.1-2.2A6 6 0 0 0 12 3z" fill="#ffd76a" stroke="#7a4a10" stroke-width="1.4"/><path d="M9.8 18.2h4.4M10.4 20.6h3.2" stroke="#efdcb0" stroke-width="1.8" stroke-linecap="round"/></svg><span></span></button>
+      <div class="alq-title">${logo(COPY.games.alquimia.name)}<div class="alq-progress"><div class="alq-bar"><i></i><span></span></div><div class="alq-valls" role="img" hidden>${ESCUT}<span></span></div></div></div>
+      <div class="alq-tools"><button class="alq-hint"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a6 6 0 0 0-3.6 10.8c.7.6 1.1 1.3 1.1 2.2h5c0-.9.4-1.6 1.1-2.2A6 6 0 0 0 12 3z" fill="#ffd76a" stroke="#7a4a10" stroke-width="1.4"/><path d="M9.8 18.2h4.4M10.4 20.6h3.2" stroke="#efdcb0" stroke-width="1.8" stroke-linecap="round"/></svg><span></span><i class="alq-wait"></i></button>
       <button class="alq-round alq-book" aria-label="${T.book}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6C9.5 4.5 6.5 4 3 4v15c3.5 0 6.5.5 9 2 2.5-1.5 5.5-2 9-2V4c-3.5 0-6.5.5-9 2z" fill="#efdcb0" stroke="#7a4a10" stroke-width="1.5" stroke-linejoin="round"/><path d="M12 6v15" stroke="#7a4a10" stroke-width="1.5"/></svg></button></div>
     </header>
     <section class="alq-scene">
@@ -92,6 +98,17 @@ function play(root, leave) {
   const hintButton = $('.alq-hint'), slots = [$('[data-slot="0"]'), $('[data-slot="1"]')], resultBox = $('.alq-result'), grid = $('.alq-grid'), overlay = $('.alq-overlay'), msg = $('.alq-msg'), pot = $('.alq-pot');
   const fx = startFx($('.alq-fx'), () => { const r = pot.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height * .25, w: r.width * .6, fireY: r.bottom + 2 }; });
   let found = load(), picked = [], fails = 0, timer = 0, locked = false, hints = restoreHints(localStorage.getItem(HINTS_KEY), Date.now(), found.length);
+  const { showOverlay, closeOverlay, showFound, showBook } = createAlchemyOverlays(overlay, fx, rules, () => found);
+  // The guided start, for a new player only: mix → hint → follow (the hint) → book; 'done' shows the send-off once.
+  // Meanwhile only what the hand points at answers: a stray tap can't lose the thread.
+  let lesson = !localStorage.getItem(LESSON_KEY) && found.length <= rules.restore([]).length + 1 ? (mix(found, ...LESSON).isNew ? 'mix' : 'hint') : null;
+  const endLesson = () => { lesson = 'done'; localStorage.setItem(LESSON_KEY, '1'); };
+  const expected = () => (lesson === 'mix' ? LESSON : lesson === 'follow' ? hints.pair ?? [] : [])[picked.length];
+  const lessonText = () => ({ mix: T.lesson[0](nameOf(LESSON[0])), hint: T.lessonHint, book: T.lessonBook, done: T.lessonDone })[lesson];
+  const hand = coach($('.alq'));
+  // What the bubble says at each step: what the thing is, not only what to tap.
+  const tipText = () => ({ mix: T.tip[picked.length]?.(nameOf(LESSON[picked.length])), hint: T.tipHint, follow: T.tipFollow, book: T.tipBook })[lesson];
+  const stuck = () => fails >= (ALL.length - found.length <= LAST_STRETCH ? NUDGE_AFTER_LATE : NUDGE_AFTER) && !hints.pair && !lesson && found.length < ALL.length;
   const saveHints = () => { if (!stillNew(hints.pair)) hints = { ...hints, pair: null }; localStorage.setItem(HINTS_KEY, JSON.stringify(hints)); };
   saveHints();
 
@@ -99,9 +116,8 @@ function play(root, leave) {
   const later = (fn, ms) => { clearTimeout(timer); timer = setTimeout(fn, ms); };
 
   function renderGrid() {
-    const wait = ALL.length - found.length <= LAST_STRETCH ? NUDGE_AFTER_LATE : NUDGE_AFTER;
-    const pulse = hints.pair ?? [];
-    hintButton.classList.toggle('nudge', fails >= wait && !hints.pair && found.length < ALL.length);
+    const pulse = lesson === 'mix' ? [LESSON[picked.length]] : hints.pair ?? [];
+    hintButton.classList.toggle('nudge', stuck());
     renderHintButton();
     // Updated in place: rebuilding would re-decode every image on each tap, and flicker.
     for (const b of [...grid.children]) if (!found.includes(b.dataset.id)) b.remove();
@@ -112,12 +128,19 @@ function play(root, leave) {
         b.dataset.id = id;
         grid.append(b);
       }
-      b.classList.toggle('done', isFinished(found, id) && !picked.includes(id));
       b.classList.toggle('on', picked.includes(id));
       b.classList.toggle('hint', pulse.includes(id));
+      b.classList.toggle('twice', pulse[0] === id && pulse[1] === id); // one pulse can't say "use it twice"
     }
-    $('.alq-bar span').textContent = T.count(found.length, ALL.length);
-    $('.alq-bar i').style.width = `${found.length / ALL.length * 100}%`;
+    const next = picked.length < 2 && expected();
+    // Nothing while a mix plays out: the next step waits until the discovery has been seen and closed.
+    hand.point(locked ? null : lesson === 'hint' ? hintButton : lesson === 'book' ? $('.alq-book') : next ? grid.querySelector(`[data-id="${next}"] .orb`) : null, tipText());
+    const got = rules.progress(found), chip = $('.alq-valls');
+    $('.alq-bar span').textContent = T.count(got.general, rules.general.length);
+    $('.alq-bar i').style.width = `${got.general / rules.general.length * 100}%`;
+    chip.hidden = !got.valls; // shown from the first Valls element on
+    chip.lastChild.textContent = `${got.valls}/${rules.valls.length}`;
+    chip.setAttribute('aria-label', T.vallsCount(got.valls, rules.valls.length));
   }
 
   function clearMix() {
@@ -127,24 +150,36 @@ function play(root, leave) {
     fill(resultBox);
     resultBox.classList.remove('up');
     pot.classList.remove('boil', 'burp');
-    msg.textContent = hints.pair ? T.hintTry(nameOf(hints.pair[0]), nameOf(hints.pair[1])) : T.how;
+    msg.textContent = lessonText() ?? (hints.pair ? T.hintTry(nameOf(hints.pair[0]), nameOf(hints.pair[1])) : stuck() ? T.hintTip : T.how);
+    if (lesson === 'done') lesson = null;
     renderGrid();
   }
 
-  // The pill: how many hints are left, or infinite while they are free.
+  // The pill: infinite while they are free, how many are left, and with none the time to the next one.
   function renderHintButton() {
-    const v = hintView(hints, Date.now());
-    hintButton.lastChild.textContent = v.free ? '∞' : v.credits;
-    hintButton.setAttribute('aria-label', v.free ? T.hintFree : T.hintLeft(v.credits));
+    const v = hintView(hints, Date.now()), m = Math.ceil(v.remainingMs / 60e3), waiting = !v.free && !v.credits;
+    hintButton.querySelector('span').textContent = v.free ? '∞' : waiting ? '' : v.credits;
+    hintButton.querySelector('.alq-wait').textContent = waiting ? T.hintWait(Math.floor(m / 60), m % 60) : '';
+    hintButton.classList.toggle('waiting', waiting);
+    hintButton.setAttribute('aria-label', v.free ? T.hintFree : waiting ? T.hintWaitLeft(waitText(v.remainingMs)) : T.hintLeft(v.credits));
   }
   const waitText = ms => { const m = Math.ceil(ms / 60e3); return T.hintWait(Math.floor(m / 60), m % 60); };
+  // How hints come back: on a tap with none left, and once when the free start ends. Its button is the overlay's «go».
+  function showHintsCard(end) {
+    const v = hintView(hints, Date.now());
+    showOverlay(`<div class="alq-sheet alq-hints"><h2>${T.hintsTitle}</h2>${end ? `<p>${T.hintsEnd}</p>` : ''}<p>${T.hintsHow(MAX, EVERY / 60e3)}</p>
+      ${v.credits ? '' : `<p><strong>${T.hintEmpty(waitText(v.remainingMs))}</strong></p>`}<button class="alq-btn" data-act="go">${T.hintsOk}</button></div>`);
+  }
+  let hintsEnded = false; // the free start just ended: say so once the discovery is closed
   function askHint() {
-    if (locked) return;
+    if (locked || lesson === 'mix' || lesson === 'book') return;
     const r = requestHint(hints, hint(found), Date.now(), found.length);
     hints = r.state;
     saveHints();
+    if (r.pair && lesson === 'hint') lesson = 'follow';
     if (r.pair) { fails = 0; clearMix(); return; }
-    msg.textContent = r.status === 'empty' ? T.hintEmpty(waitText(hintView(hints, Date.now()).remainingMs)) : T.hintNone;
+    if (r.status === 'empty') { showHintsCard(false); return; }
+    msg.textContent = T.hintNone;
     renderGrid();
   }
 
@@ -162,12 +197,13 @@ function play(root, leave) {
   }
 
   function pick(id, el) {
-    if (locked) return;
+    if (locked || (lesson && lesson !== 'done' && id !== expected())) return;
     if (picked.length === 2) clearMix();
     const slot = slots[picked.length];
     fly(el?.querySelector('.orb'), slot.querySelector('.orb'));
     picked.push(id);
     fill(slot, id);
+    if (lesson === 'mix' && picked.length === 1) msg.textContent = T.lesson[1](nameOf(LESSON[1]));
     if (!reduced) slot.animate([{ opacity: 0 }, { opacity: 0, offset: .99 }, { opacity: 1 }], FLY_MS);
     blip(440 + picked.length * 110, 60);
     renderGrid();
@@ -217,9 +253,11 @@ function play(root, leave) {
     }
     fails = 0;
     msg.textContent = T.fresh;
+    if (lesson === 'mix' || lesson === 'follow') lesson = lesson === 'mix' ? 'hint' : 'book';
     const pair = picked.slice();
     found.push(result);
     localStorage.setItem(KEY, JSON.stringify(found));
+    hintsEnded = !hints.introDone && seen(hints, found.length).introDone;
     hints = seen(hints, found.length);
     saveHints();
     localStorage.removeItem(OLD_CATALANA_KEY);
@@ -227,39 +265,6 @@ function play(root, leave) {
     renderGrid();
     grid.scrollTop = grid.scrollHeight; // scrollIntoView can also shift the fixed page on iOS
     later(() => { locked = false; showFound(result, pair); }, REVEAL_MS);
-  }
-
-  function showOverlay(html, tint = null) {
-    overlay.innerHTML = html;
-    overlay.style.setProperty('--tint', tint ?? '#ffd76a');
-    overlay.style.display = '';
-    fx.embers(false);
-  }
-  const closeOverlay = () => { overlay.style.display = 'none'; overlay.innerHTML = ''; fx.embers(true); };
-
-  function showFound(id, pair) {
-    const fact = factOf(id), done = found.length === ALL.length;
-    showOverlay(`<div class="alq-rays"></div><div class="alq-found">
-      <h2>${nameOf(id)}</h2>${orb(id)}<p class="alq-recipe">${recipeText(id, pair)}</p>
-      ${fact || done ? `<div class="alq-parch">${fact ? `<p>${fact}</p>` : ''}${done ? `<p><strong>${T.allFound}</strong></p>` : ''}</div>` : ''}
-      <button class="alq-btn" data-act="go">${T.go}</button></div>`, tintOf(id));
-    overlay.querySelector('[data-act="go"]').focus({ preventScroll: true });
-    // offsets, not rects: the card is still animating in
-    const card = overlay.querySelector('.alq-found'), big = card.querySelector('.orb');
-    const y = card.offsetTop + big.offsetTop + big.offsetHeight / 2;
-    overlay.querySelector('.alq-rays').style.top = `${y}px`;
-    fx.burst(innerWidth / 2, y);
-  }
-
-  function showBook(armed = false) {
-    const missing = ALL.length - found.length;
-    const entries = found.map(id => {
-      const fact = factOf(id);
-      return `<div class="alq-entry">${orb(id)}<div><strong>${nameOf(id)}</strong><small>${recipeText(id)}</small>${fact ? `<p>${fact}</p>` : ''}</div></div>`;
-    }).join('');
-    showOverlay(`<div class="alq-sheet"><h2>${T.book}</h2><div class="alq-list">${entries}</div>
-      ${missing ? `<p class="alq-missing">${T.missing(missing)}</p>` : ''}
-      <div class="alq-actions"><button class="alq-btn alt" data-act="${armed ? 'reset' : 'arm'}">${armed ? T.resetSure : T.reset}</button><button class="alq-btn" data-act="go">${T.go}</button></div></div>`);
   }
 
   hintButton.onclick = askHint;
@@ -270,11 +275,12 @@ function play(root, leave) {
   grid.onclick = e => { const b = e.target.closest('[data-id]'); if (b) pick(b.dataset.id, b); };
   slots.forEach(s => { s.onclick = () => { if (!locked) clearMix(); }; });
   $('.alq-back').onclick = leave;
-  $('.alq-book').onclick = () => { if (!locked) showBook(); };
+  $('.alq-book').onclick = () => { if (locked) return; if (lesson === 'book') endLesson(); showBook(); };
   overlay.onclick = e => {
     const act = e.target.closest('[data-act]')?.dataset.act;
-    if (act === 'go') { closeOverlay(); clearMix(); }
+    if (act === 'go') { closeOverlay(); clearMix(); if (hintsEnded) { hintsEnded = false; showHintsCard(true); } }
     if (act === 'arm') showBook(true);
+    if (act === 'book') showBook();
     if (act === 'reset') {
       localStorage.removeItem(KEY);
       localStorage.removeItem(OLD_CATALANA_KEY);
@@ -286,5 +292,5 @@ function play(root, leave) {
   };
 
   clearMix();
-  return () => { clearTimeout(timer); clearInterval(ticker); document.removeEventListener('visibilitychange', tick); fx.stop(); };
+  return () => { closeOverlay(); clearTimeout(timer); clearInterval(ticker); document.removeEventListener('visibilitychange', tick); fx.stop(); hand.stop(); };
 }

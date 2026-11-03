@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="ca">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#1b1420">
+  <title>Mulassa Alchemy</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="Mulassa">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <!-- What the menu needs first, before the 178 icons: its fonts and its painting -->
+  <link rel="preload" href="/fonts/baloo-2-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/fonts/jersey-10-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/alchemy/cards/menu-mobil.jpg" as="image" fetchpriority="high" media="(orientation: portrait)">
+  <link rel="preload" href="/alchemy/cards/menu-escriptori.jpg" as="image" fetchpriority="high" media="(orientation: landscape)">
+  <link rel="stylesheet" href="/src/jocs/games/alquimia/style.css">
+  <style>
+    html, body { margin: 0; background: #1b1420; } /* the first paint is already the night, never a black or white flash */
+    /* The cover paints before the bundle and lifts once the menu can show whole (main.js); with no JS it gives up by itself. */
+    #loader { position: fixed; z-index: 40; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; background: #1b1420; color: #fff2d5; font: 700 18px/1.2 'Baloo 2', system-ui, sans-serif; transition: opacity .25s ease-out; animation: loader-give-up .3s 30s forwards; }
+    #loader.out { opacity: 0; pointer-events: none; }
+    #loader > * { animation: loader-show .2s .2s both; } /* a quick (re)load shows only the night, never a blink of the cauldron */
+    @keyframes loader-show { from { opacity: 0; } }
+    #loader svg { width: 120px; height: auto; overflow: visible; }
+    #loader .glow { animation: loader-glow .9s ease-in-out infinite alternate; }
+    #loader .bub { animation: loader-bub 1.2s ease-in-out infinite; } #loader .b2 { animation-delay: .4s; } #loader .b3 { animation-delay: .8s; }
+    @keyframes loader-glow { to { opacity: .55; } }
+    @keyframes loader-bub { 0% { transform: translateY(0); opacity: 0; } 30% { opacity: 1; } 100% { transform: translateY(-26px); opacity: 0; } }
+    @keyframes loader-give-up { to { opacity: 0; visibility: hidden; } }
+    @media (prefers-reduced-motion: reduce) { #loader * { animation: none !important; } }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <!-- The game's cauldron, as in game.js, simmering while the menu loads. -->
+  <div id="loader" role="status" aria-live="polite">
+    <svg viewBox="0 0 120 100" aria-hidden="true">
+      <ellipse class="glow" cx="60" cy="96" rx="34" ry="5" fill="#ff7a1f"/>
+      <path d="M10 32h100c2 34-14 58-50 58S8 66 10 32z" fill="#3a3342"/>
+      <ellipse cx="60" cy="32" rx="52" ry="12" fill="#2b2530"/>
+      <ellipse cx="60" cy="33" rx="44" ry="8.5" fill="#ff9d3c"/>
+      <path d="M6 32a54 13 0 0 0 108 0" fill="none" stroke="#e3bf62" stroke-width="3"/>
+      <circle class="bub" cx="44" cy="28" r="3.5" fill="#fff2d5"/><circle class="bub b2" cx="62" cy="28" r="3" fill="#fff2d5"/><circle class="bub b3" cx="78" cy="28" r="3.5" fill="#fff2d5"/>
+    </svg>
+    <span>Escalfant l'olla…</span>
+  </div>
+  <script type="module" src="/src/jocs/games/alquimia/main.js"></script>
+</body>
+</html>

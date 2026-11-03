@@ -1,7 +1,7 @@
 // «Jocs»: free play stays inside the page and comes back to the sheet; a mini-game replaces the page.
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { setupGamesMenu } from '../../src/ui/games-menu.js';
+import { setupGamesMenu, AT_ROOT } from '../../src/ui/games-menu.js';
 
 function make() {
   let grid, x, entered = 0, went = null, focused = null;
@@ -31,6 +31,9 @@ b.games.open(); b.games.afterFree(true); b.menu.close(); b.games.afterFree(true)
 assert(!b.menu.open, 'a free play that did not come from the sheet stays on the selector');
 b.games.open(); b.tap('pica');
 assert.equal(b.went, '/jocs/pica/', 'a mini-game is its own page');
+b.games.open(); b.tap('alchemy');
+assert.equal(b.went, '/alchemy/', 'Mulassa Alchemy has its own address at the root');
+b.games.open(); b.tap('pica');
 b.games.open(); b.tap('tap');
 assert(!b.menu.open && b.went === '/jocs/pica/', 'Tap Tap Dance is this page: the sheet just closes');
 b.closeX();
@@ -42,7 +45,7 @@ const ids = [...html.matchAll(/data-game="([\w-]+)"/g)].map(m => m[1]);
 assert.equal(ids.at(-1), 'lliure', 'free play comes last, after the games');
 for (const id of ids) {
   readFileSync(`public/jocs/menu/cards/${id}.jpg`);
-  if (id !== 'lliure' && id !== 'tap') readFileSync(`jocs/${id}/index.html`);
+  if (id !== 'lliure' && id !== 'tap') readFileSync(AT_ROOT.has(id) ? `${id}/index.html` : `jocs/${id}/index.html`);
 }
 
 // one «Juga» for the whole sheet, in the hero; each card is the one real button

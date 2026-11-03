@@ -4,7 +4,7 @@ import { tr } from '../i18n/messages.js';
 const SEEN_KEY = 'news-seen';
 export const NEWS = [
   { id: 'jocs-1', title: 'ui.news.title', text: 'ui.news.text', games: ['pica', 'memory', 'crush'] },
-  { id: 'jocs-2', title: 'ui.news.alchemyTitle', text: 'ui.news.alchemyText', games: ['alquimia'] },
+  { id: 'jocs-2', title: 'ui.news.alchemyTitle', text: 'ui.news.alchemyText', games: ['alchemy'] },
 ];
 
 export function setupNews({ focusIn, store, played, onGames, force = false, doc = document, win = globalThis, news = NEWS }) {

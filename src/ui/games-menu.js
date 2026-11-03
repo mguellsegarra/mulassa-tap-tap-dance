@@ -1,5 +1,7 @@
 // «Jocs», the corner gamepad's sheet over the selector. Free play is inside this page, so it starts and comes back at once;
 // a mini-game is its own page: replace, so bfcache does not keep the game frozen in memory (docs/jocs/README.md).
+// Games with their own address at the root instead of /jocs/<id>/ (vite.config.js builds them, prepare-pages.mjs deploys them).
+export const AT_ROOT = new Set(['alchemy']);
 export function setupGamesMenu({ focusIn, enterFree, carousel, doc = document, go = url => location.replace(url) }) {
   const menu = doc.getElementById('games-menu');
   let backToMenu = false;
@@ -9,7 +11,7 @@ export function setupGamesMenu({ focusIn, enterFree, carousel, doc = document, g
     const card = e.target.closest?.('[data-game]');
     if (!card || carousel?.take(card, e) === false) return;
     if (card.dataset.game === 'tap') { menu.close(); return; } // the rhythm game is the selector behind this sheet
-    if (card.dataset.game !== 'lliure') { go(`/jocs/${card.dataset.game}/`); return; }
+    if (card.dataset.game !== 'lliure') { go(AT_ROOT.has(card.dataset.game) ? `/${card.dataset.game}/` : `/jocs/${card.dataset.game}/`); return; }
     menu.close(); backToMenu = true; enterFree();
   });
   return {

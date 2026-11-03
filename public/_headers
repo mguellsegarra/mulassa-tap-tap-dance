@@ -59,9 +59,9 @@ https://beta.mulassa.cat/*
   Cache-Control: no-cache
 /jocs/subara/index.html
   Cache-Control: no-cache
-/jocs/alquimia/
+/alchemy/
   Cache-Control: no-cache
-/jocs/alquimia/index.html
+/alchemy/index.html
   Cache-Control: no-cache
 
 /index.md

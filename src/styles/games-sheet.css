@@ -43,7 +43,7 @@ html.to-jocs #games-menu::backdrop { background: #000; }
 #games-grid .sel-card-name { display: block; font-size: clamp(15px, calc(var(--row) * .075), 28px); line-height: 1.05; color: var(--game); text-shadow: 0 1px 2px #0008; white-space: normal; }
 #games-grid .game-desc { display: none; }
 /* each game's own colour, the same as the second word of its logo; the new ones are provisional */
-.game-card[data-game="tap"] { --game: #ffd23f; } .game-card[data-game="pica"] { --game: #ff7ac6; } .game-card[data-game="memory"] { --game: #6ec8ff; } .game-card[data-game="crush"] { --game: #8be04e; } .game-card[data-game="murdoku"] { --game: #ff9f45; } .game-card[data-game="alquimia"] { --game: #e58bff; } .game-card[data-game="suika"] { --game: #f7b267; } .game-card[data-game="corre"] { --game: #ff6b5e; } .game-card[data-game="subara"] { --game: #3fe0c5; } .game-card[data-game="lliure"] { --game: #c9a0ff; }
+.game-card[data-game="tap"] { --game: #ffd23f; } .game-card[data-game="pica"] { --game: #ff7ac6; } .game-card[data-game="memory"] { --game: #6ec8ff; } .game-card[data-game="crush"] { --game: #8be04e; } .game-card[data-game="murdoku"] { --game: #ff9f45; } .game-card[data-game="alchemy"] { --game: #e58bff; } .game-card[data-game="suika"] { --game: #f7b267; } .game-card[data-game="corre"] { --game: #ff6b5e; } .game-card[data-game="subara"] { --game: #3fe0c5; } .game-card[data-game="lliure"] { --game: #c9a0ff; }
 
 /* a phone's hero is narrow: the picture becomes its background, the text stands on it */
 @media (max-width: 700px) {

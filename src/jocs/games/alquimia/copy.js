@@ -2,10 +2,9 @@
 export const COPY = {
   games: { alquimia: { name: 'Mulassa Alchemy', blurb: 'Barreja i mira què surt' } }, // i18n-ok: Catalan-only game
   alquimia: {
-    tagline: 'Barreja dues coses i a veure què surt', // i18n-ok: Catalan-only game
     play: 'Juga', // i18n-ok: Catalan-only game
-    continue: 'Continua', // i18n-ok: Catalan-only game
     menu: 'Menú', // i18n-ok: Catalan-only game
+    allGames: 'Torna als jocs', // the start menu's way back to the games sheet (Codex) // i18n-ok: Catalan-only game
     book: 'Llibre de descobertes', // i18n-ok: Catalan-only game
     clear: 'Buida', // i18n-ok: Catalan-only game
     how: 'Toca dues coses per combinar-les', // i18n-ok: Catalan-only game
@@ -18,19 +17,44 @@ export const COPY = {
     hintTry: (a, b) => `Prova ${a} amb ${b}`, // i18n-ok: Catalan-only game
     hintWait: (h, m) => [h && `${h} h`, m && `${m} min`].filter(Boolean).join(' '), // i18n-ok: Catalan-only game
     hintEmpty: wait => `Propera pista en ${wait}`, // one line on a 320 px phone // i18n-ok: Catalan-only game
+    // The card that explains how hints come back.
+    hintWaitLeft: wait => `No et queden pistes. En tindràs una d'aquí a ${wait}.`, // i18n-ok: Catalan-only game
+    hintsTitle: 'Pistes', // i18n-ok: Catalan-only game
+    hintsHow: (max, min) => `Pots tenir fins a ${max} pistes. Cada ${min} minuts en recuperes una.`, // i18n-ok: Catalan-only game
+    hintsEnd: "S'han acabat les pistes il·limitades.", // i18n-ok: Catalan-only game
+    hintsOk: 'Entesos', // i18n-ok: Catalan-only game
     hintNone: 'Ja ho has descobert tot!', // i18n-ok: Catalan-only game
+    // The first game's guided mix.
+    lesson: [n => `Toca ${n}`, n => `Ara toca ${n}`], // i18n-ok: Catalan-only game
+    lessonHint: 'Toca la bombeta i demana una pista', // i18n-ok: Catalan-only game
+    lessonBook: 'Toca el llibre', // i18n-ok: Catalan-only game
+    lessonDone: 'Ara prova altres parelles!', // i18n-ok: Catalan-only game
+    // The tutorial bubbles, next to the hand. What each thing is, for kids and grandparents.
+    tip: [n => `Toca ${n} per posar-ho a l'olla.`, n => `Afegeix ${n} i mira què surt de l'olla.`], // i18n-ok: Catalan-only game
+    tipHint: 'La bombeta et diu quines dues coses pots barrejar.', // i18n-ok: Catalan-only game
+    tipFollow: 'Toca les dues coses que brillen per barrejar-les.', // i18n-ok: Catalan-only game
+    tipBook: 'Al llibre hi ha tot el que has descobert.', // i18n-ok: Catalan-only game
+    hintTip: 'Vols una pista? Toca la bombeta', // i18n-ok: Catalan-only game
     go: 'Continua', // i18n-ok: Catalan-only game
     base: 'Element de sortida', // i18n-ok: Catalan-only game
     missing: n => (n === 1 ? 'Només et falta una cosa per descobrir.' : `Encara et falten ${n} coses per descobrir.`), // i18n-ok: Catalan-only game
     allFound: 'Ho has descobert tot!', // i18n-ok: Catalan-only game
+    // The Valls elements, counted apart from the rest. Say "element de Valls", never "cosa".
+    vallsSeal: 'Element de Valls', // i18n-ok: Catalan-only game
+    vallsCount: (a, b) => `Has descobert ${a} de ${b} elements de Valls`, // the chip's spoken label // i18n-ok: Catalan-only game
+    firstValls: n => `El teu primer element de Valls! N'hi ha ${n} en total.`, // i18n-ok: Catalan-only game
+    allValls: 'Has descobert tots els elements de Valls!', // i18n-ok: Catalan-only game
+    missingValls: n => (n === 1 ? 'Només et falta un element de Valls.' : `Encara et falten ${n} elements de Valls.`), // i18n-ok: Catalan-only game
     reset: 'Torna a començar', // i18n-ok: Catalan-only game
     resetSure: 'Vols esborrar les descobertes?', // i18n-ok: Catalan-only game
+    resetYes: 'Esborra', // i18n-ok: Catalan-only game
+    resetNo: 'Cancel·la', // i18n-ok: Catalan-only game
     items: {
-      foc: { name: 'Foc' }, terra: { name: 'Terra' }, aigua: { name: 'Aigua' }, vent: { name: 'Vent' }, // i18n-ok: Catalan-only game
-      carbo: { name: 'Carbó' }, vapor: { name: 'Vapor' }, fum: { name: 'Fum' }, fang: { name: 'Fang' }, pols: { name: 'Pols' }, // i18n-ok: Catalan-only game
-      nuvol: { name: 'Núvol' }, brasa: { name: 'Brasa' }, pedra: { name: 'Pedra' }, mar: { name: 'Mar' }, ventada: { name: 'Ventada' }, // i18n-ok: Catalan-only game
-      muntanya: { name: 'Muntanya' }, pluja: { name: 'Pluja' }, planta: { name: 'Planta' }, arbre: { name: 'Arbre' }, canya: { name: 'Canya' }, fusta: { name: 'Fusta' }, // i18n-ok: Catalan-only game
-      ceba: { name: 'Ceba' }, vida: { name: 'Vida' }, animal: { name: 'Animal' }, ocell: { name: 'Ocell' }, // i18n-ok: Catalan-only game
+      foc: { name: 'Foc', fact: 'Perquè la llenya cremi calen calor i oxigen de l\'aire. Si falta una d\'aquestes coses, el foc s\'apaga.' }, terra: { name: 'Terra', fact: 'Sota els peus hi ha un món viu: a la terra hi viuen cucs, fongs i organismes tan petits que no els veiem.' }, aigua: { name: 'Aigua', fact: 'Quan es congela, l\'aigua ocupa més espai. Per això el gel sura damunt de l\'aigua líquida.' }, vent: { name: 'Vent', fact: 'El vent és aire que es mou. Les diferències de pressió entre uns llocs i uns altres el posen en moviment.' }, // i18n-ok: Catalan-only game
+      carbo: { name: 'Carbó', fact: 'El carbó vegetal s\'obté escalfant fusta amb molt poc aire. Així la fusta es transforma sense cremar-se del tot fins a fer-se cendra.' }, vapor: { name: 'Vapor', fact: 'El vapor d\'aigua és invisible. El núvol blanc que veus damunt d\'una olla són gotetes d\'aigua.' }, fum: { name: 'Fum' }, fang: { name: 'Fang', fact: 'De vegades plou fang: les gotes de pluja arrosseguen pols de l\'aire i deixen una capa de brutícia quan s\'assequen.' }, pols: { name: 'Pols', fact: 'La pols pot viatjar molt lluny amb el vent. La del desert del Sàhara arriba a travessar l\'oceà Atlàntic.' }, // i18n-ok: Catalan-only game
+      nuvol: { name: 'Núvol', fact: 'Els núvols estan formats per gotetes d\'aigua o cristallets de gel que queden suspesos a l\'aire.' }, brasa: { name: 'Brasa', fact: 'Les brases poden continuar molt calentes encara que ja no hi hagi flames. Cobrir-les de terra pot conservar-ne l\'escalfor.' }, pedra: { name: 'Pedra', fact: 'L\'aigua i el vent desgasten les roques. Amb el temps, en poden sortir fragments tan petits com grans de sorra.' }, mar: { name: 'Mar', fact: 'Una part de la sal del mar ve de les roques de terra ferma. Els rius la transporten fins al mar.' }, ventada: { name: 'Ventada', fact: 'La velocitat del vent es mesura amb un aparell anomenat anemòmetre. Alguns tenen unes cassoletes que giren quan bufa.' }, // i18n-ok: Catalan-only game
+      muntanya: { name: 'Muntanya', fact: 'Algunes muntanyes neixen quan dues grans plaques de la Terra xoquen i aixequen el terreny. Així es va formar l\'Himàlaia.' }, pluja: { name: 'Pluja', fact: 'Les gotes petites de pluja són gairebé rodones. Les més grosses s\'aplanen per sota mentre cauen.' }, planta: { name: 'Planta', fact: 'Les plantes fan servir la llum del sol per fabricar sucres a partir d\'aigua i diòxid de carboni de l\'aire.' }, arbre: { name: 'Arbre', fact: 'En molts arbres, cada anell del tronc correspon a un any de creixement. Els anells també donen pistes sobre el clima del passat.' }, canya: { name: 'Canya', fact: 'La gralla sona gràcies a dues làmines fines de canya que vibren quan hi bufes. Aquesta peça s\'anomena inxa.' }, fusta: { name: 'Fusta', fact: 'De la fusta se\'n poden separar fibres per fabricar paper. Aquestes fibres contenen cel·lulosa, un material que forma part de les plantes.' }, // i18n-ok: Catalan-only game
+      ceba: { name: 'Ceba', fact: 'Quan talles una ceba, s\'allibera una substància que arriba als ulls i els irrita. Per això et surten llàgrimes.' }, vida: { name: 'Vida', fact: 'Tots els éssers vius estan formats per cèl·lules. N\'hi ha que només en tenen una, i d\'altres que en tenen moltíssimes.' }, animal: { name: 'Animal', fact: 'Els insectes són animals i formen més de la meitat de les espècies animals conegudes. Encara en queden moltes per descobrir.' }, ocell: { name: 'Ocell', fact: 'Les plomes retenen aire i ajuden els ocells a conservar l\'escalfor del cos. També els serveixen per a moltes altres coses, com volar.' }, // i18n-ok: Catalan-only game
       calcot: { name: 'Calçot', fact: 'Es diu així perquè es calça: se li tira terra al voltant perquè quedi blanc.' }, // i18n-ok: Catalan-only game
       calcotada: { name: 'Calçotada', fact: 'Diuen que la va inventar en Xat de Benaiges, però segurament és una llegenda.' }, // i18n-ok: Catalan-only game
       casa: { name: 'Casa' }, coto: { name: 'Cotó' }, persona: { name: 'Persona' }, colla: { name: 'Colla' }, roba: { name: 'Roba' }, // i18n-ok: Catalan-only game
@@ -116,7 +140,7 @@ export const COPY = {
       tio: { name: 'Tió', fact: 'Se\'l tapa amb una manta i se l\'alimenta cada dia fins que caga regals.' }, // i18n-ok: Catalan-only game
       caganer: { name: 'Caganer', fact: 'És una figureta del pessebre, sovint amagada en un racó.' }, // i18n-ok: Catalan-only game
       celula: { name: 'Cèl·lula' }, // i18n-ok: Catalan-only game
-      peix: { name: 'Peix' }, // i18n-ok: Catalan-only game
+      peix: { name: 'Peix', fact: 'Els peixos també necessiten oxigen. Les brànquies els permeten agafar el que hi ha dissolt a l\'aigua.' }, // i18n-ok: Catalan-only game
       gos: { name: 'Gos' }, // i18n-ok: Catalan-only game
       caca: { name: 'Caca de gos' }, // i18n-ok: Catalan-only game
       panerola: { name: 'Panerola' }, // i18n-ok: Catalan-only game

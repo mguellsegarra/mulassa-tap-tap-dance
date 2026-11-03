@@ -32,4 +32,4 @@ jobs:
       # --use-api bundles on Supabase's side: no Docker on the runner. verify_jwt comes from supabase/config.toml.
       - run: |
           [ -n "$PROJECT_REF" ] || { echo "missing Supabase project"; exit 1; }
-          supabase functions deploy delete-player --project-ref "$PROJECT_REF" --use-api
+          supabase functions deploy delete-player --project-ref "$PROJECT_REF" --use-api --yes

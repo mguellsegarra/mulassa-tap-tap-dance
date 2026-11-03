@@ -1,6 +1,6 @@
 // PROVISIONAL: every player-facing string lives here until Codex writes the final copy.
 export const COPY = {
-  title: 'Del Nan al Gegant',
+  title: 'Mulassa Drop',
   figures: { nan: 'Nan', barretVerd: 'Barret Verd', arlequi: 'Arlequí', diable: 'Diable', drac: 'Drac', aliga: 'Àliga', lleo: 'Lleó', basilisc: 'Basilisc', mulassa: 'Mulassa', gegant: 'Gegant', calcot: 'Gegant del Calçot' }, // i18n-ok: provisional, until Codex writes the final copy
   how: 'Arrossega i deixa anar. Dues figures iguals es fan una de més gran. Que no sobresurtin!', // i18n-ok: provisional, until Codex writes the final copy
   play: 'A jugar',

@@ -1,6 +1,6 @@
 // PROVISIONAL: every player-facing string lives here until Codex writes the final copy.
 export const COPY = {
-  title: 'Vila del Seguici', // i18n-ok: provisional, until Codex writes the final copy
+  title: 'Mulassa City', // i18n-ok: provisional, until Codex writes the final copy
   how: "Toca parcel·les del mateix color que es toquin. Els edificis poden ser diferents: es fusionen on toques i el resultat creix. A partir de 10 surten monuments: junta'ls per arribar al campanar.", // i18n-ok: provisional, until Codex writes the final copy
   play: 'Comença', // i18n-ok: provisional, until Codex writes the final copy
   retry: 'Torna-hi', // i18n-ok: provisional, until Codex writes the final copy

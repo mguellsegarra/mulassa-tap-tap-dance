@@ -15,3 +15,15 @@ button { font: inherit; color: inherit; border: 0; cursor: pointer; }
 .btn { min-height: 48px; padding: 8px 16px; border-radius: 12px; background: var(--red); font-weight: 800; font-size: 18px; }
 .btn.alt { background: #453850; }
 .back { position: absolute; top: max(8px, env(safe-area-inset-top)); left: 8px; width: 44px; height: 44px; border-radius: 12px; background: rgba(44, 34, 51, .85); font-size: 22px; line-height: 1; }
+
+/* the run: HUD, sound button, people badges and the gain/loss flash */
+.corre-hud { position: absolute; top: max(8px, env(safe-area-inset-top)); left: 60px; right: 60px; height: 44px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; pointer-events: none; }
+.corre-hud b { font: 400 24px/1 'Jersey 10', monospace; color: #fff2d5; text-shadow: 0 2px 0 #17131a, 2px 0 0 #17131a, -2px 0 0 #17131a, 0 -2px 0 #17131a; white-space: nowrap; }
+.corre-bar { width: min(100%, 180px); height: 8px; border-radius: 4px; background: rgba(23,19,26,.7); overflow: hidden; }
+.corre-bar i { display: block; height: 100%; width: 100%; background: var(--gold); transform-origin: left; transform: scaleX(0); }
+.corre-sound { position: absolute; top: max(8px, env(safe-area-inset-top)); right: 8px; width: 44px; height: 44px; border-radius: 12px; background: rgba(44, 34, 51, .85); font-size: 20px; line-height: 1; }
+.corre-badge { position: absolute; left: 0; top: 0; min-width: 44px; padding: 2px 12px; border-radius: 16px; background: rgba(23,19,26,.85); color: var(--gold); font: 400 30px/1.1 'Jersey 10', monospace; text-align: center; pointer-events: none; will-change: transform; }
+.corre-flash { position: absolute; left: 0; right: 0; top: 17%; text-align: center; font: 400 clamp(40px, 13vw, 60px)/1 'Jersey 10', monospace; pointer-events: none; opacity: 0; text-shadow: 0 3px 0 #17131a, 3px 0 0 #17131a, -3px 0 0 #17131a, 0 -3px 0 #17131a; }
+.corre-flash.go { animation: corre-pop .9s ease-out; }
+@keyframes corre-pop { 0% { opacity: 0; transform: scale(.6); } 12% { opacity: 1; transform: scale(1.12); } 22% { transform: scale(1); } 80% { opacity: 1; } 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .corre-flash.go { animation-name: corre-still; } @keyframes corre-still { 0%, 80% { opacity: 1; } 100% { opacity: 0; } } }

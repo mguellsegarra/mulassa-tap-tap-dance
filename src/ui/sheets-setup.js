@@ -19,6 +19,7 @@ import { setupGreeting } from './greeting.js';
 import { setupDeviceHint } from './device-hint.js';
 import { setupFreeGate } from './free-gate.js';
 import { setupGamesMenu } from './games-menu.js';
+import { setupGamesCarousel } from './games-carousel.js';
 import { setupNews } from './news-sheet.js';
 import { hasPlayed } from '../game/records.js';
 import { softwareGl } from '../scene/stage.js';
@@ -49,7 +50,7 @@ import { sheetUp, viewMode, viewBtn, enterFree } from './controls.js';
 import { loadPhoto } from '../hud/share-card.js';
 
 sheetFades();
-// The keyboard works in every sheet: ↑↓ (and ←→ outside text fields) move between its controls, and Enter/Space act on
+// The keyboard works in every sheet: ↑↓ (and ←→ outside text fields and a sheet's own row, data-arrows) move between its controls, and Enter/Space act on
 // the focused one (native). If the focus fell outside the open sheet (a click on its padding), the first key brings it
 // back to the sheet's first control instead of doing nothing.
 addEventListener('keydown', e => {
@@ -59,7 +60,7 @@ addEventListener('keydown', e => {
     .filter(el => !el.disabled && !el.closest('[hidden]') && el.offsetParent !== null);
   if (!items.length) return;
   const at = items.indexOf(document.activeElement), typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName);
-  const step = { ArrowDown: 1, ArrowUp: -1, ...(typing ? {} : { ArrowRight: 1, ArrowLeft: -1 }) }[e.key];
+  const step = { ArrowDown: 1, ArrowUp: -1, ...(typing || dlg.dataset.arrows === 'row' ? {} : { ArrowRight: 1, ArrowLeft: -1 }) }[e.key];
   if (at < 0 && (step || e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); e.stopImmediatePropagation(); items[0].focus(); if (step && document.activeElement === items[0]) chip?.sfx('menu'); return; }
   if (!step || (typing && document.activeElement.tagName !== 'INPUT')) return; // a textarea/select keeps its own arrows
   e.preventDefault(); e.stopImmediatePropagation(); // not a game key while a sheet is up
@@ -184,7 +185,7 @@ let cardGreeted = false;
 const hint = setupDeviceHint({ focusIn, store, softwareGl }); // the device tips, last: after the profile's own news
 sheets.hint = hint;
 sheets.freeGate = setupFreeGate({ focusIn, store, onEnter: () => enterFree() }); // an upright iPhone is asked to turn before free play
-sheets.games = setupGamesMenu({ focusIn, enterFree });
+sheets.games = setupGamesMenu({ focusIn, enterFree, carousel: setupGamesCarousel() });
 const news = setupNews({ focusIn, store, played: () => hasPlayed(store), onGames: () => sheets.games.open(), force: Q.has('novetats') }); // ?novetats on a dev host shows it again
 sheets.news = news;
 const greeting = setupGreeting({ asked: () => heartTip.update(), stats: statsSync, seasonEnd, account, hint, newGame: news, identity: () => refreshIdentity(service, kv), back: () => select.refocus(),

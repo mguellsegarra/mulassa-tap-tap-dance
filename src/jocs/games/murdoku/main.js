@@ -192,7 +192,7 @@ $('levels').addEventListener('click', e => {
 $('undo').addEventListener('click', undo);
 $('hintbtn').addEventListener('click', hint);
 $('accuse').addEventListener('click', accuse);
-const showMenu = () => showSheet({ title: 'Murdoku del Seguici', msg: UI.menu, note: UI.rule, cases: true });
+const showMenu = () => showSheet({ title: 'Mulassoku', msg: UI.menu, note: UI.rule, cases: true });
 $('menu').addEventListener('click', showMenu);
 $('sheet').addEventListener('cancel', e => { if (!level || !$('next').hidden) e.preventDefault(); }); // Esc can't skip a case's opening or the reveal
 

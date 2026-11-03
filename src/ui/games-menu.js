@@ -1,13 +1,14 @@
 // «Jocs», the corner gamepad's sheet over the selector. Free play is inside this page, so it starts and comes back at once;
 // a mini-game is its own page: replace, so bfcache does not keep the game frozen in memory (docs/jocs/README.md).
-export function setupGamesMenu({ focusIn, enterFree, doc = document, go = url => location.replace(url) }) {
+export function setupGamesMenu({ focusIn, enterFree, carousel, doc = document, go = url => location.replace(url) }) {
   const menu = doc.getElementById('games-menu');
   let backToMenu = false;
-  const open = () => { menu.showModal(); focusIn(menu, 'games-x'); };
+  const open = () => { menu.showModal(); carousel?.opened(); focusIn(menu, 'games-x'); };
   doc.getElementById('games-x').addEventListener('click', () => menu.close());
   doc.getElementById('games-grid').addEventListener('click', e => {
     const card = e.target.closest?.('[data-game]');
-    if (!card) return;
+    if (!card || carousel?.take(card) === false) return;
+    if (card.dataset.game === 'tap') { menu.close(); return; } // the rhythm game is the selector behind this sheet
     if (card.dataset.game !== 'lliure') { go(`/jocs/${card.dataset.game}/`); return; }
     menu.close(); backToMenu = true; enterFree();
   });

@@ -31,6 +31,8 @@ b.games.open(); b.games.afterFree(true); b.menu.close(); b.games.afterFree(true)
 assert(!b.menu.open, 'a free play that did not come from the sheet stays on the selector');
 b.games.open(); b.tap('pica');
 assert.equal(b.went, '/jocs/pica/', 'a mini-game is its own page');
+b.games.open(); b.tap('tap');
+assert(!b.menu.open && b.went === '/jocs/pica/', 'Tap Tap Dance is this page: the sheet just closes');
 b.closeX();
 assert(!b.menu.open, 'the × closes');
 
@@ -40,9 +42,8 @@ const ids = [...html.matchAll(/data-game="([\w-]+)"/g)].map(m => m[1]);
 assert.equal(ids.at(-1), 'lliure', 'free play comes last, after the games');
 for (const id of ids) {
   readFileSync(`public/jocs/menu/cards/${id}.jpg`);
-  if (id !== 'lliure') readFileSync(`jocs/${id}/index.html`);
+  if (id !== 'lliure' && id !== 'tap') readFileSync(`jocs/${id}/index.html`);
 }
 
-// the card's «Juga» is a label inside the card, which is the one real button; its name is the game's
-assert.match(html, /<span class="game-play" aria-hidden="true" data-i18n="html\.games\.play">/, 'the pill is decoration for assistive tech');
-assert.equal((html.match(/class="game-play"/g) ?? []).length, ids.length, 'one pill per game');
+// one «Juga» for the whole sheet, in the hero; each card is the one real button
+assert.equal((html.match(/class="game-play"/g) ?? []).length, 1, 'one play button, in the hero');

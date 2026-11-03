@@ -1,41 +1,29 @@
 import * as THREE from 'three';
 import { NAME, T } from './copy.js';
 import { MAT } from '../../../scene/models/voxel.js';
-import { applyGroundTexture } from './ground-texture.js';
-import { loadWorld, ROTATION } from './realworld.js';
+import { loadWorld } from './realworld.js';
 import { LEVELS, newRun, tick, castellFor } from './rules.js';
 import { buildStreet, STREET_LENGTH, X_SPAN, halfAt, NARROW, bend, heading } from './street.js';
 import { createCrew, createMulassa, createConfetti, castellSlots, castellHeight, castellTime, enxanetaY } from './crew.js';
 import { createCourse } from './course.js';
 import { createAudio } from './music.js';
+import { createOverlay, placeBadge, wireSound } from './overlay.js';
+import { createStageScene, fitFov } from './stage-scene.js';
 
 THREE.ColorManagement.enabled = false; // as in the viewer: every colour here is a display colour
 const CAM_Y = 9, CAM_BACK = 15, CAM_AHEAD = 13, VIEW_DIST = 13;
 const BEST_KEY = 'minijocs.corre.best'; // most people who ever reached the plaça
 const REVEAL = .2; // seconds per floor
 const RESERVE = 224; // height kept free for the result panel
-const WIDE = 46 * Math.PI / 180; // how much street a phone in portrait must see, across
 // All of it straight ahead on the Cort's axis: the camera never has to round the street's corners, and the square opens in front of it.
 const MOUTH_Z = -STREET_LENGTH, CASTELL = { x: 0, z: MOUTH_Z - 13 }, RIVALS = { x: 0, z: MOUTH_Z - 16 }, MINE_AT = { x: 0, z: MOUTH_Z + 1 }, MULA_AT = { x: -4.5, z: MOUTH_Z - 18 };
 const CAM_DIR = { x: 0, z: 1 };
 const BPM = [168, 180, 190, 198, 206];
 const PARTY = ['#d8342f', '#f2c21d', '#2c6fc4', '#2f9a4e', '#ffffff'];
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-const CSS = `
-.corre-hud { position: absolute; top: max(8px, env(safe-area-inset-top)); left: 60px; right: 60px; height: 44px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; pointer-events: none; }
-.corre-hud b { font: 400 24px/1 'Jersey 10', monospace; color: #fff2d5; text-shadow: 0 2px 0 #17131a, 2px 0 0 #17131a, -2px 0 0 #17131a, 0 -2px 0 #17131a; white-space: nowrap; }
-.corre-bar { width: min(100%, 180px); height: 8px; border-radius: 4px; background: rgba(23,19,26,.7); overflow: hidden; }
-.corre-bar i { display: block; height: 100%; width: 100%; background: var(--gold); transform-origin: left; transform: scaleX(0); }
-.corre-sound { position: absolute; top: max(8px, env(safe-area-inset-top)); right: 8px; width: 44px; height: 44px; border-radius: 12px; background: rgba(44, 34, 51, .85); font-size: 20px; line-height: 1; }
-.corre-badge { position: absolute; left: 0; top: 0; min-width: 44px; padding: 2px 12px; border-radius: 16px; background: rgba(23,19,26,.85); color: var(--gold); font: 400 30px/1.1 'Jersey 10', monospace; text-align: center; pointer-events: none; will-change: transform; }
-.corre-flash { position: absolute; left: 0; right: 0; top: 17%; text-align: center; font: 400 clamp(40px, 13vw, 60px)/1 'Jersey 10', monospace; pointer-events: none; opacity: 0; text-shadow: 0 3px 0 #17131a, 3px 0 0 #17131a, -3px 0 0 #17131a, 0 -3px 0 #17131a; }
-.corre-flash.go { animation: corre-pop .9s ease-out; }
-@keyframes corre-pop { 0% { opacity: 0; transform: scale(.6); } 12% { opacity: 1; transform: scale(1.12); } 22% { transform: scale(1); } 80% { opacity: 1; } 100% { opacity: 0; } }
-@media (prefers-reduced-motion: reduce) { .corre-flash.go { animation-name: corre-still; } @keyframes corre-still { 0%, 80% { opacity: 1; } 100% { opacity: 0; } } }
-`;
 
 export function start(root, leave) {
-  root.innerHTML = `<div class="stage"><style>${CSS}</style><canvas></canvas><div class="corre-hud"><b></b><div class="corre-bar"><i></i></div></div>
+  root.innerHTML = `<div class="stage"><canvas></canvas><div class="corre-hud"><b></b><div class="corre-bar"><i></i></div></div>
     <div class="corre-badge"></div><div class="corre-badge"></div><div class="corre-flash"></div>
     <button class="back" aria-label="${T.menu}">‹</button><button class="corre-sound"></button><div class="overlay"></div></div>`;
   const stage = root.firstElementChild, canvas = stage.querySelector('canvas'), overlay = stage.querySelector('.overlay');
@@ -44,19 +32,7 @@ export function start(root, leave) {
   const back = stage.querySelector('.back');
   back.onclick = leave;
 
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
-  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 1.5));
-  const scene = new THREE.Scene();
-  renderer.outputColorSpace = THREE.LinearSRGBColorSpace; // as in the viewer: the bytes are sRGB already, light them as they are
-  scene.background = new THREE.Color(0x4fa8ee);
-  scene.fog = new THREE.Fog(0x4fa8ee, 110, 210);
-  scene.add(new THREE.HemisphereLight(0xb8b6b2, 0xf5e8d2, 1.05 * Math.PI));
-  const sun = new THREE.DirectionalLight(0xffeccc, .45 * Math.PI);
-  sun.position.set(.28 * Math.cos(ROTATION) + .5 * Math.sin(ROTATION), .82, -.28 * Math.sin(ROTATION) + .5 * Math.cos(ROTATION)); // the world's sun, turned with the world
-  scene.add(sun);
-  const worldMat = new THREE.MeshLambertMaterial({ vertexColors: true }), farMat = new THREE.MeshLambertMaterial({ vertexColors: true, polygonOffset: true, polygonOffsetFactor: 2, polygonOffsetUnits: 2 });
-  const groundTex = applyGroundTexture(renderer.capabilities.getMaxAnisotropy() > 2 ? 4 : 1, worldMat, farMat);
-  const camera = new THREE.PerspectiveCamera(70, 1, 1, 800); // a near plane of 1 m keeps far façades from flickering
+  const { renderer, scene, worldMat, farMat, groundTex, camera } = createStageScene(canvas);
   const lookAt = new THREE.Vector3(), lookNow = new THREE.Vector3(), camNow = new THREE.Vector3(), at = new THREE.Vector3();
 
   const stretches = buildStreet(scene, worldMat), plazaWorld = new THREE.Group();
@@ -68,7 +44,7 @@ export function start(root, leave) {
   const aleta = new THREE.Mesh(new THREE.BoxGeometry(.1, .55, .1).translate(0, .27, 0), new THREE.MeshLambertMaterial({ color: '#f0bd8e' }));
   scene.add(aleta);
 
-  let W = 0, H = 0, raf = 0, last = 0, run = null, level = 0, course = null, kick = 0, shake = 0, target = 0, keys = 0, plaza = null, armTimer = 0, panelTimer = 0, offset = 0, baseFov = 70, stopped = false, arena = false, snap = false;
+  let W = 0, H = 0, raf = 0, last = 0, run = null, level = 0, course = null, kick = 0, shake = 0, target = 0, keys = 0, plaza = null, panelTimer = 0, offset = 0, baseFov = 70, stopped = false, arena = false, snap = false;
   const worldZ = z => -(offset + z);
 
   function size() {
@@ -76,37 +52,12 @@ export function start(root, leave) {
     H = stage.clientHeight;
     renderer.setSize(W, H, false);
     camera.aspect = W / H;
-    camera.fov = baseFov = Math.max(58, 2 * Math.atan(Math.tan(WIDE / 2) / camera.aspect) * 180 / Math.PI);
+    camera.fov = baseFov = fitFov(camera.aspect);
     camera.updateProjectionMatrix();
   }
-  const showSound = () => { soundBtn.textContent = '♪'; soundBtn.style.opacity = audio.muted ? .45 : 1; soundBtn.setAttribute('aria-label', audio.muted ? T.soundOn : T.soundOff); };
-  soundBtn.onclick = () => { audio.toggleMute(); showSound(); };
+  wireSound(soundBtn, audio);
 
-  function panel(title, text, buttons, atBottom) {
-    overlay.style.display = '';
-    overlay.style.pointerEvents = 'none'; // a player still dragging must not hit a button that has just appeared
-    overlay.style.alignItems = atBottom ? 'flex-end' : '';
-    overlay.style.background = atBottom ? 'none' : '';
-    clearTimeout(armTimer);
-    armTimer = setTimeout(() => { overlay.style.pointerEvents = ''; }, 500);
-    overlay.innerHTML = `<div class="panel"><h2>${title}</h2><p>${text}</p><div style="display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:12px"></div></div>`;
-    for (const [name, fn, alt] of buttons) {
-      const b = document.createElement('button');
-      b.className = alt ? 'btn alt' : 'btn';
-      b.textContent = name;
-      b.onclick = fn;
-      overlay.querySelector('.panel > div').append(b);
-    }
-  }
-
-  function flash(text, gain) {
-    if (!text) return;
-    flashEl.textContent = text;
-    flashEl.style.color = gain ? '#f5c518' : '#ff9d9d';
-    flashEl.classList.remove('go');
-    void flashEl.offsetWidth; // restart the animation
-    flashEl.classList.add('go');
-  }
+  const { panel, flash, disarm } = createOverlay(overlay, flashEl);
 
   const crewZ = () => worldZ(run.z);
   const toSquare = () => { arena = true; };
@@ -205,16 +156,7 @@ export function start(root, leave) {
     }, (plaza.end + .8) * 1000);
   }
 
-  function badge(el, n, x, y, z) {
-    el.style.display = n ? '' : 'none';
-    if (!n) return;
-    at.set(x, y, z).project(camera);
-    const text = String(n);
-    if (el.textContent !== text) el.textContent = text;
-    const w = el.offsetWidth, h = el.offsetHeight;
-    const left = Math.max(8, Math.min(W - w - 8, (at.x + 1) / 2 * W - w / 2)), top = Math.max(56, Math.min(H - h - 8, (1 - at.y) / 2 * H - h));
-    el.style.transform = `translate(${Math.round(left)}px, ${Math.round(top)}px)`;
-  }
+  const badge = (el, n, x, y, z) => placeBadge(el, n, at.set(x, y, z).project(camera), W, H);
 
   function frame(now) {
     raf = requestAnimationFrame(frame);
@@ -327,7 +269,6 @@ export function start(root, leave) {
     if (d) keys = e.type === 'keydown' ? d : keys === d ? 0 : keys;
   };
 
-  showSound();
   size();
   // the door numbers are drawn into textures: the pixel font has to be there first
   overlay.innerHTML = `<div class="panel"><h2>${NAME}</h2><p>${T.loading}</p></div>`;
@@ -344,7 +285,7 @@ export function start(root, leave) {
   return () => {
     stopped = true;
     cancelAnimationFrame(raf);
-    clearTimeout(armTimer);
+    disarm();
     clearTimeout(panelTimer);
     removeEventListener('resize', size);
     removeEventListener('keydown', onKey);

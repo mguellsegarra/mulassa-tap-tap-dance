@@ -185,20 +185,3 @@ html:not([lang="ca"]) .sel-footer :is(#select-next, #select-play, #select-figure
 
 body.view-mode #select { opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .2s, visibility 0s .2s, display .2s allow-discrete; }
 #select { transition: opacity .2s, visibility 0s, display .2s allow-discrete; } /* return visibility immediately so the saved card can take focus */
-/* «Jocs» (ui/games-menu.js): the selector's own card, a game's picture filling its panel. */
-#games-menu { width: min(440px, calc(100vw - 24px)); }
-.games-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 12px; }
-#games-grid { grid-template-columns: minmax(0, 1fr); gap: 10px; }
-/* each game its own world: the picture fades into the game's colour, the text stands on that colour */
-#games-grid .game-card { position: relative; display: block; width: auto; flex: none; height: 140px; border: 0; --sel-r: 16px; background: linear-gradient(90deg, color-mix(in srgb, var(--game) 30%, #24170e), color-mix(in srgb, var(--game) 16%, #24170e)); box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--game) 75%, transparent), 0 6px 16px #0006; }
-#games-grid .game-card .por { position: absolute; inset: 0 0 0 auto; width: 46%; height: 100%; background: none; -webkit-mask-image: linear-gradient(90deg, #0000, #000 30%); mask-image: linear-gradient(90deg, #0000, #000 30%); }
-#games-grid .game-card .por img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-#games-grid .game-card .nb { position: absolute; inset: 0 auto 0 0; transform: none; width: 54%; height: 100%; min-width: 0; margin: 0; align-items: flex-start; justify-content: center; gap: 2px; padding: 8px 8px 8px 14px; background: none; box-shadow: none; text-align: left; }
-#games-grid .sel-card-name { font-size: 18px; line-height: 22px; color: var(--game); text-shadow: 0 1px 2px #0008; }
-#games-grid .nb .game-desc { flex: none; display: block; overflow: visible; max-width: none; white-space: normal; text-overflow: clip; color: #fff3d6; font-size: 14px; font-weight: 600; line-height: 17px; text-wrap: balance; text-shadow: 0 1px 2px #0008; }
-#games-grid .game-play { flex: none; display: grid; place-items: center; min-width: 76px; height: 44px; margin-top: 6px; padding: 0 16px; box-sizing: border-box; border-radius: 22px; background: #fff3d6; color: #2a1a10; font: 800 16px/1 'Baloo 2', system-ui, sans-serif; box-shadow: 0 3px 0 color-mix(in srgb, var(--game) 55%, #120b07); }
-/* each game's own colour, the same as the second word of its logo */
-.game-card[data-game="pica"] { --game: #ff7ac6; } .game-card[data-game="memory"] { --game: #6ec8ff; } .game-card[data-game="crush"] { --game: #8be04e; } .game-card[data-game="lliure"] { --game: #c9a0ff; }
-/* short screens: all four still in view (the whole card is the target, so the pill may be smaller) */
-@media (max-height: 760px) { #games-grid .game-card { height: 126px; } #games-grid .game-card .nb { padding-block: 4px; } #games-grid .sel-card-name { font-size: 17px; line-height: 20px; } #games-grid .game-play { height: 34px; margin-top: 4px; } }
-@media (max-height: 640px) { #games-grid { gap: 8px; } #games-grid .game-card { height: 98px; } #games-grid .game-card .por { width: 40%; } #games-grid .game-card .nb { width: 60%; } #games-grid .sel-card-name { font-size: 15px; line-height: 18px; } #games-grid .nb .game-desc { font-size: 13px; line-height: 15px; } #games-grid .game-play { height: 28px; margin-top: 3px; font-size: 14px; } }

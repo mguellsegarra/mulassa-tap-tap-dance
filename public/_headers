@@ -53,6 +53,10 @@ https://beta.mulassa.cat/*
   Cache-Control: no-cache
 /jocs/subara/index.html
   Cache-Control: no-cache
+/jocs/alquimia/
+  Cache-Control: no-cache
+/jocs/alquimia/index.html
+  Cache-Control: no-cache
 
 /index.md
   Content-Type: text/markdown; charset=utf-8

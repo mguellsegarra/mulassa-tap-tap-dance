@@ -352,13 +352,13 @@ for (const practice of [null, { step: 0 }]) {
 }
 const menuItems = [$('resume'), $('exit')];
 for (const b of menuItems) { b.tagName = 'BUTTON'; b.offsetParent = doc.body; b.closest = () => null; }
-activeDialog = { querySelectorAll: () => menuItems };
+activeDialog = { dataset: {}, querySelectorAll: () => menuItems };
 doc.activeElement = menuItems[0]; presses.length = sounds.length = 0;
 dispatchKey('ArrowDown', 'ArrowDown', menuItems[0]);
 assert.equal(doc.activeElement, menuItems[1]);
 assert.deepEqual(sounds, ['menu'], 'sheet focus navigation emits exactly one menu sound');
 assert.deepEqual(presses, [], 'capture prevents sheet arrows from also playing a note');
-activeDialog = { querySelectorAll: () => [menuItems[1]] }; sounds.length = 0;
+activeDialog = { dataset: {}, querySelectorAll: () => [menuItems[1]] }; sounds.length = 0;
 dispatchKey('ArrowDown', 'ArrowDown', menuItems[1]);
 assert.deepEqual(sounds, [], 'unchanged focus does not emit a second selection sound');
 console.log('practice/game input routing: keyboard, mouse/touch pad and bubbling stay separate from menu sounds');

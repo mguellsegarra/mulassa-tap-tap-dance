@@ -2,11 +2,21 @@
 // (her hop and clack, its breath and sway) and now and then the Drac roaring fire into the air. A small WebGL view of its own:
 // it sits over the home's blur, which would blur the board's canvas; main.js draws it only while the home shows.
 import * as THREE from 'three';
-import { mulaRig, dracRig, poseMula, poseDrac, MULA_POSES, DRAC_POSES, MULA_SCALE, MULA_YAW, DRAC_K } from './rigs.js';
+import { mulaRig, dracRig, poseMula, poseDrac, MULA_POSES, MULA_SCALE, MULA_YAW, DRAC_K } from './rigs.js';
 import { createSparks } from './board-sparks.js';
 import { waitForWarmup, linkPrograms } from '../../../platform/boot.js';
 
 const ROAR_EVERY = 6.5, ROAR = 1.6; // seconds between the Drac's roars, and how long one lasts
+// The home's Drac plays like a puppy. Its snouts dip a little: the eyes sit on top of the heads, and the raised camera
+// only finds them over a lowered snout (heads thrown back hid them behind the red lips).
+const PLAY = { necks: [.2, .2], heads: [[.2, .3], [.2, -.3]], jaws: [.12, .12], splay: .25, wing: .4 };
+// Its play fills the quiet between two roars (seconds into each ROAR_EVERY): a play bow, two hops, a look at her and back.
+const BOW = [2, 3.4], HOPS = [3.6, 4.8], LOOK = [4.9, 6.2];
+// Every move eases in and out (zero speed at both ends), so nothing starts, stops or turns with a jolt.
+const ease = (a, b, x) => { const u = Math.min(1, Math.max(0, (x - a) / (b - a))); return u * u * (3 - 2 * u); };
+const bump = ([a, b], x) => (x > a && x < b ? (1 - Math.cos((x - a) / (b - a) * 2 * Math.PI)) / 2 : 0); // 0 → 1 → 0
+const hops = ([a, b], x) => (x > a && x < b ? Math.abs(Math.sin((x - a) / (b - a) * 2 * Math.PI)) : 0); // two, falling like hers: the bounce reads as gravity
+const UP_AWAY = new THREE.Vector3(0, 3, -1);
 const still = matchMedia('(prefers-reduced-motion: reduce)');
 
 export function createHero(canvas) {
@@ -22,7 +32,7 @@ export function createHero(canvas) {
   drac.root.position.set(1.7, 0, -.9); // behind her on the right, facing her and us
   scene.add(mula.root, drac.root);
   const { flame, step } = createSparks(scene);
-  const P = MULA_POSES[0], D = DRAC_POSES[3], tip = new THREE.Vector3(), dir = new THREE.Vector3();
+  const P = MULA_POSES[0], tip = new THREE.Vector3(), dir = new THREE.Vector3();
   let t = 0, W = 0, H = 0;
 
   function pose(fire) {
@@ -30,10 +40,25 @@ export function createHero(canvas) {
     poseMula(mula, P, t, 0, fire * .6); // she panics a little while it roars
     mula.root.position.y = hop * .35;
     mula.root.rotation.set(0, MULA_YAW + P.yaw + Math.sin(t * .7) * .15, Math.sin(t * 3.5) * .06);
-    poseDrac(drac, D, t, 0, fire);
-    drac.root.rotation.set(0, -.55 + Math.sin(t * .5) * .1, 0);
+    poseDrac(drac, PLAY, t, 0, fire);
+    playDrac(fire);
     const breath = 1 + Math.sin(t * 2.4) * .025;
     drac.root.scale.set(DRAC_K * (2 - breath), DRAC_K * breath, DRAC_K * (2 - breath));
+  }
+
+  function playDrac(fire) {
+    const c = t % ROAR_EVERY, on = still.matches ? 0 : 1;
+    const bow = bump(BOW, c) * on, hop = hops(HOPS, c) * on, look = bump(LOOK, c) * on;
+    drac.body.rotation.x = .22 * bow; // front down, rear up
+    drac.root.position.y = .3 * hop;
+    drac.root.rotation.set(0, -.55 - .3 * look + Math.sin(t * .5) * .06, 0);
+    drac.necks.forEach((n, k) => {
+      n.head.rotation.x += .25 * fire; // its roar lifts the heads less: the eyes stay in view
+      n.head.rotation.z = (k ? -1 : 1) * .2 * bow; // heads cocked in the bow
+      n.jaw.rotation.x = Math.max(n.jaw.rotation.x, .35 * hop); // a yap on each hop
+    });
+    const wag = (bow + hop) * on; // it wags while it plays, and the wag fades out with the play
+    for (const seg of drac.tail) seg.rotation.y = Math.sin(t * 9) * .32 * Math.min(1, wag * 2);
   }
 
   // both figures in view, whatever the box's shape: the camera backs off along a raised three-quarter line
@@ -59,12 +84,12 @@ export function createHero(canvas) {
   function frame(dt) {
     fit();
     t += dt;
-    const k = t % ROAR_EVERY, fire = still.matches ? 0 : Math.max(0, Math.min(1, Math.min(k, ROAR - k) * 5)) * (k < ROAR ? 1 : 0);
+    const k = t % ROAR_EVERY, fire = still.matches ? 0 : ease(0, .35, k) * (1 - ease(ROAR - .35, ROAR, k)); // eased in and out
     pose(fire);
     if (fire > .4) for (const n of drac.necks) { // the board's flames (board.js placeFigure), up and away from her
       n.head.updateMatrixWorld(true);
       tip.set(0, .2, 1.75).applyMatrix4(n.head.matrixWorld);
-      dir.setFromMatrixColumn(n.head.matrixWorld, 2).normalize().add(new THREE.Vector3(0, .9, 0)).normalize();
+      dir.setFromMatrixColumn(n.head.matrixWorld, 2).normalize().add(UP_AWAY).normalize(); // up and back: the fire never hides the faces
       flame(tip.x, tip.y, tip.z, dir.x * 4.5 + (Math.random() - .5), dir.y * 4.5 + (Math.random() - .5), dir.z * 4.5 + (Math.random() - .5), .32);
     }
     step(dt);

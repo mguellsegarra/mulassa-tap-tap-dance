@@ -85,7 +85,7 @@ const catalogFixture = { id: 'selector-fixture', town: TOWNS.at(-1).id, status: 
 FIGURES.push(catalogFixture);
 // The selector's DOM contract, with no rendering or network dependency.
 const nodes = new Map(), handlers = {};
-const doc = { activeElement: null, body: {}, getElementById: id => nodes.get(id) };
+const doc = { activeElement: null, body: {}, getElementById: id => nodes.get(id), createElement: () => ({ classList: { add() {} } }) };
 class Node {
   constructor(id = '', cls = '', dataset = {}) { Object.assign(this, { id, cls, dataset, children: [], attrs: {}, listeners: {}, style: { setProperty() {} }, hidden: false, open: false, scrollLeft: 0, scrollWidth: 700, clientWidth: 393, offsetLeft: 0, offsetWidth: 74 }); }
   set innerHTML(html) {
@@ -96,6 +96,8 @@ class Node {
     });
   }
   get innerHTML() { return this.html; }
+  get ownerDocument() { return doc; }
+  replaceChildren(...kids) { this.textContent = kids.map(k => k.textContent).join(''); } // the heart's count line: number + words
   querySelectorAll(sel) { return [...this.children, ...(this.banners || [])].filter(c => c.cls?.split(' ').includes(sel.slice(1))); }
   querySelector(sel) { return sel.startsWith('.sel-banner') ? { offsetLeft: 100 } : null; }
   setAttribute(k, v) { this.attrs[k] = v; }
@@ -123,10 +125,11 @@ Object.defineProperties(nodes.get('select-level-sub'), { clientWidth: { value: 2
 let narrow = false, narrowSub = false;
 const $ = id => nodes.get(id), win = { innerWidth: 393, innerHeight: 852, addEventListener(k, f) { (handlers[k] ||= []).push(f); } };
 let boards = [], sounds = [], played = [], how = 0, drafts = [], busy = false, selected = [];
+const heartN = new Map(), heartMine = new Set();
 let standingOf = async f => (f === DRAC.id ? { pos: 3, total: 12 } : { pos: 7, total: 1350 });
 const api = setupSelect({ doc, win, store, keyboard: () => true, reduced: () => true, busy: () => busy,
   sfx: k => sounds.push(k), firstLevel: 0, standing: f => standingOf(f), onBoard: f => boards.push(f.id), ranked: true, demo: true, // ?demo stays off outside a dev build
-  onPlay: (d, f) => played.push([d, f.id]), onSelect: f => selected.push(f.id), onHowto: () => how++, onWrite: draft => drafts.push(draft), hearts: { count: () => 0, mine: () => false, paint() {}, tap() {} } });
+  onPlay: (d, f) => played.push([d, f.id]), onSelect: f => selected.push(f.id), onHowto: () => how++, onWrite: draft => drafts.push(draft), hearts: { count: id => heartN.get(id) ?? 0, mine: id => heartMine.has(id), paint() {}, tap() {} } });
 const key = (key, options = {}) => { const e = { key, ...options, defaultPrevented: false, preventDefault() { this.defaultPrevented = true; } }; for (const f of handlers.keydown) f(e); return e; };
 const click = (root, target = root) => root.fire('click', { target });
 api.visible(true); await Promise.resolve();
@@ -393,6 +396,17 @@ assert(!$('select-pending').hidden && $('select-info').hidden, 'a pending figure
 assert.equal($('aviat-title').textContent, soon[0].fullName || soon[0].name);
 assert.equal(soon[0].id, UNRELEASED_IDS.has('bou-tradicional-valls') ? 'bou-tradicional-valls' : 'os-trabucaires-valls', 'the agreed order: (the Bou, until its release) Ós, Cavallets, Basilisc, Àliga, Gegants'); assert.match($('aviat-entity').innerHTML, /viewBox="0 0 525 829".*Unió Anelles de la Flama/, 'a pending figure shows its entity\'s mark, as its card does'); assert.doesNotMatch($('aviat-entity').innerHTML, /class="escut"/);
 assert.equal($('aviat-love-title').textContent, 'Vols que surti a la plaça?'); assert.match($('aviat-status').textContent, /Pròximament|Encara no té data/);
+{ // The count leads before the vote too, and the button only says what a tap does: give, or already given (a quiet state).
+  assert.equal($('aviat-love-sub').textContent, 'Dona un cor');
+  heartN.set(soon[0].id, 16); api.paintHearts();
+  assert.equal($('aviat-love-title').textContent, '16persones volen que sigui a la plaça', 'someone gave one: the count replaces the question before voting');
+  assert.equal($('aviat-love-sub').textContent, 'Dona un cor');
+  heartN.set(soon[0].id, 17); heartMine.add(soon[0].id); api.paintHearts();
+  assert.equal($('aviat-love-title').textContent, '17persones volen que sigui a la plaça');
+  assert.equal($('aviat-love-sub').textContent, 'Cor donat');
+  heartN.clear(); heartMine.clear(); api.paintHearts();
+  assert.equal($('aviat-love-title').textContent, 'Vols que surti a la plaça?', 'nobody: the question again, never a zero');
+}
 assert($('select-next').disabled && !$('select-next').hidden, 'pending keeps a disabled action for the desktop placeholder');
 assert.equal($('select-next-label').textContent, 'Encara no es pot jugar');
 assert($('select').attrs['data-pending'], 'pending selection hides the action');
@@ -592,7 +606,7 @@ assert.match(selectCss(), /@media \(pointer: coarse\) \{[^}]*\}\s*\.sel-carousel
   assert.match(css, /#select \.sel-pending-id \{ box-sizing: content-box;[^}]*min-height: calc\(/, 'desktop: the identity reserves its tallest size, so moving along the strip never resizes the card');
   assert.match(css, /#select \.sel-state \{ box-sizing: content-box; min-height: calc\(/, 'desktop: the progress island reserves its tallest size too');
   assert.match(css, /#select \.sel-pending \.btn \{[^}]*width: fit-content; max-width: 100%;/, 'the buttons fit their words, never wider than the island');
-  assert.match(css, /\.sel-heart-wide \{ width: fit-content; max-width: 100%;/, 'the heart button fits its words as well');
+  assert.match(css, /\.sel-heart-wide \{ width: fit-content; max-width: 100%; box-sizing: border-box;/, 'the heart button fits its words as well; border-box: the given state\'s border never grows it (pressing moves nothing)');
   assert.match(css, /\.sel-pending\[data-no-actions\] \.sel-pending-actions \{ display: none; \}/, 'no actions: no empty action row');
   assert.match(css, /@media \(min-width: 1400px\) and \(min-height: 860px\) and \(pointer: fine\) \{\s*\.sel-pending \{ width: min\(576px, [^}]*\}\s*\.sel-pending > \* \{ zoom: 1\.2; \}/, 'big windows: the same card a fifth larger (576 = 480 x 1.2)');
   const phone = css.match(/@media \(max-width: 519px\) \{\s*#select :is\(\.sel-pending-id, \.sel-state\) \{ min-height: 0; \}[^]*?\n\}/)?.[0] ?? '';

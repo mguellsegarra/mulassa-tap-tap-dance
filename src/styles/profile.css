@@ -206,6 +206,7 @@ span.player-name { display: inline-flex; align-items: baseline; min-width: 0; }
    which takes what the profile block and the links leave; a taller answer scrolls the sheet's body as every sheet's */
 #account-menu { width: min(460px, calc(100vw - 32px - var(--sal) - var(--sar))); height: min(760px, calc(100dvh - 32px - var(--sat) - var(--sab))); padding: 18px 20px 12px; }
 #account-menu > .sheet-body { flex: 1 1 auto; display: flex; flex-direction: column; }
+#account-menu > .sheet-body { padding-inline: calc(var(--ring-room) + 10px); } /* the drawn bar's room (share.css) always: the statistics arrive after the open, overflow, and the bar showing then would narrow everything */
 .account-grow { flex: 1 0 auto; display: flex; flex-direction: column; }
 .account-grow > .account-empty { margin-block: auto; }
 .account-grow > .account-stats { margin-bottom: auto; }
@@ -365,6 +366,7 @@ body:has(:is(#board-menu, #seasons-menu, #account-menu)[open]) #card-menu { widt
 .card-from .lvl { padding: 0 6px; border-radius: 999px; color: #2a1a10; font-size: 10px; font-weight: 800; line-height: 16px; letter-spacing: .05em; }
 .card-box { position: relative; min-height: 196px; }
 .card-box .board-state { position: absolute; inset: 0; }
+#card-stats { display: flex; flex-direction: column; justify-content: center; } /* a shorter answer than the skeleton's reserve (player-card.js): the spare room shared above and below */
 /* loading (player-card.js): the loaded tiles with their words and icons gone, pulsing; «Carregant…» for readers only */
 .card-box [data-pending] :is(.stat-fact, .stat-toggle) { color: transparent; pointer-events: none; animation: profile-pulse 1.2s ease-in-out infinite; }
 .card-box [data-pending] :is(.stat-fact, .stat-toggle) * { visibility: hidden; }
@@ -372,7 +374,7 @@ body:has(:is(#board-menu, #seasons-menu, #account-menu)[open]) #card-menu { widt
 @media (prefers-reduced-motion: reduce) { .card-box [data-pending] :is(.stat-fact, .stat-toggle) { animation: none; } }
 .card-box .board-status .stat-ico { display: block; width: 40px; height: 40px; margin: 0 auto 8px; color: #b5a385; } .card-box .board-status .stat-ico svg { stroke-width: 1.6; }
 @media (max-width: 400px) { .stat-fact { padding: 10px; column-gap: 8px; } }
-@media (max-width: 359px) { #card-menu, #account-menu { padding-inline: 14px; } :is(#card-menu, #account-menu):has(> .sheet-bar:not([hidden])) { padding-inline: 6px; } /* the scroll bar's inset (share.css) already keeps the margins */ .stat-fact { padding: 8px; column-gap: 6px; } .stat-fact span:not(.stat-ico) { font-size: 12px; } .stat-fact b { font-size: 19px; } .stat-fact .stat-ico { width: 22px; height: 22px; }
+@media (max-width: 359px) { #card-menu { padding-inline: 14px; } #account-menu, #card-menu:has(> .sheet-bar:not([hidden])) { padding-inline: 6px; } /* the scroll bar's inset (share.css) already keeps the margins */ .stat-fact { padding: 8px; column-gap: 6px; } .stat-fact span:not(.stat-ico) { font-size: 12px; } .stat-fact b { font-size: 19px; } .stat-fact .stat-ico { width: 22px; height: 22px; }
   .stat-lines li { grid-template-columns: 22px minmax(0, 1fr); column-gap: 6px; padding: 8px; } .stat-lines .stat-ico { width: 22px; height: 22px; } } /* the lines keep the tiles' compact inset */
 /* The detailed labels need whole words on phones; the four headline facts stay paired. */
 @media (max-width: 519px) { .stat-lines { grid-template-columns: 1fr; } }

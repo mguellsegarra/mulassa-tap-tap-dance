@@ -11,7 +11,7 @@ import { setupAccount } from '../../src/ui/account-ui.js';
 import { setupGreeting } from '../../src/ui/greeting.js';
 import { setupDeviceHint } from '../../src/ui/device-hint.js';
 import { refreshIdentity, savedName } from '../../src/services/leaderboard-identity.js';
-import { setStatsOwner } from '../../src/game/stats.js';
+import { setStatsOwner, endRun, newStats, saveStats } from '../../src/game/stats.js';
 import { createStatsSync } from '../../src/services/stats-sync.js';
 import { readPage } from './page.mjs';
 
@@ -222,6 +222,7 @@ const service = (o = {}) => ({ configured: true, asked: [], async seasons(f) { t
   await tick(); await tick(); await tick();
   assert.deepEqual(asked, ['id-baldufa'], 'asked by public id, never by name; the repeated taps ask nothing more');
   assert(!f.$('card-stats').inert && !('pending' in f.$('card-stats').dataset), 'loaded: the skeleton gone');
+  assert.equal(f.$('card-stats').style.minHeight, `${f.$('card-stats').offsetHeight}px`, 'but its height stays: a shorter answer never shrinks the card, a longer one is the skeleton\'s worst case');
   assert(/3 h 12 mina la plaça/.test(f.$('card-stats').textContent) && !/Has jugat|dies/.test(f.$('card-stats').textContent), 'the totals, never the days');
   assert(/1Podi a Tardor 2026 · Mulassa de Valls \(ball anterior\)/.test(f.$('card-stats').textContent), 'its podiums, with the season\'s name');
   card = { ...card, alias: 'Portadora', verified: true, released: false, totals: {}, podiums: [] };
@@ -233,6 +234,7 @@ const service = (o = {}) => ({ configured: true, asked: [], async seasons(f) { t
   const g = fakeDoc(ids);
   card = null; const none = setupCard({ focusIn() {}, service: svc, doc: g.doc, minLoad: 0 }); none.open({ alias: 'Tabal', publicId: 'id-tabal' }); await tick(); await tick();
   assert(g.$('card-status').textContent === 'Encara no hi ha estadístiques per mostrar.');
+  assert.equal(g.$('card-stats').style.minHeight, '', 'no statistics: no reserved room under the line');
   card = Object.assign(new Error('No s’ha pogut connectar amb la classificació.'), { code: 'unavailable' }); none.open({ alias: 'Tabal', publicId: 'id-tabal' }); g.$('card-close').click(); none.open({ alias: 'Tabal', publicId: 'id-tabal' }); await tick(); await tick();
   assert(!g.$('card-retry').hidden, 'a failure: retry inside the box');
 }
@@ -537,3 +539,39 @@ console.log('podium discs ok');
   menu.close();
 }
 console.log('badge pencil ribbon ok');
+
+// back from the badge sheet: the sheet as it was (no statistics reload: the spinner and the bar would shift it), unless they never arrived
+{
+  const f = fakeDoc(['account-menu', 'account-close', 'account-stats', 'account-status', 'account-since', 'account-empty', 'account-join', 'account-previous', 'account-previous-list', 'profile-row', 'stats-notice-menu', 'stats-notice-ok', 'stats-notice-close', 'stats-notice-hall']);
+  const mem = new Map(), store = { get: k => mem.get(k) ?? null, set: (k, v) => mem.set(k, v), remove: k => mem.delete(k) };
+  const server = { buckets: { 'mulassa-valls/mulassa-v3/1': bucket({ runs: 40, completed: 40, perfect: 4000, good: 100, miss: 100 }) }, days: ['2026-10-19'], daysPlayed: 1, currentStreak: 1, longestStreak: 1 };
+  let asked = 0, refreshed = 0, badgeBack = null;
+  const svc = service({ ownerId: async () => 'u1', myStats: async () => { asked++; return server; } });
+  const acc = setupAccount({ focusIn() {}, profile: { refresh() { refreshed++; }, open() {}, forget() {}, isOpen: false }, badges: { open(back) { badgeBack = back; } }, service: svc, store, doc: f.doc, now: () => NOW, stats: { noticeNeeded: () => false, acceptNotice() {} } });
+  const toBadge = () => f.$('profile-row').fire('click', { target: { closest: () => ({ dataset: { act: 'badge' } }) } });
+  setStatsOwner('u1');
+  acc.open(); for (let i = 0; i < 6; i++) await tick();
+  assert(asked === 1 && /40 balls/.test(f.$('account-stats').textContent));
+  toBadge(); assert(!f.$('account-menu').open && badgeBack, 'the badge sheet takes its place');
+  badgeBack(); for (let i = 0; i < 6; i++) await tick();
+  assert(f.$('account-menu').open && refreshed === 2, 'back: the profile block (its new badge) refreshes');
+  assert(asked === 1 && f.$('account-status').hidden && /40 balls/.test(f.$('account-stats').textContent), 'but the statistics stay, no loading line');
+  f.$('account-close').click();
+  // left before the answer: closing dropped it (before it reached the server), so the return asks again
+  acc.open(); toBadge(); badgeBack(); for (let i = 0; i < 6; i++) await tick();
+  assert(asked === 2 && f.$('account-status').hidden && /40 balls/.test(f.$('account-stats').textContent), 'still loading when it left: loaded on the way back');
+  f.$('account-close').click();
+  // this device has played: its numbers show at once (no loading line), so only the unfinished answer says to ask again
+  const disk = new Map(); globalThis.localStorage = { getItem: k => disk.get(k) ?? null, setItem: (k, v) => disk.set(k, v), removeItem: k => disk.delete(k) };
+  saveStats(endRun(newStats(), 'u1', { date: '2026-10-19', figureId: 'mulassa-valls', version: 'mulassa-v3', level: 1, kind: 'end', seconds: 60, counts: { perfect: 10 } }));
+  let answer; svc.myStats = () => { asked++; return new Promise(res => { answer = res; }); };
+  acc.open(); await tick(); await tick();
+assert(asked === 3 && f.$('account-status').hidden && /1 ball/.test(f.$('account-stats').textContent), 'the local numbers while the server thinks');
+  toBadge(); answer(server); badgeBack(); for (let i = 0; i < 6; i++) await tick();
+  assert(asked === 4, 'left before the answer, with local runs: asked again on the way back');
+  answer(server); for (let i = 0; i < 6; i++) await tick();
+  assert(/40 balls/.test(f.$('account-stats').textContent), 'and the server\'s totals replace this device\'s');
+  f.$('account-close').click(); delete globalThis.localStorage;
+  setStatsOwner(null);
+}
+console.log('badge return keeps the statistics ok');

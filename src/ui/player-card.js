@@ -13,8 +13,9 @@ import { FIGURES, portraitArt, portraitPalette } from '../game/figures.js';
 import { DIFFS } from '../game/chart.js';
 import { figureOfVersion } from '../figures/index.js';
 
-// The skeleton's numbers: never shown (transparent, profile.css), they only give the tiles their loaded size
-const SKELETON = statsData({ 'mulassa-valls/-/1': { runs: 12, seconds: 3600, bestCombo: 120, perfect: 90, good: 6, miss: 4 } });
+// The skeleton's numbers: never shown (transparent, profile.css), they only give the tiles their loaded size. Every figure
+// played, wide numbers and hours: the longest «Mulassa 1000 · Drac 1000 · …» and «10 h 10 min» lines; the answer keeps that height (load), so the card never moves
+const SKELETON = statsData(Object.fromEntries(Object.keys(FIGURE_NAMES).map(f => [`${f}/-/1`, { runs: 1000, seconds: 36600, bestCombo: 120, perfect: 90, good: 6, miss: 4 }])));
 
 export function setupCard({ focusIn, service, doc = document, now = () => Date.now(), minLoad = 600 }) {
   const $ = byId(doc), menu = $('card-menu'), head = $('card-name'), note = $('card-note'), from = $('card-from'), box = $('card-stats'), status = $('card-status');
@@ -36,8 +37,10 @@ export function setupCard({ focusIn, service, doc = document, now = () => Date.n
   }
   async function load() {
     const r = ++req;
+    box.style.minHeight = ''; // the last answer's reserve, measured at another width perhaps
     renderStats(doc, box, SKELETON); box.inert = true; box.dataset.pending = ''; // the loaded layout from the first frame: nothing moves when it answers; inert: no reader, no Tab onto its fake «Més estadístiques»
     say(tr('ui.card.loading'));
+    const room = box.offsetHeight; // the most the answer needs: a shorter one keeps it (the spare shared above and below, profile.css) rather than shrink the card
     const shown = minLoad > 0 ? new Promise(res => setTimeout(res, minLoad)) : null;
     let card, podiums = [];
     try {
@@ -53,9 +56,9 @@ export function setupCard({ focusIn, service, doc = document, now = () => Date.n
     const d = card && statsData(card.totals);
     if (!d?.runs) { say(tr('ui.card.noStats'), { empty: true }); return; }
     say('');
-    renderStats(doc, box, d, { podiums });
+    renderStats(doc, box, d, { podiums }); box.style.minHeight = `${room}px`;
   }
-  function unpend() { box.replaceChildren(); box.inert = false; delete box.dataset.pending; }
+  function unpend() { box.replaceChildren(); box.inert = false; delete box.dataset.pending; box.style.minHeight = ''; }
   // the name from the first frame (what was tapped), the server's answer after
   function paintName(p) {
     head.replaceChildren();

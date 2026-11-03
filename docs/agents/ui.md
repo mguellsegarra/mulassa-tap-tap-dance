@@ -1,6 +1,7 @@
 # UI conventions
 
 - **Selector** (the main menu: cards and town pills, the two steps, the info column and standings card, the showreel and its camera, the idle screen, the corner row, the logo): the full rules are in `docs/ui/selector.md`. Read it before changing `ui/select-*.js`, `game/showreel.js`, the menu framing in `scene/cameras.js` or `styles/select*.css`.
+- **Mulassa Games picker images** (each game's card and banner in `public/jocs/menu/`): Codex imagegen, Real-ESRGAN ×4 and the final sizes are in `docs/ui/games-menu-images.md`.
 - Hide disabled action buttons instead of showing a dimmed unavailable action. Preserve their layout space when removing it would shift nearby controls. Exception: the paired carousel arrows remain visible but dimmed and natively disabled at either end; hide the whole capsule only when navigation is unnecessary.
 - **Balanced layout (every card, sheet and screen).** Mandatory for every UI change: `.agents/skills/uipolish/SKILL.md` (the rules, the measurement loop and the viewport matrix).
 

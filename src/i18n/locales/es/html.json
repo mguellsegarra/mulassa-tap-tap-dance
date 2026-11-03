@@ -230,9 +230,11 @@
   "html.games.pica": "Mulassa Pop",
   "html.games.memory": "Mulassa Memory",
   "html.games.crush": "Mulassa Crush",
+  "html.games.alquimia": "Mulassa Alchemy",
   "html.games.play": "Juega",
   "html.games.picaDesc": "Atrapa a la Mulassa. Evita Dracs.",
   "html.games.memoryDesc": "Busca las parejas del Seguici.",
   "html.games.crushDesc": "Junta tres figuras iguales.",
+  "html.games.alquimiaDesc": "Mezcla y mira qué sale.",
   "html.games.lliureDesc": "Pasea y baila con tu figura."
 }

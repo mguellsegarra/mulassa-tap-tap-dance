@@ -426,5 +426,7 @@
   "ui.hearts.failed": "Non è stato possibile salvare. Riprova.",
   "ui.code.open": "Apri GitHub",
   "ui.news.title": "Ora, minigiochi!",
-  "ui.news.text": "Tre nuovi minigiochi nel pulsante in alto."
+  "ui.news.text": "Tre nuovi minigiochi nel pulsante in alto.",
+  "ui.news.alchemyTitle": "Novità: Mulassa Alchemy!",
+  "ui.news.alchemyText": "Nel pulsante in alto: mescola e scopri."
 }

@@ -230,9 +230,11 @@
   "html.games.pica": "Mulassa Pop",
   "html.games.memory": "Mulassa Memory",
   "html.games.crush": "Mulassa Crush",
+  "html.games.alquimia": "Mulassa Alchemy",
   "html.games.play": "Joacă",
   "html.games.picaDesc": "Prinde Mulassa. Evită Drac.",
   "html.games.memoryDesc": "Găsește perechile de figuri.",
   "html.games.crushDesc": "Unește trei figuri identice.",
+  "html.games.alquimiaDesc": "Amestecă și vezi ce iese.",
   "html.games.lliureDesc": "Plimbă-te și dansează liber."
 }

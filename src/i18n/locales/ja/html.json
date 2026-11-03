@@ -230,9 +230,11 @@
   "html.games.pica": "Mulassa Pop",
   "html.games.memory": "Mulassa Memory",
   "html.games.crush": "Mulassa Crush",
+  "html.games.alquimia": "Mulassa Alchemy",
   "html.games.play": "あそぶ",
   "html.games.picaDesc": "Mulassaをつかまえよう。Dracに注意！",
   "html.games.memoryDesc": "お祭りの仲間のペアを探そう。",
   "html.games.crushDesc": "同じ仲間を3つ並べよう。",
+  "html.games.alquimiaDesc": "混ぜて何ができるか見てみよう。",
   "html.games.lliureDesc": "好きな仲間と広場を歩いて踊ろう。"
 }

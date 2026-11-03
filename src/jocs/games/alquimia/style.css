@@ -9,6 +9,7 @@ html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); 
 body { user-select: none; -webkit-user-select: none; }
 button { font: inherit; color: inherit; border: 0; cursor: pointer; }
 #app { min-height: 100dvh; display: flex; flex-direction: column; }
+.overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: var(--gap); background: rgba(20, 14, 24, .72); }
 
 /* An alchemist's bench at night: cauldron above, a wooden shelf of medallions below. Centred on wide screens. */
 .alq { --gold: #f5c518; --brass: #e3bf62; --wood: #3a2416; --parch: #efdcb0; --ink: #33210f; position: fixed; inset: 0 0 auto; height: 100dvh; display: flex; justify-content: center; overflow: hidden; touch-action: manipulation;
@@ -17,29 +18,44 @@ button { font: inherit; color: inherit; border: 0; cursor: pointer; }
 .alq-fx { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; }
 
 .alq-top, .alq-scene, .alq-msg { touch-action: none; }
-.alq-top { display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; gap: 8px; padding: 0 12px; }
-.alq-round { width: 44px; height: 44px; padding: 0; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #5a4569, #241b2c 75%); box-shadow: 0 0 0 2px var(--brass), 0 3px 6px #0009; font-size: 22px; line-height: 1; color: #fff2d5; }
-.alq-book svg { display: block; width: 26px; height: 26px; margin: auto; }
+.alq-top { display: grid; grid-template-columns: 56px 1fr 56px; grid-template-rows: auto auto; align-items: center; gap: 8px 12px; padding: 0 12px; }
+.alq-top .alq-back { grid-area: 1 / 1; } .alq-top .alq-book { grid-area: 1 / 3; } .alq-top .alq-hint { grid-area: 2 / 3; }
+.alq-title, .alq-tools { display: contents; }
+.alq-title .alq-logo { grid-area: 1 / 2; }
+.alq-top .alq-bar { grid-area: 2 / 2; justify-self: center; width: min(100%, 480px); margin: 0; } /* on a wide screen it would run far from the logo */
+.alq-round { display: flex; align-items: center; justify-content: center; width: 56px; height: 44px; padding: 0; border-radius: 22px; background: radial-gradient(circle at 35% 30%, #5a4569, #241b2c 75%); box-shadow: 0 0 0 2px var(--brass), 0 3px 6px #0009; font-size: 22px; line-height: 1; color: #fff2d5; }
+.alq-title .alq-logo { --s: 34px; filter: drop-shadow(0 2px 3px #0009); }
+.alq-title .alq-logo-sub { margin-top: 1px; }
+.alq-title .alq-logo-main::after, .alq-title .alq-logo-sub i { animation: none; } /* still while playing */
+.alq-hint { display: flex; align-items: center; justify-content: center; width: 56px; height: 44px; padding: 0 8px 0 4px; border-radius: 22px; background: radial-gradient(circle at 35% 30%, #5a4569, #241b2c 75%); box-shadow: 0 0 0 2px var(--brass), 0 3px 6px #0009; font: 800 18px/1 'Baloo 2', sans-serif; color: #ffd76a; }
+.alq-hint svg { flex: none; width: 26px; height: 26px; }
+.alq-hint:active { transform: scale(.94); }
+.alq-hint.nudge { animation: alq-nudge 1s ease-in-out infinite; }
+@keyframes alq-nudge { 50% { box-shadow: 0 0 0 2px var(--gold), 0 0 14px 4px rgba(255, 215, 106, .85); } }
+@media (prefers-reduced-motion: reduce) { .alq-hint.nudge { animation: none; box-shadow: 0 0 0 2px var(--gold), 0 0 14px 4px rgba(255, 215, 106, .85); } }
+.alq-item.done { opacity: .5; filter: saturate(.4); } /* nothing new comes out of it any more */
+.alq-book svg { display: block; width: 26px; height: 26px; }
+.alq-back svg { display: block; width: 24px; height: 24px; }
 .alq-round:active { transform: scale(.94); }
-.alq-title h1 { margin: 0; text-align: center; font: 800 clamp(20px, 6vw, 26px)/1.1 'Baloo 2', sans-serif; color: var(--gold); text-shadow: 0 2px 0 #7a4a10, 0 3px 6px #000a; }
-.alq-bar { position: relative; height: 18px; margin-top: 4px; border-radius: 9px; background: #120d18; box-shadow: inset 0 1px 3px #000, 0 0 0 1.5px #8a6a2c; overflow: hidden; }
+.alq-bar { position: relative; height: 26px; margin-top: 4px; border-radius: 13px; background: #120d18; box-shadow: inset 0 1px 3px #000, 0 0 0 1.5px #8a6a2c; overflow: hidden; }
 .alq-bar i { position: absolute; inset: 0 auto 0 0; background: linear-gradient(#ffd76a, #d98a1f); transition: width .4s; }
-.alq-bar span { position: relative; display: block; text-align: center; font-size: 13px; line-height: 18px; font-weight: 800; color: #fff; text-shadow: 0 1px 2px #000; }
+.alq-bar span { position: relative; display: block; text-align: center; font-size: 15px; line-height: 26px; font-weight: 800; color: #fff; text-shadow: 0 1px 2px #000; }
 
 .orb { --orb: 56px; width: var(--orb); height: var(--orb); flex: none; display: flex; align-items: center; justify-content: center; padding: calc(var(--orb) * .08); border-radius: 50%;
   background: radial-gradient(circle at 35% 28%, #5d4a70, #241b2c 72%); box-shadow: 0 0 0 2px #8a6a2c, 0 0 0 3.5px var(--brass), 0 4px 7px #000a; }
 .orb img { width: 100%; height: 100%; display: block; object-fit: contain; pointer-events: none; -webkit-touch-callout: none; }
-.orb.empty { background: rgba(20, 14, 24, .45); box-shadow: inset 0 0 0 2px rgba(227, 191, 98, .45); color: rgba(227, 191, 98, .6); font: 800 calc(var(--orb) * .4)/1 'Baloo 2', sans-serif; }
+.orb.empty { /* an empty place to fill: a dashed ring, even all round (SVG, not border-style: dashed) */ background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='47.5' fill='none' stroke='%23e3bf62' stroke-opacity='.6' stroke-width='3' stroke-linecap='round' stroke-dasharray='10.4 8.25' pathLength='298.4'/%3E%3C/svg%3E") center / 100% no-repeat, rgba(20, 14, 24, .45); box-shadow: none; color: rgba(227, 191, 98, .6); font: 800 calc(var(--orb) * .4)/1 'Baloo 2', sans-serif; }
 
 .alq-scene { position: relative; flex: none; height: clamp(160px, 25dvh, 230px); display: grid; grid-template-columns: 1fr auto 1fr; grid-template-rows: minmax(0, 1fr); align-items: center; padding: 0 12px; }
-.alq-scene::before { content: ''; position: absolute; right: 10px; bottom: 6px; width: 34%; height: 62%; background: url(/campanar-valls.svg) no-repeat 100% 100% / contain; opacity: .1; pointer-events: none; }
-.alq-slot { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 0; background: none; align-self: start; margin-top: clamp(12px, 3dvh, 28px); }
-.alq-slot .orb, .alq-result .orb { --orb: clamp(62px, 19vw, 84px); }
+.alq-slot { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 0; background: none; }
+.alq-slot .orb, .alq-result .orb { --orb: clamp(70px, 21vw, 96px); }
+.alq-slot b { position: absolute; top: calc(100% + 4px); white-space: nowrap; } /* the name hangs under: the circle stays centred */
+.alq-slot { position: relative; }
 .alq-slot b, .alq-result b { font-size: 14px; line-height: 1.1; font-weight: 800; color: #fff2d5; text-align: center; text-shadow: 0 1px 3px #000; }
 .alq-slot.into .orb { transform: translate(var(--dx), var(--dy)) scale(.3); opacity: 0; transition: transform .36s ease-in, opacity .36s ease-in .1s; }
 .alq-slot.into b { opacity: 0; transition: opacity .15s; }
 
-.alq-pot { position: relative; isolation: isolate; align-self: end; width: clamp(108px, 31vw, 150px); margin-bottom: 14px; }
+.alq-pot { position: relative; isolation: isolate; width: clamp(108px, 31vw, 156px); }
 .alq-pot svg { display: block; width: 100%; height: auto; position: relative; }
 .alq-flames { position: absolute; left: 12%; right: 12%; bottom: -12px; height: 26px; border-radius: 50% 50% 40% 40%; background: radial-gradient(ellipse at 50% 100%, #ffd76a 0%, #ff7a1f 45%, transparent 72%); filter: blur(2px); z-index: -1; animation: alq-flicker .28s ease-in-out infinite alternate; }
 .alq-pot .bub { animation: alq-bub 1.4s ease-in-out infinite; }
@@ -66,8 +82,8 @@ button { font: inherit; color: inherit; border: 0; cursor: pointer; }
 @media (max-width: 340px) { .alq-grid { grid-template-columns: repeat(auto-fill, minmax(66px, 1fr)); } .alq-item b { font-size: 12px; } }
 .alq-ghost { position: fixed; z-index: 4; margin: 0; pointer-events: none; }
 
-.alq-overlay { z-index: 4; background: rgba(12, 8, 18, .93); overflow: hidden; }
-.alq-rays { position: absolute; left: 50%; top: 38%; width: 240vmax; height: 240vmax; margin: -120vmax 0 0 -120vmax; background: repeating-conic-gradient(rgba(255, 215, 106, .13) 0 12deg, transparent 12deg 24deg); animation: alq-spin 24s linear infinite; will-change: transform; }
+.alq-overlay { --tint: #ffd76a; z-index: 4; background: #0c0812; overflow: hidden; }
+.alq-rays { position: absolute; left: 50%; top: 38%; width: 240vmax; height: 240vmax; margin: -120vmax 0 0 -120vmax; background: radial-gradient(closest-side, color-mix(in srgb, var(--tint) 45%, transparent), transparent 30%), repeating-conic-gradient(color-mix(in srgb, var(--tint) 22%, transparent) 0 12deg, transparent 12deg 24deg); animation: alq-spin 24s linear infinite; will-change: transform; }
 .alq-found { position: relative; width: min(100%, 360px); max-height: 100%; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; animation: alq-rise .4s cubic-bezier(.2, 1.5, .5, 1); }
 .alq-found h2 { margin: 0; font: 800 clamp(32px, 10vw, 44px)/1.1 'Baloo 2', sans-serif; color: var(--gold); text-shadow: 0 3px 0 #7a4a10, 0 4px 10px #000; }
 .alq-found .orb { --orb: clamp(120px, 26dvh, 168px); box-shadow: 0 0 0 3px #8a6a2c, 0 0 0 5px var(--brass), 0 0 40px 12px rgba(255, 215, 106, .55); }
@@ -100,40 +116,24 @@ button { font: inherit; color: inherit; border: 0; cursor: pointer; }
 .alq-found { --tx: 0; }
 @media (prefers-reduced-motion: reduce) { .alq-flames, .alq-pot .bub, .alq-pot.boil, .alq-pot.burp, .alq-rays, .alq-result.up, .alq-found { animation: none; } .alq-slot.into .orb { transition: none; } .alq-item.hint .orb { animation: none; box-shadow: 0 0 0 2px #8a6a2c, 0 0 0 4px var(--gold), 0 0 20px 7px rgba(255, 215, 106, .9); } }
 
-/* Start menu and collection picker */
+/* Start menu */
 .alq-menu { isolation: isolate; flex-direction: column; align-items: center; justify-content: space-between; padding: max(56px, env(safe-area-inset-top)) 24px max(32px, env(safe-area-inset-bottom)); background: url(/jocs/alquimia/cards/menu-mobil.jpg) center / cover, #2e1519; text-align: center; }
 .alq-menu .alq-back { position: absolute; top: max(8px, env(safe-area-inset-top)); left: 12px; }
-.alq-menu-title h1 { margin: 0; font: 400 clamp(64px, 21vw, 96px)/.85 'Jersey 10', monospace; color: var(--gold); text-shadow: 0 4px 0 #7a4a10, 0 6px 16px #000c; }
+/* The logo, from Mulassa Tap Tap Dance (src/hud/title.js): red pixel letters, a round cream outline, a dark red extrusion under them, a glint every 5 s; MULASSA stays still. The word under it: gold Baloo, dark outline,
+   one syllable rising gently per beat (152 bpm) and a rest, like TAP, TAP, DANCE but eased (src/hud/logo-motion.js). */
+.alq-logo { --s: clamp(64px, 21vw, 104px); position: relative; margin: 0; display: flex; flex-direction: column; align-items: center; filter: drop-shadow(0 6px 10px #0009); text-transform: uppercase; }
+.alq-logo-main { position: relative; font: 400 var(--s)/.8 'Jersey 10', monospace; color: #c0283c; white-space: nowrap; /* a round outline and the extrusion: rings of shadows, like the lineJoin round strokes there */
+  text-shadow: 0.083em 0.000em 0 #fff3d6, 0.077em 0.032em 0 #fff3d6, 0.059em 0.059em 0 #fff3d6, 0.032em 0.077em 0 #fff3d6, 0.000em 0.083em 0 #fff3d6, -0.032em 0.077em 0 #fff3d6, -0.059em 0.059em 0 #fff3d6, -0.077em 0.032em 0 #fff3d6, -0.083em 0.000em 0 #fff3d6, -0.077em -0.032em 0 #fff3d6, -0.059em -0.059em 0 #fff3d6, -0.032em -0.077em 0 #fff3d6, -0.000em -0.083em 0 #fff3d6, 0.032em -0.077em 0 #fff3d6, 0.059em -0.059em 0 #fff3d6, 0.077em -0.032em 0 #fff3d6, 0 0.030em 0 #5e1514, 0.083em 0.030em 0 #5e1514, 0.077em 0.062em 0 #5e1514, 0.059em 0.089em 0 #5e1514, 0.032em 0.107em 0 #5e1514, 0.000em 0.113em 0 #5e1514, -0.032em 0.107em 0 #5e1514, -0.059em 0.089em 0 #5e1514, -0.077em 0.062em 0 #5e1514, -0.083em 0.030em 0 #5e1514, -0.077em -0.002em 0 #5e1514, -0.059em -0.029em 0 #5e1514, -0.032em -0.047em 0 #5e1514, -0.000em -0.053em 0 #5e1514, 0.032em -0.047em 0 #5e1514, 0.059em -0.029em 0 #5e1514, 0.077em -0.002em 0 #5e1514, 0 0.060em 0 #5e1514, 0.083em 0.060em 0 #5e1514, 0.077em 0.092em 0 #5e1514, 0.059em 0.119em 0 #5e1514, 0.032em 0.137em 0 #5e1514, 0.000em 0.143em 0 #5e1514, -0.032em 0.137em 0 #5e1514, -0.059em 0.119em 0 #5e1514, -0.077em 0.092em 0 #5e1514, -0.083em 0.060em 0 #5e1514, -0.077em 0.028em 0 #5e1514, -0.059em 0.001em 0 #5e1514, -0.032em -0.017em 0 #5e1514, -0.000em -0.023em 0 #5e1514, 0.032em -0.017em 0 #5e1514, 0.059em 0.001em 0 #5e1514, 0.077em 0.028em 0 #5e1514; }
+.alq-logo-main::after { content: attr(data-text); position: absolute; inset: 0; color: transparent; text-shadow: none; background: linear-gradient(105deg, transparent 38%, #fff4 44%, #fff8 48.5%, #fff8 51.5%, #fff4 56%, transparent 62%) no-repeat -200% 0 / 50% 100%; -webkit-background-clip: text; background-clip: text; animation: alq-glint 5s ease-in-out infinite; }
+.alq-logo-sub { margin-top: calc(var(--s) * -.02); font: 800 calc(var(--s) * .4)/1 'Baloo 2', sans-serif; color: var(--gold); -webkit-text-stroke: calc(var(--s) * .1) #2a1a10; paint-order: stroke fill; white-space: nowrap; }
+.alq-logo-sub { position: relative; }
+.alq-logo-sub i { position: absolute; width: .46em; height: .46em; margin: -.23em; background: #fff6cf; clip-path: polygon(50% 0, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0 50%, 40% 40%); opacity: 0; scale: .2; animation: alq-spark 3.6s ease-in-out infinite; animation-delay: calc(var(--i) * 1.2s); }
+@keyframes alq-glint { 0%, 84% { background-position: -200% 0; opacity: 0; } 92% { opacity: 1; } 100% { background-position: 300% 0; opacity: 0; } }
+@keyframes alq-spark { 0%, 62%, 100% { opacity: 0; scale: .2; rotate: 0deg; } 74% { opacity: .9; scale: 1; } 88% { opacity: 0; scale: .4; rotate: 45deg; } }
+@media (prefers-reduced-motion: reduce) { .alq-logo-main::after, .alq-logo-sub i { animation: none; } }
 .alq-menu-title p { margin: 12px 0 0; font-size: 16px; font-weight: 700; color: #fff2d5; text-shadow: 0 1px 4px #000; }
 .alq-menu-actions { width: min(100%, 360px); display: grid; gap: 8px; }
 .alq-play { min-height: 56px; font-size: 24px; }
-.alq-to-colls { min-height: 44px; }
-.alq-help { margin: 8px 12px 16px; text-align: center; color: #d9cdbf; font-size: 15px; }
-.alq-picker .alq-col { padding-bottom: env(safe-area-inset-bottom); }
-.alq-colls { flex: 1; min-height: 0; overflow-y: auto; touch-action: pan-y; display: flex; flex-direction: column; gap: 16px; padding: 0 16px 16px; }
-.alq-coll { flex: none; display: block; width: 100%; padding: 0; overflow: hidden; border-radius: 16px; background: linear-gradient(#513120, #3a2416); box-shadow: 0 0 0 2px var(--brass), 0 6px 14px #0009; text-align: left; color: #fff2d5; }
-.alq-coll:active { transform: scale(.98); }
-.alq-coll img { display: block; width: 100%; aspect-ratio: 2.6; object-fit: cover; pointer-events: none; }
-.alq-coll-body { display: grid; grid-template-columns: 1fr auto; gap: 8px 12px; align-items: center; padding: 12px 16px 16px; }
-.alq-coll b { font-size: 18px; line-height: 1.15; font-weight: 800; }
-.alq-coll-count { font-size: 15px; font-weight: 800; color: var(--gold); white-space: nowrap; }
-.alq-meter { grid-column: 1 / -1; height: 8px; border-radius: 4px; background: #1a1020; overflow: hidden; }
-.alq-meter i { display: block; height: 100%; background: linear-gradient(#ffd76a, #d98a1f); }
-
-/* Chapters */
-.alq-tabs { flex: none; display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; padding: 10px 12px 4px; }
-.alq-tab { min-height: 44px; padding: 3px 2px; border-radius: 10px; background: rgba(18, 13, 24, .55); color: #fff2d5; line-height: 1.1; }
-.alq-tab b { display: block; font-size: 13px; font-weight: 800; }
-.alq-tab small { display: block; font-size: 11px; font-weight: 700; color: #d9cdbf; }
-.alq-tab.on { background: linear-gradient(#ffe07a, #e9a92c); color: #3a2008; }
-.alq-tab.on small { color: #5a3a10; }
-.alq-tab:disabled { opacity: .45; cursor: default; }
-.alq-tab.hint { animation: alq-tab-pulse 1s ease-in-out infinite; }
-.alq-item[hidden] { display: none; }
-@keyframes alq-tab-pulse { 50% { box-shadow: 0 0 0 2px var(--gold), 0 0 12px 3px rgba(255, 215, 106, .8); } }
-@media (prefers-reduced-motion: reduce) { .alq-tab.hint { animation: none; box-shadow: 0 0 0 2px var(--gold); } }
-.alq-empty { margin: 16px 24px; text-align: center; font-size: 16px; color: #fff2d5; text-shadow: 0 1px 2px #000; }
-.alq-empty[hidden] { display: none; }
 
 /* The room breathes: the fire flickers and the picked elements float */
 .alq-pot svg { animation: alq-simmer 2.6s ease-in-out infinite; transform-origin: 50% 100%; }
@@ -150,7 +150,6 @@ button { font: inherit; color: inherit; border: 0; cursor: pointer; }
   .alq-menu-title p { display: none; }
 }
 @media (orientation: portrait) and (max-height: 700px) { /* the button must not hide the fire */
-  .alq-btn.alt.alq-to-colls { background: none; box-shadow: none; font-size: 15px; text-decoration: underline; text-shadow: 0 1px 3px #000; }
   .alq-menu-actions { gap: 0; }
   .alq-menu { padding-bottom: 8px; }
   .alq-play { min-height: 50px; }
@@ -158,10 +157,16 @@ button { font: inherit; color: inherit; border: 0; cursor: pointer; }
 @media (orientation: landscape) {
   .alq-menu { background: url(/jocs/alquimia/cards/menu-escriptori.jpg) 85% center / cover, #2e1519; align-items: flex-end; justify-content: flex-start; gap: 1.5vh; padding: 3vh 3vw; }
   .alq-menu-title { width: 36vw; }
-  .alq-menu-title h1 { font-size: min(10vh, 6.2vw); white-space: nowrap; }
+  .alq-logo { --s: min(15vh, 8.5vw); }
   .alq-menu-title p { font-size: max(15px, 2.2vh); margin-top: 1vh; }
   .alq-menu-actions { width: min(36vw, 48vh); margin-right: calc((36vw - min(36vw, 48vh)) / 2); }
   .alq-play { min-height: max(50px, 6.5vh); font-size: max(20px, 3vh); }
-  .alq-to-colls { min-height: max(44px, 5vh); font-size: max(16px, 2.2vh); }
+  .alq-col { width: min(100% - 48px, 1040px); }
+  .alq-scene { height: clamp(200px, 30dvh, 300px); }
+  .alq-title .alq-logo { --s: 44px; }
+  .alq-slot .orb, .alq-result .orb { --orb: clamp(84px, 12vh, 112px); }
+  .alq-pot { width: clamp(140px, 20vh, 190px); }
+  .alq-grid { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); padding: 16px 20px max(16px, env(safe-area-inset-bottom)); }
+  .alq-item .orb { --orb: 68px; }
   .alq:not(.alq-menu) { background: linear-gradient(rgba(20, 10, 16, .78), rgba(20, 10, 16, .78)), url(/jocs/alquimia/cards/menu-escriptori.jpg) center / cover; }
 }

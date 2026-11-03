@@ -230,9 +230,11 @@
   "html.games.pica": "Mulassa Pop",
   "html.games.memory": "Mulassa Memory",
   "html.games.crush": "Mulassa Crush",
+  "html.games.alquimia": "Mulassa Alchemy",
   "html.games.play": "Играть",
   "html.games.picaDesc": "Лови Mulassa, избегай Drac.",
   "html.games.memoryDesc": "Найди пары в шествии.",
   "html.games.crushDesc": "Собери три одинаковых.",
+  "html.games.alquimiaDesc": "Смешивай и смотри, что получится.",
   "html.games.lliureDesc": "Гуляй и танцуй."
 }

@@ -230,9 +230,11 @@
   "html.games.pica": "Mulassa Pop",
   "html.games.memory": "Mulassa Memory",
   "html.games.crush": "Mulassa Crush",
+  "html.games.alquimia": "Mulassa Alchemy",
   "html.games.play": "Jòga",
   "html.games.picaDesc": "Atrapa era Mulassa. Evita es Dracs.",
   "html.games.memoryDesc": "Tròba es parelhs deth Seguici.",
   "html.games.crushDesc": "Amassa tres figures iguales.",
+  "html.games.alquimiaDesc": "Barreja e guarda qué ges.",
   "html.games.lliureDesc": "Passeja e balha damb era tua figura."
 }

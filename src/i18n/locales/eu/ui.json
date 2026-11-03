@@ -426,5 +426,7 @@
   "ui.hearts.failed": "Ezin izan da gorde. Saiatu berriro.",
   "ui.code.open": "Ireki GitHub",
   "ui.news.title": "Minijokoak!",
-  "ui.news.text": "Hiru minijoko berri goiko botoian."
+  "ui.news.text": "Hiru minijoko berri goiko botoian.",
+  "ui.news.alchemyTitle": "Berria: Mulassa Alchemy!",
+  "ui.news.alchemyText": "Goiko botoian: nahastu eta aurkitu."
 }

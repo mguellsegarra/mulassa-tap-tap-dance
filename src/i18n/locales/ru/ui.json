@@ -448,5 +448,7 @@
   "ui.hearts.failed": "Не удалось сохранить. Попробуй ещё раз.",
   "ui.code.open": "Открыть GitHub",
   "ui.news.title": "Мини-игры!",
-  "ui.news.text": "Три новые мини-игры в кнопке сверху."
+  "ui.news.text": "Три новые мини-игры в кнопке сверху.",
+  "ui.news.alchemyTitle": "Новинка: Mulassa Alchemy!",
+  "ui.news.alchemyText": "В кнопке сверху: смешивай и открывай."
 }

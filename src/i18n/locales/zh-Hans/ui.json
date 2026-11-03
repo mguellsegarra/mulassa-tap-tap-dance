@@ -415,5 +415,7 @@
   "ui.hearts.failed": "保存失败，请再试一次。",
   "ui.code.open": "打开GitHub",
   "ui.news.title": "迷你游戏来啦！",
-  "ui.news.text": "上方按钮里有三款全新迷你游戏。"
+  "ui.news.text": "上方按钮里有三款全新迷你游戏。",
+  "ui.news.alchemyTitle": "新游戏：Mulassa Alchemy！",
+  "ui.news.alchemyText": "在上方按钮里，混一混，发现新东西。"
 }

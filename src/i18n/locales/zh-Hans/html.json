@@ -230,9 +230,11 @@
   "html.games.pica": "Mulassa Pop",
   "html.games.memory": "Mulassa Memory",
   "html.games.crush": "Mulassa Crush",
+  "html.games.alquimia": "Mulassa Alchemy",
   "html.games.play": "开始",
   "html.games.picaDesc": "抓住Mulassa，避开Drac！",
   "html.games.memoryDesc": "找出节庆角色的配对。",
   "html.games.crushDesc": "将三个相同角色连成一线。",
+  "html.games.alquimiaDesc": "混一混，看看会出现什么。",
   "html.games.lliureDesc": "带着角色漫游广场，自由起舞。"
 }

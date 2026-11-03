@@ -30,7 +30,7 @@ The owner's choices. A game takes its name when it enters this branch; folders, 
 | Mulassa Crush | applied | `crush` | 1.3.0 |
 | Ball lliure | applied | free play, last card of the sheet | 1.3.0 |
 | Mulassoku | to apply | `murdoku`, branch `jocs/murdoku`; players must never read «Murdoku» | one a week after 1.3.0 |
-| Mulassa Craft | to apply | Alquímia, `mulassa-minijocs`, `minijoc/alquimia` | one a week |
+| Mulassa Alchemy | in 1.4.0, with its card | Alquímia, `mulassa-minijocs`, `minijoc/alquimia` | one a week |
 | Mulassa Drop | to apply | Del Nan al Gegant, `suika`, branch `jocs/suika` | one a week |
 | Mulassa Run | to apply | Corre i suma colla, branch `jocs/corre` | one a week |
 | Mulassa City | to apply | Vila del Seguici, `subara`, branch `jocs/subara` | one a week |

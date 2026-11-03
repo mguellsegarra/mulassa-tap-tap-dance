@@ -415,5 +415,7 @@
   "ui.hearts.failed": "保存できませんでした。もう一度試してね。",
   "ui.code.open": "GitHubを開く",
   "ui.news.title": "ミニゲーム！",
-  "ui.news.text": "上のボタンから、新しいミニゲーム3つで遊べます。"
+  "ui.news.text": "上のボタンから、新しいミニゲーム3つで遊べます。",
+  "ui.news.alchemyTitle": "新登場：Mulassa Alchemy！",
+  "ui.news.alchemyText": "上のボタンから、混ぜて発見しよう。"
 }

@@ -426,5 +426,7 @@
   "ui.hearts.failed": "Impossible d'enregistrer. Réessaie.",
   "ui.code.open": "Ouvrir GitHub",
   "ui.news.title": "Des mini-jeux !",
-  "ui.news.text": "Trois nouveaux mini-jeux via le bouton du haut."
+  "ui.news.text": "Trois nouveaux mini-jeux via le bouton du haut.",
+  "ui.news.alchemyTitle": "Nouveau : Mulassa Alchemy !",
+  "ui.news.alchemyText": "Dans le bouton du haut : mélange et découvre."
 }

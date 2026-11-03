@@ -230,9 +230,11 @@
   "html.games.pica": "Mulassa Pop",
   "html.games.memory": "Mulassa Memory",
   "html.games.crush": "Mulassa Crush",
+  "html.games.alquimia": "Mulassa Alchemy",
   "html.games.play": "Jolastu",
   "html.games.picaDesc": "Harrapatu Mulassa. Saihestu Dracak.",
   "html.games.memoryDesc": "Aurkitu jaietako figuren bikoteak.",
   "html.games.crushDesc": "Elkartu hiru figura berdin.",
+  "html.games.alquimiaDesc": "Nahastu eta ikusi zer ateratzen den.",
   "html.games.lliureDesc": "Ibili eta dantzatu zure figurarekin."
 }

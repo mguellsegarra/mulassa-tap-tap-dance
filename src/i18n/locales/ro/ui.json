@@ -437,5 +437,7 @@
   "ui.hearts.failed": "Nu s-a putut salva. Încearcă din nou.",
   "ui.code.open": "Deschide GitHub",
   "ui.news.title": "Minijocuri!",
-  "ui.news.text": "Trei minijocuri noi în butonul de sus."
+  "ui.news.text": "Trei minijocuri noi în butonul de sus.",
+  "ui.news.alchemyTitle": "Nou: Mulassa Alchemy!",
+  "ui.news.alchemyText": "În butonul de sus: amestecă și descoperă."
 }

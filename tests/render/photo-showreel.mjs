@@ -624,8 +624,9 @@ verifyManualSway(run, assert);
   assert(run('REEL.on && !reelIdleOn'), 'showreel: the selector stays while it was just touched');
   idleFrames(Math.ceil(run('REEL_IDLE.after') * 60) + 30);
   assert(run('reelIdleOn'), 'showreel idle: untouched, the UI fades and the dance has the screen');
+  assert(run('reelGone'), 'showreel idle: once faded, the UI is not rendered at all (an iPhone hitched under the invisible layers)');
   windowHandlers.pointermove.forEach(h => h({})); idleFrames(1);
-  assert(run('!reelIdleOn'), 'showreel idle: a move brings the selector back at once');
+  assert(run('!reelIdleOn && !reelGone'), 'showreel idle: a move brings the selector back at once, rendered again');
   idleFrames(Math.ceil(run('REEL_IDLE.after') * 60) + 30); // the press that wakes it only wakes it: it, its up and its click never reach the game
   const ptr = type => { const e = { type, pointerId: 7, cancelable: true, stopped: false, stopImmediatePropagation() { this.stopped = true; }, preventDefault() {} }; windowHandlers[type].forEach(h => h(e)); return e.stopped; };
   assert(ptr('pointerdown') && run('!reelIdleOn') && ptr('pointerup') && ptr('click'), 'showreel idle: the waking tap is swallowed whole');
@@ -675,8 +676,9 @@ run('sheets.select = idleSel;'); console.log('showreel clear of the attendants o
 // The splash's tap: the selector's first cut must already have its band, or it frames the whole screen and springs back out
 { run(`var firstSel = sheets.select; G.state = 'select'; sheets.select = { pending: false, figure: MULASSA, band: null, sheetOpen: false, visible() { this.band ??= { top: 100, bottom: 500, hardTop: 60, left: 500, right: 1280 }; } }; frameCamera(1 / 60, 0, false);`);
   assert(run('!!sheets.select.band'), 'selector: the band is measured before the first frame is framed');
-  // Play to results: the play camera's wide lens eases back, no one-frame zoom
-  run(`sheets.select = firstSel; G.state = 'results'; G.resT = clock; CAMS.live = true; camera.fov = baseFov() + 16; camera.updateProjectionMatrix(); frameCamera(1 / 60, 0, false); var resFov0 = camera.fov - baseFov(); for (let i = 0; i < 300; i++) { clock += 1 / 60; frameCamera(1 / 60, 0, false); }`);
+  // Play to results: the play camera's wide lens eases back, no one-frame zoom (the game in between already gave the selector's
+  // lens back: a long-lens showreel shot left it zoomed)
+  run(`sheets.select = firstSel; G.state = 'play'; easeLensX(1 / 60); G.state = 'results'; G.resT = clock; CAMS.live = true; camera.fov = baseFov() + 16; camera.updateProjectionMatrix(); frameCamera(1 / 60, 0, false); var resFov0 = camera.fov - baseFov(); for (let i = 0; i < 300; i++) { clock += 1 / 60; frameCamera(1 / 60, 0, false); }`);
   assert(run('resFov0') > 15.9, `results: the lens does not snap (${run('resFov0')})`);
   assert(Math.abs(run('camera.fov - baseFov()')) < 0.1, 'results: the lens is back within seconds');
   run(`G.state = 'select';`); console.log('selector entry and results lens ok'); }

@@ -6,6 +6,14 @@ import { peekGap, navX } from './select-strip.js';
 
 export function createSelectLayout({ win, $, root, towns, strip, pending, bar, later, corner, facts, flip, api, view, updateArrows }) {
   let stripLimit = 0;
+  // The cards' sizes as plain values for the CSS: size containers on each card or portrait made every restyle of the page
+  // lay each one out on its own (a sheet opening: ~300 ms on a Galaxy S10, ~500 ms at 375×667)
+  if (win.ResizeObserver && strip.querySelector('.sel-card')) {
+    const por = new win.ResizeObserver(entries => { for (const { target, contentBoxSize: [box] } of entries) { target.style.setProperty('--por-w', `${box.inlineSize}px`); target.style.setProperty('--por-h', `${box.blockSize}px`); } });
+    for (const p of strip.querySelectorAll('.por')) por.observe(p); // the portraits' boxes (select-cards.css --por-w/--por-h)
+    // short phones' squat cards (select-pending.css): every card is as tall as the first; the squat layout keeps that height
+    new win.ResizeObserver(([e]) => strip.toggleAttribute('data-squat', e.contentBoxSize[0].blockSize <= 100)).observe(strip.querySelector('.sel-card'));
+  }
   const rowEdge = row => Math.max(0, ...[...row.children].map(el =>
     el.offsetLeft + el.offsetWidth + (parseFloat(win.getComputedStyle?.(el).marginRight) || 0)))
     + (parseFloat(win.getComputedStyle?.(row).paddingRight) || 0);

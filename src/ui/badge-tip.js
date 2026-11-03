@@ -31,10 +31,11 @@ export function setupBadgeTip({ doc = document, win = globalThis } = {}) {
     tip ??= Object.assign(doc.createElement('div'), { className: 'badge-tip' });
     if (tip.showPopover) tip.popover = 'manual'; // a [popover] without the API would be a hidden one
     tip.setAttribute('aria-hidden', 'true'); // the badge's own aria-label already says it
+    // the tail points at the art, not the box: a tall mark sits at the box's left
     tip.textContent = mark.dataset.tip; tip.classList.remove('below');
     // no popover (older browsers): inside the badge's sheet, so a modal's top layer does not hide it
     (tip.showPopover ? doc.body : mark.closest('dialog') ?? doc.body).append(tip); tip.showPopover?.(); on = mark;
-    const r = mark.getBoundingClientRect(), w = tip.offsetWidth, h = tip.offsetHeight, centre = r.left + r.width / 2;
+    const r = (mark.querySelector('svg') ?? mark).getBoundingClientRect(), w = tip.offsetWidth, h = tip.offsetHeight, centre = r.left + r.width / 2;
     const x = Math.max(8, Math.min(centre - w / 2, win.innerWidth - w - 8)), below = r.top - h - 10 < 8; // no room above: under it
     tip.classList.toggle('below', below);
     const y = below ? r.bottom + 10 : r.top - h - 10;

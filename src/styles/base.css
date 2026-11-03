@@ -269,8 +269,8 @@ kbd { display: inline-block; min-width: 14px; padding: 0 4px; border: 1px solid 
 .hint-menu .board-text { margin-bottom: 4px; text-wrap: balance; }
 .hint-menu .board-text b { color: #fff3d6; font-weight: 800; }
 /* the home-screen steps with Safari's own glyphs, as its dark glass buttons draw them */
-#free-fs-menu, #free-hint-menu:has(> .ios-bubble:not([hidden])) { bottom: calc(var(--sab) + 96px); max-height: calc(100dvh - 112px - var(--sab)); } /* centred above the bubble, never under it */
-@media (max-height: 600px) { #free-fs-menu .hint-icon { display: none; } #free-fs-menu h2 { font-size: 26px; } #free-fs-menu .ios-steps { gap: 6px; margin: 10px 0 12px; } #free-fs-menu .ios-steps li { min-height: 44px; padding-block: 2px; } #free-fs-menu .board-text { font-size: 15px; } } /* an SE: the steps matter more than the art */
+#free-fs-menu, #install-steps-menu:has(> .ios-bubble:not(.up):not([hidden])), #free-hint-menu:has(> .ios-bubble:not([hidden])) { bottom: calc(var(--sab) + 96px); max-height: calc(100dvh - 112px - var(--sab)); } /* centred above the bubble, never under it */
+@media (max-height: 600px) { :is(#free-fs-menu, #install-steps-menu) .hint-icon { display: none; } :is(#free-fs-menu, #install-steps-menu) h2 { font-size: 26px; } :is(#free-fs-menu, #install-steps-menu) .ios-steps { gap: 6px; margin: 10px 0 12px; } :is(#free-fs-menu, #install-steps-menu) .ios-steps li { min-height: 44px; padding-block: 2px; } #free-fs-menu .board-text { font-size: 15px; } } /* an SE: the steps matter more than the art */
 .ios-steps { display: grid; gap: 8px; margin: 12px 0 14px; padding: 0; list-style: none; counter-reset: ios; text-align: left; font-size: 15px; line-height: 1.25; color: #e8d8b8; text-wrap: pretty; }
 .ios-steps li { position: relative; display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 6px 12px 6px 10px; font-weight: 600; border-radius: var(--button-radius); background: #fff3d60d; counter-increment: ios; }
 .ios-steps li::before { content: counter(ios); position: absolute; left: 4px; top: 50%; translate: 0 -24px; z-index: 1; display: grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; background: #f5c518; color: #2a1a10; font-size: 12px; font-weight: 800; line-height: 1; } /* the step's number as a badge on its button */
@@ -288,6 +288,11 @@ kbd { display: inline-block; min-width: 14px; padding: 0 4px; border: 1px solid 
 .ios-bubble-go { display: block; margin: 0; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; text-wrap: pretty; cursor: pointer; }
 .ios-bubble button:focus-visible { outline: 3px solid #0a84ff; outline-offset: 2px; } /* the game's cream ring vanishes on white */
 @keyframes ios-bob { 50% { transform: translateY(5px); } }
+/* the iPad's: Safari's Share sits top right (Share, +, Tabs; its centre ~120 pt from the edge, iPadOS 27 simulator), so the bubble hangs from there and points up at it */
+.ios-bubble.up { top: calc(var(--sat) + 12px); bottom: auto; left: auto; right: calc(var(--sar) + 16px); animation-name: ios-bob-up; }
+.ios-bubble.up::after { top: auto; bottom: calc(100% - 1px); left: auto; right: calc(120px - 16px - 9px - var(--sar)); border-top: 0; border-bottom: 9px solid #fff; }
+.ios-bubble.up b:first-of-type i { margin-right: 2px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231c1c1e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3.5v11M8.5 7 12 3.5 15.5 7M8.5 10H7.5a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2h-1'/%3E%3C/svg%3E"); }
+@keyframes ios-bob-up { 50% { transform: translateY(-5px); } }
 @media (prefers-reduced-motion: reduce) { .ios-bubble { animation: none; } }
 #free-hint-menu .hint-icon { animation: rotate-hint 1.6s ease-in-out infinite reverse; } @media (prefers-reduced-motion: reduce) { #free-hint-menu .hint-icon { animation: none; } } /* the phone turns upright → sideways, as the photo cover's does */
 .captcha-text { margin: 0 0 16px; font-size: 16px; line-height: 1.35; color: #e8d8b8; text-wrap: balance; }

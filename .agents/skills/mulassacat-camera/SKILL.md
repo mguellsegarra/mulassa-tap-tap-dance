@@ -38,6 +38,8 @@ Keep each change in its owner. `main.js` only calls them. Never move the camera 
 4. Add or extend a test at the owner (`tests/figures/common/showreel.mjs`, `tests/render/framing.mjs`, `tests/render/orbit.mjs`, the camera blocks of `tests/render/render-quality.mjs`) and check it fails without the change.
 5. Report what was measured, which figures (Mulassa, Drac, Bou) and viewports, and that no physical device was tested unless one was.
 
+Before writing or reviewing a showreel's shot list, read [directing](references/directing.md): measure the dance first (`tools/qa/reel-motion.mjs`), cut where a run sets off or she stops, pick the angle from where she runs next, fixed cameras and cranes, and how to show proposals (`?reel=A`).
+
 Read [sources](references/sources.md) before new research: dance film, music video, third-person camera and touch-control findings are already collected there.
 
 ## A new figure

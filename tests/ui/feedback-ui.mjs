@@ -9,7 +9,7 @@ const el = id => {
   if (!nodes.has(id)) nodes.set(id, {
     id, value: '', textContent: '', style: {}, getBoundingClientRect: () => ({ top: 40 }), dataset: {}, scrollHeight: 100, clientHeight: 100, hidden: false, disabled: false, readOnly: false, open: false, attrs: {}, listeners: {}, cls: new Set(),
     addEventListener(t, f) { (this.listeners[t] ||= []).push(f); }, fire(t, e = {}) { for (const f of this.listeners[t] || []) f({ preventDefault() {}, ...e }); },
-    setAttribute(k, v) { this.attrs[k] = v; }, getAttribute(k) { return this.attrs[k] ?? null; },
+    setAttribute(k, v) { this.attrs[k] = v; }, getAttribute(k) { return this.attrs[k] ?? null; }, toggleAttribute(k, on) { if (on) this.attrs[k] = ''; else delete this.attrs[k]; },
     classList: { toggle(c, on) { const s = nodes.get(id).cls; (on ?? !s.has(c)) ? s.add(c) : s.delete(c); } },
     querySelectorAll() { return this.choices ?? []; }, prepend(c) { this.first = c; }, showModal() { this.open = true; }, close() { if (!this.open) return; this.open = false; this.fire('close'); }, focus() { focused = id; },
   });
@@ -77,7 +77,9 @@ text.value = 'Un esborrany meu'; menu.close();
 const figure = { id: 'bou', name: 'Bou de Valls' }, material = el('feedback-material'), entity = el('feedback-entity'), kinds = el('feedback-kind'), name = el('feedback-entity-name');
 const help = { kind: 'material', figure, choose: true };
 fb.show(null, help);
-assert.equal(text.value, ''); assert(!material.hidden && entity.hidden && !kinds.hidden); assert.equal(el('feedback-title').textContent, 'Vull ajudar'); assert.equal(el('feedback-lead').textContent, 'Bou de Valls');
+assert.equal(text.value, ''); assert(!material.hidden && entity.hidden && !kinds.hidden);
+const flags = () => Object.keys(menu.attrs).filter(k => k.startsWith('data-')).sort(); // feedback.css reads these, never :has() over [hidden]
+assert.deepEqual(flags(), ['data-choices', 'data-choose']); assert.equal(el('feedback-title').textContent, 'Vull ajudar'); assert.equal(el('feedback-lead').textContent, 'Bou de Valls');
 sent.length = 0; text.value = 'Tinc la partitura original del ball'; await submit();
 assert.equal(status.textContent, 'Marca quin material tens.'); assert.equal(sent.length, 0);
 material.choices = [{ value: 'music' }]; text.value = 'Tinc fotos'; await submit();
@@ -88,7 +90,7 @@ timers.at(-1)(); material.choices = [];
 // each tab has its own draft and asks its own questions; the sheet's top holds so the tabs stay under the finger
 fb.show(null, help); assert.equal(text.value, '', 'sent: that draft is gone'); text.value = 'Un esborrany de material';
 kinds.fire('change', { target: { value: 'entity' } });
-assert(material.hidden && !entity.hidden); assert.equal(text.value, '', 'not the other tab\'s words');
+assert(material.hidden && !entity.hidden); assert.equal(text.value, '', 'not the other tab\'s words'); assert.deepEqual(flags(), ['data-choices', 'data-choose', 'data-entity']);
 assert.equal(menu.style.marginBlock, '40px auto', 'held where it was');
 text.value = 'Som la colla i en volem parlar'; kinds.fire('change', { target: { value: 'material' } });
 assert.equal(text.value, 'Un esborrany de material', 'back on a tab: its own words'); kinds.fire('change', { target: { value: 'entity' } });

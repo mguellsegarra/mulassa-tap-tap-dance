@@ -89,7 +89,7 @@ function normals(g) {
   for (let i = 0; i < p.length; i += 9) {
     const ax = p[i + 3] - p[i], ay = p[i + 4] - p[i + 1], az = p[i + 5] - p[i + 2];
     const bx = p[i + 6] - p[i], by = p[i + 7] - p[i + 1], bz = p[i + 8] - p[i + 2];
-    const nx = ay * bz - az * by, ny = az * bx - ax * bz, nz = ax * by - ay * bx, l = Math.hypot(nx, ny, nz) || 1;
+    const nx = ay * bz - az * by, ny = az * bx - ax * bz, nz = ax * by - ay * bx, l = Math.sqrt(nx * nx + ny * ny + nz * nz) || 1; // (Math.hypot boxed its three numbers every triangle: ~3.5 MB/s of garbage on the splash)
     for (let j = i; j < i + 9; j += 3) { n[j] = nx / l; n[j + 1] = ny / l; n[j + 2] = nz / l; }
   }
   g.attributes.position.needsUpdate = g.attributes.normal.needsUpdate = true;

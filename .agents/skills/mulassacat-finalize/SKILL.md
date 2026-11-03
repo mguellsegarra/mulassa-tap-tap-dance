@@ -27,6 +27,9 @@ modularize code that should have been structured during implementation.
 5. Read only the specialist skills routed by AGENTS.md for the affected boundary:
    UI, performance, security, runtime incidents, compatibility or backups. Do not
    run all audits on every change or launch other agents as a review ritual.
+   A change to UI, DOM, CSS or the scene is not final without its blocking cost in ms
+   (AGENTS.md, Process): check the report has before/after numbers from the device
+   (`docs/agents/device-profiling.md`).
 6. Apply verified in-scope corrections at their owner. Inspect the final diff,
    including additions and deletions. Preserve concurrent edits and review why
    each hunk is needed. Check dynamic uses before declaring code dead.

@@ -14,6 +14,7 @@ import { setupPendingPanel } from './pending-panel.js';
 import { stripScroll } from './strip-scroll.js';
 import { setupFlip } from './select-flip.js';
 import { pixelSvg, pillHtml, stripHtml, peekGap, paintCardHearts } from './select-strip.js';
+import { escutBitmaps } from './escuts.js';
 import { setupSelectKeys } from './select-keys.js';
 import { createSelectLayout } from './select-layout.js';
 import { tr } from '../i18n/messages.js';
@@ -37,6 +38,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
   const liveTowns = TOWNS.filter(t => live.some(f => f.town === t.id)), soonTowns = [...TOWNS.filter(t => !liveTowns.includes(t) && soon.some(f => f.town === t.id)), INVITE_TOWN]; // the invitation comes with what is to come, last
   towns.setAttribute('role', 'group'); // Native Tab order, with optional arrow shortcuts between visible buttons.
   towns.innerHTML = [...liveTowns, ...soonTowns].map(pillHtml).join('');
+  escutBitmaps(towns, win); // (before the selector first shows: its arms then raster as images)
   strip.innerHTML = stripHtml(live) + (soon.length ? stripHtml([...soon, INVITE], true, townOf(live.at(-1))) : '');
   levels.innerHTML = DIFFS.map((d, i) => `<button type="button" class="btn btn-secondary" data-level="${i}" aria-pressed="false">${d.name}</button>`).join('');
   const bar = [...towns.querySelectorAll('.sel-pill')], pills = bar.filter(p => p.dataset.town), cards = [...strip.querySelectorAll('.sel-card')];

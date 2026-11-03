@@ -2,6 +2,12 @@
 // a few notes on the song's own beat grid (song.bpm), two beats apart so there is time to think.
 // notes: [beat, input, holdBeats]; input L = GUA, R = PA, B = GUAPA (both), P = GLOBUS (balloon, any side).
 import { tr } from '../i18n/messages.js';
+// Done on this device or by the profile on any (the seen-notices registry, id 'tutorial'); done here before there was a
+// profile (or before 1.2.11) and not yet on the server: the profile learns it now.
+export function practiceSeen(doneHere, owner, notices) {
+  if (doneHere && owner && !notices.seen(owner, 'tutorial')) notices.mark(owner, 'tutorial');
+  return doneHere || notices.seen(owner, 'tutorial');
+}
 export const STEPS = [
   { word: 'GUA', notes: [[0, 'L'], [2, 'L'], [4, 'L'], [6, 'L']], need: 3 },
   { word: 'PA', notes: [[0, 'R'], [2, 'R'], [4, 'R'], [6, 'R']], need: 3 },

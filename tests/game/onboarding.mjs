@@ -4,7 +4,8 @@ import { readFileSync } from 'node:fs';
 import { CAL, clickTimes, measureOffset, fmtMs, verdict, offsetDraft } from '../../src/game/calibration.js';
 import { Chip } from '../../src/platform/audio.js';
 import { Clicker } from '../../src/platform/clicker.js';
-import { STEPS, buildStep, stepBeats, stepDone, stepPassed } from '../../src/game/practice.js';
+import { STEPS, buildStep, stepBeats, stepDone, stepPassed, practiceSeen } from '../../src/game/practice.js';
+import { createSeenNotices } from '../../src/services/seen-notices.js';
 import { practiceText } from '../../src/game/figure-theme.js';
 import { WINDOWS } from '../../src/game/progress.js';
 
@@ -100,3 +101,14 @@ console.log('practice steps ok');
   assert.equal(started, 1, 'the menu loop still plays on the title');
 }
 console.log('menu ambient never leaks into play ok');
+
+// The practice is seen once per profile: done on another device counts here, and done here before the profile reaches the server
+{ const kv = new Map(), sent = [], tick = () => new Promise(r => setTimeout(r));
+  const reg = createSeenNotices({ kv: { get: k => kv.get(k) ?? null, set: (k, v) => kv.set(k, v) }, service: { seenNotices: async o => (o === 'A' ? ['tutorial'] : []), markNoticeSeen: async (id, o) => { sent.push([id, o]); } } });
+  await reg.load('A'); await reg.load('B');
+  assert.equal(practiceSeen(false, 'A', reg), true, 'done on another device');
+  assert.equal(practiceSeen(false, 'B', reg), false, 'a new profile on a new device: the practice comes');
+  assert.equal(practiceSeen(false, null, reg), false, 'no profile: only this device knows');
+  assert.equal(practiceSeen(true, 'B', reg), true); await tick();
+  assert.deepEqual(sent, [['tutorial', 'B']], 'done here before the profile: the server learns it');
+  practiceSeen(true, 'B', reg); await tick(); assert.equal(sent.length, 1, 'once'); }

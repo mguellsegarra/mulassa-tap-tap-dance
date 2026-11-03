@@ -82,6 +82,11 @@ export function buildPerson(o = {}) {
 // world matrix says. Bind pose = identity, so a vertex lands at bone.matrixWorld × (its part-local position).
 // A hidden person must be scaled to zero (p.g.scale 0): the groups still update, only the mesh draws them.
 // A person with p.bones (the representation's figures: a chair and its wheels are bones too) bakes those instead.
+// The shadow pass draws every caster with three.js's one depth material: plain, instanced and skinned casters in turn made
+// it re-read its program parameters ~4 times a frame (CPU and ~0.6 MB/s of garbage an iPhone in Low Power Mode pays in
+// collector time; docs/agents/device-profiling.md). Every skinned crowd shares this one (the same GPU program, only the
+// switching goes); the Mulassa's carriers, the only instanced casters, make theirs (mula-carriers.js).
+const SKINNED_DEPTH = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking }); // (three.js's own packing)
 export function skinCrowd(people, mat = SKIN_MAT) {
   const parts = [], bones = [];
   for (const p of people) {
@@ -105,6 +110,7 @@ export function skinCrowd(people, mat = SKIN_MAT) {
   parts.forEach(geo => geo.dispose());
   mesh.bind(new THREE.Skeleton(bones, bones.map(() => new THREE.Matrix4())), new THREE.Matrix4());
   mesh.frustumCulled = false; // people walk about: bounds from the bones would be stale (and they ring the camera anyway)
+  mesh.customDepthMaterial = SKINNED_DEPTH; // its own depth material in the shadow pass (SKINNED_DEPTH)
   return mesh;
 }
 // One index per line-up (and null: nobody plays) of what the mesh draws now, without the other line-ups' people: a

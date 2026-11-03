@@ -4,7 +4,7 @@ import '../ui/free-music.mjs';
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { Chip } from '../../src/platform/audio.js';
-import { applause } from '../../src/platform/applause.js';
+import { synthApplause, seeded, APPLAUSE } from '../../tools/music/build_applause.mjs';
 import { audioFailureTags } from '../../src/platform/audio-load.js';
 import { errors } from '../../src/services/errors.js';
 
@@ -153,7 +153,8 @@ console.log('audio wake respects page activity');
     await slow.ready;
     slow.menu(true);
     await new Promise(r => setTimeout(r, 5));
-    assert.deepEqual(log, ['song', 'menu'], 'a 3G / Save-Data connection still downloads the menu loop');
+    assert.deepEqual(log.filter(u => u !== 'sfx/applause.mp3'), ['song', 'menu'], 'a 3G / Save-Data connection still downloads the menu loop');
+    assert.deepEqual(log.filter(u => u === 'sfx/applause.mp3'), ['sfx/applause.mp3'], 'the applause once, after the song (never before the music)');
     assert.deepEqual(menuStarts, [normal, slow], 'and starts it');
     slow.menu(false);
     if (navDesc) Object.defineProperty(globalThis, 'navigator', navDesc); else delete globalThis.navigator;
@@ -167,14 +168,14 @@ console.log('audio wake respects page activity');
     await quiet.ready;
     quiet.menu(true);
     await new Promise(r => setTimeout(r, 5));
-    assert.deepEqual(log, ['song'], 'menu music off: the loop is never downloaded');
+    assert.deepEqual(log.filter(u => u !== 'sfx/applause.mp3'), ['song'], 'menu music off: the loop is never downloaded');
     assert.equal(menuStarts.length, 0, 'nor started');
     const ramps = [];
     quiet.ctx.createGain = () => ({ connect: t => t, disconnect() {}, gain: { setValueAtTime() {}, linearRampToValueAtTime: (v, t) => ramps.push(t), setTargetAtTime(v) { ramps.push(`to ${v}`); } } });
     quiet.ctx.createBufferSource = () => ({ connect: t => t, start() { menuStarts.push(quiet); }, stop() { ramps.push('stop'); } });
     quiet.setMenuMusic(true);
     await new Promise(r => setTimeout(r, 5));
-    assert.deepEqual(log, ['song', 'menu'], 'switched on: fetched now');
+    assert.deepEqual(log.filter(u => u !== 'sfx/applause.mp3'), ['song', 'menu'], 'switched on: fetched now');
     assert(menuStarts.at(-1) === quiet && Math.abs(ramps[0] - 0.32) < 1e-9, 'and faded in within 0.2 s (after the 0.12 s lead)');
     quiet.setMenuMusic(false);
     assert.deepEqual(ramps.slice(1), ['to 0', 'stop'], 'off: a short fade out');
@@ -292,7 +293,7 @@ console.log('menu entrance, loop points, version and tempo ok');
     const source = () => { const s = node({ frequency: param(), playbackRate: param(), start(at = 0) { this.at = at; }, stop(at = 0) { this.end = Math.min(this.end ?? Infinity, at); } }); ctx.sources.push(s); return s; };
     Object.assign(ctx, { createOscillator: source, createBufferSource: source, createGain: () => node({ gain: param() }),
       createBiquadFilter: () => node({ frequency: param(), Q: param() }), createBuffer: () => ({ duration: 200, getChannelData: () => new Float32Array(1) }) });
-    const c = Object.assign(Object.create(Chip.prototype), { ctx, noise: {}, applause: { finish: () => ({}) }, buf: { duration: 200 }, ready: Promise.resolve() });
+    const c = Object.assign(Object.create(Chip.prototype), { ctx, noise: {}, applause: { duration: 5 }, buf: { duration: 200 }, ready: Promise.resolve() });
     c.out = ctx.createGain(); c.music = ctx.createGain(); c.unlock = () => {};
     // reaches the speakers: still connected, through whatever gains, to `out` or `music`
     c.audible = s => { const walk = n => n === c.out || n === c.music || n.outs.some(walk); return walk(s); };
@@ -328,8 +329,11 @@ console.log('menu entrance, loop points, version and tempo ok');
   menuSound.setMenuMusic(false);
   assert(!menuSound.plays(oldFlame, menuSound.ctx.currentTime), 'silencing the menu stops a flame already sounding');
   const quietSources = menuSound.ctx.sources.length;
-  for (const kind of ['menu', 'flama', 'perfect', 'crack']) menuSound.sfx(kind);
-  assert.equal(menuSound.ctx.sources.length, quietSources, 'muted menu buttons and demo effects schedule nothing');
+  for (const kind of ['flama', 'perfect', 'crack']) menuSound.sfx(kind);
+  assert.equal(menuSound.ctx.sources.length, quietSources, 'muted demo effects schedule nothing');
+  menuSound.sfx('menu');
+  assert(menuSound.ctx.sources.length > quietSources, 'a muted menu still clicks: the clicks mix over the other app (ambient)');
+  menuSound.clearMenuSfx();
   menuSound.sfx('flama', 0, true);
   assert(menuSound.ctx.sources.length > quietSources, 'manual free-mode fire sounds with the music off');
   menuSound.clearMenuSfx();
@@ -338,8 +342,8 @@ console.log('menu entrance, loop points, version and tempo ok');
   assert(menuSound.ctx.sources.length > quietSources && menuSound.menuMusic === false, 'game effects return without changing the saved menu preference');
   menuSound.menu(true);
   const returnedSources = menuSound.ctx.sources.length;
-  menuSound.sfx('menu'); menuSound.sfx('flama');
-  assert.equal(menuSound.ctx.sources.length, returnedSources, 'returning to the menu restores silence');
+  menuSound.sfx('flama');
+  assert.equal(menuSound.ctx.sources.length, returnedSources, 'returning to the menu silences the demo effects again');
   menuSound.ambient = Promise.resolve({ duration: 30 });
   menuSound.setMenuMusic(true); await menuSound.ambient;
   const enabledSources = menuSound.ctx.sources.length;
@@ -421,25 +425,27 @@ console.log('menu entrance, loop points, version and tempo ok');
 }
 console.log('leaving a run silences everything it queued ok');
 
-// The applause (Chip's 'ovation'): built in small idle slices from the first frame on, so each slice must stay cheap
-// (a phone paid ~10 ms of every frame for it after TOCA LA PANTALLA), and it must still sound like a crowd.
+// The applause (Chip's 'ovation', section B's claps) is a recorded file now (public/sfx/applause.mp3, built by
+// tools/music/build_applause.mjs): synthesised on the phone it was 15% of an iPhone's splash JavaScript. The generator
+// is seeded (the file only changes with the script) and still sounds like a crowd; the game only downloads and decodes it.
 {
-  const bufCtx = { sampleRate: 48000, createBuffer: (n, len) => { const ch = Array.from({ length: n }, () => new Float32Array(len)); return { ch, getChannelData: i => ch[i] }; } };
-  const slices = [], job = applause(bufCtx, f => slices.push(f));
-  let n = 0, worst = 0;
-  while (slices.length) { const t = performance.now(); slices.shift()(); worst = Math.max(worst, performance.now() - t); n++; }
-  assert(job.done && n >= 30, `built over many slices (${n})`);
-  // Guard the synthesis cost without charging time spent waiting for CPU on a busy host.
-  const cpuStart = process.cpuUsage(), t = performance.now(), whole = applause(bufCtx, () => {}).finish(), ms = performance.now() - t;
-  const cpu = process.cpuUsage(cpuStart), cpuMs = (cpu.user + cpu.system) / 1000;
-  assert(cpuMs < 110, `the whole applause stays cheap (${cpuMs.toFixed(0)} ms CPU, ${ms.toFixed(0)} ms elapsed)`);
-  for (const d of whole.ch) {
+  const [l, r] = synthApplause(seeded(APPLAUSE.seed)), [l2] = synthApplause(seeded(APPLAUSE.seed));
+  assert(l.every((v, i) => v === l2[i]), 'seeded: the same crowd every build');
+  for (const d of [l, r]) {
     let peak = 0, sum = 0, bad = 0;
     for (const v of d) { if (!Number.isFinite(v)) bad++; peak = Math.max(peak, Math.abs(v)); sum += v * v; }
     const rms = Math.sqrt(sum / d.length);
     assert(!bad && peak < 0.6 && rms > 0.025 && rms < 0.08, `a crowd's level on both channels (peak ${peak.toFixed(2)}, rms ${rms.toFixed(3)})`);
   }
-  console.log(`applause: ${n} slices, worst ${worst.toFixed(1)} ms elapsed, whole ${cpuMs.toFixed(0)} ms CPU / ${ms.toFixed(0)} ms elapsed ok`);
+  const file = readFileSync(new URL('../../public/sfx/applause.mp3', import.meta.url));
+  assert(file.length > 20_000 && file.length < 150_000, `the applause file is small (${file.length} bytes)`);
+  const src = ['audio.js', 'audio-voices.js'].map(f => readFileSync(new URL(`../../src/platform/${f}`, import.meta.url), 'utf8')).join('\n');
+  assert(/fetch\('sfx\/applause\.mp3'\)[^]*decodeAudioData/.test(src) && !/applause\.js/.test(src), 'the engine decodes the file, it synthesises nothing');
+  const early = Object.assign(Object.create(Chip.prototype), { applause: null, ctx: { createBufferSource() { throw new Error('played'); } } });
+  let asked = 0; early.loadApplause = () => { asked++; };
+  early.clap(0.5, 3); early.clapBurst(0.05);
+  assert.equal(asked, 1, 'not downloaded yet: the ovation is silent and asks for it; the beat claps just wait');
+  console.log(`applause: a ${(file.length / 1024).toFixed(0)} KB file, seeded generator at a crowd's level, silent until loaded ok`);
 }
 
 { // a device that won't start rejects ctx.resume(): swallowed, not an unhandled rejection
@@ -589,6 +595,46 @@ console.log('leaving a run silences everything it queued ok');
     assert.equal(audioSession.type, 'playback', 'a run takes the session even with the menu music off');
     c.endRun();
     assert.equal(audioSession.type, 'ambient', 'back on the silent menu: ambient again');
+    // the ringer switch kept muting a context started under 'ambient' after the run took 'playback' (the podcast paused, the game stayed silent)
+    const calls = [];
+    c.ctx.state = 'running';
+    c.ctx.suspend = () => { calls.push('suspend'); return Promise.resolve(); };
+    c.ctx.resume = () => { calls.push('resume'); return Promise.resolve(); };
+    c.beginRun(); await Promise.resolve();
+    assert.deepEqual(calls, ['suspend', 'resume'], 'ambient → playback on a running context restarts it on the new route');
+    c.beginRun(); await Promise.resolve();
+    assert.equal(calls.length, 2, 'staying on playback never restarts the context');
+    c.endRun(); await Promise.resolve();
+    assert.equal(calls.length, 2, 'back to ambient: no restart');
+    // the restart is two steps: a mute while the suspend is pending must not bring the context back
+    let done;
+    c.ctx.suspend = () => { calls.push('suspend'); return new Promise(r => { done = r; }); };
+    c.beginRun(); c.endRun(); done(); await new Promise(r => setTimeout(r));
+    assert.deepEqual(calls.slice(2), ['suspend'], 'back to ambient before the suspend resolved: no resume');
+    c.ctx.suspend = () => { calls.push('suspend'); return Promise.reject(new Error('refused')); };
+    const report = errors.report, reported = []; errors.report = kind => reported.push(kind);
+    try { c.beginRun(); await new Promise(r => setTimeout(r)); } finally { errors.report = report; }
+    assert.equal(calls.at(-1), 'resume', 'a refused suspend still resumes, without an unhandled rejection');
+    assert.deepEqual(reported, ['audio-route-restart-failed'], 'and the refusal is reported');
+    // an iPhone paused mid-run in another app (hidden: 'auto', iOS froze the 40 ms suspend), back still paused: the pause
+    // menu's suspend takes 'playback' back but must not restart the route, whose resume played the song under the pause
+    c.ctx.suspend = () => { calls.push('suspend'); return Promise.resolve(); };
+    audioSession.type = 'auto'; calls.length = 0;
+    c.suspend(); clearTimeout(c.hushT); await new Promise(r => setTimeout(r));
+    assert.equal(audioSession.type, 'playback', 'the paused run keeps its session');
+    assert.deepEqual(calls, [], 'a pause never resumes the context');
+    c.endRun(); calls.length = 2;
+    c.ctx.suspend = () => { calls.push('suspend'); return Promise.resolve(); };
+    // an iPhone paused the podcast under 'ambient' too, as soon as the context ran: a silent menu keeps it stopped
+    c.ctx.state = 'suspended';
+    assert.equal(await c.resume(), false, 'a silent menu refuses to resume');
+    assert.equal(calls.length, 2, 'and never touches the context');
+    c.free = true; await c.resume();
+    assert.equal(calls.at(-1), 'resume', 'free mode keeps its plaça sound');
+    c.free = false; c.ctx.state = 'running'; c.wakeOrRest();
+    await new Promise(r => setTimeout(r, 60));
+    assert.equal(calls.at(-1), 'suspend', 'switching the menu music off stops a running context');
+    c.ctx.state = 'suspended';
     c.ctx.suspend = c.ctx.resume = () => {}; c.beginRun();
     const doc = globalThis.document;
     globalThis.document = { hidden: true };

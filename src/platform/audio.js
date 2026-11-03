@@ -4,16 +4,18 @@ import { errors } from '../services/errors.js';
 import { Q } from '../core/flags.js';
 import { latency, RAW, audioClock } from './audio-clock.js';
 import { AudioFailure, audioFailureTags, readAll } from './audio-load.js';
-import { applause } from './applause.js';
 import { VOICES } from './audio-voices.js';
 import { RADIO } from './audio-radio.js';
+import { AUDIO_SESSION } from './audio-session.js';
 export const muted = () => Q.has('mute');
 
 export class Chip {
   constructor(song = {}, { menuMusic = true, menuLoop = song } = {}) {
     this.menuUrls = menuLoop; // the menu loop is one tune for every figure: a figure's song never swaps it
     this.urls = song; // song.audio / song.ambient carry a ?v= content hash, so a regenerated song is never served stale
+    this.menuMusic = menuMusic; // the title's speaker button (main.js): off = a silent menu but for its clicks; the loop is neither fetched nor played
     const ctx = this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (this.silentMenu()) ctx.suspend(); // Safari may start it untapped on load, which pauses the podcast
     this.out = ctx.createGain();
     this.out.gain.value = 0.8;
     const comp = ctx.createDynamicsCompressor();
@@ -31,8 +33,7 @@ export class Chip {
     const md = this.murmur.getChannelData(0);
     let b = 0;
     for (let i = 0; i < md.length; i++) { b = (b + 0.02 * (Math.random() * 2 - 1)) / 1.02; md[i] = b * 3.5; }
-    this.applause = applause(ctx); // built a few people at a time when the page is idle (see applause())
-    this.menuMusic = menuMusic; // the title's speaker button (main.js): off = all menu sounds are silent; the loop is neither fetched nor played
+    this.applause = null; // the recorded applause (public/sfx/applause.mp3): loadApplause(), audio-voices.js
     this.preload();
   }
 
@@ -49,6 +50,7 @@ export class Chip {
 
   preload() {
     this.ready = this.loadRecording();
+    this.ready.then(() => this.loadApplause(), () => this.loadApplause()); // after the song: the ovation is at a run's end
     if (this.menuMusic === false) return; // switched off: menu() fetches it if it is switched back on
     const amb = this.ambient = this.loadAmbient();
     amb.catch(() => { if (this.ambient === amb) this.ambient = null; }); // menu() retries
@@ -77,7 +79,7 @@ export class Chip {
     const g = this.master.gain, t = this.ctx.currentTime;
     g.cancelScheduledValues(t); g.setTargetAtTime(0, t, 0.006);
     clearTimeout(this.hushT);
-    this.session(); // hidden: 'auto', in case iOS freezes the timer below
+    this.session(false); // hidden: 'auto', in case iOS freezes the timer below; never the route restart, which resumes
     this.hushT = setTimeout(() => this.ctx.suspend(), 40);
   }
   unhush() {
@@ -87,21 +89,15 @@ export class Chip {
   }
   resume() {
     this.session(); // back from a hidden page's 'auto'
+    if (this.silentMenu()) return Promise.resolve(false);
     this.unhush();
     const failed = e => { errors.report('audio-resume-failed', { ...audioFailureTags(e), audioState: this.ctx.state }); return false; };
     try { return Promise.resolve(this.ctx.resume?.()).then(() => this.running, failed); } catch (e) { return Promise.resolve(failed(e)); }
   } // a rejected wake stays paused; the next real gesture can resume the same transport
 
-  // iOS: a silent menu is 'ambient' (sfx mix with Spotify or any other app's music, which keeps playing); the menu music,
-  // the radio or a run take the 'playback' session (the other app pauses, and the ringer switch can't silence the song).
-  // A hidden page drops to 'auto': only 'playback' sounds in the background, so iOS itself stops it if our suspend never ran
-  session() {
-    const type = globalThis.document?.hidden ? 'auto' : this.menuMusic === false && !this.bus ? 'ambient' : 'playback';
-    try { if (navigator.audioSession) navigator.audioSession.type = type; } catch { /* older iOS */ }
-  }
-
   wake() { // iOS: resume + a silent sample inside a real gesture
     this.session();
+    if (this.silentMenu()) return;
     if (document.hidden || !document.hasFocus() || navigator.userActivation?.isActive === false) return; // a modifier key, Cmd+R…: no gesture, the browser would refuse (and warn)
     if (this.ctx.state !== 'running') this.resume(); else this.unhush(); // a hidden page's timer may never have suspended it
     if (!this.woke) {
@@ -125,7 +121,7 @@ export class Chip {
   }
   // the plaça's murmur: silent on the menu while the speaker is off (a muted menu means quiet), back in any game and in the
   // free mode (setFree), where the plaça is the point and the music off only means no tune
-  setFree(on) { this.free = on; this.murmurLevel(); }
+  setFree(on) { this.free = on; this.murmurLevel(); this.wakeOrRest(); }
   murmurLevel() {
     if (!this.amb) return;
     const quiet = this.menuToken && this.menuMusic === false && !this.free;
@@ -202,7 +198,7 @@ export class Chip {
     this.endRun(); // back on the menu: whatever the run still had queued on the audio clock never sounds
     const token = (this.menuToken = {});
     this.murmurLevel();
-    if (this.menuMusic === false) { this.clearMenuSfx(); return; } // remembered menu silence, including leftover effects
+    if (this.menuMusic === false) { this.clearMenuSfx(); if (this.silentMenu()) this.suspend(); return; } // remembered menu silence, including leftover effects
     const ambient = this.ambient ||= this.loadAmbient();
     // the tap's resume() takes a moment before the hardware really plays: starting the loop while the context is still
     // suspended ate its first beats (it began "cut"). Wait for `running`, then start a hair ahead of the clock.
@@ -245,6 +241,7 @@ export class Chip {
   setMenuMusic(on) {
     this.menuMusic = on;
     this.session();
+    this.wakeOrRest();
     this.murmurLevel();
     if (!on) this.radio(null); // «Silenci» on the radio is this same preference
     if (!this.menuToken) return; // not on the menu: the next menu(true) follows the setting
@@ -258,15 +255,15 @@ export class Chip {
   // clock, and «Torna al menú» resumed it on the title with the three drum hits still to come. menu(false) opens a
   // run's bus, menu(true) ends it (a short fade, then disconnected); on the menu sfx go straight to `out`.
   beginRun() {
-    this.endRun();
+    this.endRun(true); // a new run: straight on to 'playback', no needless restart through 'ambient'
     this.bus = this.ctx.createGain();
     this.bus.connect(this.out);
     this.session();
   }
-  endRun() {
+  endRun(reopen = false) {
     const bus = this.bus, t = this.ctx.currentTime;
     this.bus = null;
-    this.session();
+    if (!reopen) this.session();
     for (const n of this.voices ?? []) try { n.stop(t + 0.05); } catch { /* already over */ } // queued ones never start
     this.voices?.clear();
     if (!bus) return;
@@ -290,4 +287,4 @@ export class Chip {
   }
 
 }
-Object.assign(Chip.prototype, VOICES, RADIO);
+Object.assign(Chip.prototype, VOICES, RADIO, AUDIO_SESSION);

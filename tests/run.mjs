@@ -15,7 +15,7 @@ import { fileURLToPath } from 'node:url';
 const root = fileURLToPath(new URL('..', import.meta.url));
 // Quick and broad, then the longest, so they don't start last and leave the run waiting on them.
 const FIRST = ['check.mjs', 'tests/build/modules.mjs', 'tests/render/render-quality.mjs', 'tests/figures/drac/drac-compare-comic.mjs', 'tests/db/short-ranking-db.mjs', 'tests/figures/drac/drac-compare.mjs'];
-const GPU = ['tests/render/gl-budget.mjs', 'tests/render/prod-play.mjs'];
+const GPU = ['tests/render/gl-budget.mjs', 'tests/render/prod-play.mjs', 'tests/render/alloc-budget.mjs'];
 // The mocked-DOM render tests fake performance.now, so they share the machine; these drive a real browser or time themselves.
 const ALONE = t => [...GPU, 'tests/build/audio.mjs'].includes(t);
 // Python tests run through uv with these packages (the generators' own environment); tests/db/db_backup_test.py runs from db-backup.mjs.

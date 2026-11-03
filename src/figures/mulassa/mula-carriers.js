@@ -17,7 +17,10 @@ export function createCarriers({ cloth = '#26262e', leather = '#171714' } = {}) 
   const shoes = new THREE.InstancedMesh(shoeGeo, new THREE.MeshLambertMaterial({ color: leather }), 8);
   const group = new THREE.Group();
   group.name = 'mula-carriers';
-  for (const m of [cuffs, shoes]) { m.frustumCulled = false; m.castShadow = true; m.receiveShadow = false; group.add(m); } // (instances leave the origin's bounds)
+  // the game's only instanced shadow casters: their own depth material, or the shadow pass switches three.js's shared one
+  // between kinds every frame (models/people.js has the skinned crowd's; the same RGBA packing as three.js's default)
+  const depth = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking });
+  for (const m of [cuffs, shoes]) { m.frustumCulled = false; m.castShadow = true; m.receiveShadow = false; m.customDepthMaterial = depth; group.add(m); } // (instances leave the origin's bounds)
   const inverse = new THREE.Matrix4(), ankle = new THREE.Vector3(), top = new THREE.Vector3(), dir = new THREE.Vector3();
   const ray = new THREE.Ray(), q = new THREE.Quaternion(), s = new THREE.Vector3(1, 1, 1), m = new THREE.Matrix4();
   const shoeQ = new THREE.Quaternion(), yAxis = new THREE.Vector3(0, 1, 0), local = new THREE.Matrix4();
@@ -56,6 +59,6 @@ export function createCarriers({ cloth = '#26262e', leather = '#171714' } = {}) 
     }
     cuffs.instanceMatrix.needsUpdate = shoes.instanceMatrix.needsUpdate = true;
   }
-  function dispose() { cuffGeo.dispose(); shoeGeo.dispose(); cuffs.material.dispose(); shoes.material.dispose(); }
+  function dispose() { cuffGeo.dispose(); shoeGeo.dispose(); cuffs.material.dispose(); shoes.material.dispose(); depth.dispose(); }
   return { group, cuffs, shoes, pose, dispose };
 }

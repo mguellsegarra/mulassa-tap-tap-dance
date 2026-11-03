@@ -7,7 +7,7 @@ import { setupBadgeTip } from '../../src/ui/badge-tip.js';
 const listeners = {}, rect = (left, top, w, h) => ({ left, top, right: left + w, bottom: top + h, width: w, height: h });
 function el(cls, r, parent = null, tag = 'span') {
   const e = { cls, tag, r, parentElement: parent, dataset: {}, style: { setProperty() {} }, classList: { remove() {}, toggle() {} }, setAttribute() {},
-    getBoundingClientRect: () => e.r, matches: s => s.split(',').some(x => x.trim() === `.${cls}`),
+    getBoundingClientRect: () => e.r, querySelector: () => e.art ?? null, matches: s => s.split(',').some(x => x.trim() === `.${cls}`),
     closest(s) { for (let n = e; n; n = n.parentElement) if (s.split(',').some(x => { x = x.trim(); return x === n.tag || x === `.${n.cls}` || (x === '.player-badge[data-tip]' && n.cls === 'player-badge' && n.dataset.tip); })) return n; return null; },
     contains: o => { for (let n = o; n; n = n.parentElement) if (n === e) return true; return false; } };
   return e;
@@ -16,12 +16,12 @@ const row = el('row', rect(0, 0, 300, 50), null, 'li');
 const name = el('player-name', rect(10, 10, 80, 18), row, 'button');
 const mark = el('player-badge', rect(94, 11, 16, 16), row); mark.dataset.tip = 'Valls';
 const entry = el('badge-edit', rect(0, 100, 60, 30), null, 'button'), owned = el('player-badge', rect(4, 107, 16, 16), entry); owned.dataset.tip = 'UAF';
-let covered = false, clickCapture = null; // a sheet over the row: the mark's centre shows that sheet, not the mark
+let covered = false, clickCapture = null, lastTip = null; // a sheet over the row: the mark's centre shows that sheet, not the mark
 const shown = [];
 const doc = {
   addEventListener: (t, f, capture) => { (listeners[t] ||= []).push(f); if (t === 'click') clickCapture = capture === true; }, querySelectorAll: () => [mark, owned],
   elementFromPoint: (x, y) => covered ? null : [owned, mark].find(m => x >= m.r.left && x <= m.r.right && y >= m.r.top && y <= m.r.bottom) ?? row,
-  createElement: () => ({ ...el('badge-tip', rect(0, 0, 50, 20)), offsetWidth: 50, offsetHeight: 20, isConnected: false,
+  createElement: () => (lastTip = { ...el('badge-tip', rect(0, 0, 50, 20)), offsetWidth: 50, offsetHeight: 20, isConnected: false,
     showPopover() { this.isConnected = true; shown.push(this.textContent); }, hidePopover() {}, remove() { this.isConnected = false; } }),
   body: { append() {} },
 };
@@ -76,4 +76,12 @@ press('touch'); assert.deepEqual(tap(row, 100, 35, { pointerType: '' }), { tip: 
 press('touch'); assert.deepEqual(tap(row, 100, 35, { pointerType: 'mouse' }), { tip: 'Valls', heard: false }, 'WebKit\'s click after a tap says mouse: the press counts'); reset();
 const canvas = el('hud', rect(0, 0, 400, 400), null, 'canvas');
 assert.deepEqual(tap(canvas, 100, 35), { tip: null, heard: true }, 'a tap on the game canvas looks for no mark');
+// the tail aims at the art, not the box: a tall mark (the UAF's flame) sits at its 16 px box's left
+const tipAt = () => { const t = lastTip, vars = {}; t.style.setProperty = (k, v) => { vars[k] = v; }; return vars; };
+let vars = tipAt(); tap(mark, 100, 18); assert.equal(vars['--tail'], `${102 - 77}px`, 'no art inside: the box\'s centre (94 + 8)'); reset();
+mark.art = { getBoundingClientRect: () => rect(94, 13, 8, 13) };
+vars = tipAt(); tap(mark, 100, 18); assert.equal(lastTip.style.left, '73px', 'centred on the art: 98 - 25'); assert.equal(vars['--tail'], '25px'); reset();
+const edge = el('player-badge', rect(380, 11, 16, 16), row); edge.dataset.tip = 'UAF'; edge.art = { getBoundingClientRect: () => rect(380, 13, 8, 13) };
+vars = tipAt(); tap(edge, 384, 18); assert.equal(lastTip.style.left, '342px', 'held inside the screen: 400 - 50 - 8'); assert.equal(vars['--tail'], '42px', 'the tail still at the art: 384 - 342'); reset();
+mark.art = null;
 console.log('badge tip ok');

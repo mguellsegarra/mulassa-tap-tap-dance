@@ -19,6 +19,7 @@ import { OPTOUT_KEY, PERSIST_KEY } from './publish-ui.js';
 import { setupGreeting } from './greeting.js';
 import { setupDeviceHint } from './device-hint.js';
 import { setupFreeGate } from './free-gate.js';
+import { setupInstall } from './install-app.js';
 import { softwareGl } from '../scene/stage.js';
 import { makeDanceChart } from '../game/chart.js';
 import { song, FINALE_T } from '../game/figure-song.js';
@@ -113,6 +114,7 @@ versionEl.textContent = `v${APP_BUILD.replace('+', ' · ')}`; // v1.0.54 · d405
 document.getElementById('settings').addEventListener('click', openSettings);
 document.getElementById('settings-sync').addEventListener('click', () => { settingsMenu.close(); syncBack = openSettings; sync.show(); });
 document.getElementById('settings-feedback').addEventListener('click', () => { settingsMenu.close(); writeToBox({ kind: 'general' }, openSettings); }); // the selector's Bústia (its corner slot went to free play); closing it comes back here
+sheets.install = setupInstall({ focusIn, back: openSettings }); // «Instal·la l’app»: Chromium's prompt, or the browser's own steps; closing them comes back here
 // Classificacions (optional, online): from the selector or the results screen.
 // After an eligible run its publish sheet opens by itself, only over a bare, visible, upright results screen.
 const mockBoard = Boolean(FINAL) || leaderboardPreviewMode({ hostname: location.hostname, search: location.search, configured: leaderboard.configured });
@@ -209,7 +211,7 @@ const greeting = setupGreeting({ asked: () => heartTip.update(), stats: statsSyn
 service.onAccount?.(() => { hearts.accountChanged(); refreshIdentity(service, kv, { fresh: true }).then(() => share.refreshName()); greeting.accountChanged(); });
 document.addEventListener('close', () => { greeting.poke(); heartTip.update(); }, true); // dialogs' close does not bubble
 document.addEventListener('visibilitychange', () => { if (!document.hidden) { greeting.poke(); heartTip.update(); } }); // an answer that landed in a hidden tab was dropped: ask again
-settingsMenu.addEventListener('close', () => { if (!sync.open && !board.open && (G.state === 'select')) document.activeElement?.blur(); });
+settingsMenu.addEventListener('close', () => { if (!sync.open && !board.open && !document.querySelector('dialog[open]') && (G.state === 'select')) document.activeElement?.blur(); }); // (close fires a task later: a sheet opened from here has its focus by then)
 // Bústia de la plaça: opened from Configuració or a pending figure; one shared Turnstile.
 const feedback = setupFeedback({ focusIn, captcha: board.captcha, accessToken: () => service.accessToken() });
 const needConfirmed = setupConfirmGate({ focusIn, identity: () => service.identity(), hasProfile: async () => !!ownerKey(kv) || !!(await service.profile?.())?.alias, openProfile: (what, back, opts) => profile.open(what, back, opts) });

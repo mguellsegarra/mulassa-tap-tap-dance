@@ -1,5 +1,5 @@
-// The selector's showreel (src/game/showreel.js), cut like a music video: a change every two bars or so (8-40 beats; close-ups
-// 8-12, cut in and out), on bars, a cut only where the list says so (a glide eases across without a jump), never the same shot
+// The selector's showreel (src/game/showreel.js): each shot 8-40 beats (close-ups 8-12, cut in and out; a fixed camera
+// entered on a cut, a crane rising slowly), on bars, a cut only where the list says so (a glide eases across without a jump), never the same shot
 // twice in a row (across the loop too), every angle on the camera's side of the action, every shot held or moving slowly
 // (the dizziness was the camera turning, not the cut), and the dance clock locked to the menu loop's beat.
 import assert from 'node:assert/strict';
@@ -29,6 +29,8 @@ for (const [id, reel] of Object.entries(SHOWREELS)) {
     const k = SHOT_KINDS[kind]; assert.ok(Math.abs(k.az[1] - k.az[0]) / (next - b) <= 0.05, `${id}: the shot at ${b} turns round her slowly (≤ 0.05 rad a beat: ~0.13 rad/s)`);
     assert.notEqual(kind, prev, `${id}: no change into the same shot at ${b}`);
     if (how === 'glide') assert.ok(Math.abs(SHOT_KINDS[kind].az[0] - SHOT_KINDS[prev].az[1]) <= REEL_GLIDE_AZ, `${id}: the glide at ${b} turns round her calmly`);
+    if (k.fixed) assert.equal(how, 'cut', `${id}: the fixed camera at ${b} is placed by its cut (a glide would hold the last one's spot)`);
+    if (Array.isArray(k.el)) assert.ok(Math.abs(k.el[1] - k.el[0]) / (next - b) <= 0.05, `${id}: the crane at ${b} rises slowly`);
   });
   // a glide never jumps, and only a cut changes the index tickReel reports as a cut
   const a = {}, z = {};
@@ -61,6 +63,11 @@ for (const [name, k] of Object.entries(SHOT_KINDS)) {
 
 // reduced motion: one still shot
 const out = {}, mula = SHOWREELS[MULASSA.id];
+// a crane rises through its shot, a fixed camera says so, and the reduced-motion shot is neither
+{ const crane = { shots: [[0, 'jibUp', 'cut'], [20, 'camR', 'cut']], loop: 40 }, o = {};
+  shotAt(crane, 0, o); const low = o.el; shotAt(crane, 19.9, o); assert.ok(o.el > low + 0.2 && !o.fixed, 'the crane goes up through its shot');
+  shotAt(crane, 25, o); assert.ok(o.fixed && o.el === SHOT_KINDS.camR.el, 'a fixed camera says so');
+  shotAt(crane, 25, o, true); assert.ok(!o.fixed, 'reduced motion: the plain still shot'); }
 assert.equal(shotAt(mula, 150, out, true), 0, 'reduced motion: one shot');
 const calmAz = out.az; shotAt(mula, 10, out, true); assert.equal(out.az, calmAz, 'reduced motion: the shot holds still');
 

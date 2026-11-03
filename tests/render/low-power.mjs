@@ -61,6 +61,19 @@ check('background gaps (hidden tab) in Low Power Mode: no quality step', () => {
   for (let i = 0; i < 6; i++) parts.push(lpm(7), gap);
   assert.deepEqual(steps(...parts), []);
 });
+// An iPhone 18 Pro in Low Power Mode (2026-11-03): its 120 Hz screen gave Safari 30 Hz, then 24 Hz (41.7 ms, 5 refreshes)
+// for seconds at a time, the frame's CPU at ~10 ms; read as 100% slow frames, quality fell medium → minimal mid-song.
+const V120 = 1000 / 120, at24 = (s, o = {}) => { const out = []; for (let t = 0; t < s * 1000;) { const ms = (rnd() < (o.miss ?? 0) ? (o.late ?? 6) : 5) * V120 + (rnd() * 2 - 1) * 0.6; out.push([ms, o.play ?? true]); t += ms; } return out; };
+check('iPhone Low Power Mode alternating 30 and 24 Hz: no quality step', () =>
+  assert.deepEqual(steps(boot, lpm(6, { play: false }), at24(8), lpm(5), at24(30), lpm(4), at24(20)), []));
+check('a steady 24 Hz from the start: no quality step', () => assert.deepEqual(steps(at24(60)), []));
+check('24 Hz from a reset with a refresh missed now and then (10%, 50 ms): no quality step', () =>
+  assert.deepEqual(steps(at24(40, { miss: 0.1 })), []));
+check('a 120 Hz screen overloaded, alternating 41.7 and 50 ms (5 and 6 refreshes): steps down, not a cap', () => {
+  const f = []; for (let t = 0, i = 0; t < 30000; i++) { const ms = (i % 2 ? 6 : 5) * V120 + (rnd() * 2 - 1) * 0.6; f.push([ms, true]); t += ms; }
+  assert(steps(f).length >= 1, 'half the frames a refresh late is no steady cadence');
+});
+check('24 Hz really losing its slots (25% at 83 ms): steps down', () => assert(steps(at24(30, { miss: 0.25, late: 10 })).length >= 1));
 check('a gap resets the cap: a 60 Hz device that comes back missing frames steps down', () =>
   assert(steps(lpm(10), [[5000, false]], at60(20, { miss: 0.2 })).length >= 1));
 

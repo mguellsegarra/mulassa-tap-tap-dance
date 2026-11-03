@@ -21,6 +21,8 @@ html.to-jocs #games-menu::backdrop { background: #000; }
 @keyframes games-drift { from { translate: -4% -3%; scale: 1.12; } to { translate: 4% 3%; scale: 1.3; } }
 /* a card's picture is small: it stays sharp at its own size instead of being stretched across the screen */
 #games-hero-art { position: absolute; right: max(24px, 8vw); top: 7%; bottom: 7%; height: 86%; width: auto; aspect-ratio: 4 / 5; object-fit: cover; border-radius: 24px; box-shadow: 0 16px 40px #000a; }
+/* the chosen game's clip after a few calm seconds (ui/games-hero-video.js): where the still is, fading over it */
+#games-hero-video { display: none; }
 #games-hero::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, #120b07cc, #0000 60%), linear-gradient(#0000 70%, #120b07); pointer-events: none; }
 #games-hero-text { position: absolute; z-index: 1; left: max(24px, 6vw); right: 24px; bottom: 28px; display: grid; justify-items: start; gap: 8px; max-width: min(46vw, 760px); }
 #games-hero-name { font-size: clamp(40px, 9dvh, 104px); font-weight: 800; line-height: .95; color: var(--game); text-shadow: 0 3px 0 #0008; text-wrap: balance; }
@@ -32,9 +34,10 @@ html.to-jocs #games-menu::backdrop { background: #000; }
 .game-play:hover, .game-play:focus-visible { animation-play-state: paused; }
 @keyframes game-play-hop { 0%, 60%, 100% { translate: 0 0; } 70% { translate: 0 -8px; } 80% { translate: 0 0; } 87% { translate: 0 -3px; } 94% { translate: 0 0; } }
 
-#games-grid { position: absolute; inset: auto 0 0 0; height: var(--row); display: flex; align-items: center; gap: 14px; margin: 0; padding: 0 calc(50vw - var(--card-w) / 2); overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; scrollbar-width: none; }
+/* a phone's row starts on the title's margin: the chosen card on the left, the next one cut at the right edge (it scrolls) */
+#games-grid { --edge: max(24px, 6vw); position: absolute; inset: auto 0 0 0; height: var(--row); display: flex; align-items: center; gap: 20px; margin: 0; padding: 0 calc(100vw - var(--edge) - var(--card-w)) 0 var(--edge); scroll-padding-inline-start: var(--edge); overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; scrollbar-width: none; }
 #games-grid::-webkit-scrollbar { display: none; }
-#games-grid .game-card { position: relative; flex: none; display: block; width: var(--card-w); height: calc(var(--row) - 36px); padding: 0; overflow: hidden; border: 0; border-radius: 18px; --sel-r: 18px; scroll-snap-align: center; background: #24170e; box-shadow: 0 8px 18px #0008; transition: transform .15s; transform: scale(.94); }
+#games-grid .game-card { position: relative; flex: none; display: block; width: var(--card-w); height: calc(var(--row) - 36px); padding: 0; overflow: hidden; border: 0; border-radius: 18px; --sel-r: 18px; scroll-snap-align: start; background: #24170e; box-shadow: 0 8px 18px #0008; transition: transform .15s; transform: scale(.94); transform-origin: left center; /* shrinks towards its left edge: the gap before it stays the same on every phone */ }
 #games-grid .game-card.on { transform: none; box-shadow: 0 0 0 3px #120b07, 0 0 0 6px var(--game); }
 #games-grid .game-card .por { position: absolute; inset: 0; width: auto; height: auto; background: none; }
 #games-grid .game-card .por img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
@@ -49,7 +52,9 @@ html.to-jocs #games-menu::backdrop { background: #000; }
 /* a phone's hero is narrow: the picture becomes its background, the text stands on it */
 @media (max-width: 700px) {
   #games-hero-art { display: none; }
-  #games-hero-back { filter: saturate(1.1) brightness(.7); transform: none; }
+  #games-hero-back { filter: saturate(1.1) brightness(.7); transform: none; animation: none; } /* still, at the clip's own size: the clip fades in over it with no jump */
+  #games-hero-video { display: block; position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: saturate(1.1) brightness(.7); opacity: 0; transition: opacity .3s ease; }
+  #games-hero-video.on { opacity: 1; }
   #games-hero-text { max-width: none; }
 }
 @media (prefers-reduced-motion: reduce) { #games-grid .game-card { transition: none; } }
@@ -87,4 +92,7 @@ html.to-jocs #games-menu::backdrop { background: #000; }
   /* the picture stands at the right at the hero's full height, no frame: it melts into the backdrop on its left and at the bottom */
   #games-menu #games-hero-art { top: 0; bottom: auto; right: 0; height: 100%; width: auto; max-width: 100%; aspect-ratio: auto; object-fit: cover; object-position: center; border-radius: 0; box-shadow: none;
     -webkit-mask-image: linear-gradient(90deg, #0000, #000 40%), linear-gradient(#000 75%, #0000); -webkit-mask-composite: source-in; mask-image: linear-gradient(90deg, #0000, #000 40%), linear-gradient(#000 75%, #0000); mask-composite: intersect; }
+  #games-menu #games-hero-video { display: block; position: absolute; top: 0; right: 0; height: 100%; width: auto; max-width: 100%; aspect-ratio: 8 / 3; object-fit: cover; opacity: 0; transition: opacity .3s ease;
+    -webkit-mask-image: linear-gradient(90deg, #0000, #000 40%), linear-gradient(#000 75%, #0000); -webkit-mask-composite: source-in; mask-image: linear-gradient(90deg, #0000, #000 40%), linear-gradient(#000 75%, #0000); mask-composite: intersect; }
+  #games-menu #games-hero-video.on { opacity: 1; }
 }

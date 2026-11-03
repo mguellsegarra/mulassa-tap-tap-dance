@@ -1,5 +1,6 @@
-// The «Jocs» sheet's row of cards: the chosen card fills the hero above (on a phone, the centred one). Touching a card only
+// The «Jocs» sheet's row of cards: the chosen card fills the hero above (on a phone, the one on the left). Touching a card only
 // chooses it, so nobody starts a game by accident; «Juga» in the hero plays.
+import { setupHeroVideo } from './games-hero-video.js';
 export function setupGamesCarousel(doc = document) {
   const by = id => doc.getElementById(id), row = by('games-grid'), hero = by('games-hero');
   const cards = [...row.querySelectorAll('[data-game]')];
@@ -10,6 +11,7 @@ export function setupGamesCarousel(doc = document) {
   const wide = matchMedia('(min-width: 701px)'), art = by('games-hero-art');
   const showArt = () => { const card = cards[on]; if (card && wide.matches) art.src = card.dataset.hero ?? card.querySelector('img').getAttribute('src'); };
   wide.addEventListener?.('change', showArt);
+  const clip = setupHeroVideo({ menu: by('games-menu'), video: by('games-hero-video'), wide });
   const choose = i => {
     if (i === on) return;
     on = i;
@@ -17,16 +19,17 @@ export function setupGamesCarousel(doc = document) {
     const card = cards[on], src = card.querySelector('img').getAttribute('src');
     hero.style.setProperty('--game', getComputedStyle(card).getPropertyValue('--game'));
     hero.classList.toggle('soon', 'soon' in card.dataset); // nothing to play yet: no «Juga»
-    by('games-hero-back').src = src; // a phone's upright hero: the card's own picture
+    by('games-hero-back').src = card.dataset.heroTall ?? src; // a phone's upright hero: the card's picture, or the frame its clip starts on
     showArt();
+    clip.show(card);
     heroName.textContent = card.querySelector('.sel-card-name').textContent;
     heroDesc.textContent = card.querySelector('.game-desc').textContent;
   };
   const sync = () => {
-    const mid = row.getBoundingClientRect().left + row.clientWidth / 2;
+    const rest = row.getBoundingClientRect().left + parseFloat(getComputedStyle(row).paddingLeft); // where the chosen card's left edge rests
     let best = 0, least = Infinity;
     cards.forEach((card, i) => {
-      const r = card.getBoundingClientRect(), gap = Math.abs(r.left + r.width / 2 - mid);
+      const r = card.getBoundingClientRect(), gap = Math.abs(r.left - rest);
       if (gap < least) { least = gap; best = i; }
     });
     choose(best);
@@ -36,7 +39,7 @@ export function setupGamesCarousel(doc = document) {
   const goTo = (i, smooth = !reduced()) => {
     i = Math.max(0, Math.min(cards.length - 1, i));
     if (fits()) { choose(i); return; }
-    cards[i].scrollIntoView({ inline: 'center', block: 'nearest', behavior: smooth ? 'smooth' : 'auto' });
+    cards[i].scrollIntoView({ inline: 'start', block: 'nearest', behavior: smooth ? 'smooth' : 'auto' });
   };
 
   row.addEventListener('scroll', () => requestAnimationFrame(sync), { passive: true });
@@ -80,6 +83,6 @@ export function setupGamesCarousel(doc = document) {
       goTo(i);
       return false;
     },
-    opened() { goTo(Math.max(on, 0), false); if (!fits()) sync(); },
+    opened() { goTo(Math.max(on, 0), false); if (!fits()) sync(); clip.show(cards[on]); },
   };
 }

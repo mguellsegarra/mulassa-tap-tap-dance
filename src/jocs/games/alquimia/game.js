@@ -119,17 +119,18 @@ function play(root, leave) {
     renderHintButton();
     // Updated in place: rebuilding would re-decode every image on each tap, and flicker.
     for (const b of [...grid.children]) if (!found.includes(b.dataset.id)) b.remove();
-    for (const id of found) {
+    // Alphabetical: a new one goes in its place, the rest stay put.
+    [...found].sort((x, y) => nameOf(x).localeCompare(nameOf(y), 'ca')).forEach((id, i) => {
       let b = grid.querySelector(`[data-id="${id}"]`);
       if (!b) {
         b = Object.assign(document.createElement('button'), { className: 'alq-item', innerHTML: `${orb(id)}<b>${nameOf(id)}</b>` });
         b.dataset.id = id;
-        grid.append(b);
+        grid.insertBefore(b, grid.children[i] ?? null);
       }
       b.classList.toggle('on', picked.includes(id));
       b.classList.toggle('hint', pulse.includes(id));
       b.classList.toggle('twice', pulse[0] === id && pulse[1] === id); // one pulse can't say "use it twice"
-    }
+    });
     const aim = coachTarget(lesson, { locked, picked: picked.length, pair: hints.pair });
     hand.point(aim === 'hint' ? hintButton : aim === 'book' ? $('.alq-book') : aim && grid.querySelector(`[data-id="${aim}"] .orb`), tipText());
     const got = rules.progress(found), chip = $('.alq-valls');
@@ -260,7 +261,8 @@ function play(root, leave) {
     localStorage.removeItem(OLD_CATALANA_KEY);
     [523, 659, 784].forEach((n, i) => setTimeout(() => blip(n, 140), i * 90));
     renderGrid();
-    grid.scrollTop = grid.scrollHeight; // scrollIntoView can also shift the fixed page on iOS
+    const fresh = grid.querySelector(`[data-id="${result}"]`); // centred in the shelf; scrollIntoView can also shift the fixed page on iOS
+    grid.scrollTop += fresh.getBoundingClientRect().top - grid.getBoundingClientRect().top - (grid.clientHeight - fresh.offsetHeight) / 2;
     later(() => { locked = false; showFound(result, pair); }, REVEAL_MS);
   }
 

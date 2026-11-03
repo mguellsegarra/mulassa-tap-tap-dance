@@ -3,7 +3,9 @@ import { start, stored } from './game.js';
 import { rulesFor } from './rules.js';
 import { warmIcons } from './icons.js';
 import { newPlayer } from './lesson.js';
+import { stopDoubleTapZoom } from '../../../platform/double-tap.js';
 
+stopDoubleTapZoom();
 newPlayer(Q, localStorage); // ?nou, ?nou=pista (lesson.js); before start(), which reads the progress
 // ?valls (through Q too: dev and LAN hosts only): a played-in game with a dozen Valls elements; ?valls=primer: none yet, with Camisa castellera and Flor
 // ready, to see the first one arrive. Replaces this browser's progress.

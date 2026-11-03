@@ -4,7 +4,8 @@ export const BASE = ['foc', 'terra', 'aigua', 'vent'];
 // Only known in Valls: counted apart, so a player from elsewhere can finish the rest. No other element may need one of them.
 export const VALLS = new Set(['valls', 'vella', 'joves', 'bou', 'bouvalls', 'primera', 'lleo', 'alcaldessa', 'santjoan', 'santaursula', 'decennals', 'maredeu',
   'lluminaries', 'lledo', 'roser', 'oller', 'huguet', 'figaflawas', 'calcofest', 'muralla', 'teatre', 'museucasteller', 'francoli',
-  'caramel', 'trestombs', 'firagost', 'placablat']);
+  'caramel', 'trestombs', 'firagost', 'placablat',
+  'drac', 'nans', 'mulassa', 'gegants', 'os', 'basilisc', 'aliga', 'aligons']); // the Seguici's figures: Valls' own
 
 // [ingredient, ingredient, result]
 export const RECIPES = [
@@ -122,8 +123,8 @@ export const RECIPES = [
   ['arbre', 'terra', 'castanya'],
   ['castanya', 'foc', 'castanyada'],
   ['esglesia', 'muntanya', 'montserrat'],
-  ['cavall', 'drac', 'santjordi'],
-  ['flor', 'santjordi', 'rosa'],
+  ['flor', 'llibre', 'rosa'],
+  ['llibre', 'rosa', 'santjordi'], // the book and the rose: the Drac is Valls' own
   ['fusta', 'aigua', 'paper'],
   ['paper', 'persona', 'llibre'],
   ['campanar', 'campanar', 'sagrada'],
@@ -230,7 +231,8 @@ export const RECIPES = [
   ['serp', 'foc', 'drac'],
   ['persona', 'muntanya', 'gegants'],
   ['persona', 'drac', 'santjordi'],
-  ['flor', 'llibre', 'rosa'],
+  ['flor', 'santjordi', 'rosa'],
+  ['cavall', 'drac', 'santjordi'],
   ['ceramica', 'persona', 'caganer'],
   ['gos', 'botifarra', 'caca'],
 ];

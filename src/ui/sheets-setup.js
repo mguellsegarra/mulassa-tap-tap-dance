@@ -9,6 +9,7 @@ import { store } from '../platform/storage.js';
 import { APP_BUILD } from '../core/version.js';
 import { memoryKeys, mockLeaderboard, markTestMode, leaderboardPreviewMode, demoOptions, DEMO_SELF, demoPublicId, FINAL } from '../dev/final-test.js';
 import { statsSync, markStatsNoticeSeen } from '../services/stats-sync.js';
+import { seenNotices } from '../services/seen-notices.js';
 import { setupAccount } from './account-ui.js';
 import { setupSeasons } from './seasons-ui.js';
 import { setupSeasonEnd } from './season-end-ui.js';
@@ -174,8 +175,9 @@ sheets.badges = setupBadges({ focusIn, service, store: kv, onSaved: id => { prof
 const account = setupAccount({ focusIn, profile, badges: sheets.badges, service, store: kv, stats: statsSync, onSync: back => { syncBack = back; sync.show(); }, onHall: (f, back) => seasons.open(f, back) });
 sheets.account = account;
 document.getElementById('settings-profile').addEventListener('click', () => { settingsMenu.close(); account.open(openSettings); }); // Perfil lives in ⚙ Configuració (no corner button); closing it comes back here
-// «Tardor 2026 s’ha acabat»: once per profile and season (in memory over the mock, so each review shows it)
-const seasonEnd = setupSeasonEnd({ focusIn, service, store: mockBoard ? new Map() : store, onHall: (f, back) => seasons.open(f, back) });
+// «Tardor 2026 s’ha acabat»: once per profile and season (in memory over the mock, so each review shows it). The real sheets
+// share the statistics' seen-notices registry: one read of the server's list per owner.
+const seasonEnd = setupSeasonEnd({ focusIn, service, store: mockBoard ? new Map() : store, ...(!mockBoard && { notices: seenNotices }), onHall: (f, back) => seasons.open(f, back) });
 sheets.seasonEnd = seasonEnd;
 const until = (test, ms = 20000) => new Promise((resolve, reject) => { const t0 = Date.now(); (function tick() { if (test()) resolve(); else if (Date.now() - t0 > ms) reject(new Error('timed out')); else setTimeout(tick, 50); })(); });
 // The first selector after the start, and every idle one after it until the profile has nothing left to hear (src/ui/greeting.js).
@@ -183,7 +185,7 @@ const until = (test, ms = 20000) => new Promise((resolve, reject) => { const t0 
 let cardGreeted = false;
 // a bare selector: also no sheet outside sheetUp (the gate, the pending card's), so nothing the greeting tells lands on one
 const selectorFree = () => G.state === 'select' && !sheetUp() && !viewMode && !document.hidden && !document.querySelector('dialog[open]');
-const badgeNews = setupBadgeNews({ focusIn, service, store: mockBoard ? { get: () => null, set() {} } : kv, badges: sheets.badges, profile, idle: selectorFree, refresh: () => refreshIdentity(service, kv, { fresh: true }) }); // the mock: every load can show it again
+const badgeNews = setupBadgeNews({ focusIn, service, store: mockBoard ? { get: () => null, set() {} } : kv, ...(!mockBoard && { notices: seenNotices }), badges: sheets.badges, profile, idle: selectorFree, refresh: () => refreshIdentity(service, kv, { fresh: true }) }); // the mock: every load can show it again
 sheets.badgeNews = badgeNews;
 const hint = setupDeviceHint({ focusIn, store, softwareGl }); // the device tips, last: after the profile's own news
 sheets.hint = hint;

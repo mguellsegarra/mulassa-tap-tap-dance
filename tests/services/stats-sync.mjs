@@ -212,3 +212,19 @@ console.log('stats-sync: ok');
   const reg = createSeenNotices({ kv: { get: () => null, set() {} }, service: { seenNotices: async () => { calls++; if (refuse) throw Object.assign(new Error('x'), { code: 'session' }); return ['stats']; } } });
   await reg.load('A'); assert.equal(reg.seen('A', 'stats'), false, 'refused: nothing taken as seen');
   refuse = false; await reg.load('A'); assert.equal(calls, 2, 'asked again'); assert.equal(reg.seen('A', 'stats'), true); }
+
+// a list that arrives after the service changed (use()) belongs to the old one: dropped
+{ let answer; const reg = createSeenNotices({ kv: { get: () => null, set() {} }, service: { seenNotices: () => new Promise(r => { answer = r; }) } });
+  const read = reg.load('A'); reg.use({ seenNotices: async () => [] }); answer(['stats']); await read;
+  assert.equal(reg.seen('A', 'stats'), false, 'the old service\'s list is not taken'); }
+
+// a mark the server did not get (offline, refused) stays seen here, and goes again once the server's list is read without it
+{ const m = new Map(), sent = []; let down = true;
+  const reg = createSeenNotices({ kv: { get: k => m.get(k) ?? null, set: (k, v) => m.set(k, v) },
+    service: { seenNotices: async () => [], markNoticeSeen: async id => { sent.push(id); if (down) throw new Error('offline'); } } });
+  const tick = () => new Promise(r => setTimeout(r, 0));
+  reg.mark('A', 'badge-news'); await tick();
+  assert.deepEqual(sent, ['badge-news']); assert.equal(reg.seen('A', 'badge-news'), true, 'refused: still seen on this device');
+  down = false; await reg.load('A'); assert.equal(reg.seen('A', 'badge-news'), true); await tick();
+  assert.deepEqual(sent, ['badge-news', 'badge-news'], 'sent again: the server\'s list lacked it');
+  reg.seen('A', 'badge-news'); await tick(); assert.equal(sent.length, 2, 'once per read'); }

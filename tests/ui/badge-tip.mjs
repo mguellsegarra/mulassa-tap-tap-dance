@@ -68,4 +68,11 @@ for (const f of listeners.pointerout) f({ pointerType: 'mouse', relatedTarget: r
 for (const f of listeners.pointerover) f({ pointerType: 'mouse', target: mark }); assert.equal(shown.length, 2, 'out and back over: shown again');
 assert.deepEqual(tap(mark, 100, 18, { pointerType: 'mouse' }), { tip: null, heard: false }, 'a click over it keeps it (already up) and opens no card');
 assert.deepEqual(tap(row, 100, 35, { pointerType: 'mouse' }), { tip: null, heard: true }, 'a mouse gets no 44 px target: the row is the row');
+
+// clicks that carry no pointerType (some browsers): the press before the click says what it was
+const press = pointerType => { for (const f of listeners.pointerdown ?? []) f({ pointerType }); };
+press('mouse'); assert.deepEqual(tap(row, 100, 35, { pointerType: '' }), { tip: null, heard: true }, 'a mouse near the mark: the row\'s click (the card opens)');
+press('touch'); assert.deepEqual(tap(row, 100, 35, { pointerType: '' }), { tip: 'Valls', heard: false }, 'a finger near it: the mark\'s'); reset();
+const canvas = el('hud', rect(0, 0, 400, 400), null, 'canvas');
+assert.deepEqual(tap(canvas, 100, 35), { tip: null, heard: true }, 'a tap on the game canvas looks for no mark');
 console.log('badge tip ok');

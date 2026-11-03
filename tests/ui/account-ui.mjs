@@ -198,6 +198,8 @@ const service = (o = {}) => ({ configured: true, asked: [], async seasons(f) { t
   assert.equal(await end.check(), false, 'once');
   const other = setupSeasonEnd({ focusIn() {}, service: service({ ownerId: async () => 'u2' }), store, doc: fakeDoc(['season-end-menu', 'season-end-boards', 'season-end-title', 'season-end-ok', 'season-end-close', 'season-end-hall']).doc, now: () => NOW });
   assert.equal(await other.check(), true, 'another profile on this device sees its own');
+  const elsewhere = setupSeasonEnd({ focusIn() {}, service: service({ ownerId: async () => 'u4', seenNotices: async () => ['season:1'] }), store, doc: fakeDoc(['season-end-menu', 'season-end-boards', 'season-end-title', 'season-end-ok', 'season-end-close', 'season-end-hall']).doc, now: () => NOW });
+  assert.equal(await elsewhere.check(), false, 'seen on another device (the server\'s list): not here');
   const anon = setupSeasonEnd({ focusIn() {}, service: service({ ownerId: async () => null }), store, doc: fakeDoc(['season-end-menu', 'season-end-boards', 'season-end-title', 'season-end-ok', 'season-end-close', 'season-end-hall']).doc, now: () => NOW });
   assert.equal(await anon.check(), false, 'no profile: nothing to tell');
   const plain = fakeDoc(['season-end-menu', 'season-end-boards', 'season-end-title', 'season-end-ok', 'season-end-close', 'season-end-hall']);

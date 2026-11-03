@@ -21,9 +21,9 @@ const tick = () => new Promise(r => setTimeout(r, 0));
 const memStore = () => { const m = new Map(); return { get: k => m.get(k) ?? null, set: (k, v) => m.set(k, String(v)), m }; };
 const guest = { alias: 'Prova', verified: false, released: false, publicId: 'p1', badgeId: null, canBadge: true };
 
-function news({ prof = guest, publishingEnabled = true, idle = () => true, after = prof, store = memStore() } = {}) {
+function news({ prof = guest, publishingEnabled = true, idle = () => true, after = prof, store = memStore(), server } = {}) {
   const doc = fakeDoc(), log = []; let reads = 0;
-  const service = { publishingEnabled, ownerId: async () => 'u1', profile: async () => { if (prof instanceof Error) throw prof; return reads++ ? after : prof; } };
+  const service = { publishingEnabled, ownerId: async () => 'u1', seenNotices: async () => server, profile: async () => { if (prof instanceof Error) throw prof; return reads++ ? after : prof; } };
   const badges = { open: b => log.push(['picker', b]) }, profile = { open: (what, b) => log.push([what, b]) };
   const n = setupBadgeNews({ focusIn() {}, service, store, badges, profile, refresh: async () => {}, idle, reduced: () => true, doc });
   return { n, doc, log, store, $: id => doc.getElementById(id) };
@@ -36,6 +36,8 @@ for (const [why, o] of [['no profile', { prof: null }], ['a released name', { pr
 }
 { const x = news({ prof: { ...guest, verified: true, badgeId: 'senyera' } });
   assert.equal(await x.n.show(), false, 'a badge already chosen: nothing to tell'); assert.equal(x.store.get('seen:u1:badge-news'), '1'); }
+{ const x = news({ server: ['badge-news'] });
+  assert.equal(await x.n.show(), false, 'seen on another device (the server\'s list): not shown here'); }
 { const x = news();
   assert.equal(await x.n.show(null, () => false), false, 'the selector moved on during the read'); assert.equal(x.store.m.size, 0); }
 { const x = news(); x.n.holdVisit();

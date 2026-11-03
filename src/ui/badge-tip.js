@@ -6,11 +6,11 @@
 const TOUCH_MS = 2200, SLOP = 14;
 
 export function setupBadgeTip({ doc = document, win = globalThis } = {}) {
-  let tip = null, on = null, timer = null;
+  let tip = null, on = null, timer = null, pressed = ''; // pressed: the last press's pointerType (some browsers' clicks carry none)
   const markOf = t => t?.closest?.('.player-badge[data-tip]') ?? null;
   // the nearest mark within SLOP of a finger's tap, on show (not under a sheet, not scrolled away); a button there (the name) keeps its tap
   function nearMark(e) {
-    const own = e.target.closest?.('button, a, input, select, textarea, label');
+    const own = e.target.closest?.('button, a, input, select, textarea, label, canvas');
     if (own && !(own.matches('.player-name') && e.clientX > own.getBoundingClientRect().right)) return null; // past the name's text: its invisible 44 px pad (profile.css), the mark's ground
     let best = null, bestD = Infinity;
     for (const m of doc.querySelectorAll('.player-badge[data-tip]')) {
@@ -48,11 +48,13 @@ export function setupBadgeTip({ doc = document, win = globalThis } = {}) {
   }
   doc.addEventListener('pointerover', e => { if (e.pointerType === 'mouse') { const m = markOf(e.target); if (m) show(m); else if (on) hide(); } });
   doc.addEventListener('pointerout', e => { if (e.pointerType === 'mouse' && on && !on.contains(e.relatedTarget)) hide(); });
+  doc.addEventListener('pointerdown', e => { pressed = e.pointerType; }, true);
   doc.addEventListener('click', e => {
-    const m = markOf(e.target) ?? (e.pointerType !== 'mouse' && e.detail ? nearMark(e) : null); // detail 0: a key, not a finger
+    const finger = /^(touch|pen)$/.test(e.pointerType || pressed); // unknown: a mouse, so a near miss never takes a click
+    const m = markOf(e.target) ?? (finger && e.detail ? nearMark(e) : null); // detail 0: a key, not a finger
     if (!m || m.closest('button')) { if (on) hide(); return; }
     e.preventDefault(); e.stopPropagation(); // capture: the row's own click (open the card) never hears it
-    if (e.pointerType === 'mouse') { show(m); return; } // hover already shows it: the click only must not open the card
+    if (!finger) { show(m); return; } // hover already shows it: the click only must not open the card
     if (on === m) { hide(); return; }
     show(m); timer = setTimeout(hide, TOUCH_MS);
   }, true);

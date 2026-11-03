@@ -103,7 +103,7 @@ function start() {
   board.setGame(game);
   for (const id of ['menu', 'end-menu', 'pause-menu']) $(id).hidden = true;
   $('hud').hidden = false;
-  $('hud-best').textContent = +store.get(BEST) || '';
+  $('hud-best-num').textContent = +store.get(BEST) || '';
   $('hud-best').hidden = !(+store.get(BEST));
   $('pause').style.visibility = '';
   mode = 'play';

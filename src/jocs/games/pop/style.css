@@ -28,7 +28,9 @@ a.btn { text-align: center; text-decoration: none; color: #fff3d6; }
 #hud-mid { text-align: center; line-height: 1; }
 #hud-mid { justify-self: center; display: flex; align-items: center; gap: 12px; padding: 4px 20px; border-radius: 40px; background: #24223f; }
 #score { font: 800 34px/1 'Baloo 2', system-ui, sans-serif; color: #ff7ac6; min-width: 40px; }
-#hud-best { font: 800 20px/1 'Baloo 2', system-ui, sans-serif; color: #fff2e4; padding-left: 12px; border-left: 1px solid #ff7ac666; }
+#hud-best { display: flex; flex-direction: column; align-items: center; gap: 1px; font: 800 20px/1 'Baloo 2', system-ui, sans-serif; color: #fff2e4; padding-left: 12px; border-left: 1px solid #ff7ac666; }
+#hud-best[hidden] { display: none; }
+#hud-best small { font: 700 10px/1 'Baloo 2', system-ui, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: #ff7ac6; } /* a bare second number read as a fraction */
 #best { margin-top: 4px; font-size: 14px; color: #2a1a10; font-weight: 800; }
 #chips { position: absolute; top: 56px; left: 0; right: 0; display: flex; justify-content: center; gap: 8px; }
 .chip { display: inline-flex; align-items: center; padding: 0 10px 0 8px; border-left: 3px solid #ff7ac6; border-radius: 4px; background: #24223fe8; color: #fff3d6; font-size: 14px; }

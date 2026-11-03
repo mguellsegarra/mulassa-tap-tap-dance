@@ -39,19 +39,19 @@ export function setupPendingPanel({ $, win, pending, hearts }) {
   }
   function paintHeart(f) {
     if (f.invite) return;
-    const on = hearts.mine(f.id), call = heartCall(f), n = hearts.count(f.id) ?? 1, line = $('aviat-love-title');
-    if (on) {
+    // The count leads in both states (the question only while nobody has given one): the button only says what a tap does
+    const on = hearts.mine(f.id), call = heartCall(f), n = hearts.count(f.id) ?? (on ? 1 : 0), line = $('aviat-love-title');
+    if (n) {
       const number = doc.createElement('span'), words = doc.createElement('small');
       number.className = 'sel-call-n'; number.textContent = n;
-      if (shownHeart === `${f.id}:off`) number.classList.add('sel-heart-pop'); // only when this figure has just got the heart
+      if (on && shownHeart === `${f.id}:off`) number.classList.add('sel-heart-pop'); // only when this figure has just got the heart
       words.textContent = heartThanks(f, n).sub;
       line.replaceChildren(number, words);
     } else line.textContent = call.title;
     shownHeart = `${f.id}:${on ? 'on' : 'off'}`;
-    line.toggleAttribute('data-count', on);
+    line.toggleAttribute('data-count', !!n);
     $('aviat-love-sub').textContent = on ? heartThanks(f, n).title : call.sub;
     hearts.paint($('aviat-heart'), f);
-    if (on) $('aviat-heart').querySelector('span').textContent = ''; // the line above already says how many
   }
   // Leaving, the card keeps the box it had: the dock rising and the room it frees would otherwise resize and move it
   // mid-fade (a jump and a repaint as it went). Its next showing lets go first.

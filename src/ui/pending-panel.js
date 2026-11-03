@@ -13,6 +13,7 @@ export function setupPendingPanel({ $, win, pending, hearts }) {
   const doc = pending.ownerDocument;
   let shownHeart = '';
   function fill(f) {
+    pending.scrollTop = 0; // a short phone's scrolled card starts the next figure at its title
     pending.toggleAttribute('data-invite', !!f.invite); // on the panel, not #select: it must outlast the panel's fade-out
     $('aviat-title').textContent = f.fullName || f.name;
     $('aviat-entity').innerHTML = entityHtml(f);
@@ -29,8 +30,6 @@ export function setupPendingPanel({ $, win, pending, hearts }) {
     const word = m => tr(`figures.pending.${ITEM[m]}`), and = items => (items.length > 1 ? `${items.slice(0, -1).join(', ')}${tr('figures.pending.and')}${items.at(-1)}` : items[0]);
     const missing = [...MATERIALS.filter(m => !have.includes(m)).map(m => word(m).toLowerCase()), ...(builder ? [] : [tr('figures.pending.builderMissing')])];
     $('aviat-status').textContent = pendingStatus(f, status);
-    $('aviat-status').toggleAttribute('data-ready', status !== 'waiting');
-    pending.toggleAttribute('data-soon', status === 'soon'); // the stamp, with what we have beside it
     const had = [...have.map(m => word(m).toLowerCase()), ...(builder ? [tr('figures.pending.builderHave')] : []), ...(agreement ? [tr('figures.pending.agreement').toLowerCase()] : [])], list = had.length ? and(had) : '';
     $('aviat-missing').hidden = status === 'waiting' ? !missing.length : !list;
     $('aviat-missing').innerHTML = status === 'waiting'

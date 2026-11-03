@@ -187,8 +187,16 @@ sheets.badgeNews = badgeNews;
 const hint = setupDeviceHint({ focusIn, store, softwareGl }); // the device tips, last: after the profile's own news
 sheets.hint = hint;
 sheets.freeGate = setupFreeGate({ focusIn, store, onEnter: () => enterFree() }); // an upright iPhone is asked to turn before free play
+// The greeting waits for calm: a playable figure (Mulassa, Drac) on screen and no touch or key for a while, so its sheet never
+// lands on what a tap has just opened. Every touch restarts the wait; the timer asks again once it is calm.
+const GREET_CALM_MS = 2500;
+let lastTouchAt = 0, greetCalmT = 0;
+for (const type of ['pointerdown', 'keydown', 'wheel']) document.addEventListener(type, () => {
+  lastTouchAt = performance.now(); clearTimeout(greetCalmT); greetCalmT = setTimeout(() => greeting.greet(), GREET_CALM_MS + 50);
+}, { capture: true, passive: true });
+const greetCalm = () => selectorFree() && !select.pending && performance.now() - lastTouchAt >= GREET_CALM_MS;
 const greeting = setupGreeting({ asked: () => heartTip.update(), stats: statsSync, seasonEnd, account, badgeNews, hint, identity: () => refreshIdentity(service, kv), back: () => select.refocus(),
-  free: selectorFree,
+  free: greetCalm,
   extra: () => {
     if (cardGreeted || !mockOpts?.card) return false;
     cardGreeted = true; card.open({ alias: mockOpts.card, publicId: demoPublicId(mockOpts.card) }, () => select.refocus()); // the card says whether it is released

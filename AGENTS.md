@@ -116,6 +116,7 @@ benchmarks and device sessions are unnecessary unless the task also changes runt
   `SUPABASE_PROJECT_REF`, `SUPABASE_POOLER_HOST`, `SUPABASE_DB_PASSWORD`), a tag `vX.Y.Z` equal to package.json's version
   deploys mulassa.cat (environment `production`); running the workflow by hand on an old tag redeploys it. Each tag is a
   separately confirmed operation. `.github/workflows/deploy-pages.yml` refuses a beta build on the real Supabase.
+  Following a deploy (the exact run, the live stamp, beta → production steps): `docs/ops/deploys.md`.
 - Audio must stay **bit-identical** unless the task is about music: compare `shasum public/music/*` before/after.
 
 ## Sentry

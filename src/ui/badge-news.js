@@ -7,7 +7,11 @@ import { byId } from './sheet-kit.js';
 import { tr } from '../i18n/messages.js';
 
 const newsSeenKey = publicId => `badge-news-seen:${publicId}`;
-const NEWS_TURN = ['senyera', 'estelada-groga', 'town:valls', 'uaf'];
+// what the news shows: Valls first, then the big towns and Valls's own; no esteladas (the picker still has every badge)
+const NEWS_TURN = ['town:valls', 'senyera', 'town:barcelona', 'town:tarragona', 'town:reus', 'town:girona', 'town:lleida'];
+const NEWS_SHELF = ['town:valls', 'town:barcelona', 'town:tarragona', 'town:reus', 'town:girona', 'town:lleida', 'senyera', 'colla-vella',
+  'colla-joves', 'town:terrassa', 'town:mataro', 'town:manresa', 'town:valencia', 'town:castello', 'campanar-valls', 'town:tortosa',
+  'town:vilanova', 'town:vilafranca', 'uaf', 'town:olot', 'town:berga'];
 const NEWS_ROWS = 3;
 
 export function setupBadgeNews({ focusIn, service, store, badges, profile, refresh, idle = () => true, reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches, doc = document }) {
@@ -16,10 +20,11 @@ export function setupBadgeNews({ focusIn, service, store, badges, profile, refre
   let back = null, next = null, turner = 0, seen = '', held = false;
 
   const wear = (alias, id) => { nameBox.replaceChildren(); appendName(doc, nameBox, { alias, verified: true, badgeId: id }); };
-  function fillShelf() { // once: 49 drawings, twice each, that only this sheet needs
+  function fillShelf() { // once: the shelf's drawings, twice each, that only this sheet needs
     if (shelf.childElementCount) return;
+    const shown = NEWS_SHELF.map(id => all.find(b => b.id === id)).filter(Boolean);
     for (let r = 0; r < NEWS_ROWS; r++) {
-      const row = doc.createElement('div'), line = doc.createElement('div'), part = all.filter((_, i) => i % NEWS_ROWS === r);
+      const row = doc.createElement('div'), line = doc.createElement('div'), part = shown.filter((_, i) => i % NEWS_ROWS === r);
       row.className = 'badge-news-row'; line.className = 'badge-news-line';
       for (const b of [...part, ...part]) { // doubled: the row scrolls half its width and starts over unseen
         const chip = doc.createElement('span');

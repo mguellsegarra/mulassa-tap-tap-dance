@@ -45,6 +45,8 @@ function floatText(i, text) {
   el.style.top = `${s.y}px`;
   el.addEventListener('animationend', () => el.remove());
   document.body.append(el);
+  const half = el.offsetWidth / 2 + 8; // a long word on an edge cell stays on screen (ЗАТИШЬЕ! is about 200 px)
+  el.style.left = `${Math.min(innerWidth - half, Math.max(half, s.x))}px`;
 }
 
 const COLORS = { hit: ['#c0283c', '#d9a521', '#fff3d6', '#1f5c33'], goodie: ['#f5c518', '#fff3d6', '#ffe066'] };

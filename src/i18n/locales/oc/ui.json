@@ -402,7 +402,7 @@
   "ui.hearts.count.plural.one": "persona les vò ena plaça",
   "ui.hearts.count.plural.other": "persones les vòlen ena plaça",
   "ui.hearts.action": "Da eth tòn còr a {name}",
-  "ui.hearts.saved": "Ja as dat eth tòn còr a {name}. Tòca entà retirar-lo.",
+  "ui.hearts.saved": "Ja as dat eth tòn còr a {name}. Torna a activar eth boton entà retirar-lo.",
   "ui.material.optionsRequired": "Mèrca quin materiau as.",
   "ui.entity.typeRequired": "Triga des d'a on mos escriues.",
   "ui.entity.nameRequired": "Escriu eth nòm dera colla o entitat.",

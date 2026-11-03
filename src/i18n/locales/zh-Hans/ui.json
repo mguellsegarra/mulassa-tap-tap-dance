@@ -391,7 +391,7 @@
   "ui.hearts.count.plural.one": "人想让它们来到广场",
   "ui.hearts.count.plural.other": "人想让它们来到广场",
   "ui.hearts.action": "给{name}送上你的爱心",
-  "ui.hearts.saved": "你已给{name}送出爱心。轻触可收回。",
+  "ui.hearts.saved": "你已给{name}送出爱心。再次操作此按钮即可收回。",
   "ui.material.optionsRequired": "请勾选你拥有的资料。",
   "ui.entity.typeRequired": "请选择你以什么身份联系。",
   "ui.entity.nameRequired": "请填写colla或机构名称。",

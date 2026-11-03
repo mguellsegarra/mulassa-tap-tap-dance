@@ -402,7 +402,7 @@
   "ui.hearts.count.plural.one": "persona quiere verlos en la plaza",
   "ui.hearts.count.plural.other": "personas quieren verlos en la plaza",
   "ui.hearts.action": "Dale tu corazón a {name}",
-  "ui.hearts.saved": "Ya le has dado tu corazón a {name}. Toca para retirarlo.",
+  "ui.hearts.saved": "Ya le has dado tu corazón a {name}. Vuelve a activar el botón para retirarlo.",
   "ui.material.optionsRequired": "Marca qué material tienes.",
   "ui.entity.typeRequired": "Elige desde dónde nos escribes.",
   "ui.entity.nameRequired": "Escribe el nombre de la colla o entidad.",

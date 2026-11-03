@@ -402,7 +402,7 @@
   "ui.hearts.count.plural.one": "persona vol que siguin a la plaça",
   "ui.hearts.count.plural.other": "persones volen que siguin a la plaça",
   "ui.hearts.action": "Dona el teu cor a {name}",
-  "ui.hearts.saved": "Ja has donat el teu cor a {name}. Toca per retirar-lo.",
+  "ui.hearts.saved": "Ja has donat el teu cor a {name}. Torna a activar el botó per retirar-lo.",
   "ui.material.optionsRequired": "Marca quin material tens.",
   "ui.entity.typeRequired": "Tria des d'on ens escrius.",
   "ui.entity.nameRequired": "Escriu el nom de la colla o entitat.",

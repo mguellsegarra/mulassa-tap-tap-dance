@@ -424,7 +424,7 @@
   "ui.hearts.count.plural.one": "людина хоче їх на площі",
   "ui.hearts.count.plural.other": "ос. хочуть їх на площі",
   "ui.hearts.action": "Подаруй своє сердечко {name}",
-  "ui.hearts.saved": "Ти вже даруєш сердечко: {name}. Натисни, щоб прибрати.",
+  "ui.hearts.saved": "Ти вже даруєш сердечко: {name}. Активуй кнопку ще раз, щоб забрати його назад.",
   "ui.material.optionsRequired": "Познач, які матеріали маєш.",
   "ui.entity.typeRequired": "Вибери, від чийого імені ти пишеш.",
   "ui.entity.nameRequired": "Введи назву colla чи організації.",

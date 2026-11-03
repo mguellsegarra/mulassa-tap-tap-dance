@@ -168,7 +168,7 @@
 .sel-heart svg { flex: none; width: 16px; height: 16px; fill: currentColor; }
 .sel-heart[aria-pressed="true"] { background: linear-gradient(#e0364c, #ad1f33); box-shadow: 0 2px 0 #6d1220; color: #fff3d6; }
 .sel-heart:focus-visible { outline: 3px solid #fff3d6; outline-offset: 2px; }
-.sel-heart-wide { width: fit-content; max-width: 100%; padding: 0 24px; min-height: var(--island-btn, 44px); border-radius: 12px; box-shadow: 0 3px 0 #9c7408; font-size: 16px; }
+.sel-heart-wide { width: fit-content; max-width: 100%; box-sizing: border-box; padding: 0 24px; min-height: var(--island-btn, 44px); border-radius: 12px; box-shadow: 0 3px 0 #9c7408; font-size: 16px; }
 .sel-heart-wide[aria-pressed="true"] { border: 2px solid #fff3d640; background: var(--button-bg); box-shadow: none; color: #fff3d6; } /* given: a quiet state, not a second call to tap (a tap takes the heart back) */
 .sel-heart-wide[aria-pressed="true"] svg { fill: #e8473f; }
 .sel-heart-wide[aria-pressed="true"]:active { translate: none; }

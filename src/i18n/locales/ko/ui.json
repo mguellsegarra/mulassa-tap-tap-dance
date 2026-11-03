@@ -391,7 +391,7 @@
   "ui.hearts.count.plural.one": "명이 모두 광장에서 보고 싶어 해요",
   "ui.hearts.count.plural.other": "명이 모두 광장에서 보고 싶어 해요",
   "ui.hearts.action": "{name}에 내 하트 주기",
-  "ui.hearts.saved": "{name}에 하트를 보냈어요. 누르면 취소할 수 있어요.",
+  "ui.hearts.saved": "{name}에 하트를 보냈어요. 버튼을 다시 실행하면 취소할 수 있어요.",
   "ui.material.optionsRequired": "어떤 자료가 있는지 선택해 줘요.",
   "ui.entity.typeRequired": "어떤 자격으로 연락하는지 골라요.",
   "ui.entity.nameRequired": "colla 또는 단체 이름을 써 줘요.",

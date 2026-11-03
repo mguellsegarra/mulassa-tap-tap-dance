@@ -391,7 +391,7 @@
   "ui.hearts.count.plural.one": "人がみんなに広場で会いたい！",
   "ui.hearts.count.plural.other": "人がみんなに広場で会いたい！",
   "ui.hearts.action": "{name}に君のハートを贈る",
-  "ui.hearts.saved": "{name}にハートを贈りました。タップで取り消せます。",
+  "ui.hearts.saved": "{name}にハートを贈りました。もう一度ボタンを操作すると取り消せます。",
   "ui.material.optionsRequired": "持っている資料を選んでね。",
   "ui.entity.typeRequired": "どの立場で連絡するか選んでね。",
   "ui.entity.nameRequired": "collaや団体の名前を書いてね。",

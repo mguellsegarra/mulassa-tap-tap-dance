@@ -606,7 +606,7 @@ assert.match(selectCss(), /@media \(pointer: coarse\) \{[^}]*\}\s*\.sel-carousel
   assert.match(css, /#select \.sel-pending-id \{ box-sizing: content-box;[^}]*min-height: calc\(/, 'desktop: the identity reserves its tallest size, so moving along the strip never resizes the card');
   assert.match(css, /#select \.sel-state \{ box-sizing: content-box; min-height: calc\(/, 'desktop: the progress island reserves its tallest size too');
   assert.match(css, /#select \.sel-pending \.btn \{[^}]*width: fit-content; max-width: 100%;/, 'the buttons fit their words, never wider than the island');
-  assert.match(css, /\.sel-heart-wide \{ width: fit-content; max-width: 100%;/, 'the heart button fits its words as well');
+  assert.match(css, /\.sel-heart-wide \{ width: fit-content; max-width: 100%; box-sizing: border-box;/, 'the heart button fits its words as well; border-box: the given state\'s border never grows it (pressing moves nothing)');
   assert.match(css, /\.sel-pending\[data-no-actions\] \.sel-pending-actions \{ display: none; \}/, 'no actions: no empty action row');
   assert.match(css, /@media \(min-width: 1400px\) and \(min-height: 860px\) and \(pointer: fine\) \{\s*\.sel-pending \{ width: min\(576px, [^}]*\}\s*\.sel-pending > \* \{ zoom: 1\.2; \}/, 'big windows: the same card a fifth larger (576 = 480 x 1.2)');
   const phone = css.match(/@media \(max-width: 519px\) \{\s*#select :is\(\.sel-pending-id, \.sel-state\) \{ min-height: 0; \}[^]*?\n\}/)?.[0] ?? '';

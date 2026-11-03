@@ -402,7 +402,7 @@
   "ui.hearts.count.plural.one": "persona li vuole in piazza",
   "ui.hearts.count.plural.other": "persone li vogliono in piazza",
   "ui.hearts.action": "Dona il tuo cuore a {name}",
-  "ui.hearts.saved": "Hai donato il tuo cuore a {name}. Tocca per ritirarlo.",
+  "ui.hearts.saved": "Hai donato il tuo cuore a {name}. Attiva di nuovo il pulsante per ritirarlo.",
   "ui.material.optionsRequired": "Seleziona il materiale che hai.",
   "ui.entity.typeRequired": "Scegli a che titolo ci scrivi.",
   "ui.entity.nameRequired": "Scrivi il nome della colla o dell'ente.",

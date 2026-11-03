@@ -11,7 +11,7 @@ import { setupAccount } from '../../src/ui/account-ui.js';
 import { setupGreeting } from '../../src/ui/greeting.js';
 import { setupDeviceHint } from '../../src/ui/device-hint.js';
 import { refreshIdentity, savedName } from '../../src/services/leaderboard-identity.js';
-import { setStatsOwner } from '../../src/game/stats.js';
+import { setStatsOwner, endRun, newStats, saveStats } from '../../src/game/stats.js';
 import { createStatsSync } from '../../src/services/stats-sync.js';
 import { readPage } from './page.mjs';
 
@@ -560,7 +560,18 @@ console.log('badge pencil ribbon ok');
   // left before the answer: closing dropped it (before it reached the server), so the return asks again
   acc.open(); toBadge(); badgeBack(); for (let i = 0; i < 6; i++) await tick();
   assert(asked === 2 && f.$('account-status').hidden && /40 balls/.test(f.$('account-stats').textContent), 'still loading when it left: loaded on the way back');
-  setStatsOwner(null);
   f.$('account-close').click();
+  // this device has played: its numbers show at once (no loading line), so only the unfinished answer says to ask again
+  const disk = new Map(); globalThis.localStorage = { getItem: k => disk.get(k) ?? null, setItem: (k, v) => disk.set(k, v), removeItem: k => disk.delete(k) };
+  saveStats(endRun(newStats(), 'u1', { date: '2026-10-19', figureId: 'mulassa-valls', version: 'mulassa-v3', level: 1, kind: 'end', seconds: 60, counts: { perfect: 10 } }));
+  let answer; svc.myStats = () => { asked++; return new Promise(res => { answer = res; }); };
+  acc.open(); await tick(); await tick();
+assert(asked === 3 && f.$('account-status').hidden && /1 ball/.test(f.$('account-stats').textContent), 'the local numbers while the server thinks');
+  toBadge(); answer(server); badgeBack(); for (let i = 0; i < 6; i++) await tick();
+  assert(asked === 4, 'left before the answer, with local runs: asked again on the way back');
+  answer(server); for (let i = 0; i < 6; i++) await tick();
+  assert(/40 balls/.test(f.$('account-stats').textContent), 'and the server\'s totals replace this device\'s');
+  f.$('account-close').click(); delete globalThis.localStorage;
+  setStatsOwner(null);
 }
 console.log('badge return keeps the statistics ok');

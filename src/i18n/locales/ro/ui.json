@@ -413,7 +413,7 @@
   "ui.hearts.count.plural.one": "persoană îi vrea în piață",
   "ui.hearts.count.plural.other": "pers. îi vor în piață",
   "ui.hearts.action": "Oferă-ți inima pentru {name}",
-  "ui.hearts.saved": "Ți-ai oferit inima pentru {name}. Atinge pentru a o retrage.",
+  "ui.hearts.saved": "Ți-ai oferit inima pentru {name}. Activează din nou butonul pentru a o retrage.",
   "ui.material.optionsRequired": "Bifează ce materiale ai.",
   "ui.entity.typeRequired": "Alege în ce calitate ne scrii.",
   "ui.entity.nameRequired": "Scrie numele colla sau al organizației.",

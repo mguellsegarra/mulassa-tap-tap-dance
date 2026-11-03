@@ -402,7 +402,7 @@
   "ui.hearts.count.plural.one": "Person will sie auf dem Platz",
   "ui.hearts.count.plural.other": "Leute wollen sie auf dem Platz",
   "ui.hearts.action": "Schenk {name} dein Herz",
-  "ui.hearts.saved": "Du hast {name} dein Herz geschenkt. Tippe zum Zurücknehmen.",
+  "ui.hearts.saved": "Du hast {name} dein Herz geschenkt. Aktiviere den Button erneut, um es zurückzunehmen.",
   "ui.material.optionsRequired": "Wähle aus, welches Material du hast.",
   "ui.entity.typeRequired": "Wähle, in welcher Rolle du uns schreibst.",
   "ui.entity.nameRequired": "Gib den Namen der colla oder Organisation ein.",

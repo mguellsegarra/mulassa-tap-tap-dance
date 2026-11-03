@@ -402,7 +402,7 @@
   "ui.hearts.count.plural.one": "pessoa quer vê-los na praça",
   "ui.hearts.count.plural.other": "pessoas querem vê-los na praça",
   "ui.hearts.action": "Dá o teu coração a {name}",
-  "ui.hearts.saved": "Já deste o teu coração a {name}. Toca para o retirar.",
+  "ui.hearts.saved": "Já deste o teu coração a {name}. Volta a ativar o botão para o retirar.",
   "ui.material.optionsRequired": "Assinala o material que tens.",
   "ui.entity.typeRequired": "Escolhe em que qualidade nos escreves.",
   "ui.entity.nameRequired": "Escreve o nome da colla ou entidade.",

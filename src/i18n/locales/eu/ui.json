@@ -402,7 +402,7 @@
   "ui.hearts.count.plural.one": "bihotz plazarako",
   "ui.hearts.count.plural.other": "bihotz plazarako",
   "ui.hearts.action": "Eman zure bihotza honi: {name}",
-  "ui.hearts.saved": "Zure bihotza eman diozu jada: {name}. Ukitu kentzeko.",
+  "ui.hearts.saved": "Zure bihotza eman diozu jada: {name}. Aktibatu berriro botoia kentzeko.",
   "ui.material.optionsRequired": "Markatu zer material daukazun.",
   "ui.entity.typeRequired": "Aukeratu noren izenean idazten diguzun.",
   "ui.entity.nameRequired": "Idatzi collaren edo erakundearen izena.",

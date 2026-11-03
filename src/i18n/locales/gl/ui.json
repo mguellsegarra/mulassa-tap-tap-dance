@@ -402,7 +402,7 @@
   "ui.hearts.count.plural.one": "persoa quéreos na praza",
   "ui.hearts.count.plural.other": "persoas quérenos na praza",
   "ui.hearts.action": "Dálle o teu corazón a {name}",
-  "ui.hearts.saved": "Xa lle deches o teu corazón a {name}. Toca para retiralo.",
+  "ui.hearts.saved": "Xa lle deches o teu corazón a {name}. Activa de novo o botón para retiralo.",
   "ui.material.optionsRequired": "Marca que material tes.",
   "ui.entity.typeRequired": "Escolle desde onde nos escribes.",
   "ui.entity.nameRequired": "Escribe o nome da colla ou entidade.",

@@ -18,7 +18,7 @@ const BADGE_TIP_KEY = 'badge-edit-tip-seen', BADGE_TIP_MS = 6000, BADGE_TIP_LEAV
 
 export function setupAccount({ focusIn, profile, badges, service, store, stats, onSync = () => {}, onHall = () => {}, doc = document, now = () => Date.now() }) {
   const $ = byId(doc), menu = $('account-menu'), box = $('account-stats'), status = $('account-status'), notice = $('stats-notice-menu');
-  let req = 0, back = null, shown = null, wins = [];
+  let req = 0, back = null, shown = null, wins = [], done = false, podiumsDone = null; // done: the last load's statistics and podiums both answered
   const local = () => { const s = loadStats(), o = s.owners[getStatsOwner()]; return { since: s.since, buckets: { ...o?.counters, ...o && { practice: o.practice } }, days: o?.days ?? [] }; };
   // the statistics with the podiums among them (they arrive later: painted again with them)
   // wait: nothing played here yet but the server may know more: 'loading' (the dancing Mulassa) or 'failed' sit inside the statistics' room, so its answer shifts nothing
@@ -60,7 +60,12 @@ export function setupAccount({ focusIn, profile, badges, service, store, stats, 
     wins = lines; paint(...shown);
   }
   async function load() {
-    const r = ++req, mine = local();
+    const r = ++req; done = false; podiumsDone = null;
+    await fetchStats(r); await podiumsDone;
+    if (r === req) done = true;
+  }
+  async function fetchStats(r) {
+    const mine = local();
     const d = statsData(mine.buckets, mine.days);
     wins = [];
     const waiting = service.configured && !d.runs, settle = (wait = '') => { if (waiting && r === req) paint(d, mine.since, wait); };
@@ -73,7 +78,7 @@ export function setupAccount({ focusIn, profile, badges, service, store, stats, 
     if (r !== req) return;
     $('account-join').hidden = signed; // no profile: «Crea un perfil per guardar-les…»
     if (!signed) return settle();
-    podiums(r);
+    podiumsDone = podiums(r);
     let server = null;
     let failed = false;
     try { server = await service.myStats(); } catch { failed = true; } // this device's numbers stand (with none: «No s’han pogut carregar»)
@@ -91,7 +96,7 @@ export function setupAccount({ focusIn, profile, badges, service, store, stats, 
     focusIn(menu, 'account-close');
     if (!resume) menu.querySelector?.('.sheet-body')?.scrollTo?.(0, 0);
     Promise.resolve(profile.refresh()).then(pointAtBadge);
-    if (!resume || shown?.[2]) load(); // still loading (or failed) when it left: closing dropped that answer
+    if (!resume || !done || shown?.[2]) load(); // still loading (or failed) when it left: closing dropped that answer
   }
   // The heart's red ribbon under the name's pencil, once ever: the mark is what changes the badge, and nothing says so.
   function pointAtBadge() {

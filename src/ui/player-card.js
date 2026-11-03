@@ -37,6 +37,7 @@ export function setupCard({ focusIn, service, doc = document, now = () => Date.n
   }
   async function load() {
     const r = ++req;
+    box.style.minHeight = ''; // the last answer's reserve, measured at another width perhaps
     renderStats(doc, box, SKELETON); box.inert = true; box.dataset.pending = ''; // the loaded layout from the first frame: nothing moves when it answers; inert: no reader, no Tab onto its fake «Més estadístiques»
     say(tr('ui.card.loading'));
     const room = box.offsetHeight; // the most the answer needs: a shorter one keeps it (the spare shared above and below, profile.css) rather than shrink the card

@@ -4,20 +4,22 @@
 // The home-screen recommendation is told once (FREE_FS_KEY); later taps only ask to turn, with a bubble back to its steps
 // in Safari.
 export const FREE_FS_KEY = 'free-hint';
+// A wrapped box keeps its widest size: the bubble is cut to its longest line, so no hole is left on its right
+// (also «Instal·la l’app»'s steps, install-app.js)
+export function hugBubble(menu, doc = document) {
+  const b = menu.querySelector?.('.ios-bubble:not([hidden])');
+  if (!b || b.hidden) return;
+  b.style.width = '';
+  const r = doc.createRange(); r.selectNodeContents(b.querySelector('button') ?? b); // the text's line boxes, not the block's
+  const right = Math.max(...[...r.getClientRects()].map(x => x.right));
+  b.style.width = `${Math.ceil(right - b.getBoundingClientRect().left + parseFloat(getComputedStyle(b).paddingRight))}px`;
+}
 export function setupFreeGate({ focusIn, onEnter, store = null, ua = navigator.userAgent ?? '', standalone = navigator.standalone, portrait = () => innerHeight > innerWidth, doc = document, listen = addEventListener }) {
   const by = id => doc.getElementById(id), turn = by('free-hint-menu'), fs = by('free-fs-menu');
   const iphone = /iPhone|iPod/.test(ua), isOpen = () => Boolean(turn.open || fs.open);
   // Safari's own steps: Chrome, Firefox and Edge on iOS are WebKit too, but their menus differ
   const safari = iphone && standalone === false && !/CriOS|FxiOS|EdgiOS/.test(ua);
-  // A wrapped box keeps its widest size: the bubble is cut to its longest line, so no hole is left on its right
-  const hug = menu => {
-    const b = menu.querySelector?.('.ios-bubble');
-    if (!b || b.hidden) return;
-    b.style.width = '';
-    const r = doc.createRange(); r.selectNodeContents(b.querySelector('button') ?? b); // the text's line boxes, not the block's
-    const right = Math.max(...[...r.getClientRects()].map(x => x.right));
-    b.style.width = `${Math.ceil(right - b.getBoundingClientRect().left + parseFloat(getComputedStyle(b).paddingRight))}px`;
-  };
+  const hug = menu => hugBubble(menu, doc);
   const askTurn = () => { turn.showModal(); hug(turn); focusIn(turn, 'free-hint-close'); };
   const showSteps = () => { fs.showModal(); hug(fs); focusIn(fs, 'free-fs-ok'); };
   by('free-hint-home').hidden = !safari;

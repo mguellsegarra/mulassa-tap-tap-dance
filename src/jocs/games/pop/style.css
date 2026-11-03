@@ -48,6 +48,11 @@ a.btn { text-align: center; text-decoration: none; color: #fff3d6; }
 .ready #boot { opacity: 0; pointer-events: none; }
 :root:not(.ready) #menu { visibility: hidden; } /* whole under the boot screen when it fades: a fading blur shows the board sharp */
 h2 { margin: 0; text-align: center; font: 800 24px/1.1 'Baloo 2', system-ui, sans-serif; color: #ff7ac6; }
+/* what ended the run: the figure's home portrait and why, so a red Drac tapped in a hurry is no mystery */
+.end-why { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 8px 0 0; font-size: 16px; font-weight: 700; color: #fff3d6; }
+.end-why span { line-height: 1.2; text-wrap: balance; } /* two tight lines on a narrow phone, not one word left alone */
+.end-why img { width: 44px; height: 44px; object-fit: contain; flex: none; }
+@media (max-width: 359px) { .end-why { flex-direction: column; gap: 4px; text-align: center; } } /* a narrow sheet wraps the line, and a row of picture and two lines leans left */
 .result { margin: 4px 0 0; text-align: center; font: 800 56px/1 'Baloo 2', system-ui, sans-serif; color: #fff3d6; }
 .result-sub { margin: 2px 0 0; text-align: center; font-size: 16px; color: #e8d8b8; }
 .result-sub.record { color: #ff7ac6; }

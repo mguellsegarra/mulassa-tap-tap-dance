@@ -65,6 +65,9 @@ function on(event, cell, kind) {
 }
 
 function gameOver(cell) {
+  // a Mulassa or a bomb ends the run by running out; the rest by being tapped: the kind alone says which
+  $('end-why').querySelector('img').src = document.querySelector(`.c-card[data-kind="${cell.kind}"] img`).src;
+  $('end-why').querySelector('span').textContent = t(`end.why.${cell.kind}`);
   SFX.wrong();
   SFX.boom();
   haptic('boom'); // a tapped Drac's inside the tap (iPhone too); a fuse running out vibrates on Android only

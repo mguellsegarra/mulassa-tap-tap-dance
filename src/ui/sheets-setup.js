@@ -1,5 +1,5 @@
 import { leaderboard } from '../services/leaderboard.js';
-import { ALIAS_KEY, ownerKey, refreshIdentity, dropLegacyIdentity } from '../services/leaderboard-identity.js';
+import { ALIAS_KEY, ownerKey, savedName, refreshIdentity, dropLegacyIdentity } from '../services/leaderboard-identity.js';
 // Builds the sheets (settings, sync, board, share, profile, Perfil, seasons, cards, feedback, privacy), wires their buttons and registers them in `sheets`.
 import { showPhotoHelp, setRadioHint } from './photo-avatars.js';
 import { setupSelect } from './select-ui.js';
@@ -189,7 +189,8 @@ let cardGreeted = false;
 const selectorFree = () => G.state === 'select' && !sheetUp() && !viewMode && !document.hidden && !document.querySelector('dialog[open]');
 const badgeNews = setupBadgeNews({ focusIn, service, store: mockBoard ? { get: () => null, set() {} } : kv, ...(!mockBoard && { notices: seenNotices }), badges: sheets.badges, profile, idle: selectorFree, refresh: () => refreshIdentity(service, kv, { fresh: true }) }); // the mock: every load can show it again
 sheets.badgeNews = badgeNews;
-const hint = setupDeviceHint({ focusIn, store, softwareGl }); // the device tips, last: after the profile's own news
+const hint = setupDeviceHint({ focusIn, store, softwareGl, // the device tips, last: after the profile's own news
+  account: () => (ownerKey(kv) ? (savedName(kv).verified ? 'linked' : 'guest') : 'none'), confirm: back => { profile.open('link', back); if (!profile.isOpen) back?.(); } }); // offline the profile sheet stays shut: focus back to the selector
 sheets.hint = hint;
 sheets.freeGate = setupFreeGate({ focusIn, store, onEnter: () => enterFree() }); // an upright iPhone is asked to turn before free play
 // The greeting waits for calm: a playable figure (Mulassa, Drac) on screen and no touch or key for a while, so its sheet never

@@ -589,6 +589,19 @@ addEventListener('beforeinstallprompt', function (e) { window.__installPrompt = 
     <div class="sheet-actions"><button id="gpu-hint-ok" type="button" class="btn btn-primary" data-i18n="ui.common.ok">D’acord</button></div>
   </div>
 </dialog>
+<dialog id="inapp-hint-menu" class="sheet hint-menu" tabindex="-1" aria-labelledby="inapp-hint-title" aria-describedby="inapp-hint-text"><!-- inside an app's own browser, one version per account state (device-hint.js); copy provisional, to be written by Codex -->
+  <button id="inapp-hint-close" type="button" data-i18n-attr="aria-label:html.attr.close" class="sheet-x" aria-label="Tanca"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  <div class="sheet-body">
+    <svg class="hint-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4"/></svg>
+    <h2 id="inapp-hint-title"><span id="inapp-hint-title-none">Juga al navegador</span><span id="inapp-hint-title-guest" hidden>Guarda el teu perfil</span><span id="inapp-hint-title-linked" hidden>Juga al navegador</span></h2>
+    <p id="inapp-hint-text" class="board-text"><span id="inapp-hint-text-none">Dins d’aquesta app els teus rècords es poden <b>perdre</b>. Al navegador es guarden bé.</span><span id="inapp-hint-text-guest" hidden>Dins d’aquesta app el teu perfil es pot <b>perdre</b>. Confirma el correu i el recuperaràs on vulguis.</span><span id="inapp-hint-text-linked" hidden>El teu perfil està guardat. Al navegador, toca <b>Recupera</b> i entra amb el teu correu.</span></p>
+    <ol id="inapp-hint-steps" class="ios-steps">
+      <li><span class="ios-key"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5.5h.01M12 12h.01M12 18.5h.01" stroke-width="3"/></svg></span><span data-i18n-rich="html.rich.inappStep1">Obre el <b>menú</b> d’aquesta aplicació</span></li>
+      <li><span class="ios-key"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4"/></svg></span><span data-i18n-rich="html.rich.inappStep2">Tria <b>Obre al navegador</b> o una opció semblant</span></li>
+    </ol>
+    <div class="sheet-actions"><a id="inapp-hint-go" class="btn btn-primary" hidden>Obre al navegador</a><button id="inapp-hint-confirm" type="button" class="btn btn-primary" hidden>Confirma el correu</button><button id="inapp-hint-ok" type="button" class="btn btn-primary" data-i18n="ui.common.ok">D’acord</button></div>
+  </div>
+</dialog>
 <!-- «Instal·la l’app» where the browser has no install prompt (src/ui/install-app.js): that browser's own steps, one list per device (data-for) -->
 <dialog id="install-steps-menu" class="sheet hint-menu" tabindex="-1" aria-labelledby="install-steps-title">
   <button id="install-steps-close" type="button" data-i18n-attr="aria-label:html.attr.close" class="sheet-x" aria-label="Tanca"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>

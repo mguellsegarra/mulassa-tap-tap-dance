@@ -746,12 +746,13 @@ for (const [total, line] of [[1, 'Ets el número 1!'], [20, 'Ets el número 7!']
     facebook: 'Mozilla/5.0 (Linux; Android 14; SM-S911B) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/129.0 Mobile Safari/537.36 [FB_IAB/FB4A;FBAV/480.0.0.0;]',
     tiktok: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 musical_ly_36.0 BytedanceWebview/d8a21c6',
     whatsapp: 'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/129.0 Mobile Safari/537.36 WhatsApp/2.24',
+    telegram: 'Mozilla/5.0 (Linux; Android 14; SM-G973F Build/UP1A.231005.007; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/129.0 Mobile Safari/537.36 Telegram-Android/11.2.3 (Samsung SM-G973F; Android 14; SDK 34; AVERAGE)',
     firefox: 'Mozilla/5.0 (X11; Linux x86_64; rv:131.0) Gecko/20100101 Firefox/131.0',
   };
   assert.equal(deviceRisk({ ua: UA.iphone }), 'ios');
   assert.equal(deviceRisk({ ua: UA.ipad, touch: 5 }), 'ios', 'iPadOS says Macintosh: its touch points tell');
   assert.equal(deviceRisk({ ua: UA.mac }), 'safari');
-  for (const k of ['instagram', 'facebook', 'tiktok', 'whatsapp']) assert.equal(deviceRisk({ ua: UA[k] }), 'inapp', k);
+  for (const k of ['instagram', 'facebook', 'tiktok', 'whatsapp', 'telegram']) assert.equal(deviceRisk({ ua: UA[k] }), 'inapp', k);
   for (const k of ['chrome', 'crios', 'macChrome', 'firefox']) assert.equal(deviceRisk({ ua: UA[k] }), null, `${k}: no note`);
   for (const k of ['iphone', 'instagram', 'mac']) assert.equal(deviceRisk({ ua: UA[k], standalone: true }), null, `${k} from the home screen: no note`);
   assert.equal(deviceRisk({ ua: UA.chrome, persistent: false }), 'private', 'storage blocked (private modes): it goes with the page');

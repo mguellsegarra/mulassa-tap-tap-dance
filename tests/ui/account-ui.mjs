@@ -515,9 +515,8 @@ const service = (o = {}) => ({ configured: true, asked: [], async seasons(f) { t
   };
   const shown = t => ['go', 'confirm', 'ok', 'steps'].filter(x => !t.$(`inapp-hint-${x}`).hidden);
   assert.equal(browserJump(ANDROID_IG, HREF), 'intent://mulassa.cat/joc/?r=abc#Intent;scheme=https;action=android.intent.action.VIEW;end', 'Android: the default browser, the query kept, no hash to cut the intent');
-  assert.equal(browserJump(IOS(17), HREF), 'x-safari-https://mulassa.cat/joc/?r=abc', 'iOS 17: Safari');
+  assert.equal(browserJump(IOS(18), HREF), null, 'iOS: no jump (Instagram swallowed x-safari-https://), only the menu steps');
   assert.equal(browserJump(ANDROID_IG, 'http://192.168.1.232:5190/'), 'intent://192.168.1.232:5190/#Intent;scheme=http;action=android.intent.action.VIEW;end', 'a LAN dev server keeps http (https failed on the S10)');
-  assert.equal(browserJump(IOS(16), HREF), null, 'iOS 16: no jump known');
   // no profile: the jump and the menu steps; the GPU tip waits
   const t = make({ ua: ANDROID_IG });
   assert.equal(t.hint.show(), true);
@@ -538,7 +537,7 @@ const service = (o = {}) => ({ configured: true, asked: [], async seasons(f) { t
   t.acct.state = 'linked'; t.hint.show();
   assert.deepEqual([shown(t), t.$('inapp-hint-text-linked').hidden], [['go', 'steps'], false], 'confirmed: the jump');
   t.$('inapp-hint-close').click(); assert.equal(t.hint.show(), false, 'every state told: nothing left');
-  const i = make({ ua: IOS(16) }); i.hint.show();
+  const i = make({ ua: IOS(18) }); i.hint.show();
   assert.deepEqual([shown(i), i.focused[0]], [['ok', 'steps'], 'inapp-hint-ok'], 'no jump: «D’acord»');
   assert.equal(make({ ua: ANDROID_IG, softwareGl: false, standalone: true }).hint.show(), false, 'from the home screen: nothing');
   const html = readPage(), m = /<dialog id="inapp-hint-menu"[\s\S]*?<\/dialog>/.exec(html)?.[0] ?? '';

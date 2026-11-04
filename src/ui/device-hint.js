@@ -5,13 +5,13 @@ import { stepsFor } from './install-app.js';
 //                     offer a jump to the real browser where one exists, and that app's menu steps as the sure way
 //   #gpu-hint-menu    WebGL in software (turn hardware acceleration on)
 // (The iPhone's fullscreen tip is free play's own: free-gate.js.)
-// The jump out of an app's browser, null where none is known: Android hands an intent:// to the system's default browser,
-// iOS 17+ opens x-safari-https:// (or -http) in Safari. Either may be swallowed by the app: the menu steps stay beside the button.
+// The jump out of an app's browser, null where none is known. Android: an intent:// for the system's default browser (Instagram
+// asks «You're leaving our app», then Chrome opens it: S10, 2026-11-04). iOS has none: Instagram's browser swallowed
+// x-safari-https:// without a word (iPhone, 2026-11-04), and a button that does nothing is worse than the menu steps alone.
 export function browserJump(ua, href) {
-  const u = new URL(href), at = u.host + u.pathname + u.search, scheme = u.protocol.slice(0, -1); // an intent's own «#» ends the address: no hash on either; the page's own scheme (a LAN dev server is http)
-  if (/Android/.test(ua)) return `intent://${at}#Intent;scheme=${scheme};action=android.intent.action.VIEW;end`;
-  const ios = /(?:iPhone|iPad|iPod).* OS (\d+)_/.exec(ua);
-  return ios && +ios[1] >= 17 ? `x-safari-${scheme}://${at}` : null;
+  if (!/Android/.test(ua)) return null;
+  const u = new URL(href), scheme = u.protocol.slice(0, -1); // the page's own scheme: a LAN dev server is http
+  return `intent://${u.host + u.pathname + u.search}#Intent;scheme=${scheme};action=android.intent.action.VIEW;end`; // no hash: the intent's «#» ends the address
 }
 // Who the app's browser holds (account()): 'none' (no profile: only this device's numbers), 'guest' (a profile with no confirmed
 // address: lost with this storage, so confirm it first) or 'linked' (confirmed: «Recupera» brings it back in the real browser).

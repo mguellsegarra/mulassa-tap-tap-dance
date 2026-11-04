@@ -16,7 +16,7 @@ import { ALIAS_KEY } from '../services/leaderboard-identity.js';
 const HALL_FIGURE = 'mulassa-valls'; // the figure whose first season holds everything played before the seasons
 const BADGE_TIP_KEY = 'badge-edit-tip-seen', BADGE_TIP_MS = 6000, BADGE_TIP_LEAVE_MS = 260; // LEAVE: sel-tip-out's length
 
-export function setupAccount({ focusIn, profile, badges, service, store, stats, onSync = () => {}, onHall = () => {}, doc = document, now = () => Date.now() }) {
+export function setupAccount({ focusIn, profile, badges, service, store, stats, onSync = () => {}, onHall = () => {}, offerLink = null, doc = document, now = () => Date.now() }) {
   const $ = byId(doc), menu = $('account-menu'), box = $('account-stats'), status = $('account-status'), notice = $('stats-notice-menu');
   let req = 0, back = null, shown = null, wins = [], done = false, podiumsDone = null; // done: the last load's statistics and podiums both answered
   const local = () => { const s = loadStats(), o = s.owners[getStatsOwner()]; return { since: s.since, buckets: { ...o?.counters, ...o && { practice: o.practice } }, days: o?.days ?? [] }; };
@@ -119,7 +119,8 @@ export function setupAccount({ focusIn, profile, badges, service, store, stats, 
     if (!act) return;
     if (act === 'forget') { profile.forget(); return; }
     const b = leave();
-    if (act === 'badge') badges.open(() => open(b, { resume: true })); else profile.open(act, () => open(b));
+    if (act === 'badge') badges.open(() => open(b, { resume: true })); else if (act === 'link' && offerLink) offerLink(() => open(b)); // a guest's «Confirma el correu»: what it earns first (src/ui/confirm-gate.js)
+    else profile.open(act, () => open(b));
   });
   $('account-close').addEventListener('click', () => menu.close());
   menu.addEventListener('close', () => { req++; const b = back; back = null; b?.(); });

@@ -215,7 +215,9 @@ export function setupPublish({ doc, $, service, store, focusIn, now, runs, canWr
       appendName(doc, publishStatus, prof ?? savedName(store));
       publishStatus.append(post);
       // a guest: a quiet way to keep the profile and its name (the e-mail), under every «Publicat!»; never by itself
-      const offer = Boolean(onConfirm && prof && !prof.verified);
+      // no profile answer in time: the session says it (a local read, no wait)
+      const offer = Boolean(onConfirm) && (prof ? !prof.verified : await service.identity().then(id => id.hasSession && !id.email, () => false));
+      if (req !== publishReq) return;
       $('publish-offer').hidden = !offer;
       done = true;
       aliasInput.readOnly = true;

@@ -595,6 +595,21 @@ console.log('podium discs ok');
 }
 console.log('badge pencil ribbon ok');
 
+// a guest's «Confirma el correu» on the block: the benefits first (src/ui/confirm-gate.js), back to Perfil after; the other buttons go straight to their steps
+{
+  const f = fakeDoc(['account-menu', 'account-close', 'account-stats', 'account-status', 'account-since', 'account-empty', 'account-join', 'account-previous', 'account-previous-list', 'profile-row', 'stats-notice-menu', 'stats-notice-ok', 'stats-notice-close', 'stats-notice-hall']);
+  const mem = new Map(), store = { get: k => mem.get(k) ?? null, set: (k, v) => mem.set(k, v), remove: k => mem.delete(k) };
+  const offers = [], opened = [];
+  const acc = setupAccount({ focusIn() {}, profile: { refresh() {}, open: (a, b) => opened.push([a, b]), forget() {}, isOpen: false }, offerLink: b => offers.push(b),
+    service: service({ ownerId: async () => 'u1', myStats: async () => null }), store, doc: f.doc, now: () => NOW, stats: { noticeNeeded: () => false, acceptNotice() {} } });
+  const tap = act => f.$('profile-row').fire('click', { target: { closest: () => ({ dataset: { act } }) } });
+  acc.open(); await tick(); tap('link');
+  assert(offers.length === 1 && opened.length === 0 && !f.$('account-menu').open, 'the benefits take the sheet\'s place');
+  offers[0](); await tick(); assert(f.$('account-menu').open, 'back to Perfil');
+  tap('delete'); assert(offers.length === 1 && opened[0][0] === 'delete', 'deleting: its own step');
+}
+console.log('block confirm offer ok');
+
 // back from the badge sheet: the sheet as it was (no statistics reload: the spinner and the bar would shift it), unless they never arrived
 {
   const f = fakeDoc(['account-menu', 'account-close', 'account-stats', 'account-status', 'account-since', 'account-empty', 'account-join', 'account-previous', 'account-previous-list', 'profile-row', 'stats-notice-menu', 'stats-notice-ok', 'stats-notice-close', 'stats-notice-hall']);

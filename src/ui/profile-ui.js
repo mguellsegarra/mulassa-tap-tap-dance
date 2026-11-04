@@ -20,7 +20,7 @@ import { checkAlias } from '../services/alias-rules.js';
 import { turnstileMessage } from '../services/captcha.js';
 import { errors } from '../services/errors.js';
 import { byId, statusLine, setButton, trMarked } from './sheet-kit.js';
-import { GUEST, GUEST_TEXT, appendName, BADGE_PENCIL, labelProfileBtn } from './profile-notes.js';
+import { GUEST, GUEST_TEXT, appendName, profileBadgeEntry, labelProfileBtn } from './profile-notes.js';
 import { tr } from '../i18n/messages.js';
 
 const CONFIRM = {
@@ -32,7 +32,7 @@ const CONFIRM = {
 
 // acceptStats(): creating a profile here showed the statistics notice (src/services/stats-sync.js may send them now)
 export function setupProfile({ focusIn, captcha, store, aliasKey, deviceNote = () => '', service = defaultService, doc = document, report = errors.report,
-  acceptStats = () => {} }) {
+  acceptStats = () => {}, offerLink = null }) {
   const $ = byId(doc);
   const menu = $('profile-menu'), form = $('profile-form'), mailIn = $('profile-email'), aliasIn = $('profile-alias'), codeIn = $('profile-code');
   const status = $('profile-status'), sendBtn = $('profile-send'), cancelBtn = $('profile-cancel'), keepBtn = $('profile-keep'), lead = $('profile-lead');
@@ -72,13 +72,6 @@ export function setupProfile({ focusIn, captcha, store, aliasKey, deviceNote = (
     } catch {}
   }
   readKnown();
-  // the mark beside the name is what you tap to change it (src/ui/badge-picker.js), with a pencil saying so
-  function badgeEntry() {
-    const mark = nameEl.querySelector('.verified-check, .player-badge'), b = doc.createElement('button');
-    if (!mark) return;
-    b.type = 'button'; b.className = 'badge-edit'; b.dataset.act = 'badge'; b.setAttribute('aria-haspopup', 'dialog'); b.setAttribute('aria-label', tr('ui.badge.entry'));
-    mark.replaceWith(b); b.append(mark); b.insertAdjacentHTML('beforeend', BADGE_PENCIL);
-  }
   function paint({ alias, hasSession, mailOn, persistent, prof = null, noRow = false }) {
     if (noRow) alias = ''; // no row on the server: a name kept here is not this session's
     delete row.dataset.pending;
@@ -89,6 +82,8 @@ export function setupProfile({ focusIn, captcha, store, aliasKey, deviceNote = (
     const state = hasSession && !(noRow && !confirmed) ? (confirmed ? (noRow ? 'unnamed' : 'linked') : prof?.released ? 'released' : 'guest') : alias ? 'stale' : 'none';
     email = mailOn;
     const set = (i, act, text, on = true) => { const b = btns[i]; b.hidden = !on; b.dataset.act = act; labelProfileBtn(b, act, text); };
+    // a guest's «Confirma el correu» is the one thing to do: the primary
+    btns[0].classList.toggle('btn-primary', state === 'guest'); btns[0].classList.toggle('btn-secondary', state !== 'guest');
     nameEl.replaceChildren(); // as the boards show it: the check for a confirmed address, a released name faded
     if (state !== 'none') appendName(doc, nameEl, { alias, verified: confirmed && hasSession, released: state === 'released', badgeId: prof?.badgeId });
     kindEl.hidden = state !== 'guest'; kindEl.textContent = GUEST;
@@ -106,7 +101,7 @@ export function setupProfile({ focusIn, captcha, store, aliasKey, deviceNote = (
       set(0, 'create', tr('ui.profile.btn.create'), canLink); set(1, 'signout', tr('ui.profile.btn.signout')); set(2, 'delete', tr('ui.profile.btn.delete'));
     } else {
       sub.textContent = '';
-      if (canLink && prof?.canBadge === true) badgeEntry();
+      if (canLink && prof?.canBadge === true) profileBadgeEntry(doc, nameEl);
       set(0, 'signout', tr('ui.profile.btn.signout')); set(1, 'delete', tr('ui.profile.btn.delete'));
     }
     row.dataset.state = state;
@@ -119,7 +114,7 @@ export function setupProfile({ focusIn, captcha, store, aliasKey, deviceNote = (
     // confirmed profile lands on the same size, a guest's line appears under the name); no name: «Encara no en tens cap.»
     if (!known) readKnown();
     if (known && alias) paint({ alias, ...known });
-    else if (alias) { row.dataset.pending = '1'; nameEl.replaceChildren(); appendName(doc, nameEl, { alias, verified: false }); kindEl.hidden = true; sub.textContent = ''; [['link', tr('ui.profile.btn.link')], ['delete', tr('ui.profile.btn.delete')]].forEach(([act, t], i) => { btns[i].hidden = false; labelProfileBtn(btns[i], act, t); delete btns[i].dataset.act; }); btns[2].hidden = true; }
+    else if (alias) { row.dataset.pending = '1'; btns[0].classList.replace('btn-primary', 'btn-secondary'); nameEl.replaceChildren(); appendName(doc, nameEl, { alias, verified: false }); kindEl.hidden = true; sub.textContent = ''; [['link', tr('ui.profile.btn.link')], ['delete', tr('ui.profile.btn.delete')]].forEach(([act, t], i) => { btns[i].hidden = false; labelProfileBtn(btns[i], act, t); delete btns[i].dataset.act; }); btns[2].hidden = true; }
     else paint({ alias, hasSession: false, mailOn: '', persistent: true });
     let id, prof = null, gone = false, stillNoRow = false;
     try {
@@ -142,8 +137,9 @@ export function setupProfile({ focusIn, captcha, store, aliasKey, deviceNote = (
 
   // --- the sheet
   // thenLink: a profile created for something that needs the address goes straight on to it, in this same sheet
+  // true: the sheet took over (offline or already open: it did not, the caller keeps its way back)
   function open(what, onBack = null, { thenLink = false } = {}) {
-    if (!online || menu.open) return;
+    if (!online || menu.open) return false;
     kind = what; back = onBack; linkNext = thenLink; req++; busy = false; mail = ''; type = ''; leave = null;
     mailIn.value = codeIn.value = aliasIn.value = ''; setStatus('');
     mailIn.readOnly = codeIn.readOnly = aliasIn.readOnly = false;
@@ -165,6 +161,7 @@ export function setupProfile({ focusIn, captcha, store, aliasKey, deviceNote = (
     }
     menu.showModal();
     focusIn(menu, step === 'alias' ? 'profile-alias' : step === 'mail' ? 'profile-email' : 'profile-keep'); // a confirmation starts on the safe button
+    return true;
   }
 
   mailIn.addEventListener('input', () => { const c = cleanEmail(mailIn.value); if (c !== mailIn.value) mailIn.value = c; });
@@ -210,9 +207,16 @@ export function setupProfile({ focusIn, captcha, store, aliasKey, deviceNote = (
         const alias = await service.createProfile(aliasIn.value, { captchaToken });
         if (r !== req) return;
         store.set(aliasKey, alias);
-        try { remember(await service.profile?.()); } catch { /* the block asks again */ }
+        let prof = null;
+        try { prof = await service.profile?.(); remember(prof); } catch { /* the block asks again */ }
         if (kind !== 'rename') acceptStats(); // the notice was on this step
         if (r !== req) return;
+        // a new guest (no confirmed address: the profile says it, else the session, a local read) sees what confirming earns (offerLink: confirm-gate.js)
+        if (kind === 'create' && !linkNext && offerLink && (prof ? !prof.verified : await service.identity().then(id => id.hasSession && !id.email, () => false))) {
+          if (r !== req) return;
+          const b = back; back = null; refresh(); menu.close(); offerLink(b, 'ui.profile.done.created');
+          return;
+        }
         if (linkNext && kind === 'create') {
           linkNext = false; kind = 'link'; idle(); refresh();
           $('profile-title').textContent = tr('ui.profile.title.link'); lead.textContent = tr('ui.profile.lead.link');

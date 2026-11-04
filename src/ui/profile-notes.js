@@ -75,3 +75,10 @@ const BTN_ICON = {
   signout: svg('M10 8V6a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-7a2 2 0 0 1-2-2v-2M15 12H3l3-3M6 15l-3-3'),
 };
 export const labelProfileBtn = (b, act, text) => { b.textContent = text; if (BTN_ICON[act]) b.insertAdjacentHTML('afterbegin', BTN_ICON[act]); };
+// the mark beside the name is what you tap to change it (src/ui/badge-picker.js), with a pencil saying so
+export function profileBadgeEntry(doc, nameEl) {
+  const mark = nameEl.querySelector('.verified-check, .player-badge'), b = doc.createElement('button');
+  if (!mark) return;
+  b.type = 'button'; b.className = 'badge-edit'; b.dataset.act = 'badge'; b.setAttribute('aria-haspopup', 'dialog'); b.setAttribute('aria-label', tr('ui.badge.entry'));
+  mark.replaceWith(b); b.append(mark); b.insertAdjacentHTML('beforeend', BADGE_PENCIL);
+}

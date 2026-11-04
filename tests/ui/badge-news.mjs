@@ -84,9 +84,9 @@ for (const [why, o] of [['no profile', { prof: null }], ['a released name', { pr
   const again = setupConfirmGate({ focusIn() {}, identity: async () => ({ hasSession: true, email: '' }), hasProfile: async () => { throw new Error('offline'); }, openProfile() {}, doc: fakeDoc() });
   await again('heart', () => done++); assert.equal(done, 0, 'a failed profile read neither'); }
 // the gate
-function gate({ email = '', hasSession = true, profiled = false } = {}) {
+function gate({ email = '', hasSession = true, profiled = false, online = true } = {}) { // online false: the profile sheet stays shut
   const doc = fakeDoc(), log = [], T = { email }; let done = 0, reads = 0;
-  const need = setupConfirmGate({ focusIn() {}, identity: async () => ({ hasSession, email: T.email }), hasProfile: async () => { reads++; return profiled; }, openProfile: (...a) => log.push(a), doc });
+  const need = setupConfirmGate({ focusIn() {}, identity: async () => ({ hasSession, email: T.email }), hasProfile: async () => { reads++; return profiled; }, openProfile: (...a) => { log.push(a); return online; }, doc });
   return { need, doc, log, T, $: id => doc.getElementById(id), run: () => done++, get done() { return done; }, get reads() { return reads; } };
 }
 { const g = gate({ email: 'a@b.cat' }); await g.need('heart', g.run); assert.equal(g.done, 1, 'confirmed: straight to the action'); assert.equal(g.$('gate-menu').open, false); }
@@ -98,4 +98,16 @@ function gate({ email = '', hasSession = true, profiled = false } = {}) {
   assert.equal(g.done, 0, 'closed without confirming: a cancel'); assert.equal(g.log.length, 1, 'and it is not asked again'); }
 { const g = gate({ profiled: true }); await g.need('heart', g.run); g.$('gate-go').click();
   assert.equal(g.log[0][0], 'link'); assert.equal(g.log[0][2].thenLink, false); }
+// a guest's own offer (Perfil «Crea», the block's «Confirma el correu»): what confirming earns, then the address or «Ara no»;
+// the way back to Perfil runs once whichever way the sheet is left
+{ const g = gate(); let backs = 0; g.need.offer(() => backs++, 'ui.profile.done.created');
+  assert(g.$('gate-menu').open && g.$('gate-title').textContent === 'Perfil creat!' && !g.$('gate-go').hidden && g.$('gate-go').textContent === 'Confirma el correu', 'the benefits, the address as the main action');
+  g.$('gate-later').click(); assert.equal(backs, 1, '«Ara no»: back to Perfil, a guest'); assert.equal(g.log.length, 0, 'nothing else opened');
+  g.need.offer(() => backs++); assert.equal(g.$('gate-title').textContent, 'Confirma el teu correu');
+  g.$('gate-menu').close(); assert.equal(backs, 2, 'Escape: back too');
+  g.need.offer(() => backs++); g.$('gate-go').click(); assert.deepEqual([g.log[0][0], g.log[0][2].thenLink], ['link', false], 'Confirma: the address step, no second offer');
+  assert.equal(backs, 2, 'not back while the profile sheet is up'); await g.log[0][1](); assert.equal(backs, 3, 'its sheet closed: back, once');
+  await g.need('heart', g.run); g.$('gate-later').click(); assert.equal(backs, 3, 'a later gate does not inherit the way back'); }
+{ const g = gate({ online: false }); let backs = 0; g.need.offer(() => backs++); g.$('gate-go').click(); await tick();
+  assert.equal(backs, 1, 'offline the profile sheet stays shut: back to Perfil all the same'); }
 console.log('badge news and confirm gate ok');

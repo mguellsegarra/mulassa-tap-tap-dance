@@ -171,10 +171,12 @@ if (FINAL?.review != null) import('../dev/account-review.js').then(m => m.startR
 // at the top of «Perfil» (src/ui/account-ui.js, the corner row's person); closing a step goes back to Perfil. «Recupera’l» on the
 // publish sheet recovers, then the publication opens again. ?final / ?mock: the same sheets over the mock service and the
 // in-memory keys (src/dev/final-test.js), nothing real.
-const profile = setupProfile({ focusIn, captcha: board.captcha, store: kv, aliasKey: ALIAS_KEY, deviceNote: board.deviceNote, acceptStats, ...(mockBoard && { service: mockService }) });
+const profile = setupProfile({ focusIn, captcha: board.captcha, store: kv, aliasKey: ALIAS_KEY, deviceNote: board.deviceNote, acceptStats,
+  offerLink: (back, title) => needConfirmed.offer(back, title), ...(mockBoard && { service: mockService }) });
 sheets.profile = profile;
 sheets.badges = setupBadges({ focusIn, service, store: kv, onSaved: id => { profile.badgeSaved(id); sheets.select?.reread(); forgetSeasons(service); refreshIdentity(service, kv, { fresh: true }).then(() => share.refreshName()); } });
-const account = setupAccount({ focusIn, profile, badges: sheets.badges, service, store: kv, stats: statsSync, onSync: back => { syncBack = back; sync.show(); }, onHall: (f, back) => seasons.open(f, back) });
+const account = setupAccount({ focusIn, profile, badges: sheets.badges, service, store: kv, stats: statsSync, onSync: back => { syncBack = back; sync.show(); }, onHall: (f, back) => seasons.open(f, back),
+  offerLink: back => needConfirmed.offer(back) });
 sheets.account = account;
 document.getElementById('settings-profile').addEventListener('click', () => { settingsMenu.close(); account.open(openSettings); }); // Perfil lives in ⚙ Configuració (no corner button); closing it comes back here
 // «Tardor 2026 s’ha acabat»: once per profile and season (in memory over the mock, so each review shows it). The real sheets

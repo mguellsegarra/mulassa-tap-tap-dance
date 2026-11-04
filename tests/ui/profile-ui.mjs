@@ -26,7 +26,7 @@ const ids = ['profile-menu', 'profile-form', 'profile-email', 'profile-code', 'p
 const tick = () => new Promise(r => setTimeout(r, 0));
 
 function make({ configured = true, publishingEnabled = true, session = false, email = '', alias = '', persistent = true, captchaRequired = false,
-  prof, known = null } = {}) { // prof: my_profile's answer (undefined: an older server, no my_profile); known: the stored last answer
+  prof, known = null, offerLink } = {}) { // prof: my_profile's answer (undefined: an older server, no my_profile); known: the stored last answer
   const els = new Map(ids.map(id => [id, new El(id)]));
   const doc = { getElementById: id => els.get(id), createElement: tag => Object.assign(new El(''), { tag }) }, $ = id => els.get(id);
   const mem = new Map(alias ? [['alias', alias]] : []);
@@ -50,7 +50,7 @@ function make({ configured = true, publishingEnabled = true, session = false, em
   const captcha = { token: async () => 'tok', cancel() {} };
   const focused = [];
   const profile = setupProfile({ focusIn: (m, id) => focused.push(id), captcha, store, aliasKey: 'alias', deviceNote: p => (p ? '' : 'NOTE'), service, doc,
-    report: (k, d) => reports.push([k, d]), acceptStats: () => { T.accepted++; } });
+    report: (k, d) => reports.push([k, d]), acceptStats: () => { T.accepted++; }, offerLink });
   const find = (el, test) => (test(el) ? el : (el.kids || []).filter(k => typeof k !== 'string').map(k => find(k, test)).find(Boolean) ?? null);
   return { profile, $, mem, calls, reports, T, focused, find, doc,
     badge: () => find($('profile-name'), k => k.className === 'verified-check'),
@@ -148,7 +148,29 @@ const guestProf = o => ({ alias: 'takeshi', verified: false, published: true, re
   assert.equal(s.$('profile-status').textContent, 'Perfil creat!');
   await tick(); await tick();
   assert.equal(s.buttons().join(), 'link:Confirma el correu,delete:Esborra el perfil'); assert.equal(s.$('profile-name').textContent, 'takeshi');
+  assert(s.$('profile-main').classList.contains('btn-primary') && !s.$('profile-alt').classList.contains('btn-primary'), 'a guest: «Confirma el correu» is the one gold button');
   s.$('profile-menu').close();
+}
+{ // with the offer (src/ui/confirm-gate.js): a new guest leaves this sheet for the benefits, once; its way back goes along
+  const offers = [], back = () => {}, s = make({ prof: guestProf({ published: false }), offerLink: (...a) => offers.push(a) }); await s.profile.refresh();
+  s.profile.open('create', back); enter(s.$, 'profile-alias', 'takeshi'); s.$('profile-form').fire('submit'); for (let i = 0; i < 5; i++) await tick();
+  assert(!s.$('profile-menu').open && offers.length === 1 && offers[0][0] === back && offers[0][1] === 'ui.profile.done.created', '«Perfil creat!» on the benefits sheet');
+  // no answer from my_profile: the session says it (no confirmed address: a guest)
+  const slow = make({ offerLink: (...a) => offers.push(a) }); await slow.profile.refresh();
+  slow.profile.open('create'); enter(slow.$, 'profile-alias', 'takeshi'); slow.$('profile-form').fire('submit'); for (let i = 0; i < 5; i++) await tick();
+  assert.equal(offers.length, 2, 'my_profile unanswered: still offered');
+  // the gate's own create (thenLink) has shown the benefits already: on to the address in this sheet
+  const gated = make({ prof: guestProf({ published: false }), offerLink: (...a) => offers.push(a) }); await gated.profile.refresh();
+  gated.profile.open('create', null, { thenLink: true }); enter(gated.$, 'profile-alias', 'takeshi'); gated.$('profile-form').fire('submit'); for (let i = 0; i < 5; i++) await tick();
+  assert(offers.length === 2 && gated.$('profile-menu').open && !gated.$('profile-mail-field').hidden, 'no second offer');
+  // a confirmed session naming itself: nothing to confirm
+  const named = make({ session: true, email: 'jo@example.test', prof: null, offerLink: (...a) => offers.push(a) }); await named.profile.refresh();
+  named.T.prof = { ...guestProf({ published: false }), verified: true };
+  named.profile.open('create'); enter(named.$, 'profile-alias', 'takeshi'); named.$('profile-form').fire('submit'); for (let i = 0; i < 5; i++) await tick();
+  assert(offers.length === 2 && named.$('profile-status').textContent === 'Perfil creat!' && named.$('profile-mail-field').hidden, 'confirmed: done, no address asked');
+  named.$('profile-menu').close();
+  // offline nothing opens: the caller (the gate) keeps its way back
+  assert.equal(make({ configured: false }).profile.open('link', back), false, 'offline: nothing took over');
 }
 { // confirm an e-mail: mail → code; the tick, the same name; an address typed elsewhere; a code the server does not confirm
   const s = make({ alias: 'takeshi', session: true, captchaRequired: true, prof: guestProf() }); await s.profile.refresh();

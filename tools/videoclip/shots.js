@@ -69,12 +69,12 @@ export function shotAt(g, t, labelOf) {
     const owner = edit.cuts.map(g.beatAt).filter(c => c > run.beat + 4 && c < run.end - 4), seqEnd = plan.seq ? owner[0] ?? run.end : run.beat;
     const cuts = []; for (let c = run.beat; c < seqEnd - 2; c += plan.beats) cuts.push(c); // (not 2 beats short of an owner's cut: a blink of a shot)
     cuts.push(...owner.filter(c => c >= seqEnd));
-    const k = cuts.findLastIndex(c => c <= b), from = cuts[k], to = cuts[k + 1] ?? run.end, inSeq = from < seqEnd;
+    const k = cuts.findLastIndex(c => c <= b), from = cuts[k], to = cuts[k + 1] ?? (run.last === g.phrases.length - 1 ? Math.max(run.end, g.tailEnd ?? 0) : run.end), inSeq = from < seqEnd; // (the song's last shot runs on under the end card)
     const name = inSeq ? plan.seq[k % plan.seq.length] : plan.long[(k - cuts.findIndex(c => c >= seqEnd)) % plan.long.length];
     // through black: into and out of each cut of the sequence, out of the run's start, into its end with fadeOut
     let dip = 0;
     if (inSeq) dip = Math.max(0, 1 - (b - from) / DIP, to <= seqEnd && to < run.end ? 1 - (to - b) / DIP : 0);
-    if (plan.fadeOut) dip = Math.max(dip, 1 - (run.end - b) / plan.fadeOut);
+    if (plan.fadeOut && edit.endcardAt == null) dip = Math.max(dip, 1 - (run.end - b) / plan.fadeOut); // (a card over the end does its own fade: this hid the blur)
     return { name, u: (b - from) / (to - from), label, cut: from, beats: to - from, dip: Math.min(1, dip) };
   }
   if (label === 'build' && (next === 'drop' || next === 'hard') && left <= 8) { // the run-up: a cut every two beats, then every beat, then the push in

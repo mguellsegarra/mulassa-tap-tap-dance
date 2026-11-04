@@ -1,5 +1,5 @@
 {
- "note": "The owner's edit decisions, over what the analysis and the plan guess. cuts: song seconds where a long-shot section (intro, outro) cuts; nowhere else inside them. texts: the full-screen word on each spoken shout (clip.json shouts, in order), one style each, at most one repeat (textfx.js STYLES). entry: she walks in from behind the crowd (z m, along +z) to the middle, arriving at `end` s; the crowd makes way. titles: words that are not shouts (the intro's sung MULASSA at 1.17 s, said for `len` s), on until `until` s. A text's syl (s from the shout) and after (beats on after it is said) override the measured ones, by ear. strobes: [from, to] s where the picture shows only in a white flash on each beat. songCuts: [from, to] s of the full song left out (cut.py), on downbeats where both sides sound alike; times elsewhere here are of the cut song. beatShift: [beat, beats removed before it] so every shot keeps the angle it had in the full song. endcard: endcard.js's card after the song (the tool shows it; render.mjs --endcard). musicFade: seconds over which the song fades out before the end card (the tool and the export).",
+ "note": "The owner's edit decisions, over what the analysis and the plan guess. cuts: song seconds where a long-shot section (intro, outro) cuts; nowhere else inside them. texts: the full-screen word on each spoken shout (clip.json shouts, in order), one style each, at most one repeat (textfx.js STYLES). entry: she walks in from behind the crowd (z m, along +z) to the middle, arriving at `end` s; the crowd makes way. titles: words that are not shouts (the intro's sung MULASSA at 1.17 s, said for `len` s), on until `until` s. A text's syl (s from the shout) and after (beats on after it is said) override the measured ones, by ear. strobes: [from, to] s where the picture shows only in a white flash on each beat. songCuts: [from, to] s of the full song left out (cut.py), on downbeats where both sides sound alike; times elsewhere here are of the cut song. beatShift: [beat, beats removed before it] so every shot keeps the angle it had in the full song. endcard: endcard.js's card after the song (the tool shows it; render.mjs --endcard). musicFade: seconds over which the song fades out before the end card (the tool and the export). endcardAt: song second the end card starts at, over the video (the tool's ?card=minim shows the card after it instead).",
  "cuts": [
   20.5
  ],
@@ -81,6 +81,7 @@
   340,
   160
  ],
- "endcard": "minim",
- "musicFade": 5
+ "endcard": "sobre",
+ "musicFade": 5,
+ "endcardAt": 158.4
 }

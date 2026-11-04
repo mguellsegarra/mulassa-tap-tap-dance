@@ -37,13 +37,14 @@ function drawPill(ctx, L, alpha, s = 1, glow = 0, p = null) {
   ctx.save(); ctx.translate(cx, cy); ctx.scale(s, s); ctx.translate(-cx, -cy);
   ctx.font = FONT(L.pillPx); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = INK; ctx.fillText(URL_TEXT, cx, cy + L.pillPx * .08);
   ctx.restore();
-  if (p != null && p > 0 && p < 1) { // the logo's glint, clipped to the pill: a soft wide band and a bright core, fading at the ends
-    const lean = L.ph * .45, cxg = L.pillX - lean + p * (L.pw + 2 * lean), a = Math.sin(Math.PI * p);
+  if (p != null && p > 0 && p < 1) { // the glint: one slanted band of light, its edges a gradient (hard-edged bands showed their lines: the owner)
+    const w = L.ph * 1.1, lean = L.ph * .5, x = L.pillX - w + p * (L.pw + 2 * w), cy = L.pillY + L.ph / 2;
     pillPath(ctx, L, s); ctx.clip();
-    for (const [w, al] of [[L.ph * .9, .35], [L.ph * .28, .7]]) {
-      ctx.beginPath(); ctx.moveTo(cxg - w / 2 + lean, L.pillY); ctx.lineTo(cxg + w / 2 + lean, L.pillY); ctx.lineTo(cxg + w / 2 - lean, L.pillY + L.ph); ctx.lineTo(cxg - w / 2 - lean, L.pillY + L.ph);
-      ctx.fillStyle = `rgba(255,255,255,${al * a})`; ctx.fill();
-    }
+    ctx.translate(x, cy); ctx.transform(1, 0, -lean / L.ph, 1, 0, 0); // a shear: the band leans like the logo's
+    const gr = ctx.createLinearGradient(-w / 2, 0, w / 2, 0);
+    gr.addColorStop(0, 'rgba(255,255,255,0)'); gr.addColorStop(.42, 'rgba(255,255,255,.18)'); gr.addColorStop(.5, 'rgba(255,255,255,.6)');
+    gr.addColorStop(.58, 'rgba(255,255,255,.18)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = gr; ctx.fillRect(-w / 2, -L.ph, w, L.ph * 2);
   }
   ctx.restore();
 }
@@ -67,13 +68,25 @@ function bloom(ctx, k, blur, draw) {
 const fadeOut = (ctx, W, H, t, dur) => black(ctx, W, H, (t - (dur - .8)) / .8);
 
 export const CARDS = {
+  // over the video's last seconds (edit.json endcardAt): the picture blurs and dims under the pair, then all fades to black.
+  // src: the clip's picture this frame (the tool's WebGL region; the gallery has none: black)
+  sobre: { name: 'E · Sobre el vídeo', dur: 5.5, note: 'Entra per sobre dels últims segons del vídeo: la frase i la píndola apareixen amb un fos mentre la imatge es desenfoca i s\'enfosqueix al darrere, i després tot es fon a negre.',
+    draw(ctx, W, H, t, src) {
+      const k = ease(t / 1.6); // the background's blur and dimming
+      ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
+      if (src) { ctx.save(); ctx.filter = `blur(${(k * .014 * Math.min(W, H)).toFixed(1)}px) brightness(${1 - .2 * k})`; ctx.drawImage(src, 0, 0, W, H); ctx.restore(); } // (dimmed only a little: the blur must read)
+      const L = layout(ctx, W, H);
+      drawText(ctx, L, W, ease((t - .2) / 1), 0, .6);
+      drawPill(ctx, L, ease((t - 1.7) / .6), 1, .6 * ease((t - 1.7) / .8), t > 2.4 && t < 2.9 ? ease((t - 2.4) / .5) : null); // (1.5 s after the question)
+      black(ctx, W, H, (t - 4.8) / .7); // (to black only at the very end)
+    } },
   minim: { name: 'A · Mínim', dur: 5.5, note: 'La proposta 4 tal com era: negre pur, acostament molt lent i una resplendor blanca suau enganxada a les lletres. Sense cap llum a l\'escena.',
     draw(ctx, W, H, t) {
       ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
       const z = 1 + .05 * ease(t / 5.5); ctx.save(); ctx.translate(W / 2, H / 2); ctx.scale(z, z); ctx.translate(-W / 2, -H / 2);
       const L = layout(ctx, W, H);
       drawText(ctx, L, W, ease(t / 1), 0, .6);
-      drawPill(ctx, L, ease((t - 1) / .6), 1, .6 * ease((t - 1) / .8), t > 1.7 && t < 2.6 ? (t - 1.7) / .9 : null);
+      drawPill(ctx, L, ease((t - 1) / .6), 1, .6 * ease((t - 1) / .8), t > 1.7 && t < 2.2 ? ease((t - 1.7) / .5) : null);
       ctx.restore(); fadeOut(ctx, W, H, t, 5.5);
     } },
   ambient: { name: 'B · Llum ambiental', dur: 5.5, note: 'Una claror molt àmplia i tènue que neix al centre, darrere la frase, sense cap forma ni vora: el negre s\'aclareix una mica al voltant de les lletres, com si hi hagués llum fora de pla. Acostament lent.',
@@ -83,7 +96,7 @@ export const CARDS = {
       const L = layout(ctx, W, H);
       wash(ctx, W, H, W / 2, (L.textY + L.pillY) / 2, ease(t / 1.6));
       drawText(ctx, L, W, ease(t / 1), 0, .35);
-      drawPill(ctx, L, ease((t - 1) / .6), 1, .45 * ease((t - 1) / .8), t > 1.7 && t < 2.6 ? (t - 1.7) / .9 : null);
+      drawPill(ctx, L, ease((t - 1) / .6), 1, .45 * ease((t - 1) / .8), t > 1.7 && t < 2.2 ? ease((t - 1.7) / .5) : null);
       ctx.restore(); fadeOut(ctx, W, H, t, 5.5);
     } },
   contrallum: { name: 'C · Contrallum', dur: 5.5, note: 'La llum ve de darrere de les lletres: un halo blanc difús que les retalla sobre el negre (com un rètol il·luminat per darrere) i un halo daurat darrere la píndola. Les lletres queden nítides al davant.',
@@ -95,7 +108,7 @@ export const CARDS = {
       bloom(ctx, .55 * kt, L.px * 1.4, () => drawText(ctx, L, W, 1));
       bloom(ctx, .8 * kp, L.ph * .5, () => drawPill(ctx, L, 1));
       drawText(ctx, L, W, kt);
-      drawPill(ctx, L, kp, 1, 0, t > 1.7 && t < 2.6 ? (t - 1.7) / .9 : null);
+      drawPill(ctx, L, kp, 1, 0, t > 1.7 && t < 2.2 ? ease((t - 1.7) / .5) : null);
       ctx.restore(); fadeOut(ctx, W, H, t, 5.5);
     } },
   passada: { name: 'D · Llum que passa', dur: 5.5, note: 'Una claror suau i sense vores travessa el quadre en diagonal un cop, molt a poc a poc, i en passar per sobre de la frase i la píndola les il·lumina una mica més (alhora que la brillantor del logo). Després queda una claror fixa i tènue.',
@@ -106,7 +119,7 @@ export const CARDS = {
       wash(ctx, W, H, W / 2, (L.textY + L.pillY) / 2, .5 * ease((t - 2.5) / 1.5));
       const near = Math.max(0, 1 - Math.abs(cx - W / 2) / (W * .5));
       drawText(ctx, L, W, ease(t / 1), 0, .25 + .5 * near);
-      drawPill(ctx, L, ease((t - 1) / .6), 1, .3 + .5 * near, t > 1.9 && t < 2.8 ? (t - 1.9) / .9 : null);
+      drawPill(ctx, L, ease((t - 1) / .6), 1, .3 + .5 * near, t > 1.9 && t < 2.4 ? ease((t - 1.9) / .5) : null);
       fadeOut(ctx, W, H, t, 5.5);
     } },
 };

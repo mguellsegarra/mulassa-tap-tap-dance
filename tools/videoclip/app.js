@@ -84,7 +84,10 @@ function draw(fmt, t, x, y, w, h, lit) {
 }
 
 // the end card after the song (edit.json endcard): the tool's timeline runs on through it, silent
-const CARD = edit.endcard && CARDS[edit.endcard], END = clip.duration + (CARD?.dur ?? 0);
+// (?card= tries another; endcardAt: the card starts over the video's end instead of after it)
+const CARD = CARDS[q.get('card') ?? edit.endcard], CARD_AT = q.get('card') === 'minim' ? clip.duration : edit.endcardAt ?? clip.duration;
+const END = CARD ? Math.max(clip.duration, CARD_AT + CARD.dur) : clip.duration;
+g.tailEnd = g.beatAt(END); // (the last shot runs on to the very end: shots.js)
 
 // ---- export mode: one format, the whole window, frame by frame
 if (RENDER) {
@@ -191,22 +194,22 @@ function startTool() {
     const W = innerWidth, H = innerHeight;
     if (renderer.domElement.width !== Math.round(W * renderer.getPixelRatio()) || renderer.domElement.height !== Math.round(H * renderer.getPixelRatio())) renderer.setSize(W, H, false);
     renderer.setScissor(0, 0, W, H); renderer.setClearColor('#0b0c14'); renderer.clear();
-    const ts = Math.min(t, clip.duration - .01), lit = poseWorld(ts); let s; // (on the end card the scene holds its last frame, under the card)
+    const ts = t, lit = poseWorld(ts); let s; // (the scene keeps moving under the end card: frozen, its blur read as a still)
     for (const [k, el] of Object.entries(boxes)) { const r = el.getBoundingClientRect(); s = draw(k, ts, r.left, r.top, r.width, r.height, lit); }
     // the words on a shout, over each frame: drawn from that frame's region of the WebGL canvas, in this same task
-    const card = CARD && t >= clip.duration, word = card ? { card: true } : textAt(g, t, edit, labelOf), dpr = renderer.getPixelRatio();
+    const card = CARD && t >= CARD_AT, word = card ? { card: true } : textAt(g, t, edit, labelOf), dpr = renderer.getPixelRatio();
     for (const el of Object.values(boxes)) {
       const c = el.querySelector('.words'); c.style.display = word ? 'block' : 'none'; if (!word) continue;
       const r = el.getBoundingClientRect(), cw = Math.round(r.width * dpr), ch = Math.round(r.height * dpr);
       if (c.width !== cw || c.height !== ch) { c.width = cw; c.height = ch; }
       region.width = cw; region.height = ch; region.getContext('2d').drawImage(renderer.domElement, r.left * dpr, r.top * dpr, cw, ch, 0, 0, cw, ch);
-      if (card) { CARD.draw(c.getContext('2d'), cw, ch, t - clip.duration); continue; }
+      if (card) { CARD.draw(c.getContext('2d'), cw, ch, t - CARD_AT, region); continue; } // (region: the picture just copied above)
       STYLES[word.style].draw(c.getContext('2d', { willReadFrequently: true }), cw, ch, region, word);
     }
     head.style.left = `${t / END * 100}%`;
     if (range) { rangeEl.style.display = 'block'; rangeEl.style.left = `${range[0] / END * 100}%`; rangeEl.style.width = `${(range[1] - range[0]) / END * 100}%`; } else rangeEl.style.display = 'none';
     const fmt = s => `${Math.floor(s / 60)}:${(s % 60).toFixed(1).padStart(4, '0')}`;
-    $('time').textContent = `${fmt(t)} / ${fmt(END)} · ${t >= clip.duration ? 'targeta final' : `compàs ${Math.floor(g.beatAt(t) / 4) + 1} · ${lit.label}`}${s ? ` · pla ${s.name}` : ''}${range ? ` · tall ${fmt(range[0])}–${fmt(range[1])} (${(range[1] - range[0]).toFixed(1)} s)` : ''}`;
+    $('time').textContent = `${fmt(t)} / ${fmt(END)} · ${t >= CARD_AT ? 'targeta final' : `compàs ${Math.floor(g.beatAt(t) / 4) + 1} · ${lit.label}`}${s ? ` · pla ${s.name}` : ''}${range ? ` · tall ${fmt(range[0])}–${fmt(range[1])} (${(range[1] - range[0]).toFixed(1)} s)` : ''}`;
     $('info').textContent = `~${Math.round(clip.bpm)} BPM`;
     notes.tick();
     requestAnimationFrame(frame);

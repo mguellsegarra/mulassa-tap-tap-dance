@@ -180,7 +180,7 @@
   "ui.profile.field.name": "Nume",
   "ui.profile.guest": "Oaspete",
   "ui.profile.guestText": "Ești oaspete. Dacă ștergi datele browserului, pierzi profilul. Confirmă e-mailul ca să-l păstrezi.",
-  "ui.profile.lead.codeOther": "Acest e-mail aparține deja altui profil. Cu codul trimis la {mail} vei intra în acel profil: {mine} și rezultatele sale nu se adaugă.",
+  "ui.profile.lead.codeOther": "Acest e-mail aparține altui profil. Dacă intri cu codul pe care îl vom trimite la {mail}, {mine} și rezultatele sale vor fi șterse pentru totdeauna. Pentru alt e-mail, anulează.",
   "ui.profile.lead.codeSent": "Ți-am trimis un cod de 6 cifre la {mail}. Verifică și dosarul spam.",
   "ui.profile.lead.create": "Alege o poreclă pentru clasament. 3–16 caractere, fără spații.",
   "ui.profile.lead.link": "Numele tău, pentru totdeauna și cu bifă albastră.",

@@ -123,8 +123,10 @@ await assert.rejects(absent.listAll(),{code:'disabled'});
   await assert.rejects(svc.sendCode('nope'),{code:'email'});
   assert.deepEqual(await svc.sendCode('a@b.cat'),{type:'email_change'}); assert.deepEqual(calls.at(-1),['update',{email:'a@b.cat'}],'a guest profile here: the address goes on it');
   updateError=Object.assign(new Error('x'),{code:'email_exists',status:422});
-  await assert.rejects(svc.sendCode('a@b.cat'),{code:'captcha'},'the address owns a profile: signing in needs a Turnstile token');
-  assert.deepEqual(await svc.sendCode('a@b.cat',{captchaToken:'t'}),{type:'email'}); assert.deepEqual(calls.at(-1),['otp',{email:'a@b.cat',options:{shouldCreateUser:false,captchaToken:'t'}}],'never creates a profile');
+  assert.deepEqual(await svc.sendCode('a@b.cat'),{type:'exists',guest:null}); assert.equal(calls.at(-1)[0],'update','the address owns a profile: nothing sent, the player chooses');
+  await assert.rejects(svc.sendCode('a@b.cat',{signIn:true}),{code:'captcha'},'signing in needs a Turnstile token');
+  calls.length=0; assert.deepEqual(await svc.sendCode('a@b.cat',{captchaToken:'t',signIn:true}),{type:'email'});
+  assert.deepEqual(calls,[['otp',{email:'a@b.cat',options:{shouldCreateUser:false,captchaToken:'t'}}]],'no address change tried; never creates a profile');
   updateError=Object.assign(new Error('x'),{code:'over_email_send_rate_limit',status:429});
   await assert.rejects(svc.sendCode('a@b.cat'),{code:'rate_limit'});
   updateError=null; session=null; otpError=Object.assign(new Error('x'),{code:'otp_disabled',status:422});
@@ -133,6 +135,32 @@ await assert.rejects(absent.listAll(),{code:'disabled'});
   assert.deepEqual(await svc.verifyCode('a@b.cat',' 123 456 ','email'),{email:'a@b.cat'}); assert.deepEqual(calls.at(-1),['verify',{email:'a@b.cat',token:'123456',type:'email'}]);
   verifyError=Object.assign(new Error('x'),{code:'otp_expired',status:403});
   await assert.rejects(svc.verifyCode('a@b.cat','123456','email'),{code:'code'});
+}
+// Switching from a guest to the address's profile deletes the guest the player agreed to leave, with its own token: nobody
+// could reach it again, and its name stays taken otherwise. Never another profile, and never once it has an address.
+{ const invoked=[], events=[]; let session, verifyError=null, deleted=true, fresh;
+  const c8={auth:{getSession:async()=>({data:{session}}),getUser:async t=>({data:{user:fresh(t)}}),
+    updateUser:async()=>({error:Object.assign(new Error('x'),{code:'email_exists',status:422})}),
+    verifyOtp:async()=>{if(verifyError)return {error:verifyError}; session={user:{id:'other'},access_token:'new'};return {data:{user:{id:'other'}},error:null};}},
+    functions:{invoke:async(n,o)=>{invoked.push([n,o]);return {data:{deleted}};}}};
+  const svc=createLeaderboardService({configured:true,publishingEnabled:true,captchaRequired:false,getClient:async()=>c8});
+  svc.onAccount(e=>events.push(e));
+  const guest=()=>{session={user:{id:'guest',is_anonymous:true},access_token:'old'}; fresh=t=>(t==='old'?{id:'guest',is_anonymous:true}:null);};
+  guest(); assert.deepEqual(await svc.sendCode('a@b.cat'),{type:'exists',guest:'guest'},'the question names the guest it is about');
+  verifyError=Object.assign(new Error('x'),{code:'otp_expired',status:403});
+  await assert.rejects(svc.verifyCode('a@b.cat','123456','email',{leave:'guest'}),{code:'code'}); assert.equal(invoked.length,0,'a wrong code deletes nothing');
+  verifyError=null; await svc.verifyCode('a@b.cat','123456','email',{leave:'guest'});
+  assert.deepEqual(invoked,[['delete-player',{body:{},headers:{Authorization:'Bearer old'}}]],'the guest’s token, not the new session’s');
+  assert.deepEqual(events,[{type:'gone',userId:'guest'},{type:'changed'}]);
+  invoked.length=0;
+  guest(); await svc.verifyCode('a@b.cat','123456','email'); assert.equal(invoked.length,0,'no question answered (recover): nothing deleted');
+  guest(); session={user:{id:'guest-b',is_anonymous:true},access_token:'b'}; await svc.verifyCode('a@b.cat','123456','email',{leave:'guest'});
+  assert.equal(invoked.length,0,'another tab switched this browser to another guest meanwhile: that one stays');
+  guest(); fresh=()=>({id:'guest',is_anonymous:false,email:'x@y.cat'}); await svc.verifyCode('a@b.cat','123456','email',{leave:'guest'});
+  assert.equal(invoked.length,0,'another tab confirmed that guest meanwhile: it stays (its address brings it back)');
+  guest(); await svc.verifyCode('a@b.cat','123456','email_change',{leave:'guest'}); assert.equal(invoked.length,0,'an address added to this guest keeps it');
+  events.length=0; deleted=false; guest(); await svc.verifyCode('a@b.cat','123456','email',{leave:'guest'});
+  assert.deepEqual(events,[{type:'changed'}],'a failed deletion still switches; the guest keeps its statistics');
 }
 { let out=0; const c7={auth:{signOut:async a=>{out=a;return {error:null};}}};
   const svc=createLeaderboardService({configured:true,publishingEnabled:false,captchaRequired:true,getClient:async()=>c7});

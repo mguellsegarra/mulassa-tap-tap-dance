@@ -1,11 +1,11 @@
 import { LEADERBOARD_VERSION, normalizeAlias, validResult } from './leaderboard-rules.js';
 import { badgeReads } from './leaderboard-badges.js';
 import { ownRecords } from './leaderboard-own.js';
+import { codeSignIn } from './leaderboard-code.js';
 import { DRAC_SCORE_VERSION, BOU_SCORE_VERSION } from '../game/score-scale.js';
 import { MOCK_BOARD } from '../core/mock-board.js';
 import { fail, translated } from './leaderboard-errors.js';
 import { getClient } from './supabase-client.js';
-import { cleanEmail } from './feedback.js';
 export { LEADERBOARD_VERSION, normalizeAlias } from './leaderboard-rules.js';
 export { getLeaderboardResult, subscribeLeaderboardResult } from './leaderboard-result.js';
 
@@ -203,37 +203,7 @@ export function createLeaderboardService({ configured, publishingEnabled, captch
       catch (error) { throw translated(error); }
     },
     ...ownRecords({ publishingEnabled, client, signedIn, rpc, player }),
-    // Profile recovery, no password: an e-mail address on the guest profile, then a 6-digit code sent to it. sendCode()
-    // attaches the address to this browser's profile (or, if that address already owns one, signs in to it instead) and
-    // returns the `type` verifyCode() needs; verifyCode() finishes it. The address stays in Supabase Auth, never on the board.
-    async sendCode(email, { captchaToken } = {}) {
-      const mail = cleanEmail(email);
-      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(mail)) throw fail('email');
-      return write(async c => {
-        const { data, error } = await c.auth.getSession();
-        if (error) throw error;
-        if (data.session) {
-          const up = await c.auth.updateUser({ email: mail });
-          if (!up.error) return { type: 'email_change' };
-          if (up.error.code !== 'email_exists') throw up.error;
-        }
-        if (captchaRequired && !captchaToken) throw fail('captcha');
-        const { error: otpError } = await c.auth.signInWithOtp({ email: mail, options: { shouldCreateUser: false, captchaToken } });
-        if (otpError) throw otpError;
-        return { type: 'email' };
-      });
-    },
-    async verifyCode(email, code, type) {
-      const mail = cleanEmail(email), token = String(code ?? '').replace(/\D/g, '');
-      if (token.length !== 6 || !['email', 'email_change'].includes(type)) throw fail('code');
-      const out = await write(async c => {
-        const { error } = await c.auth.verifyOtp({ email: mail, token, type });
-        if (error) throw error;
-        return { email: mail };
-      });
-      emit({ type: 'changed' }); // type 'email' may have switched this browser to another profile
-      return out;
-    },
+    ...codeSignIn({ write, emit, captchaRequired }),
     // Leave this browser's profile; it stays on the server (only sensible once an e-mail is on it: sendCode/verifyCode bring it back).
     async signOut() {
       if (writing) throw fail('busy');

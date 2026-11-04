@@ -180,7 +180,7 @@
   "ui.profile.field.name": "Izena",
   "ui.profile.guest": "Gonbidatua",
   "ui.profile.guestText": "Gonbidatua zara. Nabigatzaileko datuak ezabatuz gero, profila galduko duzu. Baieztatu posta gordetzeko.",
-  "ui.profile.lead.codeOther": "Posta hori beste profil bati dagokio. Helbide honetara bidalitako kodearekin profil hartan sartuko zara: {mail}. Zure profila ({mine}) eta haren emaitzak ez zaizkio gehituko.",
+  "ui.profile.lead.codeOther": "Posta hori beste profil batena da. {mail} helbidera bidaliko dugun kodearekin profil hartan sartzen bazara, {mine} eta haren emaitzak betiko ezabatuko dira. Beste posta bat jartzeko, ezeztatu.",
   "ui.profile.lead.codeSent": "6 zifrako kodea bidali dizugu helbide honetara: {mail}. Begiratu spam karpeta ere.",
   "ui.profile.lead.create": "Aukeratu goitizena: sailkapenean agertuko den izena da. 3–16 karaktere, zuriunerik gabe.",
   "ui.profile.lead.link": "Zure izena, betiko eta marka urdinarekin.",

@@ -180,7 +180,7 @@
   "ui.profile.field.name": "Nome",
   "ui.profile.guest": "Ospite",
   "ui.profile.guestText": "Sei ospite. Se cancelli i dati del browser, perderai il profilo. Conferma l’email per conservarlo.",
-  "ui.profile.lead.codeOther": "Questa email appartiene già a un altro profilo. Con il codice inviato a {mail} entrerai in quel profilo: {mine} e i suoi risultati non saranno aggiunti.",
+  "ui.profile.lead.codeOther": "Questa email è già di un altro profilo. Se accedi con il codice che invieremo a {mail}, {mine} e i suoi risultati saranno eliminati per sempre. Per usare un’altra email, annulla.",
   "ui.profile.lead.codeSent": "Ti abbiamo inviato un codice di 6 cifre a {mail}. Controlla anche lo spam.",
   "ui.profile.lead.create": "Scegli un soprannome: apparirà in classifica. 3–16 caratteri, senza spazi.",
   "ui.profile.lead.link": "Il tuo nome, per sempre e con la spunta blu.",

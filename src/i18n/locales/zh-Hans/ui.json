@@ -180,7 +180,7 @@
   "ui.profile.field.name": "名字",
   "ui.profile.guest": "访客",
   "ui.profile.guestText": "你是访客。清除浏览器数据就会丢失档案，验证邮箱就能保住它。",
-  "ui.profile.lead.codeOther": "这个邮箱已属于另一个档案。输入发到{mail}的验证码，会登录那个档案；{mine}及其成绩不会合并进去。",
+  "ui.profile.lead.codeOther": "这个邮箱已属于另一个档案。用即将发送到{mail}的验证码登录后，{mine}及其成绩将被永久删除，无法恢复。要改用其他邮箱，请取消。",
   "ui.profile.lead.codeSent": "6位验证码已发到{mail}，也看看垃圾邮件文件夹。",
   "ui.profile.lead.create": "选个昵称作为排行榜上的名字。3–16个字符，不含空格。",
   "ui.profile.lead.link": "你的名字，永久保留，还有蓝色标记。",

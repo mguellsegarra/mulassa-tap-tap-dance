@@ -180,7 +180,7 @@
   "ui.profile.field.name": "Nom",
   "ui.profile.guest": "Convidat",
   "ui.profile.guestText": "Ets convidat. Si esborres les dades del navegador, perdràs el perfil. Confirma el correu per guardar-lo.",
-  "ui.profile.lead.codeOther": "Aquest correu ja és d’un altre perfil. Amb el codi que t’hem enviat a {mail} entraràs en aquell perfil: {mine} i els seus resultats no s’hi afegeixen.",
+  "ui.profile.lead.codeOther": "Aquest correu ja és d’un altre perfil. Si hi entres amb el codi que enviarem a {mail}, {mine} i els seus resultats s’esborraran per sempre. Per posar un altre correu, cancel·la.",
   "ui.profile.lead.codeSent": "T’hem enviat un codi de 6 xifres a {mail}. Mira també la carpeta de correu brossa.",
   "ui.profile.lead.create": "Tria un sobrenom: és el nom que sortirà a la classificació. 3–16 caràcters, sense espais.",
   "ui.profile.lead.link": "El teu nom, per sempre i amb la marca blava.",

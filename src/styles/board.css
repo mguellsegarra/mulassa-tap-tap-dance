@@ -29,7 +29,7 @@ dialog p, #results-actions .btn { overflow-wrap: break-word; }
 #board-list-view:not([hidden]) { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; }
 #publish-menu { width: min(400px, calc(100vw - 32px - var(--sal) - var(--sar))); padding: 18px 20px 12px; }
 #profile-menu { width: min(400px, calc(100vw - 32px - var(--sal) - var(--sar))); max-height: calc(100dvh - 32px - var(--sat) - var(--sab)); padding: 18px 20px 12px; }
-#profile-menu .board-label { display: block; text-align: center; } #profile-code { text-align: center; letter-spacing: .3em; }
+#profile-menu .board-label { display: block; text-align: center; } #profile-lead .profile-hl { color: #f5c518; overflow-wrap: anywhere; } /* the address and the name the question is about */ #profile-code { text-align: center; letter-spacing: .3em; }
 #profile-menu .publish-body { margin-top: 10px; } #profile-menu .sheet-actions { margin-top: 12px; gap: 8px; }
 .board-status { margin: 4px 0; text-align: center; font-size: 15px; line-height: 1.35; color: #e8d8b8; text-wrap: pretty; }
 .board-status:empty { display: none; }

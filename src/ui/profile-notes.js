@@ -65,3 +65,13 @@ export const browserEnv = () => {
   try { standalone ||= Boolean(globalThis.matchMedia?.('(display-mode: standalone)').matches); } catch { /* no media queries */ }
   return { ua: String(nav.userAgent || ''), standalone, touch: Number(nav.maxTouchPoints) || 0 };
 };
+// The profile block's icons (src/ui/profile-ui.js): the pencil beside the mark, and each button's, at a glance (static markup, the label stays text)
+export const BADGE_PENCIL = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16zM13.5 6.5l4 4"/></svg>';
+const svg = d => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${d}"/></svg>`;
+const BTN_ICON = {
+  link: `<span class="verified-check" aria-hidden="true">${CHECK_SVG}</span>`,
+  delete: svg('M4 7h16M9 7V4h6v3M6.5 7l1 13h9l1-13M10 11v5M14 11v5'),
+  rename: svg('M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16zM13.5 6.5l4 4'),
+  signout: svg('M10 8V6a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-7a2 2 0 0 1-2-2v-2M15 12H3l3-3M6 15l-3-3'),
+};
+export const labelProfileBtn = (b, act, text) => { b.textContent = text; if (BTN_ICON[act]) b.insertAdjacentHTML('afterbegin', BTN_ICON[act]); };

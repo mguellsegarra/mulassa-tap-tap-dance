@@ -180,7 +180,7 @@
   "ui.profile.field.name": "Name",
   "ui.profile.guest": "Gast",
   "ui.profile.guestText": "Du bist Gast. Löschst du die Browserdaten, verlierst du dein Profil. Bestätige die E-Mail, um es zu sichern.",
-  "ui.profile.lead.codeOther": "Diese E-Mail gehört zu einem anderen Profil. Mit dem Code an {mail} meldest du dich dort an: {mine} und dessen Ergebnisse werden nicht übernommen.",
+  "ui.profile.lead.codeOther": "Diese E-Mail gehört zu einem anderen Profil. Wenn du dich dort mit dem Code anmeldest, den wir an {mail} senden, werden {mine} und alle zugehörigen Ergebnisse endgültig gelöscht. Für eine andere E-Mail wähle Abbrechen.",
   "ui.profile.lead.codeSent": "Ein Code mit 6 Ziffern ist unterwegs an {mail}. Schau auch im Spam nach.",
   "ui.profile.lead.create": "Wähle einen Spitznamen für die Rangliste. 3–16 Zeichen, ohne Leerzeichen.",
   "ui.profile.lead.link": "Dein Name, für immer und mit blauem Häkchen.",

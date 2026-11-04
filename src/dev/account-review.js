@@ -93,10 +93,12 @@ async function reach(ctx) {
     press('publish-send');
   };
   const published = async () => { await publish(); await until(() => $('publish-form').dataset.view === 'done' && !$('publish-send').disabled, 'Publicat!'); };
-  const mail = async (address = 'prova@exemple.cat') => {
+  // other: the address owns another profile, so the sheet stops at its question (nothing sent yet)
+  const mail = async (address = 'prova@exemple.cat', other = false) => {
     await until(() => $('profile-menu').open && shown($('profile-email')), 'the e-mail step');
     type('profile-email', address); press('profile-send');
-    await until(() => shown($('profile-code')) && !$('profile-send').disabled, 'the code step');
+    if (other) await until(() => !$('profile-keep').hidden && !$('profile-send').disabled, 'the switch question');
+    else await until(() => shown($('profile-code')) && !$('profile-send').disabled, 'the code step');
   };
   // the Perfil sheet (the corner row's person), its profile block answered
   const settings = async () => { await need('openProfile')(); await until(() => !$('profile-row').dataset.pending && $('profile-row').dataset.state, 'the profile block'); };
@@ -111,7 +113,7 @@ async function reach(ctx) {
       await until(() => $('profile-status').textContent === 'Correu confirmat!', 'Correu confirmat!');
       return;
     case 'released-name': await settings(); press('profile-main'); await need('renameReady')(); return; // the released guest's block, then its name sheet
-    case 'switch': await settings(); press('profile-main'); return mail(OTHER_MAIL);
+    case 'switch': await settings(); press('profile-main'); return mail(OTHER_MAIL, true);
     case 'board-empty': case 'board-drac': case 'board-drac-empty':
       return need('openBoard')(state === 'board-empty' ? {} : { figure: 'drac-valls' });
     case 'seasons': case 'seasons-later': case 'seasons-many': return need('openSeasons')();

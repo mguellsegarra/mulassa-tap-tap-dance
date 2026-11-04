@@ -180,7 +180,7 @@
   "ui.profile.field.name": "Nom",
   "ui.profile.guest": "Invité",
   "ui.profile.guestText": "Tu es invité. Si tu effaces les données du navigateur, tu perdras ton profil. Confirme ton e-mail pour le garder.",
-  "ui.profile.lead.codeOther": "Cet e-mail appartient déjà à un autre profil. Le code envoyé à {mail} te connectera à cet autre profil : {mine} et ses résultats n’y seront pas ajoutés.",
+  "ui.profile.lead.codeOther": "Cet e-mail appartient déjà à un autre profil. Si tu t’y connectes avec le code qu’on enverra à {mail}, {mine} et ses résultats seront supprimés pour toujours. Pour un autre e-mail, annule.",
   "ui.profile.lead.codeSent": "Un code à 6 chiffres a été envoyé à {mail}. Regarde aussi dans les spams.",
   "ui.profile.lead.create": "Choisis un pseudo pour le classement. 3–16 caractères, sans espaces.",
   "ui.profile.lead.link": "Ton pseudo, pour toujours et avec la coche bleue.",

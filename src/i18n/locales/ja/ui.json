@@ -180,7 +180,7 @@
   "ui.profile.field.name": "名前",
   "ui.profile.guest": "ゲスト",
   "ui.profile.guestText": "ゲストとして利用中です。ブラウザーのデータを消すとプロフィールを失います。メールを認証して残しておこう。",
-  "ui.profile.lead.codeOther": "このメールは別のプロフィールに登録済みです。{mail}に送ったコードでそのプロフィールに入ります。{mine}とその結果は統合されません。",
+  "ui.profile.lead.codeOther": "このメールは別のプロフィールに登録済みです。{mail}に送るコードでログインすると、{mine}とその結果が完全に削除され、元に戻せません。別のメールを使うにはキャンセルしてね。",
   "ui.profile.lead.codeSent": "{mail}に6桁のコードを送りました。迷惑メールフォルダーも確認してね。",
   "ui.profile.lead.create": "ニックネームを選ぼう。ランキングに表示される名前です。3–16文字、スペースなし。",
   "ui.profile.lead.link": "あなたの名前を、青いマークとともにずっと。",

@@ -153,7 +153,8 @@ assert.equal((await svc.identity()).hasSession, false);
   assert.equal((await fresh.listAll()).find(r => r.is_self).verified, true);
   assert.equal(await fresh.myAlias(), 'ProvaNova');
   const sw = mockLeaderboard({ charts, finaleT: song.finale, delay: 0, account: 'guest' });
-  assert.deepEqual(await sw.sendCode(OTHER_MAIL), { type: 'email' }, 'an address with a profile: switch, not merge');
+  assert.equal((await sw.sendCode(OTHER_MAIL)).type, 'exists', 'an address with a profile: asked first, nothing sent');
+  assert.deepEqual(await sw.sendCode(OTHER_MAIL, { signIn: true }), { type: 'email' }, 'then switch, not merge');
   await sw.verifyCode(OTHER_MAIL, MOCK_CODE, 'email'); assert.equal(await sw.myAlias(), 'Castellera777');
   await assert.rejects(mockLeaderboard({ charts, finaleT: song.finale, delay: 0 }).sendCode('ningu@exemple.cat'), { code: 'noprofile' }, 'recovery needs a confirmed address');
 }

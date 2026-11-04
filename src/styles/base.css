@@ -13,7 +13,7 @@ button:focus-visible, a:focus-visible { outline: var(--focus); outline-offset: v
    (icon + label read as one; no gap that changes with the label's length); an optional .sub line below.
    .btn-primary = filled gold (one per sheet), .btn-secondary = outlined, .btn-link = plain text (minor actions). */
 .btn { position: relative; box-sizing: border-box; display: block; width: 100%; min-height: 48px; padding: 8px 20px; border: 2px solid var(--button-border); border-radius: var(--button-radius); background: var(--button-bg); color: var(--button-text); font: 800 18px/1.2 'Baloo 2', system-ui, sans-serif; text-align: center; text-decoration: none; text-wrap: balance; }
-a.btn { display: grid; place-content: center; } /* a link as a button (the in-app tip's jump): a <button> centres its line by itself, a block link left it 3 px high */
+a.btn-primary { display: grid; place-content: center; } /* a link as a main button (the in-app tip's jump): a <button> centres its line by itself, a block link left it 3 px high; not .btn-compact links (share, code), which stay inline-flex */
 .btn > svg { display: inline-block; flex: none; width: 22px; height: 22px; margin: -3px 10px 0 0; vertical-align: middle; }
 .btn .sub { display: block; margin-top: 2px; font-size: 14px; font-weight: 700; color: #e8d8b8; }
 .btn-primary { background: var(--button-gold-bg); color: #2a1a10; }

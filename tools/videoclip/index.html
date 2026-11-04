@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="ca"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Videoclip · Mulassa techno</title>
+<style>
+:root{--bg:#0b0c14;--panel:#151726;--line:#2a2d45;--ink:#e8e9f3;--dim:#8a8daa;--acc:#ff2bd6;--r:10px;--gap:12px}
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:14px system-ui;overflow:hidden}
+#gl{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
+#app{position:fixed;inset:0;display:grid;grid-template-rows:auto 1fr auto;padding:var(--gap);gap:var(--gap)}
+#top{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+#top label,#top button,#top select{font:13px system-ui;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:7px 10px;display:flex;gap:6px;align-items:center;cursor:pointer}
+#top button.on{border-color:var(--acc)}#info{margin-left:auto;font:12px ui-monospace,monospace;color:var(--dim)}
+#frames{display:flex;gap:var(--gap);align-items:center;justify-content:center;min-height:0}
+.frame{position:relative;flex:none;border-radius:4px;outline:1px solid var(--line)}
+.frame .words{position:absolute;inset:0;width:100%;height:100%;display:none;border-radius:4px}
+@font-face{font-family:'Baloo 2';font-weight:800;src:url(/fonts/baloo-2-latin.woff2) format('woff2')}
+@font-face{font-family:'VC Power';src:local('Futura-CondensedExtraBold'),local('Futura Condensed ExtraBold')}
+@font-face{font-family:'Jersey 10';src:url(/fonts/jersey-10-latin.woff2) format('woff2')}
+.frame .name{position:absolute;left:0;top:-20px;font:12px system-ui;color:var(--dim);white-space:nowrap}
+.safe{position:absolute;inset:0;pointer-events:none;display:none}.safes .safe{display:block}
+.safe i{position:absolute;left:0;right:0;background:repeating-linear-gradient(135deg,#ff2bd640 0 6px,#0000 6px 12px);border:1px dashed #ff2bd6aa}
+.safe b{position:absolute;top:0;bottom:0;border-left:1px dashed #1ee3ffcc;border-right:1px dashed #1ee3ffcc}
+#bottom{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:10px;display:grid;gap:8px}
+#bar{display:flex;gap:8px;align-items:center}#bar button{font:14px system-ui;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:var(--r);padding:6px 12px;cursor:pointer}
+#time{font:12px ui-monospace,monospace;color:var(--dim)}
+#tl{position:relative;height:46px;border-radius:6px;overflow:hidden;cursor:pointer;background:var(--bg);touch-action:none}
+#tl .ph{position:absolute;top:0;bottom:0;border-right:1px solid #0008;font:10px system-ui;padding:3px;color:#000c;overflow:hidden}
+#tl canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+#tl .head{position:absolute;top:0;bottom:0;width:2px;background:#fff;pointer-events:none}
+#tl .range{position:absolute;top:0;bottom:0;background:#ffffff22;border-left:2px solid #ffd21e;border-right:2px solid #ffd21e;pointer-events:none;display:none}
+#edit{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--dim)}#edit select,#edit button{font:13px system-ui;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:4px 8px}
+body.render #app{display:none}
+body.picking .frame{cursor:crosshair;outline:2px solid #ffd21e}
+.pin{position:absolute;transform:translate(-50%,-50%);min-width:22px;height:22px;border-radius:11px;background:#ffd21e;color:#000;font:bold 12px system-ui;display:grid;place-items:center;box-shadow:0 0 0 2px #000;pointer-events:none}
+#tl .tick{position:absolute;top:0;bottom:0;width:3px;background:#ffd21e;pointer-events:none}
+#edit{flex-wrap:wrap}.note-form{display:flex;gap:8px;margin-top:6px;flex-basis:100%}.note-form textarea{flex:1;font:14px system-ui;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px}
+.notes-state{font:12px system-ui;color:var(--dim)}.notes{display:flex;flex-direction:column;gap:4px;max-height:20vh;overflow:auto;font-size:13px;color:var(--dim)}
+.note{display:flex;gap:8px;align-items:center}.note .txt{color:var(--ink);flex:1}
+.note button,.note-form button{font:13px system-ui;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:4px 8px;cursor:pointer}
+</style></head>
+<body>
+<canvas id="gl"></canvas>
+<div id="app">
+  <div id="top">
+    <button data-f="yt" class="on">YouTube 16:9</button><button data-f="reel" class="on">Reels / Story / Shorts 9:16</button>
+    <button data-f="post" class="on">Post 4:5</button><button data-f="square">Quadrat 1:1</button>
+    <label><input type="checkbox" id="safes" checked>Zones segures</label>
+    <span id="info"></span>
+  </div>
+  <div id="frames"></div>
+  <div id="bottom">
+    <div id="bar"><button id="play">▶︎</button><button id="mark-in" title="Inici del tall (I)">[ </button><button id="mark-out" title="Final del tall (O)"> ]</button><button id="clear-range">Tot</button><span id="time"></span></div>
+    <div id="tl"><canvas id="wave"></canvas><div class="range"></div><div class="head"></div></div>
+    <div id="edit"></div>
+  </div>
+</div>
+<audio id="audio" src="media/mix.wav" preload="auto"></audio>
+<script type="module" src="./app.js"></script>
+</body></html>

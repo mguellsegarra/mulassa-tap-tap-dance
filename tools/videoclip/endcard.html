@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="ca"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Videoclip · targeta final</title>
+<style>
+@font-face{font-family:'Baloo 2';font-weight:800;src:url(/fonts/baloo-2-latin.woff2) format('woff2')}
+@font-face{font-family:'Baloo 2';font-weight:800;src:url(/fonts/baloo-2-latin-ext.woff2) format('woff2');unicode-range:U+0100-02BA,U+2020,U+20A0-20AB}
+:root{--bg:#0b0c14;--panel:#151726;--line:#2a2d45;--ink:#e8e9f3;--dim:#8a8daa;--gap:16px}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--ink);font:14px system-ui}
+header{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:var(--gap)}
+header button{font:14px system-ui;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 12px;cursor:pointer}
+header button.on{border-color:#f5c518}#t{margin-left:auto;font:12px ui-monospace,monospace;color:var(--dim)}
+main{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:var(--gap);padding:0 var(--gap) var(--gap)}
+main.tall{grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr))}
+figure{margin:0;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;display:grid;gap:8px}
+canvas{width:100%;border-radius:6px;background:#000;display:block}
+figcaption b{display:block;font-size:15px}figcaption span{color:var(--dim);font-size:13px}
+body.render header,body.render main{display:none}body.render canvas#out{position:fixed;left:0;top:0}
+</style></head>
+<body>
+<header>
+  <button id="play">↻ Torna a començar</button><button id="loop" class="on">En bucle</button>
+  <button data-ar="169" class="on">16:9</button><button data-ar="916">9:16</button>
+  <span id="t"></span>
+</header>
+<main id="grid"></main>
+<script type="module" src="./endcard.js"></script>
+</body></html>

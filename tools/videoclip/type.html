@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="ca"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Videoclip · text: contorn i groc àcid</title>
+<style>
+@font-face{font-family:'VC Power';src:local('Futura-CondensedExtraBold'),local('Futura Condensed ExtraBold')}
+@font-face{font-family:'Jersey 10';src:url(/fonts/jersey-10-latin.woff2) format('woff2')}
+:root{--bg:#0b0c14;--panel:#151726;--line:#2a2d45;--ink:#e8e9f3;--dim:#8a8daa;--gap:16px}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--ink);font:14px system-ui}
+header{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:var(--gap)}
+header button{font:14px system-ui;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 12px;cursor:pointer}
+header button.on{border-color:#ff2bd6}#t{margin-left:auto;font:12px ui-monospace,monospace;color:var(--dim)}
+main{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:var(--gap);padding:0 var(--gap) var(--gap)}
+figure{margin:0;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;display:grid;gap:8px}
+canvas{width:100%;border-radius:6px;background:#000;display:block}
+figcaption b{display:block;font-size:15px}figcaption span{color:var(--dim);font-size:13px}
+</style></head>
+<body>
+<header>
+  <button id="play">▶︎ Reprodueix</button>
+  <button data-seg="titol">Títol (inici 0:01)</button><button data-seg="mulassa" class="on">MULASSA (crit a 0:41.8)</button><button data-seg="guapa">GUAPA ×3 (2:03)</button>
+  <button data-ar="916" class="on">9:16</button><button data-ar="169">16:9</button>
+  <span id="t"></span>
+</header>
+<main id="grid"></main>
+<video id="v916" src="media/reel-0-216.36-x0.5.mp4" muted playsinline preload="auto" hidden></video>
+<video id="v169" src="media/yt-0-216.36-x0.5.mp4" muted playsinline preload="auto" hidden></video>
+<audio id="audio" src="media/mix.wav" preload="auto"></audio>
+<script type="module" src="./type.js"></script>
+</body></html>

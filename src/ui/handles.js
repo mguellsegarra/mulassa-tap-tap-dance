@@ -16,4 +16,4 @@ export const freeEl = ctl('free'), musicEl = ctl('music');
 // First paint: index.html's #loader covers the page until the first frame. Shaders are compiled up front (in parallel
 // where KHR_parallel_shader_compile exists, so the cover keeps painting) instead of inside that frame; compile()
 // takes every material, hidden ones too (confetti, fireworks), so none stalls a later frame.
-export const loader = setupLoader(document); // after readiness, finish at least three complete loading lines
+export const loader = setupLoader(document); // after readiness, finish at least one complete loading line

@@ -1,6 +1,6 @@
 import vm from 'node:vm';
 import { readPage } from './page.mjs';
-// The Mulassa loader (src/ui/loader.js + index.html #loader): paints before any JS, releases after readiness and three full phrases,
+// The Mulassa loader (src/ui/loader.js + index.html #loader): paints before any JS, releases after readiness (or the safety timeout) and at least one full phrase, never mid-phrase,
 // only shows later waits past the delay, updates its status line, and respects prefers-reduced-motion.
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -37,44 +37,53 @@ function timedLoader({ start = 0, ...options } = {}) {
   const L = setupLoader(d.doc, { timers, storage: null, random: () => 0, ...options });
   return { ...d, L, run };
 }
-const SHORT = ['a', 'b', 'c', 'd']; // short lines: the 1.6 s floor
-for (const start of [0, 7000]) { // also after a slow module load: elapsed navigation time never skips the three lines
+const SHORT = ['a', 'b', 'c', 'd']; // short lines: the 2 s floor
+for (const start of [0, 7000]) { // also after a slow module load: elapsed navigation time never skips the first full line
   const d = timedLoader({ start });
   d.L.jokes(SHORT);
   const first = d.label.textContent;
   d.run(start + 500); d.L.ready(); d.L.ready();
-  d.run(start + 1599); assert.equal(d.label.textContent, first);
-  assert(d.L.covering, 'a fast load still leaves the first phrase readable');
-  d.run(start + 1600); const second = d.label.textContent;
-  d.run(start + 3200); const third = d.label.textContent;
-  assert.equal(new Set([first, second, third]).size, 3, 'three distinct phrases');
-  d.run(start + 4799); assert(d.L.covering && !d.classes.has('out'));
-  d.run(start + 4800); assert(!d.L.covering && d.classes.has('out'), 'fade only after all three full turns');
-  d.run(start + 5050); assert(d.el.hidden);
-  d.run(start + 20000); assert.equal(d.label.textContent, third, 'no fourth phrase flashes during or after the fade');
+  d.run(start + 1999); assert(d.L.covering && !d.classes.has('out') && d.label.textContent === first, 'a fast load still leaves the first phrase readable');
+  d.run(start + 2000); assert(!d.L.covering && d.classes.has('out'), 'a fast load lifts after one full phrase');
+  d.run(start + 2250); assert(d.el.hidden);
+  d.run(start + 20000); assert.equal(d.label.textContent, first, 'no second phrase flashes during or after the fade');
 }
-{
+{ // a slow load shows as many whole phrases as it needs, and finishes the current one
   const d = timedLoader(); d.L.jokes(SHORT);
-  d.run(5350); const fourth = d.label.textContent;
-  assert(d.L.covering, 'three phrases alone never release a game that is still loading');
-  d.L.ready();
-  d.run(6399); assert(d.L.covering && d.label.textContent === fourth, 'a slow load finishes the current phrase too');
-  d.run(6400); assert(!d.L.covering && d.label.textContent === fourth);
+  const seen = [d.label.textContent];
+  for (const t of [2000, 4000, 6000]) { d.run(t); seen.push(d.label.textContent); }
+  assert.equal(new Set(seen).size, 4, 'distinct phrases while the game is still loading');
+  assert(d.L.covering, 'phrases alone never release a game that is still loading');
+  d.run(6500); d.L.ready();
+  d.run(7999); assert(d.L.covering && d.label.textContent === seen[3], 'readiness mid-phrase never cuts it');
+  d.run(8000); assert(!d.L.covering && d.label.textContent === seen[3]);
 }
-{ // a long line stays up longer (45 ms a character, up to 3 s), so it can be read whole
-  const d = timedLoader(); d.L.jokes(['x', 'y', 'z'].map(c => c.repeat(50)));
-  d.run(1600); const long = d.label.textContent;
-  d.run(3849); assert.equal(d.label.textContent, long);
-  d.run(3850); assert.notEqual(d.label.textContent, long);
+{ // a long line stays up longer (50 ms a character, up to 3.5 s), so it can be read whole
+  const d = timedLoader(); d.L.jokes(['x', 'y', 'z'].map(c => c.repeat(60)));
+  d.run(2000); const long = d.label.textContent;
+  d.run(4999); assert.equal(d.label.textContent, long);
+  d.run(5000); assert.notEqual(d.label.textContent, long);
   const e = timedLoader(); e.L.jokes(['x', 'y', 'z'].map(c => c.repeat(200)));
-  e.run(1600); const huge = e.label.textContent;
-  e.run(4600); assert.notEqual(e.label.textContent, huge, 'never more than 3 s');
+  e.run(2000); const huge = e.label.textContent;
+  e.run(5499); assert.equal(e.label.textContent, huge);
+  e.run(5500); assert.notEqual(e.label.textContent, huge, 'never more than 3.5 s');
 }
 {
   const d = timedLoader({ giveUp: 3500 }); d.L.jokes(SHORT);
-  d.run(3500); assert(!d.L.covering, 'the safety timeout overrides the minimum reading time');
+  d.run(3500); assert(d.L.covering, 'the safety timeout still lets the current phrase finish');
   const last = d.label.textContent;
-  d.run(5000); assert(d.el.hidden && d.label.textContent === last, 'no joke timer survives the timeout');
+  d.run(3999); assert(d.L.covering && d.label.textContent === last);
+  d.run(4000); assert(!d.L.covering, 'the safety timeout lifts at the next phrase boundary without readiness');
+  d.run(6000); assert(d.el.hidden && d.label.textContent === last, 'no joke timer survives the timeout');
+}
+{ // a wait or status under the joke cycle never replaces a joke before its turn ends
+  const d = timedLoader(); d.L.jokes(SHORT);
+  const first = d.label.textContent;
+  const h = d.L.wait('Carregant la música…'); d.L.status('Carregant la música… 40%');
+  assert.equal(d.label.textContent, first, 'the joke keeps the cover line');
+  d.L.ready(); d.run(2000);
+  assert(!d.L.covering && d.label.textContent === 'Carregant la música… 40%', 'the ongoing wait takes over as a card');
+  d.L.done(h);
 }
 {
   const d = timedLoader(); d.L.jokes(SHORT); d.classes.add('fail');

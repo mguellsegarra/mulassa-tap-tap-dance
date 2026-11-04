@@ -20,14 +20,15 @@ export function mulaSpinner(doc = document, { mini = false } = {}) {
   return s;
 }
 
-// Drives #loader: ready() marks the game ready; the cover finishes at least three full joke turns before fading.
+// Drives #loader: ready() marks the game ready; the cover finishes at least one full joke turn before fading, and
+// never cuts a line: a slow load shows as many whole lines as it needs.
 // Without a joke cycle it releases immediately. wait(text) shows a card only if
 // the wait outlasts `delay` (short waits never flash a spinner) and returns a handle for done(handle); cancel() hides
 // whatever is showing. A newer wait replaces an older one (its done() then does nothing). After `giveUp` ms the
-// pre-bundle watchdog checks that a frame exists before lifting; a failed boot keeps its recoverable error card.
+// pre-bundle watchdog checks that a frame exists before lifting (at the end of the current joke); a failed boot keeps its recoverable error card.
 const JOKES_KEY = 'loader-jokes-seen';
 const localStore = () => { try { return globalThis.localStorage; } catch { return null; } };
-export function setupLoader(doc = document, { delay = 300, fade = 250, giveUp = 20000, minJokes = 3, timers = globalThis, storage = localStore(), random = Math.random } = {}) {
+export function setupLoader(doc = document, { delay = 300, fade = 250, giveUp = 20000, minJokes = 1, timers = globalThis, storage = localStore(), random = Math.random } = {}) {
   const el = doc.getElementById('loader'), label = doc.getElementById('loader-text');
   let current = null, timer = 0, fadeTimer = 0, cover = !!el && !el.hidden;
   let jokeTimer = 0, jokesActive = false, gameReady = false;
@@ -51,20 +52,21 @@ export function setupLoader(doc = document, { delay = 300, fade = 250, giveUp = 
     timers.clearTimeout(jokeTimer);
     if (el?.classList?.contains?.('fail')) return; // a boot failure stays until the player retries
     doc.body?.removeAttribute?.('aria-busy');
-    if (current) el?.classList.toggle('page', false); // an ongoing wait continues as a card
+    if (current) { el?.classList.toggle('page', false); set(current.text); } // an ongoing wait continues as a card, with its line
     else show(false);
   };
   const api = {
     get showing() { return !!el && !el.hidden && !el.classList?.contains?.('out'); },
     get covering() { return cover; }, // the page cover is still up (the first load): nothing under it is seen
     get text() { return label?.textContent; },
-    status(text) { if (current) current.text = text; set(text); }, // a new line for what's waiting (a stage, a %)
+    // a new line for what's waiting (a stage, a %); under the joke cycle it waits for the card, so no joke is cut
+    status(text) { if (current) current.text = text; if (!(cover && jokesActive)) set(text); },
     // While the page cover is up, cycle funny lines. The lines already seen on this device (localStorage) go last, so
     // every visit opens with new ones; once all are seen the memory starts over. Never the same line twice in a row.
-    jokes(lines = LOADING_JOKES, every = 1600) {
+    jokes(lines = LOADING_JOKES, every = 2000) {
       if (!cover || !lines.length || jokesActive) return;
       jokesActive = true;
-      const turn = () => Math.min(3000, Math.max(every, 45 * (label?.textContent?.length || 0))); // long lines stay longer, to be read whole
+      const turn = () => Math.min(3500, Math.max(every, 50 * (label?.textContent?.length || 0))); // long lines stay longer, to be read whole
       let shown = 1; // the inline first-paint line gets a full turn too, even after a slow module load
       const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
       let seen = [];
@@ -100,7 +102,7 @@ export function setupLoader(doc = document, { delay = 300, fade = 250, giveUp = 
     wait(text) {
       const h = (current = { text });
       timers.clearTimeout(timer);
-      if (cover) { set(text); return h; } // still under the page cover: just its line
+      if (cover) { if (!jokesActive) set(text); return h; } // still under the page cover: its line, unless a joke owns it
       timer = timers.setTimeout(() => { if (current === h) { set(h.text); show(true); } }, delay);
       return h;
     },
@@ -114,7 +116,7 @@ export function setupLoader(doc = document, { delay = 300, fade = 250, giveUp = 
   if (cover) timers.setTimeout(() => {
     if (!cover) return;
     const checkBoot = doc.defaultView?.__mulassaCheckBoot;
-    if (!checkBoot || checkBoot()) liftCover(); // a hidden tab or failed first frame belongs to the watchdog
+    if (!checkBoot || checkBoot()) api.ready(); // drawn: lift at the end of the current joke; a hidden tab or failed first frame belongs to the watchdog
   }, giveUp);
   return api;
 }

@@ -1,0 +1,62 @@
+{
+ "id": "opus-d-cta-loop",
+ "author": "opus-d",
+ "group": "tiktok",
+ "title": "Perfect loop · lletres GUAPA ×3, 35 s",
+ "format": "reel",
+ "loop": true,
+ "why": "El cor són els tres primers GUAPA (88,93, 91,82 i 94,69) amb les seves lletres: pausa 83,98 → build → segon drop fins a 112,81, salt a 78,21 (últim tram del primer drop) i torna sol a la pausa de 83,98, exactament com fa la cançó: el retorn no és cap unió.\nUnió 112,81→78,21: tots dos són inici de frase del drop i copien el mateix gest de la cançó, la bateria s'atura 3 temps i torna a l'u (−30 dB → −17 dB als dos llocs). Compàs d'abans croma 0,991 i MFCC 6,8; d'après croma 0,996 i MFCC 2,2; directe 0,975. Stems al compàs d'après, el que sona contra el que hauria sonat: bateria −17,8/−17,0, baix −22,2/−21,1, synth −26,6/−28,2 dB; la resta en silenci.\nEl CTA va de punta a punta i s'amaga sol mentre hi ha les lletres.",
+ "segments": [
+  {
+   "from": 83.978,
+   "to": 112.805
+  },
+  {
+   "from": 78.213,
+   "to": 83.978
+  }
+ ],
+ "overlays": [
+  {
+   "type": "cta",
+   "from": 0,
+   "to": 4.93,
+   "y": 0.69
+  },
+  {
+   "type": "cta",
+   "from": 13.0,
+   "to": 14.4,
+   "y": 0.74,
+   "question": false
+  },
+  {
+   "type": "cta",
+   "from": 14.47,
+   "to": 15.87,
+   "y": 0.2,
+   "question": false
+  },
+  {
+   "type": "cta",
+   "from": 21.67,
+   "to": 23.07,
+   "y": 0.2,
+   "question": false
+  },
+  {
+   "type": "cta",
+   "from": 26.0,
+   "to": 27.33,
+   "y": 0.71,
+   "question": false
+  },
+  {
+   "type": "cta",
+   "from": 31.73,
+   "to": 34.53,
+   "y": 0.2,
+   "question": false
+  }
+ ]
+}

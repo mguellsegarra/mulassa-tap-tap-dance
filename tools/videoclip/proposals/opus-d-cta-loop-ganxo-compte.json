@@ -1,0 +1,96 @@
+{
+  "id": "opus-d-cta-loop-ganxo-compte",
+  "author": "opus-d",
+  "group": "tiktok",
+  "title": "Perfect loop · lletres + avís fins al drop (compte enrere)",
+  "format": "reel",
+  "loop": true,
+  "why": "Còpia de l'opus-d-cta-loop aprovat amb frases per retenir fins al drop de 0:17.3 (textos de Codex, joc «compte enrere»). La pregunta amb la píndola surt just després del drop dos plans, i la píndola sola després.",
+  "segments": [
+    {
+      "from": 83.978,
+      "to": 112.805
+    },
+    {
+      "from": 78.213,
+      "to": 83.978
+    }
+  ],
+  "overlays": [
+    {
+      "type": "title",
+      "at": 0.3,
+      "dur": 4.6,
+      "text": "Espera que arrenqui…",
+      "look": "clean",
+      "y": 0.73,
+      "size": 1
+    },
+    {
+      "type": "title",
+      "at": 15.147,
+      "dur": 0.72,
+      "text": "3",
+      "look": "clean",
+      "y": 0.5,
+      "size": 11,
+      "cut": true
+    },
+    {
+      "type": "title",
+      "at": 15.867,
+      "dur": 0.72,
+      "text": "2",
+      "look": "clean",
+      "y": 0.5,
+      "size": 11,
+      "cut": true
+    },
+    {
+      "type": "title",
+      "at": 16.587,
+      "dur": 0.72,
+      "text": "1",
+      "look": "clean",
+      "y": 0.5,
+      "size": 11,
+      "cut": true
+    },
+    {
+      "type": "cta",
+      "from": 17.33,
+      "to": 20.13,
+      "y": 0.16,
+      "size": 1.4,
+      "pillY": 0.74
+    },
+    {
+      "type": "cta",
+      "from": 26,
+      "to": 27.33,
+      "y": 0.71,
+      "question": false
+    },
+    {
+      "type": "cta",
+      "from": 31.73,
+      "to": 34.53,
+      "y": 0.2,
+      "question": false
+    },
+    {
+      "type": "cta",
+      "from": 6.25,
+      "to": 7.8,
+      "y": 0.2,
+      "question": false
+    },
+    {
+      "type": "cta",
+      "from": 9.3,
+      "to": 14.85,
+      "y": 0.2,
+      "question": false
+    }
+  ]
+}

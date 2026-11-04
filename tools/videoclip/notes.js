@@ -30,7 +30,7 @@ export function createNotes(key, ui, ctx, { pause, seek }) {
 
   function start() { // stop and wait for a tap on a frame (or «Sense punt»)
     pause(); picking = true; document.body.classList.add('picking');
-    const c = ctx(); draft = { id: Math.random().toString(36).slice(2, 12), t: +c.t.toFixed(2), bar: c.bar, label: c.label, shot: c.shot, cut: c.cut, fmt: null, x: null, y: null, text: '' };
+    const c = ctx(); draft = { id: Math.random().toString(36).slice(2, 12), t: +c.t.toFixed(2), mix: c.mix, bar: c.bar, label: c.label, shot: c.shot, cut: c.cut, fmt: null, x: null, y: null, text: '' };
     form();
   }
   function form() {
@@ -55,7 +55,7 @@ export function createNotes(key, ui, ctx, { pause, seek }) {
   btn.onclick = start;
   addEventListener('keydown', e => { if (e.key === 'n' && !/TEXTAREA|INPUT|SELECT/.test(e.target.tagName)) start(); });
 
-  const asText = () => notes.map((n, i) => `${i + 1}. ${fmtT(n.t)} (compàs ${n.bar}, ${n.label}, pla ${n.shot}${n.fmt ? `, ${n.fmt} a x ${n.x}% y ${n.y}%` : ', tot el pla'}): ${n.text}`).join('\n');
+  const asText = () => notes.map((n, i) => `${i + 1}. ${n.mix ? `[${n.mix}] ` : ''}${fmtT(n.t)} (compàs ${n.bar}, ${n.label}, pla ${n.shot}${n.fmt ? `, ${n.fmt} a x ${n.x}% y ${n.y}%` : ', tot el pla'}): ${n.text}`).join('\n');
   copy.onclick = async () => {
     const text = `Notes del videoclip (${notes.length}):\n${asText()}\n\n${JSON.stringify(notes)}`;
     try { await navigator.clipboard.writeText(text); copy.textContent = 'Copiades ✓'; }
@@ -66,18 +66,19 @@ export function createNotes(key, ui, ctx, { pause, seek }) {
   // the list under the timeline, and the ticks on it
   function render() {
     list.innerHTML = notes.map((n, i) => `<div class="note"><button data-go="${i}">${i + 1} · ${fmtT(n.t)}</button>
-      <span>${esc(n.label)} · ${esc(n.shot)}${n.fmt ? ` · ${esc(n.fmt)}` : ''}</span> <span class="txt">${esc(n.text)}</span> <button data-del="${i}" title="Esborra">✕</button></div>`).join('');
-    list.querySelectorAll('[data-go]').forEach(b => { b.onclick = () => { pause(); seek(notes[+b.dataset.go].t); }; });
+      <span>${n.mix ? `[${esc(n.mix)}] ` : ''}${esc(n.label)} · ${esc(n.shot)}${n.fmt ? ` · ${esc(n.fmt)}` : ''}</span> <span class="txt">${esc(n.text)}</span> <button data-del="${i}" title="Esborra">✕</button></div>`).join('');
+    list.querySelectorAll('[data-go]').forEach(b => { b.onclick = () => { pause(); seek(notes[+b.dataset.go].t, notes[+b.dataset.go].mix); }; });
     list.querySelectorAll('[data-del]').forEach(b => { b.onclick = () => { const [n] = notes.splice(+b.dataset.del, 1); save(); render(); server({ op: 'del', id: n.id }); }; });
     ui.timeline.querySelectorAll('.tick').forEach(e => e.remove());
     for (const [i, n] of notes.entries()) {
+      if ((n.mix ?? null) !== ctx().mix) continue; // (each montage shows its own notes on its timeline)
       const k = document.createElement('div'); k.className = 'tick'; k.style.left = `${n.t / ctx().duration * 100}%`; k.title = `${i + 1}: ${n.text}`; ui.timeline.append(k);
     }
     pinsKey = '';
   }
   // each frame: the pins of the notes whose shot is on (same cut), numbered as in the list
   function tick() {
-    const c = ctx(), on = notes.map((n, i) => [n, i]).filter(([n]) => n.fmt && n.cut === c.cut);
+    const c = ctx(), on = notes.map((n, i) => [n, i]).filter(([n]) => n.fmt && n.cut === c.cut && (n.mix ?? null) === c.mix);
     if (draft?.fmt) on.push([draft, -1]);
     const k = `${c.layout}|${c.cut}|${on.map(([n, i]) => `${i}${n.fmt}${n.x}${n.y}`).join()}|${Object.keys(c.formats)}`;
     if (k === pinsKey) return; pinsKey = k;
@@ -88,5 +89,5 @@ export function createNotes(key, ui, ctx, { pause, seek }) {
   }
   render();
   fetch('/__videoclip/notes').then(r => r.json()).then(merge).catch(() => { state.textContent = 'notes només en aquest dispositiu (servidor no disponible)'; });
-  return { tick, picking: () => picking };
+  return { refresh: render, tick, picking: () => picking };
 }

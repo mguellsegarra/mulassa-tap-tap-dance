@@ -1,0 +1,19 @@
+{
+  "id": "opus-a-story-1",
+  "author": "opus-a",
+  "group": "stories",
+  "title": "Story 1: MULASSA i drop",
+  "format": "reel",
+  "why": "Idea: impacte directe, del crit MULASSA a la primera ronda sencera del drop amb el terra de colors (14.5 s). Sense unions: un sol tros que comença un compàs abans del crit (veu en silenci) i acaba al final de la ronda de 8 compassos, després del redoble.",
+  "segments": [
+    {
+      "from": 40.666,
+      "to": 55.12
+    }
+  ],
+  "fade": {
+    "in": 0.3,
+    "out": 0.6
+  },
+  "overlays": []
+}

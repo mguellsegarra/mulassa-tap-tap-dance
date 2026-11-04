@@ -1,0 +1,29 @@
+{
+  "id": "opus-a-tiktok",
+  "author": "opus-a",
+  "group": "tiktok",
+  "title": "TikTok: GUAPA, dur i final",
+  "format": "reel",
+  "why": "Idea: entrar de cop al tercer GUAPA, pujada, tram dur, final i cartela (35.9 s), amb la marca mulassa.cat des del primer fotograma. Sense unions: un sol tros de la cançó, que comença al silenci de veu just abans del GUAPA.",
+  "segments": [
+    {
+      "from": 128.576,
+      "to": 164.5
+    }
+  ],
+  "fade": {
+    "in": 0,
+    "out": 0
+  },
+  "overlays": [
+    {
+      "type": "watermark",
+      "from": 0,
+      "to": 29.824
+    },
+    {
+      "type": "endcard",
+      "at": 29.824
+    }
+  ]
+}

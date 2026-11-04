@@ -1,0 +1,74 @@
+{
+ "id": "opus-d-cta-loop-ganxo-casa",
+ "author": "opus-d",
+ "group": "tiktok",
+ "title": "Perfect loop · lletres + avís fins al drop (juganer, de casa)",
+ "format": "reel",
+ "loop": true,
+ "why": "Còpia de l'opus-d-cta-loop aprovat amb frases per retenir fins al drop de 0:17.3 (textos de Codex, joc «juganer, de casa»). La pregunta amb la píndola surt just després del drop dos plans, i la píndola sola després.",
+ "segments": [
+  {
+   "from": 83.978,
+   "to": 112.805
+  },
+  {
+   "from": 78.213,
+   "to": 83.978
+  }
+ ],
+ "overlays": [
+  {
+   "type": "title",
+   "at": 0.3,
+   "dur": 4.6,
+   "text": "Sembla tranquil·la, oi?",
+   "look": "clean",
+   "y": 0.73,
+   "size": 1.0
+  },
+  {
+   "type": "title",
+   "at": 12.2,
+   "dur": 3.1,
+   "text": "Espera't, que és de Valls.",
+   "look": "clean",
+   "y": 0.17,
+   "size": 1.0
+  },
+  {
+   "type": "title",
+   "at": 15.3,
+   "dur": 1.95,
+   "text": "Ara ve la festa.",
+   "look": "clean",
+   "y": 0.17,
+   "size": 1.0
+  },
+  {
+   "type": "cta",
+   "from": 17.33,
+   "to": 20.13,
+   "y": 0.69
+  },
+  {
+   "type": "cta",
+   "from": 20.2,
+   "to": 21.6,
+   "y": 0.16
+  },
+  {
+   "type": "cta",
+   "from": 26.0,
+   "to": 27.33,
+   "y": 0.71,
+   "question": false
+  },
+  {
+   "type": "cta",
+   "from": 31.73,
+   "to": 34.53,
+   "y": 0.2,
+   "question": false
+  }
+ ]
+}

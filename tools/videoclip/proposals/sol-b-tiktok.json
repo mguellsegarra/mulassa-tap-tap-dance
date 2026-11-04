@@ -1,0 +1,36 @@
+{
+  "id": "sol-b-tiktok",
+  "author": "sol-b",
+  "group": "tiktok",
+  "title": "Tres crits i un esclat",
+  "format": "reel",
+  "why": "GUAPA ×3 com a ganxo, una ordre breu i esclat hard: el watermark mulassa.cat acompanya des del primer fotograma a la zona segura. Títol (provisional) després dels crits; cartell aprovat al final.\n35,803 s seguits des del beat 340, sense unió artificial ni canvi d'stems inventat. La baixada de tensió i l'entrada hard a 135,717 són originals; el cartell cobreix els últims 5,5 s d'outro.",
+  "segments": [
+    {
+      "from": 122.869,
+      "to": 158.672
+    }
+  ],
+  "fade": {
+    "in": 0.04,
+    "out": 0.5
+  },
+  "overlays": [
+    {
+      "type": "watermark",
+      "from": 0,
+      "to": 35.803
+    },
+    {
+      "type": "title",
+      "at": 10.347,
+      "dur": 0.95,
+      "text": "ARA.",
+      "look": "over"
+    },
+    {
+      "type": "endcard",
+      "at": 30.303
+    }
+  ]
+}

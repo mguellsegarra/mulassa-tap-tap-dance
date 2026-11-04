@@ -1,0 +1,19 @@
+{
+  "id": "opus-a-story-2",
+  "author": "opus-a",
+  "group": "stories",
+  "title": "Story 2: GUAPA i el tram dur",
+  "format": "reel",
+  "why": "Idea: l'últim GUAPA amb lletres a pantalla completa i la pujada cap al tram dur vermell i blanc (12.9 s); s'atura abans del final per no espatllar la sorpresa. Sense unions: comença al silenci de veu abans del GUAPA (−72 dB) i acaba al final de la frase de 4 compassos del tram dur, amb fosa.",
+  "segments": [
+    {
+      "from": 128.576,
+      "to": 141.434
+    }
+  ],
+  "fade": {
+    "in": 0.2,
+    "out": 0.8
+  },
+  "overlays": []
+}

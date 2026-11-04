@@ -1,0 +1,42 @@
+{
+  "id": "sol-b-reel",
+  "author": "sol-b",
+  "group": "reel",
+  "title": "Més. I encara més.",
+  "format": "reel",
+  "why": "Dos cops de drop, GUAPA ×3, esclat vermell i blanc i cartell final: una escalada de promo. Títols (provisional) de dos cops, entre les lletres cantades.\nÚnica unió 107,050 → 118,560, salt de 8 compassos sobre el mateix drop: RMS del compàs previ bateria −0,36 dB, baix +0,24 dB; cosinus cromàtic 0,994 i envolupants 0,997/0,999. Sintetitzador +3,98 dB: la semblança mesurada no substitueix l'escolta.\nLa resta és contínua: els crits desemboquen en el hard amb la transició que ja fa la cançó. Cartell de 5,5 s sobre la sortida.",
+  "segments": [
+    {
+      "from": 101.285,
+      "to": 107.05
+    },
+    {
+      "from": 118.56,
+      "to": 163.9
+    }
+  ],
+  "fade": {
+    "in": 0.06,
+    "out": 0.25
+  },
+  "overlays": [
+    {
+      "type": "title",
+      "at": 5.765,
+      "dur": 1,
+      "text": "MÉS.",
+      "look": "over"
+    },
+    {
+      "type": "title",
+      "at": 22.922,
+      "dur": 0.9,
+      "text": "ARA.",
+      "look": "over"
+    },
+    {
+      "type": "endcard",
+      "at": 45.605
+    }
+  ]
+}

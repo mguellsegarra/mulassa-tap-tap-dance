@@ -1,0 +1,24 @@
+{
+  "id": "sol-a-reel",
+  "author": "sol-a",
+  "group": "reel",
+  "title": "Tres GUAPA i esclat",
+  "format": "reel",
+  "why": "GUAPA entra a 0,636 s; els tres crits fan esperar el terra vermell i blanc, que esclata a 12,848 s. El desenllaç i la pregunta final tanquen la peça.\nTram continu: inici al beat 340, primer temps exacte; cap unió interna ni canvi de stems artificial. El hard arriba al beat 376, conservant sencera la pujada de 9 compassos.",
+  "segments": [
+    {
+      "from": 122.869,
+      "to": 164.5
+    }
+  ],
+  "fade": {
+    "in": 0,
+    "out": 0
+  },
+  "overlays": [
+    {
+      "type": "endcard",
+      "at": 36.131
+    }
+  ]
+}

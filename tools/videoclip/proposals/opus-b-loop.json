@@ -1,0 +1,16 @@
+{
+  "id": "opus-b-loop",
+  "author": "opus-b",
+  "group": "tiktok",
+  "title": "Perfect loop · GUAPA i tram dur, 23 s",
+  "format": "reel",
+  "loop": true,
+  "why": "Un loop que respira: comença al build del segon GUAPA ×3 amb les lletres a pantalla completa, entra al tram dur vermell i blanc, repeteix un cop el seu riff (Do-Re-Fa-Do) i torna al GUAPA. Només sonen bateria i baix (més la veu als crits) a tot arreu, sense sintetitzador. Unió 141,43→137,15: copia l'entrada que la cançó ja fa a 137,15 (compàs d'abans igual: croma 0,998, MFCC 0,994; stems dins 0,7 dB). Tancament 141,43→122,87: després del cicle complet del riff, que la cançó segueix en Do igual que el build (croma del compàs abans 0,955, després 0,975, directe 0,970); la bateria baixa de −17 a −22 dB i el baix de −18 a −22, el mateix descens que fa la cançó en entrar al build. Marca d'aigua de punta a punta.",
+  "segments": [
+    { "from": 122.869, "to": 141.434 },
+    { "from": 137.152, "to": 141.434 }
+  ],
+  "overlays": [
+    { "type": "watermark", "from": 0, "to": 22.847 }
+  ]
+}

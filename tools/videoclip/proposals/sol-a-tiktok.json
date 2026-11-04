@@ -1,0 +1,29 @@
+{
+  "id": "sol-a-tiktok",
+  "author": "sol-a",
+  "group": "tiktok",
+  "title": "GUAPA, hard i pregunta",
+  "format": "reel",
+  "why": "GUAPA a 0,636 s, tres crits i el hard sense interrupció: un petit arc complet. mulassa.cat és visible des del primer fotograma a la zona segura; la pregunta ocupa els últims 5,5 s.\nBeats 340 → 440: 35,803 s i 25 compassos. Cap unió interna ni salt de stems; conservo sencera la pujada i els 6 compassos hard. La cartela s'avança sobre l'outro, sense canviar l'àudio.",
+  "segments": [
+    {
+      "from": 122.869,
+      "to": 158.672
+    }
+  ],
+  "fade": {
+    "in": 0,
+    "out": 0
+  },
+  "overlays": [
+    {
+      "type": "watermark",
+      "from": 0,
+      "to": 30.303
+    },
+    {
+      "type": "endcard",
+      "at": 30.303
+    }
+  ]
+}

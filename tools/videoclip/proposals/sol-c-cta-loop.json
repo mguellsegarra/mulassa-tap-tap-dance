@@ -1,0 +1,34 @@
+{
+  "id": "sol-c-cta-loop",
+  "author": "sol-c",
+  "group": "tiktok",
+  "title": "Perfect loop · lletres GUAPA, cop de HARD",
+  "format": "reel",
+  "loop": true,
+  "why": "24,292 s: obro al terra vermell i blanc, encadeno tres voltes del HARD i deixo respirar el GUAPA de 129,205 s, amb les lletres completes, abans de recuperar el cop fort. HARD: 17,151 s (71%). CTA durant tot el loop, amagada automàticament sota les lletres.\nRetorn 138,576 → 138,576 s, beat 384, inici de compàs: continuació original exacta dins del HARD, sense salt de frase ni canvi de stems. Croma STFT cosinus 1,0000 i distància RMS MFCC de 13 coeficients 0,000 en mix, bateria i baix, comparant el primer compàs amb la continuació original (mono, 22.050 Hz).\nRMS per stem abans/després del retorn, compassos 137,152–138,576 / 138,576–140,005 s, estèreo dBFS: bateria −16,60/−16,71; baix −18,98/−19,82; veu −117,03/silenci; Other −82,48/−77,09; percussió, cordes, synth, metalls i fustes en silenci digital. Les variacions són les del compàs original, sense discontinuïtat afegida.\nUnions internes a compàs: 141,434 → 135,717 reprèn el riff complet (continuació: croma mix/bateria/baix 0,9988/0,9983/0,9974; distància MFCC RMS 3,715/2,699/7,133). 141,434 → 128,576 obre el compàs del tercer crit: baix continuació croma 0,9790, MFCC 43,374; baixa la bateria i entra la veu deliberadament. El retorn exterior conserva la continuïtat original; l'escolta del muntatge queda per validar.",
+  "segments": [
+    {
+      "from": 138.576,
+      "to": 141.434
+    },
+    {
+      "from": 135.717,
+      "to": 141.434
+    },
+    {
+      "from": 135.717,
+      "to": 141.434
+    },
+    {
+      "from": 128.576,
+      "to": 138.576
+    }
+  ],
+  "overlays": [
+    {
+      "type": "cta",
+      "from": 0,
+      "to": 24.292
+    }
+  ]
+}

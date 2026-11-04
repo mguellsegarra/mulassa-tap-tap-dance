@@ -1,0 +1,19 @@
+{
+  "id": "sol-a-impact-story-1",
+  "author": "sol-a",
+  "group": "stories",
+  "title": "Impacte: ball directe",
+  "format": "reel",
+  "why": "Primer fotograma al drop, amb ball i terra encès, sense portada ni espera. Vuit compassos donen una volta curta que convida a repetir.\nBeats 280 → 312: 11,520 s, dos inicis de frase exactes. Tram continu, sense unions; el retorn visual i musical al primer drop és una proposta de bucle, no una continuïtat garantida.",
+  "segments": [
+    {
+      "from": 101.285,
+      "to": 112.805
+    }
+  ],
+  "fade": {
+    "in": 0,
+    "out": 0
+  },
+  "overlays": []
+}

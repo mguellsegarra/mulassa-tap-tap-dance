@@ -1,0 +1,16 @@
+{
+  "id": "opus-c-cta-loop",
+  "author": "opus-c",
+  "group": "tiktok",
+  "title": "Perfect loop · lletres GUAPA i tram dur, 23 s",
+  "format": "reel",
+  "loop": true,
+  "why": "Ganxo: arrenca al compàs 125,72 i el GUAPA (retallBlanc) omple la pantalla als 0,65 s, després l'invertit; entra al tram dur vermell i blanc i en repeteix el riff (Re-Fa-Do-Do) un cop. Només bateria i baix (i la veu als crits) a tot arreu, sense synth.\nEl build i el tram dur fan el mateix riff de baix (Do | Re Fa Do Do | Re…), així que el retorn 142,86→125,72 cau al mateix lloc de l'harmonia: compàs d'abans Do i compàs de després Re a tots dos costats. Croma (mix) abans 0,973 i després 0,958, MFCC abans 0,936; baix croma 0,979/0,977, nivell −18,4/−21,4 dB; bateria croma 0,993/0,975 i baixa de −16,8 a −34,1 dB, el mateix compàs on la cançó ja la deixa a −34,1 (ve de −21,8).\nUnió interna 142,86→137,15 (Re a Re dins el tram dur): croma 0,999/0,996, MFCC 0,993/0,994, bateria i baix dins 0,6 dB. CTA a tot el loop; s'amaga sol mentre hi ha les lletres.",
+  "segments": [
+    { "from": 125.722, "to": 142.864 },
+    { "from": 137.152, "to": 142.864 }
+  ],
+  "overlays": [
+    { "type": "cta", "from": 0, "to": 22.854 }
+  ]
+}

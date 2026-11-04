@@ -1,0 +1,26 @@
+{
+  "id": "opus-a-loop",
+  "author": "opus-a",
+  "group": "tiktok",
+  "title": "Perfect loop: primer drop, 8 compassos",
+  "format": "reel",
+  "loop": true,
+  "why": "Una sola frase de 8 compassos del primer drop (55.12–66.672, 11.55 s): posada 2 vegades (23.1 s, per arribar als 20 s mínims de TikTok), de manera que cada unió i la tornada són el mateix tall, a l'inici de frase.\nCompàs després del final (66.672) contra compàs d'inici (55.12): croma 0.997, MFCC 0.997, croma del synth 0.975; bateria −16.4/−17.0 dB, baix −22.6/−21.3, synth −28.4/−28.0.\nCompàs abans del final contra compàs abans de l'inici: croma 0.968, MFCC 0.996; el final porta el forat de baix de 2 temps que sempre precedeix l'inici de frase, de manera que la tornada sona com el canvi de frase natural.",
+  "segments": [
+    {
+      "from": 55.12,
+      "to": 66.672
+    },
+    {
+      "from": 55.12,
+      "to": 66.672
+    }
+  ],
+  "overlays": [
+    {
+      "type": "watermark",
+      "from": 0,
+      "to": 23.104
+    }
+  ]
+}

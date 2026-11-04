@@ -1,0 +1,17 @@
+{
+  "id": "opus-b-tiktok",
+  "author": "opus-b",
+  "group": "tiktok",
+  "title": "Opus B · TikTok 29 s, nom, drop, cop final",
+  "format": "reel",
+  "why": "Sense preàmbul: el primer fotograma ja és la Mulassa a la pista amb el build a punt, al segon i mig el crit MULASSA, drop, i en lloc d'una segona ronda igual salta al tram dur vermell i blanc; acaba amb la targeta. La unió 55,12→135,72 va del redoblament del drop a l'entrada del hard (stems d'arribada 0,15, croma 0,99). Marca d'aigua des del primer fotograma.",
+  "segments": [
+    { "from": 40.666, "to": 55.12 },
+    { "from": 135.717, "to": 149.8 }
+  ],
+  "fade": { "in": 0, "out": 0.5 },
+  "overlays": [
+    { "type": "watermark", "from": 0, "to": 23.03 },
+    { "type": "endcard", "at": 23.03 }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+ "author": "claude",
+ "group": "tiktok",
+ "format": "reel",
+ "loop": true,
+ "id": "opus-d-hard-loop",
+ "title": "Perfect loop · lletres GUAPA ×3 sobre el hard, 16 s",
+ "why": "Variant de l'opus-d: el hard entra al compàs de 0:04.3, just abans del primer GUAPA, i els tres crits (veu de la pista de veu i lletres) cauen sobre el hard als seus instants de sempre. Unions: break 88,31 → hard 135,72 (croma 0,96 després; entra la bateria com en un drop) i hard 141,43 → drop 78,21 (croma 0,987/0,988, bateria igual); la tornada 83,98 → 83,98 és contínua.",
+ "segments": [
+  {
+   "from": 83.978,
+   "to": 88.309
+  },
+  {
+   "from": 135.717,
+   "to": 141.434
+  },
+  {
+   "from": 78.213,
+   "to": 83.978
+  }
+ ],
+ "overlays": [
+  {
+   "type": "shout",
+   "at": 4.952,
+   "index": 1
+  },
+  {
+   "type": "shout",
+   "at": 7.842,
+   "index": 2
+  },
+  {
+   "type": "shout",
+   "at": 10.712,
+   "index": 3
+  },
+  {
+   "type": "cta",
+   "from": 0,
+   "to": 4.27,
+   "y": 0.69
+  },
+  {
+   "type": "cta",
+   "from": 12.93,
+   "to": 15.8,
+   "y": 0.2,
+   "question": false
+  }
+ ]
+}

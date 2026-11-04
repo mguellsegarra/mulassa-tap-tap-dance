@@ -1,0 +1,28 @@
+{
+  "id": "opus-a-reel",
+  "author": "opus-a",
+  "group": "reel",
+  "title": "Reel: MULASSA, GUAPA i dur",
+  "format": "reel",
+  "why": "Idea: del crit MULASSA a set compassos del primer drop, i d'allà al segon GUAPA ×3, el tram dur, el final i la cartela (54.6 s). Unió única (53.67→122.87): repeteix l'estructura de la unió aprovada (set compassos de drop → build GUAPA); el compàs abans del tall i el que precedeix el build a la cançó coincideixen (croma 0.985, cap pista >2.9 dB). No talla cap frase de veu: la veu és en silenci.",
+  "segments": [
+    {
+      "from": 40.666,
+      "to": 53.674
+    },
+    {
+      "from": 122.869,
+      "to": 164.5
+    }
+  ],
+  "fade": {
+    "in": 0.3,
+    "out": 0
+  },
+  "overlays": [
+    {
+      "type": "endcard",
+      "at": 48.539
+    }
+  ]
+}

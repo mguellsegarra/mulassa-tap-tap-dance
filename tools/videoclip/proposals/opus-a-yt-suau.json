@@ -1,0 +1,32 @@
+{
+  "id": "opus-a-yt-suau",
+  "author": "opus-a",
+  "group": "youtube",
+  "title": "YT suau: sense rondes repetides",
+  "format": "yt",
+  "why": "Idea: treure només les rondes més repetides (la 2a del drop 1 i la 2a del drop 2): 2:21, 23 s menys, amb les unions de millor mesura. Unió 1 (55.12→66.67): copia el pas de la ronda 2 a la 3 (redoble de final de ronda → entren les cordes); compàs anterior redoble contra redoble, croma 0.98, cap pista >3.4 dB. Unió 2 (111.37→122.87): mateix 7è compàs de ronda que la unió aprovada drop→GUAPA: croma 0.99, cap pista >1.1 dB.",
+  "segments": [
+    {
+      "from": 0,
+      "to": 55.12
+    },
+    {
+      "from": 66.672,
+      "to": 111.365
+    },
+    {
+      "from": 122.869,
+      "to": 164.5
+    }
+  ],
+  "fade": {
+    "in": 0.4,
+    "out": 0
+  },
+  "overlays": [
+    {
+      "type": "endcard",
+      "at": 135.344
+    }
+  ]
+}

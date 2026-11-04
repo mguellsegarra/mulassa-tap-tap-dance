@@ -1,0 +1,24 @@
+{
+  "id": "sol-b-pulse-story-3",
+  "author": "sol-b",
+  "group": "stories",
+  "title": "3 · Ara, juga",
+  "format": "reel",
+  "why": "Resolc l'expectativa amb sis compassos de hard, el terra vermell i blanc i la sortida. El cartell aprovat tanca la seqüència i manté el vídeo viu a sota.\nFragment continu des del beat 376: 15,403 s sense cap unió als stems. Conservo la transició hard → outro original a 144,293; cartell als 9,903 s i 5,5 s complets fins al negre.",
+  "segments": [
+    {
+      "from": 135.717,
+      "to": 151.12
+    }
+  ],
+  "fade": {
+    "in": 0,
+    "out": 0.5
+  },
+  "overlays": [
+    {
+      "type": "endcard",
+      "at": 9.903
+    }
+  ]
+}

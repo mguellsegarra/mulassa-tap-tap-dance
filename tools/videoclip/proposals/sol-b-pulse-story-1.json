@@ -1,0 +1,31 @@
+{
+  "id": "sol-b-pulse-story-1",
+  "author": "sol-b",
+  "group": "stories",
+  "title": "1 · Impacte sense espera",
+  "format": "reel",
+  "why": "Impacte des del primer fotograma: quatre compassos i tres més de ball; sense portada estàtica ni cartell que freni l'entrada. Títol (provisional) curt al salt.\n107,050 → 118,560 és un salt de 8 compassos dins del drop: RMS bateria/baix −0,36/+0,24 dB, cosinus cromàtic 0,994; envolupants 0,997/0,999. Final a 122,869, abans del crit, sense tallar cap síl·laba.",
+  "segments": [
+    {
+      "from": 101.285,
+      "to": 107.05
+    },
+    {
+      "from": 118.56,
+      "to": 122.869
+    }
+  ],
+  "fade": {
+    "in": 0,
+    "out": 0.08
+  },
+  "overlays": [
+    {
+      "type": "title",
+      "at": 5.765,
+      "dur": 0.8,
+      "text": "MÉS.",
+      "look": "over"
+    }
+  ]
+}

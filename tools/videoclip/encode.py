@@ -20,12 +20,14 @@ v.options = {'crf': crf, 'preset': 'slow'} if hevc else {'crf': crf, 'preset': '
 if hevc: v.codec_tag = 'hvc1'  # (the tag Apple's players need for H.265 in MP4)
 import json
 MUSIC = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'edit.json'))).get('musicFade', 1.0)  # (1 s cut off audibly into the end card)
-LEAD, FADE_IN, FADE_OUT, MUSIC_OUT = (2.0, 1.5, 2.0, MUSIC) if t0 == 0 else (0, 0, 0, 0)  # (s; a test span: none)
+loop = os.environ.get('VIDEOCLIP_LOOP') == '1'  # (a perfect loop: no lead-in or fades, it replays seamlessly)
+LEAD, FADE_IN, FADE_OUT, MUSIC_OUT = (2.0, 1.5, 2.0, MUSIC) if t0 == 0 and not loop else (0, 0, 0, 0)  # (s; a test span: none)
 audio, sr = sf.read(wav, dtype='float32', always_2d=True)
 audio = audio[int(t0 * sr):int(t1 * sr)]
-fade = min(len(audio), int(sr * .05))  # 50 ms fades: a cut on a bar should not click
-audio[:fade] *= np.linspace(0, 1, fade)[:, None]
-out_n = max(fade, int(sr * MUSIC_OUT)); audio[len(audio) - out_n:] *= np.linspace(1, 0, out_n)[:, None] ** 2
+fade = 0 if loop else min(len(audio), int(sr * .05))  # 50 ms fades: a cut on a bar should not click (a loop: none, it joins itself)
+if fade: audio[:fade] *= np.linspace(0, 1, fade)[:, None]
+out_n = max(fade, int(sr * MUSIC_OUT))
+if out_n: audio[len(audio) - out_n:] *= np.linspace(1, 0, out_n)[:, None] ** 2
 audio = np.concatenate([np.zeros((int(LEAD * sr), 2), np.float32), audio, np.zeros((int(tail / fps * sr), 2), np.float32)])
 s = c.add_stream('aac', rate=sr); s.layout = 'stereo'; s.bit_rate = 256000
 lead, n = int(LEAD * fps), len(files) - tail

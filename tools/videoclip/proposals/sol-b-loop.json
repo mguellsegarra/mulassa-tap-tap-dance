@@ -1,0 +1,101 @@
+{
+  "id": "sol-b-loop",
+  "author": "sol-b",
+  "group": "tiktok",
+  "title": "Perfect loop · De cop al neó",
+  "format": "reel",
+  "loop": true,
+  "why": "Entrada directa al primer drop: pla inclinat de la Mulassa i terra LED encès des del primer fotograma; el retorn funciona com un altre tall al cop.\n49,344–72,442 s: 16 compassos, beats 136→200, límits de motiu de quatre compassos dins del mateix drop, sense veu ni canvi de secció.\nUn compàs abans/després de cada punt: mix ΔRMS −0,8/0,0 dB, cosinus chroma 0,987/0,998 i RMSE MFCC 5,15/2,91; bateria, baix i synth presents als quatre costats.\nRMS per stem i costat a les mesures adjuntes: cordes −67,2…−48,1 dBFS; la similitud mesurada avala el candidat, però no substitueix escoltar el retorn ni revisar-lo en vídeo.",
+  "segments": [
+    {
+      "from": 49.344,
+      "to": 72.442
+    }
+  ],
+  "overlays": [
+    {
+      "type": "watermark",
+      "from": 0,
+      "to": 23.098
+    }
+  ],
+  "measurements": {
+    "method": "Mono, resampling 22050 Hz; RMS dBFS; librosa chroma_stft mean cosine; 13 MFCC mean RMSE. One source-grid bar immediately before and after each endpoint. Silence floor -240 dBFS.",
+    "beatIndices": [
+      136,
+      200
+    ],
+    "rmsOrder": [
+      "startBefore",
+      "endBefore",
+      "startAfter",
+      "endAfter"
+    ],
+    "stemRmsDbfs": {
+      "lead_vocals": [
+        -121.3,
+        -240,
+        -240,
+        -240
+      ],
+      "drums": [
+        -16,
+        -17.3,
+        -16.1,
+        -17.3
+      ],
+      "bass": [
+        -22.8,
+        -21.1,
+        -22.7,
+        -21.1
+      ],
+      "percussion": [
+        -240,
+        -82.2,
+        -240,
+        -82.3
+      ],
+      "strings": [
+        -67.2,
+        -48.5,
+        -65.6,
+        -48.1
+      ],
+      "synth": [
+        -28.3,
+        -27.7,
+        -28,
+        -27.7
+      ],
+      "other": [
+        -89.6,
+        -91.4,
+        -88.2,
+        -91.1
+      ],
+      "brass": [
+        -82,
+        -106.9,
+        -83.3,
+        -101.4
+      ],
+      "woodwinds": [
+        -240,
+        -240,
+        -240,
+        -240
+      ]
+    },
+    "mixChromaCosineBeforeAfter": [
+      0.987,
+      0.998
+    ],
+    "mixMfccRmseBeforeAfter": [
+      5.15,
+      2.91
+    ],
+    "auditioned": false,
+    "visualBasis": "Existing shots.js: beat 136 opens dutch, beat 200 also opens dutch; beat 200 preceding shot is top. Existing camera cuts, same coloured LED drop. No rendered review."
+  }
+}

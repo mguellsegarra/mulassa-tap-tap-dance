@@ -1,0 +1,27 @@
+{
+  "id": "sol-b-pulse-story-2",
+  "author": "sol-b",
+  "group": "stories",
+  "title": "2 · Encara no",
+  "format": "reel",
+  "why": "GUAPA ×3 i tensió: acabo un compàs abans del hard per guardar-ne la sorpresa. Títol (provisional) només després de l'últim crit.\nVuit compassos seguits entre els beats 340 i 372: 11,424 s, sense cap unió artificial als stems ni cap síl·laba seccionada; no avanço el terra vermell i blanc.",
+  "segments": [
+    {
+      "from": 122.869,
+      "to": 134.293
+    }
+  ],
+  "fade": {
+    "in": 0.04,
+    "out": 0.12
+  },
+  "overlays": [
+    {
+      "type": "title",
+      "at": 8.917,
+      "dur": 1.05,
+      "text": "PREPARA’T.",
+      "look": "over"
+    }
+  ]
+}

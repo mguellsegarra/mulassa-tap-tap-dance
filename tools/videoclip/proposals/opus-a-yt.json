@@ -1,0 +1,32 @@
+{
+  "id": "opus-a-yt",
+  "author": "opus-a",
+  "group": "youtube",
+  "title": "YT curt: una ronda per drop",
+  "format": "yt",
+  "why": "Idea: cada drop sona una sola ronda; es manté l'entrada, MULASSA, els dos GUAPA ×3, el tram dur, el final i la cartela (2:04, 40 s menys). Unió 1 (55.12→83.98): final de ronda del drop 1 cap al break, la transició que la cançó ja fa a 83.98; el compàs d'abans s'assembla al que precedeix el break (croma 0.94, cap pista >7.5 dB) i la costura sona més contínua que el canvi natural (croma 0.99 vs 0.93). Unió 2 (111.37→122.87): entra a la unió aprovada drop→GUAPA des del compàs que ocupa la mateixa posició de frase (7è compàs de ronda): croma 0.99, cap pista >1.1 dB.",
+  "segments": [
+    {
+      "from": 0,
+      "to": 55.12
+    },
+    {
+      "from": 83.978,
+      "to": 111.365
+    },
+    {
+      "from": 122.869,
+      "to": 164.5
+    }
+  ],
+  "fade": {
+    "in": 0.4,
+    "out": 0
+  },
+  "overlays": [
+    {
+      "type": "endcard",
+      "at": 118.038
+    }
+  ]
+}

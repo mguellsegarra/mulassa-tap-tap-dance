@@ -12,11 +12,15 @@ import { tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { lock } from '../qa/capture-lib.mjs';
+import { proposalLength } from './proposal.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const a = Object.fromEntries(process.argv.slice(2).map(s => { const [k, ...v] = s.replace(/^--/, '').split('='); return [k, v.length ? v.join('=') : '1']; }));
 const clip = JSON.parse(readFileSync(join(HERE, 'clip.json'), 'utf8'));
-const fmt = a.fmt ?? 'yt', ss = +(a.ss ?? 2), fps = +(a.fps ?? 30), from = +(a.from ?? 0), to = Math.min(clip.duration, +(a.to ?? clip.duration)), scale = +(a.scale ?? 1);
+// --montage=<id>: a proposal (proposals/<id>.json) instead of the song: its own length, its pieces' sound (montage_audio.py)
+const P = a.montage ? JSON.parse(readFileSync(join(HERE, 'proposals', `${a.montage.replace(/[^a-z0-9-]/g, '')}.json`), 'utf8')) : null;
+const full = P ? proposalLength(P) : clip.duration;
+const fmt = a.fmt ?? P?.format ?? 'yt', ss = +(a.ss ?? 2), fps = +(a.fps ?? 30), from = +(a.from ?? 0), to = Math.min(full, +(a.to ?? full)), scale = +(a.scale ?? 1);
 if (!(to > from)) { console.error('--to must be after --from'); process.exit(2); }
 const out = a.out ?? join(HERE, 'media', `${fmt}-${from}-${to}${scale !== 1 ? `-x${scale}` : ''}.mp4`);
 let tail = 0; // frames after the song's (the end card)
@@ -27,7 +31,7 @@ const browser = await chromium.launch({ channel: 'chrome', headless: true, chrom
 try {
   const page = await browser.newPage({ viewport: { width: 400, height: 400 } });
   const errors = []; page.on('pageerror', e => errors.push(e.message));
-  await page.goto(`${a.url ?? 'http://localhost:5178'}/tools/videoclip/?render=${fmt}&scale=${scale * ss}`);
+  await page.goto(`${a.url ?? 'http://localhost:5178'}/tools/videoclip/?render=${fmt}&scale=${scale * ss}${P ? `&m=${P.id}` : ''}`);
   await page.waitForFunction(() => window.__clip);
   await page.evaluate(() => Promise.all([document.fonts.load("400 40px 'Jersey 10'"), document.fonts.load("40px 'VC Power'")])); // (the words' faces, before the first frame)
   const [w, h] = await page.evaluate(() => window.__clip.size);
@@ -49,7 +53,9 @@ try {
   if (errors.length) throw new Error(errors.join('\n'));
 } finally { await browser.close(); }
 console.log('\nencoding…');
-const r = spawnSync('uv', ['run', '-q', '--python', '3.11', '--with', 'av', '--with', 'numpy', '--with', 'soundfile', 'python', '-I', join(HERE, 'encode.py'), frames, join(HERE, 'media', 'mix.wav'), String(from), String(to), String(fps), out, String(ss), String(a.crf ?? 20), a.codec ?? 'h264', String(tail)], { stdio: 'inherit' });
+let wav = join(HERE, 'media', 'mix.wav');
+if (P) { wav = join(frames, 'montage.wav'); const m = spawnSync('uv', ['run', '-q', '--python', '3.11', '--with', 'numpy', '--with', 'soundfile', 'python', '-I', join(HERE, 'montage_audio.py'), join(HERE, 'proposals', `${P.id}.json`), wav], { stdio: 'inherit' }); if (m.status) process.exit(m.status); }
+const r = spawnSync('uv', ['run', '-q', '--python', '3.11', '--with', 'av', '--with', 'numpy', '--with', 'soundfile', 'python', '-I', join(HERE, 'encode.py'), frames, wav, String(from), String(to), String(fps), out, String(ss), String(a.crf ?? 20), a.codec ?? 'h264', String(tail)], { stdio: 'inherit', env: { ...process.env, VIDEOCLIP_LOOP: P?.loop ? '1' : '' } });
 if (!a.keep) rmSync(frames, { recursive: true, force: true }); else console.log('frames:', frames);
 if (r.status) process.exit(r.status);
 console.log(out);

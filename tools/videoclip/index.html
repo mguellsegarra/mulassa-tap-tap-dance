@@ -8,6 +8,7 @@
 #app{position:fixed;inset:0;display:grid;grid-template-rows:auto 1fr auto;padding:var(--gap);gap:var(--gap)}
 #top{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 #top label,#top button,#top select{font:13px system-ui;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:7px 10px;display:flex;gap:6px;align-items:center;cursor:pointer}
+#top select#montage{max-width:min(46vw,420px)}#why{font-size:13px;color:var(--ink)}
 #top button.on{border-color:var(--acc)}#info{margin-left:auto;font:12px ui-monospace,monospace;color:var(--dim)}
 #frames{display:flex;gap:var(--gap);align-items:center;justify-content:center;min-height:0}
 .frame{position:relative;flex:none;border-radius:4px;outline:1px solid var(--line)}
@@ -50,7 +51,7 @@ body.picking .frame{cursor:crosshair;outline:2px solid #ffd21e}
   <div id="bottom">
     <div id="bar"><button id="play">▶︎</button><button id="mark-in" title="Inici del tall (I)">[ </button><button id="mark-out" title="Final del tall (O)"> ]</button><button id="clear-range">Tot</button><span id="time"></span></div>
     <div id="tl"><canvas id="wave"></canvas><div class="range"></div><div class="head"></div></div>
-    <div id="edit"></div>
+    <div id="why"></div><div id="edit"></div>
   </div>
 </div>
 <audio id="audio" src="media/mix.wav" preload="auto"></audio>

@@ -1,0 +1,46 @@
+{
+  "id": "sol-b-youtube",
+  "author": "sol-b",
+  "group": "youtube",
+  "title": "La plaça accelera",
+  "format": "yt",
+  "why": "Entrada sencera, tots els crits amb les lletres, vermell i blanc i sortida; elimino 16 compassos del primer drop i 8 del segon. Títols (provisional) breus sobre el ball, sense tapar cap crit.\n49,344 → 72,442: mateix drop i fase de compàs; RMS al compàs anterior de bateria/baix/sintetitzador: −1,30/+1,81/+0,53 dB; cosinus cromàtic 0,995/0,990/0,975.\n107,050 → 118,560: RMS bateria/baix −0,36/+0,24 dB; cosinus cromàtic 0,994 en tots dos, envolupants 0,997/0,999. Tots els extrems són inicis de compàs exactes; després conservo les transicions originals fins al cartell.",
+  "segments": [
+    {
+      "from": 0,
+      "to": 49.344
+    },
+    {
+      "from": 72.442,
+      "to": 107.05
+    },
+    {
+      "from": 118.56,
+      "to": 163.9
+    }
+  ],
+  "fade": {
+    "in": 0.4,
+    "out": 0.5
+  },
+  "overlays": [
+    {
+      "type": "title",
+      "at": 49.344,
+      "dur": 1,
+      "text": "MÉS.",
+      "look": "over"
+    },
+    {
+      "type": "title",
+      "at": 83.952,
+      "dur": 1,
+      "text": "ENCARA.",
+      "look": "over"
+    },
+    {
+      "type": "endcard",
+      "at": 123.792
+    }
+  ]
+}

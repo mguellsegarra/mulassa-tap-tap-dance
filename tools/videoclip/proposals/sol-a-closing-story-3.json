@@ -1,0 +1,24 @@
+{
+  "id": "sol-a-closing-story-3",
+  "author": "sol-a",
+  "group": "stories",
+  "title": "Tancament: la pregunta",
+  "format": "reel",
+  "why": "Entro amb el moviment de l'outro i guardo la pregunta per als últims 5,5 s. La cartela aprovada queda al final, sobre vídeo que continua movent-se.\nInici al beat 416, primer temps exacte; 14,468 s continus, sense unions ni trasllat entre stems. La cartela entra al segon 8,968 de la Story i acaba amb la peça.",
+  "segments": [
+    {
+      "from": 150.032,
+      "to": 164.5
+    }
+  ],
+  "fade": {
+    "in": 0,
+    "out": 0
+  },
+  "overlays": [
+    {
+      "type": "endcard",
+      "at": 8.968
+    }
+  ]
+}

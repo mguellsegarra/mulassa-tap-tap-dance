@@ -1,0 +1,17 @@
+{
+  "id": "opus-b-reel",
+  "author": "opus-b",
+  "group": "reel",
+  "title": "Opus B · Reel 52 s, arriba la Mulassa",
+  "format": "reel",
+  "why": "Tràiler: primer només un detall de la faldilla caminant entre la gent, després ella sola al focus, el build creix i el nom no arriba fins al crit MULASSA i el drop; el tram dur vermell i blanc és el segon cop i el final s'apaga sota la targeta. Títol inicial provisional. L'única unió (55,12→135,72) va del redoblament del drop a l'entrada del hard, com un drop després d'un fill (stems d'arribada 0,15, croma 0,99).",
+  "segments": [
+    { "from": 17.536, "to": 55.12 },
+    { "from": 135.717, "to": 149.8 }
+  ],
+  "fade": { "in": 0.3, "out": 0.6 },
+  "overlays": [
+    { "type": "title", "at": 0.2, "dur": 2.2, "text": "Valls, nit de Santa Úrsula", "look": "over" },
+    { "type": "endcard", "at": 46.16 }
+  ]
+}

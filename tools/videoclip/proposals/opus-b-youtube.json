@@ -1,0 +1,17 @@
+{
+  "id": "opus-b-youtube",
+  "author": "opus-b",
+  "group": "youtube",
+  "title": "Opus B · YouTube 2:10, la història sencera",
+  "format": "yt",
+  "why": "La mateixa història (entrada fosca, MULASSA, GUAPA, el tram dur i el final) amb 34 s menys de pista de colors: del primer drop queda la primera ronda i la mitja última, i el segon drop fa 7 compassos. La unió 55,12→78,21 va de redoblament a redoblament (mateixos stems, croma 1,00) i la 111,37→122,87 copia el pas drop→build que la cançó ja fa en aquell punt.",
+  "segments": [
+    { "from": 0, "to": 55.12 },
+    { "from": 78.213, "to": 111.365 },
+    { "from": 122.869, "to": 164.5 }
+  ],
+  "fade": { "in": 0.4, "out": 0.5 },
+  "overlays": [
+    { "type": "endcard", "at": 123.8 }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "id": "sol-a-youtube",
+  "author": "sol-a",
+  "group": "youtube",
+  "title": "Entrada i esclat",
+  "format": "yt",
+  "why": "El nom cantat i el títol a 1,2 s fan de ganxo; conservo l'entrada, tots els crits, el terra vermell i blanc i el desenllaç. Elimino 23,093 s de voltes al primer terra de colors.\nUnió 55,120 → 78,213: beats 152 → 216, primers temps exactes i 16 compassos eliminats, entre inicis de frase drop.\nRMS dels stems al compàs entrant original/destí: bateria 0,1513/0,1300, baix 0,0737/0,0778, synth 0,0381/0,0469; cosinus cromàtic 0,999/0,996/0,998. Veu absent; cordes residuals al destí 0,0028. La resta continua sense salts.",
+  "segments": [
+    {
+      "from": 0,
+      "to": 55.12
+    },
+    {
+      "from": 78.213,
+      "to": 164.5
+    }
+  ],
+  "fade": {
+    "in": 0,
+    "out": 0
+  },
+  "overlays": [
+    {
+      "type": "endcard",
+      "at": 135.907
+    }
+  ]
+}

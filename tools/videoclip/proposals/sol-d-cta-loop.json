@@ -1,0 +1,22 @@
+{
+  "id": "sol-d-cta-loop",
+  "author": "sol-d",
+  "group": "tiktok",
+  "title": "Perfect loop · lletres · GUAPA ×3",
+  "format": "reel",
+  "loop": true,
+  "why": "Tres GUAPA seguits, amb pixelGlitch, retallBlanc i invertit: 11,424 s, vuit compassos i cap frase de sintetitzador tallada. El CTA ocupa tota la volta i s'amaga sol sota les lletres.\nRetorn 134,293 → 122,869 s, tots dos inicis de compàs. Comparant les continuacions d'un compàs (1,424 s): cosinus de chroma 0,9813; RMSE dels MFCC 1–12: 13,20 (sense normalitzar).\nStems en aquestes finestres, RMS inici/final en dBFS: veu −29,2/−115,8; bateria −22,4/−40,5; baix −21,8/−21,1; percussió, cordes, sintetitzador, metalls i vents <−140; altres −89,3/−118,4. Al tall entren baix i bateria; el primer crit arriba 0,636 s després.\nLa coincidència harmònica és alta; la diferència de bateria encara requereix validació d'oïda abans de donar el retorn per inaudible.",
+  "segments": [
+    {
+      "from": 122.869,
+      "to": 134.293
+    }
+  ],
+  "overlays": [
+    {
+      "type": "cta",
+      "from": 0,
+      "to": 11.424
+    }
+  ]
+}

@@ -233,5 +233,12 @@
   "html.entity.namePlaceholder": "Nola du izena?",
   "html.rich.material.note": "Argazkiak eta fitxategiak <a href=\"mailto:holi@mulassa.cat\">holi@mulassa.cat</a> helbidera bidali, eta esan zein irudirenak diren.",
   "html.code.tab": "Programatu",
-  "html.code.text": "Programatzen badakizu, irudi hau jokora ekartzen lagun dezakezu. Kodea irekia da eta GitHub-en dago."
+  "html.code.text": "Programatzen badakizu, irudi hau jokora ekartzen lagun dezakezu. Kodea irekia da eta GitHub-en dago.",
+  "html.inappHintTitle": "Jokatu nabigatzailean",
+  "html.inappHintTitle.guest": "Gorde zure profila",
+  "html.rich.inappHint": "App honetan <b>gailuko errekorrak gal ditzakezu</b>. Jokatu nabigatzailean.",
+  "html.rich.inappHint.guest": "Apparen datuak ezabatuz gero, <b>profila eta izena</b> galduko dituzu. Baieztatu lehenik posta.",
+  "html.rich.inappHint.linked": "Profila gordeta dago. Nabigatzailean, ireki Profila, sakatu <b>Berreskuratu</b> eta idatzi zure posta.",
+  "html.inappHintGo": "Ireki nabigatzailean",
+  "html.inappHintTitle.linked": "Jokatu nabigatzailean"
 }

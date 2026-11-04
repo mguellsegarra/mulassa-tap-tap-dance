@@ -233,5 +233,12 @@
   "html.entity.namePlaceholder": "叫什么名字？",
   "html.rich.material.note": "照片和文件请发到 <a href=\"mailto:holi@mulassa.cat\">holi@mulassa.cat</a>，并告诉我们是哪个角色的。",
   "html.code.tab": "写代码",
-  "html.code.text": "如果你会编程，可以帮忙把这个角色加入游戏。代码开源，放在GitHub上。"
+  "html.code.text": "如果你会编程，可以帮忙把这个角色加入游戏。代码开源，放在GitHub上。",
+  "html.inappHintTitle": "在浏览器中游玩",
+  "html.inappHintTitle.guest": "保存你的个人资料",
+  "html.rich.inappHint": "在此应用内游玩可能会<b>丢失此设备上的纪录</b>。请在浏览器中游玩。",
+  "html.rich.inappHint.guest": "如果应用数据被清除，你将失去<b>个人资料和昵称</b>。请先验证邮箱。",
+  "html.rich.inappHint.linked": "你的个人资料已保存。在浏览器中打开个人资料，点击<b>找回</b>，然后输入你的邮箱。",
+  "html.inappHintGo": "在浏览器中打开",
+  "html.inappHintTitle.linked": "在浏览器中游玩"
 }

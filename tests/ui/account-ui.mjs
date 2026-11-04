@@ -543,6 +543,14 @@ const service = (o = {}) => ({ configured: true, asked: [], async seasons(f) { t
   const html = readPage(), m = /<dialog id="inapp-hint-menu"[\s\S]*?<\/dialog>/.exec(html)?.[0] ?? '';
   assert(/aria-labelledby="inapp-hint-title" aria-describedby="inapp-hint-text"/.test(m) && /class="sheet-x"/.test(m), 'a sheet with its ×');
   for (const id of ids.filter(x => x.startsWith('inapp-hint-') && !/-(menu|close)$/.test(x))) assert(m.includes(`id="${id}"`), id);
+  for (const state of ['none', 'guest', 'linked']) {
+    const suffix = state === 'none' ? '' : `.${state}`;
+    for (const [part, attr, key] of [['title', 'data-i18n', 'html.inappHintTitle'], ['text', 'data-i18n-rich', 'html.rich.inappHint']]) {
+      assert(m.match(new RegExp(`<span id="inapp-hint-${part}-${state}"[^>]*`))?.[0].includes(`${attr}="${key}${suffix}"`), `${state} ${part}: translated when the account state changes`);
+    }
+  }
+  assert(/id="inapp-hint-confirm"[^>]*data-i18n="ui.profile.btn.link"/.test(m), 'confirm uses the same label as Perfil');
+  assert(/id="inapp-hint-go"[^>]*data-i18n="html.inappHintGo"/.test(m), 'the browser action is translated');
   assert(/html\.rich\.inappStep1/.test(m) && /html\.rich\.inappStep2/.test(m), 'the app menu\'s steps, the sure way');
 }
 console.log('perfil, statistics, seasons and cards ok');

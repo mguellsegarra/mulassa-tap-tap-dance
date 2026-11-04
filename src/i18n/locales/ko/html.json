@@ -233,5 +233,12 @@
   "html.entity.namePlaceholder": "이름이 뭔가요?",
   "html.rich.material.note": "사진과 파일은 <a href=\"mailto:holi@mulassa.cat\">holi@mulassa.cat</a>(으)로 보내고 어떤 인형인지 알려 주세요.",
   "html.code.tab": "개발",
-  "html.code.text": "개발할 수 있다면 이 캐릭터를 게임에 넣는 일을 도와줄 수 있어요. 코드는 GitHub에 공개되어 있어요."
+  "html.code.text": "개발할 수 있다면 이 캐릭터를 게임에 넣는 일을 도와줄 수 있어요. 코드는 GitHub에 공개되어 있어요.",
+  "html.inappHintTitle": "브라우저에서 플레이",
+  "html.inappHintTitle.guest": "프로필 저장",
+  "html.rich.inappHint": "이 앱에서는 <b>기기의 기록을 잃을 수 있어요</b>. 브라우저에서 플레이하세요.",
+  "html.rich.inappHint.guest": "앱 데이터가 삭제되면 <b>프로필과 이름</b>을 잃어요. 먼저 이메일을 인증하세요.",
+  "html.rich.inappHint.linked": "프로필이 저장되어 있어요. 브라우저에서 프로필을 열고 <b>복구</b>를 눌러 이메일을 입력하세요.",
+  "html.inappHintGo": "브라우저에서 열기",
+  "html.inappHintTitle.linked": "브라우저에서 플레이"
 }

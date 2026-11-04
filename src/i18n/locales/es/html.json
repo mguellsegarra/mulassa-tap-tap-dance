@@ -233,5 +233,12 @@
   "html.entity.namePlaceholder": "¿Cómo se llama?",
   "html.rich.material.note": "Las fotos y los archivos, envíalos a <a href=\"mailto:holi@mulassa.cat\">holi@mulassa.cat</a> y dinos de qué figura son.",
   "html.code.tab": "Programar",
-  "html.code.text": "Si sabes programar, puedes ayudar a traer esta figura al juego. El código es abierto y está en GitHub."
+  "html.code.text": "Si sabes programar, puedes ayudar a traer esta figura al juego. El código es abierto y está en GitHub.",
+  "html.inappHintTitle": "Juega en el navegador",
+  "html.inappHintTitle.guest": "Guarda tu perfil",
+  "html.rich.inappHint": "En esta app puedes <b>perder los récords</b> del dispositivo. Juega en el navegador.",
+  "html.rich.inappHint.guest": "Si se borran los datos de la app, pierdes <b>perfil y nombre</b>. Confirma antes el correo.",
+  "html.rich.inappHint.linked": "Tu perfil está guardado. En el navegador, ve a Perfil, toca <b>Recupera</b> y escribe tu correo.",
+  "html.inappHintGo": "Abre en el navegador",
+  "html.inappHintTitle.linked": "Juega en el navegador"
 }

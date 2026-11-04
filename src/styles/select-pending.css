@@ -136,6 +136,8 @@
 .sel-lower { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--island-gap); }
 /* Side by side only from 668 px and where the card has the room: a split layout's narrow column keeps the stack. Beside each other the islands share one height: the buttons on one line at the foot, each island's words centred above. */
 @media (min-width: 668px) { @container (min-width: 440px) { .sel-lower { grid-template-columns: repeat(2, minmax(0, 1fr)); } } }
+/* Landscape tablets: the card is 480 px or wider there (640 below 768 px high), so the screen says it. An iPad's home-screen app (1210×802, zoom .9, Safari 26.6) left the query above at one column and the stack ran under the strip */
+@media (min-width: 900px) and (min-height: 600px) and (pointer: coarse) { .sel-lower { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .sel-state-words { display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .sel-pending p.sel-call-line { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0 6px; min-height: 20px; font-size: 16px; font-weight: 600; line-height: 20px; color: #fff3d6; } /* one height with and without the count: the heart never moves when pressed */
 /* The narrower pair: the count takes two lines, so the question keeps them too and pressing moves nothing. */

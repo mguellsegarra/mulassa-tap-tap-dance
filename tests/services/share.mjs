@@ -98,6 +98,9 @@ const counts = { perfect: EXPECTED_JUDGMENTS[2], good: 0, miss: 0 };
 const game = { diff: 2, counts, score: 1000, maxCombo: 10, practice: null };
 assert(snapshotResult(game, { reason: 'end', query: new URLSearchParams('repte=94-2') }), 'still eligible with ?repte');
 assert(snapshotResult(game, { reason: 'end', query: new URLSearchParams('mute&repte=junk') }), 'junk repte: eligible too');
+// ?perf is public on mulassa.cat: measuring a device still publishes; a run with part of the drawing skipped does not.
+for (const q of ['perf', 'perf=sync', 'vp', 'figura=drac']) assert(snapshotResult(game, { reason: 'end', query: new URLSearchParams(q) }), `?${q}: eligible`);
+for (const q of ['perf&hide=crowd', 'perf=no3d', 'perf=nohud', 'autoplay', 'from=40']) assert.equal(snapshotResult(game, { reason: 'end', query: new URLSearchParams(q) }), null, `?${q}: not eligible`);
 
 // --- the page: Privadesa explains sharing; static link-preview tags with absolute URLs; the image exists and is light
 const html = readPage();

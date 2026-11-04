@@ -33,7 +33,7 @@ const game = { diff:0, counts:{ perfect:70,good:20,miss:18 },score:54321,maxComb
 const clean = snapshotResult(game,{reason:'end',query:new URLSearchParams()});
 assert(clean && Object.isFrozen(clean) && Object.isFrozen(clean.counts));
 game.counts.perfect = 1; assert.equal(clean.counts.perfect,70); game.counts.perfect = 70;
-for (const q of ['autoplay','from=0','from=50','view=front','perf']) assert.equal(snapshotResult(game,{reason:'end',query:new URLSearchParams(q)}),null);
+for (const q of ['autoplay','from=0','from=50','view=front','perf=no3d','perf=nohud','perf&hide=crowd']) assert.equal(snapshotResult(game,{reason:'end',query:new URLSearchParams(q)}),null);
 assert(snapshotResult(game,{reason:'end',query:new URLSearchParams('mute&offset=60')}));
 assert.equal(snapshotResult(game,{reason:'collapse',query:new URLSearchParams()}),null);
 assert.equal(snapshotResult({...game,practice:{}},{reason:'end',query:new URLSearchParams()}),null);

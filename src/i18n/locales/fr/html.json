@@ -234,11 +234,11 @@
   "html.rich.material.note": "Envoie les photos et les fichiers à <a href=\"mailto:holi@mulassa.cat\">holi@mulassa.cat</a> en précisant de quelle figure il s'agit.",
   "html.code.tab": "Coder",
   "html.code.text": "Si tu sais coder, tu peux aider à faire entrer cette figure dans le jeu. Le code est ouvert et sur GitHub.",
-  "html.inappHintTitle": "Joue sur navigateur",
-  "html.inappHintTitle.guest": "Garde ton profil",
-  "html.rich.inappHint": "Dans cette app, tu peux <b>perdre les records</b> de cet appareil. Joue sur navigateur.",
-  "html.rich.inappHint.guest": "Effacer les données de l’app fait perdre <b>profil et nom</b>. Confirme d’abord ton e-mail.",
-  "html.rich.inappHint.linked": "Ton profil est sauvegardé. Dans le navigateur, ouvre Profil, touche <b>Récupère</b> et saisis ton e-mail.",
+  "html.inappHintTitle": "Garde tes records",
+  "html.inappHintTitle.guest": "Protège ton profil",
+  "html.rich.inappHint": "Ici, tu risques de <b>perdre records et statistiques</b>. Ouvre le jeu dans le navigateur.",
+  "html.rich.inappHint.guest": "Ici, tu peux perdre <b>profil et nom</b> pour toujours. Confirme ton e-mail pour pouvoir les récupérer.",
+  "html.rich.inappHint.linked": "Ton profil est à l'abri. Ouvre le navigateur. Puis, dans Profil, touche <b>Récupère</b> et saisis ton e-mail.",
   "html.inappHintGo": "Ouvre le navigateur",
-  "html.inappHintTitle.linked": "Joue sur navigateur"
+  "html.inappHintTitle.linked": "Garde ton profil"
 }

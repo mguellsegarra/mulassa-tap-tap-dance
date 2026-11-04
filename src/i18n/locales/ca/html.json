@@ -234,11 +234,11 @@
   "html.rich.material.note": "Les fotos i els fitxers, envia'ls a <a href=\"mailto:holi@mulassa.cat\">holi@mulassa.cat</a> i digue'ns de quina figura són.",
   "html.code.tab": "Programar",
   "html.code.text": "Si saps programar, pots ajudar a portar aquesta figura al joc. El codi és obert i és a GitHub.",
-  "html.inappHintTitle": "Juga al navegador",
-  "html.inappHintTitle.guest": "Guarda el teu perfil",
-  "html.rich.inappHint": "Dins d’aquesta app pots <b>perdre els rècords</b> del dispositiu. Juga al navegador.",
-  "html.rich.inappHint.guest": "Si s’esborren les dades de l’app, perds <b>perfil i nom</b>. Confirma primer el correu.",
-  "html.rich.inappHint.linked": "El perfil està guardat. Al navegador, ves a Perfil, toca <b>Recupera</b> i posa el teu correu.",
+  "html.inappHintTitle": "No perdis els rècords",
+  "html.inappHintTitle.guest": "Protegeix el perfil",
+  "html.rich.inappHint": "Aquí pots perdre <b>rècords i estadístiques</b>. Obre el joc al navegador.",
+  "html.rich.inappHint.guest": "Aquí pots perdre <b>perfil i nom</b> per sempre. Confirma el correu per poder-los recuperar.",
+  "html.rich.inappHint.linked": "No perds el perfil. Obre el joc al navegador. Després, a Perfil, toca <b>Recupera</b> i posa el correu.",
   "html.inappHintGo": "Obre al navegador",
-  "html.inappHintTitle.linked": "Juga al navegador"
+  "html.inappHintTitle.linked": "Juga amb el perfil"
 }

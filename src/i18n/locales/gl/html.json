@@ -234,11 +234,11 @@
   "html.rich.material.note": "As fotos e os ficheiros, envíaos a <a href=\"mailto:holi@mulassa.cat\">holi@mulassa.cat</a> e dinos de que figura son.",
   "html.code.tab": "Programar",
   "html.code.text": "Se sabes programar, podes axudar a traer esta figura ao xogo. O código é aberto e está en GitHub.",
-  "html.inappHintTitle": "Xoga no navegador",
-  "html.inappHintTitle.guest": "Garda o teu perfil",
-  "html.rich.inappHint": "Nesta app podes <b>perder os récords</b> do dispositivo. Xoga no navegador.",
-  "html.rich.inappHint.guest": "Se se borran os datos da app, perdes <b>perfil e nome</b>. Confirma primeiro o correo.",
-  "html.rich.inappHint.linked": "O perfil está gardado. No navegador, vai a Perfil, toca <b>Recupera</b> e escribe o teu correo.",
+  "html.inappHintTitle": "Non perdas récords",
+  "html.inappHintTitle.guest": "Protexe o teu perfil",
+  "html.rich.inappHint": "Aquí podes perder <b>récords e estatísticas</b>. Abre o xogo no navegador.",
+  "html.rich.inappHint.guest": "Aquí podes perder <b>perfil e nome</b> para sempre. Confirma o correo para poder recuperalos.",
+  "html.rich.inappHint.linked": "O teu perfil está a salvo. Abre o navegador. Despois, en Perfil, toca <b>Recupera</b> e pon o correo.",
   "html.inappHintGo": "Abre no navegador",
-  "html.inappHintTitle.linked": "Xoga no navegador"
+  "html.inappHintTitle.linked": "Xoga co teu perfil"
 }

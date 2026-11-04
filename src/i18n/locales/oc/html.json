@@ -234,11 +234,11 @@
   "html.rich.material.note": "Es fòtos e es fichèrs, manda-les a <a href=\"mailto:holi@mulassa.cat\">holi@mulassa.cat</a> e digue-mos de quina figura son.",
   "html.code.tab": "Programar",
   "html.code.text": "Se sabes programar, pòdes ajudar a portar aguesta figura en jòc. Eth còdi ei dubèrt e ei en GitHub.",
-  "html.inappHintTitle": "Jòga en navegador",
-  "html.inappHintTitle.guest": "Sauva eth tòn perfil",
-  "html.rich.inappHint": "En aguesta app pòs <b>pèrder es recòrds</b> deth dispositiu. Jòga en navegador.",
-  "html.rich.inappHint.guest": "Se s’esbòrren es donades dera app, perdes <b>perfil e nòm</b>. Confirma prumèr eth corrèu.",
-  "html.rich.inappHint.linked": "Eth perfil ei sauvat. En navegador, vè a Perfil, tòca <b>Recupèra</b> e escriu eth tòn corrèu.",
-  "html.inappHintGo": "Daurís en navegador",
-  "html.inappHintTitle.linked": "Jòga en navegador"
+  "html.inappHintTitle": "Gardatz los recòrds",
+  "html.inappHintTitle.guest": "Protegissètz lo perfil",
+  "html.rich.inappHint": "Aquí podètz perdre <b>recòrds e estatisticas</b>. Dobritz lo jòc al navegador.",
+  "html.rich.inappHint.guest": "Aquí podètz perdre <b>perfil e nom</b> per totjorn. Confirmatz lo corrièl per los poder recuperar.",
+  "html.rich.inappHint.linked": "Lo perfil es en seguretat. Dobritz lo navegador. Puèi, dins Perfil, tocatz <b>Recupèra</b> e picatz lo corrièl.",
+  "html.inappHintGo": "Dobritz al navegador",
+  "html.inappHintTitle.linked": "Jogatz amb lo perfil"
 }

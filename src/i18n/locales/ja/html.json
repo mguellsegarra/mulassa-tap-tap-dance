@@ -234,11 +234,11 @@
   "html.rich.material.note": "写真やファイルは <a href=\"mailto:holi@mulassa.cat\">holi@mulassa.cat</a> に送って、どのフィギュアのものか教えてね。",
   "html.code.tab": "開発",
   "html.code.text": "プログラミングができるなら、このキャラクターをゲームに加える手伝いができます。コードはGitHubで公開しています。",
-  "html.inappHintTitle": "ブラウザで遊ぼう",
-  "html.inappHintTitle.guest": "プロフィールを保存",
-  "html.rich.inappHint": "このアプリ内では<b>端末の記録が失われる</b>ことがあります。ブラウザで遊びましょう。",
-  "html.rich.inappHint.guest": "アプリのデータを削除すると、<b>プロフィールと名前</b>が失われます。先にメールを認証してください。",
-  "html.rich.inappHint.linked": "プロフィールは保存済みです。ブラウザでプロフィールを開き、<b>復元</b>をタップしてメールアドレスを入力してください。",
+  "html.inappHintTitle": "記録を失わないために",
+  "html.inappHintTitle.guest": "プロフィールを守ろう",
+  "html.rich.inappHint": "ここでは<b>記録や統計が失われる</b>ことがあります。ブラウザでゲームを開いてください。",
+  "html.rich.inappHint.guest": "ここでは<b>プロフィールと名前</b>を失うと元に戻せません。復元できるよう、メールアドレスを確認してください。",
+  "html.rich.inappHint.linked": "プロフィールは安全です。ブラウザで開いてください。その後、プロフィールで<b>復元</b>をタップし、メールアドレスを入力してください。",
   "html.inappHintGo": "ブラウザで開く",
-  "html.inappHintTitle.linked": "ブラウザで遊ぼう"
+  "html.inappHintTitle.linked": "自分のプロフィールで遊ぼう"
 }

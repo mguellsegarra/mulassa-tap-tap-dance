@@ -234,11 +234,11 @@
   "html.rich.material.note": "Argazkiak eta fitxategiak <a href=\"mailto:holi@mulassa.cat\">holi@mulassa.cat</a> helbidera bidali, eta esan zein irudirenak diren.",
   "html.code.tab": "Programatu",
   "html.code.text": "Programatzen badakizu, irudi hau jokora ekartzen lagun dezakezu. Kodea irekia da eta GitHub-en dago.",
-  "html.inappHintTitle": "Jokatu nabigatzailean",
-  "html.inappHintTitle.guest": "Gorde zure profila",
-  "html.rich.inappHint": "App honetan <b>gailuko errekorrak gal ditzakezu</b>. Jokatu nabigatzailean.",
-  "html.rich.inappHint.guest": "Apparen datuak ezabatuz gero, <b>profila eta izena</b> galduko dituzu. Baieztatu lehenik posta.",
-  "html.rich.inappHint.linked": "Profila gordeta dago. Nabigatzailean, ireki Profila, sakatu <b>Berreskuratu</b> eta idatzi zure posta.",
+  "html.inappHintTitle": "Ez galdu errekorrak",
+  "html.inappHintTitle.guest": "Babestu profila",
+  "html.rich.inappHint": "Hemen <b>errekorrak eta estatistikak gal ditzakezu</b>. Ireki jokoa nabigatzailean.",
+  "html.rich.inappHint.guest": "Hemen <b>profila eta izena</b> betiko gal ditzakezu. Berretsi posta berreskuratu ahal izateko.",
+  "html.rich.inappHint.linked": "Profila seguru dago. Ireki nabigatzailean. Gero, Profilean, sakatu <b>Berreskuratu</b> eta idatzi posta.",
   "html.inappHintGo": "Ireki nabigatzailean",
-  "html.inappHintTitle.linked": "Jokatu nabigatzailean"
+  "html.inappHintTitle.linked": "Jarraitu profilarekin"
 }

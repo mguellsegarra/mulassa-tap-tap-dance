@@ -54,7 +54,7 @@
 .sel-entity { display: inline-flex; align-items: center; gap: 7px; box-sizing: border-box; max-width: 100%; padding: 4px 10px; border-radius: 999px; background: #fff3d6; color: #2a1a10; font-size: 12px; font-weight: 700; line-height: 1.25; vertical-align: middle; }
 .sel-entity svg { flex: none; width: 14px; height: 22px; fill: #e73449; stroke: none; }
 /* Keep the original colours legible on the foil. The flame's path has a .1 transform. */
-:is(.sel-pending, .sel-identity, .about-uaf) .sel-entity svg:not(.escut):not(.pessigolla) path { stroke: #63202c; stroke-width: 160; paint-order: stroke fill; }
+:is(.sel-pending, .sel-identity, .about-uaf) .sel-entity svg:not(.escut):not(.pessigolla):not(.round-mark) path { stroke: #63202c; stroke-width: 160; paint-order: stroke fill; }
 :is(.sel-pending, .sel-identity) .sel-entity svg.pessigolla path[fill] { stroke: #243044; stroke-width: 12; paint-order: stroke fill; }
 .sel-entity span { min-width: 0; }
 /* Keep each mark with its name, and the separator with the following attribution. */

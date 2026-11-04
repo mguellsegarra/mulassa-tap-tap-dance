@@ -97,6 +97,7 @@
 /* Keep the jester light on dark captions and the home attribution, dark on the pending foil. */
 #select :is(.sel-entity, .sel-entity-icons) svg.pessigolla { width: auto; height: 1em; aspect-ratio: 845 / 628; fill: initial; } /* Keep the mark centred with its label by the parent flex row. */
 #select :is(.sel-entity-icons, .sel-identity) svg.pessigolla { --jester: currentColor; }
+.sel-entity-icons svg.round-mark { width: 14px; height: 14px; } /* the Bou de Valls's entities: round marks in their own colours */
 #select :is(.sel-pending, .sel-identity) .sel-entity svg.pessigolla { --jester: #1b171c; }
 /* Selected: a cream ring over the whole card (drawn above the portrait) and a deeper shadow; never lifted, so every
    figure keeps the strip's one floor line. */

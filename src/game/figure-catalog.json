@@ -351,6 +351,61 @@
       "manager": "Unió Anelles de la Flama"
     },
     {
+      "id": "bou-valls",
+      "name": "Bou de Valls",
+      "fullName": "Bou de Valls",
+      "town": "valls",
+      "entity": "La Turba + El Calçot",
+      "entityName": "La Turba + El Calçot",
+      "owner": "Casal Popular La Turba",
+      "manager": "Colla Gegantera El Calçot-AAEET",
+      "music": "Francesc Sans i Bonet",
+      "sources": [
+        "https://www.laturba.cat/projectes/el-bou-de-valls/",
+        "http://elboudevalls.blogspot.com/",
+        "https://lateiera.wordpress.com/2012/06/17/el-bou-de-reus-padri-del-bou-de-valls/"
+      ],
+      "attributionNote": "Bou de La Turba i El Calçot-AAEET (2012, Jordi Jubany i Eudald Ferré, per a dos balladors); no és el Bou Tradicional de la UAF."
+    },
+    {
+      "id": "lleo-valls",
+      "name": "Lleó",
+      "fullName": "Lleó de Valls",
+      "town": "valls",
+      "entity": "UAF",
+      "entityName": "Unió Anelles de la Flama",
+      "music": "Francesc Bofarull i Figuerola",
+      "sources": [
+        "https://uaf.cat/seguici-ceremonial/lleo/",
+        "https://www.bestiari.cat/figura/lleo-de-valls/"
+      ]
+    },
+    {
+      "id": "gegant-calcot-valls",
+      "name": "Gegant del Calçot",
+      "fullName": "Gegant del Calçot de Valls",
+      "town": "valls",
+      "entity": "UAF",
+      "entityName": "Unió Anelles de la Flama",
+      "music": "Roser Olivé",
+      "sources": [
+        "https://uaf.cat/elements-festius-de-nova-tradicio/gegant-del-calcot/"
+      ],
+      "attributionNote": "Gegant del Calçot de la UAF (1989, emblema de la Gran Festa de la Calçotada); no són els gegants Antonet i Angelina d'El Calçot."
+    },
+    {
+      "id": "gegant-campanar-valls",
+      "name": "Gegant del Campanar",
+      "fullName": "Gegant del Campanar de Valls",
+      "town": "valls",
+      "entity": "UAF",
+      "entityName": "Unió Anelles de la Flama",
+      "sources": [
+        "https://www.valls.cat/images/aa2026noticies/260526PROGRAMA_santjoan_premsa.pdf",
+        "https://www.diaridetarragona.com/camp/263625/valls-comenca-sant-joan-petada-globus-prego-margarida-aritzeta.html"
+      ]
+    },
+    {
       "id": "diables-valls",
       "name": "Diables",
       "fullName": "Ball de Diables de Valls",

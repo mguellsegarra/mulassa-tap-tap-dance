@@ -233,5 +233,12 @@
   "html.entity.namePlaceholder": "Com se ditz?",
   "html.rich.material.note": "Es fòtos e es fichèrs, manda-les a <a href=\"mailto:holi@mulassa.cat\">holi@mulassa.cat</a> e digue-mos de quina figura son.",
   "html.code.tab": "Programar",
-  "html.code.text": "Se sabes programar, pòdes ajudar a portar aguesta figura en jòc. Eth còdi ei dubèrt e ei en GitHub."
+  "html.code.text": "Se sabes programar, pòdes ajudar a portar aguesta figura en jòc. Eth còdi ei dubèrt e ei en GitHub.",
+  "html.inappHintTitle": "Gardatz los recòrds",
+  "html.inappHintTitle.guest": "Protegissètz lo perfil",
+  "html.rich.inappHint": "Aquí podètz perdre <b>recòrds e estatisticas</b>. Dobritz lo jòc al navegador.",
+  "html.rich.inappHint.guest": "Aquí podètz perdre <b>perfil e nom</b> per totjorn. Confirmatz lo corrièl per los poder recuperar.",
+  "html.rich.inappHint.linked": "Lo perfil es en seguretat. Dobritz lo navegador. Puèi, dins Perfil, tocatz <b>Recupèra</b> e picatz lo corrièl.",
+  "html.inappHintGo": "Dobritz al navegador",
+  "html.inappHintTitle.linked": "Jogatz amb lo perfil"
 }

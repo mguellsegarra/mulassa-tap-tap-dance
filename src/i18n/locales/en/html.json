@@ -233,5 +233,12 @@
   "html.entity.namePlaceholder": "What's it called?",
   "html.rich.material.note": "Send photos and files to <a href=\"mailto:holi@mulassa.cat\">holi@mulassa.cat</a> and tell us which figure they're for.",
   "html.code.tab": "Code",
-  "html.code.text": "If you can code, you can help bring this figure into the game. The code is open and on GitHub."
+  "html.code.text": "If you can code, you can help bring this figure into the game. The code is open and on GitHub.",
+  "html.inappHintTitle": "Keep your records",
+  "html.inappHintTitle.guest": "Protect your profile",
+  "html.rich.inappHint": "You could lose <b>records and stats</b> here. Open the game in your browser.",
+  "html.rich.inappHint.guest": "You could lose your <b>profile and name</b> for good here. Confirm your email to recover them.",
+  "html.rich.inappHint.linked": "Your profile is safe. Open in your browser. Then, in Profile, tap <b>Recover</b> and enter your email.",
+  "html.inappHintGo": "Open in browser",
+  "html.inappHintTitle.linked": "Keep your profile"
 }

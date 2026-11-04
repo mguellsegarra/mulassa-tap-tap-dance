@@ -14,7 +14,7 @@ const PODIUM_ROOM = '(min-width: 600px) and (min-height: 600px)'; // tablets and
 
 export function setupPodium({ doc, win, $, onBoard, onCard, load, refit, now = () => Date.now() }) {
   const box = $('select-podium');
-  if (!box || !load) return { fit() {} };
+  if (!box || !load) return { fit() {}, forget() {} };
   const panel = box.parentElement, info = $('select-info'), title = $('select-podium-t'), count = $('select-podium-n'), list = $('select-podium-list');
   const cache = new Map(); // figure:level:owner → { at, rows } (memory only); a pending ask has no rows yet
   $('select-podium-head').addEventListener('click', () => onBoard());
@@ -35,7 +35,8 @@ export function setupPodium({ doc, win, $, onBoard, onCard, load, refit, now = (
     if (!hit?.asking) {
       const ask = { at: hit?.at ?? 0, rows: hit?.rows ?? null, asking: true };
       cache.set(key, ask);
-      load(figure, level).then(rows => { cache.set(key, { at: now(), rows }); refit(); }, () => cache.delete(key));
+      load(figure, level).then(rows => { if (cache.get(key) !== ask) return; cache.set(key, { at: now(), rows }); refit(); }, // forgotten meanwhile: an older answer
+        () => { if (cache.get(key) === ask) cache.delete(key); });
     }
     return hit?.rows ?? null; // the last answer meanwhile, if any
   }
@@ -61,5 +62,5 @@ export function setupPodium({ doc, win, $, onBoard, onCard, load, refit, now = (
     box.hidden = true; panel.removeAttribute('data-podium');
     panel.toggleAttribute('data-tight', was[0]); if (was[1]) panel.setAttribute('data-snug', was[1]); else panel.removeAttribute('data-snug');
   }
-  return { fit };
+  return { fit, forget: () => cache.clear() }; // forget: a name or badge changed, the next fit asks again
 }

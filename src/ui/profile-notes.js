@@ -43,7 +43,7 @@ export function appendName(doc, into, p, onOpen = null) {
 // someone who has published (a remembered alias or a session), never before. Standalone (home screen) apps and ordinary
 // browsers get none. `persistent`: identity()'s storage probe (false = storage blocked, e.g. some private modes).
 // (also install-app.js: nothing installs from inside an app)
-export const IN_APP = /\b(Instagram|FBAN|FBAV|FB_IAB|FBIOS|Messenger|WhatsApp|TikTok|musical_ly|BytedanceWebview|Snapchat|Line\/|LinkedInApp|Pinterest|Twitter)\b/i;
+export const IN_APP = /\b(Instagram|FBAN|FBAV|FB_IAB|FBIOS|Messenger|WhatsApp|TikTok|musical_ly|BytedanceWebview|Snapchat|Line\/|LinkedInApp|Pinterest|Twitter|Telegram-Android)\b/i;
 export function deviceRisk({ ua = '', standalone = false, touch = 0, persistent = true } = {}) {
   if (standalone) return null;
   if (!persistent) return 'private';

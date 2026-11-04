@@ -1,10 +1,11 @@
 // Crash reports (Sentry, errors only: no replay, tracing, sessions or feedback). Off unless VITE_SENTRY_DSN is set
-// and this is a real visit: never in tests (no window), webdriver/headless, ?autoplay/?from/?view or on a dev host.
+// and this is a real visit: never in tests (no window), webdriver/headless, ?autoplay/?from/?view/?hide/?perf=no3d|nohud
+// or on a dev host.
 // `?sentry-test` on localhost only turns it on (environment 'development') and adds window.__sentryTest() to throw
 // one test error. The SDK loads when idle after the first frame; errors before that are buffered and forwarded.
 
 const LOOPBACK = /^(localhost|127\.0\.0\.1|\[::1\])$/;
-import { DEV_HOST } from '../core/flags.js';
+import { DEV_HOST, strippedRun } from '../core/flags.js';
 const DEBUG_PARAMS = ['autoplay', 'from', 'view']; // self-playing or debug-camera runs are not players
 const PROD_HOST = 'mulassa-tap-tap-dance.pages.dev';
 const BETA_HOST = 'beta.mulassa.cat'; // main's channel, on the test Supabase
@@ -19,7 +20,7 @@ export function errorsMode({ dsn, hostname = '', search = '', webdriver = false 
   if (!dsn) return null;
   const q = new URLSearchParams(search);
   if (q.has('sentry-test') && LOOPBACK.test(hostname)) return 'development';
-  if (webdriver || DEBUG_PARAMS.some(k => q.has(k)) || DEV_HOST.test(hostname)) return null;
+  if (webdriver || DEBUG_PARAMS.some(k => q.has(k)) || strippedRun(q) || DEV_HOST.test(hostname)) return null;
   return hostname === PROD_HOST ? 'production' : hostname === BETA_HOST ? 'beta' : hostname.endsWith('.pages.dev') ? 'preview' : 'production';
 }
 

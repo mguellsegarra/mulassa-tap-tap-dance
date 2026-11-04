@@ -292,6 +292,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     const target = step === 'level' ? levels.children[level] : cards[cur];
     target?.focus({ preventScroll: true });
   };
+  api.reread = () => { podium.forget(); if (shown && playable(figure)) updateStanding(levelStats); }; // a badge saved: the rows show the old mark until asked again
   api.paintHearts = () => { paintCardHearts(cards, hearts); if (playable(figure)) hearts.paint($('select-heart'), figure); else paintHeart(figure); };
   return api;
 }

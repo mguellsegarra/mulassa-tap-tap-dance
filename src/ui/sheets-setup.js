@@ -1,5 +1,5 @@
 import { leaderboard } from '../services/leaderboard.js';
-import { ALIAS_KEY, ownerKey, refreshIdentity, dropLegacyIdentity } from '../services/leaderboard-identity.js';
+import { ALIAS_KEY, ownerKey, savedName, refreshIdentity, dropLegacyIdentity } from '../services/leaderboard-identity.js';
 // Builds the sheets (settings, sync, board, share, profile, Perfil, seasons, cards, feedback, privacy), wires their buttons and registers them in `sheets`.
 import { showPhotoHelp, setRadioHint } from './photo-avatars.js';
 import { setupSelect } from './select-ui.js';
@@ -11,7 +11,7 @@ import { memoryKeys, mockLeaderboard, markTestMode, leaderboardPreviewMode, demo
 import { statsSync, markStatsNoticeSeen } from '../services/stats-sync.js';
 import { seenNotices } from '../services/seen-notices.js';
 import { setupAccount } from './account-ui.js';
-import { setupSeasons } from './seasons-ui.js';
+import { setupSeasons, forgetSeasons } from './seasons-ui.js';
 import { setupSeasonEnd } from './season-end-ui.js';
 import { setupCard } from './player-card.js';
 import { setupBoard } from './board-ui.js';
@@ -173,7 +173,7 @@ if (FINAL?.review != null) import('../dev/account-review.js').then(m => m.startR
 // in-memory keys (src/dev/final-test.js), nothing real.
 const profile = setupProfile({ focusIn, captcha: board.captcha, store: kv, aliasKey: ALIAS_KEY, deviceNote: board.deviceNote, acceptStats, ...(mockBoard && { service: mockService }) });
 sheets.profile = profile;
-sheets.badges = setupBadges({ focusIn, service, store: kv, onSaved: id => { profile.badgeSaved(id); refreshIdentity(service, kv, { fresh: true }).then(() => share.refreshName()); } });
+sheets.badges = setupBadges({ focusIn, service, store: kv, onSaved: id => { profile.badgeSaved(id); sheets.select?.reread(); forgetSeasons(service); refreshIdentity(service, kv, { fresh: true }).then(() => share.refreshName()); } });
 const account = setupAccount({ focusIn, profile, badges: sheets.badges, service, store: kv, stats: statsSync, onSync: back => { syncBack = back; sync.show(); }, onHall: (f, back) => seasons.open(f, back) });
 sheets.account = account;
 document.getElementById('settings-profile').addEventListener('click', () => { settingsMenu.close(); account.open(openSettings); }); // Perfil lives in ⚙ Configuració (no corner button); closing it comes back here
@@ -189,7 +189,8 @@ let cardGreeted = false;
 const selectorFree = () => G.state === 'select' && !sheetUp() && !viewMode && !document.hidden && !document.querySelector('dialog[open]');
 const badgeNews = setupBadgeNews({ focusIn, service, store: mockBoard ? { get: () => null, set() {} } : kv, ...(!mockBoard && { notices: seenNotices }), badges: sheets.badges, profile, idle: selectorFree, refresh: () => refreshIdentity(service, kv, { fresh: true }) }); // the mock: every load can show it again
 sheets.badgeNews = badgeNews;
-const hint = setupDeviceHint({ focusIn, store, softwareGl }); // the device tips, last: after the profile's own news
+const hint = setupDeviceHint({ focusIn, store, softwareGl, // the device tips, last: after the profile's own news
+  account: () => (ownerKey(kv) ? (savedName(kv).verified ? 'linked' : 'guest') : 'none'), confirm: back => { profile.open('link', back); if (!profile.isOpen) back?.(); } }); // offline the profile sheet stays shut: focus back to the selector
 sheets.hint = hint;
 sheets.freeGate = setupFreeGate({ focusIn, store, onEnter: () => enterFree() }); // an upright iPhone is asked to turn before free play
 // The greeting waits for calm: a playable figure (Mulassa, Drac) on screen and no touch or key for a while, so its sheet never

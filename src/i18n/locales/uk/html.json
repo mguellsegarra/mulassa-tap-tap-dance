@@ -233,5 +233,12 @@
   "html.entity.namePlaceholder": "Як називається?",
   "html.rich.material.note": "Фото й файли надсилай на <a href=\"mailto:holi@mulassa.cat\">holi@mulassa.cat</a> і напиши, до якої фігури вони стосуються.",
   "html.code.tab": "Код",
-  "html.code.text": "Якщо вмієш програмувати, допоможи додати цю фігуру в гру. Код відкритий і є на GitHub."
+  "html.code.text": "Якщо вмієш програмувати, допоможи додати цю фігуру в гру. Код відкритий і є на GitHub.",
+  "html.inappHintTitle": "Не втрачай рекорди",
+  "html.inappHintTitle.guest": "Збережи профіль",
+  "html.rich.inappHint": "Тут можна втратити <b>рекорди й статистику</b>. Відкрий гру в браузері.",
+  "html.rich.inappHint.guest": "Тут можна назавжди втратити <b>профіль та ім’я</b>. Підтвердь пошту, щоб їх можна було відновити.",
+  "html.rich.inappHint.linked": "Профіль у безпеці. Відкрий браузер. Потім у профілі натисни <b>Відновити</b> й введи пошту.",
+  "html.inappHintGo": "Відкрити в браузері",
+  "html.inappHintTitle.linked": "Грай зі своїм профілем"
 }

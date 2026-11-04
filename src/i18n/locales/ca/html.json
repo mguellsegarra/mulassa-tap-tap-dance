@@ -233,5 +233,12 @@
   "html.entity.namePlaceholder": "Com es diu?",
   "html.rich.material.note": "Les fotos i els fitxers, envia'ls a <a href=\"mailto:holi@mulassa.cat\">holi@mulassa.cat</a> i digue'ns de quina figura són.",
   "html.code.tab": "Programar",
-  "html.code.text": "Si saps programar, pots ajudar a portar aquesta figura al joc. El codi és obert i és a GitHub."
+  "html.code.text": "Si saps programar, pots ajudar a portar aquesta figura al joc. El codi és obert i és a GitHub.",
+  "html.inappHintTitle": "No perdis els rècords",
+  "html.inappHintTitle.guest": "Protegeix el perfil",
+  "html.rich.inappHint": "Aquí pots perdre <b>rècords i estadístiques</b>. Obre el joc al navegador.",
+  "html.rich.inappHint.guest": "Aquí pots perdre <b>perfil i nom</b> per sempre. Confirma el correu per poder-los recuperar.",
+  "html.rich.inappHint.linked": "No perds el perfil. Obre el joc al navegador. Després, a Perfil, toca <b>Recupera</b> i posa el correu.",
+  "html.inappHintGo": "Obre al navegador",
+  "html.inappHintTitle.linked": "Juga amb el perfil"
 }

@@ -1,6 +1,7 @@
 import { checkAlias } from './alias-rules.js';
 import { CURRENT_SCORE_VERSION, SHORT_SCORE_VERSION, DRAC_SCORE_VERSION, BOU_SCORE_VERSION } from '../game/score-scale.js';
 import { MOCK_BOARD } from '../core/mock-board.js';
+import { strippedRun } from '../core/flags.js';
 // Charts retain their own raw counts and validation; the server combines their comparable points.
 export const LEADERBOARD_VERSION = CURRENT_SCORE_VERSION;
 export const EXPECTED_JUDGMENTS = Object.freeze([108, 133, 240]);
@@ -43,7 +44,7 @@ export function validResult(result) {
 export function snapshotResult(game, { reason, query, debugUsed = false }) {
   const version = game.figureVersion ?? LEADERBOARD_VERSION;
   if (!PUBLISHABLE.includes(version) || (game.figureId != null && game.figureId !== VERSION_RULES[version].figureId)) return null;
-  if (reason !== 'end' || game.practice || debugUsed || ['autoplay', 'from', 'view', 'perf'].some(k => query.has(k))) return null;
+  if (reason !== 'end' || game.practice || debugUsed || ['autoplay', 'from', 'view'].some(k => query.has(k)) || strippedRun(query)) return null; // ?perf alone is public: a real run
   const result = { version, difficulty: game.diff,
     counts: Object.freeze({ perfect: game.counts.perfect, good: game.counts.good, miss: game.counts.miss }),
     score: game.score, maxCombo: game.maxCombo };

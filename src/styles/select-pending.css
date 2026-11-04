@@ -136,6 +136,8 @@
 .sel-lower { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--island-gap); }
 /* Side by side only from 668 px and where the card has the room: a split layout's narrow column keeps the stack. Beside each other the islands share one height: the buttons on one line at the foot, each island's words centred above. */
 @media (min-width: 668px) { @container (min-width: 440px) { .sel-lower { grid-template-columns: repeat(2, minmax(0, 1fr)); } } }
+/* Landscape tablets: the card is 480 px or wider there (640 below 768 px high), so the screen says it. An iPad's home-screen app (1210×802, zoom .9, Safari 26.6) left the query above at one column and the stack ran under the strip */
+@media (min-width: 900px) and (min-height: 600px) and (pointer: coarse) { .sel-lower { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .sel-state-words { display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .sel-pending p.sel-call-line { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0 6px; min-height: 20px; font-size: 16px; font-weight: 600; line-height: 20px; color: #fff3d6; } /* one height with and without the count: the heart never moves when pressed */
 /* The narrower pair: the count takes two lines, so the question keeps them too and pressing moves nothing. */
@@ -201,8 +203,8 @@
   .sel-call-line small { font-size: 12.5px; line-height: 16px; }
   .sel-state, .sel-call { gap: 4px; }
 }
-/* Wide, low bands under the full dock (900×600, 700×640, 1280×610): the attribution beside the place, tighter islands; the pair stays. */
-@media (min-width: 668px) and (max-width: 1099px) and (min-height: 600px) and (max-height: 700px), (min-width: 1280px) and (min-height: 600px) and (max-height: 640px) {
+/* Wide, low bands under the full dock (900×600, 700×640, 1280×610, a 1366×768 laptop under a browser and taskbar: 1366×660): the attribution beside the place, tighter islands; the pair stays. */
+@media (min-width: 668px) and (max-width: 1099px) and (min-height: 600px) and (max-height: 700px), (min-width: 1280px) and (min-height: 600px) and (max-height: 729px) {
   .sel-pending { --island-pad: 6px 16px; --island-r: 14px; --island-gap: 6px; --island-btn: 44px; }
   .sel-pending { --title-size: 22px; }
   .sel-pending h2 { flex: 100%; }
@@ -212,7 +214,7 @@
   .sel-pending p.sel-missing { font-size: 13px; line-height: 16px; }
   .sel-state, .sel-call { gap: 4px; }
 }
-@media (min-width: 1280px) and (min-height: 600px) and (max-height: 640px) { .sel-pending { --island-btn: 50px; } } /* its 90% zoom */
+@media (min-width: 1280px) and (min-height: 600px) and (max-height: 729px) { .sel-pending { --island-btn: 50px; } } /* its 90% zoom */
 @media (min-width: 520px) and (max-height: 599px), (min-width: 480px) and (max-width: 667px) and (min-height: 401px) and (max-height: 660px) {
   .sel-pending { --island-pad: 10px 12px; --island-r: 14px; --island-gap: 8px; --island-btn: 44px; }
   .sel-pending { --title-size: 22px; }

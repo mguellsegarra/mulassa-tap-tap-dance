@@ -10,8 +10,9 @@ assert.equal(errorsMode(prod), 'production');
 assert.equal(errorsMode({ ...prod, hostname: 'beta.mulassa.cat' }), 'beta', 'the beta channel reports apart');
 assert.equal(errorsMode({ ...prod, dsn: '' }), null, 'no DSN: off');
 assert.equal(errorsMode({ ...prod, webdriver: true }), null, 'headless/automation: off');
-for (const q of ['?autoplay', '?mute&autoplay', '?from=40', '?view=side']) assert.equal(errorsMode({ ...prod, search: q }), null, `${q}: off`);
+for (const q of ['?autoplay', '?mute&autoplay', '?from=40', '?view=side', '?perf&hide=crowd', '?perf=no3d', '?perf=nohud']) assert.equal(errorsMode({ ...prod, search: q }), null, `${q}: off`);
 assert.equal(errorsMode({ ...prod, search: '?mute&repte=94-2' }), 'production', '?mute and challenges are real players');
+for (const q of ['?perf', '?perf=sync', '?vp', '?figura=drac']) assert.equal(errorsMode({ ...prod, search: q }), 'production', `${q}: a real player measuring`);
 assert.equal(errorsMode({ ...prod, hostname: 'abc123.mulassa-tap-tap-dance.pages.dev' }), 'preview');
 for (const h of ['localhost', '127.0.0.1', '192.168.1.20', '10.0.0.5', '172.20.1.1', 'mac.local', 'game.localhost'])
   assert.equal(errorsMode({ ...prod, hostname: h }), null, `${h}: dev hosts stay quiet`);

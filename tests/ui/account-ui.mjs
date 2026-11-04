@@ -9,7 +9,7 @@ import { setupSeasonEnd, seasonSeenKey } from '../../src/ui/season-end-ui.js';
 import { setupCard } from '../../src/ui/player-card.js';
 import { setupAccount } from '../../src/ui/account-ui.js';
 import { setupGreeting } from '../../src/ui/greeting.js';
-import { setupDeviceHint } from '../../src/ui/device-hint.js';
+import { setupDeviceHint, browserJump } from '../../src/ui/device-hint.js';
 import { refreshIdentity, savedName } from '../../src/services/leaderboard-identity.js';
 import { setStatsOwner, endRun, newStats, saveStats } from '../../src/game/stats.js';
 import { createStatsSync } from '../../src/services/stats-sync.js';
@@ -499,6 +499,59 @@ const service = (o = {}) => ({ configured: true, asked: [], async seasons(f) { t
   }
   assert(/acceleració per maquinari/.test(html), 'the copy');
   assert(!/id="ios-hint"/.test(html), 'the inline banner is gone');
+}
+// --- inside an app's own browser (device-hint.js): its tip comes first, once per account state, with a jump out where one is known
+{
+  const ids = ['inapp-hint', 'gpu-hint'].flatMap(k => ['menu', 'ok', 'close'].map(x => `${k}-${x}`))
+    .concat('inapp-hint-go', 'inapp-hint-confirm', 'inapp-hint-steps', ...['none', 'guest', 'linked'].flatMap(s => [`inapp-hint-title-${s}`, `inapp-hint-text-${s}`]));
+  const ANDROID_IG = 'Mozilla/5.0 (Linux; Android 14; SM-G973F; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/129.0 Mobile Safari/537.36 Instagram 350.0.0.0 Android';
+  const IOS = v => `Mozilla/5.0 (iPhone; CPU iPhone OS ${v}_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Instagram 350.0.0.0`;
+  const HREF = 'https://mulassa.cat/joc/?r=abc#top';
+  const make = (o, mem = new Map()) => {
+    const { doc, $ } = fakeDoc(ids), focused = [], acct = { state: 'none' }, confirmed = [];
+    const store = { get: k => mem.get(k) ?? null, set: (k, v) => mem.set(k, v) };
+    return { $, mem, focused, acct, confirmed, hint: setupDeviceHint({ focusIn: (m, id) => focused.push(id), store, doc, href: HREF, standalone: false, softwareGl: true,
+      account: () => acct.state, confirm: b => confirmed.push(b), ...o }) };
+  };
+  const shown = t => ['go', 'confirm', 'ok', 'steps'].filter(x => !t.$(`inapp-hint-${x}`).hidden);
+  assert.equal(browserJump(ANDROID_IG, HREF), 'intent://mulassa.cat/joc/?r=abc#Intent;scheme=https;action=android.intent.action.VIEW;end', 'Android: the default browser, the query kept, no hash to cut the intent');
+  assert.equal(browserJump(IOS(18), HREF), null, 'iOS: no jump (Instagram swallowed x-safari-https://), only the menu steps');
+  assert.equal(browserJump(ANDROID_IG, 'http://192.168.1.232:5190/'), 'intent://192.168.1.232:5190/#Intent;scheme=http;action=android.intent.action.VIEW;end', 'a LAN dev server keeps http (https failed on the S10)');
+  // no profile: the jump and the menu steps; the GPU tip waits
+  const t = make({ ua: ANDROID_IG });
+  assert.equal(t.hint.show(), true);
+  assert.deepEqual([t.$('inapp-hint-menu').open, t.$('gpu-hint-menu').open], [true, false], 'the app\'s browser first, the GPU tip waits');
+  assert.deepEqual([shown(t), t.focused.at(-1), t.$('inapp-hint-text-none').hidden], [['go', 'steps'], 'inapp-hint-go', false], 'one primary: the jump');
+  assert.match(t.$('inapp-hint-go').href, /^intent:\/\//);
+  t.$('inapp-hint-close').click();
+  assert.equal(t.mem.get('inapp-hint'), 'none');
+  assert.equal(t.hint.show(), true); assert.equal(t.$('gpu-hint-menu').open, true, 'told for this state: the GPU tip has its turn'); t.$('gpu-hint-ok').click();
+  // a guest appears (first result): told again, to confirm the address first; its button hands over to Perfil after closing
+  t.acct.state = 'guest'; let backs = 0;
+  assert.equal(t.hint.show(() => backs++), true, 'a new state: told again');
+  assert.deepEqual([shown(t), t.focused.at(-1), t.$('inapp-hint-text-guest').hidden, t.$('inapp-hint-text-none').hidden], [['confirm'], 'inapp-hint-confirm', false, true], 'a guest: confirm first, no jump yet');
+  t.$('inapp-hint-confirm').click();
+  assert.equal(t.$('inapp-hint-menu').open, false); assert.equal(t.confirmed.length, 1, 'Perfil opens on the confirm step'); t.confirmed[0]();
+  assert.equal(backs, 1, 'the back handler goes to Perfil, called once'); assert.equal(t.mem.get('inapp-hint'), 'none,guest');
+  // confirmed: told once more, with the jump and the reminder to recover in the browser
+  t.acct.state = 'linked'; t.hint.show();
+  assert.deepEqual([shown(t), t.$('inapp-hint-text-linked').hidden], [['go', 'steps'], false], 'confirmed: the jump');
+  t.$('inapp-hint-close').click(); assert.equal(t.hint.show(), false, 'every state told: nothing left');
+  const i = make({ ua: IOS(18) }); i.hint.show();
+  assert.deepEqual([shown(i), i.focused[0]], [['ok', 'steps'], 'inapp-hint-ok'], 'no jump: «D’acord»');
+  assert.equal(make({ ua: ANDROID_IG, softwareGl: false, standalone: true }).hint.show(), false, 'from the home screen: nothing');
+  const html = readPage(), m = /<dialog id="inapp-hint-menu"[\s\S]*?<\/dialog>/.exec(html)?.[0] ?? '';
+  assert(/aria-labelledby="inapp-hint-title" aria-describedby="inapp-hint-text"/.test(m) && /class="sheet-x"/.test(m), 'a sheet with its ×');
+  for (const id of ids.filter(x => x.startsWith('inapp-hint-') && !/-(menu|close)$/.test(x))) assert(m.includes(`id="${id}"`), id);
+  for (const state of ['none', 'guest', 'linked']) {
+    const suffix = state === 'none' ? '' : `.${state}`;
+    for (const [part, attr, key] of [['title', 'data-i18n', 'html.inappHintTitle'], ['text', 'data-i18n-rich', 'html.rich.inappHint']]) {
+      assert(m.match(new RegExp(`<span id="inapp-hint-${part}-${state}"[^>]*`))?.[0].includes(`${attr}="${key}${suffix}"`), `${state} ${part}: translated when the account state changes`);
+    }
+  }
+  assert(/id="inapp-hint-confirm"[^>]*data-i18n="ui.profile.btn.link"/.test(m), 'confirm uses the same label as Perfil');
+  assert(/id="inapp-hint-go"[^>]*data-i18n="html.inappHintGo"/.test(m), 'the browser action is translated');
+  assert(/html\.rich\.inappStep1/.test(m) && /html\.rich\.inappStep2/.test(m), 'the app menu\'s steps, the sure way');
 }
 console.log('perfil, statistics, seasons and cards ok');
 

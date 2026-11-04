@@ -233,5 +233,12 @@
   "html.entity.namePlaceholder": "Come si chiama?",
   "html.rich.material.note": "Foto e file mandali a <a href=\"mailto:holi@mulassa.cat\">holi@mulassa.cat</a> e dicci di quale figura si tratta.",
   "html.code.tab": "Programma",
-  "html.code.text": "Se sai programmare, puoi aiutare a portare questa figura nel gioco. Il codice è aperto e su GitHub."
+  "html.code.text": "Se sai programmare, puoi aiutare a portare questa figura nel gioco. Il codice è aperto e su GitHub.",
+  "html.inappHintTitle": "Non perdere i record",
+  "html.inappHintTitle.guest": "Proteggi il profilo",
+  "html.rich.inappHint": "Qui puoi perdere <b>record e statistiche</b>. Apri il gioco nel browser.",
+  "html.rich.inappHint.guest": "Qui puoi perdere <b>profilo e nome</b> per sempre. Conferma la tua email per poterli recuperare.",
+  "html.rich.inappHint.linked": "Il profilo è al sicuro. Apri nel browser. Poi, in Profilo, tocca <b>Recupera</b> e inserisci la tua email.",
+  "html.inappHintGo": "Apri nel browser",
+  "html.inappHintTitle.linked": "Gioca col tuo profilo"
 }

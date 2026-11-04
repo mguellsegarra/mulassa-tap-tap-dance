@@ -38,8 +38,8 @@ export function setupConfirmGate({ focusIn, identity, hasProfile, openProfile, d
     $('gate-perks-lead').textContent = tr('ui.confirm.perksLead');
     sellMark();
   };
-  // a guest's own «Confirma el correu» (Perfil, a profile just created): what it earns first, nothing waiting on it
-  function offer(back = null, titleKey = 'ui.confirm.title') {
+  // a profile just created (Perfil «Crea»): what confirming earns, nothing waiting on it (a tapped «Confirma el correu» goes straight to its steps)
+  function offer(back, titleKey) {
     if (menu.open) { back?.(); return; }
     pending = null; after = back; profiled = true;
     sell(tr(titleKey), 'ui.profile.guestText');

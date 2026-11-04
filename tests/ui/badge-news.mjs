@@ -98,16 +98,16 @@ function gate({ email = '', hasSession = true, profiled = false, online = true }
   assert.equal(g.done, 0, 'closed without confirming: a cancel'); assert.equal(g.log.length, 1, 'and it is not asked again'); }
 { const g = gate({ profiled: true }); await g.need('heart', g.run); g.$('gate-go').click();
   assert.equal(g.log[0][0], 'link'); assert.equal(g.log[0][2].thenLink, false); }
-// a guest's own offer (Perfil «Crea», the block's «Confirma el correu»): what confirming earns, then the address or «Ara no»;
+// the offer after Perfil «Crea» (a tapped «Confirma el correu» goes straight to its steps): what confirming earns, then the address or «Ara no»;
 // the way back to Perfil runs once whichever way the sheet is left
 { const g = gate(); let backs = 0; g.need.offer(() => backs++, 'ui.profile.done.created');
   assert(g.$('gate-menu').open && g.$('gate-title').textContent === 'Perfil creat!' && !g.$('gate-go').hidden && g.$('gate-go').textContent === 'Confirma el correu', 'the benefits, the address as the main action');
   g.$('gate-later').click(); assert.equal(backs, 1, '«Ara no»: back to Perfil, a guest'); assert.equal(g.log.length, 0, 'nothing else opened');
-  g.need.offer(() => backs++); assert.equal(g.$('gate-title').textContent, 'Confirma el teu correu');
+  g.need.offer(() => backs++, 'ui.profile.done.created');
   g.$('gate-menu').close(); assert.equal(backs, 2, 'Escape: back too');
-  g.need.offer(() => backs++); g.$('gate-go').click(); assert.deepEqual([g.log[0][0], g.log[0][2].thenLink], ['link', false], 'Confirma: the address step, no second offer');
+  g.need.offer(() => backs++, 'ui.profile.done.created'); g.$('gate-go').click(); assert.deepEqual([g.log[0][0], g.log[0][2].thenLink], ['link', false], 'Confirma: the address step, no second offer');
   assert.equal(backs, 2, 'not back while the profile sheet is up'); await g.log[0][1](); assert.equal(backs, 3, 'its sheet closed: back, once');
   await g.need('heart', g.run); g.$('gate-later').click(); assert.equal(backs, 3, 'a later gate does not inherit the way back'); }
-{ const g = gate({ online: false }); let backs = 0; g.need.offer(() => backs++); g.$('gate-go').click(); await tick();
+{ const g = gate({ online: false }); let backs = 0; g.need.offer(() => backs++, 'ui.profile.done.created'); g.$('gate-go').click(); await tick();
   assert.equal(backs, 1, 'offline the profile sheet stays shut: back to Perfil all the same'); }
 console.log('badge news and confirm gate ok');

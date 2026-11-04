@@ -6,6 +6,15 @@
 - Frame/glitch checks and videos: `npm run capture -- --url='http://localhost:5178/?mute&autoplay&from=40' --seconds=20 --vp=393x852 --dpr=2 --touch` (`tools/qa/capture.mjs`). Real GPU (Chrome + Metal), not SwiftShader, whose CPU rendering saturates the machine and fakes hitches; one capture at a time (lock `/tmp/mulassa-capture.lock`, shared with `ui-video.mjs`/`ui-inventory.mjs`, `--soft` there = SwiftShader; the inventory's S24 «gpu» scene picks it by itself). It writes `frames.csv` (rAF ms), `summary.json` (fps, p99, spikes), `video.mp4` and `spike-N.jpg` contact sheets: read the numbers first, the video second. The clock starts once `#loader` is gone, so the dev server's load is not counted.
 - UI inventory for the owner's review: `npm run ui-review -- --base`, `npm run ui-review`, `npm run ui-review -- --serve` (`.agents/skills/mulassacat-validacio-visual/SKILL.md`).
 - Check mobile first (375×667 and iPhone 16, 393×852) and desktop (e.g. 1280×800). Orientation (`src/ui/fullscreen.js`): phones run the menus and the game in portrait and free play in landscape (free play in portrait shows «Gira el mòbil en horitzontal»); tablets run everything in landscape. So QA phone menus, sheets, the selector and play in portrait, and phone free play in landscape (e.g. 852×393, 932×430); the other orientation only shows the rotate cover.
+- **Chromium is not Safari.** Every automated check and capture here is Chromium (Playwright WebKit agreed with it in the case below), so before a
+  release, and after a change to the selector or its sheets, check a real iPad in landscape twice: in Safari (with its bars) and as
+  the home-screen app (no bars, `env(safe-area-inset-bottom)` ≈ 25 px, its own viewport: 1210×802 on the owner's iPad against
+  1210×702 in Safari). On 2026-11-04 the app stacked a pending card's two columns and ran it under the strip (the `.sel-lower`
+  container query at 440 px was not met there), while Chromium, Playwright WebKit and the iPad's Safari tab showed it right at the
+  same size. The home-screen app drops the URL's query, so `?vp` can't be passed: for a test build, make `devSearch()` in
+  `src/core/flags.js` fall back to `?vp&figura=mulassa` on dev hosts for that session only (never commit it), add the LAN URL to the
+  home screen and read the label off a photo. The iOS Simulator's taps did not select the selector's cards (agent-device, iPadOS
+  27.2): the owner's iPad is the reference.
 - URL params (dev hosts only; on public hosts `Q` in `src/core/flags.js` keeps only `PUBLIC_FLAGS`: `?perf`, `?hide`, `?vp` and `?figura`, to diagnose a player's device on mulassa.cat or beta. `?repte` and `?lang` are real features that read their own search):
   - `?mute` silent; `?autoplay` plays itself (`&jitter=<ms>` presses every note that many ms early or late, deterministic: ~70 ms is BÉ on NORMAL, 300 misses); `?from=N` start at N s; `?still` the Mulassa doesn't dance on the selector; `?offset=ms` sync offset.
   - `?view=side|front|back|top` fixed camera, no HUD; `?camdrac=segueix` the play camera follows the Drac's heading (the old behaviour).

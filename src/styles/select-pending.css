@@ -201,8 +201,8 @@
   .sel-call-line small { font-size: 12.5px; line-height: 16px; }
   .sel-state, .sel-call { gap: 4px; }
 }
-/* Wide, low bands under the full dock (900×600, 700×640, 1280×610): the attribution beside the place, tighter islands; the pair stays. */
-@media (min-width: 668px) and (max-width: 1099px) and (min-height: 600px) and (max-height: 700px), (min-width: 1280px) and (min-height: 600px) and (max-height: 640px) {
+/* Wide, low bands under the full dock (900×600, 700×640, 1280×610, a 1366×768 laptop under a browser and taskbar: 1366×660): the attribution beside the place, tighter islands; the pair stays. */
+@media (min-width: 668px) and (max-width: 1099px) and (min-height: 600px) and (max-height: 700px), (min-width: 1280px) and (min-height: 600px) and (max-height: 729px) {
   .sel-pending { --island-pad: 6px 16px; --island-r: 14px; --island-gap: 6px; --island-btn: 44px; }
   .sel-pending { --title-size: 22px; }
   .sel-pending h2 { flex: 100%; }
@@ -212,7 +212,7 @@
   .sel-pending p.sel-missing { font-size: 13px; line-height: 16px; }
   .sel-state, .sel-call { gap: 4px; }
 }
-@media (min-width: 1280px) and (min-height: 600px) and (max-height: 640px) { .sel-pending { --island-btn: 50px; } } /* its 90% zoom */
+@media (min-width: 1280px) and (min-height: 600px) and (max-height: 729px) { .sel-pending { --island-btn: 50px; } } /* its 90% zoom */
 @media (min-width: 520px) and (max-height: 599px), (min-width: 480px) and (max-width: 667px) and (min-height: 401px) and (max-height: 660px) {
   .sel-pending { --island-pad: 10px 12px; --island-r: 14px; --island-gap: 8px; --island-btn: 44px; }
   .sel-pending { --title-size: 22px; }

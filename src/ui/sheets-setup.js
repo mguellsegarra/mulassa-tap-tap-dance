@@ -11,7 +11,7 @@ import { memoryKeys, mockLeaderboard, markTestMode, leaderboardPreviewMode, demo
 import { statsSync, markStatsNoticeSeen } from '../services/stats-sync.js';
 import { seenNotices } from '../services/seen-notices.js';
 import { setupAccount } from './account-ui.js';
-import { setupSeasons } from './seasons-ui.js';
+import { setupSeasons, forgetSeasons } from './seasons-ui.js';
 import { setupSeasonEnd } from './season-end-ui.js';
 import { setupCard } from './player-card.js';
 import { setupBoard } from './board-ui.js';
@@ -173,7 +173,7 @@ if (FINAL?.review != null) import('../dev/account-review.js').then(m => m.startR
 // in-memory keys (src/dev/final-test.js), nothing real.
 const profile = setupProfile({ focusIn, captcha: board.captcha, store: kv, aliasKey: ALIAS_KEY, deviceNote: board.deviceNote, acceptStats, ...(mockBoard && { service: mockService }) });
 sheets.profile = profile;
-sheets.badges = setupBadges({ focusIn, service, store: kv, onSaved: id => { profile.badgeSaved(id); refreshIdentity(service, kv, { fresh: true }).then(() => share.refreshName()); } });
+sheets.badges = setupBadges({ focusIn, service, store: kv, onSaved: id => { profile.badgeSaved(id); sheets.select?.reread(); forgetSeasons(service); refreshIdentity(service, kv, { fresh: true }).then(() => share.refreshName()); } });
 const account = setupAccount({ focusIn, profile, badges: sheets.badges, service, store: kv, stats: statsSync, onSync: back => { syncBack = back; sync.show(); }, onHall: (f, back) => seasons.open(f, back) });
 sheets.account = account;
 document.getElementById('settings-profile').addEventListener('click', () => { settingsMenu.close(); account.open(openSettings); }); // Perfil lives in ⚙ Configuració (no corner button); closing it comes back here

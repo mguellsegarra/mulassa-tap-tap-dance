@@ -8,6 +8,8 @@ import { setupSelect, peekGap, pixelSvg } from '../../../src/ui/select-ui.js';
 import { cellOutline } from '../../../src/ui/selector-portraits.js';
 import { DRAWN_SILHOUETTES, SILHOUETTE_DRAWINGS, silhouetteBox } from '../../../src/ui/pending-silhouettes.js';
 import { escutSvg } from '../../../src/ui/escuts.js';
+import { cardEntityHtml, entityHtml } from '../../../src/ui/figure-entities.js';
+import { TURBA_MARK, CALCOT_MARK } from '../../../src/ui/bou-valls-logos.js';
 import { clampStand } from '../../../src/dev/sizes-edit.js';
 import '../../ui/strip-scroll.mjs';
 const MULE_ART = FIGURE_PORTRAITS['mulassa-valls'].art, DRAC_ART = FIGURE_PORTRAITS['drac-valls'].art;
@@ -19,7 +21,7 @@ assert.deepEqual(FIGURES.filter(playable).map(f => f.id), [MULASSA.id, DRAC.id, 
 assert.equal(BOU.status, UNRELEASED_IDS.has(BOU.id) ? 'aviat' : 'playable', 'an unreleased figure is a pending one: no song, no play');
 assert(FIGURES.slice(0, FIGURES.filter(playable).length).every(playable), 'available figures come first');
 assert(FIGURES.every(f => townOf(f) && ['playable', 'aviat'].includes(f.status)));
-assert.deepEqual(FIGURES.filter(f => f.town === 'valls').map(f => f.id).sort(), ['mulassa-valls', 'drac-valls', 'aliga-valls', 'bou-tradicional-valls', 'os-trabucaires-valls', 'gegants-ciutat-valls', 'cavallets-valls', 'basilisc-valls'].sort(), 'only the requested principal Valls figures remain');
+assert.deepEqual(FIGURES.filter(f => f.town === 'valls').map(f => f.id).sort(), ['mulassa-valls', 'drac-valls', 'aliga-valls', 'bou-tradicional-valls', 'os-trabucaires-valls', 'gegants-ciutat-valls', 'cavallets-valls', 'basilisc-valls', 'bou-valls', 'lleo-valls', 'gegant-calcot-valls', 'gegant-campanar-valls'].sort(), 'only the requested principal Valls figures remain');
 const sourceCatalog = JSON.parse(readFileSync(new URL('../../../src/game/figure-catalog.json', import.meta.url), 'utf8'));
 // Solsona keeps the Drac and the Gegants Bojos on the selector (an editorial choice); the other four stay in the catalogue
 const HIDDEN = ['nans-valls', 'diables-valls', 'gegants-solsona', 'mulassa-solsona', 'aliga-solsona', 'draca-solsona'];
@@ -271,6 +273,18 @@ const pills = $('select-towns').children;
 const restTowns = TOWNS.filter(t => t.id !== 'valls' && soon.some(f => f.town === t.id));
 assert.deepEqual(pills.map(p => p.dataset.town), ['valls', ...restTowns.map(t => t.id), INVITE_TOWN.id], 'every town has its pill from the start, the playable ones first');
 assert(!$('select-towns').innerHTML.includes('sel-soon'), 'no «Pròximament» pill');
+{ // Valls' later additions close its row, after the Gegants: the Turba's Bou, the Lleó, the Calçot and the Campanar giants
+  const LATE = ['bou-valls', 'lleo-valls', 'gegant-calcot-valls', 'gegant-campanar-valls'];
+  const valls = FIGURES.filter(f => f.town === 'valls' && !playable(f)).map(f => f.id);
+  assert.deepEqual(valls.slice(-LATE.length), LATE, 'the four come last in Valls, in this order');
+  for (const id of LATE) {
+    const f = FIGURES.find(g => g.id === id);
+    assert(f && !playable(f) && f.sources.length && f.entityName && DRAWN_SILHOUETTES[id] && STAND[id], `${id}: a pending, attributed, drawn figure with its own stand`);
+  }
+  const bou = FIGURES.find(f => f.id === 'bou-valls');
+  assert(cardEntityHtml(bou).includes(TURBA_MARK) && cardEntityHtml(bou).includes(CALCOT_MARK), 'the Bou de Valls card credits both entities with their marks');
+  assert(entityHtml(bou).includes(TURBA_MARK) && entityHtml(bou).includes(CALCOT_MARK), 'and so does its information label');
+}
 { // the second wave: eleven pending figures in ten new towns, pairs drawn as two subjects, arms and a location line for every town
   const WAVE = ['beatusaure-girona', 'camell-molins', 'filloxera-sant-sadurni', 'momerota-mataro', 'cucafera-tortosa', 'gegants-pi-barcelona', 'much-muca-sineu', 'gegants-vinaros', 'haca-traca-castello', 'hamlet-bao', 'gegants-fraga'];
   for (const id of WAVE) {

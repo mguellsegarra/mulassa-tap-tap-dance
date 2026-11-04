@@ -216,6 +216,50 @@ SILHOUETTE_DRAWINGS['vibria-manresa'] = { vb: [20, 16], d: [
   'M80 112L58 114L48 118L58 122L82 122Z', // arms and claws
   carrierLeg(100, 118), carrierLeg(80, 118),
 ] };
+// The Turba's Bou de Valls as its own logo draws it (the 2012 campaign; chosen over profile drawings): one round body, two
+// small horns, a curly tail and stick legs. Its eyes run the other way round, so nonzero fill leaves them open.
+const eyeHole = (cx, cy, rx, ry) => `M${cx - rx} ${cy}a${rx} ${ry} 0 1 1 ${2 * rx} 0a${rx} ${ry} 0 1 1 ${-2 * rx} 0Z`;
+SILHOUETTE_DRAWINGS['bou-valls'] = { vb: [20, 16], d: [
+  oval(98, 84, 50, 46) + eyeHole(80, 70, 9, 10) + eyeHole(102, 66, 10, 11),
+  'M60 58Q46 44 50 28Q54 26 56 32Q58 42 70 50Z', 'M118 46Q130 34 128 22Q132 20 134 26Q136 40 126 52Z', // horns
+  'M62 110L54 150H62L72 114Z', 'M84 122L82 150H90L92 122Z', 'M112 122L114 150H122L120 122Z', 'M134 110L144 150H152L142 108Z', // legs
+  'M146 80Q164 76 168 60Q170 50 164 48Q160 50 162 56Q162 70 146 72Z', // tail
+] };
+// a leather fringe: a band from x0 to x1, top y0, with n tongues down to y1 (the Lleó's skirt, the Calçot's hem)
+const silFringe = (x0, x1, y0, y1, n) => { const w = (x1 - x0) / n; let d = `M${x0} ${y0}H${x1}`; // one decimal, as silPlume
+  for (let i = n; i > 0; i--) { const a = x0 + i * w; const r = v => +v.toFixed(1); d += `L${r(a - w * .15)} ${y1}L${r(a - w * .85)} ${y1}L${r(a - w)} ${r(y0 + (y1 - y0) * .55)}`; }
+  return d + 'Z'; };
+const silCrown = (x, y, w, h) => `M${x} ${y + h}L${x} ${y + h * .35}L${x + w * .25} ${y + h * .6}L${x + w / 2} ${y}L${x + w * .75} ${y + h * .6}L${x + w} ${y + h * .35}L${x + w} ${y + h}Z`;
+// The Lleó (UAF photos), to the left: the crowned head on a tall brass mane with the carrier's window (it runs the other
+// way round: an open hole), the lower golden back and the curled tail behind, the fringe and one carrier's legs.
+SILHOUETTE_DRAWINGS['lleo-valls'] = { vb: [20, 16], d: [
+  'M92 84Q116 76 130 88Q138 98 136 112H96Z', // back and haunch
+  'M128 92Q146 82 142 64Q140 56 146 54Q156 60 152 76Q148 92 134 100Z', // tail
+  'M66 26Q50 30 48 50Q40 62 46 76Q38 90 46 104L48 114H104Q108 92 102 76Q106 56 96 40Q90 26 66 26ZM60 74H74V90H60Z', // mane, window
+  oval(66, 34, 15, 14), 'M54 30Q42 34 44 44Q48 50 58 48Z', silCrown(54, 6, 24, 16), // head, muzzle, crown
+  silFringe(44, 138, 110, 130, 10), carrierLeg(72, 124), carrierLeg(88, 124),
+] };
+// The Gegant del Calçot (UAF photos): three broad green blades, the white stem with its outer leaves hanging like arms,
+// the escut's lozenge open where its dancer looks out, a fringed hem to the ground.
+SILHOUETTE_DRAWINGS['gegant-calcot-valls'] = { vb: [20, 16], d: [
+  'M84 50L68 14Q74 8 82 12L96 48Z', 'M93 48L91 10Q100 6 109 10L107 48Z', 'M104 48L118 12Q126 8 132 14L116 50Z', // leaves, clear of the card's top
+  'M82 52Q82 40 100 40Q118 40 118 52L119 138H81ZM100 88L92 98L100 108L108 98Z', // stem and lozenge
+  'M116 56Q132 62 132 84L130 110Q127 115 124 110L124 84Q122 70 112 64Z', 'M84 56Q68 62 68 84L70 110Q73 115 76 110L76 84Q78 70 88 64Z',
+  silFringe(80, 120, 136, 150, 6),
+] };
+// The Gegant del Campanar (UAF), drawn comic: weathervane on a spire, a square toothed belfry with its rosettes, a square
+// face with a grin and a big nose to the left, square ears with their bells, the narrow tower (clock, window), cloth arms
+// and the long skirt. Its holes run against their shape's winding, so they stay open.
+SILHOUETTE_DRAWINGS['gegant-campanar-valls'] = { vb: [20, 16], d: [
+  'M98.8 0h2.4V14h-2.4Z', 'M86 2H108L112 4.5L108 7H86L89 4.5Z', 'M92 28L100 8L108 28Z', // vane and spire (a pole the gap check can see)
+  'M81 42V27L85 23L89 27L93 23L97 27L100 24L103 27L107 23L111 27L115 23L119 27V42Z' + oval(89, 34, 3) + oval(100, 33, 3.4) + oval(111, 34, 3),
+  'M80 40H120V64Q120 73 110 73H90Q80 73 80 64Z' + oval(91, 48, 3.5) + oval(109, 48, 3.5) + 'M88 58Q100 68 112 58Q100 63 88 58Z', // face
+  'M82 50L66 56Q64 60 68 61L82 60Z', // nose
+  'M76 46h5v14h-5Z', 'M119 46h5v14h-5Z', 'M71 58h6l1.5 7h-9Z', 'M123 58h6l1.5 7h-9Z', // ears and bells
+  'M90 72H110V106H90Z' + oval(100, 96, 3.6) + 'M97 78V87H103V78Z', // tower: clock, window
+  'M91 74Q85 76 85 86L86 118H90L89 86Z', 'M109 74Q115 76 115 86L114 118H110L111 86Z', // arms
+  'M90 104Q81.8 128 74 150H126Q118.2 128 110 104ZM97 116H103V126H97Z', // skirt and its window
+] };
 Object.assign(SILHOUETTE_DRAWINGS, moreDrawings({ oval, ring, carrierLeg })); // the second wave of figures (pending-silhouettes-more.js)
 Object.assign(SILHOUETTE_DRAWINGS, thirdDrawings({ oval, ring, carrierLeg })); // the third wave (pending-silhouettes-third.js)
 const DRAWN_INK = '#120b07', DRAWN_HALO = '#f5e3b8';

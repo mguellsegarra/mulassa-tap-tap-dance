@@ -595,6 +595,18 @@ console.log('podium discs ok');
 }
 console.log('badge pencil ribbon ok');
 
+// a guest's «Confirma el correu» on the block: tapped, so straight to the address (no benefits sheet before it); closing it comes back here
+{
+  const f = fakeDoc(['account-menu', 'account-close', 'account-stats', 'account-status', 'account-since', 'account-empty', 'account-join', 'account-previous', 'account-previous-list', 'profile-row', 'stats-notice-menu', 'stats-notice-ok', 'stats-notice-close', 'stats-notice-hall']);
+  const mem = new Map(), store = { get: k => mem.get(k) ?? null, set: (k, v) => mem.set(k, v), remove: k => mem.delete(k) }, opened = [];
+  const acc = setupAccount({ focusIn() {}, profile: { refresh() {}, open: (a, b) => opened.push([a, b]), forget() {}, isOpen: false },
+    service: service({ ownerId: async () => 'u1', myStats: async () => null }), store, doc: f.doc, now: () => NOW, stats: { noticeNeeded: () => false, acceptNotice() {} } });
+  acc.open(); await tick(); f.$('profile-row').fire('click', { target: { closest: () => ({ dataset: { act: 'link' } }) } });
+  assert(opened.length === 1 && opened[0][0] === 'link' && !f.$('account-menu').open, 'the address step takes the sheet\'s place');
+  opened[0][1](); await tick(); assert(f.$('account-menu').open, 'back to Perfil');
+}
+console.log('block confirm goes straight to the address ok');
+
 // back from the badge sheet: the sheet as it was (no statistics reload: the spinner and the bar would shift it), unless they never arrived
 {
   const f = fakeDoc(['account-menu', 'account-close', 'account-stats', 'account-status', 'account-since', 'account-empty', 'account-join', 'account-previous', 'account-previous-list', 'profile-row', 'stats-notice-menu', 'stats-notice-ok', 'stats-notice-close', 'stats-notice-hall']);

@@ -101,7 +101,8 @@ body.reel-idle #select > * { pointer-events: none; }
   .sel-panel[data-tight] { gap: 12px; } .sel-panel[data-tight] > :is(.sel-song, .sel-tiles) { padding-top: 12px; } /* the info block would scroll (step 2's level row on a laptop, a two-line name at 900 px): the gaps give first (level-stats.js) */
   /* step 2 on a short laptop (900×700, 1280×600): the level row and the ranking line keep their place (level-stats.js); the song
      gives way, its credit and a smaller disc first (the glyph keeps its 22 px), then the whole row */
-  .sel-panel[data-snug] #select-song-credit, .sel-panel[data-snug="song"] > #select-song { display: none; }
+  .sel-panel[data-snug] #select-song-credit, .sel-panel:is([data-snug="song"], [data-snug="rank"]) > #select-song { display: none; }
+  .sel-panel[data-snug="rank"] > #select-standings { margin-top: 5px; } /* step 1 on a touch tablet's short window (select-standings.js): the ranking card takes the song's place, 18 px below the chip's ink (it sits 5 px low, centred for the hairline) */
   .sel-panel[data-snug] > #select-song svg { width: 32px; height: 32px; padding: 5px; }
   .sel-song svg { width: 44px; height: 44px; padding: 11px; }
   .sel-song-credit { font-size: 15px; }

@@ -15,14 +15,16 @@ class Node {
   click() { for (const f of this.listeners.click ?? []) f({ stopPropagation() {} }); }
   getClientRects() { return this.hidden ? [] : [{}]; }
   querySelectorAll() { return []; } // no layout here: phones' long names never overflow
+  closest() { return null; } // no .sel-panel unless a test gives one
 }
 const doc = { createElement: tag => new Node(tag) };
 const ids = ['select-meds', 'select-standings', 'select-standings-head', 'select-standings-pos', 'select-standings-rows', 'select-standings-foot', 'select-standings-body', 'select-standings-sk', 'select-standings-msg', 'select-info'];
 const nodes = new Map(ids.map(id => [id, new Node()]));
 const $ = id => nodes.get(id);
 let room = Infinity; // rows the info column holds before it scrolls (full medals take two, one-line ones one)
+let bonus = () => 0; // rows a tablet's panel steps give back (data-tight, data-snug="rank")
 const info = $('select-info'), list = $('select-standings-rows'), foot = $('select-standings-foot');
-Object.defineProperties(info, { clientHeight: { value: 0 }, scrollHeight: { get: () => { const m = $('select-meds').attrs; return list.kids.length + ('data-gone' in m ? 0 : 2) > room ? 10 : 0; } } });
+Object.defineProperties(info, { clientHeight: { value: 0 }, scrollHeight: { get: () => { const m = $('select-meds').attrs; return list.kids.length + ('data-gone' in m ? 0 : 2) > room + bonus() ? 10 : 0; } } });
 let boards = 0;
 const facts = setupStandings({ doc, $, onBoard: () => boards++ });
 
@@ -145,6 +147,33 @@ console.log('selector standings: rows, gaps, verified check and fitting ok');
   room = Infinity;
 }
 console.log('tablets: the first three before your neighbours ok');
+
+{ // a touch tablet's short window (an iPad's Safari: 1210×702): the gaps, then the song row make room for the three, each only
+  // when the step before can't hold them, the cheapest that does; nothing changes when even all of it can't; a taller window gives it back
+  const panel = new Node(), card = $('select-standings');
+  card.closest = () => panel;
+  bonus = () => ('data-tight' in panel.attrs ? 1 : 0) + (panel.attrs['data-snug'] === 'rank' ? 2 : 0);
+  const tabFacts = setupStandings({ doc, win: { matchMedia: q => ({ matches: !/reduce/.test(q) }), get innerHeight() { return room; } }, $, onBoard() {} }); // the window's height is the room
+  tabFacts.board({ pos: 13, total: 63, rows }, true);
+  const state = () => [shown(), 'data-tight' in panel.attrs, panel.attrs['data-snug'] ?? ''];
+  room = 3; tabFacts.fit();
+  assert.deepEqual(state(), [[1, 2, 3], false, ''], 'room for the three: the panel as it is');
+  room = 2; tabFacts.fit();
+  assert.deepEqual(state(), [[1, 2, 3], true, ''], 'one row short: the gaps give, the song stays');
+  room = 1; tabFacts.fit();
+  assert.deepEqual(state(), [[1, 2, 3], false, 'rank'], 'two short: the song row goes, the gaps keep their size');
+  room = 0; tabFacts.fit();
+  assert.deepEqual(state(), [[1, 2, 3], true, 'rank'], 'three short: both');
+  room = -5; tabFacts.fit();
+  assert.deepEqual(state().slice(2), [''], 'no room even so: the song row stays (hiding it would buy nothing)');
+  assert(bodyEl.hidden, 'and the header stands alone');
+  room = 1; tabFacts.fit(); room = 3; for (let i = 0; i < 3; i++) tabFacts.fit(); // the song's room buys a fourth row at first
+  assert.deepEqual(state(), [[1, 2, 3], false, ''], 'room for the three beside the song: it comes back, though the extras it bought go');
+  room = 0; tabFacts.fit(); room = 5; tabFacts.fit();
+  assert.deepEqual(state(), [[1, 2, 3], false, ''], 'a taller window: the song and the gaps come back at once');
+  card.closest = Node.prototype.closest; bonus = () => 0; room = Infinity; panel.attrs = {};
+}
+console.log('tablets: the panel makes room for the first three only when needed ok');
 
 // Another board, or the first answer after a placeholder (a fade, not a height ease): the card fades out
 // with the old board, swaps to the newest answer while unseen, then fades in; a refresh rewrites in place, reduced motion at once.

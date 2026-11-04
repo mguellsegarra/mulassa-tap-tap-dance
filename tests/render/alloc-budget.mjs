@@ -60,6 +60,9 @@ try {
   await page.mouse.click(196, 426); await page.waitForTimeout(3000); // into the selector
   await page.evaluate(() => document.querySelectorAll('dialog[open]').forEach(d => d.close()));
   await page.waitForFunction(() => document.body.classList.contains('reel-idle'), null, { timeout: 30000 }); // untouched: the idle reel
+  // Its crowd's pose() reaches V8's top tier only seconds into the reel: sampled before, the same build read 6.0 or 6.8 MB/s
+  // by luck (pose 0.3 or 0.65), after it a steady 5.2-5.4 (2026-11-03)
+  await page.waitForTimeout(8000);
   const idle = await allocated(8000), idleEval = await reEvaluations();
   assert.deepEqual(page.errors, [], 'no page errors');
   assert.deepEqual([...splashEval, ...idleEval], [], 'no material re-evaluated for its program every frame (a material shared by plain, instanced and skinned meshes does it)');

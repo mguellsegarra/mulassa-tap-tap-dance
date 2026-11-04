@@ -112,9 +112,10 @@ benchmarks and device sessions are unnecessary unless the task also changes runt
 - Regenerate music + chart (only when the task is about music/chart):
   `uv run --python 3.11 --with numpy --with scipy --with soundfile --with mido tools/music/build_taiko.py`
 - Never hardcode the BPM (it has changed before): the Drac changes tempo phrase by phrase (the Mulassa keeps 152 since but may not stay so), so read the local grid (`song.beats`, `beatAtTime`/`timeAtBeat`); `song.bpm` is only the opening tempo.
-- Release channels (one branch, channels by deploy): `main` is the only long-lived branch; every
-  push to it deploys beta.mulassa.cat on the test Supabase (GitHub environment `beta`: its own `VITE_SUPABASE_*`,
-  `SUPABASE_PROJECT_REF`, `SUPABASE_POOLER_HOST`, `SUPABASE_DB_PASSWORD`), a tag `vX.Y.Z` equal to package.json's version
+- Release channels (one branch, channels by deploy): `main` is the only long-lived branch. A repository ruleset blocks
+  direct pushes, force pushes and deletion on it: changes reach it only through a merged PR (from the `release/X.Y.Z`
+  branch; no review required), so a `git push origin main` fails. Every merge into it deploys beta.mulassa.cat on the
+  test Supabase (GitHub environment `beta`: its own `VITE_SUPABASE_*`, `SUPABASE_PROJECT_REF`, `SUPABASE_POOLER_HOST`, `SUPABASE_DB_PASSWORD`), a tag `vX.Y.Z` equal to package.json's version
   deploys mulassa.cat (environment `production`); running the workflow by hand on an old tag redeploys it. Each tag is a
   separately confirmed operation. `.github/workflows/deploy-pages.yml` refuses a beta build on the real Supabase.
 - Audio must stay **bit-identical** unless the task is about music: compare `shasum public/music/*` before/after.

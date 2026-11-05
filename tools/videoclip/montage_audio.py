@@ -28,7 +28,11 @@ if os.path.exists(voice_f) and any(o['type'] == 'shout' for o in p.get('overlays
 if p.get('loop'):  # the wrap: the turn's tail blends into what leads into its start (montage.js loopBuffer)
     f0 = int(p['segments'][0]['from'] * sr); out[-n:] = out[-n:] * fade[::-1] + x[f0 - n:f0] * fade
 card = next((o for o in p.get('overlays', []) if o['type'] == 'endcard'), None)
-if card:  # under the end card the music fades out (montage.js CARD_FADE)
-    u = np.arange(len(out)) / sr; out *= (np.clip(1 - (u - card['at']) / 4.5, 0, 1) ** 2)[:, None]
+u = np.arange(len(out)) / sr
+if card and not card.get('music'):  # under the end card the music fades out (montage.js CARD_FADE), unless it keeps playing
+    out *= (np.clip(1 - (u - card['at']) / 4.5, 0, 1) ** 2)[:, None]
+fin, fout = (p.get('fade') or {}).get('in', 0), (p.get('fade') or {}).get('out', 0)  # the proposal's own fades, as the tool plays them
+if fin: out *= np.clip(u / fin, 0, 1)[:, None]
+if fout: out *= np.clip((len(out) / sr - u) / fout, 0, 1)[:, None]
 sf.write(sys.argv[2], out, sr, subtype='FLOAT')
 print(f'{len(out) / sr:.2f} s')

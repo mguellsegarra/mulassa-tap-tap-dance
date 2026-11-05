@@ -6,8 +6,10 @@
   "format": "reel",
   "why": "La tensió: el segon build amb els tres GUAPA i només el baix, que es tanca just al compàs de riser abans del tram dur. Talla on la música demana el drop i el guarda per a la story 3; el final de la peça no es veu. Sense unions.",
   "segments": [
-    { "from": 122.869, "to": 135.717 }
+    {
+      "from": 122.869,
+      "to": 135.717
+    }
   ],
-  "fade": { "in": 0.2, "out": 0.15 },
   "overlays": []
 }

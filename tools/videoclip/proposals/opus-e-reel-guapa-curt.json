@@ -1,0 +1,28 @@
+{
+  "id": "opus-e-reel-guapa-curt",
+  "author": "opus-e",
+  "group": "reel",
+  "title": "Reel 50 s · GUAPA ×6, entra directe",
+  "format": "reel",
+  "why": "Com el reel GUAPA de 54 s sense els crits afegits, però entra un compàs abans del primer GUAPA (0,6 s): el ganxo és immediat i es guanyen 4 s. GUAPA ×3, segon drop, GUAPA ×3, el tram dur vermell i blanc i la targeta.",
+  "segments": [
+    {
+      "from": 88.309,
+      "to": 111.365
+    },
+    {
+      "from": 122.869,
+      "to": 150.032
+    }
+  ],
+  "overlays": [
+    {
+      "type": "endcard",
+      "at": 44.719,
+      "music": true
+    }
+  ],
+  "fade": {
+    "out": 0.7
+  }
+}

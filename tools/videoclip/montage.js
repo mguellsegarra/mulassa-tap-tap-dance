@@ -62,11 +62,11 @@ export function createMontageAudio(url) {
     const len = proposalLength(p), fin = p.fade?.in ?? 0, fout = p.fade?.out ?? 0, t0 = ac.currentTime + .05;
     const master = ac.createGain(); master.connect(ac.destination);
     // the proposal's own fades, on the master (from where playback starts); under an end card the music fades out (cardFade)
-    const card = (p.overlays ?? []).find(o => o.type === 'endcard');
-    const env = x => Math.min(1, fin ? x / fin : 1, fout ? (len - x) / fout : 1, card ? Math.max(0, 1 - (x - card.at) / CARD_FADE) ** 2 : 1);
+    const card = (p.overlays ?? []).find(o => o.type === 'endcard'); // music: true keeps the music playing under it
+    const env = x => Math.min(1, fin ? x / fin : 1, fout ? (len - x) / fout : 1, card && !card.music ? Math.max(0, 1 - (x - card.at) / CARD_FADE) ** 2 : 1);
     master.gain.setValueAtTime(Math.max(0, env(u)), t0);
     if (fin && u < fin) master.gain.linearRampToValueAtTime(1, t0 + fin - u);
-    if (card && !p.loop) for (let x = Math.max(u, card.at); x <= Math.min(len, card.at + CARD_FADE) + .001; x += .1) master.gain.linearRampToValueAtTime(env(x), t0 + x - u); // (a curve as small ramps)
+    if (card && !card.music && !p.loop) for (let x = Math.max(u, card.at); x <= Math.min(len, card.at + CARD_FADE) + .001; x += .1) master.gain.linearRampToValueAtTime(env(x), t0 + x - u); // (a curve as small ramps)
     else if (fout) { const a = Math.max(u, len - fout); master.gain.setValueAtTime(Math.max(0, env(a)), t0 + a - u); master.gain.linearRampToValueAtTime(0, t0 + len - u); }
     let at = 0;
     for (const s of p.segments) {

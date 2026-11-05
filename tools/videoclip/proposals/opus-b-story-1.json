@@ -6,8 +6,10 @@
   "format": "reel",
   "why": "El cop: comença en moviment al final del build, al segon i mig esclata el crit MULASSA a pantalla completa i cau el primer drop amb la pista de colors. Una sola peça seguida de la cançó, sense cap unió.",
   "segments": [
-    { "from": 40.666, "to": 55.12 }
+    {
+      "from": 40.666,
+      "to": 55.12
+    }
   ],
-  "fade": { "in": 0, "out": 0.3 },
   "overlays": []
 }

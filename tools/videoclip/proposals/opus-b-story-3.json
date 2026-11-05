@@ -6,10 +6,19 @@
   "format": "reel",
   "why": "La resposta a la story 2: entra directe el tram dur vermell i blanc (on la 2 s'havia quedat) i, quan comença l'outro, la Mulassa es queda sola al focus sota la targeta de mulassa.cat. Sense unions.",
   "segments": [
-    { "from": 135.717, "to": 149.8 }
+    {
+      "from": 135.717,
+      "to": 150.032
+    }
   ],
-  "fade": { "in": 0, "out": 0.5 },
   "overlays": [
-    { "type": "endcard", "at": 8.58 }
-  ]
+    {
+      "type": "endcard",
+      "at": 8.815,
+      "music": true
+    }
+  ],
+  "fade": {
+    "out": 0.7
+  }
 }

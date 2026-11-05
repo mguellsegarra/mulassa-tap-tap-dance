@@ -18,7 +18,7 @@ A proposal is made only of pieces of the current video: no new animation is rend
 - Sections today: 0.2 intro (dark entrance, title at 1.2) · 32.0 build · 41.8 MULASSA shout · 43.6–84.0 first drop
   (colour LED floor, repeated rounds) · 84.0 break · 89.7 build with GUAPA ×3 · 101.3–122.9 second drop · 122.9 build with
   GUAPA ×3 · 135.7 hard (red and white floor, hardstyle) · 144.3 outro · 158.4 end card over the video.
-- To see it: the tool at http://192.168.1.232:5190/tools/videoclip/?t=<seconds> or one frame at a time with the render
+- To see it: the tool at http://<lan-ip>:5190/tools/videoclip/?t=<seconds> or one frame at a time with the render
   mode `?render=yt|reel&scale=.5` and `window.__clip.frame(t)` (headless Chrome; take tools/qa/capture-lib.mjs `lock()`
   first: the GPU is shared).
 
@@ -55,7 +55,7 @@ A proposal is made only of pieces of the current video: no new animation is rend
   - `shout`: one of the song's spoken shouts laid at `at` (`index` in clip.json `shouts`, 0 is MULASSA): its voice from
     the lead vocal stem over whatever music plays there, and its full-screen letters in its approved style.
   - `endcard`: the approved end card (the question and the mulassa.cat pill over the blurring picture, 5.5 s, ending in
-    black). The picture under it must keep running for 5.5 s from `at`.
+    black). The picture under it must keep running for 5.5 s from `at`. The music fades out under it; `music: true` keeps it playing to the end (pair it with a short `fade.out`).
 - `group` targets: youtube the whole video (shorter than 2:39 is welcome); reel 30–60 s; stories 3 files, 10–15 s, 10–15 s
   and the closing one, `id`s ending in `-story-1`, `-story-2`, `-story-3`; tiktok 20–40 s.
 - `loop: true` marks a **perfect loop** (Reels and TikTok replay a video endlessly): the end runs straight back into

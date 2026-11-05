@@ -1,0 +1,24 @@
+{
+ "id": "opus-e-reel-guapa",
+ "author": "opus-e",
+ "group": "reel",
+ "title": "Reel 54 s · GUAPA ×9, videoclip",
+ "format": "reel",
+ "why": "Videoclip, no anunci: sense textos ni compte enrere. Comença al break, GUAPA ×3 i el segon drop; salta (la unió 111,365→122,869 del vídeo de YouTube) a l'altre build amb GUAPA ×3 i, sobre el tram dur vermell i blanc, tres GUAPA més amb les seves lletres. Tanca amb la targeta.",
+ "segments": [
+  {
+   "from": 83.978,
+   "to": 111.365
+  },
+  {
+   "from": 122.869,
+   "to": 149.8
+  }
+ ],
+ "overlays": [
+  {
+   "type": "endcard",
+   "at": 48.817
+  }
+ ]
+}

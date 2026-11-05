@@ -1,0 +1,35 @@
+<!doctype html><html lang="ca"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Story 3 · on va l'adhesiu d'enllaç</title>
+<style>
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:#121219;color:#ececf2;font:15px/1.45 system-ui,-apple-system,sans-serif;display:flex;flex-direction:column;align-items:center;gap:16px;padding:20px 12px 40px}
+h1{font-size:19px;margin:0;text-align:center}p{margin:0;color:#9a9ab0;text-align:center;max-width:360px}
+.phone{position:relative;width:min(360px,calc(100vw - 24px));aspect-ratio:9/16;border-radius:22px;overflow:hidden;background:#000;box-shadow:0 10px 40px #0008}
+video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+/* Instagram's own chrome, approximated: progress bars and name on top, reply bar at the bottom */
+.top{position:absolute;left:0;right:0;top:0;padding:8px 8px 0;background:linear-gradient(#0007,transparent);height:14%}
+.bars{display:flex;gap:3px}.bars i{flex:1;height:2px;border-radius:2px;background:#fff8}.bars i.on{background:#fff}
+.who{display:flex;align-items:center;gap:8px;margin-top:9px;font:600 13px system-ui}.who b{width:28px;height:28px;border-radius:50%;background:#f5c518;display:block}.who span{color:#fffa;font-weight:400}
+.bottom{position:absolute;left:0;right:0;bottom:0;height:20%;display:flex;align-items:flex-end;gap:10px;padding:0 12px 14px;background:linear-gradient(transparent,#0007)}
+.reply{flex:1;height:40px;border:1px solid #fff9;border-radius:99px;color:#fffc;display:flex;align-items:center;padding:0 16px;font-size:14px}
+.ico{width:26px;height:26px;border:2px solid #fff;border-radius:50%;margin-bottom:7px}
+/* the link sticker: white, rounded, chain icon and blue capitals */
+.sticker{position:absolute;left:50%;top:70.5%;transform:translate(-50%,-50%) rotate(-2deg);background:#fff;border-radius:9px;padding:7px 12px;display:flex;align-items:center;gap:6px;box-shadow:0 2px 10px #0005;white-space:nowrap}
+.sticker svg{width:16px;height:16px}.sticker span{font:800 14px/1 system-ui;letter-spacing:.02em;text-transform:uppercase;background:linear-gradient(90deg,#3d63f5,#8f3df5);-webkit-background-clip:text;background-clip:text;color:transparent}
+.zone{position:absolute;left:0;right:0;background:repeating-linear-gradient(45deg,#ff2d6f33 0 6px,transparent 6px 12px);border:1px dashed #ff2d6f;display:none;font:700 11px system-ui;color:#ff8fb0;padding:4px 6px}
+.zones .zone{display:block}
+label{display:flex;gap:8px;align-items:center;color:#ccd}
+</style>
+<h1>Story 3 · on va l'adhesiu d'enllaç</h1>
+<p>Sota la píndola de mulassa.cat i per sobre de la barra de resposta. Es veu durant tota la story.</p>
+<div class="phone" id="ph">
+  <video src="../media/publicar-opus-b-story-3.mp4" autoplay muted loop playsinline></video>
+  <div class="zone" style="top:0;height:14%">zona d'Instagram (14 %)</div>
+  <div class="zone" style="bottom:0;height:20%;display:none" id="zb">zona d'Instagram (20 %)</div>
+  <div class="top"><div class="bars"><i class="on"></i><i class="on"></i><i class="on"></i></div><div class="who"><b></b>el_teu_compte <span>2 min</span></div></div>
+  <div class="sticker"><svg viewBox="0 0 24 24" fill="none" stroke="#5a4df5" stroke-width="2.6" stroke-linecap="round"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg><span>Mira el videoclip sencer</span></div>
+  <div class="bottom"><div class="reply">Envia un missatge</div><div class="ico"></div><div class="ico"></div></div>
+</div>
+<label><input type="checkbox" id="z"> Mostra les zones que tapa Instagram</label>
+<p>Al mòbil: posa l'adhesiu i arrossega'l fins que quedi just a sota de la píndola groga, centrat. No el posis a sobre de la pregunta ni de la píndola.</p>
+<script>
+z.onchange = () => { ph.classList.toggle('zones', z.checked); zb.style.display = z.checked ? 'block' : 'none'; };
+</script>

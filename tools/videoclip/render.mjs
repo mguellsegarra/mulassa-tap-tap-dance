@@ -55,7 +55,7 @@ try {
 console.log('\nencoding…');
 let wav = join(HERE, 'media', 'mix.wav');
 if (P) { wav = join(frames, 'montage.wav'); const m = spawnSync('uv', ['run', '-q', '--python', '3.11', '--with', 'numpy', '--with', 'soundfile', 'python', '-I', join(HERE, 'montage_audio.py'), join(HERE, 'proposals', `${P.id}.json`), wav], { stdio: 'inherit' }); if (m.status) process.exit(m.status); }
-const r = spawnSync('uv', ['run', '-q', '--python', '3.11', '--with', 'av', '--with', 'numpy', '--with', 'soundfile', 'python', '-I', join(HERE, 'encode.py'), frames, wav, String(from), String(to), String(fps), out, String(ss), String(a.crf ?? 20), a.codec ?? 'h264', String(tail)], { stdio: 'inherit', env: { ...process.env, VIDEOCLIP_LOOP: P?.loop ? '1' : '' } });
+const r = spawnSync('uv', ['run', '-q', '--python', '3.11', '--with', 'av', '--with', 'numpy', '--with', 'soundfile', 'python', '-I', join(HERE, 'encode.py'), frames, wav, String(from), String(to), String(fps), out, String(ss), String(a.crf ?? 20), a.codec ?? 'h264', String(tail)], { stdio: 'inherit', env: { ...process.env, VIDEOCLIP_LOOP: P?.loop || (P && P.group !== 'youtube') ? '1' : '' } }); // (vertical pieces open on their first frame: no 2 s of black, only the proposal's own fades)
 if (!a.keep) rmSync(frames, { recursive: true, force: true }); else console.log('frames:', frames);
 if (r.status) process.exit(r.status);
 console.log(out);

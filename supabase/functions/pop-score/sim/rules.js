@@ -1,6 +1,6 @@
 // The game's rules, no drawing: Ringo Tap's Game.cs, Bomb.cs and Level.cs ported to a tick, plus the goodies.
 // The Mulassa is the red apple (tap it before its fuse ends), the Drac the green one (never tap it).
-export const FUSE = 5, SPECIAL_LIFE = 2.5, SLOW_TIME = 5, NO_MUSIC_GAP = 2.5;
+export const FUSE = 5, SPECIAL_LIFE = 2.5, SLOW_TIME = 5;
 // The petard is lit: tap it before its fuse burns down to put it out (no points: it only saves the board), or it blows up and the game is over.
 export const BOMB_FUSE = 4;
 export const BURN = .9; // a Mulassa the carretilla's Dracs burn stays on her cell that long, and nothing new comes there
@@ -9,8 +9,9 @@ export const TRAPS = ['petard', 'mulaFalsa', 'dracFals']; // one at a time; the 
 // Progressive: nothing but Mulassas at first, then each thing once it makes sense. mulas: how many must be out for it to be worth anything.
 const UNLOCK = { calcot: { score: 10 }, campanar: { score: 30 }, carretilla: { score: 20, mulas: 3 }, petard: { score: 15 }, dracFals: { score: 25 }, mulaFalsa: { score: 35 } };
 
-// Level.cs, verbatim (its music pitch steps became sequencer.js's tempo curve)
-export const swapEvery = s => s < 10 ? .75 : s < 25 ? .6 : s < 50 ? .5 : s < 100 ? .4 : s < 250 ? .3 : .2;
+// A Mulassa every swapEvery(score) seconds: a steady pace, never the tune's rhythm, that quickens smoothly with the score
+// (Level.cs's steps, .75 s at 0 to .2 s past 250, as one curve). + − × ÷ only: the server's replay rounds alike (run.js).
+export const swapEvery = s => .18 + .57 * 30 / (s + 30);
 
 // A run's dice: mulberry32 from a 32-bit seed, so the server's replay throws the same ones (run.js).
 export function seeded(seed) {
@@ -25,7 +26,7 @@ export function seeded(seed) {
 
 export function newGame({ cols = 4, rows = 6, rng = Math.random, on = () => {} } = {}) {
   const cells = Array.from({ length: cols * rows }, (_, i) => ({ i, kind: 'drac', prev: 'drac', age: 9, left: 0 }));
-  return { cols, rows, rng, on, cells, recent: [], score: 0, state: 'play', slow: 0, nextSwap: 1, since: 0, culprit: -1 };
+  return { cols, rows, rng, on, cells, recent: [], score: 0, state: 'play', slow: 0, since: 0, culprit: -1 };
 }
 
 function setKind(c, kind, left = 0) {
@@ -72,20 +73,7 @@ export function tick(g, dt) {
     else setKind(c, 'drac');
   }
   g.since += d;
-  g.nextSwap -= d;
-  if (g.nextSwap <= 0) spawned(g); // no note for too long: a phone refused the audio, and the game must go on without it
-}
-
-function spawned(g) {
-  spawn(g);
-  g.since = 0;
-  g.nextSwap = NO_MUSIC_GAP;
-}
-
-// A note of the tune is sounding: the Mulassas appear on them. Level.cs's pace is the shortest gap between two, so fast
-// passages skip notes rather than flood the board.
-export function noteSounded(g) {
-  if (g.state === 'play' && g.since >= swapEvery(g.score) * .9) spawned(g);
+  if (g.since >= swapEvery(g.score)) { g.since = 0; spawn(g); }
 }
 
 export function tap(g, i) {
@@ -109,7 +97,7 @@ export function tap(g, i) {
       g.score += 1;
       g.on('burn', m);
     }
-    if (kind === 'carretilla') { g.since = -1.2 + swapEvery(g.score); g.nextSwap = 1.2; } // a breath while the Dracs burn them
+    if (kind === 'carretilla') g.since = -1.2; // a breath while the Dracs burn them
     g.on('goodie', c, kind);
   } else miss(g, c);
 }

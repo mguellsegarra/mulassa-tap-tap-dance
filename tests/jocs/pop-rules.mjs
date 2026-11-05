@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { newGame, tick, tap, noteSounded, FUSE, swapEvery, GOODIES, TRAPS, BOMB_FUSE, BURN } from '../../src/jocs/games/pop/rules.js';
+import { newGame, tick, tap, FUSE, swapEvery, GOODIES, TRAPS, BOMB_FUSE, BURN } from '../../src/jocs/games/pop/rules.js';
 
 const seeded = s => () => (s = (s * 16807) % 2147483647) / 2147483647;
 const game = (o = {}) => newGame({ rng: seeded(7), ...o });
@@ -111,10 +111,8 @@ test('nothing changes once the game is over', () => {
 test('a long autoplayed game stays consistent: the pace rises, one trap and one goodie at most, goodies and traps do appear', () => {
   const g = game();
   const seen = new Set();
-  let frame = 0;
   for (let t = 0; t < 400 && g.state === 'play'; t += 1 / 60) {
     tick(g, 1 / 60);
-    if (++frame % 12 === 0) noteSounded(g);
     const specials = g.cells.filter(c => c.kind !== 'drac' && c.kind !== 'mula');
     assert.ok(specials.filter(c => GOODIES.includes(c.kind)).length <= 1);
     assert.ok(specials.filter(c => TRAPS.includes(c.kind)).length <= 1);
@@ -123,13 +121,13 @@ test('a long autoplayed game stays consistent: the pace rises, one trap and one 
   }
   assert.equal(g.state, 'play');
   assert.ok(g.score > 250, `score ${g.score}`);
-  assert.equal(swapEvery(g.score), .2);
+  assert.ok(swapEvery(g.score) < .25, 'the pace has quickened to its fastest');
   assert.ok([...GOODIES, ...TRAPS].every(k => seen.has(k)), [...seen].join());
 });
 
 test('a full board does not break spawning', () => {
   const g = game({ cols: 1, rows: 2 });
-  for (let t = 0; t < 3 && g.state === 'play'; t += .1) { tick(g, .1); noteSounded(g); }
+  for (let t = 0; t < 3 && g.state === 'play'; t += .1) tick(g, .1);
   assert.equal(g.state, 'play');
   assert.equal(g.cells.filter(c => c.kind === 'drac').length, 0);
 });
@@ -137,7 +135,7 @@ test('a full board does not break spawning', () => {
 test('a cell where a Mulassa is still burning gets nothing new until she is gone', () => {
   const g = game({ cols: 2, rows: 1 });
   g.cells[0].age = -5;
-  g.nextSwap = .01;
+  g.since = swapEvery(0) - .01;
   tick(g, .02);
   assert.equal(g.cells[0].kind, 'drac');
   assert.equal(g.cells[1].kind, 'mula');
@@ -153,27 +151,23 @@ test('phones want portrait, tablets landscape, a mouse anything', async () => {
   assert.equal(wrongOrient({ ...mouse, w: 400, h: 900 }), false);
 });
 
-test('Mulassas appear on the notes, no closer than the level pace, and without music the game still goes on', () => {
+test('Mulassas come at a steady pace, whatever the tune, that quickens smoothly with the score', () => {
   const mulas = g => g.cells.filter(c => c.kind === 'mula').length;
-  let g = game();
-  tick(g, .3);
-  noteSounded(g); // too soon after the start
-  assert.equal(mulas(g), 0);
-  tick(g, .4);
-  noteSounded(g);
+  const g = game();
+  tick(g, swapEvery(0) - .02);
+  assert.equal(mulas(g), 0, 'not before its time');
+  tick(g, .03);
   assert.equal(mulas(g), 1);
-  noteSounded(g); // the very next note is too close
+  tick(g, swapEvery(0) - .02);
   assert.equal(mulas(g), 1);
-  tick(g, swapEvery(0));
-  assert.equal(mulas(g), 1); // time alone adds nothing while notes come
-  noteSounded(g);
-  assert.equal(mulas(g), 2);
-
-  g = game();
-  tick(g, 1.01); // no notes at all
-  assert.equal(mulas(g), 1);
-  tick(g, 2.5);
-  assert.equal(mulas(g), 2);
+  tick(g, .03);
+  assert.equal(mulas(g), 2, 'the next one a whole interval later: an even beat');
+  assert.equal(swapEvery(0), .75);
+  for (let s = 0; s < 400; s++) {
+    const a = swapEvery(s), b = swapEvery(s + 1);
+    assert.ok(b < a && a - b < .02, `smooth and always quicker: ${s} → ${a}, ${b}`); // no jump between two scores
+  }
+  assert.ok(swapEvery(250) < .25 && swapEvery(1e6) > .18, 'Level.cs\'s fastest pace, never past it');
 });
 
 test('progressive: only Mulassas at first, each special at its own score, the fire only with several Mulassas out', () => {
@@ -182,7 +176,7 @@ test('progressive: only Mulassas at first, each special at its own score, the fi
     g.score = score;
     for (let i = 0; i < 4000; i++) {
       g.since = 9;
-      noteSounded(g);
+      tick(g, 0);
       g.cells.forEach(c => { if (c.kind !== 'drac' && c.kind !== 'mula') seen.add(c.kind); });
       g.cells.forEach(c => { if (c.kind !== 'mula' || !keepOut) { c.kind = 'drac'; c.left = 0; } }); // clear for the next roll
       if (keepOut) g.cells.filter(c => c.kind === 'mula').slice(keepOut).forEach(c => { c.kind = 'drac'; });

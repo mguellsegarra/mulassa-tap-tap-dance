@@ -12,6 +12,8 @@ import { setMusicOn, musicOn, startHomeMusic, unlock } from './audio.js';
 import { guardGpu } from './gpu-guard.js';
 import { errors } from '../../../services/errors.js';
 import { watchUpdates } from '../../../services/update-watch.js';
+import { stopDoubleTapZoom } from '../../../platform/double-tap.js';
+import { waitForTap } from './splash.js';
 
 const $ = id => document.getElementById(id);
 // the error card's words in the player's language, for index.html's watchdog (Catalan until here)
@@ -54,8 +56,10 @@ for (const b of musicBtns) b.addEventListener('click', () => { setMusicOn(!music
 syncMusicBtn();
 addEventListener('keydown', e => { if (e.key !== 'Escape') return; if (rankingUI.escape()) return; if (flow.mode === 'play' || flow.mode === 'count') flow.pause(); else flow.resume(); });
 addEventListener('resize', flow.resized);
+stopDoubleTapZoom(); // a quick second tap (the board is all quick taps) zoomed the page on an iPad
 addEventListener('pointerdown', unlock, true); // the first tap the browser counts lets the home's music sound
 addEventListener('keydown', unlock, true);
+addEventListener('touchend', unlock, true); // iOS counts a touch's end as the tap, not its start
 document.addEventListener('visibilitychange', () => { if (document.hidden) flow.pause(); });
 
 let last = performance.now(), behind = 0, odd = false; // behind: the home backdrop's time not drawn yet
@@ -94,10 +98,16 @@ await document.fonts.ready;
 // the record's place on the board comes with the menu, not after it (the pill would widen under the player's eyes); a slow
 // network waits 1.5 s at most, and the place then joins late
 await Promise.race([rankingUI.sync().catch(() => {}), new Promise(go => setTimeout(go, 1500))]);
+// the first frame of each 3D scene, still under the boot screen: it is the costly one, and the blurred home over an undrawn
+// board showed an empty night for a moment as the boot screen faded
+board.frame(0);
+hero.frame(0);
+await new Promise(go => requestAnimationFrame(() => requestAnimationFrame(go)));
 booted = true;
 requestAnimationFrame(() => {
   document.documentElement.classList.add('ready');
   errors.start(); // the SDK loads when the browser is idle (nothing at all without a DSN)
   if (flow.mode === 'menu') startHomeMusic();
+  waitForTap({ label: t('home.tap'), onGo: unlock }); // the tap the home's music needs (splash.js)
   setTimeout(() => { $('boot').hidden = true; }, 400); // kept, still: the error card comes up in it (index.html's watchdog)
 });

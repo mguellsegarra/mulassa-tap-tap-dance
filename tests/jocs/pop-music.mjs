@@ -64,15 +64,9 @@ test('the tap can ask which note of the tune is sounding', () => {
   assert.equal(seq.noteNow(), played);
 });
 
-test('the conductor announces each note of the tune once, when game time reaches it, and keeps the audio\'s steps for it', () => {
+test('the conductor lays out the tune ahead of game time and keeps the audio\'s steps for it, each once', () => {
   const tune = createConductor();
-  tune.advance(.35);
-  assert.equal(tune.due(-.01), 0);
-  assert.equal(tune.due(0), 1, 'the pickup\'s first note at time 0');
-  assert.equal(tune.due(0), 0, 'once');
   tune.advance(4);
-  const beats = MELODY.filter(n => n[0] < 12 + 4 * bpmFor(0) / 60).length;
-  assert.equal(1 + tune.due(4), beats);
   const steps = tune.take();
   assert.ok(steps.length >= 4 * bpmFor(0) / 60 / STEP && tune.take().length === 0, 'the steps go to the audio once');
 });

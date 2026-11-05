@@ -139,8 +139,8 @@ export const SFX = {
   // the lead voice's note, an octave up, sounding at once on the tap (waiting for the beat would feel late)
   hit: () => { const m = seq.noteNow(), f = hz(m + 12); tone(f, .1, 'triangle', .13); tone(f, .14, 'sine', .09); },
   // on the chord that's sounding: a fixed pitch clashed with the song
-  // a figure springs up out of the board: a plop rising onto one of the chord's notes, under the tap's (it comes with every note)
-  sprout: () => { const t = seq.tonesNow(), f = hz(72 + t[Math.floor(Math.random() * t.length)]); tone(f * .5, .14, 'sine', .12, f); tone(f, .08, 'triangle', .06, f * 1.5, .07); },
+  // a Mulassa springs up out of the board: a plop rising onto the tune's note sounding now (the tap plays it an octave up)
+  sprout: () => { const f = hz(seq.noteNow()); tone(f * .5, .14, 'sine', .12, f); tone(f, .08, 'triangle', .06, f * 1.5, .07); },
   goodie: () => { const [a, b, c] = seq.tonesNow(); [a, b, c, a + 12].forEach((pc, i) => { const f = hz(72 + pc); tone(f, .14, 'triangle', .12, f, i * .06); }); },
   // the campanar: a low bell in the chord's key, its inharmonic partials ringing long; and a lift when the slow time ends
   bell: () => { const f = hz(48 + seq.tonesNow()[0]); [[1, .3, 2.6], [2, .14, 1.8], [2.4, .1, 1.4], [3, .07, 1], [4.2, .04, .7]].forEach(([k, v, d]) => tone(f * k, d, 'sine', v)); },

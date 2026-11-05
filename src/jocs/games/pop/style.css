@@ -284,3 +284,18 @@ div.mula-load{display:flex;align-items:center;justify-content:center;container-t
   .c-card .nb { height: calc(var(--name) * 1.1 + var(--line) * 2.3 + 26px); }
   .c-por { bottom: calc(var(--name) * 1.1 + var(--line) * 2.3 + 20px); }
 }
+/* The home waits for the tap (splash.js): the title big, the live figures and mulassa.cat's gold button, one group in the
+   middle over the blurred board; the rest of the home comes in after the tap */
+.sp-home .home { grid-template-rows: 1fr; }
+@keyframes sp-breathe { 0%, 100% { scale: 1; } 50% { scale: 1.06; } }
+.sp-home .c-hero { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: clamp(8px, 3dvh, 32px); padding: calc(var(--sat) + 24px) var(--m) calc(var(--sab) + 24px); } /* one group, centred */
+.sp-home .c-text { display: contents; }
+.sp-home .pop-title { width: min(700px, 100vw - 2 * var(--m), 57dvh); }
+.sp-home .c-art { flex: 0 1 auto; height: min(56dvh, 560px); margin-top: calc(-1 * clamp(8px, 3dvh, 32px)); } /* close under the title */
+.sp-home .c-play-row { order: 3; margin-top: clamp(8px, 3dvh, 32px); } /* and the button a little apart below */
+.sp-home .c-pitch, .sp-home .c-play-row > :not(#tap-start), .sp-home .c-row, .sp-home #back, .sp-home #menu-music { display: none; }
+#tap-start { min-width: 260px; min-height: 60px; padding: 8px 32px; border: 2px solid #f5c518; border-radius: 12px; background: linear-gradient(180deg, #ffe066 0%, #f5c518 55%, #dfad13 100%); color: #2a1a10; font: 800 24px 'Baloo 2', system-ui, sans-serif; box-shadow: 0 6px 0 #8a6a12, 0 16px 40px #0008; animation: sp-breathe 1.6s ease-in-out infinite; }
+/* after the tap: what was hidden comes in, a little after the title and the figures have started to move */
+.sp-in .c-pitch, .sp-in .c-play-row > *, .sp-in .c-row, .sp-in #back, .sp-in #menu-music { animation: sp-fade .45s ease-out .15s both; }
+@keyframes sp-fade { from { opacity: 0; translate: 0 8px; } }
+@media (prefers-reduced-motion: reduce) { #tap-start, .sp-in .home * { animation: none !important; } }

@@ -21,6 +21,8 @@
 <body>
   <canvas id="game" data-t-aria="board" aria-label="Tauler de Mulassa Pop"></canvas>
 
+  <!-- The run's 3, 2, 1 (flow.js): over the board, never in the way of a tap (nothing to tap yet). -->
+  <div id="count" aria-hidden="true" hidden><b></b></div>
   <div id="hud" hidden>
     <button id="pause" class="round-btn" data-t-aria="pause" aria-label="Pausa"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg></button>
     <div id="hud-mid">
@@ -47,7 +49,7 @@
         <p class="c-pitch" data-t="home.pitch"></p>
         <div class="c-play-row">
           <button id="play" class="game-play"><svg viewBox="0 0 24 24"><path d="M7 4.5v15a1 1 0 0 0 1.5.9l12-7.5a1 1 0 0 0 0-1.8l-12-7.5A1 1 0 0 0 7 4.5z"/></svg><span data-t="play">Juga</span></button>
-          <button type="button" class="c-best" id="menu-best" data-t-aria="rank.open" aria-label="Rànquing" disabled><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 3h10v3h3v2a4 4 0 0 1-4 4h-.4A5 5 0 0 1 13 14.8V17h3v3H8v-3h3v-2.2A5 5 0 0 1 8.4 12H8a4 4 0 0 1-4-4V6h3zm-1 5c0 1 .8 2 2 2V8zm12 2c1.2 0 2-1 2-2h-2z"/></svg><span class="label" data-t="home.bestShort"></span> <b id="menu-best-num"></b><span class="rank" id="menu-rank" hidden></span><span class="none" data-t="home.bestNone"></span><svg class="go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button>
+          <button type="button" class="c-best" id="menu-best" data-t-aria="rank.open" aria-label="Rànquing" disabled><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 3h10v3h3v2a4 4 0 0 1-4 4h-.4A5 5 0 0 1 13 14.8V17h3v3H8v-3h3v-2.2A5 5 0 0 1 8.4 12H8a4 4 0 0 1-4-4V6h3zm-1 5c0 1 .8 2 2 2V8zm12 2c1.2 0 2-1 2-2h-2z"/></svg><span class="label" data-t="home.board">Veure classificació</span><span class="rank" id="menu-rank" hidden></span><svg class="go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button>
         </div>
       </div>
       <div class="c-art"><canvas id="menu-hero" aria-hidden="true"></canvas></div>

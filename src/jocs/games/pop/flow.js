@@ -2,10 +2,11 @@
 // (rules.js) turned into what is seen and heard, and which screen is up. main.js builds it and drives step() every frame.
 import { newGame, tick } from './rules.js';
 import { createRun, TICKS_PER_S } from './run.js';
-import { startMusic, stopMusic, pauseMusic, resumeMusic, followGame, SFX } from './audio.js';
+import { startMusic, stopMusic, pauseMusic, resumeMusic, followGame, startHomeMusic, armAudio, SFX } from './audio.js';
 import { BOT_FROM, botTap } from './autoplay.js';
 import { haptic } from '../../../platform/haptics.js';
-import { best, END_SHEET_MS } from './results.js';
+import { END_SHEET_MS } from './results.js';
+import { best } from './best.js';
 import { RANKING } from './ranking-ui.js';
 
 const COLORS = { hit: ['#c0283c', '#d9a521', '#fff3d6', '#1f5c33'], goodie: ['#f5c518', '#fff3d6', '#ffe066'] };
@@ -16,11 +17,33 @@ const params = new URLSearchParams(location.search);
 const BOT = import.meta.env.DEV && params.has('autoplay');
 const BELL = import.meta.env.DEV && params.has('campanar');
 const BELL_FROM = +(params.get('campanar') || 150);
+// A run starts on a 3, 2, 1, .6 s each (the owner's pace: a beat and a half at the tune's opening 150 BPM). The run's clock
+// only starts after it: the server's replay (pop-score) never sees the count.
+const EACH = .6, COUNT = 3 * EACH;
 
 // booted(): the boot screen is gone, so the home may ask the board for the player's place
 export function createFlow({ board, hud, results, rankingUI, t, booted }) {
   const $ = id => document.getElementById(id);
   let run = null, game = null, mode = 'menu', endTimer = 0, clock = 0, bellAt = 0; // clock: the run's play time, in seconds
+  let countT = 0, counted = 0, pausedCount = false; // the 3, 2, 1's time left, the number shown; a pause during it starts it over
+  const count = $('count');
+  function countFrom3() { countT = COUNT; counted = 0; mode = 'count'; armAudio(); }
+  function countStep(dt) {
+    countT -= dt;
+    const n = Math.ceil(countT / EACH - 1e-6);
+    if (n > 0 && n !== counted) {
+      counted = n;
+      count.hidden = false;
+      const b = count.firstChild;
+      b.textContent = n;
+      b.style.animation = 'none'; void b.offsetWidth; b.style.animation = ''; // the pop again, for each number
+      SFX.count(n);
+    }
+    if (countT > 0) return;
+    count.hidden = true;
+    mode = 'play';
+    startMusic(run.tune);
+  }
   const word = kind => (kind === 'calcot' ? '+5' : t(`word.${kind}`));
 
   function on(event, cell, kind) {
@@ -67,8 +90,7 @@ export function createFlow({ board, hud, results, rankingUI, t, booted }) {
     $('hud-best-num').textContent = best() || '';
     $('hud-best').hidden = !best();
     $('pause').style.visibility = '';
-    mode = 'play';
-    startMusic(run.tune);
+    countFrom3();
     hud.sync(game, true);
     board.fit(); // now the HUD has a height
   }
@@ -80,17 +102,17 @@ export function createFlow({ board, hud, results, rankingUI, t, booted }) {
     game.state = 'menu';
     hud.setSlow(false, false);
     board.setGame(game);
-    for (const id of ['end-menu', 'pause-menu', 'hud']) $(id).hidden = true;
+    for (const id of ['end-menu', 'pause-menu', 'hud', 'count']) $(id).hidden = true;
     $('menu').hidden = false;
-    $('menu-best').classList.toggle('empty', !best());
-    $('menu-best-num').textContent = best();
     $('menu-best').disabled = !RANKING;
-    if (booted()) rankingUI.sync();
     mode = 'menu';
+    if (booted()) { rankingUI.sync(); startHomeMusic(); } // at boot, main.js starts it once the home is up
   }
 
   function pause() {
-    if (mode !== 'play') return;
+    if (mode !== 'play' && mode !== 'count') return;
+    pausedCount = mode === 'count';
+    count.hidden = true;
     mode = 'paused';
     pauseMusic();
     $('pause-menu').hidden = false;
@@ -98,9 +120,10 @@ export function createFlow({ board, hud, results, rankingUI, t, booted }) {
   }
   function resume() {
     if (mode !== 'paused') return;
+    $('pause-menu').hidden = true;
+    if (pausedCount) return countFrom3(); // the run had not begun: the count again, from 3
     mode = 'play';
     resumeMusic();
-    $('pause-menu').hidden = true;
   }
 
   function tap(x, y) {
@@ -112,6 +135,7 @@ export function createFlow({ board, hud, results, rankingUI, t, booted }) {
   // dt: this frame's seconds, already capped by main.js so a stalled tab does not burn the fuses
   function step(dt) {
     if (mode === 'ending') tick(game, dt);
+    if (mode === 'count') countStep(dt);
     if (mode !== 'play') return;
     clock += dt;
     run.until(Math.floor(clock * TICKS_PER_S)); // the rules' fixed steps this frame has reached

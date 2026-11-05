@@ -8,7 +8,7 @@ import { createFlow } from './flow.js';
 import { setupRankingUI } from './ranking-ui.js';
 import { setupOrientation } from './orientation.js';
 import { t, applyWords } from './i18n.js';
-import { setMusicOn, musicOn } from './audio.js';
+import { setMusicOn, musicOn, startHomeMusic, unlock } from './audio.js';
 import { guardGpu } from './gpu-guard.js';
 import { errors } from '../../../services/errors.js';
 import { watchUpdates } from '../../../services/update-watch.js';
@@ -52,8 +52,10 @@ const musicBtns = document.querySelectorAll('.music-btn'); // the HUD's and the 
 const syncMusicBtn = () => { for (const b of musicBtns) { b.setAttribute('aria-pressed', musicOn()); b.querySelector('.music-off').toggleAttribute('hidden', musicOn()); } };
 for (const b of musicBtns) b.addEventListener('click', () => { setMusicOn(!musicOn()); syncMusicBtn(); });
 syncMusicBtn();
-addEventListener('keydown', e => { if (e.key !== 'Escape') return; if (rankingUI.escape()) return; if (flow.mode === 'play') flow.pause(); else flow.resume(); });
+addEventListener('keydown', e => { if (e.key !== 'Escape') return; if (rankingUI.escape()) return; if (flow.mode === 'play' || flow.mode === 'count') flow.pause(); else flow.resume(); });
 addEventListener('resize', flow.resized);
+addEventListener('pointerdown', unlock, true); // the first tap the browser counts lets the home's music sound
+addEventListener('keydown', unlock, true);
 document.addEventListener('visibilitychange', () => { if (document.hidden) flow.pause(); });
 
 let last = performance.now(), behind = 0, odd = false; // behind: the home backdrop's time not drawn yet
@@ -96,5 +98,6 @@ booted = true;
 requestAnimationFrame(() => {
   document.documentElement.classList.add('ready');
   errors.start(); // the SDK loads when the browser is idle (nothing at all without a DSN)
+  if (flow.mode === 'menu') startHomeMusic();
   setTimeout(() => { $('boot').hidden = true; }, 400); // kept, still: the error card comes up in it (index.html's watchdog)
 });

@@ -2,6 +2,7 @@
 // ranking.js's (or ranking-mock.js's on a dev server with no Supabase), loaded only when needed. Names as on mulassa.cat's
 // boards (src/ui/profile-notes.js): a guest's quieter, a confirmed address's with its check or chosen badge.
 import { RUN_VERSION } from './run.js';
+import { raiseBest } from './best.js';
 
 const SUPABASE = !!import.meta.env.VITE_SUPABASE_URL;
 export const RANKING = SUPABASE || import.meta.env.DEV;
@@ -27,7 +28,7 @@ export function setupRankingUI({ t, focusBack }) {
       m = await service();
       const res = await m.publish(body);
       m.forget();
-      showPlace(res.position); // on the home's pill before the player goes back to it
+      showPlace(res.position, res.best); // on the home's pill before the player goes back to it
       if (mine !== sent) return;
       line.textContent = t(res.improved ? 'rank.newBest' : 'rank.place', { n: res.position });
       line.classList.toggle('good', res.improved);
@@ -43,9 +44,12 @@ export function setupRankingUI({ t, focusBack }) {
       name.href = e.code === 'released' ? '/#nom-pop-canvi' : '/#nom-pop';
     }
   }
-  function showPlace(position) {
+  // the home's pill: the player's place; the board's best becomes this device's when higher (played elsewhere: the HUD and
+  // the end sheet then measure a run against it)
+  function showPlace(position, score) {
     $('menu-rank').hidden = !position;
     if (position) $('menu-rank').textContent = ` · #${position}`;
+    raiseBest(score);
   }
   function endScreen() { $('end-rank').hidden = $('end-name').hidden = true; }
 
@@ -57,7 +61,7 @@ export function setupRankingUI({ t, focusBack }) {
     const kept = m.pending();
     if (kept) try { await m.publish(kept); m.forget(); } catch (e) { if (REFUSED.has(e.code)) m.forget(); }
     const { place } = await m.me().catch(() => ({}));
-    showPlace(place?.position);
+    showPlace(place?.position, place?.score);
   }
 
   // a player's name as the main boards show it, into `into`

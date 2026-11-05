@@ -1,10 +1,16 @@
-// The music (sequencer.js) and the synthesized effects, on one context that starts inside the player's first tap.
+// The music (sequencer.js), the home's (menu-music.js) and the synthesized effects, on one context. A browser lets it sound
+// only after a tap on the page (Chrome also after one on mulassa.cat's games sheet that led here): unlock() is every tap.
 import { createSequencer, hz } from './sequencer.js';
 import { store } from '../../../platform/storage.js';
 import { fresh } from './fresh.js';
 import { audioClock } from '../../../platform/audio-clock.js';
+import { createMenuMusic } from './menu-music.js';
+import homeUrl from './menu-music.mp3?url';
+import homeLoop from './menu-music.json' with { type: 'json' };
+import { MELODY } from './melody.js';
 
 let on = store.get('pica-music') /* the game's first name, kept */ !== 'off', ctx = null, clock = null, seq = null, sfxBus = null, noise = null, timer = 0;
+let music = null, home = null, homeOn = false; // music: on/off for everything musical; home: the home's music, homeOn while it should play
 let tune = null, offset = 0; // the run's conductor; audio time = game time + offset
 
 // The tune is laid out by the game's frames (conductor.js), ahead of them; the timer queues it. The offset only grows: after
@@ -19,21 +25,57 @@ export function setMusicOn(v) {
   on = v;
   store.set('pica-music', v ? 'on' : 'off');
   seq?.gain(v ? .9 : 0);
+  music?.gain.setTargetAtTime(v ? 1 : 0, ctx.currentTime, .05);
 }
-// inside the tap that starts a game: browsers only let audio start from a gesture
+// made with the page, suspended until the browser lets it sound (unlock)
+function audio() {
+  if (ctx) return true;
+  try { ctx = new AudioContext(); } catch { return false; } // no Web Audio: a silent game
+  clock = audioClock(ctx);
+  seq = createSequencer(ctx);
+  sfxBus = ctx.createBiquadFilter();
+  sfxBus.type = 'lowpass';
+  sfxBus.frequency.value = 3000;
+  sfxBus.connect(ctx.destination);
+  noise = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate); // a second of white noise, made once: the blast's body
+  const d = noise.getChannelData(0);
+  for (let k = 0; k < d.length; k++) d[k] = Math.random() * 2 - 1;
+  music = ctx.createGain();
+  music.gain.value = on ? 1 : 0;
+  music.connect(ctx.destination);
+  home = createMenuMusic(ctx, music, { url: homeUrl, loop: homeLoop });
+  return true;
+}
+// every tap or key: the first one the browser counts lets the context run (a suspended one stays as it is)
+export function unlock() {
+  if (ctx?.state === 'suspended' && homeOn) ctx.resume(); // never a paused run's (its menu is tapped too)
+}
+// the home: its music, as soon as the browser lets it sound (Chrome may at once, coming from the games sheet's tap)
+export function startHomeMusic() {
+  if (!audio()) return;
+  homeOn = true;
+  home.play();
+  ctx.resume().catch(() => {}); // refused without a tap yet: unlock() asks again on the first one
+}
+export function stopHomeMusic() {
+  homeOn = false;
+  home?.stop();
+}
+// a hidden page: the home's music stops with it and comes back with it (a run pauses on its own, main.js)
+document.addEventListener('visibilitychange', () => {
+  if (!homeOn || !ctx) return;
+  if (document.hidden) ctx.suspend(); else ctx.resume();
+});
+// inside «Juga»'s tap, before the 3, 2, 1: the home's music goes and the context may run (iOS needs that tap's gesture)
+export function armAudio() {
+  if (!audio()) return;
+  stopHomeMusic();
+  ctx.resume();
+}
+// inside the tap that starts a game (or after armAudio): browsers only let audio start from a gesture
 export function startMusic(conductor) {
-  if (!ctx) {
-    ctx = new AudioContext();
-    clock = audioClock(ctx);
-    seq = createSequencer(ctx);
-    sfxBus = ctx.createBiquadFilter();
-    sfxBus.type = 'lowpass';
-    sfxBus.frequency.value = 3000;
-    sfxBus.connect(ctx.destination);
-    noise = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate); // a second of white noise, made once: the blast's body
-    const d = noise.getChannelData(0);
-    for (let k = 0; k < d.length; k++) d[k] = Math.random() * 2 - 1;
-  }
+  if (!audio()) return;
+  stopHomeMusic();
   ctx.resume();
   tune = conductor;
   offset = ctx.currentTime + LEAD; // game time 0 is queued now; at() keeps every note a little ahead of the clock
@@ -104,6 +146,13 @@ export const SFX = {
   bell: () => { const f = hz(48 + seq.tonesNow()[0]); [[1, .3, 2.6], [2, .14, 1.8], [2.4, .1, 1.4], [3, .07, 1], [4.2, .04, .7]].forEach(([k, v, d]) => tone(f * k, d, 'sine', v)); },
   unbell: () => { const [a, b, c] = seq.tonesNow(); [c, b, a + 12].forEach((pc, i) => tone(hz(72 + pc) * .5, .16, 'triangle', .1, hz(72 + pc), i * .05)); },
   wrong: () => tone(180, .35, 'triangle', .2, 70),
+  // the 3, 2, 1: the Ball de la Mulassa's first three notes (melody.js: G, G, C), each on a kick (the sequencer's, harder);
+  // the 1 a little louder
+  count: n => {
+    const last = n === 1, f = hz(MELODY[3 - n][2]);
+    tone(130, .22, 'sine', last ? .55 : .45, 42);
+    tone(f, .22, 'triangle', last ? .17 : .14); tone(f, .3, 'sine', last ? .12 : .1);
+  },
   fire: () => { tone(120, 1.1, 'triangle', .22, 50); tone(70, 1.1, 'sine', .2, 140); },
   // the blast: one of four, never the last one, like the board's (board-blast.js)
   boom: () => nextBoom()(),

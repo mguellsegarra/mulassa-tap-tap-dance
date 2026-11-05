@@ -101,6 +101,11 @@ a.exit:hover .exit-tip, a.exit:focus-visible .exit-tip { animation: none; opacit
 .pop-word i { display: inline-block; font-style: normal; animation: games-pop 2.4s ease-in-out infinite; animation-delay: calc(var(--i) * .07s); }
 @keyframes games-pop { 0%, 20%, 100% { translate: 0 0; scale: 1; } 8% { translate: 0 -.28em; scale: 1.18; } 14% { translate: 0 .04em; scale: .97; } }
 @media (prefers-reduced-motion: reduce) { .pop-word i { animation: none; } }
+/* The run's 3, 2, 1 (flow.js): the logo's POP letters, big over the board, each popping in on its kick */
+#count { position: fixed; z-index: 2; inset: 0; display: grid; place-items: center; pointer-events: none; }
+#count b { font: 800 min(42vw, 32dvh)/1 'Baloo 2', system-ui, sans-serif; color: #ff7ac6; -webkit-text-stroke: .15em #2a1a10; paint-order: stroke fill; animation: count-pop .6s ease-out both; } /* flow.js EACH */
+@keyframes count-pop { 0% { scale: 1.8; opacity: 0; } 18% { scale: .92; opacity: 1; } 30% { scale: 1.04; } 45%, 80% { scale: 1; opacity: 1; } 100% { scale: .85; opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { #count b { animation: none; } }
 .c-art { order: 1; flex: 1 1 0; min-height: 72px; width: 100%; display: flex; align-items: center; justify-content: center; position: relative; container-type: size; }
 .c-art::before { content: ""; position: absolute; width: min(100%, 100cqh, 340px); aspect-ratio: 1; border-radius: 50%; background: radial-gradient(#ff7ac655, #ff7ac600 68%); }
 .c-art canvas { position: relative; width: min(100cqw, 100cqh * 1.5, 540px); height: min(100cqh, 100cqw / 1.5 + 0px, 360px); } /* hero.js: the Mulassa and the Drac, live */
@@ -113,9 +118,6 @@ a.exit:hover .exit-tip, a.exit:focus-visible .exit-tip { animation: none; opacit
 @keyframes game-play-hop { 0%, 60%, 100% { translate: 0 0; } 70% { translate: 0 -8px; } 80% { translate: 0 0; } 87% { translate: 0 -3px; } 94% { translate: 0 0; } }
 .c-best { display: inline-flex; align-items: center; gap: 6px; height: 44px; padding: 0 12px; border-radius: 22px; background: #24223fe8; box-shadow: inset 0 0 0 2px #ff7ac655; font-size: 16px; color: #e8d8b8; }
 .c-best svg { width: 20px; height: 20px; color: #ff7ac6; }
-.c-best b { font-size: 24px; color: #fff3d6; }
-.c-best .none, .c-best.empty .label, .c-best.empty b { display: none; }
-.c-best.empty .none { display: inline; }
 .c-best .rank { color: #ff7ac6; }
 /* the record is the board's button (main.js enables it when there is a board) */
 button.c-best { width: auto; min-height: 0; border: 0; font: inherit; font-size: 16px; color: #e8d8b8; }

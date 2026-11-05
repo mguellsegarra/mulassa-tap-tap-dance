@@ -1,13 +1,11 @@
 // A run's end: the blast and its culprit, then the end sheet with the score, this device's best and the board's answer
-// (ranking-ui.js). flow.js says when; the best lives here.
-import { store } from '../../../platform/storage.js';
+// (ranking-ui.js). flow.js says when.
 import { stopMusic, SFX } from './audio.js';
 import { haptic } from '../../../platform/haptics.js';
 import { RANKING } from './ranking-ui.js';
+import { best, raiseBest } from './best.js';
 
-const BEST = 'pica-best'; // the game's first name: kept, so a best score survives the rename
 export const END_SHEET_MS = 1200; // the blast plays out before the sheet comes up (tests/jocs/pop-blast.mjs)
-export const best = () => +store.get(BEST) || 0;
 
 export function createResults({ board, t, rankingUI }) {
   const $ = id => document.getElementById(id);
@@ -28,7 +26,7 @@ export function createResults({ board, t, rankingUI }) {
   // practice: a dev run (?autoplay, ?campanar) neither sets the best nor goes on the board
   function show(run, { practice }) {
     const { game } = run, was = best(), record = game.score > was;
-    if (record && !practice) store.set(BEST, game.score);
+    if (record && !practice) raiseBest(game.score);
     $('end-title').textContent = t(record ? 'end.record' : 'end.over');
     $('end-score').textContent = game.score;
     $('end-best').textContent = record ? t('end.recordSub') : t('end.best', { best: was });

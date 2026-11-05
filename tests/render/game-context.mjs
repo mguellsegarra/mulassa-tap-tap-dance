@@ -72,6 +72,7 @@ privacyMenuStub.querySelector = () => privacyBodyStub;
 privacyMenuStub.close = function () { this.open = false; this.listeners.close(); };
 document.getElementById('privacy-content').content = privacyFragmentStub;
 class Renderer {
+  capabilities = { getMaxAnisotropy: () => 8 };
   constructor() { this.shadowMap = {}; this.lost = false; }
   getContext() { return { isContextLost: () => this.lost }; }
   setPixelRatio() {}

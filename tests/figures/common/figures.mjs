@@ -332,7 +332,7 @@ assert(!$('select-towns').innerHTML.includes('sel-soon'), 'no «Pròximament» p
   assert.equal(banners.at(-1), INVITE_TOWN.id, 'the invitation stays last');
   assert.deepEqual(banners.filter(t => t !== 'valls' && t !== INVITE_TOWN.id), TOWNS.slice(1).filter(t => FIGURES.some(f => f.town === t.id)).map(t => t.id), 'the strip groups follow the pills');
   assert.equal(strip.banners[0].dataset.town, 'valls');
-  const vallsOrder = ['bou-tradicional-valls', 'os-trabucaires-valls', 'cavallets-valls', 'basilisc-valls', 'aliga-valls', 'gegants-ciutat-valls'].filter(id => UNRELEASED_IDS.has(id) || id !== 'bou-tradicional-valls'); // (the Bou, until its release)
+  const vallsOrder = ['bou-tradicional-valls', 'os-trabucaires-valls', 'cavallets-valls', 'basilisc-valls', 'aliga-valls', 'gegants-ciutat-valls', 'bou-valls'].filter(id => UNRELEASED_IDS.has(id) || id !== 'bou-tradicional-valls'); // (the Bou, until its release)
   assert.deepEqual(FIGURES.filter(f => f.town === 'valls' && !playable(f)).map(f => f.id).slice(0, 6), vallsOrder.slice(0, 6), "Valls' agreed order");
 }
 

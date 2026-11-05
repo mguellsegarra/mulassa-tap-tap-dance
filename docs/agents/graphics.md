@@ -134,3 +134,7 @@ comes back blank, with its default state (identity transform, default font), and
 - `tests/build/bundle-size.mjs` builds into a temp dir (a few seconds) and fails when the largest JS chunk passes 492,000 bytes gzip (measured 477,732). Raise it only for a deliberate addition.
 - `?perf` also shows `geo`/`tex`/`prog` (GPU memory counts), skinned people and total bones; `window.__perfLive()` returns the same counts on demand. Skinned load: 2-4 skinned meshes, about 480-530 bones, at most 41 people moving on them.
 - Shadows: the sun's frustum is 15 m each side (the played ground plus margin), and only figures, collas, the crowd (high) cast. Plaza buildings, trees and lamps are receive-only. Static plaza meshes have `matrixAutoUpdate = false`.
+
+## Bou activation budget (1.4.0 preparation)
+
+Activating the existing Bou includes its model, dance, colla, effects and song data in the production main chunk. Measured gzip -9: 517,141 bytes, above the previous unreleased-Bou budget of 492,000. The deliberate figure addition sets a 533,000-byte budget (~3% headroom); it does not establish startup latency or explain a post-splash GPU stall. No other branch changes or audio assets were imported.

@@ -1,3 +1,4 @@
+import { UNRELEASED_IDS } from '../../src/figures/index.js';
 // The production build plays: built with the real vite.config.js (an unreleased figure swapped out by
 // tools/deploy/unreleased-figure.mjs, which dev and every other test never run), a Mulassa run starts, the plaça moves
 // and nothing throws; the pending Bou's card shows on the way. Needs Playwright (PLAYWRIGHT_DIR, default /tmp/ui-inv-pw)
@@ -40,10 +41,11 @@ try {
   };
   await page.waitForFunction(() => document.querySelector('.sel-card[aria-selected="true"]')?.dataset.id === 'mulassa-valls', null, { timeout: 30000 });
   await step('forward'); await step('forward');
-  assert.equal(await selected(), 'bou-tradicional-valls', 'the pending Bou is in the strip');
-  assert(await page.evaluate(() => document.getElementById('select-next').disabled), 'the pending Bou cannot be played');
-  await step('prev'); await step('prev');
-  assert.equal(await selected(), 'mulassa-valls');
+  assert.equal(await selected(), 'bou-tradicional-valls', 'the Bou is in the strip');
+  const bouPending = UNRELEASED_IDS.has('bou-tradicional-valls');
+  assert.equal(await page.evaluate(() => document.getElementById('select-next').disabled), bouPending, 'the production selector follows the Bou release switch');
+  if (bouPending) { await step('prev'); await step('prev'); }
+  assert.equal(await selected(), bouPending ? 'mulassa-valls' : 'bou-tradicional-valls');
   await page.waitForFunction(() => !document.getElementById('select-next').disabled, null, { timeout: 10000 });
   // back from the pending Bou the dock slides «Tria la dificultat» up from below the screen: tap it once it rests on screen
   await page.waitForFunction(() => {
@@ -64,5 +66,5 @@ try {
   const crowd = await page.evaluate(() => window.__dbg.crowd.map(p => [p.pos.x, p.pos.y]).flat());
   assert(crowd.length && crowd.every(Number.isFinite), 'every spectator stands somewhere');
   assert.deepEqual(errors, [], 'no page error in the production build');
-  console.log('prod play: the production build plays a Mulassa run ok');
+  console.log(`prod play: the production build plays ${bouPending ? 'Mulassa' : 'Bou'} ok`);
 } finally { await server?.close(); await browser.close(); rmSync(outDir, { recursive: true, force: true }); }

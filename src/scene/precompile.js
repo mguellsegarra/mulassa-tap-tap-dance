@@ -12,6 +12,8 @@ export function precompile(quad = false) {
   const jobs = [], prev = renderer.getRenderTarget?.() ?? null;
   let rt = null;
   try {
+    // Cache the driver's limit under the loader: the Bou's first image otherwise queries it during entry.
+    renderer.capabilities.getMaxAnisotropy();
     jobs.push(renderer.compileAsync(scene, camera)); // three.js traverses hidden meshes too, including the Drac and its flames
     if (balloonFx) jobs.push(balloonFx.warm(renderer));
     dracWarm(renderer); // its glow texture (the Drac's meshes are in the scene, compiled above)

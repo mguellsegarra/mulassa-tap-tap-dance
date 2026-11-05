@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { gzipSync } from 'node:zlib';
 import { build } from 'vite';
 
-const MAIN_GZIP_MAX = 492_000; // measured 477,732 bytes (gzip -9) plus ~3%
+const MAIN_GZIP_MAX = 533_000; // Bou activated: measured 517,141 bytes (gzip -9) plus ~3%
 const out = mkdtempSync(join(tmpdir(), 'mulassa-bundle-'));
 try {
   await build({ root: fileURLToPath(new URL('../..', import.meta.url)), logLevel: 'silent', build: { outDir: out, emptyOutDir: true } });

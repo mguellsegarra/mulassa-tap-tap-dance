@@ -67,13 +67,11 @@
 @media (max-width: 519px) and (min-height: 501px) and (max-height: 700px) {
   #select { --dock-h: clamp(160px, calc(100dvh - 408px), 240px); }
   .sel-pending { width: calc(100% - 16px); }
-  .sel-card { container-type: size; }
-  @container (max-height: 100px) {
-    .sel-card .por { --floor: 9px; grid-area: 1 / 1 / -1 / -1; justify-self: start; width: 46%; }
-    .sel-card .nb { grid-area: 1 / 1 / -1 / -1; justify-self: end; width: 54%; padding-inline: 4px; box-shadow: inset 1px 0 #fff3d61a; }
-    /* a three-line name leaves the entity one line (Tio Gori i Tia Caballera); the town is on the banner beside it */
-    .sel-card .nb small:not(.sel-entity-icons) { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 1; overflow: hidden; }
-  }
+  /* a card 100 px tall or less (select-layout.js sets data-squat): 84 size containers made every restyle ~500 ms here */
+  :where(#select-strip[data-squat]) .sel-card .por { --floor: 9px; grid-area: 1 / 1 / -1 / -1; justify-self: start; width: 46%; }
+  :where(#select-strip[data-squat]) .sel-card .nb { grid-area: 1 / 1 / -1 / -1; justify-self: end; width: 54%; padding-inline: 4px; box-shadow: inset 1px 0 #fff3d61a; }
+  /* a three-line name leaves the entity one line (Tio Gori i Tia Caballera); the town is on the banner beside it */
+  :where(#select-strip[data-squat]) .sel-card .nb small:not(.sel-entity-icons) { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 1; overflow: hidden; }
 }
 
 /* Below the stacked band's minimum reading height, use the existing contact/dock split.
@@ -138,6 +136,8 @@
 .sel-lower { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--island-gap); }
 /* Side by side only from 668 px and where the card has the room: a split layout's narrow column keeps the stack. Beside each other the islands share one height: the buttons on one line at the foot, each island's words centred above. */
 @media (min-width: 668px) { @container (min-width: 440px) { .sel-lower { grid-template-columns: repeat(2, minmax(0, 1fr)); } } }
+/* Landscape tablets: the card is 480 px or wider there (640 below 768 px high), so the screen says it. An iPad's home-screen app (1210×802, zoom .9, Safari 26.6) left the query above at one column and the stack ran under the strip */
+@media (min-width: 900px) and (min-height: 600px) and (pointer: coarse) { .sel-lower { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .sel-state-words { display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .sel-pending p.sel-call-line { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0 6px; min-height: 20px; font-size: 16px; font-weight: 600; line-height: 20px; color: #fff3d6; } /* one height with and without the count: the heart never moves when pressed */
 /* The narrower pair: the count takes two lines, so the question keeps them too and pressing moves nothing. */
@@ -160,7 +160,7 @@
 .sel-pending-copy p { font-size: 16px; line-height: 1.3; }
 .sel-pending[data-invite] .sel-pending-id { gap: var(--island-gap); }
 .sel-pending [hidden] { display: none; }
-/* The heart: gold before, red after, in both sizes. The wide one is the card's main action; the small one sits with the badge on a playable figure. */
+/* The heart: gold before; given, red on the small one and quiet on the wide one. The wide one is the card's main action; the small one sits with the badge on a playable figure. */
 .sel-heart { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 0 12px; border: 0; border-radius: 999px; background: linear-gradient(#ffdc55, #e8b512); box-shadow: 0 2px 0 #9c7408; color: #2a1a10; font: 800 14px/1 'Baloo 2', system-ui, sans-serif; font-variant-numeric: tabular-nums; cursor: pointer; transition: translate .08s, box-shadow .08s; }
 .sel-heart:active { translate: 0 2px; box-shadow: none; }
 .sel-heart b { font-weight: 800; }
@@ -168,11 +168,13 @@
 .sel-heart svg { flex: none; width: 16px; height: 16px; fill: currentColor; }
 .sel-heart[aria-pressed="true"] { background: linear-gradient(#e0364c, #ad1f33); box-shadow: 0 2px 0 #6d1220; color: #fff3d6; }
 .sel-heart:focus-visible { outline: 3px solid #fff3d6; outline-offset: 2px; }
-.sel-heart-wide { width: fit-content; max-width: 100%; padding: 0 24px; min-height: var(--island-btn, 44px); border-radius: 12px; box-shadow: 0 3px 0 #9c7408; font-size: 16px; }
-.sel-heart-wide[aria-pressed="true"] { box-shadow: 0 3px 0 #6d1220; }
+.sel-heart-wide { width: fit-content; max-width: 100%; box-sizing: border-box; padding: 0 24px; min-height: var(--island-btn, 44px); border-radius: 12px; box-shadow: 0 3px 0 #9c7408; font-size: 16px; }
+.sel-heart-wide[aria-pressed="true"] { border: 2px solid #fff3d640; background: var(--button-bg); box-shadow: none; color: #fff3d6; } /* given: a quiet state, not a second call to tap (a tap takes the heart back) */
+.sel-heart-wide[aria-pressed="true"] svg { fill: #e8473f; }
+.sel-heart-wide[aria-pressed="true"]:active { translate: none; }
 .sel-heart-wide:active { translate: 0 3px; }
 .sel-heart-wide svg { width: 20px; height: 20px; }
-.sel-heart-wide span { min-width: 28px; margin-inline-start: 4px; padding: 0 8px; border-radius: 999px; background: #2a1a10; color: #ffdc55; font-size: 14px; line-height: 24px; }
+.sel-heart-wide span { display: none; } /* the line above already says how many */
 .sel-heart[aria-pressed="true"] .sel-heart-pop, .sel-heart-pop { animation: sel-heart-pop .45s cubic-bezier(.3, 1.6, .5, 1); }
 @keyframes sel-heart-pop { 0% { scale: .5; } 50% { scale: 1.8; } 100% { scale: 1; } }
 .sel-heart-bit { position: fixed; z-index: 30; width: var(--s); height: var(--s); pointer-events: none; animation: sel-heart-fly 1.15s cubic-bezier(.15, .7, .3, 1) both; }
@@ -189,7 +191,8 @@
 /* The 75% zoom below: the buttons still reach 44 px on screen. */
 @media (min-width: 1100px) and (max-width: 1279px) and (min-height: 600px) and (max-height: 799px) and (pointer: fine) { .sel-pending { --island-btn: 59px; } }
 @media (max-width: 340px), (max-width: 519px) and (max-height: 759px) {
-  .sel-pending { --island-pad: 8px 12px; --island-r: 12px; --island-gap: 8px; --island-btn: 44px; --pending-max: calc(100% - var(--pending-top) - var(--pending-bottom, 254px) + 8px); } /* short phones spend 4 px of each outer gap on reading room */
+  .sel-pending { --island-pad: clamp(8px, (100dvh - 600px) / 8, 16px) 12px; --island-r: 12px; --island-gap: 8px; --island-btn: 44px; --pending-max: calc(100% - var(--pending-top) - var(--pending-bottom, 254px) + 8px); } /* short phones spend 4 px of each outer gap on reading room */
+  /* the padding grows with the height: 8 px where the card barely fits (≤ 664 px), the tall phones' 16 px from 728 px, so a 740 px iPhone isn't tight in a half-empty plaça */
   .sel-pending { --title-size: 21px; --entity-reserve: 44px; }
   .sel-pending .sel-entity { font-size: 11px; line-height: 14px; }
   .sel-pending .sel-entity-part { min-height: 20px; padding: 2px 6px; }
@@ -200,8 +203,8 @@
   .sel-call-line small { font-size: 12.5px; line-height: 16px; }
   .sel-state, .sel-call { gap: 4px; }
 }
-/* Wide, low bands under the full dock (900×600, 700×640, 1280×610): the attribution beside the place, tighter islands; the pair stays. */
-@media (min-width: 668px) and (max-width: 1099px) and (min-height: 600px) and (max-height: 700px), (min-width: 1280px) and (min-height: 600px) and (max-height: 640px) {
+/* Wide, low bands under the full dock (900×600, 700×640, 1280×610, a 1366×768 laptop under a browser and taskbar: 1366×660): the attribution beside the place, tighter islands; the pair stays. */
+@media (min-width: 668px) and (max-width: 1099px) and (min-height: 600px) and (max-height: 700px), (min-width: 1280px) and (min-height: 600px) and (max-height: 729px) {
   .sel-pending { --island-pad: 6px 16px; --island-r: 14px; --island-gap: 6px; --island-btn: 44px; }
   .sel-pending { --title-size: 22px; }
   .sel-pending h2 { flex: 100%; }
@@ -211,7 +214,7 @@
   .sel-pending p.sel-missing { font-size: 13px; line-height: 16px; }
   .sel-state, .sel-call { gap: 4px; }
 }
-@media (min-width: 1280px) and (min-height: 600px) and (max-height: 640px) { .sel-pending { --island-btn: 50px; } } /* its 90% zoom */
+@media (min-width: 1280px) and (min-height: 600px) and (max-height: 729px) { .sel-pending { --island-btn: 50px; } } /* its 90% zoom */
 @media (min-width: 520px) and (max-height: 599px), (min-width: 480px) and (max-width: 667px) and (min-height: 401px) and (max-height: 660px) {
   .sel-pending { --island-pad: 10px 12px; --island-r: 14px; --island-gap: 8px; --island-btn: 44px; }
   .sel-pending { --title-size: 22px; }

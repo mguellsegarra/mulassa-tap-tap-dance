@@ -121,3 +121,15 @@ El programa municipal de Sant Joan 2026 (pàgina impresa 12) atribueix explícit
 La referència fotogràfica del Campanar és l'[àlbum públic de la visita de l'Escola La Candela a l'exposició dels 300 anys dels gegants](https://photos.app.goo.gl/9v4mbG9rPUTesjnH8), enllaçat des de la [crònica del centre del 29 d'octubre de 2025](https://agora.xtec.cat/ceipmdcandela-valls/infantil/exposicio-dels-300-anys-dels-gegants-i3-i-i5/). Les fotografies mostren el penell i el campanar al cap, la cara, el rellotge al tors i la faldilla beix. Només s'han consultat com a referència; no s'incorporen al joc.
 
 El retrat de Gegants i Gegantons representa les quatre figures separades: el Gegant de la Porra i la Geganta, més alts, i el Lladrefaves i la Gegantona, més petits. Segueix els vestits de la restauració de 2025 (Santa Úrsula 2025): el Lladrefaves amb tricorni, perruca blanca, casaca blava i les cames visibles, i la Gegantona amb cosset salmó i faldilla verda. A cap fotografia el Lladrefaves no porta turbant. La paleta compartida té nou colors i la graella ocupa 18 × 14 cel·les.
+
+## Bou de Valls, Lleó i Gegant del Calçot
+
+El **Bou de Valls** (`bou-valls`) és el que van recuperar el 2012 el Casal Popular La Turba i la Colla Gegantera El Calçot-AAEET ([La Turba](https://www.laturba.cat/projectes/el-bou-de-valls/)): fet per Jordi Jubany i Eudald Ferré per a dos balladors, amb música de Francesc Sans i Bonet. No és el Bou Tradicional de la UAF. La silueta segueix el bou rodó de la campanya del 2012 (ulls buidats). El crèdit porta dues marques locals, no oficials (`src/ui/bou-valls-logos.js`): el cercle i l'estel del logo de La Turba, i un calçot dins un cercle verd per a El Calçot-AAEET, que no té logo publicat.
+
+El **Lleó** (`lleo-valls`, UAF) es va incorporar a les Decennals del 2011: de llautó, uns 2 m i 70 kg, obra de Lluís Musté, música de Francesc Bofarull ([UAF](https://uaf.cat/seguici-ceremonial/lleo/)). Silueta de perfil a l'esquerra: el cap coronat damunt la crinera alta amb la reixeta del portador, l'esquena daurada més baixa, la cua enrotllada, el faldó de serrells i un portador.
+
+El **Gegant del Calçot** (`gegant-calcot-valls`, UAF) és l'emblema de la Gran Festa de la Calçotada des del 1989: 4 m i 60 kg, un sol portador que hi veu per la reixa de l'escut ([UAF](https://uaf.cat/elements-festius-de-nova-tradicio/gegant-del-calcot/)). No són l'Antonet i l'Angelina d'El Calçot. Silueta: tres fulles amples, les fulles de fora penjant com a braços i el rombe de l'escut buidat.
+
+El **Gegant del Campanar** (`gegant-campanar-valls`, UAF) es dibuixa en clau còmica, a partir de fotos del gegant al carrer i de l'exposició dels 300 anys: penell sobre una punxa, campanar quadrat amb dents i rosasses, cara quadrada amb somriure i un nas gros cap a l'esquerra, orelles amb campanes, la torre amb rellotge i finestra, i la faldilla llarga.
+
+Les fotos de referència d'aquestes revisions (`tools/dev/bou-turba-propostes/ref/`) són de tercers i no s'incorporen al joc ni al repositori.

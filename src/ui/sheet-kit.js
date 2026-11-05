@@ -5,6 +5,9 @@ export const byId = doc => id => doc.getElementById(id);
 export const num = v => fmtNum(Math.round(Number(v))); // points the Catalan way: 12.340
 // tr() with one slot kept for a DOM node: the text before and after it
 export const trSplit = (key, slot, params = {}) => tr(key, { ...params, [slot]: '\u0000' }).split('\u0000');
+// tr() with its {params} as <b class=cls> nodes (typed by players: text nodes, never HTML), for replaceChildren
+export const trMarked = (doc, key, params, cls) => tr(key, Object.fromEntries(Object.keys(params).map(k => [k, `\u0000${k}\u0000`]))).split('\u0000')
+  .map((t, i) => (i % 2 ? Object.assign(doc.createElement('b'), { className: cls, textContent: params[t] }) : t));
 // A place: 1-2-3 as the solid medal (the selector's ribbon medal, solid, everywhere): the disc in its metal
 // (board.css .pos.p1-3: the drawing is the background, the number stays text), sized by --pos-size; 4th on a plain number
 export function posDisc(doc, n, text = num(n)) { const e = doc.createElement('span'); e.className = n >= 1 && n <= 3 ? `pos p${n}` : 'pos'; e.textContent = text; return e; }

@@ -7,7 +7,8 @@ const OMIT = new Set(['music/mulassa-taiko.wav', 'music/mulassa-taiko.mid', 'mus
 // A root 404 disables Pages' SPA fallback: unknown URLs must not serve the game with HTTP 200.
 const REQUIRED = ['index.html', '404.html', '_headers', 'favicon.ico', 'favicon.svg', 'favicon-32.png',
   'apple-touch-icon.png', 'icon-512.png', 'manifest.webmanifest', 'og.jpg', // og.jpg: index.html's og:image / twitter:image
-  'share/mulassa-valls.jpg', 'share/drac-valls.jpg']; // the share card's fixed photos (share-card.js loadPhoto)
+  'share/mulassa-valls.jpg', 'share/drac-valls.jpg', // the share card's fixed photos (share-card.js loadPhoto)
+  'sfx/applause.mp3']; // the crowd's applause (platform/audio.js loadApplause; tools/music/build_applause.mjs)
 
 // Reject unexpected public files rather than accidentally publishing sources or server code.
 export async function preparePages(directory, song) {

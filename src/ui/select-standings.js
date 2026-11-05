@@ -34,6 +34,7 @@ const phone = (win = globalThis) => Boolean(win.matchMedia) && !win.matchMedia(D
 // Touch tablets: the board's first three (as on phones) before your neighbours; then they drop the medals, not the three
 const tabletTouch = (win = globalThis) => Boolean(win.matchMedia?.(`${DESKTOP} and (pointer: coarse)`).matches);
 const TABLET_TRIES = [...TRIES.slice(0, 5), [3, -1, true, 2], [3, -1, false, 2], [3, -1, false, 0], [0, 0, false, 0]];
+const ROOMS = [[false], [true], [false, 'rank'], [true, 'rank']]; // [data-tight, data-snug] on the panel: the room the first three may take on a touch tablet
 export function setupStandings({ doc, win = globalThis, $, onBoard, onCard = null, busy = () => false, levels = () => false, onSwapped = () => {} }) { // levels(): step 2
   const meds = $('select-meds'), card = $('select-standings');
   if (!meds || !card) return { medals() {}, board() {}, fit() {} }; // a page without them (the node tests' DOM)
@@ -41,6 +42,7 @@ export function setupStandings({ doc, win = globalThis, $, onBoard, onCard = nul
   const body = $('select-standings-body'), sk = $('select-standings-sk'), msg = $('select-standings-msg');
   $('select-standings-head').addEventListener('click', () => { if (!busy()) onBoard(); });
   let fitAt = 0; // TRIES' index that fitted last
+  let roomAt = 0, roomFor = ''; // ROOMS' step the last fit took (touch tablets), and for which board and window it was checked
   let board = null, on = false; // on: a board is configured (the header shows before its answer)
   let state = 'loading'; // loading | ready | error: the body's skeleton and the rows cross-fade (select-sizes.css)
   const seen = new Map(); // figure + owner → the last answer's rows (memory only): the placeholder's shape
@@ -148,9 +150,31 @@ export function setupStandings({ doc, win = globalThis, $, onBoard, onCard = nul
     const fits = i => (at(i), !scrolls());
     at(Math.min(fitAt, tries.length - 1));
     if (!card.getClientRects().length && !meds.getClientRects().length) return; // not shown here: nothing to measure
-    let lo = 0, hi = tries.length; // hi: the biggest known to fit (tries.length: none)
-    if (!scrolls()) { hi = fitAt; if (fitAt) { if (fits(fitAt - 1)) hi = fitAt - 1; else lo = fitAt; } } else lo = fitAt + 1;
-    while (lo < hi) { const m = (lo + hi) >> 1; if (fits(m)) hi = m; else lo = m + 1; }
+    const search = () => { // from fitAt drawn, so its first test reads the try it assumes
+      if (drawn !== Math.min(fitAt, tries.length - 1)) at(Math.min(fitAt, tries.length - 1));
+      let lo = 0, hi = tries.length; // hi: the biggest known to fit (tries.length: none)
+      if (!scrolls()) { hi = fitAt; if (fitAt) { if (fits(fitAt - 1)) hi = fitAt - 1; else lo = fitAt; } } else lo = fitAt + 1;
+      while (lo < hi) { const m = (lo + hi) >> 1; if (fits(m)) hi = m; else lo = m + 1; }
+      return hi;
+    };
+    // Touch tablets (an iPad Air's Safari with its tab bar: 1210×702): when not even the first three fit, the panel's gaps,
+    // then the song row give way (select-sizes.css data-tight, data-snug="rank"), each only if it lets the three in. The step
+    // is kept (roomAt): the next fit starts there, and tries giving it back (one layout) only for another board or window size,
+    // so a refit at the same size costs what it did without it
+    const panel = tabletTouch(win) && card.closest('.sel-panel'), floor = tries.length - 2; // floor: the first three alone
+    const room = i => { const [tight, snug] = ROOMS[i]; panel.toggleAttribute('data-tight', tight); if (snug) panel.setAttribute('data-snug', snug); else panel.removeAttribute('data-snug'); };
+    const here = `${key}|${win.innerWidth}x${win.innerHeight}`; // no layout: what could change the room the three need
+    if (panel) room(roomAt);
+    let hi = search();
+    if (panel && hi > floor) {
+      const up = ROOMS.findIndex((r, i) => i > roomAt && (room(i), fits(floor)));
+      if (up > 0) { roomAt = up; roomFor = here; fitAt = floor; hi = search(); }
+      else { room(roomAt = 0); at(Math.min(hi, tries.length - 1)); if (scrolls()) panel.toggleAttribute('data-tight', true); } // no room even so: the song stays, as before (level-stats.js tighten())
+    } else if (panel && roomAt && roomFor !== here) { // a taller window gives the room back as soon as the three fit without it (not the extras it bought)
+      const was = roomAt; roomFor = here;
+      while (roomAt && (room(roomAt - 1), fits(floor))) roomAt--; // all the steps at once (a resize from 702 to 1024 px high)
+      room(roomAt); if (roomAt !== was) { fitAt = floor; hi = search(); }
+    }
     fitAt = Math.min(hi, tries.length - 1);
     if (drawn !== fitAt) at(fitAt);
     if (hi === tries.length) { body.hidden = true; head.textContent = heading(board); } // the header stays: the line is the home's way to the board

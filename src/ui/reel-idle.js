@@ -8,6 +8,13 @@ import { sheetUp, viewMode } from './controls.js';
 export const REEL_IDLE = { after: 10 }; // s untouched
 let reelIdleOn = false, reelIdleLast = -Infinity, reelIdleWoken = true, reelIdleBack = false, reelIdleTap = null, reelIdleKey = null, reelWakeEnd = 0;
 export const REEL_WAKE_MS = 250; // body.reel-wake's fade back in (select-sizes.css)
+// Faded out, the UI is still there: its layers (and the CSS animations inside them) kept an iPhone's Safari compositing every
+// frame, 96/42 ms frames for seconds in the idle dance (Low Power Mode, 2026-11-03; at opacity 0 or visibility hidden alike,
+// fine visible or with content-visibility hidden). Once the fade is over they get data-reel-gone (content-visibility: hidden,
+// select-sizes.css), on each element rather than on <body> (a body class restyles the whole page); a wake drops it at once.
+const REEL_FADE_OUT_MS = 400, REEL_GONE = ['select', 'settings', 'free', 'music', 'howto'].map(id => document.getElementById(id)).filter(Boolean);
+let reelIdleSince = 0, reelGone = false;
+const reelGoneSet = on => { if (on === reelGone) return; reelGone = on; for (const el of REEL_GONE) el.toggleAttribute('data-reel-gone', on); };
 // The press that wakes it only wakes it: no card changes, no tap or drag reaches the plaça. This module is imported
 // before ui/input.js, so its window listeners run first; the waking pointer's up and click (a key's up) are swallowed too.
 const reelIdleSwallow = e => { e.stopImmediatePropagation(); if (e.cancelable && e.type !== 'pointerdown') e.preventDefault(); };
@@ -54,11 +61,13 @@ export function reelIdle(now) {
   if (woke || reelIdleBack) reelIdleLast = now;
   reelIdleWoken = reelIdleBack = false;
   const on = may && !woke && (reelIdleOn || now - reelIdleLast > REEL_IDLE.after * 1000);
-  if (on !== reelIdleOn) { reelIdleOn = on; if (on) { document.body.classList.toggle('reel-idle', true); document.body.classList.toggle('reel-wake', false); reelWakeEnd = 0; } else reelWake(); }
+  if (on !== reelIdleOn) { reelIdleOn = on; if (on) { document.body.classList.toggle('reel-idle', true); document.body.classList.toggle('reel-wake', false); reelWakeEnd = 0; reelIdleSince = now; } else reelWake(); }
+  if (reelIdleOn && !reelGone && now - reelIdleSince > REEL_FADE_OUT_MS + 50) reelGoneSet(true); // the fade out is over
   if (reelWakeEnd < 0) reelWakeEnd = now + REEL_WAKE_MS; // (dated by the first frame after it)
   else if (reelWakeEnd && now > reelWakeEnd) { reelWakeEnd = 0; document.body.classList.toggle('reel-wake', false); } // the quick fade done: their own transitions again
   return on;
 }
 function reelWake() {
+  reelGoneSet(false);
   document.body.classList.toggle('reel-idle', false); document.body.classList.toggle('reel-wake', true); reelWakeEnd = -1;
 }

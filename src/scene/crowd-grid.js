@@ -8,15 +8,19 @@ import { FIGURE_SCENES } from './figure-scenes.js';
 import { crowdAnchored } from './crowd-effects.js';
 import { crowdRadius, backdropContacts } from './crowd-contact.js';
 
-export const crowdCells = Array.from({ length: 32 * 32 }, () => []), usedCells = [];
-const cellPush = (k, p) => { if (!crowdCells[k].length) usedCells.push(k); crowdCells[k].push(p); };
+// Each cell keeps its array; cellCount[k] says how many of its entries are this frame's. Emptying them with length = 0
+// freed every array and the pushes grew them again, every frame: ~1.2 MB/s of garbage (docs/agents/device-profiling.md).
+export const crowdCells = Array.from({ length: 32 * 32 }, () => []), cellCount = new Uint16Array(32 * 32);
+const usedCells = new Uint16Array(32 * 32); let usedN = 0;
+const cellPush = (k, p) => { const n = cellCount[k]; if (!n) usedCells[usedN++] = k; crowdCells[k][n] = p; cellCount[k] = n + 1; };
 const crowdCell = p => Math.max(0, Math.min(31, Math.floor(p.pos.x + 16)))
   + 32 * Math.max(0, Math.min(31, Math.floor(p.pos.y + 16)));
 export function recell(p) {
   const nextCell = crowdCell(p);
   if (nextCell === p.cell) return;
-  const previous = crowdCells[p.cell];
-  previous.splice(previous.indexOf(p), 1);
+  const previous = crowdCells[p.cell], n = cellCount[p.cell];
+  let i = 0; while (i < n && previous[i] !== p) i++;
+  if (i < n) { for (; i < n - 1; i++) previous[i] = previous[i + 1]; cellCount[p.cell] = n - 1; } // (in order, as splice did)
   cellPush(nextCell, p); p.cell = nextCell;
 }
 // The hard limit: no two footprints (RAD circles) ever overlap, whatever the forces did this frame (fleeing the rear,
@@ -30,7 +34,9 @@ export function separate() {
       const cellX = p.cell % 32, cellZ = Math.floor(p.cell / 32);
       for (let z = Math.max(0, cellZ - 2); z <= Math.min(31, cellZ + 2); z++) {
         for (let x = Math.max(0, cellX - 2); x <= Math.min(31, cellX + 2); x++) {
-          for (const q of crowdCells[x + z * 32]) {
+          const cell = crowdCells[x + z * 32];
+          for (let i = 0, n = cellCount[x + z * 32]; i < n; i++) {
+            const q = cell[i];
             if (q === p) continue;
             let sx = p.pos.x - q.pos.x, sz = p.pos.y - q.pos.y;
             const presence = Math.min(p.qualityScale ?? 1, q.qualityScale ?? 1);
@@ -68,7 +74,8 @@ export function photoCrowdClearance(p, x, z) {
   let clear = photoPersonClearance(p,x,z);
   const cx = Math.floor(x+16), cz = Math.floor(z+16);
   for (let iz=Math.max(0,cz-2);iz<=Math.min(31,cz+2);iz++) for (let ix=Math.max(0,cx-2);ix<=Math.min(31,cx+2);ix++) {
-    for (const q of crowdCells[ix+iz*32]) {
+    for (let i=0,cell=crowdCells[ix+iz*32],n=cellCount[ix+iz*32];i<n;i++) {
+      const q=cell[i];
       if (q===p) continue;
       const presence=Math.min(p.qualityScale??1,q.qualityScale??1);
       clear=Math.min(clear,Math.hypot(x-q.pos.x,z-q.pos.y)-crowdRadius(p)-crowdRadius(q)-.04*presence);
@@ -79,8 +86,8 @@ export function photoCrowdClearance(p, x, z) {
 // Everyone in their cell for this frame: the crowd, then the fixed footprints (the band, the shown collas, photo
 // mode's extras, the backdrop's front); returns those backdrop contacts (settleDrawnCrowd needs them too).
 export function fillCells() {
-  for (const k of usedCells) crowdCells[k].length = 0; // only the cells used last frame, not all 1024
-  usedCells.length = 0;
+  for (let i = 0; i < usedN; i++) cellCount[usedCells[i]] = 0; // only the cells used last frame, not all 1024
+  usedN = 0;
   for (const p of activeCrowd) { p.cell = crowdCell(p); cellPush(p.cell, p); }
   for (const b of bandSpots) cellPush(crowdCell(b), b); // the band: fixed, never in anyone's way
   for (const f of FIGURE_SCENES) if (f.colla()?.helpers.visible) for (const b of f.collaSpots) cellPush(crowdCell(b), b); // the shown figure's colla

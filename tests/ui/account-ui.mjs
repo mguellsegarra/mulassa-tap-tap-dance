@@ -9,9 +9,9 @@ import { setupSeasonEnd, seasonSeenKey } from '../../src/ui/season-end-ui.js';
 import { setupCard } from '../../src/ui/player-card.js';
 import { setupAccount } from '../../src/ui/account-ui.js';
 import { setupGreeting } from '../../src/ui/greeting.js';
-import { setupDeviceHint } from '../../src/ui/device-hint.js';
+import { setupDeviceHint, browserJump } from '../../src/ui/device-hint.js';
 import { refreshIdentity, savedName } from '../../src/services/leaderboard-identity.js';
-import { setStatsOwner } from '../../src/game/stats.js';
+import { setStatsOwner, endRun, newStats, saveStats } from '../../src/game/stats.js';
 import { createStatsSync } from '../../src/services/stats-sync.js';
 import { readPage } from './page.mjs';
 
@@ -190,7 +190,7 @@ const service = (o = {}) => ({ configured: true, asked: [], async seasons(f) { t
   assert(part('se-cheer').textContent === 'Has fet podi!' && /blk me/.test(part('se-art-box').innerHTML) && (part('se-art-box').innerHTML.match(/blk me/g) || []).length === 1, 'the podium, its step');
   assert.equal(part('se-now').textContent, 'Ara: Hivern 2027\u00a0· queden 87 dies', 'the «·» kept with the name (a no-break space): a wrap falls after it');
   assert(!body.find(e => e.className === 'podium') && body.all(e => /^pos p/.test(e.className)).map(e => e.className).join() === 'pos p3', 'no full podium here; a podium place on its disc');
-  assert.equal(mem.get(seasonSeenKey('u1', 1)), '1', 'seen: per profile and season');
+  assert.equal(mem.get('seen:u1:season:1'), '1', 'seen: per profile and season');
   $('season-end-hall').click();
   assert(!$('season-end-menu').open && backs === 0 && halls[0][0] === 'drac-valls', 'the Saló de la fama of the podium\'s figure, with this sheet\'s way back');
   halls[0][1](); assert.equal(backs, 1);
@@ -198,6 +198,8 @@ const service = (o = {}) => ({ configured: true, asked: [], async seasons(f) { t
   assert.equal(await end.check(), false, 'once');
   const other = setupSeasonEnd({ focusIn() {}, service: service({ ownerId: async () => 'u2' }), store, doc: fakeDoc(['season-end-menu', 'season-end-boards', 'season-end-title', 'season-end-ok', 'season-end-close', 'season-end-hall']).doc, now: () => NOW });
   assert.equal(await other.check(), true, 'another profile on this device sees its own');
+  const elsewhere = setupSeasonEnd({ focusIn() {}, service: service({ ownerId: async () => 'u4', seenNotices: async () => ['season:1'] }), store, doc: fakeDoc(['season-end-menu', 'season-end-boards', 'season-end-title', 'season-end-ok', 'season-end-close', 'season-end-hall']).doc, now: () => NOW });
+  assert.equal(await elsewhere.check(), false, 'seen on another device (the server\'s list): not here');
   const anon = setupSeasonEnd({ focusIn() {}, service: service({ ownerId: async () => null }), store, doc: fakeDoc(['season-end-menu', 'season-end-boards', 'season-end-title', 'season-end-ok', 'season-end-close', 'season-end-hall']).doc, now: () => NOW });
   assert.equal(await anon.check(), false, 'no profile: nothing to tell');
   const plain = fakeDoc(['season-end-menu', 'season-end-boards', 'season-end-title', 'season-end-ok', 'season-end-close', 'season-end-hall']);
@@ -222,6 +224,7 @@ const service = (o = {}) => ({ configured: true, asked: [], async seasons(f) { t
   await tick(); await tick(); await tick();
   assert.deepEqual(asked, ['id-baldufa'], 'asked by public id, never by name; the repeated taps ask nothing more');
   assert(!f.$('card-stats').inert && !('pending' in f.$('card-stats').dataset), 'loaded: the skeleton gone');
+  assert.equal(f.$('card-stats').style.minHeight, `${f.$('card-stats').offsetHeight}px`, 'but its height stays: a shorter answer never shrinks the card, a longer one is the skeleton\'s worst case');
   assert(/3 h 12 mina la plaça/.test(f.$('card-stats').textContent) && !/Has jugat|dies/.test(f.$('card-stats').textContent), 'the totals, never the days');
   assert(/1Podi a Tardor 2026 · Mulassa de Valls \(ball anterior\)/.test(f.$('card-stats').textContent), 'its podiums, with the season\'s name');
   card = { ...card, alias: 'Portadora', verified: true, released: false, totals: {}, podiums: [] };
@@ -233,6 +236,7 @@ const service = (o = {}) => ({ configured: true, asked: [], async seasons(f) { t
   const g = fakeDoc(ids);
   card = null; const none = setupCard({ focusIn() {}, service: svc, doc: g.doc, minLoad: 0 }); none.open({ alias: 'Tabal', publicId: 'id-tabal' }); await tick(); await tick();
   assert(g.$('card-status').textContent === 'Encara no hi ha estadístiques per mostrar.');
+  assert.equal(g.$('card-stats').style.minHeight, '', 'no statistics: no reserved room under the line');
   card = Object.assign(new Error('No s’ha pogut connectar amb la classificació.'), { code: 'unavailable' }); none.open({ alias: 'Tabal', publicId: 'id-tabal' }); g.$('card-close').click(); none.open({ alias: 'Tabal', publicId: 'id-tabal' }); await tick(); await tick();
   assert(!g.$('card-retry').hidden, 'a failure: retry inside the box');
 }
@@ -348,7 +352,7 @@ const service = (o = {}) => ({ configured: true, asked: [], async seasons(f) { t
     if (shown) { told.push($('season-end-title').textContent); $('season-end-ok').click(); }
   }
   assert.deepEqual(told, ['Temporada 3 s’ha acabat', 'Temporada 2 s’ha acabat', 'Temporada 1 s’ha acabat'], 'one at a time, newest first, none lost');
-  assert.deepEqual([1, 2, 3].map(id => mem.get(seasonSeenKey('u1', id))), ['1', '1', '1']);
+  assert.deepEqual([1, 2, 3].map(id => mem.get(`seen:u1:season:${id}`)), ['1', '1', '1']);
 }
 // --- the greeting: what a profile has pending, told when the selector is idle; one sheet per visit (page load)
 {
@@ -496,6 +500,59 @@ const service = (o = {}) => ({ configured: true, asked: [], async seasons(f) { t
   assert(/acceleració per maquinari/.test(html), 'the copy');
   assert(!/id="ios-hint"/.test(html), 'the inline banner is gone');
 }
+// --- inside an app's own browser (device-hint.js): its tip comes first, once per account state, with a jump out where one is known
+{
+  const ids = ['inapp-hint', 'gpu-hint'].flatMap(k => ['menu', 'ok', 'close'].map(x => `${k}-${x}`))
+    .concat('inapp-hint-go', 'inapp-hint-confirm', 'inapp-hint-steps', ...['none', 'guest', 'linked'].flatMap(s => [`inapp-hint-title-${s}`, `inapp-hint-text-${s}`]));
+  const ANDROID_IG = 'Mozilla/5.0 (Linux; Android 14; SM-G973F; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/129.0 Mobile Safari/537.36 Instagram 350.0.0.0 Android';
+  const IOS = v => `Mozilla/5.0 (iPhone; CPU iPhone OS ${v}_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Instagram 350.0.0.0`;
+  const HREF = 'https://mulassa.cat/joc/?r=abc#top';
+  const make = (o, mem = new Map()) => {
+    const { doc, $ } = fakeDoc(ids), focused = [], acct = { state: 'none' }, confirmed = [];
+    const store = { get: k => mem.get(k) ?? null, set: (k, v) => mem.set(k, v) };
+    return { $, mem, focused, acct, confirmed, hint: setupDeviceHint({ focusIn: (m, id) => focused.push(id), store, doc, href: HREF, standalone: false, softwareGl: true,
+      account: () => acct.state, confirm: b => confirmed.push(b), ...o }) };
+  };
+  const shown = t => ['go', 'confirm', 'ok', 'steps'].filter(x => !t.$(`inapp-hint-${x}`).hidden);
+  assert.equal(browserJump(ANDROID_IG, HREF), 'intent://mulassa.cat/joc/?r=abc#Intent;scheme=https;action=android.intent.action.VIEW;end', 'Android: the default browser, the query kept, no hash to cut the intent');
+  assert.equal(browserJump(IOS(18), HREF), null, 'iOS: no jump (Instagram swallowed x-safari-https://), only the menu steps');
+  assert.equal(browserJump(ANDROID_IG, 'http://192.168.1.232:5190/'), 'intent://192.168.1.232:5190/#Intent;scheme=http;action=android.intent.action.VIEW;end', 'a LAN dev server keeps http (https failed on the S10)');
+  // no profile: the jump and the menu steps; the GPU tip waits
+  const t = make({ ua: ANDROID_IG });
+  assert.equal(t.hint.show(), true);
+  assert.deepEqual([t.$('inapp-hint-menu').open, t.$('gpu-hint-menu').open], [true, false], 'the app\'s browser first, the GPU tip waits');
+  assert.deepEqual([shown(t), t.focused.at(-1), t.$('inapp-hint-text-none').hidden], [['go', 'steps'], 'inapp-hint-go', false], 'one primary: the jump');
+  assert.match(t.$('inapp-hint-go').href, /^intent:\/\//);
+  t.$('inapp-hint-close').click();
+  assert.equal(t.mem.get('inapp-hint'), 'none');
+  assert.equal(t.hint.show(), true); assert.equal(t.$('gpu-hint-menu').open, true, 'told for this state: the GPU tip has its turn'); t.$('gpu-hint-ok').click();
+  // a guest appears (first result): told again, to confirm the address first; its button hands over to Perfil after closing
+  t.acct.state = 'guest'; let backs = 0;
+  assert.equal(t.hint.show(() => backs++), true, 'a new state: told again');
+  assert.deepEqual([shown(t), t.focused.at(-1), t.$('inapp-hint-text-guest').hidden, t.$('inapp-hint-text-none').hidden], [['confirm'], 'inapp-hint-confirm', false, true], 'a guest: confirm first, no jump yet');
+  t.$('inapp-hint-confirm').click();
+  assert.equal(t.$('inapp-hint-menu').open, false); assert.equal(t.confirmed.length, 1, 'Perfil opens on the confirm step'); t.confirmed[0]();
+  assert.equal(backs, 1, 'the back handler goes to Perfil, called once'); assert.equal(t.mem.get('inapp-hint'), 'none,guest');
+  // confirmed: told once more, with the jump and the reminder to recover in the browser
+  t.acct.state = 'linked'; t.hint.show();
+  assert.deepEqual([shown(t), t.$('inapp-hint-text-linked').hidden], [['go', 'steps'], false], 'confirmed: the jump');
+  t.$('inapp-hint-close').click(); assert.equal(t.hint.show(), false, 'every state told: nothing left');
+  const i = make({ ua: IOS(18) }); i.hint.show();
+  assert.deepEqual([shown(i), i.focused[0]], [['ok', 'steps'], 'inapp-hint-ok'], 'no jump: «D’acord»');
+  assert.equal(make({ ua: ANDROID_IG, softwareGl: false, standalone: true }).hint.show(), false, 'from the home screen: nothing');
+  const html = readPage(), m = /<dialog id="inapp-hint-menu"[\s\S]*?<\/dialog>/.exec(html)?.[0] ?? '';
+  assert(/aria-labelledby="inapp-hint-title" aria-describedby="inapp-hint-text"/.test(m) && /class="sheet-x"/.test(m), 'a sheet with its ×');
+  for (const id of ids.filter(x => x.startsWith('inapp-hint-') && !/-(menu|close)$/.test(x))) assert(m.includes(`id="${id}"`), id);
+  for (const state of ['none', 'guest', 'linked']) {
+    const suffix = state === 'none' ? '' : `.${state}`;
+    for (const [part, attr, key] of [['title', 'data-i18n', 'html.inappHintTitle'], ['text', 'data-i18n-rich', 'html.rich.inappHint']]) {
+      assert(m.match(new RegExp(`<span id="inapp-hint-${part}-${state}"[^>]*`))?.[0].includes(`${attr}="${key}${suffix}"`), `${state} ${part}: translated when the account state changes`);
+    }
+  }
+  assert(/id="inapp-hint-confirm"[^>]*data-i18n="ui.profile.btn.link"/.test(m), 'confirm uses the same label as Perfil');
+  assert(/id="inapp-hint-go"[^>]*data-i18n="html.inappHintGo"/.test(m), 'the browser action is translated');
+  assert(/html\.rich\.inappStep1/.test(m) && /html\.rich\.inappStep2/.test(m), 'the app menu\'s steps, the sure way');
+}
 console.log('perfil, statistics, seasons and cards ok');
 
 // --- one podium medal everywhere: every renderer of a place takes the boards' disc from posDisc (sheet-kit.js), none draws its own
@@ -537,3 +594,51 @@ console.log('podium discs ok');
   menu.close();
 }
 console.log('badge pencil ribbon ok');
+
+// a guest's «Confirma el correu» on the block: tapped, so straight to the address (no benefits sheet before it); closing it comes back here
+{
+  const f = fakeDoc(['account-menu', 'account-close', 'account-stats', 'account-status', 'account-since', 'account-empty', 'account-join', 'account-previous', 'account-previous-list', 'profile-row', 'stats-notice-menu', 'stats-notice-ok', 'stats-notice-close', 'stats-notice-hall']);
+  const mem = new Map(), store = { get: k => mem.get(k) ?? null, set: (k, v) => mem.set(k, v), remove: k => mem.delete(k) }, opened = [];
+  const acc = setupAccount({ focusIn() {}, profile: { refresh() {}, open: (a, b) => opened.push([a, b]), forget() {}, isOpen: false },
+    service: service({ ownerId: async () => 'u1', myStats: async () => null }), store, doc: f.doc, now: () => NOW, stats: { noticeNeeded: () => false, acceptNotice() {} } });
+  acc.open(); await tick(); f.$('profile-row').fire('click', { target: { closest: () => ({ dataset: { act: 'link' } }) } });
+  assert(opened.length === 1 && opened[0][0] === 'link' && !f.$('account-menu').open, 'the address step takes the sheet\'s place');
+  opened[0][1](); await tick(); assert(f.$('account-menu').open, 'back to Perfil');
+}
+console.log('block confirm goes straight to the address ok');
+
+// back from the badge sheet: the sheet as it was (no statistics reload: the spinner and the bar would shift it), unless they never arrived
+{
+  const f = fakeDoc(['account-menu', 'account-close', 'account-stats', 'account-status', 'account-since', 'account-empty', 'account-join', 'account-previous', 'account-previous-list', 'profile-row', 'stats-notice-menu', 'stats-notice-ok', 'stats-notice-close', 'stats-notice-hall']);
+  const mem = new Map(), store = { get: k => mem.get(k) ?? null, set: (k, v) => mem.set(k, v), remove: k => mem.delete(k) };
+  const server = { buckets: { 'mulassa-valls/mulassa-v3/1': bucket({ runs: 40, completed: 40, perfect: 4000, good: 100, miss: 100 }) }, days: ['2026-10-19'], daysPlayed: 1, currentStreak: 1, longestStreak: 1 };
+  let asked = 0, refreshed = 0, badgeBack = null;
+  const svc = service({ ownerId: async () => 'u1', myStats: async () => { asked++; return server; } });
+  const acc = setupAccount({ focusIn() {}, profile: { refresh() { refreshed++; }, open() {}, forget() {}, isOpen: false }, badges: { open(back) { badgeBack = back; } }, service: svc, store, doc: f.doc, now: () => NOW, stats: { noticeNeeded: () => false, acceptNotice() {} } });
+  const toBadge = () => f.$('profile-row').fire('click', { target: { closest: () => ({ dataset: { act: 'badge' } }) } });
+  setStatsOwner('u1');
+  acc.open(); for (let i = 0; i < 6; i++) await tick();
+  assert(asked === 1 && /40 balls/.test(f.$('account-stats').textContent));
+  toBadge(); assert(!f.$('account-menu').open && badgeBack, 'the badge sheet takes its place');
+  badgeBack(); for (let i = 0; i < 6; i++) await tick();
+  assert(f.$('account-menu').open && refreshed === 2, 'back: the profile block (its new badge) refreshes');
+  assert(asked === 1 && f.$('account-status').hidden && /40 balls/.test(f.$('account-stats').textContent), 'but the statistics stay, no loading line');
+  f.$('account-close').click();
+  // left before the answer: closing dropped it (before it reached the server), so the return asks again
+  acc.open(); toBadge(); badgeBack(); for (let i = 0; i < 6; i++) await tick();
+  assert(asked === 2 && f.$('account-status').hidden && /40 balls/.test(f.$('account-stats').textContent), 'still loading when it left: loaded on the way back');
+  f.$('account-close').click();
+  // this device has played: its numbers show at once (no loading line), so only the unfinished answer says to ask again
+  const disk = new Map(); globalThis.localStorage = { getItem: k => disk.get(k) ?? null, setItem: (k, v) => disk.set(k, v), removeItem: k => disk.delete(k) };
+  saveStats(endRun(newStats(), 'u1', { date: '2026-10-19', figureId: 'mulassa-valls', version: 'mulassa-v3', level: 1, kind: 'end', seconds: 60, counts: { perfect: 10 } }));
+  let answer; svc.myStats = () => { asked++; return new Promise(res => { answer = res; }); };
+  acc.open(); await tick(); await tick();
+assert(asked === 3 && f.$('account-status').hidden && /1 ball/.test(f.$('account-stats').textContent), 'the local numbers while the server thinks');
+  toBadge(); answer(server); badgeBack(); for (let i = 0; i < 6; i++) await tick();
+  assert(asked === 4, 'left before the answer, with local runs: asked again on the way back');
+  answer(server); for (let i = 0; i < 6; i++) await tick();
+  assert(/40 balls/.test(f.$('account-stats').textContent), 'and the server\'s totals replace this device\'s');
+  f.$('account-close').click(); delete globalThis.localStorage;
+  setStatsOwner(null);
+}
+console.log('badge return keeps the statistics ok');

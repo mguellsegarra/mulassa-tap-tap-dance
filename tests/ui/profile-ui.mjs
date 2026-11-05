@@ -26,7 +26,7 @@ const ids = ['profile-menu', 'profile-form', 'profile-email', 'profile-code', 'p
 const tick = () => new Promise(r => setTimeout(r, 0));
 
 function make({ configured = true, publishingEnabled = true, session = false, email = '', alias = '', persistent = true, captchaRequired = false,
-  prof, known = null } = {}) { // prof: my_profile's answer (undefined: an older server, no my_profile); known: the stored last answer
+  prof, known = null, offerLink } = {}) { // prof: my_profile's answer (undefined: an older server, no my_profile); known: the stored last answer
   const els = new Map(ids.map(id => [id, new El(id)]));
   const doc = { getElementById: id => els.get(id), createElement: tag => Object.assign(new El(''), { tag }) }, $ = id => els.get(id);
   const mem = new Map(alias ? [['alias', alias]] : []);
@@ -36,9 +36,9 @@ function make({ configured = true, publishingEnabled = true, session = false, em
   const service = {
     configured, publishingEnabled, captchaRequired,
     createProfile: async (a, o) => { calls.push(['create', a, o]); if (T.fail) throw T.fail; T.session = true; if (T.prof) T.prof = { ...T.prof, alias: a.trim(), released: false }; return a.trim(); },
-    identity: async () => ({ hasSession: T.session, email: T.email, persistent }),
+    identity: async () => { if (T.offline) throw new Error('offline'); return { hasSession: T.session, email: T.email, persistent }; },
     sendCode: async (m, o) => { // as leaderboard.js: a sign-in by code (no session, or the address is another profile's) needs a token
-      calls.push(['send', m, o]); const type = T.sendType ?? (T.session ? 'email_change' : 'email');
+      calls.push(['send', m, o]); const type = o?.signIn ? 'email' : T.sendType ?? (T.session ? 'email_change' : 'email');
       if (captchaRequired && type === 'email' && !o?.captchaToken) throw Object.assign(new Error('captcha'), { code: 'captcha' });
       return { type }; },
     profile: async () => { T.profiles++; if (T.prof === undefined) throw new Error('rpc:PGRST202:404'); return T.prof; },
@@ -50,7 +50,7 @@ function make({ configured = true, publishingEnabled = true, session = false, em
   const captcha = { token: async () => 'tok', cancel() {} };
   const focused = [];
   const profile = setupProfile({ focusIn: (m, id) => focused.push(id), captcha, store, aliasKey: 'alias', deviceNote: p => (p ? '' : 'NOTE'), service, doc,
-    report: (k, d) => reports.push([k, d]), acceptStats: () => { T.accepted++; } });
+    report: (k, d) => reports.push([k, d]), acceptStats: () => { T.accepted++; }, offerLink });
   const find = (el, test) => (test(el) ? el : (el.kids || []).filter(k => typeof k !== 'string').map(k => find(k, test)).find(Boolean) ?? null);
   return { profile, $, mem, calls, reports, T, focused, find, doc,
     badge: () => find($('profile-name'), k => k.className === 'verified-check'),
@@ -108,6 +108,25 @@ const guestProf = o => ({ alias: 'takeshi', verified: false, published: true, re
   assert(s.mem.get('record-v2-duet-1') && s.mem.get('alias') === 'takeshi', 'device records stay');
   const mail = make({ alias: 'takeshi', session: true, email: 'jo@example.test', prof: null }); await mail.profile.refresh();
   assert.equal(mail.calls.length, 0, 'a confirmed address: kept (its row may come back with a name)');
+  // a «Crea» whose name was taken left a session with no row and no name: no profile yet, «Crea» again (on that same
+  // session) or «Recupera»; never signed out by a refresh (another tab may share it). It once read «Convidat» with no name.
+  const nameless = make({ session: true, prof: null }); await nameless.profile.refresh(); await tick();
+  assert.deepEqual(nameless.calls, []); assert.equal(nameless.$('profile-row').dataset.state, 'none');
+  assert.equal(nameless.buttons().join(), 'create:Crea,recover:Recupera');
+  // that confirmed profile without a name: «Crea» gives it one (update_alias makes its row)
+  const unnamed = make({ session: true, email: 'jo@example.test', prof: null }); await unnamed.profile.refresh();
+  assert.equal(unnamed.$('profile-row').dataset.state, 'unnamed');
+  assert.equal(unnamed.buttons().join(), 'create:Crea,signout:Tanca la sessió,delete:Esborra el perfil');
+  // a name merely unknown here (my_profile gave no answer) is no «unnamed» profile: «Crea» would rename it
+  const unknown = make({ session: true, email: 'jo@example.test' }); await unknown.profile.refresh();
+  assert.equal(unknown.$('profile-row').dataset.state, 'linked');
+  // a name kept here from before is not that profile's: still «unnamed», with no name shown
+  const kept = make({ alias: 'takeshi', session: true, email: 'jo@example.test', prof: null }); await kept.profile.refresh();
+  assert.equal(kept.$('profile-row').dataset.state, 'unnamed'); assert.equal(kept.$('profile-name').textContent, '');
+  kept.T.offline = true; await kept.profile.refresh(); // the next first frame paints from the stored answer: still no old name
+  assert.equal(kept.$('profile-row').dataset.state, 'unnamed'); assert.equal(kept.$('profile-name').textContent, '');
+  kept.T.offline = false; kept.T.prof = undefined; await kept.profile.refresh(); // the session answers, my_profile fails: the last answer stands
+  assert.equal(kept.$('profile-row').dataset.state, 'unnamed'); assert.equal(kept.$('profile-name').textContent, '');
 }
 { // create: a nickname, checked here first; the statistics' notice on the step; then the block is a guest profile's
   const s = make({ captchaRequired: true }); await s.profile.refresh();
@@ -129,14 +148,36 @@ const guestProf = o => ({ alias: 'takeshi', verified: false, published: true, re
   assert.equal(s.$('profile-status').textContent, 'Perfil creat!');
   await tick(); await tick();
   assert.equal(s.buttons().join(), 'link:Confirma el correu,delete:Esborra el perfil'); assert.equal(s.$('profile-name').textContent, 'takeshi');
+  assert(s.$('profile-main').classList.contains('btn-primary') && !s.$('profile-alt').classList.contains('btn-primary'), 'a guest: «Confirma el correu» is the one gold button');
   s.$('profile-menu').close();
+}
+{ // with the offer (src/ui/confirm-gate.js): a new guest leaves this sheet for the benefits, once; its way back goes along
+  const offers = [], back = () => {}, s = make({ prof: guestProf({ published: false }), offerLink: (...a) => offers.push(a) }); await s.profile.refresh();
+  s.profile.open('create', back); enter(s.$, 'profile-alias', 'takeshi'); s.$('profile-form').fire('submit'); for (let i = 0; i < 5; i++) await tick();
+  assert(!s.$('profile-menu').open && offers.length === 1 && offers[0][0] === back && offers[0][1] === 'ui.profile.done.created', '«Perfil creat!» on the benefits sheet');
+  // no answer from my_profile: the session says it (no confirmed address: a guest)
+  const slow = make({ offerLink: (...a) => offers.push(a) }); await slow.profile.refresh();
+  slow.profile.open('create'); enter(slow.$, 'profile-alias', 'takeshi'); slow.$('profile-form').fire('submit'); for (let i = 0; i < 5; i++) await tick();
+  assert.equal(offers.length, 2, 'my_profile unanswered: still offered');
+  // the gate's own create (thenLink) has shown the benefits already: on to the address in this sheet
+  const gated = make({ prof: guestProf({ published: false }), offerLink: (...a) => offers.push(a) }); await gated.profile.refresh();
+  gated.profile.open('create', null, { thenLink: true }); enter(gated.$, 'profile-alias', 'takeshi'); gated.$('profile-form').fire('submit'); for (let i = 0; i < 5; i++) await tick();
+  assert(offers.length === 2 && gated.$('profile-menu').open && !gated.$('profile-mail-field').hidden, 'no second offer');
+  // a confirmed session naming itself: nothing to confirm
+  const named = make({ session: true, email: 'jo@example.test', prof: null, offerLink: (...a) => offers.push(a) }); await named.profile.refresh();
+  named.T.prof = { ...guestProf({ published: false }), verified: true };
+  named.profile.open('create'); enter(named.$, 'profile-alias', 'takeshi'); named.$('profile-form').fire('submit'); for (let i = 0; i < 5; i++) await tick();
+  assert(offers.length === 2 && named.$('profile-status').textContent === 'Perfil creat!' && named.$('profile-mail-field').hidden, 'confirmed: done, no address asked');
+  named.$('profile-menu').close();
+  // offline nothing opens: the caller (the gate) keeps its way back
+  assert.equal(make({ configured: false }).profile.open('link', back), false, 'offline: nothing took over');
 }
 { // confirm an e-mail: mail → code; the tick, the same name; an address typed elsewhere; a code the server does not confirm
   const s = make({ alias: 'takeshi', session: true, captchaRequired: true, prof: guestProf() }); await s.profile.refresh();
   s.profile.open('link'); assert(s.$('profile-menu').open && s.$('profile-title').textContent === 'Confirma el correu' && s.focused.at(-1) === 'profile-email');
   assert(/El teu nom/.test(s.$('profile-lead').textContent) && /marca/.test(s.$('profile-lead').textContent) && !/#|caduc|7 dies|torneig/.test(s.$('profile-lead').textContent), 'what confirming does: keeps it, sells the mark, no «#» talk');
   enter(s.$, 'profile-email', 'jugador@example.com'); s.$('profile-form').fire('submit'); await tick(); await tick();
-  assert.deepEqual(s.calls[0], ['send', 'jugador@example.com', undefined], 'an address on this session: no Turnstile wait');
+  assert.deepEqual(s.calls[0], ['send', 'jugador@example.com', { signIn: false }], 'an address on this session: no Turnstile wait');
   assert(!s.$('profile-code-field').hidden && s.$('profile-mail-field').hidden && /jugador@example\.com/.test(s.$('profile-lead').textContent) && s.focused.at(-1) === 'profile-code');
   enter(s.$, 'profile-code', '12a34-56'); assert.equal(s.$('profile-code').value, '123456', 'digits only, six');
   { // the keyboard's «send» while typing the address: the code field takes the focus while the address field still shows (iOS keeps its keyboard)
@@ -182,7 +223,7 @@ const guestProf = o => ({ alias: 'takeshi', verified: false, published: true, re
   const s = make({ captchaRequired: true }); await s.profile.refresh(); let backs = 0;
   s.profile.open('recover', () => backs++); assert.equal(s.$('profile-title').textContent, 'Recupera el perfil');
   enter(s.$, 'profile-email', 'jugador@example.com'); s.$('profile-form').fire('submit'); await tick(); await tick(); await tick();
-  assert.deepEqual(s.calls.slice(0, 2), [['send', 'jugador@example.com', undefined], ['send', 'jugador@example.com', { captchaToken: 'tok' }]], 'a sign-in by code: the token when asked');
+  assert.deepEqual(s.calls.slice(0, 2), [['send', 'jugador@example.com', { signIn: true }], ['send', 'jugador@example.com', { captchaToken: 'tok', signIn: true }]], 'a sign-in by code: the token when asked; never an address added to a session left here (a nameless one would become a confirmed profile without a name)');
   assert(!s.$('profile-code-field').hidden, 'then the code step');
   s.T.fail = Object.assign(new Error('El codi no és correcte o ha caducat. Demana’n un de nou.'), { code: 'code' });
   enter(s.$, 'profile-code', '000000'); s.$('profile-form').fire('submit'); await tick(); await tick();
@@ -217,11 +258,19 @@ const guestProf = o => ({ alias: 'takeshi', verified: false, published: true, re
   assert.deepEqual(s.calls, [['signout']]); assert(!s.mem.has('alias')); assert.equal(s.$('profile-status').textContent, 'Sessió tancada.');
   s.$('profile-menu').close();
 }
-{ // an address that already confirmed another profile: the code switches to that one, said before, nothing merged
+{ // an address that already confirmed another profile: asked first (nothing sent), «Cancel·la» goes back to the address,
+  // going on sends the code that switches to that one (the guest left is the service's to delete)
   const s = make({ alias: 'takeshi', session: true, prof: guestProf() }); await s.profile.refresh();
-  s.T.sendType = 'email'; s.profile.open('link');
+  s.T.sendType = 'exists'; s.profile.open('link');
   enter(s.$, 'profile-email', 'altre@example.com'); s.$('profile-form').fire('submit'); await tick(); await tick();
-  assert.equal(s.$('profile-lead').textContent, 'Aquest correu ja és d’un altre perfil. Amb el codi que t’hem enviat a altre@example.com entraràs en aquell perfil: takeshi i els seus resultats no s’hi afegeixen.');
+  const ca = JSON.parse(readFileSync(new URL('../../src/i18n/locales/ca/ui.json', import.meta.url), 'utf8'));
+  assert.equal(s.$('profile-lead').textContent, ca['ui.profile.lead.codeOther'].replace('{mail}', 'altre@example.com').replace('{mine}', 'takeshi'));
+  assert.deepEqual(s.$('profile-lead').kids.filter(k => k.className === 'profile-hl').map(k => k.textContent), ['altre@example.com', 'takeshi'], 'the address and the name stand out, as text');
+  assert(!s.$('profile-keep').hidden && s.$('profile-code-field').hidden && s.$('profile-mail-field').hidden, 'a question, no field');
+  s.$('profile-keep').click(); assert(s.$('profile-menu').open && !s.$('profile-mail-field').hidden, '«Cancel·la»: another address, same sheet');
+  s.$('profile-form').fire('submit'); await tick(); await tick();
+  assert.equal(s.calls.length, 2); s.$('profile-form').fire('submit'); await tick(); await tick();
+  assert.deepEqual(s.calls.at(-1), ['send', 'altre@example.com', { signIn: true }]); assert(!s.$('profile-code-field').hidden);
   s.T.prof = guestProf({ alias: 'Castellera777', verified: true }); s.T.email = 'altre@example.com';
   enter(s.$, 'profile-code', '123456'); s.$('profile-form').fire('submit'); await tick(); await tick();
   assert.deepEqual(s.calls.at(-1), ['verify', 'altre@example.com', '123456', 'email']);

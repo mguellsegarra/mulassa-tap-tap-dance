@@ -191,3 +191,24 @@ export function escutSvg(townId, cls = 'escut') {
   return `<svg class="${cls}" data-shape="${arms.shape}" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><clipPath id="${id}"><path d="${shape}"/></clipPath>`
     + `<g clip-path="url(#${id})" stroke="none">${arms.art.replaceAll('{id}', id)}</g><path d="${shape}" fill="none" stroke="${ESC_T.sable}" stroke-width="1.1" stroke-linejoin="round"/>${arms.over ? `<g stroke="none">${arms.over}</g>` : ''}</svg>`;
 }
+
+// The selector pills' arms as bitmaps: 33 inline vectors were re-rastered on the selector's first paint (~300 ms of a Galaxy
+// S10's GPU, the 3D stalled behind it; as PNGs, none). Drawn once at 2x the screen's density, so a zoomed layer stays sharp.
+export function escutBitmaps(root, win = globalThis) {
+  const doc = root.ownerDocument, px = Math.ceil(22 * 2 * (win.devicePixelRatio || 1));
+  if (!doc?.createElement('canvas').getContext) return Promise.resolve();
+  return Promise.all([...root.querySelectorAll('svg.escut')].map(async svg => {
+    const src = new win.Image();
+    src.src = `data:image/svg+xml,${encodeURIComponent(svg.outerHTML.replace('<svg', `<svg xmlns="http://www.w3.org/2000/svg" width="${px}" height="${px}"`))}`;
+    let blob = null;
+    try { // (a decode error, or a browser that taints a canvas drawn from a vector: the arm stays a vector)
+      await src.decode();
+      const canvas = doc.createElement('canvas'); canvas.width = canvas.height = px;
+      canvas.getContext('2d').drawImage(src, 0, 0, px, px);
+      blob = await new Promise(done => canvas.toBlob(done));
+    } catch { return; }
+    if (!blob) return;
+    const img = new win.Image(); img.className = svg.getAttribute('class'); img.alt = ''; img.src = win.URL.createObjectURL(blob);
+    svg.replaceWith(img);
+  }));
+}

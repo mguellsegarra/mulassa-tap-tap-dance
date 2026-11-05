@@ -16,7 +16,7 @@ export function checkBadge(doc, badgeId = null) {
   const b = doc.createElement('span'), badge = badgeOf(badgeId); // a chosen badge takes the check's place and keeps its meaning
   b.className = badge ? 'player-badge' : 'verified-check'; b.setAttribute('role', 'img');
   b.setAttribute('aria-label', badge ? tr('ui.badge.label', { status: VERIFIED, name: badge.name }) : VERIFIED);
-  if (badge) b.title = badge.name; // what it is, on a hover
+  if (badge) b.dataset.tip = badge.name; // what it is, on a hover or a tap (src/ui/badge-tip.js)
   b.innerHTML = badge ? badge.art() : CHECK_SVG;
   return b;
 }
@@ -43,7 +43,8 @@ export function appendName(doc, into, p, onOpen = null) {
 // A guest profile lives in this browser's storage only: where that storage is likely to go, a short note — only for
 // someone who has published (a remembered alias or a session), never before. Standalone (home screen) apps and ordinary
 // browsers get none. `persistent`: identity()'s storage probe (false = storage blocked, e.g. some private modes).
-const IN_APP = /\b(Instagram|FBAN|FBAV|FB_IAB|FBIOS|Messenger|WhatsApp|TikTok|musical_ly|BytedanceWebview|Snapchat|Line\/|LinkedInApp|Pinterest|Twitter)\b/i;
+// (also install-app.js: nothing installs from inside an app)
+export const IN_APP = /\b(Instagram|FBAN|FBAV|FB_IAB|FBIOS|Messenger|WhatsApp|TikTok|musical_ly|BytedanceWebview|Snapchat|Line\/|LinkedInApp|Pinterest|Twitter|Telegram-Android)\b/i;
 export function deviceRisk({ ua = '', standalone = false, touch = 0, persistent = true } = {}) {
   if (standalone) return null;
   if (!persistent) return 'private';
@@ -65,3 +66,20 @@ export const browserEnv = () => {
   try { standalone ||= Boolean(globalThis.matchMedia?.('(display-mode: standalone)').matches); } catch { /* no media queries */ }
   return { ua: String(nav.userAgent || ''), standalone, touch: Number(nav.maxTouchPoints) || 0 };
 };
+// The profile block's icons (src/ui/profile-ui.js): the pencil beside the mark, and each button's, at a glance (static markup, the label stays text)
+export const BADGE_PENCIL = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16zM13.5 6.5l4 4"/></svg>';
+const svg = d => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${d}"/></svg>`;
+const BTN_ICON = {
+  link: `<span class="verified-check" aria-hidden="true">${CHECK_SVG}</span>`,
+  delete: svg('M4 7h16M9 7V4h6v3M6.5 7l1 13h9l1-13M10 11v5M14 11v5'),
+  rename: svg('M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16zM13.5 6.5l4 4'),
+  signout: svg('M10 8V6a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-7a2 2 0 0 1-2-2v-2M15 12H3l3-3M6 15l-3-3'),
+};
+export const labelProfileBtn = (b, act, text) => { b.textContent = text; if (BTN_ICON[act]) b.insertAdjacentHTML('afterbegin', BTN_ICON[act]); };
+// the mark beside the name is what you tap to change it (src/ui/badge-picker.js), with a pencil saying so
+export function profileBadgeEntry(doc, nameEl) {
+  const mark = nameEl.querySelector('.verified-check, .player-badge'), b = doc.createElement('button');
+  if (!mark) return;
+  b.type = 'button'; b.className = 'badge-edit'; b.dataset.act = 'badge'; b.setAttribute('aria-haspopup', 'dialog'); b.setAttribute('aria-label', tr('ui.badge.entry'));
+  mark.replaceWith(b); b.append(mark); b.insertAdjacentHTML('beforeend', BADGE_PENCIL);
+}

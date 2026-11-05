@@ -1,10 +1,11 @@
 import { LEADERBOARD_VERSION, normalizeAlias, validResult } from './leaderboard-rules.js';
 import { badgeReads } from './leaderboard-badges.js';
+import { ownRecords } from './leaderboard-own.js';
+import { codeSignIn } from './leaderboard-code.js';
 import { DRAC_SCORE_VERSION, BOU_SCORE_VERSION } from '../game/score-scale.js';
 import { MOCK_BOARD } from '../core/mock-board.js';
 import { fail, translated } from './leaderboard-errors.js';
 import { getClient } from './supabase-client.js';
-import { cleanEmail } from './feedback.js';
 export { LEADERBOARD_VERSION, normalizeAlias } from './leaderboard-rules.js';
 export { getLeaderboardResult, subscribeLeaderboardResult } from './leaderboard-result.js';
 
@@ -201,61 +202,8 @@ export function createLeaderboardService({ configured, publishingEnabled, captch
       try { return await player(await client(), 'set_profile_badge', { p_badge_id: badgeId, p_owner: owner }); }
       catch (error) { throw translated(error); }
     },
-    // Statistics (docs/rankings/strategy.md §7), through src/services/stats-sync.js. syncStats({ device, buckets, days }) is
-    // merge_stats: cumulative counters of this device per bucket, and the played days (YYYY-MM-DD); at most once a minute
-    // per profile (rate_limit). myStats() is my_stats, the sum over all devices:
-    // { buckets (as playerCard totals, plus 'practice': { runs, seconds }), days, daysPlayed, currentStreak, longestStreak } or null.
-    // owner: the user id these counters belong to, required: another session (an account switched in another tab) means nothing is
-    // sent. The check here can pass and the SDK still sign the request with a newer session, so the server gets the owner too
-    // (p_owner) and refuses a mismatch (leaderboard_owner_mismatch → 'session').
-    async syncStats({ device, buckets, days, owner }) {
-      if (!publishingEnabled) throw fail('disabled');
-      try {
-        const c = await client(), now = await signedIn(c);
-        if (!now || !owner || now.user?.id !== owner) throw fail('session');
-        await player(c, 'merge_stats', { p_device: device, p_buckets: buckets, p_days: days, p_owner: owner });
-        return { synced: true };
-      } catch (error) { throw translated(error); }
-    },
-    async myStats() {
-      try {
-        const c = await client();
-        if (!(await signedIn(c))) return null;
-        const r = (await rpc(c, 'my_stats'))?.[0]; // not player(): a session with no profile yet is no reason to forget anything
-        return r ? { buckets: r.buckets ?? {}, days: r.days ?? [], daysPlayed: Number(r.days_played), currentStreak: r.current_streak, longestStreak: r.longest_streak } : null;
-      } catch (error) { const t = translated(error); if (t.code === 'gone') return null; throw t; }
-    },
-    // Profile recovery, no password: an e-mail address on the guest profile, then a 6-digit code sent to it. sendCode()
-    // attaches the address to this browser's profile (or, if that address already owns one, signs in to it instead) and
-    // returns the `type` verifyCode() needs; verifyCode() finishes it. The address stays in Supabase Auth, never on the board.
-    async sendCode(email, { captchaToken } = {}) {
-      const mail = cleanEmail(email);
-      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(mail)) throw fail('email');
-      return write(async c => {
-        const { data, error } = await c.auth.getSession();
-        if (error) throw error;
-        if (data.session) {
-          const up = await c.auth.updateUser({ email: mail });
-          if (!up.error) return { type: 'email_change' };
-          if (up.error.code !== 'email_exists') throw up.error;
-        }
-        if (captchaRequired && !captchaToken) throw fail('captcha');
-        const { error: otpError } = await c.auth.signInWithOtp({ email: mail, options: { shouldCreateUser: false, captchaToken } });
-        if (otpError) throw otpError;
-        return { type: 'email' };
-      });
-    },
-    async verifyCode(email, code, type) {
-      const mail = cleanEmail(email), token = String(code ?? '').replace(/\D/g, '');
-      if (token.length !== 6 || !['email', 'email_change'].includes(type)) throw fail('code');
-      const out = await write(async c => {
-        const { error } = await c.auth.verifyOtp({ email: mail, token, type });
-        if (error) throw error;
-        return { email: mail };
-      });
-      emit({ type: 'changed' }); // type 'email' may have switched this browser to another profile
-      return out;
-    },
+    ...ownRecords({ publishingEnabled, client, signedIn, rpc, player }),
+    ...codeSignIn({ write, emit, captchaRequired }),
     // Leave this browser's profile; it stays on the server (only sensible once an e-mail is on it: sendCode/verifyCode bring it back).
     async signOut() {
       if (writing) throw fail('busy');

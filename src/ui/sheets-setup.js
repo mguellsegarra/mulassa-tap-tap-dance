@@ -1,5 +1,5 @@
 import { leaderboard } from '../services/leaderboard.js';
-import { ALIAS_KEY, ownerKey, refreshIdentity, dropLegacyIdentity } from '../services/leaderboard-identity.js';
+import { ALIAS_KEY, ownerKey, savedName, refreshIdentity, dropLegacyIdentity } from '../services/leaderboard-identity.js';
 // Builds the sheets (settings, sync, board, share, profile, Perfil, seasons, cards, feedback, privacy), wires their buttons and registers them in `sheets`.
 import { showPhotoHelp, setRadioHint } from './photo-avatars.js';
 import { setupSelect } from './select-ui.js';
@@ -9,8 +9,9 @@ import { store } from '../platform/storage.js';
 import { APP_BUILD } from '../core/version.js';
 import { memoryKeys, mockLeaderboard, markTestMode, leaderboardPreviewMode, demoOptions, DEMO_SELF, demoPublicId, FINAL } from '../dev/final-test.js';
 import { statsSync, markStatsNoticeSeen } from '../services/stats-sync.js';
+import { seenNotices } from '../services/seen-notices.js';
 import { setupAccount } from './account-ui.js';
-import { setupSeasons } from './seasons-ui.js';
+import { setupSeasons, forgetSeasons } from './seasons-ui.js';
 import { setupSeasonEnd } from './season-end-ui.js';
 import { setupCard } from './player-card.js';
 import { setupBoard } from './board-ui.js';
@@ -22,6 +23,7 @@ import { setupGamesMenu } from './games-menu.js';
 import { setupGamesCarousel } from './games-carousel.js';
 import { setupNews } from './news-sheet.js';
 import { hasPlayed } from '../game/records.js';
+import { setupInstall } from './install-app.js';
 import { softwareGl } from '../scene/stage.js';
 import { makeDanceChart } from '../game/chart.js';
 import { song, FINALE_T } from '../game/figure-song.js';
@@ -32,6 +34,7 @@ import { setupBadgeNews } from './badge-news.js';
 import { setupConfirmGate } from './confirm-gate.js';
 import { setupHearts } from './figure-hearts.js';
 import { setupHeartTip } from './heart-tip.js';
+import { setupBadgeTip } from './badge-tip.js';
 import { setupFeedback } from './feedback-ui.js';
 import { sheets } from './sheets.js';
 import './keyboard-room.js';
@@ -115,6 +118,7 @@ versionEl.textContent = `v${APP_BUILD.replace('+', ' · ')}`; // v1.0.54 · d405
 document.getElementById('settings').addEventListener('click', openSettings);
 document.getElementById('settings-sync').addEventListener('click', () => { settingsMenu.close(); syncBack = openSettings; sync.show(); });
 document.getElementById('settings-feedback').addEventListener('click', () => { settingsMenu.close(); writeToBox({ kind: 'general' }, openSettings); }); // the selector's Bústia (its corner slot went to free play); closing it comes back here
+sheets.install = setupInstall({ focusIn, back: openSettings }); // «Instal·la l’app»: Chromium's prompt, or the browser's own steps; closing them comes back here
 // Classificacions (optional, online): from the selector or the results screen.
 // After an eligible run its publish sheet opens by itself, only over a bare, visible, upright results screen.
 const mockBoard = Boolean(FINAL) || leaderboardPreviewMode({ hostname: location.hostname, search: location.search, configured: leaderboard.configured });
@@ -171,14 +175,16 @@ if (FINAL?.review != null) import('../dev/account-review.js').then(m => m.startR
 // at the top of «Perfil» (src/ui/account-ui.js, the corner row's person); closing a step goes back to Perfil. «Recupera’l» on the
 // publish sheet recovers, then the publication opens again. ?final / ?mock: the same sheets over the mock service and the
 // in-memory keys (src/dev/final-test.js), nothing real.
-const profile = setupProfile({ focusIn, captcha: board.captcha, store: kv, aliasKey: ALIAS_KEY, deviceNote: board.deviceNote, acceptStats, ...(mockBoard && { service: mockService }) });
+const profile = setupProfile({ focusIn, captcha: board.captcha, store: kv, aliasKey: ALIAS_KEY, deviceNote: board.deviceNote, acceptStats,
+  offerLink: (back, title) => needConfirmed.offer(back, title), ...(mockBoard && { service: mockService }) });
 sheets.profile = profile;
-sheets.badges = setupBadges({ focusIn, service, store: kv, onSaved: id => { profile.badgeSaved(id); refreshIdentity(service, kv, { fresh: true }).then(() => share.refreshName()); } });
+sheets.badges = setupBadges({ focusIn, service, store: kv, onSaved: id => { profile.badgeSaved(id); sheets.select?.reread(); forgetSeasons(service); refreshIdentity(service, kv, { fresh: true }).then(() => share.refreshName()); } });
 const account = setupAccount({ focusIn, profile, badges: sheets.badges, service, store: kv, stats: statsSync, onSync: back => { syncBack = back; sync.show(); }, onHall: (f, back) => seasons.open(f, back) });
 sheets.account = account;
 document.getElementById('settings-profile').addEventListener('click', () => { settingsMenu.close(); account.open(openSettings); }); // Perfil lives in ⚙ Configuració (no corner button); closing it comes back here
-// «Tardor 2026 s’ha acabat»: once per profile and season (in memory over the mock, so each review shows it)
-const seasonEnd = setupSeasonEnd({ focusIn, service, store: mockBoard ? new Map() : store, onHall: (f, back) => seasons.open(f, back) });
+// «Tardor 2026 s’ha acabat»: once per profile and season (in memory over the mock, so each review shows it). The real sheets
+// share the statistics' seen-notices registry: one read of the server's list per owner.
+const seasonEnd = setupSeasonEnd({ focusIn, service, store: mockBoard ? new Map() : store, ...(!mockBoard && { notices: seenNotices }), onHall: (f, back) => seasons.open(f, back) });
 sheets.seasonEnd = seasonEnd;
 const until = (test, ms = 20000) => new Promise((resolve, reject) => { const t0 = Date.now(); (function tick() { if (test()) resolve(); else if (Date.now() - t0 > ms) reject(new Error('timed out')); else setTimeout(tick, 50); })(); });
 // The first selector after the start, and every idle one after it until the profile has nothing left to hear (src/ui/greeting.js).
@@ -186,9 +192,10 @@ const until = (test, ms = 20000) => new Promise((resolve, reject) => { const t0 
 let cardGreeted = false;
 // a bare selector: also no sheet outside sheetUp (the gate, the pending card's), so nothing the greeting tells lands on one
 const selectorFree = () => G.state === 'select' && !sheetUp() && !viewMode && !document.hidden && !document.querySelector('dialog[open]');
-const badgeNews = setupBadgeNews({ focusIn, service, store: mockBoard ? { get: () => null, set() {} } : kv, badges: sheets.badges, profile, idle: selectorFree, refresh: () => refreshIdentity(service, kv, { fresh: true }) }); // the mock: every load can show it again
+const badgeNews = setupBadgeNews({ focusIn, service, store: mockBoard ? { get: () => null, set() {} } : kv, ...(!mockBoard && { notices: seenNotices }), badges: sheets.badges, profile, idle: selectorFree, refresh: () => refreshIdentity(service, kv, { fresh: true }) }); // the mock: every load can show it again
 sheets.badgeNews = badgeNews;
-const hint = setupDeviceHint({ focusIn, store, softwareGl }); // the device tips, last: after the profile's own news
+const hint = setupDeviceHint({ focusIn, store, softwareGl, // the device tips, last: after the profile's own news
+  account: () => (ownerKey(kv) ? (savedName(kv).verified ? 'linked' : 'guest') : 'none'), confirm: back => { profile.open('link', back); if (!profile.isOpen) back?.(); } }); // offline the profile sheet stays shut: focus back to the selector
 sheets.hint = hint;
 sheets.freeGate = setupFreeGate({ focusIn, store, onEnter: () => enterFree() }); // an upright iPhone is asked to turn before free play
 sheets.games = setupGamesMenu({ focusIn, carousel: setupGamesCarousel() });
@@ -221,11 +228,12 @@ const greeting = setupGreeting({ asked: () => heartTip.update(), stats: statsSyn
 service.onAccount?.(() => { hearts.accountChanged(); refreshIdentity(service, kv, { fresh: true }).then(() => share.refreshName()); greeting.accountChanged(); });
 document.addEventListener('close', () => { greeting.poke(); heartTip.update(); }, true); // dialogs' close does not bubble
 document.addEventListener('visibilitychange', () => { if (!document.hidden) { greeting.poke(); heartTip.update(); } }); // an answer that landed in a hidden tab was dropped: ask again
-settingsMenu.addEventListener('close', () => { if (!sync.open && !board.open && (G.state === 'select')) document.activeElement?.blur(); });
+settingsMenu.addEventListener('close', () => { if (!sync.open && !board.open && !document.querySelector('dialog[open]') && (G.state === 'select')) document.activeElement?.blur(); }); // (close fires a task later: a sheet opened from here has its focus by then)
 // Bústia de la plaça: opened from Configuració or a pending figure; one shared Turnstile.
 const feedback = setupFeedback({ focusIn, captcha: board.captcha, accessToken: () => service.accessToken() });
 const needConfirmed = setupConfirmGate({ focusIn, identity: () => service.identity(), hasProfile: async () => !!ownerKey(kv) || !!(await service.profile?.())?.alias, openProfile: (what, back, opts) => profile.open(what, back, opts) });
 const hearts = setupHearts({ service, needConfirmed, onChange: () => { select.paintHearts(); heartTip.update(); } });
+setupBadgeTip();
 const heartTip = setupHeartTip({ store, hearts, figure: () => (select.pending ? null : select.figure), busy: () => sheetUp() || viewMode || !greeting.answered });
 const writeToBox = (request, back) => needConfirmed(request.kind === 'general' ? 'feedback' : request.kind, () => feedback.show(back, request));
 sheets.feedback = feedback;

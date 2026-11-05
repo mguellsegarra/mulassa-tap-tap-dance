@@ -11,8 +11,9 @@ import { CALM, CAMDRAC } from '../core/env.js';
 import { clock, G } from '../game/state.js';
 import { TAU } from '../core/math.js';
 import { HH, K, W, SAFE, baseFov } from '../hud/canvas.js';
-import { COLLAS, figureRoot } from '../figures/objects.js';
+import { figureRoot } from '../figures/objects.js';
 import { SPLASH_HOST_ID, traitsOf } from '../figures/index.js';
+import { clearOfColla } from './colla-dodge.js';
 
 // Remove the previous render's offset before any rig reads the camera. The short impact never enters framing springs.
 let impactCameraX = 0, impactCameraY = 0;
@@ -123,17 +124,19 @@ export function frameMenuCamera(dt, mx, mz, root, rect, aim, reel = null) {
   { const br = CALM.matches ? 0 : 1, T = clock * TAU;
     orbitHome.yaw = CAM_AZ + br * TITLE_SWAY * (0.65 * Math.sin(T / DRIFT.tAz) + 0.35 * Math.sin(T / DRIFT.tAz2 + 1.3)) + (CAMDRAC === 'segueix' ? DRIFT.follow * Math.sin(M.yaw - FRONT) : 0); }
   if (shot) { orbitHome.yaw = CAM_AZ + shot.az; orbitHome.pitch = shot.el; } // (held by a drag: where it eases back to)
-  if (shot && direct) orbitHome.yaw += clearOfColla(orbitHome.yaw, cx, cz, cut, dt);
+  if (shot && direct) orbitHome.yaw += clearOfColla(orbitHome.yaw, cx, cz, orbit.x[1] * Math.cos(orbitHome.pitch), cut, dt); // (the shot's own height: on a cut the orbit still has the last one's)
   // The showreel borrows the orbit's height and distance and gives them back when it stops (photo mode, a pending card):
   // what follows starts from the plain framing, never from its close or high shot.
   if (direct && !MENU.directed) MENU.lent.set(orbit.x);
   else if (MENU.directed && !direct && !MENU.held) { orbit.x.set(MENU.lent); orbit.zoomRaw = orbit.zoomTo = orbit.x[1]; orbit.v.fill(0); } // (a drag keeps the angle it took over)
   MENU.directed = direct;
   if (orbit.fresh) orbit.yaw = orbitHome.yaw; // (the very first frame starts at home)
-  if (direct) aimShot(dt, cut, cx, cz, slow || MENU_T.dolly, shot.eye); else orbitStep(orbit, dt, now, orbitHome, roomAt(cx, cz));
+  const held = direct && !cut && REEL_HOLD.on && shot.fixed; // (a fixed camera: it stays where its cut put it, lens and all)
+  if (!direct) REEL_HOLD.on = false;
+  if (held) fixedLens(cx, cz); else if (direct) aimShot(dt, cut, cx, cz, slow || MENU_T.dolly, shot.eye); else orbitStep(orbit, dt, now, orbitHome, roomAt(cx, cz));
   placeMenu(cx, cz, cut ? Infinity : dt);
   const zoomOn = root && MENU.w && !bandless(rect);
-  zoomMenu(cut ? 0 : dt, zoomOn, slow || MENU_T.shift, shot?.part);
+  zoomMenu(cut ? 0 : dt, zoomOn, slow || MENU_T.shift, shot?.part, held && zoomOn ? REEL_HOLD.z : 0);
   const y = frameMenuLens(dt, root, rect, aim, shot?.fill, cut, direct, slow, shot?.part);
   const late = !cut && MENU.late && MENU.w && shot; // (a new figure shows a frame after its cut: its first measure snaps as the cut would have)
   if (MENU.first && MENU.w && !cut) { // the splash's first measure, still under the loading cover: framed at once (it backed off from 11 m for seconds, the plaça empty between them)
@@ -152,6 +155,7 @@ export function frameMenuCamera(dt, mx, mz, root, rect, aim, reel = null) {
   zoomMenu(0, root && MENU.w && !bandless(rect), 0, shot.part); // then the lens that size wants (a close-up's long lens at once, never a zoom after the cut)
   const out = frameMenuLens(dt, root, rect, aim, shot.fill, true, false, 0, shot.part); // and the shift for that lens
   MENU.late = !MENU.w;
+  REEL_HOLD.on = !!shot.fixed && !!MENU.w; REEL_HOLD.p.copy(camera.position); REEL_HOLD.z = ZOOM.x[0];
   return out;
 }
 // A band too short for the square (a 1280x800 desktop: ~23 m wanted, 15-17 m to the façades) left her head over the
@@ -161,37 +165,11 @@ export function frameMenuCamera(dt, mx, mz, root, rect, aim, reel = null) {
 // and the colla round her) and a long lens brings the part in, up to ZOOM_TELE (short close-ups).
 // Any other camera takes the title's lens back (easeLensX; the play camera sets its own).
 const ZOOM = { x: new Float64Array([1]), v: new Float64Array(1) }, ZOOM_MAX = 1.45, ZOOM_TELE = 3;
-function zoomMenu(dt, on, time, tele = false) {
-  const z = on ? Math.max(1 / ZOOM_MAX, Math.min(tele ? ZOOM_TELE : 1, MENU.fit.dist > orbit.lim.distMax ? orbit.lim.distMax / MENU.fit.dist : tele ? orbit.lim.distMin / MENU.fit.dist : 1)) : 1;
+function zoomMenu(dt, on, time, tele = false, hold = 0) { // hold: a fixed camera's lens from its cut, only ever widened (she outgrows it as she charges)
+  const z = hold ? Math.max(1 / ZOOM_MAX, Math.min(hold, orbit.x[1] / MENU.fit.dist)) : on ? Math.max(1 / ZOOM_MAX, Math.min(tele ? ZOOM_TELE : 1, MENU.fit.dist > orbit.lim.distMax ? orbit.lim.distMax / MENU.fit.dist : tele ? orbit.lim.distMin / MENU.fit.dist : 1)) : 1;
   if (dt) smoothDamp(ZOOM, 0, z, time, dt); else { ZOOM.x[0] = z; ZOOM.v[0] = 0; } // (a cut: at once)
   const fov = Math.atan(Math.tan(baseFov() * Math.PI / 360) / ZOOM.x[0]) * 360 / Math.PI;
   if (Math.abs(camera.fov - fov) > 1e-3) { camera.fov = fov; camera.updateProjectionMatrix(); }
-}
-// The showreel never shoots over an attendant's shoulder (at the foot of the full screen one loomed half
-// her size): the shot's azimuth leaves `rad` either side of every colla helper standing between the lens and her, all of
-// them at once (two windows can join), by the nearer way out when a cut or the shot's own arc brings one in, then the same way
-// round while it stays (the other only past `max`: no swing across), eased and slow (her travel turns their bearings).
-const HELPER_CLEAR = { rad: 0.5, max: 1.2, ease: 0.6, speed: 0.12 }, AVOID = { x: new Float64Array(1), v: new Float64Array(1), side: 1, free: true, d: new Float64Array(16), n: 0 };
-function pushOut(dir) { // from the shot's own azimuth out past every window, one way round
-  let o = 0;
-  for (let k = 0; k < 4; k++) for (let i = 0; i < AVOID.n; i++) if (Math.abs(o - AVOID.d[i]) < HELPER_CLEAR.rad) o = AVOID.d[i] + dir * HELPER_CLEAR.rad;
-  return o;
-}
-function clearOfColla(yaw, cx, cz, cut, dt) {
-  const hd = orbit.x[1] * Math.cos(orbitHome.pitch); // (the shot's own height: on a cut the orbit still has the last one's)
-  AVOID.n = 0;
-  for (const c of COLLAS) if (c.helpers.visible) for (const p of c.crew) {
-    p.g.getWorldPosition(V3);
-    const dx = V3.x - cx, dz = V3.z - cz;
-    if (dx * dx + dz * dz > hd * hd || AVOID.n === AVOID.d.length) continue; // beyond her: in the background
-    const b = Math.atan2(dx, dz); AVOID.d[AVOID.n++] = Math.atan2(Math.sin(b - yaw), Math.cos(b - yaw));
-  }
-  let off = pushOut(AVOID.side);
-  const fresh = cut || AVOID.free; // (nothing in the way until now: the nearer way out)
-  if (fresh || Math.abs(off) > HELPER_CLEAR.max) { const other = pushOut(-AVOID.side); if (fresh ? Math.abs(other) < Math.abs(off) : Math.abs(other) < HELPER_CLEAR.max) { AVOID.side = -AVOID.side; off = other; } }
-  AVOID.free = off === 0;
-  if (cut) { AVOID.x[0] = off; AVOID.v[0] = 0; return off; }
-  return smoothDamp(AVOID, 0, off, HELPER_CLEAR.ease, dt, HELPER_CLEAR.speed); // (at most `speed` rad/s: a quick dodge turned the whole plaça, dizzying on a big screen)
 }
 function placeMenu(cx, cz, dt) {
   const hd = orbit.x[1] * Math.cos(orbit.x[0]);
@@ -201,6 +179,13 @@ function placeMenu(cx, cz, dt) {
 // The showreel's shot: its angle exactly (the shot list itself moves it), the distance its size wants eased (her outline
 // changes as she turns) or at once on a cut; inside the orbit's limits (the lens above the crowd, inside the square).
 const roomAt = (cx, cz) => roomAlong(cx, cz, Math.sin(orbit.yaw), Math.cos(orbit.yaw), plaza.inner - 1.5); // behind the lens, to the square's edge
+// A fixed camera (SHOT_KINDS `fixed`: a TV camera on its stand) stays where the cut put it and only pans after her: she grows as
+// she charges at it and crosses the frame as she runs past, instead of the dolly keeping her the same size wherever she goes
+const REEL_HOLD = { on: false, p: new THREE.Vector3(), z: 1 };
+function fixedLens(cx, cz) {
+  const dx = REEL_HOLD.p.x - cx, dz = REEL_HOLD.p.z - cz, hd = Math.hypot(dx, dz), up = REEL_HOLD.p.y - ORBIT.focusY;
+  orbit.yaw = Math.atan2(dx, dz); orbit.x[0] = Math.atan2(up, hd); orbit.x[1] = orbit.zoomRaw = orbit.zoomTo = Math.hypot(hd, up); orbit.v.fill(0); orbit.spin = 0;
+}
 function aimShot(dt, snap, cx, cz, ease, eye) { // eye: the shot's own lens height (SHOT_KINDS.low), else the orbit's
   orbit.yaw = orbitHome.yaw; orbit.spin = 0;
   const L = orbitLimits(orbit.lim, orbit.x[1], orbitHome.pitch, roomAt(cx, cz), eye ?? undefined);

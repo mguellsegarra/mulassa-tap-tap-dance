@@ -47,7 +47,7 @@
 .sel-card.aviat:not([data-id="la-teva-colla"]) .por img { filter: saturate(.75) brightness(.92); }
 /* The portrait stands on the caption, on a floor shared by every card; the svg is exactly its columns × a whole-pixel
    cell, so no figure is resampled (each keeps square, equal pixels). */
-.sel-card .por { --sky: .93; --reach: 1; /* --sky: the tallest figures' share of the panel (air above the crowns); --reach: the share a stand-1 figure would take, so the gegants are held at --sky and everyone else stands bigger (Mulassa and Drac looked small) */ position: relative; box-sizing: border-box; width: 100%; height: 100%; min-height: 0; display: grid; place-items: end center; padding: 5px 4px var(--floor); overflow: hidden; container-type: size;
+.sel-card .por { --sky: .93; --reach: 1; /* --sky: the tallest figures' share of the panel (air above the crowns); --reach: the share a stand-1 figure would take, so the gegants are held at --sky and everyone else stands bigger (Mulassa and Drac looked small) */ position: relative; box-sizing: border-box; width: 100%; height: 100%; min-height: 0; display: grid; place-items: end center; padding: 5px 4px var(--floor); overflow: hidden; contain: size layout style;
   /* the plaça's tiles («Rajola de plaça»): a wall in the town's colour, a skirting line, tiles in perspective and a contact shadow where the soles stand, at --floor on every card */
   background:
     radial-gradient(ellipse 34% 5% at 50% calc(100% - var(--floor)), #0009, transparent),
@@ -61,8 +61,10 @@
      biggest grid (18 × 14) at --reach, the tallest figures are held at --sky (top and sides) and the rim hangs outside, so
      the soles stand on the floor. A figure's cell never exceeds its own box, so a wide group of gegants held back by the width still
      stands tallest. */
-  .sel-card .por img { --ref: min(var(--reach) * 100cqh / 14, var(--sky) * 100cqw / 18);
-    --cell: max(2px, min(var(--s, 1) * 14 * var(--ref) / (var(--gh) - 2), var(--sky) * 100cqh / (var(--gh) - 2), var(--sky) * 100cqw / (var(--gw) - 2)));
+  /* --por-w/--por-h: the box's content size, written by select-layout.js; 50 size containers (cqw/cqh) made every restyle of
+     the page lay each out on its own (a sheet opening: ~280 ms on a Galaxy S10) */
+  .sel-card .por img { --ref: min(var(--reach) * var(--por-h) / 14, var(--sky) * var(--por-w) / 18);
+    --cell: max(2px, min(var(--s, 1) * 14 * var(--ref) / (var(--gh) - 2), var(--sky) * var(--por-h) / (var(--gh) - 2), var(--sky) * var(--por-w) / (var(--gw) - 2)));
     width: calc(var(--gw) * var(--cell)); height: calc(var(--gh) * var(--cell)); margin: calc(-1 * var(--cell)); } /* the rim on every side: the margin box is the drawing, so a full-height figure still aligns to the floor */
 }
 /* Static portraits share a 160x112 viewBox, 100-unit body height and sole baseline 104.
@@ -81,7 +83,7 @@
 .sel-card .por .sel-invite-illustration { --portrait-scale: calc(1.75 / 2.95 * 100 / 79.076); }
 @supports (width: round(down, 5.5px, 1px)) {
   .sel-card .por :is(.sel-mulassa-illustration, .sel-drac-illustration, .sel-bou-illustration, .sel-invite-illustration) {
-    --mula-cell: max(2px, min(.8 * 14 * min(var(--reach) * 100cqh / 14, var(--sky) * 100cqw / 18) / 11.02, 100cqh / 12, 100cqw / 14)); /* her 100-unit body = STAND .8 of the grids' --ref */
+    --mula-cell: max(2px, min(.8 * 14 * min(var(--reach) * var(--por-h) / 14, var(--sky) * var(--por-w) / 18) / 11.02, var(--por-h) / 12, var(--por-w) / 14)); /* her 100-unit body = STAND .8 of the grids' --ref */
   }
 }
 /* Full names wrap in a shared caption height, just the room two lines of name and one of entity need. */
@@ -95,6 +97,7 @@
 /* Keep the jester light on dark captions and the home attribution, dark on the pending foil. */
 #select :is(.sel-entity, .sel-entity-icons) svg.pessigolla { width: auto; height: 1em; aspect-ratio: 845 / 628; fill: initial; } /* Keep the mark centred with its label by the parent flex row. */
 #select :is(.sel-entity-icons, .sel-identity) svg.pessigolla { --jester: currentColor; }
+.sel-entity-icons svg.round-mark { width: 14px; height: 14px; } /* the Bou de Valls's entities: round marks in their own colours */
 #select :is(.sel-pending, .sel-identity) .sel-entity svg.pessigolla { --jester: #1b171c; }
 /* Selected: a cream ring over the whole card (drawn above the portrait) and a deeper shadow; never lifted, so every
    figure keeps the strip's one floor line. */
@@ -185,3 +188,15 @@ html:not([lang="ca"]) .sel-footer :is(#select-next, #select-play, #select-figure
 
 body.view-mode #select { opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .2s, visibility 0s .2s, display .2s allow-discrete; }
 #select { transition: opacity .2s, visibility 0s, display .2s allow-discrete; } /* return visibility immediately so the saved card can take focus */
+/* The figure's heart count on its card: a dark pill high on the wall, top left (the heads face right). Filled heart: this player gave one. */
+.sel-card-hearts { position: absolute; z-index: 1; top: 7px; left: 7px; display: inline-flex; align-items: center; gap: .25em; padding: .34em .67em .25em .5em; border-radius: 999px; background: #1a110bd9; box-shadow: 0 0 0 1px #fff3d624; font: 700 12px/1 'Baloo 2', system-ui, sans-serif; color: #fff3d6; font-variant-numeric: tabular-nums; pointer-events: none; }
+/* Out of the layout (absolute), so its arrival moves nothing: it only fades in when the totals come, and out at zero. */
+.sel-card-hearts:not([data-on]) { opacity: 0; visibility: hidden; transition: opacity .25s, visibility 0s .25s; }
+.sel-card-hearts[data-on] { transition: opacity .25s; }
+@media (prefers-reduced-motion: reduce) { .sel-card-hearts { transition: none !important; } }
+.sel-card-hearts svg { flex: none; width: 1em; height: 1em; margin: 0; fill: #e73449; stroke: none; }
+.sel-card-hearts:not([data-mine]) svg { fill: none; stroke: #e73449; stroke-width: 2.6; }
+/* Squat phone cards (select-pending.css: portrait left, caption right): smaller, in the portrait's corner. */
+@media (max-width: 519px) and (min-height: 501px) and (max-height: 700px) {
+  :where(#select-strip[data-squat]) .sel-card-hearts { top: 4px; left: 4px; padding: 2px 6px 1px 4px; font-size: 11px; }
+}

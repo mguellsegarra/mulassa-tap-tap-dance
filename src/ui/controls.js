@@ -35,7 +35,7 @@ hud.addEventListener('pointerleave', () => { hudMouse = false; updateHudCursor()
 
 export const sheetUp = () => howtoMenu.open || settingsMenu.open || sheets.sync.open || sheets.board.open || privacyMenu.open || sheets.share.open || pauseMenu.open || sheets.feedback.open || sheets.profile?.isOpen || sheets.select?.sheetOpen || sheets.watch?.open
   || sheets.account?.isOpen || sheets.seasons?.isOpen || sheets.seasonEnd?.isOpen || sheets.card?.isOpen || sheets.hint?.isOpen || sheets.badges?.isOpen || sheets.badgeNews?.isOpen || sheets.freeGate?.isOpen
-  || sheets.games?.isOpen || sheets.news?.isOpen;
+  || sheets.games?.isOpen || sheets.news?.isOpen || sheets.install?.isOpen;
 export const menuState = () => G.state === 'splash' || G.state === 'select'; // the camera steers
 export const photoScreen = () => G.state === 'select'; // photo mode lives only on the selector
 export const steers = () => menuState() && !sheetUp();

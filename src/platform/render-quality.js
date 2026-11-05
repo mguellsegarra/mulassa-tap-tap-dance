@@ -105,21 +105,25 @@ const EARLY = { until: 15000, window: 2000, share: 0.3 };
 // 33 ms, all of them read as slow and medium fell straight to minimal. CAP.run frames in a row at a steady ~33 ms suggest
 // a cap: until a faster frame, frames are judged against 30 Hz (twice the times above) and the run's frames
 // don't count as slow. Cadence alone cannot distinguish a power cap from a busy GPU; only missed refreshes
-// or repeated hitches justify removing detail, never an otherwise steady 30 Hz.
-const CAP = { lo: 29, hi: 38, run: 12 };
+// or repeated hitches justify removing detail, never an otherwise steady 30 Hz. A 120 Hz iPhone in Low Power Mode also
+// spends seconds at 24 Hz (41.7 ms, its CPU at ~10 ms a frame): the same cap, and a 60 Hz screen never misses into it (33, 50 ms).
+// shortcut: a 120/144 Hz screen whose GPU steadily manages only ~24 fps reads the same and keeps its level; tell them apart
+// (e.g. by the screen's refresh) if such a device shows up in reports.
+const CAP = { lo: 29, hi: 44, run: 12 };
 export function frameMonitor(onSlow) {
-  let elapsed = 0, samples = 0, slow = 0, warmup = 2000, clock = 0, n = 0, spiky = false;
-  let run = 0, runSlow = 0, capped = false; // runSlow: this window's slow frames of the current run
+  let elapsed = 0, samples = 0, slow = 0, late = 0, warmup = 2000, clock = 0, n = 0, spiky = false; // late: capped frames a refresh past their slot
+  let run = 0, runSlow = 0, capped = false, capMs = 0; // runSlow: this window's slow frames of the current run; capMs: the cap's interval
   const spikes = new Float64Array(SPIKE.count); // when the last few spikes happened (monitor time, ring buffer)
   const reset = (settle = true) => {
-    elapsed = samples = slow = n = run = runSlow = 0; spiky = capped = false;
+    elapsed = samples = slow = late = n = run = runSlow = capMs = 0; spiky = capped = false;
     if (settle) warmup = 2000;
   };
   const monitor = (ms, play = true) => {
     if (ms <= 0 || ms > 1000) { reset(false); return; }
     clock += ms;
     const inCap = ms >= CAP.lo && ms <= CAP.hi, was = capped;
-    run = inCap ? run + 1 : 0;
+    if (inCap) capMs = capMs ? capMs + (ms - capMs) * 0.1 : ms;
+    run = inCap ? run + 1 : ms > CAP.hi && ms < CAP.hi * 1.25 ? run : 0; // one refresh late (50 ms at 24 Hz) neither builds nor breaks the run
     if (ms < 24) capped = false; else if (run >= CAP.run) capped = true;
     if (warmup > 0) { warmup = Math.max(0, warmup - ms); return; }
     const k = capped ? 2 : 1;
@@ -128,13 +132,14 @@ export function frameMonitor(onSlow) {
       if (n >= SPIKE.count && clock - spikes[n % SPIKE.count] <= SPIKE.within) spiky = true; // the oldest of the last few
     }
     elapsed += ms; samples++;
-    if (ms > 24 * k) slow++;
+    if (ms > (capped ? capMs * 1.4 : 24)) slow++; // capped: past its own slot (30 Hz: 47 ms; 24 Hz: 58, so a 120 Hz screen's 50 ms is on time)
+    else if (capped && ms > capMs * 1.15) late++; // a refresh late: now and then a cap's jitter; a third of the frames is overload
     if (!inCap) runSlow = 0; else if (!capped) runSlow++;
     if (capped && !was) { slow -= runSlow; runSlow = 0; } // the run that showed the cap was its pace, not misses
     if (elapsed >= 4000 || clock < EARLY.until && elapsed >= EARLY.window && samples >= 8 && slow / samples > EARLY.share) {
-      const share = samples >= 8 ? slow / samples : 0;
+      const share = samples >= 8 ? (slow + (late / samples > 0.3 ? late : 0)) / samples : 0; // (41.7/50 ms alternating: a busy 120 Hz GPU)
       if (share > SLOW_SHARE || spiky) { onSlow(share > 0.8 ? 2 : 1, { slowShare: share, spiky, window: elapsed, samples, capped }); warmup = 2000; n = 0; } // way too slow: two steps
-      elapsed = samples = slow = runSlow = 0; spiky = false;
+      elapsed = samples = slow = late = runSlow = 0; spiky = false;
     }
   };
   monitor.reset = reset;

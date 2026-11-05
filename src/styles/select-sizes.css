@@ -5,6 +5,10 @@
 body.reel-idle :is(#select, #settings, #free, #music, #howto) { opacity: 0; pointer-events: none; transition: opacity .4s cubic-bezier(.4, 0, .2, 1); }
 body.reel-wake :is(#select, #settings, #free, #music, #howto) { transition: opacity .25s cubic-bezier(0, 0, .2, 1); }
 body.reel-idle #select > * { pointer-events: none; }
+/* after the fade (ui/reel-idle.js data-reel-gone): not painted nor animated at all, an iPhone's idle dance hitched under the
+   invisible layers; the auto size keeps each box as it was, so the selector's observers see nothing change */
+:is(#select, #settings, #free, #music, #howto) { contain-intrinsic-size: auto none; }
+:is(#select, #settings, #free, #music, #howto)[data-reel-gone] { content-visibility: hidden; }
 @media (prefers-reduced-motion: reduce) { :is(body.reel-idle, body.reel-wake) :is(#select, #settings, #free, #music, #howto) { transition: none; } }
 #select[hidden] { opacity: 0; }
 @starting-style { #select { opacity: 0; } }
@@ -97,7 +101,8 @@ body.reel-idle #select > * { pointer-events: none; }
   .sel-panel[data-tight] { gap: 12px; } .sel-panel[data-tight] > :is(.sel-song, .sel-tiles) { padding-top: 12px; } /* the info block would scroll (step 2's level row on a laptop, a two-line name at 900 px): the gaps give first (level-stats.js) */
   /* step 2 on a short laptop (900×700, 1280×600): the level row and the ranking line keep their place (level-stats.js); the song
      gives way, its credit and a smaller disc first (the glyph keeps its 22 px), then the whole row */
-  .sel-panel[data-snug] #select-song-credit, .sel-panel[data-snug="song"] > #select-song { display: none; }
+  .sel-panel[data-snug] #select-song-credit, .sel-panel:is([data-snug="song"], [data-snug="rank"]) > #select-song { display: none; }
+  .sel-panel[data-snug="rank"] > #select-standings { margin-top: 5px; } /* step 1 on a touch tablet's short window (select-standings.js): the ranking card takes the song's place, 18 px below the chip's ink (it sits 5 px low, centred for the hairline) */
   .sel-panel[data-snug] > #select-song svg { width: 32px; height: 32px; padding: 5px; }
   .sel-song svg { width: 44px; height: 44px; padding: 11px; }
   .sel-song-credit { font-size: 15px; }
@@ -236,12 +241,13 @@ body.reel-idle #select > * { pointer-events: none; }
 /* Short desktop windows: the dock gives the pending card its room back (a 324 px dock took over half of 600 px). */
 @media (min-width: 900px) and (min-height: 600px) and (max-height: 660px) { #select { --dock-h: 224px; --action-h: 44px; --card-label-h: 68px; } .sel-card { --floor: 9px; } } /* the floor keeps ~16% of the 58 px panel, as elsewhere */
 /* From 1200 px the info column sits beside the strip, so the dock can keep the next step's height: at 224 px the art was shorter than its label (1366×657). Under 640 px the pending card no longer fits it */
-@media (min-width: 1200px) and (min-height: 640px) and (max-height: 660px) { #select { --dock-h: 284px; } .sel-card { flex-basis: 220px; --floor: 22px; } }
+@media (min-width: 1200px) and (min-height: 640px) and (max-height: 660px) { #select { --dock-h: 284px; } .sel-card { flex-basis: 220px; --floor: 22px; } .sel-card-hearts { top: 9px; left: 9px; font-size: 14px; } }
 @media (min-width: 900px) and (min-height: 661px) and (max-height: 700px) { #select { --dock-h: 284px; --action-h: 44px; --card-label-h: 68px; } } /* a step between that and the full desktop dock: the card still fits, the art a size bigger */ /* the pending card needs ~190 px: the label's empty band and the action row give it (the art keeps its size; «Gegant del Campanar» still fits) */
 /* Desktop cards are wider; every portrait keeps the one reference above (--ref, --mula-cell), so the playable
    illustrations and the pending silhouettes share one physical scale and floor at every size. */
 @media (min-width: 900px) and (min-height: 661px) {
   .sel-card { flex-basis: 220px; --floor: 22px; }
+  .sel-card-hearts { top: 9px; left: 9px; font-size: 14px; } /* the heart count grows with the card */
 }
 @media (min-width: 900px) and (max-width: 919px) and (min-height: 661px) { .sel-card { flex-basis: 200px; --floor: 20px; } } /* both cards right of the narrowest info column (select-ui.js measure()) */
 /* Larger desktops keep nearly square cards rather than adding empty height above the artwork. */
@@ -252,6 +258,7 @@ body.reel-idle #select > * { pointer-events: none; }
   .sel-panel { gap: 20px; }
   .sel-identity-row { translate: 0 6px; }
   .sel-card { flex-basis: 248px; --floor: 25px; }
+  .sel-card-hearts { top: 10px; left: 10px; font-size: 15px; }
   .sel-card-name { font-size: 19px; line-height: 23px; }
   .sel-card .nb small { font-size: 14px; }
   .sel-banner { flex-basis: 42px; }

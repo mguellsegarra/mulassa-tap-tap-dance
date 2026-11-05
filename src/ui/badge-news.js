@@ -5,8 +5,9 @@ import { appendName } from './profile-notes.js';
 import { ASSOCIATION_BADGES, VALLS_BADGES, FLAG_BADGES, TOWN_BADGES } from './player-badges.js';
 import { byId } from './sheet-kit.js';
 import { tr } from '../i18n/messages.js';
+import { createSeenNotices } from '../services/seen-notices.js';
 
-const newsSeenKey = publicId => `badge-news-seen:${publicId}`;
+const newsSeenKey = publicId => `badge-news-seen:${publicId}`; // the older device-only mark; 'badge-news' in the seen-notices registry now
 // what the news shows: Valls first, then the big towns and Valls's own; no esteladas (the picker still has every badge)
 const NEWS_TURN = ['town:valls', 'senyera', 'town:barcelona', 'town:tarragona', 'town:reus', 'town:girona', 'town:lleida'];
 const NEWS_SHELF = ['town:valls', 'town:barcelona', 'town:tarragona', 'town:reus', 'town:girona', 'town:lleida', 'senyera', 'colla-vella',
@@ -14,10 +15,10 @@ const NEWS_SHELF = ['town:valls', 'town:barcelona', 'town:tarragona', 'town:reus
   'town:vilanova', 'town:vilafranca', 'uaf', 'town:olot', 'town:berga'];
 const NEWS_ROWS = 3;
 
-export function setupBadgeNews({ focusIn, service, store, badges, profile, refresh, idle = () => true, reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches, doc = document }) {
+export function setupBadgeNews({ focusIn, service, store, notices = createSeenNotices({ service, kv: store }), badges, profile, refresh, idle = () => true, reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches, doc = document }) {
   const $ = byId(doc), menu = $('badge-news-menu'), shelf = $('badge-news-shelf'), nameBox = $('badge-news-name');
   const all = [...ASSOCIATION_BADGES, ...VALLS_BADGES, ...FLAG_BADGES, ...TOWN_BADGES];
-  let back = null, next = null, turner = 0, seen = '', held = false;
+  let back = null, next = null, turner = 0, seen = null, held = false;
 
   const wear = (alias, id) => { nameBox.replaceChildren(); appendName(doc, nameBox, { alias, verified: true, badgeId: id }); };
   function fillShelf() { // once: the shelf's drawings, twice each, that only this sheet needs
@@ -46,7 +47,7 @@ export function setupBadgeNews({ focusIn, service, store, badges, profile, refre
   $('badge-news-go').addEventListener('click', () => { next = menu.dataset.kind; menu.close(); });
   menu.addEventListener('close', () => {
     clearInterval(turner);
-    store.set(seen, '1');
+    if (seen) notices.mark(seen, 'badge-news');
     const b = back, kind = next;
     back = next = null;
     if (kind === 'confirmed') badges.open(b);
@@ -63,12 +64,13 @@ export function setupBadgeNews({ focusIn, service, store, badges, profile, refre
       let p = null;
       try { p = await service.profile?.(); } catch { return false; } // offline: the next visit asks again
       if (!p?.alias || !p.publicId || p.released || p.canBadge !== true) return false;
-      const key = newsSeenKey(p.publicId);
-      if (store.get(key) === '1') return false;
-      if (p.verified && p.badgeId) { store.set(key, '1'); return false; }
+      let owner = null;
+      try { owner = await service.ownerId(); await notices.load(owner); } catch { return false; }
+      if (!owner || notices.seen(owner, 'badge-news', newsSeenKey(p.publicId))) return false;
+      if (p.verified && p.badgeId) { notices.mark(owner, 'badge-news'); return false; }
       if (!still()) return false;
       const kind = p.verified ? 'confirmed' : 'guest';
-      seen = key; back = onBack; next = null; menu.dataset.kind = kind;
+      seen = owner; back = onBack; next = null; menu.dataset.kind = kind;
       $('badge-news-title').textContent = tr(`ui.badgeNews.${kind}.title`, { count: all.length, n: all.length });
       $('badge-news-text').textContent = tr(`ui.badgeNews.${kind}.text`);
       $('badge-news-go').textContent = tr(kind === 'confirmed' ? 'ui.badgeNews.confirmed.go' : 'ui.confirm.action');

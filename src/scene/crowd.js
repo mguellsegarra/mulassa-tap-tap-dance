@@ -18,7 +18,7 @@ import { crowdAnchored, crowdSteer, crowdPose, crowdTick, crowdKnock } from './c
 import { crowdRadius, settleDrawnCrowd } from './crowd-contact.js';
 import { traitsOf } from '../figures/index.js';
 import { GROOVE, mood, SHOVE, F, grooveHit, updateMood } from './crowd-mood.js';
-import { crowdCells, recell, separate, photoCrowdClearance, fillCells } from './crowd-grid.js';
+import { crowdCells, cellCount, recell, separate, photoCrowdClearance, fillCells } from './crowd-grid.js';
 import { pose, poseScenery } from './crowd-pose.js';
 
 const local = new THREE.Vector2(), away = new THREE.Vector2(), tmp = new THREE.Vector2();
@@ -99,7 +99,9 @@ function steer(p, dt, beat, live) {
   const cellX = p.cell % 32, cellZ = Math.floor(p.cell / 32), dm = Math.hypot(dx, dz) || 1;
   for (let z = Math.max(0, cellZ - 2); z <= Math.min(31, cellZ + 2); z++) {
     for (let x = Math.max(0, cellX - 2); x <= Math.min(31, cellX + 2); x++) {
-      for (const q of crowdCells[x + z * 32]) {
+      const cell = crowdCells[x + z * 32];
+      for (let i = 0, n = cellCount[x + z * 32]; i < n; i++) { // (a cell's entries past its count are last frame's)
+        const q = cell[i];
         if (q === p) continue;
         const sx = p.pos.x - q.pos.x, sz = p.pos.y - q.pos.y, d2 = sx * sx + sz * sz;
         if (d2 > 3.24 || d2 < 1e-6) continue;

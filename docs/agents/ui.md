@@ -55,7 +55,7 @@
   shown only past 300 ms, `role="status"`, `pointer-events: none`. For a sheet's own "Carregant…" line use
   `mulaSpinner()` (a `<span class="mula-spinner">`, 1em); pass `{ mini: true }` as its second argument for the head at small sizes. Reduced motion holds the rest pose. The full SVG
   lives twice, identical (`MULASSA_SVG` and index.html; tests/ui/loader.mjs checks): swap both together. The error card reuses the same artwork and size with a slow breath, a small head movement and falling tears; reduced motion keeps a static sad pose.
-  Show at least three complete loading jokes (1.6 s each). Once the game is ready and the minimum is met, finish the current line before lifting the cover. The loader's 20 s safety check delegates to the watchdog and never reveals an unpainted game. Copy is short
+  Show at least one complete loading joke (2 s to 3.5 s each, 50 ms a character), never a cut one. Once the game is ready and the minimum is met, finish the current line before lifting the cover. The loader's 20 s safety check delegates to the watchdog and never reveals an unpainted game. Copy is short
   Catalan with "…". Audio (suspended context) downloads/decodes while the shaders compile, before the first frame, never on the tap;
   the cover lifts only once the queued `warmups` are painted (one a frame under it, at most `COVER_WARM` 1.5 s more).
 - **Free play** (one figure driven, its keys, the touch stick and look, the radio): `docs/ui/free-play.md`.

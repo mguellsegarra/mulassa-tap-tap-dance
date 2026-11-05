@@ -54,6 +54,9 @@ export function setupFeedback({ focusIn, captcha, service = defaultService, doc 
     $('feedback-code').hidden = !coding; $('feedback-fields').hidden = coding;
     for (const i of kindRow.querySelectorAll('input')) i.checked = i.value === k;
     material.hidden = k !== 'material'; entity.hidden = k !== 'entity';
+    // what is shown, as the sheet's own flags for feedback.css: `:has(… :not([hidden]))` there re-ran on every [hidden] toggle
+    // in the page, even shut (~55 ms of style on each selector figure change, Galaxy S10)
+    menu.toggleAttribute('data-choose', !kindRow.hidden); menu.toggleAttribute('data-choices', !(material.hidden && entity.hidden)); menu.toggleAttribute('data-entity', !entity.hidden);
     title.textContent = tr(request.choose || k === 'code' ? 'ui.help.title' : k === 'general' ? 'html.feedbackTitle' : propose ? 'figures.invite.action' : `html.${k}.title`);
     lead.textContent = k === 'general' ? tr('html.feedbackLead') : propose ? tr('figures.invite.text') : request.figure?.name ?? ''; // which figure this is about
     text.placeholder = tr(k === 'general' ? 'html.feedbackMessage.placeholder' : propose ? 'figures.invite.placeholder' : `ui.${k === 'code' ? 'material' : k}.placeholder`);

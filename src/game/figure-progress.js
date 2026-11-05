@@ -3,6 +3,7 @@
 export const MATERIALS = ['photos', 'score', 'video', 'choreography'];
 const PROGRESS = {
   'bou-tradicional-valls': { photos: true, score: true, video: true, choreography: true, builder: true, soon: true },
+  'bou-valls': { photos: true }, 'lleo-valls': { photos: true }, 'gegant-calcot-valls': { photos: true }, 'gegant-campanar-valls': { photos: true },
   'basilisc-valls': { photos: true, score: true, video: true, builder: true },
   'aliga-valls': { photos: true, video: true, score: true, builder: true }, 'os-trabucaires-valls': { photos: true, video: true, score: true, builder: true }, 'cavallets-valls': { photos: true, video: true, score: true, builder: true },
   'nans-valls': { photos: true, video: true, score: true, builder: true }, 'gegants-ciutat-valls': { photos: true, video: true, score: true, builder: true },

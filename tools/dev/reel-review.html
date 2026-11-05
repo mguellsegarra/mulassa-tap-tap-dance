@@ -114,6 +114,7 @@ const KIND = { wide: ['#8ec5ff', 'obert: la plaça al voltant'], left: ['#b5e48c
   vast: ['#4ea8de', 'tota la plaça, des d’amunt'], tight: ['#f4a261', 'tot el cos, de prop amb teleobjectiu'], side: ['#90be6d', 'de perfil'],
   low: ['#e76f51', 'des de baix, contrapicat'], tail: ['#ffafcc', 'primer pla de la cua'], arcL: ['#43aa8b', 'la càmera l’envolta (esquerra)'], arcR: ['#4d908e', 'la càmera l’envolta (dreta)'],
   push: ['#f9c74f', 's’hi acosta a poc a poc'], pull: ['#577590', 'se n’allunya fins a la plaça'] };
+for (const [k, v] of Object.entries(KINDS)) KIND[k] ??= [v.color, v.label]; // (the proposals' own kinds)
 const SRC = { mulassa: ['/src/game/dance.js', 'MULASSA', 'M'], drac: ['/src/figures/drac/dance-drac.js', 'DRAC', 'D'], bou: [null, 'BOU', 'B'] };
 let plan = null;
 async function drawPlan(fig) {

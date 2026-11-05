@@ -8,6 +8,8 @@ import { setupSelect, peekGap, pixelSvg } from '../../../src/ui/select-ui.js';
 import { cellOutline } from '../../../src/ui/selector-portraits.js';
 import { DRAWN_SILHOUETTES, SILHOUETTE_DRAWINGS, silhouetteBox } from '../../../src/ui/pending-silhouettes.js';
 import { escutSvg } from '../../../src/ui/escuts.js';
+import { cardEntityHtml, entityHtml } from '../../../src/ui/figure-entities.js';
+import { TURBA_MARK, CALCOT_MARK } from '../../../src/ui/bou-valls-logos.js';
 import { clampStand } from '../../../src/dev/sizes-edit.js';
 import '../../ui/strip-scroll.mjs';
 const MULE_ART = FIGURE_PORTRAITS['mulassa-valls'].art, DRAC_ART = FIGURE_PORTRAITS['drac-valls'].art;
@@ -19,7 +21,7 @@ assert.deepEqual(FIGURES.filter(playable).map(f => f.id), [MULASSA.id, DRAC.id, 
 assert.equal(BOU.status, UNRELEASED_IDS.has(BOU.id) ? 'aviat' : 'playable', 'an unreleased figure is a pending one: no song, no play');
 assert(FIGURES.slice(0, FIGURES.filter(playable).length).every(playable), 'available figures come first');
 assert(FIGURES.every(f => townOf(f) && ['playable', 'aviat'].includes(f.status)));
-assert.deepEqual(FIGURES.filter(f => f.town === 'valls').map(f => f.id).sort(), ['mulassa-valls', 'drac-valls', 'aliga-valls', 'bou-tradicional-valls', 'os-trabucaires-valls', 'gegants-ciutat-valls', 'cavallets-valls', 'basilisc-valls'].sort(), 'only the requested principal Valls figures remain');
+assert.deepEqual(FIGURES.filter(f => f.town === 'valls').map(f => f.id).sort(), ['mulassa-valls', 'drac-valls', 'aliga-valls', 'bou-tradicional-valls', 'os-trabucaires-valls', 'gegants-ciutat-valls', 'cavallets-valls', 'basilisc-valls', 'bou-valls', 'lleo-valls', 'gegant-calcot-valls', 'gegant-campanar-valls'].sort(), 'only the requested principal Valls figures remain');
 const sourceCatalog = JSON.parse(readFileSync(new URL('../../../src/game/figure-catalog.json', import.meta.url), 'utf8'));
 // Solsona keeps the Drac and the Gegants Bojos on the selector (an editorial choice); the other four stay in the catalogue
 const HIDDEN = ['nans-valls', 'diables-valls', 'gegants-solsona', 'mulassa-solsona', 'aliga-solsona', 'draca-solsona'];
@@ -85,7 +87,7 @@ const catalogFixture = { id: 'selector-fixture', town: TOWNS.at(-1).id, status: 
 FIGURES.push(catalogFixture);
 // The selector's DOM contract, with no rendering or network dependency.
 const nodes = new Map(), handlers = {};
-const doc = { activeElement: null, body: {}, getElementById: id => nodes.get(id) };
+const doc = { activeElement: null, body: {}, getElementById: id => nodes.get(id), createElement: () => ({ classList: { add() {} } }) };
 class Node {
   constructor(id = '', cls = '', dataset = {}) { Object.assign(this, { id, cls, dataset, children: [], attrs: {}, listeners: {}, style: { setProperty() {} }, hidden: false, open: false, scrollLeft: 0, scrollWidth: 700, clientWidth: 393, offsetLeft: 0, offsetWidth: 74 }); }
   set innerHTML(html) {
@@ -96,6 +98,8 @@ class Node {
     });
   }
   get innerHTML() { return this.html; }
+  get ownerDocument() { return doc; }
+  replaceChildren(...kids) { this.textContent = kids.map(k => k.textContent).join(''); } // the heart's count line: number + words
   querySelectorAll(sel) { return [...this.children, ...(this.banners || [])].filter(c => c.cls?.split(' ').includes(sel.slice(1))); }
   querySelector(sel) { return sel.startsWith('.sel-banner') ? { offsetLeft: 100 } : null; }
   setAttribute(k, v) { this.attrs[k] = v; }
@@ -123,10 +127,11 @@ Object.defineProperties(nodes.get('select-level-sub'), { clientWidth: { value: 2
 let narrow = false, narrowSub = false;
 const $ = id => nodes.get(id), win = { innerWidth: 393, innerHeight: 852, addEventListener(k, f) { (handlers[k] ||= []).push(f); } };
 let boards = [], sounds = [], played = [], how = 0, drafts = [], busy = false, selected = [];
+const heartN = new Map(), heartMine = new Set();
 let standingOf = async f => (f === DRAC.id ? { pos: 3, total: 12 } : { pos: 7, total: 1350 });
 const api = setupSelect({ doc, win, store, keyboard: () => true, reduced: () => true, busy: () => busy,
   sfx: k => sounds.push(k), firstLevel: 0, standing: f => standingOf(f), onBoard: f => boards.push(f.id), ranked: true, demo: true, // ?demo stays off outside a dev build
-  onPlay: (d, f) => played.push([d, f.id]), onSelect: f => selected.push(f.id), onHowto: () => how++, onWrite: draft => drafts.push(draft), hearts: { count: () => 0, mine: () => false, paint() {}, tap() {} } });
+  onPlay: (d, f) => played.push([d, f.id]), onSelect: f => selected.push(f.id), onHowto: () => how++, onWrite: draft => drafts.push(draft), hearts: { count: id => heartN.get(id) ?? 0, mine: id => heartMine.has(id), paint() {}, tap() {} } });
 const key = (key, options = {}) => { const e = { key, ...options, defaultPrevented: false, preventDefault() { this.defaultPrevented = true; } }; for (const f of handlers.keydown) f(e); return e; };
 const click = (root, target = root) => root.fire('click', { target });
 api.visible(true); await Promise.resolve();
@@ -268,6 +273,18 @@ const pills = $('select-towns').children;
 const restTowns = TOWNS.filter(t => t.id !== 'valls' && soon.some(f => f.town === t.id));
 assert.deepEqual(pills.map(p => p.dataset.town), ['valls', ...restTowns.map(t => t.id), INVITE_TOWN.id], 'every town has its pill from the start, the playable ones first');
 assert(!$('select-towns').innerHTML.includes('sel-soon'), 'no «Pròximament» pill');
+{ // Valls' later additions close its row, after the Gegants: the Turba's Bou, the Lleó, the Calçot and the Campanar giants
+  const LATE = ['bou-valls', 'lleo-valls', 'gegant-calcot-valls', 'gegant-campanar-valls'];
+  const valls = FIGURES.filter(f => f.town === 'valls' && !playable(f)).map(f => f.id);
+  assert.deepEqual(valls.slice(-LATE.length), LATE, 'the four come last in Valls, in this order');
+  for (const id of LATE) {
+    const f = FIGURES.find(g => g.id === id);
+    assert(f && !playable(f) && f.sources.length && f.entityName && DRAWN_SILHOUETTES[id] && STAND[id], `${id}: a pending, attributed, drawn figure with its own stand`);
+  }
+  const bou = FIGURES.find(f => f.id === 'bou-valls');
+  assert(cardEntityHtml(bou).includes(TURBA_MARK) && cardEntityHtml(bou).includes(CALCOT_MARK), 'the Bou de Valls card credits both entities with their marks');
+  assert(entityHtml(bou).includes(TURBA_MARK) && entityHtml(bou).includes(CALCOT_MARK), 'and so does its information label');
+}
 { // the second wave: eleven pending figures in ten new towns, pairs drawn as two subjects, arms and a location line for every town
   const WAVE = ['beatusaure-girona', 'camell-molins', 'filloxera-sant-sadurni', 'momerota-mataro', 'cucafera-tortosa', 'gegants-pi-barcelona', 'much-muca-sineu', 'gegants-vinaros', 'haca-traca-castello', 'hamlet-bao', 'gegants-fraga'];
   for (const id of WAVE) {
@@ -393,6 +410,17 @@ assert(!$('select-pending').hidden && $('select-info').hidden, 'a pending figure
 assert.equal($('aviat-title').textContent, soon[0].fullName || soon[0].name);
 assert.equal(soon[0].id, UNRELEASED_IDS.has('bou-tradicional-valls') ? 'bou-tradicional-valls' : 'os-trabucaires-valls', 'the agreed order: (the Bou, until its release) Ós, Cavallets, Basilisc, Àliga, Gegants'); assert.match($('aviat-entity').innerHTML, /viewBox="0 0 525 829".*Unió Anelles de la Flama/, 'a pending figure shows its entity\'s mark, as its card does'); assert.doesNotMatch($('aviat-entity').innerHTML, /class="escut"/);
 assert.equal($('aviat-love-title').textContent, 'Vols que surti a la plaça?'); assert.match($('aviat-status').textContent, /Pròximament|Encara no té data/);
+{ // The count leads before the vote too, and the button only says what a tap does: give, or already given (a quiet state).
+  assert.equal($('aviat-love-sub').textContent, 'Dona un cor');
+  heartN.set(soon[0].id, 16); api.paintHearts();
+  assert.equal($('aviat-love-title').textContent, '16persones volen que sigui a la plaça', 'someone gave one: the count replaces the question before voting');
+  assert.equal($('aviat-love-sub').textContent, 'Dona un cor');
+  heartN.set(soon[0].id, 17); heartMine.add(soon[0].id); api.paintHearts();
+  assert.equal($('aviat-love-title').textContent, '17persones volen que sigui a la plaça');
+  assert.equal($('aviat-love-sub').textContent, 'Cor donat');
+  heartN.clear(); heartMine.clear(); api.paintHearts();
+  assert.equal($('aviat-love-title').textContent, 'Vols que surti a la plaça?', 'nobody: the question again, never a zero');
+}
 assert($('select-next').disabled && !$('select-next').hidden, 'pending keeps a disabled action for the desktop placeholder');
 assert.equal($('select-next-label').textContent, 'Encara no es pot jugar');
 assert($('select').attrs['data-pending'], 'pending selection hides the action');
@@ -556,14 +584,15 @@ assert(!/showModal|aviat\.close|aviat-menu|aviat-close/.test(ui));
   assert.match(strip, /sel-card[^`]*data-town="\$\{t\.id\}"/, 'cards carry their town');
   // one surface, no divider; each portrait (all vectors now) at its real relative size, never more than its box holds
   assert(!/\.sel-card \.por \{[^}]*border-bottom/.test(css), 'no line between portrait and caption');
-  assert.match(css, /--ref: min\(var\(--reach\) \* 100cqh \/ 14, var\(--sky\) \* 100cqw \/ 18\)/, 'one reference cell: the biggest grid without its rim, at the panel\'s reach');
+  assert(!/\.sel-card \.por \{[^}]*container-type/.test(css) && !/\dcq[hw]\b/.test(css), 'the portrait boxes are no size containers: 50 of them made every restyle (a sheet opening) lay each out on its own');
+  assert.match(css, /--ref: min\(var\(--reach\) \* var\(--por-h\) \/ 14, var\(--sky\) \* var\(--por-w\) \/ 18\)/, 'one reference cell: the biggest grid without its rim, at the panel\'s reach');
   const [, sky, reach] = css.match(/\.sel-card \.por \{ --sky: (\.\d+); --reach: ([\d.]+);/) ?? [];
   assert(sky < 1 && reach > sky && portraitStand(MULASSA) * reach < sky && sky / (portraitStand(MULASSA) * reach) >= 1.15, 'the tallest figures leave air above them; the rest grow, still clearly under the gegants');
-  assert.match(css, /min\(var\(--s, 1\) \* 14 \* var\(--ref\) \/ \(var\(--gh\) - 2\), var\(--sky\) \* 100cqh \/ \(var\(--gh\) - 2\), var\(--sky\) \* 100cqw \/ \(var\(--gw\) - 2\)\)/, 'the cell at the figure\'s share, clamped to fit');
+  assert.match(css, /min\(var\(--s, 1\) \* 14 \* var\(--ref\) \/ \(var\(--gh\) - 2\), var\(--sky\) \* var\(--por-h\) \/ \(var\(--gh\) - 2\), var\(--sky\) \* var\(--por-w\) \/ \(var\(--gw\) - 2\)\)/, 'the cell at the figure\'s share, clamped to fit');
   const cells = f => { const b = !playable(f) && silhouetteBox(f.id); return b ? [b[0] - 2, b[1] - 2] : [portraitArt(f)[0].length, portraitArt(f).length]; }; // a pending card's grid is its silhouette's box
   assert(Math.max(...FIGURES.map(f => cells(f)[0])) === 18 && Math.max(...FIGURES.map(f => cells(f)[1])) === 14, 'the reference divisors match the biggest portrait');
   assert.match(css, /width: calc\(var\(--gw\) \* var\(--cell\)\); height: calc\(var\(--gh\) \* var\(--cell\)\); margin: calc\(-1 \* var\(--cell\)\);/, 'the rim hangs outside the box: the drawing stands on the floor');
-  assert.match(css, /--mula-cell: max\(2px, min\(\.8 \* 14 \* min\(var\(--reach\) \* 100cqh \/ 14, var\(--sky\) \* 100cqw \/ 18\) \/ 11\.02/, 'the Mulassa\'s body on the same reference, at her stand');
+  assert.match(css, /--mula-cell: max\(2px, min\(\.8 \* 14 \* min\(var\(--reach\) \* var\(--por-h\) \/ 14, var\(--sky\) \* var\(--por-w\) \/ 18\) \/ 11\.02/, 'the Mulassa\'s body on the same reference, at her stand');
   assert.match(strip, /--gw:\$\{box\[0\]\};--gh:\$\{box\[1\]\};--s:\$\{portraitStand\(f\)\}/, 'the svg grid, rim included, and its stand');
   assert.match(strip, /\[art\[0\]\.length \+ 2, art\.length \+ 2\]/, 'the rim: the grid plus one cell each side');
   for (const f of [...FIGURES, INVITE]) assert(STAND[f.id] > 0 && STAND[f.id] <= 1.2 && portraitStand(f) === STAND[f.id], `${f.id}: its own stand beside the gegants (?sizes output pastes over STAND)`);
@@ -592,7 +621,7 @@ assert.match(selectCss(), /@media \(pointer: coarse\) \{[^}]*\}\s*\.sel-carousel
   assert.match(css, /#select \.sel-pending-id \{ box-sizing: content-box;[^}]*min-height: calc\(/, 'desktop: the identity reserves its tallest size, so moving along the strip never resizes the card');
   assert.match(css, /#select \.sel-state \{ box-sizing: content-box; min-height: calc\(/, 'desktop: the progress island reserves its tallest size too');
   assert.match(css, /#select \.sel-pending \.btn \{[^}]*width: fit-content; max-width: 100%;/, 'the buttons fit their words, never wider than the island');
-  assert.match(css, /\.sel-heart-wide \{ width: fit-content; max-width: 100%;/, 'the heart button fits its words as well');
+  assert.match(css, /\.sel-heart-wide \{ width: fit-content; max-width: 100%; box-sizing: border-box;/, 'the heart button fits its words as well; border-box: the given state\'s border never grows it (pressing moves nothing)');
   assert.match(css, /\.sel-pending\[data-no-actions\] \.sel-pending-actions \{ display: none; \}/, 'no actions: no empty action row');
   assert.match(css, /@media \(min-width: 1400px\) and \(min-height: 860px\) and \(pointer: fine\) \{\s*\.sel-pending \{ width: min\(576px, [^}]*\}\s*\.sel-pending > \* \{ zoom: 1\.2; \}/, 'big windows: the same card a fifth larger (576 = 480 x 1.2)');
   const phone = css.match(/@media \(max-width: 519px\) \{\s*#select :is\(\.sel-pending-id, \.sel-state\) \{ min-height: 0; \}[^]*?\n\}/)?.[0] ?? '';

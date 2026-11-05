@@ -16,6 +16,9 @@
 <!-- A copy of this page kept from before a deploy (a tab woken from memory, iOS's cold start from an old copy) would boot the
      old game: compare this page's build with /version.json first and load the new one at once, before the game starts.
      One try per build (sessionStorage, the key src/services/update.js uses), so a CDN still serving the old page can't loop. -->
+<script id="install-early">/* Chromium's install prompt (beforeinstallprompt) can come before the bundle has loaded: kept here for src/ui/install-app.js. Not cancelled, so Chrome's own install bar still shows. */
+addEventListener('beforeinstallprompt', function (e) { window.__installPrompt = e; });
+</script>
 <script id="build-check">(function () {
   var own = '__MULASSA_BUILD__';
   if (!window.fetch) return;
@@ -96,7 +99,7 @@
 <link rel="stylesheet" href="/src/styles/board.css">
 <link rel="stylesheet" href="/src/styles/share.css">
 <style>
-  /* #loader paints the Mulassa before the bundle loads. The initial cover leaves after readiness and three full loading lines;
+  /* #loader paints the Mulassa before the bundle loads. The initial cover leaves after readiness and at least one full loading line, never mid-line;
      later waits use a small flat card and only show after 300 ms. Artwork and animation stay inline. */
   #loader { position: fixed; z-index: 40; inset: 0; display: flex; align-items: center; justify-content: center; box-sizing: border-box; padding: 0 env(safe-area-inset-right) 0 env(safe-area-inset-left); pointer-events: none; color: #fff3d6; font: 800 18px/1.2 'Baloo 2', system-ui, sans-serif; transition: opacity .25s ease-out; }
   /* No vertical padding: a home-screen app first reports no safe-area insets and then them, so padding by them moved the centred card while the page started. */
@@ -293,6 +296,8 @@
     <button id="settings-profile" type="button" class="btn btn-secondary" hidden aria-haspopup="dialog" data-i18n="html.profile.aria"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.2" r="3.9"/><path d="M4.6 20.4a7.4 7.4 0 0 1 14.8 0"/></svg>Perfil<span class="sub" data-i18n="html.settingsProfileSub">El teu nom, estadístiques i podis</span></button>
     <button id="settings-sync" type="button" class="btn btn-secondary" data-i18n="html.sync"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 21h8l-3-17h-2zM12 14l6-7"/></svg>Ajusta la sincronia<span class="sub" id="settings-offset" data-i18n="html.settingsOffset">Ara: 0 ms</span></button>
     <button id="settings-feedback" type="button" class="btn btn-secondary" aria-haspopup="dialog" data-i18n="html.feedbackTitle"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a8.5 8 0 0 1-12.3 7.2L3.5 20l1.4-4.3A8.5 8 0 1 1 21 11.5z"/><path d="M8.5 11.5h.01M12.5 11.5h.01M16.5 11.5h.01" stroke-width="2.6"/></svg>Bústia de la plaça<span class="sub" data-i18n="html.settingsFeedbackSub">Idees, queixes o felicitacions</span></button>
+    <!-- «Instal·la l’app» (src/ui/install-app.js): only where it can install (Chromium's prompt) or show how (Safari on iPhone/iPad, Firefox on Android, inside an app) -->
+    <button id="settings-install" type="button" class="btn btn-secondary" hidden data-i18n="html.installTitle"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M12 7v7.5M8.8 11.3 12 14.5l3.2-3.2M10.5 18.5h3"/></svg>Instal·la l’app<span class="sub" data-i18n="html.installSub">Juga des de la pantalla d’inici</span></button>
     <!-- the prompt after a run (src/ui/board-ui.js): on = it opens by itself; off = «No m’ho tornis a recordar» -->
     <!-- only once the prompt is off («No m’ho tornis a recordar»): a way back (src/ui/board-ui.js syncPromptRow) -->
     <div id="settings-prompt-row" class="switch-row setting-row" hidden><span data-i18n="html.settingsPromptLabel">Proposta de publicar<span class="sub" data-i18n="html.settingsPromptSub">Desactivada: no surt en acabar el ball</span></span><button id="settings-prompt" type="button" class="btn btn-secondary btn-small" data-i18n="html.settingsPrompt">Activa</button></div>
@@ -617,6 +622,48 @@
     <p id="gpu-hint-text" class="board-text" data-i18n-rich="html.rich.gpuHint">El navegador no fa servir la targeta gràfica: el joc anirà més fluid si actives l’<b>acceleració per maquinari</b>.</p>
     <div class="sheet-actions"><button id="gpu-hint-ok" type="button" class="btn btn-primary" data-i18n="ui.common.ok">D’acord</button></div>
   </div>
+</dialog>
+<dialog id="inapp-hint-menu" class="sheet hint-menu" tabindex="-1" aria-labelledby="inapp-hint-title" aria-describedby="inapp-hint-text"><!-- inside an app's own browser, one version per account state (device-hint.js) -->
+  <button id="inapp-hint-close" type="button" data-i18n-attr="aria-label:html.attr.close" class="sheet-x" aria-label="Tanca"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  <div class="sheet-body">
+    <svg class="hint-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4"/></svg>
+    <h2 id="inapp-hint-title"><span id="inapp-hint-title-none" data-i18n="html.inappHintTitle">No perdis els rècords</span><span id="inapp-hint-title-guest" hidden data-i18n="html.inappHintTitle.guest">Protegeix el perfil</span><span id="inapp-hint-title-linked" hidden data-i18n="html.inappHintTitle.linked">Juga amb el perfil</span></h2>
+    <p id="inapp-hint-text" class="board-text"><span id="inapp-hint-text-none" data-i18n-rich="html.rich.inappHint">Aquí pots perdre <b>rècords i estadístiques</b>. Obre el joc al navegador.</span><span id="inapp-hint-text-guest" hidden data-i18n-rich="html.rich.inappHint.guest">Aquí pots perdre <b>perfil i nom</b> per sempre. Confirma el correu per poder-los recuperar.</span><span id="inapp-hint-text-linked" hidden data-i18n-rich="html.rich.inappHint.linked">No perds el perfil. Obre el joc al navegador. Després, a Perfil, toca <b>Recupera</b> i posa el correu.</span></p>
+    <ol id="inapp-hint-steps" class="ios-steps">
+      <li><span class="ios-key"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5.5h.01M12 12h.01M12 18.5h.01" stroke-width="3"/></svg></span><span data-i18n-rich="html.rich.inappStep1">Obre el <b>menú</b> d’aquesta aplicació</span></li>
+      <li><span class="ios-key"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4"/></svg></span><span data-i18n-rich="html.rich.inappStep2">Tria <b>Obre al navegador</b> o una opció semblant</span></li>
+    </ol>
+    <div class="sheet-actions"><a id="inapp-hint-go" data-i18n="html.inappHintGo" class="btn btn-primary" hidden>Obre al navegador</a><button id="inapp-hint-confirm" data-i18n="ui.profile.btn.link" type="button" class="btn btn-primary" hidden>Confirma el correu</button><button id="inapp-hint-ok" type="button" class="btn btn-primary" data-i18n="ui.common.ok">D’acord</button></div>
+  </div>
+</dialog>
+<!-- «Instal·la l’app» where the browser has no install prompt (src/ui/install-app.js): that browser's own steps, one list per device (data-for) -->
+<dialog id="install-steps-menu" class="sheet hint-menu" tabindex="-1" aria-labelledby="install-steps-title">
+  <button id="install-steps-close" type="button" data-i18n-attr="aria-label:html.attr.close" class="sheet-x" aria-label="Tanca"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  <div class="sheet-body">
+    <svg class="hint-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M12 7v7.5M8.8 11.3 12 14.5l3.2-3.2M10.5 18.5h3"/></svg>
+    <h2 id="install-steps-title" data-i18n="html.installTitle">Instal·la l’app</h2>
+    <ol class="ios-steps" data-for="iphone" hidden><!-- Safari's own glyphs (iOS 26, dark): the page menu in the address bar, Share, Add to Home Screen -->
+      <li><span class="ios-key"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7.5h14M5 12h13M5 16.5h9"/></svg></span><span data-i18n-rich="html.rich.iosStep1">Toca el <b>menú</b> de la barra de Safari, a baix</span></li>
+      <li><span class="ios-key"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5v11M8.5 7 12 3.5 15.5 7M8.5 10H7.5a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2h-1"/></svg></span><span data-i18n-rich="html.rich.iosStep2">Tria <b>Comparteix</b></span></li>
+      <li><span class="ios-key"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 8.5v7M8.5 12h7"/></svg></span><span data-i18n-rich="html.rich.iosStep3">Baixa i toca <b>Afegeix a la pantalla d’inici</b></span></li>
+    </ol>
+    <ol class="ios-steps" data-for="ipad" hidden><!-- iPad: Safari's Share sits top right -->
+      <li><span class="ios-key"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5v11M8.5 7 12 3.5 15.5 7M8.5 10H7.5a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2h-1"/></svg></span><span data-i18n-rich="html.rich.ipadStep1">Toca <b>Comparteix</b>, a dalt a la dreta</span></li>
+      <li><span class="ios-key"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 8.5v7M8.5 12h7"/></svg></span><span data-i18n-rich="html.rich.ipadStep2">Toca <b>Afegeix a la pantalla d’inici</b></span></li>
+    </ol>
+    <ol class="ios-steps" data-for="firefox" hidden><!-- Firefox for Android: no install prompt, only its menu -->
+      <li><span class="ios-key"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5.5h.01M12 12h.01M12 18.5h.01" stroke-width="3"/></svg></span><span data-i18n-rich="html.rich.firefoxStep1">Toca el <b>menú ⋮</b> de Firefox</span></li>
+      <li><span class="ios-key"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 8.5v7M8.5 12h7"/></svg></span><span data-i18n-rich="html.rich.firefoxStep2">Toca <b>Afegeix l’aplicació a la pantalla d’inici</b></span></li>
+    </ol>
+    <ol class="ios-steps" data-for="inapp" hidden><!-- inside an app (WhatsApp, Instagram…): nothing installs from there -->
+      <li><span class="ios-key"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5.5h.01M12 12h.01M12 18.5h.01" stroke-width="3"/></svg></span><span data-i18n-rich="html.rich.inappStep1">Obre el <b>menú</b> d’aquesta aplicació</span></li>
+      <li><span class="ios-key"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4"/></svg></span><span data-i18n-rich="html.rich.inappStep2">Tria <b>Obre al navegador</b> o una opció semblant</span></li>
+      <li><span class="ios-key"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 8.5v7M8.5 12h7"/></svg></span><span data-i18n-rich="html.rich.inappStep3">Al navegador, tria <b>Afegeix a la pantalla d’inici</b></span></li>
+    </ol>
+    <div class="sheet-actions"><button id="install-steps-ok" type="button" class="btn btn-primary" data-i18n="ui.common.ok">D’acord</button></div>
+  </div>
+  <p class="ios-bubble" data-for="iphone" hidden aria-hidden="true" data-i18n-rich="html.rich.iosBubble">Toca <b><i></i></b> aquí baix → <b><i></i> Comparteix</b> → <b><i></i> Afegeix a la pantalla d’inici</b></p><!-- points down at Safari's bar, as free play's -->
+  <p class="ios-bubble up" data-for="ipad" hidden aria-hidden="true" data-i18n-rich="html.rich.ipadBubble">Toca <b><i></i> Comparteix</b> → <b><i></i> Afegeix a la pantalla d’inici</b></p><!-- points up at the iPad's Share -->
 </dialog>
 <!-- «Joc lliure» on an iPhone held upright (src/ui/free-gate.js): Safari first recommends fullscreen (home screen), then both ask to turn it sideways -->
 <dialog id="free-fs-menu" class="sheet hint-menu" tabindex="-1" aria-labelledby="free-fs-title" aria-describedby="free-fs-text">

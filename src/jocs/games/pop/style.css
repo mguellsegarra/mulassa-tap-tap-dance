@@ -108,7 +108,7 @@ a.exit:hover .exit-tip, a.exit:focus-visible .exit-tip { animation: none; opacit
 @media (prefers-reduced-motion: reduce) { #count b { animation: none; } }
 .c-art { order: 1; flex: 1 1 0; min-height: 72px; width: 100%; display: flex; align-items: center; justify-content: center; position: relative; container-type: size; }
 .c-art::before { content: ""; position: absolute; width: min(100%, 100cqh, 340px); aspect-ratio: 1; border-radius: 50%; background: radial-gradient(#ff7ac655, #ff7ac600 68%); }
-.c-art canvas { position: relative; width: min(100cqw, 100cqh * 1.5, 540px); height: min(100cqh, 100cqw / 1.5 + 0px, 360px); } /* hero.js: the Mulassa and the Drac, live */
+.c-art canvas { --k: 1; position: relative; flex: none; width: calc(var(--k) * min(100cqw, 100cqh * 1.5, 540px)); height: calc(var(--k) * min(100cqh, 100cqw / 1.5 + 0px, 360px)); translate: 0 calc((1 - var(--k)) / 2 * min(100cqh, 100cqw / 1.5 + 0px, 360px)); } /* hero.js: the Mulassa and the Drac, live; --k grows them upwards, their feet where they were */
 .c-pitch { order: 2; margin: 0 0 12px; max-width: 320px; text-align: center; font-size: clamp(16px, 2.4dvh, 20px); line-height: 1.2; text-wrap: balance; text-shadow: 0 1px 3px #000; }
 .c-play-row { order: 3; display: flex; flex-direction: column; align-items: center; gap: 12px; } /* the record on its own line, under Juga */
 /* «Juga», as on mulassa.cat's games sheet (src/styles/games-sheet.css): cream, with a hop now and then */
@@ -187,7 +187,7 @@ li.me .alias.guest { color: inherit; }
   .pop-title { width: clamp(260px, 26vw, 420px); }
   .c-pitch { margin: 0; text-align: center; max-width: 24ch; font-size: clamp(18px, 1.6vw, 26px); }
   .c-play-row { align-items: center; }
-  .c-art canvas { width: min(100cqw, 100cqh * 1.4, 760px); height: min(100cqh, 100cqw / 1.4, 560px); } /* the figures grow with the screen */
+  .c-art canvas { width: calc(var(--k) * min(100cqw, 100cqh * 1.4, 760px)); height: calc(var(--k) * min(100cqh, 100cqw / 1.4, 560px)); translate: 0 calc((1 - var(--k)) / 2 * min(100cqh, 100cqw / 1.4, 560px)); } /* the figures grow with the screen */
   .c-art::before { width: min(100%, 100cqh, 520px); }
   .c-art { height: 100%; }
   .c-row { padding: 0 max(32px, 5vw); gap: 16px; overflow: visible; }
@@ -288,14 +288,17 @@ div.mula-load{display:flex;align-items:center;justify-content:center;container-t
    middle over the blurred board; the rest of the home comes in after the tap */
 .sp-home .home { grid-template-rows: 1fr; }
 @keyframes sp-breathe { 0%, 100% { scale: 1; } 50% { scale: 1.06; } }
-.sp-home .c-hero { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: clamp(8px, 3dvh, 32px); padding: calc(var(--sat) + 24px) var(--m) calc(var(--sab) + 24px); } /* one group, centred */
+.sp-home .c-hero { display: flex; flex-direction: column; align-items: center; gap: clamp(8px, 2dvh, 24px); padding: calc(var(--sat) + clamp(24px, 6dvh, 56px)) var(--m) calc(var(--sab) + clamp(32px, 8dvh, 72px)); } /* the title on top, the button at the bottom, the figures in the middle of what is left */
 .sp-home .c-text { display: contents; }
-.sp-home .pop-title { width: min(700px, 100vw - 2 * var(--m), 57dvh); }
-.sp-home .c-art { flex: 0 1 auto; height: min(56dvh, 560px); margin-top: calc(-1 * clamp(8px, 3dvh, 32px)); } /* close under the title */
-.sp-home .c-play-row { order: 3; margin-top: clamp(8px, 3dvh, 32px); } /* and the button a little apart below */
+.sp-home .pop-title { width: min(760px, 100vw - 4 * var(--m), 62dvh); }
+.sp-home .c-art { flex: 1 1 0; height: auto; }
+.sp-home .c-art canvas { --k: 1.35; } /* bigger while they wait */
+.sp-home .c-play-row { order: 3; }
 .sp-home .c-pitch, .sp-home .c-play-row > :not(#tap-start), .sp-home .c-row, .sp-home #back, .sp-home #menu-music { display: none; }
 #tap-start { min-width: 260px; min-height: 60px; padding: 8px 32px; border: 2px solid #f5c518; border-radius: 12px; background: linear-gradient(180deg, #ffe066 0%, #f5c518 55%, #dfad13 100%); color: #2a1a10; font: 800 24px 'Baloo 2', system-ui, sans-serif; box-shadow: 0 6px 0 #8a6a12, 0 16px 40px #0008; animation: sp-breathe 1.6s ease-in-out infinite; }
 /* after the tap: what was hidden comes in, a little after the title and the figures have started to move */
 .sp-in .c-pitch, .sp-in .c-play-row > *, .sp-in .c-row, .sp-in #back, .sp-in #menu-music { animation: sp-fade .45s ease-out .15s both; }
+/* the live figures fade where they wait (splash.js), then in on the home (a canvas glided while resized looked warped) */
+.sp-in .c-art { animation: sp-fade .4s ease-out both; }
 @keyframes sp-fade { from { opacity: 0; translate: 0 8px; } }
 @media (prefers-reduced-motion: reduce) { #tap-start, .sp-in .home * { animation: none !important; } }

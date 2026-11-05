@@ -10,7 +10,7 @@ import homeLoop from './menu-music.json' with { type: 'json' };
 import { MELODY } from './melody.js';
 
 let on = store.get('pica-music') /* the game's first name, kept */ !== 'off', ctx = null, clock = null, seq = null, sfxBus = null, noise = null, timer = 0;
-let music = null, home = null, homeOn = false; // music: on/off for everything musical; home: the home's music, homeOn while it should play
+let music = null, home = null, homeOn = false, out = null, hushT = 0; // out: everything's last gain, faded before a stop // music: on/off for everything musical; home: the home's music, homeOn while it should play
 let tune = null, offset = 0; // the run's conductor; audio time = game time + offset
 
 // The tune is laid out by the game's frames (conductor.js), ahead of them; the timer queues it. The offset only grows: after
@@ -32,30 +32,47 @@ function audio() {
   if (ctx) return true;
   try { ctx = new AudioContext(); } catch { return false; } // no Web Audio: a silent game
   clock = audioClock(ctx);
-  seq = createSequencer(ctx);
+  out = ctx.createGain();
+  out.connect(ctx.destination);
+  seq = createSequencer(ctx, out);
   sfxBus = ctx.createBiquadFilter();
   sfxBus.type = 'lowpass';
   sfxBus.frequency.value = 3000;
-  sfxBus.connect(ctx.destination);
+  sfxBus.connect(out);
   noise = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate); // a second of white noise, made once: the blast's body
   const d = noise.getChannelData(0);
   for (let k = 0; k < d.length; k++) d[k] = Math.random() * 2 - 1;
   music = ctx.createGain();
   music.gain.value = on ? 1 : 0;
-  music.connect(ctx.destination);
+  music.connect(out);
   home = createMenuMusic(ctx, music, { url: homeUrl, loop: homeLoop });
   return true;
 }
+// A stopped context cut its sound mid-wave (a click, and on waking the rest of a note «escaped»): everything fades out over a
+// few ms first, and back in on waking.
+function hush() {
+  if (!ctx) return;
+  out.gain.setTargetAtTime(0, ctx.currentTime, .015);
+  clearTimeout(hushT);
+  hushT = setTimeout(() => ctx.suspend(), 80);
+}
+function wake() {
+  clearTimeout(hushT);
+  const p = ctx.resume();
+  out.gain.cancelScheduledValues(ctx.currentTime);
+  out.gain.setTargetAtTime(1, ctx.currentTime, .02);
+  return p;
+}
 // every tap or key: the first one the browser counts lets the context run (a suspended one stays as it is)
 export function unlock() {
-  if (ctx?.state === 'suspended' && homeOn) ctx.resume(); // never a paused run's (its menu is tapped too)
+  if (ctx?.state === 'suspended' && homeOn) wake(); // never a paused run's (its menu is tapped too)
 }
 // the home: its music, as soon as the browser lets it sound (Chrome may at once, coming from the games sheet's tap)
 export function startHomeMusic() {
   if (!audio()) return;
   homeOn = true;
   home.play();
-  ctx.resume().catch(() => {}); // refused without a tap yet: unlock() asks again on the first one
+  wake().catch(() => {}); // refused without a tap yet: unlock() asks again on the first one
 }
 export function stopHomeMusic() {
   homeOn = false;
@@ -64,19 +81,19 @@ export function stopHomeMusic() {
 // a hidden page: the home's music stops with it and comes back with it (a run pauses on its own, main.js)
 document.addEventListener('visibilitychange', () => {
   if (!homeOn || !ctx) return;
-  if (document.hidden) ctx.suspend(); else ctx.resume();
+  if (document.hidden) hush(); else wake();
 });
 // inside «Juga»'s tap, before the 3, 2, 1: the home's music goes and the context may run (iOS needs that tap's gesture)
 export function armAudio() {
   if (!audio()) return;
   stopHomeMusic();
-  ctx.resume();
+  wake();
 }
 // inside the tap that starts a game (or after armAudio): browsers only let audio start from a gesture
 export function startMusic(conductor) {
   if (!audio()) return;
   stopHomeMusic();
-  ctx.resume();
+  wake();
   tune = conductor;
   offset = ctx.currentTime + LEAD; // game time 0 is queued now; at() keeps every note a little ahead of the clock
   clock.run();
@@ -101,10 +118,10 @@ export function followGame(t) {
 export const slowMusic = v => seq?.slow(v);
 export function pauseMusic() {
   clearInterval(timer);
-  ctx?.suspend();
+  hush();
 }
 export function resumeMusic() {
-  ctx?.resume();
+  if (ctx) wake();
   if (seq) run();
 }
 

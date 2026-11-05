@@ -228,6 +228,8 @@
   "html.news.go": "See the games",
   "html.news.tip": "Right here!",
   "html.games.pop": "Mulassa Pop",
+  "html.games.memory": "Mulassa Memory",
+  "html.games.memoryDesc": "Find pairs of festive figures.",
   "html.games.play": "Play",
   "html.games.popDesc": "Catch the Mulassa. Avoid Dracs.",
   "html.games.soon": "Surprise",

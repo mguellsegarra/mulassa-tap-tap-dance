@@ -1,6 +1,6 @@
-# Mini-games plan (release 1.3.0)
+# Mini-games plan (releases 1.3.0 onwards)
 
-Status: 1.3.0 ships only Mulassa Pop (mulassa.cat/pop: page `pop/index.html`, code in `src/jocs/games/pop/`, source project `pica-la-mulassa`). The other games were taken out of this branch before release; each one waits on its own `jocs/<id>` branch, at the state it had here (7e0e749), until its release (table below). The selector's gamepad opens the games sheet.
+Status: 1.3.0 ships Mulassa Pop (mulassa.cat/pop: page `pop/index.html`, code in `src/jocs/games/pop/`, source project `pica-la-mulassa`). 1.5.0 brings back Mulassa Memory at `/jocs/memory/` (page `jocs/memory/index.html`, code in `src/jocs/games/memory/`, taken from `jocs/memory`); its own page is still in Catalan only (`docs/jocs/memory-textos.md`). The other games were taken out of this branch before release; each one waits on its own `jocs/<id>` branch, at the state it had here (7e0e749), until its release (table below). The selector's gamepad opens the games sheet.
 
 Research, in Catalan, copied from `mulassa-minijocs/notes/` on 2026-11-01 (that project may have moved on since):
 - `research/cataleg-jocs.md`: the catalogue of game ideas.
@@ -24,15 +24,15 @@ The owner's choices. A game takes its name when it enters this branch; folders, 
 | --- | --- | --- | --- |
 | Mulassa Pop | `pop` | here | 1.3.0, 12 Nov 2026 |
 | Ball lliure | free play: not a card; a button in the help sheet («?», `#howto-walk`), too expert for the sheet | here | 1.3.0 |
-| Mulassa Memory | `memory` | `jocs/memory` | 1.4.0, 19 Nov |
-| Mulassa Crush | `crush` | `jocs/crush` | 1.6.0, 3 Dec |
-| Mulassa Drop | `suika` | `jocs/suika` | 1.7.0, 10 Dec |
-| Mulassa Alchemy | `alquimia` | `jocs/alquimia` | 1.8.0, 17 Dec |
-| Mulassa City | `subara` | `jocs/subara` | 1.9.0, 14 Jan 2027 |
-| Mulassoku | `murdoku`; players must never read «Murdoku» | `jocs/murdoku` | 1.12.0, 4 Feb |
-| Mulassa Run | `corre` | `jocs/corre` | 1.13.0, 11 Feb |
+| Mulassa Memory | `memory` | here (from `jocs/memory`) | 1.5.0, 3 Dec 2026 |
+| Mulassa Crush | `crush` | `jocs/crush` | 1.8.0, 14 Jan 2027 |
+| Mulassa Drop | `suika` | `jocs/suika` | 1.12.0, 18 Feb 2027 |
+| Mulassa Alchemy | `alquimia` | `jocs/alquimia` | 1.6.0, 17 Dec 2026 |
+| Mulassa City | `subara` | `jocs/subara` | 1.13.0, 4 Mar 2027 |
+| Mulassoku | `murdoku`; players must never read «Murdoku» | `jocs/murdoku` | 1.14.0, 18 Mar 2027 |
+| Mulassa Run | `corre` | `jocs/corre` | 1.19.0, 24 Jun 2027 |
 
-One novelty per release, on Thursdays; 1.5.0 (Bou), 1.10.0 (Gegant del Calçot) and 1.11.0 (Àliga) are figures. A game's branch
+Schedule: [Google Drive release calendar](https://docs.google.com/spreadsheets/d/1QcKqxCfRGv-kHcts_DceExX8diMTS3vypgzOqI8CekA/edit), checked on 5 Nov 2026. One novelty per release, on Thursdays; after the Bou, the base cadence is fortnightly with holiday exceptions. 1.4.0 (Bou), 1.7.0 (Gegant del Campanar), 1.9.0 (Gegant del Calçot), 1.10.0 (Àliga) and 1.11.0 (Carnaval figure) are figures. A game's branch
 holds its pages, code, pictures, tests and `_headers` lines as they were in 1.3.0 before the removal (Memory and Crush also their card). A merge of that branch does not
 bring them back (the removal is newer), so take its files with `git checkout jocs/<id> -- jocs/<id> src/jocs/games/<id> public/jocs/<id>`
 plus its tests and docs, then add its card in `index.html`, its colour, its `html.games.<id>` strings and its `_headers` lines.

@@ -437,5 +437,7 @@
   "ui.hearts.failed": "Nu s-a putut salva. Încearcă din nou.",
   "ui.code.open": "Deschide GitHub",
   "ui.news.title": "Acum, minijocuri!",
-  "ui.news.text": "Găsești Mulassa Pop la butonul de sus."
+  "ui.news.text": "Găsești Mulassa Pop la butonul de sus.",
+  "ui.news.memoryTitle": "Joc nou!",
+  "ui.news.memoryText": "Troba les parelles del Seguici, al botó de dalt."
 }

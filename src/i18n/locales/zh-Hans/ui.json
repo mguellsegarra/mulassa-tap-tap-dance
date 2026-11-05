@@ -415,5 +415,7 @@
   "ui.hearts.failed": "保存失败，请再试一次。",
   "ui.code.open": "打开GitHub",
   "ui.news.title": "迷你游戏来啦！",
-  "ui.news.text": "点上方按钮，玩Mulassa Pop。"
+  "ui.news.text": "点上方按钮，玩Mulassa Pop。",
+  "ui.news.memoryTitle": "Joc nou!",
+  "ui.news.memoryText": "Troba les parelles del Seguici, al botó de dalt."
 }

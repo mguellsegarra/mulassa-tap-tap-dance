@@ -228,6 +228,8 @@
   "html.news.go": "Vedi i giochi",
   "html.news.tip": "Sono qui!",
   "html.games.pop": "Mulassa Pop",
+  "html.games.memory": "Mulassa Memory",
+  "html.games.memoryDesc": "Trova le coppie del Seguici.",
   "html.games.play": "Gioca",
   "html.games.popDesc": "Cattura la Mulassa. Evita i Drac.",
   "html.games.soon": "Sorpresa",

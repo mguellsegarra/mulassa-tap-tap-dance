@@ -228,6 +228,8 @@
   "html.news.go": "Vezi jocurile",
   "html.news.tip": "Sunt aici!",
   "html.games.pop": "Mulassa Pop",
+  "html.games.memory": "Mulassa Memory",
+  "html.games.memoryDesc": "Găsește perechile de figuri.",
   "html.games.play": "Joacă",
   "html.games.popDesc": "Prinde Mulassa. Evită Drac.",
   "html.games.soon": "Surpriză",

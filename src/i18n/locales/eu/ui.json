@@ -426,5 +426,7 @@
   "ui.hearts.failed": "Ezin izan da gorde. Saiatu berriro.",
   "ui.code.open": "Ireki GitHub",
   "ui.news.title": "Orain, minijokoak!",
-  "ui.news.text": "Mulassa Pop, goiko botoian."
+  "ui.news.text": "Mulassa Pop, goiko botoian.",
+  "ui.news.memoryTitle": "Joc nou!",
+  "ui.news.memoryText": "Troba les parelles del Seguici, al botó de dalt."
 }

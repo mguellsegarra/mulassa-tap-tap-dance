@@ -46,6 +46,6 @@ save('up-hero-<id>.png', (3600, 1350), '$D/hero/<id>.jpg', 80)
 EOF
 ```
 
-Mulassa Pop's banner is the only one composed: the AI base has its right half replaced by a real board capture, blended over a 260 px left feather. Repeat that when the game itself has changed, not for teasers.
+Mulassa Pop's banner is the only one composed: the AI base has its right half replaced by a real board capture, blended over a 260 px left feather. Repeat that when the game itself has changed, not for teasers. Mulassa Memory's banner is a plain capture of its own board: `/jocs/memory/` at 1800×675, DPR 2, with `#hud` hidden and `#area` given a 50% left margin, on the 8-card level with two cards face up. Its card is the 1.2 card (600×750), upscaled with Real-ESRGAN and resized to 720×900.
 
 Then check the picker at the viewport set (`.agents/skills/mulassacat-validacio-visual/SKILL.md`) and hand the captures to the owner.

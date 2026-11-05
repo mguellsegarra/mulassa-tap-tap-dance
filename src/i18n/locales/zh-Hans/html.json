@@ -228,6 +228,8 @@
   "html.news.go": "查看游戏",
   "html.news.tip": "就在这里！",
   "html.games.pop": "Mulassa Pop",
+  "html.games.memory": "Mulassa Memory",
+  "html.games.memoryDesc": "找出节庆角色的配对。",
   "html.games.play": "开始",
   "html.games.popDesc": "抓住Mulassa，避开Drac！",
   "html.games.soon": "惊喜",

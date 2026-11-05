@@ -228,6 +228,8 @@
   "html.news.go": "Переглянути ігри",
   "html.news.tip": "Вони тут!",
   "html.games.pop": "Mulassa Pop",
+  "html.games.memory": "Mulassa Memory",
+  "html.games.memoryDesc": "Знайди пари святкових фігур.",
   "html.games.play": "Грати",
   "html.games.popDesc": "Лови Mulassa. Остерігайся Drac.",
   "html.games.soon": "Сюрприз",

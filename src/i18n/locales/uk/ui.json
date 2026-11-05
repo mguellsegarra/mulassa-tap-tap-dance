@@ -448,5 +448,7 @@
   "ui.hearts.failed": "Не вдалося зберегти. Спробуй ще раз.",
   "ui.code.open": "Відкрити GitHub",
   "ui.news.title": "А тепер мініігри!",
-  "ui.news.text": "Mulassa Pop — за кнопкою вгорі."
+  "ui.news.text": "Mulassa Pop — за кнопкою вгорі.",
+  "ui.news.memoryTitle": "Joc nou!",
+  "ui.news.memoryText": "Troba les parelles del Seguici, al botó de dalt."
 }

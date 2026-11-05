@@ -426,5 +426,7 @@
   "ui.hearts.failed": "Impossible d'enregistrer. Réessaie.",
   "ui.code.open": "Ouvrir GitHub",
   "ui.news.title": "Place aux mini-jeux !",
-  "ui.news.text": "Mulassa Pop, avec le bouton du haut."
+  "ui.news.text": "Mulassa Pop, avec le bouton du haut.",
+  "ui.news.memoryTitle": "Joc nou!",
+  "ui.news.memoryText": "Troba les parelles del Seguici, al botó de dalt."
 }

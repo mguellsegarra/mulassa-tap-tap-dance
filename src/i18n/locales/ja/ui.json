@@ -415,5 +415,7 @@
   "ui.hearts.failed": "保存できませんでした。もう一度試してね。",
   "ui.code.open": "GitHubを開く",
   "ui.news.title": "ミニゲーム登場！",
-  "ui.news.text": "上のボタンからMulassa Popで遊べるよ。"
+  "ui.news.text": "上のボタンからMulassa Popで遊べるよ。",
+  "ui.news.memoryTitle": "Joc nou!",
+  "ui.news.memoryText": "Troba les parelles del Seguici, al botó de dalt."
 }

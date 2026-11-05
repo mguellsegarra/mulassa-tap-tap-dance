@@ -228,6 +228,8 @@
   "html.news.go": "Ikusi jokoak",
   "html.news.tip": "Hemen daude!",
   "html.games.pop": "Mulassa Pop",
+  "html.games.memory": "Mulassa Memory",
+  "html.games.memoryDesc": "Aurkitu jaietako figuren bikoteak.",
   "html.games.play": "Jolastu",
   "html.games.popDesc": "Harrapatu Mulassa. Saihestu Dracak.",
   "html.games.soon": "Ezustekoa",

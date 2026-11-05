@@ -1,0 +1,76 @@
+{
+ "fps": 30,
+ "width": 1280,
+ "height": 720,
+ "out": "out/clips",
+ "shots": [
+  {
+   "name": "s1-cap",
+   "beat": 132,
+   "beats": 6.8,
+   "cam": {
+    "target": "head",
+    "azFrom": "heading",
+    "az": [
+     34,
+     14
+    ],
+    "el": [
+     3,
+     7
+    ],
+    "dist": [
+     3.4,
+     2.7
+    ],
+    "fov": 32,
+    "lag": 0.12,
+    "up": 0.1
+   }
+  },
+  {
+   "name": "s2-mig",
+   "beat": 144,
+   "beats": 4,
+   "cam": {
+    "target": "body",
+    "azFrom": "world",
+    "az": [
+     -30,
+     -38
+    ],
+    "el": 7,
+    "dist": [
+     8,
+     7.2
+    ],
+    "fov": 40,
+    "up": 1.0,
+    "lag": 0.3
+   },
+   "nudge": -0.00347
+  },
+  {
+   "name": "s3-obert",
+   "beat": 148,
+   "beats": 8.8,
+   "cam": {
+    "target": "body",
+    "azFrom": "world",
+    "az": [
+     -100,
+     -92
+    ],
+    "el": 11,
+    "dist": [
+     10.5,
+     9.3
+    ],
+    "fov": 40,
+    "up": 1.1,
+    "lag": 0.4
+   },
+   "nudge": -0.0158
+  }
+ ]
+}

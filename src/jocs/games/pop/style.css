@@ -54,6 +54,7 @@ a.btn { text-align: center; text-decoration: none; color: #fff3d6; }
 #boot { z-index: 4; background: inherit; -webkit-backdrop-filter: none; backdrop-filter: none; transition: opacity .3s; }
 #boot .art { flex: none; width: 180px; height: 138px; }
 .ready #boot { opacity: 0; pointer-events: none; }
+#boot.fail .sheet { text-align: center; } /* the watchdog's error card (index.html): the end sheet's look */
 :root:not(.ready) #menu { visibility: hidden; } /* whole under the boot screen when it fades: a fading blur shows the board sharp */
 h2 { margin: 0; text-align: center; font: 800 24px/1.1 'Baloo 2', system-ui, sans-serif; color: #ff7ac6; }
 /* what ended the run: the figure's home portrait and why, so a red Drac tapped in a hurry is no mystery */

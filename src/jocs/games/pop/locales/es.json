@@ -69,5 +69,10 @@
   "rotate.phone": "Gira el móvil",
   "rotate.tablet": "Gira la tableta",
   "rotate.phoneSub": "En vertical para jugar",
-  "rotate.tabletSub": "En horizontal para jugar"
+  "rotate.tabletSub": "En horizontal para jugar",
+  "fail.title": "¡Ups! No se ha podido cargar",
+  "fail.text": "Recarga la página para volver a intentarlo.",
+  "fail.retry": "Vuelve a intentarlo",
+  "lost.title": "¡Ups! El juego se ha detenido",
+  "lost.text": "El móvil ha dejado de mostrar el juego en 3D. Cierra el navegador del todo y vuelve a abrirlo."
 }

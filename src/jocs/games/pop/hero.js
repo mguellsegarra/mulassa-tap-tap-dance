@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { mulaRig, dracRig, poseMula, poseDrac, MULA_POSES, MULA_SCALE, MULA_YAW, DRAC_K } from './rigs.js';
 import { createSparks } from './board-sparks.js';
 import { waitForWarmup, linkPrograms } from '../../../platform/boot.js';
+import { LOW, pixelRatio } from './quality.js';
 
 const ROAR_EVERY = 6.5, ROAR = 1.6; // seconds between the Drac's roars, and how long one lasts
 // The home's Drac plays like a puppy. Its snouts dip a little: the eyes sit on top of the heads, and the raised camera
@@ -20,7 +21,7 @@ const UP_AWAY = new THREE.Vector3(0, 3, -1);
 const still = matchMedia('(prefers-reduced-motion: reduce)');
 
 export function createHero(canvas) {
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: !LOW, alpha: true }); // a weak GPU: no MSAA (quality.js)
   const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera(24, 1, .5, 200);
   const sun = new THREE.DirectionalLight('#ffe8c0', 2.4);
   sun.position.set(-6, 12, 8);
@@ -66,7 +67,7 @@ export function createHero(canvas) {
     const w = canvas.clientWidth, h = canvas.clientHeight;
     if (!w || !h || (w === W && h === H)) return;
     W = w; H = h;
-    renderer.setPixelRatio(Math.min(devicePixelRatio, matchMedia('(pointer: coarse)').matches ? 1.5 : 2));
+    renderer.setPixelRatio(pixelRatio());
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
     pose(0);

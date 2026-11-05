@@ -69,5 +69,10 @@
   "rotate.phone": "转动手机",
   "rotate.tablet": "转动平板",
   "rotate.phoneSub": "竖屏开始游戏",
-  "rotate.tabletSub": "横屏开始游戏"
+  "rotate.tabletSub": "横屏开始游戏",
+  "fail.title": "哎呀，加载失败了",
+  "fail.text": "刷新页面再试一次。",
+  "fail.retry": "重试",
+  "lost.title": "哎呀，游戏停止了",
+  "lost.text": "手机无法再显示3D游戏了。请完全关闭浏览器后重新打开。"
 }

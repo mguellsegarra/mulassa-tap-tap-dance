@@ -69,5 +69,10 @@
   "rotate.phone": "Turn your phone",
   "rotate.tablet": "Turn your tablet",
   "rotate.phoneSub": "Upright to play",
-  "rotate.tabletSub": "Sideways to play"
+  "rotate.tabletSub": "Sideways to play",
+  "fail.title": "Oops! Couldn’t load the game",
+  "fail.text": "Refresh the page to try again.",
+  "fail.retry": "Try again",
+  "lost.title": "Oops! The game stopped",
+  "lost.text": "Your phone stopped showing the game in 3D. Close your browser completely and open it again."
 }

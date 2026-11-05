@@ -69,5 +69,10 @@
   "rotate.phone": "Gira el mòbil",
   "rotate.tablet": "Gira la tauleta",
   "rotate.phoneSub": "En vertical per jugar",
-  "rotate.tabletSub": "En horitzontal per jugar"
+  "rotate.tabletSub": "En horitzontal per jugar",
+  "fail.title": "Ups! No s’ha pogut carregar",
+  "fail.text": "Refresca la pàgina per tornar-ho a provar.",
+  "fail.retry": "Torna-ho a provar",
+  "lost.title": "Ups! El joc s’ha aturat",
+  "lost.text": "El mòbil ha deixat de mostrar el joc en 3D. Tanca el navegador del tot i torna’l a obrir."
 }

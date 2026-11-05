@@ -6,25 +6,23 @@ import { buildPopPetard, buildPopCalcot, buildPopCampanar, buildPopCarretilla, b
 import { createSparks } from './board-sparks.js';
 import { createTiles } from './board-tiles.js';
 import { createBlast } from './board-blast.js';
-import { drawPortraits } from './portraits.js';
 import { frameBoard, PITCH, PITCH_Z, FIG_H } from './board-framing.js';
 import { waitForWarmup, linkPrograms } from '../../../platform/boot.js';
+import { LOW, pixelRatio } from './quality.js';
 
 const BOMB_K = .7; // the petard's size on its cell
 
 export function createBoard(canvas) {
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-  renderer.shadowMap.enabled = true;
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: !LOW, alpha: true }); // a weak GPU: no MSAA, no shadows (quality.js)
+  renderer.shadowMap.enabled = !LOW;
   renderer.shadowMap.type = THREE.PCFShadowMap; // soft shadows cost a phone more than they show on these flat figures
-  // a phone's 3x screen draws 2.25x the pixels of 2x for no visible gain on chunky voxels; re-read on fit (zoom, another screen)
-  const pixelRatio = () => Math.min(devicePixelRatio, matchMedia('(pointer: coarse)').matches ? 1.5 : 2);
 
   const scene = new THREE.Scene();
   const sky = new THREE.HemisphereLight('#ffffff', '#76849a', 2.2);
   scene.add(sky);
   const sun = new THREE.DirectionalLight('#fff7e8', 2.7);
   sun.position.set(-9, 26, 12);
-  sun.castShadow = true;
+  sun.castShadow = !LOW;
   sun.shadow.mapSize.set(1024, 1024);
   Object.assign(sun.shadow.camera, { left: -22, right: 22, top: 22, bottom: -22, near: 1, far: 70 });
   scene.add(sun);
@@ -62,7 +60,7 @@ export function createBoard(canvas) {
   const put = (m, matrix, color) => { m.setMatrixAt(m.count, matrix); m.setColorAt(m.count, color); m.count += 1; };
   const { mesh: tiles, paint: paintTiles } = createTiles(scene, CELLS);
 
-  const sparks = createSparks(scene), { burst: sparkBurst, flame, step: stepSparks } = sparks;
+  const sparks = createSparks(scene), { burst: sparkBurst, flame, step: stepSparks, busy: sparksBusy } = sparks;
   const blast = createBlast(canvas, sparks, sky);
 
   const dummy = new THREE.Object3D(), col = new THREE.Color(), bit = new THREE.Matrix4(), at = new THREE.Matrix4(), flick = new THREE.Vector3();
@@ -280,6 +278,9 @@ export function createBoard(canvas) {
   // the first frame paying for them all held the thread long enough to freeze the boot screen's Mulassa.
   const warm = () => waitForWarmup(() => renderer.compileAsync(scene, camera).then(() => linkPrograms(renderer.info.programs)));
 
-  const portraits = (kinds, size, opts) => drawPortraits(renderer, GEOS, mat, kinds, size, opts);
-  return { setGame, fit, pick, frame, burst, explodeAll, dragonFire, burn, warm, portraits, insets, screenOf: i => screen[i], shake: k => { trauma = Math.min(1, trauma + k); } };
+  // dev only (main.js __pop.portraits): the home's portraits are files, so this stays out of the game's own chunk
+  const portraits = (kinds, size, opts) => import('./portraits.js').then(m => m.drawPortraits(renderer, GEOS, mat, kinds, size, opts));
+  // an ended run's board once its blast has played out: nothing moves on it, so it need not be drawn again
+  const settled = () => game?.state === 'over' && !trauma && !sparksBusy() && game.cells.every(c => blast.progress(c.i, time) >= 1);
+  return { setGame, fit, pick, frame, burst, explodeAll, dragonFire, burn, warm, portraits, settled, insets, screenOf: i => screen[i], shake: k => { trauma = Math.min(1, trauma + k); } };
 }

@@ -1,12 +1,12 @@
 // This game's own words, apart from the main game's catalogues so neither page loads the other's. The language is the main game's saved choice.
-import { initLang, lang, applyDocumentLang } from '../../../i18n/locale.js';
+import { initLang, lang, setLang, applyDocumentLang, DEFAULT_LANG } from '../../../i18n/locale.js';
 import ca from './locales/ca.json' with { type: 'json' };
 
 initLang();
-applyDocumentLang();
 const chunks = import.meta.glob(['./locales/*.json', '!./locales/ca.json']);
 const load = chunks[`./locales/${lang()}.json`];
-const words = load ? await load().then(m => m.default, () => ca) : ca; // a failed chunk falls back to Catalan
+const words = load ? await load().then(m => m.default, () => (setLang(DEFAULT_LANG), ca)) : ca; // a failed chunk falls back to Catalan
+applyDocumentLang(); // the language shown, so a fallback is not read out as the one asked for
 
 export const t = (key, params = {}) => (words[key] ?? ca[key]).replace(/\{(\w+)\}/g, (_, name) => params[name]);
 

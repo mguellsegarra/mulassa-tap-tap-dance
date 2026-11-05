@@ -69,5 +69,10 @@
   "rotate.phone": "Dreh das Handy",
   "rotate.tablet": "Dreh das Tablet",
   "rotate.phoneSub": "Ins Hochformat, um zu spielen",
-  "rotate.tabletSub": "Ins Querformat, um zu spielen"
+  "rotate.tabletSub": "Ins Querformat, um zu spielen",
+  "fail.title": "Ups! Laden fehlgeschlagen",
+  "fail.text": "Lade die Seite neu und versuch’s noch mal.",
+  "fail.retry": "Noch mal versuchen",
+  "lost.title": "Ups! Das Spiel wurde angehalten",
+  "lost.text": "Dein Handy zeigt das Spiel nicht mehr in 3D. Schließe den Browser ganz und öffne ihn wieder."
 }

@@ -12,24 +12,25 @@ export async function drawPortraits(renderer, GEOS, mat, kinds, size = 112, { ti
   const px = new Uint8Array(size * size * 4), pic = document.createElement('canvas');
   pic.width = pic.height = size;
   const ctx = pic.getContext('2d'), img = ctx.createImageData(size, size), out = {}, box = new THREE.Box3(), c = new THREE.Vector3(), d = new THREE.Vector3();
-  for (const kind of kinds) {
-    await new Promise(go => setTimeout(go));
-    const m = new THREE.Mesh(GEOS[kind], mat);
-    s.add(m);
-    box.setFromObject(m).getCenter(c);
-    const R = box.getSize(d).length() / 2;
-    cam.position.set(c.x, c.y + R * 1.4, c.z + R * 3.5);
-    cam.lookAt(c);
-    renderer.setRenderTarget(rt);
-    renderer.render(s, cam);
-    renderer.readRenderTargetPixels(rt, 0, 0, size, size, px);
-    renderer.setRenderTarget(null);
-    for (let y = 0; y < size; y++) img.data.set(px.subarray((size - 1 - y) * size * 4, (size - y) * size * 4), y * size * 4); // GL rows run bottom up
-    ctx.putImageData(img, 0, 0);
-    out[kind] = tight ? cropped(pic, img.data, size) : pic.toDataURL();
-    s.remove(m);
-  }
-  rt.dispose();
+  try {
+    for (const kind of kinds) {
+      await new Promise(go => setTimeout(go));
+      const m = new THREE.Mesh(GEOS[kind], mat);
+      s.add(m);
+      box.setFromObject(m).getCenter(c);
+      const R = box.getSize(d).length() / 2;
+      cam.position.set(c.x, c.y + R * 1.4, c.z + R * 3.5);
+      cam.lookAt(c);
+      renderer.setRenderTarget(rt);
+      try {
+        renderer.render(s, cam);
+        renderer.readRenderTargetPixels(rt, 0, 0, size, size, px);
+      } finally { renderer.setRenderTarget(null); s.remove(m); }
+      for (let y = 0; y < size; y++) img.data.set(px.subarray((size - 1 - y) * size * 4, (size - y) * size * 4), y * size * 4); // GL rows run bottom up
+      ctx.putImageData(img, 0, 0);
+      out[kind] = tight ? cropped(pic, img.data, size) : pic.toDataURL();
+    }
+  } finally { rt.dispose(); } // freed even when a draw throws
   return out;
 }
 

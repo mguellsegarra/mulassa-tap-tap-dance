@@ -69,5 +69,10 @@
   "rotate.phone": "휴대폰을 돌려 줘",
   "rotate.tablet": "태블릿을 돌려 줘",
   "rotate.phoneSub": "세로로 들고 시작해",
-  "rotate.tabletSub": "가로로 들고 시작해"
+  "rotate.tabletSub": "가로로 들고 시작해",
+  "fail.title": "앗! 불러오지 못했어요",
+  "fail.text": "페이지를 새로고침해서 다시 해봐요.",
+  "fail.retry": "다시 시도",
+  "lost.title": "앗! 게임이 멈췄어요",
+  "lost.text": "휴대폰에서 게임을 3D로 표시하지 못하게 됐어요. 브라우저를 완전히 닫았다가 다시 열어요."
 }

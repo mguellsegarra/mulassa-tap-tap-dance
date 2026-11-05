@@ -7,6 +7,8 @@ const SUPABASE = !!import.meta.env.VITE_SUPABASE_URL;
 export const RANKING = SUPABASE || import.meta.env.DEV;
 const service = () => (SUPABASE ? import('./ranking.js') : import('./ranking-mock.js'));
 const marks = () => import('../../../ui/badge-svg.js');
+// the server's no to the run itself (pop-score): sent again it can never pass, so it is not kept to retry
+const REFUSED = new Set(['version', 'mismatch', 'invalid', 'too_large', 'pop_seed_used']);
 const el = (tag, cls, text) => Object.assign(document.createElement(tag), cls ? { className: cls } : {}, text == null ? {} : { textContent: text });
 
 export function setupRankingUI({ t, focusBack }) {
@@ -20,8 +22,9 @@ export function setupRankingUI({ t, focusBack }) {
     const body = { v: RUN_VERSION, seed: run.seed, cols: run.game.cols, rows: run.game.rows, ticks: run.ticks, taps: run.log, score: run.game.score };
     line.hidden = false; name.hidden = true; line.classList.remove('good');
     line.textContent = '\u00a0'; // the line's height is kept from the start: the answer fades in, nothing moves (no «sending…» swapped out)
-    const m = await service();
+    let m;
     try {
+      m = await service();
       const res = await m.publish(body);
       m.forget();
       showPlace(res.position); // on the home's pill before the player goes back to it
@@ -31,7 +34,7 @@ export function setupRankingUI({ t, focusBack }) {
       line.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 250, easing: 'ease-out' });
     } catch (e) {
       if (e.code === 'pop_seed_used') return; // already on the board: the line stays blank, its height kept
-      m.keep(body);
+      if (!REFUSED.has(e.code)) m?.keep(body);
       if (mine !== sent) return;
       const nameless = e.code === 'noname' || e.code === 'released';
       line.textContent = t(nameless ? 'rank.noName' : 'rank.error');
@@ -49,9 +52,10 @@ export function setupRankingUI({ t, focusBack }) {
   // The home's place on the board, and a run kept from before (no name then, or offline) sent now if it can go.
   async function sync() {
     if (!RANKING) return;
-    const m = await service();
+    const m = await service().catch(() => null); // offline with the chunk not yet loaded: the place waits for the next visit
+    if (!m) return;
     const kept = m.pending();
-    if (kept) try { await m.publish(kept); m.forget(); } catch (e) { if (e.code === 'pop_seed_used') m.forget(); }
+    if (kept) try { await m.publish(kept); m.forget(); } catch (e) { if (REFUSED.has(e.code)) m.forget(); }
     const { place } = await m.me().catch(() => ({}));
     showPlace(place?.position);
   }

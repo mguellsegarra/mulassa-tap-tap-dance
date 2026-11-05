@@ -2,13 +2,15 @@
 import { createSequencer, hz } from './sequencer.js';
 import { store } from '../../../platform/storage.js';
 import { fresh } from './fresh.js';
+import { audioClock } from '../../../platform/audio-clock.js';
 
-let on = store.get('pica-music') /* the game's first name, kept */ !== 'off', ctx = null, seq = null, sfxBus = null, noise = null, timer = 0;
+let on = store.get('pica-music') /* the game's first name, kept */ !== 'off', ctx = null, clock = null, seq = null, sfxBus = null, noise = null, timer = 0;
 let tune = null, offset = 0; // the run's conductor; audio time = game time + offset
 
 // The tune is laid out by the game's frames (conductor.js), ahead of them; the timer queues it. The offset only grows: after
-// a stall the music waits for the game rather than bursting the notes it missed.
-const at = t => { offset = Math.max(offset, ctx.currentTime + .02 - t); return t + offset; };
+// a stall the music waits for the game rather than bursting the notes it missed (and followGame keeps it on the game's clock).
+const LEAD = .02; // a note is queued at least this far ahead of the audio clock
+const at = t => { offset = Math.max(offset, ctx.currentTime + LEAD - t); return t + offset; };
 const pump = () => seq.play(tune.take(), at);
 const run = () => { clearInterval(timer); timer = setInterval(pump, 80); pump(); };
 
@@ -22,6 +24,7 @@ export function setMusicOn(v) {
 export function startMusic(conductor) {
   if (!ctx) {
     ctx = new AudioContext();
+    clock = audioClock(ctx);
     seq = createSequencer(ctx);
     sfxBus = ctx.createBiquadFilter();
     sfxBus.type = 'lowpass';
@@ -33,7 +36,8 @@ export function startMusic(conductor) {
   }
   ctx.resume();
   tune = conductor;
-  offset = ctx.currentTime - (ctx.outputLatency || 0); // game time 0 is heard now; at() keeps every note a little ahead of the clock
+  offset = ctx.currentTime + LEAD; // game time 0 is queued now; at() keeps every note a little ahead of the clock
+  clock.run();
   seq.start();
   seq.slow(false);
   seq.gain(on ? .9 : 0);
@@ -42,7 +46,15 @@ export function startMusic(conductor) {
 export function stopMusic() {
   if (!seq) return;
   clearInterval(timer);
-  seq.gain(0); // what is queued fades out instead of cutting
+  seq.stop();
+}
+// The game's clock loses what a long frame or a stall took (main.js caps a frame), while the notes already queued play on:
+// the music would drift ahead of the board. Each frame, game time `t` is due at audio time t + offset; when the audio clock
+// is past that, later notes move later to meet the game. Never earlier: the game only falls behind the music.
+export function followGame(t) {
+  if (!ctx || ctx.state !== 'running') return; // not sounding yet (iOS starts late) or suspended: nothing to drift from
+  const late = clock.at() + LEAD - (t + offset);
+  if (late > .03) offset += late; // under 30 ms is the clocks' own jitter
 }
 export const slowMusic = v => seq?.slow(v);
 export function pauseMusic() {

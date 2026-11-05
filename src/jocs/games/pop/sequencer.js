@@ -26,6 +26,7 @@ export function createSequencer(ctx, out = ctx.destination) {
   let lastChord = '';
   const levels = { bass: 0, kick: 0, shaker: 0, octave: 0 };
   let half = false; // the bell's slow time: the beat goes half-time, so it sounds slower though the tempo only glides
+  let bus = null; // this run's voices: the next run cuts it off, so notes queued ahead of a quit never sound in a new run
 
   function voice(freq, t, dur, vol, type = 'sine', attack = .01) {
     const o = ctx.createOscillator(), g = ctx.createGain();
@@ -34,7 +35,7 @@ export function createSequencer(ctx, out = ctx.destination) {
     g.gain.setValueAtTime(0, t);
     g.gain.linearRampToValueAtTime(vol, t + attack);
     g.gain.exponentialRampToValueAtTime(Math.max(vol * .02, .0002), t + Math.max(dur, attack + .02));
-    o.connect(g).connect(master);
+    o.connect(g).connect(bus);
     o.start(t);
     o.stop(t + Math.max(dur, attack + .02) + .02);
     return o;
@@ -46,7 +47,7 @@ export function createSequencer(ctx, out = ctx.destination) {
     o.frequency.exponentialRampToValueAtTime(50, t + .1);
     g.gain.setValueAtTime(vol, t);
     g.gain.exponentialRampToValueAtTime(.001, t + .16);
-    o.connect(g).connect(master);
+    o.connect(g).connect(bus);
     o.start(t);
     o.stop(t + .18);
   }
@@ -57,7 +58,7 @@ export function createSequencer(ctx, out = ctx.destination) {
     f.frequency.value = 2200;
     g.gain.setValueAtTime(vol, t);
     g.gain.exponentialRampToValueAtTime(.001, t + .05);
-    s.connect(f).connect(g).connect(master);
+    s.connect(f).connect(g).connect(bus);
     s.start(t);
     s.stop(t + .06);
   }
@@ -88,11 +89,16 @@ export function createSequencer(ctx, out = ctx.destination) {
 
   return {
     start() {
+      bus?.disconnect();
+      bus = ctx.createGain();
+      bus.connect(master);
       lastChord = '';
       chordLog.length = noteLog.length = 0;
       for (const k in levels) levels[k] = 0;
     },
     gain(v) { master.gain.setTargetAtTime(v, ctx.currentTime, .05); },
+    // the run's end: what is queued fades out instead of cutting
+    stop() { bus?.gain.setTargetAtTime(0, ctx.currentTime, .05); },
     // the bell's slow time: the music goes muffled and roomy at once (the tempo itself only glides, see conductor.js)
     slow(on) {
       half = on;

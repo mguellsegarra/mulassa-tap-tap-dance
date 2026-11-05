@@ -15,6 +15,7 @@ export function createTiles(scene, cells) {
   mesh.frustumCulled = false;
   scene.add(mesh);
   const col = new THREE.Color(), hot = new THREE.Color();
+  mesh.setColorAt(0, col); // the colour attribute exists before the warm-up compiles: its shader variant is the one drawn
   let chill = 0; // 0..1: in fast, out slower
   // blastAt(i): the blast's progress on cell i, < 0 before its wave
   function paint(game, dt, blastAt) {

@@ -8,7 +8,7 @@ globalThis.document = { createElement: () => ({ style: {}, animate() {} }) };
 const { createBlast } = await import('../../src/jocs/games/pop/board-blast.js');
 const { fresh } = await import('../../src/jocs/games/pop/fresh.js');
 
-const END_SHEET = +readFileSync(new URL('../../src/jocs/games/pop/main.js', import.meta.url), 'utf8').match(/setTimeout\(showEnd, (\d+)\)/)[1] / 1000; // gameOver()'s
+const END_SHEET = +readFileSync(new URL('../../src/jocs/games/pop/results.js', import.meta.url), 'utf8').match(/END_SHEET_MS = (\d+)/)[1] / 1000; // the blast's time before the end sheet
 const PITCH = 2, PITCH_Z = 2.2;
 const sky = { intensity: 2.2 };
 let bursts = [];

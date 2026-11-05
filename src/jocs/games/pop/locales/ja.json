@@ -69,5 +69,10 @@
   "rotate.phone": "スマホを回してね",
   "rotate.tablet": "タブレットを回してね",
   "rotate.phoneSub": "縦向きで遊ぼう",
-  "rotate.tabletSub": "横向きで遊ぼう"
+  "rotate.tabletSub": "横向きで遊ぼう",
+  "fail.title": "あれっ、読み込めませんでした",
+  "fail.text": "ページを更新して、もう一度試してね。",
+  "fail.retry": "もう一度",
+  "lost.title": "あれっ、ゲームが止まりました",
+  "lost.text": "スマホでゲームを3D表示できなくなりました。ブラウザーを完全に閉じて開き直してね。"
 }

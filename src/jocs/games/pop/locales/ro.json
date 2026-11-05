@@ -69,5 +69,10 @@
   "rotate.phone": "Rotește telefonul",
   "rotate.tablet": "Rotește tableta",
   "rotate.phoneSub": "Pe verticală ca să te joci",
-  "rotate.tabletSub": "Pe orizontală ca să te joci"
+  "rotate.tabletSub": "Pe orizontală ca să te joci",
+  "fail.title": "Ups! Nu s-a încărcat",
+  "fail.text": "Reîncarcă pagina și încearcă din nou.",
+  "fail.retry": "Încearcă din nou",
+  "lost.title": "Ups! Jocul s-a oprit",
+  "lost.text": "Telefonul nu mai afișează jocul în 3D. Închide complet browserul și deschide-l din nou."
 }

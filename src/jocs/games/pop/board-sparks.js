@@ -9,7 +9,8 @@ export function createSparks(scene) {
   scene.add(sparks);
   const P = Array.from({ length: SPARKS }, () => ({ life: 0, x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, s: 1, g: 26 }));
   const dummy = new THREE.Object3D(), col = new THREE.Color();
-  let next = 0;
+  let next = 0, live = true; // live: a particle moved last step, so the pool still needs writing
+  sparks.setColorAt(0, col); // the colour attribute exists before the warm-up compiles: its shader variant is the one drawn
 
   function burst(c, colors, n = 26, power = 1) {
     for (let k = 0; k < n; k++) {
@@ -18,7 +19,7 @@ export function createSparks(scene) {
       sparks.setColorAt(next, col.set(colors[k % colors.length]));
       next = (next + 1) % SPARKS;
     }
-    sparks.instanceColor.needsUpdate = true;
+    sparks.instanceColor.needsUpdate = live = true;
   }
 
   // the blast's shock wave: a flat ring of embers racing out over the tiles from the culprit
@@ -29,7 +30,7 @@ export function createSparks(scene) {
       sparks.setColorAt(next, col.set(colors[k % colors.length]));
       next = (next + 1) % SPARKS;
     }
-    sparks.instanceColor.needsUpdate = true;
+    sparks.instanceColor.needsUpdate = live = true;
   }
 
   function flame(x, y, z, vx, vy, vz, life = .4) {
@@ -37,10 +38,11 @@ export function createSparks(scene) {
     Object.assign(p, { life: life * (.7 + Math.random() * .6), x, y, z, vx, vy, vz, s: .7 + Math.random() * 1.1, g: -3 });
     sparks.setColorAt(next, col.set(FLAME[Math.floor(Math.random() * 5)]));
     next = (next + 1) % SPARKS;
-    sparks.instanceColor.needsUpdate = true;
+    sparks.instanceColor.needsUpdate = live = true;
   }
 
   function step(dt) {
+    if (!live && sparks.instanceMatrix.version > 0) return; // all spent and parked: nothing to write
     let any = false;
     P.forEach((p, i) => {
       if (p.life > 0) {
@@ -58,7 +60,8 @@ export function createSparks(scene) {
       dummy.updateMatrix();
       sparks.setMatrixAt(i, dummy.matrix);
     });
-    sparks.instanceMatrix.needsUpdate = any || sparks.instanceMatrix.version === 0;
+    sparks.instanceMatrix.needsUpdate = live || any || sparks.instanceMatrix.version === 0; // the last live step parks the spent ones
+    live = any;
   }
-  return { burst, ring, flame, step };
+  return { burst, ring, flame, step, busy: () => live };
 }

@@ -26,7 +26,7 @@ submitted score proves nothing. The server must play the game again from what th
   fails when they differ). `verify_jwt = false` and `getUser`, as `delete-player`.
 - Caps: body 64 KB, 30 min of play (216 000 ticks), 6000 taps, taps in order and on the board's cells. The stored score is the
   replay's; the client's is only compared.
-- Migration `202611030001_pop_board.sql`: `pop_best`, `pop_runs` (a seed scores once per player), `pop_attempts`;
+- Migration `202611050001_pop_board.sql`: `pop_best`, `pop_runs` (a seed scores once per player), `pop_attempts`;
   `pop_gate` (a guest or confirmed account with a name of its own, at most 12 replays a minute, asked before the replay) and
   `pop_record` (profile row locked, the best only rises, `last_active_at` refreshed), both `service_role` only;
   `get_pop_board` and `my_pop` public. Seed profiles are left out; released names stay, as on the main boards.
@@ -46,6 +46,10 @@ submitted score proves nothing. The server must play the game again from what th
 - The replay proves a log follows the rules, not that a person played it live: a bot that plays well in real time, or a log
   searched offline for a seed, passes. Server-issued run tickets would bound seed choice and wall time, but would need a
   session (and the captcha) before every game; not for 1.3.0.
+- Plausibility (`verify.js`, error `implausible`, 422): from 30 scoring taps (Mulassas) on, a run is refused when more than
+  25 % of them came under 100 ms after the Mulassa appeared on its cell. It catches a bot that answers in the same frame
+  (an instant one taps at 0 ms); a short lucky run is never judged. It does not catch a bot that waits a human-like
+  180 ms or more with jitter, nor the dev bot (`autoplay.js`, which waits 1–3.5 s): that is the accepted risk above.
 - The music now follows game time: after a long stall it waits rather than catching up.
 
 ## Rollout

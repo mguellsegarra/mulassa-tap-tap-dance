@@ -30,12 +30,13 @@ Deno.serve(async (req: Request) => {
   if (!url || !secret) return reply(503, { error: 'not_configured' });
   const admin = createClient(url, secret, { auth: { persistSession: false, autoRefreshToken: false } });
   try {
+    // Auth first: a caller with no account never gets its body read or parsed
+    const { data, error } = await admin.auth.getUser(bearer);
+    if (error || !data.user || !isPlayer(data.user)) return reply(401, { error: 'authentication_required' });
     const text = await req.text();
     if (text.length > MAX_BYTES) return reply(413, { error: 'too_large' });
     let body: unknown;
     try { body = JSON.parse(text); } catch { return reply(400, { error: 'invalid' }); }
-    const { data, error } = await admin.auth.getUser(bearer);
-    if (error || !data.user || !isPlayer(data.user)) return reply(401, { error: 'authentication_required' });
     const uid = data.user.id; // the account is Auth's word, never the body's
     const gate = await admin.rpc('pop_gate', { p_uid: uid });
     if (gate.error) { const r = reason(gate.error.message); return reply(STATUS[r] ?? 503, { error: r }); }

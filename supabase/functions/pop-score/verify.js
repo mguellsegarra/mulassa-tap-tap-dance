@@ -8,6 +8,9 @@ export const MAX_TICKS = 30 * 60 * TICKS_PER_S; // half an hour of play: the rep
 export const MAX_TAPS = 6000;
 const LAYOUTS = new Set(['4x6', '6x4']); // portrait and landscape boards (main.js layout())
 const int = (x, lo, hi) => Number.isInteger(x) && x >= lo && x <= hi;
+// A human needs ~150 ms to answer a Mulassa that just appeared; a bot built from sim/ answers in the same frame. Judged only
+// from MIN_JUDGED scoring taps on, so a short lucky run is never punished.
+const FAST_S = .1, FAST_SHARE = .25, MIN_JUDGED = 30;
 const no = error => ({ ok: false, error });
 
 // body: { v, seed, cols, rows, ticks, taps: [tick, cell, ...], score } → { ok, seed, score, ticks } or { ok: false, error }
@@ -18,16 +21,20 @@ export function verifyRun(body) {
   if (!int(seed, 0, 2 ** 32 - 1) || !LAYOUTS.has(`${cols}x${rows}`) || !int(ticks, 1, MAX_TICKS) || !int(score, 0, 1e6)
     || !Array.isArray(taps) || taps.length % 2 || taps.length > MAX_TAPS * 2) return no('invalid');
   const run = createRun({ cols, rows, seed });
+  let judged = 0, fast = 0;
   for (let j = 0, last = 0; j < taps.length; j += 2) {
     const [t, cell] = [taps[j], taps[j + 1]];
     if (!int(t, last, ticks) || !int(cell, 0, cols * rows - 1)) return no('invalid');
     last = t;
     run.until(t);
     if (run.game.state !== 'play') return no('mismatch'); // a tap after the end
+    const c = run.game.cells[cell];
+    if (c.kind === 'mula') { judged++; if (c.age < FAST_S) fast++; } // age: seconds since the Mulassa appeared there
     run.tap(cell);
   }
   run.until(ticks);
   // the run must have ended where the page says, with the page's score: anything else is not the run that was played
   if (run.game.state !== 'over' || run.ticks !== ticks || run.game.score !== score) return no('mismatch');
+  if (judged >= MIN_JUDGED && fast > judged * FAST_SHARE) return no('implausible');
   return { ok: true, seed, score, ticks };
 }

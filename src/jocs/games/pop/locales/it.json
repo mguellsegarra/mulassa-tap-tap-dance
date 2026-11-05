@@ -69,5 +69,10 @@
   "rotate.phone": "Ruota il telefono",
   "rotate.tablet": "Ruota il tablet",
   "rotate.phoneSub": "In verticale per giocare",
-  "rotate.tabletSub": "In orizzontale per giocare"
+  "rotate.tabletSub": "In orizzontale per giocare",
+  "fail.title": "Ops! Caricamento fallito",
+  "fail.text": "Ricarica la pagina per riprovare.",
+  "fail.retry": "Riprova",
+  "lost.title": "Ops! Il gioco si è fermato",
+  "lost.text": "Il telefono ha smesso di mostrare il gioco in 3D. Chiudi del tutto il browser e riaprilo."
 }

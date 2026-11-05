@@ -69,5 +69,10 @@
   "rotate.phone": "Vira eth mobil",
   "rotate.tablet": "Vira era tauleta",
   "rotate.phoneSub": "En vertical entà jogar",
-  "rotate.tabletSub": "En orizontau entà jogar"
+  "rotate.tabletSub": "En orizontau entà jogar",
+  "fail.title": "Uep! Non s’a pogut cargar",
+  "fail.text": "Actualiza era pagina tà tornar-ac a provar.",
+  "fail.retry": "Torna-ac a provar",
+  "lost.title": "Uep! Eth jòc s’a arturat",
+  "lost.text": "Eth mobil a deishat de mostrar eth jòc en 3D. Barra eth navegador deth tot e torna a daurí-lo."
 }

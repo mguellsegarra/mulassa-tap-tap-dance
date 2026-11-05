@@ -52,7 +52,7 @@ export async function publish(run) {
 
 export function keep(run) {
   const old = pending();
-  if (!old || run.score > old.score) store.set(PENDING, JSON.stringify(run));
+  if (!old || old.v !== run.v || run.score > old.score) store.set(PENDING, JSON.stringify(run)); // an older version's never passes
 }
 export function pending() {
   try { return JSON.parse(store.get(PENDING)) || null; } catch { return null; }

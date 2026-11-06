@@ -13,7 +13,7 @@ import { FINAL } from './dev/final-test.js';
 import { pace, RAWCLOCK, viewClock } from './core/timing.js';
 import { glc, qualityLevel, renderProfile, softwareGl, stepPeople, freePlayPeople, GPU, renderer, camera, plaza, scene, setQualityLevel, renderScreen } from './scene/stage.js';
 import { initFigureObjects, hideFigures } from './figures/objects.js';
-import { G, chip, clock, songTime, drawT, audioEngine, setClock, setDrawT, offsetMs } from './game/state.js';
+import { G, chip, clock, songTime, drawT, audioEngine, setClock, setDrawT, offsetMs, menuMusic, startMenuAudio } from './game/state.js';
 import { audioFailureTags } from './platform/audio-load.js';
 import { animConfetti } from './scene/confetti.js';
 import { applyRenderQuality, activeCrowd } from './scene/quality.js';
@@ -188,10 +188,20 @@ requestAnimationFrame(() => setTimeout(() => { // one paint first: that line sho
     requestAnimationFrame(frame);
   });
 }));
-// The audio engine, suspended (the splash's tap resumes it): the song, the menu loop and the applause are made behind
-// the page cover. Made at the first frame they finished on the splash on a slow first load, right under the tap.
+// The audio engine: the song, the menu loop and the applause are made behind the page cover. Made at the first frame they
+// finished on the splash on a slow first load, right under the tap. The menu loop already asks to sound on the splash (as
+// Mulassa Pop's home): a browser that allows it without a tap (Chrome on a site played often) plays it; else the tap does.
 function startAudio() {
-  try { audioEngine().ready?.then(() => loadMark('song decoded'), e => errors.breadcrumb('audio-load-failed', audioFailureTags(e))); } catch { /* no Web Audio: made at the tap */ } // the run's start loads it again (a failure there is audio-start-failed)
+  try {
+    audioEngine().ready?.then(() => loadMark('song decoded'), e => errors.breadcrumb('audio-load-failed', audioFailureTags(e))); // the run's start loads it again (a failure there is audio-start-failed)
+  } catch { /* no Web Audio: made at the tap */ }
+  loader.lifted.then(splashMusic);
+}
+// Once the cover is gone, not under it. No userActivation (Safari < 16.4): wake() can't tell the load from a tap, so the
+// tap stays the only start; hidden: no visibility change would suspend it later; already past the splash: the tap did it
+function splashMusic() {
+  if (G.state !== 'splash' || !menuMusic || !navigator.userActivation || document.hidden) return;
+  try { startMenuAudio(); chip.autoplay(); } catch { /* no Web Audio: made at the tap */ }
 }
 window.__dbg = { get G() { markLeaderboardDebugUse(); return G; }, get M() { markLeaderboardDebugUse(); return M; },
   act: debugAction(act), finish: debugAction(finish), collapse: debugAction(collapse), judge: debugAction(judge), press: debugAction(press),

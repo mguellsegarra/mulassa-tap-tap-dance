@@ -83,6 +83,17 @@ try {
 }
 console.log('audio wake respects page activity');
 
+// The splash's untapped start: allowed, the context counts as woken, so a return from another tab resumes it (pause-actions.js)
+// instead of staying mute and reporting a stall; refused (Chrome leaves it suspended), the splash's tap still unlocks it.
+for (const [allowed, woke] of [[true, true], [false, undefined]]) {
+  const splashChip = Object.create(Chip.prototype);
+  splashChip.ctx = { state: 'suspended', resume() { if (allowed) this.state = 'running'; return allowed ? Promise.resolve() : Promise.reject(new Error('NotAllowedError')); } };
+  splashChip.autoplay();
+  await new Promise(done => setTimeout(done));
+  assert.equal(splashChip.woke, woke, `an untapped start ${allowed ? 'allowed' : 'refused'} by the browser`);
+}
+console.log('splash autoplay contract ok');
+
 {
   const c = Object.create(Chip.prototype);
   c.master = { gain: { cancelScheduledValues() {}, setTargetAtTime() {} } };

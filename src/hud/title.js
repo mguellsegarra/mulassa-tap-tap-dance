@@ -5,7 +5,7 @@ import { glintAt, POP, popsAt } from './logo-motion.js';
 import { COARSE, CALM } from '../core/env.js';
 import { text, textWidth } from './primitives.js';
 import { C, PIXEL, FONT, textWidths } from './sprites.js';
-import { chip, clock } from '../game/state.js';
+import { G, chip, clock } from '../game/state.js';
 import { W, HH, H, K, SAFE } from './canvas.js';
 
 // The logo: MULASSA on a blocky extrusion (one dark copy of its sprite, stacked), a glint of light across its letters
@@ -17,7 +17,7 @@ const pops = [0, 0, 0], tapAt = new Map(); // tapAt: s -> TAP, TAP, DANCE's cent
 const SPLASH_ENTER = [tr('hud.title.enterTouch'), tr('hud.title.enterClick')];
 export function splashWarmups() { return [() => logo(0, splashS(), true)]; }
 function logo(y, s = splashS(), warm = false) {
-  const b = chip ? Math.abs(Math.sin(beatAt(Math.max(0, chip.now())) * Math.PI)) : 0, my = y - b * s * 0.06, calm = CALM.matches;
+  const b = chip && G.state !== 'splash' ? Math.abs(Math.sin(beatAt(Math.max(0, chip.now())) * Math.PI)) : 0, my = y - b * s * 0.06, calm = CALM.matches;
   for (const d of LOGO_DEPTH) text('MULASSA', W / 2, my + d * s, s, LOGO_EXT, 'center', LOGO_EXT, true);
   text('MULASSA', W / 2, my, s, C.red, 'center', C.cream, true);
   const g = calm ? null : glintAt(clock);

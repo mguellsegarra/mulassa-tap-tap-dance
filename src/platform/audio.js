@@ -109,6 +109,11 @@ export class Chip {
   }
 
   get running() { return this.ctx.state === 'running'; }
+  // the splash, before any tap: the browser may let the context run (Chrome on a site played often). Allowed, it counts as
+  // woken, so a return from another tab resumes it as after a tap (else it stayed mute and watchAudio reported a stall)
+  autoplay() {
+    Promise.resolve(this.ctx.resume?.()).then(() => { if (this.running) this.woke = true; }, () => {}); // refused: the splash's tap wakes it
+  }
 
   unlock() {
     this.wake();

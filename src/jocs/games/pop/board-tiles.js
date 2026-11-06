@@ -1,12 +1,13 @@
 // The board's tiles: one instanced box per cell and its colour each frame (checkered, lit by a fuse, frosted by the bell,
 // scorched by a blast). board.js places them and owns the scene.
 import * as THREE from 'three';
-import { FUSE, BOMB_FUSE, SPECIAL_LIFE } from './rules.js';
+import { SPECIAL_LIFE } from './rules.js';
 import { PITCH, PITCH_Z } from './board-framing.js';
 
 const JOINT = .06;
 // The cells that light up, yellow to red as their time runs out: the traps too, so a lit cell is never a sure tap; the goodies stay on the board's own tiles.
-const LIT = { mula: FUSE, petard: BOMB_FUSE, mulaFalsa: SPECIAL_LIFE, dracFals: SPECIAL_LIFE };
+// each cell's whole life: a Mulassa's own fuse (rules.js c.life, it shortens with the progression), the level's for the petard (game.bombFuse)
+const LIT = { mula: (g, c) => c.life, petard: g => g.bombFuse, mulaFalsa: () => SPECIAL_LIFE, dracFals: () => SPECIAL_LIFE };
 const ICE = [new THREE.Color('#8fb4d8'), new THREE.Color('#7ea3c9')]; // the bell's slow time: the tiles frost over, the figures keep their colours
 
 export function createTiles(scene, cells) {
@@ -23,7 +24,7 @@ export function createTiles(scene, cells) {
     game.cells.forEach((c, i) => {
       const odd = (i + Math.floor(i / game.cols)) % 2;
       col.set(odd ? '#4c4d71' : '#424363').lerp(ICE[odd], chill);
-      const life = LIT[c.kind];
+      const life = LIT[c.kind]?.(game, c);
       if (life) col.set('#f5c518').lerp(hot.set('#ff3b2e'), 1 - c.left / life);
       const k = blastAt(i);
       if (k >= 0) col.set('#fff1c4').lerp(hot.set('#2b2233'), Math.min(1, k)); // white-hot as the wave passes, then scorched

@@ -40,18 +40,29 @@ const loop = JSON.parse(readFileSync(new URL('../../src/jocs/games/pop/menu-musi
   assert.ok(gain.gain.events().some(e => e.target && e.v === 0), 'it fades to silence');
   assert.ok(ctx.stopped[0] <= .6, 'and stops soon');
 }
-{ // never heard: cut at once
-  const ctx = fakeCtx('suspended');
-  let gain;
+{ // loaded while suspended (iOS before the first tap): nothing starts until the context runs, then it fades in from there
+  const ctx = fakeCtx('suspended'), starts = [];
+  let gain, wakeUp;
+  ctx.addEventListener = (e, f) => { if (e === 'statechange') wakeUp = f; };
   const make = ctx.createGain; ctx.createGain = () => (gain = make());
+  const src = ctx.createBufferSource; ctx.createBufferSource = () => Object.assign(src(), { start: t => starts.push(t) });
+  const home = createMenuMusic(ctx, {}, { url: 'x.mp3', loop });
+  home.play(); await settle(); await settle();
+  assert.deepEqual(starts, [], 'not scheduled on a stopped clock');
+  ctx.state = 'running'; ctx.currentTime = 2; wakeUp();
+  assert.deepEqual(starts, [2], 'started when it runs');
+  assert.ok(gain.gain.events().some(e => e.ramp && e.v === 1 && e.t === 3), 'with its whole second of fade in');
+}
+{ // «Juga» before the context ever ran: nothing was started, nothing to cut
+  const ctx = fakeCtx('suspended');
+  ctx.addEventListener = () => {};
   const home = createMenuMusic(ctx, {}, { url: 'x.mp3', loop });
   home.play(); await settle(); await settle();
   home.stop();
-  assert.deepEqual(gain.gain.events().filter(e => e.t >= 0).map(e => e.v), [0], 'silent at once, no ramp left');
-  assert.equal(ctx.stopped[0], 0);
+  assert.deepEqual(ctx.stopped, []);
 }
 // the file: one 64-beat loop at 152 BPM from its first note, and in the game's folder (Vite hashes its URL)
 assert.equal(loop.start, 0, 'from the tune\'s first note');
 assert.ok(Math.abs(loop.end - 64 * 60 / 152) < 1e-3, '64 beats at 152');
 assert.ok(existsSync(new URL('../../src/jocs/games/pop/menu-music.mp3', import.meta.url)));
-console.log('pop home music: silenced under the count, its fade in dropped, cut at once if never heard; loop points ok');
+console.log('pop home music: silenced under the count, its fade in dropped, started only once the context runs; loop points ok');

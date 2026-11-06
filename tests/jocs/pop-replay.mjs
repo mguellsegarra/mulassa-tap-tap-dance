@@ -14,8 +14,8 @@ for (const f of POP_SIM) {
 }
 
 // a run as the page plays it: uneven frames, the bot's taps between them, a slip now and then
-function play(seed, { cols = 4, rows = 6, rnd = mulberry(seed) } = {}) {
-  const run = createRun({ cols, rows, seed });
+function play(seed, { cols = 4, rows = 6, level = 0, rnd = mulberry(seed) } = {}) {
+  const run = createRun({ cols, rows, seed, level });
   let clock = 0;
   while (run.game.state === 'play' && clock < 900) {
     clock += rnd() < .05 ? .05 : 1 / 60 + (rnd() - .5) * .006;
@@ -23,21 +23,35 @@ function play(seed, { cols = 4, rows = 6, rnd = mulberry(seed) } = {}) {
     if (run.game.state === 'play' && rnd() < .6) { const i = botTap(run.game, rnd); if (i >= 0) run.tap(i); }
     if (run.game.state === 'play' && rnd() < .001) run.tap(Math.floor(rnd() * cols * rows));
   }
-  return { v: RUN_VERSION, seed, cols, rows, ticks: run.ticks, taps: [...run.log], score: run.game.score };
+  return { v: RUN_VERSION, seed, level, cols, rows, ticks: run.ticks, taps: [...run.log], points: run.game.points, hits: run.game.hits };
 }
 function mulberry(a) { return () => { a = (a + 0x6D2B79F5) >>> 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 
 let best = null;
-for (let k = 1; k <= 40; k++) {
-  const body = play(k * 7919, k % 2 ? {} : { cols: 6, rows: 4 });
-  assert.deepEqual(verifyRun(body), { ok: true, seed: body.seed, score: body.score, ticks: body.ticks }, `seed ${body.seed}`);
-  if (!best || body.score > best.score) best = body;
+const levels = new Set();
+for (let k = 1; k <= 45; k++) {
+  const body = play(k * 7919, { ...(k % 2 ? {} : { cols: 6, rows: 4 }), level: k % 3 });
+  assert.deepEqual(verifyRun(body), { ok: true, seed: body.seed, level: body.level, points: body.points, hits: body.hits, ticks: body.ticks }, `seed ${body.seed}`);
+  levels.add(body.level);
+  assert.ok(body.points >= body.hits, 'a Mulassa is worth at least 1');
+  if (!best || body.points > best.points) best = body;
 }
-assert.ok(best.score >= 20 && best.taps.length >= 40, `a run worth testing (${best.score} points)`);
+assert.equal(levels.size, 3, 'replays pass at every level');
+assert.ok(best.points >= 20 && best.taps.length >= 40, `a run worth testing (${best.points} points)`);
 
 const no = (change, error = 'mismatch', why = '') => assert.equal(verifyRun({ ...best, ...change }).error, error, why || Object.keys(change).join());
-no({ score: best.score + 1 });
-no({ score: best.score - 1 });
+no({ points: best.points + 1 });
+no({ points: best.points - 1 });
+no({ hits: best.hits + 1 });
+no({ hits: best.hits - 1 });
+no({ level: (best.level + 1) % 3 }, 'mismatch', 'another level is another run');
+no({ level: (best.level + 2) % 3 }, 'mismatch', 'another level is another run');
+no({ level: 3 }, 'invalid');
+no({ level: -1 }, 'invalid');
+no({ level: 1.5 }, 'invalid');
+no({ level: undefined }, 'invalid', 'a body with no level');
+no({ points: undefined }, 'invalid', 'a body with no points');
+no({ hits: undefined }, 'invalid', 'a body with no hits');
 no({ ticks: best.ticks + TICKS_PER_S }, 'mismatch'); // played on after the end
 no({ seed: best.seed + 1 });
 no({ taps: best.taps.slice(0, -2) }); // a tap left out
@@ -56,4 +70,4 @@ no({ taps: [0, 99] }, 'invalid');
 no({ seed: -1 }, 'invalid');
 no({ taps: 'x' }, 'invalid');
 assert.equal(verifyRun(null).error, 'invalid');
-console.log(`pop-replay: ok (best bot run ${best.score} points, ${best.taps.length / 2} taps)`);
+console.log(`pop-replay: ok (best bot run ${best.points} points, ${best.hits} hits, level ${best.level}, ${best.taps.length / 2} taps)`);

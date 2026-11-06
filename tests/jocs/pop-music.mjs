@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { MELODY, CHORDS, chordAt, LOOP_START, LOOP_END } from '../../src/jocs/games/pop/melody.js';
+import { MELODY, CHORDS, chordAt, LOOP_START, LOOP_END, SKIP_FROM, SKIP_TO } from '../../src/jocs/games/pop/melody.js';
 import { createSequencer } from '../../src/jocs/games/pop/sequencer.js';
-import { bpmFor, layersFor, createConductor, STEP } from '../../src/jocs/games/pop/conductor.js';
+import { bpmFor, layersFor, createConductor, STEP, LEAD, BASE_BPM } from '../../src/jocs/games/pop/conductor.js';
 
 test('every beat of the loop has a known chord, and the tune stays on the eighth-note grid', () => {
   for (let b = LOOP_START; b < LOOP_END; b += .5) assert.ok(CHORDS[chordAt(b)], `beat ${b}`);
@@ -14,6 +14,18 @@ test('the tempo only rises with the score, stays playable, and the bell slows it
   for (let s = 0; s <= 1000; s += 5) { assert.ok(bpmFor(s) > last); last = bpmFor(s); }
   assert.ok(bpmFor(0) >= 140 && bpmFor(1000) <= 180);
   assert.ok(bpmFor(50, true) < bpmFor(50));
+});
+
+test('each level opens at its own tempo (150, 165, 180) and rises by the same amount; the bell is a quarter slower', () => {
+  assert.deepEqual([0, 1, 2].map(l => bpmFor(0, false, l)), [150, 165, 180]);
+  assert.deepEqual(BASE_BPM, [150, 165, 180]);
+  for (const l of [0, 1, 2]) {
+    for (const s of [10, 60, 300]) assert.equal(bpmFor(s, false, l) - BASE_BPM[l], bpmFor(s) - 150);
+    assert.ok(Math.abs(bpmFor(60, true, l) - bpmFor(60, false, l) * .75) < 1e-9);
+    const first = createConductor(l);
+    first.advance(.1);
+    assert.equal(60 / first.take()[0].spb, BASE_BPM[l], `level ${l} plays its base tempo from the first step`);
+  }
 });
 
 test('voices only come in as the score grows', () => {
@@ -71,30 +83,53 @@ test('the conductor lays out the tune ahead of game time and keeps the audio\'s 
   assert.ok(steps.length >= 4 * bpmFor(0) / 60 / STEP && tune.take().length === 0, 'the steps go to the audio once');
 });
 
-test('the tempo follows the level it is given, gliding, and the bell slows it', () => {
+test('the conductor says how many steps the game has reached, a LEAD early, each once', () => {
+  const tune = createConductor(); // 150 BPM: a step every .2 s
+  tune.advance(1);
+  assert.equal(tune.due(-LEAD - .01), 0);
+  assert.equal(tune.due(0), 1, 'the first step is due LEAD before it sounds');
+  assert.equal(tune.due(0), 0);
+  assert.equal(tune.due(.45), 2, 'the steps at .2 and .4, each LEAD early');
+  assert.equal(tune.due(.85), 2, 'then .6 and .8');
+});
+
+test('the tempo follows the progression it is given, gliding, and the bell slows it', () => {
   const tune = createConductor();
-  tune.setLevel(200, false);
+  tune.setProgress(200, false);
   tune.advance(20);
   const spb = tune.take().map(s => s.spb);
   for (let k = 1; k < spb.length; k++) assert.ok(spb[k] <= spb[k - 1] + 1e-12, 'only faster');
   assert.ok(Math.abs(60 / spb.at(-1) - bpmFor(200)) < 1e-9, 'it reaches the target');
-  tune.setLevel(200, true);
+  tune.setProgress(200, true);
   tune.advance(40);
   assert.ok(Math.abs(60 / tune.take().at(-1).spb - bpmFor(200, true)) < 1e-9);
 });
 
 test('the bell drops the tempo at once and gives it back at once, then rises glide as before', () => {
   const tune = createConductor(), bpms = () => tune.take().map(s => 60 / s.spb);
-  tune.setLevel(200, false);
+  tune.setProgress(200, false);
   tune.advance(20);
   tune.take();
-  tune.setLevel(200, true);
+  tune.setProgress(200, true);
   tune.advance(20.5);
   assert.ok(Math.abs(bpms().at(-1) - bpmFor(200, true)) < 1e-9, 'slow within half a second');
-  tune.setLevel(200, false);
+  tune.setProgress(200, false);
   tune.advance(21);
   assert.ok(Math.abs(bpms().at(-1) - bpmFor(200)) < 1e-9, 'back up within half a second');
-  tune.setLevel(400, false); // a score rise, no bell: the slow glide again
+  tune.setProgress(400, false); // a progression rise, no bell: the slow glide again
   tune.advance(21.5);
   assert.ok(bpms().at(-1) < bpmFor(400) - 1, 'no jump on a score rise');
+});
+
+test('A plays once: from its first half straight on into the second\'s cadence, so B comes after 56 + 8 beats, then C, then A again', async () => {
+  const { wrap } = await import('../../src/jocs/games/pop/conductor.js');
+  const at = b => MELODY.filter(n => n[0] >= b && n[0] < b + 8).map(n => [n[0] - b, n[1], n[2]]);
+  assert.deepEqual(at(SKIP_FROM - 8), at(SKIP_TO - 8), 'the two halves are one phrase before the jump: it is not heard');
+  assert.equal(wrap(SKIP_FROM - .5), SKIP_FROM - .5);
+  assert.equal(wrap(SKIP_FROM), SKIP_TO, 'on at the second half\'s cadence');
+  assert.equal(chordAt(SKIP_TO), 'C', 'which lands A in major for B');
+  assert.equal(wrap(LOOP_END), LOOP_START, 'after C, back to A');
+  let pos = LOOP_START, beats = 0;
+  while (pos < 144) { pos = wrap(pos + .5); beats += .5; }
+  assert.equal(beats, 144 - LOOP_START - (SKIP_TO - SKIP_FROM), 'B after 64 beats of A, not 128');
 });

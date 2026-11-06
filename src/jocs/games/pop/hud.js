@@ -1,6 +1,7 @@
 // The run's HUD over the board: the score, the campanar's chip, the words that float up from a tapped cell, and the bell's
 // slow time, seen (a cold tint, style.css .slow) and heard (audio.js). flow.js feeds it the run; board.js gets the HUD's edge.
 import { slowMusic, SFX } from './audio.js';
+import { CHORD } from './rules.js';
 
 export function createHud({ board, t }) {
   const $ = id => document.getElementById(id);
@@ -32,7 +33,8 @@ export function createHud({ board, t }) {
 
   function sync(game, force) {
     board.insets.top = hud.hidden ? 0 : bottom;
-    if (force || game.score !== shownScore) $('score').textContent = shownScore = game.score;
+    if (force) $('combo').hidden = true; // a new run: no streak yet
+    if (force || game.points !== shownScore) $('score').textContent = shownScore = game.points;
     // the campanar's own portrait (the home's card), its name for the effect, and the seconds left: rebuilt when they change
     const secs = game.slow > 0 ? Math.ceil(game.slow) : 0, chips = secs ? `${secs}` : '';
     if (chips !== shownChips) {
@@ -42,5 +44,20 @@ export function createHud({ board, t }) {
     setSlow(game.slow > 0, game.state === 'play');
   }
 
-  return { floatText, sync, setSlow };
+  // «Combo ×3 +9»: a chord of fingers (rules.js combo) and its whole points, under the score, from its second tap; it pops on
+  // each one that joins and goes CHORD_HOLD ms after the chord can take no more. A single tap shows nothing: its sound is enough.
+  const CHORD_HOLD = 450;
+  let chordGone = 0;
+  function combo(n, total) {
+    const el = $('combo');
+    el.textContent = `${t('combo', { n })} +${total}`;
+    el.style.top = `${bottom + 6}px`;
+    el.hidden = false;
+    el.getAnimations().forEach(a => a.cancel());
+    el.animate([{ scale: .7 }, { scale: 1.15, offset: .4 }, { scale: 1 }], { duration: 180, easing: 'ease-out' });
+    clearTimeout(chordGone);
+    chordGone = setTimeout(() => el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 200 }).finished.then(() => { el.hidden = true; }, () => {}), CHORD * 1000 + CHORD_HOLD);
+  }
+
+  return { floatText, sync, setSlow, combo };
 }

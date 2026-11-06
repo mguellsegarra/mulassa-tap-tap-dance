@@ -14,6 +14,8 @@ import { errors } from '../../../services/errors.js';
 import { watchUpdates } from '../../../services/update-watch.js';
 import { stopDoubleTapZoom } from '../../../platform/double-tap.js';
 import { waitForTap } from './splash.js';
+import { setupLevelStep } from './level-step.js';
+import { setupHelp } from './help.js';
 
 const $ = id => document.getElementById(id);
 // the error card's words in the player's language, for index.html's watchdog (Catalan until here)
@@ -24,7 +26,7 @@ let booted = false; // the boot screen is up: nothing is drawn under it (see the
 // The public board (ranking-ui.js). The dev bot's runs start at BOT_FROM points: they are not the game's and never go.
 const rankingUI = setupRankingUI({ t, focusBack: () => $('menu-best').focus({ focusVisible: false }) });
 const hud = createHud({ board, t });
-const flow = createFlow({ board, hud, results: createResults({ board, t, rankingUI }), rankingUI, t, booted: () => booted });
+const flow = createFlow({ board, hero, hud, results: createResults({ board, hero, t, rankingUI }), rankingUI, t, booted: () => booted });
 errors.context(() => ({ game: 'pop', state: flow.mode, booted })); // crash reports as the main game's (services/errors.js)
 // a lost GPU pauses a run (it would go on unseen); back, a paused board is drawn again; gone for good, the error card
 guardGpu([$('game'), $('menu-hero')], {
@@ -44,7 +46,10 @@ if (!document.referrer.startsWith(`${location.origin}/`) || performance.getEntri
 }
 
 $('game').addEventListener('pointerdown', e => flow.tap(e.clientX, e.clientY));
-$('play').addEventListener('click', flow.start);
+const levelStep = setupLevelStep({ t, onPlay: flow.start }); // «Juga» asks for the level first; «Torna-hi» keeps it
+// «Com es juga?», and the first «Juga» goes through it (help.js), once
+const help = setupHelp({ t });
+$('play').addEventListener('click', () => help.play(levelStep.open));
 $('again').addEventListener('click', flow.start);
 $('to-menu').addEventListener('click', flow.showMenu);
 $('quit').addEventListener('click', flow.showMenu);
@@ -54,13 +59,14 @@ const musicBtns = document.querySelectorAll('.music-btn'); // the HUD's and the 
 const syncMusicBtn = () => { for (const b of musicBtns) { b.setAttribute('aria-pressed', musicOn()); b.querySelector('.music-off').toggleAttribute('hidden', musicOn()); } };
 for (const b of musicBtns) b.addEventListener('click', () => { setMusicOn(!musicOn()); syncMusicBtn(); });
 syncMusicBtn();
-addEventListener('keydown', e => { if (e.key !== 'Escape') return; if (rankingUI.escape()) return; if (flow.mode === 'play' || flow.mode === 'count') flow.pause(); else flow.resume(); });
+addEventListener('keydown', e => { if (e.key !== 'Escape') return; if (rankingUI.escape()) return; if (levelStep.isOpen()) return levelStep.close(); if (help.isOpen()) return help.close(); if (flow.mode === 'play' || flow.mode === 'count') flow.pause(); else flow.resume(); });
 addEventListener('resize', flow.resized);
 stopDoubleTapZoom(); // a quick second tap (the board is all quick taps) zoomed the page on an iPad
 addEventListener('pointerdown', unlock, true); // the first tap the browser counts lets the home's music sound
 addEventListener('keydown', unlock, true);
 addEventListener('touchend', unlock, true); // iOS counts a touch's end as the tap, not its start
 document.addEventListener('visibilitychange', () => { if (document.hidden) flow.pause(); });
+addEventListener('blur', () => flow.pause()); // alt-tab or a click on another window: the page stays visible, the player is gone
 
 let last = performance.now(), behind = 0, odd = false; // behind: the home backdrop's time not drawn yet
 function frame(now) {
@@ -74,7 +80,7 @@ function frame(now) {
     odd = flow.mode === 'menu' && !odd;
     if (!odd) { board.frame(behind); behind = 0; }
   }
-  if (flow.mode === 'menu' && booted) hero.frame(dt);
+  if ((flow.mode === 'menu' || flow.mode === 'over') && booted) hero.frame(dt); // the end sheet borrows it (results.js)
   requestAnimationFrame(frame);
 }
 
@@ -86,6 +92,13 @@ if (import.meta.env.DEV) window.__pop = { board, get game() { return flow.game; 
   async portraits() {
     const pics = await board.portraits([...document.querySelectorAll('.c-card')].map(c => c.dataset.kind), 320, { tight: true });
     for (const [kind, url] of Object.entries(pics)) Object.assign(document.createElement('a'), { href: url, download: `${kind}.png` }).click();
+  },
+  // a carretilla among five Mulassas, tapped: for reviewing her correfoc in a run
+  carretilla() {
+    const cells = flow.game.cells.filter(c => c.kind === 'drac' && c.age >= 0).sort(() => Math.random() - .5);
+    cells.slice(0, 5).forEach(c => Object.assign(c, { prev: c.kind, kind: 'mula', age: 1, left: 5 }));
+    Object.assign(cells[5], { prev: 'drac', kind: 'carretilla', age: 1, left: 9 });
+    setTimeout(() => flow.run.tap(cells[5].i), 600);
   } };
 
 // The boot, while the boot screen's Mulassa runs: the shaders, then the home's portraits and the fonts. Each step leaves the

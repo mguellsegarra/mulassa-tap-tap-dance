@@ -13,14 +13,14 @@ const int = (x, lo, hi) => Number.isInteger(x) && x >= lo && x <= hi;
 const FAST_S = .1, FAST_SHARE = .25, MIN_JUDGED = 30;
 const no = error => ({ ok: false, error });
 
-// body: { v, seed, cols, rows, ticks, taps: [tick, cell, ...], score } → { ok, seed, score, ticks } or { ok: false, error }
+// body: { v, seed, level, cols, rows, ticks, taps: [tick, cell, ...], points, hits } → { ok, seed, level, points, hits, ticks } or { ok: false, error }
 export function verifyRun(body) {
   if (!body || typeof body !== 'object') return no('invalid');
-  const { v, seed, cols, rows, ticks, taps, score } = body;
+  const { v, seed, level, cols, rows, ticks, taps, points, hits } = body;
   if (v !== RUN_VERSION) return no('version');
-  if (!int(seed, 0, 2 ** 32 - 1) || !LAYOUTS.has(`${cols}x${rows}`) || !int(ticks, 1, MAX_TICKS) || !int(score, 0, 1e6)
-    || !Array.isArray(taps) || taps.length % 2 || taps.length > MAX_TAPS * 2) return no('invalid');
-  const run = createRun({ cols, rows, seed });
+  if (!int(seed, 0, 2 ** 32 - 1) || !int(level, 0, 2) || !LAYOUTS.has(`${cols}x${rows}`) || !int(ticks, 1, MAX_TICKS) || !int(points, 0, 1e6)
+    || !int(hits, 0, MAX_TAPS) || !Array.isArray(taps) || taps.length % 2 || taps.length > MAX_TAPS * 2) return no('invalid');
+  const run = createRun({ cols, rows, seed, level });
   let judged = 0, fast = 0;
   for (let j = 0, last = 0; j < taps.length; j += 2) {
     const [t, cell] = [taps[j], taps[j + 1]];
@@ -33,8 +33,8 @@ export function verifyRun(body) {
     run.tap(cell);
   }
   run.until(ticks);
-  // the run must have ended where the page says, with the page's score: anything else is not the run that was played
-  if (run.game.state !== 'over' || run.ticks !== ticks || run.game.score !== score) return no('mismatch');
+  // the run must have ended where the page says, with the page's points and hits: anything else is not the run that was played
+  if (run.game.state !== 'over' || run.ticks !== ticks || run.game.points !== points || run.game.hits !== hits) return no('mismatch');
   if (judged >= MIN_JUDGED && fast > judged * FAST_SHARE) return no('implausible');
-  return { ok: true, seed, score, ticks };
+  return { ok: true, seed, level, points, hits, ticks };
 }

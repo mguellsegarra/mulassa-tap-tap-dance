@@ -7,6 +7,7 @@ import { BOT_FROM, botTap } from './autoplay.js';
 import { haptic } from '../../../platform/haptics.js';
 import { END_SHEET_MS } from './results.js';
 import { best } from './best.js';
+import { level } from './level.js';
 import { RANKING } from './ranking-ui.js';
 
 const COLORS = { hit: ['#c0283c', '#d9a521', '#fff3d6', '#1f5c33'], goodie: ['#f5c518', '#fff3d6', '#ffe066'] };
@@ -17,15 +18,18 @@ const params = new URLSearchParams(location.search);
 const BOT = import.meta.env.DEV && params.has('autoplay');
 const BELL = import.meta.env.DEV && params.has('campanar');
 const BELL_FROM = +(params.get('campanar') || 150);
+// dev only (?carretilla): a carretilla 3 s in once two Mulassas are out, then every 6 s, to see her correfoc
+const CARR = import.meta.env.DEV && params.has('carretilla');
 // A run starts on a 3, 2, 1, .6 s each (the owner's pace: a beat and a half at the tune's opening 150 BPM). The run's clock
 // only starts after it: the server's replay (pop-score) never sees the count.
 const EACH = .6, COUNT = 3 * EACH;
 
 // booted(): the boot screen is gone, so the home may ask the board for the player's place
-export function createFlow({ board, hud, results, rankingUI, t, booted }) {
+export function createFlow({ board, hero, hud, results, rankingUI, t, booted }) {
   const $ = id => document.getElementById(id);
   let run = null, game = null, mode = 'menu', endTimer = 0, clock = 0, bellAt = 0; // clock: the run's play time, in seconds
-  let countT = 0, counted = 0, pausedCount = false; // the 3, 2, 1's time left, the number shown; a pause during it starts it over
+  let carrAt = 3, burnt = [], chordPts = 0; // carrAt: the dev carretilla's next time; burnt: the Mulassas the carretilla is taking
+  let countT = 0, counted = 0, begun = false; // the 3, 2, 1's time left, the number shown; begun: the run's music has started
   const count = $('count');
   function countFrom3() { countT = COUNT; counted = 0; mode = 'count'; armAudio(); }
   function countStep(dt) {
@@ -42,26 +46,34 @@ export function createFlow({ board, hud, results, rankingUI, t, booted }) {
     if (countT > 0) return;
     count.hidden = true;
     mode = 'play';
-    startMusic(run.tune);
+    if (begun) resumeMusic(); else startMusic(run.tune); // after a pause the tune goes on where it stopped
+    begun = true;
   }
-  const word = kind => (kind === 'calcot' ? '+5' : t(`word.${kind}`));
+  // a goodie's word over its cell: the calçot's are its points (rules.js: ×5 the level's)
+  const word = (kind, gained) => (kind === 'calcot' ? `+${gained}` : t(`word.${kind}`));
 
-  function on(event, cell, kind) {
+  // rules.js's events: hit (cell, { combo, gained }), burn (cell, { gained }), goodie (cell, kind, { gained })
+  function on(event, cell, kind, extra) {
     if (event === 'hit') {
       SFX.hit();
       haptic('hit');
       board.burst(cell.i, COLORS.hit);
-      hud.floatText(cell.i, '+1');
+      chordPts = kind.combo > 1 ? chordPts + kind.gained : kind.gained; // the chord's whole, for the HUD
+      if (kind.combo > 1) hud.combo(kind.combo, chordPts);
       board.shake(.12);
     } else if (event === 'burn') {
       board.burn(cell);
-      hud.floatText(cell.i, '+1');
+      burnt.push([cell.i, kind.gained]); // her points come with her pop (below)
     } else if (event === 'goodie') {
       SFX.goodie();
       haptic('big');
       board.burst(cell.i, COLORS.goodie, 40, 1.2);
-      hud.floatText(cell.i, word(kind));
-      if (kind === 'carretilla') { board.dragonFire(); SFX.fire(); }
+      hud.floatText(cell.i, word(kind, extra?.gained));
+      if (kind === 'carretilla') {
+        const pops = board.dragonFire(cell.i); // when each one goes up (board-carretilla.js)
+        for (const [i, gained] of burnt.splice(0)) setTimeout(() => hud.floatText(i, `+${gained}`), (pops.get(i) ?? 0) * 1000);
+        SFX.fire();
+      }
       if (kind === 'campanar') SFX.bell();
     } else if (event === 'defuse') {
       SFX.goodie();
@@ -79,11 +91,14 @@ export function createFlow({ board, hud, results, rankingUI, t, booted }) {
 
   function start() {
     clearTimeout(endTimer);
-    run = createRun({ ...layout(), seed: crypto.getRandomValues(new Uint32Array(1))[0], on });
+    run = createRun({ ...layout(), seed: crypto.getRandomValues(new Uint32Array(1))[0], level: level(), on });
     clock = 0;
+    begun = false;
+    carrAt = 3;
+    burnt = [];
     game = run.game;
-    if (BOT) game.score = BOT_FROM; // dev only: such a run is never published
-    if (BELL) { game.score = BELL_FROM; bellAt = 8; }
+    if (BOT) game.progress = BOT_FROM; // dev only: such a run is never published
+    if (BELL) { game.progress = BELL_FROM; bellAt = 8; }
     board.setGame(game);
     for (const id of ['menu', 'end-menu', 'pause-menu']) $(id).hidden = true;
     $('hud').hidden = false;
@@ -101,6 +116,7 @@ export function createFlow({ board, hud, results, rankingUI, t, booted }) {
     game = newGame({ ...layout(), on });
     game.state = 'menu';
     hud.setSlow(false, false);
+    hero.back(); // the end sheet had it
     board.setGame(game);
     for (const id of ['end-menu', 'pause-menu', 'hud', 'count']) $(id).hidden = true;
     $('menu').hidden = false;
@@ -111,7 +127,6 @@ export function createFlow({ board, hud, results, rankingUI, t, booted }) {
 
   function pause() {
     if (mode !== 'play' && mode !== 'count') return;
-    pausedCount = mode === 'count';
     count.hidden = true;
     mode = 'paused';
     pauseMusic();
@@ -121,9 +136,7 @@ export function createFlow({ board, hud, results, rankingUI, t, booted }) {
   function resume() {
     if (mode !== 'paused') return;
     $('pause-menu').hidden = true;
-    if (pausedCount) return countFrom3(); // the run had not begun: the count again, from 3
-    mode = 'play';
-    resumeMusic();
+    countFrom3(); // back to the board on a 3, 2, 1, whether the run had begun or not
   }
 
   function tap(x, y) {
@@ -141,6 +154,10 @@ export function createFlow({ board, hud, results, rankingUI, t, booted }) {
     run.until(Math.floor(clock * TICKS_PER_S)); // the rules' fixed steps this frame has reached
     followGame(clock); // the music keeps to this clock, whatever a stall took from it
     if (BOT && game.state === 'play') { const i = botTap(game); if (i >= 0) run.tap(i); }
+    if (CARR && game.state === 'play' && clock >= carrAt && game.cells.filter(c => c.kind === 'mula').length >= 2) {
+      const free = game.cells.filter(c => c.kind === 'drac' && c.age >= 0), c = free[Math.floor(Math.random() * free.length)];
+      if (c) { Object.assign(c, { prev: c.kind, kind: 'carretilla', age: 0, left: 9 }); carrAt = clock + 6; }
+    }
     if (BELL && game.state === 'play') {
       if (game.slow > 0 || game.cells.some(c => c.kind === 'campanar')) bellAt = Math.max(bellAt, clock + 3 + Math.random() * 3);
       else if (clock >= bellAt) {

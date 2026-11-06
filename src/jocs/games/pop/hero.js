@@ -1,8 +1,10 @@
 // The home's two figures, live: the red Mulassa and a Drac beside her, the board's own rigs and postures (rigs.js), moving
 // (her hop and clack, its breath and sway) and now and then the Drac roaring fire into the air. A small WebGL view of its own:
 // it sits over the home's blur, which would blur the board's canvas; main.js draws it only while the home shows.
+// The end sheet borrows it (solo): the one that ended the run, alone and alive, where the sheet shows it (results.js).
 import * as THREE from 'three';
-import { mulaRig, dracRig, poseMula, poseDrac, MULA_POSES, MULA_SCALE, MULA_YAW, DRAC_K } from './rigs.js';
+import { mulaRig, dracRig, poseMula, poseDrac, MULA_POSES, MULA_SCALE, MULA_YAW, DRAC_K, bake, redScales, greenVelvet } from './rigs.js';
+import { buildPopPetard } from './models.js';
 import { createSparks } from './board-sparks.js';
 import { waitForWarmup, linkPrograms } from '../../../platform/boot.js';
 import { LOW, pixelRatio } from './quality.js';
@@ -34,9 +36,36 @@ export function createHero(canvas) {
   scene.add(mula.root, drac.root);
   const { flame, step } = createSparks(scene);
   const P = MULA_POSES[0], tip = new THREE.Vector3(), dir = new THREE.Vector3();
-  let t = 0, W = 0, H = 0;
+  let t = 0, W = 0, H = 0, solo = null; // solo: { kind, root, rig } while the end sheet shows the culprit
+  // the culprits the home never shows, made the first time one ends a run: the board's own paints (rigs.js)
+  const painted = (rig, paint) => { rig.root.traverse(o => { if (o.isMesh && o.geometry.attributes.color) o.geometry = paint(o.geometry); }); return rig; };
+  const extra = {}, made = (fig, k = 1) => { fig.root.scale.setScalar(k); fig.root.visible = false; scene.add(fig.root); return fig; };
+  const culprit = kind => (kind === 'mula' ? mula : kind === 'drac' ? drac : extra[kind] ??= kind === 'dracFals' ? made(painted(dracRig(), redScales), DRAC_K)
+    : kind === 'mulaFalsa' ? made(painted(mulaRig(), greenVelvet), MULA_SCALE)
+    : made({ root: new THREE.Mesh(bake(buildPopPetard(), { scale: 1.3 }), new THREE.MeshLambertMaterial({ vertexColors: true })) }));
+  const home = canvas.parentElement;
+
+  // the culprit alone: a Mulassa hops, a Drac breathes and plays, the petard bobs and turns
+  function poseSolo() {
+    const { kind, rig, root } = solo, move = still.matches ? 0 : 1;
+    if (kind === 'mula' || kind === 'mulaFalsa') {
+      poseMula(rig, P, t, 0, 0);
+      root.position.set(0, Math.abs(Math.sin(t * 3.5)) * .35 * move, 0);
+      root.rotation.set(0, MULA_YAW + P.yaw + .5 + Math.sin(t * .7) * .15 * move, Math.sin(t * 3.5) * .06 * move);
+    } else if (rig) {
+      poseDrac(rig, PLAY, t, 0, 0);
+      const breath = 1 + Math.sin(t * 2.4) * .025 * move;
+      root.position.set(0, 0, 0);
+      root.rotation.set(0, -.25 + Math.sin(t * .5) * .1 * move, 0);
+      root.scale.set(DRAC_K * (2 - breath), DRAC_K * breath, DRAC_K * (2 - breath));
+    } else {
+      root.position.set(0, .4 + Math.sin(t * 2.2) * .12 * move, 0);
+      root.rotation.set(0, t * .8 * move, Math.sin(t * 1.7) * .08 * move);
+    }
+  }
 
   function pose(fire) {
+    if (solo) return poseSolo();
     const hop = still.matches ? 0 : Math.abs(Math.sin(t * 3.5));
     poseMula(mula, P, t, 0, fire * .6); // she panics a little while it roars
     mula.root.position.y = hop * .35;
@@ -72,8 +101,8 @@ export function createHero(canvas) {
     camera.aspect = w / h;
     pose(0);
     scene.updateMatrixWorld(true);
-    const box = new THREE.Box3().setFromObject(mula.root).union(new THREE.Box3().setFromObject(drac.root));
-    box.max.y += .4; // room for her hop
+    const box = solo ? new THREE.Box3().setFromObject(solo.root) : new THREE.Box3().setFromObject(mula.root).union(new THREE.Box3().setFromObject(drac.root));
+    box.max.y += .4; // room for her hop (and the petard's bob)
     const c = box.getCenter(new THREE.Vector3()), r = box.getSize(new THREE.Vector3()).length() / 2;
     const half = Math.min(camera.fov / 2, THREE.MathUtils.radToDeg(Math.atan(Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.aspect)));
     const dist = r / Math.sin(THREE.MathUtils.degToRad(half)) * .74; // the sphere round the box is loose: a little closer
@@ -87,7 +116,7 @@ export function createHero(canvas) {
     t += dt;
     const k = t % ROAR_EVERY, fire = still.matches ? 0 : ease(0, .35, k) * (1 - ease(ROAR - .35, ROAR, k)); // eased in and out
     pose(fire);
-    if (fire > .4) for (const n of drac.necks) { // the board's flames (board.js placeFigure), up and away from her
+    if (fire > .4 && !solo) for (const n of drac.necks) { // the board's flames (board.js placeFigure), up and away from her
       n.head.updateMatrixWorld(true);
       tip.set(0, .2, 1.75).applyMatrix4(n.head.matrixWorld);
       dir.setFromMatrixColumn(n.head.matrixWorld, 2).normalize().add(UP_AWAY).normalize(); // up and back: the fire never hides the faces
@@ -98,5 +127,22 @@ export function createHero(canvas) {
   }
 
   const warm = () => { fit(); return waitForWarmup(() => renderer.compileAsync(scene, camera).then(() => linkPrograms(renderer.info.programs))); };
-  return { frame, warm };
+  // the end sheet's: `kind` alone in `into` (rules.js culprits); home(): back to the pair, on the home
+  function show(kind, into) {
+    const c = culprit(kind);
+    for (const r of [mula.root, drac.root, ...Object.values(extra).map(e => e.root)]) r.visible = r === c.root;
+    solo = { kind, root: c.root, rig: c.root.isMesh ? null : c }; // the petard is one baked mesh: no rig to pose
+    into.append(canvas);
+    W = 0; // fit again: another box
+  }
+  function back() {
+    if (!solo) return;
+    for (const e of Object.values(extra)) e.root.visible = false;
+    mula.root.visible = drac.root.visible = true;
+    mula.root.position.set(-1.3, 0, .9); drac.root.position.set(1.7, 0, -.9); drac.root.scale.setScalar(DRAC_K); mula.root.scale.setScalar(MULA_SCALE);
+    solo = null;
+    home.append(canvas);
+    W = 0;
+  }
+  return { frame, warm, show, back };
 }

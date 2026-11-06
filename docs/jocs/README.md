@@ -70,13 +70,47 @@ cannot be unloaded, and hand-releasing three.js, audio and canvas caches is frag
 ```
 jocs/index.html                   menu
 jocs/<game>/index.html            loads only its game
-src/jocs/shared/                  only what at least two games use
+packages/plassa/src/                  only what at least two games use
 src/jocs/games/<game>/            a game never imports from another game
 public/jocs/<game>/               a game's images
 tests/jocs/
 ```
 
 Each game page repeats the main page's viewport, `theme-color`, manifest and Apple tags.
+
+## Shared base
+
+Plassa, `packages/plassa/` (its README; games import `#plassa/<file>`), is the mini-games' own library: every game page stands on it, and mulassa.cat (the main game) does
+not use it yet. It was built from mulassa.cat's pieces, copied and consolidated, and is proven on the games first;
+once several games run on it, mulassa.cat moves onto it and drops its own copies. Until then both exist on purpose:
+the main game stays exactly as it is. **A game never copies a base piece; if the base lacks it, add it to the base**
+(from mulassa.cat's version when it has one) and use it from the game. The how-to is the skill
+`.agents/skills/mulassacat-minijoc/SKILL.md`. Its future name is **Plassa**: what it will hold (the games selector as the
+home page, one account and social layer for every game, general and per-game settings) and what each piece's state is
+are in `packages/plassa/docs/inventari.md`.
+
+- Look: `base.css` (tokens, `button`, `.round-btn`, the `.btn` family, `.sheet`, `.switch-row`, the «?» pill, «Juga»,
+  the focus ring) and `game.css` (the games' shell: fonts with Cyrillic and CJK, page, `.cover`, the boot screen and
+  its line, `#count`, the end sheet's `.result`, the way back `a.exit`, the boards and player card, `#rotate`, the
+  scroll fade). A game's CSS sets only its colour tokens (`--accent`, `--button-gold-bg`, `--button-bg`, `--ink`,
+  `--sheet-color`, `--sheet-bg`, `--sheet-radius`, `--page-edge`, `--page-bg`, `--game`) and its own screens.
+- Interaction: `focus.js` (keyboard vs pointer, `<html data-keys>`), `sheet-keys.js` (arrows, Enter/Space and focus
+  recovery in the open cover), `ui-sound.js` (a blip on keyboard moves and every press), `backdrop.js` (a tap outside a
+  cover's sheet does what Escape does), `scroll-hint.js`, `gesture.js` (every tap or key), `double-tap.js`,
+  `tap-start.js` (the home waits for the tap its music needs).
+- The page's life: `page-leave.js` (hidden, blur, pagehide: a run pauses) and `page-audio.js` (one AudioContext: fade
+  before stopping, back on return and checked, iOS's audio session, a clock that stands still; reported to Sentry).
+- Boot: `mula-load.html` (the running Mulassa; vite.config.js puts it in a page's `<!-- mula-load -->` and inlines
+  `boot-watchdog.js`), `boot-lines.js` (mulassa.cat's loading lines and its memory of the ones seen), `boot.js`
+  (shader warmup), `errors.js` + `sentry-load.js`, `update-watch.js` + `update-rules.js`, `gpu-guard.js`, `quality.js`
+  + `render-quality.js`, `orientation.js`.
+- Words and state: `music-pref.js` (Plassa's one music switch, mulassa.cat's `menu-music` key), `words.js` (a game's `locales/*.json`) over `locale.js` (the saved language), `storage.js`, `best.js`,
+  `haptics.js`, `countdown.js`.
+- Imports: `packages/plassa/src/` reaches outside itself only for `core/` and data (`i18n/meta.json`, the loading lines'
+  `i18n/locales/*/boot.json`); mulassa.cat never imports it yet; a game never imports another game.
+- Copies of mulassa.cat kept in step until it moves onto the base: `storage`, `haptics`, `boot`, `double-tap`,
+  `errors`, `sentry-load`, `update-watch`, `update-rules`, `locale`, `focus`, `render-quality` (same code, other paths),
+  `mula-load.html` (ui/loader.js's art). The rest is consolidated from several of its modules (see each file's header).
 
 ## Steps
 

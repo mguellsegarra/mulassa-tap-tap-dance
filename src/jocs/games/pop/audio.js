@@ -1,17 +1,20 @@
 // The music (sequencer.js), the home's (menu-music.js) and the synthesized effects, on one context. A browser lets it sound
 // only after a tap on the page (Chrome also after one on mulassa.cat's games sheet that led here): unlock() is every tap.
 import { createSequencer, hz } from './sequencer.js';
-import { store } from '../../../platform/storage.js';
 import { fresh } from './fresh.js';
 import { audioClock } from '../../../platform/audio-clock.js';
 import { createMenuMusic } from './menu-music.js';
 import homeUrl from './menu-music.mp3?url';
 import homeLoop from './menu-music.json' with { type: 'json' };
 import { MELODY } from './melody.js';
+import { createPageAudio } from '#plassa/page-audio.js';
+import { musicPref } from '#plassa/music-pref.js';
 
-let on = store.get('pica-music') /* the game's first name, kept */ !== 'off', ctx = null, clock = null, seq = null, sfxBus = null, noise = null, timer = 0;
-let music = null, home = null, homeOn = false, out = null, hushT = 0; // out: everything's last gain, faded before a stop // music: on/off for everything musical; home: the home's music, homeOn while it should play
+musicPref.adopt('pica-music'); // Pop's own key until Plassa's one switch (the game's first name)
+let on = musicPref.get(), ctx = null, clock = null, seq = null, sfxBus = null, noise = null, timer = 0;
+let music = null, home = null, homeOn = false, out = null, life = null, hooks = {}; // out: everything's last gain (page-audio.js fades it) // music: on/off for everything musical; home: the home's music, homeOn while it should play
 let tune = null, offset = 0; // the run's conductor; audio time = game time + offset
+let armed = false; // from «Juga»'s tap (the 3, 2, 1) to the run's pause or end: the run should sound
 
 // The tune is laid out by the game's frames (conductor.js), ahead of them; the timer queues it. The offset only grows: after
 // a stall the music waits for the game rather than bursting the notes it missed (and followGame keeps it on the game's clock).
@@ -23,7 +26,7 @@ const run = () => { clearInterval(timer); timer = setInterval(pump, 80); pump();
 export const musicOn = () => on;
 export function setMusicOn(v) {
   on = v;
-  store.set('pica-music', v ? 'on' : 'off');
+  musicPref.set(v);
   seq?.gain(v ? .9 : 0);
   music?.gain.setTargetAtTime(v ? 1 : 0, ctx.currentTime, .05);
 }
@@ -34,6 +37,7 @@ function audio() {
   clock = audioClock(ctx);
   out = ctx.createGain();
   out.connect(ctx.destination);
+  life = createPageAudio(ctx, out, { hearing: () => on && (homeOn || armed), stall: () => !!hooks.stall?.() });
   seq = createSequencer(ctx, out);
   sfxBus = ctx.createBiquadFilter();
   sfxBus.type = 'lowpass';
@@ -48,52 +52,36 @@ function audio() {
   home = createMenuMusic(ctx, music, { url: homeUrl, loop: homeLoop });
   return true;
 }
-// A stopped context cut its sound mid-wave (a click, and on waking the rest of a note «escaped»): everything fades out over a
-// few ms first, and back in on waking.
-function hush() {
-  if (!ctx) return;
-  out.gain.setTargetAtTime(0, ctx.currentTime, .015);
-  clearTimeout(hushT);
-  hushT = setTimeout(() => ctx.suspend(), 80);
-}
-function wake() {
-  clearTimeout(hushT);
-  const p = ctx.resume();
-  out.gain.cancelScheduledValues(ctx.currentTime);
-  out.gain.setTargetAtTime(1, ctx.currentTime, .02);
-  return p;
-}
 // every tap or key: the first one the browser counts lets the context run (a suspended one stays as it is)
-export function unlock() {
-  if (ctx?.state === 'suspended' && homeOn) wake(); // never a paused run's (its menu is tapped too)
-}
+export const unlock = () => life?.gesture(); // never a paused run's: nothing should sound then (its menu is tapped too)
+// main.js: what a stalled clock does to the game (page-audio.js); watch() each frame
+export const audioPage = h => { hooks = h; };
+export const watchAudio = now => life?.watch(now);
 // the home: its music, as soon as the browser lets it sound (Chrome may at once, coming from the games sheet's tap)
 export function startHomeMusic() {
   if (!audio()) return;
   homeOn = true;
   home.play();
-  wake().catch(() => {}); // refused without a tap yet: unlock() asks again on the first one
+  life.resume(); // refused without a tap yet: unlock() asks again on the first one
 }
 export function stopHomeMusic() {
   homeOn = false;
   home?.stop();
 }
-// a hidden page: the home's music stops with it and comes back with it (a run pauses on its own, main.js)
-document.addEventListener('visibilitychange', () => {
-  if (!homeOn || !ctx) return;
-  if (document.hidden) hush(); else wake();
-});
+// a hidden page: page-audio.js stops the sound and brings it back (a run pauses: page-leave.js, main.js)
 // inside «Juga»'s tap, before the 3, 2, 1: the home's music goes and the context may run (iOS needs that tap's gesture)
 export function armAudio() {
   if (!audio()) return;
   stopHomeMusic();
-  wake();
+  armed = true;
+  life.wake();
 }
 // inside the tap that starts a game (or after armAudio): browsers only let audio start from a gesture
 export function startMusic(conductor) {
   if (!audio()) return;
   stopHomeMusic();
-  wake();
+  armed = true;
+  life.wake();
   tune = conductor;
   offset = ctx.currentTime + LEAD; // game time 0 is queued now; at() keeps every note a little ahead of the clock
   clock.run();
@@ -103,6 +91,7 @@ export function startMusic(conductor) {
   run();
 }
 export function stopMusic() {
+  armed = false;
   if (!seq) return;
   clearInterval(timer);
   seq.stop();
@@ -118,10 +107,12 @@ export function followGame(t) {
 export const slowMusic = v => seq?.slow(v);
 export function pauseMusic() {
   clearInterval(timer);
-  hush();
+  armed = false;
+  life?.hush();
 }
 export function resumeMusic() {
-  if (ctx) wake();
+  armed = true;
+  life?.wake();
   if (seq) run();
 }
 
@@ -163,6 +154,8 @@ export const SFX = {
   // the campanar: a low bell in the chord's key, its inharmonic partials ringing long; and a lift when the slow time ends
   bell: () => { const f = hz(48 + seq.tonesNow()[0]); [[1, .3, 2.6], [2, .14, 1.8], [2.4, .1, 1.4], [3, .07, 1], [4.2, .04, .7]].forEach(([k, v, d]) => tone(f * k, d, 'sine', v)); },
   unbell: () => { const [a, b, c] = seq.tonesNow(); [c, b, a + 12].forEach((pc, i) => tone(hz(72 + pc) * .5, .16, 'triangle', .1, hz(72 + pc), i * .05)); },
+  // the base's UI blip (packages/plassa/src/ui-sound.js): a press or a keyboard move; never queued while the browser holds the sound
+  ui: () => { if (ctx?.state === 'running') tone(880, .04, 'triangle', .06); },
   wrong: () => tone(180, .35, 'triangle', .2, 70),
   // the 3, 2, 1: the Ball de la Mulassa's first three notes (melody.js: G, G, C), each on a kick (the sequencer's, harder);
   // the 1 a little louder

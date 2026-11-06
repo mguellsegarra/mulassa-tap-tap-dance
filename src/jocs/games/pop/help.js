@@ -1,7 +1,7 @@
 // «Com es juga»: what to tap and what never to tap, two columns of the figures with their one line (fig.*, tiny.*). The first
 // time a player taps «Juga» it comes on the way to the game, once on this device; after that it only opens from «Com es juga?»
 // on the home. One big button, no cross.
-import { store } from '../../../platform/storage.js';
+import { store } from '#plassa/storage.js';
 import { COMBO_MAX } from './rules.js';
 
 const SEEN = 'pop-howto-seen';

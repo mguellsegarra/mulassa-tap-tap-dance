@@ -7,8 +7,8 @@ import { createTiles } from './board-tiles.js';
 import { createBlast } from './board-blast.js';
 import { createCarretilla } from './board-carretilla.js';
 import { frameBoard, PITCH, PITCH_Z, FIG_H } from './board-framing.js';
-import { waitForWarmup, linkPrograms } from '../../../platform/boot.js';
-import { LOW, pixelRatio } from './quality.js';
+import { waitForWarmup, linkPrograms } from '#plassa/boot.js';
+import { LOW, pixelRatio } from '#plassa/quality.js';
 
 const BOMB_K = .7; // the petard's size on its cell
 
@@ -246,7 +246,7 @@ export function createBoard(canvas) {
     camera.position.set(camBase.x + Math.sin(time * 71) * sh, camBase.y + Math.sin(time * 83) * sh, camBase.z + Math.cos(time * 67) * sh);
     renderer.render(scene, camera);
   }
-  // The shaders, compiled off the main thread and linked a few ms at a time, like the main game's boot (platform/boot.js):
+  // The shaders, compiled off the main thread and linked a few ms at a time, like the main game's boot (plassa/boot.js):
   // the first frame paying for them all held the thread long enough to freeze the boot screen's Mulassa.
   const warm = () => waitForWarmup(() => renderer.compileAsync(scene, camera).then(() => linkPrograms(renderer.info.programs)));
 

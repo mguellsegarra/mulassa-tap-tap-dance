@@ -25,6 +25,7 @@ const PYTHON = [
 const files = [];
 const walk = dir => { for (const f of readdirSync(dir)) { const p = join(dir, f); if (statSync(p).isDirectory()) walk(p); else if (p.endsWith('.mjs')) files.push(p); } };
 walk(join(root, 'tests'));
+walk(join(root, 'packages/plassa/tests')); // Plassa's own (packages/plassa/README.md)
 const imported = new Set([fileURLToPath(import.meta.url)]);
 for (const f of files) for (const [, spec] of readFileSync(f, 'utf8').matchAll(/(?:^import\s+|\sfrom\s+|import\(\s*)'(\.{1,2}\/[^']+\.mjs)'/gm)) imported.add(resolve(dirname(f), spec));
 const found = files.filter(f => !imported.has(f)).map(f => relative(root, f)).filter(f => !FIRST.includes(f)).sort();

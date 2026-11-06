@@ -4,11 +4,12 @@ import { newGame, tick } from './rules.js';
 import { createRun, TICKS_PER_S } from './run.js';
 import { startMusic, stopMusic, pauseMusic, resumeMusic, followGame, startHomeMusic, armAudio, SFX } from './audio.js';
 import { BOT_FROM, botTap } from './autoplay.js';
-import { haptic } from '../../../platform/haptics.js';
+import { haptic } from '#plassa/haptics.js';
 import { END_SHEET_MS } from './results.js';
 import { best } from './best.js';
 import { level } from './level.js';
 import { RANKING } from './ranking-ui.js';
+import { createCountdown } from '#plassa/countdown.js';
 
 const COLORS = { hit: ['#c0283c', '#d9a521', '#fff3d6', '#1f5c33'], goodie: ['#f5c518', '#fff3d6', '#ffe066'] };
 const layout = () => (innerWidth > innerHeight ? { cols: 6, rows: 4 } : { cols: 4, rows: 6 });
@@ -22,33 +23,20 @@ const BELL_FROM = +(params.get('campanar') || 150);
 const CARR = import.meta.env.DEV && params.has('carretilla');
 // A run starts on a 3, 2, 1, .6 s each (the owner's pace: a beat and a half at the tune's opening 150 BPM). The run's clock
 // only starts after it: the server's replay (pop-score) never sees the count.
-const EACH = .6, COUNT = 3 * EACH;
+const EACH = .6;
 
 // booted(): the boot screen is gone, so the home may ask the board for the player's place
 export function createFlow({ board, hero, hud, results, rankingUI, t, booted }) {
   const $ = id => document.getElementById(id);
   let run = null, game = null, mode = 'menu', endTimer = 0, clock = 0, bellAt = 0; // clock: the run's play time, in seconds
   let carrAt = 3, burnt = [], chordPts = 0; // carrAt: the dev carretilla's next time; burnt: the Mulassas the carretilla is taking
-  let countT = 0, counted = 0, begun = false; // the 3, 2, 1's time left, the number shown; begun: the run's music has started
-  const count = $('count');
-  function countFrom3() { countT = COUNT; counted = 0; mode = 'count'; armAudio(); }
-  function countStep(dt) {
-    countT -= dt;
-    const n = Math.ceil(countT / EACH - 1e-6);
-    if (n > 0 && n !== counted) {
-      counted = n;
-      count.hidden = false;
-      const b = count.firstChild;
-      b.textContent = n;
-      b.style.animation = 'none'; void b.offsetWidth; b.style.animation = ''; // the pop again, for each number
-      SFX.count(n);
-    }
-    if (countT > 0) return;
-    count.hidden = true;
+  let begun = false; // the run's music has started
+  const count = createCountdown($('count'), { each: EACH, beat: SFX.count, done: () => {
     mode = 'play';
     if (begun) resumeMusic(); else startMusic(run.tune); // after a pause the tune goes on where it stopped
     begun = true;
-  }
+  } });
+  function countFrom3() { count.start(); mode = 'count'; armAudio(); }
   // a goodie's word over its cell: the calçot's are its points (rules.js: ×5 the level's)
   const word = (kind, gained) => (kind === 'calcot' ? `+${gained}` : t(`word.${kind}`));
 
@@ -127,7 +115,7 @@ export function createFlow({ board, hero, hud, results, rankingUI, t, booted }) 
 
   function pause() {
     if (mode !== 'play' && mode !== 'count') return;
-    count.hidden = true;
+    count.stop();
     mode = 'paused';
     pauseMusic();
     $('pause-menu').hidden = false;
@@ -148,7 +136,7 @@ export function createFlow({ board, hero, hud, results, rankingUI, t, booted }) 
   // dt: this frame's seconds, already capped by main.js so a stalled tab does not burn the fuses
   function step(dt) {
     if (mode === 'ending') tick(game, dt);
-    if (mode === 'count') countStep(dt);
+    if (mode === 'count') count.step(dt);
     if (mode !== 'play') return;
     clock += dt;
     run.until(Math.floor(clock * TICKS_PER_S)); // the rules' fixed steps this frame has reached

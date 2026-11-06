@@ -18,6 +18,7 @@ This file holds the rules that apply to every task. Read the page for the area y
 | UI conventions, selector, sheets, loading, safe areas | `docs/agents/ui.md` |
 | Dances, cameras, crowd, frame pacing, mobile GPUs, DOM blocking costs, GPU context loss and canvas caches | `docs/agents/graphics.md` |
 | Music style and audio rules | `docs/agents/audio.md` |
+| Mini-games: their pages, the shared base `packages/plassa/src/` (look, keyboard, UI sound, boot) | `docs/jocs/README.md` |
 
 ## T3 conversations: no automatic messages between agents
 
@@ -95,6 +96,7 @@ instructions have propagated through Git or copy them into unrelated projects.
 | A figure's colla, the crowd around it and its own festa effects | `.agents/skills/mulassacat-colla-festa/SKILL.md` |
 | Selector vector portraits, pixel portraits and pending silhouettes | `.agents/skills/mulassacat-miniatures/SKILL.md` |
 | Making an approved figure playable on every screen | `.agents/skills/mulassacat-integracio-figura/SKILL.md` |
+| Starting or touching any mini-game: the shared base in `packages/plassa/src/` (a game never copies a base piece; add it to the base) | `.agents/skills/mulassacat-minijoc/SKILL.md` |
 | **Any UI change or proposal (mandatory):** centred, equal margins, proportional and equidistant spacing, one card style per role; measured at several viewports | `.agents/skills/uipolish/SKILL.md` |
 | UI changes affecting interaction, focus, layout or loading states; before reporting any visual change; the owner's screen recordings | `.agents/skills/mulassacat-validacio-visual/SKILL.md` |
 | Proposals, review pages, prototypes and decisions with the owner | `.agents/skills/mulassacat-revisio-amb-marc/SKILL.md` |

@@ -5,7 +5,9 @@ import { readFileSync, existsSync } from 'node:fs';
 import vm from 'node:vm';
 
 const html = readFileSync(new URL('../../pop/index.html', import.meta.url), 'utf8');
-const script = html.match(/<script id="boot-watchdog">([\s\S]*?)<\/script>/)[1];
+// the games' shared watchdog (packages/plassa/src/boot-watchdog.js), inlined into the page by vite.config.js
+const script = readFileSync(new URL('../../packages/plassa/src/boot-watchdog.js', import.meta.url), 'utf8');
+assert.ok(html.indexOf('<script id="boot-watchdog" src="/packages/plassa/src/boot-watchdog.js"></script>') > 0, 'the page asks for the shared watchdog');
 assert.ok(html.indexOf('id="boot-watchdog"') < html.indexOf('type="module"'), 'the watchdog runs before the module');
 
 function page({ ready = false, clock = Date } = {}) {
@@ -33,7 +35,7 @@ assert.match(p.parts.h2.textContent, /Ups/, 'Catalan before the catalogue is in'
 assert.match(p.boot.innerHTML, /mula-load sad/, 'the crying Mulassa');
 
 p = page();
-p.win.__popBootWords = { title: 'Oops', text: 'Reload', retry: 'Retry' };
+p.win.__gameBootWords = { title: 'Oops', text: 'Reload', retry: 'Retry' };
 p.listeners.unhandledrejection({});
 assert.deepEqual([p.parts.h2.textContent, p.parts.button.textContent], ['Oops', 'Retry'], "the player's language once main.js has it");
 

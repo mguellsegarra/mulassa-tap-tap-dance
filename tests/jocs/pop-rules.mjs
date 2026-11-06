@@ -146,7 +146,7 @@ test('a cell where a Mulassa is still burning gets nothing new until she is gone
 });
 
 test('phones want portrait, tablets landscape, a mouse anything', async () => {
-  const { wrongOrient } = await import('../../src/jocs/games/pop/orientation.js');
+  const { wrongOrient } = await import('#plassa/orientation.js');
   const phone = { coarse: true, shortSide: 375 }, tablet = { coarse: true, shortSide: 768 }, mouse = { coarse: false, shortSide: 800 };
   assert.equal(wrongOrient({ ...phone, w: 375, h: 667 }), false);
   assert.equal(wrongOrient({ ...phone, w: 667, h: 375 }), true);

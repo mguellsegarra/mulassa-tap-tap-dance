@@ -6,33 +6,42 @@ import { createHud } from './hud.js';
 import { createResults } from './results.js';
 import { createFlow } from './flow.js';
 import { setupRankingUI } from './ranking-ui.js';
-import { setupOrientation } from './orientation.js';
+import { setupOrientation } from '#plassa/orientation.js';
 import { t, applyWords } from './i18n.js';
-import { setMusicOn, musicOn, startHomeMusic, unlock } from './audio.js';
-import { guardGpu } from './gpu-guard.js';
-import { errors } from '../../../services/errors.js';
-import { watchUpdates } from '../../../services/update-watch.js';
-import { stopDoubleTapZoom } from '../../../platform/double-tap.js';
-import { waitForTap } from './splash.js';
+import { setMusicOn, musicOn, startHomeMusic, unlock, audioPage, watchAudio, SFX } from './audio.js';
 import { setupLevelStep } from './level-step.js';
 import { setupHelp } from './help.js';
+import { guardGpu } from '#plassa/gpu-guard.js';
+import { errors } from '#plassa/errors.js';
+import { watchUpdates } from '#plassa/update-watch.js';
+import { stopDoubleTapZoom } from '#plassa/double-tap.js';
+import { waitForTap } from '#plassa/tap-start.js';
+import { onEveryGesture } from '#plassa/gesture.js';
+import { setUiSound, soundOnPress } from '#plassa/ui-sound.js';
+import { setupSheetKeys } from '#plassa/sheet-keys.js';
+import { closeOnBackdrop } from '#plassa/backdrop.js';
+import { scrollHints } from '#plassa/scroll-hint.js';
+import { bootLines } from '#plassa/boot-lines.js';
+import { onPageLeave } from '#plassa/page-leave.js';
+import '#plassa/focus.js'; // keyboard vs pointer: <html data-keys> while keys drive the page
 
 const $ = id => document.getElementById(id);
-// the error card's words in the player's language, for index.html's watchdog (Catalan until here)
-window.__popBootWords = { title: t('fail.title'), text: t('fail.text'), retry: t('fail.retry') };
+// the error card's words in the player's language, for the shared boot watchdog (Catalan until here)
+window.__gameBootWords = { title: t('fail.title'), text: t('fail.text'), retry: t('fail.retry') };
 const board = createBoard($('game'));
 const hero = createHero($('menu-hero'));
 let booted = false; // the boot screen is up: nothing is drawn under it (see the end of this file)
+bootLines($('boot-line'), () => booted); // its funny lines while it lasts
 // The public board (ranking-ui.js). The dev bot's runs start at BOT_FROM points: they are not the game's and never go.
 const rankingUI = setupRankingUI({ t, focusBack: () => $('menu-best').focus({ focusVisible: false }) });
 const hud = createHud({ board, t });
 const flow = createFlow({ board, hero, hud, results: createResults({ board, hero, t, rankingUI }), rankingUI, t, booted: () => booted });
-errors.context(() => ({ game: 'pop', state: flow.mode, booted })); // crash reports as the main game's (services/errors.js)
+errors.context(() => ({ game: 'pop', state: flow.mode, booted })); // crash reports as the main game's (plassa/errors.js)
 // a lost GPU pauses a run (it would go on unseen); back, a paused board is drawn again; gone for good, the error card
 guardGpu([$('game'), $('menu-hero')], {
   lost: () => { errors.report('webgl-context-lost', { game: 'pop', screen: flow.mode }); flow.pause(); },
   restored: () => { if (flow.mode === 'paused' || flow.mode === 'over') board.frame(0); }, // not redrawn otherwise
-  dead: () => { errors.report('webgl-not-restored', { game: 'pop' }); flow.pause(); window.__popFail?.(t('lost.title'), t('lost.text'), 'webgl-not-restored'); },
+  dead: () => { errors.report('webgl-not-restored', { game: 'pop' }); flow.pause(); window.__gameFail?.(t('lost.title'), t('lost.text'), 'webgl-not-restored'); },
 });
 // a newer deploy reloads the page, but only on the home or the end sheet with nothing open over them
 watchUpdates(() => (flow.mode === 'menu' || flow.mode === 'over') && !document.querySelector('.cover:not([hidden]):not(#boot):not(#end-menu)'));
@@ -59,19 +68,33 @@ const musicBtns = document.querySelectorAll('.music-btn'); // the HUD's and the 
 const syncMusicBtn = () => { for (const b of musicBtns) { b.setAttribute('aria-pressed', musicOn()); b.querySelector('.music-off').toggleAttribute('hidden', musicOn()); } };
 for (const b of musicBtns) b.addEventListener('click', () => { setMusicOn(!musicOn()); syncMusicBtn(); });
 syncMusicBtn();
-addEventListener('keydown', e => { if (e.key !== 'Escape') return; if (rankingUI.escape()) return; if (levelStep.isOpen()) return levelStep.close(); if (help.isOpen()) return help.close(); if (flow.mode === 'play' || flow.mode === 'count') flow.pause(); else flow.resume(); });
+const inRun = () => flow.mode === 'play' || flow.mode === 'count';
+// Escape, or a tap on a cover's backdrop (backdrop.js): a board, the level step or the help closes, a run pauses, a pause resumes
+const back = () => {
+  if (rankingUI.escape()) return;
+  if (levelStep.isOpen()) return levelStep.close();
+  if (help.isOpen()) return help.close();
+  if (inRun()) flow.pause(); else flow.resume();
+};
+addEventListener('keydown', e => { if (e.key === 'Escape') back(); });
+closeOnBackdrop(back);
+scrollHints([$('board-list')]);
 addEventListener('resize', flow.resized);
 stopDoubleTapZoom(); // a quick second tap (the board is all quick taps) zoomed the page on an iPad
-addEventListener('pointerdown', unlock, true); // the first tap the browser counts lets the home's music sound
-addEventListener('keydown', unlock, true);
-addEventListener('touchend', unlock, true); // iOS counts a touch's end as the tap, not its start
-document.addEventListener('visibilitychange', () => { if (document.hidden) flow.pause(); });
-addEventListener('blur', () => flow.pause()); // alt-tab or a click on another window: the page stays visible, the player is gone
+onEveryGesture(unlock); // the first tap the browser counts lets the home's music sound
+// the base's UI sound on every press and keyboard move, and the arrows in the open cover (the home when none is)
+setUiSound(SFX.ui);
+soundOnPress();
+setupSheetKeys({ top: () => [...document.querySelectorAll('.cover:not([hidden]):not(#boot)')].pop() ?? (flow.mode === 'menu' ? $('menu') : null) });
+// leaving the page (hidden, blur, pagehide) pauses a run; so does a run whose audio clock stands still (page-audio.js)
+onPageLeave(flow.pause);
+audioPage({ stall: () => inRun() && (flow.pause(), true) });
 
 let last = performance.now(), behind = 0, odd = false; // behind: the home backdrop's time not drawn yet
 function frame(now) {
   const dt = Math.max(0, Math.min(.05, (now - last) / 1000)); // a stalled tab must not burn the fuses; the first frame's stamp can predate `last`
   last = now;
+  watchAudio(now);
   flow.step(dt);
   // the board: every frame in a run; on the home, under its blur, every other one (the hero is drawn too); a run's end,
   // until its blast has played out
@@ -121,6 +144,7 @@ requestAnimationFrame(() => {
   document.documentElement.classList.add('ready');
   errors.start(); // the SDK loads when the browser is idle (nothing at all without a DSN)
   if (flow.mode === 'menu') startHomeMusic();
-  waitForTap({ label: t('home.tap'), onGo: unlock }); // the tap the home's music needs (splash.js)
+  // the tap the home's music needs (tap-start.js): the live Mulassa and Drac fade, the title glides to its place
+  waitForTap({ label: t('home.tap'), onGo: unlock, into: $('play').parentElement, art: document.querySelector('#menu .c-art'), title: document.querySelector('#menu .pop-title') });
   setTimeout(() => { $('boot').hidden = true; }, 400); // kept, still: the error card comes up in it (index.html's watchdog)
 });

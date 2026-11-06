@@ -1,7 +1,7 @@
 // A run's end: the blast, then the end sheet: what ended it, alive (hero.js solo) under a title of its own, the score, this
 // device's best and the board's answer (ranking-ui.js). flow.js says when.
 import { stopMusic, SFX } from './audio.js';
-import { haptic } from '../../../platform/haptics.js';
+import { haptic } from '#plassa/haptics.js';
 import { RANKING } from './ranking-ui.js';
 import { best, raiseBest } from './best.js';
 

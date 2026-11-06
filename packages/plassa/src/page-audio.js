@@ -32,15 +32,15 @@ export function createPageAudio(ctx, out, { hearing, stall = () => false }) {
   }
   function hush() {
     const t = ctx.currentTime;
-    out.gain.cancelScheduledValues(t); out.gain.setTargetAtTime(0, t, .006);
+    out.gain.cancelScheduledValues(t); out.gain.setTargetAtTime(0, t, .015); // Pop's fade, tuned on an iPhone: no click on a hidden tab (mulassa.cat's is 6 ms / 40 ms)
     clearTimeout(hushT);
     session(false); // hidden: 'auto', in case iOS freezes the timer below; never the route restart, which resumes
-    hushT = setTimeout(() => ctx.suspend(), 40);
+    hushT = setTimeout(() => ctx.suspend(), 80);
   }
   function unhush() {
     clearTimeout(hushT);
     const t = ctx.currentTime;
-    out.gain.cancelScheduledValues(t); out.gain.setTargetAtTime(1, t, .01);
+    out.gain.cancelScheduledValues(t); out.gain.setTargetAtTime(1, t, .02);
   }
   // without a gesture: allowed once the page has been tapped (Chrome also right after the tap that led here)
   function resume() {

@@ -1,6 +1,6 @@
 /* Mulassa Pop's own screens: the board, the HUD, the home and its cards, the wait for the first tap. The look is the base
    (packages/plassa/src/base.css, game.css, linked first by pop/index.html); this file only sets Pop's colour tokens. */
-:root { --accent: #ff7ac6; --button-gold-bg: linear-gradient(180deg, #ff9ed6 0%, #ff7ac6 55%, #e85aae 100%); --button-bg: #24223fe8; --ink: #24112e; --sheet-color: #24223f; --sheet-bg: linear-gradient(#3a2b4c, #24223f); --sheet-radius: 24px; --page-edge: #11152c; --page-bg: radial-gradient(ellipse at 50% 0, #53436b, #11152c 70%) #11152c; --game: #ff7ac6; }
+:root { --accent: #ff7ac6; --button-gold-bg: linear-gradient(180deg, #ff9ed6 0%, #ff7ac6 55%, #e85aae 100%); --button-bg: #24223fe8; --ink: #24112e; --sheet-color: #24223f; --sheet-bg: linear-gradient(#3a2b4c, #24223f); --sheet-radius: 24px; --pill-border: #ff7ac6aa; --page-edge: #11152c; --page-bg: radial-gradient(ellipse at 50% 0, #53436b, #11152c 70%) #11152c; --game: #ff7ac6; }
 canvas#game { position: fixed; left: 0; top: 0; width: 100%; height: 100dvh; touch-action: none; }
 .board-flash { position: fixed; inset: 0; z-index: 1; opacity: 0; pointer-events: none; }
 /* the bell's slow time (main.js setSlow): a cold frost closing in from the edges, under the HUD */
@@ -20,6 +20,7 @@ body.slow::after { opacity: 1; transition-duration: .15s; animation: chill-in .5
 #hud-best small { font: 700 10px/1 'Baloo 2', system-ui, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: #ff7ac6; } /* a bare second number read as a fraction */
 #best { margin-top: 4px; font-size: 14px; color: #2a1a10; font-weight: 800; }
 #chips { position: absolute; top: 56px; left: 0; right: 0; display: flex; justify-content: center; gap: 8px; }
+#combo { position: fixed; z-index: 2; left: 0; right: 0; text-align: center; font: 800 26px/1 'Baloo 2', system-ui, sans-serif; color: #ffe066; -webkit-text-stroke: .16em #2a1a10; paint-order: stroke fill; pointer-events: none; } /* a chord (hud.js combo): under the score, top set from the HUD's edge */
 .chip { display: inline-flex; align-items: center; gap: 8px; padding: 4px 6px 4px 4px; border-radius: 40px; background: #24223f; box-shadow: 0 0 0 2px #7ec4ff, 0 0 18px #7ec4ff88; color: #fff3d6; font: 800 17px/1 'Baloo 2', system-ui, sans-serif; white-space: nowrap; }
 .chip img { width: 30px; height: 30px; object-fit: contain; }
 .chip b { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: #7ec4ff; color: #16243f; font-size: 16px; }
@@ -29,10 +30,6 @@ body.slow::after { opacity: 1; transition-duration: .15s; animation: chill-in .5
 .logo { display: block; flex: none; width: min(300px, 80vw); height: auto; overflow: visible; }
 :root:not(.ready) #menu { visibility: hidden; } /* whole under the boot screen when it fades: a fading blur shows the board sharp */
 /* what ended the run: the figure's home portrait and why, so a red Drac tapped in a hurry is no mystery */
-.end-why { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 8px 0 0; font-size: 16px; font-weight: 700; color: #fff3d6; }
-.end-why span { line-height: 1.2; text-wrap: balance; } /* two tight lines on a narrow phone, not one word left alone */
-.end-why img { width: 44px; height: 44px; object-fit: contain; flex: none; }
-@media (max-width: 359px) { .end-why { flex-direction: column; gap: 4px; text-align: center; } } /* a narrow sheet wraps the line, and a row of picture and two lines leans left */
 
 /* The home (the Mulassa Games hero, after mulassa.cat's games sheet): logo, pitch, Juga and the record, the red Mulassa big;
    under it a row of cards, one per figure, that scrolls on a phone and holds all eight on a wide screen. */
@@ -125,11 +122,51 @@ button.c-best:enabled { cursor: pointer; }
 .sp-home .c-art { flex: 1 1 0; height: auto; }
 .sp-home .c-art canvas { --k: 1.35; } /* bigger while they wait */
 .sp-home .c-play-row { order: 3; }
-.sp-home .c-pitch, .sp-home .c-play-row > :not(#tap-start), .sp-home .c-row, .sp-home #back, .sp-home #menu-music { display: none; }
+.sp-home .c-pitch, .sp-home .c-play-row > :not(#tap-start), .sp-home .c-row, .sp-home #back, .sp-home #menu-music, .sp-home #help { display: none; }
 #tap-start { min-width: 260px; min-height: 60px; padding: 8px 32px; border: 2px solid #f5c518; border-radius: 12px; background: linear-gradient(180deg, #ffe066 0%, #f5c518 55%, #dfad13 100%); color: #2a1a10; font: 800 24px 'Baloo 2', system-ui, sans-serif; box-shadow: 0 6px 0 #8a6a12, 0 16px 40px #0008; animation: sp-breathe 1.6s ease-in-out infinite; }
 /* after the tap: what was hidden comes in, a little after the title and the figures have started to move */
-.sp-in .c-pitch, .sp-in .c-play-row > *, .sp-in .c-row, .sp-in #back, .sp-in #menu-music { animation: sp-fade .45s ease-out .15s both; }
+.sp-in .c-pitch, .sp-in .c-play-row > *, .sp-in .c-row, .sp-in #back, .sp-in #menu-music, .sp-in #help { animation: sp-fade .45s ease-out .15s both; }
 /* the live figures fade where they wait (tap-start.js), then in on the home (a canvas glided while resized looked warped) */
 .sp-in .c-art { animation: sp-fade .4s ease-out both; }
 @keyframes sp-fade { from { opacity: 0; translate: 0 8px; } }
 @media (prefers-reduced-motion: reduce) { #tap-start, .sp-in .home * { animation: none !important; } }
+/* the level step (level-step.js): the main game's segmented levels (level-seg.css) in Pop's sheet */
+.level-sheet { --sel-muted: #e8d8b8; text-align: center; }
+.level-sheet h2 { margin: 0 0 16px; }
+.level-sheet .sel-seg { margin: 0 auto; }
+.level-sheet .sel-seg .btn { position: relative; min-height: 72px; font-size: 18px; }
+/* «Com es juga?» (help.js) is Plassa's pill (base.css .howto-pill) in Pop's tokens; its softer border is --pill-border */
+/* «Com es juga» (help.js): TOCA / MAI, two columns of the figures with what each one does (O3) */
+.help-sheet { width: min(420px, 100%); text-align: center; }
+.help-sheet h2 { margin: 0 0 12px; }
+.help-legend { --tap: #ff7ac6; --no: #ff8a7a; --gold: #f5c518; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; text-align: left; }
+.help-legend .col { display: grid; grid-template-rows: auto 1fr; gap: 6px; padding: 10px 6px; border-radius: 16px; background: color-mix(in srgb, var(--tone) 14%, #1a1630); box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--tone) 55%, transparent); }
+.help-legend .col.tap { --tone: var(--tap); } .help-legend .col.no { --tone: var(--no); }
+.help-legend .hd { display: flex; align-items: center; justify-content: center; gap: 6px; margin: 0; font-size: 17px; line-height: 1; letter-spacing: .05em; color: var(--tone); }
+.help-legend .rows { display: grid; align-content: center; gap: 6px; } /* the shorter column's rows sit in its middle */
+.help-legend .r { display: grid; grid-template-columns: 40px 1fr; align-items: center; gap: 6px; min-height: 52px; padding: 2px 4px; border-radius: 10px; background: #0003; }
+.help-legend .face { position: relative; display: grid; place-items: end center; width: 40px; height: 48px; }
+.help-legend .face img { max-width: 40px; max-height: 46px; }
+.help-legend .no .face::after { content: ''; position: absolute; inset: 4px 2px 0; background: linear-gradient(135deg, transparent calc(50% - 1.5px), var(--no) calc(50% - 1.5px) calc(50% + 1.5px), transparent calc(50% + 1.5px)); }
+.help-legend .star { position: absolute; top: -2px; right: -4px; width: 16px; height: 16px; border-radius: 50%; background: var(--gold); color: #2a1a10; font-size: 11px; line-height: 16px; text-align: center; }
+/* 320 px phones: «Campanar» and a 40 px figure do not fit a column; a smaller figure keeps the two columns equal */
+@media (max-width: 359px) {
+  .help-legend .r { grid-template-columns: 32px 1fr; gap: 4px; min-height: 46px; }
+  .help-legend .face { width: 32px; height: 40px; }
+  .help-legend .face img { max-width: 32px; max-height: 38px; }
+  .help-legend .star { right: -1px; }
+}
+.help-legend .combo { grid-column: 1 / -1; display: grid; gap: 4px; justify-items: center; margin-top: 4px; text-align: center; } /* the chord combo (help.js combo, rules.js CHORD): no box, the in-game lettering */
+.help-legend .combo p { margin: 0; font-size: 14px; line-height: 1.15; color: #e8d8b8; text-wrap: balance; }
+.help-legend .combo .x { display: flex; align-items: baseline; gap: 12px; font-weight: 800; line-height: 1; color: #ffe066; -webkit-text-stroke: .16em #2a1a10; paint-order: stroke fill; }
+.help-legend b { display: block; font-size: 14px; line-height: 1.05; } .help-legend b.extra { color: var(--gold); }
+.help-legend .r span span { display: block; font-size: 12px; line-height: 1.15; color: #e8d8b8; }
+/* a phone's home: the title, the live Mulassa and Drac big, Juga and the board; the figures' cards and the pitch are in «?» */
+@media (orientation: portrait) and (max-width: 700px) {
+  .home { grid-template-rows: 1fr; }
+  .home .c-row, .home .c-pitch { display: none; }
+}
+#end-menu .btn > svg { fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; } /* the end sheet's icons are drawn as lines */
+/* the end sheet's culprit, alive (hero.js solo, results.js) */
+#end-art { display: flex; align-items: center; justify-content: center; flex: 0 1 220px; width: min(320px, 100%); min-height: 120px; }
+#end-art canvas { width: 100%; height: 100%; }

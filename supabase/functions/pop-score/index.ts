@@ -2,7 +2,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 import { verifyRun, MAX_BYTES } from './verify.js';
 
 // Mulassa Pop's publication (docs/jocs/pop-ranking.md): verify the caller with Auth, let the database rate-limit them, play the
-// run again (verify.js) and record the score this replay reached. Only the service role may record (pop_gate, pop_record).
+// run again (verify.js) and record the points this replay reached. Only the service role may record (pop_gate, pop_record).
 const isPlayer = (user: { is_anonymous?: boolean; email_confirmed_at?: string | null } | null | undefined): boolean =>
   user?.is_anonymous === true || Boolean(user?.email_confirmed_at);
 // the database's reasons the page may show; anything else stays here
@@ -42,9 +42,9 @@ Deno.serve(async (req: Request) => {
     if (gate.error) { const r = reason(gate.error.message); return reply(STATUS[r] ?? 503, { error: r }); }
     const run = verifyRun(body);
     if (!run.ok) return reply(422, { error: run.error });
-    const rec = await admin.rpc('pop_record', { p_uid: uid, p_seed: run.seed, p_score: run.score, p_ticks: run.ticks });
+    const rec = await admin.rpc('pop_record', { p_uid: uid, p_seed: run.seed, p_score: run.points, p_ticks: run.ticks, p_hits: run.hits, p_level: run.level });
     if (rec.error) { const r = reason(rec.error.message); return reply(STATUS[r] ?? 503, { error: r }); }
     const row = rec.data?.[0];
-    return reply(200, { score: run.score, best: row.best, improved: row.improved, position: Number(row.position) });
+    return reply(200, { score: run.points, best: row.best, improved: row.improved, position: Number(row.position), hits: run.hits, level: run.level });
   } catch { return reply(503, { error: 'unavailable' }); }
 });

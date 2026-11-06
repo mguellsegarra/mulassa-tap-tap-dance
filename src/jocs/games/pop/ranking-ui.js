@@ -3,6 +3,8 @@
 // boards (src/ui/profile-notes.js): a guest's quieter, a confirmed address's with its check or chosen badge.
 import { RUN_VERSION } from './run.js';
 import { raiseBest } from './best.js';
+import { badgeName } from '../../../ui/badge-names.js';
+import { setupBadgeTip } from '../../../ui/badge-tip.js';
 
 const SUPABASE = !!import.meta.env.VITE_SUPABASE_URL;
 export const RANKING = SUPABASE || import.meta.env.DEV;
@@ -20,7 +22,7 @@ export function setupRankingUI({ t, focusBack }) {
   // mulassa.cat (/#nom-pop), which comes back here, and the run waits (ranking.keep) to go then.
   async function publish(run) {
     const line = $('end-rank'), name = $('end-name'), mine = ++sent;
-    const body = { v: RUN_VERSION, seed: run.seed, cols: run.game.cols, rows: run.game.rows, ticks: run.ticks, taps: run.log, score: run.game.score };
+    const body = { v: RUN_VERSION, seed: run.seed, level: run.level, cols: run.game.cols, rows: run.game.rows, ticks: run.ticks, taps: run.log, points: run.game.points, hits: run.game.hits };
     line.hidden = false; name.hidden = true; line.classList.remove('good');
     line.textContent = '\u00a0'; // the line's height is kept from the start: the answer fades in, nothing moves (no «sending…» swapped out)
     let m;
@@ -64,14 +66,24 @@ export function setupRankingUI({ t, focusBack }) {
     showPlace(place?.position, place?.score);
   }
 
-  // a player's name as the main boards show it, into `into`
+  // a player's name as the main boards show it, into `into`: a chosen badge says its name on a hover or a tap (the main game's
+  // badge-tip.js, its names from badge-names.js), the check otherwise
   function nameInto(into, p, { badgeArtOf, CHECK_SVG }) {
     into.append(el('span', `alias${p.verified ? '' : ' guest'}${p.released ? ' released' : ''}`, p.alias));
     if (!p.verified) return;
-    const art = badgeArtOf(p.badge_id), mark = el('span', art ? 'player-badge' : 'verified-check');
+    const art = badgeArtOf(p.badge_id), name = art && badgeName(p.badge_id, k => t(`badge.${k}`)), mark = el('span', art ? 'player-badge' : 'verified-check');
+    mark.setAttribute('role', 'img');
+    if (name) { mark.dataset.tip = name; mark.setAttribute('aria-label', name); }
     mark.innerHTML = art ?? CHECK_SVG; // our own markup, never the player's
     into.append(mark);
   }
+  setupBadgeTip();
+  // a row's points, then its taps and level, small (rules.js hits; the level's name as the main game's)
+  const scoreOf = r => {
+    const box = el('span', 'score');
+    box.append(el('b', '', r.score), el('small', '', `${r.hits ?? 0} ${t('rank.hits')} · ${t(`level.${r.level ?? 0}`)}`));
+    return box;
+  };
 
   function openBoard() {
     const list = $('board-list'), note = $('board-note'), req = ++boardReq;
@@ -87,7 +99,7 @@ export function setupRankingUI({ t, focusBack }) {
         who.addEventListener('click', () => openCard(r.public_id));
         who.append(el('i', '', r.position));
         nameInto(who, r, art);
-        who.append(el('b', '', r.score));
+        who.append(scoreOf(r));
         row.append(who);
         return row;
       };

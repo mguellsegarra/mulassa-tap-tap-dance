@@ -1,11 +1,11 @@
 // The 3D board: every cell's figure as instances (one per rig pivot), its tile, the camera that fits the board on any screen, and the tap-to-cell picking.
 import * as THREE from 'three';
-import { FUSE, BOMB_FUSE, BURN } from './rules.js';
 import { MULA_POSES, DRAC_POSES, MULA_SCALE, MULA_YAW, DRAC_K, DRAC_YAW, poseMula, poseDrac, mulaRig, dracRig, bake, bakeMulassa, bakeDrac, rigParts, redScales, greenVelvet } from './rigs.js';
 import { buildPopPetard, buildPopCalcot, buildPopCampanar, buildPopCarretilla, buildFuseBit, buildSpark, PETARD_FUSE, PETARD_SPARK } from './models.js';
 import { createSparks } from './board-sparks.js';
 import { createTiles } from './board-tiles.js';
 import { createBlast } from './board-blast.js';
+import { createCarretilla } from './board-carretilla.js';
 import { frameBoard, PITCH, PITCH_Z, FIG_H } from './board-framing.js';
 import { waitForWarmup, linkPrograms } from '#plassa/boot.js';
 import { LOW, pixelRatio } from '#plassa/quality.js';
@@ -62,9 +62,10 @@ export function createBoard(canvas) {
 
   const sparks = createSparks(scene), { burst: sparkBurst, flame, step: stepSparks, busy: sparksBusy } = sparks;
   const blast = createBlast(canvas, sparks, sky);
+  const fx = createCarretilla(sparks);
 
   const dummy = new THREE.Object3D(), col = new THREE.Color(), bit = new THREE.Matrix4(), at = new THREE.Matrix4(), flick = new THREE.Vector3();
-  let game = null, centres = [], screen = [], W = 1, H = 1, time = 0, trauma = 0, poses = [], seen = [], fireUntil = 0, burning = new Map();
+  let game = null, centres = [], screen = [], W = 1, H = 1, time = 0, trauma = 0, poses = [], seen = [], burning = new Map();
   const camBase = new THREE.Vector3();
   const insets = { top: 68, bottom: 8 };
 
@@ -76,7 +77,6 @@ export function createBoard(canvas) {
     centres = g.cells.map(c => cellPos(c.i));
     seen = g.cells.map(() => '');
     poses = g.cells.map(() => 0);
-    fireUntil = 0;
     burning = new Map();
     tiles.count = g.cells.length;
     slab.scale.set(g.cols * PITCH + .5, 1, g.rows * PITCH_Z + .5);
@@ -121,34 +121,24 @@ export function createBoard(canvas) {
   }
 
   const burst = (i, colors, n, power) => sparkBurst(centres[i], colors, n, power);
-  const FIRE_TIME = 1.1;
-  // The carretilla: every Drac turns on the nearest Mulassa and breathes fire; she chars, then goes.
-  function dragonFire() {
-    fireUntil = time + FIRE_TIME;
-    trauma = Math.min(1, trauma + .5);
+  // The carretilla (board-carretilla.js): every Mulassa out goes up, quickly; `origin` its cell. → each one's pop, seconds from now
+  function dragonFire(origin) {
+    trauma = Math.min(1, trauma + .35);
+    return fx.start(origin, [...burning.keys()], centres, time);
   }
   function burn(cell) {
-    burning.set(cell.i, poses[cell.i]); // her posture, while she chars (rules.js keeps the cell hers for BURN)
+    burning.set(cell.i, poses[cell.i]); // her posture, until she goes up (rules.js keeps the cell hers for BURN)
   }
-  const nearestBurning = (x, z) => {
-    let best = null, bd = Infinity;
-    for (const i of burning.keys()) {
-      const c = centres[i], d = Math.hypot(c.x - x, c.z - z);
-      if (d < bd) { bd = d; best = c; }
-    }
-    return best;
-  };
 
   // Everything goes up, the culprit first and then on (Ringo Tap's chain); the mix is board-blast.js's
-  function explodeAll(culprit) {
+  function explodeAll(culprit = Math.floor(centres.length / 2)) { // none when the run's time is up: from the middle
     blast.start(centres, culprit, screen[culprit], game.cols, PITCH, PITCH_Z, time);
     trauma = 1;
   }
 
   const back = t => { const s = 2.2, u = t - 1; return u * u * ((s + 1) * u + s) + 1; }; // overshoots a little
 
-  const headTip = new THREE.Vector3(), headDir = new THREE.Vector3();
-  function placeFigure(i, kind, cell, s, charred, blasted = 0) {
+  function placeFigure(i, kind, cell, s, blasted = 0) {
     if (s <= .001) return;
     const { x, z } = centres[i], ph = i * 1.73, t = time;
     let y = 0, ry = 0, rz = 0, sx = 1, sy = 1, jx = 0, jz = 0, urgent = 0;
@@ -156,8 +146,8 @@ export function createBoard(canvas) {
     if (kind === 'drac' || kind === 'dracFals') {
       sy = 1 + Math.sin(t * 2.4 + ph) * .025;
       sx = 2 - sy;
-    } else if (kind === 'mula' && !charred) {
-      urgent = Math.max(0, (1 - cell.left / FUSE - .5) * 2);
+    } else if (kind === 'mula') {
+      urgent = Math.max(0, (1 - cell.left / (cell.life || 1) - .5) * 2); // her own fuse (rules.js); 0 once she is gone
       y = Math.abs(Math.sin(t * 7 + ph)) * .32;
       rz = Math.sin(t * 7 + ph) * .1;
       sy = 1 + y * .25;
@@ -170,19 +160,13 @@ export function createBoard(canvas) {
       y = Math.abs(Math.sin(t * 5 + ph)) * .16;
       rz = Math.sin(t * 5 + ph) * .06;
     } else if (kind === 'petard') { // its fuse burns down; the last half, it shakes like a Mulassa
-      urgent = Math.max(0, (1 - cell.left / BOMB_FUSE - .5) * 2);
+      urgent = Math.max(0, (1 - cell.left / game.bombFuse - .5) * 2);
       y = .1 + Math.sin(t * 4 + ph) * .1;
       jx = Math.sin(t * 61 + ph) * .08 * urgent;
       jz = Math.cos(t * 53 + ph) * .08 * urgent;
-    } else if (!charred) {
+    } else {
       y = .1 + Math.sin(t * 4 + ph) * .1;
       ry = Math.sin(t * 2.2) * .5;
-    }
-    if (charred) { // burning: she stiffens and blackens, and shakes
-      const k = Math.min(1, (cell.age + BURN) / (BURN * .6));
-      col.setRGB(1 - k * .86, 1 - k * .88, 1 - k * .88);
-      jx = Math.sin(t * 47 + ph) * .05;
-      if (cell.age < 0 && Math.random() < .7) flame(x + (Math.random() - .5) * 1.8, .4 + Math.random() * 1.6, z + (Math.random() - .5) * 1.8, 0, 3 + Math.random() * 3, 0, .5);
     }
     if (blasted) { // on its way out (board-blast.js), blackening
       const f = blast.place(i, blasted, col);
@@ -200,33 +184,20 @@ export function createBoard(canvas) {
     }
     const { rig, parts } = fig, isDrac = kind === 'drac' || kind === 'dracFals';
     const list = isDrac ? DRAC_POSES : MULA_POSES, P = list[poses[i] % list.length];
-    const firing = isDrac && kind === 'drac' ? Math.max(0, Math.min(1, Math.min(fireUntil - t, FIRE_TIME - (fireUntil - t)) * 6)) : 0;
-    let yaw = (isDrac ? DRAC_YAW : MULA_YAW) + (P.yaw ?? 0) + ry;
-    const target = firing > 0 ? nearestBurning(x, z) : null;
-    if (target) { // turn on her; the shorter way round
-      const want = Math.atan2(target.x - x, target.z - z), d = Math.atan2(Math.sin(want - yaw), Math.cos(want - yaw));
-      yaw += d * firing;
-    }
-    if (isDrac) poseDrac(rig, P, t, ph, firing);
-    else poseMula(rig, P, charred ? 0 : t, ph, urgent);
+    const yaw = (isDrac ? DRAC_YAW : MULA_YAW) + (P.yaw ?? 0) + ry;
+    if (isDrac) poseDrac(rig, P, t, ph, 0);
+    else poseMula(rig, P, t, ph, urgent);
     const k = isDrac ? DRAC_K : MULA_SCALE;
     rig.root.position.set(x + jx, y, z + jz);
     rig.root.rotation.set(0, yaw, rz);
     rig.root.scale.set(sx * s * k, sy * s * k, sx * s * k);
     rig.root.updateMatrixWorld(true);
     for (const p of parts) put(p.mesh, p.node.matrixWorld, col);
-    if (firing > .3) for (const n of rig.necks) {
-      headTip.set(0, .2, 1.75).applyMatrix4(n.head.matrixWorld);
-      if (target) headDir.set(target.x - headTip.x, 1.1 - headTip.y, target.z - headTip.z).normalize();
-      else headDir.setFromMatrixColumn(n.head.matrixWorld, 2).normalize();
-      const speed = 13, w = 1.6;
-      flame(headTip.x, headTip.y, headTip.z, headDir.x * speed + (Math.random() - .5) * w, headDir.y * speed + (Math.random() - .5) * w, headDir.z * speed + (Math.random() - .5) * w);
-    }
   }
 
   // what is left of the fuse, and the spark on its end; it is out (no spark) once the petard is put out
   function litFuse(cell, t) {
-    const n = cell.kind === 'petard' ? Math.ceil(Math.max(0, cell.left / BOMB_FUSE) * PETARD_FUSE.length) : 0;
+    const n = cell.kind === 'petard' ? Math.ceil(Math.max(0, cell.left / game.bombFuse) * PETARD_FUSE.length) : 0;
     for (let k = 0; k < n; k++) put(meshes.fuseBit, at.multiplyMatrices(dummy.matrix, bit.makeTranslation(PETARD_FUSE[k][0] * BOMB_K, PETARD_FUSE[k][1] * BOMB_K, 0)), col);
     if (!n) return;
     const [sx, sy] = n === PETARD_FUSE.length ? PETARD_SPARK : PETARD_FUSE[n - 1], f = .8 + Math.random() * .35;
@@ -246,15 +217,15 @@ export function createBoard(canvas) {
       }
       const k = blast.progress(c.i, time); // < 0 until the wave gets here, gone at 1
       if (k >= 1) continue;
-      if (k >= 0) { placeFigure(c.i, c.kind, c, 1, false, Math.max(k, .001)); continue; }
+      if (k >= 0) { placeFigure(c.i, c.kind, c, 1, Math.max(k, .001)); continue; }
       const wasBurning = burning.has(c.i);
       if (wasBurning && c.age >= pop) burning.delete(c.i);
-      if (wasBurning && c.kind === 'drac' && c.age < pop) { // her old posture until she goes: the frame loop's new one is for the Drac
+      if (wasBurning && c.kind === 'drac' && c.age < pop) { // her old posture until she goes up; then the cell waits for its Drac
+        if (!fx.waiting(c.i, time)) continue;
         const keep = poses[c.i];
         poses[c.i] = burning.get(c.i);
-        placeFigure(c.i, 'mula', c, Math.min(1, 1 - c.age / pop), true);
+        placeFigure(c.i, 'mula', c, 1);
         poses[c.i] = keep;
-        if (c.age >= 0 && c.age < dt) burst(c.i, ['#26222a', '#3a2c22', '#ff8a1e'], 22);
         continue;
       }
       placeFigure(c.i, c.kind, c, c.age < pop ? 0 : back(Math.min(1, (c.age - pop) / .22)));
@@ -266,6 +237,7 @@ export function createBoard(canvas) {
     }
     paintTiles(game, dt, i => blast.progress(i, time));
 
+    fx.step(time, centres);
     stepSparks(dt);
 
     trauma = Math.min(1, trauma + blast.step(time, dt));

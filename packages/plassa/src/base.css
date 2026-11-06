@@ -33,7 +33,7 @@ p .btn-link::after { display: none; } /* a link inside a sentence: its slop woul
 .btn-compact > svg { margin: 0; width: 18px; height: 18px; fill: currentColor; stroke: none; } /* filled marks (the apps' own logos, Simple Icons CC0) */
 .btn-compact > svg.line { fill: none; stroke: currentColor; stroke-width: 2.2; } /* our own line icons (share, link) */
 .sheet-actions { display: grid; gap: 12px; margin-top: 14px; } /* a sheet's stack of .btn */
-.howto-pill { min-height: 44px; padding: 6px 18px 6px 8px; gap: 8px; border-width: 1.5px; border-radius: 999px; font-size: 15px; letter-spacing: .03em; } /* #howto and «QUI BALLA?»'s #select-howto */
+.howto-pill { min-height: 44px; padding: 6px 18px 6px 8px; gap: 8px; border-width: 1.5px; border-color: var(--pill-border, var(--button-border)); border-radius: 999px; font-size: 15px; letter-spacing: .03em; } /* #howto and «QUI BALLA?»'s #select-howto */
 .howto-pill .q { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--button-border); color: var(--ink); font-size: 17px; line-height: 1; }
 /* An on/off setting: a native checkbox with role="switch" (Space toggles, screen readers say on/off) in a flat row
    (a setting, not a button: no outline); the label is the whole row, the switch sits on the right. */

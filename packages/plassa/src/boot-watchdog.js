@@ -22,8 +22,9 @@
     boot.querySelector('button').onclick = function () { location.reload(); };
   };
   var early = function (reason) { if (!root.classList.contains('ready')) window.__gameFail(null, null, reason); };
-  addEventListener('error', function (e) { early(e.target && e.target.tagName === 'SCRIPT' ? 'module-load' : 'startup'); }, true);
-  addEventListener('unhandledrejection', function () { early('startup'); });
+  /* __gameBootError: what stopped it, for a look in the console (never sent: errors.js reports the reason only) */
+  addEventListener('error', function (e) { if (!root.classList.contains('ready')) window.__gameBootError = e.message; early(e.target && e.target.tagName === 'SCRIPT' ? 'module-load' : 'startup'); }, true);
+  addEventListener('unhandledrejection', function (e) { if (!root.classList.contains('ready')) window.__gameBootError = String(e.reason && e.reason.stack || e.reason); early('startup'); });
   (function tick() { /* only time on screen counts: a tab opened in the background is not stuck */
     var now = Date.now();
     if (!document.hidden) seen += now - last;

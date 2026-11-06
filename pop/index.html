@@ -18,6 +18,8 @@
   <link rel="preload" href="/fonts/jersey-10-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/packages/plassa/src/base.css">
   <link rel="stylesheet" href="/packages/plassa/src/game.css">
+  <link rel="stylesheet" href="/src/styles/badge.css">
+  <link rel="stylesheet" href="/src/styles/level-seg.css">
   <link rel="stylesheet" href="/src/jocs/games/pop/style.css">
 </head>
 <body>
@@ -25,6 +27,7 @@
 
   <!-- The run's 3, 2, 1 (flow.js): over the board, never in the way of a tap (nothing to tap yet). -->
   <div id="count" aria-hidden="true" hidden><b></b></div>
+  <div id="combo" aria-hidden="true" hidden></div><!-- «Combo ×3 +9», a chord, hud.js -->
   <div id="hud" hidden>
     <button id="pause" class="round-btn" data-t-aria="pause" aria-label="Pausa"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg></button>
     <div id="hud-mid">
@@ -52,6 +55,7 @@
         <div class="c-play-row">
           <button id="play" class="game-play" data-keys-first><svg viewBox="0 0 24 24"><path d="M7 4.5v15a1 1 0 0 0 1.5.9l12-7.5a1 1 0 0 0 0-1.8l-12-7.5A1 1 0 0 0 7 4.5z"/></svg><span data-t="play">Juga</span></button>
           <button type="button" class="c-best" id="menu-best" data-t-aria="rank.open" aria-label="Rànquing" disabled><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 3h10v3h3v2a4 4 0 0 1-4 4h-.4A5 5 0 0 1 13 14.8V17h3v3H8v-3h3v-2.2A5 5 0 0 1 8.4 12H8a4 4 0 0 1-4-4V6h3zm-1 5c0 1 .8 2 2 2V8zm12 2c1.2 0 2-1 2-2h-2z"/></svg><span class="label" data-t="home.board">Veure classificació</span><span class="rank" id="menu-rank" hidden></span><svg class="go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button>
+          <button type="button" id="help" class="howto-pill" aria-haspopup="dialog"><span class="q" aria-hidden="true">?</span><span data-t="help.open">Com es juga?</span></button>
         </div>
       </div>
       <div class="c-art"><canvas id="menu-hero" aria-hidden="true"></canvas></div>
@@ -68,6 +72,22 @@
     </div>
   </div>
 
+  <!-- «Com es juga» (help.js): what each figure does, from the «?» and, the first time, after «Juga». -->
+  <div id="help-menu" class="cover" hidden>
+    <div class="sheet help-sheet">
+      <h2 data-t="home.how">Com es juga</h2>
+      <div class="help-legend" id="help-legend"></div>
+      <div class="sheet-actions"><button type="button" id="help-go" class="btn btn-primary" data-t="play">Juga</button><button type="button" id="help-ok" class="btn btn-primary" data-t="help.ok">D’acord</button></div>
+    </div>
+  </div>
+  <!-- The level step after «Juga» (level-step.js): the main game's three levels (level-seg.css), the last one picked. -->
+  <div id="level-menu" class="cover" hidden>
+    <div class="sheet level-sheet">
+      <h2 data-t="level.pick">Nivell</h2>
+      <div class="sel-seg" id="level-seg" role="group" data-t-aria="level.pick" aria-label="Nivell"></div>
+      <div class="sheet-actions"><button type="button" id="level-go" class="btn btn-primary" data-t="play">Juga</button><button type="button" id="level-back" class="btn" data-t="rank.back">Torna</button></div>
+    </div>
+  </div>
   <div id="pause-menu" class="cover" hidden>
     <div class="sheet">
       <h2 data-t="pause">Pausa</h2>
@@ -82,14 +102,13 @@
     <div class="art" id="end-art"></div>
     <div class="sheet">
       <h2 id="end-title"></h2>
-      <p class="end-why" id="end-why"><img alt=""><span></span></p>
       <p class="result" id="end-score">0</p>
       <p class="result-sub" id="end-best"></p>
       <p class="result-sub rank-line" id="end-rank" hidden></p>
       <a id="end-name" class="btn" href="/#nom-pop" data-t="rank.getName" hidden>Posa’t un nom</a>
       <div class="sheet-actions">
-        <button id="again" class="btn btn-primary" data-t="again">Torna-hi</button>
-        <button id="to-menu" class="btn" data-t="menu">Menú</button>
+        <button id="again" class="btn btn-primary"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v5h-5"/></svg><span data-t="again">Torna-hi</span></button>
+        <button id="to-menu" class="btn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 8v-2a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-7a2 2 0 0 1-2-2v-2M15 12H3l3-3M6 15l-3-3"/></svg><span data-t="menu">Menú</span></button>
       </div>
     </div>
   </div>

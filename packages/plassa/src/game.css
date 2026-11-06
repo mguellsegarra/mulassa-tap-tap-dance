@@ -76,7 +76,9 @@ a.exit:hover .exit-tip, a.exit:focus-visible .exit-tip { animation: none; opacit
 /* a row is the button to its player's card */
 .board-list .who { display: grid; grid-template-columns: 40px minmax(0, max-content) auto minmax(0, 1fr); align-items: center; gap: 6px; width: 100%; min-height: 44px; padding: 0 12px 0 4px; border: 0; border-radius: 10px; background: none; font-size: 17px; text-align: left; color: var(--button-text); }
 .board-list .who i { font-style: normal; color: var(--muted); text-align: center; }
-.board-list .who b { grid-column: 4; justify-self: end; font-size: 20px; }
+.board-list .who .score { grid-column: 4; justify-self: end; display: grid; justify-items: end; line-height: 1.1; } /* the points, then a smaller line under them (Pop: the taps and the level) */
+.board-list .who b { font-size: 20px; }
+.board-list .who small { font-size: 12px; color: var(--muted); white-space: nowrap; }
 .board-list li.me .who { color: var(--accent); }
 /* names as on mulassa.cat's boards (src/styles/profile.css, board.css): a guest quieter, a released name fainter, a confirmed address with its check or badge */
 .alias { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

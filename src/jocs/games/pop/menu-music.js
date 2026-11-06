@@ -4,11 +4,16 @@
 export function createMenuMusic(ctx, out, { url, loop }) {
   const gain = ctx.createGain();
   gain.connect(out);
-  let buffer = null, loading = null, src = null, wanted = false;
+  let buffer = null, loading = null, src = null, wanted = false, waiting = false;
   const load = () => (loading ??= fetch(url).then(r => r.arrayBuffer()).then(a => ctx.decodeAudioData(a)).then(b => { buffer = b; },
     () => { loading = null; })); // offline: tried again on the next home
   function begin() {
     if (!wanted || src || !buffer) return;
+    // only once the context runs: scheduled while suspended, iOS woke it with the fade in already over (the first note at full blast)
+    if (ctx.state !== 'running') {
+      if (!waiting) { waiting = true; ctx.addEventListener?.('statechange', () => { waiting = false; begin(); }, { once: true }); }
+      return;
+    }
     src = Object.assign(ctx.createBufferSource(), { buffer, loop: true, loopStart: loop.start, loopEnd: loop.end });
     src.connect(gain);
     const t = ctx.currentTime;
@@ -25,8 +30,7 @@ export function createMenuMusic(ctx, out, { url, loop }) {
       if (!src) return;
       const s = src, t = ctx.currentTime;
       src = null;
-      // never heard yet (iOS: the tap on «Juga» is the first the browser counts): gone at once, not a blip of it before the run's
-      if (ctx.state !== 'running') { gain.gain.cancelScheduledValues(t); gain.gain.setValueAtTime(0, t); s.stop(); return; }
+      if (ctx.state !== 'running') { gain.gain.cancelScheduledValues(t); gain.gain.setValueAtTime(0, t); s.stop(); return; } // suspended since: cut at once
       // its fade in may still be pending (it ramps up for a second): dropped, or it would bring the music back under the count
       gain.gain.cancelScheduledValues(t);
       gain.gain.setValueAtTime(gain.gain.value, t);

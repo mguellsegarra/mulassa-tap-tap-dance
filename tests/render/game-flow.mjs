@@ -180,6 +180,22 @@ await Promise.resolve();
 assert.equal(run('countIns'), 0, 'cancelled starts cannot schedule a count-in');
 console.log('menu pause and cancelled start contracts ok');
 
+// Once the page cover is gone, the splash asks for the menu loop (Mulassa Pop's home does too): it sounds where the browser
+// allows it, else at the splash's tap. A switched-off menu, or a browser without userActivation, leaves the engine for the tap.
+run(`var splashMenus = 0, splashResumes = 0, keptEngine = engine, keptMusic = menuMusic;
+  engine = { ready: null, menu(on) { if (on) splashMenus++; }, autoplay() { splashResumes++; } };
+  var keptActivation = navigator.userActivation; navigator.userActivation = { isActive: false };
+  G.state = 'splash'; chip = null; menuMusic = true; splashMusic();`);
+assert.equal(run('[splashMenus, splashResumes, chip === engine].join()'), '1,1,true', 'the splash starts the menu loop and asks the context to run');
+run('chip = null; menuMusic = false; splashMusic();');
+assert.equal(run('[splashMenus, splashResumes, chip].join()'), '1,1,', 'a switched-off menu asks for nothing before the tap');
+run('chip = null; menuMusic = true; navigator.userActivation = undefined; splashMusic();');
+assert.equal(run('[splashMenus, splashResumes, chip].join()'), '1,1,', 'without userActivation (older Safari) only the tap starts it');
+run(`chip = null; navigator.userActivation = { isActive: false }; G.state = 'select'; splashMusic();`);
+assert.equal(run('[splashMenus, splashResumes, chip].join()'), '1,1,', 'a cover lifting after the splash (its tap already went in) asks for nothing');
+run(`engine = keptEngine; menuMusic = keptMusic; navigator.userActivation = keptActivation; chip = null; G.state = 'splash';`);
+console.log('splash menu music contract ok');
+
 // A visible page may not own keyboard focus yet (Safari's address bar, another window).
 // Boot still paints; normal gameplay remains suspended without focus.
 {

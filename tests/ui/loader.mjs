@@ -41,10 +41,13 @@ const SHORT = ['a', 'b', 'c', 'd']; // short lines: the 2 s floor
 for (const start of [0, 7000]) { // also after a slow module load: elapsed navigation time never skips the first full line
   const d = timedLoader({ start });
   d.L.jokes(SHORT);
+  let lifted = false; d.L.lifted.then(() => { lifted = true; }); // the splash's menu music waits for it (main.js splashMusic)
   const first = d.label.textContent;
   d.run(start + 500); d.L.ready(); d.L.ready();
   d.run(start + 1999); assert(d.L.covering && !d.classes.has('out') && d.label.textContent === first, 'a fast load still leaves the first phrase readable');
+  await null; assert(!lifted, 'nothing waiting on the cover starts under it');
   d.run(start + 2000); assert(!d.L.covering && d.classes.has('out'), 'a fast load lifts after one full phrase');
+  await null; assert(lifted, 'the lift is announced');
   d.run(start + 2250); assert(d.el.hidden);
   d.run(start + 20000); assert.equal(d.label.textContent, first, 'no second phrase flashes during or after the fade');
 }
@@ -87,7 +90,9 @@ for (const start of [0, 7000]) { // also after a slow module load: elapsed navig
 }
 {
   const d = timedLoader(); d.L.jokes(SHORT); d.classes.add('fail');
+  let lifted = false; d.L.lifted.then(() => { lifted = true; });
   d.run(28000); assert(!d.el.hidden && !d.classes.has('out'), 'a boot error stays visible past the loader timeout');
+  await null; assert(!lifted, 'a failed boot never announces a lift (no music over its error card)');
 }
 {
   const d = timedLoader(); d.L.jokes(SHORT);

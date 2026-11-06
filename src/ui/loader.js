@@ -31,7 +31,8 @@ const localStore = () => { try { return globalThis.localStorage; } catch { retur
 export function setupLoader(doc = document, { delay = 300, fade = 250, giveUp = 20000, minJokes = 1, timers = globalThis, storage = localStore(), random = Math.random } = {}) {
   const el = doc.getElementById('loader'), label = doc.getElementById('loader-text');
   let current = null, timer = 0, fadeTimer = 0, cover = !!el && !el.hidden;
-  let jokeTimer = 0, jokesActive = false, gameReady = false;
+  let jokeTimer = 0, jokesActive = false, gameReady = false, lifted;
+  const liftedP = new Promise(done => { lifted = done; });
   const show = on => {
     if (!el) return;
     timers.clearTimeout(fadeTimer);
@@ -51,6 +52,7 @@ export function setupLoader(doc = document, { delay = 300, fade = 250, giveUp = 
     cover = false; jokesActive = false;
     timers.clearTimeout(jokeTimer);
     if (el?.classList?.contains?.('fail')) return; // a boot failure stays until the player retries
+    lifted();
     doc.body?.removeAttribute?.('aria-busy');
     if (current) { el?.classList.toggle('page', false); set(current.text); } // an ongoing wait continues as a card, with its line
     else show(false);
@@ -58,6 +60,7 @@ export function setupLoader(doc = document, { delay = 300, fade = 250, giveUp = 
   const api = {
     get showing() { return !!el && !el.hidden && !el.classList?.contains?.('out'); },
     get covering() { return cover; }, // the page cover is still up (the first load): nothing under it is seen
+    lifted: liftedP, // the first load's cover is gone (never after a failed boot): the splash is seen
     get text() { return label?.textContent; },
     // a new line for what's waiting (a stage, a %); under the joke cycle it waits for the card, so no joke is cut
     status(text) { if (current) current.text = text; if (!(cover && jokesActive)) set(text); },

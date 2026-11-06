@@ -4,8 +4,8 @@
 import * as THREE from 'three';
 import { mulaRig, dracRig, poseMula, poseDrac, MULA_POSES, MULA_SCALE, MULA_YAW, DRAC_K } from './rigs.js';
 import { createSparks } from './board-sparks.js';
-import { waitForWarmup, linkPrograms } from '../../../platform/boot.js';
-import { LOW, pixelRatio } from './quality.js';
+import { waitForWarmup, linkPrograms } from '#plassa/boot.js';
+import { LOW, pixelRatio } from '#plassa/quality.js';
 
 const ROAR_EVERY = 6.5, ROAR = 1.6; // seconds between the Drac's roars, and how long one lasts
 // The home's Drac plays like a puppy. Its snouts dip a little: the eyes sit on top of the heads, and the raised camera

@@ -1,7 +1,7 @@
 // Every released language has every word of Pica, with the same placeholders and the same bold.
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { LANGS } from '../../src/i18n/locale.js';
+import { LANGS } from '#plassa/locale.js';
 
 const read = code => JSON.parse(readFileSync(new URL(`../../src/jocs/games/pop/locales/${code}.json`, import.meta.url), 'utf8'));
 const marks = text => (text.match(/\{\w+\}|<\/?b>/g) ?? []).sort().join();

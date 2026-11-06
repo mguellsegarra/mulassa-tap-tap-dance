@@ -3,6 +3,9 @@
   "version": "1.3.0",
   "private": true,
   "type": "module",
+  "imports": {
+    "#plassa/*": "./packages/plassa/src/*"
+  },
   "scripts": {
     "dev": "vite --host --port 5178",
     "build": "vite build",

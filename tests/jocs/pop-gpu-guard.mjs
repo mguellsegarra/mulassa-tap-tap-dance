@@ -7,7 +7,7 @@ globalThis.setTimeout = (f, ms) => { timers.push({ f, ms }); return timers.lengt
 globalThis.clearTimeout = id => { if (timers[id - 1]) timers[id - 1].f = null; };
 const fire = () => { const t = timers.splice(0).filter(x => x.f); for (const x of t) x.f(); return t.length; };
 globalThis.document = { hidden: false };
-const { guardGpu } = await import('../../src/jocs/games/pop/gpu-guard.js');
+const { guardGpu } = await import('#plassa/gpu-guard.js');
 
 const canvas = () => { const c = new EventTarget(); c.lose = () => c.dispatchEvent(new Event('webglcontextlost', { cancelable: true })); c.back = () => c.dispatchEvent(new Event('webglcontextrestored')); return c; };
 const log = [];

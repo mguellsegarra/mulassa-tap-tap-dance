@@ -1,30 +1,13 @@
-/* The Mulassa game's look, copied from its base.css and index.html: the same tokens, .btn, .round-btn and .sheet. */
-@font-face { font-family: 'Baloo 2'; font-weight: 600 800; font-display: swap; src: url(/fonts/baloo-2-latin.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+2000-206F; }
-@font-face { font-family: 'Baloo 2'; font-weight: 600 800; font-display: swap; src: url(/fonts/baloo-2-latin-ext.woff2) format('woff2'); unicode-range: U+0100-02BA, U+1E00-1E9F; }
-/* the pixel font is the logo's only (pop/index.html) */
-@font-face { font-family: 'Jersey 10'; font-weight: 400; font-display: swap; src: url(/fonts/jersey-10-latin.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+2000-206F; }
-:root { color-scheme: light only; --sat: env(safe-area-inset-top, 0px); --sab: env(safe-area-inset-bottom, 0px); --button-radius: 12px; --button-border: #ff7ac6; --button-gold-bg: linear-gradient(180deg, #ff9ed6 0%, #ff7ac6 55%, #e85aae 100%); --button-bg: #24223fe8; --button-text: #fff3d6; --focus: 3px solid var(--button-text); --focus-off: 3px; --page-edge: #11152c; }
-html, body { margin: 0; height: 100%; overflow: hidden; overscroll-behavior: none; background: radial-gradient(ellipse at 50% 0, #53436b, #11152c 70%) var(--page-edge); touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
-body { position: fixed; top: 0; left: 0; width: 100%; color: #fff3d6; font: 700 18px 'Baloo 2', system-ui, sans-serif; }
+/* Mulassa Pop's own screens: the board, the HUD, the home and its cards, the wait for the first tap. The look is the base
+   (packages/plassa/src/base.css, game.css, linked first by pop/index.html); this file only sets Pop's colour tokens. */
+:root { --accent: #ff7ac6; --button-gold-bg: linear-gradient(180deg, #ff9ed6 0%, #ff7ac6 55%, #e85aae 100%); --button-bg: #24223fe8; --ink: #24112e; --sheet-color: #24223f; --sheet-bg: linear-gradient(#3a2b4c, #24223f); --sheet-radius: 24px; --page-edge: #11152c; --page-bg: radial-gradient(ellipse at 50% 0, #53436b, #11152c 70%) #11152c; --game: #ff7ac6; }
 canvas#game { position: fixed; left: 0; top: 0; width: 100%; height: 100dvh; touch-action: none; }
 .board-flash { position: fixed; inset: 0; z-index: 1; opacity: 0; pointer-events: none; }
 /* the bell's slow time (main.js setSlow): a cold frost closing in from the edges, under the HUD */
 body::after { content: ''; position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: 0; transition: opacity .6s; background: radial-gradient(ellipse at 50% 50%, #7ec4ff22 20%, #3d8fe08c 70%, #1f58b8e0); }
 body.slow::after { opacity: 1; transition-duration: .15s; animation: chill-in .5s ease-out; } /* a white-blue flash as the bell strikes */
 @keyframes chill-in { from { background-color: #e8f6ffb3; } to { background-color: #e8f6ff00; } }
-[hidden] { display: none !important; }
 
-button, a.btn { -webkit-appearance: none; appearance: none; display: inline-flex; align-items: center; justify-content: center; gap: 12px; min-height: 44px; border: 2px solid var(--button-border); border-radius: var(--button-radius); background: var(--button-bg); color: var(--button-text); font: 800 18px 'Baloo 2', system-ui, sans-serif; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-@media (hover: hover) { button:hover { filter: brightness(1.15); } }
-button:active { transform: translateY(1px); }
-button:focus-visible { outline: var(--focus); outline-offset: var(--focus-off); }
-.round-btn { width: 44px; height: 44px; min-height: 0; padding: 0; border-radius: 50%; }
-.round-btn svg { width: 24px; height: 24px; }
-.btn { position: relative; box-sizing: border-box; display: block; width: 100%; min-height: 48px; padding: 8px 20px; font: 800 18px/1.2 'Baloo 2', system-ui, sans-serif; text-align: center; }
-a.btn { text-align: center; text-decoration: none; color: #fff3d6; }
-.btn-primary { background: var(--button-gold-bg); color: #24112e; }
-.sheet-actions { display: grid; gap: 12px; margin-top: 16px; }
-.sheet { box-sizing: border-box; max-height: calc(100dvh - 32px); overflow: auto; border: 2px solid #ff7ac6; border-radius: 24px; background: linear-gradient(#3a2b4c, #24223f); color: #fff3d6; box-shadow: 0 16px 60px #0008; scrollbar-width: thin; scrollbar-color: #ff7ac699 transparent; }
 
 /* HUD */
 #hud { position: fixed; z-index: 2; top: calc(var(--sat) + 8px); left: 16px; right: 16px; display: grid; grid-template-columns: 44px 1fr 44px; align-items: start; pointer-events: none; }
@@ -43,29 +26,13 @@ a.btn { text-align: center; text-decoration: none; color: #fff3d6; }
 .float { position: fixed; z-index: 2; translate: -50% -50%; font: 800 34px/1 'Baloo 2', system-ui, sans-serif; color: #ff7ac6; -webkit-text-stroke: 5px #24112e; paint-order: stroke fill; pointer-events: none; animation: float-up .7s ease-out forwards; }
 @keyframes float-up { from { transform: translateY(0) scale(.7); opacity: 1; } 25% { transform: translateY(-16px) scale(1.15); } to { transform: translateY(-64px) scale(1); opacity: 0; } }
 
-/* Overlays */
-.cover { position: fixed; z-index: 3; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; box-sizing: border-box; padding: calc(var(--sat) + 16px) 16px calc(var(--sab) + 16px); background: #11152c8c; -webkit-backdrop-filter: blur(14px) saturate(1.3); backdrop-filter: blur(14px) saturate(1.3); }
-.cover .sheet { width: min(360px, 100%); padding: 16px; flex: 0 1 auto; }
 .logo { display: block; flex: none; width: min(300px, 80vw); height: auto; overflow: visible; }
-.art { flex: 0 1 120px; min-height: 60px; width: 180px; }
-/* boot: the running Mulassa until main.js adds .ready; then it fades out and the menu in, all of it at once.
-   Like the main game's #loader: opaque and unblurred, with the blurred menu not drawn under it, so nothing is re-blurred each
-   frame and her compositor-run stride keeps going while the boot holds the main thread. */
-#boot { z-index: 4; background: inherit; -webkit-backdrop-filter: none; backdrop-filter: none; transition: opacity .3s; }
-#boot .art { flex: none; width: 180px; height: 138px; }
-.ready #boot { opacity: 0; pointer-events: none; }
-#boot.fail .sheet { text-align: center; } /* the watchdog's error card (index.html): the end sheet's look */
 :root:not(.ready) #menu { visibility: hidden; } /* whole under the boot screen when it fades: a fading blur shows the board sharp */
-h2 { margin: 0; text-align: center; font: 800 24px/1.1 'Baloo 2', system-ui, sans-serif; color: #ff7ac6; }
 /* what ended the run: the figure's home portrait and why, so a red Drac tapped in a hurry is no mystery */
 .end-why { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 8px 0 0; font-size: 16px; font-weight: 700; color: #fff3d6; }
 .end-why span { line-height: 1.2; text-wrap: balance; } /* two tight lines on a narrow phone, not one word left alone */
 .end-why img { width: 44px; height: 44px; object-fit: contain; flex: none; }
 @media (max-width: 359px) { .end-why { flex-direction: column; gap: 4px; text-align: center; } } /* a narrow sheet wraps the line, and a row of picture and two lines leans left */
-.result { margin: 4px 0 0; text-align: center; font: 800 56px/1 'Baloo 2', system-ui, sans-serif; color: #fff3d6; }
-.result-sub { margin: 2px 0 0; text-align: center; font-size: 16px; color: #e8d8b8; }
-.result-sub.record { color: #ff7ac6; }
-@media (max-height: 620px) { .art { display: none; } }
 
 /* The home (the Mulassa Games hero, after mulassa.cat's games sheet): logo, pitch, Juga and the record, the red Mulassa big;
    under it a row of cards, one per figure, that scrolls on a phone and holds all eight on a wide screen. */
@@ -75,24 +42,7 @@ h2 { margin: 0; text-align: center; font: 800 24px/1.1 'Baloo 2', system-ui, san
 .home[hidden] { display: none; }
 .corner-l, .corner-r { position: absolute; z-index: 1; top: calc(var(--sat) + var(--m)); }
 .corner-l { left: var(--m); } .corner-r { right: var(--m); }
-a.round-btn { box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; border: 2px solid var(--button-border); background: var(--button-bg); color: #fff3d6; }
 .c-hero { position: relative; min-height: 0; display: flex; flex-direction: column; align-items: center; padding: calc(44px + 12px) var(--m) 0; } /* under the corner buttons' row */
-/* The way back to mulassa.cat's games sheet: the site's games icon, round as the music button, and a bubble that pops in
-   once the home is up and comes back every few seconds (hover holds it). Without the games sheet behind (main.js: .more)
-   the bubble invites, «Més jocs!», and a pink dot beats on the button */
-a.exit { position: absolute; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: 2px solid var(--button-border); border-radius: 50%; background: var(--button-bg); color: #fff3d6; font: 800 16px/1 'Baloo 2', system-ui, sans-serif; text-decoration: none; }
-a.exit svg { flex: none; width: 24px; height: 24px; }
-a.exit:active { transform: scale(.96); }
-.exit-dot { display: none; }
-a.exit.more .exit-dot { display: block; position: absolute; top: -3px; right: -3px; width: 12px; height: 12px; border-radius: 50%; background: #ff7ac6; box-shadow: 0 0 0 2px #11152c; }
-a.exit.more .exit-dot::after { content: ""; position: absolute; inset: 0; border-radius: 50%; background: #ff7ac6; animation: exit-ping 1.8s ease-out infinite; }
-@keyframes exit-ping { 0% { scale: 1; opacity: .8; } 80%, 100% { scale: 2.6; opacity: 0; } }
-.exit-tip { position: absolute; left: calc(100% + 12px); top: 50%; translate: 0 -50%; padding: 8px 14px; border-radius: 14px; background: #fff3d6; color: #2a1a10; white-space: nowrap; filter: drop-shadow(0 3px 4px #0008); opacity: 0; pointer-events: none; }
-.exit-tip::before { content: ""; position: absolute; left: -5px; top: 50%; width: 14px; height: 14px; border-radius: 3px; background: inherit; translate: 0 -50%; rotate: 45deg; } /* one shape with the bubble: its shadow is the bubble's drop-shadow */
-.ready .exit-tip { animation: exit-tip 10s ease 1.5s infinite both; } /* 6 s up, 4 s away, while the home is up */
-a.exit:hover .exit-tip, a.exit:focus-visible .exit-tip { animation: none; opacity: 1; }
-@keyframes exit-tip { 0% { opacity: 0; translate: -8px -50%; scale: .9; } 3% { opacity: 1; translate: 0 -50%; scale: 1.08; } 5%, 58% { opacity: 1; translate: 0 -50%; scale: 1; } 60%, 100% { opacity: 0; translate: 0 -50%; scale: 1; } }
-@media (prefers-reduced-motion: reduce) { a.exit.more .exit-dot::after { animation: none; } @keyframes exit-tip { 0% { opacity: 0; } 3%, 58% { opacity: 1; } 60%, 100% { opacity: 0; } } }
 .c-text { display: contents; }
 .pop-title { order: 0; flex: none; display: grid; justify-items: center; width: min(300px, 100vw - 2 * var(--m) - 40px, 40dvh); margin: 0; container-type: inline-size; }
 .pop-title .logo { width: 100%; }
@@ -101,21 +51,12 @@ a.exit:hover .exit-tip, a.exit:focus-visible .exit-tip { animation: none; opacit
 .pop-word i { display: inline-block; font-style: normal; animation: games-pop 2.4s ease-in-out infinite; animation-delay: calc(var(--i) * .07s); }
 @keyframes games-pop { 0%, 20%, 100% { translate: 0 0; scale: 1; } 8% { translate: 0 -.28em; scale: 1.18; } 14% { translate: 0 .04em; scale: .97; } }
 @media (prefers-reduced-motion: reduce) { .pop-word i { animation: none; } }
-/* The run's 3, 2, 1 (flow.js): the logo's POP letters, big over the board, each popping in on its kick */
-#count { position: fixed; z-index: 2; inset: 0; display: grid; place-items: center; pointer-events: none; }
-#count b { font: 800 min(42vw, 32dvh)/1 'Baloo 2', system-ui, sans-serif; color: #ff7ac6; -webkit-text-stroke: .15em #2a1a10; paint-order: stroke fill; animation: count-pop .6s ease-out both; } /* flow.js EACH */
-@keyframes count-pop { 0% { scale: 1.8; opacity: 0; } 18% { scale: .92; opacity: 1; } 30% { scale: 1.04; } 45%, 80% { scale: 1; opacity: 1; } 100% { scale: .85; opacity: 0; } }
-@media (prefers-reduced-motion: reduce) { #count b { animation: none; } }
 .c-art { order: 1; flex: 1 1 0; min-height: 72px; width: 100%; display: flex; align-items: center; justify-content: center; position: relative; container-type: size; }
 .c-art::before { content: ""; position: absolute; width: min(100%, 100cqh, 340px); aspect-ratio: 1; border-radius: 50%; background: radial-gradient(#ff7ac655, #ff7ac600 68%); }
 .c-art canvas { --k: 1; position: relative; flex: none; width: calc(var(--k) * min(100cqw, 100cqh * 1.5, 540px)); height: calc(var(--k) * min(100cqh, 100cqw / 1.5 + 0px, 360px)); translate: 0 calc((1 - var(--k)) / 2 * min(100cqh, 100cqw / 1.5 + 0px, 360px)); } /* hero.js: the Mulassa and the Drac, live; --k grows them upwards, their feet where they were */
 .c-pitch { order: 2; margin: 0 0 12px; max-width: 320px; text-align: center; font-size: clamp(16px, 2.4dvh, 20px); line-height: 1.2; text-wrap: balance; text-shadow: 0 1px 3px #000; }
 .c-play-row { order: 3; display: flex; flex-direction: column; align-items: center; gap: 12px; } /* the record on its own line, under Juga */
-/* «Juga», as on mulassa.cat's games sheet (src/styles/games-sheet.css): cream, with a hop now and then */
-.game-play { display: inline-flex; align-items: center; justify-content: center; gap: 12px; min-width: 136px; height: 60px; padding: 0 28px 0 22px; border: 0; border-radius: 30px; background: #fff3d6; color: #2a1a10; font: 800 24px/1 'Baloo 2', system-ui, sans-serif; box-shadow: 0 4px 0 color-mix(in srgb, #ff7ac6 55%, #120b07); animation: game-play-hop 2.4s ease-in-out infinite; }
-.game-play:hover, .game-play:focus-visible { animation-play-state: paused; }
-.game-play svg { width: 1em; height: 1em; fill: currentColor; flex: none; }
-@keyframes game-play-hop { 0%, 60%, 100% { translate: 0 0; } 70% { translate: 0 -8px; } 80% { translate: 0 0; } 87% { translate: 0 -3px; } 94% { translate: 0 0; } }
+.c-play-row .game-play { min-width: 136px; margin-top: 0; padding: 0 28px 0 22px; } /* the home's «Juga»: base.css, a little smaller than the games sheet's */
 .c-best { display: inline-flex; align-items: center; gap: 6px; height: 44px; padding: 0 12px; border-radius: 22px; background: #24223fe8; box-shadow: inset 0 0 0 2px #ff7ac655; font-size: 16px; color: #e8d8b8; }
 .c-best svg { width: 20px; height: 20px; color: #ff7ac6; }
 .c-best .rank { color: #ff7ac6; }
@@ -124,39 +65,6 @@ button.c-best { width: auto; min-height: 0; border: 0; font: inherit; font-size:
 button.c-best:enabled { cursor: pointer; }
 .c-best .go { width: 16px; height: 16px; margin-left: -2px; color: #ff7ac6; }
 .c-best:disabled .go { display: none; }
-/* the board sheet: the top 50, your row lit */
-.board-sheet { display: flex; flex-direction: column; gap: 12px; width: min(400px, 100%); }
-.board-list { min-height: 0; flex: 1 1 auto; margin: 0; padding: 0; overflow: auto; list-style: none; scrollbar-width: thin; scrollbar-color: #ff7ac699 transparent; }
-.board-list li { border-radius: 10px; }
-.board-list li:nth-child(odd) { background: #ffffff0a; }
-.board-list li.me { background: #ff7ac633; }
-.board-list li.gap { min-height: 24px; background: none; text-align: center; color: #e8d8b8; }
-/* a row is the button to its player's card */
-.board-list .who { display: grid; grid-template-columns: 40px minmax(0, max-content) auto minmax(0, 1fr); align-items: center; gap: 6px; width: 100%; min-height: 44px; padding: 0 12px 0 4px; border: 0; border-radius: 10px; background: none; font-size: 17px; text-align: left; color: #fff3d6; }
-.board-list .who i { font-style: normal; color: #e8d8b8; text-align: center; }
-.board-list .who b { grid-column: 4; justify-self: end; font-size: 20px; }
-.board-list li.me .who { color: #ff7ac6; }
-/* names as on mulassa.cat's boards (src/styles/profile.css, board.css): a guest quieter, a released name fainter, a confirmed address with its check or badge */
-.alias { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.alias.guest { color: #b5a385; }
-.alias.released { opacity: .55; }
-li.me .alias.guest { color: inherit; }
-.verified-check, .player-badge { flex: none; display: inline-grid; place-items: center; width: 16px; height: 16px; --jester: #fff3d6; }
-.verified-check svg { width: 100%; height: 100%; fill: #3b9cff; stroke: #fff; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
-.verified-check svg .seal { stroke: none; }
-.player-badge svg { display: block; width: 100%; height: 100%; stroke: none; }
-/* a player's card */
-.card-sheet { display: grid; gap: 16px; width: min(360px, 100%); }
-.card-name { display: flex; align-items: center; justify-content: center; gap: 8px; min-width: 0; color: #fff3d6; }
-.card-name .verified-check, .card-name .player-badge { width: 22px; height: 22px; }
-.card-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 0; }
-.card-stats div { display: grid; justify-items: center; gap: 2px; padding: 12px 8px; border-radius: 14px; background: #11152c66; }
-.card-stats dt { font-size: 14px; color: #e8d8b8; }
-.card-stats dd { margin: 0; font-size: 28px; line-height: 1; color: #ff7ac6; }
-.rank-line { line-height: 1.5; } /* a set height: a fallback font (Japanese) is a pixel taller and would nudge the sheet */
-.rank-line.good { color: #ff7ac6; }
-/* a narrow phone wraps the longer answers (Posa't un nom…, the error, a new record) to two lines: keep them from the start, so the place fades in without moving the sheet */
-@media (max-width: 374px) { .rank-line { display: grid; align-content: center; min-height: 2.6em; line-height: 1.3; text-wrap: balance; } }
 #end-name { margin-top: 4px; text-decoration: none; } /* a link to mulassa.cat's name sheet, drawn as the sheet's buttons */
 .c-row { display: flex; align-items: center; gap: 12px; height: var(--row); padding: 0 var(--m); overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: var(--m); scrollbar-width: none; }
 .c-row::-webkit-scrollbar { display: none; }
@@ -180,7 +88,7 @@ li.me .alias.guest { color: inherit; }
 @media (orientation: landscape) {
   .home { --row: clamp(150px, 26dvh, 260px); }
   .c-hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; padding: calc(52px + 12px) max(32px, 5vw) 0; } /* under the corner buttons' row */
-  a.exit { width: 52px; height: 52px; font-size: 20px; } a.exit svg { width: 28px; height: 28px; }
+  :root { --exit-size: 52px; --exit-icon: 28px; --exit-font: 20px; } /* the way back, as big as the music button across */
   #menu-music { width: 52px; height: 52px; } /* the same size as the games button across */
   /* one axis (tools/dev/pop-hero, A): the title is centred by nature, so the pitch and the actions follow it */
   .c-text { display: flex; flex-direction: column; align-items: center; gap: 20px; }
@@ -199,84 +107,7 @@ li.me .alias.guest { color: inherit; }
   .c-por { bottom: calc(var(--name) * 1.1 + var(--line) * 3.45 + 20px); }
 }
 
-/* The turn-the-device cover (orientation.js), from the other game's base.css */
-#rotate { display: none; position: fixed; inset: 0; z-index: 50; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 24px; background: var(--page-edge); color: #fff3d6; font: 800 22px/1.3 'Baloo 2', system-ui, sans-serif; text-align: center; }
-body.wrong-orient #rotate { display: flex; }
-#rotate svg { width: 96px; height: 96px; overflow: visible; fill: none; stroke: #ff7ac6; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
-#rotate .ph { transform-box: view-box; transform-origin: 24px 24px; animation: rotate-hint 1.6s ease-in-out infinite; }
-#rotate .arr { opacity: .7; transform-box: view-box; transform-origin: 24px 24px; }
-#rotate h2 { margin: 0; color: inherit; font: inherit; font-size: 32px; line-height: 1.15; }
-#rotate b { font-size: 19px; font-weight: 700; opacity: .85; }
-#rotate .r-tablet { display: none; }
-body.tablet #rotate .r-tablet { display: inline; }
-body.tablet #rotate .r-phone { display: none; }
-body.tablet #rotate .ph { animation-direction: reverse; }
-body.tablet #rotate .arr { transform: scaleX(-1); }
-/* the same rule from the first paint, before orientation.js runs: a sideways phone, or an upright tablet (only a tablet is 600 px wide upright) */
-@media (pointer: coarse) and (orientation: landscape) and (max-height: 599px) { body:not(.tablet) #rotate { display: flex; } }
-@media (pointer: coarse) and (orientation: portrait) and (min-width: 600px) {
-  body:not(.tablet) #rotate { display: flex; }
-  body:not(.tablet) #rotate .r-tablet { display: inline; }
-  body:not(.tablet) #rotate .r-phone { display: none; }
-  body:not(.tablet) #rotate .ph { animation-direction: reverse; }
-  body:not(.tablet) #rotate .arr { transform: scaleX(-1); }
-}
-@keyframes rotate-hint { 0%, 30% { transform: rotate(-90deg); } 60%, 100% { transform: rotate(0); } }
-@media (prefers-reduced-motion: reduce) { #rotate .ph { animation: none; } }
 
-/* The running Mulassa, from the other game's index.html */
-.mula-load{display:block;width:100%;height:100%;overflow:visible}.mula-load *{transform-box:view-box}
-/* The full figure: HTML layers, each the whole 220×168 box (origins and moves in % of it); the mini head stays one SVG. */
-div.mula-load{display:flex;align-items:center;justify-content:center;container-type:size}
-.ml-fig{position:relative;flex:none;width:min(100cqw,130.952cqh);aspect-ratio:220/168}
-.ml-fig div,.ml-fig svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
-.ml-fig .ml-ground{inset:85.714% auto auto 3.636%;width:91.818%;height:10.714%;overflow:hidden}
-.ml-fig .ml-bob{transform-origin:45.455% 70.238%}.ml-fig .ml-tail{transform-origin:19.091% 44.048%}.ml-fig .ml-neck,.ml-fig .ml-nod{transform-origin:67.273% 42.857%}
-.ml-fig .ml-jaw{transform-origin:72.273% 22.619%}.ml-fig .ml-ear{transform-origin:68.636% 10.714%}.ml-fig .ml-ear.ml-e2{transform-origin:71.818% 10.714%}.ml-fig .ml-dust{transform-origin:19.545% 86.31%}
-/* One stride is .48 s: opposing legs, bent knees, heels up; the ground travels left under the planted feet. */
-.mula-load .ml-leg{transform-origin:0 0;animation:ml-stride .48s linear infinite;animation-delay:var(--step,0s)}
-.mula-load .ml-shin{transform-origin:0 0;animation:ml-knee .48s linear infinite;animation-delay:var(--step,0s)}
-.ml-bob{transform-origin:100px 118px;animation:ml-bob .24s ease-in-out infinite}
-.ml-tail{transform-origin:42px 74px;animation:ml-tail .48s ease-in-out infinite}
-.ml-neck{transform-origin:148px 72px;animation:ml-neck .48s ease-in-out infinite}
-.ml-nod{transform-origin:148px 72px;animation:ml-nod .24s ease-in-out infinite;animation-delay:-.06s}
-.ml-jaw{transform-origin:159px 38px;animation:ml-jaw .48s ease-in-out infinite}
-.ml-ear{transform-origin:151px 18px;animation:ml-ear .48s ease-in-out infinite;animation-delay:-.08s}.ml-ear.ml-e2{transform-origin:158px 18px;animation-delay:-.16s}
-.ml-clac{opacity:0;animation:ml-clac 1.92s linear infinite}
-.mula-load .ml-ground{overflow:hidden}
-.ml-road{animation:ml-road .32s linear infinite}
-.ml-dust{opacity:0;transform-origin:0 0;animation:ml-dust .48s linear infinite}
-.ml-sweat{opacity:0;animation:ml-sweat .96s ease-out infinite}
-.mula-load.mini .ml-neck{animation-duration:.96s}
-.mula-load.mini .ml-nod{animation:none}
-.mula-load.mini .ml-sweat{display:none}
-@keyframes ml-stride{0%,100%{transform:translateY(.595%) rotate(-30deg)}12%{transform:translateY(-1.19%) rotate(-4deg)}25%{transform:translateY(-.595%) rotate(25deg)}45%{transform:rotate(50deg)}60%{transform:translateY(-1.19%) rotate(10deg)}78%{transform:translateY(-1.786%) rotate(-45deg)}90%{transform:rotate(-48deg)}}
-@keyframes ml-knee{0%,100%{transform:rotate(35deg)}12%{transform:rotate(23deg)}25%{transform:rotate(10deg)}45%{transform:rotate(85deg)}60%{transform:rotate(110deg)}78%{transform:rotate(95deg)}90%{transform:rotate(50deg)}}
-@keyframes ml-bob{0%,100%{transform:translateY(.595%) rotate(6deg)}25%{transform:translateY(-1.786%) rotate(8deg)}50%{transform:translateY(-3.571%) rotate(7deg)}75%{transform:translateY(-1.19%) rotate(5deg)}}
-@keyframes ml-tail{0%,100%{transform:rotate(66deg)}45%{transform:rotate(87deg)}75%{transform:rotate(58deg)}}
-@keyframes ml-neck{0%,100%{transform:rotate(6deg)}45%{transform:rotate(13deg)}75%{transform:rotate(3deg)}}
-@keyframes ml-nod{0%,100%{transform:none}50%{transform:rotate(-4deg)}}
-@keyframes ml-jaw{0%,100%{transform:rotate(6deg)}35%{transform:rotate(19deg)}65%{transform:rotate(3deg)}}
-@keyframes ml-ear{0%,100%{transform:rotate(-32deg)}40%{transform:rotate(-54deg)}75%{transform:rotate(-22deg)}}
-@keyframes ml-clac{0%,86%,100%{opacity:0}90%{opacity:.75}95%{opacity:0}}
-@keyframes ml-road{to{transform:translateX(-31.683%)}}
-@keyframes ml-dust{0%{opacity:0;transform:translate(1.364%,0) scale(.22,.35)}16%{opacity:.5;transform:translate(-.909%,-.595%) scale(.55,.7)}45%{opacity:.4;transform:translate(-5.455%,-2.381%) scale(.9,1)}75%{opacity:.15;transform:translate(-10.455%,-4.167%) scale(1.16,1.08)}100%{opacity:0;transform:translate(-14.545%,-5.357%) scale(1.3,1.12)}}
-@keyframes ml-sweat{0%,45%,100%{opacity:0;transform:none}55%{opacity:.85;transform:none}90%{opacity:0;transform:translate(-4.545%,3.571%)}}
-.mula-load .ml-sad{display:none}
-.mula-load.sad,.mula-load.sad *{animation:none}
-.mula-load.sad .ml-sad{display:inline}
-.mula-load.sad .ml-neck{transform:rotate(12deg)}
-.mula-load.sad .ml-ear{transform:rotate(-30deg)}
-.mula-load.sad .ml-e2{transform:rotate(25deg)}
-/* Same character at rest: planted feet, a slow breath and drops from the visible eye. */
-.mula-load.sad .ml-bob{animation:ml-sad-breathe 3.2s ease-in-out infinite}
-.mula-load.sad .ml-neck{animation:ml-sad-sigh 3.2s ease-in-out infinite;animation-delay:-.25s}
-.mula-load.sad .ml-tear{transform-origin:161px 28.5px;animation:ml-tear 2.8s linear infinite}
-.mula-load.sad .ml-tear-late{opacity:0;animation-delay:-1.4s}
-@keyframes ml-sad-breathe{0%,100%{transform:translateY(0) rotate(1deg)}42%{transform:translateY(-1.071%) rotate(.4deg)}65%{transform:translateY(-.298%) rotate(1deg)}}
-@keyframes ml-sad-sigh{0%,100%{transform:rotate(12deg)}42%{transform:rotate(9deg)}65%{transform:rotate(13deg)}}
-@keyframes ml-tear{0%{opacity:0;transform:translate(0,0) scale(.45)}10%{opacity:1;transform:translate(0,1px) scale(.85)}26%{opacity:1;transform:translate(2px,7px) scale(1)}48%{opacity:1;transform:translate(5px,19px) scale(.95,1.08)}60%{opacity:.8;transform:translate(7px,28px) scale(.9,1.12)}72%,100%{opacity:0;transform:translate(9px,37px) scale(.8,1.15)}}
-@media (prefers-reduced-motion: reduce){.mula-load *{animation:none!important}}
 .loader-box .mula-spinner { width: 70px; height: 56px; }
 /* a tablet's eight cards are ~100 px wide: the long line would take four lines, so the short one, as on a phone */
 @media (orientation: landscape) and (max-width: 1180px) {
@@ -284,7 +115,7 @@ div.mula-load{display:flex;align-items:center;justify-content:center;container-t
   .c-card .nb { height: calc(var(--name) * 1.1 + var(--line) * 2.3 + 26px); }
   .c-por { bottom: calc(var(--name) * 1.1 + var(--line) * 2.3 + 20px); }
 }
-/* The home waits for the tap (splash.js): the title big, the live figures and mulassa.cat's gold button, one group in the
+/* The home waits for the tap (tap-start.js): the title big, the live figures and mulassa.cat's gold button, one group in the
    middle over the blurred board; the rest of the home comes in after the tap */
 .sp-home .home { grid-template-rows: 1fr; }
 @keyframes sp-breathe { 0%, 100% { scale: 1; } 50% { scale: 1.06; } }
@@ -298,7 +129,7 @@ div.mula-load{display:flex;align-items:center;justify-content:center;container-t
 #tap-start { min-width: 260px; min-height: 60px; padding: 8px 32px; border: 2px solid #f5c518; border-radius: 12px; background: linear-gradient(180deg, #ffe066 0%, #f5c518 55%, #dfad13 100%); color: #2a1a10; font: 800 24px 'Baloo 2', system-ui, sans-serif; box-shadow: 0 6px 0 #8a6a12, 0 16px 40px #0008; animation: sp-breathe 1.6s ease-in-out infinite; }
 /* after the tap: what was hidden comes in, a little after the title and the figures have started to move */
 .sp-in .c-pitch, .sp-in .c-play-row > *, .sp-in .c-row, .sp-in #back, .sp-in #menu-music { animation: sp-fade .45s ease-out .15s both; }
-/* the live figures fade where they wait (splash.js), then in on the home (a canvas glided while resized looked warped) */
+/* the live figures fade where they wait (tap-start.js), then in on the home (a canvas glided while resized looked warped) */
 .sp-in .c-art { animation: sp-fade .4s ease-out both; }
 @keyframes sp-fade { from { opacity: 0; translate: 0 8px; } }
 @media (prefers-reduced-motion: reduce) { #tap-start, .sp-in .home * { animation: none !important; } }

@@ -14,13 +14,15 @@
 //   * each hold's trickle: 400 (x2 in the finale);
 //   * balloons: every tap scores 50 and every `need` taps pop it for 300 x need, over the whole window the balloon
 //     takes taps (from WIN.good before it to HANDOFF before its end), at TAP_RATE taps a second.
-// TAP_RATE is the assumption: the game has no input-rate cap, so 30 taps/s (several fingers drumming on the pad or
-// on keys; key auto-repeat is ignored), about double what the fastest single-finger tappers manage.
+// TAP_RATE is the game's own cap (judge-core.js balloonTapCap: taps past it score nothing), so no run can pass it.
+// LEGACY_TAP_RATE was the assumption before that cap (30 taps/s); the published v1 and v2-short contracts keep it.
 import { readFileSync } from 'node:fs';
 import { makeDanceChart } from '../../src/game/chart.js';
 import { WINDOWS } from '../../src/game/progress.js';
+import { BALLOON_TAP_RATE, balloonTapCap } from '../../src/game/judge-core.js';
 
-export const TAP_RATE = 30; // taps per second, the generous human maximum (see above)
+export const TAP_RATE = BALLOON_TAP_RATE; // taps per second, what the game counts at most (see above)
+export const LEGACY_TAP_RATE = 30;
 export const MARGIN = 1.05; // +5% on top of the perfect run
 export const FINALE_SLACK = 1; // s before song.finale that still counts as doubled
 const HANDOFF = 0.06; // main.js: a balloon takes taps until 60 ms before its end
@@ -31,14 +33,14 @@ export const loadSong = () => JSON.parse(readFileSync(new URL('../../src/song-mu
 export const loadDracSong = () => JSON.parse(readFileSync(new URL('../../src/song-drac.json', import.meta.url)));
 
 // `taps` (one count per balloon) and `slack` replace the assumptions, to compare with a real run (the test's autoplay)
-export function perfectMax(song, diff, { taps: given, slack = FINALE_SLACK } = {}) {
+export function perfectMax(song, diff, { taps: given, slack = FINALE_SLACK, rate = TAP_RATE } = {}) {
   const chart = makeDanceChart(song, diff), fin = t => (t >= song.finale - slack ? 2 : 1);
   let b = 0;
   const mults = [];
   let extra = 0;
   for (const n of chart) {
     if (n.balloon) {
-      const f = fin(n.end), taps = given ? given[b++] : Math.floor(TAP_RATE * (n.end - n.t + WINDOWS[diff].good - HANDOFF)) + 1;
+      const f = fin(n.end), taps = given ? given[b++] : balloonTapCap(n, WINDOWS[diff].good, HANDOFF, rate);
       extra += (SCORING.pump * taps + SCORING.pop * n.need * Math.floor(taps / n.need)) * f;
       mults.push(fin(n.end)); // its judgment, at its end
       continue;
@@ -54,9 +56,9 @@ export function perfectMax(song, diff, { taps: given, slack = FINALE_SLACK } = {
 
 // rounded up to the next thousand, so the SQL and the client carry round numbers
 export const ceilingOf = max => Math.ceil(max * MARGIN / 1000) * 1000;
-export const ceilings = (song = loadSong()) => [0, 1, 2].map(d => ceilingOf(perfectMax(song, d).max));
+export const ceilings = (song = loadSong(), rate = TAP_RATE) => [0, 1, 2].map(d => ceilingOf(perfectMax(song, d, { rate }).max));
 // versions.extras_max: what holds and balloons pay whatever the judgments say, with the same margin
-export const extrasCeilings = (song = loadSong()) => [0, 1, 2].map(d => ceilingOf(perfectMax(song, d).extras));
+export const extrasCeilings = (song = loadSong(), rate = TAP_RATE) => [0, 1, 2].map(d => ceilingOf(perfectMax(song, d, { rate }).extras));
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   for (const [name, song] of [['mulassa-v3', loadSong()], ['drac-v1', loadDracSong()]]) for (const d of [0, 1, 2]) {

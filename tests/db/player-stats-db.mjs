@@ -3,6 +3,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { fixture } from '../../supabase/tests/fixture.mjs';
+import { VERSION_RULES } from '../../src/services/leaderboard-rules.js';
 globalThis.localStorage = { getItem: () => null, setItem() {}, removeItem() {} };
 const { newStats, endRun, payload } = await import('../../src/game/stats.js');
 const { makeDanceChart } = await import('../../src/game/chart.js');
@@ -103,7 +104,7 @@ try {
   await merge(device,{[bucket]:{balloons:20000,holds:50000,errors:{early:79992}}});
   await relax(a);
   for(const bad of [
-    {...complete.best,score:193001}, {...complete.best,score:193000,perfect:1,miss:239,maxCombo:1},
+    {...complete.best,score:VERSION_RULES['mulassa-v3'].ceilings[2]+1}, {...complete.best,score:VERSION_RULES['mulassa-v3'].ceilings[2],perfect:1,miss:239,maxCombo:1},
     {...complete.best,perfect:233}, {...complete.best,maxCombo:233}, {...complete.best,user_id:a}
   ]) await fail(()=>merge(device,{[bucket]:{best:bad}}),'leaderboard_invalid_stats');
   // Later aggregate time growth includes a previously unseen bucket on the same imported device.

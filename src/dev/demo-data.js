@@ -55,7 +55,7 @@ const shuffled = (list, r) => { const a = [...list]; for (let i = a.length - 1; 
 
 // One result in the server's terms: counts out of the level's judgments, the score under its ceiling for those counts.
 export function makeRun(version, difficulty, skill, r) {
-  const rule = VERSION_RULES[family(version) === SHORT_SCORE_VERSION || version === PREVIOUS_VERSION ? 'mulassa-v3' : version], J = rule.judgments[difficulty];
+  const rule = VERSION_RULES[family(version) === SHORT_SCORE_VERSION ? SHORT_SCORE_VERSION : version === PREVIOUS_VERSION ? 'mulassa-v3' : version], J = rule.judgments[difficulty];
   const lost = (1 - skill) * 0.42 + 0.02 * r();
   const miss = Math.round(J * lost * 0.6), good = Math.round(J * lost * 1.1), perfect = Math.max(0, J - miss - good);
   const maxCombo = Math.max(1, Math.min(perfect + good, Math.round((perfect + good) * (0.25 + 0.7 * skill * (0.8 + 0.2 * r())))));

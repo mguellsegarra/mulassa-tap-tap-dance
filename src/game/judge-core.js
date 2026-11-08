@@ -27,5 +27,9 @@ export function holdVerdict(n, got, t) {
   const frac = t >= n.end - HOLD_GRACE ? 1 : (got - n.t) / (n.end - n.t);
   return frac >= 0.9 ? { frac, kind: 'perfect', more: '' } : frac >= 0.5 ? { frac, kind: 'good', more: 'holdMore' } : { frac, kind: 'miss', more: 'hold' };
 }
+// The most taps a balloon counts: BALLOON_TAP_RATE a second over the whole window it takes taps in (state.js balloonAt).
+// Past it a tap scores nothing, so no run outgrows the leaderboard's ceiling (tools/data/score-ceiling.mjs uses this cap).
+export const BALLOON_TAP_RATE = 40;
+export const balloonTapCap = (n, good, handoff, rate = BALLOON_TAP_RATE) => Math.floor(rate * (n.end - n.t + good - handoff)) + 1;
 export const balloonVerdict = (count, need) => (count >= need ? 'perfect' : count * 2 >= need ? 'good' : 'miss'); // time's up: a pop is perfect, half-inflated still good
 export const isOverdue = (n, t, win) => t - n.t > win.miss; // untouched past its window: a silent miss

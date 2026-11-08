@@ -353,7 +353,7 @@ assert(run('Math.cos(songYaw() - CAM_AZ) < -0.5 && guaFront > 0.03 && guaRear < 
 run(`var worst = 0, bl = G.balloons[0]; songNow = bl.t + 0.1; G.next = G.chart.indexOf(bl);
   for (let i = 0; i < 400; i++) { press(i % 2 ? 'L' : 'R'); frames(1, 1 / 120);
     worst = Math.max(worst, Math.abs(M.yaw - songYaw()) / CAP.yaw, Math.abs(S.roll.x) / CAP.roll, Math.abs(S.pitch.x) / CAP.pitch, M.air / CAP.air); }`);
-assert(run('bl.count === 400 && worst <= 1 + 1e-9'), 'mashing a GLOBUS (and its pops) stays within the accent caps');
+assert(run('bl.count === Math.min(400, balloonTapCap(bl, WIN.good, HANDOFF)) && worst <= 1 + 1e-9'), 'mashing a GLOBUS (and its pops, up to the tap cap) stays within the accent caps');
 run(`frames(180);`);
 assert(run('M.air === 0 && Math.abs(S.roll.x) < 1e-3 && Math.abs(M.yaw - songYaw()) < 1e-3'), 'and settles once the mashing stops');
 run(`startGame(1); var hn = G.chart.find(n => n.end && !n.balloon); songNow = hn.t; frames(30);

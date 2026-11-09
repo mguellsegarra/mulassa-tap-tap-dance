@@ -4,7 +4,7 @@
 import { RUN_VERSION } from './run.js';
 import { raiseBest } from './best.js';
 import { badgeName } from '../../../ui/badge-names.js';
-import { setupBadgeTip } from '../../../ui/badge-tip.js';
+import { playerName, boardRow, levelPill } from '#plassa/board.js';
 
 const SUPABASE = !!import.meta.env.VITE_SUPABASE_URL;
 export const RANKING = SUPABASE || import.meta.env.DEV;
@@ -66,22 +66,12 @@ export function setupRankingUI({ t, focusBack }) {
     showPlace(place?.position, place?.score);
   }
 
-  // a player's name as the main boards show it, into `into`: a chosen badge says its name on a hover or a tap (the main game's
-  // badge-tip.js, its names from badge-names.js), the check otherwise
-  function nameInto(into, p, { badgeArtOf, CHECK_SVG }) {
-    into.append(el('span', `alias${p.verified ? '' : ' guest'}${p.released ? ' released' : ''}`, p.alias));
-    if (!p.verified) return;
-    const art = badgeArtOf(p.badge_id), name = art && badgeName(p.badge_id, k => t(`badge.${k}`)), mark = el('span', art ? 'player-badge' : 'verified-check');
-    mark.setAttribute('role', 'img');
-    if (name) { mark.dataset.tip = name; mark.setAttribute('aria-label', name); }
-    mark.innerHTML = art ?? CHECK_SVG; // our own markup, never the player's
-    into.append(mark);
-  }
-  setupBadgeTip();
-  // a row's points, then its taps and level, small (rules.js hits; the level's name as the main game's)
+  // the board's look (Plassa's board.js): mulassa.cat's badge art, their names in this game's words
+  const lookOf = ({ badgeArtOf, CHECK_SVG }) => ({ checkSvg: CHECK_SVG, badgeOf: id => { const art = badgeArtOf(id); return art && { art, name: badgeName(id, k => t(`badge.${k}`)) }; } });
+  // a row's points, then its taps, small (rules.js hits); the level is the pill under the name
   const scoreOf = r => {
     const box = el('span', 'score');
-    box.append(el('b', '', r.score), el('small', '', `${r.hits ?? 0} ${t('rank.hits')} · ${t(`level.${r.level ?? 0}`)}`));
+    box.append(el('b', '', r.score), el('small', '', `${r.hits ?? 0} ${t('rank.hits')}`));
     return box;
   };
 
@@ -93,16 +83,7 @@ export function setupRankingUI({ t, focusBack }) {
     $('board-close').focus({ focusVisible: false });
     service().then(m => Promise.all([m.board(), m.me().catch(() => ({})), marks()])).then(([rows, { place }, art]) => {
       if (req !== boardReq) return;
-      const li = r => {
-        const row = el('li', r.is_self ? 'me' : ''), who = el('button', 'who');
-        who.type = 'button';
-        who.addEventListener('click', () => openCard(r.public_id));
-        who.append(el('i', '', r.position));
-        nameInto(who, r, art);
-        who.append(scoreOf(r));
-        row.append(who);
-        return row;
-      };
+      const look = lookOf(art), li = r => boardRow(r, { look, onOpen: () => openCard(r.public_id), cells: [scoreOf(r)], sub: r.level == null ? [] : [levelPill(r.level, t(`level.${r.level}`))] });
       list.append(...rows.map(li));
       if (place && !rows.some(r => r.is_self)) list.append(el('li', 'gap', '…'), li({ ...place, alias: t('rank.you', { n: place.position }), is_self: true, verified: false }));
       note.hidden = rows.length > 0;
@@ -122,7 +103,7 @@ export function setupRankingUI({ t, focusBack }) {
       if (req !== cardReq) return;
       if (!p) { title.replaceChildren(t('rank.error')); return; }
       title.replaceChildren();
-      nameInto(title, p, art);
+      playerName(title, p, lookOf(art));
       const stat = (key, value) => { const box = el('div'); box.append(el('dt', '', t(key)), el('dd', '', value)); return box; };
       stats.append(stat('rank.cardBest', p.best), stat('rank.cardPlace', `#${p.position}`), stat('rank.cardRuns', p.runs), stat('rank.cardAverage', p.average));
     }, () => { if (req === cardReq) title.replaceChildren(t('rank.error')); });

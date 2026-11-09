@@ -55,7 +55,7 @@ Llegenda de l'estat:
 
 | Funcionalitat | Avui | Estat |
 | --- | --- | --- |
-| Rànquing per joc, amb el teu lloc encara que no hi surtis | Classificació (`ui/board-list.js`); Pop (`ranking-ui.js`) | mulassa.cat, Pop |
+| Rànquing per joc, amb el teu lloc encara que no hi surtis | Classificació (`ui/board-list.js`); Pop (`ranking-ui.js`), amb les files i el nom de Plassa (`board.js`) | mulassa.cat, Pop |
 | Temporades, podis, Saló de la fama, avís de final de temporada | `ui/seasons-ui.js`, `season-end-ui.js`, `select-podium.js` | mulassa.cat |
 | Publicar un resultat; si encara no tens nom, es guarda fins que en tinguis | `ui/publish-ui.js`, `publish-land.js`; Pop (`pop-pending`) | mulassa.cat, Pop |
 | El servidor valida el resultat: contra la partitura a mulassa.cat, tornant a jugar la partida a Pop | taules i funcions per joc (`pop-score`) | per joc, amb una porta d'entrada comuna |
@@ -120,7 +120,8 @@ Llegenda de l'estat:
 | Compte enrere 3-2-1 (`countdown.js`) | Plassa |
 | Pausa i final de partida: el full, la Mulassa plorant, els botons | Plassa (CSS) / Pop (la lògica) |
 | Ajuda del joc («?») i esglaó de nivell | Pop (feina sense commit a `release-1.3.0`) |
-| Rànquing del joc: publicar, llista, la teva posició, fitxa | Pop (`ranking-ui.js`) |
+| Rànquing del joc: la fila i el nom amb la insígnia | Plassa (`board.js`, `badge-tip.js`); mulassa.cat hi passarà després de la 1.3.0 |
+| Rànquing del joc: publicar, la teva posició, fitxa | Pop (`ranking-ui.js`) |
 | Demostració («Mira com es juga») | mulassa.cat (`watch-ui.js`, del seu joc) |
 
 ## 9. Què s'ha de fer configurable perquè Plassa pugui sortir a part

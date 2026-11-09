@@ -106,10 +106,12 @@ are in `packages/plassa/docs/inventari.md`.
   + `render-quality.js`, `orientation.js`.
 - Words and state: `music-pref.js` (Plassa's one music switch, mulassa.cat's `menu-music` key), `words.js` (a game's `locales/*.json`) over `locale.js` (the saved language), `storage.js`, `best.js`,
   `haptics.js`, `countdown.js`.
+- Boards: `board.js` (a board's row and a player's name with its badge, as mulassa.cat's; the game brings the art, the words
+  and its own cells) over `badge-tip.js`.
 - Imports: `packages/plassa/src/` reaches outside itself only for `core/` and data (`i18n/meta.json`, the loading lines'
   `i18n/locales/*/boot.json`); mulassa.cat never imports it yet; a game never imports another game.
 - Copies of mulassa.cat kept in step until it moves onto the base: `storage`, `haptics`, `boot`, `double-tap`,
-  `errors`, `sentry-load`, `update-watch`, `update-rules`, `locale`, `focus`, `render-quality` (same code, other paths),
+  `errors`, `sentry-load`, `update-watch`, `update-rules`, `locale`, `focus`, `badge-tip`, `render-quality` (same code, other paths),
   `mula-load.html` (ui/loader.js's art). The rest is consolidated from several of its modules (see each file's header).
 
 ## Steps

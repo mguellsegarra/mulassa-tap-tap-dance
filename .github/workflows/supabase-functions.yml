@@ -28,7 +28,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: supabase/setup-cli@v1
         with:
-          version: latest
+          version: 3.0.0 # pinned: `latest` asks the GitHub API on every run (a 503 there failed a deploy) and takes new majors unasked
       # --use-api bundles on Supabase's side: no Docker on the runner. verify_jwt comes from supabase/config.toml.
       - run: |
           [ -n "$PROJECT_REF" ] || { echo "missing Supabase project"; exit 1; }

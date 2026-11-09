@@ -8,9 +8,9 @@ export function verifyCarretillesCounter(run) {
       run(`setFigureSong(${figure}); startGame(${diff}); G.state = 'play'; G.paused = false; offsetMs = 0;`);
       for (const ix of [0, 1]) {
         run(`var counterRoll = G.balloons[${ix}]; G.next = G.chart.indexOf(counterRoll); songNow = counterRoll.t;
-          var counterNeed = counterRoll.need;`);
-        const need = run('counterNeed');
-        for (const count of [0, 1, need - 1, need, need + 1, need * 2, Math.max(101, need * 3 + 1)]) {
+          var counterNeed = counterRoll.need, counterCap = balloonTapCap(counterRoll, WIN.good, HANDOFF);`);
+        const need = run('counterNeed'), cap = run('counterCap');
+        for (const count of [0, 1, need - 1, need, need + 1, need * 2, Math.min(cap, Math.max(101, need * 3 + 1)), cap]) {
           run(`while (counterRoll.count < ${count}) press(counterRoll.count % 2 ? 'L' : 'R');
             counterText = []; drawLane(songNow);`);
           const words = JSON.parse(run('JSON.stringify(counterText)'));
@@ -28,6 +28,9 @@ export function verifyCarretillesCounter(run) {
             assert(words.includes(value) && words.includes(label), `MULASSA/${diff}/${ix}/${count}: ${value} ${label}, got ${words}`);
           }
         }
+        run(`var counterScore = G.score; for (let i = 0; i < 20; i++) press(i % 2 ? 'L' : 'R');`);
+        assert.equal(run('counterRoll.count'), cap, `${figure}/${diff}/${ix}: no tap past the cap counts (the ceiling's ${cap})`);
+        assert.equal(run('G.score'), run('counterScore'), 'nor scores');
         run(`var counterBefore = counterRoll.count; G.paused = true; press('L'); G.paused = false;
           songNow = counterRoll.end - HANDOFF; press('R');
           counterText = []; drawLane(songNow);`);

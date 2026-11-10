@@ -65,4 +65,18 @@ try {
   assert(crowd.length && crowd.every(Number.isFinite), 'every spectator stands somewhere');
   assert.deepEqual(errors, [], 'no page error in the production build');
   console.log('prod play: the production build plays a Mulassa run ok');
+  // Mulassa Pop's splash tap: the live figures' box shrinks to the home's, and their WebGL buffer must stay as it is
+  // (hero.js fit): a new one stalled the tap 75-146 ms on the S10, as the title glided
+  await page.goto(`${server.resolvedUrls.local[0]}pop/?mute`, { waitUntil: 'domcontentloaded' });
+  await page.waitForSelector('#tap-start', { timeout: 120000 });
+  await page.waitForTimeout(500);
+  const hero = () => page.evaluate(() => { const c = document.getElementById('menu-hero'); return { css: c.clientWidth, buffer: c.width }; });
+  const splash = await hero();
+  await page.click('#tap-start', { force: true }); // (force: it breathes)
+  await page.waitForFunction(() => !document.body.matches('.sp-home, .sp-in'), null, { timeout: 10000 });
+  const home = await hero();
+  assert.notEqual(home.css, splash.css, 'the splash shows the figures in another box than the home');
+  assert.equal(home.buffer, splash.buffer, 'the splash tap keeps the figures\' WebGL buffer');
+  assert.deepEqual(errors, [], 'no page error in Mulassa Pop\'s production build');
+  console.log('prod play: Mulassa Pop\'s splash tap keeps its WebGL buffer');
 } finally { await server?.close(); await browser.close(); rmSync(outDir, { recursive: true, force: true }); }

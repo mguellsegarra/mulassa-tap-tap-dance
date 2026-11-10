@@ -64,6 +64,10 @@ the method and its tools: `docs/agents/device-profiling.md`.
   visible 0%, `display: none` 0-0.5%, `visibility: hidden` 17-27% (no help), `content-visibility: hidden` 0%. Fixed with
   `data-reel-gone` once the fade is over (`ui/reel-idle.js`, `select-sizes.css`: `content-visibility: hidden`, and
   `contain-intrinsic-size: auto none` so the boxes keep their size and the selector's observers see no change).
+- **A WebGL canvas that changes size makes a new buffer.** Mulassa Pop's splash tap shrank the home's live figures
+  (`--k` and another box): `renderer.setSize` stalled that frame 75-146 ms on the S10 (the GPU making the buffer, WebGL
+  waiting on it), just as the title glided (2026-11-10). The splash now stretches the home's buffer (hero.js `fit`, same
+  aspect); the tap takes no task over 50 ms. A box that only scales keeps its buffer; `tests/render/prod-play.mjs` guards it.
 - **Low Power Mode is a cadence, not overload.** An iPhone's Safari alternated 30 and 24 Hz (41.7 ms frames, five
   refreshes of its 120 Hz screen) with the CPU at ~10 ms; the quality monitor read 24 Hz as overload and fell from medium
   to minimal mid-song. `render-quality.js` CAP now covers 24 Hz, a frame one refresh late keeps the run, and a capped frame

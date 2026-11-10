@@ -95,6 +95,8 @@ export function createHero(canvas) {
   function fit() {
     const w = canvas.clientWidth, h = canvas.clientHeight;
     if (!w || !h || (w === W && h === H)) return;
+    // the splash only scales the home's box (tap-start.js): the home's buffer, stretched; a new one stalled the tap ~100 ms (S10)
+    if (W && document.body.classList.contains('sp-home') && Math.abs(w / h - W / H) < .01) return;
     W = w; H = h;
     renderer.setPixelRatio(pixelRatio());
     renderer.setSize(w, h, false);

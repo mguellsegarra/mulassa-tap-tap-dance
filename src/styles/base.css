@@ -272,6 +272,7 @@ kbd { display: inline-block; min-width: 14px; padding: 0 4px; border: 1px solid 
    and the way there (the games button drawn as it is up there). One 16 px rhythm between blocks; the name hugs its line. */
 .sheet.hint-menu#news-menu { width: min(400px, calc(100vw - 32px - var(--sal) - var(--sar))); padding-top: 14px; }
 #news-menu .sheet-body { display: grid; gap: 16px; }
+#news-menu::backdrop { -webkit-mask: var(--spot, none) 0 0 / 100% 100% no-repeat; mask: var(--spot, none) 0 0 / 100% 100% no-repeat; } /* a hole round the games button (news-sheet.js) */
 #news-menu .sheet-body > .notice-ribbon { margin: 0 0 -12px; } /* the cloth's drawn shadow under the band already reads as space */
 #news-menu .sheet-actions { margin: 0; }
 .news-pics { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 10px; margin: 0; }

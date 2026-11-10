@@ -280,6 +280,7 @@
    the way of a tap on what it covers while it is away */
 #free:is([hidden], [data-reel-gone]) + .games-tip, body.view-mode .games-tip { display: none; } /* gone with the button (play, the reel) and in free play; a sheet's backdrop dims it as the rest */
 .sel-heart-tip.games-tip { pointer-events: none; animation: games-tip 10s ease 1.5s infinite both; }
+.sel-heart-tip.games-tip.games-tip-on { animation: none; } /* held up while the news sheet points at it (news-sheet.js) */
 @keyframes games-tip { 0% { opacity: 0; translate: 0 -8px; scale: .9; } 3% { opacity: 1; translate: 0 0; scale: 1.08; } 5%, 58% { opacity: 1; translate: 0 0; scale: 1; } 60%, 100% { opacity: 0; translate: 0 0; scale: 1; } }
 @media (prefers-reduced-motion: reduce) { @keyframes games-tip { 0% { opacity: 0; } 3%, 58% { opacity: 1; } 60%, 100% { opacity: 0; } } }
 @media not ((hover: hover) and (pointer: fine)) { .sel-song .sel-walk { display: none; } } /* free play beside «Mira el ball» on a desktop only (a phone's row has no room; touch finds it in the help) */

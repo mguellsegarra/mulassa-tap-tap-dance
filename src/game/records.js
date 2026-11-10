@@ -36,3 +36,6 @@ export function saveRecord(store, difficulty, quality, rawScore, combo) {
   store.set(recordPointsKey(difficulty), JSON.stringify({ quality, rawScore, score: comparableScore(rawScore, difficulty),
     combo, sourceVersion: CURRENT_SCORE_VERSION, scoreScale: recordScale }));
 }
+// Anything this device remembers of a run: the statistics, a record, or a record from an older scoring
+export const hasPlayed = store => store.get('stats-v1') != null
+  || [0, 1, 2].some(d => [recordPointsKey(d), ...previousKeys(d)].some(k => store.get(k) != null));

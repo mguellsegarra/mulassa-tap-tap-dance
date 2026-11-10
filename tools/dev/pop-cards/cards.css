@@ -1,0 +1,84 @@
+/* Four proposals for the Pop home's row of cards (html[data-p]). The row box (.c-row: its height --row, margins, scroll) is the
+   real one from style.css; only the cards inside change. Phones (portrait) show the two-word line, wide screens the long one. */
+.k { --tone: #ff7ac6; --ink: #2a1a10; --name: clamp(14px, calc(var(--row) * .085), 18px); --line: clamp(12px, calc(var(--row) * .07), 15px);
+  position: relative; flex: none; box-sizing: border-box; width: calc(var(--row) * .8); height: 100%; scroll-snap-align: start; }
+.k[data-tone="no"] { --tone: #ff8a7a; } .k[data-tone="extra"] { --tone: #f5c518; }
+.k img { display: block; min-width: 0; min-height: 0; max-width: 100%; max-height: 100%; }
+.k-nb b { display: block; font-size: var(--name); line-height: 1.1; }
+.k-nb span { display: block; font-size: var(--line); line-height: 1.15; }
+.k-tag { display: block; box-sizing: border-box; border-radius: 50%; }
+.k-tag svg { display: block; width: 100%; height: 100%; fill: currentColor; }
+.k .long { display: none; }
+@media (orientation: landscape) {
+  .k { flex: 1 1 0; width: auto; min-width: 0; }
+  .k .long { display: block; } .k .tiny { display: none; }
+  .k-nb span { text-wrap: balance; }
+}
+
+/* A: mulassa.cat's game cards (games-sheet.css). The picture is the card; the name stands on a short shade at its foot. */
+[data-p="A"] .k { overflow: hidden; border-radius: 18px; background: radial-gradient(85% 65% at 50% 42%, color-mix(in srgb, var(--tone) 40%, #2b2350), #1a1630 85%);
+  box-shadow: 0 8px 18px #0008, inset 0 0 0 2px color-mix(in srgb, var(--tone) 60%, transparent); }
+[data-p="A"] .k-por { position: absolute; inset: 12px 10px 30px; display: flex; align-items: flex-end; justify-content: center; }
+[data-p="A"] .k-tag { position: absolute; z-index: 2; top: 8px; left: 8px; width: 24px; height: 24px; padding: 4px; background: var(--tone); color: var(--ink); }
+/* the shade starts as far above the name as the text ends above the card's foot (games-sheet.css) */
+[data-p="A"] .k-nb { position: absolute; z-index: 1; inset: auto 0 0; padding: 20px 10px 10px; background: linear-gradient(#0000, color-mix(in srgb, var(--tone) 24%, #120b07) 10px); }
+[data-p="A"] .k-nb b { color: var(--tone); }
+/* wide: the long line wraps to one to three lines; one band for all (names on one line across the row), figures one size */
+@media (orientation: landscape) {
+  [data-p="A"] .k-nb { height: calc(var(--name) * 1.1 + var(--line) * 3.45 + 26px); padding-top: 16px; box-sizing: border-box; }
+  [data-p="A"] .k-por { bottom: calc(var(--name) * 1.1 + var(--line) * 3.45 + 20px); }
+}
+
+/* B: a cream card with a coloured window. The tone is the window's colour; the text is dark ink right under it. */
+[data-p="B"] .k { display: flex; flex-direction: column; padding: 6px; border-radius: 18px; background: #fff3d6; color: var(--ink);
+  box-shadow: 0 4px 0 color-mix(in srgb, var(--tone) 55%, #2a1a10), 0 10px 18px #0007; }
+[data-p="B"] .k-por { flex: 1 1 0; min-height: 0; display: flex; align-items: center; justify-content: center; padding: 8px; border-radius: 12px; box-sizing: border-box;
+  background: radial-gradient(circle at 50% 65%, color-mix(in srgb, var(--tone) 55%, #fff), var(--tone) 75%); }
+[data-p="B"] .k-por img { filter: drop-shadow(0 3px 0 #0003); }
+[data-p="B"] .k-tag { position: absolute; top: 12px; right: 12px; width: 22px; height: 22px; padding: 3px; background: #fff3d6; color: color-mix(in srgb, var(--tone) 45%, var(--ink)); }
+[data-p="B"] .k-nb { padding: 4px 4px 2px; }
+[data-p="B"] .k-nb span { color: color-mix(in srgb, var(--tone) 30%, #4a3528); }
+/* wide: one window height across the row (names on one line); the text under it takes one to three lines */
+@media (orientation: landscape) { [data-p="B"] .k-por { flex: none; height: calc(100% - var(--name) * 1.1 - var(--line) * 3.45 - 6px); } }
+
+/* C: two rows of small landscape tiles, portrait left, words right: twice the cards in the same height, no band at all. */
+[data-p="C"] .c-row { display: grid; grid-template-rows: repeat(2, minmax(0, 1fr)); grid-auto-flow: column; grid-auto-columns: max(176px, calc(var(--row) * 1.15)); align-items: stretch; gap: 8px; }
+[data-p="C"] .k { width: auto; height: auto; min-height: 0; display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); align-items: center; gap: 10px; padding-right: 10px;
+  overflow: hidden; border-radius: 14px; background: #24223f; box-shadow: 0 6px 14px #0007, inset 0 0 0 2px color-mix(in srgb, var(--tone) 50%, transparent); }
+[data-p="C"] .k-por { position: relative; height: 100%; aspect-ratio: 1; box-sizing: border-box; display: flex; align-items: center; justify-content: center; padding: 6px;
+  background: radial-gradient(circle at 50% 60%, color-mix(in srgb, var(--tone) 60%, #3a2b4c), color-mix(in srgb, var(--tone) 22%, #24223f) 75%); }
+[data-p="C"] .k-tag { position: absolute; left: 4px; bottom: 4px; width: 18px; height: 18px; padding: 3px; background: var(--tone); color: var(--ink); }
+[data-p="C"] .k-nb b { color: var(--tone); }
+@media (orientation: landscape) {
+  [data-p="C"] .c-row { grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-columns: auto; gap: 12px 16px; }
+  [data-p="C"] .k { gap: 14px; padding-right: 14px; }
+  [data-p="C"] .k-tag { width: 22px; height: 22px; }
+}
+
+/* D: the figure pops out of a solid tile in its tone; dark text on the colour. The tone is the whole tile. */
+[data-p="D"] .k { display: flex; flex-direction: column; isolation: isolate; color: var(--ink); }
+[data-p="D"] .k::before { content: ""; position: absolute; z-index: -1; inset: 34% 0 0; border-radius: 18px;
+  background: linear-gradient(170deg, color-mix(in srgb, var(--tone) 70%, #fff), var(--tone) 45%, color-mix(in srgb, var(--tone) 78%, #5e1514));
+  box-shadow: 0 8px 18px #0008, inset 0 -3px 0 #0002; }
+[data-p="D"] .k-por { flex: 1 1 0; min-height: 0; display: flex; align-items: flex-end; justify-content: center; padding: 4px 8px 0; }
+[data-p="D"] .k-por img { filter: drop-shadow(0 4px 0 #0005); }
+/* the tone's mark goes before the name: a wide figure covers any corner of the tile */
+[data-p="D"] .k-tag { display: none; }
+[data-p="D"] .k-nb b { display: flex; align-items: baseline; } /* a two-line name wraps beside its mark */
+[data-p="D"] .k-nb b::before { content: ""; flex: none; display: block; width: .8em; height: .8em; margin: 0 .25em 0 0; background: currentColor; mask: var(--icon) center / contain no-repeat; }
+[data-p="D"] .k { --icon: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9 11V5.5a1.5 1.5 0 0 1 3 0V10l4.3.9a2 2 0 0 1 1.6 2.2l-.6 4.6A3 3 0 0 1 14.3 20h-3.6a3 3 0 0 1-2.4-1.2L5.6 15a1.5 1.5 0 0 1 2.2-2L9 14.2z"/></svg>'); }
+[data-p="D"] .k[data-tone="no"] { --icon: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zm0 3a6 6 0 0 1 4.9 9.5L8.5 7.1A6 6 0 0 1 12 6zm-4.9 2.5 8.4 8.4A6 6 0 0 1 7.1 8.5z"/></svg>'); }
+[data-p="D"] .k[data-tone="extra"] { --icon: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2.5l2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17l-5.7 3 1.2-6.4-4.7-4.4 6.4-.8z"/></svg>'); }
+[data-p="D"] .k-nb { padding: 4px 10px 10px; }
+[data-p="D"] .k-nb span { color: #2a1a10d0; }
+@media (orientation: landscape) { [data-p="D"] .k-nb { height: calc(var(--name) * 1.1 + var(--line) * 3.45 + 14px); box-sizing: border-box; } } /* names on one line across the row */
+
+/* a tablet's eight cards are ~100 px wide: the long line would take four lines, so the short one, as on a phone (C has room) */
+@media (orientation: landscape) and (max-width: 1180px) {
+  html:not([data-p="C"]) .k .long { display: none; } html:not([data-p="C"]) .k .tiny { display: block; }
+  [data-p="A"] .k-nb { height: calc(var(--name) * 1.1 + var(--line) * 2.3 + 26px); }
+  [data-p="A"] .k-por { bottom: calc(var(--name) * 1.1 + var(--line) * 2.3 + 20px); }
+  [data-p="B"] .k-por { height: calc(100% - var(--name) * 1.1 - var(--line) * 2.3 - 6px); }
+  [data-p="D"] .k { --name: 14px; } [data-p="D"] .k-nb { padding-inline: 8px; } /* the mark takes room beside the name */
+  [data-p="D"] .k-nb { height: auto; min-height: calc(var(--name) * 1.1 + var(--line) * 2.3 + 14px); } /* «Mulassa verda» may take two lines */
+}

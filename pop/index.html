@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="ca" translate="no">
+<head>
+  <meta charset="utf-8">
+  <!-- nothing in the game is dragged: the browser's own drag of a picture, logo or text (a ghost of it) would steal the pointer -->
+  <script>addEventListener('dragstart', e => e.preventDefault());</script>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#11152c">
+  <meta name="robots" content="noindex">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="Mulassa">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <title>Mulassa Pop</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="/fonts/baloo-2-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/fonts/jersey-10-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/packages/plassa/src/base.css">
+  <link rel="stylesheet" href="/packages/plassa/src/game.css">
+  <link rel="stylesheet" href="/packages/plassa/src/sheets.css">
+  <link rel="stylesheet" href="/src/styles/badge.css">
+  <link rel="stylesheet" href="/src/styles/level-seg.css">
+  <link rel="stylesheet" href="/src/jocs/games/pop/style.css">
+</head>
+<body>
+  <canvas id="game" data-t-aria="board" aria-label="Tauler de Mulassa Pop"></canvas>
+
+  <!-- The run's 3, 2, 1 (flow.js): over the board, never in the way of a tap (nothing to tap yet). -->
+  <div id="count" aria-hidden="true" hidden><b></b></div>
+  <div id="combo" aria-hidden="true" hidden></div><!-- «Combo ×3 +9», a chord, hud.js -->
+  <div id="combo-flash" aria-hidden="true" hidden></div><!-- a chord lights the screen gold, hud.js -->
+  <div id="hud" hidden>
+    <button id="pause" class="round-btn" data-t-aria="pause" aria-label="Pausa"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg></button>
+    <div id="hud-mid">
+      <div id="score" role="status">0</div>
+      <div id="hud-best" aria-hidden="true"><small data-t="home.bestShort">Rècord</small><span id="hud-best-num"></span></div>
+      <div id="chips"></div>
+    </div>
+    <button id="music" class="round-btn music-btn" data-t-aria="music" aria-label="Música" aria-pressed="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 18V6l10-2v12" fill="none" stroke="currentColor" stroke-width="2.2"/><circle cx="6.5" cy="18" r="2.8"/><circle cx="16.5" cy="16" r="2.8"/><path class="music-off" d="M4 4l16 16" stroke="#ff8a7a" stroke-width="2.6" stroke-linecap="round" hidden/></svg></button>
+  </div>
+
+  <!-- The home: the Mulassa Games hero (logo, pitch, Juga, record, the red Mulassa big) over a row of cards, one per figure. -->
+  <div id="menu" class="home">
+    <!-- the site's games icon, round as the music button; its bubble says «Torna als jocs», or «Més jocs!» with a pink dot
+         when the player did not come from the games sheet (main.js) -->
+    <a id="back" class="exit corner-l" href="/jocs/"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="3.5" y="3.5" width="7.5" height="7.5" rx="1.6"/><rect x="13.6" y="2.8" width="7.5" height="7.5" rx="1.6" transform="rotate(14 17.35 6.55)"/><rect x="3.5" y="13" width="7.5" height="7.5" rx="1.6"/><rect x="13" y="13" width="7.5" height="7.5" rx="1.6"/></svg><span class="exit-tip" data-t="back">Torna als jocs</span><i class="exit-dot" aria-hidden="true"></i></a>
+    <!-- the corner row as mulassa.cat's: music, then ⚙ (Configuració: mulassa.cat's sheets, settings.js) -->
+    <div class="corner-r corner-row"><button id="menu-music" class="round-btn music-btn" data-t-aria="music" aria-label="Música" aria-pressed="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 18V6l10-2v12" fill="none" stroke="currentColor" stroke-width="2.2"/><circle cx="6.5" cy="18" r="2.8"/><circle cx="16.5" cy="16" r="2.8"/><path class="music-off" d="M4 4l16 16" stroke="#ff8a7a" stroke-width="2.6" stroke-linecap="round" hidden/></svg></button><button id="settings" class="round-btn" aria-haspopup="dialog" data-t-aria="settings" aria-label="Configuració"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button></div>
+    <div class="c-hero">
+      <div class="c-text">
+        <!-- the title as Mulassa Games' (index.html #games-title): a glint across MULASSA, and POP pops letter by letter -->
+        <h1 class="pop-title" aria-label="Mulassa Pop"><svg class="logo" aria-hidden="true" focusable="false" viewBox="0 -4 308.6 80" text-anchor="middle" stroke-linejoin="round" paint-order="stroke">
+          <defs><linearGradient id="pop-glint" gradientUnits="userSpaceOnUse" x1="-150" y1="0" x2="-60" y2="40"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".75"/><stop offset="1" stop-color="#fff" stop-opacity="0"/><animateTransform attributeName="gradientTransform" type="translate" values="0;560;560" keyTimes="0;.3;1" dur="4.5s" repeatCount="indefinite"/></linearGradient></defs>
+          <g font-family="'Jersey 10'" font-size="100" stroke-width="12"><text x="154.3" y="66.6" textLength="300" lengthAdjust="spacingAndGlyphs" fill="#5e1514" stroke="#5e1514">MULASSA</text><text x="154.3" y="60.6" textLength="300" lengthAdjust="spacingAndGlyphs" fill="#c0283c" stroke="#fff3d6">MULASSA</text><text x="154.3" y="60.6" textLength="300" lengthAdjust="spacingAndGlyphs" fill="url(#pop-glint)" stroke="none">MULASSA</text></g>
+        </svg><span class="pop-word" aria-hidden="true"><i style="--i:0">P</i><i style="--i:1">O</i><i style="--i:2">P</i></span></h1>
+        <p class="c-pitch" data-t="home.pitch"></p>
+        <!-- the board's best three on a tall phone's home, as mulassa.cat's «Top 3» (ranking-ui.js top3; style.css .c-top) -->
+        <section class="c-top" id="menu-top" hidden><button type="button" class="c-top-head" id="menu-top-head"><svg class="podium" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 20h20M3.5 20v-7H9v7M9 20V5h6v15M15 20v-5h5.5v5M11 9.2l1.4-1.1V14"/></svg><span data-t="rank.title">Rànquing</span><svg class="go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button><ol class="board-list" id="menu-top-list"></ol></section>
+        <div class="c-play-row">
+          <button id="play" class="btn btn-primary btn-big btn-invite" data-keys-first><svg viewBox="0 0 24 24"><path d="M7 4.5v15a1 1 0 0 0 1.5.9l12-7.5a1 1 0 0 0 0-1.8l-12-7.5A1 1 0 0 0 7 4.5z"/></svg><span data-t="play">Juga</span></button>
+          <button type="button" id="help" class="round-btn pop-help" aria-haspopup="dialog" data-t-aria="help.open" aria-label="Com es juga?"><span aria-hidden="true">?</span></button><!-- «?» round, beside Juga (the owner's pick, 10 Nov 2026) -->
+          <button type="button" class="btn btn-secondary btn-big" id="menu-best" data-t-aria="rank.open" aria-label="Rànquing" disabled><svg class="podium" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 20h20M3.5 20v-7H9v7M9 20V5h6v15M15 20v-5h5.5v5M11 9.2l1.4-1.1V14"/></svg><span class="label" data-t="home.board">Veure classificació</span><svg class="go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button>
+        </div>
+      </div>
+      <div class="c-art"><canvas id="menu-hero" aria-hidden="true"></canvas></div>
+    </div>
+  </div>
+
+  <!-- «Com es juga» (help.js): what each figure does, from the «?» and, the first time, after «Juga». -->
+  <div id="help-menu" class="cover" hidden>
+    <div class="sheet help-sheet">
+      <h2 data-t="home.how">Com es juga</h2>
+      <div class="help-legend" id="help-legend"></div>
+      <div class="sheet-actions"><button type="button" id="help-go" class="btn btn-primary" data-t="play">Juga</button><button type="button" id="help-ok" class="btn btn-primary" data-t="help.ok">D’acord</button></div>
+    </div>
+  </div>
+  <!-- The level step after «Juga» (level-step.js): the main game's three levels (level-seg.css), the last one picked. -->
+  <div id="level-menu" class="cover" hidden>
+    <div class="sheet level-sheet">
+      <h2 data-t="level.pick">Nivell</h2>
+      <div class="sel-seg" id="level-seg" role="group" data-t-aria="level.pick" aria-label="Nivell"></div>
+      <div class="sheet-actions"><button type="button" id="level-go" class="btn btn-primary" data-t="play">Juga</button><button type="button" id="level-back" class="btn" data-t="rank.back">Torna</button></div>
+    </div>
+  </div>
+  <div id="pause-menu" class="cover" hidden>
+    <div class="sheet">
+      <h2 data-t="pause">Pausa</h2>
+      <div class="sheet-actions">
+        <button id="resume" class="btn btn-primary" data-t="resume">Continua</button>
+        <button id="quit" class="btn" data-t="quit">Surt</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="end-menu" class="cover" hidden>
+    <div class="art" id="end-art"></div>
+    <div class="sheet">
+      <h2 id="end-title"></h2>
+      <p class="result" id="end-score">0</p>
+      <p class="result-sub" id="end-best"></p>
+      <p class="result-sub rank-line" id="end-rank" hidden></p>
+      <a id="end-name" class="btn" href="/#nom-pop" data-t="rank.getName" hidden>Posa’t un nom</a>
+      <div class="sheet-actions">
+        <button id="again" class="btn btn-primary"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v5h-5"/></svg><span data-t="again">Torna-hi</span></button>
+        <button id="to-menu" class="btn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 8v-2a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-7a2 2 0 0 1-2-2v-2M15 12H3l3-3M6 15l-3-3"/></svg><span data-t="menu">Menú</span></button>
+      </div>
+    </div>
+  </div>
+  <!-- The boot screen: the running Mulassa (packages/plassa/src/mula-load.html, vite.config.js puts it in), shown until the menu is whole; main.js also copies it, crying, into the end. -->
+  <div id="boot" class="cover"><div class="boot-card"><div class="art" id="boot-art"><!-- mula-load --></div><p class="boot-line" id="boot-line" aria-live="polite"></p></div></div><!-- boot-first-line -->
+  <!-- The all-time board (ranking.js): the top 50, you among them. -->
+  <div id="board-menu" class="cover" hidden>
+    <div class="sheet board-sheet">
+      <h2 data-t="rank.title">Rànquing</h2>
+      <ol class="board-list" id="board-list"></ol>
+      <p class="result-sub" id="board-note" hidden></p>
+      <div class="sheet-actions"><button type="button" id="board-close" class="btn btn-primary" data-t="rank.close">Tanca</button></div>
+    </div>
+  </div>
+  <!-- A player's card (ranking-ui.js): their best and place, runs and average. -->
+  <div id="card-menu" class="cover" hidden>
+    <div class="sheet card-sheet">
+      <h2 id="card-name" class="card-name"></h2>
+      <dl class="card-stats" id="card-stats"></dl>
+      <div class="sheet-actions"><button type="button" id="card-close" class="btn btn-primary" data-t="rank.back">Torna</button></div>
+    </div>
+  </div>
+  <div id="rotate" role="alert"><svg viewBox="0 0 48 48" aria-hidden="true"><path class="arr" d="M24 5A19 19 0 0 1 43 24M39.5 20.5 43 24l3.5-3.5M24 43A19 19 0 0 1 5 24M8.5 27.5 5 24l-3.5 3.5"/><g class="ph"><rect x="18" y="10" width="12" height="28" rx="2.5"/><path d="M22.5 34h3"/></g></svg><h2><span class="r-phone" data-t="rotate.phone">Gira el mòbil</span><span class="r-tablet" data-t="rotate.tablet">Gira la tauleta</span></h2><b><span class="r-phone" data-t="rotate.phoneSub">En vertical per jugar</span><span class="r-tablet" data-t="rotate.tabletSub">En horitzontal per jugar</span></b></div>
+  <!-- mulassa.cat's own sheets, put in by vite.config.js from its index.html; settings.js runs them -->
+  <!-- mulassa-sheets: settings-menu account-menu profile-menu badge-menu feedback-menu gate-menu publish-menu captcha-menu privacy-menu -->
+  <script id="boot-watchdog" src="/packages/plassa/src/boot-watchdog.js"></script>
+  <script type="module" src="/src/jocs/games/pop/main.js"></script>
+</body>
+</html>

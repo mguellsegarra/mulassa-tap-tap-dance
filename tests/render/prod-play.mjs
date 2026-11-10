@@ -35,7 +35,9 @@ try {
   assert(await page.evaluate(() => new Promise(done => requestAnimationFrame(() => requestAnimationFrame(() => done(!document.getElementById('lang-tip')))))), 'the language tip is gone with the splash');
   const selected = () => page.evaluate(() => document.querySelector('.sel-card[aria-selected="true"]')?.dataset.id);
   const step = async dir => { // (force: the buttons pulse)
-    const was = await selected(); await page.click(`#select-${dir}`, { force: true });
+    // a forced click on an arrow still disabled (select-ui.js updateArrows, until the strip is laid out) does nothing: waiting for
+    // it ended this step's timeouts, about one run in two (the disabled arrow itself was not caught in the act)
+    const was = await selected(); await page.waitForFunction(id => !document.getElementById(id).disabled, `select-${dir}`, { timeout: 10000 }); await page.click(`#select-${dir}`, { force: true });
     await page.waitForFunction(was => document.querySelector('.sel-card[aria-selected="true"]')?.dataset.id !== was, was, { timeout: 10000 });
   };
   await page.waitForFunction(() => document.querySelector('.sel-card[aria-selected="true"]')?.dataset.id === 'mulassa-valls', null, { timeout: 30000 });
@@ -65,4 +67,18 @@ try {
   assert(crowd.length && crowd.every(Number.isFinite), 'every spectator stands somewhere');
   assert.deepEqual(errors, [], 'no page error in the production build');
   console.log('prod play: the production build plays a Mulassa run ok');
+  // Mulassa Pop's splash tap: the live figures' box shrinks to the home's, and their WebGL buffer must stay as it is
+  // (hero.js fit): a new one stalled the tap 75-146 ms on the S10, as the title glided
+  await page.goto(`${server.resolvedUrls.local[0]}pop/?mute`, { waitUntil: 'domcontentloaded' });
+  await page.waitForSelector('#tap-start', { timeout: 120000 });
+  await page.waitForTimeout(500);
+  const hero = () => page.evaluate(() => { const c = document.getElementById('menu-hero'); return { css: c.clientWidth, buffer: c.width }; });
+  const splash = await hero();
+  await page.click('#tap-start', { force: true }); // (force: it breathes)
+  await page.waitForFunction(() => !document.body.matches('.sp-home, .sp-in'), null, { timeout: 10000 });
+  const home = await hero();
+  assert.notEqual(home.css, splash.css, 'the splash shows the figures in another box than the home');
+  assert.equal(home.buffer, splash.buffer, 'the splash tap keeps the figures\' WebGL buffer');
+  assert.deepEqual(errors, [], 'no page error in Mulassa Pop\'s production build');
+  console.log('prod play: Mulassa Pop\'s splash tap keeps its WebGL buffer');
 } finally { await server?.close(); await browser.close(); rmSync(outDir, { recursive: true, force: true }); }

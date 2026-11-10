@@ -382,6 +382,7 @@
   "ui.sync.tooFew": "Je n’ai pas entendu assez de coups. Réessaie et joue chaque coup dès que tu l’entends.",
   "ui.watch.text": "Tu connais maintenant {song}. Choisis la difficulté et danse avec tes boutons.",
   "ui.lang.title": "Langue",
+  "ui.settings.profileSubGames": "Ton nom et ton insigne",
   "ui.webgl.unavailable": "Ton navigateur ne peut pas afficher le jeu en 3D. Ferme-le complètement et rouvre-le ; sinon, mets-le à jour ou ouvre le jeu avec Chrome ou Safari.",
   "ui.webgl.title": "Oups ! Impossible d’afficher le jeu",
   "ui.webgl.lostTitle": "Oups ! Le jeu s’est arrêté",
@@ -424,5 +425,8 @@
   "ui.hearts.tip.singular": "Un cœur pour toi !",
   "ui.hearts.tip.plural": "Un cœur pour vous !",
   "ui.hearts.failed": "Impossible d'enregistrer. Réessaie.",
-  "ui.code.open": "Ouvrir GitHub"
+  "ui.code.open": "Ouvrir GitHub",
+  "ui.news.title": "Place aux mini-jeux !",
+  "ui.games.tip": "Autres jeux !",
+  "ui.news.text": "Le premier mini-jeu : touche les Mulassas rouges et désamorce les bombes !"
 }

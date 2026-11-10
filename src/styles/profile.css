@@ -319,9 +319,9 @@ span.player-name { display: inline-flex; align-items: baseline; min-width: 0; }
    Phones already wrap it in two lines clear of the ×, and an inset there would push «estadístiques» off-centre */
 /* the welcome news: three steps on the ribbon medals, one axis (medal column, then text), a hairline between them */
 /* the title sits in a ribbon of the estendard's red; its text is real (container units keep it inside the band at every width) */
-#stats-notice-menu .notice-ribbon { position: relative; container-type: inline-size; aspect-ratio: 400 / 92; margin: 0 0 12px; }
-#stats-notice-menu .notice-ribbon svg { display: block; width: 100%; height: auto; }
-#stats-notice-menu .notice-ribbon h2 { position: absolute; inset: 9% 16% 26%; display: grid; place-items: center; margin: 0; color: #fff3d6; font-size: 7.1cqw; line-height: 1; white-space: nowrap; text-shadow: 0 .06em 0 #4a0f14; }
+:is(#stats-notice-menu, #news-menu) .notice-ribbon { position: relative; container-type: inline-size; aspect-ratio: 400 / 92; margin: 0 0 12px; }
+:is(#stats-notice-menu, #news-menu) .notice-ribbon svg { display: block; width: 100%; height: auto; }
+:is(#stats-notice-menu, #news-menu) .notice-ribbon h2 { position: absolute; inset: 9% 16% 26%; display: grid; place-items: center; margin: 0; color: #fff3d6; font-size: 7.1cqw; line-height: 1; white-space: nowrap; text-shadow: 0 .06em 0 #4a0f14; }
 .notice-steps { display: grid; margin: 0; padding: 0; list-style: none; }
 .notice-steps li { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 12px; align-items: start; padding: 12px 0; border-top: 1px solid #e8d8b82e; color: #fff3d6; font-size: 14px; line-height: 1.35; }
 .notice-steps li:first-child { padding-top: 0; border-top: 0; }

@@ -3,12 +3,13 @@
 // A guest idle for 30 days can lose the name to somebody else: its rows are then fainter still («released»), results kept.
 import { tr } from '../i18n/messages.js';
 import { badgeOf } from './player-badges.js';
+import { CHECK_SVG } from './badge-svg.js';
 export const VERIFIED = tr('ui.profile.verified');
 export const GUEST = tr('ui.profile.guest');
 export const GUEST_TEXT = tr('ui.profile.guestText');
 
 // a scalloped seal, the shape people read as «verified»
-export const CHECK_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path class="seal" d="M12 2.7Q17.1-.2 18.6 5.4Q24.2 6.9 21.3 12Q24.2 17.1 18.6 18.6Q17.1 24.2 12 21.3Q6.9 24.2 5.4 18.6Q-.2 17.1 2.7 12Q-.2 6.9 5.4 5.4Q6.9-.2 12 2.7z"/><path d="m7.8 12.2 2.9 2.9 5.6-5.9"/></svg>';
+export { CHECK_SVG } from './badge-svg.js';
 // A plain mark (no tip, no help cursor; it sits inside the name's button, a tap opens the card);
 // screen readers still hear «Correu confirmat»
 export function checkBadge(doc, badgeId = null) {

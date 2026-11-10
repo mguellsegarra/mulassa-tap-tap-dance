@@ -65,7 +65,8 @@ function spot(v, axis, s, a0, a1, u, y, r) {
 }
 // the eye's layers on its white globe, outermost first, each a step prouder: [w, h, back z, front z, colour]
 const EYE = [[0.24, 0.24, 0.445, 0.485, D.red], [0.18, 0.18, 0.47, 0.5, D.iris], [0.1, 0.1, 0.48, 0.515, D.irisCore], [0.04, 0.15, 0.49, 0.53, D.pupil]];
-function head() {
+const EYE_WIDE = [[0.3, 0.3, 0.465, 0.505, D.iris], [0.17, 0.17, 0.495, 0.53, D.irisCore], [0.11, 0.24, 0.515, 0.55, D.pupil]]; // src/jocs' Pica: no lid, read from a high camera
+function head(wide) {
   const g = new THREE.Group(), v = new Vox();
   g.name = 'head'; // (the showreel's close-ups frame both: cameras.js partOutline)
   // origin = the neck joint; +z = the snout. The stem fits inside the last neck segment's knuckle at any angle.
@@ -78,9 +79,9 @@ function head() {
   for (const s of [1, -1]) {
     cb(v, s * 0.22, 0.7, 1.08, 0.3, 0.2, 0.3, D.green); // nostril mound
     cb(v, s * 0.22, 0.72, 1.24, 0.14, 0.1, 0.03, D.redDark); // nostril
-    cb(v, s * 0.26, 0.86, 0.32, 0.3, 0.3, 0.28, D.white); // bulging eye
-    EYE.forEach(([w, h, z0, z1, c]) => cb(v, s * 0.26, 0.87, (z0 + z1) / 2, w, h, z1 - z0, c));
-    cb(v, s * 0.26, 1.03, 0.3, 0.36, 0.1, 0.3, D.greenDark); // eyelid
+    cb(v, s * 0.26, wide ? 0.98 : 0.86, wide ? 0.41 : 0.32, wide ? 0.44 : 0.3, wide ? 0.46 : 0.3, wide ? 0.12 : 0.28, D.white); // bulging eye
+    (wide ? EYE_WIDE : EYE).forEach(([w, h, z0, z1, c]) => cb(v, s * 0.26, wide ? 0.99 : 0.87, (z0 + z1) / 2, w, h, z1 - z0, c));
+    if (!wide) cb(v, s * 0.26, 1.03, 0.3, 0.36, 0.1, 0.3, D.greenDark); // eyelid
     cb(v, s * 0.53, 0.55, -0.3, 0.12, 0.5, 0.3, D.greenDark); // ear fin, scalloped
     cb(v, s * 0.6, 0.85, -0.38, 0.1, 0.2, 0.12, D.greenDark);
     cb(v, s * 0.6, 0.45, -0.38, 0.1, 0.16, 0.12, D.greenDark);
@@ -133,7 +134,7 @@ const WING_ROWS = [1.46, 1.62, 1.46, 1.44, 1.56, 1.38, 1.34, 1.4]; // how far ou
 const knuckle = w => w / 2 + 0.05; // radius of the ball at a segment's far end, around the next pivot
 // the widest square stem (half side) whose base, `depth` behind the pivot, stays inside a knuckle of radius r at any angle
 const stemHalf = (r, depth) => Math.sqrt(((r - 0.04) ** 2 - depth ** 2) / 2);
-function neck(side) { // a chain of pivots: segs[i] hangs off segs[i-1]; the head is the last link
+function neck(side, wideEyes) { // a chain of pivots: segs[i] hangs off segs[i-1]; the head is the last link
   const root = new THREE.Group();
   root.position.set(side * NECK_AT[0], NECK_AT[1], NECK_AT[2]);
   const segs = [], L = NECK.len;
@@ -154,7 +155,7 @@ function neck(side) { // a chain of pivots: segs[i] hangs off segs[i-1]; the hea
     s.add(v.mesh());
     parent.add(s); segs.push(s); parent = s;
   });
-  const h = head();
+  const h = head(wideEyes);
   h.g.position.y = L;
   parent.add(h.g);
   return { root, segs, head: h.g, jaw: h.jaw, flame: h.flame };
@@ -200,7 +201,7 @@ const TAIL = { len: [0.65, 0.52, 0.48], w: [0.62, 0.5, 0.4, 0.3] };
 const TAIL_GAP = 0.14, TAIL_ROOT_GAP = 0.12, KNUCKLE_INSET = 0.03, KNUCKLE_HALF_DEPTH = 0.12, SPOT_MARGIN = 0.02;
 const TRUNK_RIM = 0.34;
 const tailKnuckle = (v, [x, y, z], w) => ball(v, x, y, z, w / 2 - KNUCKLE_INSET, w / 2 - KNUCKLE_INSET, KNUCKLE_HALF_DEPTH, D.green, D.rib, 6);
-export function buildDrac() {
+export function buildDrac({ wideEyes = false } = {}) {
   const root = new THREE.Group();
   const body = new THREE.Group();
   body.position.y = BODY_Y;
@@ -236,7 +237,7 @@ export function buildDrac() {
   }
   body.add(t.mesh());
   // ---- necks (front, splayed), wings (back), tail
-  const necks = [1, -1].map(side => { const n = neck(side); body.add(n.root); return n; });
+  const necks = [1, -1].map(side => { const n = neck(side, wideEyes); body.add(n.root); return n; });
   const wings = [1, -1].map(side => { const w = wing(side); body.add(w.root); return w; });
   const tail = [];
   {

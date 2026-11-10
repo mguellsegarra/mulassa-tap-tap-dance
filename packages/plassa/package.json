@@ -1,0 +1,9 @@
+{
+  "name": "plassa",
+  "private": true,
+  "type": "module",
+  "description": "The shared base of mulassa.cat's games: look, keyboard, UI sound, the page's life and audio, boot, account and social (README.md).",
+  "exports": {
+    "./*": "./src/*"
+  }
+}

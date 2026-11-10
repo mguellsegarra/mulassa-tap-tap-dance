@@ -382,6 +382,7 @@
   "ui.sync.tooFew": "Non te oín dabondo. Volve tentalo e marca cada golpe xusto cando o oias.",
   "ui.watch.text": "Xa coñeces o {song}. Escolle a dificultade e báilao cos teus botóns.",
   "ui.lang.title": "Idioma",
+  "ui.settings.profileSubGames": "O teu nome e a túa insignia",
   "ui.webgl.unavailable": "O teu navegador non pode amosar o xogo en 3D. Péchao de todo e volve abrilo; se non, actualízao ou ábreo con Chrome ou Safari.",
   "ui.webgl.title": "Ups! Non se pode amosar o xogo",
   "ui.webgl.lostTitle": "Ups! O xogo detívose",
@@ -424,5 +425,8 @@
   "ui.hearts.tip.singular": "Un corazón para ti!",
   "ui.hearts.tip.plural": "Un corazón para vós!",
   "ui.hearts.failed": "Non se puido gardar. Téntao de novo.",
-  "ui.code.open": "Abrir GitHub"
+  "ui.code.open": "Abrir GitHub",
+  "ui.news.title": "Agora, minixogos!",
+  "ui.games.tip": "Máis xogos!",
+  "ui.news.text": "O primeiro minixogo: toca as Mulassas vermellas e desactiva bombas!"
 }

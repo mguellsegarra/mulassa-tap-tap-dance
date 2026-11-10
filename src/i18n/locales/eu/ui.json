@@ -382,6 +382,7 @@
   "ui.sync.tooFew": "Ez ditut nahikoa kolpe entzun. Saiatu berriro: markatu kolpe bakoitza entzun bezain laster.",
   "ui.watch.text": "Dagoeneko ezagutzen duzu pieza: {song}. Aukeratu zailtasuna eta dantzatu botoiekin.",
   "ui.lang.title": "Hizkuntza",
+  "ui.settings.profileSubGames": "Zure izena eta bereizgarria",
   "ui.webgl.unavailable": "Zure nabigatzaileak ezin du jokoa 3Dn erakutsi. Itxi guztiz eta ireki berriro; bestela, eguneratu edo ireki Chrome edo Safari erabiliz.",
   "ui.webgl.title": "Ene! Ezin da jokoa erakutsi",
   "ui.webgl.lostTitle": "Ene! Jokoa gelditu da",
@@ -424,5 +425,8 @@
   "ui.hearts.tip.singular": "Bihotz bat zuretzat!",
   "ui.hearts.tip.plural": "Bihotz bat zuentzat!",
   "ui.hearts.failed": "Ezin izan da gorde. Saiatu berriro.",
-  "ui.code.open": "Ireki GitHub"
+  "ui.code.open": "Ireki GitHub",
+  "ui.news.title": "Orain, minijokoak!",
+  "ui.games.tip": "Joko gehiago!",
+  "ui.news.text": "Lehen minijokoa: ukitu Mulassa gorriak eta desaktibatu bonbak!"
 }

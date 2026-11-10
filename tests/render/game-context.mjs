@@ -52,7 +52,7 @@ const document = {
         this.listeners[type] = prev ? (...args) => { prev(...args); return handler(...args); } : handler;
       },
       showModal() { this.open = true; }, close() { this.open = false; },
-      focus() {}, blur() {}, setAttribute() {}, removeAttribute() {}, querySelectorAll: () => [], classList: { toggle() {}, add() {}, remove() {} }, contains: () => false, after() {},
+      focus() {}, blur() {}, setAttribute() {}, removeAttribute() {}, classList: { toggle() {}, add() {}, remove() {} }, contains: () => false, after() {}, querySelectorAll: () => [], // (the «Jocs» row lists its cards)
       getContext: () => drawing, getBoundingClientRect: () => ({ left: 10, top: 10, right: 54, bottom: 54, width: 44, height: 44 }), // (the radio sits by #viewmode)
     });
     return nodes.get(id);

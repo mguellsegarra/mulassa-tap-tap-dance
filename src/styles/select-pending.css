@@ -240,7 +240,7 @@
 .sel-heart-tip { cursor: pointer; }
 @media (min-width: 1600px) { .sel-heart-tip { font-size: 17px; } }
 /* Phones: the ribbon lands on the song's row. Rather than leave pieces of it sticking out, that row waits until the ribbon goes (it keeps its place). */
-@media (max-width: 899px) { body:has(.sel-heart-tip:not(.sel-tip-out)) :is(#select-song, .sel-watch) { visibility: hidden; } }
+@media (max-width: 899px) { body:has(.sel-heart-tip:not(.sel-tip-out, .games-tip)) :is(#select-song, .sel-watch) { visibility: hidden; } }
 .sel-heart-tip-side { min-height: 34px; padding-block: 1px; transform-origin: 0 50%; animation-name: sel-tip-in, sel-tip-bob-side; }
 .sel-heart-tip.sel-tip-out { pointer-events: none; animation: sel-tip-out .26s ease-in forwards, sel-tip-bob 1.4s ease-in-out infinite; }
 .sel-heart-tip-side.sel-tip-out { animation-name: sel-tip-out, sel-tip-bob-side; }
@@ -276,3 +276,11 @@
   #select :is(.sel-pending-id, .sel-state, .sel-call) { background: none; border-radius: 0; padding-inline: 18px; } /* the narrow card keeps air at its sides */
   #select :is(.sel-state, .sel-call) { border-top: 1px solid #fff3d626; }
 }
+/* «Més jocs!» beside the games button (games-tip.js), as Mulassa Pop's bubble: 6 s up, 4 s away, again and again; never in
+   the way of a tap on what it covers while it is away */
+#free:is([hidden], [data-reel-gone]) + .games-tip, body.view-mode .games-tip { display: none; } /* gone with the button (play, the reel) and in free play; a sheet's backdrop dims it as the rest */
+.sel-heart-tip.games-tip { pointer-events: none; animation: games-tip 10s ease 1.5s infinite both; }
+@keyframes games-tip { 0% { opacity: 0; translate: 0 -8px; scale: .9; } 3% { opacity: 1; translate: 0 0; scale: 1.08; } 5%, 58% { opacity: 1; translate: 0 0; scale: 1; } 60%, 100% { opacity: 0; translate: 0 0; scale: 1; } }
+@media (prefers-reduced-motion: reduce) { @keyframes games-tip { 0% { opacity: 0; } 3%, 58% { opacity: 1; } 60%, 100% { opacity: 0; } } }
+@media not ((hover: hover) and (pointer: fine)) { .sel-song .sel-walk { display: none; } } /* free play beside «Mira el ball» on a desktop only (a phone's row has no room; touch finds it in the help) */
+.games-tip-side::before { top: 50%; left: auto; right: -9px; width: 10px; height: 20px; margin: -10px 0 0; background: #c3283e; clip-path: polygon(100% 50%, 0 0, 0 100%); } /* beside the button: the tail points right, at it */

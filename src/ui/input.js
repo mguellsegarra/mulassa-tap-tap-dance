@@ -2,6 +2,7 @@
 import { PHOTO, photoKey, photoRelease, clearPhotoKeys, photoLook, photoZoom } from '../game/photo-control.js';
 import { syncAvatars } from './photo-avatars.js';
 import { store } from '../platform/storage.js';
+import { stopDoubleTapZoom } from '../platform/double-tap.js';
 import { orbitMove, turnFor, orbitDown, orbitUp, orbitZoom, wheelFactor } from '../scene/orbit.js';
 import { sheets } from './sheets.js';
 import { G, chip, KEYS, down, clock, songTime, offsetMs, setOffsetMs } from '../game/state.js';
@@ -12,7 +13,8 @@ import { sheetUp, viewMode, setView, steers, menuState, photoScreen } from './co
 import { curtain } from './curtain.js';
 import { unlock, toTitle } from '../game/flow.js';
 import { press, settleHold, eventAt, releaseAll } from '../game/judge.js';
-import { padButtons, haptic, padFeedback, syncPad } from './pad.js';
+import { padButtons, padFeedback, syncPad } from './pad.js';
+import { haptic } from '../platform/haptics.js';
 import { hud, W, K } from '../hud/canvas.js';
 import { orbit, look, pnow } from '../scene/cameras.js';
 import { lookDown, lookUp, lookSkip, lookEscape, lookLocked } from './mouse-look.js';
@@ -64,15 +66,7 @@ const letGo = e => { if (G.state === 'play' && !G.paused) settleHold(songTime(ev
 addEventListener('keyup', e => { photoRelease(e.code); if (down.keys.delete(e.code)) letGo(e); });
 for (const ev of ['pointerup', 'pointercancel']) addEventListener(ev, e => { if (down.ptr.delete(e.pointerId)) { syncPad(); letGo(e); } });
 addEventListener('blur', releaseAll);
-// iPhones zoom on a quick second tap whatever touch-action says: cancel that tap's default and click for it.
-// Pointer events (the pad, the stick), scrolling and single taps are untouched; text fields keep their own taps.
-let lastTouchEnd = -1e9;
-document.addEventListener('touchend', e => {
-  const quick = e.timeStamp - lastTouchEnd < 350; lastTouchEnd = e.timeStamp;
-  if (!quick || e.touches?.length || !e.cancelable || e.target.closest?.('input, textarea, select, [contenteditable="true"]')) return;
-  e.preventDefault();
-  e.target.closest?.('button, a, label, summary, [role="button"]')?.click();
-}, { passive: false });
+stopDoubleTapZoom();
 addEventListener('blur', clearPhotoKeys);
 document.addEventListener('visibilitychange', clearPhotoKeys);
 addEventListener('pagehide', clearPhotoKeys);

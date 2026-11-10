@@ -34,7 +34,8 @@ hud.addEventListener('pointermove', e => {
 hud.addEventListener('pointerleave', () => { hudMouse = false; updateHudCursor(); });
 
 export const sheetUp = () => howtoMenu.open || settingsMenu.open || sheets.sync.open || sheets.board.open || privacyMenu.open || sheets.share.open || pauseMenu.open || sheets.feedback.open || sheets.profile?.isOpen || sheets.select?.sheetOpen || sheets.watch?.open
-  || sheets.account?.isOpen || sheets.seasons?.isOpen || sheets.seasonEnd?.isOpen || sheets.card?.isOpen || sheets.hint?.isOpen || sheets.badges?.isOpen || sheets.badgeNews?.isOpen || sheets.freeGate?.isOpen || sheets.install?.isOpen;
+  || sheets.account?.isOpen || sheets.seasons?.isOpen || sheets.seasonEnd?.isOpen || sheets.card?.isOpen || sheets.hint?.isOpen || sheets.badges?.isOpen || sheets.badgeNews?.isOpen || sheets.freeGate?.isOpen
+  || sheets.news?.isOpen || sheets.install?.isOpen;
 export const menuState = () => G.state === 'splash' || G.state === 'select'; // the camera steers
 export const photoScreen = () => G.state === 'select'; // photo mode lives only on the selector
 export const steers = () => menuState() && !sheetUp();
@@ -105,7 +106,9 @@ export function freeDance(b) {
   if (Math.abs(drift) > 40) freeStep.currentTime = want; // a loop, a seek or a new song: back on the beat
 }
 export function enterFree() { if (sheets.freeGate?.ask()) return; curtain(() => { setView(true); if (viewMode) sheets.music?.playFigure(G.figureId); }); } // the figure's own song (a pending selection: the last playable one, the one she drives)
-freeEl.addEventListener('click', () => { G.state === 'select' && enterFree(); });
+// Mulassa Games is its own page (jocs/index.html): replace, so bfcache does not keep the game frozen in memory (docs/jocs/README.md)
+export const openGames = () => location.replace('/jocs/');
+freeEl.addEventListener('click', () => { if (G.state === 'select') openGames(); });
 document.getElementById('rotate-exit').addEventListener('click', () => curtain(() => setView(false)));
 export function updateControls() {
   updateHudCursor();

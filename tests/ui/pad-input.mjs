@@ -33,6 +33,7 @@ const context = vm.createContext({
 });
 context.document = { addEventListener: context.addEventListener };
 vm.runInContext(readFileSync(new URL('../../src/ui/mouse-look.js', import.meta.url), 'utf8').replace(/^import .*;\n/gm, '').replace(/^export /gm, ''), context);
+vm.runInContext(readFileSync(new URL('../../src/platform/double-tap.js', import.meta.url), 'utf8').replace(/^export /gm, ''), context);
 vm.runInContext(readFileSync(new URL('../../src/ui/input.js', import.meta.url), 'utf8').replace(/^import .*;\n/gm, ''), context);
 const emit = (type, button, extra = {}) => {
   const e = { type, target: button, preventDefault() {}, pointerId: 1, ...extra };

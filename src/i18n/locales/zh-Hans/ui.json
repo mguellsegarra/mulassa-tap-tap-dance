@@ -372,6 +372,7 @@
   "ui.sync.tooFew": "没有收到足够的击打。再试一次，每次听到节拍就击打。",
   "ui.watch.text": "你已经熟悉{song}了。选好难度，用你的按钮跳起来吧。",
   "ui.lang.title": "语言",
+  "ui.settings.profileSubGames": "你的名字和徽章",
   "ui.webgl.unavailable": "你的浏览器无法显示3D游戏。请完全关闭浏览器后重新打开；如果还不行，请更新浏览器或用Chrome、Safari打开。",
   "ui.webgl.title": "哎呀，游戏无法显示",
   "ui.webgl.lostTitle": "哎呀，游戏停止了",
@@ -413,5 +414,8 @@
   "ui.hearts.tip.singular": "送你一颗爱心！",
   "ui.hearts.tip.plural": "送你们一颗爱心！",
   "ui.hearts.failed": "保存失败，请再试一次。",
-  "ui.code.open": "打开GitHub"
+  "ui.code.open": "打开GitHub",
+  "ui.news.title": "迷你游戏来啦！",
+  "ui.games.tip": "更多游戏！",
+  "ui.news.text": "第一个迷你游戏：点击红色Mulassa，拆除炸弹！"
 }

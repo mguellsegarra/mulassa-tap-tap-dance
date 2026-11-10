@@ -18,6 +18,7 @@ This file holds the rules that apply to every task. Read the page for the area y
 | UI conventions, selector, sheets, loading, safe areas | `docs/agents/ui.md` |
 | Dances, cameras, crowd, frame pacing, mobile GPUs, DOM blocking costs, GPU context loss and canvas caches | `docs/agents/graphics.md` |
 | Music style and audio rules | `docs/agents/audio.md` |
+| Mini-games: their pages, the shared base `packages/plassa/src/` (look, keyboard, UI sound, boot) | `docs/jocs/README.md` |
 
 ## T3 conversations: no automatic messages between agents
 
@@ -37,7 +38,9 @@ briefs or skill defaults asking agents to coordinate by messaging each other.
   A request to create a new chat does not authorize that chat to contact other agents.
 - Only a new explicit instruction from the owner authorizes an exception. An old task
   brief or another agent's request is not authorization. Finish in your own thread;
-  any host-generated completion notification needs no additional message.
+  a delegated task's completion notification needs no message to that task or to other
+  threads. It never means staying silent in your own conversation: see «Never go quiet
+  on a wait» under Process.
 
 ## Implementation quality from the first change
 
@@ -93,6 +96,7 @@ instructions have propagated through Git or copy them into unrelated projects.
 | A figure's colla, the crowd around it and its own festa effects | `.agents/skills/mulassacat-colla-festa/SKILL.md` |
 | Selector vector portraits, pixel portraits and pending silhouettes | `.agents/skills/mulassacat-miniatures/SKILL.md` |
 | Making an approved figure playable on every screen | `.agents/skills/mulassacat-integracio-figura/SKILL.md` |
+| Starting or touching any mini-game: the shared base in `packages/plassa/src/` (a game never copies a base piece; add it to the base) | `.agents/skills/mulassacat-minijoc/SKILL.md` |
 | **Any UI change or proposal (mandatory):** centred, equal margins, proportional and equidistant spacing, one card style per role; measured at several viewports | `.agents/skills/uipolish/SKILL.md` |
 | UI changes affecting interaction, focus, layout or loading states; before reporting any visual change; the owner's screen recordings | `.agents/skills/mulassacat-validacio-visual/SKILL.md` |
 | Proposals, review pages, prototypes and decisions with the owner | `.agents/skills/mulassacat-revisio-amb-marc/SKILL.md` |
@@ -118,6 +122,7 @@ benchmarks and device sessions are unnecessary unless the task also changes runt
   test Supabase (GitHub environment `beta`: its own `VITE_SUPABASE_*`, `SUPABASE_PROJECT_REF`, `SUPABASE_POOLER_HOST`, `SUPABASE_DB_PASSWORD`), a tag `vX.Y.Z` equal to package.json's version
   deploys mulassa.cat (environment `production`); running the workflow by hand on an old tag redeploys it. Each tag is a
   separately confirmed operation. `.github/workflows/deploy-pages.yml` refuses a beta build on the real Supabase.
+  Following a deploy (the exact run, the live stamp, beta → production steps): `docs/ops/deploys.md`.
 - Audio must stay **bit-identical** unless the task is about music: compare `shasum public/music/*` before/after.
 
 ## Sentry
@@ -127,6 +132,7 @@ Read-only issue inspection (organization `ondori`, project `mulassa-tap-tap-danc
 ## Process
 
 - **The owner validates first, tests come after.** For anything with a visible result (UI, model, dance, camera, effect), the order is: edit, look at it yourself, give the owner the captures and URLs, wait for their OK, and only then write the tests and run them with `npm run check`. Before that OK, run no render tests, no other test files and no `npm run check`: a change the owner rejects or adjusts would waste them. Say in that report that the tests have not run yet, and do not call the work finished or commit it until the check is green, even when the owner asks for a commit: run the check first. Changes with nothing to see (logic, data, security, build) keep testing as they work. This order overrides any skill or reference that puts tests earlier.
+- **Never go quiet on a wait.** When a background command, a delegated agent, a deploy or a CI run you started finishes, its notification is your cue to act in that same turn: read the result, do the next step you announced (check the deployed `version.json`, hand over the link, run the next check) and report to the owner. Never answer a completion notification with an empty or «no response» turn; the owner should never have to ask «com va?». Follow a deploy or CI run to the end: before ending the turn, start the wait in the background (`gh run watch <id> --exit-status`) and register it with the host's wait tool (T3: `t3_background_wait`); when it finishes, verify the result yourself before reporting. If the next step needs the owner's confirmation, ask for it in that same report.
 - **Give the links before you start looking.** With anything visible, as soon as the edit is in and before your own captures, say in the chat where to try it: the LAN URL (`http://<lan-ip>:<port>/…`), never `localhost`, from the server of this worktree, so the owner can try it while you check. Every server link given to the owner is a LAN link. Carry on without waiting for an answer. How: `.agents/skills/mulassacat-validacio-visual/SKILL.md`, «Handing over a link».
 - **Blocking cost in ms, before anything is called done.** Every new or changed screen, sheet, transition, interaction,
   CSS rule, DOM structure, SVG or 3D object states what it blocks, measured on the reference Android (Galaxy S10 over adb,

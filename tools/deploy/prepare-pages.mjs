@@ -42,6 +42,7 @@ export async function preparePages(directory, song) {
   for (const name of deploy) {
     const allowed = required.includes(name)
       || /^assets\/[\w-]+\.(js|css)$/.test(name)
+      || /^assets\/[\w-]+\.mp3$/.test(name) // a home's music, imported by its page (Pop's and the games selector's: menu-music.js)
       || /^fonts\/[\w-]+\.(woff2?|txt)$/.test(name)
       || /^(captures\/[\w-]+\.jpg|videos\/[\w-]+\.(mp4|jpg))$/.test(name) // /projecte/'s screenshots
       || /^[a-z]{2,3}(?:-[A-Za-z]{2,4})?\/projecte\/index\.(html|md)$/.test(name) // /<lang>/projecte/ from tools/deploy/seo-content/<lang>.json

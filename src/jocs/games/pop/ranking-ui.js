@@ -18,11 +18,11 @@ export function setupRankingUI({ t, focusBack }) {
   const $ = id => document.getElementById(id);
   let sent = 0, boardReq = 0, cardReq = 0;
 
-  // After a run: the server plays it again and answers with the place; a player with no name is sent to make one on
-  // mulassa.cat (/#nom-pop), which comes back here, and the run waits (ranking.keep) to go then.
-  async function publish(run) {
+  // After a run: the server plays it again and answers with the place; a player with no name makes one in the profile's
+  // steps right here (settings.js; mulassa.cat's /#nom-pop if that chunk fails), and the run waits (ranking.keep) to go then.
+  const publish = run => send({ v: RUN_VERSION, seed: run.seed, level: run.level, cols: run.game.cols, rows: run.game.rows, ticks: run.ticks, taps: run.log, points: run.game.points, hits: run.game.hits });
+  async function send(body) {
     const line = $('end-rank'), name = $('end-name'), mine = ++sent;
-    const body = { v: RUN_VERSION, seed: run.seed, level: run.level, cols: run.game.cols, rows: run.game.rows, ticks: run.ticks, taps: run.log, points: run.game.points, hits: run.game.hits };
     line.hidden = false; name.hidden = true; line.classList.remove('good');
     line.textContent = '\u00a0'; // the line's height is kept from the start: the answer fades in, nothing moves (no «sending…» swapped out)
     let m;
@@ -44,7 +44,13 @@ export function setupRankingUI({ t, focusBack }) {
       line.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 250, easing: 'ease-out' });
       name.hidden = !nameless;
       name.href = e.code === 'released' ? '/#nom-pop-canvi' : '/#nom-pop';
+      name.dataset.kind = e.code === 'released' ? 'rename' : 'create';
     }
+  }
+  // back from the profile's steps: the kept run tries again, its answer on the end sheet
+  async function named() {
+    const kept = (await service().catch(() => null))?.pending();
+    if (kept) send(kept);
   }
   // the home's pill: the player's place; the board's best becomes this device's when higher (played elsewhere: the HUD and
   // the end sheet then measure a run against it)
@@ -114,7 +120,7 @@ export function setupRankingUI({ t, focusBack }) {
   $('board-close').addEventListener('click', closeBoard);
   $('card-close').addEventListener('click', closeCard);
   return {
-    publish, endScreen, sync,
+    publish, named, endScreen, sync,
     // Escape closes the top sheet; false when none was open
     escape() {
       if (!$('card-menu').hidden) closeCard();

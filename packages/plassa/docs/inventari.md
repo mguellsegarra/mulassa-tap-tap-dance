@@ -29,7 +29,7 @@ Llegenda de l'estat:
 | Llista de jocs amb portada, vídeo i «Juga» | full «Jocs» dins mulassa.cat (`ui/games-menu.js`, `games-carousel.js`, `games-hero-video.js`) | mulassa.cat |
 | Cada joc és una pàgina: navegació completa, i en sortir el joc no queda congelat en memòria | `games-menu.js` (`location.replace`) | mulassa.cat |
 | Tornar al selector des d'un joc | `a.exit` de Pop (`game.css`) | Plassa |
-| Barra comuna: perfil, configuració, música, ajuda | cada pàgina la fa a la seva manera | Nou |
+| Barra comuna: perfil, configuració, música, ajuda | Pop: música i ⚙ (fulls de mulassa.cat, `settings.js`); la resta, cada pàgina a la seva manera | Nou |
 | Novetats: un joc nou s'anuncia un sol cop a qui ja jugava abans | `ui/news-sheet.js` | mulassa.cat |
 | Cua d'avisos d'un sol cop: final de temporada, estadístiques, insígnies, novetats, consells del dispositiu | `ui/greeting.js`, `services/seen-notices.js` | mulassa.cat |
 | Rànquings i podis de tots els jocs en un sol lloc | Classificació, només de mulassa.cat | Nou |
@@ -39,7 +39,7 @@ Llegenda de l'estat:
 | Funcionalitat | Avui | Estat |
 | --- | --- | --- |
 | Sessió única al navegador, compartida entre pàgines | `services/supabase-client.js` (Pop ja la fa servir) | mulassa.cat |
-| Perfil convidat o perfil verificat amb correu | `ui/profile-ui.js`, `services/leaderboard-identity.js` | mulassa.cat |
+| Perfil convidat o perfil verificat amb correu | `ui/profile-ui.js`, `services/leaderboard-identity.js`; Pop l'obre des de ⚙ amb el mateix codi | mulassa.cat, Pop |
 | Nom públic triat un sol cop, amb les seves regles | `services/alias-rules.js`, `ui/publish-ui.js` | mulassa.cat |
 | Confirmar el correu amb un codi; recuperar el perfil en un altre dispositiu | `services/leaderboard-code.js` | mulassa.cat |
 | Perfils anteriors del dispositiu | full Perfil (`account-ui.js`) | mulassa.cat |

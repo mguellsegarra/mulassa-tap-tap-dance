@@ -108,6 +108,13 @@ are in `packages/plassa/docs/inventari.md`.
   `haptics.js`, `countdown.js`.
 - Boards: `board.js` (a board's row and a player's name with its badge, as mulassa.cat's; the game brings the art, the words
   and its own cells) over `badge-tip.js`.
+- Settings and account (one account everywhere, inventari §2): `sheets.css` (the modal sheets' corner × and scrolling body,
+  Configuració's «Sobre el joc», Privadesa, the Turnstile box) and `scoped-css.js` (another page's CSS kept inside some of
+  this page's elements). The sheets themselves stay mulassa.cat's: a page asks for them by id with
+  `<!-- mulassa-sheets: settings-menu account-menu … -->` (vite.config.js copies those `<dialog>`s from index.html into a
+  `<template>`), and the game runs them with mulassa.cat's own code, loaded at the first ⚙ (Pop's `settings.js`: Perfil,
+  the badge, the Bústia, the language, Privadesa; its CSS through `scoped-css.js`). When mulassa.cat moves onto Plassa,
+  that code moves with it.
 - Imports: `packages/plassa/src/` reaches outside itself only for `core/` and data (`i18n/meta.json`, the loading lines'
   `i18n/locales/*/boot.json`); mulassa.cat never imports it yet; a game never imports another game.
 - Copies of mulassa.cat kept in step until it moves onto the base: `storage`, `haptics`, `boot`, `double-tap`,

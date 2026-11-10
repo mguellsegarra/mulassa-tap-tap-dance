@@ -59,9 +59,10 @@ submitted score proves nothing. The server must play the game again from what th
 - `ranking.js` (lazy): the Supabase client and session are mulassa.cat's. On a dev server with no Supabase, `ranking-mock.js`
   (`?sense-nom` for a player with no name).
 - Home: the record pill shows the place (`· #11`) and opens the board sheet (top 50, your row lit, you after them if lower).
-- End: the place, or «new best»; a player with no name gets a button to mulassa.cat's name sheet (`/#nom-pop`, or
-  `/#nom-pop-canvi` for a released name, in `src/ui/sheets-setup.js`), which comes back to `/pop/`; the run waits in
-  `pop-pending` and goes then. Texts provisional until Codex writes them.
+- End: the place, or «new best»; a player with no name gets a button to the profile's own steps right here (create, or
+  another name for a released one: mulassa.cat's sheet through `settings.js`); the run waits in `pop-pending` and goes
+  when that sheet closes. If that chunk fails to load the button is still mulassa.cat's link (`/#nom-pop`, or
+  `/#nom-pop-canvi`, in `src/ui/sheets-setup.js`), which comes back to `/pop/`. Texts provisional until Codex writes them.
 
 ## Residual risks (accepted)
 

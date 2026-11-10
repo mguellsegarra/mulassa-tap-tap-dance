@@ -39,6 +39,12 @@ body.slow::after { opacity: 1; transition-duration: .15s; animation: chill-in .5
 .home[hidden] { display: none; }
 .corner-l, .corner-r { position: absolute; z-index: 1; top: calc(var(--sat) + var(--m)); }
 .corner-l { left: var(--m); } .corner-r { right: var(--m); }
+.corner-row { display: flex; gap: 8px; } /* music, then ⚙ */
+#settings svg { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+/* mulassa.cat's sheets (settings.js): Perfil is the profile block alone (no statistics, decision 3), as tall as that (auto
+   would stretch a modal between its insets); the Bústia's field in Pop's colours, not mulassa.cat's gold on brown */
+dialog#account-menu { height: fit-content; }
+dialog .feedback-field { border-color: color-mix(in srgb, var(--accent) 60%, transparent); background: var(--page-edge); }
 .c-hero { position: relative; min-height: 0; display: flex; flex-direction: column; align-items: center; padding: calc(44px + 12px) var(--m) 0; } /* under the corner buttons' row */
 .c-text { display: contents; }
 .pop-title { order: 0; flex: none; display: grid; justify-items: center; width: min(300px, 100vw - 2 * var(--m) - 40px, 40dvh); margin: 0; container-type: inline-size; }
@@ -86,7 +92,7 @@ button.c-best:enabled { cursor: pointer; }
   .home { --row: clamp(150px, 26dvh, 260px); }
   .c-hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; padding: calc(52px + 12px) max(32px, 5vw) 0; } /* under the corner buttons' row */
   :root { --exit-size: 52px; --exit-icon: 28px; --exit-font: 20px; } /* the way back, as big as the music button across */
-  #menu-music { width: 52px; height: 52px; } /* the same size as the games button across */
+  :is(#menu-music, #settings) { width: 52px; height: 52px; } /* the same size as the games button across */
   /* one axis (tools/dev/pop-hero, A): the title is centred by nature, so the pitch and the actions follow it */
   .c-text { display: flex; flex-direction: column; align-items: center; gap: 20px; }
   .pop-title { width: clamp(260px, 26vw, 420px); }
@@ -122,10 +128,10 @@ button.c-best:enabled { cursor: pointer; }
 .sp-home .c-art { flex: 1 1 0; height: auto; }
 .sp-home .c-art canvas { --k: 1.35; } /* bigger while they wait */
 .sp-home .c-play-row { order: 3; }
-.sp-home .c-pitch, .sp-home .c-play-row > :not(#tap-start), .sp-home .c-row, .sp-home #back, .sp-home #menu-music, .sp-home #help { display: none; }
+.sp-home .c-pitch, .sp-home .c-play-row > :not(#tap-start), .sp-home .c-row, .sp-home #back, .sp-home #menu-music, .sp-home #settings, .sp-home #help { display: none; }
 #tap-start { min-width: 260px; min-height: 60px; padding: 8px 32px; border: 2px solid #f5c518; border-radius: 12px; background: linear-gradient(180deg, #ffe066 0%, #f5c518 55%, #dfad13 100%); color: #2a1a10; font: 800 24px 'Baloo 2', system-ui, sans-serif; box-shadow: 0 6px 0 #8a6a12, 0 16px 40px #0008; animation: sp-breathe 1.6s ease-in-out infinite; }
 /* after the tap: what was hidden comes in, a little after the title and the figures have started to move */
-.sp-in .c-pitch, .sp-in .c-play-row > *, .sp-in .c-row, .sp-in #back, .sp-in #menu-music, .sp-in #help { animation: sp-fade .45s ease-out .15s both; }
+.sp-in .c-pitch, .sp-in .c-play-row > *, .sp-in .c-row, .sp-in #back, .sp-in #menu-music, .sp-in #settings, .sp-in #help { animation: sp-fade .45s ease-out .15s both; }
 /* the live figures fade where they wait (tap-start.js), then in on the home (a canvas glided while resized looked warped) */
 .sp-in .c-art { animation: sp-fade .4s ease-out both; }
 @keyframes sp-fade { from { opacity: 0; translate: 0 8px; } }

@@ -62,6 +62,7 @@ selector or a page that skips the base.
 | Best score on this device | `best.js` |
 | A run's 3, 2, 1 | `countdown.js` |
 | Storage, haptics, double-tap zoom guard, shader warmup | `storage.js`, `haptics.js`, `double-tap.js`, `boot.js` |
+| ⚙ Configuració, Perfil, Bústia, idioma, Privadesa (mulassa.cat's sheets and code; Pop's `settings.js` is the model) | `sheets.css`, `scoped-css.js`, `<!-- mulassa-sheets: … -->` |
 
 ## Adding to the base
 

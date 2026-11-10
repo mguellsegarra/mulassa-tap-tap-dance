@@ -25,7 +25,12 @@ const pages = ['index.html', 'pop/index.html', ...(existsSync('jocs') ? readdirS
 // A game page's boot watchdog must run even when its module fails to load: inlined as a classic script, never bundled.
 // Its boot screen's running Mulassa is painted before any script: one copy for every game (packages/plassa/src/mula-load.html).
 const WATCHDOG = '<script id="boot-watchdog" src="/packages/plassa/src/boot-watchdog.js"></script>';
+// mulassa.cat's own sheets (Configuració, Perfil, Bústia, Privadesa…), one copy in index.html: a game page names them in
+// <!-- mulassa-sheets: id … --> and gets those <dialog>s as they are, in a <template> (no DOM on the boot); their code is
+// mulassa.cat's, loaded by the game, which puts them in the page
+const mainSheet = id => readFileSync('index.html', 'utf8').match(new RegExp(`<dialog id="${id}"[\\s\\S]*?</dialog>`))?.[0] ?? (() => { throw new Error(`index.html has no <dialog id="${id}">`); })();
 const jocsPage = { name: 'jocs-page', transformIndexHtml: { order: 'pre', handler: html => html
+  .replace(/<!-- mulassa-sheets: ([\w\s-]+?) -->/, (_, ids) => `<template id="mulassa-sheets">${ids.split(/\s+/).map(mainSheet).join('\n')}</template>`)
   .replace(WATCHDOG, () => `<script id="boot-watchdog">${readFileSync('packages/plassa/src/boot-watchdog.js', 'utf8')}</script>`)
   .replace('<!-- mula-load -->', () => readFileSync('packages/plassa/src/mula-load.html', 'utf8').trim()) } };
 // Keep playtests intact until a manual reload; file watching still invalidates cached modules.

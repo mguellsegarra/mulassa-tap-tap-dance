@@ -44,7 +44,7 @@ guardGpu([$('game'), $('menu-hero')], {
   dead: () => { errors.report('webgl-not-restored', { game: 'pop' }); flow.pause(); window.__gameFail?.(t('lost.title'), t('lost.text'), 'webgl-not-restored'); },
 });
 // a newer deploy reloads the page, but only on the home or the end sheet with nothing open over them
-watchUpdates(() => (flow.mode === 'menu' || flow.mode === 'over') && !document.querySelector('.cover:not([hidden]):not(#boot):not(#end-menu)'));
+watchUpdates(() => (flow.mode === 'menu' || flow.mode === 'over') && !document.querySelector('.cover:not([hidden]):not(#boot):not(#end-menu), dialog[open]'));
 
 applyWords();
 // From the games sheet (mulassa.cat, location.replace keeps the referrer) the corner's bubble says «Torna als jocs»; a shared
@@ -64,6 +64,24 @@ $('to-menu').addEventListener('click', flow.showMenu);
 $('quit').addEventListener('click', flow.showMenu);
 $('pause').addEventListener('click', flow.pause);
 $('resume').addEventListener('click', flow.resume);
+// ⚙ Configuració (settings.js, mulassa.cat's sheets and code), loaded at the first tap; closed, the focus is back on ⚙
+// A chunk that cannot load (a page from before a deploy, the dev server restarted) is reported and the page reloads, once;
+// anything else that fails in it is reported (the sheet would otherwise just not open)
+const settings = () => import('./settings.js').catch(e => {
+  errors.capture(e, { game: 'pop', where: 'settings' });
+  if (!/dynamically imported module|Importing a module script failed|error loading/i.test(String(e?.message))) throw e;
+  let again = false;
+  try { again = !sessionStorage.getItem('pop-settings-reload'); sessionStorage.setItem('pop-settings-reload', '1'); } catch { /* no storage: no reload loop either */ }
+  if (again) location.reload();
+  throw e;
+});
+$('settings').addEventListener('click', () => settings().then(m => m.openSettings(() => $('settings').focus({ focusVisible: false })), () => {}));
+// a run with no name for the board: the profile's own steps here, then the kept run goes (ranking-ui.js)
+$('end-name').addEventListener('click', e => {
+  const a = e.currentTarget;
+  e.preventDefault();
+  settings().then(m => m.openProfile(a.dataset.kind, rankingUI.named), () => { location.href = a.href; }); // the chunk failed: mulassa.cat's sheet
+});
 const musicBtns = document.querySelectorAll('.music-btn'); // the HUD's and the home's
 const syncMusicBtn = () => { for (const b of musicBtns) { b.setAttribute('aria-pressed', musicOn()); b.querySelector('.music-off').toggleAttribute('hidden', musicOn()); } };
 for (const b of musicBtns) b.addEventListener('click', () => { setMusicOn(!musicOn()); syncMusicBtn(); });
@@ -85,7 +103,7 @@ onEveryGesture(unlock); // the first tap the browser counts lets the home's musi
 // the base's UI sound on every press and keyboard move, and the arrows in the open cover (the home when none is)
 setUiSound(SFX.ui);
 soundOnPress();
-setupSheetKeys({ top: () => [...document.querySelectorAll('.cover:not([hidden]):not(#boot)')].pop() ?? (flow.mode === 'menu' ? $('menu') : null) });
+setupSheetKeys({ top: () => [...document.querySelectorAll('.cover:not([hidden]):not(#boot), dialog[open]')].pop() ?? (flow.mode === 'menu' ? $('menu') : null) });
 // leaving the page (hidden, blur, pagehide) pauses a run; so does a run whose audio clock stands still (page-audio.js)
 onPageLeave(flow.pause);
 audioPage({ stall: () => inRun() && (flow.pause(), true) });

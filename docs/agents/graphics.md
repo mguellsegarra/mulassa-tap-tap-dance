@@ -98,6 +98,12 @@ the method and its tools: `docs/agents/device-profiling.md`.
   decoded by the browser off the main thread) or move it to a Worker.
 - No fix without the before/after numbers on the device (AGENTS.md, Process): two measured «obvious» causes here
   (the portraits as PNGs, the dissolve) changed nothing.
+- A sheet's first paint compiles Skia's Vulkan pipelines (`VulkanCreateGraphicsPipelines`, 17–39 ms each, in
+  `RendererRasterWorker` GPU tasks) for every kind of paint the page has not drawn yet: no single rule owns it, each new
+  look (a full-screen `::backdrop` dim over WebGL, a gradient fill, a blurred shadow, an animated gradient) adds some.
+  Painting a copy at 1% opacity first does not warm them (another blend). S10, 2026-11-10, Pop's first ⚙ (mulassa.cat's
+  sheets): frame 435–469 ms, GPU 188–196; without the dim (`packages/plassa/src/sheets.css`) 352 ms, GPU 123–129, accepted
+  as a once-per-visit cost; Pop's own first sheet («Com es juga?») already pays 168–201. Every later sheet: 34–67 ms.
 
 ## GPU context loss (mobile GPUs)
 

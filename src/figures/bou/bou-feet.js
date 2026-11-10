@@ -28,7 +28,7 @@ const nominal = (p, i) => ({ x: p.x + layout[i].x * Math.cos(p.yaw) + layout[i].
   z: p.z - layout[i].x * Math.sin(p.yaw) + layout[i].z * Math.cos(p.yaw), yaw: p.yaw });
 // legRoom: the least distance across between a carrier's two feet (m; .26 at rest, legs .14-.16 wide).
 // due/half/late: step units off before a pair steps on a beat / on a half beat / off the grid; a step lasts `share` of a half beat.
-const STEP = { legRoom: .22, legPush: .45, due: .5, half: .8, late: 2.5, share: .9, min: .18, max: .34, lead: .3, lift: .1, run: { speed: .3, carrier: .5, spin: 1, share: 1, lead: .5 } };   // lift: a stepping sole 1.5 cm over the other shoe (8.5 cm) when it passes over it
+const STEP = { legRoom: .22, legPush: .45, due: .5, half: .8, late: 2.5, share: .9, min: .18, max: .34, lead: .3, lift: .1, rise: .32, quick: .12, near: .04, run: { speed: .3, carrier: .5, spin: 1, share: 1, lead: .5 } };   // lift: a stepping sole 1.5 cm over the other shoe (8.5 cm) when it passes over it
 export function planBouFeet(...args) {
   const plan = bouFootPlan(...args);
   let step;
@@ -69,6 +69,14 @@ function* bouFootPlan(poseAt, start, end, gesture = () => 0, raise = () => 0) {
     throw new Error(`No clear Bou landing at ${at}, foot ${i}`);
   };
   const out = (i, t) => (t < quiet[i] ? 0 : gesture(t, i));
+  // how long a step's shoe takes to come up and to go down (shares of the step): gently, unless in that half of its way
+  // it would pass over another shoe (where that one stands): then up before it travels, or down only once it is there
+  const riseFor = (i, from, to, e) => {
+    e.up = e.down = STEP.rise;
+    for (let k = 1; k < 32; k++) { const u = k / 32, x = from.x + (to.x - from.x) * u, z = from.z + (to.z - from.z) * u, yaw = from.yaw + (to.yaw - from.yaw) * u;
+      for (let j = 0; j < 4; j++) if (j !== i && shoeGap(x, z, yaw, planted[j].x, planted[j].z, planted[j].yaw) < STEP.near) { if (u < .5) e.up = STEP.quick; else e.down = STEP.quick; } }
+    return e;
+  };
   // How far a foot is from where the body wants it, in step units (0.11 m, 0.2 rad).
   const gap = (i, p) => { const n = nominal(p, i), f = planted[i]; return Math.max(Math.hypot(n.x - f.x, n.z - f.z) / .11, Math.abs(n.yaw - f.yaw) / .2); };
   let free = start, group = 0, lastBeat = poseAt(start).beat;
@@ -110,8 +118,12 @@ function* bouFootPlan(poseAt, start, end, gesture = () => 0, raise = () => 0) {
         // shortcut: running feet keep no leg room (land(…, 0)): sideways at the techno's 4-5 m/s the trailing foot can't
         // close up behind the leading one on half-beat steps (splits) without crossing; it needs a chassé
         const to = land(i, Math.min(end, finish + STEP.run.lead * half), 0);
-        events[i].push({ start: t, end: finish, from: { ...planted[i] }, to, run: true });
-        Object.assign(planted[i], to); busy[i] = finish;
+        // as an ordinary step: out of a stretched leg it starts where that leg is, and the stretch rests until its next
+        // cycle (without, the shoe jumped 0.35 m from its stretch to the stride and back at its end)
+        const from = { ...planted[i] }, a = out(i, t);
+        if (a !== 0) Object.assign(from, stretch(from, i, a));
+        events[i].push(riseFor(i, from, to, { start: t, end: finish, from, to, run: true }));
+        Object.assign(planted[i], to); busy[i] = finish; rest(i, t, zeroAfter(i, finish));
       }
       free = finish; group = 1 - group;
       continue;
@@ -126,7 +138,7 @@ function* bouFootPlan(poseAt, start, end, gesture = () => 0, raise = () => 0) {
       const from = { ...planted[i] }, a = t < busy[i] ? 0 : out(i, t);
       if (a !== 0) Object.assign(from, stretch(from, i, a));
       const to = land(i, Math.min(end, finish + (finish - t) * STEP.lead));   // a little ahead: the feet keep under a turning body till the next step
-      events[i].push({ start: t, end: finish, from, to });
+      events[i].push(riseFor(i, from, to, { start: t, end: finish, from, to }));
       Object.assign(planted[i], to); busy[i] = finish; rest(i, t, zeroAfter(i, finish));
     }
     free = finish + .01; group = 1 - group;
@@ -156,7 +168,9 @@ function* bouFootPlan(poseAt, start, end, gesture = () => 0, raise = () => 0) {
     const u = (t - e.start) / (e.end - e.start), s = e.run ? u * u * (3 - 2 * u) : ease((u - .1) / .8), lift = 1 - ease(u);
     res.x = e.from.x + (e.to.x - e.from.x) * s; res.z = e.from.z + (e.to.z - e.from.z) * s;
     res.yaw = e.from.yaw + (e.to.yaw - e.from.yaw) * s; res.contact = false; res.swing = true;
-    res.y = Math.max(STEP.lift * ease(Math.min(u / .1, (1 - u) / .1)), (e.from.y ?? 0) * lift);   // up over the other shoe before it travels res.tilt = (e.from.tilt ?? 0) * lift;
+    // up over e.up of the step and down over e.down: STEP.rise, unless it passes over another shoe there (STEP.quick). In a tenth for every step (two frames of a quick one) the shoe popped up and slapped down, a twitch
+    res.y = Math.max(STEP.lift * ease(Math.min(u / e.up, (1 - u) / e.down)), (e.from.y ?? 0) * lift);
+    res.tilt = (e.from.tilt ?? 0) * lift; // (a step out of a stretched leg: its toe comes down as it goes, not at once)
     return res;
   };
 }

@@ -198,6 +198,7 @@ export const BOU_PHASES = [
 // DIP included: k/DIP).
 export const BOU_COMIC = 3;
 const HEM_DROP = .23; // the skirt's hem (43 cm) stays 20 cm up: clear of a stepping shoe (8.5 cm tall, lifted 10)
+const SAW_SOFT = .07; // rad of see-saw over which its turn from one end to the other is rounded
 const SAW_RISE = 1.0; // m of lift a radian of see-saw: the low end's hem (~1 m from the middle) holds its height
 export function newBouPose() { return {x:0,z:0,yaw:0,pitch:0,roll:0,lift:0,beat:0,inertiaRoll:0}; }
 const END_BEAT = at(92);
@@ -229,7 +230,7 @@ export function bouPose(t,out=newBouPose()) {
   // the rump, heaved high on alternate beats; the body rises as far as the low end would sink, so that end stays where
   // it was and the high one shows its carrier's legs (and trunk, figures/bou/bou-rig.js) under the lifted hem
   const saw=-k*comic(beat,4)*Math.cos(PI*beat);
-  out.pitch+=saw;out.lift+=SAW_RISE*Math.abs(Math.sin(saw));
+  out.pitch+=saw;out.lift+=SAW_RISE*(Math.hypot(Math.sin(saw),SAW_SOFT)-SAW_SOFT); // (|sin| rounded at its turn: a sharp V there bounced the whole body like a ball on every beat, its carriers' knees snapping with it)
   // the front carrier's leg out in front (SWING): its front lifts a touch, on the rear carrier, so the straight leg comes
   // out under the hem, not through the cloth (a rigid skirt: in the reference video the cloth gives)
   const kick=SWING.kick*frontKick(beat);out.pitch-=kick;out.lift+=.66*Math.sin(kick);

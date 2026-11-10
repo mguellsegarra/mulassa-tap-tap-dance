@@ -1,5 +1,5 @@
 """Mulassa Games' music (the games selector): mulassa.cat's menu tune (build_taiko.py's AMBIENT loop, the call and answer
-both homes play) as lo-fi: slow (78, not 152), the tune on a felt piano, muted electric-piano sevenths, a lazy beat. The
+both homes play) as lo-fi: slow (78, not 152), the tune on a felt piano, muted electric-piano sevenths, a soft dry beat. The
 owner's pick among several styles (10 Nov 2026), without the vinyl dust it had. Rendered once to an MP3.
 
     uv run --python 3.11 --with numpy --with scipy --with lameenc tools/music/build_games_menu.py
@@ -10,7 +10,7 @@ points, music.json. Each layer is levelled by its measured RMS (LAYERS: dB under
 import json, os
 import numpy as np
 import lameenc
-from scipy.signal import butter, sosfilt, fftconvolve
+from scipy.signal import butter, sosfilt
 
 SR = 44100
 SPB = 60 / 78
@@ -51,11 +51,9 @@ def kick():
     return np.sin(2 * np.pi * np.cumsum(150 * (65 / 150) ** np.clip(t / .07, 0, 1)) / SR) * np.exp(-t / .08)
 
 LAYERS = dict(tune=0, keys=-5, bass=-4, kick=-9, snare=-15, hat=-22)   # each one's level, dB under the tune
-WET = dict(tune=.25, keys=.2, snare=.1)                               # how much of each goes to the room
 bufs = {k: np.zeros(LOOP + 8 * SR) for k in LAYERS}
 def put(k, beat, x, vel=1.0, late=0.0):
     i = int(round((beat * SPB + late) * SR)); b = bufs[k]; n = min(len(x), len(b) - i); b[i:i + n] += x[:n] * vel
-lazy = lambda b: b + (.09 if (b * 2) % 1 else 0)   # the off-sixteenths lean back
 
 for bar, line in enumerate(TUNE):                  # the tune, an octave up and a touch behind the beat
     t = bar * 4
@@ -68,17 +66,13 @@ for bar, (root, notes) in enumerate(CHORDS):
     for at, d in ((0, 2.2), (2.5, 1.3)):           # two chords a bar, each rolled a little from the bottom
         for k, m in enumerate(notes): put('keys', b0 + at, keys(m, d * SPB), rng.uniform(.8, 1), k * .018)
     for at, d, v in ((0, 1.4, 1), (2.5, 1.2, .8)): put('bass', b0 + at, bass(root, d * SPB), v)
-    for at, v in ((0, 1), (2.5, .8), (3.25, .5) if bar % 2 else (1.75, .4)): put('kick', lazy(b0 + at), kick(), v)
+    for at, v in ((0, 1), (2.5, .8)): put('kick', b0 + at, kick(), v)
     for at in (1, 3): put('snare', b0 + at, noise(.2, 900, 3500, .05), 1, .012)
-    for e in range(8): put('hat', lazy(b0 + e / 2), noise(.05, 3000, 4200, .015), 1 if e % 2 else .6)
+    for e in range(8): put('hat', b0 + e / 2, noise(.05, 3000, 4200, .015), .8)
 
-# a small room, so nothing sounds dry: decaying noise, kept out of the lows
-t = np.arange(2 * SR) / SR
-ROOM = sosfilt(butter(2, [400, 5000], 'bandpass', fs=SR, output='sos'), rng.standard_normal(len(t)) * np.exp(-t / .45))
-ROOM /= np.sqrt((ROOM ** 2).sum())
+# all dry: a room, ghost kicks and accented hats read as echo on the beat (owner's pick, 10 Nov 2026)
 mix = np.zeros(LOOP)
 for k, x in bufs.items():
-    if k in WET: x = x + WET[k] * fftconvolve(x, ROOM)[:len(x)]
     x = sosfilt(butter(2, 150, 'highpass', fs=SR, output='sos'), sosfilt(butter(2, 4200, fs=SR, output='sos'), x))   # lo-fi: no highs
     x = x.copy(); x[:len(x) - LOOP] += x[LOOP:]   # the tails wrapped round: the loop's end flows into its start
     mix += x[:LOOP] * 10 ** (LAYERS[k] / 20) / np.sqrt((x[:LOOP] ** 2).mean())

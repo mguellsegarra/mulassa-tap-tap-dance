@@ -100,7 +100,8 @@ export function buildBou({ cap = 'a' } = {}) {
     // Cloth hems; the barrel's hang 12 cm lower so less of the carriers' legs shows.
     const drop = bands ? .12 : 0;
     const tab = p.mantle ? .43 : .58 - drop;
-    v.box(s * (wb / 2 - .04), tab, FE2 - .14, .12, B2 - tab, .28, K.ochre, 0).box(s * (wb / 2 - .04), tab - .02, FE2 - .14, .14, .03, .3, K.rim, 0);
+    // The tab sits 5 mm inside the pale rim's face, so the rim runs unbroken over it (no gap under the rim either).
+    v.box(s * (wb / 2 - .05), tab, FE2 - .14, .12, B2 - tab, .28, K.ochre, 0).box(s * (wb / 2 - .04), tab - .02, FE2 - .14, .14, .03, .3, K.rim, 0);
     if (!p.barrel) v.box(s * (wb / 2 - .1), .36, FE2 - .14, .04, .2, .04, K.black, 0);   // peg (the owner removed it on p13)
     // The donors' lettering; the blanket version leaves it out (the blanket goes there instead).
     if (!p.mantle) {

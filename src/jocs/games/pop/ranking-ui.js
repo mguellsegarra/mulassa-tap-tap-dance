@@ -62,6 +62,7 @@ export function setupRankingUI({ t, focusBack }) {
     const kept = m.pending();
     if (kept) try { await m.publish(kept); m.forget(); } catch (e) { if (REFUSED.has(e.code)) m.forget(); }
     const { place } = await m.me().catch(() => ({}));
+    top3(m); // not awaited: the home shows without it, the three come in when they are here
     raiseBest(place?.score); // played elsewhere: the HUD and the end sheet measure a run against it; the home's button never shows the place (the owner's call, 10 Nov 2026)
   }
 
@@ -70,6 +71,17 @@ export function setupRankingUI({ t, focusBack }) {
   // a row's points on the right, its level under the name: mulassa.cat's points and pill (src/ui/board-list.js); one number ranks
   const scoreOf = r => el('b', 'score', r.score);
   const underName = r => (r.level == null ? [] : [levelPill(r.level, t(`level.${r.level}`))]);
+
+  // the home's Top 3 (a tall phone's, style.css .c-top): the board's first three rows, a tap on one opens its card, the head
+  // opens the board; none yet (an empty board, offline) and it stays hidden
+  async function top3(m) {
+    const [rows, art] = await Promise.all([m.board(), marks()]).catch(() => [[]]);
+    if (!rows.length) return;
+    const look = lookOf(art);
+    $('menu-top-list').replaceChildren(...rows.slice(0, 3).map(r => boardRow(r, { look, onOpen: () => openCard(r.public_id), cells: [scoreOf(r)], sub: underName(r) })));
+    $('menu-top').hidden = false;
+    $('menu-top').closest('.c-hero').classList.add('has-top'); // the figures make room (style.css)
+  }
 
   function openBoard() {
     const list = $('board-list'), note = $('board-note'), req = ++boardReq;
@@ -107,6 +119,7 @@ export function setupRankingUI({ t, focusBack }) {
   function closeCard() { cardReq++; $('card-menu').hidden = true; $('board-close').focus({ focusVisible: false }); }
 
   $('menu-best').addEventListener('click', openBoard);
+  $('menu-top-head').addEventListener('click', openBoard);
   $('board-close').addEventListener('click', closeBoard);
   $('card-close').addEventListener('click', closeCard);
   return {

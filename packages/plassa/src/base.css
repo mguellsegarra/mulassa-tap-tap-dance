@@ -10,7 +10,8 @@ button { -webkit-appearance: none; appearance: none; display: inline-flex; align
 button:active { transform: translateY(1px); }
 /* THE round icon button: the corner row (free play, Perfil, music, ⚙; #free wears the holo, select-chrome.css), free play's exit, radio and ?, and the sheets' corner × (.sheet-x, solid: it straddles the frame). A dark disc, 2 px gold edge, cream glyph; size and place stay with each owner. */
 .round-btn, .sheet-x { width: 44px; height: 44px; min-height: 0; padding: 0; border: 2px solid var(--button-border); border-radius: 50%; background: var(--round-bg, var(--button-bg)); color: var(--button-text); }
-.round-btn svg { width: 24px; height: 24px; }
+.round-btn { width: var(--round-size, 44px); height: var(--round-size, 44px); } /* a game's corner row grows with a tall screen (game.css --round-size) */
+.round-btn svg { width: calc(var(--round-size, 44px) * .55); height: calc(var(--round-size, 44px) * .55); }
 button:focus-visible, a:focus-visible { outline: var(--focus); outline-offset: var(--focus-off); }
 /* .btn: THE button of every sheet. An optional icon sits right before the label and the two are centred together
    (icon + label read as one; no gap that changes with the label's length); an optional .sub line below.

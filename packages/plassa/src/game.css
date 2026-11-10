@@ -54,8 +54,10 @@ a.round-btn { box-sizing: border-box; display: inline-flex; align-items: center;
 /* The way back to mulassa.cat's games sheet: the site's games icon, round as the music button, and a bubble that pops in
    once the home is up and comes back every few seconds (hover holds it). Without the games sheet behind (main.js: .more)
    the bubble invites, «Més jocs!», and a pink dot beats on the button */
-a.exit { position: absolute; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; width: var(--exit-size, 44px); height: var(--exit-size, 44px); border: 2px solid var(--button-border); border-radius: 50%; background: var(--button-bg); color: var(--button-text); font: 800 var(--exit-font, 16px)/1 'Baloo 2', system-ui, sans-serif; text-decoration: none; }
-a.exit svg { flex: none; width: var(--exit-icon, 24px); height: var(--exit-icon, 24px); } /* a game may size it: --exit-size, --exit-icon, --exit-font */
+/* the corner row's size: 44 px on a phone, up to 72 on a tall screen (2560×1440); a game may raise the floor */
+:root { --round-size: clamp(44px, 5dvh, 72px); }
+a.exit { position: absolute; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; width: var(--exit-size, var(--round-size)); height: var(--exit-size, var(--round-size)); border: 2px solid var(--button-border); border-radius: 50%; background: var(--button-bg); color: var(--button-text); font: 800 var(--exit-font, calc(var(--round-size) * .36))/1 'Baloo 2', system-ui, sans-serif; text-decoration: none; }
+a.exit svg { flex: none; width: var(--exit-icon, calc(var(--round-size) * .55)); height: var(--exit-icon, calc(var(--round-size) * .55)); } /* a game may size it: --exit-size, --exit-icon, --exit-font */
 a.exit:active { transform: scale(.96); }
 .exit-dot { display: none; }
 a.exit.more .exit-dot { display: block; position: absolute; top: -3px; right: -3px; width: 12px; height: 12px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 2px var(--page-edge); }

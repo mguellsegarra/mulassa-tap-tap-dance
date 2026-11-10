@@ -61,28 +61,28 @@ dialog .feedback-field { border-color: color-mix(in srgb, var(--accent) 60%, tra
 .c-art::before { content: ""; position: absolute; width: min(100%, 100cqh, 340px); aspect-ratio: 1; border-radius: 50%; background: radial-gradient(#ff7ac655, #ff7ac600 68%); }
 .c-art canvas { --k: 1; position: relative; flex: none; width: calc(var(--k) * min(100cqw, 100cqh * 1.5, 540px)); height: calc(var(--k) * min(100cqh, 100cqw / 1.5 + 0px, 360px)); translate: 0 calc((1 - var(--k)) / 2 * min(100cqh, 100cqw / 1.5 + 0px, 360px)); } /* hero.js: the Mulassa and the Drac, live; --k grows them upwards, their feet where they were */
 .c-pitch { order: 2; margin: 0 0 12px; max-width: 320px; text-align: center; font-size: clamp(16px, 2.4dvh, 20px); line-height: 1.2; text-wrap: balance; text-shadow: 0 1px 3px #000; }
-/* the home's actions: Plassa's buttons as they are (base.css .btn .btn-big); here only where they sit: the board and «?»
-   side by side, Juga under them the whole width (the owner's pick, 10 Nov 2026) */
-.c-play-row { order: 3; align-self: stretch; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: min(100%, 380px); margin: 0 auto; }
-.c-play-row > * { grid-column: 1 / -1; margin: 0; }
-.c-play-row > :is(#menu-best, #help) { grid-column: auto; min-width: 0; padding-inline: 4px; white-space: nowrap; --icon: 1.37em; } /* the phone's 22 px icons at its 16 px labels, grown with them */
-@media (orientation: portrait) { .c-play-row > :is(#menu-best, #help) { font-size: clamp(13px, 4.1vw, 18px); } } /* half a ≤380 px row: by the width, never .btn-big's height-grown size (440×956 overflowed) */
-#play { order: 1; } /* under the two */
+/* the home's actions: Plassa's buttons as they are (base.css .btn .btn-big): «Veure rànquing» the whole width (only with no
+   Top 3, below), then Juga and, beside it, the «?» (Plassa's round button, as tall as Juga: the owner's pick, 10 Nov 2026) */
+.c-play-row { order: 3; align-self: stretch; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; width: min(100%, 380px); margin: 0 auto; }
+.c-play-row > * { margin: 0; }
+.c-play-row > #menu-best { grid-column: 1 / -1; }
+#play { order: 1; } /* under the board's button */
+#help { order: 2; width: clamp(60px, 7dvh, 88px); height: clamp(60px, 7dvh, 88px); font: 800 clamp(26px, 3dvh, 36px)/1 'Baloo 2', system-ui, sans-serif; } /* .btn-big's height */
+#tap-start { grid-column: 1 / -1; } /* the first screen's one button, the whole row */
 #menu-best .go { display: none; }
 
 #end-name { margin-top: 4px; text-decoration: none; } /* a link to mulassa.cat's name sheet, drawn as the sheet's buttons */
 /* wide: the text and the Mulassa side by side */
 @media (orientation: landscape) {
   .c-hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; padding: calc(52px + 12px) max(32px, 5vw); } /* clear of the corner buttons' row, and as much below: the block sits at the screen's middle */
-  :root { --exit-size: 52px; --exit-icon: 28px; --exit-font: 20px; } /* the way back, as big as the music button across */
-  :is(#menu-music, #settings) { width: 52px; height: 52px; } /* the same size as the games button across */
+  :root { --round-size: clamp(52px, 5dvh, 72px); } /* the corner row (Plassa's .round-btn and the way back): 52 px at least on a wide screen */
   /* one axis (tools/dev/pop-hero, A): the title is centred by nature, so the pitch and the actions follow it */
   /* the column grows with the screen, by its height first (a wide short window stays whole): title, line and buttons in step */
   .c-text { display: flex; flex-direction: column; align-items: center; gap: clamp(10px, 2.6dvh, 32px); }
   .pop-title { width: clamp(220px, min(32vw, 50dvh), 680px); }
   .c-pitch { margin: 0; text-align: center; max-width: 24ch; font-size: clamp(18px, min(1.7vw, 3dvh), 36px); }
-  .c-play-row { width: min(100%, clamp(380px, min(30vw, 56dvh), 620px)); gap: clamp(12px, 1.6dvh, 20px); }
-  .c-play-row > :is(#menu-best, #help) { font-size: clamp(16px, 2dvh, 26px); } /* the halves a step under Juga, so their labels fit */
+  .c-play-row { width: min(100%, clamp(380px, min(30vw, 56dvh), 620px)); }
+  .c-play-row { gap: clamp(12px, 1.6dvh, 20px); }
   .c-art canvas { width: calc(var(--k) * min(100cqw, 100cqh * 1.4, 1040px)); height: calc(var(--k) * min(100cqh, 100cqw / 1.4, 760px)); translate: 0 calc((1 - var(--k)) / 2 * min(100cqh, 100cqw / 1.4, 760px)); } /* the figures grow with the screen */
   .c-art::before { width: min(100%, 100cqh, 700px); }
   .c-art { height: 100%; }
@@ -100,10 +100,10 @@ dialog .feedback-field { border-color: color-mix(in srgb, var(--accent) 60%, tra
 .sp-home .c-art { flex: 1 1 0; height: auto; }
 .sp-home .c-art canvas { --k: 1.35; } /* bigger while they wait */
 .sp-home .c-play-row { order: 3; }
-.sp-home .c-pitch, .sp-home .c-play-row > :not(#tap-start), .sp-home #back, .sp-home #menu-music, .sp-home #settings, .sp-home #help { display: none; }
+.sp-home .c-pitch, .sp-home .c-top:not(#x), .sp-home .c-play-row > :not(#tap-start), .sp-home #back, .sp-home #menu-music, .sp-home #settings, .sp-home #help { display: none; }
 #tap-start { animation: sp-breathe 1.6s ease-in-out infinite; } /* Plassa's main button (tap-start.js), as wide as Juga after it, breathing while it waits */
 /* after the tap: what was hidden comes in, a little after the title and the figures have started to move */
-.sp-in .c-pitch, .sp-in .c-play-row > *, .sp-in #back, .sp-in #menu-music, .sp-in #settings, .sp-in #help { animation: sp-fade .45s ease-out .15s both; }
+.sp-in .c-pitch, .sp-in .c-top, .sp-in .c-play-row > *, .sp-in #back, .sp-in #menu-music, .sp-in #settings, .sp-in #help { animation: sp-fade .45s ease-out .15s both; }
 /* the live figures fade where they wait (tap-start.js), then in on the home (a canvas glided while resized looked warped) */
 .sp-in .c-art { animation: sp-fade .4s ease-out both; }
 @keyframes sp-fade { from { opacity: 0; translate: 0 8px; } }
@@ -145,9 +145,33 @@ dialog .feedback-field { border-color: color-mix(in srgb, var(--accent) 60%, tra
   .c-hero { padding-top: calc(44px + clamp(16px, 4.5dvh, 44px)); } /* the title a little lower, clear of the corner row */
   .c-art canvas { --k: 1.5; } /* the figures fit the canvas's width (hero.js fit): wider than the screen, they fill a tall phone's middle */
 }
+/* the Top 3 (ranking-ui.js top3), as mulassa.cat's selector «Top 3» (select-sizes.css .sel-standings): a card, its head
+   (the way to the whole board) over hairline-split one-line rows, the level by the name, the points lilac. Shown where there
+   is room: a tall upright screen, between the figures and the buttons, and a wide one's text column; there it stands for
+   «Veure rànquing» (style.css .has-top, set when the three come) */
+.c-top { display: none; }
+.c-top-head { justify-content: flex-start; gap: 8px; width: 100%; min-height: 44px; padding: 0 12px; border: 0; border-bottom: 1px solid #fff3d61c; border-radius: 0; background: #00000026; font-size: 16px; color: var(--button-text); }
+.c-top-head svg { width: 20px; height: 20px; color: var(--button-border); }
+.c-top-head .go { margin-left: auto; width: 16px; height: 16px; }
+.c-top .board-list { overflow: visible; padding: 2px 0; }
+.c-top .board-list li, .c-top .board-list li:nth-child(odd) { border-radius: 0; background: none; }
+.c-top .board-list li + li { border-top: 1px solid #fff3d61c; }
+.c-top .board-list .who { min-height: 40px; padding: 0 12px 0 0; grid-template-columns: 36px minmax(0, 1fr) auto; }
+.c-top .board-list .who .name { display: flex; align-items: center; gap: 8px; }
+.c-top .board-list .who .sub { margin: 0; }
+@media (orientation: portrait) and (min-height: 760px) {
+  .c-top:not([hidden]) { order: 2; display: block; width: min(100%, 380px); margin: 0 auto 16px; overflow: hidden; border-radius: var(--button-radius); background: #00000040; }
+  .has-top .c-art canvas { --k: 1.2; } /* less room above the three: grown less upwards, clear of the title */
+  .has-top #menu-best { display: none; }
+}
+@media (orientation: landscape) and (min-height: 640px) {
+  .c-top:not([hidden]) { order: 2; display: block; width: min(100%, clamp(380px, min(30vw, 56dvh), 620px)); overflow: hidden; border-radius: var(--button-radius); background: #00000040; }
+  .has-top #menu-best { display: none; }
+}
 @media (orientation: portrait) and (max-height: 700px) { .c-art canvas { --k: 1.2; } } /* 320×568, 375×667: the buttons keep their room */
 #end-menu .btn > svg { fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; } /* the end sheet's icons are drawn as lines */
 /* the end sheet's culprit, alive (hero.js solo, results.js) */
 #end-art { display: flex; align-items: center; justify-content: center; flex: 0 1 220px; width: min(320px, 100%); min-height: 120px; }
 #end-art canvas { width: 100%; height: 100%; }
+
 

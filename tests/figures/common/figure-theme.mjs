@@ -20,9 +20,9 @@ const el = (text, extra = {}) => ({ textContent: text, dataset: {}, attrs: { ...
 const word = el('GUA'), aria = el('', { 'aria-label': 'GUA, esquerra' }), legend = el('GUAPA!'), anim = el('index.html fallback text'), padWord = el('PA'), face = { dataset: {}, innerHTML: '<path fill="#c0283c"/>' };
 padWord.dataset.w = 'PA';
 const props = new Map(), classes = new Set();
+const themed = { classList: { toggle: (c, on) => (on ? classes.add(c) : classes.delete(c)) }, style: { setProperty: (k, v) => props.set(k, v), removeProperty: k => props.delete(k) } }; // the theme's readers (#pad, the legend, the sync pad), never <body>
 globalThis.document = {
-  body: { classList: { toggle: (c, on) => (on ? classes.add(c) : classes.delete(c)) }, style: { setProperty: (k, v) => props.set(k, v), removeProperty: k => props.delete(k) } },
-  querySelectorAll: sel => sel.startsWith('#pad .gua [') ? [word] : sel.startsWith('#pad .pa [') ? [padWord] : sel === '#controls-legend .note.guapa + span [data-fig]' ? [legend] : sel === '#controls-legend small[data-fig]' ? [anim] : sel === '#pad .gua' ? [aria] : sel === '#howto-portrait' ? [face] : [],
+  querySelectorAll: sel => sel === '#pad, #controls-legend, #sync-pad' ? [themed] : sel.startsWith('#pad .gua [') ? [word] : sel.startsWith('#pad .pa [') ? [padWord] : sel === '#controls-legend .note.guapa + span [data-fig]' ? [legend] : sel === '#controls-legend small[data-fig]' ? [anim] : sel === '#pad .gua' ? [aria] : sel === '#howto-portrait' ? [face] : [],
 };
 const { setFigureSong } = await import('../../../src/game/figure-song.js');
 const T = await import('../../../src/game/figure-theme.js'), { trf, practiceText } = T;

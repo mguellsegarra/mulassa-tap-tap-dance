@@ -12,7 +12,9 @@ export function setupGamesCarousel(doc = document) {
   // The hero's still: the frame the game's clip starts on, so the clip fades in over itself; a game with no clip (or no
   // motion wanted) shows its picture. The wide one only where it shows (a big screen, style.css): a phone never downloads it.
   // It is decoded off the main thread before it goes in, and the clip changes right behind it: the game before stays on
-  // screen those few ms (a first change of game waited for that decode in a 50-84 ms frame on a Galaxy S10).
+  // screen those few ms (a first change of game waited for that decode in a 50-84 ms frame on a Galaxy S10). A game's first
+  // showing still makes a 50-84 ms frame there about one time in three: its picture decoded and drawn at that screen's
+  // density, off the main thread (which stays under 30 ms); putting the decoded image itself in changed nothing.
   const showStill = () => {
     const card = cards[on];
     if (!card) return;
@@ -36,7 +38,7 @@ export function setupGamesCarousel(doc = document) {
     heroDesc.textContent = card.querySelector('.game-desc').textContent;
   };
   const sync = () => {
-    const rest = row.getBoundingClientRect().left + parseFloat(getComputedStyle(row).paddingLeft); // where the chosen card's left edge rests
+    const cs = getComputedStyle(row), rest = row.getBoundingClientRect().left + (parseFloat(cs.scrollPaddingLeft) || parseFloat(cs.paddingLeft)); // where the chosen card's left edge rests (the first one, short of it)
     let best = 0, least = Infinity;
     cards.forEach((card, i) => {
       const r = card.getBoundingClientRect(), gap = Math.abs(r.left - rest);

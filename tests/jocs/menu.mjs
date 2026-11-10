@@ -17,9 +17,9 @@ for (const id of ids) {
   }
   if (id !== 'tap' && !id.startsWith('aviat-')) readFileSync(id === 'pop' ? 'pop/index.html' : `jocs/${id}/index.html`);
 }
-// one «Juga» for the whole page, in the hero, before the name it stands over
+// one «Juga» for the whole page, in the hero, last: one height whatever the name's lines
 assert.equal((html.match(/class="game-play"/g) ?? []).length, 1, 'one play button, in the hero');
-assert(html.indexOf('id="games-hero-play"') < html.indexOf('id="games-hero-name"'), '«Juga» comes before the game\'s name');
+assert(html.indexOf('id="games-hero-play"') > html.indexOf('id="games-hero-desc"'), '«Juga» comes after the game\'s description');
 assert(html.includes('id="games-music"'), 'the page has its speaker');
 
 // the page stands on Plassa and loads nothing of the main game

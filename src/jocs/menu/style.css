@@ -33,9 +33,10 @@ html.ready #games-menu { animation: games-in .6s ease-in-out both; }
 #games-menu { --name: clamp(40px, 9dvh, 104px); } /* the game's name: the hero's gaps are counted in it */
 #games-hero-name { font-size: var(--name); font-weight: 800; line-height: .95; color: var(--game); text-shadow: 0 3px 0 #0008; text-wrap: balance; }
 #games-hero-desc { font-size: clamp(16px, 2.6dvh, 26px); font-weight: 600; line-height: 1.2; color: #fff3d6; text-shadow: 0 1px 3px #000; text-wrap: balance; }
-#games-hero-play { margin: 0 0 4px; } /* «Juga» is the base's .game-play: here only its place, over the name; its shadow's depth under it */
-/* One gap (--g, a third of the name) three times, counted from what is painted: «Juga» (its shadow) to the name's capitals,
-   the name to the description's capitals, the description to the chosen card's ring (--card-top under the hero's foot).
+#games-hero-play { margin: 0 0 4px; } /* «Juga» is the base's .game-play: here only its place, last, so it stands at one height whatever
+   the name's lines (over the name it moved from game to game on a phone); its shadow's depth under it */
+/* One gap (--g, a third of the name) three times, counted from what is painted: the name to the description's capitals,
+   the description to «Juga», «Juga» (its shadow) to the chosen card's ring (--card-top under the hero's foot).
    The line boxes are trimmed to capitals and baseline; under a line of text the gap takes .12 em more, for the letters that
    hang below it (the p of Tap and Pop sat on the description). The name's M starts on the button's edge, not a side
    bearing further in. Untrimmed (an older browser), the gaps above stay. */
@@ -43,12 +44,15 @@ html.ready #games-menu { animation: games-in .6s ease-in-out both; }
   #games-menu { --g: calc(var(--name) * .34); --card-top: 12px; }
   #games-hero-text { gap: 0; bottom: max(0px, var(--g) - var(--card-top)); }
   #games-hero-name, #games-hero-desc { text-box: trim-both cap alphabetic; }
-  #games-hero-name { margin: var(--g) 0 calc(var(--g) + .12em) -.045em; }
+  #games-hero-name { margin: 0 0 calc(var(--g) + .12em) -.045em; }
   #games-hero-desc { padding-bottom: .12em; }
+  #games-menu #games-hero-play { margin-top: var(--g); }
 }
 
 /* a phone's row starts on the title's margin: the chosen card on the left, the next one cut at the right edge (it scrolls) */
-#games-grid { --edge: max(24px, 6vw); position: absolute; inset: auto 0 0 0; height: var(--row); display: flex; align-items: center; gap: 20px; margin: 0; padding: 0 calc(100vw - var(--edge) - var(--card-w)) 0 var(--edge); scroll-padding-inline-start: var(--edge); overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; scrollbar-width: none; }
+/* …and from the second card on, the chosen one rests --peek further in: the card before shows its edge at the left, or
+   nobody knows there is a game that way (the first card cannot go that far: it stays on the margin) */
+#games-grid { --edge: max(24px, 6vw); --peek: 36px; position: absolute; inset: auto 0 0 0; height: var(--row); display: flex; align-items: center; gap: 20px; margin: 0; padding: 0 calc(100vw - var(--edge) - var(--card-w)) 0 var(--edge); scroll-padding-inline-start: calc(var(--edge) + var(--peek)); overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; scrollbar-width: none; }
 #games-grid::-webkit-scrollbar { display: none; }
 #games-grid .game-card { position: relative; flex: none; display: block; width: var(--card-w); height: calc(var(--row) - 36px); min-height: 0; padding: 0; overflow: hidden; border: 0; border-radius: 18px; --sel-r: 18px; scroll-snap-align: start; background: #24170e; box-shadow: 0 8px 18px #0008; transition: transform .15s; transform: scale(.94); transform-origin: left center; /* shrinks towards its left edge: the gap before it stays the same on every phone */ }
 #games-grid .game-card.on { transform: none; box-shadow: 0 0 0 3px #120b07, 0 0 0 6px var(--game); }
@@ -89,7 +93,7 @@ html.ready #games-menu { animation: games-in .6s ease-in-out both; }
   #games-menu #games-grid .game-card:not(.on) { filter: brightness(.78); }
   #games-menu #games-grid .sel-card-name { font-size: clamp(16px, 1.5vw, 39px); }
   #games-menu #games-grid .game-card .nb { padding: 60px 16px 20px; background: linear-gradient(#0000, color-mix(in srgb, var(--game) 26%, #120b07) calc(60px - 20px)); }
-  /* the text column runs up to the picture: «Juga» over the name, which keeps one line; the block is anchored at the bottom */
+  /* the text column runs up to the picture; the name keeps one line; the block is anchored at the bottom */
   #games-menu { --art-w: calc((100dvh - var(--row) - var(--bottom)) * .8); }
   #games-menu #games-hero-text { left: var(--m); right: calc(var(--art-w) * .6); top: var(--top); bottom: max(32px, 2.2vw); max-width: none; align-content: end; row-gap: 12px; }
   @supports (text-box: trim-both cap alphabetic) { #games-menu { --card-top: 6px; } #games-menu #games-hero-text { row-gap: 0; bottom: max(0px, var(--g) - var(--card-top)); } }

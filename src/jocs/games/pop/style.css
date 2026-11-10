@@ -103,9 +103,9 @@ dialog .feedback-field { border-color: color-mix(in srgb, var(--accent) 60%, tra
 .sp-home .c-pitch, .sp-home .c-top:not(#x), .sp-home .c-play-row > :not(#tap-start), .sp-home #back, .sp-home #menu-music, .sp-home #settings, .sp-home #help { display: none; }
 #tap-start { animation: sp-breathe 1.6s ease-in-out infinite; } /* Plassa's main button (tap-start.js), as wide as Juga after it, breathing while it waits */
 /* after the tap: what was hidden comes in, a little after the title and the figures have started to move */
-.sp-in .c-pitch, .sp-in .c-top, .sp-in .c-play-row > *, .sp-in #back, .sp-in #menu-music, .sp-in #settings, .sp-in #help { animation: sp-fade .45s ease-out .15s both; }
+.sp-in .c-pitch, .sp-in .c-top, .sp-in .c-play-row > *, .sp-in #back, .sp-in #menu-music, .sp-in #settings, .sp-in #help { animation: sp-fade .3s ease-out .05s both; } /* with tap-start.js's 120 ms and 350 ms glide: the home whole in ~0.45 s */
 /* the live figures fade where they wait (tap-start.js), then in on the home (a canvas glided while resized looked warped) */
-.sp-in .c-art { animation: sp-fade .4s ease-out both; }
+.sp-in .c-art { animation: sp-fade .3s ease-out both; }
 @keyframes sp-fade { from { opacity: 0; translate: 0 8px; } }
 @media (prefers-reduced-motion: reduce) { #tap-start, .sp-in .home * { animation: none !important; } }
 /* the level step (level-step.js): the main game's segmented levels (level-seg.css) in Pop's sheet */

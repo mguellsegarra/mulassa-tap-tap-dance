@@ -12,7 +12,7 @@ export function waitForTap({ label, onGo, into, art, title }) {
     if (gone) return;
     gone = true;
     onGo();
-    const hide = { duration: 180, easing: 'ease-in', fill: 'forwards' };
+    const hide = { duration: 120, easing: 'ease-in', fill: 'forwards' }; // short: the whole tap → home in ~0.45 s (it read as slow at ~1 s on an iPhone)
     const fades = [art, btn].map(el => el.animate([{ opacity: 1 }, { opacity: 0 }], hide));
     fades[0].finished.then(() => {
       const a = title.getBoundingClientRect();
@@ -21,8 +21,8 @@ export function waitForTap({ label, onGo, into, art, title }) {
       fades[0].cancel(); // the home's own fade in takes over (the game's .sp-in)
       const b = title.getBoundingClientRect();
       title.animate([{ transformOrigin: '0 0', transform: `translate(${a.left - b.left}px, ${a.top - b.top}px) scale(${a.width / b.width})` },
-        { transformOrigin: '0 0', transform: 'none' }], { duration: 550, easing: 'cubic-bezier(.2, .8, .2, 1)' });
-      setTimeout(() => document.body.classList.remove('sp-in'), 700);
+        { transformOrigin: '0 0', transform: 'none' }], { duration: 350, easing: 'cubic-bezier(.2, .8, .2, 1)' });
+      setTimeout(() => document.body.classList.remove('sp-in'), 420); // after the game's own fade in (≤ .35 s)
     });
   };
   addEventListener('pointerup', go, { once: true, capture: true });

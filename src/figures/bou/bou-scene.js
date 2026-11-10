@@ -1,7 +1,7 @@
 // The Bou on the shared stage (scene/figure-scenes.js): shown, its colla, its motion and the share photo's pose.
 import { Q } from '../../core/env.js';
 import { bou, bouColla } from './bou-objects.js';
-import { bouCollaTick, BOU_COLLA_SPOTS, poseBou, BOU_END, bouBrama } from './bou-stage.js';
+import { bouCollaTick, BOU_COLLA_SPOTS, poseBou, BOU_END, bouBrama, prepareBouMotion } from './bou-stage.js';
 import { animPlayableBou } from './bou-play.js';
 import { bouEndShot } from './bou-end-shot.js';
 import { placeBouClip, BOU_CLIP_END } from './bou-clip.js';
@@ -20,7 +20,9 @@ function bouFilmShot() {
 const NO_BOU = Q.has('nobou'); // dev: its colla and the plaça without the Bou itself (to film them)
 export const BOU_SCENE = {
   id: 'bou-tradicional-valls',
+  band: 'grallers',
   rotllana: true, // the plaça cleared to one round ring of people (scene/rotllana.js)
+  prepare: prepareBouMotion,
   root: () => bou.frame,
   show(on) { if (bou) bou.frame.visible = on && !NO_BOU; },
   collaTick: bouCollaTick, collaSpots: BOU_COLLA_SPOTS, colla: () => bouColla,

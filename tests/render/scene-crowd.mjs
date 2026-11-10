@@ -141,6 +141,21 @@ run(`setBandLineup('cobla');`);
 assert(run('drawsCobla()') && run(`plaza.band.every(p => (p.g.parent !== null) === (p.lineup === 'cobla'))`), 'the cobla on show: drawn, and the banda out of the scene');
 run(`setBandLineup('banda');`);
 // Free play: no musicians at all, and nobody keeps clear of them.
+for (const q of [0, 1, 2]) {
+  run(`qualityLevel = peopleLevel = ${q}; applyRenderQuality(); setBandLineup('grallers');`);
+  assert.deepEqual(JSON.parse(run(`JSON.stringify(plaza.band.filter(p => p.g.parent && p.g.scale.x > 0).map(p => p.kind))`)),
+    ['gralla', 'gralla', 'gralla-baixa', 'timbal'], `quality ${q}: only the four Bou musicians`);
+  assert.equal(run('bandSpots.length'), 4, 'all four places stay clear at every quality');
+  const indexed = JSON.parse(run(`JSON.stringify((() => {
+    const owners = new Map();
+    for (const p of plaza.band) for (const bone of [p.torso, ...p.legs, ...p.arms]) owners.set(crowdMesh.skeleton.bones.indexOf(bone), p.lineup);
+    const lineups = new Set(), { index, attributes: { skinIndex } } = crowdMesh.geometry;
+    for (let i = 0; i < index.count; i++) { const lineup = owners.get(skinIndex.getX(index.getX(i))); if (lineup) lineups.add(lineup); }
+    return [...lineups];
+  })())`));
+  assert.deepEqual(indexed, ['grallers'], 'inactive banda/cobla triangles are absent from the packed crowd draw');
+  run(`setBandLineup('banda');`);
+}
 run(`setBandLineup(null);`);
 assert.equal(run('plaza.band.filter(p => p.g.scale.x > 0).length + bandSpots.length'), 0, 'free play has no band');
 run(`setBandLineup('banda');`);

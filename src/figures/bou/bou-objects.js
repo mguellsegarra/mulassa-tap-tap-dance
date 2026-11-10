@@ -13,17 +13,17 @@ export let bouColla = null;
 export const BOU_COLLA_YAW = CAM_AZ - Math.PI / 4; // the Bou's colla compass (bou-colla.js): the camera looks in between W and S
 // The Bou lit on its own in its disco night (bou-show.js sets value 0-1): its own colours added after the lights,
 // as if a spot were on it, without lighting the floor or casting anything (a real spot read badly on the tiles).
-export const bouGlow = { value: 0 };
+export const bouGlow = { value: 0 }, bouSpot = { tint: { value: new THREE.Color(1, 1, 1) }, top: { value: 0 } }; // bouSpot: night.js glowMaterial's
 let bouMat = null;
 export function initBouModel() {
   bou = buildBou();
   bou.frame = new THREE.Group(); bou.frame.rotation.y = BOU_COLLA_YAW; // its colla's compass: the dance's W is the W attendant's
   bou.frame.visible = false;
-  bou.frame.add(bou.root, ...bou.feet, ...bou.legs, ...bou.trunks, ...bou.arms);
+  bou.frame.add(bou.root, ...bou.feet, ...bou.legs, ...bou.trunks, ...bou.arms, bou.limbs);
   scene.add(bou.frame);
   bou.frame.traverse(o => { // its voxel parts get their own copy, which can light itself (bouGlow)
     if (!o.isMesh || o.isSkinnedMesh || !o.material?.isMeshLambertMaterial || !o.material.vertexColors) return;
-    bouMat ??= glowMaterial(o.material, bouGlow, 'bou-glow');
+    bouMat ??= glowMaterial(o.material, bouGlow, 'bou-glow', bouSpot);
     o.material = bouMat;
   });
 }

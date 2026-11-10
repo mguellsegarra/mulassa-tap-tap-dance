@@ -25,13 +25,15 @@ const extrude = (pts, depth, x) => {
   // Shape x -> body z, the extrusion across the body.
   return new THREE.ExtrudeGeometry(shape, { depth, bevelEnabled: false, curveSegments: 1 }).rotateY(-H).translate(x, 0, 0);
 };
-// One carretilla: a kraft tube and its red cap, mouth at +z. Painted by hand, not through Vox: Vox draws a random per box
+// One carretilla: a kraft tube and its red cap, mouth at +z, BOU_TUBE_K x a real one's size (life size its sparks seemed
+// to come out of nothing). (`fire.nozzle`: its mouth.) Painted by hand, not through Vox: Vox draws a random per box
 // (its colour jitter, even at 0), and the tubes must not shift the plaça's random layout built after the Bou.
 let BOU_TUBE = null;
+export const BOU_TUBE_K = 1.7;
 function bouTube() {
   const paint = (g, hex) => { const c = new THREE.Color(hex), n = g.attributes.position.count, a = new Float32Array(n * 3);
     for (let i = 0; i < a.length; i += 3) { a[i] = c.r; a[i + 1] = c.g; a[i + 2] = c.b; } return g.setAttribute('color', new THREE.BufferAttribute(a, 3)); };
-  return mergeGeometries([paint(new THREE.BoxGeometry(.05, .05, .18).translate(0, 0, .09), K.letter), paint(new THREE.BoxGeometry(.056, .056, .025).translate(0, 0, .1695), K.red)]);
+  return mergeGeometries([paint(new THREE.BoxGeometry(.05, .05, .18).translate(0, 0, .09), K.letter), paint(new THREE.BoxGeometry(.056, .056, .025).translate(0, 0, .1695), K.red)]).scale(BOU_TUBE_K, BOU_TUBE_K, BOU_TUBE_K);
 }
 // cap: one of bou-heads.js's heads, «Bonàs» ('a') by default; null keeps the p13 head (and its neck block).
 export function buildBou({ cap = 'a' } = {}) {
@@ -192,18 +194,21 @@ export function buildBou({ cap = 'a' } = {}) {
   }
   const shell = new THREE.Group(); shell.position.y = -.85; shell.add(...(solid.g.length ? [solid.mesh()] : []), v.mesh()); rig.body.add(shell);
   // Its carretilles (UAF videos 2021/2024: a comb of tubes along both edges of the back): no rack, only
-  // small tubes where its comb stands, hidden until they burn (figures/bou/bou-show.js grows them in and out). Pairs from the
-  // rump out of both flanks, nearly flat, then three straight up the middle. Their mouths at +z (figures/bou/bou-show.js BOU_JET_NOZZLE).
+  // small tubes where its comb stands, hidden until they burn (figures/bou/bou-show.js grows them in and out). Three pairs from the
+  // rump out of both flanks and one straight up the middle. Their mouths at +z.
   const back = new THREE.Box3(); for (const m of shell.children) { m.geometry.computeBoundingBox(); back.union(m.geometry.boundingBox); }
   const fire = [], Z = new THREE.Vector3(0, 0, 1);
-  const carretilla = (x, z, dir) => {
-    const g = new THREE.Group(); g.position.set(x, back.max.y - .87, z); g.quaternion.setFromUnitVectors(Z, dir.normalize());
-    g.add(new THREE.Mesh(BOU_TUBE ??= bouTube(), MAT));
-    g.visible = false; rig.body.add(g); fire.push(g);
+  fire.nozzle = .19 * BOU_TUBE_K; // m from a tube's foot to where its sparks are born, just past its mouth (bou-show.js)
+  const carretilla = (x, z, dir, on = rig.body, y = back.max.y - .865) => { // (its foot a centimetre into the back's top)
+    const g = new THREE.Group(), m = new THREE.Mesh(BOU_TUBE ??= bouTube(), MAT); g.position.set(x, y, z); g.quaternion.setFromUnitVectors(Z, dir.normalize());
+    if (on !== rig.body) m.scale.setScalar(1 / on.scale.x); // (its head is drawn bigger: the same tube there)
+    g.add(m);
+    g.visible = false; on.add(g); fire.push(g);
   };
-  for (let k = 0; k < 6; k++) for (const s of [-1, 1]) carretilla(s * (back.max.x - .12), zc - .8 + k * .32, new THREE.Vector3(s, .06, 0));
-  for (let k = 0; k < 3; k++) carretilla(0, zc - .45 + k * .45, new THREE.Vector3(0, 1, -.1));
+  for (let k = 0; k < 3; k++) for (const s of [-1, 1]) carretilla(s * (back.max.x - .28), zc - .3 + k * .3, new THREE.Vector3(s, .8, 0), rig.body, back.max.y - .885); // up and out (flat, the far flank's hid behind its back), on the back's flat top by its edge: further out the back steps down and they floated
+  carretilla(0, zc, new THREE.Vector3(0, 1, -.1));
   const alt = cap && buildBouHead(cap, rig.body), head = alt ? alt.head : slimHead(p, F2 - .02); if (!alt) rig.body.add(head);
+  for (const [x, y, z, dx, dy, dz] of alt?.sockets ?? []) carretilla(x, z, new THREE.Vector3(dx, dy, dz), head, y); // its head's, after its back's (bou-correfoc.js bouTubeBurns)
   // The tail (free of the body, a proper chain, comic): it springs from a small dock at the top of
   // the rump, where the back ends, then hangs in links that swing and bounce on their own and never enter the body:
   // a hide link, three wound red and white ribbon links, a hide link, the brush.

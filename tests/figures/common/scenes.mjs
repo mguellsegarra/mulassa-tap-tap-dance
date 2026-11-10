@@ -22,6 +22,10 @@ for (const x of shapes) {
   assert.equal(x.heroScale, 'number', `${x.id}: hero.scale`);
   assert.equal(x.heroPose, 'function', `${x.id}: hero.pose`);
 }
+assert.equal(run(`sceneOf('bou-tradicional-valls').band`), 'grallers', 'the Bou selects its new formation on every shared game screen');
+run(`setSelectedFigure('bou-tradicional-valls'); setBandLineup(sceneOf('bou-tradicional-valls').band); G.state = 'play'; poseScenery(.4, 0);`);
+assert(run(`plaza.band.find(p => p.lineup === 'grallers' && p.kind === 'timbal').arms[1].rotation.x < -1.4`), 'the real crowd pose drives Bou percussion during its intro');
+run(`G.state = 'select'; setSelectedFigure('mulassa-valls');`);
 // what each still takes from a figure's folder: the splash's Drac beside the Mulassa
 const ALLOWED = { 'scene/stage-motion.js': ['drac/drac-play.js', 'drac/drac-demo.js'], 'scene/crowd.js': ['drac/drac-play.js'] };
 for (const f of ['scene/share-capture.js', 'scene/crowd-grid.js', 'scene/crowd-pose.js', 'scene/crowd-mood.js', 'scene/photo-obstacles.js', 'scene/play-camera.js']) ALLOWED[f] = [];

@@ -46,7 +46,8 @@ const DFIRE_FLIGHT = `attribute vec4 aA; attribute vec4 aB; attribute vec4 aC;
     bool stem = aC.z > 0.5 && aC.z < 1.5;
     float sz = aC.y * (stem ? (0.7 + 0.6 * u) : (1.1 - 0.6 * u));
     float px = -pv.z * 2.0 / (projectionMatrix[1][1] * uViewH), wid = max(sz, 1.5 * px); // a far spark stays a ~1.5 px line
-    float len = max(wid, sz + (stem ? 0.0 : l2 * uTrail * (aC.z > 1.5 ? 0.6 : 1.0)));
+    // (its streak never reaches behind where it was born: a new spark's ran back down its tube, the jet starting at the tube's foot)
+    float len = max(wid, sz + (stem ? 0.0 : min(l2 * uTrail * (aC.z > 1.5 ? 0.6 : 1.0), length((viewMatrix * vec4(pos - aA.xyz, 0.0)).xy))));
     pv.xy += dir * (position.x - 0.5) * len + dir * sz * 0.5 + nor * position.y * wid; // a streak along its flight, head first
     gl_Position = projectionMatrix * pv;
   }`;

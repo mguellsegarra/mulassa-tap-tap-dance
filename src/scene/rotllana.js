@@ -15,14 +15,18 @@ import { activeCrowd, bandSpots, midCrowd, crowdStamp, bandLineup, refreshBandSp
 
 // r0: the front row (beyond the colla's ring, RING.arenaMula 6.7 m); row / step: m between rows / along one (a shirt is
 // 0.46 wide); mover: the camera's-side wedge the moving crowd leaves (crowd-build.js); band: its front row's radius, m
-// between players and the room kept round each (in the ring's rows they were lost among the people: the owner)
-export const ROTLLANA = { r0: 7, row: 0.7, step: 0.7, rows: 9, moverFrom: 2.0, moverTo: 3.75, band: { r0: 7.2, gap: 1.15 }, bandRoom: 1.3 };
+// between players and the room kept round each (in the ring's rows they were lost among the people: the owner); lens: the
+// rows behind the first `keep` thin out within `room` m of where the play camera stands (`at` m out; play-camera.js puts
+// it 13.7-15 m out): on a phone their heads filled the bottom of the shot (the owner). The first rows stay closed all round.
+export const ROTLLANA = { r0: 7, row: 0.7, step: 0.7, rows: 9, moverFrom: 2.0, moverTo: 3.75, band: { r0: 7.2, gap: 1.15 }, bandRoom: 1.3, lens: { at: 14, room: 6.5, keep: 2 } };
+const rotllanaLens = { x: Math.cos(Math.atan2(CAM_DIR[2], CAM_DIR[0])) * ROTLLANA.lens.at, z: Math.sin(Math.atan2(CAM_DIR[2], CAM_DIR[0])) * ROTLLANA.lens.at };
 // every slot, front row first (a lower quality's count, a prefix, keeps the front rows)
 const rotllanaSlots = [];
 for (let k = 0; k < ROTLLANA.rows; k++) {
   const r = ROTLLANA.r0 + k * ROTLLANA.row, n = Math.round(2 * Math.PI * r / ROTLLANA.step);
   for (let i = 0; i < n; i++) {
     const a = (i + (k % 2) * 0.5) / n * 2 * Math.PI, x = Math.cos(a) * r, z = Math.sin(a) * r; // odd rows between shoulders
+    if (k >= ROTLLANA.lens.keep && Math.hypot(x - rotllanaLens.x, z - rotllanaLens.z) < ROTLLANA.lens.room) continue;
     const w = ((a % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
     rotllanaSlots.push({ x, z, k, mover: k < 2 && !(w > ROTLLANA.moverFrom && w < ROTLLANA.moverTo) });
   }

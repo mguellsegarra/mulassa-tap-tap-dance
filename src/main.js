@@ -13,6 +13,7 @@ import { FINAL } from './dev/final-test.js';
 import { pace, RAWCLOCK, viewClock } from './core/timing.js';
 import { glc, qualityLevel, renderProfile, softwareGl, stepPeople, freePlayPeople, GPU, renderer, camera, plaza, scene, setQualityLevel, renderScreen } from './scene/stage.js';
 import { initFigureObjects, hideFigures } from './figures/objects.js';
+import { prepareFigureScenes } from './scene/figure-scenes.js';
 import { G, chip, clock, songTime, drawT, audioEngine, setClock, setDrawT, offsetMs } from './game/state.js';
 import { audioFailureTags } from './platform/audio-load.js';
 import { animConfetti } from './scene/confetti.js';
@@ -181,7 +182,7 @@ requestAnimationFrame(() => setTimeout(() => { // one paint first: that line sho
   if (window.__mulassaBootFailure) return;
   startAudio(); // the song downloads and decodes (off the main thread) while the shaders compile, all under the cover
   window.__mulassaSetBootPhase?.('shaders');
-  waitForWarmup(() => localPeopleReady.then(() => precompile(true)).then(() => linkPrograms(renderer.info.programs))).then(result => {
+  Promise.all([prepareFigureScenes(), waitForWarmup(() => localPeopleReady.then(() => precompile(true)).then(() => linkPrograms(renderer.info.programs)))]).then(([, result]) => {
     if (window.__mulassaBootFailure) return;
     window.__mulassaSetBootPhase?.('frame');
     loadMark(result === 'ready' ? 'shaders' : 'shaders fallback');

@@ -1,7 +1,8 @@
 // The Bou's festa rules (src/figures/bou/bou-correfoc.js) and its carretilles on the model (models/bou.js).
 import assert from 'node:assert/strict';
-import { BOU_FX, BOU_BILLS, bouTechno, bouHush, bouJetsWant, bouPairBurns, bouUpBurns, bouTileLight, bouTileRing, bouTileColour, bouHeroSpot, bouBillPlan, bouFlutterDrop, bouWind } from '../../../src/figures/bou/bou-correfoc.js';
-import { buildBou } from '../../../src/figures/bou/bou.js';
+import { BOU_FX, BOU_BILLS, bouTechno, bouHush, bouJetsWant, bouCarried, bouTubeBurns, bouTileLight, bouTileRing, bouTileColour, bouSoftTileLight, bouHeroSpot, bouBillPlan, bouFlutterDrop, bouWind } from '../../../src/figures/bou/bou-correfoc.js';
+import * as THREE from 'three';
+import { buildBou, BOU_TUBE_K } from '../../../src/figures/bou/bou.js';
 
 // the techno part: source bars 27 up to 35, inside the song
 assert(BOU_FX.technoStart > 0 && BOU_FX.technoEnd > BOU_FX.technoStart + 10, 'the techno part spans its bars');
@@ -48,15 +49,12 @@ for (let p = 0; p < 7; p += 0.05) { const v = bouFlutterDrop(1, p); assert(v > 0
 assert(bouFlutterDrop(1, 0) > 4 * bouFlutterDrop(1, Math.PI / 2), 'it hangs at the ends of its swing');
 for (let t = 0; t < 60; t += 0.25) { const w = bouWind(t); assert(w >= 0.1 && w <= 1, `the wind in 0..1 (${w})`); }
 
-// at any moment exactly two pairs and one up tube burn: the five jets common/fire.js draws
-for (let c = 0; c < 30; c += 0.05) {
-  let pairs = 0, ups = 0;
-  for (let p = 0; p < BOU_FX.pairs; p++) pairs += bouPairBurns(c, p);
-  for (let u = 0; u < BOU_FX.ups; u++) ups += bouUpBurns(c, u);
-  assert.equal(pairs, 2, `two pairs at ${c.toFixed(2)} s`); assert.equal(ups, 1, `one up tube at ${c.toFixed(2)} s`);
+// its back's tubes all burn at once (in turns the fire walked along its back); carried by its colla, its head's instead
+for (let i = 0; i < BOU_FX.back + 3; i++) {
+  assert.equal(bouTubeBurns(i, false), i < BOU_FX.back, `tube ${i} on the plaça`);
+  assert.equal(bouTubeBurns(i, true), i >= BOU_FX.back, `tube ${i} carried`);
 }
-// they move on from the rump: the newest pair keeps burning as the next lights
-assert(bouPairBurns(0, 0) && bouPairBurns(BOU_FX.pair, 0) && bouPairBurns(BOU_FX.pair, 1) && !bouPairBurns(2 * BOU_FX.pair, 0));
+assert(!bouCarried(BOU_FX.festaStart - 0.01) && bouCarried(BOU_FX.festaStart) && bouCarried(BOU_FX.carryEnd - 0.01) && !bouCarried(BOU_FX.carryEnd), 'carried over [festaStart, carryEnd)');
 
 // the floor: on a beat every other tile flashes (far from the ring), the other half on the next; never brighter than 1
 const far = 15;
@@ -83,14 +81,51 @@ for (let i = 0; i < 17; i++) for (let j = 0; j < 17; j++) {
 assert.equal(used.size, BOU_FX.disco.length, 'every disco colour shows');
 assert(same / pairs < 0.3, `neighbouring lit tiles mostly differ (${same}/${pairs} the same)`);
 
-// the model: 12 tubes along the back's edges and 3 up the middle, hidden until they burn, mouths pointing out or up
+// the model: three pairs along its back's edges and one up the middle, then a horn tip each and its mouth; hidden until
+// they burn, pointing out and up, up, out of each horn and ahead
 const bou = buildBou();
-assert.equal(bou.fire.length, 15);
+assert.equal(bou.fire.length, BOU_FX.back + 3);
 assert(bou.fire.every(t => !t.visible), 'the tubes are hidden at rest');
+const tubeDir = t => new THREE.Vector3(0, 0, 1).applyQuaternion(t.quaternion);
 for (const [i, t] of bou.fire.entries()) {
-  const q = t.quaternion; // +z through its quaternion
-  const x = 2 * (q.x * q.z + q.w * q.y), y = 2 * (q.y * q.z - q.w * q.x);
-  if (i < 12) assert(Math.sign(x) === Math.sign(t.position.x) && Math.abs(x) > 0.9, `side tube ${i} points out of its flank`);
-  else assert(y > 0.9, `up tube ${i} points up`);
+  const d = tubeDir(t);
+  if (i < 6) assert(Math.sign(d.x) === Math.sign(t.position.x) && Math.abs(d.x) > 0.5 && d.y > 0.5, `back tube ${i} points out of its flank and up (flat, the far flank's hid behind its back)`);
+  else if (i === 6) assert(d.y > 0.9, 'the middle tube points up');
+  else if (i < 9) assert(Math.sign(d.x) === Math.sign(t.position.x) && Math.abs(d.x) > 0.99, `horn tube ${i} lies along its horn, pointing out`);
+  else assert(d.z > 0.99, 'the mouth tube points ahead');
 }
-console.log('bou correfoc: techno window, five jets, the end\'s banknotes, disco floor and the tubes ok');
+// each back tube stands in the back: its foot under the surface there (on air it read as floating beside the body), its mouth clear of it
+bou.root.updateMatrixWorld(true);
+const shell = []; bou.body.traverse(o => { if (o.isMesh && o.geometry.attributes.position.count > 600) shell.push(o); });
+const down = new THREE.Raycaster(), foot = new THREE.Vector3(), tip = new THREE.Vector3();
+for (let i = 0; i < BOU_FX.back; i++) {
+  bou.fire[i].getWorldPosition(foot); bou.fire[i].localToWorld(tip.set(0, 0, 0.18 * BOU_TUBE_K));
+  down.set(new THREE.Vector3(foot.x, 9, foot.z), new THREE.Vector3(0, -1, 0));
+  const top = down.intersectObjects(shell, false)[0].point.y;
+  assert(foot.y < top && foot.y > top - 0.05, `back tube ${i}: its foot ${((top - foot.y) * 100).toFixed(1)} cm into the back`);
+  assert(tip.y > top + 0.15, `back tube ${i}: its mouth well clear of the back`);
+}
+// the mouth's: held between the lips (against the mouth's roof, the jaw closed up to it), the mouth still while it is there
+const jawDrop = () => { bou.cap.play(0, 21.8, 0); return bou.cap.jaw.rotation.x; }; // beat 21.8: mid-gape
+const gape = jawDrop();
+bou.cap.jaw.userData.bite = 1;
+const bite = jawDrop();
+assert(gape > 0.4 && bite > 0.05 && bite < 0.15, `it gapes ${gape.toFixed(2)} rad on its own, ${bite.toFixed(2)} holding the tube`);
+bou.cap.play(0, 21.8, 1);
+assert.equal(bou.cap.jaw.rotation.x, bite, 'a BRAMA does not open the mouth round the tube either');
+let tongue = false; bou.cap.jaw.traverse(o => { if (o !== bou.cap.jaw && o.isGroup && o.visible && o.children.some(c => c.isMesh) && o.position.z > 0.4) tongue = true; });
+assert(!tongue, 'no tongue out while it holds the tube');
+console.log('bou correfoc: techno window, the tubes that burn, the end\'s banknotes, disco floor and the tubes ok');
+
+// First techno: alternating warm tiles, dimmer than the final and bounded around the Bou.
+assert.equal(BOU_FX.softDisco.colour, '#ffd66b');
+for (const beat of [0, .25, .5, 1, 1.75, 2, 80.3]) {
+  for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) {
+    const light = bouSoftTileLight(i, j, beat, 0);
+    if ((i + j) % 2) assert.equal(light, 0, 'every other tile stays dark throughout the pulse');
+    else assert(light > 0 && light <= .4, 'the yellow tiles stay softly lit');
+    assert.equal(bouSoftTileLight(i, j, beat, BOU_FX.softDisco.reach), 0, 'no yellow light beyond its reach');
+  }
+}
+assert(bouSoftTileLight(0, 0, 0, 0) < bouTileLight(0, 0, 0, 0), 'first-techno tiles are dimmer than the final');
+console.log('Bou first techno: soft yellow checkerboard, bounded pulse and reach ok');

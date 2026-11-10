@@ -24,7 +24,17 @@ function prototypeBody(spec, headOnly = false) {
 }
 // Who plays each line-up's first places. The cobla's flabiol is a fair woman with long light-brown blonde hair: a look of her own,
 // so the public and the banda keep p01's.
-export const MUSICIANS = { banda: ['p01', 'p03', 'p07'].map(catalogueSpec), cobla: [{ ...catalogueSpec('p01'), skin: SKIN[4], hair: { style: 'llarg', colour: '#a67c45' } }, catalogueSpec('p03')] };
+const COBLA_FLABIOL = { ...catalogueSpec('p01'), skin: SKIN[4], hair: { style: 'llarg', colour: '#a67c45' } };
+export const MUSICIANS = {
+  banda: ['p01', 'p03', 'p07'].map(catalogueSpec),
+  cobla: [COBLA_FLABIOL, catalogueSpec('p03')],
+  grallers: [
+    { ...catalogueSpec('p01'), id: 'gralla-1', meta: { gender: 'home' }, skin: SKIN[4], cover: null, hair: { style: 'curt', colour: '#c9a45c' } },
+    { ...catalogueSpec('p03'), id: 'gralla-2' },
+    { ...catalogueSpec('p07'), id: 'gralla-baixa', cover: null, hair: { style: 'llarg', colour: '#6b4423' } },
+    { ...COBLA_FLABIOL, id: 'timbal' },
+  ],
+};
 export function reviewMusician(spec, kind, look) {
   const { shirt, pants } = look;
   const p = buildPerson({ shirt, pants, skin: spec.skin, hair: spec.hair.colour });

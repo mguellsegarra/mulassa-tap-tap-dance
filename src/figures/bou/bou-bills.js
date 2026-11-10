@@ -6,10 +6,10 @@
 // wind (`aPaper`: how much, its phase), so the notes read as paper, not cards; compiled up front with the rest (main.js
 // precompile: hidden meshes too). Its matrices and `aPaper` are written in place, nothing allocated per frame.
 import * as THREE from 'three';
-import { scene, renderer, renderProfile } from '../../scene/stage.js';
+import { scene, renderer, renderProfile, camera } from '../../scene/stage.js';
 import { bou } from './bou-objects.js';
 import { confBills } from '../../scene/confetti.js';
-import { BOU_BILLS, bouHeroSpot, bouBillPlan, bouFlutterDrop, bouWind, bouWindDir } from './bou-correfoc.js';
+import { BOU_BILLS, bouHeroSpot, bouBillPlan, bouStackOn, bouFlutterDrop, bouWind, bouWindDir } from './bou-correfoc.js';
 import { bouPose, newBouPose, BOU_TIMING } from './bou-dance.js';
 import { AUTOPLAY } from '../../core/env.js';
 import { G } from '../../game/state.js';
@@ -36,6 +36,9 @@ float billZ(vec2 p) {
   float bz = billZ(position.xy);
   objectNormal = normalize(vec3(-(billZ(position.xy + vec2(0.004, 0.0)) - bz) / 0.004, -(billZ(position.xy + vec2(0.0, 0.004)) - bz) / 0.004, 1.0));`)
     .replace('#include <begin_vertex>', '#include <begin_vertex>\n  transformed.z += bz;');
+  // either face takes the sky's light: a falling note turning its back (lit from below: dark) flashed light/dark by the lens
+  sh.fragmentShader = sh.fragmentShader.replace('#include <normal_fragment_begin>', `#include <normal_fragment_begin>
+  if (dot(normal, (viewMatrix * vec4(0.0, 1.0, 0.0, 0.0)).xyz) < 0.0) normal = -normal;`);
 };
 billMat.customProgramCacheKey = () => 'bou-bill';
 const billCarpet = new THREE.InstancedMesh(billGeo, billMat, BILL_N);
@@ -44,9 +47,9 @@ billCarpet.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
 billCarpet.count = 0; billCarpet.visible = false; billCarpet.frustumCulled = false; billCarpet.receiveShadow = true;
 scene.add(billCarpet);
 
-const billNotes = Array.from({ length: BILL_N }, () => ({ x: 0, z: 0, y: 0, delay: 0, high: 0, drop: 0, yaw: 0, ph: 0, tumble: false, cy: 0, dx: 0, dz: 0, spin: 0, land: -1, q0: new THREE.Quaternion() }));
-// t: s since the rain began; endT: when the song ended (the crane, cameras.js), -1 before; k: how far the camera has come down; go: tapped on
-export const BOU_FINALE = { on: false, t: 0, endT: -1, k: 0, go: false, hero: new THREE.Vector3(), cam: new THREE.Vector3(), look: new THREE.Vector3(), fov: 0 };
+const billNotes = Array.from({ length: BILL_N }, () => ({ x: 0, z: 0, y: 0, delay: 0, high: 0, drop: 0, yaw: 0, ph: 0, tumble: false, cy: 0, dx: 0, dz: 0, spin: 0, land: -1, born: false, base: 0, px: 0, pz: 0, claim: false, ax: 0, az: 0, p0: 0, q0: new THREE.Quaternion() }));
+// t: s since the rain began; yaw: the hero's heading (bou-end-shot.js films it from there); endT: when the song ended (the crane, cameras.js), -1 before; k: how far the camera has come down; go: tapped on
+export const BOU_FINALE = { on: false, t: 0, endT: -1, k: 0, go: false, yaw: 0, hero: new THREE.Vector3(), cam: new THREE.Vector3(), look: new THREE.Vector3(), fov: 0 };
 const billPlan = { x: 0, z: 0, y: 0, delay: 0, high: 0, drop: 0, yaw: 0, ph: 0, tumble: false }, billSpot = { x: 0, z: 0 };
 const billM4 = new THREE.Matrix4(), billQ = new THREE.Quaternion(), billQf = new THREE.Quaternion(), billE = new THREE.Euler(0, 0, 0, 'YXZ'), billPos = new THREE.Vector3(), billOne = new THREE.Vector3(BOU_BILLS.scale, BOU_BILLS.scale, BOU_BILLS.scale), billZero = new THREE.Matrix4().makeScale(0, 0, 0);
 const BILL_SETTLE = 0.3; // s a landed note takes to lie flat (no snap)
@@ -82,11 +85,11 @@ export function bouBillsStart(t, end, camera) {
   for (let i = 0; i < BILL_N; i++) {
     const n = billNotes[i];
     bouBillPlan(i, BILL_N, billSpot.x, billSpot.z, bx, bz, Math.max(1, end - t), billPlan);
-    Object.assign(n, billPlan); n.cy = n.high; n.dx = n.dz = n.spin = 0; n.land = -1;
+    Object.assign(n, billPlan); n.base = n.y; n.cy = n.high; n.dx = n.dz = n.spin = n.px = n.pz = 0; n.land = -1; n.claim = n.born = false;
   }
   const h = billNotes[BILL_N - 1];
   h.yaw = Math.atan2(camera.position.x - billSpot.x, camera.position.z - billSpot.z); // its top away from the lens: it reads upright
-  Object.assign(BOU_FINALE, { on: true, t: 0, endT: -1, k: 0, go: false });
+  Object.assign(BOU_FINALE, { on: true, t: 0, endT: -1, k: 0, go: false, yaw: h.yaw });
   BOU_FINALE.hero.set(billSpot.x, h.y, billSpot.z);
   billCarpet.count = BILL_N; billCarpet.visible = true;
 }
@@ -94,6 +97,16 @@ export function bouBillsStart(t, end, camera) {
 export function bouBillsEnd(camera, focus) {
   if (!BOU_FINALE.on || BOU_FINALE.endT >= 0) return;
   BOU_FINALE.endT = BOU_FINALE.t; BOU_FINALE.cam.copy(camera.position); BOU_FINALE.look.copy(focus); BOU_FINALE.fov = camera.fov;
+  // the notes that would still be falling once the crane is down move out of its shot (high up, the camera still far)
+  const h = billNotes[BILL_N - 1];
+  for (let i = 0; i < BILL_N - 1; i++) {
+    const n = billNotes[i];
+    if (n.land >= 0 || Math.max(0, n.delay - BOU_FINALE.t) + (n.cy - n.y) / n.drop < BOU_BILLS.late) continue;
+    const dx = n.x + n.dx - h.x, dz = n.z + n.dz - h.z, d = Math.hypot(dx, dz);
+    if (d >= BOU_BILLS.shot) continue;
+    const a = d > 1e-4 ? Math.atan2(dz, dx) : n.ph;
+    n.x += Math.cos(a) * BOU_BILLS.shot - dx; n.z += Math.sin(a) * BOU_BILLS.shot - dz;
+  }
 }
 export function bouBillsClear() {
   if (!BOU_FINALE.on) return;
@@ -106,6 +119,25 @@ export const bouHolds = () => BOU_FINALE.endT >= 0 && !BOU_FINALE.go && !((AUTOP
 export const bouWaiting = () => bouHolds() && BOU_FINALE.k > 0.98; // the close-up is there: a tap goes on
 export function bouTap() { if (!bouWaiting()) return false; BOU_FINALE.go = true; return true; }
 
+// A note in its last 0.8 m once the hero is that low too (or down): eased `reach` m off the hero's spot, so nothing lands on
+// the filmed note (the mound under it fell before). Every frame, not once: the wind kept carrying a note after its one
+// aim, and one aimed while the hero was still high landed on it later (a corner of the hero covered)
+function billAim(n, h, dt) {
+  if (h.land < 0 && h.cy - h.y >= 0.8) return;
+  const dx = n.x + n.dx - h.x - h.dx, dz = n.z + n.dz - h.z - h.dz, d = Math.hypot(dx, dz), out = Math.max(0, BOU_BILLS.reach - d);
+  const a = d > 1e-4 ? Math.atan2(dz, dx) : n.ph, e = Math.min(1, dt * 12);
+  n.px += (Math.cos(a) * out - n.px) * e; n.pz += (Math.sin(a) * out - n.pz) * e;
+}
+// A note born inside the shot (it popped out of thin air, a blink) starts higher, above it: it falls into the frame. Not the
+// first hit's burst (delay 0: the sky full at once); the hero falls faster from there, landing when it would have (the crane)
+const billFrustum = new THREE.Frustum(), billSphere = new THREE.Sphere(new THREE.Vector3(), 0.3), billVP = new THREE.Matrix4();
+function billOffShot(n, hero) {
+  const fall = n.cy - n.y;
+  billFrustum.setFromProjectionMatrix(billVP.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse));
+  billSphere.center.set(n.x + n.dx, n.cy, n.z + n.dz);
+  for (let k = 0; k < 30 && billFrustum.intersectsSphere(billSphere); k++) billSphere.center.y = n.cy += 1;
+  if (hero) n.drop *= (n.cy - n.y) / fall;
+}
 // once a frame while they're out: fall (fluttering or tumbling, carried by the wind), settle, then lie and stir in it
 export function bouBillsFrame(dt) {
   if (!BOU_FINALE.on) return;
@@ -115,27 +147,29 @@ export function bouBillsFrame(dt) {
   for (let i = 0; i < BILL_N; i++) {
     const n = billNotes[i], a = t - n.delay;
     if (a < 0) { billCarpet.setMatrixAt(i, billZero); continue; }
+    if (!n.born) { n.born = true; if (n.delay > 0) billOffShot(n, i === top); }
     if (n.land < 0) { // in the air
       const p = n.ph + 2.6 * a; // its swing's phase
       n.cy = Math.max(n.y, n.cy - (n.tumble ? 1.25 * n.drop : bouFlutterDrop(n.drop, p)) * dt);
-      n.dx += wx * wind * dt; n.dz += wz * wind * dt; // the gusts carry it
+      if (i !== top) { n.dx += wx * wind * dt; n.dz += wz * wind * dt; } // the gusts carry it (the hero lands on its spot, under the camera)
       if (i !== top) n.spin += 0.35 * dt; // a slow turn as it comes down (the hero keeps its heading: it lands upright for the lens)
+      if (i !== top && n.cy - n.y < 0.8) billAim(n, billNotes[top], dt); // its last 0.8 m: out of the hero's way
+      if (n.cy - n.y < 0.3) { n.claim = true; n.ax = n.x + n.dx + n.px; n.az = n.z + n.dz + n.pz; const on = bouStackOn(n, billNotes); n.y = on - n.cy < 3.5 * BOU_BILLS.step ? on : Math.min(n.cy, on); } // on whatever lies under it by now; one that reached its spot the frame another landed there hops onto it (held at its height they shared a plane: z-fighting in the close-up)
       const low = Math.min(1, (n.cy - n.y) / 0.8); // the swing dies down near the floor: it lands where planned
       const sw = (n.tumble ? 0.3 * Math.sin(0.9 * a + n.ph) : 0.45 * Math.sin(p)) * low * (i === top ? 0.5 : 1); // tumbling: a slow glide; fluttering: the pendulum
       const hx = -Math.sin(n.yaw + n.spin), hz = -Math.cos(n.yaw + n.spin); // across the note (its short side): the way it swings
-      billPos.set(n.x + n.dx + hx * sw, n.cy, n.z + n.dz + hz * sw);
-      if (n.tumble) billQ.setFromEuler(billE.set(-Math.PI / 2 + (n.ph + 7 * a) * low, n.yaw + n.spin, 0)); // end over end round its long side
+      billPos.set(n.x + n.dx + hx * sw + n.px * (1 - low), n.cy, n.z + n.dz + hz * sw + n.pz * (1 - low));
+      if (n.tumble) billQ.setFromEuler(billE.set(-Math.PI / 2 + 1.0 * Math.sin(n.ph + 2.2 * a) * low, n.yaw + n.spin, 0)); // rocking wide round its long side (end over end it went edge-on, vanishing: a blink)
       else billQ.setFromEuler(billE.set(-Math.PI / 2 + 0.75 * Math.cos(p) * low, n.yaw + n.spin, 0)); // tilted into its swing (round its long side)
-      P[2 * i] = 0.012 + 0.006 * Math.sin(3 * a + n.ph); P[2 * i + 1] = n.ph; // in the air it curls and flaps
-      if (n.cy <= n.y) { n.land = t; n.q0.copy(billQ); n.x = billPos.x; n.z = billPos.z; n.dx = n.dz = 0; }
-    } else { // lying: it settles flat, then only the wind stirs it (the loose ones on top slide a little)
-      const s = Math.min(1, (t - n.land) / BILL_SETTLE), e = s * s * (3 - 2 * s), loose = i === top ? 0.05 : n.y > 0.03 ? 0.4 : 0.08;
-      n.dx += wx * wind * loose * dt * 0.25; n.dz += wz * wind * loose * dt * 0.25;
+      P[2 * i] = (0.012 + 0.006 * Math.sin(3 * a + n.ph)) * (0.15 + 0.85 * low); P[2 * i + 1] = n.ph; // in the air it curls and flaps (flatter as it lands: its bulge stays near the step)
+      if (n.cy <= n.y) { n.land = t; n.q0.copy(billQ); n.x = billPos.x; n.z = billPos.z; n.dx = n.dz = n.px = n.pz = 0; n.ax = n.x; n.az = n.z; n.claim = false; n.p0 = P[2 * i]; }
+    } else { // lying: it settles flat, then only the wind ripples it (none slides: one sliding over another shared its plane)
+      const s = Math.min(1, (t - n.land) / BILL_SETTLE), e = s * s * (3 - 2 * s);
       billQf.setFromEuler(billE.set(-Math.PI / 2, n.yaw + n.spin, 0));
       billQ.slerpQuaternions(n.q0, billQf, e);
-      billPos.set(n.x + n.dx, n.y, n.z + n.dz);
+      billPos.set(n.x, n.y, n.z);
       const gust = bouWind(t * 1.3 + n.ph); // under the step: a ripple never reaches the note above (the hero, on top, lifts more)
-      P[2 * i] = (i === top ? 0.004 : BOU_BILLS.ripple) * (0.4 + 0.6 * gust) + 0.01 * (1 - e); P[2 * i + 1] = n.ph;
+      P[2 * i] = (i === top ? 0.004 : BOU_BILLS.ripple) * (0.4 + 0.6 * gust) + n.p0 * (1 - e); P[2 * i + 1] = n.ph;
     }
     billCarpet.setMatrixAt(i, billM4.compose(billPos, billQ, billOne));
     if (i === top) BOU_FINALE.hero.set(billPos.x, n.y, billPos.z); // the camera aims where it lies, not where it falls

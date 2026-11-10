@@ -22,7 +22,22 @@ assert.notEqual(hemi.intensity, 1.6, 'the retained finale lights still pulse');
 run('for (let i = 0; i < 180; i++) animFireworks(1 / 60);');
 assert.equal(fireworks.visible, false, 'the retained sparks expire');
 assert.deepEqual(scene.children, [fireworks], 'running the celebration never adds decorative release objects');
+// a figure's quiet end (the Bou's close-up on its banknotes): the pulse and the colours ease to the day's light, so the
+// frame the finale ends changes nothing (pale notes flashed on every beat and changed colour in one frame)
+run('setFinaleCalm(0.5); animFinaleLights(4.02);');
+const halfCalm = hemi.intensity;
+run('setFinaleCalm(0); animFinaleLights(4.02);');
+assert(Math.abs(halfCalm - 1.6) < Math.abs(hemi.intensity - 1.6) && halfCalm !== 1.6, 'half calm, half the pulse');
+for (const beat of [4.02, 4.5, 5.01, 7.3]) {
+  run(`setFinaleCalm(1); animFinaleLights(${beat});`);
+  assert.equal(hemi.intensity, 1.6, `calm: no pulse at beat ${beat}`);
+  assert(sun.color.equals(new THREE.Color('#ffe6bd')) && hemi.color.equals(new THREE.Color('#fff0dc')), `calm: the day's colours at beat ${beat}`);
+}
+const calmSun = sun.color.clone();
 G.finale = false;
 run('animFinaleLights(0);');
+assert(sun.color.equals(calmSun), 'the finale ending on a calm shot changes no colour');
+run('setFinaleCalm(0);');
+run('animFinaleLights(0);');
 assert.equal(hemi.intensity, 1.6, 'leaving the finale restores the lights');
-console.log('finale lights and fireworks only, no decorative balloon release ok');
+console.log('finale lights and fireworks only, calm on a quiet end, no decorative balloon release ok');

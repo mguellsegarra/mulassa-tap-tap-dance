@@ -1,5 +1,6 @@
 // The band and the cobla: the musicians, where they stand and how they play.
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { buildPerson } from './people.js';
 import { Vox } from './voxel.js';
 
@@ -14,7 +15,9 @@ export const BAND = [['clarinet', 0], ['trumpet', 0], ['trombone', 1], ['tuba', 
 // A figure can bring its own players instead (its scene's `band`, figure-scenes.js). The Drac dances to a mitja cobla:
 // two players and three instruments, the xeremies and the flabiol with its tamborí, in white shirts and dark trousers.
 export const COBLA = [['flabiol', 0], ['xeremies', 0]];
-export const BAND_LOOKS = { banda: { shirt: '#f5f5ef', pants: '#1f2230', tie: '#e8b830' }, cobla: { shirt: '#f5f5ef', pants: '#1f2230' } };
+export const GRALLERS = [['gralla', 0], ['gralla', 0], ['gralla-baixa', 0], ['timbal', 0]];
+export const BAND_LINEUPS = { banda: BAND, cobla: COBLA, grallers: GRALLERS };
+export const BAND_LOOKS = { banda: { shirt: '#f5f5ef', pants: '#1f2230', tie: '#e8b830' }, cobla: { shirt: '#f5f5ef', pants: '#1f2230' }, grallers: { shirt: '#f5f5ef', pants: '#1f2230' } };
 const BRASS = '#e2b13c', BRASS_D = '#b8872a', WOOD = '#1d1b1f', KEYS = '#c9ccd2', HEAD = '#f1ead8', REED = '#3a2015', BAG = '#7a5636';
 const HIP = 0.78, REACH = 0.49, _o = new THREE.Object3D(), _m = new THREE.Matrix4(), _v = new THREE.Vector3();
 const at = (a, b, t) => a.map((x, i) => x + (b[i] - x) * t);
@@ -44,12 +47,56 @@ function onArm(arm, v) {
   m.geometry.applyMatrix4(_m.makeTranslation(0, HIP, 0).multiply(arm.matrix).invert());
   arm.add(m);
 }
+// A sloping shirt shoulder meets the neck without a flat ledge cutting across raised sleeves.
+function slopeBassShoulders(body) {
+  const old = body.geometry, pos = old.attributes.position, bounds = new THREE.Box3();
+  for (let i = 0; i < 24; i++) bounds.expandByPoint(_v.fromBufferAttribute(pos, i));
+  const { min: a, max: b } = bounds, inset = .05;
+  const shape = new THREE.Shape();
+  shape.moveTo(a.x, a.y); shape.lineTo(b.x, a.y);
+  shape.lineTo(b.x, b.y - inset); shape.lineTo(b.x - inset, b.y);
+  shape.lineTo(a.x + inset, b.y); shape.lineTo(a.x, b.y - inset); shape.closePath();
+  const shirt = new THREE.ExtrudeGeometry(shape, { depth: b.z - a.z, bevelEnabled: false, steps: 1 }).translate(0, 0, a.z);
+  const colours = new Float32Array(shirt.attributes.position.count * 3), original = old.attributes.color;
+  for (let i = 0; i < colours.length; i += 3) colours.set([original.getX(0), original.getY(0), original.getZ(0)], i);
+  shirt.setAttribute('color', new THREE.BufferAttribute(colours, 3));
+  const rest = old.clone(); rest.setIndex(Array.from(old.index.array.slice(36)));
+  const head = rest.toNonIndexed();
+  body.geometry = mergeGeometries([shirt, head]);
+  // The crowd packer merges indexed meshes; keep that contract for this prism too.
+  body.geometry.setIndex(Array.from({ length: body.geometry.attributes.position.count }, (_, i) => i));
+  delete body.userData.boxes; // the bevel is a prism, not the original axis-aligned torso box
+  shirt.dispose(); head.dispose(); rest.dispose(); old.dispose();
+}
 export function buildMusician(kind, look = BAND_LOOKS.banda, p = buildPerson(look)) {
   const [L, R] = p.arms; // arms[0] is at +x: their left (they face +z)
   const t = new Vox(), l = new Vox(), r = new Vox();
   if (look.tie) t.box(0, 1.0, 0.135, 0.07, 0.32, 0.02, look.tie, 0).box(0, 1.27, 0.14, 0.1, 0.07, 0.03, look.tie, 0); // tie and knot
   const lips = [0, 1.46, 0.17];
-  if (kind === 'clarinet') { // black, straight down-forward from the lips, silver rings, a small flared bell
+  if (kind === 'gralla' || kind === 'gralla-baixa') {
+    const low = kind === 'gralla-baixa', end = low ? [0, .91, .67] : [0, 1.13, .57];
+    const wood = '#6b3820', rim = '#ad8048';
+    rod(t, lips, at(lips, end, .12), .025, REED);
+    // Stepped conical bore, with an open bell: the larger bass carries its keys down the lower joint.
+    for (const [a, b, width] of [[.1, .45, .045], [.43, .72, .055], [.7, .87, .075], [.85, .97, .1]]) {
+      rod(t, at(lips, end, a), at(lips, end, b), width * (low ? 1.12 : 1), wood);
+    }
+    const bell = new THREE.Group(), w = low ? .14 : .12, wall = .022;
+    bell.position.set(...end); bell.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), new THREE.Vector3(...end).sub(new THREE.Vector3(...lips)).normalize());
+    const bv = new Vox();
+    for (const sign of [-1, 1]) {
+      bv.box(sign * (w - wall) / 2, -w / 2, 0, wall, w, .06, rim, 0);
+      bv.box(0, sign > 0 ? w / 2 - wall : -w / 2, 0, w - 2 * wall, wall, .06, rim, 0);
+    }
+    // Bake the bell into the same torso geometry as the bore.
+    bell.updateMatrix(); t.add(bv.mesh().geometry.applyMatrix4(bell.matrix), rim, 0);
+    for (const k of [0.2, .36, .52, .66]) rod(t, at(lips, end, k), at(lips, end, k + .025), low ? .07 : .06, KEYS);
+    if (low) for (const k of [.72, .8]) {
+      const point = at(lips, end, k); t.box(point[0] + .043, point[1] - .018, point[2] + .018, .035, .035, .045, KEYS, 0);
+    }
+    if (low) slopeBassShoulders(p.body);
+    grip(L, ...at(lips, end, .3)); grip(R, ...at(lips, end, .6));
+  } else if (kind === 'clarinet') { // black, straight down-forward from the lips, silver rings, a small flared bell
     const b = [0, 0.98, 0.5];
     rod(t, lips, b, 0.05, WOOD);
     for (const k of [0.3, 0.56]) rod(t, at(lips, b, k), at(lips, b, k + 0.03), 0.06, KEYS);
@@ -123,6 +170,18 @@ export function buildMusician(kind, look = BAND_LOOKS.banda, p = buildPerson(loo
     const h = grip(R, -0.42, 1.08, 0.42);
     rod(r, h, [-0.2, 1.03, 0.42], 0.025, '#7a4a22');
     r.box(-0.195, 0.99, 0.42, 0.08, 0.08, 0.08, HEAD, 0);
+  } else if (kind === 'timbal') { // traditional drum on a sling, a stick in each hand
+    t.add(new THREE.CylinderGeometry(.17, .17, .28, 8).translate(.04, .82, .38), '#9b632e', 0);
+    for (const y of [.68, .96]) t.add(new THREE.CylinderGeometry(.182, .182, .025, 8).translate(.04, y, .38), BRASS_D, 0);
+    t.add(new THREE.CylinderGeometry(.16, .16, .012, 8).translate(.04, .98, .38), HEAD, 0);
+    for (let i = 0; i < 8; i++) {
+      const a = i * Math.PI / 4, b = (i + 1) * Math.PI / 4;
+      rod(t, [.04 + .175 * Math.cos(a), .7, .38 + .175 * Math.sin(a)], [.04 + .175 * Math.cos(b), .95, .38 + .175 * Math.sin(b)], .014, '#e4d6af');
+    }
+    rod(t, [.2, .96, .22], [-.16, 1.37, .15], .04, '#514035');
+    // Hands stay in front of their own shoulders; crossing inward made raised sleeves cut into the neck.
+    rod(l, grip(L, .3, 1.1, .33), [.09, 1.005, .4], .022, '#d8c39a');
+    rod(r, grip(R, -.3, 1.1, .33), [.02, 1.005, .4], .022, '#d8c39a');
   } else if (kind === 'caixa') { // snare at the left hip on a sling, a stick in each hand
     t.box(0.06, 0.86, 0.36, 0.34, 0.13, 0.34, KEYS);
     t.box(0.06, 0.885, 0.36, 0.35, 0.05, 0.35, '#a3182f', 0);
@@ -172,7 +231,7 @@ export function poseBand(band, beat, live = 1) {
       R.rotation.x = rx - 0.25 * s; R.rotation.z = rz - 0.5 * s;
     } else if (p.kind === 'flabiol') {
       R.rotation.x = rx - 0.35 * stroke(frac(beat)) * live;
-    } else if (p.kind === 'caixa') {
+    } else if (p.kind === 'caixa' || p.kind === 'timbal') {
       R.rotation.x = rx - 0.45 * stroke(frac(beat)) * live;
       L.rotation.x = lx - 0.45 * stroke(frac(beat + 0.5)) * live;
     } else if (p.kind === 'plats') {

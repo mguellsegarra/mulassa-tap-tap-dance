@@ -17,11 +17,11 @@
 // Dev only: the musicians as the game poses them, to look at from anywhere while they play.
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { BAND, COBLA, BAND_LOOKS, buildMusician, placeBand, poseBand } from '/src/scene/models/band.js';
+import { BAND, COBLA, GRALLERS, BAND_LOOKS, buildMusician, placeBand, poseBand } from '/src/scene/models/band.js';
 import { MUSICIANS, reviewMusician } from '/src/scene/representation/role-models.js';
 
 const $ = id => document.getElementById(id), AZ = Math.PI / 2;
-const LINEUPS = { cobla: ['Mitja cobla (Drac)', COBLA], banda: ['Banda (Mulassa, Bou)', BAND] };
+const LINEUPS = { cobla: ['Mitja cobla (Drac)', COBLA], banda: ['Banda (Mulassa)', BAND], grallers: ['Grallers (Bou)', GRALLERS] };
 const renderer = new THREE.WebGLRenderer({ canvas: $('c'), antialias: true });
 renderer.setPixelRatio(Math.min(2, devicePixelRatio));
 const scene = new THREE.Scene();

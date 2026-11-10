@@ -96,5 +96,5 @@ export function frameCamera(dt, now, reelWide) { // reelWide: the idle selector'
   if (trauma > 0) { // shake decays; quadratic so small bumps barely move it. During play only a small accent
     setTrauma(Math.max(0, trauma - dt * 1.6)); // (GUAPA, the finale), added on top: it never feeds the camera's springs
   }
-  applyCameraImpact(trauma * (1 - BOU_FINALE.k)); // (no shake on the Bou's close-up)
+  applyCameraImpact(trauma * (1 - BOU_FINALE.k) * (BOU_FINALE.endT >= 0 ? Math.SQRT1_2 : 1)); // (the Bou's end: half the shake as its crane sets off (the strength is squared), none on its close-up)
 }

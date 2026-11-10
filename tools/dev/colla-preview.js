@@ -54,7 +54,7 @@ colla.setLabels(true);
 plaza.add(colla.helpers, colla.seated);
 if (BOU) { // the Bou at song second T in its dance frame (stage.js: turned to FRONT, CAM_AZ + 0.35)
   const bou = buildBou(), frame = new THREE.Group();
-  frame.rotation.y = CAM_AZ + 0.35; frame.add(bou.root, ...bou.feet, ...bou.legs, ...bou.trunks, ...bou.arms); plaza.add(frame);
+  frame.rotation.y = CAM_AZ + 0.35; frame.add(bou.root, ...bou.feet, ...bou.legs, ...bou.trunks, ...bou.arms, bou.limbs); plaza.add(frame);
   createBouMotion(bou)(T, 0);
 } else if (MULA) { // her body and carriers at song second T, in the dance frame
   const rig = buildMulassa(), carriers = createCarriers(), p = mulaDance.pose(newMulaPose(), T), feet = Array.from({ length: 8 }, (_, i) => mulaDance.foot(T, i, {}));

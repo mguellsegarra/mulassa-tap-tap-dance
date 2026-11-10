@@ -9,7 +9,7 @@ import { M } from './figure-springs.js';
 import { RING } from './crowd-build.js';
 import { lensShrink, OUTGOING_LENS } from './framing.js';
 import { easeIn, smooth01, TAU } from '../core/math.js';
-import { crowdPose, crowdPace, crowdHop, crowdArms } from './crowd-effects.js';
+import { crowdPose, crowdPace, crowdHop, crowdArms, crowdBand } from './crowd-effects.js';
 const ARMS = { tx: 0, tz: 0 }; // the arm targets a figure's effect bends (crowdArms), reused
 import { GROOVE, mood, PRES, PARTY_HOP, NEAR, F } from './crowd-mood.js';
 
@@ -127,6 +127,7 @@ export function pose(p, dt, beat, live) {
 export function poseScenery(beat, live) {
   const { moodK, ex } = F, { festK, clapK, partyK, waveK, gr2 } = mood;
   poseBand(plaza.band, beat, live);
+  crowdBand(plaza.band, beat, live);
   for (const p of plaza.balcony) { // up on the balconies (high quality): one waves on the beat, the other leans on the rail
     const still = 1 - 0.8 * moodK; // the song: a slow small wave
     p.arms[0].rotation.x = -2.4 - 0.4 * smooth01(Math.max(festK, waveK * 2 - 0.5)); p.arms[0].rotation.z = 0.35 + Math.sin(beat * Math.PI + p.ph) * 0.35 * still;

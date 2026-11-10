@@ -3,9 +3,12 @@
 // collaTick(on, beat, dt, reel), collaSpots, colla(), animate(dt, beat, live, reel, splash), leave() and reset()
 // (optional: another figure took the stage / it takes it afresh), onBoth?() (its answer to a both-buttons hit), endShot?(dt, shift)
 // (ui/frame-camera.js: its song's end shot), band? (its musicians, a line-up in models/band.js; default the banda), rotllana? (the plaça cleared to one round ring: scene/rotllana.js) and hero { scale, pose(), fx?(), save?(saved), restore?() }. The first is the fallback.
+// prepare?(): asynchronous CPU work under the loader, finished before the first frame.
 import { MULA_SCENE } from '../figures/mulassa/mula-scene.js';
 import { DRAC_SCENE } from '../figures/drac/drac-scene.js';
 import { BOU_SCENE } from '../figures/bou/bou-scene.js';
 
 export const FIGURE_SCENES = [MULA_SCENE, DRAC_SCENE, BOU_SCENE].filter(Boolean); // an unreleased figure's is null in a build
 export const sceneOf = id => FIGURE_SCENES.find(f => f.id === id) ?? null;
+// CPU preparation finishes before the first frame; each figure owns its scheduling.
+export const prepareFigureScenes = () => Promise.all(FIGURE_SCENES.map(f => f.prepare?.()));

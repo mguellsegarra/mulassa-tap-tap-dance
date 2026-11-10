@@ -43,9 +43,9 @@ let rig = null, motion = null;
 // For automated sweeps (flicker checks): the camera and its controls.
 window.__orbit = { get rig() { return rig; }, camera, controls, render: () => { controls.update(); renderer.render(scene, camera); } };
 function load(key) {
-  if (rig) { scene.remove(rig.root, ...rig.feet, ...rig.legs); rig.dispose?.(); }
+  if (rig) { scene.remove(rig.root, ...rig.feet, ...rig.legs, rig.limbs); rig.dispose?.(); }
   rig = buildBou({ cap: key === 'bou' ? null : key });
-  scene.add(rig.root, ...rig.feet, ...rig.legs);
+  scene.add(rig.root, ...rig.feet, ...rig.legs, rig.limbs);
   [[-.12, -.66], [.12, -.66], [-.12, .66], [.12, .66]].forEach(([x, z], i) => rig.feet[i].position.set(x, 0, z));
   rig.poseLegs(); rig.swingTail?.reset();
   

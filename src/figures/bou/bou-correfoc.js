@@ -19,6 +19,7 @@ export const BOU_FX = {
   finalStart: BOU_TIMING.bars.find(b => b.sourceBar === 84).time, finalEnd: BOU_TIMING.bars.find(b => b.sourceBar === 92).time,
   night: 0.4, // s the plaça takes to turn night (and back)
   disco: ['#ff3b30', '#ffcc00', '#34c759', '#0a84ff', '#ff2bd6'], // The owner\'s «Disco 70 multicolor»
+  glass: '#262838', // every disco tile's base: the Mulassa clip's cool dark grey (tools/videoclip/stage.js), not black
   pulse: 3, low: 0.35, // a lit tile's flash fades by e^(-pulse * beat fraction) down to `low`
   wave: 14, ring0: 3.2, bar: 4, waveW: 1.5, reach: 16, // the ring: m it runs out to in a bar of `bar` beats, from ring0 (clear of its body), its width (m²); how far the floor stays lit round the Bou (m)
   glow: 0.9, // how much of its own colour the Bou shows on its own at night (lit as by day, the floor left dark)

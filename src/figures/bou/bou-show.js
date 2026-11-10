@@ -34,7 +34,7 @@ setConfettiDivert((sec, reason) => {
 const BOU_TILES = PAVING.size / PAVING.tile;
 const bouFloor = new THREE.InstancedMesh(new THREE.PlaneGeometry(PAVING.tile - 0.06, PAVING.tile - 0.06).rotateX(-Math.PI / 2),
   new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, polygonOffset: true, polygonOffsetFactor: -1, fog: false }), BOU_TILES * BOU_TILES);
-const BOU_DISCO = BOU_FX.disco.map(c => new THREE.Color(c)), bouTint = new THREE.Color(), bouWhite = new THREE.Color('#fff8ec'), bouRingTint = new THREE.Color(), bouM4 = new THREE.Matrix4();
+const BOU_DISCO = BOU_FX.disco.map(c => new THREE.Color(c)), BOU_GLASS = new THREE.Color(BOU_FX.glass), bouTint = new THREE.Color(), bouWhite = new THREE.Color('#fff8ec'), bouRingTint = new THREE.Color(), bouM4 = new THREE.Matrix4();
 for (let i = 0; i < BOU_TILES; i++) for (let j = 0; j < BOU_TILES; j++) {
   const at = i * BOU_TILES + j, c = PAVING.tile / 2 - PAVING.size / 2;
   bouFloor.setMatrixAt(at, bouM4.makeTranslation(c + i * PAVING.tile, 0.004, c + j * PAVING.tile)); bouFloor.setColorAt(at, bouTint.setRGB(0, 0, 0));
@@ -46,7 +46,7 @@ function bouDisco(beat, light) {
   for (let i = 0; i < BOU_TILES; i++) for (let j = 0; j < BOU_TILES; j++) {
     const d = Math.hypot(c + i * PAVING.tile - M.pos.x, c + j * PAVING.tile - M.pos.y), at = i * BOU_TILES + j;
     const ring = bouTileRing(beat, d); // the ring whitens whatever the tile shows, lit or not
-    bouFloor.setColorAt(at, bouTint.copy(BOU_DISCO[bouTileColour(i, j, BOU_TILES, beat)]).multiplyScalar(bouTileLight(i, j, beat, d) * (1 - ring)).add(bouRingTint.copy(bouWhite).multiplyScalar(0.65 * ring)).multiplyScalar(light));
+    bouFloor.setColorAt(at, bouTint.copy(BOU_DISCO[bouTileColour(i, j, BOU_TILES, beat)]).multiplyScalar(bouTileLight(i, j, beat, d) * (1 - ring)).add(bouRingTint.copy(bouWhite).multiplyScalar(0.65 * ring)).add(BOU_GLASS).multiplyScalar(light));
   }
   bouFloor.instanceColor.needsUpdate = true;
 }

@@ -45,7 +45,7 @@ export const titleS = { x: new Float64Array(2), v: new Float64Array(2) }, TITLE_
 // and the title keep their one shot for every figure, with the caller's `aim` (css px below the middle).
 export const lens = { x: 0, y: 0 }; // the menu's lens shift, css px (her centre right of / below the screen's middle), smoothed
 const MENU = { late: false, held: false, directed: false, soft: false, softT: -Infinity, lent: new Float64Array(2), x: new Float64Array(2), v: new Float64Array(2), w: 0, h: 0, long: false, ox: 0, oy: 0, mx: 0, mz: 0, tx: 0, ty: 0, root: null, away: true, fit: { dist: 11, cx: 0, cy: 0, floor: 0 } }; // shift spring; her extents' envelope (m); her outline's middle across / feet off the focus (tangents, slow)
-const MENU_T = { dolly: 0.35, reel: 0.7, soft: 1.1, wake: 0.45, softFor: 2.5, shift: 0.9, up: 0.35, down: 4, centre: 1.2, pair: 1.2 }; // s: dolly: the showreel's distance (0.6 let her outgrow a phone's frame as she came at the lens or turned side on; it only follows the size's envelope, which shrinks slowly, so it never pumps); the showreel's follow and shift (a little quicker than the menu's: she travels round the plaça); soft: into a `soft` band (the idle screen), wake: back out of it (the UI is back in 0.25 s: she must not linger under it), for softFor s; the lens shift's spring; her extents rise / fall (turning side on and back never pumps the shot); her centre's slow average (the focus already follows her: a turn must not swing the shot); pair: the splash's distance and height (the pair spreads apart quicker than one figure turns)
+const MENU_T = { calmFollow: 2, calmDolly: 1.5, calmShift: 2, dolly: 0.35, reel: 0.7, soft: 1.1, wake: 0.45, softFor: 2.5, shift: 0.9, up: 0.35, down: 4, centre: 1.2, pair: 1.2 }; // s: dolly: the showreel's distance (0.6 let her outgrow a phone's frame as she came at the lens or turned side on; it only follows the size's envelope, which shrinks slowly, so it never pumps); the showreel's follow and shift (a little quicker than the menu's: she travels round the plaça); soft: into a `soft` band (the idle screen), wake: back out of it (the UI is back in 0.25 s: she must not linger under it), for softFor s; the lens shift's spring; her extents rise / fall (turning side on and back never pumps the shot); her centre's slow average (the focus already follows her: a turn must not swing the shot); pair: the splash's distance and height (the pair spreads apart quicker than one figure turns)
 const MENU_EDGE = 0.015; // the hard edge's margin (frameMenuLens), a share of the screen's width
 const OUTLINES = new Map(), V3 = new THREE.Vector3(), FREE = { top: 0, bottom: 0, left: 0, right: 0, hardTop: 0 };
 // Her outline, cheaply: for each of her meshes, its farthest vertices along 14 directions (axes and diagonals: its hull's support
@@ -102,6 +102,9 @@ export function frameMenuCamera(dt, mx, mz, root, rect, aim, reel = null) {
   // player's angle until the next cut.
   const shot = reel && root ? reel.shot : null;
   MENU.long = !!shot && traitsOf(reel.id).frameLength; // (scene/cameras.js frameMenuLens: framed by her length)
+  // traits.reelCalm (the Bou: 4 m rushes and charges): the showreel follows it, sizes it and shifts the lens slowly, with no hard
+  // edge; at the usual speeds the shot under the menu jumped with every rush (the owner, an iPhone 18 Pro)
+  MENU.calm = !!shot && traitsOf(reel.id).reelCalm;
   if (!!rect?.soft !== MENU.soft) { MENU.soft = !!rect?.soft; MENU.softT = now; } // into a `soft` band (the idle screen) slowly, ~2 s; out of it quickly
   const slow = now - MENU.softT < MENU_T.softFor ? (MENU.soft ? MENU_T.soft : MENU_T.wake) : 0; // (s: the spring's time, 0 = the usual)
   if (orbit.ptrs.size || now - orbit.last <= ORBIT.idle) MENU.held = true;
@@ -115,7 +118,7 @@ export function frameMenuCamera(dt, mx, mz, root, rect, aim, reel = null) {
   // filter changes velocity the instant she does, which read as a jerk on every hop)
   if (!titleC.on || cut) { titleS.x[0] = mx; titleS.x[1] = mz; titleS.v.fill(0); }
   else if (MENU.away && !orbit.fresh && !orbit.ptrs.size) adopt(); // back from another camera (results, a game): carry on from it, then ease to the framing
-  const follow = direct ? MENU_T.reel : TITLE_FOLLOW; // (the showreel: she travels the whole plaça)
+  const follow = direct ? (MENU.calm ? MENU_T.calmFollow : MENU_T.reel) : TITLE_FOLLOW; // (the showreel: she travels the whole plaça)
   titleC.x = smoothDamp(titleS, 0, mx, follow, dt); titleC.z = smoothDamp(titleS, 1, mz, follow, dt); titleC.on = true;
   const cx = titleC.x, cz = titleC.z;
   // The idle azimuth is the play camera's own (CAM_AZ: no swoop across the plaça when a game starts), swaying slowly; like the play
@@ -133,7 +136,7 @@ export function frameMenuCamera(dt, mx, mz, root, rect, aim, reel = null) {
   if (orbit.fresh) orbit.yaw = orbitHome.yaw; // (the very first frame starts at home)
   const held = direct && !cut && REEL_HOLD.on && shot.fixed; // (a fixed camera: it stays where its cut put it, lens and all)
   if (!direct) REEL_HOLD.on = false;
-  if (held) fixedLens(cx, cz); else if (direct) aimShot(dt, cut, cx, cz, slow || MENU_T.dolly, shot.eye); else orbitStep(orbit, dt, now, orbitHome, roomAt(cx, cz));
+  if (held) fixedLens(cx, cz); else if (direct) aimShot(dt, cut, cx, cz, slow || (MENU.calm ? MENU_T.calmDolly : MENU_T.dolly), shot.eye); else orbitStep(orbit, dt, now, orbitHome, roomAt(cx, cz));
   placeMenu(cx, cz, cut ? Infinity : dt);
   const zoomOn = root && MENU.w && !bandless(rect);
   zoomMenu(cut ? 0 : dt, zoomOn, slow || MENU_T.shift, shot?.part, held && zoomOn ? REEL_HOLD.z : 0);
@@ -251,13 +254,14 @@ function frameMenuLens(dt, root, rect, aim, fill = 0.86, snap = false, quick = f
       MENU.tx = tx = MENU.fit.cx - vw / 2 - MENU.ox * ppm; MENU.ty = ty = MENU.fit.floor - vh / 2 + MENU.oy * ppm; // minus where she sits now (css px from the middle, unshifted)
     }
   }
-  const st = slow || (quick ? MENU_T.reel : MENU_T.shift), cx = Math.max(-0.3 * vw, Math.min(0.3 * vw, tx)), cy = Math.max(-0.3 * vh, Math.min(0.3 * vh, ty));
+  const st = slow || (quick ? (MENU.calm ? MENU_T.calmShift : MENU_T.reel) : MENU_T.shift), cx = Math.max(-0.3 * vw, Math.min(0.3 * vw, tx)), cy = Math.max(-0.3 * vh, Math.min(0.3 * vh, ty));
   if (snap) { MENU.x[0] = cx; MENU.x[1] = cy; MENU.v.fill(0); }
   lens.x = smoothDamp(MENU, 0, cx, st, dt);
   lens.y = smoothDamp(MENU, 1, cy, st, dt);
   // (a close-up may crop its part). Not the splash's pair (roots): side by side they are wider than a phone's portrait
-  // frame, so the hard edge pushed the lens every frame as they danced, left and right as the page came up (the owner)
-  if (bx0 === bx0 && !none && !root.roots) keepInFrame(lens, MENU, bx0, bx1, by0, by1, ppm, vw, vh, FREE, part ? 0 : MENU_EDGE * vw);
+  // frame, so the hard edge pushed the lens every frame as they danced, left and right as the page came up (the owner).
+  // Nor a calm showreel's figure (MENU.calm): the Bou side on, rushing into a phone's narrow band, jumped the shot the same way
+  if (bx0 === bx0 && !none && !root.roots && !MENU.calm) keepInFrame(lens, MENU, bx0, bx1, by0, by1, ppm, vw, vh, FREE, part ? 0 : MENU_EDGE * vw);
   return lens.y;
 }
 // Every frame another camera runs (a game, results, photo driving): the menu's sideways shift glides back to the middle (the play

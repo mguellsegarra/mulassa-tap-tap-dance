@@ -168,12 +168,16 @@ function frame(now) {
   // The page cover lifts once the web fonts are in and the queued words are painted (warmups: a big outlined count-in
   // word is ~20 ms on a desktop, several times that on a phone), at most COVER_WARM ms after the fonts: on a slow first
   // load they were painted on the splash, right under the tap. (loader.ready() still waits for its minimum time.)
-  if (coverUp && fontsIn && (!warmups.length || now - (coverAt ??= now) > COVER_WARM)) { coverUp = false; loader.ready(); if (STARS >= 0) previewResults(STARS); } // ?stars: only once the page cover is gone, or the animation plays unseen
+  // ...and once the plaça runs smoothly (COVER_SMOOTH frames in a row under 60 ms), at most COVER_SMOOTH_MAX ms after the
+  // first: an iPhone's first visit compiles its GPU programs then, a 316 ms frame on the splash just after it showed
+  if (coverUp) coverSmooth = frameS < 0.06 ? coverSmooth + 1 : 0;
+  if (coverUp && fontsIn && (!warmups.length || now - (coverAt ??= now) > COVER_WARM) && (coverSmooth >= COVER_SMOOTH || now - (coverAt ??= now) > COVER_SMOOTH_MAX)) { coverUp = false; loader.ready(); loadMark('cover'); if (STARS >= 0) previewResults(STARS); } // ?stars: only once the page cover is gone, or the animation plays unseen
   qualityCost = performance.now() - f0;
   if (PERF) perfSample(f0, p0, p1, now);
   if (PERF?.line) showPerfLine(); // on screen too: a tablet has no console
 }
-let hudError = '', drawn = false, fontsIn = false, coverUp = true, coverAt = null, COVER_WARM = 1500;
+let hudError = '', drawn = false, fontsIn = false, coverUp = true, coverAt = null, COVER_WARM = 1500, coverSmooth = 0;
+const COVER_SMOOTH = 8, COVER_SMOOTH_MAX = 3000;
 // ?perf also logs the load: [load] <stage> <ms since navigation>.
 function loadMark(stage) { if (PERF) console.log('[load]', stage, Math.round(performance.now())); }
 loadMark('module');

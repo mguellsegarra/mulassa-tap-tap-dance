@@ -61,6 +61,12 @@ export const BOU_CLIP_CUTS = [
 const CLIP_TALL_SIZE = .78, CLIP_TALL_KINDS = ['wide', 'crane', 'orbit', 'front'];
 const CLIP_TALL = Object.fromEntries(Object.entries(BOU_CLIP_SHOTS).map(([k, d]) => [k, { ...d, ...(CLIP_TALL_KINDS.includes(k) && { size: d.size.map(v => v * CLIP_TALL_SIZE) }), ...d.portrait }]));
 export const BOU_CLIP_END = 316;
+// The idle selector's film (bou-scene.js, behind the faded menu): only the open, slow shots, each one held BOU_CLIP_IDLE_MIN
+// beats at least, and on a phone a lens no wider than BOU_CLIP_IDLE_FOV. The film's own cut every 8 beats, from its face to
+// the whole plaça and a 75° lens that bent the façades, read there as jolts (the owner, an iPhone 18 Pro)
+const BOU_CLIP_CALM = ['vast', 'wide', 'crane', 'orbit', 'balcony'], BOU_CLIP_IDLE_MIN = 16, BOU_CLIP_IDLE_FOV = 55;
+export const BOU_CLIP_IDLE_CUTS = BOU_CLIP_CUTS.filter(c => BOU_CLIP_CALM.includes(c[1]))
+  .reduce((out, c) => (out.length && (c[0] - out.at(-1)[0] < BOU_CLIP_IDLE_MIN || c[1] === out.at(-1)[1]) ? out : [...out, c]), []);
 export const bouClipSec = b => { const T = BOU_TIMING.beats, i = Math.min(T.length - 2, Math.max(0, Math.floor(b))); return T[i] + (T[i + 1] - T[i]) * (b - i); };
 export const bouClipCut = b => BOU_CLIP_CUTS.findLastIndex(c => c[0] <= b);
 
@@ -83,9 +89,9 @@ function bouClipPath(t, out, lag) {
 }
 function clipWorld(time, o, c, s, hx, hz, lag) { const p = bouClipPath(time, clipAim, lag); o.x = p.x * c + p.z * s + hx; o.z = -p.x * s + p.z * c + hz; o.lift = p.lift; return o; }
 // Places `camera` (the game's own) for song beat `beat`. frameYaw: the dance frame's turn on the plaça (bou.frame.rotation.y);
-// filmed: s since the film began (Infinity: no opening creep, the idle selector).
-export function placeBouClip(camera, beat, frameYaw, filmed = Infinity) {
-  const i = Math.max(0, bouClipCut(beat)), [b0, kind] = BOU_CLIP_CUTS[i], b1 = BOU_CLIP_CUTS[i + 1]?.[0] ?? BOU_CLIP_END, d = (camera.aspect < 1 ? CLIP_TALL : BOU_CLIP_SHOTS)[kind];
+// filmed: s since the film began (Infinity: no opening creep, the idle selector); idle: the idle selector's calm cut.
+export function placeBouClip(camera, beat, frameYaw, filmed = Infinity, idle = false) {
+  const cuts = idle ? BOU_CLIP_IDLE_CUTS : BOU_CLIP_CUTS, i = Math.max(0, cuts.findLastIndex(c => c[0] <= beat)), [b0, kind] = cuts[i], b1 = cuts[i + 1]?.[0] ?? BOU_CLIP_END, d = (camera.aspect < 1 ? CLIP_TALL : BOU_CLIP_SHOTS)[kind];
   const u = clipEase(Math.min(1, Math.max(0, (beat - b0) / (b1 - b0)))), t = bouClipSec(beat), t0 = bouClipSec(b0);
   // (the play camera looks in between its W and S). A shot of its head takes the heading it has half way through: cut in
   // while it was still turning, the heading at the cut aimed a metre beside its face
@@ -101,7 +107,7 @@ export function placeBouClip(camera, beat, frameYaw, filmed = Infinity) {
   const ux = Math.sin(az), uz = Math.cos(az), pb = from.x * ux + from.z * uz, r2 = from.x * from.x + from.z * from.z, clear = BOU_CLIP_CLEAR;
   const inRing = r2 > clear * clear ? BOU_CLIP_REACH : Math.max(3.5, -pb + Math.sqrt(pb * pb - (r2 - clear * clear))), high = clipEase(Math.min(1, Math.max(0, (el - .25) / .12))); // (from ~0.37 rad the lens looks over the heads: it may stand behind them)
   const reach = (inRing + (BOU_CLIP_REACH - inRing) * high) / Math.max(.2, Math.cos(el));
-  if (dist > reach) { dist = reach; const n = 2 * Math.atan(size / 2 / dist); fov = Math.min(d.still && aspect < 1 ? 75 : d.fov + 10, (aspect < 1 ? 2 * Math.atan(Math.tan(n / 2) / aspect) : n) * 180 / Math.PI); } // (never a wide lens: rather a tighter frame; but a still shot on a phone opens as far as the laps ask, or they ran out of its narrow frame)
+  if (dist > reach) { dist = reach; const n = 2 * Math.atan(size / 2 / dist); fov = Math.min(idle && aspect < 1 ? BOU_CLIP_IDLE_FOV : d.still && aspect < 1 ? 75 : d.fov + 10, (aspect < 1 ? 2 * Math.atan(Math.tan(n / 2) / aspect) : n) * 180 / Math.PI); } // (never a wide lens: rather a tighter frame; but a still shot on a phone opens as far as the laps ask, or they ran out of its narrow frame)
   if (d.still) dist *= 1 - BOU_CLIP_PUSH * u;
   if (!i) dist *= 1 + BOU_CLIP_PUSH * (1 - clipEase(Math.min(1, filmed / BOU_CLIP_PRE)));
   const y = d.y + now.lift;

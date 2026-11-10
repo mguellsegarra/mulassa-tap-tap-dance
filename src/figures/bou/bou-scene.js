@@ -18,7 +18,7 @@ function bouFilmShot() {
   const watching = G.state === 'play' && G.watch;
   if (!watching) bouFilmT0 = null;
   if (REEL.id !== 'bou-tradicional-valls' || CALM.matches) return;
-  if (watching ? REEL.song && REEL.beat < BOU_CLIP_END : G.state === 'select' && REEL.on && REEL.idle) placeBouClip(camera, REEL.beat, bou.frame.rotation.y, watching ? clock - (bouFilmT0 ??= clock) : Infinity);
+  if (watching ? REEL.song && REEL.beat < BOU_CLIP_END : G.state === 'select' && REEL.on && REEL.idle) placeBouClip(camera, REEL.beat, bou.frame.rotation.y, watching ? clock - (bouFilmT0 ??= clock) : Infinity, !watching);
 }
 const NO_BOU = Q.has('nobou'); // dev: its colla and the plaça without the Bou itself (to film them)
 export const BOU_SCENE = {

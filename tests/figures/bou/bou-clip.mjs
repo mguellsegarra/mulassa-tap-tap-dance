@@ -2,7 +2,7 @@
 // into the same kind of shot, the feet only on the opening's leg passes; and the lens follows the Bou's path, never its
 // bounce (its height steady inside a shot, its turn slow), from above the crowd through a long lens.
 import assert from 'node:assert/strict';
-import { BOU_CLIP_CUTS as CUTS, BOU_CLIP_SHOTS as SHOTS, BOU_CLIP_END as CLIP_END, placeBouClip as placeClip } from '../../../src/figures/bou/bou-clip.js';
+import { BOU_CLIP_CUTS as CUTS, BOU_CLIP_SHOTS as SHOTS, BOU_CLIP_END as CLIP_END, BOU_CLIP_IDLE_CUTS as IDLE, placeBouClip as placeClip } from '../../../src/figures/bou/bou-clip.js';
 
 CUTS.forEach(([b, kind], i) => {
   const next = CUTS[i + 1]?.[0] ?? CLIP_END;
@@ -34,4 +34,11 @@ assert.ok(dist(0, 0) - dist(0, 3) > 0.5, `the opening comes in during the music'
 assert.ok(Math.abs(dist(0.05, 3.05) - dist(0, 3)) < 0.05, 'no jump when the beat starts');
 assert.ok(dist(1, Infinity) - dist(7, Infinity) > 0.5, 'the still opening keeps coming in on a phone');
 assert.equal(dist(0, Infinity), dist(0, 1e9), 'the idle selector (no film clock) has no opening creep');
+// the idle selector's film (behind the menu): open, slow shots only, two bars at least each, never twice the same, and on
+// a phone no lens wider than 55° (the film's own cut every 8 beats, close-ups and a 75° lens read there as jolts)
+IDLE.forEach(([b, kind], i) => {
+  assert.ok(['vast', 'wide', 'crane', 'orbit', 'balcony'].includes(kind), `idle: ${kind} at ${b} is an open shot`);
+  if (i) { assert.ok(b - IDLE[i - 1][0] >= 16, `idle: the shot before ${b} lasts 16 beats or more`); assert.notEqual(kind, IDLE[i - 1][1], `idle: no cut into the same shot at ${b}`); }
+});
+for (let b = 0; b < CLIP_END - 0.05; b += 0.5) { placeClip(phone, b, -2.2, Infinity, true); assert.ok(phone.fov <= 55 + 1e-9, `idle beat ${b}: no wide lens on a phone (${phone.fov.toFixed(1)}°)`); }
 console.log('bou-clip ok');

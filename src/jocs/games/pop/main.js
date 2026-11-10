@@ -144,6 +144,8 @@ if (import.meta.env.DEV) window.__pop = { board, get game() { return flow.game; 
 
 // The boot, while the boot screen's Mulassa runs: the shaders, then the home's portraits and the fonts. Each step leaves the
 // main thread between tasks; the menu shows whole, on the board's first frame (this rAF runs after frame's).
+// ⚙'s sheets load meanwhile; they paint once with the 3D's first frame below, in the same GPU stall (settings.js warm)
+const sheetsCode = settings().catch(() => null);
 await board.warm();
 await hero.warm();
 // the portraits are files (public/jocs/pop/cards, made with __pop.portraits): drawing them here held a phone's boot
@@ -154,9 +156,11 @@ await document.fonts.ready;
 await Promise.race([rankingUI.sync().catch(() => {}), new Promise(go => setTimeout(go, 1500))]);
 // the first frame of each 3D scene, still under the boot screen: it is the costly one, and the blurred home over an undrawn
 // board showed an empty night for a moment as the boot screen faded
+const sheetsWarm = (await sheetsCode)?.warm();
 board.frame(0);
 hero.frame(0);
 await new Promise(go => requestAnimationFrame(() => requestAnimationFrame(go)));
+await sheetsWarm;
 booted = true;
 requestAnimationFrame(() => {
   document.documentElement.classList.add('ready');

@@ -43,7 +43,7 @@ function fakeCtx() {
   return {
     started, currentTime: 0, sampleRate: 100, destination: node(),
     createGain: () => node({ gain: param() }), createBiquadFilter: () => node({ frequency: param(), Q: param(), type: '' }),
-    createDynamicsCompressor: () => node(), createDelay: () => node({ delayTime: param() }),
+    createDynamicsCompressor: () => node({ threshold: param(), knee: param(), ratio: param(), attack: param(), release: param() }), createDelay: () => node({ delayTime: param() }),
     createBuffer: () => ({ getChannelData: () => new Float32Array(10) }),
     createBufferSource: () => node({ start() {}, stop() {} }),
     createOscillator() {
@@ -58,10 +58,25 @@ test('the held harmony has stopped before the next chord starts, so two chords n
   seq.start();
   tune.advance(300);
   seq.play(tune.take(), t => t);
-  // the pads are the only voices in the octave under middle C held for more than a beat's fraction
+  // the pads: the held voices, tagged by the sequencer
   const pads = ctx.started.filter(o => o.pad);
   assert.ok(pads.length > 50);
   for (const a of pads) for (const b of pads) if (b.t > a.t) assert.ok(b.t >= a.end - 1e-6, `pad at ${a.t} rings to ${a.end}, next chord at ${b.t}`);
+});
+
+// A phone's speaker (the Galaxy S10's) buzzed on low pure sines held together and on a sine lead: the pads sit from C4 up,
+// nothing tonal goes under C3, and the lead is a triangle.
+test('on a phone speaker: pads from C4 up, no tone under C3, a triangle lead', () => {
+  const ctx = fakeCtx(), seq = createSequencer(ctx), tune = createConductor();
+  seq.start();
+  tune.setProgress(100, false);
+  tune.advance(60);
+  seq.play(tune.take(), t => t);
+  const hz = m => 440 * 2 ** ((m - 69) / 12), tones = ctx.started.filter(o => o.frequency.value > 0); // the kick sweeps its own
+  assert.ok(tones.filter(o => o.pad).every(o => o.frequency.value >= hz(60) - 1e-6));
+  for (const o of tones) assert.ok(o.frequency.value >= hz(48) - 1e-6, `${o.frequency.value} Hz`);
+  const first = hz(MELODY[0][2]), lead = tones.filter(o => !o.pad && o.frequency.value === first && o.t === tones[0].t); // the tune's first note
+  assert.deepEqual(lead.map(o => o.type), ['triangle', 'sine']);
 });
 
 test('the tap can ask which note of the tune is sounding', () => {

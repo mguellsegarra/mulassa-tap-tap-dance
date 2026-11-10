@@ -14,10 +14,20 @@ export function createSequencer(ctx, out = ctx.destination) {
   tone.type = 'lowpass';
   tone.frequency.value = 2600; // the cure for shrill
   tone.Q.value = .4;
-  master.connect(tone).connect(comp).connect(out);
+  // a phone's speaker buzzes on what it cannot play: nothing under 180 Hz, and a limiter on the peaks only (the default
+  // compressor squashed the whole mix and pumped it on every kick)
+  const low = ctx.createBiquadFilter();
+  low.type = 'highpass';
+  low.frequency.value = 180;
+  comp.threshold.value = -6;
+  comp.knee.value = 0;
+  comp.ratio.value = 20;
+  comp.attack.value = .002;
+  comp.release.value = .1;
+  master.connect(tone).connect(low).connect(comp).connect(out);
   const echo = ctx.createDelay(1), wet = ctx.createGain();
   echo.delayTime.value = .06; // a short room: a longer echo rang old notes over the next chord
-  wet.gain.value = .14;
+  wet.gain.value = 0; // only the bell's slow time: always on, its 60 ms repeat doubled each note's tail into a buzz on the S10
   tone.connect(wet).connect(echo).connect(comp);
   const noise = ctx.createBuffer(1, ctx.sampleRate / 10, ctx.sampleRate), nd = noise.getChannelData(0);
   for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
@@ -35,12 +45,14 @@ export function createSequencer(ctx, out = ctx.destination) {
     g.gain.setValueAtTime(0, t);
     g.gain.linearRampToValueAtTime(vol, t + attack);
     g.gain.exponentialRampToValueAtTime(Math.max(vol * .02, .0002), t + Math.max(dur, attack + .02));
+    g.gain.linearRampToValueAtTime(0, t + Math.max(dur, attack + .02) + .015); // to silence before the stop: no click
     o.connect(g).connect(bus);
     o.start(t);
     o.stop(t + Math.max(dur, attack + .02) + .02);
     return o;
   }
-  const pluck = (m, t, dur, vol) => { voice(hz(m), t, dur, vol); voice(hz(m), t, dur * .6, vol * .35, 'triangle'); };
+  // the lead is a triangle: its overtones carry the pitch, so a phone's speaker moves less than for a pure sine and buzzes less
+  const pluck = (m, t, dur, vol) => { voice(hz(m), t, dur, vol, 'triangle'); voice(hz(m), t, dur * .6, vol * .35); };
   function kick(t, vol) {
     const o = ctx.createOscillator(), g = ctx.createGain();
     o.frequency.setValueAtTime(120, t);
@@ -78,10 +90,11 @@ export function createSequencer(ctx, out = ctx.destination) {
       let beats = STEP;
       while (beats < 16 && chordAt(wrap(pos + beats)) === chord) beats += STEP;
       // gone before the next chord (the margin: the tempo may rise meanwhile), or two harmonies ring together and it sounds out of tune
-      for (const pc of tones.slice(0, 3)) voice(hz(48 + pc), t, beats * spb * .9 - .02, .035, 'sine', Math.min(.12, beats * spb * .3)).pad = true;
+      // from C4 up: under it a phone's speaker only buzzes on it
+      for (const pc of tones.slice(0, 3)) voice(hz(60 + pc), t, beats * spb * .9 - .02, .035, 'sine', Math.min(.12, beats * spb * .3)).pad = true;
     }
     const onBeat = pos % 1 === 0, on2 = pos % (half ? 4 : 2) === 0;
-    if (on2 && levels.bass > 0) voice(hz(36 + tones[0]), t, spb * (half ? 2.8 : 1.4), .2 * levels.bass);
+    if (on2 && levels.bass > 0) voice(hz(48 + tones[0]), t, spb * (half ? 2.8 : 1.4), .2 * levels.bass); // C3 up, like the pad
     if (!half && !on2 && onBeat && levels.bass > 0) voice(hz(48 + tones[1]), t, spb * .6, .05 * levels.bass); // the polka's "pah"
     if (half ? pos % 4 === 0 : on2) kick(t, .22 * (half ? 1 : levels.kick)); // half-time keeps a slow kick even before the kick layer
     if (!half && !onBeat && levels.shaker > 0) shaker(t, .03 * levels.shaker);
@@ -103,7 +116,7 @@ export function createSequencer(ctx, out = ctx.destination) {
     slow(on) {
       half = on;
       tone.frequency.setTargetAtTime(on ? 650 : 2600, ctx.currentTime, on ? .08 : .25);
-      wet.gain.setTargetAtTime(on ? .35 : .14, ctx.currentTime, .1);
+      wet.gain.setTargetAtTime(on ? .35 : 0, ctx.currentTime, .1);
     },
     // Queue the conductor's steps; `at` turns a step's game time into audio time.
     play(steps, at) {

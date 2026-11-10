@@ -1,6 +1,6 @@
 """Mulassa Pop's home music: mulassa.cat's menu tune (build_taiko.py's AMBIENT loop: the same 64 beats, harmony and
-call-and-answer at 152) played with Pop's own soft synth (src/jocs/games/pop/sequencer.js: sine and triangle plucks, sine
-pads, a lowpass at 2600 Hz, a short room), rendered once to an MP3 so the home spends nothing on it.
+call-and-answer at 152) played with Pop's own soft synth (src/jocs/games/pop/sequencer.js: triangle plucks, sine pads from C4 up,
+a lowpass at 2600 Hz and a highpass at 180, no room: a phone's speaker buzzed on the low sines and the echo), rendered once to an MP3 so the home spends nothing on it.
 
     uv run --python 3.11 --with numpy --with scipy --with soundfile --with lameenc tools/music/build_pop_menu.py [variant]
 
@@ -44,9 +44,10 @@ def voice(f, dur, vol, kind='sine', attack=.01):
     n = int((max(dur, attack + .02) + .02) * SR); t = np.arange(n) / SR
     osc = np.sin(2 * np.pi * f * t) if kind == 'sine' else 2 / np.pi * np.arcsin(np.sin(2 * np.pi * f * t))
     fall = np.exp(np.log(.02) * np.clip((t - attack) / max(dur - attack, 1e-3), 0, 1))
-    return osc * np.where(t < attack, t / attack, fall) * vol
+    end = max(dur, attack + .02)
+    return osc * np.where(t < attack, t / attack, fall) * np.clip((end + .015 - t) / .015, 0, 1) * vol  # to silence before the stop
 def pluck(m, dur, vol):
-    a, b = voice(hz(m), dur, vol), voice(hz(m), dur * .6, vol * .35, 'triangle')
+    a, b = voice(hz(m), dur, vol, 'triangle'), voice(hz(m), dur * .6, vol * .35)
     a[:len(b)] += b
     return a
 def kick(vol):
@@ -68,21 +69,19 @@ def put(k, at, x):
 for s, d, m in mel:                                   # the tune: Pop's lead pluck
     put('melody', s * SPB, pluck(m, max(.16, min(d * SPB, 1.2)), VOL['melody']))
 for s, e, c in chords:                                # the held harmony under everything
-    for m in VOICES[c]: put('pad', s * SPB, voice(hz(m), (e - s) * SPB * .95, VOL['pad'], 'sine', .12))
+    for m in VOICES[c]: put('pad', s * SPB, voice(hz(60 + m % 12), (e - s) * SPB * .95, VOL['pad'], 'sine', .12))  # C4 up, as the game's
 for b in range(0, AMB, 2):                            # a polka: bass on 1 and 3 (root, fifth), a quiet chord on 2 and 4
-    root = CH[chord_at(b)][0]; root += 36 if root < 8 else 24
+    root = CH[chord_at(b)][0]; root += 48 if root < 8 else 36   # C3 up, as the game's
     put('bass', b * SPB, voice(hz(root + 7 if b % 4 else root), SPB * 1.2, VOL['bass']))
-    for m in VOICES[chord_at(b + 1)]: put('pah', (b + 1) * SPB, voice(hz(m), SPB * .45, VOL['pah'], 'triangle'))
+    for m in VOICES[chord_at(b + 1)]: put('pah', (b + 1) * SPB, voice(hz(60 + m % 12), SPB * .45, VOL['pah'], 'triangle'))
 if VARIANT == 'pulse':
     for b in range(0, AMB, 2): put('kick', b * SPB, kick(VOL['kick']))
     for b in range(AMB * 2): put('shaker', b * SPB / 2, shaker(VOL['shaker'] * (1 if b % 2 else .55)))
 
 def render(buf):
-    """The sequencer's chain (a lowpass at 2600 Hz, a 60 ms room at .14), the tails wrapped round so the loop's end flows into
+    """The sequencer's chain (a lowpass at 2600 Hz, a highpass at 180), the tails wrapped round so the loop's end flows into
     its start, then the loop and a second to spare."""
-    tone = sosfilt(butter(2, 2600, fs=SR, output='sos'), buf)
-    d = int(.06 * SR); room = np.zeros_like(tone); room[d:] = tone[:-d] * .14
-    mix = tone + room
+    mix = sosfilt(butter(2, 180, 'highpass', fs=SR, output='sos'), sosfilt(butter(2, 2600, fs=SR, output='sos'), buf))
     mix[:len(mix) - LOOP] += mix[LOOP:]
     steady = mix[:LOOP]
     return np.concatenate([steady, steady[:SR]])

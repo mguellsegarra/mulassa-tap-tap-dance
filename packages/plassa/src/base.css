@@ -28,6 +28,9 @@ a.btn-primary { display: grid; place-content: center; } /* a link as a main butt
 p .btn-link::after { display: none; } /* a link inside a sentence: its slop would cover the lines around it (WCAG 2.5.8 exempts inline targets) */
 /* .btn-big: a game home's buttons, as tall as the tap that starts it (tap-start.js); the sheets keep .btn's 48 px */
 .btn-big { min-height: clamp(60px, 7dvh, 88px); font-size: clamp(22px, 2.6dvh, 32px); } /* a tall screen gets a bigger one; a phone stays at 60 */
+/* its icons grow with the label: --icon is the icon's size (1em: .btn's own 22 px at the phone's 22 px label), the «?» disc
+   in proportion (28 px at 22); a game whose labels are smaller sets a bigger --icon (Pop's halves) */
+.btn-big { --icon: 1em; } .btn-big > svg { width: var(--icon); height: var(--icon); } .btn.btn-big .q { width: 1.65em; height: 1.65em; font-size: calc(var(--icon) * .77); }
 /* .btn-invite: a main button that asks to be pressed, as mulassa.cat's «Tria la dificultat» (src/styles/select-sizes.css
    #select .btn-primary): it breathes and tilts gently, a glint crosses it, it answers the pointer. The glint sits under the
    label (negative z in the button's own stacking context), clipped to the button. */

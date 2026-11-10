@@ -65,7 +65,7 @@ dialog .feedback-field { border-color: color-mix(in srgb, var(--accent) 60%, tra
    side by side, Juga under them the whole width (the owner's pick, 10 Nov 2026) */
 .c-play-row { order: 3; align-self: stretch; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: min(100%, 380px); margin: 0 auto; }
 .c-play-row > * { grid-column: 1 / -1; margin: 0; }
-.c-play-row > :is(#menu-best, #help) { grid-column: auto; min-width: 0; padding-inline: 4px; white-space: nowrap; }
+.c-play-row > :is(#menu-best, #help) { grid-column: auto; min-width: 0; padding-inline: 4px; white-space: nowrap; --icon: 1.37em; } /* the phone's 22 px icons at its 16 px labels, grown with them */
 @media (orientation: portrait) { .c-play-row > :is(#menu-best, #help) { font-size: clamp(13px, 4.1vw, 18px); } } /* half a ≤380 px row: by the width, never .btn-big's height-grown size (440×956 overflowed) */
 #play { order: 1; } /* under the two */
 #menu-best .go { display: none; }

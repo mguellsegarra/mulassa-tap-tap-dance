@@ -23,7 +23,10 @@
   };
   var early = function (reason) { if (!root.classList.contains('ready')) window.__gameFail(null, null, reason); };
   /* __gameBootError: what stopped it, for a look in the console (never sent: errors.js reports the reason only) */
-  addEventListener('error', function (e) { if (!root.classList.contains('ready')) window.__gameBootError = e.message; early(e.target && e.target.tagName === 'SCRIPT' ? 'module-load' : 'startup'); }, true);
+  /* a file from another site that fails to load is not ours to fail on: the host adds its analytics script to the page, and
+     an ad blocker stopping it showed this card on beta over a game that had loaded */
+  var theirs = function (t) { var url = t && (t.src || t.href) || ''; return url && url.indexOf(location.origin + '/') !== 0; };
+  addEventListener('error', function (e) { if (theirs(e.target)) return; if (!root.classList.contains('ready')) window.__gameBootError = e.message; early(e.target && e.target.tagName === 'SCRIPT' ? 'module-load' : 'startup'); }, true);
   addEventListener('unhandledrejection', function (e) { if (!root.classList.contains('ready')) window.__gameBootError = String(e.reason && e.reason.stack || e.reason); early('startup'); });
   (function tick() { /* only time on screen counts: a tab opened in the background is not stuck */
     var now = Date.now();

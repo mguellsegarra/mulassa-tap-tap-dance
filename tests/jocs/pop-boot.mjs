@@ -16,7 +16,7 @@ function page({ ready = false, clock = Date } = {}) {
   const parts = { h2: node(), p: node(), button: node() };
   const boot = { className: 'cover', hidden: true, innerHTML: '', querySelector: sel => parts[sel] };
   const win = {
-    Date: clock, setTimeout: f => timers.push(f), location: { reload() {} },
+    Date: clock, setTimeout: f => timers.push(f), location: { reload() {}, origin: 'https://mulassa.cat' },
     addEventListener: (type, f) => { listeners[type] = f; },
     document: { hidden: false, documentElement: { classList: { contains: c => classes.has(c), remove: c => classes.delete(c) } },
       getElementById: id => (id === 'boot' ? boot : { innerHTML: '<div class="mula-load"></div>' }) },
@@ -33,6 +33,12 @@ assert.equal(p.boot.hidden, false);
 assert.equal(p.win.__mulassaBootFailure.reason, 'module-load');
 assert.match(p.parts.h2.textContent, /Ups/, 'Catalan before the catalogue is in');
 assert.match(p.boot.innerHTML, /mula-load sad/, 'the crying Mulassa');
+
+p = page();
+p.listeners.error({ target: { tagName: 'SCRIPT', src: 'https://static.cloudflareinsights.com/beacon.min.js' } });
+assert.equal(p.boot.className, 'cover', 'another site\'s script failing (the host\'s analytics, an ad blocker) is no boot failure');
+p.listeners.error({ target: { tagName: 'SCRIPT', src: 'https://mulassa.cat/assets/index-abc.js' } });
+assert.equal(p.boot.className, 'cover fail', '…our own module failing is');
 
 p = page();
 p.win.__gameBootWords = { title: 'Oops', text: 'Reload', retry: 'Retry' };

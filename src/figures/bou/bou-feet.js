@@ -28,7 +28,7 @@ const nominal = (p, i) => ({ x: p.x + layout[i].x * Math.cos(p.yaw) + layout[i].
   z: p.z - layout[i].x * Math.sin(p.yaw) + layout[i].z * Math.cos(p.yaw), yaw: p.yaw });
 // legRoom: the least distance across between a carrier's two feet (m; .26 at rest, legs .14-.16 wide).
 // due/half/late: step units off before a pair steps on a beat / on a half beat / off the grid; a step lasts `share` of a half beat.
-const STEP = { legRoom: .22, legPush: .45, due: .5, half: .8, late: 2.5, share: .9, min: .18, max: .34, lead: .3, lift: .1, rise: .32, quick: .12, near: .04, run: { speed: .3, carrier: .5, spin: 1, share: 1, lead: .5 } };   // lift: a stepping sole 1.5 cm over the other shoe (8.5 cm) when it passes over it
+const STEP = { legRoom: .22, legPush: .45, due: .5, half: .8, late: 2.5, share: .9, min: .18, max: .34, lead: .3, far: 4, farLead: 1, lift: .1, rise: .32, quick: .12, near: .04, run: { speed: .3, carrier: .5, spin: 1, share: 1, lead: .5 } };   // lift: a stepping sole 1.5 cm over the other shoe (8.5 cm) when it passes over it
 export function planBouFeet(...args) {
   const plan = bouFootPlan(...args);
   let step;
@@ -137,7 +137,10 @@ function* bouFootPlan(poseAt, start, end, gesture = () => 0, raise = () => 0) {
       // A step out of a stretched leg starts where that leg is, and its gesture rests until the next cycle.
       const from = { ...planted[i] }, a = t < busy[i] ? 0 : out(i, t);
       if (a !== 0) Object.assign(from, stretch(from, i, a));
-      const to = land(i, Math.min(end, finish + (finish - t) * STEP.lead));   // a little ahead: the feet keep under a turning body till the next step
+      // a little ahead: the feet keep under a turning body till the next step. A foot already left `far` step units
+      // behind (its end of the body swinging fast: a turn on the move) lands a whole swing ahead, half way through its
+      // coming stance, as a running foot does: landing just under the body it was 0.9 m aside again before its next step
+      const to = land(i, Math.min(end, finish + (finish - t) * (gap(i, p) > STEP.far ? STEP.farLead : STEP.lead)));
       events[i].push(riseFor(i, from, to, { start: t, end: finish, from, to }));
       Object.assign(planted[i], to); busy[i] = finish; rest(i, t, zeroAfter(i, finish));
     }

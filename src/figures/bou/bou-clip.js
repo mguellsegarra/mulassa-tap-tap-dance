@@ -69,6 +69,11 @@ const clipPose = newBouPose(), clipAim = { x: 0, z: 0, lift: 0 }, clipNow = { x:
 // screen a second (dizzying). At CLIP_LAG a rush out and back hardly moves the lens: it runs inside the frame. A close-up
 // (`lag` .6) keeps to it, and is only cut where it stands
 const CLIP_LAG = 2;
+// a still shot creeps in by this share of its distance over its length: on a phone its lens stands at the ring's limit at
+// its widest (75°) whatever its size, so the opening's 'vast' did not move at all and read as a hang (the owner). The
+// film's first shot also starts that much further out and comes in over BOU_CLIP_PRE s of the clock: the song's beat
+// stays at 0 until its music is heard (main.js), ~3 s on a phone, and the picture stood still meanwhile
+const BOU_CLIP_PUSH = .12, BOU_CLIP_PRE = 5;
 const BOU_CLIP_CLEAR = 4.8, BOU_CLIP_REACH = 12; // m from the plaça's middle: inside its colla's marks (5.5 m) and the crowd's ring, so nobody stands at the lens; inside the façades
 // its middle on average over 1.2 s round song second t, in its dance frame (lift: only what its colla carries it up)
 function bouClipPath(t, out, lag) {
@@ -77,8 +82,9 @@ function bouClipPath(t, out, lag) {
   return out;
 }
 function clipWorld(time, o, c, s, hx, hz, lag) { const p = bouClipPath(time, clipAim, lag); o.x = p.x * c + p.z * s + hx; o.z = -p.x * s + p.z * c + hz; o.lift = p.lift; return o; }
-// Places `camera` (the game's own) for song beat `beat`. frameYaw: the dance frame's turn on the plaça (bou.frame.rotation.y).
-export function placeBouClip(camera, beat, frameYaw) {
+// Places `camera` (the game's own) for song beat `beat`. frameYaw: the dance frame's turn on the plaça (bou.frame.rotation.y);
+// filmed: s since the film began (Infinity: no opening creep, the idle selector).
+export function placeBouClip(camera, beat, frameYaw, filmed = Infinity) {
   const i = Math.max(0, bouClipCut(beat)), [b0, kind] = BOU_CLIP_CUTS[i], b1 = BOU_CLIP_CUTS[i + 1]?.[0] ?? BOU_CLIP_END, d = (camera.aspect < 1 ? CLIP_TALL : BOU_CLIP_SHOTS)[kind];
   const u = clipEase(Math.min(1, Math.max(0, (beat - b0) / (b1 - b0)))), t = bouClipSec(beat), t0 = bouClipSec(b0);
   // (the play camera looks in between its W and S). A shot of its head takes the heading it has half way through: cut in
@@ -96,6 +102,8 @@ export function placeBouClip(camera, beat, frameYaw) {
   const inRing = r2 > clear * clear ? BOU_CLIP_REACH : Math.max(3.5, -pb + Math.sqrt(pb * pb - (r2 - clear * clear))), high = clipEase(Math.min(1, Math.max(0, (el - .25) / .12))); // (from ~0.37 rad the lens looks over the heads: it may stand behind them)
   const reach = (inRing + (BOU_CLIP_REACH - inRing) * high) / Math.max(.2, Math.cos(el));
   if (dist > reach) { dist = reach; const n = 2 * Math.atan(size / 2 / dist); fov = Math.min(d.still && aspect < 1 ? 75 : d.fov + 10, (aspect < 1 ? 2 * Math.atan(Math.tan(n / 2) / aspect) : n) * 180 / Math.PI); } // (never a wide lens: rather a tighter frame; but a still shot on a phone opens as far as the laps ask, or they ran out of its narrow frame)
+  if (d.still) dist *= 1 - BOU_CLIP_PUSH * u;
+  if (!i) dist *= 1 + BOU_CLIP_PUSH * (1 - clipEase(Math.min(1, filmed / BOU_CLIP_PRE)));
   const y = d.y + now.lift;
   camera.clearViewOffset(); camera.fov = fov;
   camera.position.set(from.x + ux * Math.cos(el) * dist, Math.max(.25, d.y + Math.sin(el) * dist), from.z + uz * Math.cos(el) * dist);

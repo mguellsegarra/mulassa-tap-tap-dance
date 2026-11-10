@@ -26,4 +26,12 @@ for (let b = 0; b < CLIP_END - 0.05; b += 1 / 30) { // 60 samples a second at th
   }
   prev = { i, u, y: p.y };
 }
+// «Mira el ball» on a phone never stands still: its opening comes in over the clock while the music's wait holds the beat at
+// 0, on without a jump when the beat starts, and a still shot keeps coming in although the lens stands at its widest
+const phone = { ...cam, aspect: 402 / 874, position: { set(x, y, z) { this.d = Math.hypot(x, z); } } };
+const dist = (b, s) => (placeClip(phone, b, -2.2, s), phone.position.d);
+assert.ok(dist(0, 0) - dist(0, 3) > 0.5, `the opening comes in during the music's wait (${dist(0, 0).toFixed(2)} m to ${dist(0, 3).toFixed(2)} m)`);
+assert.ok(Math.abs(dist(0.05, 3.05) - dist(0, 3)) < 0.05, 'no jump when the beat starts');
+assert.ok(dist(1, Infinity) - dist(7, Infinity) > 0.5, 'the still opening keeps coming in on a phone');
+assert.equal(dist(0, Infinity), dist(0, 1e9), 'the idle selector (no film clock) has no opening creep');
 console.log('bou-clip ok');

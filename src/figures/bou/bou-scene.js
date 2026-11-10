@@ -6,16 +6,19 @@ import { animPlayableBou } from './bou-play.js';
 import { bouEndShot } from './bou-end-shot.js';
 import { placeBouClip, BOU_CLIP_END } from './bou-clip.js';
 import { camera } from '../../scene/stage.js';
-import { G } from '../../game/state.js';
+import { G, clock } from '../../game/state.js';
 import { REEL } from '../../game/showreel.js';
 import { CALM } from '../../core/env.js';
 
 // «Mira el ball»: its dance filmed by its own music video's cameras (bou-clip.js) up to the last chord, where its end shot
 // takes over; and the selector left untouched (its UI faded: the whole screen is the picture; under the UI the showreel's
 // shots stay, fitted to the free band, which a full-frame film cannot be). Reduced motion keeps the showreel's one still shot
+let bouFilmT0 = null; // the clock when «Mira el ball» began: its opening creeps in from there, the music's wait included
 function bouFilmShot() {
+  const watching = G.state === 'play' && G.watch;
+  if (!watching) bouFilmT0 = null;
   if (REEL.id !== 'bou-tradicional-valls' || CALM.matches) return;
-  if (G.state === 'play' ? G.watch && REEL.song && REEL.beat < BOU_CLIP_END : G.state === 'select' && REEL.on && REEL.idle) placeBouClip(camera, REEL.beat, bou.frame.rotation.y);
+  if (watching ? REEL.song && REEL.beat < BOU_CLIP_END : G.state === 'select' && REEL.on && REEL.idle) placeBouClip(camera, REEL.beat, bou.frame.rotation.y, watching ? clock - (bouFilmT0 ??= clock) : Infinity);
 }
 const NO_BOU = Q.has('nobou'); // dev: its colla and the plaça without the Bou itself (to film them)
 export const BOU_SCENE = {

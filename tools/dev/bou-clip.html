@@ -1,0 +1,116 @@
+<!doctype html><html lang="ca"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Bou · videoclip</title>
+<!-- The Bou's music video editor (dev only): the game itself in a frame playing «Mira el ball» with its music, filmed by the
+  clip's own cameras (bou-clip/shots.js, placed over the game's at each render), the cut list on the song's bars under it,
+  and notes pinned to a moment, saved for the agent through
+  the Bou timeline's dev backend (tools/dev/bou-timeline/plugin.mjs, view 'clip'). A click on the line starts the song there
+  (the frame reloads with ?from: the game's crowd and festa are simulated, they cannot be scrubbed). -->
+<style>
+:root{color-scheme:dark}*{box-sizing:border-box}
+body{margin:0;padding:16px;background:#15171c;color:#eee;font:14px/1.4 system-ui,sans-serif}
+header,.bar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+h1{font-size:18px;margin:0 8px 0 0}h2{font-size:14px;margin:0 0 8px}
+button,select,textarea{font:inherit;color:inherit;background:#262a33;border:1px solid #3a404d;border-radius:8px;padding:6px 10px}
+button{cursor:pointer}button.primary{background:#ffd166;color:#111;border-color:#ffd166;font-weight:700}
+.top{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:16px;align-items:start}
+@media(max-width:900px){.top{grid-template-columns:1fr}}
+.view{background:#000;border-radius:12px;overflow:hidden;display:flex;justify-content:center}
+.box{position:relative;overflow:hidden}iframe{border:0;transform-origin:0 0;position:absolute;left:0;top:0}
+aside{background:#1d2027;border-radius:12px;padding:16px}
+textarea{width:100%;min-height:72px;resize:vertical;margin-bottom:8px}
+.n{border-top:1px solid #333;padding:8px 0;cursor:pointer}.n b{color:#ffd166}.n button{float:right;padding:0 8px}
+.lanes{position:relative;background:#1d2027;border-radius:12px;padding:12px 12px 12px 56px;margin:16px 0;cursor:pointer;user-select:none}
+.lane{position:relative;height:26px;margin-bottom:4px}.lane .lab{position:absolute;left:-48px;top:4px;font-size:11px;color:#999;font-weight:400}
+.lane span{position:absolute;top:0;height:100%;overflow:hidden;white-space:nowrap;font-size:11px;line-height:26px;padding-left:3px;border-left:1px solid #15171c;color:#111;border-radius:3px}
+.lane .sec{background:#333a47;color:#ddd}.lane .bar{background:none;color:#888;border-left:1px solid #444;border-radius:0}
+.lane .now{outline:2px solid #fff;outline-offset:-2px}
+#head{position:absolute;top:8px;bottom:8px;width:2px;background:#fff;pointer-events:none}
+.pin{position:absolute;top:2px;width:10px;height:10px;margin-left:-5px;border-radius:50%;background:#ff5d8f;border:1px solid #fff}
+table{border-collapse:collapse;width:100%;font-size:13px}td,th{text-align:left;padding:4px 8px;border-top:1px solid #2a2e37}tbody tr{cursor:pointer}tr.now{background:#2b303b}
+.k{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px}
+#idea,#status{color:#aaa}
+</style></head><body>
+<header><h1>Videoclip del Ball del Bou</h1>
+  <label>Format <select id="fmt"><option value="1280x720">YouTube 16:9</option><option value="405x720">Reel 9:16</option><option value="576x720">Post 4:5</option></select></label>
+  <button id="play" class="primary">▶ Des de l’inici</button><button id="pause">❚❚ Pausa</button><button id="note" class="primary">✎ Nota aquí (N)</button>
+  <span id="time"></span><span id="status">carregant…</span></header>
+<div class="top"><div class="view"><div class="box" id="box"><iframe id="game" allow="autoplay"></iframe></div></div>
+  <aside><h2>Notes per a en Claude</h2><textarea id="text" placeholder="Què hi veus en aquest moment? (queda apuntat al temps i al pla que sona)"></textarea>
+    <button id="save" class="primary">Desa la nota</button> <span id="where"></span><div id="notes"></div></aside></div>
+<p id="idea">Talls secs, cadascun al primer temps d’un compàs on comença o acaba un moviment. La càmera segueix el camí del Bou, no els seus bots. Clica la línia per saltar-hi; «Nota aquí» apunta el que vegis.</p>
+<div class="lanes" id="lanes"><div class="lane" id="bars"><b class="lab">compàs</b></div><div class="lane" id="parts"><b class="lab">ball</b></div><div class="lane" id="shots"><b class="lab">plans</b></div><div class="lane" id="pins"><b class="lab">notes</b></div><i id="head"></i></div>
+<table><thead><tr><th>pla</th><th>temps</th><th>segons</th><th>dura</th><th>càmera</th><th>què hi passa</th></tr></thead><tbody id="rows"></tbody></table>
+<script type="module">
+import { SHOTS, CUTS, PARTS, CLIP_END, secAt, cutAt, placeClip } from '/tools/dev/bou-clip/shots.js';
+import song from '/src/song-bou.json';
+
+const $ = id => document.getElementById(id), game = $('game'), LOOP = CLIP_END, sec = secAt, shots = CUTS, KINDS = SHOTS;
+const clock = t => `${Math.floor(t / 60)}:${(t % 60).toFixed(1).padStart(4, '0')}`, pct = b => `${b / LOOP * 100}%`;
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+const mod = u => game.contentWindow.eval(`import(${JSON.stringify(u)})`); // the frame's own module instances
+
+let REEL = null, run = 0, notes = [];
+const shotAt = cutAt, code = i => `P${i + 1}`;
+const beatNow = () => (REEL?.on && REEL.song ? REEL.beat : null);
+
+// ---- the game: loaded at `from` seconds, the muntatge applied, «Mira el ball» pressed
+async function load(from = 0) {
+  const me = ++run, [w, h] = $('fmt').value.split('x').map(Number), k = Math.min(1, ($('box').parentElement.clientWidth || w) / w);
+  Object.assign($('box').style, { width: `${w * k}px`, height: `${h * k}px` }); Object.assign(game.style, { width: `${w}px`, height: `${h}px`, transform: `scale(${k})` });
+  REEL = null; $('status').textContent = 'carregant…';
+  game.src = `/?mock&figura=bou${from > 0.5 ? `&from=${from.toFixed(2)}` : ''}`;
+  await new Promise(res => { const t = setInterval(() => { if (game.contentWindow?.__dbg?.G?.state) { clearInterval(t); res(); } }, 200); });
+  if (me !== run) return;
+  const win = game.contentWindow; win.document.hasFocus = () => true; // (the game runs only in the focused window)
+  if (win.__dbg.G.state === 'splash') (await mod('/src/game/flow.js')).unlock();
+  await new Promise(r => setTimeout(r, 1200));
+  win.document.querySelectorAll('dialog[open]').forEach(d => d.close());
+  const [sr, { renderer }, { bou }] = await Promise.all(['/src/game/showreel.js', '/src/scene/stage.js', '/src/figures/bou/bou-objects.js'].map(mod)); if (me !== run) return;
+  win.document.head.append(Object.assign(win.document.createElement('style'), { textContent: '#reel-fade{display:none!important}' })); // (the game's own reel still cuts under the clip: its dissolves stay out of the picture)
+  // the clip's camera over the game's, right before each draw of the game's camera while the song plays
+  const cam = win.__dbg.camera, render = renderer.render.bind(renderer);
+  renderer.render = (scene, c) => { if (c === cam && sr.REEL.on && sr.REEL.song && win.__dbg.G.state === 'play' && sr.REEL.beat < LOOP) placeClip(cam, sr.REEL.beat, bou.frame.rotation.y); render(scene, c); }; // (past its last chord the game's own end shot: down to the banknotes)
+  win.document.getElementById('select-watch').click(); REEL = sr.REEL; $('status').textContent = '';
+}
+const seek = b => load(Math.max(0, sec(b) - 0.3));
+
+// ---- the lines: bars, the dance's parts, the shots, the notes
+function draw() {
+  const lane = (id, items, cls, text, color) => { $(id).querySelectorAll('span').forEach(s => s.remove());
+    items.forEach((it, i) => { const s = document.createElement('span'), b = it[0], e = items[i + 1]?.[0] ?? LOOP;
+      s.className = cls; s.style.left = pct(b); s.style.width = pct(e - b); s.textContent = text(it, i); s.title = `${text(it, i)} · ${clock(sec(b))}`; if (color) s.style.background = color(it); $(id).append(s); }); };
+  lane('bars', song.dance.bars.filter((_, i) => i % 4 === 0).map(([n, b]) => [b, n]), 'bar', it => `c.${it[1]}`);
+  lane('parts', PARTS, 'sec', it => it[1]);
+  lane('shots', shots, '', (it, i) => `${code(i)} ${it[1]}`, it => KINDS[it[1]]?.color ?? '#8ec5ff');
+  $('rows').innerHTML = shots.map(([b, k, n], i) => { const e = shots[i + 1]?.[0] ?? LOOP;
+    return `<tr data-b="${b}"><td><b>${code(i)}</b></td><td>${b}–${e}</td><td>${clock(sec(b))}</td><td>${(sec(e) - sec(b)).toFixed(1)} s</td><td><span class="k" style="background:${KINDS[k]?.color ?? '#8ec5ff'}"></span>${k}</td><td>${esc(n ?? '')}</td></tr>`; }).join('');
+  drawNotes();
+}
+function drawNotes() {
+  $('pins').querySelectorAll('i').forEach(p => p.remove());
+  for (const n of notes) { const p = document.createElement('i'); p.className = 'pin'; p.style.left = pct(n.beat); p.title = n.text; $('pins').append(p); }
+  $('notes').innerHTML = notes.map(n => `<div class="n" data-b="${n.beat}"><button data-del="${n.id}" title="Esborra">×</button><b>${clock(n.t)} · ${esc(n.phase ?? '')}</b><br>${esc(n.text)}</div>`).join('') || '<p style="color:#888">Encara no n’hi ha cap.</p>';
+}
+$('lanes').addEventListener('click', e => { const r = $('shots').getBoundingClientRect(); seek(Math.max(0, Math.min(LOOP - 1, (e.clientX - r.left) / r.width * LOOP))); });
+$('rows').addEventListener('click', e => { const t = e.target.closest('[data-b]'); if (t) seek(+t.dataset.b); });
+
+// ---- notes: the Bou timeline's backend, kept apart by view 'clip'
+const api = body => fetch('/__bou-timeline/notes', body ? { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-bou-timeline': '1' }, body: JSON.stringify(body) } : {}).then(r => r.json())
+  .then(db => { if (db.notes) { notes = db.notes.filter(n => n.view === 'clip'); drawNotes(); } else $('status').textContent = db.error ?? ''; });
+let pinned = null; // the moment the note being written is about (where the song was when writing began)
+function pin() { const b = beatNow() ?? 0, i = shotAt(b); pinned = { beat: b, t: sec(b), phase: `${code(i)} ${shots[i]?.[1] ?? ''} · ${$('fmt').selectedOptions[0].text}` }; $('where').textContent = `${clock(pinned.t)} · ${pinned.phase}`; }
+$('note').addEventListener('click', async () => { pin(); (await mod('/src/ui/pause.js')).pauseGame(); $('text').focus(); });
+$('text').addEventListener('focus', () => { if (!pinned) pin(); });
+$('save').addEventListener('click', () => { const text = $('text').value.trim(); if (!text || !pinned) return;
+  api({ op: 'add', note: { id: `clip-${Date.now().toString(36)}`, view: 'clip', text, ...pinned } }); $('text').value = ''; pinned = null; $('where').textContent = 'desada'; });
+$('notes').addEventListener('click', e => { const d = e.target.dataset.del; if (d) return api({ op: 'del', id: d }); const n = e.target.closest('[data-b]'); if (n) seek(+n.dataset.b); });
+addEventListener('keydown', e => { if (e.key.toLowerCase() === 'n' && e.target === document.body) $('note').click(); });
+
+$('play').addEventListener('click', () => load(0));
+$('pause').addEventListener('click', async () => { const w = game.contentWindow; if (w.__dbg.G.paused) w.document.getElementById('resume').click(); else (await mod('/src/ui/pause.js')).pauseGame(); });
+for (const id of ['fmt']) $(id).addEventListener('change', () => load(beatNow() == null ? 0 : sec(beatNow())));
+setInterval(() => { const b = beatNow(); if (b == null) return;
+  $('head').style.left = `calc(56px + (100% - 68px) * ${Math.min(b, LOOP) / LOOP})`; const i = shotAt(b);
+  $('time').textContent = `${clock(sec(Math.min(b, LOOP)))} · ${code(i)} ${shots[i]?.[1] ?? ''}`;
+  [...$('rows').children].forEach((r, j) => r.classList.toggle('now', j === i)); [...$('shots').querySelectorAll('span')].forEach((s, j) => s.classList.toggle('now', j === i)); }, 150);
+draw(); api(); load(0);
+</script></body></html>

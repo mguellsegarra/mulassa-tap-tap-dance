@@ -449,5 +449,6 @@
   "ui.hearts.failed": "Не вдалося зберегти. Спробуй ще раз.",
   "ui.code.open": "Відкрити GitHub",
   "ui.news.title": "А тепер мініігри!",
-  "ui.news.text": "Mulassa Pop — за кнопкою вгорі."
+  "ui.games.tip": "Ще ігри!",
+  "ui.news.text": "Перша мінігра: тисни на червоних Mulassa та знешкоджуй бомби!"
 }

@@ -1,61 +1,51 @@
 // «Novetats»: a new game told once, in the greeting's queue, only to who had played before it existed (who starts today
 // finds it in the menu). Several unseen ones tell only the newest. A later game is one more line in NEWS.
+// Seen once per profile on any device: the seen-notices registry (`news:<id>`, on the server); without a profile, or
+// offline, this device's own list (SEEN_KEY), which is also sent up once a profile reads the registry.
 import { tr } from '../i18n/messages.js';
+import { createSeenNotices } from '../services/seen-notices.js';
 const SEEN_KEY = 'news-seen';
 export const NEWS = [
-  { id: 'jocs-1', title: 'ui.news.title', text: 'ui.news.text', games: ['pop'] },
+  { id: 'jocs-1', title: 'ui.news.title', text: 'ui.news.text', games: [{ id: 'pop', name: 'Mulassa Pop' }] }, // a game's name is its brand, the same in every language
 ];
 
-export function setupNews({ focusIn, store, played, onGames, force = false, doc = document, win = globalThis, news = NEWS }) {
+export function setupNews({ focusIn, store, played, onGames, service = null, notices = createSeenNotices({ service, kv: store }), force = false, doc = document, news = NEWS }) {
   const by = id => doc.getElementById(id), menu = by('news-menu');
-  let back = null, toGames = false, onButton = false;
+  let back = null, toGames = false;
   const seen = () => { try { const v = JSON.parse(store.get(SEEN_KEY)); return Array.isArray(v) ? v : []; } catch { return []; } };
-  const markAll = () => store.set(SEEN_KEY, JSON.stringify(news.map(n => n.id)));
-  // the ribbon under the corner button, seen through a hole in the backdrop: the sheet's text says «the button up there»
-  const place = () => {
-    if (!menu.open) return;
-    const r = by('free').getBoundingClientRect(), tip = by('news-tip'), centre = r.left + r.width / 2;
-    // 20 under it: the tail (9) and the bob (5) never reach the button
-    const x = Math.max(12, Math.min(centre - tip.offsetWidth / 2, win.innerWidth - tip.offsetWidth - 12));
-    tip.style.left = `${x}px`; tip.style.top = `${r.bottom + 20}px`; tip.style.setProperty('--tail', `${centre - x}px`);
-    menu.style.setProperty('--hole-x', `${centre}px`); menu.style.setProperty('--hole-y', `${r.top + r.height / 2}px`); menu.style.setProperty('--hole-r', `${r.width / 2 + 5}px`);
-  };
-  win.addEventListener?.('resize', place);
+  const noticeId = id => `news:${id}`;
+  const markAll = owner => { store.set(SEEN_KEY, JSON.stringify(news.map(n => n.id))); for (const n of news) notices.mark(owner, noticeId(n.id)); }; // mark(null): device only
+  // the profile's owner and its registry; null without a session or offline (this device's list answers alone)
+  const reader = async () => { try { const owner = await service?.ownerId?.(); if (owner) await notices.load(owner); return owner ?? null; } catch { return null; } };
   by('news-x').addEventListener('click', () => menu.close());
-  const goToGames = () => { toGames = true; menu.close(); };
-  by('news-go').addEventListener('click', goToGames);
-  by('news-tip').addEventListener('click', goToGames);
-  // the button shows through the backdrop, so a tap on it is the backdrop's: it closes the sheet (backdrop.js) and must still do what the button does
-  menu.addEventListener('pointerdown', e => {
-    const r = by('free').getBoundingClientRect();
-    onButton = e.target === menu && e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
-  });
-  menu.addEventListener('cancel', () => { if (onButton) toGames = true; onButton = false; });
+  by('news-go').addEventListener('click', () => { toGames = true; menu.close(); });
   menu.addEventListener('close', () => {
     const b = back, go = toGames; back = null; toGames = false;
     if (go) onGames(); else b?.();
   });
   return {
     get isOpen() { return Boolean(menu?.open); },
-    // true once shown
-    show(onBack = null) {
+    // true once shown; still(): the selector is still idle and its owner the same after the read
+    async show(onBack = null, still = () => true) {
       if (menu.open) return false;
-      const was = seen(), unseen = force ? news : news.filter(n => !was.includes(n.id));
-      if (!unseen.length) return false;
-      if (!force && !played()) { markAll(); return false; }
+      const owner = await reader(), here = seen();
+      for (const id of here) if (owner && !notices.seen(owner, noticeId(id))) notices.mark(owner, noticeId(id)); // seen here before the registry: sent up once
+      const unseen = force ? news : news.filter(n => !here.includes(n.id) && !(owner && notices.seen(owner, noticeId(n.id))));
+      if (!unseen.length || menu.open || !still()) return false;
+      if (!force && !played()) { markAll(owner); return false; }
       const n = unseen[unseen.length - 1];
       by('news-title').textContent = tr(n.title);
       by('news-text').textContent = tr(n.text);
-      by('news-pics').replaceChildren(...n.games.map(g => { // each game's name is its card's, in the games sheet
+      by('news-pics').replaceChildren(...n.games.map(g => { // the game's still, its name under it in the game's colour
         const fig = doc.createElement('figure'), img = doc.createElement('img'), name = doc.createElement('figcaption');
-        img.src = `/jocs/menu/cards/${g}.jpg`; img.alt = ''; img.width = 600; img.height = 750;
-        name.textContent = doc.querySelector(`[data-game="${g}"] .sel-card-name`)?.textContent ?? '';
+        img.src = `/jocs/menu/cards/${g.id}.jpg`; img.alt = ''; img.width = 600; img.height = 750;
+        name.className = `news-${g.id}`; name.textContent = g.name;
         fig.append(img, name);
         return fig;
       }));
-      if (!force) markAll();
+      if (!force) markAll(owner);
       back = onBack;
-      menu.showModal(); place(); focusIn(menu, 'news-go');
+      menu.showModal(); focusIn(menu, 'news-go');
       return true;
     },
   };

@@ -416,5 +416,6 @@
   "ui.hearts.failed": "保存失败，请再试一次。",
   "ui.code.open": "打开GitHub",
   "ui.news.title": "迷你游戏来啦！",
-  "ui.news.text": "点上方按钮，玩Mulassa Pop。"
+  "ui.games.tip": "更多游戏！",
+  "ui.news.text": "第一个迷你游戏：点击红色Mulassa，拆除炸弹！"
 }

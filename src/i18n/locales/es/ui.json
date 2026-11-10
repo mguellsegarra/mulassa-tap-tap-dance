@@ -427,5 +427,6 @@
   "ui.hearts.failed": "No se ha podido guardar. Vuelve a intentarlo.",
   "ui.code.open": "Abrir GitHub",
   "ui.news.title": "¡Ahora, minijuegos!",
-  "ui.news.text": "Mulassa Pop, en el botón de arriba."
+  "ui.games.tip": "¡Más juegos!",
+  "ui.news.text": "El primer minijuego: toca las Mulassas rojas y desactiva bombas."
 }

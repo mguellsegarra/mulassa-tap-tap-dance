@@ -427,5 +427,6 @@
   "ui.hearts.failed": "Ezin izan da gorde. Saiatu berriro.",
   "ui.code.open": "Ireki GitHub",
   "ui.news.title": "Orain, minijokoak!",
-  "ui.news.text": "Mulassa Pop, goiko botoian."
+  "ui.games.tip": "Joko gehiago!",
+  "ui.news.text": "Lehen minijokoa: ukitu Mulassa gorriak eta desaktibatu bonbak!"
 }

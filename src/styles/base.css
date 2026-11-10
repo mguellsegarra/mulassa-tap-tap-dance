@@ -268,13 +268,25 @@ kbd { display: inline-block; min-width: 14px; padding: 0 4px; border: 1px solid 
 .sheet.hint-menu { width: min(360px, calc(100vw - 32px - var(--sal) - var(--sar))); padding: 12px 20px 18px; text-align: center; } /* the icon art sits ~6 px inside its box: equal margins to what shows */
 .hint-icon { display: block; width: 44px; height: 44px; margin: 0 auto 8px; fill: none; stroke: #f5c518; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .hint-menu .board-text { margin-bottom: 4px; text-wrap: balance; }
-/* a hole in the dim over the corner button (news-sheet.js places it; an older browser just dims it) */
-#news-menu::backdrop { background: radial-gradient(circle var(--hole-r, 0px) at var(--hole-x, 0) var(--hole-y, 0), #0000 calc(100% - 1px), #120d09b3 100%); }
-.sheet.hint-menu#news-menu { width: min(480px, calc(100vw - 24px - var(--sal) - var(--sar))); }
-.news-pics { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); grid-auto-flow: column; gap: 10px; margin: 14px 0; }
-.news-pics figure { margin: 0; min-width: 0; }
-.news-pics img { display: block; width: 100%; height: auto; aspect-ratio: 4 / 5; object-fit: cover; border-radius: 10px; }
-.news-pics figcaption { margin-top: 6px; font-size: 14px; line-height: 17px; text-wrap: balance; }
+/* the news (news-sheet.js): «Nova temporada»'s ribbon, the new game's still, its name in the game's colour, a line,
+   and the way there (the games button drawn as it is up there). One 16 px rhythm between blocks; the name hugs its line. */
+.sheet.hint-menu#news-menu { width: min(400px, calc(100vw - 32px - var(--sal) - var(--sar))); padding-top: 14px; }
+#news-menu .sheet-body { display: grid; gap: 16px; }
+#news-menu .sheet-body > .notice-ribbon { margin: 0 0 -12px; } /* the cloth's drawn shadow under the band already reads as space */
+#news-menu .sheet-actions { margin: 0; }
+.news-pics { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 10px; margin: 0; }
+.news-pics figure { position: relative; display: grid; gap: 6px; margin: 0; min-width: 0; }
+.news-pics img { display: block; width: 100%; height: auto; aspect-ratio: 16 / 10; object-fit: cover; object-position: 50% 40%; border-radius: 12px; }
+@media (max-height: 600px) { .news-pics img { aspect-ratio: 16 / 7; } } /* a short phone keeps the button on screen */
+.news-pics figcaption { margin-top: 6px; font: 800 28px/1.1 'Baloo 2', system-ui, sans-serif; color: #f5c518; text-wrap: balance; }
+/* the game's name in its own colour: Mulassa Pop's pink (src/jocs/games/pop/style.css --accent), Baloo as its POP */
+.news-pics .news-pop { color: #ff7ac6; }
+#news-menu #news-text { margin: -10px 0 0; font-size: 15px; line-height: 1.35; text-wrap: balance; }
+.news-where { display: flex; align-items: center; gap: 12px; margin: 0; padding: 10px 14px 10px 10px; border-radius: 12px; background: #ffffff0d; font-size: 14px; line-height: 1.3; text-align: left; }
+.news-where > span:last-child { flex: 1; text-align: left; text-wrap: pretty; }
+/* the corner button itself, smaller: same disc, gold edge, glows (select-chrome.css :is(#free, …)) and glyph */
+.news-free { position: relative; flex: none; display: grid; place-items: center; width: 40px; height: 40px; box-sizing: border-box; border: 2px solid var(--button-border); border-radius: 50%; color: var(--button-text); }
+.news-free svg { width: 22px; height: 22px; fill: currentColor; }
 .hint-menu .board-text b { color: #fff3d6; font-weight: 800; }
 /* the home-screen steps with Safari's own glyphs, as its dark glass buttons draw them */
 #free-fs-menu, #install-steps-menu:has(> .ios-bubble:not(.up):not([hidden])), #free-hint-menu:has(> .ios-bubble:not([hidden])) { bottom: calc(var(--sab) + 96px); max-height: calc(100dvh - 112px - var(--sab)); } /* centred above the bubble, never under it */

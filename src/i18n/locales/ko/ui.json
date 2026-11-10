@@ -416,5 +416,6 @@
   "ui.hearts.failed": "저장하지 못했어요. 다시 시도해 주세요.",
   "ui.code.open": "GitHub 열기",
   "ui.news.title": "미니게임이 왔어요!",
-  "ui.news.text": "위쪽 버튼에서 Mulassa Pop을 만나 봐요."
+  "ui.games.tip": "다른 게임도!",
+  "ui.news.text": "첫 미니게임: 빨간 Mulassa를 누르고 폭탄을 해체해요!"
 }

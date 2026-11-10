@@ -416,5 +416,6 @@
   "ui.hearts.failed": "保存できませんでした。もう一度試してね。",
   "ui.code.open": "GitHubを開く",
   "ui.news.title": "ミニゲーム登場！",
-  "ui.news.text": "上のボタンからMulassa Popで遊べるよ。"
+  "ui.games.tip": "ほかのゲームも！",
+  "ui.news.text": "最初のミニゲーム：赤いMulassaをタップして爆弾を解除しよう！"
 }

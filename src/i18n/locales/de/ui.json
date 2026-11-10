@@ -427,5 +427,6 @@
   "ui.hearts.failed": "Konnte nicht gespeichert werden. Versuch es noch einmal.",
   "ui.code.open": "GitHub öffnen",
   "ui.news.title": "Jetzt Minispiele!",
-  "ui.news.text": "Mulassa Pop: über den Button oben."
+  "ui.games.tip": "Mehr Spiele!",
+  "ui.news.text": "Das erste Minispiel: Tippe rote Mulasses an und entschärfe Bomben!"
 }

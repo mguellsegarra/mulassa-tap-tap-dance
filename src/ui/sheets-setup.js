@@ -32,6 +32,7 @@ import { setupBadgeNews } from './badge-news.js';
 import { setupConfirmGate } from './confirm-gate.js';
 import { setupHearts } from './figure-hearts.js';
 import { setupHeartTip } from './heart-tip.js';
+import { setupGamesTip } from './games-tip.js';
 import { setupBadgeTip } from './badge-tip.js';
 import { setupFeedback } from './feedback-ui.js';
 import { sheets } from './sheets.js';
@@ -200,7 +201,7 @@ sheets.freeGate = setupFreeGate({ focusIn, store, onEnter: () => enterFree() });
 // one): the name sheet at once, and back to the game once it closes, made or not (docs/jocs/pop-ranking.md)
 const nameFor = globalThis.location?.hash?.match(/^#nom-pop(-canvi)?$/);
 if (nameFor) { history.replaceState(null, '', '/' + location.search); profile.open(nameFor[1] ? 'rename' : 'create', () => location.replace('/pop/')); }
-const news = setupNews({ focusIn, store, played: () => hasPlayed(store), onGames: openGames, force: Q.has('novetats') }); // ?novetats on a dev host shows it again
+const news = setupNews({ focusIn, store, played: () => hasPlayed(store), onGames: openGames, force: Q.has('novetats'), ...(!mockBoard && { service, notices: seenNotices }) }); // seen per profile on any device (the mock: device only); ?novetats on a dev host shows it again
 sheets.news = news;
 // The greeting waits for calm: a playable figure (Mulassa, Drac) on screen and no touch or key for a while, so its sheet never
 // lands on what a tap has just opened. Every touch restarts the wait; the timer asks again once it is calm.
@@ -227,6 +228,7 @@ const feedback = setupFeedback({ focusIn, captcha: board.captcha, accessToken: (
 const needConfirmed = setupConfirmGate({ focusIn, identity: () => service.identity(), hasProfile: async () => !!ownerKey(kv) || !!(await service.profile?.())?.alias, openProfile: (what, back, opts) => profile.open(what, back, opts) });
 const hearts = setupHearts({ service, needConfirmed, onChange: () => { select.paintHearts(); heartTip.update(); } });
 setupBadgeTip();
+const gamesTip = setupGamesTip();
 const heartTip = setupHeartTip({ store, hearts, figure: () => (select.pending ? null : select.figure), busy: () => sheetUp() || viewMode || !greeting.answered });
 const writeToBox = (request, back) => needConfirmed(request.kind === 'general' ? 'feedback' : request.kind, () => feedback.show(back, request));
 sheets.feedback = feedback;
@@ -236,7 +238,7 @@ const select = setupSelect({ store, keyboard: () => keyboardNav, busy: () => she
   sfx: k => chip?.sfx(k), onSelect: f => { setSelectedFigure(f); greeting.greet(); },
   onPlay: (level, figure) => { setSelectedFigure(figure); choose(level); },
   onHowto: () => { howtoMenu.showModal(); focusIn(howtoMenu, 'howto-ok'); },
-  onWrite: request => writeToBox(request, () => select.refocus()), hearts, onPanel: () => heartTip.update() });
+  onWrite: request => writeToBox(request, () => select.refocus()), hearts, onPanel: () => { heartTip.update(); gamesTip.update(); } });
 hearts.load();
 sheets.select = select;
 sheets.lang = setupLang({ store, state: () => G.state }); // the language dropdown and the one-time suggestion
@@ -272,6 +274,7 @@ document.addEventListener('click', e => { if (e.target.closest?.('[data-privacy-
 document.getElementById('pause-sync').addEventListener('click', () => sync.show());
 document.getElementById('howto-practice').addEventListener('click', () => { howtoMenu.close(); startPractice(null); });
 document.getElementById('howto-walk').addEventListener('click', () => { howtoMenu.close(); enterFree(); });
+document.getElementById('select-walk').addEventListener('click', () => enterFree()); // free play beside «Mira el ball» (a desktop only: select-pending.css)
 document.getElementById('howto-ok').addEventListener('click', () => howtoMenu.close());
 document.getElementById('privacy-ok').addEventListener('click', () => privacyMenu.close());
 document.getElementById('skip').addEventListener('click', () => { if (G.practice && !G.paused) { chip.sfx('menu'); endPractice(); } });

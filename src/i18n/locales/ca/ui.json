@@ -427,5 +427,6 @@
   "ui.hearts.failed": "No s'ha pogut desar. Torna-ho a provar.",
   "ui.code.open": "Obre GitHub",
   "ui.news.title": "Ara, minijocs!",
-  "ui.news.text": "Mulassa Pop, al botó de dalt."
+  "ui.games.tip": "Més jocs!",
+  "ui.news.text": "El primer minijoc: toca Mulasses vermelles i desactiva bombes!"
 }

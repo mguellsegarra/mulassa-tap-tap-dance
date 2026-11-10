@@ -255,7 +255,9 @@ function frameMenuLens(dt, root, rect, aim, fill = 0.86, snap = false, quick = f
   if (snap) { MENU.x[0] = cx; MENU.x[1] = cy; MENU.v.fill(0); }
   lens.x = smoothDamp(MENU, 0, cx, st, dt);
   lens.y = smoothDamp(MENU, 1, cy, st, dt);
-  if (bx0 === bx0 && !none) keepInFrame(lens, MENU, bx0, bx1, by0, by1, ppm, vw, vh, FREE, part ? 0 : MENU_EDGE * vw); // (a close-up may crop its part)
+  // (a close-up may crop its part). Not the splash's pair (roots): side by side they are wider than a phone's portrait
+  // frame, so the hard edge pushed the lens every frame as they danced, left and right as the page came up (the owner)
+  if (bx0 === bx0 && !none && !root.roots) keepInFrame(lens, MENU, bx0, bx1, by0, by1, ppm, vw, vh, FREE, part ? 0 : MENU_EDGE * vw);
   return lens.y;
 }
 // Every frame another camera runs (a game, results, photo driving): the menu's sideways shift glides back to the middle (the play

@@ -21,8 +21,9 @@ export const BOU_CLIP_SHOTS = {
   charge: { az: [.3, .3], el: [.38, .38], size: [7, 7], y: 1.1, fov: 34, rel: 1, fixed: 1, lag: 3.5 }, // (lag: it hardly pans, the rush comes at it inside the frame)
   feet: { az: [.7, .65], el: [.2, .2], size: [4.3, 4.1], y: .95, fov: 30, rel: 1, lag: .6, ahead: .8, // (its shoes with its face over them: the shoes alone, its face cut off, read as a mistake; ahead: the front carrier's leg is the one that swings)
     portrait: { az: [.22, .18], el: [.38, .38], size: [2.8, 2.7], y: .9, ahead: .5 } }, // (a phone's tall frame: from nearly head on, its face stacked over its shoes; from the side its face fell off the narrow frame)
-  head: { az: [.4, .35], el: [.3, .3], size: [3, 2.8], y: 1.5, fov: 30, rel: 1, ahead: 1.2, lag: .6 },
-  eyes: { az: [.3, .28], el: [.22, .22], size: [1.7, 1.5], y: 1.65, fov: 24, rel: 1, ahead: 1.6, lag: .6 },
+  // (its head's middle is 2 m ahead of its own and 1.5 m up, horns 3.1 m across: aimed nearer, its face sat cut off at the frame's edge)
+  head: { az: [.4, .35], el: [.3, .3], size: [2.4, 2.3], y: 1.5, fov: 30, rel: 1, ahead: 2, lag: .6, portrait: { size: [2.8, 2.7] } },
+  eyes: { az: [.3, .28], el: [.22, .22], size: [1.7, 1.6], y: 1.6, fov: 24, rel: 1, ahead: 2, lag: .6, portrait: { size: [1.5, 1.4] } },
 };
 // [song beat, shot] (what each answers, in Catalan for the owner: tools/dev/bou-clip.html). The feet only on the opening's leg passes (bars 1-2 and 5-6). The list ends on the
 // last chord (BOU_CLIP_END): from there the game's own end shot comes down to the banknotes.
@@ -54,8 +55,11 @@ export const BOU_CLIP_CUTS = [
   [284, 'orbit'],
   [300, 'crane'],
 ];
-// each shot as a portrait frame takes it
-const CLIP_TALL = Object.fromEntries(Object.entries(BOU_CLIP_SHOTS).map(([k, d]) => [k, { ...d, ...d.portrait }]));
+// Each shot as a portrait frame takes it. The shots that go with it are tighter there (CLIP_TALL_SIZE of their size):
+// sized for a wide frame they asked a phone's lens to stand further back than the plaça lets it, so it opened instead and
+// the bottom third of the picture was the backs of the crowd it stood behind
+const CLIP_TALL_SIZE = .78, CLIP_TALL_KINDS = ['wide', 'crane', 'orbit', 'front'];
+const CLIP_TALL = Object.fromEntries(Object.entries(BOU_CLIP_SHOTS).map(([k, d]) => [k, { ...d, ...(CLIP_TALL_KINDS.includes(k) && { size: d.size.map(v => v * CLIP_TALL_SIZE) }), ...d.portrait }]));
 export const BOU_CLIP_END = 316;
 export const bouClipSec = b => { const T = BOU_TIMING.beats, i = Math.min(T.length - 2, Math.max(0, Math.floor(b))); return T[i] + (T[i + 1] - T[i]) * (b - i); };
 export const bouClipCut = b => BOU_CLIP_CUTS.findLastIndex(c => c[0] <= b);
@@ -77,7 +81,9 @@ function clipWorld(time, o, c, s, hx, hz, lag) { const p = bouClipPath(time, cli
 export function placeBouClip(camera, beat, frameYaw) {
   const i = Math.max(0, bouClipCut(beat)), [b0, kind] = BOU_CLIP_CUTS[i], b1 = BOU_CLIP_CUTS[i + 1]?.[0] ?? BOU_CLIP_END, d = (camera.aspect < 1 ? CLIP_TALL : BOU_CLIP_SHOTS)[kind];
   const u = clipEase(Math.min(1, Math.max(0, (beat - b0) / (b1 - b0)))), t = bouClipSec(beat), t0 = bouClipSec(b0);
-  const heading = d.rel ? bouPose(t0, clipPose).yaw + frameYaw : frameYaw + Math.PI / 4; // (the play camera looks in between its W and S)
+  // (the play camera looks in between its W and S). A shot of its head takes the heading it has half way through: cut in
+  // while it was still turning, the heading at the cut aimed a metre beside its face
+  const heading = d.rel ? bouPose(d.ahead ? bouClipSec((b0 + b1) / 2) : t0, clipPose).yaw + frameYaw : frameYaw + Math.PI / 4;
   // its averaged middle on the plaça (the dance frame turned, `ahead` m in front of it), into `o`: no garbage per frame
   const c = Math.cos(frameYaw), s = Math.sin(frameYaw), hx = (d.ahead ?? 0) * Math.sin(heading), hz = (d.ahead ?? 0) * Math.cos(heading);
   const el = clipLerp(d.el, u), size = clipLerp(d.size, u), az = heading + clipLerp(d.az, d.fixed ? 0 : u);

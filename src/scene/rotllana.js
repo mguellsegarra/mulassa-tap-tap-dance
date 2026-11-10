@@ -14,11 +14,12 @@ const ROTLLANA_BAND_AZ = Math.atan2(CAM_DIR[2], CAM_DIR[0]) + Math.PI - 0.35;
 import { activeCrowd, bandSpots, midCrowd, crowdStamp, bandLineup, refreshBandSpots } from './quality.js';
 
 // r0: the front row (beyond the colla's ring, RING.arenaMula 6.7 m); row / step: m between rows / along one (a shirt is
-// 0.46 wide); mover: the camera's-side wedge the moving crowd leaves (crowd-build.js); band: its front row's radius, m
+// 0.46 wide; never under a mover's and a figure's footprints, RAD.adult + 0.33 + 0.04 = 0.73 m: at 0.7 they overlapped,
+// shoved every frame and never rested, and separate() cost the S10 frames over 100 ms); mover: the camera's-side wedge the moving crowd leaves (crowd-build.js); band: its front row's radius, m
 // between players and the room kept round each (in the ring's rows they were lost among the people: the owner); lens: the
 // rows behind the first `keep` thin out within `room` m of where the play camera stands (`at` m out; play-camera.js puts
 // it 13.7-15 m out): on a phone their heads filled the bottom of the shot (the owner). The first rows stay closed all round.
-export const ROTLLANA = { r0: 7, row: 0.7, step: 0.7, rows: 9, moverFrom: 2.0, moverTo: 3.75, band: { r0: 7.2, gap: 1.15 }, bandRoom: 1.3, lens: { at: 14, room: 6.5, keep: 2 } };
+export const ROTLLANA = { r0: 7, row: 0.75, step: 0.75, rows: 9, moverFrom: 2.0, moverTo: 3.75, band: { r0: 7.2, gap: 1.15 }, bandRoom: 1.3, lens: { at: 14, room: 6.5, keep: 2 } };
 const rotllanaLens = { x: Math.cos(Math.atan2(CAM_DIR[2], CAM_DIR[0])) * ROTLLANA.lens.at, z: Math.sin(Math.atan2(CAM_DIR[2], CAM_DIR[0])) * ROTLLANA.lens.at };
 // every slot, front row first (a lower quality's count, a prefix, keeps the front rows)
 const rotllanaSlots = [];
@@ -34,7 +35,9 @@ for (let k = 0; k < ROTLLANA.rows; k++) {
 // the ring's instanced figures: the backdrop's (its material, no new shader program), as many as backdrop and mid band
 export const rotllanaCrowd = plaza.backdrop ? buildBackdrop(rotllanaSlots.length, 0, [], { share: plaza.backdrop, given: rotllanaSlots.map(s => [s.x, s.z]) }) : null;
 const rotllanaBase = rotllanaSlots.map((_, i) => { const m = new THREE.Matrix4(); rotllanaCrowd?.mesh.getMatrixAt(i, m); return m; }); // (hidden slots get a zero scale)
-if (rotllanaCrowd) { rotllanaCrowd.mesh.visible = false; plaza.group.add(rotllanaCrowd.mesh); }
+// its figures stand packed round the moving crowd's slots: they count for the hard no-overlap limit only (crowd.js steer's
+// soft push wants 0.2-0.6 m of air, which no packed ring has: its neighbours shoved every frame and never rested)
+if (rotllanaCrowd) { rotllanaCrowd.mesh.visible = false; rotllanaCrowd.hardOnly = true; plaza.group.add(rotllanaCrowd.mesh); }
 
 let rotllanaOn = false, rotllanaStamp = -1;
 const rotllanaHidden = new THREE.Matrix4().makeScale(0, 0, 0);

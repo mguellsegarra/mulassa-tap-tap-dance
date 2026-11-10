@@ -20,7 +20,7 @@ export function backdropContacts(groups) {
         mesh.getMatrixAt(i, contactMatrix); contactMatrix.premultiply(mesh.matrixWorld);
         const m = contactMatrix.elements, scale = Math.hypot(m[0], m[1], m[2]);
         if (scale < .05) continue;
-        const c = cache.all[i] ??= { pos: new THREE.Vector2(), rad: 0, fixed: true };
+        const c = cache.all[i] ??= { pos: new THREE.Vector2(), rad: 0, fixed: true, hardOnly: !!group.hardOnly }; // hardOnly: the hard limit only (rotllana.js)
         c.pos.set(m[12], m[14]); c.rad = .33 * scale; cache.list.push(c);
       }
     }

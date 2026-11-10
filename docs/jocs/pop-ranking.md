@@ -47,7 +47,7 @@ submitted score proves nothing. The server must play the game again from what th
   `{ score, best, improved, position, hits, level }`, `score` being the replay's points.
 - Caps: body 64 KB, 30 min of play (216 000 ticks), 6000 taps, taps in order and on the board's cells, `level` 0–2. The stored
   points are the replay's; the client's points and hits are only compared, and both must match.
-- Migration `202611050001_pop_board.sql`: `pop_best` (the best run's `score`, `hits`, `level`), `pop_runs` (a seed scores once per player), `pop_attempts`;
+- Migration `202611100001_pop_board.sql`: `pop_best` (the best run's `score`, `hits`, `level`), `pop_runs` (a seed scores once per player), `pop_attempts`;
   `pop_gate` (a guest or confirmed account with a name of its own, at most 12 replays a minute, asked before the replay) and
   `pop_record(uid, seed, score, ticks, hits, level)` (profile row locked, the best only rises and a tie keeps the first, with its
   hits and level; `last_active_at` refreshed), both `service_role` only; `get_pop_board`, `get_pop_player` and `my_pop` public and

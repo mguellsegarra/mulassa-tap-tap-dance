@@ -1,9 +1,9 @@
-// Mulassa Pop's home music (menu-music.js): «Juga» silences it under the 3, 2, 1. Its fade in (a ramp up over a second)
+// Mulassa Pop's home music (packages/plassa/src/menu-music.js, the selector's too): «Juga» silences it under the 3, 2, 1. Its fade in (a ramp up over a second)
 // may still be pending then, and once brought the music back under the count; one never heard (iOS: «Juga» is the first
 // tap) is cut at once. Its file loops from the tune's first note (tools/music/build_pop_menu.py).
 import assert from 'node:assert/strict';
 import { readFileSync, existsSync } from 'node:fs';
-import { createMenuMusic } from '../../src/jocs/games/pop/menu-music.js';
+import { createMenuMusic } from '../../packages/plassa/src/menu-music.js';
 
 // An AudioParam's timeline, enough to read the value it heads for after a given time
 function param() {

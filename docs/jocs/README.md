@@ -12,7 +12,7 @@ Research, in Catalan, copied from `mulassa-minijocs/notes/` on 2026-11-01 (that 
 
 - 1.3.0 is the release that brings the mini-games into mulassa.cat.
 - Fes el castell is out of the plan. It still appears in the research notes, which are left as written.
-- The selector's gamepad button (`#free`) opens «Jocs», a sheet inside the main game (`src/ui/games-menu.js`), not a page: the owner rejected a separate `/jocs/` menu, so free play starts and returns to the sheet with no reload.
+- Mulassa Games, the games' selector, is its own light page at `/jocs/` (`jocs/index.html`, `src/jocs/menu/`, on Plassa; the owner's call on 10 Nov 2026, reversing the earlier sheet inside the main game): nothing of Mulassa Tap Tap Dance loads behind it. The selector's gamepad button (`#free`) and a game's way back go there with `location.replace('/jocs/')`; «Juga» on the Tap Tap Dance card goes to `/`. An old `/#jocs` link is sent on by `index.html`. It has its own music, the menu tune as lo-fi (`tools/music/build_games_menu.py` → `src/jocs/menu/music.mp3`), on Plassa's one music switch.
 - Free play is that sheet's last entry. A mini-game is still its own page, so opening one and coming back reloads the main game.
 - The URL must not say `minijocs`.
 
@@ -104,6 +104,7 @@ are in `packages/plassa/docs/inventari.md`.
   `boot-watchdog.js`), `boot-lines.js` (mulassa.cat's loading lines and its memory of the ones seen; the screen leaves at a line's end), `boot-first-line.js` (the first line before the first paint, inlined by vite.config.js with every language's lines), `boot.js`
   (shader warmup), `errors.js` + `sentry-load.js`, `update-watch.js` + `update-rules.js`, `gpu-guard.js`, `quality.js`
   + `render-quality.js`, `orientation.js`.
+- A home's music from a rendered file: `menu-music.js` (Pop's home and the selector).
 - Words and state: `music-pref.js` (Plassa's one music switch, mulassa.cat's `menu-music` key), `words.js` (a game's `locales/*.json`) over `locale.js` (the saved language), `storage.js`, `best.js`,
   `haptics.js`, `countdown.js`.
 - Boards: `board.js` (a board's row and a player's name with its badge, as mulassa.cat's; the game brings the art, the words

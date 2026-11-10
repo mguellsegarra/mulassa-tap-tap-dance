@@ -1,13 +1,13 @@
 # Mulassa Games picker images
 
-Each game in the Mulassa Games picker (`#games-menu` in `index.html`) has two pictures:
+Each game in the Mulassa Games picker (`#games-menu` in `jocs/index.html`) has two pictures:
 
 | File | Shape | Final size | JPEG |
 | --- | --- | --- | --- |
 | `public/jocs/menu/cards/<id>.jpg` (the card, `img src`) | 4:5 | 720×900 | quality 84 |
 | `public/jocs/menu/hero/<id>.jpg` (the banner, `data-hero`) | 8:3 | 3600×1350 | quality 80 |
 
-`tests/ui/games-menu.mjs` reads every card the menu lists, so a card without its file fails the check.
+`tests/jocs/menu.mjs` reads every card the menu lists, so a card without its file fails the check.
 
 ## 1. Generate with Codex
 
@@ -49,3 +49,21 @@ EOF
 Mulassa Pop's banner is the only one composed: the AI base has its right half replaced by a real board capture, blended over a 260 px left feather. Repeat that when the game itself has changed, not for teasers.
 
 Then check the picker at the viewport set (`.agents/skills/mulassacat-validacio-visual/SKILL.md`) and hand the captures to the owner.
+
+## The hero's clips
+
+A live game's card also has a clip (`data-video`, 8:3, and `data-video-tall` for a phone) in `public/jocs/menu/video/`, each
+with its first frame beside it as `.jpg`: the hero's still until the clip plays (`hero-video.js` `poster()`), so the clip
+fades in over itself and the video is never shown empty (iOS Safari showed black on every change of game). Record them frame by frame, never from a real-time screen capture (that stored frames grabbed
+late or twice: the clips stuttered):
+
+```
+npm run dev
+PORT=<its port> node tools/qa/record-clip.mjs tools/qa/clips/pop.mjs
+```
+
+`tools/qa/clips/<game>.mjs` is the recipe: the URL, how to reach the scene, what to hide and each clip's viewport. Pop's are
+the dev bot's run with nothing but the board. The recorder dissolves a clip's end into its start, so the loop has no jump.
+Tap Tap Dance's were recorded before this tool and have no recipe yet: their hard camera cut and their loop were
+turned into dissolves by hand (ffmpeg `xfade`), since a cut 2.5 s after the page opens read as a glitch.
+

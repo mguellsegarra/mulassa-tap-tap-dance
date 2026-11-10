@@ -11,7 +11,7 @@ const css = [...sheets, ...inline].join('\n').replace(/\/\*[^]*?\*\//g, '');
 
 // Container queries only on single elements: one container per card or row (50-84 of them) made every sheet opening
 // ~300-500 ms on a Galaxy S10. A list's sizes come from a ResizeObserver (select-layout.js).
-const CONTAINERS = new Set(['#stats-notice-menu .notice-ribbon', '.sel-pending', '.sel-info', '.sel-standings', 'div.mula-load', '#games-menu #games-hero-text']); // the games hero: one element
+const CONTAINERS = new Set(['#stats-notice-menu .notice-ribbon', '.sel-pending', '.sel-info', '.sel-standings', 'div.mula-load']);
 for (const [, selector, type] of css.matchAll(/([^{}]+)\{[^}]*container-type\s*:\s*([a-z-]+)/g)) {
   if (type === 'normal') continue;
   assert(CONTAINERS.has(selector.trim()), `container-type: ${type} on «${selector.trim()}»: a query container is laid out on its own on every restyle; never on a list's items (measure it, docs/agents/graphics.md)`);

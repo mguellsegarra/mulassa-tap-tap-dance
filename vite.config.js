@@ -22,7 +22,8 @@ const buildStamp = { name: 'build-stamp', generateBundle() { this.emitFile({ typ
   transformIndexHtml: html => html.replace("'__MULASSA_BUILD__'", JSON.stringify(build)) };
 // One page per mini-game (docs/jocs/README.md): a full navigation is what frees the main game's memory.
 // Mulassa Pop lives at mulassa.cat/pop/; games still on their branches come back under jocs/<id>/.
-const pages = ['index.html', 'pop/index.html', ...(existsSync('jocs') ? readdirSync('jocs').map(game => `jocs/${game}/index.html`) : [])];
+// jocs/index.html is Mulassa Games, the games' selector.
+const pages = ['index.html', 'pop/index.html', 'jocs/index.html', ...readdirSync('jocs', { withFileTypes: true }).filter(e => e.isDirectory()).map(e => `jocs/${e.name}/index.html`)];
 // A game page's boot watchdog must run even when its module fails to load: inlined as a classic script, never bundled.
 // Its boot screen's running Mulassa is painted before any script: one copy for every game (packages/plassa/src/mula-load.html).
 const WATCHDOG = '<script id="boot-watchdog" src="/packages/plassa/src/boot-watchdog.js"></script>';

@@ -26,8 +26,8 @@ Llegenda de l'estat:
 
 | Funcionalitat | Avui | Estat |
 | --- | --- | --- |
-| Llista de jocs amb portada, vídeo i «Juga» | full «Jocs» dins mulassa.cat (`ui/games-menu.js`, `games-carousel.js`, `games-hero-video.js`) | mulassa.cat |
-| Cada joc és una pàgina: navegació completa, i en sortir el joc no queda congelat en memòria | `games-menu.js` (`location.replace`) | mulassa.cat |
+| Llista de jocs amb portada, vídeo i «Juga» | pàgina pròpia `/jocs/` sobre Plassa (`src/jocs/menu/`: `main.js`, `carousel.js`, `hero-video.js`, `music.js`) | selector |
+| Cada joc és una pàgina: navegació completa, i en sortir el joc no queda congelat en memòria | `src/jocs/menu/main.js` i `ui/controls.js` (`location.replace`) | selector, mulassa.cat |
 | Tornar al selector des d'un joc | `a.exit` de Pop (`game.css`) | Plassa |
 | Barra comuna: perfil, configuració, música, ajuda | Pop: música i ⚙ (fulls de mulassa.cat, `settings.js`); la resta, cada pàgina a la seva manera | Nou |
 | Novetats: un joc nou s'anuncia un sol cop a qui ja jugava abans | `ui/news-sheet.js` | mulassa.cat |

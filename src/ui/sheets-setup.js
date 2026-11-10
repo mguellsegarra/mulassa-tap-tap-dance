@@ -19,8 +19,6 @@ import { OPTOUT_KEY, PERSIST_KEY } from './publish-ui.js';
 import { setupGreeting } from './greeting.js';
 import { setupDeviceHint } from './device-hint.js';
 import { setupFreeGate } from './free-gate.js';
-import { setupGamesMenu } from './games-menu.js';
-import { setupGamesCarousel } from './games-carousel.js';
 import { setupNews } from './news-sheet.js';
 import { hasPlayed } from '../game/records.js';
 import { setupInstall } from './install-app.js';
@@ -50,7 +48,7 @@ import { setupLang } from './lang-ui.js';
 import { focusIn, keyboardNav } from './focus.js';
 import { Q, CALM, DEMO } from '../core/env.js';
 import { idOfKey } from '../figures/index.js';
-import { sheetUp, viewMode, viewBtn, enterFree } from './controls.js';
+import { sheetUp, viewMode, viewBtn, enterFree, openGames } from './controls.js';
 import { loadPhoto } from '../hud/share-card.js';
 
 sheetFades();
@@ -198,16 +196,11 @@ const hint = setupDeviceHint({ focusIn, store, softwareGl, // the device tips, l
   account: () => (ownerKey(kv) ? (savedName(kv).verified ? 'linked' : 'guest') : 'none'), confirm: back => { profile.open('link', back); if (!profile.isOpen) back?.(); } }); // offline the profile sheet stays shut: focus back to the selector
 sheets.hint = hint;
 sheets.freeGate = setupFreeGate({ focusIn, store, onEnter: () => enterFree() }); // an upright iPhone is asked to turn before free play
-sheets.games = setupGamesMenu({ focusIn, carousel: setupGamesCarousel() });
-// back from a mini-game (/#jocs) or the short link mulassa.cat/jocs (public/jocs/index.html; the dev server answers /jocs/
-// with this page): the sheet comes up at once, over the loader, while the plaça loads behind it
-if (globalThis.location?.hash === '#jocs' || /^\/jocs\/?$/.test(globalThis.location?.pathname)) { history.replaceState(null, '', '/' + location.search); sheets.games.open();
-  document.getElementById('games-menu').addEventListener('close', () => document.documentElement.classList.remove('to-jocs'), { once: true }); }
 // a mini-game sends a player who has no name for its board here (Mulassa Pop: /#nom-pop, or /#nom-pop-canvi for a released
 // one): the name sheet at once, and back to the game once it closes, made or not (docs/jocs/pop-ranking.md)
 const nameFor = globalThis.location?.hash?.match(/^#nom-pop(-canvi)?$/);
 if (nameFor) { history.replaceState(null, '', '/' + location.search); profile.open(nameFor[1] ? 'rename' : 'create', () => location.replace('/pop/')); }
-const news = setupNews({ focusIn, store, played: () => hasPlayed(store), onGames: () => sheets.games.open(), force: Q.has('novetats') }); // ?novetats on a dev host shows it again
+const news = setupNews({ focusIn, store, played: () => hasPlayed(store), onGames: openGames, force: Q.has('novetats') }); // ?novetats on a dev host shows it again
 sheets.news = news;
 // The greeting waits for calm: a playable figure (Mulassa, Drac) on screen and no touch or key for a while, so its sheet never
 // lands on what a tap has just opened. Every touch restarts the wait; the timer asks again once it is calm.

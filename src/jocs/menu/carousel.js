@@ -1,26 +1,32 @@
-// The «Jocs» sheet's row of cards: the chosen card fills the hero above (on a phone, the one on the left). Touching a card only
+// Mulassa Games' row of cards: the chosen card fills the hero above (on a phone, the one on the left). Touching a card only
 // chooses it, so nobody starts a game by accident; «Juga» in the hero plays.
-import { setupHeroVideo } from './games-hero-video.js';
+import { setupHeroVideo } from './hero-video.js';
 export function setupGamesCarousel(doc = document) {
   const by = id => doc.getElementById(id), row = by('games-grid'), hero = by('games-hero');
   const cards = [...row.querySelectorAll('[data-game]')];
   const heroName = by('games-hero-name'), heroDesc = by('games-hero-desc');
   let on = -1, wheelAt = 0, drag = null, dragged = false;
 
-  // the wide hero picture only where it shows (a big screen, games-sheet.css): a phone never downloads the 3600 px files
   const wide = matchMedia('(min-width: 701px)'), art = by('games-hero-art');
-  const showArt = () => { const card = cards[on]; if (card && wide.matches) art.src = card.dataset.hero ?? card.querySelector('img').getAttribute('src'); };
-  wide.addEventListener?.('change', showArt);
-  const clip = setupHeroVideo({ menu: by('games-menu'), video: by('games-hero-video'), wide });
+  const clip = setupHeroVideo({ video: by('games-hero-video'), wide });
+  // The hero's still: the frame the game's clip starts on, so the clip fades in over itself; a game with no clip (or no
+  // motion wanted) shows its picture. The wide one only where it shows (a big screen, style.css): a phone never downloads it.
+  const showStill = () => {
+    const card = cards[on];
+    if (!card) return;
+    const src = card.querySelector('img').getAttribute('src'), poster = clip.poster(card);
+    if (wide.matches) art.src = poster ?? card.dataset.hero ?? src; else by('games-hero-back').src = poster ?? src;
+  };
+  wide.addEventListener?.('change', showStill);
+  for (const card of cards) { const poster = clip.poster(card); if (poster) new Image().src = poster; } // ready before a change of game
   const choose = i => {
     if (i === on) return;
     on = i;
     cards.forEach((card, k) => card.classList.toggle('on', k === on));
-    const card = cards[on], src = card.querySelector('img').getAttribute('src');
+    const card = cards[on];
     hero.style.setProperty('--game', getComputedStyle(card).getPropertyValue('--game'));
     hero.classList.toggle('soon', 'soon' in card.dataset); // nothing to play yet: no «Juga»
-    by('games-hero-back').src = card.dataset.heroTall ?? src; // a phone's upright hero: the card's picture, or the frame its clip starts on
-    showArt();
+    showStill();
     clip.show(card);
     heroName.textContent = card.querySelector('.sel-card-name').textContent;
     heroDesc.textContent = card.querySelector('.game-desc').textContent;
@@ -47,7 +53,7 @@ export function setupGamesCarousel(doc = document) {
   by('games-menu').addEventListener('keydown', e => {
     const step = { ArrowRight: 1, ArrowLeft: -1 }[e.key];
     if (!step) return;
-    e.preventDefault(); e.stopPropagation(); // not a game key while the sheet is up
+    e.preventDefault();
     const next = cards[Math.max(0, Math.min(cards.length - 1, on + step))];
     next.focus({ preventScroll: true }); goTo(cards.indexOf(next));
   });
@@ -72,6 +78,7 @@ export function setupGamesCarousel(doc = document) {
     if (dragged) { row.style.scrollSnapType = ''; goTo(on); }
   });
   by('games-hero-play').addEventListener('click', () => cards[on].click());
+  goTo(0, false); if (!fits()) sync(); // the first game, chosen from the start
 
   return {
     // false: this click only chooses (or ended a drag), no game starts. A pointer on a card only ever chooses: «Juga» plays;
@@ -83,6 +90,5 @@ export function setupGamesCarousel(doc = document) {
       goTo(i);
       return false;
     },
-    opened() { goTo(Math.max(on, 0), false); if (!fits()) sync(); clip.show(cards[on]); },
   };
 }

@@ -1,6 +1,6 @@
-// The home's music: mulassa.cat's menu tune played with Pop's synth, rendered once to a file (tools/music/build_pop_menu.py)
-// so the home spends nothing on it. It starts on the tune's first note, faded in, and loops for good; a run fades it out.
-// url and loop (its points, menu-music.json) come from audio.js, so this runs in the tests (tests/jocs/pop-menu-music.mjs) too.
+// A home's music: a tune rendered once to a file (Pop's: tools/music/build_pop_menu.py; the selector's: build_games_menu.py),
+// so the home spends nothing on it. It starts on the tune's first note, faded in, and loops for good; stop() fades it out.
+// url and loop (its points) come from the page, so this runs in the tests (tests/jocs/pop-menu-music.mjs) too.
 export function createMenuMusic(ctx, out, { url, loop }) {
   const gain = ctx.createGain();
   gain.connect(out);

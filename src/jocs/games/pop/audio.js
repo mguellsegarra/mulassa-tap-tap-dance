@@ -3,7 +3,7 @@
 import { createSequencer, hz } from './sequencer.js';
 import { fresh } from './fresh.js';
 import { audioClock } from '../../../platform/audio-clock.js';
-import { createMenuMusic } from './menu-music.js';
+import { createMenuMusic } from '#plassa/menu-music.js';
 import homeUrl from './menu-music.mp3?url';
 import homeLoop from './menu-music.json' with { type: 'json' };
 import { MELODY } from './melody.js';

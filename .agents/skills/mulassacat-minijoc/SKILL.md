@@ -21,7 +21,7 @@ selector or a page that skips the base.
    `<script id="boot-watchdog" src="/packages/plassa/src/boot-watchdog.js"></script>` (vite.config.js inlines it). Markup the
    shell expects: `#boot` holding `<div class="art" id="boot-art"><!-- mula-load --></div>` (vite.config.js puts the
    running Mulassa in) and `<p class="boot-line" id="boot-line">`, covers as `<div class="cover" hidden><div class="sheet">`,
-   `#count > b` for the 3, 2, 1, `#rotate`, `a.exit` back to `/#jocs`.
+   `#count > b` for the 3, 2, 1, `#rotate`, `a.exit` back to `/jocs/`.
 3. The game's CSS starts with one `:root` of tokens: `--accent`, `--button-gold-bg`, `--button-bg`, `--ink`,
    `--sheet-color`, `--sheet-bg`, `--sheet-radius`, `--page-edge`, `--page-bg`, `--game` (Pop's style.css is the model).
    Then only the game's own screens. Never `button`, `.btn*`, `.sheet*`, `.cover`, `.round-btn`, `.switch-row`,
@@ -45,6 +45,7 @@ selector or a page that skips the base.
 | Arrows, Enter/Space and focus recovery in the open sheet or cover | `sheet-keys.js` |
 | UI blip on focus moves and presses | `ui-sound.js` |
 | Audio unlock on every gesture | `gesture.js` |
+| A home's music: a rendered loop, faded in and out | `menu-music.js` |
 | Plassa's one music on/off (mulassa.cat's `menu-music` key) | `music-pref.js` |
 | Pause on leaving the page (hidden, blur, pagehide) | `page-leave.js` |
 | The AudioContext's life: fade out, back on return and checked, iOS audio session, frozen clock | `page-audio.js` |

@@ -86,7 +86,7 @@ dialog .feedback-field { border-color: color-mix(in srgb, var(--accent) 60%, tra
   .c-art canvas { width: calc(var(--k) * min(100cqw, 100cqh * 1.4, 1040px)); height: calc(var(--k) * min(100cqh, 100cqw / 1.4, 760px)); translate: 0 calc((1 - var(--k)) / 2 * min(100cqh, 100cqw / 1.4, 760px)); } /* the figures grow with the screen */
   .c-art::before { width: min(100%, 100cqh, 700px); }
   .c-art { height: 100%; }
-  .c-art canvas { --k: 1.25; } /* past the column's width (fit by width): the figures as big as the column is tall */
+  .c-art canvas { --k: 1.25; translate: 0 calc((1 - var(--k)) / 4 * min(100cqh, 100cqw / 1.4, 760px)); } /* past the column's width (fit by width): as big as the column is tall; grown half upwards, so the figures (framed with room above for the hop) sit level with the text: all upwards they stood 30-60 px high, all from the middle 16-50 px low */
 }
 
 
@@ -161,7 +161,7 @@ svg.podium { fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap
 .c-top .board-list .who { min-height: 40px; padding: 0 12px 0 0; grid-template-columns: 36px minmax(0, 1fr) auto; }
 .c-top .board-list .who .name { display: flex; align-items: center; gap: 8px; }
 .c-top .board-list .who .sub { margin: 0; }
-@media (orientation: portrait) and (min-height: 680px) { /* an iPhone Pro in Safari leaves ~720 px under its bars */
+@media (orientation: portrait) and (min-height: 640px) { /* Safari leaves ~660 px on an iPhone 14/15, ~720 on a Pro */
   .c-top:not([hidden]) { order: 2; display: block; width: min(100%, 380px); margin: 0 auto 16px; overflow: hidden; border-radius: var(--button-radius); background: #00000040; }
   .has-top .c-art canvas { --k: 1.2; } /* less room above the three: grown less upwards, clear of the title */
   .has-top #menu-best { display: none; }

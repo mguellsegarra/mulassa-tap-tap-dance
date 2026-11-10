@@ -405,12 +405,15 @@ console.log('practice/game input routing: keyboard, mouse/touch pad and bubbling
   assert(/hud\.tabIndex = -1/.test(src) && !/hud\.tabIndex = on/.test(src) && !/world-focus/.test(src), 'the photo-mode canvas is not a Tab stop and has no focus ring'); }
 // iPhone double-tap zoom: the quick second tap loses its default (the zoom) but still clicks; text fields keep theirs.
 {
-  const tap = (target, timeStamp) => { let prevented = false; for (const f of handlers.touchend || []) f({ target, timeStamp, touches: [], cancelable: true, preventDefault() { prevented = true; } }); return prevented; };
+  const tap = (target, timeStamp, touches = []) => { let prevented = false; for (const f of handlers.touchend || []) f({ target, timeStamp, touches, cancelable: true, preventDefault() { prevented = true; } }); return prevented; };
   let clicks = 0; const button = { closest: sel => (sel.includes('button') ? { click() { clicks++; } } : null) };
   const field = { closest: sel => (sel.includes('input') ? {} : null) };
   assert(!tap(button, 10000) && tap(button, 10200) && clicks === 1, 'a quick second tap is no zoom and still clicks once');
   assert(!tap(button, 11000), 'a slow tap is untouched');
   assert(!tap(field, 11100), 'a text field keeps its own taps');
+  assert(!tap(button, 12000) && tap(button, 12200, [{}]) && clicks === 2, 'a quick tap while another finger rests is no zoom either (two thumbs drumming)');
+  let pinch = false; for (const f of handlers.gesturestart || []) f({ preventDefault() { pinch = true; } });
+  assert(pinch, "Safari's pinch never zooms the page");
   console.log('double-tap zoom guard ok');
 }
 

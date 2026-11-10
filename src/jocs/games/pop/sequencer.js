@@ -1,12 +1,21 @@
 // The music, played live: every step of the tune (laid out in game time by conductor.js) is scheduled on its own, so the
 // tempo rises smoothly with nothing stretched or pitched, and new voices come in as the score grows. Soft sine and triangle
 // timbres only (the Mulassa game's audio rule: no pulse or square buzz).
-import { MELODY, CHORDS, chordAt } from './melody.js';
+import { CHORDS } from './melody.js';
 import { STEP, layersFor, wrap } from './conductor.js';
+import { SONGS } from './songs.js';
 
 export const hz = m => 440 * 2 ** ((m - 69) / 12);
-const byBeat = new Map();
-for (const n of MELODY) if (!byBeat.has(n[0])) byBeat.set(n[0], n);
+// a song's notes by the step they fall in: a Drac's sixteenths and triplets sound at their own time inside it
+const bySteps = new Map(Object.entries(SONGS).map(([id, { melody }]) => {
+  const steps = new Map();
+  for (const n of melody) {
+    const at = Math.floor(n[0] / STEP + 1e-6) * STEP;
+    if (!steps.has(at)) steps.set(at, []);
+    if (!steps.get(at).some(o => o[0] === n[0])) steps.get(at).push(n); // one note per onset, the first written
+  }
+  return [id, steps];
+}));
 
 export function createSequencer(ctx, out = ctx.destination) {
   const master = ctx.createGain(), tone = ctx.createBiquadFilter(), comp = ctx.createDynamicsCompressor();
@@ -37,6 +46,7 @@ export function createSequencer(ctx, out = ctx.destination) {
   const levels = { bass: 0, kick: 0, shaker: 0, octave: 0 };
   let half = false; // the bell's slow time: the beat goes half-time, so it sounds slower though the tempo only glides
   let bus = null; // this run's voices: the next run cuts it off, so notes queued ahead of a quit never sound in a new run
+  let song = SONGS.mulassa, notes = bySteps.get('mulassa'), chordAt = song.chordAt; // the run's tune (start())
 
   function voice(freq, t, dur, vol, type = 'sine', attack = .01) {
     const o = ctx.createOscillator(), g = ctx.createGain();
@@ -53,6 +63,22 @@ export function createSequencer(ctx, out = ctx.destination) {
   }
   // the lead is a triangle: its overtones carry the pitch, so a phone's speaker moves less than for a pure sine and buzzes less
   const pluck = (m, t, dur, vol) => { voice(hz(m), t, dur, vol, 'triangle'); voice(hz(m), t, dur * .6, vol * .35); };
+  // a held note: up at once, settles a little, holds to its written end, then a short release (no click, no overlap)
+  function held(m, t, dur, vol) {
+    for (const [type, v] of [['triangle', vol], ['sine', vol * .3]]) {
+      const o = ctx.createOscillator(), g = ctx.createGain(), end = t + Math.max(dur, .05);
+      o.type = type;
+      o.frequency.value = hz(m);
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(v, t + .01);
+      g.gain.linearRampToValueAtTime(v * .7, t + Math.min(.08, (end - t) * .5));
+      g.gain.setValueAtTime(v * .7, Math.max(t + .02, end - .03));
+      g.gain.linearRampToValueAtTime(0, end);
+      o.connect(g).connect(bus);
+      o.start(t);
+      o.stop(end + .02);
+    }
+  }
   function kick(t, vol) {
     const o = ctx.createOscillator(), g = ctx.createGain();
     o.frequency.setValueAtTime(120, t);
@@ -76,19 +102,25 @@ export function createSequencer(ctx, out = ctx.destination) {
   }
 
   function step(t, spb, pos) {
-    const n = byBeat.get(pos), chord = chordAt(pos), tones = CHORDS[chord];
-    if (n) {
-      noteLog.push({ t, midi: n[2] });
+    const chord = chordAt(pos), tones = CHORDS[chord];
+    for (const n of notes.get(pos) ?? []) {
+      const at = t + (n[0] - pos) * spb;
+      noteLog.push({ t: at, midi: n[2] });
       if (noteLog.length > 16) noteLog.shift();
-      pluck(n[2], t, Math.max(.16, n[1] * spb), .17);
-      if (levels.octave > 0) pluck(n[2] - 12, t, Math.max(.2, n[1] * spb), .08 * levels.octave);
+      if (song.held) {
+        held(n[2], at, n[1] * spb, .15);
+        if (levels.octave > 0) held(n[2] - 12, at, n[1] * spb, .07 * levels.octave);
+      } else {
+        pluck(n[2], at, Math.max(.16, n[1] * spb), .17);
+        if (levels.octave > 0) pluck(n[2] - 12, at, Math.max(.2, n[1] * spb), .08 * levels.octave);
+      }
     }
     if (chord !== lastChord) { // a quiet held harmony under everything
       lastChord = chord;
       chordLog.push({ t, tones });
       if (chordLog.length > 8) chordLog.shift();
       let beats = STEP;
-      while (beats < 16 && chordAt(wrap(pos + beats)) === chord) beats += STEP;
+      while (beats < 16 && chordAt(wrap(pos + beats, song.form)) === chord) beats += STEP;
       // gone before the next chord (the margin: the tempo may rise meanwhile), or two harmonies ring together and it sounds out of tune
       // from C4 up: under it a phone's speaker only buzzes on it
       for (const pc of tones.slice(0, 3)) voice(hz(60 + pc), t, beats * spb * .9 - .02, .035, 'sine', Math.min(.12, beats * spb * .3)).pad = true;
@@ -101,7 +133,9 @@ export function createSequencer(ctx, out = ctx.destination) {
   }
 
   return {
-    start() {
+    // id: the run's tune (songs.js); the Mulassa's when none
+    start(id = 'mulassa') {
+      song = SONGS[id]; notes = bySteps.get(id); chordAt = song.chordAt;
       bus?.disconnect();
       bus = ctx.createGain();
       bus.connect(master);

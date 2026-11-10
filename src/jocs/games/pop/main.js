@@ -10,7 +10,7 @@ import { setupOrientation } from '#plassa/orientation.js';
 import { t, applyWords } from './i18n.js';
 import { setMusicOn, musicOn, startHomeMusic, unlock, audioPage, watchAudio, SFX } from './audio.js';
 import { setupLevelStep } from './level-step.js';
-import { setupHelp } from './help.js';
+import { setupHelp, KINDS } from './help.js';
 import { guardGpu } from '#plassa/gpu-guard.js';
 import { errors } from '#plassa/errors.js';
 import { watchUpdates } from '#plassa/update-watch.js';
@@ -31,7 +31,7 @@ window.__gameBootWords = { title: t('fail.title'), text: t('fail.text'), retry: 
 const board = createBoard($('game'));
 const hero = createHero($('menu-hero'));
 let booted = false; // the boot screen is up: nothing is drawn under it (see the end of this file)
-bootLines($('boot-line'), () => booted); // its funny lines while it lasts
+const lines = bootLines($('boot-line')); // its funny lines while it lasts; it leaves at a line's end, as mulassa.cat's
 // The public board (ranking-ui.js). The dev bot's runs start at BOT_FROM points: they are not the game's and never go.
 const rankingUI = setupRankingUI({ t, focusBack: () => $('menu-best').focus({ focusVisible: false }) });
 const hud = createHud({ board, t });
@@ -128,10 +128,10 @@ function frame(now) {
 flow.showMenu();
 setupOrientation(flow.pause);
 requestAnimationFrame(frame);
-// dev: __pop.portraits() downloads the home cards' portraits, to replace public/jocs/pop/cards/*.png after a model changes
+// dev: __pop.portraits() downloads the figures' portraits (help.js, the HUD's chip), to replace public/jocs/pop/cards/*.png after a model changes
 if (import.meta.env.DEV) window.__pop = { board, get game() { return flow.game; }, get run() { return flow.run; }, get mode() { return flow.mode; },
   async portraits() {
-    const pics = await board.portraits([...document.querySelectorAll('.c-card')].map(c => c.dataset.kind), 320, { tight: true });
+    const pics = await board.portraits(KINDS, 320, { tight: true });
     for (const [kind, url] of Object.entries(pics)) Object.assign(document.createElement('a'), { href: url, download: `${kind}.png` }).click();
   },
   // a carretilla among five Mulassas, tapped: for reviewing her correfoc in a run
@@ -148,8 +148,6 @@ if (import.meta.env.DEV) window.__pop = { board, get game() { return flow.game; 
 const sheetsCode = settings().catch(() => null);
 await board.warm();
 await hero.warm();
-// the portraits are files (public/jocs/pop/cards, made with __pop.portraits): drawing them here held a phone's boot
-await Promise.all([...document.querySelectorAll('.c-card img')].map(img => img.decode().catch(() => {})));
 await document.fonts.ready;
 // the record's place on the board comes with the menu, not after it (the pill would widen under the player's eyes); a slow
 // network waits 1.5 s at most, and the place then joins late
@@ -161,6 +159,7 @@ board.frame(0);
 hero.frame(0);
 await new Promise(go => requestAnimationFrame(() => requestAnimationFrame(go)));
 await sheetsWarm;
+await lines.finished(); // never a line cut mid-read (at most one line's turn, 3.5 s)
 booted = true;
 requestAnimationFrame(() => {
   document.documentElement.classList.add('ready');

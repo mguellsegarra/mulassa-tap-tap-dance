@@ -4,14 +4,15 @@
 import { newGame, tick, tap, beat, seeded, timeUp } from './rules.js';
 import { createConductor, AHEAD } from './conductor.js';
 
-export const RUN_VERSION = 5; // bump whenever a change here, in rules.js or in conductor.js changes what a log scores
+export const RUN_VERSION = 6; // bump whenever a change here, in rules.js or in conductor.js changes what a log scores
 export const TICKS_PER_S = 120;
 const DT = 1 / TICKS_PER_S;
 // a run ends on its own here, under the server's limits (verify.js MAX_TICKS, MAX_TAPS), so a long one is never refused
 export const MAX_RUN_S = 25 * 60, MAX_RUN_TAPS = 5500;
 
-export function createRun({ cols, rows, seed, level = 0, on }) {
-  const game = newGame({ cols, rows, level, rng: seeded(seed), on }), tune = createConductor(level), log = [];
+// form: the song's (conductor.js), for the music only; the steps' timing, and so the score, are the same for every song
+export function createRun({ cols, rows, seed, level = 0, on, form }) {
+  const game = newGame({ cols, rows, level, rng: seeded(seed), on }), tune = createConductor(level, form), log = [];
   let ticks = 0;
   tune.advance(AHEAD);
   // one step of the clock: the fuses burn, the tune follows the progression, and each half-beat step it reaches may bring a Mulassa

@@ -26,6 +26,18 @@ a.btn-primary { display: grid; place-content: center; } /* a link as a main butt
 .btn-link:active { transform: none; }
 .btn-link::after { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 100%; min-height: 44px; translate: 0 -50%; } /* touch slop: a 44 px target whatever the text's height */
 p .btn-link::after { display: none; } /* a link inside a sentence: its slop would cover the lines around it (WCAG 2.5.8 exempts inline targets) */
+/* .btn-big: a game home's buttons, as tall as the tap that starts it (tap-start.js); the sheets keep .btn's 48 px */
+.btn-big { min-height: clamp(60px, 7dvh, 88px); font-size: clamp(22px, 2.6dvh, 32px); } /* a tall screen gets a bigger one; a phone stays at 60 */
+/* .btn-invite: a main button that asks to be pressed, as mulassa.cat's «Tria la dificultat» (src/styles/select-sizes.css
+   #select .btn-primary): it breathes and tilts gently, a glint crosses it, it answers the pointer. The glint sits under the
+   label (negative z in the button's own stacking context), clipped to the button. */
+.btn-invite { overflow: hidden; isolation: isolate; box-shadow: 0 4px 14px #0007; transition: transform .12s, filter .12s, box-shadow .12s; animation: btn-invite 3.6s ease-in-out infinite; }
+.btn-invite::after { content: ''; position: absolute; z-index: -1; inset: 0 auto 0 -60%; width: 40%; background: linear-gradient(90deg, #fff0, #fffa, #fff0); transform: skewX(-20deg); animation: btn-glint 5s ease-in-out infinite; pointer-events: none; }
+@keyframes btn-invite { 0%, 100% { scale: 1; rotate: -.25deg; } 50% { scale: 1.018; rotate: .25deg; } }
+@keyframes btn-glint { 0%, 84% { translate: 0; } 100% { translate: 420%; } }
+@media (hover: hover) { .btn-invite:hover { transform: translateY(-1px); filter: brightness(1.06); box-shadow: 0 6px 18px #0008; } }
+.btn-invite:active { transform: translateY(1px) scale(.98); filter: brightness(.94); box-shadow: 0 2px 8px #0006; }
+@media (prefers-reduced-motion: reduce) { .btn-invite { animation: none; scale: none; rotate: none; transition: none; } .btn-invite::after { display: none; } }
 .btn-small { min-height: 32px; padding: 0 4px; font-size: 14px; }
 /* .btn-compact (with .btn-link): a quiet icon + label text link, clearly lesser than the sheet's buttons, e.g. the
    share sheet's WhatsApp · X · Més…; small to the eye, still a 44 px target (padding); never a sheet's main action */
@@ -34,7 +46,8 @@ p .btn-link::after { display: none; } /* a link inside a sentence: its slop woul
 .btn-compact > svg.line { fill: none; stroke: currentColor; stroke-width: 2.2; } /* our own line icons (share, link) */
 .sheet-actions { display: grid; gap: 12px; margin-top: 14px; } /* a sheet's stack of .btn */
 .howto-pill { min-height: 44px; padding: 6px 18px 6px 8px; gap: 8px; border-width: 1.5px; border-color: var(--pill-border, var(--button-border)); border-radius: 999px; font-size: 15px; letter-spacing: .03em; } /* #howto and «QUI BALLA?»'s #select-howto */
-.howto-pill .q { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--button-border); color: var(--ink); font-size: 17px; line-height: 1; }
+:is(.howto-pill, .btn) .q { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--button-border); color: var(--ink); font-size: 17px; line-height: 1; }
+.btn > .q { display: inline-grid; width: 24px; height: 24px; margin: -3px 10px 0 0; vertical-align: middle; font-size: 15px; } /* the «?» before a .btn's label, where an icon sits */
 /* An on/off setting: a native checkbox with role="switch" (Space toggles, screen readers say on/off) in a flat row
    (a setting, not a button: no outline); the label is the whole row, the switch sits on the right. */
 .switch-row { box-sizing: border-box; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; padding: 6px 12px 6px 16px; border-radius: var(--button-radius); background: #fff3d60d; font: 800 18px/1.2 'Baloo 2', system-ui, sans-serif; cursor: pointer; }

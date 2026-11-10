@@ -101,7 +101,7 @@ are in `packages/plassa/docs/inventari.md`.
 - The page's life: `page-leave.js` (hidden, blur, pagehide: a run pauses) and `page-audio.js` (one AudioContext: fade
   before stopping, back on return and checked, iOS's audio session, a clock that stands still; reported to Sentry).
 - Boot: `mula-load.html` (the running Mulassa; vite.config.js puts it in a page's `<!-- mula-load -->` and inlines
-  `boot-watchdog.js`), `boot-lines.js` (mulassa.cat's loading lines and its memory of the ones seen), `boot.js`
+  `boot-watchdog.js`), `boot-lines.js` (mulassa.cat's loading lines and its memory of the ones seen; the screen leaves at a line's end), `boot-first-line.js` (the first line before the first paint, inlined by vite.config.js with every language's lines), `boot.js`
   (shader warmup), `errors.js` + `sentry-load.js`, `update-watch.js` + `update-rules.js`, `gpu-guard.js`, `quality.js`
   + `render-quality.js`, `orientation.js`.
 - Words and state: `music-pref.js` (Plassa's one music switch, mulassa.cat's `menu-music` key), `words.js` (a game's `locales/*.json`) over `locale.js` (the saved language), `storage.js`, `best.js`,

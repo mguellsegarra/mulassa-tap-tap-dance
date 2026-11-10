@@ -15,7 +15,7 @@ html:lang(ja) { --cjk: ui-rounded, 'Hiragino Maru Gothic ProN', 'Hiragino Sans',
 html:lang(ko) { --cjk: ui-rounded, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans CJK KR', sans-serif; }
 html:lang(zh-Hans) { --cjk: ui-rounded, 'PingFang SC', 'Microsoft YaHei', 'Noto Sans CJK SC', sans-serif; }
 html:is(:lang(ja), :lang(ko), :lang(zh-Hans)) :not(svg, svg *) { font-family: 'Baloo 2', var(--cjk); }
-html, body { margin: 0; height: 100%; overflow: hidden; overscroll-behavior: none; background: var(--page-bg, var(--page-edge)); touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+html, body { margin: 0; height: 100%; overflow: hidden; overscroll-behavior: none; background: var(--page-bg, var(--page-edge)); touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; } /* Android flashed (and after a return, kept) a box on the links that take a tap, as on mulassa.cat */
 body { position: fixed; top: 0; left: 0; width: 100%; color: var(--button-text); font: 700 18px 'Baloo 2', system-ui, sans-serif; }
 [hidden] { display: none !important; }
 h2 { margin: 0; text-align: center; font: 800 24px/1.1 'Baloo 2', system-ui, sans-serif; color: var(--accent); }
@@ -29,17 +29,23 @@ a.round-btn { box-sizing: border-box; display: inline-flex; align-items: center;
 /* boot: the running Mulassa until main.js adds .ready; then it fades out and the menu in, all of it at once.
    Like the main game's #loader: opaque and unblurred, with the blurred menu not drawn under it, so nothing is re-blurred each
    frame and her compositor-run stride keeps going while the boot holds the main thread. */
-#boot { z-index: 4; background: inherit; -webkit-backdrop-filter: none; backdrop-filter: none; transition: opacity .3s; }
+#boot { z-index: 4; overflow: hidden; background: var(--page-bg, var(--page-edge, #140c07)); -webkit-backdrop-filter: none; backdrop-filter: none; transition: opacity .3s; }
+/* mulassa.cat's page loader (index.html #loader.page): the card, its words, and the drifting pattern behind, in each game's
+   own colour: its page (--page-bg), the pattern a shade lighter over it (a mask, so the tile's own brown never shows) */
+#boot .boot-card { display: flex; flex-direction: column; align-items: center; gap: 14px; box-sizing: border-box; max-width: min(360px, 100vw - 32px); padding: 24px; border-radius: 20px; background: #0000008c; -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px); }
+#boot::before { content: ''; position: absolute; z-index: -1; inset: -180px 0 0 -180px; pointer-events: none; background: #ffffff0d; -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' fill='%2324170f' stroke='%2324170f'%3E%3Cpath transform='translate(50 54) rotate(-14) scale(1.5) translate(-41 -39)' stroke='none' d='M18 42h34l2 14H16zM20 36h30v8H20zM21 56h4v5h-4zM43 56h4v5h-4zM47 40l6-15h5l-5 15zM54 22h12v7H54zM55 23l-1-6 3 5zM59 22l1-6 2 6z'/%3E%3Cpath transform='translate(140 118) rotate(16) scale(1.5) translate(-134 -109)' stroke-width='.8' d='M131 102h6v24q0 3-3 3t-3-3zM132 103l-5-17 7 16zM134 102v-18l2 18zM136 103l5-16-3 17zM132 130l-1 4M134 130v4M136 130l1 4'/%3E%3Cpath transform='translate(134 34) rotate(14) scale(1.5)' stroke='none' d='M0-8l2 6 6 2-6 2-2 6-2-6-6-2 6-2z'/%3E%3Cpath transform='translate(40 146) rotate(-20) scale(1.2)' stroke='none' d='M0-8l2 6 6 2-6 2-2 6-2-6-6-2 6-2z'/%3E%3C/svg%3E") 0 0 / 180px 180px; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' fill='%2324170f' stroke='%2324170f'%3E%3Cpath transform='translate(50 54) rotate(-14) scale(1.5) translate(-41 -39)' stroke='none' d='M18 42h34l2 14H16zM20 36h30v8H20zM21 56h4v5h-4zM43 56h4v5h-4zM47 40l6-15h5l-5 15zM54 22h12v7H54zM55 23l-1-6 3 5zM59 22l1-6 2 6z'/%3E%3Cpath transform='translate(140 118) rotate(16) scale(1.5) translate(-134 -109)' stroke-width='.8' d='M131 102h6v24q0 3-3 3t-3-3zM132 103l-5-17 7 16zM134 102v-18l2 18zM136 103l5-16-3 17zM132 130l-1 4M134 130v4M136 130l1 4'/%3E%3Cpath transform='translate(134 34) rotate(14) scale(1.5)' stroke='none' d='M0-8l2 6 6 2-6 2-2 6-2-6-6-2 6-2z'/%3E%3Cpath transform='translate(40 146) rotate(-20) scale(1.2)' stroke='none' d='M0-8l2 6 6 2-6 2-2 6-2-6-6-2 6-2z'/%3E%3C/svg%3E") 0 0 / 180px 180px; animation: boot-tiles 9s linear infinite; will-change: transform; }
+@keyframes boot-tiles { to { transform: translate3d(180px, 180px, 0); } }
+@media (prefers-reduced-motion: reduce) { #boot::before { animation: none; } }
 #boot .art { flex: none; width: 180px; height: 138px; }
 .ready #boot { opacity: 0; pointer-events: none; }
 /* its funny line (boot-lines.js): always two lines tall, so a line that wraps, or the font swap, never moves the Mulassa */
-#boot .boot-line { display: flex; align-items: center; justify-content: center; width: min(300px, 100vw - 80px); height: 2.6em; margin: 0; text-align: center; font: 700 16px/1.3 'Baloo 2', system-ui, sans-serif; color: var(--button-text); }
+#boot .boot-line { display: flex; align-items: center; justify-content: center; width: min(300px, 100vw - 80px); height: 2.6em; margin: 0; text-align: center; font: 800 20px/1.2 'Baloo 2', system-ui, sans-serif; color: #fff3d6; font-variant-numeric: tabular-nums; }
 #boot.fail .sheet { text-align: center; } /* the watchdog's error card (index.html): the end sheet's look */
 /* the end sheet's score and its lines under it */
 .result { margin: 4px 0 0; text-align: center; font: 800 56px/1 'Baloo 2', system-ui, sans-serif; color: var(--button-text); }
 .result-sub { margin: 2px 0 0; text-align: center; font-size: 16px; color: var(--muted); }
 .result-sub.record { color: var(--accent); }
-@media (max-height: 620px) { .art { display: none; } }
+@media (max-height: 620px) { .art:not(#boot-art) { display: none; } } /* a short screen drops the end sheet's art, never the boot's Mulassa */
 /* The run's 3, 2, 1 (flow.js): the logo's POP letters, big over the board, each popping in on its kick */
 #count { position: fixed; z-index: 2; inset: 0; display: grid; place-items: center; pointer-events: none; }
 #count b { font: 800 min(42vw, 32dvh)/1 'Baloo 2', system-ui, sans-serif; color: var(--accent); -webkit-text-stroke: .15em var(--ink); paint-order: stroke fill; animation: count-pop .6s ease-out both; } /* flow.js EACH */
@@ -56,9 +62,12 @@ a.exit.more .exit-dot { display: block; position: absolute; top: -3px; right: -3
 a.exit.more .exit-dot::after { content: ""; position: absolute; inset: 0; border-radius: 50%; background: var(--accent); animation: exit-ping 1.8s ease-out infinite; }
 @keyframes exit-ping { 0% { scale: 1; opacity: .8; } 80%, 100% { scale: 2.6; opacity: 0; } }
 .exit-tip { position: absolute; left: calc(100% + 12px); top: 50%; translate: 0 -50%; padding: 8px 14px; border-radius: 14px; background: var(--button-text); color: var(--ink); white-space: nowrap; filter: drop-shadow(0 3px 4px #0008); opacity: 0; pointer-events: none; }
-.exit-tip::before { content: ""; position: absolute; left: -5px; top: 50%; width: 14px; height: 14px; border-radius: 3px; background: inherit; translate: 0 -50%; rotate: 45deg; } /* one shape with the bubble: its shadow is the bubble's drop-shadow */
+/* one shape with the bubble (its shadow is the bubble's drop-shadow); a plain triangle reaching 3px into the bubble, not a
+   rotated square: iOS Safari resamples the rotated piece and its join with the pill shows */
+.exit-tip::before { content: ""; position: absolute; left: -7px; top: calc(50% - 7px); width: 10px; height: 14px; background: inherit; clip-path: polygon(0 50%, 100% 0, 100% 100%); }
 .ready .exit-tip { animation: exit-tip 10s ease 1.5s infinite both; } /* 6 s up, 4 s away, while the home is up */
-a.exit:hover .exit-tip, a.exit:focus-visible .exit-tip { animation: none; opacity: 1; }
+a.exit:focus-visible .exit-tip { animation: none; opacity: 1; }
+@media (hover: hover) { a.exit:hover .exit-tip { animation: none; opacity: 1; } } /* a tap leaves :hover on a touch screen: the tip stuck up */
 @keyframes exit-tip { 0% { opacity: 0; translate: -8px -50%; scale: .9; } 3% { opacity: 1; translate: 0 -50%; scale: 1.08; } 5%, 58% { opacity: 1; translate: 0 -50%; scale: 1; } 60%, 100% { opacity: 0; translate: 0 -50%; scale: 1; } }
 @media (prefers-reduced-motion: reduce) { a.exit.more .exit-dot::after { animation: none; } @keyframes exit-tip { 0% { opacity: 0; } 3%, 58% { opacity: 1; } 60%, 100% { opacity: 0; } } }
 /* the board sheet: the top 50, your row lit */
@@ -79,16 +88,18 @@ a.exit:hover .exit-tip, a.exit:focus-visible .exit-tip { animation: none; opacit
 /* the name, its mark beside it, and a small line under them (Pop: the level pill), as mulassa.cat's board (src/styles/board.css) */
 .board-list .who .name { display: grid; justify-items: start; min-width: 0; }
 .board-list .who .line { display: flex; align-items: center; gap: 6px; min-width: 0; max-width: 100%; }
-.board-list .who .sub { display: flex; align-items: center; gap: 2px 6px; margin-top: 1px; }
+.board-list .who .sub { display: flex; align-items: center; gap: 2px 6px; margin-top: 1px; font-size: 10.5px; }
 /* one colour per level, mulassa.cat's (src/styles/board.css --lvl*) */
 :root { --lvl0: #8fd98f; --lvl1: #f0b04a; --lvl2: #ef7b6a; }
 .lvl { flex: none; padding: 0 6px; border-radius: 999px; font-size: 9.5px; font-weight: 800; line-height: 15px; letter-spacing: .05em; color: #2a1a10; }
 .lvl0 { background: var(--lvl0); } .lvl1 { background: var(--lvl1); } .lvl2 { background: var(--lvl2); }
 .board-list .who i { font-style: normal; color: var(--muted); text-align: center; }
-.board-list .who .score { justify-self: end; display: grid; justify-items: end; line-height: 1.1; } /* the points, then a smaller line under them (Pop: the taps) */
-.board-list .who b { font-size: 20px; }
-.board-list .who small { font-size: 12px; color: var(--muted); white-space: nowrap; }
+.board-list .who .score { justify-self: end; font-size: 17px; font-weight: 800; color: #c9a7ff; font-variant-numeric: tabular-nums; } /* mulassa.cat's points: lilac, every row */
+/* a second figure beside the pill (Pop: the taps), as mulassa.cat's streak: quiet, its number bright */
+.board-list .who .streak { font-size: 10.5px; color: #e8d8b8b3; white-space: nowrap; }
+.board-list .who .streak b { color: #fff; font-weight: 800; }
 .board-list li.me .who { color: var(--accent); }
+.board-list li.me .who .streak { color: color-mix(in srgb, var(--accent) 70%, transparent); } /* as mulassa.cat's own row, in the game's colour */
 /* names as on mulassa.cat's boards (src/styles/profile.css, board.css): a guest quieter, a released name fainter, a confirmed address with its check or badge */
 .alias { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .alias.guest { color: #b5a385; }

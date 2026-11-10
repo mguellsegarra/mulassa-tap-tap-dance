@@ -6,6 +6,7 @@ import { COMBO_MAX } from './rules.js';
 
 const SEEN = 'pop-howto-seen';
 const TAP = ['mula', 'petard', 'calcot', 'campanar', 'carretilla'], NEVER = ['drac', 'dracFals', 'mulaFalsa'], EXTRA = new Set(['calcot', 'campanar', 'carretilla']);
+export const KINDS = [...TAP, ...NEVER]; // every figure with a portrait (public/jocs/pop/cards)
 
 export function setupHelp({ t }) {
   const $ = id => document.getElementById(id), menu = $('help-menu');

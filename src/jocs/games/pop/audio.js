@@ -77,7 +77,7 @@ export function armAudio() {
   life.wake();
 }
 // inside the tap that starts a game (or after armAudio): browsers only let audio start from a gesture
-export function startMusic(conductor) {
+export function startMusic(conductor, song) {
   if (!audio()) return;
   stopHomeMusic();
   armed = true;
@@ -85,7 +85,7 @@ export function startMusic(conductor) {
   tune = conductor;
   offset = ctx.currentTime + LEAD; // game time 0 is queued now; at() keeps every note a little ahead of the clock
   clock.run();
-  seq.start();
+  seq.start(song);
   seq.slow(false);
   seq.gain(on ? .9 : 0);
   run();
@@ -145,7 +145,14 @@ function rumble(dur, vol, from, to, at = 0) {
 }
 export const SFX = {
   // the lead voice's note, an octave up, sounding at once on the tap (waiting for the beat would feel late)
-  hit: () => { const m = seq.noteNow(), f = hz(m + 12); tone(f, .1, 'triangle', .13); tone(f, .14, 'sine', .09); },
+  // A chord of fingers (rules.js combo) builds a chord of voices: the k-th finger plays the k-th voice over the harmony
+  // sounding now, so ×5 rings as one full strum. Each a little softer, the sum stays near one tap's level.
+  hit: (k = 1) => {
+    const m = seq.noteNow() + 12, pcs = seq.tonesNow(), inKey = n => pcs.includes(((n % 12) + 12) % 12);
+    const near = (n, d) => { do n += d; while (!inKey(n)); return n; };
+    const note = [m, near(m, -1), near(m, 1), 48 + pcs[0], m + 12][Math.min(k, 5) - 1], f = hz(note), v = 1 / Math.sqrt(k), long = k >= 4 ? 2.2 : 1;
+    tone(f, .1 * long, 'triangle', .13 * v); tone(f, .14 * long, 'sine', .09 * v);
+  },
   // on the chord that's sounding: a fixed pitch clashed with the song
   // a Mulassa springs up out of the board: a plop rising onto the tune's note sounding now (the tap plays it an octave up)
   // a Mulassa pops up on every beat: half the hit's level (-6 dB), so it marks the beat without nagging
@@ -165,6 +172,12 @@ export const SFX = {
     tone(f, .22, 'triangle', last ? .17 : .14); tone(f, .3, 'sine', last ? .12 : .1);
   },
   fire: () => { tone(120, 1.1, 'triangle', .22, 50); tone(70, 1.1, 'sine', .2, 140); },
+  // a chord's flash (flow.js), k fingers so far: a techno kick, louder as it grows, doubled at ×5 (the owner's pick, 10 Nov 2026)
+  combo: k => {
+    const kick = (v, at = 0) => tone(150, .28, 'sine', v, 42, at); // the body only: no high click, it rang shrill
+    kick(.45 + .06 * Math.min(k, 5));
+    if (k === 5) kick(.7, .12);
+  },
   // the blast: one of four, never the last one, like the board's (board-blast.js)
   boom: () => nextBoom()(),
 };

@@ -65,6 +65,7 @@ export function createBoard(canvas) {
   const fx = createCarretilla(sparks);
 
   const dummy = new THREE.Object3D(), col = new THREE.Color(), bit = new THREE.Matrix4(), at = new THREE.Matrix4(), flick = new THREE.Vector3();
+  let zoom = 0; // a chord's punch-in, 0..1, decaying (flow.js)
   let game = null, centres = [], screen = [], W = 1, H = 1, time = 0, trauma = 0, poses = [], seen = [], burning = new Map();
   const camBase = new THREE.Vector3();
   const insets = { top: 68, bottom: 8 };
@@ -120,7 +121,12 @@ export function createBoard(canvas) {
     return -1;
   }
 
-  const burst = (i, colors, n, power) => sparkBurst(centres[i], colors, n, power);
+  const burst = (i, colors, n, power, span) => sparkBurst(centres[i], colors, n, power, span);
+  // a chord's column of fire straight up from cell i
+  function fountain(i, n) {
+    const c = centres[i];
+    for (let k = 0; k < n; k++) flame(c.x + (Math.random() - .5) * .4, 1, c.z + (Math.random() - .5) * .4, (Math.random() - .5) * 2, 12 + Math.random() * 10, (Math.random() - .5) * 2, .5);
+  }
   // The carretilla (board-carretilla.js): every Mulassa out goes up, quickly; `origin` its cell. → each one's pop, seconds from now
   function dragonFire(origin) {
     trauma = Math.min(1, trauma + .35);
@@ -241,9 +247,11 @@ export function createBoard(canvas) {
     stepSparks(dt);
 
     trauma = Math.min(1, trauma + blast.step(time, dt));
-    trauma = Math.max(0, trauma - dt * 1.6);
+    trauma = Math.max(0, trauma - dt * 2.4); // a short, quick shake
     const sh = trauma * trauma * .9;
-    camera.position.set(camBase.x + Math.sin(time * 71) * sh, camBase.y + Math.sin(time * 83) * sh, camBase.z + Math.cos(time * 67) * sh);
+    zoom = Math.max(0, zoom - dt * 6);
+    const z = 1 - .09 * zoom * zoom; // the camera darts toward the board and back (a game: it moves, whatever the OS asks)
+    camera.position.set(camBase.x * z + Math.sin(time * 113) * sh, camBase.y * z + Math.sin(time * 131) * sh, camBase.z * z + Math.cos(time * 107) * sh);
     renderer.render(scene, camera);
   }
   // The shaders, compiled off the main thread and linked a few ms at a time, like the main game's boot (plassa/boot.js):
@@ -254,5 +262,5 @@ export function createBoard(canvas) {
   const portraits = (kinds, size, opts) => import('./portraits.js').then(m => m.drawPortraits(renderer, GEOS, mat, kinds, size, opts));
   // an ended run's board once its blast has played out: nothing moves on it, so it need not be drawn again
   const settled = () => game?.state === 'over' && !trauma && !sparksBusy() && game.cells.every(c => blast.progress(c.i, time) >= 1);
-  return { setGame, fit, pick, frame, burst, explodeAll, dragonFire, burn, warm, portraits, settled, insets, screenOf: i => screen[i], shake: k => { trauma = Math.min(1, trauma + k); } };
+  return { setGame, fit, pick, frame, burst, explodeAll, dragonFire, burn, warm, portraits, settled, insets, fountain, punch: k => { zoom = Math.min(1, zoom + k); }, screenOf: i => screen[i], shake: k => { trauma = Math.min(1, trauma + k); } };
 }

@@ -63,7 +63,7 @@ test('the petard is lit: tapping it puts it out (no points, it only saves the bo
   tap(g, 3);
   assert.deepEqual([g.progress, g.points, g.hits], [0, 0, 0]);
   assert.equal(g.cells[3].kind, 'drac');
-  assert.deepEqual(events, ['defuse']);
+  assert.deepEqual(events, ['defuse', 'chord']);
   g = game();
   Object.assign(g.cells[3], { kind: 'petard', left: .1 });
   tick(g, .2);
@@ -84,7 +84,7 @@ test('goodies: calçot +5, bell slows the clock, rocket clears', () => {
   let g = game();
   put(g, 0, 'calcot');
   tap(g, 0);
-  assert.deepEqual([g.progress, g.points, g.hits, g.combo], [5, 5, 0, 0], 'the calçot is not a hit and has no combo');
+  assert.deepEqual([g.progress, g.points, g.hits, g.combo], [5, 5, 0, 1], 'the calçot is not a hit; alone, its chord pays nothing more');
 
   g = game();
   put(g, 0, 'campanar');
@@ -254,27 +254,39 @@ test('combo: fingers at once, each Mulassa of a k-finger chord worth k × the le
   };
   assert.deepEqual(chord(0, 3), [[1, 3, 5], 9, 3], 'three fingers: 3 × 3');
   assert.deepEqual(chord(0, 6)[1], 6 * COMBO_MAX, 'six: each at ×5');
-  assert.deepEqual(chord(1, 3), [[1, 4, 7], 12, 3]); // round(9 × 1.3)
-  assert.deepEqual(chord(2, 3), [[2, 4, 8], 14, 3]); // round(9 × 1.6)
+  assert.deepEqual(chord(1, 3), [[2, 6, 10], 18, 3]); // 9 × 2
+  assert.deepEqual(chord(2, 3), [[3, 9, 15], 27, 3]); // 9 × 3
   const g = game();
   [0, 1].forEach(i => Object.assign(g.cells[i], { kind: 'mula', left: 50 }));
   tick(g, .5); tap(g, 0); tick(g, .3); tap(g, 1);
   assert.deepEqual([g.points, g.combo], [2, 1], 'a streak in time is no combo');
 });
 
-test('points: the level\'s multiplier (1, 1.3, 1.6, rounded) per Mulassa, a calçot 5 × it, a burn 1 × it; hits and the progression do not scale', () => {
-  assert.deepEqual(MULT, [1, 1.3, 1.6]);
-  const want = [[1, 5, 1], [1, 7, 1], [2, 8, 2]]; // a Mulassa alone, a calçot, a burn
+test('a chord takes any good tap: Mulassas, a petard put out, goodies; a lone petard or goodie pays only its own', () => {
+  const g = game(), chords = [];
+  g.on = (e, c, x) => { if (e === 'chord') chords.push([x.combo, x.gained]); };
+  ['petard', 'mula', 'calcot', 'campanar'].forEach((kind, i) => Object.assign(g.cells[i], { kind, left: 50 }));
+  tick(g, .5);
+  [0, 1, 2, 3].forEach(i => tap(g, i));
+  assert.deepEqual(chords, [[1, 0], [2, 4], [3, 5], [4, 7]], 'the petard starts it unpaid; each one joining raises the rest');
+  assert.deepEqual([g.points, g.hits, g.combo], [4 * 4 + 5, 1, 4], '4 × 4, plus the calçot\'s own 5');
+});
+
+test('points: the level\'s multiplier (1, 2, 3) per Mulassa, a calçot 5 × it, a burn 1 × it; hits and the progression do not scale', () => {
+  assert.deepEqual(MULT, [1, 2, 3]);
+  const want = [[1, 5, 1], [2, 10, 2], [3, 15, 3]]; // a Mulassa alone, a calçot, a burn
   for (const level of [0, 1, 2]) {
     const [one, calcot, burn] = want[level], g = game({ level }), events = [];
     g.on = (...a) => events.push(a);
     ['mula', 'calcot', 'carretilla', 'mula', 'mula'].forEach((kind, i) => Object.assign(g.cells[i], { kind, left: 50 }));
     tap(g, 0);
+    tick(g, .5); // apart: no chord
     tap(g, 1); // calçot
     assert.equal(g.points, one + calcot);
+    tick(g, .5);
     tap(g, 2); // carretilla burns the two Mulassas out
     assert.deepEqual([g.points, g.hits, g.progress], [one + calcot + 2 * burn, 1, 1 + 5 + 2]);
-    assert.deepEqual(events.map(([e, , x, y]) => [e, ...(e === 'goodie' ? [x, y.gained] : [x.gained])]),
+    assert.deepEqual(events.filter(([e]) => ['hit', 'goodie', 'burn'].includes(e)).map(([e, , x, y]) => [e, ...(e === 'goodie' ? [x, y.gained] : [x.gained])]),
       [['hit', one], ['goodie', 'calcot', calcot], ['burn', burn], ['burn', burn], ['goodie', 'carretilla', 0]]);
   }
 });

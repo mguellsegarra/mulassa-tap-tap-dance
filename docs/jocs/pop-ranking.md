@@ -14,7 +14,7 @@ submitted score proves nothing. The server must play the game again from what th
   2 Difícil).
 - Three counters: `progress` (Mulassas +1, calçot +5, burns +1) drives the tempo, the spawn pace and the unlocks and stays internal;
   `points` is what the player sees and the board ranks; `hits` is the Mulassas tapped («tocs»). A tapped Mulassa gives
-  `MULT[level]` points (`MULT` 1 / 1.3 / 1.6), times the combo; a calçot `round(5 × MULT)`; a Mulassa burnt by the carretilla
+  `MULT[level]` points (`MULT` 1 / 2 / 3), times the combo; a calçot `round(5 × MULT)`; a Mulassa burnt by the carretilla
   `round(MULT)` (not a hit). The combo is fingers at once: Mulassas tapped within `CHORD` (.12 s) of a chord's first one make a
   chord of k, each worth k (up to `COMBO_MAX` 5), so the chord's whole is `round(k × min(k, 5) × MULT)` and each tap adds the
   difference. One at a time is ×1: the player lets Mulassas build up (the fuse is the risk) and takes them together.

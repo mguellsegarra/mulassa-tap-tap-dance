@@ -29,10 +29,14 @@ export function createHero(canvas) {
   sun.position.set(-6, 12, 8);
   scene.add(new THREE.HemisphereLight('#fff3d6', '#8a6a4a', 2.1), sun);
   const mula = mulaRig(), drac = dracRig();
-  mula.root.scale.setScalar(MULA_SCALE);
-  drac.root.scale.setScalar(DRAC_K);
-  mula.root.position.set(-1.3, 0, .9); // in front, her head towards the Drac
-  drac.root.position.set(1.7, 0, -.9); // behind her on the right, facing her and us
+  // the home's pair (the owner's call, 10 Nov 2026): she behind, so higher on the screen (the raised camera), and the bigger;
+  // the Drac in front on the right, lower and smaller, facing her and us. The end sheet's culprit keeps the rigs' own scale.
+  const HOME = { mula: [[-1.3, 0, -.4], MULA_SCALE * 1.3], drac: [[1.7, 0, .9], DRAC_K * .8] };
+  const atHome = () => {
+    mula.root.position.set(...HOME.mula[0]); mula.root.scale.setScalar(HOME.mula[1]);
+    drac.root.position.set(...HOME.drac[0]); drac.root.scale.setScalar(HOME.drac[1]);
+  };
+  atHome();
   scene.add(mula.root, drac.root);
   const { flame, step } = createSparks(scene);
   const P = MULA_POSES[0], tip = new THREE.Vector3(), dir = new THREE.Vector3();
@@ -69,11 +73,12 @@ export function createHero(canvas) {
     const hop = still.matches ? 0 : Math.abs(Math.sin(t * 3.5));
     poseMula(mula, P, t, 0, fire * .6); // she panics a little while it roars
     mula.root.position.y = hop * .35;
-    mula.root.rotation.set(0, MULA_YAW + P.yaw + Math.sin(t * .7) * .15, Math.sin(t * 3.5) * .06);
+    mula.root.rotation.set(0, -(MULA_YAW + P.yaw) + Math.sin(t * .7) * .15, Math.sin(t * 3.5) * .06); // the mirror of her three-quarter: she looks away from the Drac (the owner's call, 10 Nov 2026)
     poseDrac(drac, PLAY, t, 0, fire);
     playDrac(fire);
     const breath = 1 + Math.sin(t * 2.4) * .025;
-    drac.root.scale.set(DRAC_K * (2 - breath), DRAC_K * breath, DRAC_K * (2 - breath));
+    const dk = HOME.drac[1];
+    drac.root.scale.set(dk * (2 - breath), dk * breath, dk * (2 - breath));
   }
 
   function playDrac(fire) {
@@ -141,7 +146,7 @@ export function createHero(canvas) {
     if (!solo) return;
     for (const e of Object.values(extra)) e.root.visible = false;
     mula.root.visible = drac.root.visible = true;
-    mula.root.position.set(-1.3, 0, .9); drac.root.position.set(1.7, 0, -.9); drac.root.scale.setScalar(DRAC_K); mula.root.scale.setScalar(MULA_SCALE);
+    atHome();
     solo = null;
     home.append(canvas);
     W = 0;

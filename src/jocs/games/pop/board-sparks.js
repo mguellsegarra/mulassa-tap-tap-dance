@@ -12,10 +12,10 @@ export function createSparks(scene) {
   let next = 0, live = true; // live: a particle moved last step, so the pool still needs writing
   sparks.setColorAt(0, col); // the colour attribute exists before the warm-up compiles: its shader variant is the one drawn
 
-  function burst(c, colors, n = 26, power = 1) {
+  function burst(c, colors, n = 26, power = 1, span = 1) { // span: its life's scale (a chord's are brief)
     for (let k = 0; k < n; k++) {
       const p = P[next], a = Math.random() * Math.PI * 2, s = (2 + Math.random() * 5) * power;
-      Object.assign(p, { life: .6 + Math.random() * .5, x: c.x, y: 1.2, z: c.z, vx: Math.cos(a) * s, vz: Math.sin(a) * s, vy: (4 + Math.random() * 8) * power, s: .6 + Math.random(), g: 26 });
+      Object.assign(p, { life: (.6 + Math.random() * .5) * span, x: c.x, y: 1.2, z: c.z, vx: Math.cos(a) * s, vz: Math.sin(a) * s, vy: (4 + Math.random() * 8) * power, s: .6 + Math.random(), g: 26 });
       sparks.setColorAt(next, col.set(colors[k % colors.length]));
       next = (next + 1) % SPARKS;
     }

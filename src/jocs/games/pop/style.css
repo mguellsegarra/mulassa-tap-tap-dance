@@ -21,6 +21,9 @@ body.slow::after { opacity: 1; transition-duration: .15s; animation: chill-in .5
 #best { margin-top: 4px; font-size: 14px; color: #2a1a10; font-weight: 800; }
 #chips { position: absolute; top: 56px; left: 0; right: 0; display: flex; justify-content: center; gap: 8px; }
 #combo { position: fixed; z-index: 2; left: 0; right: 0; text-align: center; font: 800 26px/1 'Baloo 2', system-ui, sans-serif; color: #ffe066; -webkit-text-stroke: .16em #2a1a10; paint-order: stroke fill; pointer-events: none; } /* a chord (hud.js combo): under the score, top set from the HUD's edge */
+/* a chord lights the screen gold (hud.js combo): opacity only */
+#combo-flash { position: fixed; z-index: 1; inset: 0; pointer-events: none; background: radial-gradient(closest-side, #ffd23a00 45%, #ffd23acc 130%); }
+#combo-flash[hidden] { display: none; }
 .chip { display: inline-flex; align-items: center; gap: 8px; padding: 4px 6px 4px 4px; border-radius: 40px; background: #24223f; box-shadow: 0 0 0 2px #7ec4ff, 0 0 18px #7ec4ff88; color: #fff3d6; font: 800 17px/1 'Baloo 2', system-ui, sans-serif; white-space: nowrap; }
 .chip img { width: 30px; height: 30px; object-fit: contain; }
 .chip b { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: #7ec4ff; color: #16243f; font-size: 16px; }
@@ -31,10 +34,10 @@ body.slow::after { opacity: 1; transition-duration: .15s; animation: chill-in .5
 :root:not(.ready) #menu { visibility: hidden; } /* whole under the boot screen when it fades: a fading blur shows the board sharp */
 /* what ended the run: the figure's home portrait and why, so a red Drac tapped in a hurry is no mystery */
 
-/* The home (the Mulassa Games hero, after mulassa.cat's games sheet): logo, pitch, Juga and the record, the red Mulassa big;
-   under it a row of cards, one per figure, that scrolls on a phone and holds all eight on a wide screen. */
-.home { --m: 16px; --g: clamp(12px, 2.4dvh, 24px); --row: clamp(120px, 22dvh, 200px); --no: #ff8a7a; --gold: #f5c518;
-  position: fixed; z-index: 3; inset: 0; box-sizing: border-box; display: grid; grid-template-rows: 1fr var(--row); gap: var(--g);
+/* The home (the Mulassa Games hero, after mulassa.cat's games sheet): logo, pitch, Juga and the record, the red Mulassa big.
+   The figures are in «Com es juga?» (help.js), not on the home (the owner's call, 10 Nov 2026). */
+.home { --m: 16px; --g: clamp(12px, 2.4dvh, 24px); --no: #ff8a7a; --gold: #f5c518;
+  position: fixed; z-index: 3; inset: 0; box-sizing: border-box; display: grid; grid-template-rows: 1fr; gap: var(--g);
   padding: calc(var(--sat) + var(--m)) 0 calc(var(--sab) + var(--m)); background: #11152c8c; -webkit-backdrop-filter: blur(14px) saturate(1.3); backdrop-filter: blur(14px) saturate(1.3); }
 .home[hidden] { display: none; }
 .corner-l, .corner-r { position: absolute; z-index: 1; top: calc(var(--sat) + var(--m)); }
@@ -58,80 +61,49 @@ dialog .feedback-field { border-color: color-mix(in srgb, var(--accent) 60%, tra
 .c-art::before { content: ""; position: absolute; width: min(100%, 100cqh, 340px); aspect-ratio: 1; border-radius: 50%; background: radial-gradient(#ff7ac655, #ff7ac600 68%); }
 .c-art canvas { --k: 1; position: relative; flex: none; width: calc(var(--k) * min(100cqw, 100cqh * 1.5, 540px)); height: calc(var(--k) * min(100cqh, 100cqw / 1.5 + 0px, 360px)); translate: 0 calc((1 - var(--k)) / 2 * min(100cqh, 100cqw / 1.5 + 0px, 360px)); } /* hero.js: the Mulassa and the Drac, live; --k grows them upwards, their feet where they were */
 .c-pitch { order: 2; margin: 0 0 12px; max-width: 320px; text-align: center; font-size: clamp(16px, 2.4dvh, 20px); line-height: 1.2; text-wrap: balance; text-shadow: 0 1px 3px #000; }
-.c-play-row { order: 3; display: flex; flex-direction: column; align-items: center; gap: 12px; } /* the record on its own line, under Juga */
-.c-play-row .game-play { min-width: 136px; margin-top: 0; padding: 0 28px 0 22px; } /* the home's «Juga»: base.css, a little smaller than the games sheet's */
-.c-best { display: inline-flex; align-items: center; gap: 6px; height: 44px; padding: 0 12px; border-radius: 22px; background: #24223fe8; box-shadow: inset 0 0 0 2px #ff7ac655; font-size: 16px; color: #e8d8b8; }
-.c-best svg { width: 20px; height: 20px; color: #ff7ac6; }
-.c-best .rank { color: #ff7ac6; }
-/* the record is the board's button (main.js enables it when there is a board) */
-button.c-best { width: auto; min-height: 0; border: 0; font: inherit; font-size: 16px; color: #e8d8b8; }
-button.c-best:enabled { cursor: pointer; }
-.c-best .go { width: 16px; height: 16px; margin-left: -2px; color: #ff7ac6; }
-.c-best:disabled .go { display: none; }
+/* the home's actions: Plassa's buttons as they are (base.css .btn .btn-big); here only where they sit: the board and «?»
+   side by side, Juga under them the whole width (the owner's pick, 10 Nov 2026) */
+.c-play-row { order: 3; align-self: stretch; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: min(100%, 380px); margin: 0 auto; }
+.c-play-row > * { grid-column: 1 / -1; margin: 0; }
+.c-play-row > :is(#menu-best, #help) { grid-column: auto; min-width: 0; padding-inline: 4px; white-space: nowrap; }
+@media (orientation: portrait) { .c-play-row > :is(#menu-best, #help) { font-size: clamp(13px, 4.1vw, 18px); } } /* half a ≤380 px row: by the width, never .btn-big's height-grown size (440×956 overflowed) */
+#play { order: 1; } /* under the two */
+#menu-best .go { display: none; }
+
 #end-name { margin-top: 4px; text-decoration: none; } /* a link to mulassa.cat's name sheet, drawn as the sheet's buttons */
-.c-row { display: flex; align-items: center; gap: 12px; height: var(--row); padding: 0 var(--m); overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: var(--m); scrollbar-width: none; }
-.c-row::-webkit-scrollbar { display: none; }
-/* a card is its figure (as mulassa.cat's game cards, games-sheet.css): the name on a short shade at its foot, the tone's mark in a
-   corner (a tap, a no, a star) */
-.c-card { --tone: #ff7ac6; --ink: #2a1a10; --name: clamp(14px, calc(var(--row) * .085), 18px); --line: clamp(12px, calc(var(--row) * .07), 15px);
-  position: relative; flex: none; box-sizing: border-box; width: calc(var(--row) * .8); height: 100%; overflow: hidden; border-radius: 18px; scroll-snap-align: start;
-  background: radial-gradient(85% 65% at 50% 42%, color-mix(in srgb, var(--tone) 40%, #2b2350), #1a1630 85%); box-shadow: 0 8px 18px #0008, inset 0 0 0 2px color-mix(in srgb, var(--tone) 60%, transparent); }
-.c-card[data-tone="no"] { --tone: var(--no); } .c-card[data-tone="extra"] { --tone: var(--gold); }
-.c-por { position: absolute; inset: 12px 10px 30px; display: flex; align-items: flex-end; justify-content: center; }
-.c-por img { display: block; min-width: 0; min-height: 0; max-width: 100%; max-height: 100%; }
-.c-tag { position: absolute; z-index: 2; top: 8px; left: 8px; box-sizing: border-box; width: 24px; height: 24px; padding: 4px; border-radius: 50%; background: var(--tone); color: var(--ink); }
-.c-tag svg { display: block; width: 100%; height: 100%; fill: currentColor; }
-/* the shade starts as far above the name as the text ends above the card's foot */
-.c-card .nb { position: absolute; z-index: 1; inset: auto 0 0; box-sizing: border-box; height: calc(var(--name) * 1.1 + var(--line) * 2.3 + 30px); display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px 10px 10px; text-align: center; background: linear-gradient(#0000, color-mix(in srgb, var(--tone) 24%, #120b07) 10px); }
-.c-por { bottom: calc(var(--name) * 1.1 + var(--line) * 2.3 + 20px); } /* one band for the row: the short line may take two lines, the names still line up */
-.c-card b { display: block; font-size: var(--name); line-height: 1.1; color: var(--tone); hyphens: auto; overflow-wrap: anywhere; } /* «Glockenturm» on a phone's card */
-.c-card .nb span { display: block; font-size: var(--line); line-height: 1.15; color: #fff3d6; }
-.c-card .long { display: none !important; }
-/* wide: the text and the Mulassa side by side, and the row ends on the screen's margins with all eight cards at once */
+/* wide: the text and the Mulassa side by side */
 @media (orientation: landscape) {
-  .home { --row: clamp(150px, 26dvh, 260px); }
-  .c-hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; padding: calc(52px + 12px) max(32px, 5vw) 0; } /* under the corner buttons' row */
+  .c-hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; padding: calc(52px + 12px) max(32px, 5vw); } /* clear of the corner buttons' row, and as much below: the block sits at the screen's middle */
   :root { --exit-size: 52px; --exit-icon: 28px; --exit-font: 20px; } /* the way back, as big as the music button across */
   :is(#menu-music, #settings) { width: 52px; height: 52px; } /* the same size as the games button across */
   /* one axis (tools/dev/pop-hero, A): the title is centred by nature, so the pitch and the actions follow it */
-  .c-text { display: flex; flex-direction: column; align-items: center; gap: 20px; }
-  .pop-title { width: clamp(260px, 26vw, 420px); }
-  .c-pitch { margin: 0; text-align: center; max-width: 24ch; font-size: clamp(18px, 1.6vw, 26px); }
-  .c-play-row { align-items: center; }
-  .c-art canvas { width: calc(var(--k) * min(100cqw, 100cqh * 1.4, 760px)); height: calc(var(--k) * min(100cqh, 100cqw / 1.4, 560px)); translate: 0 calc((1 - var(--k)) / 2 * min(100cqh, 100cqw / 1.4, 560px)); } /* the figures grow with the screen */
-  .c-art::before { width: min(100%, 100cqh, 520px); }
+  /* the column grows with the screen, by its height first (a wide short window stays whole): title, line and buttons in step */
+  .c-text { display: flex; flex-direction: column; align-items: center; gap: clamp(10px, 2.6dvh, 32px); }
+  .pop-title { width: clamp(220px, min(32vw, 50dvh), 680px); }
+  .c-pitch { margin: 0; text-align: center; max-width: 24ch; font-size: clamp(18px, min(1.7vw, 3dvh), 36px); }
+  .c-play-row { width: min(100%, clamp(380px, min(30vw, 56dvh), 620px)); gap: clamp(12px, 1.6dvh, 20px); }
+  .c-play-row > :is(#menu-best, #help) { font-size: clamp(16px, 2dvh, 26px); } /* the halves a step under Juga, so their labels fit */
+  .c-art canvas { width: calc(var(--k) * min(100cqw, 100cqh * 1.4, 1040px)); height: calc(var(--k) * min(100cqh, 100cqw / 1.4, 760px)); translate: 0 calc((1 - var(--k)) / 2 * min(100cqh, 100cqw / 1.4, 760px)); } /* the figures grow with the screen */
+  .c-art::before { width: min(100%, 100cqh, 700px); }
   .c-art { height: 100%; }
-  .c-row { padding: 0 max(32px, 5vw); gap: 16px; overflow: visible; }
-  .c-card { flex: 1 1 0; width: auto; min-width: 0; }
-  .c-card .long { display: block !important; } .c-card .tiny { display: none !important; }
-  .c-card .nb span { text-wrap: balance; }
-  /* the long line wraps to one to three lines: one band for all, so the names line up across the row and the figures are one size */
-  .c-card .nb { height: calc(var(--name) * 1.1 + var(--line) * 3.45 + 26px); padding-top: 16px; box-sizing: border-box; }
-  .c-por { bottom: calc(var(--name) * 1.1 + var(--line) * 3.45 + 20px); }
+  .c-art canvas { --k: 1.25; } /* past the column's width (fit by width): the figures as big as the column is tall */
 }
 
 
 .loader-box .mula-spinner { width: 70px; height: 56px; }
-/* a tablet's eight cards are ~100 px wide: the long line would take four lines, so the short one, as on a phone */
-@media (orientation: landscape) and (max-width: 1180px) {
-  .c-card .long { display: none !important; } .c-card .tiny { display: block !important; }
-  .c-card .nb { height: calc(var(--name) * 1.1 + var(--line) * 2.3 + 26px); }
-  .c-por { bottom: calc(var(--name) * 1.1 + var(--line) * 2.3 + 20px); }
-}
 /* The home waits for the tap (tap-start.js): the title big, the live figures and mulassa.cat's gold button, one group in the
    middle over the blurred board; the rest of the home comes in after the tap */
-.sp-home .home { grid-template-rows: 1fr; }
 @keyframes sp-breathe { 0%, 100% { scale: 1; } 50% { scale: 1.06; } }
 .sp-home .c-hero { display: flex; flex-direction: column; align-items: center; gap: clamp(8px, 2dvh, 24px); padding: calc(var(--sat) + clamp(24px, 6dvh, 56px)) var(--m) calc(var(--sab) + clamp(32px, 8dvh, 72px)); } /* the title on top, the button at the bottom, the figures in the middle of what is left */
 .sp-home .c-text { display: contents; }
-.sp-home .pop-title { width: min(760px, 100vw - 4 * var(--m), 62dvh); }
+.sp-home .pop-title { width: min(1100px, 100vw - 4 * var(--m), 62dvh); } /* by the height: a 2560×1440 screen gets its share */
 .sp-home .c-art { flex: 1 1 0; height: auto; }
 .sp-home .c-art canvas { --k: 1.35; } /* bigger while they wait */
 .sp-home .c-play-row { order: 3; }
-.sp-home .c-pitch, .sp-home .c-play-row > :not(#tap-start), .sp-home .c-row, .sp-home #back, .sp-home #menu-music, .sp-home #settings, .sp-home #help { display: none; }
-#tap-start { min-width: 260px; min-height: 60px; padding: 8px 32px; border: 2px solid #f5c518; border-radius: 12px; background: linear-gradient(180deg, #ffe066 0%, #f5c518 55%, #dfad13 100%); color: #2a1a10; font: 800 24px 'Baloo 2', system-ui, sans-serif; box-shadow: 0 6px 0 #8a6a12, 0 16px 40px #0008; animation: sp-breathe 1.6s ease-in-out infinite; }
+.sp-home .c-pitch, .sp-home .c-play-row > :not(#tap-start), .sp-home #back, .sp-home #menu-music, .sp-home #settings, .sp-home #help { display: none; }
+#tap-start { animation: sp-breathe 1.6s ease-in-out infinite; } /* Plassa's main button (tap-start.js), as wide as Juga after it, breathing while it waits */
 /* after the tap: what was hidden comes in, a little after the title and the figures have started to move */
-.sp-in .c-pitch, .sp-in .c-play-row > *, .sp-in .c-row, .sp-in #back, .sp-in #menu-music, .sp-in #settings, .sp-in #help { animation: sp-fade .45s ease-out .15s both; }
+.sp-in .c-pitch, .sp-in .c-play-row > *, .sp-in #back, .sp-in #menu-music, .sp-in #settings, .sp-in #help { animation: sp-fade .45s ease-out .15s both; }
 /* the live figures fade where they wait (tap-start.js), then in on the home (a canvas glided while resized looked warped) */
 .sp-in .c-art { animation: sp-fade .4s ease-out both; }
 @keyframes sp-fade { from { opacity: 0; translate: 0 8px; } }
@@ -141,7 +113,6 @@ button.c-best:enabled { cursor: pointer; }
 .level-sheet h2 { margin: 0 0 16px; }
 .level-sheet .sel-seg { margin: 0 auto; }
 .level-sheet .sel-seg .btn { position: relative; min-height: 72px; font-size: 18px; }
-/* «Com es juga?» (help.js) is Plassa's pill (base.css .howto-pill) in Pop's tokens; its softer border is --pill-border */
 /* «Com es juga» (help.js): TOCA / MAI, two columns of the figures with what each one does (O3) */
 .help-sheet { width: min(420px, 100%); text-align: center; }
 .help-sheet h2 { margin: 0 0 12px; }
@@ -167,12 +138,16 @@ button.c-best:enabled { cursor: pointer; }
 .help-legend .combo .x { display: flex; align-items: baseline; gap: 12px; font-weight: 800; line-height: 1; color: #ffe066; -webkit-text-stroke: .16em #2a1a10; paint-order: stroke fill; }
 .help-legend b { display: block; font-size: 14px; line-height: 1.05; } .help-legend b.extra { color: var(--gold); }
 .help-legend .r span span { display: block; font-size: 12px; line-height: 1.15; color: #e8d8b8; }
-/* a phone's home: the title, the live Mulassa and Drac big, Juga and the board; the figures' cards and the pitch are in «?» */
-@media (orientation: portrait) and (max-width: 700px) {
-  .home { grid-template-rows: 1fr; }
-  .home .c-row, .home .c-pitch { display: none; }
+/* a phone's home: the title, the live Mulassa and Drac big, Juga and the board; the pitch is in «?» */
+@media (orientation: portrait) { /* any upright screen, a phone or a narrow window alike */
+  .home .c-pitch { display: none; }
+  .home { padding-bottom: calc(var(--sab) + clamp(16px, 4dvh, 40px)); } /* the buttons off the screen's foot */
+  .c-hero { padding-top: calc(44px + clamp(16px, 4.5dvh, 44px)); } /* the title a little lower, clear of the corner row */
+  .c-art canvas { --k: 1.5; } /* the figures fit the canvas's width (hero.js fit): wider than the screen, they fill a tall phone's middle */
 }
+@media (orientation: portrait) and (max-height: 700px) { .c-art canvas { --k: 1.2; } } /* 320×568, 375×667: the buttons keep their room */
 #end-menu .btn > svg { fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; } /* the end sheet's icons are drawn as lines */
 /* the end sheet's culprit, alive (hero.js solo, results.js) */
 #end-art { display: flex; align-items: center; justify-content: center; flex: 0 1 220px; width: min(320px, 100%); min-height: 120px; }
 #end-art canvas { width: 100%; height: 100%; }
+

@@ -148,3 +148,18 @@ test('A plays once: from its first half straight on into the second\'s cadence, 
   while (pos < 144) { pos = wrap(pos + .5); beats += .5; }
   assert.equal(beats, 144 - LOOP_START - (SKIP_TO - SKIP_FROM), 'B after 64 beats of A, not 128');
 });
+
+for (const id of ['drac']) test(`the ${id}: a chord on every step of its loop, its notes inside it, and the very same step times as the Mulassa (the score never depends on the tune)`, async () => {
+  const { SONGS } = await import('../../src/jocs/games/pop/songs.js');
+  const { form, melody, chordAt: at } = SONGS[id];
+  for (let b = form.loopStart; b < form.loopEnd; b += .5) assert.ok(CHORDS[at(b)], `${id} beat ${b}`);
+  for (const [b, d] of melody) assert.ok(b >= form.loopStart && b + d <= form.loopEnd + 1e-9, `${id} note at ${b}`);
+  const times = f => { const c = createConductor(1, f); c.setProgress(120, false); c.advance(400); return c.take().map(s => [s.t, s.spb]); };
+  assert.deepEqual(times(form), times(SONGS.mulassa.form));
+  const c = createConductor(0, form);
+  c.advance(400);
+  const pos = c.take().map(s => s.pos);
+  assert.equal(pos[0], form.pickup);
+  assert.ok(pos.some((p, i) => i && p < pos[i - 1]), 'it loops');
+  assert.ok(pos.every(p => p >= form.loopStart && p < form.loopEnd));
+});

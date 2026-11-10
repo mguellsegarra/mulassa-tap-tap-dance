@@ -10,12 +10,15 @@ export const BASE_BPM = [150, 165, 180]; // the opening tempo of Fàcil, Normal 
 // + − × ÷ only: they round alike in every engine (Math.exp need not), so the page and the server's replay keep the same tempo
 export const bpmFor = (progress, slow = false, level = 0) => (BASE_BPM[level] + 28 * progress / (progress + 60)) * (slow ? .75 : 1);
 export const layersFor = score => ({ bass: score >= 5 ? 1 : 0, kick: score >= 15 ? 1 : 0, shaker: score >= 35 ? 1 : 0, octave: score >= 70 ? 1 : 0 });
-// the next position played: past the end, back to A; inside A's repeat, on in its second half (melody.js SKIP_*)
-export const wrap = pos => (pos >= LOOP_END ? wrap(pos - LOOP_END + LOOP_START) : pos >= SKIP_FROM && pos < SKIP_TO ? pos - SKIP_FROM + SKIP_TO : pos);
+// A song's form: where it starts, where its loop goes back to, and a stretch it jumps over. The Mulassa's (melody.js) is the
+// default and the server's; the page plays another tune (songs.js) on the same steps: only the notes change, never the timing.
+export const MULASSA_FORM = { pickup: PICKUP, loopStart: LOOP_START, loopEnd: LOOP_END, skipFrom: SKIP_FROM, skipTo: SKIP_TO };
+// the next position played: past the end, back to the loop's start; inside a skipped stretch, on after it
+export const wrap = (pos, f = MULASSA_FORM) => (pos >= f.loopEnd ? wrap(pos - f.loopEnd + f.loopStart, f) : pos >= f.skipFrom && pos < f.skipTo ? pos - f.skipFrom + f.skipTo : pos);
 
-export function createConductor(level = 0) {
+export function createConductor(level = 0, form = MULASSA_FORM) {
   const steps = [], marks = []; // laid out and not yet taken by the audio; step times not yet reached by the game
-  let pos = PICKUP, next = 0, bpm = bpmFor(0, false, level), target = bpm, score = 0, wasSlow = false, rush = false; // rush: the bell's jump, until it lands
+  let pos = form.pickup, next = 0, bpm = bpmFor(0, false, level), target = bpm, score = 0, wasSlow = false, rush = false; // rush: the bell's jump, until it lands
   return {
     // the frame's progression and bell: the tempo glides towards them from the next step on
     setProgress(s, slow) { rush = rush || slow !== wasSlow; wasSlow = slow; score = s; target = bpmFor(s, slow, level); },
@@ -29,7 +32,7 @@ export function createConductor(level = 0) {
         const glide = (rush ? BELL_GLIDE : GLIDE) * spb * STEP;
         bpm += Math.max(-glide, Math.min(glide, target - bpm));
         if (bpm === target) rush = false;
-        pos = wrap(pos + STEP);
+        pos = wrap(pos + STEP, form);
       }
     },
     // how many steps have reached game time `now` (a LEAD early), since the last call: each one once. The game spawns on them.

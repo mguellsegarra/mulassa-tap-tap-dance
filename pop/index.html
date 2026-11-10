@@ -29,6 +29,7 @@
   <!-- The run's 3, 2, 1 (flow.js): over the board, never in the way of a tap (nothing to tap yet). -->
   <div id="count" aria-hidden="true" hidden><b></b></div>
   <div id="combo" aria-hidden="true" hidden></div><!-- «Combo ×3 +9», a chord, hud.js -->
+  <div id="combo-flash" aria-hidden="true" hidden></div><!-- a chord lights the screen gold, hud.js -->
   <div id="hud" hidden>
     <button id="pause" class="round-btn" data-t-aria="pause" aria-label="Pausa"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg></button>
     <div id="hud-mid">
@@ -55,22 +56,12 @@
         </svg><span class="pop-word" aria-hidden="true"><i style="--i:0">P</i><i style="--i:1">O</i><i style="--i:2">P</i></span></h1>
         <p class="c-pitch" data-t="home.pitch"></p>
         <div class="c-play-row">
-          <button id="play" class="game-play" data-keys-first><svg viewBox="0 0 24 24"><path d="M7 4.5v15a1 1 0 0 0 1.5.9l12-7.5a1 1 0 0 0 0-1.8l-12-7.5A1 1 0 0 0 7 4.5z"/></svg><span data-t="play">Juga</span></button>
-          <button type="button" class="c-best" id="menu-best" data-t-aria="rank.open" aria-label="Rànquing" disabled><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 3h10v3h3v2a4 4 0 0 1-4 4h-.4A5 5 0 0 1 13 14.8V17h3v3H8v-3h3v-2.2A5 5 0 0 1 8.4 12H8a4 4 0 0 1-4-4V6h3zm-1 5c0 1 .8 2 2 2V8zm12 2c1.2 0 2-1 2-2h-2z"/></svg><span class="label" data-t="home.board">Veure classificació</span><span class="rank" id="menu-rank" hidden></span><svg class="go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button>
-          <button type="button" id="help" class="howto-pill" aria-haspopup="dialog"><span class="q" aria-hidden="true">?</span><span data-t="help.open">Com es juga?</span></button>
+          <button id="play" class="btn btn-primary btn-big btn-invite" data-keys-first><svg viewBox="0 0 24 24"><path d="M7 4.5v15a1 1 0 0 0 1.5.9l12-7.5a1 1 0 0 0 0-1.8l-12-7.5A1 1 0 0 0 7 4.5z"/></svg><span data-t="play">Juga</span></button>
+          <button type="button" class="btn btn-secondary btn-big" id="menu-best" data-t-aria="rank.open" aria-label="Rànquing" disabled><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 3h10v3h3v2a4 4 0 0 1-4 4h-.4A5 5 0 0 1 13 14.8V17h3v3H8v-3h3v-2.2A5 5 0 0 1 8.4 12H8a4 4 0 0 1-4-4V6h3zm-1 5c0 1 .8 2 2 2V8zm12 2c1.2 0 2-1 2-2h-2z"/></svg><span class="label" data-t="home.board">Veure classificació</span><svg class="go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button>
+          <button type="button" id="help" class="btn btn-secondary btn-big" aria-haspopup="dialog"><span class="q" aria-hidden="true">?</span><span data-t="help.open">Com es juga?</span></button>
         </div>
       </div>
       <div class="c-art"><canvas id="menu-hero" aria-hidden="true"></canvas></div>
-    </div>
-    <div class="c-row" role="list" data-t-aria="home.how" aria-label="Com es juga">
-      <div class="c-card" data-tone="yes" data-kind="mula" role="listitem"><div class="c-por"><img alt="" src="/jocs/pop/cards/mula.png"></div><i class="c-tag" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 11V5.5a1.5 1.5 0 0 1 3 0V10l4.3.9a2 2 0 0 1 1.6 2.2l-.6 4.6A3 3 0 0 1 14.3 20h-3.6a3 3 0 0 1-2.4-1.2L5.6 15a1.5 1.5 0 0 1 2.2-2L9 14.2z"/></svg></i><div class="nb"><b data-t="fig.mula"></b><span class="long" data-t="do.mula"></span><span class="tiny" data-t="tiny.mula"></span></div></div>
-      <div class="c-card" data-tone="yes" data-kind="petard" role="listitem"><div class="c-por"><img alt="" src="/jocs/pop/cards/petard.png"></div><i class="c-tag" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 11V5.5a1.5 1.5 0 0 1 3 0V10l4.3.9a2 2 0 0 1 1.6 2.2l-.6 4.6A3 3 0 0 1 14.3 20h-3.6a3 3 0 0 1-2.4-1.2L5.6 15a1.5 1.5 0 0 1 2.2-2L9 14.2z"/></svg></i><div class="nb"><b data-t="fig.petard"></b><span class="long" data-t="do.petard"></span><span class="tiny" data-t="tiny.petard"></span></div></div>
-      <div class="c-card" data-tone="no" data-kind="drac" role="listitem"><div class="c-por"><img alt="" src="/jocs/pop/cards/drac.png"></div><i class="c-tag" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zm0 3a6 6 0 0 1 4.9 9.5L8.5 7.1A6 6 0 0 1 12 6zm-4.9 2.5 8.4 8.4A6 6 0 0 1 7.1 8.5z"/></svg></i><div class="nb"><b data-t="fig.drac"></b><span class="long" data-t="do.drac"></span><span class="tiny" data-t="tiny.drac"></span></div></div>
-      <div class="c-card" data-tone="no" data-kind="dracFals" role="listitem"><div class="c-por"><img alt="" src="/jocs/pop/cards/dracFals.png"></div><i class="c-tag" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zm0 3a6 6 0 0 1 4.9 9.5L8.5 7.1A6 6 0 0 1 12 6zm-4.9 2.5 8.4 8.4A6 6 0 0 1 7.1 8.5z"/></svg></i><div class="nb"><b data-t="fig.dracFals"></b><span class="long" data-t="do.dracFals"></span><span class="tiny" data-t="tiny.dracFals"></span></div></div>
-      <div class="c-card" data-tone="no" data-kind="mulaFalsa" role="listitem"><div class="c-por"><img alt="" src="/jocs/pop/cards/mulaFalsa.png"></div><i class="c-tag" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zm0 3a6 6 0 0 1 4.9 9.5L8.5 7.1A6 6 0 0 1 12 6zm-4.9 2.5 8.4 8.4A6 6 0 0 1 7.1 8.5z"/></svg></i><div class="nb"><b data-t="fig.mulaFalsa"></b><span class="long" data-t="do.mulaFalsa"></span><span class="tiny" data-t="tiny.mulaFalsa"></span></div></div>
-      <div class="c-card" data-tone="extra" data-kind="calcot" role="listitem"><div class="c-por"><img alt="" src="/jocs/pop/cards/calcot.png"></div><i class="c-tag" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2.5l2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17l-5.7 3 1.2-6.4-4.7-4.4 6.4-.8z"/></svg></i><div class="nb"><b data-t="fig.calcot"></b><span class="long" data-t="do.calcot"></span><span class="tiny" data-t="tiny.calcot"></span></div></div>
-      <div class="c-card" data-tone="extra" data-kind="campanar" role="listitem"><div class="c-por"><img alt="" src="/jocs/pop/cards/campanar.png"></div><i class="c-tag" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2.5l2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17l-5.7 3 1.2-6.4-4.7-4.4 6.4-.8z"/></svg></i><div class="nb"><b data-t="fig.campanar"></b><span class="long" data-t="do.campanar"></span><span class="tiny" data-t="tiny.campanar"></span></div></div>
-      <div class="c-card" data-tone="extra" data-kind="carretilla" role="listitem"><div class="c-por"><img alt="" src="/jocs/pop/cards/carretilla.png"></div><i class="c-tag" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2.5l2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17l-5.7 3 1.2-6.4-4.7-4.4 6.4-.8z"/></svg></i><div class="nb"><b data-t="fig.carretilla"></b><span class="long" data-t="do.carretilla"></span><span class="tiny" data-t="tiny.carretilla"></span></div></div>
     </div>
   </div>
 
@@ -115,7 +106,7 @@
     </div>
   </div>
   <!-- The boot screen: the running Mulassa (packages/plassa/src/mula-load.html, vite.config.js puts it in), shown until the menu is whole; main.js also copies it, crying, into the end. -->
-  <div id="boot" class="cover"><div class="art" id="boot-art"><!-- mula-load --></div><p class="boot-line" id="boot-line" aria-live="polite"></p></div>
+  <div id="boot" class="cover"><div class="boot-card"><div class="art" id="boot-art"><!-- mula-load --></div><p class="boot-line" id="boot-line" aria-live="polite"></p></div></div><!-- boot-first-line -->
   <!-- The all-time board (ranking.js): the top 50, you among them. -->
   <div id="board-menu" class="cover" hidden>
     <div class="sheet board-sheet">

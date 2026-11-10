@@ -16,10 +16,11 @@ export const TRAPS = ['petard', 'mulaFalsa', 'dracFals']; // one at a time; the 
 // The thresholds are on the progression (g.progress), not on the points the player sees.
 const UNLOCK = { calcot: { score: 10 }, campanar: { score: 30 }, carretilla: { score: 20, mulas: 3 }, petard: { score: 15 }, dracFals: { score: 25 }, mulaFalsa: { score: 35 } };
 export const LEVELS = 3; // 0 Fàcil, 1 Normal, 2 Difícil: tempo base (conductor.js), where the pace starts and the points' multiplier
-// The combo is fingers at once: Mulassas tapped within CHORD s of a chord's first one each score its size (two fingers ×2,
-// three ×3, up to COMBO_MAX), so the player lets them build up and takes them together, with the fuse as the risk.
+// The combo is fingers at once: good taps (a Mulassa, a petard put out, a goodie) within CHORD s of a chord's first one
+// each score its size (two fingers ×2, three ×3, up to COMBO_MAX), so the player lets them build up and takes them together,
+// with the fuse as the risk. A lone petard or goodie pays only its own, as ever.
 export const CHORD = .12, COMBO_MAX = 5;
-export const MULT = [1, 1.3, 1.6]; // the points' multiplier per level: Difícil pays more, not so much that only Difícil ranks
+export const MULT = [1, 2, 3]; // the points' multiplier per level, whole numbers anyone reads at a glance (the owner's choice, 9 Nov 2026)
 export const GRACE = .15; // a tap this soon after a cell turned Drac is the finger's lag, not a mistake (a goodie or fake that just ran out)
 export const FLURRY = [3, 5], FLURRY_WAIT = 2; // the carretilla's volley: as many Mulassas as it burnt, within these; half-beat steps before it
 export const BELL_REST = 20; // seconds after the bell's slow time ends before another bell may come
@@ -77,7 +78,7 @@ export function seeded(seed) {
 // the board ranks (combo × multiplier per Mulassa). hits: Mulassas tapped. pulse: half-beat steps since the last Mulassa.
 export function newGame({ cols = 4, rows = 6, level = 0, rng = Math.random, on = () => {} } = {}) {
   const cells = Array.from({ length: cols * rows }, (_, i) => ({ i, kind: 'drac', prev: 'drac', age: 9, left: 0 }));
-  return { cols, rows, level, fuse: fuseOf(level), bombFuse: bombFuseOf(level), rng, on, cells, recent: [], pattern: null, lastPattern: '', blockLeft: 0, progress: 0, points: 0, hits: 0, combo: 0, chordAt: -1, clock: 0, bellAt: -BELL_REST, state: 'play', slow: 0, pulse: 0, flurry: 0, flurryWait: 0, culprit: -1 };
+  return { cols, rows, level, fuse: fuseOf(level), bombFuse: bombFuseOf(level), rng, on, cells, recent: [], pattern: null, lastPattern: '', blockLeft: 0, progress: 0, points: 0, hits: 0, combo: 0, chordAt: -1, chordPaid: 0, clock: 0, bellAt: -BELL_REST, state: 'play', slow: 0, pulse: 0, flurry: 0, flurryWait: 0, culprit: -1 };
 }
 
 function setKind(c, kind, left = 0) {
@@ -172,6 +173,18 @@ export function beat(g) {
   spawn(g);
 }
 
+// A good tap joins this chord (or starts one): the chord's whole worth is k × min(k, COMBO_MAX), paid as it grows, so the
+// one that joins raises the ones before to its size too. A lone Mulassa pays 1; a lone petard or goodie, nothing more.
+function join(g, mula, mult) {
+  if (g.clock - g.chordAt > CHORD) { g.combo = 0; g.chordPaid = 0; g.chordAt = g.clock; } // a new chord
+  g.combo += 1;
+  if (g.combo < 2 && !mula) return 0;
+  const k = g.combo, worth = Math.round(k * Math.min(k, COMBO_MAX) * mult), gained = worth - g.chordPaid;
+  g.chordPaid = worth;
+  g.points += gained;
+  return gained;
+}
+
 export function tap(g, i) {
   if (g.state !== 'play') return;
   const c = g.cells[i], kind = c.kind, mult = MULT[g.level];
@@ -179,17 +192,16 @@ export function tap(g, i) {
   if (kind === 'mula') {
     setKind(c, 'drac');
     g.recent = [...g.recent, i].slice(-3);
-    if (g.clock - g.chordAt > CHORD) { g.combo = 0; g.chordAt = g.clock; } // a new chord
-    g.combo += 1;
     g.progress += 1;
     g.hits += 1;
-    // the chord's whole worth, k × min(k, COMBO_MAX): the one that joins it raises the ones before to its size too
-    const worth = k => Math.round(k * Math.min(k, COMBO_MAX) * mult), gained = worth(g.combo) - worth(g.combo - 1);
-    g.points += gained;
+    const gained = join(g, true, mult);
     g.on('hit', c, { combo: g.combo, gained });
+    g.on('chord', c, { combo: g.combo, gained });
   } else if (kind === 'petard') {
     setKind(c, 'drac');
+    const gained = join(g, false, mult);
     g.on('defuse', c);
+    g.on('chord', c, { combo: g.combo, gained });
   } else if (GOODIES.includes(kind)) {
     setKind(c, 'drac');
     let gained = 0;
@@ -209,5 +221,7 @@ export function tap(g, i) {
       g.flurryWait = FLURRY_WAIT;
     }
     g.on('goodie', c, kind, { gained });
+    const joined = join(g, false, mult);
+    g.on('chord', c, { combo: g.combo, gained: joined });
   } else if (!(kind === 'drac' && c.prev !== 'drac' && c.age < GRACE)) miss(g, c);
 }

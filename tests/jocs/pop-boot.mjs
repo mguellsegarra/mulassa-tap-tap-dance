@@ -55,11 +55,31 @@ assert.equal(p.boot.className, 'cover', 'an error once the home is up is not a b
   assert.equal(q.win.__mulassaBootFailure.reason, 'deadline');
 }
 
-// the home's portraits: one file per card, no longer drawn on the player's device
-const kinds = [...html.matchAll(/class="c-card"[^>]*data-kind="(\w+)"[^>]*><div class="c-por"><img alt="" src="\/jocs\/pop\/cards\/(\w+)\.png">/g)];
-assert.equal(kinds.length, 8, 'every card has its portrait file');
-for (const [, kind, file] of kinds) {
-  assert.equal(kind, file);
-  assert.ok(existsSync(new URL(`../../public/jocs/pop/cards/${file}.png`, import.meta.url)), `${file}.png`);
-}
+// the figures' portraits (help.js, the HUD's chip): one file each, no longer drawn on the player's device
+const { KINDS } = await import('../../src/jocs/games/pop/help.js');
+assert.equal(KINDS.length, 8, 'every figure');
+for (const kind of KINDS) assert.ok(existsSync(new URL(`../../public/jocs/pop/cards/${kind}.png`, import.meta.url)), `${kind}.png`);
 console.log('pop boot: the error card on a failed or stuck boot, not after it; portraits as files ok');
+
+// the boot screen's first funny line, inlined by vite.config.js before the module: already there on the first paint
+assert.ok(html.indexOf('id="boot-line"') < html.indexOf('<!-- boot-first-line -->') && html.indexOf('<!-- boot-first-line -->') < html.indexOf('type="module"'),
+  'the first line is written right after its element, before the module');
+{
+  const first = readFileSync(new URL('../../packages/plassa/src/boot-first-line.js', import.meta.url), 'utf8');
+  const T = { aliases: { ca: 'ca', en: 'en', 'en-gb': 'en' }, lines: { ca: ['a', 'b', 'c'], en: ['x', 'y'] } };
+  const line = (search, store) => {
+    const el = { textContent: '' };
+    vm.runInNewContext(first.replace('__BOOT_LINES__', JSON.stringify(T)), {
+      URLSearchParams, JSON, Math, String, location: { search }, document: { getElementById: () => el },
+      localStorage: { getItem: k => store[k] ?? null, setItem: (k, v) => { store[k] = v; } },
+    });
+    return el.textContent;
+  };
+  assert.ok(T.lines.en.includes(line('?lang=en_GB', {})), '?lang= picks the language, by locale.js aliases');
+  assert.ok(T.lines.en.includes(line('', { 'ui-language-v1': 'en' })), 'else the saved choice');
+  assert.ok(T.lines.ca.includes(line('', { 'ui-language-v1': 'xx' })), 'else Catalan');
+  const store = { 'loader-jokes-seen': JSON.stringify(['a', 'b']) };
+  assert.equal(line('', store), 'c', 'a line not seen yet on this device');
+  assert.notEqual(line('', store), 'c', 'all seen: starts over, never the last one again');
+}
+console.log('pop boot: the first line by language, unseen first ok');

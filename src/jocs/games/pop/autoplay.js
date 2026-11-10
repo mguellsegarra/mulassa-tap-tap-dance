@@ -18,3 +18,19 @@ export function botTap(g, rng = Math.random) {
   }
   return -1;
 }
+
+// Dev only (?autoplay=combo): taps 2, 3, 4, then 5 good cells in one frame (Mulassas, petards, goodies: rules.js join),
+// round and round, to see each chord on a PC. It waits for that many; after WAIT s it takes those there (2 at least), and a
+// petard or Mulassa about to go makes it take whatever is there (alone if need be).
+const GOOD = ['petard', 'calcot', 'campanar', 'carretilla', 'mula'], SIZES = [2, 3, 4, 5], GAP = 1.2, WAIT = 3;
+let size = 0, since = 0;
+
+// The cells to tap together this frame (maybe none).
+export function botChord(g, dt) {
+  since += dt;
+  const good = g.cells.filter(c => GOOD.includes(c.kind)).sort((a, b) => GOOD.indexOf(a.kind) - GOOD.indexOf(b.kind));
+  const want = SIZES[size], urgent = g.cells.some(c => (c.kind === 'petard' || c.kind === 'mula') && c.left < 1);
+  if (!urgent && (since < GAP || (good.length < want && !(since > GAP + WAIT && good.length >= 2)))) return [];
+  size = (size + 1) % SIZES.length; since = 0;
+  return good.slice(0, want).map(c => c.i);
+}

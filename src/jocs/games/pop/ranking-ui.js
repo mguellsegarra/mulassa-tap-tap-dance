@@ -30,7 +30,7 @@ export function setupRankingUI({ t, focusBack }) {
       m = await service();
       const res = await m.publish(body);
       m.forget();
-      showPlace(res.position, res.best); // on the home's pill before the player goes back to it
+      raiseBest(res.best); // the board's best becomes this device's when higher
       if (mine !== sent) return;
       line.textContent = t(res.improved ? 'rank.newBest' : 'rank.place', { n: res.position });
       line.classList.toggle('good', res.improved);
@@ -52,13 +52,6 @@ export function setupRankingUI({ t, focusBack }) {
     const kept = (await service().catch(() => null))?.pending();
     if (kept) send(kept);
   }
-  // the home's pill: the player's place; the board's best becomes this device's when higher (played elsewhere: the HUD and
-  // the end sheet then measure a run against it)
-  function showPlace(position, score) {
-    $('menu-rank').hidden = !position;
-    if (position) $('menu-rank').textContent = ` · #${position}`;
-    raiseBest(score);
-  }
   function endScreen() { $('end-rank').hidden = $('end-name').hidden = true; }
 
   // The home's place on the board, and a run kept from before (no name then, or offline) sent now if it can go.
@@ -69,17 +62,14 @@ export function setupRankingUI({ t, focusBack }) {
     const kept = m.pending();
     if (kept) try { await m.publish(kept); m.forget(); } catch (e) { if (REFUSED.has(e.code)) m.forget(); }
     const { place } = await m.me().catch(() => ({}));
-    showPlace(place?.position, place?.score);
+    raiseBest(place?.score); // played elsewhere: the HUD and the end sheet measure a run against it; the home's button never shows the place (the owner's call, 10 Nov 2026)
   }
 
   // the board's look (Plassa's board.js): mulassa.cat's badge art, their names in this game's words
   const lookOf = ({ badgeArtOf, CHECK_SVG }) => ({ checkSvg: CHECK_SVG, badgeOf: id => { const art = badgeArtOf(id); return art && { art, name: badgeName(id, k => t(`badge.${k}`)) }; } });
-  // a row's points, then its taps, small (rules.js hits); the level is the pill under the name
-  const scoreOf = r => {
-    const box = el('span', 'score');
-    box.append(el('b', '', r.score), el('small', '', `${r.hits ?? 0} ${t('rank.hits')}`));
-    return box;
-  };
+  // a row's points on the right, its level under the name: mulassa.cat's points and pill (src/ui/board-list.js); one number ranks
+  const scoreOf = r => el('b', 'score', r.score);
+  const underName = r => (r.level == null ? [] : [levelPill(r.level, t(`level.${r.level}`))]);
 
   function openBoard() {
     const list = $('board-list'), note = $('board-note'), req = ++boardReq;
@@ -89,7 +79,7 @@ export function setupRankingUI({ t, focusBack }) {
     $('board-close').focus({ focusVisible: false });
     service().then(m => Promise.all([m.board(), m.me().catch(() => ({})), marks()])).then(([rows, { place }, art]) => {
       if (req !== boardReq) return;
-      const look = lookOf(art), li = r => boardRow(r, { look, onOpen: () => openCard(r.public_id), cells: [scoreOf(r)], sub: r.level == null ? [] : [levelPill(r.level, t(`level.${r.level}`))] });
+      const look = lookOf(art), li = r => boardRow(r, { look, onOpen: () => openCard(r.public_id), cells: [scoreOf(r)], sub: underName(r) });
       list.append(...rows.map(li));
       if (place && !rows.some(r => r.is_self)) list.append(el('li', 'gap', '…'), li({ ...place, alias: t('rank.you', { n: place.position }), is_self: true, verified: false }));
       note.hidden = rows.length > 0;

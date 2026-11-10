@@ -7,7 +7,7 @@ export const PICKUP = 12, LOOP_START = 16, LOOP_END = 224;
 export const SKIP_FROM = 72, SKIP_TO = 136;
 const A = ['Cm', 'Eb', ['Eb', 'Bb', 'Cm', 'G'], ['Cm', 'G'], 'Ab', 'Eb', 'G', ['Cm', 'G']];
 const B = ['C', 'G', 'G7', 'C'], C = ['C', 'Dm', 'F', 'C', 'C', 'Dm', 'Dm7', 'C'];
-export const CHORDS = { C: [0, 4, 7], Cm: [0, 3, 7], Eb: [3, 7, 10], Ab: [8, 0, 3], Bb: [10, 2, 5], G: [7, 11, 2], G7: [7, 11, 2, 5], Dm: [2, 5, 9], Dm7: [2, 5, 9, 0], F: [5, 9, 0] };
+export const CHORDS = { C: [0, 4, 7], Cm: [0, 3, 7], Eb: [3, 7, 10], Ab: [8, 0, 3], Bb: [10, 2, 5], G: [7, 11, 2], G7: [7, 11, 2, 5], Dm: [2, 5, 9], Dm7: [2, 5, 9, 0], F: [5, 9, 0], D: [2, 6, 9] }; // D: the Drac's dominant (songs.js)
 export function chordAt(beat) {
   if (beat < 16) return 'G';
   if (beat >= 136 && beat < 144) return 'C'; // lands the B section in major

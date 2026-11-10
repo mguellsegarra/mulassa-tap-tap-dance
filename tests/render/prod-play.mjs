@@ -35,7 +35,9 @@ try {
   assert(await page.evaluate(() => new Promise(done => requestAnimationFrame(() => requestAnimationFrame(() => done(!document.getElementById('lang-tip')))))), 'the language tip is gone with the splash');
   const selected = () => page.evaluate(() => document.querySelector('.sel-card[aria-selected="true"]')?.dataset.id);
   const step = async dir => { // (force: the buttons pulse)
-    const was = await selected(); await page.click(`#select-${dir}`, { force: true });
+    // a forced click on an arrow still disabled (select-ui.js updateArrows, until the strip is laid out) does nothing: waiting for
+    // it ended this step's timeouts, about one run in two (the disabled arrow itself was not caught in the act)
+    const was = await selected(); await page.waitForFunction(id => !document.getElementById(id).disabled, `select-${dir}`, { timeout: 10000 }); await page.click(`#select-${dir}`, { force: true });
     await page.waitForFunction(was => document.querySelector('.sel-card[aria-selected="true"]')?.dataset.id !== was, was, { timeout: 10000 });
   };
   await page.waitForFunction(() => document.querySelector('.sel-card[aria-selected="true"]')?.dataset.id === 'mulassa-valls', null, { timeout: 30000 });

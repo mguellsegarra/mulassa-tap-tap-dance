@@ -11,11 +11,16 @@ export function setupGamesCarousel(doc = document) {
   const clip = setupHeroVideo({ video: by('games-hero-video'), wide });
   // The hero's still: the frame the game's clip starts on, so the clip fades in over itself; a game with no clip (or no
   // motion wanted) shows its picture. The wide one only where it shows (a big screen, style.css): a phone never downloads it.
+  // It is decoded off the main thread before it goes in, and the clip changes right behind it: the game before stays on
+  // screen those few ms (a first change of game waited for that decode in a 50-84 ms frame on a Galaxy S10).
   const showStill = () => {
     const card = cards[on];
     if (!card) return;
     const src = card.querySelector('img').getAttribute('src'), poster = clip.poster(card);
-    if (wide.matches) art.src = poster ?? card.dataset.hero ?? src; else by('games-hero-back').src = poster ?? src;
+    const url = wide.matches ? poster ?? card.dataset.hero ?? src : poster ?? src, probe = new Image();
+    const put = () => { if (cards[on] !== card) return; (wide.matches ? art : by('games-hero-back')).src = url; clip.show(card); };
+    probe.src = url;
+    (probe.decode?.() ?? Promise.resolve()).then(put, put); // a failed decode (offline, an old browser): the browser's own load
   };
   wide.addEventListener?.('change', showStill);
   for (const card of cards) { const poster = clip.poster(card); if (poster) new Image().src = poster; } // ready before a change of game
@@ -27,7 +32,6 @@ export function setupGamesCarousel(doc = document) {
     hero.style.setProperty('--game', getComputedStyle(card).getPropertyValue('--game'));
     hero.classList.toggle('soon', 'soon' in card.dataset); // nothing to play yet: no «Juga»
     showStill();
-    clip.show(card);
     heroName.textContent = card.querySelector('.sel-card-name').textContent;
     heroDesc.textContent = card.querySelector('.game-desc').textContent;
   };

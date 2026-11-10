@@ -6,7 +6,8 @@
 export function setupHeroVideo({ video, wide, win = globalThis }) {
   let card = null, turn = 0; // turn: only the latest start may show or give up its clip
   // the hero's own flag holds its still in place while a clip loads or plays (no :has(), docs/agents/graphics.md)
-  const mark = () => video.parentElement?.classList.toggle('clip', video.classList.contains('due') || video.classList.contains('on'));
+  // …and lets it go once the clip is on screen (.playing): a big screen's clip fades out on its left, the still showed through it
+  const mark = () => { const hero = video.parentElement?.classList, on = video.classList.contains('on'); hero?.toggle('clip', on || video.classList.contains('due')); hero?.toggle('playing', on); };
   const calm = () => !win.matchMedia?.('(prefers-reduced-motion: reduce)').matches && !win.navigator?.connection?.saveData;
   // back to the start, so a clip shown again begins from its first frame
   const still = () => { video.classList.remove('on', 'due'); mark(); video.pause(); if (video.currentTime) video.currentTime = 0; };

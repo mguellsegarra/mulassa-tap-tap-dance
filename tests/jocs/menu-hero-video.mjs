@@ -4,9 +4,10 @@ import { setupHeroVideo } from '../../src/jocs/menu/hero-video.js';
 
 function make({ wide = true, reduced = false, saveData = false, refuseFirst = false, refuseAll = false } = {}) {
   let plays = 0;
-  const classes = new Set(), video = {
-    src: null, playing: false, has: c => classes.has(c),
-    classList: { add: c => classes.add(c), remove: (...cs) => cs.forEach(c => classes.delete(c)) },
+  const classes = new Set(), hero = new Set(), video = {
+    src: null, playing: false, has: c => classes.has(c), hero,
+    classList: { add: c => classes.add(c), remove: (...cs) => cs.forEach(c => classes.delete(c)), contains: c => classes.has(c) },
+    parentElement: { classList: { toggle: (c, on) => (on ? hero.add(c) : hero.delete(c)) } },
     getAttribute: () => video.src, pause() { video.playing = false; },
     play() { video.playing = true; return refuseAll || (refuseFirst && !plays++) ? Promise.reject(new Error('AbortError')) : (plays++, Promise.resolve()); },
   };
@@ -25,8 +26,12 @@ assert(a.video.src === '/v/tap.mp4' && a.video.playing, 'a live game\'s clip loa
 assert(a.video.has('due') && !a.shown, 'the clip is not shown while it loads: never an empty video');
 assert.equal(a.clip.poster(card('tap', true)), '/v/tap.jpg', '…the hero\'s still is the clip\'s own first frame meanwhile');
 assert.equal(a.clip.poster(card('aviat-1', false)), undefined, 'a game with no clip keeps its picture');
+assert(a.video.hero.has('clip') && !a.video.hero.has('playing'), 'the hero holds its still under the loading clip');
 await null;
 assert(a.shown, 'then the wide clip shows over the still');
+assert(a.video.hero.has('playing'), '…and the still goes: it showed through the clip\'s faded side as a ghost');
+a.clip.show(card('pop', true));
+assert(!a.video.hero.has('playing') && !a.shown, 'a change of game brings the still back at once');
 
 // two starts in a row: the first one's play is aborted, and must not bring the picture back over the second
 const r = make({ refuseFirst: true });

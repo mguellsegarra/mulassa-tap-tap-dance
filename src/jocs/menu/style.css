@@ -97,4 +97,6 @@ html.ready #games-menu { animation: games-in .6s ease-in-out both; }
   /* the still drifts; under a clip it is the clip's first frame and stands still (both fade out on the left with the same mask) */
   #games-menu #games-hero-art { transform-origin: right center; animation: games-art-drift 12s ease-in-out infinite alternate; }
   #games-menu #games-hero.clip #games-hero-art { animation: none; }
+  /* gone once the clip has faded in over it: through the clip's faded left side it stood behind as a ghost of the first frame */
+  #games-menu #games-hero.playing #games-hero-art { opacity: 0; transition: opacity 0s .3s; }
 }

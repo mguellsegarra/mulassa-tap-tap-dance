@@ -80,7 +80,8 @@ export const SHOWREELS = {
   // on its source bars (figures/bou/bou-dance.js): 1 the first steps, 9 the changes of facing, 19 the lateral pass, 27 the
   // drums and turns, 64 the start, 72 the festive turns, 88 the ending
   // fill: a smaller share of the band (the Bou is low: at full share the lens came within the crowd's front rows)
-  [BOU.id]: { start: 12, loop: 324, fill: 0.8, shots: [
+  // film: «Mira el ball» is filmed by its own cameras (figures/bou/bou-clip.js), which cut dry: this list's cuts dissolve only on the selector
+  [BOU.id]: { start: 12, loop: 324, fill: 0.8, film: true, shots: [
     [0, 'wide', 'cut'], [16, 'left', 'glide'], [44, 'front', 'glide'], // the entrance, the first steps, the changes of facing
     [80, 'high', 'cut'], [112, 'right', 'glide'], [144, 'wide', 'glide'], [176, 'front', 'glide'], // the lateral pass; the turns
     [208, 'left', 'cut'], [240, 'high', 'glide'], [272, 'right', 'glide'], // the start; the festive turns
@@ -149,6 +150,6 @@ export function tickReel(on, id, menuBeat, dt, calm = false, songBeat = null) {
   REEL.on = true;
   REEL.beat = song ? Math.max(0, songBeat) : reelMod(reel.start + REEL.acc - REEL.anchor, reel.loop);
   const i = shotAt(reel, REEL.beat, REEL.shot, calm);
-  REEL.cut = i !== REEL.idx; REEL.fresh = REEL.idx === -1; REEL.idx = i; // fresh: a new selection's first shot (no dissolve: the old shot is gone)
+  REEL.cut = i !== REEL.idx && !(song && reel.film); REEL.fresh = REEL.idx === -1; REEL.idx = i; // fresh: a new selection's first shot (no dissolve: the old shot is gone)
   return REEL;
 }

@@ -90,6 +90,7 @@ export function frameCamera(dt, now, reelWide) { // reelWide: the idle selector'
   setCamShift(PHOTO.on || menuCam || G.state === 'play' && !VIEW ? shift : camShift + (shift - camShift) * Math.min(1, dt * 3), menuCam ? lens.x : easeLensX(dt) * !PHOTO.on); // play and menus: already smoothed (photo driving: no shift)
   if (Math.abs(camShift) > 0.5 || Math.abs(camShiftX) > 0.5) camera.setViewOffset(W * K, HH * K, -camShiftX, -camShift, W * K, HH * K);
   else if (camera.view?.enabled) camera.clearViewOffset();
+  if (!VIEW && !PHOTO.on) for (const f of FIGURE_SCENES) f.filmShot?.(); // a figure's own film of its dance (the Bou's «Mira el ball»): the whole camera, its lens shift too
   focusXYZ[0] = mx; focusXYZ[1] = G.state === 'play' ? 1.4 : 1; focusXYZ[2] = mz;
   propsFor(camera);
   if (trauma > 0) { // shake decays; quadratic so small bumps barely move it. During play only a small accent

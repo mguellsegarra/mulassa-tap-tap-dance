@@ -1,6 +1,6 @@
 <!doctype html><html lang="ca"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Bou · videoclip</title>
 <!-- The Bou's music video editor (dev only): the game itself in a frame playing «Mira el ball» with its music, filmed by the
-  clip's own cameras (bou-clip/shots.js, placed over the game's at each render), the cut list on the song's bars under it,
+  clip's own cameras (src/figures/bou/bou-clip.js: the game films «Mira el ball» with them), the cut list on the song's bars under it,
   and notes pinned to a moment, saved for the agent through
   the Bou timeline's dev backend (tools/dev/bou-timeline/plugin.mjs, view 'clip'). A click on the line starts the song there
   (the frame reloads with ?from: the game's crowd and festa are simulated, they cannot be scrubbed). -->
@@ -40,10 +40,18 @@ table{border-collapse:collapse;width:100%;font-size:13px}td,th{text-align:left;p
 <div class="lanes" id="lanes"><div class="lane" id="bars"><b class="lab">compàs</b></div><div class="lane" id="parts"><b class="lab">ball</b></div><div class="lane" id="shots"><b class="lab">plans</b></div><div class="lane" id="pins"><b class="lab">notes</b></div><i id="head"></i></div>
 <table><thead><tr><th>pla</th><th>temps</th><th>segons</th><th>dura</th><th>càmera</th><th>què hi passa</th></tr></thead><tbody id="rows"></tbody></table>
 <script type="module">
-import { SHOTS, CUTS, PARTS, CLIP_END, secAt, cutAt, placeClip } from '/tools/dev/bou-clip/shots.js';
+import { BOU_CLIP_CUTS as CUTS, BOU_CLIP_END as CLIP_END, bouClipSec as secAt, bouClipCut as cutAt } from '/src/figures/bou/bou-clip.js';
 import song from '/src/song-bou.json';
+// the dance on its song beats (figures/bou/bou-dance.js, source bars), for the editor's lane
+// each shot's colour and name, each cut's reason (the owner's words: Catalan)
+const LOOKS = {"vast": ["#4ea8de", "tota la plaça, quieta"], "balcony": ["#b5e48c", "quieta, des d’un balcó de l’altre costat"], "wide": ["#8ec5ff", "obert, el segueix"], "crane": ["#cdb4db", "grua: puja a poc a poc"], "orbit": ["#43aa8b", "l’envolta a poc a poc"], "front": ["#ffd166", "de cara, una mica de costat"], "charge": ["#f4a261", "càmera fixa per sobre de la colla: li ve de cara"], "feet": ["#ffafcc", "els peus dels portadors, de prop"], "head": ["#ff8fa3", "el cap"], "eyes": ["#ff5d8f", "primer pla dels ulls"]};
+const NOTES = {"0": "la plaça, el Bou al mig esperant", "8": "c.1-2: les dues passes de cama", "16": "mitja volta sobre la gropa", "24": "c.5-6: les passes de cama, ara mirant a l’altra banda", "32": "torna a girar cap a nosaltres", "40": "la volta sencera, davant i cua amunt i avall: la grua puja", "56": "desfà la volta (aquí canvia de sentit): tota la plaça, quieta", "72": "c.18-21: pren embranzida, envesteix i derrapa", "88": "arrenca cap a l’altra banda i torna al mig", "100": "quiet abans del techno: el cap", "108": "TECHNO: envestida a W, cap a la càmera", "116": "envestida de costat a S i tornada: tota la plaça", "124": "envestida a N i tornada", "132": "la diagonal", "140": "passes de cama, envestida, derrapada i mitja volta", "156": "volta i quart tornant al mig", "172": "envestida a S, cap a la càmera, i derrapada", "180": "recula girant", "188": "el calderó: passes curtes i canvis de pes", "196": "el calderó: quiet, respira (els ulls)", "204": "arrenca a poc a poc i obre l’arc", "220": "la volta d’anada i tornada", "232": "la colla l’aixeca; primera volta a coll amb la serp de públic", "252": "segona volta, des de l’altre costat i de lluny", "276": "el deixen a terra, rebota; la colla se’n va", "284": "DISCO FINAL: gira sobre si mateix, la càmera l’envolta a poc a poc", "300": "els últims girs: la grua puja"};
+const PARTS = [[0, 'entrada'], [8, 'passes de peus'], [16, 'mitja volta'], [24, 'passes (girat)'], [32, 'mitja volta'], [40, 'volta, davant i cua'], [56, 'desfà la volta'],
+  [76, 'envestida a W'], [88, 'envestida a E'], [104, 'espera'], [108, 'TECHNO W'], [116, 'S'], [124, 'N'], [132, 'diagonal'], [140, 'passes i envestida'], [156, 'volta i quart'],
+  [172, 'envestida a S'], [188, 'calderó'], [204, 'arrencada lenta'], [220, 'volta'], [232, 'l’aixequen'], [239, 'FESTA: dues voltes a coll'], [276, 'el deixen'], [284, 'DISCO FINAL: girs'], [316, 'cop final']];
 
-const $ = id => document.getElementById(id), game = $('game'), LOOP = CLIP_END, sec = secAt, shots = CUTS, KINDS = SHOTS;
+
+const $ = id => document.getElementById(id), game = $('game'), LOOP = CLIP_END, sec = secAt, shots = CUTS;
 const clock = t => `${Math.floor(t / 60)}:${(t % 60).toFixed(1).padStart(4, '0')}`, pct = b => `${b / LOOP * 100}%`;
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 const mod = u => game.contentWindow.eval(`import(${JSON.stringify(u)})`); // the frame's own module instances
@@ -64,11 +72,7 @@ async function load(from = 0) {
   if (win.__dbg.G.state === 'splash') (await mod('/src/game/flow.js')).unlock();
   await new Promise(r => setTimeout(r, 1200));
   win.document.querySelectorAll('dialog[open]').forEach(d => d.close());
-  const [sr, { renderer }, { bou }] = await Promise.all(['/src/game/showreel.js', '/src/scene/stage.js', '/src/figures/bou/bou-objects.js'].map(mod)); if (me !== run) return;
-  win.document.head.append(Object.assign(win.document.createElement('style'), { textContent: '#reel-fade{display:none!important}' })); // (the game's own reel still cuts under the clip: its dissolves stay out of the picture)
-  // the clip's camera over the game's, right before each draw of the game's camera while the song plays
-  const cam = win.__dbg.camera, render = renderer.render.bind(renderer);
-  renderer.render = (scene, c) => { if (c === cam && sr.REEL.on && sr.REEL.song && win.__dbg.G.state === 'play' && sr.REEL.beat < LOOP) placeClip(cam, sr.REEL.beat, bou.frame.rotation.y); render(scene, c); }; // (past its last chord the game's own end shot: down to the banknotes)
+  const sr = await mod('/src/game/showreel.js'); if (me !== run) return;
   win.document.getElementById('select-watch').click(); REEL = sr.REEL; $('status').textContent = '';
 }
 const seek = b => load(Math.max(0, sec(b) - 0.3));
@@ -80,9 +84,9 @@ function draw() {
       s.className = cls; s.style.left = pct(b); s.style.width = pct(e - b); s.textContent = text(it, i); s.title = `${text(it, i)} · ${clock(sec(b))}`; if (color) s.style.background = color(it); $(id).append(s); }); };
   lane('bars', song.dance.bars.filter((_, i) => i % 4 === 0).map(([n, b]) => [b, n]), 'bar', it => `c.${it[1]}`);
   lane('parts', PARTS, 'sec', it => it[1]);
-  lane('shots', shots, '', (it, i) => `${code(i)} ${it[1]}`, it => KINDS[it[1]]?.color ?? '#8ec5ff');
-  $('rows').innerHTML = shots.map(([b, k, n], i) => { const e = shots[i + 1]?.[0] ?? LOOP;
-    return `<tr data-b="${b}"><td><b>${code(i)}</b></td><td>${b}–${e}</td><td>${clock(sec(b))}</td><td>${(sec(e) - sec(b)).toFixed(1)} s</td><td><span class="k" style="background:${KINDS[k]?.color ?? '#8ec5ff'}"></span>${k}</td><td>${esc(n ?? '')}</td></tr>`; }).join('');
+  lane('shots', shots, '', (it, i) => `${code(i)} ${it[1]}`, it => LOOKS[it[1]]?.[0] ?? '#8ec5ff');
+  $('rows').innerHTML = shots.map(([b, k], i) => { const e = shots[i + 1]?.[0] ?? LOOP;
+    return `<tr data-b="${b}"><td><b>${code(i)}</b></td><td>${b}–${e}</td><td>${clock(sec(b))}</td><td>${(sec(e) - sec(b)).toFixed(1)} s</td><td><span class="k" style="background:${LOOKS[k]?.[0] ?? '#8ec5ff'}"></span>${k}</td><td>${esc(NOTES[b] ?? '')}</td></tr>`; }).join('');
   drawNotes();
 }
 function drawNotes() {

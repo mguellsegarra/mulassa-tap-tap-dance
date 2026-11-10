@@ -1,8 +1,8 @@
-// The Bou's music video (tools/dev/bou-clip/shots.js): every cut on a bar's downbeat, each shot at least two bars, never
+// The Bou's music video (src/figures/bou/bou-clip.js): every cut on a bar's downbeat, each shot at least two bars, never
 // into the same kind of shot, the feet only on the opening's leg passes; and the lens follows the Bou's path, never its
 // bounce (its height steady inside a shot, its turn slow), from above the crowd through a long lens.
 import assert from 'node:assert/strict';
-import { CUTS, SHOTS, CLIP_END, placeClip } from '../../../tools/dev/bou-clip/shots.js';
+import { BOU_CLIP_CUTS as CUTS, BOU_CLIP_SHOTS as SHOTS, BOU_CLIP_END as CLIP_END, placeBouClip as placeClip } from '../../../src/figures/bou/bou-clip.js';
 
 CUTS.forEach(([b, kind], i) => {
   const next = CUTS[i + 1]?.[0] ?? CLIP_END;

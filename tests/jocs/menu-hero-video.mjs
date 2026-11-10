@@ -12,11 +12,11 @@ function make({ wide = true, reduced = false, saveData = false, refuseFirst = fa
     play() { video.playing = true; return refuseAll || (refuseFirst && !plays++) ? Promise.reject(new Error('AbortError')) : (plays++, Promise.resolve()); },
   };
   const mq = { matches: wide, addEventListener: (k, f) => { mq.change = f; } };
-  const win = {
-    matchMedia: () => ({ matches: reduced }), navigator: { connection: { saveData } },
+  const taps = {}, win = {
+    matchMedia: () => ({ matches: reduced }), navigator: { connection: { saveData } }, addEventListener: (k, f) => { taps[k] = f; },
   };
   const clip = setupHeroVideo({ video, wide: mq, win });
-  return { clip, video, mq, get shown() { return classes.has('on'); } };
+  return { clip, video, mq, taps, get shown() { return classes.has('on'); } };
 }
 const card = (game, video) => ({ dataset: video ? { game, video: `/v/${game}.mp4`, videoTall: `/v/${game}-tall.mp4` } : { game, soon: '' } });
 
@@ -38,6 +38,11 @@ const r = make({ refuseFirst: true });
 r.clip.show(card('tap', true)); r.clip.show(card('pop', true));
 await null; await null;
 assert(r.video.has('due') && r.shown, 'an aborted earlier play leaves the latest clip alone');
+const g = make({ refuseFirst: true });
+g.clip.show(card('tap', true)); await null; await null;
+assert(!g.shown, 'a play refused before any tap keeps the still…');
+g.taps.touchend(); await null;
+assert(g.shown && g.video.playing, '…and the first tap anywhere starts the clip (an iPhone in Low Power Mode)');
 const f = make({ refuseAll: true });
 f.clip.show(card('tap', true)); await null; await null;
 assert(!f.video.has('due') && !f.shown, 'a refused play brings the picture back');

@@ -111,6 +111,12 @@ the method and its tools: `docs/agents/device-profiling.md`.
   frame 435–469 ms, GPU 188–196; without the dim (`packages/plassa/src/sheets.css`) 352 ms, GPU 123–129; painted once
   under the boot screen, with the 3D's first frame (`settings.js` `warm`, Pop's `main.js`) 34–67 ms, GPU 9–33. The cost
   moves to the boot screen (one more ~350 ms frame there, the boot as long as before, 3.2–3.3 s). Every later sheet: 34–67 ms.
+- A full-screen dim that is not a layer of its own is merged with what lies under it and repainted, at DPR 3.5, the first
+  time it shows: Pop's dim behind a sheet (mulassa.cat's look) cost the first ⚙ 168–201 ms whether it was the dialog's
+  `::backdrop`, a plain element, opaque or not, warmed under the boot screen or not (a colour covered by an opaque layer is
+  not drawn at all). `will-change: transform` on the dim element (`sheets.css` `.sheet-dim`) made it a solid-colour layer:
+  the first ⚙ 34–67 ms. The Bústia's confirm notice copies the publish sheet's seal and perks: that sheet is warmed too
+  (first notice 100–117 → 34–67 ms).
 
 ## GPU context loss (mobile GPUs)
 

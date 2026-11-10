@@ -39,6 +39,10 @@ const sheets = template.content;
 applyI18n(sheets); // the player's language (the page holds the Catalan)
 document.body.append(sheets);
 sheetFades(document);
+// the dim behind any open sheet (sheets.css .sheet-dim: an element, so the boot's warm() paints it too)
+const dim = Object.assign(document.createElement('div'), { className: 'sheet-dim', hidden: true });
+document.body.append(dim);
+new MutationObserver(() => { dim.hidden = !document.querySelector('dialog.sheet[open]'); }).observe(document.body, { subtree: true, attributeFilter: ['open'] });
 for (const id of ['settings-sync', 'settings-install', 'settings-prompt-row']) $(id).hidden = true;
 for (const s of $('account-menu').querySelectorAll('section.account-section')) s.hidden = true;
 $('settings-profile').querySelector('.sub').textContent = tr('ui.settings.profileSubGames'); // a game's Perfil: no statistics or podiums
@@ -101,10 +105,12 @@ export function openSettings(done = onDone) {
 // once as it will look, not modal (no top layer, so under #boot), then shut.
 export async function warm() {
   $('settings-profile').hidden = !service.configured;
-  menu.style.cssText = 'position: fixed; inset: 0; margin: auto; z-index: 3';
-  menu.show();
+  // Configuració, and the publish sheet whose seal and perks the Bústia's confirm notice copies (confirm-gate.js; its first
+  // showing cost 100–117 ms on the S10 otherwise)
+  const warmed = [menu, $('publish-menu')];
+  for (const d of warmed) { d.style.cssText = 'position: fixed; inset: 0; margin: auto; z-index: 3'; d.show(); } // the dim comes too (below)
   await new Promise(go => requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(go, 300))));
-  menu.close(); menu.style.cssText = '';
+  for (const d of warmed) { d.close(); d.style.cssText = ''; }
 }
 const fromSettings = open => () => { menu.close(); open(() => openSettings()); };
 $('settings-profile').addEventListener('click', fromSettings(openAccount));

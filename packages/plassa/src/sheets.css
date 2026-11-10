@@ -5,9 +5,12 @@
 /* a sheet's button icons as mulassa.cat draws them (its base.css `button svg`): line art in the text's colour; only in the
    sheets, so a game's filled icons (Juga, music) keep theirs */
 :where(dialog.sheet) button svg { width: 22px; height: 22px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-/* no full-screen dim behind a sheet on a game page: the game's home already veils its 3D, and that layer cost the S10
-   ~90 ms of Vulkan pipeline compiles on the first ⚙ (2026-11-10: first frame 435–469 → 319–335 ms; docs/agents/graphics.md) */
+/* the dim behind a sheet on a game page (mulassa.cat's colour): an element shown while a sheet is open (Pop's settings.js),
+   in a layer of its own (will-change). Without one, Chrome merged it with what lies under it and repainted the whole
+   screen at its first showing, new GPU programs included (S10: the first ⚙ 168–201 ms, as the ::backdrop was; with its
+   own layer 34–67 ms, graphics.md). Above the game's covers (z-index 3, last in <body>), under the boot screen (4). */
 dialog.sheet::backdrop { background: none; }
+.sheet-dim { position: fixed; inset: 0; z-index: 3; background: #120d09b3; pointer-events: none; will-change: transform; }
 body.wrong-orient dialog[open] { visibility: hidden; } body.wrong-orient dialog::backdrop { display: none; }
 #settings-menu { width: min(400px, calc(100vw - 32px)); padding: 20px 20px 18px; }
 #settings-menu .sheet-actions { grid-template-columns: minmax(0, 1fr); } /* a long label wraps in its row instead of widening the column past the sheet (Português at 320) */

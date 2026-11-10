@@ -59,7 +59,9 @@ html.ready #games-menu { animation: games-in .6s ease-in-out both; }
 #games-grid .sel-card-name { display: block; overflow-wrap: anywhere; text-wrap: balance; font-size: clamp(15px, calc(var(--row) * .075), 28px); line-height: 1.05; color: var(--game); text-shadow: 0 1px 2px #0008; white-space: normal; }
 #games-grid .game-desc { display: none; }
 /* each game's own colour, the same as the second word of its logo; the new ones are provisional */
-.game-card[data-game="tap"] { --game: #ffd23f; } .game-card[data-game="pop"] { --game: #ff7ac6; } .game-card[data-game="aviat-1"] { --game: #6ec8ff; } .game-card[data-game="aviat-2"] { --game: #8be04e; } .game-card[data-game="aviat-3"] { --game: #ff7a1a; } /* the next games' own colours: Memory, Crush, Drop */
+/* a card's and, by the same attribute, the hero's (carousel.js): never copied by script, which read it before this file had
+   arrived on a first visit in Safari (a white name, «Juga» without its shadow) */
+[data-game="tap"] { --game: #ffd23f; } [data-game="pop"] { --game: #ff7ac6; } [data-game="aviat-1"] { --game: #6ec8ff; } [data-game="aviat-2"] { --game: #8be04e; } [data-game="aviat-3"] { --game: #ff7a1a; } /* the next games' own colours: Memory, Crush, Drop */
 #games-hero.soon .game-play { visibility: hidden; }
 #games-grid .game-card[data-soon] .por img { object-position: top; } /* its «?» floats at the top of the picture */
 

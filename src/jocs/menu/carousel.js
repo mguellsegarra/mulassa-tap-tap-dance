@@ -29,7 +29,7 @@ export function setupGamesCarousel(doc = document) {
     on = i;
     cards.forEach((card, k) => card.classList.toggle('on', k === on));
     const card = cards[on];
-    hero.style.setProperty('--game', getComputedStyle(card).getPropertyValue('--game'));
+    hero.dataset.game = card.dataset.game; // its colour (style.css)
     hero.classList.toggle('soon', 'soon' in card.dataset); // nothing to play yet: no «Juga»
     showStill();
     heroName.textContent = card.querySelector('.sel-card-name').textContent;

@@ -1,9 +1,12 @@
-// The page follows the selected figure's buttons (game/figure-theme.js): colours as custom properties on <body>
-// (--gua… with the Mulassa's own as the CSS fallbacks), `fig-drac` for the few Drac-only rules, and the labels of the
-// semantic DOM roles; only the portrait keeps its original markup.
+// The page follows the selected figure's buttons (game/figure-theme.js): colours as custom properties (--gua… with the
+// Mulassa's own as the CSS fallbacks) and `fig-drac` / `fig-bou` for the few figure-only rules, both on their only readers
+// (THEMED: the pad, the controls' legend, the sync pad), and the labels of the semantic DOM roles; only the portrait keeps
+// its original markup. On <body> every figure change restyled the whole page and its body :has() rules (~370 elements,
+// 20-35 ms of a selector tap on a Galaxy S10).
 import { onTheme, trf, figTheme } from '../game/figure-theme.js';
 import { DRAC, BOU, portraitArt, portraitPalette } from '../game/figures.js';
 
+const THEMED = '#pad, #controls-legend, #sync-pad';
 const VARS = { gua: '--gua', guaLt: '--gua-lt', guaDk: '--gua-dk', pa: '--pa', paLt: '--pa-lt', paDk: '--pa-dk' };
 // Bind semantic roles explicitly; no message is identified by its rendered words.
 const figureDomText = [
@@ -16,9 +19,10 @@ const figureDomText = [
 const figureDomAria = [['#pad .gua', 'input.leftAria'], ['#pad .pa', 'input.rightAria']];
 // the default (Mulassa) theme never fires a switch, so it is applied once here: index.html's Catalan fallback text would otherwise stay in every language
 const apply = t => {
-  const b = document.body;
-  b.classList.toggle('fig-drac', t.drac); b.classList.toggle('fig-bou', t.id === 'bou');
-  for (const [k, v] of Object.entries(VARS)) t.id !== 'mulassa' ? b.style.setProperty(v, t.colors[k]) : b.style.removeProperty(v);
+  for (const b of document.querySelectorAll(THEMED)) {
+    b.classList.toggle('fig-drac', t.drac); b.classList.toggle('fig-bou', t.id === 'bou');
+    for (const [k, v] of Object.entries(VARS)) t.id !== 'mulassa' ? b.style.setProperty(v, t.colors[k]) : b.style.removeProperty(v);
+  }
   for (const [selector, key] of figureDomText) document.querySelectorAll(selector).forEach(el => { el.textContent = trf(key); if (el.dataset.w) el.dataset.w = el.textContent; });
   document.querySelectorAll('#howto-portrait').forEach(face => { // «Com es juga»'s ÀNIM row: the HUD's portrait of who dances
     face.dataset.base ??= face.innerHTML; face.innerHTML = t.drac ? portraitSvg(DRAC) : t.id === 'bou' ? portraitSvg(BOU) : face.dataset.base;

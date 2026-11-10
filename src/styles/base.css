@@ -53,7 +53,7 @@ canvas { position: fixed; left: 0; top: 0; width: 100%; height: 100vh; height: 1
 #pad .lbl { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; box-sizing: border-box; height: calc(100% - 10px); aspect-ratio: 1; max-width: calc(100% - 14px); border: 6px solid #fff; border-radius: 50%; background: radial-gradient(circle at 50% 30%, var(--lt), var(--c) 62%); box-shadow: 0 0 0 5px #2a1a10, 0 6px 0 5px #0006, inset 0 -8px 0 var(--dk); pointer-events: none; transition: transform .38s cubic-bezier(.3, 1.8, .5, 1), box-shadow .3s ease-out; will-change: transform; } /* release: springs back past 1 and settles */
 /* The outline is painted once: a stroked copy of the word under it (::before), not 16 text-shadows (iOS Safari
    ignores paint-order on HTML text). The word's own shadow drops under it; over the outline it's the same colour. */
-#pad .word { text-shadow: 0 2px 8px #0000002e; } .fig-drac #pad .word, .fig-bou #pad .word { text-shadow: 0 1px 0 var(--dk), 0 2px 6px #0006; } /* white on the light yellow (sand) needs a darker edge */ /* plain white, just a soft shadow for contrast */
+#pad .word { text-shadow: 0 2px 8px #0000002e; } #pad.fig-drac .word, #pad.fig-bou .word { text-shadow: 0 1px 0 var(--dk), 0 2px 6px #0006; } /* white on the light yellow (sand) needs a darker edge */ /* plain white, just a soft shadow for contrast */
 #pad .arr { font-size: 18px; line-height: 1; color: #fff; text-shadow: 0 1px 4px #0000002e; margin-bottom: 2px; }
 #pad button:hover { filter: none; }
 #pad button:active { transform: none; }
@@ -166,7 +166,7 @@ button svg { width: 22px; height: 22px; flex: none; fill: none; stroke: currentC
 #controls-legend { margin: 12px 0 0; padding: 0; list-style: none; display: grid; gap: 6px; font: 700 14px/1.2 'Baloo 2', system-ui, sans-serif; }
 #controls-legend li { display: grid; grid-template-columns: 76px 1fr; align-items: center; gap: 12px; padding: 8px 10px; border-radius: 12px; background: #fff3d60a; }
 #controls-legend li > :first-child { justify-self: center; }
-#controls-legend li.only-drac, #controls-legend li.only-bou, .fig-drac #controls-legend li.only-mula, .fig-bou #controls-legend li.only-mula { display: none; } .fig-drac #controls-legend li.only-drac, .fig-bou #controls-legend li.only-bou { display: grid; } /* one figure's rows (ui/figure-theme-dom.js sets .fig-drac / .fig-bou) */
+#controls-legend li.only-drac, #controls-legend li.only-bou, #controls-legend.fig-drac li.only-mula, #controls-legend.fig-bou li.only-mula { display: none; } #controls-legend.fig-drac li.only-drac, #controls-legend.fig-bou li.only-bou { display: grid; } /* one figure's rows (ui/figure-theme-dom.js sets .fig-drac / .fig-bou on the legend) */
 #controls-legend b { display: block; color: #f5c518; font-size: 16px; letter-spacing: .03em; }
 @media (max-height: 700px) { #howto-menu { padding: 14px 16px 14px; } #howto-menu h2 { font-size: 26px; } #controls-legend { margin-top: 8px; gap: 4px; } #controls-legend li { padding: 4px 8px; } } /* short phones (360×640): the whole list and «Entesos!» fit without scrolling */
 #controls-legend small { display: block; font-size: 14px; color: #e8d8b8; }

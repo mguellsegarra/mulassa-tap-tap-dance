@@ -1,7 +1,7 @@
 import { newBouPose, createBouDance } from './bou-dance.js';
 // One deterministic sampler for playback, pause, restart and arbitrary seeks.
-export function createBouMotion(rig) {
-  const dance=createBouDance(),pose=newBouPose(),feet=Array.from({length:4},()=>({}));
+export function createBouMotion(rig, dance = createBouDance()) {
+  const pose=newBouPose(),feet=Array.from({length:4},()=>({}));
   // dt: real seconds since the last frame, for the tail's pendulum only (0 = a seek: it hangs still)
   // sq 0-1: a BRAMA's squash on the head (bou-stage.js bouBrama)
   return (t,dt=0,sq=0)=>{

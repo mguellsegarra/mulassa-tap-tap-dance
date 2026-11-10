@@ -1,4 +1,4 @@
-import { shoeSeparation } from '../mulassa/mula-supports.js';
+import { shoeGap } from '../mulassa/mula-supports.js';
 import { clamp01, quintic } from '../../core/math.js';
 
 // Deterministic phrase interpolation and world-space contacts, adapted from the Bou reference study.
@@ -29,14 +29,31 @@ const nominal = (p, i) => ({ x: p.x + layout[i].x * Math.cos(p.yaw) + layout[i].
 // legRoom: the least distance across between a carrier's two feet (m; .26 at rest, legs .14-.16 wide).
 // due/half/late: step units off before a pair steps on a beat / on a half beat / off the grid; a step lasts `share` of a half beat.
 const STEP = { legRoom: .22, legPush: .45, due: .5, half: .8, late: 2.5, share: .9, min: .18, max: .34, lead: .3, lift: .1, run: { speed: .3, carrier: .5, spin: 1, share: 1, lead: .5 } };   // lift: a stepping sole 1.5 cm over the other shoe (8.5 cm) when it passes over it
-export function planBouFeet(poseAt, start, end, gesture = () => 0, raise = () => 0) {
+export function planBouFeet(...args) {
+  const plan = bouFootPlan(...args);
+  let step;
+  do { step = plan.next(); } while (!step.done);
+  return step.value;
+}
+// The game prepares the same contacts under the loader, yielding between small batches.
+export async function prepareBouFeet(...args) {
+  const plan = bouFootPlan(...args);
+  let step;
+  do {
+    const until = performance.now() + 8;
+    do { step = plan.next(); } while (!step.done && performance.now() < until);
+    if (!step.done) await new Promise(resolve => setTimeout(resolve, 0));
+  } while (!step.done);
+  return step.value;
+}
+function* bouFootPlan(poseAt, start, end, gesture = () => 0, raise = () => 0) {
   const initial = layout.map((_, i) => nominal(poseAt(start), i)), planted = initial.map(p => ({ ...p }));
   const events = layout.map(() => []), busy = [start, start, start, start], quiet = [start, start, start, start];
   // Gesture cycles a foot sits out, [from, to], for the sampler too.
   const rests = layout.map(() => []), rest = (i, a, b) => { if (b > a) { rests[i].push([a, b]); quiet[i] = Math.max(quiet[i], b); } };
   const zeroAfter = (i, t) => { while (t < end && gesture(t, i) !== 0) t += .005; return t; };
   const land = (i, at, most = STEP.legPush) => {
-    const to = nominal(poseAt(at), i), target = { ...to }, separation = {};
+    const to = nominal(poseAt(at), i), target = { ...to };
     // Its own side of its partner, a leg's room apart (the trousers are wider than the shoes): a body turning or sliding
     // sideways would otherwise land a foot across the other one, and the two legs through each other.
     const mate = planted[i ^ 1], side = i % 2 ? 1 : -1, c = Math.cos(to.yaw), s = Math.sin(to.yaw);
@@ -46,8 +63,8 @@ export function planBouFeet(poseAt, start, end, gesture = () => 0, raise = () =>
       to.x = target.x + sign * ring * .025 * Math.sin(to.yaw);
       to.z = target.z + sign * ring * .025 * Math.cos(to.yaw);
       // Clear of the others' planted feet and of where a stretched leg may reach meanwhile.
-      if (planted.every((other, j) => i === j || (shoeSeparation(to, other, separation).gap >= .018
-        && shoeSeparation(to, stretch(other, j, 1), separation).gap >= .018))) return to;
+      if (planted.every((other, j) => { if (i === j) return true; const out = stretch(other, j, 1);
+        return shoeGap(to.x, to.z, to.yaw, other.x, other.z, other.yaw) >= .018 && shoeGap(to.x, to.z, to.yaw, out.x, out.z, out.yaw) >= .018; })) return to;
     }
     throw new Error(`No clear Bou landing at ${at}, foot ${i}`);
   };
@@ -60,6 +77,7 @@ export function planBouFeet(poseAt, start, end, gesture = () => 0, raise = () =>
   const ends = q => [.66, -.66].map(z => ({ x: q.x + z * Math.sin(q.yaw), z: q.z + z * Math.cos(q.yaw) }));
   let prev = ends(poseAt(start));
   for (let frame = 1; start + frame / 100 < end; frame++) {
+    if (frame % 32 === 0) yield;
     const t = start + frame / 100, p = poseAt(t), beats = (p.beat - lastBeat) * 100;   // beats a second here
     // Ordinary steps keep the music (natural steps when it turns, not a shuffle): a pair steps on a
     // beat when half a step unit out, on the half beat between only when further behind (a fast turn), taking most of a

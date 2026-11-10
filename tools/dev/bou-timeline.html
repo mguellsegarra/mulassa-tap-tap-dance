@@ -1,0 +1,13 @@
+<!doctype html><html lang="ca"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Bou · línia de temps del ball</title><link rel="stylesheet" href="/tools/dev/bou-timeline/style.css"></head><body>
+<header><h1>Ball del Bou · línia de temps</h1><a href="/tools/dev/bou-dance.html">Ball sense editor</a><a href="/tools/dev/bou-review.html">Compara amb el vídeo</a><span id="status">Carregant…</span></header>
+<div class="top"><div class="viewer"><canvas id="stage" aria-label="El Bou ballant a la plaça"></canvas><span id="hud"></span><span id="flash" role="status"></span></div>
+<aside><section id="note-form" hidden></section><section id="inspector"></section><section><h2>Notes per a en Claude</h2><div id="notes"></div></section></aside></div>
+<div class="transport"><button id="start" title="A l'inici (Inici)">⏮</button><button id="play" title="Reprodueix / para (Espai)">▶</button><span id="time">0:00.00</span>
+<label>Tros<select id="phase-pick"></select></label><label>Velocitat<select id="speed"><option value="1">1×</option><option value="0.75">0,75×</option><option value="0.5">0,5×</option><option value="0.25">0,25×</option></select></label>
+<label>Imant<select id="snap"><option value="1">1 temps</option><option value="0.5">1/2 temps</option><option value="0.25" selected>1/4 temps</option><option value="0.125">1/8 temps</option><option value="0">Lliure</option></select></label>
+<button id="loop" title="Bucle (L). Maj + arrossega la regla per marcar-lo">⟲ Bucle</button>
+<label>Vista<select id="view"><option value="q">Tres quarts</option><option value="side">Costat</option><option value="front">Davant</option><option value="rear">Darrere</option><option value="top">Des de dalt</option></select></label><label><input type="checkbox" id="follow"> Segueix</label>
+<button id="zoomout" title="Allunya (−)">−</button><button id="zoomin" title="Apropa (+)">+</button><button id="fit">Tot</button>
+<button id="undo" title="Desfés (⌘Z)" aria-label="Desfés">↶</button><button id="redo" title="Refés (⇧⌘Z)" aria-label="Refés">↷</button><button id="note" class="primary" title="Nota en aquest moment (N)">✎ Nota</button></div>
+<div class="tlwrap"><canvas id="tl"></canvas></div>
+<script type="module" src="/tools/dev/bou-timeline/main.js"></script></body></html>

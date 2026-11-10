@@ -8,7 +8,7 @@ import { G } from '../../game/state.js';
 import { REEL } from '../../game/showreel.js';
 import { songTimeAtBeat } from '../../game/figure-song.js';
 import { createBouMotion } from './bou-motion.js';
-import { BOU_TIMING, BOU_CARRY, bouPose, newBouPose, bouFestaAt } from './bou-dance.js';
+import { BOU_TIMING, BOU_CARRY, bouPose, newBouPose, bouFestaAt, prepareBouDance } from './bou-dance.js';
 import { liveBouFeet } from './bou-feet.js';
 import { PHOTO } from '../../game/photo-control.js';
 import { LETTERS } from '../../core/env.js';
@@ -23,6 +23,9 @@ export const BOU_DANCE = { t: 0 }; // the song second shown
 export const BOU_END = BOU_TIMING.duration;
 const BOU_WORLD = new THREE.Vector3();
 let bouMotion = null, bouShown = -1;
+export async function prepareBouMotion() {
+  if (!bouMotion) bouMotion = createBouMotion(bou, await prepareBouDance());
+}
 
 // acc: { roll, pitch } accents (rad) leaning the shell on the carriers, `col` 0-1 the collapse. The shell never lifts
 // off its carriers: the reference's collective overhead lift needs exterior carriers, not modelled.

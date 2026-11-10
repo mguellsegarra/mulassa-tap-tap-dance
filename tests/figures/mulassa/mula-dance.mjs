@@ -9,7 +9,7 @@ import { beatAtTime } from '../../../src/core/beat-grid.js';
 import { compileForm } from '../../../src/music-form/compile.js';
 import { mulaDance, makeMulaDance, newMulaPose } from '../../../src/figures/mulassa/mula-dance.js';
 import { createMulaTime } from '../../../src/figures/mulassa/mula-time.js';
-import { shoeSeparation, nominalFoot, createStepper, MULA_STEP, SHOE } from '../../../src/figures/mulassa/mula-supports.js';
+import { shoeGap, nominalFoot, createStepper, MULA_STEP, SHOE } from '../../../src/figures/mulassa/mula-supports.js';
 import { MULA_W, MULA_COMPASS, MULA_CENTRE, MULA_REACH, MULA_HELPERS, MULA_HELPER_RADIUS, MULA_SEATS, mulaDanceYaw, mulaToWorld } from '../../../src/figures/mulassa/mula-layout.js';
 
 const read = p => JSON.parse(readFileSync(new URL(p, import.meta.url), 'utf8'));
@@ -142,7 +142,7 @@ for (const b of [24, 60, 170]) { // (away from the culades, whose pitch lifts th
 }
 // ---- the song's shoes: planted shoes stay put, swings lift a little and land, no two shoes ever overlap, none left behind
 {
-  const dt = 1 / 240, feet = [0, 1, 2, 3, 4, 5, 6, 7].map(() => ({})), prev = feet.map(() => null), sep = {}, p = newMulaPose(), nom = {};
+  const dt = 1 / 240, feet = [0, 1, 2, 3, 4, 5, 6, 7].map(() => ({})), prev = feet.map(() => null), p = newMulaPose(), nom = {};
   let slide = 0, lift = 0, overlap = Infinity, behind = 0;
   for (let t = dt / 2; t < song.tail; t += dt) {
     at(t, p);
@@ -153,7 +153,7 @@ for (const b of [24, 60, 170]) { // (away from the culades, whose pitch lifts th
       nominalFoot(p, i, nom); behind = Math.max(behind, Math.hypot(f.x - nom.x, f.z - nom.z));
       prev[i] = { ...f };
     }
-    for (let i = 0; i < 8; i++) for (let j = i + 1; j < 8; j++) if (Math.abs(feet[i].y - feet[j].y) < SHOE.height) overlap = Math.min(overlap, shoeSeparation(feet[i], feet[j], sep).gap); // (a swing passes above)
+    for (let i = 0; i < 8; i++) for (let j = i + 1; j < 8; j++) if (Math.abs(feet[i].y - feet[j].y) < SHOE.height) overlap = Math.min(overlap, shoeGap(feet[i].x, feet[i].z, feet[i].yaw, feet[j].x, feet[j].z, feet[j].yaw)); // (a swing passes above)
   }
   assert(slide < 1e-9, `planted shoes never slide (${slide})`);
   assert(lift <= MULA_STEP.lift + 1e-9, 'a swing lifts at most the step height');

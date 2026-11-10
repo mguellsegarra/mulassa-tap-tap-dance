@@ -20,6 +20,7 @@ function bouFilmShot() {
 const NO_BOU = Q.has('nobou'); // dev: its colla and the plaça without the Bou itself (to film them)
 export const BOU_SCENE = {
   id: 'bou-tradicional-valls',
+  rotllana: true, // the plaça cleared to one round ring of people (scene/rotllana.js)
   root: () => bou.frame,
   show(on) { if (bou) bou.frame.visible = on && !NO_BOU; },
   collaTick: bouCollaTick, collaSpots: BOU_COLLA_SPOTS, colla: () => bouColla,

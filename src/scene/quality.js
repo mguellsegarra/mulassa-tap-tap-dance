@@ -45,7 +45,7 @@ function qualityShadows() {
     qualityShadowMap(target);
   }
 }
-function refreshBandSpots() {
+export function refreshBandSpots() {
   bandSpots = plaza.band.filter(p => p.g.scale.x).map(({ g: { position: b } }) => {
     const r = Math.hypot(b.x, b.z);
     return { pos: new THREE.Vector2(b.x * (1 - 0.25 / r), b.z * (1 - 0.25 / r)), rad: RAD.band, fixed: true, band: true };

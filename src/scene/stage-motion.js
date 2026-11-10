@@ -13,6 +13,7 @@ import { clearManualImpact, expireManual } from './manual-jump.js';
 import { PAIR, DRAC_JUMP, keepClear, takeSolo, animPair } from '../figures/drac/drac-play.js';
 import { FIGURE_SCENES, sceneOf } from './figure-scenes.js';
 import { setBandLineup } from './quality.js';
+import { setRotllana } from './rotllana.js';
 import { traitsOf, SPLASH_HOST_ID } from '../figures/index.js';
 
 const SPLASH = { pair: PAIR, keepClear };
@@ -70,6 +71,7 @@ export function animStage(dt, beat, live = 1) {
   const reel = REEL.on && G.state === 'select' && !PHOTO.on && !pair; // the selector's showreel: the song dance on the menu loop's beat (game/showreel.js)
   for (const f of FIGURE_SCENES) f.show(f === own);
   setBandLineup(PHOTO.on ? null : own.band ?? 'banda'); // free play: no musicians with any figure, only the public
+  setRotllana(!pair && !!own.rotllana); // (after the band: its spots stay clear)
   for (const f of FIGURE_SCENES) f.collaTick(f === own && !pair, beat, dt, reel); // (the splash has two figures: no colla)
   if (own.id === SPLASH_HOST_ID) animPair(dt, beat, pair);
   else {

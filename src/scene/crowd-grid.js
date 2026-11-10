@@ -7,6 +7,7 @@ import { activeCrowd, bandSpots, midCrowd } from './quality.js';
 import { FIGURE_SCENES } from './figure-scenes.js';
 import { crowdAnchored } from './crowd-effects.js';
 import { crowdRadius, backdropContacts } from './crowd-contact.js';
+import { rotllanaCrowd } from './rotllana.js';
 
 // Each cell keeps its array; cellCount[k] says how many of its entries are this frame's. Emptying them with length = 0
 // freed every array and the pushes grew them again, every frame: ~1.2 MB/s of garbage (docs/agents/device-profiling.md).
@@ -92,7 +93,7 @@ export function fillCells() {
   for (const b of bandSpots) cellPush(crowdCell(b), b); // the band: fixed, never in anyone's way
   for (const f of FIGURE_SCENES) if (f.colla()?.helpers.visible) for (const b of f.collaSpots) cellPush(crowdCell(b), b); // the shown figure's colla
   for (const p of photoExtras) cellPush(crowdCell(p), p);
-  const backgroundContacts = backdropContacts([plaza.backdrop, midCrowd]);
+  const backgroundContacts = backdropContacts([plaza.backdrop, midCrowd, rotllanaCrowd]);
   for (const b of backgroundContacts) cellPush(crowdCell(b), b);
   return backgroundContacts;
 }

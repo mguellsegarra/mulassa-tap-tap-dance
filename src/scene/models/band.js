@@ -146,11 +146,11 @@ export function buildMusician(kind, look = BAND_LOOKS.banda, p = buildPerson(loo
 // Two rows at the ring's edge (front r 9.7 m, back 10.6, staggered so the back row plays between shoulders), centred
 // on azimuth az (x = cos, z = sin), facing the middle. Only the first n of the line-up play: everyone else is hidden
 // (scale 0, skinCrowd).
-export function placeBand(band, n, az, lineup = 'banda') {
+export function placeBand(band, n, az, lineup = 'banda', { r0 = 9.7, gap = 0.85 } = {}) { // r0: the front row's radius; gap: m between players
   const on = band.filter(p => p.lineup === lineup).slice(0, n), rows = [on.filter(p => !p.row), on.filter(p => p.row)];
   band.forEach(p => p.g.scale.setScalar(on.includes(p) ? 1 : 0));
   rows.forEach((row, k) => row.forEach((p, j) => {
-    const r = 9.7 + k * 0.9, a = az + (j - (row.length - 1) / 2 + k * 0.5) * 0.85 / r;
+    const r = r0 + k * 0.9, a = az + (j - (row.length - 1) / 2 + k * 0.5) * gap / r;
     p.g.position.set(Math.cos(a) * r, 0, Math.sin(a) * r);
     p.g.rotation.set(0, Math.atan2(-p.g.position.x, -p.g.position.z), 0);
   }));

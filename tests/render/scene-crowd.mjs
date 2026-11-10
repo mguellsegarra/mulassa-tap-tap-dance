@@ -393,3 +393,32 @@ console.log('crowd neighbour separation ok');
   run(`qualityLevel = ${q0}; applyRenderQuality(); crowd.forEach(p => placeHome(p));`);
 }
 console.log('crowd footprints never overlap ok');
+{ // a figure's rotllana (scene/rotllana.js, the Bou's): one closed round ring, the band in its front row with room round it,
+  // the façades' backdrop and the mid band hidden; and everything back as it was when another figure takes the plaça
+  const ring = JSON.parse(run(`(() => { setRotllana(true);
+    const m = new THREE.Matrix4(), places = [];
+    for (let i = 0; i < rotllanaCrowd.mesh.count; i++) { rotllanaCrowd.mesh.getMatrixAt(i, m); const e = m.elements; if (Math.hypot(e[0], e[1], e[2]) > 0.05) places.push([e[12], e[14]]); }
+    const movers = activeCrowd.map(p => [p.ring.x, p.ring.y]);
+    return JSON.stringify({ places, movers, band: bandSpots.map(b => [b.pos.x, b.pos.y]), backdrop: plaza.backdrop.mesh.visible, mid: midCrowd?.mesh.visible ?? false, shown: rotllanaCrowd.mesh.visible, R: ROTLLANA }); })()`));
+  const { R } = ring, everyone = [...ring.places, ...ring.movers];
+  assert(ring.shown && !ring.backdrop && !ring.mid, 'the ring shows, the backdrop and the mid band hide');
+  for (const [x, z] of everyone) {
+    const row = (Math.hypot(x, z) - R.r0) / R.row;
+    assert(Math.abs(row - Math.round(row)) < 1e-6 && row > -1e-6, `everyone on one of the ring's circles (${x.toFixed(2)}, ${z.toFixed(2)})`);
+  }
+  // closed all round: round the front two rows, but by the band, no gap wider than a few places (no corridor)
+  const front = everyone.filter(([x, z]) => Math.hypot(x, z) < R.r0 + 1.5 * R.row).map(([x, z]) => Math.atan2(z, x)).sort((a, b) => a - b);
+  const byBand = a => ring.band.some(([x, z]) => Math.hypot(Math.cos(a) * R.r0 - x, Math.sin(a) * R.r0 - z) < R.bandRoom + 0.5);
+  const gaps = front.map((a, i) => [i ? a - front[i - 1] : a + 2 * Math.PI - front.at(-1), a]).filter(([g, a]) => !byBand(a - g / 2)).map(([g]) => g);
+  assert(Math.max(...gaps) < 2.5 * R.step / R.r0, `the ring has no corridor (widest gap ${Math.max(...gaps).toFixed(2)} rad)`);
+  assert(ring.band.length > 0, 'the band plays in it');
+  assert(ring.band.some(([x, z]) => Math.abs(Math.hypot(x, z) - (R.band.r0 - 0.25)) < 1e-6), 'its first row in the front row');
+  for (const [bx, bz] of ring.band) {
+    assert([0, 0.9].some(k => Math.abs(Math.hypot(bx, bz) - (R.band.r0 + k - 0.25)) < 1e-6), 'the band at the ring\'s front (its spots: 0.25 m in front of each player)');
+    assert(everyone.every(([x, z]) => Math.hypot(x - bx, z - bz) >= R.bandRoom), 'nobody in the band\'s room');
+  }
+  const back = JSON.parse(run(`(() => { setRotllana(false); return JSON.stringify({ shown: rotllanaCrowd.mesh.visible, backdrop: plaza.backdrop.mesh.visible, rings: crowd.filter(p => p.ring).length, band: Math.hypot(bandSpots[0].pos.x, bandSpots[0].pos.y) }); })()`));
+  assert(!back.shown && back.backdrop && !back.rings, 'another figure: the ring gone, the backdrop back, nobody keeps a ring slot');
+  assert(back.band > 9, 'and the band back at its own place');
+  console.log('rotllana: closed round ring, the band in front with room, restored after ok');
+}

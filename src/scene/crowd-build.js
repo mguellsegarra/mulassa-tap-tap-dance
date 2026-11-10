@@ -34,7 +34,7 @@ export const arenaNow = () => COLLAS.reduce((r, c) => (c.helpers.visible ? Math.
 export function placeHome(p) {
   // the front row near enough that her turns reach it (RING); with a colla out, from the dance ground's edge
   const r = Math.max(RING.front + p.row * 1.1 + rnd(-0.4, 0.4), arenaNow() && arenaNow() + 0.3 + p.row * 0.6);
-  p.pos.set(Math.cos(p.ang) * r, Math.sin(p.ang) * r);
+  if (p.ring) p.pos.copy(p.ring); else p.pos.set(Math.cos(p.ang) * r, Math.sin(p.ang) * r); // ring: their slot in a figure's rotllana (rotllana.js)
   p.vel.set(0, 0); p.gx = p.gz = undefined; p.away = false; // (drawn there at once, no easing across)
 }
 for (let row = 0; row < renderProfile.rows; row++) {

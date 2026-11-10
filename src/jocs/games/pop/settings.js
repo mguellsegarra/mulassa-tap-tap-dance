@@ -96,6 +96,16 @@ export function openSettings(done = onDone) {
   $('settings-profile').hidden = !service.configured; // Perfil only with a board (mulassa.cat's decision 6)
   menu.showModal(); focusIn(menu, 'settings-profile');
 }
+// The boot screen pays Configuració's first paint: Chrome compiles a GPU program for every kind of paint the page has not
+// drawn yet, and Pop's home is mostly WebGL (S10: a 352 ms frame on the first ⚙ otherwise; docs/agents/graphics.md). Drawn
+// once as it will look, not modal (no top layer, so under #boot), then shut.
+export async function warm() {
+  $('settings-profile').hidden = !service.configured;
+  menu.style.cssText = 'position: fixed; inset: 0; margin: auto; z-index: 3';
+  menu.show();
+  await new Promise(go => requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(go, 300))));
+  menu.close(); menu.style.cssText = '';
+}
 const fromSettings = open => () => { menu.close(); open(() => openSettings()); };
 $('settings-profile').addEventListener('click', fromSettings(openAccount));
 $('settings-feedback').addEventListener('click', fromSettings(back => needConfirmed('feedback', () => feedback.show(back))));

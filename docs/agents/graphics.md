@@ -101,9 +101,12 @@ the method and its tools: `docs/agents/device-profiling.md`.
 - A sheet's first paint compiles Skia's Vulkan pipelines (`VulkanCreateGraphicsPipelines`, 17–39 ms each, in
   `RendererRasterWorker` GPU tasks) for every kind of paint the page has not drawn yet: no single rule owns it, each new
   look (a full-screen `::backdrop` dim over WebGL, a gradient fill, a blurred shadow, an animated gradient) adds some.
-  Painting a copy at 1% opacity first does not warm them (another blend). S10, 2026-11-10, Pop's first ⚙ (mulassa.cat's
-  sheets): frame 435–469 ms, GPU 188–196; without the dim (`packages/plassa/src/sheets.css`) 352 ms, GPU 123–129, accepted
-  as a once-per-visit cost; Pop's own first sheet («Com es juga?») already pays 168–201. Every later sheet: 34–67 ms.
+  Painting a copy at 1% opacity does not warm them (another blend); painting it as it will look, not modal (`show()`,
+  so under the boot screen, not in the top layer), does. mulassa.cat does not pay it at its first ⚙ because the selector
+  already drew those paints (its own ~475 ms first raster, below). S10, 2026-11-10, Pop's first ⚙ (mulassa.cat's sheets):
+  frame 435–469 ms, GPU 188–196; without the dim (`packages/plassa/src/sheets.css`) 352 ms, GPU 123–129; painted once
+  under the boot screen, with the 3D's first frame (`settings.js` `warm`, Pop's `main.js`) 34–67 ms, GPU 9–33. The cost
+  moves to the boot screen (one more ~350 ms frame there, the boot as long as before, 3.2–3.3 s). Every later sheet: 34–67 ms.
 
 ## GPU context loss (mobile GPUs)
 

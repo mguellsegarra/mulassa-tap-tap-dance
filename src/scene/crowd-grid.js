@@ -14,6 +14,11 @@ import { rotllanaCrowd } from './rotllana.js';
 export const crowdCells = Array.from({ length: 32 * 32 }, () => []), cellCount = new Uint16Array(32 * 32);
 const usedCells = new Uint16Array(32 * 32); let usedN = 0;
 const cellPush = (k, p) => { const n = cellCount[k]; if (!n) usedCells[usedN++] = k; crowdCells[k][n] = p; cellCount[k] = n + 1; };
+// A rotllana's packed figures (rotllana.js, contacts with hardOnly) in a grid of their own: the soft push never reads them
+// and the hard limit only the 3 x 3 cells round a mover (their reach is 0.73 m). In the shared cells, every mover's 5 x 5
+// search walked dozens of them each sweep: the S10 lost frames over 50 ms to it.
+const wallCells = Array.from({ length: 32 * 32 }, () => []), wallCount = new Uint16Array(32 * 32), wallUsed = new Uint16Array(32 * 32); let wallN = 0;
+const wallPush = (k, p) => { const n = wallCount[k]; if (!n) wallUsed[wallN++] = k; wallCells[k][n] = p; wallCount[k] = n + 1; };
 const crowdCell = p => Math.max(0, Math.min(31, Math.floor(p.pos.x + 16)))
   + 32 * Math.max(0, Math.min(31, Math.floor(p.pos.y + 16)));
 export function recell(p) {
@@ -28,11 +33,28 @@ export function recell(p) {
 // creeping in, the camera's wedge, the edge of the plaça). Overlapping pairs are pulled apart along the line between
 // them, half each (all of it by a mover when the other is fixed: the band), and the velocity into
 // the neighbour is dropped so they don't walk on the spot. Four sweeps over the nearby cells, including the larger mobility footprints.
+// the hard limit against a rotllana's figures: all of it by the mover, and no velocity into them
+function pushOffWalls(p, cellX, cellZ) {
+  for (let z = Math.max(0, cellZ - 1); z <= Math.min(31, cellZ + 1); z++) for (let x = Math.max(0, cellX - 1); x <= Math.min(31, cellX + 1); x++) {
+    const cell = wallCells[x + z * 32];
+    for (let i = 0, n = wallCount[x + z * 32]; i < n; i++) {
+      const q = cell[i], min = crowdRadius(p) + q.rad + 0.04 * (p.qualityScale ?? 1);
+      let sx = p.pos.x - q.pos.x, sz = p.pos.y - q.pos.y; const d2 = sx * sx + sz * sz;
+      if (d2 >= min * min) continue;
+      const d = Math.sqrt(d2);
+      if (d > 1e-6) { sx /= d; sz /= d; } else { sx = Math.cos(p.ang); sz = Math.sin(p.ang); }
+      p.pos.x += sx * (min - d); p.pos.y += sz * (min - d);
+      const pv = p.vel.x * sx + p.vel.y * sz;
+      if (pv < 0) { p.vel.x -= sx * pv; p.vel.y -= sz * pv; }
+    }
+  }
+}
 export function separate() {
   for (let it = 0; it < 4; it++) {
     for (const p of activeCrowd) {
       if (p.rest || crowdAnchored(p)) continue; // at rest during the song (or charred stiff): only a mover can reach them, and resolves it
       const cellX = p.cell % 32, cellZ = Math.floor(p.cell / 32);
+      if (wallN) pushOffWalls(p, cellX, cellZ);
       for (let z = Math.max(0, cellZ - 2); z <= Math.min(31, cellZ + 2); z++) {
         for (let x = Math.max(0, cellX - 2); x <= Math.min(31, cellX + 2); x++) {
           const cell = crowdCells[x + z * 32];
@@ -88,12 +110,13 @@ export function photoCrowdClearance(p, x, z) {
 // mode's extras, the backdrop's front); returns those backdrop contacts (settleDrawnCrowd needs them too).
 export function fillCells() {
   for (let i = 0; i < usedN; i++) cellCount[usedCells[i]] = 0; // only the cells used last frame, not all 1024
-  usedN = 0;
+  for (let i = 0; i < wallN; i++) wallCount[wallUsed[i]] = 0;
+  usedN = wallN = 0;
   for (const p of activeCrowd) { p.cell = crowdCell(p); cellPush(p.cell, p); }
   for (const b of bandSpots) cellPush(crowdCell(b), b); // the band: fixed, never in anyone's way
   for (const f of FIGURE_SCENES) if (f.colla()?.helpers.visible) for (const b of f.collaSpots) cellPush(crowdCell(b), b); // the shown figure's colla
   for (const p of photoExtras) cellPush(crowdCell(p), p);
   const backgroundContacts = backdropContacts([plaza.backdrop, midCrowd, rotllanaCrowd]);
-  for (const b of backgroundContacts) cellPush(crowdCell(b), b);
+  for (const b of backgroundContacts) (b.hardOnly ? wallPush : cellPush)(crowdCell(b), b);
   return backgroundContacts;
 }

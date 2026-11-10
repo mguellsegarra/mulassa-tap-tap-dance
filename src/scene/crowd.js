@@ -102,7 +102,7 @@ function steer(p, dt, beat, live) {
       const cell = crowdCells[x + z * 32];
       for (let i = 0, n = cellCount[x + z * 32]; i < n; i++) { // (a cell's entries past its count are last frame's)
         const q = cell[i];
-        if (q === p || q.hardOnly) continue; // (a rotllana's packed figures: only the hard limit, or their neighbours never rest)
+        if (q === p) continue;
         const sx = p.pos.x - q.pos.x, sz = p.pos.y - q.pos.y, d2 = sx * sx + sz * sz;
         if (d2 > 3.24 || d2 < 1e-6) continue;
         const d = Math.sqrt(d2), ahead = Math.max(0, (sx * dx + sz * dz) / (d * dm)); // q between p and her

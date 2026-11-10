@@ -432,6 +432,17 @@ console.log('crowd footprints never overlap ok');
     assert([0, 0.9].some(k => Math.abs(Math.hypot(bx, bz) - (R.band.r0 + k - 0.25)) < 1e-6), 'the band at the ring\'s front (its spots: 0.25 m in front of each player)');
     assert(everyone.every(([x, z]) => Math.hypot(x - bx, z - bz) >= R.bandRoom), 'nobody in the band\'s room');
   }
+  // she runs round just inside it: the movers make way and come back, never into a figure (the hard limit, crowd-grid.js
+  // pushOffWalls: the figures sit in a grid of their own, out of the soft push's)
+  const moved = JSON.parse(run(`(() => { G.state = 'play';
+    const m = new THREE.Matrix4(), figs = []; for (let i = 0; i < rotllanaCrowd.mesh.count; i++) { rotllanaCrowd.mesh.getMatrixAt(i, m); const e = m.elements; if (Math.hypot(e[0], e[1], e[2]) > 0.05) figs.push([e[12], e[14], 0.33 * Math.hypot(e[0], e[1], e[2])]); }
+    let worst = 9, t = 0;
+    const step = (x, z) => { t += 1 / 30; M.pos.set(x, z); M.pivot.set(x, z); M.yaw = Math.atan2(-z, x); animCrowd(1 / 30, t * 2, t, 1);
+      for (const p of activeCrowd) for (const [fx, fz, r] of figs) worst = Math.min(worst, Math.hypot(p.pos.x - fx, p.pos.y - fz) - crowdRadius(p) - r); };
+    for (let k = 0; k < 360; k++) { const a = k / 360 * 2 * Math.PI; step(Math.cos(a) * 4.2, Math.sin(a) * 4.2); }
+    for (let k = 0; k < 600; k++) step(0, 0);
+    return JSON.stringify({ worst }); })()`));
+  assert(moved.worst > 0.03, `nobody walks into the ring's figures (closest ${moved.worst.toFixed(3)} m)`);
   const back = JSON.parse(run(`(() => { setRotllana(false); return JSON.stringify({ shown: rotllanaCrowd.mesh.visible, backdrop: plaza.backdrop.mesh.visible, rings: crowd.filter(p => p.ring).length, band: Math.hypot(bandSpots[0].pos.x, bandSpots[0].pos.y) }); })()`));
   assert(!back.shown && back.backdrop && !back.rings, 'another figure: the ring gone, the backdrop back, nobody keeps a ring slot');
   assert(back.band > 9, 'and the band back at its own place');

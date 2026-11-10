@@ -164,9 +164,10 @@ export function buildPlaza({ backdrop = 0, balconies = 0, waving = false, sun = 
   const S = PAVING.size, T = PAVING.tile;
   for (let x = -S / 2; x < S / 2; x += T) for (let z = -S / 2; z < S / 2; z += T) {
     const light = ((x + z) / T) % 2 === 0;
-    v.box(x + T / 2, -0.1, z + T / 2, T - 0.06, 0.1, T - 0.06, light ? '#dccaa8' : '#cfb994', 0.03);
+    v.box(x + T / 2, -0.005, z + T / 2, T - 0.06, 0.005, T - 0.06, light ? '#dccaa8' : '#cfb994', 0.03);
   }
-  v.box(0, -0.2, 0, S + 40, 0.12, S + 40, '#8a7a66', 0);
+  // 5 mm tiles over the joint colour: any taller and their side walls show close up as a step at every joint
+  v.box(0, -0.125, 0, S + 40, 0.12, S + 40, '#8a7a66', 0);
   const floor = v.mesh();
   floor.castShadow = false;
   group.add(freezeStatic(floor));

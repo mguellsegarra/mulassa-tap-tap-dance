@@ -11,9 +11,11 @@ import { REEL } from '../../game/showreel.js';
 import { CALM } from '../../core/env.js';
 
 // «Mira el ball»: its dance filmed by its own music video's cameras (bou-clip.js) up to the last chord, where its end shot
-// takes over; reduced motion keeps the showreel's one still shot
+// takes over; and the selector left untouched (its UI faded: the whole screen is the picture; under the UI the showreel's
+// shots stay, fitted to the free band, which a full-frame film cannot be). Reduced motion keeps the showreel's one still shot
 function bouFilmShot() {
-  if (G.state === 'play' && G.watch && REEL.song && REEL.id === 'bou-tradicional-valls' && REEL.beat < BOU_CLIP_END && !CALM.matches) placeBouClip(camera, REEL.beat, bou.frame.rotation.y);
+  if (REEL.id !== 'bou-tradicional-valls' || CALM.matches) return;
+  if (G.state === 'play' ? G.watch && REEL.song && REEL.beat < BOU_CLIP_END : G.state === 'select' && REEL.on && REEL.idle) placeBouClip(camera, REEL.beat, bou.frame.rotation.y);
 }
 const NO_BOU = Q.has('nobou'); // dev: its colla and the plaça without the Bou itself (to film them)
 export const BOU_SCENE = {

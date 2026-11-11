@@ -1,6 +1,6 @@
 # Mulassa Pop: public all-time ranking (design, 1.3.0)
 
-Owner's decisions (2026-11-03): one all-time board (no weekly, no seasons), ready for 1.3.0 (12 Nov 2026), reusing mulassa.cat's
+Owner's decisions (2026-11-03): one all-time board (no weekly, no seasons), ready for 1.3.0, reusing mulassa.cat's
 profiles, guest sessions and captcha. Only each player's best counts.
 
 ## Why a replay

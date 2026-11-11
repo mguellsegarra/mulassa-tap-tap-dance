@@ -25,23 +25,25 @@ export const BOU_CLIP_SHOTS = {
   head: { az: [.4, .35], el: [.3, .3], size: [2.4, 2.3], y: 1.5, fov: 30, rel: 1, ahead: 2, lag: .6, portrait: { size: [2.8, 2.7] } },
   eyes: { az: [.3, .28], el: [.22, .22], size: [1.7, 1.6], y: 1.6, fov: 24, rel: 1, ahead: 2, lag: .6, portrait: { size: [1.5, 1.4] } },
 };
-// [song beat, shot] (what each answers, in Catalan for the owner: tools/dev/bou-clip.html). The feet only on the opening's leg passes (bars 1-2 and 5-6). The list ends on the
+// [song beat, shot, fit?] (what each answers, in Catalan for the owner: tools/dev/bou-clip.html). fit: { tall, wide }, the shot's
+// size (and, where the plaça stops the lens, its widest, up to 75°) times this on a portrait / landscape frame, where the whole-film measure at 9 screen sizes found the Bou or who
+// comes to touch it cut off (2026-11-10, the owner: «el bou surt molt tallat o no es veu l'ajudant que el va a tocar»). The feet only on the opening's leg passes (bars 1-2 and 5-6). The list ends on the
 // last chord (BOU_CLIP_END): from there the game's own end shot comes down to the banknotes.
 export const BOU_CLIP_CUTS = [
   [0, 'vast'],
   [8, 'feet'],
   [16, 'wide'],
   [24, 'feet'],
-  [32, 'front'],
+  [32, 'front', { tall: 1.25 }],
   [40, 'crane'],
   [56, 'vast'],
-  [72, 'front'],
+  [72, 'front', { wide: 1.3 }],
   [88, 'wide'],
   [100, 'head'],
-  [108, 'charge'],
+  [108, 'charge', { tall: 1.7, wide: 1.15 }],
   [116, 'vast'], // (both sideways rushes, 4.2 m each way, in one still shot: any camera that went with them slid the plaça)
   [132, 'balcony'], // (the diagonal rush: still too, from the other side)
-  [140, 'crane'],
+  [140, 'crane', { tall: 2 }],
   [156, 'orbit'],
   [172, 'charge'],
   [180, 'wide'],
@@ -51,7 +53,7 @@ export const BOU_CLIP_CUTS = [
   [220, 'crane'],
   [232, 'vast'],
   [252, 'balcony'],
-  [276, 'front'],
+  [276, 'front', { tall: 1.8, wide: 1.3 }],
   [284, 'orbit'],
   [300, 'crane'],
 ];
@@ -80,6 +82,9 @@ const CLIP_LAG = 2;
 // film's first shot also starts that much further out and comes in over BOU_CLIP_PRE s of the clock: the song's beat
 // stays at 0 until its music is heard (main.js), ~3 s on a phone, and the picture stood still meanwhile
 const BOU_CLIP_PUSH = .12, BOU_CLIP_PRE = 5;
+// a lens's widest (vertical, degrees) as it opens on a 9:16 phone, kept as wide across on a taller one (393×852, 430×932):
+// held at the same vertical there, the Bou's laps ran out of the narrower frame
+const clipCap = (deg, aspect) => (aspect < 9 / 16 ? 2 * Math.atan(Math.tan(deg * Math.PI / 360) * 9 / 16 / aspect) * 180 / Math.PI : deg);
 const BOU_CLIP_CLEAR = 4.8, BOU_CLIP_REACH = 12; // m from the plaça's middle: inside its colla's marks (5.5 m) and the crowd's ring, so nobody stands at the lens; inside the façades
 // its middle on average over 1.2 s round song second t, in its dance frame (lift: only what its colla carries it up)
 function bouClipPath(t, out, lag) {
@@ -98,7 +103,7 @@ export function placeBouClip(camera, beat, frameYaw, filmed = Infinity, idle = f
   const heading = d.rel ? bouPose(d.ahead ? bouClipSec((b0 + b1) / 2) : t0, clipPose).yaw + frameYaw : frameYaw + Math.PI / 4;
   // its averaged middle on the plaça (the dance frame turned, `ahead` m in front of it), into `o`: no garbage per frame
   const c = Math.cos(frameYaw), s = Math.sin(frameYaw), hx = (d.ahead ?? 0) * Math.sin(heading), hz = (d.ahead ?? 0) * Math.cos(heading);
-  const el = clipLerp(d.el, u), size = clipLerp(d.size, u), az = heading + clipLerp(d.az, d.fixed ? 0 : u);
+  const fit = cuts[i][2]?.[camera.aspect < 1 ? 'tall' : 'wide'] ?? 1, el = clipLerp(d.el, u), size = clipLerp(d.size, u) * fit, az = heading + clipLerp(d.az, d.fixed ? 0 : u);
   const now = d.still ? CLIP_MIDDLE : clipWorld(t, clipNow, c, s, hx, hz, d.lag ?? CLIP_LAG), from = d.fixed ? clipWorld(t0, clipFrom, c, s, hx, hz, d.lag ?? CLIP_LAG) : now;
   const aspect = camera.aspect, vfov = d.fov * Math.PI / 180, narrow = aspect < 1 ? 2 * Math.atan(Math.tan(vfov / 2) * aspect) : vfov;
   let dist = size / 2 / Math.tan(narrow / 2), fov = d.fov;
@@ -107,7 +112,7 @@ export function placeBouClip(camera, beat, frameYaw, filmed = Infinity, idle = f
   const ux = Math.sin(az), uz = Math.cos(az), pb = from.x * ux + from.z * uz, r2 = from.x * from.x + from.z * from.z, clear = BOU_CLIP_CLEAR;
   const inRing = r2 > clear * clear ? BOU_CLIP_REACH : Math.max(3.5, -pb + Math.sqrt(pb * pb - (r2 - clear * clear))), high = clipEase(Math.min(1, Math.max(0, (el - .25) / .12))); // (from ~0.37 rad the lens looks over the heads: it may stand behind them)
   const reach = (inRing + (BOU_CLIP_REACH - inRing) * high) / Math.max(.2, Math.cos(el));
-  if (dist > reach) { dist = reach; const n = 2 * Math.atan(size / 2 / dist); fov = Math.min(idle && aspect < 1 ? BOU_CLIP_IDLE_FOV : d.still && aspect < 1 ? 75 : d.fov + 10, (aspect < 1 ? 2 * Math.atan(Math.tan(n / 2) / aspect) : n) * 180 / Math.PI); } // (never a wide lens: rather a tighter frame; but a still shot on a phone opens as far as the laps ask, or they ran out of its narrow frame)
+  if (dist > reach) { dist = reach; const n = 2 * Math.atan(size / 2 / dist); fov = Math.min(idle && aspect < 1 ? BOU_CLIP_IDLE_FOV : clipCap(d.still && aspect < 1 ? 75 : Math.min(75, (d.fov + 10) * fit), aspect), (aspect < 1 ? 2 * Math.atan(Math.tan(n / 2) / aspect) : n) * 180 / Math.PI); } // (never a wide lens: rather a tighter frame; but a still shot on a phone opens as far as the laps ask, or they ran out of its narrow frame)
   if (d.still) dist *= 1 - BOU_CLIP_PUSH * u;
   if (!i) dist *= 1 + BOU_CLIP_PUSH * (1 - clipEase(Math.min(1, filmed / BOU_CLIP_PRE)));
   const y = d.y + now.lift;

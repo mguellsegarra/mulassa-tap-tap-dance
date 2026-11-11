@@ -41,10 +41,11 @@ try {
     const was = await selected(); await page.waitForFunction(id => !document.getElementById(id).disabled, `select-${dir}`, { timeout: 10000 }); await page.click(`#select-${dir}`, { force: true });
     await page.waitForFunction(was => document.querySelector('.sel-card[aria-selected="true"]')?.dataset.id !== was, was, { timeout: 10000 });
   };
-  await page.waitForFunction(() => document.querySelector('.sel-card[aria-selected="true"]')?.dataset.id === 'mulassa-valls', null, { timeout: 30000 });
-  await step('forward'); await step('forward');
-  assert.equal(await selected(), 'bou-tradicional-valls', 'the Bou is in the strip');
   const bouPending = UNRELEASED_IDS.has('bou-tradicional-valls');
+  // a released Bou is the new figure: it leads the strip and opens the selector (figures.js isNovelty); a pending one sits two cards on
+  await page.waitForFunction(id => document.querySelector('.sel-card[aria-selected="true"]')?.dataset.id === id, bouPending ? 'mulassa-valls' : 'bou-tradicional-valls', { timeout: 30000 });
+  if (bouPending) { await step('forward'); await step('forward'); }
+  assert.equal(await selected(), 'bou-tradicional-valls', 'the Bou is in the strip');
   assert.equal(await page.evaluate(() => document.getElementById('select-next').disabled), bouPending, 'the production selector follows the Bou release switch');
   if (bouPending) { await step('prev'); await step('prev'); }
   assert.equal(await selected(), bouPending ? 'mulassa-valls' : 'bou-tradicional-valls');

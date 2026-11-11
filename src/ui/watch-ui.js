@@ -6,10 +6,10 @@ import { hide } from './handles.js';
 import { focusIn } from './focus.js';
 import { tr } from '../i18n/messages.js';
 
-// select: the selector's api (figure, pending, visible, toLevels); busy(): another sheet or «mode foto» is up
-export function setupWatch({ select, busy }) {
+// select: the selector's api (figure, pending, visible, toLevels); busy(): another sheet or «mode foto» is up; walk(): free play
+export function setupWatch({ select, busy, walk }) {
   const $ = id => document.getElementById(id);
-  const menu = $('watch-menu'), tag = $('watch-tag');
+  const menu = $('watch-menu'), tag = $('watch-tag'), walkBtn = $('watch-walk');
   let offered = false; // this demo's end sheet has opened (once: closing it always leaves the results)
   function start() { // from the song row, which only a playable figure's panel shows
     const figure = select.figure;
@@ -30,11 +30,13 @@ export function setupWatch({ select, busy }) {
   $('watch-again').addEventListener('click', () => { menu.close(); startWatch(); });
   $('watch-figures').addEventListener('click', () => leave(false));
   $('watch-close').addEventListener('click', () => leave(false));
+  walkBtn.addEventListener('click', () => { leave(false); select.visible(true); walk(); }); // «Fes un tomb»: the demo's way into free play (on phones, the only one); the selector shown first, or its next frame's opening undoes free play's inert and focus
   menu.addEventListener('cancel', e => { e.preventDefault(); leave(false); }); // Escape: back to the menu, as the ×
   return {
     get open() { return menu.open; },
     frame() { // every frame (ui/controls.js): the label while it plays; the sheet once the plaça has cheered a moment
       hide(tag, !(G.state === 'play' && G.watch));
+      hide(walkBtn, !(G.state === 'play' && G.watch && !G.paused));
       const end = G.state === 'results' && G.watch && clock - G.resT > 1;
       if (!end) { offered = false; return; }
       if (offered || document.hidden) return;

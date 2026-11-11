@@ -5,11 +5,11 @@
    __gameBootWords once the game's catalogue is in (Catalan before). __gameFail shows the same card later (a GPU gone for good). */
 (function () {
   var root = document.documentElement, shown = false, seen = 0, last = Date.now();
-  window.__gameFail = function (title, text, reason) {
+  window.__gameFail = function (title, text, reason, cause) {
     var boot = document.getElementById('boot'), W = window.__gameBootWords || {};
     if (shown || !boot) return;
     shown = true;
-    window.__mulassaBootFailure = { phase: 'init', reason: reason || 'startup', visibleMs: seen }; /* plassa/errors.js reports it */
+    window.__mulassaBootFailure = { phase: 'init', reason: reason || 'startup', cause: cause, visibleMs: seen }; /* plassa/errors.js reports it */
     if (window.__mulassaReportBoot) window.__mulassaReportBoot();
     root.classList.remove('ready');
     boot.className = 'cover fail';
@@ -21,13 +21,15 @@
     boot.querySelector('button').textContent = W.retry || 'Torna-ho a provar';
     boot.querySelector('button').onclick = function () { location.reload(); };
   };
-  var early = function (reason) { if (!root.classList.contains('ready')) window.__gameFail(null, null, reason); };
-  /* __gameBootError: what stopped it, for a look in the console (never sent: errors.js reports the reason only) */
+  var early = function (reason, cause) { if (!root.classList.contains('ready')) window.__gameFail(null, null, reason, cause); };
+  /* __gameBootError: what stopped it, for a look in the console (never sent: errors.js reports the reason and a fixed cause:
+     error, rejection or resource:<TAG> for a file of ours that did not load) */
   /* a file from another site that fails to load is not ours to fail on: the host adds its analytics script to the page, and
      an ad blocker stopping it showed this card on beta over a game that had loaded */
   var theirs = function (t) { var url = t && (t.src || t.href) || ''; return url && url.indexOf(location.origin + '/') !== 0; };
-  addEventListener('error', function (e) { if (theirs(e.target)) return; if (!root.classList.contains('ready')) window.__gameBootError = e.message; early(e.target && e.target.tagName === 'SCRIPT' ? 'module-load' : 'startup'); }, true);
-  addEventListener('unhandledrejection', function (e) { if (!root.classList.contains('ready')) window.__gameBootError = String(e.reason && e.reason.stack || e.reason); early('startup'); });
+  addEventListener('error', function (e) { if (theirs(e.target)) return; if (!root.classList.contains('ready')) window.__gameBootError = e.message;
+    var tag = e.target && e.target.tagName; early(tag === 'SCRIPT' ? 'module-load' : 'startup', tag ? 'resource:' + tag : 'error'); }, true);
+  addEventListener('unhandledrejection', function (e) { if (!root.classList.contains('ready')) window.__gameBootError = String(e.reason && e.reason.stack || e.reason); early('startup', 'rejection'); });
   (function tick() { /* only time on screen counts: a tab opened in the background is not stuck */
     var now = Date.now();
     if (!document.hidden) seen += now - last;

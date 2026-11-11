@@ -99,6 +99,8 @@ ${p.videos ? `<section>\n<h2>${esc(ui.videos)}</h2>\n<div class="videos">${p.vid
 export const sitemapXml = langs => `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>${SITE}/</loc></url>
+  <url><loc>${SITE}/jocs/</loc></url>
+  <url><loc>${SITE}/pop/</loc></url>
 ${langs.map(l => `  <url><loc>${SITE}${projectPath(l)}</loc></url>`).join('\n')}
 </urlset>
 `;

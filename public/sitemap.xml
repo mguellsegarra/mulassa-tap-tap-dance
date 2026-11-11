@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://mulassa.cat/</loc></url>
+  <url><loc>https://mulassa.cat/jocs/</loc></url>
+  <url><loc>https://mulassa.cat/pop/</loc></url>
   <url><loc>https://mulassa.cat/projecte/</loc></url>
 </urlset>

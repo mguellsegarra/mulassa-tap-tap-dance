@@ -46,6 +46,7 @@ try {
   for (const [, url] of llms.matchAll(/\]\((https:\/\/mulassa\.cat\/[^)]+)\)/g)) {
     const path = new URL(url).pathname;
     if (path.endsWith('.md')) await access(join(dist, path));
+    else if (path.endsWith('/')) await access(new URL(`../..${path}index.html`, import.meta.url)); // a page of its own (pop/, jocs/)
     else await access(new URL(`../../public${path}`, import.meta.url));
   }
   // The generated sitemap/llms.txt equal the Catalan base while only `ca` exists

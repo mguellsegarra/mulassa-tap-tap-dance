@@ -117,3 +117,6 @@ html.ready #games-menu { animation: games-in .6s ease-in-out both; }
   /* gone once the clip has faded in over it: through the clip's faded left side it stood behind as a ghost of the first frame */
   #games-menu #games-hero.playing #games-hero-art { opacity: 0; transition: opacity 0s .3s; }
 }
+
+/* «Juga» answers at once (main.js open): the page fades to its own background while the game's page loads; no second tap */
+html.leaving body { opacity: 0; transition: opacity .25s ease-out; pointer-events: none; }

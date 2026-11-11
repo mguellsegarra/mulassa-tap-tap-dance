@@ -4,6 +4,8 @@
 
 - [Joc](https://mulassa.cat/index.md): presentació breu i com jugar-hi
 - [Sobre el projecte](https://mulassa.cat/projecte/index.md): què és, instruccions, imatges, vídeos i crèdits
+- [Mulassa Games](https://mulassa.cat/jocs/): Tens una estona? La Mulassa també. Entra a Mulassa Games, obre un joc i deixa't endur per la partida. Fet a Valls, per jugar des d'on siguis.
+- [Mulassa Pop](https://mulassa.cat/pop/): Una Mulassa vermella? Toca-la. Una bomba? Desactiva-la. Posa a prova els reflexos a Mulassa Pop.
 - [Codi a GitHub](https://github.com/mguellsegarra/mulassa-tap-tap-dance): codi obert, obert a col·laboracions
 - [Vídeo horitzontal](https://mulassa.cat/videos/promo-16x9.mp4) · [Vídeo vertical](https://mulassa.cat/videos/promo-9x16.mp4): material promocional, MP4 1080p
 - [Autor](https://ondori.dev): Marc Güell Segarra · Ondori

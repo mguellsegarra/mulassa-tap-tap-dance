@@ -2,7 +2,7 @@
 // this file imports them in the order they must start, wires the input and the sheets' buttons together, and runs the frame loop.
 import './platform/polyfills.js';
 import { PHOTO } from './game/photo-control.js';
-import { errors } from './services/errors.js';
+import { errors, errorName } from './services/errors.js';
 import './services/update.js';
 import { song, selectedFigure, beatAt, BEAT } from './game/figure-song.js';
 import { adaptiveQuality } from './platform/adaptive-quality.js';
@@ -211,4 +211,6 @@ window.__dbg = { get G() { markLeaderboardDebugUse(); return G; }, get M() { mar
 window.__mulassaBooted ||= 'module'; // ran to the end: index.html's boot watchdog now only waits for the first frame
 // The representation cast on every host; ?representation=off retains the original cast for comparisons.
 const localPeopleReady = Q.get('representation') !== 'off'
-  ? import('./scene/representation.js').then(m => m.setupRepresentation()) : Promise.resolve();
+  // a chunk lost on a flaky network: the original cast (as ?representation=off) and a warning, not an unhandled error
+  ? import('./scene/representation.js').then(m => m.setupRepresentation(), e => errors.report('representation-load-failed', { name: errorName(e) }))
+  : Promise.resolve();

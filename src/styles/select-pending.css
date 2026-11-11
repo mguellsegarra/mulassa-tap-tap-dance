@@ -239,8 +239,10 @@
 @media (prefers-reduced-motion: reduce) { .sel-pending p.sel-call-line[data-count] { animation: none; } }
 .sel-heart-tip { cursor: pointer; }
 @media (min-width: 1600px) { .sel-heart-tip { font-size: 17px; } }
-/* Phones: the ribbon lands on the song's row. Rather than leave pieces of it sticking out, that row waits until the ribbon goes (it keeps its place). */
-@media (max-width: 899px) { body:has(.sel-heart-tip:not(.sel-tip-out, .games-tip)) :is(#select-song, .sel-watch) { visibility: hidden; } }
+/* Phones: the ribbon lands on the song's row. Rather than leave pieces of it sticking out, that row waits until the ribbon goes (it keeps its place).
+   Faded out, not `visibility: hidden`: that made Chrome compile GPU programs as the ribbon came and again at the pulse's end
+   (S10: 117-218 ms and 117-151 ms frames; with opacity 34-67 and 17-34). Out of the taps' way meanwhile. */
+@media (max-width: 899px) { body:has(.sel-heart-tip:not(.sel-tip-out, .games-tip)) :is(#select-song, .sel-watch) { opacity: 0; pointer-events: none; } }
 .sel-heart-tip-side { min-height: 34px; padding-block: 1px; transform-origin: 0 50%; animation-name: sel-tip-in, sel-tip-bob-side; }
 .sel-heart-tip.sel-tip-out { pointer-events: none; animation: sel-tip-out .26s ease-in forwards, sel-tip-bob 1.4s ease-in-out infinite; }
 .sel-heart-tip-side.sel-tip-out { animation-name: sel-tip-out, sel-tip-bob-side; }

@@ -10,7 +10,7 @@ const fail = code => Object.assign(new Error(code), { code });
 async function client() {
   const c = await getClient();
   const { data } = await c.auth.getSession();
-  return { c, signed: !!data.session };
+  return { c, signed: !!data.session, uid: data.session?.user.id ?? null };
 }
 async function rpc(c, name, args) {
   const { data, error } = await c.rpc(name, args);
@@ -42,9 +42,12 @@ export async function player(publicId) {
 
 // → { score, best, improved, position }; throws { code }: 'noname', 'released', 'pop_rate_limited', 'pop_seed_used', 'unavailable'…
 export async function publish(run) {
-  const { c, signed } = await client();
-  if (!signed) throw fail('noname');
-  const { data, error } = await c.functions.invoke('pop-score', { body: run });
+  const { c, uid } = await client();
+  const { owner, ...body } = run;
+  if (owner && owner !== uid) throw fail('owner'); // kept under another account on this device: never sent under this one
+  if (!uid) throw fail('noname');
+  claim(body, uid);
+  const { data, error } = await c.functions.invoke('pop-score', { body });
   if (!error) return data;
   const code = (await error.context?.json?.().catch(() => null))?.error ?? 'unavailable';
   throw fail(code === 'pop_profile_required' ? 'released' : code === 'authentication_required' ? 'noname' : code);
@@ -53,6 +56,12 @@ export async function publish(run) {
 export function keep(run) {
   const old = pending();
   if (!old || old.v !== run.v || run.points > old.points) store.set(PENDING, JSON.stringify(run)); // an older version's never passes
+}
+// the kept run becomes the signed-in account's as it goes out; one kept by another account gives way to this run
+function claim(body, uid) {
+  const p = pending();
+  if (p?.owner && p.owner !== uid) store.set(PENDING, JSON.stringify({ ...body, owner: uid }));
+  else if (p && !p.owner && p.v === body.v && p.seed === body.seed) store.set(PENDING, JSON.stringify({ ...p, owner: uid }));
 }
 export function pending() {
   try { return JSON.parse(store.get(PENDING)) || null; } catch { return null; }

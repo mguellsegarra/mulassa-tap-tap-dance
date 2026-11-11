@@ -40,7 +40,7 @@ export function setupRankingUI({ t, focusBack }) {
       line.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 250, easing: 'ease-out' });
     } catch (e) {
       if (m && REFUSED.has(e.code)) forgetSent(m, body);
-      if (e.code === 'pop_seed_used') return; // already on the board: the line stays blank, its height kept
+      if (e.code === 'pop_seed_used' || e.code === 'owner') return; // already on the board, or another account's kept run: the line stays blank, its height kept
       if (mine !== sent) return;
       const nameless = e.code === 'noname' || e.code === 'released';
       line.textContent = t(nameless ? 'rank.noName' : 'rank.error');

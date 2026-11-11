@@ -20,6 +20,8 @@ const carousel = setupGamesCarousel();
 
 function open(card) {
   if (!card || 'soon' in card.dataset) return; // a surprise card holds the place of next week's game: nothing to open yet
+  // the page fades at once: on a phone the next one can take seconds to show, and the old one stood still meanwhile (owner, 11 Nov 2026)
+  document.documentElement.classList.add('leaving');
   // the rhythm game is the site's home; Pop is the one game with its own short address
   location.replace({ tap: '/', pop: '/pop/' }[card.dataset.game] ?? `/jocs/${card.dataset.game}/`);
 }

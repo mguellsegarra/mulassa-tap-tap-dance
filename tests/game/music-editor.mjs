@@ -32,7 +32,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
   assert(seen.size > 20, 'the walk reached the game');
   assert(!/editor/.test(readFileSync(join(root, 'index.html'), 'utf8').match(/<script[^>]*src="[^"]*"/g)?.join() ?? ''), 'index.html loads no editor script');
   const cfg = readFileSync(join(root, 'vite.config.js'), 'utf8');
-  assert(!/rollupOptions|\binput\s*:/.test(cfg), 'vite build keeps index.html as its only input');
+  assert(/const pages = \['index\.html', 'pop\/index\.html', 'jocs\/index\.html', \.\.\.readdirSync\('jocs', \{ withFileTypes: true \}\)/.test(cfg) && /\binput: pages\b/.test(cfg), 'vite build takes only index.html and the mini-game pages as inputs');
   assert(/apply:\s*'serve'/.test(readFileSync(join(root, 'tools/music/music-editor/vite-plugin.mjs'), 'utf8')), 'the backend is dev-only');
   for (const f of ['edits.js', 'state.js', 'tracks.js', 'pointer.js', 'panel.js', 'main.js']) {
     const n = readFileSync(join(root, 'tools/dev/music-editor', f), 'utf8').split('\n').length;

@@ -1,7 +1,7 @@
 // Judging: hits, GUAPA pairs, holds, balloons and the collapse, plus the autoplay and advance ticks.
 import { tr } from '../i18n/messages.js';
 import { quality, eventAge } from './progress.js';
-import { gradeOf, pressTarget, noteOnTime, pairWindow, isPartnerPress, pairClosed, HOLD_GRACE, holdVerdict, balloonVerdict, isOverdue } from './judge-core.js';
+import { gradeOf, pressTarget, noteOnTime, pairWindow, isPartnerPress, pairClosed, HOLD_GRACE, holdVerdict, balloonVerdict, balloonTapCap, isOverdue } from './judge-core.js';
 import { pick } from '../scene/models.js';
 import { CELEBRATE } from './bubble-rules.js';
 import { drain, warnings } from './energy.js';
@@ -20,7 +20,8 @@ import { autoplayError } from '../dev/autoplay-jitter.js';
 import { PRAISE, headline } from '../hud/praise.js';
 import { burst } from '../scene/confetti.js';
 import { balloonFx } from '../hud/balloon.js';
-import { syncPad, haptic } from '../ui/pad.js';
+import { syncPad } from '../ui/pad.js';
+import { haptic } from '../platform/haptics.js';
 import { dracPump, dracEndTraca } from '../figures/drac/drac-show.js';
 import { sceneOf } from '../scene/figure-scenes.js';
 import { selectedFigure } from './figure-song.js';
@@ -210,7 +211,10 @@ export function press(dir, e) {
   G.tapT = clock;
   settleBig(t);
   const bp = bigPending;
-  if (bl && !isPartnerPress(bp, dir) && !noteOnTime(G.chart, G.next, t, WIN, bp?.n, dir)) { pump(bl); return; } // never a wrong move
+  if (bl && !isPartnerPress(bp, dir) && !noteOnTime(G.chart, G.next, t, WIN, bp?.n, dir)) { // never a wrong move
+    if (bl.count < balloonTapCap(bl, WIN.good, HANDOFF)) pump(bl); // past the cap a tap counts for nothing
+    return;
+  }
   if (isPartnerPress(bp, dir)) { // the partner press of a GUAPA pair
     setBigPending(null);
     if (!bp.done) { bp.n.detail = bp.detail; judge(bp.n, bp.kind); guapaHit(bp.n); }

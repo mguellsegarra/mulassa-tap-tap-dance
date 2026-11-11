@@ -382,6 +382,7 @@
   "ui.sync.tooFew": "Zu wenige Anschläge erkannt. Versuch’s noch mal und tippe genau bei jedem Schlag.",
   "ui.watch.text": "Du kennst jetzt {song}. Wähle eine Stufe und tanze mit deinen Knöpfen mit.",
   "ui.lang.title": "Sprache",
+  "ui.settings.profileSubGames": "Dein Name und dein Abzeichen",
   "ui.webgl.unavailable": "Dein Browser kann das Spiel nicht in 3D zeigen. Schließe ihn ganz und öffne ihn wieder; sonst aktualisiere ihn oder öffne es in Chrome oder Safari.",
   "ui.webgl.title": "Ups! Das Spiel kann nicht angezeigt werden",
   "ui.webgl.lostTitle": "Ups! Das Spiel wurde angehalten",
@@ -424,5 +425,8 @@
   "ui.hearts.tip.singular": "Ein Herz für dich!",
   "ui.hearts.tip.plural": "Ein Herz für euch!",
   "ui.hearts.failed": "Konnte nicht gespeichert werden. Versuch es noch einmal.",
-  "ui.code.open": "GitHub öffnen"
+  "ui.code.open": "GitHub öffnen",
+  "ui.news.title": "Jetzt Minispiele!",
+  "ui.games.tip": "Mehr Spiele!",
+  "ui.news.text": "Das erste Minispiel: Tippe rote Mulasses an und entschärfe Bomben!"
 }

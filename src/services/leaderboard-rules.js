@@ -5,21 +5,21 @@ import { strippedRun } from '../core/flags.js';
 // Charts retain their own raw counts and validation; the server combines their comparable points.
 export const LEADERBOARD_VERSION = CURRENT_SCORE_VERSION;
 export const EXPECTED_JUDGMENTS = Object.freeze([108, 133, 240]);
-// The most a human can score per level, +5% (tools/data/score-ceiling.mjs: a perfect run, balloons mashed at 30 taps/s).
-// The server refuses more (versions.max_score, 202609280015_score_ceiling.sql); tests/game/score-ceiling.mjs keeps both in
+// The most a human can score per level, +5% (tools/data/score-ceiling.mjs: a perfect run, balloons at the game's 50 taps/s cap).
+// The server refuses more (versions.max_score, 202611080002_balloon_tap_cap_50.sql); tests/game/score-ceiling.mjs keeps both in
 // step with the chart and the scoring.
-export const MAX_SCORES = Object.freeze([109000, 122000, 193000]);
+export const MAX_SCORES = Object.freeze([139000, 155000, 225000]);
 // extras_max: the most holds and balloons pay whatever the judgments say (tools/data/score-ceiling.mjs, same +5%).
-export const EXTRAS_MAX = Object.freeze([50000, 48000, 51000]);
+export const EXTRAS_MAX = Object.freeze([80000, 81000, 84000]);
 const rules = (judgments, ceilings, extras, figureId) => Object.freeze({ judgments: Object.freeze(judgments), ceilings: Object.freeze(ceilings), extras: Object.freeze(extras), figureId });
 // Every version belongs to one figure and one score family; mulassa-v1 and v2-short only stay for history.
 export const VERSION_RULES = Object.freeze({
   'mulassa-v1': rules([150, 181, 318], [147000, 163000, 250000], [63000, 60000, 65000], 'mulassa-valls'),
   [SHORT_SCORE_VERSION]: rules([108, 133, 240], [109000, 122000, 193000], [50000, 48000, 51000], 'mulassa-valls'),
   [LEADERBOARD_VERSION]: rules(EXPECTED_JUDGMENTS, MAX_SCORES, EXTRAS_MAX, 'mulassa-valls'),
-  [DRAC_SCORE_VERSION]: rules([106, 200, 277], [157000, 205000, 237000], [104000, 103000, 92000], 'drac-valls'),
+  [DRAC_SCORE_VERSION]: rules([106, 200, 277], [225000, 267000, 302000], [171000, 165000, 157000], 'drac-valls'),
   // the server's rows wait in supabase/pending/202610230001_bou_board.sql: not publishable until that is applied
-  [BOU_SCORE_VERSION]: rules([129, 220, 413], [139000, 187000, 297000], [73000, 71000, 76000], 'bou-tradicional-valls'),
+  [BOU_SCORE_VERSION]: rules([129, 220, 413], [181000, 235000, 344000], [115000, 119000, 123000], 'bou-tradicional-valls'),
 });
 // Only these may be published from this client.
 const PUBLISHABLE = [LEADERBOARD_VERSION, DRAC_SCORE_VERSION, ...(MOCK_BOARD ? [BOU_SCORE_VERSION] : [])]; // the Bou: the mock's board only

@@ -64,6 +64,10 @@ the method and its tools: `docs/agents/device-profiling.md`.
   visible 0%, `display: none` 0-0.5%, `visibility: hidden` 17-27% (no help), `content-visibility: hidden` 0%. Fixed with
   `data-reel-gone` once the fade is over (`ui/reel-idle.js`, `select-sizes.css`: `content-visibility: hidden`, and
   `contain-intrinsic-size: auto none` so the boxes keep their size and the selector's observers see no change).
+- **A WebGL canvas that changes size makes a new buffer.** Mulassa Pop's splash tap shrank the home's live figures
+  (`--k` and another box): `renderer.setSize` stalled that frame 75-146 ms on the S10 (the GPU making the buffer, WebGL
+  waiting on it), just as the title glided (2026-11-10). The splash now stretches the home's buffer (hero.js `fit`, same
+  aspect); the tap takes no task over 50 ms. A box that only scales keeps its buffer; `tests/render/prod-play.mjs` guards it.
 - **Low Power Mode is a cadence, not overload.** An iPhone's Safari alternated 30 and 24 Hz (41.7 ms frames, five
   refreshes of its 120 Hz screen) with the CPU at ~10 ms; the quality monitor read 24 Hz as overload and fell from medium
   to minimal mid-song. `render-quality.js` CAP now covers 24 Hz, a frame one refresh late keeps the run, and a capped frame
@@ -98,6 +102,21 @@ the method and its tools: `docs/agents/device-profiling.md`.
   decoded by the browser off the main thread) or move it to a Worker.
 - No fix without the before/after numbers on the device (AGENTS.md, Process): two measured «obvious» causes here
   (the portraits as PNGs, the dissolve) changed nothing.
+- A sheet's first paint compiles Skia's Vulkan pipelines (`VulkanCreateGraphicsPipelines`, 17–39 ms each, in
+  `RendererRasterWorker` GPU tasks) for every kind of paint the page has not drawn yet: no single rule owns it, each new
+  look (a full-screen `::backdrop` dim over WebGL, a gradient fill, a blurred shadow, an animated gradient) adds some.
+  Painting a copy at 1% opacity does not warm them (another blend); painting it as it will look, not modal (`show()`,
+  so under the boot screen, not in the top layer), does. mulassa.cat does not pay it at its first ⚙ because the selector
+  already drew those paints (its own ~475 ms first raster, below). S10, 2026-11-10, Pop's first ⚙ (mulassa.cat's sheets):
+  frame 435–469 ms, GPU 188–196; without the dim (`packages/plassa/src/sheets.css`) 352 ms, GPU 123–129; painted once
+  under the boot screen, with the 3D's first frame (`settings.js` `warm`, Pop's `main.js`) 34–67 ms, GPU 9–33. The cost
+  moves to the boot screen (one more ~350 ms frame there, the boot as long as before, 3.2–3.3 s). Every later sheet: 34–67 ms.
+- A full-screen dim that is not a layer of its own is merged with what lies under it and repainted, at DPR 3.5, the first
+  time it shows: Pop's dim behind a sheet (mulassa.cat's look) cost the first ⚙ 168–201 ms whether it was the dialog's
+  `::backdrop`, a plain element, opaque or not, warmed under the boot screen or not (a colour covered by an opaque layer is
+  not drawn at all). `will-change: transform` on the dim element (`sheets.css` `.sheet-dim`) made it a solid-colour layer:
+  the first ⚙ 34–67 ms. The Bústia's confirm notice copies the publish sheet's seal and perks: that sheet is warmed too
+  (first notice 100–117 → 34–67 ms).
 
 ## GPU context loss (mobile GPUs)
 

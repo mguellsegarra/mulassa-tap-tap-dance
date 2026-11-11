@@ -1,0 +1,111 @@
+/* Plassa's modal sheets (<dialog class="sheet">) and the general settings layer every page shares (docs/inventari.md): the
+   corner ×, the scrolling body and its fades, the on-screen keyboard's room, Configuració's «Sobre el joc», Privadesa and
+   the Turnstile tick box. Consolidated from mulassa.cat (src/styles/base.css, share.css), its colours as Plassa's tokens;
+   the sheets themselves are mulassa.cat's index.html (vite.config.js puts them in a game page). A page links it after base.css. */
+/* a sheet's button icons as mulassa.cat draws them (its base.css `button svg`): line art in the text's colour; only in the
+   sheets, so a game's filled icons (Juga, music) keep theirs */
+:where(dialog.sheet) button svg { width: 22px; height: 22px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+/* the dim behind a sheet on a game page (mulassa.cat's colour): an element shown while a sheet is open (Pop's settings.js),
+   in a layer of its own (will-change). Without one, Chrome merged it with what lies under it and repainted the whole
+   screen at its first showing, new GPU programs included (S10: the first ⚙ 168–201 ms, as the ::backdrop was; with its
+   own layer 34–67 ms, graphics.md). Above the game's covers (z-index 3, last in <body>), under the boot screen (4). */
+dialog.sheet::backdrop { background: none; }
+.sheet-dim { position: fixed; inset: 0; z-index: 3; background: #120d09b3; pointer-events: none; will-change: transform; }
+body.wrong-orient dialog[open] { visibility: hidden; } body.wrong-orient dialog::backdrop { display: none; }
+#settings-menu { width: min(400px, calc(100vw - 32px)); padding: 20px 20px 18px; }
+#settings-menu .sheet-actions { grid-template-columns: minmax(0, 1fr); } /* a long label wraps in its row instead of widening the column past the sheet (Português at 320) */
+:root[data-kb] dialog.sheet[open]:focus-within { inset-block: var(--kb-top) var(--kb-bottom); max-height: calc(var(--kb-h) - 16px) !important; } /* keyboard-room.js: above the on-screen keyboard (!important: each sheet's #id max-height) */
+/* a sheet that scrolls fades out under its frame instead of cutting text at the border, and the fade hints there is more:
+   sticky ghosts at both ends, shown by data-more-up / data-more-down (mulassa.cat's src/ui/sheet-fade.js). Dialogs only: a
+   cover's .sheet keeps game.css's .scroll-hint. */
+:is(dialog.sheet, .sheet-body.fade, .feedback-scroll)::before, :is(dialog.sheet, .sheet-body.fade, .feedback-scroll)::after { content: ""; display: block; position: sticky; z-index: 3; height: 30px; pointer-events: none; flex: none; opacity: 0; transition: opacity .15s; }
+:is(dialog.sheet, .sheet-body.fade, .feedback-scroll)::before { top: 0; margin-bottom: -30px; background: linear-gradient(var(--sheet-color) 35%, transparent); }
+:is(dialog.sheet, .sheet-body.fade, .feedback-scroll)::after { bottom: 0; margin-top: -30px; background: linear-gradient(transparent, var(--sheet-color) 65%); }
+:is(dialog.sheet, .sheet-body.fade, .feedback-scroll)[data-more-up]::before, :is(dialog.sheet, .sheet-body.fade, .feedback-scroll)[data-more-down]::after { opacity: 1; }
+.sheet-x { position: absolute; top: -14px; right: -14px; z-index: 1; display: grid; place-items: center; --round-bg: var(--sheet-color); cursor: pointer; } /* the round icon button, as the corner ones */
+/* shared X component: any .sheet whose first child is a .sheet-x sits it on the frame's corner (no clipping: the frame stops
+   scrolling) and scrolls its .sheet-body instead; no per-sheet rules, no «Tanca» button */
+.sheet[open]:has(> .sheet-x) { display: flex; flex-direction: column; overflow: visible; }
+.sheet > .sheet-body { min-height: 0; overflow: auto; scrollbar-width: none; --ring-room: 8px; margin: calc(-1 * var(--ring-room)); padding: var(--ring-room); scroll-padding: var(--ring-room); } /* overflow clips the keyboard ring (3px + 3px offset) on every side: room for it, taken back with the margin so nothing moves */ .sheet > .sheet-body::-webkit-scrollbar { display: none; }
+.sheet-bar { position: absolute; right: 6px; width: 4px; border-radius: 2px; background: color-mix(in srgb, var(--accent) 16%, transparent); pointer-events: none; } /* src/ui/sheet-fade.js: the body's drawn scrollbar */
+.sheet-bar i { display: block; border-radius: 2px; background: color-mix(in srgb, var(--accent) 85%, transparent); }
+.sheet:has(> .sheet-bar:not([hidden])) > .sheet-body { padding-inline: calc(var(--ring-room) + 10px); } /* the bar's 6 + 4 px, on both sides: the content stays on the frame's axis */
+.sheet-x::after { content: ""; position: absolute; inset: -4px; } /* touch slop: a ~52 px target for the 44 px circle */
+.sheet-x svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; }
+.sheet-x:focus-visible { outline-offset: 1px; } /* a full-height sheet puts the X 2 px under the screen's top */
+/* Privadesa: one sheet, one <section data-privacy="…"> per service (hosting/analytics, this device, rankings…) */
+.sheet-actions > .btn-link { justify-self: center; } /* a minor action under the stack, centred */
+#privacy-menu { width: min(440px, calc(100vw - 32px)); padding: 20px 20px 14px; }
+#privacy-menu .privacy-lead { margin: 0 0 4px; text-align: center; font-size: 15px; line-height: 1.3; color: var(--muted); text-wrap: pretty; }
+#privacy-menu section { margin-top: 12px; padding: 8px 12px 6px; border-left: 3px solid var(--accent); border-radius: 4px; background: color-mix(in srgb, var(--button-text) 5%, transparent); } /* notes, not buttons: flat, coloured strip */
+#privacy-menu h3 { margin: 0 0 4px; font-size: 17px; line-height: 1.2; color: var(--accent); }
+#privacy-menu p { margin: 0 0 6px; font-size: 15px; line-height: 1.35; color: var(--muted); text-wrap: pretty; }
+#privacy-menu b { color: var(--button-text); }
+#privacy-menu .sheet-actions { position: sticky; bottom: -14px; margin: 12px -20px -14px; padding: 10px 20px 14px; background: linear-gradient(transparent, var(--sheet-color) 12px); } /* a long read: Entesos stays in reach */
+@media (max-height: 500px) { /* landscape phones: two columns, so Configuració fits without scrolling */
+  #settings-menu { width: min(600px, calc(100vw - 32px)); padding: 14px 16px 10px; }
+  #settings-menu h2, #privacy-menu h2 { font-size: 24px; margin-bottom: 6px; }
+  #settings-menu .sheet-actions { grid-template-columns: 1fr 1fr; margin-top: 8px; }
+  #settings-menu .sheet-actions > :is(.btn-primary, .btn-link) { grid-column: 1 / -1; }
+  #privacy-menu { width: min(640px, calc(100vw - 32px)); padding: 12px 16px 8px; }
+  #privacy-menu .sheet-actions { bottom: -8px; margin: 8px -16px -8px; padding: 8px 16px; }
+}
+/* Turnstile's tick box (src/services/captcha.js), only when Cloudflare asks: centred, its native 300 × 65 never clipped */
+#captcha-menu { width: min(372px, calc(100vw - 16px - var(--sal) - var(--sar))); max-width: none; padding: 20px 16px 12px; text-align: center; }
+#captcha-menu h2 { font-size: 26px; }
+.captcha-text { margin: 0 0 16px; font-size: 16px; line-height: 1.35; color: var(--muted); text-wrap: balance; }
+.captcha-box { display: flex; justify-content: center; min-height: 65px; }
+.captcha-note { margin: 12px 0 0; color: color-mix(in srgb, var(--muted) 60%, transparent); font-size: 13px; }
+.captcha-note .btn-link { display: inline; min-height: 0; padding: 0 2px; font-size: 13px; }
+#settings-privacy { min-height: 40px; padding: 0 6px; color: var(--accent); font-weight: 800; font-size: 15px; text-decoration-color: currentColor; }
+.settings-about { display: grid; gap: 0; margin: 0; padding: 14px 12px 0; border-top: 1px solid color-mix(in srgb, var(--button-text) 12%, transparent); text-align: center; font: 700 16px/1.4 'Baloo 2', system-ui, sans-serif; color: var(--button-text); }
+.settings-about p { margin: 0; }
+/* the heart (logo red, drawn: no emoji-dependent icons) and the campanar de Valls (public/campanar-valls.svg), both decorative */
+.about-heart { width: .9em; height: .9em; vertical-align: -.1em; fill: #c0283c; }
+.about-place { white-space: nowrap; }
+.about-campanar { width: auto; height: .95em; vertical-align: baseline; margin-left: .08em; } /* its foot on the text baseline, a little taller than the capitals */
+.settings-about .sub { display: block; margin-top: 8px; font-weight: 600; font-size: 14px; line-height: 1.6; color: color-mix(in srgb, var(--muted) 67%, transparent); }
+.settings-about .about-version { margin-top: 8px; font: 600 12px/1 'Baloo 2', system-ui, sans-serif; color: color-mix(in srgb, var(--muted) 67%, transparent); } /* the build, in the space under the links */
+.about-coffee { color: var(--accent); font-weight: 800; white-space: nowrap; text-decoration: underline; text-underline-offset: 3px; } /* inline in the sub-line: cup + words, one tap target */
+.about-coffee svg { width: 1.1em; height: 1.1em; margin-right: .25em; vertical-align: -.2em; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.settings-about .about-uaf { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px 8px; margin-top: 12px; font-weight: 600; font-size: 14px; line-height: 1.5; color: color-mix(in srgb, var(--muted) 67%, transparent); } /* the entitat's credit (their requirement): their flame, quiet like the sub-line */
+/* the entitat: the selector's holo chip (.sel-entity, select-pending.css); the ::after slop makes it a 44 px target */
+.about-uaf .sel-entity { position: relative; white-space: nowrap; text-decoration: none; }
+.about-uaf .sel-entity::after { content: ''; position: absolute; inset: -10px 0; } /* 24 + 20 = 44 */
+.about-uaf .sel-entity { --entity-holo: linear-gradient(105deg, #ffb3c7, #ffe29a, #b8f0c8, #a8dcff, #d7b8ff, #ffb3c7); display: inline-flex; align-items: center; gap: 7px; box-sizing: border-box; max-width: 100%; min-height: 24px; padding: 4px 10px; border-radius: 999px; background: var(--entity-holo) 0 0 / 300% 100%; color: #2a1a10; font-size: 12px; font-weight: 700; line-height: 16px; vertical-align: middle; box-shadow: inset 0 0 0 1px #fff9, 0 0 4px #d7b8ff40; animation: about-holo 6s linear infinite; } /* select.css + select-pending.css */
+.about-uaf .sel-entity svg { flex: none; width: auto; height: 16px; fill: #e73449; stroke: none; }
+.about-uaf .sel-entity svg path { stroke: #63202c; stroke-width: 160; paint-order: stroke fill; }
+@keyframes about-holo { to { background-position: 300% 0; } }
+@media (prefers-reduced-motion: reduce) { .about-uaf .sel-entity { animation: none; } }
+.about-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 14px; }
+.about-links a { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 6px; color: var(--accent); font-weight: 800; font-size: 15px; text-decoration: underline; text-underline-offset: 3px; }
+.about-links svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+@media (max-width: 519px) { .settings-about { padding-inline: 2px; } .about-links { gap: 4px 6px; } .about-links a, #settings-privacy { padding: 0 3px; font-size: 14px; } } /* phones: GitHub · Crèdits · Privadesa on one row, paying back the UAF line's two; 14 px so the longer Spanish «Código en GitHub» still leaves Privacidad on the row at 375–393 */
+.setting-row { cursor: default; }
+@media (max-height: 720px) and (orientation: portrait) { /* short phones (iPhone SE): Configuració fits without scrolling */
+  #settings-menu { padding: 14px 16px 10px; }
+  #settings-menu h2 { margin-bottom: 4px; }
+  #settings-menu .sheet-actions { gap: 7px; margin-top: 8px; }
+  #settings-menu .btn { min-height: 44px; padding-block: 5px; }
+  #settings-menu .btn .sub { margin-top: 0; font-size: 13px; }
+  #settings-menu .switch-row:not(.lang-pick) { min-height: 44px; }
+  .settings-about { gap: 4px; margin-top: 0; padding-top: 8px; font-size: 15px; }
+  .settings-about .sub { margin-top: 2px; line-height: 1.4; }
+  .settings-about .about-uaf { margin-top: 10px; line-height: 1.3; } .settings-about .about-version { margin-top: 2px; }
+  .about-links a { min-height: 40px; }
+}
+@media (max-width: 359px) { /* 320 px: GitHub · Crèdits · Privadesa need 267 px of a 238 px row; a little sheet edge and 14 px links put them on one row */
+  #settings-menu { padding-inline: 12px; }
+  .about-links { gap: 4px; } .about-links a, #settings-privacy { padding: 0 2px; font-size: 14px; } .about-links a { gap: 4px; }
+}
+@media (max-width: 359px) and (max-height: 720px) { /* 320×568: the gaps give the last 12 px so Configuració needs no scroll */
+  #settings-menu .sheet-actions { gap: 5px; } .settings-about { gap: 2px; }
+}
+.setting-row .btn { flex: none; width: auto; min-height: 44px; padding: 0 14px; border-width: 1.5px; font-size: 15px; }
+.setting-row .sub { overflow-wrap: anywhere; color: var(--accent); }
+#privacy-menu .privacy-owner { margin: 12px 0 0; text-align: center; }
+/* links in running text (the mailtos): GUA orange, 6.4:1 on the sheet and 5.6:1 on a section's tint, underlined, the same once
+   visited, a keyboard ring; gold stays for the .btn-link buttons and the Configuració icon links */
+#privacy-menu p a, #privacy-menu p a:visited, .feedback-small a, .feedback-small a:visited { color: var(--button-text); text-decoration: underline; text-decoration-thickness: 1.5px; text-underline-offset: 3px; overflow-wrap: anywhere; border-radius: 3px; }
+#privacy-menu p a:hover, .feedback-small a:hover { color: #ff9a4a; }
+.about-links a:visited { color: var(--accent); }

@@ -11,7 +11,7 @@ import { fabricateRun, judgments, walk } from '../../src/dev/final-test.js';
 import { buildWorld } from '../../src/dev/demo-data.js';
 // every Mulassa row of the demo boards: none above what a perfect run scores
 const mockRows = () => buildWorld().boards.filter(b => b.figure === 'mulassa-valls').flatMap(b => b.rows);
-import { ceilings, extrasCeilings, perfectMax, ceilingOf, loadSong, loadDracSong, SCORING, TAP_RATE, MARGIN } from '../../tools/data/score-ceiling.mjs';
+import { ceilings, extrasCeilings, perfectMax, ceilingOf, loadSong, loadDracSong, SCORING, TAP_RATE, LEGACY_TAP_RATE, MARGIN } from '../../tools/data/score-ceiling.mjs';
 import { v1Song } from './v1-song.mjs';
 
 const song = loadSong();
@@ -26,7 +26,7 @@ assert.deepEqual([...MAX_SCORES], want, `MAX_SCORES must be the generated ceilin
 const sql = readFileSync(new URL('../../supabase/migrations/202609280015_score_ceiling.sql', import.meta.url), 'utf8');
 const values = sql.match(/from \(values ([^)]*\)(?:, \([^)]*\))*)\) as c\(difficulty, max_score\)/)?.[1];
 assert(values, 'the migration sets versions.max_score from a values list');
-assert.deepEqual([...values.matchAll(/\((\d), (\d+)\)/g)].map(m => [+m[1], +m[2]]), ceilings(v1Song).map((c, d) => [d, c]), 'the migration carries the same ceilings');
+assert.deepEqual([...values.matchAll(/\((\d), (\d+)\)/g)].map(m => [+m[1], +m[2]]), ceilings(v1Song, LEGACY_TAP_RATE).map((c, d) => [d, c]), 'the migration carries the same ceilings');
 assert(/if p_score > v_max then[\s\S]*?'leaderboard_score_ceiling'/.test(sql), 'submit_result refuses a score over the ceiling with its own code');
 assert(/^[\x00-\x7f]*$/.test(sql), 'ASCII only (SQL Editor)');
 
@@ -51,7 +51,7 @@ for (const d of [0, 1, 2]) {
 assert(mockRows(charts, song.finale).every(r => r.score <= comparableScore(MAX_SCORES[r.difficulty], r.difficulty, LEADERBOARD_VERSION)), '?final mock board under the ceilings');
 assert(MAX_SCORES[0] < MAX_SCORES[1] && MAX_SCORES[1] < MAX_SCORES[2], 'harder levels, higher ceilings');
 // Preserve the original published contract independently of the active short chart.
-assert.deepEqual(VERSION_RULES['mulassa-v1'].ceilings, ceilings(v1Song));
+assert.deepEqual(VERSION_RULES['mulassa-v1'].ceilings, ceilings(v1Song, LEGACY_TAP_RATE));
 assert.deepEqual(VERSION_RULES['mulassa-v1'].judgments, [0, 1, 2].map(d => perfectMax(v1Song, d).judgments));
 for (const d of [0, 1, 2]) {
   assert.equal(referenceScore(v1Song, d), FULL_SCORE_ANCHORS[d]);

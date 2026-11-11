@@ -1,0 +1,30 @@
+@font-face { font-family: 'Baloo 2'; font-weight: 600 800; src: url(/fonts/baloo-2-latin.woff2) format('woff2'); }
+body { margin: 0; background: #11152c; color: #fff3d6; font: 600 16px/1.4 'Baloo 2', system-ui, sans-serif; }
+main { max-width: 1500px; margin: 0 auto; padding: 24px; display: grid; gap: 16px; }
+.eyebrow { margin: 0; font-size: 13px; letter-spacing: .08em; color: #ff7ac6; }
+h1 { margin: 0; font-size: 30px; line-height: 1.1; }
+h2 { margin: 0; font-size: 20px; color: #ff7ac6; }
+header p, #why p { margin: 4px 0 0; max-width: 80ch; }
+a { color: #fff3d6; }
+.warn { color: #f5c518; }
+#tabs { display: flex; gap: 8px; }
+button, select, textarea { font: inherit; color: inherit; }
+button, select { min-height: 44px; padding: 0 16px; border: 2px solid #ff7ac6; border-radius: 12px; background: #24223f; cursor: pointer; }
+#tabs button { min-width: 64px; font-size: 22px; font-weight: 800; }
+button[aria-pressed="true"] { background: #fff3d6; border-color: #fff3d6; color: #24112e; }
+#why { padding: 12px 16px; border-left: 3px solid #ff7ac6; border-radius: 4px; background: #24223f; }
+#change { color: #e8d8b8; }
+.controls { display: flex; flex-wrap: wrap; gap: 16px; }
+.controls label { display: flex; align-items: center; gap: 8px; }
+#frames { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2.4fr); gap: 24px; align-items: start; }
+figure { margin: 0; display: grid; justify-items: center; gap: 8px; min-width: 0; }
+.scaler { position: relative; overflow: hidden; border-radius: 20px; box-shadow: 0 0 0 6px #2c2a48, 0 12px 40px #000a; }
+.big .scaler { border-radius: 8px; }
+iframe { position: absolute; left: 0; top: 0; border: 0; transform-origin: 0 0; background: #11152c; }
+figcaption { font-size: 14px; color: #e8d8b8; }
+.hint { margin: 0; color: #e8d8b8; font-size: 14px; }
+#notes { display: grid; gap: 8px; max-width: 720px; }
+#marks { display: flex; flex-wrap: wrap; gap: 8px; }
+textarea { box-sizing: border-box; width: 100%; padding: 8px 12px; border: 2px solid #e8d8b880; border-radius: 12px; background: #24223f; }
+#copy { justify-self: start; }
+@media (max-width: 800px) { #frames { grid-template-columns: 1fr; } }

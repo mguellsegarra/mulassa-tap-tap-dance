@@ -52,7 +52,7 @@ const state = { state: 'splash', paused: false }, ctx = { tr, document: doc, nav
   store: { set() {} }, unlock() { state.state = 'select'; }, toTitle() { state.state = 'select'; },
   startMenuAudio() {}, setFreeSound() {}, photoOrient() {}, curtain: swap => swap(), photoHelpAvailable: () => false, showAvatars: () => run('setPhotoControl(false)'), syncAvatars() {} }; // src/ui/photo-avatars.js (its DOM: tests/render/render-quality.mjs)
 let time = 1000;
-const photoSource = ['figures/index', 'game/photo-control'].map(name => readFileSync(new URL(`../../src/${name}.js`, import.meta.url), 'utf8').replace(/^import .*;\n/gm, '').replace(/^export /gm, '')).join('\n'); // the figures' traits first: photo-control reads them
+const photoSource = ['figures/index', 'game/photo-control', 'platform/double-tap'].map(name => readFileSync(new URL(`../../src/${name}.js`, import.meta.url), 'utf8').replace(/^import .*;\n/gm, '').replace(/^export /gm, '')).join('\n'); // the figures' traits first: photo-control reads them
 const code = photoSource + '\n' + ['mouse-look', 'controls', 'input'].map(name => readFileSync(new URL(`../../src/ui/${name}.js`, import.meta.url), 'utf8').replace(/^import .*;\n/gm, '').replace(/^export /gm, '')).join('\n');
 vm.createContext(ctx); vm.runInContext(code, ctx);
 const run = code => vm.runInContext(code, ctx);
@@ -92,7 +92,7 @@ assert($('viewmode').hidden, 'the eye shows only inside free play');
 // free play opens the corner row: free play, music, ⚙
 assert.match(css, /body:has\(#select:not\(\[hidden\]\)\) #free \{ --cb-i: 0; \}/, 'free play comes first');
 state.figureId = 'drac-valls'; state.sel = 2;
-key('KeyH'); assert(!run('viewMode'), 'H no longer enters free play'); $('free').fire('click'); run('updateControls()'); assert(run('viewMode') && $('select').inert && classes.has('view-mode') && sheets.select.shown, 'photo mode hides without closing/reinitializing the selector');
+key('KeyH'); assert(!run('viewMode'), 'H no longer enters free play'); run('setView(true)'); run('updateControls()'); assert(run('viewMode') && $('select').inert && classes.has('view-mode') && sheets.select.shown, 'photo mode hides without closing/reinitializing the selector');
 assert(!$('viewmode').hidden, 'inside free play the button is the way back');
 key('Escape'); assert(!run('viewMode') && !$('select').inert && state.state === 'select' && state.figureId === 'drac-valls' && state.sel === 2, 'photo exit keeps the figure and level');
 run('setView(true)'); key('KeyH'); assert(run('viewMode'), 'nor leaves it'); $('viewmode').fire('click'); assert(!run('viewMode'), 'the button leaves free play'); run('updateControls()'); assert($('viewmode').hidden);
@@ -352,13 +352,13 @@ for (const practice of [null, { step: 0 }]) {
 }
 const menuItems = [$('resume'), $('exit')];
 for (const b of menuItems) { b.tagName = 'BUTTON'; b.offsetParent = doc.body; b.closest = () => null; }
-activeDialog = { querySelectorAll: () => menuItems };
+activeDialog = { dataset: {}, querySelectorAll: () => menuItems };
 doc.activeElement = menuItems[0]; presses.length = sounds.length = 0;
 dispatchKey('ArrowDown', 'ArrowDown', menuItems[0]);
 assert.equal(doc.activeElement, menuItems[1]);
 assert.deepEqual(sounds, ['menu'], 'sheet focus navigation emits exactly one menu sound');
 assert.deepEqual(presses, [], 'capture prevents sheet arrows from also playing a note');
-activeDialog = { querySelectorAll: () => [menuItems[1]] }; sounds.length = 0;
+activeDialog = { dataset: {}, querySelectorAll: () => [menuItems[1]] }; sounds.length = 0;
 dispatchKey('ArrowDown', 'ArrowDown', menuItems[1]);
 assert.deepEqual(sounds, [], 'unchanged focus does not emit a second selection sound');
 console.log('practice/game input routing: keyboard, mouse/touch pad and bubbling stay separate from menu sounds');
@@ -405,12 +405,15 @@ console.log('practice/game input routing: keyboard, mouse/touch pad and bubbling
   assert(/hud\.tabIndex = -1/.test(src) && !/hud\.tabIndex = on/.test(src) && !/world-focus/.test(src), 'the photo-mode canvas is not a Tab stop and has no focus ring'); }
 // iPhone double-tap zoom: the quick second tap loses its default (the zoom) but still clicks; text fields keep theirs.
 {
-  const tap = (target, timeStamp) => { let prevented = false; for (const f of handlers.touchend || []) f({ target, timeStamp, touches: [], cancelable: true, preventDefault() { prevented = true; } }); return prevented; };
+  const tap = (target, timeStamp, touches = []) => { let prevented = false; for (const f of handlers.touchend || []) f({ target, timeStamp, touches, cancelable: true, preventDefault() { prevented = true; } }); return prevented; };
   let clicks = 0; const button = { closest: sel => (sel.includes('button') ? { click() { clicks++; } } : null) };
   const field = { closest: sel => (sel.includes('input') ? {} : null) };
   assert(!tap(button, 10000) && tap(button, 10200) && clicks === 1, 'a quick second tap is no zoom and still clicks once');
   assert(!tap(button, 11000), 'a slow tap is untouched');
   assert(!tap(field, 11100), 'a text field keeps its own taps');
+  assert(!tap(button, 12000) && tap(button, 12200, [{}]) && clicks === 2, 'a quick tap while another finger rests is no zoom either (two thumbs drumming)');
+  let pinch = false; for (const f of handlers.gesturestart || []) f({ preventDefault() { pinch = true; } });
+  assert(pinch, "Safari's pinch never zooms the page");
   console.log('double-tap zoom guard ok');
 }
 

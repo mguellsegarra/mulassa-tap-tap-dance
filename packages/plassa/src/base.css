@@ -1,0 +1,86 @@
+/* THE look of every Mulassa page, the main game's and each mini-game's: the tokens, the buttons, the sheets, the on/off rows,
+   the «?» pill and the keyboard's focus ring. A page links it first; a game only sets its own colour tokens (:root below) in
+   its own CSS, never these selectors again (tests/jocs/shared-base.mjs). The games' shell (cover, boot, countdown, end
+   sheet, rotate cover, boards) is game.css. Defaults are the main game's gold.
+   ::backdrop keeps its literal colour: older browsers do not pass :root's custom properties into it. */
+:root { --sat: env(safe-area-inset-top, 0px); --sar: env(safe-area-inset-right, 0px); --sal: env(safe-area-inset-left, 0px); --sab: env(safe-area-inset-bottom, 0px); --button-radius: 12px; --accent: #f5c518; --button-border: var(--accent); --button-gold-bg: linear-gradient(180deg, #ffe066 0%, #f5c518 55%, #dfad13 100%); --button-bg: #2a1a10e8; --button-text: #fff3d6; --focus: 3px solid var(--button-text); --focus-off: 3px; --ink: #2a1a10; --muted: #e8d8b8; --sheet-color: #2a1a10; --sheet-bg: var(--sheet-color); --sheet-radius: 18px; } /* ONE keyboard cursor everywhere: --focus, never stacked on a selection ring */
+:root { color-scheme: light only; } /* never let iOS/Android dark mode restyle our colours */
+button { -webkit-appearance: none; appearance: none; display: inline-flex; align-items: center; justify-content: center; gap: 12px; min-height: 44px; border: 2px solid var(--button-border); border-radius: var(--button-radius); background: var(--button-bg); color: var(--button-text); font: 800 18px 'Baloo 2', system-ui, sans-serif; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+@media (hover: hover) { button:hover { filter: brightness(1.15); } } /* touch screens keep :hover after a tap: it stuck lit */
+button:active { transform: translateY(1px); }
+/* THE round icon button: the corner row (free play, Perfil, music, ⚙; #free wears the holo, select-chrome.css), free play's exit, radio and ?, and the sheets' corner × (.sheet-x, solid: it straddles the frame). A dark disc, 2 px gold edge, cream glyph; size and place stay with each owner. */
+.round-btn, .sheet-x { width: 44px; height: 44px; min-height: 0; padding: 0; border: 2px solid var(--button-border); border-radius: 50%; background: var(--round-bg, var(--button-bg)); color: var(--button-text); }
+.round-btn { width: var(--round-size, 44px); height: var(--round-size, 44px); } /* a game's corner row grows with a tall screen (game.css --round-size) */
+.round-btn svg { width: calc(var(--round-size, 44px) * .55); height: calc(var(--round-size, 44px) * .55); }
+button:focus-visible, a:focus-visible { outline: var(--focus); outline-offset: var(--focus-off); }
+/* .btn: THE button of every sheet. An optional icon sits right before the label and the two are centred together
+   (icon + label read as one; no gap that changes with the label's length); an optional .sub line below.
+   .btn-primary = filled gold (one per sheet), .btn-secondary = outlined, .btn-link = plain text (minor actions). */
+.btn { position: relative; box-sizing: border-box; display: block; width: 100%; min-height: 48px; padding: 8px 20px; border: 2px solid var(--button-border); border-radius: var(--button-radius); background: var(--button-bg); color: var(--button-text); font: 800 18px/1.2 'Baloo 2', system-ui, sans-serif; text-align: center; text-decoration: none; text-wrap: balance; }
+a.btn-primary { display: grid; place-content: center; } /* a link as a main button (the in-app tip's jump): a <button> centres its line by itself, a block link left it 3 px high; not .btn-compact links (share, code), which stay inline-flex */
+.btn > svg { display: inline-block; flex: none; width: 22px; height: 22px; margin: -3px 10px 0 0; vertical-align: middle; }
+.btn .sub { display: block; margin-top: 2px; font-size: 14px; font-weight: 700; color: var(--muted); }
+.btn-primary { background: var(--button-gold-bg); color: var(--ink); }
+.btn-primary .sub { color: color-mix(in srgb, var(--ink) 70.2%, transparent); }
+.btn-secondary { background: var(--button-bg); border-color: var(--button-border); color: var(--button-text); } /* = the plain .btn, spelled out: gold edge, never filled */
+.btn-link { display: inline-block; width: auto; min-height: 40px; padding: 4px 12px; border-color: transparent; background: none; color: var(--muted); font-size: 16px; text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--muted) 40%, transparent); text-underline-offset: 3px; }
+.btn-link:active { transform: none; }
+.btn-link::after { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 100%; min-height: 44px; translate: 0 -50%; } /* touch slop: a 44 px target whatever the text's height */
+p .btn-link::after { display: none; } /* a link inside a sentence: its slop would cover the lines around it (WCAG 2.5.8 exempts inline targets) */
+/* .btn-big: a game home's buttons, as tall as the tap that starts it (tap-start.js); the sheets keep .btn's 48 px */
+.btn-big { min-height: clamp(60px, 7dvh, 88px); font-size: clamp(22px, 2.6dvh, 32px); } /* a tall screen gets a bigger one; a phone stays at 60 */
+/* its icons grow with the label: --icon is the icon's size (1em: .btn's own 22 px at the phone's 22 px label), the «?» disc
+   in proportion (28 px at 22); a game whose labels are smaller sets a bigger --icon (Pop's halves) */
+.btn-big { --icon: 1em; } .btn-big > svg { width: var(--icon); height: var(--icon); } .btn.btn-big .q { width: 1.65em; height: 1.65em; font-size: calc(var(--icon) * .77); }
+/* .btn-invite: a main button that asks to be pressed, as mulassa.cat's «Tria la dificultat» (src/styles/select-sizes.css
+   #select .btn-primary): it breathes and tilts gently, a glint crosses it, it answers the pointer. The glint sits under the
+   label (negative z in the button's own stacking context), clipped to the button. */
+.btn-invite { overflow: hidden; isolation: isolate; box-shadow: 0 4px 14px #0007; transition: transform .12s, filter .12s, box-shadow .12s; animation: btn-invite 3.6s ease-in-out infinite; }
+.btn-invite::after { content: ''; position: absolute; z-index: -1; inset: 0 auto 0 -60%; width: 40%; background: linear-gradient(90deg, #fff0, #fffa, #fff0); transform: skewX(-20deg); animation: btn-glint 5s ease-in-out infinite; pointer-events: none; }
+@keyframes btn-invite { 0%, 100% { scale: 1; rotate: -.25deg; } 50% { scale: 1.018; rotate: .25deg; } }
+@keyframes btn-glint { 0%, 84% { translate: 0; } 100% { translate: 420%; } }
+@media (hover: hover) { .btn-invite:hover { transform: translateY(-1px); filter: brightness(1.06); box-shadow: 0 6px 18px #0008; } }
+.btn-invite:active { transform: translateY(1px) scale(.98); filter: brightness(.94); box-shadow: 0 2px 8px #0006; }
+@media (prefers-reduced-motion: reduce) { .btn-invite { animation: none; scale: none; rotate: none; transition: none; } .btn-invite::after { display: none; } }
+.btn-small { min-height: 32px; padding: 0 4px; font-size: 14px; }
+/* .btn-compact (with .btn-link): a quiet icon + label text link, clearly lesser than the sheet's buttons, e.g. the
+   share sheet's WhatsApp · X · Més…; small to the eye, still a 44 px target (padding); never a sheet's main action */
+.btn-compact { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-width: 44px; min-height: 44px; padding: 4px 10px; color: var(--muted); font-size: 15px; line-height: 1.1; white-space: nowrap; }
+.btn-compact > svg { margin: 0; width: 18px; height: 18px; fill: currentColor; stroke: none; } /* filled marks (the apps' own logos, Simple Icons CC0) */
+.btn-compact > svg.line { fill: none; stroke: currentColor; stroke-width: 2.2; } /* our own line icons (share, link) */
+.sheet-actions { display: grid; gap: 12px; margin-top: 14px; } /* a sheet's stack of .btn */
+.howto-pill { min-height: 44px; padding: 6px 18px 6px 8px; gap: 8px; border-width: 1.5px; border-color: var(--pill-border, var(--button-border)); border-radius: 999px; font-size: 15px; letter-spacing: .03em; } /* #howto and «QUI BALLA?»'s #select-howto */
+:is(.howto-pill, .btn) .q { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--button-border); color: var(--ink); font-size: 17px; line-height: 1; }
+.btn > .q { display: inline-grid; width: 24px; height: 24px; margin: -3px 10px 0 0; vertical-align: middle; font-size: 15px; } /* the «?» before a .btn's label, where an icon sits */
+/* An on/off setting: a native checkbox with role="switch" (Space toggles, screen readers say on/off) in a flat row
+   (a setting, not a button: no outline); the label is the whole row, the switch sits on the right. */
+.switch-row { box-sizing: border-box; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; padding: 6px 12px 6px 16px; border-radius: var(--button-radius); background: #fff3d60d; font: 800 18px/1.2 'Baloo 2', system-ui, sans-serif; cursor: pointer; }
+.switch-row .sub { display: block; margin-top: 2px; font-size: 14px; font-weight: 700; color: var(--muted); }
+.switch-row.lang-pick { min-height: calc(12px + 1.2em + 2px + 1.2 * 14px); } /* the height of a row with a .sub (the publish prompt row): padding + label + sub gap + sub line */
+.switch-row input { -webkit-appearance: none; appearance: none; flex: none; position: relative; width: 48px; height: 28px; margin: 0; border: 2px solid var(--button-border); border-radius: 999px; background: var(--page-edge); cursor: pointer; transition: background-color .15s; }
+.switch-row input::before { content: ""; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%; background: var(--muted); transition: transform .15s; }
+.switch-row input:checked { background: var(--button-border); }
+.switch-row input:checked::before { transform: translateX(20px); background: var(--ink); }
+.switch-row input:focus-visible { outline: var(--focus); outline-offset: var(--focus-off); }
+@media (prefers-reduced-motion: reduce) { .switch-row input, .switch-row input::before { transition: none; } }
+*, dialog { user-select: none; -webkit-user-select: none; } input, textarea { user-select: text; -webkit-user-select: text; } /* UI text is never selectable; fields are */
+.sheet { box-sizing: border-box; max-height: calc(100dvh - 32px); overflow: auto; border: 2px solid var(--accent); border-radius: var(--sheet-radius); background: var(--sheet-bg); color: var(--button-text); font: 700 18px 'Baloo 2', system-ui, sans-serif; box-shadow: 0 16px 60px #0008; }
+/* scrollbars in the game's colours: thin gold thumb on the sheet's own dark background, inset from the rounded frame */
+.sheet, .sheet * { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--accent) 60%, transparent) transparent; }
+.sheet::-webkit-scrollbar, .sheet *::-webkit-scrollbar { width: 10px; height: 10px; background: transparent; }
+.sheet::-webkit-scrollbar-track, .sheet *::-webkit-scrollbar-track { background: transparent; margin: 16px 0; }
+.sheet::-webkit-scrollbar-thumb, .sheet *::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--accent) 50.2%, transparent); border-radius: 999px; border: 3px solid var(--sheet-color); }
+.sheet::-webkit-scrollbar-thumb:hover, .sheet *::-webkit-scrollbar-thumb:hover { background: color-mix(in srgb, var(--accent) 75.3%, transparent); }
+.sheet::-webkit-scrollbar-corner { background: transparent; }
+.sheet { scrollbar-width: none; } .sheet::-webkit-scrollbar { display: none; } /* the frame's own bar never fits its rounded corners (Privadesa); inner lists keep theirs */
+.sheet:focus { outline: none; } /* opened by touch or mouse the sheet itself takes focus: no ring on its first button */
+.sheet::backdrop { background: #120d09b3; }
+.sheet h2 + p { color: var(--button-text) !important; } /* what a sheet says under its title reads first: white, the small print stays muted */
+.sheet h2 { margin: 0 0 8px; color: var(--accent); text-align: center; font-size: 30px; line-height: 1.1; }
+/* «Juga»: the cream pill that starts a game (the games sheet's cards, a game's home); its shadow takes the game's --game */
+.game-play { display: inline-flex; align-items: center; justify-content: center; gap: 12px; min-width: 160px; height: 60px; margin-top: 8px; padding: 0 34px 0 28px; border: 0; border-radius: 30px; background: #fff3d6; color: #2a1a10; font: 800 24px/1 'Baloo 2', system-ui, sans-serif; cursor: pointer; box-shadow: 0 4px 0 color-mix(in srgb, var(--game) 55%, #120b07); }
+.game-play svg { width: 1em; height: 1em; fill: currentColor; flex: none; }
+/* a soft hop now and then says «press here»; it ignores reduced motion on purpose (the owner's call), like the backdrop */
+.game-play { animation: game-play-hop 2.4s ease-in-out infinite; }
+.game-play:hover, .game-play:focus-visible { animation-play-state: paused; }
+@keyframes game-play-hop { 0%, 60%, 100% { translate: 0 0; } 70% { translate: 0 -8px; } 80% { translate: 0 0; } 87% { translate: 0 -3px; } 94% { translate: 0 0; } }

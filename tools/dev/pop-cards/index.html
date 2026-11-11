@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="ca">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Mulassa Pop · targetes de la portada</title>
+  <style>
+    @font-face { font-family: 'Baloo 2'; font-weight: 600 800; src: url(/fonts/baloo-2-latin.woff2) format('woff2'); }
+    body { margin: 0; padding: 16px 24px 48px; background: #11152c; color: #fff3d6; font: 600 16px/1.4 'Baloo 2', system-ui, sans-serif; }
+    h1 { margin: 0 0 4px; font-size: 26px; color: #ff7ac6; }
+    .bar { position: sticky; top: 0; z-index: 2; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 12px 0; background: #11152c; }
+    button, a.btn { height: 40px; padding: 0 16px; border: 2px solid #ff7ac6; border-radius: 12px; background: #24223f; color: #fff3d6; font: inherit; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; }
+    button[aria-pressed="true"] { background: #ff7ac6; color: #2a1a10; }
+    .sep { width: 12px; }
+    .why { max-width: 72ch; margin: 8px 0 12px; }
+    .why b { color: #ff7ac6; }
+    textarea { box-sizing: border-box; width: min(100%, 72ch); min-height: 72px; padding: 8px 12px; border: 2px solid #ff7ac655; border-radius: 12px; background: #24223f; color: #fff3d6; font: inherit; }
+    .stage { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; }
+    .dev { display: flex; flex-direction: column; gap: 6px; }
+    .dev span { color: #e8d8b8; font-size: 14px; }
+    .frame { overflow: hidden; border: 2px solid #ffffff22; border-radius: 16px; background: #000; }
+    .frame iframe { display: block; border: 0; transform-origin: 0 0; }
+    .toast { position: fixed; right: 24px; bottom: 24px; padding: 8px 16px; border-radius: 12px; background: #ff7ac6; color: #2a1a10; }
+  </style>
+</head>
+<body>
+  <h1>Mulassa Pop · les targetes de baix</h1>
+  <p class="why">Quatre propostes per a la fila de figures de la portada. Cada una es veu dins la portada real (tauler, logo i Juga de /pop/), amb els retrats reals retallats al seu contingut. Tria una mida: els mòbils es veuen a mida real; l’escriptori, reduït (el percentatge surt a sota). «Obre» la mostra a pantalla sencera per provar-la al mòbil.</p>
+  <div class="bar">
+    <button data-p="A">A · Selector</button><button data-p="B">B · Fitxa crema</button><button data-p="C">C · Dues files</button><button data-p="D">D · Surt del marc</button>
+    <span class="sep"></span>
+    <button data-v="320x568">320×568</button><button data-v="393x852">393×852</button><button data-v="430x932">430×932</button><button data-v="1024x768">1024×768</button><button data-v="1280x800">1280×800</button><button data-v="1920x1080">1920×1080</button>
+    <span class="sep"></span>
+    <a class="btn" id="open" target="_blank">Obre</a>
+    <button id="copy">Copia totes les notes</button>
+  </div>
+  <p class="why" id="why"></p>
+  <textarea id="note" placeholder="Notes sobre aquesta proposta…"></textarea>
+  <div class="stage">
+    <div class="dev"><div class="frame" id="f1"></div><span id="l1"></span></div>
+  </div>
+  <div class="toast" hidden></div>
+  <script type="module">
+    const WHY = {
+      A: '<b>A · Selector.</b> El llenguatge de les targetes de mulassa.cat (selector i full de jocs): el retrat és la targeta sencera, la figura gran i retallada al seu contingut, i el nom s’aguanta sobre una ombra curta al peu en lloc d’una banda plana. El to es llegeix pel marc i per una marca rodona a la cantonada (dit = toca, prohibit = no toquis, estrella = premi).',
+      B: '<b>B · Fitxa crema.</b> Una fitxa de joc de taula: targeta crema amb una finestra plena del color del to, la figura a dins i el text en tinta fosca just a sota, sense cap banda. El crema destaca sobre la nit i lliga amb el botó Juga; el to és tota la finestra.',
+      C: '<b>C · Dues files.</b> Targetes apaïsades en dues files: retrat a l’esquerra, nom i frase a la dreta. Sense banda de text: el text va al costat i ocupa just el que ocupa. En pantalla ampla hi caben les vuit en una graella de 4×2 amb la frase llarga sencera; al mòbil es llisca com ara.',
+      D: '<b>D · Surt del marc.</b> Una peça massissa del color del to, i la figura en surt per dalt, més gran que la peça. El text en tinta fosca sobre el color, amb la marca del to davant del nom. El to es veu de lluny perquè és tota la peça.',
+    };
+    const KEY = 'pop-cards-notes';
+    const notes = JSON.parse(localStorage.getItem(KEY) || '{}');
+    const q = new URLSearchParams(location.search);
+    let P = /^[ABCD]$/.test(q.get('p')) ? q.get('p') : 'A', V = q.get('v') || '393x852';
+    const $ = s => document.querySelector(s);
+    const frame = (box, label, size) => {
+      const [w, h] = size.split('x').map(Number), k = Math.min(1, (innerWidth - 64) / w, 0.9 * innerHeight / h);
+      box.style.cssText = `width:${Math.round(w * k)}px;height:${Math.round(h * k)}px`;
+      box.innerHTML = `<iframe src="frame.html?p=${P}" width="${w}" height="${h}" style="transform:scale(${k})"></iframe>`;
+      $(label).textContent = `${size}${k < 1 ? ` · reduït al ${Math.round(k * 100)} %` : ' · mida real'}`;
+    };
+    const show = () => {
+      for (const b of document.querySelectorAll('[data-p]')) b.setAttribute('aria-pressed', b.dataset.p === P);
+      for (const b of document.querySelectorAll('[data-v]')) b.setAttribute('aria-pressed', b.dataset.v === V);
+      $('#why').innerHTML = WHY[P];
+      $('#note').value = notes[P] || '';
+      $('#open').href = `frame.html?p=${P}`;
+      frame($('#f1'), '#l1', V);
+      history.replaceState(null, '', `?p=${P}&v=${V}`);
+    };
+    for (const b of document.querySelectorAll('[data-p]')) b.onclick = () => { P = b.dataset.p; show(); };
+    for (const b of document.querySelectorAll('[data-v]')) b.onclick = () => { V = b.dataset.v; show(); };
+    $('#note').oninput = e => { notes[P] = e.target.value; localStorage.setItem(KEY, JSON.stringify(notes)); };
+    $('#copy').onclick = async () => {
+      const text = 'Mulassa Pop · targetes de la portada (tools/dev/pop-cards)\n' + 'ABCD'.split('').map(p => `${p}: ${(notes[p] || '').trim() || '—'}`).join('\n');
+      const t = $('.toast');
+      try { await navigator.clipboard.writeText(text); t.textContent = 'Notes copiades'; }
+      catch { prompt('Copia les notes:', text); return; } // http on the LAN may lack the clipboard
+      t.hidden = false; setTimeout(() => { t.hidden = true; }, 1800);
+    };
+    show();
+  </script>
+</body>
+</html>

@@ -69,6 +69,14 @@ for (const [why, o] of [['no profile', { prof: null }], ['a released name', { pr
   const run = g.greet(); await tick(); await tick();
   assert.equal(g.answered, false, 'the ribbon must not be spent behind a sheet about to open');
   release(); await run; assert.equal(g.answered, true); assert.deepEqual(seen, ['asked']); }
+// one sheet per visit, in order: the badges' news, then the new games' (1.3.0), then the device tip
+for (const [badge, want] of [[true, ['badge']], [false, ['games']]]) {
+  const shown = [], say = (k, r) => ({ show: () => (shown.push(k), r) });
+  const g = setupGreeting({ stats: { async init() {} }, seasonEnd: { async news() { return null; } }, account: { notice: () => false }, free: () => true,
+    badgeNews: { show: async () => (shown.push('badge'), badge) }, newGame: say('games', true), hint: say('hint', true) });
+  await g.greet();
+  assert.deepEqual(shown.filter(k => k !== 'badge' || badge), want, `badge news ${badge ? 'told' : 'not due'}`);
+}
 
 // a device from 1.2.6: its cached identity has no badge fields and still reads as the same confirmed profile
 { const old = JSON.stringify({ hasSession: true, mailOn: 'a@b.cat', persistent: true, prof: { alias: 'Vell', verified: true, published: true, released: false, publicId: 'p9' } });

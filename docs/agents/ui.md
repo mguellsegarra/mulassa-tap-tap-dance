@@ -1,6 +1,7 @@
 # UI conventions
 
 - **Selector** (the main menu: cards and town pills, the two steps, the info column and standings card, the showreel and its camera, the idle screen, the corner row, the logo): the full rules are in `docs/ui/selector.md`. Read it before changing `ui/select-*.js`, `game/showreel.js`, the menu framing in `scene/cameras.js` or `styles/select*.css`.
+- **Mulassa Games picker images** (each game's card and banner in `public/jocs/menu/`): Codex imagegen, Real-ESRGAN ×4 and the final sizes are in `docs/ui/games-menu-images.md`.
 - Hide disabled action buttons instead of showing a dimmed unavailable action. Preserve their layout space when removing it would shift nearby controls. Exception: the paired carousel arrows remain visible but dimmed and natively disabled at either end; hide the whole capsule only when navigation is unnecessary.
 - **Balanced layout (every card, sheet and screen).** Mandatory for every UI change: `.agents/skills/uipolish/SKILL.md` (the rules, the measurement loop and the viewport matrix).
 
@@ -70,4 +71,10 @@
   and adds `window.__sentryTest()`. No replay/tracing/sessions; privacy text in `data-privacy="errors"`.
 
 - Fullscreen: page fullscreen only in free play, on Android touch devices and on desktop, inside a real tap or key (`photoOrient`, `src/ui/fullscreen.js`): in on entering it (on Android the next tap goes back in if the player leaves it; on desktop an Escape leaves it windowed, since a click orbits), out on leaving it; on desktop only, free play's way in and out runs under a short dark curtain (`src/ui/curtain.js`; touch devices switch at once) that lifts once frames run smooth, as the switch and the fullscreen change stall a few frames; the menus and the game never ask; never on iPhone/iPad (iPad Safari element fullscreen swallowed touches) — an upright iPhone asks to turn before entering free play (`#free-hint-menu`, `free-gate.js`), and in Safari (not the home-screen app) that sheet adds the «Juga a pantalla completa» tip.
+- **Every new one-time sheet (news, notice, welcome, anything shown once) is marked seen per profile on the server**, not
+  only on the device: use the seen-notices registry (`src/services/seen-notices.js`, shared `seenNotices` instance in
+  `sheets-setup.js`; ids `[a-z0-9:._-]`, e.g. `news:<id>`, `season:<id>`, no migration needed). Read it with
+  `service.ownerId()` + `notices.load(owner)`, check `notices.seen(owner, id)`, mark with `notices.mark(owner, id)`; keep
+  a device mark for players without a profile and offline, and send an older device-only mark up once (`news-sheet.js`
+  and `badge-news.js` show both). Only hints about this device (GPU, rotate, install) stay device-only.
 - Device tips (`src/ui/device-hint.js`): small modal sheets (icon, title, text, «D’acord», round `.sheet-x`), once ever: closing either way stores `gpu-hint` = `off`. Only «Acceleració per maquinari», when WebGL runs on a software renderer (`softwareGl`). Told only by the greeting's queue at an idle selector, after the end-of-season sheet, the statistics notice and the badges' news (`src/ui/badge-news.js`: once per profile on a device; never without a profile, with a released name or publishing off) (offline too: they need no network).

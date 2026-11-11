@@ -19,6 +19,8 @@ import { OPTOUT_KEY, PERSIST_KEY } from './publish-ui.js';
 import { setupGreeting } from './greeting.js';
 import { setupDeviceHint } from './device-hint.js';
 import { setupFreeGate } from './free-gate.js';
+import { setupNews } from './news-sheet.js';
+import { hasPlayed } from '../game/records.js';
 import { setupInstall } from './install-app.js';
 import { softwareGl } from '../scene/stage.js';
 import { makeDanceChart } from '../game/chart.js';
@@ -30,6 +32,7 @@ import { setupBadgeNews } from './badge-news.js';
 import { setupConfirmGate } from './confirm-gate.js';
 import { setupHearts } from './figure-hearts.js';
 import { setupHeartTip } from './heart-tip.js';
+import { setupGamesTip } from './games-tip.js';
 import { setupBadgeTip } from './badge-tip.js';
 import { setupFeedback } from './feedback-ui.js';
 import { sheets } from './sheets.js';
@@ -46,11 +49,11 @@ import { setupLang } from './lang-ui.js';
 import { focusIn, keyboardNav } from './focus.js';
 import { Q, CALM, DEMO } from '../core/env.js';
 import { idOfKey } from '../figures/index.js';
-import { sheetUp, viewMode, viewBtn, enterFree } from './controls.js';
+import { sheetUp, viewMode, viewBtn, enterFree, openGames } from './controls.js';
 import { loadPhoto } from '../hud/share-card.js';
 
 sheetFades();
-// The keyboard works in every sheet: ↑↓ (and ←→ outside text fields) move between its controls, and Enter/Space act on
+// The keyboard works in every sheet: ↑↓ (and ←→ outside text fields and a sheet's own row, data-arrows) move between its controls, and Enter/Space act on
 // the focused one (native). If the focus fell outside the open sheet (a click on its padding), the first key brings it
 // back to the sheet's first control instead of doing nothing.
 addEventListener('keydown', e => {
@@ -61,7 +64,7 @@ addEventListener('keydown', e => {
     .filter(el => !el.disabled && !el.closest('[hidden]') && el.offsetParent !== null);
   if (!items.length) return;
   const at = items.indexOf(document.activeElement), typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName);
-  const step = { ArrowDown: 1, ArrowUp: -1, ...(typing ? {} : { ArrowRight: 1, ArrowLeft: -1 }) }[e.key];
+  const step = { ArrowDown: 1, ArrowUp: -1, ...(typing || dlg.dataset.arrows === 'row' ? {} : { ArrowRight: 1, ArrowLeft: -1 }) }[e.key];
   if (at < 0 && (step || e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); e.stopImmediatePropagation(); items[0].focus(); if (step && document.activeElement === items[0]) chip?.sfx('menu'); return; }
   if (!step || (typing && document.activeElement.tagName !== 'INPUT')) return; // a textarea/select keeps its own arrows
   e.preventDefault(); e.stopImmediatePropagation(); // not a game key while a sheet is up
@@ -194,6 +197,12 @@ const hint = setupDeviceHint({ focusIn, store, softwareGl, // the device tips, l
   account: () => (ownerKey(kv) ? (savedName(kv).verified ? 'linked' : 'guest') : 'none'), confirm: back => { profile.open('link', back); if (!profile.isOpen) back?.(); } }); // offline the profile sheet stays shut: focus back to the selector
 sheets.hint = hint;
 sheets.freeGate = setupFreeGate({ focusIn, store, onEnter: () => enterFree() }); // an upright iPhone is asked to turn before free play
+// a mini-game sends a player who has no name for its board here (Mulassa Pop: /#nom-pop, or /#nom-pop-canvi for a released
+// one): the name sheet at once, and back to the game once it closes, made or not (docs/jocs/pop-ranking.md)
+const nameFor = globalThis.location?.hash?.match(/^#nom-pop(-canvi)?$/);
+if (nameFor) { history.replaceState(null, '', '/' + location.search); profile.open(nameFor[1] ? 'rename' : 'create', () => location.replace('/pop/')); }
+const news = setupNews({ focusIn, store, played: () => hasPlayed(store), onGames: openGames, force: Q.has('novetats'), ...(!mockBoard && { service, notices: seenNotices }) }); // seen per profile on any device (the mock: device only); ?novetats on a dev host shows it again
+sheets.news = news;
 // The greeting waits for calm: a playable figure (Mulassa, Drac) on screen and no touch or key for a while, so its sheet never
 // lands on what a tap has just opened. Every touch restarts the wait; the timer asks again once it is calm.
 const GREET_CALM_MS = 2500;
@@ -202,7 +211,7 @@ for (const type of ['pointerdown', 'keydown', 'wheel']) document.addEventListene
   lastTouchAt = performance.now(); clearTimeout(greetCalmT); greetCalmT = setTimeout(() => greeting.greet(), GREET_CALM_MS + 50);
 }, { capture: true, passive: true });
 const greetCalm = () => selectorFree() && !select.pending && performance.now() - lastTouchAt >= GREET_CALM_MS;
-const greeting = setupGreeting({ asked: () => heartTip.update(), stats: statsSync, seasonEnd, account, badgeNews, hint, identity: () => refreshIdentity(service, kv), back: () => select.refocus(),
+const greeting = setupGreeting({ asked: () => heartTip.update(), stats: statsSync, seasonEnd, account, badgeNews, hint, newGame: news, identity: () => refreshIdentity(service, kv), back: () => select.refocus(),
   free: greetCalm,
   extra: () => {
     if (cardGreeted || !mockOpts?.card) return false;
@@ -219,6 +228,7 @@ const feedback = setupFeedback({ focusIn, captcha: board.captcha, accessToken: (
 const needConfirmed = setupConfirmGate({ focusIn, identity: () => service.identity(), hasProfile: async () => !!ownerKey(kv) || !!(await service.profile?.())?.alias, openProfile: (what, back, opts) => profile.open(what, back, opts) });
 const hearts = setupHearts({ service, needConfirmed, onChange: () => { select.paintHearts(); heartTip.update(); } });
 setupBadgeTip();
+const gamesTip = setupGamesTip();
 const heartTip = setupHeartTip({ store, hearts, figure: () => (select.pending ? null : select.figure), busy: () => sheetUp() || viewMode || !greeting.answered });
 const writeToBox = (request, back) => needConfirmed(request.kind === 'general' ? 'feedback' : request.kind, () => feedback.show(back, request));
 sheets.feedback = feedback;
@@ -228,7 +238,7 @@ const select = setupSelect({ store, keyboard: () => keyboardNav, busy: () => she
   sfx: k => chip?.sfx(k), onSelect: f => { setSelectedFigure(f); greeting.greet(); },
   onPlay: (level, figure) => { setSelectedFigure(figure); choose(level); },
   onHowto: () => { howtoMenu.showModal(); focusIn(howtoMenu, 'howto-ok'); },
-  onWrite: request => writeToBox(request, () => select.refocus()), hearts, onPanel: () => requestAnimationFrame(() => setTimeout(heartTip.update)) }); // (after the change's frame is drawn: its visibility reads then find a laid-out page, not a figure change's dirty one: ~15 ms of forced style on a Galaxy S10)
+  onWrite: request => writeToBox(request, () => select.refocus()), hearts, onPanel: () => requestAnimationFrame(() => setTimeout(() => { heartTip.update(); gamesTip.update(); })) }); // (after the change's frame is drawn: their visibility and rect reads then find a laid-out page, not a figure change's dirty one: ~15 ms of forced style on a Galaxy S10)
 hearts.load();
 sheets.select = select;
 sheets.lang = setupLang({ store, state: () => G.state }); // the language dropdown and the one-time suggestion
@@ -263,6 +273,8 @@ function openPrivacy() {
 document.addEventListener('click', e => { if (e.target.closest?.('[data-privacy-open]')) openPrivacy(); });
 document.getElementById('pause-sync').addEventListener('click', () => sync.show());
 document.getElementById('howto-practice').addEventListener('click', () => { howtoMenu.close(); startPractice(null); });
+document.getElementById('howto-walk').addEventListener('click', () => { howtoMenu.close(); enterFree(); });
+document.getElementById('select-walk').addEventListener('click', () => enterFree()); // free play beside «Mira el ball» (a desktop only: select-pending.css)
 document.getElementById('howto-ok').addEventListener('click', () => howtoMenu.close());
 document.getElementById('privacy-ok').addEventListener('click', () => privacyMenu.close());
 document.getElementById('skip').addEventListener('click', () => { if (G.practice && !G.paused) { chip.sfx('menu'); endPractice(); } });

@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="ca">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Mulassa Pop · llegenda</title>
+<style>
+@font-face { font-family: 'Baloo 2'; font-weight: 600 800; font-display: swap; src: url(/fonts/baloo-2-latin.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+2000-206F; }
+@font-face { font-family: 'Baloo 2'; font-weight: 600 800; font-display: swap; src: url(/fonts/baloo-2-latin-ext.woff2) format('woff2'); unicode-range: U+0100-02BA, U+1E00-1E9F; }
+@font-face { font-family: 'Jersey 10'; font-display: swap; src: url(/fonts/jersey-10-latin.woff2) format('woff2'); }
+:root { color-scheme: light only; --pink: #ff7ac6; --cream: #fff3d6; --gold: #f5c518; --no: #ff8a7a; --dark: #24223f; --ink: #2a1a10; --night: #11152c; --muted: #e8d8b8;
+  --pink-btn: linear-gradient(180deg, #ff9ed6 0%, #ff7ac6 55%, #e85aae 100%); }
+* { box-sizing: border-box; }
+html, body { margin: 0; background: #0b0e20; color: var(--cream); font: 700 16px/1.35 'Baloo 2', system-ui, sans-serif; }
+main { max-width: 1240px; margin: 0 auto; padding: 24px 16px 64px; }
+header .eyebrow { margin: 0; font-size: 12px; letter-spacing: .12em; color: var(--pink); }
+header h1 { margin: 4px 0 8px; font-size: 30px; line-height: 1.1; }
+header p { margin: 0 0 8px; max-width: 72ch; color: var(--muted); }
+.warn { color: var(--gold); }
+nav { position: sticky; top: 0; z-index: 5; display: flex; gap: 8px; flex-wrap: wrap; padding: 12px 0; background: #0b0e20; }
+nav a { min-height: 44px; display: inline-flex; align-items: center; padding: 0 16px; border: 2px solid var(--pink); border-radius: 22px; color: var(--cream); text-decoration: none; }
+nav a:hover { background: #ff7ac622; }
+
+section.prop { margin-top: 40px; padding-top: 16px; border-top: 1px solid #ff7ac633; }
+.prop > h2 { margin: 0; font-size: 26px; color: var(--pink); }
+.prop > h2 small { color: var(--muted); font-size: 16px; }
+.prop > p { margin: 4px 0 16px; max-width: 80ch; color: var(--muted); }
+.frames { display: flex; flex-wrap: wrap; gap: 32px; align-items: flex-start; }
+figure { margin: 0; }
+figcaption { margin-top: 8px; font-size: 13px; color: var(--muted); text-align: center; }
+
+/* ---------- the two stages: Pop's home at 375×667 and the «?» sheet at 360 ---------- */
+.phone { position: relative; width: 375px; height: 667px; overflow: hidden; border-radius: 28px; box-shadow: 0 0 0 6px #000, 0 0 0 7px #333;
+  background: radial-gradient(120% 60% at 50% 30%, #3a3d6e, var(--night) 70%); }
+.home { position: absolute; inset: 0; display: flex; flex-direction: column; gap: 16px; padding: 16px 0; }
+.home .corner { position: absolute; top: 16px; width: 44px; height: 44px; border: 2px solid var(--pink); border-radius: 50%; background: #24223fe8; display: grid; place-items: center; }
+.home .corner.l { left: 16px; } .home .corner.r { right: 16px; }
+.home .corner svg { width: 22px; height: 22px; fill: var(--cream); }
+.hero { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; align-items: center; padding: 56px 16px 0; }
+.title { margin: 0; font: 400 64px/.8 'Jersey 10', system-ui; color: #ff3b47; -webkit-text-stroke: 8px #5e1514; paint-order: stroke fill; letter-spacing: 1px; }
+.title + .pop { margin: -4px 0 0; font: 800 44px/1 'Baloo 2'; letter-spacing: 6px; color: var(--pink); -webkit-text-stroke: 6px #2a1a10; paint-order: stroke fill; }
+.pitch { margin: 4px 0 12px; max-width: 300px; text-align: center; font-size: 16px; line-height: 1.2; text-shadow: 0 1px 3px #000; }
+.play-row { display: flex; gap: 12px; align-items: center; }
+.play { display: inline-flex; align-items: center; gap: 10px; height: 56px; padding: 0 26px 0 20px; border-radius: 28px; background: var(--cream); color: var(--ink); font-size: 22px; box-shadow: 0 4px 0 #8a3a6a; }
+.play svg { width: 22px; height: 22px; fill: currentColor; }
+.best { display: inline-flex; align-items: center; gap: 6px; height: 44px; padding: 0 12px; border-radius: 22px; background: #24223fe8; box-shadow: inset 0 0 0 2px #ff7ac655; color: var(--muted); font-size: 16px; }
+.best b { color: var(--pink); }
+.art { flex: 1 1 auto; min-height: 0; width: 100%; display: flex; justify-content: center; align-items: flex-end; padding-top: 8px; }
+.art img { max-height: 100%; max-width: 60%; object-fit: contain; filter: drop-shadow(0 10px 16px #0008); }
+.legend-slot { flex: none; padding: 0 16px; }
+
+.backdrop { width: 392px; height: 667px; display: grid; place-items: center; border-radius: 28px; background: #11152c8c; box-shadow: 0 0 0 6px #000, 0 0 0 7px #333;
+  background: linear-gradient(#11152ccc, #11152ccc), radial-gradient(120% 60% at 50% 30%, #3a3d6e, var(--night) 70%); overflow: hidden; }
+.sheet { position: relative; width: 360px; max-height: 635px; overflow: auto; padding: 20px 16px 16px; border: 2px solid var(--pink); border-radius: 24px;
+  background: linear-gradient(#3a2b4c, #24223f); box-shadow: 0 16px 60px #0008; scrollbar-width: thin; scrollbar-color: #ff7ac699 transparent; }
+.sheet h3 { margin: 0 44px 4px; text-align: center; font-size: 24px; line-height: 1.1; color: var(--pink); }
+.sheet .lead { margin: 0 0 16px; text-align: center; font-size: 15px; line-height: 1.25; color: var(--muted); }
+.sheet .x { position: absolute; top: 12px; right: 12px; width: 44px; height: 44px; border: 2px solid var(--pink); border-radius: 50%; background: var(--dark); display: grid; place-items: center; }
+.sheet .x svg { width: 20px; height: 20px; stroke: var(--cream); stroke-width: 2.6; stroke-linecap: round; fill: none; }
+.sheet .ok { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 48px; margin-top: 16px; border: 0; border-radius: 12px; background: var(--pink-btn); color: #24112e; font: 800 18px 'Baloo 2'; }
+
+/* group tones and their marks, shared by every proposal */
+[data-g="tap"] { --tone: var(--pink); }
+[data-g="no"] { --tone: var(--no); }
+[data-g="extra"] { --tone: var(--gold); }
+.mark { display: inline-grid; place-items: center; flex: none; width: 22px; height: 22px; padding: 3px; border-radius: 50%; background: var(--tone); color: var(--ink); }
+.mark svg { width: 100%; height: 100%; fill: currentColor; }
+.por { display: block; object-fit: contain; }
+
+/* ================= O1 · Tres franges ================= */
+/* home: one strip of 8 icons in three tinted groups; a caption under it says what the touched (or cycling) figure does */
+.o1h { display: grid; gap: 8px; }
+.o1h .groups { display: flex; gap: 8px; }
+.o1h .grp { flex: var(--n) 1 0; min-width: 0; display: grid; gap: 4px; padding: 6px 4px 8px; border-radius: 14px; background: color-mix(in srgb, var(--tone) 16%, #1a1630); box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--tone) 55%, transparent); }
+.o1h .lab { display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 12px; line-height: 1; letter-spacing: .06em; color: var(--tone); }
+.o1h .lab .mark { width: 16px; height: 16px; padding: 2px; }
+.o1h .icons { display: flex; justify-content: space-evenly; }
+.o1h button { all: unset; cursor: pointer; display: grid; place-items: end center; width: 34px; height: 48px; border-radius: 8px; }
+.o1h button[aria-pressed="true"] { background: color-mix(in srgb, var(--tone) 30%, transparent); }
+.o1h button img { height: 44px; max-width: 32px; }
+.o1h .cap { margin: 0; display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 12px; border-radius: 12px; background: #fff3d60a; font-size: 15px; line-height: 1.15; text-align: center; }
+.o1h .cap b { color: var(--tone); white-space: nowrap; }
+/* sheet: the three groups as bands, each a heading with the verb and a row of small cards */
+.o1s { display: grid; gap: 16px; }
+.o1s .band { display: grid; gap: 8px; }
+.o1s .head { margin: 0; display: flex; align-items: center; gap: 8px; padding: 0 0 0 10px; border-left: 4px solid var(--tone); font-size: 15px; line-height: 1.15; }
+.o1s .head b { color: var(--tone); letter-spacing: .04em; }
+.o1s .head span { color: var(--muted); font-size: 14px; }
+.o1s .row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.o1s .it { display: grid; justify-items: center; align-content: start; gap: 2px; padding: 8px 4px; border-radius: 12px; background: color-mix(in srgb, var(--tone) 12%, #1a1630); text-align: center; }
+.o1s .it img { height: 52px; max-width: 64px; margin-bottom: 2px; }
+.o1s .it b { font-size: 14px; line-height: 1.1; }
+.o1s .it span { font-size: 12px; line-height: 1.15; color: var(--muted); }
+
+/* ================= O2 · Fitxes que passen ================= */
+.o2 { display: grid; gap: 10px; }
+.o2 .track { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; padding: 2px 16px 6px; margin: 0 -16px; scroll-padding-inline: 16px; }
+.o2 .track::-webkit-scrollbar { display: none; }
+.o2 .card { flex: none; scroll-snap-align: start; display: grid; grid-template-columns: 96px 1fr; align-items: center; gap: 12px; width: 300px; height: 128px; padding: 10px 14px 10px 10px; border-radius: 18px;
+  background: linear-gradient(100deg, color-mix(in srgb, var(--tone) 42%, #2b2350) 0 96px, #1d1838 150px); box-shadow: 0 6px 14px #0007, inset 0 0 0 2px color-mix(in srgb, var(--tone) 60%, transparent); }
+.o2 .card .pic { height: 108px; display: grid; place-items: end center; }
+.o2 .card .pic img { max-height: 104px; max-width: 88px; }
+.o2 .card .txt { display: grid; gap: 4px; align-content: center; }
+.o2 .pill { justify-self: start; display: inline-flex; align-items: center; gap: 4px; height: 22px; padding: 0 8px 0 2px; border-radius: 11px; background: color-mix(in srgb, var(--tone) 22%, transparent); font-size: 12px; letter-spacing: .06em; color: var(--tone); }
+.o2 .pill .mark { width: 18px; height: 18px; padding: 2px; }
+.o2 .card b { font-size: 20px; line-height: 1.05; color: var(--cream); }
+.o2 .card span.rule { font-size: 15px; line-height: 1.2; color: var(--muted); text-wrap: balance; }
+.o2 .dots { display: flex; justify-content: center; align-items: center; gap: 6px; height: 12px; }
+.o2 .dots i { width: 8px; height: 8px; border-radius: 4px; background: #fff3d644; transition: width .2s, background .2s; }
+.o2 .dots i.on { width: 20px; background: var(--tone, var(--pink)); }
+.o2 .dots i[data-g] { background: color-mix(in srgb, var(--tone) 45%, transparent); }
+.o2 .dots i[data-g].on { background: var(--tone); }
+/* sheet: bigger card, portrait on top, arrows beside the dots */
+.o2.big .card { grid-template-columns: 1fr; grid-template-rows: 150px auto; justify-items: center; width: 296px; height: auto; min-height: 284px; padding: 16px; text-align: center;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--tone) 42%, #2b2350) 0 160px, #1d1838 200px); }
+.o2.big .card .pic { height: 150px; }
+.o2.big .card .pic img { max-height: 146px; max-width: 160px; }
+.o2.big .card .txt { justify-items: center; }
+.o2.big .pill { justify-self: center; }
+.o2.big .card b { font-size: 24px; }
+.o2.big .card span.rule { font-size: 16px; }
+.o2.big .track { padding-inline: 16px; margin: 0 -16px; }
+.o2 .nav { display: flex; align-items: center; justify-content: space-between; }
+.o2 .nav button { width: 44px; height: 44px; border: 2px solid var(--pink); border-radius: 50%; background: var(--dark); color: var(--cream); display: grid; place-items: center; cursor: pointer; padding: 0; }
+.o2 .nav svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ================= O3 · Sí / No ================= */
+.o3 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.o3 .col { display: grid; align-content: start; gap: 8px; padding: 10px 8px; border-radius: 16px; background: color-mix(in srgb, var(--tone) 14%, #1a1630); box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--tone) 55%, transparent); }
+.o3 .col > .hd { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 17px; line-height: 1; letter-spacing: .05em; color: var(--tone); }
+.o3 .col > .hd .mark { width: 24px; height: 24px; }
+.o3 .faces { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 6px; }
+.o3 .face { position: relative; width: 42px; height: 50px; display: grid; place-items: end center; }
+.o3 .face img { max-height: 48px; max-width: 40px; }
+.o3 .face .star { position: absolute; top: -2px; right: -4px; width: 16px; height: 16px; padding: 2px; background: var(--gold); }
+.o3:not(.rows) .col { align-content: space-between; }
+.o3 .col > p { margin: 0; text-align: center; font-size: 13px; line-height: 1.15; color: var(--muted); text-wrap: balance; }
+.o3 .no .face::after { content: ''; position: absolute; inset: 4px 2px 0; background: linear-gradient(135deg, transparent calc(50% - 1.5px), var(--no) calc(50% - 1.5px) calc(50% + 1.5px), transparent calc(50% + 1.5px)); opacity: .9; }
+/* sheet: two columns of rows; the goodies wear a gold star and a gold name */
+.o3.rows { gap: 8px; }
+.o3.rows .col { padding: 10px 6px; gap: 6px; }
+.o3 .r { display: grid; grid-template-columns: 40px 1fr; align-items: center; gap: 6px; min-height: 52px; padding: 2px 4px; border-radius: 10px; background: #0003; }
+.o3 .r .face { width: 40px; height: 48px; }
+.o3 .r b { display: block; font-size: 14px; line-height: 1.05; }
+.o3 .r b.extra { color: var(--gold); }
+.o3 .r span { display: block; font-size: 12px; line-height: 1.15; color: var(--muted); }
+.o3 .bigno { margin-top: 2px; padding: 8px 6px; border-radius: 10px; background: color-mix(in srgb, var(--no) 22%, transparent); text-align: center; font-size: 13px; line-height: 1.2; color: var(--cream); }
+
+/* ================= O4 · Rajoles de la plaça ================= */
+.o4 { display: grid; gap: 8px; }
+.o4 .key { display: flex; justify-content: center; gap: 14px; font-size: 13px; color: var(--muted); }
+.o4 .key span { display: inline-flex; align-items: center; gap: 4px; }
+.o4 .key .mark { width: 18px; height: 18px; padding: 2px; }
+.o4 .grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px 8px; }
+.o4 .t { display: grid; justify-items: center; gap: 4px; text-align: center; }
+/* the board's tile: a top face over a darker side, checker colours as board-tiles.js, state colours for the bell, the fuse and the fire */
+.o4 .tile { position: relative; width: 100%; aspect-ratio: 1; border-radius: 10px; background: var(--top, #4c4d71); box-shadow: 0 5px 0 var(--side, #2b2c48), 0 8px 12px #0006, inset 0 2px 0 #ffffff22; display: grid; place-items: end center; padding-bottom: 6px; }
+.o4 .tile.odd { --top: #424363; }
+.o4 .tile img { position: absolute; bottom: 7px; left: 50%; translate: -50% 0; height: 76%; width: auto; max-width: 80%; filter: drop-shadow(0 3px 2px #0009); }
+.o4 .tile .mark { position: absolute; top: -6px; left: -6px; width: 22px; height: 22px; box-shadow: 0 0 0 2px #1a1630; }
+.o4 .tile.fuse { --top: #f5c518; --side: #8a6a12; animation: fuse 3s linear infinite; }
+@keyframes fuse { 0% { background: #f5c518; } 85% { background: #ff3b2e; } 100% { background: #f5c518; } }
+.o4 .tile.hot { --top: #ff6a3a; --side: #7a2414; animation: fuse 2.2s linear infinite; }
+.o4 .tile.ice { --top: #8fb4d8; --side: #4f6c8c; }
+.o4 .tile.fire { --top: #fff1c4; --side: #a8875a; }
+.o4 .tile.gold { --top: #5a4f3a; --side: #2f2918; box-shadow: 0 5px 0 var(--side), 0 0 0 2px #f5c51888, 0 8px 12px #0006; }
+.o4 .tile.bad { box-shadow: 0 5px 0 var(--side, #2b2c48), 0 0 0 2px #ff8a7a88, 0 8px 12px #0006; }
+.o4 .t b { margin-top: 4px; font-size: 13px; line-height: 1.05; }
+.o4 .t span { font-size: 12px; line-height: 1.1; color: var(--muted); }
+.o4.home-v .t span { display: none; }
+@media (prefers-reduced-motion: reduce) { .o4 .tile { animation: none !important; } }
+
+/* notes */
+.notes { display: grid; gap: 8px; max-width: 760px; margin-top: 16px; }
+.notes .marks { display: flex; gap: 8px; flex-wrap: wrap; }
+.notes button, #copy { min-height: 44px; padding: 0 14px; border: 2px solid var(--pink); border-radius: 22px; background: var(--dark); color: var(--cream); font: 700 15px 'Baloo 2'; cursor: pointer; }
+.notes button[aria-pressed="true"] { background: var(--cream); color: var(--ink); border-color: var(--cream); }
+textarea { width: 100%; min-height: 64px; padding: 8px 10px; border-radius: 12px; border: 2px solid #ff7ac655; background: #1a1630; color: var(--cream); font: 600 15px 'Baloo 2'; }
+#export { margin-top: 40px; padding-top: 16px; border-top: 1px solid #ff7ac633; display: grid; gap: 8px; max-width: 760px; }
+@media (max-width: 820px) { .frames { justify-content: center; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <p class="eyebrow">ESTUDI DE DISSENY · MULASSA POP · LLEGENDA DE FIGURES</p>
+    <h1>Quatre llegendes per a Mulassa Pop</h1>
+    <p>Cada proposta es veu a l’inici del joc (mòbil 375×667) i dins el full «?» / «Com es juga» (360 px). Figures reals del joc; tres grups: <b style="color:var(--pink)">toca</b>, <b style="color:var(--no)">no toquis mai</b>, <b style="color:var(--gold)">regals</b>.</p>
+    <p><b class="warn">Textos provisionals</b>: els finals els escriu Codex. Toca les icones, les fitxes i les fletxes: són vives.</p>
+  </header>
+  <nav aria-label="Propostes"><a href="#O1">O1 · Tres franges</a><a href="#O2">O2 · Fitxes que passen</a><a href="#O3">O3 · Sí / No</a><a href="#O4">O4 · Rajoles de la plaça</a><a href="#export">Notes</a></nav>
+  <div id="props"></div>
+  <section id="export">
+    <h2 style="margin:0;color:var(--pink)">Totes les notes</h2>
+    <p style="margin:0;color:var(--muted)">Marca cada proposta i escriu què en conservaries; després copia el bloc i enganxa’l al xat.</p>
+    <div><button id="copy" type="button">Copia les notes</button> <span id="status" role="status"></span></div>
+    <textarea id="out" rows="6" readonly aria-label="Notes per copiar"></textarea>
+  </section>
+</main>
+<script>
+// shortcut: provisional copy inline; final strings come from the locale catalogue once a proposal is chosen
+const F = [
+  { k: 'mula', g: 'tap', name: 'Mulassa', short: '+1 abans de la metxa', rule: 'Toca-la abans que s’acabi la metxa: punts!' },
+  { k: 'petard', g: 'tap', name: 'Bomba', short: 'Desactiva-la', rule: 'Toca-la per desactivar-la abans que peti.' },
+  { k: 'drac', g: 'no', name: 'Drac', short: 'No el toquis', rule: 'No el toquis mai.' },
+  { k: 'dracFals', g: 'no', name: 'Drac vermell', short: 'No el toquis', rule: 'Tampoc: no el toquis mai.' },
+  { k: 'mulaFalsa', g: 'no', name: 'Mulassa verda', short: 'És falsa', rule: 'És falsa: no la toquis mai.' },
+  { k: 'calcot', g: 'extra', name: 'Calçot', short: '+5 punts', rule: 'Toca’l i guanyes 5 punts.' },
+  { k: 'campanar', g: 'extra', name: 'Campanar', short: 'Calma 5 s', rule: 'Calma: la plaça va més lenta 5 segons.' },
+  { k: 'carretilla', g: 'extra', name: 'Carretilla', short: 'Crema-les totes', rule: 'Crema totes les Mulasses: punts per a cada una.' },
+];
+const G = {
+  tap: { word: 'TOCA', verb: 'abans que petin', icon: '<path d="M9 11V5.5a1.5 1.5 0 0 1 3 0V10l4.3.9a2 2 0 0 1 1.6 2.2l-.6 4.6A3 3 0 0 1 14.3 20h-3.6a3 3 0 0 1-2.4-1.2L5.6 15a1.5 1.5 0 0 1 2.2-2L9 14.2z"/>' },
+  no: { word: 'MAI', verb: 'si en toques un, perds', icon: '<path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zm0 3a6 6 0 0 1 4.9 9.5L8.5 7.1A6 6 0 0 1 12 6zm-4.9 2.5 8.4 8.4A6 6 0 0 1 7.1 8.5z"/>' },
+  extra: { word: 'REGALS', verb: 'toca’ls quan surtin', icon: '<path d="M12 2.5l2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17l-5.7 3 1.2-6.4-4.7-4.4 6.4-.8z"/>' },
+};
+const img = (f, extra = '') => `<img class="por" alt="" src="/jocs/pop/cards/${f.k}.png" ${extra}>`;
+const mark = g => `<i class="mark" aria-hidden="true"><svg viewBox="0 0 24 24">${G[g].icon}</svg></i>`;
+const by = g => F.filter(f => f.g === g);
+const X = '<i class="x" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></i>';
+
+function home(legend) {
+  return `<div class="phone"><div class="home">
+    <i class="corner l"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.5" height="7.5" rx="1.6"/><rect x="13" y="3.5" width="7.5" height="7.5" rx="1.6"/><rect x="3.5" y="13" width="7.5" height="7.5" rx="1.6"/><rect x="13" y="13" width="7.5" height="7.5" rx="1.6"/></svg></i>
+    <i class="corner r"><svg viewBox="0 0 24 24"><path d="M9 18V6l10-2v12" fill="none" stroke="#fff3d6" stroke-width="2.2"/><circle cx="7" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg></i>
+    <div class="hero"><p class="title">MULASSA</p><p class="pop">POP</p>
+      <p class="pitch">Toca Mulasses vermelles i desactiva bombes. Només tens una vida.</p>
+      <div class="play-row"><span class="play"><svg viewBox="0 0 24 24"><path d="M7 4.5v15a1 1 0 0 0 1.5.9l12-7.5a1 1 0 0 0 0-1.8l-12-7.5A1 1 0 0 0 7 4.5z"/></svg>Juga</span><span class="best">Rècord <b>57</b></span></div>
+      <div class="art"><img alt="" src="/jocs/pop/cards/mula.png"></div></div>
+    <div class="legend-slot">${legend}</div></div></div>`;
+}
+function sheet(legend, lead) {
+  return `<div class="backdrop"><div class="sheet">${X}<h3>Com es juga</h3>${lead ? `<p class="lead">${lead}</p>` : ''}${legend}<span class="ok">Entesos!</span></div></div>`;
+}
+
+// O1: home strip + caption; sheet bands
+function o1Home() {
+  const grp = g => `<div class="grp" data-g="${g}" style="--n:${by(g).length}"><span class="lab">${mark(g)}${G[g].word}</span><div class="icons">${by(g).map(f => `<button type="button" data-k="${f.k}" aria-label="${f.name}" aria-pressed="false">${img(f)}</button>`).join('')}</div></div>`;
+  return `<div class="o1h"><div class="groups">${grp('tap')}${grp('no')}${grp('extra')}</div><p class="cap" aria-live="polite"></p></div>`;
+}
+function o1Sheet() {
+  const band = g => `<div class="band" data-g="${g}"><p class="head"><b>${G[g].word}</b><span>${G[g].verb}</span></p><div class="row">${by(g).map(f => `<div class="it">${img(f)}<b>${f.name}</b><span>${f.short}</span></div>`).join('')}</div></div>`;
+  return `<div class="o1s">${band('tap')}${band('no')}${band('extra')}</div>`;
+}
+// O2: swipeable cards
+function o2(big) {
+  const cards = F.map(f => `<article class="card" data-g="${f.g}"><div class="pic">${img(f)}</div><div class="txt"><span class="pill">${mark(f.g)}${G[f.g].word}</span><b>${f.name}</b><span class="rule">${f.rule}</span></div></article>`).join('');
+  const dots = `<div class="dots" aria-hidden="true">${F.map((f, i) => `<i data-g="${f.g}"${i ? '' : ' class="on"'}></i>`).join('')}</div>`;
+  const nav = big ? `<div class="nav"><button type="button" data-step="-1" aria-label="Anterior"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>${dots}<button type="button" data-step="1" aria-label="Següent"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button></div>` : dots;
+  return `<div class="o2${big ? ' big' : ''}"><div class="track">${cards}</div>${nav}</div>`;
+}
+// O3: do / don't
+function o3Home() {
+  const yes = F.filter(f => f.g !== 'no');
+  const face = f => `<span class="face">${img(f)}${f.g === 'extra' ? `<i class="mark star" aria-hidden="true"><svg viewBox="0 0 24 24">${G.extra.icon}</svg></i>` : ''}</span>`;
+  return `<div class="o3"><div class="col" data-g="tap"><p class="hd">${mark('tap')}TOCA</p><div class="faces">${yes.map(face).join('')}</div><p>Mulasses, bombes i <b style="color:var(--gold)">regals</b></p></div>
+    <div class="col no" data-g="no"><p class="hd">${mark('no')}MAI</p><div class="faces">${by('no').map(face).join('')}</div><p>Si en toques un, perds</p></div></div>`;
+}
+function o3Sheet() {
+  const row = f => `<div class="r"><span class="face">${img(f)}${f.g === 'extra' ? `<i class="mark star" aria-hidden="true"><svg viewBox="0 0 24 24">${G.extra.icon}</svg></i>` : ''}</span><span><b class="${f.g === 'extra' ? 'extra' : ''}">${f.name}</b><span>${f.short}</span></span></div>`;
+  return `<div class="o3 rows"><div class="col" data-g="tap"><p class="hd">${mark('tap')}TOCA</p>${F.filter(f => f.g !== 'no').map(row).join('')}</div>
+    <div class="col no" data-g="no"><p class="hd">${mark('no')}MAI</p>${by('no').map(row).join('')}<p class="bigno">Si en toques un, s’acaba la partida.</p></div></div>`;
+}
+// O4: board tiles
+const TILE = { mula: 'fuse', petard: 'hot', drac: 'bad', dracFals: 'bad odd', mulaFalsa: 'bad', calcot: 'gold odd', campanar: 'ice', carretilla: 'fire' };
+function o4(homeV) {
+  const key = `<p class="key" style="margin:0">${['tap', 'no', 'extra'].map(g => `<span data-g="${g}">${mark(g)}${{ tap: 'toca', no: 'mai', extra: 'regal' }[g]}</span>`).join('')}</p>`;
+  return `<div class="o4${homeV ? ' home-v' : ''}">${key}<div class="grid">${F.map(f => `<div class="t" data-g="${f.g}"><div class="tile ${TILE[f.k]}">${mark(f.g)}${img(f)}</div><b>${f.name}</b><span>${f.short}</span></div>`).join('')}</div></div>`;
+}
+
+const P = [
+  { id: 'O1', name: 'Tres franges', sub: 'icones compactes, tres colors',
+    desc: 'A l’inici, una sola franja de 8 icones en tres grups de color (TOCA · MAI · REGALS); la línia de sota diu què fa la figura que toques (i va passant sola si no en toques cap). Al full, cada grup és una banda amb el verb a la capçalera i fitxes petites.',
+    home: o1Home(), sheet: o1Sheet() },
+  { id: 'O2', name: 'Fitxes que passen', sub: 'una figura gran cada cop',
+    desc: 'Una fitxa horitzontal per figura (retrat a l’esquerra, grup, nom i una regla sencera), que es fa lliscar amb el dit; els punts tenen el color del grup. Al full, la mateixa fitxa en gran i vertical, amb fletxes.',
+    home: o2(false), sheet: o2(true) },
+  { id: 'O3', name: 'Sí / No', sub: 'dues columnes',
+    desc: 'Només dues preguntes: què toco i què no. A l’esquerra TOCA (els regals hi van amb estrella daurada), a la dreta MAI, amb les figures ratllades. Al full, files amb el retrat, el nom i què fa.',
+    home: o3Home(), sheet: o3Sheet() },
+  { id: 'O4', name: 'Rajoles de la plaça', sub: 'com es veuen al tauler',
+    desc: 'Cada figura damunt la seva rajola, pintada com al joc: la Mulassa amb la metxa que va del groc al vermell, el Campanar gelat, la Carretilla encesa. Una marca a la cantonada diu el grup; a l’inici només el nom, al full també què fa.',
+    home: o4(true), sheet: o4(false) },
+];
+document.getElementById('props').innerHTML = P.map(p => `<section class="prop" id="${p.id}">
+  <h2>${p.id} · ${p.name} <small>${p.sub}</small></h2><p>${p.desc}</p>
+  <div class="frames"><figure>${home(p.home)}<figcaption>Inici · 375×667</figcaption></figure><figure>${sheet(p.sheet, p.id === 'O3' ? '' : '')}<figcaption>Full «?» / «Com es juga» · 360 px</figcaption></figure></div>
+  <div class="notes" data-p="${p.id}"><div class="marks"><button type="button" data-mark="" aria-pressed="true">Sense marcar</button><button type="button" data-mark="ok" aria-pressed="false">M’agrada · ok</button><button type="button" data-mark="refer" aria-pressed="false">Cal refer · refer</button></div>
+  <textarea placeholder="Què conservaries o canviaries de la ${p.id}?"></textarea></div></section>`).join('');
+
+// O1: caption follows the touched icon; cycles alone until the first touch
+document.querySelectorAll('.o1h').forEach(box => {
+  const cap = box.querySelector('.cap'); const btns = [...box.querySelectorAll('button')]; let i = 0, timer;
+  const show = k => { const f = F.find(x => x.k === k); btns.forEach(b => b.setAttribute('aria-pressed', b.dataset.k === k)); cap.dataset.g = f.g; cap.innerHTML = `<b>${f.name}</b><span>${f.rule}</span>`; };
+  btns.forEach(b => b.addEventListener('click', () => { clearInterval(timer); show(b.dataset.k); }));
+  show(F[0].k); timer = setInterval(() => show(F[++i % F.length].k), 2600);
+});
+// O2: dots follow the scroll; arrows step one card
+document.querySelectorAll('.o2').forEach(box => {
+  const track = box.querySelector('.track'); const dots = [...box.querySelectorAll('.dots i')]; const cards = [...track.children];
+  const at = () => Math.round(track.scrollLeft / (cards[0].offsetWidth + 12));
+  track.addEventListener('scroll', () => { const n = Math.min(cards.length - 1, at()); dots.forEach((d, j) => d.classList.toggle('on', j === n)); }, { passive: true });
+  box.querySelectorAll('[data-step]').forEach(b => b.addEventListener('click', () => {
+    const n = Math.max(0, Math.min(cards.length - 1, at() + +b.dataset.step)); track.scrollTo({ left: cards[n].offsetLeft - cards[0].offsetLeft, behavior: 'smooth' });
+  }));
+});
+// notes
+const KEY = 'pop-legend-opus-notes';
+let notes = {}; try { notes = JSON.parse(localStorage.getItem(KEY)) || {}; } catch {}
+const out = document.getElementById('out');
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(notes)); } catch {} out.value = JSON.stringify(notes, null, 1); };
+document.querySelectorAll('.notes').forEach(n => {
+  const id = n.dataset.p; const st = notes[id] || (notes[id] = { mark: '', note: '' }); const ta = n.querySelector('textarea'); ta.value = st.note;
+  const btns = n.querySelectorAll('[data-mark]'); const paint = () => btns.forEach(b => b.setAttribute('aria-pressed', b.dataset.mark === st.mark));
+  btns.forEach(b => b.addEventListener('click', () => { st.mark = b.dataset.mark; paint(); save(); })); paint();
+  ta.addEventListener('input', () => { st.note = ta.value; save(); });
+});
+save();
+document.getElementById('copy').addEventListener('click', async () => {
+  const s = document.getElementById('status');
+  try { await navigator.clipboard.writeText(out.value); s.textContent = 'Copiat!'; } catch { out.select(); s.textContent = 'Selecciona i copia el bloc.'; }
+});
+</script>
+</body>
+</html>

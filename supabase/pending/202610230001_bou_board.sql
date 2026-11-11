@@ -7,8 +7,8 @@
 -- Numbers from tools/data/score-ceiling.mjs over src/song-bou.json (tests/figures/bou/bou-board-db.mjs keeps them in step):
 -- judgments, max_score and extras_max per level; duration = song.end; 9 GUAPA, one balloon (the esquellot), holds from NORMAL.
 insert into leaderboard_private.versions(version,difficulty,judgments,max_score,extras_max,active,figure_id) values
-  ('bou-v1',0,129,139000,73000,true,'bou-tradicional-valls'),
-  ('bou-v1',1,220,187000,71000,true,'bou-tradicional-valls'),
-  ('bou-v1',2,413,297000,76000,true,'bou-tradicional-valls') on conflict (version,difficulty) do nothing;
+  ('bou-v1',0,129,181000,115000,true,'bou-tradicional-valls'),
+  ('bou-v1',1,220,235000,119000,true,'bou-tradicional-valls'),
+  ('bou-v1',2,413,344000,123000,true,'bou-tradicional-valls') on conflict (version,difficulty) do nothing;
 update leaderboard_private.versions set duration_seconds = 147.9347, guapa_count = 9, balloon_count = 1,
   hold_count = (array[0,10,10])[difficulty+1] where version = 'bou-v1';

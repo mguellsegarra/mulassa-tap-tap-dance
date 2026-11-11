@@ -1,34 +1,7 @@
-// A home-screen app on iOS (and a tab left open for days) wakes from memory instead of loading the page again, so a
-// deploy never reaches it; iOS has even opened an old copy on a cold start. So on waking (the start: index.html), compare the
-// deployed build (/version.json, vite.config.js) with ours and reload on a newer one, but only on the menus with nothing
-// open: never mid-song, never under a sheet or a typed field.
-import { APP_BUILD } from '../core/version.js';
+// The main game's update check (update-watch.js): quiet is the menus with nothing open.
 import { G } from '../game/state.js';
-import { quietMoment, shouldReload } from './update-rules.js';
+import { quietMoment } from './update-rules.js';
+import { watchUpdates } from './update-watch.js';
 
-const UPDATE_TRIED = 'reloaded-for'; // sessionStorage: the build a reload was tried for (update-rules.js)
-let updateNewer = null, updateWaitT = 0;
-function reloadWhenQuiet() {
-  clearTimeout(updateWaitT);
-  if (!updateNewer || document.hidden) return;
-  if (!quietMoment(G.state, document)) { updateWaitT = setTimeout(reloadWhenQuiet, 2000); return; } // a song or a sheet: ask again later
-  try { sessionStorage.setItem(UPDATE_TRIED, updateNewer); } catch { /* private mode: at worst one more check */ }
-  location.reload();
-}
-async function checkUpdate() {
-  if (document.hidden || updateNewer) return reloadWhenQuiet();
-  try {
-    const r = await fetch('/version.json', { cache: 'no-store' });
-    if (!r.ok) return; // dev server and tests: no file, nothing to compare
-    const { build } = await r.json();
-    let tried = null; try { tried = sessionStorage.getItem(UPDATE_TRIED); } catch { /* private mode */ }
-    if (shouldReload(build, APP_BUILD, tried)) { updateNewer = build; reloadWhenQuiet(); }
-  } catch { /* offline: try on the next wake */ }
-}
-document.addEventListener('visibilitychange', checkUpdate);
-setInterval(checkUpdate, 30 * 60 * 1000); // a menu left on screen for hours: one tiny request now and then (hidden: skipped)
-// a tab older than the deploy whose lazy chunk failed to load: check now, so a newer build reloads on the next quiet moment
-// (not preventDefault: Vite would resolve the import with nothing and break its caller)
-addEventListener('vite:preloadError', checkUpdate);
-addEventListener('pageshow', e => { if (e?.persisted) checkUpdate(); }); // back from the bfcache
+watchUpdates(() => quietMoment(G.state, document));
 // the start needs no check here: index.html's #build-check already compared the build before the game booted

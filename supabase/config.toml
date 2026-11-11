@@ -3,3 +3,7 @@ project_id = "mulassa-tap-tap-dance"
 [functions.delete-player]
 # Auth.getUser verifies the JWT in the handler, including new asymmetric signing keys.
 verify_jwt = false
+
+[functions.pop-score]
+# As delete-player: Auth.getUser verifies the JWT in the handler.
+verify_jwt = false

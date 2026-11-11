@@ -163,7 +163,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     if (!playable(figure)) return;
     l = Math.max(0, Math.min(DIFFS.length - 1, l));
     if (l !== level && by !== 'open') { rememberLevel(store, figure.id, l); sfx('menu'); }
-    level = l; levels.toggleAttribute('data-quiet', by === 'open'); // only a tap shakes (select-cards.css)
+    level = l; levels.toggleAttribute('data-quiet', by === 'open'); // only a tap shakes (level-seg.css)
     for (const b of levels.children) b.setAttribute('aria-pressed', String(Number(b.dataset.level) === l));
     levelStats(); // step 2's row (level-stats.js)
   }

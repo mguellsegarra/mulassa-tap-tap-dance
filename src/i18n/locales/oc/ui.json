@@ -382,6 +382,7 @@
   "ui.sync.tooFew": "Non t’è entenut pro còps. Torna-i e marca cada còp just quan l’entengues.",
   "ui.watch.text": "Ja coneishes eth {song}. Triga era dificultat e balha-lo damb es tòns botons.",
   "ui.lang.title": "Lengua",
+  "ui.settings.profileSubGames": "Eth tieu nòm e era tua insígnia",
   "ui.webgl.unavailable": "Eth tòn navegador non pòt mostrar eth jòc en 3D. Barra-lo deth tot e torna a daurí-lo; se non, actualiza-lo o daurís-lo damb Chrome o Safari.",
   "ui.webgl.title": "Uep! Non se pòt mostrar eth jòc",
   "ui.webgl.lostTitle": "Uep! Eth jòc s’a arturat",
@@ -424,5 +425,8 @@
   "ui.hearts.tip.singular": "Un còr entà tu!",
   "ui.hearts.tip.plural": "Un còr entà vosati!",
   "ui.hearts.failed": "Non s'a pogut sauvar. Torna-i a provar.",
-  "ui.code.open": "Daurís GitHub"
+  "ui.code.open": "Daurís GitHub",
+  "ui.news.title": "Ara, minijòcs!",
+  "ui.games.tip": "Mai de jòcs!",
+  "ui.news.text": "Eth prumèr minijòc: tòca es Mulasses ròies e desactiva es bombes!"
 }

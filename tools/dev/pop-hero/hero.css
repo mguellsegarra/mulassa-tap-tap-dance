@@ -1,0 +1,48 @@
+/* Four arrangements of the wide home's title block (orientation: landscape only; phones keep style.css as it is).
+   view.js wraps .c-pitch + .c-play-row in .hx-side (display: contents unless a proposal lays it out). */
+.hx-side { display: contents; }
+
+@media (orientation: landscape) {
+  html:not([data-hero="ara"]) .c-play-row { gap: 12px; }
+
+  /* A and B: the Mulassa grows with the screen instead of stopping at 360 px */
+  html:is([data-hero="A"], [data-hero="B"]) .c-art img { height: min(100cqh, 100cqw, 560px); }
+  html:is([data-hero="A"], [data-hero="B"]) .c-art::before { width: min(100%, 100cqh, 520px); }
+
+  /* A · Eix central: the title is centred by nature, so the whole column follows its axis */
+  html[data-hero="A"] .c-text { align-items: center; gap: 20px; }
+  html[data-hero="A"] .hx-side { display: flex; flex-direction: column; align-items: center; gap: 24px; }
+  html[data-hero="A"] .c-pitch { text-align: center; max-width: 24ch; }
+  html[data-hero="A"] .c-play-row { flex-direction: row; align-items: center; gap: 16px; } /* one row: the centred block stays clear of «Torna als jocs» on short screens */
+
+  /* B · Tot a l'esquerra: POP leaves the centre and sits under the M, one left edge for everything; Juga and the record share a row */
+  html[data-hero="B"] .pop-title { justify-items: start; }
+  html[data-hero="B"] .pop-word { margin-left: .4cqi; } /* the stroke of P against MULASSA's outline */
+  html[data-hero="B"] .pop-title { width: min(clamp(280px, 30vw, 500px), 52dvh); } /* 1440×700: clear of the corner row */
+  html[data-hero="B"] .c-text { gap: 20px; }
+  html[data-hero="B"] .hx-side { display: flex; flex-direction: column; align-items: flex-start; gap: 24px; }
+  html[data-hero="B"] .c-play-row { flex-direction: row; align-items: center; gap: 16px; }
+
+  /* C · Portada: the title crowns the Mulassa (one centred poster on the left); the pitch, bigger, and the actions on the right */
+  html[data-hero="C"] .c-hero { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); column-gap: 48px; align-items: stretch; }
+  html[data-hero="C"] .c-text { display: contents; }
+  html[data-hero="C"] .pop-title { grid-column: 1; grid-row: 1; justify-self: center; position: relative; z-index: 1; width: clamp(240px, 24vw, 400px);
+    margin-top: calc(52px + 16px); } /* clear of the corner buttons' row (52 px tall «Torna als jocs») */
+  html[data-hero="C"] .c-art { grid-column: 1; grid-row: 2; height: auto; }
+  html[data-hero="C"] .c-art img { height: min(100cqh, 100cqw, 600px); }
+  html[data-hero="C"] .c-art::before { width: min(100%, 100cqh, 560px); }
+  html[data-hero="C"] .hx-side { grid-column: 2; grid-row: 1 / 3; align-self: center; display: flex; flex-direction: column; align-items: flex-start; gap: 28px; }
+  html[data-hero="C"] .c-pitch { max-width: 20ch; font-size: clamp(22px, 2.3vw, 38px); line-height: 1.15; }
+  html[data-hero="C"] .c-play-row { flex-direction: row; align-items: center; gap: 16px; }
+
+  /* D · Tríptic: title | Mulassa | pitch and actions, each centred in its third, the Mulassa on the screen's axis */
+  html[data-hero="D"] .c-hero { --art: min(34vw, 100dvh - 2 * 16px - clamp(150px, 26dvh, 260px) - clamp(12px, 2.4dvh, 24px));
+    grid-template-columns: minmax(0, 1fr) var(--art) minmax(0, 1fr); column-gap: 24px; }
+  html[data-hero="D"] .c-text { display: contents; }
+  html[data-hero="D"] .pop-title { grid-column: 1; grid-row: 1; justify-self: center; width: clamp(220px, 22vw, 380px); }
+  html[data-hero="D"] .c-art { grid-column: 2; grid-row: 1; height: 100%; }
+  html[data-hero="D"] .c-art img { height: min(100cqh, 100cqw); }
+  html[data-hero="D"] .hx-side { grid-column: 3; grid-row: 1; justify-self: center; display: flex; flex-direction: column; align-items: center; gap: 24px; }
+  html[data-hero="D"] .c-pitch { text-align: center; max-width: 20ch; }
+  html[data-hero="D"] .c-play-row { align-items: center; }
+}

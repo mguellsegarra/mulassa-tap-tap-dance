@@ -42,10 +42,16 @@ export async function preparePages(directory, song) {
   for (const name of deploy) {
     const allowed = required.includes(name)
       || /^assets\/[\w-]+\.(js|css)$/.test(name)
+      || /^assets\/[\w-]+\.mp3$/.test(name) // a home's music, imported by its page (Pop's and the games selector's: menu-music.js)
       || /^fonts\/[\w-]+\.(woff2?|txt)$/.test(name)
       || /^(captures\/[\w-]+\.jpg|videos\/[\w-]+\.(mp4|jpg))$/.test(name) // /projecte/'s screenshots
       || /^[a-z]{2,3}(?:-[A-Za-z]{2,4})?\/projecte\/index\.(html|md)$/.test(name) // /<lang>/projecte/ from tools/deploy/seo-content/<lang>.json
       || /^photo-icons\/[\w-]+\.webp$/.test(name) // free play's drawn move buttons (src/ui/photo-icons.js)
+      || /^jocs\/[\w-]+\/index\.html$/.test(name) // docs/jocs/README.md: one page per mini-game
+      || name === 'pop/index.html' // mulassa.cat/pop: Mulassa Pop
+      || name === 'jocs/index.html' // mulassa.cat/jocs: a short link to the games picker
+      || /^jocs\/[\w-]+\/(cards|hero)\/[\w-]+\.(jpg|svg|png|webp)$/.test(name) // a mini-game's own pictures; the games sheet's cards and wide heroes
+      || /^jocs\/menu\/video\/[\w-]+\.(mp4|jpg)$/.test(name) // the games sheet's hero clips and their first frames (src/ui/games-hero-video.js)
       || name === 'campanar-valls.svg' // Configuració «Sobre el joc»
       || name === 'version.json' // vite.config.js buildStamp: the woken app's update check
       || name === 'uaf-logo.jpg' // /projecte/'s credits: the Unió Anelles de la Flama logo

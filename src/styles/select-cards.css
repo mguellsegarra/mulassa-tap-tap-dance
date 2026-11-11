@@ -145,53 +145,6 @@ html:not([lang="ca"]) .sel-footer :is(#select-next, #select-play, #select-figure
 .sel-act { grid-row: 1; grid-column: 1; justify-self: center; align-self: center; box-sizing: border-box; width: min(640px, 100%); max-height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 14px; min-height: 0; padding: 16px; border: 1px solid var(--sel-line); border-radius: var(--sel-r); background: var(--sel-surface); box-shadow: 0 8px 24px #0005; }
 #select[data-step='level'] .sel-footer .btn { flex: 1; min-width: 0; margin: 0; }
 .sel-act h2 { margin: 0; font-size: 22px; }
-.sel-seg { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; width: min(600px, 100%); }
-.sel-seg .btn { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 0; padding: 10px; min-height: 64px; border-color: #e8d8b880; font-size: 18px; } /* a name + record's height whether or not any level has one (no shift); a lone name sits centred */
-.sel-seg .btn[aria-pressed="true"] { color: #2a1a10; border-color: #fff3d6; background: #fff3d6; } .sel-seg .btn[aria-pressed="true"] .sub { color: #2a1a10b3; }
-.sel-seg .sub { display: flex; align-items: center; justify-content: center; gap: 4px; margin-top: 2px; font-size: 13px; line-height: 16px; color: var(--sel-muted); white-space: nowrap; } /* the best score at that level */
-.sel-seg .sub svg { flex: none; width: 1em; height: 1em; margin: 0; stroke-width: 2.2; }
-/* Each level warms from its bottom edge, hotter as it gets harder (gold, orange, red); the chosen one's glow breathes
-   and it wears a turning ring of light over its edge (DIFÍCIL's red and lilac, quicker); DIFÍCIL shakes
-   when chosen, then keeps a sub-pixel tremble while it stays chosen; NORMAL a fainter one, FÀCIL none. Reduced motion keeps it all still. */
-@property --sel-halo { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
-.sel-seg .btn { isolation: isolate; background: radial-gradient(120% 70% at 50% 120%, var(--lv-bg), #0000 72%), var(--button-bg); }
-.sel-seg .btn[aria-pressed="true"] { background: radial-gradient(120% 70% at 50% 120%, var(--lv-on), #0000 72%) 50% 0 / 100% 100%, #fff3d6; box-shadow: inset 0 0 14px 2px #f5c51840; animation: sel-pop .28s cubic-bezier(.3, 1.6, .5, 1), sel-glow var(--lv-t) ease-in-out infinite; }
-/* the warmth per level (the owner chose it over drawn patterns: nothing behind the name) and its breathing period */
-.sel-seg .btn[data-level="0"] { --lv-bg: #d9a52140; --lv-on: #f5c51838; --lv-t: 2.6s; }
-.sel-seg .btn[data-level="1"] { --lv-bg: #d9732a66; --lv-on: #f59a1848; --lv-t: 1.8s; }
-.sel-seg .btn[data-level="2"] { --lv-bg: #c8283a90; --lv-on: #e8473f4a; --lv-t: 1.4s; }
-/* the ring: a 7 px band over the button's own edge (inside it, so it never reaches the neighbours), under the name */
-.sel-seg .btn::before { content: ''; position: absolute; z-index: -1; inset: -2px; padding: 7px; border-radius: var(--button-radius); opacity: 0; transition: opacity .2s; pointer-events: none;
-  background: conic-gradient(from var(--sel-halo), #f5c518, #ffb020, #ffe066 30%, #f5c518, #ff9f2e 60%, #ffe066 80%, #f5c518);
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); filter: blur(1px); }
-/* the ring's colour says the level, two hues each, no white: green and lime FÀCIL, gold and amber NORMAL, red and lilac DIFÍCIL
-   (the greens stay clear of PA's turquoise, the amber of GUA's orange) */
-.sel-seg .btn[data-level="0"]::before { background: conic-gradient(from var(--sel-halo), #4cc35a, #a3e635, #2f9e44 30%, #c5f25a, #4cc35a 60%, #8bd450 80%, #4cc35a); }
-.sel-seg .btn[data-level="0"][aria-pressed="true"] { box-shadow: inset 0 0 14px 2px #4cc35a40; }
-.sel-seg .btn[data-level="2"]::before { background: conic-gradient(from var(--sel-halo), #e8473f, #b061ff 25%, #ff5d8f, #8a5cff 60%, #e8473f, #d27bff 85%, #e8473f); }
-.sel-seg .btn[aria-pressed="true"]::before { opacity: .9; animation: sel-turn 3.2s linear infinite; }
-.sel-seg .btn[aria-pressed="true"]:hover { filter: none; } /* the global hover brightening turned the chosen cream white: it is already chosen */
-.sel-seg .btn[data-level="1"][aria-pressed="true"] { animation: sel-quake-soft .36s cubic-bezier(.36, .07, .19, .97), sel-shiver-soft .6s linear .36s infinite, sel-glow var(--lv-t) ease-in-out infinite; } /* NORMAL: half DIFÍCIL's shake, then a smaller tremble; FÀCIL stays still */
-.sel-seg .btn[data-level="2"][aria-pressed="true"] { box-shadow: inset 0 0 14px 2px #e8473f40, inset 0 0 5px 1px #a45cff55; animation: sel-quake .42s cubic-bezier(.36, .07, .19, .97), sel-shiver .5s linear .42s infinite, sel-glow var(--lv-t) ease-in-out infinite; } /* DIFÍCIL keeps trembling a little while chosen */
-.sel-seg .btn[data-level="2"][aria-pressed="true"]::before { animation-duration: 1.6s; }
-.sel-seg .btn[data-level="2"]:focus-visible { animation: sel-quake .42s cubic-bezier(.36, .07, .19, .97); }
-.sel-seg .btn[data-level="2"][aria-pressed="true"]:focus-visible { animation: sel-quake .42s cubic-bezier(.36, .07, .19, .97), sel-shiver .5s linear .42s infinite, sel-glow var(--lv-t) ease-in-out infinite; }
-/* The level marked on entry (the figure's last one, NORMAL at first, or a challenge's) looks chosen, tremble included,
-   but skips a tap's pop and shake: only a tap shakes. Its trembles carry their own names (same keyframes) so a tap
-   on it restarts them behind the shake instead of keeping them running over it. */
-.sel-seg[data-quiet] .btn[aria-pressed="true"] { animation: sel-glow var(--lv-t) ease-in-out infinite; }
-.sel-seg[data-quiet] .btn[data-level="1"][aria-pressed="true"] { animation: sel-shiver-soft-idle .6s linear infinite, sel-glow var(--lv-t) ease-in-out infinite; }
-.sel-seg[data-quiet] .btn[data-level="2"][aria-pressed="true"] { animation: sel-shiver-idle .5s linear infinite, sel-glow var(--lv-t) ease-in-out infinite; }
-@keyframes sel-turn { to { --sel-halo: 360deg; } }
-@keyframes sel-glow { 50% { background-size: 100% 125%, auto; } }
-@keyframes sel-shiver { 0%, 100% { translate: 0 0; rotate: 0deg; } 20% { translate: -.6px .3px; rotate: -.35deg; } 40% { translate: .6px -.3px; rotate: .35deg; } 60% { translate: -.4px -.2px; rotate: -.25deg; } 80% { translate: .4px .2px; rotate: .25deg; } }
-@keyframes sel-shiver-idle { 0%, 100% { translate: 0 0; rotate: 0deg; } 20% { translate: -.6px .3px; rotate: -.35deg; } 40% { translate: .6px -.3px; rotate: .35deg; } 60% { translate: -.4px -.2px; rotate: -.25deg; } 80% { translate: .4px .2px; rotate: .25deg; } } /* under a pixel: lively, still readable */
-@keyframes sel-shiver-soft { 0%, 100% { translate: 0 0; rotate: 0deg; } 25% { translate: -.4px .2px; rotate: -.22deg; } 50% { translate: .4px -.2px; rotate: .22deg; } 75% { translate: -.25px -.12px; rotate: -.15deg; } }
-@keyframes sel-shiver-soft-idle { 0%, 100% { translate: 0 0; rotate: 0deg; } 25% { translate: -.4px .2px; rotate: -.22deg; } 50% { translate: .4px -.2px; rotate: .22deg; } 75% { translate: -.25px -.12px; rotate: -.15deg; } }
-@keyframes sel-quake-soft { 15%, 85% { translate: -1px 0; rotate: -.4deg; } 35%, 65% { translate: 1.5px -.5px; rotate: .7deg; } 50% { translate: -1.5px .5px; rotate: -.7deg; } }
-@keyframes sel-pop { 40% { scale: 1.02; } } /* small: the 5 px gap to the neighbours */
-@keyframes sel-quake { 10%, 90% { translate: -1px 0; rotate: -.5deg; } 20%, 80% { translate: 2px -1px; rotate: 1deg; } 30%, 50%, 70% { translate: -3px 1px; rotate: -1.4deg; } 40%, 60% { translate: 3px -1px; rotate: 1.4deg; } }
-@media (prefers-reduced-motion: reduce) { .sel-seg .btn, .sel-seg .btn::before { animation: none !important; } }
 
 body.view-mode #select { opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .2s, visibility 0s .2s, display .2s allow-discrete; }
 #select { transition: opacity .2s, visibility 0s, display .2s allow-discrete; } /* return visibility immediately so the saved card can take focus */

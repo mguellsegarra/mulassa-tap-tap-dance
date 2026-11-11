@@ -66,11 +66,12 @@ export function poseBou(t) { bouMotion ??= createBouMotion(bou); return bouMotio
 
 // Free play (photo mode, the Bou alone): driven like the others (game/photo-control.js movePhoto), its carriers stepping
 // live under it (figures/bou/bou-feet.js liveBouFeet). As the Mulassa: Space jumps (the whole rig, carriers and all, as
-// the Drac), Q held lifts its front, E held its rear, R is the half turn every figure has. Parked where it stopped while
+// the Drac), E held lifts its front (its snout up), Q held burns its carretilles, the back's and the ones on its horn tips and in its mouth
+// (bou-show.js), R is the half turn every figure has. Parked where it stopped while
 // free play looks around; the next dance takes it back to its frame.
-export const BOU_LIVE = { parked: false, at: { x: 0, z: 0, yaw: 0 }, front: 0, rear: 0 };
-// rad the shell tips on the hips that stay down (.66 m fore and aft of its middle): Q front up, E rear up
-const BOU_TIP = { front: 0.3, rear: 0.25, hips: 0.66, ease: 0.15 };
+export const BOU_LIVE = { parked: false, at: { x: 0, z: 0, yaw: 0 }, front: 0 };
+// rad the shell tips its front up on the hind hips, which stay down (.66 m aft of its middle)
+const BOU_TIP = { front: 0.3, hips: 0.66, ease: 0.15 };
 const BOU_JUMP = { air: 0, airV: 0 };
 const BOU_FEET = Array.from({ length: 4 }, () => ({})), BOU_REACH = () => 0;
 let bouSteps = null, bouClock = 0;
@@ -85,9 +86,8 @@ export function driveBou(dt, body, vx, vz, pos) {
   if (hit > 2) manualContact('bou-tradicional-valls', hit);
   if (driving) PHOTO.air = BOU_JUMP.air > 0; // airborne: it keeps its momentum (movePhoto)
   const ease = dt > 0 ? 1 - Math.exp(-dt / BOU_TIP.ease) : 0, reduce = CALM.matches ? 0.4 : 1;
-  BOU_LIVE.front += ((driving && keys.has('KeyQ') ? reduce : 0) - BOU_LIVE.front) * ease;
-  BOU_LIVE.rear += ((driving && keys.has('KeyE') ? reduce : 0) - BOU_LIVE.rear) * ease;
-  const tip = -BOU_TIP.front * BOU_LIVE.front + BOU_TIP.rear * BOU_LIVE.rear; // (- = front up)
+  BOU_LIVE.front += ((driving && keys.has('KeyE') ? reduce : 0) - BOU_LIVE.front) * ease;
+  const tip = -BOU_TIP.front * BOU_LIVE.front; // (- = front up)
   bou.frame.rotation.y = 0; bou.frame.position.y = BOU_JUMP.air; // the plaça's own frame: the driven body is in world metres
   bou.root.position.set(body.x, BOU_TIP.hips * Math.abs(Math.sin(tip)), body.z); bou.root.rotation.y = body.yaw; // pivots on the hips that stay down
   const speed = Math.hypot(vx, vz);

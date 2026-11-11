@@ -1,5 +1,5 @@
 // Photo mode's touch buttons (ui/photo-stick.js): what each figure does, drawn. The Mulassa's and the Drac's pictures
-// follow their selector portraits; the Bou's lift its front and its rear as hers do.
+// follow their selector portraits; the Bou's show its snout up and its sparks.
 import { MULASSA, DRAC, BOU, FIGURES, portraitArt, portraitPalette } from '../game/figures.js';
 import { nextPhotoId } from '../game/photo-control.js';
 import { pixelSvg } from './select-ui.js';
@@ -15,7 +15,7 @@ const PI_JUMP = piSvg(`${piLines('M24 35V11M14 20l10-10 10 10', 5.5)}${piLines('
 export const PHOTO_ICONS = {
   [MULASSA.id]: { Space: PI_JUMP, KeyQ: piImg('mula-cavallet'), KeyE: piImg('mula-coca'), KeyR: PI_SPIN },
   [DRAC.id]: { Space: PI_JUMP, KeyQ: piImg('drac-rugit'), KeyE: piImg('drac-foc'), KeyR: PI_SPIN },
-  [BOU.id]: { Space: PI_JUMP, KeyQ: piImg('bou-morro'), KeyE: piImg('bou-cul'), KeyR: PI_SPIN },
+  [BOU.id]: { Space: PI_JUMP, KeyQ: piImg('bou-guspires'), KeyE: piImg('bou-morro'), KeyR: PI_SPIN },
 };
 // The swap button shows who you'd become: the next figure's pixel portrait.
 export const swapArt = id => { const f = FIGURES.find(g => g.id === nextPhotoId(id)); return pixelSvg(portraitArt(f), portraitPalette(f), '#2a1a10'); };

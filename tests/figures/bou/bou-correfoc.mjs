@@ -53,6 +53,7 @@ for (let t = 0; t < 60; t += 0.25) { const w = bouWind(t); assert(w >= 0.1 && w 
 for (let i = 0; i < BOU_FX.back + 3; i++) {
   assert.equal(bouTubeBurns(i, false), i < BOU_FX.back, `tube ${i} on the plaça`);
   assert.equal(bouTubeBurns(i, true), i >= BOU_FX.back, `tube ${i} carried`);
+  assert(bouTubeBurns(i, false, true) && bouTubeBurns(i, true, true), `tube ${i} in free play's burst: all of them, back, horns and mouth`);
 }
 assert(!bouCarried(BOU_FX.festaStart - 0.01) && bouCarried(BOU_FX.festaStart) && bouCarried(BOU_FX.carryEnd - 0.01) && !bouCarried(BOU_FX.carryEnd), 'carried over [festaStart, carryEnd)');
 

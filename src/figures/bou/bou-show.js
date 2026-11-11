@@ -17,6 +17,7 @@ import { M } from '../../scene/figure-springs.js';
 import { G } from '../../game/state.js';
 import { selectedFigure, song } from '../../game/figure-song.js';
 import { BOU } from '../../game/figures.js';
+import { PHOTO } from '../../game/photo-control.js';
 import { BOU_FX, bouTechno, bouHush, bouJetsWant, bouCarried, bouTubeBurns, bouTileLight, bouTileRing, bouTileColour, bouStrobe } from './bou-correfoc.js';
 import { beatAtTime, timeAtBeat } from '../../core/beat-grid.js';
 import { CALM } from '../../core/env.js';
@@ -104,7 +105,8 @@ export function bouFrame(dt, t) {
   // the jets: a burst wherever the confetti would have flown; eased in and out like the Drac's, never in the first disco
   BOU_SHOW.song = t;
   if (!run) BOU_SHOW.burstAt = Infinity;
-  const want = run && !BOU_SHOW.hush && !G.collapseT && t < song.finale && bouJetsWant(t, BOU_SHOW.burstAt); // (none while the banknotes rain)
+  const manual = PHOTO.on && PHOTO.id === BOU.id && PHOTO.keys.has('KeyQ') && !!bou?.frame.visible; // free play: Q held burns them all, its back's and the ones on its horn tips and in its mouth
+  const want = manual || run && !BOU_SHOW.hush && !G.collapseT && t < song.finale && bouJetsWant(t, BOU_SHOW.burstAt); // (none while the banknotes rain)
   BOU_SHOW.jets = Math.max(0, Math.min(1, BOU_SHOW.jets + (want ? dt : -dt) / 0.3));
   if (!BOU_SHOW.jets && !bouLit) return;
   if (!bou) return;
@@ -112,7 +114,7 @@ export function bouFrame(dt, t) {
   let lit = 0, live = false;
   const carried = bouCarried(t);
   for (let i = 0; i < bou.fire.length; i++) {
-    const tube = bou.fire[i], on = BOU_SHOW.jets > 0 && bouTubeBurns(i, carried);
+    const tube = bou.fire[i], on = BOU_SHOW.jets > 0 && bouTubeBurns(i, carried, manual);
     BOU_GROW[i] += ((on ? 1 : 0) - BOU_GROW[i]) * (1 - Math.exp(-dt / BOU_FX.grow));
     if (BOU_GROW[i] < 0.01) BOU_GROW[i] = 0;
     tube.visible = BOU_GROW[i] > 0; tube.scale.setScalar(BOU_GROW[i] || 1);

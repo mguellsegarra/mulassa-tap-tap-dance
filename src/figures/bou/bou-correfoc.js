@@ -50,7 +50,7 @@ export const bouJetsWant = (t, at) => t >= BOU_FX.festaStart && t < BOU_FX.carry
 // head's: a horn tip each and its mouth): carried by its colla, its head's alone (fire from the horns and the mouth, as
 // in the videos); otherwise its back's, all at once (in turns the fire walked along its back)
 export const bouCarried = t => t >= BOU_FX.festaStart && t < BOU_FX.carryEnd;
-export const bouTubeBurns = (i, carried) => (i >= BOU_FX.back) === carried;
+export const bouTubeBurns = (i, carried, all = false) => all || (i >= BOU_FX.back) === carried; // all: free play's own burst (Q), every tube at once
 // tile (i, j) at song beat `beat`, d m from the Bou: its flash 0..1; and (in an n-wide grid) its colour's index
 export function bouTileLight(i, j, beat, d) {
   const b = Math.floor(beat), f = beat - b;

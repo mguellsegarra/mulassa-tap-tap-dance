@@ -12,7 +12,7 @@ import { tr } from '../i18n/messages.js';
 
 const PF_FIGS = [[MULASSA, ['q', 'e', 'r'].map(k => [k.toUpperCase(), tr(`ui.photo.act.mula.${k}`)])],
   [DRAC, ['q', 'e', 'r'].map(k => [k.toUpperCase(), tr(`ui.photo.act.drac.${k}`)])],
-  [BOU, [['Q', tr('ui.photo.act.mula.q')], ['E', tr('ui.photo.act.mula.e')], ['R', tr('ui.photo.act.bou.r')]]]].filter(([f]) => playable(f));
+  [BOU, [['Q', tr('ui.photo.act.drac.e')], ['E', tr('ui.photo.act.mula.q')], ['R', tr('ui.photo.act.bou.r')]]]].filter(([f]) => playable(f));
 const PF_WORDS = { [MULASSA.id]: ['ui.photo.moveMula', 'ui.photo.nowMula'], [DRAC.id]: ['ui.photo.moveDrac', 'ui.photo.nowDrac'], [BOU.id]: ['ui.photo.moveBou', 'ui.photo.nowBou'] };
 const photoHelpActions = fig => [['WASD', tr('ui.photo.act.walk')], ['Shift', tr('ui.photo.act.run')], [tr('ui.photo.key.space'), tr('ui.photo.act.jump')], ...fig[1], ['Tab', tr('ui.photo.act.swap')], [tr('ui.photo.key.rightButton'), tr('ui.photo.act.holdLook')], ['M', tr('ui.photo.act.music')], ['Esc', tr(lookLocked() ? 'ui.photo.act.unlock' : 'ui.photo.act.exit')]];
 const photoHelpDescription = fig => tr('ui.photo.description', { figure: fig[0].fullName, actions: photoHelpActions(fig).map(([key, label]) => `${key} ${label}`).join(' · ') });

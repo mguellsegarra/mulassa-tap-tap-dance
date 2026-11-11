@@ -194,6 +194,17 @@ function dom() {
   assert.deepEqual(JSON.parse(src.match(/L = \(B && B\.jokes\) \|\| \/\* i18n:boot:jokes \*\/(\[[\s\S]*?\])\/\* i18n:boot:end \*\/, k =/)[1]), LOADING_JOKES, 'index.html and loader.js share one list');
   assert.equal(renderBoot(readFileSync(INDEX, 'utf8')), readFileSync(INDEX, 'utf8'), 'index.html\u2019s boot strings are the catalogue\u2019s (node tools/deploy/gen-boot.mjs rewrites them)');
   assert(LOADING_JOKES.length >= 3 && LOADING_JOKES.every(l => l.endsWith('…')), 'at least three complete loading lines');
+  { // the line waits for its font: hidden until Baloo 2 is in, or a second has passed
+    const label = { textContent: 'Avisant la brigada…', style: {} }, timers = []; let fontIn;
+    const ctx = { document: { getElementById: () => label, fonts: { load: () => new Promise(r => { fontIn = r; }) } }, window: {}, localStorage: { getItem: () => null, setItem() {} }, setTimeout: (f, ms) => timers.push([f, ms]), Math, JSON };
+    vm.runInNewContext(src, ctx);
+    assert.equal(label.style.visibility, 'hidden', 'the first line is not painted in the fallback font');
+    assert.deepEqual(timers.map(t => t[1]), [1000], 'a second at most');
+    fontIn(); await new Promise(r => setTimeout(r));
+    assert.equal(label.style.visibility, '', 'shown once the font is in');
+    label.style.visibility = 'hidden'; timers[0][0]();
+    assert.equal(label.style.visibility, '', 'and by the timer when the font never comes');
+  }
   const mem = {}, firsts = [];
   for (let v = 0; v < LOADING_JOKES.length + 3; v++) {
     const label = { textContent: 'Avisant la brigada…' };

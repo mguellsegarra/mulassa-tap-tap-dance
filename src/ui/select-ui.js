@@ -44,7 +44,7 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
   const bar = [...towns.querySelectorAll('.sel-pill')], pills = bar.filter(p => p.dataset.town), cards = [...strip.querySelectorAll('.sel-card')];
   const later = [...strip.querySelectorAll('.later')];
   let figure = live.find(f => f.id === firstFigure) ?? live[0], lastPlayable = figure; // catalog selection is independent of the host's last playable figure
-  let opening = false, shown = false, level = 1, town = null, cur = 0, req = 0, step = 'figures';
+  let opening = false, shown = false, rehearsing = false, level = 1, town = null, cur = 0, req = 0, step = 'figures';
   const smooth = () => (reduced() ? 'auto' : 'smooth');
   const api = { band: null, measure: () => { if (shown) measure(); }, onSelect, get figure() { return figure; }, get pending() { return !playable(figure); }, visible, toLevels: () => nextStep() };
 
@@ -260,27 +260,27 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     observer.observe($('select-info')); observer.observe(root); // --app-h can settle after Safari's viewport event.
   }
   doc.fonts?.ready.then(() => { if (shown) measure(); });
-  function visible(on) {
+  function visible(on, rehearsal = false) { // rehearsal: one paint under the page cover (select-warm.js): inert, the host told nothing
     const error = $('select-error'), message = getError() ?? '';
     if (error && error.textContent !== message) { error.textContent = message; error.hidden = !message; if (shown) measure(); }
-    if (on === shown) return;
-    shown = on; root.inert = root.hidden = !on;
+    if (on === shown && rehearsal === rehearsing) return;
+    shown = on; rehearsing = rehearsal; root.hidden = !on; root.inert = !on || rehearsal;
     root.removeAttribute('data-shown'); // navigation waits for the opening layout; panel fades also cover reopening
     if (on) win.requestAnimationFrame?.(() => win.requestAnimationFrame(() => root.toggleAttribute('data-shown', shown))); // after its first paint
     if (!on) { scrolling.stop(); townScrolling.stop(); if (root.contains(doc.activeElement)) doc.activeElement.blur(); return; }
     // Every write first, then one read of the layout, then the scrolls: each read after a write recomputed the whole
     // selector's styles, and this runs in the frame that shows it (the splash's ENTRA: ~0.3 s on a slow phone).
     opening = true; info();
-    setLevel(firstLevel ?? rememberedLevel(store, figure.id), 'open'); firstLevel = null; opening = false;
+    setLevel(firstLevel ?? rememberedLevel(store, figure.id), 'open'); if (!rehearsal) firstLevel = null; opening = false;
     const i = cards.findIndex(c => c.dataset.id === figure.id);
     roveCard(i);
     const pill = press(figure.town);
     measure(); levelStats(); layout.settle();
     centre(strip, cards[i], 'auto');
     if (pill) centre(towns, pill, 'auto');
+    if (rehearsal) return;
     if (playable(figure)) api.onSelect(figure);
     if (keyboard()) cards[i].focus({ preventScroll: true }); else doc.activeElement?.blur?.();
-
   }
   api.show = id => { // a figure picked elsewhere (an empty board's «Juga amb …»): its card selected and centred, step 1
     const card = cards.find(c => c.dataset.id === id);

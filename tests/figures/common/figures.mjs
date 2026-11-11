@@ -652,3 +652,18 @@ console.log('catalog selection, pending panel, town pills, town arms, touch stri
 const wasPlural = figure => / i /.test(figure.name) || /^\S{3,}s(?=\s|$)/.test(figure.fullName || figure.name);
 for (const figure of sourceCatalog.figures) assert.equal(heartCall(figure).title, `Vols que ${wasPlural(figure) ? 'surtin' : 'surti'} a la plaça?`, figure.id);
 for (const figure of sourceCatalog.figures) assert.equal(heartCall({ ...figure, name: 'Noms canviats', fullName: 'Altres noms' }).title, heartCall(figure).title, 'grammar is keyed by ID, never inferred from names');
+{ // the rehearsal under the page cover (ui/select-warm.js): shown and inert, the host told nothing, the challenge's level kept for the real opening
+  const m = new Map(), st = { get: k => m.get(k) ?? null, set: (k, v) => m.set(k, v) }, told = [];
+  const sel = setupSelect({ doc, win, store: st, reduced: () => true, firstLevel: 2, onPlay() {}, onSelect: f => told.push(f.id), hearts: { count: () => 0, mine: () => false, paint() {}, tap() {} } });
+  sel.visible(true, true);
+  assert(!$('select').hidden && $('select').inert, 'rehearsal: on show, inert');
+  assert.deepEqual(told, [], 'rehearsal: no figure told to the host');
+  sel.visible(false);
+  assert($('select').hidden, 'rehearsal over: hidden again');
+  sel.visible(true);
+  assert(!$('select').inert, 'the real opening takes input');
+  assert.deepEqual(told, [sel.figure.id], 'and tells its figure');
+  assert.equal($('select-level').children[2].attrs['aria-pressed'], 'true', 'the challenge\'s level survived the rehearsal');
+  sel.visible(false); sel.visible(true, true); sel.visible(true);
+  assert.deepEqual(told, [sel.figure.id, sel.figure.id], 'a rehearsal turning straight into the real opening still tells the host');
+}

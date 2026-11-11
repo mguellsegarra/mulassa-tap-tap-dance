@@ -573,7 +573,7 @@ addEventListener('beforeinstallprompt', function (e) { window.__installPrompt = 
   </div>
 </dialog>
 <!-- before a profile made earlier sends its first statistics: once (src/ui/account-ui.js, src/services/stats-sync.js) -->
-<dialog id="stats-notice-menu" class="sheet" tabindex="-1" aria-labelledby="stats-notice-title" aria-describedby="stats-notice-text">
+<dialog id="stats-notice-menu" class="sheet" data-unasked tabindex="-1" aria-labelledby="stats-notice-title" aria-describedby="stats-notice-text">
   <button id="stats-notice-close" type="button" data-i18n-attr="aria-label:html.attr.close" class="sheet-x" aria-label="Tanca"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
   <div class="sheet-body">
     <!-- the title hangs in a ribbon in the estendard's red (#a11d2a); the text is real, the cloth is drawn -->
@@ -590,7 +590,7 @@ addEventListener('beforeinstallprompt', function (e) { window.__installPrompt = 
 </dialog>
 <!-- Device tips (src/ui/device-hint.js): once ever, at an idle selector after the profile's news; WebGL in software first -->
 <!-- A new game, told once (src/ui/news-sheet.js fills it). -->
-<dialog id="news-menu" class="sheet hint-menu" tabindex="-1" aria-labelledby="news-title" aria-describedby="news-text">
+<dialog id="news-menu" class="sheet hint-menu" data-unasked tabindex="-1" aria-labelledby="news-title" aria-describedby="news-text">
   <button id="news-x" type="button" data-i18n-attr="aria-label:html.attr.close" class="sheet-x" aria-label="Tanca"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
   <div class="sheet-body">
     <!-- the «Nova temporada» sheet's ribbon (#stats-notice-menu), saying the news -->
@@ -602,7 +602,7 @@ addEventListener('beforeinstallprompt', function (e) { window.__installPrompt = 
     <div class="sheet-actions"><button id="news-go" type="button" class="btn btn-primary" data-i18n="html.news.go">Ves als minijocs</button></div>
   </div>
 </dialog>
-<dialog id="gpu-hint-menu" class="sheet hint-menu" tabindex="-1" aria-labelledby="gpu-hint-title" aria-describedby="gpu-hint-text">
+<dialog id="gpu-hint-menu" class="sheet hint-menu" data-unasked tabindex="-1" aria-labelledby="gpu-hint-title" aria-describedby="gpu-hint-text">
   <button id="gpu-hint-close" type="button" data-i18n-attr="aria-label:html.attr.close" class="sheet-x" aria-label="Tanca"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
   <div class="sheet-body">
     <svg class="hint-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h10v10H7zM10 3v4M14 3v4M10 17v4M14 17v4M3 10h4M3 14h4M17 10h4M17 14h4"/></svg>
@@ -611,7 +611,7 @@ addEventListener('beforeinstallprompt', function (e) { window.__installPrompt = 
     <div class="sheet-actions"><button id="gpu-hint-ok" type="button" class="btn btn-primary" data-i18n="ui.common.ok">D’acord</button></div>
   </div>
 </dialog>
-<dialog id="inapp-hint-menu" class="sheet hint-menu" tabindex="-1" aria-labelledby="inapp-hint-title" aria-describedby="inapp-hint-text"><!-- inside an app's own browser, one version per account state (device-hint.js) -->
+<dialog id="inapp-hint-menu" class="sheet hint-menu" data-unasked tabindex="-1" aria-labelledby="inapp-hint-title" aria-describedby="inapp-hint-text"><!-- inside an app's own browser, one version per account state (device-hint.js) -->
   <button id="inapp-hint-close" type="button" data-i18n-attr="aria-label:html.attr.close" class="sheet-x" aria-label="Tanca"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
   <div class="sheet-body">
     <svg class="hint-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4"/></svg>
@@ -694,7 +694,7 @@ addEventListener('beforeinstallprompt', function (e) { window.__installPrompt = 
   </div>
 </dialog>
 <!-- «Tardor 2026 s’ha acabat» (src/ui/seasons-ui.js): once per profile and season; the profile's places, the whole podium in the Saló de la fama -->
-<dialog id="season-end-menu" class="sheet" tabindex="-1" aria-labelledby="season-end-title">
+<dialog id="season-end-menu" class="sheet" data-unasked tabindex="-1" aria-labelledby="season-end-title">
   <button id="season-end-close" type="button" data-i18n-attr="aria-label:html.attr.close" class="sheet-x" aria-label="Tanca"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
   <div class="sheet-body fade">
     <h2 id="season-end-title"></h2>
@@ -775,7 +775,7 @@ addEventListener('beforeinstallprompt', function (e) { window.__installPrompt = 
   </div>
 </dialog>
 <!-- once per profile: badges are here, or what confirming the e-mail would earn (src/ui/badge-news.js) -->
-<dialog id="badge-news-menu" class="sheet" tabindex="-1" aria-labelledby="badge-news-title" aria-describedby="badge-news-text">
+<dialog id="badge-news-menu" class="sheet" data-unasked tabindex="-1" aria-labelledby="badge-news-title" aria-describedby="badge-news-text">
   <div class="sheet-body">
     <h2 id="badge-news-title"></h2>
     <p id="badge-news-text"></p>

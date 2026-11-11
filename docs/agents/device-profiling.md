@@ -10,7 +10,7 @@ Mac still ran 5-10× faster than the S10 and missed costs the S10 showed.
 
 | Device | Browser | Reach it from mac-studio | Tool |
 | --- | --- | --- | --- |
-| Galaxy S10 (DPR 3.5, Mali-G76, 60 Hz) | Chrome | USB: `adb` + Chrome DevTools Protocol | `tools/qa/device/android-cost.mjs` (synchronous part), raw CDP traces (task, frame, raster) |
+| Galaxy S10 (DPR 3.5, Mali-G76, 60 Hz) | Chrome | USB: `adb` + Chrome DevTools Protocol | `tools/qa/device/android-cost.mjs` (synchronous part), `tools/qa/device/android-frames.mjs` (frames over 50 ms from a cold start, with the GPU programs compiled in them), raw CDP traces (task, frame, raster) |
 | iPhone (ProMotion 120 Hz) | Safari | no cable: the LAN probe proxy | `tools/qa/device/probe-proxy.mjs` |
 | iPhone, plugged in (mac-studio or mbp-m1) | Safari | `ios_webkit_debug_proxy` (Homebrew), its port 9222 | `tools/qa/device/ios-inspect.mjs` |
 | Any Mac (headless Chrome) | — | — | `tools/qa/alloc-profile.mjs` (who allocates), `tests/render/alloc-budget.mjs` (the guard) |
@@ -72,12 +72,37 @@ After the fixes of that day: 7.3 MB/s on the splash, 5.6 in the idle reel (6.9 /
    lower bound for A/B. The budget in AGENTS.md is the longest task and frame: take it from a trace around the
    interaction (`Tracing` with `devtools.timeline,disabled-by-default-devtools.timeline,gpu`: `RunTask` over 50 ms, what is
    inside, `RendererRasterWorker` for the raster) and a rAF probe for frames over 50 ms. Label which one each number is.
-7. **Report** before/after with device, browser, build, size, Low Power Mode and cold or warm. Compare against the
+7. **A hitch with no long JavaScript: look at the GPU process.** `android-frames.mjs <plan.json>` runs the flow cold
+   (Chrome stopped, the site's data cleared, the splash's tap, the selector left alone), lists every frame over 50 ms
+   with its time from the selector's showing, sums the ms lost in them (around the opening and over the whole watch),
+   and with `"trace"` counts the `VulkanCreateGraphicsPipelines` in each long frame. Read the times first: a hitch that
+   comes at the same second in every run belongs to something the page does then. Name that event (a `MutationObserver`
+   on `childList` and attributes, `transitionstart|end` and `animationstart|end` listeners calling `console.timeStamp`,
+   all injected through `Page.addScriptToEvaluateOnNewDocument`; the marks land in the trace), then A/B its parts with
+   injected CSS, one at a time and then together: on the heart's ribbon no single removal changed the frame, and the
+   owner was a rule on its neighbours. Compare the whole lost time, not only the frame you are chasing: a fix can move
+   the cost to another second (docs/agents/graphics.md, the `will-change` entry).
+8. **Report** before/after with device, browser, build, size, Low Power Mode and cold or warm. Compare against the
    baseline below; record new results there when they change.
 
 ## Pitfalls met (do not repeat them)
 
 Android / Chrome:
+- The S10 is shared by every agent on mac-studio. `android-cost.mjs` and `android-frames.mjs` stop Chrome at each run,
+  which ends any other agent's session on it: ask the owner that the phone is free before starting, and say so when
+  done. A phone another agent is using also measures wrong: with 100+ tabs left open and two pages at 60-110% CPU the
+  same build read 12 fps instead of 58, the Mulassa as slow as the Bou (2026-11-11). Before a session, check
+  `adb shell top -b -n 1 -m 5` and the tab list (`/json/list`); a selector at rest should read 57-60 fps at `medium`
+  (`?perf`). Stopping Chrome closes none of those tabs, only their processes.
+- Chrome opens its debugging socket a moment after `am start`: the first `fetch` of `/json/list` after a `force-stop`
+  can fail (`other side closed`); retry for a few seconds.
+- The selector also shows once under the page cover (`ui/select-warm.js`), so its first `data-shown` is not the
+  opening: time an opening from the first `data-shown` after `#loader` is hidden (a probe that took the rehearsal for
+  the opening shifted every number by seconds).
+- A CDP mouse move every 2 s keeps the idle screen away during a watch (the selector's idle screen comes after 10 s
+  untouched and is another thing to measure).
+- Frames over 50 ms vary by one or two between identical runs, and the cover's time by a second: run each side at
+  least twice, alternated (A, B, B, A), and trust a difference only when the runs do not overlap.
 - A background tab ignores `Page.navigate`, and `/json/new` is refused: bring Chrome forward with `am start … -d <url>`.
 - The Home key and a relaunch can make Chrome reload the tab: to test a pause, switch tabs (`am start` another URL, then
   `/json/activate/<id>`) and press «Continua».
@@ -124,6 +149,25 @@ Measuring in general:
   Compare like with like.
 - A hook blocks shell commands containing a bare `open` (it brings apps to the front): write such scripts with the
   file tool and run them with `node`, or name the variable otherwise.
+
+## Baseline, 2026-11-11 (release/1.4.0, d540e86)
+
+Galaxy S10, Chrome, native size, production build served by `vite preview`, cold (Chrome stopped, data cleared), a fresh
+profile (the Bou new and chosen, no heart given), `android-frames.mjs`; each range is three runs.
+
+| Moment | Before | After | What changed |
+| --- | --- | --- | --- |
+| Selector's opening, ms lost in frames over 50 ms (-0.3 s to +0.9 s) | 637-821 | 251-302 | rehearsed under the page cover (`ui/select-warm.js`) |
+| Selector's opening, longest frame | 268-385 ms | 101 ms | same |
+| Page cover's time | 4.5-6.1 s | 5.6-7.0 s | same (the dev-phone's Wi-Fi load included; noisy) |
+| The heart's ribbon showing (~2.4 s after the opening) | 134-168 ms | 17-34 ms | the song's row faded, not `visibility: hidden` |
+| The heart's pulse ending (3.6 s later) | 134-151 ms | 33-34 ms | same |
+| Selector at rest, 17 s (`?perf`) | 57.3-58.5 fps, `medium` | same | the Bou and the Mulassa alike (JS 6.5-6.8 ms, 3D 3.8-4.2 ms a frame) |
+| The new figure's light sweep | — | no frame over 50 ms of its own, 2-4 paints in 2 s | compositor-only (`translate`) |
+
+Still there: the opening's 251-302 ms (frames of 50-117 ms; a trace still counts ~25 programs compiled in one of them,
+not chased: whatever the rehearsal under the cover does not show, the corner buttons among it), and one 100-117 ms
+frame ~0.25 s before the selector shows (the splash's tap itself).
 
 ## Baseline, 2026-11-03 (release/1.2.10 with the fixes)
 

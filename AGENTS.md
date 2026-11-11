@@ -142,6 +142,14 @@ Read-only issue inspection (organization `ondori`, project `mulassa-tap-tap-danc
   owner (`docs/agents/graphics.md`, «DOM blocking costs») or ask the owner before shipping it. A sheet opening once cost
   440 ms of layout because of an unrelated CSS rule: nothing is assumed cheap. How, with the tools and the traps met:
   `docs/agents/device-profiling.md`.
+- **First paints and layer changes cost on a phone.** Chrome compiles a GPU program for every kind of paint a page has not
+  drawn yet, and again when the set of composited layers changes: 100-400 ms frames on the S10 with no long JavaScript.
+  The page cover pays it for the 3D, the HUD's words and the selector (`ui/select-warm.js`); anything in HTML and CSS that
+  first shows later (a sheet, a tip, a notice) pays it under the player's eyes unless it is warmed. To take something out
+  of sight on a screen that is on show, fade it (`opacity: 0`, `pointer-events: none`), not `visibility` or `display`;
+  no permanent `will-change` without the device's numbers; animate only `translate`, `scale` or `opacity`, without blend
+  modes, for anything left running. Read `docs/agents/graphics.md` («DOM blocking costs») before adding one, and measure
+  it with `tools/qa/device/android-frames.mjs`. The S10 is shared: ask the owner that it is free before a run.
 - Every UI change is validated with a real screenshot (at least 375×667 and 320×568, plus desktop when it applies) before it is shown to the owner; apply `.agents/skills/uipolish/SKILL.md` (a must, not optional) inside that evaluation loop (measure, look at the capture, fix, repeat). Unit tests alone never prove a layout.
 - Orientation (`src/ui/fullscreen.js`): phones are portrait only and tablets landscape only; the other orientation shows the rotate cover («Gira el mòbil…»), so it is never a layout to capture, measure or put in a review or PDF. The one exception is phone free play, which is landscape. Viewport set for menus and sheets: phones 320×568, 375×667, 393×852, 430×932; tablet 1024×768; desktop 1280×800, a wide-short window (1440×700) and a large one (1920×1080). This overrides the matrix of any generic skill (e.g. a global `uipolish` listing 667×375, 852×393 or 768×1024).
 - **Player-facing text is written by Codex.** Other agents do not write final UI copy in any language: use clearly provisional text only in proposals, and hand the owner the list of strings needed (key, screen, context, length limit) so a Codex agent writes them and their translations.

@@ -460,6 +460,17 @@ console.log('crowd footprints never overlap ok');
     assert(q.players > 0 && q.off < 0.01, `a quality change moves the ring's band ${q.off.toFixed(2)} m`);
     assert(q.end < q.n0 && q.mid === q.n0, `the ring's figures leave over the fade, not at once (${q.n0} -> ${q.mid} mid-fade -> ${q.end})`);
   }
+  { // fewer people (the people's level a step down): whoever stays in the ring keeps the spot (they were all dealt out
+    // again, and half the front rows walked to another place mid-dance)
+    const q = JSON.parse(run(`(() => { setRotllana(true);
+      const at = new Map(activeCrowd.map(p => [p, [p.ring.x, p.ring.y]])), level = qualityLevel, people = peopleLevel;
+      qualityLevel = -1; peopleLevel = 0; applyRenderQuality(); setRotllana(true);
+      const kept = activeCrowd.filter(p => at.has(p)), moved = kept.filter(p => Math.hypot(p.ring.x - at.get(p)[0], p.ring.y - at.get(p)[1]) > 0.01).length;
+      qualityLevel = level; peopleLevel = people; applyRenderQuality(); setRotllana(true);
+      return JSON.stringify({ before: at.size, kept: kept.length, moved }); })()`));
+    assert(q.kept > 5 && q.kept < q.before, `the step leaves fewer people (${q.before} -> ${q.kept})`);
+    assert.equal(q.moved, 0, `${q.moved} of the ${q.kept} people still in the ring were dealt another spot`);
+  }
   const back = JSON.parse(run(`(() => { setRotllana(false); return JSON.stringify({ shown: rotllanaCrowd.mesh.visible, backdrop: plaza.backdrop.mesh.visible, rings: crowd.filter(p => p.ring).length, band: Math.hypot(bandSpots[0].pos.x, bandSpots[0].pos.y) }); })()`));
   assert(!back.shown && back.backdrop && !back.rings, 'another figure: the ring gone, the backdrop back, nobody keeps a ring slot');
   assert(back.band > 9, 'and the band back at its own place');

@@ -3,6 +3,7 @@
   "pop": "Mulassa Pop",
   "play": "Joga",
   "popDesc": "Apanha a Mulassa. Evita os Dracs.",
+  "tapDesc": "Dança com as figuras ao ritmo da música.",
   "soon": "Surpresa",
   "soonDesc": "Um novo jogo está a caminho.",
   "new": "Novo!",
@@ -11,5 +12,8 @@
   "rotate.phone": "Roda o telemóvel",
   "rotate.tablet": "Roda o tablet",
   "rotate.phoneSub": "Na vertical para jogar",
-  "rotate.tabletSub": "Na horizontal para jogar"
+  "rotate.tabletSub": "Na horizontal para jogar",
+  "fail.title": "Ups! Não foi possível carregar",
+  "fail.text": "Atualiza a página para tentar outra vez.",
+  "fail.retry": "Tentar outra vez"
 }

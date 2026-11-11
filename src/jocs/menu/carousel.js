@@ -1,11 +1,12 @@
 // Mulassa Games' row of cards: the chosen card fills the hero above (on a phone, the one on the left). Touching a card only
-// chooses it, so nobody starts a game by accident; «Juga» in the hero plays.
+// chooses it, so nobody starts a game by accident; «Juga» in the hero plays (main.js, with chosen()).
 import { setupHeroVideo } from './hero-video.js';
+import { keyboardNav } from '#plassa/focus.js';
 export function setupGamesCarousel(doc = document) {
   const by = id => doc.getElementById(id), row = by('games-grid'), hero = by('games-hero');
   const cards = [...row.querySelectorAll('[data-game]')];
   const heroName = by('games-hero-name'), heroDesc = by('games-hero-desc');
-  let on = -1, wheelAt = 0, drag = null, dragged = false;
+  let on = -1, wheelAt = 0, drag = null, dragged = false, stillTurn = 0, syncQueued = 0;
 
   const wide = matchMedia('(min-width: 701px)'), art = by('games-hero-art');
   const clip = setupHeroVideo({ video: by('games-hero-video'), wide });
@@ -16,11 +17,11 @@ export function setupGamesCarousel(doc = document) {
   // showing still makes a 50-84 ms frame there about one time in three: its picture decoded and drawn at that screen's
   // density, off the main thread (which stays under 30 ms); putting the decoded image itself in changed nothing.
   const showStill = () => {
-    const card = cards[on];
+    const card = cards[on], turn = ++stillTurn; // only the latest request's decode may write: an older, slower one would put a past game's picture back
     if (!card) return;
     const src = card.querySelector('img').getAttribute('src'), poster = clip.poster(card);
     const url = wide.matches ? poster ?? card.dataset.hero ?? src : poster ?? src, probe = new Image();
-    const put = () => { if (cards[on] !== card) return; (wide.matches ? art : by('games-hero-back')).src = url; clip.show(card); };
+    const put = () => { if (turn !== stillTurn) return; (wide.matches ? art : by('games-hero-back')).src = url; clip.show(card); };
     probe.src = url;
     (probe.decode?.() ?? Promise.resolve()).then(put, put); // a failed decode (offline, an old browser): the browser's own load
   };
@@ -54,7 +55,7 @@ export function setupGamesCarousel(doc = document) {
     cards[i].scrollIntoView({ inline: 'start', block: 'nearest', behavior: smooth ? 'smooth' : 'auto' });
   };
 
-  row.addEventListener('scroll', () => requestAnimationFrame(sync), { passive: true });
+  row.addEventListener('scroll', () => { syncQueued ||= requestAnimationFrame(() => { syncQueued = 0; sync(); }); }, { passive: true }); // one per frame, not one per scroll event
   row.addEventListener('focusin', e => { const i = cards.indexOf(e.target.closest?.('[data-game]')); if (i >= 0 && i !== on) goTo(i); });
   by('games-menu').addEventListener('keydown', e => {
     const step = { ArrowRight: 1, ArrowLeft: -1 }[e.key];
@@ -71,28 +72,32 @@ export function setupGamesCarousel(doc = document) {
     wheelAt = performance.now(); goTo(on + Math.sign(e.deltaY));
   }, { passive: false });
   // mouse drag; touch already scrolls natively
-  row.addEventListener('pointerdown', e => { if (e.pointerType === 'mouse') drag = { x: e.clientX, from: row.scrollLeft, moved: false }; });
+  row.addEventListener('pointerdown', e => { dragged = false; if (e.pointerType === 'mouse' && e.button === 0) drag = { x: e.clientX, from: row.scrollLeft, moved: false }; });
+  const endDrag = () => {
+    if (!drag) return;
+    dragged = drag.moved; drag = null;
+    if (dragged) { row.style.scrollSnapType = ''; goTo(on); }
+  };
   addEventListener('pointermove', e => {
     if (!drag) return;
+    if (!(e.buttons & 1)) return endDrag(); // released outside the window: no pointerup came
     const dx = e.clientX - drag.x;
     if (Math.abs(dx) > 4) { drag.moved = true; row.style.scrollSnapType = 'none'; }
     row.scrollLeft = drag.from - dx;
   });
-  addEventListener('pointerup', () => {
-    if (!drag) return;
-    dragged = drag.moved; drag = null;
-    if (dragged) { row.style.scrollSnapType = ''; goTo(on); }
-  });
-  by('games-hero-play').addEventListener('click', () => cards[on].click());
+  addEventListener('pointerup', endDrag);
+  addEventListener('pointercancel', endDrag); // a touch pan or a system gesture took the pointer
   goTo(0, false); if (!fits()) sync(); // the first game, chosen from the start
 
   return {
+    chosen: () => cards[on],
     // false: this click only chooses (or ended a drag), no game starts. A pointer on a card only ever chooses: «Juga» plays;
-    // Enter on the chosen card (a click with no pointer, detail 0) plays too, so the keyboard needs no detour
+    // Enter on the chosen card (a click with no pointer, detail 0) plays too, so the keyboard needs no detour. Only while the
+    // keys drive the page: double-tap.js turns a quick second touch into a detail-0 click, and that one must not launch
     take(card, e) {
       if (dragged) { dragged = false; return false; }
       const i = cards.indexOf(card);
-      if (i === on && !e?.detail) return true;
+      if (i === on && !e?.detail && keyboardNav) return true;
       goTo(i);
       return false;
     },

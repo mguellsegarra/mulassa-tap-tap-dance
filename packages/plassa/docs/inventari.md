@@ -129,7 +129,7 @@ Llegenda de l'estat:
 Avui Plassa té coses de Mulassa escrites dins el codi. Per publicar-la com a llibreria, cada lloc les ha de poder passar:
 
 - La marca: colors, la figura de la càrrega i les frases.
-- Les claus de desament (`mulassa-lang`, `pica-best`, `loader-jokes-seen`).
+- Les claus de desament (`ui-language-v1`, `pica-best`, `loader-jokes-seen`).
 - El projecte de Supabase i l'esquema del compte, del rànquing i de les insígnies.
 - El DSN de Sentry i l'adreça de `version.json`.
 - El catàleg de jocs del selector.

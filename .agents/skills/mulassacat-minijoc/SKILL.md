@@ -31,7 +31,7 @@ selector or a page that skips the base.
    returns the open cover or the home; mark the home's main button `data-keys-first`), `onEveryGesture(unlock)`
    (`gesture.js`), `onPageLeave(pause)` (`page-leave.js`), `createPageAudio(ctx, out, { hearing, stall })` on the
    game's AudioContext (`page-audio.js`; call its `wake()` inside taps, `watch(now)` each frame), `closeOnBackdrop(back)`
-   (`backdrop.js`, `back` is what Escape does), `scrollHints([...lists])`, `bootLines($('boot-line'), () => booted)`,
+   (`backdrop.js`, `back` is what Escape does), `scrollHints([...lists])`, `const lines = bootLines($('boot-line'))` (`(el, every = 2000)`: the line's minimum turn in ms), then `await lines.finished()` when the home is whole (the screen leaves at a line's end),
    `waitForTap(...)` (`tap-start.js`) if the home has music, `stopDoubleTapZoom()`, `guardGpu(...)` for each WebGL canvas, `errors.context(...)` + `errors.start()`,
    `watchUpdates(...)`, `setupOrientation(pause)`, `window.__gameBootWords` and `<html class="ready">` when the home is whole.
 
@@ -52,7 +52,7 @@ selector or a page that skips the base.
 | A tap outside a cover's sheet = Escape | `backdrop.js` |
 | A list that scrolls fades where there is more | `scroll-hint.js` |
 | The home waits for the tap its music needs | `tap-start.js` |
-| The boot screen's running Mulassa and its funny lines | `mula-load.html`, `boot-lines.js` |
+| The boot screen's running Mulassa and its funny lines (the first one before the first paint) | `mula-load.html`, `boot-lines.js`, `boot-first-line.js` |
 | Boot watchdog and error card | `boot-watchdog.js` |
 | Crash reports (Sentry) | `errors.js`, `sentry-load.js` |
 | New deploy → reload when quiet | `update-watch.js`, `update-rules.js` |
@@ -60,6 +60,7 @@ selector or a page that skips the base.
 | Device quality guess, pixel ratio | `quality.js`, `render-quality.js` |
 | Phone portrait / tablet landscape cover | `orientation.js` |
 | Words per game (`locales/*.json`) and the saved language | `words.js`, `locale.js` |
+| A board's row and a player's name with its badge (the badge's tap tip) | `board.js`, `badge-tip.js` |
 | Best score on this device | `best.js` |
 | A run's 3, 2, 1 | `countdown.js` |
 | Storage, haptics, double-tap zoom guard, shader warmup | `storage.js`, `haptics.js`, `double-tap.js`, `boot.js` |

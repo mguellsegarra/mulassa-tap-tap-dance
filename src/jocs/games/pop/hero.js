@@ -38,9 +38,13 @@ export function createHero(canvas) {
   };
   atHome();
   scene.add(mula.root, drac.root);
-  const { flame, step } = createSparks(scene);
+  const { flame, step } = createSparks(scene, 192); // two flames a frame, each short-lived: a few dozen live at once
   const P = MULA_POSES[0], tip = new THREE.Vector3(), dir = new THREE.Vector3();
   let t = 0, W = 0, H = 0, solo = null; // solo: { kind, root, rig } while the end sheet shows the culprit
+  // the canvas's box, from a ResizeObserver: a layout read every frame costs a phone; read at once where the canvas moves (show, back)
+  let cw = 0, ch = 0;
+  const measure = () => { cw = canvas.clientWidth; ch = canvas.clientHeight; };
+  new ResizeObserver(measure).observe(canvas);
   // the culprits the home never shows, made the first time one ends a run: the board's own paints (rigs.js)
   const painted = (rig, paint) => { rig.root.traverse(o => { if (o.isMesh && o.geometry.attributes.color) o.geometry = paint(o.geometry); }); return rig; };
   const extra = {}, made = (fig, k = 1) => { fig.root.scale.setScalar(k); fig.root.visible = false; scene.add(fig.root); return fig; };
@@ -98,12 +102,12 @@ export function createHero(canvas) {
 
   // both figures in view, whatever the box's shape: the camera backs off along a raised three-quarter line
   function fit() {
-    const w = canvas.clientWidth, h = canvas.clientHeight;
+    const w = cw, h = ch;
     if (!w || !h || (w === W && h === H)) return;
     // the splash only scales the home's box (tap-start.js): the home's buffer, stretched; a new one stalled the tap ~100 ms (S10)
     if (W && document.body.classList.contains('sp-home') && Math.abs(w / h - W / H) < .01) return;
     W = w; H = h;
-    renderer.setPixelRatio(pixelRatio());
+    renderer.setPixelRatio(pixelRatio(w, h));
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
     pose(0);
@@ -133,13 +137,20 @@ export function createHero(canvas) {
     renderer.render(scene, camera);
   }
 
-  const warm = () => { fit(); return waitForWarmup(() => renderer.compileAsync(scene, camera).then(() => linkPrograms(renderer.info.programs))); };
+  const warm = async () => {
+    measure();
+    fit();
+    await waitForWarmup(() => renderer.compileAsync(scene, camera).then(() => linkPrograms(renderer.info.programs)));
+    // the end sheet's culprits the home never shows, made here between tasks: not on the end transition's frame
+    for (const kind of ['petard', 'dracFals', 'mulaFalsa']) { culprit(kind); await new Promise(go => setTimeout(go)); }
+  };
   // the end sheet's: `kind` alone in `into` (rules.js culprits); home(): back to the pair, on the home
   function show(kind, into) {
     const c = culprit(kind);
     for (const r of [mula.root, drac.root, ...Object.values(extra).map(e => e.root)]) r.visible = r === c.root;
     solo = { kind, root: c.root, rig: c.root.isMesh ? null : c }; // the petard is one baked mesh: no rig to pose
     into.append(canvas);
+    measure();
     W = 0; // fit again: another box
   }
   function back() {
@@ -149,6 +160,7 @@ export function createHero(canvas) {
     atHome();
     solo = null;
     home.append(canvas);
+    measure();
     W = 0;
   }
   return { frame, warm, show, back };

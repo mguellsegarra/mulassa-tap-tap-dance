@@ -1,5 +1,5 @@
 // ⚙ Configuració on Pop's home, with Perfil, the Bústia, the language and Privadesa: mulassa.cat's own sheets (its index.html,
-// put in this page by vite.config.js) run by mulassa.cat's own code, loaded at the first ⚙ (none of it on the boot). One
+// put in this page by vite.config.js) run by mulassa.cat's own code, a chunk main.js loads while the boot screen runs. One
 // account everywhere (packages/plassa/docs/inventari.md); the statistics stay each game's (decision 3), so Perfil here is the
 // profile block alone. The rows that are mulassa.cat's game (the sync, the publish prompt) stay hidden.
 import boardCss from '../../../styles/board.css?inline';
@@ -21,6 +21,8 @@ import { APP_BUILD } from '../../../core/version.js';
 import { store } from '#plassa/storage.js';
 import { focusIn } from '#plassa/focus.js';
 import { adoptWithin } from '#plassa/scoped-css.js';
+import '../../../ui/keyboard-room.js'; // a field's sheet rises above the on-screen keyboard (plassa sheets.css reads the <html data-kb> it sets)
+import '../../../ui/backdrop.js'; // a tap on a sheet's dim backdrop = Escape (main.js's closeOnBackdrop only knows the games' covers)
 
 const $ = id => document.getElementById(id);
 // a dev server with no Supabase: mulassa.cat's in-memory account (src/dev/mock-leaderboard.js, ?account=new|guest|verified…),

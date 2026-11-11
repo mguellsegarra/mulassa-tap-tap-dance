@@ -12,6 +12,7 @@ import { setMusicOn, musicOn, startHomeMusic, unlock, audioPage, watchAudio, SFX
 import { setupLevelStep } from './level-step.js';
 import { setupHelp, KINDS } from './help.js';
 import { guardGpu } from '#plassa/gpu-guard.js';
+import { lostGpu } from '#plassa/quality.js';
 import { errors } from '#plassa/errors.js';
 import { watchUpdates } from '#plassa/update-watch.js';
 import { stopDoubleTapZoom } from '#plassa/double-tap.js';
@@ -39,7 +40,7 @@ const flow = createFlow({ board, hero, hud, results: createResults({ board, hero
 errors.context(() => ({ game: 'pop', state: flow.mode, booted })); // crash reports as the main game's (plassa/errors.js)
 // a lost GPU pauses a run (it would go on unseen); back, a paused board is drawn again; gone for good, the error card
 guardGpu([$('game'), $('menu-hero')], {
-  lost: () => { errors.report('webgl-context-lost', { game: 'pop', screen: flow.mode }); flow.pause(); },
+  lost: () => { errors.report('webgl-context-lost', { game: 'pop', screen: flow.mode }); lostGpu(); flow.pause(); }, // lostGpu: a reload starts a level lighter
   restored: () => { if (flow.mode === 'paused' || flow.mode === 'over') board.frame(0); }, // not redrawn otherwise
   dead: () => { errors.report('webgl-not-restored', { game: 'pop' }); flow.pause(); window.__gameFail?.(t('lost.title'), t('lost.text'), 'webgl-not-restored'); },
 });
@@ -47,13 +48,20 @@ guardGpu([$('game'), $('menu-hero')], {
 watchUpdates(() => (flow.mode === 'menu' || flow.mode === 'over') && !document.querySelector('.cover:not([hidden]):not(#boot):not(#end-menu), dialog[open]'));
 
 applyWords();
-// From the games sheet (mulassa.cat, location.replace keeps the referrer) the corner's bubble says «Torna als jocs»; a shared
-// link, a typed address or a reload (which keeps the first referrer, the games sheet no longer behind) gets an invitation (style.css)
+// From Mulassa Games (/jocs/, location.replace keeps the referrer) the corner's bubble says «Torna als jocs»; a shared
+// link, a typed address or a reload (which keeps the first referrer, the selector no longer behind) gets an invitation (style.css)
 if (!document.referrer.startsWith(`${location.origin}/`) || performance.getEntriesByType('navigation')[0]?.type === 'reload') {
   $('back').classList.add('more');
   $('back').querySelector('.exit-tip').textContent = t('more');
 }
 
+// the way back replaces this page as the selector's cards did (location.replace): a link back and forth would grow the history.
+// Still a real link (no script, a new tab with ctrl/⌘/middle click)
+$('back').addEventListener('click', e => {
+  if (e.button || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+  e.preventDefault();
+  location.replace($('back').href);
+});
 $('game').addEventListener('pointerdown', e => flow.tap(e.clientX, e.clientY));
 const levelStep = setupLevelStep({ t, onPlay: flow.start }); // «Juga» asks for the level first; «Torna-hi» keeps it
 // «Com es juga?», and the first «Juga» goes through it (help.js), once
@@ -64,7 +72,7 @@ $('to-menu').addEventListener('click', flow.showMenu);
 $('quit').addEventListener('click', flow.showMenu);
 $('pause').addEventListener('click', flow.pause);
 $('resume').addEventListener('click', flow.resume);
-// ⚙ Configuració (settings.js, mulassa.cat's sheets and code), loaded at the first tap; closed, the focus is back on ⚙
+// ⚙ Configuració (settings.js, mulassa.cat's sheets and code), loaded at the boot (below), opened by a tap; closed, the focus is back on ⚙
 // A chunk that cannot load (a page from before a deploy, the dev server restarted) is reported and the page reloads, once;
 // anything else that fails in it is reported (the sheet would otherwise just not open)
 const settings = () => import('./settings.js').catch(e => {
@@ -145,7 +153,8 @@ if (import.meta.env.DEV) window.__pop = { board, get game() { return flow.game; 
 // The boot, while the boot screen's Mulassa runs: the shaders, then the home's portraits and the fonts. Each step leaves the
 // main thread between tasks; the menu shows whole, on the board's first frame (this rAF runs after frame's).
 // ⚙'s sheets load meanwhile; they paint once with the 3D's first frame below, in the same GPU stall (settings.js warm)
-const sheetsCode = settings().catch(() => null);
+// a chunk that never answers (4 s from here) is let go: the boot screen would otherwise wait on it for good, and ⚙ loads it again on its tap
+const sheetsCode = Promise.race([settings().catch(() => null), new Promise(go => setTimeout(go, 4000, null))]);
 await board.warm();
 await hero.warm();
 await document.fonts.ready;

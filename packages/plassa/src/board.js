@@ -28,7 +28,7 @@ export function playerName(into, p, look, onOpen = null, doc = document) {
 }
 
 // A board's row: its place, the name with a small line under it (`sub`: Pop's level pill, levelPill), then the game's own
-// cells (Pop: points and taps); the player's own row marked
+// cells (Pop: its score); the player's own row marked
 export function boardRow(r, { look, onOpen, cells = [], sub = [] }, doc = document) {
   const row = el(doc, 'li', r.is_self ? 'me' : ''), who = el(doc, 'div', 'who'), col = el(doc, 'div', 'name'), line = el(doc, 'div', 'line');
   who.append(el(doc, 'i', '', r.position), col);

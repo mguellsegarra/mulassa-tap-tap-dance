@@ -3,6 +3,7 @@
   "pop": "Mulassa Pop",
   "play": "Jolastu",
   "popDesc": "Harrapatu Mulassa. Saihestu Dracak.",
+  "tapDesc": "Dantzatu irudiekin musikaren erritmoan.",
   "soon": "Ezustekoa",
   "soonDesc": "Joko berri bat bidean da.",
   "new": "Berria",
@@ -11,5 +12,8 @@
   "rotate.phone": "Biratu mugikorra",
   "rotate.tablet": "Biratu tableta",
   "rotate.phoneSub": "Bertikalean jolasteko",
-  "rotate.tabletSub": "Horizontalean jolasteko"
+  "rotate.tabletSub": "Horizontalean jolasteko",
+  "fail.title": "Ene! Ezin izan da kargatu",
+  "fail.text": "Freskatu orria berriro saiatzeko.",
+  "fail.retry": "Saiatu berriro"
 }

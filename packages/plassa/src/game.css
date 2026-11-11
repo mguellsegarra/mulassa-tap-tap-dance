@@ -1,5 +1,5 @@
 /* The shell every mini-game page shares, after base.css: the fonts, the page, the covers (pause, end, boards) over the
-   board, the boot screen and its running Mulassa, the 3, 2, 1, the end sheet's numbers, the way back to the games sheet,
+   board, the boot screen and its running Mulassa, the 3, 2, 1, the end sheet's numbers, the way back to Mulassa Games,
    the boards and a player's card, the turn-the-device cover. Colours come from the tokens a game sets (base.css :root, and
    --page-bg for the page behind everything). A game adds its own screens in its own CSS, never these selectors again. */
 /* Fonts served from this site, the main game's (index.html), with its subsets' ranges: latin, latin-ext, and for uk and ru
@@ -53,13 +53,13 @@ a.round-btn { box-sizing: border-box; display: inline-flex; align-items: center;
 .result-sub { margin: 2px 0 0; text-align: center; font-size: 16px; color: var(--muted); }
 .result-sub.record { color: var(--accent); }
 @media (max-height: 620px) { .art:not(#boot-art) { display: none; } } /* a short screen drops the end sheet's art, never the boot's Mulassa */
-/* The run's 3, 2, 1 (flow.js): the logo's POP letters, big over the board, each popping in on its kick */
+/* A run's 3, 2, 1 (countdown.js, flow.js): big over the board, each popping in on its kick */
 #count { position: fixed; z-index: 2; inset: 0; display: grid; place-items: center; pointer-events: none; }
 #count b { font: 800 min(42vw, 32dvh)/1 'Baloo 2', system-ui, sans-serif; color: var(--accent); -webkit-text-stroke: .15em var(--ink); paint-order: stroke fill; animation: count-pop .6s ease-out both; } /* flow.js EACH */
 @keyframes count-pop { 0% { scale: 1.8; opacity: 0; } 18% { scale: .92; opacity: 1; } 30% { scale: 1.04; } 45%, 80% { scale: 1; opacity: 1; } 100% { scale: .85; opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { #count b { animation: none; } }
-/* The way back to mulassa.cat's games sheet: the site's games icon, round as the music button, and a bubble that pops in
-   once the home is up and comes back every few seconds (hover holds it). Without the games sheet behind (main.js: .more)
+/* The way back to Mulassa Games (/jocs/): the site's games icon, round as the music button, and a bubble that pops in
+   once the home is up and comes back every few seconds (hover holds it). Without the selector behind (main.js: .more)
    the bubble invites, «Més jocs!», and a pink dot beats on the button */
 /* the corner row's size: 44 px on a phone, up to 72 on a tall screen (2560×1440); a game may raise the floor */
 :root { --round-size: clamp(44px, 5dvh, 72px); }
@@ -210,3 +210,17 @@ div.mula-load{display:flex;align-items:center;justify-content:center;container-t
 @keyframes ml-sad-sigh{0%,100%{transform:rotate(12deg)}42%{transform:rotate(9deg)}65%{transform:rotate(13deg)}}
 @keyframes ml-tear{0%{opacity:0;transform:translate(0,0) scale(.45)}10%{opacity:1;transform:translate(0,1px) scale(.85)}26%{opacity:1;transform:translate(2px,7px) scale(1)}48%{opacity:1;transform:translate(5px,19px) scale(.95,1.08)}60%{opacity:.8;transform:translate(7px,28px) scale(.9,1.12)}72%,100%{opacity:0;transform:translate(9px,37px) scale(.8,1.15)}}
 @media (prefers-reduced-motion: reduce){.mula-load *{animation:none!important}}
+/* a title's word popping letter by letter now and then (Mulassa Games' GAMES, Pop's POP: each page's own `i` rule runs it) */
+@keyframes games-pop { 0%, 20%, 100% { translate: 0 0; scale: 1; } 8% { translate: 0 -.28em; scale: 1.18; } 14% { translate: 0 .04em; scale: .97; } }
+/* MULASSA's glint (Pop's home, the games menu): mulassa.cat's splash glint (src/hud/title.js glint, logo-motion.js GLINT),
+   its numbers in CSS: a white copy of the letters through a band leaning 0.3 × the letters' size, a soft wide part (.22) and
+   a brighter core (.5), crossing in 0.8 s (smoothstep) at the end of every 5 s and fading in and out. The window and the copy
+   move in opposite steps so the letters stay put: two HTML boxes' translate and opacity, never an animated <svg> over the 3D
+   (docs/agents/graphics.md). In the logo's 308.6 units: the window 110 wide (the band and its lean), its centre from -25.7 to
+   334.3 */
+.logo-box { position: relative; display: block; }
+.logo-glint { --b: #0000 32.5%, #00000038 32.5% 44.5%, #0000009c 44.5% 55.5%, #00000038 55.5% 67.5%, #0000 67.5%; position: absolute; inset: 0 auto 0 0; width: 35.64%; overflow: hidden; pointer-events: none; opacity: 0; -webkit-mask-image: linear-gradient(112deg, var(--b)); mask-image: linear-gradient(112deg, var(--b)); animation: logo-glint 5s infinite; }
+.logo-glint > svg { position: absolute; top: 0; left: 0; width: 280.6%; height: 100%; overflow: visible; animation: logo-glint-in 5s infinite; }
+@keyframes logo-glint { 0%, 84% { translate: -73.4%; opacity: 0; animation-timing-function: cubic-bezier(.333, 0, .667, 1); } 92% { opacity: 1; } 100% { translate: 253.9%; opacity: 0; } }
+@keyframes logo-glint-in { 0%, 84% { translate: 26.15%; animation-timing-function: cubic-bezier(.333, 0, .667, 1); } 100% { translate: -90.5%; } }
+@media (prefers-reduced-motion: reduce) { .logo-glint { display: none; } }

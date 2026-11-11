@@ -20,7 +20,15 @@ let armed = false; // from «Juga»'s tap (the 3, 2, 1) to the run's pause or en
 // a stall the music waits for the game rather than bursting the notes it missed (and followGame keeps it on the game's clock).
 const LEAD = .02; // a note is queued at least this far ahead of the audio clock
 const at = t => { offset = Math.max(offset, ctx.currentTime + LEAD - t); return t + offset; };
-const pump = () => seq.play(tune.take(), at);
+let rebase = false; // steps were dropped while the context stood still: the next one sets the offset afresh
+const pump = () => {
+  const steps = tune.take();
+  // a clock that is not running (iOS, music off: nothing wakes it): queued notes would pile up behind it and sound all at once
+  // when it ran, and `at` would push the offset out to the game's time. They are dropped; the music joins where the game is.
+  if (ctx.state !== 'running') { rebase = true; return; }
+  if (rebase && steps.length) { rebase = false; offset = ctx.currentTime + LEAD - steps[0].t; seq.cut(); }
+  seq.play(steps, at);
+};
 const run = () => { clearInterval(timer); timer = setInterval(pump, 80); pump(); };
 
 export const musicOn = () => on;
@@ -29,6 +37,7 @@ export function setMusicOn(v) {
   musicPref.set(v);
   seq?.gain(v ? .9 : 0);
   music?.gain.setTargetAtTime(v ? 1 : 0, ctx.currentTime, .05);
+  if (v) life?.wake(); else life?.hush(); // inside the ♪ tap: its own gesture ran before `on` changed; off stops the context (iOS: the other app's music is left alone)
 }
 // made with the page, suspended until the browser lets it sound (unlock)
 function audio() {
@@ -64,16 +73,16 @@ export function startHomeMusic() {
   home.play();
   life.resume(); // refused without a tap yet: unlock() asks again on the first one
 }
-export function stopHomeMusic() {
+function stopHomeMusic() {
   homeOn = false;
   home?.stop();
 }
-// a hidden page: page-audio.js stops the sound and brings it back (a run pauses: page-leave.js, main.js)
 // inside «Juga»'s tap, before the 3, 2, 1: the home's music goes and the context may run (iOS needs that tap's gesture)
 export function armAudio() {
   if (!audio()) return;
   stopHomeMusic();
   armed = true;
+  seq.cut(); // a resumed run: what was queued when it paused must not sound in the 3, 2, 1 (the bus is brought back up right below)
   life.wake();
 }
 // inside the tap that starts a game (or after armAudio): browsers only let audio start from a gesture
@@ -143,24 +152,25 @@ function rumble(dur, vol, from, to, at = 0) {
   src.start(t);
   src.stop(t + dur);
 }
+// the voices that read the music's state (seq): no Web Audio, no seq, nothing to play (tone() alone is already guarded)
+const live = f => (...a) => { if (seq) f(...a); };
 export const SFX = {
   // the lead voice's note, an octave up, sounding at once on the tap (waiting for the beat would feel late)
   // A chord of fingers (rules.js combo) builds a chord of voices: the k-th finger plays the k-th voice over the harmony
   // sounding now, so ×5 rings as one full strum. Each a little softer, the sum stays near one tap's level.
-  hit: (k = 1) => {
+  hit: live((k = 1) => {
     const m = seq.noteNow() + 12, pcs = seq.tonesNow(), inKey = n => pcs.includes(((n % 12) + 12) % 12);
     const near = (n, d) => { do n += d; while (!inKey(n)); return n; };
     const note = [m, near(m, -1), near(m, 1), 48 + pcs[0], m + 12][Math.min(k, 5) - 1], f = hz(note), v = 1 / Math.sqrt(k), long = k >= 4 ? 2.2 : 1;
     tone(f, .1 * long, 'triangle', .13 * v); tone(f, .14 * long, 'sine', .09 * v);
-  },
-  // on the chord that's sounding: a fixed pitch clashed with the song
+  }),
   // a Mulassa springs up out of the board: a plop rising onto the tune's note sounding now (the tap plays it an octave up)
   // a Mulassa pops up on every beat: half the hit's level (-6 dB), so it marks the beat without nagging
-  sprout: () => { const f = hz(seq.noteNow()); tone(f * .5, .14, 'sine', .06, f); tone(f, .08, 'triangle', .03, f * 1.5, .07); },
-  goodie: () => { const [a, b, c] = seq.tonesNow(); [a, b, c, a + 12].forEach((pc, i) => { const f = hz(72 + pc); tone(f, .14, 'triangle', .12, f, i * .06); }); },
+  sprout: live(() => { const f = hz(seq.noteNow()); tone(f * .5, .14, 'sine', .06, f); tone(f, .08, 'triangle', .03, f * 1.5, .07); }),
+  goodie: live(() => { const [a, b, c] = seq.tonesNow(); [a, b, c, a + 12].forEach((pc, i) => { const f = hz(72 + pc); tone(f, .14, 'triangle', .12, f, i * .06); }); }),
   // the campanar: a low bell in the chord's key, its inharmonic partials ringing long; and a lift when the slow time ends
-  bell: () => { const f = hz(48 + seq.tonesNow()[0]); [[1, .3, 2.6], [2, .14, 1.8], [2.4, .1, 1.4], [3, .07, 1], [4.2, .04, .7]].forEach(([k, v, d]) => tone(f * k, d, 'sine', v)); },
-  unbell: () => { const [a, b, c] = seq.tonesNow(); [c, b, a + 12].forEach((pc, i) => tone(hz(72 + pc) * .5, .16, 'triangle', .1, hz(72 + pc), i * .05)); },
+  bell: live(() => { const f = hz(48 + seq.tonesNow()[0]); [[1, .3, 2.6], [2, .14, 1.8], [2.4, .1, 1.4], [3, .07, 1], [4.2, .04, .7]].forEach(([k, v, d]) => tone(f * k, d, 'sine', v)); }),
+  unbell: live(() => { const [a, b, c] = seq.tonesNow(); [c, b, a + 12].forEach((pc, i) => tone(hz(72 + pc) * .5, .16, 'triangle', .1, hz(72 + pc), i * .05)); }),
   // the base's UI blip (packages/plassa/src/ui-sound.js): a press or a keyboard move; never queued while the browser holds the sound
   ui: () => { if (ctx?.state === 'running') tone(880, .04, 'triangle', .06); },
   wrong: () => tone(180, .35, 'triangle', .2, 70),

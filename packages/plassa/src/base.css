@@ -77,7 +77,7 @@ p .btn-link::after { display: none; } /* a link inside a sentence: its slop woul
 .sheet::backdrop { background: #120d09b3; }
 .sheet h2 + p { color: var(--button-text) !important; } /* what a sheet says under its title reads first: white, the small print stays muted */
 .sheet h2 { margin: 0 0 8px; color: var(--accent); text-align: center; font-size: 30px; line-height: 1.1; }
-/* «Juga»: the cream pill that starts a game (the games sheet's cards, a game's home); its shadow takes the game's --game */
+/* «Juga»: the cream pill that starts a game (Mulassa Games' hero, a game's home); its shadow takes the game's --game */
 .game-play { display: inline-flex; align-items: center; justify-content: center; gap: 12px; min-width: 160px; height: 60px; margin-top: 8px; padding: 0 34px 0 28px; border: 0; border-radius: 30px; background: #fff3d6; color: #2a1a10; font: 800 24px/1 'Baloo 2', system-ui, sans-serif; cursor: pointer; box-shadow: 0 4px 0 color-mix(in srgb, var(--game) 55%, #120b07); }
 .game-play svg { width: 1em; height: 1em; fill: currentColor; flex: none; }
 /* a soft hop now and then says «press here»; it ignores reduced motion on purpose (the owner's call), like the backdrop */

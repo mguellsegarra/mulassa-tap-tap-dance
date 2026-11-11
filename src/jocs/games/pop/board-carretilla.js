@@ -28,5 +28,7 @@ export function createCarretilla({ burst, flame }) {
       if (Math.abs(x) < ex && Math.abs(z) < ez) flame(x, .3, z, 0, 2.5 + Math.random() * 2, 0, .35);
     }
   }
-  return { start, step, waiting };
+  // a new board: her ring is out, nobody is waiting to go up
+  const reset = () => { o = null; pops = new Map(); };
+  return { start, step, waiting, reset };
 }

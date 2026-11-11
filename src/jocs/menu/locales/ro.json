@@ -3,12 +3,17 @@
   "pop": "Mulassa Pop",
   "play": "Joacă",
   "popDesc": "Prinde Mulassa. Evită Drac.",
+  "tapDesc": "Dansează cu figurile în ritmul muzicii.",
   "soon": "Surpriză",
   "soonDesc": "Un joc nou e pe drum.",
+  "new": "Nou!",
   "music.mute": "Oprește sunetul meniului",
   "music.unmute": "Pornește sunetul meniului",
   "rotate.phone": "Rotește telefonul",
   "rotate.tablet": "Rotește tableta",
   "rotate.phoneSub": "Pe verticală ca să te joci",
-  "rotate.tabletSub": "Pe orizontală ca să te joci"
+  "rotate.tabletSub": "Pe orizontală ca să te joci",
+  "fail.title": "Ups! Nu s-a încărcat",
+  "fail.text": "Reîncarcă pagina și încearcă din nou.",
+  "fail.retry": "Încearcă din nou"
 }

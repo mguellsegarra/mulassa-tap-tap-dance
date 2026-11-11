@@ -1,13 +1,14 @@
 // The particles, one pool: bursts and flames as one instanced mesh.
 import * as THREE from 'three';
 
-const SPARKS = 1600, FLAME = ['#fff3d6', '#ffe066', '#f5c518', '#ff8a1e', '#ff5a1e'];
+const FLAME = ['#fff3d6', '#ffe066', '#f5c518', '#ff8a1e', '#ff5a1e'];
 
-export function createSparks(scene) {
-  const sparks = new THREE.InstancedMesh(new THREE.BoxGeometry(.2, .2, .2), new THREE.MeshBasicMaterial(), SPARKS);
+// size: the pool's particles; the board's blast and chords need hundreds, the home's pair a few dozen flames
+export function createSparks(scene, size = 1600) {
+  const sparks = new THREE.InstancedMesh(new THREE.BoxGeometry(.2, .2, .2), new THREE.MeshBasicMaterial(), size);
   sparks.frustumCulled = false;
   scene.add(sparks);
-  const P = Array.from({ length: SPARKS }, () => ({ life: 0, x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, s: 1, g: 26 }));
+  const P = Array.from({ length: size }, () => ({ life: 0, x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, s: 1, g: 26 }));
   const dummy = new THREE.Object3D(), col = new THREE.Color();
   let next = 0, live = true; // live: a particle moved last step, so the pool still needs writing
   sparks.setColorAt(0, col); // the colour attribute exists before the warm-up compiles: its shader variant is the one drawn
@@ -17,7 +18,7 @@ export function createSparks(scene) {
       const p = P[next], a = Math.random() * Math.PI * 2, s = (2 + Math.random() * 5) * power;
       Object.assign(p, { life: (.6 + Math.random() * .5) * span, x: c.x, y: 1.2, z: c.z, vx: Math.cos(a) * s, vz: Math.sin(a) * s, vy: (4 + Math.random() * 8) * power, s: .6 + Math.random(), g: 26 });
       sparks.setColorAt(next, col.set(colors[k % colors.length]));
-      next = (next + 1) % SPARKS;
+      next = (next + 1) % size;
     }
     sparks.instanceColor.needsUpdate = live = true;
   }
@@ -28,7 +29,7 @@ export function createSparks(scene) {
       const p = P[next], a = k / n * Math.PI * 2, v = speed * (.85 + Math.random() * .3);
       Object.assign(p, { life: .55 + Math.random() * .25, x: c.x, y: .35, z: c.z, vx: Math.cos(a) * v, vz: Math.sin(a) * v, vy: 1.5 + Math.random() * 2, s: 1 + Math.random() * .8, g: 4 });
       sparks.setColorAt(next, col.set(colors[k % colors.length]));
-      next = (next + 1) % SPARKS;
+      next = (next + 1) % size;
     }
     sparks.instanceColor.needsUpdate = live = true;
   }
@@ -37,7 +38,7 @@ export function createSparks(scene) {
     const p = P[next];
     Object.assign(p, { life: life * (.7 + Math.random() * .6), x, y, z, vx, vy, vz, s: .7 + Math.random() * 1.1, g: -3 });
     sparks.setColorAt(next, col.set(FLAME[Math.floor(Math.random() * 5)]));
-    next = (next + 1) % SPARKS;
+    next = (next + 1) % size;
     sparks.instanceColor.needsUpdate = live = true;
   }
 
@@ -63,5 +64,7 @@ export function createSparks(scene) {
     sparks.instanceMatrix.needsUpdate = live || any || sparks.instanceMatrix.version === 0; // the last live step parks the spent ones
     live = any;
   }
-  return { burst, ring, flame, step, busy: () => live };
+  // a new board: nothing from the last one flies on (the step parks them all)
+  const clear = () => { for (const p of P) p.life = 0; live = true; };
+  return { burst, ring, flame, step, clear, busy: () => live };
 }

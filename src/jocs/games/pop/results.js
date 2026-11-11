@@ -27,13 +27,13 @@ export function createResults({ board, hero, t, rankingUI }) {
     const { game } = run, was = best(), record = game.points > was;
     if (record && !practice) raiseBest(game.points);
     $('end-title').textContent = t(`end.title.${culprit}`); // a record says so below, in the best's line
+    $('end-menu').hidden = false; // before the hero moves into it: its box is read there (hero.js measure)
     hero.show(culprit === 'time' ? 'mula' : culprit, $('end-art')); // time's up: the Mulassa, who outlasted it
     $('end-score').textContent = game.points;
     $('end-best').textContent = record ? t('end.recordSub') : t('end.best', { best: was });
     $('end-best').classList.toggle('record', record);
     rankingUI.endScreen();
     if (RANKING && !practice && game.points > 0) rankingUI.publish(run);
-    $('end-menu').hidden = false;
     $('hud').hidden = true;
     $('again').focus({ focusVisible: false });
   }

@@ -34,7 +34,7 @@ const nextSong = () => { const id = FORCED ?? SONG_IDS[(SONG_IDS.indexOf(store.g
 export function createFlow({ board, hero, hud, results, rankingUI, t, booted }) {
   const $ = id => document.getElementById(id);
   let run = null, game = null, mode = 'menu', endTimer = 0, clock = 0, bellAt = 0; // clock: the run's play time, in seconds
-  let carrAt = 3, burnt = [], chordPts = 0, chord = []; // carrAt: the dev carretilla's next time; burnt: the Mulassas the carretilla is taking; chord: this chord's cells
+  let carrAt = 3, burnt = [], labels = [], chordPts = 0, chord = []; // carrAt: the dev carretilla's next time; burnt: the Mulassas the carretilla is taking; labels: their «+N», each due at its game time; chord: this chord's cells
   let begun = false, song = 'mulassa'; // the run's music has started; its tune
   const count = createCountdown($('count'), { each: EACH, beat: SFX.count, done: () => {
     mode = 'play';
@@ -79,7 +79,7 @@ export function createFlow({ board, hero, hud, results, rankingUI, t, booted }) 
       hud.floatText(cell.i, word(kind, extra?.gained));
       if (kind === 'carretilla') {
         const pops = board.dragonFire(cell.i); // when each one goes up (board-carretilla.js)
-        for (const [i, gained] of burnt.splice(0)) setTimeout(() => hud.floatText(i, `+${gained}`), (pops.get(i) ?? 0) * 1000);
+        for (const [i, gained] of burnt.splice(0)) labels.push({ at: clock + (pops.get(i) ?? 0), i, gained }); // on the run's clock: a pause holds them, a quit drops them
         SFX.fire();
       }
       if (kind === 'campanar') SFX.bell();
@@ -104,31 +104,31 @@ export function createFlow({ board, hero, hud, results, rankingUI, t, booted }) 
     clock = 0;
     begun = false;
     carrAt = 3;
-    burnt = [];
+    burnt = []; labels = [];
     game = run.game;
     if (BOT) game.progress = BOT_FROM; // dev only: such a run is never published
     if (BELL) { game.progress = BELL_FROM; bellAt = 8; }
-    board.setGame(game);
     for (const id of ['menu', 'end-menu', 'pause-menu']) $(id).hidden = true;
     $('hud').hidden = false;
     $('hud-best-num').textContent = best() || '';
     $('hud-best').hidden = !best();
     $('pause').style.visibility = '';
     countFrom3();
-    hud.sync(game, true);
-    board.fit(); // now the HUD has a height
+    hud.sync(game, true); // the HUD is up and measured (hud.js owns the board's top inset) before the board fits to it
+    board.setGame(game);
   }
 
   function showMenu() {
     clearTimeout(endTimer);
     stopMusic();
+    burnt = []; labels = [];
     game = newGame({ ...layout(), on });
     game.state = 'menu';
     hud.setSlow(false, false);
-    hero.back(); // the end sheet had it
     board.setGame(game);
     for (const id of ['end-menu', 'pause-menu', 'hud', 'count']) $(id).hidden = true;
     $('menu').hidden = false;
+    hero.back(); // the end sheet had it; its box is read in the shown home (hero.js measure)
     $('menu-best').disabled = !RANKING;
     mode = 'menu';
     if (booted()) { rankingUI.sync(); startHomeMusic(); } // at boot, main.js starts it once the home is up
@@ -161,6 +161,8 @@ export function createFlow({ board, hero, hud, results, rankingUI, t, booted }) 
     if (mode !== 'play') return;
     clock += dt;
     run.until(Math.floor(clock * TICKS_PER_S)); // the rules' fixed steps this frame has reached
+    if (mode !== 'play') return; // a fuse ended the run: on() has the blast going, and hud.sync would frost the end sheet again
+    if (labels.length) labels = labels.filter(l => l.at > clock || (hud.floatText(l.i, `+${l.gained}`), false));
     followGame(clock); // the music keeps to this clock, whatever a stall took from it
     if (BOT_CHORDS && game.state === 'play') for (const i of botChord(game, dt)) run.tap(i);
     else if (BOT && game.state === 'play') { const i = botTap(game); if (i >= 0) run.tap(i); }
@@ -184,6 +186,8 @@ export function createFlow({ board, hero, hud, results, rankingUI, t, booted }) 
     else board.fit();
     if (mode === 'paused' || mode === 'over') board.frame(0); // fit() clears the canvas; a paused or settled board is not redrawn
   }
+
+  hud.watchInset(resized); // the HUD changed size: the board fits to it again
 
   return {
     start, showMenu, pause, resume, tap, step, resized,

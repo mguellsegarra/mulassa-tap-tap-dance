@@ -1,4 +1,4 @@
-// A run's 3, 2, 1 over the board: each number pops in (base.css #count) on its own beat, then done(). step(dt) is called
+// A run's 3, 2, 1 over the board: each number pops in (game.css #count) on its own beat, then done(). step(dt) is called
 // by the game's frame, so a paused game holds it; start() begins it again from the top.
 export function createCountdown(el, { from = 3, each, beat, done }) {
   let left = 0, shown = 0;

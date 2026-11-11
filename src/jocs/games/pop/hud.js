@@ -6,9 +6,17 @@ import { CHORD } from './rules.js';
 export function createHud({ board, t }) {
   const $ = id => document.getElementById(id);
   const hud = $('hud');
-  let shownScore = -1, shownChips = '', shownSlow = false, bottom = 0;
-  // measured when it changes size: a layout read every frame costs a phone
-  new ResizeObserver(() => { bottom = hud.getBoundingClientRect().bottom; }).observe(hud);
+  let shownScore = -1, shownChips = '', shownSlow = false, bottom = 0, onInset = () => {};
+  // The board's top inset is the HUD's bottom edge, and this file is its one owner (board.insets.top). Read when the run
+  // starts (sync force) and when the HUD changes size, never every frame: a layout read costs a phone. A hidden HUD keeps the last.
+  function measure() {
+    if (hud.hidden) return false;
+    const b = hud.getBoundingClientRect().bottom;
+    if (b === bottom) return false;
+    bottom = board.insets.top = b;
+    return true;
+  }
+  new ResizeObserver(() => { if (measure()) onInset(); }).observe(hud);
 
   function floatText(i, text) {
     const s = board.screenOf(i), el = document.createElement('div');
@@ -32,7 +40,6 @@ export function createHud({ board, t }) {
   }
 
   function sync(game, force) {
-    board.insets.top = hud.hidden ? 0 : bottom;
     if (force) $('combo').hidden = true; // a new run: no streak yet
     if (force || game.points !== shownScore) $('score').textContent = shownScore = game.points;
     // the campanar's own portrait (the home's card), its name for the effect, and the seconds left: rebuilt when they change
@@ -42,6 +49,7 @@ export function createHud({ board, t }) {
       $('chips').innerHTML = secs ? `<span class="chip"><img src="/jocs/pop/cards/campanar.png" alt=""><span>${t('chip.slow')}</span><b>${secs}</b></span>` : '';
     }
     setSlow(game.slow > 0, game.state === 'play');
+    if (force) measure(); // a new run: its board is fitted to this HUD, not the last frame's
   }
 
   // «Combo ×3 +9»: a chord of fingers (rules.js combo) and its whole points, under the score, from its second tap; it pops on
@@ -64,5 +72,5 @@ export function createHud({ board, t }) {
     chordGone = setTimeout(() => el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 200 }).finished.then(() => { el.hidden = true; }, () => {}), CHORD * 1000 + CHORD_HOLD);
   }
 
-  return { floatText, sync, setSlow, combo };
+  return { floatText, sync, setSlow, combo, watchInset: fn => { onInset = fn; } };
 }

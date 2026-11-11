@@ -3,12 +3,17 @@
   "pop": "Mulassa Pop",
   "play": "Juga",
   "popDesc": "Atrapa la Mulassa. Evita els Dracs.",
+  "tapDesc": "Balla amb les figures al ritme de la música.",
   "soon": "Sorpresa",
   "soonDesc": "Un joc nou està de camí.",
+  "new": "Nou!",
   "music.mute": "Silencia el so del menú",
   "music.unmute": "Activa el so del menú",
   "rotate.phone": "Gira el mòbil",
   "rotate.tablet": "Gira la tauleta",
   "rotate.phoneSub": "En vertical per jugar",
-  "rotate.tabletSub": "En horitzontal per jugar"
+  "rotate.tabletSub": "En horitzontal per jugar",
+  "fail.title": "Ups! No s’ha pogut carregar",
+  "fail.text": "Refresca la pàgina per tornar-ho a provar.",
+  "fail.retry": "Torna-ho a provar"
 }

@@ -238,7 +238,7 @@ const select = setupSelect({ store, keyboard: () => keyboardNav, busy: () => she
   sfx: k => chip?.sfx(k), onSelect: f => { setSelectedFigure(f); greeting.greet(); },
   onPlay: (level, figure) => { setSelectedFigure(figure); choose(level); },
   onHowto: () => { howtoMenu.showModal(); focusIn(howtoMenu, 'howto-ok'); },
-  onWrite: request => writeToBox(request, () => select.refocus()), hearts, onPanel: () => { heartTip.update(); gamesTip.update(); } });
+  onWrite: request => writeToBox(request, () => select.refocus()), hearts, onPanel: () => requestAnimationFrame(() => setTimeout(() => { heartTip.update(); gamesTip.update(); })) }); // (after the change's frame is drawn: their visibility and rect reads then find a laid-out page, not a figure change's dirty one: ~15 ms of forced style on a Galaxy S10)
 hearts.load();
 sheets.select = select;
 sheets.lang = setupLang({ store, state: () => G.state }); // the language dropdown and the one-time suggestion

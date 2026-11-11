@@ -20,7 +20,7 @@ It still reaches into mulassa.cat in a few places, each to become configuration 
 
 - `src/core/` (`flags.js`, `version.js`): the dev host and the build stamp.
 - Data: `src/i18n/meta.json` (the languages) and `src/i18n/locales/*/boot.json` (the loading lines).
-- Mulassa's art and keys: `mula-load.html`, the storage keys (`menu-music`, `mulassa-lang`, `loader-jokes-seen`).
+- Mulassa's art and keys: `mula-load.html`, the storage keys (`menu-music`, `ui-language-v1`, `loader-jokes-seen`).
 - `vite.config.js` (the root's) inlines `boot-watchdog.js` and `mula-load.html` into a game page.
 - Exact copies of mulassa.cat modules, kept in step by `tests/jocs/shared-base.mjs` until the main game uses these.
 

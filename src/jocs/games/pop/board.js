@@ -34,11 +34,7 @@ export function createBoard(canvas) {
   slab.receiveShadow = true;
   scene.add(slab);
 
-  const mula = bakeMulassa(), drac = bakeDrac();
-  const GEOS = {
-    drac, mula, dracFals: redScales(drac), mulaFalsa: greenVelvet(mula),
-    petard: bake(buildPopPetard(), { scale: BOMB_K }), calcot: bake(buildPopCalcot(), { scale: .82 }), campanar: bake(buildPopCampanar(), { scale: .62 }), carretilla: bake(buildPopCarretilla(), { scale: .72 }),
-  };
+  const GEOS = { calcot: bake(buildPopCalcot(), { scale: .82 }), campanar: bake(buildPopCampanar(), { scale: .62 }), carretilla: bake(buildPopCarretilla(), { scale: .72 }) };
   const mat = new THREE.MeshLambertMaterial({ vertexColors: true });
   const CELLS = 24;
   const newInstanced = (g, shadow = true) => {
@@ -51,7 +47,7 @@ export function createBoard(canvas) {
     return m;
   };
   const meshes = Object.fromEntries(['calcot', 'campanar', 'carretilla'].map(kind => [kind, newInstanced(GEOS[kind])]));
-  // the board's petard burns its fuse down: ball, fuse bits and spark apart (GEOS.petard, lit, is the help's portrait)
+  // the board's petard burns its fuse down: ball, fuse bits and spark apart
   Object.assign(meshes, { petard: newInstanced(bake(buildPopPetard({ lit: false }), { scale: BOMB_K })), fuseBit: newInstanced(bake(buildFuseBit(), { scale: BOMB_K }), false), spark: newInstanced(bake(buildSpark(), { scale: BOMB_K }), false) }); // a fuse's shadow is a speck
   // The figures are live: one rig per kind poses each cell's copy in turn; one instanced part per pivot, so any number of them cost the same few draw calls.
   const live = (rig, paint = g => g) => ({ rig, parts: rigParts(rig.root).map(p => ({ node: p.node, mesh: newInstanced(paint(p.geo)) })) });
@@ -64,7 +60,7 @@ export function createBoard(canvas) {
   const blast = createBlast(canvas, sparks, sky);
   const fx = createCarretilla(sparks);
 
-  const dummy = new THREE.Object3D(), col = new THREE.Color(), bit = new THREE.Matrix4(), at = new THREE.Matrix4(), flick = new THREE.Vector3();
+  const dummy = new THREE.Object3D(), col = new THREE.Color(), WHITE = new THREE.Color('#fff'), bit = new THREE.Matrix4(), at = new THREE.Matrix4(), flick = new THREE.Vector3();
   let zoom = 0; // a chord's punch-in, 0..1, decaying (flow.js)
   let game = null, centres = [], screen = [], W = 1, H = 1, time = 0, trauma = 0, poses = [], seen = [], burning = new Map();
   const camBase = new THREE.Vector3();
@@ -79,6 +75,7 @@ export function createBoard(canvas) {
     seen = g.cells.map(() => '');
     poses = g.cells.map(() => 0);
     burning = new Map();
+    fx.reset(); sparks.clear(); // the last board's correfoc and embers do not fly on over this one
     tiles.count = g.cells.length;
     slab.scale.set(g.cols * PITCH + .5, 1, g.rows * PITCH_Z + .5);
     centres.forEach((c, i) => {
@@ -95,7 +92,7 @@ export function createBoard(canvas) {
   // the board fills the space between the HUD and the bottom edge (board-framing.js); then each cell's tap target
   function fit() {
     W = innerWidth; H = innerHeight;
-    renderer.setPixelRatio(pixelRatio());
+    renderer.setPixelRatio(pixelRatio(W, H));
     renderer.setSize(W, H, false);
     frameBoard(camera, game.cols, game.rows, W, H, insets);
     camBase.copy(camera.position);
@@ -148,7 +145,7 @@ export function createBoard(canvas) {
     if (s <= .001) return;
     const { x, z } = centres[i], ph = i * 1.73, t = time;
     let y = 0, ry = 0, rz = 0, sx = 1, sy = 1, jx = 0, jz = 0, urgent = 0;
-    col.set('#fff');
+    col.copy(WHITE);
     if (kind === 'drac' || kind === 'dracFals') {
       sy = 1 + Math.sin(t * 2.4 + ph) * .025;
       sx = 2 - sy;
@@ -238,6 +235,7 @@ export function createBoard(canvas) {
       if (c.prev !== c.kind && c.age < pop) placeFigure(c.i, c.prev, c, 1 - c.age / pop);
     }
     for (const m of allMeshes) {
+      if (!m.count) continue; // nothing drawn: nothing to upload (the buffers are written again when it has instances)
       m.instanceMatrix.needsUpdate = true;
       if (m.instanceColor) m.instanceColor.needsUpdate = true;
     }
@@ -258,8 +256,13 @@ export function createBoard(canvas) {
   // the first frame paying for them all held the thread long enough to freeze the boot screen's Mulassa.
   const warm = () => waitForWarmup(() => renderer.compileAsync(scene, camera).then(() => linkPrograms(renderer.info.programs)));
 
-  // dev only (main.js __pop.portraits): the home's portraits are files, so this stays out of the game's own chunk
-  const portraits = (kinds, size, opts) => import('./portraits.js').then(m => m.drawPortraits(renderer, GEOS, mat, kinds, size, opts));
+  // dev only (main.js __pop.portraits): the home's portraits are files, so this stays out of the game's own chunk, and so do the
+  // portrait-only geometries (the board draws its figures from the rigs), baked here when it is used
+  const portraits = (kinds, size, opts) => import('./portraits.js').then(m => {
+    const mula = bakeMulassa(), drac = bakeDrac();
+    const all = { ...GEOS, drac, mula, dracFals: redScales(drac), mulaFalsa: greenVelvet(mula), petard: bake(buildPopPetard(), { scale: BOMB_K }) };
+    return m.drawPortraits(renderer, all, mat, kinds, size, opts);
+  });
   // an ended run's board once its blast has played out: nothing moves on it, so it need not be drawn again
   const settled = () => game?.state === 'over' && !trauma && !sparksBusy() && game.cells.every(c => blast.progress(c.i, time) >= 1);
   return { setGame, fit, pick, frame, burst, explodeAll, dragonFire, burn, warm, portraits, settled, insets, fountain, punch: k => { zoom = Math.min(1, zoom + k); }, screenOf: i => screen[i], shake: k => { trauma = Math.min(1, trauma + k); } };

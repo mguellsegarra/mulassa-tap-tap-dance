@@ -77,6 +77,7 @@ export function sentryOptions({ dsn, environment, release, tags = () => ({}) }) 
 export function createErrors({ mode, win, load, idle }) {
   const off = { on: false, context() {}, report() {}, breadcrumb() {}, capture() {}, start() {} };
   if (!mode || !win) return off;
+  if (win.__mulassaErrors) return win.__mulassaErrors; // one reporter a page: a game page loads Plassa's copy and the main game's (the sheets' leaderboard); a second one started Sentry again, without the game's context
   let sentry = null, loading = false, getTags = () => ({});
   const pending = [];
   let pointer = '';
@@ -128,6 +129,7 @@ export function createErrors({ mode, win, load, idle }) {
     },
   };
   win.setTimeout?.(() => api.start(), 20000); // a startup crash may prevent the first frame: send early reports anyway
+  win.__mulassaErrors = api;
   return api;
 }
 

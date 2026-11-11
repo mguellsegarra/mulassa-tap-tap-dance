@@ -13,17 +13,18 @@ export function setupMusic() {
   try { ctx = new AudioContext(); } catch { return { on: () => on, set() {}, blip() {} }; } // no Web Audio: a silent page
   const out = ctx.createGain();
   out.connect(ctx.destination);
-  const life = createPageAudio(ctx, out, { hearing: () => on }), tune = createMenuMusic(ctx, out, { url, loop });
+  const life = createPageAudio(ctx, out, { hearing: () => on }), tune = createMenuMusic(ctx, out, { url, loop }), blip = blipOn(ctx, out);
   if (on) { tune.play(); life.resume(); } // refused without a tap yet: the first one asks again
   onEveryGesture(life.gesture);
+  setInterval(() => life.watch(performance.now()), 500); // a clock standing still while it should sound (page-audio.js); no frame loop here, so a timer
   return {
     on: () => on,
     // inside the speaker's tap
     set(v) {
       on = v;
       musicPref.set(v);
-      if (v) { tune.play(); life.wake(); } else tune.stop();
+      if (v) { tune.play(); life.wake(); } else { tune.stop(); life.hush(); } // off: the context stops and iOS's session goes ambient, so another app's music is left alone
     },
-    blip: blipOn(ctx, out),
+    blip: () => on && blip(), // muted: no blip either (it would sound through the speaker's own off)
   };
 }

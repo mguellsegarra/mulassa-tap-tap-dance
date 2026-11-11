@@ -6,6 +6,8 @@ import { lang } from './locale.js';
 import { store } from './storage.js';
 
 const chunks = import.meta.glob('../../../src/i18n/locales/*/boot.json');
+// the glob's keys start at this file's folder (../../../src/…): a key typed from another folder finds nothing and every player gets Catalan
+export const bootChunk = l => chunks[`../../../src/i18n/locales/${l}/boot.json`] ?? chunks['../../../src/i18n/locales/ca/boot.json'];
 const KEY = 'loader-jokes-seen';
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 
@@ -15,8 +17,7 @@ export function bootLines(el, every = 2000) {
   let release = null, over = false;
   const end = () => { over = true; release?.(); };
   (async () => {
-    const load = chunks[`../../i18n/locales/${lang()}/boot.json`] ?? chunks['../../../src/i18n/locales/ca/boot.json'];
-    const words = await load().then(m => m.default, () => ({}));
+    const words = await bootChunk(lang())().then(m => m.default, () => ({}));
     const lines = Object.entries(words).filter(([k]) => k.startsWith('boot.joke.')).map(([, v]) => v);
     if (!lines.length) { end(); return; }
     let seen = [];

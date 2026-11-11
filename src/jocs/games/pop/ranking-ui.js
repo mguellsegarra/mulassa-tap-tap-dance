@@ -11,7 +11,9 @@ export const RANKING = SUPABASE || import.meta.env.DEV;
 const service = () => (SUPABASE ? import('./ranking.js') : import('./ranking-mock.js'));
 const marks = () => import('../../../ui/badge-svg.js');
 // the server's no to the run itself (pop-score): sent again it can never pass, so it is not kept to retry
-const REFUSED = new Set(['version', 'mismatch', 'invalid', 'too_large', 'pop_seed_used']);
+const REFUSED = new Set(['version', 'mismatch', 'invalid', 'too_large', 'pop_seed_used', 'implausible']);
+// the kept run goes only when it is the one just answered: a better one waiting there (another seed) must stay
+const forgetSent = (m, body) => { const p = m.pending(); if (p && p.v === body.v && p.seed === body.seed) m.forget(); };
 const el = (tag, cls, text) => Object.assign(document.createElement(tag), cls ? { className: cls } : {}, text == null ? {} : { textContent: text });
 
 export function setupRankingUI({ t, focusBack }) {
@@ -28,16 +30,17 @@ export function setupRankingUI({ t, focusBack }) {
     let m;
     try {
       m = await service();
+      m.keep(body); // before the request: a tab closed meanwhile keeps the run for the next visit
       const res = await m.publish(body);
-      m.forget();
+      forgetSent(m, body);
       raiseBest(res.best); // the board's best becomes this device's when higher
       if (mine !== sent) return;
       line.textContent = t(res.improved ? 'rank.newBest' : 'rank.place', { n: res.position });
       line.classList.toggle('good', res.improved);
       line.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 250, easing: 'ease-out' });
     } catch (e) {
+      if (m && REFUSED.has(e.code)) forgetSent(m, body);
       if (e.code === 'pop_seed_used') return; // already on the board: the line stays blank, its height kept
-      if (!REFUSED.has(e.code)) m?.keep(body);
       if (mine !== sent) return;
       const nameless = e.code === 'noname' || e.code === 'released';
       line.textContent = t(nameless ? 'rank.noName' : 'rank.error');
@@ -60,7 +63,7 @@ export function setupRankingUI({ t, focusBack }) {
     const m = await service().catch(() => null); // offline with the chunk not yet loaded: the place waits for the next visit
     if (!m) return;
     const kept = m.pending();
-    if (kept) try { await m.publish(kept); m.forget(); } catch (e) { if (REFUSED.has(e.code)) m.forget(); }
+    if (kept) try { await m.publish(kept); forgetSent(m, kept); } catch (e) { if (REFUSED.has(e.code)) forgetSent(m, kept); }
     const { place } = await m.me().catch(() => ({}));
     top3(m); // not awaited: the home shows without it, the three come in when they are here
     raiseBest(place?.score); // played elsewhere: the HUD and the end sheet measure a run against it; the home's button never shows the place (the owner's call, 10 Nov 2026)
@@ -102,7 +105,9 @@ export function setupRankingUI({ t, focusBack }) {
   function closeBoard() { boardReq++; $('board-menu').hidden = true; focusBack(); }
 
   // a player's card: their best and place here, their published runs and average
+  let opener = null; // what had the focus when the card opened: it gets it back
   function openCard(publicId) {
+    opener = document.activeElement;
     const req = ++cardReq, title = $('card-name'), stats = $('card-stats');
     title.replaceChildren(t('rank.loading')); stats.replaceChildren();
     $('card-menu').hidden = false;
@@ -116,7 +121,13 @@ export function setupRankingUI({ t, focusBack }) {
       stats.append(stat('rank.cardBest', p.best), stat('rank.cardPlace', `#${p.position}`), stat('rank.cardRuns', p.runs), stat('rank.cardAverage', p.average));
     }, () => { if (req === cardReq) title.replaceChildren(t('rank.error')); });
   }
-  function closeCard() { cardReq++; $('card-menu').hidden = true; $('board-close').focus({ focusVisible: false }); }
+  // the card comes from a board row or the home's Top 3 (its sheet is not open then): never focus what is hidden
+  function closeCard() {
+    cardReq++;
+    $('card-menu').hidden = true;
+    const back = opener?.isConnected && opener !== document.body ? opener : $('board-menu').hidden ? $('menu-top-head') : $('board-close');
+    back.focus({ focusVisible: false });
+  }
 
   $('menu-best').addEventListener('click', openBoard);
   $('menu-top-head').addEventListener('click', openBoard);

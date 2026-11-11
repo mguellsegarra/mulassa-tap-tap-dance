@@ -48,6 +48,13 @@ export function createSequencer(ctx, out = ctx.destination) {
   let bus = null; // this run's voices: the next run cuts it off, so notes queued ahead of a quit never sound in a new run
   let song = SONGS.mulassa, notes = bySteps.get('mulassa'), chordAt = song.chordAt; // the run's tune (start())
 
+  function newBus() {
+    bus?.disconnect();
+    bus = ctx.createGain();
+    bus.connect(master);
+    lastChord = '';
+  }
+
   function voice(freq, t, dur, vol, type = 'sine', attack = .01) {
     const o = ctx.createOscillator(), g = ctx.createGain();
     o.type = type;
@@ -136,13 +143,13 @@ export function createSequencer(ctx, out = ctx.destination) {
     // id: the run's tune (songs.js); the Mulassa's when none
     start(id = 'mulassa') {
       song = SONGS[id]; notes = bySteps.get(id); chordAt = song.chordAt;
-      bus?.disconnect();
-      bus = ctx.createGain();
-      bus.connect(master);
-      lastChord = '';
+      newBus();
       chordLog.length = noteLog.length = 0;
       for (const k in levels) levels[k] = 0;
     },
+    // a fresh bus, the levels and the harmony log as they were: everything queued ahead on the old one is cut (a paused run's
+    // notes, a clock that stood still), and the next step starts the pad again
+    cut: () => newBus(),
     gain(v) { master.gain.setTargetAtTime(v, ctx.currentTime, .05); },
     // the run's end: what is queued fades out instead of cutting
     stop() { bus?.gain.setTargetAtTime(0, ctx.currentTime, .05); },

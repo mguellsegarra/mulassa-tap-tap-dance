@@ -222,7 +222,7 @@
 }
 
 /* The ribbon pointing at a playable figure's heart, the first time. */
-.sel-heart-tip { position: fixed; z-index: 20; display: flex; align-items: center; gap: 8px; box-sizing: border-box; min-height: 40px; padding: 4px 12px; border-radius: 10px; background: linear-gradient(#d93148, #ad1f33); box-shadow: 0 3px 0 #6d1220, 0 6px 14px #0008; color: #fff; font: 800 14px/1.15 'Baloo 2', system-ui, sans-serif; transform-origin: 50% 0; animation: sel-tip-in .35s cubic-bezier(.3, 1.5, .5, 1), sel-tip-bob 1.4s ease-in-out .35s infinite; }
+.sel-heart-tip { position: fixed; z-index: 20; display: flex; align-items: center; gap: 8px; box-sizing: border-box; width: max-content; max-width: calc(100vw - 24px); /* its own width, not what its old left leaves: a resize measured it squeezed into two lines and placed it on the button */ min-height: 40px; padding: 4px 12px; border-radius: 10px; background: linear-gradient(#d93148, #ad1f33); box-shadow: 0 3px 0 #6d1220, 0 6px 14px #0008; color: #fff; font: 800 14px/1.15 'Baloo 2', system-ui, sans-serif; transform-origin: 50% 0; animation: sel-tip-in .35s cubic-bezier(.3, 1.5, .5, 1), sel-tip-bob 1.4s ease-in-out .35s infinite; }
 .sel-heart-tip::before { content: ""; position: absolute; top: -9px; left: var(--tail); width: 20px; height: 10px; margin-left: -10px; background: #d93148; clip-path: polygon(50% 0, 100% 100%, 0 100%); }
 .sel-heart-called { animation: sel-heart-call 1.2s ease-in-out 3; }
 @keyframes sel-tip-in { from { opacity: 0; scale: .6; } }

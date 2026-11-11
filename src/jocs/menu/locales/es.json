@@ -3,12 +3,17 @@
   "pop": "Mulassa Pop",
   "play": "Juega",
   "popDesc": "Atrapa a la Mulassa. Evita Dracs.",
+  "tapDesc": "Baila con las figuras al ritmo de la música.",
   "soon": "Sorpresa",
   "soonDesc": "Un juego nuevo está en camino.",
+  "new": "¡Nuevo!",
   "music.mute": "Silencia el sonido del menú",
   "music.unmute": "Activa el sonido del menú",
   "rotate.phone": "Gira el móvil",
   "rotate.tablet": "Gira la tableta",
   "rotate.phoneSub": "En vertical para jugar",
-  "rotate.tabletSub": "En horizontal para jugar"
+  "rotate.tabletSub": "En horizontal para jugar",
+  "fail.title": "¡Ups! No se ha podido cargar",
+  "fail.text": "Recarga la página para volver a intentarlo.",
+  "fail.retry": "Vuelve a intentarlo"
 }

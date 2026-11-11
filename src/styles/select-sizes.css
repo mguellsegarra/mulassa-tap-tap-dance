@@ -12,6 +12,9 @@ body.reel-idle #select > * { pointer-events: none; }
 @media (prefers-reduced-motion: reduce) { :is(body.reel-idle, body.reel-wake) :is(#select, #settings, #free, #music, #howto) { transition: none; } }
 #select[hidden] { opacity: 0; }
 @starting-style { #select { opacity: 0; } }
+/* The first opening, from the splash, comes whole with the plaça's first frame: its fade left the plaça bare for a moment
+   (half a second on an iPhone in Low Power Mode), which a stalled first frame used to hide. */
+#select[data-cut], #select[data-cut] :is(.sel-info, .sel-pending) { transition: none; }
 
 @media (max-width: 899px) and (min-height: 501px) {
   #select { --dock-h: 252px; --card-label-h: 64px; }

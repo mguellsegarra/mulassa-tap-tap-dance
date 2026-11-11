@@ -1,7 +1,7 @@
 // Which DOM controls show in each state, and the photo (view) mode.
 import { showAvatars, photoHelpAvailable } from './photo-avatars.js';
 import { sheets } from './sheets.js';
-import { selectRehearsing } from './select-warm.js';
+import { selectRehearsing, selectEntry } from './select-warm.js';
 import { howtoMenu, settingsMenu, privacyMenu, pauseMenu, hide, howtoEl, settingsEl, freeEl, musicEl, pauseEl, skipEl, retryEl } from './handles.js';
 import { G, clock, CHALLENGE, setFreeSound } from '../game/state.js';
 import { selectedFigure } from '../game/figure-song.js';
@@ -126,6 +126,7 @@ export function updateControls() {
   hide(freeEl, G.state !== 'select');
   hide(musicEl, G.state !== 'select');
   const rehearsal = G.state === 'splash' && selectRehearsing(); // (its one paint under the page cover)
+  if (G.state === 'select') selectEntry(); // (before it shows: its first opening does not fade in)
   sheets.select?.visible(G.state === 'select' || rehearsal, rehearsal); // measure after the header controls have their final layout
   hide(pauseEl, G.state !== 'play' || G.paused || Boolean(G.collapseT));
   hide(skipEl, G.state !== 'play' || !G.practice || G.paused);

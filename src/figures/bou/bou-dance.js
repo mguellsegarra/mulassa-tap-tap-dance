@@ -132,9 +132,10 @@ const GESTURE_KEYS = [
 // eases on them)]. Eased from key to key. The dip always covers the see-saw (front hips never rise past the legs' reach).
 const DIP = 1.25; // the dips read small at the play camera's distance
 // (the intro only bounces and waddles: no nod nor see-saw before the tune)
+// (bars 0-8, the steps, are solemn: knees on the beat but hardly a waddle, the owner 11/11/2026; it lets go from bar 9, BOU_SOLEMN)
 const COMIC_KEYS = [
-  [0,0, .03,.02,0,0,0], [1,0, .015,.005,.01,0,0], [2,3, .015,.005,.01,0,0], [3,0, .05,.03,.02,0,0], [4,3, .05,.03,.02,0,0],
-  [5,0, .015,.005,.01,0,0], [6,3, .015,.005,.01,0,0], [7,0, .05,.03,.04,0,0], [8,3, .05,.025,.02,0,0],
+  [0,0, .02,.005,0,0,0], [1,0, .015,.005,.01,0,0], [2,3, .015,.005,.01,0,0], [3,0, .03,.008,.02,0,0], [4,3, .03,.008,.02,0,0],
+  [5,0, .015,.005,.01,0,0], [6,3, .015,.005,.01,0,0], [7,0, .03,.008,.04,0,0], [8,3, .03,.008,.02,0,0],
   [9,0, .06,.02,.01,.13,0], [18,-.5, .06,.02,.01,.13,0], [18,0, .055,.04,.02,0,0],
   [19,0, .05,.055,.02,0,0], [23,0, .05,.035,.02,0,0], [26,0, .07,.045,.03,0,0],
   [27,0, .09,.045,.03,0,.4], [34,3, .09,.045,.03,0,.4], // (warp .4: the rushes pulsed harder outran the carriers' legs) [35,0, .05,.05,.02,0,0],
@@ -151,6 +152,8 @@ const SKID = { slide: .3, tail: .22, sit: .12, len: 1.6, lead: .3, wag: 1 };
 const SKID_KEYS = [[20,0,1],[23,0,-1],[28,0,1],[30,0,-1],[32,0,1],[34,0,-1],[37,0,1],[44,0,-1],[81,2,1]];
 // The keys as played: each authored key's id (`kind:bar+beats`), its beat after the owner's edits (BOU_DANCE_EDITS), and its values.
 let YAW, X, Z, GESTURES, COMIC, LIFT, SKIDS, KEYS;
+// [from, to] song beats: the opening's solemn steps end, the head's gags (googly eyes, waggle, gape) come in (pose.calm 1 -> 0)
+export const BOU_SOLEMN = [0, 0];
 const keyId = (kind, n, b) => `${kind}:${n}+${b}`;
 export function setBouDanceEdits(edits = BOU_DANCE_EDITS) {
   const E = edits?.keys ?? {}, at2 = (id, beat) => beat + (E[id]?.shift ?? 0), v = (id, f, x) => E[id]?.[f] ?? x;
@@ -171,6 +174,7 @@ export function setBouDanceEdits(edits = BOU_DANCE_EDITS) {
     const dx = sampleTrack(X, t) - sampleTrack(X, t - .3), dz = sampleTrack(Z, t) - sampleTrack(Z, t - .3), d = Math.hypot(dx, dz) || 1;
     return { id, base: at(n, b), beat: t, t, dx: dx / d, dz: dz / d, side: v(id, 'side', side) }; });
   SKIDS = skids;
+  BOU_SOLEMN[0] = comic.find(k => k.id === 'comic:8+3').beat; BOU_SOLEMN[1] = comic.find(k => k.id === 'comic:9+0').beat;
   KEYS = { path, gestures, comic, skids, carry: Object.entries(CARRY_AT).map(([k, b]) => ({ id: `carry:${k}`, name: k, base: b, beat: C[k] })) };
 }
 setBouDanceEdits();
@@ -200,7 +204,7 @@ export const BOU_COMIC = 3;
 const HEM_DROP = .23; // the skirt's hem (43 cm) stays 20 cm up: clear of a stepping shoe (8.5 cm tall, lifted 10)
 const SAW_SOFT = .07; // rad of see-saw over which its turn from one end to the other is rounded
 const SAW_RISE = 1.0; // m of lift a radian of see-saw: the low end's hem (~1 m from the middle) holds its height
-export function newBouPose() { return {x:0,z:0,yaw:0,pitch:0,roll:0,lift:0,beat:0,inertiaRoll:0}; }
+export function newBouPose() { return {x:0,z:0,yaw:0,pitch:0,roll:0,lift:0,beat:0,inertiaRoll:0,calm:0}; }
 const END_BEAT = at(92);
 const INERTIA = { turn: .7, lean: .12, decay: 1.6, swing: 2.2 }; // rad on past the stop and back, rad of lean, 1/beat, beats a swing
 export function bouPose(t,out=newBouPose()) {
@@ -239,6 +243,7 @@ export function bouPose(t,out=newBouPose()) {
   // frantic up there: heaved on every beat, rocking side to side and
   // bucking nose up on alternate beats
   out.lift+=carried-BOU_CARRY.pump*up*(1-dip);out.pitch-=up*(BOU_CARRY.rear+BOU_CARRY.buck*Math.sin(PI*beat));out.roll+=up*BOU_CARRY.wobble*Math.sin(PI*beat+PI/4);
+  out.calm=1-ease((beat-BOU_SOLEMN[0])/(BOU_SOLEMN[1]-BOU_SOLEMN[0]));
   out.beat=beat;return out;
 }
 // The swing in beats from the bar's start: out with the long note, swung back through (brushing the floor) to arrive

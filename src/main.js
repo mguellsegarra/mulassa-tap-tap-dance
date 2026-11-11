@@ -22,6 +22,7 @@ import { resize, hud, HH, K, sizedW, sizedDpr, appHeight, W, H, SAFE } from './h
 import { loader } from './ui/handles.js';
 import { sheets } from './ui/sheets.js';
 import { fontsReady, warmups } from './hud/sprites.js';
+import { rehearseSelect } from './ui/select-warm.js';
 import './hud/primitives.js';
 import { balloonView, balloonFx, setBalloonView } from './hud/balloon.js';
 import { M, act } from './scene/figure-springs.js';
@@ -168,10 +169,10 @@ function frame(now) {
   // The page cover lifts once the web fonts are in and the queued words are painted (warmups: a big outlined count-in
   // word is ~20 ms on a desktop, several times that on a phone), at most COVER_WARM ms after the fonts: on a slow first
   // load they were painted on the splash, right under the tap. (loader.ready() still waits for its minimum time.)
-  // ...and once the plaça runs smoothly (COVER_SMOOTH frames in a row under 60 ms), at most COVER_SMOOTH_MAX ms after the
+  // ...after the selector's one paint under it (ui/select-warm.js), and once the plaça runs smoothly (COVER_SMOOTH frames in a row under 60 ms), at most COVER_SMOOTH_MAX ms after the
   // first: an iPhone's first visit compiles its GPU programs then, a 316 ms frame on the splash just after it showed
   if (coverUp) coverSmooth = frameS < 0.06 ? coverSmooth + 1 : 0;
-  if (coverUp && fontsIn && (!warmups.length || now - (coverAt ??= now) > COVER_WARM) && (coverSmooth >= COVER_SMOOTH || now - (coverAt ??= now) > COVER_SMOOTH_MAX)) { coverUp = false; loader.ready(); loadMark('cover'); if (STARS >= 0) previewResults(STARS); } // ?stars: only once the page cover is gone, or the animation plays unseen
+  if (coverUp && fontsIn && rehearseSelect(now, coverSmooth >= COVER_SMOOTH, G.state === 'splash') && (!warmups.length || now - (coverAt ??= now) > COVER_WARM) && (coverSmooth >= COVER_SMOOTH || now - (coverAt ??= now) > COVER_SMOOTH_MAX)) { coverUp = false; loader.ready(); loadMark('cover'); if (STARS >= 0) previewResults(STARS); } // ?stars: only once the page cover is gone, or the animation plays unseen
   qualityCost = performance.now() - f0;
   if (PERF) perfSample(f0, p0, p1, now);
   if (PERF?.line) showPerfLine(); // on screen too: a tablet has no console

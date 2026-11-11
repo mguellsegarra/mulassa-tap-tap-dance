@@ -53,7 +53,7 @@ const state = { state: 'splash', paused: false }, ctx = { tr, document: doc, nav
   startMenuAudio() {}, setFreeSound() {}, photoOrient() {}, curtain: swap => swap(), photoHelpAvailable: () => false, showAvatars: () => run('setPhotoControl(false)'), syncAvatars() {} }; // src/ui/photo-avatars.js (its DOM: tests/render/render-quality.mjs)
 let time = 1000;
 const photoSource = ['figures/index', 'game/photo-control', 'platform/double-tap'].map(name => readFileSync(new URL(`../../src/${name}.js`, import.meta.url), 'utf8').replace(/^import .*;\n/gm, '').replace(/^export /gm, '')).join('\n'); // the figures' traits first: photo-control reads them
-const code = photoSource + '\n' + ['mouse-look', 'controls', 'input'].map(name => readFileSync(new URL(`../../src/ui/${name}.js`, import.meta.url), 'utf8').replace(/^import .*;\n/gm, '').replace(/^export /gm, '')).join('\n');
+const code = photoSource + '\n' + ['mouse-look', 'select-warm', 'controls', 'input'].map(name => readFileSync(new URL(`../../src/ui/${name}.js`, import.meta.url), 'utf8').replace(/^import .*;\n/gm, '').replace(/^export /gm, '')).join('\n');
 vm.createContext(ctx); vm.runInContext(code, ctx);
 const run = code => vm.runInContext(code, ctx);
 const key = code => { for (const f of handlers.keydown || []) f({ code, target: { tagName: 'BODY' }, preventDefault() {} }); };

@@ -117,6 +117,14 @@ the method and its tools: `docs/agents/device-profiling.md`.
   not drawn at all). `will-change: transform` on the dim element (`sheets.css` `.sheet-dim`) made it a solid-colour layer:
   the first ⚙ 34–67 ms. The Bústia's confirm notice copies the publish sheet's seal and perks: that sheet is warmed too
   (first notice 100–117 → 34–67 ms).
+- The selector's first show pays the same compiles (~125 programs, two ~300 ms frames right under the splash's tap): it is
+  rehearsed once under the page cover instead (`ui/select-warm.js`, `select-ui.js` `visible(on, rehearsal)`: shown inert,
+  the host told nothing, then hidden). S10, 2026-11-11, production build, cold: time lost in frames over 50 ms around the
+  opening 637-821 ms -> 251-302, its longest frame 268-385 -> 101; the cover stays up to ~1 s longer.
+- Hiding something with `visibility: hidden` while another thing shows can cost the same compiles again (the song's row under
+  the heart's ribbon: 134-168 ms as the ribbon came and 134-151 at its pulse's end); faded with `opacity: 0` and
+  `pointer-events: none` instead: 17-34 ms. A permanent `will-change` on the heart or the standings card only moved or
+  multiplied the cost (the card promoted for good: ~200 frames over 50 ms in 17 s).
 
 ## GPU context loss (mobile GPUs)
 

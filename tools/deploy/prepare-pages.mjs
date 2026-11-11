@@ -6,7 +6,7 @@ import { UNRELEASED_IDS } from '../../src/figures/index.js';
 const OMIT = new Set(['music/mulassa-taiko.wav', 'music/mulassa-taiko.mid', 'music/drac-taiko.mid', '.DS_Store']);
 // A root 404 disables Pages' SPA fallback: unknown URLs must not serve the game with HTTP 200.
 const REQUIRED = ['index.html', '404.html', '_headers', 'favicon.ico', 'favicon.svg', 'favicon-32.png',
-  'apple-touch-icon.png', 'icon-512.png', 'manifest.webmanifest', 'og.jpg', // og.jpg: index.html's og:image / twitter:image
+  'apple-touch-icon.png', 'icon-512.png', 'manifest.webmanifest', 'og.jpg', 'og-jocs.jpg', 'og-pop.jpg', // index.html's, jocs/'s and pop/'s og:image / twitter:image (tools/social/og/build.py)
   'share/mulassa-valls.jpg', 'share/drac-valls.jpg', // the share card's fixed photos (share-card.js loadPhoto)
   'sfx/applause.mp3']; // the crowd's applause (platform/audio.js loadApplause; tools/music/build_applause.mjs)
 

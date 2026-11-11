@@ -36,7 +36,7 @@ A game's branch holds its pages, code, pictures, tests and `_headers` lines as t
 bring them back (the removal is newer), so take its files with `git checkout jocs/<id> -- jocs/<id> src/jocs/games/<id> public/jocs/<id>`
 plus its tests and docs, then add its card in `jocs/index.html` (a `.game-card` with `data-game`), its colour, its words in `src/jocs/menu/locales/` and its `_headers` lines.
 
-Each new game gets a colour for its card and logo, a line in `NEWS` (`src/ui/news-sheet.js`) and a card after the last game. The «Aviat» surprise cards (`data-soon`, nothing to play, each in the colour of the game it stands for) fill the row; a new game takes the place of the first one.
+Each new game gets a colour for its card and logo, a line in `NEWS` (`src/ui/news-sheet.js`), a card after the last game and its link preview (`tools/social/og/build.py`, `docs/agents/seo.md`). The «Aviat» surprise cards (`data-soon`, nothing to play, each in the colour of the game it stands for) fill the row; a new game takes the place of the first one.
 
 Discarded: Snake, La Cercavila, Talla calçots, Bantumi, Pinta per números, Endreça el Seguici, De nan a gegant (2048), Fes el castell. The code of those that had any, without a commit here, is in `mulassa-minijocs/descartats/`.
 

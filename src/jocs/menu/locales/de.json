@@ -3,6 +3,7 @@
   "pop": "Mulassa Pop",
   "play": "Spielen",
   "popDesc": "Fang die Mulassa. Meide Dracs.",
+  "tapDesc": "Tanze mit den Figuren im Takt der Musik.",
   "soon": "Überraschung",
   "soonDesc": "Ein neues Spiel ist unterwegs.",
   "new": "Neu!",
@@ -11,5 +12,8 @@
   "rotate.phone": "Dreh das Handy",
   "rotate.tablet": "Dreh das Tablet",
   "rotate.phoneSub": "Ins Hochformat, um zu spielen",
-  "rotate.tabletSub": "Ins Querformat, um zu spielen"
+  "rotate.tabletSub": "Ins Querformat, um zu spielen",
+  "fail.title": "Ups! Laden fehlgeschlagen",
+  "fail.text": "Lade die Seite neu und versuch’s noch mal.",
+  "fail.retry": "Noch mal versuchen"
 }

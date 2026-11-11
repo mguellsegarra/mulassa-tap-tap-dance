@@ -77,6 +77,7 @@ export function sentryOptions({ dsn, environment, release, tags = () => ({}) }) 
 export function createErrors({ mode, win, load, idle }) {
   const off = { on: false, context() {}, report() {}, breadcrumb() {}, capture() {}, start() {} };
   if (!mode || !win) return off;
+  if (win.__mulassaErrors) return win.__mulassaErrors; // one reporter a page: a game page loads Plassa's copy and the main game's (the sheets' leaderboard); a second one started Sentry again, without the game's context
   let sentry = null, loading = false, getTags = () => ({});
   const pending = [];
   let pointer = '';
@@ -128,6 +129,7 @@ export function createErrors({ mode, win, load, idle }) {
     },
   };
   win.setTimeout?.(() => api.start(), 20000); // a startup crash may prevent the first frame: send early reports anyway
+  win.__mulassaErrors = api;
   return api;
 }
 
@@ -154,6 +156,7 @@ if (w) {
     const reason = ['deadline', 'module-load', 'module-init', 'startup'].includes(failure.reason) ? failure.reason : 'unknown';
     const timing = {};
     for (const key of ['visibleMs', 'phaseMs']) if (Number.isFinite(failure[key]) && failure[key] >= 0) timing[key] = Math.min(300000, Math.round(failure[key]));
+    if (/^(error|rejection|resource:[A-Z]{1,12})$/.test(failure.cause)) timing.cause = failure.cause; // only the games' watchdog (plassa/boot-watchdog.js) sets it
     errors.report('boot-failed', { phase, reason, ...timing });
     errors.start();
   };

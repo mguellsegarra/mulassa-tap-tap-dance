@@ -169,6 +169,16 @@ nodes.get('restart').listeners.click();
 assert(run('!G.paused && G.watch') && run('G.chart') !== demoChart, 'restart needs no confirmation: nothing to lose');
 run('togglePause();'); nodes.get('exit').listeners.click();
 assert(run("G.state === 'select' && !G.watch && !G.paused"), 'neither does leaving');
+// «Fes un tomb» over the demo: the only way into free play on a phone (the selector's song row has no room for it)
+nodes.get('select-watch').listeners.click(); run('updateControls();');
+assert.equal(nodes.get('watch-walk').hidden, false, '«Fes un tomb» shows over the playing demo');
+run('togglePause(); updateControls();');
+assert.equal(nodes.get('watch-walk').hidden, true, 'and hides under its pause');
+run('togglePause(); updateControls();');
+nodes.get('watch-walk').listeners.click();
+assert(run("G.state === 'select' && !G.watch"), 'it leaves the demo for the selector');
+assert(run('viewMode'), 'and free play opens on it');
+run('setView(false);');
 run('startGame(1); togglePause();');
 assert(!nodes.get('pause-sync').hidden && nodes.get('restart-label').textContent === 'Reinicia', 'a real game\'s pause is unchanged');
 run('toTitle(); chip = preWatch.chip; stored = preWatch.stored;');

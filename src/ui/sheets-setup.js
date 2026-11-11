@@ -242,7 +242,7 @@ const select = setupSelect({ store, keyboard: () => keyboardNav, busy: () => she
 hearts.load();
 sheets.select = select;
 sheets.lang = setupLang({ store, state: () => G.state }); // the language dropdown and the one-time suggestion
-sheets.watch = setupWatch({ select, busy: () => sheetUp() || viewMode });
+sheets.watch = setupWatch({ select, busy: () => sheetUp() || viewMode, walk: enterFree });
 howtoMenu.addEventListener('close', () => select.refocus());
 // The speaker controls every menu sound; the saved preference never silences a run.
 const musicBtn = document.getElementById('music');

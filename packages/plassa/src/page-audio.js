@@ -65,6 +65,7 @@ export function createPageAudio(ctx, out, { hearing, stall = () => false }) {
   function gesture() {
     if (waiting && running()) waiting = false; // it came back
     else if (waiting || (hearing() && !running())) wake();
+    else if (hearing()) woke = true; // autoplay let it run: this is the first audible tap anyway, so the stall watch and the return from hidden apply
   }
   function stalled(kind = 'menu-audio-stalled') {
     if (kind && waiting !== true) errors.report(kind, { audioState: ctx.state });

@@ -38,9 +38,10 @@ export function createHero(canvas) {
   };
   atHome();
   scene.add(mula.root, drac.root);
-  const { flame, step } = createSparks(scene);
+  const { flame, step } = createSparks(scene, 192); // two flames a frame, each short-lived: a few dozen live at once
   const P = MULA_POSES[0], tip = new THREE.Vector3(), dir = new THREE.Vector3();
   let t = 0, W = 0, H = 0, solo = null; // solo: { kind, root, rig } while the end sheet shows the culprit
+  let bw = 0, bh = 0, bp = 0; // the drawing buffer's box and pixel ratio: set only when they change (each set clears it)
   // the culprits the home never shows, made the first time one ends a run: the board's own paints (rigs.js)
   const painted = (rig, paint) => { rig.root.traverse(o => { if (o.isMesh && o.geometry.attributes.color) o.geometry = paint(o.geometry); }); return rig; };
   const extra = {}, made = (fig, k = 1) => { fig.root.scale.setScalar(k); fig.root.visible = false; scene.add(fig.root); return fig; };
@@ -98,14 +99,16 @@ export function createHero(canvas) {
 
   // both figures in view, whatever the box's shape: the camera backs off along a raised three-quarter line
   function fit() {
+    // read each frame, not from a ResizeObserver: its late size during the splash's scale reallocated the buffer on the tap (S10, 8 taps: 60-190 ms task; this way 0)
     const w = canvas.clientWidth, h = canvas.clientHeight;
     if (!w || !h || (w === W && h === H)) return;
     // the splash only scales the home's box (tap-start.js): the home's buffer, stretched; a new one stalled the tap ~100 ms (S10)
     if (W && document.body.classList.contains('sp-home') && Math.abs(w / h - W / H) < .01) return;
     W = w; H = h;
-    renderer.setPixelRatio(pixelRatio());
-    renderer.setSize(w, h, false);
-    camera.aspect = w / h;
+    // the end sheet keeps the home's buffer, contained by CSS (#end-art canvas): a new one stalled its opening 50-200 ms (S10)
+    const pr = pixelRatio(w, h);
+    if (!(solo && bw) && (w !== bw || h !== bh || pr !== bp)) { renderer.setDrawingBufferSize(w, h, pr); bw = w; bh = h; bp = pr; }
+    camera.aspect = bw / bh;
     pose(0);
     scene.updateMatrixWorld(true);
     const box = solo ? new THREE.Box3().setFromObject(solo.root) : new THREE.Box3().setFromObject(mula.root).union(new THREE.Box3().setFromObject(drac.root));
@@ -133,7 +136,12 @@ export function createHero(canvas) {
     renderer.render(scene, camera);
   }
 
-  const warm = () => { fit(); return waitForWarmup(() => renderer.compileAsync(scene, camera).then(() => linkPrograms(renderer.info.programs))); };
+  const warm = async () => {
+    fit();
+    await waitForWarmup(() => renderer.compileAsync(scene, camera).then(() => linkPrograms(renderer.info.programs)));
+    // the end sheet's culprits the home never shows, made here between tasks: not on the end transition's frame
+    for (const kind of ['petard', 'dracFals', 'mulaFalsa']) { culprit(kind); await new Promise(go => setTimeout(go)); }
+  };
   // the end sheet's: `kind` alone in `into` (rules.js culprits); home(): back to the pair, on the home
   function show(kind, into) {
     const c = culprit(kind);

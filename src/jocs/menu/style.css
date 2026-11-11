@@ -1,7 +1,7 @@
 /* Mulassa Games (jocs/index.html, main.js, carousel.js): the whole screen, the chosen game in the hero, the row of cards under it. */
 :root { --page-edge: #120b07; --page-bg: #120b07; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-#games-menu { --row: min(33dvh, 66vw); --card-w: calc(var(--row) * .8); position: fixed; inset: 0; width: 100vw; max-width: none; height: 100dvh; max-height: none; margin: 0; padding: 0; overflow: hidden; background: #120b07; outline: 0; }
+#games-menu { --row: min(33dvh, 66vw); --card-w: calc(var(--row) * .8); --bottom: var(--sab); /* the row's foot clears the home indicator */ position: fixed; inset: 0; width: 100vw; height: 100dvh; overflow: hidden; background: #120b07; outline: 0; }
 /* shown whole, once its words and the chosen game are in (main.js): the hero's text jumped into place under the fade */
 html:not(.ready) #games-menu { visibility: hidden; }
 html.ready #games-menu { animation: games-in .6s ease-in-out both; }
@@ -11,23 +11,19 @@ html.ready #games-menu { animation: games-in .6s ease-in-out both; }
 #games-title .games-word { margin-top: -.15em; font: 800 clamp(18px, 2.6vw, 34px)/1 'Baloo 2', system-ui, sans-serif; letter-spacing: .04em; text-transform: uppercase; color: #f5c518; -webkit-text-stroke: .2em #2a1a10; paint-order: stroke fill; }
 /* GAMES pops letter by letter now and then, as TAP TAP DANCE pops on the title's beat (hud/title.js); after «Juga»'s hop */
 #games-title .games-word i { display: inline-block; font-style: normal; animation: games-pop 2.4s ease-in-out infinite; animation-delay: calc(var(--i) * .07s); }
-@keyframes games-pop { 0%, 20%, 100% { translate: 0 0; scale: 1; } 8% { translate: 0 -.28em; scale: 1.18; } 14% { translate: 0 .04em; scale: .97; } }
 
 /* mulassa.cat's speaker (base.css .round-btn) on the logo's margins, at the other side */
 #games-music { position: absolute; z-index: 3; top: calc(12px + var(--sat, 0px)); right: max(24px, 6vw); }
 #games-music[data-state="off"] .on, #games-music[data-state="on"] .off { display: none; }
 #games-music svg { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; } /* a line icon, as mulassa.cat draws its buttons' */
 
-#games-hero { position: absolute; inset: 0 0 var(--row) 0; overflow: hidden; }
-#games-hero-back { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: blur(30px) saturate(1.2) brightness(.5); transform: scale(1.15); animation: games-drift 9s ease-in-out infinite alternate; }
+#games-hero { position: absolute; inset: 0 0 calc(var(--row) + var(--bottom)) 0; overflow: hidden; }
+#games-hero-back { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; animation: games-drift 9s ease-in-out infinite alternate; }
 /* the wide screen's sharp picture: a gentler drift that keeps its right edge on the screen's */
 @keyframes games-art-drift { from { translate: 0 0; scale: 1; } to { translate: 1.5% 1%; scale: 1.08; } }
-/* slow drift so the blurred backdrop feels alive; translate/scale stack on top of each layout's transform */
+/* slow drift so the blurred backdrop feels alive */
 @keyframes games-drift { from { translate: -4% -3%; scale: 1.12; } to { translate: 4% 3%; scale: 1.3; } }
-/* a card's picture is small: it stays sharp at its own size instead of being stretched across the screen */
-#games-hero-art { position: absolute; right: max(24px, 8vw); top: 7%; bottom: 7%; height: 86%; width: auto; aspect-ratio: 4 / 5; object-fit: cover; border-radius: 24px; box-shadow: 0 16px 40px #000a; }
-/* the chosen game's clip as soon as it can play (ui/games-hero-video.js): where the still is, fading over it */
-#games-hero-video { display: none; }
+#games-hero-art { position: absolute; }
 #games-hero::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, #120b07cc, #0000 60%), linear-gradient(#0000 70%, #120b07); pointer-events: none; }
 #games-hero-text { position: absolute; z-index: 1; left: max(24px, 6vw); right: 24px; bottom: 28px; display: grid; justify-items: start; gap: 8px; max-width: min(46vw, 760px); }
 #games-menu { --name: clamp(40px, 9dvh, 104px); } /* the game's name: the hero's gaps are counted in it */
@@ -52,9 +48,9 @@ html.ready #games-menu { animation: games-in .6s ease-in-out both; }
 /* a phone's row starts on the title's margin: the chosen card on the left, the next one cut at the right edge (it scrolls) */
 /* …and from the second card on, the chosen one rests --peek further in: the card before shows its edge at the left, or
    nobody knows there is a game that way (the first card cannot go that far: it stays on the margin) */
-#games-grid { --edge: max(24px, 6vw); --peek: 36px; position: absolute; inset: auto 0 0 0; height: var(--row); display: flex; align-items: center; gap: 20px; margin: 0; padding: 0 calc(100vw - var(--edge) - var(--card-w)) 0 var(--edge); scroll-padding-inline-start: calc(var(--edge) + var(--peek)); overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; scrollbar-width: none; }
+#games-grid { --edge: max(24px, 6vw); --peek: 36px; position: absolute; inset: auto 0 var(--bottom) 0; height: var(--row); display: flex; align-items: center; gap: 20px; margin: 0; padding: 0 calc(100vw - var(--edge) - var(--card-w)) 0 var(--edge); scroll-padding-inline-start: calc(var(--edge) + var(--peek)); overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; scrollbar-width: none; }
 #games-grid::-webkit-scrollbar { display: none; }
-#games-grid .game-card { position: relative; flex: none; display: block; width: var(--card-w); height: calc(var(--row) - 36px); min-height: 0; padding: 0; overflow: hidden; border: 0; border-radius: 18px; --sel-r: 18px; scroll-snap-align: start; background: #24170e; box-shadow: 0 8px 18px #0008; transition: transform .15s; transform: scale(.94); transform-origin: left center; /* shrinks towards its left edge: the gap before it stays the same on every phone */ }
+#games-grid .game-card { position: relative; flex: none; display: block; width: var(--card-w); height: calc(var(--row) - 36px); min-height: 0; padding: 0; overflow: hidden; border: 0; border-radius: 18px; scroll-snap-align: start; background: #24170e; box-shadow: 0 8px 18px #0008; transition: transform .15s; transform: scale(.94); transform-origin: left center; /* shrinks towards its left edge: the gap before it stays the same on every phone */ }
 #games-grid .game-card.on { transform: none; box-shadow: 0 0 0 3px #120b07, 0 0 0 6px var(--game); }
 #games-grid .game-card::after { content: ''; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1px #fff3d624; pointer-events: none; }
 #games-grid .game-card .por { position: absolute; inset: 0; }
@@ -72,9 +68,9 @@ html.ready #games-menu { animation: games-in .6s ease-in-out both; }
 #games-grid .game-card[data-soon] .por img { object-position: top; } /* its «?» floats at the top of the picture */
 
 /* a phone's hero is narrow: the picture becomes its background, the text stands on it */
-@media (max-width: 700px) {
+@media not all and (min-width: 701px) { /* what carousel.js's `wide` is not: no width falls between the two */
   #games-hero-art { display: none; }
-  #games-hero-back { filter: saturate(1.1) brightness(.7); transform: none; } /* it drifts like a wide screen's picture */
+  #games-hero-back { filter: saturate(1.1) brightness(.7); }
   #games-hero.clip #games-hero-back { animation: none; } /* the clip's first frame, still, right under the clip */
   #games-hero-video { display: block; position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: saturate(1.1) brightness(.7); opacity: 0; } /* gone at once on a change of game, never shown empty */
   #games-hero-video.on { opacity: 1; transition: opacity .3s ease; }
@@ -82,15 +78,14 @@ html.ready #games-menu { animation: games-in .6s ease-in-out both; }
 }
 @media (prefers-reduced-motion: reduce) { #games-grid .game-card { transition: none; } }
 
-/* a big screen: one grid of margins for the logo, the ×, the hero's two columns and the row; every card shows at once */
+/* a big screen: one grid of margins for the logo, the speaker, the hero's two columns and the row; every card shows at once */
 @media (min-width: 701px) {
-  #games-menu { --m: max(32px, 5vw); --gap: 16px; --top: 128px; --logo: clamp(240px, 21vw, 570px); --bottom: 16px; }
+  #games-menu { --m: max(32px, 5vw); --gap: 16px; --top: 128px; --logo: clamp(240px, 21vw, 570px); --bottom: max(16px, var(--sab)); }
   #games-menu #games-title { top: clamp(28px, 7dvh, 72px); left: var(--m); }
   #games-menu #games-title .games-logo { width: var(--logo); }
   #games-menu #games-music { top: clamp(28px, 7dvh, 72px); right: var(--m); --round-size: clamp(56px, 2.9vw, 84px); } /* grows with the logo on a large display */
   /* the row ends on the same margins as everything else: five cards share its width, the ring has room above and below */
-  #games-menu #games-hero { bottom: calc(var(--row) + var(--bottom)); }
-  #games-menu #games-grid { bottom: var(--bottom); padding: 0 var(--m); gap: var(--gap); scroll-snap-type: x mandatory; scroll-padding-inline: var(--m); }
+  #games-menu #games-grid { padding: 0 var(--m); gap: var(--gap); scroll-snap-type: x mandatory; scroll-padding-inline: var(--m); }
   #games-menu #games-grid .game-card { --card-w: max(140px, (100vw - 2 * var(--m) - 4 * var(--gap)) / 5); width: var(--card-w); height: calc(var(--row) - 24px); transform: none; scroll-snap-align: start; }
   #games-menu #games-grid .game-card:not(.on) { filter: brightness(.78); }
   #games-menu #games-grid .sel-card-name { font-size: clamp(16px, 1.5vw, 39px); }
@@ -111,7 +106,7 @@ html.ready #games-menu { animation: games-in .6s ease-in-out both; }
   #games-menu #games-hero-back { display: none; }
   #games-menu #games-hero { background: radial-gradient(120% 140% at 85% 30%, color-mix(in srgb, var(--game) 22%, #120b07), #120b07 70%); }
   /* the picture stands at the right at the hero's full height, no frame: it melts into the backdrop on its left and at the bottom */
-  #games-menu #games-hero-art { top: 0; bottom: auto; right: 0; height: 100%; width: auto; max-width: 100%; aspect-ratio: auto; object-fit: cover; object-position: center; border-radius: 0; box-shadow: none;
+  #games-menu #games-hero-art { top: 0; right: 0; height: 100%; width: auto; max-width: 100%; object-fit: cover;
     -webkit-mask-image: linear-gradient(90deg, #0000, #000 40%), linear-gradient(#000 75%, #0000); -webkit-mask-composite: source-in; mask-image: linear-gradient(90deg, #0000, #000 40%), linear-gradient(#000 75%, #0000); mask-composite: intersect; }
   #games-menu #games-hero-video { display: block; position: absolute; top: 0; right: 0; height: 100%; width: auto; max-width: 100%; aspect-ratio: 8 / 3; object-fit: cover; opacity: 0;
     -webkit-mask-image: linear-gradient(90deg, #0000, #000 40%), linear-gradient(#000 75%, #0000); -webkit-mask-composite: source-in; mask-image: linear-gradient(90deg, #0000, #000 40%), linear-gradient(#000 75%, #0000); mask-composite: intersect; }

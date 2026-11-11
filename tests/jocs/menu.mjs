@@ -25,7 +25,13 @@ assert(html.includes('id="games-music"'), 'the page has its speaker');
 // the page stands on Plassa and loads nothing of the main game
 const links = [...html.matchAll(/<link rel="stylesheet" href="([^"]+)">/g)].map(m => m[1]);
 assert.deepEqual(links, ['/packages/plassa/src/base.css', '/packages/plassa/src/game.css', '/src/jocs/menu/style.css']);
-assert.deepEqual([...html.matchAll(/<script[^>]*src="([^"]+)"/g)].map(m => m[1]), ['/src/jocs/menu/main.js']);
+// …and has the games' boot screen and shared watchdog (a failed module or an early throw would leave a black page), before its module
+assert.deepEqual([...html.matchAll(/<script[^>]*src="([^"]+)"/g)].map(m => m[1]), ['/packages/plassa/src/boot-watchdog.js', '/src/jocs/menu/main.js']);
+assert(html.includes('<script id="boot-watchdog" src="/packages/plassa/src/boot-watchdog.js"></script>') && html.includes('<div id="boot" class="cover">') && html.includes('<!-- mula-load -->'), 'the boot screen and the shared watchdog');
+const menuMain = readFileSync('src/jocs/menu/main.js', 'utf8');
+assert(menuMain.includes('window.__gameBootWords') && /word\('fail\.title'\)/.test(menuMain), 'the error card speaks the player\'s language once the words are in');
+assert(menuMain.indexOf("classList.add('ready')") > menuMain.indexOf('applyWords()'), 'ready only once the words and the carousel are in');
+assert(!html.includes('data-keys-first') && !html.includes('class="games-grid"'), 'no attribute or class nobody reads');
 // its words in every language the games speak
 const langs = f => f.replace('.json', '');
 const ca = JSON.parse(readFileSync('src/jocs/menu/locales/ca.json', 'utf8'));
@@ -40,6 +46,7 @@ assert(existsSync('src/jocs/menu/music.mp3') && loop.start === 0 && loop.end > 3
 assert(!main.includes('games-menu') && !main.includes('games-sheet.css'), 'no games sheet in the main game');
 assert(main.includes("if (location.hash === '#jocs') location.replace('/jocs/')"), 'an old /#jocs link goes to the page');
 assert(readFileSync('src/ui/controls.js', 'utf8').includes("location.replace('/jocs/')"), 'the gamepad goes to the page');
-assert(readFileSync('pop/index.html', 'utf8').includes('<a id="back" class="exit corner-l" href="/jocs/">'), 'Pop\'s way back is the page');
+assert(readFileSync('pop/index.html', 'utf8').includes('<a id="back" class="exit corner-l" href="/jocs/">'), 'Pop\'s way back is the page, a real link');
+assert(/\$\('back'\)\.addEventListener\('click'[\s\S]*?location\.replace\(\$\('back'\)\.href\)/.test(readFileSync('src/jocs/games/pop/main.js', 'utf8')), '…replacing Pop\'s page as the selector does, so the history does not grow');
 assert(!existsSync('public/jocs/index.html'), 'no redirect stub over the built page');
 console.log(`Mulassa Games: ${ids.length} cards with their pictures and pages, on Plassa, the main game leads there ok`);

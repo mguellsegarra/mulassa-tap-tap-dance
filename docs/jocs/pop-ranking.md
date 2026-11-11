@@ -15,9 +15,9 @@ submitted score proves nothing. The server must play the game again from what th
 - Three counters: `progress` (Mulassas +1, calçot +5, burns +1) drives the tempo, the spawn pace and the unlocks and stays internal;
   `points` is what the player sees and the board ranks; `hits` is the Mulassas tapped («tocs»). A tapped Mulassa gives
   `MULT[level]` points (`MULT` 1 / 2 / 3), times the combo; a calçot `round(5 × MULT)`; a Mulassa burnt by the carretilla
-  `round(MULT)` (not a hit). The combo is fingers at once: Mulassas tapped within `CHORD` (.12 s) of a chord's first one make a
+  `round(MULT)` (not a hit). The combo is fingers at once: good taps (a Mulassa, a petard put out, a goodie) within `CHORD` (.12 s) of a chord's first one make a
   chord of k, each worth k (up to `COMBO_MAX` 5), so the chord's whole is `round(k × min(k, 5) × MULT)` and each tap adds the
-  difference. One at a time is ×1: the player lets Mulassas build up (the fuse is the risk) and takes them together.
+  difference. A lone petard or goodie adds nothing to that (a goodie keeps its own points, above); one Mulassa at a time is ×1: the player lets Mulassas build up (the fuse is the risk) and takes them together.
   A tap within `GRACE` (.15 s) of a cell turning Drac (a goodie or fake that just ran out, a double tap) is forgiven. A bell does
   not come again until `BELL_REST` (20 s) after its slow time ends.
 - `conductor.js` (pure) lays the tune out in **game time**: position, tempo glide. Its tempo starts at 150 / 165 / 180 BPM
@@ -43,7 +43,7 @@ submitted score proves nothing. The server must play the game again from what th
 - `supabase/functions/pop-score/`: `index.ts` (Auth, size cap, gate, record), `verify.js` (the replay, plain JS), `sim/` (exact
   copies of `run.js`, `rules.js`, `conductor.js`, `melody.js`, made by `node tools/jocs/pop-sim.mjs`; `tests/jocs/pop-replay.mjs`
   fails when they differ). `verify_jwt = false` and `getUser`, as `delete-player`.
-- The body is `{ v, seed, level, cols, rows, ticks, taps, points, hits }` (`RUN_VERSION` 5). The answer is
+- The body is `{ v, seed, level, cols, rows, ticks, taps, points, hits }` (`RUN_VERSION` 6, in `run.js`: bumped whenever `run.js`, `rules.js` or `conductor.js` change what a log scores). The answer is
   `{ score, best, improved, position, hits, level }`, `score` being the replay's points.
 - Caps: body 64 KB, 30 min of play (216 000 ticks), 6000 taps, taps in order and on the board's cells, `level` 0–2. The stored
   points are the replay's; the client's points and hits are only compared, and both must match.
@@ -58,10 +58,11 @@ submitted score proves nothing. The server must play the game again from what th
 
 - `ranking.js` (lazy): the Supabase client and session are mulassa.cat's. On a dev server with no Supabase, `ranking-mock.js`
   (`?sense-nom` for a player with no name).
-- Home: the record pill shows the place (`· #11`) and opens the board sheet (top 50, your row lit, you after them if lower).
+- Home: a «Veure classificació» button opens the board sheet (top 50, your row lit, you after them if lower); it never shows the place (the owner's call, 10 Nov 2026), so there is no record pill. On a tall phone the best three show under it as «Top 3» (`ranking-ui.js` `top3`), which opens the same sheet.
 - End: the place, or «new best»; a player with no name gets a button to the profile's own steps right here (create, or
   another name for a released one: mulassa.cat's sheet through `settings.js`); the run waits in `pop-pending` and goes
-  when that sheet closes. If that chunk fails to load the button is still mulassa.cat's link (`/#nom-pop`, or
+  when that sheet closes.
+- A run is kept in `pop-pending` before it is published (`ranking.keep`, the best of the current `RUN_VERSION`) and forgotten only once the server has answered for that same run (same version and seed): a better run kept meanwhile, from another seed, stays. A refusal of the run itself (`version`, `mismatch`, `invalid`, `too_large`, `pop_seed_used`, `implausible`) is terminal: it is not kept and nothing is retried, since the same log can never pass. Offline or a transient error keeps it for the next visit (`sync()` on the home). If that chunk fails to load the button is still mulassa.cat's link (`/#nom-pop`, or
   `/#nom-pop-canvi`, in `src/ui/sheets-setup.js`), which comes back to `/pop/`. Texts provisional until Codex writes them.
 
 ## Residual risks (accepted)
@@ -72,7 +73,7 @@ submitted score proves nothing. The server must play the game again from what th
 - Plausibility (`verify.js`, error `implausible`, 422): from 30 judged taps (Mulassas) on, a run is refused when more than
   25 % of them came under 100 ms after the Mulassa appeared on its cell. It catches a bot that answers in the same frame
   (an instant one taps at 0 ms); a short lucky run is never judged. It does not catch a bot that waits a human-like
-  180 ms or more with jitter, nor the dev bot (`autoplay.js`, which waits 1–3.5 s): that is the accepted risk above.
+  180 ms or more with jitter, nor the dev bot (`autoplay.js`, which waits 1–2.8 s): that is the accepted risk above.
 - The music now follows game time: after a long stall it waits rather than catching up.
 
 ## Rollout

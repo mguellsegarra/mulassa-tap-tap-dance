@@ -79,3 +79,16 @@ life.hush(); fire();
 life.gesture();
 assert.deepEqual([ctx.state, session.type], ['suspended', 'ambient'], 'a silent page stays stopped on iOS');
 console.log('page audio: no report before a tap, frozen clock stopped and woken, run pauses, leave fades, not-back reported, iOS session ok');
+
+// Autoplay let the context run before any tap (Chrome after the tap that led here): the first tap is the audible one, so
+// a clock that then stands still is caught (woke was only ever set by wake(), which never ran: the watch stayed off)
+{
+  const ctx2 = { ...ctx, state: 'running', currentTime: 5 }, life2 = createPageAudio(ctx2, out, { hearing: () => true });
+  for (let t = 0; t <= 3000; t += 500) life2.watch(t);
+  assert.deepEqual(reports, [], 'before any tap: nothing reported');
+  life2.gesture();
+  for (let t = 4000; t <= 5200; t += 400) life2.watch(t);
+  fire();
+  assert.deepEqual(reports.splice(0), ['menu-audio-stalled'], 'an already running context\'s frozen clock is caught after the first tap');
+}
+console.log('page audio: the first tap counts on a context autoplay already let run ok');

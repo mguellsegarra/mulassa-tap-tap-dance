@@ -25,7 +25,7 @@ export function setupHeroVideo({ video, wide, win = globalThis }) {
     video.play().then(() => (video.requestVideoFrameCallback ? video.requestVideoFrameCallback(show) : show()),
       () => { if (mine === turn) { refused = true; video.classList.remove('due'); mark(); } }); // an earlier start's aborted play leaves this one alone
   };
-  wide.addEventListener?.('change', start); // turning a tablet swaps the clip
+  // turning a tablet swaps the clip: carousel.js shows the card again on that change (its still first, then show())
   // a play refused before any tap (an iPhone in Low Power Mode, a browser that wants a gesture first) starts on the first one,
   // inside it: the first game's clip stood still until another game was chosen
   for (const type of ['pointerdown', 'touchend', 'keydown']) win.addEventListener?.(type, () => { if (refused) start(); }, true);

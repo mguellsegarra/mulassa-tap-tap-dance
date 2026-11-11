@@ -1,6 +1,6 @@
 # Mini-games plan (release 1.3.0)
 
-Status: 1.3.0 ships only Mulassa Pop (mulassa.cat/pop: page `pop/index.html`, code in `src/jocs/games/pop/`, source project `pica-la-mulassa`). The other games were taken out of this branch before release; each one waits on its own `jocs/<id>` branch, at the state it had here (7e0e749), until its release (table below). The selector's gamepad opens the games sheet.
+Status: 1.3.0 ships only Mulassa Pop (mulassa.cat/pop: page `pop/index.html`, code in `src/jocs/games/pop/`, source project `pica-la-mulassa`). The other games were taken out of this branch before release; each one waits on its own `jocs/<id>` branch, at the state it had here (7e0e749), until its release (table below). The selector's gamepad opens Mulassa Games, the games' own page (`/jocs/`).
 
 Research, in Catalan, copied from `mulassa-minijocs/notes/` on 2026-11-01 (that project may have moved on since):
 - `research/cataleg-jocs.md`: the catalogue of game ideas.
@@ -13,7 +13,7 @@ Research, in Catalan, copied from `mulassa-minijocs/notes/` on 2026-11-01 (that 
 - 1.3.0 is the release that brings the mini-games into mulassa.cat.
 - Fes el castell is out of the plan. It still appears in the research notes, which are left as written.
 - Mulassa Games, the games' selector, is its own light page at `/jocs/` (`jocs/index.html`, `src/jocs/menu/`, on Plassa; the owner's call on 10 Nov 2026, reversing the earlier sheet inside the main game): nothing of Mulassa Tap Tap Dance loads behind it. The selector's gamepad button (`#free`) and a game's way back go there with `location.replace('/jocs/')`; «Juga» on the Tap Tap Dance card goes to `/`. An old `/#jocs` link is sent on by `index.html`. It has its own music, the menu tune as lo-fi (`tools/music/build_games_menu.py` → `src/jocs/menu/music.mp3`), on Plassa's one music switch.
-- Free play is that sheet's last entry. A mini-game is still its own page, so opening one and coming back reloads the main game.
+- Free play is not a card on that page: it is a button in the main game's help sheet (`#howto-walk`). A mini-game is still its own page, so opening one and coming back reloads the main game.
 - The URL must not say `minijocs`.
 
 ## Names and rollout
@@ -35,7 +35,7 @@ The owner's choices. A game takes its name when it enters this branch; folders, 
 One novelty per release, on Thursdays; 1.5.0 (Bou), 1.10.0 (Gegant del Calçot) and 1.11.0 (Àliga) are figures. A game's branch
 holds its pages, code, pictures, tests and `_headers` lines as they were in 1.3.0 before the removal (Memory and Crush also their card). A merge of that branch does not
 bring them back (the removal is newer), so take its files with `git checkout jocs/<id> -- jocs/<id> src/jocs/games/<id> public/jocs/<id>`
-plus its tests and docs, then add its card in `index.html`, its colour, its `html.games.<id>` strings and its `_headers` lines.
+plus its tests and docs, then add its card in `jocs/index.html` (a `.game-card` with `data-game`), its colour, its words in `src/jocs/menu/locales/` and its `_headers` lines.
 
 Each new game gets a colour for its card and logo, a line in `NEWS` (`src/ui/news-sheet.js`) and a card after the last game. The «Aviat» surprise cards (`data-soon`, nothing to play, each in the colour of the game it stands for) fill the row; a new game takes the place of the first one.
 
@@ -49,14 +49,16 @@ Separate pages on the same domain, in the same tab. Only a full page navigation 
 cannot be unloaded, and hand-releasing three.js, audio and canvas caches is fragile.
 
 ```
-/                game (proposal, see open questions)
-/jocs/           menu
-/jocs/memory/    one page per game
+/                main game
+/jocs/           menu (Mulassa Games)
+/pop/            Mulassa Pop
+/jocs/memory/    the other games: one page each, when they release
 /jocs/crush/
 ```
 
-- Leaving the main game uses `location.replace()`, so bfcache does not keep it frozen in memory. The browser's back button then
-  skips it, so every page has its own visible way back. Menu and games use normal navigation.
+- One rule for every hop between the main game, `/jocs/` and a game: `location.replace()`, so bfcache does not keep the page
+  frozen in memory and no history entry piles up (a card goes menu → game with it, a game's way back to `/jocs/` too, as does the
+  main game's gamepad). The browser's back button therefore skips them, so every page has its own visible way back.
 - The menu loads no game; a game loads its own code and `shared/`. three.js stays out unless a game needs it.
 - Same origin: `localStorage` and the Supabase session are shared.
 - `public/manifest.webmanifest` has `start_url: "/"` and no `scope`, so these URLs should stay inside the installed app. A subdomain would leave it.
@@ -68,7 +70,7 @@ cannot be unloaded, and hand-releasing three.js, audio and canvas caches is frag
 ## Code layout
 
 ```
-jocs/index.html                   menu
+jocs/index.html                   menu (Mulassa Games); its code is src/jocs/menu/
 jocs/<game>/index.html            loads only its game
 packages/plassa/src/                  only what at least two games use
 src/jocs/games/<game>/            a game never imports from another game
@@ -113,32 +115,33 @@ are in `packages/plassa/docs/inventari.md`.
   Configuració's «Sobre el joc», Privadesa, the Turnstile box) and `scoped-css.js` (another page's CSS kept inside some of
   this page's elements). The sheets themselves stay mulassa.cat's: a page asks for them by id with
   `<!-- mulassa-sheets: settings-menu account-menu … -->` (vite.config.js copies those `<dialog>`s from index.html into a
-  `<template>`), and the game runs them with mulassa.cat's own code, loaded at the first ⚙ (Pop's `settings.js`: Perfil,
+  `<template>`), and the game runs them with mulassa.cat's own code, loaded at boot while the boot screen runs, so the first ⚙ tap opens at once (Pop's `settings.js`: Perfil,
   the badge, the Bústia, the language, Privadesa; its CSS through `scoped-css.js`). When mulassa.cat moves onto Plassa,
   that code moves with it.
 - Imports: `packages/plassa/src/` reaches outside itself only for `core/` and data (`i18n/meta.json`, the loading lines'
-  `i18n/locales/*/boot.json`); mulassa.cat never imports it yet; a game never imports another game.
+  `i18n/locales/*/boot.json`); mulassa.cat never imports it yet; a game never imports another game. Pop still imports
+  mulassa.cat's modules directly (`platform/`, `services/`, `ui/`, `i18n/`, `styles/`, `dev/`, `core/`: the list is in
+  `docs/architecture.md`), a transitional exception that moves into Plassa with the settings and account layer.
 - Copies of mulassa.cat kept in step until it moves onto the base: `storage`, `haptics`, `boot`, `double-tap`,
   `errors`, `sentry-load`, `update-watch`, `update-rules`, `locale`, `focus`, `badge-tip`, `render-quality` (same code, other paths),
   `mula-load.html` (ui/loader.js's art). The rest is consolidated from several of its modules (see each file's header).
 
 ## Steps
 
-1. Probe: an empty `/jocs/` page and a button there and back. On an iPhone and an Android with the app installed, check that it stays
-   in the app, that memory drops, and how long the return takes. Change the plan here if it fails.
-2. Infrastructure: `vite.config.js` inputs from a glob of `jocs/*/index.html`, `tools/deploy/prepare-pages.mjs` allowlist, `no-cache` for
-   the new HTML in `public/_headers`, the version check from `src/services/update.js`.
-3. Move the menu and one finished game (Memory), and take that path all the way to beta.
-4. Move the others one by one.
-5. Free play entry: it needs a URL that opens it directly. `src/ui/free-gate.js` only handles the iPhone's turn-the-phone sheets, it offers no such link.
-6. Selector button, last, so players see nothing until it works. Until then the URL is only reachable directly on beta.
+Done for 1.3.0: the infrastructure (`vite.config.js` inputs, the `tools/deploy/prepare-pages.mjs` allowlist, `no-cache` for the HTML in
+`public/_headers`), the `/jocs/` page and Pop, and the selector's gamepad button. Still to do:
+
+1. On an iPhone and an Android with the app installed, check that the hop between pages stays in the app, that memory drops, and how
+   long the return takes. Change the plan here if it fails.
+2. Move the other games one by one (table above), each taken all the way to beta.
+3. Free play stays a button in the help sheet; a direct URL for it would need work, since `src/ui/free-gate.js` only handles the iPhone's turn-the-phone sheets.
 
 Follow `docs/agents/seo.md` if the games should appear in search (sitemap, `llms.txt`, `tools/deploy/seo-pages.mjs`). Button and menu text is written by Codex.
 
 ## Open questions
 
-- Where the menu lives. Proposal for 1.3.0: game stays at `/`, menu at `/jocs/`, with no change to entry, links, search pages or `start_url`. The owner
+- Where the menu lives. Decided for 1.3.0: the main game stays at `/`, the menu at `/jocs/`, with no change to entry, links, search pages or `start_url`. The owner
   has floated the menu at mulassa.cat itself. That gives a very light first load, but adds a tap before the game, moves it to a new URL and
   needs redirects and rebuilt public pages. It can still be done later.
 - The URL word: `jocs` is a proposal.
-- The new button's icon. The double tap on the plaça can stay as a free play shortcut.
+- The double tap on the plaça can stay as a free play shortcut.

@@ -11,7 +11,7 @@ function make({ wide = true, reduced = false, saveData = false, refuseFirst = fa
     getAttribute: () => video.src, pause() { video.playing = false; },
     play() { video.playing = true; return refuseAll || (refuseFirst && !plays++) ? Promise.reject(new Error('AbortError')) : (plays++, Promise.resolve()); },
   };
-  const mq = { matches: wide, addEventListener: (k, f) => { mq.change = f; } };
+  const mq = { matches: wide };
   const taps = {}, win = {
     matchMedia: () => ({ matches: reduced }), navigator: { connection: { saveData } }, addEventListener: (k, f) => { taps[k] = f; },
   };
@@ -55,7 +55,7 @@ const c = make({ wide: false });
 c.clip.show(card('pop', true));
 assert.equal(c.video.src, '/v/pop-tall.mp4', 'a phone plays the upright clip');
 assert.equal(c.clip.poster(card('pop', true)), '/v/pop-tall.jpg', 'with the upright first frame as its still');
-c.mq.matches = true; c.mq.change();
+c.mq.matches = true; c.clip.show(card('pop', true)); // what carousel.js does when the screen turns (menu-carousel.mjs)
 assert.equal(c.video.src, '/v/pop.mp4', 'turning a tablet swaps to the wide one');
 
 for (const opts of [{ reduced: true }, { saveData: true }]) {

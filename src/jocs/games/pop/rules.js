@@ -1,6 +1,7 @@
 // The game's rules, no drawing: Ringo Tap's Game.cs, Bomb.cs and Level.cs ported to a tick, plus the goodies.
 // The Mulassa is the red apple (tap it before its fuse ends), the Drac the green one (never tap it).
-export const SPECIAL_LIFE = 2.5, SLOW_TIME = 5;
+export const SPECIAL_LIFE = 2.5;
+const SLOW_TIME = 5;
 // Seconds a Mulassa stays lit before she escapes, per level (Fàcil, Normal, Difícil), at the start: it shortens as the progression
 // grows, down to FUSE_MIN, so a good player meets her end within minutes. game.fuse is the next one's; each cell keeps its own (c.life).
 export const FUSES = [5, 4, 3], FUSE_MIN = 1.6, FUSE_SHRINK = 150; // progression at which the fuse is halved
@@ -8,27 +9,29 @@ export const FUSE = FUSES[0]; // Fàcil's at the start: the UI should use the ce
 // The petard is lit: tap it before its fuse burns down to put it out (no points: it only saves the board), or it blows up and the game is over.
 export const BOMB_FUSES = [4, 3.2, 2.4];
 export const BOMB_FUSE = BOMB_FUSES[0]; // Fàcil's: the UI should use game.bombFuse
-export const fuseOf = (level, progress = 0) => Math.max(FUSE_MIN, (FUSES[level] ?? FUSES[0]) * FUSE_SHRINK / (FUSE_SHRINK + progress)), bombFuseOf = level => BOMB_FUSES[level] ?? BOMB_FUSES[0];
+export const fuseOf = (level, progress = 0) => Math.max(FUSE_MIN, (FUSES[level] ?? FUSES[0]) * FUSE_SHRINK / (FUSE_SHRINK + progress));
+const bombFuseOf = level => BOMB_FUSES[level] ?? BOMB_FUSES[0];
 export const BURN = .9; // a Mulassa the carretilla's Dracs burn stays on her cell that long, and nothing new comes there
 export const GOODIES = ['calcot', 'campanar', 'carretilla'];
 export const TRAPS = ['petard', 'mulaFalsa', 'dracFals']; // one at a time; the petard is the one you must tap
 // Progressive: nothing but Mulassas at first, then each thing once it makes sense. mulas: how many must be out for it to be worth anything.
 // The thresholds are on the progression (g.progress), not on the points the player sees.
 const UNLOCK = { calcot: { score: 10 }, campanar: { score: 30 }, carretilla: { score: 20, mulas: 3 }, petard: { score: 15 }, dracFals: { score: 25 }, mulaFalsa: { score: 35 } };
-export const LEVELS = 3; // 0 Fàcil, 1 Normal, 2 Difícil: tempo base (conductor.js), where the pace starts and the points' multiplier
 // The combo is fingers at once: good taps (a Mulassa, a petard put out, a goodie) within CHORD s of a chord's first one
 // each score its size (two fingers ×2, three ×3, up to COMBO_MAX), so the player lets them build up and takes them together,
 // with the fuse as the risk. A lone petard or goodie pays only its own, as ever.
 export const CHORD = .12, COMBO_MAX = 5;
 export const MULT = [1, 2, 3]; // the points' multiplier per level, whole numbers anyone reads at a glance (the owner's choice, 9 Nov 2026)
 export const GRACE = .15; // a tap this soon after a cell turned Drac is the finger's lag, not a mistake (a goodie or fake that just ran out)
-export const FLURRY = [3, 5], FLURRY_WAIT = 2; // the carretilla's volley: as many Mulassas as it burnt, within these; half-beat steps before it
+const FLURRY = [3, 5]; // the carretilla's volley: as many Mulassas as it burnt, within these
+export const FLURRY_WAIT = 2; // half-beat steps before it
 export const BELL_REST = 20; // seconds after the bell's slow time ends before another bell may come
 
 // Where the Mulassas come, in blocks of BLOCK spawns: at random, or along a pattern the player can read (one at a time, on the
 // beat as ever: the pattern only picks the cell). Random only before PATTERN_FROM; then a pattern a block in three, one in two
 // from PATTERN_HALF, never the same one twice running. A cell of it that is taken ends the pattern: the rest of the block is random.
-export const PATTERNS = ['walk', 'mirror', 'zigzag', 'corners'], BLOCK = 4, PATTERN_FROM = 10, PATTERN_HALF = 25;
+const PATTERN_HALF = 25;
+export const PATTERNS = ['walk', 'mirror', 'zigzag', 'corners'], BLOCK = 4, PATTERN_FROM = 10;
 // a pattern's cells (indices), from the run's dice: g.rng only, so the server's replay draws the same
 export function patternPath(kind, cols, rows, rng) {
   const at = (x, y) => y * cols + x, int = n => Math.floor(rng() * n), half = Math.floor(cols / 2);

@@ -44,6 +44,18 @@ for (const id of games) {
   assert(main.includes("import '#plassa/focus.js'"), `${dir}/main.js: import '#plassa/focus.js' (keyboard vs pointer)`);
 }
 
+// Mulassa Games' selector (jocs/index.html) is a Plassa page too: the shell, the boot screen with the shared watchdog (a failed module
+// left a black page on a real iPhone), the keyboard/pointer module and the UI sound; its CSS never redefines a base selector either
+{
+  const page = read('jocs/index.html'), links = [...page.matchAll(/<link rel="stylesheet" href="([^"]+)">/g)].map(m => m[1]);
+  assert(links[0] === '/packages/plassa/src/base.css' && links[1] === '/packages/plassa/src/game.css', 'jocs/index.html: links base.css then game.css first');
+  assert(page.includes('<script id="boot-watchdog" src="/packages/plassa/src/boot-watchdog.js"></script>') && page.indexOf('id="boot-watchdog"') < page.indexOf('type="module"'), 'jocs/index.html: the watchdog before the module');
+  assert(page.includes('id="boot"') && page.includes('id="boot-art"><!-- mula-load -->'), 'jocs/index.html: the boot screen with the running Mulassa');
+  const main = read('src/jocs/menu/main.js');
+  assert(/from '#plassa\/focus\.js'/.test(main) && /\bsetUiSound\(/.test(main) && /\bsoundOnPress\(/.test(main), 'src/jocs/menu/main.js: keyboard vs pointer and UI sound from the base');
+  assert.deepEqual([...selectors(read('src/jocs/menu/style.css'))].filter(sel => base.has(sel)), [], 'src/jocs/menu/style.css redefines base selectors');
+}
+
 // the boot art is the main game's (src/ui/loader.js) until mulassa.cat uses Plassa's
 const art = read('src/ui/loader.js').match(/export const MULASSA_SVG = '([^']+)'/)[1];
 assert.equal(read('packages/plassa/src/mula-load.html').trim(), art, 'mula-load.html drifted from src/ui/loader.js MULASSA_SVG');

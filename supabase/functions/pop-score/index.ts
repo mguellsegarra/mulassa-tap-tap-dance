@@ -9,6 +9,25 @@ const isPlayer = (user: { is_anonymous?: boolean; email_confirmed_at?: string | 
 const KNOWN = ['leaderboard_auth_required', 'pop_profile_required', 'pop_rate_limited', 'pop_seed_used'];
 const STATUS: Record<string, number> = { leaderboard_auth_required: 401, pop_profile_required: 403, pop_rate_limited: 429, pop_seed_used: 409 };
 const reason = (message = '') => KNOWN.find(k => message.includes(k)) ?? 'unavailable';
+// The body as text, at most MAX_BYTES of it: counted in bytes as they arrive, and the stream cancelled at the cap, since a
+// chunked body has no Content-Length to trust and req.text() would buffer all of it first. null: too large.
+async function readCapped(req: Request): Promise<string | null> {
+  const reader = req.body?.getReader();
+  if (!reader) return '';
+  const chunks: Uint8Array[] = [];
+  let size = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    size += value.byteLength;
+    if (size > MAX_BYTES) { await reader.cancel().catch(() => {}); return null; }
+    chunks.push(value);
+  }
+  const all = new Uint8Array(size);
+  let at = 0;
+  for (const c of chunks) { all.set(c, at); at += c.byteLength; }
+  return new TextDecoder().decode(all);
+}
 
 Deno.serve(async (req: Request) => {
   const origin = req.headers.get('origin');
@@ -33,8 +52,8 @@ Deno.serve(async (req: Request) => {
     // Auth first: a caller with no account never gets its body read or parsed
     const { data, error } = await admin.auth.getUser(bearer);
     if (error || !data.user || !isPlayer(data.user)) return reply(401, { error: 'authentication_required' });
-    const text = await req.text();
-    if (text.length > MAX_BYTES) return reply(413, { error: 'too_large' });
+    const text = await readCapped(req);
+    if (text === null) return reply(413, { error: 'too_large' });
     let body: unknown;
     try { body = JSON.parse(text); } catch { return reply(400, { error: 'invalid' }); }
     const uid = data.user.id; // the account is Auth's word, never the body's

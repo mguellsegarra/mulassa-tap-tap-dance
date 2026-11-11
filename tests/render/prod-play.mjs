@@ -82,6 +82,15 @@ try {
   const home = await hero();
   assert.notEqual(home.css, splash.css, 'the splash shows the figures in another box than the home');
   assert.equal(home.buffer, splash.buffer, 'the splash tap keeps the figures\' WebGL buffer');
+  // the end sheet borrows the same canvas in its own box and keeps that buffer too (CSS contains it): a new one stalled
+  // the sheet's opening 79-128 ms on the S10. No taps: the Mulassa runs out and ends the run.
+  await page.click('#play', { force: true });
+  for (const go of ['#help-go', '#level-go']) await page.locator(go).click({ force: true, timeout: 5000 }).catch(() => {});
+  await page.waitForSelector('#end-menu:not([hidden])', { timeout: 90000 });
+  await page.waitForTimeout(500);
+  const end = await hero();
+  assert.notEqual(end.css, home.css, 'the end sheet shows the culprit in another box than the home');
+  assert.equal(end.buffer, home.buffer, 'the end sheet keeps the figures\' WebGL buffer');
   assert.deepEqual(errors, [], 'no page error in Mulassa Pop\'s production build');
-  console.log('prod play: Mulassa Pop\'s splash tap keeps its WebGL buffer');
+  console.log('prod play: Mulassa Pop\'s splash tap and end sheet keep their WebGL buffer');
 } finally { await server?.close(); await browser.close(); rmSync(outDir, { recursive: true, force: true }); }

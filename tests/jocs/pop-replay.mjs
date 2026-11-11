@@ -56,9 +56,13 @@ no({ ticks: best.ticks + TICKS_PER_S }, 'mismatch'); // played on after the end
 no({ seed: best.seed + 1 });
 no({ taps: best.taps.slice(0, -2) }); // a tap left out
 { // the second tap moved onto a Drac: that run ends there
-  const r = createRun({ cols: best.cols, rows: best.rows, seed: best.seed });
+  const r = createRun({ cols: best.cols, rows: best.rows, seed: best.seed, level: best.level }); // the run's own level: another one is another board
   r.until(best.taps[0]); r.tap(best.taps[1]); r.until(best.taps[2]);
   const drac = r.game.cells.find(c => c.kind === 'drac' && c.age >= 0).i;
+  r.tap(drac);
+  assert.equal(r.game.state, 'over', 'tapping the cell picked ends the run');
+  // the control: that very run, ended at the Drac, is one the server accepts: so the cell is a Drac of the run the body names
+  assert.equal(verifyRun({ ...best, taps: best.taps.slice(0, 2).concat(best.taps[2], drac), ticks: r.ticks, points: r.game.points, hits: r.game.hits }).ok, true, 'a run ended on that Drac replays as itself');
   no({ taps: best.taps.map((x, j) => (j === 3 ? drac : x)) });
 }
 no({ taps: [...best.taps, best.ticks, 0] }); // a tap after the end

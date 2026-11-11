@@ -3,7 +3,7 @@
 :root { --accent: #ff7ac6; --button-gold-bg: linear-gradient(180deg, #ff9ed6 0%, #ff7ac6 55%, #e85aae 100%); --button-bg: #24223fe8; --ink: #24112e; --sheet-color: #24223f; --sheet-bg: linear-gradient(#3a2b4c, #24223f); --sheet-radius: 24px; --pill-border: #ff7ac6aa; --page-edge: #11152c; --page-bg: radial-gradient(ellipse at 50% 0, #53436b, #11152c 70%) #11152c; --game: #ff7ac6; }
 canvas#game { position: fixed; left: 0; top: 0; width: 100%; height: 100dvh; touch-action: none; }
 .board-flash { position: fixed; inset: 0; z-index: 1; opacity: 0; pointer-events: none; }
-/* the bell's slow time (main.js setSlow): a cold frost closing in from the edges, under the HUD */
+/* the bell's slow time (hud.js setSlow): a cold frost closing in from the edges, under the HUD */
 body::after { content: ''; position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: 0; transition: opacity .6s; background: radial-gradient(ellipse at 50% 50%, #7ec4ff22 20%, #3d8fe08c 70%, #1f58b8e0); }
 body.slow::after { opacity: 1; transition-duration: .15s; animation: chill-in .5s ease-out; } /* a white-blue flash as the bell strikes */
 @keyframes chill-in { from { background-color: #e8f6ffb3; } to { background-color: #e8f6ff00; } }
@@ -12,13 +12,11 @@ body.slow::after { opacity: 1; transition-duration: .15s; animation: chill-in .5
 /* HUD */
 #hud { position: fixed; z-index: 2; top: calc(var(--sat) + 8px); left: 16px; right: 16px; display: grid; grid-template-columns: 44px 1fr 44px; align-items: start; pointer-events: none; }
 #hud button { pointer-events: auto; }
-#hud-mid { text-align: center; line-height: 1; }
-#hud-mid { justify-self: center; display: flex; align-items: center; gap: 12px; padding: 4px 20px; border-radius: 40px; background: #24223f; }
+#hud-mid { text-align: center; line-height: 1; justify-self: center; display: flex; align-items: center; gap: 12px; padding: 4px 20px; border-radius: 40px; background: #24223f; }
 #score { font: 800 34px/1 'Baloo 2', system-ui, sans-serif; color: #ff7ac6; min-width: 40px; }
 #hud-best { display: flex; flex-direction: column; align-items: center; gap: 1px; font: 800 20px/1 'Baloo 2', system-ui, sans-serif; color: #fff2e4; padding-left: 12px; border-left: 1px solid #ff7ac666; }
 #hud-best[hidden] { display: none; }
 #hud-best small { font: 700 10px/1 'Baloo 2', system-ui, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: #ff7ac6; } /* a bare second number read as a fraction */
-#best { margin-top: 4px; font-size: 14px; color: #2a1a10; font-weight: 800; }
 #chips { position: absolute; top: 56px; left: 0; right: 0; display: flex; justify-content: center; gap: 8px; }
 #combo { position: fixed; z-index: 2; left: 0; right: 0; text-align: center; font: 800 26px/1 'Baloo 2', system-ui, sans-serif; color: #ffe066; -webkit-text-stroke: .16em #2a1a10; paint-order: stroke fill; pointer-events: none; } /* a chord (hud.js combo): under the score, top set from the HUD's edge */
 /* a chord lights the screen gold (hud.js combo): opacity only */
@@ -32,7 +30,6 @@ body.slow::after { opacity: 1; transition-duration: .15s; animation: chill-in .5
 
 .logo { display: block; flex: none; width: min(300px, 80vw); height: auto; overflow: visible; }
 :root:not(.ready) #menu { visibility: hidden; } /* whole under the boot screen when it fades: a fading blur shows the board sharp */
-/* what ended the run: the figure's home portrait and why, so a red Drac tapped in a hurry is no mystery */
 
 /* The home (the Mulassa Games hero, after mulassa.cat's games sheet): logo, pitch, Juga and the record, the red Mulassa big.
    The figures are in «Com es juga?» (help.js), not on the home (the owner's call, 10 Nov 2026). */
@@ -51,11 +48,10 @@ dialog .feedback-field { border-color: color-mix(in srgb, var(--accent) 60%, tra
 .c-hero { position: relative; min-height: 0; display: flex; flex-direction: column; align-items: center; padding: calc(44px + 12px) var(--m) 0; } /* under the corner buttons' row */
 .c-text { display: contents; }
 .pop-title { order: 0; flex: none; display: grid; justify-items: center; width: min(300px, 100vw - 2 * var(--m) - 40px, 40dvh); margin: 0; container-type: inline-size; }
-.pop-title .logo { width: 100%; }
+.pop-title .logo-box, .pop-title .logo { width: 100%; }
 /* POP as Mulassa Games' GAMES (src/styles/games-sheet.css): each letter pops now and then, in turn */
 .pop-word { margin-top: -1cqi; font: 800 15cqi/1 'Baloo 2', system-ui, sans-serif; letter-spacing: 2cqi; color: #ff7ac6; -webkit-text-stroke: 2.3cqi #2a1a10; paint-order: stroke fill; }
 .pop-word i { display: inline-block; font-style: normal; animation: games-pop 2.4s ease-in-out infinite; animation-delay: calc(var(--i) * .07s); }
-@keyframes games-pop { 0%, 20%, 100% { translate: 0 0; scale: 1; } 8% { translate: 0 -.28em; scale: 1.18; } 14% { translate: 0 .04em; scale: .97; } }
 @media (prefers-reduced-motion: reduce) { .pop-word i { animation: none; } }
 .c-art { order: 1; flex: 1 1 0; min-height: 72px; width: 100%; display: flex; align-items: center; justify-content: center; position: relative; container-type: size; }
 .c-art::before { content: ""; position: absolute; width: min(100%, 100cqh, 340px); aspect-ratio: 1; border-radius: 50%; background: radial-gradient(#ff7ac655, #ff7ac600 68%); }
@@ -90,7 +86,6 @@ dialog .feedback-field { border-color: color-mix(in srgb, var(--accent) 60%, tra
 }
 
 
-.loader-box .mula-spinner { width: 70px; height: 56px; }
 /* The home waits for the tap (tap-start.js): the title big, the live figures and mulassa.cat's gold button, one group in the
    middle over the blurred board; the rest of the home comes in after the tap */
 @keyframes sp-breathe { 0%, 100% { scale: 1; } 50% { scale: 1.06; } }
@@ -133,6 +128,14 @@ dialog .feedback-field { border-color: color-mix(in srgb, var(--accent) 60%, tra
   .help-legend .face img { max-width: 32px; max-height: 38px; }
   .help-legend .star { right: -1px; }
 }
+/* short screens (iPhone SE in Safari, 548 px): the full sheet scrolled to its focused «Juga» and hid the title under the frame */
+@media (max-height: 600px) {
+  .help-sheet h2 { margin-bottom: 6px; }
+  .help-legend .rows { gap: 4px; }
+  .help-legend .r { min-height: 44px; }
+  .help-legend .face { height: 40px; }
+  .help-legend .face img { max-height: 38px; }
+}
 .help-legend .combo { grid-column: 1 / -1; display: grid; gap: 4px; justify-items: center; margin-top: 4px; text-align: center; } /* the chord combo (help.js combo, rules.js CHORD): no box, the in-game lettering */
 .help-legend .combo p { margin: 0; font-size: 14px; line-height: 1.15; color: #e8d8b8; text-wrap: balance; }
 .help-legend .combo .x { display: flex; align-items: baseline; gap: 12px; font-weight: 800; line-height: 1; color: #ffe066; -webkit-text-stroke: .16em #2a1a10; paint-order: stroke fill; }
@@ -174,6 +177,6 @@ svg.podium { fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap
 #end-menu .btn > svg { fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; } /* the end sheet's icons are drawn as lines */
 /* the end sheet's culprit, alive (hero.js solo, results.js) */
 #end-art { display: flex; align-items: center; justify-content: center; flex: 0 1 calc(220px * var(--sheet-zoom, 1)); width: min(calc(320px * var(--sheet-zoom, 1)), 100%); min-height: 120px; } /* grown with the sheet (game.css --sheet-zoom), its canvas sized, not zoomed */
-#end-art canvas { width: 100%; height: 100%; }
+#end-art canvas { width: 100%; height: 100%; object-fit: contain; } /* the home's buffer, kept (hero.js fit): its transparent margins never show */
 
 

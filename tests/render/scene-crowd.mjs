@@ -471,6 +471,8 @@ console.log('crowd footprints never overlap ok');
     assert(q.kept > 5 && q.kept < q.before, `the step leaves fewer people (${q.before} -> ${q.kept})`);
     assert.equal(q.moved, 0, `${q.moved} of the ${q.kept} people still in the ring were dealt another spot`);
   }
+  // free play: every figure is driven in the plaça they share (its people step out of the way), so no ring there, nor in the splash's pair
+  assert(run('figureRing({ rotllana: true }, false, false) && !figureRing({ rotllana: true }, false, true) && !figureRing({ rotllana: true }, true, false) && !figureRing({}, false, false)'), 'a ring only for its figure, on the selector and in play');
   const back = JSON.parse(run(`(() => { setRotllana(false); return JSON.stringify({ shown: rotllanaCrowd.mesh.visible, backdrop: plaza.backdrop.mesh.visible, rings: crowd.filter(p => p.ring).length, band: Math.hypot(bandSpots[0].pos.x, bandSpots[0].pos.y) }); })()`));
   assert(!back.shown && back.backdrop && !back.rings, 'another figure: the ring gone, the backdrop back, nobody keeps a ring slot');
   assert(back.band > 9, 'and the band back at its own place');

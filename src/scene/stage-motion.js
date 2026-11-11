@@ -23,6 +23,9 @@ export function resetMotionImpact() {
   M.air = M.airV = 0; PHOTO.air = false;
   DRAC_JUMP.air = DRAC_JUMP.airV = 0;
 }
+// Whether the figure on show stands in its own ring of people (rotllana.js): never in the splash's pair, nor in free
+// play, where every figure is driven in the same plaça, whose people step out of its way (a ring's packed figures do not)
+export const figureRing = (own, pair, driven) => !pair && !driven && !!own.rotllana;
 let impactState, impactFigure, impactEpoch;
 export function animStage(dt, beat, live = 1) {
   expireManual();
@@ -71,7 +74,7 @@ export function animStage(dt, beat, live = 1) {
   const reel = REEL.on && G.state === 'select' && !PHOTO.on && !pair; // the selector's showreel: the song dance on the menu loop's beat (game/showreel.js)
   for (const f of FIGURE_SCENES) f.show(f === own);
   setBandLineup(PHOTO.on ? null : own.band ?? 'banda'); // free play: no musicians with any figure, only the public
-  setRotllana(!pair && !!own.rotllana); // (after the band: its spots stay clear)
+  setRotllana(figureRing(own, pair, PHOTO.on)); // (after the band: its spots stay clear)
   for (const f of FIGURE_SCENES) f.collaTick(f === own && !pair, beat, dt, reel); // (the splash has two figures: no colla)
   if (own.id === SPLASH_HOST_ID) animPair(dt, beat, pair);
   else {

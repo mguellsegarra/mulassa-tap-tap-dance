@@ -210,6 +210,8 @@ addEventListener('beforeinstallprompt', function (e) { window.__installPrompt = 
   if (s.length >= L.length) s = s.slice(-1); /* all seen: start over, not with the last one */
   var u = L.filter(function (l) { return s.indexOf(l) < 0; }), l = u[Math.floor(Math.random() * u.length)];
   if (t && l) t.textContent = l;
+  /* The line waits for its font, a second at most: painted in the system's font first, it changed shape under the eye on a first visit (the Mulassa above it runs meanwhile) */
+  if (t && document.fonts && document.fonts.load) { t.style.visibility = 'hidden'; var show = function () { t.style.visibility = ''; }; document.fonts.load('800 18px "Baloo 2"', l || t.textContent).then(show, show); setTimeout(show, 1000); }
   s = s.filter(function (x) { return x !== l; }); s.push(l); if (s.length >= L.length) s = [l];
   try { localStorage.setItem(k, JSON.stringify(s)); } catch (e) { /* ignore */ }
 })();</script>

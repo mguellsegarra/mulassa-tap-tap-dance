@@ -132,8 +132,14 @@ const bouFollowMat = new THREE.ShaderMaterial({
   fragmentShader: 'uniform float power; varying float vL, vE; void main(){ gl_FragColor = vec4(vec3(1., .82, .58) * power * (.25 + .75 * pow(vL, .6)) * pow(vE, 1.5), 1.); }',
 });
 const bouFollow = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 2.6, 13, 32, 1, true).translate(0, 6.5, 0), bouFollowMat); // (uv.y 1 at the top: the lamp)
-const bouPoolTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d'), gr = x.createRadialGradient(64, 64, 0, 64, 64, 64);
-  gr.addColorStop(0, '#fff'); gr.addColorStop(0.6, '#ffffffbb'); gr.addColorStop(0.93, '#ffffff22'); gr.addColorStop(1, '#fff0'); x.fillStyle = gr; x.fillRect(0, 0, 128, 128); return new THREE.CanvasTexture(c); })();
+// the pool's radial falloff, its alpha worked out per pixel: a canvas gradient is dithered in Safari, and stretched over
+// 5.6 m and added to the light its noise showed as pink and blue specks on the floor (the owner, an iPhone)
+const bouPoolTex = (() => { const S = 128, px = new Uint8Array(S * S * 4), stops = [[0, 1], [0.6, 0xbb / 255], [0.93, 0x22 / 255], [1, 0]];
+  for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
+    const r = Math.min(1, Math.hypot(x + 0.5 - S / 2, y + 0.5 - S / 2) / (S / 2)), k = stops.findIndex(s => s[0] >= r), [r0, a0] = stops[Math.max(0, k - 1)], [r1, a1] = stops[k];
+    px.set([255, 255, 255, Math.round(255 * (r1 > r0 ? a0 + (a1 - a0) * (r - r0) / (r1 - r0) : a1))], (y * S + x) * 4);
+  }
+  const t = new THREE.DataTexture(px, S, S); t.magFilter = t.minFilter = THREE.LinearFilter; t.needsUpdate = true; return t; })();
 const bouPool = new THREE.Mesh(new THREE.PlaneGeometry(5.6, 5.6).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ map: bouPoolTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, color: '#ffd9a8', fog: false }));
 bouPool.position.y = 0.02;
 for (const o of [bouFollow, bouPool]) { o.visible = false; o.frustumCulled = false; scene.add(o); }

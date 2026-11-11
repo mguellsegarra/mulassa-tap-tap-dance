@@ -55,7 +55,7 @@ export function pose(p, dt, beat, live) {
     ringUp = nk * (nv * NEAR.bob + ringBeat * NEAR.bounce * (0.5 + 0.5 * Math.cos(TAU * (beat - p.lag * 0.15)))); // up on the beat
     ringNod = nk * nv * NEAR.nod; ringArms = nk * nv * NEAR.arms;
   }
-  const lens = Math.min(lensShrink(F.lens, p.pos.x, p.pos.y), F.lens && OUTGOING_LENS.on ? lensShrink(OUTGOING_LENS, p.pos.x, p.pos.y) : 1);
+  const lens = Math.min(lensShrink(F.lens, p.pos.x, p.pos.y, F.lensK), F.lens && OUTGOING_LENS.on ? lensShrink(OUTGOING_LENS, p.pos.x, p.pos.y) : 1);
   if (lens !== (p.lensK ?? 1)) { p.lensK = lens; p.g.scale.setScalar(p.scale * (p.pres ?? 1) * p.qualityScale * lens); }
   if (p.thr) { // one of those who come and go with how well it goes (PRES)
     const to = smooth01((presK - p.thr) / PRES.soft);

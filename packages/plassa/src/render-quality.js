@@ -89,6 +89,15 @@ export function gpuLossLevel(now = Date.now()) {
 export function renderDpr(profile, width, height, dpr) {
   return Math.min(dpr || 1, profile.dpr, Math.sqrt(profile.pixels / Math.max(1, width * height)));
 }
+// A held close-up on small print (mulassa.cat: the Bou's banknote) is drawn nearer the screen's own pixels than the
+// profile's: at the profile's resolution it read as a blur (an iPhone Pro at `medium` draws a quarter of its pixels, a
+// Galaxy S10 gone down to `low` a twelfth). The shot is still and near, so it has the pixels to spare: up to
+// CLOSE_UP_PIXELS from `medium` up, CLOSE_UP_PIXELS_LOW under it. Never fewer than the profile's own.
+export const CLOSE_UP_PIXELS = 3_400_000, CLOSE_UP_PIXELS_LOW = 2_000_000;
+export function closeUpDpr(profile, width, height, dpr) {
+  const pixels = profile.dpr > 1 ? CLOSE_UP_PIXELS : CLOSE_UP_PIXELS_LOW;
+  return Math.max(renderDpr(profile, width, height, dpr), Math.min(dpr || 1, Math.sqrt(pixels / Math.max(1, width * height))));
+}
 // Quality steps normally judge the drawn frames against 60 fps: a 120 Hz screen that misses its 8.3 ms halves its
 // rate first (framePacer). A sustained 30 Hz cadence uses the capped budget below instead.
 // Spikes: a device that keeps hitching during play (SPIKE.count frames over SPIKE.ms within SPIKE.within ms) steps

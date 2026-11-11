@@ -10,7 +10,7 @@ import { bouPose, newBouPose, BOU_TIMING } from '../../../src/figures/bou/bou-da
 const camera = new THREE.PerspectiveCamera(54, 16 / 9, 0.5, 200);
 camera.position.set(-6.6, 4.3, 0.9); camera.lookAt(0, 1, 0); camera.updateMatrixWorld();
 const context = vm.createContext({ THREE, scene: new THREE.Scene(), renderer: { capabilities: { getMaxAnisotropy: () => 1 } }, renderProfile: { confetti: 260 }, camera,
-  bou: { frame: new THREE.Object3D() }, confBills: { material: { map: null } }, ...correfoc, bouPose, newBouPose, BOU_TIMING, AUTOPLAY: false, G: { watch: false }, CALM: { matches: false } });
+  bou: { frame: new THREE.Object3D() }, confBills: { material: { map: null } }, ...correfoc, bouPose, newBouPose, BOU_TIMING, AUTOPLAY: false, G: { watch: false }, CALM: { matches: false }, END_LENS: { k: 0 } });
 for (const f of ['bou-bills.js', 'bou-end-shot.js']) vm.runInContext(readFileSync(new URL(`../../../src/figures/bou/${f}`, import.meta.url), 'utf8').replace(/^import .*;\n/gm, '').replace(/^export /gm, ''), context);
 const run = code => vm.runInContext(code, context);
 const FINALE = run('BOU_FINALE'), notes = run('billNotes'), SHOT = run('END_SHOT'), B = correfoc.BOU_BILLS;
@@ -33,6 +33,10 @@ for (let f = 0; f * dt < rain + 9; f++) {
   if (FINALE.k > 0 && step > worst) { worst = step; worstAt = t; }
 }
 assert(FINALE.k === 1, 'the crane came all the way down');
+// the people by the lens are asked out of its way all the crane long (framing.js END_LENS: it went through a spectator's head)
+assert.equal(run('END_LENS').k, 1, 'the people by the lens shrink away under the crane');
+// and it ends closer than the note is wide: a phone crops its corners and its small print reads
+assert(SHOT.view < 0.14 * B.scale, `the close-up shows ${SHOT.view} m across, less than the note's ${0.14 * B.scale}`);
 // it sets off from wherever the play camera is by then: from where it stood when the song ended it snapped back, a jump
 assert(first >= 0 && first < 2 * DRIFT, `the crane's first frame moves ${(first * 100).toFixed(1)} cm (the play camera's own ${(DRIFT * 100).toFixed(1)})`);
 // and no frame of it steps further than its own top speed: the note stepping up onto the mound as it lands moved the shot 15 cm at once

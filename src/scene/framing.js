@@ -26,10 +26,13 @@ export function stageFrame(out, top, bottom) {
 export const LENS_CLEAR = { near: 3.4, soft: 1.6, high: 7.5 };
 // A showreel dissolve's outgoing camera (ui/reel-fade.js): while its shot fades out, people by either lens shrink
 export const OUTGOING_LENS = { x: 0, y: 99, z: 0, on: false };
-export function lensShrink(lens, x, z) {
+// A figure's end shot bringing the play camera down through the people (the Bou's crane to its banknote went through a
+// spectator's head and one of its attendants): k 0-1, how much of the same shrinking applies in play (eased in by the shot)
+export const END_LENS = { k: 0 };
+export function lensShrink(lens, x, z, k = 1) {
   if (!lens || lens.y >= LENS_CLEAR.high) return 1;
   const t = (Math.hypot(x - lens.x, z - lens.z) - LENS_CLEAR.near) / LENS_CLEAR.soft;
-  return t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t);
+  return 1 - k * (t <= 0 ? 1 : t >= 1 ? 0 : 1 - t * t * (3 - 2 * t));
 }
 
 // Critically damped smoothing (no overshoot, the same path at 30, 60 or 120 fps): moves s.x[i] towards `target`,

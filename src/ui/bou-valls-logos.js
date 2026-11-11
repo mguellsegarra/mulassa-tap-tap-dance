@@ -1,4 +1,4 @@
-// The Bou de Valls's two entities, as the card's credit line shows them (chosen from tools/dev/bou-turba-propostes.html).
+// The Bou de Valls's two entities, as the card's credit line shows them.
 // La Turba: its logo's orange ring and star, without the red ground or the crowd (unreadable at 14 px); a local
 // simplification, not an official asset. El Calçot-AAEET published no logo: a calçot in a green ring, drawn for the game.
 const TURBA_STAR = 'M40 17L45.6 33.3H62.8L48.9 43.4L54.2 59.7L40 49.6L25.8 59.7L31.1 43.4L17.2 33.3H34.4Z';

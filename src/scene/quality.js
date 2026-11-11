@@ -56,7 +56,13 @@ function refreshQualityCrowd() {
   refreshBandSpots();
   crowdStamp++;
 }
-function qualityScaleTo(from, to, write) {
+// Where the band stands now: the plaça's own place, or the one a figure's ring gives it (rotllana.js). Every placing goes
+// through here: a quality change and a line-up change put it back at the plaça's place under the ring (5 m off, and back
+// a frame later: the band was seen moving at each change of quality)
+let bandAt = { az: BAND_AZ, room: undefined };
+export function placeBandAt(az = BAND_AZ, room) { bandAt = { az, room }; placeBandNow(); refreshBandSpots(); }
+const placeBandNow = () => placeBand(plaza.band, renderProfile.band, bandAt.az, bandLineup, bandAt.room);
+export function qualityScaleTo(from, to, write) {
   if (qualityTransition && from !== to) {
     write(from); // applying a profile must not change the exposed frame
     qualityTransition.items.push(k => write(from + (to - from) * k));
@@ -114,7 +120,7 @@ export function applyRenderQuality({ transition = false } = {}) {
   plaza.balcony.forEach((p, i) => qualityScaleTo(p.g.scale.x, i < renderProfile.balconies ? 1 : 0, value => p.g.scale.setScalar(value)));
   const bandScales = plaza.band.map(p => p.g.scale.x);
   const bandPositions = plaza.band.map(p => ({ position: p.g.position.clone(), yaw: p.g.rotation.y }));
-  placeBand(plaza.band, renderProfile.band, BAND_AZ, bandLineup);
+  placeBandNow();
   plaza.band.forEach((p, i) => {
     const previous = bandPositions[i], target = p.g.position.clone(), scale = p.g.scale.x;
     const turn = Math.atan2(Math.sin(p.g.rotation.y - previous.yaw), Math.cos(p.g.rotation.y - previous.yaw));
@@ -155,7 +161,7 @@ showBandLineup();
 export function setBandLineup(lineup) {
   if (lineup === bandLineup) return;
   bandLineup = lineup; bandEpoch++;
-  placeBand(plaza.band, renderProfile.band, BAND_AZ, lineup);
+  placeBandNow();
   showBandLineup();
   refreshBandSpots();
 }

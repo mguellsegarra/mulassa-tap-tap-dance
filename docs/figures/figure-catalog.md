@@ -132,4 +132,4 @@ El **Gegant del Calçot** (`gegant-calcot-valls`, UAF) és l'emblema de la Gran 
 
 El **Gegant del Campanar** (`gegant-campanar-valls`, UAF) es dibuixa en clau còmica, a partir de fotos del gegant al carrer i de l'exposició dels 300 anys: penell sobre una punxa, campanar quadrat amb dents i rosasses, cara quadrada amb somriure i un nas gros cap a l'esquerra, orelles amb campanes, la torre amb rellotge i finestra, i la faldilla llarga.
 
-Les fotos de referència d'aquestes revisions (`tools/dev/bou-turba-propostes/ref/`) són de tercers i no s'incorporen al joc ni al repositori.
+Les fotos de referència d'aquestes revisions són de tercers i no s'incorporen al joc ni al repositori.

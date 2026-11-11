@@ -17,7 +17,7 @@ import { framePlayCamera, applyWatchLook, CAMS } from '../scene/play-camera.js';
 import { framePhotoCamera, releasePhotoCamera } from '../scene/photo-camera.js';
 import { FIGURE_SCENES } from '../scene/figure-scenes.js';
 import { BOU_FINALE } from '../figures/bou/bou-bills.js';
-import { hud, HH, K, W, SAFE, baseFov } from '../hud/canvas.js';
+import { hud, HH, K, W, SAFE, baseFov, setCloseUp } from '../hud/canvas.js';
 import { lane, playBottom, playStage } from '../hud/layout.js';
 import { splashS, splashBand } from '../hud/title.js';
 import { viewMode, menuState, updateControls } from './controls.js';
@@ -85,6 +85,7 @@ export function frameCamera(dt, now, reelWide) { // reelWide: the idle selector'
     CAMS.live = false;
     if (G.state !== 'results' && camera.fov !== baseFov()) { camera.fov = baseFov(); camera.updateProjectionMatrix(); }
   }
+  setCloseUp(FIGURE_SCENES.some(f => f.closeUp?.())); // its small print at the screen's own pixels while it holds (hud/canvas.js); before the end shot: a resize resets the lens, which the shot then sets again (after it, one frame showed the play lens)
   if (!VIEW && !PHOTO.on) for (const f of FIGURE_SCENES) if (f.endShot) shift = f.endShot(dt, shift); // a figure's end shot (the Bou: down to its banknotes, over play and results)
   const menuCam = (menuState() || watchReel) && !PHOTO.on && !VIEW;
   setCamShift(PHOTO.on || menuCam || G.state === 'play' && !VIEW ? shift : camShift + (shift - camShift) * Math.min(1, dt * 3), menuCam ? lens.x : easeLensX(dt) * !PHOTO.on); // play and menus: already smoothed (photo driving: no shift)

@@ -5,13 +5,13 @@
 // every other slot. The façades' backdrop and the mid band hide meanwhile. setRotllana is called every frame
 // (stage-motion.js) and acts on a change.
 import * as THREE from 'three';
-import { buildBackdrop, placeBand } from './models.js';
+import { buildBackdrop } from './models.js';
 import { plaza, renderProfile, CAM_DIR } from './stage.js';
-import { crowd, placeHome, BAND_AZ } from './crowd-build.js';
+import { crowd, placeHome } from './crowd-build.js';
 // the band across the plaça from the play camera, a little off its axis (the figure would hide it): in every screen's shot,
 // a phone's narrow one too (at BAND_AZ it was off a phone's frame)
 const ROTLLANA_BAND_AZ = Math.atan2(CAM_DIR[2], CAM_DIR[0]) + Math.PI - 0.35;
-import { activeCrowd, bandSpots, midCrowd, crowdStamp, bandLineup, refreshBandSpots } from './quality.js';
+import { activeCrowd, bandSpots, midCrowd, crowdStamp, placeBandAt, qualityScaleTo } from './quality.js';
 
 // r0: the front row (beyond the colla's ring, RING.arenaMula 6.7 m); row / step: m between rows / along one (a shirt is
 // 0.46 wide; never under a mover's and a figure's footprints, RAD.adult + 0.33 + 0.04 = 0.73 m: at 0.7 they overlapped,
@@ -43,23 +43,30 @@ let rotllanaOn = false, rotllanaStamp = -1;
 const rotllanaHidden = new THREE.Matrix4().makeScale(0, 0, 0);
 function layRotllana() {
   rotllanaStamp = crowdStamp;
-  placeBand(plaza.band, renderProfile.band, ROTLLANA_BAND_AZ, bandLineup, ROTLLANA.band); refreshBandSpots();
+  placeBandAt(ROTLLANA_BAND_AZ, ROTLLANA.band);
   const byBand = s => bandSpots.some(b => Math.hypot(b.pos.x - s.x, b.pos.y - s.z) < ROTLLANA.bandRoom);
-  // the moving crowd: evenly over its slots
-  const movers = rotllanaSlots.filter(s => s.mover && !byBand(s)), taken = new Set(), A = activeCrowd.length;
-  for (const p of crowd) p.ring = null;
-  activeCrowd.forEach((p, i) => { const s = movers[Math.floor(i * movers.length / A)]; taken.add(s); p.ring = new THREE.Vector2(s.x, s.z); placeHome(p); });
-  // the figures: every other slot, but where the band stands
-  const { mesh } = rotllanaCrowd;
+  // the moving crowd: evenly over its slots. Who already stands in the ring keeps the spot (a change of quality dealt
+  // them all out again: half the front rows walked off to another place mid-dance); only newcomers take the free ones
+  const open = new Set(rotllanaSlots.filter(s => s.mover && !byBand(s))), taken = new Set(), active = new Set(activeCrowd);
+  for (const p of crowd) if (p.ring && active.has(p) && open.delete(p.ringSlot)) taken.add(p.ringSlot); else p.ring = p.ringSlot = null;
+  const rest = [...open], fresh = activeCrowd.filter(p => !p.ring);
+  fresh.forEach((p, i) => { const s = rest[Math.floor(i * rest.length / fresh.length)]; taken.add(s); p.ringSlot = s; p.ring = new THREE.Vector2(s.x, s.z); placeHome(p); });
+  // the figures: every other slot, but where the band stands, as many as the profile allows (front rows first). They come
+  // and go shrinking with the quality's own fade (quality.js), not at once: 230 of them gone in a frame read as people vanishing
+  const { mesh } = rotllanaCrowd, limit = renderProfile.backdrop + renderProfile.mid;
   let shown = 0;
   rotllanaSlots.forEach((s, i) => {
-    const free = !taken.has(s) && !byBand(s);
-    if (free) shown = i + 1;
-    mesh.setMatrixAt(i, free ? rotllanaBase[i] : rotllanaHidden);
+    const on = !taken.has(s) && !byBand(s) && i < limit ? 1 : 0;
+    if (on || rotllanaOut[i]) shown = i + 1;
+    qualityScaleTo(rotllanaOut[i], on, k => {
+      rotllanaOut[i] = k;
+      mesh.setMatrixAt(i, k ? rotllanaMatrix.copy(rotllanaBase[i]).scale(rotllanaScale.setScalar(k)) : rotllanaHidden);
+      mesh.instanceMatrix.needsUpdate = true;
+    });
   });
-  mesh.count = Math.min(shown, renderProfile.backdrop + renderProfile.mid);
-  mesh.instanceMatrix.needsUpdate = true;
+  mesh.count = shown; // shortcut: figures faded out stay in the count at zero size until the ring is laid again, trim it at the fade's end if their vertex cost shows
 }
+const rotllanaOut = new Float32Array(rotllanaSlots.length), rotllanaMatrix = new THREE.Matrix4(), rotllanaScale = new THREE.Vector3(); // each slot's figure: 0 away .. 1 there
 export function setRotllana(on) {
   if (!rotllanaCrowd) return;
   if (on === rotllanaOn) { if (on && crowdStamp !== rotllanaStamp) layRotllana(); return; } // (a quality change: who is in the crowd)
@@ -69,7 +76,8 @@ export function setRotllana(on) {
   if (midCrowd) midCrowd.mesh.visible = !on;
   if (on) layRotllana();
   else {
-    for (const p of crowd) if (p.ring) { p.ring = null; placeHome(p); }
-    placeBand(plaza.band, renderProfile.band, BAND_AZ, bandLineup); refreshBandSpots();
+    for (const p of crowd) if (p.ring) { p.ring = p.ringSlot = null; placeHome(p); }
+    rotllanaOut.fill(0); // (hidden with its mesh: laid afresh, at once, next time)
+    placeBandAt();
   }
 }

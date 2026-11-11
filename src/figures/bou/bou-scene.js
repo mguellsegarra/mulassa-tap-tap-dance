@@ -4,6 +4,7 @@ import { bou, bouColla } from './bou-objects.js';
 import { bouCollaTick, BOU_COLLA_SPOTS, poseBou, BOU_END, bouBrama, prepareBouMotion } from './bou-stage.js';
 import { animPlayableBou } from './bou-play.js';
 import { bouEndShot } from './bou-end-shot.js';
+import { BOU_FINALE } from './bou-bills.js';
 import { placeBouClip, BOU_CLIP_END } from './bou-clip.js';
 import { camera } from '../../scene/stage.js';
 import { G, clock } from '../../game/state.js';
@@ -33,5 +34,6 @@ export const BOU_SCENE = {
   hero: { scale: 0.8, pose() { poseBou(BOU_END); } }, // its last stance, back on its entrance facing
   onBoth: bouBrama, // a BRAMA: squashed, mouth wide, tongue out
   endShot: bouEndShot, // its song's end: the camera comes down to its banknotes
+  closeUp: () => BOU_FINALE.on && BOU_FINALE.k >= 1, // the crane down on the note: sharp from there until the notes go (not mid-crane: the new buffer costs a frame, seen while the shot still moves)
   filmShot: bouFilmShot,
 };

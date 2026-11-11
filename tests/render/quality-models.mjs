@@ -1,7 +1,7 @@
 // Render quality (profiles, DPR, the frame monitor and pacer, HUD budget) and the voxel models (skinned crowd, band,
 // backdrop, z-fighting): no game needed.
 import assert from 'node:assert/strict';
-import { PROFILES, sessionProfile, initialQuality, renderDpr, frameMonitor, hudScale, framePacer, profileAt, hudBudget, MINIMAL, isSoftwareRenderer, probeRenderer } from '../../src/platform/render-quality.js';
+import { PROFILES, sessionProfile, initialQuality, renderDpr, closeUpDpr, CLOSE_UP_PIXELS, CLOSE_UP_PIXELS_LOW, frameMonitor, hudScale, framePacer, profileAt, hudBudget, MINIMAL, isSoftwareRenderer, probeRenderer } from '../../src/platform/render-quality.js';
 import { buildPerson } from '../../src/scene/models.js';
 assert.equal(initialQuality({ mobile: true, cores: 8, memory: 8 }), 1);
 assert.equal(initialQuality({ mobile: true, cores: 4 }), 1); // iOS under-reports cores: phones start antialiased
@@ -59,6 +59,14 @@ assert.equal(promptReductions, 1, 'very slow rendering must react within six sec
 // the minimal tier (-1): only reached by stepping down; below 1x 3D, one crowd row; this session only
 assert.equal(profileAt(-1), MINIMAL); assert.equal(profileAt(0), PROFILES[0]); assert.equal(profileAt(2), PROFILES[2]);
 assert(renderDpr(MINIMAL, 393, 852, 3) < 1.05 && renderDpr(MINIMAL, 1280, 800, 2) < 0.7, 'minimal draws the 3D below 1x');
+{ // a held close-up on small print: the screen's own pixels from medium up, within its budget, never under the profile's own
+  const [low, medium, high] = PROFILES;
+  assert.equal(closeUpDpr(medium, 402, 874, 3), 3, 'an iPhone Pro at medium: its own 3x (1.5x otherwise)');
+  assert.equal(renderDpr(medium, 402, 874, 3), 1.5);
+  const s10 = closeUpDpr(medium, 411, 745, 3.5); assert(s10 < 3.5 && Math.abs(s10 * s10 * 411 * 745 - CLOSE_UP_PIXELS) < 1, 'a 3.5x phone: capped by the pixel budget');
+  for (const p of [low, MINIMAL]) { const k = closeUpDpr(p, 411, 745, 3.5); assert(k > 2 && Math.abs(k * k * 411 * 745 - CLOSE_UP_PIXELS_LOW) < 1, `${p.name}: sharper than its own 1x, within its smaller budget`); }
+  for (const [w, h, d] of [[2560, 1440, 1], [3840, 2160, 2], [1280, 800, 2]]) assert(closeUpDpr(high, w, h, d) <= d && closeUpDpr(high, w, h, d) >= renderDpr(high, w, h, d), `a ${w}x${h} desktop: its own pixels at most, never fewer than before`);
+}
 assert(MINIMAL.rows === 1 && MINIMAL.backdrop < PROFILES[0].backdrop && MINIMAL.confetti < PROFILES[0].confetti);
 // A full plaça, cheaply: the instanced figures (façades: backdrop; beyond the ring: mid), the static
 // balcony people and the ring that answers hits (near) grow with the tier; low-end phones pay the least.

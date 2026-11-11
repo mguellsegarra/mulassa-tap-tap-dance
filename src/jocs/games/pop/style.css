@@ -128,6 +128,14 @@ dialog .feedback-field { border-color: color-mix(in srgb, var(--accent) 60%, tra
   .help-legend .face img { max-width: 32px; max-height: 38px; }
   .help-legend .star { right: -1px; }
 }
+/* short screens (iPhone SE in Safari, 548 px): the full sheet scrolled to its focused «Juga» and hid the title under the frame */
+@media (max-height: 600px) {
+  .help-sheet h2 { margin-bottom: 6px; }
+  .help-legend .rows { gap: 4px; }
+  .help-legend .r { min-height: 44px; }
+  .help-legend .face { height: 40px; }
+  .help-legend .face img { max-height: 38px; }
+}
 .help-legend .combo { grid-column: 1 / -1; display: grid; gap: 4px; justify-items: center; margin-top: 4px; text-align: center; } /* the chord combo (help.js combo, rules.js CHORD): no box, the in-game lettering */
 .help-legend .combo p { margin: 0; font-size: 14px; line-height: 1.15; color: #e8d8b8; text-wrap: balance; }
 .help-legend .combo .x { display: flex; align-items: baseline; gap: 12px; font-weight: 800; line-height: 1; color: #ffe066; -webkit-text-stroke: .16em #2a1a10; paint-order: stroke fill; }
@@ -169,6 +177,6 @@ svg.podium { fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap
 #end-menu .btn > svg { fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; } /* the end sheet's icons are drawn as lines */
 /* the end sheet's culprit, alive (hero.js solo, results.js) */
 #end-art { display: flex; align-items: center; justify-content: center; flex: 0 1 calc(220px * var(--sheet-zoom, 1)); width: min(calc(320px * var(--sheet-zoom, 1)), 100%); min-height: 120px; } /* grown with the sheet (game.css --sheet-zoom), its canvas sized, not zoomed */
-#end-art canvas { width: 100%; height: 100%; }
+#end-art canvas { width: 100%; height: 100%; object-fit: contain; } /* the home's buffer, kept (hero.js fit): its transparent margins never show */
 
 

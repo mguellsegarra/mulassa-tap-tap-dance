@@ -117,6 +117,44 @@ the method and its tools: `docs/agents/device-profiling.md`.
   not drawn at all). `will-change: transform` on the dim element (`sheets.css` `.sheet-dim`) made it a solid-colour layer:
   the first ⚙ 34–67 ms. The Bústia's confirm notice copies the publish sheet's seal and perks: that sheet is warmed too
   (first notice 100–117 → 34–67 ms).
+- What the page cover already pays, and what it does not. Under `#loader` the game compiles the 3D's shaders (`precompile`),
+  paints the HUD canvas's big words once (`warmups`, `hud/warm.js`), waits for the fonts and for the plaça to run smooth
+  (`COVER_SMOOTH`, `main.js`), and shows the selector once (`ui/select-warm.js`, below). That covers WebGL, the 2D canvas
+  and the selector's DOM. It does not cover anything else in HTML and CSS that first paints later: a sheet, a tip, a
+  notice, a new panel. Each of those still compiles its GPU programs at its first show, right when the player is looking.
+- The selector's first show paid the same compiles (~125 programs, two ~300 ms frames right under the splash's tap): it is
+  rehearsed once under the page cover instead (`ui/select-warm.js`, `select-ui.js` `visible(on, rehearsal)`: shown inert,
+  the host told nothing, the challenge's level kept, then hidden; only when the cover lifts on the splash). S10, 2026-11-11,
+  production build, cold, three alternated runs: time lost in frames over 50 ms around the opening 637-821 ms -> 251-302,
+  its longest frame 268-385 -> 101; the cover stays ~0.6 s longer on average (0.9 s at least while it rehearses, 2.5 s at
+  most on a device that never runs smooth). Anything new the selector shows at its opening is warmed with it for free;
+  anything it shows later (a tip after 2 s, a card arriving from the network) is not.
+- A change in which elements have a layer of their own costs like a first paint. When an element gains or loses its layer
+  (an animation of `scale`, `translate` or `opacity` starting or ending, a transition's end, `visibility: hidden` on a
+  neighbour, an element appended over the panel), Chrome re-rasters the tiles around it, and the new split compiles GPU
+  programs again (13-23 at a time, 85-140 ms on the S10) although nothing new is drawn. Found on the heart's ribbon
+  («Un cor per a tu!», `ui/heart-tip.js`): 134-168 ms as it came and 134-151 ms at the end of the heart's pulse, 3.6 s
+  later. The owner was not the ribbon's drawing (flat, without its shadow or tail: the same; hidden with `display: none`:
+  the same, as a `:has()` rule on it still matched) but the rule hiding the song's row under it with
+  `visibility: hidden`. Faded with `opacity: 0` and `pointer-events: none` instead (`select-pending.css`): 17-34 ms at
+  both moments, the animations untouched. So: to take something out of sight for a moment on a screen that is on show,
+  fade it with `opacity` (and `pointer-events: none`) rather than `visibility` or `display`, and measure.
+- `will-change` is not a fix for that; measured, it moved the cost or multiplied it. `#select-heart { will-change: scale }`
+  made the ribbon's two moments cheap (50-84 ms) and brought a new 184-218 ms frame ~1 s after the opening, when the
+  standings card's skeleton-to-real crossfade ended (23 programs): 1234 ms lost in all against 1155 without it, reverted.
+  The same plus `will-change: opacity` on `#select-standings-sk` and `.sel-standings-real`: ~200 frames over 50 ms in
+  17 s (two phone-wide layers at DPR 3.5 composited every frame). A permanent layer is a per-frame cost: add one only
+  with the device's numbers, as for the full-screen dim above.
+- A compositor-only animation is free; the same look done another way is not. The new figure's card sweep
+  (`.sel-card.sel-new::before`, a band of light moved with `translate`, no blend mode, three runs and then still): the
+  S10 painted 2-4 times in 2 s while it ran (a repaint every frame would be ~120) and its frames matched the runs
+  without it. Not measured here, but they repaint every frame by construction, so measure before leaving one running:
+  `mix-blend-mode` over moving content, an animated `background-position`, an animated gradient angle (the difficulty
+  buttons' turning ring, `--sel-halo`).
+- Measured to nothing, so nobody repeats it: the «Més jocs!» tip at the selector's opening (788-921 ms lost without it,
+  770-820 with it); the ribbon's shadow, tail and gradient; the ribbon's own pop and bob animations. And opening the
+  selector on the Bou instead of the Mulassa costs the same at the opening (the Bou's later hitches were the ribbon's,
+  which only a figure with no heart from this player shows).
 
 ## GPU context loss (mobile GPUs)
 

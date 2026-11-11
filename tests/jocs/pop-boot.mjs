@@ -45,6 +45,23 @@ p.win.__gameBootWords = { title: 'Oops', text: 'Reload', retry: 'Retry' };
 p.listeners.unhandledrejection({});
 assert.deepEqual([p.parts.h2.textContent, p.parts.button.textContent], ['Oops', 'Retry'], "the player's language once main.js has it");
 
+// Sentry gets a fixed cause (never the message): which kind of failure showed the card
+for (const [fire, cause] of [[q => q.listeners.error({ target: { tagName: 'IMG', src: 'https://mulassa.cat/x.png' } }), 'resource:IMG'],
+  [q => q.listeners.error({ target: {}, message: 'private text' }), 'error'], [q => q.listeners.unhandledrejection({ reason: 'x' }), 'rejection']]) {
+  const q = page();
+  fire(q);
+  assert.equal(q.win.__mulassaBootFailure.cause, cause, `cause ${cause}`);
+}
+{ // plassa/errors.js forwards only those fixed causes
+  const source = readFileSync(new URL('../../packages/plassa/src/errors.js', import.meta.url), 'utf8');
+  const bridge = source.slice(source.indexOf('if (w) {\n  let bootReported'), source.indexOf("if (MODE === 'development'"));
+  for (const [cause, sent] of [['resource:IMG', 'resource:IMG'], ['rejection', 'rejection'], ['https://x.test/?t=private', undefined]]) {
+    const events = [], w = { __mulassaBootFailure: { phase: 'init', reason: 'startup', cause } };
+    vm.runInNewContext(bridge, { w, errors: { report: (kind, tags) => events.push(tags), start() {} } });
+    assert.equal(events[0].cause, sent, `forwarded cause for ${cause}`);
+  }
+}
+
 p = page({ ready: true });
 p.listeners.error({ target: null });
 assert.equal(p.boot.className, 'cover', 'an error once the home is up is not a boot failure');

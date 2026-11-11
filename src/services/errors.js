@@ -156,6 +156,7 @@ if (w) {
     const reason = ['deadline', 'module-load', 'module-init', 'startup'].includes(failure.reason) ? failure.reason : 'unknown';
     const timing = {};
     for (const key of ['visibleMs', 'phaseMs']) if (Number.isFinite(failure[key]) && failure[key] >= 0) timing[key] = Math.min(300000, Math.round(failure[key]));
+    if (/^(error|rejection|resource:[A-Z]{1,12})$/.test(failure.cause)) timing.cause = failure.cause; // only the games' watchdog (plassa/boot-watchdog.js) sets it
     errors.report('boot-failed', { phase, reason, ...timing });
     errors.start();
   };

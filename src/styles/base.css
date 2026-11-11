@@ -110,6 +110,10 @@ button svg { width: 22px; height: 22px; flex: none; fill: none; stroke: currentC
 .watch-tag { position: fixed; z-index: 3; top: calc(18px + env(safe-area-inset-top)); left: env(safe-area-inset-left); margin: 0; display: grid; padding: 6px 14px 7px 12px; border-left: 4px solid #f5c518; border-radius: 0 8px 8px 0; background: #2a1a10e0; color: #fff3d6; font: 600 13px/1.25 'Baloo 2', system-ui, sans-serif; pointer-events: none; }
 .watch-tag b { font-weight: 800; letter-spacing: .08em; }
 @media (min-width: 900px) and (min-height: 600px) { .watch-tag { padding: 8px 18px 9px 14px; font-size: 15px; } }
+/* free play straight from the demo (phones have no room for it on the selector's song row): a lilac pill, the games' look (select-chrome.css) */
+#watch-walk { position: fixed; z-index: 3; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); translate: -50% 0; display: inline-flex; align-items: center; gap: 10px; height: 52px; padding: 0 24px 0 18px; border: 2px solid #f5c518; border-radius: 999px; color: #fff3d6; font: 800 17px/1 'Baloo 2', system-ui, sans-serif; white-space: nowrap; cursor: pointer; }
+#watch-walk[hidden] { display: none; }
+.pad-ico { width: 24px; height: 24px; fill: none !important; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; } /* Lucide's line gamepad, inside buttons whose icons are filled */
 #watch-menu { width: min(360px, calc(100vw - 48px)); padding: 24px; text-align: center; }
 #watch-menu h2 { margin-bottom: 6px; }
 #watch-menu p { margin: 0 0 18px; color: #e8d8b8; font-size: 16px; text-wrap: balance; }

@@ -62,3 +62,25 @@ only while the faded UI stayed in the page. 30 s phases: as is 12-32% of frames 
 0-0.5%; visibility hidden 17-27%; content-visibility hidden 0%. Safari composites invisible layers; the fix stops
 rendering the UI once the fade is over (`data-reel-gone`). Four «obvious» causes before it were measured to nothing:
 the dissolve, a shot, the WebGL copy, the collector.
+
+## P11
+
+2026-11-11, the selector on the S10 with the Bou chosen: 5-8 frames over 50 ms in 11 s against the Mulassa's 2-3. Not
+the Bou: `?perf` read the same for both (58 fps, JS 6.6 ms, 3D 3.9 ms). The slow frames came at the same two seconds in
+every run, 2.4 s and 6.0 s after the opening, and a trace put 85-110 ms of each in `VulkanCreateGraphicsPipelines`
+(13-14 programs) on the GPU's main thread: the heart's ribbon showing, then the heart's pulse ending. Only a figure
+with no heart from this player shows the ribbon, which the test profile's Bou was. Removing the ribbon's shadow, tail,
+gradient or animations changed nothing; with the ribbon `display: none` the frame stayed, because the `:has()` rule that
+hid the song's row under it still matched. That rule's `visibility: hidden` was the owner; `opacity: 0` in its place:
+17-34 ms. `will-change` on the heart looked like a fix on the two frames it was aimed at and lost 80 ms overall (a new
+frame elsewhere); on the standings card it made the selector stutter all the time. First hypothesis measured to
+nothing: the figure's 3D. A phone shared with another agent's tabs gave 12 fps for an hour before that was noticed.
+
+## P12
+
+2026-11-11, the splash's tap to the selector on the S10: two ~300 ms frames, ~125 GPU programs compiled for the selector's
+first paint, known since 2026-11-03 and accepted as a first-raster cost. Showing the selector once under the page cover
+(inert, the host told nothing) moved the compiles there: 637-821 ms lost around the opening -> 251-302, the cover ~0.6 s
+longer. A crude prototype behind a URL flag proved it in one build before any real code was written; its first numbers
+were wrong because the probe timed the rehearsal instead of the real opening.
+

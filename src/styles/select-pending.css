@@ -225,9 +225,6 @@
 .sel-heart-tip { position: fixed; z-index: 20; display: flex; align-items: center; gap: 8px; box-sizing: border-box; min-height: 40px; padding: 4px 12px; border-radius: 10px; background: linear-gradient(#d93148, #ad1f33); box-shadow: 0 3px 0 #6d1220, 0 6px 14px #0008; color: #fff; font: 800 14px/1.15 'Baloo 2', system-ui, sans-serif; transform-origin: 50% 0; animation: sel-tip-in .35s cubic-bezier(.3, 1.5, .5, 1), sel-tip-bob 1.4s ease-in-out .35s infinite; }
 .sel-heart-tip::before { content: ""; position: absolute; top: -9px; left: var(--tail); width: 20px; height: 10px; margin-left: -10px; background: #d93148; clip-path: polygon(50% 0, 100% 100%, 0 100%); }
 .sel-heart-called { animation: sel-heart-call 1.2s ease-in-out 3; }
-/* Its own layer from the start: the pulse promoting it, then dropping it, re-rastered the panel each time (S10: 117-201 ms at
-   the ribbon's show and again at the pulse's end; with it 50-84, and one 184-218 ms frame ~1 s after the selector opens) */
-#select-heart { will-change: scale; }
 @keyframes sel-tip-in { from { opacity: 0; scale: .6; } }
 @keyframes sel-tip-out { to { opacity: 0; scale: .8; } }
 @keyframes sel-tip-bob { 50% { translate: 0 -5px; } } /* towards the heart above it */

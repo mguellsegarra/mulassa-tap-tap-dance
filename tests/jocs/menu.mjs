@@ -29,6 +29,7 @@ assert.deepEqual(links, ['/packages/plassa/src/base.css', '/packages/plassa/src/
 assert.deepEqual([...html.matchAll(/<script[^>]*src="([^"]+)"/g)].map(m => m[1]), ['/packages/plassa/src/boot-watchdog.js', '/src/jocs/menu/main.js']);
 assert(html.includes('<script id="boot-watchdog" src="/packages/plassa/src/boot-watchdog.js"></script>') && html.includes('<div id="boot" class="cover">') && html.includes('<!-- mula-load -->'), 'the boot screen and the shared watchdog');
 const menuMain = readFileSync('src/jocs/menu/main.js', 'utf8');
+assert(/<video id="games-hero-video"[^>]*\bdisablepictureinpicture\b[^>]*\bdisableremoteplayback\b/.test(html), 'the hero clip is a backdrop: the browser never offers it as picture-in-picture');
 // «Juga» answers at once: the page fades (opacity, no layer change from visibility/display) before the next page starts loading
 assert(/classList\.add\('leaving'\);[\s\S]{0,120}location\.replace\(/.test(menuMain), 'the fade is asked before the navigation');
 assert(/html\.leaving body \{ opacity: 0; transition: opacity [^;]+; pointer-events: none; \}/.test(readFileSync('src/jocs/menu/style.css', 'utf8')), 'it fades and takes no second tap');

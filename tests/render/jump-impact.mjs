@@ -1,14 +1,14 @@
 // Real motion/camera VM: manual ownership is independent of the selector/demo state.
 export function verifyJumpImpact(run, assert) {
   const results = [];
-  for (const fps of [30, 60, 120]) for (const id of ['mulassa-valls', 'drac-valls']) {
+  for (const fps of [30, 60, 120]) for (const id of ['mulassa-valls', 'drac-valls', 'bou-tradicional-valls']) {
     run(`G.state='select'; G.paused=false; G.collapseT=0; CALM.matches=false; setFigureSong(MULASSA);
       setView(false); setView(true); setPhotoControl(true,${JSON.stringify(id)});
       animStage(1/${fps},0); resetMotionImpact(); PHOTO.action=true;
       var impactRows=[], impactPulses=0, impactPrevious=-1;
       for(let i=1;i<=${fps}*1.5;i++) {
         clock+=1/${fps}; animStage(1/${fps},clock/BEAT);
-        const air=PHOTO.id==='mulassa-valls'?M.air:DRAC_JUMP.air;
+        const air=PHOTO.id==='mulassa-valls'?M.air:PHOTO.id==='drac-valls'?DRAC_JUMP.air:BOU_JUMP.air;
         if(manualLanding && manualLanding.time!==impactPrevious){impactPulses++;impactPrevious=manualLanding.time;}
         impactRows.push({t:i/${fps},air,pulse:manualLandingStrength(),trauma,contact:manualLanding?.time===clock});
         if(i<${fps}*.5) PHOTO.action=true; // repeated input in flight cannot restart it
@@ -65,7 +65,7 @@ export function verifyJumpImpact(run, assert) {
     clearCameraImpact();`);
   assert(run('cameraBound>.02 && cameraBound<=Math.hypot(.25,.2)*.98**2+1e-9'), 'camera translation hard bounded without accumulation');
   assert(run('camera.position.distanceTo(cameraBase)<1e-9 && camFocus.distanceTo(focusBase)===0 && JSON.stringify(titleS)===springBase'), 'zero residual; no framing target or spring mutation');
-  for (const id of ['mulassa-valls','drac-valls']) assert.equal(new Set(results.filter(r=>r.id===id).map(r=>r.peak)).size, 1, 'identical initial strength at 30/60/120 Hz');
+  for (const id of ['mulassa-valls','drac-valls','bou-tradicional-valls']) assert.equal(new Set(results.filter(r=>r.id===id).map(r=>r.peak)).size, 1, 'identical initial strength at 30/60/120 Hz');
   run(`var savedImpactNow=performance.now;
     manualLanding={origin:'manual-jump',actor:PHOTO.id,epoch:PHOTO.epoch,inputEpoch:PHOTO.inputEpoch,time:clock,startedAt:0};
     performance.now=()=>620;var wallExpired=manualLandingStrength();performance.now=savedImpactNow;

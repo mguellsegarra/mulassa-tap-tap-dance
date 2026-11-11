@@ -218,7 +218,7 @@ import { THREE, models, framing, dance, nodes, keyHandlers, windowHandlers, docu
   assert(run('pfTip.dataset.visible === "false" && pfHelp.textContent.includes("rugeix")'), 'after fade the accessible help remains');
   if (run("PLAYABLE_IDS.includes('bou-tradicional-valls')")) {
     keyDown('Tab');
-    assert(run('pfTip.innerHTML.includes("Ara mous el Bou") && pfHelp.textContent.includes("envesteix") && pfHelp.textContent.includes("Tab")'), 'the Bou comes next, and Tab goes on from it');
+    assert(run('pfTip.innerHTML.includes("Ara mous el Bou") && pfHelp.textContent.includes("salta") && pfHelp.textContent.includes("guitza") && !pfHelp.textContent.includes("rugeix")'), 'the Bou comes next, jumping and kicking as the Mulassa does');
   }
   keyDown('Tab');
   assert(run('pfTip.innerHTML.includes("Ara mous la Mulassa")'), 'each switch identifies the actual actor');

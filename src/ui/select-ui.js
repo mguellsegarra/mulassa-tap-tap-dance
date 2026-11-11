@@ -2,7 +2,7 @@
 // A pending figure shows its own panel instead of the records.
 // Arrows rove cards; Enter confirms a figure. On the next step arrows choose difficulty; Escape returns. The keys
 // and the layout's measure are select-keys.js and select-layout.js.
-import { FIGURES, TOWNS, townOf, playable, hasBoard, upFront, rememberedLevel, rememberLevel, readFigureRecord, INVITE, INVITE_TOWN } from '../game/figures.js';
+import { FIGURES, TOWNS, townOf, playable, hasBoard, upFront, rememberedLevel, rememberLevel, readFigureRecord, isNovelty, INVITE, INVITE_TOWN } from '../game/figures.js';
 import { DIFFS } from '../game/chart.js';
 import { num } from './sheet-kit.js';
 import { showLevelStats } from './level-stats.js';
@@ -39,11 +39,12 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
   towns.setAttribute('role', 'group'); // Native Tab order, with optional arrow shortcuts between visible buttons.
   towns.innerHTML = [...liveTowns, ...soonTowns].map(pillHtml).join('');
   escutBitmaps(towns, win); // (before the selector first shows: its arms then raster as images)
-  strip.innerHTML = stripHtml(live) + (soon.length ? stripHtml([...soon, INVITE], true, townOf(live.at(-1))) : '');
+  const fresh = live.filter(f => isNovelty(store, f)), inStrip = [...fresh, ...live.filter(f => !fresh.includes(f))]; // the new figure leads the strip until played
+  strip.innerHTML = stripHtml(inStrip, false, null, fresh) + (soon.length ? stripHtml([...soon, INVITE], true, townOf(inStrip.at(-1))) : '');
   levels.innerHTML = DIFFS.map((d, i) => `<button type="button" class="btn btn-secondary" data-level="${i}" aria-pressed="false">${d.name}</button>`).join('');
   const bar = [...towns.querySelectorAll('.sel-pill')], pills = bar.filter(p => p.dataset.town), cards = [...strip.querySelectorAll('.sel-card')];
   const later = [...strip.querySelectorAll('.later')];
-  let figure = live.find(f => f.id === firstFigure) ?? live[0], lastPlayable = figure; // catalog selection is independent of the host's last playable figure
+  let figure = live.find(f => f.id === firstFigure) ?? fresh[0] ?? live[0], lastPlayable = figure; // the new figure opens the selector while it is new; catalog selection is independent of the host's last playable figure
   let opening = false, shown = false, level = 1, town = null, cur = 0, req = 0, step = 'figures';
   const smooth = () => (reduced() ? 'auto' : 'smooth');
   const api = { band: null, measure: () => { if (shown) measure(); }, onSelect, get figure() { return figure; }, get pending() { return !playable(figure); }, visible, toLevels: () => nextStep() };

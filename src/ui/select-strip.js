@@ -31,7 +31,7 @@ export function paintCardHearts(cards, hearts) {
     box.toggleAttribute('data-mine', hearts.mine(c.dataset.id));
   }
 }
-export function stripHtml(figures, later = false, last = null) { // later: the figures still to come, after the playable ones; last: the town before (no banner twice)
+export function stripHtml(figures, later = false, last = null, fresh = []) { // later: the figures still to come, after the playable ones; last: the town before (no banner twice); fresh: the new figure, its card shining (.sel-new)
   let html = '';
   for (const f of figures) {
     const t = townOf(f);
@@ -40,7 +40,7 @@ export function stripHtml(figures, later = false, last = null) { // later: the f
     const name = f.name || tr('ui.select.aviat'), entity = f.entity || t.name;
     const ok = playable(f), art = f.thumbnail ? null : portraitArt(f); // the portrait's grid with its rim: whole-pixel sizing (select-cards.css)
     const box = art && ((!ok && silhouetteBox(f.id)) || [art[0].length + 2, art.length + 2]); // a pending figure's drawn silhouette sizes its card (no pixel portrait until it is playable)
-    html += `<button type="button" class="btn btn-secondary sel-card${ok ? '' : ' aviat'}${later ? ' later' : ''}" role="option" data-id="${escapeHtml(f.id)}" data-town="${t.id}" tabindex="-1" aria-selected="false" aria-label="${escapeHtml(f.invite ? tr('ui.select.cardInvite', { name, entity: entity.toLowerCase() }) : tr(ok ? 'ui.select.card' : 'ui.select.cardSoon', { name, entity: entityLabel(f), town: t.name }))}"${box ? ` style="--gw:${box[0]};--gh:${box[1]};--s:${portraitStand(f)}"` : ''}><span class="por">${svgImg(SELECTOR_PORTRAITS[f.id] || (ok || f.thumbnail ? portraitHtml(f) : pendingSilhouette(art)))}</span><span class="nb"><span class="sel-card-name">${escapeHtml(name)}</span>${cardEntityHtml(f)}${f.invite ? '' : HEARTS_HTML}</span></button>`;
+    html += `<button type="button" class="btn btn-secondary sel-card${ok ? '' : ' aviat'}${later ? ' later' : ''}${fresh.includes(f) ? ' sel-new' : ''}" role="option" data-id="${escapeHtml(f.id)}" data-town="${t.id}" tabindex="-1" aria-selected="false" aria-label="${escapeHtml(f.invite ? tr('ui.select.cardInvite', { name, entity: entity.toLowerCase() }) : tr(ok ? 'ui.select.card' : 'ui.select.cardSoon', { name, entity: entityLabel(f), town: t.name }))}"${box ? ` style="--gw:${box[0]};--gh:${box[1]};--s:${portraitStand(f)}"` : ''}><span class="por">${svgImg(SELECTOR_PORTRAITS[f.id] || (ok || f.thumbnail ? portraitHtml(f) : pendingSilhouette(art)))}</span><span class="nb"><span class="sel-card-name">${escapeHtml(name)}</span>${cardEntityHtml(f)}${f.invite ? '' : HEARTS_HTML}</span></button>`;
   }
   return html;
 }

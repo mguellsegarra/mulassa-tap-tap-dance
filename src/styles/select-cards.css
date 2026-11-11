@@ -105,6 +105,13 @@
 .sel-card[aria-selected="true"]::after { border: 0; box-shadow: inset 0 0 0 3px #fff3d6; }
 .sel-card[aria-selected="true"] .sel-card-name { color: #fff3d6; }
 @media (hover: hover) { .sel-card:not([aria-selected="true"]):hover { transform: translateY(-2px); } }
+/* The new figure's card (.sel-new, until it is played): a band of gold light sweeps across it three times each time the
+   selector shows (display: none restarts it), then it is still. Only `translate` moves and no blend mode: the compositor
+   runs it, with no paint or main-thread work per frame. Over the portrait, under the heart count. */
+.sel-card.sel-new::before { content: ''; position: absolute; z-index: 1; inset: -20% -60%; background: linear-gradient(105deg, #0000 42%, #ffe68a3d 47%, #fff6d08c 50%, #ffe68a3d 53%, #0000 58%); translate: -70% 0; pointer-events: none; animation: sel-new-sweep 3.6s cubic-bezier(.45, 0, .2, 1) 1.6s 3 both; /* the delay: past the selector's own opening */ }
+.sel-card.sel-new .sel-card-hearts { z-index: 2; }
+@keyframes sel-new-sweep { 0% { translate: -70% 0; } 40%, 100% { translate: 70% 0; } }
+@media (prefers-reduced-motion: reduce) { .sel-card.sel-new::before { animation: none; display: none; } }
 /* a town's gonfanó: a plain cloth hung from a gold pole wider than it, a gold fringe at its foot (whole strands, so both edges match), the name on the cloth;
    it rises 8 px into the strip's top padding, above the cards */
 .sel-banner { position: relative; flex: 0 0 34px; margin-top: -8px; background: linear-gradient(var(--town), var(--town)) 2px 4px / calc(100% - 4px) calc(100% - 15px) no-repeat; }

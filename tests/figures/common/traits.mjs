@@ -13,8 +13,10 @@ for (const id of PLAYABLE_IDS) {
   assert(existsSync(new URL(`../../../src/figures/${t.key}/`, import.meta.url)), `${id}: its folder src/figures/${t.key}/`);
   assert(['balloon', 'carretilles', 'esquellot'].includes(t.drumroll), `${id}: a drumroll the HUD draws`);
   assert(['fem', 'masc'].includes(t.article) && ['mula', 'drac'].includes(t.playCam) && [null, 'sparks'].includes(t.photoE), `${id}: known values`);
+  assert.equal(typeof t.novelty, 'boolean', `${id}: novelty is a yes or no`);
   assert.equal(traitsByKey(t.key), t); assert.equal(idOfKey(t.key), id); assert.equal(traitsOf(id), t);
 }
+assert(PLAYABLE_IDS.filter(id => FIGURE_TRAITS[id].novelty).length <= 1, 'one new figure at a time leads the selector');
 assert.equal(traitsOf('nobody'), FIGURE_TRAITS['mulassa-valls'], 'an unknown id falls back to the Mulassa');
 assert.equal(idOfKey('nobody'), null);
 for (const [v, id] of [[CURRENT_SCORE_VERSION, 'mulassa-valls'], [LEGACY_SCORE_VERSION, 'mulassa-valls'], [SHORT_SCORE_VERSION, 'mulassa-valls'],

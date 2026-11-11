@@ -19,17 +19,18 @@ export const FIGURE_TRAITS = Object.freeze({
     splashHost: true, splashPartner: false, // the splash's pair: the one that hosts it, the one beside the host
     landing: 0.98, // the manual jump's landing shake (scene/manual-jump.js)
     reelCalm: false,
+    novelty: false, // the selector's newest figure: first in the strip, its card shining, until it is played (ui/select-ui.js)
     frameLength: true, // the selector and showreel frame her by her length, whatever her heading (scene/cameras.js): turned side on at once she outgrew a phone's frame
   }),
   'drac-valls': Object.freeze({
     key: 'drac', drumroll: 'carretilles', article: 'masc', cardFile: 'drac-de-valls.jpg', cardAlt: 'hud.card.altDrac',
     shareKey: null, shareLines: 'services.share.drac.', shareEmoji: '🐉', challenge: true, playCam: 'drac', wideClearance: true, photoSpace: 'ui.photo.act.jump', photoE: 'sparks',
-    photoBody: 'drac', springs: false, splashHost: false, splashPartner: true, landing: 0.9, frameLength: false, reelCalm: false,
+    photoBody: 'drac', springs: false, splashHost: false, splashPartner: true, landing: 0.9, frameLength: false, reelCalm: false, novelty: false,
   }),
   'bou-tradicional-valls': Object.freeze({
     key: 'bou', drumroll: 'esquellot', article: 'masc', cardFile: 'bou-tradicional-de-valls.jpg', cardAlt: 'hud.card.altBou',
     shareKey: 'services.share.bou', shareLines: null, shareEmoji: null, challenge: false, playCam: 'mula', wideClearance: false, photoSpace: 'ui.photo.act.bou.space', photoE: null,
-    photoBody: 'bou', springs: false, splashHost: false, splashPartner: false, landing: 0.9, frameLength: false, reelCalm: true, // reelCalm: the selector's showreel camera follows it slowly (scene/cameras.js)
+    photoBody: 'bou', springs: false, splashHost: false, splashPartner: false, landing: 0.9, frameLength: false, reelCalm: true, novelty: true, // reelCalm: the selector's showreel camera follows it slowly (scene/cameras.js)
   }),
 });
 // The Bou is active for the 1.4.0 worktree review; its online board remains disabled.

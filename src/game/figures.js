@@ -5,7 +5,7 @@ import { bestRecord, recordPointsKey, saveRecord } from './records.js';
 import { CURRENT_SCORE_VERSION, DRAC_SCORE_VERSION, BOU_SCORE_VERSION } from './score-scale.js';
 import { FIGURE_PORTRAITS } from './figure-portraits.js';
 import { MOCK_BOARD } from '../core/mock-board.js';
-import { PLAYABLE_IDS } from '../figures/index.js';
+import { PLAYABLE_IDS, FIGURE_TRAITS } from '../figures/index.js';
 // Valls first, the rest alphabetical by Catalan name, so the catalogue grows without a hand-kept order.
 const byTown = (a, b) => (a.id === 'valls' ? -1 : b.id === 'valls' ? 1 : a.name.localeCompare(b.name, 'ca'));
 export const TOWNS = [...figureCatalog.towns].sort(byTown);
@@ -54,6 +54,8 @@ export function readFigureRecord(store, figure, level) {
   if (figure.id === MULASSA.id) return bestRecord(store, level);
   try { return JSON.parse(store.get(recordKey(figure, level))) || null; } catch { return null; }
 }
+// The newest figure (its trait) stays new until this device has a record of it at any level.
+export const isNovelty = (store, figure) => !!FIGURE_TRAITS[figure.id]?.novelty && [0, 1, 2].every(level => !readFigureRecord(store, figure, level));
 export function saveFigureRecord(store, figure, level, quality, rawScore, combo) {
   if (figure.id === MULASSA.id) saveRecord(store, level, quality, rawScore, combo);
   else store.set(recordKey(figure, level), JSON.stringify({ quality, score: rawScore, combo }));

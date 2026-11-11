@@ -2,7 +2,7 @@ import { UNRELEASED_IDS } from '../../../src/figures/index.js';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { selectCss } from '../../ui/page.mjs';
-import { FIGURES, TOWNS, MULASSA, DRAC, BOU, portraitArt, portraitPalette, portraitStand, STAND, playable, upFront, townOf, rememberedLevel, rememberLevel, recordKey, locationOf, heartCall, inviteText, INVITE, INVITE_TOWN } from '../../../src/game/figures.js';
+import { FIGURES, TOWNS, MULASSA, DRAC, BOU, portraitArt, portraitPalette, portraitStand, STAND, playable, upFront, townOf, rememberedLevel, rememberLevel, recordKey, locationOf, heartCall, inviteText, isNovelty, saveFigureRecord, INVITE, INVITE_TOWN } from '../../../src/game/figures.js';
 import { FIGURE_PORTRAITS } from '../../../src/game/figure-portraits.js';
 import { setupSelect, peekGap, pixelSvg } from '../../../src/ui/select-ui.js';
 import { cellOutline } from '../../../src/ui/selector-portraits.js';
@@ -74,6 +74,12 @@ assert.equal(rememberedLevel(store, MULASSA.id), 1);
 rememberLevel(store, MULASSA.id, 2); assert.equal(rememberedLevel(store, MULASSA.id), 2);
 assert.equal(rememberedLevel(store, 'another'), 1, 'memory belongs to the figure');
 for (const value of ['-1', '3', 'NaN', '1.5', '']) { memory.set('level-mulassa-valls', value); assert.equal(rememberedLevel(store, MULASSA.id), 1); }
+{ // the new figure (its trait) stays new until a record of it at any level, and only it
+  const m = new Map(), fresh = { get: k => m.get(k) ?? null, set: (k, v) => m.set(k, v) };
+  assert(isNovelty(fresh, BOU) && !isNovelty(fresh, MULASSA) && !isNovelty(fresh, DRAC), 'only the Bou is new');
+  saveFigureRecord(fresh, BOU, 2, 0.8, 1000, 40);
+  assert(!isNovelty(fresh, BOU), 'a record on any level ends it');
+}
 assert.equal(recordKey(MULASSA, 2), 'record-points-mulassa-v3-2', 'each Mulassa score version has its own record namespace');
 assert.equal(sourceCatalog.figures.find(f => f.id === 'nans-valls').music, 'Francesc Sans', 'pending Valls figures credit their own music');
 const pendingName = id => sourceCatalog.figures.find(f => f.id === id);
@@ -129,6 +135,7 @@ const $ = id => nodes.get(id), win = { innerWidth: 393, innerHeight: 852, addEve
 let boards = [], sounds = [], played = [], how = 0, drafts = [], busy = false, selected = [];
 const heartN = new Map(), heartMine = new Set();
 let standingOf = async f => (f === DRAC.id ? { pos: 3, total: 12 } : { pos: 7, total: 1350 });
+saveFigureRecord(store, BOU, 1, 0.5, 500, 10); // the Bou already played: the strip in catalogue order, the Mulassa first
 const api = setupSelect({ doc, win, store, keyboard: () => true, reduced: () => true, busy: () => busy,
   sfx: k => sounds.push(k), firstLevel: 0, standing: f => standingOf(f), onBoard: f => boards.push(f.id), ranked: true, demo: true, // ?demo stays off outside a dev build
   onPlay: (d, f) => played.push([d, f.id]), onSelect: f => selected.push(f.id), onHowto: () => how++, onWrite: draft => drafts.push(draft), hearts: { count: id => heartN.get(id) ?? 0, mine: id => heartMine.has(id), paint() {}, tap() {} } });
@@ -652,3 +659,13 @@ console.log('catalog selection, pending panel, town pills, town arms, touch stri
 const wasPlural = figure => / i /.test(figure.name) || /^\S{3,}s(?=\s|$)/.test(figure.fullName || figure.name);
 for (const figure of sourceCatalog.figures) assert.equal(heartCall(figure).title, `Vols que ${wasPlural(figure) ? 'surtin' : 'surti'} a la plaça?`, figure.id);
 for (const figure of sourceCatalog.figures) assert.equal(heartCall({ ...figure, name: 'Noms canviats', fullName: 'Altres noms' }).title, heartCall(figure).title, 'grammar is keyed by ID, never inferred from names');
+{ // a device that has not played the Bou: it leads the strip and the selector opens on it
+  const m = new Map(), fresh = { get: k => m.get(k) ?? null, set: (k, v) => m.set(k, v) };
+  const opened = setupSelect({ doc, win, store: fresh, reduced: () => true, onPlay() {}, hearts: { count: () => 0, mine: () => false, paint() {}, tap() {} } });
+  assert.deepEqual($('select-strip').children.slice(0, 3).map(c => c.dataset.id), [BOU.id, MULASSA.id, DRAC.id], 'the new figure first');
+  assert($('select-strip').children[0].cls.split(' ').includes('sel-new') && !$('select-strip').children[1].cls.includes('sel-new'), 'its card alone shines');
+  assert.equal(opened.figure.id, BOU.id, 'and chosen on opening');
+  saveFigureRecord(fresh, BOU, 0, 0.5, 500, 10);
+  setupSelect({ doc, win, store: fresh, reduced: () => true, onPlay() {}, hearts: { count: () => 0, mine: () => false, paint() {}, tap() {} } });
+  assert.equal($('select-strip').children[0].dataset.id, MULASSA.id, 'played: back in catalogue order');
+}

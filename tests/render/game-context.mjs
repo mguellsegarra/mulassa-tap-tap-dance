@@ -113,7 +113,7 @@ const context = vm.createContext({
   refreshIdentity: (service, kv) => { (context.identityAsked ||= []).push(kv); return Promise.resolve(); }, // src/ui/board-list.js: tests/ui/account-ui.mjs
   setupShare: opts => (context.shareSheet = setupShare({ ...opts, doc: document, nav: {}, fonts: null, url: { createObjectURL: () => 'blob:card', revokeObjectURL() {} } })),
   document, navigator: { hardwareConcurrency: 8, deviceMemory: 8 },
-  location: { hostname: 'localhost', search: '?representation=off' }, localStorage: { getItem() {}, setItem() {} }, // this mocked DOM supplies the original cast; representation-motion tests the new rigs
+  location: { hostname: 'localhost', search: '?representation=off' }, localStorage: { getItem: k => k === 'splash-turn' ? '3' : undefined, setItem() {} }, // a returning player: the splash's pair, which builds the Drac the flows start from (figures/index.js splashSoloAt); this mocked DOM supplies the original cast; representation-motion tests the new rigs
   matchMedia: () => ({ matches: false, addEventListener() {} }), addEventListener(type, handler) {
     (windowHandlers[type] ||= []).push(handler);
     if (type === 'keydown') keyHandlers.push(handler);

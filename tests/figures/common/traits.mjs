@@ -1,7 +1,7 @@
 // The figures' traits (src/figures/index.js): one row per playable figure, every value one the shared systems know.
 import assert from 'node:assert/strict';
 import { existsSync } from 'node:fs';
-import { FIGURE_TRAITS, PLAYABLE_IDS, traitsOf, traitsByKey, idOfKey, figureOfVersion } from '../../../src/figures/index.js';
+import { FIGURE_TRAITS, PLAYABLE_IDS, traitsOf, traitsByKey, idOfKey, figureOfVersion, splashSoloAt } from '../../../src/figures/index.js';
 import { FIGURES, playable } from '../../../src/game/figures.js';
 import { CURRENT_SCORE_VERSION, DRAC_SCORE_VERSION, BOU_SCORE_VERSION, LEGACY_SCORE_VERSION, SHORT_SCORE_VERSION } from '../../../src/game/score-scale.js';
 
@@ -22,3 +22,6 @@ assert.equal(idOfKey('nobody'), null);
 for (const [v, id] of [[CURRENT_SCORE_VERSION, 'mulassa-valls'], [LEGACY_SCORE_VERSION, 'mulassa-valls'], [SHORT_SCORE_VERSION, 'mulassa-valls'],
   [DRAC_SCORE_VERSION, 'drac-valls'], [BOU_SCORE_VERSION, 'bou-tradicional-valls']]) assert.equal(figureOfVersion(v), id, `${v} belongs to ${id}`);
 console.log(`figure traits ok: ${PLAYABLE_IDS.length} playable figures`);
+// The splash: the new figure alone on the first three visits after an update, then taking turns with the pair (null)
+assert.deepEqual(Array.from({ length: 8 }, (_, v) => splashSoloAt(v, ['bou'])), ['bou', 'bou', 'bou', null, 'bou', null, 'bou', null]);
+assert.deepEqual([0, 3, 4].map(v => splashSoloAt(v, [])), [null, null, null], 'no splashSolo figure: always the pair');

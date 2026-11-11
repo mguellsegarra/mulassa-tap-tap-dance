@@ -4,7 +4,7 @@
 // own: a pause or a collapse freezes the song second shown, a restart seeks it, the results keep the last one.
 import * as THREE from 'three';
 import { bou, bouColla, BOU_COLLA_YAW } from './bou-objects.js';
-import { G } from '../../game/state.js';
+import { G, clock } from '../../game/state.js';
 import { REEL } from '../../game/showreel.js';
 import { songTimeAtBeat } from '../../game/figure-song.js';
 import { createBouMotion } from './bou-motion.js';
@@ -23,6 +23,7 @@ import { stepManualJump, beginManualFlight, manualContact } from '../../scene/ma
 
 export const BOU_DANCE = { t: 0 }; // the song second shown
 export const BOU_END = BOU_TIMING.duration;
+const SPLASH_LOOP = [9, 88].map(n => BOU_TIMING.bars.find(b => b.sourceBar === n).time); // s: source bars 9 to 88
 const BOU_WORLD = new THREE.Vector3();
 let bouMotion = null, bouShown = -1;
 export async function prepareBouMotion() {
@@ -38,7 +39,8 @@ export function danceBou(beat, dt, acc, pos) {
   if (BOU_LIVE.parked && !dancing && G.state === 'select') return driveBou(dt, BOU_LIVE.at, 0, 0, pos); // free play, just looking: it stays where it was driven
   if (BOU_LIVE.parked) { BOU_LIVE.parked = false; bouSteps = null; bouShown = -9; BOU_JUMP.air = BOU_JUMP.airV = 0; } // back to its dance: fresh steps next time, the tail hangs still
   bou.frame.position.y = 0; bou.frame.rotation.y = BOU_COLLA_YAW; // (the dance frame, its colla's compass, which free play turned to the plaça's)
-  if (G.practice || !dancing && G.state !== 'results') BOU_DANCE.t = 0; // the practice and the menus: its opening stance
+  if (G.state === 'splash') BOU_DANCE.t = SPLASH_LOOP[0] + clock % (SPLASH_LOOP[1] - SPLASH_LOOP[0]); // alone on the splash (scene/stage-motion.js): its lively bars on a loop, past the solemn steps and before the banknotes
+  else if (G.practice || !dancing && G.state !== 'results') BOU_DANCE.t = 0; // the practice and the menus: its opening stance
   else if (reel || dancing && !G.collapseT && !G.paused) BOU_DANCE.t = Math.max(0, songTimeAtBeat(beat));
   const jump = Math.abs(BOU_DANCE.t - bouShown) > 0.5; // a seek (restart, a new reel loop): the tail hangs still again
   bouShown = BOU_DANCE.t;

@@ -17,6 +17,7 @@ export const FIGURE_TRAITS = Object.freeze({
     photoBody: 'mula', // free play: which PHOTO body (game/photo-control.js) it drives
     springs: true, // M (scene/figure-springs.js) is this figure's own body, not a shared one the selector borrows
     splashHost: true, splashPartner: false, // the splash's pair: the one that hosts it, the one beside the host
+    splashSolo: false, // the splash shows this figure alone on the first visits, then takes turns with the pair (splashSoloAt)
     landing: 0.98, // the manual jump's landing shake (scene/manual-jump.js)
     reelCalm: false,
     novelty: false, // the selector's newest figure: first in the strip, its card shining, until it is played (ui/select-ui.js)
@@ -25,12 +26,12 @@ export const FIGURE_TRAITS = Object.freeze({
   'drac-valls': Object.freeze({
     key: 'drac', drumroll: 'carretilles', article: 'masc', cardFile: 'drac-de-valls.jpg', cardAlt: 'hud.card.altDrac',
     shareKey: null, shareLines: 'services.share.drac.', shareEmoji: '🐉', challenge: true, playCam: 'drac', wideClearance: true, photoE: 'sparks',
-    photoBody: 'drac', springs: false, splashHost: false, splashPartner: true, landing: 0.9, frameLength: false, reelCalm: false, novelty: false,
+    photoBody: 'drac', springs: false, splashHost: false, splashPartner: true, splashSolo: false, landing: 0.9, frameLength: false, reelCalm: false, novelty: false,
   }),
   'bou-tradicional-valls': Object.freeze({
     key: 'bou', drumroll: 'esquellot', article: 'masc', cardFile: 'bou-tradicional-de-valls.jpg', cardAlt: 'hud.card.altBou',
     shareKey: 'services.share.bou', shareLines: null, shareEmoji: null, challenge: false, playCam: 'mula', wideClearance: false, photoE: null,
-    photoBody: 'bou', springs: false, splashHost: false, splashPartner: false, landing: 0.9, frameLength: false, reelCalm: true, novelty: true, // reelCalm: the selector's showreel camera follows it slowly (scene/cameras.js)
+    photoBody: 'bou', springs: false, splashHost: false, splashPartner: false, splashSolo: true, landing: 0.9, frameLength: false, reelCalm: true, novelty: true, // reelCalm: the selector's showreel camera follows it slowly (scene/cameras.js)
   }),
 });
 // The Bou is active for the 1.4.0 worktree review; its online board remains disabled.
@@ -40,6 +41,11 @@ export const PLAYABLE_IDS = Object.freeze(Object.keys(FIGURE_TRAITS).filter(id =
 export const traitsOf = id => FIGURE_TRAITS[id] ?? FIGURE_TRAITS['mulassa-valls'];
 export const traitsByKey = key => PLAYABLE_IDS.map(id => FIGURE_TRAITS[id]).find(t => t.key === key) ?? FIGURE_TRAITS['mulassa-valls'];
 export const SPLASH_HOST_ID = Object.keys(FIGURE_TRAITS).find(id => FIGURE_TRAITS[id].splashHost);
+export const SPLASH_SOLO_IDS = PLAYABLE_IDS.filter(id => FIGURE_TRAITS[id].splashSolo);
+// Who the splash shows on a page's `visit`-th load (0 on): the newest splashSolo figure alone on the first `first` visits
+// (the novelty an update brings), then the pair and each splashSolo figure in turn; null = the pair (scene/stage-motion.js)
+export const splashSoloAt = (visit, ids = SPLASH_SOLO_IDS, first = 3) =>
+  visit < first ? ids.at(-1) ?? null : ids[(visit - first) % (ids.length + 1) - 1] ?? null;
 export const idOfKey = key => PLAYABLE_IDS.find(id => FIGURE_TRAITS[id].key === key) ?? null;
 // A score version's figure (the server's versions start with the figure's short name; the Mulassa's older ones do not)
 export const figureOfVersion = version => Object.keys(FIGURE_TRAITS).find(id => id !== 'mulassa-valls' && String(version).startsWith(FIGURE_TRAITS[id].key)) ?? 'mulassa-valls';

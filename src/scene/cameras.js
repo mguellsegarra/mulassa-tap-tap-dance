@@ -86,11 +86,13 @@ const shown = (o, root) => { for (; o && o !== root; o = o.parent) if (!o.visibl
 // whole in the free band on every screen (a phone's fixed 11 m shot left the plaça empty between them);
 // the Drac joins the outline once it is built and shown (the envelope eases the shot out for it)
 const PAIR_SHOT = { roots: [], visible: false }, ONE = [];
-export function pairShot() {
+export function pairShot(solo = null) { // solo: the splash's turn with one figure alone, framed the same way
   PAIR_SHOT.roots.length = 0;
-  if (shown(figureRoot(SPLASH_HOST_ID), null)) PAIR_SHOT.roots.push(figureRoot(SPLASH_HOST_ID));
-  if (drac?.root && shown(drac.root, null)) PAIR_SHOT.roots.push(drac.root);
+  if (solo) PAIR_SHOT.roots.push(figureRoot(solo));
+  else if (shown(figureRoot(SPLASH_HOST_ID), null)) PAIR_SHOT.roots.push(figureRoot(SPLASH_HOST_ID));
+  if (!solo && drac?.root && shown(drac.root, null)) PAIR_SHOT.roots.push(drac.root);
   PAIR_SHOT.visible = PAIR_SHOT.roots.length > 0;
+  PAIR_SHOT.fill = solo ? 0.65 : undefined; PAIR_SHOT.across = solo ? 0.55 : undefined; // alone: as far off as the pair stands, the plaça round it (at the usual fill it hid the logo)
   return PAIR_SHOT;
 }
 // reel: the selector's showreel (game/showreel.js REEL: { cut, shot: { az, el, fill } }) or null
@@ -140,7 +142,7 @@ export function frameMenuCamera(dt, mx, mz, root, rect, aim, reel = null) {
   placeMenu(cx, cz, cut ? Infinity : dt);
   const zoomOn = root && MENU.w && !bandless(rect);
   zoomMenu(cut ? 0 : dt, zoomOn, slow || MENU_T.shift, shot?.part, held && zoomOn ? REEL_HOLD.z : 0);
-  const y = frameMenuLens(dt, root, rect, aim, shot?.fill, cut, direct, slow, shot?.part);
+  const y = frameMenuLens(dt, root, rect, aim, shot?.fill ?? root?.fill, cut, direct, slow, shot?.part);
   const late = !cut && MENU.late && MENU.w && shot; // (a new figure shows a frame after its cut: its first measure snaps as the cut would have)
   if (MENU.first && MENU.w && !cut) { // the splash's first measure, still under the loading cover: framed at once (it backed off from 11 m for seconds, the plaça empty between them)
     MENU.first = false; orbit.x[1] = orbit.zoomRaw = orbit.zoomTo = Math.max(orbit.lim.distMin, Math.min(orbit.lim.distMax, MENU.fit.dist)); orbit.v[1] = 0;
@@ -250,7 +252,7 @@ function frameMenuLens(dt, root, rect, aim, fill = 0.86, snap = false, quick = f
     FREE.top = rect ? rect.top : SAFE.t; FREE.bottom = rect ? rect.bottom : vh - SAFE.b; FREE.hardTop = rect?.hardTop ?? FREE.top; FREE.ground = !!rect?.ground;
     FREE.left = Math.max(rect?.left ?? 0, SAFE.l); FREE.right = Math.min(rect?.right ?? vw, vw - SAFE.r);
     if (MENU.w && !none) {
-      menuFit(MENU.fit, FREE, vh, tan, MENU.w, MENU.h, fill);
+      menuFit(MENU.fit, FREE, vh, tan, MENU.w, MENU.h, fill, undefined, root.across);
       MENU.tx = tx = MENU.fit.cx - vw / 2 - MENU.ox * ppm; MENU.ty = ty = MENU.fit.floor - vh / 2 + MENU.oy * ppm; // minus where she sits now (css px from the middle, unshifted)
     }
   }

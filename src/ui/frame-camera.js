@@ -16,6 +16,7 @@ import { orbit, look, insidePlaza, frameMenuCamera, lens, easeLensX, applyCamera
 import { framePlayCamera, applyWatchLook, CAMS } from '../scene/play-camera.js';
 import { framePhotoCamera, releasePhotoCamera } from '../scene/photo-camera.js';
 import { FIGURE_SCENES } from '../scene/figure-scenes.js';
+import { SPLASH_SOLO } from '../scene/stage-motion.js';
 import { BOU_FINALE } from '../figures/bou/bou-bills.js';
 import { hud, HH, K, W, SAFE, baseFov, setCloseUp } from '../hud/canvas.js';
 import { lane, playBottom, playStage } from '../hud/layout.js';
@@ -61,7 +62,7 @@ export function frameCamera(dt, now, reelWide) { // reelWide: the idle selector'
       aim = Math.max(-0.25 * HH * K, Math.min(0.25 * HH * K, (mid - HH / 2) * K));
     }
     const splash = G.state === 'splash'; // the pair, framed whole between the logo and the prompt (cameras.js pairShot)
-    const sel = G.state === 'select', root = splash ? pairShot() : sel && !PAIR.k ? figureRoot(selectedFigure.id) : null; // «QUI BALLA?» frames its figure in the free rect it measured (css px, when it opens or resizes); «mode foto» hides the selector: the whole screen
+    const sel = G.state === 'select', root = splash ? pairShot(SPLASH_SOLO) : sel && !PAIR.k ? figureRoot(selectedFigure.id) : null; // «QUI BALLA?» frames its figure in the free rect it measured (css px, when it opens or resizes); «mode foto» hides the selector: the whole screen
     if (sel && !sheets.select?.band) updateControls(); // the first frame after the splash: its cut needs the band, measured later in the frame, or it frames the whole screen and springs back out (5 m in 1 s)
     shift = frameMenuCamera(dt, mx, mz, root, splash ? splashBand(SPLASH_BAND) : sel && !viewMode ? (reelWide ? idleBand(sheets.select?.band, W * K, HH * K, SAFE) : sheets.select?.band) : null, aim, REEL.on ? REEL : null);
   } else if (watchReel) { // «Mira el ball»: the showreel's shots on the song's beat, in the demo's free stage; a drag still turns them round her

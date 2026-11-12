@@ -167,7 +167,8 @@ if (import.meta.env.DEV) window.__pop = { board, get game() { return flow.game; 
 // main thread between tasks; the menu shows whole, on the board's first frame (this rAF runs after frame's).
 // ⚙'s sheets load meanwhile; they paint once with the 3D's first frame below, in the same GPU stall (settings.js warm)
 // a chunk that never answers (4 s from here) is let go: the boot screen would otherwise wait on it for good, and ⚙ loads it again on its tap
-const sheetsCode = Promise.race([settings().catch(() => null), new Promise(go => setTimeout(go, 4000, null))]);
+const sheetsLoad = settings().catch(() => null); // the browser tip waits for it whole (below): only the boot lets it go
+const sheetsCode = Promise.race([sheetsLoad, new Promise(go => setTimeout(go, 4000, null))]);
 await board.warm();
 await hero.warm();
 await document.fonts.ready;
@@ -189,6 +190,6 @@ requestAnimationFrame(() => {
   if (flow.mode === 'menu') startHomeMusic();
   // the tap the home's music needs (tap-start.js): the live Mulassa and Drac fade, the title glides to its place
   waitForTap({ label: t('home.tap'), onGo: unlock, into: $('play').parentElement, art: document.querySelector('#menu .c-art'), title: document.querySelector('#menu .pop-title'),
-    onIn: () => { if (flow.mode === 'menu') sheetsCode.then(m => m?.deviceHint()); } }); // an app's own browser: its tip, over the whole home
+    onIn: () => sheetsLoad.then(m => { if (flow.mode === 'menu') m?.deviceHint(); }) }); // an app's own browser: its tip, over the whole home (still there when a slow chunk comes)
   setTimeout(() => { $('boot').hidden = true; }, 400); // kept, still: the error card comes up in it (index.html's watchdog)
 });

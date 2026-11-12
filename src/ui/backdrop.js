@@ -21,9 +21,10 @@ addEventListener('click', e => {
 // A sheet nobody asked for comes up under a finger that was busy elsewhere (data-unasked, greeting.js): no tap outside
 // closes it (above), and for its first ARM_MS no tap inside presses its buttons either. Escape and the back gesture still close it.
 const ARM_MS = 400;
-for (const d of document.querySelectorAll('dialog[data-unasked]')) {
-  new MutationObserver(() => { if (d.open) d.dataset.since = String(performance.now()); }).observe(d, { attributes: true, attributeFilter: ['open'] });
-}
+// one watch on the whole document: a game page appends mulassa.cat's sheets after this module runs (jocs/main-sheets.js)
+new MutationObserver(records => {
+  for (const { target: d } of records) if (d.open && d.matches?.('dialog[data-unasked]')) d.dataset.since = String(performance.now());
+}).observe(document, { subtree: true, attributes: true, attributeFilter: ['open'] });
 addEventListener('click', e => {
   const d = e.target?.closest?.('dialog[data-unasked][open]');
   if (d && performance.now() - Number(d.dataset.since) < ARM_MS) { e.preventDefault(); e.stopImmediatePropagation(); }

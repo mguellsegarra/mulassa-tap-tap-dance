@@ -98,6 +98,12 @@ export async function warm() {
   // Configuració, and the publish sheet whose seal and perks the Bústia's confirm notice copies (confirm-gate.js; its first
   // showing cost 100–117 ms on the S10 otherwise)
   const warmed = [menu, $('publish-menu')];
+  // and the install steps where this browser can show them (S10: a 67 ms frame on their first opening otherwise)
+  const steps = $('install-steps-menu');
+  if (steps.querySelector('[data-for]:not([hidden])')) {
+    warmed.push(steps);
+    steps.addEventListener('close', e => e.stopImmediatePropagation(), { capture: true, once: true }); // its close gives focus back to the button: not under #boot
+  }
   for (const d of warmed) { d.style.cssText = 'position: fixed; inset: 0; margin: auto; z-index: 3'; d.show(); } // the dim comes too (below)
   await new Promise(go => requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(go, 300))));
   for (const d of warmed) { d.close(); d.style.cssText = ''; }

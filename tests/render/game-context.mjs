@@ -112,6 +112,7 @@ const context = vm.createContext({
   refreshIdentity: (service, kv) => { (context.identityAsked ||= []).push(kv); return Promise.resolve(); }, // src/ui/board-list.js: tests/ui/account-ui.mjs
   setupShare: opts => (context.shareSheet = setupShare({ ...opts, doc: document, nav: {}, fonts: null, url: { createObjectURL: () => 'blob:card', revokeObjectURL() {} } })),
   document, navigator: { hardwareConcurrency: 8, deviceMemory: 8 },
+  MutationObserver: class { observe() {} disconnect() {} }, // src/ui/backdrop.js watches the document for unasked sheets opening: tests/ui/backdrop-unasked.mjs
   location: { hostname: 'localhost', search: '?representation=off' }, localStorage: { getItem() {}, setItem() {} }, // this mocked DOM supplies the original cast; representation-motion tests the new rigs
   matchMedia: () => ({ matches: false, addEventListener() {} }), addEventListener(type, handler) {
     (windowHandlers[type] ||= []).push(handler);

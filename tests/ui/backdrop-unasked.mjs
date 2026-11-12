@@ -1,6 +1,7 @@
 // A sheet nobody asked for (data-unasked: the greeting's news, notices and tips) comes up under a finger busy elsewhere:
 // a tap outside never closes it, and for its first 400 ms a tap inside presses nothing. A sheet the player opened still
-// closes on a tap outside (src/ui/backdrop.js).
+// closes on a tap outside (src/ui/backdrop.js). A sheet added after the module runs (a game page mounts mulassa.cat's) is
+// guarded the same.
 import assert from 'node:assert/strict';
 
 const on = {};
@@ -8,19 +9,19 @@ let now = 0, observed = [];
 const sheet = unasked => {
   const d = {
     open: false, unasked, dataset: {}, closed: 0,
-    matches: s => s === 'dialog.sheet[open]:not([data-unasked])' ? d.open && !unasked : s === 'dialog.sheet[open]' && d.open,
+    matches: s => s === 'dialog.sheet[open]:not([data-unasked])' ? d.open && !unasked : s === 'dialog[data-unasked]' ? unasked : s === 'dialog.sheet[open]' && d.open,
     closest: s => (s === 'dialog[data-unasked][open]' && unasked && d.open ? d : null),
     getBoundingClientRect: () => ({ left: 100, right: 300, top: 100, bottom: 500 }),
     dispatchEvent: () => true,
     close() { d.open = false; d.closed++; },
-    showModal() { d.open = true; for (const [t, cb] of observed) if (t === d) cb(); },
+    showModal() { d.open = true; for (const [, cb] of observed) cb([{ target: d }]); }, // the document-wide watch sees it
   };
   return d;
 };
 const news = sheet(true), help = sheet(false);
 Object.assign(globalThis, {
   addEventListener: (type, fn) => (on[type] ??= []).push(fn),
-  document: { querySelectorAll: s => (s === 'dialog[data-unasked]' ? [news] : []) },
+  document: {},
   MutationObserver: class { constructor(cb) { this.cb = cb; } observe(t) { observed.push([t, this.cb]); } },
   performance: { now: () => now },
 });
@@ -46,6 +47,10 @@ assert.equal(news.open, true, 'a tap outside never closes a sheet nobody asked f
 
 news.close(); now = 5000; news.showModal(); now = 5100;
 assert.equal(fire('click', button(news), 200, 300).stopped, true, 'shown again: the 400 ms start over');
+
+const late = sheet(true); // mounted after the import (Pop's in-app tip)
+now = 7000; late.showModal(); now = 7100;
+assert.equal(fire('click', button(late), 200, 300).stopped, true, 'a sheet added later presses nothing for 400 ms either');
 
 help.showModal(); now = 9000;
 tapOutside(help);

@@ -39,11 +39,11 @@ export function setupProfile({ focusIn, captcha, store, aliasKey, deviceNote = (
   const row = $('profile-row'), nameEl = $('profile-name'), kindEl = $('profile-kind'), sub = $('profile-sub');
   const btns = [$('profile-main'), $('profile-alt'), $('profile-more')];
   const online = Boolean(service.configured), canLink = online && service.publishingEnabled; // deleting stays possible with publishing off
-  let step = 'mail', kind = '', type = '', mail = '', leave = null, busy = false, req = 0, back = null, settingsReq = 0, closeTimer = null, linkNext = false;
+  let step = 'mail', kind = '', type = '', mail = '', leave = null, busy = false, req = 0, back = null, settingsReq = 0, closeTimer = null, linkNext = false, pub = false;
   let email = ''; // the address on the profile shown in the block (for «Tanca la sessió»)
 
   const setStatus = statusLine(status);
-  const label = () => ({ alias: tr(kind === 'rename' ? 'ui.profile.btn.saveName' : 'ui.profile.btn.createProfile'), mail: tr('ui.profile.btn.sendCode'), switch: tr('ui.profile.btn.sendCode'), code: tr('ui.profile.btn.checkCode'), confirm: CONFIRM[kind]?.yes }[step] ?? tr('ui.profile.btn.close'));
+  const label = () => ({ alias: tr(kind === 'rename' ? 'ui.profile.btn.saveName' : pub ? 'ui.board.publish' : 'ui.profile.btn.createProfile'), mail: tr('ui.profile.btn.sendCode'), switch: tr('ui.profile.btn.sendCode'), code: tr('ui.profile.btn.checkCode'), confirm: CONFIRM[kind]?.yes }[step] ?? tr('ui.profile.btn.close'));
   // disabled = working: a plain ring spins in the button (index.html .btn-spin, as in feedback-ui.js)
   const setSend = (text, disabled = false) => setButton(doc, sendBtn, text, disabled);
   const show = s => {
@@ -136,16 +136,16 @@ export function setupProfile({ focusIn, captcha, store, aliasKey, deviceNote = (
   function forget() { store.remove(aliasKey); refresh(); }
 
   // --- the sheet
-  // thenLink: a profile created for something that needs the address goes straight on to it, in this same sheet
-  // true: the sheet took over (offline or already open: it did not, the caller keeps its way back)
-  function open(what, onBack = null, { thenLink = false } = {}) {
+  // thenLink: a profile made for something that needs the address goes on to it here; publish: a game's run waits for this new
+  // name (Pop: the publish prompt's title and button). true: the sheet took over (offline or already open: the caller keeps its way back)
+  function open(what, onBack = null, { thenLink = false, publish = false } = {}) {
     if (!online || menu.open) return false;
-    kind = what; back = onBack; linkNext = thenLink; req++; busy = false; mail = ''; type = ''; leave = null;
+    kind = what; back = onBack; linkNext = thenLink; req++; busy = false; mail = ''; type = ''; leave = null; pub = publish && what === 'create';
     mailIn.value = codeIn.value = aliasIn.value = ''; setStatus('');
     mailIn.readOnly = codeIn.readOnly = aliasIn.readOnly = false;
     cancelBtn.hidden = false;
     if (what === 'create') {
-      $('profile-title').textContent = tr('ui.profile.title.create');
+      $('profile-title').textContent = tr(pub ? 'ui.board.publishTitle' : 'ui.profile.title.create');
       lead.textContent = tr('ui.profile.lead.create');
       show('alias');
     } else if (what === 'rename') { // a released profile: its name is somebody else's now; the same field, update_alias

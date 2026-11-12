@@ -42,7 +42,7 @@
   "rank.place": "Estás no posto {n}",
   "rank.newBest": "Novo récord! Posto {n}",
   "rank.noName": "Pon un nome para saír na clasificación",
-  "rank.getName": "Pon un nome",
+  "rank.publish": "Publica o resultado",
   "rank.error": "Sen conexión coa clasificación",
   "rank.empty": "Aínda non hai ninguén. Estréaa!",
   "rank.loading": "Cargando…",
@@ -52,6 +52,14 @@
   "rank.cardPlace": "Posto",
   "rank.cardRuns": "Partidas",
   "rank.cardAverage": "Media",
+  "rank.jumpTop": "Ao principio",
+  "rank.jumpMe": "Á miña fila",
+  "rank.jumpTopAria": "Vai ao principio da clasificación",
+  "rank.jumpMeAria": "Vai á túa fila",
+  "rank.capped": "Amosando os {n} primeiros",
+  "rank.loadMore": "Carga máis",
+  "rank.loadingMore": "Cargando máis…",
+  "rank.moreFailed": "Non se puideron cargar máis. Téntao de novo",
   "word.campanar": "CALMA!",
   "word.carretilla": "LUME!",
   "chip.slow": "Calma",
@@ -86,5 +94,6 @@
   "help.ok": "De acordo",
   "help.tap": "TOCA",
   "help.never": "NON TOQUES",
-  "help.combo": "Máis dedos á vez, máis puntos"
+  "help.combo": "Máis dedos á vez, máis puntos",
+  "settings.promptOff": "Desactivada: non sae ao rematar a partida"
 }

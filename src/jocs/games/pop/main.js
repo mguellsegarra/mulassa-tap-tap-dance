@@ -34,7 +34,8 @@ const hero = createHero($('menu-hero'));
 let booted = false; // the boot screen is up: nothing is drawn under it (see the end of this file)
 const lines = bootLines($('boot-line')); // its funny lines while it lasts; it leaves at a line's end, as mulassa.cat's
 // The public board (ranking-ui.js). The dev bot's runs start at BOT_FROM points: they are not the game's and never go.
-const rankingUI = setupRankingUI({ t, focusBack: () => $('menu-best').focus({ focusVisible: false }) });
+const rankingUI = setupRankingUI({ t, focusBack: () => $('menu-best').focus({ focusVisible: false }),
+  askName: run => settings().then(m => m.promptName(run, rankingUI.named), () => {}) });
 const hud = createHud({ board, t });
 const flow = createFlow({ board, hero, hud, results: createResults({ board, hero, t, rankingUI }), rankingUI, t, booted: () => booted });
 errors.context(() => ({ game: 'pop', state: flow.mode, booted })); // crash reports as the main game's (plassa/errors.js)
@@ -98,7 +99,7 @@ $('settings').addEventListener('click', () => settings().then(m => m.openSetting
 $('end-name').addEventListener('click', e => {
   const a = e.currentTarget;
   e.preventDefault();
-  settings().then(m => m.openProfile(a.dataset.kind, rankingUI.named), () => { location.href = a.href; }); // the chunk failed: mulassa.cat's sheet
+  settings().then(m => m.openProfile(a.dataset.kind, rankingUI.named, a.dataset.kind === 'create' ? rankingUI.runLine() : null), () => { location.href = a.href; }); // the chunk failed: mulassa.cat's sheet
 });
 const musicBtns = document.querySelectorAll('.music-btn'); // the HUD's and the home's
 const syncMusicBtn = () => { for (const b of musicBtns) { b.setAttribute('aria-pressed', musicOn()); b.querySelector('.music-off').toggleAttribute('hidden', musicOn()); } };

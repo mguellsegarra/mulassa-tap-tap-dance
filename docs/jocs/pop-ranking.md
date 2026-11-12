@@ -57,8 +57,10 @@ submitted score proves nothing. The server must play the game again from what th
 ## Page (as built)
 
 - `ranking.js` (lazy): the Supabase client and session are mulassa.cat's. On a dev server with no Supabase, `ranking-mock.js`
-  (`?sense-nom` for a player with no name).
-- Home: a «Veure classificació» button opens the board sheet (top 50, your row lit, you after them if lower); it never shows the place (the owner's call, 10 Nov 2026), so there is no record pill. On a tall phone the best three show under it as «Top 3» (`ranking-ui.js` `top3`), which opens the same sheet.
+  (`?sense-nom` for a player with no name; `?jugadors=5000&posicio=1234` a long board with you on it, `&falla-pagina` every other
+  page after the first failing; `?sense-nom&autoplay=publica` a bot run that reaches the end sheet's name step, which opens
+  by itself once a visit).
+- Home: a «Veure classificació» button opens the board sheet (pages of 50 as you scroll, up to 500; it opens at your row, which comes with five neighbours each side after a «…» when lower; one link goes to the top or back to your row: `board-pages.js`); it never shows the place (the owner's call, 10 Nov 2026), so there is no record pill. On a tall phone the best three show under it as «Top 3» (`ranking-ui.js` `top3`), which opens the same sheet.
 - End: the place, or «new best»; a player with no name gets a button to the profile's own steps right here (create, or
   another name for a released one: mulassa.cat's sheet through `settings.js`); the run waits in `pop-pending` and goes
   when that sheet closes.

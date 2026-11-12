@@ -9,7 +9,8 @@ const REQUIRED = ['index.html', '404.html', '_headers', 'favicon.ico', 'favicon.
   'apple-touch-icon.png', 'icon-512.png', 'manifest.webmanifest', 'og.jpg', 'og-jocs.jpg', 'og-pop.jpg', // index.html's, jocs/'s and pop/'s og:image / twitter:image (tools/social/og/build.py)
   'og-1x1.jpg', 'og-jocs-1x1.jpg', 'og-pop-1x1.jpg', // their square twins, in each page's JSON-LD image (Google's thumbnail)
   'share/mulassa-valls.jpg', 'share/drac-valls.jpg', // the share card's fixed photos (share-card.js loadPhoto)
-  'sfx/applause.mp3']; // the crowd's applause (platform/audio.js loadApplause; tools/music/build_applause.mjs)
+  'sfx/applause.mp3', // the crowd's applause (platform/audio.js loadApplause; tools/music/build_applause.mjs)
+  'pop.webmanifest', 'pop-icon-180.png', 'pop-icon-512.png', 'jocs.webmanifest', 'jocs-icon-180.png', 'jocs-icon-512.png']; // Mulassa Pop and Mulassa Games installed as their own apps
 
 // Reject unexpected public files rather than accidentally publishing sources or server code.
 export async function preparePages(directory, song) {

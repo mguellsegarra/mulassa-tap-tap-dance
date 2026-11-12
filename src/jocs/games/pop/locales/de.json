@@ -34,11 +34,15 @@
   "home.board": "Rangliste ansehen",
   "home.tap": "Tippen zum Spielen",
   "rank.title": "Rangliste",
+  "rank.players": {
+    "one": "{n} Teilnehmer",
+    "other": "{n} Teilnehmer"
+  },
   "rank.close": "Schließen",
   "rank.place": "Du bist auf Platz {n}",
   "rank.newBest": "Neuer Rekord! Platz {n}",
   "rank.noName": "Wähle einen Namen für die Rangliste",
-  "rank.getName": "Namen wählen",
+  "rank.publish": "Ergebnis eintragen",
   "rank.error": "Keine Verbindung zur Rangliste",
   "rank.empty": "Noch niemand hier. Sei der Erste!",
   "rank.loading": "Lädt…",
@@ -48,6 +52,14 @@
   "rank.cardPlace": "Platz",
   "rank.cardRuns": "Spiele",
   "rank.cardAverage": "Schnitt",
+  "rank.jumpTop": "Nach oben",
+  "rank.jumpMe": "Zu meiner Zeile",
+  "rank.jumpTopAria": "Geh zum Anfang der Rangliste",
+  "rank.jumpMeAria": "Geh zu deiner Zeile",
+  "rank.capped": "Die ersten {n}",
+  "rank.loadMore": "Mehr laden",
+  "rank.loadingMore": "Mehr Einträge laden…",
+  "rank.moreFailed": "Weitere Einträge konnten nicht geladen werden. Versuch’s noch mal",
   "word.campanar": "RUHE!",
   "word.carretilla": "FEUER!",
   "chip.slow": "Ruhe",
@@ -82,5 +94,6 @@
   "help.ok": "Alles klar",
   "help.tap": "ANTIPPEN",
   "help.never": "NICHT TIPPEN",
-  "help.combo": "Mehr Finger zugleich, mehr Punkte"
+  "help.combo": "Mehr Finger zugleich, mehr Punkte",
+  "settings.promptOff": "Aus: kein Hinweis nach dem Spiel"
 }

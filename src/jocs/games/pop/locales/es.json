@@ -34,11 +34,15 @@
   "home.board": "Ver ránking",
   "home.tap": "Toca para jugar",
   "rank.title": "Ránking",
+  "rank.players": {
+    "one": "{n} participante",
+    "other": "{n} participantes"
+  },
   "rank.close": "Cerrar",
   "rank.place": "Eres el número {n} del ránking",
   "rank.newBest": "¡Nuevo récord! Número {n}",
   "rank.noName": "Ponte un nombre para salir en el ránking",
-  "rank.getName": "Ponte un nombre",
+  "rank.publish": "Publica el resultado",
   "rank.error": "No se ha podido conectar al ránking",
   "rank.empty": "Aún no hay nadie. ¡Estrénalo!",
   "rank.loading": "Cargando…",
@@ -48,6 +52,14 @@
   "rank.cardPlace": "Posición",
   "rank.cardRuns": "Partidas",
   "rank.cardAverage": "Media",
+  "rank.jumpTop": "Al principio",
+  "rank.jumpMe": "A mi fila",
+  "rank.jumpTopAria": "Ve al principio de la clasificación",
+  "rank.jumpMeAria": "Ve a tu fila",
+  "rank.capped": "Mostrando los {n} primeros",
+  "rank.loadMore": "Carga más",
+  "rank.loadingMore": "Cargando más…",
+  "rank.moreFailed": "No se han podido cargar más. Vuelve a intentarlo",
   "word.campanar": "¡CALMA!",
   "word.carretilla": "¡FUEGO!",
   "chip.slow": "Calma",
@@ -82,5 +94,6 @@
   "help.ok": "De acuerdo",
   "help.tap": "TOCA",
   "help.never": "NO TOQUES",
-  "help.combo": "Más dedos a la vez, más puntos"
+  "help.combo": "Más dedos a la vez, más puntos",
+  "settings.promptOff": "Desactivada: no sale al acabar la partida"
 }

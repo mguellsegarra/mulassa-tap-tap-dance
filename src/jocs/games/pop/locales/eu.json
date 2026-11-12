@@ -34,11 +34,15 @@
   "home.board": "Ikusi sailkapena",
   "home.tap": "Ukitu jolasteko",
   "rank.title": "Sailkapena",
+  "rank.players": {
+    "one": "{n} parte-hartzaile",
+    "other": "{n} parte-hartzaile"
+  },
   "rank.close": "Itxi",
   "rank.place": "{n}. postuan zaude",
   "rank.newBest": "Marka berria! {n}. postua",
   "rank.noName": "Aukeratu izena sailkapenerako",
-  "rank.getName": "Aukeratu izena",
+  "rank.publish": "Argitaratu emaitza",
   "rank.error": "Ezin da sailkapenera konektatu",
   "rank.empty": "Oraindik ez dago inor. Izan lehena!",
   "rank.loading": "Kargatzen…",
@@ -48,6 +52,14 @@
   "rank.cardPlace": "Postua",
   "rank.cardRuns": "Partidak",
   "rank.cardAverage": "Batezbest.",
+  "rank.jumpTop": "Gora",
+  "rank.jumpMe": "Nire lerrora",
+  "rank.jumpTopAria": "Joan sailkapenaren gorenera",
+  "rank.jumpMeAria": "Joan zure lerrora",
+  "rank.capped": "Lehen {n} emaitzak",
+  "rank.loadMore": "Kargatu gehiago",
+  "rank.loadingMore": "Gehiago kargatzen…",
+  "rank.moreFailed": "Ezin izan dira gehiago kargatu. Saiatu berriro",
   "word.campanar": "LASAI!",
   "word.carretilla": "SUA!",
   "chip.slow": "Lasai",
@@ -82,5 +94,6 @@
   "help.ok": "Ados",
   "help.tap": "UKITU",
   "help.never": "EZ UKITU",
-  "help.combo": "Hatz gehiago batera, puntu gehiago"
+  "help.combo": "Hatz gehiago batera, puntu gehiago",
+  "settings.promptOff": "Desaktibatuta: ez da agertzen partida amaitzean"
 }

@@ -7,3 +7,15 @@
 - `tools/deploy/prepare-pages.mjs` allowlists every public file; a new kind of file needs a line there. `public/_headers` sets the `charset` of the `.md`/`llms.txt`.
 - The game's own page carries only an `sr-only` H1/summary, JSON-LD and `rel="alternate"` for crawlers: no visible SEO text in the game. Catalan is the source language, with translated pages per released language.
   Always use "Marc Güell Segarra" (both surnames), and no jargon (no engine or genre names). `tests/build/seo.mjs` checks the output.
+- Link previews (og:image, 1200×630 JPEG under 300 KB, absolute `https://mulassa.cat/…` URLs: the beta deploy rewrites og:url, og:image and
+  twitter:image to beta by `sed`). `public/og.jpg` (the main game) is a one-off capture. The mini-games' pages share one template made in HTML,
+  `tools/social/og/build.py` → `public/og-jocs.jpg` (/jocs/) and `public/og-pop.jpg` (/pop/): the games menu's own stills
+  (`public/jocs/menu/`) full bleed, the pages' MULASSA lettering big on top with GAMES or POP under it, and the gold «mulassa.cat» pill (the
+  «Juga» gradient) at the foot; no other text, the page's og:title/og:description carry the words (Codex writes them). Chosen by the owner on
+  11 Nov 2026 from eight proposals (four by Claude, four by Codex). A new game's page: one more entry in the script's `PAGES`, its file in
+  `prepare-pages.mjs`'s list, and the tags in its page's head, copied from `index.html`'s block. Render with
+  `python3 tools/social/og/build.py` (headless Chrome, `--html` for the HTML only, in `output/og/`) and look at the result before committing.
+- Google's result thumbnail is square, cut from the middle of the image it picks: each page's JSON-LD `image` lists a 1200×1200 twin
+  first (`og-1x1.jpg`, `og-jocs-1x1.jpg`, `og-pop-1x1.jpg`, same script) and its 1200×630 preview second; the home also carries
+  `max-image-preview:large`. A hint, not an order: Google may still choose. `/jocs/` and `/pop/` are indexed (owner, 11 Nov 2026): no
+  `noindex`, their own canonical, a line in `sitemap.xml` (and `seo-pages.mjs`'s `sitemapXml`). `tests/jocs/og-preview.mjs` checks it all.

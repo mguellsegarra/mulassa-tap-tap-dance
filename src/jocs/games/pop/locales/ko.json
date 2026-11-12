@@ -34,11 +34,14 @@
   "home.board": "순위표 보기",
   "home.tap": "터치해서 시작",
   "rank.title": "순위표",
+  "rank.players": {
+    "other": "참가자 {n}명"
+  },
   "rank.close": "닫기",
   "rank.place": "현재 {n}위",
   "rank.newBest": "신기록! 현재 {n}위",
   "rank.noName": "순위표에 올릴 이름을 정해 줘",
-  "rank.getName": "이름 정하기",
+  "rank.publish": "결과 올리기",
   "rank.error": "순위표에 연결할 수 없어",
   "rank.empty": "아직 아무도 없어. 첫 기록을 남겨 봐!",
   "rank.loading": "불러오는 중…",
@@ -48,6 +51,14 @@
   "rank.cardPlace": "순위",
   "rank.cardRuns": "게임 수",
   "rank.cardAverage": "평균",
+  "rank.jumpTop": "맨 위로",
+  "rank.jumpMe": "내 순위로",
+  "rank.jumpTopAria": "순위표 맨 위로 가요",
+  "rank.jumpMeAria": "내 순위로 가요",
+  "rank.capped": "상위 {n}명 표시 중",
+  "rank.loadMore": "더 보기",
+  "rank.loadingMore": "더 불러오는 중…",
+  "rank.moreFailed": "더 불러오지 못했어요. 다시 해봐요",
   "word.campanar": "진정!",
   "word.carretilla": "불이야!",
   "chip.slow": "진정",
@@ -82,5 +93,6 @@
   "help.ok": "확인",
   "help.tap": "터치",
   "help.never": "누르지 마",
-  "help.combo": "동시에 손가락을 더 쓰면 점수도 쑥"
+  "help.combo": "동시에 손가락을 더 쓰면 점수도 쑥",
+  "settings.promptOff": "끄면 게임이 끝나도 나오지 않아요"
 }

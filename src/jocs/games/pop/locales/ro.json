@@ -34,11 +34,16 @@
   "home.board": "Vezi clasamentul",
   "home.tap": "Atinge și joacă",
   "rank.title": "Clasament",
+  "rank.players": {
+    "one": "{n} participant",
+    "few": "{n} participanți",
+    "other": "{n} de participanți"
+  },
   "rank.close": "Închide",
   "rank.place": "Ești pe locul {n}",
   "rank.newBest": "Record nou! Locul {n}",
   "rank.noName": "Alege un nume pentru clasament",
-  "rank.getName": "Alege un nume",
+  "rank.publish": "Publică rezultatul",
   "rank.error": "Conexiunea la clasament a eșuat",
   "rank.empty": "Încă nu e nimeni. Fii primul!",
   "rank.loading": "Se încarcă…",
@@ -48,6 +53,14 @@
   "rank.cardPlace": "Loc",
   "rank.cardRuns": "Jocuri",
   "rank.cardAverage": "Medie",
+  "rank.jumpTop": "Sus de tot",
+  "rank.jumpMe": "La rândul meu",
+  "rank.jumpTopAria": "Mergi în fruntea clasamentului",
+  "rank.jumpMeAria": "Mergi la rândul tău",
+  "rank.capped": "Primii {n}",
+  "rank.loadMore": "Încarcă mai multe",
+  "rank.loadingMore": "Se încarcă mai multe…",
+  "rank.moreFailed": "Nu s-au încărcat mai multe. Încearcă din nou",
   "word.campanar": "CALM!",
   "word.carretilla": "FOC!",
   "chip.slow": "Calm",
@@ -82,5 +95,6 @@
   "help.ok": "Bine",
   "help.tap": "ATINGE",
   "help.never": "NU ATINGE",
-  "help.combo": "Degete simultan, puncte în plus"
+  "help.combo": "Degete simultan, puncte în plus",
+  "settings.promptOff": "Dezactivată: nu apare după partidă"
 }

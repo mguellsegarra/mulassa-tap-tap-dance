@@ -34,11 +34,15 @@
   "home.board": "Veure rànquing",
   "home.tap": "Toca per jugar",
   "rank.title": "Rànquing",
+  "rank.players": {
+    "one": "{n} participant",
+    "other": "{n} participants"
+  },
   "rank.close": "Tanca",
   "rank.place": "Ets el número {n} del rànquing",
   "rank.newBest": "Nou rècord! Número {n} del rànquing",
   "rank.noName": "Posa’t un nom per sortir al rànquing",
-  "rank.getName": "Posa’t un nom",
+  "rank.publish": "Publica el resultat",
   "rank.error": "No s’ha pogut connectar al rànquing",
   "rank.empty": "Encara no hi ha ningú. Estrena’l!",
   "rank.loading": "Carregant…",
@@ -48,6 +52,14 @@
   "rank.cardPlace": "Posició",
   "rank.cardRuns": "Partides",
   "rank.cardAverage": "Mitjana",
+  "rank.jumpTop": "Al capdamunt",
+  "rank.jumpMe": "A la meva fila",
+  "rank.jumpTopAria": "Ves al capdamunt de la classificació",
+  "rank.jumpMeAria": "Ves a la teva fila",
+  "rank.capped": "Mostrant els {n} primers",
+  "rank.loadMore": "Carrega’n més",
+  "rank.loadingMore": "Carregant-ne més…",
+  "rank.moreFailed": "No s’han pogut carregar més. Torna-ho a provar",
   "word.campanar": "CALMA!",
   "word.carretilla": "FOC!",
   "chip.slow": "Calma",
@@ -82,5 +94,6 @@
   "help.ok": "D’acord",
   "help.tap": "TOCA",
   "help.never": "NO TOQUIS",
-  "help.combo": "Més dits alhora, més punts"
+  "help.combo": "Més dits alhora, més punts",
+  "settings.promptOff": "Desactivada: no surt en acabar la partida"
 }

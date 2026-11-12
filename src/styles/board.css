@@ -126,12 +126,6 @@ dialog p, #results-actions .btn { overflow-wrap: break-word; }
 .pct-sub { display: none; } /* the % under the points: portrait phones only (profile.css) */
 /* Punts ends 12px short of the box: iOS overlay scrollbars reserve no gutter and would sit on the score (heading too, aligned) */
 :is(#board-table, .board-head) :is(th, td):nth-child(4) { padding-right: 12px; }
-/* the podium: 1-2-3 as the solid ribbon medal (posDisc, sheet-kit.js; the selector's, everywhere): the
-   drawing is the background (one per metal), the number stays text on the disc; --pos-size is the disc's width */
-.pos.p1, .pos.p2, .pos.p3 { display: inline-grid; place-items: center; flex: none; box-sizing: border-box; width: var(--pos-size, 24px); height: calc(var(--pos-size, 24px) * 7 / 6); padding-top: calc(var(--pos-size, 24px) * 7 / 24); background: center / 100% 100% no-repeat; color: #2a1a10; font-weight: 800; font-size: calc(var(--pos-size, 24px) * .54); line-height: 1; vertical-align: middle; }
-.pos.p1 { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 28'%3E%3Cpath d='M5.5 1h5l2.5 8h-5zM18.5 1h-5L11 9h5z' fill='%23f5c518' opacity='.55'/%3E%3Ccircle cx='12' cy='17.5' r='9.5' fill='%23f5c518'/%3E%3C/svg%3E"); }
-.pos.p2 { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 28'%3E%3Cpath d='M5.5 1h5l2.5 8h-5zM18.5 1h-5L11 9h5z' fill='%23d6dbe2' opacity='.55'/%3E%3Ccircle cx='12' cy='17.5' r='9.5' fill='%23d6dbe2'/%3E%3C/svg%3E"); }
-.pos.p3 { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 28'%3E%3Cpath d='M5.5 1h5l2.5 8h-5zM18.5 1h-5L11 9h5z' fill='%23d9955a' opacity='.55'/%3E%3Ccircle cx='12' cy='17.5' r='9.5' fill='%23d9955a'/%3E%3C/svg%3E"); }
 /* the name cell: alias (+ TU) on one line, the level on a small muted line under it (a coloured dot, not a tag) */
 .who { display: flex; align-items: center; gap: 5px; min-width: 0; }
 #board-table .sub { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 6px; margin-top: 2px; font-size: 10.5px; white-space: nowrap; }

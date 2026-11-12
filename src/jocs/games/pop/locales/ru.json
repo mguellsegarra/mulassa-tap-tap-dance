@@ -34,11 +34,17 @@
   "home.board": "Смотреть рейтинг",
   "home.tap": "Коснись и играй",
   "rank.title": "Рейтинг",
+  "rank.players": {
+    "one": "{n} участник",
+    "few": "{n} участника",
+    "many": "{n} участников",
+    "other": "{n} участника"
+  },
   "rank.close": "Закрыть",
   "rank.place": "Ты на месте {n}",
   "rank.newBest": "Новый рекорд! Место {n}",
   "rank.noName": "Выбери имя для рейтинга",
-  "rank.getName": "Выбрать имя",
+  "rank.publish": "Опубликовать результат",
   "rank.error": "Нет связи с рейтингом",
   "rank.empty": "Пока никого. Будь первым!",
   "rank.loading": "Загрузка…",
@@ -48,6 +54,14 @@
   "rank.cardPlace": "Место",
   "rank.cardRuns": "Игры",
   "rank.cardAverage": "Среднее",
+  "rank.jumpTop": "Наверх",
+  "rank.jumpMe": "К моей строке",
+  "rank.jumpTopAria": "Перейди в начало рейтинга",
+  "rank.jumpMeAria": "Перейди к своей строке",
+  "rank.capped": "Первые {n}",
+  "rank.loadMore": "Загрузить ещё",
+  "rank.loadingMore": "Загружаем ещё…",
+  "rank.moreFailed": "Не удалось загрузить ещё. Попробуй снова",
   "word.campanar": "ЗАТИШЬЕ!",
   "word.carretilla": "ОГОНЬ!",
   "chip.slow": "Затишье",
@@ -82,5 +96,6 @@
   "help.ok": "Ладно",
   "help.tap": "НАЖИМАЙ",
   "help.never": "НЕ НАЖИМАЙ",
-  "help.combo": "Больше пальцев разом, больше очков"
+  "help.combo": "Больше пальцев разом, больше очков",
+  "settings.promptOff": "Выключено: без предложения после игры"
 }

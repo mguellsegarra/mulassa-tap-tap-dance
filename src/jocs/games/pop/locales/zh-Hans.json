@@ -34,11 +34,14 @@
   "home.board": "查看排行榜",
   "home.tap": "轻触开始",
   "rank.title": "排行榜",
+  "rank.players": {
+    "other": "{n}位玩家"
+  },
   "rank.close": "关闭",
   "rank.place": "你排在第{n}名",
   "rank.newBest": "新纪录！第{n}名",
   "rank.noName": "取个名字就能上榜",
-  "rank.getName": "取个名字",
+  "rank.publish": "发布成绩",
   "rank.error": "无法连接排行榜",
   "rank.empty": "还没有人上榜，快来争第一！",
   "rank.loading": "加载中…",
@@ -48,6 +51,14 @@
   "rank.cardPlace": "名次",
   "rank.cardRuns": "局数",
   "rank.cardAverage": "平均分",
+  "rank.jumpTop": "回到榜首",
+  "rank.jumpMe": "我的排名",
+  "rank.jumpTopAria": "回到排行榜顶部",
+  "rank.jumpMeAria": "查看你的排名",
+  "rank.capped": "显示前{n}名",
+  "rank.loadMore": "加载更多",
+  "rank.loadingMore": "正在加载更多…",
+  "rank.moreFailed": "更多成绩加载失败，请重试",
   "word.campanar": "放轻松！",
   "word.carretilla": "着火啦！",
   "chip.slow": "放轻松",
@@ -82,5 +93,6 @@
   "help.ok": "好的",
   "help.tap": "点击",
   "help.never": "不要点",
-  "help.combo": "同时用的手指越多，得分越高"
+  "help.combo": "同时用的手指越多，得分越高",
+  "settings.promptOff": "关闭后，游戏结束不再提示"
 }

@@ -27,8 +27,14 @@
   /* a file from another site that fails to load is not ours to fail on: the host adds its analytics script to the page, and
      an ad blocker stopping it showed this card on beta over a game that had loaded */
   var theirs = function (t) { var url = t && (t.src || t.href) || ''; return url && url.indexOf(location.origin + '/') !== 0; };
-  addEventListener('error', function (e) { if (theirs(e.target)) return; if (!root.classList.contains('ready')) window.__gameBootError = e.message;
-    var tag = e.target && e.target.tagName; early(tag === 'SCRIPT' ? 'module-load' : 'startup', tag ? 'resource:' + tag : 'error'); }, true);
+  /* a picture, sound or font of ours that did not load (a phone's network) does not stop the game, only a script or a stylesheet
+     does: Pop's help puts its portraits in the page before it is up. errors.js keeps it as a breadcrumb (__mulassaBootSkip) */
+  var minor = function (t) { var tag = t && t.tagName; return !!tag && tag !== 'SCRIPT' && !(tag === 'LINK' && t.rel === 'stylesheet'); };
+  addEventListener('error', function (e) { if (theirs(e.target)) return;
+    var tag = e.target && e.target.tagName;
+    if (minor(e.target)) { if (window.__mulassaBootSkip) window.__mulassaBootSkip(tag); else (window.__gameBootSkipped = window.__gameBootSkipped || []).push(tag); return; }
+    if (!root.classList.contains('ready')) window.__gameBootError = e.message;
+    early(tag === 'SCRIPT' ? 'module-load' : 'startup', tag ? 'resource:' + tag : 'error'); }, true);
   addEventListener('unhandledrejection', function (e) { if (!root.classList.contains('ready')) window.__gameBootError = String(e.reason && e.reason.stack || e.reason); early('startup', 'rejection'); });
   (function tick() { /* only time on screen counts: a tab opened in the background is not stuck */
     var now = Date.now();

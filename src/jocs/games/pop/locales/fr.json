@@ -34,11 +34,15 @@
   "home.board": "Voir le classement",
   "home.tap": "Touche pour jouer",
   "rank.title": "Classement",
+  "rank.players": {
+    "one": "{n} participant",
+    "other": "{n} participants"
+  },
   "rank.close": "Fermer",
   "rank.place": "Tu es au rang {n}",
   "rank.newBest": "Nouveau record ! Rang {n}",
   "rank.noName": "Choisis un nom pour le classement",
-  "rank.getName": "Choisir un nom",
+  "rank.publish": "Publie ton résultat",
   "rank.error": "Connexion au classement impossible",
   "rank.empty": "Personne encore. À toi de commencer !",
   "rank.loading": "Chargement…",
@@ -48,6 +52,14 @@
   "rank.cardPlace": "Rang",
   "rank.cardRuns": "Parties",
   "rank.cardAverage": "Moyenne",
+  "rank.jumpTop": "En haut",
+  "rank.jumpMe": "Ma ligne",
+  "rank.jumpTopAria": "Va en haut du classement",
+  "rank.jumpMeAria": "Va à ta ligne",
+  "rank.capped": "Les {n} premiers résultats",
+  "rank.loadMore": "Charge la suite",
+  "rank.loadingMore": "Chargement de la suite…",
+  "rank.moreFailed": "Impossible de charger la suite. Réessaie",
   "word.campanar": "CALME !",
   "word.carretilla": "FEU !",
   "chip.slow": "Calme",
@@ -82,5 +94,6 @@
   "help.ok": "D’accord",
   "help.tap": "TOUCHE",
   "help.never": "NE TOUCHE PAS",
-  "help.combo": "Doigts ensemble, points multipliés"
+  "help.combo": "Doigts ensemble, points multipliés",
+  "settings.promptOff": "Désactivé : rien après la partie"
 }

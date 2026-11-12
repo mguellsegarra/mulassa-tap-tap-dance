@@ -34,11 +34,14 @@
   "home.board": "ランキングを見る",
   "home.tap": "タップであそぶ",
   "rank.title": "ランキング",
+  "rank.players": {
+    "other": "{n}人参加"
+  },
   "rank.close": "閉じる",
   "rank.place": "現在{n}位",
   "rank.newBest": "新記録！現在{n}位",
   "rank.noName": "名前を決めてランキングに参加",
-  "rank.getName": "名前を決める",
+  "rank.publish": "結果を公開",
   "rank.error": "ランキングに接続できません",
   "rank.empty": "まだ記録がないよ。一番乗りしよう！",
   "rank.loading": "読み込み中…",
@@ -48,6 +51,14 @@
   "rank.cardPlace": "順位",
   "rank.cardRuns": "プレイ数",
   "rank.cardAverage": "平均",
+  "rank.jumpTop": "トップへ",
+  "rank.jumpMe": "自分の順位へ",
+  "rank.jumpTopAria": "ランキングのトップへ",
+  "rank.jumpMeAria": "自分の順位へ",
+  "rank.capped": "上位{n}人を表示中",
+  "rank.loadMore": "もっと見る",
+  "rank.loadingMore": "追加で読み込み中…",
+  "rank.moreFailed": "追加分を読み込めませんでした。もう一度試してね",
   "word.campanar": "ひと息！",
   "word.carretilla": "炎だ！",
   "chip.slow": "ひと息",
@@ -82,5 +93,6 @@
   "help.ok": "了解",
   "help.tap": "タップ",
   "help.never": "タップしないで",
-  "help.combo": "同時に使う指が多いほど高得点"
+  "help.combo": "同時に使う指が多いほど高得点",
+  "settings.promptOff": "オフにするとゲームの終了時に表示しません"
 }

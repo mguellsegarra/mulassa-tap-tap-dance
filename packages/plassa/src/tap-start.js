@@ -3,7 +3,7 @@
 // that out); the tap starts the music (onGo, inside the gesture), the art and the button fade where they are, the title
 // glides to its place on the home (first, last, invert, play) and <body class="sp-in"> brings the rest in.
 // Enter or Space on the focused button counts too (sheet-keys.js): a key press has no pointerup.
-export function waitForTap({ label, onGo, into, art, title }) {
+export function waitForTap({ label, onGo, into, art, title, onIn = () => {} }) { // onIn: the home whole, its fade in done
   const btn = Object.assign(document.createElement('button'), { type: 'button', id: 'tap-start', className: 'btn btn-primary btn-big', textContent: label }); // the game's main button (base.css), its colour
   into.append(btn); // where the home's main button sits
   document.body.classList.add('sp-home');
@@ -25,7 +25,7 @@ export function waitForTap({ label, onGo, into, art, title }) {
         const b = title.getBoundingClientRect();
         title.animate([{ transformOrigin: '0 0', transform: `translate(${a.left - b.left}px, ${a.top - b.top}px) scale(${a.width / b.width})` },
           { transformOrigin: '0 0', transform: 'none' }], { duration: 350, easing: 'cubic-bezier(.2, .8, .2, 1)' });
-        setTimeout(() => document.body.classList.remove('sp-in'), 420); // after the game's own fade in (≤ .35 s)
+        setTimeout(() => { document.body.classList.remove('sp-in'); onIn(); }, 420); // after the game's own fade in (≤ .35 s)
       });
     });
   };

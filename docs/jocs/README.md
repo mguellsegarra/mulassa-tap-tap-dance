@@ -16,28 +16,27 @@ Research, in Catalan, copied from `mulassa-minijocs/notes/` on 2026-11-01 (that 
 - Free play is not a card on that page: it is a button in the main game's help sheet (`#howto-walk`). A mini-game is still its own page, so opening one and coming back reloads the main game.
 - The URL must not say `minijocs`.
 
-## Names and rollout
+## Names
 
 The owner's choices. A game takes its name when it enters this branch; folders, URLs and branches keep their working ids, players never see them.
 
-| Name | Id | Branch | Release |
-| --- | --- | --- | --- |
-| Mulassa Pop | `pop` | here | 1.3.0, 12 Nov 2026 |
-| Ball lliure | free play: not a card; a button in the help sheet («?», `#howto-walk`), too expert for the sheet | here | 1.3.0 |
-| Mulassa Memory | `memory` | `jocs/memory` | 1.4.0, 19 Nov |
-| Mulassa Crush | `crush` | `jocs/crush` | 1.6.0, 3 Dec |
-| Mulassa Drop | `suika` | `jocs/suika` | 1.7.0, 10 Dec |
-| Mulassa Alchemy | `alquimia` | `jocs/alquimia` | 1.8.0, 17 Dec |
-| Mulassa City | `subara` | `jocs/subara` | 1.9.0, 14 Jan 2027 |
-| Mulassoku | `murdoku`; players must never read «Murdoku» | `jocs/murdoku` | 1.12.0, 4 Feb |
-| Mulassa Run | `corre` | `jocs/corre` | 1.13.0, 11 Feb |
+| Name | Id | Branch |
+| --- | --- | --- |
+| Mulassa Pop | `pop` | here |
+| Ball lliure | free play: not a card; a button in the help sheet («?», `#howto-walk`), too expert for the sheet | here |
+| Mulassa Memory | `memory` | `jocs/memory` |
+| Mulassa Crush | `crush` | `jocs/crush` |
+| Mulassa Drop | `suika` | `jocs/suika` |
+| Mulassa Alchemy | `alquimia` | `jocs/alquimia` |
+| Mulassa City | `subara` | `jocs/subara` |
+| Mulassoku | `murdoku`; players must never read «Murdoku» | `jocs/murdoku` |
+| Mulassa Run | `corre` | `jocs/corre` |
 
-One novelty per release, on Thursdays; 1.5.0 (Bou), 1.10.0 (Gegant del Calçot) and 1.11.0 (Àliga) are figures. A game's branch
-holds its pages, code, pictures, tests and `_headers` lines as they were in 1.3.0 before the removal (Memory and Crush also their card). A merge of that branch does not
+A game's branch holds its pages, code, pictures, tests and `_headers` lines as they were in 1.3.0 before the removal (Memory and Crush also their card). A merge of that branch does not
 bring them back (the removal is newer), so take its files with `git checkout jocs/<id> -- jocs/<id> src/jocs/games/<id> public/jocs/<id>`
 plus its tests and docs, then add its card in `jocs/index.html` (a `.game-card` with `data-game`), its colour, its words in `src/jocs/menu/locales/` and its `_headers` lines.
 
-Each new game gets a colour for its card and logo, a line in `NEWS` (`src/ui/news-sheet.js`) and a card after the last game. The «Aviat» surprise cards (`data-soon`, nothing to play, each in the colour of the game it stands for) fill the row; a new game takes the place of the first one.
+Each new game gets a colour for its card and logo, a line in `NEWS` (`src/ui/news-sheet.js`), a card after the last game and its link preview (`tools/social/og/build.py`, `docs/agents/seo.md`). The «Aviat» surprise cards (`data-soon`, nothing to play, each in the colour of the game it stands for) fill the row; a new game takes the place of the first one.
 
 Discarded: Snake, La Cercavila, Talla calçots, Bantumi, Pinta per números, Endreça el Seguici, De nan a gegant (2048), Fes el castell. The code of those that had any, without a commit here, is in `mulassa-minijocs/descartats/`.
 

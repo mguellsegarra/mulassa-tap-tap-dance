@@ -8,9 +8,12 @@
   <meta name="theme-color" content="#11152c">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="Mulassa">
-  <link rel="manifest" href="/manifest.webmanifest">
-  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-title" content="Mulassa Pop">
+  <!-- its own app on a home screen (pop.webmanifest): it opens here, not on the main game -->
+  <link rel="manifest" href="/pop.webmanifest">
+  <link rel="apple-touch-icon" href="/pop-icon-180.png">
+  <script id="install-early">/* Chromium's install prompt can come before the bundle: kept for src/ui/install-app.js (as index.html's) */
+  addEventListener('beforeinstallprompt', function (e) { window.__installPrompt = e; });</script>
   <title>Mulassa Pop | Posa a prova els reflexos</title><!-- for search; the page sets its own words' title once they load (words.js) -->
   <meta name="description" content="Una Mulassa vermella? Toca-la. Una bomba? Desactiva-la. Posa a prova els reflexos a Mulassa Pop.">
   <!-- Link previews (static, absolute URLs): public/og-pop.jpg, 1200×630, from tools/social/og/build.py -->
@@ -38,6 +41,7 @@
   <link rel="stylesheet" href="/packages/plassa/src/base.css">
   <link rel="stylesheet" href="/packages/plassa/src/game.css">
   <link rel="stylesheet" href="/packages/plassa/src/sheets.css">
+  <link rel="stylesheet" href="/src/styles/hint-sheets.css">
   <link rel="stylesheet" href="/src/styles/badge.css">
   <link rel="stylesheet" href="/src/styles/level-seg.css">
   <link rel="stylesheet" href="/src/jocs/games/pop/style.css">
@@ -64,8 +68,8 @@
     <!-- the site's games icon, round as the music button; its bubble says «Torna als jocs», or «Més jocs!» with a pink dot
          when the player did not come from the games sheet (main.js) -->
     <a id="back" class="exit corner-l" href="/jocs/"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="3.5" y="3.5" width="7.5" height="7.5" rx="1.6"/><rect x="13.6" y="2.8" width="7.5" height="7.5" rx="1.6" transform="rotate(14 17.35 6.55)"/><rect x="3.5" y="13" width="7.5" height="7.5" rx="1.6"/><rect x="13" y="13" width="7.5" height="7.5" rx="1.6"/></svg><span class="exit-tip" data-t="back">Torna als jocs</span><i class="exit-dot" aria-hidden="true"></i></a>
-    <!-- the corner row as mulassa.cat's: music, then ⚙ (Configuració: mulassa.cat's sheets, settings.js) -->
-    <div class="corner-r corner-row"><button id="menu-music" class="round-btn music-btn" data-t-aria="music" aria-label="Música" aria-pressed="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 18V6l10-2v12" fill="none" stroke="currentColor" stroke-width="2.2"/><circle cx="6.5" cy="18" r="2.8"/><circle cx="16.5" cy="16" r="2.8"/><path class="music-off" d="M4 4l16 16" stroke="#ff8a7a" stroke-width="2.6" stroke-linecap="round" hidden/></svg></button><button id="settings" class="round-btn" aria-haspopup="dialog" data-t-aria="settings" aria-label="Configuració"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button></div>
+    <!-- the corner row as mulassa.cat's: «Instal·la l'app» (only where it can: #menu-install, settings.js), music, then ⚙ (Configuració: mulassa.cat's sheets, settings.js) -->
+    <div class="corner-r corner-row"><button id="menu-install" type="button" class="round-btn install-btn" hidden aria-label="Instal·la l’app"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M12 7v7.5M8.8 11.3 12 14.5l3.2-3.2M10.5 18.5h3"/></svg></button><button id="menu-music" class="round-btn music-btn" data-t-aria="music" aria-label="Música" aria-pressed="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 18V6l10-2v12" fill="none" stroke="currentColor" stroke-width="2.2"/><circle cx="6.5" cy="18" r="2.8"/><circle cx="16.5" cy="16" r="2.8"/><path class="music-off" d="M4 4l16 16" stroke="#ff8a7a" stroke-width="2.6" stroke-linecap="round" hidden/></svg></button><button id="settings" class="round-btn" aria-haspopup="dialog" data-t-aria="settings" aria-label="Configuració"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button></div>
     <div class="c-hero">
       <div class="c-text">
         <!-- the title as Mulassa Games' (index.html #games-title): a glint across MULASSA, and POP pops letter by letter -->
@@ -74,7 +78,7 @@
         </svg><span class="logo-glint" aria-hidden="true"><svg viewBox="0 -4 308.6 80" text-anchor="middle" focusable="false"><text x="154.3" y="60.6" textLength="300" lengthAdjust="spacingAndGlyphs" font-family="'Jersey 10'" font-size="100" fill="#fff">MULASSA</text></svg></span></span><span class="pop-word" aria-hidden="true"><i style="--i:0">P</i><i style="--i:1">O</i><i style="--i:2">P</i></span></h1>
         <p class="c-pitch" data-t="home.pitch"></p>
         <!-- the board's best three on a tall phone's home, as mulassa.cat's «Top 3» (ranking-ui.js top3; style.css .c-top) -->
-        <section class="c-top" id="menu-top" hidden><button type="button" class="c-top-head" id="menu-top-head"><svg class="podium" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 20h20M3.5 20v-7H9v7M9 20V5h6v15M15 20v-5h5.5v5M11 9.2l1.4-1.1V14"/></svg><span data-t="rank.title">Rànquing</span><svg class="go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button><ol class="board-list" id="menu-top-list"></ol></section>
+        <section class="c-top" id="menu-top" hidden><button type="button" class="c-top-head" id="menu-top-head"><svg class="podium" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 20h20M3.5 20v-7H9v7M9 20V5h6v15M15 20v-5h5.5v5M11 9.2l1.4-1.1V14"/></svg><span data-t="rank.title">Rànquing</span><span class="count" id="menu-top-count"></span><svg class="go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button><ol class="board-list" id="menu-top-list"></ol></section>
         <div class="c-play-row">
           <button id="play" class="btn btn-primary btn-big btn-invite" data-keys-first><svg viewBox="0 0 24 24"><path d="M7 4.5v15a1 1 0 0 0 1.5.9l12-7.5a1 1 0 0 0 0-1.8l-12-7.5A1 1 0 0 0 7 4.5z"/></svg><span data-t="play">Juga</span></button>
           <button type="button" id="help" class="round-btn pop-help" aria-haspopup="dialog" data-t-aria="help.open" aria-label="Com es juga?"><span aria-hidden="true">?</span></button><!-- «?» round, beside Juga (the owner's pick, 10 Nov 2026) -->
@@ -146,7 +150,7 @@
   </div>
   <div id="rotate" role="alert"><svg viewBox="0 0 48 48" aria-hidden="true"><path class="arr" d="M24 5A19 19 0 0 1 43 24M39.5 20.5 43 24l3.5-3.5M24 43A19 19 0 0 1 5 24M8.5 27.5 5 24l-3.5 3.5"/><g class="ph"><rect x="18" y="10" width="12" height="28" rx="2.5"/><path d="M22.5 34h3"/></g></svg><h2><span class="r-phone" data-t="rotate.phone">Gira el mòbil</span><span class="r-tablet" data-t="rotate.tablet">Gira la tauleta</span></h2><b><span class="r-phone" data-t="rotate.phoneSub">En vertical per jugar</span><span class="r-tablet" data-t="rotate.tabletSub">En horitzontal per jugar</span></b></div>
   <!-- mulassa.cat's own sheets, put in by vite.config.js from its index.html; settings.js runs them -->
-  <!-- mulassa-sheets: settings-menu account-menu profile-menu badge-menu feedback-menu gate-menu publish-menu captcha-menu privacy-menu -->
+  <!-- mulassa-sheets: settings-menu account-menu profile-menu badge-menu feedback-menu gate-menu publish-menu captcha-menu privacy-menu install-steps-menu inapp-hint-menu -->
   <script id="boot-watchdog" src="/packages/plassa/src/boot-watchdog.js"></script>
   <script type="module" src="/src/jocs/games/pop/main.js"></script>
 </body>

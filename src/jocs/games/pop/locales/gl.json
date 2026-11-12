@@ -34,6 +34,10 @@
   "home.board": "Ver a clasificación",
   "home.tap": "Toca para xogar",
   "rank.title": "Clasificación",
+  "rank.players": {
+    "one": "{n} participante",
+    "other": "{n} participantes"
+  },
   "rank.close": "Pechar",
   "rank.place": "Estás no posto {n}",
   "rank.newBest": "Novo récord! Posto {n}",

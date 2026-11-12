@@ -54,6 +54,16 @@ if (!document.referrer.startsWith(`${location.origin}/`) || performance.getEntri
   $('back').classList.add('more');
   $('back').querySelector('.exit-tip').textContent = t('more');
 }
+// the bubble never runs under the corner row (a narrow phone, a long language, «Instal·la l'app» shown): it stays away then
+const exitTip = $('back').querySelector('.exit-tip'), cornerRow = document.querySelector('#menu .corner-row');
+function fitExitTip() {
+  exitTip.hidden = false; // measured shown (its width), then hidden in the same task: never painted in between
+  const first = [...cornerRow.children].find(el => !el.hidden);
+  exitTip.hidden = Boolean(first) && $('back').getBoundingClientRect().left + exitTip.offsetLeft + exitTip.offsetWidth + 8 > first.getBoundingClientRect().left;
+}
+addEventListener('resize', fitExitTip);
+new MutationObserver(fitExitTip).observe(cornerRow, { subtree: true, attributeFilter: ['hidden'] });
+document.fonts.ready.then(fitExitTip);
 
 // the way back replaces this page as the selector's cards did (location.replace): a link back and forth would grow the history.
 // Still a real link (no script, a new tab with ctrl/⌘/middle click)
@@ -118,10 +128,13 @@ audioPage({ stall: () => inRun() && (flow.pause(), true) });
 
 let last = performance.now(), behind = 0, odd = false; // behind: the home backdrop's time not drawn yet
 function frame(now) {
-  const dt = Math.max(0, Math.min(.05, (now - last) / 1000)); // a stalled tab must not burn the fuses; the first frame's stamp can predate `last`
+  const raw = Math.max(0, (now - last) / 1000); // the first frame's stamp can predate `last`
+  const dt = Math.min(.05, raw); // a stalled tab must not burn the fuses
   last = now;
   watchAudio(now);
-  flow.step(dt);
+  // the run's clock takes up to 250 ms: an iPhone in Low Power Mode misses 24–30 Hz frames into 80–100 ms, and a 50 ms cap lost
+  // that time, so the music (which follows the game, audio.js followGame) slowed down and stuttered. Past that, a stall still costs the run its time.
+  flow.step(Math.min(.25, raw));
   // the board: every frame in a run; on the home, under its blur, every other one (the hero is drawn too); a run's end,
   // until its blast has played out
   if (booted && flow.mode !== 'paused' && !board.settled()) {
@@ -154,7 +167,8 @@ if (import.meta.env.DEV) window.__pop = { board, get game() { return flow.game; 
 // main thread between tasks; the menu shows whole, on the board's first frame (this rAF runs after frame's).
 // ⚙'s sheets load meanwhile; they paint once with the 3D's first frame below, in the same GPU stall (settings.js warm)
 // a chunk that never answers (4 s from here) is let go: the boot screen would otherwise wait on it for good, and ⚙ loads it again on its tap
-const sheetsCode = Promise.race([settings().catch(() => null), new Promise(go => setTimeout(go, 4000, null))]);
+const sheetsLoad = settings().catch(() => null); // the browser tip waits for it whole (below): only the boot lets it go
+const sheetsCode = Promise.race([sheetsLoad, new Promise(go => setTimeout(go, 4000, null))]);
 await board.warm();
 await hero.warm();
 await document.fonts.ready;
@@ -175,6 +189,7 @@ requestAnimationFrame(() => {
   errors.start(); // the SDK loads when the browser is idle (nothing at all without a DSN)
   if (flow.mode === 'menu') startHomeMusic();
   // the tap the home's music needs (tap-start.js): the live Mulassa and Drac fade, the title glides to its place
-  waitForTap({ label: t('home.tap'), onGo: unlock, into: $('play').parentElement, art: document.querySelector('#menu .c-art'), title: document.querySelector('#menu .pop-title') });
+  waitForTap({ label: t('home.tap'), onGo: unlock, into: $('play').parentElement, art: document.querySelector('#menu .c-art'), title: document.querySelector('#menu .pop-title'),
+    onIn: () => sheetsLoad.then(m => { if (flow.mode === 'menu') m?.deviceHint(); }) }); // an app's own browser: its tip, over the whole home (still there when a slow chunk comes)
   setTimeout(() => { $('boot').hidden = true; }, 400); // kept, still: the error card comes up in it (index.html's watchdog)
 });

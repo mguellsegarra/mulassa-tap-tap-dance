@@ -34,6 +34,10 @@
   "home.board": "Ver ránking",
   "home.tap": "Toca para jugar",
   "rank.title": "Ránking",
+  "rank.players": {
+    "one": "{n} participante",
+    "other": "{n} participantes"
+  },
   "rank.close": "Cerrar",
   "rank.place": "Eres el número {n} del ránking",
   "rank.newBest": "¡Nuevo récord! Número {n}",

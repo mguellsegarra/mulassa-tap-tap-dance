@@ -81,6 +81,8 @@ export function setupRankingUI({ t, focusBack }) {
     const [rows, art] = await Promise.all([m.board(), marks()]).catch(() => [[]]);
     if (!rows.length) return;
     const look = lookOf(art);
+    const total = Number(rows[0].total); // every row carries the board's size (get_pop_board)
+    if (total) $('menu-top-count').textContent = t('rank.players', { count: total, n: total.toLocaleString(document.documentElement.lang) });
     $('menu-top-list').replaceChildren(...rows.slice(0, 3).map(r => boardRow(r, { look, onOpen: () => openCard(r.public_id), cells: [scoreOf(r)], sub: underName(r) })));
     $('menu-top').hidden = false;
     $('menu-top').closest('.c-hero').classList.add('has-top'); // the figures make room (style.css)

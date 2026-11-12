@@ -39,8 +39,8 @@ body.slow::after { opacity: 1; transition-duration: .15s; animation: chill-in .5
 .home[hidden] { display: none; }
 .corner-l, .corner-r { position: absolute; z-index: 1; top: calc(var(--sat) + var(--m)); }
 .corner-l { left: var(--m); } .corner-r { right: var(--m); }
-.corner-row { display: flex; gap: 8px; } /* music, then ⚙ */
-#settings svg { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.corner-row { display: flex; gap: 8px; } /* «Instal·la l'app» where it can, music, then ⚙ */
+:is(#settings, #menu-install) svg { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 /* mulassa.cat's sheets (settings.js): Perfil is the profile block alone (no statistics, decision 3), as tall as that (auto
    would stretch a modal between its insets); the Bústia's field in Pop's colours, not mulassa.cat's gold on brown */
 dialog#account-menu { height: fit-content; }
@@ -95,10 +95,10 @@ dialog .feedback-field { border-color: color-mix(in srgb, var(--accent) 60%, tra
 .sp-home .c-art { flex: 1 1 0; height: auto; }
 .sp-home .c-art canvas { --k: 1.35; } /* bigger while they wait */
 .sp-home .c-play-row { order: 3; }
-.sp-home .c-pitch, .sp-home .c-top:not(#x), .sp-home .c-play-row > :not(#tap-start), .sp-home #back, .sp-home #menu-music, .sp-home #settings, .sp-home #help { display: none; }
+.sp-home .c-pitch, .sp-home .c-top:not(#x), .sp-home .c-play-row > :not(#tap-start), .sp-home #back, .sp-home #menu-music, .sp-home #menu-install, .sp-home #settings, .sp-home #help { display: none; }
 #tap-start { animation: sp-breathe 1.6s ease-in-out infinite; } /* Plassa's main button (tap-start.js), as wide as Juga after it, breathing while it waits */
 /* after the tap: what was hidden comes in, a little after the title and the figures have started to move */
-.sp-in .c-pitch, .sp-in .c-top, .sp-in .c-play-row > *, .sp-in #back, .sp-in #menu-music, .sp-in #settings, .sp-in #help { animation: sp-fade .3s ease-out .05s both; } /* with tap-start.js's 120 ms and 350 ms glide: the home whole in ~0.45 s */
+.sp-in .c-pitch, .sp-in .c-top, .sp-in .c-play-row > *, .sp-in #back, .sp-in #menu-music, .sp-in #menu-install, .sp-in #settings, .sp-in #help { animation: sp-fade .3s ease-out .05s both; } /* with tap-start.js's 120 ms and 350 ms glide: the home whole in ~0.45 s */
 /* the live figures fade where they wait (tap-start.js), then in on the home (a canvas glided while resized looked warped) */
 .sp-in .c-art { animation: sp-fade .3s ease-out both; }
 @keyframes sp-fade { from { opacity: 0; translate: 0 8px; } }
@@ -158,6 +158,9 @@ dialog .feedback-field { border-color: color-mix(in srgb, var(--accent) 60%, tra
 /* the board's mark, as mulassa.cat's «Top 3» head (select-sizes.css .sel-standings-head svg): a line podium */
 svg.podium { fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
 .c-top-head .go { margin-left: auto; width: 16px; height: 16px; }
+.c-top-head .count { margin-left: auto; font-size: 14px; opacity: .7; } /* «43 participants», by the chevron */
+.c-top-head .count:empty { display: none; }
+.c-top-head .count:not(:empty) + .go { margin-left: 0; }
 .c-top .board-list { overflow: visible; padding: 2px 0; }
 .c-top .board-list li, .c-top .board-list li:nth-child(odd) { border-radius: 0; background: none; }
 .c-top .board-list li + li { border-top: 1px solid #fff3d61c; }

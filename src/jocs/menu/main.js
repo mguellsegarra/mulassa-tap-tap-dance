@@ -46,5 +46,7 @@ setupOrientation(() => {});
 watchUpdates(() => true); // nothing here to interrupt
 focusIn($('games-menu'), 'games-hero-play');
 document.documentElement.classList.add('ready');
+// «Instal·la l'app» (install.js): mulassa.cat's words and steps sheet in a chunk of their own, after the page shows
+import('./install.js').catch(e => errors.capture(e, { where: 'install' }));
 setTimeout(() => { $('boot').hidden = true; }, 400); // kept, hidden: the error card comes up in it (the watchdog)
 errors.start(); // the SDK loads when the browser is idle (nothing at all without a DSN)

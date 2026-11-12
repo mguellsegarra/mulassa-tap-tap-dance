@@ -34,6 +34,9 @@
   "home.board": "순위표 보기",
   "home.tap": "터치해서 시작",
   "rank.title": "순위표",
+  "rank.players": {
+    "other": "참가자 {n}명"
+  },
   "rank.close": "닫기",
   "rank.place": "현재 {n}위",
   "rank.newBest": "신기록! 현재 {n}위",

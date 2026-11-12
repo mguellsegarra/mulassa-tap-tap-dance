@@ -1,0 +1,24 @@
+{
+  "id": "/pop/",
+  "name": "Mulassa Pop",
+  "short_name": "Mulassa Pop",
+  "start_url": "/pop/",
+  "scope": "/",
+  "display": "fullscreen",
+  "orientation": "any",
+  "background_color": "#11152c",
+  "theme_color": "#11152c",
+  "icons": [
+    {
+      "src": "/pop-icon-180.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "/pop-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

@@ -106,7 +106,7 @@ export function setupRankingUI({ t, focusBack, askName = () => {} }) {
   function openBoard() {
     const list = $('board-list'), note = $('board-note'), jump = $('board-jump'), req = ++boardReq;
     list.replaceChildren(); list.scrollTop = 0;
-    jump.classList.add('off'); delete jump.dataset.state; pages = null;
+    jump.classList.add('off'); jump.classList.remove('none'); delete jump.dataset.state; pages = null;
     note.hidden = false; note.textContent = t('rank.loading');
     $('board-menu').hidden = false;
     $('board-close').focus({ focusVisible: false });
@@ -132,6 +132,7 @@ export function setupRankingUI({ t, focusBack, askName = () => {} }) {
       moreSeen = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting) && !pages?.s.near.length) loadMore(); }, { root: list, rootMargin: '0px 0px 240px' });
       moreSeen.observe(more);
       list.scrollTop = meTop() ?? 0;
+      jump.classList.toggle('none', !list.querySelector('.me')); // not on the board: no row to go back to, no link (nor its room)
       jumpLabel();
     }).catch(() => { if (req === boardReq) note.textContent = t('rank.error'); });
   }

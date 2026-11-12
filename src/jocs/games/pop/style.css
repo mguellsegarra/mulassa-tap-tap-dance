@@ -175,7 +175,7 @@ svg.podium { fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap
    2026); 46 px, a row's own height, so the jump to the own row lands where it should */
 #board-list > li:not(.gap, .more) { content-visibility: auto; contain-intrinsic-size: auto 46px; } /* rows only: «…» and the end line are another height */
 .board-sheet .board-jump { align-self: center; min-height: 32px; margin: -6px 0 -4px; padding-block: 0; font-size: 14px; }
-.board-sheet .board-jump.off { visibility: hidden; }
+.board-sheet .board-jump.off { visibility: hidden; } .board-sheet .board-jump.none { display: none; }
 .board-list li.more { display: grid; place-items: center; min-height: 40px; color: var(--muted); font-size: 14px; }
 .board-list :is(li.more, li.gap) .btn-link { min-height: 40px; font-size: 14px; }
 .board-list li.gap:has(button) { display: grid; place-items: center; padding: 4px 0; } .board-list li.gap .btn-link:not([hidden]) { display: block; }

@@ -9,7 +9,11 @@ body.reel-idle #select > * { pointer-events: none; }
    invisible layers; the auto size keeps each box as it was, so the selector's observers see nothing change */
 :is(#select, #settings, #free, #music, #howto) { contain-intrinsic-size: auto none; }
 :is(#select, #settings, #free, #music, #howto)[data-reel-gone] { content-visibility: hidden; }
-@media (prefers-reduced-motion: reduce) { :is(body.reel-idle, body.reel-wake) :is(#select, #settings, #free, #music, #howto) { transition: none; } }
+/* its one control, «Mira el ball sencer» (ui/watch-ui.js): fades in with the idle screen, out at once with any wake */
+#idle-watch { background: #2a1a10e0; opacity: 0; pointer-events: none; transition: opacity .25s cubic-bezier(0, 0, .2, 1); }
+#idle-watch > svg { width: 18px; height: 18px; fill: currentColor; }
+body.reel-idle #idle-watch { opacity: 1; pointer-events: auto; transition: opacity .4s cubic-bezier(.4, 0, .2, 1); }
+@media (prefers-reduced-motion: reduce) { :is(body.reel-idle, body.reel-wake) :is(#select, #settings, #free, #music, #howto), #idle-watch { transition: none; } }
 #select[hidden] { opacity: 0; }
 @starting-style { #select { opacity: 0; } }
 /* The first opening, from the splash, comes whole with the plaça's first frame: its fade left the plaça bare for a moment

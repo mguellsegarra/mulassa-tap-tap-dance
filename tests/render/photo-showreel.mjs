@@ -632,6 +632,16 @@ verifyManualSway(run, assert);
   assert(ptr('pointerdown') && run('!reelIdleOn') && ptr('pointerup') && ptr('click'), 'showreel idle: the waking tap is swallowed whole');
   assert(!ptr('pointerdown') && !ptr('pointerup') && !ptr('click'), 'showreel idle: the next tap is a real one');
   idleFrames(1); assert(run('!reelIdleOn'), 'awake after that tap');
+  // its one control, «Mira el ball sencer» (#idle-watch): a press on it neither wakes nor is swallowed, so its click starts the demo
+  const idleBtn = document.getElementById('idle-watch'), onBtn = {}; idleBtn.contains = t => t === onBtn;
+  idleFrames(Math.ceil(run('REEL_IDLE.after') * 60) + 30); assert(run('reelIdleOn') && idleBtn.inert === false && idleBtn.hidden === false, 'showreel idle: «Mira el ball sencer» on offer');
+  const btnPtr = type => { const e = { type, pointerId: 8, target: onBtn, cancelable: true, stopped: false, stopImmediatePropagation() { this.stopped = true; }, preventDefault() {} }; windowHandlers[type].forEach(h => h(e)); return e.stopped; };
+  assert(!btnPtr('pointerdown') && !btnPtr('pointermove') && !btnPtr('pointerup') && !btnPtr('click'), 'showreel idle: the button takes its own tap');
+  idleFrames(1); assert(run('reelIdleOn'), 'showreel idle: pressing the button does not wake the selector under it');
+  assert.equal(run('idleBand({}, 375, 667, { t: 0, b: 0, l: 0, r: 0 }).bottom'), 667 - run('REEL_IDLE_BTN'), 'showreel idle: she stands clear of the button');
+  assert.equal(idleBtn.listeners.click, document.getElementById('select-watch').listeners.click, 'showreel idle: the button starts the same dance demo as the song row\'s');
+  windowHandlers.pointermove.forEach(h => h({})); idleFrames(1); assert(run('!reelIdleOn') && idleBtn.inert === true, 'showreel idle: awake, the faded button takes no focus');
+  idleBtn.contains = () => false;
   // leaving the page puts the selector back (everything pauses), and coming back the time away never counts
   idleFrames(Math.ceil(run('REEL_IDLE.after') * 60) + 30); assert(run('reelIdleOn'));
   document.focused = false; (windowHandlers.blur || []).forEach(h => h());

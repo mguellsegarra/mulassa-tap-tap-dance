@@ -14,11 +14,15 @@ export const REEL_WAKE_MS = 250; // body.reel-wake's fade back in (select-sizes.
 // select-sizes.css), on each element rather than on <body> (a body class restyles the whole page); a wake drops it at once.
 const REEL_FADE_OUT_MS = 400, REEL_GONE = ['select', 'settings', 'free', 'music', 'howto'].map(id => document.getElementById(id)).filter(Boolean);
 let reelIdleSince = 0, reelGone = false;
+// «Mira el ball sencer» (#idle-watch, ui/watch-ui.js): the idle screen's one control. A press on it neither wakes nor is swallowed,
+// so its click starts the demo (which leaves the selector, and the idle screen with it); inert whenever it is faded out.
+const reelIdleBtn = document.getElementById('idle-watch'), onReelIdleBtn = e => reelIdleBtn?.contains(e.target);
+export const REEL_IDLE_BTN = 24 + 52 + 12; // css px it takes off the screen's foot: its bottom margin, height and a gap (base.css)
 const reelGoneSet = on => { if (on === reelGone) return; reelGone = on; for (const el of REEL_GONE) el.toggleAttribute('data-reel-gone', on); };
 // The press that wakes it only wakes it: no card changes, no tap or drag reaches the plaça. This module is imported
 // before ui/input.js, so its window listeners run first; the waking pointer's up and click (a key's up) are swallowed too.
 const reelIdleSwallow = e => { e.stopImmediatePropagation(); if (e.cancelable && e.type !== 'pointerdown') e.preventDefault(); };
-addEventListener('pointermove', () => { reelIdleWoken = true; }, { capture: true, passive: true });
+addEventListener('pointermove', e => { if (!onReelIdleBtn(e)) reelIdleWoken = true; }, { capture: true, passive: true });
 // Leaving the page (another tab or app, the window's focus) pauses everything (main.js stops drawing, the audio context is
 // suspended) and puts the selector back (the simplest, with nothing left half-way to glitch on return);
 // coming back starts the idle count afresh: the time away never counts.
@@ -31,6 +35,7 @@ function reelIdleAway() {
 for (const ev of ['blur', 'focus', 'pagehide', 'pageshow']) addEventListener(ev, reelIdleAway);
 document.addEventListener('visibilitychange', reelIdleAway);
 for (const ev of ['pointerdown', 'keydown', 'wheel']) addEventListener(ev, e => {
+  if (reelIdleOn && onReelIdleBtn(e)) return;
   reelIdleWoken = true;
   if (!reelIdleOn) { if (ev === 'pointerdown') reelIdleTap = null; return; } // (a tap that never clicked holds nothing back)
   reelIdleOn = false; reelWake(); // (at once: the next press is a real one)
@@ -50,7 +55,7 @@ addEventListener('keyup', e => { if (e.code === reelIdleKey) { reelIdleKey = nul
 const REEL_IDLE_BAND = { top: 0, bottom: 0, hardTop: 0, left: 0, right: 0, soft: true };
 export function idleBand(band, vw, vh, safe) {
   if (!band) return band;
-  REEL_IDLE_BAND.top = vh > vw ? vh * 0.3 : safe.t + vh * 0.06; REEL_IDLE_BAND.bottom = vh - safe.b - vh * 0.05;
+  REEL_IDLE_BAND.top = vh > vw ? vh * 0.3 : safe.t + vh * 0.06; REEL_IDLE_BAND.bottom = vh - safe.b - Math.max(vh * 0.05, REEL_IDLE_BTN);
   REEL_IDLE_BAND.hardTop = safe.t; REEL_IDLE_BAND.left = safe.l; REEL_IDLE_BAND.right = vw - safe.r;
   return REEL_IDLE_BAND;
 }
@@ -61,7 +66,7 @@ export function reelIdle(now) {
   if (woke || reelIdleBack) reelIdleLast = now;
   reelIdleWoken = reelIdleBack = false;
   const on = may && !woke && (reelIdleOn || now - reelIdleLast > REEL_IDLE.after * 1000);
-  if (on !== reelIdleOn) { reelIdleOn = on; if (on) { document.body.classList.toggle('reel-idle', true); document.body.classList.toggle('reel-wake', false); reelWakeEnd = 0; reelIdleSince = now; } else reelWake(); }
+  if (on !== reelIdleOn) { reelIdleOn = on; if (on) { document.body.classList.toggle('reel-idle', true); if (reelIdleBtn) reelIdleBtn.inert = false; document.body.classList.toggle('reel-wake', false); reelWakeEnd = 0; reelIdleSince = now; } else reelWake(); }
   if (reelIdleOn && !reelGone && now - reelIdleSince > REEL_FADE_OUT_MS + 50) reelGoneSet(true); // the fade out is over
   if (reelWakeEnd < 0) reelWakeEnd = now + REEL_WAKE_MS; // (dated by the first frame after it)
   else if (reelWakeEnd && now > reelWakeEnd) { reelWakeEnd = 0; document.body.classList.toggle('reel-wake', false); } // the quick fade done: their own transitions again
@@ -69,5 +74,6 @@ export function reelIdle(now) {
 }
 function reelWake() {
   reelGoneSet(false);
+  if (reelIdleBtn) reelIdleBtn.inert = true;
   document.body.classList.toggle('reel-idle', false); document.body.classList.toggle('reel-wake', true); reelWakeEnd = -1;
 }

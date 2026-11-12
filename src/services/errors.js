@@ -161,5 +161,8 @@ if (w) {
     errors.start();
   };
   w.__mulassaReportBoot();
+  // a file of ours that failed at boot without stopping it (plassa/boot-watchdog.js): a breadcrumb for the next report
+  w.__mulassaBootSkip = tag => { if (/^[A-Z]{1,12}$/.test(tag)) errors.breadcrumb('boot-resource-failed', { tag }); };
+  for (const tag of w.__gameBootSkipped || []) w.__mulassaBootSkip(tag);
 }
 if (MODE === 'development' && w) w.__sentryTest = (msg = 'sentry-test: deliberate test error') => w.setTimeout(() => { throw new Error(msg); });

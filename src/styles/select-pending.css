@@ -280,7 +280,7 @@
 }
 /* «Més jocs!» beside the games button (games-tip.js), as Mulassa Pop's bubble: 6 s up, 4 s away, again and again; never in
    the way of a tap on what it covers while it is away */
-#free:is([hidden], [data-reel-gone]) + .games-tip, body.view-mode .games-tip { display: none; } /* gone with the button (play, the reel) and in free play; a sheet's backdrop dims it as the rest */
+#free[hidden] + .games-tip, :is(body.view-mode, body.reel-idle) .games-tip { display: none; } /* gone with the button (play), in free play and as soon as the idle screen starts (its own looping opacity would beat the .4 s fade, so it lingered whole); a sheet's backdrop dims it as the rest */
 .sel-heart-tip.games-tip { pointer-events: none; animation: games-tip 10s ease 1.5s infinite both; }
 .sel-heart-tip.games-tip.games-tip-on { animation: none; } /* held up while the news sheet points at it (news-sheet.js) */
 @keyframes games-tip { 0% { opacity: 0; translate: 0 -8px; scale: .9; } 3% { opacity: 1; translate: 0 0; scale: 1.08; } 5%, 58% { opacity: 1; translate: 0 0; scale: 1; } 60%, 100% { opacity: 0; translate: 0 0; scale: 1; } }

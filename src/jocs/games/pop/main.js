@@ -12,7 +12,7 @@ import { setMusicOn, musicOn, startHomeMusic, unlock, audioPage, watchAudio, SFX
 import { setupLevelStep } from './level-step.js';
 import { setupHelp, KINDS } from './help.js';
 import { guardGpu } from '#plassa/gpu-guard.js';
-import { lostGpu } from '#plassa/quality.js';
+import { lostGpu, GL_NAME } from '#plassa/quality.js';
 import { errors } from '#plassa/errors.js';
 import { watchUpdates } from '#plassa/update-watch.js';
 import { stopDoubleTapZoom } from '#plassa/double-tap.js';
@@ -28,7 +28,8 @@ import '#plassa/focus.js'; // keyboard vs pointer: <html data-keys> while keys d
 
 const $ = id => document.getElementById(id);
 // the error card's words in the player's language, for the shared boot watchdog (Catalan until here)
-window.__gameBootWords = { title: t('fail.title'), text: t('fail.text'), retry: t('fail.retry') };
+window.__gameBootWords = { title: t('fail.title'), text: t('fail.text'), retry: t('fail.retry'),
+  webglTitle: t('fail.webglTitle'), webglText: t('fail.webglText') };
 const board = createBoard($('game'));
 const hero = createHero($('menu-hero'));
 let booted = false; // the boot screen is up: nothing is drawn under it (see the end of this file)
@@ -38,7 +39,7 @@ const rankingUI = setupRankingUI({ t, focusBack: () => $('menu-best').focus({ fo
   askName: run => settings().then(m => m.promptName(run, rankingUI.named), () => {}) });
 const hud = createHud({ board, t });
 const flow = createFlow({ board, hero, hud, results: createResults({ board, hero, t, rankingUI }), rankingUI, t, booted: () => booted });
-errors.context(() => ({ game: 'pop', state: flow.mode, booted })); // crash reports as the main game's (plassa/errors.js)
+errors.context(() => ({ game: 'pop', state: flow.mode, booted, gl: GL_NAME })); // crash reports as the main game's (plassa/errors.js)
 // a lost GPU pauses a run (it would go on unseen); back, a paused board is drawn again; gone for good, the error card
 guardGpu([$('game'), $('menu-hero')], {
   lost: () => { errors.report('webgl-context-lost', { game: 'pop', screen: flow.mode }); lostGpu(); flow.pause(); }, // lostGpu: a reload starts a level lighter

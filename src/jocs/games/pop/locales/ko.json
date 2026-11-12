@@ -77,6 +77,8 @@
   "fail.title": "앗! 불러오지 못했어요",
   "fail.text": "페이지를 새로고침해서 다시 해봐요.",
   "fail.retry": "다시 시도",
+  "fail.webglTitle": "앗! 게임을 표시할 수 없어요",
+  "fail.webglText": "이 브라우저는 3D 게임을 표시할 수 없어요. 브라우저를 완전히 닫았다가 다시 열어요. 그래도 안 되면 업데이트하거나 Chrome 또는 Safari로 열어요.",
   "lost.title": "앗! 게임이 멈췄어요",
   "lost.text": "휴대폰에서 게임을 3D로 표시하지 못하게 됐어요. 브라우저를 완전히 닫았다가 다시 열어요.",
   "badge.campanar": "발스 종탑",

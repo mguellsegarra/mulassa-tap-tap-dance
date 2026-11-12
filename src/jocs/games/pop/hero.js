@@ -7,6 +7,7 @@ import { mulaRig, dracRig, poseMula, poseDrac, MULA_POSES, MULA_SCALE, MULA_YAW,
 import { buildPopPetard } from './models.js';
 import { createSparks } from './board-sparks.js';
 import { waitForWarmup, linkPrograms } from '#plassa/boot.js';
+import { rendererOrCard } from '#plassa/gpu-guard.js';
 import { LOW, pixelRatio } from '#plassa/quality.js';
 
 const ROAR_EVERY = 6.5, ROAR = 1.6; // seconds between the Drac's roars, and how long one lasts
@@ -23,7 +24,7 @@ const UP_AWAY = new THREE.Vector3(0, 3, -1);
 const still = matchMedia('(prefers-reduced-motion: reduce)');
 
 export function createHero(canvas) {
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: !LOW, alpha: true }); // a weak GPU: no MSAA (quality.js)
+  const renderer = rendererOrCard(() => new THREE.WebGLRenderer({ canvas, antialias: !LOW, alpha: true })); // a weak GPU: no MSAA (quality.js)
   const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera(24, 1, .5, 200);
   const sun = new THREE.DirectionalLight('#ffe8c0', 2.4);
   sun.position.set(-6, 12, 8);

@@ -79,6 +79,8 @@
   "fail.title": "Ups! Nu s-a încărcat",
   "fail.text": "Reîncarcă pagina și încearcă din nou.",
   "fail.retry": "Încearcă din nou",
+  "fail.webglTitle": "Ups! Jocul nu poate fi afișat",
+  "fail.webglText": "Browserul tău nu poate afișa jocul în 3D. Închide-l complet și deschide-l din nou; altfel, actualizează-l sau deschide-l cu Chrome ori Safari.",
   "lost.title": "Ups! Jocul s-a oprit",
   "lost.text": "Telefonul nu mai afișează jocul în 3D. Închide complet browserul și deschide-l din nou.",
   "badge.campanar": "Clopotnița din Valls",

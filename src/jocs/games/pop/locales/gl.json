@@ -78,6 +78,8 @@
   "fail.title": "Ups! Non se puido cargar",
   "fail.text": "Actualiza a páxina para tentalo de novo.",
   "fail.retry": "Téntao de novo",
+  "fail.webglTitle": "Ups! Non se pode amosar o xogo",
+  "fail.webglText": "O teu navegador non pode amosar o xogo en 3D. Péchao de todo e volve abrilo; se non, actualízao ou ábreo con Chrome ou Safari.",
   "lost.title": "Ups! O xogo detívose",
   "lost.text": "O móbil deixou de amosar o xogo en 3D. Pecha o navegador de todo e volve abrilo.",
   "badge.campanar": "Campanario de Valls",

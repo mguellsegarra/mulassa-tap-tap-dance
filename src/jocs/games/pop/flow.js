@@ -16,9 +16,10 @@ import { SONGS, SONG_IDS } from './songs.js';
 const COLORS = { hit: ['#c0283c', '#d9a521', '#fff3d6', '#1f5c33'], goodie: ['#f5c518', '#fff3d6', '#ffe066'], gold: ['#f5c518', '#ffe066', '#fff3d6', '#ffb321'] };
 const layout = () => (innerWidth > innerHeight ? { cols: 6, rows: 4 } : { cols: 4, rows: 6 });
 const params = new URLSearchParams(location.search);
-// dev only: ?autoplay taps for you from BOT_FROM points; ?campanar (or ?campanar=points) starts that far on (150 by default,
+// dev only: ?autoplay taps for you from BOT_FROM points (?autoplay=publica: its run goes to the dev mock board, to reach the
+// end sheet's board line and name step); ?campanar (or ?campanar=points) starts that far on (150 by default,
 // the tune at full speed after its glide) and pops a campanar up 8 s in, then 3 to 6 s after each slow time ends
-const BOT = import.meta.env.DEV && params.has('autoplay'), BOT_CHORDS = BOT && params.get('autoplay') === 'combo';
+const BOT = import.meta.env.DEV && params.has('autoplay'), BOT_CHORDS = BOT && params.get('autoplay') === 'combo', BOT_SENDS = BOT && params.get('autoplay') === 'publica';
 const BELL = import.meta.env.DEV && params.has('campanar');
 const BELL_FROM = +(params.get('campanar') || 150);
 // dev only (?carretilla): a carretilla 3 s in once two Mulassas are out, then every 6 s, to see her correfoc
@@ -93,7 +94,7 @@ export function createFlow({ board, hero, hud, results, rankingUI, t, booted }) 
       results.blast(cell);
       mode = 'ending';
       hud.setSlow(false, false);
-      endTimer = setTimeout(() => { mode = 'over'; results.show(run, { practice: BOT || BELL }); }, END_SHEET_MS);
+      endTimer = setTimeout(() => { mode = 'over'; results.show(run, { practice: (BOT && !BOT_SENDS) || BELL }); }, END_SHEET_MS);
     }
   }
 

@@ -42,7 +42,7 @@
   "rank.place": "Ès eth numèro {n} deth classament",
   "rank.newBest": "Nau recòrd! Numèro {n}",
   "rank.noName": "Triga un nòm entath classament",
-  "rank.getName": "Triga un nòm",
+  "rank.publish": "Publica eth resultat",
   "rank.error": "Non s’a pogut connectar ath classament",
   "rank.empty": "Encara non i a arrés. Comença tu!",
   "rank.loading": "En tot cargar…",
@@ -52,6 +52,14 @@
   "rank.cardPlace": "Posicion",
   "rank.cardRuns": "Partides",
   "rank.cardAverage": "Mejana",
+  "rank.jumpTop": "Entà naut",
+  "rank.jumpMe": "Tara mia fila",
+  "rank.jumpTopAria": "Vè entà naut dera classificacion",
+  "rank.jumpMeAria": "Vè tara tua fila",
+  "rank.capped": "Se mòstren es {n} prumèrs",
+  "rank.loadMore": "Carga-ne mès",
+  "rank.loadingMore": "Cargant-ne mès…",
+  "rank.moreFailed": "Non s’an pogut cargar mès. Torna-ac a provar",
   "word.campanar": "CALMA!",
   "word.carretilla": "HUEC!",
   "chip.slow": "Calma",
@@ -86,5 +94,6 @@
   "help.ok": "D’acòrd",
   "help.tap": "TÒCA",
   "help.never": "NON TÒQUES",
-  "help.combo": "Mai de dets amassa, mai de punts"
+  "help.combo": "Mai de dets amassa, mai de punts",
+  "settings.promptOff": "Desactivada: non ges en acabar era partida"
 }

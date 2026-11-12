@@ -44,7 +44,7 @@
   "rank.place": "Ти на місці {n}",
   "rank.newBest": "Новий рекорд! Місце {n}",
   "rank.noName": "Обери ім’я для рейтингу",
-  "rank.getName": "Обрати ім’я",
+  "rank.publish": "Опублікувати результат",
   "rank.error": "Немає зв’язку з рейтингом",
   "rank.empty": "Ще нікого немає. Будь першим!",
   "rank.loading": "Завантаження…",
@@ -54,6 +54,14 @@
   "rank.cardPlace": "Місце",
   "rank.cardRuns": "Ігри",
   "rank.cardAverage": "Середнє",
+  "rank.jumpTop": "Нагору",
+  "rank.jumpMe": "До мого рядка",
+  "rank.jumpTopAria": "Перейди на початок рейтингу",
+  "rank.jumpMeAria": "Перейди до свого рядка",
+  "rank.capped": "Перші {n}",
+  "rank.loadMore": "Ще результати",
+  "rank.loadingMore": "Завантажуємо ще…",
+  "rank.moreFailed": "Не вдалося завантажити більше. Спробуй ще раз",
   "word.campanar": "ЗАТИШШЯ!",
   "word.carretilla": "ВОГОНЬ!",
   "chip.slow": "Затишшя",
@@ -88,5 +96,6 @@
   "help.ok": "Гаразд",
   "help.tap": "НАТИСКАЙ",
   "help.never": "НЕ НАТИСКАЙ",
-  "help.combo": "Більше пальців разом, більше очок"
+  "help.combo": "Більше пальців разом, більше очок",
+  "settings.promptOff": "Вимкнено: не з’являється після гри"
 }

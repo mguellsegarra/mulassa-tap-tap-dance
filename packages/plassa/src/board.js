@@ -31,7 +31,7 @@ export function playerName(into, p, look, onOpen = null, doc = document) {
 // cells (Pop: its score); the player's own row marked
 export function boardRow(r, { look, onOpen, cells = [], sub = [] }, doc = document) {
   const row = el(doc, 'li', r.is_self ? 'me' : ''), who = el(doc, 'div', 'who'), col = el(doc, 'div', 'name'), line = el(doc, 'div', 'line');
-  who.append(el(doc, 'i', '', r.position), col);
+  who.append(el(doc, 'i', r.position >= 1 && r.position <= 3 ? `pos p${r.position}` : '', r.position), col); // 1-2-3: the medal (medal.css)
   col.append(line);
   const name = playerName(line, r, look, onOpen, doc);
   if (sub.length) { const under = el(doc, 'div', 'sub'); under.append(...sub); col.append(under); }

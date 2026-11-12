@@ -98,6 +98,7 @@ addEventListener('beforeinstallprompt', function (e) { window.__installPrompt = 
 </style>
 <link rel="stylesheet" href="/src/styles/base.css">
 <link rel="stylesheet" href="/src/styles/hint-sheets.css">
+<link rel="stylesheet" href="/src/styles/medal.css">
 <link rel="stylesheet" href="/src/styles/board.css">
 <link rel="stylesheet" href="/src/styles/badge.css">
 <link rel="stylesheet" href="/src/styles/share.css">
@@ -509,6 +510,7 @@ addEventListener('beforeinstallprompt', function (e) { window.__installPrompt = 
   <button id="profile-cancel" type="button" data-i18n-attr="aria-label:html.attr.close" class="sheet-x" aria-label="Tanca"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
   <form id="profile-form" class="sheet-body" novalidate>
     <h2 id="profile-title" data-i18n="html.profileTitle">Confirma el correu</h2>
+    <p id="profile-run" class="publish-run" hidden></p><!-- a game's run waiting for this name (Pop): profile-ui.js open's publish -->
     <p id="profile-lead" class="publish-hint"></p>
     <div class="publish-body">
       <div id="profile-alias-field" hidden>
@@ -538,6 +540,7 @@ addEventListener('beforeinstallprompt', function (e) { window.__installPrompt = 
     <div class="sheet-actions">
       <button id="profile-keep" type="button" class="btn btn-primary" hidden data-i18n="html.common.cancel">Cancel·la</button><!-- delete / sign out: the safe choice is the primary, as in the pause -->
       <button id="profile-send" type="submit" class="btn btn-primary" data-i18n="html.profileSend">Envia el codi</button>
+      <button id="profile-never" type="button" class="btn btn-link" hidden data-i18n="html.publishNever">No m’ho tornis a recordar</button>
     </div>
   </form>
 </dialog>

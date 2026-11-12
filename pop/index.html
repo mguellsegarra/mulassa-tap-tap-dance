@@ -43,6 +43,7 @@
   <link rel="stylesheet" href="/packages/plassa/src/sheets.css">
   <link rel="stylesheet" href="/src/styles/hint-sheets.css">
   <link rel="stylesheet" href="/src/styles/badge.css">
+  <link rel="stylesheet" href="/src/styles/medal.css">
   <link rel="stylesheet" href="/src/styles/level-seg.css">
   <link rel="stylesheet" href="/src/jocs/games/pop/style.css">
 </head>
@@ -122,7 +123,7 @@
       <p class="result" id="end-score">0</p>
       <p class="result-sub" id="end-best"></p>
       <p class="result-sub rank-line" id="end-rank" hidden></p>
-      <a id="end-name" class="btn" href="/#nom-pop" data-t="rank.getName" hidden>Posa’t un nom</a>
+      <a id="end-name" class="btn" href="/#nom-pop" data-t="rank.publish" hidden>Publica el resultat</a>
       <div class="sheet-actions">
         <button id="again" class="btn btn-primary"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v5h-5"/></svg><span data-t="again">Torna-hi</span></button>
         <button id="to-menu" class="btn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 8v-2a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-7a2 2 0 0 1-2-2v-2M15 12H3l3-3M6 15l-3-3"/></svg><span data-t="menu">Menú</span></button>
@@ -135,6 +136,7 @@
   <div id="board-menu" class="cover" hidden>
     <div class="sheet board-sheet">
       <h2 data-t="rank.title">Rànquing</h2>
+      <button type="button" class="btn-link board-jump off" id="board-jump"></button>
       <ol class="board-list" id="board-list"></ol>
       <p class="result-sub" id="board-note" hidden></p>
       <div class="sheet-actions"><button type="button" id="board-close" class="btn btn-primary" data-t="rank.close">Tanca</button></div>

@@ -10,8 +10,8 @@ body.slow::after { opacity: 1; transition-duration: .15s; animation: chill-in .5
 
 
 /* HUD */
-#hud { position: fixed; z-index: 2; top: calc(var(--sat) + 8px); left: 16px; right: 16px; display: grid; grid-template-columns: 44px 1fr 44px; align-items: start; pointer-events: none; }
-#hud button { pointer-events: auto; }
+#hud { position: fixed; z-index: 2; top: calc(var(--sat) + 8px); left: 16px; right: 16px; display: grid; grid-template-columns: var(--round-size, 44px) 1fr var(--round-size, 44px); align-items: start; pointer-events: none; }
+#hud button { pointer-events: auto; } /* the side columns as wide as the round buttons (game.css --round-size, up to 72 px): a 44 px one pushed ♪ off the right edge */
 #hud-mid { text-align: center; line-height: 1; justify-self: center; display: flex; align-items: center; gap: 12px; padding: 4px 20px; border-radius: 40px; background: #24223f; }
 #score { font: 800 34px/1 'Baloo 2', system-ui, sans-serif; color: #ff7ac6; min-width: 40px; }
 #hud-best { display: flex; flex-direction: column; align-items: center; gap: 1px; font: 800 20px/1 'Baloo 2', system-ui, sans-serif; color: #fff2e4; padding-left: 12px; border-left: 1px solid #ff7ac666; }
@@ -68,6 +68,9 @@ dialog .feedback-field { border-color: color-mix(in srgb, var(--accent) 60%, tra
 #menu-best .go { display: none; }
 
 #end-name { margin-top: 4px; text-decoration: none; } /* a link to mulassa.cat's name sheet, drawn as the sheet's buttons */
+#profile-run { font-size: 22px; font-weight: 800; color: var(--accent); } /* the run the name is for (settings.js promptName), one line in the title's colour as the main game's */
+#profile-run .lvt { text-transform: uppercase; } #profile-run .lvt0 { color: var(--lvl0); } #profile-run .lvt1 { color: var(--lvl1); } #profile-run .lvt2 { color: var(--lvl2); }
+#end-name:not([hidden]) { display: flex; align-items: center; justify-content: center; } /* a link, not a <button>: its label centred as theirs when the sheet makes them taller */
 /* wide: the text and the Mulassa side by side */
 @media (orientation: landscape) {
   .c-hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; padding: calc(52px + 12px) max(32px, 5vw); } /* clear of the corner buttons' row, and as much below: the block sits at the screen's middle */
@@ -162,8 +165,20 @@ svg.podium { fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap
 .c-top-head .count:empty { display: none; }
 .c-top-head .count:not(:empty) + .go { margin-left: 0; }
 .c-top .board-list { overflow: visible; padding: 2px 0; }
-.c-top .board-list li, .c-top .board-list li:nth-child(odd) { border-radius: 0; background: none; }
 .c-top .board-list li + li { border-top: 1px solid #fff3d61c; }
+/* the board sheet's long list (ranking-ui.js): the link to the top / the own row under the title, kept in place where there is
+   nowhere to go; the status row closing the loaded top (loading, retry, the 500 cap) */
+#board-menu .board-sheet { height: min(640px, 100%); } /* one height from the first frame: loading, a short board, a long one */
+#board-menu .board-list:empty { display: none; } #board-note { margin-block: auto; } /* loading, empty, error: centred */
+#board-menu .board-list { overflow-anchor: none; } /* a page lands under the rows in view or before the gap: nothing to anchor, and Safari has none */
+/* rows out of view skip style and layout: 63 of them on opening cost a 50-73 ms task on the S10, none with this (12 Nov
+   2026); 46 px, a row's own height, so the jump to the own row lands where it should */
+#board-list > li:not(.gap, .more) { content-visibility: auto; contain-intrinsic-size: auto 46px; } /* rows only: «…» and the end line are another height */
+.board-sheet .board-jump { align-self: center; min-height: 32px; margin: -6px 0 -4px; padding-block: 0; font-size: 14px; }
+.board-sheet .board-jump.off { visibility: hidden; }
+.board-list li.more { display: grid; place-items: center; min-height: 40px; color: var(--muted); font-size: 14px; }
+.board-list :is(li.more, li.gap) .btn-link { min-height: 40px; font-size: 14px; }
+.board-list li.gap:has(button) { display: grid; place-items: center; padding: 4px 0; } .board-list li.gap .btn-link:not([hidden]) { display: block; }
 .c-top .board-list .who { min-height: 40px; padding: 0 12px 0 0; grid-template-columns: 36px minmax(0, 1fr) auto; }
 .c-top .board-list .who .name { display: flex; align-items: center; gap: 8px; }
 .c-top .board-list .who .sub { margin: 0; }
@@ -179,7 +194,7 @@ svg.podium { fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap
 @media (orientation: portrait) and (max-height: 700px) { .c-art canvas { --k: 1.2; } } /* 320×568, 375×667: the buttons keep their room */
 #end-menu .btn > svg { fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; } /* the end sheet's icons are drawn as lines */
 /* the end sheet's culprit, alive (hero.js solo, results.js) */
-#end-art { display: flex; align-items: center; justify-content: center; flex: 0 1 calc(220px * var(--sheet-zoom, 1)); width: min(calc(320px * var(--sheet-zoom, 1)), 100%); min-height: 120px; } /* grown with the sheet (game.css --sheet-zoom), its canvas sized, not zoomed */
+#end-art { display: flex; align-items: center; justify-content: center; flex: 0 1 220px; width: min(320px, 100%); min-height: 120px; }
 #end-art canvas { width: 100%; height: 100%; object-fit: contain; } /* the home's buffer, kept (hero.js fit): its transparent margins never show */
 
 

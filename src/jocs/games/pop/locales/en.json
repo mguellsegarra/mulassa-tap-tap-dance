@@ -42,7 +42,7 @@
   "rank.place": "You’re number {n}",
   "rank.newBest": "New best! Number {n}",
   "rank.noName": "Choose a name to join the leaderboard",
-  "rank.getName": "Choose a name",
+  "rank.publish": "Post score",
   "rank.error": "Can’t connect to the leaderboard",
   "rank.empty": "No scores yet. Be the first!",
   "rank.loading": "Loading…",
@@ -52,6 +52,14 @@
   "rank.cardPlace": "Rank",
   "rank.cardRuns": "Games",
   "rank.cardAverage": "Average",
+  "rank.jumpTop": "To the top",
+  "rank.jumpMe": "To my row",
+  "rank.jumpTopAria": "Go to the top of the leaderboard",
+  "rank.jumpMeAria": "Go to your row",
+  "rank.capped": "Showing the top {n}",
+  "rank.loadMore": "Load more",
+  "rank.loadingMore": "Loading more…",
+  "rank.moreFailed": "Couldn’t load more. Try again",
   "word.campanar": "CALM!",
   "word.carretilla": "FIRE!",
   "chip.slow": "Calm",
@@ -86,5 +94,6 @@
   "help.ok": "OK",
   "help.tap": "TAP",
   "help.never": "DON’T TAP",
-  "help.combo": "More fingers at once, more points"
+  "help.combo": "More fingers at once, more points",
+  "settings.promptOff": "Off: no prompt after the game"
 }

@@ -28,9 +28,10 @@ export async function me() {
   return { name: p && !p.released ? p.alias : null, released: !!p?.released, place: row ? { score: row.score, position: Number(row.position), public_id: p?.public_id } : null };
 }
 
-export async function board() {
+// a page of the board by row index (board-pages.js); the server gives 50 at most
+export async function board(offset = 0, limit = 50) {
   const { c } = await client();
-  return (await rpc(c, 'get_pop_board', { p_offset: 0, p_limit: 50 })).map(r => ({ ...r, position: Number(r.position) }));
+  return (await rpc(c, 'get_pop_board', { p_offset: offset, p_limit: limit })).map(r => ({ ...r, position: Number(r.position) }));
 }
 
 // a player's card by the public id the board shows, or null

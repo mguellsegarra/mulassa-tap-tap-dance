@@ -46,7 +46,17 @@ p.listeners.unhandledrejection({});
 assert.deepEqual([p.parts.h2.textContent, p.parts.button.textContent], ['Oops', 'Retry'], "the player's language once main.js has it");
 
 // Sentry gets a fixed cause (never the message): which kind of failure showed the card
-for (const [fire, cause] of [[q => q.listeners.error({ target: { tagName: 'IMG', src: 'https://mulassa.cat/x.png' } }), 'resource:IMG'],
+// a picture of ours that does not load (the help's portraits, a phone's network) is no boot failure: a breadcrumb, not the card
+{
+  const q = page(), crumbs = [];
+  q.listeners.error({ target: { tagName: 'IMG', src: 'https://mulassa.cat/jocs/pop/cards/mula.png' } });
+  assert.equal(q.boot.className, 'cover', 'a portrait that does not load: no card');
+  assert.deepEqual([...q.win.__gameBootSkipped], ['IMG'], 'kept until errors.js arrives');
+  q.win.__mulassaBootSkip = tag => crumbs.push(tag);
+  q.listeners.error({ target: { tagName: 'AUDIO', src: 'https://mulassa.cat/x.ogg' } });
+  assert.deepEqual(crumbs, ['AUDIO'], 'then handed straight to errors.js');
+}
+for (const [fire, cause] of [[q => q.listeners.error({ target: { tagName: 'LINK', rel: 'stylesheet', href: 'https://mulassa.cat/a.css' } }), 'resource:LINK'],
   [q => q.listeners.error({ target: {}, message: 'private text' }), 'error'], [q => q.listeners.unhandledrejection({ reason: 'x' }), 'rejection']]) {
   const q = page();
   fire(q);
@@ -55,11 +65,14 @@ for (const [fire, cause] of [[q => q.listeners.error({ target: { tagName: 'IMG',
 { // plassa/errors.js forwards only those fixed causes
   const source = readFileSync(new URL('../../packages/plassa/src/errors.js', import.meta.url), 'utf8');
   const bridge = source.slice(source.indexOf('if (w) {\n  let bootReported'), source.indexOf("if (MODE === 'development'"));
-  for (const [cause, sent] of [['resource:IMG', 'resource:IMG'], ['rejection', 'rejection'], ['https://x.test/?t=private', undefined]]) {
+  for (const [cause, sent] of [['resource:LINK', 'resource:LINK'], ['rejection', 'rejection'], ['https://x.test/?t=private', undefined]]) {
     const events = [], w = { __mulassaBootFailure: { phase: 'init', reason: 'startup', cause } };
     vm.runInNewContext(bridge, { w, errors: { report: (kind, tags) => events.push(tags), start() {} } });
     assert.equal(events[0].cause, sent, `forwarded cause for ${cause}`);
   }
+  const crumbs = [], w = { __gameBootSkipped: ['IMG', 'https://x.test/private'] };
+  vm.runInNewContext(bridge, { w, errors: { report() {}, start() {}, breadcrumb: (kind, data) => crumbs.push([kind, { ...data }]) } });
+  assert.deepEqual(crumbs, [['boot-resource-failed', { tag: 'IMG' }]], 'skipped files become breadcrumbs, tag names only');
 }
 
 p = page({ ready: true });

@@ -54,6 +54,16 @@ if (!document.referrer.startsWith(`${location.origin}/`) || performance.getEntri
   $('back').classList.add('more');
   $('back').querySelector('.exit-tip').textContent = t('more');
 }
+// the bubble never runs under the corner row (a narrow phone, a long language, «Instal·la l'app» shown): it stays away then
+const exitTip = $('back').querySelector('.exit-tip'), cornerRow = document.querySelector('#menu .corner-row');
+function fitExitTip() {
+  exitTip.hidden = false; // measured shown (its width), then hidden in the same task: never painted in between
+  const first = [...cornerRow.children].find(el => !el.hidden);
+  exitTip.hidden = Boolean(first) && $('back').getBoundingClientRect().left + exitTip.offsetLeft + exitTip.offsetWidth + 8 > first.getBoundingClientRect().left;
+}
+addEventListener('resize', fitExitTip);
+new MutationObserver(fitExitTip).observe(cornerRow, { subtree: true, attributeFilter: ['hidden'] });
+document.fonts.ready.then(fitExitTip);
 
 // the way back replaces this page as the selector's cards did (location.replace): a link back and forth would grow the history.
 // Still a real link (no script, a new tab with ctrl/⌘/middle click)
@@ -178,6 +188,7 @@ requestAnimationFrame(() => {
   errors.start(); // the SDK loads when the browser is idle (nothing at all without a DSN)
   if (flow.mode === 'menu') startHomeMusic();
   // the tap the home's music needs (tap-start.js): the live Mulassa and Drac fade, the title glides to its place
-  waitForTap({ label: t('home.tap'), onGo: unlock, into: $('play').parentElement, art: document.querySelector('#menu .c-art'), title: document.querySelector('#menu .pop-title') });
+  waitForTap({ label: t('home.tap'), onGo: unlock, into: $('play').parentElement, art: document.querySelector('#menu .c-art'), title: document.querySelector('#menu .pop-title'),
+    onIn: () => { if (flow.mode === 'menu') sheetsCode.then(m => m?.deviceHint()); } }); // an app's own browser: its tip, over the whole home
   setTimeout(() => { $('boot').hidden = true; }, 400); // kept, still: the error card comes up in it (index.html's watchdog)
 });

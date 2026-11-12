@@ -34,6 +34,9 @@
   "home.board": "查看排行榜",
   "home.tap": "轻触开始",
   "rank.title": "排行榜",
+  "rank.players": {
+    "other": "{n}位玩家"
+  },
   "rank.close": "关闭",
   "rank.place": "你排在第{n}名",
   "rank.newBest": "新纪录！第{n}名",

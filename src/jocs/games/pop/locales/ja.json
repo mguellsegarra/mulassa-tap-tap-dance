@@ -34,6 +34,9 @@
   "home.board": "ランキングを見る",
   "home.tap": "タップであそぶ",
   "rank.title": "ランキング",
+  "rank.players": {
+    "other": "{n}人参加"
+  },
   "rank.close": "閉じる",
   "rank.place": "現在{n}位",
   "rank.newBest": "新記録！現在{n}位",

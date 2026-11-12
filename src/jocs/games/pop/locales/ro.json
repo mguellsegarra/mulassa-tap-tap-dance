@@ -34,6 +34,11 @@
   "home.board": "Vezi clasamentul",
   "home.tap": "Atinge și joacă",
   "rank.title": "Clasament",
+  "rank.players": {
+    "one": "{n} participant",
+    "few": "{n} participanți",
+    "other": "{n} de participanți"
+  },
   "rank.close": "Închide",
   "rank.place": "Ești pe locul {n}",
   "rank.newBest": "Record nou! Locul {n}",

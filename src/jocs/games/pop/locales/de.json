@@ -34,6 +34,10 @@
   "home.board": "Rangliste ansehen",
   "home.tap": "Tippen zum Spielen",
   "rank.title": "Rangliste",
+  "rank.players": {
+    "one": "{n} Teilnehmer",
+    "other": "{n} Teilnehmer"
+  },
   "rank.close": "Schließen",
   "rank.place": "Du bist auf Platz {n}",
   "rank.newBest": "Neuer Rekord! Platz {n}",

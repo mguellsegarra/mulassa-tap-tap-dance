@@ -13,6 +13,12 @@ try {
   const md = await readFile(join(dist, 'projecte/index.md'), 'utf8');
   assert.equal(page.match(/<h1>/g).length, 1, 'one H1');
   assert.match(page, /<link rel="canonical" href="https:\/\/mulassa\.cat\/projecte\/">/);
+  // /projecte/ and the 404 sit on the game's loading cover: its dark (base.css --page-edge) under the same tiles, and the bar in it
+  const edge = (await readFile(new URL('../../src/styles/base.css', import.meta.url), 'utf8')).match(/--page-edge: (#[0-9a-f]{6})/)[1];
+  for (const [name, html] of [['/projecte/', page], ['404.html', await pub('404.html')]]) {
+    assert.match(html, new RegExp(`body \\{[^}]*background: ${edge};`), `${name}: the loading cover's background (${edge})`);
+    assert(html.includes(`<meta name="theme-color" content="${edge}">`), `${name}: the browser bar in the same colour`);
+  }
   assert.match(page, /rel="icon"[^>]*favicon-32\.png/, 'the page has the game\'s favicon');
   assert.match(page, /rel="alternate" type="text\/markdown" href="\/projecte\/index\.md"/);
   assert.match(page, /og:image:width" content="1200"[\s\S]*og:image:height" content="630"[\s\S]*og:image:alt" content="La Mulassa i el Drac de Valls/); // same card as the home page

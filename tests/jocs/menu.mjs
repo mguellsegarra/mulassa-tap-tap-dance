@@ -22,9 +22,10 @@ assert.equal((html.match(/class="game-play"/g) ?? []).length, 1, 'one play butto
 assert(html.indexOf('id="games-hero-play"') > html.indexOf('id="games-hero-desc"'), '«Juga» comes after the game\'s description');
 assert(html.includes('id="games-music"'), 'the page has its speaker');
 
-// the page stands on Plassa and loads nothing of the main game
+// the page stands on Plassa; of the main game it takes only the install steps (their sheet, in Plassa's sheet look)
 const links = [...html.matchAll(/<link rel="stylesheet" href="([^"]+)">/g)].map(m => m[1]);
-assert.deepEqual(links, ['/packages/plassa/src/base.css', '/packages/plassa/src/game.css', '/src/jocs/menu/style.css']);
+assert.deepEqual(links, ['/packages/plassa/src/base.css', '/packages/plassa/src/game.css', '/packages/plassa/src/sheets.css', '/src/styles/hint-sheets.css', '/src/jocs/menu/style.css']);
+assert.deepEqual(html.match(/<!-- mulassa-sheets: ([^>]*?) -->/)?.[1].split(/\s+/), ['install-steps-menu'], 'only the install steps come from mulassa.cat');
 // …and has the games' boot screen and shared watchdog (a failed module or an early throw would leave a black page), before its module
 assert.deepEqual([...html.matchAll(/<script[^>]*src="([^"]+)"/g)].map(m => m[1]), ['/packages/plassa/src/boot-watchdog.js', '/src/jocs/menu/main.js']);
 assert(html.includes('<script id="boot-watchdog" src="/packages/plassa/src/boot-watchdog.js"></script>') && html.includes('<div id="boot" class="cover">') && html.includes('<!-- mula-load -->'), 'the boot screen and the shared watchdog');

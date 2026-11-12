@@ -15,8 +15,8 @@ export function stepsFor({ ua = '', touch = 0, standalone = false } = {}) {
   if (/iPad/.test(ua) || (/Macintosh/.test(ua) && touch > 1)) return 'ipad'; // iPadOS says «Macintosh»: its touch points tell
   return /iPhone|iPod/.test(ua) ? 'iphone' : null;
 }
-export function setupInstall({ focusIn, back, ua = navigator.userAgent ?? '', touch = navigator.maxTouchPoints ?? 0, standalone = navigator.standalone === true || matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches, doc = document, listen = addEventListener }) {
-  const by = id => doc.getElementById(id), btn = by('settings-install'), sheet = by('install-steps-menu');
+export function setupInstall({ focusIn, back, button = 'settings-install', ua = navigator.userAgent ?? '', touch = navigator.maxTouchPoints ?? 0, standalone = navigator.standalone === true || matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches, doc = document, listen = addEventListener }) {
+  const by = id => doc.getElementById(id), btn = by(button), sheet = by('install-steps-menu');
   const steps = stepsFor({ ua, touch, standalone });
   for (const el of sheet.querySelectorAll('[data-for]')) el.hidden = el.dataset.for !== steps;
   let prompt = globalThis.__installPrompt ?? null; // the browser's install prompt, good for one use (index.html's #install-early keeps an early one)

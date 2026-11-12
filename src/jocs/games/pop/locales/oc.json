@@ -34,6 +34,10 @@
   "home.board": "Veir eth classament",
   "home.tap": "Tòca tà jogar",
   "rank.title": "Classament",
+  "rank.players": {
+    "one": "{n} participant",
+    "other": "{n} participants"
+  },
   "rank.close": "Barra",
   "rank.place": "Ès eth numèro {n} deth classament",
   "rank.newBest": "Nau recòrd! Numèro {n}",

@@ -41,7 +41,7 @@ ${langs.length > 1 ? `${langs.map(l => `<link rel="alternate" hreflang="${l}" hr
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="preload" href="/fonts/baloo-2-latin.woff2" as="font" type="font/woff2" crossorigin>
-<meta name="theme-color" content="#2a1a10">
+<meta name="theme-color" content="#140c07">
 <meta property="og:type" content="article">
 <meta property="og:title" content="${esc(p.title)}">
 <meta property="og:description" content="${esc(p.lead)}">
@@ -61,7 +61,7 @@ ${langs.length > 1 ? `${langs.map(l => `<link rel="alternate" hreflang="${l}" hr
   ...(p.videos && { video: p.videos.map(([src, poster, t]) => ({ '@type': 'VideoObject', name: t, description: ui.videoDescription, thumbnailUrl: `${SITE}${poster}`, contentUrl: `${SITE}${src}`, uploadDate: '2026-10-01', duration: 'PT34S', inLanguage: c.lang })) }),
 })}</script>
 <style>
-  body { margin: 0; background: #2a1a10; color: #fff3d6; font: 400 18px/1.6 'Baloo 2', system-ui, sans-serif; }
+  body { margin: 0; background: #140c07; color: #fff3d6; font: 400 18px/1.6 'Baloo 2', system-ui, sans-serif; }
   body::before { content: ''; position: fixed; inset: 0; z-index: -1; background: ${PATTERN}; } /* still pattern, the page scrolls over it (iOS ignores background-attachment: fixed) */
   @font-face { font-family: 'Baloo 2'; font-weight: 400 800; font-display: swap; src: url(/fonts/baloo-2-latin.woff2) format('woff2'); }
   main { max-width: 42rem; margin: 0 auto; padding: 32px 20px 64px; }

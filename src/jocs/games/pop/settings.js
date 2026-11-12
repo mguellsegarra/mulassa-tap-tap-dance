@@ -6,23 +6,22 @@ import boardCss from '../../../styles/board.css?inline';
 import profileCss from '../../../styles/profile.css?inline';
 import feedbackCss from '../../../styles/feedback.css?inline';
 import { leaderboard, turnstileSiteKey } from '../../../services/leaderboard.js';
-import { ALIAS_KEY, refreshIdentity } from '../../../services/leaderboard-identity.js';
+import { ALIAS_KEY, ownerKey, savedName, refreshIdentity } from '../../../services/leaderboard-identity.js';
 import { setupVerify, loadTurnstile } from '../../../services/captcha.js';
 import { setupProfile } from '../../../ui/profile-ui.js';
 import { setupBadges } from '../../../ui/badge-picker.js';
 import { setupFeedback } from '../../../ui/feedback-ui.js';
 import { setupConfirmGate } from '../../../ui/confirm-gate.js';
 import { setupLang } from '../../../ui/lang-ui.js';
-import { sheetFades } from '../../../ui/sheet-fade.js';
 import { DEVICE_NOTES, deviceRisk, browserEnv } from '../../../ui/profile-notes.js';
-import { applyI18n } from '../../../i18n/apply-dom.js';
 import { tr } from '../../../i18n/messages.js';
 import { APP_BUILD } from '../../../core/version.js';
 import { store } from '#plassa/storage.js';
 import { focusIn } from '#plassa/focus.js';
-import { adoptWithin } from '#plassa/scoped-css.js';
+import { mountMainSheets } from '../../main-sheets.js';
+import { setupGameInstall } from '../../install.js';
+import { setupDeviceHint } from '../../../ui/device-hint.js';
 import '../../../ui/keyboard-room.js'; // a field's sheet rises above the on-screen keyboard (plassa sheets.css reads the <html data-kb> it sets)
-import '../../../ui/backdrop.js'; // a tap on a sheet's dim backdrop = Escape (main.js's closeOnBackdrop only knows the games' covers)
 
 const $ = id => document.getElementById(id);
 // a dev server with no Supabase: mulassa.cat's in-memory account (src/dev/mock-leaderboard.js, ?account=new|guest|verified…),
@@ -32,19 +31,8 @@ const service = mock ? (await import('../../../dev/mock-leaderboard.js')).mockLe
 const kv = mock ? (m => ({ get: k => m.get(k) ?? null, set: (k, v) => m.set(k, String(v)), remove: k => m.delete(k) }))(new Map()) : store;
 if (mock && mockAccount !== 'new') kv.set(ALIAS_KEY, 'Prova123'); // the mock's own player (DEMO_SELF)
 
-// mulassa.cat's CSS for these sheets, kept inside them: it also names #music, #settings and #board-menu, which here are Pop's
-adoptWithin([boardCss, profileCss, feedbackCss].join('\n'), 'dialog.sheet');
-const template = document.getElementById('mulassa-sheets'); // the page's copy (vite.config.js), out of the boot's DOM
-// no copy: the page was built without vite.config.js's jocs-page step (a dev server started before it): say so, never fail silently
-if (!template) throw new Error('pop/index.html has no #mulassa-sheets: restart Vite so vite.config.js puts in mulassa.cat\'s sheets'); // i18n-ok: a developer's error, never shown
-const sheets = template.content;
-applyI18n(sheets); // the player's language (the page holds the Catalan)
-document.body.append(sheets);
-sheetFades(document);
-// the dim behind any open sheet (sheets.css .sheet-dim: an element, so the boot's warm() paints it too)
-const dim = Object.assign(document.createElement('div'), { className: 'sheet-dim', hidden: true });
-document.body.append(dim);
-new MutationObserver(() => { dim.hidden = !document.querySelector('dialog.sheet[open]'); }).observe(document.body, { subtree: true, attributeFilter: ['open'] });
+// mulassa.cat's sheets, with its CSS for them kept inside them: it also names #music, #settings and #board-menu, which here are Pop's
+mountMainSheets([boardCss, profileCss, feedbackCss]);
 for (const id of ['settings-sync', 'settings-install', 'settings-prompt-row']) $(id).hidden = true;
 for (const s of $('account-menu').querySelectorAll('section.account-section')) s.hidden = true;
 $('settings-profile').querySelector('.sub').textContent = tr('ui.settings.profileSubGames'); // a game's Perfil: no statistics or podiums
@@ -125,3 +113,11 @@ export function openProfile(kind, back) {
   onDone = back;
   if (!profile.open(kind)) back?.(); // offline: nothing opened
 }
+
+// «Instal·la l'app»: the round button by ♪ (index.html #menu-install)
+setupGameInstall('menu-install');
+// inside an app's own browser (Instagram, TikTok…): mulassa.cat's tip, once per account state (told here or there), when the
+// home is whole after «Toca per jugar» (main.js); a guest's «confirm» opens the profile's link step, as the main game's
+const hint = setupDeviceHint({ focusIn, store: kv, account: () => (ownerKey(kv) ? (savedName(kv).verified ? 'linked' : 'guest') : 'none'),
+  confirm: back => openProfile('link', back) });
+export const deviceHint = () => hint.show(() => $('play').focus({ focusVisible: false }));

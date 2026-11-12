@@ -34,6 +34,10 @@
   "home.board": "View leaderboard",
   "home.tap": "Tap to play",
   "rank.title": "Leaderboard",
+  "rank.players": {
+    "one": "{n} player",
+    "other": "{n} players"
+  },
   "rank.close": "Close",
   "rank.place": "You’re number {n}",
   "rank.newBest": "New best! Number {n}",

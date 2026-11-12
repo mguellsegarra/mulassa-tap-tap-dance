@@ -8,12 +8,13 @@ import { createBlast } from './board-blast.js';
 import { createCarretilla } from './board-carretilla.js';
 import { frameBoard, PITCH, PITCH_Z, FIG_H } from './board-framing.js';
 import { waitForWarmup, linkPrograms } from '#plassa/boot.js';
+import { rendererOrCard } from '#plassa/gpu-guard.js';
 import { LOW, pixelRatio } from '#plassa/quality.js';
 
 const BOMB_K = .7; // the petard's size on its cell
 
 export function createBoard(canvas) {
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: !LOW, alpha: true }); // a weak GPU: no MSAA, no shadows (quality.js)
+  const renderer = rendererOrCard(() => new THREE.WebGLRenderer({ canvas, antialias: !LOW, alpha: true })); // a weak GPU: no MSAA, no shadows (quality.js)
   renderer.shadowMap.enabled = !LOW;
   renderer.shadowMap.type = THREE.PCFShadowMap; // soft shadows cost a phone more than they show on these flat figures
 

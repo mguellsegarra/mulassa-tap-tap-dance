@@ -41,7 +41,7 @@ console.log('Pages deployment change detection ok');
 
 const song = { audio: 'music/main.mp3?v=abc123', ambient: 'music/menu.mp3?v=def456' };
 const files = ['index.html', '404.html', '_headers', 'favicon.ico', 'favicon.svg', 'favicon-32.png', 'apple-touch-icon.png',
-  'icon-512.png', 'manifest.webmanifest', 'og.jpg', 'og-jocs.jpg', 'og-pop.jpg', 'og-1x1.jpg', 'og-jocs-1x1.jpg', 'og-pop-1x1.jpg', 'share/mulassa-valls.jpg', 'share/drac-valls.jpg', 'sfx/applause.mp3', 'photo-icons/drac-foc.webp', 'assets/index-abc.js', 'music/main.mp3', 'music/menu.mp3',
+  'icon-512.png', 'manifest.webmanifest', 'og.jpg', 'og-jocs.jpg', 'og-pop.jpg', 'og-1x1.jpg', 'og-jocs-1x1.jpg', 'og-pop-1x1.jpg', 'share/mulassa-valls.jpg', 'share/drac-valls.jpg', 'sfx/applause.mp3', 'pop.webmanifest', 'pop-icon-180.png', 'pop-icon-512.png', 'jocs.webmanifest', 'jocs-icon-180.png', 'jocs-icon-512.png', 'photo-icons/drac-foc.webp', 'assets/index-abc.js', 'music/main.mp3', 'music/menu.mp3',
   'music/mulassa-taiko.wav', 'music/mulassa-taiko.mid', '.DS_Store'];
 const root = await mkdtemp(join(tmpdir(), 'mulassa-pages-'));
 async function fixture(name) {

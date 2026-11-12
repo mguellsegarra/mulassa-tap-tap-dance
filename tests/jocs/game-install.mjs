@@ -21,6 +21,8 @@ for (const { page, manifest, start, button } of apps) {
   assert.equal(m.start_url, start, `${manifest}: opens on its page`);
   assert(!ids.has(m.id), `${manifest}: an id of its own (${m.id}), or it installs as mulassa.cat`);
   ids.add(m.id);
+  const deploy = read('tools/deploy/prepare-pages.mjs').match(/const REQUIRED = \[([\s\S]*?)\];/)[1]; // what Pages publishes (and requires)
+  for (const file of [manifest, ...m.icons.map(i => i.src.slice(1))]) assert(deploy.includes(`'${file}'`), `${file}: in prepare-pages.mjs REQUIRED, or the deploy refuses it`);
   for (const icon of m.icons) {
     assert(existsSync(join(root, 'public', icon.src)), `${manifest}: ${icon.src} exists`);
     assert.equal(pngSize(icon.src), icon.sizes, `${manifest}: ${icon.src} is the size it says`);

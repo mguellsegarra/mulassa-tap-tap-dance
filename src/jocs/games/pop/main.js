@@ -118,10 +118,13 @@ audioPage({ stall: () => inRun() && (flow.pause(), true) });
 
 let last = performance.now(), behind = 0, odd = false; // behind: the home backdrop's time not drawn yet
 function frame(now) {
-  const dt = Math.max(0, Math.min(.05, (now - last) / 1000)); // a stalled tab must not burn the fuses; the first frame's stamp can predate `last`
+  const raw = Math.max(0, (now - last) / 1000); // the first frame's stamp can predate `last`
+  const dt = Math.min(.05, raw); // a stalled tab must not burn the fuses
   last = now;
   watchAudio(now);
-  flow.step(dt);
+  // the run's clock takes up to 250 ms: an iPhone in Low Power Mode misses 24–30 Hz frames into 80–100 ms, and a 50 ms cap lost
+  // that time, so the music (which follows the game, audio.js followGame) slowed down and stuttered. Past that, a stall still costs the run its time.
+  flow.step(Math.min(.25, raw));
   // the board: every frame in a run; on the home, under its blur, every other one (the hero is drawn too); a run's end,
   // until its blast has played out
   if (booted && flow.mode !== 'paused' && !board.settled()) {

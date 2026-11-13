@@ -488,10 +488,13 @@ console.log('crowd footprints never overlap ok');
   assert.deepEqual([...walks], [0, 1, 1], 'hidden: not walked; shown again: walked that render; a forced update still reaches it');
 }
 { // a held close-up is drawn sharper than the profile only while the session has not stepped quality down (hud/canvas.js)
-  const [boot, dropped, back] = run(`(() => { const seen = [], was = renderer.setPixelRatio, level = qualityLevel; renderer.setPixelRatio = v => seen.push(v);
+  const [boot, dropped, back, capped] = run(`(() => { const seen = [], was = renderer.setPixelRatio, level = qualityLevel, dpr = devicePixelRatio; renderer.setPixelRatio = v => seen.push(v);
+    devicePixelRatio = 3; setQualityLevel(BOOT_QUALITY); // (a phone's screen: room for the close-up's own pixels; the boot level)
     const base = renderDpr(renderProfile, sizedW, sizedH, devicePixelRatio);
-    setCloseUp(true); setCloseUp(false); setQualityLevel(BOOT_QUALITY - 1); setCloseUp(true); setCloseUp(false); setQualityLevel(level); setCloseUp(true); setCloseUp(false);
-    renderer.setPixelRatio = was; return [seen[0] >= base, seen[2] === base, seen[4] === seen[0]]; })()`);
+    setCloseUp(true); setCloseUp(false); setQualityLevel(BOOT_QUALITY - 1); setCloseUp(true); setCloseUp(false); setQualityLevel(BOOT_QUALITY); setCloseUp(true); setCloseUp(false);
+    const hz = pace.hz; pace.hz = 30; setCloseUp(true); setCloseUp(false); pace.hz = hz; // (iOS Low Power Mode's cap)
+    renderer.setPixelRatio = was; devicePixelRatio = dpr; setQualityLevel(level); return [seen[0] > base, seen[2] === base, seen[4] === seen[0], seen[6] === base]; })()`);
   assert(boot && dropped && back, 'the close-up keeps the profile\'s pixels after an overload drop, and its own at the boot level');
+  assert(capped, 'under a 30 Hz cap (iOS Low Power Mode) the close-up keeps the profile\'s pixels');
 }
 

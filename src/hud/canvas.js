@@ -3,6 +3,7 @@ import { hudBudget, hudScale, renderDpr, closeUpDpr } from '../platform/render-q
 import * as THREE from 'three';
 import { qualityLevel, BOOT_QUALITY, renderer, renderProfile, camera } from '../scene/stage.js';
 import { COARSE } from '../core/env.js';
+import { pace } from '../core/timing.js';
 
 // ------------------------------------------------------------------ HUD
 // All HUD drawing happens in "logical" units: 1 unit = K css px (2 on desktop, 1.5 on phones).
@@ -23,8 +24,9 @@ function uiScale(m, coarse) {
 // A figure's held close-up (figure-scenes.js closeUp: the Bou's banknote) is drawn at the screen's own pixels
 // (render-quality.js closeUpDpr): frame-camera.js says when. Not on a device that stepped quality down this session: the
 // end shot and the results at 2-3.4 Mpx read 41 fps on a ThinkPad X230, 53 on a 2015 MacBook Pro, 40-46 on a Galaxy S10
-// that had dropped (13/11/2026); it keeps the profile's pixels there.
-const sharpDpr = () => (closeUpOn && qualityLevel >= BOOT_QUALITY ? closeUpDpr : renderDpr);
+// that had dropped (13/11/2026); it keeps the profile's pixels there. Nor under a ~30 Hz cap (iOS Low Power Mode): an
+// iPhone 18 Pro went from 33 to 50-60 ms frames at 2.6 Mpx and down to minimal on the results (13/11/2026).
+const sharpDpr = () => (closeUpOn && qualityLevel >= BOOT_QUALITY && pace.hz >= 50 ? closeUpDpr : renderDpr);
 let closeUpOn = false, resizedFov = camera.fov; // resizedFov: the lens resize() last gave the camera
 // Only the 3D's buffer changes (not the HUD's canvas, nor the layout: a whole resize() cost the S10 a 100-170 ms frame)
 export function setCloseUp(on) { if (on !== closeUpOn) { closeUpOn = on; renderer.setPixelRatio(sharpDpr()(renderProfile, sizedW, sizedH, devicePixelRatio)); } }

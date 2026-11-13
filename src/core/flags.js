@@ -4,7 +4,7 @@
 // i18n/locale.js) read their own search and are not flags.
 // Read debug parameters through `Q`.
 export const DEV_HOST = /^(localhost|127(\.\d+){3}|\[::1\]|0\.0\.0\.0|.+\.(localhost|local|test)|10(\.\d+){3}|192\.168(\.\d+){2}|172\.(1[6-9]|2\d|3[01])(\.\d+){2})$/;
-export const PUBLIC_FLAGS = ['perf', 'hide', 'vp', 'figura'];
+export const PUBLIC_FLAGS = ['perf', 'hide', 'vp', 'figura', 'exp']; // exp: experiments/1311 only (poc.mulassa.cat)
 export function devSearch(loc) {
   if (!loc) return '';
   if (DEV_HOST.test(loc.hostname)) return loc.search;

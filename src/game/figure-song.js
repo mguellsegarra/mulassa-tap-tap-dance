@@ -7,12 +7,13 @@ import { FIGURES, MULASSA, DRAC, BOU } from './figures.js';
 import { DRAC_SIZE, DRAC_SCALE } from '../figures/drac/drac.js';
 import { setFigureTheme } from './figure-theme.js';
 import { traitsOf } from '../figures/index.js';
+import { mulassaPlaySong } from './experiment-song.js';
 
-const FIGURE_SONGS = { [MULASSA.id]: mulassaSong, [DRAC.id]: dracSong, [BOU.id]: bouSong };
+const FIGURE_SONGS = { [MULASSA.id]: mulassaPlaySong, [DRAC.id]: dracSong, [BOU.id]: bouSong };
 export const menuSong = mulassaSong; // the menu loop, whoever is selected
 export const figureSong = id => FIGURE_SONGS[id]; // any figure's song, selected or not (free mode's radio)
 export let selectedFigure = MULASSA;
-export let song = mulassaSong;
+export let song = FIGURE_SONGS[MULASSA.id];
 export let BEATS = song.beats;
 export let BEAT = (BEATS.at(-1) - BEATS[0]) / (BEATS.length - 1);
 export let FINALE_T = song.finale;

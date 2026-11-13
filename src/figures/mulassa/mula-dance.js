@@ -5,7 +5,7 @@
 // (figures/mulassa/mula-supports.js), so seeking, a pause or a restart show the same pose and shoes, and a faster phrase steps faster.
 // `time` is the comparator's map from the song to the 2017 reference (figures/mulassa/mula-time.js): the phrases' pairing with the
 // video the dance is styled on, no longer what poses her. Pure, no three.js; pose(out, t) fills a reused object.
-import mulaSong from '../../song-mulassa.json' with { type: 'json' };
+import { mulassaPlaySong as mulaSong } from '../../game/experiment-song.js'; // experiments/1311: ?exp= picks the song
 import { beatAtTime } from '../../core/beat-grid.js';
 import { mulaMotion, mulaTrack } from './mula-path.js';
 import { createMulaTime } from './mula-time.js';

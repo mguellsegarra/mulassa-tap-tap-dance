@@ -7,6 +7,7 @@ import { AudioFailure, audioFailureTags, readAll } from './audio-load.js';
 import { VOICES } from './audio-voices.js';
 import { RADIO } from './audio-radio.js';
 import { AUDIO_SESSION } from './audio-session.js';
+import { ytReady, ytPlay, ytStop, ytNow } from './youtube.js';
 export const muted = () => Q.has('mute');
 
 export class Chip {
@@ -49,6 +50,7 @@ export class Chip {
   }
 
   preload() {
+    if (this.urls?.youtube) ytReady(this.urls.youtube); // POC: the embed shows from the start, ready by the first run
     this.ready = this.loadRecording();
     this.ready.then(() => this.loadApplause(), () => this.loadApplause()); // after the song: the ovation is at a run's end
     if (this.menuMusic === false) return; // switched off: menu() fetches it if it is switched back on
@@ -141,6 +143,12 @@ export class Chip {
     const token = (this.token = {});
     await (this.ready ||= this.loadRecording());
     if (this.token !== token) return false; // stopped while loading
+    if (this.urls?.youtube) { // POC: the video is the music; the context only times the count-in
+      this.yt = { from }; this.t0 = this.ctx.currentTime + delay - from; this.clock.run();
+      await ytReady(this.urls.youtube);
+      setTimeout(() => { if (this.token === token) ytPlay(from); }, Math.max(0, delay * 1000 - 300)); // a head start: the embed takes a moment to start
+      return true;
+    }
     const src = (this.src = this.ctx.createBufferSource()), g = this.ctx.createGain();
     src.buffer = this.buf;
     src.connect(g).connect(this.music);
@@ -168,6 +176,7 @@ export class Chip {
 
   stop() {
     this.token = null;
+    if (this.yt) { ytStop(); clearInterval(this.yt.timer); this.yt = null; }
     try { this.src?.stop(); } catch { /* not started */ }
     this.src = null;
     this.t0 = null;
@@ -176,6 +185,7 @@ export class Chip {
   // position in the recording, as it reaches the ears, at perfMs (performance.now() time; default: now)
   now(perfMs) {
     if (this.t0 == null) return -1;
+    if (this.yt) { const v = ytNow(perfMs ?? undefined); return v ?? Math.min(this.clock.at(perfMs) - this.t0, this.yt.from); } // before the video plays (count-in, an ad): the context's time, held at the start
     if (RAW) return this.ctx.currentTime - this.t0 - latency(this.ctx) - (perfMs == null ? 0 : (performance.now() - perfMs) / 1000);
     return this.clock.at(perfMs) - this.t0 - this.clock.latency();
   }
@@ -188,7 +198,21 @@ export class Chip {
 
 
   tick(at) { // debug metronome on chart notes (?clicks)
+    if (this.yt) return this.ytTick(at);
     this.blip(this.t0 + at, 2000, 2000, 0.03, 0.08);
+  }
+  // POC: the video's clock may start late or stop for an ad, so each click is queued only 0.25 s ahead, on the video's time,
+  // early by our output latency: it reaches the ears with the video's own sound
+  ytTick(at) {
+    const yt = this.yt;
+    (yt.ticks ??= []).push(at);
+    yt.timer ??= setInterval(() => {
+      const v = ytNow();
+      if (this.yt !== yt) return clearInterval(yt.timer);
+      if (v == null) return;
+      while (yt.ticks.length && yt.ticks[0] < v) yt.ticks.shift(); // passed (a seek, a stall): never a late click
+      while (yt.ticks.length && yt.ticks[0] < v + 0.25) this.blip(this.ctx.currentTime + yt.ticks.shift() - v - this.clock.latency(), 2000, 2000, 0.03, 0.08);
+    }, 50);
   }
 
   // ---------------------------------------------------------------- menu music

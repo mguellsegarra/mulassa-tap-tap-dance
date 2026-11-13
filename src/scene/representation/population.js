@@ -85,8 +85,11 @@ export function buildPublicSpecs(sources, catalogue, seed = 20261020) {
   let j = 0;
   return sources.map((source, i) => {
     // Preserve the existing eight appearance examples for review. Additional figures inherit their source skin;
-    // these four fixed mobility examples are coverage fixtures, not approved disability prevalence weights.
+    // these fixed mobility examples are coverage fixtures, not approved disability prevalence weights.
     let look = review.has(i) ? catalogue.find(s => s.id === review.get(i)) : ordinary[Math.floor(random() * ordinary.length)];
+    // the two cane users stand in the public without their cane: in the front row it read as forced (the owner,
+    // 13/11/2026). Same people and places, so nobody else's look is redrawn; the cane stays in the catalogue.
+    if (look.mobility === 'basto') look = { ...look, mobility: null };
     const age = ages[i] === '0-14' ? 'infant' : ages[i] === '65+' ? 'gran' : stages[j++];
     const ageBand = age === 'jove' ? '15-24' : age === 'adult' ? '25-64' : ages[i];
     // The long tunic + headscarf look read too often and always navy: half as frequent, its own colours each time.

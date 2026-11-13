@@ -89,7 +89,7 @@ assert(caneError<.005,`final held cane stays on ground: ${caneError}`);
 { // the review examples (wheelchairs, canes) stand spread through the crowd, not side by side at its centre
  const sources=Array.from({length:60},(_,i)=>({row:0,slot:i,pos:new THREE.Vector2(i*.9,0),appearance:{skin:'#000'}}));
  const mob=buildPublicSpecs(sources,CATALOGUE,7).map((s,i)=>s.mobility?sources[i].pos:null).filter(Boolean);
- assert.equal(mob.length,4,'all four mobility examples are placed');
+ assert.equal(mob.length,2,'both wheelchair examples are placed, and no cane user');
  for(let i=0;i<mob.length;i++)for(let j=i+1;j<mob.length;j++)assert(mob[i].distanceTo(mob[j])>=3,'mobility examples at least 3 m apart');
 }
 { // the wheelchairs stand off to the sides of the shot and a row back, for every figure

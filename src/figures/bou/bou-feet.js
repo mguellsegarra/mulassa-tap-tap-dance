@@ -187,18 +187,26 @@ function stretch(p, index, a) {
 }
 // Live steps (free play, figures/bou/bou-stage.js): the planned dance's layout, trigger (a step unit off) and lift, stepped as
 // the body is driven. Each carrier's pair of feet steps diagonally with the other's (0+2, then 1+3) and lands where the
-// body will be when it lands (its velocity), so a gallop stays under the shell. reach(i): 0-1, a held leg stretch.
+// body will be half way through its coming stance (its velocity and its turn), so the body passes over the planted shoe
+// instead of always leaving it behind; faster, the steps shorten (a stride of two reaches) and no shoe is ever left more
+// than LIVE_REACH from its place (as the Drac's STEP_REACH: at a gallop the legs trailed 1 m behind, a spider's).
+// reach(i): 0-1, a held leg stretch.
+const LIVE_REACH = .35; // m
 export function liveBouFeet() {
   const planted = [], moves = [null, null, null, null], ahead = { x: 0, z: 0, yaw: 0 };
-  let group = 0;
+  let group = 0, lastT = 0, lastYaw = null;
+  const keep = (f, p, i) => { const n = nominal(p, i), dx = f.x - n.x, dz = f.z - n.z, d = Math.hypot(dx, dz);
+    if (d > LIVE_REACH) { f.x = n.x + dx * LIVE_REACH / d; f.z = n.z + dz * LIVE_REACH / d; } };
   const turn = a => Math.atan2(Math.sin(a), Math.cos(a)); // a driven heading may wrap: never step the long way round
   const gap = (i, p) => { const n = nominal(p, i), f = planted[i]; return Math.max(Math.hypot(n.x - f.x, n.z - f.z) / .11, Math.abs(turn(n.yaw - f.yaw)) / .2); };
   return (t, p, vx, vz, reach, out) => {
     if (!planted.length) for (let i = 0; i < 4; i++) planted.push(nominal(p, i));
+    const spin = t > lastT && lastYaw !== null ? turn(p.yaw - lastYaw) / (t - lastT) : 0; lastT = t; lastYaw = p.yaw; // rad/s
     for (let i = 0; i < 4; i++) if (moves[i] && t >= moves[i].end) { Object.assign(planted[i], moves[i].to); moves[i] = null; }
     if (moves.every(m => !m) && Math.max(...[0, 1, 2, 3].map(i => gap(i, p))) > 1) {
-      const speed = Math.hypot(vx, vz), dur = Math.max(.12, Math.min(.22, .3 / (1 + speed)));
-      Object.assign(ahead, { x: p.x + vx * dur, z: p.z + vz * dur, yaw: p.yaw });
+      const speed = Math.hypot(vx, vz), dur = Math.min(.22, Math.max(.12, .3 / (1 + speed)), Math.max(.08, 2 * LIVE_REACH / speed));
+      const lead = dur * 1.5; // its swing, and half the other pair's (its stance)
+      Object.assign(ahead, { x: p.x + vx * lead, z: p.z + vz * lead, yaw: p.yaw + Math.max(-.5, Math.min(.5, spin * lead)) });
       for (const i of [group, group + 2]) {
         const to = nominal(ahead, i); to.yaw = planted[i].yaw + turn(to.yaw - planted[i].yaw);
         moves[i] = { start: t, end: t + dur, from: { ...planted[i] }, to };
@@ -208,10 +216,11 @@ export function liveBouFeet() {
     for (let i = 0; i < 4; i++) {
       const m = moves[i], res = out[i];
       res.tilt = 0; res.y = 0;
-      if (!m) { Object.assign(res, planted[i]); const a = reach(i); if (a > 0) Object.assign(res, stretch(planted[i], i, a)); continue; }
+      if (!m) { keep(planted[i], p, i); Object.assign(res, planted[i]); const a = reach(i); if (a > 0) Object.assign(res, stretch(planted[i], i, a)); continue; }
       const u = clamp01((t - m.start) / (m.end - m.start)), e = ease((u - .2) / .6);
       res.x = m.from.x + (m.to.x - m.from.x) * e; res.z = m.from.z + (m.to.z - m.from.z) * e;
       res.yaw = m.from.yaw + (m.to.yaw - m.from.yaw) * e; res.y = .09 * ease(Math.min(u / .2, (1 - u) / .2));
+      keep(res, p, i);
     }
     return out;
   };

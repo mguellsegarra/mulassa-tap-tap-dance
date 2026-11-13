@@ -25,6 +25,9 @@
   JSON and port it to the generator by hand: `build_taiko.py` still picks each note's level. The proposals read
   `chart-events.json`, the hits the song plays; after the Mulassa's audio changes, `tests/game/chart-proposals.mjs` fails
   until it is regenerated with `CHART_EVENTS=tools/dev/notes-propostes/chart-events.json` + the generator command (no audio written).
+- **Hand-editing the Bou's levels**: `/tools/dev/bou-notes.html`: the three levels under the score's tune (gold = tapped
+  at the chosen level), playable on the MP3 with a click per note, the same editor; «Copia el JSON» is ported by hand to
+  `tools/music/build_bou_chart.mjs`.
 - **Record** = most comparable points per level, device (`beatsRecord`; keys per version: the Mulassa's `record-points-mulassa-v3-<level>`, the Drac's `record-drac-valls-<level>`; the previous dance's keys are only read, as «Rècord del ball anterior» in Perfil, and never compared) and
   server (`submit_result`), as the board ranks; the % only breaks ties. Points: thousands dots, `C.score` lilac (points only). `?repte` stays on %.
 - **Ànim de la plaça** (energy/health): starts full, misses drain it, hits refill; empty = the mulassa collapses.

@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ca">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Notes del Bou</title>
+<!-- Dev only (npm run dev → /tools/dev/bou-notes.html): the Bou's three levels under its tune, playable and editable. Logic: tools/dev/bou-notes/. -->
+<style>
+  @font-face { font-family: 'Baloo 2'; font-weight: 600; src: url(/fonts/baloo-2-latin.woff2) format('woff2'); }
+  @font-face { font-family: 'Baloo 2'; font-weight: 800; src: url(/fonts/baloo-2-latin.woff2) format('woff2'); }
+  :root { --bra: #ff7a1a; --ma: #14b8a6; --gold: #f5c518; --cream: #fff3d6; --dark: #2a1a10; --edge: #e8d8b880; --err: #ff8a7a; color-scheme: light only; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: #1a0f08; color: var(--cream); font: 600 15px/1.35 'Baloo 2', system-ui, sans-serif; }
+  main { max-width: 1180px; margin: 0 auto; padding: 16px; display: grid; gap: 12px; }
+  h1 { margin: 0; font-weight: 800; font-size: 26px; color: var(--gold); }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .seg { display: inline-flex; gap: 6px; flex-wrap: wrap; }
+  .btn { min-height: 44px; padding: 0 16px; border-radius: 999px; border: 2px solid var(--edge); background: transparent; color: var(--cream); font: inherit; font-weight: 800; cursor: pointer; }
+  .btn[aria-pressed="true"] { background: var(--cream); color: var(--dark); border-color: var(--cream); }
+  .btn-primary { background: var(--gold); color: var(--dark); border-color: var(--gold); }
+  .dot { display: inline-block; width: 14px; height: 14px; border-radius: 50%; margin-right: 6px; vertical-align: -2px; box-shadow: 0 0 0 1.5px var(--cream); }
+  kbd { font: inherit; font-size: 12px; opacity: .6; margin-left: 6px; }
+  .switch { display: inline-flex; gap: 8px; align-items: center; min-height: 44px; }
+  .switch input { width: 20px; height: 20px; accent-color: var(--gold); }
+  .grow { flex: 1; }
+  #stats { font-variant-numeric: tabular-nums; opacity: .85; }
+  .editor { display: grid; grid-template-columns: 72px 1fr; background: var(--dark); border-radius: 12px; overflow: hidden; }
+  .ed-labels { display: grid; grid-template-rows: repeat(4, 46px); align-content: start; padding-top: 36px; font-size: 12px; font-weight: 800; }
+  .ed-labels span { display: flex; align-items: center; padding-left: 10px; }
+  .ed-scroll { position: relative; overflow-x: auto; }
+  #editor { display: block; cursor: crosshair; }
+  .ed-head { position: absolute; top: 0; bottom: 0; left: 0; width: 2px; background: var(--gold); pointer-events: none; }
+  #warn { margin: 0; font-size: 13px; opacity: .8; }
+  #warn[data-ok="false"] { color: var(--err); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Notes del Bou</h1>
+  <div class="row">
+    <button class="btn btn-primary" id="go">Juga</button>
+    <div class="seg" id="levels" role="group" aria-label="Nivell"></div>
+    <label class="switch"><input type="checkbox" id="hits" checked> Cops</label>
+    <span class="grow"></span>
+    <span id="stats"></span>
+  </div>
+  <div class="row">
+    <div class="seg" id="tools" role="group" aria-label="Eina">
+      <button class="btn" data-tool="don"><span class="dot" style="background: var(--bra)"></span>BRA <kbd>1</kbd></button>
+      <button class="btn" data-tool="ka"><span class="dot" style="background: var(--ma)"></span>MA <kbd>2</kbd></button>
+      <button class="btn" data-tool="big"><span class="dot" style="background: linear-gradient(90deg, var(--bra) 50%, var(--ma) 50%)"></span>BRAMA <kbd>3</kbd></button>
+      <button class="btn" data-tool="hold">Allarga <kbd>4</kbd></button>
+      <button class="btn" data-tool="del">Esborra <kbd>5</kbd></button>
+    </div>
+    <button class="btn" id="undo">Desfés</button>
+  </div>
+  <div class="editor">
+    <div class="ed-labels"><span style="opacity:.6">Tonada</span><span>FÀCIL</span><span>NORMAL</span><span>DIFÍCIL</span></div>
+    <div class="ed-scroll" id="ed-scroll"><canvas id="editor"></canvas><div class="ed-head" id="ed-head" hidden></div></div>
+  </div>
+  <p id="warn" aria-live="polite"></p>
+  <div class="row">
+    <button class="btn" id="copy">Copia el JSON</button>
+    <button class="btn" id="reset">Torna al del joc</button>
+    <span id="msg" aria-live="polite"></span>
+  </div>
+</main>
+<script type="module" src="/tools/dev/bou-notes/main.js"></script>
+</body>
+</html>

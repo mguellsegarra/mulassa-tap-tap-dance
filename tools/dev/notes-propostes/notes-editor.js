@@ -2,14 +2,16 @@
 // of the easiest level that has it and echoes, paler, in the harder ones). Notes are [beat, 'don'|'ka', level, big,
 // holdEndBeat], the shape handed back as JSON (the game's song.json keeps seconds; the page converts).
 const COL = { don: '#ff7a1a', ka: '#14b8a6', gold: '#f5c518', cream: '#fff3d6', err: '#ff8a7a' };
-const PX = 36, B0 = 11, RULER = 36, ROW = 46, LEVELS = ['FÀCIL', 'NORMAL', 'DIFÍCIL'];
-const x = b => (b - B0) * PX + 10;
+const PX = 36, RULER = 36, TUNE = 46, ROW = 46, TOP = RULER + TUNE, LEVELS = ['FÀCIL', 'NORMAL', 'DIFÍCIL'];
 
-/** el: { canvas, scroll, head, tools, warn, undo }; opts: { end, parts, balloons, onChange(notes) (edits only), onSeek(beat),
- * onScroll(beat at the view's left edge) }. */
-export function createEditor(el, { end, parts, balloons, onChange, onSeek, onScroll }) {
+/** el: { canvas, scroll, head, tools, warn, undo }; opts: { first, end, parts, balloons, melody ([beat, beats, midi]: the
+ * tune, drawn above the levels), both (the two-button note's name), onChange(notes) (edits only), onSeek(beat), onScroll(beat at the view's left edge) }. */
+export function createEditor(el, { first, end, parts, balloons, melody, both = 'GUAPA', easyHolds = false, onChange, onSeek, onScroll }) {
+  const holdFrom = easyHolds ? 0 : 1; // the easiest level that shows a hold (song.easyHolds: FÀCIL too)
   let notes = [], tool = 'don', pendingHold = null, level = 1, quiet = false; // quiet: our own scroll, not the user's
-  const undo = [], H = RULER + ROW * 3 + 6, W = (end + 2 - B0) * PX + 20;
+  const B0 = first - 1, x = b => (b - B0) * PX + 10;
+  const lo = Math.min(...melody.map(m => m[2])), hi = Math.max(...melody.map(m => m[2]));
+  const undo = [], H = TOP + ROW * 3 + 6, W = (end + 2 - B0) * PX + 20;
   const inBalloon = b => balloons.some(([a, z]) => b > a - 1e-3 && b < z - 1e-3);
   const at = b => notes.find(n => n[0] === b);
   const show = () => { notes.sort((a, b) => a[0] - b[0]); draw(); warn(); };
@@ -23,11 +25,12 @@ export function createEditor(el, { end, parts, balloons, onChange, onSeek, onScr
       n.forEach((v, i) => {
         const next = n[i + 1];
         if (next && next[0] - v[0] < 0.5) out.push(`${LEVELS[L]}: massa juntes al temps ${v[0]}`);
-        if (L && v[4] && next && next[0] < v[4] + 1) out.push(`${LEVELS[L]}: la llarga del temps ${v[0]} ha d’acabar un temps abans de la següent`);
+        if (L >= holdFrom && v[4] && next && next[0] < v[4] + 1) out.push(`${LEVELS[L]}: la llarga del temps ${v[0]} ha d’acabar un temps abans de la següent`);
       });
     }
-    for (const v of notes) if (inBalloon(v[0])) out.push(`Temps ${v[0]}: cau dins d’un globus i el joc no la mostrarà`);
-    if (!notes.some(v => v[0] === end && v[3])) out.push(`Falta el GUAPA final (temps ${end})`);
+    const inside = notes.filter(v => inBalloon(v[0])).map(v => v[0]);
+    if (inside.length) out.push(`${inside.length} notes dins d’un globus (temps ${inside[0]}–${inside.at(-1)}): el joc no les mostra`);
+    if (!notes.some(v => v[0] === end && v[3])) out.push(`Falta el ${both} final (temps ${end})`);
     el.warn.textContent = [...new Set(out)].slice(0, 8).join(' · ') || 'Cap avís: compleix les regles del joc.';
     el.warn.dataset.ok = String(!out.length);
   }
@@ -37,21 +40,27 @@ export function createEditor(el, { end, parts, balloons, onChange, onSeek, onScr
     cv.style.width = `${W}px`; cv.style.height = `${H}px`; cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
     g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
     for (const [name, a, z] of parts) {
-      g.fillStyle = '#fff3d60a'; g.fillRect(x(a), RULER, (z - a) * PX, ROW * 3);
+      g.fillStyle = '#fff3d60a'; g.fillRect(x(a), RULER, (z - a) * PX, TUNE + ROW * 3);
       g.fillStyle = COL.gold; g.font = "800 13px 'Baloo 2', system-ui"; g.fillText(name, x(a) + 4, 14);
     }
-    for (const [a, z] of balloons) { g.fillStyle = '#ff8fb133'; g.fillRect(x(a), RULER, (z - a) * PX, ROW * 3); }
+    for (const [a, z] of balloons) { g.fillStyle = '#ff8fb133'; g.fillRect(x(a), RULER, (z - a) * PX, TUNE + ROW * 3); }
     for (let h = B0 * 2; h <= end * 2 + 2; h++) {
       const b = h / 2; g.fillStyle = b % 4 === 0 ? '#fff3d640' : b % 1 === 0 ? '#fff3d61c' : '#fff3d60a';
-      g.fillRect(x(b), RULER, 1, ROW * 3);
+      g.fillRect(x(b), RULER, 1, TUNE + ROW * 3);
       if (b % 4 === 0) { g.fillStyle = '#fff3d699'; g.font = "600 11px 'Baloo 2', system-ui"; g.fillText(String(b), x(b) + 3, RULER - 4); }
     }
-    for (let L = 1; L < 3; L++) { g.fillStyle = '#fff3d61a'; g.fillRect(0, RULER + ROW * L, W, 1); }
-    g.fillStyle = '#f5c51814'; g.fillRect(0, RULER + ROW * level, W, ROW); // the level being played
+    for (let L = 0; L < 3; L++) { g.fillStyle = '#fff3d61a'; g.fillRect(0, TOP + ROW * L, W, 1); }
+    g.fillStyle = '#f5c51814'; g.fillRect(0, TOP + ROW * level, W, ROW); // the level being played
+    const tapped = new Set(notes.filter(v => v[2] <= level).map(v => v[0])); // the tune's notes this level taps, gold
+    for (const [b, d, m] of melody) {
+      const y = RULER + 6 + (hi - m) / Math.max(1, hi - lo) * (TUNE - 14);
+      g.fillStyle = tapped.has(Math.round(b * 2) / 2) && Math.abs(b * 2 - Math.round(b * 2)) < 1e-3 ? COL.gold : '#fff3d670';
+      g.fillRect(x(b) + 1, y, Math.max(3, d * PX - 3), 4);
+    }
     for (const v of notes) for (let L = v[2]; L < 3; L++) {
-      const y = RULER + ROW * L + ROW / 2, cx = x(v[0]), echo = L > v[2], r = v[3] ? 13 : 10;
+      const y = TOP + ROW * L + ROW / 2, cx = x(v[0]), echo = L > v[2], r = v[3] ? 13 : 10;
       g.globalAlpha = echo ? 0.3 : 1;
-      if (v[4] && L > 0) { g.fillStyle = COL[v[1]] + 'aa'; g.fillRect(cx, y - 6, (v[4] - v[0]) * PX, 12); g.beginPath(); g.arc(x(v[4]), y, 6, 0, 7); g.fill(); }
+      if (v[4] && L >= holdFrom) { g.fillStyle = COL[v[1]] + 'aa'; g.fillRect(cx, y - 6, (v[4] - v[0]) * PX, 12); g.beginPath(); g.arc(x(v[4]), y, 6, 0, 7); g.fill(); }
       if (v[3]) {
         g.fillStyle = COL.don; g.beginPath(); g.arc(cx, y, r, Math.PI / 2, Math.PI * 1.5); g.fill();
         g.fillStyle = COL.ka; g.beginPath(); g.arc(cx, y, r, -Math.PI / 2, Math.PI / 2); g.fill();
@@ -65,9 +74,9 @@ export function createEditor(el, { end, parts, balloons, onChange, onSeek, onScr
   function click(e) {
     const r = el.canvas.getBoundingClientRect(), px = e.clientX - r.left, py = e.clientY - r.top;
     const b = Math.round(((px - 10) / PX + B0) * 2) / 2;
-    if (py < RULER) { onSeek(b); return; }
-    const L = Math.max(0, Math.min(2, Math.floor((py - RULER) / ROW))), n = at(b);
-    if (b < 12 || b > end) return;
+    if (py < TOP) { onSeek(b); return; } // the ruler and the tune play from there
+    const L = Math.max(0, Math.min(2, Math.floor((py - TOP) / ROW))), n = at(b);
+    if (b < first || b > end) return;
     if (pendingHold) { // second click of «Allarga»: where it ends
       if (b >= pendingHold[0] + 2) { save(); pendingHold[4] = b; pendingHold[3] = 0; }
       pendingHold = null; commit(); return;

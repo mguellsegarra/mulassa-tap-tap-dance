@@ -287,7 +287,7 @@ for (const p of document.querySelectorAll('.pad')) {
 let base = localStorage.getItem(`${SAVED}-base`) ?? 'tambors', mine = null;
 const setMine = list => { mine = list; charts.meva = chartsOf(toSong(list)); localStorage.setItem(SAVED, JSON.stringify(list)); localStorage.setItem(`${SAVED}-base`, base); };
 const editor = createEditor({ canvas: $('editor'), scroll: $('ed-scroll'), head: $('ed-head'), tools: $('tools'), warn: $('warn'), undo: $('undo') }, {
-  end: EV.end, parts: PARTS, balloons: EV.balloons,
+  first: 12, end: EV.end, parts: PARTS, balloons: EV.balloons, melody: EV.melody,
   onChange(list) {
     if (state.version !== 'meva') { // editing the game's chart or a proposal starts 'La meva' from it
       const was = JSON.stringify(mine), from = JSON.stringify(toBeats(songNotesOf(base)));

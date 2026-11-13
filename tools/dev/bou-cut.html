@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ca">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Bou · escurça la cançó</title>
+<!-- Dev only (npm run dev → /tools/dev/bou-cut.html): mark phrases or bars of the Bou's song to drop and hear the cut
+     on the game's MP3. A preview by splicing, not the final audio. Logic: tools/dev/bou-cut/. -->
+<style>
+  @font-face { font-family: 'Baloo 2'; font-weight: 600; src: url(/fonts/baloo-2-latin.woff2) format('woff2'); }
+  @font-face { font-family: 'Baloo 2'; font-weight: 800; src: url(/fonts/baloo-2-latin.woff2) format('woff2'); }
+  :root { --gold: #f5c518; --cream: #fff3d6; --dark: #2a1a10; --edge: #e8d8b880; --err: #ff8a7a; color-scheme: light only; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: #1a0f08; color: var(--cream); font: 600 15px/1.35 'Baloo 2', system-ui, sans-serif; }
+  main { max-width: 1180px; margin: 0 auto; padding: 16px; display: grid; gap: 12px; }
+  h1 { margin: 0; font-weight: 800; font-size: 26px; color: var(--gold); }
+  p { margin: 0; opacity: .8; }
+  .bar { position: sticky; top: 0; z-index: 1; background: #1a0f08; padding: 8px 0; display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; }
+  .btn { min-height: 44px; padding: 0 16px; border-radius: 999px; border: 2px solid var(--edge); background: transparent; color: var(--cream); font: inherit; font-weight: 800; cursor: pointer; }
+  .btn-primary { background: var(--gold); color: var(--dark); border-color: var(--gold); }
+  #time { font-variant-numeric: tabular-nums; font-weight: 800; }
+  #time b { color: var(--gold); }
+  .grow { flex: 1; }
+  #list { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); }
+  .phrase { background: var(--dark); border-radius: 12px; padding: 12px; display: grid; gap: 8px; }
+  .phrase.off { opacity: .45; }
+  .head { display: flex; gap: 8px; align-items: center; }
+  .head b { font-size: 16px; }
+  .same { min-width: 26px; height: 26px; padding: 0 6px; border-radius: 13px; display: inline-grid; place-items: center; color: var(--dark); font-weight: 800; font-size: 13px; }
+  .small { min-height: 36px; padding: 0 12px; font-size: 13px; }
+  .bars { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .cell { border: 2px solid transparent; border-radius: 8px; background: #1a0f08; padding: 4px 4px 2px; cursor: pointer; font: inherit; color: inherit; font-size: 11px; text-align: left; }
+  .cell svg { display: block; width: 100%; height: 34px; }
+  .cell rect { fill: var(--cream); }
+  .cell.cut { background: repeating-linear-gradient(135deg, #1a0f08 0 6px, #ff8a7a33 6px 12px); }
+  .cell.cut rect { fill: var(--err); opacity: .5; }
+  .cell.cut span { text-decoration: line-through; color: var(--err); }
+  .cell.now { border-color: var(--gold); }
+  .cell[disabled] { cursor: default; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Bou · escurça la cançó</h1>
+  <p>Toca un compàs per treure’l o tornar-lo, o «Treu» per a tota la frase. Les frases amb la mateixa lletra sonen idèntiques. «▶» fa sonar des del compàs d’abans, per sentir la unió. És una prova fent talls a l’MP3 actual: la versió final es torna a generar.</p>
+  <div class="bar">
+    <button class="btn btn-primary" id="go">Juga</button>
+    <button class="btn" id="start">Des de l’inici</button>
+    <span id="time"></span>
+    <span class="grow"></span>
+    <button class="btn" id="copy">Copia el JSON</button>
+    <button class="btn" id="reset">Sencera</button>
+    <span id="msg" aria-live="polite"></span>
+  </div>
+  <div id="list"></div>
+</main>
+<script type="module" src="/tools/dev/bou-cut/main.js"></script>
+</body>
+</html>

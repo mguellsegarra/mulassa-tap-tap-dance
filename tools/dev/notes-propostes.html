@@ -53,7 +53,7 @@
   .dot { display: inline-block; width: 14px; height: 14px; border-radius: 50%; margin-right: 6px; vertical-align: -2px; box-shadow: 0 0 0 1.5px var(--cream); }
   kbd { font: inherit; font-size: 12px; opacity: .6; margin-left: 6px; }
   .editor { display: grid; grid-template-columns: 72px 1fr; background: #1a0f08; border-radius: 12px; overflow: hidden; }
-  .ed-labels { display: grid; grid-template-rows: repeat(3, 46px); align-content: start; padding-top: 36px; font-size: 12px; font-weight: 800; }
+  .ed-labels { display: grid; grid-template-rows: repeat(4, 46px); align-content: start; padding-top: 36px; font-size: 12px; font-weight: 800; }
   .ed-labels span { display: flex; align-items: center; padding-left: 10px; }
   .ed-scroll { position: relative; border-radius: 0; }
   #editor { display: block; cursor: crosshair; }
@@ -127,7 +127,7 @@
       <button class="btn" id="undo">Desfés</button>
     </div>
     <div class="editor">
-      <div class="ed-labels"><span>FÀCIL</span><span>NORMAL</span><span>DIFÍCIL</span></div>
+      <div class="ed-labels"><span style="opacity:.6">Tonada</span><span>FÀCIL</span><span>NORMAL</span><span>DIFÍCIL</span></div>
       <div class="scroll ed-scroll" id="ed-scroll"><canvas id="editor"></canvas><div class="ed-head" id="ed-head" hidden></div></div>
     </div>
     <p class="note" id="warn" aria-live="polite"></p>

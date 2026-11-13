@@ -24,7 +24,7 @@ import { splashS, splashBand } from '../hud/title.js';
 import { viewMode, menuState, updateControls } from './controls.js';
 import { sheets } from './sheets.js';
 import { idleBand } from './reel-idle.js';
-import { REEL } from '../game/showreel.js';
+import { REEL, REEL_STILL } from '../game/showreel.js';
 
 const RESULTS_EASE = 0.6; // s
 const SPLASH_BAND = {}, WATCH_BAND = { top: 0, bottom: 0, left: 0, right: 0 }; // the splash's and the dance demo's free bands, refilled each frame
@@ -64,7 +64,7 @@ export function frameCamera(dt, now, reelWide) { // reelWide: the idle selector'
     const splash = G.state === 'splash'; // the pair, framed whole between the logo and the prompt (cameras.js pairShot)
     const sel = G.state === 'select', root = splash ? pairShot(SPLASH_SOLO) : sel && !PAIR.k ? figureRoot(selectedFigure.id) : null; // «QUI BALLA?» frames its figure in the free rect it measured (css px, when it opens or resizes); «mode foto» hides the selector: the whole screen
     if (sel && !sheets.select?.band) updateControls(); // the first frame after the splash: its cut needs the band, measured later in the frame, or it frames the whole screen and springs back out (5 m in 1 s)
-    shift = frameMenuCamera(dt, mx, mz, root, splash ? splashBand(SPLASH_BAND) : sel && !viewMode ? (reelWide ? idleBand(sheets.select?.band, W * K, HH * K, SAFE) : sheets.select?.band) : null, aim, REEL.on ? REEL : null);
+    shift = frameMenuCamera(dt, mx, mz, root, splash ? splashBand(SPLASH_BAND) : sel && !viewMode ? (reelWide ? idleBand(sheets.select?.band, W * K, HH * K, SAFE) : sheets.select?.band) : null, aim, REEL.on ? REEL : REEL_STILL.on ? REEL_STILL : null);
   } else if (watchReel) { // «Mira el ball»: the showreel's shots on the song's beat, in the demo's free stage; a drag still turns them round her
     const area = playStage(); WATCH_BAND.top = area.top * K; WATCH_BAND.bottom = area.bottom * K; WATCH_BAND.right = W * K;
     if (REEL.fresh) resetLook(look);

@@ -154,3 +154,19 @@ export function tickReel(on, id, menuBeat, dt, calm = false, songBeat = null) {
   REEL.cut = i !== REEL.idx && !(reel.film === 'song' ? song : (song || REEL.idle) && reel.film); REEL.fresh = REEL.idx === -1; REEL.idx = i; // fresh: a new selection's first shot (no dissolve: the old shot is gone)
   return REEL;
 }
+
+// With the selector's UI up (2026-11-12, «més controlat i estàtic, barat de renderitzar»): one held camera, no cuts, and
+// each figure dances on its spot (its own hooks: the Mulassa her song dance, the Drac its walker standing, the Bou its
+// changes of facing; the colla at rest, no night). Her music video is the idle screen's, dissolved in and out (main.js).
+// lock: framed by its cut (scene/cameras.js), then only a slow drift round it (scene/still-drift.js).
+export const REEL_STILL = { on: false, id: null, cut: false, shot: { az: 0.35, el: 0.3, fill: 0.75, part: null, eye: null, fixed: true, lock: true } };
+export function tickStill(may, id) {
+  REEL.may = may && !!SHOWREELS[id];
+  const on = REEL.may && !REEL.on;
+  REEL_STILL.cut = on && (!REEL_STILL.on || REEL_STILL.id !== id); REEL_STILL.on = on; REEL_STILL.id = id;
+  REEL_STILL.shot.fill = 0.75 * (SHOWREELS[id]?.fill ?? 1);
+  return REEL_STILL;
+}
+// Her song dance under the held shot, for figures that dance it on their spot (the Mulassa): its whole loop on the
+// music's beat, from her first move
+export const stillBeat = (id, beat) => { const r = SHOWREELS[id]; return r.start + reelMod(beat, r.loop - r.start); };

@@ -12,14 +12,16 @@ let reelFadeAnim = null, reelFadeCam = null, reelFadeEnd = 0, reelFadeN = 0;
 
 // src: the WebGL canvas, read in the same task as its render (no preserveDrawingBuffer); w, h: css px; cam: the outgoing
 // shot's camera (kept as it is, still: the shots are nearly held)
-export function reelDissolve(src, w, h, cam) {
+// still: a frozen copy, never rendered again (the idle screen's way in and out: she jumps from her spot into her dance, so the
+// outgoing camera would show her new pose), over `ms`
+export function reelDissolve(src, w, h, cam, still = false, ms = REEL_FADE_MS) {
   w = Math.round(w); h = Math.round(h);
   if (reelFadeEl.width !== w || reelFadeEl.height !== h) { reelFadeEl.width = w; reelFadeEl.height = h; }
   reelFadeCtx.drawImage(src, 0, 0, w, h);
-  reelFadeCam = (reelFadeCam ??= cam.clone()).copy(cam); reelFadeEnd = performance.now() + REEL_FADE_MS; reelFadeN = 0;
-  OUTGOING_LENS.x = cam.position.x; OUTGOING_LENS.y = cam.position.y; OUTGOING_LENS.z = cam.position.z; OUTGOING_LENS.on = true;
+  reelFadeCam = (reelFadeCam ??= cam.clone()).copy(cam); reelFadeEnd = still ? 0 : performance.now() + ms; reelFadeN = 0;
+  OUTGOING_LENS.x = cam.position.x; OUTGOING_LENS.y = cam.position.y; OUTGOING_LENS.z = cam.position.z; OUTGOING_LENS.on = !still;
   reelFadeAnim?.cancel();
-  reelFadeAnim = reelFadeEl.animate?.([{ opacity: 1 }, { opacity: 0 }], { duration: REEL_FADE_MS, easing: 'ease-in-out', fill: 'forwards' });
+  reelFadeAnim = reelFadeEl.animate?.([{ opacity: 1 }, { opacity: 0 }], { duration: ms, easing: 'ease-in-out', fill: 'forwards' });
 }
 // Every frame, before the plaça's own render: while a dissolve runs, `render(cam)` draws the outgoing shot live every other frame
 // (not on the cut's own frame: reelDissolve copied it then) and it is copied over

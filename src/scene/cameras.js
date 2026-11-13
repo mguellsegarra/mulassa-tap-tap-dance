@@ -8,6 +8,7 @@ import { drac } from '../figures/drac/drac-objects.js';
 import { M } from './figure-springs.js';
 import { manualLandingStrength } from './manual-jump.js';
 import { CALM, CAMDRAC } from '../core/env.js';
+import { stillDrift } from './still-drift.js';
 import { clock, G } from '../game/state.js';
 import { TAU } from '../core/math.js';
 import { HH, K, W, SAFE, baseFov } from '../hud/canvas.js';
@@ -110,7 +111,8 @@ export function frameMenuCamera(dt, mx, mz, root, rect, aim, reel = null) {
   if (!!rect?.soft !== MENU.soft) { MENU.soft = !!rect?.soft; MENU.softT = now; } // into a `soft` band (the idle screen) slowly, ~2 s; out of it quickly
   const slow = now - MENU.softT < MENU_T.softFor ? (MENU.soft ? MENU_T.soft : MENU_T.wake) : 0; // (s: the spring's time, 0 = the usual)
   if (orbit.ptrs.size || now - orbit.last <= ORBIT.idle) MENU.held = true;
-  const cut = shot && reel.cut && !orbit.ptrs.size, direct = shot && (cut || !MENU.held);
+  const cut = shot && (reel.cut || shot.lock && !sameHold(rect)) && !orbit.ptrs.size, direct = shot && (cut || !MENU.held);
+  if (shot?.lock && !cut && REEL_HOLD.on) { stillDrift(REEL_HOLD.p, REEL_HOLD.f, REEL_HOLD.t); return REEL_HOLD.y; } // a locked shot (the selector under its UI): framed by its cut, then held (or drifting slowly round it)
   if (cut) { MENU.held = false; MENU.w = MENU.h = MENU.ox = MENU.oy = 0; } // her size and middle measured afresh from the new angle
   if (root?.visible && MENU.w && Math.hypot(MENU.mx - mx, MENU.mz - mz) < 4) { mx = MENU.mx; mz = MENU.mz; } // follow the middle of her outline (her pivot is off it as she turns), measured last frame; never a stray part metres away
   const homeH = 4.2 * far, homeD = 11; // plaza level, in among the crowd (the old high wide shot showed mostly bare floor)
@@ -160,7 +162,8 @@ export function frameMenuCamera(dt, mx, mz, root, rect, aim, reel = null) {
   zoomMenu(0, root && MENU.w && !bandless(rect), 0, shot.part); // then the lens that size wants (a close-up's long lens at once, never a zoom after the cut)
   const out = frameMenuLens(dt, root, rect, aim, shot.fill, true, false, 0, shot.part); // and the shift for that lens
   MENU.late = !MENU.w;
-  REEL_HOLD.on = !!shot.fixed && !!MENU.w; REEL_HOLD.p.copy(camera.position); REEL_HOLD.z = ZOOM.x[0];
+  REEL_HOLD.on = !!shot.fixed && !!MENU.w; REEL_HOLD.p.copy(camera.position); REEL_HOLD.z = ZOOM.x[0]; REEL_HOLD.y = out; REEL_HOLD.f.copy(camFocus); REEL_HOLD.t = clock;
+  REEL_HOLD.r[0] = rect?.top ?? -1; REEL_HOLD.r[1] = rect?.bottom ?? -1; REEL_HOLD.r[2] = rect?.left ?? -1; REEL_HOLD.r[3] = rect?.right ?? -1; REEL_HOLD.r[4] = W; REEL_HOLD.r[5] = HH;
   return out;
 }
 // A band too short for the square (a 1280x800 desktop: ~23 m wanted, 15-17 m to the façades) left her head over the
@@ -186,7 +189,9 @@ function placeMenu(cx, cz, dt) {
 const roomAt = (cx, cz) => roomAlong(cx, cz, Math.sin(orbit.yaw), Math.cos(orbit.yaw), plaza.inner - 1.5); // behind the lens, to the square's edge
 // A fixed camera (SHOT_KINDS `fixed`: a TV camera on its stand) stays where the cut put it and only pans after her: she grows as
 // she charges at it and crosses the frame as she runs past, instead of the dolly keeping her the same size wherever she goes
-const REEL_HOLD = { on: false, p: new THREE.Vector3(), z: 1 };
+const REEL_HOLD = { on: false, p: new THREE.Vector3(), f: new THREE.Vector3(), t: 0, z: 1, y: 0, r: new Float64Array(6) }; // y: the cut's lens shift; r: the band and screen it was framed in
+// (a locked shot is framed again when the selector's band or the screen changes: a resize, a layout change)
+const sameHold = rect => REEL_HOLD.r[0] === (rect?.top ?? -1) && REEL_HOLD.r[1] === (rect?.bottom ?? -1) && REEL_HOLD.r[2] === (rect?.left ?? -1) && REEL_HOLD.r[3] === (rect?.right ?? -1) && REEL_HOLD.r[4] === W && REEL_HOLD.r[5] === HH; // (a missing side: -1, never NaN)
 function fixedLens(cx, cz) {
   const dx = REEL_HOLD.p.x - cx, dz = REEL_HOLD.p.z - cz, hd = Math.hypot(dx, dz), up = REEL_HOLD.p.y - ORBIT.focusY;
   orbit.yaw = Math.atan2(dx, dz); orbit.x[0] = Math.atan2(up, hd); orbit.x[1] = orbit.zoomRaw = orbit.zoomTo = Math.hypot(hd, up); orbit.v.fill(0); orbit.spin = 0;

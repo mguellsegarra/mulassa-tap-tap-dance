@@ -88,6 +88,12 @@ After the fixes of that day: 7.3 MB/s on the splash, 5.6 in the idle reel (6.9 /
 ## Pitfalls met (do not repeat them)
 
 Android / Chrome:
+- `Page.addScriptToEvaluateOnNewDocument` injects nothing unless `Page.enable` was sent first (Chrome 157 on the S10,
+  checked with a marker): a whole round of CSS A/B «variants» (2026-11-13) was as-is runs. Check a marker before trusting one.
+- «Cold» GPU numbers depend on Chrome's persisted Vulkan pipeline cache, which clearing the site's data, the HTTP cache or
+  Android's «Clear cache» does not empty: the morning after a Chrome update the S10 compiled 52 programs (604 ms) under the
+  page cover and 17 (413 ms) at the idle wake; hours later, the same builds hit the driver cache (0 compiles). Count the
+  `VulkanCreateGraphicsPipelines` (builds), not only their ms, and note Chrome's version and update time.
 - The S10 is shared by every agent on mac-studio. `android-cost.mjs` and `android-frames.mjs` stop Chrome at each run,
   which ends any other agent's session on it: ask the owner that the phone is free before starting, and say so when
   done. A phone another agent is using also measures wrong: with 100+ tabs left open and two pages at 60-110% CPU the

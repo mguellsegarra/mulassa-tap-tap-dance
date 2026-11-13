@@ -49,6 +49,14 @@ the method and its tools: `docs/agents/device-profiling.md`.
 - **Inline SVG on a screen's first paint.** The 33 town arms (832 SVG nodes) cost ~300 ms of GPU raster when the
   selector first showed; drawn once to bitmaps (`escutBitmaps`, escuts.js): 750 → 475 ms. The same arms as an SVG `<img>`
   saved nothing, and the card portraits as PNGs did not change the sheet cost: the format is not the cause until measured.
+- **A layer's raster mode flips (MSAA).** Chrome rasters a layer with MSAA when it has ≥ 6 slow paths and no
+  non-antialiased paint; the card strip's only non-AA paint is the pending cards' dashed edge (`.sel-card.aviat::after`).
+  Those cards are `content-visibility: auto`, so on the frame the idle screen's `content-visibility: hidden` went they were
+  not painted yet, the strip flipped to MSAA and Skia built ~50 GPU programs in one flush: up to 0.4 s (52 builds, 17 real
+  compiles, 413 ms) the first wake after a Chrome install or update; later wakes and later sessions hit the driver's
+  persisted cache. Fixed by showing the UI two frames after `data-reel-gone` drops (`reelWakeHold`, ui/reel-idle.js):
+  51-52 builds → 0-1 (2026-11-13, S10 Chrome 157). Anything that hides the strip and shows it again, or a scroll that
+  leaves no dashed card near the viewport, can flip it the same way. Found by Fable 5.2's traces (Skia op tracing).
 - **What did not matter here**, so do not «fix» it without numbers: network requests (a guest's are two small RPCs; a
   `fetch` never blocks), the idle dissolve's WebGL→2D copy on Android, steady-state CSS animations (no repaint measured).
 - **The same, only on small phones.** Short phones (375×667, 320×568: iPhone SE/8) made each of the 84 cards a size

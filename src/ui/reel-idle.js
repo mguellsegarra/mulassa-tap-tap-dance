@@ -7,13 +7,14 @@ import { sheetUp, viewMode } from './controls.js';
 
 export const REEL_IDLE = { after: 10 }; // s untouched
 let reelIdleOn = false, reelIdleLast = -Infinity, reelIdleWoken = true, reelIdleBack = false, reelIdleTap = null, reelIdleKey = null, reelWakeEnd = 0;
+export const REEL_IDLE_FADE_MS = 900; // the plaça's dissolve between her spot and her music video, both ways (main.js, ui/reel-fade.js)
 export const REEL_WAKE_MS = 250; // body.reel-wake's fade back in (select-sizes.css)
 // Faded out, the UI is still there: its layers (and the CSS animations inside them) kept an iPhone's Safari compositing every
 // frame, 96/42 ms frames for seconds in the idle dance (Low Power Mode, 2026-11-03; at opacity 0 or visibility hidden alike,
 // fine visible or with content-visibility hidden). Once the fade is over they get data-reel-gone (content-visibility: hidden,
 // select-sizes.css), on each element rather than on <body> (a body class restyles the whole page); a wake drops it at once.
 const REEL_FADE_OUT_MS = 400, REEL_GONE = ['select', 'settings', 'free', 'music', 'howto'].map(id => document.getElementById(id)).filter(Boolean);
-let reelIdleSince = 0, reelGone = false;
+let reelIdleSince = 0, reelGone = false, reelWakeHold = 0;
 // «Mira el ball sencer» (#idle-watch, ui/watch-ui.js): the idle screen's one control. A press on it neither wakes nor is swallowed,
 // so its click starts the demo (which leaves the selector, and the idle screen with it); inert whenever it is faded out.
 const reelIdleBtn = document.getElementById('idle-watch'), onReelIdleBtn = e => reelIdleBtn?.contains(e.target);
@@ -62,18 +63,25 @@ export function idleBand(band, vw, vh, safe) {
 
 // Every frame (now: the frame's ms). True while the UI is faded out.
 export function reelIdle(now) {
-  const may = REEL.on && G.state === 'select' && !viewMode && !sheetUp(), woke = reelIdleWoken || !may;
+  const may = REEL.may && G.state === 'select' && !viewMode && !sheetUp(), woke = reelIdleWoken || !may;
   if (woke || reelIdleBack) reelIdleLast = now;
   reelIdleWoken = reelIdleBack = false;
+  if (reelWakeHold && --reelWakeHold === 0) reelShow(); // (before a wake of this frame: two whole frames, whoever woke it)
   const on = may && !woke && (reelIdleOn || now - reelIdleLast > REEL_IDLE.after * 1000);
-  if (on !== reelIdleOn) { reelIdleOn = on; if (on) { document.body.classList.toggle('reel-idle', true); if (reelIdleBtn) reelIdleBtn.inert = false; document.body.classList.toggle('reel-wake', false); reelWakeEnd = 0; reelIdleSince = now; } else reelWake(); }
+  if (on !== reelIdleOn) { reelIdleOn = on; if (on) { document.body.classList.toggle('reel-idle', true); if (reelIdleBtn) reelIdleBtn.inert = false; document.body.classList.toggle('reel-wake', false); reelWakeEnd = reelWakeHold = 0; reelIdleSince = now; } else reelWake(); }
   if (reelIdleOn && !reelGone && now - reelIdleSince > REEL_FADE_OUT_MS + 50) reelGoneSet(true); // the fade out is over
   if (reelWakeEnd < 0) reelWakeEnd = now + REEL_WAKE_MS; // (dated by the first frame after it)
   else if (reelWakeEnd && now > reelWakeEnd) { reelWakeEnd = 0; document.body.classList.toggle('reel-wake', false); } // the quick fade done: their own transitions again
   return on;
 }
+// Back from data-reel-gone, the UI shows two frames later (2026-11-13, Galaxy S10): on the frame content-visibility: hidden
+// goes, the pending cards (content-visibility: auto) are not painted yet, and without their dashed edge (the strip's only
+// non-antialiased paint) Chrome rasters the card strip with MSAA, a mode it never uses otherwise: ~50 GPU programs built in
+// one flush, up to 0.4 s the first wake after a Chrome install or update. Still at opacity 0 for those frames, nothing is rastered.
 function reelWake() {
+  const held = reelGone;
   reelGoneSet(false);
   if (reelIdleBtn) reelIdleBtn.inert = true;
-  document.body.classList.toggle('reel-idle', false); document.body.classList.toggle('reel-wake', true); reelWakeEnd = -1;
+  if (held) reelWakeHold = 2; else reelShow(); // (a wake during the fade out: nothing was gone)
 }
+function reelShow() { reelWakeHold = 0; document.body.classList.toggle('reel-idle', false); document.body.classList.toggle('reel-wake', true); reelWakeEnd = -1; }

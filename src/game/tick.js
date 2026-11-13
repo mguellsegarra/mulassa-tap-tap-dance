@@ -8,7 +8,7 @@ import { Q, playFrom, AUTOPLAY } from '../core/env.js';
 import { traitsOf } from '../figures/index.js';
 import { PHOTO } from './photo-control.js';
 import { afterActive, G, chip, clock, bigPending } from './state.js';
-import { REEL } from './showreel.js';
+import { REEL, REEL_STILL } from './showreel.js';
 import { figTheme } from './figure-theme.js';
 import { autoplay, advance } from './judge.js';
 import { practiceTick, finish } from './flow.js';
@@ -60,7 +60,7 @@ export function tickGame(t, vt, beat, dt) {
       if (G.practice) practiceTick(t);
       else if (BOU_FINALE.go || t > song.tail + 1 && !bouHolds()) finish('end'); // (the Bou: its banknotes' close-up waits for a tap, and a tap goes on at once)
     } else if (clock - G.collapseT > 3.5) finish('collapse');
-  } else if (G.state === 'select' && !REEL.on && Math.floor(beat) !== G.lastBeat) { // demo dance on the menu
+  } else if (G.state === 'select' && !REEL.on && !REEL_STILL.on && Math.floor(beat) !== G.lastBeat) { // demo dance on the menu (not under the selector's held shot: each figure dances there on its own)
     G.lastBeat = Math.floor(beat);
     if (G.lastBeat % 2 === 0 && !Q.has('still') && !(PHOTO.on && traitsOf(PHOTO.id).springs)) act('LDRU'[(G.lastBeat / 2) % 4]);
   }

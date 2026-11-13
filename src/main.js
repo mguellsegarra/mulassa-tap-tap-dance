@@ -52,8 +52,8 @@ import { updateControls, viewMode, viewT, hudBlank, setHudBlank, steers, setView
 import { debugAction } from './dev/debug.js';
 import { drawHud } from './hud/draw.js';
 import { watchAudio } from './ui/pause-actions.js';
-import { tickReel, REEL, setReelIdle } from './game/showreel.js';
-import { reelIdle } from './ui/reel-idle.js';
+import { tickReel, REEL, setReelIdle, tickStill, REEL_STILL } from './game/showreel.js';
+import { reelIdle, REEL_IDLE_FADE_MS } from './ui/reel-idle.js';
 import { reelDissolve, reelFadeLive } from './ui/reel-fade.js';
 import './ui/backdrop.js';
 import './ui/input.js';
@@ -115,9 +115,12 @@ function frame(now) {
   if (G.state === 'play') { t = songTime(); vt = setDrawT(chip?.t0 != null ? viewClock(heard - offsetMs / 1000, G.paused ? 0 : frameS) : t); live = Math.min(1, Math.max(0, (vt - G.go) / 0.12 + 1)); } // t: the song now (misses, autoplay); vt: at the frame's rAF time, what is drawn. Same clock, eased over the audio device's own jumps (viewClock). Still until the first note
   if (G.resuming != null) t = vt = setDrawT(G.resuming); // the 3, 2, 1 after a pause: the scene holds still at the pause point (the song clock is running back up to it)
   const pendingSel = sheets.select?.pending ?? sheets.select?.figure?.status === 'aviat';
-  tickReel(G.state === 'select' && !viewMode && !PHOTO.on && !pendingSel && !Q.has('still'), selectedFigure.id, chip?.menuBeat?.(), dt, CALM.matches, G.state === 'play' && G.watch ? (heard > 0 ? beat : 0) : null); // the selector's showreel: her song dance on the menu loop's beat, filmed as a dance film; «Mira el ball» on the song's beat
-  if (REEL.cut && !REEL.fresh && PERF?.mode !== 'no3d') { renderScreen(); reelDissolve(renderer.domElement, W * K, HH * K, camera); } // a cut dissolves: the outgoing shot once more, still in its camera, copied to fade out over the new one; a figure change cuts (its old shot already shows the new figure: two changes)
   const reelWide = reelIdle(now); setReelIdle(reelWide); // left untouched, its UI fades
+  const reelMay = G.state === 'select' && !viewMode && !PHOTO.on && !pendingSel && !Q.has('still'), wasReel = REEL.on, wasStill = REEL_STILL.on;
+  tickReel(reelMay && reelWide, selectedFigure.id, chip?.menuBeat?.(), dt, CALM.matches, G.state === 'play' && G.watch ? (heard > 0 ? beat : 0) : null); // her music video on the menu loop's beat, only on the idle screen; «Mira el ball» on the song's beat
+  tickStill(reelMay, selectedFigure.id); // under the selector's UI: one held shot, she dances on her spot
+  if (PERF?.mode !== 'no3d' && (wasStill && REEL.on || wasReel && REEL_STILL.on)) { renderScreen(); reelDissolve(renderer.domElement, W * K, HH * K, camera, true, REEL_IDLE_FADE_MS); } // into the music video and back: a slow dissolve from a frozen copy
+  else if (REEL.cut && !REEL.fresh && PERF?.mode !== 'no3d') { renderScreen(); reelDissolve(renderer.domElement, W * K, HH * K, camera); } // a cut dissolves: the outgoing shot once more, still in its camera, copied to fade out over the new one; a figure change cuts (its old shot already shows the new figure: two changes)
   beat = tickGame(t, vt, beat, dt);
   if (PHOTO.on && !steers()) setView(false);
   animStage(dt, beat, live);

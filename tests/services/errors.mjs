@@ -124,6 +124,28 @@ function fakeWindow() {
   assert.deepEqual(sent.map(h => h.fingerprint), [['mulassa', 'webgl-context-lost'], ['mulassa', 'webgl-context-lost'], ['mulassa', 'audio-load-failed'], undefined],
     'kinds get separate fingerprints, tags never change them, exceptions are left to the SDK');
 }
+// After the error card (boot-failed, no WebGL, a GPU that never came back) the page's leftover code keeps throwing on a dead
+// context: those uncaught errors are not sent (five new issues from one Pop boot, 12 Nov 2026); what came before still is.
+{
+  const win = fakeWindow(), hints = [];
+  const S = { captureException: (e, h) => hints.push(h), captureMessage() {}, addBreadcrumb() {} };
+  let ready;
+  const api = createErrors({ mode: 'production', win, idle: f => f(), load: () => new Promise(r => { ready = () => r(S); }) });
+  const opts = sentryOptions({ dsn: DSN, environment: 'production', release: 'r', dead: api.dead });
+  const uncaught = { exception: { values: [{ mechanism: { type: 'onerror', handled: false } }] } };
+  win.fire('error', { error: new Error('the cause') });
+  api.report('webgl-context-lost'); // a lost context can come back: not a dead page
+  assert.equal(api.dead(), false);
+  assert(opts.beforeSend(structuredClone(uncaught), {}), 'a lost context alone mutes nothing');
+  api.report('boot-failed');
+  win.fire('error', { error: new Error('shaderSource on a dead context') });
+  api.start(); await new Promise(r => setTimeout(r)); ready(); await new Promise(r => setTimeout(r));
+  assert.equal(hints.length, 1, 'an uncaught error after the card is not even held');
+  assert(opts.beforeSend(structuredClone(uncaught), hints[0]), 'the error from before the card is still sent');
+  assert.equal(opts.beforeSend(structuredClone(uncaught), {}), null, 'an uncaught error after the card is dropped');
+  assert(opts.beforeSend({ exception: { values: [{ mechanism: { type: 'generic', handled: true } }] } }, {}), 'explicit captures still go');
+  assert(opts.beforeSend({ message: 'audio-unavailable', level: 'warning' }, {}), 'warnings still go');
+}
 assert.deepEqual(['TypeError', 'ReferenceError', 'SyntaxError', 'Whatever', undefined].map(n => errorName({ name: n })), ['TypeError', 'ReferenceError', 'SyntaxError', 'Other', 'Other'], 'standard diagnostic names stay recognizable while arbitrary names are rejected');
 console.log('crash reports: gating, scrubbing, early buffer ok');
 

@@ -425,5 +425,6 @@
   "ui.code.open": "Ireki GitHub",
   "ui.news.title": "Orain, minijokoak!",
   "ui.games.tip": "Joko gehiago!",
-  "ui.news.text": "Lehen minijokoa: ukitu Mulassa gorriak eta desaktibatu bonbak!"
+  "ui.news.text": "Lehen minijokoa: ukitu Mulassa gorriak eta desaktibatu bonbak!",
+  "ui.drumConnected": "Connectat: les cançons comencen amb el timbal"
 }

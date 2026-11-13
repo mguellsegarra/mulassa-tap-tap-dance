@@ -447,5 +447,6 @@
   "ui.code.open": "Открыть GitHub",
   "ui.news.title": "А теперь мини-игры!",
   "ui.games.tip": "Ещё игры!",
-  "ui.news.text": "Первая мини-игра: нажимай на красных Mulassa и обезвреживай бомбы!"
+  "ui.news.text": "Первая мини-игра: нажимай на красных Mulassa и обезвреживай бомбы!",
+  "ui.drumConnected": "Connectat: les cançons comencen amb el timbal"
 }

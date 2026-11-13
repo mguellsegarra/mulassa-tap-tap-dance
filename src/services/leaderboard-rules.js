@@ -44,7 +44,7 @@ export function validResult(result) {
 export function snapshotResult(game, { reason, query, debugUsed = false }) {
   const version = game.figureVersion ?? LEADERBOARD_VERSION;
   if (!PUBLISHABLE.includes(version) || (game.figureId != null && game.figureId !== VERSION_RULES[version].figureId)) return null;
-  if (reason !== 'end' || game.practice || debugUsed || ['autoplay', 'from', 'view'].some(k => query.has(k)) || strippedRun(query)) return null; // ?perf alone is public: a real run
+  if (reason !== 'end' || game.practice || game.drum || debugUsed || ['autoplay', 'from', 'view'].some(k => query.has(k)) || strippedRun(query)) return null; // ?perf alone is public: a real run
   const result = { version, difficulty: game.diff,
     counts: Object.freeze({ perfect: game.counts.perfect, good: game.counts.good, miss: game.counts.miss }),
     score: game.score, maxCombo: game.maxCombo };

@@ -5,7 +5,7 @@ import { lane, LH } from './layout.js';
 import { W, H, PXU, SAFE, K } from './canvas.js';
 import { CALM } from '../core/env.js';
 import { BEATS, beatAt } from '../game/figure-song.js';
-import { RING_R, holdTail, holdHalo, noteDisc, holdCharge, text, textWidth, NOTE_R, glowDisc, glowPath } from './primitives.js';
+import { RING_R, holdTail, holdHalo, noteDisc, holdCharge, text, textWidth, NOTE_R, glowDisc, glowPath, rollHead } from './primitives.js';
 import { G, balloonShown, clock } from '../game/state.js';
 import { pulse } from '../core/anim.js';
 import { balloonFx, balloonHead, balloonShape, setBalloonView } from './balloon.js';
@@ -29,12 +29,20 @@ export function drawLane(t) {
     else { H.fillStyle = 'rgba(255,243,214,0.35)'; H.fillRect(x - 1, top + 4, 2, LB - 8); }
   }
   drawRing(t, hx, cy);
-  let held = null;
+  let held = null, roll = null;
   for (let i = Math.min(G.chart.length - 1, G.next + 40); i >= Math.max(0, G.next - 4); i--) {
     const n = G.chart[i];
+    const x = hx + (n.t - t) * speed;
+    if (n.roll) { // a drum run's roll (Taiko's renda): a gold bar that scrolls through the ring, hit all along it
+      const xe = hx + (n.end - t) * speed;
+      if (x > W1 + 20 || xe < hx - 20) continue;
+      holdTail('B', x, Math.min(xe, W1 + 40), cy);
+      rollHead(x, cy, 14);
+      if (t >= n.t && t < n.end + 0.5) roll = n;
+      continue;
+    }
     const holding = G.hold?.n === n, dropped = n.dropAt != null && !holding;
     if (n.hit && !holding && !dropped) continue;
-    const x = hx + (n.t - t) * speed;
     if (n.end && !n.balloon) { // MANTÉN: the tail is eaten at the ring while held; the head then sits on the ring, glowing
       const xe = hx + (n.end - t) * speed, xh = holding ? hx : dropped ? hx + (n.dropAt - t) * speed : x;
       if (x > W1 + 20 || xe < hx - 20) continue;
@@ -63,6 +71,11 @@ export function drawLane(t) {
   if (held) {
     holdCharge(held.input, hx, cy, (G.hold.got - held.t) / (held.end - held.t));
     text(LANE_TXT.hold, hx + 30, bottom + 8, 9 * 1.06, C.gold, 'left', C.dark, false, (1 + 0.06 * Math.sin(clock * 8)) / 1.06); // small label beside the ring, clear of the judge word
+  }
+  if (roll?.count > 0) { // the roll's hits so far (the rules count them in `count`, as a GLOBUS's), where a GLOBUS shows its taps: never both at once
+    if (roll.count !== rollN) rollS = String(rollN = roll.count);
+    text(rollS, hx + 34, bottom + 12, 20, C.gold, 'left', C.dark, false, 0.8 * (1 + pulse(G.tapT ?? -9, 0.12) * 0.25));
+    text(LANE_TXT.taps, hx + 34, bottom + 26, 8, C.cream, 'left');
   }
   const bl = balloonShown(t);
   if (bl) { // the balloon hangs from the ring, under the lane, and inflates with every tap; the counter keeps going after each pop
@@ -102,6 +115,7 @@ export function drawLane(t) {
   H.restore();
   drawStreak(t); // in screen units, over the band
 }
+let rollN = -1, rollS = ''; // the roll counter's text, rebuilt only when the count moves
 // Hit-ring juice (Taiko style), all under 300 ms: PERFECTE flashes gold with a shockwave and sparks in the
 // note's colour, BÉ a small cream pulse, ERROR shakes and dims slate blue; every tap squashes the ring a little.
 const SPARKS = Array.from({ length: 32 }, () => ({ t0: -9, a: 0, v: 0, col: '' }));

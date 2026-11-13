@@ -103,7 +103,7 @@ for (const [figure, from] of [[BOU, 0], [BOU, 30], [MULASSA, 0], [DRAC, 0]]) {
   runtime.setFigureSong(figure);
   const calls = [], G = {};
   const ctx = vm.createContext({ ...runtime, G, playFrom: from, LEAD: 3.2, CLICKS: false, songWait: null,
-    leaveRun() {}, warmStart() {}, makeDanceChart, recordKey, readFigureRecord: () => null, store: {},
+    leaveRun() {}, warmStart() {}, drumRun: () => null, makeDanceChart, recordKey, readFigureRecord: () => null, store: {},
     beginRun(diff, chart) { G.chart = chart; },
     chip: { buf: {}, start(...args) { calls.push(['start', ...args]); return Promise.resolve(true); }, countIn(times) { calls.push(['countIn', times]); } },
     loader: { done() {} }, errors: { report() { throw new Error('unexpected audio failure'); } },

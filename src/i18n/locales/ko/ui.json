@@ -414,5 +414,6 @@
   "ui.code.open": "GitHub 열기",
   "ui.news.title": "미니게임이 왔어요!",
   "ui.games.tip": "다른 게임도!",
-  "ui.news.text": "첫 미니게임: 빨간 Mulassa를 누르고 폭탄을 해체해요!"
+  "ui.news.text": "첫 미니게임: 빨간 Mulassa를 누르고 폭탄을 해체해요!",
+  "ui.drumConnected": "Connectat: les cançons comencen amb el timbal"
 }

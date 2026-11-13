@@ -1,5 +1,5 @@
 import { tr } from '../i18n/messages.js';
-import { beatAtTime } from '../core/beat-grid.js';
+import { beatAtTime, timeAtBeat } from '../core/beat-grid.js';
 // The chart comes straight from the arrangement (tools/music/build_taiko.py -> song.notes):
 // every tap is a note of the tune, on the song's own beat grid (song.beats: its tempo changes phrase by phrase), so it
 // lands exactly on what you hear.
@@ -28,4 +28,21 @@ export function makeDanceChart(song, diff) {
   });
   const balloons = windows.map(([a, b]) => ({ t: B[a], end: B[b], balloon: true, need: Math.round((b - a) * PUMPS[diff]), input: 'P', phrase: Math.floor(a / 8) }));
   return [...notes, ...balloons].sort((x, y) => x.t - y.t);
+}
+// A drum run's chart (docs/agents/drum-mode.md): written for the drum in song beats, [beat, kind, endBeat, need] per level.
+// The touch game's notes, so they draw and judge as always: d GUA (the left face), k PA (the right face), D and K a GUAPA
+// (both rims), r a roll (every hit counts, never judged), b a balloon.
+const DRUM_INPUT = { d: 'L', k: 'R', D: 'B', K: 'B' };
+// A figure with no chart of its own plays its touch chart on the drum, every MANTÉN (which a drum cannot hold: each hit
+// is a ~55 ms pulse) a roll over the same span; the rest plays as it is (faces GUA / PA, both rims a GUAPA).
+export const drumFromTouch = chart => chart.map(n => (n.end && !n.balloon ? { t: n.t, end: n.end, roll: true, input: 'P', phrase: n.phrase } : n));
+export function makeDrumChart(song, chart, diff) {
+  const at = beat => timeAtBeat(song.beats, beat);
+  return chart.levels[diff].map(([beat, kind, endBeat, need]) => {
+    const t = at(beat), phrase = Math.floor(Math.floor(beat + 0.01) / 8);
+    if (kind === 'r') return { t, end: at(endBeat), roll: true, input: 'P', phrase };
+    if (kind === 'b') return { t, end: at(endBeat), balloon: true, need, input: 'P', phrase };
+    if (!DRUM_INPUT[kind]) throw new RangeError(`Unknown drum chart event: ${kind}`);
+    return { t, phrase, input: DRUM_INPUT[kind], big: DRUM_INPUT[kind] === 'B', end: 0 };
+  }).sort((x, y) => x.t - y.t);
 }

@@ -1,16 +1,17 @@
 // Game flow: back to the selector, start a run, the practice, finish and the final.
 import { tr } from '../i18n/messages.js';
 import { clearLeaderboardResult, captureLeaderboardResult } from '../services/leaderboard-result.js';
-import { makeDanceChart } from './chart.js';
+import { makeDanceChart, makeDrumChart, drumFromTouch } from './chart.js';
 import { recordKey, readFigureRecord, saveFigureRecord } from './figures.js';
 import { comparableScore } from './score-scale.js';
 import { beatsRecord } from './records.js';
-import { song, selectedFigure, countInAt, startCueAt, BEATS, beatAt, FINALE_T } from './figure-song.js';
+import { song, selectedFigure, countInAt, startCueAt, BEATS, beatAt, FINALE_T, drumChart } from './figure-song.js';
+import { drumOn } from '../platform/drum.js';
 import { store } from '../platform/storage.js';
 import { errors } from '../services/errors.js';
 import { WINDOWS, quality, starsFor } from './progress.js';
 import { restTimeline } from './bubble-rules.js';
-import { stepAt, buildStep, stepBeats, stepDone, stepPassed, STEPS, practiceSeen } from './practice.js';
+import { stepAt, buildStep, stepBeats, stepDone, stepPassed, STEPS, practiceSeen, setPracticeDrum } from './practice.js';
 import { pick } from '../scene/models.js';
 import { challengeResult } from '../services/share.js';
 import { fabricateRun, FINAL } from '../dev/final-test.js';
@@ -74,10 +75,11 @@ export function startGame(diff) {
   leaveRun('restart');
   G.practice = null;
   G.sel = diff;
-  beginRun(diff, makeDanceChart(song, diff).filter(n => n.t >= playFrom));
+  const drum = drumRun(); // decided once, as the run starts: plugging the drum in or out mid-song changes nothing
+  beginRun(diff, (drum ? drumRunChart(diff) : makeDanceChart(song, diff)).filter(n => n.t >= playFrom), !!drum);
   warmStart(); // already painted on the menu unless the screen changed since (sprites are per size)
-  G.recordKey = recordKey(selectedFigure, diff);
-  G.previous = readFigureRecord(store, selectedFigure, diff);
+  G.recordKey = recordKey(selectedFigure, diff, G.drum);
+  G.previous = readFigureRecord(store, selectedFigure, diff, G.drum);
   const chart = G.chart;
   const wait = songWait = chip.buf ? null : loader.wait(musicLine());
   const waited = () => { loader.done(wait); if (songWait === wait) songWait = null; };
@@ -107,12 +109,23 @@ function watched() { // the plaça cheers the dance; ui/watch-ui.js then offers 
   burst(M.pos.x, M.pos.y);
   chip.sfx('ovation');
 }
-function beginRun(diff, chart) { // shared by the song and the practice: a clean plaça and score, `chart` on the lane
+// A drum run (docs/agents/drum-mode.md): a drum is being played and the figure has a chart written for it. Its own chart
+// and record; never on a board (leaderboard-rules.js snapshotResult) nor in the statistics (armRun below).
+const drumRun = () => drumOn(); // every figure plays on the drum: its own chart, or its touch chart's
+const drumRunChart = diff => (drumChart() ? makeDrumChart(song, drumChart(), diff) : drumFromTouch(makeDanceChart(song, diff)));
+// The drum's first hit in a run that started before Chrome showed the drum (it shows a pad only once it is hit): that run
+// has the touch chart, whose MANTÉN a drum cannot hold, so it starts again as a drum run, as the pause's «Torna a començar».
+export function toDrumRun() {
+  if (G.state !== 'play' || G.drum || G.paused || G.watch || !drumRun()) return false;
+  if (G.practice) startPractice(G.practice.then); else startGame(G.diff);
+  return true;
+}
+function beginRun(diff, chart, drum = false) { // shared by the song and the practice: a clean plaça and score, `chart` on the lane
   clearLeaderboardResult();
   closePauseMenu();
   loader.cancel(); songWait = null; // a restart drops the last run's wait (startGame makes its own)
   if (!chip) { setChip(audioEngine()); chip.unlock(); } // never start without an audio engine
-  G.diff = diff;
+  G.diff = diff; G.drum = drum; G.rollEnd = null;
   G.figureId = selectedFigure.id; G.figureVersion = selectedFigure.version;
   chip.stop();
   chip.menu(false);
@@ -138,7 +151,7 @@ function beginRun(diff, chart) { // shared by the song and the practice: a clean
   crowd.forEach(p => placeHome(p));
   sweepConfetti();
   G.audioError = null;
-  armRun(!AUTOPLAY && !FROM && STARS < 0 && !FINAL && !debugUsed);
+  armRun(!drum && !AUTOPLAY && !FROM && STARS < 0 && !FINAL && !debugUsed);
 }
 // ------------------------------------------------------------------ practice (first game)
 // Five short steps (practice.js) on the real lane with the real judge and FX, over a click track on the song's
@@ -151,7 +164,8 @@ export function choose(diff) { // a level picked on the selector (A BALLAR!): th
 export function startPractice(then = null) { // then: the difficulty to start afterwards (null: back to the selector)
   leaveRun('restart');
   G.sel = then ?? G.sel;
-  beginRun(1, []); // NORMAL rules (GUAPA wants both buttons, holds) ...
+  beginRun(1, [], !!drumRun()); // NORMAL rules (GUAPA wants both buttons, holds) ...
+  setPracticeDrum(G.drum); // the drum's own steps
   setWIN(WINDOWS[0]); // ... with FÀCIL's forgiving timing
   document.activeElement?.blur();
   G.practice = { then, t0: clock, step: 0, tries: 0, clickK: 0, wait: null, doneT: null };
@@ -236,11 +250,11 @@ export function finish(reason) {
   G.reason = reason === 'collapse' ? 'collapse' : value >= 70 ? 'clear' : 'fail';
   const recordScore = comparableScore(G.score, G.diff, G.figureVersion);
   G.newRecord = !AUTOPLAY && !FROM && STARS < 0 && reason !== 'collapse' && beatsRecord(value, recordScore, G.previous);
-  if (G.newRecord && !FINAL) saveFigureRecord(store, selectedFigure, G.diff, value, G.score, G.maxCombo);
+  if (G.newRecord && !FINAL) saveFigureRecord(store, selectedFigure, G.diff, value, G.score, G.maxCombo, G.drum);
   G.state = 'results';
   G.resT = clock;
-  const run = { figureId: selectedFigure.id, score: recordScore, pct: Math.round(value), diff: G.diff, reason: G.reason, stars: G.stars, newRecord: G.newRecord, maxCombo: G.maxCombo, t: G.resT, practice: false };
-  G.challenge = challengeResult(CHALLENGE, run); // null unless it was the challenge's level
+  const run = { figureId: selectedFigure.id, score: recordScore, pct: Math.round(value), diff: G.diff, reason: G.reason, stars: G.stars, newRecord: G.newRecord, maxCombo: G.maxCombo, t: G.resT, practice: false, drum: G.drum };
+  G.challenge = G.drum ? null : challengeResult(CHALLENGE, run); // null unless it was the challenge's level
   G.shareRun = run; // what «Comparteix» shows (share-ui.js); the leaderboard's snapshot above is untouched
   if (G.reason === 'clear') { G.chantT = clock; burst(M.pos.x, M.pos.y); chip.sfx('ovation'); }
   else chip.sfx(G.diff === 2 ? 'laugh' : 'menu');

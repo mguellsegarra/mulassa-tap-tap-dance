@@ -7,7 +7,8 @@
 
 - All copy in Catalan, no English ("Practice", "OK", "Settings"…). Watch false friends and apostrophes (’).
 - Tap verbs: «Toca» for the touch screen, «Prem» for keys, «Pica» only for GLOBUS mashing; split by device (`.touch`/`.keys`,
-  `COARSE`) or use a neutral verb («Marca»). Links in running text (mailtos): cream `#fff3d6`, underlined (never GUA orange).
+  `COARSE`) or use a neutral verb («Marca»). A Taiko drum in use (`drumOn()`, `platform/drum.js`) takes its own text first: the `drum` practice
+  lines and, on the «Com es juga» and sync sheets, `.drum-in` shown and `.keys`/`.touch`/`.no-drum` hidden by the sheet's `.by-drum` (set as it opens). Links in running text (mailtos): cream `#fff3d6`, underlined (never GUA orange).
 - **Colour roles** (one job each): solid gold `#f5c518` = the one primary action of a view; gold outline = every other button,
   round icon buttons and the sheets' frame; solid cream `#fff3d6` with dark text = what is selected (town pills, level and
   view segments; a cream ring on the selected card), unselected choices get a neutral `#e8d8b880` edge; information chips on a card (a pending figure's entity) are dark with cream text, never a cream fill; the one exception is the entity chip (pending card and the playable info block share the same pastel holo pill with dark text, `.sel-entity` in select-pending.css); gold as text only for brand, celebration (GUAPA) and titles: every sheet's big `h2` is gold (`.sheet h2`), except the small labels of Classificació and the end of a season, the notice's ribbon and «Publicat!» above the offer's own gold headline; GUA orange / PA turquoise only for the two drums and what literally means left/right;

@@ -2,6 +2,7 @@
 import mulassaSong from '../song-mulassa.json' with { type: 'json' };
 import dracSong from '../song-drac.json' with { type: 'json' };
 import bouSong from '../song-bou.json' with { type: 'json' };
+import mulaDrumChart from '../figures/mulassa/mula-drum-chart.json' with { type: 'json' };
 import { beatAtTime, timeAtBeat } from '../core/beat-grid.js';
 import { FIGURES, MULASSA, DRAC, BOU } from './figures.js';
 import { DRAC_SIZE, DRAC_SCALE } from '../figures/drac/drac.js';
@@ -11,6 +12,11 @@ import { mulassaPlaySong } from './experiment-song.js';
 
 const FIGURE_SONGS = { [MULASSA.id]: mulassaPlaySong, [DRAC.id]: dracSong, [BOU.id]: bouSong };
 export const menuSong = mulassaSong; // the menu loop, whoever is selected
+// The charts written for a Taiko drum (docs/agents/drum-mode.md), per song: a chart fits the recording it was written on,
+// not the figure (a figure may dance another song). A song with none plays its touch chart on the drum, its MANTÉN made
+// rolls (chart.js drumFromTouch).
+const SONG_DRUM_CHARTS = new Map([[mulassaSong, mulaDrumChart]]);
+export const drumChart = () => SONG_DRUM_CHARTS.get(song) ?? null;
 export const figureSong = id => FIGURE_SONGS[id]; // any figure's song, selected or not (free mode's radio)
 export let selectedFigure = MULASSA;
 export let song = FIGURE_SONGS[MULASSA.id];

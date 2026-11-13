@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="ca">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Notes del timbal</title>
+<!-- Dev only (npm run dev → /tools/dev/timbal-notes.html): the Mulassa's drum chart (src/figures/mulassa/mula-drum-chart.json,
+     written in tools/music/build_drum_chart.mjs), its three levels on a scrolling lane over the real MP3, a click per note. -->
+<style>
+  @font-face { font-family: 'Baloo 2'; font-weight: 600; src: url(/fonts/baloo-2-latin.woff2) format('woff2'); }
+  @font-face { font-family: 'Baloo 2'; font-weight: 800; src: url(/fonts/baloo-2-latin.woff2) format('woff2'); }
+  :root { --don: #ff7a1a; --ka: #14b8a6; --gold: #f5c518; --cream: #fff3d6; --dark: #2a1a10; --edge: #e8d8b880; color-scheme: light only; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: #1a0f08; color: var(--cream); font: 600 15px/1.35 'Baloo 2', system-ui, sans-serif; }
+  main { max-width: 1180px; margin: 0 auto; padding: 16px; display: grid; gap: 12px; }
+  h1 { margin: 0; font-weight: 800; font-size: 26px; color: var(--gold); }
+  p { margin: 0; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .btn { min-height: 44px; padding: 0 16px; border-radius: 999px; border: 2px solid var(--edge); background: transparent; color: var(--cream); font: inherit; font-weight: 800; cursor: pointer; }
+  .btn[aria-pressed="true"] { background: var(--cream); color: var(--dark); border-color: var(--cream); }
+  .btn-primary { background: var(--gold); color: var(--dark); border-color: var(--gold); min-width: 96px; }
+  .switch { display: inline-flex; gap: 8px; align-items: center; min-height: 44px; }
+  .switch input { width: 20px; height: 20px; accent-color: var(--gold); }
+  .dot { display: inline-block; width: 14px; height: 14px; border-radius: 50%; margin: 0 6px 0 12px; vertical-align: -2px; box-shadow: 0 0 0 1.5px var(--cream); }
+  .dot:first-child { margin-left: 0; }
+  .bar { display: inline-block; width: 28px; height: 12px; border-radius: 6px; margin: 0 6px 0 12px; vertical-align: -1px; box-shadow: 0 0 0 1.5px var(--cream); }
+  #lane { display: block; width: 100%; height: 252px; background: var(--dark); border-radius: 12px; cursor: pointer; touch-action: none; }
+  #seek { width: 100%; min-height: 44px; accent-color: var(--gold); }
+  table { border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  th, td { padding: 4px 12px; text-align: right; }
+  th:first-child, td:first-child { text-align: left; }
+  thead th { opacity: .7; font-weight: 600; }
+  .scroll { overflow-x: auto; }
+  .dim { opacity: .7; font-size: 13px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Notes del timbal · Mulassa</h1>
+  <div class="row">
+    <button class="btn btn-primary" id="go">Escolta</button>
+    <div class="row" id="levels" role="group" aria-label="Nivell que sona"></div>
+    <label class="switch"><input type="checkbox" id="hits" checked> Cops</label>
+    <label class="switch"><input type="checkbox" id="music" checked> Música</label>
+  </div>
+  <canvas id="lane" aria-label="Les notes dels tres nivells; toca per saltar a un punt"></canvas>
+  <input id="seek" type="range" min="0" max="228" step="0.25" value="8" aria-label="Posició a la cançó, en temps">
+  <div class="row" id="parts" role="group" aria-label="Salta a una part"></div>
+  <p>
+    <span class="dot" style="background: var(--don)"></span>don (cara)
+    <span class="dot" style="background: var(--ka)"></span>ka (vora)
+    <span class="dot" style="background: var(--don); width: 20px; height: 20px; vertical-align: -5px"></span>gran: les dues mans
+    <span class="bar" style="background: var(--gold)"></span>redoble
+    <span class="bar" style="background: #ff5d8f"></span>globus
+  </p>
+  <div class="scroll"><table>
+    <thead><tr><th>Nivell</th><th>don</th><th>ka</th><th>DON</th><th>KA</th><th>redobles</th><th>globus</th><th>notes</th><th>% ka</th><th>per 7 s</th></tr></thead>
+    <tbody id="stats"></tbody>
+  </table></div>
+  <p class="dim">Espai: escolta o pausa. Toca la pista o arrossega la barra per saltar. Sona el nivell triat: cop greu = don, cop agut = ka, més fort = gran. Els números de la pista són temps de la cançó, per dir on grinyola.</p>
+</main>
+<script type="module">
+import song from '/src/song-mulassa.json';
+import chart from '/src/figures/mulassa/mula-drum-chart.json';
+import { timeAtBeat, beatAtTime } from '/src/core/beat-grid.js';
+
+const $ = id => document.getElementById(id), B = song.beats, sec = b => timeAtBeat(B, b), beatOf = t => beatAtTime(B, t);
+const LEVELS = ['FÀCIL', 'NORMAL', 'DIFÍCIL'], C = { d: '#ff7a1a', k: '#14b8a6', r: '#f5c518', b: '#ff5d8f', cream: '#fff3d6' };
+const isNote = e => 'dkDK'.includes(e[1]);
+let level = 1;
+
+// ------------------------------------------------------------------ sound: the MP3 and a click per note of the level
+const audio = new Audio(`/${song.audio}`); audio.preload = 'auto';
+let ctx = null, done = 0; // `done`: clicks are queued up to this song time
+function click(kind, when) {
+  const o = ctx.createOscillator(), v = ctx.createGain(), big = kind === 'D' || kind === 'K';
+  if (kind === 'd' || kind === 'D') { o.frequency.setValueAtTime(160, when); o.frequency.exponentialRampToValueAtTime(60, when + 0.12); v.gain.setValueAtTime(big ? 0.9 : 0.5, when); v.gain.exponentialRampToValueAtTime(0.001, when + 0.18); }
+  else if (kind === 'k' || kind === 'K') { o.type = 'triangle'; o.frequency.setValueAtTime(1300, when); v.gain.setValueAtTime(big ? 0.4 : 0.2, when); v.gain.exponentialRampToValueAtTime(0.001, when + 0.05); }
+  else { o.type = 'triangle'; o.frequency.setValueAtTime(520, when); v.gain.setValueAtTime(0.07, when); v.gain.exponentialRampToValueAtTime(0.001, when + 0.04); } // inside a roll or a balloon
+  o.connect(v).connect(ctx.destination); o.start(when); o.stop(when + 0.2);
+}
+// what clicks at the level: its notes, and a soft tick every sixteenth inside its rolls and balloons
+const clicks = chart.levels.map(ev => ev.flatMap(e => {
+  if (isNote(e)) return [[sec(e[0]), e[1]]];
+  const out = []; for (let b = e[0]; b < e[2] - 1e-6; b += 0.25) out.push([sec(b), 'r']); return out;
+}).sort((a, b) => a[0] - b[0]));
+function queue() { // a tenth of a second ahead on the audio context's clock, so a slow frame does not smear the clicks
+  const now = audio.currentTime, to = now + 0.1;
+  if ($('hits').checked) for (const [t, kind] of clicks[level]) if (t > done && t <= to) click(kind, ctx.currentTime + Math.max(0, t - now) / audio.playbackRate);
+  done = to;
+}
+function play(b = null) {
+  ctx ??= new AudioContext(); ctx.resume();
+  if (b !== null) audio.currentTime = Math.max(0, sec(b));
+  done = audio.currentTime - 1e-3; audio.play();
+}
+const toggle = () => (audio.paused ? play() : audio.pause());
+audio.onplay = audio.onpause = () => ($('go').textContent = audio.paused ? 'Escolta' : 'Pausa');
+$('music').onchange = e => (audio.volume = e.target.checked ? 1 : 0);
+
+// ------------------------------------------------------------------ the lane: three rows, the notes come from the right
+const cv = $('lane'), g = cv.getContext('2d'), ROW = 68, TOP = 34;
+let W = 0, RING = 96, PX = 84; // px per beat: ten beats in sight on a phone
+function size() { const r = devicePixelRatio || 1; W = cv.clientWidth; PX = Math.min(84, Math.max(40, W / 10)); RING = W < 500 ? 56 : 96; cv.width = W * r; cv.height = cv.clientHeight * r; g.setTransform(r, 0, 0, r, 0, 0); }
+new ResizeObserver(size).observe(cv); size();
+const partAt = b => song.arrangement.findLast(([a]) => a <= b)?.[1] ?? '';
+function draw(now) {
+  const H = cv.clientHeight, x = b => RING + (b - now) * PX, from = now - RING / PX - 1, to = now + (W - RING) / PX + 1;
+  g.clearRect(0, 0, W, H);
+  g.font = '600 12px "Baloo 2", system-ui'; g.textBaseline = 'middle';
+  for (let b = Math.max(0, Math.ceil(from)); b <= Math.min(B.length - 1, to); b++) { // beat lines, a number and the part on each bar
+    const bar = b % 4 === 0;
+    g.fillStyle = bar ? '#fff3d640' : '#fff3d615'; g.fillRect(x(b), TOP - 8, 1, ROW * 3 + 8);
+    if (bar) { g.fillStyle = '#fff3d6a0'; g.textAlign = 'left'; g.fillText(`${b} · ${partAt(b)}`, x(b) + 4, 12); }
+  }
+  chart.levels.forEach((ev, L) => {
+    const y = TOP + ROW * L + ROW / 2, on = L === level;
+    g.globalAlpha = on ? 1 : 0.45;
+    g.fillStyle = '#00000040'; g.fillRect(0, y - 26, W, 52);
+    g.fillStyle = C.cream; g.textAlign = 'left'; g.font = '800 12px "Baloo 2", system-ui'; g.fillText(LEVELS[L], 8, y - 18);
+    g.strokeStyle = C.cream; g.lineWidth = 2; g.beginPath(); g.arc(RING, y, 20, 0, 7); g.stroke();
+    for (const e of ev) if (!isNote(e) && e[2] >= from && e[0] <= to) { // the bars first, the notes over them
+      const a = x(e[0]), z = x(e[2]);
+      g.fillStyle = C[e[1]]; g.beginPath(); g.roundRect(a - 14, y - 14, z - a + 28, 28, 14); g.fill();
+      g.strokeStyle = C.cream; g.lineWidth = 2; g.stroke();
+      g.fillStyle = '#2a1a10'; g.textAlign = 'left'; g.fillText(e[1] === 'b' ? `globus ×${e[3]}` : 'redoble', a - 4, y + 1);
+    }
+    for (let i = ev.length - 1; i >= 0; i--) { // the earlier note on top, as Taiko draws them
+      const e = ev[i]; if (!isNote(e) || e[0] < from || e[0] > to) continue;
+      const big = e[1] === 'D' || e[1] === 'K';
+      g.fillStyle = C[e[1].toLowerCase()]; g.beginPath(); g.arc(x(e[0]), y, big ? 20 : 13, 0, 7); g.fill();
+      g.strokeStyle = C.cream; g.lineWidth = big ? 3 : 2; g.stroke();
+    }
+    g.globalAlpha = 1;
+  });
+}
+const nowBeat = () => beatOf(audio.currentTime);
+function tick() {
+  if (!audio.paused) { queue(); $('seek').value = nowBeat(); }
+  draw(nowBeat());
+  requestAnimationFrame(tick);
+}
+const jump = b => { const to = Math.min(B.length - 1, Math.max(0, b)); if (audio.paused) { audio.currentTime = sec(to); $('seek').value = to; } else play(to); };
+cv.onpointerdown = e => jump(nowBeat() + (e.offsetX - RING) / PX);
+$('seek').oninput = e => jump(Number(e.target.value));
+
+// ------------------------------------------------------------------ controls and the numbers
+const levels = $('levels');
+levels.innerHTML = LEVELS.map((l, i) => `<button class="btn" data-l="${i}">${l}</button>`).join('');
+const syncLevel = () => levels.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(Number(b.dataset.l) === level)));
+levels.onclick = e => { const b = e.target.closest('button'); if (b) { level = Number(b.dataset.l); syncLevel(); } };
+$('parts').innerHTML = song.arrangement.filter(([, n]) => !/^intro[12]$/.test(n)).map(([b, n]) => `<button class="btn" data-b="${b}">${n === 'intro0' ? 'inici' : n} <span class="dim">${b}</span></button>`).join('');
+$('parts').onclick = e => { const b = e.target.closest('button'); if (b) play(Math.max(0, Number(b.dataset.b) - 2)); };
+$('go').onclick = toggle;
+addEventListener('keydown', e => { if (e.code === 'Space' && !e.target.closest?.('button, input')) { e.preventDefault(); toggle(); } });
+$('stats').innerHTML = chart.levels.map((ev, L) => {
+  const n = { d: 0, k: 0, D: 0, K: 0, r: 0, b: 0 }; for (const e of ev) n[e[1]]++;
+  const t = ev.filter(isNote).map(e => sec(e[0])), fix = v => v.toFixed(1).replace('.', ',');
+  return `<tr><th>${LEVELS[L]}</th><td>${n.d}</td><td>${n.k}</td><td>${n.D}</td><td>${n.K}</td><td>${n.r}</td><td>${n.b}</td><td>${t.length}</td><td>${fix((n.k + n.K) / t.length * 100)}</td><td>${fix(t.length / (t.at(-1) - t[0]) * 7)}</td></tr>`;
+}).join('');
+audio.currentTime = sec(8); syncLevel(); requestAnimationFrame(tick);
+</script>
+</body>
+</html>

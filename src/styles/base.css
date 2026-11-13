@@ -184,6 +184,7 @@ kbd { display: inline-block; min-width: 14px; padding: 0 4px; border: 1px solid 
 .keys, .touch { white-space: nowrap; }
 .touch { display: none; }
 @media (pointer: coarse) { .keys { display: none; } .touch { display: inline; } }
+:is(#howto-menu, #sync-menu):not(.by-drum) .drum-in, :is(#howto-menu, #sync-menu).by-drum :is(.keys, .touch, .no-drum) { display: none; } /* a Taiko drum in use (platform/drum.js drumOn(), read as the sheet opens): its own lines and rows replace the keys' and the pad's */
 /* practice (first game): SALTA in the top-left corner, mirroring the pause button */
 #skip { position: fixed; z-index: 3; top: calc(18px + env(safe-area-inset-top)); left: calc(10px + env(safe-area-inset-left)); height: 64px; padding: 0 16px 0 20px; gap: 8px; font-size: 20px; letter-spacing: .04em; }
 #skip svg { width: 26px; height: 26px; }

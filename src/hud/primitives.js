@@ -88,6 +88,11 @@ export function noteDisc(dir, x, y, r, big = false) { // big = GUAPA: 1.4x, gold
   noteFace(dir, x, y, r - rim);
   arrow(dir, x, y, r);
 }
+export function rollHead(x, y, r) { // a drum run's roll: the bar's gold, no arrow (any zone counts)
+  H.fillStyle = C.dark; H.beginPath(); H.arc(x, y, r + 2, 0, 7); H.fill();
+  H.fillStyle = '#fff'; H.beginPath(); H.arc(x, y, r, 0, 7); H.fill();
+  noteFace('B', x, y, r - 2);
+}
 // MANTÉN: a thick bar in the note's colour with a round cap. state: 0 waiting, 1 being held (glows, energy flows
 // into the ring), 2 let go too early (greyed out, it just scrolls away).
 export function holdTail(dir, x0, x1, y, state = 0) {

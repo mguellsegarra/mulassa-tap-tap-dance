@@ -425,5 +425,6 @@
   "ui.code.open": "Daurís GitHub",
   "ui.news.title": "Ara, minijòcs!",
   "ui.games.tip": "Mai de jòcs!",
-  "ui.news.text": "Eth prumèr minijòc: tòca es Mulasses ròies e desactiva es bombes!"
+  "ui.news.text": "Eth prumèr minijòc: tòca es Mulasses ròies e desactiva es bombes!",
+  "ui.drumConnected": "Connectat: les cançons comencen amb el timbal"
 }

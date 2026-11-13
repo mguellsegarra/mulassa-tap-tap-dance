@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { CAL, clickTimes, measureOffset, fmtMs, verdict, offsetDraft } from '../../src/game/calibration.js';
 import { Chip } from '../../src/platform/audio.js';
 import { Clicker } from '../../src/platform/clicker.js';
-import { STEPS, buildStep, stepBeats, stepDone, stepPassed, practiceSeen } from '../../src/game/practice.js';
+import { STEPS, buildStep, stepBeats, stepDone, stepPassed, practiceSeen, setPracticeDrum } from '../../src/game/practice.js';
 import { createSeenNotices } from '../../src/services/seen-notices.js';
 import { practiceText } from '../../src/game/figure-theme.js';
 import { WINDOWS } from '../../src/game/progress.js';
@@ -82,6 +82,23 @@ assert(hold.every(n => n.end > n.t && 'LR'.includes(n.input)), 'MANTÉN notes ar
 assert(balloon.length === 1 && balloon[0].balloon && balloon[0].need > 0, 'GLOBUS is a balloon');
 const heldHead = hold.map(n => ({ ...n, hit: 'perfect' }));
 assert(!stepDone(heldHead), 'a hold is done only once its tail is judged');
+// A drum run's practice (docs/agents/drum-mode.md): GUA, PA, both in turn, GUAPA, a roll, the balloon; no holds.
+{
+  const keys = STEPS;
+  setPracticeDrum(true);
+  const drum = STEPS.map((step, i) => buildStep(step, song.beats, 4, i)), shape = ns => ns.map(n => n.input + (n.big ? '!' : '')).join('');
+  assert.deepEqual(drum.slice(0, 4).map(shape), ['LLLL', 'RRRR', 'LRLR', 'B!B!B!']);
+  assert(drum.flat().every(n => !('drum' in n)) && drum.slice(0, 4).flat().every(n => n.end === 0 && song.beats.includes(n.t)), 'the touch game\'s notes (no drum flag), on the grid, no holds');
+  const [roll] = drum[4], [pop] = drum[5];
+  assert(roll.roll && roll.input === 'P' && roll.end > roll.t && !roll.balloon && pop.balloon && pop.need > 0, 'then a roll and the balloon');
+  assert(stepDone([roll]) && !stepPassed(STEPS[4], [{ ...roll, count: 0 }]) && stepPassed(STEPS[4], [{ ...roll, count: 3 }]), 'a roll never blocks the step and passes on any hit');
+  for (const [i, step] of STEPS.entries()) {
+    assert(step.drum && practiceText(i, 'drumWord') && practiceText(i, 'drum').length <= 45, `drum step ${i}: a word and one short line`);
+    assert(!stepPassed(step, drum[i].map(n => ({ ...n, hit: 'miss', count: 0 }))) && stepPassed(step, drum[i].map(n => ({ ...n, hit: 'good', count: n.need ?? 1 }))), `drum step ${i}: missed retries, played passes`);
+  }
+  setPracticeDrum(false);
+  assert.equal(STEPS, keys, 'and the keys\' practice is back, untouched');
+}
 console.log('practice steps ok');
 
 // The menu ambient still loading when a game or the practice starts must never start under it.

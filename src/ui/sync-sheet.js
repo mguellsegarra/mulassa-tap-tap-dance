@@ -8,6 +8,7 @@ import { Clicker } from '../platform/clicker.js';
 import { CAL, clickTimes, measureOffset, fmtMs, verdict, offsetDraft } from '../game/calibration.js';
 import { eventAge } from '../game/progress.js';
 import { tr } from '../i18n/messages.js';
+import { drumOn } from '../platform/drum.js';
 
 const COUNT = 3; // count-in beats before the first click
 
@@ -123,10 +124,12 @@ export function setupSync({ beat = CAL.beat, get, set, onOpen = () => {}, onClos
 
   return {
     get open() { return dlg.open; },
+    drumTap(e) { if (dlg.dataset.state === 'run') tap(e); }, // input.js: a drum hit, dated at the driver's poll
     show() {
       if (dlg.open) return;
       draft = offsetDraft(get()); now(draft.value);
       onOpen();
+      dlg.classList.toggle('by-drum', drumOn()); // the drum's own line instead of the keys' or the pad's (base.css)
       dlg.showModal();
       intro(); // nothing plays until Comença
     },

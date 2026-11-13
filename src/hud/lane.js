@@ -15,6 +15,7 @@ import { M } from '../scene/figure-springs.js';
 import { traitsByKey } from '../figures/index.js';
 const LANE_TXT = { hold: tr('hud.lane.hold'), taps: tr('hud.lane.taps'), balloon: tr('hud.lane.balloon'), pop: tr('hud.lane.pop'), mash1: tr('hud.lane.mash1'), mash2: tr('hud.lane.mash2'), mash: tr('hud.lane.mash'), streak: tr('hud.lane.streak') };
 
+const LANE_BIGS = new Float64Array(45); // x of this frame's doubles (the loop visits at most 45 notes): no garbage per frame
 export function drawLane(t) {
   const { cy, hx, s, sb, speed } = lane(), LB = LH * sb / s, top = cy - LB / 2, bottom = cy + LB / 2; // in lane units, scaled by s around the ring
   const W0 = hx - hx / s, W1 = hx + (W - hx) / s; // the screen's left and right edges in lane units
@@ -29,7 +30,7 @@ export function drawLane(t) {
     else { H.fillStyle = 'rgba(255,243,214,0.35)'; H.fillRect(x - 1, top + 4, 2, LB - 8); }
   }
   drawRing(t, hx, cy);
-  let held = null;
+  let held = null, bigs = 0;
   for (let i = Math.min(G.chart.length - 1, G.next + 40); i >= Math.max(0, G.next - 4); i--) {
     const n = G.chart[i];
     const holding = G.hold?.n === n, dropped = n.dropAt != null && !holding;
@@ -57,8 +58,10 @@ export function drawLane(t) {
       continue;
     }
     if (x > W1 + 20 || x < hx - 20) continue;
-    noteDisc(n.input, x, cy, 14, n.big);
+    if (n.big) LANE_BIGS[bigs++] = x; // the doubles go on top of any hold or roll before them
+    else noteDisc(n.input, x, cy, 14);
   }
+  for (let i = 0; i < bigs; i++) noteDisc('B', LANE_BIGS[i], cy, 14, true);
   drawRingTop(t, hx, cy, !!held);
   if (held) {
     holdCharge(held.input, hx, cy, (G.hold.got - held.t) / (held.end - held.t));

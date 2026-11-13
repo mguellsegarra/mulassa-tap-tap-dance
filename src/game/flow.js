@@ -52,6 +52,7 @@ export function toTitle() {
   G.paused = false; G.resuming = null;
   G.practice = null;
   G.watch = false;
+  G.finale = G.doublePoints = false; // left mid-coda: its lights (scene/fx.js) would keep pulsing on the menu's beat
   G.state = 'select';
   chip.stop();
   chip.menu(true); // also silences whatever the run still had queued (the count-in) before the clock runs again

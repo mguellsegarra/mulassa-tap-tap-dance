@@ -36,3 +36,22 @@ for (let beat = 0; beat < 32; beat += 0.25) { // the final's eight bars: the fan
 }
 assert(onBou > 20 && onFloor > onBou, `beams on the Bou ${onBou}, on the floor ${onFloor}`);
 console.log(`bou rave: ${onBou} beams end on the Bou, ${onFloor} on the floor, none through it ok`);
+{ // rays from inside a mesh's box (the DDA must start where the ray starts, not where it leaves the box): every triangle tried,
+  // both faces, as the beams count them (three's Raycaster skips back faces)
+  const tri = [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()], at = new THREE.Vector3(), local = new THREE.Ray(), inv = new THREE.Matrix4();
+  const brute = (o, d) => { let best = Infinity; for (const m of body) {
+    local.set(o, d).applyMatrix4(inv.copy(m.matrixWorld).invert()); const P = m.geometry.attributes.position, I = m.geometry.index;
+    for (let i = 0; i < (I ? I.count : P.count); i += 3) {
+      for (let k = 0; k < 3; k++) tri[k].fromBufferAttribute(P, I ? I.getX(i + k) : i + k);
+      if (local.intersectTriangle(tri[0], tri[1], tri[2], false, at)) best = Math.min(best, at.applyMatrix4(m.matrixWorld).distanceTo(o));
+    } } return best; };
+  const hit = run('bouBeamHit'), box = new THREE.Box3(); for (const m of body) box.expandByObject(m);
+  const o = new THREE.Vector3(), d = new THREE.Vector3(); let n = 0;
+  for (let i = 0; i < 300; i++) {
+    o.set(box.min.x + (box.max.x - box.min.x) * ((i * 0.618) % 1), box.min.y + (box.max.y - box.min.y) * ((i * 0.414) % 1), box.min.z + (box.max.z - box.min.z) * ((i * 0.732) % 1));
+    d.set(Math.sin(i * 1.3), Math.cos(i * 0.7) - 0.3, Math.sin(i * 2.1 + 1)).normalize();
+    const want = brute(o, d), got = hit(o, d);
+    assert(want === got || Math.abs(want - got) < 1e-4, `a ray from inside its box: ${got} m, every triangle ${want} m`); if (want < Infinity) n++;
+  }
+  console.log(`bou rave: ${n} rays from inside its box land where every triangle says`);
+}

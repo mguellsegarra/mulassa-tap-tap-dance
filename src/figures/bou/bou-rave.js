@@ -38,19 +38,60 @@ const bouDots = new THREE.Points(bouDotGeo, new THREE.ShaderMaterial({
 for (const o of [bouBeams, bouDots]) { o.visible = false; o.frustumCulled = false; scene.add(o); }
 const BOU_LASER_GREEN = new THREE.Color('#39ff6a'), BOU_LASER_PINK = new THREE.Color('#ff2bd6');
 // How far (m) a beam from `o` along `d` goes before it lands on the Bou (Infinity: it misses it): its big voxel meshes,
-// each in its own space, box first and then triangle by triangle (a few thousand, for the few beams on it; nothing allocated)
-const bouHitMeshes = [], bouRay = new THREE.Ray(), bouHitInv = new THREE.Matrix4(), bouTri = [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()], bouHitAt = new THREE.Vector3();
+// each in its own space, box first, then only the triangles of the grid cells the beam crosses, nearest cell first (nothing
+// allocated). Every triangle for each of the 14 beams was a third of an iPhone's JavaScript in the final (Low Power Mode:
+// 8 to 25 ms a frame, a quality step down on the last bars, 13/11/2026)
+const BOU_GRID = 12, bouHitMeshes = [], bouRay = new THREE.Ray(), bouHitInv = new THREE.Matrix4(), bouTri = [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()], bouHitAt = new THREE.Vector3(), bouIn = new THREE.Vector3();
+const BOU_AXES = ['x', 'y', 'z'], bouCell = [0, 0, 0], bouStep = [0, 0, 0], bouNext = [0, 0, 0], bouDelta = [0, 0, 0];
+const bouCellOf = (g, v, a) => Math.min(BOU_GRID - 1, Math.max(0, Math.floor((v - g.min[a]) / g.cell[a])));
+function bouGridOf(m) { // once per mesh: each triangle's first index, filed in every cell its box overlaps
+  const P = m.geometry.attributes.position, I = m.geometry.index, bb = m.geometry.boundingBox;
+  const g = { min: bb.min, cell: bb.getSize(new THREE.Vector3()).divideScalar(BOU_GRID).max(new THREE.Vector3(1e-6, 1e-6, 1e-6)), cells: Array.from({ length: BOU_GRID ** 3 }, () => []) };
+  for (let i = 0, n = I ? I.count : P.count; i < n; i += 3) {
+    for (let k = 0; k < 3; k++) bouTri[k].fromBufferAttribute(P, I ? I.getX(i + k) : i + k);
+    const span = (a, f) => bouCellOf(g, f(bouTri[0][a], bouTri[1][a], bouTri[2][a]), a);
+    const x1 = span('x', Math.max), y0 = span('y', Math.min), y1 = span('y', Math.max), z0 = span('z', Math.min), z1 = span('z', Math.max);
+    for (let x = span('x', Math.min); x <= x1; x++) for (let y = y0; y <= y1; y++) for (let z = z0; z <= z1; z++) g.cells[(x * BOU_GRID + y) * BOU_GRID + z].push(i);
+  }
+  g.cells = g.cells.map(c => Int32Array.from(c));
+  return g;
+}
+// the grids are built ahead of the final, one mesh a frame while the rave is off (built all at once, ~15 ms on a Mac, it
+// fell on the final's first frame); true once they are all there
+let bouHitTodo = null;
+function bouHitWarm() {
+  if (!bou) return false;
+  bouHitTodo ??= (() => { const l = []; bou.root.traverse(m => { if (m.isMesh && !m.isSkinnedMesh && m.geometry.attributes.position.count > 600) l.push(m); }); return l; })();
+  const m = bouHitTodo.pop();
+  if (m) { m.geometry.computeBoundingBox(); bouHitMeshes.push([m, bouGridOf(m)]); }
+  return !bouHitTodo.length;
+}
 function bouBeamHit(o, d) {
   if (!bou) return Infinity;
-  if (!bouHitMeshes.length) bou.root.traverse(m => { if (m.isMesh && !m.isSkinnedMesh && m.geometry.attributes.position.count > 600) { m.geometry.computeBoundingBox(); bouHitMeshes.push(m); } });
+  while (!bouHitWarm()); // (a final reached before they were warm, a seek: the rest now)
   let best = Infinity;
-  for (const m of bouHitMeshes) {
-    bouRay.origin.copy(o); bouRay.direction.copy(d); bouRay.applyMatrix4(bouHitInv.copy(m.matrixWorld).invert());
-    if (!bouRay.intersectsBox(m.geometry.boundingBox)) continue;
-    const P = m.geometry.attributes.position, I = m.geometry.index;
-    for (let i = 0, n = I ? I.count : P.count; i < n; i += 3) {
-      for (let k = 0; k < 3; k++) bouTri[k].fromBufferAttribute(P, I ? I.getX(i + k) : i + k);
-      if (bouRay.intersectTriangle(bouTri[0], bouTri[1], bouTri[2], false, bouHitAt)) best = Math.min(best, bouHitAt.applyMatrix4(m.matrixWorld).distanceTo(o));
+  for (const [m, g] of bouHitMeshes) {
+    bouRay.origin.copy(o); bouRay.direction.copy(d); bouRay.applyMatrix4(bouHitInv.copy(m.matrixWorld).invert()); // (direction normalised: t is object-space length)
+    if (m.geometry.boundingBox.containsPoint(bouRay.origin)) bouIn.copy(bouRay.origin); // (from inside, intersectBox gives the exit)
+    else if (!bouRay.intersectBox(m.geometry.boundingBox, bouIn)) continue;
+    const P = m.geometry.attributes.position, I = m.geometry.index, t0 = bouIn.distanceTo(bouRay.origin);
+    for (let a = 0; a < 3; a++) { // a 3D DDA from where the beam enters the box
+      const ax = BOU_AXES[a], dv = bouRay.direction[ax];
+      bouCell[a] = bouCellOf(g, bouIn[ax], ax); bouStep[a] = dv > 0 ? 1 : dv < 0 ? -1 : 0;
+      bouDelta[a] = dv ? g.cell[ax] / Math.abs(dv) : Infinity;
+      bouNext[a] = dv ? t0 + (g.min[ax] + (bouCell[a] + (dv > 0 ? 1 : 0)) * g.cell[ax] - bouIn[ax]) / dv : Infinity;
+    }
+    let near = Infinity;
+    while (bouCell[0] >= 0 && bouCell[0] < BOU_GRID && bouCell[1] >= 0 && bouCell[1] < BOU_GRID && bouCell[2] >= 0 && bouCell[2] < BOU_GRID) {
+      for (const i of g.cells[(bouCell[0] * BOU_GRID + bouCell[1]) * BOU_GRID + bouCell[2]]) {
+        for (let k = 0; k < 3; k++) bouTri[k].fromBufferAttribute(P, I ? I.getX(i + k) : i + k);
+        if (bouRay.intersectTriangle(bouTri[0], bouTri[1], bouTri[2], false, bouHitAt) && bouHitAt.distanceTo(bouRay.origin) < near) {
+          near = bouHitAt.distanceTo(bouRay.origin); best = Math.min(best, bouHitAt.applyMatrix4(m.matrixWorld).distanceTo(o));
+        }
+      }
+      const a = bouNext[0] < bouNext[1] ? (bouNext[0] < bouNext[2] ? 0 : 2) : (bouNext[1] < bouNext[2] ? 1 : 2);
+      if (near <= bouNext[a]) break; // a hit inside the cells crossed so far: nothing further along can be nearer
+      bouCell[a] += bouStep[a]; bouNext[a] += bouDelta[a];
     }
   }
   return best;
@@ -94,7 +135,7 @@ const bouFwd = new THREE.Vector3(), bouSide = new THREE.Vector3(), bouAim = new 
 export function bouRave(n, t, beat, b0, bx, bz, tint, co2Age) {
   const on = n > 0.01;
   bouBeams.visible = bouDots.visible = bouHaze.visible = bouCo2.visible = on;
-  if (!on) return;
+  if (!on) { bouHitWarm(); return; }
   const scale = glc.height / 2 / Math.tan(camera.fov * Math.PI / 360) * 0.5; // px per m at 1 m, halved (the clip's puffs)
   bouHaze.material.uniforms.scale.value = bouCo2.material.uniforms.scale.value = bouBeamLook.scale.value = scale;
   // behind the Bou as the camera sees it

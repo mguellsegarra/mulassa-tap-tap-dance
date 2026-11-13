@@ -10,6 +10,9 @@ const DEBUG_PARAMS = ['autoplay', 'from', 'view']; // self-playing or debug-came
 const PROD_HOST = 'mulassa-tap-tap-dance.pages.dev';
 const BETA_HOST = 'beta.mulassa.cat'; // main's channel, on the test Supabase
 const MAX_EVENTS = 10; // per page: a bug in the frame loop must not send one report per frame
+// a page that already showed its error card: the code still running on a dead GPU or audio throws one new issue per line it
+// reaches (Sentry, 12 Nov 2026: five from one Pop boot), so uncaught errors after these are not sent
+const DEAD_PAGE = new Set(['boot-failed', 'webgl-unavailable', 'webgl-not-restored']);
 const BUFFER = { exception: 10, report: 10, breadcrumb: 20 };
 const KNOWN_ERROR_NAMES = new Set(['Error', 'TypeError', 'RangeError', 'ReferenceError', 'SyntaxError', 'SecurityError', 'InvalidStateError', 'NotSupportedError', 'AbortError',
   'NetworkError', 'EncodingError', 'OperationError', 'UnknownError', 'NotAllowedError', 'DataCloneError']);
@@ -52,7 +55,7 @@ export function scrubEvent(event, tags = {}) {
 }
 
 // Plain options for Sentry.init (integrations are added by the loader); pure, so the tests read the privacy knobs.
-export function sentryOptions({ dsn, environment, release, tags = () => ({}) }) {
+export function sentryOptions({ dsn, environment, release, tags = () => ({}), dead = () => false }) {
   let sent = 0;
   return {
     dsn, environment, release,
@@ -64,6 +67,7 @@ export function sentryOptions({ dsn, environment, release, tags = () => ({}) }) 
     beforeBreadcrumb: scrubBreadcrumb,
     beforeSend(event, hint) {
       if (hint?.originalException?.mulassaReported) return null; // e.g. no WebGL: already a warning, not a crash
+      if (dead() && !hint?.data?.held && event.exception?.values?.some(v => v.mechanism?.handled === false)) return null;
       if (++sent > MAX_EVENTS) return null;
       let t = {};
       try { t = tags(); } catch { /* a report must never fail on its own context */ }
@@ -78,13 +82,13 @@ export function createErrors({ mode, win, load, idle }) {
   const off = { on: false, context() {}, report() {}, breadcrumb() {}, capture() {}, start() {} };
   if (!mode || !win) return off;
   if (win.__mulassaErrors) return win.__mulassaErrors; // one reporter a page: a game page loads Plassa's copy and the main game's (the sheets' leaderboard); a second one started Sentry again, without the game's context
-  let sentry = null, loading = false, getTags = () => ({});
+  let sentry = null, loading = false, getTags = () => ({}), dead = false;
   const pending = [];
   let pointer = '';
   const hold = (kind, send) => pending.filter(p => p.kind === kind).length < BUFFER[kind] && pending.push({ kind, send });
   const early = e => {
-    if ((e.error ?? e.reason)?.mulassaReported) return; // shown to the player and reported already
-    const mechanism = type => ({ mechanism: { type, handled: false } });
+    if (dead || (e.error ?? e.reason)?.mulassaReported) return; // after the error card, or shown to the player and reported already
+    const mechanism = type => ({ mechanism: { type, handled: false }, data: { held: true } }); // held: it came before any card
     if (e.type === 'unhandledrejection') hold('exception', S => S.captureException(e.reason, mechanism('onunhandledrejection')));
     else if (e.error || (e.message && e.message !== 'Script error.')) hold('exception', S => S.captureException(e.error ?? e.message, mechanism('onerror')));
   };
@@ -101,8 +105,10 @@ export function createErrors({ mode, win, load, idle }) {
       return { ...t, pointer: pointer || 'none' };
     },
     context(fn) { getTags = fn; },
+    dead: () => dead,
     // known failures shown to the player (not crashes): one warning each, no personal data, `data` = small tags
     report(kind, data = {}, message = kind) {
+      if (DEAD_PAGE.has(kind)) dead = true;
       run(S => S.captureMessage(message, { level: 'warning', fingerprint: ['mulassa', kind], tags: { issue: kind, ...data } }));
     },
     breadcrumb(kind, data = {}) {
@@ -141,7 +147,7 @@ const MODE = w && errorsMode({ dsn: DSN, hostname: w.location?.hostname, search:
 
 export const errors = createErrors({
   mode: MODE, win: w,
-  load: api => import('./sentry-load.js').then(m => m.start(sentryOptions({ dsn: DSN, environment: MODE, tags: api.tags,
+  load: api => import('./sentry-load.js').then(m => m.start(sentryOptions({ dsn: DSN, environment: MODE, tags: api.tags, dead: api.dead,
     release: `mulassa-tap-tap-dance@${APP_BUILD}` }))),
 });
 // Only fixed categories from the pre-bundle watchdog, never exception text, URLs or player data.

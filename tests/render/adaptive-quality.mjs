@@ -3,8 +3,8 @@ import { adaptiveQuality } from '../../src/platform/adaptive-quality.js';
 import { framePacer, gpuLossLevel, rememberGpuLoss } from '../../src/platform/render-quality.js';
 
 const rig = (ceiling = 2) => {
-  let level = ceiling, t = 0; const events = [], changes = [];
-  const sample = adaptiveQuality({ ceiling, level: () => level, change: q => { changes.push([t, q]); level = q; }, report: e => events.push(e) });
+  let level = ceiling, t = 0; const events = [], changes = [], halves = [];
+  const sample = adaptiveQuality({ ceiling, level: () => level, change: q => { changes.push([t, q]); level = q; }, report: e => events.push(e), halve: on => halves.push(on) });
   const run = (seconds, options = {}) => {
     const { hz = 60, fps = hz, cost = 3, miss = 0, ...rest } = options;
     for (let i = 0, end = t + seconds * 1000; t < end; i++) {
@@ -12,7 +12,7 @@ const rig = (ceiling = 2) => {
       sample(ms, typeof cost === 'function' ? cost(level) : cost, { hz, fps, half: !!rest.half, lowPower: !!rest.lowPower }, !!rest.hold, rest.ready ?? true);
     }
   };
-  return { sample, run, events, changes, get level() { return level; } };
+  return { sample, run, events, changes, halves, get level() { return level; } };
 };
 {
   const r = rig(); r.run(3); for (let i = 0; i < 9; i++) r.run(1, { miss: r.level === 2 ? 4 : 0, cost: 14 }); // the drop relieves the load
@@ -63,6 +63,22 @@ for (const policy of [{ hold: true }, { half: true, hz: 120, fps: 60 }, { lowPow
   assert.equal(r.level, 2, 'misses no profile changes do not keep quality down');
   assert(r.events.some(e => e.reason === 'futile'), 'the futile drop is reported');
   r.run(12, { miss: 3, cost: 14 }); assert(r.level < 2, 'a heavier overload than the tolerated misses still lowers quality');
+}
+{ // a song whose JavaScript takes most of a 60 Hz frame is drawn at an even 30 instead of losing a profile that would not help
+  const r = rig(); r.run(3, { hold: true, cost: 14 }); r.run(5, { miss: 4, cost: 14, hold: true }); // (the rig keeps its rate: stop at the verdict)
+  assert.deepEqual(r.halves, [true], 'the overload of a CPU-bound song asks for the half rate, once');
+  assert.equal(r.level, 2, 'and keeps its profile'); assert(r.events.some(e => e.reason === 'cpu-cap'));
+  r.run(20, { fps: 30, hz: 60, cost: 14, hold: true }); assert.equal(r.level, 2, 'a steady 30 is its pace, not an overload');
+  r.run(3, { cost: 3 }); assert.deepEqual(r.halves, [true, false], 'the full rate is back once the song is over');
+  const g = rig(); g.run(3, { hold: true }); g.run(12, { miss: 4, cost: 5, hold: true });
+  assert(g.level < 2 && !g.halves.length, 'a light frame that misses refreshes is the GPU\'s: the profile steps down as before');
+}
+{ // a song in play is not walked down the ladder again once a drop proved futile (a CPU-bound phone: a hitch at every switch)
+  const r = rig(); r.run(120, { miss: 6, hold: true });
+  assert(r.events.some(e => e.reason === 'futile') && r.level === 2, 'the song\'s first drop is undone as futile');
+  const n = r.changes.length; r.run(60, { miss: 3, cost: 14, hold: true });
+  assert.equal(r.changes.length, n, 'no further profile change in that song, although it got heavier');
+  r.run(12, { miss: 3, cost: 14 }); assert(r.level < 2, 'out of the song the overload lowers quality as before');
 }
 {
   const r = rig(-1); r.run(90); assert.equal(r.level, -1, 'software renderer ceiling is preserved');
@@ -143,3 +159,12 @@ console.log('adaptive quality: overload, measured recovery, failed-trial backoff
   delete globalThis.localStorage; delete globalThis.document;
 }
 console.log('context-lost quality step ok');
+{ // the pacer's cap: a 60 Hz screen draws every other refresh, evenly, and all of them again once it is lifted
+  const pace = framePacer(); let t = 0, drawn = 0; const tick = n => { drawn = 0; for (let i = 0; i < n; i++) { t += 1000 / 60; if (pace(t, true)) drawn++; } return drawn; };
+  assert.equal(tick(120), 120, '60 Hz: every refresh'); pace.cap = true;
+  assert(Math.abs(tick(120) - 60) <= 1 && Math.round(pace.fps) === 30, `capped: every other refresh (${drawn}), 30 fps`);
+  pace.cap = false; assert.equal(tick(120), 120, 'lifted: every refresh again');
+  const slow = framePacer(); let u = 0, n = 0; slow.cap = true; for (let i = 0; i < 60; i++) { u += 1000 / 30; if (slow(u, true)) n++; }
+  assert.equal(n, 60, 'a screen already at 30 Hz (Low Power Mode) is never halved to 15');
+}
+

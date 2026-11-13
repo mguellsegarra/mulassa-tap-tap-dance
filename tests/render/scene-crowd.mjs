@@ -478,3 +478,20 @@ console.log('crowd footprints never overlap ok');
   assert(back.band > 9, 'and the band back at its own place');
   console.log('rotllana: closed round ring, the band in front with room, restored after ok');
 }
+{ // a hidden top-level branch skips the frame's matrix walk (stage.js renderScreen): the scene itself must not force its
+  // children every render, as an auto-updating scene does (three's render calls scene.updateMatrixWorld())
+  const walks = run(`(() => { const g = new THREE.Group(), c = new THREE.Group(); g.add(c); g.visible = false; scene.add(g);
+    let n = 0; const u = c.updateMatrix; c.updateMatrix = function () { n++; return u.call(this); };
+    for (let i = 0; i < 3; i++) { renderScreen(); scene.updateMatrixWorld(); }
+    const hidden = n; g.visible = true; renderScreen(); scene.updateMatrixWorld(); const shown = n - hidden;
+    g.visible = false; scene.updateMatrixWorld(true); const forced = n - hidden - shown; scene.remove(g); return [hidden, shown, forced]; })()`);
+  assert.deepEqual([...walks], [0, 1, 1], 'hidden: not walked; shown again: walked that render; a forced update still reaches it');
+}
+{ // a held close-up is drawn sharper than the profile only while the session has not stepped quality down (hud/canvas.js)
+  const [boot, dropped, back] = run(`(() => { const seen = [], was = renderer.setPixelRatio, level = qualityLevel; renderer.setPixelRatio = v => seen.push(v);
+    const base = renderDpr(renderProfile, sizedW, sizedH, devicePixelRatio);
+    setCloseUp(true); setCloseUp(false); setQualityLevel(BOOT_QUALITY - 1); setCloseUp(true); setCloseUp(false); setQualityLevel(level); setCloseUp(true); setCloseUp(false);
+    renderer.setPixelRatio = was; return [seen[0] >= base, seen[2] === base, seen[4] === seen[0]]; })()`);
+  assert(boot && dropped && back, 'the close-up keeps the profile\'s pixels after an overload drop, and its own at the boot level');
+}
+

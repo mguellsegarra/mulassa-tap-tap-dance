@@ -182,6 +182,16 @@ comes back blank, with its default state (identity transform, default font), and
 - A context lost on screen drops quality one level once it is back, with no trial above it that session, and the next
   loads on that device start at that level for 12 hours (`src/platform/adaptive-quality.js`, `render-quality.js`). A
   hidden page's loss costs nothing. This is a mitigation: the cause of these losses is unknown.
+- A quality drop that changes nothing is undone («futile», `adaptive-quality.js`), and from then on the song in play
+  keeps its profile: only frames way too slow (80% late) still step down in it. A CPU-bound phone (the S10 with its CPU
+  slowed three times: JS 15-19 ms a frame) otherwise walked medium, low, minimal, medium twice a song, a hitch of up to
+  787 ms at every switch. No profile sheds JavaScript: for those phones the cost per frame is the lever, not the ladder.
+- A song whose JavaScript takes over 10 ms a frame when an overload is found is drawn at an even 30 for the rest of that
+  song (`cpu-cap`: the pacer's `cap`, lifted when the song ends) instead of losing a profile. The S10 with its CPU slowed
+  three times: 40-53 fps with 30-50 late frames every 3 s before, a steady 29.9 with 0-1 after, the profile kept. Mind a
+  laptop's frequency scaling when reading JS ms: a 2015 MacBook Pro holding 60 fps read 7.6 ms at `high` and 13.5 at
+  `medium`, the CPU clocked down to what the frame needs; only missed frames and profile changes say it is struggling.
+- A held close-up keeps the profile's pixels on a device that stepped quality down this session (`hud/canvas.js`).
 - A lost context that never comes back shows the reload card after 5 s on screen (`src/ui/pause-actions.js`). Its text
   asks to close the browser and reopen it, since Chrome can block WebGL for the site until it restarts; its retry
   button stays, as a reload may still work elsewhere; a

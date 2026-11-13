@@ -170,6 +170,8 @@ export function hudScale(width, height, dpr, budget) {
 // A try is a 2 s window of missed refreshes when it fails, and every switch changes the notes' step on screen: tried
 // mid-song, a device that reads a steady 60 broke the lane's motion a few times a song.
 // pace(now, hold) -> draw this frame?; pace.hz (refresh rate), pace.fps (target rate), pace.half, pace.lowPower (~30 Hz).
+// pace.cap (set by its owner, adaptive-quality.js): a 60 Hz screen draws every other refresh too, an even 30, for a song
+// whose JavaScript does not fit a 60 Hz frame (a 2015 MacBook Pro throttled by heat a minute into it: 14 ms a frame).
 const PACE = { window: 2000, slowShare: 0.15, recover: 5000, perMinute: 3, warmup: 1500 };
 export function framePacer(opts) {
   const o = { ...PACE, ...opts }, N = 31, d = new Float32Array(N).fill(Infinity), sorted = new Float32Array(N);
@@ -191,7 +193,8 @@ export function framePacer(opts) {
     }
     const hz = 1000 / iv, fast = hz > 95;
     pace.hz = hz; pace.lowPower = hz > 27 && hz < 34; // Low Power Mode is 30 exactly
-    if (!fast) { pace.fps = hz; lastDraw = now; return true; } // (a slow patch can read as 60 Hz: `half` is kept)
+    if (!fast && !(pace.cap && hz > 50)) { pace.fps = hz; lastDraw = now; return true; } // (a slow patch can read as 60 Hz: `half` is kept)
+    if (!fast) { pace.fps = hz / 2; if (now - lastDraw < 1.5 * iv) return false; lastDraw = now; return true; } // capped: every other refresh, evenly
     pace.fps = pace.half ? hz / 2 : hz;
     const since = now - lastDraw;
     if (pace.half && since < 1.5 * iv) return false; // every other refresh, evenly
@@ -211,7 +214,7 @@ export function framePacer(opts) {
     }
     return true;
   };
-  Object.assign(pace, { hz: 60, fps: 60, half: false, lowPower: false });
+  Object.assign(pace, { hz: 60, fps: 60, half: false, lowPower: false, cap: false });
   pace.reset = () => {
     d.fill(Infinity); i = n = prev = good = winN = winSlow = 0; start = -1; lastDraw = -1e9;
   }; // no hidden/resize time or old refresh samples in the next cadence window; retain anti-oscillation history

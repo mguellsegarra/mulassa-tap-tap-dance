@@ -41,19 +41,17 @@ export const BOU_CLIP_CUTS = [
   [132, 'balcony'], // (the diagonal rush: still too, from the other side)
   [140, 'crane', { tall: 2 }],
   [156, 'orbit'],
-  [172, 'charge'],
-  [180, 'wide'],
-  [188, 'front'],
-  [196, 'eyes'],
-  [204, 'wide'],
-  [220, 'crane'],
-  [232, 'vast'],
-  [252, 'balcony'],
-  [276, 'front', { tall: 1.8, wide: 1.3 }],
-  [284, 'orbit'],
-  [300, 'crane'],
+  [172, 'front'], // (the charge and the wide shot that followed filmed the run of bars 43-47, out since music revision 21)
+  [180, 'eyes'],
+  [188, 'wide'],
+  [204, 'crane'],
+  [216, 'vast'],
+  [236, 'balcony'],
+  [260, 'front', { tall: 1.8, wide: 1.3 }],
+  [268, 'orbit'],
+  [284, 'crane'],
 ];
-export const BOU_CLIP_END = 316;
+export const BOU_CLIP_END = 300;
 export const bouClipSec = b => { const T = BOU_TIMING.beats, i = Math.min(T.length - 2, Math.max(0, Math.floor(b))); return T[i] + (T[i + 1] - T[i]) * (b - i); };
 const clipPose = newBouPose();
 // its middle in its dance frame; lift: only what its colla carries it up (its bounce left out)

@@ -20,6 +20,7 @@ The approved package and its history are in `music/bou-tradicional/README.md` (C
 | The final note hurts, sounds different | No special effect on the last note, shorter ring |
 | Almost three minutes is too long; the cut phrase does not fit | Several shortened versions in one HTML with a phrase selector; cut only at repeated phrases; the opening phrases kept identical |
 | The first note comes much later after 3·2·1 than on the Mulassa and the Drac | The first intro bar cut (`cutBeats` in `playback.json`) so the first note lands near the others' |
+| The song is still too long: drop phrases, with my validation | A dev page (`tools/dev/bou-cut.html`) splices the current MP3 so the owner marks bars and hears the cut; the chosen bars go to `DROP` in `build_bou_mobile.py`, which re-renders and proves the rest unchanged; the dance's keys on those bars, the clip's and the showreel's cuts, the pending board's numbers and `review-map.json` move with it |
 
 ## Process lessons
 

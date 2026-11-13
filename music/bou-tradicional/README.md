@@ -22,6 +22,14 @@ S'ha demanat substituir al joc el bombo que no sentia als altaveus del mòbil.
 `approval.json` conserva l'aprovació històrica de v13; no implica que s'hagi
 escoltat i aprovat aquesta nova mescla.
 
+La revisió 21 escurça la cançó: no sonen els
+compassos 43-47 (la primera de les quatre vegades seguides del mateix tema; el compàs 42 porta al 60, al mateix tempo,
+136). Tall triat pel propietari amb `tools/dev/bou-cut.html` (13/11/2026). La durada passa de 2:32 a 2:25.
+`tools/music/build_bou_mobile.py` (`DROP`) torna a generar l'àudio amb el mateix generador i comprova que, fora de la
+unió, és la revisió 20; `playback.json` (`cutBars`) ho indica i `timing.json` passa a ser el mapa de la forma curta (el de
+la v13 sense aquest tram). El ball (`bou-dance.js`), el videoclip (`bou-clip.js`), el xart i la percussió s'hi han
+adaptat. La v13 aprovada i el seu ZIP no canvien. Escolta pendent.
+
 La revisió 20 corregeix una errata de la partitura: al compàs 12,
 temps 3, la Gralla I fa si natural, no el si bemoll imprès. Al PDF hi falta el becaire: el baix fa sol (la dominant),
 la Gralla II hi fa si naturals una tercera per sota i en directe se sent si natural. `score.json` porta la correcció

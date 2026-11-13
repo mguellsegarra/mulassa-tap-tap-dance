@@ -90,12 +90,9 @@ const PATH = [
   [34,0, 0,-RUSH.diag,RUSH.diag], [34,1, 0,-RUSH.diag+.2,RUSH.diag-.2], [35,0, 0,0,0],
   // 35-38: a rush forward to W and a skid; backing off, half a turn (via S) to face E
   [35,2, 0,0,.4], [37,0, 0,0,RUSH.head], [37,2, 0,0,RUSH.head-.5], [38,2, PI,.2,RUSH.head-.9], [39,0, PI,.1,1.4],
-  // 39-42: facing E, a turn and a quarter the other way (via N) while it comes back to the middle: faces S
-  [43,0, -1.5*PI,0,0],
-  // 43-45: a rush out to S and a skid; backing off, it turns back (via E) and heads N; 47: the turn carries on, a
-  // side-step, to W
-  [43,1, -1.5*PI,.3,0], [44,0, -1.5*PI,RUSH.head,0], [44,2, -1.5*PI,RUSH.head-.5,0],
-  [47,0, -.5*PI,.7,-.1], [60,0, 0,.3,.1],
+  // 39-42: facing E, half a turn the other way (via N) while it walks back, to face W near the middle (the run of bars
+  // 43-47 that followed, a rush out to S, is not played since music revision 21: this one leads into 60)
+  [60,0, 0,.3,.1],
   // 60-63: near W, short steps and weight changes on the half bar (the music runs on: no long notes for leg swings,
   // the owner, 05/11/2026), then still on the fermata, breathing (the beat itself slows) before the slow start
   [61,0, .1,.15,.15], [61,2, -.08,.22,.12], [62,0, .12,.12,.2], [62,2, -.05,.2,.14], [63,0, .1,.15,.15], [64,0, 0,0,0],
@@ -149,7 +146,7 @@ const liftKeys = C => [[0,0],[C.grip,0],[C.up,C.lift],[C.lower,C.lift],[C.down,0
 // fishtails (its rear swinging out `tail` rad to one side then the other, dying away) and sits back on its haunches
 // (front up `sit` rad) while it brakes; over `len` beats from a little before it arrives.
 const SKID = { slide: .3, tail: .22, sit: .12, len: 1.6, lead: .3, wag: 1 };
-const SKID_KEYS = [[20,0,1],[23,0,-1],[28,0,1],[30,0,-1],[32,0,1],[34,0,-1],[37,0,1],[44,0,-1],[81,2,1]];
+const SKID_KEYS = [[20,0,1],[23,0,-1],[28,0,1],[30,0,-1],[32,0,1],[34,0,-1],[37,0,1],[81,2,1]];
 // The keys as played: each authored key's id (`kind:bar+beats`), its beat after the owner's edits (BOU_DANCE_EDITS), and its values.
 let YAW, X, Z, GESTURES, COMIC, LIFT, SKIDS, KEYS;
 // [from, to] song beats: the opening's solemn steps end, the head's gags (googly eyes, waggle, gape) come in (pose.calm 1 -> 0)

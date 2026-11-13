@@ -54,7 +54,8 @@ const [easy, normal, hard] = charts.map(per7);
 assert(Math.max(...easy) <= 9 && Math.min(...easy.slice(0, -2)) >= 4, `FÀCIL stays flat (${Math.min(...easy)}-${Math.max(...easy)})`);
 assert(Math.max(...normal) <= 14, `NORMAL grows to ~12 (max ${Math.max(...normal)})`);
 assert(Math.max(...hard) <= 31, `DIFÍCIL ~30 only at its densest (max ${Math.max(...hard)})`);
-assert(charts[0].every(n => !n.end || n.balloon) && charts[1].some(n => n.end && !n.balloon), 'MANTÉN from NORMAL up');
+assert(song.easyHolds && charts[0].some(n => n.end && !n.balloon) && charts[1].some(n => n.end && !n.balloon), 'MANTÉN on every level (song.easyHolds)');
+assert(makeDanceChart({ ...song, easyHolds: false }, 0).every(n => !n.end || n.balloon), 'without it, from NORMAL up as the other figures');
 // the ESQUELLOT: on every level the last two bars are mashed, up to the final hit, which stays a tap
 for (const c of charts) {
   const bl = c.filter(n => n.balloon);
@@ -81,10 +82,10 @@ assert.equal(recordKey(BOU, 2), 'record-bou-tradicional-valls-2');
 saveFigureRecord(store, BOU, 2, 91, 123456, 200);
 assert.equal(readFigureRecord(store, BOU, 2).score, 123456);
 assert.equal(readFigureRecord(store, MULASSA, 2), null, 'never the Mulassa\'s record');
-const game = { figureId: BOU.id, figureVersion: BOU.version, diff: 1, practice: false, counts: { perfect: 220, good: 0, miss: 0 }, score: 1000, maxCombo: 220 }; // a valid NORMAL run
+const game = { figureId: BOU.id, figureVersion: BOU.version, diff: 1, practice: false, counts: { perfect: 224, good: 0, miss: 0 }, score: 1000, maxCombo: 224 }; // a valid NORMAL run
 assert.equal(snapshotResult(game, { reason: 'end', query: new URLSearchParams() }), null, 'a Bou run is never published');
 assert.equal(snapshotResult({ ...game, figureVersion: 'mulassa-v3' }, { reason: 'end', query: new URLSearchParams() }), null, 'nor under the Mulassa\'s version');
-assert(validResult({ version: 'bou-v1', difficulty: 1, counts: { perfect: 220, good: 0, miss: 0 }, score: 1, maxCombo: 1, figureId: BOU.id }) && !validResult({ version: 'bou-v1', difficulty: 1, counts: { perfect: 220, good: 0, miss: 0 }, score: 1, maxCombo: 1, figureId: MULASSA.id }), 'bou-v1 is the Bou\'s, mirrored for when its board exists');
+assert(validResult({ version: 'bou-v1', difficulty: 1, counts: { perfect: 224, good: 0, miss: 0 }, score: 1, maxCombo: 1, figureId: BOU.id }) && !validResult({ version: 'bou-v1', difficulty: 1, counts: { perfect: 224, good: 0, miss: 0 }, score: 1, maxCombo: 1, figureId: MULASSA.id }), 'bou-v1 is the Bou\'s, mirrored for when its board exists');
 const stats = { deviceId: 'd', owners: {} };
 endRun(stats, 'none', { kind: 'end', date: '2026-10-23', figureId: BOU.id, version: BOU.version, level: 1, completed: true, seconds: 150, counts: { perfect: 1, good: 0, miss: 0 } });
 endRun(stats, 'none', { kind: 'end', date: '2026-10-23', figureId: MULASSA.id, version: MULASSA.version, level: 1, completed: true, seconds: 88, counts: { perfect: 1, good: 0, miss: 0 } });

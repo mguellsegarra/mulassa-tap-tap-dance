@@ -6,7 +6,8 @@ import { beatAtTime } from '../core/beat-grid.js';
 // GUA (red, left; data key "don") on the tune's strong positions, PA (blue, right; "ka") between them.
 // GUAPA (Taiko's big notes, `big`; input 'B'), half red half blue, on the musical accents (crashes, the last C,
 // the final hit): GUA + PA, both buttons at once for double points (FÀCIL: either one).
-// MANTÉN (holds, `end`): the tune's long notes, from NORMAL up; press on the head and keep it down to `end`.
+// MANTÉN (holds, `end`): the tune's long notes, from NORMAL up (on FÀCIL too in a song with `easyHolds`, the Bou's);
+// press on the head and keep it down to `end`.
 // Each note carries the easiest difficulty that includes it.
 // GLOBUS (Taiko's balloon): over the arrangement's drumrolls you mash either side to pop it.
 // The mulassa's dance is not in the chart: it follows the song (dance.js), the same on every difficulty; hits only accent it.
@@ -23,7 +24,7 @@ export function makeDanceChart(song, diff) {
   const inBalloon = t => windows.some(([a, b]) => t > B[a] - 1e-3 && t < B[b] - 1e-3);
   const notes = song.notes.filter(([t, , level]) => level <= diff && !inBalloon(t)).map(([t, kind, , big, holdEnd]) => {
     const phrase = Math.floor(Math.floor(beatAtTime(B, t) + 0.01) / 8), input = INPUT[kind];
-    return { t, phrase, input: big ? 'B' : input, big: !!big, end: diff > 0 ? holdEnd || 0 : 0 };
+    return { t, phrase, input: big ? 'B' : input, big: !!big, end: diff > 0 || song.easyHolds ? holdEnd || 0 : 0 };
   });
   const balloons = windows.map(([a, b]) => ({ t: B[a], end: B[b], balloon: true, need: Math.round((b - a) * PUMPS[diff]), input: 'P', phrase: Math.floor(a / 8) }));
   return [...notes, ...balloons].sort((x, y) => x.t - y.t);

@@ -5,10 +5,10 @@
 --      (src/services/leaderboard-rules.js) and to FIGURE_VERSIONS (src/services/leaderboard.js).
 -- A client released before step 1 would only get refused submissions and statistics, so the order matters.
 -- Numbers from tools/data/score-ceiling.mjs over src/song-bou.json (tests/figures/bou/bou-board-db.mjs keeps them in step):
--- judgments, max_score and extras_max per level; duration = song.end; 9 GUAPA, one balloon (the esquellot), holds from NORMAL.
+-- judgments, max_score and extras_max per level; duration = song.end; 12 BRAMA, one balloon (the esquellot), holds on every level.
 insert into leaderboard_private.versions(version,difficulty,judgments,max_score,extras_max,active,figure_id) values
-  ('bou-v1',0,129,181000,115000,true,'bou-tradicional-valls'),
-  ('bou-v1',1,220,235000,119000,true,'bou-tradicional-valls'),
-  ('bou-v1',2,413,344000,123000,true,'bou-tradicional-valls') on conflict (version,difficulty) do nothing;
-update leaderboard_private.versions set duration_seconds = 147.9347, guapa_count = 9, balloon_count = 1,
-  hold_count = (array[0,10,10])[difficulty+1] where version = 'bou-v1';
+  ('bou-v1',0,141,197000,122000,true,'bou-tradicional-valls'),
+  ('bou-v1',1,224,242000,122000,true,'bou-tradicional-valls'),
+  ('bou-v1',2,394,338000,125000,true,'bou-tradicional-valls') on conflict (version,difficulty) do nothing;
+update leaderboard_private.versions set duration_seconds = 140.8759, guapa_count = 12, balloon_count = 1,
+  hold_count = (array[16,16,16])[difficulty+1] where version = 'bou-v1';

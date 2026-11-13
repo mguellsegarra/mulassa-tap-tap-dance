@@ -82,11 +82,11 @@ export const SHOWREELS = {
   // drums and turns, 64 the start, 72 the festive turns, 88 the ending
   // fill: a smaller share of the band (the Bou is low: at full share the lens came within the crowd's front rows)
   // film: «Mira el ball» and the idle selector are filmed by its own cameras (figures/bou/bou-clip.js), which cut dry: this list's cuts dissolve only under the selector's UI
-  [BOU.id]: { start: 12, loop: 324, fill: 0.8, film: true, shots: [
+  [BOU.id]: { start: 12, loop: 308, fill: 0.8, film: true, shots: [
     [0, 'wide', 'cut'], [16, 'left', 'glide'], [44, 'front', 'glide'], // the entrance, the first steps, the changes of facing
-    [80, 'high', 'cut'], [112, 'right', 'glide'], [144, 'wide', 'glide'], [176, 'front', 'glide'], // the lateral pass; the turns
-    [208, 'left', 'cut'], [240, 'high', 'glide'], [272, 'right', 'glide'], // the start; the festive turns
-    [304, 'front', 'glide'], // the ending and the settle (a glide: the cut fell in the end's banknote rain, bou-bills.js, a jolt)
+    [80, 'high', 'cut'], [112, 'right', 'glide'], [144, 'wide', 'glide'], [172, 'front', 'glide'], // the lateral pass; the turns
+    [192, 'left', 'cut'], [224, 'high', 'glide'], [256, 'right', 'glide'], // the start; the festive turns
+    [288, 'front', 'glide'], // the ending and the settle (a glide: the cut fell in the end's banknote rain, bou-bills.js, a jolt)
   ] },
 };
 

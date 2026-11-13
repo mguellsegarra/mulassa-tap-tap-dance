@@ -15,7 +15,7 @@ const { db, q, as, player, unlock, migrate } = await fixture();
 const submit = (d, score) => q('select * from public.submit_result($1,$2,$3,0,$4,$5,$3,$6)', ['bou-v1', d, VERSION_RULES['bou-v1'].judgments[d], 0, score, 'BouFan']);
 const board = () => q('select * from public.get_leaderboard_all($1,$2,$3,$4,$5::smallint)', ['bou-v1', 'all', 0, 50, null]);
 const bucket = d => ({ runs: 1, completed: 1, collapsed: 0, seconds: Math.floor(song.end), perfect: VERSION_RULES['bou-v1'].judgments[d], good: 0, miss: 0,
-  guapa: 9, guapaTotal: 9, balloons: 0, holds: d ? 10 : 0, bestCombo: VERSION_RULES['bou-v1'].judgments[d], bestStars: 3,
+  guapa: 12, guapaTotal: 12, balloons: 0, holds: 16, bestCombo: VERSION_RULES['bou-v1'].judgments[d], bestStars: 3,
   errors: { early: 0, late: 0, silent: 0, both: 0, hold: 0, move: 0 }, best: { score: 1000, perfect: VERSION_RULES['bou-v1'].judgments[d], good: 0, miss: 0, maxCombo: VERSION_RULES['bou-v1'].judgments[d] } });
 const merge = (device, buckets) => q('select public.merge_stats($1,$2::jsonb,$3::date[],auth.uid())', [device, JSON.stringify(buckets), ['2026-10-23']]);
 try {
@@ -32,7 +32,7 @@ try {
   assert.deepEqual(rules.map(r => r.judgments), VERSION_RULES['bou-v1'].judgments, 'the client mirror (leaderboard-rules.js)');
   assert.deepEqual(rules.map(r => r.max_score), VERSION_RULES['bou-v1'].ceilings);
   assert.deepEqual(rules.map(r => r.extras_max), VERSION_RULES['bou-v1'].extras);
-  assert(rules.every(r => r.figure_id === 'bou-tradicional-valls' && Number(r.duration_seconds) === song.end && r.guapa_count === 9 && r.balloon_count === 1));
+  assert(rules.every(r => r.figure_id === 'bou-tradicional-valls' && Number(r.duration_seconds) === song.end && r.guapa_count === 12 && r.balloon_count === 1));
   await unlock(); await as(me); await submit(1, 120000);
   const rows = await board();
   assert.equal(rows.length, 1); assert.equal(rows[0].score, 120000);
@@ -42,7 +42,7 @@ try {
   // the real client's statistics of a whole run on every level
   const stats = newStats();
   for (const d of [0, 1, 2]) endRun(stats, 'u', { kind: 'end', date: '2026-10-23', figureId: 'bou-tradicional-valls', version: 'bou-v1', level: d, seconds: song.end,
-    counts: { perfect: rules[d].judgments, good: 0, miss: 0 }, errors: {}, guapa: 9, guapaTotal: 9, balloons: 0, holds: rules[d].hold_count, maxCombo: rules[d].judgments, stars: 3, score: rules[d].max_score, quality: 100 });
+    counts: { perfect: rules[d].judgments, good: 0, miss: 0 }, errors: {}, guapa: 12, guapaTotal: 12, balloons: 0, holds: rules[d].hold_count, maxCombo: rules[d].judgments, stars: 3, score: rules[d].max_score, quality: 100 });
   // payload()'s shape (it leaves the Bou out until its board is switched on: tests/figures/bou/bou-chart.mjs), quality stays local
   const buckets = Object.fromEntries(Object.entries(stats.owners.u.counters).map(([k, c]) => { const { quality, ...best } = c.best; return [k, { ...c, best }]; })); // eslint-disable-line no-unused-vars
   await merge('00000000-0000-4000-8000-000000000002', buckets);

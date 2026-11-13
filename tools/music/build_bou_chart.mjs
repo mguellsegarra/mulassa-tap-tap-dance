@@ -42,31 +42,37 @@ for (const e of timing.events.filter(e => e.voice === 0).sort((a, b) => a.beat -
 }
 assert(melody.length > 300 && Math.abs(melody[0].beat - FIRST) < 1e-6 && Math.abs(melody.at(-1).beat - LAST) < 1e-6);
 
-// Level = the easiest difficulty that taps it, chosen bar by bar from the tune (the same bar always gets the same
-// taps): each note on the half-beat grid weighs its length, its accent in the 4/4 bar and whether it opens a phrase
-// (after a rest). FÀCIL taps the two heaviest beats, two beats apart; NORMAL three; DIFÍCIL every eighth; triplets
-// and sixteenths stay in the audio. FÀCIL stays flat (6-7 notes per 7 s) while the tempo climbs to 150: a bar shorter
-// than 1.8 s keeps one, every other bar.
-const near = (x, k) => Math.abs(x - k) < 1e-6;
-const barOf = beat => Math.floor((beat - FIRST) / 4), posOf = beat => ((beat - FIRST) % 4 + 4) % 4;
-const fastBar = beat => { const b0 = FIRST + 4 * barOf(beat); return sec(b0 + 4) - sec(b0) < 1.8 && barOf(beat) % 2 === 1; };
+// Level = the easiest difficulty that taps it. Each bar is read by the shape of its four beats (h: a note of two
+// beats or more starts there, q: one beat, e: shorter, t: a triplet, -: none) and always gets the same taps, all on
+// the beats. FÀCIL: the bar's first beat and the long notes that close a phrase (the two quarters after a run), not
+// an even pulse; NORMAL adds the beats of the run; DIFÍCIL taps every eighth. Triplets and sixteenths stay in the audio.
+const near = (x, k) => Math.abs(x - k) < 1e-2;
+const barOf = beat => Math.floor((beat - FIRST + 1e-6) / 4);
+const TAPS = { // shape: [FÀCIL's beats, NORMAL's]
+  'h-e-': [[0, 2], [0, 2]], 'h--t': [[0, 3], [0, 3]], 'h-qe': [[0], [0, 2]], 'h-qt': [[0], [0, 2]], 'h---': [[0], [0]], 'q---': [[0], [0]],
+  tttt: [[0, 2], [0, 1, 2]], teqe: [[0, 2], [0, 1, 2]], 'tte-': [[0, 2], [0, 1, 2]],
+  qqqq: [[0, 2, 3], [0, 1, 2, 3]], 'qqh-': [[0, 1, 2], [0, 1, 2]],
+  eeee: [[0], [0, 1, 2]], eeqq: [[0, 2, 3], [0, 2, 3]], 'eeh-': [[0, 2], [0, 1, 2]], 'eeq-': [[0, 2], [0, 1, 2]],
+};
 const LEVEL = new Map(); // beat -> level; a note off the grid has none
+const RUN = new Map(); // beat -> the end of a run held from its first note, on NORMAL and DIFÍCIL
 {
   const bars = new Map();
-  melody.forEach((n, i) => {
-    const p = posOf(n.beat), prev = melody[i - 1];
-    if (!near(p * 2, Math.round(p * 2))) return;
-    LEVEL.set(n.beat, 2);
-    if (!near(p, Math.round(p))) return; // the off-beat eighths are DIFÍCIL's
-    const opens = !prev || n.beat - (prev.beat + prev.beats) > 0.25;
-    const w = Math.min(n.beats, 2) + (near(p, 0) ? 1 : near(p, 2) ? 0.5 : 0.25) + (opens ? 1 : 0);
-    bars.set(barOf(n.beat), [...(bars.get(barOf(n.beat)) ?? []), { beat: n.beat, w }]);
-  });
-  for (const list of bars.values()) {
-    const order = [...list].sort((x, y) => y.w - x.w || x.beat - y.beat), easy = [];
-    for (const c of order) if (easy.length < (fastBar(c.beat) ? 1 : 2) && easy.every(e => Math.abs(e.beat - c.beat) >= 2)) easy.push(c);
-    for (const c of easy) LEVEL.set(c.beat, 0);
-    for (const c of order.filter(c => !easy.includes(c)).slice(0, 3 - easy.length)) LEVEL.set(c.beat, 1);
+  for (const n of melody) bars.set(barOf(n.beat), [...(bars.get(barOf(n.beat)) ?? []), n]);
+  for (const [k, list] of bars) {
+    const b0 = FIRST + 4 * k, at = p => list.find(n => near(n.beat - b0, p)), frac = f => list.filter(n => near((n.beat - b0) % 1, f)).length;
+    const shape = [0, 1, 2, 3].map(p => { const n = at(p); return !n ? '-' : n.beats > 1.99 ? 'h' : n.beats > 0.99 ? 'q' : n.beats < 0.4 ? 't' : 'e'; }).join('');
+    let taps = TAPS[shape];
+    if (frac(2 / 3) >= 2 && !frac(1 / 3)) { // bars 9-16 gallop (tan-ta on every beat): every other beat, then three, then all four
+      const f = at(0) ? [0, 2] : [1, 3];
+      taps = [f, [...f, f[0] + 1], [0, 1, 2, 3]];
+    }
+    // a little of MANTÉN on the runs: in the third bar of each four-bar phrase (the run comes back) NORMAL and DIFÍCIL
+    // hold its first two beats instead of tapping them, then tap its end
+    else if (shape === 'eeee' && k % 4 === 3) { taps = [[0], [0, 3], [0, 3, 3.5]]; RUN.set(b0, b0 + 2); }
+    assert(taps, `bar at beat ${b0}: no taps for the shape ${shape}`);
+    const eighths = list.map(n => n.beat - b0).filter(p => near(p * 2, Math.round(p * 2)));
+    [taps[0], taps[1], taps[2] ?? eighths].forEach((ps, L) => { for (const p of ps) { const n = at(p); if (n && !LEVEL.has(n.beat)) LEVEL.set(n.beat, L); } });
   }
 }
 const levelOf = n => LEVEL.get(n.beat) ?? 3;
@@ -104,7 +110,9 @@ for (let lvl = 0; lvl < 3; lvl++) {
   }
 }
 
-const notes = chart.map(n => [r4(sec(n.beat)), n.side, n.level, n.big ? 1 : 0, n.end ? r4(sec(n.end)) : 0]);
+// a hold's end: one number, or [FÀCIL, NORMAL, DIFÍCIL] for a held run, which FÀCIL only taps
+const holdOf = n => (RUN.has(n.beat) && !n.big ? [0, r4(sec(RUN.get(n.beat))), r4(sec(RUN.get(n.beat)))] : n.end ? r4(sec(n.end)) : 0);
+const notes = chart.map(n => [r4(sec(n.beat)), n.side, n.level, n.big ? 1 : 0, holdOf(n)]);
 const S = b => r4(sec(b));
 const song = {
   figure: 'bou-tradicional-valls', revision: timing.revision,

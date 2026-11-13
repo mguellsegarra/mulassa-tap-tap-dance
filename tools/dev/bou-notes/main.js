@@ -9,13 +9,16 @@ import { createEditor } from '../notes-propostes/notes-editor.js';
 const SUB = song.dance.subdivision, ST = song.dance.subdivisionTimes;
 const sec = b => { const x = b * SUB, i = Math.min(Math.floor(x), ST.length - 2); return ST[i] + (x - i) * (ST[i + 1] - ST[i]); };
 const beat = t => { let lo = 0, hi = ST.length - 1; while (hi - lo > 1) { const m = (lo + hi) >> 1; if (ST[m] <= t) lo = m; else hi = m; } return (lo + (t - ST[lo]) / (ST[hi] - ST[lo])) / SUB; };
-const half = t => Math.round(beat(t) * 2) / 2, r4 = x => Math.round(x * 1e4) / 1e4;
-// edits are kept per game chart: a regenerated song-bou.json shows itself, not the edits made on the old one
-let sum = 0; for (const c of JSON.stringify(song.notes)) sum = (sum * 31 + c.charCodeAt(0)) >>> 0;
-const LEVELS = ['FÀCIL', 'NORMAL', 'DIFÍCIL'], SAVED = `bou-notes-${sum.toString(36)}`;
+const half = t => Math.round(beat(t) * 12) / 12, // (twelfths: the tan-ta's short note sits on a third of a beat)
+   r4 = x => Math.round(x * 1e4) / 1e4;
+const LEVELS = ['FÀCIL', 'NORMAL', 'DIFÍCIL'];
 const $ = id => document.getElementById(id);
 
-const game = song.notes.map(([t, k, L, big, e]) => [half(t), k, L, big, e ? half(e) : 0]);
+const ends = (e, f) => (Array.isArray(e) ? e.map(x => (x ? f(x) : 0)) : e ? f(e) : 0); // a hold's end, or one per level
+const game = song.notes.map(([t, k, L, big, e]) => [half(t), k, L, big, ends(e, half)]);
+// edits are kept per game chart: a regenerated song-bou.json shows itself, not the edits made on the old one
+let sum = 0; for (const c of JSON.stringify(song.notes)) sum = (sum * 31 + c.charCodeAt(0)) >>> 0;
+const SAVED = `bou-notes-${sum.toString(36)}`;
 const first = game[0][0], end = half(song.end), fin = half(song.finale);
 const marks = song.sections.map(([t, name], i) => [`${name}${Math.floor(i / 2) + 1}`, Math.max(first, half(t))]).filter(([, b]) => b < fin);
 const parts = [...marks.map(([n, a], i) => [n, a, marks[i + 1]?.[1] ?? fin]), ['Final', fin, end]];
@@ -23,7 +26,7 @@ const cut = playback.cutBeats ?? 0, melody = timing.events.filter(e => e.voice =
 
 let level = 1, notes;
 try { notes = JSON.parse(localStorage.getItem(SAVED)); } catch { /* a broken save starts from the game's */ }
-if (!Array.isArray(notes)) notes = game;
+if (!Array.isArray(notes)) notes = game.map(n => [...n]);
 
 // ------------------------------------------------------------------ sound: the MP3 and a click per note of the level
 const audio = new Audio(`/${song.audio}`); audio.preload = 'auto';
@@ -72,10 +75,34 @@ levels.onclick = e => { const b = e.target.closest('button'); if (b) { level = N
 $('go').onclick = toggle;
 addEventListener('keydown', e => { if (e.code === 'Space' && !e.target.closest?.('input')) { e.preventDefault(); toggle(); } });
 $('copy').onclick = async () => {
-  const json = { format: 'bou-notes-v1', note: '[beat, don=BRA|ka=MA, level 0 FÀCIL 1 NORMAL 2 DIFÍCIL, BRAMA 0|1, end beat of a hold or 0]', notes,
-    seconds: notes.map(([b, k, L, big, e]) => [r4(sec(b)), k, L, big, e ? r4(sec(e)) : 0]) };
+  const json = { format: 'bou-notes-v1', comments, note: '[beat, don=BRA|ka=MA, level 0 FÀCIL 1 NORMAL 2 DIFÍCIL, BRAMA 0|1, end beat of a hold or 0]', notes,
+    seconds: notes.map(([b, k, L, big, e]) => [r4(sec(b)), k, L, big, ends(e, x => r4(sec(x)))]) };
   await navigator.clipboard.writeText(JSON.stringify(json)); $('msg').textContent = 'Copiat!'; setTimeout(() => ($('msg').textContent = ''), 1600);
 };
+// ------------------------------------------------------------------ the owner's comments, at the playhead
+const NOTES_KEY = 'bou-notes-comments';
+let comments = []; try { comments = JSON.parse(localStorage.getItem(NOTES_KEY)) ?? []; } catch { /* none */ }
+const barAt = b => song.dance.bars.findLast(r => r[1] <= b + 1e-6)?.[0] ?? song.dance.bars[0][0];
+const line = c => `[${LEVELS[c.level]} · compàs ${c.bar}] ${c.text}`;
+function showComments() {
+  localStorage.setItem(NOTES_KEY, JSON.stringify(comments));
+  $('comments').replaceChildren(...comments.map((c, i) => {
+    const li = document.createElement('li'), go = document.createElement('button'), del = document.createElement('button');
+    go.className = del.className = 'link'; go.textContent = line(c); del.textContent = 'Treu'; del.setAttribute('aria-label', `Treu el comentari del compàs ${c.bar}`);
+    go.onclick = () => play(c.beat);
+    del.onclick = () => { comments.splice(i, 1); showComments(); };
+    li.append(go, del); return li;
+  }));
+}
+$('comment').onsubmit = e => {
+  e.preventDefault();
+  const text = $('comment-text').value.trim(); if (!text) return;
+  const b = audio.paused ? last : beat(audio.currentTime);
+  comments.push({ level, bar: barAt(b), beat: Math.round(b * 2) / 2, text }); comments.sort((x, y) => x.beat - y.beat);
+  $('comment-text').value = ''; showComments();
+};
+$('copy-comments').onclick = async () => { await navigator.clipboard.writeText(comments.map(line).join('\n')); $('msg').textContent = 'Copiat!'; setTimeout(() => ($('msg').textContent = ''), 1600); };
+showComments();
 $('reset').onclick = () => { if (confirm('Esborro els teus canvis i torno al chart del joc?')) { notes = game.map(v => [...v]); editor.set(notes, true); save(); } };
 
 syncLevel(); editor.level(level); editor.set(notes); stats(); requestAnimationFrame(tick);

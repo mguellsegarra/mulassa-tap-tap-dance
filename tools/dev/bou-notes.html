@@ -31,6 +31,11 @@
   .ed-scroll { position: relative; overflow-x: auto; }
   #editor { display: block; cursor: crosshair; }
   .ed-head { position: absolute; top: 0; bottom: 0; left: 0; width: 2px; background: var(--gold); pointer-events: none; }
+  #comment-text { flex: 1 1 240px; min-height: 44px; min-width: 0; padding: 0 16px; border-radius: 999px; border: 2px solid var(--edge); background: transparent; color: var(--cream); font: inherit; }
+  #comments { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; }
+  #comments li { display: flex; gap: 12px; align-items: center; justify-content: space-between; padding: 4px 12px; background: var(--dark); border-radius: 12px; }
+  .link { min-height: 36px; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+  .link:last-child { color: var(--err); flex: none; }
   #warn { margin: 0; font-size: 13px; opacity: .8; }
   #warn[data-ok="false"] { color: var(--err); }
 </style>
@@ -60,6 +65,12 @@
     <div class="ed-scroll" id="ed-scroll"><canvas id="editor"></canvas><div class="ed-head" id="ed-head" hidden></div></div>
   </div>
   <p id="warn" aria-live="polite"></p>
+  <form class="row" id="comment">
+    <input id="comment-text" class="grow" aria-label="Comentari al punt on és la línia groga" placeholder="Comentari al punt on és la línia (nivell triat)" autocomplete="off">
+    <button class="btn">Afegeix</button>
+    <button class="btn" type="button" id="copy-comments">Copia els comentaris</button>
+  </form>
+  <ul id="comments"></ul>
   <div class="row">
     <button class="btn" id="copy">Copia el JSON</button>
     <button class="btn" id="reset">Torna al del joc</button>

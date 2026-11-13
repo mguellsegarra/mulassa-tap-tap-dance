@@ -7,6 +7,7 @@ const PX = 36, RULER = 36, TUNE = 46, ROW = 46, TOP = RULER + TUNE, LEVELS = ['F
 /** el: { canvas, scroll, head, tools, warn, undo }; opts: { first, end, parts, balloons, melody ([beat, beats, midi]: the
  * tune, drawn above the levels), both (the two-button note's name), onChange(notes) (edits only), onSeek(beat), onScroll(beat at the view's left edge) }. */
 export function createEditor(el, { first, end, parts, balloons, melody, both = 'GUAPA', easyHolds = false, onChange, onSeek, onScroll }) {
+  const holdAt = (v, L) => (Array.isArray(v[4]) ? v[4][L] : v[4]); // one end, or one per level (the Bou's held runs)
   const holdFrom = easyHolds ? 0 : 1; // the easiest level that shows a hold (song.easyHolds: FÀCIL too)
   let notes = [], tool = 'don', pendingHold = null, level = 1, quiet = false; // quiet: our own scroll, not the user's
   const B0 = first - 1, x = b => (b - B0) * PX + 10;
@@ -25,7 +26,7 @@ export function createEditor(el, { first, end, parts, balloons, melody, both = '
       n.forEach((v, i) => {
         const next = n[i + 1];
         if (next && next[0] - v[0] < 0.5) out.push(`${LEVELS[L]}: massa juntes al temps ${v[0]}`);
-        if (L >= holdFrom && v[4] && next && next[0] < v[4] + 1) out.push(`${LEVELS[L]}: la llarga del temps ${v[0]} ha d’acabar un temps abans de la següent`);
+        if (L >= holdFrom && holdAt(v, L) && next && next[0] < holdAt(v, L) + 1) out.push(`${LEVELS[L]}: la llarga del temps ${v[0]} ha d’acabar un temps abans de la següent`);
       });
     }
     const inside = notes.filter(v => inBalloon(v[0])).map(v => v[0]);
@@ -60,7 +61,7 @@ export function createEditor(el, { first, end, parts, balloons, melody, both = '
     for (const v of notes) for (let L = v[2]; L < 3; L++) {
       const y = TOP + ROW * L + ROW / 2, cx = x(v[0]), echo = L > v[2], r = v[3] ? 13 : 10;
       g.globalAlpha = echo ? 0.3 : 1;
-      if (v[4] && L >= holdFrom) { g.fillStyle = COL[v[1]] + 'aa'; g.fillRect(cx, y - 6, (v[4] - v[0]) * PX, 12); g.beginPath(); g.arc(x(v[4]), y, 6, 0, 7); g.fill(); }
+      if (holdAt(v, L) && L >= holdFrom) { g.fillStyle = COL[v[1]] + 'aa'; g.fillRect(cx, y - 6, (holdAt(v, L) - v[0]) * PX, 12); g.beginPath(); g.arc(x(holdAt(v, L)), y, 6, 0, 7); g.fill(); }
       if (v[3]) {
         g.fillStyle = COL.don; g.beginPath(); g.arc(cx, y, r, Math.PI / 2, Math.PI * 1.5); g.fill();
         g.fillStyle = COL.ka; g.beginPath(); g.arc(cx, y, r, -Math.PI / 2, Math.PI / 2); g.fill();

@@ -4,7 +4,8 @@
 - **GUA** = left = orange `#FF7A1A` = `don`. **PA** = right = turquoise `#14B8A6` = `ka`. Never swap them.
 - **GUAPA!** = both buttons on every level, within 80 ms (FÀCIL: 150 ms); one button alone = ERROR «ELS DOS ALHORA!»; half orange / half turquoise disc, double points.
 - **MANTÉN** holds: NORMAL and DIFÍCIL only (the long part-A notes), judged at head and tail. The Bou holds on FÀCIL too
-  (`easyHolds` in its song, read by `chart.js`): its opening is the long do held, then a BRAMA.
+  (`easyHolds` in its song, read by `chart.js`): its opening is the long do held, then a BRAMA. A hold's end may be
+  one per level (`[FÀCIL, NORMAL, DIFÍCIL]`): the Bou's held runs, from NORMAL up, in the third bar of each four-bar phrase.
 - Judge windows (`WINDOWS`, progress.js), ± PERFECTE / BÉ / earliest ERROR: FÀCIL 60 / 140 / 180 ms, NORMAL 45 / 110 / 150,
   DIFÍCIL 35 / 90 / 125; the practice uses FÀCIL's. They assume the de-stepped song clock (below); no «expert» level.
 - **One song clock** (`audioClock`, audio-clock.js) for drawing, judging and the sync calibration: `ctx.currentTime` de-stepped

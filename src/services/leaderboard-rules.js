@@ -19,7 +19,7 @@ export const VERSION_RULES = Object.freeze({
   [LEADERBOARD_VERSION]: rules(EXPECTED_JUDGMENTS, MAX_SCORES, EXTRAS_MAX, 'mulassa-valls'),
   [DRAC_SCORE_VERSION]: rules([106, 200, 277], [225000, 267000, 302000], [171000, 165000, 157000], 'drac-valls'),
   // the server's rows wait in supabase/pending/202610230001_bou_board.sql: not publishable until that is applied
-  [BOU_SCORE_VERSION]: rules([141, 224, 394], [197000, 242000, 338000], [122000, 122000, 125000], 'bou-tradicional-valls'),
+  [BOU_SCORE_VERSION]: rules([155, 227, 356], [205000, 248000, 323000], [122000, 126000, 130000], 'bou-tradicional-valls'),
 });
 // Only these may be published from this client.
 const PUBLISHABLE = [LEADERBOARD_VERSION, DRAC_SCORE_VERSION, ...(MOCK_BOARD ? [BOU_SCORE_VERSION] : [])]; // the Bou: the mock's board only

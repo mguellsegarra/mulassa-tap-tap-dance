@@ -9,6 +9,8 @@ import { feetAt } from './drac-steps.js';
 import { placeDance } from './drac-layout.js';
 import { poseCarrier } from './drac-rig.js';
 import { dracFx, dracCrema } from './drac-show.js';
+import { placeDracClip, DRAC_CLIP_END } from './drac-clip.js';
+import { clipShot } from '../common/clip-shot.js';
 
 const SHARE_POSE = newDracPose();
 let shareOpacity = 1;
@@ -19,6 +21,7 @@ export const DRAC_SCENE = {
   show(on) { drac.root.visible = on; },
   collaTick: dracColla, collaSpots: COLLA_SPOTS, colla: () => colla,
   animate: animPlayableDrac, leave: leaveSolo, onBoth: dracCrema,
+  filmShot: clipShot('drac-valls', placeDracClip, DRAC_CLIP_END, () => DRAC_YAW, false), // «Mira el ball»: its own music video (drac-clip.js); the idle selector keeps the showreel's (held 70 beats there, a near camera had its arc walk into the lens)
   hero: {
     scale: DRAC_SIZE.h * DRAC_SCALE / 4.03, // (figure-song.js figureScale)
     fx: () => Object.values(dracFx.objects).flat(),

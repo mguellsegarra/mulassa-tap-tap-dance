@@ -71,7 +71,8 @@ export const SHOWREELS = {
   // plaça, cut to the one it runs across or charges at; a crane over the spins and the end. Close-ups of a head only where its
   // root stands still (beats 0-10 before the dance, 96-104 after the charge). A fresh selection opens on the plaça as it sets
   // off (a close-up first read as a framing bug); the opening close-up plays from the second loop on.
-  [DRAC.id]: { start: 8, loop: 236, shots: [
+  // film 'song': only «Mira el ball» is filmed by its own cameras (figures/drac/drac-clip.js), which cut dry
+  [DRAC.id]: { start: 8, loop: 236, film: 'song', shots: [
     [0, 'close', 'cut'], [8, 'camWide', 'cut'], [16, 'camR', 'cut'], [28, 'camL', 'cut'], // its faces; it sets off; A2 to and fro across one camera, then the other
     [42, 'camTight', 'cut'], [56, 'camLow', 'cut'], [70, 'camFront', 'cut'], // B: the torsions; C: its snaps from low; D: the charge grows in the front camera, the arc
     [96, 'close', 'cut'], [104, 'camR', 'cut'], [132, 'jibUp', 'cut'], [146, 'camTight', 'cut'], // the stare; E; B3 under the crane; C3
@@ -150,6 +151,6 @@ export function tickReel(on, id, menuBeat, dt, calm = false, songBeat = null) {
   REEL.on = true;
   REEL.beat = song ? Math.max(0, songBeat) : reelMod(reel.start + REEL.acc - REEL.anchor, reel.loop);
   const i = shotAt(reel, REEL.beat, REEL.shot, calm);
-  REEL.cut = i !== REEL.idx && !((song || REEL.idle) && reel.film); REEL.fresh = REEL.idx === -1; REEL.idx = i; // fresh: a new selection's first shot (no dissolve: the old shot is gone)
+  REEL.cut = i !== REEL.idx && !(reel.film === 'song' ? song : (song || REEL.idle) && reel.film); REEL.fresh = REEL.idx === -1; REEL.idx = i; // fresh: a new selection's first shot (no dissolve: the old shot is gone)
   return REEL;
 }

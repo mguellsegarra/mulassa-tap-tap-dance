@@ -109,9 +109,11 @@ r = tickReel(true, DRAC.id, 0, 0.04); assert.ok(r.cut && r.beat >= 8 && r.beat <
 r = tickReel(false, DRAC.id, 0.1, 0.04); assert.ok(!r.on && !r.cut);
 // «Mira el ball»: the same shots on the song's own beat, from its first beat, fresh after the selector's reel; once through, no wrap
 r = tickReel(false, DRAC.id, 0.2, 0.04, false, 0); assert.ok(r.on && r.fresh && r.beat === 0, 'the demo opens on its first shot, fresh');
-r = tickReel(false, DRAC.id, 0.3, 0.04, false, 10); assert.ok(r.cut && !r.fresh, 'a cut of the list cuts (and dissolves) in the demo too');
+r = tickReel(false, DRAC.id, 0.3, 0.04, false, 10); assert.ok(!r.cut && !r.fresh, 'its demo is its own film (figures/drac/drac-clip.js), which cuts dry: no dissolve on the list\'s cuts');
 r = tickReel(false, DRAC.id, 0.3, 0.04, false, 14); assert.ok(r.beat === 14 && !r.cut, 'the song beat itself; inside a shot, no cut');
-r = tickReel(false, DRAC.id, 0.4, 0.04, false, 97); assert.ok(r.cut, 'the stare\'s close-up cuts in');
+r = tickReel(false, DRAC.id, 0.4, 0.04, false, 97); assert.ok(!r.cut, 'nor on the stare\'s');
+tickReel(false, MULASSA.id, 0.4, 0.04, false, 0); r = tickReel(false, MULASSA.id, 0.4, 0.04, false, 17); assert.ok(r.cut && !r.fresh, 'a cut of the list cuts (and dissolves) in a demo filmed by the showreel');
+tickReel(false, DRAC.id, 0.4, 0.04, false, 97);
 r = tickReel(false, DRAC.id, 0.5, 0.04, false, 400); assert.ok(r.beat === 400, 'past the loop it holds the last shot (no wrap)');
 r = tickReel(true, DRAC.id, 0.6, 0.04); assert.ok(r.fresh && r.beat >= 8, 'back on the selector: its own reel afresh');
 console.log('showreel ok');

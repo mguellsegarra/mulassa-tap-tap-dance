@@ -1,13 +1,9 @@
-// The Bou's music video on the plaça: «Mira el ball» films its dance with these cameras, free of the showreel's (bou-scene.js
-// filmShot; edited with tools/dev/bou-clip.html; after the Mulassa's clip, tools/videoclip/shots.js on tool/videoclip-mulassa). A shot: az (rad; `rel`: round the heading it had when the
-// shot began, else from the play camera's side of the plaça), el (rad above the floor), size (m of world across the
-// frame's narrow side), y (m looked at), fov, each [from, to] over the shot.
-// The lens aims at where the Bou is on average over 1.2 s, at a fixed height: it follows its path, never its bounce,
-// waddle or see-saw (a lens that bobbed with it on every beat was unwatchable). Hard cuts, each on a bar's downbeat
-// where a move starts or ends, and never into a shot that looks like the last one (far, middle and close take turns).
-// `fixed`: the camera stays where its cut put it and pans (the Bou grows as it charges); `still`: it looks at the
-// plaça's middle and does not move at all (the carried laps cross the frame); `ahead`: m in front of its middle (its head); `portrait`: what changes on a frame taller than wide.
+// The Bou's music video on the plaça: «Mira el ball» films its dance with these cameras (figures/common/clip-camera.js, the
+// shots' fields and the rules every film keeps; bou-scene.js filmShot; edited with tools/dev/bou-clip.html; after the Mulassa's
+// clip, tools/videoclip/shots.js on tool/videoclip-mulassa). `rel` shots turn round the heading it had when the shot began,
+// the others are seen from the play camera's side of the plaça.
 import { bouPose, newBouPose, BOU_TIMING } from './bou-dance.js';
+import { createClip } from '../common/clip-camera.js';
 
 export const BOU_CLIP_SHOTS = {
   // (the owner's rounds: arran de terra and with a wide lens the Bou read badly and the lens saw in under its skirt; in
@@ -57,67 +53,15 @@ export const BOU_CLIP_CUTS = [
   [284, 'orbit'],
   [300, 'crane'],
 ];
-// Each shot as a portrait frame takes it. The shots that go with it are tighter there (CLIP_TALL_SIZE of their size):
-// sized for a wide frame they asked a phone's lens to stand further back than the plaça lets it, so it opened instead and
-// the bottom third of the picture was the backs of the crowd it stood behind
-const CLIP_TALL_SIZE = .78, CLIP_TALL_KINDS = ['wide', 'crane', 'orbit', 'front'];
-const CLIP_TALL = Object.fromEntries(Object.entries(BOU_CLIP_SHOTS).map(([k, d]) => [k, { ...d, ...(CLIP_TALL_KINDS.includes(k) && { size: d.size.map(v => v * CLIP_TALL_SIZE) }), ...d.portrait }]));
 export const BOU_CLIP_END = 316;
-// The idle selector's film (bou-scene.js, behind the faded menu): only the open, slow shots, each one held BOU_CLIP_IDLE_MIN
-// beats at least, and on a phone a lens no wider than BOU_CLIP_IDLE_FOV. The film's own cut every 8 beats, from its face to
-// the whole plaça and a 75° lens that bent the façades, read there as jolts (the owner, an iPhone 18 Pro)
-const BOU_CLIP_CALM = ['vast', 'wide', 'crane', 'orbit', 'balcony'], BOU_CLIP_IDLE_MIN = 16, BOU_CLIP_IDLE_FOV = 55;
-export const BOU_CLIP_IDLE_CUTS = BOU_CLIP_CUTS.filter(c => BOU_CLIP_CALM.includes(c[1]))
-  .reduce((out, c) => (out.length && (c[0] - out.at(-1)[0] < BOU_CLIP_IDLE_MIN || c[1] === out.at(-1)[1]) ? out : [...out, c]), []);
 export const bouClipSec = b => { const T = BOU_TIMING.beats, i = Math.min(T.length - 2, Math.max(0, Math.floor(b))); return T[i] + (T[i + 1] - T[i]) * (b - i); };
-export const bouClipCut = b => BOU_CLIP_CUTS.findLastIndex(c => c[0] <= b);
-
-const clipPose = newBouPose(), clipAim = { x: 0, z: 0, lift: 0 }, clipNow = { x: 0, z: 0, lift: 0 }, clipFrom = { x: 0, z: 0, lift: 0 }, CLIP_MIDDLE = Object.freeze({ x: 0, z: 0, lift: 0 }), clipLerp = (v, u) => v[0] + (v[1] - v[0]) * u, clipEase = u => u * u * (3 - 2 * u);
-// s either side its middle is averaged over: a camera that kept up with its rushes slid the plaça across a phone at half a
-// screen a second (dizzying). At CLIP_LAG a rush out and back hardly moves the lens: it runs inside the frame. A close-up
-// (`lag` .6) keeps to it, and is only cut where it stands
-const CLIP_LAG = 2;
-// a still shot creeps in by this share of its distance over its length: on a phone its lens stands at the ring's limit at
-// its widest (75°) whatever its size, so the opening's 'vast' did not move at all and read as a hang (the owner). The
-// film's first shot also starts that much further out and comes in over BOU_CLIP_PRE s of the clock: the song's beat
-// stays at 0 until its music is heard (main.js), ~3 s on a phone, and the picture stood still meanwhile
-const BOU_CLIP_PUSH = .12, BOU_CLIP_PRE = 5;
-// a lens's widest (vertical, degrees) as it opens on a 9:16 phone, kept as wide across on a taller one (393×852, 430×932):
-// held at the same vertical there, the Bou's laps ran out of the narrower frame
-const clipCap = (deg, aspect) => (aspect < 9 / 16 ? 2 * Math.atan(Math.tan(deg * Math.PI / 360) * 9 / 16 / aspect) * 180 / Math.PI : deg);
-const BOU_CLIP_CLEAR = 4.8, BOU_CLIP_REACH = 12; // m from the plaça's middle: inside its colla's marks (5.5 m) and the crowd's ring, so nobody stands at the lens; inside the façades
-// its middle on average over 1.2 s round song second t, in its dance frame (lift: only what its colla carries it up)
-function bouClipPath(t, out, lag) {
-  out.x = out.z = out.lift = 0;
-  for (let k = -4; k <= 4; k++) { bouPose(Math.max(0, t + k * lag / 4), clipPose); out.x += clipPose.x / 9; out.z += clipPose.z / 9; out.lift += Math.max(0, clipPose.lift - .25) / 9; }
-  return out;
-}
-function clipWorld(time, o, c, s, hx, hz, lag) { const p = bouClipPath(time, clipAim, lag); o.x = p.x * c + p.z * s + hx; o.z = -p.x * s + p.z * c + hz; o.lift = p.lift; return o; }
+const clipPose = newBouPose();
+// its middle in its dance frame; lift: only what its colla carries it up (its bounce left out)
+function bouClipRoot(t, out) { bouPose(t, clipPose); out.x = clipPose.x; out.z = clipPose.z; out.lift = Math.max(0, clipPose.lift - .25); out.yaw = clipPose.yaw; return out; }
+// (the play camera looks in between its W and S); inside its colla's marks (5.5 m) and the crowd's ring, so nobody stands
+// at the lens; inside the façades
+const BOU_CLIP = createClip({ shots: BOU_CLIP_SHOTS, cuts: BOU_CLIP_CUTS, end: BOU_CLIP_END, tallKinds: ['wide', 'crane', 'orbit', 'front'], secAt: bouClipSec, root: bouClipRoot, side: Math.PI / 4, clear: 4.8, reach: 12 });
+export const BOU_CLIP_IDLE_CUTS = BOU_CLIP.idleCuts, bouClipCut = BOU_CLIP.cutAt;
 // Places `camera` (the game's own) for song beat `beat`. frameYaw: the dance frame's turn on the plaça (bou.frame.rotation.y);
 // filmed: s since the film began (Infinity: no opening creep, the idle selector); idle: the idle selector's calm cut.
-export function placeBouClip(camera, beat, frameYaw, filmed = Infinity, idle = false) {
-  const cuts = idle ? BOU_CLIP_IDLE_CUTS : BOU_CLIP_CUTS, i = Math.max(0, cuts.findLastIndex(c => c[0] <= beat)), [b0, kind] = cuts[i], b1 = cuts[i + 1]?.[0] ?? BOU_CLIP_END, d = (camera.aspect < 1 ? CLIP_TALL : BOU_CLIP_SHOTS)[kind];
-  const u = clipEase(Math.min(1, Math.max(0, (beat - b0) / (b1 - b0)))), t = bouClipSec(beat), t0 = bouClipSec(b0);
-  // (the play camera looks in between its W and S). A shot of its head takes the heading it has half way through: cut in
-  // while it was still turning, the heading at the cut aimed a metre beside its face
-  const heading = d.rel ? bouPose(d.ahead ? bouClipSec((b0 + b1) / 2) : t0, clipPose).yaw + frameYaw : frameYaw + Math.PI / 4;
-  // its averaged middle on the plaça (the dance frame turned, `ahead` m in front of it), into `o`: no garbage per frame
-  const c = Math.cos(frameYaw), s = Math.sin(frameYaw), hx = (d.ahead ?? 0) * Math.sin(heading), hz = (d.ahead ?? 0) * Math.cos(heading);
-  const fit = cuts[i][2]?.[camera.aspect < 1 ? 'tall' : 'wide'] ?? 1, el = clipLerp(d.el, u), size = clipLerp(d.size, u) * fit, az = heading + clipLerp(d.az, d.fixed ? 0 : u);
-  const now = d.still ? CLIP_MIDDLE : clipWorld(t, clipNow, c, s, hx, hz, d.lag ?? CLIP_LAG), from = d.fixed ? clipWorld(t0, clipFrom, c, s, hx, hz, d.lag ?? CLIP_LAG) : now;
-  const aspect = camera.aspect, vfov = d.fov * Math.PI / 180, narrow = aspect < 1 ? 2 * Math.atan(Math.tan(vfov / 2) * aspect) : vfov;
-  let dist = size / 2 / Math.tan(narrow / 2), fov = d.fov;
-  // a low lens stays inside the crowd's ring (the public is the background, never a blur across the frame), a high one
-  // inside the façades; where that stops it short, the lens opens instead
-  const ux = Math.sin(az), uz = Math.cos(az), pb = from.x * ux + from.z * uz, r2 = from.x * from.x + from.z * from.z, clear = BOU_CLIP_CLEAR;
-  const inRing = r2 > clear * clear ? BOU_CLIP_REACH : Math.max(3.5, -pb + Math.sqrt(pb * pb - (r2 - clear * clear))), high = clipEase(Math.min(1, Math.max(0, (el - .25) / .12))); // (from ~0.37 rad the lens looks over the heads: it may stand behind them)
-  const reach = (inRing + (BOU_CLIP_REACH - inRing) * high) / Math.max(.2, Math.cos(el));
-  if (dist > reach) { dist = reach; const n = 2 * Math.atan(size / 2 / dist); fov = Math.min(idle && aspect < 1 ? BOU_CLIP_IDLE_FOV : clipCap(d.still && aspect < 1 ? 75 : Math.min(75, (d.fov + 10) * fit), aspect), (aspect < 1 ? 2 * Math.atan(Math.tan(n / 2) / aspect) : n) * 180 / Math.PI); } // (never a wide lens: rather a tighter frame; but a still shot on a phone opens as far as the laps ask, or they ran out of its narrow frame)
-  if (d.still) dist *= 1 - BOU_CLIP_PUSH * u;
-  if (!i) dist *= 1 + BOU_CLIP_PUSH * (1 - clipEase(Math.min(1, filmed / BOU_CLIP_PRE)));
-  const y = d.y + now.lift;
-  camera.clearViewOffset(); camera.fov = fov;
-  camera.position.set(from.x + ux * Math.cos(el) * dist, Math.max(.25, d.y + Math.sin(el) * dist), from.z + uz * Math.cos(el) * dist);
-  camera.up.set(0, 1, 0); camera.lookAt(now.x, y, now.z); camera.updateProjectionMatrix();
-  return i;
-}
+export const placeBouClip = BOU_CLIP.place;

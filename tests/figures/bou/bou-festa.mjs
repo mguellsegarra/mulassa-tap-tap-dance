@@ -109,7 +109,7 @@ assert.ok(worst.crowdShell > 0.1, `the public runs into the Bou (${worst.crowdSh
 assert.ok(worst.crowdHelper > 0.4, `the public runs through an attendant (${worst.crowdHelper.toFixed(2)} m)`);
 assert.ok(worst.crowdCap > 0.5, `the public runs through the capatàs (${worst.crowdCap.toFixed(2)} m)`);
 assert.ok(worst.crowdEach > 0.4, `two of the public through each other (${worst.crowdEach.toFixed(2)} m)`);
-assert.equal(joined, Math.min(PARADE_K.count, Math.floor(crowd.length * PARADE_K.share)), 'the snake fills');
+assert.equal(joined, Math.max(PARADE_K.count, Math.min(PARADE_K.most, Math.floor(crowd.length * PARADE_K.share))), 'the snake fills: never under `count`, more with a big crowd');
 assert.ok(joined >= 10, `a file of ${joined} at medium quality`);
 assert.ok(formed > 0.8, `the file is not formed a beat after the lift (${(formed * 100).toFixed(0)}% in place)`);
 assert.ok(behind < 1.5, `nobody right at its tail (${behind.toFixed(2)} m)`);

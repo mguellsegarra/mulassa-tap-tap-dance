@@ -7,17 +7,18 @@ import { BOU_CARRY, LAP, lapWay } from './bou-dance.js';
 import { BOU_CAPATAS, bouToWorld } from './bou-colla.js';
 
 export const PARADE = { on: false, beat: 0, yaw: 0, x: 0, z: 0, heading: 0, colla: [] }; // x z heading: the Bou's (compass frame), an obstacle; colla: its attendants ({ pos: Vector2 }, the plaça's), too
-// who: up to `count` (and `share` of the crowd) of those standing round it, each the nearest to their place; the conga's first row `gap` m (along the
+// who: `count` to `most` (`share` of the crowd drawn) of those standing round it, each the nearest to their place; the conga's first row `gap` m (along the
 // ring) behind its middle (its tail ends 1.45 m back, the rear attendants 0.7), `space` m apart, `ranks` files `files` m apart round
 // of the ring, weaving `weave` m in and out; `run` / `walk` m/s; `room` m kept from each other, `wide` m from the capatàs on the way; `bou` m from its spine, `clear` m from an attendant
-// who and when: up to `count` (and `share` of the crowd), one file behind it; its first `tail` side by side right at its
+// who and when: `count` at every quality (a short file read as nobody following it: the owner), up to `most` where the
+// quality draws a big crowd; one file behind it; its first `tail` side by side right at its
 // rump (`touch` m from its middle), reaching to touch it, then the file on its trail round the ring, `gap` m behind its
 // middle, `space` m apart. They join one at a time from its head, `every` beats apart from `after` beats past its
 // colla's grip (negative: before it), each the one standing nearest to their place (in from outside, so no one crosses the file); `leadOut`
 // beats before it is lowered they leave one at a time from the tail, `outEvery` apart, each straight out to the front
 // row (the snake in view from the start; it leaves gently a second or two before the Bou is lowered). `run` / `walk` m/s; `room` m kept from each other, `wide` m from the capatàs on the way; `bou` m from
 // its footprint, `clear` m from an attendant; the hard limits `touchMin`, `bouMin`, `collaMin`
-export const PARADE_K = { count: 12, share: 0.6, tail: 2, touch: 2.02, gap: 2.75, space: 0.9, files: 0.6, weave: 0.08, run: 6, walk: 1.4,
+export const PARADE_K = { count: 12, most: 18, share: 0.3, tail: 2, touch: 2.02, gap: 2.75, space: 0.9, files: 0.6, weave: 0.08, run: 6, walk: 1.4,
   every: 0.15, after: -2, leadOut: 4, outEvery: 0.25, room: 0.5, touchMin: 0.45, bouMin: 0.12, collaMin: 0.52, hop: 0.16, clear: 0.8, wide: 1.2, bou: 0.22 };
 const paraders = [], homers = [], PARADE_LISTS = [paraders, homers], paradeAt = { x: 0, z: 0 }; // in the file; walking back
 const paradeWorld = (x, z, yaw, out) => { out.x = x * Math.cos(yaw) + z * Math.sin(yaw); out.z = -x * Math.sin(yaw) + z * Math.cos(yaw); return out; };
@@ -40,7 +41,7 @@ export function paradeSlot(k, beat, yaw, out) {
 // once a frame, before the crowd steers (crowd.js animCrowd)
 export function paradeTick(crowd) {
   if (!paradeLive()) { for (const p of paraders) { p.parade = 'home'; homers.push(p); } paraders.length = 0; paradeN = paradeNext = 0; return; }
-  const n = paradeN ||= Math.min(PARADE_K.count, Math.floor(crowd.length * PARADE_K.share));
+  const n = paradeN ||= Math.max(PARADE_K.count, Math.min(PARADE_K.most, Math.floor(crowd.length * PARADE_K.share))); // (the fewest any quality shows: ~23)
   for (let i = paraders.length - 1; i >= 0; i--) { // leaving, from the tail: straight out to the front row's distance
     const p = paraders[i];
     if (PARADE.beat < paradeLeaveAt(p.paradeSlot, n)) continue;

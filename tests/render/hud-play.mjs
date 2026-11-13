@@ -584,3 +584,21 @@ console.log('selector camera lock and splash entry ok');
   document.body.classList = bodyCl;
 }
 console.log('view mode ok');
+
+// The lane draws far notes first, so a hold's tail or a roll's bar ran over the double right after it: every double
+// (GUAPA / CREMA / BRAMA) is drawn after all the tails and bars on screen.
+{
+  const order = JSON.parse(run(`(() => {
+    const saved = { holdTail, noteDisc, balloonHead, chart: G.chart, state: G.state, next: G.next, hold: G.hold }, out = [];
+    holdTail = () => out.push('tail'); balloonHead = () => out.push('roll'); noteDisc = (dir, x, y, r, big) => out.push(big ? 'big' : 'note');
+    G.state = 'play'; G.next = 0; G.hold = null;
+    G.chart = [{ t: 1, end: 1.3, input: 'L' }, { t: 1.4, input: 'B', big: true }, { t: 1.5, end: 1.9, balloon: true, need: 4, count: 0, input: 'P' }, { t: 2, input: 'B', big: true }];
+    drawLane(1.25);
+    Object.assign(G, { chart: saved.chart, state: saved.state, next: saved.next, hold: saved.hold });
+    holdTail = saved.holdTail; noteDisc = saved.noteDisc; balloonHead = saved.balloonHead;
+    return JSON.stringify(out);
+  })()`));
+  assert.equal(order.filter(k => k === 'big').length, 2, `both doubles drawn (${order})`);
+  assert(order.indexOf('big') > Math.max(order.lastIndexOf('tail'), order.lastIndexOf('roll')), `doubles over the hold's tail and the roll's bar (${order})`);
+}
+console.log('lane doubles over tails and bars ok');

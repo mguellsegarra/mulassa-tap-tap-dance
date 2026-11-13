@@ -166,9 +166,10 @@ import { dance, flushLoader, nodes, keyHandlers, windowHandlers, drawnText, docu
 // Leaving a paused game must resume the menu and allow the next game to run.
 run(`let resumes = 0;
   chip = { stop() {}, menu() {}, resume() { resumes++; }, ctx: {} };
-  G.state = 'play'; G.paused = true;
+  G.state = 'play'; G.paused = true; G.finale = G.doublePoints = true;
   toTitle();`);
 assert.equal(run('G.paused'), false, 'menu clears pause after Escape');
+assert.equal(run('G.finale || G.doublePoints'), false, 'left mid-finale: its pulsing lights and cheering crowd stay out of the selector');
 assert.equal(run('resumes'), 1, 'menu resumes suspended audio');
 
 // Loading a recording may finish after the player has already left the game.

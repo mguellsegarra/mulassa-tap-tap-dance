@@ -123,11 +123,30 @@ export function frameMonitor(onSlow) {
   let elapsed = 0, samples = 0, slow = 0, late = 0, warmup = 2000, clock = 0, n = 0, spiky = false; // late: capped frames a refresh past their slot
   let run = 0, runSlow = 0, capped = false, capMs = 0; // runSlow: this window's slow frames of the current run; capMs: the cap's interval
   const spikes = new Float64Array(SPIKE.count); // when the last few spikes happened (monitor time, ring buffer)
+  const group = new Float64Array(4); let gN = 0, gSum = 0, gPlay = true; // a late frame and the early ones after it, judged together
   const reset = (settle = true) => {
-    elapsed = samples = slow = late = n = run = runSlow = capMs = 0; spiky = capped = false;
+    elapsed = samples = slow = late = n = run = runSlow = capMs = gN = gSum = 0; spiky = capped = false;
     if (settle) warmup = 2000;
   };
+  // WebGL in Safari under the 30 Hz cap jitters its timestamps: a late callback, then one or two early ones, together a
+  // whole number of slots (50 + 16, 68 + 2 + 30, 81 + 2 + 17 ms), on time on average. A page that only clears a WebGL
+  // canvas does it too, a plain page hardly. Judged one by one the early one read as a faster screen (no cap) and the late
+  // one as a hitch: an iPhone 18 Pro in Low Power Mode, 8 ms of JavaScript a frame, fell from medium to minimal
+  // (13/11/2026). A late frame waits for the early ones after it: a group of up to four that fills its slots and is
+  // followed by a frame at the cap's own pace (29-44 ms) is judged at its mean. A 60 Hz screen's hitches (80 then 16.7s,
+  // 50/16.7 alternating) never close one; one that steadily draws 50, 16.7, 33 is a 30 fps device, read as capped like
+  // a steady 33 (the shortcut above).
+  const flush = paced => {
+    const k = gN, sum = gSum, fills = paced && k > 1 && Math.abs(sum - k * (capMs || 1000 / 30)) <= 8; gN = gSum = 0;
+    for (let i = 0; i < k; i++) judge(fills ? sum / k : group[i], gPlay);
+  };
   const monitor = (ms, play = true) => {
+    if (gN && ms > 0 && ms < CAP.lo && gN < group.length) { group[gN++] = ms; gSum += ms; gPlay = play; return; }
+    if (gN) flush(ms >= CAP.lo && ms <= CAP.hi);
+    if (ms > CAP.lo * 1.25 && ms < 1000) { group[gN++] = ms; gSum += ms; gPlay = play; return; } // (over 36 ms: past a 30 Hz slot's jitter)
+    judge(ms, play);
+  };
+  const judge = (ms, play) => {
     if (ms <= 0 || ms > 1000) { reset(false); return; }
     clock += ms;
     const inCap = ms >= CAP.lo && ms <= CAP.hi, was = capped;

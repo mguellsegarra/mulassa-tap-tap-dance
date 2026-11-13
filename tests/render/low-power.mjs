@@ -26,6 +26,15 @@ const check = (name, fn) => { try { fn(); } catch (e) { failures.push(`${name}: 
 
 check('Low Power Mode, menus then a song: stable 30 Hz never lowers quality', () =>
   assert.deepEqual(steps(boot, lpm(20, { play: false }), lpm(100)), []));
+check('Low Power Mode, Safari WebGL\'s jittered groups (46 + 20, 70 + 2 + 28 ms every few frames): no quality step', () => {
+  // as an iPhone 18 Pro recorded them: the short ones read as a faster screen, the long ones as hitches; medium fell to minimal
+  const f = lpm(60);
+  for (let i = 5; i < f.length - 2; i += 6 + (i % 5)) {
+    if (i % 2) { f[i] = [44 + (i % 14), true]; f[i + 1] = [66.7 - f[i][0], true]; }
+    else { f[i] = [66 + (i % 15), true]; f[i + 1] = [2, true]; f[i + 2] = [100 - f[i][0] - 2, true]; }
+  }
+  assert.deepEqual(steps(f), []);
+});
 check('Low Power Mode with rough timestamps (±1.5 ms): the same', () =>
   assert.deepEqual(steps(lpm(60, { jitter: 1.5 })), []));
 check('Low Power Mode, a rare missed refresh (2%): no quality step', () =>
@@ -43,6 +52,9 @@ check('Low Power Mode, missed refreshes are no spikes (50 ms at 30 Hz is one ref
   assert.deepEqual(steps(f), []);
 });
 check('60 Hz smooth after the boot hitches: no step', () => assert.deepEqual(steps(boot, at60(60)), []));
+// a 60 Hz screen's repeated stutter can also add up to whole 33 ms slots: closed by a late frame, it is never a jitter group
+for (const [name, cycle] of [['50 / 16.7 alternating', [50, 16.7]], ['80 then three 16.7', [80, 16.7, 16.7, 16.7]], ['66.7, 16.7, 16.7', [66.7, 16.7, 16.7]]])
+  check(`60 Hz stuttering ${name}: steps down`, () => assert(steps(at60(5), Array.from({ length: 300 }, (_, i) => [cycle[i % cycle.length], true])).length >= 1));
 check('60 Hz, 15% scattered misses: steps down as before', () => assert(steps(at60(30, { miss: 0.15 })).length >= 1));
 check('60 Hz device too slow for 60, drawing an exact 33 ms: no step from cadence alone (the cap cannot be told apart)', () =>
   assert.deepEqual(steps(at60(3), frames(30, { every: 2, jitter: 0 })), []));

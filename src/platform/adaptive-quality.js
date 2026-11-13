@@ -48,8 +48,9 @@ export function adaptiveQuality({ ceiling, level, change, report = () => {}, can
     // people, the CPU's load, step a level later): it is drawn at an even 30 for the rest of the song instead, half the
     // work and the heat (halve: the pacer's cap, core/timing.js). A 2015 MacBook Pro went 55 to 85 °C in a minute of play
     // and its JavaScript from 7.6 to 14 ms a frame, medium and low changing nothing (13/11/2026).
-    if (playing && !halved && costAvg > CPU_BOUND) { halved = true; halve(true); down.reset(); clear(); report({ time, reason: 'cpu-cap', level: level(), cost: costAvg, ...context(), ...evidence }); return; }
-    if (futile && playing && steps < 2) return;
+    // (only where the pacer can halve: over 50 Hz, not a 120 Hz screen)
+    if (playing && !halved && costAvg > CPU_BOUND && currentPace.hz > 50 && currentPace.hz <= 95) { halved = true; halve(true); down.reset(); clear(); report({ time, reason: 'cpu-cap', level: level(), cost: costAvg, ...context(), ...evidence }); return; }
+    if (futile && playing && steps < 2 && !spiky) return; // repeated hitches still step down
     if (drops && level() === -1 && !spiky && share < 0.35 && drops.share - share < SLOW_SHARE) {
       tolerated = share + SLOW_SHARE; futile = true; const to = drops.from; drops = null;
       switchTo(to, 'futile', evidence); return;
@@ -69,6 +70,7 @@ export function adaptiveQuality({ ceiling, level, change, report = () => {}, can
     frameMs = ms; frameCost = cost; currentPace = pace; held = hold; playing = play;
     if (Number.isFinite(cost)) costAvg = costAvg >= 0 ? costAvg + (cost - costAvg) * 0.02 : cost; // ~1 s of frames
     if (halved && !play) { halved = false; halve(false); } // the song is over: menus and the next song start at the full rate
+    if (!play) futile = false; // only the song in play is left alone: the next one is judged afresh
     if (restored && lostTo !== null) { // on a drawn frame: the profile's precompile needs a live context and a finished boot
       const to = lostTo; lostTo = null; restored = false;
       switchTo(to, 'context-lost', {}); trial = false;

@@ -80,6 +80,11 @@ for (const policy of [{ hold: true }, { half: true, hz: 120, fps: 60 }, { lowPow
   assert.equal(r.changes.length, n, 'no further profile change in that song, although it got heavier');
   r.run(12, { miss: 3, cost: 14 }); assert(r.level < 2, 'out of the song the overload lowers quality as before');
 }
+{ // a futile verdict is that song's: after the menus, a song that really misses half its frames steps down
+  const r = rig(); r.run(120, { miss: 6, hold: true }); assert(r.events.some(e => e.reason === 'futile') && r.level === 2);
+  r.run(10); r.run(30, { miss: 2, cost: 5, hold: true });
+  assert(r.level < 2, 'the next song is judged afresh');
+}
 {
   const r = rig(-1); r.run(90); assert.equal(r.level, -1, 'software renderer ceiling is preserved');
 }

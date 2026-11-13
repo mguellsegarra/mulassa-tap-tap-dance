@@ -33,6 +33,21 @@ load the URL; the S10 normally stays plugged into mac-studio.
   mbp-m1 (2026-11-03) bridges at `192.168.1.206:9222`; there Chrome also holds `127.0.0.1:9222`, so even on that Mac
   use the LAN address. Add `--maps=<outDir of a vite build --sourcemap>` to name the minified functions.
 - Keep the iPhone awake for long runs (Settings → Display → Auto-Lock → Never, restored afterwards).
+- **iPhone with a cable, unattended** (the owner leaves it plugged in and does nothing): Xcode's Device Hub
+  (`Xcode.app/Contents/Applications/DeviceHub.app`) mirrors its screen, and with it open the screen did not lock in
+  hours. Drive it with Cua Driver from one persistent `cua-driver mcp` session (a `cua-driver call` per action loses
+  the window's capture and refuses clicks): `get_window_state` for a screenshot, `click` with `x, y` on the mirror and
+  `delivery_mode: 'foreground'` for a real touch (background clicks never reach the phone; it fronts Device Hub for a
+  moment, so the owner allows it first), its window's Home button by `element_token`, and a `drag` down from the top
+  right for Control Center (Low Power Mode's toggle: iOS turns it off by itself at 80% while charging). Safari's audio
+  starts only after a real touch on the splash; then `__dbg.choose(level)` with `?autoplay` plays a whole song, and
+  `&mute` keeps it silent. Check the state left the splash after the tap and tap again if not (a tap can miss); Device
+  Hub can restart with a new pid and window, and the phone sits at another place in its window then.
+- **What the iPhone actually shows** (not what rAF reports): a small Swift program can turn on CoreMediaIO's screen
+  capture devices (`kCMIOHardwarePropertyAllowScreenCaptureDevices`, as QuickTime does) and record the plugged-in
+  iPhone's screen with `AVCaptureMovieFileOutput` at 60 fps; ffmpeg alone does not list it. Start the recording before
+  the song: it moves the iPhone's audio to the Mac, and a song already playing pauses. Count the frames whose 3D band
+  differs from the one before (new pictures) and the time between them.
 
 ## Allocations (the garbage collector)
 
@@ -136,6 +151,13 @@ iPhone / Safari:
 - The first page opened after a while pays Safari's cold caches: alternate the A/B order or repeat both.
 - Low Power Mode alternates 30 and 24 Hz on a 120 Hz screen (33.3 and 41.7 ms frames) with the CPU at ~10 ms: a
   cadence, not overload. A frame one refresh late at 24 Hz is 50 ms.
+- In Low Power Mode, WebGL's rAF timestamps jitter in groups that fill whole 33 ms slots (50 + 16, 68 + 2 + 30,
+  81 + 2 + 17 ms) every few frames, 30 a second on average; a plain page hardly does. On the screen, recorded over the
+  cable, a page that only clears a WebGL canvas showed 23 new pictures a second and the Bou in play 25, with 67-100 ms
+  holds: Safari's, not the game's (hiding scene parts or a lower quality did not change the rAF groups either). The
+  frame monitor reads those groups as on time (render-quality.js); do not take them for overload.
+- With `?perf`, `pace.hz` (the lower quartile of rAF deltas) swings between 30 and 66 under that jitter and `lowPower`
+  flips with it: read the trend, not one line.
 
 The phone and the owner (LAN runs):
 - A reload is a new session; the phone locked or the owner switching to the chat puts the page in the background and
